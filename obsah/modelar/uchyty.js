@@ -452,8 +452,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // rysky po 5°, delší po 15°, nejdelší s popisem po 45°; 0° leží na ose (otáčení kolem Z: směr X,
       // kolem X: směr Y, kolem Y: směr Z), popisky = natočení měřené od ní
       const zn = tah.zakladUhel != null ? tah.znUhlu : 1;
+      // absolutní úhel (jedno těleso kolem své osy): 0° leží na ose; jinak (víc těles, cizí osa) se otáčí
+      // o přírůstek – 0° stupnice leží tam, kde tah začal, a čísla na ní sedí s popiskem „+X°“
+      const nula = tah.zakladUhel != null ? 0 : tah.a0;
       for (let k = 0; k < 72; k++) {
-        const t = k * 5 * M.st, dlouha = k % 9 === 0, stredni = k % 3 === 0;
+        const t = nula + k * 5 * M.st, dlouha = k % 9 === 0, stredni = k % 3 === 0;
         const smer = tah.b1.clone().multiplyScalar(Math.cos(t)).addScaledVector(tah.b2, Math.sin(t));
         const a = S.naObrazovku(tah.kresba.clone().addScaledVector(smer, tah.R * (dlouha ? 0.84 : stredni ? 0.91 : 0.955)));
         const b = S.naObrazovku(tah.kresba.clone().addScaledVector(smer, tah.R));
@@ -464,12 +467,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           let st = zn * k * 5;
           st = ((st % 360) + 540) % 360 - 180;
           if (st === -180) st = 180;
-          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' + (k === 0 ? ' nula' : '') }, vrstvaKresby).textContent = k === 0 ? `0° ${nazevOsy((tah.index + 1) % 3)}` : st + '°';
+          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' + (k === 0 ? ' nula' : '') }, vrstvaKresby).textContent = k === 0 ? (tah.zakladUhel != null ? `0° ${nazevOsy((tah.index + 1) % 3)}` : '0°') : (tah.zakladUhel != null ? '' : st > 0 ? '+' : '') + st + '°';
         }
       }
       // osa nuly: čárkovaně od středu za okraj úhloměru
       {
-        const a = S.naObrazovku(tah.kresba), b = S.naObrazovku(tah.kresba.clone().addScaledVector(tah.b1, tah.R * 1.12));
+        const sn = tah.b1.clone().multiplyScalar(Math.cos(nula)).addScaledVector(tah.b2, Math.sin(nula));
+        const a = S.naObrazovku(tah.kresba), b = S.naObrazovku(tah.kresba.clone().addScaledVector(sn, tah.R * 1.12));
         if (a && b) el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'osa-nuly', stroke: BARVY_OS[tah.index] }, vrstvaKresby);
       }
       const cs = S.naObrazovku(tah.kresba);

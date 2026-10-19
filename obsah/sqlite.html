@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQLite – prohlížeč a editor databází</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/chart.min.js" defer></script>
+  <script src="sqlite/jadro.js"></script>
+  <style>
+    :root {
+      --sql-kw: #79b8ff; --sql-fn: #d2a8ff; --sql-str: #a5d6a7; --sql-num: #f2c66d; --sql-kom: #9e9e9e; --sql-id: #e0e0e0; --sql-par: #ff9e80;
+      --null: #9e9e9e; --zmena: rgba(224, 166, 63, 0.18);
+      --er-box: var(--bg-elevated); --er-hlava: #2a3f5f; --er-hrana: #8aa4c8;
+    }
+    :root[data-theme="light"] {
+      --sql-kw: #0b57a8; --sql-fn: #6f42c1; --sql-str: #1d6b2a; --sql-num: #8a5300; --sql-kom: #5f666e; --sql-id: #24292f; --sql-par: #b3361b;
+      --null: #5f666e; --zmena: rgba(125, 88, 0, 0.12);
+      --er-hlava: #dbe7f8; --er-hrana: #4d6f9e;
+    }
+    * { box-sizing: border-box; }
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 2.5vw, 32px); min-height: 100vh; color: var(--text); font-family: var(--font); }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1rem; margin: 0 0 8px; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 10px; max-width: 1000px; line-height: 1.5; }
+    .soukromi { max-width: 1400px; border: 1px solid var(--ok); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius); padding: 9px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    .karta[hidden], [hidden] { display: none !important; }
+    button, .tlac {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px;
+      padding: 6px 11px; font-size: 0.84rem; cursor: pointer; font-family: inherit; line-height: 1.3; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    }
+    button:hover, .tlac:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.nebezpeci { border-color: var(--danger); color: var(--danger); }
+    button.male { padding: 3px 8px; font-size: 0.78rem; }
+    button[aria-selected="true"], button.aktivni { background: var(--accent-soft); border-color: var(--accent); }
+    input[type="text"], input[type="search"], input[type="number"], select, textarea {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+      padding: 6px 9px; font-size: 0.88rem; font-family: inherit; min-width: 0;
+    }
+    input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .rada { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .napoveda { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; }
+    .napoveda code, .pozn code { background: var(--bg-input); padding: 0 4px; border-radius: 4px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    a { color: var(--accent); }
+
+    /* úvod */
+    .uvod { max-width: 1400px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+    @media (max-width: 860px) { .uvod { grid-template-columns: minmax(0, 1fr); } }
+    .zona { border: 2px dashed var(--border-strong); border-radius: 12px; padding: 28px 18px; text-align: center; background: var(--bg-panel); transition: border-color .15s, background .15s; }
+    .zona.nad { border-color: var(--accent); background: var(--accent-soft); }
+    .zona p { margin: 8px 0; }
+    .zona .velka { font-size: 2.4rem; }
+    .zona .rada { justify-content: center; margin-top: 12px; }
+    .uvod ul { margin: 6px 0 0 18px; padding: 0; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+
+    /* horní lišta */
+    .lista { max-width: 100%; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 10px; }
+    .lista .soubor { min-width: 0; overflow-wrap: anywhere; font-size: 0.9rem; }
+    .stitek { display: inline-block; font-size: 0.74rem; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--border-strong); color: var(--text-muted); white-space: nowrap; }
+    .stitek.ok { border-color: var(--ok); color: var(--ok); }
+    .stitek.warn { border-color: var(--warn); color: var(--warn); }
+    .stitek.danger { border-color: var(--danger); color: var(--danger); }
+    .txpanel { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--warn); background: var(--zmena); font-size: 0.82rem; }
+    details.menu { position: relative; }
+    details.menu > summary { list-style: none; cursor: pointer; }
+    details.menu > summary::-webkit-details-marker { display: none; }
+    details.menu .nabidka { position: absolute; right: 0; top: calc(100% + 4px); z-index: 50; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; min-width: 240px; box-shadow: var(--shadow); }
+    details.menu .nabidka button { justify-content: flex-start; width: 100%; }
+    .nastaveni { max-width: 100%; margin-bottom: 10px; }
+    .nastaveni .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 18px; }
+    .zaskrt { display: flex; gap: 8px; align-items: flex-start; font-size: 0.85rem; cursor: pointer; }
+    .zaskrt input { margin-top: 3px; accent-color: var(--accent); }
+    .zaskrt small { display: block; color: var(--text-muted); font-size: 0.76rem; }
+
+    /* rozložení */
+    .rozlozeni { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 12px; align-items: start; }
+    @media (max-width: 900px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .objekty { position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow: auto; padding: 10px; }
+    @media (max-width: 900px) { .objekty { position: static; max-height: 300px; } }
+    .objekty input { width: 100%; margin-bottom: 6px; }
+    .objekty details { margin: 4px 0; }
+    .objekty summary { cursor: pointer; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: .4px; padding: 3px 0; }
+    .objekty ul { list-style: none; margin: 0; padding: 0; }
+    .objekty li button { width: 100%; justify-content: space-between; background: transparent; border-color: transparent; padding: 4px 6px; font-size: 0.84rem; text-align: left; }
+    .objekty li button:hover { background: var(--bg-hover); }
+    .objekty li button.aktivni { background: var(--accent-soft); border-color: var(--accent); }
+    .objekty li button .jm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .objekty li button .poc { color: var(--text-faint); font-size: 0.74rem; flex: none; }
+    .hlavni-obsah { min-width: 0; }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .zalozky button { font-size: 0.86rem; }
+
+    /* mřížka dat */
+    .mrizka-lista { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .mrizka-lista .hledat { flex: 1 1 180px; }
+    .strankovani { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; color: var(--text-muted); }
+    .strankovani input { width: 64px; }
+    .tabulka-obal { overflow: auto; max-height: 68vh; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); }
+    table.data { border-collapse: separate; border-spacing: 0; font-size: 0.82rem; min-width: 100%; }
+    table.data th, table.data td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; max-width: 360px; }
+    table.data thead th { position: sticky; top: 0; background: var(--bg-elevated); z-index: 2; white-space: nowrap; }
+    table.data thead tr.filtry th { top: var(--vyska-hlavy, 31px); padding: 3px 4px; }
+    table.data thead tr.filtry input { width: 100%; min-width: 70px; padding: 3px 6px; font-size: 0.78rem; }
+    table.data th .razeni { background: none; border: none; padding: 0; font-weight: 600; color: var(--text); font-size: 0.82rem; }
+    table.data th .typ { color: var(--text-faint); font-weight: 400; font-size: 0.72rem; margin-left: 4px; }
+    table.data th .klic { color: var(--warn); font-size: 0.72rem; }
+    table.data td { white-space: pre; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8rem; }
+    table.data td.cislo { text-align: right; }
+    table.data td.null { color: var(--null); font-style: italic; }
+    table.data td.vyber, table.data th.vyber { width: 30px; text-align: center; position: sticky; left: 0; background: var(--bg-elevated); z-index: 1; }
+    table.data thead th.vyber { z-index: 3; }
+    table.data td.cislo-radku { color: var(--text-faint); text-align: right; }
+    table.data tbody tr:hover td { background: var(--bg-hover); }
+    table.data tbody tr.vybrany td { background: var(--accent-soft); }
+    table.data td.zmeneno { background: var(--zmena); }
+    table.data td:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+    table.data td.edit { cursor: cell; }
+    .blob { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font); font-size: 0.74rem; color: var(--text-muted); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 5px; }
+    .blob img { width: 18px; height: 18px; image-rendering: pixelated; object-fit: contain; }
+    .dlouhy { color: var(--accent); font-family: var(--font); font-size: 0.72rem; }
+    .prazdne { padding: 18px; color: var(--text-muted); font-size: 0.88rem; text-align: center; }
+    .info-radek { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
+
+    /* SQL editor */
+    .sql-rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; align-items: start; }
+    @media (max-width: 1200px) { .sql-rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .editor { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); height: 220px; resize: vertical; overflow: hidden; min-height: 110px; }
+    .editor .cisla { padding: 8px 6px; text-align: right; color: var(--text-faint); user-select: none; overflow: hidden; border-right: 1px solid var(--border); background: var(--bg-panel); }
+    .editor .plocha { position: relative; overflow: hidden; }
+    .editor pre, .editor textarea, .editor .cisla { margin: 0; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; tab-size: 2; }
+    .editor pre, .editor textarea { position: absolute; inset: 0; padding: 8px 10px; white-space: pre; overflow: auto; border: 0; border-radius: 0; }
+    .editor pre { pointer-events: none; color: var(--sql-id); }
+    .editor textarea { background: transparent; color: transparent; caret-color: var(--text); resize: none; outline: none; }
+    .editor textarea::selection { background: rgba(106, 166, 253, 0.35); color: transparent; }
+    .editor:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .t-kw { color: var(--sql-kw); font-weight: 600; } .t-fn { color: var(--sql-fn); } .t-str, .t-blob { color: var(--sql-str); }
+    .t-num { color: var(--sql-num); } .t-kom { color: var(--sql-kom); font-style: italic; } .t-par { color: var(--sql-par); } .t-id { color: var(--sql-id); }
+    pre.ddl { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 10px; overflow: auto; font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; margin: 6px 0; max-height: 50vh; }
+    .zpravy { list-style: none; margin: 8px 0; padding: 0; font-size: 0.8rem; max-height: 160px; overflow: auto; }
+    .zpravy li { padding: 3px 8px; border-left: 3px solid var(--ok); background: var(--bg-input); margin-bottom: 2px; border-radius: 0 4px 4px 0; overflow-wrap: anywhere; }
+    .zpravy li.chyba { border-left-color: var(--danger); color: var(--danger); }
+    .zpravy li.warn { border-left-color: var(--warn); }
+    .zpravy code { color: var(--text-muted); }
+    .historie { max-height: 70vh; overflow: auto; }
+    .historie ul { list-style: none; padding: 0; margin: 6px 0 0; }
+    .historie li { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 5px; background: var(--bg-input); }
+    .historie li .sql { display: block; width: 100%; background: none; border: 0; text-align: left; padding: 5px 7px; font: 11.5px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; max-height: 4.3em; overflow: hidden; color: var(--text); }
+    .historie li .meta { display: flex; gap: 6px; align-items: center; justify-content: space-between; padding: 0 7px 4px; font-size: 0.72rem; color: var(--text-faint); }
+    .historie li.chyba { border-left: 3px solid var(--danger); }
+    .historie li .meta button { padding: 0 5px; font-size: 0.74rem; background: none; border-color: transparent; }
+    .podzalozky { display: flex; gap: 4px; margin: 10px 0 8px; flex-wrap: wrap; }
+
+    /* plán */
+    .plan ul { list-style: none; margin: 0; padding-left: 18px; border-left: 1px dashed var(--border-strong); }
+    .plan > ul { padding-left: 0; border: 0; }
+    .plan li { margin: 4px 0; font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .plan .var { display: block; font-family: var(--font); font-size: 0.76rem; color: var(--warn); }
+    .plan .uzel { display: inline-block; padding: 2px 7px; border-radius: 4px; background: var(--bg-input); border: 1px solid var(--border); }
+
+    /* graf */
+    .graf-ovladani { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end; margin-bottom: 8px; font-size: 0.82rem; }
+    .graf-ovladani label { display: flex; flex-direction: column; gap: 3px; color: var(--text-muted); }
+    .graf-ovladani .yy { display: flex; flex-wrap: wrap; gap: 4px 10px; max-width: 520px; }
+    .graf-ovladani .yy label { flex-direction: row; align-items: center; gap: 4px; color: var(--text); }
+    .graf-obal { position: relative; height: 380px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+
+    /* struktura */
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+    table.prehled { border-collapse: collapse; font-size: 0.82rem; width: 100%; }
+    table.prehled th, table.prehled td { border-bottom: 1px solid var(--border); padding: 4px 6px; text-align: left; vertical-align: top; }
+    table.prehled th { color: var(--text-muted); font-weight: 600; font-size: 0.76rem; }
+    table.prehled td.cislo, table.prehled th.cislo { text-align: right; white-space: nowrap; }
+    .obal-tab { overflow-x: auto; }
+    .pruh { height: 8px; background: var(--accent); border-radius: 3px; min-width: 1px; }
+    .pruh.idx { background: var(--warn); }
+
+    /* ER */
+    .er-obal { position: relative; height: 70vh; min-height: 360px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); overflow: hidden; touch-action: none; }
+    .er-obal svg { width: 100%; height: 100%; display: block; cursor: grab; user-select: none; }
+    .er-obal svg.tahne { cursor: grabbing; }
+    .er-box rect.telo { fill: var(--er-box); stroke: var(--border-strong); }
+    .er-box rect.hlava { fill: var(--er-hlava); }
+    .er-box.chybi rect.telo { stroke-dasharray: 4 3; stroke: var(--danger); }
+    .er-box text { fill: var(--text); font: 12px var(--font); }
+    .er-box text.nazev { font-weight: 700; font-size: 13px; }
+    .er-box text.typ { fill: var(--text-faint); font-size: 11px; }
+    .er-box text.pk { fill: var(--warn); font-weight: 700; }
+    .er-box { cursor: move; }
+    .er-hrana { fill: none; stroke: var(--er-hrana); stroke-width: 1.6; }
+    .er-hrana.zvyraznena { stroke: var(--accent); stroke-width: 2.6; }
+    .er-hrana.chybi { stroke: var(--danger); stroke-dasharray: 5 4; }
+    .er-box.zvyrazneny rect.telo { stroke: var(--accent); stroke-width: 2; }
+
+    /* zaneprázdněno */
+    .zaneprazdneno { position: fixed; left: 50%; bottom: 46px; transform: translateX(-50%); z-index: 1000; background: var(--bg-elevated); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 12px; box-shadow: var(--shadow); display: flex; gap: 10px; align-items: center; font-size: 0.86rem; max-width: calc(100vw - 24px); }
+    .kolecko { width: 16px; height: 16px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: toc 0.8s linear infinite; flex: none; }
+    @keyframes toc { to { transform: rotate(360deg); } }
+
+    dialog.okno { border: 1px solid var(--border-strong); border-radius: 10px; padding: 0; background: var(--bg-elevated); color: var(--text); width: min(640px, 94vw); max-height: 90vh; }
+    dialog.okno::backdrop { background: rgba(0, 0, 0, .5); }
+    dialog.okno form { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    dialog.okno textarea { width: 100%; min-height: 140px; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: vertical; }
+    dialog.okno .tlacitka { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .pole-novy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 6px 8px; align-items: center; font-size: 0.82rem; max-height: 55vh; overflow: auto; }
+    .pole-novy input[type="text"] { width: 100%; }
+    .stat-sloupce { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; margin-top: 8px; }
+    .stat-sloupce .karta { padding: 10px; font-size: 0.8rem; }
+    .stat-sloupce dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; margin: 6px 0 0; }
+    .stat-sloupce dt { color: var(--text-muted); }
+    .stat-sloupce dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .pozn { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; max-width: 1100px; }
+    footer.zdroje { margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <h1>🗄️ SQLite – prohlížeč a editor databází</h1>
+  <p class="podtitul">Otevřete soubor <code>.sqlite</code>, <code>.db</code> nebo <code>.sqlite3</code> a prohlížejte tabulky, pohledy, indexy
+    a schéma, ER diagram z cizích klíčů, pište SQL se zvýrazněním syntaxe a historií, řaďte a filtrujte výsledky, kreslete z nich grafy,
+    prohlédněte plán dotazu a velikosti tabulek. Úpravy probíhají v transakci, kterou můžete potvrdit nebo vrátit.</p>
+  <div class="soukromi" role="note">🔒 <b>Vše běží jen ve vašem prohlížeči</b> (SQLite přeložené do WebAssembly, sql.js ve Web Workeru).
+    Soubor se nikam neodesílá a <b>původní soubor zůstává nedotčený</b> – pracujete s kopií v paměti. Změny se do souboru dostanou jen tak,
+    že je výslovně exportujete jako <b>nový soubor</b>.</div>
+
+  <section id="uvod" class="uvod">
+    <div class="zona" id="zona">
+      <div class="velka" aria-hidden="true">🗄️</div>
+      <p><b>Přetáhněte sem databázový soubor</b><br><span class="napoveda">nebo vyberte jinou možnost</span></p>
+      <div class="rada">
+        <button class="hlavni" id="bOtevrit" type="button">📂 Otevřít soubor…</button>
+        <button id="bDemo" type="button">🛒 Ukázková databáze (e-shop)</button>
+        <button id="bNova" type="button">✨ Nová prázdná</button>
+      </div>
+      <input type="file" id="soubor" accept=".sqlite,.sqlite3,.db,.db3,.s3db,.sl3,application/vnd.sqlite3,application/x-sqlite3" hidden>
+      <p class="napoveda" id="stavNacteni" aria-live="polite">Načítám SQLite (WebAssembly)…</p>
+    </div>
+    <div class="karta">
+      <h2>Co umí</h2>
+      <ul>
+        <li>Seznam tabulek, pohledů, indexů a triggerů, sloupce, cizí klíče, DDL.</li>
+        <li>ER diagram z <b>deklarovaných</b> cizích klíčů (přetahování, zoom, export SVG).</li>
+        <li>SQL editor: zvýraznění syntaxe, <kbd>Ctrl</kbd>+<kbd>Enter</kbd>, historie, EXPLAIN QUERY PLAN.</li>
+        <li>Výsledky se stránkováním, filtrem a řazením; export CSV a JSON; grafy.</li>
+        <li>Úprava buněk, vkládání a mazání řádků přes parametrizované příkazy podle rowid / PRIMARY KEY, krok zpět, COMMIT / ROLLBACK.</li>
+        <li>Velikosti tabulek a indexů (průchod B-stromy souboru), kontrola integrity a cizích klíčů.</li>
+      </ul>
+      <p class="napoveda">Limity: databáze se celá drží v paměti prohlížeče. Do ~300 MB bez potíží, nad 1,5 GB ji prohlížeč neotevře
+        (WebAssembly má nejvýš 2 GB paměti). Výsledek dotazu se drží do zvoleného počtu řádků (výchozí 50 000).</p>
+    </div>
+  </section>
+
+  <div id="aplikace" hidden>
+    <div class="lista">
+      <div class="soubor"><b id="nazevDb">–</b> <span id="velikostDb" class="napoveda"></span> <span id="stavDb" class="stitek"></span></div>
+      <div id="txPanel" class="txpanel" hidden>
+        <span id="txText">Otevřená transakce</span>
+        <button class="male" id="bZpet" type="button" title="Vrátit poslední úpravu buňky/řádku (savepoint)">↶ Zpět úpravu</button>
+        <button class="male hlavni" id="bCommit" type="button">✔ Potvrdit (COMMIT)</button>
+        <button class="male nebezpeci" id="bRollback" type="button">✖ Vrátit vše (ROLLBACK)</button>
+      </div>
+      <div class="rada">
+        <button id="bJiny" type="button">📂 Otevřít jiný</button>
+        <details class="menu" id="menuExport">
+          <summary class="tlac">💾 Exportovat ▾</summary>
+          <div class="nabidka">
+            <button id="bExportDb" type="button">Databáze jako nový soubor (.sqlite)</button>
+            <button id="bExportSql" type="button">SQL výpis (.sql)</button>
+            <button id="bExportSchema" type="button">Jen schéma (.sql)</button>
+          </div>
+        </details>
+        <button id="bNastaveni" type="button" aria-expanded="false" aria-controls="nastaveni">⚙️ Nastavení</button>
+      </div>
+    </div>
+    <div class="karta nastaveni" id="nastaveni" hidden>
+      <div class="mrizka">
+        <label class="zaskrt"><input type="checkbox" id="nBezpecny" checked><span>Bezpečný režim<small>Každá změna z SQL editoru i z tabulky běží v transakci, dokud ji nepotvrdíte.</small></span></label>
+        <label class="zaskrt"><input type="checkbox" id="nCizi" checked><span>Vynucovat cizí klíče<small><code>PRAGMA foreign_keys = ON</code> – kontroluje nové změny (stávající data ne).</small></span></label>
+        <label class="zaskrt"><input type="checkbox" id="nJenCteni"><span>Jen pro čtení<small><code>PRAGMA query_only</code> – žádný zápis do databáze v paměti.</small></span></label>
+        <label class="zaskrt" style="flex-direction:column;gap:3px">Max. řádků výsledku SQL
+          <select id="nMaxRadku"><option value="10000">10 000</option><option value="50000" selected>50 000</option><option value="200000">200 000</option><option value="1000000">1 000 000</option></select>
+          <small>Víc řádků se nenačte (výsledek se označí jako zkrácený); export celé tabulky limit nemá.</small></label>
+        <label class="zaskrt" style="flex-direction:column;gap:3px">Formát CSV
+          <select id="nCsv"><option value="std">Standard RFC 4180 (čárka, tečka)</option><option value="excel">Excel česky (středník, desetinná čárka, BOM)</option></select>
+          <small>Excel varianta navíc chrání před vzorci (hodnota začínající = + − @ dostane apostrof).</small></label>
+        <label class="zaskrt" style="flex-direction:column;gap:3px">Řádků na stránku
+          <select id="nStranka"><option>50</option><option selected>100</option><option>250</option><option>500</option></select></label>
+      </div>
+    </div>
+
+    <div class="rozlozeni">
+      <aside class="karta objekty" aria-label="Objekty databáze">
+        <input type="search" id="hledatObjekt" placeholder="Hledat objekt…" aria-label="Hledat objekt">
+        <div id="seznamObjektu"></div>
+      </aside>
+      <main class="hlavni-obsah">
+        <nav class="zalozky" role="tablist" aria-label="Pohledy">
+          <button role="tab" data-z="data" aria-selected="true" type="button">📋 Data</button>
+          <button role="tab" data-z="sql" aria-selected="false" type="button">⌨️ SQL</button>
+          <button role="tab" data-z="struktura" aria-selected="false" type="button">🧱 Struktura</button>
+          <button role="tab" data-z="er" aria-selected="false" type="button">🔗 ER diagram</button>
+          <button role="tab" data-z="stat" aria-selected="false" type="button">📊 Statistiky</button>
+        </nav>
+
+        <section class="karta" id="z-data" role="tabpanel">
+          <div class="rada" style="justify-content:space-between;margin-bottom:8px">
+            <h2 id="dataNadpis" style="margin:0">Vyberte tabulku vlevo</h2>
+            <div class="rada">
+              <button id="bNovyRadek" type="button" disabled>+ Řádek</button>
+              <button id="bSmazat" type="button" disabled>🗑 Smazat vybrané</button>
+              <button id="bExpCsv" type="button" disabled>CSV</button>
+              <button id="bExpJson" type="button" disabled>JSON</button>
+              <button id="bStatSl" type="button" disabled>Σ Statistika sloupců</button>
+              <button id="bDoSql" type="button" disabled title="Otevřít SELECT v SQL editoru">→ SQL</button>
+            </div>
+          </div>
+          <div id="dataMrizka"></div>
+          <div id="statSloupcu"></div>
+        </section>
+
+        <section class="karta" id="z-sql" role="tabpanel" hidden>
+          <div class="sql-rozlozeni">
+            <div style="min-width:0">
+              <div class="editor" id="editor">
+                <div class="cisla" id="edCisla" aria-hidden="true">1</div>
+                <div class="plocha">
+                  <pre id="edZvyr" aria-hidden="true"></pre>
+                  <textarea id="edText" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="SQL dotaz"></textarea>
+                </div>
+              </div>
+              <div class="rada" style="margin-top:8px">
+                <button class="hlavni" id="bSpustit" type="button" title="Ctrl+Enter (s výběrem spustí jen vybraný text)">▶ Spustit</button>
+                <button id="bSpustitKurzor" type="button" title="Ctrl+Shift+Enter">▶ Příkaz u kurzoru</button>
+                <button id="bPlan" type="button" title="EXPLAIN QUERY PLAN příkazu u kurzoru">🧭 Plán dotazu</button>
+                <select id="sablony" aria-label="Vložit šablonu">
+                  <option value="">Vložit šablonu…</option>
+                  <option value="select">SELECT … LIMIT</option>
+                  <option value="join">JOIN přes cizí klíč</option>
+                  <option value="group">GROUP BY s počtem</option>
+                  <option value="cte">WITH (CTE)</option>
+                  <option value="okno">Okenní funkce</option>
+                  <option value="tabulky">Přehled tabulek</option>
+                  <option value="index">CREATE INDEX</option>
+                </select>
+                <span class="napoveda" id="sqlInfo"></span>
+              </div>
+              <ul class="zpravy" id="zpravy" aria-live="polite"></ul>
+              <div id="vysledekObal" hidden>
+                <div class="podzalozky" role="tablist">
+                  <button type="button" data-pz="tab" aria-selected="true">Tabulka</button>
+                  <button type="button" data-pz="graf" aria-selected="false">📈 Graf</button>
+                  <button type="button" data-pz="plan" aria-selected="false">🧭 Plán</button>
+                </div>
+                <div id="pz-tab"><div id="sqlMrizka"></div></div>
+                <div id="pz-graf" hidden>
+                  <div class="graf-ovladani">
+                    <label>Typ<select id="gTyp"><option value="bar">Sloupcový</option><option value="line">Čárový</option><option value="scatter">Bodový (X–Y)</option><option value="pie">Koláčový</option></select></label>
+                    <label>Osa X / kategorie<select id="gX"></select></label>
+                    <label>Seskupit podle X<select id="gAg"><option value="zadna">ne – řádek po řádku</option><option value="soucet">součet</option><option value="prumer">průměr</option><option value="pocet">počet</option><option value="min">minimum</option><option value="max">maximum</option></select></label>
+                    <label>Max. bodů<select id="gMax"><option>200</option><option selected>2000</option><option>10000</option></select></label>
+                    <div><span class="napoveda">Hodnoty (Y)</span><div class="yy" id="gY"></div></div>
+                    <button id="gPng" type="button">PNG</button>
+                  </div>
+                  <div class="graf-obal"><canvas id="graf" aria-label="Graf výsledku dotazu" role="img"></canvas></div>
+                  <p class="info-radek" id="gInfo"></p>
+                </div>
+                <div id="pz-plan" hidden><div class="plan" id="planObsah"><p class="napoveda">Stiskněte „Plán dotazu".</p></div></div>
+              </div>
+            </div>
+            <div class="historie">
+              <div class="rada" style="justify-content:space-between"><h2 style="margin:0">Historie</h2><button class="male" id="bSmazHist" type="button">Vymazat</button></div>
+              <input type="search" id="hledatHist" placeholder="Hledat v historii…" style="width:100%;margin-top:6px" aria-label="Hledat v historii">
+              <ul id="historie"></ul>
+              <p class="napoveda">Ukládá se jen v tomto prohlížeči (posledních 300, ⭐ oblíbené zůstávají).</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="karta" id="z-struktura" role="tabpanel" hidden>
+          <div id="strukturaObsah"><p class="napoveda">Vyberte objekt vlevo.</p></div>
+        </section>
+
+        <section class="karta" id="z-er" role="tabpanel" hidden>
+          <div class="rada" style="margin-bottom:8px">
+            <button id="erFit" type="button">⤢ Přizpůsobit</button>
+            <button id="erPlus" type="button" aria-label="Přiblížit">+</button>
+            <button id="erMinus" type="button" aria-label="Oddálit">−</button>
+            <button id="erRozlozit" type="button">↻ Znovu rozložit</button>
+            <label class="zaskrt" style="align-items:center"><input type="checkbox" id="erKlice"> jen klíčové sloupce</label>
+            <label class="zaskrt" style="align-items:center"><input type="checkbox" id="erSamostatne" checked> i tabulky bez vazeb</label>
+            <button id="erSvg" type="button">Export SVG</button>
+            <span class="napoveda" id="erInfo"></span>
+          </div>
+          <div class="er-obal" id="erObal"></div>
+          <p class="napoveda">Hrany vedou od sloupce s cizím klíčem (konec „mnoho" ⋔) k odkazovanému sloupci (konec „jeden" ǀ). Diagram vzniká
+            jen z <b>deklarovaných</b> <code>FOREIGN KEY</code> / <code>REFERENCES</code> – vazby, které existují jen v aplikaci, v souboru nejsou.
+            Tabulky lze přetahovat, kolečkem myši nebo tlačítky přibližovat, tažením pozadí posouvat.</p>
+        </section>
+
+        <section class="karta" id="z-stat" role="tabpanel" hidden>
+          <div id="statObsah"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <footer class="zdroje pozn">
+    Postaveno na <a href="https://sql.js.org/" target="_blank" rel="noopener">sql.js</a> 1.15.1 (SQLite 3.54.0, licence MIT; SQLite je public domain)
+    a <a href="https://www.chartjs.org/" target="_blank" rel="noopener">Chart.js</a> (MIT). Formát souboru podle
+    <a href="https://www.sqlite.org/fileformat2.html" target="_blank" rel="noopener">dokumentace SQLite</a>.
+    Omezení: tento build sql.js neobsahuje virtuální tabulku <code>dbstat</code>, velikosti se proto počítají vlastním průchodem B-stromy
+    obrazu databáze (výsledek odpovídá dbstat); databáze v režimu WAL se otevře bez obsahu souboru <code>-wal</code>; rozšíření (načítání .so/.dll)
+    nejsou k dispozici; řazení textu ve výsledcích je binární (jako kolace BINARY v SQLite).
+  </footer>
+
+  <div class="zaneprazdneno" id="zaneprazdneno" hidden role="status">
+    <span class="kolecko" aria-hidden="true"></span><span id="zanText">Pracuji…</span>
+    <button class="male nebezpeci" id="bPrerusit" type="button">Přerušit</button>
+  </div>
+
+  <dialog class="okno" id="dlgBunka">
+    <form method="dialog" id="formBunka">
+      <h2 id="bunkaNadpis">Úprava hodnoty</h2>
+      <div class="rada">
+        <label class="napoveda">Typ hodnoty
+          <select id="bunkaTyp">
+            <option value="text">Text</option><option value="integer">Celé číslo</option><option value="real">Desetinné číslo</option>
+            <option value="null">NULL</option><option value="blob">BLOB ze souboru</option><option value="hex">BLOB z hex</option>
+          </select></label>
+        <span class="napoveda" id="bunkaInfo"></span>
+      </div>
+      <textarea id="bunkaHodnota" spellcheck="false" aria-label="Hodnota"></textarea>
+      <input type="file" id="bunkaSoubor" hidden>
+      <p class="napoveda" id="bunkaPozn">Změna se provede parametrizovaným <code>UPDATE … WHERE</code> podle klíče řádku uvnitř transakce. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> uloží.</p>
+      <div class="tlacitka">
+        <button type="button" id="bunkaStahnout" hidden>⬇ Stáhnout hodnotu</button>
+        <button type="button" id="bunkaZrusit">Zrušit</button>
+        <button type="submit" class="hlavni" id="bunkaUlozit">Uložit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="okno" id="dlgNovy">
+    <form method="dialog" id="formNovy">
+      <h2 id="novyNadpis">Nový řádek</h2>
+      <p class="napoveda">Nevyplněné pole s „výchozí" použije hodnotu <code>DEFAULT</code> (u <code>INTEGER PRIMARY KEY</code> automatické číslo).</p>
+      <div class="pole-novy" id="novyPole"></div>
+      <div class="tlacitka">
+        <button type="button" id="novyZrusit">Zrušit</button>
+        <button type="submit" class="hlavni">Vložit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="sqlite/ui.js"></script>
+</body>
+</html>

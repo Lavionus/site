@@ -37,7 +37,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const btnProj = $('btnProjekce');
     btnProj.onclick = () => { S.projekce(!k.ortograficka); const n = btnProj.closest('.nabidka'); if (n) M.zavriNabidku(n); };
     M.na('projekce', orto => {
-      btnProj.textContent = orto ? '▭ Ortografická' : '◬ Perspektiva';
+      // jen text za ikonou (ui/ikony.js) – ikona zůstane
+      const txt = orto ? 'Ortografická' : 'Perspektiva', posl = btnProj.lastChild;
+      if (btnProj.querySelector('.ik-cad') && posl && posl.nodeType === 3) posl.nodeValue = txt;
+      else btnProj.textContent = (orto ? '▭ ' : '◬ ') + txt;
       btnProj.setAttribute('aria-pressed', orto ? 'true' : 'false');
       $('stavProjekce').textContent = orto ? 'ortografická' : 'perspektiva';
     });
@@ -175,6 +178,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       stavRezim.textContent = M.app.rezim === 'rovina' ? 'Klikni na stěnu tělesa pro pracovní rovinu (vedle = deska, Esc = zpět)'
         : M.app.rezim === 'plochou' ? 'Klikni na stěnu, která má ležet dole (Esc = zpět)'
         : M.app.rezim === 'vzorDer' ? 'Klikni na rovnou plochu tělesa, do které se vyvrtají díry (Esc = zpět)'
+        : M.app.rezim === 'skicaNaPlose' ? 'Klikni na rovnou plochu tělesa – otevře se skica na ní (Esc = zpět)'
+        : M.app.rezim === 'kapsaNaPlose' ? 'Klikni na rovnou plochu tělesa – nakreslíš tvar kapsy nebo otvoru (Esc = zpět)'
         : M.app.rezim === 'struktura' ? 'Klikni na plochu tělesa (rovnou nebo plášť válce), na kterou se nanese struktura (Esc = zpět)'
         : M.app.rezim === 'pivot' ? 'Bod otáčení: klikni na puntík (roh, střed hrany či stěny), na stěnu tělesa nebo na desku (Esc = zpět)'
         : M.app.rezim === 'zrcadleni' ? 'Zrcadlení: najeď na šipku (ukáže výsledek), klikni; Esc nebo klik vedle = konec'
@@ -217,6 +222,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.vytvorPivot(S);
     M.vytvorTisk(S, S.telesa);
     M.vytvorKoty(S);
+    M.vytvorPromenne();
+    M.vytvorSestavu(S);
+    M.vytvorZjednoduseni();
+    M.vytvorObrazek(S);
+    M.vytvorTazeni();
+    M.vytvorRychleKoty(S);
+    M.pouzijIkony();
     M.cekej('start', 'Otevírám projekt…', null, 0);
     U.start().finally(() => { M.hotovoCekani('start'); M.pripraveno = true; M.vysli('pripraveno'); M.pruvodceNaZacatku(); });
 

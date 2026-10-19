@@ -126,6 +126,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       $('pivInfo').textContent = !uzly.length ? 'Vyber tělesa, která se mají otočit.'
         : M.app.pivot ? 'Bod otáčení je zvolený (značka ⊕ ve scéně) – otáčí kolem něj i šipky u těles.' : 'Bod = střed výběru. Jiný zvolíš tlačítkem Vybrat ve scéně.';
       $('pivOk').disabled = $('pivKopie').disabled = !uzly.length;
+      nahledOtoceni();
+    }
+    /** Náhled otočení ve scéně (duch: průhledně, čárkované hrany) – jak budou tělesa stát po Otočit. */
+    function nahledOtoceni() {
+      const uzly = M.vybraneVolne(), uhel = M.prectiCislo($('pivUhel').value), b = precti();
+      if (!okno.open || !uzly.length || !isFinite(uhel) || Math.abs(uhel % 360) < 1e-9 || !b.every(isFinite)) { S.telesa.ukazDuchy('pivot', []); return; }
+      const osa = [0, 0, 0]; osa[+okno.querySelector('input[name="pivOsa"]:checked').value] = 1;
+      const ids = uzly.map(u => u.id), dok = M.otocUzly(M.app.dok, ids, osa, uhel, b);
+      S.telesa.ukazDuchy('pivot', ids.map(id => M.najdiUzel(dok, id)), 'nahled');
     }
     M.otevriOtoceniKolemBodu = function () {
       M.otevriPanel(okno);
@@ -140,6 +149,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     $('pivStred').onclick = () => M.nastavPivot(null);
     $('pivVybrat').onclick = () => M.prepniPivot();
     $('pivZavrit').onclick = () => okno.close();
+    okno.addEventListener('close', () => S.telesa.ukazDuchy('pivot', []));
+    $('pivUhel').addEventListener('input', nahledOtoceni);
+    okno.querySelectorAll('input[name="pivOsa"]').forEach(r => r.addEventListener('change', nahledOtoceni));
     okno.addEventListener('cancel', e => { e.preventDefault(); okno.close(); });
     function otoc(kopie) {
       const uzly = M.vybraneVolne(), uhel = M.prectiCislo($('pivUhel').value), b = precti();

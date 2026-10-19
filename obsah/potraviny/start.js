@@ -20,7 +20,7 @@ window.obnovDenik = async function () {
     for (const k of await caches.keys()) {
       if (k.indexOf('webapp-') !== 0) continue;
       const c = await caches.open(k);
-      for (const r of await c.keys()) if (/\/obsah\/(potraviny|lib\/(zxing|tesseract|qrcode))/.test(r.url)) await c.delete(r);
+      for (const r of await c.keys()) if (/\/obsah\/(potraviny|lib\/(zxing|tesseract|qrcode|xlsx))/.test(r.url)) await c.delete(r);
     }
   } catch (e) { /* bez Cache API */ }
   try {

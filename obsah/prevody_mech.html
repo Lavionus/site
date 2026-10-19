@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Návrhář mechanických převodů</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="prevody_mech/jadro.js"></script>
+  <script src="prevody_mech/kresba.js"></script>
+  <style>
+    :root {
+      --text-chyba: #ff8f85; --text-mez: #f0bd5e;
+      --rov0: #5b9cf5; --rov1: #f0a04b; --rov2: #4cc38a; --rov3: #b48cf0; --rov4: #ef7a7a; --rov5: #3cc6c0;
+      --remen: #d8d8d8; --retez: #bdbdbd; --mrizka: rgba(255,255,255,0.05); --mrizka2: rgba(255,255,255,0.10);
+    }
+    :root[data-theme="light"] {
+      --text-chyba: var(--danger); --text-mez: var(--warn);
+      --rov0: #2a64c4; --rov1: #b8640f; --rov2: #19804f; --rov3: #7a4cc0; --rov4: #b5352a; --rov5: #13807b;
+      --remen: #3a3a3a; --retez: #555; --mrizka: rgba(0,0,0,0.05); --mrizka2: rgba(0,0,0,0.11);
+    }
+    body { background-color: var(--bg-deep); padding: 24px clamp(10px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 1000px; line-height: 1.5; }
+    .podtitul a, .upozorneni a, .pozn a { color: var(--accent); }
+    .upozorneni { max-width: 1400px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .upozorneni b { color: var(--text-mez); }
+    .lista { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 1400px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 6px 10px; margin-bottom: 14px; }
+    .lista select { width: auto; max-width: 100%; }
+    .lista .mezera { flex: 1 1 0; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 16px; max-width: 1400px; }
+    @media (max-width: 1000px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 8px 0 3px; }
+    input[type="number"], input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.92rem; min-width: 0; font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 6px 11px; font-size: 0.84rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 3px 8px; font-size: 0.76rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    button.nebezpecne { border-color: var(--danger); color: var(--text-chyba); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0 10px; }
+    .zaskrt { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text); margin: 0; cursor: pointer; }
+    .zaskrt input { width: 16px; height: 16px; accent-color: var(--accent); }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); line-height: 1.45; margin-top: 6px; }
+    .napoveda kbd { background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 4px; font-size: 0.74rem; }
+    /* plátno */
+    .platno-obal { position: relative; margin-top: 8px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-input); }
+    #platno { display: block; width: 100%; height: clamp(320px, 62vh, 660px); touch-action: none; cursor: grab; }
+    #platno.propojovani { cursor: crosshair; }
+    .platno-stav { position: absolute; left: 8px; top: 6px; font-size: 0.74rem; color: var(--text-muted); pointer-events: none; background: var(--bg-panel); opacity: 0.92; padding: 2px 6px; border-radius: 4px; max-width: calc(100% - 16px); }
+    .platno-zoom { position: absolute; right: 6px; top: 6px; display: flex; flex-direction: column; gap: 4px; }
+    .platno-zoom button { width: 32px; height: 32px; padding: 0; font-size: 1rem; }
+    .legenda { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; align-items: center; }
+    .legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+    .pridat { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .oddel { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
+    .rychlost { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted); }
+    .rychlost input { width: 110px; accent-color: var(--accent); }
+    /* výsledky */
+    .souhrn { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 10px; min-width: 0; }
+    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 3px; }
+    .box .cislo { font-size: 1.12rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; overflow-wrap: anywhere; }
+    .box .ideal { color: var(--text-muted); font-weight: 400; font-size: 0.82rem; }
+    .box.hlavni .cislo { color: var(--accent); }
+    .stav-souhrn { padding: 8px 12px; border-radius: 6px; font-size: 0.86rem; border: 1px solid var(--border); background: var(--bg-elevated); line-height: 1.45; margin-bottom: 10px; }
+    .stav-souhrn.ok { border-color: var(--ok); }
+    .stav-souhrn.mez { border-color: var(--warn); }
+    .stav-souhrn.chyba { border-color: var(--danger); }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--text-muted); font-weight: 600; }
+    td.vlevo, th.vlevo { text-align: left; }
+    tr.vybrany td { background: var(--accent-soft); }
+    tbody tr[data-id] { cursor: pointer; }
+    .sm-cw, .sm-ccw { font-weight: 700; }
+    /* vazby */
+    .vazby { display: flex; flex-direction: column; gap: 8px; }
+    .vazba { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: var(--bg-elevated); }
+    .vazba.vybrany { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .vazba.ma-chybu { border-left: 4px solid var(--danger); }
+    .vazba-hlava { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 0.86rem; }
+    .vazba-hlava b { font-size: 0.9rem; }
+    .vazba-hlava .typ { color: var(--text-muted); font-size: 0.78rem; }
+    .vazba-hlava .tlacitka { margin-left: auto; }
+    .vazba .pole-radek { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0 8px; }
+    .vazba .geom { font-size: 0.76rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+    /* zprávy */
+    .zpravy { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .zpravy li { font-size: 0.8rem; line-height: 1.45; padding: 6px 8px 6px 10px; border-radius: 6px; background: var(--bg-elevated); border-left: 4px solid var(--text-faint); cursor: pointer; }
+    .zpravy li.chyba { border-left-color: var(--danger); }
+    .zpravy li.varovani { border-left-color: var(--warn); }
+    .zpravy li.info { border-left-color: var(--accent); }
+    .zpravy li .uroven { font-weight: 700; margin-right: 4px; }
+    .zpravy li.chyba .uroven { color: var(--text-chyba); }
+    .zpravy li.varovani .uroven { color: var(--text-mez); }
+    .zpravy li.info .uroven { color: var(--accent); }
+    /* porovnání */
+    .porovnani td, .porovnani th { white-space: normal; }
+    .porovnani td.lisi { background: var(--accent-soft); font-weight: 600; }
+    .nahledy { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .nahledy figure { margin: 0; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 4px; min-height: 60px; }
+    .nahledy figcaption { font-size: 0.72rem; color: #333; text-align: center; }
+    .nahledy svg { width: 100%; height: 110px; display: block; }
+    .pozn { color: var(--text-muted); font-size: 0.8rem; line-height: 1.55; max-width: 1400px; margin-top: 20px; }
+    .pozn h2 { color: var(--text-muted); margin-top: 14px; }
+    .pozn ul { padding-left: 20px; }
+    .skryt { display: none !important; }
+    .prazdne { color: var(--text-muted); font-size: 0.82rem; }
+    #protokol { display: none; }
+    @media (pointer: coarse) { button, select, input[type="number"], input[type="text"] { min-height: 40px; } }
+    @media (max-width: 520px) {
+      body { padding: 14px 10px; }
+      .box .cislo { font-size: 1rem; }
+      th, td { padding: 4px; }
+      .rychlost input { width: 80px; }
+    }
+    @media print {
+      @page { size: A4 portrait; margin: 14mm 12mm; }
+      body { padding: 0; background: #fff; color: #000; font-size: 10pt; }
+      body > *:not(#protokol) { display: none !important; }
+      #protokol { display: block !important; color: #000; }
+      #protokol h1 { font-size: 16pt; margin: 0 0 4pt; }
+      #protokol h2 { font-size: 11.5pt; margin: 12pt 0 4pt; color: #000; display: block; }
+      #protokol table { font-size: 8.5pt; page-break-inside: auto; }
+      #protokol th, #protokol td { border-bottom: 0.5pt solid #999; color: #000; padding: 2pt 4pt; white-space: normal; }
+      #protokol tr { page-break-inside: avoid; }
+      #protokol .obrazek svg { width: 100%; max-height: 120mm; height: auto; border: 0.5pt solid #999; }
+      #protokol .pozn-tisk { font-size: 8.5pt; color: #222; border: 0.5pt solid #999; padding: 4pt 6pt; margin: 6pt 0; }
+      #protokol .zprava-chyba { color: #a00; } #protokol .zprava-varovani { color: #7a5000; }
+    }
+  </style>
+</head>
+<body>
+  <h1>⚙️ Návrhář mechanických převodů</h1>
+  <p class="podtitul">Skládejte kinematickou soustavu z ozubených kol (vnějších i vnitřních), řemenic a řetězových kol na hřídelích
+    a propojujte je záběrem, řemenem nebo řetězem. Stránka v reálném čase přepočítá otáčky, smysl otáčení, momenty a výkony všech hřídelů,
+    animuje mechanismus a upozorní na nesouhlas roztečí, nekompatibilní moduly, kolize a přeurčené (zablokované) smyčky.
+    Výrobní geometrii zubů a planetová soukolí řeší <a href="ozubena_kola.html">Ozubená kola</a>, rychlý výpočet jednoho převodu
+    <a href="gear_ratio.html">kalkulačka převodů</a>.</p>
+  <div class="upozorneni" role="note"><b>⚠️ Kinematika a toky výkonu, ne pevnostní výpočet.</b>
+    <b>Ideální model</b> počítá bez ztrát a bez skluzu, <b>model s účinností</b> používá zadané výkonové účinnosti vazeb
+    a skluz řemenů – výchozí hodnoty jsou jen orientační literární rozsahy. Stránka neposuzuje pevnost zubů, řemenů, řetězů,
+    hřídelů ani ložisek; obvodové síly a momenty jsou vstupem pro takový výpočet, ne jeho výsledkem. Obrysy zubů jsou ilustrační.</div>
+
+  <div class="lista" role="toolbar" aria-label="Soubor a návrhy">
+    <select id="ukazka" aria-label="Načíst ukázku">
+      <option value="">Ukázky…</option>
+    </select>
+    <button id="btnNovy" title="Prázdný návrh">Nový</button>
+    <button id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶ Zpět</button>
+    <button id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷ Znovu</button>
+    <span class="oddel"></span>
+    <button id="btnUlozit">Uložit…</button>
+    <select id="ulozene" aria-label="Uložené návrhy"><option value="">Uložené…</option></select>
+    <button id="btnSmazatUl" class="male" title="Smazat vybraný uložený návrh" disabled>Smazat</button>
+    <span class="mezera"></span>
+    <button id="btnJsonEx" title="Stáhnout návrh jako JSON">Export JSON</button>
+    <button id="btnJsonIm" title="Načíst návrh ze souboru JSON">Import JSON</button>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryt">
+    <button id="btnSvg">Export SVG</button>
+    <button id="btnTisk" class="hlavni">Tisk protokolu</button>
+  </div>
+
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="hPlatno">
+        <h2 id="hPlatno">Mechanismus <span id="nazevNavrhu" class="prazdne"></span></h2>
+        <div class="pridat" role="toolbar" aria-label="Úpravy mechanismu">
+          <button data-pridat="kolo" title="Přidat ozubené kolo s vnějším ozubením">+ Kolo</button>
+          <button data-pridat="vnitrni" title="Přidat kolo s vnitřním ozubením (věnec)">+ Vnitřní kolo</button>
+          <button data-pridat="remenice" title="Přidat řemenici">+ Řemenice</button>
+          <button data-pridat="retezove" title="Přidat řetězové kolo">+ Řetězové kolo</button>
+          <label class="zaskrt" title="Nová komponenta se nasadí na hřídel vybrané komponenty do další roviny (sdružené kolo, předlohový hřídel)"><input type="checkbox" id="naHridel"> na hřídel vybrané</label>
+          <span class="oddel"></span>
+          <button id="btnPropojit" aria-pressed="false" title="Klepněte postupně na dvě komponenty (Esc = zrušit)">Propojit</button>
+          <button id="btnDorovnat" title="Posunout hnaný hřídel na správnou osovou vzdálenost">Dorovnat</button>
+          <button id="btnSmazat" class="nebezpecne" title="Smazat vybranou komponentu nebo vazbu (Delete)">Smazat</button>
+          <span class="oddel"></span>
+          <button id="btnHraj" aria-pressed="true" title="Animace (mezerník)">⏸ Pauza</button>
+          <label class="rychlost" for="rychlost">vstup <input type="range" id="rychlost" min="1" max="120" step="1" value="20"> <span id="rychlostTxt">20</span> min⁻¹</label>
+        </div>
+        <div class="platno-obal">
+          <canvas id="platno" tabindex="0" aria-label="Plátno mechanismu – tažením posunete hřídel, kolečkem přiblížíte"></canvas>
+          <div class="platno-stav" id="platnoStav" aria-live="polite"></div>
+          <div class="platno-zoom">
+            <button id="zoomPlus" title="Přiblížit" aria-label="Přiblížit">+</button>
+            <button id="zoomMinus" title="Oddálit" aria-label="Oddálit">−</button>
+            <button id="zoomCely" title="Celý mechanismus" aria-label="Zobrazit celý mechanismus">⤢</button>
+          </div>
+        </div>
+        <div class="legenda" id="legenda"></div>
+        <p class="napoveda">Klepnutím vyberete komponentu, tažením posunete její hřídel (u záběru se přichytí na správnou osovou vzdálenost),
+          tažením prázdné plochy posunete pohled, kolečkem / dvěma prsty přiblížíte. Je-li vybraná komponenta, tlačítko <i>+ …</i>
+          přidá kompatibilní komponentu rovnou propojenou. Animace je zpomalená: vstupní hřídel se točí rychlostí z posuvníku,
+          ostatní hřídele ve správném poměru. <kbd>Delete</kbd> smaže, <kbd>Ctrl+Z</kbd> vrátí, <kbd>Esc</kbd> zruší propojování.</p>
+      </section>
+
+      <section class="karta" aria-labelledby="hSouhrn">
+        <h2 id="hSouhrn">Výsledky soustavy</h2>
+        <div id="stavSouhrn" class="stav-souhrn"></div>
+        <div class="souhrn" id="souhrn"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hHridele">
+        <h2 id="hHridele">Hřídele – otáčky, momenty, výkony</h2>
+        <div class="obal-tab"><table id="tabHridele"></table></div>
+        <p class="napoveda">Moment hřídele = moment přiváděný do hřídele (pokrývá vlastní zatížení i vše, co hřídel pohání dál).
+          ↻ po směru, ↺ proti směru hodinových ručiček při pohledu zepředu (na plátno). „Id.“ = ideální model, „s η“ = s účinností a skluzem.</p>
+      </section>
+
+      <section class="karta" aria-labelledby="hVazby">
+        <h2 id="hVazby">Vazby (záběry, řemeny, řetězy)</h2>
+        <div class="vazby" id="vazby"></div>
+      </section>
+    </div>
+
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="hVstup">
+        <h2 id="hVstup">Vstup a výstup</h2>
+        <div class="mrizka2">
+          <div><label for="vstHridel">Vstupní (hnací) hřídel</label><select id="vstHridel"></select></div>
+          <div><label for="vstN">Vstupní otáčky [min⁻¹]</label><input type="number" id="vstN" min="0" step="any"></div>
+          <div><label for="vstSmer">Smysl otáčení vstupu</label>
+            <select id="vstSmer"><option value="cw">↻ po směru hod. ručiček</option><option value="ccw">↺ proti směru</option></select></div>
+          <div><label for="vysHridel">Výstupní hřídel (pro souhrn)</label><select id="vysHridel"></select></div>
+        </div>
+        <label for="nazev">Název návrhu</label>
+        <input type="text" id="nazev" maxlength="80">
+      </section>
+
+      <section class="karta" aria-labelledby="hEditor">
+        <h2 id="hEditor">Vybraná komponenta</h2>
+        <div id="editor"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hKontroly">
+        <h2 id="hKontroly">Kontroly <span id="pocetZprav" class="prazdne"></span></h2>
+        <ul class="zpravy" id="zpravy"></ul>
+      </section>
+
+      <section class="karta" aria-labelledby="hPorovnani">
+        <h2 id="hPorovnani">Porovnání dvou návrhů</h2>
+        <div class="tlacitka">
+          <button id="ulozA">Aktuální → A</button>
+          <button id="ulozB">Aktuální → B</button>
+          <button id="nactiA" class="male" disabled>Načíst A</button>
+          <button id="nactiB" class="male" disabled>Načíst B</button>
+        </div>
+        <div id="porovnani"><p class="prazdne napoveda">Uložte aktuální návrh jako A, upravte ho (nebo načtěte jiný) a uložte jako B.</p></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pozn">
+    <h2>Jak stránka počítá</h2>
+    <ul>
+      <li><b>Graf soustavy:</b> uzly jsou hřídele (všechny komponenty na hřídeli mají stejné otáčky), hrany jsou vazby.
+        Převod vazby: vnější záběr ω₂ = −ω₁·z₁/z₂, vnitřní záběr ω₂ = +ω₁·z₁/z₂, otevřený řemen ω₂ = ω₁·d₁/d₂ (křížený se znaménkem −),
+        řetěz ω₂ = ω₁·z₁/z₂. Otáčky se šíří od vstupu průchodem grafu do šířky.</li>
+      <li><b>Smyčky:</b> pokud se k hřídeli dá dojít dvěma cestami, musí obě dát stejné otáčky i smysl. Jinak je soustava
+        <b>přeurčená</b> a ve skutečnosti se zablokuje (typicky tři vnější kola, která zabírají každé s každým). Slučitelná smyčka je
+        kinematicky v pořádku, ale rozdělení momentu mezi větve je staticky neurčité – výpočet výkonu jde jen po kostře grafu.</li>
+      <li><b>Model s účinností:</b> každá vazba má výkonovou účinnost η (P_hnaná = η·P_hnací); u řemene skluz s zpomalí hnanou
+        řemenici (n₂ = n₁·d₁/d₂·(1 − s)) a η zahrnuje i ztrátu skluzem. Výkon potřebný na vstupu se sčítá od zatížených hřídelů
+        ke vstupu: P = P_zatížení + Σ P_větve / η. Moment = P / ω.</li>
+      <li><b>Geometrie:</b> osová vzdálenost záběru bez korekcí a = m·(z₁ ± z₂)/2 (tolerance ±0,05 mm), shodný modul a úhel záběru,
+        podřezání pod z_min = 2/sin²α (17 zubů pro 20°), interference vnitřního ozubení při z₂ − z₁ &lt; 10, kolize komponent ve stejné
+        rovině, délka řemene po tečnách a úhel opásání, počet článků řetězu X = 2a/p + (z₁+z₂)/2 + p/a·((z₂−z₁)/2π)² zaokrouhlený
+        na sudé číslo, polygonový efekt 1 − cos(180°/z).</li>
+      <li><b>Roviny:</b> komponenty na jednom hřídeli musí být v různých rovinách (sdružená kola). Zabírat a kolidovat mohou jen
+        komponenty ve stejné rovině.</li>
+      <li><b>Co stránka nedělá:</b> pevnostní kontrolu (ohyb a dotyk zubů dle ČSN/ISO 6336, únosnost řemene či řetězu, hřídele, ložiska),
+        korekce profilu, šikmé a kuželové ozubení, planetová (epicyklická) soukolí s otáčejícím se unašečem, napínací kladky
+        a dynamiku rozběhu. Výsledky ověřte odborným výpočtem.</li>
+    </ul>
+  </div>
+
+  <div id="protokol" aria-hidden="true"></div>
+
+<script>
+'use strict';
+const P = window.PREVODY, KR = window.PREVODY_KRESBA;
+const $ = id => document.getElementById(id);
+const fmt = P.fmt;
+const toast = (t, chyba) => { if (window.Dialog) (chyba ? Dialog.chyba : Dialog.info)(t); };
+const PREFIX = 'webapp_prevody_mech_';
+const ls = {
+  cti(k) { try { const v = localStorage.getItem(PREFIX + k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  zapis(k, v) { try { localStorage.setItem(PREFIX + k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+};
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const RPM = P.RPM;
+const ROZTECE_RETEZU = [[6, '04 (6 mm)'], [8, '05B (8 mm)'], [9.525, '06B (3/8″)'], [12.7, '08B / 08A (1/2″)'], [15.875, '10B (5/8″)'], [19.05, '12B (3/4″)'], [25.4, '16B (1″)'], [31.75, '20B (1¼″)'], [38.1, '24B (1½″)']];
+const MODULY = [0.5, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+
+/* ---------- stav ---------- */
+const UKAZKY = P.ukazky();
+let stav = null, vysl = null, fz = {}, vyber = null;    // vyber = {druh: 'k'|'v', id}
+let zpet = [], znovu = [];
+let propojA = null, propojuji = false;
+let hraje = true, tAnim = 0, posledniCas = null;
+let pohled = { cx: 0, cy: 0, s: 2 };
+let mys = null;
+
+function nastavStav(n, bezHistorie) {
+  if (!bezHistorie && stav) { zpet.push(JSON.stringify(stav)); if (zpet.length > 100) zpet.shift(); znovu = []; }
+  stav = P.normalizuj(n);
+  if (vyber && !najdiVyber()) vyber = null;
+  prepocet();
+}
+function najdiVyber() {
+  if (!vyber) return null;
+  if (vyber.druh === 'k') return stav.komponenty.find(k => k.id === vyber.id) || null;
+  return stav.vazby.find(e => e.id === vyber.id) || null;
+}
+let casUlozeni = null;
+function prepocet(bezPanelu) {
+  vysl = P.spocitej(stav);
+  fz = P.faze(vysl);
+  clearTimeout(casUlozeni);
+  casUlozeni = setTimeout(() => ls.zapis('navrh', stav), 400);
+  if (!bezPanelu) kresliPanely();
+  else { kresliVysledky(); }
+  if (!hraje) kresli();
+}
+
+/* ---------- pomocné ---------- */
+const smerZnak = s => s === 'cw' ? '↻' : s === 'ccw' ? '↺' : '–';
+const smerText = s => s === 'cw' ? 'po směru hod. ručiček' : s === 'ccw' ? 'proti směru hod. ručiček' : '–';
+const popisK = k => {
+  if (!k) return '?';
+  if (k.typ === 'kolo') return `${k.id} · kolo z${k.z} m${fmt(k.m, k.m % 1 ? 2 : 0)}`;
+  if (k.typ === 'vnitrni') return `${k.id} · věnec z${k.z} m${fmt(k.m, k.m % 1 ? 2 : 0)}`;
+  if (k.typ === 'retezove') return `${k.id} · řetězové z${k.z}`;
+  return `${k.id} · řemenice ⌀${fmt(k.d, k.d % 1 ? 1 : 0)}`;
+};
+const vykon = w => Math.abs(w) >= 1000 ? fmt(w / 1000, 3) + ' kW' : fmt(w, 1) + ' W';
+const barvaRoviny = r => `var(--rov${((r % 6) + 6) % 6})`;
+function cssBarva(nazev) { return getComputedStyle(document.documentElement).getPropertyValue(nazev).trim() || '#888'; }
+
+/* ---------- panely ---------- */
+function kresliPanely() {
+  kresliVstup();
+  kresliEditor();
+  kresliVysledky();
+  $('btnZpet').disabled = !zpet.length; $('btnZnovu').disabled = !znovu.length;
+}
+function kresliVysledky() {
+  kresliSouhrn(); kresliHridele(); kresliVazby(); kresliZpravy(); kresliLegendu();
+  $('nazevNavrhu').textContent = stav.nazev ? '– ' + stav.nazev : '';
+}
+
+function kresliVstup() {
+  const moznosti = stav.hridele.map(h => `<option value="${esc(h.id)}">${esc(h.id)}</option>`).join('');
+  for (const id of ['vstHridel', 'vysHridel']) {
+    const s = $(id); if (document.activeElement === s) continue;
+    s.innerHTML = moznosti || '<option value="">–</option>';
+  }
+  $('vstHridel').value = stav.vstup.hridel || '';
+  $('vysHridel').value = stav.vystup || '';
+  if (document.activeElement !== $('vstN')) $('vstN').value = stav.vstup.n;
+  $('vstSmer').value = stav.vstup.smer;
+  if (document.activeElement !== $('nazev')) $('nazev').value = stav.nazev;
+}
+
+function kresliSouhrn() {
+  const s = vysl.souhrn, c = vysl.pocet;
+  const st = $('stavSouhrn');
+  st.className = 'stav-souhrn ' + (c.chyby ? 'chyba' : c.varovani ? 'mez' : 'ok');
+  st.innerHTML = c.chyby
+    ? `<b>✗ ${c.chyby} ${c.chyby === 1 ? 'chyba' : c.chyby < 5 ? 'chyby' : 'chyb'}</b> v návrhu${vysl.preurceno ? ' – soustava je přeurčená a nepohne se' : ''}. Podrobnosti v kartě Kontroly.`
+    : c.varovani ? `<b>⚠ ${c.varovani} ${c.varovani === 1 ? 'varování' : 'varování'}</b> – mechanismus je kinematicky platný, ale něco stojí za kontrolu.`
+    : '<b>✓ Bez chyb a varování.</b> Geometrie a kinematika jsou konzistentní (pevnost se neposuzuje).';
+  if (!s.platny) {
+    $('souhrn').innerHTML = `<p class="prazdne">${vysl.preurceno ? 'Přeurčená soustava – otáčky nelze jednoznačně určit.' : 'Výstupní hřídel není spojen se vstupem nebo chybí vstupní údaje.'}</p>`;
+    return;
+  }
+  const zat = s.PvysRe > 0 || s.PvstRe > 0;
+  const box = (popis, cislo, dalsi, hl) => `<div class="box${hl ? ' hlavni' : ''}"><div class="popis">${popis}</div><div class="cislo">${cislo}</div>${dalsi ? `<div class="dalsi">${dalsi}</div>` : ''}</div>`;
+  const ip = s.iId >= 1 ? 'do pomala' : 'do rychla';
+  $('souhrn').innerHTML = [
+    box('Převodový poměr i (n₁ / n₂)', fmt(s.iId, 4), `${ip}${Math.abs(s.iRe - s.iId) > 1e-9 ? ` · se skluzem ${fmt(s.iRe, 4)}` : ''} · ${s.stupnu} ${s.stupnu === 1 ? 'stupeň' : s.stupnu < 5 ? 'stupně' : 'stupňů'}`, true),
+    box('Výstupní otáčky', `${fmt(s.nVysRe, 2)} min⁻¹`, `ideálně ${fmt(s.nVysId, 2)} min⁻¹`, true),
+    box('Smysl výstupu', `${smerZnak(s.smerVys)} ${s.znamenko > 0 ? 'stejný' : 'opačný'}`, smerText(s.smerVys) + ' (vstup ' + smerZnak(stav.vstup.smer) + ')'),
+    box('Výstupní moment (zatížení)', zat ? `${fmt(s.TvysRe, 2)} N·m` : '–', zat ? `ideálně při stejném zatížení ${fmt(s.TvysId, 2)} N·m` : 'zadejte zatížení hřídele v editoru'),
+    box('Vstupní moment', zat ? `${fmt(s.TvstRe, 3)} N·m` : '–', zat ? `ideálně ${fmt(s.TvstId, 3)} N·m` : ''),
+    box('Vstupní výkon', zat ? vykon(s.PvstRe) : '–', zat ? `ideálně ${vykon(s.PvstId)} · ztráty ${vykon(s.ztraty)}` : ''),
+    box('Účinnost vstup → výstup', `${fmt(s.etaCesta * 100, 2)} %`, s.etaCelk !== null ? `celková (všechna zatížení) ${fmt(s.etaCelk * 100, 2)} %` : 'součin účinností vazeb na cestě'),
+  ].join('');
+}
+
+function kresliHridele() {
+  const r = vysl, tab = $('tabHridele');
+  let h = `<thead><tr><th>Hřídel</th><th>n id. [min⁻¹]</th><th>n s η [min⁻¹]</th><th>Smysl</th><th>Zatížení</th><th>T id. [N·m]</th><th>T s η [N·m]</th><th>P s η</th></tr></thead><tbody>`;
+  for (const hh of stav.hridele) {
+    const s = r.hridele[hh.id];
+    const komp = stav.komponenty.filter(k => k.hridel === hh.id).map(k => k.id).join(', ');
+    const zn = (hh.id === stav.vstup.hridel ? ' <span title="vstup">⮕ vstup</span>' : '') + (hh.id === stav.vystup ? ' <span title="výstup">výstup ⮕</span>' : '');
+    const zat = hh.zatez ? (hh.zatezDruh === 'vykon' ? fmt(hh.zatez, 3) + ' kW' : fmt(hh.zatez, 2) + ' N·m') : '–';
+    const vyb = vyber && vyber.druh === 'k' && stav.komponenty.find(k => k.id === vyber.id && k.hridel === hh.id);
+    if (!s.dosazen) { h += `<tr data-hridel="${hh.id}" class="${vyb ? 'vybrany' : ''}"><td>${hh.id}${zn}<br><small class="prazdne">${komp}</small></td><td colspan="7" class="vlevo prazdne">nepoháněn</td></tr>`; continue; }
+    h += `<tr data-hridel="${hh.id}" class="${vyb ? 'vybrany' : ''}"><td>${hh.id}${zn}<br><small class="prazdne">${komp}</small></td><td>${fmt(s.nId, 2)}</td><td>${fmt(s.nReal, 2)}</td>
+      <td class="sm-${s.smer}" title="${smerText(s.smer)}">${smerZnak(s.smer)}</td><td>${zat}</td><td>${fmt(s.TId, 3)}</td><td>${fmt(s.TRe, 3)}</td><td>${vykon(s.PRe)}</td></tr>`;
+  }
+  if (r.preurceno) h += `<tr><td colspan="8" class="vlevo" style="color:var(--text-chyba);white-space:normal">Soustava je přeurčená – otáčky výše jsou jen z jedné cesty grafu, mechanismus se ve skutečnosti nepohne a momenty se nepočítají.</td></tr>`;
+  tab.innerHTML = h + '</tbody>';
+}
+
+function chybneId() {
+  const m = new Map();
+  for (const z of vysl.zpravy) for (const p of z.prvky) if (!m.has(p) || z.uroven === 'chyba') m.set(p, z.uroven);
+  return m;
+}
+
+function kresliVazby() {
+  const el = $('vazby'), K = new Map(stav.komponenty.map(k => [k.id, k]));
+  if (!stav.vazby.length) { el.innerHTML = '<p class="prazdne">Zatím žádné vazby. Vyberte komponentu a přidejte k ní další tlačítkem „+ …“, nebo použijte „Propojit“.</p>'; return; }
+  const ch = chybneId();
+  const aktivni = document.activeElement && el.contains(document.activeElement) ? document.activeElement.id : null;
+  let h = '';
+  for (const e of stav.vazby) {
+    const vi = vysl.vazby[e.id] || {}, g = vi.geometrie || {};
+    const ka = K.get(e.a), kb = K.get(e.b);
+    const smer = vi.hnaci ? `${vi.hnaci} → ${vi.hnana}` : `${e.a} – ${e.b}`;
+    let k = '';
+    if (vi.k !== null && vi.k !== undefined) {
+      const kk = vi.hnaci === e.b ? 1 / vi.k : vi.k;
+      k = `i = ${fmt(1 / Math.abs(kk), 4)} · ${kk < 0 ? 'obrací smysl' : 'stejný smysl'}`;
+    }
+    const geom = [];
+    if (g.osova !== undefined) geom.push(`osová vzdálenost ${fmt(g.osova, 2)} mm` + (g.pozadovana !== undefined && g.pozadovana !== null ? ` (záběr vyžaduje ${fmt(g.pozadovana, 2)} mm)` : ''));
+    if (g.delka) geom.push(`délka řemene ${fmt(g.delka, 1)} mm`);
+    if (g.opasani) geom.push(`opásání ${fmt(g.opasani, 1)}°`);
+    if (g.clanky) geom.push(`řetěz ${fmt(g.clanky, 2)} čl. → ${g.clankySude} čl. (a = ${fmt(g.osovaProSude, 1)} mm)`);
+    if (g.polygon) geom.push(`polygonový efekt ${fmt(g.polygon, 2)} %`);
+    if (vi.tok) geom.push(`v = ${fmt(vi.tok.v, 2)} m/s · F<sub>t</sub> ≈ ${fmt(vi.tok.FtRe, 1)} N · T hnací ${fmt(vi.tok.ThnaciRe, 3)} N·m → hnaná ${fmt(vi.tok.ThnanaRe, 3)} N·m`);
+    if (vi.smycka) geom.push('uzavírá smyčku (nepřenáší výkon ve výpočtu)');
+    const pole = [`<div><label for="eta_${e.id}">Účinnost η [%]</label><input type="number" id="eta_${e.id}" data-vazba="${e.id}" data-pole="eta" min="1" max="100" step="0.1" value="${+(e.eta * 100).toFixed(3)}"></div>`];
+    if (e.typ === 'remen') {
+      pole.push(`<div><label for="druh_${e.id}">Druh řemene</label><select id="druh_${e.id}" data-vazba="${e.id}" data-pole="druh">${Object.entries(P.DRUHY_REMENE).map(([kl, d]) => `<option value="${kl}"${e.druh === kl ? ' selected' : ''}>${d.nazev}</option>`).join('')}</select></div>`);
+      pole.push(`<div><label for="skluz_${e.id}">Skluz s [%]</label><input type="number" id="skluz_${e.id}" data-vazba="${e.id}" data-pole="skluz" min="0" max="19" step="0.1" value="${+(e.skluz * 100).toFixed(3)}"></div>`);
+      pole.push(`<div><label class="zaskrt" style="margin-top:28px"><input type="checkbox" id="kriz_${e.id}" data-vazba="${e.id}" data-pole="krizeny"${e.krizeny ? ' checked' : ''}> křížený</label></div>`);
+    }
+    const tridy = ['vazba']; if (vyber && vyber.druh === 'v' && vyber.id === e.id) tridy.push('vybrany'); if (ch.get(e.id) === 'chyba') tridy.push('ma-chybu');
+    h += `<div class="${tridy.join(' ')}" data-vazba-karta="${e.id}">
+      <div class="vazba-hlava"><b>${e.id}</b><span class="typ">${P.VAZBY[e.typ].nazev}${e.typ === 'remen' && e.krizeny ? ' (křížený)' : ''}</span><span>${smer}</span><span>${k}</span>
+        <span class="tlacitka">${e.typ !== 'zaber' || true ? `<button class="male" data-akce="dorovnat" data-id="${e.id}" title="Posunout hnaný hřídel na správnou / doporučenou osovou vzdálenost">Dorovnat</button>` : ''}<button class="male nebezpecne" data-akce="smazat" data-id="${e.id}" aria-label="Smazat vazbu ${e.id}">Smazat</button></span></div>
+      <div class="napoveda" style="margin-top:2px">${esc(popisK(ka))} ↔ ${esc(popisK(kb))}</div>
+      <div class="pole-radek">${pole.join('')}</div>
+      <div class="geom">${geom.join(' · ')}</div></div>`;
+  }
+  el.innerHTML = h;
+  if (aktivni && $(aktivni)) $(aktivni).focus();
+}
+
+function kresliZpravy() {
+  const el = $('zpravy');
+  const z = vysl.zpravy;
+  $('pocetZprav').textContent = z.length ? `(${vysl.pocet.chyby} chyb, ${vysl.pocet.varovani} varování)` : '';
+  if (!z.length) { el.innerHTML = '<li class="info"><span class="uroven">✓</span>Žádné problémy nenalezeny.</li>'; return; }
+  const ur = { chyba: 'Chyba', varovani: 'Varování', info: 'Info' };
+  el.innerHTML = z.map((x, i) => `<li class="${x.uroven}" data-i="${i}" tabindex="0" role="button"><span class="uroven">${ur[x.uroven]}:</span>${esc(x.text)}</li>`).join('');
+}
+
+function kresliLegendu() {
+  const rov = [...new Set(stav.komponenty.map(k => k.rovina))].sort((a, b) => a - b);
+  $('legenda').innerHTML = rov.map(r => `<span><i style="background:${barvaRoviny(r)}"></i>rovina ${r}</span>`).join('') +
+    '<span><i style="background:var(--danger)"></i>chyba</span><span><i style="background:var(--accent)"></i>výběr</span>';
+}
+
+/* editor vybrané komponenty + jejího hřídele */
+function kresliEditor() {
+  const el = $('editor');
+  const aktivni = document.activeElement && el.contains(document.activeElement) ? document.activeElement.id : null;
+  kresliEditorObsah(el);
+  if (aktivni && $(aktivni)) $(aktivni).focus();
+}
+function kresliEditorObsah(el) {
+  const k = vyber && vyber.druh === 'k' ? stav.komponenty.find(x => x.id === vyber.id) : null;
+  if (!k) {
+    const e = vyber && vyber.druh === 'v' ? stav.vazby.find(x => x.id === vyber.id) : null;
+    el.innerHTML = e ? `<p class="prazdne">Vybrána vazba <b>${e.id}</b> – její parametry upravíte v kartě Vazby.</p>`
+      : '<p class="prazdne">Klepněte na komponentu v plátně. Novou přidáte tlačítky „+ Kolo“, „+ Řemenice“…</p>';
+    return;
+  }
+  const h = stav.hridele.find(x => x.id === k.hridel);
+  const d = P.rozdelovaciPrumer(k), o = P.obrys(k);
+  const pole = (id, popis, hodnota, attr) => `<div><label for="${id}">${popis}</label><input type="number" id="${id}" value="${hodnota}" ${attr || ''}></div>`;
+  let typove = '';
+  if (k.typ === 'kolo' || k.typ === 'vnitrni') {
+    typove = pole('edZ', 'Počet zubů z', k.z, 'min="3" step="1"') +
+      `<div><label for="edM">Modul m [mm]</label><input type="number" id="edM" value="${k.m}" min="0.1" step="any" list="moduly"></div>` +
+      pole('edAlfa', 'Úhel záběru α [°]', k.alfa, 'min="5" max="40" step="0.5"');
+  } else if (k.typ === 'retezove') {
+    const vlastni = !ROZTECE_RETEZU.some(([p]) => Math.abs(p - k.p) < 1e-9);
+    typove = pole('edZ', 'Počet zubů z', k.z, 'min="5" step="1"') +
+      `<div><label for="edPsel">Řetěz (rozteč p)</label><select id="edPsel">${ROZTECE_RETEZU.map(([p, n]) => `<option value="${p}"${Math.abs(p - k.p) < 1e-9 ? ' selected' : ''}>${n}</option>`).join('')}<option value="vlastni"${vlastni ? ' selected' : ''}>vlastní…</option></select></div>` +
+      pole('edP', 'Rozteč p [mm]', k.p, 'min="1" step="any"');
+  } else {
+    typove = pole('edD', 'Výpočtový průměr d [mm]', k.d, 'min="1" step="any"');
+  }
+  const hs = vysl.hridele[k.hridel] || {};
+  const info = [`rozdělovací ⌀ ${fmt(d, 2)} mm`, `vnější ⌀ ${fmt(2 * o.rout, 1)} mm`];
+  if (k.typ === 'vnitrni') info.push(`hlavová (vnitřní) ⌀ ${fmt(2 * o.rin, 1)} mm`);
+  if (k.typ === 'kolo' || k.typ === 'vnitrni') info.push(`rozteč p = π·m = ${fmt(Math.PI * k.m, 3)} mm`);
+  if (hs.dosazen) info.push(`obvodová rychlost ${fmt(Math.abs(hs.wReal) * d / 2000, 2)} m/s`);
+  el.innerHTML = `
+    <div class="vazba-hlava" style="margin-bottom:4px"><b>${k.id}</b><span class="typ">${P.TYPY[k.typ].nazev}</span>
+      <span class="tlacitka"><button class="male nebezpecne" id="edSmazat">Smazat</button></span></div>
+    <div class="mrizka2">${typove}
+      ${pole('edRovina', 'Rovina (vrstva)', k.rovina, 'step="1"')}
+    </div>
+    <p class="napoveda">${info.join(' · ')}</p>
+    <h3>Hřídel ${h.id}${h.id === stav.vstup.hridel ? ' (vstup)' : ''}</h3>
+    <div class="mrizka2">
+      ${pole('edX', 'Poloha x [mm]', +h.x.toFixed(3), 'step="any"')}
+      ${pole('edY', 'Poloha y [mm]', +h.y.toFixed(3), 'step="any"')}
+      ${pole('edZat', 'Zatížení hřídele', h.zatez, 'min="0" step="any"')}
+      <div><label for="edZatDruh">Druh zatížení</label><select id="edZatDruh"><option value="moment"${h.zatezDruh === 'moment' ? ' selected' : ''}>moment [N·m]</option><option value="vykon"${h.zatezDruh === 'vykon' ? ' selected' : ''}>výkon [kW]</option></select></div>
+    </div>
+    <p class="napoveda">Zatížení = odporový moment / odebíraný výkon pracovního stroje na tomto hřídeli. Vstupní moment a výkon se dopočítají.</p>
+    <div class="tlacitka" style="margin-top:8px">
+      <button class="male" id="edVstup"${h.id === stav.vstup.hridel ? ' disabled' : ''}>Nastavit jako vstup</button>
+      <button class="male" id="edVystup"${h.id === stav.vystup ? ' disabled' : ''}>Nastavit jako výstup</button>
+    </div>
+    <datalist id="moduly">${MODULY.map(m => `<option value="${m}">`).join('')}</datalist>`;
+  const zmen = (fn) => () => { const n = JSON.parse(JSON.stringify(stav)); const kk = n.komponenty.find(x => x.id === k.id); const hh = n.hridele.find(x => x.id === k.hridel); fn(kk, hh, n); nastavStav(n); };
+  const cislo = id => { const v = parseFloat(String($(id).value).replace(',', '.')); return v; };
+  const navaz = (id, fn) => { const x = $(id); if (x) x.addEventListener('change', zmen(fn)); };
+  navaz('edZ', kk => { kk.z = Math.round(cislo('edZ')); });
+  navaz('edM', kk => { kk.m = cislo('edM'); });
+  navaz('edAlfa', kk => { kk.alfa = cislo('edAlfa'); });
+  navaz('edP', kk => { kk.p = cislo('edP'); });
+  navaz('edPsel', kk => { if ($('edPsel').value !== 'vlastni') kk.p = +$('edPsel').value; });
+  navaz('edD', kk => { kk.d = cislo('edD'); });
+  navaz('edRovina', kk => { kk.rovina = Math.round(cislo('edRovina')) || 0; });
+  navaz('edX', (kk, hh) => { hh.x = cislo('edX') || 0; });
+  navaz('edY', (kk, hh) => { hh.y = cislo('edY') || 0; });
+  navaz('edZat', (kk, hh) => { hh.zatez = cislo('edZat') || 0; });
+  navaz('edZatDruh', (kk, hh) => { hh.zatezDruh = $('edZatDruh').value; });
+  $('edVstup').addEventListener('click', zmen((kk, hh, n) => { n.vstup.hridel = hh.id; }));
+  $('edVystup').addEventListener('click', zmen((kk, hh, n) => { n.vystup = hh.id; }));
+  $('edSmazat').addEventListener('click', smazVybrane);
+  // živé přepočítání při psaní (bez historie – ta se uloží při change)
+  for (const id of ['edZ', 'edM', 'edD', 'edP', 'edX', 'edY', 'edZat']) {
+    const x = $(id); if (!x) continue;
+    x.addEventListener('input', () => {
+      const v = cislo(id); if (!isFinite(v)) return;
+      const kk = stav.komponenty.find(q => q.id === k.id), hh = stav.hridele.find(q => q.id === k.hridel);
+      if (id === 'edZ') kk.z = Math.round(v); else if (id === 'edM') kk.m = v; else if (id === 'edD') kk.d = v; else if (id === 'edP') kk.p = v;
+      else if (id === 'edX') hh.x = v; else if (id === 'edY') hh.y = v; else if (id === 'edZat') hh.zatez = v;
+      prepocet(true);
+    });
+  }
+}
+
+/* ---------- úpravy ---------- */
+function kopieStavu() { return JSON.parse(JSON.stringify(stav)); }
+
+function pridej(typ) {
+  const n = kopieStavu();
+  const vyb = vyber && vyber.druh === 'k' ? n.komponenty.find(k => k.id === vyber.id) : null;
+  const id = P.noveId(n, 'K');
+  const nova = { id, typ, rovina: 0 };
+  if (typ === 'kolo') Object.assign(nova, { z: 30, m: vyb && vyb.m ? vyb.m : 2, alfa: vyb && vyb.alfa ? vyb.alfa : 20 });
+  if (typ === 'vnitrni') Object.assign(nova, { z: vyb && vyb.typ === 'kolo' ? Math.max(vyb.z + 24, 60) : 60, m: vyb && vyb.m ? vyb.m : 2, alfa: vyb && vyb.alfa ? vyb.alfa : 20 });
+  if (typ === 'remenice') Object.assign(nova, { d: vyb && vyb.typ === 'remenice' ? Math.round(vyb.d * 2) : 100 });
+  if (typ === 'retezove') Object.assign(nova, { z: vyb && vyb.typ === 'retezove' ? Math.min(vyb.z * 2, 80) : 17, p: vyb && vyb.p ? vyb.p : 12.7 });
+  if (typ === 'kolo' && vyb && vyb.typ === 'vnitrni') nova.z = Math.max(17, vyb.z - 30);
+  if (vyb && $('naHridel').checked) {
+    nova.hridel = vyb.hridel;
+    nova.rovina = Math.max(...n.komponenty.filter(k => k.hridel === vyb.hridel).map(k => k.rovina)) + 1;
+    n.komponenty.push(nova);
+    vyber = { druh: 'k', id };
+    nastavStav(n);
+    toast(`${id} nasazena na hřídel ${vyb.hridel} v rovině ${nova.rovina}.`);
+    return;
+  }
+  const hid = P.noveId(n, 'H');
+  const kompat = vyb && P.typVazbyPro(vyb, nova);
+  if (kompat) {
+    nova.rovina = vyb.rovina;
+    const hv = n.hridele.find(h => h.id === vyb.hridel);
+    n.hridele.push({ id: hid, x: hv.x + 1, y: hv.y });
+    nova.hridel = hid;
+    n.komponenty.push(nova);
+    let pr = P.propoj(n, vyb.id, id);
+    // zkusit několik směrů, aby nová komponenta s ničím nekolidovala
+    let nejlepsi = null;
+    for (const uhel of [0, -45, 45, -90, 90, 180, -135, 135, -20, 20, -60, 60]) {
+      const zk = JSON.parse(JSON.stringify(pr.navrh));
+      const h = zk.hridele.find(x => x.id === hid);
+      h.x = hv.x + Math.cos(uhel * Math.PI / 180); h.y = hv.y + Math.sin(uhel * Math.PI / 180);
+      const d = P.dorovnej(zk, pr.id);
+      const r = P.spocitej(d);
+      const kol = r.zpravy.filter(z => z.uroven === 'chyba' && z.prvky.includes(id)).length;
+      if (!nejlepsi || kol < nejlepsi.kol) nejlepsi = { kol, navrh: d };
+      if (!kol) break;
+    }
+    vyber = { druh: 'k', id };
+    nastavStav(nejlepsi.navrh);
+    return;
+  }
+  // samostatně vpravo od mechanismu
+  const m = KR.meze(n);
+  const r = P.obrys(Object.assign({}, nova)).rout;
+  n.hridele.push({ id: hid, x: n.komponenty.length ? m.x1 + r + 15 : 0, y: n.komponenty.length ? (m.y0 + m.y1) / 2 : 0 });
+  nova.hridel = hid;
+  n.komponenty.push(nova);
+  if (n.hridele.length === 1) n.vstup = { hridel: hid, n: 1000, smer: 'cw' };
+  vyber = { druh: 'k', id };
+  nastavStav(n);
+  if (vyb) toast(`${P.TYPY[typ].nazev} nelze spojit s ${vyb.id} – přidána samostatně.`);
+  priblizNaVse(true);
+}
+
+function smazVybrane() {
+  if (!vyber) return;
+  const n = kopieStavu();
+  if (vyber.druh === 'v') n.vazby = n.vazby.filter(e => e.id !== vyber.id);
+  else {
+    const k = n.komponenty.find(x => x.id === vyber.id); if (!k) return;
+    n.komponenty = n.komponenty.filter(x => x.id !== k.id);
+    n.vazby = n.vazby.filter(e => e.a !== k.id && e.b !== k.id);
+    if (!n.komponenty.some(x => x.hridel === k.hridel)) n.hridele = n.hridele.filter(h => h.id !== k.hridel);
+  }
+  vyber = null;
+  nastavStav(n);
+}
+
+function dorovnejVazbu(id) {
+  const e = stav.vazby.find(x => x.id === id); if (!e) return;
+  const vi = vysl.vazby[id] || {};
+  // posouvá se hnaná strana; pokud není určena (nepoháněná), posune se b
+  const kterou = vi.hnaci === e.b ? 'a' : 'b';
+  nastavStav(P.dorovnej(stav, id, kterou));
+}
+
+function propojKlik(kid) {
+  if (!propojA) { propojA = kid; nastavStavPlatna(`Propojit: vybrána ${kid}, klepněte na druhou komponentu.`); kresli(); return; }
+  const r = P.propoj(stav, propojA, kid);
+  propojA = null;
+  if (r.chyba) { toast(r.chyba, true); nastavStavPlatna('Propojit: klepněte na první komponentu.'); kresli(); return; }
+  let n = r.navrh;
+  // když je druhý hřídel volný (bez jiných vazeb), rovnou ho dorovnat
+  const e = n.vazby.find(x => x.id === r.id);
+  const kb = n.komponenty.find(x => x.id === e.b);
+  const volny = !n.vazby.some(x => x.id !== e.id && [x.a, x.b].some(c => n.komponenty.find(q => q.id === c && q.hridel === kb.hridel)));
+  if (volny && kb.hridel !== n.vstup.hridel) n = P.dorovnej(n, r.id, 'b');
+  vyber = { druh: 'v', id: r.id };
+  nastavStav(n);
+  toast(`Vytvořena vazba ${r.id} (${P.VAZBY[e.typ].nazev.toLowerCase()}).`);
+  prepniPropojovani(false);
+}
+function prepniPropojovani(zap) {
+  propojuji = zap; propojA = null;
+  $('btnPropojit').setAttribute('aria-pressed', zap ? 'true' : 'false');
+  $('platno').classList.toggle('propojovani', zap);
+  nastavStavPlatna(zap ? 'Propojit: klepněte na první komponentu (Esc = zrušit).' : '');
+  if (!hraje) kresli();
+}
+function nastavStavPlatna(t) { const el = $('platnoStav'); el.textContent = t; el.classList.toggle('skryt', !t); }
+
+/* ---------- plátno ---------- */
+const cv = $('platno'), ctx = cv.getContext('2d');
+let W = 0, Hc = 0, dpr = 1;
+function velikost() {
+  const r = cv.getBoundingClientRect();
+  dpr = window.devicePixelRatio || 1;
+  W = r.width; Hc = r.height;
+  cv.width = Math.max(1, Math.round(W * dpr)); cv.height = Math.max(1, Math.round(Hc * dpr));
+}
+const naObr = (x, y) => [W / 2 + (x - pohled.cx) * pohled.s, Hc / 2 - (y - pohled.cy) * pohled.s];
+const naSvet = (sx, sy) => [pohled.cx + (sx - W / 2) / pohled.s, pohled.cy - (sy - Hc / 2) / pohled.s];
+
+function priblizNaVse(jenKdyzMimo) {
+  const m = KR.meze(stav);
+  if (jenKdyzMimo) {
+    const [ax, ay] = naObr(m.x0, m.y1), [bx, by] = naObr(m.x1, m.y0);
+    if (ax >= 0 && ay >= 0 && bx <= W && by <= Hc) return;
+  }
+  const w = m.x1 - m.x0, h = m.y1 - m.y0;
+  pohled.cx = (m.x0 + m.x1) / 2; pohled.cy = (m.y0 + m.y1) / 2;
+  pohled.s = Math.max(0.05, Math.min(40, Math.min((W - 40) / Math.max(w, 1), (Hc - 40) / Math.max(h, 1))));
+  if (!hraje) kresli();
+}
+
+function cesta(body) {
+  ctx.moveTo(body[0][0], body[0][1]);
+  for (let i = 1; i < body.length; i++) ctx.lineTo(body[i][0], body[i][1]);
+  ctx.closePath();
+}
+
+function kresli() {
+  if (!stav) return;
+  const barvy = {
+    text: cssBarva('--text'), muted: cssBarva('--text-muted'), accent: cssBarva('--accent'), danger: cssBarva('--danger'),
+    warn: cssBarva('--warn'), ok: cssBarva('--ok'), bg: cssBarva('--bg-input'), panel: cssBarva('--bg-panel'),
+    remen: cssBarva('--remen'), retez: cssBarva('--retez'), m1: cssBarva('--mrizka'), m2: cssBarva('--mrizka2'),
+    rov: [0, 1, 2, 3, 4, 5].map(i => cssBarva('--rov' + i)),
+  };
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, Hc);
+  ctx.fillStyle = barvy.bg; ctx.fillRect(0, 0, W, Hc);
+  // mřížka
+  const kroky = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000];
+  const krok = kroky.find(k => k * pohled.s >= 14) || 5000;
+  const [x0, y1] = naSvet(0, 0), [x1, y0] = naSvet(W, Hc);
+  ctx.lineWidth = 1;
+  for (let x = Math.floor(x0 / krok) * krok; x <= x1; x += krok) {
+    const sx = Math.round(naObr(x, 0)[0]) + 0.5;
+    ctx.strokeStyle = Math.round(x / krok) % 5 === 0 ? barvy.m2 : barvy.m1;
+    ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, Hc); ctx.stroke();
+  }
+  for (let y = Math.floor(y0 / krok) * krok; y <= y1; y += krok) {
+    const sy = Math.round(naObr(0, y)[1]) + 0.5;
+    ctx.strokeStyle = Math.round(y / krok) % 5 === 0 ? barvy.m2 : barvy.m1;
+    ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke();
+  }
+  // měřítko
+  ctx.fillStyle = barvy.muted; ctx.font = '11px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(`mřížka ${krok * 5} mm`, 8, Hc - 8);
+
+  // svět: y nahoru
+  const s = pohled.s;
+  ctx.setTransform(dpr * s, 0, 0, -dpr * s, dpr * (W / 2 - pohled.cx * s), dpr * (Hc / 2 + pohled.cy * s));
+  const H = new Map(stav.hridele.map(h => [h.id, h])), K = new Map(stav.komponenty.map(k => [k.id, k]));
+  const nVst = stav.vstup.n > 0 ? stav.vstup.n : 1;
+  const tViz = tAnim * (+$('rychlost').value) / nVst;      // zpomalení: vstup se točí rychlostí z posuvníku
+  const u = KR.uhly(vysl, fz, vysl.preurceno ? 0 : tViz);
+  const ch = chybneId();
+  const roviny = [...new Set(stav.komponenty.map(k => k.rovina))].sort((a, b) => a - b);
+  const px = 1 / s;
+  for (const rv of roviny) {
+    const barva = barvy.rov[((rv % 6) + 6) % 6];
+    for (const k of stav.komponenty) {
+      if (k.rovina !== rv) continue;
+      const h = H.get(k.hridel); if (!h || !(P.rozdelovaciPrumer(k) > 0) || !(P.obrys(k).rout < 1e5)) continue;
+      if ((k.typ === 'kolo' || k.typ === 'vnitrni' || k.typ === 'retezove') && !(k.z >= 3 && k.z <= 2000)) continue;
+      const vybrana = vyber && vyber.druh === 'k' && vyber.id === k.id, pa = propojA === k.id;
+      const stavK = ch.get(k.id);
+      ctx.save();
+      ctx.translate(h.x, h.y); ctx.rotate(u[k.id]);
+      for (const g of KR.tvarKomponenty(k)) {
+        ctx.beginPath();
+        if (g.otevrena) { for (const c of g.cesty) { ctx.moveTo(c[0][0], c[0][1]); for (const p of c) ctx.lineTo(p[0], p[1]); ctx.closePath(); } }
+        else for (const c of g.cesty) cesta(c);
+        if (g.druh === 'telo') {
+          ctx.globalAlpha = 0.38; ctx.fillStyle = barva; ctx.fill('evenodd'); ctx.globalAlpha = 1;
+          ctx.lineWidth = (vybrana || pa ? 2.5 : 1.2) * px;
+          ctx.strokeStyle = vybrana || pa ? barvy.accent : stavK === 'chyba' ? barvy.danger : barva;
+          ctx.stroke();
+        } else if (g.druh === 'znacka') {
+          ctx.fillStyle = barvy.bg; ctx.fill(); ctx.lineWidth = 1 * px; ctx.strokeStyle = barva; ctx.stroke();
+        } else {
+          ctx.setLineDash([4 * px, 3 * px]); ctx.lineWidth = 1 * px; ctx.strokeStyle = barva; ctx.stroke(); ctx.setLineDash([]);
+        }
+      }
+      ctx.restore();
+    }
+    // řemeny a řetězy dané roviny
+    for (const e of stav.vazby) {
+      if (e.typ === 'zaber') continue;
+      const ka = K.get(e.a), kb = K.get(e.b);
+      if (!ka || !kb || ka.rovina !== rv) continue;
+      const ha = H.get(ka.hridel), hb = H.get(kb.hridel);
+      if (!ha || !hb) continue;
+      const ra = P.rozdelovaciPrumer(ka) / 2, rb = P.rozdelovaciPrumer(kb) / 2;
+      if (!(ra > 0 && rb > 0)) continue;
+      const sm = KR.smycka([ha.x, ha.y], ra, [hb.x, hb.y], rb, e.krizeny);
+      if (!sm) continue;
+      const hs = vysl.hridele[ka.hridel];
+      // smyčka jde po kružnici 1 (komponenta a) ve směru hod. ručiček → pás se posouvá o −ω_a·r_a·t
+      const posun = hs && hs.dosazen && !vysl.preurceno ? -hs.wReal * ra * tViz : 0;
+      const vybrana = vyber && vyber.druh === 'v' && vyber.id === e.id;
+      const chybna = ch.get(e.id) === 'chyba';
+      ctx.beginPath(); cesta(sm.body);
+      if (e.typ === 'remen') {
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.max(3 * px, Math.min(ra, rb) * 0.12);
+        ctx.strokeStyle = vybrana ? barvy.accent : chybna ? barvy.danger : barvy.remen;
+        ctx.globalAlpha = 0.85; ctx.stroke(); ctx.globalAlpha = 1;
+        // značky pohybu
+        ctx.setLineDash([Math.max(6 * px, ra * 0.25), Math.max(10 * px, ra * 0.35)]);
+        ctx.lineDashOffset = -posun;
+        ctx.lineWidth = Math.max(1 * px, Math.min(ra, rb) * 0.04);
+        ctx.strokeStyle = barvy.bg; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+      } else {
+        ctx.lineWidth = ka.p * 0.5; ctx.strokeStyle = vybrana ? barvy.accent : chybna ? barvy.danger : barvy.retez;
+        ctx.globalAlpha = 0.6; ctx.stroke(); ctx.globalAlpha = 1;
+        const N = Math.max(2, Math.round(sm.delka / ka.p)), dl = sm.delka / N;
+        if (ka.p * s > 2.5) {
+          ctx.fillStyle = vybrana ? barvy.accent : barvy.retez;
+          for (let i = 0; i < N; i++) {
+            const b = KR.bodNaSmycce(sm, posun + i * dl);
+            ctx.beginPath(); ctx.arc(b[0], b[1], ka.p * 0.31, 0, 2 * Math.PI); ctx.fill();
+          }
+        }
+      }
+    }
+  }
+  // chybné záběry: červená spojnice středů
+  for (const e of stav.vazby) {
+    if (e.typ !== 'zaber' || ch.get(e.id) !== 'chyba') continue;
+    const ka = K.get(e.a), kb = K.get(e.b); if (!ka || !kb) continue;
+    const ha = H.get(ka.hridel), hb = H.get(kb.hridel); if (!ha || !hb) continue;
+    ctx.beginPath(); ctx.moveTo(ha.x, ha.y); ctx.lineTo(hb.x, hb.y);
+    ctx.setLineDash([6 * px, 4 * px]); ctx.lineWidth = 2 * px; ctx.strokeStyle = barvy.danger; ctx.stroke(); ctx.setLineDash([]);
+  }
+  // hřídele, směry otáčení a popisky (v pixelech)
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.font = '12px sans-serif'; ctx.textBaseline = 'middle';
+  for (const h of stav.hridele) {
+    const [sx, sy] = naObr(h.x, h.y);
+    const hs = vysl.hridele[h.id];
+    ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = h.id === stav.vstup.hridel ? barvy.ok : barvy.text; ctx.fill();
+    // šipka smyslu
+    if (hs && hs.dosazen) {
+      const rr = 13, cw = hs.smer === 'cw';
+      ctx.beginPath();
+      // obrazovka má y dolů: proti směru hod. ručiček = záporný úhel v canvasu
+      const a0 = -0.4, a1 = -0.4 + (cw ? 1 : -1) * 4.4;
+      ctx.arc(sx, sy, rr, a0, a1, !cw);
+      ctx.lineWidth = 2; ctx.strokeStyle = h.id === stav.vstup.hridel ? barvy.ok : barvy.accent; ctx.stroke();
+      const ex = sx + rr * Math.cos(a1), ey = sy + rr * Math.sin(a1);
+      const tx = (cw ? -1 : 1) * Math.sin(a1), ty = (cw ? 1 : -1) * Math.cos(a1);
+      ctx.beginPath(); ctx.moveTo(ex + tx * 6, ey + ty * 6);
+      ctx.lineTo(ex - ty * 4, ey + tx * 4); ctx.lineTo(ex + ty * 4, ey - tx * 4); ctx.closePath();
+      ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+    }
+    let t = h.id;
+    if (hs && hs.dosazen) t += ` ${fmt(hs.nReal, hs.nReal < 10 ? 2 : 1)} min⁻¹`;
+    if (h.id === stav.vstup.hridel) t += ' (vstup)';
+    else if (h.id === stav.vystup) t += ' (výstup)';
+    const tw = ctx.measureText(t).width;
+    let lx = sx + 18, ly = sy - 16;
+    if (lx + tw > W - 44) lx = sx - 18 - tw;
+    ctx.fillStyle = barvy.panel; ctx.globalAlpha = 0.85; ctx.fillRect(lx - 3, ly - 8, tw + 6, 16); ctx.globalAlpha = 1;
+    ctx.fillStyle = hs && hs.dosazen ? barvy.text : barvy.muted; ctx.textAlign = 'left'; ctx.fillText(t, lx, ly);
+  }
+  // propojování: čára k myši
+  if (propojuji && propojA && mys) {
+    const k = K.get(propojA), h = k && H.get(k.hridel);
+    if (h) {
+      const [sx, sy] = naObr(h.x, h.y);
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(mys[0], mys[1]);
+      ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = barvy.accent; ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+}
+
+function smycka() {
+  const ted = performance.now();
+  if (posledniCas !== null && hraje) tAnim += Math.min(0.1, (ted - posledniCas) / 1000);
+  posledniCas = ted;
+  kresli();
+  if (hraje) requestAnimationFrame(smycka);
+  else posledniCas = null;
+}
+function prepniHru(zap) {
+  hraje = zap;
+  $('btnHraj').setAttribute('aria-pressed', zap ? 'true' : 'false');
+  $('btnHraj').textContent = zap ? '⏸ Pauza' : '▶ Spustit';
+  ls.zapis('hraje', zap);
+  if (zap) { posledniCas = null; requestAnimationFrame(smycka); } else kresli();
+}
+
+/* zásah myší: nejvyšší rovina, nejmenší komponenta */
+function zasah(sx, sy) {
+  const [x, y] = naSvet(sx, sy);
+  const H = new Map(stav.hridele.map(h => [h.id, h]));
+  let nej = null;
+  for (const k of stav.komponenty) {
+    const h = H.get(k.hridel); if (!h) continue;
+    const o = P.obrys(k), d = Math.hypot(x - h.x, y - h.y);
+    const tol = 4 / pohled.s;
+    if (d <= o.rout + tol && d >= o.rin - tol) {
+      if (!nej || k.rovina > nej.k.rovina || (k.rovina === nej.k.rovina && o.rout < nej.r)) nej = { k, r: o.rout };
+    }
+  }
+  if (nej) return { druh: 'k', id: nej.k.id };
+  // řemeny a řetězy
+  const K = new Map(stav.komponenty.map(k => [k.id, k]));
+  for (const e of stav.vazby) {
+    if (e.typ === 'zaber') continue;
+    const ka = K.get(e.a), kb = K.get(e.b); if (!ka || !kb) continue;
+    const ha = H.get(ka.hridel), hb = H.get(kb.hridel); if (!ha || !hb) continue;
+    const sm = KR.smycka([ha.x, ha.y], P.rozdelovaciPrumer(ka) / 2, [hb.x, hb.y], P.rozdelovaciPrumer(kb) / 2, e.krizeny);
+    if (!sm) continue;
+    const tol = 6 / pohled.s;
+    for (let i = 0; i < sm.body.length; i++) {
+      const p = sm.body[i], q = sm.body[(i + 1) % sm.body.length];
+      const dx = q[0] - p[0], dy = q[1] - p[1], l2 = dx * dx + dy * dy || 1;
+      const t = Math.max(0, Math.min(1, ((x - p[0]) * dx + (y - p[1]) * dy) / l2));
+      if (Math.hypot(x - p[0] - t * dx, y - p[1] - t * dy) < tol) return { druh: 'v', id: e.id };
+    }
+  }
+  return null;
+}
+
+const ukazatele = new Map();
+let tah = null;   // {druh:'hridel'|'pohled'|'pinch', ...}
+cv.addEventListener('pointerdown', ev => {
+  cv.focus({ preventScroll: true });
+  const r = cv.getBoundingClientRect(), sx = ev.clientX - r.left, sy = ev.clientY - r.top;
+  ukazatele.set(ev.pointerId, [sx, sy]);
+  cv.setPointerCapture(ev.pointerId);
+  if (ukazatele.size === 2) {
+    const [a, b] = [...ukazatele.values()];
+    tah = { druh: 'pinch', d0: Math.hypot(a[0] - b[0], a[1] - b[1]), s0: pohled.s, stred: naSvet((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) };
+    return;
+  }
+  const z = zasah(sx, sy);
+  if (propojuji) { if (z && z.druh === 'k') propojKlik(z.id); return; }
+  if (z) {
+    const zmena = !vyber || vyber.druh !== z.druh || vyber.id !== z.id;
+    vyber = z;
+    if (zmena) { kresliPanely(); }
+    if (z.druh === 'k') {
+      const k = stav.komponenty.find(x => x.id === z.id), h = stav.hridele.find(x => x.id === k.hridel);
+      const [wx, wy] = naSvet(sx, sy);
+      tah = { druh: 'hridel', hid: h.id, dx: h.x - wx, dy: h.y - wy, puvodni: JSON.stringify(stav), pohnul: false, sx, sy };
+    }
+  } else {
+    if (vyber) { vyber = null; kresliPanely(); }
+    tah = { druh: 'pohled', sx, sy, cx: pohled.cx, cy: pohled.cy };
+    cv.style.cursor = 'grabbing';
+  }
+  if (!hraje) kresli();
+});
+cv.addEventListener('pointermove', ev => {
+  const r = cv.getBoundingClientRect(), sx = ev.clientX - r.left, sy = ev.clientY - r.top;
+  mys = [sx, sy];
+  if (ukazatele.has(ev.pointerId)) ukazatele.set(ev.pointerId, [sx, sy]);
+  if (!tah) { if (propojuji && propojA && !hraje) kresli(); return; }
+  if (tah.druh === 'pinch' && ukazatele.size === 2) {
+    const [a, b] = [...ukazatele.values()];
+    const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    pohled.s = Math.max(0.05, Math.min(60, tah.s0 * d / Math.max(tah.d0, 1)));
+    const [mx, my] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    pohled.cx = tah.stred[0] - (mx - W / 2) / pohled.s; pohled.cy = tah.stred[1] + (my - Hc / 2) / pohled.s;
+  } else if (tah.druh === 'pohled') {
+    pohled.cx = tah.cx - (sx - tah.sx) / pohled.s; pohled.cy = tah.cy + (sy - tah.sy) / pohled.s;
+  } else if (tah.druh === 'hridel') {
+    if (!tah.pohnul && Math.hypot(sx - tah.sx, sy - tah.sy) < 4) return;
+    tah.pohnul = true;
+    const [wx, wy] = naSvet(sx, sy);
+    let x = wx + tah.dx, y = wy + tah.dy;
+    // přichycení na osovou vzdálenost záběru se sousedy
+    const K = new Map(stav.komponenty.map(k => [k.id, k]));
+    let prichyceno = false;
+    for (const e of stav.vazby) {
+      const ka = K.get(e.a), kb = K.get(e.b); if (!ka || !kb) continue;
+      let vlastni = null, cizi = null;
+      if (ka.hridel === tah.hid && kb.hridel !== tah.hid) { vlastni = ka; cizi = kb; }
+      else if (kb.hridel === tah.hid && ka.hridel !== tah.hid) { vlastni = kb; cizi = ka; }
+      if (!vlastni) continue;
+      const a = P.pozadovanaOsovaVzdalenost(e, ka, kb);
+      if (!(a > 0) || Math.abs(ka.m - kb.m) > 1e-9) continue;
+      const hc = stav.hridele.find(h => h.id === cizi.hridel);
+      const d = Math.hypot(x - hc.x, y - hc.y);
+      if (Math.abs(d - a) * pohled.s < 12 && d > 1e-9) { x = hc.x + (x - hc.x) / d * a; y = hc.y + (y - hc.y) / d * a; prichyceno = true; break; }
+    }
+    if (!prichyceno) { x = Math.round(x * 10) / 10; y = Math.round(y * 10) / 10; }
+    const h = stav.hridele.find(q => q.id === tah.hid);
+    h.x = x; h.y = y;
+    prepocet(true);
+    nastavStavPlatna(`${h.id}: x = ${fmt(x, 2)} mm, y = ${fmt(y, 2)} mm${prichyceno ? ' · přichyceno na záběr' : ''}`);
+  }
+  if (!hraje) kresli();
+});
+function konecTahu(ev) {
+  ukazatele.delete(ev.pointerId);
+  if (tah && tah.druh === 'hridel' && tah.pohnul) {
+    zpet.push(tah.puvodni); if (zpet.length > 100) zpet.shift(); znovu = [];
+    nastavStavPlatna('');
+    kresliPanely();
+  }
+  if (ukazatele.size === 0) tah = null;
+  else if (tah && tah.druh === 'pinch') tah = null;
+  cv.style.cursor = '';
+}
+cv.addEventListener('pointerup', konecTahu);
+cv.addEventListener('pointercancel', konecTahu);
+cv.addEventListener('pointerleave', () => { mys = null; });
+cv.addEventListener('wheel', ev => {
+  ev.preventDefault();
+  const r = cv.getBoundingClientRect(), sx = ev.clientX - r.left, sy = ev.clientY - r.top;
+  zoom(Math.exp(-ev.deltaY * 0.0015), sx, sy);
+}, { passive: false });
+function zoom(f, sx, sy) {
+  if (sx === undefined) { sx = W / 2; sy = Hc / 2; }
+  const [wx, wy] = naSvet(sx, sy);
+  pohled.s = Math.max(0.05, Math.min(60, pohled.s * f));
+  pohled.cx = wx - (sx - W / 2) / pohled.s; pohled.cy = wy + (sy - Hc / 2) / pohled.s;
+  if (!hraje) kresli();
+}
+
+/* ---------- porovnání ---------- */
+let navrhA = ls.cti('A'), navrhB = ls.cti('B');
+function kresliPorovnani() {
+  $('nactiA').disabled = !navrhA; $('nactiB').disabled = !navrhB;
+  const el = $('porovnani');
+  if (!navrhA && !navrhB) return;
+  const rA = navrhA ? P.spocitej(navrhA) : null, rB = navrhB ? P.spocitej(navrhB) : null;
+  const nahled = (r, nazev) => r ? `<figure>${KR.svg(r, P.faze(r), { popis: false }).replace(/^<\?xml[^>]*>\s*/, '').replace(/width="[^"]*mm" height="[^"]*mm"/, '')}<figcaption>${esc(nazev)}: ${esc(r.navrh.nazev)}</figcaption></figure>` : `<figure><figcaption>${nazev}: nevyplněno</figcaption></figure>`;
+  let h = `<div class="nahledy">${nahled(rA, 'A')}${nahled(rB, 'B')}</div>`;
+  if (rA && rB) {
+    const tab = P.porovnej(rA, rB);
+    h += `<div class="obal-tab"><table class="porovnani"><thead><tr><th class="vlevo">Veličina</th><th>A</th><th>B</th><th>B − A</th></tr></thead><tbody>`;
+    for (const r of tab) {
+      const f = v => v === null || v === undefined ? '–' : typeof v === 'number' ? fmt(v, r.des) + (r.jednotka ? ' ' + r.jednotka : '') : esc(v);
+      const lisi = r.rozdil !== null && Math.abs(r.rozdil) > 1e-9;
+      h += `<tr><th class="vlevo" scope="row">${r.nazev}</th><td${lisi ? ' class="lisi"' : ''}>${f(r.a)}</td><td${lisi ? ' class="lisi"' : ''}>${f(r.b)}</td><td>${r.rozdil === null ? '' : (r.rozdil > 0 ? '+' : '') + fmt(r.rozdil, r.des)}</td></tr>`;
+    }
+    h += '</tbody></table></div>';
+  }
+  el.innerHTML = h;
+}
+
+/* ---------- export / tisk ---------- */
+function stahni(nazev, obsah, typ) {
+  const b = new Blob([obsah], { type: typ });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = nazev;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+const nazevSouboru = () => (stav.nazev || 'prevod').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'prevod';
+function svgAktualni() {
+  const nVst = stav.vstup.n > 0 ? stav.vstup.n : 1;
+  return KR.svg(vysl, fz, { t: vysl.preurceno ? 0 : tAnim * (+$('rychlost').value) / nVst });
+}
+
+function sestavProtokol() {
+  const s = vysl.souhrn, K = new Map(stav.komponenty.map(k => [k.id, k]));
+  const dnes = new Date().toLocaleString('cs-CZ');
+  const radek = (a, b, c) => `<tr><td class="vlevo">${a}</td><td>${b}</td><td>${c}</td></tr>`;
+  let h = `<h1>Výpočtový protokol – mechanický převod</h1>
+    <p><b>${esc(stav.nazev)}</b> · vytvořeno ${esc(dnes)} · Návrhář mechanických převodů</p>
+    <div class="pozn-tisk"><b>Rozsah:</b> kinematika (otáčky, smysl, převody) a toky výkonu podle zadaných účinností. Protokol <b>neobsahuje
+    pevnostní posouzení</b> ozubení, řemenů, řetězů, hřídelů ani ložisek; účinnosti a skluzy jsou zadané hodnoty, ne ověřené vlastnosti.
+    Obrysy zubů na obrázku jsou ilustrační.</div>
+    <h2>Vstup</h2>
+    <table><tbody>
+      <tr><td class="vlevo">Vstupní hřídel</td><td>${esc(stav.vstup.hridel || '–')}</td></tr>
+      <tr><td class="vlevo">Vstupní otáčky</td><td>${fmt(stav.vstup.n, 2)} min⁻¹, ${smerText(stav.vstup.smer)}</td></tr>
+      <tr><td class="vlevo">Výstupní hřídel</td><td>${esc(stav.vystup || '–')}</td></tr>
+      ${stav.hridele.filter(h => h.zatez).map(h => `<tr><td class="vlevo">Zatížení ${h.id}</td><td>${h.zatezDruh === 'vykon' ? fmt(h.zatez, 3) + ' kW' : fmt(h.zatez, 3) + ' N·m'}</td></tr>`).join('')}
+    </tbody></table>`;
+  if (s.platny) {
+    h += `<h2>Souhrn vstup → výstup</h2><table><thead><tr><th class="vlevo">Veličina</th><th>Ideální model</th><th>S účinností a skluzem</th></tr></thead><tbody>
+      ${radek('Převodový poměr i = n_vst / n_výst', fmt(s.iId, 5), fmt(s.iRe, 5))}
+      ${radek('Výstupní otáčky [min⁻¹]', fmt(s.nVysId, 3), fmt(s.nVysRe, 3))}
+      ${radek('Smysl otáčení výstupu', smerText(s.smerVys), smerText(s.smerVys))}
+      ${radek('Výstupní moment (zatížení) [N·m]', fmt(s.TvysId, 3), fmt(s.TvysRe, 3))}
+      ${radek('Vstupní moment [N·m]', fmt(s.TvstId, 4), fmt(s.TvstRe, 4))}
+      ${radek('Vstupní výkon [W]', fmt(s.PvstId, 2), fmt(s.PvstRe, 2))}
+      ${radek('Účinnost cesty vstup → výstup', '100 %', fmt(s.etaCesta * 100, 2) + ' %')}
+      ${radek('Ztráty [W]', '0', fmt(s.ztraty, 2))}
+    </tbody></table>`;
+  } else h += `<p><b>Souhrn nelze určit:</b> ${vysl.preurceno ? 'soustava je přeurčená (zablokuje se).' : 'výstup není spojen se vstupem.'}</p>`;
+  h += `<h2>Komponenty</h2><table><thead><tr><th class="vlevo">ID</th><th class="vlevo">Typ</th><th>Hřídel</th><th>Rovina</th><th class="vlevo">Parametry</th><th>Rozdělovací ⌀ [mm]</th></tr></thead><tbody>`;
+  for (const k of stav.komponenty) {
+    const par = k.typ === 'kolo' || k.typ === 'vnitrni' ? `z = ${k.z}, m = ${fmt(k.m, 3)} mm, α = ${fmt(k.alfa, 1)}°` : k.typ === 'retezove' ? `z = ${k.z}, p = ${fmt(k.p, 3)} mm` : `d = ${fmt(k.d, 2)} mm`;
+    h += `<tr><td class="vlevo">${k.id}</td><td class="vlevo">${P.TYPY[k.typ].nazev}</td><td>${k.hridel}</td><td>${k.rovina}</td><td class="vlevo">${par}</td><td>${fmt(P.rozdelovaciPrumer(k), 2)}</td></tr>`;
+  }
+  h += `</tbody></table><h2>Vazby</h2><table><thead><tr><th class="vlevo">ID</th><th class="vlevo">Typ</th><th class="vlevo">Hnací → hnaná</th><th>i</th><th>η</th><th>Skluz</th><th>Osová vzd. [mm]</th><th class="vlevo">Poznámka</th></tr></thead><tbody>`;
+  for (const e of stav.vazby) {
+    const vi = vysl.vazby[e.id] || {}, g = vi.geometrie || {};
+    const kk = vi.k === null || vi.k === undefined ? null : (vi.hnaci === e.b ? 1 / vi.k : vi.k);
+    const pozn = [];
+    if (g.pozadovana) pozn.push(`požadováno ${fmt(g.pozadovana, 2)} mm`);
+    if (g.delka) pozn.push(`L ${fmt(g.delka, 1)} mm, opásání ${fmt(g.opasani, 1)}°${e.krizeny ? ', křížený' : ''}`);
+    if (g.clankySude) pozn.push(`${g.clankySude} článků, polygon. ef. ${fmt(g.polygon, 2)} %`);
+    if (vi.tok) pozn.push(`T ${fmt(vi.tok.ThnaciRe, 3)} → ${fmt(vi.tok.ThnanaRe, 3)} N·m, F_t ≈ ${fmt(vi.tok.FtRe, 1)} N, v ${fmt(vi.tok.v, 2)} m/s`);
+    h += `<tr><td class="vlevo">${e.id}</td><td class="vlevo">${P.VAZBY[e.typ].nazev}${e.typ === 'remen' ? ' (' + P.DRUHY_REMENE[e.druh].nazev + ')' : ''}</td><td class="vlevo">${vi.hnaci ? vi.hnaci + ' → ' + vi.hnana : e.a + ' – ' + e.b}</td>
+      <td>${kk === null ? '–' : fmt(1 / Math.abs(kk), 4) + (kk < 0 ? ' (−)' : '')}</td><td>${fmt(e.eta * 100, 1)} %</td><td>${e.typ === 'remen' ? fmt(e.skluz * 100, 1) + ' %' : '–'}</td><td>${fmt(g.osova, 2)}</td><td class="vlevo">${pozn.join('; ')}</td></tr>`;
+  }
+  h += `</tbody></table><h2>Hřídele</h2><table><thead><tr><th class="vlevo">Hřídel</th><th>x, y [mm]</th><th>n id. [min⁻¹]</th><th>n s η [min⁻¹]</th><th>Smysl</th><th>T id. [N·m]</th><th>T s η [N·m]</th><th>P s η [W]</th></tr></thead><tbody>`;
+  for (const hh of stav.hridele) {
+    const x = vysl.hridele[hh.id];
+    h += `<tr><td class="vlevo">${hh.id}</td><td>${fmt(hh.x, 2)}; ${fmt(hh.y, 2)}</td>${x.dosazen ? `<td>${fmt(x.nId, 3)}</td><td>${fmt(x.nReal, 3)}</td><td>${smerZnak(x.smer)}</td><td>${fmt(x.TId, 3)}</td><td>${fmt(x.TRe, 3)}</td><td>${fmt(x.PRe, 1)}</td>` : '<td colspan="6">nepoháněn</td>'}</tr>`;
+  }
+  if (vysl.preurceno) h += `<tr><td colspan="8" class="vlevo">Soustava je přeurčená – hodnoty jsou jen z jedné cesty grafu, mechanismus se nepohne.</td></tr>`;
+  h += `</tbody></table><h2>Kontroly</h2>`;
+  h += vysl.zpravy.length ? `<ul>${vysl.zpravy.map(z => `<li class="zprava-${z.uroven}">${z.uroven === 'chyba' ? 'CHYBA' : z.uroven === 'varovani' ? 'Varování' : 'Info'}: ${esc(z.text)}</li>`).join('')}</ul>` : '<p>Bez chyb a varování.</p>';
+  h += `<h2>Schéma</h2><div class="obrazek">${svgAktualni().replace(/^<\?xml[^>]*>\s*/, '')}</div>`;
+  h += `<p class="pozn-tisk">Konvence: smysl otáčení při pohledu zepředu (↻ po směru, ↺ proti směru hodinových ručiček), i = n_vstup / n_výstup.
+    Model s účinností: P_hnaná = η · P_hnací, u řemene n_hnaná = n_hnací · d_hnací / d_hnaná · (1 − s).</p>`;
+  $('protokol').innerHTML = h;
+}
+
+/* ---------- uložené návrhy ---------- */
+function obnovUlozene() {
+  const vse = ls.cti('ulozene') || {};
+  const s = $('ulozene');
+  s.innerHTML = '<option value="">Uložené…</option>' + Object.keys(vse).sort((a, b) => a.localeCompare(b, 'cs')).map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  $('btnSmazatUl').disabled = true;
+}
+
+/* ---------- události ---------- */
+function init() {
+  const sel = $('ukazka');
+  for (const [k, u] of Object.entries(UKAZKY)) { const o = document.createElement('option'); o.value = k; o.textContent = u.nazev; sel.appendChild(o); }
+  sel.addEventListener('change', () => {
+    if (!sel.value) return;
+    vyber = null; nastavStav(JSON.parse(JSON.stringify(UKAZKY[sel.value])));
+    sel.value = ''; priblizNaVse();
+  });
+  $('btnNovy').addEventListener('click', async () => {
+    if (stav.komponenty.length && !(await Dialog.potvrd('Začít nový prázdný návrh? Aktuální lze vrátit tlačítkem Zpět.'))) return;
+    vyber = null; nastavStav({ nazev: 'Nový návrh', hridele: [{ id: 'H1', x: 0, y: 0 }], komponenty: [{ id: 'K1', typ: 'kolo', hridel: 'H1', z: 20, m: 2, alfa: 20 }], vazby: [], vstup: { hridel: 'H1', n: 1000, smer: 'cw' } });
+    vyber = { druh: 'k', id: 'K1' }; kresliPanely(); priblizNaVse();
+  });
+  $('btnZpet').addEventListener('click', vratit);
+  $('btnZnovu').addEventListener('click', obnovit);
+  document.querySelectorAll('[data-pridat]').forEach(b => b.addEventListener('click', () => pridej(b.dataset.pridat)));
+  $('btnPropojit').addEventListener('click', () => prepniPropojovani(!propojuji));
+  $('btnDorovnat').addEventListener('click', () => {
+    if (vyber && vyber.druh === 'v') return dorovnejVazbu(vyber.id);
+    if (vyber && vyber.druh === 'k') {
+      const e = stav.vazby.find(x => (x.a === vyber.id || x.b === vyber.id) && vysl.vazby[x.id] && vysl.vazby[x.id].hnana === vyber.id) || stav.vazby.find(x => x.a === vyber.id || x.b === vyber.id);
+      if (e) return dorovnejVazbu(e.id);
+    }
+    toast('Vyberte vazbu nebo komponentu, která je ve vazbě.', true);
+  });
+  $('btnSmazat').addEventListener('click', smazVybrane);
+  $('btnHraj').addEventListener('click', () => prepniHru(!hraje));
+  $('rychlost').addEventListener('input', () => { $('rychlostTxt').textContent = $('rychlost').value; ls.zapis('rychlost', +$('rychlost').value); if (!hraje) kresli(); });
+  $('zoomPlus').addEventListener('click', () => zoom(1.25));
+  $('zoomMinus').addEventListener('click', () => zoom(0.8));
+  $('zoomCely').addEventListener('click', () => priblizNaVse());
+
+  const zmenaVstupu = fn => () => { const n = kopieStavu(); fn(n); nastavStav(n); };
+  $('vstHridel').addEventListener('change', zmenaVstupu(n => { n.vstup.hridel = $('vstHridel').value; }));
+  $('vysHridel').addEventListener('change', zmenaVstupu(n => { n.vystup = $('vysHridel').value; }));
+  $('vstN').addEventListener('change', zmenaVstupu(n => { n.vstup.n = parseFloat(String($('vstN').value).replace(',', '.')) || 0; }));
+  $('vstN').addEventListener('input', () => { const v = parseFloat($('vstN').value); if (v > 0) { stav.vstup.n = v; prepocet(true); } });
+  $('vstSmer').addEventListener('change', zmenaVstupu(n => { n.vstup.smer = $('vstSmer').value; }));
+  $('nazev').addEventListener('change', zmenaVstupu(n => { n.nazev = $('nazev').value.trim() || 'Návrh'; }));
+
+  // vazby – delegace
+  $('vazby').addEventListener('change', ev => {
+    const t = ev.target, id = t.dataset.vazba; if (!id) return;
+    const n = kopieStavu(), e = n.vazby.find(x => x.id === id);
+    const v = parseFloat(String(t.value).replace(',', '.'));
+    if (t.dataset.pole === 'eta') e.eta = v / 100;
+    else if (t.dataset.pole === 'skluz') e.skluz = (v || 0) / 100;
+    else if (t.dataset.pole === 'krizeny') e.krizeny = t.checked;
+    else if (t.dataset.pole === 'druh') { e.druh = t.value; e.eta = P.DRUHY_REMENE[t.value].eta; e.skluz = P.DRUHY_REMENE[t.value].skluz; }
+    nastavStav(n);
+  });
+  $('vazby').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-akce]');
+    if (b) {
+      if (b.dataset.akce === 'smazat') { const n = kopieStavu(); n.vazby = n.vazby.filter(e => e.id !== b.dataset.id); if (vyber && vyber.id === b.dataset.id) vyber = null; nastavStav(n); }
+      if (b.dataset.akce === 'dorovnat') dorovnejVazbu(b.dataset.id);
+      return;
+    }
+    const karta = ev.target.closest('[data-vazba-karta]');
+    if (karta && !ev.target.closest('input,select,label')) { vyber = { druh: 'v', id: karta.dataset.vazbaKarta }; kresliPanely(); if (!hraje) kresli(); }
+  });
+  $('tabHridele').addEventListener('click', ev => {
+    const tr = ev.target.closest('tr[data-hridel]'); if (!tr) return;
+    const k = stav.komponenty.find(x => x.hridel === tr.dataset.hridel);
+    if (k) { vyber = { druh: 'k', id: k.id }; kresliPanely(); if (!hraje) kresli(); }
+  });
+  const klikZprava = li => {
+    const z = vysl.zpravy[+li.dataset.i]; if (!z || !z.prvky.length) return;
+    const p = z.prvky.find(x => stav.komponenty.some(k => k.id === x)) || z.prvky.find(x => stav.vazby.some(e => e.id === x));
+    if (p) { vyber = { druh: stav.vazby.some(e => e.id === p) ? 'v' : 'k', id: p }; kresliPanely(); if (!hraje) kresli(); }
+  };
+  $('zpravy').addEventListener('click', ev => { const li = ev.target.closest('li[data-i]'); if (li) klikZprava(li); });
+  $('zpravy').addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { const li = ev.target.closest('li[data-i]'); if (li) { ev.preventDefault(); klikZprava(li); } } });
+
+  // uložení
+  $('btnUlozit').addEventListener('click', async () => {
+    const n = await Dialog.zeptej('Název návrhu pro uložení', stav.nazev || 'Návrh');
+    if (!n) return;
+    const vse = ls.cti('ulozene') || {};
+    if (vse[n] && !(await Dialog.potvrd(`Návrh „${n}“ už existuje. Přepsat?`))) return;
+    const k = kopieStavu(); k.nazev = n; vse[n] = k;
+    if (ls.zapis('ulozene', vse)) { stav.nazev = n; obnovUlozene(); $('ulozene').value = n; $('btnSmazatUl').disabled = false; kresliPanely(); toast(`Návrh „${n}“ uložen.`); }
+    else toast('Úložiště prohlížeče není dostupné.', true);
+  });
+  $('ulozene').addEventListener('change', () => {
+    const n = $('ulozene').value; $('btnSmazatUl').disabled = !n;
+    if (!n) return;
+    const vse = ls.cti('ulozene') || {};
+    if (vse[n]) { vyber = null; nastavStav(vse[n]); priblizNaVse(); toast(`Načten návrh „${n}“.`); }
+  });
+  $('btnSmazatUl').addEventListener('click', async () => {
+    const n = $('ulozene').value; if (!n) return;
+    if (!(await Dialog.potvrd(`Smazat uložený návrh „${n}“?`))) return;
+    const vse = ls.cti('ulozene') || {}; delete vse[n]; ls.zapis('ulozene', vse); obnovUlozene();
+  });
+  $('btnJsonEx').addEventListener('click', () => stahni(nazevSouboru() + '.json', JSON.stringify({ format: 'prevody_mech', verze: 1, navrh: stav }, null, 2), 'application/json'));
+  $('btnJsonIm').addEventListener('click', () => $('soubor').click());
+  $('soubor').addEventListener('change', async () => {
+    const f = $('soubor').files[0]; $('soubor').value = '';
+    if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      const n = d && d.navrh ? d.navrh : d;
+      if (!n || !Array.isArray(n.komponenty) || !Array.isArray(n.hridele)) throw new Error('chybí komponenty nebo hřídele');
+      vyber = null; nastavStav(n); priblizNaVse(); toast(`Načten návrh „${stav.nazev}“.`);
+    } catch (e) { toast('Soubor nelze načíst: ' + e.message, true); }
+  });
+  $('btnSvg').addEventListener('click', () => stahni(nazevSouboru() + '.svg', svgAktualni(), 'image/svg+xml'));
+  $('btnTisk').addEventListener('click', () => { sestavProtokol(); window.print(); });
+  window.addEventListener('beforeprint', sestavProtokol);
+
+  // porovnání
+  $('ulozA').addEventListener('click', () => { navrhA = kopieStavu(); ls.zapis('A', navrhA); kresliPorovnani(); toast('Aktuální návrh uložen jako A.'); });
+  $('ulozB').addEventListener('click', () => { navrhB = kopieStavu(); ls.zapis('B', navrhB); kresliPorovnani(); toast('Aktuální návrh uložen jako B.'); });
+  $('nactiA').addEventListener('click', () => { if (navrhA) { vyber = null; nastavStav(navrhA); priblizNaVse(); } });
+  $('nactiB').addEventListener('click', () => { if (navrhB) { vyber = null; nastavStav(navrhB); priblizNaVse(); } });
+
+  // klávesy
+  document.addEventListener('keydown', ev => {
+    const t = ev.target;
+    const vPoli = t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA');
+    if ((ev.ctrlKey || ev.metaKey) && ev.code === 'KeyZ' && !vPoli) { ev.preventDefault(); ev.shiftKey ? obnovit() : vratit(); return; }
+    if ((ev.ctrlKey || ev.metaKey) && ev.code === 'KeyY' && !vPoli) { ev.preventDefault(); obnovit(); return; }
+    if (vPoli) return;
+    if (ev.code === 'Escape' && propojuji) prepniPropojovani(false);
+    if ((ev.code === 'Delete' || ev.code === 'Backspace') && vyber && (t === cv || t === document.body)) { ev.preventDefault(); smazVybrane(); }
+    if (ev.code === 'Space' && t === cv) { ev.preventDefault(); prepniHru(!hraje); }
+  });
+
+  new ResizeObserver(() => { velikost(); if (!hraje) kresli(); }).observe(cv);
+  new MutationObserver(() => { if (!hraje) kresli(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  const rych = ls.cti('rychlost'); if (rych >= 1 && rych <= 120) { $('rychlost').value = rych; $('rychlostTxt').textContent = rych; }
+  const ul = ls.cti('navrh');
+  stav = P.normalizuj(ul && Array.isArray(ul.komponenty) && ul.komponenty.length ? ul : UKAZKY.kombinace);
+  obnovUlozene();
+  velikost();
+  prepocet();
+  priblizNaVse();
+  kresliPorovnani();
+  const hr = ls.cti('hraje');
+  const omezPohyb = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  prepniHru(hr === null ? !omezPohyb : !!hr);
+}
+function vratit() {
+  if (!zpet.length) return;
+  znovu.push(JSON.stringify(stav));
+  stav = P.normalizuj(JSON.parse(zpet.pop()));
+  if (vyber && !najdiVyber()) vyber = null;
+  prepocet();
+}
+function obnovit() {
+  if (!znovu.length) return;
+  zpet.push(JSON.stringify(stav));
+  stav = P.normalizuj(JSON.parse(znovu.pop()));
+  if (vyber && !najdiVyber()) vyber = null;
+  prepocet();
+}
+init();
+</script>
+</body>
+</html>

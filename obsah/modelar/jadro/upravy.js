@@ -180,6 +180,51 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const m = M.maticeUzlu(u), s = u.stred;
     return nej.map(([x, y]) => { const w = new V(x - s[0], y - s[1], -s[2]).applyMatrix4(m); return [w.x, w.y]; });
   };
+  /** Dráha pro tažení ze skici: nejdelší obrys jako body [x, y, z] ve světě (v rovině skici, i natočené).
+      Otevřenou dráhu (bez úseku z posledního bodu na první) řeší param uzavrena tažení. */
+  M.drahaZeSkici = function (u, seg = 128) {
+    if (!u || u.druh !== 'skica') return [];
+    let nej = [], delka = -1;
+    for (const t of u.param.tvary || []) for (const k of M.konturyTvaru(t, seg)) {
+      let l = 0;
+      for (let i = 0; i < k.length; i++) l += Math.hypot(k[(i + 1) % k.length][0] - k[i][0], k[(i + 1) % k.length][1] - k[i][1]);
+      if (l > delka) { delka = l; nej = k; }
+    }
+    const m = M.maticeUzlu(u), s = u.stred;
+    // otevřená dráha = stejné body, jen tažení nespojí konec se začátkem (param uzavrena)
+    return nej.map(([x, y]) => new V(x - s[0], y - s[1], -s[2]).applyMatrix4(m).toArray().map(c => Math.round(c * 1e6) / 1e6));
+  };
+
+  /** Tažení profilu (skica idProfil) po dráze (skica idDraha): nová skica v režimu tažení, souřadnice skici = svět.
+      Profil se vycentruje na dráhu (střed jeho obrysu leží na křivce). Obě původní skici se skryjí.
+      Vrací {dok, id}. */
+  M.tazeniZeSkic = function (dok, idProfil, idDraha, { otevrena = false, centrovat = true } = {}) {
+    const pr = M.najdiUzel(dok, idProfil), dr = M.najdiUzel(dok, idDraha);
+    if (!pr || !dr || pr.druh !== 'skica' || dr.druh !== 'skica') throw new Error('vyber dvě skici: profil a dráhu');
+    const body = M.drahaZeSkici(dr);
+    if (body.length < 2) throw new Error('skica dráhy nemá žádný obrys');
+    let tvary = pr.param.tvary.map(t => Object.assign({}, t));
+    if (centrovat) {
+      const { stredObrysu: c } = M.bodyObalkySkici(Object.assign({}, pr.param, { rezim: 'vytazeni' }));
+      tvary = tvary.map(t => posunTvar(t, -c[0], -c[1]));
+    }
+    const param = Object.assign({}, pr.param, { tvary, rezim: 'tazeni', draha: 'krivka', drahaBody: body, uzavrena: !otevrena, zkrouceni: 0, horni: 100 });
+    delete param.vazby;                  // vazby profilu odkazují na neposunuté tvary – po vycentrování neplatí
+    const p = M.normalizujParamSkici(param);
+    const r = M.rozmeryTelesaSkici(p);
+    const u = M.normalizujUzel({ druh: 'skica', param: p, stred: r.stred, zaklad: r.zaklad, rozmer: r.zaklad, poloha: r.stred,
+      nazev: pr.nazev + ' po dráze', barva: pr.barva });
+    let d = M.upravUzly(dok, [pr.id, dr.id], { skryto: true });
+    d = M.pridejUzly(d, [u]);
+    return { dok: d, id: u.id };
+  };
+  /** Tvar skici posunutý o dx, dy. */
+  function posunTvar(t, dx, dy) {
+    if (t.typ === 'cesta') return Object.assign({}, t, { body: t.body.map(b => Object.assign({}, b, { x: b.x + dx, y: b.y + dy })) });
+    return Object.assign({}, t, { x: (t.x || 0) + dx, y: (t.y || 0) + dy });
+  }
+  M.posunTvarSkici = posunTvar;
+
   /** n bodů rovnoměrně po délce lomené čáry (uzavřené: po celém obvodu) s úhlem tečny: [{x, y, uhel}]. */
   M.bodyNaCeste = function (cesta, n, uzavrena = true) {
     const b = cesta.slice();
@@ -450,6 +495,30 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const r = M.seskupUzly(d1, [id, s.id], { nazev: u.nazev + ' s dírami' });
     const g = M.najdiUzel(r.dok, r.id);
     return { dok: M.upravUzly(r.dok, [r.id], { barva: u.barva }), id: g.id, pocet: stredy.length };
+  };
+
+  /** Skica nakreslená na rovné ploše tělesa: osy skici x = plocha.u, y = plocha.v, z = normála ven
+      (díváš se na plochu zvenku), počátek v plocha.bod. volby.operace 'pridat' = vytažení ven o param.vyska,
+      'vyriznout' = kapsa do tělesa hloubky param.vyska (skrz = celé těleso); spojit = seskupit s tělesem
+      (kapsa vždy). Vrací {dok, id (výsledná skupina nebo skica)}. */
+  M.skicaNaPlose = function (dok, id, plocha, param, { operace = 'pridat', skrz = false, spojit = true } = {}) {
+    const u = M.najdiUzel(dok, id);
+    if (!u) throw new Error('těleso pod skicou už není');
+    const n = new V(...plocha.normala), ux = new V(...plocha.u), vy = new V(...plocha.v);
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(ux, vy, n));
+    const presah = 0.25;                                  // kapsa začíná kousek nad povrchem, ať čistě prořízne
+    const vyriz = operace === 'vyriznout';
+    const hloubka = vyriz ? (skrz ? M.hloubkaPodPlochou(u, plocha.bod, plocha.normala) + 0.5 : param.vyska) : param.vyska;
+    const p = Object.assign({}, param, { rezim: 'vytazeni', vyska: vyriz ? hloubka + presah : param.vyska });
+    const sk = M.novaSkica(p, vyriz ? { role: 'dira', nazev: 'Kapsa' } : { barva: u.barva }, dok);
+    const pocatek = new V(...plocha.bod).addScaledVector(n, vyriz ? -hloubka : 0);
+    const poloha = new V(...sk.stred).applyQuaternion(q).add(pocatek);
+    const s = M.normalizujUzel(Object.assign({}, sk, { poloha: poloha.toArray().map(x => zaokr(x)), rotace: M.rotaceZQuat(q) }));
+    const d1 = M.pridejUzly(dok, [s]);
+    if (!vyriz && !spojit) return { dok: d1, id: s.id };
+    const r = M.seskupUzly(d1, [id, s.id], { nazev: u.nazev + (vyriz ? ' s kapsou' : '') });
+    if (!r.id) return { dok: d1, id: s.id };            // zamčené těleso: skica zůstane vedle
+    return { dok: M.upravUzly(r.dok, [r.id], { barva: u.barva }), id: r.id };
   };
 
   // ------------------------------------------------------------ přesné úpravy (zaoblení, sražení, skořepina)

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulátor epidemií – modely, stochastika, sítě a analýza dat</title>
+  <meta name="description" content="Vzdělávací simulátor epidemií: kompartmentové modely SEIR/SEIRS s hospitalizacemi a věkovou strukturou ČR, Gillespie a tau-leaping, superšíření, sítě kontaktů, kraje s mobilitou, odhad Rt (Cori) a fitování, citlivostní analýza.">
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="epidemie/data.js"></script>
+  <script src="epidemie/jadro.js"></script>
+  <script src="epidemie/model.js"></script>
+  <script src="epidemie/agenti.js"></script>
+  <script src="epidemie/stochastika.js"></script>
+  <script src="epidemie/site.js"></script>
+  <script src="epidemie/metapop.js"></script>
+  <script src="epidemie/analyza.js"></script>
+  <script src="epidemie/graf.js"></script>
+  <style>
+    /* kategorická paleta řad (ověřené pořadí slotů), tmavé téma výchozí */
+    :root {
+      --c-s: #3987e5; --c-i: #d95926; --c-r: #199e70; --c-e: #c98500; --c-v: #d55181; --c-a: #008300; --c-h: #9085e9; --c-c: #e66767; --c-d: #c3c2b7;
+      --c-1: #3987e5; --c-2: #d95926; --c-3: #199e70; --c-4: #c98500;
+      --c-rt: var(--accent);
+      --mapa-0: #1c2633; --mapa-1: #a9cdff;
+      --arena: #101010; --text-chyba: #ff8f85; --text-mez: #f0bd5e;
+    }
+    :root[data-theme="light"] {
+      --c-s: #2a78d6; --c-i: #eb6834; --c-r: #1baf7a; --c-e: #eda100; --c-v: #e87ba4; --c-a: #008300; --c-h: #6250d6; --c-c: #e34948; --c-d: #52514e;
+      --c-1: #2a78d6; --c-2: #eb6834; --c-3: #1baf7a; --c-4: #eda100;
+      --mapa-0: #eef4fc; --mapa-1: #0f3d80;
+      --arena: #fbfbfa; --text-chyba: var(--danger); --text-mez: var(--warn);
+    }
+    * { box-sizing: border-box; }
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 3vw, 40px) 40px; min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1rem; margin: 0 0 8px; }
+    h3 { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 16px 0 6px; }
+    h3 sub, .box .popis sub { text-transform: none; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 10px; max-width: 1100px; line-height: 1.5; }
+    .upozorneni { max-width: 1500px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius); padding: 9px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .upozorneni b { color: var(--text-mez); }
+    .upozorneni a { color: var(--accent); }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 350px) minmax(0, 1fr); gap: 16px; max-width: 1500px; }
+    @media (max-width: 1000px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    [hidden] { display: none !important; }
+    label.popisek { display: flex; justify-content: space-between; gap: 6px; font-size: 0.78rem; color: var(--text-muted); margin: 9px 0 3px; }
+    label.popisek .hodnota-odvoz { color: var(--text-faint); white-space: nowrap; }
+    input[type="text"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.92rem; min-width: 0; font-family: inherit;
+    }
+    textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8rem; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    .pole-chyba { color: var(--text-chyba); font-size: 0.74rem; margin-top: 2px; }
+    .s-posuvnikem { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 8px; align-items: center; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); min-width: 0; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+    .mrizka3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    .napoveda a { color: var(--accent); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button:focus-visible, canvas:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .segment { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+    .segment button { border: 0; border-radius: 0; }
+    .segment button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+    .tlacitka .napoveda { margin: 0; }
+    .tlacitka select { width: auto; padding: 4px 6px; max-width: 100%; }
+    .tlacitka label { max-width: 100%; min-width: 0; }
+    .zaskrt { display: flex; align-items: center; gap: 7px; font-size: 0.84rem; margin: 8px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+    details.skupina { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 8px; }
+    details.skupina > summary { cursor: pointer; font-weight: 600; font-size: 0.88rem; padding: 2px 0; }
+    details.skupina > summary .stav-zasahu { font-weight: 400; color: var(--text-muted); font-size: 0.76rem; margin-left: 6px; }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .zalozky button { border-radius: 6px 6px 0 0; border-bottom: 0; padding: 6px 10px; }
+    .zalozky button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+    .odliseni { font-size: 0.8rem; color: var(--text-muted); margin: -4px 0 10px; line-height: 1.45; }
+    .odliseni b { color: var(--text); }
+    .dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 8px 0 4px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 10px; min-width: 0; }
+    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 3px; }
+    .box .cislo { font-size: 1.12rem; font-weight: 700; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .box .dalsi { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .box.varuj { border-color: var(--warn); }
+    .box .znacka { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; }
+    .odvozene { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .odvozene .box .cislo { font-size: 1rem; }
+    .odvozene .box .popis { text-transform: none; letter-spacing: 0; }
+    canvas.graf { width: 100%; display: block; touch-action: pan-y; border-radius: 6px; }
+    .graf-hlava { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .graf-hlava h3 { margin: 0; }
+    .graf-hlava .tlacitka { margin: 0; }
+    .legenda { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 2px; }
+    .leg-polozka { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; font-size: 0.76rem; border-radius: 12px; background: transparent; }
+    .leg-polozka i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; }
+    .leg-polozka i.carkovana { background-image: linear-gradient(90deg, transparent 50%, var(--bg-panel) 50%) !important; background-size: 6px 4px; }
+    .leg-polozka i.pas { height: 10px; opacity: 0.35; }
+    .leg-polozka[aria-pressed="false"] { opacity: 0.5; text-decoration: line-through; }
+    .obal-tab { overflow: auto; max-height: 360px; margin-top: 6px; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--text-muted); font-weight: 600; position: sticky; top: 0; background: var(--bg-panel); }
+    td.pruh { min-width: 110px; }
+    .pruh-v { height: 9px; border-radius: 2px; background: var(--b, var(--accent)); min-width: 1px; }
+    details.tabulka > summary { cursor: pointer; font-size: 0.82rem; color: var(--accent); margin-top: 10px; }
+    .chybovy { color: var(--text-chyba); font-size: 0.86rem; padding: 6px 0; }
+    .varovani { color: var(--text-mez); font-size: 0.8rem; margin-top: 6px; line-height: 1.4; }
+    .prubeh { height: 6px; background: var(--bg-control); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .prubeh > div { height: 100%; background: var(--accent); width: 0; }
+    .dva-sloupce { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+    @media (max-width: 1250px) { .dva-sloupce { grid-template-columns: minmax(0, 1fr); } }
+    /* časová osa zásahů */
+    #osa-platno { width: 100%; display: block; touch-action: none; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border); cursor: grab; }
+    .osa-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0 10px; align-items: end; margin-top: 6px; }
+    /* matice */
+    table.matice { width: auto; font-size: 0.72rem; }
+    table.matice td, table.matice th { padding: 3px 5px; text-align: center; border: 1px solid var(--bg-panel); }
+    table.matice td { color: var(--text); }
+    /* agenti */
+    .agent-rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 14px; align-items: start; }
+    @media (max-width: 1250px) { .agent-rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .arena-obal { position: relative; width: 100%; max-width: 640px; aspect-ratio: 1 / 1; }
+    #arena { width: 100%; height: 100%; display: block; background: var(--arena); border: 1px solid var(--border); border-radius: 6px; }
+    .arena-info { position: absolute; left: 8px; top: 6px; font-size: 0.78rem; color: var(--text); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; pointer-events: none; font-variant-numeric: tabular-nums; }
+    .legenda-stavu { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.76rem; color: var(--text-muted); margin-top: 6px; }
+    .legenda-stavu span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; background: var(--b); vertical-align: -1px; }
+    .legenda-stavu span.iso::before { background: transparent; border: 2px solid var(--c-i); width: 7px; height: 7px; }
+    /* mapa krajů */
+    .mapa-obal { position: relative; width: 100%; max-width: 760px; aspect-ratio: 16 / 9; }
+    #mapa { width: 100%; height: 100%; display: block; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; }
+    /* citlivost */
+    .tepl-obal { position: relative; width: 100%; max-width: 720px; }
+    #tepl { width: 100%; aspect-ratio: 1 / 0.82; display: block; touch-action: none; }
+    .stupnice { display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; flex-wrap: wrap; }
+    .stupnice i { display: inline-block; width: 160px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, var(--mapa-0), var(--mapa-1)); border: 1px solid var(--border); }
+    /* porovnání */
+    .scenare { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 10px; }
+    .scenar { background: var(--bg-elevated); border: 1px solid var(--border); border-top: 4px solid var(--sb); border-radius: var(--radius); padding: 10px; min-width: 0; }
+    .scenar h4 { margin: 0 0 4px; font-size: 0.92rem; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
+    .scenar h4 span { overflow-wrap: anywhere; }
+    .scenar h4 button { white-space: nowrap; }
+    .scenar .popis-par { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; min-height: 2.8em; }
+    .scenar dl { display: grid; grid-template-columns: auto auto; gap: 2px 8px; font-size: 0.78rem; margin: 6px 0 0; }
+    .scenar dt { color: var(--text-muted); }
+    .scenar dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .prazdne { color: var(--text-muted); font-size: 0.86rem; padding: 14px; border: 1px dashed var(--border-strong); border-radius: var(--radius); margin-top: 10px; }
+    /* dokumentace */
+    .dok { font-size: 0.86rem; line-height: 1.6; max-width: 960px; }
+    .dok h3 { margin-top: 22px; }
+    .dok code, .vzorec { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.82rem; }
+    .vzorec { display: block; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin: 6px 0; white-space: pre-wrap; overflow-x: auto; }
+    .dok table td, .dok table th { white-space: normal; text-align: left; vertical-align: top; }
+    .dok ul, .dok ol { padding-left: 20px; }
+    .dok a { color: var(--accent); }
+    @media (max-width: 520px) {
+      body { padding: 12px 10px 30px; }
+      .karta { padding: 11px; }
+      .zalozky button { padding: 5px 7px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🦠 Simulátor epidemií</h1>
+  <p class="podtitul">Kompartmentové modely (SIR → SEIRS s asymptomatickými, hospitalizacemi a JIP), věková struktura ČR s kontaktní maticí,
+    stochastické simulace (Gillespie, tau-leaping) a superšíření, agenti v prostoru a na sítích kontaktů, kraje propojené mobilitou,
+    odhad R<sub>t</sub> z dat a citlivostní analýza. Všechny modely sdílejí parametry vlevo a časovou osu zásahů.</p>
+  <div class="upozorneni" role="note"><b>Vzdělávací nástroj, ne předpověď.</b> Modely ukazují mechanismy šíření nákazy za zjednodušujících
+    předpokladů. Výsledky <b>nejsou odhadem průběhu žádné skutečné epidemie</b> a nesmí sloužit ke zdravotním ani politickým rozhodnutím.
+    Věková data o kontaktech a populaci jsou skutečná (zdroje v dokumentaci), profil závažnosti je jen ilustrační.
+    Rovnice, předpoklady a omezení každého modelu: záložka <a href="#" data-prejdi="dok">Dokumentace</a>.</div>
+
+  <div class="rozlozeni">
+    <!-- ===== levý sloupec: společné parametry ===== -->
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="h-par">
+        <h2 id="h-par">Parametry</h2>
+        <div class="tlacitka" style="margin-top:0">
+          <select id="predvolba" aria-label="Ilustrativní předvolby" style="flex:1; min-width:150px; width:auto; padding:6px 8px">
+            <option value="">Ilustrativní předvolby…</option>
+          </select>
+          <button type="button" id="b-sdilet" class="male" title="Zkopírovat odkaz s aktuálními parametry">🔗 Odkaz</button>
+        </div>
+        <details class="skupina" open id="sk-nakaza"><summary>Nákaza</summary>
+          <label class="zaskrt"><input type="checkbox" id="f-latence"> latentní fáze E (SEIR; vypnuto = SIR)</label>
+          <div id="pole-nakaza"></div>
+        </details>
+        <h3>Odvozené veličiny</h3>
+        <div class="odvozene" id="odvozene" aria-live="polite"></div>
+        <details class="skupina" id="sk-populace"><summary>Populace a věk <span class="stav-zasahu"></span></summary>
+          <label class="zaskrt"><input type="checkbox" id="f-vek"> věková struktura ČR (8 skupin, kontaktní matice Prem et al.)</label>
+          <p class="napoveda">Populace ČR po věku (Eurostat 2024) škálovaná na N; kontakty doma, ve škole, v práci a jinde podle projekce
+            Prem et al. (2017), přeškálované na průměr c kontaktů/den. Podrobnosti v záložce modelu a v Dokumentaci.</p>
+          <div id="pole-populace"></div>
+        </details>
+        <details class="skupina" id="sk-zavaznost"><summary>Závažnost a nemocnice <span class="stav-zasahu"></span></summary>
+          <label class="zaskrt"><input type="checkbox" id="f-zavaznost"> sledovat hospitalizace, JIP a úmrtí</label>
+          <div id="pole-zavaznost"></div>
+        </details>
+        <details class="skupina" id="sk-imunita"><summary>Imunita, sezónnost, importy <span class="stav-zasahu"></span></summary>
+          <div id="pole-imunita"></div>
+        </details>
+        <details class="skupina" id="sk-izolace"><summary>Izolace nakažených <span class="stav-zasahu"></span></summary>
+          <div id="pole-izolace"></div>
+        </details>
+        <details class="skupina" id="sk-ockovani"><summary>Očkování <span class="stav-zasahu"></span></summary>
+          <div id="pole-ockovani"></div>
+          <label class="popisek" for="f-kampanPriorita">Priorita kampaně</label>
+          <select id="f-kampanPriorita"></select>
+        </details>
+        <details class="skupina" id="sk-numerika"><summary>Numerika</summary>
+          <label class="popisek" for="f-krok">Krok RK4</label>
+          <select id="f-krok">
+            <option value="2">2 dny</option><option value="1">1 den</option><option value="0.5">0,5 dne</option><option value="0.25">0,25 dne</option>
+            <option value="0.1">0,1 dne</option><option value="0.05">0,05 dne</option><option value="0.01">0,01 dne</option>
+          </select>
+          <p class="napoveda">Runge–Kutta 4. řádu; chyba klesá zhruba s h⁴. Stránka ukazuje rozdíl proti polovičnímu kroku.</p>
+        </details>
+        <div class="tlacitka">
+          <button type="button" id="b-bez-zasahu" class="male">Vypnout všechny zásahy</button>
+          <button type="button" id="b-vychozi" class="male">Výchozí hodnoty</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== pravý sloupec ===== -->
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="h-osa">
+        <div class="graf-hlava" style="margin-top:0"><h2 id="h-osa" style="margin:0">Časová osa zásahů</h2>
+          <span class="tlacitka"><button type="button" id="b-zasah-pridat" class="male">+ Přidat zásah</button>
+            <select id="zasah-sablona" aria-label="Šablony zásahů"><option value="">Šablona…</option>
+              <option value="skoly">Zavření škol na 60 dní</option><option value="lockdown">Plošné omezení −60 % na 45 dní</option>
+              <option value="vlny">Opakované omezení (3 vlny)</option><option value="prace">Práce z domova −50 % na 90 dní</option></select></span></div>
+        <p class="napoveda">Táhnutím posunete zásah, okraji změníte začátek a konec. Klepnutím zásah vyberete a upravíte níže; vybraný lze
+          posouvat šipkami (Shift = 10 dní, Alt = jen konec). Zásahy se násobí; „všechny kontakty“ působí na všechna prostředí.</p>
+        <canvas id="osa-platno" aria-label="Časová osa zásahů" tabindex="0"></canvas>
+        <div id="osa-editor"></div>
+      </section>
+
+      <div class="karta">
+        <div class="zalozky" role="tablist" aria-label="Režimy simulátoru">
+          <button type="button" role="tab" id="z-model" aria-controls="p-model">Kompartmentový model</button>
+          <button type="button" role="tab" id="z-stoch" aria-controls="p-stoch">Stochastika</button>
+          <button type="button" role="tab" id="z-agenti" aria-controls="p-agenti">Agenti a sítě</button>
+          <button type="button" role="tab" id="z-kraje" aria-controls="p-kraje">Kraje</button>
+          <button type="button" role="tab" id="z-data" aria-controls="p-data">Analýza dat</button>
+          <button type="button" role="tab" id="z-citlivost" aria-controls="p-citlivost">Citlivost</button>
+          <button type="button" role="tab" id="z-porovnani" aria-controls="p-porovnani">Porovnání</button>
+          <button type="button" role="tab" id="z-dok" aria-controls="p-dok">Dokumentace</button>
+        </div>
+
+        <!-- ===== kompartmentový model ===== -->
+        <section id="p-model" role="tabpanel" aria-labelledby="z-model">
+          <p class="odliseni"><b>Deterministický model (ODR):</b> populace je rozdělená do přihrádek a počty se mění spojitě podle soustavy
+            diferenciálních rovnic (Runge–Kutta 4. řádu). Stejné parametry dají vždy stejný výsledek; jde o průměrné chování velké populace.</p>
+          <div id="m-chyba" class="chybovy" role="alert" hidden></div>
+          <div id="m-varovani" class="varovani" hidden></div>
+          <div class="dlazdice" id="m-dlazdice" aria-live="polite"></div>
+          <div class="graf-hlava"><h3>Přihrádky</h3>
+            <span class="tlacitka"><label class="zaskrt" style="margin:0"><input type="checkbox" id="m-log"> log. osa</label>
+              <label class="zaskrt" style="margin:0"><input type="checkbox" id="m-podil"> v % populace</label>
+              <button type="button" class="male" data-png="g-m">PNG</button></span></div>
+          <div class="legenda" id="leg-m"></div>
+          <canvas class="graf" id="g-m"></canvas>
+          <div id="m-nemocnice">
+            <div class="graf-hlava"><h3>Nemocnice: obsazená lůžka a JIP</h3><button type="button" class="male" data-png="g-m-hosp">PNG</button></div>
+            <div class="legenda" id="leg-m-hosp"></div>
+            <canvas class="graf" id="g-m-hosp"></canvas>
+            <div class="graf-hlava"><h3>Úmrtí kumulativně</h3><button type="button" class="male" data-png="g-m-umrti">PNG</button></div>
+            <canvas class="graf" id="g-m-umrti"></canvas>
+          </div>
+          <div class="dva-sloupce">
+            <div>
+              <div class="graf-hlava"><h3>Reprodukční číslo R<sub>t</sub> (NGM)</h3><button type="button" class="male" data-png="g-m-rt">PNG</button></div>
+              <canvas class="graf" id="g-m-rt"></canvas>
+            </div>
+            <div>
+              <div class="graf-hlava"><h3>Denní toky</h3><span class="tlacitka"><select id="m-inc-co" aria-label="Veličina">
+                <option value="incidence">nové nákazy/den</option><option value="hospPrijmy">příjmy do nemocnic/den</option><option value="umrtiDen">úmrtí/den</option></select>
+                <button type="button" class="male" data-png="g-m-inc">PNG</button></span></div>
+              <canvas class="graf" id="g-m-inc"></canvas>
+            </div>
+          </div>
+          <p class="napoveda" id="m-presnost"></p>
+          <div id="m-vek" hidden>
+            <h3>Podle věku</h3>
+            <div class="obal-tab" id="m-vek-tab" style="max-height:none"></div>
+            <div class="dva-sloupce">
+              <div><h3>Kontaktní matice (kontaktů/den, škálováno na c)</h3>
+                <div class="tlacitka" style="margin:0 0 6px"><select id="m-matice-prostredi" aria-label="Prostředí matice">
+                  <option value="vse">všechna prostředí</option><option value="domov">domácnost</option><option value="skola">škola</option>
+                  <option value="prace">práce</option><option value="ostatni">ostatní</option></select>
+                  <span class="napoveda">řádek = kdo, sloupec = s kým (aktuální den zásahů: 0)</span></div>
+                <div class="obal-tab" id="m-matice"></div></div>
+              <div><h3>Matice dalších generací K (R<sub>0</sub> = ρ(K))</h3>
+                <p class="napoveda" style="margin:0 0 6px">K<sub>gh</sub> = počet nákaz ve skupině g od jednoho nakaženého ze skupiny h v plně vnímavé populaci.</p>
+                <div class="obal-tab" id="m-ngm"></div></div>
+            </div>
+          </div>
+          <div class="tlacitka">
+            <button type="button" id="b-m-scenar" class="hlavni">+ Přidat do porovnání</button>
+            <button type="button" id="b-m-csv">Stáhnout CSV</button>
+          </div>
+          <details class="tabulka"><summary>Tabulka hodnot po dnech</summary><div class="obal-tab" id="m-tabulka"></div></details>
+        </section>
+
+        <!-- ===== stochastika ===== -->
+        <section id="p-stoch" role="tabpanel" aria-labelledby="z-stoch" hidden>
+          <p class="odliseni"><b>Stochastický kompartmentový model:</b> stejné přechody jako ODR (homogenní SEIR/SEIRS se zásahy, sezónností a importy),
+            ale každá nákaza a uzdravení je náhodná událost. Simulace se seedem jsou reprodukovatelné. Souborem běhů se ukáže rozptyl
+            a pravděpodobnost, že ohnisko náhodou vymře.</p>
+          <div class="mrizka3">
+            <div><label class="popisek" for="st-metoda">Metoda</label>
+              <select id="st-metoda"><option value="gillespie">Gillespie (přesný, N ≤ 200 000)</option><option value="tau">Tau-leaping (rychlý, velké N)</option></select></div>
+            <div><label class="popisek" for="st-N">Populace N</label><input type="text" inputmode="numeric" id="st-N"></div>
+            <div><label class="popisek" for="st-I0">Nakažených na začátku</label><input type="text" inputmode="numeric" id="st-I0"></div>
+            <div><label class="popisek" for="st-behu">Počet běhů</label>
+              <select id="st-behu"><option>20</option><option selected>100</option><option>300</option><option>1000</option></select></div>
+            <div><label class="popisek" for="st-seed">Seed</label><input type="text" id="st-seed" autocomplete="off"></div>
+            <div><label class="popisek" for="st-tau">Krok τ (tau-leaping)</label>
+              <select id="st-tau"><option value="0.5">0,5 dne</option><option value="0.25">0,25 dne</option><option value="0.1" selected>0,1 dne</option><option value="0.02">0,02 dne</option></select></div>
+          </div>
+          <div class="tlacitka">
+            <button type="button" id="b-st-spustit" class="hlavni">Spustit soubor běhů</button>
+            <button type="button" id="b-st-stop" hidden>Zastavit</button>
+            <span class="napoveda" id="st-stav"></span>
+          </div>
+          <div class="prubeh" id="st-prubeh" hidden><div></div></div>
+          <div id="st-chyba" class="chybovy" role="alert" hidden></div>
+          <div class="dlazdice" id="st-dlazdice"></div>
+          <div class="graf-hlava"><h3>Infekční I(t): medián, 50% a 95% pásmo, ODR</h3><button type="button" class="male" data-png="g-st">PNG</button></div>
+          <div class="legenda" id="leg-st"></div>
+          <canvas class="graf" id="g-st"></canvas>
+          <div class="graf-hlava"><h3>Rozdělení konečné velikosti (podíl populace)</h3></div>
+          <canvas class="graf" id="g-st-hist"></canvas>
+          <p class="napoveda">Ohniska pod hranicí 10 % deterministické konečné velikosti se počítají jako „vymřelá“. Teorie větvícího procesu
+            pro exponenciální infekční dobu: P(vymření) = (1/R)<sup>I₀</sup> (pro R &gt; 1, bez časově proměnných zásahů).</p>
+
+          <h3>Větvící proces a superšíření</h3>
+          <p class="odliseni">Počet lidí, které nakazí jeden případ, má záporně binomické rozdělení se střední hodnotou R a disperzí k
+            (Lloyd-Smith et al. 2005). Malé k = silné superšíření: většina případů nikoho nenakazí, několik málo nakazí mnoho.
+            Řetězce začínají jedním případem.</p>
+          <div class="mrizka3">
+            <div><label class="popisek" for="vp-R">R (střední počet nákaz)</label><input type="text" inputmode="decimal" id="vp-R" value="2,5"></div>
+            <div><label class="popisek" for="vp-k">Disperze k (∞ = Poisson)</label><input type="text" inputmode="decimal" id="vp-k" value="0,2"></div>
+            <div><label class="popisek" for="vp-pocet">Počet řetězců</label>
+              <select id="vp-pocet"><option>1000</option><option selected>5000</option><option>20000</option></select></div>
+          </div>
+          <div class="tlacitka"><button type="button" id="b-vp" class="hlavni">Simulovat řetězce</button></div>
+          <div class="dlazdice" id="vp-dlazdice"></div>
+          <div class="dva-sloupce">
+            <div><div class="graf-hlava"><h3>Pravděpodobnost vymření podle k</h3></div><canvas class="graf" id="g-vp-k"></canvas></div>
+            <div><div class="graf-hlava"><h3>Rozdělení počtu nákaz od jednoho případu</h3></div><canvas class="graf" id="g-vp-pot"></canvas></div>
+          </div>
+        </section>
+
+        <!-- ===== agenti a sítě ===== -->
+        <section id="p-agenti" role="tabpanel" aria-labelledby="z-agenti" hidden>
+          <p class="odliseni"><b>Individuální modely:</b> každý jedinec je samostatný. V režimu <b>prostor</b> se agenti pohybují po čtverci
+            (okraje jsou propojené) a nakazí souseda v dosahu; v režimu <b>síť</b> se nákaza šíří jen po hranách sítě kontaktů. Superšíření:
+            každý nakažený dostane náhodnou infekčnost z gama rozdělení s disperzí k. Stejný seed = stejný průběh.</p>
+          <div class="tlacitka" style="margin-top:0">
+            <div class="segment" role="group" aria-label="Režim">
+              <button type="button" data-rezim="prostor" aria-pressed="true">Prostor</button>
+              <button type="button" data-rezim="sit" aria-pressed="false">Síť kontaktů</button>
+            </div>
+          </div>
+          <div id="ag-chyba" class="chybovy" role="alert" hidden></div>
+          <div class="agent-rozlozeni">
+            <div>
+              <div class="arena-obal">
+                <canvas id="arena" aria-label="Animace: barevné tečky jsou jedinci podle stavu"></canvas>
+                <div class="arena-info" id="arena-info">den 0</div>
+              </div>
+              <div class="legenda-stavu">
+                <span style="--b: var(--c-s)">vnímaví (S)</span><span style="--b: var(--c-e)">exponovaní (E)</span>
+                <span style="--b: var(--c-i)">infekční (I)</span><span class="iso">izolovaní</span>
+                <span style="--b: var(--c-r)">zotavení (R)</span><span style="--b: var(--c-v)">očkovaní (V)</span>
+              </div>
+              <div class="tlacitka">
+                <button type="button" id="b-start" class="hlavni">▶ Spustit</button>
+                <button type="button" id="b-krok">+1 den</button>
+                <button type="button" id="b-reset">↺ Znovu</button>
+                <label class="napoveda">Rychlost
+                  <select id="rychlost"><option value="0.5">0,5 dne/s</option><option value="1">1 den/s</option><option value="2" selected>2 dny/s</option>
+                    <option value="5">5 dní/s</option><option value="15">15 dní/s</option><option value="0">co nejrychleji</option></select></label>
+              </div>
+            </div>
+            <div>
+              <div class="mrizka2">
+                <div><label class="popisek" for="agN">Počet jedinců</label><input type="text" inputmode="numeric" id="agN"></div>
+                <div><label class="popisek" for="agI0">Nakažených na začátku</label><input type="text" inputmode="numeric" id="agI0"></div>
+              </div>
+              <label class="popisek" for="seed">Seed (číslo nebo text)</label>
+              <div class="s-posuvnikem" style="grid-template-columns: minmax(0,1fr) auto">
+                <input type="text" id="seed" autocomplete="off" spellcheck="false">
+                <button type="button" id="b-seed" class="male" title="Náhodný seed">🎲 Náhodný</button>
+              </div>
+              <div id="pole-superk"></div>
+              <div id="ag-prostor">
+                <div id="pole-agenti"></div>
+                <label class="zaskrt"><input type="checkbox" id="kreslit-dosah"> zobrazit kontaktní dosah infekčních</label>
+              </div>
+              <div id="ag-sit" hidden>
+                <label class="popisek" for="f-sitTyp">Typ sítě</label>
+                <select id="f-sitTyp"><option value="er">Erdős–Rényi (náhodná)</option><option value="ws">Watts–Strogatz (malý svět)</option>
+                  <option value="ba">Barabási–Albert (bezškálová)</option><option value="dom">Domácnosti + komunita</option></select>
+                <div id="pole-sit"></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="kreslit-prenosy" checked> zobrazit přenosy (čáry)</label>
+              <label class="popisek" for="f-rozdeleni">Rozdělení délky latence a infekčnosti</label>
+              <select id="f-rozdeleni"><option value="exp">exponenciální (jako ODR)</option><option value="pevne">pevné (všichni stejně dlouho)</option></select>
+              <div id="ag-varovani" class="varovani" hidden></div>
+            </div>
+          </div>
+          <div class="dlazdice" id="ag-dlazdice"></div>
+          <div class="graf-hlava"><h3>Průběh u jedinců (plně) a v ODR (přerušovaně)</h3><button type="button" class="male" data-png="g-ag">PNG</button></div>
+          <div class="legenda" id="leg-ag"></div>
+          <canvas class="graf" id="g-ag"></canvas>
+          <div class="dva-sloupce">
+            <div><div class="graf-hlava"><h3>Reprodukční číslo: teoretické a empirické</h3></div>
+              <div class="legenda" id="leg-ag-rt"></div><canvas class="graf" id="g-ag-rt"></canvas></div>
+            <div><div class="graf-hlava"><h3 id="h-ag-hist">Počet nákaz od jednoho nakaženého</h3></div>
+              <canvas class="graf" id="g-ag-hist"></canvas></div>
+          </div>
+          <p class="napoveda">Empirické R = průměrný počet lidí, které nakazili ti, kdo se nakazili v daný den (jen kohorty, které už doběhly).
+            Histogram ukazuje skutečný počet nákaz od každého zotaveného – při superšíření je většina nul a dlouhý chvost.</p>
+          <h3>Opakované běhy</h3>
+          <div class="tlacitka">
+            <label class="napoveda">Počet běhů
+              <select id="pocet-behu"><option>5</option><option selected>10</option><option>20</option><option>50</option></select></label>
+            <button type="button" id="b-behy">Spustit opakované běhy</button>
+            <button type="button" id="b-behy-stop" hidden>Zastavit</button>
+          </div>
+          <div class="prubeh" id="behy-prubeh" hidden><div></div></div>
+          <div id="behy-vysledek"></div>
+          <div class="legenda" id="leg-behy" hidden></div>
+          <canvas class="graf" id="g-behy" hidden></canvas>
+        </section>
+
+        <!-- ===== kraje ===== -->
+        <section id="p-kraje" role="tabpanel" aria-labelledby="z-kraje" hidden>
+          <p class="odliseni"><b>Metapopulační model:</b> 14 krajů ČR (skutečné počty obyvatel), v každém běží SEIR; kraje propojuje
+            mobilita podle gravitačního modelu (víc kontaktů s lidnatými a blízkými kraji). Poloha krajů je jen schematická.
+            Populace se škáluje na zvolené N (poměry krajů zůstávají).</p>
+          <div class="mrizka3">
+            <div><label class="popisek" for="kr-zdroj">Ohnisko v kraji</label><select id="kr-zdroj"></select></div>
+          </div>
+          <div class="mrizka3" id="pole-kraje2"></div>
+          <div id="kr-chyba" class="chybovy" role="alert" hidden></div>
+          <div class="dva-sloupce">
+            <div>
+              <div class="mapa-obal"><canvas id="mapa" aria-label="Schéma krajů: kruhy podle počtu obyvatel, barva podle podílu infekčních"></canvas></div>
+              <div class="tlacitka">
+                <button type="button" id="b-kr-prehrat" class="male">▶ Přehrát</button>
+                <input type="range" id="kr-den" min="0" max="365" value="0" aria-label="Den" style="flex:1; min-width:120px">
+                <span class="napoveda" id="kr-den-popis">den 0</span>
+              </div>
+              <div class="stupnice"><span>podíl infekčních v kraji:</span><span>0 %</span><i></i><span id="kr-max">max</span></div>
+            </div>
+            <div>
+              <div class="graf-hlava" style="margin-top:0"><h3>Infekční v krajích (podíl obyvatel)</h3><button type="button" class="male" data-png="g-kr">PNG</button></div>
+              <p class="napoveda" style="margin:0">Zvýrazněný kraj vyberte v tabulce nebo v seznamu.</p>
+              <canvas class="graf" id="g-kr"></canvas>
+            </div>
+          </div>
+          <h3>Příchod a průběh epidemie v krajích</h3>
+          <div class="obal-tab" id="kr-tab" style="max-height:none"></div>
+        </section>
+
+        <!-- ===== analýza dat ===== -->
+        <section id="p-data" role="tabpanel" aria-labelledby="z-data" hidden>
+          <p class="odliseni"><b>Analýza dat:</b> nahrajte denní počty případů (CSV) nebo vytvořte syntetická data se známým R<sub>t</sub>.
+            Stránka odhadne R<sub>t</sub> metodou Cori et al. (2013), dobu zdvojnásobení a fituje R<sub>0</sub> modelu SEIR metodou
+            maximální věrohodnosti. Data zůstávají v prohlížeči.</p>
+          <div class="tlacitka" style="margin-top:0">
+            <label class="napoveda">Zdroj dat
+              <select id="da-zdroj"><option value="obnova">syntetická: obnovovací proces se známým Rₜ</option><option value="seir">syntetická: SEIR + Poissonův šum</option><option value="csv">vlastní CSV</option></select></label>
+            <button type="button" id="b-da-gen">Vytvořit data</button>
+          </div>
+          <div id="da-csv" hidden>
+            <p class="napoveda">Formát: jeden řádek na den, <code>datum;počet</code> (datum RRRR-MM-DD nebo D. M. RRRR) nebo <code>den;počet</code>.
+              Oddělovač středník, čárka nebo tabulátor; hlavička je volitelná. Chybějící dny se doplní nulou.</p>
+            <div class="tlacitka"><input type="file" id="da-soubor" accept=".csv,.txt,text/csv,text/plain" aria-label="Soubor CSV"></div>
+            <label class="popisek" for="da-text">…nebo vložte text</label>
+            <textarea id="da-text" rows="5" placeholder="2020-03-01;3&#10;2020-03-02;5&#10;…"></textarea>
+            <div class="tlacitka"><button type="button" id="b-da-nacti" class="hlavni">Načíst</button></div>
+          </div>
+          <div id="da-syn" class="mrizka3">
+            <div><label class="popisek" for="da-r1">Rₜ na začátku</label><input type="text" inputmode="decimal" id="da-r1" value="2"></div>
+            <div><label class="popisek" for="da-r2">Rₜ od dne zlomu</label><input type="text" inputmode="decimal" id="da-r2" value="0,8"></div>
+            <div><label class="popisek" for="da-zlom">Den zlomu</label><input type="text" inputmode="numeric" id="da-zlom" value="40"></div>
+            <div><label class="popisek" for="da-dny">Počet dní</label><input type="text" inputmode="numeric" id="da-dny" value="100"></div>
+          </div>
+          <div class="mrizka3">
+            <div><label class="popisek" for="da-si">Sériový interval: průměr [dní]</label><input type="text" inputmode="decimal" id="da-si" value="5"></div>
+            <div><label class="popisek" for="da-sisd">Sériový interval: sm. odchylka</label><input type="text" inputmode="decimal" id="da-sisd" value="3"></div>
+            <div><label class="popisek" for="da-okno">Okno odhadu τ [dní]</label><input type="text" inputmode="numeric" id="da-okno" value="7"></div>
+          </div>
+          <div id="da-chyba" class="chybovy" role="alert" hidden></div>
+          <div id="da-varovani" class="varovani" hidden></div>
+          <div class="dlazdice" id="da-dlazdice"></div>
+          <div class="graf-hlava"><h3>Denní případy a fit SEIR</h3><button type="button" class="male" data-png="g-da">PNG</button></div>
+          <div class="legenda" id="leg-da"></div>
+          <canvas class="graf" id="g-da"></canvas>
+          <div class="graf-hlava"><h3>Odhad R<sub>t</sub> (Cori) s 95% intervalem</h3><button type="button" class="male" data-png="g-da-rt">PNG</button></div>
+          <div class="legenda" id="leg-da-rt"></div>
+          <canvas class="graf" id="g-da-rt"></canvas>
+          <h3>Doba zdvojnásobení</h3>
+          <div class="tlacitka" style="margin-top:0">
+            <label class="napoveda">od dne <input type="text" inputmode="numeric" id="da-od" value="10" style="width:70px"></label>
+            <label class="napoveda">do dne <input type="text" inputmode="numeric" id="da-do" value="35" style="width:70px"></label>
+            <button type="button" id="b-da-zdv" class="male">Spočítat</button>
+          </div>
+          <div id="da-zdv" class="napoveda"></div>
+          <h3>Fit modelu SEIR</h3>
+          <p class="napoveda">Odhaduje se R<sub>0</sub> a počet nakažených na začátku; latence, infekční období, N a c se berou z parametrů vlevo,
+            podíl hlášených případů zadejte zde. 95% interval R<sub>0</sub> z profilové věrohodnosti (pokles log-věrohodnosti o 1,92).
+            Fit předpokládá konstantní přenos – u dat se zlomem (zásahy) proto nesedí, což je samo o sobě poučné.</p>
+          <div class="tlacitka">
+            <label class="napoveda">hlášeno <input type="text" inputmode="decimal" id="da-hlaseni" value="100" style="width:60px"> %</label>
+            <label class="napoveda">fit do dne <input type="text" inputmode="numeric" id="da-fitdo" value="" placeholder="vše" style="width:70px"></label>
+            <button type="button" id="b-da-fit" class="hlavni">Fitovat</button>
+          </div>
+          <div id="da-fit" class="napoveda"></div>
+        </section>
+
+        <!-- ===== citlivost ===== -->
+        <section id="p-citlivost" role="tabpanel" aria-labelledby="z-citlivost" hidden>
+          <p class="odliseni"><b>Citlivostní analýza:</b> mřížka deterministických simulací přes dva parametry (ostatní podle nastavení vlevo).
+            Výrazná čára odděluje oblast, kde je R na začátku pod 1 (ohnisko nevzlétne). Křížek = aktuální nastavení.</p>
+          <div class="mrizka3" id="ci-volby"></div>
+          <div class="tlacitka">
+            <button type="button" id="b-ci" class="hlavni">Spočítat mapu</button>
+            <button type="button" id="b-ci-stop" hidden>Zastavit</button>
+            <button type="button" class="male" id="b-ci-png">PNG</button>
+          </div>
+          <div class="prubeh" id="ci-prubeh" hidden><div></div></div>
+          <div id="ci-chyba" class="chybovy" role="alert" hidden></div>
+          <div class="tepl-obal"><canvas id="tepl" tabindex="0" aria-label="Teplotní mapa citlivosti"></canvas></div>
+          <div class="stupnice"><span id="ci-min">min</span><i></i><span id="ci-maxp">max</span><span id="ci-metrika"></span></div>
+          <p class="napoveda" id="ci-info"></p>
+        </section>
+
+        <!-- ===== porovnání ===== -->
+        <section id="p-porovnani" role="tabpanel" aria-labelledby="z-porovnani" hidden>
+          <p class="odliseni">Až čtyři scénáře vedle sebe, každý je uložená sada všech parametrů (včetně časové osy). Počítá se rozšířeným
+            kompartmentovým modelem.</p>
+          <div class="tlacitka" style="margin-top:0">
+            <button type="button" id="b-pridat" class="hlavni">+ Přidat aktuální nastavení</button>
+            <select id="experiment" aria-label="Připravené experimenty">
+              <option value="">Připravený experiment…</option>
+              <option value="omezeni">Plošné omezení kontaktů 0 / 25 / 50 / 75 %</option>
+              <option value="prostredi">Zavření škol / práce z domova / omezení volného času</option>
+              <option value="ockovani">Očkování na začátku 0 / 30 / 50 / 70 %</option>
+              <option value="priorita">Priorita očkovací kampaně (věk zapnut)</option>
+              <option value="izolace">Izolace 60 % po 0 / 1 / 2 / 4 dnech</option>
+              <option value="asympt">Podíl asymptomatických 0 / 20 / 40 / 60 % (izolace 60 %)</option>
+              <option value="nacasovani">Omezení 50 % na 30 dní od dne 10 / 30 / 50 / 70</option>
+              <option value="imunita">Trvalá imunita / 1 rok / ½ roku / ¼ roku</option>
+            </select>
+            <button type="button" id="b-vycistit">Smazat vše</button>
+          </div>
+          <div id="scenare" class="scenare"></div>
+          <div id="por-grafy" hidden>
+            <div class="graf-hlava"><h3>Infekční I(t) – všechny scénáře (podíl populace)</h3><button type="button" class="male" data-png="g-por">PNG</button></div>
+            <div class="legenda" id="leg-por"></div>
+            <canvas class="graf" id="g-por"></canvas>
+            <div class="graf-hlava"><h3>Obsazenost JIP (na 100 000 obyvatel)</h3></div>
+            <canvas class="graf" id="g-por-jip"></canvas>
+            <h3>Souhrn</h3>
+            <div class="obal-tab" id="por-tabulka" style="max-height:none"></div>
+          </div>
+        </section>
+
+        <!-- ===== dokumentace ===== -->
+        <section id="p-dok" role="tabpanel" aria-labelledby="z-dok" hidden>
+          <div class="dok">
+            <p><b>K čemu simulátor je:</b> k pochopení mechanismů – proč existuje práh R = 1, proč epidemie skončí dřív, než se nakazí všichni,
+              jak heterogenita kontaktů mění R<sub>0</sub>, proč zpoždění izolace a asymptomatičtí oslabují kontrolu, proč malé ohnisko může
+              náhodou vymřít a jak superšíření mění pravděpodobnost vymření. <b>Není to nástroj pro předpověď.</b> Skutečné předpovědní
+              modely jsou kalibrované na data, mají nejistotu všech parametrů, regionální a sociální strukturu a i tak se často mýlí.</p>
+
+            <h3>1. Rozšířený kompartmentový model (ODR)</h3>
+            <span class="vzorec">λ_g(t) = p · s(t) · Σ_h C_gh(t) · (f_iso·I_h + r_A·A_h) / N_h  +  ι(t)/N
+C(t)  = κ · Σ_prostředí m_prostředí(t) · C^prostředí          s(t) = 1 + a·cos(2π(t − t_max)/365)
+f_iso = 1 − q · e^(−γ d)
+
+dS/dt = −λS − v_g(t) + ω R + ω_V V
+dE/dt =  λS − σE
+dA/dt =  p_A σE − γA                 dI/dt = (1 − p_A) σE − γI
+dH/dt =  h_g γI − H/d_H              dC/dt = c_JIP H/d_H − C/d_C
+dD/dt =  f_H,g H/d_H + f_C,g C/d_C
+dR/dt =  γA + (1 − h_g) γI + (1 − c_JIP − f_H,g) H/d_H + (1 − f_C,g) C/d_C − ωR
+dV/dt =  v_g(t) − ω_V V             v_g = dávky_g(t) · e · S/(S + E + A + R)</span>
+            <ul>
+              <li><b>p</b> pravděpodobnost přenosu při kontaktu, <b>c</b> průměrný počet kontaktů za den, σ = 1/latence, γ = 1/infekční období.
+                Bez latence (SIR) jde λS rovnou do A a I.</li>
+              <li><b>Věková struktura:</b> 8 skupin po 10 letech (70+). Matice C<sup>prostředí</sup> pro domácnost, školu, práci a ostatní
+                jsou projekce pro ČR podle Prem, Cook, Jit (2017), agregované z 16 pětiletých skupin vážením populací ČR (Eurostat 2024) a
+                symetrizované tak, aby platila reciprocita C<sub>ij</sub>N<sub>i</sub> = C<sub>ji</sub>N<sub>j</sub>. Matice se škáluje
+                faktorem κ, aby průměrný počet kontaktů byl c (v nezměněných datech je to asi 12,8 kontaktu/den). V homogenním režimu se c
+                rozdělí na prostředí podle stejných dat (domov 26 %, škola 14 %, práce 27 %, ostatní 33 %), takže i tam má smysl „zavřít školy“.</li>
+              <li><b>R<sub>0</sub></b> je spektrální poloměr matice dalších generací (Diekmann, Heesterbeek, Metz 1990):
+                <code>K_gh = p · C_gh · (N_g/N_h) · D</code>, <code>D = [(1−p_A) + p_A r_A]/γ</code>. Bez věku R<sub>0</sub> = p·c·D.
+                R<sub>t</sub> je totéž se současnými S<sub>g</sub>, zásahy, sezónností a izolací. Heterogenní míchání zvyšuje R<sub>0</sub>
+                proti p·c·D, protože nejaktivnější skupiny se potkávají hlavně mezi sebou.</li>
+              <li><b>Závažnost:</b> zadává se podíl hospitalizovaných z nakažených (IHR) a smrtnost z nakažených (IFR) po věkových skupinách;
+                přepočet h<sub>g</sub> = IHR/(1 − p<sub>A</sub>), φ<sub>g</sub> = IFR/IHR (úmrtí z hospitalizovaných); podíl ψ úmrtí nastane na JIP:
+                f<sub>C,g</sub> = ψ φ<sub>g</sub>/c<sub>JIP</sub>, f<sub>H,g</sub> = (1 − ψ) φ<sub>g</sub>. Úmrtí nastávají jen
+                přes nemocnici (skupina s IHR = 0 tedy nemá úmrtí). Kapacita lůžek a JIP je jen referenční čára – model neřeší, co se děje
+                s pacienty nad kapacitou. Ilustrativní profil je řádově podle odhadů pro COVID-19 (Verity et al. 2020) a nelze ho použít pro
+                jinou nemoc; v homogenním režimu se použije populační průměr (předpoklad stejného zasažení všech věků).</li>
+              <li><b>Očkovací kampaň:</b> od zvoleného dne kapacita dávek/den, rozdělovaná podle priority, dokud skupina nedosáhne zvolené
+                ochoty k očkování. Lidé se očkují bez ohledu na to, zda už nemoc prodělali – dávky pro E, A a R jsou „promarněné“. Model
+                „vše nebo nic“: chráněno je e · dávky; ochrana může slábnout (ω<sub>V</sub>).</li>
+              <li><b>Konečná velikost</b> (SIR/SEIR bez zásahů v čase): <code>z = 1 − exp(−R₀ z)</code>; s počáteční imunitou
+                <code>x = s₀ + i₀ − s₀·exp(−R₀ x)</code>. Práh stádní imunity 1 − 1/R<sub>0</sub>. Vrchol SIR: I<sub>max</sub>/N = 1 − (1 + ln R<sub>0</sub>)/R<sub>0</sub>.</li>
+            </ul>
+
+            <h3>2. Stochastické modely</h3>
+            <ul>
+              <li><b>Gillespie (SSA):</b> čas do další události je exponenciální s intenzitou a<sub>0</sub> = Σ intenzit, typ události se losuje
+                úměrně intenzitám. Přesná realizace Markovova procesu. Časově proměnné intenzity (zásahy, sezónnost, importy) jsou po dnech
+                konstantní; na hranici dne se čekání losuje znovu (bezpaměťovost exponenciálního rozdělení).</li>
+              <li><b>Tau-leaping:</b> v kroku τ se počty přechodů losují binomicky, např. Bin(S, 1 − e<sup>−λτ</sup>), takže nevzniknou záporné
+                počty. Je rychlý i pro miliony lidí, ale má chybu úměrnou τ (při τ = 0,1 dne řádově desetiny procenta konečné velikosti).</li>
+              <li><b>Vymření:</b> na začátku se epidemie chová jako větvící proces. S exponenciální infekční dobou má počet potomků geometrické
+                rozdělení a pravděpodobnost vymření je 1/R na jeden počáteční případ, tedy (1/R)<sup>I₀</sup>.</li>
+              <li><b>Superšíření:</b> počet potomků ~ NB(R, k). Pravděpodobnost vymření q je nejmenší kořen q = (1 + R(1−q)/k)<sup>−k</sup>
+                (Lloyd-Smith et al. 2005); pro k → ∞ (Poisson) q = e<sup>−R(1−q)</sup>, pro k = 1 (geometrické) q = 1/R.</li>
+              <li>Stochastický kompartmentový model je homogenní a nesleduje hospitalizace; asymptomatičtí jsou zahrnuti průměrnou infekčností.</li>
+            </ul>
+
+            <h3>3. Agenti a sítě</h3>
+            <ul>
+              <li><b>Prostor:</b> torus, dosah r volen tak, aby v dosahu bylo v průměru k lidí: k = (N − 1)·π r². Pravděpodobnost nákazy
+                za krok 1 − exp(−p·(c/k)·ν·s(t)·Δt). Omezení kontaktů zmenší dosah na r·√m(t). Sousedé se hledají v mřížce (buňka ≥ r, 3 × 3 buněk).</li>
+              <li><b>Síť:</b> přenos po hraně s intenzitou τ = p·c/k̄ (stejná průměrná síla infekce), u domácností váha w. Odhad
+                R<sub>0</sub> = T·(⟨k²⟩ − ⟨k⟩)/⟨k⟩ s přenosností T = τ/(τ + γ) (exponenciální doba) nebo 1 − e<sup>−τD</sup> (pevná doba)
+                platí pro konfigurační (stromovité) sítě; u sítí s mnoha trojúhelníky (malý svět, domácnosti) R<sub>0</sub> nadhodnocuje.
+                Na náhodné síti ER s pevnou dobou je konečná velikost z = 1 − exp(−k̄ T z) (Newman 2002).</li>
+              <li><b>Superšíření:</b> každý nakažený má infekčnost ν ~ Gama(k, 1/k) (průměr 1). S pevnou infekční dobou a mnoha kontakty je počet
+                potomků záporně binomický s disperzí k.</li>
+              <li>Agenti a sítě nemají věkovou strukturu, hospitalizace, importy ani očkovací kampaň (jen počáteční proočkovanost).
+                Asymptomatičtí se promítají tak, že p se vynásobí (1 − p<sub>A</sub>) + p<sub>A</sub>r<sub>A</sub> a izolace se týká jen podílu (1 − p<sub>A</sub>).</li>
+            </ul>
+
+            <h3>4. Kraje (metapopulace)</h3>
+            <span class="vzorec">λ_i = β(t) · Σ_j M_ij · I_j / N_j + ι/N
+M_ii = 1 − m,   M_ij = m · w_ij / Σ_k≠i w_ik,   w_ij = N_j / d_ij^a      (gravitační model)</span>
+            <p>m = podíl kontaktů mimo vlastní kraj, d<sub>ij</sub> vzdálenost přibližných těžišť krajů. Mobilitní data operátorů ani
+              dojížďky (ČSÚ) nejsou použita – gravitační model je hrubá náhrada. Pro m = 0 se nákaza z kraje nešíří; pro M<sub>ij</sub> = N<sub>j</sub>/N
+              je model totožný s homogenním. „Příchod“ = první den s aspoň 10 kumulativními nákazami (deterministický model šíří infekci
+              okamžitě v nepatrném množství, proto práh).</p>
+
+            <h3>5. Analýza dat</h3>
+            <ul>
+              <li><b>R<sub>t</sub> podle Cori et al. (2013):</b> I<sub>t</sub> ~ Poisson(R<sub>t</sub> Λ<sub>t</sub>), Λ<sub>t</sub> = Σ<sub>s</sub> I<sub>t−s</sub> w<sub>s</sub>.
+                S apriorním Gama(1, 5) a oknem τ je aposteriorní rozdělení Gama(1 + ΣI, 1/(1/5 + ΣΛ)). Sériový interval w je diskretizované
+                gama rozdělení w<sub>s</sub> = F(s) − F(s − 1). Odhad v čase t popisuje okno [t − τ + 1, t], tedy reaguje se zpožděním.
+                Odhad je platný jen při stálém podílu hlášených případů a správném sériovém intervalu.</li>
+              <li><b>Doba zdvojnásobení:</b> regrese ln I<sub>t</sub> = a + r t (dny s nulou vynechány), 95% interval r z t-rozdělení, doba = ln 2 / r.</li>
+              <li><b>Fit SEIR:</b> maximální věrohodnost s Poissonovým rozdělením denních případů (Nelder–Mead), 95% interval R<sub>0</sub>
+                z profilové věrohodnosti. Neuvažuje nadměrný rozptyl (overdispersion) ani zpoždění hlášení, takže interval bývá příliš úzký.</li>
+            </ul>
+
+            <h3>Předpoklady, které platí všude</h3>
+            <table>
+              <thead><tr><th>Předpoklad</th><th>Co ve skutečnosti chybí</th></tr></thead>
+              <tbody>
+                <tr><td>Míchání uvnitř skupiny je homogenní</td><td>Sítě kontaktů, opakované kontakty, superšířicí události (částečně v záložce Agenti a sítě).</td></tr>
+                <tr><td>Konstantní parametry nákazy</td><td>Nové varianty, změny chování podle situace, únava z opatření.</td></tr>
+                <tr><td>Uzavřená populace</td><td>Narození, úmrtí z jiných příčin, migrace; importy jen jako konstantní tok.</td></tr>
+                <tr><td>Exponenciálně rozdělené doby (ODR)</td><td>Skutečné doby mají tvar spíš gama/lognormálního rozdělení; mění to rychlost růstu, ne konečnou velikost.</td></tr>
+                <tr><td>Infekčnost začíná po latenci</td><td>U řady nemocí přenos začíná před příznaky – izolace podle příznaků pak účinkuje méně.</td></tr>
+                <tr><td>Zásahy působí okamžitě a přesně</td><td>Dodržování, postupné zavádění, kompenzační chování.</td></tr>
+                <tr><td>Kontaktní matice z projekce (2017)</td><td>Kontakty v ČR nikdo přímo v této podobě neměřil; po pandemii se mohly změnit.</td></tr>
+              </tbody>
+            </table>
+
+            <h3>Zdroje dat a literatura</h3>
+            <ul>
+              <li>Prem K., Cook A. R., Jit M. (2017): Projecting social contact matrices in 152 countries using contact surveys and demographic data.
+                PLoS Comput Biol 13(9): e1005697. <a href="https://doi.org/10.1371/journal.pcbi.1005697" target="_blank" rel="noopener">doi:10.1371/journal.pcbi.1005697</a> – data CC BY 4.0.</li>
+              <li>Eurostat: demo_pjangroup, demo_r_pjanaggr3 (obyvatelstvo k 1. 1. 2024), © Evropská unie, CC BY 4.0. Data se nemění (stav k datu), stažena 19. 10. 2026.</li>
+              <li>Verity R. et al. (2020): Estimates of the severity of coronavirus disease 2019: a model-based analysis. Lancet Infect Dis 20: 669–677.</li>
+              <li>Kermack W. O., McKendrick A. G. (1927): A contribution to the mathematical theory of epidemics. Proc. R. Soc. A 115: 700–721.</li>
+              <li>Diekmann O., Heesterbeek J. A. P., Metz J. A. J. (1990): On the definition and the computation of the basic reproduction ratio R0. J Math Biol 28: 365–382.</li>
+              <li>Gillespie D. T. (1977): Exact stochastic simulation of coupled chemical reactions. J Phys Chem 81: 2340–2361.</li>
+              <li>Lloyd-Smith J. O. et al. (2005): Superspreading and the effect of individual variation on disease emergence. Nature 438: 355–359.</li>
+              <li>Newman M. E. J. (2002): Spread of epidemic disease on networks. Phys Rev E 66: 016128.</li>
+              <li>Cori A. et al. (2013): A new framework and software to estimate time-varying reproduction numbers during epidemics. Am J Epidemiol 178: 1505–1512.</li>
+              <li>Keeling M. J., Rohani P. (2008): Modeling Infectious Diseases in Humans and Animals. Princeton University Press.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <script src="epidemie/ui_zaklad.js"></script>
+  <script src="epidemie/ui_model.js"></script>
+  <script src="epidemie/ui_stoch.js"></script>
+  <script src="epidemie/ui_agenti.js"></script>
+  <script src="epidemie/ui_kraje.js"></script>
+  <script src="epidemie/ui_data.js"></script>
+  <script src="epidemie/ui_citlivost.js"></script>
+  <script src="epidemie/ui_porovnani.js"></script>
+  <script src="epidemie/ui_start.js"></script>
+</body>
+</html>

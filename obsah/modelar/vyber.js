@@ -46,6 +46,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           // téměř vodorovná horní stěna: rovina jen posunutá nahoru, osy jako deska
           M.nastavRovinu(zasah.normala.z > 0.9999 ? { puvod: r.puvod, osy: M.ROVINA_DESKY.osy } : r);
         } else M.nastavRovinu(null);
+      } else if ((M.app.rezim === 'skicaNaPlose' || M.app.rezim === 'kapsaNaPlose') && zasah) {
+        const op = M.app.rezim === 'kapsaNaPlose' ? 'vyriznout' : 'pridat';
+        M.nastavRezim(null);
+        M.otevriSkicuNaPlose(zasah, op);
+        return;
       } else if (M.app.rezim === 'vzorDer' && zasah) {
         M.nastavRezim(null);
         M.otevriVzorDer(zasah);
@@ -90,6 +95,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const p0 = new V(...M.rovina().puvod);
       const st = new V(...uzel.poloha).sub(p0);
       t.ref = [st.dot(u), st.dot(v)];
+      // výchozí bod kót posunu (ui/rychleKoty.js): střed spodku obálky tažených těles před tahem
+      const ob = M.obalkaVice(t.ids.map(id => M.najdiUzel(t.zaklad, id)).filter(Boolean));
+      t.p0 = [ob.stred[0], ob.stred[1], ob.min[2]];
       el.classList.add('tah-posun');
     }
 
@@ -107,8 +115,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         dv = Math.round((t.ref[1] + dv) / k) * k - t.ref[1];
       }
       const posunuti = t.u.clone().multiplyScalar(du).addScaledVector(t.v, dv);
+      // kóty od původní polohy (kreslí ui/rychleKoty.js při události dokument); vypnuté = jen popisek u kurzoru
+      M.tahPosunu = { p0: t.p0, u: t.u.toArray(), v: t.v.toArray(), du, dv, rovina: !!M.app.rovina };
       M.zmenDokument(M.posunUzly(t.zaklad, t.ids, posunuti.toArray()), '', { docasne: true });
-      M.ukazPopisek(`${M.app.rovina ? 'U' : 'X'} ${du >= 0 ? '+' : ''}${M.mm(du, 2)}  ${M.app.rovina ? 'V' : 'Y'} ${dv >= 0 ? '+' : ''}${M.mm(dv, 2)} mm`, t.x, t.y);
+      if (!M.kotyPosunuZapnute || !M.kotyPosunuZapnute()) M.ukazPopisek(`${M.app.rovina ? 'U' : 'X'} ${du >= 0 ? '+' : ''}${M.mm(du, 2)}  ${M.app.rovina ? 'V' : 'Y'} ${dv >= 0 ? '+' : ''}${M.mm(dv, 2)} mm`, t.x, t.y);
     }
 
     // ------------------------------------------------------------ události
@@ -153,6 +163,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       M.skryjPopisek();
       if (t.druh === 'posun') {
         M.ovladaniBlokovano = false;
+        M.tahPosunu = null;
         if (zrusit) M.zrusUpravu(); else M.dokonciUpravu(t.kopie ? 'Duplikovat a posunout' : 'Posun');
         return;
       }

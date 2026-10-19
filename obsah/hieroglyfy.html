@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏺 Egyptský písař – přepis do hieroglyfů</title>
+  <script src="lib/opentype.min.js"></script>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="fonty/fonty.js"></script>
+  <script src="hieroglyfy/znaky.js"></script>
+  <script src="hieroglyfy/jadro.js"></script>
+  <script src="../podpis.js" defer></script>
+  <style>
+    /* Vlevo se píše česky, vpravo písař sází hieroglyfy: skládá znaky
+       do čtverců, jména dává do kartuší, známá slova bere ze slovníčku.
+       Logika je v hieroglyfy/jadro.js (testy v node), tady jen UI. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* font s hieroglyfy jako záložní písmo – hieroglyfy v nadpisu, nápovědách
+       a v nabídkách se pak kreslí i uprostřed běžného textu */
+    body {
+      font-family: var(--font), 'fnt-hieroglyfy', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+    .container { padding: 12px 16px 24px; }
+    .header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .header h1 { font-size: 1.35rem; font-weight: 600; }
+    .header p { font-size: .85rem; color: var(--text-muted); }
+    .header a { color: var(--accent); }
+
+    .btn {
+      padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer;
+      font-size: .85rem; font-family: inherit; background: var(--bg-control); color: var(--text);
+      transition: filter .15s ease, border-color .15s; white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #fff); font-weight: 600; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-mala { padding: 5px 9px; font-size: .8rem; }
+
+    /* --- rozvržení: vstup + volby vlevo, výstup vpravo --- */
+    .plocha { display: grid; grid-template-columns: minmax(300px, 400px) 1fr; gap: 14px; align-items: start; }
+    .panel {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+      display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+    }
+    .panel-hlava {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 44px;
+      padding: 6px 10px 6px 14px; border-bottom: 1px solid var(--border);
+      font-size: .8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .panel-hlava .mezera { flex: 1; }
+    .panel-hlava .btn { text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+    #zdroj {
+      width: 100%; min-height: 130px; resize: vertical; border: none; outline: none;
+      background: var(--bg-input); color: var(--text); padding: 14px; font-size: 1.1rem; line-height: 1.5;
+      font-family: inherit; border-bottom: 1px solid var(--border);
+    }
+    #zdroj:focus { box-shadow: inset 0 0 0 2px var(--accent-soft); }
+    .priklady { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .priklady .popisek { width: 100%; }
+
+    .volby { display: flex; flex-direction: column; gap: 12px; padding: 12px 14px 14px; }
+    .pole { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .pole > label, .popisek {
+      font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+    }
+    .pole select {
+      padding: 7px 9px; background: var(--bg-input); border: 1px solid var(--border-strong);
+      border-radius: 6px; color: var(--text); font-size: .88rem; font-family: inherit;
+    }
+    .pole select:focus { outline: none; border-color: var(--accent); }
+    .pole input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .hodnota { color: var(--accent); font-weight: 600; text-transform: none; }
+    .radek2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .zaskrt { display: flex; flex-direction: column; gap: 6px; }
+    .zaskrt label { display: flex; gap: 8px; align-items: flex-start; font-size: .88rem; cursor: pointer; line-height: 1.35; }
+    .zaskrt input { accent-color: var(--accent); margin-top: 3px; flex: none; }
+    .zaskrt small { color: var(--text-faint); }
+    .vypnuto { opacity: .45; pointer-events: none; }
+
+    .segment { display: flex; flex-wrap: wrap; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+    .segment button {
+      flex: 1 1 auto; padding: 7px 9px; border: none; background: var(--bg-control); color: var(--text-muted);
+      font: inherit; font-size: .83rem; cursor: pointer; border-right: 1px solid var(--border-strong);
+    }
+    .segment button:last-child { border-right: none; }
+    .segment button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent, #fff); }
+    .segment button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .vzhledy { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .vzhled {
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid var(--border-strong);
+      font-size: 16px; display: flex; align-items: center; justify-content: center; padding: 0;
+      font-family: 'fnt-hieroglyfy', serif;
+    }
+    .vzhled[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); transform: scale(1.08); }
+    .vzhled:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .vzhledy input[type="color"] { width: 34px; height: 34px; padding: 2px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-input); cursor: pointer; }
+
+    /* --- výstup --- */
+    .panel-vystup { position: sticky; top: 10px; }
+    #vystup {
+      min-height: 260px; max-height: calc(100vh - 150px); overflow: auto; padding: 14px;
+      background: var(--bg-input); display: flex; align-items: flex-start; justify-content: flex-start;
+    }
+    #vystup.prazdny::before { content: 'Napište vlevo jméno nebo text…'; color: var(--text-faint); padding: 8px; }
+    #vystup.nacita { opacity: .4; }
+    #vystup svg { display: block; max-width: none; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+    #vystup svg path[data-polozka] { cursor: help; transition: fill .12s; }
+    #vystup svg path.zvyraz { fill: var(--zvyraz, #c0392b); }
+    .rtl-vystup { justify-content: flex-end !important; }
+    .akce { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--border); }
+    .akce .mezera { flex: 1; }
+    .info-znak { padding: 6px 12px; font-size: .85rem; color: var(--text-muted); border-top: 1px solid var(--border); min-height: 32px; }
+    .info-znak b { color: var(--text); }
+    .panel-vystup.cela { position: fixed; inset: 0 0 22px 0; z-index: 100; border-radius: 0; border: none; }
+    .panel-vystup.cela #vystup { max-height: none; flex: 1; }
+
+    .hlaseni {
+      margin-top: 12px; padding: 9px 12px; border-left: 3px solid var(--warn); border-radius: 6px;
+      background: var(--bg-control); font-size: .86rem; line-height: 1.5;
+    }
+    .hlaseni:empty { display: none; }
+
+    /* --- rozbor --- */
+    .sekce { margin-top: 16px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; }
+    .sekce > summary, .sekce > h2 {
+      padding: 11px 14px; font-size: .95rem; font-weight: 600; cursor: pointer; list-style: none;
+    }
+    .sekce > summary::-webkit-details-marker { display: none; }
+    .sekce > summary::before { content: '▸ '; color: var(--accent); }
+    .sekce[open] > summary::before { content: '▾ '; }
+    .sekce-telo { padding: 0 14px 14px; overflow-x: auto; }
+    table.rozbor { border-collapse: collapse; width: 100%; font-size: .88rem; }
+    table.rozbor th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    table.rozbor td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    table.rozbor tr.zvyraz td { background: var(--accent-soft); }
+    .tr { font-style: italic; color: var(--accent); white-space: nowrap; }
+    .druh { font-size: .72rem; color: var(--text-faint); display: block; }
+    .cipy { display: flex; flex-wrap: wrap; gap: 4px; }
+    .cip {
+      display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 4px; border-radius: 6px;
+      background: var(--bg-control); border: 1px solid var(--border); font-size: .78rem; color: var(--text-muted);
+    }
+    .cip .g { font-family: 'fnt-hieroglyfy', serif; font-size: 1.5rem; line-height: 1.15; color: var(--text); }
+    .pozn { color: var(--text-faint); font-size: .8rem; }
+
+    /* --- seznam znaků --- */
+    .seznam-lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .seznam-lista input, .seznam-lista select {
+      padding: 7px 9px; background: var(--bg-input); border: 1px solid var(--border-strong);
+      border-radius: 6px; color: var(--text); font-size: .88rem; font-family: inherit;
+    }
+    .seznam-lista input { flex: 1 1 200px; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 6px; }
+    .znak-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 4px;
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      color: var(--text); font: inherit; min-width: 0;
+    }
+    .znak-btn:hover, .znak-btn:focus-visible { border-color: var(--accent); outline: none; }
+    .znak-btn .g { font-family: 'fnt-hieroglyfy', serif; font-size: 2rem; line-height: 1.2; height: 1.25em; }
+    .znak-btn .k { font-size: .72rem; color: var(--text-muted); font-weight: 600; }
+    .znak-btn .z { font-size: .7rem; color: var(--accent); font-style: italic; min-height: 1em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pocet { font-size: .8rem; color: var(--text-faint); }
+
+    .rada { line-height: 1.6; font-size: .9rem; }
+    .rada p, .rada ul { margin: 0 0 8px; }
+    .rada ul { padding-left: 20px; }
+    .rada code { background: var(--bg-control); padding: 1px 5px; border-radius: 4px; }
+    .rada .h { font-family: 'fnt-hieroglyfy', serif; font-size: 1.3em; }
+
+    @media (max-width: 860px) {
+      .plocha { grid-template-columns: 1fr; }
+      .panel-vystup { position: static; }
+      #vystup { max-height: 70vh; }
+    }
+    @media print {
+      body { background: #fff; }
+      .container > :not(.plocha), .plocha > :not(.panel-vystup), .panel-hlava, .akce, .info-znak, #autor-podpis { display: none !important; }
+      .plocha { display: block; }
+      .panel, #vystup { border: none; background: #fff; max-height: none; overflow: visible; }
+      #vystup svg { box-shadow: none; max-width: 100%; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>𓂀 Egyptský písař</h1>
+      <p>Napište jméno nebo text a písař ho zapíše hieroglyfy: složí znaky do čtverců, jména dá do kartuše a známá slova vezme ze slovníčku.
+        Jednoduchý přepis písmeno po písmenu je i v <a href="prevod_pisma.html">Převodníku písma</a>.</p>
+    </div>
+
+    <div class="plocha">
+      <section class="panel" aria-labelledby="hlavaZdroj">
+        <div class="panel-hlava"><span id="hlavaZdroj">Text česky</span><span class="mezera"></span>
+          <button class="btn btn-mala" id="btnVymazat" type="button">Vymazat</button></div>
+        <textarea id="zdroj" spellcheck="false" aria-labelledby="hlavaZdroj"
+          placeholder="Např. [Kleopatra] nebo život zdraví síla&#10;Jméno do kartuše dejte do [hranatých závorek], znak podle Gardinera vložíte jako {G17}."></textarea>
+        <div class="priklady">
+          <span class="popisek">Vyzkoušejte</span>
+          <button class="btn btn-mala" type="button" data-priklad="[Kleopatra]">Kleopatra</button>
+          <button class="btn btn-mala" type="button" data-priklad="[Ramesse]&#10;život zdraví síla">Ramesse</button>
+          <button class="btn btn-mala" type="button" data-priklad="Ahoj [Jana]">Ahoj Jano</button>
+          <button class="btn btn-mala" type="button" data-priklad="láska krása věčnost">Láska, krása, věčnost</button>
+          <button class="btn btn-mala" type="button" data-priklad="Egypt 2026">Rok 2026</button>
+          <button class="btn btn-mala" type="button" data-priklad="{S34}{D10}{R11}{S40}">Amulety</button>
+        </div>
+        <div class="volby">
+          <div class="pole">
+            <span class="popisek" id="lStyl">Způsob přepisu</span>
+            <div class="segment" role="group" aria-labelledby="lStyl" id="segStyl">
+              <button type="button" data-styl="pisar" aria-pressed="true" title="Jako egyptský písař v ptolemaiovské době psal cizí jména">Jako písař</button>
+              <button type="button" data-styl="muzeum" aria-pressed="false" title="Každé písmeno jedním znakem – dá se přečíst zpátky">Muzejní abeceda</button>
+            </div>
+          </div>
+          <div class="radek2">
+            <div class="pole" id="poleSamohl">
+              <label for="samohlasky">Samohlásky</label>
+              <select id="samohlasky">
+                <option value="vse">psát všechny</option>
+                <option value="zacatek">jen na začátku slova</option>
+                <option value="zadne">vynechat (jako Egypťané)</option>
+              </select>
+            </div>
+            <div class="pole">
+              <label for="det">Za jméno přidat</label>
+              <select id="det">
+                <option value="">nic</option>
+                <option value="A1">𓀀 muž</option>
+                <option value="B1">𓁐 žena</option>
+                <option value="A40">𓀭 bůh</option>
+                <option value="I12">𓆗 bohyně</option>
+                <option value="A43">𓀲 král</option>
+                <option value="G7">𓅆 bůh / král (sokol)</option>
+              </select>
+            </div>
+          </div>
+          <div class="zaskrt">
+            <label id="lVice"><input type="checkbox" id="viceznaky" checked> <span>Dvou- a trojsouhláskové znaky <small>(mn 𓏠, nfr 𓄤, ꜥnḫ 𓋹 …)</small></span></label>
+            <label id="lDopl"><input type="checkbox" id="doplnky" checked> <span>Fonetické doplňky za nimi <small>(mn 𓏠 + n 𓈖)</small></span></label>
+            <label><input type="checkbox" id="slovnik" checked> <span>Známá slova psát egyptsky ze slovníčku <small>(život → ꜥnḫ)</small></span></label>
+            <label><input type="checkbox" id="kartuse"> <span>Celý text do kartuše</span></label>
+            <label><input type="checkbox" id="skladat" checked> <span>Skládat znaky do čtverců</span></label>
+          </div>
+          <div class="pole">
+            <span class="popisek" id="lSmer">Směr psaní</span>
+            <div class="segment" role="group" aria-labelledby="lSmer" id="segSmer">
+              <button type="button" data-smer="ltr" aria-pressed="true" title="Řádky zleva doprava, znaky hledí doleva">Řádky →</button>
+              <button type="button" data-smer="rtl" aria-pressed="false" title="Řádky zprava doleva, znaky hledí doprava (nejčastější směr v Egyptě)">← Řádky</button>
+              <button type="button" data-smer="sloupce" aria-pressed="false" title="Sloupce shora dolů, zleva doprava">Sloupce ↓</button>
+              <button type="button" data-smer="sloupce-rtl" aria-pressed="false" title="Sloupce shora dolů, zprava doleva">↓ Sloupce ←</button>
+            </div>
+          </div>
+          <div class="radek2">
+            <div class="pole">
+              <label for="sirka">Délka řádku <span class="hodnota" id="hSirka"></span></label>
+              <input type="range" id="sirka" min="0" max="30" step="1" value="0">
+            </div>
+            <div class="pole">
+              <label for="velikost">Velikost <span class="hodnota" id="hVelikost"></span></label>
+              <input type="range" id="velikost" min="24" max="160" step="4" value="64">
+            </div>
+          </div>
+          <div class="pole">
+            <span class="popisek" id="lVzhled">Vzhled</span>
+            <div class="vzhledy" role="group" aria-labelledby="lVzhled" id="vzhledy">
+              <input type="color" id="barvaZnaku" title="Barva znaků" aria-label="Barva znaků">
+              <input type="color" id="barvaPozadi" title="Barva pozadí" aria-label="Barva pozadí">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel-vystup" id="panelVystup" aria-labelledby="hlavaVystup">
+        <div class="panel-hlava"><span id="hlavaVystup">Hieroglyfy</span><span class="mezera"></span>
+          <button class="btn btn-mala" id="btnCela" type="button" aria-pressed="false" title="Přes celé okno (Esc zavře)">⛶ Celé okno</button></div>
+        <div id="vystup" class="prazdny" aria-live="polite"></div>
+        <div class="info-znak" id="infoZnak">Najeďte na znak – ukáže se, co zobrazuje a jak se čte.</div>
+        <div class="akce">
+          <button class="btn btn-primary btn-mala" id="btnPng" type="button">Stáhnout PNG</button>
+          <button class="btn btn-mala" id="btnSvg" type="button">Stáhnout SVG</button>
+          <button class="btn btn-mala" id="btnTisk" type="button">Tisk</button>
+          <span class="mezera"></span>
+          <button class="btn btn-mala" id="btnUnicode" type="button" title="Hieroglyfy jako znaky Unicode – do Wordu nebo zprávy (příjemce potřebuje font s hieroglyfy)">Kopírovat znaky</button>
+          <button class="btn btn-mala" id="btnMdc" type="button" title="Zápis Manuel de Codage pro program JSesh">Kopírovat MdC</button>
+        </div>
+      </section>
+    </div>
+    <div class="hlaseni" id="hlaseni" role="status"></div>
+
+    <details class="sekce" id="sekceRozbor" open>
+      <summary>Rozbor – jak písař text zapsal</summary>
+      <div class="sekce-telo" id="rozbor"></div>
+    </details>
+
+    <details class="sekce" id="sekceSeznam">
+      <summary>Seznam znaků (Gardinerův seznam, 1072 znaků) – kliknutím vložíte znak do textu</summary>
+      <div class="sekce-telo">
+        <div class="seznam-lista">
+          <input type="search" id="hledat" placeholder="Hledat: kód (G17), zvuk (m, nfr) nebo obrázek (sova)…" aria-label="Hledat znak">
+          <select id="skupina" aria-label="Skupina znaků"><option value="">Všechny skupiny</option><option value="*">Jen popsané znaky</option></select>
+          <span class="pocet" id="pocetZnaku"></span>
+        </div>
+        <div class="mrizka" id="mrizka"></div>
+      </div>
+    </details>
+
+    <details class="sekce">
+      <summary>Jak egyptské písmo funguje</summary>
+      <div class="sekce-telo rada">
+        <p>Hieroglyfy nejsou abeceda. Egypťané psali jen <b>souhlásky</b> a kombinovali tři druhy znaků:</p>
+        <ul>
+          <li><b>Zvukové znaky</b> – jednosouhláskové (sova <span class="h">𓅓</span> = m, voda <span class="h">𓈖</span> = n), dvousouhláskové (<span class="h">𓏠</span> = mn) a trojsouhláskové (<span class="h">𓄤</span> = nfr). Za víceznakový znak se často psal <i>fonetický doplněk</i>, který napovídá čtení: <span class="h">𓏠𓈖</span> = mn.</li>
+          <li><b>Slovní znaky</b> – obrázek znamená přímo věc: <span class="h">𓇳𓏤</span> slunce, <span class="h">𓉐𓏤</span> dům (čárka <span class="h">𓏤</span> říká „čti jako obrázek“).</li>
+          <li><b>Určující znaky (determinativy)</b> se nečtou, jen upřesní význam: sedící muž <span class="h">𓀀</span> za mužským jménem, žena <span class="h">𓁐</span> za ženským.</li>
+        </ul>
+        <p>Znaky se neřadí do jedné linky, ale <b>skládají do pomyslných čtverců</b> – ploché znaky pod sebe, úzké vedle sebe. Psalo se zprava doleva (nejčastěji), zleva doprava i ve sloupcích; čte se vždy <b>proti pohledu</b> postav a zvířat – hledí na začátek řádku.</p>
+        <p>Jména faraonů se psala do <b>kartuše</b> – oválu ze smyčky provazu s uzlem na konci. Cizí jména (Kleopatra, Ptolemaios) psali písaři v řecko-římské době i se samohláskami: a jako sup <span class="h">𓄿</span>, e/i jako rákos <span class="h">𓇋</span>, o/u jako kuře <span class="h">𓅱</span>. Tak to dělá i režim „Jako písař“.</p>
+        <p><b>Muzejní abeceda</b> přiřazuje každému písmenu jeden znak (jako tabulky v muzeích a na suvenýrech) – egyptsky to není, ale dá se to přečíst zpátky.</p>
+        <p>Psaní do pole: <code>[Jméno]</code> dá jméno do kartuše, <code>{G17}</code> vloží znak podle Gardinerova čísla (seznam níže), číslice se zapíšou egyptskými číslicemi (1 <span class="h">𓏺</span>, 10 <span class="h">𓎆</span>, 100 <span class="h">𓍢</span>, 1000 <span class="h">𓆼</span>), nový řádek začne nový řádek nebo sloupec. Slovníček zná asi 70 slov a frází (život, láska, bůh, faraon, kočka, Egypt…); pravopis je jedna z běžných učebnicových variant.</p>
+        <p class="pozn">Znaky kreslí font Noto Sans Egyptian Hieroglyphs (SIL Open Font License). Hieroglyfy zkopírované jako znaky Unicode uvidí příjemce jen tehdy, když má font s hieroglyfy; PNG a SVG fungují všude.</p>
+      </div>
+    </details>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    const Z = window.HIERO_ZNAKY, H = window.HIERO;
+    const $ = id => document.getElementById(id);
+    const KLIC = 'webapp_hieroglyfy';
+    const VZHLEDY = [
+      { id: 'papyrus', nazev: 'Papyrus', znak: '#2b2116', pozadi: '#f1e3bf' },
+      { id: 'kamen', nazev: 'Vápenec', znak: '#3a3a44', pozadi: '#e4ded2' },
+      { id: 'zlato', nazev: 'Zlato na černé', znak: '#e2b44a', pozadi: '#16120c' },
+      { id: 'lapis', nazev: 'Zlato na lazuritu', znak: '#f0c75e', pozadi: '#1d3570' },
+      { id: 'inkoust', nazev: 'Černá na bílé', znak: '#000000', pozadi: '#ffffff' },
+      { id: 'pruhledne', nazev: 'Průhledné pozadí', znak: '#000000', pozadi: null },
+    ];
+
+    let stav = {
+      text: '[Kleopatra]', styl: 'pisar', samohlasky: 'vse', viceznaky: true, doplnky: true, slovnik: true,
+      kartuse: false, skladat: true, det: '', smer: 'ltr', sirka: 0, velikost: 64, vzhled: 'papyrus',
+      barva: null, pozadi: null,
+    };
+    try { Object.assign(stav, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { /* bez úložiště */ }
+    const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(stav)); } catch (e) { /* nic */ } };
+
+    let font = null, rozmer = null, posledni = null;
+
+    /* ---------- ovládání ---------- */
+    const zdroj = $('zdroj');
+    zdroj.value = stav.text;
+    $('samohlasky').value = stav.samohlasky;
+    $('det').value = stav.det;
+    ['viceznaky', 'doplnky', 'slovnik', 'kartuse', 'skladat'].forEach(id => { $(id).checked = !!stav[id]; });
+    $('sirka').value = stav.sirka;
+    $('velikost').value = stav.velikost;
+
+    function segment(el, attr, hodnota) {
+      el.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === hodnota)));
+    }
+    segment($('segStyl'), 'styl', stav.styl);
+    segment($('segSmer'), 'smer', stav.smer);
+
+    const vz = $('vzhledy');
+    VZHLEDY.slice().reverse().forEach(v => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'vzhled'; b.dataset.vzhled = v.id; b.title = v.nazev; b.setAttribute('aria-label', v.nazev);
+      b.textContent = '𓅓';
+      b.style.color = v.znak;
+      b.style.background = v.pozadi || 'repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 10px 10px';
+      vz.prepend(b);
+    });
+    function barvy() {
+      const v = VZHLEDY.find(x => x.id === stav.vzhled) || VZHLEDY[0];
+      return { znak: stav.vzhled === 'vlastni' ? stav.barva || v.znak : v.znak,
+               pozadi: stav.vzhled === 'vlastni' ? stav.pozadi : v.pozadi };
+    }
+    function obnovVzhled() {
+      vz.querySelectorAll('.vzhled').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.vzhled === stav.vzhled)));
+      const b = barvy();
+      $('barvaZnaku').value = b.znak;
+      $('barvaPozadi').value = b.pozadi || '#ffffff';
+    }
+    vz.addEventListener('click', e => {
+      const b = e.target.closest('.vzhled'); if (!b) return;
+      stav.vzhled = b.dataset.vzhled; obnovVzhled(); prekresli();
+    });
+    $('barvaZnaku').addEventListener('input', e => { const b = barvy(); stav.vzhled = 'vlastni'; stav.barva = e.target.value; stav.pozadi = stav.pozadi || b.pozadi; obnovVzhled(); prekresli(); });
+    $('barvaPozadi').addEventListener('input', e => { const b = barvy(); stav.vzhled = 'vlastni'; stav.pozadi = e.target.value; stav.barva = stav.barva || b.znak; obnovVzhled(); prekresli(); });
+    obnovVzhled();
+
+    $('segStyl').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      stav.styl = b.dataset.styl; segment($('segStyl'), 'styl', stav.styl); prekresli();
+    });
+    $('segSmer').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      stav.smer = b.dataset.smer; segment($('segSmer'), 'smer', stav.smer); prekresli();
+    });
+    $('samohlasky').addEventListener('change', e => { stav.samohlasky = e.target.value; prekresli(); });
+    $('det').addEventListener('change', e => { stav.det = e.target.value; prekresli(); });
+    ['viceznaky', 'doplnky', 'slovnik', 'kartuse', 'skladat'].forEach(id =>
+      $(id).addEventListener('change', e => { stav[id] = e.target.checked; prekresli(); }));
+    $('sirka').addEventListener('input', e => { stav.sirka = +e.target.value; prekresli(); });
+    $('velikost').addEventListener('input', e => { stav.velikost = +e.target.value; prekresli(); });
+    let casovac = null;
+    zdroj.addEventListener('input', () => { stav.text = zdroj.value; clearTimeout(casovac); casovac = setTimeout(prekresli, 120); });
+    $('btnVymazat').addEventListener('click', () => { zdroj.value = ''; stav.text = ''; prekresli(); zdroj.focus(); });
+    document.querySelectorAll('[data-priklad]').forEach(b => b.addEventListener('click', () => {
+      zdroj.value = b.dataset.priklad; stav.text = zdroj.value; prekresli();
+    }));
+
+    function volby() {
+      const svisle = stav.smer.startsWith('sloupce');
+      return {
+        styl: stav.styl, samohlasky: stav.samohlasky, viceznaky: stav.viceznaky, doplnky: stav.doplnky,
+        slovnik: stav.slovnik, kartuse: stav.kartuse, skladat: stav.skladat, det: stav.det,
+        svisle, sirka: stav.sirka,
+      };
+    }
+    const rtl = () => stav.smer === 'rtl' || stav.smer === 'sloupce-rtl';
+
+    /* ---------- kreslení ---------- */
+    const vystup = $('vystup');
+    function prekresli() {
+      uloz();
+      const muzeum = stav.styl === 'muzeum';
+      $('poleSamohl').classList.toggle('vypnuto', muzeum);
+      $('lVice').classList.toggle('vypnuto', muzeum);
+      $('lDopl').classList.toggle('vypnuto', muzeum || !stav.viceznaky);
+      $('hSirka').textContent = stav.sirka ? stav.sirka + ' čtverců' : 'bez zalomení';
+      $('hVelikost').textContent = stav.velikost + ' px';
+      if (!rozmer) return;
+      const v = volby();
+      const polozky = H.rozloz(stav.text, v);
+      const saz = H.sazba(polozky, rozmer, v);
+      const b = barvy();
+      posledni = { polozky, saz, v };
+      if (!saz.znaky.length) {
+        vystup.innerHTML = ''; vystup.classList.add('prazdny');
+      } else {
+        vystup.classList.remove('prazdny');
+        vystup.innerHTML = H.svg(saz, rozmer, { velikost: stav.velikost, barva: b.znak, pozadi: b.pozadi, rtl: rtl() });
+        const svg = vystup.querySelector('svg');
+        if (!b.pozadi) svg.style.background = 'repeating-conic-gradient(#d8d8d8 0 25%, #fff 0 50%) 0 0 / 16px 16px';
+        vystup.style.setProperty('--zvyraz', b.pozadi && jeTmava(b.pozadi) ? '#ff8a65' : '#c0392b');
+      }
+      vystup.classList.toggle('rtl-vystup', rtl());
+      kresliRozbor(polozky);
+      const nezname = polozky.filter(p => p.druh === 'neznamy').map(p => p.cesky);
+      $('hlaseni').textContent = nezname.length ? 'Tohle písař nezapsal: ' + nezname.join(', ')
+        + ' (neznámý kód znaku, nebo číslo větší než 9 999 999).' : '';
+    }
+    function jeTmava(hex) {
+      const n = parseInt(hex.slice(1), 16);
+      return ((n >> 16) * 0.299 + ((n >> 8) & 255) * 0.587 + (n & 255) * 0.114) < 128;
+    }
+
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const DRUHY = { slovnik: 'egyptské slovo', jmeno: 'přepis podle zvuku', cislo: 'číslo', znaky: 'vložené znaky', det: 'určující znak', neznamy: 'nezapsáno' };
+    function cip(kod) {
+      const p = (Z.POPIS[kod] || '').split('|');
+      const t = p[0] ? p[0] + (p[1] ? ' – ' + p[1] : '') : '';
+      return `<span class="cip" title="${esc(t)}"><span class="g">${Z.ZNAK[kod] || ''}</span>${esc(kod)}${p[1] && p[1].length <= 4 ? ' <i>' + esc(p[1]) + '</i>' : ''}</span>`;
+    }
+    function kresliRozbor(polozky) {
+      const radky = [];
+      polozky.forEach((p, i) => {
+        if (p.druh === 'radek') return;
+        radky.push(`<tr data-polozka="${i}"><td>${esc(p.cesky || '—')}<span class="druh">${DRUHY[p.druh] || ''}${p.kartuse ? ' · v kartuši' : ''}</span></td>`
+          + `<td class="tr">${esc(p.tr || '')}</td><td><div class="cipy">${p.kody.map(cip).join('')}</div>`
+          + (p.pozn ? `<div class="pozn">${esc(p.pozn)}</div>` : '') + '</td></tr>');
+      });
+      $('rozbor').innerHTML = radky.length
+        ? '<table class="rozbor"><thead><tr><th>Česky</th><th>Přepis</th><th>Znaky</th></tr></thead><tbody>' + radky.join('') + '</tbody></table>'
+        : '<p class="pozn">Zatím nic.</p>';
+    }
+
+    /* zvýraznění: znak ve výstupu ↔ řádek rozboru */
+    function zvyrazni(i) {
+      vystup.querySelectorAll('path.zvyraz').forEach(p => p.classList.remove('zvyraz'));
+      $('rozbor').querySelectorAll('tr.zvyraz').forEach(r => r.classList.remove('zvyraz'));
+      if (i == null) return;
+      vystup.querySelectorAll(`path[data-polozka="${i}"]`).forEach(p => p.classList.add('zvyraz'));
+      const r = $('rozbor').querySelector(`tr[data-polozka="${i}"]`); if (r) r.classList.add('zvyraz');
+    }
+    function ukazZnak(kod) {
+      if (!kod) { $('infoZnak').innerHTML = 'Najeďte na znak – ukáže se, co zobrazuje a jak se čte.'; return; }
+      const p = (Z.POPIS[kod] || '').split('|');
+      const sk = Z.SKUPINY[Z.skupina(kod)] || '';
+      $('infoZnak').innerHTML = `<b>${esc(kod)}</b> ${p[0] ? '– ' + esc(p[0]) : ''}${p[1] ? ' · <i>' + esc(p[1]) + '</i>' : ''} <span class="pozn">(${esc(sk)})</span>`;
+    }
+    vystup.addEventListener('mouseover', e => {
+      const p = e.target.closest('path[data-polozka]');
+      zvyrazni(p ? p.dataset.polozka : null); ukazZnak(p && p.dataset.kod);
+    });
+    vystup.addEventListener('mouseleave', () => zvyrazni(null));
+    vystup.addEventListener('click', e => {
+      const p = e.target.closest('path[data-polozka]'); if (!p) return;
+      zvyrazni(p.dataset.polozka); ukazZnak(p.dataset.kod);
+    });
+    $('rozbor').addEventListener('mouseover', e => { const r = e.target.closest('tr[data-polozka]'); zvyrazni(r ? r.dataset.polozka : null); });
+    $('rozbor').addEventListener('mouseleave', () => zvyrazni(null));
+
+    /* ---------- výstupy ---------- */
+    function hlaska(t) { $('hlaseni').textContent = t; setTimeout(() => { if ($('hlaseni').textContent === t) $('hlaseni').textContent = ''; }, 3500); }
+    function stahni(blob, jmeno) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = jmeno;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    const jmenoSouboru = () => 'hieroglyfy-' + ((stav.text.match(/[\p{L}\d]+/u) || ['text'])[0]).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').slice(0, 24);
+    function svgKExportu(meritko) {
+      const b = barvy();
+      return H.svg(posledni.saz, rozmer, { velikost: stav.velikost * (meritko || 1), barva: b.znak, pozadi: b.pozadi, rtl: rtl(), popisky: false });
+    }
+    $('btnSvg').addEventListener('click', () => {
+      if (!posledni || !posledni.saz.znaky.length) return;
+      stahni(new Blob([svgKExportu(1)], { type: 'image/svg+xml' }), jmenoSouboru() + '.svg');
+    });
+    $('btnPng').addEventListener('click', () => {
+      if (!posledni || !posledni.saz.znaky.length) return;
+      const m = 3;
+      const text = svgKExportu(m);
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext('2d').drawImage(img, 0, 0);
+        c.toBlob(blob => stahni(blob, jmenoSouboru() + '.png'), 'image/png');
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => hlaska('Obrázek se nepodařilo vytvořit.');
+      img.src = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' }));
+    });
+    $('btnTisk').addEventListener('click', () => window.print());
+    function kopiruj(text, co) {
+      if (!text) return;
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+        .then(() => hlaska(co + ' zkopírováno do schránky.'))
+        .catch(() => {
+          const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); hlaska(co + ' zkopírováno do schránky.'); } catch (e) { hlaska('Kopírování se nepodařilo.'); }
+          t.remove();
+        });
+    }
+    $('btnUnicode').addEventListener('click', () => posledni && kopiruj(H.unicode(posledni.polozky), 'Hieroglyfy'));
+    $('btnMdc').addEventListener('click', () => posledni && kopiruj(H.mdc(posledni.polozky, rozmer, posledni.v), 'Zápis MdC'));
+    $('btnCela').addEventListener('click', () => {
+      const p = $('panelVystup'), cela = !p.classList.contains('cela');
+      p.classList.toggle('cela', cela); $('btnCela').setAttribute('aria-pressed', String(cela));
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && $('panelVystup').classList.contains('cela')) $('btnCela').click();
+    });
+
+    /* ---------- seznam znaků ---------- */
+    const selSk = $('skupina');
+    Object.entries(Z.SKUPINY).forEach(([k, n]) => {
+      const o = document.createElement('option'); o.value = k; o.textContent = k + ' – ' + n; selSk.appendChild(o);
+    });
+    let seznamHotovy = false;
+    function kresliSeznam() {
+      seznamHotovy = true;
+      const q = $('hledat').value.trim().toLowerCase();
+      const sk = selSk.value;
+      const qk = H.normKod(q).toLowerCase();
+      const out = [];
+      let n = 0;
+      for (const kod of Z.KODY) {
+        const p = Z.POPIS[kod] || '';
+        if (sk === '*' ? !p : sk && Z.skupina(kod) !== sk) continue;
+        if (q) {
+          const [co, cteni] = p.toLowerCase().split('|');
+          const shoda = kod.toLowerCase() === qk || kod.toLowerCase().startsWith(q)
+            || (co && co.includes(q)) || (cteni && cteni.split(/[ ,]+/).some(x => x === q || x.startsWith(q) && q.length > 1));
+          if (!shoda) continue;
+        }
+        n++;
+        const [co, cteni] = p.split('|');
+        out.push(`<button type="button" class="znak-btn" data-kod="${kod}" title="${esc(kod + (co ? ' – ' + co : '') + (cteni ? ' (' + cteni + ')' : ''))}">`
+          + `<span class="g">${Z.ZNAK[kod]}</span><span class="k">${kod}</span><span class="z">${esc(cteni || co || '')}</span></button>`);
+      }
+      $('mrizka').innerHTML = out.join('');
+      $('pocetZnaku').textContent = n + ' znaků';
+    }
+    $('sekceSeznam').addEventListener('toggle', () => { if ($('sekceSeznam').open && !seznamHotovy) kresliSeznam(); });
+    $('hledat').addEventListener('input', kresliSeznam);
+    selSk.addEventListener('change', kresliSeznam);
+    $('mrizka').addEventListener('click', e => {
+      const b = e.target.closest('.znak-btn'); if (!b) return;
+      const vloz = '{' + b.dataset.kod + '}';
+      const a = zdroj.selectionStart ?? zdroj.value.length, z = zdroj.selectionEnd ?? a;
+      zdroj.value = zdroj.value.slice(0, a) + vloz + zdroj.value.slice(z);
+      zdroj.selectionStart = zdroj.selectionEnd = a + vloz.length;
+      stav.text = zdroj.value; prekresli();
+      hlaska('Vložen znak ' + b.dataset.kod + '.');
+    });
+
+    /* ---------- start: font ---------- */
+    vystup.classList.add('nacita');
+    prekresli();
+    FONTY.rodina('hieroglyfy').catch(() => {});      // CSS písmo pro seznam a čipy
+    FONTY.opentype('hieroglyfy').then(f => {
+      font = f; rozmer = H.rozmerZFontu(font);
+      vystup.classList.remove('nacita');
+      prekresli();
+    }).catch(err => {
+      vystup.classList.remove('nacita');
+      $('hlaseni').textContent = 'Font s hieroglyfy se nepodařilo načíst: ' + (err && err.message || err);
+    });
+    window.PISAR = { stav: () => stav, prekresli, posledni: () => posledni, rozmer: () => rozmer };
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ Nastavení</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="../apps.js"></script>
+<script src="nastaveni_klice.js"></script>
+<style>
+body{background:var(--bg-deep);color:var(--text);padding:40px 20px;min-height:100vh}
+.container{max-width:760px;margin:0 auto}
+h1{font-size:1.8rem;color:var(--accent);margin-bottom:10px}
+.lead{color:var(--text-muted);font-size:.95rem;line-height:1.6;margin-bottom:24px}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;font-size:.92rem;color:var(--text-muted);line-height:1.6}
+.card h2{font-size:.95rem;color:var(--accent);margin-bottom:10px}
+.souhrn{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px}
+.souhrn b{color:var(--text)}
+.mira{flex:1 1 200px;height:8px;border-radius:4px;background:var(--bg-control);overflow:hidden}
+.mira i{display:block;height:100%;background:var(--accent)}
+.mira.plno i{background:var(--danger)}
+input[type=search]{width:100%;padding:8px 10px;margin-bottom:10px;background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;font-size:.88rem}
+.scroll{max-height:60vh;overflow:auto;border:1px solid var(--border);border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+th{position:sticky;top:0;background:var(--bg-elevated);color:var(--text-faint);font-weight:600}
+td.app{color:var(--text)}
+td.app .nazev{font-weight:600}
+td.app a.nazev{color:var(--text);text-decoration:none}
+td.app a.nazev:hover{color:var(--accent);text-decoration:underline}
+td.app .pocet{color:var(--text-faint);font-size:.76rem;margin-left:6px}
+td.app .nezname{color:var(--text-faint);font-style:italic;font-weight:400}
+td.app details{margin-top:2px}
+td.app summary{cursor:pointer;color:var(--text-faint);font-size:.76rem}
+.klice{list-style:none;margin:6px 0 2px;padding:0}
+.klice li{display:flex;align-items:center;gap:8px;padding:3px 0;border-top:1px dashed var(--border);font-size:.78rem}
+.klice code{flex:1;word-break:break-all;color:var(--text-muted)}
+.klice .vel{white-space:nowrap;color:var(--text-faint)}
+.klic1{display:block;font-size:.74rem;color:var(--text-faint);word-break:break-all;margin-top:1px}
+td.vel{white-space:nowrap;text-align:right}
+th.vel{text-align:right}
+button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;padding:8px 14px;cursor:pointer;font-size:.87rem}
+button:hover{background:var(--bg-hover)}
+button.smaz{padding:3px 9px;color:var(--danger);border-color:var(--border)}
+.klice button.smaz{padding:1px 7px;font-size:.78rem}
+td.akce{width:1%;vertical-align:top}
+.trvale{font-size:.78rem;color:var(--text-faint)}
+.note{font-size:.78rem;color:var(--text-faint);margin-top:10px;line-height:1.5}
+.prazdne{padding:14px;text-align:center;color:var(--text-faint)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚙️ Nastavení</h1>
+  <p class="lead">Všechny aplikace tohoto webu si ukládají data jen lokálně v tomto prohlížeči – drobnosti do sdíleného
+  <code>localStorage</code>, větší data (fotky, písma, modely) do databází IndexedDB.</p>
+
+  <div class="card">
+    <h2>💾 Sdílené úložiště (localStorage)</h2>
+    <div id="souhrn" class="souhrn"></div>
+    <input type="search" id="filtr" placeholder="Filtrovat podle aplikace nebo klíče…" autocomplete="off">
+    <div class="scroll" id="seznam"></div>
+    <p class="note">Kvóta prohlížeče bývá kolem 5 MB pro celý web dohromady a všechny aplikace ji sdílejí –
+    jedna zaplněná aplikace tak zablokuje ukládání i ostatním. Smazáním položky přijdete o data té aplikace;
+    nejde to vrátit zpět.
+    Kterým aplikacím data patří, se určuje podle seznamu klíčů vytaženého ze zdrojových kódů – položky bez
+    přiřazení jsou nejspíš pozůstatky starších verzí nebo data jiného webu na stejné adrese.</p>
+  </div>
+
+  <div class="card">
+    <h2>🗄️ Větší data (IndexedDB)</h2>
+    <div id="idbSouhrn" class="souhrn"></div>
+    <div class="scroll" id="idbSeznam"><div class="prazdne">Načítám…</div></div>
+    <p class="note">Databáze nesdílejí pětimegabajtovou kvótu – prohlížeč jim dovolí podstatně víc podle volného místa
+    na disku. Celkové číslo nahoře zahrnuje i offline kopii webu (service worker). Smazáním databáze přijde
+    aplikace o všechna data v ní; nejde to vrátit zpět.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const KVOTA = 5 * 1024 * 1024;
+
+  function kb(b){ return b < 1024 ? b + ' B' : b > 1048576 ? (b/1048576).toLocaleString('cs-CZ',{maximumFractionDigits:1}) + ' MB'
+                                     : Math.round(b/1024).toLocaleString('cs-CZ') + ' kB'; }
+  const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  /* ---- komu klíč patří ---- */
+  const NAZVY = { 'index.html': '🏠 Rozcestník (menu, téma, oblíbené)' };
+  try{ KATALOG_SEKCE.forEach(sk => sk.polozky.forEach(p => { NAZVY[p.soubor] = p.nazev; })); }catch(e){}
+  const MAPA = (typeof ULOZISTE_KLICE === 'object' && ULOZISTE_KLICE) || {};
+  // prefixy od nejdelšího – vyhraje nejkonkrétnější shoda
+  const PREFIXY = Object.keys(MAPA).sort((a,b) => b.length - a.length);
+  const ODDELOVAC = /[_\-:.]/;
+  function stranky(k){
+    if(MAPA[k]) return MAPA[k];
+    for(const p of PREFIXY){
+      if(k.length > p.length && k.startsWith(p) && (ODDELOVAC.test(p[p.length-1]) || ODDELOVAC.test(k[p.length])))
+        return MAPA[p];
+    }
+    if(k.startsWith('nodus_')) return ['nodus'];
+    return null;
+  }
+  const nazevStranky = s => s === 'nodus' ? '🎓 Nodus (výukový web)' : (NAZVY[s] || s);
+
+  function mista(){
+    try{
+      const polozky = []; let celkem = 0;
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        const b = (k.length + (localStorage.getItem(k) || '').length) * 2;   // UTF-16
+        celkem += b; polozky.push({ k, b });
+      }
+      return { celkem, polozky };
+    }catch(e){ return null; }
+  }
+
+  // položky seskupené podle aplikace; nepřiřazený klíč je skupina sám pro sebe
+  function skupiny(polozky){
+    const sk = new Map();
+    for(const x of polozky){
+      const st = stranky(x.k);
+      const id = st ? st.join('|') : '?' + x.k;
+      if(!sk.has(id)) sk.set(id, { st, nazev: st ? st.map(nazevStranky).join(' · ') : x.k, polozky: [], b: 0 });
+      const g = sk.get(id); g.polozky.push(x); g.b += x.b;
+    }
+    const out = [...sk.values()];
+    out.forEach(g => g.polozky.sort((a,b) => b.b - a.b));
+    return out.sort((a,b) => b.b - a.b);
+  }
+
+  let posledni = [];   // skupiny ve stejném pořadí jako řádky tabulky
+
+  function radek(g, i){
+    let titul;
+    if(!g.st) titul = '<span class="nazev nezname">Nepřiřazená data</span>';
+    else if(g.st.length === 1 && g.st[0].startsWith('obsah/'))
+      titul = '<a class="nazev" href="../index.html#' + esc(g.st[0]) + '" data-otevri="' + esc(g.st[0]) + '">' + esc(g.nazev) + '</a>';
+    else titul = '<span class="nazev">' + esc(g.nazev) + '</span>';
+    let detail;
+    if(g.polozky.length === 1) detail = '<span class="klic1">' + esc(g.polozky[0].k) + '</span>';
+    else detail = '<span class="pocet">' + g.polozky.length + ' položek</span><details><summary>Jednotlivé položky</summary><ul class="klice">' +
+      g.polozky.map(x => '<li><code>' + esc(x.k) + '</code><span class="vel">' + kb(x.b) +
+        '</span><button class="smaz" title="Smazat tuto položku" data-klic="' + esc(x.k) + '">✕</button></li>').join('') + '</ul></details>';
+    return '<tr><td class="app">' + titul + detail + '</td><td class="vel">' + kb(g.b) +
+      '</td><td class="akce"><button class="smaz" title="Smazat všechna data této aplikace" data-skupina="' + i + '">✕</button></td></tr>';
+  }
+
+  function vypis(){
+    const m = mista();
+    if(!m){
+      $('souhrn').innerHTML = '';
+      $('seznam').innerHTML = '<div class="prazdne">Úložiště prohlížeče není dostupné.</div>';
+      return;
+    }
+    const otevrene = new Set([...$('seznam').querySelectorAll('details[open]')].map(d => d.closest('tr').dataset.id));
+    const podil = Math.min(1, m.celkem / KVOTA);
+    const vse = skupiny(m.polozky);
+    $('souhrn').innerHTML = '<span>Zabráno celkem <b>' + kb(m.celkem) + '</b> · ' + vse.length + ' aplikací, ' +
+      m.polozky.length + ' položek</span><div class="mira' + (podil > .9 ? ' plno' : '') + '" title="' + Math.round(podil*100) +
+      ' % z přibližné kvóty 5 MB"><i style="width:' + (podil*100).toFixed(1) + '%"></i></div>';
+    const f = $('filtr').value.trim().toLowerCase();
+    posledni = f ? vse.filter(g => g.nazev.toLowerCase().includes(f) || g.polozky.some(x => x.k.toLowerCase().includes(f))) : vse;
+    $('seznam').innerHTML = posledni.length
+      ? '<table><thead><tr><th>Aplikace</th><th class="vel">Velikost</th><th></th></tr></thead><tbody>' +
+        posledni.map(radek).join('') + '</tbody></table>'
+      : '<div class="prazdne">' + (f ? 'Filtru nic neodpovídá.' : 'Úložiště je prázdné.') + '</div>';
+    // rozbalené detaily po překreslení zachovat
+    $('seznam').querySelectorAll('tbody tr').forEach((tr, i) => {
+      tr.dataset.id = posledni[i].nazev;
+      const d = tr.querySelector('details');
+      if(d && otevrene.has(tr.dataset.id)) d.open = true;
+    });
+  }
+
+  $('filtr').addEventListener('input', vypis);
+  $('seznam').addEventListener('click', async e => {
+    const odkaz = e.target.closest('a[data-otevri]');
+    if(odkaz){
+      // v rozcestníku otevřít aplikaci přes hlavní okno, samostatně normálním odkazem
+      if(window.parent !== window){ e.preventDefault(); window.parent.postMessage({ otevri: odkaz.dataset.otevri }, '*'); }
+      return;
+    }
+    const t = e.target.closest('button.smaz');
+    if(!t) return;
+    let klice, otazka;
+    if(t.dataset.klic !== undefined){
+      klice = [t.dataset.klic];
+      otazka = 'Opravdu smazat uložená data „' + t.dataset.klic + '“? Aplikace, která je používá, o ně nenávratně přijde.';
+    } else {
+      const g = posledni[+t.dataset.skupina];
+      if(!g) return;
+      klice = g.polozky.map(x => x.k);
+      otazka = g.st
+        ? 'Opravdu smazat všechna data aplikace „' + g.nazev + '“ (' + klice.length + ' ' + (klice.length === 1 ? 'položka' : klice.length < 5 ? 'položky' : 'položek') + ', ' + kb(g.b) + ')? Nejde to vrátit zpět.'
+        : 'Opravdu smazat nepřiřazená data „' + g.nazev + '“? Nejde to vrátit zpět.';
+    }
+    if(!await Dialog.potvrd(otazka)) return;
+    klice.forEach(k => { try{ localStorage.removeItem(k); }catch(err){} });
+    vypis();
+  });
+  /* ---- IndexedDB ---- */
+  // přibližná velikost hodnoty: Bloby a buffery přesně, ostatní podle délky textu
+  function velikost(v, hloubka = 0){
+    if(v == null) return 0;
+    if(v instanceof Blob) return v.size;
+    if(v instanceof ArrayBuffer) return v.byteLength;
+    if(ArrayBuffer.isView(v)) return v.byteLength;
+    if(typeof v === 'string') return v.length * 2;
+    if(typeof v !== 'object') return 8;
+    if(hloubka > 8) return 0;
+    let b = 0;
+    if(Array.isArray(v)) for(const x of v) b += velikost(x, hloubka + 1);
+    else if(v instanceof Map) v.forEach((x, k) => { b += velikost(k, hloubka + 1) + velikost(x, hloubka + 1); });
+    else for(const k in v) b += k.length * 2 + velikost(v[k], hloubka + 1);
+    return b;
+  }
+  function otevriDb(jmeno){
+    return new Promise((resolve, reject) => {
+      const rq = indexedDB.open(jmeno);
+      rq.onsuccess = () => resolve(rq.result);
+      rq.onerror = () => reject(rq.error);
+      rq.onblocked = () => reject(new Error('blokováno'));
+    });
+  }
+  async function velikostDb(jmeno){
+    const d = await otevriDb(jmeno);
+    try{
+      const story = [...d.objectStoreNames];
+      if(!story.length) return { b: 0, n: 0 };
+      return await new Promise((resolve, reject) => {
+        let b = 0, n = 0;
+        const tx = d.transaction(story, 'readonly');
+        story.forEach(st => {
+          tx.objectStore(st).openCursor().onsuccess = e => {
+            const c = e.target.result;
+            if(!c) return;
+            b += velikost(c.key) + velikost(c.value); n++;
+            c.continue();
+          };
+        });
+        tx.oncomplete = () => resolve({ b, n });
+        tx.onerror = tx.onabort = () => reject(tx.error);
+      });
+    } finally { d.close(); }
+  }
+
+  let idbPolozky = [];
+  async function vypisIdb(){
+    const souhrn = $('idbSouhrn'), seznam = $('idbSeznam');
+    try{
+      const est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
+      let trvale = null;
+      try{ trvale = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null; }catch(e){}
+      souhrn.innerHTML = est
+        ? '<span>Celkem na disku <b>' + kb(est.usage || 0) + '</b> z dostupných ' + kb(est.quota || 0) + '</span>' +
+          (trvale === null ? '' : '<span class="trvale">' + (trvale ? '🔒 trvalé úložiště – prohlížeč data sám nesmaže'
+                                                                   : 'při nedostatku místa může prohlížeč data smazat') + '</span>')
+        : '';
+    }catch(e){ souhrn.innerHTML = ''; }
+
+    if(!window.indexedDB){ seznam.innerHTML = '<div class="prazdne">IndexedDB není v tomto prohlížeči dostupná.</div>'; return; }
+    if(!indexedDB.databases){ seznam.innerHTML = '<div class="prazdne">Tento prohlížeč neumí vypsat seznam databází.</div>'; return; }
+    let dbs;
+    try{ dbs = await indexedDB.databases(); }
+    catch(e){ seznam.innerHTML = '<div class="prazdne">Seznam databází se nepodařilo načíst.</div>'; return; }
+    idbPolozky = await Promise.all(dbs.filter(d => d.name).map(async d => {
+      let v = null;
+      try{ v = await velikostDb(d.name); }catch(e){}
+      const st = stranky(d.name);
+      return { jmeno: d.name, st, nazev: st ? st.map(nazevStranky).join(' · ') : d.name, b: v ? v.b : null, n: v ? v.n : null };
+    }));
+    idbPolozky.sort((a, b) => (b.b || 0) - (a.b || 0));
+    seznam.innerHTML = idbPolozky.length
+      ? '<table><thead><tr><th>Aplikace</th><th class="vel">Velikost</th><th></th></tr></thead><tbody>' +
+        idbPolozky.map((x, i) => {
+          let titul;
+          if(!x.st) titul = '<span class="nazev nezname">Nepřiřazená databáze</span>';
+          else if(x.st.length === 1 && x.st[0].startsWith('obsah/'))
+            titul = '<a class="nazev" href="../index.html#' + esc(x.st[0]) + '" data-otevri="' + esc(x.st[0]) + '">' + esc(x.nazev) + '</a>';
+          else titul = '<span class="nazev">' + esc(x.nazev) + '</span>';
+          return '<tr><td class="app">' + titul + (x.n != null ? '<span class="pocet">' + x.n + ' záznamů</span>' : '') +
+            '<span class="klic1">' + esc(x.jmeno) + '</span></td><td class="vel">' + (x.b == null ? '?' : '≈ ' + kb(x.b)) +
+            '</td><td class="akce"><button class="smaz" title="Smazat databázi" data-db="' + i + '">✕</button></td></tr>';
+        }).join('') + '</tbody></table>'
+      : '<div class="prazdne">Žádná aplikace zatím IndexedDB nepoužila.</div>';
+  }
+
+  $('idbSeznam').addEventListener('click', async e => {
+    const odkaz = e.target.closest('a[data-otevri]');
+    if(odkaz){
+      if(window.parent !== window){ e.preventDefault(); window.parent.postMessage({ otevri: odkaz.dataset.otevri }, '*'); }
+      return;
+    }
+    const t = e.target.closest('button.smaz');
+    if(!t) return;
+    const x = idbPolozky[+t.dataset.db];
+    if(!x) return;
+    const popis = x.st ? 'všechna data aplikace „' + x.nazev + '“ v databázi ' + x.jmeno : 'nepřiřazenou databázi „' + x.jmeno + '“';
+    if(!await Dialog.potvrd('Opravdu smazat ' + popis + (x.b != null ? ' (≈ ' + kb(x.b) + ')' : '') + '? Nejde to vrátit zpět.')) return;
+    await new Promise(resolve => {
+      const rq = indexedDB.deleteDatabase(x.jmeno);
+      rq.onsuccess = rq.onerror = () => resolve();
+      // aplikace otevřená v jiné záložce drží spojení – smaže se, až ji zavřete
+      rq.onblocked = () => { Dialog.info('Databázi používá aplikace otevřená v jiné záložce – smaže se, až ji zavřete.'); resolve(); };
+    });
+    vypisIdb();
+  });
+
+  // změny z jiných záložek
+  window.addEventListener('storage', vypis);
+  vypis();
+  vypisIdb();
+})();
+</script>
+</body>
+</html>

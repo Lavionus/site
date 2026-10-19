@@ -139,7 +139,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       try { uzly = dokJ.uzly.map(u => M.normalizujUzel(u)); }
       catch (e) { throw new Error('neplatné těleso v projektu: ' + e.message); }
       uzly.forEach(u => over(u));
-      return Object.assign({ verze: 1, uzly }, Array.isArray(dokJ.poznamky) && M.normalizujPoznamky ? { poznamky: M.normalizujPoznamky(dokJ.poznamky) } : {});
+      const dok = Object.assign({ verze: 1, uzly }, Array.isArray(dokJ.poznamky) && M.normalizujPoznamky ? { poznamky: M.normalizujPoznamky(dokJ.poznamky) } : {});
+      // proměnné projektu (jadro/promenne.js) a klouby sestavy (jadro/sestava.js) – jen když jsou
+      const prom = M.normalizujPromenne ? M.normalizujPromenne(dokJ.promenne) : [];
+      if (prom.length) dok.promenne = prom;
+      const kl = M.normalizujKlouby ? M.normalizujKlouby(dokJ.klouby, ids) : [];
+      if (kl.length) dok.klouby = kl;
+      return dok;
     },
   };
 

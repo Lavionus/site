@@ -107,10 +107,35 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (b) b.setAttribute('aria-expanded', 'false');
   };
 
+  /** Jména, která nesmí mít proměnná projektu (jednotky, funkce, konstanty). */
+  M.FUNKCE_VYRAZU = {
+    sqrt: [1, Math.sqrt], abs: [1, Math.abs], round: [1, Math.round], floor: [1, Math.floor], ceil: [1, Math.ceil],
+    sin: [1, x => Math.sin(x * Math.PI / 180)], cos: [1, x => Math.cos(x * Math.PI / 180)], tan: [1, x => Math.tan(x * Math.PI / 180)],
+    min: [-1, Math.min], max: [-1, Math.max],
+  };
+  M.REZERVOVANA_JMENA = new Set(['mm', 'cm', 'm', 'in', 'deg', 'x', 'e', 'pi', ...Object.keys(M.FUNKCE_VYRAZU)]);
+  /** Platné jméno proměnné: písmeno (i s diakritikou) nebo _, pak písmena, číslice, _; ne jednotka ani funkce. */
+  M.jmenoPromenneOk = j => typeof j === 'string' && /^[\p{L}_][\p{L}\p{N}_]{0,31}$/u.test(j) && !M.REZERVOVANA_JMENA.has(j.toLowerCase());
+  /** Jména proměnných použitá ve výrazu (malými písmeny, bez funkcí a pi). */
+  M.promenneVeVyrazu = function (text) {
+    const out = new Set(), t = String(text == null ? '' : text).toLowerCase();
+    const re = /[\p{L}_][\p{L}\p{N}_]*/gu;
+    let m;
+    while ((m = re.exec(t))) {
+      const j = m[0], pred = t[m.index - 1];
+      if (pred && /[\p{N}.]/u.test(pred) && /^e\d*$/.test(j)) continue;       // exponent 1e3
+      if (M.REZERVOVANA_JMENA.has(j) || M.FUNKCE_VYRAZU[j]) continue;
+      out.add(j);
+    }
+    return [...out];
+  };
+
   /** Číslo z pole: desetinná čárka i tečka, mezery, jednotky (mm, cm, m, in, ″, °)
       a jednoduché výpočty: 60/2, 35 mm + 2,5, (10+5)*2, 1e3, −5. Nic se nevyhodnocuje jako kód.
-      Chybný zápis vrací NaN. */
-  M.prectiCislo = function (text) {
+      promenne (Map nebo objekt jméno malými písmeny → číslo) dovolí jména proměnných projektu
+      („D/2 + vule“); dál umí pi a funkce sqrt, abs, round, floor, ceil, min, max, sin/cos/tan (stupně).
+      Chybný zápis nebo neznámé jméno vrací NaN. */
+  M.prectiCislo = function (text, promenne = null) {
     let t = String(text == null ? '' : text).trim().toLowerCase()
       .replace(/[\u2212\u2013]/g, '-').replace(/[×·]/g, '*').replace(/÷|:/g, '/').replace(/\s+/g, ' ');
     if (!t || t.length > 200) return NaN;
@@ -146,6 +171,25 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         i++; const v = vyraz(); mezery(); hloubka--;
         if (t[i] !== ')') return NaN;
         i++; return v;
+      }
+      const jm = /^[\p{L}_][\p{L}\p{N}_]*/u.exec(t.slice(i));
+      if (jm) {
+        const j = jm[0];
+        i += j.length;
+        if (j === 'pi') return Math.PI;
+        const f = M.FUNKCE_VYRAZU[j];
+        if (f) {
+          mezery();
+          if (t[i] !== '(' || ++hloubka > 50) return NaN;
+          i++;
+          const arg = [vyraz()];
+          for (;;) { mezery(); if (t[i] !== ',' && t[i] !== ';') break; i++; arg.push(vyraz()); }
+          mezery(); hloubka--;
+          if (t[i] !== ')' || (f[0] > 0 && arg.length !== f[0])) return NaN;
+          i++; return f[1](...arg);
+        }
+        const v = !promenne ? undefined : promenne instanceof Map ? promenne.get(j) : Object.prototype.hasOwnProperty.call(promenne, j) ? promenne[j] : undefined;
+        return typeof v === 'number' ? v : NaN;
       }
       return cislo();
     }

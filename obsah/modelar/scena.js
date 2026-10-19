@@ -313,8 +313,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     };
 
     /** Náhled projektu (PNG data URL): tělesa šikmo zepředu, bez desky a rámečků. */
-    S.vytvorNahled = function (w = 240, h = 180) {
-      const viditelne = M.app.dok.uzly.filter(u => !u.skryto);
+    /** Náhled projektu (PNG data URL); ids = jen tato tělesa (náhled dílu do knihovny). */
+    S.vytvorNahled = function (w = 240, h = 180, ids = null) {
+      const jen = ids ? new Set(ids) : null;
+      const viditelne = M.app.dok.uzly.filter(u => !u.skryto && (!jen || jen.has(u.id)));
       const k = new M.Kamera(w, h);
       if (viditelne.length) {
         const ob = M.obalkaVice(viditelne);
@@ -329,6 +331,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // rámečky výběru a červené převisy do náhledu nepatří
       model.traverse(o => { if (o.visible && (o.userData.previs || (o.isLineSegments && o.material && o.material.depthTest === false))) ramy.push(o); });
       scena.children.forEach(o => { if (o.visible && o.userData.prekryv) ramy.push(o); });
+      if (jen) model.traverse(o => { if (o.visible && o.userData.id && !jen.has(o.userData.id)) ramy.push(o); });
       const puvodni = skryte.map(o => o.visible);
       skryte.concat(ramy).forEach(o => { o.visible = false; });
       const pozadi = scena.background, orez = renderer.localClippingEnabled;
@@ -360,6 +363,65 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         skryte.forEach((o, i) => { o.visible = puvodni[i]; });
         ramy.forEach(o => { o.visible = true; });
         // plátno se nepřekresluje: náhled šel do textury, obrazovka se nezměnila
+      }
+    };
+
+    /** Obrázek scény pro dokumentaci: canvas w × h px (s vyhlazením). volby: pohled 'aktualni' | 'cely'
+        (celý model izometricky), deska (ukázat desku), pozadi null = průhledné / '#rrggbb', vyber (rámečky výběru). */
+    S.snimek = function (w, h, volby = {}) {
+      const { pohled = 'aktualni', deska: sDeskou = false, pozadi = null, vyber = false } = volby;
+      const max = renderer.capabilities.maxRenderbufferSize || 4096;
+      const nas = Math.max(1, Math.min(2, Math.floor(Math.min(max / w, max / h))));       // 2× vyhlazení, když se vejde
+      const W = w * nas, H = h * nas;
+      const k = new M.Kamera(w, h);
+      const viditelne = M.app.dok.uzly.filter(u => !u.skryto);
+      if (pohled === 'cely' && viditelne.length) {
+        const ob = M.obalkaVice(viditelne), body = [];
+        for (let i = 0; i < 8; i++) body.push(new THREE.Vector3(i & 1 ? ob.max[0] : ob.min[0], i & 2 ? ob.max[1] : ob.min[1], i & 4 ? ob.max[2] : ob.min[2]));
+        k.ortograficka = kamera.ortograficka;
+        k.domu(new THREE.Vector3(...ob.stred), body, 0);
+      } else { k.obnov(kamera.stav()); k.nastavVelikost(w, h); }
+      const rt = new THREE.WebGLRenderTarget(W, H, { samples: 4 });
+      rt.texture.colorSpace = THREE.SRGBColorSpace;
+      const skryte = (sDeskou ? [] : [deska.objekt]).concat([rovina.objekt]);
+      const ramy = [];
+      model.traverse(o => { if (o.visible && (o.userData.previs || (!vyber && o.isLineSegments && o.material && o.material.depthTest === false))) ramy.push(o); });
+      scena.children.forEach(o => { if (o.visible && o.userData.prekryv) ramy.push(o); });
+      const puvodni = skryte.map(o => o.visible);
+      skryte.concat(ramy).forEach(o => { o.visible = false; });
+      const pozadi0 = scena.background;
+      scena.background = null;
+      celovka.position.copy(k.cil).addScaledVector(M.smerPohledu(k.az, k.el), 1000).add(new THREE.Vector3(0, 0, 300));
+      celovka.target.position.copy(k.cil);
+      const barva0 = new THREE.Color(), alfa0 = renderer.getClearAlpha();
+      renderer.getClearColor(barva0);
+      try {
+        renderer.setRenderTarget(rt);
+        if (pozadi) renderer.setClearColor(new THREE.Color(pozadi), 1); else renderer.setClearColor(0x000000, 0);
+        renderer.clear();
+        renderer.render(scena, k.aktivni());
+        const px = new Uint8Array(W * H * 4);
+        renderer.readRenderTargetPixels(rt, 0, 0, W, H, px);
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        const g = c.getContext('2d'), img = g.createImageData(W, H);
+        for (let y = 0; y < H; y++) img.data.set(px.subarray((H - 1 - y) * W * 4, (H - y) * W * 4), y * W * 4);   // otočit Y
+        g.putImageData(img, 0, 0);
+        if (nas === 1) return c;
+        const m = document.createElement('canvas');
+        m.width = w; m.height = h;
+        const gm = m.getContext('2d');
+        gm.imageSmoothingQuality = 'high';
+        gm.drawImage(c, 0, 0, w, h);
+        return m;
+      } finally {
+        renderer.setRenderTarget(null);
+        rt.dispose();
+        renderer.setClearColor(barva0, alfa0);
+        scena.background = pozadi0;
+        skryte.forEach((o, i) => { o.visible = puvodni[i]; });
+        ramy.forEach(o => { o.visible = true; });
+        M.prekresli();                 // světlo čelovky zpátky podle kamery na obrazovce
       }
     };
 

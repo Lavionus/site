@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evoluční laboratoř</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="evoluce/jadro.js"></script>
+  <script src="evoluce/analyza.js"></script>
+  <script src="evoluce/grafy.js"></script>
+  <script src="evoluce/experiment.js"></script>
+  <style>
+    :root {
+      --g1: #6aa6fd; --g2: #4cc38a; --g3: #e0a63f; --g4: #c58af9; --g5: #f07575;
+      --jidlo: #5fc27e; --predator: #ff7a6b;
+    }
+    :root[data-theme="light"] {
+      --g1: #2862bb; --g2: #177540; --g3: #8a5a00; --g4: #7b3fb8; --g5: #b5352a;
+      --jidlo: #1f8a3e; --predator: #c0392b;
+    }
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 3vw, 36px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 14px; max-width: 1000px; line-height: 1.5; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 16px; max-width: 1400px; align-items: start; }
+    @media (max-width: 1000px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    select, input[type="text"], input[type="number"] {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+      padding: 6px 8px; font-size: 0.88rem; font-family: inherit; min-width: 0;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--accent); }
+    .lista { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-bottom: 10px; }
+    .lista .stav { font-size: 0.82rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 4px 14px; margin-left: auto; }
+    .lista .stav b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .svet-obal { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-deep); }
+    #svet { width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: manipulation; }
+    .vymreli { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; font-weight: 600; color: var(--danger); pointer-events: none; }
+    .vymreli[hidden] { display: none; }
+    .legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.76rem; color: var(--text-muted); margin-top: 8px; align-items: center; }
+    .legenda .vz { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: -1px; margin-right: 4px; }
+    .prechod { display: inline-block; width: 90px; height: 10px; border-radius: 3px; vertical-align: -1px; margin: 0 4px; border: 1px solid var(--border); }
+    .volby { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+    .volby label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+    .volby input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+    .pole { margin: 8px 0 0; }
+    .pole .radek { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8rem; color: var(--text-muted); }
+    .pole .radek output { color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pole input[type="range"] { width: 100%; accent-color: var(--accent); margin: 2px 0 0; }
+    .pole.prepinac label { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); cursor: pointer; }
+    .pole.prepinac input { width: 18px; height: 18px; accent-color: var(--accent); }
+    details.skupina { border-top: 1px solid var(--border); padding: 6px 0 4px; }
+    details.skupina:first-of-type { border-top: 0; }
+    details.skupina summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--text); padding: 4px 0; list-style-position: inside; }
+    .napoveda { font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+    .napoveda b { color: var(--text); }
+    .scenar-popis { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-top: 8px; }
+    .mrizka-seed { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin-top: 8px; }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .grafy { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 14px; }
+    .graf h3 { margin-top: 0; }
+    .graf canvas { width: 100%; height: 190px; display: block; }
+    .graf .leg { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; }
+    .graf .leg i { display: inline-block; width: 14px; height: 3px; vertical-align: 3px; margin-right: 4px; border-radius: 2px; }
+    .box-rada { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px; margin-top: 8px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; min-width: 0; }
+    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
+    .box .cislo { font-size: 1.02rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--text-muted); font-weight: 600; }
+    .energie-pruh { height: 8px; border-radius: 4px; background: var(--bg-input); border: 1px solid var(--border); overflow: hidden; margin-top: 4px; }
+    .energie-pruh span { display: block; height: 100%; background: var(--ok); }
+    .rodokmen { overflow: auto; max-height: 520px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elevated); margin-top: 6px; }
+    .rodokmen svg { display: block; }
+    .rodokmen text { font-size: 11px; fill: var(--text); font-family: var(--font); }
+    .rodokmen text.slabe { fill: var(--text-muted); }
+    .rodokmen line, .rodokmen path { stroke: var(--border-strong); fill: none; }
+    .rodokmen g.uzel { cursor: pointer; }
+    .rodokmen g.uzel:hover text { fill: var(--accent); }
+    .prazdne { color: var(--text-muted); font-size: 0.84rem; padding: 10px 0; }
+    .model { max-width: 1400px; margin-top: 16px; line-height: 1.6; font-size: 0.86rem; }
+    .model p, .model li { color: var(--text); }
+    .model ul { padding-left: 20px; margin: 6px 0; }
+    .model li { margin: 3px 0; }
+    .vzorec { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; overflow-x: auto; white-space: pre; font-size: 0.8rem; margin: 6px 0; }
+    .model-sl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 4px 28px; }
+    kbd { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 5px; font-size: 0.76rem; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .mezera { margin-top: 16px; max-width: 1400px; }
+    /* záložky */
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin: -4px 0 12px; }
+    .zalozky button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 7px 11px; color: var(--text-muted); font-weight: 600; }
+    .zalozky button:hover { background: var(--bg-hover); color: var(--text); }
+    .zalozky button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+    [role="tabpanel"][hidden] { display: none; }
+    .formular[hidden], .formular [hidden] { display: none !important; }
+    .graf { position: relative; }
+    .graf h3 { display: flex; align-items: center; gap: 6px; }
+    .graf h3 .png { margin-left: auto; padding: 0 6px; font-size: 0.7rem; line-height: 1.5; text-transform: none; letter-spacing: 0; }
+    .graf-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--bg-elevated); border: 1px solid var(--border-strong);
+      border-radius: 6px; padding: 5px 8px; font-size: 0.74rem; line-height: 1.45; color: var(--text); box-shadow: var(--shadow); max-width: 260px; white-space: nowrap; }
+    .graf-tip[hidden], .graf-cara[hidden] { display: none; }
+    .graf-tip i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+    .graf-cara { position: absolute; width: 1px; background: var(--text-muted); opacity: .55; pointer-events: none; z-index: 4; }
+    .formular { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; font-size: 0.8rem; color: var(--text-muted); }
+    .formular label { display: flex; flex-direction: column; gap: 3px; }
+    .formular input[type="number"], .formular input[type="text"] { width: 92px; }
+    .formular .siroke { width: 140px; }
+    progress { width: 100%; height: 10px; accent-color: var(--accent); }
+    .exp-stav { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+    .cast { margin-top: 14px; }
+    td.vyklad { text-align: left; white-space: normal; color: var(--text-muted); min-width: 130px; }
+    td.prukazne { color: var(--text); font-weight: 600; }
+    .kladne { color: var(--ok); } .zaporne { color: var(--danger); }
+    tr.klik { cursor: pointer; } tr.klik:hover td { background: var(--bg-hover); }
+    .pocatek table input { width: 72px; padding: 3px 5px; font-size: 0.8rem; }
+    .pocatek td, .pocatek th { padding: 3px 4px; }
+    .morfo canvas { width: 100%; height: min(70vh, 460px); display: block; cursor: crosshair; }
+    td .x { padding: 0 6px; font-size: 0.74rem; }
+  </style>
+</head>
+<body>
+  <h1>🧬 Evoluční laboratoř</h1>
+  <p class="podtitul">Populace virtuálních organismů s dědičnými geny – rychlostí, velikostí, dosahem vnímání, barvou a prahem
+    rozmnožování. Organismy hledají potravu, spotřebovávají energii, množí se, mutují a umírají; přírodní výběr, genetický drift
+    a populační bottleneck můžete sledovat živě i v grafech. Simulace je deterministická: stejný seed a stejné zásahy dají vždy
+    stejný výsledek.</p>
+
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <section class="karta" aria-label="Simulace">
+        <div class="lista">
+          <button id="btnBeh" class="hlavni" title="Spustit / pozastavit (mezerník)">▶ Spustit</button>
+          <button id="btnKrok" title="Jeden krok (šipka vpravo)">Krok</button>
+          <button id="btnKrok100" title="100 kroků najednou">+100</button>
+          <button id="btnKrok1000" title="1000 kroků najednou">+1000</button>
+          <label class="sr" for="rychlost">Rychlost</label>
+          <select id="rychlost" title="Rychlost simulace (klávesy 1–6)">
+            <option value="0.25">0,25×</option>
+            <option value="1" selected>1×</option>
+            <option value="3">3×</option>
+            <option value="10">10×</option>
+            <option value="40">40×</option>
+            <option value="max">maximum</option>
+          </select>
+          <div class="stav" aria-live="off">
+            <span>krok <b id="sKrok">0</b></span>
+            <span>populace <b id="sPop">0</b></span>
+            <span>potrava <b id="sJidlo">0</b></span>
+            <span>generace <b id="sGen">0</b></span>
+            <span id="sTempo" title="Skutečné tempo simulace"></span>
+          </div>
+        </div>
+        <div class="svet-obal">
+          <canvas id="svet" aria-label="Svět simulace – klepnutím vyberete jedince"></canvas>
+          <div id="vymreli" class="vymreli" hidden>Populace vymřela</div>
+        </div>
+        <div class="legenda">
+          <span><span class="vz" style="background: var(--jidlo)"></span>potrava</span>
+          <span><span class="vz" style="background: var(--predator); border-radius: 0; clip-path: polygon(0 0, 100% 50%, 0 100%)"></span>predátor</span>
+          <span>organismus (velikost kruhu = velikost těla), barva genu:<span class="prechod" id="prechod"></span>0 → 1</span>
+        </div>
+        <div class="volby">
+          <label><input type="checkbox" id="optVnimani" checked> dosah vnímání vybraného</label>
+          <label><input type="checkbox" id="optSmer"> směr pohybu</label>
+          <label>barvit podle
+            <select id="optBarvit">
+              <option value="barva">genu barvy</option>
+              <option value="rychlost">rychlosti</option>
+              <option value="velikost">velikosti</option>
+              <option value="vnimani">vnímání</option>
+              <option value="prah">prahu rozmnožení</option>
+              <option value="energie">zásob energie</option>
+            </select>
+          </label>
+        </div>
+        <p class="napoveda">Klepnutím na organismus ho vyberete (rodokmen a podrobnosti níže). Klávesy: <kbd>mezerník</kbd> běh/pauza,
+          <kbd>→</kbd> krok, <kbd>1</kbd>–<kbd>6</kbd> rychlost. Najetím myší na graf přečtete hodnoty.</p>
+      </section>
+
+      <section class="karta" aria-label="Analýza">
+        <div class="zalozky" role="tablist" aria-label="Pohledy na data">
+          <button role="tab" id="tab-grafy" aria-controls="pan-grafy" aria-selected="true">Grafy</button>
+          <button role="tab" id="tab-morfo" aria-controls="pan-morfo" aria-selected="false">Morfoprostor</button>
+          <button role="tab" id="tab-vyber" aria-controls="pan-vyber" aria-selected="false">Analýza výběru</button>
+          <button role="tab" id="tab-exp" aria-controls="pan-exp" aria-selected="false">Experimenty</button>
+        </div>
+
+        <div role="tabpanel" id="pan-grafy" aria-labelledby="tab-grafy">
+        <h2 id="hGrafy">Vývoj populace a znaků
+          <select id="znak" aria-label="Sledovaný znak"></select>
+        </h2>
+        <div class="grafy">
+          <div class="graf"><h3>Velikost populace</h3><canvas id="gPop"></canvas>
+            <div class="leg"><span><i style="background: var(--g1)"></i>organismy</span><span><i style="background: var(--jidlo)"></i>potrava</span><span><i style="background: var(--predator)"></i>predátoři</span><span><i style="background: var(--danger); height: 1px"></i>katastrofa</span></div></div>
+          <div class="graf"><h3 id="hPrum">Průměr ± směrodatná odchylka</h3><canvas id="gPrum"></canvas>
+            <div class="leg"><span><i style="background: var(--g1)"></i>průměr</span><span><i style="background: var(--g1); opacity: .3; height: 9px; vertical-align: -1px"></i>± 1 SD</span></div></div>
+          <div class="graf"><h3 id="hMapa">Četnosti hodnot v čase</h3><canvas id="gMapa"></canvas>
+            <div class="leg"><span>sytost = četnost v intervalu (vůči nejčetnějšímu v daném čase)</span><span><i style="background: var(--text)"></i>průměr</span></div></div>
+          <div class="graf"><h3>Rozptyl znaků (SD / rozsah genu)</h3><canvas id="gRoz"></canvas>
+            <div class="leg" id="legRoz"></div></div>
+          <div class="graf"><h3 id="hHist">Současné rozložení</h3><canvas id="gHist"></canvas></div>
+          <div class="graf"><h3>Příčiny úmrtí (kumulativně)</h3><canvas id="gSmrt"></canvas>
+            <div class="leg"><span><i style="background: var(--g3)"></i>hlad</span><span><i style="background: var(--g5)"></i>predace</span><span><i style="background: var(--g4)"></i>stáří</span><span><i style="background: var(--text-muted)"></i>katastrofa</span></div></div>
+        </div>
+        </div>
+
+        <div role="tabpanel" id="pan-morfo" aria-labelledby="tab-morfo" hidden>
+          <div class="formular">
+            <label>osa x <select id="morfoX"></select></label>
+            <label>osa y <select id="morfoY"></select></label>
+            <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="morfoStopa" checked> stopa průměru</label>
+            <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="morfoPriblizit"> přiblížit na populaci</label>
+          </div>
+          <div class="graf morfo" style="margin-top:10px"><canvas id="gMorfo" aria-label="Morfoprostor – bodový graf dvou znaků, klepnutím vyberete jedince"></canvas></div>
+          <p class="napoveda">Každý bod je jeden žijící jedinec v prostoru dvou znaků (barva podle volby „barvit podle“ nad světem, velikost bodu podle těla).
+            Čára je cesta průměru populace od začátku (prázdné kolečko) do teď (plné). Vidíte tu korelace znaků, rozdělení na skupiny i směr výběru.</p>
+        </div>
+
+        <div role="tabpanel" id="pan-vyber" aria-labelledby="tab-vyber" hidden>
+          <div class="formular">
+            <label>kohorty <select id="vyberOkno">
+              <option value="500">narození za posledních 500 kroků</option><option value="1000" selected>narození za posledních 1 000 kroků</option>
+              <option value="2000">narození za posledních 2 000 kroků</option><option value="5000">narození za posledních 5 000 kroků</option><option value="vse">všechny uchované</option>
+            </select></label>
+            <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="vyberBezKat" checked> vynechat oběti katastrofy</label>
+            <label>profil fitness <select id="vyberZnak"></select></label>
+          </div>
+          <div id="vyberObsah"></div>
+          <div class="graf cast"><h3 id="hProfil">Relativní fitness podle znaku</h3><canvas id="gProfil"></canvas>
+            <div class="leg"><span><i style="background: var(--accent)"></i>průměrná relativní fitness v intervalu</span><span>úsečky = 95% interval</span><span>čárkovaně = průměr (1)</span></div></div>
+          <p class="napoveda"><b>Jak se počítá:</b> jedinci se sdružují do <b>kohort</b> podle kroku narození (po 100 krocích). Do analýzy vstupují jen
+            <b>uzavřené</b> kohorty – ty, jejichž členové už všichni zemřeli –, takže každý jedinec má známý celoživotní počet potomků
+            (LRS, <i>lifetime reproductive success</i>) a vzorek není zkreslený tím, kdo žije déle. Analýza proto zaostává za současností zhruba o délku života.
+            Fitness je relativní (<i>w</i> = LRS / průměr), znaky standardizované na průměr 0 a sd 1 (v rámci zvolených kohort).
+            <b>S</b> = cov(<i>w</i>, <i>z</i>) je selekční diferenciál – o kolik sd by se posunul průměr znaku jen výběrem (zahrnuje i nepřímý výběr přes korelované znaky).
+            <b>β</b> je parciální regresní koeficient z mnohonásobné regrese <i>w</i> na všechny znaky (Lande & Arnold 1983) – přímý směrový výběr.
+            <b>γ</b> je dvojnásobek koeficientu u <i>z</i>² v modelu se čtverci: záporné = stabilizující výběr (prospívají průměrní), kladné = disruptivní.
+            Tučně = průkazné (|koef.| &gt; 1,96 SE). <b>I</b> = Var(LRS)/průměr² je příležitost k výběru – horní mez síly výběru.
+            Ne ≈ harmonický průměr velikosti populace od začátku okna (efektivní velikost určuje sílu driftu).
+            Výběr bývá na jednu generaci slabý (setiny až desetiny sd); když není průkazný, zvětšete okno nebo použijte záložku Experimenty.</p>
+        </div>
+
+        <div role="tabpanel" id="pan-exp" aria-labelledby="tab-exp" hidden>
+          <div class="formular">
+            <label>typ experimentu <select id="expTyp">
+              <option value="rep">replikace – stejné nastavení, různé seedy</option>
+              <option value="sweep">citlivost – jeden parametr v řadě hodnot</option>
+            </select></label>
+            <label>replik <input type="number" id="expRep" min="2" max="50" value="8"></label>
+            <label>kroků <input type="number" id="expDelka" min="100" max="200000" step="100" value="5000"></label>
+            <label>základ seedu <input type="text" id="expSeed" class="siroke" spellcheck="false" autocomplete="off"></label>
+          </div>
+          <div class="formular" id="expSweep" hidden style="margin-top:8px">
+            <label>parametr <select id="expPar"></select></label>
+            <label>od <input type="number" id="expOd" step="any"></label>
+            <label>do <input type="number" id="expDo" step="any"></label>
+            <label>hodnot <input type="number" id="expPocet" min="2" max="15" value="5"></label>
+          </div>
+          <div class="tlacitka">
+            <button id="btnExp" class="hlavni">Spustit experiment</button>
+            <button id="btnExpZrus" disabled>Zrušit</button>
+          </div>
+          <div id="expPrubeh" hidden style="margin-top:8px"><progress id="expProg" max="1" value="0"></progress><div class="exp-stav" id="expStav"></div></div>
+          <p class="napoveda">Experiment přebírá nastavení <b>aktuálního běhu</b>: scénář, parametry platné na začátku, počáteční populaci a celý protokol zásahů
+            (provedených i naplánovaných). Repliky se liší jen seedem (<i>základ-1</i>, <i>základ-2</i>…); u citlivosti dostane každá hodnota parametru
+            <b>tytéž seedy</b> (společná náhoda – rozdíly pak víc odpovídají parametru než šumu) a zásahy do zkoumaného parametru se z protokolu vynechají.
+            Výsledek repliky = průměr posledních 20 % záznamů; interval je 95% (Studentovo t) přes repliky. Počítá se na pozadí ve více vláknech.</p>
+          <div id="expVysledky"></div>
+        </div>
+      </section>
+
+      <section class="karta" aria-labelledby="hJedinec">
+        <h2 id="hJedinec">Vybraný jedinec a rodokmen</h2>
+        <div id="jedinec"><p class="prazdne">Klepněte na organismus ve světě, nebo <button class="male" id="btnNahodny">vyberte náhodného</button>.</p></div>
+      </section>
+    </div>
+
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="hScenar">
+        <h2 id="hScenar">Scénář a seed</h2>
+        <label class="sr" for="scenar">Scénář</label>
+        <select id="scenar" style="width: 100%"></select>
+        <div class="scenar-popis" id="scenarPopis"></div>
+        <div class="mrizka-seed">
+          <input type="text" id="seed" aria-label="Seed" placeholder="seed" spellcheck="false" autocomplete="off">
+          <button id="btnNahodnySeed" title="Náhodný seed">🎲</button>
+        </div>
+        <details class="skupina pocatek" style="margin-top:8px">
+          <summary>Počáteční populace</summary>
+          <div class="formular" style="margin:6px 0">
+            <label>počet jedinců <input type="number" id="pocPocet" min="1" max="3000"></label>
+            <label title="Čísla oddělená mezerou; prázdné = barva z normálního rozdělení">alely barvy <input type="text" id="pocAlely" class="siroke" placeholder="např. 0,3 0,7"></label>
+          </div>
+          <div class="obal-tab"><table><thead><tr><th>Gen</th><th>střed</th><th>sd</th></tr></thead><tbody id="pocGeny"></tbody></table></div>
+        </details>
+        <div class="pole prepinac" style="margin-top:8px"><label><input type="checkbox" id="startParam"> převzít současné parametry prostředí</label></div>
+        <div class="tlacitka">
+          <button id="btnStart" class="hlavni">Začít znovu</button>
+          <button id="btnOdkaz" title="Zkopírovat odkaz s úplným nastavením experimentu">Odkaz</button>
+        </div>
+        <p class="napoveda">„Začít znovu“ vytvoří nový svět ze scénáře, počáteční populace a seedu. Stejný seed = stejný průběh. Odkaz nese úplné
+          nastavení (parametry, počátek i zásahy), takže kolega uvidí přesně totéž.</p>
+      </section>
+
+      <section class="karta" aria-labelledby="hParam">
+        <h2 id="hParam">Parametry prostředí</h2>
+        <div id="parametry"></div>
+        <div class="tlacitka">
+          <button id="btnKatastrofa" title="Náhodně zabije zvolený podíl populace (bottleneck)">☄ Katastrofa</button>
+          <select id="katPodil" aria-label="Podíl obětí katastrofy">
+            <option value="0.5">50 %</option><option value="0.8">80 %</option><option value="0.9" selected>90 %</option><option value="0.95">95 %</option><option value="0.99">99 %</option>
+          </select>
+        </div>
+        <p class="napoveda">Změny se zapisují do protokolu s číslem kroku, takže je lze přesně přehrát.</p>
+      </section>
+
+      <section class="karta" aria-labelledby="hPlan">
+        <h2 id="hPlan">Plán a protokol zásahů</h2>
+        <div class="formular">
+          <label>v kroku <input type="number" id="planKrok" min="0" step="100"></label>
+          <label>zásah <select id="planCo"></select></label>
+          <label id="planHodnotaObal">hodnota <input type="number" id="planHodnota" step="any"></label>
+          <button id="btnPlan">Naplánovat</button>
+        </div>
+        <p class="napoveda">Naplánované zásahy proběhnou přesně na začátku zadaného kroku a jsou součástí experimentu (přehrání, odkaz, dávkové repliky).
+          Změny parametrů posuvníky se zapisují k aktuálnímu kroku.</p>
+        <div class="obal-tab" style="max-height: 220px; overflow-y: auto; margin-top: 8px"><table><tbody id="protokol"></tbody></table></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hUlozeni">
+        <h2 id="hUlozeni">Uložení a export</h2>
+        <div class="tlacitka">
+          <button id="btnUlozit">Uložit</button>
+          <button id="btnNacist">Načíst</button>
+          <button id="btnExport">Export JSON</button>
+          <button id="btnImport">Import</button>
+          <input type="file" id="soubor" accept=".json,application/json" hidden>
+        </div>
+        <div class="tlacitka">
+          <button id="btnPrehrat" title="Spustí simulaci znovu od kroku 0 se stejným seedem a zásahy a ověří shodu">Přehrát a ověřit</button>
+        </div>
+        <p class="napoveda" id="ulozeniInfo">Uložení do prohlížeče drží jednu pozici; pro archiv použijte export do souboru.</p>
+        <h3>Export dat</h3>
+        <div class="tlacitka" style="margin-top:0">
+          <button id="btnCsvHist" title="Časová řada: velikost populace, průměry a sd znaků, úmrtí">CSV vývoj</button>
+          <button id="btnCsvPop" title="Žijící jedinci a jejich geny">CSV populace</button>
+          <button id="btnCsvZivoty" title="Posledních až 3 000 dokončených životů: geny, počet potomků, příčina smrti">CSV životy</button>
+          <button id="btnPngSvet" title="Snímek světa">PNG svět</button>
+        </div>
+        <div class="pole prepinac"><label><input type="checkbox" id="csvCesky"> CSV pro český Excel (středník, desetinná čárka)</label></div>
+      </section>
+
+    </div>
+  </div>
+
+  <section class="karta model" aria-labelledby="hModel">
+    <h2 id="hModel">Model a jeho zjednodušení</h2>
+    <div class="model-sl">
+      <div>
+        <h3>Geny a dědičnost</h3>
+        <ul>
+          <li><b>Genom</b> je pět spojitých čísel: rychlost <i>v</i> (0,3–4 j/krok), velikost <i>s</i> (0,4–3), dosah vnímání <i>p</i> (5–200 j),
+            barva (0–1) a práh rozmnožení <i>r</i> (0,3–0,95 kapacity zásob). Každé číslo je jeden „lokus“, fenotyp = genotyp.</li>
+          <li><b>Nepohlavně</b> potomek zdědí kopii genomu rodiče. <b>Pohlavně</b> (rekombinace) potřebuje partnera připraveného k množení v dosahu
+            svého vnímání a každý gen zdědí s pravděpodobností ½ od jednoho z rodičů (nezávislá segregace, bez vazby genů).</li>
+          <li><b>Mutace</b>: každý gen potomka se s pravděpodobností <i>μ</i> změní o náhodné číslo z normálního rozdělení se směrodatnou
+            odchylkou <i>σ</i> · (rozsah genu); na mezích se hodnota odrazí (symetricky, aby mutace neměla směr).</li>
+        </ul>
+        <h3>Energie</h3>
+        <div class="vzorec">spotřeba/krok = 0,012·s³·v²        (pohyb: kinetická energie ~ m·v², m ~ s³)
+             + 0,0012·p          (udržování smyslů, lineárně s dosahem)
+             + 0,05·(s³)^0,75    (bazální metabolismus, Kleiberův zákon)
+             + 0,05·chlad·s²     (tepelné ztráty povrchem)
+kapacita zásob = 100·s³,   1 kus potravy = nastavená energie</div>
+        <ul>
+          <li>Organismus umře hlady, když zásoby klesnou na 0, stářím po dosažení individuální délky života (průměr ± 25 %), nebo
+            ulovením.</li>
+          <li>Rozmnoží se, je-li starší než 60 kroků a má zásoby ≥ <i>r</i> · kapacita. Nepohlavně předá potomkovi polovinu zásob,
+            pohlavně každý rodič 30 %; 20 % se při tom ztratí.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Prostředí a výběr</h3>
+        <ul>
+          <li>Svět je torus 1200 × 800 jednotek (co odejde vpravo, přijde zleva). Potrava přibývá rovnoměrně náhodně podle přísunu,
+            se sezónností jako sinusovka s délkou roku.</li>
+          <li>Organismus vidí nejbližší potravu v dosahu vnímání a jde k ní; jinak se náhodně potuluje. Predátora v dosahu vnímání
+            vidí a utíká přímo od něj. Hledání potravy používá <b>prostorový index</b> (mřížka 50 × 50 j), takže krok trvá O(n).</li>
+          <li><b>Predátoři</b> se nevyvíjejí a jejich počet je pevný. Kořist v dohledu odhalí za krok s pravděpodobností
+            0,01 + 0,29 · kontrast², kde kontrast = |barva − barva prostředí|; odhalenou pronásledují. Kořist větší než limit nechávají být.
+            Po úlovku chvíli tráví.</li>
+          <li><b>Selekce</b> nikde není zadaná přímo – vzniká jen z rozdílů v přežití a počtu potomků. Barva je bez predátorů zcela
+            neutrální (nemá žádný jiný účinek) – proto se na ní dobře ukazuje genetický drift.</li>
+        </ul>
+        <h3>Co model zjednodušuje</h3>
+        <ul>
+          <li>Haploidní genom bez dominance, epistáze, pleiotropie a vazby genů; žádná pohlaví, každý se může pářit s každým.</li>
+          <li>Fenotyp je přímo genotyp – chybí ontogeneze, plasticita, vliv prostředí na vývoj a učení.</li>
+          <li>Mutace jsou malé spojité posuny; nejsou zde inzerce, delece, duplikace ani mutace s velkým účinkem.</li>
+          <li>Energetika je fenomenologická (koeficienty zvolené pro názornost, ne naměřené).</li>
+          <li>Predátoři mají pevný počet a nevyvíjejí se, takže skutečná koevoluce kořist–predátor neprobíhá.</li>
+          <li>Prostředí je homogenní (jedna barva, rovnoměrná potrava); chybí migrace, prostorové bariéry a speciace.</li>
+          <li>Generace se překrývají a čas je diskrétní (krok); generace jedince = 1 + generace staršího z rodičů (v liště je průměr populace).</li>
+          <li>Analýza výběru pracuje s uzavřenými kohortami (všichni členové zemřeli), takže zaostává o délku života; uchovává se 120 posledních kohort
+            (12 000 kroků) jako součty, ne jednotliví jedinci. Starší uložené stavy kohorty nemají – analýza u nich začne až novými narozenými.</li>
+          <li>Rodokmen si pamatuje jen předky žijících jedinců (vymřelé větve se prořezávají, nejstarší záznamy nad limit 20 000 se zahazují).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <script src="evoluce/ui.js"></script>
+</body>
+</html>

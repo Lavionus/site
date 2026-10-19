@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zaplavení terénu – orientační model</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/leaflet/leaflet.js"></script>
+  <script src="zaplavy/projekce.js"></script>
+  <script src="zaplavy/rastry.js"></script>
+  <script src="zaplavy/jadro.js"></script>
+  <script src="zaplavy/analyzy.js"></script>
+  <script src="zaplavy/pohled3d.js"></script>
+  <style>
+    :root { --text-chyba: #ff8f85; --text-mez: #f0bd5e; }
+    :root[data-theme="light"] { --text-chyba: var(--danger); --text-mez: var(--warn); }
+    * { box-sizing: border-box; }
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 2.5vw, 32px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1rem; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 12px; max-width: 1000px; line-height: 1.5; }
+    .upozorneni { max-width: 1500px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); color: var(--text);
+      border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .upozorneni b { color: var(--text-mez); }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 16px; max-width: 1500px; align-items: start; }
+    .panel, .hlavni-sloupec { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+    @media (max-width: 960px) {
+      .rozlozeni { grid-template-columns: minmax(0, 1fr); }
+      .hlavni-sloupec { order: -1; }
+    }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    .karta[hidden], [hidden] { display: none !important; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
+    input[type="number"], input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.92rem; min-width: 0; font-family: inherit; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input[type="range"] { width: 100%; accent-color: var(--accent); margin: 6px 0 2px; }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text); margin: 8px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+    button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px;
+      padding: 7px 11px; font-size: 0.85rem; cursor: pointer; font-family: inherit; }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+    .napoveda { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
+    .napoveda a, .pozn a, .meta a { color: var(--accent); }
+    .stav { font-size: 0.8rem; margin-top: 8px; color: var(--text-muted); line-height: 1.45; min-height: 1.2em; }
+    .stav.chyba { color: var(--text-chyba); }
+    .stav.ok { color: var(--ok); }
+    .prubeh { height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .prubeh > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+    .volby-zdroje { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .volby-zdroje button { text-align: left; line-height: 1.3; padding: 7px 9px; }
+    .volby-zdroje button small { display: block; color: var(--text-muted); font-size: 0.7rem; }
+    .meta { font-size: 0.76rem; line-height: 1.5; margin-top: 10px; background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 10px; overflow-wrap: anywhere; }
+    .meta dt { color: var(--text-muted); float: left; clear: left; width: 92px; }
+    .meta dd { margin: 0 0 2px 98px; }
+    .rezimy { display: grid; grid-template-columns: 1fr; gap: 6px; }
+    .rezimy label { display: flex; gap: 8px; align-items: flex-start; margin: 0; padding: 8px 10px; border: 1px solid var(--border);
+      border-radius: 6px; cursor: pointer; color: var(--text); font-size: 0.84rem; line-height: 1.35; }
+    .rezimy label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+    .rezimy input { accent-color: var(--accent); margin-top: 2px; flex: none; }
+    .rezimy small { display: block; color: var(--text-muted); font-size: 0.72rem; }
+    .hladina-radek { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+    .hladina-radek input[type="number"] { width: 118px; font-size: 1.05rem; font-weight: 600; }
+    .krokovani { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+    .krokovani button { flex: 1 1 0; padding: 5px 4px; font-size: 0.8rem; min-width: 46px; }
+    .vysledky { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; min-width: 0; }
+    .box .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
+    .box .cislo { font-size: 1.02rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.7rem; color: var(--text-muted); }
+    .box.hl .cislo { color: var(--accent); }
+    .zdroje-seznam { list-style: none; padding: 0; margin: 6px 0 0; font-size: 0.8rem; }
+    .zdroje-seznam li { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--border); }
+    .zdroje-seznam li button { padding: 1px 7px; }
+    #mapa { width: 100%; height: min(72vh, 760px); min-height: 380px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-input); z-index: 0; }
+    @media (max-width: 960px) { #mapa { height: min(62vh, 560px); min-height: 320px; } }
+    .mapa-obal { position: relative; }
+    .leaflet-container { font-family: var(--font); background: var(--bg-input); }
+    .leaflet-voda-pane canvas, .leaflet-voda-pane img { image-rendering: pixelated; }
+    .mapa-info { background: var(--bg-panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px;
+      font-size: 0.76rem; line-height: 1.4; box-shadow: var(--shadow); max-width: 260px; }
+    .mapa-info i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; border: 1px solid rgba(0,0,0,.25); }
+    .mapa-info .radek { white-space: nowrap; }
+    .leaflet-control-attribution { font-size: 10px; max-width: 70vw; white-space: normal; line-height: 1.3; }
+    .nastroj-pruh { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 800; background: var(--bg-elevated);
+      color: var(--text); border: 1px solid var(--accent); border-radius: 8px; padding: 6px 10px; font-size: 0.82rem; box-shadow: var(--shadow);
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 100px); }
+    .nastroj-pruh button { padding: 3px 9px; font-size: 0.78rem; }
+    .pracuji { position: absolute; inset: 0; z-index: 900; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .pracuji span { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 14px; font-size: 0.86rem; box-shadow: var(--shadow); }
+    .graf { width: 100%; height: 220px; display: block; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; touch-action: none; }
+    .graf-info { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; min-height: 1.2em; line-height: 1.45; }
+    .dvojice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 1200px) { .dvojice { grid-template-columns: minmax(0, 1fr); } }
+    .pozn { color: var(--text-muted); font-size: 0.8rem; line-height: 1.55; }
+    .pozn h2 { color: var(--text); }
+    .pozn h3 { margin-top: 12px; }
+    .pozn ul { padding-left: 20px; margin: 4px 0; }
+    .obal-tab { overflow-x: auto; }
+    .pozn table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.76rem; }
+    .pozn td, .pozn th { border-bottom: 1px solid var(--border); padding: 4px 6px; text-align: left; vertical-align: top; }
+    .pozn th { color: var(--text); }
+    details > summary { cursor: pointer; color: var(--text); font-weight: 600; font-size: 0.86rem; }
+    .soubor-volba input[type="file"] { width: 100%; font-size: 0.8rem; color: var(--text-muted); }
+    .kroky { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+    .kroky li { font-size: 0.74rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 5px 6px; text-align: center; }
+    .kroky li b { display: inline-block; width: 17px; height: 17px; line-height: 17px; border-radius: 50%; background: var(--bg-control); color: var(--text); font-size: 0.7rem; margin-right: 3px; }
+    .kroky li.hotovo { color: var(--text); border-color: var(--ok); }
+    .kroky li.hotovo b { background: var(--ok); color: #fff; }
+    .kroky li.aktivni { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
+    .kroky li.aktivni b { background: var(--accent); color: var(--on-accent); }
+    .kroky li.vynechat { opacity: 0.5; }
+    .krok-rada { font-size: 0.82rem; line-height: 1.45; color: var(--text); background: var(--bg-panel); border: 1px solid var(--accent); border-left-width: 4px; border-radius: 6px; padding: 7px 10px; }
+    .krok-rada:empty { display: none; }
+    .pruvodce { max-width: 1500px; display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 8px 16px; align-items: center; margin-bottom: 14px; }
+    @media (max-width: 960px) { .pruvodce { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 600px) { .mapa-info { font-size: 0.68rem; max-width: 170px; padding: 4px 6px; } .mapa-info i { width: 11px; height: 8px; } }
+    .hledani { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+    .vysledky-hledani { list-style: none; padding: 0; margin: 6px 0 0; }
+    .vysledky-hledani button { width: 100%; text-align: left; margin-top: 4px; font-size: 0.8rem; line-height: 1.3; }
+    .pohled3d { width: 100%; height: min(60vh, 460px); min-height: 280px; border-radius: 6px; overflow: hidden; background: var(--bg-input); border: 1px solid var(--border); }
+    .tab-osm td, .tab-osm th { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--border); font-size: 0.8rem; white-space: nowrap; }
+    .tab-osm td:first-child, .tab-osm th:first-child { text-align: left; }
+    .tab-osm { border-collapse: collapse; width: 100%; }
+    .tab-osm tfoot td, .tab-osm tr.soucet td { font-weight: 700; }
+    .tab-osm i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+    .mapa-tlacitko { background: var(--accent); color: var(--on-accent); border: 0; border-radius: 6px; padding: 7px 11px; font-weight: 600; font-size: 0.85rem; cursor: pointer; box-shadow: var(--shadow); }
+    .mapa-tlacitko:hover { background: var(--accent-hover); }
+    .leaflet-osm-pane canvas, .leaflet-upravy-pane canvas { pointer-events: none; }
+    kbd { font-family: inherit; font-size: 0.72rem; padding: 0 4px; border: 1px solid var(--border-strong); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>🌊 Zaplavení terénu – orientační model</h1>
+  <p class="podtitul">Vyberte oblast na mapě, načtěte digitální model terénu (DMR 5G ČÚZK pro Česko, celosvětové dlaždice Terrain Tiles,
+    vlastní GeoTIFF / ASCII grid, nebo demonstrační terén) a nastavte absolutní výšku hladiny. Mapa ukáže zatopené plochy a hloubku vody;
+    k dispozici je režim „vše pod hladinou“ i „jen propojené se zdrojem“, animace stoupající hladiny, výškový profil, měření plochy a export obrázku.</p>
+  <div class="upozorneni" role="note"><b>⚠️ Nejde o předpověď povodně.</b> Model jen porovnává výšky terénu s vodorovnou hladinou
+    (tzv. „bathtub“). Nezohledňuje průtok, objem ani dobu trvání povodně, proudění, sklon hladiny podél toku, mosty, propustky,
+    kanalizaci, mobilní ani nezaměřené hráze, vsak či srážky. Výsledek je jen ilustrace, kam by sahala vodorovná hladina dané výšky.
+    Skutečné ohrožení zjistíte z oficiálních <b>map povodňového nebezpečí a rizik</b> (VÚV T. G. Masaryka, portál
+    <a href="https://www.dibavod.cz/" target="_blank" rel="noopener">DIBAVOD</a> / <a href="https://heis.vuv.cz/" target="_blank" rel="noopener">HEIS VÚV</a>),
+    z hlásné a předpovědní povodňové služby <a href="https://hydro.chmi.cz/hppsoldv/" target="_blank" rel="noopener">ČHMÚ</a> a od povodňových orgánů obce.</div>
+
+  <div class="pruvodce">
+    <ol class="kroky" id="kroky" aria-label="Postup">
+      <li data-krok="misto"><b>1</b> Místo</li><li data-krok="teren"><b>2</b> Terén</li><li data-krok="zdroj"><b>3</b> Zdroj vody</li><li data-krok="hladina"><b>4</b> Hladina</li>
+    </ol>
+    <div class="krok-rada" id="krokRada" role="status"></div>
+  </div>
+  <div class="rozlozeni">
+    <aside class="panel" aria-label="Ovládání">
+      <section class="karta" aria-labelledby="h-misto">
+        <h2 id="h-misto">1. Místo</h2>
+        <form class="hledani" id="formHledat" role="search">
+          <input type="text" id="hledat" placeholder="Obec, ulice, řeka…" aria-label="Hledat místo" autocomplete="off">
+          <button type="submit" id="btnHledat">Hledat</button>
+        </form>
+        <ul class="vysledky-hledani" id="vysledkyHledani" hidden></ul>
+        <label for="ukazky">Ukázková místa povodní v Česku</label>
+        <select id="ukazky"><option value="">– vyberte místo –</option></select>
+        <div class="napoveda">Ukázka načte DMR 5G, zdroj vody dá na koryto hlavní řeky v centru a hladinu 2,5–7 m nad tok (podle místa). Jde jen o ilustraci
+          výšek terénu, <b>ne o rekonstrukci</b> skutečné povodně – ta měla podél toku proměnnou hladinu. Hledání: Nominatim © OpenStreetMap.</div>
+      </section>
+      <section class="karta" aria-labelledby="h-data">
+        <h2 id="h-data">2. Výšková data</h2>
+        <div class="volby-zdroje" role="group" aria-label="Zdroj výškových dat">
+          <button type="button" data-zdroj="cuzk" aria-pressed="true">ČÚZK DMR 5G<small>jen Česko, 2 m, Bpv</small></button>
+          <button type="button" data-zdroj="terrarium" aria-pressed="false">Terrain Tiles<small>celý svět, ~30 m v Evropě</small></button>
+          <button type="button" data-zdroj="soubor" aria-pressed="false">Vlastní soubor<small>GeoTIFF, ASCII grid</small></button>
+          <button type="button" data-zdroj="demo" aria-pressed="false">Demonstrační terén<small>smyšlené údolí</small></button>
+        </div>
+        <div id="volbyOnline">
+          <label>Oblast</label>
+          <div class="tlacitka" style="margin-top:0">
+            <button type="button" id="btnObdelnik" aria-pressed="false">▭ Vyznačit obdélník</button>
+            <button type="button" id="btnVyrez">Celý výřez mapy</button>
+          </div>
+          <div class="napoveda" id="oblastInfo">Oblast zatím není vyznačená – použije se aktuální výřez mapy.</div>
+          <label for="maxBunek">Nejvýše buněk rastru <span class="napoveda" style="display:inline">(víc = jemnější, ale pomalejší)</span></label>
+          <select id="maxBunek">
+            <option value="250000">0,25 milionu (rychlé)</option>
+            <option value="1000000" selected>1 milion</option>
+            <option value="2250000">2,25 milionu</option>
+            <option value="4194304">4,2 milionu (pomalejší)</option>
+          </select>
+          <div class="tlacitka"><button type="button" class="hlavni" id="btnNacist">Načíst výšky</button>
+            <button type="button" id="btnZrusitNacitani" hidden>Zrušit</button></div>
+        </div>
+        <div id="volbySoubor" hidden class="soubor-volba">
+          <label for="soubor">GeoTIFF (.tif) nebo ASCII grid (.asc); volitelně s .prj / .tfw</label>
+          <input type="file" id="soubor" multiple accept=".tif,.tiff,.asc,.txt,.prj,.tfw,.tifw">
+          <label for="crsImport">Souřadnicový systém souboru</label>
+          <select id="crsImport"><option value="0">zjistit automaticky (GeoTIFF / .prj / rozsah)</option></select>
+          <div class="tlacitka"><button type="button" id="btnZnovuImport" disabled>Načíst znovu s vybraným systémem</button></div>
+          <div class="napoveda">Soubor se zpracuje jen ve vašem prohlížeči, nikam se neodesílá. Podporováno: GeoTIFF/BigTIFF bez komprese, LZW, Deflate,
+            PackBits; systémy S-JTSK (Křovák), UTM, WGS 84, ETRS89, Web Mercator. Rastr se převzorkuje do Web Mercatoru.</div>
+        </div>
+        <div id="volbyDemo" hidden>
+          <div class="napoveda">Smyšlené údolí 4 × 3 km s meandrující řekou, nivou, přítokem a uzavřenou sníženinou za valem.
+            Leží na vymyšleném místě, proto se podkladová mapa vypne. Hodí se na vyzkoušení rozdílu mezi režimy.</div>
+          <div class="tlacitka"><button type="button" class="hlavni" id="btnDemo">Načíst demonstrační terén</button></div>
+        </div>
+        <div class="prubeh" id="prubeh" hidden><div></div></div>
+        <div class="stav" id="stavData" role="status" aria-live="polite"></div>
+        <dl class="meta" id="meta" hidden></dl>
+      </section>
+
+      <section class="karta" aria-labelledby="h-hladina">
+        <h2 id="h-hladina">3. Hladina a režim</h2>
+        <div class="rezimy" role="radiogroup" aria-label="Režim zaplavení">
+          <label><input type="radio" name="rezim" value="vana" checked><span><b>Vše pod hladinou</b>
+            <small>Zatopí se každá buňka nižší než hladina, i uzavřené sníženiny bez spojení s vodou.</small></span></label>
+          <label><input type="radio" name="rezim" value="propojena"><span><b>Propojené se zdrojem vody</b>
+            <small>Zatopí se jen buňky, do kterých se voda ze zvoleného zdroje dostane přes nižší terén.</small></span></label>
+        </div>
+        <div id="volbyPropojeni" hidden>
+          <div class="tlacitka">
+            <button type="button" id="btnZdroj" aria-pressed="false">💧 Přidat zdroj kliknutím</button>
+            <button type="button" id="btnSmazZdroje" class="male">Smazat zdroje</button>
+          </div>
+          <ul class="zdroje-seznam" id="seznamZdroju"></ul>
+          <label class="zaskrt"><input type="checkbox" id="okraj"> Voda přitéká i z okraje oblasti (např. moře)</label>
+          <label for="sousedstvi">Propojení buněk</label>
+          <select id="sousedstvi">
+            <option value="4">4 sousedé – přes roh buňky voda neprojde (opatrnější)</option>
+            <option value="8">8 sousedů – i úhlopříčně (prosákne úzkými hrázemi)</option>
+          </select>
+        </div>
+        <label for="hladinaRozsah">Absolutní výška hladiny <span id="vertJednotka">(m n. m.)</span></label>
+        <div class="hladina-radek">
+          <input type="range" id="hladinaRozsah" min="0" max="100" step="0.01" value="0" disabled aria-label="Výška hladiny – posuvník">
+          <input type="number" id="hladina" step="0.01" disabled aria-label="Výška hladiny v metrech">
+        </div>
+        <div class="krokovani">
+          <button type="button" data-krok="-1" disabled>−1 m</button><button type="button" data-krok="-0.1" disabled>−0,1</button>
+          <button type="button" data-krok="0.1" disabled>+0,1</button><button type="button" data-krok="1" disabled>+1 m</button>
+        </div>
+        <div class="napoveda" id="hladinaInfo">Nejdřív načtěte výšková data.</div>
+        <div class="tlacitka">
+          <button type="button" id="btnRef" class="male" disabled>Zafixovat pro srovnání</button>
+          <button type="button" id="btnRefZrus" class="male" hidden>Zrušit srovnání</button>
+        </div>
+        <div class="vysledky" id="vysledky" aria-live="polite">
+          <div class="box hl"><div class="popis">Zatopená plocha</div><div class="cislo" id="vPlocha">–</div><div class="dalsi" id="vPlochaD"></div></div>
+          <div class="box"><div class="popis">Objem vody</div><div class="cislo" id="vObjem">–</div><div class="dalsi" id="vObjemD"></div></div>
+          <div class="box"><div class="popis">Největší hloubka</div><div class="cislo" id="vMax">–</div></div>
+          <div class="box"><div class="popis">Průměrná hloubka</div><div class="cislo" id="vPrum">–</div></div>
+        </div>
+      </section>
+
+      <section class="karta" aria-labelledby="h-upravy">
+        <h2 id="h-upravy">4. Hráze, stěny a průrvy</h2>
+        <div class="mrizka2">
+          <div><label for="upravaVyska">Výška / hloubka (m)</label><input type="number" id="upravaVyska" step="0.1" min="0" value="1.5"></div>
+          <div><label for="upravaSirka">Šířka (m)</label><input type="number" id="upravaSirka" step="1" min="0" value="3"></div>
+        </div>
+        <div class="tlacitka">
+          <button type="button" id="btnHraz" aria-pressed="false" disabled>🧱 Nakreslit hráz / stěnu</button>
+          <button type="button" id="btnPrurva" aria-pressed="false" disabled>⛏️ Nakreslit průrvu</button>
+        </div>
+        <ul class="zdroje-seznam" id="seznamUprav"></ul>
+        <label class="zaskrt"><input type="checkbox" id="upravyVypnout"> Dočasně bez úprav (porovnání)</label>
+        <div class="napoveda" id="upravyPorovnani">Hráz zvýší terén pod čarou o zadanou výšku (koruna sleduje terén), průrva ho sníží na nejnižší bod
+          pod čarou minus zadanou hloubku. Čára je vždy souvislá, takže ji voda nepřeteče ani přes roh buňky. Úpravy se projeví hlavně v režimu
+          „propojené se zdrojem“.</div>
+      </section>
+
+      <section class="karta" aria-labelledby="h-objem">
+        <h2 id="h-objem">5. Hladina ze zadaného objemu vody</h2>
+        <label for="objemTyp">Zadání</label>
+        <select id="objemTyp">
+          <option value="m3">objem vody v m³</option>
+          <option value="srazka">srážka × plocha povodí × odtokový součinitel</option>
+        </select>
+        <div id="objemM3"><label for="objemHod">Objem (m³)</label><input type="number" id="objemHod" min="0" step="1000" value="500000"></div>
+        <div id="objemSrazka" hidden class="mrizka2">
+          <div><label for="srazkaMm">Srážka (mm)</label><input type="number" id="srazkaMm" min="0" step="1" value="60"></div>
+          <div><label for="srazkaKm2">Povodí (km²)</label><input type="number" id="srazkaKm2" min="0" step="0.1" value="5"></div>
+          <div><label for="srazkaKoef">Odtokový součinitel</label><input type="number" id="srazkaKoef" min="0" max="1" step="0.05" value="0.4"></div>
+        </div>
+        <div class="tlacitka"><button type="button" class="hlavni" id="btnObjem" disabled>Dopočítat hladinu</button></div>
+        <div class="napoveda" id="objemInfo">Hledá hladinu, při které se do zatopených buněk vejde zadaný objem (v aktuálním režimu). Neuvažuje odtok,
+          vsak ani čas – je to jen „kam by se voda vešla“.</div>
+      </section>
+
+      <section class="karta" aria-labelledby="h-anim">
+        <h2 id="h-anim">6. Animace stoupající hladiny</h2>
+        <div class="mrizka2">
+          <div><label for="animOd">Od (m)</label><input type="number" id="animOd" step="0.1"></div>
+          <div><label for="animDo">Do (m)</label><input type="number" id="animDo" step="0.1"></div>
+          <div><label for="animRychlost">Rychlost (m/s)</label><input type="number" id="animRychlost" step="0.1" min="0.01" value="1"></div>
+          <div><label>&nbsp;</label><label class="zaskrt" style="margin:6px 0 0"><input type="checkbox" id="animSmycka"> Opakovat</label></div>
+        </div>
+        <div class="tlacitka"><button type="button" class="hlavni" id="btnAnim" disabled>▶ Spustit</button>
+          <button type="button" id="btnAnimPodle" class="male" disabled>Od nejnižšího bodu po aktuální hladinu</button></div>
+      </section>
+
+      <section class="karta" aria-labelledby="h-nastroje">
+        <h2 id="h-nastroje">7. Nástroje, export a sdílení</h2>
+        <div class="tlacitka" style="margin-top:0">
+          <button type="button" id="btnProfil" aria-pressed="false" disabled>📈 Výškový profil</button>
+          <button type="button" id="btnPlocha" aria-pressed="false" disabled>📐 Měřit plochu</button>
+        </div>
+        <div class="tlacitka">
+          <button type="button" id="btnPng" disabled>🖼️ Obrázek mapy (PNG)</button>
+          <button type="button" id="btnTiff" disabled>Hloubky (GeoTIFF)</button>
+          <button type="button" id="btnCsv" disabled>Profil (CSV)</button>
+          <button type="button" id="btnGeojson" disabled>Obrys vody (GeoJSON)</button>
+        </div>
+        <div class="tlacitka">
+          <button type="button" id="btnSdilet" disabled>🔗 Zkopírovat odkaz se stavem</button>
+          <button type="button" id="btn3d" aria-pressed="false" disabled>🏔️ 3D pohled</button>
+          <button type="button" id="btnOsm" disabled>🏠 Dotčené budovy a silnice (OSM)</button>
+        </div>
+        <div class="napoveda">PNG obsahuje podklad, vodu, legendu, měřítko a zdroje dat. GeoTIFF hloubek je v EPSG:3857 (float32, bez vody = −9999).</div>
+        <h3>Zobrazení</h3>
+        <label for="podklad">Podkladová mapa</label>
+        <select id="podklad"></select>
+        <label for="relief">Reliéf z výškových dat</label>
+        <select id="relief">
+          <option value="stin">stínování</option>
+          <option value="barvy">barevné výšky se stínováním</option>
+          <option value="nic">nezobrazovat</option>
+        </select>
+        <label for="pruhlednost">Krytí vody <span id="pruhlednostHod">80 %</span></label>
+        <input type="range" id="pruhlednost" min="20" max="100" step="5" value="80">
+      </section>
+    </aside>
+
+    <main class="hlavni-sloupec">
+      <div class="mapa-obal">
+        <div id="mapa" role="application" aria-label="Mapa zaplavení"></div>
+        <div class="nastroj-pruh" id="nastrojPruh" hidden><span id="nastrojText"></span>
+          <button type="button" id="nastrojHotovo" hidden>Hotovo</button><button type="button" id="nastrojZrus">Zrušit <kbd>Esc</kbd></button></div>
+        <div class="pracuji" id="pracuji" hidden><span>Počítám propojení…</span></div>
+      </div>
+      <div class="dvojice">
+        <section class="karta" aria-labelledby="h-profil">
+          <h2 id="h-profil">Výškový profil</h2>
+          <canvas class="graf" id="grafProfil" aria-label="Graf výškového profilu"></canvas>
+          <div class="graf-info" id="profilInfo">Zapněte „Výškový profil“ a klikněte na mapě na dva body.</div>
+        </section>
+        <section class="karta" aria-labelledby="h-krivka">
+          <h2 id="h-krivka">Plocha a objem podle hladiny</h2>
+          <canvas class="graf" id="grafKrivka" aria-label="Graf zatopené plochy a objemu podle výšky hladiny"></canvas>
+          <div class="graf-info" id="krivkaInfo">Kliknutím do grafu nastavíte hladinu.</div>
+        </section>
+      </div>
+      <section class="karta" id="karta3d" hidden aria-labelledby="h-3d">
+        <h2 id="h-3d">3D pohled <span class="napoveda" style="margin:0">tažení = otočit, kolečko / dva prsty = přiblížit, Shift + tažení = posun</span></h2>
+        <div class="pohled3d" id="pohled3d"></div>
+        <div class="tlacitka">
+          <label for="prevyseni" style="margin:0;align-self:center">Převýšení</label>
+          <select id="prevyseni" style="width:auto"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option><option value="5">5×</option><option value="10">10×</option></select>
+          <button type="button" id="btn3dPng" class="male">Uložit obrázek 3D</button>
+        </div>
+      </section>
+      <section class="karta" id="kartaOsm" hidden aria-labelledby="h-osm">
+        <h2 id="h-osm">Dotčené budovy a silnice (OpenStreetMap)</h2>
+        <div class="obal-tab"><table class="tab-osm">
+          <thead><tr><th>Hloubka vody</th><th>Budovy</th><th>Silnice a cesty</th></tr></thead>
+          <tbody id="osmTabulka"></tbody></table></div>
+        <div class="graf-info" id="osmInfo"></div>
+      </section>
+      <section class="karta" id="kartaPlocha" hidden aria-labelledby="h-plocha">
+        <h2 id="h-plocha">Měřená plocha</h2>
+        <div class="vysledky" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+          <div class="box"><div class="popis">Plocha polygonu</div><div class="cislo" id="pPlocha">–</div></div>
+          <div class="box"><div class="popis">Obvod</div><div class="cislo" id="pObvod">–</div></div>
+          <div class="box hl"><div class="popis">Z toho zatopeno</div><div class="cislo" id="pZatop">–</div><div class="dalsi" id="pZatopD"></div></div>
+          <div class="box"><div class="popis">Objem vody uvnitř</div><div class="cislo" id="pObjem">–</div></div>
+        </div>
+      </section>
+
+      <section class="karta pozn" aria-labelledby="h-zdroje">
+        <h2 id="h-zdroje">Zdroje dat, přesnost a omezení</h2>
+        <div class="obal-tab"><table>
+          <thead><tr><th>Zdroj</th><th>Rozlišení</th><th>Výškový systém</th><th>Licence</th></tr></thead>
+          <tbody>
+            <tr><td><b>ČÚZK – DMR 5G</b> (Digitální model reliéfu ČR 5. generace), služba ImageServer
+              <code>ags.cuzk.cz/arcgis2/rest/services/dmr5g</code>. Holý terén z leteckého laserového skenování, bez budov a vegetace.</td>
+              <td>mřížka 2 m (odvozená z TIN); úplná střední chyba výšky ±0,18 m v odkrytém a ±0,3 m v zalesněném terénu</td>
+              <td>Bpv – Balt po vyrovnání (EPSG:8357), m n. m.</td><td>© ČÚZK, otevřená data CC BY 4.0</td></tr>
+            <tr><td><b>Terrain Tiles</b> (Mapzen/Tilezen, AWS Open Data), kódování Terrarium PNG. Složeno z více zdrojů – pro Česko EU-DEM,
+              jinde SRTM, GMTED2010, ETOPO1 (moře), USGS 3DEP aj. Zdroj každé dlaždice se zobrazuje po načtení.</td>
+              <td>pixel dlaždice 156 543 m · cos φ / 2<sup>z</sup> (z15 ≈ 3 m v ČR), ale skutečný detail je dán zdrojem: EU-DEM ~30 m (svisle RMSE ~2–7 m), SRTM ~30–90 m, ETOPO1 ~1,8 km</td>
+              <td>nesjednocený: EU-DEM – EVRS2000, SRTM/GMTED – geoid EGM96, ETOPO1 – střední hladina moře; v Česku se od Bpv liší řádově o decimetry</td>
+              <td>podle zdrojů: EU-DEM © Copernicus (EU), SRTM/GMTED/3DEP © USGS/NASA, ETOPO1 © NOAA a další – <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">úplný seznam</a></td></tr>
+            <tr><td><b>Vlastní soubor</b> – např. DMR 4G/5G, DMP 1G ze <a href="https://geoportal.cuzk.cz/" target="_blank" rel="noopener">Geoportálu ČÚZK</a>, Copernicus DEM GLO-30, místní zaměření</td>
+              <td>podle souboru (zachová se při převzorkování)</td><td>podle souboru – stránka ho nepřepočítává</td><td>podle zdroje</td></tr>
+          </tbody></table></div>
+        <h3>Jak výpočet funguje</h3>
+        <ul>
+          <li>Rastr leží v mřížce Web Mercatoru. Plocha buňky se počítá přesně na kouli R = 6 378 137 m jako R²·Δλ·(sin φ₁ − sin φ₂), tj. ≈ (d·cos φ)² –
+            Mercator v 50° š. zvětšuje délky 1,56× a plochy 2,4×, to je tím vyrovnáno. Proti elipsoidu WGS 84 je chyba plochy pod 0,5 %.</li>
+          <li><b>Vše pod hladinou:</b> buňka je zatopená, když je její výška menší než hladina. Hloubka = hladina − výška terénu.</li>
+          <li><b>Propojené se zdrojem:</b> pro každou buňku se jednou spočte „přelivová výška“ – nejnižší hladina, při které do ní voda ze zdroje
+            dorazí přes nižší buňky (prioritní zaplavování, Dijkstrův algoritmus s maximem místo součtu). Posun hladiny pak nevyžaduje nový výpočet.
+            Při 4 sousedech voda nepřeteče přes roh buňky; při 8 sousedech prosákne i úhlopříčně, takže úzké hráze užší než buňka „netěsní“ jen při 4.</li>
+          <li>Buňky bez dat jsou neprůchodné. Mosty, propustky a podchody v DMR 5G chybějí nebo jsou odstraněné, takže voda „projde“ pod mostem,
+            ale nedostane se propustkem pod náspem – v obou případech se výsledek může lišit od skutečnosti.</li>
+          <li>Stínování reliéfu: Hornova metoda, Slunce z SZ ve výšce 45°.</li>
+        </ul>
+        <h3>Hráze, objem a dotčené objekty</h3>
+        <ul>
+          <li><b>Hráze a stěny</b> zvyšují terén pod nakreslenou čarou, <b>průrvy</b> ho snižují. Jde o hrubou představu: skutečná hráz může být
+            prosáklá, přelitá nebo protržená, mobilní stěny mají omezenou výšku a těsnost.</li>
+          <li><b>Hladina z objemu</b> se hledá bisekcí: objem = Σ (hladina − terén) · plocha buňky přes zatopené buňky. V propojeném režimu objem roste
+            skokem, když voda přeteče do další sníženiny – stránka na to upozorní.</li>
+          <li><b>Budovy a silnice</b> z OpenStreetMap (© přispěvatelé OSM, licence ODbL) přes veřejné
+            <a href="https://wiki.openstreetmap.org/wiki/Overpass_API" target="_blank" rel="noopener">Overpass API</a> – jen na vyžádání a pro výřez do 30 km²;
+            servery bývají přetížené. Úplnost budov v OSM se liší podle místa.</li>
+          <li><b>Hledání míst</b>: <a href="https://nominatim.org/" target="_blank" rel="noopener">Nominatim</a> (© OpenStreetMap), nejvýš jeden dotaz za sekundu.</li>
+          <li><b>3D pohled</b> používá three.js (MIT) z knihovny webu; síť je zjednodušená na nejvýš 240 × 240 bodů.</li>
+        </ul>
+        <h3>Podkladové mapy</h3>
+        <p>OpenStreetMap (styl Humanitarian, servery OSM France), OpenTopoMap (CC BY-SA), Esri World Imagery a World Topo Map – všechny s atribucí v mapě.
+          Data se stahují jen při načtení oblasti; v režimu offline funguje import souboru a demonstrační terén.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="zaplavy/app.js"></script>
+</body>
+</html>

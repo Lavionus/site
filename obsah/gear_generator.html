@@ -2,144 +2,21 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚙️ Generátor ozubených kol</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ozubená kola → Evolventní ozubená kola</title>
+<!-- Stará stránka byla nahrazena novou (evolventni_kola.html, 19. 10. 2026).
+     Zůstává jen jako přesměrování, aby fungovaly staré odkazy a záložky. -->
+<meta http-equiv="refresh" content="0; url=evolventni_kola.html">
+<link rel="canonical" href="evolventni_kola.html">
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
-<script src="../podpis.js" defer></script>
+<script>location.replace('evolventni_kola.html' + location.search + location.hash);</script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
-.container{max-width:1100px;margin:0 auto}
-h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
-.layout{display:grid;grid-template-columns:320px 1fr;gap:20px}
-@media(max-width:780px){.layout{grid-template-columns:1fr}}
-.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:20px}
-h2{font-size:1.05rem;color:var(--accent);margin-bottom:14px}
-label{display:block;font-size:.82rem;color:var(--text-faint);margin-bottom:4px}
-input,select{width:100%;background:var(--border);border:1px solid var(--border-strong);border-radius:4px;color:var(--text);padding:9px;margin-bottom:12px}
-.range-val{color:var(--accent);float:right}
-.btn{background:var(--accent);color: var(--on-accent, #fff);border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;width:100%;margin-bottom:8px}
-.btn:hover{background:var(--accent)}.btn-sec{background:var(--border)}.btn-sec:hover{background:var(--border-strong)}
-.viewport{background:#0d0d0d;border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:480px;overflow:hidden}
-svg{max-width:100%;max-height:560px}
-.spec{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg-hover);font-size:.88rem}
-.spec:last-child{border:none}.spec b{color:#4caf50}
+  body { font-family: var(--font); background: var(--bg); color: var(--text); display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 16px; }
+  a { color: var(--accent); }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>⚙️ Generátor ozubených kol (SVG)</h1>
-  <div class="layout">
-    <div>
-      <div class="card" style="margin-bottom:20px">
-        <h2>Parametry</h2>
-        <label>Počet zubů <span class="range-val" id="teethV">20</span></label><input type="range" id="teeth" min="6" max="80" value="20">
-        <label>Modul (mm)</label><input type="number" id="module" value="4" min="0.5" step="0.5">
-        <label>Úhel záběru (°)</label><select id="pa"><option value="20" selected>20° (standard)</option><option value="14.5">14,5°</option><option value="25">25°</option></select>
-        <label>Průměr díry (mm)</label><input type="number" id="bore" value="8" min="0" step="1">
-        <label>Výška / tloušťka kola (mm)</label><input type="number" id="height" value="10" min="0.5" step="0.5">
-        <button class="btn" id="dlBtn">💾 Stáhnout SVG (2D)</button>
-        <button class="btn" id="stlBtn" style="background:#27ae60;margin-top:6px">🧊 Stáhnout STL (3D pro tisk)</button>
-      </div>
-      <div class="card">
-        <h2>Vypočtené rozměry</h2>
-        <div id="specs"></div>
-      </div>
-    </div>
-    <div class="card viewport"><div id="gearWrap"></div></div>
-  </div>
-</div>
-<script>
-const $=id=>document.getElementById(id);
-function involutePoint(baseR,t){return[baseR*(Math.cos(t)+t*Math.sin(t)),baseR*(Math.sin(t)-t*Math.cos(t))];}
-function buildGear(){
-  const z=+$('teeth').value,m=+$('module').value,pa=+$('pa').value*Math.PI/180,bore=+$('bore').value;
-  const pitchR=m*z/2, baseR=pitchR*Math.cos(pa), addR=pitchR+m, dedR=pitchR-1.25*m;
-  const rootR=Math.max(dedR,baseR*0.6,2);
-  let path='';
-  const angStep=2*Math.PI/z;
-  function invForR(r){const a=Math.acos(Math.min(1,baseR/r));return Math.tan(a)-a;}
-  const pitchInv=invForR(pitchR);
-  const halfTooth=(Math.PI/(2*z));
-  let pts=[];
-  for(let i=0;i<z;i++){
-    const center=i*angStep;
-    // one tooth: rising involute, tip, falling involute, root
-    const steps=8;
-    const rise=[],fall=[];
-    for(let s=0;s<=steps;s++){
-      const r=baseR+(addR-baseR)*s/steps;if(r<baseR)continue;
-      const inv=invForR(r);
-      const a1=center - (halfTooth+pitchInv) + inv;
-      const a2=center + (halfTooth+pitchInv) - inv;
-      rise.push([r*Math.cos(a1),r*Math.sin(a1)]);
-      fall.push([r*Math.cos(a2),r*Math.sin(a2)]);
-    }
-    pts=pts.concat(rise);
-    pts=pts.concat(fall.reverse());
-    // root arc to next tooth
-    const aRoot=center+angStep- (halfTooth+pitchInv);
-    pts.push([rootR*Math.cos(center+halfTooth+pitchInv),rootR*Math.sin(center+halfTooth+pitchInv)]);
-    pts.push([rootR*Math.cos(center+angStep-(halfTooth+pitchInv)),rootR*Math.sin(center+angStep-(halfTooth+pitchInv))]);
-  }
-  path='M '+pts.map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join(' L ')+' Z';
-  const size=addR*2.2;
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-size/2} ${-size/2} ${size} ${size}" width="520" height="520">
-    <path d="${path}" fill="#3a4a6a" stroke="#6aa6fd" stroke-width="${m*0.15}" stroke-linejoin="round"/>
-    <circle r="${pitchR.toFixed(2)}" fill="none" stroke="#27ae60" stroke-width="${m*0.06}" stroke-dasharray="${m*0.6} ${m*0.4}"/>
-    ${bore>0?`<circle r="${(bore/2).toFixed(2)}" fill="#0d0d0d" stroke="#6aa6fd" stroke-width="${m*0.12}"/>`:''}
-  </svg>`;
-  $('gearWrap').innerHTML=svg;
-  const h=+$('height').value;
-  lastGear={pts, br:bore>0?bore/2:0, h, z, m};
-  $('specs').innerHTML=[
-    ['Roztečný průměr',pitchR*2],['Hlavový průměr',addR*2],['Patní průměr',dedR*2],
-    ['Základní průměr',baseR*2],['Rozteč (p = π·m)',Math.PI*m],['Výška / tloušťka',h]
-  ].map(([l,v])=>`<div class="spec"><span>${l}</span><b>${v.toFixed(2)} mm</b></div>`).join('')
-   +`<div class="spec"><span>Počet zubů</span><b>${z}</b></div>`;
-}
-let lastGear=null;
-
-// ---- Export STL (3D) – vytlačení profilu kola do výšky, s otvorem pro díru ----
-function buildSTL(){
-  if(!lastGear) return '';
-  const {pts,br,h}=lastGear, N=pts.length, out=[];
-  function v(p){return `${p[0].toExponential(6)} ${p[1].toExponential(6)} ${p[2].toExponential(6)}`;}
-  function tri(a,b,c){
-    const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2], vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
-    let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
-    const L=Math.hypot(nx,ny,nz)||1; nx/=L;ny/=L;nz/=L;
-    out.push(`facet normal ${nx.toExponential(6)} ${ny.toExponential(6)} ${nz.toExponential(6)}`,
-      'outer loop',`vertex ${v(a)}`,`vertex ${v(b)}`,`vertex ${v(c)}`,'endloop','endfacet');
-  }
-  const O0=pts.map(p=>[p[0],p[1],0]), O1=pts.map(p=>[p[0],p[1],h]);
-  if(br>0){
-    const I=pts.map(p=>{const a=Math.atan2(p[1],p[0]);return [br*Math.cos(a),br*Math.sin(a)];});
-    const I0=I.map(p=>[p[0],p[1],0]), I1=I.map(p=>[p[0],p[1],h]);
-    for(let i=0;i<N;i++){const j=(i+1)%N;
-      tri(O1[i],O1[j],I1[j]); tri(O1[i],I1[j],I1[i]);     // horní mezikruží
-      tri(O0[i],I0[j],O0[j]); tri(O0[i],I0[i],I0[j]);     // dolní mezikruží
-      tri(O0[i],O0[j],O1[j]); tri(O0[i],O1[j],O1[i]);     // vnější stěna
-      tri(I0[i],I1[j],I0[j]); tri(I0[i],I1[i],I1[j]);     // stěna díry
-    }
-  } else {
-    const C0=[0,0,0], C1=[0,0,h];
-    for(let i=0;i<N;i++){const j=(i+1)%N;
-      tri(C1,O1[i],O1[j]); tri(C0,O0[j],O0[i]);           // horní + dolní vějíř
-      tri(O0[i],O0[j],O1[j]); tri(O0[i],O1[j],O1[i]);     // vnější stěna
-    }
-  }
-  return 'solid gear\n'+out.join('\n')+'\nendsolid gear\n';
-}
-
-$('teeth').oninput=()=>{$('teethV').textContent=$('teeth').value;buildGear();};
-['module','pa','bore','height'].forEach(id=>$(id).oninput=buildGear);
-$('dlBtn').onclick=()=>{const svg=$('gearWrap').innerHTML;const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));a.download=`kolo_z${$('teeth').value}_m${$('module').value}.svg`;a.click();};
-$('stlBtn').onclick=()=>{const stl=buildSTL();if(!stl)return;const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([stl],{type:'model/stl'}));a.download=`kolo_z${$('teeth').value}_m${$('module').value}_h${$('height').value}.stl`;a.click();};
-buildGear();
-</script>
+  <p>Generátor ozubených kol se přestěhoval: <a href="evolventni_kola.html">⚙️ Evolventní ozubená kola</a></p>
 </body>
 </html>

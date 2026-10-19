@@ -352,6 +352,94 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return (o.max[0] - o.min[0]) * (o.max[1] - o.min[1]);
   }
 
+  /** Podpěry: pod každým převisem (normála dolů víc než o úhel od svislice, výš než zMin) svislý sloup
+      dolů na desku nebo na první plochu modelu pod ním. site = sítě ve světě (všechna tělesa – podpěra
+      může stát na jiném tělese). Vrací {objem (mm³), plocha (mm² průmětu převisů), sloupy: {poz, idx} | null,
+      pocet} – sloupy jen do maxSloupu převisových trojúhelníků (víc by se do náhledu nevešlo). */
+  M.podperySite = function (site, uhel = 45, { zMin = 0.2, maxSloupu = 60000 } = {}) {
+    const mez = -Math.sin(uhel * Math.PI / 180);
+    const vsechny = Array.isArray(site) ? site : [site];
+    // mřížka v XY se všemi trojúhelníky (pro hledání plochy pod bodem)
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, nT = 0;
+    for (const s of vsechny) { nT += s.idx.length / 3; for (let i = 0; i < s.poz.length; i += 3) { x0 = Math.min(x0, s.poz[i]); x1 = Math.max(x1, s.poz[i]); y0 = Math.min(y0, s.poz[i + 1]); y1 = Math.max(y1, s.poz[i + 1]); } }
+    if (!nT) return { objem: 0, plocha: 0, sloupy: null, pocet: 0 };
+    const nb = Math.max(1, Math.min(256, Math.round(Math.sqrt(nT / 4))));
+    const bx = (x1 - x0) / nb || 1, by = (y1 - y0) / nb || 1;
+    const mriz = new Map();
+    const bunka = (i, j) => i * 1024 + j;
+    vsechny.forEach((s, si) => {
+      const p = s.poz, t = s.idx;
+      for (let f = 0; f < t.length; f += 3) {
+        const a = t[f] * 3, b = t[f + 1] * 3, c = t[f + 2] * 3;
+        // podpěra stojí jen na ploše, která míří nahoru
+        if ((p[b] - p[a]) * (p[c + 1] - p[a + 1]) - (p[b + 1] - p[a + 1]) * (p[c] - p[a]) <= 1e-12) continue;
+        const i0 = Math.max(0, Math.floor((Math.min(p[a], p[b], p[c]) - x0) / bx)), i1 = Math.min(nb - 1, Math.floor((Math.max(p[a], p[b], p[c]) - x0) / bx));
+        const j0 = Math.max(0, Math.floor((Math.min(p[a + 1], p[b + 1], p[c + 1]) - y0) / by)), j1 = Math.min(nb - 1, Math.floor((Math.max(p[a + 1], p[b + 1], p[c + 1]) - y0) / by));
+        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const k = bunka(i, j); let l = mriz.get(k); if (!l) mriz.set(k, l = []); l.push(si, f); }
+      }
+    });
+    /** Nejvyšší z pod bodem (x, y, z) na ploše mířící nahoru (vlastní trojúhelník vynechat), jinak 0 (deska). */
+    function zPod(x, y, z, vlastniS, vlastniF) {
+      const i = M.omez(Math.floor((x - x0) / bx), 0, nb - 1), j = M.omez(Math.floor((y - y0) / by), 0, nb - 1);
+      const l = mriz.get(bunka(i, j));
+      let nej = 0;
+      if (!l) return nej;
+      for (let q = 0; q < l.length; q += 2) {
+        const si = l[q], f = l[q + 1];
+        if (si === vlastniS && f === vlastniF) continue;
+        const s = vsechny[si], p = s.poz, a = s.idx[f] * 3, b = s.idx[f + 1] * 3, c = s.idx[f + 2] * 3;
+        const d = (p[b + 1] - p[c + 1]) * (p[a] - p[c]) + (p[c] - p[b]) * (p[a + 1] - p[c + 1]);
+        if (Math.abs(d) < 1e-12) continue;
+        const w1 = ((p[b + 1] - p[c + 1]) * (x - p[c]) + (p[c] - p[b]) * (y - p[c + 1])) / d;
+        const w2 = ((p[c + 1] - p[a + 1]) * (x - p[c]) + (p[a] - p[c]) * (y - p[c + 1])) / d, w3 = 1 - w1 - w2;
+        if (w1 < -1e-9 || w2 < -1e-9 || w3 < -1e-9) continue;
+        const zz = w1 * p[a + 2] + w2 * p[b + 2] + w3 * p[c + 2];
+        if (zz < z + 1e-4 && zz > nej) nej = zz;            // i plocha těsně pod převisem (noha pod deskou stolu)
+      }
+      return nej;
+    }
+    let objem = 0, plocha = 0, pocet = 0;
+    const poz = [], idx = [];
+    // velké převisy se dělí na menší trojúhelníčky (krok podle velikosti modelu), ať podpěra „vidí“ nohu pod deskou
+    const krok = Math.max(0.5, Math.hypot(x1 - x0, y1 - y0) / 150);
+    const sloup = (A, B, C, si, f) => {
+      const cx = (A[0] + B[0] + C[0]) / 3, cy = (A[1] + B[1] + C[1]) / 3, cz = (A[2] + B[2] + C[2]) / 3;
+      if (cz <= zMin) return;
+      const axy = Math.abs((B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0])) / 2;
+      const zp = zPod(cx, cy, cz, si, f), h = cz - zp;
+      if (h <= 1e-3 || axy < 1e-12) return;
+      objem += axy * h; plocha += axy; pocet++;
+      if (pocet > maxSloupu) return;
+      // sloup: horní trojúhelník = převis, dolní = jeho průmět na zp
+      const o = poz.length / 3;
+      for (const v of [A, B, C]) poz.push(v[0], v[1], v[2]);
+      for (const v of [A, B, C]) poz.push(v[0], v[1], Math.min(zp, v[2]));
+      idx.push(o, o + 2, o + 1, o + 3, o + 4, o + 5);
+      for (const [i, j] of [[0, 1], [1, 2], [2, 0]]) idx.push(o + i, o + j, o + 3 + j, o + i, o + 3 + j, o + 3 + i);
+    };
+    vsechny.forEach((s, si) => {
+      const p = s.poz, t = s.idx;
+      for (let f = 0; f < t.length; f += 3) {
+        const a = t[f] * 3, b = t[f + 1] * 3, c = t[f + 2] * 3;
+        const ux = p[b] - p[a], uy = p[b + 1] - p[a + 1], uz = p[b + 2] - p[a + 2];
+        const vx = p[c] - p[a], vy = p[c + 1] - p[a + 1], vz = p[c + 2] - p[a + 2];
+        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz);
+        if (l < 1e-12 || nz / l >= mez) continue;
+        const A = [p[a], p[a + 1], p[a + 2]], B = [p[b], p[b + 1], p[b + 2]], C = [p[c], p[c + 1], p[c + 2]];
+        const hrana = Math.max(Math.hypot(ux, uy, uz), Math.hypot(vx, vy, vz), Math.hypot(p[c] - p[b], p[c + 1] - p[b + 1], p[c + 2] - p[b + 2]));
+        const n = Math.max(1, Math.min(24, Math.ceil(hrana / krok)));
+        if (n === 1) { sloup(A, B, C, si, f / 3 * 3); continue; }
+        // barycentrická mřížka n × n: trojúhelníčky „nahoru“ i „dolů“
+        const bod = (i, j) => [0, 1, 2].map(k => A[k] + (B[k] - A[k]) * i / n + (C[k] - A[k]) * j / n);
+        for (let i = 0; i < n; i++) for (let j = 0; i + j < n; j++) {
+          sloup(bod(i, j), bod(i + 1, j), bod(i, j + 1), si, f);
+          if (i + j + 1 < n) sloup(bod(i + 1, j), bod(i + 1, j + 1), bod(i, j + 1), si, f);
+        }
+      }
+    });
+    return { objem, plocha, pocet, sloupy: pocet && pocet <= maxSloupu ? { poz: new Float32Array(poz), idx: new Uint32Array(idx) } : null };
+  };
+
   /** Nejlepší orientace pro tisk ze sítě ve světě: kandidáti = směry dolů podle velkých rovných ploch
       (normály shluků trojúhelníků) a šesti os. Pro každý: převisy (plocha nad úhlem, kromě dna), plocha
       na desce, výška. Skóre = převisy − ½·plocha na desce + 2 % výšky × odmocnina povrchu (nižší je lepší

@@ -6,7 +6,7 @@
    zdroje = geometrie importovaných modelů (i s textem STEP), worker si je pamatuje. */
 /* global importScripts, MDL */
 importScripts('../lib/three.0.160.0.min.js', '../lib/clipper.min.js', 'spolecne.js', 'jadro/sit.js', 'jadro/tvary.js',
-  'jadro/model.js', 'jadro/skica.js', 'jadro/dily.js', 'jadro/soubory/stl.js', 'jadro/occt.js', '../lib/occt/occt.klasicky.js');
+  'jadro/model.js', 'jadro/skica.js', 'jadro/vazby.js', 'jadro/tazeni.js', 'jadro/dily.js', 'jadro/soubory/stl.js', 'jadro/occt.js', '../lib/occt/occt.klasicky.js');
 
 let O = null, chybaStartu = null;
 const pripraveno = (async () => {

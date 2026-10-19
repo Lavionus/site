@@ -647,35 +647,91 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     /** Pro testy: rozpracovaná úprava (hrany, plochy, výběr). */
     M.occtEditor = () => ed;
 
-    /** Odsazení stěn (vůle): dotaz na hodnotu, výpočet přesným jádrem, pak jeden krok historie. */
-    M.otevriOdsazeni = async function () {
+    // ------------------------------------------------------------ odsazení stěn (offset) s živým náhledem
+    /** Panel Odsadit stěny: hodnota, náhled výsledku ve scéně (duch – průhledně, čárkované hrany),
+        Použít = jeden krok historie. Výpočet přesným jádrem běží na pozadí, starší výsledky se zahodí. */
+    const oknoO = $('oknoOdsazeni'), poleO = $('odsHodnota'), infoO = $('odsInfo'), okO = $('odsOk');
+    let ods = null;                 // {id, verze, vysledek: {h, zaklad, novy}}
+    let odkladO = 0;
+    /** Těleso po odsazení: spodek zůstane, kde byl (zvětšené by lezlo pod desku), díra zůstane soustředná. */
+    function poOdsazeni(u, h) {
+      let novy = M.odsadUzel(u, h);
+      if (novy !== u && u.role !== 'dira') novy = M.normalizujUzel(Object.assign({}, novy, { poloha: M.polohaSeSpodkem(novy, M.spodekUzlu(u)) }));
+      return novy;
+    }
+    const ukazDucha = novy => S.telesa.ukazDuchy('odsazeni', novy && $('odsNahled').checked ? [novy] : [], 'nahled');
+    function nastavInfo(text, lzePouzit) { infoO.textContent = text; okO.disabled = !lzePouzit; }
+    async function prepocitejOdsazeni() {
+      clearTimeout(odkladO);
+      if (!ods) return;
+      const verze = ++ods.verze;
+      ods.vysledek = null;
+      const v = M.vybraneVolne();
+      if (v.length !== 1) { ukazDucha(null); nastavInfo('Vyber jedno (nezamčené) těleso, jehož stěny chceš odsadit.', false); return; }
+      const u = v[0];
+      ods.id = u.id; ods.uzel = u;
+      const h = M.prectiCislo(poleO.value);
+      if (!isFinite(h)) { ukazDucha(null); nastavInfo(`⚠ „${poleO.value}“ není číslo.`, false); return; }
+      if (Math.abs(h) > 100) { ukazDucha(null); nastavInfo('⚠ Odsazení může být nejvýš ±100 mm.', false); return; }
+      const novy = poOdsazeni(u, h);
+      if (novy === u) { ukazDucha(null); nastavInfo('0 mm – těleso zůstane beze změny.', false); return; }
+      const rozmer = novy.rozmer.map(x => M.mm(x, 2)).join(' × ') + ' mm';
+      if (novy.occt) {
+        nastavInfo('⏳ Počítám náhled přesně…', false);
+        try { await M.occtOver(novy); }
+        catch (e) { if (ods && verze === ods.verze) { ukazDucha(null); nastavInfo('⚠ ' + String(e.message || e), false); } return; }
+        if (!ods || verze !== ods.verze) return;          // mezitím jiná hodnota nebo zavřený panel
+      }
+      ods.vysledek = { h, zaklad: u, novy };
+      ukazDucha(novy);
+      nastavInfo(novy.occt ? `Náhled: ${h > 0 ? '+' : ''}${M.mm(h, 3)} mm na každou stranu → ${rozmer}. Použít ho zapíše.` : `Odsazení se odebere → ${rozmer}.`, true);
+    }
+    const odlozPrepocet = () => { clearTimeout(odkladO); odkladO = setTimeout(prepocitejOdsazeni, 350); };
+    function zavriOdsazeni() {
+      clearTimeout(odkladO);
+      ods = null;
+      S.telesa.ukazDuchy('odsazeni', []);
+      if (oknoO.open) oknoO.close();
+    }
+    async function pouzijOdsazeni() {
+      if (!ods) return;
+      const h = M.prectiCislo(poleO.value);
+      if (!ods.vysledek || ods.vysledek.h !== h) await prepocitejOdsazeni();
+      const r = ods && ods.vysledek;
+      if (!r || r.h !== h) return;
+      // mezitím se dokument mohl změnit: jen když těleso pořád stejné
+      if (M.najdiUzel(M.app.dok, r.zaklad.id) !== r.zaklad) { prepocitejOdsazeni(); return; }
+      zavriOdsazeni();
+      M.zmenDokument(Object.assign({}, M.app.dok, { uzly: M.app.dok.uzly.map(x => x.id === r.zaklad.id ? r.novy : x) }),
+        r.novy.occt ? `Odsadit stěny ${h > 0 ? '+' : ''}${M.mm(h, 2)} mm` : 'Odebrat odsazení');
+      M.nastavVyber([r.zaklad.id]);
+    }
+    M.otevriOdsazeni = function () {
       const v = M.vybraneVolne();
       if (v.length !== 1) { Dialog.chyba('Vyber jedno těleso, jehož stěny chceš odsadit.'); return; }
       const u = v[0];
-      const ted = u.occt && u.occt.operace === 'odsazeni' ? u.occt.hodnota : 0.2;
-      const text = await Dialog.zeptej('Odsadit všechny stěny – offset tělesa (mm): kladné číslo těleso zvětší (třeba čep o vůli), záporné zmenší (díra o vůli, tenčí stěny). 0 = odsazení odebrat.', M.mm(ted, 3));
-      if (text === null) return;
-      const h = M.prectiCislo(text);
-      if (!isFinite(h)) { Dialog.chyba(`„${text}“ není číslo.`); return; }
-      if (Math.abs(h) > 100) { Dialog.chyba('Odsazení může být nejvýš ±100 mm.'); return; }
-      const u2 = M.najdiUzel(M.app.dok, u.id);
-      if (!u2) return;
-      let novy = M.odsadUzel(u2, h);
-      if (novy === u2) return;
-      // spodek zůstane, kde byl (jako při změně rozměru v inspektoru) – zvětšené těleso by jinak lezlo pod desku;
-      // díra zůstane soustředná (vůle kolem čepu na všechny strany)
-      if (u2.role !== 'dira') novy = M.normalizujUzel(Object.assign({}, novy, { poloha: M.polohaSeSpodkem(novy, M.spodekUzlu(u2)) }));
-      if (novy.occt) {
-        Dialog.info('⏳ Počítám odsazení přesně…');
-        try { await M.occtOver(novy); }
-        catch (e) { Dialog.chyba('Odsazení: ' + e.message); return; }
-      }
-      // mezitím se dokument mohl změnit: jen když těleso pořád stejné
-      if (M.najdiUzel(M.app.dok, u.id) !== u2) { Dialog.info('Těleso se mezitím změnilo – odsazení zkus znovu.'); return; }
-      const dok = Object.assign({}, M.app.dok, { uzly: M.app.dok.uzly.map(x => x.id === u.id ? novy : x) });
-      M.zmenDokument(dok, novy.occt ? `Odsadit stěny ${h > 0 ? '+' : ''}${M.mm(h, 2)} mm` : 'Odebrat odsazení');
-      M.nastavVyber([u.id]);
+      M.otevriPanel(oknoO);
+      ods = { id: u.id, verze: 0, vysledek: null };
+      poleO.value = M.mm(u.occt && u.occt.operace === 'odsazeni' ? u.occt.hodnota : 0.2, 3);
+      poleO.focus(); poleO.select();
+      prepocitejOdsazeni();
     };
+    M.odsazeniStav = () => ods && { id: ods.id, hotovo: !!ods.vysledek, h: ods.vysledek && ods.vysledek.h };
+    poleO.addEventListener('input', odlozPrepocet);
+    poleO.addEventListener('change', prepocitejOdsazeni);
+    poleO.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pouzijOdsazeni(); } });
+    oknoO.querySelectorAll('[data-ods]').forEach(b => b.addEventListener('click', () => { poleO.value = M.mm(+b.dataset.ods, 3); prepocitejOdsazeni(); }));
+    $('odsNahled').addEventListener('change', () => ukazDucha(ods && ods.vysledek ? ods.vysledek.novy : null));
+    okO.onclick = pouzijOdsazeni;
+    $('odsZrusit').onclick = zavriOdsazeni;
+    oknoO.addEventListener('cancel', e => { e.preventDefault(); zavriOdsazeni(); });
+    oknoO.addEventListener('close', () => { if (ods) zavriOdsazeni(); });
+    // jiný výběr nebo změna tělesa (posun, Zpět): náhled přepočítat pro aktuální stav
+    M.na('vyber', () => { if (ods) odlozPrepocet(); });
+    M.na('dokument', e => {
+      if (!ods || M.najdiUzel(M.app.dok, ods.id) === ods.uzel) return;
+      ukazDucha(null); odlozPrepocet();
+    });
 
     /** Odebere přesnou úpravu; obal s jedním dítětem se rozpustí. */
     M.odeberUpravu = function (id) {

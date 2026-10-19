@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analyzátor logů</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="analyzator_logu/jadro.js"></script>
+  <script src="analyzator_logu/sklad.js"></script>
+  <style>
+    :root {
+      --s0: #ff6b95; --s1: #f07575; --s2: #e0a63f; --s3: #c39bff; --s4: #6aa6fd; --s5: #93a7bb; --s6: #8593a1; --s7: #9e9e9e;
+      --osa-ostatni: #4d6f9e; --spicka: rgba(240, 117, 117, 0.16); --vyber: rgba(106, 166, 253, 0.22);
+      --sada-a: #6aa6fd; --sada-b: #e8b04a; --mrizka: rgba(255, 255, 255, 0.07);
+      --pr0: #ffd54f; --pr1: #81c784; --pr2: #64b5f6; --pr3: #f48fb1; --pr4: #ffb74d; --pr5: #ce93d8; --pr-text: #111111;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+    }
+    :root[data-theme="light"] {
+      --s0: #b0124a; --s1: #b5352a; --s2: #7d5800; --s3: #6b3fb5; --s4: #2862bb; --s5: #4f6275; --s6: #5d6670; --s7: #5f666e;
+      --osa-ostatni: #8fb0dd; --spicka: rgba(181, 53, 42, 0.11); --vyber: rgba(40, 98, 187, 0.16);
+      --sada-a: #2862bb; --sada-b: #9a5b00; --mrizka: rgba(0, 0, 0, 0.07);
+      --pr0: #fff176; --pr1: #a5d6a7; --pr2: #90caf9; --pr3: #f8bbd0; --pr4: #ffcc80; --pr5: #e1bee7;
+    }
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 2.5vw, 32px) 40px; min-height: 100vh; font-size: 15px; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 12px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 10px; max-width: 980px; line-height: 1.5; }
+    .soukromi { display: inline-flex; gap: 6px; align-items: center; font-size: 0.8rem; color: var(--ok); border: 1px solid var(--ok); border-radius: 999px; padding: 3px 10px; margin-bottom: 14px; }
+    .obsah { max-width: 1400px; display: flex; flex-direction: column; gap: 14px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    .karta[hidden], [hidden] { display: none !important; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 860px) { .mrizka2 { grid-template-columns: minmax(0, 1fr); } }
+    label.pop, .pop { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    input[type="text"], input[type="search"], input[type="number"], input[type="date"], input[type="datetime-local"], select, textarea {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+      padding: 7px 9px; font-size: 0.9rem; min-width: 0; font-family: inherit; max-width: 100%;
+    }
+    textarea { width: 100%; font-family: var(--mono); font-size: 0.82rem; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+    input.chyba, textarea.chyba { border-color: var(--danger); }
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 6px 11px; font-size: 0.84rem; cursor: pointer; font-family: inherit; white-space: nowrap;
+    }
+    button:hover:not(:disabled) { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button:focus-visible, .zalozky button:focus-visible, .radek:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover:not(:disabled) { background: var(--accent-hover); }
+    button.male { padding: 3px 8px; font-size: 0.76rem; }
+    button.nebezpeci { border-color: var(--danger); color: var(--danger); background: transparent; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .radek-ovl { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+    .radek-ovl > div { min-width: 0; }
+    .napoveda { font-size: 0.76rem; color: var(--text-muted); line-height: 1.45; margin-top: 4px; }
+    .napoveda code, .metodika code { font-family: var(--mono); font-size: 0.78rem; background: var(--bg-input); padding: 0 4px; border-radius: 4px; }
+    .zaskrt { display: inline-flex; align-items: center; gap: 6px; font-size: 0.84rem; cursor: pointer; }
+    .zaskrt input { width: 16px; height: 16px; accent-color: var(--accent); }
+    a { color: var(--accent); }
+
+    /* zdroje */
+    .slot h2 .znak { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; color: var(--on-accent); }
+    .slot[data-sada="0"] h2 .znak { background: var(--sada-a); }
+    .slot[data-sada="1"] h2 .znak { background: var(--sada-b); color: #111; }
+    .slot h2 .jmeno { font-weight: 400; color: var(--text-muted); font-size: 0.85rem; overflow-wrap: anywhere; }
+    .pust { border: 2px dashed var(--border-strong); border-radius: var(--radius); padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.86rem; transition: border-color .15s, background .15s; }
+    .pust.nad { border-color: var(--accent); background: var(--accent-soft); }
+    .pust .tlacitka { justify-content: center; margin-top: 8px; }
+    .prubeh { margin-top: 10px; }
+    .prubeh .pruh { height: 8px; background: var(--bg-input); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+    .prubeh .pruh i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+    .prubeh .pruh.neurcity i { width: 30%; animation: jizda 1.2s linear infinite; }
+    @keyframes jizda { from { margin-left: -30%; } to { margin-left: 100%; } }
+    .prubeh .text { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; flex-wrap: wrap; }
+    .souhrn { margin-top: 10px; font-size: 0.82rem; line-height: 1.5; }
+    .souhrn ul { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+    .souhrn li { padding-left: 18px; position: relative; overflow-wrap: anywhere; }
+    .souhrn li::before { content: '•'; position: absolute; left: 5px; color: var(--text-faint); }
+    .souhrn li.pred::before { content: '⚑'; color: var(--warn); left: 2px; }
+    .souhrn li.var { color: var(--warn); }
+    .souhrn li.var::before { content: '!'; color: var(--warn); font-weight: 700; }
+    .souhrn b { font-weight: 600; }
+    .souhrn pre { font-family: var(--mono); font-size: 0.74rem; background: var(--bg-input); padding: 6px; border-radius: 6px; overflow-x: auto; margin-top: 4px; white-space: pre; }
+
+    details.karta > summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; list-style-position: inside; }
+    details.karta[open] > summary { margin-bottom: 8px; }
+    .nastaveni-mrizka { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 14px; }
+    .nastaveni-mrizka > div > select, .nastaveni-mrizka > div > input { width: 100%; }
+    .vlastni-box { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+    .nahled { margin-top: 8px; overflow-x: auto; max-height: 260px; }
+    .nahled table { border-collapse: collapse; font-size: 0.76rem; min-width: 100%; }
+    .nahled td, .nahled th { border-bottom: 1px solid var(--border); padding: 3px 6px; text-align: left; vertical-align: top; font-family: var(--mono); white-space: nowrap; }
+    .nahled th { font-family: inherit; color: var(--text-muted); font-weight: 600; }
+    .nahled td.ne { color: var(--danger); }
+
+    /* filtr */
+    .filtr { position: sticky; top: 0; z-index: 5; box-shadow: var(--shadow); }
+    .filtr .hledani { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+    .filtr .hledani input { width: 100%; }
+    @media (max-width: 700px) { .filtr { position: static; } .filtr .hledani { grid-template-columns: minmax(0, 1fr); } }
+    .regex-box { display: flex; gap: 6px; align-items: center; }
+    .regex-box input[type="text"] { flex: 1; font-family: var(--mono); font-size: 0.85rem; }
+    .zav-cipy { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .zav-cipy button { display: inline-flex; gap: 6px; align-items: center; padding: 3px 8px; font-size: 0.78rem; }
+    .zav-cipy button .bod { width: 9px; height: 9px; border-radius: 50%; }
+    .zav-cipy button[aria-pressed="false"] { opacity: 0.55; text-decoration: line-through; }
+    .zav-cipy button .poc { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .cas-ovl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+    .cas-ovl input[type="datetime-local"] { width: 205px; }
+    .aktivni-cipy { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .aktivni-cipy:empty { display: none; }
+    .cip { display: inline-flex; gap: 6px; align-items: center; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 0.78rem; max-width: 100%; }
+    .cip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 52ch; font-family: var(--mono); font-size: 0.74rem; }
+    .cip button { border-radius: 50%; width: 22px; height: 22px; padding: 0; line-height: 1; }
+    .stav-dotazu { font-size: 0.78rem; color: var(--text-muted); min-height: 1.2em; margin-top: 6px; }
+    .stav-dotazu.chyba { color: var(--danger); }
+
+    /* KPI */
+    .kpi { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .dlazdice { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+    .dlazdice .hod { font-size: 1.35rem; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .dlazdice .pop { margin: 0 0 2px; }
+    .dlazdice .pod { font-size: 0.76rem; color: var(--text-muted); overflow-wrap: anywhere; }
+    .dlazdice.chyby .hod { color: var(--s1); }
+    .dlazdice.varovani .hod { color: var(--s2); }
+
+    /* grafy */
+    .graf-obal { position: relative; width: 100%; touch-action: pan-y; }
+    canvas { display: block; width: 100%; }
+    #osa { height: 210px; cursor: crosshair; }
+    #frekvence { height: 150px; }
+    #porovnaniGraf { height: 190px; }
+    @media (max-width: 600px) { #osa { height: 170px; } #frekvence { height: 120px; } }
+    .bublina { position: absolute; pointer-events: none; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 8px; font-size: 0.76rem; box-shadow: var(--shadow); z-index: 3; white-space: nowrap; line-height: 1.45; }
+    .bublina b { font-variant-numeric: tabular-nums; }
+    .legenda { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.76rem; color: var(--text-muted); margin-top: 6px; align-items: center; }
+    .legenda i { display: inline-block; width: 12px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+    .legenda i.cara { height: 2px; vertical-align: 3px; }
+    .legenda i.prerus { height: 0; border-top: 2px dashed currentColor; background: none !important; vertical-align: 3px; }
+    .spicky { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .spicka { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; background: var(--bg-input); border: 1px solid var(--border); border-left: 4px solid var(--s1); border-radius: 6px; padding: 6px 10px; font-size: 0.82rem; }
+    .spicka.chybova { border-left-color: var(--s0); }
+    .spicka .info { min-width: 0; }
+    .spicka .info b { font-variant-numeric: tabular-nums; }
+
+    /* záložky */
+    .zalozky { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .zalozky button { border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; background: transparent; padding: 7px 12px; color: var(--text-muted); margin-bottom: -1px; }
+    .zalozky button[aria-selected="true"] { background: var(--bg-panel); border-color: var(--border); color: var(--text); font-weight: 600; }
+    .zalozky button .poc { font-size: 0.72rem; color: var(--text-faint); margin-left: 4px; }
+
+    /* tabulka záznamů (virtuální) */
+    .tabulka-hlava { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; font-size: 0.8rem; color: var(--text-muted); }
+    .tabulka { position: relative; height: min(62vh, 640px); overflow: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); outline: none; contain: strict; }
+    .tabulka .vyska { position: absolute; top: 0; left: 0; width: 1px; }
+    .radek { position: absolute; left: 0; right: 0; height: 24px; display: grid; grid-template-columns: var(--sloupce); gap: 8px; align-items: center; padding: 0 8px 0 6px; font-size: 0.78rem; border-bottom: 1px solid var(--mrizka); cursor: pointer; border-left: 3px solid transparent; white-space: nowrap; }
+    .radek:hover { background: var(--bg-hover); }
+    .radek.vybrany { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+    .radek > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .radek .c { font-family: var(--mono); font-size: 0.74rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .radek .t { font-family: var(--mono); font-size: 0.76rem; }
+    .radek .z { color: var(--text-muted); }
+    .radek .viceradku { color: var(--text-faint); font-size: 0.7rem; margin-left: 6px; }
+    .sada-znak { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 4px; font-size: 0.66rem; font-weight: 700; }
+    .sada-znak.a { background: var(--sada-a); color: var(--on-accent); }
+    .sada-znak.b { background: var(--sada-b); color: #111; }
+    .zav { display: inline-block; font-size: 0.66rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid currentColor; letter-spacing: .3px; text-align: center; min-width: 46px; }
+    .zav.s0 { color: var(--s0); } .zav.s1 { color: var(--s1); } .zav.s2 { color: var(--s2); } .zav.s3 { color: var(--s3); }
+    .zav.s4 { color: var(--s4); } .zav.s5 { color: var(--s5); } .zav.s6 { color: var(--s6); } .zav.s7 { color: var(--s7); }
+    mark { border-radius: 3px; padding: 0 1px; color: var(--pr-text); }
+    mark.h { background: var(--accent); color: var(--on-accent); }
+    mark.p0 { background: var(--pr0); } mark.p1 { background: var(--pr1); } mark.p2 { background: var(--pr2); }
+    mark.p3 { background: var(--pr3); } mark.p4 { background: var(--pr4); } mark.p5 { background: var(--pr5); }
+    .prazdno { padding: 30px 12px; text-align: center; color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; }
+
+    .detail { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .detail .hlavicka { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 0.82rem; margin-bottom: 8px; }
+    .detail pre { font-family: var(--mono); font-size: 0.78rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow: auto; }
+    .detail .sablona { font-family: var(--mono); font-size: 0.78rem; color: var(--text-muted); overflow-wrap: anywhere; margin: 6px 0; }
+    .pole { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 12px; font-size: 0.78rem; margin-top: 8px; }
+    .pole dt { color: var(--text-muted); font-family: var(--mono); }
+    .pole dd { font-family: var(--mono); overflow-wrap: anywhere; }
+    .okoli { margin-top: 10px; max-height: 360px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+    .okoli .ok-r { display: grid; grid-template-columns: 70px 18px 52px minmax(0, 1fr); gap: 8px; font-size: 0.76rem; padding: 3px 8px; border-bottom: 1px solid var(--mrizka); align-items: center; cursor: pointer; }
+    .okoli .ok-r:hover { background: var(--bg-hover); }
+    .okoli .ok-r.stred { background: var(--accent-soft); }
+    .okoli .ok-r span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .okoli .dt { font-family: var(--mono); color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* tabulky vzorů, porovnání, korelace */
+    .tab-obal { overflow-x: auto; max-width: 100%; }
+    table.data { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+    table.data th, table.data td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    table.data th { color: var(--text-muted); font-weight: 600; font-size: 0.74rem; white-space: nowrap; position: sticky; top: 0; background: var(--bg-panel); }
+    table.data td.cislo, table.data th.cislo { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    table.data td.sab { font-family: var(--mono); font-size: 0.76rem; overflow-wrap: anywhere; min-width: 220px; }
+    table.data tr.klik { cursor: pointer; }
+    table.data tr.klik:hover td { background: var(--bg-hover); }
+    .podil { display: inline-block; height: 6px; background: var(--accent); border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+    .podil.chyb { background: var(--s1); }
+    .stitek { display: inline-block; font-size: 0.7rem; padding: 1px 6px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+    .stitek.novy { color: var(--s1); } .stitek.narust { color: var(--s2); } .stitek.zmizel { color: var(--ok); } .stitek.pokles { color: var(--s4); } .stitek.beze { color: var(--text-muted); }
+    .rozdeleni { display: flex; flex-direction: column; gap: 6px; }
+    .rozd-r { display: grid; grid-template-columns: 110px minmax(0, 1fr) 120px; gap: 10px; align-items: center; font-size: 0.82rem; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
+    .rozd-r:hover { background: var(--bg-hover); }
+    .rozd-r .pruh { height: 14px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+    .rozd-r .pruh i { display: block; height: 100%; border-radius: 3px; }
+    .rozd-r .cislo { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+    @media (max-width: 500px) { .rozd-r { grid-template-columns: 84px minmax(0, 1fr) 90px; gap: 6px; } }
+    .seznam-top { display: flex; flex-direction: column; gap: 2px; font-size: 0.8rem; }
+    .seznam-top button { display: flex; justify-content: space-between; gap: 10px; text-align: left; background: transparent; border: none; border-radius: 4px; padding: 3px 6px; }
+    .seznam-top button span:first-child { overflow: hidden; text-overflow: ellipsis; font-family: var(--mono); font-size: 0.76rem; }
+    .seznam-top button span:last-child { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .porovnani-souhrn { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-bottom: 12px; }
+
+    .pravidlo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .pravidlo input[type="text"] { width: 100%; font-family: var(--mono); font-size: 0.84rem; }
+    .pravidlo .vzorek-barvy { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--border-strong); }
+    .pravidlo select { padding: 5px; }
+    .pravidlo .poc { font-size: 0.78rem; color: var(--text-muted); min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
+    @media (max-width: 600px) { .pravidlo { grid-template-columns: auto minmax(0, 1fr) auto; } .pravidlo .poc { grid-column: 2; text-align: left; } }
+
+    .metodika { font-size: 0.86rem; line-height: 1.6; max-width: 900px; }
+    .metodika h3 { margin-top: 16px; }
+    .metodika ul { padding-left: 20px; }
+    .metodika p + p { margin-top: 6px; }
+    .ctecka-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  </style>
+</head>
+<body>
+  <h1>📜 Analyzátor logů</h1>
+  <p class="podtitul">Načtěte textový log (syslog RFC 3164/5424, Apache/Nginx access a error log, JSON Lines, logfmt, log4j/Python
+    a další s časem na začátku řádku, nebo vlastní formát podle regulárního výrazu). Stránka rozpozná formát, sjednotí časové značky
+    do UTC, nakreslí časovou osu, najde prudké nárůsty a nejčastější vzory zpráv, umí filtrovat, zvýrazňovat, porovnat dva logy
+    a hledat souvislosti mezi událostmi. Velké soubory se čtou proudově ve Web Workeru (i&nbsp;<code>.gz</code>).</p>
+  <div class="soukromi" role="note">🔒 Vše se zpracovává lokálně ve vašem prohlížeči – žádná data se nikam neodesílají.</div>
+
+  <div class="obsah">
+    <!-- ===== Zdroje ===== -->
+    <section class="mrizka2" aria-label="Zdroje logů">
+      <div class="karta slot" data-sada="0">
+        <h2><span class="znak" aria-hidden="true">A</span> Log A <span class="jmeno"></span></h2>
+        <div class="pust">
+          <div>Přetáhněte soubor sem, nebo</div>
+          <div class="tlacitka">
+            <button type="button" class="hlavni vyber-soubor">📂 Vybrat soubor</button>
+            <button type="button" class="vlozit">📋 Vložit text</button>
+            <select class="ukazka" aria-label="Načíst ukázkový log do A"><option value="">Ukázka…</option></select>
+          </div>
+          <input type="file" class="soubor" hidden>
+        </div>
+        <div class="vlozeni" hidden>
+          <label class="pop">Text logu</label>
+          <textarea rows="7" spellcheck="false" placeholder="Sem vložte řádky logu…"></textarea>
+          <div class="tlacitka" style="margin-top:6px"><button type="button" class="hlavni nacist-text">Načíst text</button><button type="button" class="zavrit-vlozeni">Zavřít</button></div>
+        </div>
+        <div class="prubeh" hidden>
+          <div class="pruh"><i></i></div>
+          <div class="text"><span class="popis">Načítám…</span><button type="button" class="male nebezpeci zrusit">✕ Zrušit</button></div>
+        </div>
+        <div class="souhrn"></div>
+      </div>
+      <div class="karta slot" data-sada="1">
+        <h2><span class="znak" aria-hidden="true">B</span> Log B <span class="jmeno">(volitelný – pro porovnání a korelaci)</span></h2>
+        <div class="pust">
+          <div>Přetáhněte soubor sem, nebo</div>
+          <div class="tlacitka">
+            <button type="button" class="hlavni vyber-soubor">📂 Vybrat soubor</button>
+            <button type="button" class="vlozit">📋 Vložit text</button>
+            <select class="ukazka" aria-label="Načíst ukázkový log do B"><option value="">Ukázka…</option></select>
+          </div>
+          <input type="file" class="soubor" hidden>
+        </div>
+        <div class="vlozeni" hidden>
+          <label class="pop">Text logu</label>
+          <textarea rows="7" spellcheck="false" placeholder="Sem vložte řádky logu…"></textarea>
+          <div class="tlacitka" style="margin-top:6px"><button type="button" class="hlavni nacist-text">Načíst text</button><button type="button" class="zavrit-vlozeni">Zavřít</button></div>
+        </div>
+        <div class="prubeh" hidden>
+          <div class="pruh"><i></i></div>
+          <div class="text"><span class="popis">Načítám…</span><button type="button" class="male nebezpeci zrusit">✕ Zrušit</button></div>
+        </div>
+        <div class="souhrn"></div>
+      </div>
+    </section>
+    <div class="tlacitka">
+      <label class="pop" for="dvojice" style="margin:0">Ukázkové dvojice:</label>
+      <select id="dvojice">
+        <option value="">— vyberte —</option>
+        <option value="porovnani">Porovnání: access log den 1 (A) × den 2 s incidentem (B)</option>
+        <option value="korelace">Korelace: access log (A) × nginx error log (B)</option>
+      </select>
+    </div>
+
+    <!-- ===== Nastavení importu ===== -->
+    <details class="karta" id="nastaveniImportu">
+      <summary>⚙️ Nastavení importu (formát, časové pásmo, rok, kódování, vlastní regulární výraz)</summary>
+      <div class="nastaveni-mrizka">
+        <div>
+          <label class="pop" for="imFormat">Formát</label>
+          <select id="imFormat"><option value="auto">Automaticky rozpoznat</option></select>
+        </div>
+        <div>
+          <label class="pop" for="imZona">Pásmo pro časy bez zóny</label>
+          <input type="text" id="imZona" list="seznamZon" autocomplete="off" spellcheck="false">
+          <datalist id="seznamZon"></datalist>
+        </div>
+        <div>
+          <label class="pop" for="imRef">Referenční datum (rok u RFC 3164)</label>
+          <input type="date" id="imRef">
+        </div>
+        <div>
+          <label class="pop" for="imKodovani">Kódování</label>
+          <select id="imKodovani">
+            <option value="utf-8">UTF-8</option><option value="windows-1250">Windows-1250 (středoevropské)</option>
+            <option value="iso-8859-2">ISO-8859-2</option><option value="windows-1252">Windows-1252</option><option value="utf-16le">UTF-16 LE</option>
+          </select>
+        </div>
+        <div>
+          <label class="pop" for="imDrain">Podobnost pro seskupení zpráv: <b id="imDrainHod">0,5</b></label>
+          <input type="range" id="imDrain" min="0.3" max="0.9" step="0.05" value="0.5" style="width:100%">
+        </div>
+        <div>
+          <span class="pop">&nbsp;</span>
+          <label class="zaskrt"><input type="checkbox" id="imVicer" checked> Spojovat víceřádkové záznamy (stack trace)</label>
+        </div>
+      </div>
+      <p class="napoveda">Pásmo se použije jen u značek bez zóny (syslog RFC 3164, nginx, log4j…). Přechody letního času se řeší podle pravidel pásma:
+        neexistující čas (jarní posun) se vyloží posunem před přechodem, dvojznačný čas (podzimní hodina) podle pořadí řádků.
+        Referenční datum: prázdné = datum poslední změny souboru (u vloženého textu dnešek); rok záznamů RFC 3164 se volí tak,
+        aby nebyly „v budoucnosti“ a přelom prosinec → leden zvýší rok.</p>
+      <div class="vlastni-box">
+        <h3>Vlastní regulární výraz</h3>
+        <p class="napoveda">Pojmenované skupiny: <code>(?&lt;cas&gt;…)</code> (také <code>ts</code>, <code>time</code>), <code>(?&lt;uroven&gt;…)</code> (<code>level</code>),
+          <code>(?&lt;zprava&gt;…)</code> (<code>msg</code>), <code>(?&lt;host&gt;…)</code>, <code>(?&lt;app&gt;…)</code>; ostatní skupiny se zobrazí jako pole záznamu.
+          Formát času je volitelný (jinak se čas rozpozná automaticky): <code>YYYY MM DD HH mm ss SSS</code>, <code>MMM</code> = zkratka měsíce,
+          <code>hh A</code> = 12h s AM/PM, <code>Z</code> = posun.</p>
+        <label class="pop" for="imRegex">Výraz (JavaScript RegExp)</label>
+        <textarea id="imRegex" rows="2" spellcheck="false" placeholder="^(?<cas>\S+ \S+) \| (?<uroven>\w) \| (?<app>[\w-]+) \| (?<zprava>.*)$"></textarea>
+        <div class="radek-ovl">
+          <div style="flex:1 1 220px"><label class="pop" for="imCasFormat">Formát času (volitelný)</label><input type="text" id="imCasFormat" placeholder="DD.MM.YYYY HH:mm:ss.SSS" style="width:100%" spellcheck="false"></div>
+          <div class="tlacitka"><button type="button" id="imPriklad">Příklad (ukázka vlastního formátu)</button><button type="button" id="imZkusit">Vyzkoušet na načtených řádcích</button></div>
+        </div>
+        <div class="stav-dotazu" id="imRegexStav"></div>
+        <div class="nahled" id="imNahled"></div>
+      </div>
+      <div class="tlacitka" style="margin-top:10px">
+        <button type="button" class="hlavni" id="imPouzit">↻ Načíst logy znovu s tímto nastavením</button>
+        <span class="napoveda" id="imPouzitInfo">Nastavení platí pro další načtení; tlačítkem je použijete i na už načtené logy.</span>
+      </div>
+    </details>
+
+    <!-- ===== Filtr ===== -->
+    <section class="karta filtr" aria-label="Filtr" id="filtrPanel">
+      <div class="hledani">
+        <div>
+          <label class="pop" for="fText">Hledat (slova = A ZÁROVEŇ, "fráze", -vyloučit)</label>
+          <input type="search" id="fText" placeholder="např. timeout -healthcheck &quot;connection reset&quot;" spellcheck="false">
+        </div>
+        <div>
+          <label class="pop" for="fRegex">Regulární výraz</label>
+          <div class="regex-box">
+            <input type="text" id="fRegex" placeholder="např. status=5\d\d" spellcheck="false">
+            <label class="zaskrt" title="Nerozlišovat velikost písmen"><input type="checkbox" id="fRegexI" checked> i</label>
+          </div>
+        </div>
+        <div class="tlacitka">
+          <select id="fSady" aria-label="Které logy"><option value="AB">A + B</option><option value="A">jen A</option><option value="B">jen B</option></select>
+          <select id="fExport" aria-label="Export vyfiltrovaných záznamů">
+            <option value="">⤓ Export…</option><option value="txt">Původní řádky (.log)</option><option value="csv">Tabulka CSV</option><option value="jsonl">JSON Lines</option><option value="vzory">Vzory zpráv (CSV)</option>
+          </select>
+        </div>
+      </div>
+      <div class="zav-cipy" id="fZav" aria-label="Závažnost"></div>
+      <div class="cas-ovl">
+        <label class="pop" for="fOd" style="margin:0">Od</label><input type="datetime-local" id="fOd" step="1">
+        <label class="pop" for="fDo" style="margin:0">Do</label><input type="datetime-local" id="fDo" step="1">
+        <button type="button" class="male" id="fCely">Celý rozsah</button>
+        <button type="button" class="male" id="fZpet" disabled title="Předchozí časový rozsah">↶ Zpět</button>
+        <button type="button" class="male" data-posl="900000">posl. 15 min</button>
+        <button type="button" class="male" data-posl="3600000">posl. 1 h</button>
+        <button type="button" class="male" data-posl="86400000">posl. 24 h</button>
+        <select id="fZona" aria-label="Zobrazovat časy v pásmu" style="padding:4px 6px;font-size:0.8rem">
+          <option value="mistni">časy: místní (prohlížeč)</option><option value="utc">časy: UTC</option><option value="import">časy: pásmo importu</option>
+        </select>
+        <button type="button" class="male" id="fReset">Zrušit všechny filtry</button>
+      </div>
+      <div class="aktivni-cipy" id="fCipy"></div>
+      <div class="stav-dotazu" id="fStav" aria-live="polite"></div>
+    </section>
+
+    <!-- ===== Přehled ===== -->
+    <section class="kpi" id="kpi" aria-label="Souhrn"></section>
+
+    <section class="karta" aria-label="Časová osa">
+      <h2>Časová osa událostí
+        <select id="oKrok" aria-label="Šířka koše" style="margin-left:auto;font-size:0.8rem;padding:4px 6px">
+          <option value="0">koš: automaticky</option><option value="1000">1 s</option><option value="10000">10 s</option><option value="60000">1 min</option>
+          <option value="300000">5 min</option><option value="900000">15 min</option><option value="3600000">1 h</option><option value="86400000">1 den</option>
+        </select>
+        <select id="oRezim" aria-label="Barvy sloupců" style="font-size:0.8rem;padding:4px 6px">
+          <option value="zav">podle závažnosti</option><option value="sada">podle logu A/B</option>
+        </select>
+      </h2>
+      <div class="graf-obal" id="osaObal">
+        <canvas id="osa" role="img" aria-label="Histogram počtu záznamů v čase"></canvas>
+        <div class="bublina" id="osaBublina" hidden></div>
+      </div>
+      <div class="legenda" id="osaLegenda"></div>
+      <p class="napoveda">Tažením vyberete časový rozsah (filtr), klepnutím na sloupec přejdete na jeho záznamy, dvojklik vrátí celý rozsah.</p>
+      <h3>Vývoj frekvence a prudké nárůsty</h3>
+      <div class="graf-obal">
+        <canvas id="frekvence" role="img" aria-label="Frekvence zpráv za minutu se základní úrovní a prahem"></canvas>
+      </div>
+      <div class="legenda">
+        <span><i class="cara" style="background:var(--s4)"></i>záznamů / min</span>
+        <span><i class="cara" style="background:var(--s1)"></i>chyb / min</span>
+        <span style="color:var(--text-muted)"><i class="prerus"></i>klouzavý medián</span>
+        <span style="color:var(--s2)"><i class="prerus"></i>práh nárůstu</span>
+        <span><i style="background:var(--spicka);border:1px solid var(--s1)"></i>prudký nárůst</span>
+      </div>
+      <details style="margin-top:8px">
+        <summary class="napoveda" style="cursor:pointer">Citlivost detekce nárůstů</summary>
+        <div class="radek-ovl" style="margin-top:6px">
+          <div><label class="pop" for="spOkno">Okno (košů)</label><input type="number" id="spOkno" min="5" max="200" value="20" style="width:90px"></div>
+          <div><label class="pop" for="spK">Práh z</label><input type="number" id="spK" min="2" max="20" step="0.5" value="4" style="width:90px"></div>
+          <div><label class="pop" for="spMin">Min. nárůst (záznamů)</label><input type="number" id="spMin" min="1" max="100000" value="5" style="width:110px"></div>
+        </div>
+        <p class="napoveda">Robustní z-skóre vůči klouzavému mediánu předchozích košů (po Anscombeově transformaci, podrobně v záložce Metodika).</p>
+      </details>
+      <div class="spicky" id="spicky"></div>
+    </section>
+
+    <!-- ===== Záložky ===== -->
+    <section class="karta">
+      <div class="zalozky" role="tablist" id="zalozky">
+        <button role="tab" aria-selected="true" data-z="zaznamy">Záznamy<span class="poc" id="zPocZ"></span></button>
+        <button role="tab" aria-selected="false" data-z="vzory">Vzory<span class="poc" id="zPocV"></span></button>
+        <button role="tab" aria-selected="false" data-z="rozdeleni">Rozdělení</button>
+        <button role="tab" aria-selected="false" data-z="porovnani">Porovnání A × B</button>
+        <button role="tab" aria-selected="false" data-z="korelace">Korelace</button>
+        <button role="tab" aria-selected="false" data-z="pravidla">Zvýraznění<span class="poc" id="zPocP"></span></button>
+        <button role="tab" aria-selected="false" data-z="metodika">Metodika</button>
+      </div>
+
+      <div role="tabpanel" data-panel="zaznamy">
+        <div class="tabulka-hlava">
+          <span id="tabInfo">Zatím nic načteno.</span>
+          <span class="tlacitka">
+            <select id="fRazeni" aria-label="Řazení" style="font-size:0.8rem;padding:4px 6px">
+              <option value="soubor">pořadí v souboru</option><option value="cas">podle času ↑</option><option value="cas-sestupne">podle času ↓</option>
+            </select>
+          </span>
+        </div>
+        <div class="tabulka" id="tabulka" tabindex="0" aria-label="Záznamy (šipkami nahoru/dolů vybíráte)">
+          <div class="vyska" id="tabVyska"></div>
+          <div id="tabRadky"></div>
+          <div class="prazdno" id="tabPrazdno">Načtěte log tlačítkem <b>Vybrat soubor</b>, přetažením, vložením textu nebo zvolte ukázku.</div>
+        </div>
+        <div class="detail" id="detail" hidden></div>
+      </div>
+
+      <div role="tabpanel" data-panel="vzory" hidden>
+        <p class="napoveda" style="margin-bottom:8px">Podobné zprávy jsou seskupené do šablon: čísla, IP adresy, UUID, hexadecimální řetězce, časy a URL se nahradí značkami
+          (<code>&lt;NUM&gt;</code>, <code>&lt;IP&gt;</code>…) a zbylá místa, kde se zprávy liší, algoritmus Drain nahradí <code>&lt;*&gt;</code>.
+          Klepnutím na vzor ho použijete jako filtr.</p>
+        <div class="tab-obal"><table class="data" id="tabVzory"></table></div>
+      </div>
+
+      <div role="tabpanel" data-panel="rozdeleni" hidden>
+        <div class="mrizka2">
+          <div><h3 style="margin-top:0">Podle závažnosti</h3><div class="rozdeleni" id="rozdZav"></div>
+            <p class="napoveda" id="rozdPozn"></p></div>
+          <div>
+            <h3 style="margin-top:0">Nejčastější zdroje (host / klient)</h3><div class="seznam-top" id="rozdHost"></div>
+            <h3>Nejčastější aplikace / loggery</h3><div class="seznam-top" id="rozdApp"></div>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" data-panel="porovnani" hidden>
+        <div id="porovnani"><p class="prazdno">Pro porovnání načtěte i log B (nebo zvolte ukázkovou dvojici výše).</p></div>
+      </div>
+
+      <div role="tabpanel" data-panel="korelace" hidden>
+        <p class="napoveda" style="margin-bottom:8px">Které vzory se objevují těsně po zvoleném vzoru (nebo před ním) častěji, než odpovídá náhodě?
+          Počítá se nad aktuálně vyfiltrovanými záznamy obou logů seřazenými podle času. Okolí konkrétní události (±&nbsp;N s v obou logech)
+          zobrazíte v detailu záznamu.</p>
+        <div class="radek-ovl">
+          <div style="flex:1 1 280px"><label class="pop" for="kVzor">Vzor</label><select id="kVzor" style="width:100%"></select></div>
+          <div><label class="pop" for="kOkno">Okno</label>
+            <select id="kOkno"><option value="1000">1 s</option><option value="5000" selected>5 s</option><option value="10000">10 s</option><option value="30000">30 s</option><option value="60000">1 min</option><option value="300000">5 min</option></select></div>
+          <div class="tlacitka"><button type="button" class="hlavni" id="kSpustit">Hledat souvislosti</button></div>
+        </div>
+        <div id="korelace" style="margin-top:10px"></div>
+      </div>
+
+      <div role="tabpanel" data-panel="pravidla" hidden>
+        <p class="napoveda" style="margin-bottom:6px">Pravidla obarví shodný text v záznamech a v detailu, levý okraj řádku a pruh na časové ose.
+          Text se hledá bez ohledu na velikost písmen; zaškrtnutím „regex“ zadáte regulární výraz.</p>
+        <div id="pravidla"></div>
+        <div class="tlacitka" style="margin-top:8px">
+          <button type="button" id="prPridat">+ Přidat pravidlo</button>
+          <button type="button" id="prVzorova">Vzorová pravidla</button>
+        </div>
+      </div>
+
+      <div role="tabpanel" data-panel="metodika" hidden>
+        <div class="metodika">
+          <h3>Rozpoznání formátu</h3>
+          <p>Z prvních 200 řádků (bez odsazených pokračování) se zkusí každý parser; vyhraje ten s nejvyšším podílem úspěšně rozebraných řádků,
+            při shodě specifičtější formát (JSON Lines, RFC 5424, access log, nginx/Apache error, rsyslog, RFC 3164, logfmt, obecný). Pod 30 % se log čte jako
+            prostý text. Řádky, které nejdou rozebrat a následují za záznamem (stack trace, <code>Caused by:</code>, odsazení), se připojí k předchozímu záznamu.</p>
+          <h3>Časové značky a pásma</h3>
+          <ul>
+            <li>ISO 8601 / RFC 3339 se zónou i bez ní, desetinná tečka i čárka, až nanosekundy; základní zápis <code>20261019T120000Z</code>.</li>
+            <li>Apache CLF <code>10/Oct/2000:13:55:36 -0700</code>, ctime <code>Wed Oct 11 14:32:52 2000</code>, RFC 2822, nginx <code>2026/10/19 12:00:00</code>,
+              český <code>19. 10. 2026 12:00</code>, americký <code>10/19/2026 1:05 PM</code>, epoch v s / ms / µs / ns (jen roky 1990–2100).</li>
+            <li>Značka bez zóny se vyloží v pásmu z nastavení (IANA, např. <code>Europe/Prague</code>, nebo pevný posun <code>+02:00</code>) včetně letního času.
+              Neexistující čas při jarním posunu (např. 29. 3. 2026 02:30 v Praze) se vyloží posunem platným před přechodem (= 03:30 SELČ).
+              Dvojznačný čas při podzimním posunu (25. 10. 2026 02:00–02:59) dostane výskyt bližší předchozímu řádku (krok zpět se počítá 4×),
+              takže posloupnost 02:50 SELČ → 02:05 pokračuje v SEČ.</li>
+            <li>RFC 3164 neobsahuje rok ani zónu: rok se odvodí z referenčního data (záznam nesmí být víc než 2 dny „v budoucnosti“) a při přechodu
+              prosinec → leden se zvýší. Předpoklady se ukážou v souhrnu logu.</li>
+            <li>Vše se interně ukládá v UTC; zobrazovat lze v místním čase prohlížeče, v UTC nebo v pásmu importu.</li>
+          </ul>
+          <h3>Závažnost</h3>
+          <p>Syslog PRI (0–7), číselné úrovně pino/bunyan (10–60), slova FATAL/ERROR/WARN/… i jednopísmenné E/W/I/D, u access logu stav HTTP (5xx = chyba, 4xx = varování).
+            Kde úroveň chybí, odhadne se z klíčových slov ve zprávě (error, failed, exception, warning…) – takové záznamy souhrn počítá zvlášť.</p>
+          <h3>Seskupení podobných zpráv</h3>
+          <p>Nejdřív maskování proměnných částí (UUID, URL, e-mail, časy, MAC, IPv4/IPv6, <code>0x…</code> a dlouhé hexadecimální řetězce, čísla), pak zjednodušený
+            Drain (He a kol., 2017): zprávy se rozdělí podle počtu slov a prvního slova, v rámci skupiny se hledá šablona s nejvyšším podílem shodných pozic;
+            nad prahem podobnosti (výchozí 0,5) se sloučí a lišící se pozice nahradí <code>&lt;*&gt;</code>. Access log se seskupuje přesně podle metody, maskované cesty a stavu.</p>
+          <h3>Detekce prudkých nárůstů</h3>
+          <ol style="padding-left:20px">
+            <li>Počty záznamů v koších časové osy <i>x</i> se převedou Anscombeovou transformací <i>y</i> = 2·√(<i>x</i> + 3/8). U Poissonova šumu má pak <i>y</i>
+              rozptyl ≈ 1 bez ohledu na úroveň, takže stejný práh platí pro 2 i 2 000 záznamů na koš.</li>
+            <li>Pro každý koš se z <b>předchozích</b> N košů (okno, výchozí 20) spočte medián a MAD; σ = max(1,4826·MAD; 1).</li>
+            <li>Robustní z = (<i>y</i> − medián)/σ. Nárůst je hlášen, když z ≥ k (výchozí 4) a zároveň počet převyšuje medián aspoň o zadaný minimální rozdíl.</li>
+            <li>Koše označené jako nárůst se do dalších oken započítají hodnotou mediánu, aby delší incident „neotrávil“ základ; po N po sobě jdoucích
+              koších se nová úroveň přijme (trvalá změna se nehlásí donekonečna). Sousední koše se slučují do jednoho intervalu.</li>
+          </ol>
+          <p>Stejně se zvlášť vyhodnocuje řada chyb (kritická + chyba). Medián a MAD jsou odolné vůči odlehlým hodnotám; klasické z-skóre s průměrem a směrodatnou
+            odchylkou by jedna velká špička „rozmazala“. Poslední koš bývá neúplný.</p>
+          <h3>Korelace</h3>
+          <ul>
+            <li><b>Vzor → vzor:</b> pro výskyty vzoru A (nejvýš 3 000) se zjistí, zda do <i>Δt</i> po něm (a před ním) přišel vzor B. Očekávaná pravděpodobnost
+              náhodného výskytu B v okně je <i>p₀</i> = 1 − e<sup>−λ·Δt</sup>, kde λ je průměrná četnost B. Zdvih = pozorovaný podíl / <i>p₀</i>.</li>
+            <li><b>Okolí události:</b> všechny záznamy obou logů v okně ±Δt kolem vybraného záznamu, seřazené podle UTC.</li>
+            <li><b>Řady A × B:</b> Pearsonova korelace četností se posunem ±10 košů; když se logy časově nepřekrývají (různé dny), zarovnají se na začátek.</li>
+          </ul>
+          <h3>Porovnání dvou logů</h3>
+          <p>Pro každý vzor podíl v A a v B, změna jako log₂ poměru podílů (s vyhlazením +0,5) a z-test dvou podílů. „Nárůst/pokles“ = |z| ≥ 3 a aspoň dvojnásobná změna.</p>
+          <h3>Velké soubory a omezení</h3>
+          <ul>
+            <li>Soubor se čte proudem <code>File.stream()</code> po blocích, dekóduje <code>TextDecoder</code> v režimu stream (rozpůlené znaky UTF-8) a neúplný
+              poslední řádek bloku se přenáší do dalšího. Soubory <code>.gz</code> se rozbalí <code>DecompressionStream</code>. Vše běží ve Web Workeru;
+              do stránky jdou jen statistiky a právě viditelné řádky.</li>
+            <li>Záznamy se drží v paměti prohlížeče – podle dostupné paměti zvládne stránka zhruba stovky MB textu; nad 3 milionů záznamů se načítání zastaví
+              (souhrn to oznámí). Zrušení zachová už načtenou část.</li>
+            <li>Uživatelský regulární výraz s katastrofálním backtrackingem může filtr zdržet – v takovém případě stránku obnovte.</li>
+            <li>Zkratky pásem v textu (CEST, PST…) nejsou jednoznačné, proto se nepoužívají; rozpozná se jen Z/UTC/GMT a číselný posun.</li>
+          </ul>
+          <h3>Ukázkové logy</h3>
+          <p>Všechny ukázky jsou syntetické (generované se zadaným semínkem), neobsahují skutečná data ani adresy.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+'use strict';
+(function () {
+  const J = window.LogJadro;
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const KLIC = 'webapp_analyzator_logu_';
+  const ulozit = (k, v) => { try { localStorage.setItem(KLIC + k, JSON.stringify(v)); } catch (e) { /* bez úložiště */ } };
+  const nacist = (k, vych) => { try { const v = localStorage.getItem(KLIC + k); return v === null ? vych : JSON.parse(v); } catch (e) { return vych; } };
+  const esc = s => String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const cislo = n => (n === null || n === undefined || !isFinite(n)) ? '–' : Math.round(n).toLocaleString('cs-CZ');
+  const desetinne = (n, d) => (!isFinite(n) ? '–' : n.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d }));
+  const procenta = (a, b) => (b ? desetinne(100 * a / b, a / b < 0.1 ? 1 : 0) + ' %' : '–');
+  const velikost = b => b < 1024 ? b + ' B' : b < 1048576 ? desetinne(b / 1024, 1) + ' kB' : b < 1073741824 ? desetinne(b / 1048576, 1) + ' MB' : desetinne(b / 1073741824, 2) + ' GB';
+  const trvani = ms => {
+    if (!isFinite(ms)) return '–';
+    const s = Math.abs(ms) / 1000;
+    if (s < 1) return desetinne(Math.abs(ms), 0) + ' ms';
+    if (s < 60) return desetinne(s, s < 10 ? 1 : 0) + ' s';
+    if (s < 3600) { const c = Math.round(s); return Math.floor(c / 60) + ' min' + (c % 60 ? ' ' + (c % 60) + ' s' : ''); }
+    if (s < 86400) { const m = Math.round(s / 60); return Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); }
+    return desetinne(s / 86400, 1) + ' dne';
+  };
+  const ZAV = J.ZAVAZNOSTI, ZAVK = J.ZAV_KRATCE;
+
+  /* ---------------- ukázky ---------------- */
+  const UKAZKY = [
+    { soubor: 'syslog_prelom_roku.log', nazev: 'Syslog RFC 3164 – přelom roku, útok na SSH', zona: 'Europe/Prague', ref: Date.UTC(2026, 0, 2) },
+    { soubor: 'syslog_rfc5424.log', nazev: 'Syslog RFC 5424 se strukturovanými daty', zona: 'UTC' },
+    { soubor: 'access_den1.log', nazev: 'Apache/Nginx access – den 1', zona: 'Europe/Prague' },
+    { soubor: 'access_den2_incident.log', nazev: 'Apache/Nginx access – den 2 s incidentem', zona: 'Europe/Prague' },
+    { soubor: 'nginx_error_den2.log', nazev: 'Nginx error log – den 2', zona: 'Europe/Prague' },
+    { soubor: 'aplikace.jsonl', nazev: 'JSON Lines (pino) – fronta úloh', zona: 'UTC' },
+    { soubor: 'java_konec_letniho_casu.log', nazev: 'Java/log4j se stack trace přes konec letního času', zona: 'Europe/Prague' },
+    { soubor: 'vlastni_format.log', nazev: 'Vlastní formát (pro regulární výraz)', zona: 'Europe/Prague' },
+  ];
+  const PRIKLAD_REGEX = '^(?<cas>\\S+ \\S+) \\| (?<uroven>\\w) \\| (?<app>[\\w-]+) \\| (?<zprava>.*)$';
+  const PRIKLAD_FORMAT = 'DD.MM.YYYY HH:mm:ss.SSS';
+
+  /* ---------------- stav ---------------- */
+  const stav = {
+    souhrny: [null, null],
+    zdroje: [null, null],      // {soubor} | {text} – pro „načíst znovu“ a náhled regexu
+    vzorekRadku: [[], []],
+    nacita: [false, false],
+    filtr: { text: '', regex: '', regexI: true, sev: [true, true, true, true, true, true, true, true], sady: 'AB', od: null, do: null, sablona: null, sablonaText: '', host: '', app: '', razeni: 'soubor' },
+    historieRozsahu: [],
+    krok: Number(nacist('krok', 0)) || 0,
+    rezimOsy: nacist('rezimOsy', 'zav'),
+    zonaZobr: nacist('zonaZobr', 'mistni'),
+    spicky: nacist('spicky', { okno: 20, k: 4, minRozdil: 5 }),
+    pravidla: nacist('pravidla', []),
+    stat: null,
+    vybrany: null, vybranaPozice: -1,
+    zalozka: 'zaznamy',
+    nastaveni: Object.assign({ format: 'auto', zona: J.zonaProhlizece(), ref: '', kodovani: 'utf-8', viceradkove: true, prah: 0.5, regex: '', casFormat: '' }, nacist('import', {})),
+  };
+  if (!Array.isArray(stav.pravidla)) stav.pravidla = [];
+
+  /* ---------------- komunikace s Workerem ---------------- */
+  const Klient = (function () {
+    let w = null, lokalni = null, prijato = false, dalsiId = 1;
+    const cekajici = new Map();
+    const KONCE = { nacti: ['nacteno'], prenacti: ['hotovo'], dotaz: ['vysledek'], radky: ['radky'], pozice: ['pozice'], detail: ['detail'], okoli: ['okoli'], korelace: ['korelace'], porovnani: ['porovnani'], export: ['export'], smaz: ['smazano'] };
+    function prijmi(z) {
+      prijato = true;
+      if (z.typ === 'prubeh') { naPrubeh(z); return; }
+      if (z.typ === 'nacteno') naNacteno(z);
+      const p = z.id !== undefined ? cekajici.get(z.id) : null;
+      if (p && (z.typ === 'chyba' || KONCE[p.typ].indexOf(z.typ) >= 0)) {
+        cekajici.delete(z.id);
+        if (z.typ === 'chyba') p.reject(Object.assign(new Error(z.zprava), { puvod: z.puvod, sada: z.sada })); else p.resolve(z);
+      } else if (z.typ === 'chyba' && !p) Dialog.chyba(z.zprava);
+    }
+    function lokalne() {
+      w = null;
+      lokalni = LogSklad.vytvorObsluhu(z => setTimeout(() => prijmi(z), 0));
+      for (const p of cekajici.values()) lokalni(p.zprava);
+    }
+    try {
+      w = new Worker('analyzator_logu/worker.js');
+      w.onmessage = e => prijmi(e.data);
+      w.onerror = e => {
+        if (!prijato) { e.preventDefault(); console.warn('Worker nedostupný, počítám v hlavním vlákně'); lokalne(); }
+        else Dialog.chyba('Chyba výpočetního vlákna: ' + (e.message || 'neznámá'));
+      };
+    } catch (e) { lokalne(); }
+    function posli(typ, data) {
+      const id = dalsiId++;
+      const zprava = Object.assign({ typ, id }, data);
+      if (typ === 'dotaz' || typ === 'porovnani') {
+        // novější dotaz ruší starší (Worker na zastaralé neodpovídá)
+        for (const [i, p] of cekajici) if (p.typ === typ) { cekajici.delete(i); p.resolve(null); }
+      }
+      return new Promise((resolve, reject) => {
+        cekajici.set(id, { typ, resolve, reject, zprava });
+        if (w) w.postMessage(zprava); else lokalni(zprava);
+      });
+    }
+    function zrus() { if (w) w.postMessage({ typ: 'zrus' }); else if (lokalni) lokalni({ typ: 'zrus' }); }
+    return { posli, zrus, get vlakno() { return !!w; } };
+  })();
+
+  /* ---------------- pásma a formátování času ---------------- */
+  function zonaZobrazeni() {
+    if (stav.zonaZobr === 'utc') return 'UTC';
+    if (stav.zonaZobr === 'import') return J.jePlatnaZona(stav.nastaveni.zona) ? stav.nastaveni.zona : 'UTC';
+    return J.zonaProhlizece();
+  }
+  const _fmt = new Map();
+  function casti(t, zona) {
+    let f = _fmt.get(zona);
+    if (!f) {
+      const z = /^[+-]/.test(zona) ? 'UTC' : zona;
+      f = new Intl.DateTimeFormat('en-GB', { timeZone: z, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+      _fmt.set(zona, f);
+    }
+    const posun = /^[+-]/.test(zona) ? J.posunZony(zona, t) * 60000 : 0;
+    const p = {};
+    for (const x of f.formatToParts(new Date(t + posun))) p[x.type] = x.value;
+    return p;
+  }
+  function fmtCas(t, typ) {
+    if (t === null || t === undefined || !Number.isFinite(t)) return '—';
+    const p = casti(t, zonaZobrazeni());
+    const d = Number(p.day) + '. ' + Number(p.month) + '.';
+    const hms = p.hour + ':' + p.minute + ':' + p.second;
+    if (typ === 'osa-den') return d;
+    if (typ === 'osa-min') return p.hour + ':' + p.minute;
+    if (typ === 'osa-s') return hms;
+    if (typ === 'kratky') return d + ' ' + hms;
+    if (typ === 'tabulka') return d + ' ' + hms + ',' + p.fractionalSecond;
+    return d + ' ' + p.year + ' ' + hms + ',' + p.fractionalSecond;
+  }
+  function popisZony() {
+    const z = zonaZobrazeni();
+    return z === 'UTC' ? 'UTC' : z;
+  }
+  function doVstupu(t) {
+    if (t === null || t === undefined || !Number.isFinite(Number(t))) return '';
+    const p = casti(t, zonaZobrazeni());
+    return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
+  }
+  function zeVstupu(v) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/.exec(v || '');
+    if (!m) return null;
+    const stena = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+    return J.mistniNaUtc(stena, zonaZobrazeni()).t;
+  }
+
+  /* ---------------- zdroje: soubory, text, ukázky ---------------- */
+  function nastaveniImportu(extra) {
+    const n = stav.nastaveni;
+    const o = { format: n.format, zona: J.jePlatnaZona(n.zona) ? n.zona : 'UTC', kodovani: n.kodovani, viceradkove: n.viceradkove };
+    if (n.format === 'vlastni') o.vlastni = { regex: n.regex, casFormat: n.casFormat };
+    if (n.ref) { const d = Date.parse(n.ref + 'T12:00:00Z'); if (isFinite(d)) o.referencni = d; }
+    return Object.assign(o, extra || {});
+  }
+  async function nactiDoSady(s, zdroj, extra) {
+    if (stav.nacita[s]) { Dialog.info('Log ' + 'AB'[s] + ' se ještě načítá.'); return; }
+    const slot = $(`.slot[data-sada="${s}"]`);
+    stav.nacita[s] = true;
+    stav.zdroje[s] = zdroj;
+    const nast = nastaveniImportu(extra);
+    if (nast.referencni === undefined) nast.referencni = zdroj.soubor && zdroj.soubor.lastModified ? zdroj.soubor.lastModified : Date.now();
+    nast.nazev = zdroj.nazev || (zdroj.soubor ? zdroj.soubor.name : 'vložený text');
+    slot.querySelector('.jmeno').textContent = nast.nazev;
+    slot.querySelector('.souhrn').innerHTML = '';
+    zobrazPrubeh(s, true, 0, zdroj.soubor ? zdroj.soubor.size : (zdroj.text || '').length);
+    // vzorek prvních řádků pro náhled vlastního regexu
+    vzorekZeZdroje(s, zdroj);
+    try {
+      const posZdroj = zdroj.soubor ? { soubor: zdroj.soubor } : { text: zdroj.text };
+      await Klient.posli('nacti', { sada: s, zdroj: posZdroj, nastaveni: nast });
+    } catch (e) {
+      stav.nacita[s] = false;
+      zobrazPrubeh(s, false);
+      slot.querySelector('.souhrn').innerHTML = `<ul><li class="var">Načtení selhalo: ${esc(e.message)}</li></ul>`;
+      Dialog.chyba(e.message);
+    }
+  }
+  async function vzorekZeZdroje(s, zdroj) {
+    try {
+      let text;
+      if (zdroj.text !== undefined) text = zdroj.text.slice(0, 65536);
+      else if (/\.gz$/i.test(zdroj.soubor.name || '')) text = '';
+      else text = new TextDecoder(stav.nastaveni.kodovani || 'utf-8').decode(await zdroj.soubor.slice(0, 65536).arrayBuffer());
+      stav.vzorekRadku[s] = text.split(/\r?\n/).slice(0, 200).filter(r => r.trim());
+    } catch (e) { stav.vzorekRadku[s] = []; }
+  }
+  function zobrazPrubeh(s, viditelny, bajty, celkem, radku) {
+    const slot = $(`.slot[data-sada="${s}"]`);
+    const p = slot.querySelector('.prubeh');
+    p.hidden = !viditelny;
+    if (!viditelny) return;
+    const pruh = p.querySelector('.pruh');
+    if (celkem > 0) { pruh.classList.remove('neurcity'); pruh.querySelector('i').style.width = Math.min(100, 100 * (bajty || 0) / celkem).toFixed(1) + '%'; }
+    else pruh.classList.add('neurcity');
+    p.querySelector('.popis').textContent = celkem > 0
+      ? `Načítám… ${velikost(bajty || 0)} z ${velikost(celkem)} (${procenta(bajty || 0, celkem)}), ${cislo(radku || 0)} řádků`
+      : `Načítám… ${cislo(radku || 0)} řádků`;
+  }
+  function naPrubeh(z) { zobrazPrubeh(z.sada, true, z.bajty, z.celkem, z.radku); }
+  function naNacteno(z) {
+    const s = z.sada;
+    stav.nacita[s] = false;
+    stav.souhrny[s] = z.souhrn;
+    zobrazPrubeh(s, false);
+    vykresliSouhrn(s);
+    if (z.souhrn.zruseno) Dialog.info('Načítání logu ' + 'AB'[s] + ' zrušeno – zobrazuje se načtená část.');
+    stav.filtr.sablona = null;
+    stav.vybrany = null; $('#detail').hidden = true;
+    planujDotaz(0);
+  }
+  function vykresliSouhrn(s) {
+    const slot = $(`.slot[data-sada="${s}"]`);
+    const so = stav.souhrny[s];
+    const el = slot.querySelector('.souhrn');
+    if (!so) { el.innerHTML = ''; slot.querySelector('.jmeno').textContent = s ? '(volitelný – pro porovnání a korelaci)' : ''; return; }
+    slot.querySelector('.jmeno').textContent = so.nazev;
+    const li = [];
+    const det = so.detekce;
+    li.push(`<li>Formát: <b>${esc(so.formatNazev)}</b>${det ? ` – rozpoznán automaticky (${procenta(det.podil * det.vzorek, det.vzorek)} z ${cislo(det.vzorek)} řádků vzorku)` : ' – zvolen ručně'}</li>`);
+    if (!det && so.zaznamu && so.nerozpoznano > so.zaznamu / 2) li.push(`<li class="var">Ručně zvolenému formátu odpovídá méně než polovina řádků – zkuste v Nastavení importu „Automaticky rozpoznat“.</li>`);
+    li.push(`<li><b>${cislo(so.zaznamu)}</b> záznamů z ${cislo(so.radku)} řádků (${velikost(so.bajtu)}${so.gzip ? ', rozbaleno z gzip' : ''}) za ${desetinne(so.trvani / 1000, 1)} s${so.pokracovani ? `; ${cislo(so.pokracovani)} pokračovacích řádků připojeno k záznamům` : ''}</li>`);
+    if (isFinite(so.tMin)) li.push(`<li>Rozsah: ${esc(fmtCas(so.tMin, 'plny'))} – ${esc(fmtCas(so.tMax, 'plny'))} (${esc(popisZony())}), ${trvani(so.tMax - so.tMin)}</li>`);
+    const pr = so.predpoklady || {};
+    if (pr.bezZony) li.push(`<li class="pred">${cislo(pr.bezZony)} časů bez zóny vyloženo v pásmu <b>${esc(so.zona)}</b> (změníte v Nastavení importu).</li>`);
+    if (pr.bezRoku) {
+      const roky = Object.keys(pr.roky || {}).sort().map(r => `${r} (${cislo(pr.roky[r])}×)`).join(', ');
+      li.push(`<li class="pred">Rok chybí (RFC 3164): odvozen z referenčního data ${esc(new Date(so.referencni).toLocaleDateString('cs-CZ'))} → ${esc(roky)}.</li>`);
+    }
+    if (pr.dvojznacny) li.push(`<li class="pred">${cislo(pr.dvojznacny)} časů v dvojznačné hodině (konec letního času) – rozřešeno podle pořadí řádků.</li>`);
+    if (pr.mezera) li.push(`<li class="pred">${cislo(pr.mezera)} časů v neexistující hodině (začátek letního času) – vyloženo posunem před přechodem.</li>`);
+    if (so.sevOdhad) li.push(`<li class="pred">Úroveň odhadnuta z textu zprávy u ${cislo(so.sevOdhad)} záznamů.</li>`);
+    if (so.bezCasu) li.push(`<li class="var">${cislo(so.bezCasu)} záznamů bez rozpoznaného času (nejsou na časové ose).</li>`);
+    if (so.serazeno) li.push(`<li class="var">Časy nejsou seřazené: ${cislo(so.serazeno)}× skok zpět o víc než 1 s.</li>`);
+    if (so.nerozpoznano) li.push(`<li class="var">${cislo(so.nerozpoznano)} řádků neodpovídá formátu (uloženy jako prostý text), např.:<pre>${esc(so.ukazkyNerozpoznanych.map(u => u.cislo + ': ' + u.text).join('\n'))}</pre></li>`);
+    if (so.zruseno) li.push('<li class="var">Načítání bylo zrušeno – zobrazená data jsou neúplná.</li>');
+    if (so.omezeno) li.push('<li class="var">Dosažen limit 3 000 000 záznamů – zbytek souboru nebyl načten.</li>');
+    if (so.chyba) li.push(`<li class="var">Čtení skončilo chybou: ${esc(so.chyba)}</li>`);
+    el.innerHTML = `<ul>${li.join('')}</ul><div class="tlacitka" style="margin-top:8px"><button type="button" class="male odebrat">✕ Odebrat log ${'AB'[s]}</button></div>`;
+    el.querySelector('.odebrat').onclick = () => odebrat(s);
+  }
+  async function odebrat(s) {
+    await Klient.posli('smaz', { sada: s });
+    stav.souhrny[s] = null; stav.zdroje[s] = null; stav.vzorekRadku[s] = [];
+    vykresliSouhrn(s);
+    stav.vybrany = null; $('#detail').hidden = true;
+    planujDotaz(0);
+  }
+  async function nactiUkazku(s, soubor) {
+    const u = UKAZKY.find(x => x.soubor === soubor);
+    if (!u) return;
+    try {
+      const odp = await fetch('analyzator_logu/ukazky/' + u.soubor);
+      if (!odp.ok) throw new Error('HTTP ' + odp.status);
+      const blob = await odp.blob();
+      const f = new File([blob], u.soubor, { type: 'text/plain', lastModified: u.ref || Date.UTC(2026, 9, 19) });
+      const extra = { zona: u.zona, format: u.soubor === 'vlastni_format.log' && stav.nastaveni.format === 'vlastni' ? 'vlastni' : 'auto' };
+      if (u.ref) extra.referencni = u.ref;
+      await nactiDoSady(s, { soubor: f, nazev: u.soubor }, extra);
+    } catch (e) { Dialog.chyba('Ukázku se nepodařilo načíst: ' + e.message); }
+  }
+
+  for (const slot of $$('.slot')) {
+    const s = Number(slot.dataset.sada);
+    const vstup = slot.querySelector('.soubor');
+    slot.querySelector('.vyber-soubor').onclick = () => vstup.click();
+    vstup.onchange = () => { if (vstup.files[0]) nactiDoSady(s, { soubor: vstup.files[0] }); vstup.value = ''; };
+    const pust = slot.querySelector('.pust');
+    pust.addEventListener('dragover', e => { e.preventDefault(); pust.classList.add('nad'); });
+    pust.addEventListener('dragleave', () => pust.classList.remove('nad'));
+    pust.addEventListener('drop', e => {
+      e.preventDefault(); pust.classList.remove('nad');
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) nactiDoSady(s, { soubor: f });
+      else { const t = e.dataTransfer.getData('text/plain'); if (t) nactiDoSady(s, { text: t, nazev: 'přetažený text' }); }
+    });
+    const vl = slot.querySelector('.vlozeni');
+    slot.querySelector('.vlozit').onclick = () => { vl.hidden = !vl.hidden; if (!vl.hidden) vl.querySelector('textarea').focus(); };
+    slot.querySelector('.zavrit-vlozeni').onclick = () => { vl.hidden = true; };
+    slot.querySelector('.nacist-text').onclick = () => {
+      const t = vl.querySelector('textarea').value;
+      if (!t.trim()) { Dialog.chyba('Vložte nejdřív nějaký text.'); return; }
+      vl.hidden = true;
+      nactiDoSady(s, { text: t, nazev: 'vložený text' });
+    };
+    const uk = slot.querySelector('.ukazka');
+    for (const u of UKAZKY) { const o = document.createElement('option'); o.value = u.soubor; o.textContent = u.nazev; uk.appendChild(o); }
+    uk.onchange = () => { if (uk.value) nactiUkazku(s, uk.value); uk.value = ''; };
+    slot.querySelector('.zrusit').onclick = () => Klient.zrus();
+  }
+  // přetažení kamkoli mimo sloty → do A
+  document.addEventListener('dragover', e => { if (!e.target.closest || !e.target.closest('.pust')) e.preventDefault(); });
+  document.addEventListener('drop', e => {
+    if (e.target.closest && e.target.closest('.pust')) return;
+    e.preventDefault();
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) nactiDoSady(stav.souhrny[0] && !stav.souhrny[1] ? 1 : 0, { soubor: f });
+  });
+  $('#dvojice').onchange = async () => {
+    const v = $('#dvojice').value; $('#dvojice').value = '';
+    if (v === 'porovnani') { await nactiUkazku(0, 'access_den1.log'); await nactiUkazku(1, 'access_den2_incident.log'); prepniZalozku('porovnani'); }
+    if (v === 'korelace') { await nactiUkazku(0, 'access_den2_incident.log'); await nactiUkazku(1, 'nginx_error_den2.log'); prepniZalozku('korelace'); }
+  };
+
+  /* ---------------- nastavení importu ---------------- */
+  (function () {
+    const f = $('#imFormat');
+    for (const id of J.PORADI_DETEKCE.concat(['prosty'])) { const o = document.createElement('option'); o.value = id; o.textContent = J.FORMATY[id].nazev; f.appendChild(o); }
+    const o = document.createElement('option'); o.value = 'vlastni'; o.textContent = 'Vlastní regulární výraz'; f.appendChild(o);
+    const dl = $('#seznamZon');
+    const zony = J.seznamZon();
+    dl.innerHTML = zony.map(z => `<option value="${esc(z)}">`).join('');
+    const n = stav.nastaveni;
+    f.value = n.format; $('#imZona').value = n.zona; $('#imRef').value = n.ref || ''; $('#imKodovani').value = n.kodovani;
+    $('#imVicer').checked = n.viceradkove !== false; $('#imDrain').value = n.prah; $('#imDrainHod').textContent = desetinne(Number(n.prah), 2);
+    $('#imRegex').value = n.regex || ''; $('#imCasFormat').value = n.casFormat || '';
+    const ulozNast = () => {
+      n.format = f.value; n.kodovani = $('#imKodovani').value; n.viceradkove = $('#imVicer').checked;
+      n.ref = $('#imRef').value; n.prah = Number($('#imDrain').value); n.regex = $('#imRegex').value; n.casFormat = $('#imCasFormat').value;
+      const z = $('#imZona').value.trim();
+      const platna = J.jePlatnaZona(z);
+      $('#imZona').classList.toggle('chyba', !platna);
+      if (platna) n.zona = z;
+      $('#imDrainHod').textContent = desetinne(n.prah, 2);
+      ulozit('import', n);
+    };
+    for (const id of ['#imFormat', '#imZona', '#imRef', '#imKodovani', '#imVicer', '#imDrain', '#imRegex', '#imCasFormat']) $(id).addEventListener('input', ulozNast);
+    $('#imZona').addEventListener('change', () => { ulozNast(); if (stav.zonaZobr === 'import') planujDotaz(0); });
+    $('#imPriklad').onclick = () => {
+      $('#imRegex').value = PRIKLAD_REGEX; $('#imCasFormat').value = PRIKLAD_FORMAT; f.value = 'vlastni'; ulozNast();
+      zkusRegex();
+    };
+    $('#imZkusit').onclick = zkusRegex;
+    $('#imPouzit').onclick = async () => {
+      ulozNast();
+      if (!stav.souhrny[0] && !stav.souhrny[1]) { Dialog.info('Nastavení se použije při dalším načtení.'); return; }
+      if (n.format === 'vlastni') { const v = J.vytvorVlastniParser(n.regex, n.casFormat); if (v.chyba) { Dialog.chyba(v.chyba); return; } }
+      const nast = [0, 1].map(s => {
+        const o = nastaveniImportu();
+        if (!n.ref && stav.zdroje[s]) o.referencni = stav.zdroje[s].soubor && stav.zdroje[s].soubor.lastModified ? stav.zdroje[s].soubor.lastModified : (stav.souhrny[s] ? stav.souhrny[s].referencni : Date.now());
+        return o;
+      });
+      for (let s = 0; s < 2; s++) if (stav.souhrny[s]) { stav.nacita[s] = true; zobrazPrubeh(s, true, 0, 0, 0); }
+      try { await Klient.posli('prenacti', { prah: n.prah, nastaveni: nast }); }
+      catch (e) { Dialog.chyba(e.message); for (let s = 0; s < 2; s++) { stav.nacita[s] = false; zobrazPrubeh(s, false); } }
+    };
+  })();
+  function zkusRegex() {
+    const n = stav.nastaveni;
+    const stavEl = $('#imRegexStav'), nah = $('#imNahled');
+    const v = J.vytvorVlastniParser($('#imRegex').value, $('#imCasFormat').value);
+    $('#imRegex').classList.toggle('chyba', !!v.chyba);
+    if (v.chyba) { stavEl.textContent = v.chyba; stavEl.classList.add('chyba'); nah.innerHTML = ''; return; }
+    stavEl.classList.remove('chyba');
+    let radky = stav.vzorekRadku[0].length ? stav.vzorekRadku[0] : stav.vzorekRadku[1];
+    if (!radky.length) { stavEl.textContent = 'Výraz je platný. Pro náhled načtěte log (např. ukázku „Vlastní formát“).'; nah.innerHTML = ''; return; }
+    const ctx = J.novyKontext({ zona: J.jePlatnaZona(n.zona) ? n.zona : 'UTC', referencni: Date.now() });
+    const m = v.parser.mapovani;
+    let ok = 0;
+    const r = radky.slice(0, 40).map(radek => {
+      const z = v.parser.parse(radek, ctx);
+      if (z) ok++;
+      return z ? `<tr><td>${esc(fmtCas(z.t, 'tabulka'))}</td><td><span class="zav s${z.sev}">${ZAVK[z.sev]}</span></td><td>${esc(z.host)}</td><td>${esc(z.app)}</td><td>${esc(z.msg.slice(0, 160))}</td></tr>`
+        : `<tr><td class="ne" colspan="5">✕ ${esc(radek.slice(0, 160))}</td></tr>`;
+    });
+    stavEl.textContent = `Skupiny: ${v.parser.skupiny.join(', ')}. Čas → ${m.cas || '—'}, úroveň → ${m.uroven || '—'}, zpráva → ${m.zprava || 'celý řádek'}. Vyhovuje ${ok} z ${Math.min(40, radky.length)} řádků náhledu.`;
+    nah.innerHTML = `<table><thead><tr><th>čas (${esc(popisZony())})</th><th>úroveň</th><th>host</th><th>aplikace</th><th>zpráva</th></tr></thead><tbody>${r.join('')}</tbody></table>`;
+  }
+
+  /* ---------------- filtr ---------------- */
+  function sestavFiltr() {
+    const f = stav.filtr;
+    const o = {
+      sady: f.sady === 'A' ? [0] : f.sady === 'B' ? [1] : [0, 1],
+      text: f.text, regex: f.regex, regexPriznaky: f.regexI ? 'i' : '',
+      sev: f.sev, od: f.od, do: f.do, sablona: f.sablona, host: f.host, app: f.app, razeni: f.razeni,
+      krok: stav.krok, zonaZobrazeni: zonaZobrazeni(),
+      pravidla: stav.pravidla.filter(p => p.zap !== false).map(p => ({ vzor: p.vzor, regex: !!p.regex })),
+      spicky: { okno: Number(stav.spicky.okno) || 20, k: Number(stav.spicky.k) || 4, minRozdil: Number(stav.spicky.minRozdil) || 5 },
+    };
+    return o;
+  }
+  let casovac = null, dotazBezi = 0;
+  function planujDotaz(zpozdeni) {
+    clearTimeout(casovac);
+    casovac = setTimeout(spustDotaz, zpozdeni === undefined ? 250 : zpozdeni);
+  }
+  async function spustDotaz() {
+    if (!stav.souhrny[0] && !stav.souhrny[1]) { stav.stat = null; vykresliVse(); return; }
+    if (stav.nacita[0] || stav.nacita[1]) return;
+    const f = sestavFiltr();
+    if (f.regex) { try { new RegExp(f.regex); $('#fRegex').classList.remove('chyba'); } catch (e) { $('#fRegex').classList.add('chyba'); $('#fStav').textContent = 'Neplatný regulární výraz: ' + e.message; $('#fStav').classList.add('chyba'); return; } }
+    $('#fRegex').classList.remove('chyba');
+    const t0 = performance.now();
+    $('#fStav').classList.remove('chyba');
+    $('#fStav').textContent = 'Filtruji…';
+    dotazBezi++;
+    let odp;
+    try { odp = await Klient.posli('dotaz', { filtr: f }); }
+    catch (e) { $('#fStav').textContent = e.message; $('#fStav').classList.add('chyba'); return; }
+    finally { dotazBezi--; }
+    if (!odp) return;
+    stav.stat = odp.stat;
+    const celkem = stav.stat.celkem[0] + stav.stat.celkem[1];
+    $('#fStav').textContent = `Vyhovuje ${cislo(stav.stat.pocet)} z ${cislo(celkem)} záznamů · ${desetinne(performance.now() - t0, 0)} ms · časy v pásmu ${popisZony()}${Klient.vlakno ? '' : ' · (bez Web Workeru)'}`;
+    vykresliVse();
+  }
+  function vykresliVse() {
+    vykresliCipy(); vykresliZavCipy(); vykresliKpi(); kresliOsu(); kresliFrekvenci(); vykresliSpicky();
+    vykresliVzory(); vykresliRozdeleni(); naplnKorelaceVzory(); resetTabulky();
+    vykresliPravidlaPocty();
+    if (stav.zalozka === 'porovnani') obnovPorovnani();
+    $('#fZpet').disabled = !stav.historieRozsahu.length;
+    $('#fOd').value = doVstupu(stav.filtr.od); $('#fDo').value = doVstupu(stav.filtr.do);
+  }
+  function vykresliZavCipy() {
+    const el = $('#fZav');
+    const poc = stav.stat ? stav.stat.sevPocty : null;
+    if (!el.childElementCount) {
+      el.innerHTML = ZAV.map((z, i) => `<button type="button" data-sev="${i}" aria-pressed="true" title="Klepnutí přepne, dvojklik = jen tato"><span class="bod" style="background:var(--s${i})"></span>${z}<span class="poc"></span></button>`).join('');
+      el.addEventListener('click', e => {
+        const b = e.target.closest('button'); if (!b) return;
+        const i = Number(b.dataset.sev);
+        stav.filtr.sev[i] = !stav.filtr.sev[i];
+        planujDotaz(0);
+      });
+      el.addEventListener('dblclick', e => {
+        const b = e.target.closest('button'); if (!b) return;
+        const i = Number(b.dataset.sev);
+        stav.filtr.sev = stav.filtr.sev.map((_, j) => j === i);
+        planujDotaz(0);
+      });
+    }
+    el.querySelectorAll('button').forEach((b, i) => {
+      b.setAttribute('aria-pressed', stav.filtr.sev[i] ? 'true' : 'false');
+      b.querySelector('.poc').textContent = poc ? cislo(poc[i]) : '';
+    });
+  }
+  function vykresliCipy() {
+    const f = stav.filtr, c = [];
+    if (f.sablona !== null) c.push(['sablona', 'vzor: ' + f.sablonaText]);
+    if (f.host) c.push(['host', 'host: ' + f.host]);
+    if (f.app) c.push(['app', 'aplikace: ' + f.app]);
+    $('#fCipy').innerHTML = c.map(([k, t]) => `<span class="cip"><span title="${esc(t)}">${esc(t)}</span><button type="button" data-zrus="${k}" aria-label="Zrušit filtr ${esc(t)}">×</button></span>`).join('');
+  }
+  $('#fCipy').addEventListener('click', e => {
+    const b = e.target.closest('[data-zrus]'); if (!b) return;
+    const k = b.dataset.zrus;
+    if (k === 'sablona') { stav.filtr.sablona = null; stav.filtr.sablonaText = ''; } else stav.filtr[k] = '';
+    planujDotaz(0);
+  });
+  $('#fText').addEventListener('input', () => { stav.filtr.text = $('#fText').value; planujDotaz(); });
+  $('#fRegex').addEventListener('input', () => { stav.filtr.regex = $('#fRegex').value; planujDotaz(350); });
+  $('#fRegexI').addEventListener('change', () => { stav.filtr.regexI = $('#fRegexI').checked; planujDotaz(0); });
+  $('#fSady').addEventListener('change', () => { stav.filtr.sady = $('#fSady').value; planujDotaz(0); });
+  $('#fRazeni').addEventListener('change', () => { stav.filtr.razeni = $('#fRazeni').value; planujDotaz(0); });
+  function nastavRozsah(od, doo, bezHistorie) {
+    if (!bezHistorie) { stav.historieRozsahu.push([stav.filtr.od, stav.filtr.do]); if (stav.historieRozsahu.length > 30) stav.historieRozsahu.shift(); }
+    stav.filtr.od = od; stav.filtr.do = doo;
+    planujDotaz(0);
+  }
+  $('#fOd').addEventListener('change', () => nastavRozsah(zeVstupu($('#fOd').value), stav.filtr.do));
+  $('#fDo').addEventListener('change', () => nastavRozsah(stav.filtr.od, zeVstupu($('#fDo').value)));
+  $('#fCely').onclick = () => nastavRozsah(null, null);
+  $('#fZpet').onclick = () => { const r = stav.historieRozsahu.pop(); if (r) nastavRozsah(r[0], r[1], true); };
+  $$('[data-posl]').forEach(b => b.onclick = () => {
+    const konec = Math.max(...[0, 1].map(s => stav.souhrny[s] && isFinite(stav.souhrny[s].tMax) ? stav.souhrny[s].tMax : -Infinity));
+    if (!isFinite(konec)) return;
+    nastavRozsah(konec - Number(b.dataset.posl), null);
+  });
+  $('#fZona').value = stav.zonaZobr;
+  $('#fZona').addEventListener('change', () => { stav.zonaZobr = $('#fZona').value; ulozit('zonaZobr', stav.zonaZobr); [0, 1].forEach(vykresliSouhrn); planujDotaz(0); });
+  $('#fReset').onclick = () => {
+    Object.assign(stav.filtr, { text: '', regex: '', sev: stav.filtr.sev.map(() => true), sady: 'AB', od: null, do: null, sablona: null, sablonaText: '', host: '', app: '' });
+    $('#fText').value = ''; $('#fRegex').value = ''; $('#fSady').value = 'AB';
+    stav.historieRozsahu = [];
+    planujDotaz(0);
+  };
+  $('#fExport').addEventListener('change', async () => {
+    const fmt = $('#fExport').value; $('#fExport').value = '';
+    if (!fmt || !stav.stat) return;
+    try {
+      const odp = await Klient.posli('export', { format: fmt });
+      const typy = { txt: 'text/plain', csv: 'text/csv', jsonl: 'application/x-ndjson', vzory: 'text/csv' };
+      const pripony = { txt: 'log', csv: 'csv', jsonl: 'jsonl', vzory: 'csv' };
+      const blob = new Blob(odp.casti, { type: typy[fmt] + ';charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `log_${fmt === 'vzory' ? 'vzory' : 'vyber'}_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.${pripony[fmt]}`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      Dialog.info(`Exportováno ${fmt === 'vzory' ? 'vzorů' : cislo(stav.stat.pocet) + ' záznamů'} (${velikost(blob.size)}).`);
+    } catch (e) { Dialog.chyba('Export selhal: ' + e.message); }
+  });
+
+  /* ---------------- KPI ---------------- */
+  function vykresliKpi() {
+    const st = stav.stat;
+    const el = $('#kpi');
+    if (!st) { el.innerHTML = ''; return; }
+    const chyb = st.sevPocty[0] + st.sevPocty[1];
+    const rozsah = isFinite(st.tMin) ? st.tMax - st.tMin : NaN;
+    const minut = rozsah / 60000;
+    const sp = st.osa ? st.osa.spicky.length : 0, spCh = st.osa ? st.osa.spickyChyb.length : 0;
+    const dl = (trida, pop, hod, pod) => `<div class="dlazdice ${trida}"><div class="pop">${pop}</div><div class="hod">${hod}</div><div class="pod">${pod}</div></div>`;
+    el.innerHTML = [
+      dl('', 'Záznamů', cislo(st.pocet), `z ${cislo(st.celkem[0] + st.celkem[1])}${stav.souhrny[1] && stav.souhrny[0] ? ` · A ${cislo(st.naSadu[0])} / B ${cislo(st.naSadu[1])}` : ''}`),
+      dl('chyby', 'Chyby (krit. + chyba)', cislo(chyb), `${procenta(chyb, st.pocet)} záznamů${st.sevPocty[0] ? ` · z toho kritických ${cislo(st.sevPocty[0])}` : ''}`),
+      dl('varovani', 'Varování', cislo(st.sevPocty[2]), procenta(st.sevPocty[2], st.pocet) + ' záznamů'),
+      dl('', 'Průměrná frekvence', isFinite(minut) && minut > 0 ? desetinne(st.pocet / minut, st.pocet / minut < 10 ? 2 : 0) : '–', 'záznamů za minutu'),
+      dl('', 'Časový rozsah', trvani(rozsah), isFinite(st.tMin) ? esc(fmtCas(st.tMin, 'kratky')) + ' – ' + esc(fmtCas(st.tMax, 'kratky')) : 'bez časových značek'),
+      dl('', 'Vzorů zpráv', cislo(st.pocetSablon), st.sablony.length ? 'nejčastější: ' + procenta(st.sablony[0].pocet, st.pocet) : ''),
+      dl(sp ? 'chyby' : '', 'Prudké nárůsty', cislo(sp), spCh ? `z toho v chybách ${cislo(spCh)}` : 'v řadě chyb žádný'),
+    ].join('');
+  }
+
+  /* ---------------- grafy ---------------- */
+  function barva(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#888'; }
+  function pripravPlatno(c) {
+    const dpr = window.devicePixelRatio || 1;
+    const r = c.getBoundingClientRect();
+    const w = Math.max(50, Math.round(r.width)), h = Math.max(50, Math.round(r.height));
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    return { g, w, h };
+  }
+  const KROKY_OSY = [1000, 2000, 5000, 10000, 15000, 30000, 60000, 120000, 300000, 600000, 900000, 1800000, 3600000, 7200000, 10800000, 21600000, 43200000, 86400000, 172800000, 604800000, 2592000000];
+  function znackyOsy(od, doo, sirkaPx) {
+    const cil = Math.max(2, Math.floor(sirkaPx / 95));
+    const rozsah = Math.max(doo - od, 1);
+    let krok = KROKY_OSY.find(k => rozsah / k <= cil) || KROKY_OSY[KROKY_OSY.length - 1];
+    const zona = zonaZobrazeni();
+    const posun = J.posunZony(zona, od) * 60000;
+    const out = [];
+    for (let t = Math.ceil((od + posun) / krok) * krok - posun; t <= doo; t += krok) out.push(t);
+    const typ = krok >= 86400000 ? 'osa-den' : krok >= 60000 ? 'osa-min' : 'osa-s';
+    return { znacky: out, typ, krok };
+  }
+  function oblastOsy(w, h) { return { x0: 46, x1: w - 8, y0: 8, y1: h - 22 }; }
+  let osaGeom = null;
+  function kresliOsu() {
+    const c = $('#osa');
+    const { g, w, h } = pripravPlatno(c);
+    const osa = stav.stat && stav.stat.osa;
+    const leg = $('#osaLegenda');
+    if (!osa) {
+      g.fillStyle = barva('--text-muted'); g.font = '13px sans-serif'; g.textAlign = 'center';
+      g.fillText(stav.stat ? 'Žádné záznamy s časovou značkou' : 'Časová osa se zobrazí po načtení logu', w / 2, h / 2);
+      leg.innerHTML = ''; osaGeom = null; return;
+    }
+    const pravidla = stav.pravidla.filter(p => p.zap !== false);
+    const pruhPr = Math.min(pravidla.length, 6) * 5;
+    const o = oblastOsy(w, h);
+    const yDolni = o.y1 - (pruhPr ? pruhPr + 4 : 0);
+    const nk = osa.nk, sirkaKose = (o.x1 - o.x0) / nk;
+    const rezim = stav.rezimOsy;
+    const vrstvy = rezim === 'sada' ? [[osa.sadaA, '--sada-a'], [osa.sadaB, '--sada-b']] : [[osa.chyby, '--s1'], [osa.varov, '--s2'], [osa.ostatni, '--osa-ostatni']];
+    let max = 1;
+    for (let i = 0; i < nk; i++) max = Math.max(max, osa.celkem[i]);
+    const yMax = hezkeMaximum(max);
+    const y = v => yDolni - (v / yMax) * (yDolni - o.y0);
+    // mřížka a osa y
+    g.font = '11px sans-serif'; g.fillStyle = barva('--text-muted'); g.strokeStyle = barva('--mrizka'); g.lineWidth = 1;
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (let k = 0; k <= 4; k++) {
+      const v = yMax * k / 4, yy = Math.round(y(v)) + 0.5;
+      g.beginPath(); g.moveTo(o.x0, yy); g.lineTo(o.x1, yy); g.stroke();
+      g.fillText(kratkeCislo(v), o.x0 - 6, yy);
+    }
+    // špičky
+    g.fillStyle = barva('--spicka');
+    for (const s of osa.spicky) {
+      const a = o.x0 + (s.od - osa.start) / osa.krok * sirkaKose, b = o.x0 + (s.do - osa.start) / osa.krok * sirkaKose;
+      g.fillRect(a, o.y0, Math.max(2, b - a), yDolni - o.y0);
+    }
+    // sloupce
+    const mezera = sirkaKose > 4 ? 1 : 0;
+    for (let i = 0; i < nk; i++) {
+      let zaklad = 0;
+      const x = o.x0 + i * sirkaKose;
+      for (const [rada, b] of vrstvy) {
+        const v = rada[i]; if (!v) continue;
+        g.fillStyle = barva(b);
+        const yt = y(zaklad + v), yb = y(zaklad);
+        g.fillRect(x + mezera / 2, yt, Math.max(1, sirkaKose - mezera), Math.max(1, yb - yt));
+        zaklad += v;
+      }
+    }
+    // pruhy pravidel
+    if (pruhPr) {
+      pravidla.slice(0, 6).forEach((p, j) => {
+        const rada = osa.pravidla[stav.pravidla.filter(x => x.zap !== false).indexOf(p)] || [];
+        let m = 1; for (const v of rada) m = Math.max(m, v);
+        const yy = yDolni + 4 + j * 5;
+        g.fillStyle = barva('--pr' + (p.barva || 0));
+        for (let i = 0; i < nk; i++) if (rada[i]) { g.globalAlpha = 0.35 + 0.65 * rada[i] / m; g.fillRect(o.x0 + i * sirkaKose, yy, Math.max(1, sirkaKose), 4); }
+        g.globalAlpha = 1;
+      });
+    }
+    // osa x
+    const konec = osa.start + nk * osa.krok;
+    const zn = znackyOsy(osa.start, konec, o.x1 - o.x0);
+    g.fillStyle = barva('--text-muted'); g.textAlign = 'center'; g.textBaseline = 'top';
+    g.strokeStyle = barva('--border');
+    g.beginPath(); g.moveTo(o.x0, o.y1 + 0.5); g.lineTo(o.x1, o.y1 + 0.5); g.stroke();
+    let posledniDen = '';
+    for (const t of zn.znacky) {
+      const x = o.x0 + (t - osa.start) / (konec - osa.start) * (o.x1 - o.x0);
+      if (x < o.x0 + 10 || x > o.x1 - 10) continue;
+      g.beginPath(); g.moveTo(Math.round(x) + 0.5, o.y1); g.lineTo(Math.round(x) + 0.5, o.y1 + 4); g.stroke();
+      const den = fmtCas(t, 'osa-den');
+      let txt = fmtCas(t, zn.typ);
+      if (zn.typ !== 'osa-den' && den !== posledniDen) { txt = den + ' ' + txt; posledniDen = den; }
+      g.fillText(txt, x, o.y1 + 6);
+    }
+    osaGeom = { o, start: osa.start, krok: osa.krok, nk, sirkaKose, konec, yDolni };
+    // výběr myší
+    if (tazeni && tazeni.x1 !== undefined) {
+      g.fillStyle = barva('--vyber');
+      g.fillRect(Math.min(tazeni.x0, tazeni.x1), o.y0, Math.abs(tazeni.x1 - tazeni.x0), o.y1 - o.y0);
+    }
+    leg.innerHTML = (rezim === 'sada'
+      ? `<span><i style="background:var(--sada-a)"></i>log A</span><span><i style="background:var(--sada-b)"></i>log B</span>`
+      : `<span><i style="background:var(--s1)"></i>chyby a kritické</span><span><i style="background:var(--s2)"></i>varování</span><span><i style="background:var(--osa-ostatni)"></i>ostatní</span>`)
+      + `<span><i style="background:var(--spicka);border:1px solid var(--s1)"></i>prudký nárůst</span>`
+      + pravidla.slice(0, 6).map(p => `<span><i style="background:var(--pr${p.barva || 0})"></i>${esc(p.vzor)}</span>`).join('')
+      + `<span style="margin-left:auto">koš ${esc(trvani(osa.krok))} · ${esc(popisZony())}</span>`;
+  }
+  function hezkeMaximum(m) {
+    const e = Math.pow(10, Math.floor(Math.log10(m)));
+    for (const k of [1, 2, 2.5, 5, 10]) if (k * e >= m) return k * e;
+    return 10 * e;
+  }
+  function kratkeCislo(v) {
+    if (v >= 1e6) return desetinne(v / 1e6, v % 1e6 ? 1 : 0) + ' M';
+    if (v >= 1e4) return desetinne(v / 1e3, v % 1e3 ? 1 : 0) + ' k';
+    return desetinne(v, v % 1 ? 1 : 0);
+  }
+  function kresliFrekvenci() {
+    const c = $('#frekvence');
+    const { g, w, h } = pripravPlatno(c);
+    const osa = stav.stat && stav.stat.osa;
+    if (!osa) return;
+    const o = oblastOsy(w, h);
+    const naMin = 60000 / osa.krok;
+    const nk = osa.nk;
+    let max = 0.001;
+    for (let i = 0; i < nk; i++) { max = Math.max(max, osa.celkem[i] * naMin); if (isFinite(osa.prah[i])) max = Math.max(max, osa.prah[i] * naMin); }
+    const yMax = hezkeMaximum(max);
+    const x = i => o.x0 + (i + 0.5) * (o.x1 - o.x0) / nk;
+    const y = v => o.y1 - (v / yMax) * (o.y1 - o.y0);
+    g.font = '11px sans-serif'; g.fillStyle = barva('--text-muted'); g.strokeStyle = barva('--mrizka'); g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (let k = 0; k <= 3; k++) { const v = yMax * k / 3, yy = Math.round(y(v)) + 0.5; g.beginPath(); g.moveTo(o.x0, yy); g.lineTo(o.x1, yy); g.stroke(); g.fillText(kratkeCislo(v), o.x0 - 6, yy); }
+    g.fillStyle = barva('--spicka');
+    const sk = (o.x1 - o.x0) / nk;
+    for (const s of osa.spicky) { const a = o.x0 + (s.od - osa.start) / osa.krok * sk, b = o.x0 + (s.do - osa.start) / osa.krok * sk; g.fillRect(a, o.y0, Math.max(2, b - a), o.y1 - o.y0); }
+    const cara = (rada, b, sirka, prerus) => {
+      g.strokeStyle = barva(b); g.lineWidth = sirka; g.setLineDash(prerus || []);
+      g.beginPath(); let zac = false;
+      for (let i = 0; i < nk; i++) { const v = rada[i]; if (!isFinite(v)) { zac = false; continue; } const xx = x(i), yy = y(v * naMin); if (!zac) { g.moveTo(xx, yy); zac = true; } else g.lineTo(xx, yy); }
+      g.stroke(); g.setLineDash([]);
+    };
+    cara(osa.zaklad, '--text-muted', 1.2, [4, 3]);
+    cara(osa.prah, '--s2', 1.2, [2, 3]);
+    cara(osa.celkem, '--s4', 1.6);
+    cara(osa.chyby, '--s1', 1.4);
+    g.fillStyle = barva('--s1');
+    for (const s of osa.spicky) { const i = Math.round((s.vrchol - osa.start) / osa.krok); g.beginPath(); g.arc(x(i), y(osa.celkem[i] * naMin), 3.5, 0, Math.PI * 2); g.fill(); }
+    const zn = znackyOsy(osa.start, osa.start + nk * osa.krok, o.x1 - o.x0);
+    g.fillStyle = barva('--text-muted'); g.textAlign = 'center'; g.textBaseline = 'top';
+    for (const t of zn.znacky) { const xx = o.x0 + (t - osa.start) / (nk * osa.krok) * (o.x1 - o.x0); if (xx < o.x0 + 10 || xx > o.x1 - 10) continue; g.fillText(fmtCas(t, zn.typ), xx, o.y1 + 6); }
+  }
+
+  /* interakce s časovou osou */
+  let tazeni = null;
+  const osaC = $('#osa'), bublina = $('#osaBublina');
+  function xNaKos(x) { if (!osaGeom) return -1; const i = Math.floor((x - osaGeom.o.x0) / osaGeom.sirkaKose); return i >= 0 && i < osaGeom.nk ? i : -1; }
+  function xNaCas(x) { const g = osaGeom; return g.start + Math.max(0, Math.min(1, (x - g.o.x0) / (g.o.x1 - g.o.x0))) * (g.konec - g.start); }
+  osaC.addEventListener('pointerdown', e => {
+    if (!osaGeom) return;
+    const r = osaC.getBoundingClientRect();
+    tazeni = { x0: e.clientX - r.left, id: e.pointerId, typ: e.pointerType };
+    if (e.pointerType === 'mouse') osaC.setPointerCapture(e.pointerId);
+  });
+  osaC.addEventListener('pointermove', e => {
+    if (!osaGeom) return;
+    const r = osaC.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    if (tazeni && tazeni.id === e.pointerId && (e.pointerType === 'mouse' || Math.abs(x - tazeni.x0) > 8)) { tazeni.x1 = x; kresliOsu(); }
+    const i = xNaKos(x);
+    if (i < 0) { bublina.hidden = true; return; }
+    const osa = stav.stat.osa;
+    const t = osa.start + i * osa.krok;
+    const pr = stav.pravidla.filter(p => p.zap !== false).map((p, j) => osa.pravidla[j] && osa.pravidla[j][i] ? `<br><span style="background:var(--pr${p.barva || 0});color:var(--pr-text);padding:0 3px;border-radius:3px">${esc(p.vzor)}</span> ${cislo(osa.pravidla[j][i])}` : '').join('');
+    const sp = osa.spicky.find(s => t >= s.od && t < s.do);
+    bublina.innerHTML = `<b>${esc(fmtCas(t, 'kratky'))}</b> – ${esc(fmtCas(t + osa.krok, 'osa-s'))}<br>celkem <b>${cislo(osa.celkem[i])}</b> · chyb ${cislo(osa.chyby[i])} · varování ${cislo(osa.varov[i])}`
+      + (stav.souhrny[1] && stav.souhrny[0] ? `<br>A ${cislo(osa.sadaA[i])} · B ${cislo(osa.sadaB[i])}` : '')
+      + (isFinite(osa.zaklad[i]) ? `<br>základ (medián) ${desetinne(osa.zaklad[i], 1)}` : '') + (sp ? `<br><span style="color:var(--s1)">▲ prudký nárůst (z = ${desetinne(sp.z, 1)})</span>` : '') + pr;
+    bublina.hidden = false;
+    const bw = bublina.offsetWidth;
+    bublina.style.left = Math.max(0, Math.min(r.width - bw, x + 12)) + 'px';
+    bublina.style.top = '6px';
+  });
+  osaC.addEventListener('pointerleave', () => { bublina.hidden = true; });
+  osaC.addEventListener('pointerup', e => {
+    if (!tazeni || !osaGeom) { tazeni = null; return; }
+    const r = osaC.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const t = tazeni; tazeni = null;
+    if (t.x1 !== undefined && Math.abs(x - t.x0) > 6) {
+      let a = xNaCas(Math.min(t.x0, x)), b = xNaCas(Math.max(t.x0, x));
+      nastavRozsah(Math.floor(a), Math.ceil(b));
+    } else {
+      kresliOsu();
+      const i = xNaKos(x);
+      if (i >= 0) skocNaCas(osaGeom.start + i * osaGeom.krok);
+    }
+  });
+  osaC.addEventListener('pointercancel', () => { tazeni = null; kresliOsu(); });
+  osaC.addEventListener('dblclick', () => nastavRozsah(null, null));
+  $('#oKrok').value = String(stav.krok);
+  $('#oKrok').onchange = () => { stav.krok = Number($('#oKrok').value); ulozit('krok', stav.krok); planujDotaz(0); };
+  $('#oRezim').value = stav.rezimOsy;
+  $('#oRezim').onchange = () => { stav.rezimOsy = $('#oRezim').value; ulozit('rezimOsy', stav.rezimOsy); kresliOsu(); };
+  for (const [id, k] of [['#spOkno', 'okno'], ['#spK', 'k'], ['#spMin', 'minRozdil']]) {
+    $(id).value = stav.spicky[k];
+    $(id).addEventListener('change', () => { const v = Number($(id).value); if (v > 0) { stav.spicky[k] = v; ulozit('spicky', stav.spicky); planujDotaz(0); } });
+  }
+  async function skocNaCas(t) {
+    prepniZalozku('zaznamy');
+    if (stav.filtr.razeni === 'soubor' && (stav.souhrny[0] && stav.souhrny[1])) { stav.filtr.razeni = 'cas'; $('#fRazeni').value = 'cas'; await spustDotaz(); }
+    const odp = await Klient.posli('pozice', { t });
+    if (odp && odp.pozice >= 0) vyberPozici(odp.pozice, true);
+  }
+
+  function vykresliSpicky() {
+    const el = $('#spicky');
+    const osa = stav.stat && stav.stat.osa;
+    if (!osa) { el.innerHTML = ''; return; }
+    const vse = osa.spicky.map(s => Object.assign({ druh: 'vse' }, s)).concat(osa.spickyChyb.map(s => Object.assign({ druh: 'chyby' }, s)));
+    vse.sort((a, b) => a.od - b.od);
+    if (!vse.length) { el.innerHTML = `<p class="napoveda">Žádný prudký nárůst (práh z ≥ ${desetinne(Number(stav.spicky.k), 1)}, okno ${stav.spicky.okno} košů po ${trvani(osa.krok)}).</p>`; return; }
+    el.innerHTML = vse.slice(0, 30).map((s, i) => `<div class="spicka ${s.druh === 'chyby' ? 'chybova' : ''}">
+      <div class="info">${s.druh === 'chyby' ? '🔴 nárůst chyb' : '▲ nárůst záznamů'} <b>${esc(fmtCas(s.od, 'kratky'))} – ${esc(fmtCas(s.do, 'osa-s'))}</b>
+        · vrchol ${cislo(s.x)} za ${trvani(osa.krok)} (obvykle ${desetinne(s.zaklad, 1)}, ${s.zaklad > 0 ? desetinne(s.x / s.zaklad, 1) + '×' : 'z nuly'}) · z = ${desetinne(s.z, 1)}</div>
+      <div class="tlacitka"><button type="button" class="male" data-spicka="${i}" data-akce="zoom">Přiblížit</button><button type="button" class="male" data-spicka="${i}" data-akce="vzory">Vzory v nárůstu</button></div></div>`).join('')
+      + (vse.length > 30 ? `<p class="napoveda">… a dalších ${vse.length - 30}.</p>` : '');
+    el.onclick = e => {
+      const b = e.target.closest('[data-spicka]'); if (!b) return;
+      const s = vse[Number(b.dataset.spicka)];
+      const pres = Math.max(osa.krok * 10, (s.do - s.od) * 2);
+      if (b.dataset.akce === 'zoom') nastavRozsah(s.od - pres, s.do + pres);
+      else { nastavRozsah(s.od, s.do - 1); prepniZalozku('vzory'); }
+    };
+  }
+
+  /* ---------------- zvýraznění textu ---------------- */
+  let zvyrazneniCache = null;
+  function pripravZvyrazneni() {
+    const vzory = [];
+    stav.pravidla.forEach(p => {
+      if (p.zap === false || !p.vzor) return;
+      try { vzory.push({ re: p.regex ? new RegExp(p.vzor, 'gi') : new RegExp(J.escRegex(p.vzor), 'gi'), cls: 'p' + (p.barva || 0), barva: p.barva || 0 }); } catch (e) { /* neplatné */ }
+    });
+    const d = J.rozlozDotaz(stav.filtr.text);
+    for (const r of d.kladne) vzory.push({ re: new RegExp(r.source, 'gi'), cls: 'h' });
+    if (stav.filtr.regex) { try { vzory.push({ re: new RegExp(stav.filtr.regex, 'g' + (stav.filtr.regexI ? 'i' : '')), cls: 'h' }); } catch (e) { /* nic */ } }
+    zvyrazneniCache = vzory;
+  }
+  function zvyrazni(text, vraceniBarvy) {
+    if (!zvyrazneniCache) pripravZvyrazneni();
+    const useky = [];
+    let prvniBarva = null;
+    for (const v of zvyrazneniCache) {
+      v.re.lastIndex = 0;
+      let m, n = 0;
+      while ((m = v.re.exec(text)) && n < 200) {
+        if (!m[0].length) { v.re.lastIndex++; continue; }
+        useky.push([m.index, m.index + m[0].length, v.cls]); n++;
+        if (prvniBarva === null && v.barva !== undefined) prvniBarva = v.barva;
+      }
+    }
+    if (vraceniBarvy) vraceniBarvy.barva = prvniBarva;
+    if (!useky.length) return esc(text);
+    useky.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+    let out = '', poz = 0;
+    for (const [a, b, cls] of useky) {
+      if (a < poz) continue;
+      out += esc(text.slice(poz, a)) + `<mark class="${cls}">` + esc(text.slice(a, b)) + '</mark>';
+      poz = b;
+    }
+    return out + esc(text.slice(poz));
+  }
+
+  /* ---------------- virtuální tabulka ---------------- */
+  const RV = 24, BLOK = 200;
+  const tab = $('#tabulka'), tabRadky = $('#tabRadky'), tabVyska = $('#tabVyska');
+  let cacheRadku = new Map(), nacitaneBloky = new Set(), generace = 0, meritko = 1;
+  function resetTabulky() {
+    generace++;
+    cacheRadku = new Map(); nacitaneBloky = new Set();
+    zvyrazneniCache = null;
+    const n = stav.stat ? stav.stat.pocet : 0;
+    const vyska = n * RV;
+    meritko = vyska > 8000000 ? vyska / 8000000 : 1;
+    tabVyska.style.height = Math.min(vyska, 8000000) + 'px';
+    $('#tabPrazdno').hidden = n > 0;
+    if (stav.stat && !n) $('#tabPrazdno').innerHTML = 'Filtru nevyhovuje žádný záznam. <button type="button" class="male" id="tabReset">Zrušit filtry</button>';
+    const tr = $('#tabReset'); if (tr) tr.onclick = () => $('#fReset').click();
+    const obaLogy = !!(stav.souhrny[0] && stav.souhrny[1]);
+    tab.style.setProperty('--sloupce', (obaLogy ? '16px ' : '') + (window.innerWidth < 600 ? '96px 46px minmax(0,1fr)' : '58px 150px 50px minmax(60px,150px) minmax(0,1fr)'));
+    tab.dataset.oba = obaLogy ? '1' : '';
+    $('#tabInfo').textContent = stav.stat ? `${cislo(n)} záznamů · časy v pásmu ${popisZony()}` : 'Zatím nic načteno.';
+    $('#zPocZ').textContent = stav.stat ? cislo(n) : '';
+    tab.scrollTop = 0;
+    stav.vybranaPozice = -1;
+    vykresliRadky();
+  }
+  function rozsahViditelnych() {
+    const n = stav.stat ? stav.stat.pocet : 0;
+    const vyskaOkna = tab.clientHeight;
+    const prvni = Math.floor(tab.scrollTop * meritko / RV);
+    return [Math.max(0, prvni - 5), Math.min(n, prvni + Math.ceil(vyskaOkna / RV) + 5)];
+  }
+  function vykresliRadky() {
+    const n = stav.stat ? stav.stat.pocet : 0;
+    if (!n) { tabRadky.innerHTML = ''; return; }
+    const [od, doo] = rozsahViditelnych();
+    for (let b = Math.floor(od / BLOK); b <= Math.floor((doo - 1) / BLOK); b++) nactiBlok(b);
+    const oba = tab.dataset.oba === '1', uzky = window.innerWidth < 600;
+    const html = [];
+    for (let i = od; i < doo; i++) {
+      const r = cacheRadku.get(i);
+      const top = meritko > 1 ? Math.round(tab.scrollTop + (i - tab.scrollTop * meritko / RV) * RV) : i * RV;
+      if (!r) { html.push(`<div class="radek" style="top:${top}px"><span class="c">…</span></div>`); continue; }
+      const vb = {};
+      const txt = zvyrazni(r.text, vb);
+      const okraj = vb.barva !== null && vb.barva !== undefined ? `border-left-color:var(--pr${vb.barva})` : '';
+      html.push(`<div class="radek${i === stav.vybranaPozice ? ' vybrany' : ''}" data-poz="${i}" style="top:${top}px;${okraj}">`
+        + (oba ? `<span><span class="sada-znak ${r.s ? 'b' : 'a'}">${r.s ? 'B' : 'A'}</span></span>` : '')
+        + (uzky ? '' : `<span class="c">${r.cislo}</span>`)
+        + `<span class="t">${esc(uzky ? fmtCas(r.t, 'tabulka').replace(/^\d+\. \d+\. /, '') : fmtCas(r.t, 'tabulka'))}</span>`
+        + `<span><span class="zav s${r.sev}">${ZAVK[r.sev]}</span></span>`
+        + (uzky ? '' : `<span class="z" title="${esc(r.host + (r.app ? ' · ' + r.app : ''))}">${esc(r.app || r.host)}</span>`)
+        + `<span>${txt}${r.radku > 1 ? `<span class="viceradku">↵ +${r.radku - 1}</span>` : ''}</span></div>`);
+    }
+    tabRadky.innerHTML = html.join('');
+  }
+  async function nactiBlok(b) {
+    if (nacitaneBloky.has(b)) return;
+    nacitaneBloky.add(b);
+    const gen = generace;
+    const odp = await Klient.posli('radky', { od: b * BLOK, pocet: BLOK });
+    if (gen !== generace || !odp) return;
+    odp.radky.forEach((r, j) => cacheRadku.set(b * BLOK + j, r));
+    vykresliRadky();
+  }
+  let rafTab = 0;
+  tab.addEventListener('scroll', () => { if (!rafTab) rafTab = requestAnimationFrame(() => { rafTab = 0; vykresliRadky(); }); });
+  tab.addEventListener('click', e => { const r = e.target.closest('.radek[data-poz]'); if (r) vyberPozici(Number(r.dataset.poz)); });
+  tab.addEventListener('keydown', e => {
+    const n = stav.stat ? stav.stat.pocet : 0;
+    if (!n) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const p = Math.max(0, Math.min(n - 1, (stav.vybranaPozice < 0 ? -1 : stav.vybranaPozice) + (e.key === 'ArrowDown' ? 1 : -1)));
+      vyberPozici(p, true);
+    }
+  });
+  window.addEventListener('resize', () => { kresliOsu(); kresliFrekvenci(); if (stav.zalozka === 'porovnani' && posledniPorovnani) kresliPorovnani(posledniPorovnani); resetTabulkyZachovat(); });
+  function resetTabulkyZachovat() { const st = tab.scrollTop; const v = stav.vybranaPozice; resetTabulky(); tab.scrollTop = st; stav.vybranaPozice = v; vykresliRadky(); }
+  function vyberPozici(p, posunout) {
+    stav.vybranaPozice = p;
+    if (posunout) {
+      const top = p * RV / meritko;
+      if (top < tab.scrollTop || top > tab.scrollTop + tab.clientHeight - RV) tab.scrollTop = Math.max(0, top - tab.clientHeight / 2);
+    }
+    vykresliRadky();
+    const r = cacheRadku.get(p);
+    if (r) zobrazDetail(r.k);
+    else Klient.posli('radky', { od: p, pocet: 1 }).then(o => { if (o && o.radky[0]) zobrazDetail(o.radky[0].k); });
+  }
+
+  /* ---------------- detail záznamu ---------------- */
+  async function zobrazDetail(k) {
+    const odp = await Klient.posli('detail', { klic: k });
+    if (!odp) return;
+    const d = odp.detail;
+    stav.vybrany = d;
+    const el = $('#detail');
+    el.hidden = false;
+    const pole = d.pole ? Object.entries(d.pole).filter(([, v]) => v !== '' && v !== null && v !== undefined) : [];
+    el.innerHTML = `<div class="hlavicka">
+        ${stav.souhrny[1] && stav.souhrny[0] ? `<span class="sada-znak ${d.s ? 'b' : 'a'}">${d.s ? 'B' : 'A'}</span>` : ''}
+        <span class="zav s${d.sev}">${ZAVK[d.sev]}</span>
+        <b>${esc(fmtCas(d.t, 'plny'))}</b> <span class="napoveda" style="margin:0">${esc(popisZony())}${isFinite(d.t) ? ' · UTC ' + esc(J.isoCas(d.t)) : ''}</span>
+        <span class="napoveda" style="margin:0">${esc(d.sada)}, řádek ${d.cislo}${d.sevOdhad ? ' · úroveň odhadnuta z textu' : ''}</span>
+        ${d.host ? `<span>host: <b>${esc(d.host)}</b></span>` : ''} ${d.app ? `<span>aplikace: <b>${esc(d.app)}</b></span>` : ''}
+      </div>
+      <pre>${zvyrazni(d.text)}</pre>
+      <div class="sablona">vzor #${d.sab}: ${esc(d.sablona)}</div>
+      ${pole.length ? `<dl class="pole">${pole.slice(0, 60).map(([kk, v]) => `<dt>${esc(kk)}</dt><dd>${esc(typeof v === 'object' ? JSON.stringify(v) : v)}</dd>`).join('')}</dl>` : ''}
+      <div class="tlacitka" style="margin-top:10px">
+        <button type="button" class="male" data-a="vzor">Filtrovat tento vzor</button>
+        <button type="button" class="male" data-a="korelace">Korelace vzoru</button>
+        ${d.host ? `<button type="button" class="male" data-a="host">Jen host ${esc(d.host.slice(0, 30))}</button>` : ''}
+        ${d.app ? `<button type="button" class="male" data-a="app">Jen aplikace ${esc(d.app.slice(0, 30))}</button>` : ''}
+        <span class="napoveda" style="margin:0 0 0 6px">Okolí v obou logech:</span>
+        <select data-a="okno" aria-label="Okno okolí"><option value="1000">±1 s</option><option value="5000" selected>±5 s</option><option value="30000">±30 s</option><option value="60000">±1 min</option><option value="300000">±5 min</option></select>
+        <button type="button" class="male" data-a="okoli" ${isFinite(d.t) ? '' : 'disabled'}>Zobrazit okolí</button>
+        <button type="button" class="male" data-a="kopirovat">Kopírovat</button>
+      </div>
+      <div id="okoli"></div>`;
+    el.onclick = async e => {
+      const b = e.target.closest('button[data-a]'); if (!b) return;
+      const a = b.dataset.a;
+      if (a === 'vzor') { stav.filtr.sablona = d.sab; stav.filtr.sablonaText = d.sablona; planujDotaz(0); }
+      if (a === 'korelace') { prepniZalozku('korelace'); naplnKorelaceVzory(d.sab, d.sablona); spustKorelaci(); }
+      if (a === 'host') { stav.filtr.host = d.host; planujDotaz(0); }
+      if (a === 'app') { stav.filtr.app = d.app; planujDotaz(0); }
+      if (a === 'kopirovat') { try { await navigator.clipboard.writeText(d.text); Dialog.info('Zkopírováno.'); } catch (er) { Dialog.chyba('Schránka není dostupná.'); } }
+      if (a === 'okoli') {
+        const okno = Number(el.querySelector('select[data-a="okno"]').value);
+        const o = await Klient.posli('okoli', { klic: d.k, okno, max: 300 });
+        vykresliOkoli(o.okoli, d.k, okno);
+      }
+    };
+  }
+  function vykresliOkoli(ok, k, okno) {
+    const el = $('#okoli');
+    if (!ok.zaznamy.length) { el.innerHTML = '<p class="napoveda">Záznam nemá čas.</p>'; return; }
+    const oba = stav.souhrny[0] && stav.souhrny[1];
+    el.innerHTML = `<p class="napoveda" style="margin-top:10px">${cislo(ok.celkem)} záznamů v okně ±${trvani(okno)}${ok.orezano ? ' (zobrazeno 300 nejbližších)' : ''}${oba ? ' z obou logů' : ''}, seřazeno podle UTC. Δt = rozdíl proti vybranému záznamu.</p>
+      <div class="okoli">${ok.zaznamy.map(r => `<div class="ok-r${r.k === k ? ' stred' : ''}" data-k="${r.k}">
+        <span class="dt">${r.dt === 0 ? '0' : (r.dt > 0 ? '+' : '−') + trvani(Math.abs(r.dt))}</span>
+        <span><span class="sada-znak ${r.s ? 'b' : 'a'}">${r.s ? 'B' : 'A'}</span></span>
+        <span><span class="zav s${r.sev}">${ZAVK[r.sev]}</span></span>
+        <span title="${esc(r.text)}">${zvyrazni(r.text)}</span></div>`).join('')}</div>`;
+    el.querySelector('.okoli').onclick = e => { const r = e.target.closest('[data-k]'); if (r) zobrazDetail(Number(r.dataset.k)); };
+    const stred = el.querySelector('.stred'); if (stred) stred.scrollIntoView({ block: 'nearest' });
+  }
+
+  /* ---------------- vzory ---------------- */
+  function vykresliVzory() {
+    const el = $('#tabVzory');
+    const st = stav.stat;
+    $('#zPocV').textContent = st ? cislo(st.pocetSablon) : '';
+    if (!st || !st.sablony.length) { el.innerHTML = '<tr><td class="prazdno">Žádné vzory.</td></tr>'; return; }
+    const oba = stav.souhrny[0] && stav.souhrny[1];
+    const max = st.sablony[0].pocet;
+    el.innerHTML = `<thead><tr><th class="cislo">Počet</th><th class="cislo">Podíl</th><th class="cislo">Chyb</th>${oba ? '<th class="cislo">A</th><th class="cislo">B</th>' : ''}<th>Vzor zprávy</th><th>První – poslední výskyt</th><th></th></tr></thead><tbody>`
+      + st.sablony.map(s => `<tr class="klik" data-id="${s.id}" title="${esc(s.vzorek)}">
+        <td class="cislo"><span class="podil${s.chyb > s.pocet / 2 ? ' chyb' : ''}" style="width:${Math.max(2, 60 * s.pocet / max)}px"></span>${cislo(s.pocet)}</td>
+        <td class="cislo">${procenta(s.pocet, st.pocet)}</td>
+        <td class="cislo" style="${s.chyb ? 'color:var(--s1)' : ''}">${s.chyb ? cislo(s.chyb) : '–'}</td>
+        ${oba ? `<td class="cislo">${cislo(s.a)}</td><td class="cislo">${cislo(s.b)}</td>` : ''}
+        <td class="sab">${esc(s.sablona)}</td>
+        <td style="white-space:nowrap;font-size:0.74rem">${esc(fmtCas(s.prvni, 'kratky'))}<br>${esc(fmtCas(s.posledni, 'kratky'))}</td>
+        <td><button type="button" class="male" data-kor="${s.id}">Korelace</button></td></tr>`).join('')
+      + '</tbody>' + (st.pocetSablon > st.sablony.length ? `<tfoot><tr><td colspan="8" class="napoveda">Zobrazeno ${st.sablony.length} nejčastějších z ${cislo(st.pocetSablon)} vzorů; všechny exportujete volbou „Vzory zpráv (CSV)“.</td></tr></tfoot>` : '');
+    el.onclick = e => {
+      const k = e.target.closest('[data-kor]');
+      if (k) { const s = st.sablony.find(x => x.id === Number(k.dataset.kor)); prepniZalozku('korelace'); naplnKorelaceVzory(s.id, s.sablona); spustKorelaci(); return; }
+      const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+      const s = st.sablony.find(x => x.id === Number(tr.dataset.id));
+      stav.filtr.sablona = s.id; stav.filtr.sablonaText = s.sablona;
+      prepniZalozku('zaznamy'); planujDotaz(0);
+    };
+  }
+
+  /* ---------------- rozdělení ---------------- */
+  function vykresliRozdeleni() {
+    const st = stav.stat;
+    if (!st) { $('#rozdZav').innerHTML = ''; $('#rozdHost').innerHTML = ''; $('#rozdApp').innerHTML = ''; return; }
+    const max = Math.max(1, ...st.sevPocty);
+    $('#rozdZav').innerHTML = ZAV.map((z, i) => `<div class="rozd-r" data-sev="${i}" title="Zobrazit jen: ${z}"><span><span class="zav s${i}">${ZAVK[i]}</span> ${z}</span>
+      <span class="pruh"><i style="width:${100 * st.sevPocty[i] / max}%;background:var(--s${i})"></i></span><span class="cislo">${cislo(st.sevPocty[i])} · ${procenta(st.sevPocty[i], st.pocet)}</span></div>`).join('');
+    $('#rozdZav').onclick = e => { const r = e.target.closest('[data-sev]'); if (!r) return; const i = Number(r.dataset.sev); stav.filtr.sev = stav.filtr.sev.map((_, j) => j === i); planujDotaz(0); };
+    const odhad = (stav.souhrny[0] ? stav.souhrny[0].sevOdhad : 0) + (stav.souhrny[1] ? stav.souhrny[1].sevOdhad : 0);
+    $('#rozdPozn').textContent = odhad ? `U ${cislo(odhad)} záznamů nebyla úroveň v logu uvedena a byla odhadnuta z textu zprávy.` : '';
+    const seznam = (pole, klic) => pole.length ? pole.map(x => `<button type="button" data-${klic}="${esc(x.nazev)}"><span>${esc(x.nazev)}</span><span>${cislo(x.pocet)}</span></button>`).join('') : '<p class="napoveda">Formát tuto informaci neobsahuje.</p>';
+    $('#rozdHost').innerHTML = seznam(st.hosty, 'host');
+    $('#rozdApp').innerHTML = seznam(st.aplikace, 'app');
+    $('#rozdHost').onclick = e => { const b = e.target.closest('[data-host]'); if (b) { stav.filtr.host = b.dataset.host; planujDotaz(0); } };
+    $('#rozdApp').onclick = e => { const b = e.target.closest('[data-app]'); if (b) { stav.filtr.app = b.dataset.app; planujDotaz(0); } };
+  }
+
+  /* ---------------- porovnání ---------------- */
+  let posledniPorovnani = null;
+  async function obnovPorovnani() {
+    const el = $('#porovnani');
+    if (!stav.souhrny[0] || !stav.souhrny[1]) { el.innerHTML = '<p class="prazdno">Pro porovnání načtěte i log B (nebo zvolte ukázkovou dvojici nahoře).</p>'; posledniPorovnani = null; return; }
+    el.querySelector('.porovnani-souhrn') || (el.innerHTML = '<p class="napoveda">Porovnávám…</p>');
+    const f = sestavFiltr();
+    let odp;
+    try { odp = await Klient.posli('porovnani', { filtr: f }); } catch (e) { el.innerHTML = `<p class="stav-dotazu chyba">${esc(e.message)}</p>`; return; }
+    if (!odp || !odp.porovnani) return;
+    const p = odp.porovnani;
+    posledniPorovnani = p;
+    const sevSouhrn = s => { const ch = p.sev[s][0] + p.sev[s][1]; return `${cislo(p.N[s])} záznamů · chyb ${cislo(ch)} (${procenta(ch, p.N[s])}) · varování ${procenta(p.sev[s][2], p.N[s])}`; };
+    const r = p.rady;
+    el.innerHTML = `<div class="porovnani-souhrn">
+        <div class="dlazdice"><div class="pop"><span class="sada-znak a">A</span> ${esc(p.nazvy[0])}</div><div class="pod">${sevSouhrn(0)}</div>${r ? `<div class="pod">${esc(fmtCas(r.rozsahA[0], 'kratky'))} – ${esc(fmtCas(r.rozsahA[1], 'kratky'))}</div>` : ''}</div>
+        <div class="dlazdice"><div class="pop"><span class="sada-znak b">B</span> ${esc(p.nazvy[1])}</div><div class="pod">${sevSouhrn(1)}</div>${r ? `<div class="pod">${esc(fmtCas(r.rozsahB[0], 'kratky'))} – ${esc(fmtCas(r.rozsahB[1], 'kratky'))}</div>` : ''}</div>
+        <div class="dlazdice"><div class="pop">Vzory</div><div class="hod">${cislo(p.pocetSablon)}</div><div class="pod">nových v B ${cislo(p.novych)} · zmizelých ${cislo(p.zmizelych)}</div></div>
+        <div class="dlazdice"><div class="pop">Korelace četností A × B</div><div class="hod">${r && isFinite(r.nejR) ? 'r = ' + desetinne(r.nejR, 2) : '–'}</div>
+          <div class="pod">${r ? (r.zarovnat ? 'logy se časově nepřekrývají → zarovnány na začátek; ' : 'souběžné logy; ') + (isFinite(r.nejR) ? `nejlépe při posunu B o ${r.posunMs >= 0 ? '+' : '−'}${trvani(Math.abs(r.posunMs))}; bez posunu r = ${desetinne(r.r0, 2)}` : '') : 'bez časů'}</div></div>
+      </div>
+      <h3>Četnost v čase${r && r.zarovnat ? ' (od začátku každého logu)' : ''}</h3>
+      <div class="graf-obal"><canvas id="porovnaniGraf" role="img" aria-label="Četnost záznamů logů A a B v čase"></canvas></div>
+      <div class="legenda"><span><i class="cara" style="background:var(--sada-a)"></i>A</span><span><i class="cara" style="background:var(--sada-b)"></i>B</span>${r ? `<span>koš ${trvani(r.krok)}</span>` : ''}</div>
+      <h3>Rozdíly ve vzorech</h3>
+      <div class="tlacitka" style="margin-bottom:6px"><select id="porFiltr" aria-label="Které vzory">
+        <option value="vse">všechny (podle významnosti změny)</option><option value="nový">jen nové v B</option><option value="zmizel">jen zmizelé z A</option><option value="nárůst">jen nárůst</option><option value="pokles">jen pokles</option></select></div>
+      <div class="tab-obal"><table class="data" id="porTab"></table></div>`;
+    kresliPorovnani(p);
+    const vykresliTab = () => {
+      const fv = $('#porFiltr').value;
+      const sab = p.sablony.filter(s => fv === 'vse' || s.stav === fv).slice(0, 150);
+      const tridy = { 'nový': 'novy', 'nárůst': 'narust', 'zmizel': 'zmizel', 'pokles': 'pokles', 'beze změny': 'beze' };
+      $('#porTab').innerHTML = `<thead><tr><th>Stav</th><th>Vzor</th><th class="cislo">A</th><th class="cislo">B</th><th class="cislo">podíl A</th><th class="cislo">podíl B</th><th class="cislo">změna</th><th class="cislo">z</th></tr></thead><tbody>`
+        + (sab.length ? sab.map(s => `<tr class="klik" data-id="${s.id}"><td><span class="stitek ${tridy[s.stav]}">${s.stav}</span></td><td class="sab">${esc(s.sablona)}</td>
+          <td class="cislo">${cislo(s.a)}</td><td class="cislo">${cislo(s.b)}</td><td class="cislo">${procenta(s.a, p.N[0])}</td><td class="cislo">${procenta(s.b, p.N[1])}</td>
+          <td class="cislo">${s.a && s.b ? desetinne(Math.pow(2, s.log2), Math.pow(2, s.log2) < 10 ? 1 : 0) + '×' : (s.a ? '−' : '+') + '∞'}</td><td class="cislo">${desetinne(s.z, 1)}</td></tr>`).join('')
+          : '<tr><td colspan="8" class="napoveda">Žádné vzory v této kategorii.</td></tr>') + '</tbody>';
+    };
+    $('#porFiltr').onchange = vykresliTab;
+    vykresliTab();
+    $('#porTab').onclick = e => {
+      const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+      const s = p.sablony.find(x => x.id === Number(tr.dataset.id));
+      stav.filtr.sablona = s.id; stav.filtr.sablonaText = s.sablona; prepniZalozku('zaznamy'); planujDotaz(0);
+    };
+  }
+  function kresliPorovnani(p) {
+    const c = $('#porovnaniGraf'); if (!c || !p.rady) return;
+    const { g, w, h } = pripravPlatno(c);
+    const r = p.rady, o = oblastOsy(w, h);
+    const max = hezkeMaximum(Math.max(1, ...r.a, ...r.b));
+    const x = i => o.x0 + (i + 0.5) * (o.x1 - o.x0) / r.nk;
+    const y = v => o.y1 - v / max * (o.y1 - o.y0);
+    g.font = '11px sans-serif'; g.fillStyle = barva('--text-muted'); g.strokeStyle = barva('--mrizka'); g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (let k = 0; k <= 3; k++) { const v = max * k / 3, yy = Math.round(y(v)) + 0.5; g.beginPath(); g.moveTo(o.x0, yy); g.lineTo(o.x1, yy); g.stroke(); g.fillText(kratkeCislo(v), o.x0 - 6, yy); }
+    for (const [rada, b] of [[r.a, '--sada-a'], [r.b, '--sada-b']]) {
+      g.strokeStyle = barva(b); g.lineWidth = 1.6; g.beginPath();
+      rada.forEach((v, i) => (i ? g.lineTo(x(i), y(v)) : g.moveTo(x(i), y(v)))); g.stroke();
+    }
+    g.fillStyle = barva('--text-muted'); g.textAlign = 'center'; g.textBaseline = 'top';
+    const delka = r.nk * r.krok;
+    if (r.zarovnat) {
+      const kroky = [60000, 300000, 600000, 1800000, 3600000, 7200000, 21600000, 86400000];
+      const k = kroky.find(k => delka / k <= Math.max(2, (o.x1 - o.x0) / 80)) || 86400000;
+      for (let t = 0; t <= delka; t += k) g.fillText('+' + trvani(t).trim(), o.x0 + t / delka * (o.x1 - o.x0), o.y1 + 6);
+    } else {
+      const zn = znackyOsy(r.startA, r.startA + delka, o.x1 - o.x0);
+      for (const t of zn.znacky) { const xx = o.x0 + (t - r.startA) / delka * (o.x1 - o.x0); if (xx > o.x0 + 10 && xx < o.x1 - 10) g.fillText(fmtCas(t, zn.typ), xx, o.y1 + 6); }
+    }
+  }
+
+  /* ---------------- korelace ---------------- */
+  function naplnKorelaceVzory(vybrat, text) {
+    const sel = $('#kVzor');
+    const st = stav.stat;
+    const puvodni = vybrat !== undefined ? String(vybrat) : sel.value;
+    const moznosti = st ? st.sablony.slice(0, 150).map(s => [s.id, `${cislo(s.pocet)}× ${s.sablona.slice(0, 110)}`]) : [];
+    if (vybrat !== undefined && !moznosti.some(m => String(m[0]) === String(vybrat))) moznosti.unshift([vybrat, text ? text.slice(0, 110) : '#' + vybrat]);
+    sel.innerHTML = moznosti.map(([id, t]) => `<option value="${id}">${esc(t)}</option>`).join('');
+    if (moznosti.some(m => String(m[0]) === puvodni)) sel.value = puvodni;
+  }
+  $('#kSpustit').onclick = spustKorelaci;
+  async function spustKorelaci() {
+    const el = $('#korelace');
+    const id = Number($('#kVzor').value);
+    if (!stav.stat || !isFinite(id)) { el.innerHTML = '<p class="napoveda">Nejdřív načtěte log.</p>'; return; }
+    const okno = Number($('#kOkno').value);
+    el.innerHTML = '<p class="napoveda">Počítám…</p>';
+    const odp = await Klient.posli('korelace', { sablona: id, okno });
+    const k = odp.korelace;
+    if (!k.nA) { el.innerHTML = '<p class="napoveda">Vzor nemá v aktuálním výběru žádný výskyt s časem.</p>'; return; }
+    if (!k.vysledky.length) { el.innerHTML = `<p class="napoveda">V okně ${trvani(okno)} kolem ${cislo(k.nA)} výskytů vzoru se žádný jiný vzor neopakuje aspoň 3×.</p>`; return; }
+    el.innerHTML = `<p class="napoveda">Vzor <code>${esc(k.sablona)}</code>: ${cislo(k.nA)} výskytů${k.vzorku < k.nA ? ` (vyhodnoceno ${cislo(k.vzorku)})` : ''}, okno ${trvani(okno)}.
+        „Po“ = podíl výskytů, po kterých do ${trvani(okno)} přišel daný vzor; „náhodně“ = pravděpodobnost při rovnoměrném výskytu; zdvih = poměr.</p>
+      <div class="tab-obal"><table class="data"><thead><tr><th>Vzor B</th><th class="cislo">výskytů B</th><th class="cislo">po A</th><th class="cislo">před A</th><th class="cislo">náhodně</th><th class="cislo">zdvih</th><th class="cislo">typ. zpoždění</th></tr></thead><tbody>
+      ${k.vysledky.map(v => { const z = Math.max(v.zdvihPo, v.zdvihPred); return `<tr class="klik" data-id="${v.id}"><td class="sab">${esc(v.sablona)}</td><td class="cislo">${cislo(v.nB)}</td>
+        <td class="cislo"><b>${procenta(v.po, 1)}</b></td><td class="cislo">${procenta(v.pred, 1)}</td><td class="cislo">${procenta(v.p0, 1)}</td>
+        <td class="cislo" style="${z >= 3 ? 'color:var(--s1);font-weight:600' : ''}">${isFinite(z) ? desetinne(z, 1) + '×' : '∞'}</td><td class="cislo">${isFinite(v.zpozdeni) ? trvani(v.zpozdeni) : '–'}</td></tr>`; }).join('')}
+      </tbody></table></div>`;
+    el.querySelector('tbody').onclick = e => {
+      const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+      const v = k.vysledky.find(x => x.id === Number(tr.dataset.id));
+      stav.filtr.sablona = v.id; stav.filtr.sablonaText = v.sablona; prepniZalozku('zaznamy'); planujDotaz(0);
+    };
+  }
+
+  /* ---------------- pravidla zvýraznění ---------------- */
+  const BARVY_PR = ['žlutá', 'zelená', 'modrá', 'růžová', 'oranžová', 'fialová'];
+  function vykresliPravidla() {
+    const el = $('#pravidla');
+    $('#zPocP').textContent = stav.pravidla.length ? String(stav.pravidla.length) : '';
+    if (!stav.pravidla.length) { el.innerHTML = '<p class="napoveda">Zatím žádné pravidlo.</p>'; return; }
+    el.innerHTML = stav.pravidla.map((p, i) => `<div class="pravidlo" data-i="${i}">
+      <input type="checkbox" data-k="zap" ${p.zap !== false ? 'checked' : ''} aria-label="Zapnout pravidlo">
+      <input type="text" data-k="vzor" value="${esc(p.vzor)}" placeholder="text nebo regulární výraz" spellcheck="false" aria-label="Vzor">
+      <label class="zaskrt"><input type="checkbox" data-k="regex" ${p.regex ? 'checked' : ''}> regex</label>
+      <span class="tlacitka"><span class="vzorek-barvy" style="background:var(--pr${p.barva || 0})"></span><select data-k="barva" aria-label="Barva">${BARVY_PR.map((b, j) => `<option value="${j}" ${j === (p.barva || 0) ? 'selected' : ''}>${b}</option>`).join('')}</select></span>
+      <span class="poc"></span>
+      <button type="button" class="male" data-smaz="${i}" aria-label="Smazat pravidlo">✕</button></div>`).join('');
+    vykresliPravidlaPocty();
+  }
+  function vykresliPravidlaPocty() {
+    const aktivni = stav.pravidla.map((p, i) => [p, i]).filter(([p]) => p.zap !== false);
+    $$('#pravidla .pravidlo').forEach(r => {
+      const i = Number(r.dataset.i);
+      const j = aktivni.findIndex(([, ii]) => ii === i);
+      const p = stav.pravidla[i];
+      let chyba = '';
+      if (p.regex) { try { new RegExp(p.vzor); } catch (e) { chyba = 'neplatný regex'; } }
+      r.querySelector('input[data-k="vzor"]').classList.toggle('chyba', !!chyba);
+      r.querySelector('.poc').textContent = chyba || (j >= 0 && stav.stat && stav.stat.pravidla[j] !== undefined ? cislo(stav.stat.pravidla[j]) + '×' : '');
+    });
+  }
+  function ulozPravidla(obnovit) { ulozit('pravidla', stav.pravidla); $('#zPocP').textContent = stav.pravidla.length ? String(stav.pravidla.length) : ''; if (obnovit) planujDotaz(300); }
+  $('#pravidla').addEventListener('input', e => {
+    const r = e.target.closest('.pravidlo'); if (!r) return;
+    const p = stav.pravidla[Number(r.dataset.i)];
+    const k = e.target.dataset.k;
+    if (k === 'zap' || k === 'regex') p[k] = e.target.checked;
+    else if (k === 'barva') { p.barva = Number(e.target.value); r.querySelector('.vzorek-barvy').style.background = `var(--pr${p.barva})`; }
+    else if (k === 'vzor') p.vzor = e.target.value;
+    ulozPravidla(true);
+  });
+  $('#pravidla').addEventListener('click', e => {
+    const b = e.target.closest('[data-smaz]'); if (!b) return;
+    stav.pravidla.splice(Number(b.dataset.smaz), 1); vykresliPravidla(); ulozPravidla(true);
+  });
+  $('#prPridat').onclick = () => {
+    stav.pravidla.push({ vzor: '', regex: false, barva: stav.pravidla.length % 6, zap: true });
+    vykresliPravidla(); ulozPravidla(false);
+    const v = $$('#pravidla input[data-k="vzor"]'); if (v.length) v[v.length - 1].focus();
+  };
+  $('#prVzorova').onclick = async () => {
+    if (stav.pravidla.length && !(await Dialog.potvrd('Nahradit stávající pravidla vzorovými?'))) return;
+    stav.pravidla = [
+      { vzor: 'time(d)? ?out|timeout', regex: true, barva: 0, zap: true },
+      { vzor: 'refused|denied|forbidden|unauthori[sz]ed|Failed password', regex: true, barva: 3, zap: true },
+      { vzor: 'OutOfMemory|OOM|No space left', regex: true, barva: 4, zap: true },
+      { vzor: '" 5\\d\\d ', regex: true, barva: 5, zap: true },
+      { vzor: 'novak', regex: false, barva: 2, zap: true },
+    ];
+    vykresliPravidla(); ulozPravidla(true);
+  };
+
+  /* ---------------- záložky ---------------- */
+  function prepniZalozku(z) {
+    stav.zalozka = z;
+    $$('#zalozky button').forEach(b => b.setAttribute('aria-selected', b.dataset.z === z ? 'true' : 'false'));
+    $$('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== z; });
+    if (z === 'porovnani') obnovPorovnani();
+    if (z === 'zaznamy') vykresliRadky();
+  }
+  $('#zalozky').addEventListener('click', e => { const b = e.target.closest('button[data-z]'); if (b) prepniZalozku(b.dataset.z); });
+  $('#zalozky').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const b = $$('#zalozky button'); const i = b.findIndex(x => x.getAttribute('aria-selected') === 'true');
+    const n = b[(i + (e.key === 'ArrowRight' ? 1 : b.length - 1)) % b.length];
+    prepniZalozku(n.dataset.z); n.focus();
+  });
+
+  // překreslení grafů při změně tématu
+  new MutationObserver(() => { kresliOsu(); kresliFrekvenci(); if (posledniPorovnani && stav.zalozka === 'porovnani') kresliPorovnani(posledniPorovnani); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  vykresliPravidla();
+  vykresliVse();
+  // pro testy
+  window.__analyzator = { stav, nactiUkazku, prepniZalozku, nastavRozsah, planujDotaz, spustDotaz, vyberPozici, Klient };
+})();
+</script>
+</body>
+</html>

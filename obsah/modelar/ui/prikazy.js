@@ -77,6 +77,17 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'historie', nazev: 'Historie úprav (posuvník)', klavesy: [], povoleno: () => true, akce: () => M.otevriHistorii() },
       { id: 'vykres', nazev: 'Výkres – pohledy, řez, osy a kóty děr (PDF, SVG, DXF)', klavesy: [], povoleno: () => M.telesaKExportu(M.app.dok).length > 0, akce: () => M.otevriVykres() },
       { id: 'ulozitTvar', nazev: 'Uložit výběr jako vlastní tvar (Tvary → Moje tvary)', klavesy: [], povoleno: vybrano, akce: () => M.ulozitVlastniTvar() },
+      { id: 'promenne', nazev: 'Proměnné projektu (vzorce v polích, např. D/2 + vule)', klavesy: [], povoleno: () => true, akce: () => M.otevriPromenne() },
+      { id: 'sestava', nazev: 'Pohyblivá sestava – klouby, posuvy, kontrola srážek', klavesy: [], povoleno: () => true, akce: () => M.otevriSestavu() },
+      { id: 'zjednodusit', nazev: 'Zjednodušit síť importovaného modelu (méně trojúhelníků)', klavesy: [], povoleno: () => M.vybraneUzly().length === 1 && M.vybraneUzly()[0].druh === 'sit', akce: () => M.otevriZjednoduseni() },
+      { id: 'obrazek', nazev: 'Uložit obrázek PNG (průhledné pozadí, pro dokumentaci)', klavesy: [], povoleno: () => true, akce: () => M.otevriObrazek() },
+      { id: 'tazeni', nazev: 'Tažení profilu po dráze (vyber dvě skici: profil a dráhu)', klavesy: [], povoleno: () => M.vybraneVolne().length === 2 && M.vybraneVolne().every(u => u.druh === 'skica'), akce: () => M.otevriTazeni() },
+      { id: 'skicaNaPlose', nazev: 'Skica na ploše tělesa (klikni na plochu) – přidat tvar', klavesy: [], povoleno: () => true,
+        akce: () => M.nastavRezim(M.app.rezim === 'skicaNaPlose' ? null : 'skicaNaPlose') },
+      { id: 'kapsaNaPlose', nazev: 'Kapsa / otvor ze skici na ploše (klikni na plochu)', klavesy: [], povoleno: () => true,
+        akce: () => M.nastavRezim(M.app.rezim === 'kapsaNaPlose' ? null : 'kapsaNaPlose') },
+      { id: 'rychleKoty', nazev: 'Ukázat / skrýt kóty posunu při přetahování (od původní polohy)', klavesy: [], povoleno: () => true, akce: () => M.prepniRychleKoty() },
+      { id: 'podpery', nazev: 'Odhad podpěr pod převisy (objem, hmotnost, náhled sloupů)', klavesy: [], povoleno: () => true, akce: () => { M.otevriKontroluTisku(); M.spocitejPodpery(true); } },
       { id: 'paleta', nazev: 'Paleta příkazů', klavesy: ['Ctrl+K'], povoleno: () => true, akce: () => M.otevriPaletu() },
       { id: 'zarovnat', nazev: 'Zarovnat (puntíky ve scéně)', klavesy: ['L'], povoleno: () => M.app.rezim === 'zarovnani' || (M.vybraneUzly().length > 1 && volne()),
         akce: () => M.prepniZarovnani() },
@@ -311,6 +322,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     });
     document.querySelectorAll('[role=menuitemcheckbox]').forEach(b => b.setAttribute('aria-checked', b.getAttribute('aria-pressed') || 'false'));
     const lista = document.querySelector('.lista-posuv') || document.querySelector('.lista');
+    const vpravo = document.querySelector('.lista .vpravo');          // pevná pravá část (nápověda, panel) – nabídka za ní se zavře
     if (lista) {
       // náznak dalšího obsahu u okraje (stín), podle posunu a šířky
       const okraje = () => {

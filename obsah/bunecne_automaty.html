@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laboratoř buněčných automatů</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="bunecne_automaty/jadro.js"></script>
+  <script src="bunecne_automaty/vzory.js"></script>
+  <script src="bunecne_automaty/vykres.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 3vw, 36px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin: 0 0 8px; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 1000px; line-height: 1.5; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
+    input[type="number"], input[type="text"], input[type="search"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.92rem; min-width: 0; font-family: inherit;
+    }
+    textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8rem; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 11px; font-size: 0.85rem; cursor: pointer; font-family: inherit; line-height: 1.2;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 8px; font-size: 0.78rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    button.hlavni[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+    .napoveda { font-size: 0.76rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+    .napoveda kbd, .pozn kbd { background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 5px; font-size: 0.78rem; color: var(--text); }
+    .chybovy { color: var(--danger); font-size: 0.8rem; margin-top: 4px; min-height: 1em; }
+    .ok-text { color: var(--ok); }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); margin: 8px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: 0 0 auto; }
+    .dve { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+
+    /* lišta ovládání */
+    .lista { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center;
+      max-width: 1500px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius);
+      padding: 6px 10px; margin-bottom: 12px; box-shadow: var(--shadow); }
+    .lista .skupina { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .lista #btnBeh { min-width: 104px; }
+    .rychlost { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+    .rychlost input { width: 120px; accent-color: var(--accent); }
+    .rychlost output { min-width: 66px; color: var(--text); font-variant-numeric: tabular-nums; }
+    .ukazatele { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.84rem; color: var(--text-muted); margin-left: auto; }
+    .ukazatele b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .ukazatele .pravidlo-stitek { color: var(--accent); font-weight: 600; }
+
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 14px; max-width: 1500px; }
+    @media (max-width: 1000px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .plocha { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .obal-platna { position: relative; width: 100%; height: clamp(300px, 68vh, 860px); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg); }
+    @media (max-width: 600px) { .obal-platna { height: min(62vh, 115vw); min-height: 280px; } }
+    .obal-platna canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+    #vrstva { pointer-events: auto; }
+    .obal-platna.nastroj-kreslit #vrstva, .obal-platna.nastroj-guma #vrstva { cursor: crosshair; }
+    .obal-platna.nastroj-posun #vrstva { cursor: grab; }
+    .obal-platna.tahne #vrstva { cursor: grabbing; }
+    .obal-platna.nastroj-vlozit #vrstva { cursor: copy; }
+    .plovouci { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+    .plovouci button { width: 36px; height: 36px; padding: 0; font-size: 1.05rem; background: var(--bg-elevated); opacity: .92; }
+    .souradnice { position: absolute; left: 8px; bottom: 6px; font-size: 0.72rem; color: var(--text); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; opacity: .9; pointer-events: none; font-variant-numeric: tabular-nums; z-index: 2; }
+    .souradnice:empty { display: none; }
+    .demo-titulek { position: absolute; left: 8px; top: 8px; right: 54px; max-width: 560px; background: var(--bg-elevated); color: var(--text); border: 1px solid var(--accent); border-left-width: 4px; border-radius: 6px; padding: 8px 12px; font-size: 0.86rem; line-height: 1.45; box-shadow: var(--shadow); z-index: 2; }
+    .demo-titulek b { color: var(--accent); }
+    .demo-titulek .demo-ovl { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .demo-titulek[hidden] { display: none; }
+    .nastroje { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+    .nastroje .skupina { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+    .stavy-kresleni button { display: inline-flex; align-items: center; gap: 5px; }
+    .stavy-kresleni i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border-strong); }
+    .razitko-info { font-size: 0.78rem; color: var(--text-muted); }
+    .historie { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted); }
+    .historie input[type=range] { flex: 1 1 200px; accent-color: var(--accent); min-width: 0; }
+    .historie output { font-variant-numeric: tabular-nums; color: var(--text); }
+
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+    .zalozky button { border-radius: 6px 6px 0 0; border-bottom: 0; padding: 6px 9px; font-size: 0.8rem; }
+    .zalozky button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .zalozka[hidden] { display: none; }
+
+    .bs { display: grid; grid-template-columns: 74px repeat(9, minmax(0, 1fr)); gap: 3px; align-items: center; margin-top: 6px; }
+    .bs span { font-size: 0.76rem; color: var(--text-muted); }
+    .bs button { padding: 5px 0; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    .wolf-tab { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; margin-top: 8px; }
+    .wolf-tab button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 0; }
+    .wolf-tab .vzor3 { display: flex; gap: 1px; }
+    .wolf-tab .vzor3 i, .wolf-tab .vysl { display: block; width: 8px; height: 8px; border: 1px solid var(--text-muted); }
+    .wolf-tab i.z, .wolf-tab .vysl.z { background: var(--text); }
+    .stav-pravidla { margin-top: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bg-elevated); border: 1px solid var(--border); font-size: 0.82rem; line-height: 1.45; }
+    .stav-pravidla code { color: var(--accent); font-weight: 600; }
+
+    .vzory-seznam { display: flex; flex-direction: column; gap: 6px; max-height: 560px; overflow-y: auto; padding-right: 2px; }
+    .vzor { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 6px; }
+    .vzor canvas { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 4px; background: var(--bg-deep); }
+    .vzor .jm { font-weight: 600; font-size: 0.86rem; }
+    .vzor .meta { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; }
+    .vzor .tlacitka { margin-top: 4px; }
+    .kat-nadpis { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); margin: 8px 0 0; }
+
+    .boxy { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 6px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; min-width: 0; }
+    .box .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); }
+    .box .cislo { font-size: 1.02rem; font-weight: 700; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .box.siroky { grid-column: 1 / -1; }
+    .box.siroky .cislo { font-size: 0.88rem; font-weight: 600; }
+    #graf { width: 100%; height: 170px; display: block; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
+
+    .demo-seznam { display: flex; flex-direction: column; gap: 6px; }
+    .demo-seznam button { text-align: left; display: block; width: 100%; }
+    .demo-seznam button small { display: block; color: var(--text-muted); font-size: 0.72rem; margin-top: 2px; }
+    .demo-seznam button[aria-pressed="true"] small { color: var(--text); }
+
+    .pozn { color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; max-width: 1500px; margin-top: 18px; }
+    .pozn h2 { color: var(--text); margin-top: 14px; }
+    .pozn ul { padding-left: 20px; }
+    .pozn a { color: var(--accent); }
+    .pozn table { border-collapse: collapse; font-size: 0.78rem; }
+    .pozn td, .pozn th { border-bottom: 1px solid var(--border); padding: 3px 8px 3px 0; text-align: left; vertical-align: top; }
+    .obal-tab { overflow-x: auto; }
+    .upozorneni { border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; color: var(--text); margin-top: 8px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 600px) {
+      .ukazatele { margin-left: 0; width: 100%; }
+      .rychlost input { width: 96px; }
+      .bs { grid-template-columns: 52px repeat(9, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🧫 Laboratoř buněčných automatů</h1>
+  <p class="podtitul">Conwayův Život, HighLife, Seeds, Brianův mozek, Wireworld, vlastní pravidla v zápisu B/S a elementární
+    jednorozměrné automaty Wolframových pravidel 0–255. Kreslete, vkládejte klasické vzory, převíjejte čas zpět a sledujte,
+    jak z jednoduchých pravidel vzniká složitost. Výpočet běží ve Web Workeru, vykreslení přes WebGL.</p>
+
+  <div class="lista" role="toolbar" aria-label="Ovládání simulace">
+    <div class="skupina">
+      <button id="btnBeh" class="hlavni" title="Spustit / pozastavit (mezerník)">▶ Spustit</button>
+      <button id="btnZpet" title="O generaci zpět (šipka vlevo)">⏮ Zpět</button>
+      <button id="btnKrok" title="Jedna generace (N nebo šipka vpravo)">Krok ⏭</button>
+      <button id="btnKrok10" title="Deset generací">+10</button>
+    </div>
+    <label class="rychlost" for="rychlost">Rychlost
+      <input type="range" id="rychlost" min="0" max="12" step="1" value="5">
+      <output id="rychlostText" for="rychlost">30 gen/s</output>
+    </label>
+    <div class="ukazatele" aria-live="off">
+      <span>Generace <b id="genText">0</b></span>
+      <span>Živé <b id="popText">0</b></span>
+      <span class="pravidlo-stitek" id="pravidloStitek">B3/S23</span>
+    </div>
+  </div>
+
+  <div class="rozlozeni">
+    <section class="plocha" aria-label="Plátno">
+      <div class="obal-platna nastroj-kreslit" id="obal">
+        <canvas id="platno" aria-hidden="true"></canvas>
+        <canvas id="vrstva" tabindex="0" aria-label="Mřížka automatu – kreslete myší nebo prstem"></canvas>
+        <div class="plovouci">
+          <button id="btnPlus" title="Přiblížit">+</button>
+          <button id="btnMinus" title="Oddálit">−</button>
+          <button id="btnFit" title="Zobrazit celou mřížku (H)">⤢</button>
+        </div>
+        <div class="souradnice" id="souradnice"></div>
+        <div class="demo-titulek" id="demoTitulek" hidden role="status">
+          <div id="demoText"></div>
+          <div class="demo-ovl">
+            <button class="male" id="demoPred">◀ Předchozí</button>
+            <button class="male" id="demoDalsi">Další ▶</button>
+            <button class="male" id="demoKonec">Ukončit ukázky</button>
+          </div>
+        </div>
+      </div>
+      <div class="nastroje">
+        <div class="skupina" role="group" aria-label="Nástroj">
+          <button data-nastroj="kreslit" aria-pressed="true" title="Kreslit (B); pravé tlačítko maže">✏️ Kreslit</button>
+          <button data-nastroj="guma" aria-pressed="false" title="Mazat (E)">🧽 Guma</button>
+          <button data-nastroj="posun" aria-pressed="false" title="Posouvat plátno (M); kolečko přibližuje">✋ Posun</button>
+          <button data-nastroj="vlozit" aria-pressed="false" title="Vložit vybraný vzor (V); R otočí, F převrátí">📌 Razítko</button>
+        </div>
+        <div class="skupina stavy-kresleni" id="stavyKresleni" role="group" aria-label="Kreslený stav"></div>
+        <label class="zaskrt" style="margin:0"><input type="checkbox" id="chkMrizka" checked> Mřížka</label>
+        <span class="razitko-info" id="razitkoInfo"></span>
+      </div>
+      <div class="historie">
+        <span>Historie</span>
+        <input type="range" id="historie" min="0" max="0" value="0" aria-label="Návrat v čase – generace z historie">
+        <output id="historieText">–</output>
+      </div>
+    </section>
+
+    <aside class="karta" aria-label="Nastavení">
+      <div class="zalozky" role="tablist">
+        <button role="tab" data-zal="pravidlo" aria-selected="true">Pravidlo</button>
+        <button role="tab" data-zal="mrizka" aria-selected="false">Mřížka</button>
+        <button role="tab" data-zal="vzory" aria-selected="false">Vzory</button>
+        <button role="tab" data-zal="soubor" aria-selected="false">Soubor</button>
+        <button role="tab" data-zal="statistiky" aria-selected="false">Statistiky</button>
+        <button role="tab" data-zal="ukazky" aria-selected="false">Ukázky</button>
+      </div>
+
+      <div class="zalozka" id="zal-pravidlo" role="tabpanel">
+        <label for="selPravidlo">Známé automaty</label>
+        <select id="selPravidlo"></select>
+        <label for="txtPravidlo">Zápis pravidla</label>
+        <div class="tlacitka" style="margin-top:0;flex-wrap:nowrap">
+          <input type="text" id="txtPravidlo" value="B3/S23" spellcheck="false" autocomplete="off" placeholder="B3/S23, 23/3, B2/S/C3, W110 …">
+          <button id="btnPravidlo" class="hlavni">Použít</button>
+        </div>
+        <div class="chybovy" id="pravidloChyba"></div>
+        <div id="lifeEditor">
+          <h3>Vlastní pravidlo – počty živých sousedů</h3>
+          <div class="bs" id="bsB"><span>Zrod (B)</span></div>
+          <div class="bs" id="bsS"><span>Přežití (S)</span></div>
+          <div class="dve">
+            <div><label for="selOkoli">Okolí</label>
+              <select id="selOkoli"><option value="M">Moorovo (8 sousedů)</option><option value="V">von Neumannovo (4)</option></select></div>
+            <div><label for="numStavy">Počet stavů (C)</label><input type="number" id="numStavy" min="2" max="256" value="2"></div>
+          </div>
+          <p class="napoveda">C = 2 je běžný dvoustavový automat. Při C &gt; 2 (rodina <i>Generations</i>) buňka, která nepřežije,
+            prochází stavy „umírání“ 2 … C−1, než zmizí; za živé sousedy se počítají jen buňky ve stavu 1.</p>
+        </div>
+        <div id="wolfEditor" hidden>
+          <h3>Elementární automat – číslo pravidla</h3>
+          <div class="dve">
+            <div><label for="numWolfram">Pravidlo (0–255)</label><input type="number" id="numWolfram" min="0" max="255" value="30"></div>
+            <div><label>&nbsp;</label><div class="tlacitka" style="margin:0">
+              <button class="male" data-wolf="30">30</button><button class="male" data-wolf="90">90</button>
+              <button class="male" data-wolf="110">110</button><button class="male" data-wolf="184">184</button></div></div>
+          </div>
+          <div class="wolf-tab" id="wolfTab"></div>
+          <p class="napoveda">Každý řádek je jedna generace (čas běží dolů). Nový stav buňky závisí na ní a dvou sousedech;
+            osm kombinací nahoře, výsledek dole – kliknutím bit přepnete. Na budoucnost má vliv jen aktuální (poslední) řádek,
+            označený čárou.</p>
+        </div>
+        <div class="stav-pravidla" id="pravidloPopis"></div>
+      </div>
+
+      <div class="zalozka" id="zal-mrizka" role="tabpanel" hidden>
+        <div class="dve">
+          <div><label for="numSirka">Šířka (buněk)</label><input type="number" id="numSirka" min="3" max="8192" value="200"></div>
+          <div><label for="numVyska">Výška (buněk)</label><input type="number" id="numVyska" min="3" max="8192" value="140"></div>
+        </div>
+        <div class="tlacitka">
+          <select id="selVelikost" style="width:auto">
+            <option value="">Předvolby…</option>
+            <option>64×64</option><option>128×96</option><option>200×140</option><option>256×256</option><option>512×512</option>
+            <option>1024×1024</option><option>2048×2048</option><option>4096×4096</option>
+          </select>
+          <button id="btnVelikost" class="hlavni">Změnit velikost</button>
+        </div>
+        <p class="napoveda">Nejvýše 8192 buněk na stranu a 16,7 milionu buněk celkem. Obsah zůstane uprostřed.</p>
+        <label for="selOkraj">Okrajové podmínky</label>
+        <select id="selOkraj"></select>
+        <h3>Počáteční stav</h3>
+        <div class="dve">
+          <div><label for="numHustota">Hustota (%)</label><input type="number" id="numHustota" min="1" max="100" value="30"></div>
+          <div><label for="numSeme">Semínko náhody</label><input type="number" id="numSeme" min="0" max="4294967295" value="1"></div>
+        </div>
+        <label for="selOblast">Oblast</label>
+        <select id="selOblast"><option value="cela">Celá mřížka</option><option value="stred">Čtverec uprostřed (třetina)</option></select>
+        <div class="tlacitka">
+          <button id="btnNahodne">🎲 Náhodně vyplnit</button>
+          <button id="btnNoveSeme" class="male" title="Nové semínko">nové semínko</button>
+          <button id="btnJedna" hidden>Jedna buňka uprostřed</button>
+          <button id="btnVycistit">Vyčistit</button>
+        </div>
+        <p class="napoveda">Stejné semínko a hustota dají vždy stejnou „polévku“ – výsledek lze zopakovat.</p>
+        <h3>Historie a výpočet</h3>
+        <label for="selHistorie">Paměť pro historii generací</label>
+        <select id="selHistorie"><option value="16">16 MB</option><option value="64" selected>64 MB</option><option value="256">256 MB</option><option value="512">512 MB</option></select>
+        <label class="zaskrt"><input type="checkbox" id="chkDetekce" checked> Rozpoznávat ustálení (zátiší, oscilátor, loď)</label>
+        <label class="zaskrt"><input type="checkbox" id="chkZastavit"> Zastavit běh při ustálení</label>
+        <label class="zaskrt"><input type="checkbox" id="chk2d"> Vykreslovat přes Canvas 2D místo WebGL</label>
+        <p class="napoveda" id="infoVykres"></p>
+      </div>
+
+      <div class="zalozka" id="zal-vzory" role="tabpanel" hidden>
+        <div class="dve">
+          <div><label for="hledatVzor">Hledat</label><input type="search" id="hledatVzor" placeholder="kluzák, pulsar…"></div>
+          <div><label for="selKat">Skupina</label><select id="selKat"><option value="">Vše</option></select></div>
+        </div>
+        <label class="zaskrt"><input type="checkbox" id="chkJenPravidlo"> Jen pro aktuální pravidlo</label>
+        <p class="napoveda"><b>Otevřít</b> vyčistí mřížku a vzor umístí doprostřed; <b>Razítko</b> ho připraví k vložení kliknutím
+          (<kbd>R</kbd> otočí, <kbd>F</kbd> převrátí, <kbd>Esc</kbd> zruší).</p>
+        <div class="vzory-seznam" id="vzorySeznam"></div>
+        <h3>Moje vzory</h3>
+        <div class="tlacitka" style="margin-top:0"><button id="btnUlozVzor" class="male">Uložit aktuální obsah jako vzor</button></div>
+        <div class="vzory-seznam" id="mojeVzory" style="margin-top:6px"></div>
+      </div>
+
+      <div class="zalozka" id="zal-soubor" role="tabpanel" hidden>
+        <h3 style="margin-top:0">Import</h3>
+        <label for="souborVstup">Soubor RLE, .cells, Life 1.06 nebo JSON z této laboratoře</label>
+        <input type="file" id="souborVstup" accept=".rle,.cells,.lif,.life,.json,.txt">
+        <label for="txtImport">… nebo vložte text</label>
+        <textarea id="txtImport" rows="5" spellcheck="false" placeholder="x = 3, y = 3, rule = B3/S23&#10;bo$2bo$3o!"></textarea>
+        <div class="tlacitka">
+          <button id="btnImportOtevrit" class="hlavni">Otevřít</button>
+          <button id="btnImportRazitko">Jako razítko</button>
+        </div>
+        <div class="chybovy" id="importChyba"></div>
+        <p class="napoveda">Soubor lze také přetáhnout přímo na plátno.</p>
+        <h3>Export</h3>
+        <div class="tlacitka" style="margin-top:0">
+          <button id="btnExpRLE">⬇ RLE</button>
+          <button id="btnKopRLE">Kopírovat RLE</button>
+          <button id="btnExpJSON">⬇ JSON</button>
+        </div>
+        <p class="napoveda" id="rleInfo"></p>
+        <div class="dve">
+          <div><label for="selPngMeritko">PNG – pixelů na buňku</label>
+            <select id="selPngMeritko"><option>1</option><option>2</option><option selected>4</option><option>8</option><option>16</option></select></div>
+          <div><label>&nbsp;</label><label class="zaskrt" style="margin-top:6px"><input type="checkbox" id="chkPngMrizka"> s mřížkou</label></div>
+        </div>
+        <div class="tlacitka"><button id="btnExpPNG">⬇ PNG celé mřížky</button></div>
+        <label for="txtExport">Náhled RLE</label>
+        <textarea id="txtExport" rows="6" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div class="zalozka" id="zal-statistiky" role="tabpanel" hidden>
+        <div class="boxy">
+          <div class="box"><div class="popis">Generace</div><div class="cislo" id="sGen">0</div></div>
+          <div class="box"><div class="popis" id="sPopPopis">Živé buňky</div><div class="cislo" id="sPop">0</div></div>
+          <div class="box"><div class="popis">Hustota</div><div class="cislo" id="sHust">0 %</div></div>
+          <div class="box"><div class="popis">Zrozeno</div><div class="cislo" id="sNar">0</div></div>
+          <div class="box"><div class="popis">Zaniklo</div><div class="cislo" id="sZem">0</div></div>
+          <div class="box"><div class="popis">Rychlost</div><div class="cislo" id="sRych">–</div></div>
+          <div class="box siroky"><div class="popis">Ustálení</div><div class="cislo" id="sPerioda">–</div></div>
+          <div class="box siroky" id="boxPocty" hidden><div class="popis">Počty stavů</div><div class="cislo" id="sPocty"></div></div>
+          <div class="box siroky"><div class="popis">Historie v paměti</div><div class="cislo" id="sHist">–</div></div>
+        </div>
+        <canvas id="graf" aria-label="Graf počtu živých buněk v čase"></canvas>
+        <p class="napoveda">Graf ukazuje nejvýše posledních 20 000 generací (u delších běhů zhuštěně – minimum a maximum v každém sloupci).</p>
+      </div>
+
+      <div class="zalozka" id="zal-ukazky" role="tabpanel" hidden>
+        <p class="napoveda" style="margin-top:0">Řízená prohlídka: každá scéna připraví mřížku, spustí simulaci a vysvětlí, co se děje.
+          Kliknutím do plátna nebo <kbd>Esc</kbd> prohlídku ukončíte.</p>
+        <div class="tlacitka"><button id="btnProhlidka" class="hlavni">▶ Spustit celou prohlídku</button></div>
+        <div class="demo-seznam" id="demoSeznam" style="margin-top:8px"></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="pozn">
+    <h2>Jak to funguje</h2>
+    <p>Každá buňka mřížky má stav (u dvoustavových automatů živá / mrtvá). V každé generaci se všechny buňky naráz přepočítají
+      podle stavů svých sousedů. Zápis <b>B3/S23</b> znamená: mrtvá buňka ožije (<i>birth</i>) při přesně 3 živých sousedech,
+      živá přežije (<i>survival</i>) při 2 nebo 3, jinak zemře. Starší zápis <b>23/3</b> uvádí nejprve přežití, pak zrod.
+      Rodina <b>Generations</b> (např. B2/S/C3) přidává stavy umírání. <b>Wireworld</b> má čtyři stavy: prázdno, hlava elektronu,
+      ocas a vodič – vodič se stane hlavou, má-li 1 nebo 2 sousední hlavy. <b>Elementární automaty</b> jsou jednorozměrné;
+      číslo pravidla 0–255 je v binárním zápisu přímo tabulka nového stavu pro osm kombinací (levý, střed, pravý).</p>
+    <div class="obal-tab"><table>
+      <tr><th>Klávesa</th><th>Akce</th><th>Klávesa</th><th>Akce</th></tr>
+      <tr><td><kbd>mezerník</kbd></td><td>spustit / pozastavit</td><td><kbd>B</kbd> <kbd>E</kbd> <kbd>M</kbd> <kbd>V</kbd></td><td>kreslit, guma, posun, razítko</td></tr>
+      <tr><td><kbd>N</kbd> / <kbd>→</kbd></td><td>jedna generace</td><td><kbd>R</kbd> / <kbd>F</kbd></td><td>otočit / převrátit razítko</td></tr>
+      <tr><td><kbd>←</kbd></td><td>generace zpět (z historie)</td><td><kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd></td><td>kreslený stav (0 = mazání)</td></tr>
+      <tr><td><kbd>H</kbd></td><td>zobrazit celou mřížku</td><td><kbd>G</kbd></td><td>mřížka zap./vyp.</td></tr>
+      <tr><td>kolečko / dva prsty</td><td>přiblížení</td><td>prostřední tlačítko, <kbd>Alt</kbd> + tažení</td><td>posun plátna</td></tr>
+    </table></div>
+    <h2>Výpočet a paměť</h2>
+    <p>Mřížka je pole <code>Uint8Array</code> (1 bajt na buňku) s jednobuněčným okrajem, který se před každým krokem doplní podle
+      okrajové podmínky; výpočet střídá dva buffery. Pro dvoustavová pravidla s Moorovým okolím se součty sousedů počítají posuvným
+      oknem po sloupcích. Výpočet běží ve Web Workeru, takže stránka nezamrzá ani u mřížky 4096 × 4096; vykreslení předává buňky
+      jako texturu WebGL (případně ImageData). Historie je kruhový buffer zhuštěných snímků (1 bit na buňku u dvoustavových automatů)
+      s nastavitelným limitem paměti; u mřížek nad 262 144 buněk se ukládá jen každá k-tá generace a mezilehlé se při návratu dopočítají.
+      Ustálení se rozpoznává otiskem obsahu ohraničujícího obdélníku, takže se pozná i posun lodi.</p>
+    <h2>Formáty</h2>
+    <p><b>RLE</b> (Run Length Encoded) je standard programů Golly a LifeWiki: hlavička <code>x = , y = , rule = </code>, běhy
+      <code>b</code> (mrtvá), <code>o</code> (živá), <code>$</code> (konec řádku), <code>!</code> (konec). Pro vícestavové automaty
+      (Generations, Wireworld) se používá rozšířené RLE programu Golly s tečkou a písmeny <code>A</code>–<code>X</code>; jiné programy
+      jej nemusí přečíst – „kompatibilní“ b/o zápis vzniká jen u dvoustavových pravidel. Načíst lze také <b>.cells</b>
+      (plaintext), <b>Life 1.06</b> a <b>JSON</b> z této laboratoře (celá mřížka včetně pravidla, okraje a generace).</p>
+    <h2>Původ vzorů a omezení</h2>
+    <p>Knihovna obsahuje jen klasické vzory, které jsou matematickými objekty a volně se šíří (objevitelé a roky jsou uvedeny u vzorů,
+      podle článků M. Gardnera ve Scientific American 1970–71, LifeWiki a knihy S. Wolframa <i>A New Kind of Science</i>, 2002).
+      RLE zápisy jsou přepsány ručně a automaticky ověřeny (perioda, posun, emise kluzáků). Vzory Wireworld byly sestaveny pro tuto
+      stránku. Hexagonální okolí, pravidla s izotropními podmínkami (Hensel) a pravidla typu Larger than Life laboratoř nepodporuje.
+      Na konečné mřížce se vzory chovají jinak než v nekonečné rovině – kluzák na toroidu obletí svět a může narazit do zdroje.</p>
+  </section>
+
+  <script src="bunecne_automaty/app.js"></script>
+</body>
+</html>

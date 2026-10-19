@@ -19,10 +19,12 @@ aby se z jednoho nedalo odmazáním adresy v prohlížeči dojít na druhý:
 | `metodus` | `Lavionus/metodus` | <https://lavionus.github.io/metodus/> |
 | `metodus-ukazka` | `Lavionus/metodus-ukazka` | <https://lavionus.github.io/metodus-ukazka/> |
 
-Proto **tenhle web na Metodus nikde neodkazuje** — ani z menu, ani z úvodní
-stránky, ani přesměrováním starých `#obsah/<výuková aplikace>` (neznámý hash
-otevře domovskou stránku). Když se sem přidá odkaz na Metodus, ztratí celé
-oddělení smysl.
+Odkaz vede **jen jedním směrem**: od 19. 10. 2026 (na přání autora) tenhle web
+odkazuje na Metodus na plnou adresu `https://lavionus.github.io/metodus/` – z menu
+(`index.html`, `.odkaz-metodus`), z úvodní stránky (`obsah/aplikace.html`, oddíl
+🎓 Výuka) a ze stránky O projektu. Metodus na tenhle web neodkazuje. Staré
+`#obsah/<výuková aplikace>` se dál nepřesměrovávají (neznámý hash otevře
+domovskou stránku).
 
 Dvě věci si hlavní web kvůli tomu drží ve vlastní kopii:
 `obsah/textures/8k_earth_{daymap,nightmap}.jpg` pro `obsah/weather_globe.html`

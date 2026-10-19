@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Světelné znečištění a tmavá obloha</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/leaflet/leaflet.js"></script>
+  <script src="svetelne_znecisteni/jadro.js"></script>
+  <script src="svetelne_znecisteni/astro.js"></script>
+  <style>
+    :root { --text-mez: #f0bd5e; --text-ok: #7fd6a4; --tma: #0b1020; }
+    :root[data-theme="light"] { --text-mez: var(--warn); --text-ok: var(--ok); --tma: #1d2540; }
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 3vw, 36px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1.02rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 1000px; line-height: 1.5; }
+    .upozorneni { max-width: 1400px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); color: var(--text);
+      border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .upozorneni b { color: var(--text-mez); }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 16px; max-width: 1400px; align-items: start; }
+    @media (max-width: 1000px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sirsi { max-width: 1400px; margin-top: 16px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    .karta[hidden] { display: none; }
+    label.popisek, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 0 0 3px; }
+    input[type="text"], input[type="search"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.9rem; min-width: 0; font-family: inherit; }
+    input::placeholder { color: var(--text-muted); font-style: italic; }
+    input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px;
+      padding: 7px 11px; font-size: 0.84rem; cursor: pointer; font-family: inherit; }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 3px 8px; font-size: 0.76rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .ovladani { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 12px; margin-bottom: 10px; }
+    .hledani { display: flex; gap: 6px; margin-bottom: 8px; }
+    .hledani input { flex: 1; }
+    .vysledky-hledani { list-style: none; margin: 0 0 8px; padding: 0; border: 1px solid var(--border); border-radius: 6px; max-height: 220px; overflow: auto; }
+    .vysledky-hledani:empty { display: none; }
+    .vysledky-hledani li button { width: 100%; text-align: left; border: 0; border-radius: 0; border-bottom: 1px solid var(--border); background: var(--bg-elevated); font-size: 0.8rem; }
+    .vysledky-hledani li:last-child button { border-bottom: 0; }
+    #mapa { height: min(68vh, 620px); min-height: 340px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--tma); }
+    .leaflet-container { font-family: inherit; }
+    .leaflet-control-attribution { font-size: 10px; max-width: 75vw; white-space: normal; }
+    .stav { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; min-height: 1.2em; line-height: 1.4; }
+    .stav.chyba { color: var(--danger); }
+    .legenda { margin-top: 8px; font-size: 0.74rem; color: var(--text-muted); }
+    .legenda .pruh { height: 14px; border-radius: 3px; border: 1px solid var(--border); }
+    .legenda .stupnice { display: flex; justify-content: space-between; margin-top: 2px; gap: 4px; flex-wrap: wrap; }
+    .legenda .bortle { display: flex; margin-top: 2px; }
+    .legenda .bortle span { flex: 1; text-align: center; border-left: 1px solid var(--border); font-size: 0.68rem; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 6px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px; min-width: 0; }
+    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); margin-bottom: 3px; }
+    .box .cislo { font-size: 1.08rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; line-height: 1.35; }
+    .stitek { display: inline-block; font-size: 0.66rem; padding: 1px 6px; border-radius: 9px; border: 1px solid var(--warn); color: var(--text-mez); vertical-align: middle; font-weight: 600; letter-spacing: .2px; }
+    .stitek.mer { border-color: var(--accent); color: var(--accent); }
+    .pozn { font-size: 0.76rem; color: var(--text-muted); line-height: 1.45; margin-top: 6px; }
+    .pozn a, .zdroje a, .podtitul a { color: var(--accent); }
+    .varovani { color: var(--text-mez); }
+    .seznam-casu { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 0.8rem; margin-top: 4px; }
+    .seznam-casu dt { color: var(--text-muted); }
+    .seznam-casu dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; vertical-align: top; }
+    th { color: var(--text-muted); font-weight: 600; font-size: 0.74rem; }
+    th:first-child, td:first-child, .vlevo { text-align: left; }
+    td.zalom, th.zalom { white-space: normal; min-width: 160px; }
+    th button.razeni { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; text-decoration: underline dotted; }
+    tr.nejlepsi td { background: var(--accent-soft); }
+    .noci { display: grid; gap: 3px; margin-top: 6px; }
+    .noc { display: grid; grid-template-columns: 92px minmax(0, 1fr) 118px; gap: 8px; align-items: center; font-size: 0.76rem; }
+    @media (max-width: 560px) { .noc { grid-template-columns: 70px minmax(0, 1fr); } .noc .info { grid-column: 1 / -1; padding-left: 78px; margin-top: -2px; } }
+    .noc .dat { font-variant-numeric: tabular-nums; }
+    .noc .dat b { font-weight: 600; }
+    .osa { position: relative; height: 16px; background: var(--bg-control); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+    .osa span { position: absolute; top: 0; bottom: 0; }
+    .osa .soumrak { background: #3c4a78; }
+    .osa .astro { background: #1d2547; }
+    .osa .mesic { background: repeating-linear-gradient(45deg, #9a8d4a 0 4px, #6d6435 4px 8px); }
+    .osa .tma { background: #0a0d1c; box-shadow: inset 0 0 0 1px #6aa6fd; }
+    .osa .ted { width: 2px; background: #ff6b6b; }
+    .osa .mrak { top: auto; height: 4px; bottom: 0; background: #d8dde6; opacity: .9; }
+    .noc .info { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .noc.dobra .dat b { color: var(--text-ok); }
+    .klic-osy { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
+    .klic-osy i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; border: 1px solid var(--border); }
+    .mista { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 6px; }
+    .mista li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+    .mista .jmeno { font-weight: 600; font-size: 0.86rem; overflow-wrap: anywhere; }
+    .mista .detail { font-size: 0.72rem; color: var(--text-muted); overflow-wrap: anywhere; }
+    .mista .akce { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .hvezda { background: none; border: 0; font-size: 1.1rem; padding: 0 2px; color: var(--text-faint); line-height: 1; }
+    .hvezda[aria-pressed="true"] { color: #f2b632; background: none; }
+    .prazdne { font-size: 0.8rem; color: var(--text-muted); padding: 6px 0; }
+    .znacka { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #000, 0 1px 4px rgba(0,0,0,.6); background: #6aa6fd; }
+    .znacka.obl { background: #f2b632; }
+    .znacka.vyber { background: #ff5a5a; width: 14px; height: 14px; margin: 2px; }
+    .leaflet-popup-content { font-size: 0.8rem; }
+    details.vysvetleni summary { cursor: pointer; font-size: 0.84rem; color: var(--accent); }
+    details.vysvetleni[open] summary { margin-bottom: 6px; }
+    .zdroje td, .zdroje th { white-space: normal; text-align: left; min-width: 110px; }
+    .zdroje td:first-child { min-width: 130px; }
+    .mrizka-casu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 16px; }
+    .skryto { display: none !important; }
+    .mesic-ikona { width: 34px; height: 34px; flex: none; }
+    .mesic-radek { display: flex; gap: 10px; align-items: center; }
+    .zaskrt { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; }
+    .zaskrt input { width: 16px; height: 16px; accent-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🌌 Světelné znečištění a tmavá obloha</h1>
+  <p class="podtitul">Mapa pro hledání míst k pozorování hvězd: modelový odhad jasu noční oblohy z družicových dat VIIRS, orientační třída Bortle,
+    nadmořská výška, Měsíc, astronomický soumrak, tmavá okna a předpověď oblačnosti. Klikněte do mapy nebo vyhledejte místo.</p>
+  <div class="upozorneni" role="note">
+    <b>Odhad, ne měření.</b> Jas oblohy na této stránce je <b>modelový odhad</b> spočítaný z toho, kolik světla družice vidí směrem vzhůru
+    (průměr několika nedávných nocí), a z jednoduchého zákona šíření. Skutečný jas v danou noc ovlivní Měsíc, oblačnost, opar, sníh, airglow
+    i nové osvětlení; družice navíc téměř nevidí modrou složku bílých LED. Nejistota je asi ±0,5 mag/arcsec². Pro jistotu měřte (SQM) nebo
+    porovnejte s více zdroji.
+  </div>
+
+  <div class="rozlozeni">
+    <section class="karta" aria-labelledby="nadpis-mapa">
+      <h2 id="nadpis-mapa">Mapa</h2>
+      <form class="hledani" id="formHledani" role="search">
+        <input type="search" id="hledat" placeholder="Obec, místo nebo souřadnice (50.08, 14.42)" aria-label="Hledat místo" autocomplete="off">
+        <button type="submit" class="hlavni">Hledat</button>
+      </form>
+      <ul class="vysledky-hledani" id="vysledkyHledani" aria-live="polite"></ul>
+      <div class="ovladani">
+        <div><label class="popisek" for="volbaVrstvy">Vrstva světla</label>
+          <select id="volbaVrstvy">
+            <option value="odhad">Odhad jasu oblohy (model)</option>
+            <option value="radiance">Radiance VIIRS – zdroje světla (noc)</option>
+            <option value="bm2016">Black Marble 2016 (roční snímek)</option>
+            <option value="zadna">Žádná</option>
+          </select></div>
+        <div><label class="popisek" for="pruhlednost">Krytí vrstvy světla</label>
+          <input type="range" id="pruhlednost" min="0.1" max="1" step="0.05"></div>
+        <div><label class="popisek" for="volbaOblaku">Oblačnost (samostatná vrstva)</label>
+          <select id="volbaOblaku">
+            <option value="zadna">Nezobrazovat</option>
+            <option value="predpoved">Předpověď Open-Meteo (model)</option>
+            <option value="modis">Pozorovaná minulá noc – MODIS Terra</option>
+          </select></div>
+        <div><label class="popisek" for="volbaPodkladu">Podkladová mapa</label>
+          <select id="volbaPodkladu"></select></div>
+        <div id="poleHodiny" class="skryto"><label class="popisek" for="hodinaOblaku">Čas předpovědi: <span id="hodinaText">—</span></label>
+          <input type="range" id="hodinaOblaku" min="0" max="47" step="1" value="0"></div>
+        <div style="display:flex;align-items:end"><button type="button" id="rezimZnacky" aria-pressed="false" title="Kliknutím do mapy přidáte vlastní značku">📍 Přidávat značky</button></div>
+      </div>
+      <div id="mapa" role="application" aria-label="Mapa světelného znečištění"></div>
+      <div class="stav" id="stavMapy" aria-live="polite"></div>
+      <div class="legenda" id="legenda"></div>
+    </section>
+
+    <section class="karta" aria-labelledby="nadpis-misto" id="kartaMisto">
+      <h2 id="nadpis-misto">Vybrané místo</h2>
+      <div id="misto"><p class="prazdne">Klikněte do mapy nebo vyhledejte místo. Zobrazí se odhad jasu oblohy, nadmořská výška, Měsíc a dnešní tmavé okno.</p></div>
+    </section>
+  </div>
+
+  <div class="sirsi">
+    <section class="karta" aria-labelledby="nadpis-noci">
+      <h2 id="nadpis-noci">Vhodná období – následujících 30 nocí <span class="stitek mer" title="Výpočet polohy Slunce a Měsíce je přesný na minuty">výpočet</span></h2>
+      <div id="noci"><p class="prazdne">Nejprve vyberte místo.</p></div>
+    </section>
+
+    <section class="karta" aria-labelledby="nadpis-porovnani">
+      <h2 id="nadpis-porovnani">Porovnání míst</h2>
+      <p class="pozn">Do porovnání přidáte místo tlačítkem „Porovnat“. Tmavé okno a oblačnost platí pro nejbližší noc (od dnešního večera).</p>
+      <div id="porovnani"><p class="prazdne">Zatím nic k porovnání.</p></div>
+    </section>
+
+    <section class="karta" aria-labelledby="nadpis-oblibene">
+      <h2 id="nadpis-oblibene">Moje značky a oblíbená místa</h2>
+      <div class="tlacitka">
+        <label class="zaskrt"><input type="checkbox" id="jenOblibene"> jen oblíbená (★)</label>
+        <button type="button" id="exportGpx">Export GPX</button>
+        <button type="button" id="exportJson">Export JSON</button>
+        <button type="button" id="importBtn">Import GPX/JSON…</button>
+        <input type="file" id="importSoubor" accept=".gpx,.json,application/gpx+xml,application/json" hidden>
+      </div>
+      <ul class="mista" id="seznamMist"></ul>
+    </section>
+
+    <section class="karta" aria-labelledby="nadpis-bortle">
+      <h2 id="nadpis-bortle">Bortleova stupnice – orientační převod</h2>
+      <p class="pozn">J. E. Bortle (Sky &amp; Telescope, únor 2001) definoval třídy 1–9 <b>vizuálními kritérii</b> (viditelnost Mléčné dráhy, zodiakálního světla,
+        mezní hvězdná velikost). Zenitový jas v mag/arcsec² mu odpovídá jen přibližně a různé tabulky se liší o 0,2–0,5 mag. Třídu proto
+        <b>nelze automaticky přesně odvodit ze satelitní radiance</b>: družice měří světlo vyzařované vzhůru, ne jas oblohy, nevidí světlo pod
+        mraky a za horizontem, nezohlední terén, opar ani to, jak tmavý je obzor. Stránka uvádí rozsah tříd odpovídající odhadu ± nejistota.</p>
+      <div class="obal-tab"><table id="tabBortle"></table></div>
+      <p class="pozn">Převod SQM → Bortle podle tabulky, kterou používá <a href="https://www.lightpollutionmap.info" target="_blank" rel="noopener">lightpollutionmap.info</a>
+        (J. Stare); mezní hvězdná velikost (MHV) podle Bortleho článku. Přirozená obloha bez umělého světla má v zenitu asi 21,6–22,0 mag/arcsec²
+        podle aktivity airglow (kolem maxima slunečního cyklu je jasnější).</p>
+    </section>
+
+    <section class="karta zdroje" aria-labelledby="nadpis-zdroje">
+      <h2 id="nadpis-zdroje">Zdroje dat, stáří, licence a omezení</h2>
+      <div class="obal-tab"><table id="tabZdroje"></table></div>
+      <details class="vysvetleni" style="margin-top:10px">
+        <summary>Jak se počítá odhad jasu oblohy</summary>
+        <div class="pozn" id="popisModelu"></div>
+      </details>
+    </section>
+  </div>
+
+  <script src="svetelne_znecisteni/app.js"></script>
+</body>
+</html>

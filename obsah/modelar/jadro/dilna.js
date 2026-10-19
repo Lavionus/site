@@ -235,19 +235,94 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   });
   M.smazPoznamku = (dok, id) => Object.assign({}, dok, { poznamky: M.poznamky(dok).filter(p => p.id !== id) });
 
+  // ------------------------------------------------------------ rychlé kóty při přetahování
+  /** Mezery od vybraných těles (ids, jejich společná obálka) k nejbližším sousedům v ±X a ±Y:
+      soused se počítá, jen když se s výběrem překrývá v druhé vodorovné ose (stojí „vedle“, ne šikmo).
+      Bez souseda na té straně kóta k okraji desky (deska = {sirka, hloubka}, jinak nic).
+      Vrací [{osa 0|1, strana −1|1, mezera, od [x,y,z], do [x,y,z], soused: id | null}] (body na kótovací čáře). */
+  M.vzdalenostiKSousedum = function (dok, ids, deska = null, max = 1000) {
+    const vyb = new Set(ids), vybrane = dok.uzly.filter(u => vyb.has(u.id) && !u.skryto);
+    if (!vybrane.length) return [];
+    const a = M.obalkaVice(vybrane);
+    const ostatni = dok.uzly.filter(u => !vyb.has(u.id) && !u.skryto).map(u => ({ id: u.id, o: M.obalkaUzlu(u) }));
+    const out = [];
+    for (const osa of [0, 1]) {
+      const jina = 1 - osa;
+      for (const strana of [-1, 1]) {
+        let nej = null;
+        for (const { id, o } of ostatni) {
+          // překryv v druhé vodorovné ose i ve výšce (těleso „za“ výběrem nad ním se nepočítá)
+          if (o.max[jina] <= a.min[jina] + 1e-6 || o.min[jina] >= a.max[jina] - 1e-6) continue;
+          if (o.max[2] <= a.min[2] + 1e-6 || o.min[2] >= a.max[2] - 1e-6) continue;
+          const mezera = strana < 0 ? a.min[osa] - o.max[osa] : o.min[osa] - a.max[osa];
+          if (mezera < -1e-6 || mezera > max) continue;
+          if (!nej || mezera < nej.mezera) nej = { id, o, mezera };
+        }
+        // čára kóty: uprostřed překryvu v druhé ose, ve výšce středu překryvu
+        const kraj = strana < 0 ? a.min[osa] : a.max[osa];
+        if (nej) {
+          const c = (Math.max(a.min[jina], nej.o.min[jina]) + Math.min(a.max[jina], nej.o.max[jina])) / 2;
+          const z = (Math.max(a.min[2], nej.o.min[2]) + Math.min(a.max[2], nej.o.max[2])) / 2;
+          const od = [0, 0, z], kam = [0, 0, z];
+          od[osa] = kraj; od[jina] = c; kam[osa] = strana < 0 ? nej.o.max[osa] : nej.o.min[osa]; kam[jina] = c;
+          out.push({ osa, strana, mezera: Math.max(0, nej.mezera), od, do: kam, soused: nej.id });
+        } else if (deska) {
+          const hrana = (osa === 0 ? deska.sirka : deska.hloubka) / 2 * strana;
+          const mezera = strana < 0 ? kraj - hrana : hrana - kraj;
+          if (mezera < 0 || mezera > max) continue;
+          const c = (a.min[jina] + a.max[jina]) / 2, od = [0, 0, a.min[2]], kam = [0, 0, a.min[2]];
+          od[osa] = kraj; od[jina] = c; kam[osa] = hrana; kam[jina] = c;
+          out.push({ osa, strana, mezera, od, do: kam, soused: null });
+        }
+      }
+    }
+    return out;
+  };
+
   // ------------------------------------------------------------ vlastní tvary
   /** Z vybraných uzlů udělá vlastní tvar: kopie posunuté tak, aby střed obálky byl
-      v počátku a spodek v Z = 0. Vrací {nazev, uzly, rozmer, zdroje: [id]}. */
-  M.tvarZUzlu = function (uzly, nazev) {
+      v počátku a spodek v Z = 0. Vrací {nazev, uzly, rozmer, zdroje: [id], parametry}.
+      Parametrický díl: používají-li uzly ve vzorcích proměnné projektu (dok), tvar je jedna skupina
+      s vlastními proměnnými (parametry dílu – po vložení je jde měnit v inspektoru). */
+  M.tvarZUzlu = function (uzly, nazev, dok = null) {
     if (!uzly.length) throw new Error('není vybrané žádné těleso');
     const ob = M.obalkaVice(uzly);
     const posun = [-(ob.min[0] + ob.max[0]) / 2, -(ob.min[1] + ob.max[1]) / 2, -ob.min[2]];
     const zaokr = x => Math.round(x * 1e6) / 1e6;
-    const kopie = uzly.map(u => M.normalizujUzel(Object.assign({}, u, { poloha: u.poloha.map((x, i) => zaokr(x + posun[i])), zamceno: false, skryto: false })));
+    const jmeno = String(nazev || (uzly.length === 1 ? uzly[0].nazev : 'Můj tvar')).slice(0, 60);
+    let kopie = uzly.map(u => M.normalizujUzel(Object.assign({}, u, { poloha: u.poloha.map((x, i) => zaokr(x + posun[i])), zamceno: false, skryto: false })));
+    const parametry = dok && M.promenneUzlu ? M.promenneSeZavislostmi(dok, M.promenneUzlu(kopie)) : [];
+    if (parametry.length) {
+      // hodnoty parametrů v době uložení (číslo), závislé proměnné jako výraz
+      const h = M.hodnotyPromennych(dok);
+      const prom = parametry.map(p => Object.assign({}, p, { vyraz: M.promenneVeVyrazu(p.vyraz).length ? p.vyraz : String(Math.round(h.get(p.jmeno.toLowerCase()) * 1e6) / 1e6) }));
+      let uzel;
+      if (kopie.length === 1) uzel = kopie[0].druh === 'skupina' ? kopie[0] : M.obalUpravou(kopie[0], null);
+      else { const r = M.seskupUzly({ verze: 1, uzly: kopie }, kopie.map(u => u.id), { nazev: jmeno }); uzel = r.dok.uzly.find(u => u.id === r.id); }
+      // skupina, která už parametry má (díl z knihovny uložený znovu): její zůstanou, přibudou chybějící
+      const mame = new Set((uzel.promenne || []).map(p => p.jmeno.toLowerCase()));
+      prom.unshift(...(uzel.promenne || []));
+      for (let i = prom.length - 1; i >= (uzel.promenne || []).length; i--) if (mame.has(prom[i].jmeno.toLowerCase())) prom.splice(i, 1);
+      kopie = [M.normalizujUzel(Object.assign({}, uzel, { nazev: jmeno, promenne: prom }))];
+    }
     return {
-      nazev: String(nazev || (uzly.length === 1 ? uzly[0].nazev : 'Můj tvar')).slice(0, 60),
-      uzly: kopie, rozmer: [0, 1, 2].map(i => zaokr(ob.max[i] - ob.min[i])), zdroje: [...M.zdrojeUzlu(kopie)],
+      nazev: jmeno, uzly: kopie, rozmer: [0, 1, 2].map(i => zaokr(ob.max[i] - ob.min[i])), zdroje: [...M.zdrojeUzlu(kopie)],
+      ...(kopie.length === 1 && kopie[0].promenne ? { parametry: kopie[0].promenne.map(p => p.jmeno) } : {}),
     };
+  };
+  /** Díly knihovny → dokument (každý díl jedna skupina vedle sebe) pro soubor knihovny .modelar. */
+  M.dokZKnihovny = function (tvary) {
+    let dok = M.novyDokument(), x = 0;
+    for (const t of tvary) {
+      const sirka = Math.max(1, t.tvar.rozmer[0]);
+      const r = M.vlozTvar(dok, t.tvar, [x + sirka / 2, 0, 0]);
+      dok = r.dok;
+      // díl z více těles = jedna skupina pojmenovaná po dílu (import ho pak pozná jako jeden díl)
+      if (r.ids.length > 1) { const g = M.seskupUzly(dok, r.ids, { nazev: t.nazev }); dok = g.dok; }
+      else dok = M.upravUzly(dok, r.ids, { nazev: t.nazev });
+      x += sirka + 10;
+    }
+    return dok;
   };
   /** Vloží vlastní tvar: spodek středu na bod [x, y, z]. Vrací {dok, ids}. */
   M.vlozTvar = function (dok, tvar, bod = [0, 0, 0]) {

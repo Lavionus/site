@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-17b';
+  const VERZE_KODU = '2026-10-19a';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -1552,6 +1552,8 @@
         // (americké „hrnky“ ani celé balení se jako výchozí nehodí; v receptech vždy gramy)
         const vn = J.vychoziPorceNapoje(f, porceVse);
         let i = vn ? jednotky.findIndex(x => x.nazev === vn) : -1;
+        // koření a sůl: nejmenší kuchyňská míra (špetka, lžička), ne 100 g
+        if (i < 0 && f.skupina === 'koreni') i = jednotky.findIndex((x, k) => k > 0 && /^(špetka|lžička|lžíce)/.test(x.nazev));
         if (i < 0) i = jednotky.findIndex((x, k) => k > 0 && (
           (/^porce/.test(x.nazev) && x.g <= 250 && x.g !== 100) || (/^(střední kus|kus)$/.test(x.nazev) && x.g <= 400)));
         if (i > 0) { jIdx = i; mnoz = 1; }
@@ -1576,7 +1578,7 @@
       })) : null;
     const vypocet = h('div', { class: 'vypocet', 'aria-live': 'polite' });
     const rychle = h('div', { class: 'rychle-g' });
-    for (const g of (druh ? [100, 200, 250, 330, 500] : [25, 50, 100, 150, 200, 250])) {
+    for (const g of (druh ? [100, 200, 250, 330, 500] : f.skupina === 'koreni' ? [1, 2, 5, 10, 20] : [25, 50, 100, 150, 200, 250])) {
       rychle.appendChild(h('button', { class: 'btn mini', type: 'button', onclick: () => { vyberJ.value = '0'; jIdx = 0; vstupM.value = String(g); prepocti(); } }, g + ' ' + j));
     }
     const c = cileDne(volby.den);
@@ -2990,7 +2992,12 @@
     const fotoInfo = h('div', { class: 'slabe foto-info', 'aria-live': 'polite' });
     const fotoTl = h('button', { class: 'btn', type: 'button', title: 'Vyfoť tabulku výživových údajů – hodnoty se přečtou a vyplní' }, '📷 Vyplnit z fotky etikety');
     fotoTl.addEventListener('click', () => fotoVstup.click());
-    fotoVstup.addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) vyplnZFotky(f); });
+    fotoVstup.addEventListener('change', async e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const vyrez = await orizniFotku(f);   // null = zrušeno
+      if (vyrez) vyplnZFotky(vyrez);
+    });
     async function vyplnZFotky(soubor) {
       if (!window.DENIK_ETIKETA) { fotoInfo.textContent = 'Čtení etiket se nepodařilo načíst.'; return; }
       fotoTl.disabled = true;
@@ -4076,6 +4083,182 @@
     });
   }
 
+  /* ================= import jídelníčku z tabulky (Excel / CSV, např. Kalorické tabulky) ================= */
+  let xlsxSlib = null;
+  function nactiXlsx() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    if (xlsxSlib) return xlsxSlib;
+    xlsxSlib = new Promise((ok, chyba) => {
+      const s = document.createElement('script');
+      s.src = 'lib/xlsx/xlsx.full.min.js';
+      s.onload = () => (window.XLSX ? ok(window.XLSX) : chyba(new Error('Čtení tabulek se nepodařilo načíst.')));
+      s.onerror = () => { s.remove(); xlsxSlib = null; chyba(new Error('Čtení tabulek se nepodařilo stáhnout (jsi offline?).')); };
+      document.head.appendChild(s);
+    });
+    return xlsxSlib;
+  }
+  // soubor → listy jako pole řádků (buňky: text, číslo, datum)
+  async function radkyTabulky(soubor) {
+    if (soubor.size > 30 * 1024 * 1024) throw new Error('Soubor je příliš velký.');
+    const X = await nactiXlsx();
+    const bajty = new Uint8Array(await soubor.arrayBuffer());
+    let kniha;
+    if (/\.(csv|txt)$/i.test(soubor.name) || soubor.type === 'text/csv') {
+      // CSV: UTF-8, jinak Windows-1250 (starší české exporty)
+      let text = new TextDecoder('utf-8').decode(bajty);
+      if (text.includes('�')) text = new TextDecoder('windows-1250').decode(bajty);
+      kniha = X.read(text.replace(/^\ufeff/, ''), { type: 'string', raw: true });   // buňky jako text: desetinnou čárku převede rozbor
+    } else kniha = X.read(bajty, { type: 'array', cellDates: true });
+    return kniha.SheetNames.map(n => ({ nazev: n, radky: X.utils.sheet_to_json(kniha.Sheets[n], { header: 1, raw: true, defval: '', blankrows: false }) }));
+  }
+  async function importTabulky(soubor) {
+    let listy;
+    try { listy = await radkyTabulky(soubor); }
+    catch (e) { D.chyba('Soubor se nepodařilo přečíst: ' + (e && e.message || e)); return; }
+    const dnes = J.datumKlic(new Date());
+    const datum = h('input', { class: 'vstup', type: 'date', value: dnes, max: dnes, 'aria-label': 'Datum pro položky bez data' });
+    const telo = h('div', { class: 'sheet-telo' });
+    const ulozit = h('button', { class: 'btn primary', type: 'button' }, '📥 Přidat do deníku');
+    const pata = h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' }, h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zrušit'), ulozit));
+    const v = otevriVrstvu({ titulek: '📥 Import: ' + soubor.name, telo, pata, sirka: '760px' });
+    let vys = null;
+    const vykresli = () => {
+      vys = { polozky: [], dny: [], energieKj: false, mapovani: null };
+      for (const l of listy) {
+        const x = J.rozeberTabulkuJidel(l.radky, { den: datum.value || dnes });
+        vys.polozky.push(...x.polozky); vys.energieKj = vys.energieKj || x.energieKj; vys.mapovani = vys.mapovani || x.mapovani;
+      }
+      vys.dny = [...new Set(vys.polozky.map(p => p.den))].sort();
+      telo.textContent = '';
+      ulozit.disabled = !vys.polozky.length;
+      if (!vys.polozky.length) {
+        const ukazka = (listy[0] && listy[0].radky || []).slice(0, 8);
+        pridat(telo, h('div', { class: 'upozorneni' }, 'V souboru jsem nenašel tabulku s jídly. Potřebuji řádek se záhlavím, ve kterém je energie (kcal nebo kJ) a aspoň dvě z makroživin (bílkoviny, sacharidy, tuky), a pod ním řádky s potravinami. Dny a jídla (Snídaně, Oběd…) můžou být nad položkami nebo ve vlastních sloupcích.'),
+          ukazka.length ? h('p', { class: 'slabe', text: 'Začátek souboru:' }) : null,
+          ukazka.length ? h('pre', { class: 'import-ukazka', text: ukazka.map(r => r.map(c => String(c instanceof Date ? J.datumKlic(c) : c)).join(' | ')).join('\n') }) : null);
+        return;
+      }
+      const kcal = vys.polozky.reduce((a, p) => a + (p.n.kcal || 0), 0);
+      const bezData = vys.polozky.some(p => p.den === (datum.value || dnes)) && vys.dny.length === 1;
+      const nazvySloupcu = { nazev: 'potravina', mnozstvi: 'množství', kcal: 'energie (kcal)', kj: 'energie (kJ → kcal)', energie: 'energie', bilkoviny: 'bílkoviny', sacharidy: 'sacharidy', cukry: 'cukry', tuk: 'tuky', nasycene: 'nasycené MK', vlaknina: 'vláknina', sul: 'sůl', sodik: 'sodík → sůl', datum: 'datum', chod: 'jídlo dne' };
+      const jm = Object.fromEntries(S.nastaveni.jidla.map(j => [j.id, j.nazev]));
+      pridat(telo,
+        h('p', {}, 'Nalezeno ', h('b', { text: J.pocet(vys.polozky.length, 'položka', 'položky', 'položek') }), ' ve ', h('b', { text: J.pocet(vys.dny.length, 'dni', 'dnech', 'dnech') }),
+          ' (' + J.zKlice(vys.dny[0]).toLocaleDateString('cs-CZ') + (vys.dny.length > 1 ? ' – ' + J.zKlice(vys.dny[vys.dny.length - 1]).toLocaleDateString('cs-CZ') : '') + '), celkem ' + en(kcal) + '.'),
+        vys.energieKj ? h('p', { class: 'slabe', text: 'Energie byla v kJ – převedena na kcal (÷ 4,184).' }) : null,
+        vys.mapovani ? h('p', { class: 'slabe', text: 'Rozpoznané sloupce: ' + Object.keys(vys.mapovani).map(k => nazvySloupcu[k] || k).join(', ') + '.' }) : null,
+        h('label', { class: 'pole', style: { maxWidth: '16rem' } }, bezData ? 'Datum (v souboru žádné není)' : 'Datum pro položky bez data', datum),
+        h('div', { class: 'import-tab-obal' }, h('table', { class: 'tab-ziviny import-tab' },
+          h('thead', {}, h('tr', {}, h('th', { text: 'Den' }), h('th', { text: 'Jídlo' }), h('th', { text: 'Potravina' }), h('th', { text: 'Množství' }), h('th', { text: ej() }), h('th', { text: 'B / S / T (g)' }))),
+          h('tbody', {}, ...vys.polozky.slice(0, 200).map(p => h('tr', {},
+            h('td', { text: J.zKlice(p.den).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) }), h('td', { text: jm[p.jidlo] || p.jidlo }),
+            h('td', { text: p.nazev }), h('td', { text: p.g ? fc(p.g) + ' g' : p.mnozstvi || 'porce' }), h('td', { text: fc(E(p.n.kcal)) }),
+            h('td', { text: [p.n.bilkoviny, p.n.sacharidy, p.n.tuk].map(x => Number.isFinite(x) ? fc(x, 1) : '–').join(' / ') })))))),
+        vys.polozky.length > 200 ? h('p', { class: 'slabe', text: 'Zobrazeno prvních 200 položek, přidají se všechny.' }) : null,
+        h('p', { class: 'slabe', text: 'Položky se přidají jako záznamy s hodnotami ze souboru (značka „import“). Co už v deníku stejně je, se podruhé nepřidá. Akci jde vrátit tlačítkem Vrátit.' }));
+    };
+    datum.addEventListener('change', vykresli);
+    vykresli();
+    ulozit.addEventListener('click', () => {
+      if (!vys || !vys.polozky.length) return;
+      let r = null;
+      v.zavri();
+      sVracenim('Import z tabulky', () => { r = J.importujPolozky(S, vys.polozky, { zdroj: 'import' }); });
+      D.info('Přidáno ' + J.pocet(r.pridano, 'položka', 'položky', 'položek') + (r.duplicit ? ', ' + r.duplicit + ' už v deníku bylo' : '') + '.');
+      if (vys.dny.length) { aktivniDen = vys.dny[vys.dny.length - 1]; prepni('denik'); }
+    });
+  }
+
+  /* ----- ořez fotky před čtením etikety: rámeček s úchyty (myš i prst), otočení ----- */
+  // vrátí Promise<Blob|null> (null = zrušeno); Blob je výřez v původním rozlišení (nejvýš 2400 px)
+  function orizniFotku(soubor) {
+    return new Promise(async hotovo => {
+      let zdroj;
+      try { zdroj = await createImageBitmap(soubor); } catch (_) { hotovo(soubor); return; }   // neznámý formát – číst celou
+      const platno = h('canvas', { class: 'orez-platno', role: 'img', 'aria-label': 'Fotka s rámečkem výřezu – tažením rámeček posuneš, za rohy změníš velikost' });
+      const telo = h('div', { class: 'sheet-telo orez-telo' },
+        h('p', { class: 'slabe', text: 'Ohraniči jen tabulku výživových údajů – čtení bude rychlejší a přesnější. Rámeček posuneš tažením, velikost změníš za rohy, tažením mimo něj nakreslíš nový.' }),
+        h('div', { class: 'orez-ram' }, platno));
+      let vysledek = null;
+      const otocit = h('button', { class: 'btn', type: 'button', title: 'Otočit o 90°' }, '↻ Otočit');
+      const cela = h('button', { class: 'btn', type: 'button' }, 'Celá fotka');
+      const pouzit = h('button', { class: 'btn primary', type: 'button' }, '✂️ Číst výřez');
+      const pata = h('div', { class: 'sheet-pata' }, otocit, cela, h('div', { class: 'vpravo' }, pouzit));
+      const v = otevriVrstvu({ titulek: '✂️ Výřez etikety', telo, pata, sirka: '760px', priZavreni: () => { try { zdroj.close && zdroj.close(); } catch (_) { /* nic */ } hotovo(vysledek); } });
+      let r = null, meritko = 1, tah = null;
+      const W = () => zdroj.width, H = () => zdroj.height;
+      const vychozi = () => { r = { x: W() * 0.08, y: H() * 0.08, w: W() * 0.84, h: H() * 0.84 }; };
+      vychozi();
+      function rozmer() {
+        const max = Math.max(200, telo.clientWidth - 4), maxV = Math.max(220, innerHeight * 0.6);
+        meritko = Math.min(max / W(), maxV / H(), 1);
+        platno.width = Math.round(W() * meritko); platno.height = Math.round(H() * meritko);
+        kresli();
+      }
+      function kresli() {
+        const c = platno.getContext('2d'), m = meritko;
+        c.drawImage(zdroj, 0, 0, platno.width, platno.height);
+        c.fillStyle = 'rgba(0,0,0,.55)';
+        c.fillRect(0, 0, platno.width, r.y * m); c.fillRect(0, (r.y + r.h) * m, platno.width, platno.height - (r.y + r.h) * m);
+        c.fillRect(0, r.y * m, r.x * m, r.h * m); c.fillRect((r.x + r.w) * m, r.y * m, platno.width - (r.x + r.w) * m, r.h * m);
+        c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(r.x * m, r.y * m, r.w * m, r.h * m);
+        c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1;
+        for (const t of [1 / 3, 2 / 3]) { c.beginPath(); c.moveTo((r.x + r.w * t) * m, r.y * m); c.lineTo((r.x + r.w * t) * m, (r.y + r.h) * m); c.moveTo(r.x * m, (r.y + r.h * t) * m); c.lineTo((r.x + r.w) * m, (r.y + r.h * t) * m); c.stroke(); }
+        c.fillStyle = '#fff';
+        for (const [x, y] of [[r.x, r.y], [r.x + r.w, r.y], [r.x, r.y + r.h], [r.x + r.w, r.y + r.h]]) { c.beginPath(); c.arc(x * m, y * m, 9, 0, Math.PI * 2); c.fill(); }
+      }
+      const bod = e => { const b = platno.getBoundingClientRect(); return { x: (e.clientX - b.left) * (platno.width / b.width) / meritko, y: (e.clientY - b.top) * (platno.height / b.height) / meritko }; };
+      const omez = () => {
+        const min = Math.min(W(), H()) * 0.05;
+        r.w = Math.max(min, Math.min(r.w, W())); r.h = Math.max(min, Math.min(r.h, H()));
+        r.x = Math.max(0, Math.min(r.x, W() - r.w)); r.y = Math.max(0, Math.min(r.y, H() - r.h));
+      };
+      platno.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        const p = bod(e), tol = 28 / meritko;
+        const rohy = [['tl', r.x, r.y], ['tr', r.x + r.w, r.y], ['bl', r.x, r.y + r.h], ['br', r.x + r.w, r.y + r.h]];
+        const roh = rohy.find(([, x, y]) => Math.abs(p.x - x) < tol && Math.abs(p.y - y) < tol);
+        if (roh) tah = { druh: roh[0], p, r0: { ...r } };
+        else if (p.x > r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y + r.h) tah = { druh: 'posun', p, r0: { ...r } };
+        else tah = { druh: 'novy', p, r0: { x: p.x, y: p.y, w: 0, h: 0 } };
+        platno.setPointerCapture(e.pointerId);
+      });
+      platno.addEventListener('pointermove', e => {
+        if (!tah) return;
+        const p = bod(e), dx = p.x - tah.p.x, dy = p.y - tah.p.y, o = tah.r0;
+        if (tah.druh === 'posun') { r = { ...o, x: o.x + dx, y: o.y + dy }; }
+        else if (tah.druh === 'novy') { r = { x: Math.min(o.x, p.x), y: Math.min(o.y, p.y), w: Math.abs(p.x - o.x), h: Math.abs(p.y - o.y) }; }
+        else {
+          let x1 = o.x, y1 = o.y, x2 = o.x + o.w, y2 = o.y + o.h;
+          if (tah.druh[1] === 'l') x1 += dx; else x2 += dx;
+          if (tah.druh[0] === 't') y1 += dy; else y2 += dy;
+          r = { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1), h: Math.abs(y2 - y1) };
+        }
+        omez(); kresli();
+      });
+      const konec = () => { if (tah && tah.druh === 'novy' && (r.w < 20 || r.h < 20)) vychozi(); tah = null; omez(); kresli(); };
+      platno.addEventListener('pointerup', konec);
+      platno.addEventListener('pointercancel', konec);
+      otocit.addEventListener('click', async () => {
+        const c = document.createElement('canvas'); c.width = H(); c.height = W();
+        const x = c.getContext('2d'); x.translate(c.width, 0); x.rotate(Math.PI / 2); x.drawImage(zdroj, 0, 0);
+        const novy = await createImageBitmap(c);
+        try { zdroj.close && zdroj.close(); } catch (_) { /* nic */ }
+        zdroj = novy; vychozi(); rozmer();
+      });
+      const vyrez = cast => new Promise(ok => {
+        const k = Math.min(1, 2400 / Math.max(cast.w, cast.h));
+        const c = document.createElement('canvas'); c.width = Math.round(cast.w * k); c.height = Math.round(cast.h * k);
+        c.getContext('2d').drawImage(zdroj, cast.x, cast.y, cast.w, cast.h, 0, 0, c.width, c.height);
+        c.toBlob(b => ok(b), 'image/jpeg', 0.92);
+      });
+      cela.addEventListener('click', async () => { vysledek = await vyrez({ x: 0, y: 0, w: W(), h: H() }); v.zavri(); });
+      pouzit.addEventListener('click', async () => { vysledek = await vyrez(r); v.zavri(); });
+      window.DENIK._orez = { nastav: x => { r = { ...x }; omez(); kresli(); }, ramecek: () => ({ ...r }), rozmery: () => [W(), H()], vyrez: () => vyrez(r) };   // pro testy
+      requestAnimationFrame(rozmer);
+    });
+  }
+
   /* ================= přidání na plochu ================= */
   let instalacePrompt = null;
   function zarizeni() {
@@ -4285,6 +4468,8 @@
     prep('#nOnline', 'online'); prep('#nObrazky', 'obrazky'); prep('#nMikro', 'mikro'); prep('#nPohyb', 'pohybKCili'); prep('#nNapoje', 'napojeDoVody', () => { $('#nPitny').disabled = S.nastaveni.napojeDoVody === false; vykresliDenik(); });
     $('#nPitny').addEventListener('change', e => { S.nastaveni.pitnyRezim = e.target.value; uloz(); vykresliDenik(); });
     $('#importTl').addEventListener('click', () => $('#importJson').click());
+    $('#importTabulkaTl').addEventListener('click', () => $('#importTabulka').click());
+    $('#importTabulka').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importTabulky(f); });
     $('#vyhybat').addEventListener('input', ulozAlergeny);
     $('#zpravaTl').addEventListener('click', () => { const doK = J.datumKlic(new Date()); zpravaProTerapeuta(J.posunDen(doK, -(obdobi - 1)), doK); });
     addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('zprava-otevrena') && !vrstvy.length) zavriZpravu(); });
@@ -4382,6 +4567,7 @@
 
   // pro testy
   window.DENIK = {
+    _importTabulky: importTabulky,
     spusteno: false, verze: VERZE_KODU,
     _doplnky(d) { nactiDoplnky(d); vykresliPohled(); },   // test: podvržený soubor doplňků
     get stav() { return S; }, DB, prepni, otevriPridani, detailPotraviny, zpracujKod, editorPotraviny, editorReceptu,

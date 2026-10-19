@@ -60,10 +60,8 @@ button.smaz{padding:4px 9px;color:var(--danger);border-color:var(--border)}
 .stav{font-size:.84rem;padding:9px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-panel);margin-bottom:12px}
 .stav.ok{border-color:var(--ok)} .stav.ok b{color:var(--ok)}
 .stav.zle{border-color:var(--danger)} .stav.zle b{color:var(--danger)}
+.stav a{color:var(--accent)}
 .tlacitka{display:flex;gap:10px;flex-wrap:wrap}
-#seznamMista{margin-top:14px;border:1px solid var(--border);border-radius:var(--radius);padding:12px;background:var(--bg-panel)}
-#seznamMista table{font-size:.82rem}
-#seznamMista .cesta{color:var(--text-faint);font-size:.76rem}
 .hlaska{border-radius:6px;padding:10px 12px;font-size:.85rem;margin-bottom:12px;line-height:1.5}
 .hlaska.varovani{background:rgba(224,166,63,.14);border:1px solid var(--warn);color:var(--text)}
 .hlaska.chyba{background:rgba(224,93,93,.14);border:1px solid var(--danger);color:var(--text)}
@@ -105,9 +103,7 @@ details[open] summary{margin-bottom:12px}
     <div class="tlacitka">
       <button id="doOdkazu">🔗 Uložit hodnoty do odkazu</button>
       <button id="vychozi">↺ Vrátit výchozí hodnoty</button>
-      <button id="misto">💾 Co zabírá místo v prohlížeči</button>
     </div>
-    <div id="seznamMista" style="display:none"></div>
     <p class="note">Vyplněné částky se ukládají samy do tohoto prohlížeče a při dalším otevření se načtou zpět –
     stav vidíte na řádku nahoře. Uložení <b>do odkazu</b> zapíše hodnoty přímo do adresy stránky: takový odkaz si můžete
     dát do záložek nebo poslat druhému z vás a otevře se s vašimi čísly i na jiném počítači nebo v prohlížeči,
@@ -653,14 +649,15 @@ function uloz(){
       hlas('<b>✗ Úložiště prohlížeče je plné</b>' + (m ? ' – zabráno ' + kb(m.celkem) + ', z toho nejvíc ' +
         m.polozky.slice(0,2).map(x => '<b>' + x.k + '</b> (' + kb(x.b) + ')').join(' a ') : '') +
         '. Všechny aplikace tohoto webu sdílejí jedno úložiště, takže jedna zaplněná appka zablokuje ukládání i ostatním. ' +
-        'Tlačítkem <b>Co zabírá místo</b> uvidíte celý seznam a můžete nepotřebné položky smazat.' + zaloha, 'zle');
+        'Celý seznam s možností nepotřebné položky smazat najdete v <a href="nastaveni.html" id="odkazNastaveni">⚙️ Nastavení</a> ' +
+        '(tlačítko v horní liště webu).' + zaloha, 'zle');
     } else {
       hlas('<b>✗ Tento prohlížeč ukládání nedovolil</b> (' + (e && e.name ? e.name : 'chyba') + ').' + zaloha, 'zle');
     }
   }
 }
 
-// přehled zabraného místa – kvótu (bývá kolem 5 MB) sdílí celý web
+// zabrané místo pro hlášku o plném úložišti – kvótu (bývá kolem 5 MB) sdílí celý web
 function kb(b){ return b > 1048576 ? (b/1048576).toLocaleString('cs-CZ',{maximumFractionDigits:1}) + ' MB'
                                    : Math.round(b/1024).toLocaleString('cs-CZ') + ' kB'; }
 function mista(){
@@ -675,26 +672,11 @@ function mista(){
     return { celkem, polozky };
   }catch(e){ return null; }
 }
-function vypisMista(){
-  const c = $('seznamMista'), m = mista();
-  if(!m){ c.style.display = ''; c.innerHTML = '<p class="note" style="margin:0">Úložiště prohlížeče není dostupné.</p>'; return; }
-  c.style.display = '';
-  c.innerHTML = '<div class="row" style="padding-top:0"><span>Zabráno celkem</span><b>' + kb(m.celkem) +
-    '</b></div><div class="scroll"><table><thead><tr><th>Uložená data</th><th>Velikost</th><th></th></tr></thead><tbody>' +
-    m.polozky.map(x => '<tr><td>' + x.k.replace(/[<>&]/g,'') + (x.k === KLIC ? ' <span class="cesta">(tato stránka)</span>' : '') +
-      '</td><td>' + kb(x.b) + '</td><td><button class="smaz" data-klic="' + x.k.replace(/"/g,'&quot;') + '">✕</button></td></tr>').join('') +
-    '</tbody></table></div><p class="note">Kvóta prohlížeče bývá kolem 5 MB pro celý web dohromady. Smazáním položky přijdete o data té aplikace – nejde to vrátit zpět.</p>';
-}
-$('misto').onclick = () => {
-  if($('seznamMista').style.display === 'none'){ vypisMista(); }
-  else { $('seznamMista').style.display = 'none'; }
-};
-$('seznamMista').addEventListener('click', async e => {
-  const k = e.target.dataset.klic;
-  if(k === undefined) return;
-  if(!await Dialog.potvrd('Opravdu smazat uložená data „' + k + '“? Aplikace, která je používá, o ně nenávratně přijde.')) return;
-  try{ localStorage.removeItem(k); }catch(err){}
-  vypisMista(); uloz();
+// v rozcestníku otevřít Nastavení přes hlavní okno (jinak by se načetlo jen do rámu bez menu)
+$('stavUlozeni').addEventListener('click', e => {
+  if(e.target.id !== 'odkazNastaveni' || window.parent === window) return;
+  e.preventDefault();
+  window.parent.postMessage({ otevri: 'obsah/nastaveni.html' }, '*');
 });
 
 $('doOdkazu').onclick = () => {

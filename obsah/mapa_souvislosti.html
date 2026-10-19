@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa souvislostí</title>
+  <meta name="description" content="Interaktivní mapa souvislostí: editor uzlů a vztahů mezi pojmy, událostmi, lidmi a technologiemi. Skupiny, typy vztahů, vlastnosti a obrázky, analýza sítě (centrality, komunity), filtry, prezentace, hierarchické rozmístění, import a export JSON/SVG/PNG/GraphML/GEXF/CSV/DOT/Mermaid, sdílení odkazem.">
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="mapa_souvislosti/jadro.js"></script>
+  <script src="mapa_souvislosti/sablony.js"></script>
+  <script src="mapa_souvislosti/analyza.js"></script>
+  <script src="mapa_souvislosti/formaty.js"></script>
+  <script src="mapa_souvislosti/rozlozeni.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--bg-deep); color: var(--text); font-family: var(--font);
+      display: flex; flex-direction: column; min-height: 100vh; }
+    [hidden] { display: none !important; }
+    header.hlava { padding: 12px 16px 8px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    header.hlava h1 { font-size: 1.25rem; margin: 0; }
+    header.hlava p { margin: 0; color: var(--text-muted); font-size: .85rem; }
+
+    /* ---------- lišta ---------- */
+    .lista { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 16px 10px; border-bottom: 1px solid var(--border); }
+    .lista .skup { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .lista .odd { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+    button, .tl, select, input, textarea { font-family: inherit; font-size: .86rem; }
+    button, .tl { background: var(--bg-control); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+      padding: 6px 10px; cursor: pointer; line-height: 1.2; white-space: nowrap; }
+    button:hover, .tl:hover { background: var(--bg-hover); }
+    button:disabled { opacity: .45; cursor: default; }
+    button.hlavni { background: var(--accent); color: var(--on-accent, #fff); border-color: var(--accent); }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.aktivni { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+    button.nebezpeci { color: var(--danger); }
+    button.ikona { padding: 6px 8px; min-width: 32px; }
+    select, input[type=text], input[type=search], input[type=url], input[type=number], textarea {
+      background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+    textarea { resize: vertical; line-height: 1.45; }
+    input[type=color] { width: 36px; height: 30px; padding: 1px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    #vyberMapy { max-width: 220px; }
+    .hledani { position: relative; display: flex; align-items: center; gap: 4px; }
+    .hledani input { width: 170px; }
+    .hledani .pocet { font-size: .75rem; color: var(--text-muted); min-width: 34px; }
+
+    details.menu { position: relative; }
+    details.menu > summary { list-style: none; }
+    details.menu > summary::-webkit-details-marker { display: none; }
+    details.menu > summary::after { content: ' ▾'; font-size: .7rem; }
+    details.menu .nabidka { position: absolute; z-index: 50; top: calc(100% + 4px); left: 0; min-width: 230px;
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+      padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+    details.menu .nabidka.vpravo { left: auto; right: 0; }
+    details.menu .nabidka button { text-align: left; background: transparent; border-color: transparent; }
+    details.menu .nabidka button:hover { background: var(--bg-hover); }
+    details.menu .nabidka .nadpis { font-size: .72rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .4px; padding: 6px 8px 2px; }
+    details.menu .nabidka label { font-size: .8rem; color: var(--text-muted); padding: 4px 8px; display: flex; gap: 6px; align-items: center; }
+
+    /* ---------- pracovní plocha ---------- */
+    .prace { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 0; }
+    .platno-obal { position: relative; min-height: 420px; overflow: hidden; background:
+      radial-gradient(circle, var(--border) 1px, transparent 1.2px) 0 0 / 24px 24px, var(--bg-deep); }
+    .platno-obal.pretahovani { outline: 3px dashed var(--accent); outline-offset: -6px; }
+    svg#platno { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; display: block; }
+    svg#platno.posun { cursor: grabbing; }
+    svg#platno.rezim-spojit, svg#platno.rezim-spojit .uzel { cursor: crosshair; }
+
+    .uzel { cursor: pointer; }
+    .uzel .tvar { fill: var(--bg-panel); stroke: var(--c); stroke-width: 2; }
+    .uzel .pruh { fill: var(--c); }
+    .uzel .obrys { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 3; opacity: 0; }
+    .uzel.vybrany .obrys { opacity: 1; }
+    .uzel.vybrany .tvar { stroke-width: 3; }
+    .uzel.zdroj .tvar { stroke-dasharray: 6 3; stroke-width: 3; }
+    .uzel.nalez .tvar { fill: var(--accent-soft); }
+    .uzel.cesta .tvar { stroke-width: 4; }
+    .uzel text { pointer-events: none; }
+    .uzel .nadpis { fill: var(--text); font-size: 13px; font-weight: 600; }
+    .uzel .meta { fill: var(--text-muted); font-size: 11.5px; font-weight: 600; }
+    .uzel .popis { fill: var(--text-muted); font-size: 11.5px; }
+    .uzel .tagy { fill: var(--text-faint); font-size: 11.5px; font-style: italic; }
+    .uzel .odkaz { fill: var(--accent); font-size: 11.5px; }
+    .uzel .cara { stroke: var(--c); stroke-opacity: .35; }
+    .uzel .rozb { fill: var(--text-faint); font-size: 10px; }
+    .uzel .zamek { font-size: 10px; }
+    .uzel .uchyt { fill: var(--accent); stroke: var(--bg-panel); stroke-width: 2; opacity: 0; cursor: crosshair; transition: opacity .12s; }
+    .uzel:hover .uchyt, .uzel.vybrany .uchyt { opacity: 1; }
+    @media (hover: none) { .uzel.vybrany .uchyt { opacity: 1; } }
+    .ztlumeny { opacity: .18; }
+    .uzel.ztlumeny { opacity: .25; }
+
+    .hrana .cara { fill: none; stroke: var(--hc, var(--text-faint)); }
+    .hrana .hrot { fill: var(--hc, var(--text-faint)); }
+    .hrana .zasah { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; }
+    .hrana.vybrana .cara { stroke: var(--accent); }
+    .hrana.vybrana .hrot { fill: var(--accent); }
+    .hrana.cesta .cara { stroke: var(--warn); stroke-width: 4 !important; }
+    .hrana.cesta .hrot { fill: var(--warn); }
+    .hrana.zvyraznena .cara { stroke: var(--accent); }
+    .hrana.zvyraznena .hrot { fill: var(--accent); }
+    .stitek rect { fill: var(--bg-deep); opacity: .92; }
+    .stitek text { fill: var(--text-muted); font-size: 11.5px; pointer-events: none; }
+    .stitek { cursor: pointer; }
+    .stitek.vybrana text { fill: var(--accent); font-weight: 600; }
+    .osa-casu line { stroke: var(--text-faint); stroke-width: 1.5; }
+    .osa-casu text { fill: var(--text-muted); font-size: 12px; font-weight: 600; text-anchor: middle; }
+    #docasna { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; pointer-events: none; }
+    #ramecek { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; pointer-events: none; }
+
+    .na-platne { position: absolute; z-index: 5; }
+    .legenda { top: 10px; left: 10px; display: flex; flex-wrap: wrap; gap: 4px; max-width: calc(100% - 20px); }
+    .legenda button { font-size: .75rem; padding: 3px 8px; border-radius: 12px; background: var(--bg-panel); display: flex; align-items: center; gap: 5px; }
+    .legenda button .tecka { width: 9px; height: 9px; border-radius: 3px; background: var(--c); display: inline-block; }
+    .legenda button.vypnuty { opacity: .45; text-decoration: line-through; }
+    .priblizeni { bottom: 10px; left: 10px; display: flex; gap: 4px; align-items: center; }
+    .priblizeni button { background: var(--bg-panel); }
+    .priblizeni .proc { font-size: .75rem; color: var(--text-muted); min-width: 40px; text-align: center; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 5px 4px; }
+    .napoveda-plocha { bottom: 10px; right: 10px; font-size: .75rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 9px; max-width: 60%; text-align: right; }
+    .rezim-info { top: 48px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--on-accent, #fff); padding: 6px 12px;
+      border-radius: 16px; font-size: .82rem; box-shadow: var(--shadow); display: flex; gap: 10px; align-items: center; }
+    .rezim-info button { background: transparent; color: inherit; border-color: currentColor; padding: 2px 8px; font-size: .78rem; }
+    .prazdna { top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text-muted); font-size: .92rem; line-height: 1.6;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; max-width: 360px; }
+    .prazdna .tlacitka { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+
+    /* ---------- boční panel ---------- */
+    aside.panel { border-left: 1px solid var(--border); background: var(--bg-panel); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+    .zalozky { display: flex; border-bottom: 1px solid var(--border); }
+    .zalozky button { flex: 1; border: 0; border-radius: 0; background: transparent; padding: 9px 4px; color: var(--text-muted); border-bottom: 2px solid transparent; }
+    .zalozky button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+    .obsah-panelu { padding: 12px 14px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .pole { display: flex; flex-direction: column; gap: 4px; }
+    .pole > label, .popisek { font-size: .76rem; color: var(--text-muted); }
+    .radek { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .radek > .pole { flex: 1; min-width: 100px; }
+    .panel h2 { font-size: .95rem; margin: 2px 0 0; display: flex; align-items: center; gap: 6px; }
+    .panel h3 { font-size: .74rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .4px; margin: 8px 0 0; }
+    .zaskrt { font-size: .82rem; display: flex; gap: 6px; align-items: center; color: var(--text); }
+    .seznam { display: flex; flex-direction: column; gap: 2px; }
+    .seznam button { text-align: left; background: transparent; border-color: transparent; padding: 5px 6px; white-space: normal; display: flex; gap: 6px; align-items: baseline; }
+    .seznam button:hover { background: var(--bg-hover); }
+    .seznam .vztah { color: var(--text-muted); font-size: .78rem; }
+    .seznam .pocet { margin-left: auto; color: var(--text-faint); font-size: .75rem; }
+    .tecka { width: 9px; height: 9px; border-radius: 3px; background: var(--c); display: inline-block; flex: none; }
+    .cisla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .cisla div { background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+    .cisla b { display: block; font-size: 1.1rem; }
+    .cisla span { font-size: .72rem; color: var(--text-muted); }
+    .typ-radek { display: grid; grid-template-columns: 44px minmax(0, 1fr) 36px; gap: 6px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .typ-radek .druhy { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; }
+    .typ-radek .druhy select { flex: 1; }
+    .typ-radek input[type=text] { width: 100%; }
+    .typ-radek .ik { text-align: center; padding: 6px 2px; }
+    .napoveda { font-size: .8rem; color: var(--text-muted); line-height: 1.55; }
+    .napoveda code, .napoveda kbd { background: var(--bg-deep); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: .78rem; }
+    .napoveda ul { margin: 4px 0; padding-left: 18px; }
+    .stav { display: flex; gap: 14px; padding: 4px 16px; font-size: .75rem; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--bg-panel); flex-wrap: wrap; }
+    .stav .ulozeno { margin-left: auto; }
+    a { color: var(--accent); }
+
+
+    /* ---------- profi doplňky ---------- */
+    kbd { background: var(--bg-deep); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: .74rem; font-family: inherit; }
+    header.hlava kbd { font-size: .72rem; }
+    .skupina .ram { fill: var(--sc); fill-opacity: .07; stroke: var(--sc); stroke-opacity: .55; stroke-width: 1.5; stroke-dasharray: 6 4; pointer-events: stroke; }
+    .skupina .hlava { fill: var(--sc); fill-opacity: .10; cursor: move; }
+    .skupina text { fill: var(--sc); font-size: 12.5px; font-weight: 700; pointer-events: none; }
+    .skupina .pocet-sk { fill: var(--text-faint); font-weight: 400; font-size: 11px; }
+    .skupina.vybrana .ram { stroke-width: 2.5; stroke-opacity: .9; stroke-dasharray: none; }
+    .skupina.cil .ram { fill-opacity: .18; stroke-width: 3; stroke-dasharray: none; }
+    :root[data-theme="light"] .skupina text { filter: brightness(.75); }
+    .uzel .atribut { fill: var(--text-muted); font-size: 11.5px; }
+    .uzel .klic { fill: var(--text); }
+    .uzel.kloubovy .tvar { stroke-width: 4; stroke-dasharray: 3 2; }
+    .hrana.most .cara { stroke: var(--danger) !important; stroke-width: 3.5 !important; }
+    .hrana.most .hrot { fill: var(--danger); }
+    .stitek.ztypu text { font-style: italic; }
+    svg.daleko .stitek, svg.daleko .uzel .meta, svg.daleko .uzel .popis, svg.daleko .uzel .atribut, svg.daleko .uzel .tagy, svg.daleko .uzel .odkaz, svg.daleko .uzel .rozb, svg.daleko .uzel .zamek { display: none; }
+    .legenda .pocet-leg { color: var(--text-faint); }
+    .legenda .leg-info { font-size: .72rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 3px 8px; display: inline-flex; gap: 5px; align-items: center; }
+    .legenda .skala { display: inline-block; width: 46px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #5b8ff9, #f6bd16, #e8684a); }
+    .legenda .filtr-aktivni { border-color: var(--warn); color: var(--warn); }
+    #minimapa { right: 10px; bottom: 44px; width: 200px; height: 130px; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); cursor: crosshair; touch-action: none; }
+    .prezentace { left: 50%; bottom: 14px; transform: translateX(-50%); width: min(760px, calc(100% - 24px)); background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow); padding: 12px 16px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; z-index: 20; }
+    .prezentace .pr-text { flex: 1; min-width: 200px; }
+    .prezentace b { font-size: 1.05rem; }
+    .prezentace p { margin: 4px 0 0; color: var(--text-muted); font-size: .9rem; line-height: 1.45; white-space: pre-wrap; max-height: 9em; overflow: auto; }
+    .prezentace .pr-ovladani { display: flex; gap: 6px; align-items: center; }
+    body.prezentuje .lista, body.prezentuje header.hlava, body.prezentuje aside.panel, body.prezentuje .stav, body.prezentuje .napoveda-plocha, body.prezentuje .legenda, body.prezentuje .priblizeni, body.prezentuje #minimapa { display: none !important; }
+    body.prezentuje .prace { grid-template-columns: minmax(0, 1fr); }
+    body.prezentuje .platno-obal { min-height: calc(100vh - 30px); }
+    .platno-obal:fullscreen { background-color: var(--bg-deep); }
+    .zalozky button { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: .68rem; padding: 7px 1px; min-width: 0; }
+    .zalozky button span { font-size: .95rem; line-height: 1; }
+    .atributy { display: flex; flex-direction: column; gap: 4px; }
+    .atr-radek { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) 30px; gap: 4px; }
+    .atr-radek input { width: 100%; }
+    .nahled-obr { border: 1px solid var(--border); border-radius: 6px; padding: 4px; background: var(--bg-deep); text-align: center; }
+    .nahled-obr img { max-width: 100%; max-height: 140px; display: inline-block; }
+    .cisla.mala b { font-size: .95rem; }
+    .zaskrtavatka { display: flex; flex-direction: column; gap: 3px; }
+    .zaskrtavatka .tecka { margin-right: 2px; }
+    .carka { display: inline-block; width: 16px; height: 0; border-top: 2px solid var(--hc); margin-right: 2px; }
+    .cipy { display: flex; flex-wrap: wrap; gap: 4px; }
+    .cipy button { padding: 3px 8px; border-radius: 12px; font-size: .78rem; }
+    .cipy button.aktivni { background: var(--accent-soft); border-color: var(--accent); }
+    .seznam.metriky button { display: grid; grid-template-columns: 26px minmax(0, 1fr) 60px 52px; align-items: center; gap: 6px; }
+    .seznam.metriky .poradi { color: var(--text-faint); font-size: .75rem; }
+    .seznam.metriky .jm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .seznam.metriky .sloupec { height: 7px; background: var(--bg-deep); border-radius: 4px; overflow: hidden; }
+    .seznam.metriky .sloupec span { display: block; height: 100%; background: var(--accent); }
+    .seznam.metriky .pocet { text-align: right; margin: 0; }
+    .seznam.kontrola button:disabled { opacity: .7; cursor: default; }
+    .kroky { display: flex; flex-direction: column; gap: 8px; }
+    .krok { border: 1px solid var(--border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-deep); }
+    .krok textarea { width: 100%; }
+    .verze-radek { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--border); font-size: .84rem; }
+    .typ-radek.vztahovy .druhy select { flex: 1; }
+    .zarovnani button { font-size: 1rem; }
+    dialog.paleta { width: min(560px, calc(100vw - 24px)); margin: 12vh auto auto; padding: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-elevated); color: var(--text); box-shadow: 0 12px 48px rgba(0,0,0,.5); }
+    dialog.paleta::backdrop { background: rgba(0,0,0,.45); }
+    dialog.paleta input { width: 100%; border: 0; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; padding: 14px 16px; font-size: 1rem; background: transparent; }
+    dialog.paleta input:focus-visible { outline: none; }
+    dialog.paleta ul { list-style: none; margin: 0; padding: 6px; max-height: 50vh; overflow-y: auto; }
+    dialog.paleta li { padding: 8px 10px; border-radius: 6px; display: flex; justify-content: space-between; gap: 10px; cursor: pointer; font-size: .9rem; }
+    dialog.paleta li[aria-selected="true"] { background: var(--accent-soft); }
+    dialog.paleta li.prazdne { color: var(--text-faint); cursor: default; }
+    .paleta-pata { padding: 6px 14px 10px; }
+    dialog.vyber-dialog { width: min(520px, calc(100vw - 24px)); border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elevated); color: var(--text); padding: 0; }
+    dialog.vyber-dialog::backdrop { background: rgba(0,0,0,.45); }
+    .vd-telo { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .vd-seznam { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow-y: auto; }
+    .vd-seznam button { text-align: left; white-space: normal; display: flex; flex-direction: column; gap: 2px; }
+    .vd-seznam button span { font-size: .78rem; color: var(--text-muted); }
+    @media (max-width: 900px) { #minimapa { width: 150px; height: 98px; bottom: 50px; } }
+    @media (max-width: 600px) { #minimapa { display: none !important; } }
+    @media (max-width: 900px) {
+      .prace { grid-template-columns: minmax(0, 1fr); }
+      .platno-obal { min-height: 62vh; }
+      aside.panel { border-left: 0; border-top: 1px solid var(--border); }
+      .obsah-panelu { overflow: visible; }
+      .napoveda-plocha { display: none; }
+      .hledani input { width: 130px; }
+    }
+    @media (max-width: 520px) {
+      .lista { padding: 6px 10px 8px; }
+      header.hlava { padding: 10px 10px 4px; }
+      header.hlava p { display: none; }
+      .lista .odd { display: none; }
+      #vyberMapy { max-width: 150px; }
+      .hledani input { width: 120px; }
+      /* nabídky přes celou šířku, jinak přetečou z okna */
+      details.menu .nabidka, details.menu .nabidka.vpravo { position: fixed; top: auto; left: 10px; right: 10px; min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hlava">
+    <h1>🕸️ Mapa souvislostí</h1>
+    <p>Propojujte pojmy, události, lidi a technologie. Kliknutím uzel rozbalíte, tažením z modrého bodu vytvoříte vztah. <kbd>Ctrl+K</kbd> = všechny příkazy.</p>
+  </header>
+
+  <div class="lista" role="toolbar" aria-label="Nástroje mapy">
+    <div class="skup">
+      <select id="vyberMapy" aria-label="Uložené mapy" title="Uložené mapy"></select>
+      <details class="menu" id="menuMapa">
+        <summary class="tl" title="Správa map">Mapa</summary>
+        <div class="nabidka">
+          <div class="nadpis">Nová</div>
+          <button data-akce="nova">📄 Prázdná mapa</button>
+          <div id="seznamSablon"></div>
+          <div class="nadpis">Tato mapa</div>
+          <button data-akce="prejmenovat">✏️ Přejmenovat…</button>
+          <button data-akce="duplikovat">⧉ Duplikovat</button>
+          <button data-akce="verze">🕓 Verze…</button>
+          <button data-akce="smazatMapu" class="nebezpeci">🗑 Smazat mapu…</button>
+        </div>
+      </details>
+    </div>
+    <span class="odd"></span>
+    <div class="skup">
+      <button id="tlPridat" class="hlavni" title="Nový uzel (N)">+ Uzel</button>
+      <button id="tlSpojit" title="Režim spojování: klikněte na dva uzly (L)">🔗 Spojit</button>
+      <button id="tlSmazat" class="ikona" title="Smazat vybrané (Delete)" disabled>🗑</button>
+    </div>
+    <span class="odd"></span>
+    <div class="skup">
+      <button id="tlZpet" class="ikona" title="Zpět (Ctrl+Z)" disabled>↶</button>
+      <button id="tlZnovu" class="ikona" title="Znovu (Ctrl+Y)" disabled>↷</button>
+    </div>
+    <span class="odd"></span>
+    <div class="skup">
+      <details class="menu" id="menuRozmisteni">
+        <summary class="tl" title="Automatické rozmístění">Rozmístit</summary>
+        <div class="nabidka">
+          <button data-rozm="silove">🧲 Silově (podle vztahů)</button>
+          <button data-rozm="hierarchicky">⬇ Hierarchicky shora dolů</button>
+          <button data-rozm="hierarchickyVodorovne">➡ Hierarchicky zleva doprava</button>
+          <button data-rozm="strom">🌳 Strom od vybraného</button>
+          <button data-rozm="radialni">✺ Radiální strom kolem vybraného</button>
+          <button data-rozm="kruhove">◎ Kruhově kolem vybraného</button>
+          <button data-rozm="casove">📅 Na časovou osu (podle data)</button>
+          <button data-rozm="mrizka">▦ Do mřížky podle typu</button>
+          <button data-rozm="zabalit">⧉ Setřást oddělené části k sobě</button>
+          <label><input type="checkbox" id="chZamcene" checked> nehýbat zamčenými uzly</label>
+        </div>
+      </details>
+      <details class="menu" id="menuZobrazeni">
+        <summary class="tl" title="Zobrazení">Zobrazení</summary>
+        <div class="nabidka">
+          <button data-zobr="rozbalit">▾ Rozbalit všechny uzly</button>
+          <button data-zobr="sbalit">▸ Sbalit všechny uzly</button>
+          <label><input type="checkbox" id="chOkoli"> zvýraznit okolí vybraného</label>
+          <label>hloubka okolí <select id="hloubkaOkoli"><option>1</option><option>2</option><option>3</option></select></label>
+          <label><input type="checkbox" id="chStitky" checked> popisky vztahů</label>
+          <label><input type="checkbox" id="chMinimapa" checked> minimapa <kbd>M</kbd></label>
+          <label><input type="checkbox" id="chMrizka"> přichytávat k mřížce <kbd>G</kbd></label>
+        </div>
+      </details>
+    </div>
+    <span class="odd"></span>
+    <div class="skup hledani">
+      <input type="search" id="hledat" placeholder="Hledat uzel…" title="Hledat uzel (Ctrl+F), Enter = další nález" aria-label="Hledat uzel">
+      <span class="pocet" id="pocetNalezu"></span>
+    </div>
+    <span class="odd"></span>
+    <div class="skup">
+      <button id="tlImport" title="Načíst mapu: JSON, GraphML, GEXF, CSV, DOT nebo text">📂 Import</button>
+      <input type="file" id="soubor" accept=".json,.txt,.graphml,.xml,.gexf,.csv,.tsv,.dot,.gv,application/json,text/plain,text/csv" hidden>
+      <details class="menu" id="menuExport">
+        <summary class="tl">💾 Export</summary>
+        <div class="nabidka vpravo">
+          <div id="exportPolozky"></div>
+          <div class="nadpis">Obrázek</div>
+          <label>barvy <select id="exportBarvy"><option value="svetle">světlé</option><option value="tmave">tmavé</option><option value="tema">podle tématu</option></select></label>
+          <label><input type="checkbox" id="exportVybrane"> jen vybrané uzly</label>
+          <label><input type="checkbox" id="exportLegenda" checked> legenda typů</label>
+        </div>
+      </details>
+      <button id="tlPaleta" class="ikona" title="Paleta příkazů (Ctrl+K)">⌘</button>
+    </div>
+  </div>
+
+  <div class="prace">
+    <div class="platno-obal" id="platnoObal">
+      <svg id="platno" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa souvislostí" role="application">
+        <g id="svet">
+          <g id="vrstvaSkupin"></g>
+          <g id="vrstvaHran"></g>
+          <g id="vrstvaStitku"></g>
+          <g id="vrstvaUzlu"></g>
+          <path id="docasna" d="" hidden></path>
+        </g>
+        <rect id="ramecek" hidden></rect>
+      </svg>
+      <div class="na-platne legenda" id="legenda"></div>
+      <div class="na-platne rezim-info" id="rezimInfo" hidden><span id="rezimText"></span><button id="rezimKonec">Hotovo</button></div>
+      <div class="na-platne prazdna" id="prazdna" hidden>
+        <b>Mapa je prázdná</b><br>
+        Dvojklikem do plochy přidáte uzel, nebo vložte text na kartě <i>Text</i>.
+        <div class="tlacitka"><button class="hlavni" id="prazdnaPridat">+ První uzel</button><button id="prazdnaSablona">Ukázková mapa</button></div>
+      </div>
+      <div class="na-platne priblizeni">
+        <button class="ikona" id="tlOddalit" title="Oddálit (−)">−</button>
+        <span class="proc" id="procZoom">100 %</span>
+        <button class="ikona" id="tlPriblizit" title="Přiblížit (+)">+</button>
+        <button class="ikona" id="tlPrizpusobit" title="Celá mapa (F)">⤢</button>
+      </div>
+      <canvas class="na-platne" id="minimapa" width="200" height="130" title="Minimapa – klikněte nebo táhněte" hidden></canvas>
+      <div class="na-platne napoveda-plocha">Dvojklik = nový uzel · tažení plochy = posun · Shift+tažení = výběr · kolečko = zoom · Ctrl+K = příkazy</div>
+      <div class="na-platne prezentace" id="prezentace" hidden role="region" aria-label="Prezentace">
+        <div class="pr-text"><b id="prTitulek"></b><p id="prPoznamka"></p></div>
+        <div class="pr-ovladani">
+          <span id="prPocet" class="popisek"></span>
+          <button id="prZpet" title="Předchozí (←)">◀</button>
+          <button id="prDal" class="hlavni" title="Další (→, mezerník)">Další ▶</button>
+          <button id="prCela" class="ikona" title="Celá obrazovka (F)">⤢</button>
+          <button id="prKonec" class="ikona" title="Ukončit (Esc)">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="panel" aria-label="Podrobnosti">
+      <div class="zalozky" role="tablist">
+        <button role="tab" data-zal="detail" aria-selected="true" title="Detail vybraného"><span>📝</span>Detail</button>
+        <button role="tab" data-zal="prehled" aria-selected="false" title="Přehled, kontrola a verze"><span>📊</span>Přehled</button>
+        <button role="tab" data-zal="analyza" aria-selected="false" title="Analýza sítě"><span>🧮</span>Analýza</button>
+        <button role="tab" data-zal="filtry" aria-selected="false" title="Filtry"><span>🔎</span>Filtry</button>
+        <button role="tab" data-zal="pribeh" aria-selected="false" title="Příběh – prezentace"><span>🎬</span>Příběh</button>
+        <button role="tab" data-zal="typy" aria-selected="false" title="Typy uzlů a vztahů"><span>🏷️</span>Typy</button>
+        <button role="tab" data-zal="text" aria-selected="false" title="Rychlé zadání textem"><span>⌨️</span>Text</button>
+      </div>
+      <div class="obsah-panelu" id="panelDetail" role="tabpanel"></div>
+      <div class="obsah-panelu" id="panelPrehled" role="tabpanel" hidden></div>
+      <div class="obsah-panelu" id="panelAnalyza" role="tabpanel" hidden></div>
+      <div class="obsah-panelu" id="panelFiltry" role="tabpanel" hidden></div>
+      <div class="obsah-panelu" id="panelPribeh" role="tabpanel" hidden></div>
+      <div class="obsah-panelu" id="panelTypy" role="tabpanel" hidden></div>
+      <div class="obsah-panelu" id="panelText" role="tabpanel" hidden>
+        <h2>Rychlé zadání textem</h2>
+        <div class="napoveda">
+          Každý řádek je uzel nebo vztah:
+          <ul>
+            <li><code>Název [typ] | popis</code> – uzel (typ i popis nejsou povinné)</li>
+            <li><code>A -> B : popis {typ vztahu}</code> – vztah, také <code>A -- B</code>, <code>A &lt;-> B</code>, <code>A &lt;- B</code></li>
+            <li>odsazený řádek pod uzlem pokračuje v popisu, <code>&nbsp;&nbsp;@klíč: hodnota</code> je vlastnost</li>
+            <li><code>## Název skupiny</code> – uzly pod ním patří do skupiny, samotné <code>##</code> skupinu ukončí; <code># …</code> je komentář</li>
+          </ul>
+          Neexistující uzly se ve vztazích založí samy. Typy uzlů: <span id="seznamTypuText"></span>. Typy vztahů: <span id="seznamTypuVztahuText"></span>.
+        </div>
+        <textarea id="vstupText" rows="14" spellcheck="false" placeholder="Albert Einstein [osoba] | fyzik&#10;  @narozen: 1879&#10;Teorie relativity [pojem]&#10;Albert Einstein -> Teorie relativity : formuloval {pricina}"></textarea>
+        <div class="radek">
+          <button class="hlavni" id="tlTextPridat">Přidat do mapy</button>
+          <button id="tlTextNahradit">Nahradit mapu</button>
+          <button id="tlTextZMapy" title="Vypsat současnou mapu jako text">Načíst z mapy</button>
+        </div>
+        <div class="popisek" id="textChyby"></div>
+        <p class="napoveda">Vložit sem jde i obsah souboru – JSON (tento editor, d3/vis.js, Cytoscape), GraphML, GEXF, DOT nebo CSV; formát se rozpozná sám a otevře se jako nová mapa.</p>
+      </div>
+    </aside>
+  </div>
+  <div class="stav" id="stav"><span id="stavPocty"></span><span id="stavVyber"></span><span class="ulozeno" id="stavUlozeno"></span></div>
+
+  <dialog id="paleta" class="paleta" aria-label="Paleta příkazů">
+    <input type="text" id="paletaVstup" placeholder="Příkaz nebo název uzlu…" autocomplete="off" aria-label="Hledat příkaz">
+    <ul id="paletaSeznam" role="listbox"></ul>
+    <div class="popisek paleta-pata">↑↓ vybrat · Enter provést · Esc zavřít</div>
+  </dialog>
+
+  <script src="mapa_souvislosti/ui.js"></script>
+  <script src="mapa_souvislosti/ui_panely.js"></script>
+  <script src="mapa_souvislosti/ui_nastroje.js"></script>
+</body>
+</html>

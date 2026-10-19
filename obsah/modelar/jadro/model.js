@@ -246,6 +246,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         barva: barvaOk(u.barva) ? u.barva.toLowerCase() : t.barva,
         skryto: !!u.skryto,
         zamceno: !!u.zamceno,
+        ...extraUzlu(u),
         zaklad, stred, podklad: u.druh === 'skica' ? pod : null,
         // propojené díly (šroub ↔ matice, krabička ↔ víko): stejné id vazby = sdílené rozměry závitu / krabičky
         ...(typeof u.vazba === 'string' && /^[\w-]{1,40}$/.test(u.vazba) ? { vazba: u.vazba } : {}),
@@ -267,6 +268,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         barva: barvaOk(u.barva) ? u.barva.toLowerCase() : t.barva,
         skryto: !!u.skryto,
         zamceno: !!u.zamceno,
+        ...extraUzlu(u),
         zdroj: u.zdroj,
         zaklad,
         ...(u.jednobarevne ? { jednobarevne: true } : {}),     // barvy trojúhelníků ze souboru vypnuté
@@ -288,6 +290,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         barva: barvaOk(u.barva) ? u.barva.toLowerCase() : t.barva,
         skryto: !!u.skryto,
         zamceno: !!u.zamceno,
+        ...extraUzlu(u),
         deti: u.deti.map(d => normalizovane.has(d) && !d.skryto && !d.zamceno ? d : M.normalizujUzel(Object.assign({}, d, { skryto: false, zamceno: false }))),
         zaklad,
         operace: u.operace === 'prunik' ? 'prunik' : 'sjednoceni',
@@ -308,8 +311,21 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       barva: barvaOk(u.barva) ? u.barva.toLowerCase() : t.barva,
       skryto: !!u.skryto,
       zamceno: !!u.zamceno,
+      ...extraUzlu(u),
     };
   };
+
+  /** Vzorce polí (jadro/promenne.js) a u skupiny vlastní proměnné (parametrický díl) – jen když jsou. */
+  function extraUzlu(u) {
+    const z = {};
+    const vz = M.normalizujVzorce ? M.normalizujVzorce(u.vzorce) : null;
+    if (vz) z.vzorce = vz;
+    if (u.druh === 'skupina' && M.normalizujPromenne && Array.isArray(u.promenne)) {
+      const p = M.normalizujPromenne(u.promenne);
+      if (p.length) z.promenne = p;
+    }
+    return z;
+  }
 
   /** Přesná úprava skupiny (OpenCascade): zaoblení / sražení hran, skořepina, odsazení stěn; jinak null. */
   function normalizujOcct(o) {

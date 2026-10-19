@@ -192,6 +192,42 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         for (const q of p) if (q) el('circle', { cx: q[0], cy: q[1], r: 3.5, class: 'mer-bod' }, gMereni);
       }
       for (const b of mer.body) { const q = naObr(b.bod); if (q) el('circle', { cx: q[0], cy: q[1], r: 4.5, class: 'mer-bod rozpracovany' + (b.druh !== 'plocha' && b.druh !== 'deska' ? ' prichyceny' : '') }, gMereni); }
+      // náhled bodu pod kurzorem (kam se klik přichytí) a u vzdálenosti „guma“ od posledního bodu s délkou
+      const n = mer.nahled, q = n && naObr(n.bod);
+      if (q && M.app.rezim === 'mereni') {
+        const posl = mer.body[mer.body.length - 1], typ = typMereni();
+        if (posl) {
+          const a = naObr(posl.bod);
+          cara(a, q, 'mer-cara nahled');
+          if (typ === 'vzdalenost') { const v = M.mereniVzdalenost(posl.bod, n.bod); stitek(a && [(a[0] + q[0]) / 2 + 6, (a[1] + q[1]) / 2], `${fmt(v.d)} mm`); }
+          if (typ === 'uhel' && mer.body.length === 2) { const u = M.mereniUhel(mer.body[0].bod, mer.body[1].bod, n.bod); if (u !== null) stitek(a && [a[0] + 8, a[1] - 6], `${fmt(u, 1)}°`); }
+        }
+        const prich = n.druh !== 'plocha' && n.druh !== 'deska';
+        el('circle', { cx: q[0], cy: q[1], r: prich ? 7 : 5, class: 'mer-nahled' + (prich ? ' prichyceny' : '') }, gMereni);
+        el('path', { d: `M${q[0] - 11},${q[1]}h7m8,0h7M${q[0]},${q[1] - 11}v7m0,8v7`, class: 'mer-nahled-kriz' }, gMereni);
+        const POPIS = { vrchol: 'vrchol', stred: 'střed hrany', znacka: 'referenční bod', plocha: 'plocha', deska: 'deska' };
+        el('text', { x: q[0] + 10, y: q[1] + 18, class: 'mer-nahled-popis' }, gMereni).textContent = POPIS[n.druh] || '';
+      }
+    }
+    // náhled bodu: při pohybu myši v režimu měření (bez stisknutého tlačítka), nejvýš jednou za snímek
+    {
+      const platno = S.renderer.domElement;
+      let plan = 0, posledni = null;
+      platno.addEventListener('pointermove', e => {
+        if (M.app.rezim !== 'mereni' || e.buttons || e.pointerType === 'touch') { if (mer.nahled) { mer.nahled = null; kresliMereni(); } return; }
+        const r = platno.getBoundingClientRect();
+        posledni = [e.clientX - r.left, e.clientY - r.top];
+        if (plan) return;
+        plan = requestAnimationFrame(() => {
+          plan = 0;
+          if (M.app.rezim !== 'mereni' || !posledni) return;
+          const [px, py] = posledni;
+          mer.nahled = bodKliku(T.zasah(px, py), px, py);
+          kresliMereni();
+        });
+      });
+      platno.addEventListener('pointerleave', () => { posledni = null; if (mer.nahled) { mer.nahled = null; kresliMereni(); } });
+      M.na('rezim', r => { if (r !== 'mereni' && mer.nahled) { mer.nahled = null; kresliMereni(); } });
     }
 
     // ================================================================ poznámky a referenční body
@@ -494,9 +530,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     async function obnovTvary() {
       let tvary = [];
       try { tvary = await U.tvary(); } catch (e) { /* bez úložiště */ }
-      mrizMoje.innerHTML = tvary.map(t => `<div class="dlazdice-obal"><button type="button" class="dlazdice moje" data-tvar="${esc(t.id)}" title="${esc(t.nazev)}: klikni pro vložení (${t.tvar.rozmer.map(x => M.textKoty(x)).join(' × ')} mm)">`
-        + `<span class="ik">⭐</span><span>${esc(t.nazev)}</span></button><button type="button" class="smaz-tvar" data-smaz-tvar="${esc(t.id)}" title="Smazat z knihovny" aria-label="Smazat tvar ${esc(t.nazev)}">✕</button></div>`).join('');
+      mrizMoje.innerHTML = tvary.map(t => `<div class="dlazdice-obal"><button type="button" class="dlazdice moje" data-tvar="${esc(t.id)}" title="${esc(t.nazev)}: klikni pro vložení (${t.tvar.rozmer.map(x => M.textKoty(x)).join(' × ')} mm)${t.tvar.parametry ? ' – parametry: ' + esc(t.tvar.parametry.join(', ')) : ''}">`
+        + (t.tvar.nahled ? `<img src="${esc(t.tvar.nahled)}" alt="">` : `<span class="ik">⭐</span>`) + `<span>${esc(t.nazev)}</span>${t.tvar.parametry ? '<span class="znacka-param" aria-label="parametrický díl">ƒ</span>' : ''}</button><button type="button" class="smaz-tvar" data-smaz-tvar="${esc(t.id)}" title="Smazat z knihovny" aria-label="Smazat tvar ${esc(t.nazev)}">✕</button></div>`).join('');
       $('mojeTvaryPrazdne').hidden = tvary.length > 0;
+      $('mojeExport').disabled = !tvary.length;
       M.mojeTvary = tvary;
     }
     mrizMoje.addEventListener('click', async e => {
@@ -515,6 +552,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const r = M.vlozTvar(M.app.dok, t.tvar, [Math.round(S.kamera.cil.x / krok) * krok, Math.round(S.kamera.cil.y / krok) * krok, 0]);
       M.zmenDokument(r.dok, 'Vložit ' + t.nazev);
       M.nastavVyber(r.ids);
+      if (t.tvar.parametry) Dialog.info(`„${t.nazev}“ má parametry (${t.tvar.parametry.join(', ')}) – změníš je v inspektoru.`);
     });
     M.ulozitVlastniTvar = async function () {
       const uzly = M.vybraneUzly();
@@ -523,19 +561,46 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const nazev = await Dialog.zeptej('Název tvaru v knihovně:', uzly.length === 1 ? uzly[0].nazev : 'Můj tvar');
       if (nazev === null) return;
       try {
-        await U.ulozTvar(M.tvarZUzlu(uzly, nazev.trim()));
-        Dialog.info(`„${nazev.trim() || 'Můj tvar'}“ je v knihovně v sekci Moje tvary.`);
+        const tvar = M.tvarZUzlu(uzly, nazev.trim(), M.app.dok);
+        try { tvar.nahled = S.vytvorNahled(120, 90, uzly.map(u => u.id)); } catch (e) { /* bez náhledu */ }
+        await U.ulozTvar(tvar);
+        Dialog.info(`„${nazev.trim() || 'Můj tvar'}“ je v knihovně v sekci Moje tvary.` + (tvar.parametry ? ` Parametry dílu: ${tvar.parametry.join(', ')} (z proměnných projektu).` : ''));
       } catch (e) { Dialog.chyba('Tvar nejde uložit: ' + e.message); }
     };
     M.na('tvary', obnovTvary);
     obnovTvary();
+    // celá knihovna do souboru .modelar (každý díl jedna skupina vedle sebe – jde otevřít i jako projekt) a zpět
+    $('mojeExport').onclick = async () => {
+      try {
+        const tvary = await U.tvary();
+        if (!tvary.length) return;
+        await U.nactiZdroje([...new Set(tvary.flatMap(t => t.tvar.zdroje))]);
+        const data = await M.projekt.zapis({ nazev: 'Knihovna dílů', dok: M.dokZKnihovny(tvary.slice().reverse()) });
+        M.stahniSoubor(data, 'knihovna-dilu' + M.projekt.PRIPONA);
+      } catch (e) { Dialog.chyba('Knihovnu nejde uložit: ' + e.message); }
+    };
+    $('mojeImport').onclick = () => $('mojeSoubor').click();
+    $('mojeSoubor').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      if (!U.dostupne) { Dialog.chyba('Úložiště prohlížeče není k dispozici.'); return; }
+      try {
+        const r = await M.projekt.cti(new Uint8Array(await f.arrayBuffer()));
+        for (const [k, z] of r.zdroje) if (!M.zdroje.has(k)) M.zdroje.set(k, z);
+        // každé těleso nejvyšší úrovně = jeden díl (skupina s proměnnými = parametrický díl)
+        let n = 0;
+        for (const u of r.dok.uzly.slice().reverse()) { await U.ulozTvar(M.tvarZUzlu([u], u.nazev)); n++; }
+        Dialog.info(`Do knihovny přibylo ${M.pocet(n, 'díl', 'díly', 'dílů')} ze souboru „${f.name}“.`);
+      } catch (x) { Dialog.chyba('Soubor nejde načíst do knihovny: ' + x.message); }
+    });
 
     // ================================================================ paleta příkazů (Ctrl+K)
     const oknoP = $('oknoPalety'), vstupP = $('paletaHledat'), seznamP = $('paletaSeznam');
     let polozky = [], aktivni = 0;
     const norm = s => bezDiakritiky(s).toLowerCase();
     function vsechnyPolozky() {
-      const out = M.PRIKAZY.filter(p => p.id !== 'paleta' && p.povoleno()).map(p => ({ nazev: p.nazev, klavesy: (p.klavesy[0] || '').replace('Escape', 'Esc'), akce: p.akce }));
+      const out = M.PRIKAZY.filter(p => p.id !== 'paleta' && p.povoleno()).map(p => ({ nazev: p.nazev, klavesy: (p.klavesy[0] || '').replace('Escape', 'Esc'), akce: p.akce, ikona: M.ikonaPrikazu ? M.ikonaPrikazu(p.id) : '' }));
       for (const [druh, t] of Object.entries(M.TVARY)) out.push({ nazev: 'Přidat tvar: ' + t.nazev, klavesy: '', akce: () => M.pridejTvar(druh, M.mistoProTvar ? M.mistoProTvar(druh) : {}) });
       for (const [druh, d] of Object.entries(M.DILY || {})) if (!d.skryty) out.push({ nazev: 'Přidat díl: ' + d.nazev, klavesy: '', akce: () => M.pridejTvar(druh, M.mistoProTvar ? M.mistoProTvar(druh) : {}) });
       for (const t of M.mojeTvary || []) out.push({ nazev: 'Vložit můj tvar: ' + t.nazev, klavesy: '', akce: () => mrizMoje.querySelector(`[data-tvar="${CSS.escape(t.id)}"]`).click() });
@@ -546,7 +611,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       polozky = vsechnyPolozky().filter(p => slova.every(s => norm(p.nazev).includes(s)));
       aktivni = Math.min(aktivni, Math.max(0, polozky.length - 1));
       aktivni = Math.min(aktivni, 59);                 // zobrazí se nejvýš 60 položek – výběr nesmí zmizet za koncem
-      seznamP.innerHTML = polozky.slice(0, 60).map((p, i) => `<li role="option" id="paleta-${i}" aria-selected="${i === aktivni}" data-i="${i}"><span>${esc(p.nazev)}</span>${p.klavesy ? `<kbd>${esc(p.klavesy)}</kbd>` : ''}</li>`).join('')
+      seznamP.innerHTML = polozky.slice(0, 60).map((p, i) => `<li role="option" id="paleta-${i}" aria-selected="${i === aktivni}" data-i="${i}">${p.ikona ? M.htmlIkony(p.ikona, 'ik-cad ik-paleta') : '<span class="ik-paleta"></span>'}<span>${esc(p.nazev)}</span>${p.klavesy ? `<kbd>${esc(p.klavesy)}</kbd>` : ''}</li>`).join('')
         || '<li class="pozn" role="option" aria-disabled="true">Nic nenalezeno.</li>';
       if (polozky.length) vstupP.setAttribute('aria-activedescendant', 'paleta-' + aktivni); else vstupP.removeAttribute('aria-activedescendant');
       const a = seznamP.querySelector('[aria-selected="true"]');

@@ -10,7 +10,7 @@
    ho načte importScripts i v prohlížečích bez import() ve workeru. */
 /* global importScripts, MDL */
 importScripts('../lib/three.0.160.0.min.js', 'spolecne.js', 'jadro/sit.js', 'jadro/tvary.js',
-  'jadro/model.js', 'jadro/skica.js', 'jadro/dily.js', 'jadro/booleany.js', 'jadro/vykres.js', '../lib/manifold/manifold.klasicky.js');
+  'jadro/model.js', 'jadro/skica.js', 'jadro/vazby.js', 'jadro/tazeni.js', 'jadro/dily.js', 'jadro/booleany.js', 'jadro/vykres.js', 'jadro/zjednoduseni.js', '../lib/manifold/manifold.klasicky.js');
 
 let B = null, chybaStartu = null;
 const pripraveno = (async () => {
@@ -23,6 +23,14 @@ const pripraveno = (async () => {
 self.onmessage = async e => {
   const { id, typ, uzel, zdroje } = e.data;
   if (typ === 'zapomen') { for (const k of e.data.ids || []) MDL.zdroje.delete(k); return; }   // odvozené sítě, které už nikdo nepotřebuje
+  if (typ === 'zjednodus') {
+    // zjednodušení importované sítě (QEM) – bez manifoldu, s hlášením průběhu
+    try {
+      const r = MDL.zjednodusSit(e.data.sit, Object.assign({}, e.data.volby, { prubeh: p => self.postMessage({ id, prubeh: p }) }));
+      self.postMessage({ id, ok: true, vysledek: r }, [r.poz.buffer, r.idx.buffer]);
+    } catch (err) { self.postMessage({ id, ok: false, chyba: String(err && err.message || err) }); }
+    return;
+  }
   if (typ === 'vykres') {
     // technický výkres ze světových sítí (u závitů trvá i sekundy, proto mimo hlavní vlákno)
     try { self.postMessage({ id, ok: true, vykres: MDL.vykres(e.data.site, e.data.volby) }); }

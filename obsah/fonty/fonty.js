@@ -95,7 +95,7 @@ const FONTY = (function () {
     { id: 'runy',       soubor: 'NotoSansRunic-Regular.ttf',  nazev: 'Noto Sans Runic',   druh: 'pismo', pismo: 'runy',      pro3d: true },
     { id: 'hlaholice',  soubor: 'NotoSansGlagolitic-Regular.ttf', nazev: 'Noto Sans Glagolitic', druh: 'pismo', pismo: 'hlaholice', pro3d: true },
     { id: 'ogam',       soubor: 'NotoSansOgham-Regular.ttf',  nazev: 'Noto Sans Ogham',   druh: 'pismo', pismo: 'ogam',      pro3d: true },
-    { id: 'hieroglyfy', soubor: 'NotoSansEgyptianHieroglyphs-Vyber.ttf', nazev: 'Noto Sans Egyptian Hieroglyphs (výběr)', druh: 'pismo', pismo: 'hieroglyfy', pro3d: true },
+    { id: 'hieroglyfy', soubor: 'NotoSansEgyptianHieroglyphs-Regular.ttf', nazev: 'Noto Sans Egyptian Hieroglyphs', druh: 'pismo', pismo: 'hieroglyfy', pro3d: true },
     { id: 'braille',    soubor: 'NotoSansSymbols2-Braille.ttf', nazev: 'Noto Sans Symbols 2 (Braille)', druh: 'pismo', pismo: 'braille', pro3d: true },
     { id: 'fenicke',    soubor: 'NotoSansPhoenician-Regular.ttf', nazev: 'Noto Sans Phoenician', druh: 'pismo', pismo: 'fenicke', pro3d: true },
     { id: 'etruske',    soubor: 'NotoSansOldItalic-Regular.ttf', nazev: 'Noto Sans Old Italic', druh: 'pismo', pismo: 'etruske', pro3d: true },

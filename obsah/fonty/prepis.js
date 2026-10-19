@@ -341,7 +341,7 @@ const PREPIS = (function () {
     { id: 'braille',   nazev: 'Braillovo písmo',            font: 'braille',
       popis: 'Česká tabulka: ⠨ ohlašuje velké písmeno, ⠼ číslo. Pro hmatové cedulky platí normové rozměry bodů (průměr 1,5 mm, rozteč 2,5 mm) – v 3D textu nastavte výšku tak, aby jim odpovídaly.' },
     { id: 'hieroglyfy',nazev: 'Egyptské hieroglyfy',        font: 'hieroglyfy',
-      popis: 'Jednosouhlásková „abeceda“, jak se v muzeích píšou jména. Samohlásky Egypťané nepsali – tady mají zástupné znaky.' },
+      popis: 'Jednosouhlásková „abeceda“, jak se v muzeích píšou jména. Samohlásky Egypťané nepsali – tady mají zástupné znaky. Skládání do čtverců, kartuše, egyptská slova a číslice umí <a href="hieroglyfy.html">Egyptský písař</a>.' },
     { id: 'fenicke',   nazev: 'Fénické písmo',              font: 'fenicke', rtl: true,
       popis: 'Předek řecké i latinské abecedy. Píše se zprava doleva a samohlásky původně neznalo.' },
     { id: 'etruske',   nazev: 'Etruské písmo',              font: 'etruske' },

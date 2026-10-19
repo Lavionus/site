@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💳 QR platba</title>
+<script src="lib/qrcode/qrcode.js"></script>
+<script src="lib/jsQR.min.js"></script>
+<script src="qr_platba/jadro.js"></script>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px}
+.container{margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:18px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) var(--qr-sloupec,342px);gap:18px;align-items:start}
+/* rozvržení řídí JS podle šířky okna a velikosti písma (třídy jeden / tri na <html>) */
+html.jeden .layout{grid-template-columns:minmax(0,1fr)}
+html.tri .levy{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"adr plat" "txt plat";grid-template-rows:auto 1fr;column-gap:18px;align-items:start}
+html.tri .k-adr{grid-area:adr} html.tri .k-txt{grid-area:txt} html.tri .k-plat{grid-area:plat}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.card h2{font-size:1rem;margin-bottom:8px;font-weight:600}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:10px 0 4px}
+input,select,textarea{width:100%;background:var(--bg-input,var(--border));border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:9px 10px;font-size:.95rem;font-family:inherit}
+textarea{resize:vertical;min-height:84px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.radek{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.radek2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px}
+@media(max-width:420px){.radek{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.formaty{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;justify-content:center}
+.formaty button{flex:1 1 150px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-strong);padding:9px 10px;border-radius:6px;cursor:pointer;font-size:.88rem;line-height:1.25}
+.formaty button small{display:block;color:var(--text-faint);font-size:.72rem}
+.formaty button.akt{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.formaty button.akt small{color:inherit;opacity:.85}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.86rem}
+.btn-sec{background:var(--border);color:var(--text)}
+.btn:disabled{opacity:.45;cursor:default}
+.tlacitka{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tlacitka .btn{flex:1 1 auto}
+.info{font-size:.82rem;margin-top:6px;line-height:1.45;color:var(--text-muted);word-break:break-word}
+.info b{color:var(--text)}
+.chyba{color:var(--danger)}
+.varovani{color:var(--warn)}
+.ok{color:var(--ok)}
+.qrcard{text-align:center;position:sticky;top:12px}
+#qrObal{background:#fff;border-radius:10px;padding:14px 14px 8px;display:inline-block;max-width:100%}
+#qrPlatno{display:block;width:var(--qr,280px);height:var(--qr,280px);image-rendering:pixelated}
+#qrPopisek{color:#111;font-weight:700;font-size:.95rem;margin-top:6px;letter-spacing:.02em}
+#qrUdaje{color:#111;margin-top:8px;padding-top:8px;border-top:1px solid #ddd;text-align:left;font-size:.9rem;line-height:1.45}
+#qrUdaje div{display:flex;justify-content:space-between;gap:12px}
+#qrUdaje span:first-child{color:#555}
+#qrUdaje span:last-child{font-weight:700;text-align:right;word-break:break-all;font-variant-numeric:tabular-nums}
+#qrUdaje .q-castka span:last-child{font-size:1.15rem}
+#qrPrazdny{width:var(--qr,280px);height:var(--qr,280px);display:flex;align-items:center;justify-content:center;color:#555;font-size:.9rem;padding:20px;text-align:center}
+.souhrn{margin-top:12px;text-align:left;font-size:.85rem;line-height:1.55}
+.souhrn div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--border);padding:2px 0}
+.souhrn span:first-child{color:var(--text-faint)}
+.souhrn span:last-child{text-align:right;word-break:break-all}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--text-muted);font-size:.85rem}
+.chk input{width:auto}
+details{margin-top:10px;font-size:.82rem}
+details summary{cursor:pointer;color:var(--text-faint)}
+details code{display:block;margin-top:6px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;word-break:break-all;white-space:pre-wrap;font-size:.75rem}
+.historie{list-style:none}
+.historie li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.85rem}
+.historie li .h-text{flex:1;min-width:0;cursor:pointer}
+.historie li .h-text b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.historie li .h-text small{color:var(--text-faint)}
+.historie li button{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:1rem;padding:4px 6px}
+.prazdne{color:var(--text-faint);font-size:.85rem}
+.zprava-stav{font-size:.82rem;margin-top:8px;min-height:1.2em}
+.note{font-size:.78rem;color:var(--text-faint);line-height:1.55}
+.note p+p{margin-top:6px}
+input[type=file]{display:none}
+[hidden]{display:none!important}
+/* lišta přístupnosti */
+.lista{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-bottom:14px;font-size:.85rem;color:var(--text-muted)}
+.lista .skupina{display:flex;align-items:center;gap:4px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:3px}
+.lista button{background:none;border:none;color:var(--text);cursor:pointer;padding:6px 10px;border-radius:6px;font-size:.9rem;min-width:2.4em;font-weight:600}
+.lista button:hover{background:var(--bg-hover,var(--border))}
+.lista button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff)}
+.lista .hodnota{width:auto;min-width:5.2em;padding:5px 8px;text-align:center;font-variant-numeric:tabular-nums;font-weight:600;cursor:pointer;background:var(--bg-input,var(--bg));border:1px solid var(--border-strong);border-radius:6px;color:var(--text)}
+/* adresář */
+.adresar-hledej{margin-bottom:6px}
+.adresar{list-style:none;max-height:16rem;overflow-y:auto}
+.adresar li{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.88rem}
+.adresar li .a-text{flex:1;min-width:0;cursor:pointer;padding:2px 4px;border-radius:5px}
+.adresar li .a-text:hover,.historie li .h-text:hover{background:var(--bg-hover,var(--border))}
+.adresar li .a-text b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adresar li .a-text small{color:var(--text-faint);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adresar li button{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:1rem;padding:4px 6px}
+.adresar li.akt .a-text{outline:2px solid var(--accent)}
+/* velké písmo: jeden sloupec, údaje pod kódem pod sebou */
+html.velke .qrcard{position:static}
+html.jeden .qrcard{position:static}
+html.jeden.velke .radek{grid-template-columns:minmax(0,1fr)}
+/* vysoký kontrast */
+html.kontrast{--text-faint:var(--text);--text-muted:var(--text)}
+html.kontrast .btn-sec{background:var(--bg-elevated)}
+html.kontrast .souhrn div,html.kontrast .adresar li,html.kontrast .historie li{border-color:var(--text)}
+html.kontrast .card,html.kontrast input,html.kontrast select,html.kontrast textarea,html.kontrast .formaty button,html.kontrast .btn-sec{border:2px solid var(--text)}
+html.kontrast body{font-weight:500}
+html.kontrast #qrUdaje span:first-child{color:#000}
+html.kontrast input:focus,html.kontrast select:focus,html.kontrast textarea:focus,html.kontrast button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* zvětšený kód přes celou obrazovku */
+#velky{position:fixed;inset:0;z-index:2147483100;background:#fff;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;cursor:pointer;text-align:center}
+#velkyPlatno{image-rendering:pixelated;display:block}
+#velkyUdaje{font-size:clamp(1rem,3.4vmin,2rem);line-height:1.35;font-weight:700;font-variant-numeric:tabular-nums}
+#velkyUdaje .v-castka{font-size:1.35em}
+#velkyUdaje span{color:#444;font-weight:400}
+#velky small{color:#555;font-size:.85rem}
+/* tisk: jen obrázek platby */
+#tisk{display:none}
+@media print{
+  body{background:#fff!important;padding:0}
+  body>*:not(#tisk){display:none!important}
+  #tisk{display:block!important;text-align:center}
+  #tisk img{max-width:100%;width:12cm}
+}
+</style>
+</head>
+<body>
+<div class="container" id="obsahStranky">
+  <h1>💳 QR platba</h1>
+  <p class="sub">Z čísla účtu, částky a symbolů udělá platební QR kód – naskenuješ ho v bankovní aplikaci nebo pošleš dál</p>
+
+  <div class="lista" role="toolbar" aria-label="Zobrazení">
+    <div class="skupina" role="group" aria-label="Velikost písma">
+      <button id="pismoMensi" title="Menší písmo" aria-label="Menší písmo">A−</button>
+      <select id="pismoVyber" class="hodnota" aria-label="Velikost písma" title="Velikost písma"></select>
+      <button id="pismoVetsi" title="Větší písmo" aria-label="Větší písmo">A+</button>
+    </div>
+    <div class="skupina"><button id="btnKontrast" aria-pressed="false" title="Vysoký kontrast">◐ Vysoký kontrast</button></div>
+  </div>
+
+  <div class="formaty" id="formaty" role="tablist">
+    <button data-f="cz" role="tab">🇨🇿 QR Platba<small>české banky · CZK i EUR</small></button>
+    <button data-f="sk" role="tab">🇸🇰 PAY by square<small>slovenské banky</small></button>
+    <button data-f="epc" role="tab">🇪🇺 EPC QR (SEPA)<small>eurozóna · jen EUR</small></button>
+  </div>
+
+  <div class="layout">
+    <div class="levy">
+      <div class="card k-adr">
+        <h2>📇 Adresář příjemců</h2>
+        <input id="adresarHledej" class="adresar-hledej" type="search" placeholder="Hledat podle jména nebo účtu…" autocomplete="off" aria-label="Hledat v adresáři">
+        <ul class="adresar" id="adresar"></ul>
+        <div class="tlacitka">
+          <button class="btn btn-sec" id="btnAdrExport">⬇️ Záloha</button>
+          <button class="btn btn-sec" id="btnAdrImport">⬆️ Obnovit ze zálohy</button>
+          <input type="file" id="adrSoubor" accept=".json,application/json">
+        </div>
+      </div>
+
+      <div class="card k-txt">
+        <h2>📋 Vlož údaje jako text</h2>
+        <textarea id="vstupText" placeholder="Sem vlož e-mail, SMS nebo text z faktury – např.&#10;Číslo účtu: 123456789/0800, částka 1 250 Kč, VS 2026001"></textarea>
+        <div class="tlacitka">
+          <button class="btn" id="btnRozpoznat">🔍 Rozpoznat údaje</button>
+          <button class="btn btn-sec" id="btnObrazek">📷 Načíst QR z obrázku</button>
+          <input type="file" id="soubor" accept="image/*">
+        </div>
+        <div class="zprava-stav" id="stavRozpoznani" aria-live="polite"></div>
+      </div>
+
+      <div class="card k-plat">
+        <h2>🏦 Platba</h2>
+        <label for="ucet">Číslo účtu nebo IBAN *</label>
+        <input id="ucet" placeholder="123-4567890123/0800 nebo CZ65 0800 …" autocomplete="off" spellcheck="false">
+        <div class="info" id="infoUcet"></div>
+        <div class="radek2">
+          <div><label for="castka">Částka</label><input id="castka" inputmode="decimal" placeholder="1 250,00" autocomplete="off"></div>
+          <div><label for="mena">Měna</label><select id="mena"><option>CZK</option><option>EUR</option></select></div>
+        </div>
+        <div class="radek">
+          <div><label for="vs">Variabilní symbol</label><input id="vs" inputmode="numeric" maxlength="10" autocomplete="off"></div>
+          <div><label for="ks">Konstantní symbol</label><input id="ks" inputmode="numeric" maxlength="10" autocomplete="off"></div>
+          <div><label for="ss">Specifický symbol</label><input id="ss" inputmode="numeric" maxlength="10" autocomplete="off"></div>
+        </div>
+        <label for="zprava">Zpráva pro příjemce</label>
+        <input id="zprava" maxlength="140" autocomplete="off">
+        <div class="radek2">
+          <div><label for="prijemce">Jméno příjemce</label><input id="prijemce" maxlength="70" autocomplete="off"></div>
+          <div><label for="splatnost">Splatnost</label><input id="splatnost" type="date"></div>
+        </div>
+        <details id="detBic"><summary>BIC / SWIFT (nepovinné)</summary>
+          <input id="bic" maxlength="11" placeholder="např. GIBACZPX" style="margin-top:6px" autocomplete="off" spellcheck="false">
+        </details>
+        <label class="chk" id="chkDiakritika"><input type="checkbox" id="diakritika"> Ponechat háčky a čárky (starší aplikace je nemusí zobrazit správně)</label>
+        <div class="tlacitka">
+          <button class="btn btn-sec" id="btnDoAdresare">📇 Uložit do adresáře</button>
+          <button class="btn btn-sec" id="btnVymazat">🧹 Vymazat formulář</button>
+        </div>
+        <div class="info" id="hlaseni" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card qrcard">
+        <div id="qrObal">
+          <canvas id="qrPlatno" width="280" height="280" hidden></canvas>
+          <div id="qrPrazdny">Vyplň číslo účtu a QR kód se objeví tady.</div>
+          <div id="qrPopisek">QR Platba</div>
+          <div id="qrUdaje" hidden></div>
+        </div>
+        <div class="souhrn" id="souhrn"></div>
+        <div class="tlacitka">
+          <button class="btn" id="btnSdilet" disabled>📤 Sdílet</button>
+          <button class="btn btn-sec" id="btnStahnout" disabled>💾 PNG</button>
+          <button class="btn btn-sec" id="btnKopirovat" disabled>📋 Kopírovat obrázek</button>
+        </div>
+        <div class="tlacitka">
+          <button class="btn btn-sec" id="btnZvetsit" disabled>🔍 Zvětšit</button>
+          <button class="btn btn-sec" id="btnPrecist" disabled>🔊 Přečíst</button>
+          <button class="btn btn-sec" id="btnTisk" disabled>🖨️ Tisk</button>
+        </div>
+        <div class="tlacitka">
+          <button class="btn btn-sec" id="btnUlozit" disabled>⭐ Uložit do historie</button>
+        </div>
+        <div class="zprava-stav" id="stavAkce" aria-live="polite"></div>
+        <details><summary>Obsah QR kódu (text)</summary><code id="obsahKodu"></code>
+          <button class="btn btn-sec" id="btnKopirovatText" style="margin-top:6px;width:100%">Kopírovat text kódu</button>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>🕘 Historie plateb</h2>
+        <ul class="historie" id="historie"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card note">
+    <p><b>Co je QR Platba:</b> jednotný formát České bankovní asociace (SPAYD), který umí načíst všechny české bankovní aplikace. PAY by square je jeho slovenská obdoba a EPC QR (GiroCode) se používá pro platby SEPA v eurech, hlavně v Německu, Rakousku a Beneluxu.</p>
+    <p><b>Kontroly:</b> české číslo účtu se ověří kontrolou modulo 11 a převede na IBAN, u IBANu se ověří kontrolní číslice. Překlep v čísle účtu se tak skoro vždy ukáže, ale správného příjemce kontrola nezaručí. Před odesláním platby údaje vždy zkontroluj v bankovní aplikaci.</p>
+    <p><b>Soukromí:</b> vše běží jen v tvém prohlížeči a nic se nikam neodesílá. Adresář a historie se ukládají jen v tomto zařízení. Adresář si můžeš zálohovat do souboru a přenést do jiného zařízení.</p>
+    <p><b>Pro slabozraké:</b> písmo zvětšíš tlačítky A− / A+ (stránka se podle šířky okna sama rozloží do tří, dvou nebo jednoho sloupce a QR kód roste s písmem). Vysoký kontrast zvýrazní text a okraje. „Zvětšit“ ukáže kód přes celou obrazovku a „Přečíst“ přečte účet, částku a symboly nahlas, číslici po číslici.</p>
+  </div>
+</div>
+
+<div id="velky" hidden role="dialog" aria-label="Zvětšený QR kód">
+  <canvas id="velkyPlatno"></canvas>
+  <div id="velkyUdaje"></div>
+  <small>Klepnutím nebo klávesou Esc zavřeš · displej zůstane rozsvícený</small>
+</div>
+<div id="tisk"></div>
+
+<script>
+(function () {
+  'use strict';
+  const Q = window.QRPlatba;
+  const $ = id => document.getElementById(id);
+  const POLE = ['ucet', 'castka', 'mena', 'vs', 'ks', 'ss', 'zprava', 'prijemce', 'splatnost', 'bic'];
+  const KLIC_HIST = 'webapp_qrplatba_historie', KLIC_FORMAT = 'webapp_qrplatba_format', KLIC_DIAK = 'webapp_qrplatba_diakritika';
+  const POPISKY = { cz: 'QR Platba', sk: 'PAY by square', epc: 'EPC QR · SEPA' };
+  const KLIC_ADR = 'webapp_qrplatba_adresar', KLIC_PISMO = 'webapp_qrplatba_pismo', KLIC_KONTRAST = 'webapp_qrplatba_kontrast';
+  const UROVNE_PISMA = [1, 1.15, 1.3, 1.5, 1.75, 2, 2.5];
+  const dlg = () => (typeof Dialog !== 'undefined' ? Dialog : null) || { info: m => console.log(m), chyba: m => console.error(m), potvrd: async m => confirm(m), zeptej: async (m, d) => prompt(m, d) };
+  let format = 'cz', obsah = '', aktualniPlatba = null, meritkoPisma = 1, aktivniKontakt = '';
+
+  function nacti(k, vychozi) { try { const v = localStorage.getItem(k); return v == null ? vychozi : JSON.parse(v); } catch (e) { return vychozi; } }
+  function uloz(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* plná/zakázaná paměť */ } }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+
+  function platbaZFormulare() { const p = {}; POLE.forEach(k => p[k] = $(k).value.trim()); return p; }
+  function doFormulare(p) {
+    POLE.forEach(k => { if (p[k] != null && p[k] !== '') $(k).value = k === 'castka' ? String(p[k]).replace('.', ',') : p[k]; });
+    if (p.bic) $('detBic').open = true;
+  }
+
+  /* ---------- vykreslení QR ---------- */
+  function matice(text) {
+    qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+    const qr = qrcode(0, 'M');
+    qr.addData(text, 'Byte');
+    qr.make();
+    return qr;
+  }
+  function kresli(cv, qr, cssVelikost) {
+    const n = qr.getModuleCount(), okraj = 2;
+    const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
+    const px = Math.max(1, Math.floor(cssVelikost * dpr / (n + 2 * okraj)));
+    const vel = px * (n + 2 * okraj);
+    cv.width = vel; cv.height = vel;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, vel, vel);
+    g.fillStyle = '#000';
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (qr.isDark(y, x)) g.fillRect((x + okraj) * px, (y + okraj) * px, px, px);
+  }
+  /** PNG k odeslání: QR s tichou zónou, popiskem a stručným souhrnem. */
+  function obrazekKOdeslani() {
+    const qr = matice(obsah), n = qr.getModuleCount();
+    const px = Math.max(4, Math.floor(560 / (n + 8)));
+    const qrVel = px * (n + 8);
+    const vse = souhrnRadky(aktualniPlatba);
+    const hlavni = vse.filter(([a]) => HLAVNI.includes(a)).map(([a, b]) => a + ': ' + b);
+    const radky = vse.filter(([a]) => !HLAVNI.includes(a)).map(([a, b]) => a + ': ' + b);
+    const sirka = Math.max(qrVel, 620), vyska = qrVel + 50 + hlavni.length * 34 + radky.length * 26 + 20;
+    const cv = document.createElement('canvas');
+    cv.width = sirka; cv.height = vyska;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, sirka, vyska);
+    g.fillStyle = '#000';
+    const x0 = Math.round((sirka - qrVel) / 2);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (qr.isDark(y, x)) g.fillRect(x0 + (x + 4) * px, (y + 4) * px, px, px);
+    g.textAlign = 'center';
+    g.font = 'bold 26px sans-serif';
+    g.fillText(POPISKY[format], sirka / 2, qrVel + 16);
+    g.font = 'bold 25px sans-serif';
+    hlavni.forEach((r, i) => g.fillText(r, sirka / 2, qrVel + 56 + i * 34));
+    const y0 = qrVel + 56 + hlavni.length * 34;
+    g.font = '19px sans-serif'; g.fillStyle = '#222';
+    radky.forEach((r, i) => g.fillText(r.length > 58 ? r.slice(0, 57) + '…' : r, sirka / 2, y0 + i * 26));
+    return cv;
+  }
+
+  function souhrnRadky(p) {
+    if (!p) return [];
+    const k = Q.zpracujUcet(p.ucet), r = [];
+    r.push(['Účet', k.ucetCz || Q.ibanFormat(k.iban)]);
+    if (k.ucetCz && format !== 'cz') r.push(['IBAN', Q.ibanFormat(k.iban)]);
+    if (p.castka) { const n = Q.parsujCastku(p.castka); if (isFinite(n)) r.push(['Částka', n.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + p.mena]); }
+    if (p.vs) r.push(['VS', p.vs]);
+    if (p.ks && format !== 'epc') r.push(['KS', p.ks]);
+    if (p.ss && format !== 'epc') r.push(['SS', p.ss]);
+    if (p.prijemce) r.push(['Příjemce', p.prijemce]);
+    if (p.zprava) r.push(['Zpráva', p.zprava]);
+    if (p.splatnost && format !== 'epc') r.push(['Splatnost', p.splatnost.split('-').reverse().map(x => x.replace(/^0/, '')).join('. ')]);
+    return r;
+  }
+  const HLAVNI = ['Účet', 'Částka', 'VS'];
+
+  /* ---------- hlavní přepočet ---------- */
+  function prepocti() {
+    const p = platbaZFormulare();
+    $('chkDiakritika').style.display = format === 'cz' ? '' : 'none';
+    $('qrPopisek').textContent = POPISKY[format];
+
+    // informace o účtu
+    const u = p.ucet ? Q.zpracujUcet(p.ucet) : null;
+    let infoU = '';
+    if (u) {
+      if (u.iban && !u.chyby.length) infoU += '<span class="ok">✓</span> IBAN <b>' + esc(Q.ibanFormat(u.iban)) + '</b>';
+      if (u.ucetCz && /^[A-Z]{2}/i.test(p.ucet.replace(/\s/g, ''))) infoU += ' · účet ' + esc(u.ucetCz);
+      if (u.banka) infoU += ' · ' + esc(u.banka);
+    }
+    $('infoUcet').innerHTML = infoU;
+
+    const k = Q.zkontroluj(p, format);
+    const hl = [];
+    if (p.ucet) k.chyby.forEach(c => hl.push('<div class="chyba">✗ ' + esc(c) + '</div>'));
+    else if (POLE.some(x => x !== 'mena' && p[x])) hl.push('<div class="varovani">Doplň číslo účtu.</div>');
+    k.varovani.forEach(c => hl.push('<div class="varovani">⚠ ' + esc(c) + '</div>'));
+    if (!p.castka && p.ucet && !k.chyby.length) hl.push('<div>ℹ Bez částky – plátce ji zadá v aplikaci sám.</div>');
+    $('hlaseni').innerHTML = hl.join('');
+
+    obsah = '';
+    aktualniPlatba = null;
+    if (p.ucet && !k.chyby.length) {
+      try { obsah = Q.obsahQR(p, format, { diakritika: $('diakritika').checked }); aktualniPlatba = p; }
+      catch (e) { $('hlaseni').innerHTML += '<div class="chyba">✗ ' + esc(e.message) + '</div>'; }
+    }
+    const ma = !!obsah;
+    $('qrPlatno').hidden = !ma;
+    $('qrPrazdny').hidden = ma;
+    ['btnSdilet', 'btnStahnout', 'btnKopirovat', 'btnUlozit'].forEach(id => $(id).disabled = !ma);
+    $('obsahKodu').textContent = obsah || '—';
+    const radky = souhrnRadky(aktualniPlatba);
+    $('qrUdaje').innerHTML = radky.filter(([a]) => HLAVNI.includes(a)).map(([a, b]) =>
+      '<div class="q-' + (a === 'Částka' ? 'castka' : 'x') + '"><span>' + esc(a) + '</span><span>' + esc(b) + '</span></div>').join('');
+    $('qrUdaje').hidden = !ma;
+    $('souhrn').innerHTML = radky.filter(([a]) => !HLAVNI.includes(a)).map(([a, b]) => '<div><span>' + esc(a) + '</span><span>' + esc(b) + '</span></div>').join('');
+    ['btnZvetsit', 'btnPrecist', 'btnTisk'].forEach(id => $(id).disabled = !ma);
+    if (ma) kresli($('qrPlatno'), matice(obsah), velikostQR());
+    if (!$('velky').hidden) { if (ma) kresliVelky(); else zavriVelky(); }
+    uloz('webapp_qrplatba_rozpracovano', p);
+  }
+
+  /* ---------- formát ---------- */
+  function nastavFormat(f, tise) {
+    format = f;
+    document.querySelectorAll('#formaty button').forEach(b => { b.classList.toggle('akt', b.dataset.f === f); b.setAttribute('aria-selected', b.dataset.f === f); });
+    if (!tise) {
+      if (f === 'epc' || f === 'sk') $('mena').value = 'EUR';
+    }
+    uloz(KLIC_FORMAT, f);
+    prepocti();
+  }
+  document.querySelectorAll('#formaty button').forEach(b => b.onclick = () => nastavFormat(b.dataset.f));
+
+  /* ---------- rozpoznání textu ---------- */
+  function stav(id, html, trida) { const el = $(id); el.className = 'zprava-stav ' + (trida || ''); el.innerHTML = html; }
+  function pouzijRozpoznane(r, zdroj) {
+    const nalezeno = POLE.filter(k => r[k]);
+    if (!nalezeno.length) { stav('stavRozpoznani', 'V ' + zdroj + ' jsem nenašel žádné platební údaje.', 'varovani'); return; }
+    // při novém rozpoznání vymazat staré hodnoty, aby se nemíchaly dvě platby
+    POLE.forEach(k => { if (k !== 'mena') $(k).value = ''; });
+    $('mena').value = r.mena || (r.format === 'sk' || r.format === 'epc' ? 'EUR' : 'CZK');
+    doFormulare(r);
+    if (r.format && r.format !== format) nastavFormat(r.format, true);
+    else if (!r.format && r.ucet) {
+      const u = Q.zpracujUcet(r.ucet);
+      if (u.iban.startsWith('CZ') && format !== 'cz') nastavFormat('cz', true);
+      else if (u.iban.startsWith('SK') && format === 'cz') nastavFormat('sk', true);
+    }
+    const jmena = { ucet: 'účet', castka: 'částka', mena: 'měna', vs: 'VS', ks: 'KS', ss: 'SS', zprava: 'zpráva', prijemce: 'příjemce', splatnost: 'splatnost', bic: 'BIC' };
+    stav('stavRozpoznani', '✓ Rozpoznáno: ' + nalezeno.map(k => jmena[k]).join(', ') + '. Zkontroluj údaje níže.', 'ok');
+    prepocti();
+  }
+  $('btnRozpoznat').onclick = () => pouzijRozpoznane(Q.rozpoznejText($('vstupText').value), 'textu');
+  $('vstupText').addEventListener('paste', () => setTimeout(() => pouzijRozpoznane(Q.rozpoznejText($('vstupText').value), 'textu'), 0));
+
+  /* ---------- QR z obrázku ---------- */
+  function prectiObrazek(blob) {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let kod = null;
+      // zkusit víc měřítek – fotky z mobilu bývají obrovské, malé snímky naopak potřebují zvětšit
+      for (const cil of [1000, 1600, 700, 2400]) {
+        const m = Math.min(cil / Math.max(img.width, img.height), 3);
+        const w = Math.max(1, Math.round(img.width * m)), h = Math.max(1, Math.round(img.height * m));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h);
+        kod = jsQR(g.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' });
+        if (kod) break;
+      }
+      if (!kod) { stav('stavRozpoznani', 'Na obrázku jsem QR kód nenašel. Zkus ostřejší nebo víc oříznutý snímek.', 'chyba'); return; }
+      const r = Q.rozeberQR(kod.data);
+      if (!r) { $('vstupText').value = kod.data; pouzijRozpoznane(Q.rozpoznejText(kod.data), 'QR kódu'); return; }
+      if (r.jenRozpoznano) { stav('stavRozpoznani', 'Je to slovenský PAY by square – ten umím vytvořit, ale zatím ne přečíst.', 'varovani'); return; }
+      $('vstupText').value = kod.data;
+      pouzijRozpoznane(r, 'QR kódu');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); stav('stavRozpoznani', 'Obrázek se nepodařilo otevřít.', 'chyba'); };
+    img.src = url;
+  }
+  $('btnObrazek').onclick = () => $('soubor').click();
+  $('soubor').onchange = e => { const f = e.target.files[0]; if (f) prectiObrazek(f); e.target.value = ''; };
+  document.addEventListener('paste', e => {
+    const it = [...(e.clipboardData ? e.clipboardData.items : [])].find(i => i.type.startsWith('image/'));
+    if (it) { e.preventDefault(); prectiObrazek(it.getAsFile()); }
+  });
+
+  /* ---------- akce s výsledkem ---------- */
+  function nazevSouboru() {
+    const p = aktualniPlatba || {};
+    const cast = [format === 'cz' ? 'qr-platba' : format === 'sk' ? 'pay-by-square' : 'epc-qr'];
+    if (p.vs) cast.push('vs' + p.vs);
+    if (p.castka) cast.push(String(Q.parsujCastku(p.castka)).replace('.', '_') + (p.mena || '').toLowerCase());
+    return cast.join('-') + '.png';
+  }
+  function naBlob(cv) { return new Promise(res => cv.toBlob(res, 'image/png')); }
+  $('btnStahnout').onclick = () => {
+    const a = document.createElement('a');
+    a.href = obrazekKOdeslani().toDataURL('image/png'); a.download = nazevSouboru(); a.click();
+    pridejDoHistorie();
+  };
+  $('btnKopirovat').onclick = async () => {
+    try {
+      const blob = await naBlob(obrazekKOdeslani());
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      stav('stavAkce', '✓ Obrázek je ve schránce – vlož ho do zprávy (Ctrl+V).', 'ok');
+      pridejDoHistorie();
+    } catch (e) { stav('stavAkce', 'Prohlížeč nedovolil kopírovat obrázek – použij PNG.', 'varovani'); }
+  };
+  $('btnSdilet').onclick = async () => {
+    const blob = await naBlob(obrazekKOdeslani());
+    const soubor = new File([blob], nazevSouboru(), { type: 'image/png' });
+    const text = souhrnRadky(aktualniPlatba).map(([a, b]) => a + ': ' + b).join('\n');
+    if (navigator.canShare && navigator.canShare({ files: [soubor] })) {
+      try { await navigator.share({ files: [soubor], title: POPISKY[format], text }); pridejDoHistorie(); stav('stavAkce', '', ''); }
+      catch (e) { if (e.name !== 'AbortError') stav('stavAkce', 'Sdílení selhalo: ' + esc(e.message), 'chyba'); }
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = soubor.name; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      stav('stavAkce', 'Tento prohlížeč neumí sdílet soubory – obrázek jsem stáhl, pošli ho jako přílohu.', 'varovani');
+      pridejDoHistorie();
+    }
+  };
+  $('btnKopirovatText').onclick = async () => {
+    try { await navigator.clipboard.writeText(obsah); stav('stavAkce', '✓ Text kódu zkopírován.', 'ok'); }
+    catch (e) { stav('stavAkce', 'Kopírování nebylo povoleno.', 'varovani'); }
+  };
+  $('btnUlozit').onclick = () => { pridejDoHistorie(); stav('stavAkce', '✓ Uloženo do historie.', 'ok'); };
+  $('btnVymazat').onclick = () => {
+    POLE.forEach(k => { if (k !== 'mena') $(k).value = ''; });
+    $('vstupText').value = ''; stav('stavRozpoznani', ''); stav('stavAkce', '');
+    aktivniKontakt = ''; kresliAdresar();
+    prepocti();
+  };
+
+  /* ---------- historie ---------- */
+  function pridejDoHistorie() {
+    if (!aktualniPlatba) return;
+    const zaznam = Object.assign({}, aktualniPlatba, { format, cas: Date.now() });
+    const otisk = z => JSON.stringify(POLE.map(k => z[k] || '').concat(z.format));
+    const h = nacti(KLIC_HIST, []).filter(z => otisk(z) !== otisk(zaznam));
+    h.unshift(zaznam);
+    uloz(KLIC_HIST, h.slice(0, 30));
+    kresliHistorii();
+  }
+  function kresliHistorii() {
+    const h = nacti(KLIC_HIST, []);
+    const ul = $('historie');
+    if (!h.length) { ul.innerHTML = '<li class="prazdne">Zatím nic – platby se sem uloží po sdílení, stažení nebo tlačítkem ⭐.</li>'; return; }
+    ul.innerHTML = h.map((z, i) => {
+      const n = Q.parsujCastku(z.castka);
+      const castka = isFinite(n) ? n.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (z.mena || '') : 'bez částky';
+      const kdo = z.prijemce || z.zprava || z.ucet;
+      const datum = new Date(z.cas).toLocaleDateString('cs-CZ');
+      return '<li><div class="h-text" data-i="' + i + '" title="Načíst do formuláře"><b>' + esc(castka) + ' · ' + esc(kdo) + '</b><small>' +
+        ({ cz: '🇨🇿', sk: '🇸🇰', epc: '🇪🇺' }[z.format] || '') + ' ' + esc(z.ucet) + (z.vs ? ' · VS ' + esc(z.vs) : '') + ' · ' + datum + '</small></div>' +
+        '<button data-smaz="' + i + '" title="Smazat" aria-label="Smazat">🗑</button></li>';
+    }).join('');
+  }
+  $('historie').onclick = e => {
+    const h = nacti(KLIC_HIST, []);
+    const sm = e.target.closest('[data-smaz]');
+    if (sm) { h.splice(Number(sm.dataset.smaz), 1); uloz(KLIC_HIST, h); kresliHistorii(); return; }
+    const t = e.target.closest('[data-i]');
+    if (t) {
+      const z = h[Number(t.dataset.i)];
+      POLE.forEach(k => $(k).value = k === 'mena' ? (z.mena || 'CZK') : (z[k] || ''));
+      nastavFormat(z.format || 'cz', true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+
+  /* ---------- velikost písma a kontrast ---------- */
+  /** Velikost QR v CSS px: roste s písmem, omezí ji jen šířka okna (karta + okraje ≈ 100 px). */
+  function velikostQR() {
+    return Math.max(160, Math.round(Math.min(300 * meritkoPisma, document.documentElement.clientWidth - 100)));
+  }
+  /** Rozvržení podle skutečné šířky: 3 sloupce (adresář+text | platba | QR), 2 (formulář | QR), nebo 1. */
+  function rozvrh() {
+    const h = document.documentElement;
+    const qr = velikostQR();
+    const sloupec = qr + 62;                               // padding karty 16+16, rámeček QR 14+14, okraje 2
+    h.style.setProperty('--qr', qr + 'px');
+    h.style.setProperty('--qr-sloupec', sloupec + 'px');
+    const rem = parseFloat(getComputedStyle(h).fontSize) || 16;
+    const formular = 26 * rem;                              // nejmenší rozumná šířka formuláře
+    const sirka = $('obsahStranky').clientWidth;
+    const tri = sirka >= 2 * formular + 18 + sloupec + 18;
+    const dva = sirka >= formular + 18 + sloupec;
+    h.classList.toggle('tri', tri);
+    h.classList.toggle('jeden', !dva);
+  }
+  function nastavPismo(m) {
+    meritkoPisma = UROVNE_PISMA.reduce((a, b) => Math.abs(b - m) < Math.abs(a - m) ? b : a);
+    document.documentElement.style.fontSize = (meritkoPisma * 100) + '%';
+    document.documentElement.classList.toggle('velke', meritkoPisma >= 1.5);
+    rozvrh();
+    $('pismoVyber').value = String(meritkoPisma);
+    const i = UROVNE_PISMA.indexOf(meritkoPisma);
+    $('pismoMensi').disabled = i <= 0;
+    $('pismoVetsi').disabled = i >= UROVNE_PISMA.length - 1;
+    uloz(KLIC_PISMO, meritkoPisma);
+    if (obsah) prepocti();
+  }
+  function posunPismo(o) {
+    const i = UROVNE_PISMA.indexOf(meritkoPisma);
+    nastavPismo(UROVNE_PISMA[Math.max(0, Math.min(UROVNE_PISMA.length - 1, i + o))]);
+  }
+  function nastavKontrast(zap) {
+    document.documentElement.classList.toggle('kontrast', zap);
+    $('btnKontrast').setAttribute('aria-pressed', zap);
+    uloz(KLIC_KONTRAST, zap);
+  }
+  $('pismoVyber').innerHTML = UROVNE_PISMA.map(u => '<option value="' + u + '">' + Math.round(u * 100) + ' %</option>').join('');
+  $('pismoVyber').onchange = () => nastavPismo(Number($('pismoVyber').value));
+  $('pismoMensi').onclick = () => posunPismo(-1);
+  $('pismoVetsi').onclick = () => posunPismo(1);
+  $('btnKontrast').onclick = () => nastavKontrast(!document.documentElement.classList.contains('kontrast'));
+  document.addEventListener('keydown', e => {
+    if (!(e.ctrlKey && e.altKey)) return;      // Ctrl+Alt+plus/minus – běžné Ctrl+plus nechává lupě prohlížeče
+    if (e.key === '+' || e.code === 'Equal' || e.code === 'NumpadAdd') { e.preventDefault(); posunPismo(1); }
+    else if (e.key === '-' || e.code === 'Minus' || e.code === 'NumpadSubtract') { e.preventDefault(); posunPismo(-1); }
+  });
+
+  /* ---------- zvětšený kód ---------- */
+  let zamekDispleje = null;
+  function kresliVelky() {
+    const udaje = souhrnRadky(aktualniPlatba).filter(([a]) => HLAVNI.includes(a) || a === 'Příjemce');
+    $('velkyUdaje').innerHTML = udaje.map(([a, b]) => '<div class="' + (a === 'Částka' ? 'v-castka' : '') + '"><span>' + esc(a) + ':</span> ' + esc(b) + '</div>').join('');
+    const misto = Math.min(window.innerWidth - 24, window.innerHeight - $('velkyUdaje').offsetHeight - 70);
+    const vel = Math.max(120, Math.floor(misto));
+    kresli($('velkyPlatno'), matice(obsah), vel);
+    $('velkyPlatno').style.width = $('velkyPlatno').style.height = vel + 'px';
+  }
+  async function otevriVelky() {
+    if (!obsah) return;
+    $('velky').hidden = false;
+    kresliVelky();
+    try { if (navigator.wakeLock) zamekDispleje = await navigator.wakeLock.request('screen'); } catch (e) { /* nepodporováno */ }
+  }
+  function zavriVelky() {
+    $('velky').hidden = true;
+    if (zamekDispleje) { zamekDispleje.release().catch(() => {}); zamekDispleje = null; }
+  }
+  $('btnZvetsit').onclick = otevriVelky;
+  $('velky').onclick = zavriVelky;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('velky').hidden) zavriVelky(); });
+
+  /* ---------- přečtení nahlas ---------- */
+  function cislice(s) { return String(s).split('').map(c => c === '-' ? ', pomlčka, ' : c === '/' ? ', lomeno, ' : c === ' ' ? ', ' : c).join(' ').replace(/\s+/g, ' ').trim(); }
+  function sklonuj(n, jedna, dveAzCtyri, pet) { return n === 1 ? jedna : n >= 2 && n <= 4 ? dveAzCtyri : pet; }
+  /** Text pro hlasovou syntézu: čísla účtů a symbolů po číslicích, částka slovy jednotek. */
+  function textKPrecteni(p) {
+    if (!p) return '';
+    const k = Q.zpracujUcet(p.ucet), vety = [];
+    if (k.ucetCz) vety.push('Účet: ' + cislice(k.ucetCz) + (k.banka ? '. ' + k.banka : ''));
+    else vety.push('IBAN: ' + cislice(Q.ibanFormat(k.iban)));
+    const n = Q.parsujCastku(p.castka);
+    if (isFinite(n)) {
+      const cele = Math.floor(n + 1e-9), drobne = Math.round((n - cele) * 100);
+      const eur = p.mena === 'EUR';
+      let t = 'Částka: ' + cele + ' ' + (eur ? sklonuj(cele, 'euro', 'eura', 'eur') : sklonuj(cele, 'koruna', 'koruny', 'korun'));
+      if (drobne) t += ' a ' + drobne + ' ' + (eur ? sklonuj(drobne, 'cent', 'centy', 'centů') : sklonuj(drobne, 'haléř', 'haléře', 'haléřů'));
+      vety.push(t);
+    } else vety.push('Částka není zadaná');
+    if (p.vs) vety.push('Variabilní symbol: ' + cislice(p.vs));
+    if (p.ks && format !== 'epc') vety.push('Konstantní symbol: ' + cislice(p.ks));
+    if (p.ss && format !== 'epc') vety.push('Specifický symbol: ' + cislice(p.ss));
+    if (p.prijemce) vety.push('Příjemce: ' + p.prijemce);
+    if (p.zprava) vety.push('Zpráva: ' + p.zprava);
+    return vety.join('. ') + '.';
+  }
+  $('btnPrecist').onclick = () => {
+    if (!('speechSynthesis' in window)) { stav('stavAkce', 'Tento prohlížeč neumí číst nahlas.', 'varovani'); return; }
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); $('btnPrecist').textContent = '🔊 Přečíst'; return; }
+    const u = new SpeechSynthesisUtterance(textKPrecteni(aktualniPlatba));
+    u.lang = 'cs-CZ'; u.rate = 0.85;
+    const hlas = speechSynthesis.getVoices().find(v => /^cs/i.test(v.lang));
+    if (hlas) u.voice = hlas;
+    else stav('stavAkce', 'Český hlas není v systému nainstalovaný – čtení může znít cize.', 'varovani');
+    u.onend = u.onerror = () => { $('btnPrecist').textContent = '🔊 Přečíst'; };
+    $('btnPrecist').textContent = '⏹ Zastavit';
+    speechSynthesis.speak(u);
+  };
+
+  /* ---------- tisk ---------- */
+  $('btnTisk').onclick = () => {
+    const img = new Image();
+    img.onload = () => { window.print(); };
+    img.src = obrazekKOdeslani().toDataURL('image/png');
+    img.alt = POPISKY[format];
+    $('tisk').replaceChildren(img);
+    pridejDoHistorie();
+  };
+
+  /* ---------- adresář ---------- */
+  const POLE_KONTAKTU = ['ucet', 'prijemce', 'mena', 'vs', 'ks', 'ss', 'zprava', 'bic'];
+  function nactiAdresar() { const a = nacti(KLIC_ADR, []); return Array.isArray(a) ? a.filter(k => k && k.nazev && k.ucet) : []; }
+  function ulozAdresar(a) { uloz(KLIC_ADR, a); kresliAdresar(); }
+  /** Uloží kontakt (přepíše stejnojmenný). sCastkou = zapamatovat i částku (pravidelná platba). */
+  function ulozKontakt(nazev, p, frm, sCastkou) {
+    const a = nactiAdresar();
+    const k = { nazev: nazev.trim(), format: frm, naposledy: Date.now() };
+    POLE_KONTAKTU.forEach(x => { if (p[x]) k[x] = p[x]; });
+    if (sCastkou && p.castka) k.castka = p.castka;
+    const i = a.findIndex(x => x.nazev.toLowerCase() === k.nazev.toLowerCase());
+    if (i >= 0) { k.pouzito = a[i].pouzito || 0; a[i] = k; } else { k.pouzito = 0; a.push(k); }
+    aktivniKontakt = k.nazev;
+    ulozAdresar(a);
+    return k;
+  }
+  function nactiKontakt(nazev) {
+    const a = nactiAdresar(), k = a.find(x => x.nazev === nazev);
+    if (!k) return;
+    POLE.forEach(x => $(x).value = x === 'mena' ? (k.mena || 'CZK') : (k[x] || ''));
+    if (k.bic) $('detBic').open = true;
+    k.pouzito = (k.pouzito || 0) + 1; k.naposledy = Date.now();
+    aktivniKontakt = k.nazev;
+    ulozAdresar(a);
+    nastavFormat(k.format || 'cz', true);
+    stav('stavRozpoznani', '📇 Načteno z adresáře: ' + esc(k.nazev) + (k.castka ? '' : '. Doplň částku.'), 'ok');
+    if (!k.castka) $('castka').focus();
+  }
+  function kresliAdresar() {
+    const hledej = Q.bezDiakritiky($('adresarHledej').value).toLowerCase().trim();
+    const a = nactiAdresar().sort((x, y) => (y.naposledy || 0) - (x.naposledy || 0));
+    const vyber = a.filter(k => !hledej || Q.bezDiakritiky([k.nazev, k.prijemce, k.ucet, k.zprava].join(' ')).toLowerCase().includes(hledej));
+    const ul = $('adresar');
+    $('btnAdrExport').disabled = !a.length;
+    if (!a.length) { ul.innerHTML = '<li class="prazdne">Adresář je prázdný. Vyplň platbu a dej „📇 Uložit do adresáře“ – příště ji vybereš jedním klepnutím.</li>'; return; }
+    if (!vyber.length) { ul.innerHTML = '<li class="prazdne">Nic neodpovídá hledání.</li>'; return; }
+    ul.innerHTML = vyber.map(k => {
+      const n = Q.parsujCastku(k.castka);
+      const detail = [({ cz: '🇨🇿', sk: '🇸🇰', epc: '🇪🇺' }[k.format] || ''), k.ucet, k.vs ? 'VS ' + k.vs : '', isFinite(n) ? n.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (k.mena || '') : ''].filter(Boolean).join(' · ');
+      const jm = esc(k.nazev);
+      return '<li class="' + (k.nazev === aktivniKontakt ? 'akt' : '') + '"><div class="a-text" role="button" tabindex="0" data-nazev="' + jm + '" title="Použít"><b>' + jm + '</b><small>' + esc(detail) + '</small></div>' +
+        '<button data-prejmenuj="' + jm + '" title="Přejmenovat" aria-label="Přejmenovat ' + jm + '">✏️</button>' +
+        '<button data-smaz="' + jm + '" title="Smazat" aria-label="Smazat ' + jm + '">🗑</button></li>';
+    }).join('');
+  }
+  $('adresarHledej').addEventListener('input', kresliAdresar);
+  $('adresar').addEventListener('click', async e => {
+    const sm = e.target.closest('[data-smaz]'), pr = e.target.closest('[data-prejmenuj]'), t = e.target.closest('[data-nazev]');
+    if (sm) {
+      if (!(await dlg().potvrd('Smazat „' + sm.dataset.smaz + '“ z adresáře?'))) return;
+      ulozAdresar(nactiAdresar().filter(k => k.nazev !== sm.dataset.smaz));
+    } else if (pr) {
+      const nove = await dlg().zeptej('Nový název kontaktu', pr.dataset.prejmenuj);
+      if (!nove || !nove.trim() || nove.trim() === pr.dataset.prejmenuj) return;
+      const a = nactiAdresar();
+      if (a.some(k => k.nazev.toLowerCase() === nove.trim().toLowerCase())) { dlg().chyba('Kontakt „' + nove.trim() + '“ už existuje.'); return; }
+      const k = a.find(x => x.nazev === pr.dataset.prejmenuj); if (k) k.nazev = nove.trim();
+      if (aktivniKontakt === pr.dataset.prejmenuj) aktivniKontakt = nove.trim();
+      ulozAdresar(a);
+    } else if (t) nactiKontakt(t.dataset.nazev);
+  });
+  $('adresar').addEventListener('keydown', e => {
+    const t = e.target.closest('[data-nazev]');
+    if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); nactiKontakt(t.dataset.nazev); }
+  });
+  $('btnDoAdresare').onclick = async () => {
+    const p = platbaZFormulare();
+    const u = Q.zpracujUcet(p.ucet);
+    if (u.chyby.length) { dlg().chyba(u.chyby[0]); return; }
+    const navrh = aktivniKontakt || p.prijemce || u.banka || p.ucet;
+    const nazev = await dlg().zeptej('Pod jakým názvem příjemce uložit?', navrh);
+    if (!nazev || !nazev.trim()) return;
+    const a = nactiAdresar();
+    const existuje = a.some(k => k.nazev.toLowerCase() === nazev.trim().toLowerCase());
+    if (existuje && nazev.trim() !== aktivniKontakt && !(await dlg().potvrd('Kontakt „' + nazev.trim() + '“ už v adresáři je. Přepsat?'))) return;
+    let sCastkou = false;
+    if (p.castka) sCastkou = await dlg().potvrd('Zapamatovat i částku ' + p.castka + ' ' + p.mena + '? (hodí se pro pravidelné platby, např. nájem)', { ok: 'Ano, i částku', zrus: 'Ne, jen údaje' });
+    ulozKontakt(nazev, p, format, sCastkou);
+    dlg().info('📇 Uloženo do adresáře: ' + nazev.trim());
+  };
+  $('btnAdrExport').onclick = () => {
+    const data = JSON.stringify({ typ: 'qr-platba-adresar', verze: 1, ulozeno: new Date().toISOString(), kontakty: nactiAdresar() }, null, 2);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+    a.download = 'qr-platba-adresar-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  $('btnAdrImport').onclick = () => $('adrSoubor').click();
+  $('adrSoubor').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      const nove = (Array.isArray(d) ? d : d.kontakty || []).filter(k => k && typeof k.nazev === 'string' && typeof k.ucet === 'string');
+      if (!nove.length) throw new Error('Soubor neobsahuje žádné kontakty.');
+      const a = nactiAdresar();
+      let pridano = 0, prepsano = 0;
+      for (const k of nove) {
+        const cisty = { nazev: k.nazev.trim().slice(0, 80), format: ['cz', 'sk', 'epc'].includes(k.format) ? k.format : 'cz', naposledy: Number(k.naposledy) || Date.now(), pouzito: Number(k.pouzito) || 0 };
+        POLE_KONTAKTU.concat('castka').forEach(x => { if (k[x] != null && k[x] !== '') cisty[x] = String(k[x]).slice(0, 140); });
+        const i = a.findIndex(x => x.nazev.toLowerCase() === cisty.nazev.toLowerCase());
+        if (i >= 0) { a[i] = cisty; prepsano++; } else { a.push(cisty); pridano++; }
+      }
+      ulozAdresar(a);
+      dlg().info('Adresář obnoven: ' + pridano + ' nových, ' + prepsano + ' přepsaných.');
+    } catch (err) { dlg().chyba('Zálohu se nepodařilo načíst: ' + err.message); }
+  };
+
+  /* ---------- start ---------- */
+  POLE.forEach(k => $(k).addEventListener('input', prepocti));
+  $('mena').addEventListener('change', prepocti);
+  $('diakritika').checked = !!nacti(KLIC_DIAK, false);
+  $('diakritika').onchange = () => { uloz(KLIC_DIAK, $('diakritika').checked); prepocti(); };
+  doFormulare(nacti('webapp_qrplatba_rozpracovano', {}));
+  window.addEventListener('resize', () => { rozvrh(); if (obsah) kresli($('qrPlatno'), matice(obsah), velikostQR()); if (!$('velky').hidden) kresliVelky(); });
+  kresliHistorii();
+  nastavFormat(nacti(KLIC_FORMAT, 'cz'), true);
+  nastavPismo(Number(nacti(KLIC_PISMO, 1)) || 1);
+  nastavKontrast(!!nacti(KLIC_KONTRAST, false));
+  kresliAdresar();
+  window.QR_PLATBA_UI = { textKPrecteni, nastavPismo, nastavKontrast, ulozKontakt, nactiKontakt, otevriVelky, zavriVelky, obrazek: () => obrazekKOdeslani(), prepocti, nastavFormat, pouzijRozpoznane, obsah: () => obsah, prectiObrazek };
+})();
+</script>
+</body>
+</html>

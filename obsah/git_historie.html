@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historie Gitu – vizualizátor repozitářů</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="git_historie/jadro.js"></script>
+  <style>
+    :root {
+      --pruh-0: #3987e5; --pruh-1: #d95926; --pruh-2: #199e70; --pruh-3: #c98500;
+      --pruh-4: #d55181; --pruh-5: #2f9a2f; --pruh-6: #9085e9; --pruh-7: #e66767;
+      --text-chyba: #ff8f85; --text-mez: #f0bd5e;
+    }
+    :root[data-theme="light"] {
+      --pruh-0: #2a78d6; --pruh-1: #eb6834; --pruh-2: #1baf7a; --pruh-3: #eda100;
+      --pruh-4: #e87ba4; --pruh-5: #008300; --pruh-6: #6250d6; --pruh-7: #e34948;
+      --text-chyba: var(--danger); --text-mez: var(--warn);
+    }
+    body { background-color: var(--bg-deep); padding: 24px clamp(10px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 14px; max-width: 980px; line-height: 1.5; }
+    .obsah { max-width: 1400px; display: flex; flex-direction: column; gap: 16px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
+    .karta[hidden], [hidden] { display: none !important; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 8px 0 4px; }
+    input[type="text"], input[type="password"], input[type="date"], input[type="search"], input[type="number"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.9rem; min-width: 0; font-family: inherit;
+    }
+    input::placeholder { color: var(--text-faint); }
+    input:focus, select:focus, canvas:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    button, .tlacitko {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); text-decoration: none;
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit; display: inline-block; line-height: 1.2;
+    }
+    button:hover, .tlacitko:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni, .tlacitko.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover, .tlacitko.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .radek { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0 12px; }
+    .napoveda { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+    .napoveda a, .doc a { color: var(--accent); }
+    code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code { background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: 0.82em; }
+    pre { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 0.78rem; line-height: 1.45; white-space: pre; max-width: 100%; }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .zalozky button { border-radius: 6px 6px 0 0; border-bottom: 0; }
+    .zalozky button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .pust { border: 2px dashed var(--border-strong); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+    body.tahne .pust { border-color: var(--accent); background: var(--accent-soft); }
+
+    .uplnost { border: 1px solid var(--border); border-left-width: 5px; border-radius: var(--radius); background: var(--bg-panel); padding: 10px 14px; font-size: 0.86rem; line-height: 1.5; }
+    .uplnost.uplny { border-left-color: var(--ok); }
+    .uplnost.neuplny { border-left-color: var(--warn); }
+    .uplnost.seznam { border-left-color: var(--danger); }
+    .uplnost b.stitek { display: inline-block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .4px; border: 1px solid currentColor; border-radius: 4px; padding: 0 6px; margin-right: 6px; }
+    .uplnost.uplny b.stitek { color: var(--ok); }
+    .uplnost.neuplny b.stitek { color: var(--text-mez); }
+    .uplnost.seznam b.stitek { color: var(--text-chyba); }
+    .uplnost ul { margin: 6px 0 0 18px; color: var(--text-muted); font-size: 0.8rem; }
+
+    .dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+    .dlazdice div { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+    .dlazdice b { display: block; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+    .dlazdice span { font-size: 0.74rem; color: var(--text-muted); }
+
+    .filtry { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 10px; align-items: end; }
+    .stav-filtru { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .cip { display: inline-flex; gap: 6px; align-items: center; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 12px; padding: 1px 4px 1px 10px; color: var(--text); font-size: 0.78rem; max-width: 100%; }
+    .cip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cip button { padding: 0 6px; border: 0; background: transparent; font-size: 0.9rem; }
+
+    .graf-rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 16px; }
+    @media (max-width: 1020px) { .graf-rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .platno-obal { position: relative; height: 600px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); overflow: hidden; }
+    @media (max-width: 600px) { .platno-obal { height: 460px; } }
+    #graf { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+    #graf.tahne { cursor: grabbing; }
+    .bublina { position: absolute; pointer-events: none; z-index: 5; background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 9px; font-size: 0.78rem; line-height: 1.4; box-shadow: var(--shadow); max-width: min(340px, 80vw); }
+    .bublina .mono { color: var(--text-muted); }
+    .ovladani-grafu { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .ovladani-grafu .napoveda { margin: 0; }
+    .legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; }
+    .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--text-muted); vertical-align: -1px; margin-right: 4px; }
+    .legenda i.plny { background: var(--text-muted); }
+    .legenda i.carkovany { border-style: dashed; border-radius: 2px; width: 2px; height: 12px; border-width: 0 0 0 2px; }
+    .vysledky { max-height: 220px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; font-size: 0.8rem; }
+    .vysledky button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; padding: 5px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vysledky button:hover { background: var(--bg-hover); }
+
+    .detail { font-size: 0.84rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .detail h4 { font-size: 1rem; margin-bottom: 6px; }
+    .detail .telo { white-space: pre-wrap; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 0.8rem; max-height: 220px; overflow: auto; margin: 6px 0; }
+    .detail dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 10px; margin: 8px 0; }
+    .detail dt { color: var(--text-muted); }
+    .detail dd { margin: 0; min-width: 0; }
+    .odkaz { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8rem; }
+    .mimo { color: var(--text-mez); font-size: 0.78rem; }
+    .ref { display: inline-block; border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 5px; font-size: 0.74rem; margin: 1px 3px 1px 0; }
+    .ref.znacka { border-style: dashed; }
+    .soubory { list-style: none; margin: 6px 0 0; padding: 0; font-size: 0.78rem; max-height: 320px; overflow: auto; }
+    .soubory li { display: grid; grid-template-columns: minmax(0, 1fr) auto 60px; gap: 8px; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--border); }
+    .soubory .cesta { overflow-wrap: anywhere; }
+    .plus { color: var(--ok); } .minus { color: var(--text-chyba); }
+    :root[data-theme="light"] .minus { color: var(--danger); }
+    .pruzek { display: flex; height: 8px; border-radius: 2px; overflow: hidden; background: var(--bg-input); }
+    .pruzek i { display: block; height: 100%; }
+    .pruzek i.p { background: var(--ok); } .pruzek i.m { background: var(--danger); }
+
+    .grafy2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 16px; }
+    .maly-graf { position: relative; height: 220px; }
+    .maly-graf canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+    #aktivita { cursor: crosshair; }
+    .teplo { display: grid; grid-template-columns: 26px repeat(24, minmax(0, 1fr)); gap: 2px; font-size: 0.66rem; color: var(--text-muted); }
+    .teplo div { aspect-ratio: 1; border-radius: 2px; min-width: 0; position: relative; }
+    .teplo .bunka { background: var(--bg-input); border: 1px solid var(--border); }
+    .teplo .bunka i { position: absolute; inset: 0; background: var(--accent); border-radius: 1px; }
+    .teplo .hl { aspect-ratio: auto; text-align: center; }
+    .teplo .dl { aspect-ratio: auto; align-self: center; }
+    .sloupce { display: flex; align-items: flex-end; gap: 2px; height: 90px; border-bottom: 1px solid var(--border); }
+    .sloupce div { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 1px; position: relative; }
+    .popisky { display: flex; gap: 2px; font-size: 0.64rem; color: var(--text-muted); }
+    .popisky span { flex: 1; text-align: center; overflow: hidden; }
+    .stupnice { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
+    .stupnice i { display: inline-block; width: 14px; height: 14px; border-radius: 2px; background: var(--accent); }
+
+    .tabulka-obal { overflow-x: auto; max-width: 100%; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+    th, td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--text-muted); font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--bg-panel); }
+    th[aria-sort="descending"]::after { content: " ↓"; } th[aria-sort="ascending"]::after { content: " ↑"; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: var(--bg-hover); }
+    tbody tr.vybrany { background: var(--accent-soft); }
+    td.jmeno { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+    td .podil { display: inline-block; height: 8px; background: var(--accent); border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+    .vyska-tab { max-height: 420px; overflow: auto; }
+    .api-stav { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+    .api-stav b { color: var(--text); }
+    .doc { font-size: 0.84rem; line-height: 1.55; }
+    .doc p { margin: 6px 0; }
+    .doc ul { margin: 6px 0 6px 18px; }
+    .kopie { position: relative; }
+    .kopie button { position: absolute; top: 6px; right: 6px; }
+    .zdroj { font-size: 0.74rem; color: var(--text-faint); margin-top: 8px; }
+  </style>
+</head>
+<body>
+<h1>Historie Gitu – vizualizátor repozitářů</h1>
+<p class="podtitul">Graf commitů s větvemi, merge commity a značkami, časová osa, filtry, vyhledávání a statistiky. Data načtete z lokálního exportu
+  (úplný Git DAG) nebo z veřejného repozitáře přes GitHub API (vždy neúplná data). Vše se zpracuje jen ve vašem prohlížeči.</p>
+
+<div class="obsah">
+  <section class="karta" id="karta-nacteni">
+    <h2>Načtení dat</h2>
+    <div class="zalozky" role="tablist">
+      <button role="tab" aria-selected="true" data-zalozka="soubor">Soubor z exportu</button>
+      <button role="tab" aria-selected="false" data-zalozka="github">GitHub API</button>
+      <button role="tab" aria-selected="false" data-zalozka="export">Jak vyexportovat lokální repozitář</button>
+    </div>
+
+    <div data-panel="soubor">
+      <div class="pust" id="pust">
+        Přetáhněte sem soubor <code>.json</code> z <code>export_git_json.py</code>, textový výstup jednořádkového příkazu, nebo uloženou odpověď GitHub API.
+        <div class="radek" style="justify-content:center;margin-top:10px">
+          <label class="tlacitko hlavni" style="margin:0;color:var(--on-accent)">Vybrat soubor… <input type="file" id="soubor" accept=".json,.txt,application/json,text/plain" hidden></label>
+          <button id="ukazka">Ukázková data</button>
+          <button id="obnovit" hidden>Obnovit naposledy načtené</button>
+        </div>
+      </div>
+      <p class="napoveda">Ukázka je smyšlený repozitář (4 autoři, větve, merge, octopus merge, přejmenování, binární soubor). Naposledy načtená data se pamatují v tomto prohlížeči (IndexedDB), token GitHubu nikdy.</p>
+    </div>
+
+    <div data-panel="github" hidden>
+      <div class="mrizka">
+        <div><label for="gh-repo">Repozitář (vlastník/název nebo URL)</label><input type="text" id="gh-repo" placeholder="např. git/git" autocomplete="off" spellcheck="false"></div>
+        <div><label for="gh-vetev">Větev, značka nebo SHA (prázdné = výchozí)</label><input type="text" id="gh-vetev" placeholder="výchozí větev" autocomplete="off" spellcheck="false"></div>
+        <div><label for="gh-stranky">Stránek po 100 commitech</label><select id="gh-stranky"><option>1</option><option selected>3</option><option>5</option><option>10</option><option>20</option></select></div>
+        <div><label for="gh-token">Osobní token (volitelný, jen v paměti)</label><input type="password" id="gh-token" autocomplete="off" placeholder="github_pat_…" spellcheck="false"></div>
+      </div>
+      <label class="radek" style="color:var(--text);font-size:0.84rem"><input type="checkbox" id="gh-refs" checked> načíst i seznam větví a značek (2 požadavky navíc)</label>
+      <div class="radek" style="margin-top:8px">
+        <button class="hlavni" id="gh-nacti">Načíst z GitHubu</button>
+        <button id="gh-dalsi" disabled>Načíst další stránky</button>
+        <select id="gh-pridat-vetev" style="width:auto;max-width:100%" disabled><option value="">Přidat větev…</option></select>
+        <button id="gh-zrus" hidden>Zastavit</button>
+      </div>
+      <div class="api-stav" id="gh-stav">Limit bez tokenu: 60 požadavků za hodinu z vaší IP adresy, s tokenem 5 000. Jedno načtení = 1 požadavek na informace o repozitáři + 1 za každou stránku (+ 2 za větve a značky).</div>
+      <p class="napoveda">Rozhraní <code>GET /repos/{vlastník}/{repo}/commits?per_page=100</code> vrací commity dosažitelné z jedné větve, nejnovější první, stránkované hlavičkou <code>Link</code>.
+        Rodiče za poslední načtenou stránkou zůstanou „mimo načtená data“ a ostatní větve chybí, dokud je nepřidáte. Seznam commitů neobsahuje změněné soubory – ty lze v detailu
+        commitu dočíst po jednom (1 požadavek). Časy vrací GitHub v UTC, pásmo autora tedy není známé. Token se drží jen v proměnné této stránky, neukládá se a posílá se jen na api.github.com.</p>
+    </div>
+
+    <div data-panel="export" hidden class="doc">
+      <p><b>Doporučeno – skript v Pythonu</b> (jen standardní knihovna, Python 3.7+, git v PATH; repozitář jen čte):</p>
+      <div class="radek"><a class="tlacitko hlavni" href="git_historie/export_git_json.py" download="export_git_json.py">Stáhnout export_git_json.py</a>
+        <button id="ukaz-skript">Zobrazit zdrojový kód</button></div>
+      <div class="kopie"><pre id="prikaz-py">python3 export_git_json.py -C /cesta/k/repozitari -o historie.json</pre><button class="male" data-kopiruj="prikaz-py">Kopírovat</button></div>
+      <ul>
+        <li>Windows: <code>py export_git_json.py -C C:\projekty\repo -o historie.json</code></li>
+        <li><code>--max 5000</code> jen nejnovější commity, <code>--od 2024-01-01</code> jen od data, <code>--rozsah main develop</code> jen vybrané větve (výsledek pak není úplný DAG – stránka to pozná a ukáže).</li>
+        <li><code>--emaily hash</code> nahradí e-maily krátkým otiskem (pro sdílení), <code>--emaily zadne</code> je vynechá; <code>--bez-souboru</code> vynechá statistiky souborů.</li>
+        <li>Skript volá <code>git log --all --parents --numstat -z --diff-merges=first-parent --format=…</code> s náhodnou značkou na začátku a konci každého commitu a poli oddělenými znakem NUL,
+          takže žádný obsah zprávy nerozbije čtení. Větve a značky čte <code>git for-each-ref</code> (anotované značky rozbalí na commit), zjistí HEAD a mělký klon.</li>
+      </ul>
+      <pre id="zdroj-skriptu" hidden></pre>
+      <p><b>Rychlá varianta – jeden příkaz</b> (bash, Git Bash, zsh; bez statistik souborů a bez těla zpráv):</p>
+      <div class="kopie"><pre id="prikaz-sh">git log --all --date-order --decorate=full --format='%H%x1f%P%x1f%an%x1f%ae%x1f%aI%x1f%D%x1f%s%x1e' &gt; git_historie.txt</pre><button class="male" data-kopiruj="prikaz-sh">Kopírovat</button></div>
+      <p>Oddělovače jsou řídicí znaky 0x1F a 0x1E, které se v předmětu commitu prakticky nevyskytují; předmět je poslední pole, takže by ho stejně nerozdělily.</p>
+      <details><summary>Formát JSON „git-historie-json“ verze 1</summary>
+<pre>{
+  "format": "git-historie-json", "verze": 1, "zdroj": "lokalni-git",
+  "repo": { "nazev": "projekt", "head": "&lt;sha&gt;", "head_ref": "refs/heads/main", "melky": false },
+  "parametry": { "rozsah": ["--all"], "max_pocet": null, "od": null, "soubory": true,
+                 "emaily": "plne", "numstat_merge": "first-parent" },
+  "refs": [ { "nazev": "refs/heads/main", "typ": "vetev", "cil": "&lt;sha&gt;" },
+            { "nazev": "refs/tags/v1.0", "typ": "znacka", "anotovana": true, "zprava": "…", "cil": "&lt;sha commitu&gt;" } ],
+  "commity": [ {
+    "sha": "&lt;40 hex&gt;", "rodice": ["&lt;sha&gt;", …],          // pořadí rodičů jako v Gitu (první = hlavní linie)
+    "autor": "Jméno", "email": "…", "datum": "2024-05-01T10:00:00+02:00",
+    "commiter": "…", "commiter_email": "…", "datum_commit": "…",
+    "predmet": "první řádek zprávy", "telo": "zbytek zprávy",
+    "soubory": [ ["cesta", přidáno, odebráno], ["nová", 1, 0, "stará cesta"], ["obr.png", null, null] ]
+  } ]
+}</pre>
+        <p>Úplnost se nepřebírá ze souboru, ale počítá: když každý rodič každého commitu je v datech a klon není mělký, jde o úplný DAG.
+          Přijímá se i pole commitů z GitHub API uložené z prohlížeče nebo <code>curl</code>.</p>
+      </details>
+    </div>
+  </section>
+
+  <div id="uplnost" class="uplnost" hidden></div>
+  <div class="dlazdice" id="dlazdice" hidden></div>
+
+  <section class="karta" id="karta-filtry" hidden>
+    <h2>Filtry a hledání</h2>
+    <div class="filtry">
+      <div><label for="f-vetev">Větev / značka (jen její předci)</label><select id="f-vetev"></select></div>
+      <div><label for="f-autor">Autor</label><select id="f-autor"></select></div>
+      <div><label for="f-od">Od data</label><input type="date" id="f-od"></div>
+      <div><label for="f-do">Do data (včetně)</label><input type="date" id="f-do"></div>
+      <div style="grid-column: span 2; min-width: 0"><label for="f-hledat">Hledat (zpráva, autor, SHA, <code>soubor:cesta</code>)</label><input type="search" id="f-hledat" placeholder="např. oprava, a1b2c3d nebo soubor:src/app.js" spellcheck="false"></div>
+    </div>
+    <div class="stav-filtru" id="stav-filtru"></div>
+    <p class="napoveda">Výběr větve graf skutečně zúží na její předky (podgraf je uzavřený na rodiče, žádné hrany se nedomýšlejí). Autor, období, hledání a soubor commity jen zvýrazní – ostatní zešednou, ale zůstanou na místě, aby se nevytvářely falešné vztahy.</p>
+  </section>
+
+  <section class="karta" id="karta-graf" hidden>
+    <h2>Graf commitů</h2>
+    <div class="graf-rozlozeni">
+      <div style="min-width:0">
+        <div class="ovladani-grafu">
+          <button class="male" id="z-minus" title="Oddálit (−)">−</button>
+          <button class="male" id="z-plus" title="Přiblížit (+)">+</button>
+          <button class="male" id="z-prehled">Celý přehled</button>
+          <button class="male" id="z-head">Na HEAD</button>
+          <button class="male" id="z-predchozi" title="Předchozí shoda">↑ shoda</button>
+          <button class="male" id="z-dalsi" title="Další shoda">↓ shoda</button>
+          <span class="napoveda">Kolečko posouvá, Ctrl + kolečko (nebo dva prsty) mění měřítko, tažení posouvá, šipky vybírají commit.</span>
+        </div>
+        <div class="platno-obal" id="platno-obal">
+          <canvas id="graf" tabindex="0" aria-label="Graf commitů – šipkami nahoru a dolů vyberete commit"></canvas>
+          <div class="bublina" id="bublina" hidden></div>
+        </div>
+        <div class="legenda">
+          <span><i class="plny"></i>commit</span><span><i></i>merge (≥ 2 rodiče)</span>
+          <span><i class="carkovany"></i>čárkovaně: rodič mimo načtená data</span>
+          <span>vlevo časová osa (datum commitu); řádky jsou v topologickém pořadí, potomek vždy nad rodičem</span>
+        </div>
+        <div class="vysledky" id="vysledky" hidden></div>
+      </div>
+      <aside class="karta detail" id="detail" style="background:var(--bg-deep)">
+        <p class="napoveda" style="margin:0">Klepněte na commit v grafu – zobrazí se zpráva, rodiče, potomci, větve a změněné soubory.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="karta" id="karta-aktivita" hidden>
+    <h2>Aktivita v čase</h2>
+    <div class="radek" style="margin-bottom:8px">
+      <label for="krok" style="margin:0">Krok</label>
+      <select id="krok" style="width:auto"><option value="">automaticky</option><option value="den">den</option><option value="tyden">týden</option><option value="mesic">měsíc</option></select>
+      <label for="pasmo" style="margin:0">Čas</label>
+      <select id="pasmo" style="width:auto"><option value="autor">místní čas autora</option><option value="prohlizec">čas tohoto zařízení</option><option value="utc">UTC</option></select>
+      <button class="male" id="zrus-obdobi" hidden>Zrušit výběr období</button>
+    </div>
+    <div class="maly-graf" style="height:200px"><canvas id="aktivita" aria-label="Počet commitů v čase"></canvas><div class="bublina" id="bublina-akt" hidden></div></div>
+    <p class="napoveda" id="aktivita-popis">Tažením v grafu vyberete období (filtr Od–Do). Plné sloupce = commity odpovídající filtrům, světlé = ostatní ve zvolené větvi.</p>
+  </section>
+
+  <div class="grafy2" id="grafy-cas" hidden>
+    <section class="karta">
+      <h2>Den v týdnu × hodina</h2>
+      <div class="teplo" id="teplo"></div>
+      <div class="stupnice"><span>0</span><i style="opacity:.15"></i><i style="opacity:.4"></i><i style="opacity:.7"></i><i></i><span id="teplo-max"></span><span id="teplo-pasmo" style="margin-left:auto"></span></div>
+    </section>
+    <section class="karta">
+      <h2>Histogram podle dnů a hodin</h2>
+      <h3>Dny v týdnu</h3>
+      <div class="sloupce" id="hist-dny"></div><div class="popisky" id="pop-dny"></div>
+      <h3>Hodiny</h3>
+      <div class="sloupce" id="hist-hodiny"></div><div class="popisky" id="pop-hodiny"></div>
+    </section>
+  </div>
+
+  <section class="karta" id="karta-autori" hidden>
+    <h2>Autoři</h2>
+    <div class="tabulka-obal vyska-tab"><table id="tab-autori"><thead></thead><tbody></tbody></table></div>
+    <p class="napoveda">Autor = e-mail (bez ohledu na velikost písmen), jinak jméno; soubor <code>.mailmap</code> se nepoužívá. Řádky merge commitů se autorům nepočítají (byly by dvakrát). Klepnutím na řádek nastavíte filtr autora.</p>
+  </section>
+
+  <section class="karta" id="karta-soubory" hidden>
+    <h2>Vývoj souborů</h2>
+    <div id="soubory-obsah"></div>
+  </section>
+</div>
+
+<script src="git_historie/ui.js"></script>
+</body>
+</html>

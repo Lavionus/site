@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulátor PLC – Ladder diagram</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="plc/jadro.js"></script>
+  <script src="plc/procesy.js"></script>
+  <script src="plc/priklady.js"></script>
+  <script src="plc/kresba.js"></script>
+  <style>
+    :root {
+      --drat: #7c8590; --drat-nap: #43d17a; --sep-fill: rgba(67, 209, 122, 0.16);
+      --text-chyba: #ff8f85; --text-mez: #f0bd5e; --vyber: #6aa6fd;
+    }
+    :root[data-theme="light"] {
+      --drat: #6b737c; --drat-nap: #138a3e; --sep-fill: rgba(19, 138, 62, 0.13);
+      --text-chyba: var(--danger); --text-mez: var(--warn); --vyber: #2862bb;
+    }
+    body { background-color: var(--bg-deep); padding: 18px clamp(10px, 2.4vw, 32px); min-height: 100vh; }
+    h1 { font-size: 1.35rem; margin-bottom: 4px; }
+    h2 { font-size: 0.98rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 12px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 10px; max-width: 1100px; line-height: 1.5; }
+    .upozorneni { max-width: 1500px; border: 1px solid var(--border); border-left: 4px solid var(--warn); background: var(--bg-panel);
+      border-radius: var(--radius); padding: 8px 12px; font-size: 0.8rem; line-height: 1.5; margin-bottom: 12px; color: var(--text-muted); }
+    .upozorneni b { color: var(--text); }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    button, select, input[type="text"], input[type="number"], textarea {
+      font-family: inherit; font-size: 0.84rem; color: var(--text); border-radius: 6px;
+    }
+    button { background: var(--bg-control); border: 1px solid var(--border-strong); padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 3px 8px; font-size: 0.76rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    button.nebezpecne { color: var(--text-chyba); }
+    select, input[type="text"], input[type="number"], textarea { background: var(--bg-input); border: 1px solid var(--border); padding: 6px 8px; min-width: 0; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .lista { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 1500px; margin-bottom: 8px; }
+    .lista .oddel { width: 1px; align-self: stretch; background: var(--border); margin: 0 4px; }
+    .lista label { font-size: 0.78rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 5px; }
+    #nazevProjektu { width: 220px; font-weight: 600; }
+    #perioda { width: 78px; }
+    .lista label { max-width: 100%; }
+    #proces { max-width: min(330px, calc(100vw - 120px)); }
+    .stav-plc { font-weight: 700; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-strong); letter-spacing: .5px; }
+    .stav-plc.run { background: var(--drat-nap); color: #06210f; border-color: var(--drat-nap); }
+    .stav-plc.pauza { background: var(--warn); color: #1e1400; border-color: var(--warn); }
+    :root[data-theme="light"] .stav-plc.run { color: #fff; }
+    :root[data-theme="light"] .stav-plc.pauza { color: #fff; }
+    .stav-plc.stop { color: var(--text-muted); }
+    .info-cas { font-size: 0.78rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    #btnRun { min-width: 64px; }
+
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 420px); gap: 14px; max-width: 1500px; align-items: start; }
+    @media (max-width: 1080px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+    /* paleta */
+    .paleta { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 8px; align-items: center; }
+    .paleta .skupina { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+    .paleta .skupina > span { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-right: 2px; }
+    .paleta button { padding: 4px 7px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px; }
+    .paleta button svg { width: 30px; height: 18px; }
+    .paleta .tvar { stroke: currentColor; stroke-width: 1.8; fill: none; }
+    .paleta .pis { fill: currentColor; font: 700 8px system-ui, sans-serif; text-anchor: middle; dominant-baseline: central; }
+    .paleta button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .napoveda-edit { font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 8px; line-height: 1.45; }
+    .napoveda-edit.presun { color: var(--text); background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 8px; }
+
+    /* ladder */
+    .ladder-obal { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-deep); max-height: 72vh; overflow: auto; }
+    #ladder { padding: 4px 0; min-width: min-content; }
+    #ladder svg { display: block; user-select: none; -webkit-user-select: none; }
+    .pricka-svg { border-bottom: 1px dashed var(--border); }
+    .drat { stroke: var(--drat); stroke-width: 2; fill: none; }
+    .drat.nap { stroke: var(--drat-nap); stroke-width: 3.5; }
+    .lista-l, .lista-p { stroke: var(--text-muted); stroke-width: 4; }
+    .lista-l.nap { stroke: var(--drat-nap); }
+    .prvek .tvar { stroke: var(--text); stroke-width: 2.4; fill: none; }
+    .prvek .vypln { fill: transparent; }
+    .prvek.sep .tvar, .prvek.akt .tvar { stroke: var(--drat-nap); }
+    .prvek.sep .vypln, .prvek.akt .vypln { fill: var(--sep-fill); }
+    .prvek .adr { fill: var(--text); font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; text-anchor: middle; }
+    .prvek .sym { fill: var(--text-muted); font: 10.5px system-ui, sans-serif; text-anchor: middle; }
+    .prvek .pis { fill: var(--text); font: 700 11px system-ui, sans-serif; text-anchor: middle; dominant-baseline: central; }
+    .prvek .hod { fill: var(--text-muted); font: 10.5px ui-monospace, monospace; }
+    .prvek .titul { fill: var(--text); font: 700 11.5px system-ui, sans-serif; }
+    .prvek .ramec { fill: transparent; stroke: transparent; stroke-width: 2; rx: 6; }
+    .prvek:hover .ramec { stroke: var(--border-strong); }
+    .prvek.vybran .ramec { stroke: var(--vyber); fill: var(--accent-soft); }
+    .prvek.chyba .ramec { stroke: var(--danger); stroke-dasharray: 4 3; }
+    .prvek.varov .ramec { stroke: var(--warn); stroke-dasharray: 4 3; }
+    .prvek.presouvany { opacity: 0.4; }
+    .prvek { cursor: pointer; }
+    .blok .box { fill: var(--bg-panel); stroke: var(--text); stroke-width: 2; }
+    .blok.akt .box { stroke: var(--drat-nap); fill: var(--sep-fill); }
+    .par-ram { fill: transparent; stroke: transparent; cursor: pointer; }
+    .par-ram.vybran { stroke: var(--vyber); stroke-dasharray: 5 3; fill: var(--accent-soft); }
+    .vloz circle { fill: var(--bg-panel); stroke: var(--text-faint); stroke-width: 1.4; }
+    .vloz text { fill: var(--text-muted); font: 700 12px system-ui; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+    .vloz { cursor: copy; opacity: 0.55; }
+    .vloz:hover, .vloz.cil { opacity: 1; }
+    .vloz:hover circle, .vloz.cil circle { fill: var(--accent); stroke: var(--accent); }
+    .vloz:hover text, .vloz.cil text { fill: var(--on-accent); }
+    .skryt-vloz .vloz { display: none; }
+    .hlava { cursor: pointer; }
+    .hlava .cislo { fill: var(--text); font: 700 12px system-ui; }
+    .hlava .kom { fill: var(--text-muted); font: italic 11.5px system-ui; }
+    .hlava.vybran .cislo { fill: var(--accent); }
+    .pricka-pozadi { fill: transparent; }
+    .pricka-pozadi.vybran { fill: var(--accent-soft); }
+    .poradi circle { fill: var(--accent); }
+    .poradi text { fill: var(--on-accent); font: 700 9.5px system-ui; text-anchor: middle; dominant-baseline: central; }
+    .vystup-misto { fill: none; stroke: var(--border-strong); stroke-dasharray: 4 4; }
+    .duch { position: fixed; z-index: 50; pointer-events: none; background: var(--accent); color: var(--on-accent); font: 600 12px ui-monospace, monospace;
+      padding: 3px 7px; border-radius: 5px; box-shadow: var(--shadow); }
+    .pod-ladder { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-top: 8px; }
+    .pod-ladder label { font-size: 0.8rem; color: var(--text-muted); display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+    .pod-ladder input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+    .popis-projektu { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
+
+    /* vlastnosti */
+    #vlastnosti .radek { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px; align-items: center; margin: 6px 0; }
+    #vlastnosti .radek > span { font-size: 0.78rem; color: var(--text-muted); }
+    #vlastnosti input, #vlastnosti select, #vlastnosti textarea { width: 100%; }
+    #vlastnosti textarea { resize: vertical; min-height: 54px; }
+    .pole-stav { font-size: 0.74rem; color: var(--text-muted); margin: -2px 0 4px 98px; line-height: 1.35; }
+    .pole-stav.chyba { color: var(--text-chyba); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .zive-hodnoty { font: 12px ui-monospace, monospace; color: var(--text); background: var(--bg-deep); border-radius: 6px; padding: 6px 8px; margin-top: 6px; }
+    .nic { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* proces */
+    .platno-obal { position: relative; width: 100%; aspect-ratio: 600 / 270; background: var(--bg-deep); border-radius: 6px; border: 1px solid var(--border); overflow: hidden; }
+    #platno { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .souhrn { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+    .souhrn .vyst { color: var(--text-chyba); font-weight: 600; }
+    .proces-ovl { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 8px; font-size: 0.8rem; }
+    .proces-ovl label { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); }
+    .proces-ovl input[type="range"] { width: 130px; accent-color: var(--accent); }
+    .proces-popis { font-size: 0.76rem; color: var(--text-muted); line-height: 1.45; margin-top: 6px; }
+
+    /* I/O */
+    .io-mrizka { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .io-radek { display: grid; grid-template-columns: 14px 44px minmax(0, 1fr) auto; gap: 7px; align-items: center; padding: 3px 4px; border-radius: 6px; }
+    .io-radek:hover { background: var(--bg-hover); }
+    .io-radek code { font: 600 12px ui-monospace, monospace; }
+    .io-radek .jm { font-size: 0.8rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .io-radek .ovl { display: flex; gap: 4px; align-items: center; }
+    .io-radek .ovl select { padding: 2px 4px; font-size: 0.72rem; }
+    .io-radek .ovl button { min-width: 62px; padding: 4px 8px; font-size: 0.76rem; touch-action: none; }
+    .io-radek .cidlo { font-size: 0.72rem; color: var(--text-faint); font-style: italic; }
+    .led { width: 13px; height: 13px; border-radius: 50%; background: var(--bg-control); border: 1px solid var(--border-strong); }
+    .led.zap { background: var(--drat-nap); border-color: var(--drat-nap); box-shadow: 0 0 6px var(--drat-nap); }
+    .led.vystup.zap { background: #ffb300; border-color: #ffb300; box-shadow: 0 0 6px #ffb300; }
+    .klavesa { font: 10px ui-monospace, monospace; color: var(--text-faint); border: 1px solid var(--border); border-radius: 3px; padding: 0 3px; }
+
+    /* záložky */
+    .zalozky-lista { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; padding-bottom: 6px; }
+    .zalozky-lista button { border-radius: 6px 6px 0 0; }
+    .zalozky-lista button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    .zalozka[hidden] { display: none; }
+    .odznak { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; font-size: 0.7rem; font-weight: 700; margin-left: 4px; background: var(--bg-deep); color: var(--text); }
+    .odznak.chyby { background: var(--danger); color: #fff; }
+    :root[data-theme="dark"] .odznak.chyby, :root:not([data-theme]) .odznak.chyby { color: #2a0606; }
+    .odznak.varovani { background: var(--warn); color: #1e1400; }
+    :root[data-theme="light"] .odznak.varovani { color: #fff; }
+    .diag-seznam { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .diag-seznam li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; font-size: 0.84rem; padding: 6px 8px; border-radius: 6px; background: var(--bg-deep); cursor: pointer; line-height: 1.4; }
+    .diag-seznam li:hover { background: var(--bg-hover); }
+    .diag-seznam .ik { font-weight: 800; text-align: center; }
+    .diag-seznam .chyba .ik { color: var(--text-chyba); }
+    .diag-seznam .varovani .ik { color: var(--text-mez); }
+    .diag-seznam .info .ik { color: var(--accent); }
+    .diag-seznam small { color: var(--text-muted); }
+    .tabulka-obal { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+    th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { color: var(--text-muted); font-weight: 600; font-size: 0.74rem; text-transform: uppercase; letter-spacing: .3px; }
+    td code { font: 600 12px ui-monospace, monospace; }
+    td.h1 { color: var(--drat-nap); font-weight: 700; }
+    td.h0 { color: var(--text-faint); }
+    td input[type="text"] { width: 100%; min-width: 120px; padding: 3px 6px; }
+    .prubeh-obal { position: relative; width: 100%; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; }
+    #prubeh { display: block; width: 100%; }
+    .text { font-size: 0.86rem; line-height: 1.6; max-width: 900px; }
+    .text p, .text ul, .text ol { margin-bottom: 8px; }
+    .text ul, .text ol { padding-left: 20px; }
+    .text code { font: 600 0.82rem ui-monospace, monospace; background: var(--bg-deep); padding: 0 4px; border-radius: 4px; }
+    .vzorec { font-family: ui-monospace, monospace; background: var(--bg-deep); border-left: 3px solid var(--accent); padding: 6px 10px; border-radius: 4px; margin: 6px 0 10px; display: inline-block; }
+    .cas-ovl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 8px 0; font-size: 0.82rem; }
+    .cas-ovl label { display: inline-flex; gap: 6px; align-items: center; color: var(--text-muted); }
+    .cas-ovl input { width: 86px; }
+    .diagram-obal { overflow-x: auto; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; padding: 6px; }
+    .diagram-obal svg { display: block; }
+    .dg-osa { stroke: var(--border-strong); stroke-width: 1; }
+    .dg-sig { stroke: var(--accent); stroke-width: 2; fill: none; }
+    .dg-q { stroke: var(--drat-nap); stroke-width: 2.4; fill: none; }
+    .dg-ideal { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+    .dg-et { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+    .dg-scan { stroke: var(--text-faint); stroke-width: 1; }
+    .dg-txt { fill: var(--text-muted); font: 11px system-ui; }
+    .dg-txt.b { fill: var(--text); font-weight: 700; }
+    .dg-pt { stroke: var(--warn); stroke-dasharray: 3 3; stroke-width: 1; }
+    .projekty-seznam { display: flex; flex-direction: column; gap: 6px; }
+    .projekty-seznam .pr { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 8px; border-radius: 6px; background: var(--bg-deep); }
+    .projekty-seznam .pr b { font-size: 0.86rem; }
+    .projekty-seznam .pr small { color: var(--text-muted); margin-right: auto; }
+    .cyklus-svg text { font: 12px system-ui; fill: var(--text); text-anchor: middle; dominant-baseline: central; }
+    .cyklus-svg rect { fill: var(--bg-panel); stroke: var(--accent); stroke-width: 1.5; }
+    .cyklus-svg path { stroke: var(--text-muted); stroke-width: 1.5; fill: none; }
+    .tab-ref td { white-space: normal; vertical-align: top; }
+    .tab-ref svg { width: 48px; height: 24px; }
+    .tab-ref .tvar { stroke: var(--text); stroke-width: 2; fill: none; }
+    .tab-ref .pis { fill: var(--text); font: 700 9px system-ui; text-anchor: middle; dominant-baseline: central; }
+    @media (max-width: 560px) {
+      body { padding: 12px 8px; }
+      #nazevProjektu { width: 100%; }
+      .karta { padding: 10px; }
+      .io-radek { grid-template-columns: 14px 40px minmax(0, 1fr) auto; }
+    }
+    /* ---- v2: profesionální nástroje ---- */
+    .rozlozeni { grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); }
+    @media (max-width: 1080px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .odznak[hidden], .frce[hidden] { display: none; }
+    .pou-lista { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; align-items: center; }
+    .pou-lista button { font-size: 0.8rem; padding: 4px 10px; }
+    .pou-lista button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    .pou-lista .typ { font-size: 0.68rem; opacity: 0.8; margin-left: 4px; }
+    .fb-panel { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; background: var(--bg-deep); }
+    .fb-panel table input, .fb-panel table select { width: 100%; padding: 3px 5px; font-size: 0.78rem; }
+    .fb-panel td, .fb-panel th { padding: 3px 4px; }
+    .fb-hlava { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 6px; font-size: 0.8rem; }
+    .fb-hlava b { font-size: 0.9rem; }
+    .paleta { gap: 4px 8px; }
+    .paleta button.txt { font: 600 0.72rem ui-monospace, monospace; padding: 4px 6px; min-width: 38px; justify-content: center; }
+    .prvek .op { fill: var(--text); font: 10.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .prvek .opk { fill: var(--text-muted); font: 9.5px system-ui, sans-serif; }
+    .prvek .opv { fill: var(--accent); font: 600 10.5px ui-monospace, monospace; text-anchor: end; }
+    .prvek .cmpbox { fill: var(--bg-panel); stroke: var(--text); stroke-width: 2; }
+    .prvek.sep .cmpbox { stroke: var(--drat-nap); fill: var(--sep-fill); }
+    .prvek.nalez .ramec { stroke: var(--warn); fill: rgba(224, 166, 63, 0.14); stroke-dasharray: none; }
+    .prvek .fbadge { fill: var(--danger); }
+    .prvek .fbadge-t { fill: #fff; font: 700 9px system-ui; text-anchor: middle; dominant-baseline: central; }
+    .zarazka { cursor: pointer; }
+    .zarazka circle { fill: transparent; stroke: var(--text-faint); stroke-width: 1.2; stroke-dasharray: 2 2; }
+    .zarazka.on circle { fill: var(--danger); stroke: var(--danger); stroke-dasharray: none; }
+    .zarazka:hover circle { stroke: var(--danger); }
+    .pricka-pozadi.aktualni { fill: rgba(224, 166, 63, 0.16); }
+    .sipka-akt { fill: var(--warn); }
+    .stav-plc.chyba { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .frce { font-weight: 800; font-size: 0.72rem; padding: 3px 7px; border-radius: 5px; background: var(--danger); color: #fff; letter-spacing: .5px; }
+    :root:not([data-theme="light"]) .frce, :root:not([data-theme="light"]) .stav-plc.chyba { color: #2a0606; }
+    .chyba-cpu { max-width: 1500px; border: 1px solid var(--danger); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius);
+      padding: 8px 12px; margin-bottom: 10px; font-size: 0.84rem; color: var(--text); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .chyba-cpu[hidden] { display: none; }
+    .io-analog { display: grid; grid-template-columns: 14px 44px minmax(0, 1fr) 110px; gap: 7px; align-items: center; padding: 3px 4px; }
+    .io-analog input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .io-analog .hodn { font: 11px ui-monospace, monospace; color: var(--text-muted); text-align: right; white-space: nowrap; }
+    .bar { height: 10px; border-radius: 5px; background: var(--bg-control); overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: #ffb300; width: 0; }
+    .f-znak { font: 700 9px system-ui; color: #fff; background: var(--danger); border-radius: 3px; padding: 0 3px; margin-left: 3px; }
+    :root:not([data-theme="light"]) .f-znak { color: #2a0606; }
+    details.signaly { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+    details.signaly summary { cursor: pointer; font-size: 0.84rem; font-weight: 600; }
+    .tab-signaly td, .tab-signaly th { padding: 3px 5px; font-size: 0.76rem; }
+    .tab-signaly input { width: 58px; padding: 2px 5px; font: 600 11px ui-monospace, monospace; }
+    .tab-signaly select { padding: 2px 4px; font-size: 0.74rem; }
+    .tab-signaly tr.porucha td { background: rgba(240, 117, 117, 0.12); }
+    .watch-tab input[type="text"] { width: 86px; min-width: 0; padding: 3px 6px; font: 12px ui-monospace, monospace; }
+    .watch-tab select { padding: 2px 4px; font-size: 0.76rem; }
+    .watch-tab td.hod { font: 600 12px ui-monospace, monospace; min-width: 90px; }
+    .watch-tab tr.vynuceno td.hod { color: var(--text-chyba); }
+    .analyzator-obal { position: relative; }
+    .kurzor-info { position: absolute; top: 4px; right: 6px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 6px;
+      padding: 4px 8px; font: 11px ui-monospace, monospace; color: var(--text); pointer-events: none; white-space: pre; max-height: 90%; overflow: hidden; }
+    .kurzor-info[hidden] { display: none; }
+    .mrizka-cpu { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .dlazdice { background: var(--bg-deep); border-radius: 6px; padding: 8px 10px; }
+    .dlazdice small { display: block; color: var(--text-muted); font-size: 0.72rem; margin-bottom: 2px; }
+    .dlazdice b { font: 700 1rem ui-monospace, monospace; }
+    .nastaveni-mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 18px; max-width: 900px; }
+    .nastaveni-mrizka label { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--text-muted); }
+    .nastaveni-mrizka input, .nastaveni-mrizka textarea { width: 100%; }
+    .nastaveni-mrizka .zaskrt { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }
+    .hledat-radek { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 8px; font-size: 0.82rem; }
+    .hledat-radek input[type="text"] { width: 220px; }
+    tr.klik { cursor: pointer; } tr.klik:hover td { background: var(--bg-hover); }
+    #tisk { display: none; }
+    #tisk svg { display: block; margin-bottom: 4px; }
+    .io-analog .cidlo { font-size: 0.72rem; color: var(--text-faint); font-style: italic; }
+    @media print {
+      :root, :root[data-theme] { --bg: #fff; --bg-deep: #fff; --bg-panel: #fff; --bg-elevated: #fff; --text: #000; --text-muted: #333; --text-faint: #555;
+        --border: #999; --border-strong: #777; --accent: #1f4f99; --drat: #444; --drat-nap: #444; --sep-fill: transparent; --danger: #b00; }
+      body { padding: 0; background: #fff; }
+      body > *:not(#tisk) { display: none !important; }
+      #tisk { display: block; color: #000; font-size: 10pt; }
+      #tisk h1 { font-size: 16pt; } #tisk h2 { font-size: 12pt; margin-top: 14pt; break-after: avoid; }
+      #tisk svg { break-inside: avoid; max-width: 100%; height: auto; }
+      #tisk table { font-size: 8.5pt; } #tisk th, #tisk td { padding: 2px 5px; border-bottom: 1px solid #bbb; white-space: normal; }
+      #tisk .vloz, #tisk .zarazka { display: none; }
+      .podpis-pruh, #podpis { display: none !important; }
+    }
+    #tisk.nahled { display: block; background: #fff; color: #000; padding: 20px; margin-top: 14px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Simulátor PLC – Ladder diagram</h1>
+  <p class="podtitul">Simulátor programovatelného automatu pro výuku i ověřování logiky: Ladder s bitovými, číselnými a analogovými instrukcemi,
+    časovače, čítače, PID, funkční bloky s instancemi, deterministický cyklus, ladění se zarážkami, vynucování, logický analyzátor
+    a fyzikální modely technologií s injektáží poruch.</p>
+  <div class="upozorneni"><b>Simulátor, ne skutečné PLC.</b> Stránka se nepřipojuje k žádnému automatu a neimplementuje instrukční sadu konkrétního výrobce.
+    Struktura programu (POU, funkční bloky, typy BOOL/INT/REAL, TON/TOF/TP, CTU/CTD/CTUD) vychází z obecných zvyklostí normy IEC 61131-3,
+    adresy a detaily chování jsou však vlastní. Program odtud nelze nahrát do reálného zařízení a výsledky nenahrazují oživení na skutečném hardwaru.</div>
+
+  <div class="lista" role="toolbar" aria-label="Projekt">
+    <select id="priklad" aria-label="Vzorové projekty"></select>
+    <input type="text" id="nazevProjektu" aria-label="Název projektu" maxlength="120">
+    <button id="btnUlozit" title="Uložit projekt do prohlížeče">Uložit</button>
+    <button id="btnImport" title="Načíst projekt ze souboru JSON">Import</button>
+    <button id="btnExport" title="Stáhnout projekt jako JSON">Export</button>
+    <button id="btnTisk" title="Dokumentace programu – tisk nebo uložení do PDF">Tisk / PDF</button>
+    <input type="file" id="soubor" accept=".json,application/json" hidden>
+    <span class="oddel"></span>
+    <button id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶ Zpět</button>
+    <button id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷ Znovu</button>
+  </div>
+  <div class="lista" role="toolbar" aria-label="Simulace">
+    <button id="btnRun" class="hlavni" title="Spustit (F5); ze STOP teplý start">▶ RUN</button>
+    <button id="btnPauza" title="Pozastavit – zmrazí PLC i proces">❚❚ Pauza</button>
+    <button id="btnKrok" title="Jeden celý cyklus (mezerník)">⏭ Cyklus</button>
+    <button id="btnKrokPricky" title="Jedna příčka MAIN (F10)">↧ Příčka</button>
+    <button id="btnStop" title="STOP – výstupy se vypnou">■ STOP</button>
+    <span id="stavPLC" class="stav-plc stop" aria-live="polite">STOP</span>
+    <span id="frce" class="frce" hidden title="Některé proměnné jsou vynucené">FORCE</span>
+    <span class="oddel"></span>
+    <label>Perioda <input type="number" id="perioda" min="5" max="5000" step="5" value="100"> ms</label>
+    <label>Rychlost <select id="rychlost">
+      <option value="0.1">0,1×</option><option value="0.25">0,25×</option><option value="0.5">0,5×</option>
+      <option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select></label>
+    <label>Technologie <select id="proces"></select></label>
+    <span id="infoCas" class="info-cas"></span>
+  </div>
+  <div class="chyba-cpu" id="chybaCpu" hidden role="alert"><b>CPU zastaveno:</b> <span id="chybaCpuText"></span> <button class="male" id="btnChybaZavrit">Rozumím</button></div>
+
+  <div class="rozlozeni">
+    <section class="karta" aria-label="Editor Ladder diagramu">
+      <div class="pou-lista" id="pouLista" role="tablist" aria-label="Programové organizační jednotky"></div>
+      <div class="fb-panel" id="fbPanel" hidden></div>
+      <p class="popis-projektu" id="popisProjektu"></p>
+      <div class="paleta" id="paleta" role="toolbar" aria-label="Paleta prvků"></div>
+      <p class="napoveda-edit" id="napovedaEdit"></p>
+      <div class="ladder-obal" id="ladderObal" style="overflow: auto">
+        <div id="ladder"></div>
+      </div>
+      <div class="pod-ladder">
+        <button id="btnPricka">+ Příčka</button>
+        <label><input type="checkbox" id="chkPoradi"> Pořadí vyhodnocení</label>
+        <label><input type="checkbox" id="chkSymboly" checked> Symboly</label>
+        <label><input type="checkbox" id="chkHodnoty" checked> Hodnoty</label>
+        <label><input type="checkbox" id="chkVloz" checked> Místa vložení (+)</label>
+        <label>Měřítko <select id="meritko"><option value="0.6">60 %</option><option value="0.75">75 %</option><option value="0.9">90 %</option><option value="1" selected>100 %</option><option value="1.2">120 %</option></select></label>
+      </div>
+    </section>
+
+    <div class="sloupec">
+      <section class="karta" id="vlastnosti" aria-label="Vlastnosti prvku"></section>
+      <section class="karta" aria-label="Technologický proces">
+        <h2 id="nadpisProces">Proces</h2>
+        <div class="platno-obal"><canvas id="platno" role="img" aria-label="Animace technologického procesu"></canvas></div>
+        <div class="souhrn" id="souhrn" aria-live="off"></div>
+        <div class="proces-ovl" id="procesOvl"></div>
+        <p class="proces-popis" id="procesPopis"></p>
+        <details class="signaly" id="detailSignaly">
+          <summary>Signály procesu: přiřazení I/O a poruchy</summary>
+          <p class="nic" style="margin:6px 0">Adresu lze změnit (program pak upravte), porucha se vkládá jen do simulace a neukládá se.
+            Přerušený vodič: digitální signál = 0, analogový = −8000 (0 mA na smyčce 4–20 mA).</p>
+          <div class="tabulka-obal" style="overflow-x: auto"><table class="tab-signaly" id="tabSignaly"></table></div>
+          <p class="nic" id="signalyChyby" style="color: var(--text-chyba)"></p>
+        </details>
+      </section>
+      <section class="karta" aria-label="Vstupy a výstupy">
+        <h2>Vstupy <small class="nic">(klávesy 1–8 = I0.0–I0.7)</small></h2>
+        <div class="io-mrizka" id="ioVstupy"></div>
+        <div class="io-mrizka" id="ioAnalogVstupy"></div>
+        <h3>Výstupy</h3>
+        <div class="io-mrizka" id="ioVystupy"></div>
+        <div class="io-mrizka" id="ioAnalogVystupy"></div>
+        <div class="pod-ladder"><label><input type="checkbox" id="chkVsechnyIO"> Zobrazit všechny adresy</label></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="karta" style="max-width: 1500px; margin-top: 14px" aria-label="Nástroje">
+    <div class="zalozky-lista" role="tablist">
+      <button role="tab" data-z="diag" aria-selected="true">Diagnostika <span class="odznak" id="odznakDiag">0</span></button>
+      <button role="tab" data-z="watch">Sledování</button>
+      <button role="tab" data-z="prubeh">Logický analyzátor</button>
+      <button role="tab" data-z="xref">Křížové odkazy</button>
+      <button role="tab" data-z="symboly">Symboly</button>
+      <button role="tab" data-z="cpu">CPU <span class="odznak" id="odznakCpu" hidden>0</span></button>
+      <button role="tab" data-z="nastaveni">Nastavení</button>
+      <button role="tab" data-z="casovace">Jak měří časovače</button>
+      <button role="tab" data-z="projekty">Projekty</button>
+      <button role="tab" data-z="napoveda">Nápověda</button>
+    </div>
+    <div class="zalozka" data-z="diag" role="tabpanel"><ul class="diag-seznam" id="diagSeznam"></ul></div>
+    <div class="zalozka" data-z="watch" role="tabpanel" hidden>
+      <div class="hledat-radek"><input type="text" id="watchAdr" placeholder="adresa, např. MW3" style="width:150px" aria-label="Adresa ke sledování">
+        <button id="btnWatchPridat">Přidat</button><button id="btnWatchPouzite">Přidat všechny použité</button><button id="btnWatchVymaz" class="nebezpecne">Vyprázdnit</button>
+        <button id="btnForceZrus">Zrušit všechna vynucení</button></div>
+      <p class="nic" style="margin-bottom:6px"><b>Zapsat</b> jednorázově změní hodnotu (M, MW, MD, Q, QW, CV čítače). <b>Vynutit</b> trvale přepíše vstup (I, IW) při čtení
+        nebo výstup (Q, QW) při zápisu – program pak vidí/řídí jinou hodnotu, než je ve skutečnosti. Zaškrtnutím „Analyzátor“ signál přidáte do logického analyzátoru.</p>
+      <div class="tabulka-obal" style="overflow-x: auto"><table class="watch-tab" id="tabWatch"></table></div>
+    </div>
+    <div class="zalozka" data-z="prubeh" role="tabpanel" hidden>
+      <div class="cas-ovl"><label>Okno <select id="prubehOkno"><option value="5000">5 s</option><option value="10000" selected>10 s</option><option value="30000">30 s</option><option value="60000">60 s</option><option value="120000">120 s</option></select></label>
+        <button id="btnZmrazit" aria-pressed="false">Zmrazit</button>
+        <span class="nic">Vzorek = jeden cyklus PLC. Signály: zaškrtnuté v tabulce Sledování, jinak bity a slova použitá v programu. Najetím myši se zobrazí hodnoty v daném čase.</span></div>
+      <div class="prubeh-obal analyzator-obal"><canvas id="prubeh" height="200" role="img" aria-label="Logický analyzátor"></canvas><div class="kurzor-info" id="kurzorInfo" hidden></div></div>
+    </div>
+    <div class="zalozka" data-z="xref" role="tabpanel" hidden>
+      <div class="hledat-radek"><input type="text" id="hledat" placeholder="hledat adresu, symbol, komentář…" aria-label="Hledat"><label><input type="checkbox" id="chkZvyraznit" checked> Zvýraznit v programu</label><span class="nic" id="hledatPocet"></span></div>
+      <div class="tabulka-obal" style="overflow-x: auto"><table id="tabXref"></table></div>
+      <p class="nic" style="margin-top:6px">Přístup: R = čtení, W = zápis, D = definice časovače/čítače. Kliknutím na řádek skočíte na prvek.</p>
+    </div>
+    <div class="zalozka" data-z="symboly" role="tabpanel" hidden>
+      <div class="hledat-radek"><input type="text" id="novaAdr" placeholder="adresa, např. M0.3" style="width: 140px" aria-label="Adresa">
+        <input type="text" id="novySym" placeholder="jméno" style="width: 160px" maxlength="40" aria-label="Jméno"><button id="btnPridatSym">Přidat</button></div>
+      <div class="tabulka-obal" style="overflow-x: auto"><table id="tabSymboly"></table></div>
+    </div>
+    <div class="zalozka" data-z="cpu" role="tabpanel" hidden>
+      <div class="mrizka-cpu" id="cpuDlazdice"></div>
+      <div class="tlacitka" style="margin-bottom:10px"><button id="btnStudeny" title="Vynuluje všechny proměnné včetně remanentních">Studený start</button>
+        <button id="btnVypadek" title="STOP a teplý start: zachovají se jen remanentní oblasti">Simulovat výpadek napájení</button>
+        <button id="btnChybyVymaz">Vymazat chyby běhu</button></div>
+      <h3>Chyby běhu</h3><div class="tabulka-obal" style="overflow-x: auto"><table id="tabChybyBehu"></table></div>
+      <h3>Systémové bity a slova</h3><div class="tabulka-obal" style="overflow-x: auto"><table id="tabSystem"></table></div>
+    </div>
+    <div class="zalozka" data-z="nastaveni" role="tabpanel" hidden><div class="nastaveni-mrizka" id="nastaveni"></div></div>
+    <div class="zalozka" data-z="casovace" role="tabpanel" hidden>
+      <div class="text" id="textCasovace"></div>
+      <div class="cas-ovl">
+        <label>Typ <select id="dgTyp"><option>TON</option><option>TOF</option><option>TP</option><option>RTO</option></select></label>
+        <label>PT <input type="number" id="dgPT" value="1000" min="0" max="10000" step="50"> ms</label>
+        <label>Perioda cyklu <input type="number" id="dgT" value="300" min="5" max="5000" step="5"> ms</label>
+      </div>
+      <div class="diagram-obal" style="overflow-x: auto"><svg id="dgSvg" width="820" height="250" role="img" aria-label="Časový diagram časovače"></svg></div>
+      <p class="nic" id="dgShrnuti" style="margin-top: 8px"></p>
+    </div>
+    <div class="zalozka" data-z="projekty" role="tabpanel" hidden>
+      <div class="tlacitka" style="margin: 0 0 10px"><button id="btnUlozitJako">Uložit jako nový…</button><button id="btnNovy">Nový prázdný projekt</button></div>
+      <div class="projekty-seznam" id="projektySeznam"></div>
+      <p class="nic" style="margin-top: 8px">Projekty se ukládají jen do tohoto prohlížeče (localStorage). Pro zálohu nebo přenos použijte Export/Import JSON.
+        Rozpracovaný projekt se ukládá automaticky.</p>
+    </div>
+    <div class="zalozka" data-z="napoveda" role="tabpanel" hidden><div class="text" id="textNapoveda"></div></div>
+  </section>
+  <div id="tisk" aria-hidden="true"></div>
+
+  <script src="plc/ui.js"></script>
+</body>
+</html>

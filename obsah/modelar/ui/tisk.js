@@ -65,7 +65,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // ------------------------------------------------------------ převisy ve scéně
     let prevesyZapnute = false;
     const matPrevisu = new THREE.ShaderMaterial({
-      uniforms: { mez: { value: -Math.sin(nast.uhel * Math.PI / 180) } },
+      // mez = převis (červeně), mez2 = o 10° mírnější – na hraně, tiskne se, ale hůř (žlutě)
+      uniforms: { mez: { value: -Math.sin(nast.uhel * Math.PI / 180) }, mez2: { value: -Math.sin((nast.uhel - 10) * Math.PI / 180) } },
       // normála ve světě inverzní transpozicí (roztažená skupina); řez pohledem ořízne i překryv
       vertexShader: `#include <clipping_planes_pars_vertex>
         varying vec3 vN; varying float vZ;
@@ -74,10 +75,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           #include <clipping_planes_vertex>
         }`,
       fragmentShader: `#include <clipping_planes_pars_fragment>
-        uniform float mez; varying vec3 vN; varying float vZ;
+        uniform float mez; uniform float mez2; varying vec3 vN; varying float vZ;
         void main() {
           #include <clipping_planes_fragment>
-          if (normalize(vN).z >= mez || vZ < 0.2) discard; gl_FragColor = vec4(0.95, 0.18, 0.12, 0.72); }`,
+          float nz = normalize(vN).z;
+          if (nz >= mez2 || vZ < 0.2) discard;
+          gl_FragColor = nz < mez ? vec4(0.95, 0.18, 0.12, 0.72) : vec4(0.98, 0.78, 0.15, 0.55); }`,
       transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2, clipping: true,
     });
     /** Ke každému tělesu (ne díra) průhledný překryv se stejnou geometrií; při výměně geometrie se srovná. */
@@ -111,6 +114,44 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     };
     M.prevesyZapnute = () => prevesyZapnute;
     M.na('kamera', srovnejPrevesy);
+
+    // ------------------------------------------------------------ podpěry (odhad objemu a náhled sloupů)
+    let podperyVrstva = null, podperyKlic = '';
+    const matPodper = new THREE.MeshBasicMaterial({ color: 0x4aa3ff, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide });
+    function zrusPodpery() {
+      if (podperyVrstva) { S.scena.remove(podperyVrstva); podperyVrstva.geometry.dispose(); podperyVrstva = null; }
+      podperyKlic = '';
+      const b = $('tiskPodpery'); if (b) b.setAttribute('aria-pressed', 'false');
+      M.prekresli();
+    }
+    /** Spočítá podpěry tisknutelných těles (výběru) – objem a hmotnost; ukazat = modré sloupy ve scéně. */
+    M.spocitejPodpery = function (ukazat = true) {
+      zrusPodpery();
+      const site = [];
+      let ceka = 0;
+      // podpěra smí stát na kterémkoli tělese na desce, převisy se počítají jen u tisknutých
+      for (const u of telesa().uzly) { const s = T.svetovaSit(u.id); if (s) site.push(s); else ceka++; }
+      const r = M.podperySite(site, nast.uhel);
+      const m = M.MATERIALY[nast.material] || { hustota: 1.24 };
+      // podpěry se tisknou řídce (asi 15 % objemu)
+      const g = r.objem / 1000 * 0.15 * m.hustota;
+      if (ukazat && r.sloupy) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(r.sloupy.poz, 3));
+        geo.setIndex(new THREE.BufferAttribute(r.sloupy.idx, 1));
+        podperyVrstva = new THREE.Mesh(geo, matPodper);
+        podperyVrstva.renderOrder = 4;
+        podperyVrstva.userData.prekryv = true;
+        S.scena.add(podperyVrstva);
+        podperyKlic = klicTenkych();
+        $('tiskPodpery').setAttribute('aria-pressed', 'true');
+      }
+      const info = $('tiskPodperyInfo');
+      if (info) info.textContent = !r.objem ? (ceka ? 'Některá tělesa se ještě počítají.' : 'Podpěry nejsou potřeba. ✓')
+        : `Podpěry ≈ ${cz(r.objem / 1000, 1)} cm³ prostoru pod převisy, ≈ ${cz(g, 1)} g materiálu (při 15% hustotě podpěr)${r.sloupy || !ukazat ? '' : ' – sloupů je moc na náhled'}. Natočení tělesa (🧭) je může zmenšit.`;
+      M.prekresli();
+      return { objem: r.objem, plocha: r.plocha, hmotnost: g };
+    };
 
     // ------------------------------------------------------------ tenké stěny (na požádání – výpočet je dražší)
     let tenkeVrstva = null, tenkeKlic = '';
@@ -156,6 +197,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // změna modelu: červená místa by lhala – pryč (znovu jedním klikem)
     const klicTenkych = () => M.app.dok.uzly.map(u => M.klicGeometrie(u) + u.poloha.join(',') + u.rotace.join(',') + u.rozmer.join(',')).join('|');
     M.na('dokument', e => { if (tenkeVrstva && (!e || !e.docasne) && klicTenkych() !== tenkeKlic) zrusTenke(); });
+    M.na('dokument', e => { if (podperyVrstva && (!e || !e.docasne) && klicTenkych() !== podperyKlic) { zrusPodpery(); const i = $('tiskPodperyInfo'); if (i) i.textContent = ''; } });
 
     // ------------------------------------------------------------ panel Kontrola tisku
     const okno = $('oknoTisk');
@@ -218,6 +260,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       $('tiskSeznamZavrit').onclick = () => okno.close();
       okno.addEventListener('cancel', e => { e.preventDefault(); okno.close(); });
       $('tiskPrevesy').onclick = () => M.prepniPrevesy();
+      $('tiskPodpery').onclick = () => { if (podperyVrstva) { zrusPodpery(); $('tiskPodperyInfo').textContent = ''; } else M.spocitejPodpery(true); };
       $('tiskRozmistit').onclick = () => M.spustPrikaz('rozmistit');
       $('tiskOrientace').onclick = () => M.spustPrikaz('orientace');
       $('tiskTenke').onclick = () => {

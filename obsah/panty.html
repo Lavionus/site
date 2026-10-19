@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panty a klouby pro 3D tisk</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/three.0.160.0.min.js"></script>
+  <script src="lib/manifold/manifold.klasicky.js"></script>
+  <script src="panty/jadro.js"></script>
+  <script src="panty/geometrie.js"></script>
+  <script src="panty/scena.js"></script>
+  <style>
+    :root { --text-chyba: #ff8f85; --text-mez: #f0bd5e; --barva-a: #5b8def; --barva-b: #e0a040; --barva-cep: #9aa4b0; --barva-pasek: #62b67a; --barva-kolize: #ff2a2a; }
+    :root[data-theme="light"] { --text-chyba: var(--danger); --text-mez: var(--warn); }
+    body { background-color: var(--bg-deep); padding: 24px clamp(10px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 2px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 980px; line-height: 1.5; }
+    .upozorneni { max-width: 1400px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); color: var(--text); border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .upozorneni b { color: var(--text-mez); }
+    .rezimy { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; max-width: 1400px; margin-bottom: 14px; }
+    @media (max-width: 640px) { .rezimy { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .rezimy button { display: flex; align-items: center; gap: 10px; text-align: left; padding: 8px 10px; min-height: 58px; line-height: 1.25; }
+    .rezimy svg { width: 44px; height: 34px; flex: none; color: var(--text-muted); }
+    .rezimy button[aria-pressed="true"] svg { color: var(--accent); }
+    .rezimy small { display: block; color: var(--text-muted); font-size: 0.7rem; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 390px) minmax(0, 1fr); gap: 16px; max-width: 1400px; }
+    @media (max-width: 980px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+    fieldset { border: 0; padding: 0; margin: 14px 0 0; min-width: 0; }
+    legend { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 0; padding: 0; font-weight: 600; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
+    .pole { min-width: 0; }
+    .pole[hidden] { display: none; }
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 9px 0 3px; line-height: 1.3; }
+    .vstup { display: flex; align-items: stretch; min-width: 0; }
+    .vstup input, .vstup select { flex: 1; min-width: 0; }
+    .vstup .jedn { display: flex; align-items: center; padding: 0 8px; border: 1px solid var(--border); border-left: 0; border-radius: 0 6px 6px 0; background: var(--bg-elevated); color: var(--text-muted); font-size: 0.78rem; }
+    .vstup:has(.jedn) input { border-radius: 6px 0 0 6px; }
+    input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.92rem; min-width: 0; font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input.chyba, select.chyba { border-color: var(--danger); }
+    input.mez { border-color: var(--warn); }
+    .pole-stav { font-size: 0.72rem; line-height: 1.35; margin-top: 3px; color: var(--text-chyba); }
+    .pole-stav.mez { color: var(--text-mez); }
+    .napoveda { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+    #platno3d { width: 100%; height: min(62vh, 520px); min-height: 280px; border-radius: 6px; overflow: hidden; background: var(--bg-input); border: 1px solid var(--border); position: relative; }
+    #platno3d .info3d { position: absolute; left: 8px; bottom: 6px; right: 8px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    #platno3d .zprava { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.9rem; background: var(--bg-input); }
+    #platno3d .zprava[hidden] { display: none; }
+    .ovladani { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; margin-top: 10px; }
+    .ovladani input[type="range"] { width: 100%; accent-color: var(--accent); min-width: 0; }
+    .ovladani output { font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; font-size: 0.86rem; }
+    .ovladani .popisek { margin: 0; }
+    .ovladani [hidden] { display: none; }
+    .stopa { grid-column: 2; height: 8px; border-radius: 4px; margin-top: -6px; background: var(--bg-elevated); position: relative; overflow: hidden; }
+    .stopa i { position: absolute; top: 0; bottom: 0; background: var(--danger); }
+    .volby3d { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 8px; font-size: 0.82rem; }
+    .volby3d label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text); font-size: 0.82rem; cursor: pointer; }
+    .volby3d input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); }
+    .volby3d select { width: auto; padding: 4px 6px; font-size: 0.82rem; }
+    .legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-muted); margin-top: 8px; align-items: center; }
+    .legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+    .stav-souhrn { margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.86rem; border: 1px solid var(--border); background: var(--bg-elevated); line-height: 1.45; }
+    .stav-souhrn.ok { border-color: var(--ok); }
+    .stav-souhrn.mez { border-color: var(--warn); }
+    .stav-souhrn.chyba { border-color: var(--danger); }
+    .stav-souhrn b.chyba { color: var(--text-chyba); }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; min-width: 0; }
+    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 4px; }
+    .box .cislo { font-size: 1.12rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; line-height: 1.35; }
+    .box.spatne .cislo { color: var(--text-chyba); }
+    .box.mez .cislo { color: var(--text-mez); }
+    .box.dobre .cislo { color: var(--ok); }
+    .prubeh { height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .prubeh i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .15s; }
+    .graf { width: 100%; height: auto; display: block; margin-top: 10px; }
+    .graf text { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    ul.upoz { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    ul.upoz li { border-left: 4px solid var(--text-faint); background: var(--bg-elevated); border-radius: 4px; padding: 7px 10px; font-size: 0.8rem; line-height: 1.45; }
+    ul.upoz li.chyba { border-left-color: var(--danger); }
+    ul.upoz li.varovani { border-left-color: var(--warn); }
+    ul.upoz li b { display: block; font-size: 0.8rem; }
+    ul.upoz li.chyba b { color: var(--text-chyba); }
+    ul.upoz li.varovani b { color: var(--text-mez); }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 6px 6px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+    td.cis { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td .pozn-k { display: block; color: var(--text-muted); font-size: 0.72rem; margin-top: 2px; }
+    .tecka { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+    @media (max-width: 560px) {
+      .dily thead { display: none; }
+      .dily tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+      .dily td { border: 0; padding: 0; }
+      .dily td.cis { text-align: left; }
+      .dily td:nth-child(1) { grid-column: 1; }
+      .dily td:nth-child(5) { grid-column: 2; grid-row: 1; }
+      .dily td:nth-child(2)::before { content: "rozměr: "; color: var(--text-muted); }
+      .dily td:nth-child(3)::before { content: "objem: "; color: var(--text-muted); }
+      .dily td:nth-child(4)::before { content: "hmotnost: "; color: var(--text-muted); }
+    }
+    .podlozka-svg { width: 100%; height: auto; display: block; margin-top: 10px; max-height: min(60vh, 440px); }
+    .podlozka-svg .deska { fill: var(--bg-input); stroke: var(--border-strong); }
+    .podlozka-svg .mriz { stroke: var(--border); stroke-width: 0.4; }
+    .podlozka-svg .dil { stroke: var(--text); stroke-width: 0.5; fill-rule: evenodd; fill-opacity: 0.8; }
+    .podlozka-svg text { fill: var(--text); font-size: 6px; font-family: var(--font); }
+    .rad { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    .rad > div { min-width: 0; flex: 1 1 110px; }
+    .chybovy { color: var(--text-chyba); font-size: 0.86rem; }
+    .pozn { color: var(--text-muted); font-size: 0.8rem; line-height: 1.55; max-width: 1400px; margin-top: 20px; }
+    .pozn h2 { color: var(--text); margin-top: 14px; }
+    .pozn ul, .pozn ol { padding-left: 20px; }
+    .pozn code { font-size: 0.78rem; }
+    .pozn a { color: var(--accent); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <h1>Panty a klouby pro 3D tisk</h1>
+  <p class="podtitul">Parametrický návrhář pantů, čepových kloubů a jednoduchých tisknutelných spojů. Rozměry v milimetrech, 3D náhled s animací pohybu,
+    geometrická kontrola kolizí v celém rozsahu pohybu, export dílů do STL, rozmístění na tiskové podložce a uložení parametrů. Vše se počítá v prohlížeči, nic se neodesílá.</p>
+  <div class="upozorneni" role="note"><b>Neověřeno pro bezpečnostně kritické použití.</b> <span id="neovereno"></span></div>
+
+  <div class="rezimy" id="rezimy" role="group" aria-label="Druh spoje">
+    <button type="button" data-rezim="pant" aria-pressed="true">
+      <svg viewBox="0 0 44 34" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="9" width="18" height="16" rx="1"/><rect x="24" y="9" width="18" height="16" rx="1"/><rect x="18" y="4" width="8" height="5" rx="2" fill="currentColor"/><rect x="18" y="14" width="8" height="5" rx="2"/><rect x="18" y="25" width="8" height="5" rx="2" fill="currentColor"/></svg>
+      <span>Klasický pant<small>tisk v místě, čep v listu</small></span></button>
+    <button type="button" data-rezim="cep" aria-pressed="false">
+      <svg viewBox="0 0 44 34" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="9" width="18" height="16" rx="1"/><rect x="24" y="9" width="18" height="16" rx="1"/><rect x="18" y="6" width="8" height="22" rx="2"/><line x1="22" y1="1" x2="22" y2="33" stroke-width="2.4"/><line x1="18" y1="1.5" x2="26" y2="1.5" stroke-width="2.4"/></svg>
+      <span>Vyjímatelný čep<small>dva listy + čep</small></span></button>
+    <button type="button" data-rezim="kulovy" aria-pressed="false">
+      <svg viewBox="0 0 44 34" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 6 A11 11 0 0 0 32 6" /><path d="M8 2 h28"/><circle cx="22" cy="10" r="7"/><rect x="19" y="17" width="6" height="10"/><path d="M10 27 h24 v4 h-24 z"/></svg>
+      <span>Kulový kloub<small>koule + jamka</small></span></button>
+    <button type="button" data-rezim="pruzny" aria-pressed="false">
+      <svg viewBox="0 0 44 34" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="14" width="16" height="12" rx="1"/><path d="M18 25 Q22 24 26 19"/><rect x="25" y="4" width="12" height="16" rx="1" transform="rotate(35 31 12)"/></svg>
+      <span>Pružný spoj<small>filmový pant, jeden díl</small></span></button>
+  </div>
+
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="hParam">
+        <h2 id="hParam">Parametry</h2>
+        <p class="napoveda" id="popisRezimu"></p>
+        <form id="formular" novalidate autocomplete="off"></form>
+        <div class="tlacitka"><button type="button" id="btnVychozi" class="male">Výchozí hodnoty režimu</button></div>
+      </section>
+      <section class="karta" aria-labelledby="hSady">
+        <h2 id="hSady">Uložené návrhy</h2>
+        <div class="vstup"><select id="sady" aria-label="Uložené návrhy"></select></div>
+        <div class="tlacitka">
+          <button type="button" id="btnNacti" class="male">Načíst</button>
+          <button type="button" id="btnUloz" class="male">Uložit jako…</button>
+          <button type="button" id="btnSmaz" class="male">Smazat</button>
+          <button type="button" id="btnExportJson" class="male">Export JSON</button>
+          <button type="button" id="btnImportJson" class="male">Import JSON</button>
+          <input type="file" id="souborJson" accept=".json,application/json" hidden>
+        </div>
+        <p class="napoveda">Rozpracovaný návrh se ukládá automaticky v tomto prohlížeči. Pojmenované návrhy jsou tamtéž; pro přenos jinam použijte export do JSON.</p>
+      </section>
+    </div>
+
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="h3d">
+        <h2 id="h3d">3D model a pohyb</h2>
+        <div id="platno3d"><div class="zprava" id="zprava3d">Načítám výpočetní jádro…</div><div class="info3d" id="info3d"></div></div>
+        <div class="ovladani">
+          <button type="button" id="btnPrehraj" class="male" aria-pressed="false">▶ Přehrát</button>
+          <input type="range" id="uhel" min="0" max="180" step="0.5" value="0" aria-label="Úhel pohybu">
+          <output id="uhelHodnota" for="uhel">0°</output>
+          <span></span><div class="stopa" id="stopa" title="Červeně úseky s kolizí (podle kontroly)"></div><span></span>
+          <span class="popisek" id="azimutPopisek" hidden>Směr</span>
+          <input type="range" id="azimut" min="0" max="360" step="1" value="0" aria-label="Směr náklonu" hidden>
+          <output id="azimutHodnota" for="azimut" hidden>0°</output>
+        </div>
+        <div class="volby3d">
+          <label><input type="checkbox" id="chkRez"> řez</label>
+          <label><input type="checkbox" id="chkPruhledne"> průhledně</label>
+          <label>rychlost <select id="rychlost"><option value="0.5">pomalu</option><option value="1" selected>normálně</option><option value="2">rychle</option></select></label>
+          <span class="tlacitka" style="margin:0"><button type="button" class="male" data-pohled="iso">Izometrie</button><button type="button" class="male" data-pohled="predni">Zepředu</button><button type="button" class="male" data-pohled="bocni">Z boku</button><button type="button" class="male" data-pohled="shora">Shora</button></span>
+        </div>
+        <div class="legenda" id="legenda"></div>
+        <div class="stav-souhrn" id="polohaStav" aria-live="polite">–</div>
+      </section>
+
+      <section class="karta" aria-labelledby="hKolize">
+        <h2 id="hKolize">Kontrola kolizí v rozsahu pohybu</h2>
+        <div id="kolize"><p class="napoveda">Čekám na model…</p></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hUpoz">
+        <h2 id="hUpoz">Upozornění pro FDM tisk</h2>
+        <ul class="upoz" id="upozorneni"></ul>
+      </section>
+
+      <section class="karta" aria-labelledby="hDily">
+        <h2 id="hDily">Díly a export STL</h2>
+        <div class="obal-tab"><table class="dily" id="tabDily"><thead><tr><th>Díl</th><th>Rozměr pro tisk (X × Y × Z)</th><th>Objem</th><th>Hmotnost*</th><th></th></tr></thead><tbody></tbody></table></div>
+        <p class="napoveda">* Plný díl (100% výplň) z vybraného materiálu; skutečná hmotnost závisí na výplni a počtu perimetrů. STL je v milimetrech, v doporučené tiskové orientaci a položený na podložce (z = 0).</p>
+      </section>
+
+      <section class="karta" aria-labelledby="hPodlozka">
+        <h2 id="hPodlozka">Rozmístění na tiskové podložce</h2>
+        <div class="rad">
+          <div><label for="podlozka">Podložka</label><div class="vstup"><select id="podlozka"></select></div></div>
+          <div id="vlastniW" hidden><label for="podlozkaW">Šířka (X)</label><div class="vstup"><input type="text" inputmode="decimal" id="podlozkaW"><span class="jedn">mm</span></div></div>
+          <div id="vlastniD" hidden><label for="podlozkaD">Hloubka (Y)</label><div class="vstup"><input type="text" inputmode="decimal" id="podlozkaD"><span class="jedn">mm</span></div></div>
+          <div><label for="rozestup">Rozestup dílů</label><div class="vstup"><input type="text" inputmode="decimal" id="rozestup"><span class="jedn">mm</span></div></div>
+        </div>
+        <div id="podlozkaSvg"></div>
+        <div id="podlozkaInfo" class="napoveda"></div>
+        <div class="tlacitka"><button type="button" id="btnStlPodlozka" class="hlavni">Stáhnout STL celé podložky</button></div>
+        <p class="napoveda">Rozmístění je orientační (obdélníkové obrysy po řadách). Ve sliceru můžete díly přeuspořádat; orientaci dílů ale ponechte – je zvolená kvůli pevnosti vrstev a převisům.</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="pozn">
+    <h2>Jak to funguje</h2>
+    <ul>
+      <li><b>Geometrie</b> se skládá z kvádrů, válců a koulí booleovskými operacemi knihovny <a href="https://github.com/elalish/manifold" rel="noopener" target="_blank">manifold-3d</a> (Apache-2.0, přibalená, běží offline). Výsledné sítě jsou vždy uzavřené a bez samoprůniků; každý díl se před exportem ještě kontroluje (každá hrana přesně ve dvou trojúhelnících s opačnou orientací, kladný objem).</li>
+      <li><b>Kolize</b> se počítají geometricky: v poloze daného úhlu se spočítá průnik pevných a pohyblivých dílů a jeho objem. Za kolizi se považuje průnik nad 0,001 mm³. Pohyb se vzorkuje po 2° a první dotyk od klidové polohy se dohledá půlením intervalu na 0,05°. U kulového kloubu se zkouší 24 směrů náklonu a navíc osy zářezů i směry mezi nimi. Nejmenší mezera mezi díly se hledá do 1 mm.</li>
+      <li><b>Kontrola proti vzorcům:</b> u pantu se listy dotknou rohy při 180° + 2·atan((R − t)/W), opačným směrem při −(180° − 2·atan(R/y<sub>c</sub>)), kde y<sub>c</sub> = √((R + c)² − R²); u kulového kloubu krček narazí na hrdlo, když ρ·sin(atan(r<sub>o</sub>/|z|) − α) = r<sub>s</sub>; u pružného spoje se horní hrany bloků dotknou při θ = L / (H − t/2). Rozdíl proti síti je dán náhradou kružnic mnohoúhelníky (jemnost oblouků).</li>
+      <li><b>Pružný pásek</b> se modeluje jako oblouk konstantní křivosti: přetvoření povrchu ε = t·θ/(2L), moment M = E·b·t³·θ/(12·L). <b>Zacvaknutí koule</b> se odhaduje vzorcem pro pružnou západku ε = 1,5·y·h/l². Obě čísla jsou orientační – skutečný výtisk je anizotropní a únava materiálu se nedá spočítat z jedné hodnoty.</li>
+    </ul>
+    <h2>Omezení</h2>
+    <ul>
+      <li>Kontrola kolizí ověřuje jen geometrii (tuhá tělesa, přesné rozměry). Nezohledňuje průhyb dílů, nepřesnost tisku, rozplácnutí první vrstvy, převisy ani tření.</li>
+      <li>Nejsou zde výpočty únosnosti. Pevnost výtisků FDM silně závisí na směru zatížení vůči vrstvám (mezi vrstvami bývá 2–5× menší), na materiálu, teplotě a nastavení tisku.</li>
+      <li>Hodnoty materiálů jsou orientační průměry z technických listů výrobců filamentů, nikoliv zaručené vlastnosti.</li>
+    </ul>
+  </section>
+
+  <script src="panty/ui.js"></script>
+</body>
+</html>

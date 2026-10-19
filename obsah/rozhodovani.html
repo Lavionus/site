@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vícekriteriální rozhodování</title>
+  <meta name="description" content="Průvodce rozhodnutím a vícekriteriální analýza: váhy (ROC, swing, AHP, skupina), WSM, MAVT, TOPSIS, VIKOR, PROMETHEE, citlivost a simulace nejistoty.">
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="rozhodovani/jadro.js"></script>
+  <script src="rozhodovani/sablony.js"></script>
+  <script src="rozhodovani/grafy.js"></script>
+  <style>
+    :root {
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+      --text-mez: #f0bd5e; --text-chyba: #ff8f85; --stabilni: rgba(76, 175, 125, 0.13);
+    }
+    :root[data-theme="light"] {
+      --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+      --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+      --text-mez: var(--warn); --text-chyba: var(--danger); --stabilni: rgba(23, 117, 64, 0.10);
+    }
+    * { box-sizing: border-box; }
+    body { background-color: var(--bg-deep); color: var(--text); padding: 24px clamp(10px, 3vw, 40px); min-height: 100vh; margin: 0; font-family: var(--font); }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1.02rem; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 14px; max-width: 980px; line-height: 1.5; }
+    .obsah { max-width: 1360px; display: flex; flex-direction: column; gap: 16px; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+    @media (max-width: 1050px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
+    .karta[hidden], [hidden] { display: none !important; }
+    label, .popisek { font-size: 0.78rem; color: var(--text-muted); }
+    input[type="text"], input[type="number"], select, textarea {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+      padding: 7px 9px; font-size: 0.92rem; min-width: 0; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input.chyba, select.chyba { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger) inset; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button.ikona { padding: 3px 8px; line-height: 1.2; }
+    button[aria-pressed="true"].prepinac { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .napoveda { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin: 6px 0 0; }
+    .napoveda a, .metodika a { color: var(--accent); }
+    .lista { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; }
+    .lista .pole { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    #nazevProjektu { width: min(360px, 100%); font-weight: 600; }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+    table { border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+    th { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; }
+    td.cis, th.cis { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .zadna { color: var(--text-faint); font-style: italic; }
+
+    /* kritéria */
+    .krit-seznam { display: flex; flex-direction: column; gap: 8px; }
+    .krit { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.25fr) minmax(0, .7fr) auto; gap: 6px; align-items: center;
+      padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); }
+    .krit .vaha-radek { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
+    .krit input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); height: 22px; }
+    .krit .vaha-txt { min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+    .krit .vaha-txt b { color: var(--text); }
+    .krit .vaha-pruh { height: 4px; background: var(--border); border-radius: 2px; grid-column: 1 / -1; overflow: hidden; }
+    .krit .vaha-pruh i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+    @media (max-width: 520px) {
+      .krit { grid-template-columns: minmax(0, 1fr) auto; }
+      .krit .typ-vyber { grid-column: 1; }
+      .krit .jedn { grid-column: 2; width: 84px; }
+      .krit .smaz { grid-row: 1; grid-column: 2; justify-self: end; }
+      #matice th.alt-h, #matice td.alt-n { min-width: 118px; }
+      #matice td.alt-n input { min-width: 70px; }
+      .cit-tab .sloup-int { display: none; }
+    }
+    .typ-znak { display: inline-block; min-width: 1.1em; text-align: center; font-weight: 700; }
+
+    /* AHP */
+    .ahp-pary { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .ahp-par { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 2fr) minmax(0, 1fr); gap: 8px; align-items: center; font-size: 0.83rem; }
+    .ahp-par .l { text-align: right; overflow-wrap: anywhere; }
+    .ahp-par .p { overflow-wrap: anywhere; }
+    .ahp-par .dom { font-weight: 700; color: var(--accent); }
+    .ahp-par input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .ahp-par .stav { grid-column: 1 / -1; text-align: center; font-size: 0.76rem; color: var(--text-muted); margin-top: -6px; }
+    .ahp-par.nejhorsi { outline: 2px dashed var(--warn); outline-offset: 3px; border-radius: 4px; }
+    @media (max-width: 520px) { .ahp-par { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .ahp-par input[type="range"] { grid-column: 1 / -1; grid-row: 2; } .ahp-par .l { text-align: left; } .ahp-par .p { text-align: right; } }
+    .ukazatele { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 10px 0; }
+    .ukazatel { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; }
+    .ukazatel .u-n { font-size: 0.72rem; color: var(--text-muted); }
+    .ukazatel .u-h { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stav-ok { color: var(--ok); } .stav-zle { color: var(--text-chyba); } .stav-mez { color: var(--text-mez); }
+
+    /* matice */
+    #matice { min-width: 100%; }
+    #matice th { vertical-align: bottom; min-width: 92px; }
+    #matice th.alt-h, #matice td.alt-n { position: sticky; left: 0; background: var(--bg-panel); z-index: 1; min-width: 150px; }
+    #matice td input[type="text"], #matice td select { width: 100%; min-width: 78px; }
+    #matice td.alt-n { display: flex; gap: 4px; align-items: center; }
+    #matice td.alt-n input { flex: 1; min-width: 100px; }
+    #matice input.nejlepsi, #matice select.nejlepsi { border-color: var(--ok); font-weight: 700; }
+    #matice .jedn-h { font-weight: 400; color: var(--text-faint); }
+    #matice input.hodn { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* výsledky */
+    .upozorneni { border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; }
+    .upozorneni ul { margin: 4px 0 0; padding-left: 18px; }
+    .upozorneni b.t { color: var(--text-mez); }
+    .upozorneni.chyby { border-color: var(--danger); }
+    .upozorneni.chyby b.t { color: var(--text-chyba); }
+    .vitez-box { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 10px; }
+    .vitez-box .jm { font-size: 1.25rem; font-weight: 700; }
+    .vitez-box .det { color: var(--text-muted); font-size: 0.84rem; }
+    .metoda-volby { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 12px; align-items: flex-end; }
+    .metoda-volby .pole { display: flex; flex-direction: column; gap: 3px; min-width: 0; max-width: 100%; }
+    .metoda-volby select { max-width: 100%; }
+
+    .sl-graf, .sk-graf { display: flex; flex-direction: column; gap: 6px; }
+    .sl-radek { display: grid; grid-template-columns: minmax(70px, 30%) minmax(0, 1fr) 62px; gap: 8px; align-items: center; font-size: 0.84rem; }
+    .sl-nazev { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sl-znacka { display: inline-block; min-width: 1.6em; color: var(--text-muted); font-weight: 600; }
+    .sl-drah { position: relative; height: 18px; }
+    .sl-pruh { position: absolute; top: 2px; bottom: 2px; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .sl-pruh.zap { background: var(--text-faint); border-radius: 4px 0 0 4px; }
+    .sl-nula { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--text-muted); }
+    .sl-hodn { text-align: right; font-variant-numeric: tabular-nums; }
+    .sk-drah { display: flex; height: 18px; gap: 2px; }
+    .sk-dil { display: block; height: 100%; background: var(--c); min-width: 1px; }
+    .sk-dil:first-child { border-radius: 4px 0 0 4px; } .sk-dil:last-child { border-radius: 0 4px 4px 0; }
+    .sraf { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(0,0,0,.35) 3px 5px) !important; }
+    .legenda { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+    .legenda span { display: inline-flex; align-items: center; gap: 5px; }
+    .lg-ctv { width: 11px; height: 11px; border-radius: 2px; background: var(--c); display: inline-block; }
+    .lg-pol { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid var(--border); padding: 3px 8px; font-size: 0.78rem; border-radius: 12px; }
+    .lg-pol.vyp { opacity: 0.5; text-decoration: line-through; }
+    .lg-car { width: 16px; height: 0; border-top: 3px solid var(--c); display: inline-block; }
+    .lg-car.car { border-top-style: dashed; }
+
+    .graf-obal { width: 100%; overflow: hidden; }
+    .graf-svg { display: block; margin: 0 auto; max-width: 100%; height: auto; font-family: var(--font); }
+    .graf-svg .mriz { fill: none; stroke: var(--border); stroke-width: 1; }
+    .graf-svg .mriz.slaba { stroke-dasharray: 2 4; }
+    .graf-svg .osa-txt { fill: var(--text-muted); font-size: 11px; }
+    .graf-svg .osa-txt.pop { fill: var(--text); font-size: 11.5px; }
+    .graf-svg .rad-pl { fill: var(--c); fill-opacity: .10; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; }
+    .graf-svg .rad-bod { fill: var(--c); stroke: var(--bg-panel); stroke-width: 2; cursor: default; }
+    .graf-svg .rad-bod:hover { r: 6; }
+    .graf-svg .stabilni { fill: var(--stabilni); }
+    .graf-svg .cit-cara { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; }
+    .graf-svg .cit-cara.vitez { stroke-width: 3; }
+    .graf-svg .aktualni { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 4 3; }
+    .graf-svg .kurzor { stroke: var(--text-muted); stroke-width: 1; }
+    .graf-svg .cit-zachyt { fill: transparent; cursor: crosshair; }
+
+    #tip { position: fixed; z-index: 1000; pointer-events: none; background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border-strong);
+      border-radius: 6px; padding: 6px 9px; font-size: 0.8rem; line-height: 1.4; box-shadow: var(--shadow); max-width: min(320px, 90vw); white-space: pre-line; }
+
+    .poradi-tab td.lisi { background: var(--accent-soft); font-weight: 700; }
+    .poradi-tab td.nelze { color: var(--text-faint); font-style: italic; font-size: 0.76rem; }
+    .poradi-tab th.ref { color: var(--accent); }
+    .cit-tab tr.vybrany td { background: var(--accent-soft); }
+    .cit-tab tr { cursor: pointer; }
+    .cit-tab .citlive { color: var(--text-mez); font-weight: 700; }
+    .mini-pruh { position: relative; height: 10px; min-width: 120px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; }
+    .mini-pruh i { position: absolute; top: 0; bottom: 0; background: var(--stabilni); border-left: 2px solid var(--ok); border-right: 2px solid var(--ok); }
+    .mini-pruh b { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); }
+
+    details.mezi { margin-top: 12px; }
+    details.mezi summary, details.ulozene summary { cursor: pointer; color: var(--accent); font-size: 0.85rem; }
+    .ulozene-seznam { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .ulozeny { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); font-size: 0.85rem; }
+    .ulozeny .jm { flex: 1; min-width: 140px; font-weight: 600; overflow-wrap: anywhere; }
+    .ulozeny .kdy { color: var(--text-muted); font-size: 0.76rem; }
+    .metodika { font-size: 0.84rem; line-height: 1.55; color: var(--text); }
+    .metodika p { margin: 6px 0; }
+    .metodika h3 { margin-top: 16px; }
+    .metodika code { background: var(--bg); padding: 1px 4px; border-radius: 4px; font-size: 0.82rem; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 520px) {
+      body { padding: 14px 10px; }
+      .karta { padding: 12px; }
+      .sl-radek { grid-template-columns: minmax(60px, 34%) minmax(0, 1fr) 54px; font-size: 0.8rem; }
+    }
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .neTisk, .podpis, button, input[type="range"], details.ulozene { display: none !important; }
+      .karta { break-inside: avoid; border-color: #999; background: #fff; }
+      .rozlozeni { grid-template-columns: 1fr; }
+    }
+
+    /* ---- v2: režimy, průvodce ---- */
+    .prepinac-rezimu { display: inline-flex; gap: 0; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; align-self: flex-start; }
+    .prepinac-rezimu button { border: 0; border-radius: 0; padding: 9px 16px; font-size: 0.9rem; background: var(--bg-panel); }
+    .prepinac-rezimu button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+    .menu-dalsi { position: relative; }
+    .menu-dalsi summary { list-style: none; cursor: pointer; background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; }
+    .menu-dalsi summary::-webkit-details-marker { display: none; }
+    .menu-polozky { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; display: flex; flex-direction: column; gap: 4px; background: var(--bg-elevated);
+      border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px; min-width: 210px; box-shadow: var(--shadow); }
+    .menu-polozky button { text-align: left; }
+    @media (max-width: 520px) { .menu-polozky { right: auto; left: 0; } }
+    .kroky { list-style: none; margin: 0 0 14px; padding: 0; display: flex; gap: 4px; flex-wrap: wrap; }
+    .kroky li { flex: 1 1 0; min-width: 0; }
+    .kroky button { width: 100%; background: var(--bg); border: 1px solid var(--border); border-bottom: 3px solid var(--border); border-radius: 6px 6px 0 0;
+      padding: 7px 4px; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .kroky button span { display: inline-block; width: 1.5em; height: 1.5em; line-height: 1.5em; border-radius: 50%; background: var(--bg-control); margin-right: 4px; font-weight: 700; font-size: .78rem; }
+    .kroky button.hotovo { border-bottom-color: var(--ok); }
+    .kroky button[aria-current="step"] { border-bottom-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+    .kroky button[aria-current="step"] span { background: var(--accent); color: var(--on-accent); }
+    @media (max-width: 520px) { .kroky button { font-size: 0; padding: 7px 2px; } .kroky button span { font-size: .8rem; margin: 0; } }
+    .pruvodce-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .pruvodce-stav { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
+    .pruv-uvod { font-size: 0.92rem; line-height: 1.55; margin: 0 0 12px; }
+    .pruv-seznam { display: flex; flex-direction: column; gap: 8px; }
+    .pruv-radek { display: flex; gap: 6px; align-items: center; }
+    .pruv-radek input[type="text"] { flex: 1; min-width: 0; }
+    .pruv-krit { border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: var(--bg); display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, .6fr) auto; gap: 6px; align-items: center; }
+    .pruv-krit details { grid-column: 1 / -1; font-size: 0.8rem; }
+    .pruv-krit details summary { cursor: pointer; color: var(--accent); }
+    .pruv-krit .meze { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
+    .pruv-krit .meze input { width: 110px; }
+    @media (max-width: 520px) { .pruv-krit { grid-template-columns: minmax(0, 1fr) auto; } .pruv-krit select { grid-column: 1; } .pruv-krit .jedn { grid-column: 2; width: 84px; } .pruv-krit .smaz { grid-row: 1; grid-column: 2; justify-self: end; } }
+    .hodnoceni-hlava { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: baseline; margin-bottom: 8px; }
+    .hodnoceni-hlava .kn { font-size: 1.1rem; font-weight: 700; }
+    .hodnoceni-tecky { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0 10px; }
+    .hodnoceni-tecky button { width: 28px; height: 28px; padding: 0; border-radius: 50%; font-size: 0.75rem; }
+    .hodnoceni-tecky button.vyplneno { border-color: var(--ok); }
+    .hodnoceni-tecky button[aria-current="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .hodn-radek { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 40%); gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .hodn-radek input, .hodn-radek select { width: 100%; font-size: 1rem; padding: 9px 10px; }
+    .hodn-radek .an { overflow-wrap: anywhere; }
+    .subj-tlac { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; grid-column: 1 / -1; }
+    .subj-tlac button { padding: 7px 0; font-size: 0.85rem; }
+    .subj-tlac button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
+    .vysl-velky { font-size: 1.5rem; font-weight: 800; margin: 4px 0; }
+    .proc { background: var(--bg); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 6px; padding: 10px 12px; font-size: 0.88rem; line-height: 1.55; margin: 8px 0 12px; }
+    .proc:empty { display: none; }
+    /* váhy */
+    .vahy-rezimy { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+    .vahy-rezimy button { font-size: 0.78rem; padding: 5px 9px; }
+    .vahy-rezimy button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 700; }
+    .vahy-popis { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 8px; }
+    .krit .vaha-radek select, .krit .vaha-radek input[type="number"] { width: 96px; flex: none; }
+    .krit .swing-txt { font-size: 0.74rem; color: var(--text-muted); grid-column: 1 / -1; }
+    .jen-vahy .k-nazev, .jen-vahy .k-typ, .jen-vahy .k-jedn, .jen-vahy .k-smaz, .jen-vahy .krit-pridat { display: none !important; }
+    .jen-vahy .krit { grid-template-columns: minmax(0, 1fr); }
+    .krit .k-titul { display: none; font-weight: 600; font-size: 0.88rem; }
+    .jen-vahy .krit .k-titul { display: block; }
+    .body-soucet { font-size: 0.85rem; margin: 4px 0 8px; }
+    .skupina-tab input { width: 64px; text-align: right; }
+    .skupina-tab th input { width: 110px; text-align: left; font-weight: 600; }
+    /* matice v2 */
+    #matice tr.vyrazena td { opacity: 0.55; }
+    #matice tr.vyrazena td.alt-n { opacity: 1; }
+    .stitek { display: inline-block; font-size: 0.68rem; line-height: 1.3; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--border-strong); color: var(--text-muted); white-space: nowrap; }
+    .stitek.vyr { border-color: var(--danger); color: var(--text-chyba); }
+    .stitek.dom { border-color: var(--warn); color: var(--text-mez); }
+    .stitek.fce { border-color: var(--accent); color: var(--accent); }
+    .alt-stitky { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
+    #matice td.alt-n { flex-wrap: wrap; }
+    #matice td.alt-n .alt-stitky { flex-basis: 100%; }
+    #matice input.interval { font-style: italic; }
+    /* hodnotové funkce */
+    .fce-vyber { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .fce-vyber button { font-size: 0.8rem; padding: 5px 9px; }
+    .fce-vyber button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 700; }
+    .fce-mrizka { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; }
+    @media (max-width: 900px) { .fce-mrizka { grid-template-columns: minmax(0, 1fr); } }
+    .fce-mrizka input[type="text"] { width: 120px; }
+    .fce-body td input { width: 90px; }
+    .graf-svg .fce-cara { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+    .graf-svg .fce-bod { fill: var(--bg-panel); stroke: var(--accent); stroke-width: 3; cursor: grab; touch-action: none; }
+    .graf-svg .fce-bod:focus { outline: none; stroke-width: 5; }
+    .graf-svg .fce-znacka { stroke: var(--c); stroke-width: 1; stroke-dasharray: 3 3; }
+    .graf-svg .fce-alt { fill: var(--c); stroke: var(--bg-panel); stroke-width: 2; }
+    .fce-svg { touch-action: none; }
+    /* SMAA */
+    .prubeh { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin: 10px 0; }
+    .prubeh i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .1s; }
+    .zastarale { opacity: 0.55; }
+    .smaa-tab td.p1 { font-weight: 700; }
+    /* tisková zpráva */
+    .zprava { display: none; }
+    @media print {
+      body.tisk-zpravy > *:not(.zprava) { display: none !important; }
+      body.tisk-zpravy .zprava { display: block !important; color: #000; font-size: 11pt; }
+      .zprava h1 { font-size: 18pt; } .zprava h2 { font-size: 13pt; margin: 14pt 0 6pt; color: #000; }
+      .zprava table { border-collapse: collapse; width: 100%; font-size: 9.5pt; }
+      .zprava th, .zprava td { border: 1px solid #999; padding: 3pt 5pt; color: #000; }
+      .zprava .sl-pruh { background: #555 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .zprava .proc { border: 1px solid #999; border-left: 4px solid #333; background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <h1>⚖️ Vícekriteriální rozhodování</h1>
+  <p class="podtitul">Porovnejte varianty podle více hledisek najednou. <b>Průvodce</b> vás provede pěti kroky, <b>plná analýza</b> přidá citlivost vah,
+    nejistotu (Monte Carlo), hodnotové funkce a srovnání osmi metod. Vše se počítá v prohlížeči; projekty se ukládají jen do tohoto zařízení.</p>
+
+  <div class="obsah">
+    <div class="prepinac-rezimu neTisk" role="tablist" aria-label="Zobrazení">
+      <button type="button" role="tab" id="tabPruvodce" aria-selected="true">🧭 Průvodce</button>
+      <button type="button" role="tab" id="tabPlne" aria-selected="false">📊 Plná analýza</button>
+    </div>
+
+    <!-- projekt -->
+    <section class="karta neTisk" aria-label="Projekt">
+      <div class="lista">
+        <div class="pole" style="flex:1 1 240px">
+          <label for="nazevProjektu">Co rozhodujete (název projektu)</label>
+          <input type="text" id="nazevProjektu" maxlength="120">
+        </div>
+        <div class="pole">
+          <label for="sablona">Šablona</label>
+          <select id="sablona"><option value="">— vybrat šablonu —</option></select>
+        </div>
+        <div class="tlacitka">
+          <button type="button" id="btnNovy">Nový</button>
+          <button type="button" id="btnUlozit" class="hlavni">Uložit</button>
+          <button type="button" id="btnSdilet" title="Zkopíruje odkaz, který obsahuje celý projekt">🔗 Sdílet odkaz</button>
+          <details class="menu-dalsi">
+            <summary>Další…</summary>
+            <div class="menu-polozky">
+              <button type="button" id="btnZprava">🖨 Tisková zpráva / PDF</button>
+              <button type="button" id="btnExportCsv">Export CSV (Excel)</button>
+              <button type="button" id="btnExportJson">Export JSON</button>
+              <button type="button" id="btnImport">Import JSON</button>
+            </div>
+          </details>
+          <input type="file" id="soubor" accept=".json,application/json" hidden>
+        </div>
+      </div>
+      <details class="ulozene" id="ulozene">
+        <summary>Uložené projekty (<span id="pocetUlozenych">0</span>)</summary>
+        <div class="ulozene-seznam" id="seznamUlozenych"></div>
+      </details>
+    </section>
+
+    <!-- ============ PRŮVODCE ============ -->
+    <section id="pruvodce" class="karta" aria-label="Průvodce rozhodnutím">
+      <ol class="kroky" id="pruvodceKroky">
+        <li><button type="button" data-krok="1"><span>1</span> Varianty</button></li>
+        <li><button type="button" data-krok="2"><span>2</span> Kritéria</button></li>
+        <li><button type="button" data-krok="3"><span>3</span> Váhy</button></li>
+        <li><button type="button" data-krok="4"><span>4</span> Hodnocení</button></li>
+        <li><button type="button" data-krok="5"><span>5</span> Výsledek</button></li>
+      </ol>
+      <div id="pruvodceObsah"></div>
+      <div class="pruvodce-nav">
+        <button type="button" id="pruvZpet">← Zpět</button>
+        <span class="pruvodce-stav" id="pruvStav"></span>
+        <button type="button" id="pruvDal" class="hlavni">Další →</button>
+      </div>
+    </section>
+
+    <!-- ============ PLNÁ ANALÝZA ============ -->
+    <div id="plne" class="obsah" hidden>
+      <div class="rozlozeni">
+        <section class="karta" aria-labelledby="hKrit">
+          <h2 id="hKrit">Kritéria a váhy</h2>
+          <div id="vahyEditor"></div>
+        </section>
+
+        <section class="karta" aria-labelledby="hVysl">
+          <h2 id="hVysl">Výsledné pořadí</h2>
+          <div class="metoda-volby">
+            <div class="pole">
+              <label for="metoda">Metoda</label>
+              <select id="metoda">
+                <option value="wsm">Vážený součet (WSM)</option>
+                <option value="mavt">Hodnotové funkce (MAVT)</option>
+                <option value="wpm">Vážený součin (WPM)</option>
+                <option value="topsis">TOPSIS</option>
+                <option value="vikor">VIKOR</option>
+                <option value="promethee">PROMETHEE II</option>
+              </select>
+            </div>
+            <div class="pole" id="poleNorm">
+              <label for="normalizace">Normalizace</label>
+              <select id="normalizace">
+                <option value="minmax">min-max (0–1)</option>
+                <option value="podil">podíl k maximu</option>
+                <option value="vektor">vektorová</option>
+              </select>
+            </div>
+            <div class="pole" id="polePref" hidden>
+              <label for="prefFunkce">Preferenční funkce</label>
+              <select id="prefFunkce">
+                <option value="linearni">lineární (p = rozpětí)</option>
+                <option value="obvykla">obvyklá (0/1)</option>
+              </select>
+            </div>
+            <div class="pole" id="poleVikor" hidden>
+              <label for="vikorV">Váha strategie většiny v = <b id="vikorVTxt">0,5</b></label>
+              <input type="range" id="vikorV" min="0" max="1" step="0.05" value="0.5">
+            </div>
+          </div>
+          <div id="vitezBox"></div>
+          <div id="proc" class="proc"></div>
+          <div id="poradiGraf"></div>
+          <details class="mezi" id="mezivysledky"><summary>Mezivýsledky metody</summary><div class="obal-tab" id="mezivysledkyObsah"></div></details>
+        </section>
+      </div>
+
+      <div id="upozorneni"></div>
+
+      <section class="karta" aria-labelledby="hMat">
+        <h2 id="hMat">Rozhodovací matice</h2>
+        <div class="obal-tab"><table id="matice"></table></div>
+        <div class="tlacitka neTisk" style="margin-top:10px">
+          <button type="button" id="btnPridatAlt">+ Alternativa</button>
+        </div>
+        <p class="napoveda">Desetinná čárka i tečka fungují. <b>Nejistou hodnotu zadejte jako rozpětí</b>, např. <code>20–25</code> – počítá se se středem a rozpětí využije
+          simulace nejistoty. Zeleně orámovaná buňka je v kritériu nejlepší, červená prázdná nebo chybná. Na mobilu je pohodlnější zadávání v Průvodci (krok 4).</p>
+      </section>
+
+      <section class="karta" aria-labelledby="hFce">
+        <h2 id="hFce">Hodnotové funkce, povinné meze a nejistota</h2>
+        <p class="napoveda" style="margin:0 0 8px">Ke každému kritériu můžete nastavit <b>povinnou mez</b> (varianta, která ji nesplní, se vyřadí),
+          <b>nejistotu hodnot</b> pro simulaci a <b>hodnotovou funkci</b> – jak moc vám daná hodnota přináší (např. „nad 10 h výdrže už je to jedno“ nebo „ideálně 70 m²“).
+          Hodnotové funkce používá metoda MAVT.</p>
+        <div class="fce-vyber" id="fceVyber" role="tablist" aria-label="Kritérium"></div>
+        <div id="fceObsah"></div>
+      </section>
+
+      <div class="rozlozeni">
+        <section class="karta" aria-labelledby="hPrisp">
+          <h2 id="hPrisp">Příspěvek kritérií</h2>
+          <p class="napoveda" id="prispPopis" style="margin:0 0 8px"></p>
+          <div id="prispevky"></div>
+        </section>
+        <section class="karta" aria-labelledby="hRadar">
+          <h2 id="hRadar">Radarový graf</h2>
+          <p class="napoveda" style="margin:0 0 8px" id="radarPopis"></p>
+          <div id="radarLegenda"></div>
+          <div class="graf-obal" id="radar"></div>
+        </section>
+      </div>
+
+      <section class="karta" aria-labelledby="hCit">
+        <h2 id="hCit">Citlivostní analýza vah</h2>
+        <p class="napoveda" style="margin:0 0 8px">Pro každé kritérium je uveden interval jeho váhy, ve kterém zůstává vítěz stejný (kritické váhy); ostatní váhy se přitom mění
+          ve stejném vzájemném poměru. Klepnutím na řádek zobrazíte průběh skóre všech alternativ. Zelený pás = stabilní interval, čárkovaná svislice = současná váha.</p>
+        <div class="obal-tab"><table class="cit-tab" id="citTab"></table></div>
+        <h3 id="citNadpis"></h3>
+        <div id="citLegenda"></div>
+        <div class="graf-obal" id="citGraf"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hSmaa">
+        <h2 id="hSmaa">Nejistota – simulace Monte Carlo (SMAA)</h2>
+        <p class="napoveda" style="margin:0 0 8px">Tisíckrát se náhodně „zatřesou“ váhy a hodnoty v mezích vaší nejistoty a spočítá se, jak často je každá varianta první, druhá…
+          (index akceptability pořadí, SMAA-2). Nejistotu hodnot nastavíte rozpětím v buňce matice nebo procentem u kritéria.</p>
+        <div class="lista">
+          <div class="pole"><label for="smaaVahy">Nejistota vah</label>
+            <select id="smaaVahy">
+              <option value="kolem">kolem zadaných vah (±)</option>
+              <option value="poradi">zachovat jen pořadí důležitosti</option>
+              <option value="uniformni">váhy neznámé (libovolné)</option>
+            </select></div>
+          <div class="pole" id="poleRozptyl"><label for="smaaRozptyl">Rozptyl vah ± <b id="smaaRozptylTxt">20</b> %</label>
+            <input type="range" id="smaaRozptyl" min="0" max="100" step="5" value="20"></div>
+          <div class="pole"><label for="smaaIterace">Počet simulací</label>
+            <select id="smaaIterace"><option>1000</option><option>4000</option><option>10000</option><option>30000</option></select></div>
+          <div class="tlacitka"><button type="button" class="hlavni" id="btnSmaa">▶ Spustit simulaci</button></div>
+        </div>
+        <div class="prubeh" id="smaaPrubeh" hidden><i></i></div>
+        <div id="smaaVysledek"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hPor">
+        <h2 id="hPor">Porovnání metod</h2>
+        <p class="napoveda" style="margin:0 0 8px">Pořadí alternativ podle různých postupů při stejných vahách. Zvýrazněné buňky se liší od pořadí zvolené metody.
+          Spearmanův koeficient ρ = 1 znamená stejné pořadí, 0 žádnou shodu.</p>
+        <div class="obal-tab" id="porovnani"></div>
+        <div id="porovnaniZaver"></div>
+        <h3>Shoda pořadí (Spearmanův ρ)</h3>
+        <div class="obal-tab" id="spearman"></div>
+      </section>
+
+      <section class="karta metodika" aria-labelledby="hMet">
+        <h2 id="hMet">Metodika a omezení</h2>
+        <p><b>Výsledek není objektivní pravda.</b> Pořadí závisí na (1) zvolených kritériích, (2) subjektivních vahách, (3) metodě normalizace
+          a (4) agregační metodě. Proto stránka ukazuje citlivost na váhy, simulaci nejistoty a porovnání metod – stabilní vítěz napříč metodami a v širokém intervalu vah je
+          dobrý kandidát; vítěz, který se mění při malé změně váhy nebo jiné normalizaci, znamená „těsné rozhodnutí“, kde rozhodují i nezahrnuté faktory.</p>
+        <h3>Způsoby vážení</h3>
+        <p><b>Posuvníky</b> – přímé zadání relativní důležitosti. <b>100 bodů</b> – rozdělení rozpočtu bodů (váha = podíl bodů). <b>Pořadí (ROC)</b> – stačí seřadit kritéria;
+          váhy jsou těžiště všech vah slučitelných s pořadím, <code>w_k = (1/n) Σ_{i=k}^{n} 1/i</code> (Barron &amp; Barrett 1996), shodné pořadí dostane průměr.
+          <b>Swing</b> (SMART/swing, Edwards &amp; Barron 1994) – ptá se, jak cenný je přesun z nejhorší na nejlepší hodnotu kritéria <i>v těchto variantách</i>, a tak bere v úvahu rozsah dat
+          (váha „ceny“ má smysl jen vzhledem k tomu, jak moc se ceny liší). <b>AHP</b> – párová porovnání (viz níže). <b>Skupina</b> – každý hodnotitel rozdělí body,
+          váhy se zprůměrují aritmeticky nebo geometricky; shodu měří Kendallův koeficient W (0 = žádná shoda v pořadí důležitosti, 1 = úplná).</p>
+        <h3>Normalizace (vážený součet)</h3>
+        <p><b>min-max</b>: <code>r = (x − min)/(max − min)</code>, u minimalizace <code>(max − x)/(max − min)</code>. Nejhorší alternativa dostane 0, nejlepší 1 – zvětšuje i malé rozdíly
+          a výsledek se může změnit přidáním či odebráním alternativy (rank reversal). <b>Podíl k maximu</b>: <code>x / max</code>, u minimalizace <code>min / x</code> – zachovává poměry,
+          vyžaduje kladné hodnoty. <b>Vektorová</b>: <code>x / √Σx²</code>, u minimalizace <code>1 − x / √Σx²</code> (Jahan &amp; Edwards 2015) – rozdíly „stlačuje“.</p>
+        <h3>Metody</h3>
+        <p><b>WSM</b> – vážený součet normalizovaných hodnot, plně kompenzační. <b>MAVT</b> – vážený součet hodnotových funkcí <code>Σ w·u(x)</code>; funkce je po částech lineární
+          (nasycení, cílová hodnota, klesající přínos…), bez funkce lineární min-max. Funkce je zadaná v absolutních hodnotách, takže přidání varianty nemění užitek ostatních.
+          <b>WPM</b> – vážený součin poměrů <code>Π (x/max)^w</code>; potřebuje kladné hodnoty a více trestá velmi špatné hodnoty.
+          <b>TOPSIS</b> (Hwang &amp; Yoon 1981) – vzdálenost od ideální a anti-ideální varianty, <code>C = S⁻/(S⁺ + S⁻)</code>.
+          <b>VIKOR</b> (Opricovic &amp; Tzeng 2004) – kompromis mezi celkovým užitkem S (strategie většiny) a největší „lítostí“ R v jednom kritériu;
+          <code>Q = v·(S − S⁺)/(S⁻ − S⁺) + (1 − v)·(R − R⁺)/(R⁻ − R⁺)</code>, menší je lepší (v grafu 1 − Q). Stránka vyhodnotí i podmínky přijatelné výhody (Q₂ − Q₁ ≥ 1/(m − 1))
+          a stability a případně navrhne množinu kompromisních řešení.
+          <b>PROMETHEE II</b> (Brans &amp; Vincke 1985) – párové srovnání; čistý tok <code>φ = φ⁺ − φ⁻</code>. Lineární preferenční funkce s p = rozpětí kritéria a q = 0 je zjednodušení.</p>
+        <h3>Povinné meze a dominance</h3>
+        <p>Varianta, která nesplní povinnou mez (např. cena nad rozpočet), se vyřadí <i>před</i> výpočtem – žádná váha ji nemůže „zachránit“ (nekompenzační pravidlo).
+          Varianta je <b>dominovaná</b>, když jiná je ve všech kritériích stejně dobrá nebo lepší a aspoň v jednom lepší; u kritérií s hodnotovou funkcí se porovnává užitek.
+          Dominovaná varianta nemůže ve váženém součtu zvítězit při žádných vahách.</p>
+        <h3>AHP – párové porovnání vah</h3>
+        <p>Z reciproké matice párových porovnání se váhy počítají jako hlavní vlastní vektor (mocninná metoda, Saaty 1980) a pro srovnání geometrickým průměrem řádků.
+          <code>CI = (λmax − n)/(n − 1)</code>, <code>CR = CI / RI</code> se Saatyho indexem RI (n = 3: 0,58; 4: 0,90; 5: 1,12; 6: 1,24; 7: 1,32; 8: 1,41; 9: 1,45; 10: 1,49 …).
+          Při <code>CR &gt; 0,1</code> stránka označí nejvíc odchýlené porovnání a navrhne hodnotu. AHP zde slouží k odvození vah kritérií, ne k hodnocení variant.</p>
+        <h3>Citlivost a nejistota</h3>
+        <p>Citlivost: váha jednoho kritéria se mění od 0 do 100 %, ostatní ve stejném poměru; u WSM/MAVT jsou meze přesné, u ostatních metod se hledá souvislý interval
+          vzorkováním po 1 % a bisekcí. Simulace (SMAA-2, Lahdelma &amp; Salminen 2001): váhy se losují buď rovnoměrně ze všech možných (Dirichlet(1)), se zachováním pořadí
+          důležitosti, nebo kolem zadaných vah (±); hodnoty rovnoměrně z rozpětí v buňce, případně ± zadané procento. Výsledkem jsou podíly simulací, v nichž je varianta na
+          1., 2., … místě, a „centrální váhy“ – průměrné váhy, při nichž varianta vyhrává. Generátor má pevné semínko, takže výsledek je opakovatelný.</p>
+        <h3>Co stránka nedělá</h3>
+        <p>Hierarchii kritérií (podkritéria) a AHP pro hodnocení samotných variant zatím nepodporuje – při m variantách a n kritériích by to znamenalo n·m(m − 1)/2 párových otázek;
+          místo toho slouží subjektivní škála 1–10 a hodnotové funkce. ELECTRE není zahrnuto.</p>
+        <h3>Zdroje</h3>
+        <p>Hwang, C. L.; Yoon, K. (1981): <i>Multiple Attribute Decision Making</i>. Springer. ·
+          Saaty, T. L. (1980): <i>The Analytic Hierarchy Process</i>. McGraw-Hill. ·
+          Opricovic, S.; Tzeng, G.-H. (2004): Compromise solution by MCDM methods: A comparative analysis of VIKOR and TOPSIS. <i>EJOR</i> 156(2), 445–455. ·
+          Brans, J. P.; Vincke, Ph. (1985): A preference ranking organisation method. <i>Management Science</i> 31(6). ·
+          Barron, F. H.; Barrett, B. E. (1996): Decision quality using ranked attribute weights. <i>Management Science</i> 42(11). ·
+          Edwards, W.; Barron, F. H. (1994): SMARTS and SMARTER. <i>OBHDP</i> 60(3). ·
+          Lahdelma, R.; Salminen, P. (2001): SMAA-2: Stochastic multicriteria acceptability analysis for group decision making. <i>Operations Research</i> 49(3). ·
+          Kendall, M. G.; Babington Smith, B. (1939): The problem of m rankings. <i>Ann. Math. Stat.</i> 10(3). ·
+          Jahan, A.; Edwards, K. L. (2015): <i>Materials &amp; Design</i> 65. ·
+          Wang, Z.; Rangaiah, G. P. (2025): Multi-Criteria Decision-Making: Reference-Type Methods (preprint arXiv:2508.16087) – ověřovací příklad VIKOR.</p>
+        <p class="napoveda">Hodnoty v šablonách jsou ilustrativní, nikoli aktuální ceny či měření.</p>
+      </section>
+    </div>
+  </div>
+  <div id="zprava" class="zprava" aria-hidden="true"></div>
+  <div id="tip" hidden></div>
+  <script src="rozhodovani/ui.js"></script>
+  <script src="rozhodovani/pruvodce.js"></script>
+</body>
+</html>

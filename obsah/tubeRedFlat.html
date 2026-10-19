@@ -115,6 +115,7 @@
 
     .form-group input:disabled,
     .form-group select:disabled { opacity: 0.65; cursor: not-allowed; }
+    .form-group input:read-only { background-color: transparent; border-style: dashed; cursor: default; }
 
     .form-group input[type="color"] {
       width: 100%;
@@ -1015,7 +1016,18 @@
         });
         return st;
       };
-      return { obvod, bod, zacatek };
+      // délka po obrysu k nejbližšímu bodu obrysu od `c`
+      const promitni = c => {
+        let nej = Infinity, st = 0;
+        for (let i = 0; i < P.length; i++) {
+          const A = P[i], B = P[(i + 1) % P.length], ex = B[0] - A[0], ey = B[1] - A[1], l2 = ex * ex + ey * ey || 1;
+          const u = Math.max(0, Math.min(1, ((c[0] - A[0]) * ex + (c[1] - A[1]) * ey) / l2));
+          const d = Math.hypot(c[0] - A[0] - u * ex, c[1] - A[1] - u * ey);
+          if (d < nej) { nej = d; st = s[i] + u * Math.sqrt(l2); }
+        }
+        return st;
+      };
+      return { obvod, bod, zacatek, promitni };
     }
 
     // `pocet` bodů rovnoměrně po obvodu, první na polárním úhlu `uhel`
@@ -1608,7 +1620,9 @@
           const kr = parametryKonce(p, kde, L);
           if (f.limec) {
             // nejširší díra v hloubce límce: na čele po kónusu a sražení, uvnitř plná
-            const chyba = kontrolaLimce(f, f.limec, L, Math.max(f.dI + kr.kI / 2 + kr.sI, f.dI), nazev);
+            const dVrt = Math.max(f.dI + kr.kI / 2 + kr.sI, f.dI);
+            doplnPolohuOtvoru(f, f.limec, dVrt);
+            const chyba = kontrolaLimce(f, f.limec, L, dVrt, nazev);
             if (chyba) return chyba;
           }
           if (f.konec) {
@@ -1739,6 +1753,132 @@
       // po obvodu: rovnoměrně po délce obrysu příruby odsazeného o `osa`
       const P = obrys(f.tvar, struktura(f.tvar, 720), f.dO + o.osa, f.rot, f.posun);
       return bodyPoObvodu(P, n, o.uhel || 0, f.rot, f.posun).map(b => b.Q);
+    }
+
+    // vzdálenost bodu od obrysu (k nejbližší hraně), kladná vně, záporná uvnitř
+    function vzdalenostOdObrysu(c, P) {
+      let d = Infinity;
+      for (let i = 0; i < P.length; i++) {
+        const a = P[i], b = P[(i + 1) % P.length], ex = b[0] - a[0], ey = b[1] - a[1], l2 = ex * ex + ey * ey || 1;
+        const u = Math.max(0, Math.min(1, ((c[0] - a[0]) * ex + (c[1] - a[1]) * ey) / l2));
+        d = Math.min(d, Math.hypot(c[0] - a[0] - u * ex, c[1] - a[1] - u * ey));
+      }
+      return uvnitr(c, P) ? -d : d;
+    }
+
+    /* Volné místo kolem otvoru na zadní straně límce (poloměr), které se
+       hlídá od pláště trubky a od žeber: matice zapuštěná v šestihranu nebo
+       hlava v zahloubení potřebuje jen svůj obrys, matice na rovné zadní
+       ploše i nástrčný klíč (klíč matice ≈ 1,6 × otvor, stěna hlavice 1,5 mm). */
+    function prostorZaOtvorem(o) {
+      if (o.strana !== 'celni' && o.zahloubeni === 'matice') return o.Dh / Math.sqrt(3) + 0.5;
+      if (o.strana !== 'celni' && (o.zahloubeni === 'kuzel' || o.zahloubeni === 'valec')) return o.Dh / 2 + 0.5;
+      return 1.6 * o.d / Math.sqrt(3) + 1.5;
+    }
+
+    /* Automatická poloha otvorů: osa od příruby (po obvodu), roztečný průměr
+       (kružnice) nebo rozteče X/Y (rohy) tak, aby otvory ležely uprostřed
+       mezi pláštěm trubky (i s místem na matici a klíč) a okrajem límce,
+       vně těsnicí drážky a nepřekrývaly se. Hledá se po jednom čísle
+       (u rohů odsazení od okraje obalu límce). Vrací { hodnoty, rezerva, duvod }:
+       rezerva = nejmenší vůle nad povinné minimum kontroly (< 0 → nevejdou se),
+       duvod = co otvory nejvíc tísní ('okraj' | 'trubka' | 'drazka' | 'prekryv'). */
+    function polohaOtvoru(f, lim, dVrtani) {
+      const o = lim.otvory, N = 256;
+      const plat = obrysLimce(f, lim, N), strF = struktura(f.tvar, N);
+      const z = lim.zesileni && lim.zesileni.velikost > 0 ? lim.zesileni.velikost : 0;
+      const trubka = obrys(f.tvar, strF, f.dO + z, f.rot, f.posun);
+      const vrtani = obrys(f.tvar, strF, dVrtani === undefined ? f.dI : dVrtani, f.rot, f.posun);
+      const r = polomeryOtvoru(o), rmax = Math.max(r.celo, r.zada);
+      const prostor = Math.max(r.zada, prostorZaOtvorem(o));
+      const dr = lim.drazka;
+      const drazka = dr ? obrys(f.tvar, strF, f.dO + dr.osa + dr.sirka / 2 + 0.6, f.rot, f.posun) : null;
+      const rDr = dr ? polomerDoHloubky(o, lim.tl, dr.hloubka + 0.4) : 0;
+      // rozměr límce kolem středu příruby (v jejích osách)
+      const a = (f.rot || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+      const px = f.posun ? f.posun[0] : 0, py = f.posun ? f.posun[1] : 0;
+      let ex = 0, ey = 0, er = 0;
+      for (const [x, y] of plat) {
+        const dx = x - px, dy = y - py;
+        ex = Math.max(ex, Math.abs(dx * ca + dy * sa)); ey = Math.max(ey, Math.abs(-dx * sa + dy * ca));
+        er = Math.max(er, Math.hypot(dx, dy));
+      }
+      const druh = o.rozmisteni;
+      const hodnoty = v => druh === 'obvod' ? { osa: v } : druh === 'kruznice' ? { roztec: v }
+        : { X: Math.max(0.1, 2 * (ex - v)), Y: Math.max(0.1, 2 * (ey - v)) };
+      const [v0, v1] = druh === 'obvod' ? [0, er] : druh === 'kruznice' ? [0.1, 2 * er] : [0, Math.min(ex, ey)];
+      const vyhodnot = (v, h) => {
+        const otv = otvoryLimceVypocet(f, { ...lim, otvory: { ...o, ...(h || hodnoty(v)) } });
+        let tesne = Infinity, volne = Infinity, duvod = 'okraj';
+        const min = (hodnota, proc, sNaradim) => {
+          if (hodnota < tesne) { tesne = hodnota; duvod = proc; }
+          volne = Math.min(volne, sNaradim === undefined ? hodnota : sNaradim);
+        };
+        otv.forEach((c, i) => {
+          min(-vzdalenostOdObrysu(c, plat) - rmax - 0.8, 'okraj');
+          const dt = vzdalenostOdObrysu(c, trubka);
+          min(dt - r.zada - 0.5, 'trubka', dt - prostor - 0.5);
+          min(vzdalenostOdObrysu(c, vrtani) - r.celo - 0.5, 'trubka');
+          if (drazka) min(vzdalenostOdObrysu(c, drazka) - rDr, 'drazka');
+          for (let j = 0; j < i; j++) min((Math.hypot(c[0] - otv[j][0], c[1] - otv[j][1]) - 2 * rmax - 0.8) / 2, 'prekryv');
+        });
+        return { v, tesne, volne, duvod };
+      };
+      // lepší je ta poloha, kde se otvory vejdou; z nich ta s nejvíc místem na matici
+      const lepsi = (A, B) => (A.tesne >= 0) !== (B.tesne >= 0) ? A.tesne >= 0
+        : A.tesne >= 0 ? A.volne > B.volne + 1e-9 : A.tesne > B.tesne + 1e-9;
+      let nej = vyhodnot(v0), krok = (v1 - v0) / 96;
+      for (let k = 1; k <= 96; k++) { const e = vyhodnot(v0 + k * krok); if (lepsi(e, nej)) nej = e; }
+      for (let kolo = 0; kolo < 3; kolo++) {
+        const stred = nej.v;
+        for (let k = -8; k <= 8; k++) {
+          const v = stred + k * krok / 8;
+          if (v < v0 || v > v1 || !k) continue;
+          const e = vyhodnot(v);
+          if (lepsi(e, nej)) nej = e;
+        }
+        krok /= 8;
+      }
+      // zaokrouhlit na desetiny dolů či nahoru — co dá víc místa (a vejde se)
+      let h = hodnoty(nej.v), nejZ = null, hZ = null;
+      const klice = Object.keys(h);
+      for (let maska = 0; maska < 1 << klice.length; maska++) {
+        const hk = {};
+        // stejné rozteče (čtverec) zaokrouhlit stejně, ať zůstanou souměrné
+        if (klice.length === 2 && Math.abs(h[klice[0]] - h[klice[1]]) < 1e-9 && (maska === 1 || maska === 2)) continue;
+        klice.forEach((k, i) => { hk[k] = (maska >> i & 1 ? Math.ceil(h[k] * 10 - 1e-9) : Math.floor(h[k] * 10 + 1e-9)) / 10; });
+        const e = vyhodnot(null, hk);
+        if (!nejZ || lepsi(e, nejZ)) { nejZ = e; hZ = hk; }
+      }
+      if (nejZ.tesne >= 0 || nej.tesne < 0) { h = hZ; nej = nejZ; }
+      return { hodnoty: h, rezerva: nej.tesne, duvod: nej.duvod };
+    }
+
+    /* Doplní automatickou polohu otvorů do zadání límce (o.auto). Volá se
+       z kontroly zadání, takže ji vidí náhled, export, výkres i uložené tvary. */
+    function doplnPolohuOtvoru(f, lim, dVrtani) {
+      const o = lim && lim.otvory;
+      if (!o || !o.auto || o.rozmisteni === 'zadne') return null;
+      if (neplatnaCisla(lim) || !(o.d > 0) || !(lim.tl > 0)) return null;
+      if (lim.tvar === 'obrys' ? !(lim.sirka > 0) : lim.tvar === 'kruh' ? !(lim.D > 0) : !(lim.W > 0 && lim.H > 0)) return null;
+      const vysl = polohaOtvoru(f, lim, dVrtani);
+      Object.assign(o, vysl.hodnoty);
+      o.autoRezerva = vysl.rezerva;
+      o.autoDuvod = vysl.duvod;
+      return vysl;
+    }
+
+    // největší poloměr otvoru od čela do hloubky h (šestihran přes rohy)
+    function polomerDoHloubky(o, tl, h) {
+      const prof = profilOtvoru(o, tl);
+      const ref = k => k.typ === 'hex' ? k.r / Math.sqrt(3) : k.r;
+      let r = 0;
+      for (let j = 0; j < prof.length; j++) {
+        const a = prof[j], b = prof[j + 1];
+        if (a.w <= h) r = Math.max(r, ref(a));
+        if (b && a.w <= h && b.w > h) r = Math.max(r, ref(a) + (ref(b) - ref(a)) * (h - a.w) / (b.w - a.w));
+      }
+      return r;
     }
 
     /* Profil otvoru od čela (w = 0) k zadní straně (w = tl): seznam kroužků
@@ -1904,10 +2044,14 @@
     }
 
     /* Žebra: trojúhelníkové výztuhy mezi zadní stranou límce a pláštěm trubky,
-       kolmo k obrysu. Rozmístí se rovnoměrně po obvodu; s volbou `meziOtvory`
-       se natočí tak, aby co nejméně překážela šroubům. Délka je do okraje
-       límce (nebo zadaná), zkrátí se před hlavou šroubu. Vrací profily
-       { Q, n, t, L } v souřadnicích příruby. */
+       kolmo k obrysu. Bez otvorů (nebo bez volby `meziOtvory`) se rozmístí
+       rovnoměrně po obvodu. S volbou `meziOtvory` se vyhýbají šroubům:
+       zkouší se rovnoměrné rozmístění s různým natočením i rozmístění do
+       mezer mezi otvory (žebro doprostřed mezery, aby u každého otvoru zůstalo
+       co nejvíc místa na matici a klíč) a vybere se to, kde jsou žebra nejdelší
+       a nejdál od otvorů. Délka je do okraje límce (nebo zadaná); žebro, které
+       by do místa kolem otvoru (`prostorZaOtvorem`) zasáhlo, se před ním zkrátí.
+       Vrací profily { Q, n, t, L } v souřadnicích příruby. */
     function zebraLimce(f, lim) {
       const z = lim.zebra, o = lim.otvory;
       const n = Math.round(z.pocet || 0);
@@ -1916,12 +2060,11 @@
       const cesta = obvodovaCesta(obrys(f.tvar, struktura(f.tvar, 720), f.dO, f.rot, f.posun), f.rot, f.posun);
       const obvod = cesta.obvod, bodNa = cesta.bod;
       const otv = otvoryLimce(f, lim);
-      const rz = otv.length ? polomeryOtvoru(o).zada : 0;
+      const rc = otv.length ? Math.max(polomeryOtvoru(o).zada + 1, prostorZaOtvorem(o)) + z.tloustka / 2 : 0;
       const delka = b => {
         let L = paprsek(b.Q, b.n, plat) - 1;
         if (z.delka > 0) L = Math.min(L, z.delka);
         for (const c of otv) {
-          const rc = rz + z.tloustka / 2 + 1;
           const dx = c[0] - b.Q[0], dy = c[1] - b.Q[1];
           const pr = dx * b.n[0] + dy * b.n[1], kolmo = Math.abs(dx * b.t[0] + dy * b.t[1]);
           if (kolmo >= rc) continue;
@@ -1930,24 +2073,43 @@
         }
         return L;
       };
+      // nejmenší vůle mezi žebrem (úsečkou s tloušťkou) a místem kolem otvorů
+      const vule = b => {
+        let v = Infinity;
+        for (const c of otv) {
+          const dx = c[0] - b.Q[0], dy = c[1] - b.Q[1];
+          const u = Math.max(0, Math.min(b.L, dx * b.n[0] + dy * b.n[1]));
+          v = Math.min(v, Math.hypot(dx - u * b.n[0], dy - u * b.n[1]) - rc);
+        }
+        return v;
+      };
+      const zebra = poloha => poloha.map(s => { const b = bodNa(s); b.L = delka(b); return b; });
       // výchozí natočení: první žebro na kladné ose x (u souměrných tvarů souměrně)
       const s0 = cesta.zacatek(0);
-      const rozmisti = faze => {
-        const out = [];
-        for (let k = 0; k < n; k++) {
-          const b = bodNa(s0 + obvod * (faze + k) / n);
-          b.L = delka(b);
-          out.push(b);
-        }
-        return out;
-      };
-      let nej = rozmisti(0);
+      const rovnomerne = faze => zebra(Array.from({ length: n }, (_, k) => s0 + obvod * (faze + k) / n));
+      let nej = rovnomerne(0);
       if (z.meziOtvory && otv.length) {
-        const skore = r => r.reduce((a, b) => a + Math.max(0, Math.min(b.L, 40)), 0);
+        // skóre: délka žeber (do 40 mm) a vůle od otvorů (do 6 mm, váha 2);
+        // při shodě rozhodne větší vůle — žebro doprostřed mezi otvory
+        const skore = r => r.reduce((a, b) => {
+          if (b.L < 3) return a;
+          const v = vule(b);
+          return a + Math.min(b.L, 40) + 2 * Math.max(-6, Math.min(v, 6)) + 0.05 * Math.max(-6, Math.min(v, 60));
+        }, 0);
         let nejSk = skore(nej);
-        for (let k = 1; k < 64; k++) {
-          const r = rozmisti(k / 64), sk = skore(r);
-          if (sk > nejSk + 1e-6) { nejSk = sk; nej = r; }
+        const zkus = r => { const sk = skore(r); if (sk > nejSk + 1e-6) { nejSk = sk; nej = r; } };
+        for (let k = 1; k < 64; k++) zkus(rovnomerne(k / 64));
+        // do mezer mezi otvory: počty po mezerách jako Bresenham podle délky mezery
+        const h = otv.map(c => cesta.promitni(c)).sort((a, b) => a - b);
+        const m = h.length;
+        for (const fi of [0, 0.25, 0.5, 0.75]) {
+          const poloha = [];
+          for (let i = 0; i < m; i++) {
+            const a = h[i], b = i + 1 < m ? h[i + 1] : h[0] + obvod, g = b - a;
+            const kolik = Math.floor((b - h[0]) * n / obvod + fi) - Math.floor((a - h[0]) * n / obvod + fi);
+            for (let j = 0; j < kolik; j++) poloha.push(a + g * (j + 1) / (kolik + 1));
+          }
+          if (poloha.length === n) zkus(zebra(poloha));
         }
       }
       return nej.filter(b => b.L >= 3);
@@ -2027,6 +2189,19 @@
 
     /* Kontrola zadání límce. `dVrtani` je odsazení díry na čele (po kónusu
        a sražení zevnitř). Vrací text chyby, nebo null. */
+    /* Hláška, když se otvory na límec nevejdou nikam: o kolik límec zvětšit
+       (vůle chybí na obou stranách otvoru, poloha se posune o půlku přídavku). */
+    function nevejdouSe(f, lim, dVrtani, rezerva, duvod) {
+      const o = lim.otvory, chybi = Math.ceil(-2 * rezerva * 2 + 0.01) / 2;
+      const otv = 'Otvory Ø' + des(o.d, 1) + (o.zahloubeni !== 'zadne' ? ' s hlavou Ø' + des(o.Dh, 1) : '');
+      if (duvod === 'prekryv') return otv + ' se po obvodu nevejdou vedle sebe — snižte počet otvorů nebo zvětšete límec';
+      const kolik = lim.tvar === 'obrys' ? 'rozšiřte okraj límce aspoň na ' + des(lim.sirka + chybi, 1) + ' mm'
+        : lim.tvar === 'kruh' ? 'zvětšete průměr límce aspoň na ' + des(lim.D + 2 * chybi, 1) + ' mm'
+        : 'zvětšete límec aspoň o ' + des(2 * chybi, 1) + ' mm';
+      return otv + ' se na límec nevejdou' + (duvod === 'drazka' ? ' vedle těsnicí drážky' : '') + ' — ' + kolik
+        + (o.zahloubeni !== 'zadne' ? ', nebo zvolte menší šroub' : '');
+    }
+
     function kontrolaLimce(f, lim, L, dVrtani, nazev) {
       const kde = ' (límec ' + nazev + ' příruby)';
       if (neplatnaCisla(lim)) return 'Límec má nevyplněné či neplatné číslo' + kde;
@@ -2068,34 +2243,39 @@
           if (hl > lim.tl - 0.4) return 'Zahloubení (' + des(hl, 1) + ' mm) je hlubší, než dovolí límec ' + des(lim.tl, 1)
             + ' mm — zesilte límec nebo zmenšete hlavu' + kde;
         }
+        // automatická poloha se nevešla: říct, co s tím, místo hlášky o jednom otvoru
+        if (o.auto && o.autoRezerva < 0) return nevejdouSe(f, lim, dVrtani, o.autoRezerva, o.autoDuvod) + kde;
         const r = polomeryOtvoru(o);
         const vrtani = obrys(f.tvar, struktura(f.tvar, 256), dVrtani, f.rot, f.posun);
+        // ruční poloha: poradit, kam otvory posunout
+        const rada = () => {
+          if (o.auto) return '';
+          const v = polohaOtvoru(f, lim, dVrtani);
+          if (v.rezerva < 0) return ' — ' + nevejdouSe(f, lim, dVrtani, v.rezerva, v.duvod);
+          const h = v.hodnoty;
+          return ' — vejde se ' + (o.rozmisteni === 'obvod' ? 'osa ' + des(h.osa, 1) + ' mm'
+            : o.rozmisteni === 'kruznice' ? 'roztečný Ø ' + des(h.roztec, 1) + ' mm'
+            : 'rozteč ' + des(h.X, 1) + ' × ' + des(h.Y, 1) + ' mm') + ' (nebo zapněte automatickou polohu)';
+        };
         const kruh = (c, rr) => krouzekOtvoru(c, { typ: 'kruh', r: rr }, 48);
         const mimo = (A, B) => !A.some(p => uvnitr(p, B)) && !B.some(p => uvnitr(p, A));
         for (let i = 0; i < otv.length; i++) {
           const c = otv[i], rmax = Math.max(r.celo, r.zada);
-          if (!obsahuje(plat, kruh(c, rmax + 0.8))) return 'Otvor č. ' + (i + 1) + ' zasahuje za okraj límce' + kde;
-          if (!mimo(kruh(c, r.zada + 0.5), trubka)) return 'Otvor č. ' + (i + 1) + ' zasahuje do trubky — posuňte ho dál od příruby' + kde;
-          if (!mimo(kruh(c, r.celo + 0.5), vrtani)) return 'Otvor č. ' + (i + 1) + ' zasahuje do díry příruby' + kde;
+          if (!obsahuje(plat, kruh(c, rmax + 0.8))) return 'Otvor č. ' + (i + 1) + ' zasahuje za okraj límce' + kde + rada();
+          if (!mimo(kruh(c, r.zada + 0.5), trubka)) return 'Otvor č. ' + (i + 1) + ' zasahuje do trubky' + kde + rada();
+          if (!mimo(kruh(c, r.celo + 0.5), vrtani)) return 'Otvor č. ' + (i + 1) + ' zasahuje do díry příruby' + kde + rada();
           if (dr) {
             // Největší poloměr otvoru v hloubce, kam sahá drážka (+0,4 mm) — zadní
             // zahloubení pro hlavu může v tenkém límci dosáhnout až k ní.
-            const hDr = dr.hloubka + 0.4, prof = profilOtvoru(o, lim.tl);
-            const ref = k => k.typ === 'hex' ? k.r / Math.sqrt(3) : k.r;
-            let rDr = 0;
-            for (let j = 0; j < prof.length; j++) {
-              const a = prof[j], b = prof[j + 1];
-              if (a.w <= hDr) rDr = Math.max(rDr, ref(a));
-              if (b && a.w <= hDr && b.w > hDr) rDr = Math.max(rDr, ref(a) + (ref(b) - ref(a)) * (hDr - a.w) / (b.w - a.w));
-            }
+            const rDr = polomerDoHloubky(o, lim.tl, dr.hloubka + 0.4);
             const Gv = obrys(f.tvar, strF, f.dO + dr.osa + dr.sirka / 2 + 0.6, f.rot, f.posun);
             const Gn = obrys(f.tvar, strF, f.dO + dr.osa - dr.sirka / 2 - 0.6, f.rot, f.posun);
             const k = kruh(c, rDr);
-            if (!(obsahuje(Gn, k) || mimo(k, Gv))) return 'Otvor č. ' + (i + 1) + ' zasahuje do těsnicí drážky' + kde;
+            if (!(obsahuje(Gn, k) || mimo(k, Gv))) return 'Otvor č. ' + (i + 1) + ' zasahuje do těsnicí drážky' + kde + rada();
           }
           for (let j = 0; j < i; j++) {
             if (Math.hypot(c[0] - otv[j][0], c[1] - otv[j][1]) < 2 * rmax + 0.8) {
-              return 'Otvory č. ' + (j + 1) + ' a ' + (i + 1) + ' se překrývají' + kde;
+              return 'Otvory č. ' + (j + 1) + ' a ' + (i + 1) + ' se překrývají' + kde + rada();
             }
           }
         }
@@ -2439,7 +2619,7 @@
     /* Límec: výchozí hodnoty (klíč = přípona id za předponou inL / outL). */
     const VYCHOZI_LIMEC = {
       Tvar: 'obrys', Sirka: 18, W: 160, H: 130, R: 6, D: 170, Tl: 5,
-      Rozm: 'obvod', Pocet: 4, X: 136, Y: 106, Roztec: 140, Osa: 9, Uhel: 0,
+      Rozm: 'obvod', Auto: true, Pocet: 4, X: 136, Y: 106, Roztec: 140, Osa: 9, Uhel: 0,
       Sroub: 'M4', Dira: 4.5, Zah: 'kuzel', Dh: 8.4, Hl: 4.3, Strana: 'zadni',
       ZPocet: 4, ZVyska: 12, ZTl: 2.4, ZDelka: 0, ZMezi: true,
       ZesV: 0, ZesT: 'zaobleni',
@@ -2553,6 +2733,8 @@
             <div class="podnadpis">Otvory pro šrouby</div>
             ${vyber('Rozm', 'Rozmístění', [['zadne', 'Bez otvorů'], ['obvod', 'Po obvodu (kolem příruby)'],
               ['kruznice', 'Na roztečné kružnici'], ['rohy', 'Do rohů obdélníku (4×)']], v.Rozm)}
+            <label class="zaskrt" id="${L}AutoSk"><input type="checkbox" id="${L}Auto"${v.Auto ? ' checked' : ''}>
+              <span>Polohu otvorů dopočítat (doprostřed okraje, s místem na matici)</span></label>
             <div class="mrizka2" id="${L}OtvorySk">
               ${pole('Pocet', 'Počet otvorů', v.Pocet, 'min="1" max="48" step="1"')}
               ${pole('Osa', 'Osa od příruby', v.Osa, 'min="1" step="0.5"')}
@@ -2605,7 +2787,8 @@
       const h = id => document.getElementById(L + id).value;
       return {
         tvar: h('Tvar'), sirka: c('Sirka'), W: c('W'), H: c('H'), R: c('R'), D: c('D'), tl: c('Tl'),
-        otvory: { rozmisteni: h('Rozm'), pocet: c('Pocet', 1), X: c('X'), Y: c('Y'), roztec: c('Roztec'),
+        otvory: { rozmisteni: h('Rozm'), auto: document.getElementById(L + 'Auto').checked,
+                  pocet: c('Pocet', 1), X: c('X'), Y: c('Y'), roztec: c('Roztec'),
                   osa: c('Osa'), uhel: c('Uhel'), d: c('Dira'), zahloubeni: h('Zah'), Dh: c('Dh'),
                   hloubka: c('Hl'), strana: h('Strana') },
         zebra: { pocet: c('ZPocet'), vyska: c('ZVyska'), tloustka: c('ZTl'), delka: c('ZDelka'),
@@ -2794,6 +2977,15 @@
 
       if (typ === 'short') p.stenaObjimky = stenaObjimky(p);
       const chyba = zkontrolujZadani(p);
+      // kontrola doplnila dopočtenou polohu otvorů — ukázat ji v políčkách
+      for (const [pref, f] of [['in', p.vstup], ['out', p.vystup]]) {
+        const o = f.limec && f.limec.otvory;
+        if (!o || !o.auto || !isFinite(o.autoRezerva)) continue;
+        const pis = (id, v) => { if (isFinite(v)) document.getElementById(pref + 'L' + id).value = v; };
+        if (o.rozmisteni === 'obvod') pis('Osa', o.osa);
+        else if (o.rozmisteni === 'kruznice') pis('Roztec', o.roztec);
+        else if (o.rozmisteni === 'rohy') { pis('X', o.X); pis('Y', o.Y); }
+      }
       return chyba ? { chyba } : { p };
     }
 
@@ -2837,6 +3029,12 @@
         ukaz('Sirka', tv === 'obrys'); ukaz('W', tv === 'obdelnik'); ukaz('H', tv === 'obdelnik');
         ukaz('R', tv === 'obdelnik'); ukaz('D', tv === 'kruh');
         el('OtvorySk').classList.toggle('skryto', rozm === 'zadne');
+        ukaz('Auto', rozm !== 'zadne');
+        // dopočtená poloha: políčka jen ukazují výsledek
+        for (const id of ['Osa', 'Roztec', 'X', 'Y']) {
+          el(id).readOnly = el('Auto').checked;
+          el(id).title = el('Auto').checked ? 'Dopočteno z límce — pro ruční zadání vypněte „Polohu otvorů dopočítat“' : '';
+        }
         ukaz('Pocet', rozm === 'obvod' || rozm === 'kruznice'); ukaz('Osa', rozm === 'obvod');
         ukaz('Roztec', rozm === 'kruznice'); ukaz('X', rozm === 'rohy'); ukaz('Y', rozm === 'rohy');
         ukaz('Uhel', rozm === 'obvod' || rozm === 'kruznice');
@@ -4059,11 +4257,19 @@
       } catch (e) { /* soukromé okno, plné úložiště */ }
     }
 
+    /* Záznam z doby před dopočtem polohy otvorů má polohu zadanou ručně —
+       ta se mu nechá (dopočet vypnutý). */
+    function rucniPolohaUStarych(z) {
+      const o = { ...z };
+      for (const pref of ['in', 'out']) if ((pref + 'LOsa') in o && !((pref + 'LAuto') in o)) o[pref + 'LAuto'] = false;
+      return o;
+    }
+
     function loadSettings() {
       let s = null;
       try { s = JSON.parse(localStorage.getItem(KLIC_NASTAVENI)); } catch (e) { s = null; }
       if (!s) return;
-      nastavPolicka(s);
+      nastavPolicka(rucniPolohaUStarych(s));
       if (!document.querySelector('input[name="reductionType"]:checked')) document.getElementById('reductionLong').checked = true;
       if (!document.querySelector('input[name="viewType"]:checked')) document.getElementById('viewNormal').checked = true;
       const o = document.getElementById('opacitySlider').value;
@@ -4127,7 +4333,7 @@
 
     function pouzijTvar(p) {
       if (!platnyTvar(p)) throw new Error('uložený tvar nepatří generátoru redukcí se zploštěním');
-      nastavPolicka({ ...vychoziTvar(), ...p });
+      nastavPolicka({ ...vychoziTvar(), ...rucniPolohaUStarych(p) });
       aktualizujUI();
       generateReduction();
     }

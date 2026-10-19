@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generátor testovacích dat</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="testovaci_data/slovniky.js"></script>
+  <script src="testovaci_data/jadro.js"></script>
+  <script src="testovaci_data/worker.js"></script>
+  <style>
+    :root { --text-chyba: #ff8f85; --text-mez: #f0bd5e; --text-ok: #6fd39d; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    :root[data-theme="light"] { --text-chyba: var(--danger); --text-mez: var(--warn); --text-ok: var(--ok); }
+    body { background-color: var(--bg-deep); padding: 24px clamp(10px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 1000px; line-height: 1.5; }
+    .upozorneni { max-width: 1400px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); color: var(--text); border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 16px; }
+    .upozorneni b { color: var(--text-mez); }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 18px; max-width: 1400px; align-items: start; }
+    @media (max-width: 1080px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    input[type="number"], input[type="text"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.9rem; min-width: 0; font-family: inherit;
+    }
+    textarea { resize: vertical; min-height: 60px; line-height: 1.4; }
+    textarea.mono, input.mono { font-family: var(--mono); font-size: 0.84rem; }
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .chyba-pole { border-color: var(--danger) !important; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 3px 8px; font-size: 0.78rem; }
+    button.ikona { padding: 3px 7px; min-width: 28px; font-size: 0.8rem; }
+    button.nebezpecne:hover { border-color: var(--danger); color: var(--text-chyba); }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0 10px; }
+    .mrizka .cela { grid-column: 1 / -1; }
+    .zaskrt { display: flex; align-items: center; gap: 7px; font-size: 0.84rem; color: var(--text); margin: 8px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: 0 0 auto; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; line-height: 1.45; }
+    .napoveda code, .pozn code, .help code { font-family: var(--mono); font-size: 0.92em; background: var(--bg-input); padding: 0 3px; border-radius: 3px; }
+    .chyby { margin: 6px 0; font-size: 0.8rem; line-height: 1.45; }
+    .chyby:empty { display: none; }
+    .chyby div { color: var(--text-chyba); padding: 2px 0 2px 18px; position: relative; }
+    .chyby div::before { content: "✕"; position: absolute; left: 2px; }
+    .chyby div.varovani { color: var(--text-mez); }
+    .chyby div.varovani::before { content: "!"; left: 5px; font-weight: 700; }
+
+    /* --- editor schématu --- */
+    .tab-karta { border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--bg-elevated); padding: 10px; margin-top: 12px; }
+    .tab-hlava { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; align-items: end; }
+    .tab-hlava .tab-nazev { font-weight: 600; font-family: var(--mono); }
+    .tab-radky { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: end; margin-top: 6px; }
+    .tab-radky > div { min-width: 0; }
+    .tab-radky .w-rezim { flex: 1 1 170px; } .tab-radky .w-pocet { flex: 0 1 120px; } .tab-radky .w-fk { flex: 1 1 140px; } .tab-radky .w-min { flex: 0 1 70px; }
+    .tab-radky label { margin-top: 0; }
+    .sloupce { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+    details.sl { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-panel); }
+    details.sl[open] { border-color: var(--border-strong); }
+    details.sl.ma-chybu { border-color: var(--danger); }
+    details.sl > summary { list-style: none; cursor: pointer; padding: 6px 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.85rem; min-height: 34px; }
+    details.sl > summary::-webkit-details-marker { display: none; }
+    details.sl > summary::before { content: "▸"; color: var(--text-muted); width: 10px; }
+    details.sl[open] > summary::before { content: "▾"; }
+    .sl-nazev { font-family: var(--mono); font-weight: 600; overflow-wrap: anywhere; }
+    .sl-typ { color: var(--text-muted); font-size: 0.78rem; }
+    .stitek { font-size: 0.68rem; border: 1px solid var(--border-strong); border-radius: 10px; padding: 0 6px; color: var(--text-muted); white-space: nowrap; }
+    .stitek.pk { border-color: var(--accent); color: var(--accent); }
+    .stitek.fk { border-color: var(--ok); color: var(--text-ok); }
+    .stitek.synt { border-style: dashed; }
+    .stitek.chyba { border-color: var(--danger); color: var(--text-chyba); }
+    .sl-telo { padding: 2px 10px 10px; border-top: 1px solid var(--border); }
+    .sl-chyby { margin-top: 6px; }
+    .pravidlo { border: 1px dashed var(--border-strong); border-radius: 6px; padding: 4px 8px 8px; margin-top: 8px; }
+    .pravidlo-hlava { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .chipy { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .chip { padding: 1px 8px; border-radius: 12px; font-size: 0.72rem; font-family: var(--mono); background: var(--bg-input); }
+    .sl-akce { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; justify-content: flex-end; }
+
+    /* --- generování a výsledky --- */
+    .prubeh { margin-top: 10px; }
+    .prubeh[hidden] { display: none; }
+    .lista-prubehu { height: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .lista-prubehu > div { height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+    .prubeh-text { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; font-variant-numeric: tabular-nums; }
+    .souhrn { font-size: 0.84rem; color: var(--text); margin: 6px 0; line-height: 1.5; }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 8px; }
+    .zalozky button { font-family: var(--mono); font-size: 0.8rem; padding: 4px 10px; }
+    .zalozky button .pocet { color: var(--text-muted); font-family: var(--font); margin-left: 4px; }
+    .obal-tab { overflow: auto; max-height: 460px; border: 1px solid var(--border); border-radius: 6px; -webkit-overflow-scrolling: touch; }
+    table { border-collapse: collapse; font-size: 0.78rem; width: 100%; }
+    th, td { padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; vertical-align: top; }
+    thead th { position: sticky; top: 0; background: var(--bg-elevated); color: var(--text-muted); font-weight: 600; z-index: 1; }
+    td.cislo, th.cislo { text-align: right; font-variant-numeric: tabular-nums; }
+    td { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+    td.null { color: var(--text-faint); font-style: italic; }
+    td.ix { color: var(--text-faint); text-align: right; }
+    th .stitek { margin-left: 4px; font-weight: 400; }
+    .strankovani { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 0.8rem; color: var(--text-muted); }
+    .strankovani input { width: 90px; padding: 4px 6px; }
+    .stat td, .stat th { font-size: 0.76rem; }
+    .integrita { margin: 0; padding: 0; list-style: none; font-size: 0.8rem; line-height: 1.5; }
+    .integrita li { padding: 3px 0 3px 22px; position: relative; border-bottom: 1px solid var(--border); }
+    .integrita li::before { content: "✓"; position: absolute; left: 4px; color: var(--text-ok); font-weight: 700; }
+    .integrita li.spatne::before { content: "✕"; color: var(--text-chyba); }
+    .integrita .det { color: var(--text-muted); }
+    .rezim-dat { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+    .stary { border: 1px solid var(--warn); border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; color: var(--text); margin: 6px 0; }
+    .stary b { color: var(--text-mez); }
+    pre.ukazka { font-family: var(--mono); font-size: 0.74rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 8px; max-height: 260px; overflow: auto; white-space: pre; margin-top: 8px; color: var(--text); }
+    .help { font-size: 0.8rem; line-height: 1.55; color: var(--text); }
+    .help summary { cursor: pointer; font-weight: 600; }
+    .help table td, .help table th { white-space: normal; }
+    .help dt { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); margin-top: 6px; }
+    .help dd { margin: 0 0 0 12px; color: var(--text-muted); }
+    .pozn { color: var(--text-muted); font-size: 0.78rem; line-height: 1.55; max-width: 1400px; margin-top: 20px; }
+    .pozn h3 { margin-top: 10px; }
+    .pozn ul { margin: 4px 0 0 18px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 600px) {
+      body { padding: 14px 10px; }
+      .karta { padding: 10px; }
+      .tab-karta { padding: 8px; }
+      .tab-hlava { grid-template-columns: minmax(0, 1fr); }
+      .obal-tab { max-height: 380px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Generátor testovacích dat</h1>
+  <p class="podtitul">Navrhněte tabulky a sloupce, nastavte rozsahy, rozdělení, NULL, unikátnost a vazby – a vygenerujte realistická
+    <b>syntetická</b> data pro vývoj a testy. Stejný seed dá vždy stejná data. Generuje se ve Web Workeru po dávkách,
+    takže zvládne i stovky tisíc řádků bez zamrznutí stránky. Export do CSV, JSON, JSONL a SQL (SQLite, PostgreSQL).</p>
+  <div class="upozorneni" role="note">
+    <b>Všechna data jsou syntetická.</b> Jména vznikají náhodnou kombinací běžných českých jmen a příjmení (veřejná statistika četnosti),
+    ulice a obce jsou smyšlené (Vzorová, Testovice…), e-maily jsou jen na doménách <b>example.com/.org/.net</b> vyhrazených pro dokumentaci (RFC 2606)
+    a telefony jen z nepřidělených či fiktivních rozsahů. Data nepatří žádné skutečné osobě – a do generátoru nevkládejte skutečné osobní údaje.
+  </div>
+
+  <div class="rozlozeni">
+    <section class="sloupec" aria-label="Schéma">
+      <div class="karta">
+        <h2>Schéma <span class="napoveda" id="souhrnSchematu" style="margin:0"></span></h2>
+        <div class="tlacitka">
+          <label for="sablona" class="sr-only">Šablona</label>
+          <select id="sablona" style="width:auto; flex: 1 1 200px"></select>
+          <button id="nactiSablonu">Načíst šablonu</button>
+        </div>
+        <div class="tlacitka" style="margin-top:6px">
+          <button id="pridatTabulku">+ Tabulka</button>
+          <button id="exportSchematu" title="Uloží schéma jako JSON">Uložit schéma</button>
+          <button id="importSchematuBtn" title="Načte schéma z JSON">Načíst schéma…</button>
+          <input type="file" id="importSchematu" accept=".json,application/json" hidden>
+        </div>
+        <div class="chyby" id="chybySchematu" aria-live="polite"></div>
+        <div id="tabulky"></div>
+      </div>
+      <details class="karta help" id="napoveda">
+        <summary>Nápověda: vzorce, podmínky a vzory</summary>
+        <h3>Vzorce a podmínky</h3>
+        <p>Vzorec (typ „Vzorec / závislé pole“) i podmínka pravidla je výraz nad sloupci téže tabulky:
+          <code>zaokrouhli(mnozstvi * cena, 2)</code>, <code>stav == "zrušená"</code>, <code>vek &gt;= 18 ? "dospělý" : "dítě"</code>.
+          Operátory <code>+ − * / %</code>, <code>== != &lt; &lt;= &gt; &gt;=</code> (také <code>=</code> a <code>&lt;&gt;</code>), <code>&amp;&amp; || !</code>, <code>? :</code>.
+          Texty v uvozovkách, <code>+</code> s textem spojuje. Aritmetika s NULL dává NULL. Datumy jsou texty <code>RRRR-MM-DD</code> (s časem <code>RRRR-MM-DD HH:MM:SS</code>) a dají se porovnávat.
+          Náhodné funkce (<code>nahodne</code>, <code>vyber</code>, <code>sance</code>) jsou také řízené seedem.</p>
+        <p><b>Korelace s nadřazenou tabulkou:</b> <code>nadrazeny(zakaznik_id, "registrace")</code> vrátí hodnotu sloupce z řádku, na který ukazuje cizí klíč –
+          např. datum objednávky až po registraci: <code>datum_plus(nadrazeny(zakaznik_id, "registrace"), nahodne(0, 365))</code>.</p>
+        <dl id="seznamFunkci"></dl>
+        <h3>Vlastní vzory (maska)</h3>
+        <p><code>#</code> číslice, <code>?</code> velké písmeno A–Z, <code>*</code> písmeno nebo číslice, <code>[A-F0-9]</code> třída znaků (i s diakritikou),
+          <code>(EU|US|CZ)</code> volba, <code>{3}</code> nebo <code>{2,5}</code> opakování předchozího prvku, <code>\#</code> doslovný znak. Příklady:
+          <code>PRD-[A-Z]{3}-####</code>, <code>(CZ|SK)##-?{2}</code>, <code>INV/2025/#{5}</code>.</p>
+        <h3>Výčet s vahami</h3>
+        <p>Jedna hodnota na řádek, váha za svislítkem: <code>doručená | 55</code>. Bez váhy = 1. Jsou-li všechny hodnoty čísla, exportují se jako čísla; <code>\N</code> = NULL.</p>
+        <h3>Podmíněné generování</h3>
+        <p>Každý sloupec může mít pravidla „když podmínka, pak jiný generátor“ – vyhodnocují se shora, použije se první splněné, jinak výchozí nastavení sloupce.
+          Pořadí výpočtu sloupců se určí samo podle závislostí (cyklus se nahlásí).</p>
+      </details>
+    </section>
+
+    <section class="sloupec" aria-label="Generování a výsledky">
+      <div class="karta" id="kartaGenerovani">
+        <h2>Generování</h2>
+        <div class="mrizka">
+          <div class="cela">
+            <label for="seed">Seed (libovolný text – stejný seed = stejná data)</label>
+            <div class="tlacitka" style="flex-wrap:nowrap">
+              <input type="text" id="seed" class="mono" spellcheck="false" autocomplete="off">
+              <button id="nahodnySeed" class="ikona" title="Náhodný seed" aria-label="Náhodný seed">🎲</button>
+            </div>
+          </div>
+          <div>
+            <label for="davka">Řádků na dávku</label>
+            <select id="davka"><option value="1000">1 000</option><option value="5000" selected>5 000</option><option value="20000">20 000</option></select>
+          </div>
+          <div>
+            <span class="popisek">Odhad velikosti</span>
+            <div id="odhad" class="souhrn" style="margin:4px 0 0">–</div>
+          </div>
+        </div>
+        <div class="tlacitka" style="margin-top:10px">
+          <button id="generovat" class="hlavni">▶ Generovat</button>
+          <button id="zrusit" disabled>Zrušit</button>
+        </div>
+        <div class="prubeh" id="prubeh" hidden>
+          <div class="lista-prubehu" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="listaPrubehu"><div></div></div>
+          <div class="prubeh-text" id="prubehText" aria-live="polite"></div>
+        </div>
+        <div class="chyby" id="chybyGenerovani" aria-live="assertive"></div>
+      </div>
+
+      <div class="karta" id="kartaData">
+        <h2>Data <span class="rezim-dat" id="rezimDat"></span></h2>
+        <div id="stavDat" class="souhrn"></div>
+        <div class="zalozky" id="zalozky" role="tablist"></div>
+        <div class="obal-tab" id="obalNahledu"><table id="nahled"></table></div>
+        <div class="strankovani" id="strankovani"></div>
+        <div id="statistikyObal">
+          <h3>Statistiky sloupců</h3>
+          <div class="obal-tab" style="max-height:none"><table class="stat" id="statistiky"></table></div>
+        </div>
+        <div id="integritaObal">
+          <h3>Referenční integrita a klíče</h3>
+          <ul class="integrita" id="integrita"></ul>
+        </div>
+      </div>
+
+      <div class="karta" id="kartaExport">
+        <h2>Export</h2>
+        <div class="mrizka">
+          <div>
+            <label for="format">Formát</label>
+            <select id="format">
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+              <option value="jsonl">JSON Lines (JSONL)</option>
+              <option value="sqlite">SQL INSERT – SQLite</option>
+              <option value="postgresql">SQL INSERT – PostgreSQL</option>
+            </select>
+          </div>
+          <div>
+            <label for="exportTabulka">Tabulky</label>
+            <select id="exportTabulka"></select>
+          </div>
+        </div>
+        <div id="volbyExportu"></div>
+        <div class="tlacitka" style="margin-top:10px">
+          <button id="stahnout" class="hlavni" disabled>⬇ Stáhnout</button>
+          <button id="zrusitExport" hidden>Zrušit export</button>
+          <span class="napoveda" id="exportStav" style="margin:0" aria-live="polite"></span>
+        </div>
+        <pre class="ukazka" id="ukazkaExportu" hidden></pre>
+      </div>
+    </section>
+  </div>
+
+  <div class="pozn">
+    <h3>Odkud jsou hodnoty a proč jsou bezpečné</h3>
+    <ul>
+      <li><b>Jména:</b> 50 ženských a 50 mužských křestních jmen a 60 příjmení (mužský i ženský tvar) z veřejných statistik četnosti v ČR. Kombinace jsou náhodné – syntetické osoby.</li>
+      <li><b>Adresy:</b> ulice a obce jsou vymyšlené tak, aby byly na první pohled testovací. PSČ má jen správný formát (### ##, první číslice 1–7) a k obci neodpovídá.</li>
+      <li><b>E-maily:</b> výhradně <code>example.com</code>, <code>example.org</code>, <code>example.net</code> – domény vyhrazené RFC 2606, pošta na ně nikomu nedojde.</li>
+      <li><b>Telefony:</b> ČR – <code>+420 0xx xxx xxx</code> (číslo začínající nulou český číslovací plán nepřiděluje, nelze ho vytočit);
+        Spojené království – <code>+44 7700 900xxx</code> (rozsah vyhrazený Ofcomem pro film a televizi); USA – <code>+1 xxx 555 01xx</code> (rozsah 555-0100 až 0199 je fiktivní).</li>
+      <li><b>Text:</b> výplňová česká slova bez osobních údajů. <b>UUID:</b> verze 4 (náhodné) z deterministického generátoru – nejsou kryptograficky náhodná.</li>
+    </ul>
+    <h3>Reprodukovatelnost</h3>
+    <p>Generátor sfc32 se seedem z hashe cyrb128. Každý sloupec má vlastní podproud odvozený ze seedu, názvu tabulky a sloupce, takže úprava jednoho sloupce
+      nezmění hodnoty ostatních a přidání řádků zachová ty dosavadní. Výsledek nezávisí na velikosti dávky. Změní ho přejmenování sloupce či tabulky
+      a u unikátních sloupců i změna počtu NULL. Datumy se počítají v UTC bez časových pásem; generátor nikdy nepoužívá „dnešek“.</p>
+    <h3>Omezení</h3>
+    <ul>
+      <li>Nejvýše 1 000 000 řádků v tabulce a 3 000 000 celkem; data se drží v paměti Workeru (orientačně 100–300 B na buňku). Export se skládá po kouscích do Blobu.</li>
+      <li>Složené primární klíče, cykly cizích klíčů mezi tabulkami (kromě odkazu na sebe – vybírá se jen z dříve vytvořených řádků) a <code>nadrazeny()</code> přes odkaz na stejnou tabulku nejsou podporované.</li>
+      <li>Unikátnost hlídá generátor (a pro celá čísla, datumy, výčty a cizí klíče vybírá bez opakování); jinak zkouší nejvýše 1 000 pokusů na hodnotu a pak skončí srozumitelnou chybou.</li>
+      <li>SQL: řetězce se escapují zdvojením apostrofu, znak NUL se vypouští (PostgreSQL ho neumí uložit). Pro PostgreSQL skript zapíná <code>standard_conforming_strings</code>.
+        SQLite ukládá boolean jako 1/0 a datumy jako text ISO 8601. Typ sloupce se odvodí z dat; dá se přepsat polem „SQL typ“.</li>
+      <li>CSV podle RFC 4180 (CRLF, uvozovky jen kde je třeba). Volitelně středník, desetinná čárka a BOM pro český Excel a ochrana proti vzorcům (apostrof před textem začínajícím = + − @).</li>
+    </ul>
+  </div>
+
+  <script src="testovaci_data/ui.js"></script>
+</body>
+</html>

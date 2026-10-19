@@ -1,3 +1,4 @@
+/* @maplibre/maplibre-gl-leaflet – https://github.com/maplibre/maplibre-gl-leaflet – licence ISC, © MapLibre contributors */
 /* jshint esversion: 6, -W008, -W030, -W083 */
 // Generated from src/leaflet-maplibre-gl.mjs. Run `npm run build` to update.
 (function(global, factory) {

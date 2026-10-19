@@ -1165,6 +1165,166 @@
     return out;
   }
 
+  /* ---------- import jídelníčku z tabulky (export Kalorických tabulek a jiných aplikací: Excel/CSV) ----------
+     Tabulka se čte jako řádky buněk. Hledá se řádek záhlaví (energie + makroživiny), nad položkami řádky s datem
+     a s názvem jídla dne (Snídaně, Oběd…). Každá položka = název, množství a živiny za snědené množství. */
+  const IMPORT_SLOUPCE = [
+    ['nazev', /^(potravina|nazev|nazev potraviny|polozka|jidlo|potraviny|food|name|item)$/],
+    ['mnozstvi', /mnozstvi|hmotnost|porce|gramaz|amount|quantity|^g$|gramy/],
+    ['kcal', /kcal|kalorie|calories/],
+    ['kj', /\bkj\b/],
+    ['energie', /^energie|energy/],
+    ['bilkoviny', /bilkov|protein/],
+    ['sacharidy', /sachar|carb/],
+    ['cukry', /cukr|sugar/],
+    ['tuk', /^tuky?\b|tuky? ?\(|^fat|^tuk|celkove tuky/],
+    ['nasycene', /nasycen|saturat/],
+    ['vlaknina', /vlakn|fib/],
+    ['sul', /^sul|salt/],
+    ['sodik', /sodik|sodium/],
+    ['datum', /^datum|^date|^den$/],
+    ['chod', /^(chod|denni doba|jidlo dne|meal|cas jidla|typ jidla)$/],
+  ];
+  const JIDLA_TEXT = [
+    ['druha', /druha vecere|2\. vecere|pozdni vecere/],
+    ['svacina1', /dopoledni svacina|presnidavka|svacina 1|1\. svacina/],
+    ['svacina2', /odpoledni svacina|svacina 2|2\. svacina|^svacina/],
+    ['snidane', /^snidane|breakfast/],
+    ['obed', /^obed|lunch/],
+    ['vecere', /^vecere|dinner/],
+  ];
+  const SOUHRN_TEXT = /^(celkem|soucet|suma|total|cil|zbyva|prumer|denni souhrn|souhrn)\b/;
+  function textBunky(v) {
+    if (v === null || v === undefined) return '';
+    if (v instanceof Date) return datumKlic(v);
+    return String(v).replace(/\s+/g, ' ').trim();
+  }
+  function cisloBunky(v) {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    const t = textBunky(v).replace(/ /g, ' ');
+    const m = /^-?\d[\d ]*(?:[.,]\d+)?/.exec(t);
+    return m ? cislo(m[0].replace(/ /g, '')) : null;
+  }
+  function datumBunky(v) {
+    if (v instanceof Date && !isNaN(v)) return datumKlic(v);
+    const t = textBunky(v);
+    let m = /(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
+    if (m) { const k = m[1] + '-' + m[2].padStart(2, '0') + '-' + m[3].padStart(2, '0'); return zKlice(k) ? k : null; }
+    m = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec(t);
+    if (m) { const k = m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0'); return zKlice(k) ? k : null; }
+    return null;
+  }
+  function jidloZTextu(t) {
+    const n = norm(t).replace(/[^a-z0-9. ]/g, ' ').replace(/\s+/g, ' ').trim();
+    for (const [id, re] of JIDLA_TEXT) if (re.test(n)) return id;
+    return null;
+  }
+  // „150 g“, „1 ks (60 g)“, „250 ml“, „2 lžíce (30 g)“ → gramy (ml ≈ g), jinak null
+  function gramyZMnozstvi(v, vychoziJednotka) {
+    if (typeof v === 'number') return vychoziJednotka === 'g' && v > 0 ? v : null;
+    const t = norm(textBunky(v));
+    let m = /(\d+(?:[.,]\d+)?)\s*(g|ml|gramu|gr)\b/.exec(t.replace(/\(([^)]*)\)/g, ' $1 '));
+    if (m) return cislo(m[1]);
+    m = /(\d+(?:[.,]\d+)?)\s*(kg|l)\b/.exec(t);
+    if (m) return cislo(m[1]) * 1000;
+    if (/^\d+(?:[.,]\d+)?$/.test(t) && vychoziJednotka === 'g') return cislo(t);
+    return null;
+  }
+  function najdiZahlavi(radek) {
+    const map = {};
+    radek.forEach((v, i) => {
+      const t = norm(textBunky(v)).replace(/[\[\]]/g, '').trim();
+      if (!t || t.length > 40) return;
+      for (const [k, re] of IMPORT_SLOUPCE) if (map[k] === undefined && re.test(t)) {
+        map[k] = i;
+        if (k === 'energie' && /\bkj\b/.test(t)) { delete map.energie; map.kj = i; }
+        if (k === 'energie' && /kcal/.test(t)) { delete map.energie; map.kcal = i; }
+        break;
+      }
+    });
+    const energie = map.kcal !== undefined || map.kj !== undefined || map.energie !== undefined;
+    const makro = ['bilkoviny', 'sacharidy', 'tuk'].filter(k => map[k] !== undefined).length;
+    return energie && makro >= 2 ? map : null;
+  }
+  // radky: pole řádků (pole buněk). volby: { den (výchozí datum), jidlo (výchozí jídlo) }
+  function rozeberTabulkuJidel(radky, volby) {
+    volby = volby || {};
+    const vys = { polozky: [], dny: new Set(), mapovani: null, preskoceno: 0, energieKj: false };
+    let map = null, den = volby.den || null, jidlo = volby.jidlo || 'snidane', jednotkaG = true;
+    for (const radek of radky || []) {
+      if (!Array.isArray(radek)) continue;
+      const neprazdne = radek.map(textBunky).filter(Boolean);
+      if (!neprazdne.length) continue;
+      const z = najdiZahlavi(radek);
+      // samotné číslo v množství = gramy, pokud záhlaví neříká jinak (ks, porce)
+      if (z) { map = z; vys.mapovani = map; jednotkaG = map.mnozstvi === undefined || !/\b(ks|kus|porce|porc)\b/.test(norm(textBunky(radek[map.mnozstvi]))); continue; }
+      // datum (samostatný řádek nebo sloupec)
+      const dSloupec = map && map.datum !== undefined ? datumBunky(radek[map.datum]) : null;
+      const eSloupec = map ? [map.kcal, map.kj, map.energie].find(i => i !== undefined) : undefined;
+      const energieRadku = eSloupec !== undefined ? cisloBunky(radek[eSloupec]) : null;
+      if (dSloupec) den = dSloupec;
+      else if (energieRadku === null) { for (const v of radek) { const d = datumBunky(v); if (d) { den = d; break; } } }
+      // jídlo dne (samostatný řádek nebo sloupec)
+      const ch = map && map.chod !== undefined ? jidloZTextu(textBunky(radek[map.chod])) : null;
+      if (ch) jidlo = ch;
+      else if (energieRadku === null) { const j = jidloZTextu(neprazdne[0]); if (j) { jidlo = j; continue; } }
+      if (!map || energieRadku === null) continue;
+      let nazev = map.nazev !== undefined ? textBunky(radek[map.nazev]) : '';
+      if (!nazev) nazev = radek.map(textBunky).find(t => t && !/^-?\d+([.,]\d+)?$/.test(t) && !datumBunky(t) && !jidloZTextu(t)) || '';
+      const nn = norm(nazev);
+      if (!nazev || SOUHRN_TEXT.test(nn) || (!ch && jidloZTextu(nazev) && nn.length < 25)) { vys.preskoceno++; continue; }
+      const n = {};
+      for (const k of ['bilkoviny', 'sacharidy', 'cukry', 'tuk', 'nasycene', 'vlaknina', 'sul']) {
+        if (map[k] === undefined) continue;
+        const v = cisloBunky(radek[map[k]]);
+        if (v !== null && v >= 0 && v < 5000) n[k] = v;
+      }
+      if (n.sul === undefined && map.sodik !== undefined) { const v = cisloBunky(radek[map.sodik]); if (v !== null && v >= 0) n.sul = v > 50 ? v * 2.5 / 1000 : v * 2.5; }   // sodík v mg nebo g
+      let e = null;
+      if (map.kcal !== undefined) e = cisloBunky(radek[map.kcal]);
+      if (e === null && map.kj !== undefined) { const kj = cisloBunky(radek[map.kj]); if (kj !== null) { e = kj / 4.184; vys.energieKj = true; } }
+      if (e === null && map.energie !== undefined) {
+        e = cisloBunky(radek[map.energie]);
+        // jednotka neuvedená: kJ, když hodnota sedí s makroživinami ×4,184 lépe než v kcal
+        const m = energieZMaker({ tuk: n.tuk || 0, sacharidy: n.sacharidy || 0, bilkoviny: n.bilkoviny || 0 });
+        if (e !== null && m && Math.abs(e / 4.184 - m) < Math.abs(e - m)) { e = e / 4.184; vys.energieKj = true; }
+      }
+      if (e === null || e < 0 || e > 20000) { vys.preskoceno++; continue; }
+      n.kcal = zaokrouhli(e, 1);
+      const mn = map.mnozstvi !== undefined ? radek[map.mnozstvi] : null;
+      const g = gramyZMnozstvi(mn, jednotkaG ? 'g' : null);
+      const k = den || datumKlic(new Date());
+      vys.dny.add(k);
+      vys.polozky.push({ den: k, jidlo, nazev: nazev.slice(0, 120), mnozstvi: mn === null || mn === undefined ? '' : textBunky(mn).slice(0, 40), g: g > 0 && g <= 5000 ? g : null, n });
+    }
+    vys.dny = [...vys.dny].sort();
+    return vys;
+  }
+  // zápis importovaných položek do deníku; stejná položka ve stejném dni a jídle se podruhé nepřidá
+  function importujPolozky(stav, polozky, volby) {
+    volby = volby || {};
+    let pridano = 0, duplicit = 0;
+    const jidla = (stav.nastaveni.jidla || JIDLA_VYCHOZI).map(j => j.id);
+    for (const x of polozky) {
+      const jid = jidla.includes(x.jidlo) ? x.jidlo : jidla[0];
+      const nazev = x.nazev + (x.mnozstvi && !x.g ? ' (' + x.mnozstvi + ')' : '');
+      // bez gramů: „porce“ – hodnoty rozložit na násobky 100 g, aby na 100 g nepřesáhly rozumné meze
+      const g = x.g || 100 * Math.max(1, Math.ceil(Math.max((x.n.kcal || 0) / 900, ['tuk', 'sacharidy', 'bilkoviny', 'cukry', 'vlaknina', 'nasycene'].reduce((a, k) => a + (x.n[k] || 0), 0) / 95)));
+      const n100 = {};
+      for (const k of Object.keys(x.n)) if (ZIV[k] && Number.isFinite(x.n[k])) n100[k] = zaokrouhli(x.n[k] * 100 / g, 3);
+      const f = { id: 'q' + hash('imp|' + nazev + JSON.stringify(n100)), typ: 'q', nazev, n: n100 };
+      if (volby.zdroj) f.znacka = volby.zdroj;
+      const d = stav.dny[x.den];
+      const ks = klicSnimku(f);
+      if (d && d.z.some(z => z.p === ks && z.j === jid && Math.abs(z.g - g) < 0.01)) { duplicit++; continue; }
+      const z = pridejZaznam(stav, x.den, jid, f, g);
+      if (!x.g) z.rychly = true;
+      z.imp = 1;
+      pridano++;
+    }
+    return { pridano, duplicit };
+  }
+
   /* ---------- stav deníku ---------- */
   function novyStav() {
     return {
@@ -2197,17 +2357,18 @@
     }
     return m;
   }
-  function overN(n) {
+  function overN(n, volne) {
     const v = {};
     if (!n || typeof n !== 'object') return v;
-    // na 100 g: energie nejvýš 1000 kcal (čistý tuk 900), gramové živiny nejvýš 100 g; tablety mají mikroživin hodně, proto jen hrubá mez
-    const max = k => (k === 'kcal' ? 1000 : ZIV[k].j === 'g' ? 100 : 1e7);
+    // na 100 g: energie nejvýš 1000 kcal (čistý tuk 900), gramové živiny nejvýš 100 g; tablety mají mikroživin hodně, proto jen hrubá mez.
+    // Rychlé záznamy (typ q) nesou hodnoty za celou porci – u nich jen hrubá mez.
+    const max = k => (volne ? 1e6 : k === 'kcal' ? 1000 : ZIV[k].j === 'g' ? 100 : 1e7);
     for (const k of Object.keys(n)) if (ZIV[k] && Number.isFinite(n[k]) && n[k] >= 0 && n[k] <= max(k)) v[k] = n[k];
     return v;
   }
   function overSnimek(f) {
     if (!f || typeof f !== 'object' || typeof f.nazev !== 'string' || !f.nazev) return null;
-    const s = { ...f, nazev: f.nazev.slice(0, 160), n: overN(f.n) };
+    const s = { ...f, nazev: f.nazev.slice(0, 160), n: overN(f.n, f.typ === 'q') };
     if (s.druh !== undefined && !DRUHY_NAPOJU[s.druh]) delete s.druh;
     if (s.porce !== undefined) s.porce = Array.isArray(s.porce) ? s.porce.filter(p => p && typeof p.n === 'string' && cislo(p.g) > 0).map(p => ({ n: p.n, g: cislo(p.g) })) : [];
     return s;
@@ -2373,7 +2534,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-17b', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-19a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
@@ -2386,6 +2547,7 @@
     prevodVahy, prepocetVahy, nastavPrevody, PREVODY_VAHY, namerenaVarianta, PAROVANI_ODHADU, rozeberEtiketu, pridejDoPlanu, smazZPlanu, rozvinPolozkuPlanu, souhrnPlanuDne, zapisPlanDoDeniku, nakupniSeznam, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
     overPotravinu, ulozVlastni, spocitejRecept, ulozRecept, receptJakoPotravina,
     exportJson, importJson, normalizujStav, overPohyb, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
+    rozeberTabulkuJidel, importujPolozky,
     UCINKY, UCINKY_ZDROJ, vyskytZiviny, nejlepsiZdroje,
     FORMAT_SDILENI, balikSdileni, zBalikuSdileni, ulozSdilene,
     INTENZITA, intenzitaMet, pripravPohyby, rychlostPohybu, popisRychlosti, tempoMinKm, pohybPodleRychlosti, hmotnostKDni, energiePohybu, vypoctiPohyb, nedavnePohyby, tydenPohybu, dvojiPohyb, hledejPohyb,

@@ -258,7 +258,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         <input type="text" id="qrLabel" value="Naskenujte pro navigaci">
         <label>Velikost <span class="rangeval" id="qrSzVal">90px</span></label>
         <input type="range" id="qrSize" min="50" max="160" value="90">
-        <div class="hint">QR kód se generuje online; bez připojení nebude vidět.</div>
+        <div class="hint">QR kód se vytváří přímo v prohlížeči (knihovna <a href="https://github.com/davidshimjs/qrcodejs" target="_blank" rel="noopener">QRCode.js</a>, MIT) – nic se neodesílá a funguje i offline.</div>
       </div>
     </div>
 
@@ -516,6 +516,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   </div>
 </div>
 
+<script src="lib/qrcode.min.js"></script>
 <script src="lib/html2canvas.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -816,15 +817,31 @@ function renderProgram(accent){
 $('addProgram').onclick=()=>{programData.push({time:'',event:''});buildProgramRows();render();save();};
 function escAttr(s){return (s||'').replace(/"/g,'&quot;');}
 
-/* ---------- QR code (online) ---------- */
+/* ---------- QR code (generuje se lokálně přes lib/qrcode.min.js) ---------- */
+let qrCache={text:null,src:''};
+function qrObrazek(text){
+  if(qrCache.text===text)return qrCache.src;
+  let src='';
+  try{
+    const box=document.createElement('div');
+    new QRCode(box,{text,width:400,height:400,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    const c=box.querySelector('canvas');
+    if(c)src=c.toDataURL('image/png');
+  }catch(e){src='';} // příliš dlouhý text se do QR nevejde
+  qrCache={text,src};
+  return src;
+}
 function renderQR(accent){
   const el=$('pQr');
   if(!$('qrOn').checked||!$('qrData').value.trim()){el.style.display='none';return;}
   el.style.display='flex';
   const sz=$('qrSize').value;
-  const data=encodeURIComponent($('qrData').value.trim());
-  el.innerHTML=`<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${data}" width="${sz}" height="${sz}" alt="QR" crossorigin="anonymous">
-    ${$('qrLabel').value?`<span class="qrlabel" style="color:${accent}">${escapeHtml($('qrLabel').value)}</span>`:''}`;
+  let text=$('qrData').value.trim();
+  // knihovna by před text s diakritikou vložila BOM, který mate čtečky odkazů → v adresách %-kódovat
+  if(/^[a-z][a-z0-9+.-]*:/i.test(text))text=text.replace(/[^\x00-\x7F]+/g,encodeURIComponent);
+  const src=qrObrazek(text);
+  el.innerHTML=(src?`<img src="${src}" width="${sz}" height="${sz}" alt="QR">`:`<span class="qrlabel">Text je pro QR kód příliš dlouhý</span>`)+
+    `${$('qrLabel').value?`<span class="qrlabel" style="color:${accent}">${escapeHtml($('qrLabel').value)}</span>`:''}`;
 }
 
 function composeDate(){

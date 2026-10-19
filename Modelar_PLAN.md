@@ -943,3 +943,77 @@ server i file://, DPI 1/2, šířky 420–1920), jen hlásili; opravy jsem děla
   chyba v panelu a vypnuté tlačítko, zápis do historie skicáře (Ctrl+Z).
 - Celé těleso dál přes Úpravy → Odsadit stěny (OCCT); v paletě se najde i slovem „offset“. Nápověda Postupy doplněná.
 - Testy: sekce v `_test/modelar_skica.js` (53), prohlížeč `_test/modelar_ui_offset.py` (30, server + file://).
+
+## Náhledy úprav – „duchové“ (19. 10. 2026)
+- `S.telesa.ukazDuchy(klic, uzly, styl)` v `telesa.js`: tělesa mimo dokument kreslená čárkovanými hranami
+  (`LineDashedMaterial`, délky čar ve světových mm, viditelné výrazně + zakryté slabě přes `depthTest: false`)
+  a výplní s obrysem podle natočení plochy (vlastní shader – oblé tvary po offsetu nemají ostré hrany).
+  Styl `nahled` (výsledek před potvrzením, barva akcentu) a `puvodni` (tvar před úpravou, jen obrys).
+  Geometrie přes počítání odkazů jako tělesa; dokud worker počítá, duch je skrytý (náhradní tvar by lhal).
+- **Offset tělesa** má místo dotazu panel `#oknoOdsazeni`: hodnota (výpočty v poli), rychlé volby, živý náhled
+  (přesné jádro na pozadí, starší výsledky zahozené, chyba v panelu), Enter / Použít = jeden krok historie.
+- **Otočit kolem bodu**: duch otočených těles podle úhlu, osy a bodu.
+- **Rozpracovaná úprava** (`M.app.uprava` – tažení, úchyty, zarovnání, zrcadlení): původní tvar změněných těles
+  čárkovaně, po dokončení / zrušení zmizí.
+- Test `_test/modelar_ui_nahledy.py` (44), `modelar_ui_revize4.py` přes nový panel.
+
+## Přání 19. 10. 2026 (2): vazby, proměnné, skica na ploše, tažení, sestavy, knihovna, podpěry, PNG, zjednodušení
+
+Postup: tři výpočetní jádra paralelně (agenti, jen nové soubory + node testy), UI a zbytek já.
+- **Proměnné projektu** (`jadro/promenne.js`, `ui/promenne.js`, Dílna → ƒx): `dok.promenne [{jmeno, vyraz, popis}]`,
+  `u.vzorce {klic: výraz}` (klíče `rozmer.i`, `poloha.0/1`, `spodek`, `rotace.i`, `param.k`, `odv.k`), skupina může mít
+  vlastní `promenne` (parametrický díl). `M.prectiCislo(text, promenne)` umí jména, `pi`, sqrt/abs/round/floor/ceil/min/max/
+  sin/cos/tan (°; argumenty `;` nebo `, `). `M.aplikujVzorce(dok)` přepočítá pole i kóty skic; přejmenování/odebrání
+  opraví výrazy. Inspektor: výraz s proměnnou = vzorec (modré pole, jeden krok historie přes `M.sloucitDalsi`), číslo nebo
+  šipka vzorec zruší; „Parametry dílu“ u skupiny s proměnnými.
+- **Vazby a kóty ve skice** (`jadro/vazby.js` – LM řešič s krokem nejmenší normy, volnost z hodnosti; nástroj ⊾ K v
+  `ui/skica.js`): tvary skici mají stálá `id` (`M.normalizujParamSkici`), `param.vazby`. Klávesy H V P K E C F D, kóta
+  smí být výraz s proměnnou, sporná vazba se nepřidá, tah bodu/tvaru řeší vazby (`tah` z tvarů na začátku tahu).
+- **Skica na ploše / kapsa** (`M.skicaNaPlose` v jadro/upravy.js, režimy `skicaNaPlose`/`kapsaNaPlose`): osy skici
+  u, v, n (pohled zvenku), počátek = klik přichycený na mřížku (ne roh trojúhelníku – dřív čtvrtinová kapsa), obrys
+  plochy jako čárkované vodítko, přidat (volitelně spojit) nebo vyříznout (hloubka / skrz) a seskupit.
+- **Tažení po dráze** (`jadro/tazeni.js`, režim skici `tazeni`: `draha` křivka/šroubovice, `drahaBody`, `uzavrena`,
+  `polomerS`, `stoupaniS`, `otacekS`, `levotoc`; rámce s minimální rotací, mitre v lomech; `M.tazeniZeSkic`, okno
+  `ui/tazeni.js`). Inspektor filtruje parametry i podle `d.draha`.
+- **Pohyblivá sestava** (`jadro/sestava.js`, `ui/sestava.js`): `dok.klouby` (otočení/posuv, meze, hodnota = současná
+  poloha dílů), vnořené klouby jedou s rodičem, srážky = skupina průnik dvojice ve workeru (`M.sitSkupiny`), projetí
+  rozsahu, přehrávání jako dočasná úprava.
+- **Knihovna dílů**: `M.tvarZUzlu(uzly, nazev, dok)` – vzorce s proměnnými projektu → jedna skupina s proměnnými;
+  náhled `S.vytvorNahled(w, h, ids)`; soubor knihovny = .modelar (každý díl jedna skupina, `M.dokZKnihovny`).
+- **Podpěry** (`M.podperySite` v jadro/tisk.js: sloupy pod převisy na plochu mířící nahoru nebo desku, dělení velkých
+  trojúhelníků), tlačítko ▥ v Kontrole tisku; převisy stupňovaně (žlutě 10° před mezí). Pozn.: živé převisy
+  a nejlepší orientace existovaly už dřív.
+- **Rychlé kóty** (`M.vzdalenostiKSousedum` v jadro/dilna.js, `ui/rychleKoty.js`): při posunu myší mezery k sousedům
+  v ±X/±Y (soused musí překrývat druhou osu i výšku), jinak k okraji desky. Past: třída `tah-posun` je na plátně.
+- **Obrázek PNG** (`S.snimek(w, h, volby)` ve scena.js, `ui/obrazek.js`): průhledné pozadí, 2× vyhlazení, bez desky.
+- **Zjednodušení sítě** (`jadro/zjednoduseni.js` QEM s link condition, worker typ `zjednodus` s průběhem,
+  `ui/zjednoduseni.js`, nabídka po importu nad 500 tis. trojúhelníků). 1M → 100k za ~2,6 s v node.
+- Testy: node `modelar_promenne.js` (34), `modelar_vazby.js` (72), `modelar_tazeni.js` (63), `modelar_zjednoduseni.js` (39),
+  `modelar_prani5.js` (39); prohlížeč `modelar_ui_prani5.py [dpi] [--jen-server]` (118 = 59 server + 59 file://).
+  Past testů: headless české rozložení kláves – „/“ do dialogu zapisovat přes value; po kótě 50 mm obdélník vyjede
+  z pohledu skicáře (před klikem Přizpůsobit).
+
+## Ikony rozhraní (19. 10. 2026)
+Sada od uživatele v `obsah/modelar/assets/icons-cad/` (84 ikon, PNG 256 px, archy). Na web jen zmenšené
+`assets/icons-cad/ui/*.webp` (64 px, celkem ~166 kB, v offline sadě MODELAR); zdroje (png/, webp/ 256 px, source-sheets/,
+icon-sheet-source.png) jsou v `.gitignore`. `ui/ikony.js`: `M.IKONY` příkaz → ikona + seznam dalších prvků (nabídky,
+pohledy, tlačítka panelů); `M.pouzijIkony(koren)` nahradí úvodní emoji/symbol tlačítka obrázkem (původní znak zůstává
+v HTML jako záloha), volá se při startu a po každé přestavbě inspektoru; paleta Ctrl+K ukazuje ikony příkazů.
+Přepínač projekce mění jen text za ikonou. Nové tlačítko s příkazem dostane ikonu přidáním do `M.IKONY`.
+
+## Připomínky 19. 10. 2026 (kóty posunu, náhled měření, stupnice otáčení více těles)
+- **Kóty posunu** místo mezer k sousedům: vyber.js publikuje `M.tahPosunu {p0, u, v, du, dv}` (p0 = střed spodku obálky
+  před tahem), `ui/rychleKoty.js` kreslí kótu X (U) a Y (V) od původní polohy (křížek) s posunem se znaménkem,
+  u šikmého posunu i přímou vzdálenost; popisek u kurzoru jen při vypnutých kótách (`M.kotyPosunuZapnute`).
+  `M.vzdalenostiKSousedum` zůstává v jádře (testy), UI ho nepoužívá.
+- **Náhled bodu při měření**: pointermove na plátně v režimu `mereni` (1× za snímek) → `bodKliku` → `mer.nahled`;
+  značka (zelená = přichycený vrchol / střed hrany / referenční bod), popis druhu, guma s živou délkou / úhlem.
+- **Úhloměr u více těles**: bez absolutního úhlu (`tah.zakladUhel == null`) má stupnice nulu v místě uchopení
+  (`tah.a0`) a čte se relativně (+45°…), stejně jako popisek; dřív byla nula na ose a výseč od uchopení.
+- Test `modelar_ui_prani5.py` 140. Pasti WebDriveru: po sérii akcí myši občas nedorazí pointerDown / dotyková sekvence
+  (do dokumentu nepřijde vůbec) – pořadí kroků v testu nebo jeden opakovaný pokus; ověřit záznamem událostí.
+- Úprava (19. 10.): úhlopříčná vzdálenost pryč (uživatel ji nechce); kóty posunu oranžová X / fialová Y, čárkovaně,
+  plný barevný štítek – odlišné od kót velikosti (červená/zelená/modrá).
+- Úprava 2 (19. 10.): kóty posunu v barvách os (obrys štítku i čáry jako kóty velikosti), štítek se světlou výplní,
+  čárkovaně; štítky se rozmístí bez překryvu (`rozmistiStitky`: kolmo od kóty, překážky = druhý štítek a křížek).
+  Past testu: tah tělesa začne až po 4 px – při malém posunu nejdřív odjet stranou.

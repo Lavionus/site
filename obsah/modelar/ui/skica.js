@@ -18,7 +18,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const zaokr = x => Math.round(x * 1e4) / 1e4;
   const NASTROJE = [['vyber', '↖', 'Výběr a posun (V)', 'v'], ['obdelnik', '▭', 'Obdélník (R)', 'r'], ['kruh', '◯', 'Kruh (C)', 'c'],
-    ['nuhelnik', '⬡', 'N-úhelník (N)', 'n'], ['cesta', '✎', 'Čára a oblouky (L)', 'l'], ['text', 'T', 'Text (T)', 't']];
+    ['nuhelnik', '⬡', 'N-úhelník (N)', 'n'], ['cesta', '✎', 'Čára a oblouky (L)', 'l'], ['text', 'T', 'Text (T)', 't'],
+    ['vazby', '⊾', 'Vazby a kóty (K): klikej na body, úsečky a kruhy, pak zvol vazbu', 'k']];
 
   /** Obrysy textu z písma opentype.js (mm, účaří y = 0, y nahoru). */
   M.konturyTextu = function (font, text, velikost) {
@@ -69,6 +70,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       odsVzd: 2, odsSpoj: 'kulaty', odsVysledek: 'obrys', odsOtevreno: false, odsPamet: null,
       pohled: { s: 4, ox: 0, oy: 0 }, tah: null, cesta: null, kurzor: null, prichyceno: null,
       historie: [], index: -1,
+      ent: [], vazbaVyber: null, reseni: null, naPlose: null, reference: null,
     };
     M.skicar = st;
 
@@ -104,6 +106,118 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return [zaokr(Math.round(x / k) * k), zaokr(Math.round(y / k) * k)];
     }
 
+    // ------------------------------------------------------------ vazby a kóty (jadro/vazby.js)
+    /** Proměnné projektu pro kóty s výrazem (u skici ve skupině i proměnné skupiny). */
+    const promenne = () => (st.uzelId && M.rozsahUzlu(M.app.dok, st.uzelId)) || M.hodnotyPromennych(M.app.dok);
+    const maVazby = () => !!(st.param.vazby && st.param.vazby.length);
+    /** Vyřeší vazby (volitelně s tahem bodu z výchozích tvarů tvary0); vrací výsledek řešiče nebo null bez vazeb. */
+    function vyres(tah = null, tvary0 = null) {
+      if (!maVazby() || !M.resVazbySkici) { st.reseni = null; return null; }
+      const r = M.resVazbySkici(tvary0 || st.param.tvary, st.param.vazby, { promenne: promenne(), tah });
+      if (r && r.tvary) st.param.tvary = r.tvary;
+      st.reseni = r;
+      return r;
+    }
+    /** Odkaz na bod skici pro tah (vrchol cesty, jinak střed tvaru). */
+    const refTahu = (i, bod) => { const t = st.param.tvary[i]; return t.typ === 'cesta' ? { t: t.id, b: bod >= 0 ? bod : 0 } : { t: t.id, b: 's' }; };
+    const stejnyRef = (a, b) => a.t === b.t && a.b === b.b && a.u === b.u && a.k === b.k;
+    const druhRef = r => r.b !== undefined ? 'bod' : r.u !== undefined ? 'usecka' : 'kruznice';
+
+    /** Entita skici pod bodem (x, y): nejdřív body (8 px), pak úsečky a kružnice (6 px). */
+    function entitaPod(x, y) {
+      const tb = 8 / st.pohled.s, tu = 6 / st.pohled.s;
+      let nej = null, d0 = tb;
+      st.param.tvary.forEach(t => {
+        const body = t.typ === 'cesta' ? t.body.map((b, j) => j) : t.typ === 'obdelnik' ? ['s', 'r0', 'r1', 'r2', 'r3'] : ['s'];
+        if (t.typ === 'nuhelnik') for (let k = 0; k < t.n; k++) body.push('v' + k);
+        for (const b of body) {
+          const p = M.bodSkici(st.param.tvary, { t: t.id, b });
+          if (!p) continue;
+          const d = Math.hypot(p[0] - x, p[1] - y);
+          if (d < d0) { d0 = d; nej = { t: t.id, b }; }
+        }
+      });
+      if (nej) return nej;
+      d0 = tu;
+      st.param.tvary.forEach(t => {
+        const n = t.typ === 'cesta' ? t.body.length : t.typ === 'obdelnik' ? 4 : t.typ === 'nuhelnik' ? t.n : 0;
+        for (let k = 0; k < n; k++) {
+          if (t.typ === 'cesta' && Math.abs(t.body[k].b || 0) > 1e-9) continue;       // oblouk není úsečka
+          const u = M.usekSkici(st.param.tvary, { t: t.id, u: k });
+          if (!u) continue;
+          const [a, b] = u, dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy;
+          const f = l ? M.omez(((x - a[0]) * dx + (y - a[1]) * dy) / l, 0, 1) : 0;
+          const d = Math.hypot(a[0] + dx * f - x, a[1] + dy * f - y);
+          if (d < d0) { d0 = d; nej = { t: t.id, u: k }; }
+        }
+        if (t.typ === 'kruh' || t.typ === 'nuhelnik') {
+          const c = M.kruzniceSkici(st.param.tvary, { t: t.id, k: 1 });
+          if (c) { const d = Math.abs(Math.hypot(x - c.x, y - c.y) - c.r); if (d < d0) { d0 = d; nej = { t: t.id, k: 1 }; } }
+        }
+      });
+      return nej;
+    }
+
+    /** Přidá vazbu typu typ na vybrané entity; kóta se zeptá na hodnotu (smí být výraz s proměnnými). */
+    async function pridejVazbu(typ, hodnotaText = null) {
+      const v = M.vytvorVazbu(st.param.tvary, typ, st.ent);
+      if (!v) { stav.textContent = 'Tahle vazba k vybraným prvkům nepatří.'; return false; }
+      const T = M.TYPY_VAZEB[typ];
+      if (T.hodnota) {
+        const text = hodnotaText != null ? hodnotaText
+          : await Dialog.zeptej(`${T.popis} (${T.jednotka}) – číslo nebo výraz s proměnnými projektu, třeba D/2:`, M.mm(v.hodnota, 3).replace(',', ','));
+        if (text === null) return false;
+        const jmena = M.promenneVeVyrazu(text), h = M.prectiCislo(text, promenne());
+        if (!isFinite(h)) { Dialog.chyba(jmena.length ? `Neznámá proměnná: ${jmena.join(', ')}.` : `„${text}“ není číslo.`); return false; }
+        v.hodnota = h;
+        if (jmena.length) v.vyraz = text.trim();
+      }
+      const zaloha = JSON.stringify(st.param);
+      st.param.vazby = (st.param.vazby || []).concat([v]);
+      st.param = M.normalizujParamSkici(st.param);
+      const r = vyres();
+      if (r && !r.ok) {
+        st.param = JSON.parse(zaloha);
+        vyres();
+        stav.textContent = `⚠ ${T.popis}: vazba je ve sporu s ostatními (nebo nejde splnit) – nepřidána.`;
+        vykresliPanel(); vykresli();
+        return false;
+      }
+      st.ent = [];
+      zmena();
+      stav.textContent = `${T.ikona} ${T.popis} přidáno. ${textUrcenosti()}`;
+      return true;
+    }
+    async function upravKotu(id) {
+      const v = (st.param.vazby || []).find(x => x.id === id);
+      if (!v || !M.TYPY_VAZEB[v.typ].hodnota) return;
+      const T = M.TYPY_VAZEB[v.typ];
+      const text = await Dialog.zeptej(`${T.popis} (${T.jednotka}) – číslo nebo výraz s proměnnými:`, v.vyraz || M.mm(M.hodnotaVazby(v, promenne()), 3));
+      if (text === null) return;
+      const jmena = M.promenneVeVyrazu(text), h = M.prectiCislo(text, promenne());
+      if (!isFinite(h)) { Dialog.chyba(jmena.length ? `Neznámá proměnná: ${jmena.join(', ')}.` : `„${text}“ není číslo.`); return; }
+      const zaloha = JSON.stringify(st.param);
+      st.param.vazby = st.param.vazby.map(x => x.id !== id ? x : Object.assign({}, x, { hodnota: h }, jmena.length ? { vyraz: text.trim() } : { vyraz: undefined }));
+      st.param.vazby.forEach(x => { if (x.vyraz === undefined) delete x.vyraz; });
+      const r = vyres();
+      if (r && !r.ok) { st.param = JSON.parse(zaloha); vyres(); Dialog.chyba('Tuhle hodnotu ostatní vazby nedovolí.'); vykresliPanel(); vykresli(); return; }
+      zmena();
+    }
+    function smazVazbu(id) {
+      st.param.vazby = (st.param.vazby || []).filter(v => v.id !== id);
+      if (!st.param.vazby.length) delete st.param.vazby;
+      st.vazbaVyber = null;
+      vyres();
+      zmena();
+    }
+    function textUrcenosti() {
+      if (!maVazby()) return '';
+      const r = st.reseni || vyres();
+      if (!r) return '';
+      if (!r.ok) return '⚠ Některé vazby nejdou splnit.';
+      return r.volnost === 0 ? '✓ Skica je plně určená.' : `Zbývá ${M.pocet(r.volnost, 'stupeň', 'stupně', 'stupňů')} volnosti.`;
+    }
+
     // ------------------------------------------------------------ historie editoru
     /** Záznam historie: stav po změně, výběr po ní a výběr před ní (Zpět ho obnoví). */
     function zapis(vyberPred = st.vyber) {
@@ -123,7 +237,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       st.bod = -1;
       vykresliPanel(); vykresli();
     }
-    const zmena = (vyberPred) => { zapis(vyberPred); vykresliPanel(); vykresli(); };
+    const zmena = (vyberPred) => {
+      // nové tvary dostanou id hned (vazby na ně odkazují); vazby na smazané tvary zmizí
+      try { st.param = M.normalizujParamSkici(st.param); } catch (e) { /* příliš mnoho bodů – nechat */ }
+      zapis(vyberPred); vykresliPanel(); vykresli();
+    };
 
     // ------------------------------------------------------------ kreslení
     function el(n, a, rodic) {
@@ -160,6 +278,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       el('path', { d: `M0,${OY}H${W}`, class: 'osa-x' }, svg);
       el('path', { d: `M${OX},0V${H}`, class: 'osa-y' + (st.param.rezim === 'rotace' ? ' rotacni' : '') }, svg);
       if (st.param.rezim === 'rotace') el('text', { x: OX + 6, y: 16, class: 'popis-osy' }, svg).textContent = 'osa rotace';
+      // obrys plochy tělesa, na které skica leží (jen vodítko)
+      if (st.reference) el('path', { d: dKontur(st.reference), class: 'reference', 'fill-rule': 'evenodd' }, svg);
       // tvary: nejdřív plné, pak otvory
       const poradi = st.param.tvary.map((t, i) => i).sort((a, b) => (st.param.tvary[a].otvor ? 1 : 0) - (st.param.tvary[b].otvor ? 1 : 0));
       for (const i of poradi) {
@@ -185,6 +305,73 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const ods = st.odsOtevreno && !st.tah ? nahledOdsazeni() : null;
       if (ods) el('path', { d: dKontur(ods.kontury), class: 'odsazeni', 'fill-rule': 'nonzero' }, svg);
       if (st.prichyceno) { const [X, Y] = naObr(...st.prichyceno); el('circle', { cx: X, cy: Y, r: 7, class: 'prichyceni' }, svg); }
+      kresliVazby();
+    }
+
+    /** Vazby (značky) a kóty (čísla s kótovací čarou); v nástroji Vazby i vybírací body a vybrané entity. */
+    function kresliVazby() {
+      const tv = st.param.tvary, prom = promenne(), spor = new Set(st.reseni && !st.reseni.ok ? st.reseni.konflikt || [] : []);
+      const g = el('g', { class: 'vazby' }, svg);
+      const kotva = r => {
+        const d = druhRef(r);
+        if (d === 'bod') return M.bodSkici(tv, r);
+        if (d === 'usecka') { const u = M.usekSkici(tv, r); return u && [(u[0][0] + u[1][0]) / 2, (u[0][1] + u[1][1]) / 2]; }
+        const c = M.kruzniceSkici(tv, r); return c && [c.x + c.r * 0.7071, c.y + c.r * 0.7071];
+      };
+      const pocetNaMiste = new Map();
+      for (const v of st.param.vazby || []) {
+        const T = M.TYPY_VAZEB[v.typ];
+        if (!T) continue;
+        const tridy = 'vazba' + (spor.has(v.id) ? ' spor' : '') + (st.vazbaVyber === v.id ? ' vybrana' : '') + (v.ref ? ' referencni' : '');
+        if (T.hodnota) {
+          // kóta: čára mezi body (u úsečky rovnoběžně odsazená), text uprostřed
+          let a = null, b = null;
+          if (v.typ === 'prumer') { const c = M.kruzniceSkici(tv, v.a); if (c) { a = [c.x - c.r, c.y]; b = [c.x + c.r, c.y]; } }
+          else if (v.typ === 'uhel') { const k = kotva(v.a), k2 = kotva(v.b); if (k && k2) { a = k; b = k2; } }
+          else if (druhRef(v.a) === 'usecka') { const u = M.usekSkici(tv, v.a); if (u) [a, b] = u; }
+          else { a = M.bodSkici(tv, v.a); b = v.b && M.bodSkici(tv, v.b); }
+          if (!a || !b) continue;
+          let [A, B] = [naObr(...a), naObr(...b)];
+          if (v.typ === 'vzdalX') B = [B[0], A[1]];
+          if (v.typ === 'vzdalY') B = [A[0], B[1]];
+          const dx = B[0] - A[0], dy = B[1] - A[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l * 16, ny = dx / l * 16;
+          const odsadit = v.typ === 'delka' || v.typ === 'vzdalX' || v.typ === 'vzdalY';
+          const A2 = odsadit ? [A[0] + nx, A[1] + ny] : A, B2 = odsadit ? [B[0] + nx, B[1] + ny] : B;
+          if (v.typ !== 'uhel') {
+            el('path', { d: `M${A2[0].toFixed(1)},${A2[1].toFixed(1)}L${B2[0].toFixed(1)},${B2[1].toFixed(1)}`, class: 'kota-cara ' + tridy }, g);
+            if (odsadit) el('path', { d: `M${A[0].toFixed(1)},${A[1].toFixed(1)}L${A2[0].toFixed(1)},${A2[1].toFixed(1)}M${B[0].toFixed(1)},${B[1].toFixed(1)}L${B2[0].toFixed(1)},${B2[1].toFixed(1)}`, class: 'kota-vynaseci ' + tridy }, g);
+          }
+          const M2 = v.typ === 'uhel' ? [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2] : [(A2[0] + B2[0]) / 2, (A2[1] + B2[1]) / 2];
+          const h = M.hodnotaVazby(v, prom);
+          const txt = (v.typ === 'prumer' ? '⌀' : v.typ === 'uhel' ? '∠' : '') + M.mm(h, 2) + (v.typ === 'uhel' ? '°' : '') + (v.vyraz ? ' ƒ' : '');
+          const t = el('text', { x: M2[0], y: M2[1] - 3, class: 'kota-text ' + tridy, 'data-vazba': v.id, 'text-anchor': 'middle' }, g);
+          t.textContent = txt;
+          const tit = document.createElementNS(NS, 'title'); tit.textContent = M.popisVazby(v, prom) + ' – klik = změnit hodnotu'; t.appendChild(tit);
+        } else {
+          const k = kotva(v.a);
+          if (!k) continue;
+          const K = naObr(...k), klic = K.map(x => Math.round(x / 6)).join(',');
+          const n = pocetNaMiste.get(klic) || 0;
+          pocetNaMiste.set(klic, n + 1);
+          const X = K[0] + 9 + n * 15, Y = K[1] - 9;
+          el('rect', { x: X - 7, y: Y - 7, width: 14, height: 14, rx: 3, class: 'vazba-znacka ' + tridy, 'data-vazba': v.id }, g);
+          const t = el('text', { x: X, y: Y + 4, class: 'vazba-ikona ' + tridy, 'text-anchor': 'middle', 'data-vazba': v.id }, g);
+          t.textContent = T.ikona === '📌' ? '⚓' : T.ikona;
+          const tit = document.createElementNS(NS, 'title'); tit.textContent = M.popisVazby(v, prom) + ' – klik = vybrat, Delete = smazat'; t.appendChild(tit);
+        }
+      }
+      if (st.nastroj !== 'vazby') return;
+      // vybírací body všech tvarů a vybrané entity
+      for (const t of tv) {
+        const body = t.typ === 'cesta' ? t.body.map((b, j) => j) : t.typ === 'obdelnik' ? ['s', 'r0', 'r1', 'r2', 'r3'] : ['s'];
+        for (const b of body) { const p = M.bodSkici(tv, { t: t.id, b }); if (p) { const [X, Y] = naObr(...p); el('circle', { cx: X, cy: Y, r: 3, class: 'vazba-bod' }, g); } }
+      }
+      for (const r of st.ent) {
+        const d = druhRef(r);
+        if (d === 'bod') { const p = M.bodSkici(tv, r); if (p) { const [X, Y] = naObr(...p); el('circle', { cx: X, cy: Y, r: 6, class: 'entita' }, g); } }
+        else if (d === 'usecka') { const u = M.usekSkici(tv, r); if (u) { const [A, B] = u.map(q => naObr(...q)); el('path', { d: `M${A[0]},${A[1]}L${B[0]},${B[1]}`, class: 'entita' }, g); } }
+        else { const c = M.kruzniceSkici(tv, r); if (c) { const [X, Y] = naObr(c.x, c.y); el('circle', { cx: X, cy: Y, r: c.r * st.pohled.s, class: 'entita kruh' }, g); } }
+      }
     }
 
     // ------------------------------------------------------------ odsazení (offset)
@@ -220,12 +407,40 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     function vykresliPanel() {
       const p = st.param, t = p.tvary[st.vyber];
-      let h = `<section><h3>Těleso</h3>
-        <label class="ip"><span class="osa">Druh</span><select data-pole="param.rezim"><option value="vytazeni">Vytažení</option><option value="rotace">Rotace kolem osy Y</option></select></label>`;
+      let h = '';
+      if (st.naPlose) {
+        const vyr = st.naPlose.operace === 'vyriznout';
+        h += `<section class="na-plose"><h3>Na ploše tělesa</h3><div class="pozn">„${esc(st.naPlose.nazev)}“ – díváš se na plochu zvenku, čárkovaně je její obrys.</div>
+          <label class="ip"><span class="osa">Operace</span><select data-pole="np.operace"><option value="pridat"${vyr ? '' : ' selected'}>Přidat (vytáhnout ven)</option><option value="vyriznout"${vyr ? ' selected' : ''}>Vyříznout (kapsa / otvor)</option></select></label>
+          ${pole(vyr ? 'Hloubka kapsy' : 'Výška', p.vyska, 'param.vyska')}
+          ${vyr ? `<label class="zaskrt"><input type="checkbox" data-pole="np.skrz" ${st.naPlose.skrz ? 'checked' : ''}> Skrz celé těleso</label>` : `<label class="zaskrt"><input type="checkbox" data-pole="np.spojit" ${st.naPlose.spojit ? 'checked' : ''}> Spojit s tělesem (skupina)</label>`}
+          ${pole('Segmenty oblouků', p.segmentu, 'param.segmentu', '', 4)}</section>`;
+      } else {
+      h += `<section><h3>Těleso</h3>
+        <label class="ip"><span class="osa">Druh</span><select data-pole="param.rezim"><option value="vytazeni">Vytažení</option><option value="rotace">Rotace kolem osy Y</option><option value="tazeni">Tažení po dráze</option></select></label>`;
       if (p.rezim === 'rotace') h += pole('Úhel', p.uhel, 'param.uhel', '°', 15);
+      else if (p.rezim === 'tazeni') {
+        h += `<label class="ip"><span class="osa">Dráha</span><select data-pole="param.draha"><option value="krivka"${p.draha === 'krivka' ? ' selected' : ''}>Křivka${p.drahaBody ? '' : ' (zatím žádná)'}</option><option value="sroubovice"${p.draha === 'sroubovice' ? ' selected' : ''}>Šroubovice</option></select></label>`;
+        if (p.draha === 'sroubovice') h += pole('Poloměr', p.polomerS, 'param.polomerS') + pole('Stoupání', p.stoupaniS, 'param.stoupaniS', 'mm', 0.5) + pole('Otáček', p.otacekS, 'param.otacekS', '', 0.5)
+          + `<label class="zaskrt"><input type="checkbox" data-pole="param.levotoc" ${p.levotoc ? 'checked' : ''}> Levotočivá</label>`;
+        else h += `<div class="pozn">${p.drahaBody ? `Dráha má ${p.drahaBody.length} bodů.` : 'Dráhu dá Úpravy → Tažení profilu po dráze (vyber profil a skicu dráhy).'} Profil kreslíš kolem počátku: x = do strany, y = nahoru.</div>`;
+        h += pole('Profil na konci', p.horni, 'param.horni', '%', 5) + pole('Zkroucení', p.zkrouceni, 'param.zkrouceni', '°', 15);
+      }
       else h += pole('Výška', p.vyska, 'param.vyska') + pole('Horní plocha', p.horni, 'param.horni', '%', 5) + pole('Zkroucení', p.zkrouceni, 'param.zkrouceni', '°', 15)
         + pole('Posun vršku X', p.posunX, 'param.posunX') + pole('Posun vršku Y', p.posunY, 'param.posunY');
-      h += pole('Segmenty oblouků', p.segmentu, 'param.segmentu', '', 4) + '</section>';
+      }
+      if (!st.naPlose) h += pole('Segmenty oblouků', p.segmentu, 'param.segmentu', '', 4) + '</section>';
+      // vazby a kóty
+      if (st.nastroj === 'vazby' || maVazby()) {
+        const prom = promenne(), r = st.reseni;
+        const moz = st.ent.length ? M.mozneVazby(st.ent) : [];
+        const popisEnt = st.ent.length ? st.ent.map(druhRef).map(d => ({ bod: 'bod', usecka: 'úsečka', kruznice: 'kruh' }[d])).join(' + ') : '';
+        h += `<section class="vazby-panel"><h3>Vazby a kóty</h3>
+          <div class="pozn" id="skicarUrcenost">${maVazby() ? esc(textUrcenosti()) : 'Nástroj ⊾ (K): klikej na body, úsečky a kruhy, pak zvol vazbu nebo kótu.'}</div>
+          ${st.ent.length ? `<div class="pozn">Vybráno: ${popisEnt}</div><div class="vazby-tlacitka">${moz.map(typ => { const T = M.TYPY_VAZEB[typ]; return `<button type="button" class="tl" data-akce="vazba:${typ}" title="${esc(T.popis)}${T.klavesa ? ' (' + T.klavesa + ')' : ''}">${T.ikona} ${esc(T.popis)}</button>`; }).join('') || '<span class="pozn">K tomuhle výběru žádná vazba nepatří.</span>'}</div>` : ''}
+          <ul class="vazby-seznam">${(p.vazby || []).map(v => `<li class="${r && !r.ok && (r.konflikt || []).includes(v.id) ? 'spor' : ''}${st.vazbaVyber === v.id ? ' vybrana' : ''}"><button type="button" class="odkaz-tl" data-akce="vybratVazbu:${v.id}">${esc(M.ikonaVazby(v.typ))} ${esc(M.popisVazby(v, prom))}</button>${M.TYPY_VAZEB[v.typ].hodnota ? `<button type="button" class="tl ik" data-akce="upravVazbu:${v.id}" title="Změnit hodnotu" aria-label="Změnit hodnotu">✎</button>` : ''}<button type="button" class="tl ik" data-akce="smazVazbu:${v.id}" title="Smazat vazbu" aria-label="Smazat vazbu">✕</button></li>`).join('')}</ul>
+          ${maVazby() ? '<button type="button" class="tl" data-akce="smazVazby">Odebrat všechny vazby</button>' : ''}</section>`;
+      }
       h += `<section><h3>Nový tvar</h3>
         <label class="zaskrt"><input type="checkbox" data-pole="st.otvor" ${st.otvor ? 'checked' : ''}> Kreslit jako otvor</label>
         <label class="zaskrt"><input type="checkbox" data-pole="st.prichytit" ${st.prichytit ? 'checked' : ''}> Přichytávat (mřížka ${M.mm(krok(), 2)} mm, body)</label>
@@ -265,7 +480,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           + '<button type="button" class="tl" data-akce="podkladPryc">✕ Odebrat obrázek</button>'
         : '<button type="button" class="tl" data-akce="podklad">🖼 Vložit obrázek…</button><div class="pozn">Obkreslování výkresu nebo fotky (měřítko nastavíš šířkou).</div>'}</section>`;
       panel.innerHTML = h;
-      panel.querySelector('[data-pole="param.rezim"]').value = p.rezim;
+      const selRezim = panel.querySelector('[data-pole="param.rezim"]');
+      if (selRezim) selRezim.value = p.rezim;
       const det = $('skicarOdsazeni');
       if (det) det.addEventListener('toggle', () => { if (st.odsOtevreno !== det.open) { st.odsOtevreno = det.open; vykresli(); } });
       naplnFonty();
@@ -284,6 +500,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     async function zapisPole(klic, hodnota) {
       const [kde, k] = klic.split('.');
       const t = st.param.tvary[st.vyber];
+      if (kde === 'np' && st.naPlose) { st.naPlose[k] = hodnota; vykresliPanel(); vykresli(); return; }
       if (kde === 'st') {
         st[k] = hodnota;
         if (k === 'nStran') st.nStran = M.omez(Math.round(hodnota) || 6, 3, 64);
@@ -303,6 +520,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       } else if (kde === 'b' && t && t.body[st.bod]) {
         t.body[st.bod][k] = hodnota;
         st.param.tvary[st.vyber] = M.normalizujTvarSkici(t);
+      }
+      // ručně zadaná hodnota: vazby srovnají ostatní (hodnotu, kterou drží vazba, vrátí)
+      if ((kde === 't' || kde === 'b') && maVazby()) {
+        const r = vyres(t && kde === 'b' ? { ref: { t: t.id, b: st.bod }, x: t.body[st.bod].x, y: t.body[st.bod].y } : null);
+        if (r && !r.ok) stav.textContent = '⚠ Vazby nejdou splnit – změň nebo smaž některou.';
       }
       zmena();
     }
@@ -324,9 +546,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const b = e.target.closest('[data-akce]');
       if (!b) return;
       const a = b.dataset.akce;
+      if (a.startsWith('vazba:')) { pridejVazbu(a.slice(6)); return; }
+      if (a.startsWith('smazVazbu:')) { smazVazbu(a.slice(10)); return; }
+      if (a.startsWith('upravVazbu:')) { upravKotu(a.slice(11)); return; }
+      if (a.startsWith('vybratVazbu:')) { st.vazbaVyber = a.slice(12); vykresliPanel(); vykresli(); return; }
+      if (a === 'smazVazby') { delete st.param.vazby; st.vazbaVyber = null; st.reseni = null; zmena(); return; }
       if (a === 'smazat') smazVybrany();
       else if (a === 'duplikovat') {
         const t = JSON.parse(JSON.stringify(st.param.tvary[st.vyber]));
+        delete t.id;                                      // kopie je nový tvar (vazby originálu na ni neplatí)
         const k = krok() * 5;
         if (t.typ === 'cesta') t.body.forEach(p => { p.x += k; p.y -= k; }); else { t.x += k; t.y -= k; }
         st.param.tvary.push(t); st.vyber = st.param.tvary.length - 1; st.bod = -1; zmena();
@@ -357,8 +585,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (t.typ === 'cesta' && st.bod >= 0) {
         // vybraný bod: smazat jen ten (čára potřebuje aspoň 3 body)
         if (t.body.length <= 3) { stav.textContent = 'Čára musí mít aspoň 3 body. Celý tvar smažeš, když vybereš tvar (klik dovnitř).'; return; }
+        const mapa = t.body.map((b, j) => j < st.bod ? j : j === st.bod ? -1 : j - 1);
         t.body.splice(st.bod, 1); st.bod = -1;
-      } else { const pred = st.vyber; st.param.tvary.splice(st.vyber, 1); st.vyber = -1; st.bod = -1; zmena(pred); return; }
+        if (maVazby()) st.param.vazby = M.precislujVazby(st.param.vazby, t.id, mapa, t.body.length);
+      } else {
+        const pred = st.vyber;
+        if (maVazby()) st.param.vazby = M.odeberVazbyTvaru(st.param.vazby, [t.id]);
+        st.param.tvary.splice(st.vyber, 1); st.vyber = -1; st.bod = -1; zmena(pred); return;
+      }
       zmena();
     }
 
@@ -371,7 +605,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       lista.querySelectorAll('[data-nastroj]').forEach(b => b.setAttribute('aria-pressed', b.dataset.nastroj === n ? 'true' : 'false'));
       svg.dataset.nastroj = n;
       stav.textContent = { vyber: 'Klikni na tvar (nebo jeho bod) a táhni. Delete smaže.', obdelnik: 'Táhni z rohu do rohu.', kruh: 'Táhni od středu.',
-        nuhelnik: 'Táhni od středu (počet stran v panelu).', cesta: 'Naklikej body. Zavři klikem na první bod, Enterem nebo dvojklikem. Backspace = zpět o bod.', text: 'Klikni, kam patří začátek textu.' }[n];
+        nuhelnik: 'Táhni od středu (počet stran v panelu).', cesta: 'Naklikej body. Zavři klikem na první bod, Enterem nebo dvojklikem. Backspace = zpět o bod.', text: 'Klikni, kam patří začátek textu.',
+        vazby: 'Klikej na body, úsečky a kruhy (znovu = odebrat), pak vazba v panelu nebo klávesou: H vodorovně, V svisle, P rovnoběžně, K kolmo, E stejně, C splývá, F pevně, D kóta. Klik na číslo kóty ji změní.' }[n];
+      if (n !== 'vazby' && st.ent.length) st.ent = [];
+      if (okno.open) { vykresliPanel(); vykresli(); }
     }
     lista.addEventListener('click', e => { const b = e.target.closest('[data-nastroj]'); if (b) nastavNastroj(b.dataset.nastroj); });
 
@@ -406,21 +643,43 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     svg.addEventListener('pointerdown', e => {
       const [X, Y] = pixel(e);
+      // klik do plátna: pole v panelu přestane mít fokus (klávesy pak patří skice – H, V, D…)
+      const a = document.activeElement;
+      if (a && a !== document.body && okno.contains(a) && a.closest('.skicar-panel')) a.blur();
       svg.setPointerCapture(e.pointerId);
       if (e.button === 1 || e.button === 2) { st.tah = { druh: 'pohled', X, Y }; return; }
       if (e.button !== 0) return;
       const [x, y] = zObr(X, Y);
       const n = st.nastroj;
+      // klik na kótu = změnit hodnotu, na značku vazby = vybrat ji (v každém nástroji)
+      const vazEl = e.target.closest && e.target.closest('[data-vazba]');
+      if (vazEl) {
+        const v = (st.param.vazby || []).find(q => q.id === vazEl.dataset.vazba);
+        if (v && M.TYPY_VAZEB[v.typ].hodnota) { e.preventDefault(); setTimeout(() => upravKotu(v.id), 0); return; }
+        st.vazbaVyber = vazEl.dataset.vazba; vykresliPanel(); vykresli(); return;
+      }
+      if (n === 'vazby') {
+        const r = entitaPod(x, y);
+        st.vazbaVyber = null;
+        if (!r) st.ent = [];
+        else {
+          const i = st.ent.findIndex(q => stejnyRef(q, r));
+          if (i >= 0) st.ent.splice(i, 1); else { st.ent.push(r); if (st.ent.length > 3) st.ent.shift(); }
+        }
+        vykresliPanel(); vykresli();
+        return;
+      }
       if (n === 'vyber') {
         const bodEl = e.target.closest && e.target.closest('[data-bod]');
         if (bodEl) {
           st.bod = +bodEl.dataset.bod;
-          st.tah = { druh: 'bod', index: st.vyber, X, Y, posunuto: false };
+          st.tah = { druh: 'bod', index: st.vyber, X, Y, posunuto: false, tvary0: maVazby() ? JSON.parse(JSON.stringify(st.param.tvary)) : null };
           vykresliPanel(); vykresli(); return;
         }
         const i = zasahTvaru(x, y);
         st.vyber = i; st.bod = -1;
-        if (i >= 0) st.tah = { druh: 'tvar', index: i, puvodni: JSON.stringify(st.param.tvary[i]), start: prichyt(X, Y), posunuto: false };
+        if (i >= 0) st.tah = { druh: 'tvar', index: i, puvodni: JSON.stringify(st.param.tvary[i]), start: prichyt(X, Y), posunuto: false,
+          tvary0: maVazby() ? JSON.parse(JSON.stringify(st.param.tvary)) : null };
         vykresliPanel(); vykresli();
       } else if (n === 'cesta') {
         // dvojklik ukončí cestu – vlastní detekce: zachycení ukazatele a překreslení SVG pod kurzorem
@@ -469,14 +728,19 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const dx = p[0] - t.start[0], dy = p[1] - t.start[1];
         const o = JSON.parse(t.puvodni);
         if (o.typ === 'cesta') o.body.forEach(b => { b.x = zaokr(b.x + dx); b.y = zaokr(b.y + dy); }); else { o.x = zaokr(o.x + dx); o.y = zaokr(o.y + dy); }
-        st.param.tvary[t.index] = o;
+        if (t.tvary0) {
+          // tvar s vazbami: táhne se jeho první bod (střed), vazby drží zbytek
+          const ref = refTahu(t.index, -1), p0 = M.bodSkici(t.tvary0, ref);
+          if (p0) vyres({ ref, x: p0[0] + dx, y: p0[1] + dy }, t.tvary0);
+        } else st.param.tvary[t.index] = o;
         t.posunuto = dx !== 0 || dy !== 0;
       } else if (t.druh === 'bod') {
         // bod se hne až po pár pixelech (klik s chvěním ruky ho nesmí přeskočit na mřížku)
         if (!t.posunuto && Math.hypot(X - t.X, Y - t.Y) < 4) return;
         const c = st.param.tvary[t.index];
         if (!c || !c.body || !c.body[st.bod]) return;
-        c.body[st.bod].x = p[0]; c.body[st.bod].y = p[1];
+        if (t.tvary0) vyres({ ref: { t: c.id, b: st.bod }, x: p[0], y: p[1] }, t.tvary0);
+        else { c.body[st.bod].x = p[0]; c.body[st.bod].y = p[1]; }
         t.posunuto = true;
       }
       vykresli();
@@ -526,6 +790,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); obnovZHistorie(st.index - 1); return; }
       if ((e.ctrlKey || e.metaKey) && (k === 'y' || (e.shiftKey && k === 'z'))) { e.preventDefault(); obnovZHistorie(st.index + 1); return; }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && st.vazbaVyber) { e.preventDefault(); smazVazbu(st.vazbaVyber); return; }
+      if (st.nastroj === 'vazby' && st.ent.length && e.key.length === 1) {
+        const typ = M.mozneVazby(st.ent).find(t => M.TYPY_VAZEB[t].klavesa === e.key.toUpperCase());
+        if (typ) { e.preventDefault(); pridejVazbu(typ); return; }
+      }
       if (e.key === 'Delete' || (e.key === 'Backspace' && !st.cesta)) { e.preventDefault(); smazVybrany(); return; }
       if (e.key === 'Backspace' && st.cesta) { e.preventDefault(); st.cesta.pop(); if (!st.cesta.length) st.cesta = null; vykresli(); return; }
       if (e.key === 'Enter' && st.cesta) { e.preventDefault(); dokonciCestu(); return; }
@@ -544,6 +813,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     function escSkicare() {
       if (st.tah) return;
       if (st.cesta) { st.cesta = null; vykresli(); return; }
+      if (st.ent.length || st.vazbaVyber) { st.ent = []; st.vazbaVyber = null; vykresliPanel(); vykresli(); return; }
       if (st.vyber >= 0) { st.vyber = -1; st.bod = -1; vykresliPanel(); vykresli(); return; }
       zavri();
     }
@@ -559,21 +829,28 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     function prizpusobPohled() {
       const W = svg.clientWidth || 800, H = svg.clientHeight || 600;
       let x0 = -20, x1 = 20, y0 = -20, y1 = 20;
+      if (st.reference) for (const k of st.reference) for (const [x, y] of k) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
       for (const t of st.param.tvary) for (const k of M.konturyTvaru(t, 32)) for (const [x, y] of k) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
       const s = Math.min(W / (x1 - x0), H / (y1 - y0)) * 0.8;
       st.pohled = { s, ox: W / 2 - (x0 + x1) / 2 * s, oy: H / 2 + (y0 + y1) / 2 * s };
     }
 
-    M.otevriSkicar = function (id = null) {
+    M.otevriSkicar = function (id = null, naPlose = null) {
       const u = id ? M.najdiUzel(M.app.dok, id) : null;
+      // skica na ploše tělesa (Úpravy → Skica na ploše): obrys plochy jako vodítko, Hotovo ji umístí a spojí
+      st.naPlose = naPlose ? { id: naPlose.id, nazev: naPlose.nazev, plocha: naPlose.plocha, operace: naPlose.operace || 'pridat', skrz: false, spojit: true } : null;
+      st.reference = naPlose ? naPlose.plocha.oblast : null;
+      st.ent = []; st.vazbaVyber = null; st.reseni = null;
       st.uzelId = u && u.druh === 'skica' ? u.id : null;
       st.param = JSON.parse(JSON.stringify(st.uzelId ? u.param : M.normalizujParamSkici({})));
       st.podklad = st.uzelId && u.podklad ? Object.assign({}, u.podklad) : null;
       st.vyber = -1; st.bod = -1; st.cesta = null; st.tah = null;
       st.historie = []; st.index = -1; zapis();
       st.puvodni = st.historie[0];
-      $('skicarNazev').textContent = st.uzelId ? u.nazev : 'Nová skica';
+      $('skicarNazev').textContent = st.uzelId ? u.nazev : st.naPlose ? 'Skica na ploše – ' + st.naPlose.nazev : 'Nová skica';
+      if (st.naPlose && st.param.vyska === M.SKICA_VYCHOZI.vyska) st.param.vyska = 5;
       okno.showModal();
+      vyres();
       prizpusobPohled();
       nastavNastroj(st.param.tvary.length ? 'vyber' : 'obdelnik');
       vykresliPanel(); vykresli();
@@ -592,7 +869,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (st.param.rezim === 'rotace' && !st.param.tvary.some(t => !t.otvor && M.konturyTvaru(t, 16).some(k => k.some(p => p[0] > 0)))) {
         Dialog.chyba('Pro rotaci musí část skici ležet vpravo od osy Y.'); return;
       }
-      if (st.uzelId) {
+      if (maVazby()) { const r = vyres(); if (r && !r.ok) { Dialog.chyba('Některé vazby nejdou splnit – oprav nebo smaž je (v panelu jsou červeně).'); vykresliPanel(); vykresli(); return; } }
+      if (st.naPlose) {
+        try {
+          const np = st.naPlose;
+          const r = M.skicaNaPlose(M.app.dok, np.id, np.plocha, st.param, { operace: np.operace, skrz: np.skrz, spojit: np.spojit });
+          M.zmenDokument(r.dok, np.operace === 'vyriznout' ? 'Kapsa ze skici' : 'Skica na ploše');
+          M.nastavVyber([r.id]);
+        } catch (e) { Dialog.chyba('Skicu nejde umístit: ' + e.message); return; }
+      } else if (st.uzelId) {
         M.upravVybrane(u => Object.assign(M.upravSkicu(u, st.param), { podklad: st.podklad }), 'Upravit skicu', [st.uzelId]);
       } else {
         M.pridejSkicu(st.param, st.podklad);
@@ -614,6 +899,24 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return n;
     };
 
+    /** Klik na plochu v režimu 'skicaNaPlose': rovná plocha pod kurzorem → skicář s jejím obrysem. */
+    M.otevriSkicuNaPlose = function (zasah, operace = 'pridat') {
+      const u = zasah && M.najdiUzel(M.app.dok, zasah.id);
+      if (!u || u.zamceno || u.role === 'dira') { Dialog.chyba('Klikni na rovnou plochu plného (nezamčeného) tělesa.'); return; }
+      const sit = S.telesa.svetovaSit(u.id);
+      if (!sit || zasah.trojuhelnik == null) return;
+      const plocha = M.oblastPlochy(sit, zasah.trojuhelnik);
+      if (!plocha.oblast.length) { Dialog.chyba('Tady není rovná plocha – skica jde jen na rovnou stěnu.'); return; }
+      // počátek skici = místo kliknutí přichycené na mřížku v rovině plochy (ne roh trojúhelníku)
+      if (zasah.bod) {
+        const k = Math.max(S.deska.krok, 0.1), b0 = new THREE.Vector3(...plocha.bod), uu = new THREE.Vector3(...plocha.u), vv = new THREE.Vector3(...plocha.v);
+        const d = zasah.bod.clone().sub(b0), du = Math.round(d.dot(uu) / k) * k, dv = Math.round(d.dot(vv) / k) * k;
+        plocha.bod = b0.addScaledVector(uu, du).addScaledVector(vv, dv).toArray().map(x => Math.round(x * 1e6) / 1e6);
+        plocha.oblast = plocha.oblast.map(o => o.map(([a, b]) => [Math.round((a - du) * 1e6) / 1e6, Math.round((b - dv) * 1e6) / 1e6]));
+      }
+      M.otevriSkicar(null, { id: u.id, nazev: u.nazev, plocha, operace });
+    };
+
     // dvojklik na skicu ve scéně ji otevře
     S.renderer.domElement.addEventListener('dblclick', e => {
       if (M.app.rezim) return;                       // v režimu měření/poznámek je dvojklik dva body, ne úprava skici
@@ -623,6 +926,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (u && u.druh === 'skica' && !u.zamceno) M.otevriSkicar(u.id);
     });
     new ResizeObserver(() => { if (okno.open) vykresli(); }).observe(svg);
+    // pro testy: souřadnice skici → px plátna a zápis změny
+    st.naObr = naObr; st.zmena = () => zmena();
     return st;
   };
 })(MDL);

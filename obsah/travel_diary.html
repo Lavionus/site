@@ -467,16 +467,118 @@ let db = JSON.parse(localStorage.getItem('traveldiary_db') || '{"trips":[],"entr
 let map, markerLayer, pickMode = false;
 let activeTrip  = null;
 let activeEntry = null;
-let editingEntryPhotos = [];   // working copy of photos during entry edit
+let editingEntryPhotos = [];   // working copy of photos during entry edit (ID fotek)
 let searchQuery = '';
 
 function save() {
   try {
     localStorage.setItem('traveldiary_db', JSON.stringify(db));
   } catch (err) {
-    Dialog.info('⚠️ Úložiště prohlížeče je plné – data se nepodařilo uložit.\n' +
-          'Odeberte některé fotografie nebo si zálohujte data přes Export JSON.');
+    Dialog.chyba('⚠️ Úložiště prohlížeče je plné – data se nepodařilo uložit.\n' +
+          'Zálohujte si data přes Export JSON a v ⚙️ Nastavení webu uvolněte místo.');
+    return;
   }
+  uklidFotky();
+}
+
+// ── Fotky v IndexedDB ────────────────────────────────────────────────────────
+// localStorage má pro celý web jen ~5 MB a fotky jako base64 text ho zaplnily
+// (a zablokovaly ukládání i ostatním aplikacím). Fotky proto leží v IndexedDB
+// jako Bloby a v záznamu je jen jejich ID. Starší záznamy mohou mít ještě data
+// URL – ty se při startu převedou; když IndexedDB není k dispozici (některé
+// anonymní režimy), ukládají se fotky postaru jako data URL.
+const FOTO_DB = 'webapp_traveldiary_fotky', FOTO_STORE = 'fotky';
+const fotoUrl = new Map();   // ID → object URL
+let fotoDbSlib = null;
+
+function fotoDb() {
+  if (!fotoDbSlib) fotoDbSlib = new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('IndexedDB není k dispozici')); return; }
+    const rq = indexedDB.open(FOTO_DB, 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore(FOTO_STORE);
+    rq.onsuccess = () => resolve(rq.result);
+    rq.onerror = () => reject(rq.error);
+  });
+  return fotoDbSlib;
+}
+// transakce jako Promise; hotovo až po 'complete' – teprve pak je zápis na disku
+async function fotoTx(mod, prace) {
+  const d = await fotoDb();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(FOTO_STORE, mod);
+    const vysledek = prace(tx.objectStore(FOTO_STORE));
+    tx.oncomplete = () => resolve(vysledek && 'result' in vysledek ? vysledek.result : undefined);
+    tx.onerror = tx.onabort = () => reject(tx.error);
+  });
+}
+async function ulozFotky(bloby) {
+  const ids = bloby.map(() => 'f' + genId());
+  await fotoTx('readwrite', st => { bloby.forEach((b, i) => st.put(b, ids[i])); });
+  bloby.forEach((b, i) => fotoUrl.set(ids[i], URL.createObjectURL(b)));
+  return ids;
+}
+async function nactiFotky() {
+  const [klice, hodnoty] = await Promise.all([
+    fotoTx('readonly', st => st.getAllKeys()), fotoTx('readonly', st => st.getAll())]);
+  klice.forEach((k, i) => { if (!fotoUrl.has(k)) fotoUrl.set(k, URL.createObjectURL(hodnoty[i])); });
+}
+// adresa pro <img>: ID z IndexedDB, nebo starší data URL
+function fotoSrc(p) { return String(p).startsWith('data:') ? p : (fotoUrl.get(p) || ''); }
+
+// smaže z IndexedDB fotky, na které už žádný záznam neodkazuje
+// (smazaný záznam/výlet, odebraná fotka, import)
+let uklidBezi = false;
+async function uklidFotky() {
+  if (uklidBezi || !fotoUrl.size) return;
+  uklidBezi = true;
+  try {
+    const pouzite = new Set(db.entries.flatMap(e => e.photos || []));
+    const sirotci = [...fotoUrl.keys()].filter(k => !pouzite.has(k));
+    if (sirotci.length) {
+      await fotoTx('readwrite', st => sirotci.forEach(k => st.delete(k)));
+      sirotci.forEach(k => { URL.revokeObjectURL(fotoUrl.get(k)); fotoUrl.delete(k); });
+    }
+  } catch (e) { /* nevadí, uklidí se příště */ }
+  uklidBezi = false;
+}
+
+function dataUrlNaBlob(u) {
+  const [hlava, data] = u.split(',');
+  const typ = (hlava.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+  const bin = atob(data), pole = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) pole[i] = bin.charCodeAt(i);
+  return new Blob([pole], { type: typ });
+}
+function blobNaDataUrl(b) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result); r.onerror = () => reject(r.error);
+    r.readAsDataURL(b);
+  });
+}
+// data URL v záznamech → IndexedDB (při startu i po importu); vrací, zda se něco změnilo
+async function prevedDataUrl() {
+  const zaznamy = db.entries.filter(e => (e.photos || []).some(p => String(p).startsWith('data:')));
+  if (!zaznamy.length) return false;
+  for (const e of zaznamy) {
+    const stare = e.photos.filter(p => String(p).startsWith('data:'));
+    const ids = await ulozFotky(stare.map(dataUrlNaBlob));
+    e.photos = e.photos.map(p => String(p).startsWith('data:') ? ids[stare.indexOf(p)] : p);
+  }
+  return true;
+}
+// požádat prohlížeč, ať data při nedostatku místa nemaže (stačí jednou)
+function trvaleUloziste() {
+  try { navigator.storage?.persist?.(); } catch (e) { /* nevadí */ }
+}
+// připomenutí zálohy – počet fotek přidaných od posledního exportu
+const KLIC_ZALOHA = 'traveldiary_fotek_od_exportu';
+function pripomenZalohu(pridano) {
+  let n = 0;
+  try { n = (parseInt(localStorage.getItem(KLIC_ZALOHA)) || 0) + pridano; localStorage.setItem(KLIC_ZALOHA, n); } catch (e) {}
+  if (n >= 20 && Math.floor((n - pridano) / 20) < Math.floor(n / 20))
+    Dialog.info(`📦 Od poslední zálohy přibylo ${n} fotek. Data v prohlížeči nejsou záloha – ` +
+                'stáhněte si je občas přes Export JSON.');
 }
 function genId() { return Date.now().toString() + Math.random().toString(36).slice(2, 5); }
 
@@ -486,8 +588,8 @@ function escapeHtml(s) {
     .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 
-// Zmenší fotku přes canvas (max 1400 px, JPEG) – localStorage má jen ~5 MB
-function compressImage(file, maxDim = 1400, quality = 0.82) {
+// Zmenší fotku přes canvas (max 1280 px) – WebP, kde ho prohlížeč umí zapsat, jinak JPEG
+function compressImage(file, maxDim = 1280, quality = 0.8) {
   return new Promise(resolve => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -501,9 +603,13 @@ function compressImage(file, maxDim = 1400, quality = 0.82) {
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      // Safari WebP nezapíše a vrátí PNG – pak radši JPEG
+      canvas.toBlob(b => {
+        if (b && b.type === 'image/webp') resolve(b);
+        else canvas.toBlob(j => resolve(j || file), 'image/jpeg', quality);
+      }, 'image/webp', quality);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); fileToDataURL(file).then(resolve); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
     img.src = url;
   });
 }
@@ -667,12 +773,22 @@ async function saveEntry() {
   const date  = document.getElementById('e-date').value;
   if (!title) { Dialog.info('Zadejte název záznamu'); return; }
 
-  // Načíst nové fotky z file inputu (zkomprimované)
-  const newPhotos = [];
+  // Načíst nové fotky z file inputu (zkomprimované) a uložit do IndexedDB
+  const bloby = [];
   const fileInput = document.getElementById('e-photos');
-  for (const file of fileInput.files) {
-    newPhotos.push(await compressImage(file));
+  const btn = document.getElementById('entrySaveBtn');
+  if (fileInput.files.length) { btn.disabled = true; btn.dataset.text = btn.textContent; btn.textContent = '⏳ Ukládám fotky…'; }
+  let newPhotos = [];
+  try {
+    for (const file of fileInput.files) bloby.push(await compressImage(file));
+    if (bloby.length) {
+      try { newPhotos = await ulozFotky(bloby); trvaleUloziste(); }
+      catch (err) { newPhotos = await Promise.all(bloby.map(blobNaDataUrl)); }   // bez IndexedDB postaru
+    }
+  } finally {
+    if (btn.disabled) { btn.disabled = false; btn.textContent = btn.dataset.text; }
   }
+  if (newPhotos.length) pripomenZalohu(newPhotos.length);
 
   const id = document.getElementById('e-id').value;
 
@@ -799,7 +915,7 @@ function renderExistingPhotos() {
   count.textContent = `(${editingEntryPhotos.length})`;
   list.innerHTML = editingEntryPhotos.map((src, i) => `
     <div class="existing-photo-wrap">
-      <img src="${src}" onclick="openLightbox(editingEntryPhotos, ${i})" title="Klik = zobrazit" />
+      <img src="${fotoSrc(src)}" onclick="openLightbox(editingEntryPhotos, ${i})" title="Klik = zobrazit" />
       <button class="remove-photo" onclick="removeExistingPhoto(${i})" title="Odebrat">✕</button>
     </div>`).join('');
 }
@@ -880,7 +996,7 @@ function renderEntries() {
     const photos    = e.photos || [];
     const photoThumb = photos.length
       ? `<div class="entry-photos">
-           ${photos.slice(0, 4).map(p => `<img class="entry-thumb" src="${p}" />`).join('')}
+           ${photos.slice(0, 4).map(p => `<img class="entry-thumb" src="${fotoSrc(p)}" />`).join('')}
            ${photos.length > 4 ? `<div style="width:44px;height:44px;background:#333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:var(--text-faint)">+${photos.length - 4}</div>` : ''}
          </div>`
       : '';
@@ -913,7 +1029,7 @@ function showEntryDetail(id) {
   const panel  = document.getElementById('detailPanel');
   detailPhotos = entry.photos || [];
   const photos = detailPhotos.map((p, i) =>
-    `<img class="gallery-img" src="${p}" onclick="openLightbox(detailPhotos, ${i})" />`
+    `<img class="gallery-img" src="${fotoSrc(p)}" onclick="openLightbox(detailPhotos, ${i})" />`
   ).join('');
   panel.innerHTML = `
     <div class="detail-header">
@@ -966,14 +1082,6 @@ function renderMap() {
 
 // ── Pomocné ───────────────────────────────────────────────────────────────────
 
-function fileToDataURL(file) {
-  return new Promise(resolve => {
-    const r = new FileReader();
-    r.onload = e => resolve(e.target.result);
-    r.readAsDataURL(file);
-  });
-}
-
 let lightboxPhotos = [];
 let lightboxIndex  = 0;
 
@@ -985,7 +1093,7 @@ function openLightbox(photos, index = 0) {
   document.getElementById('lightbox').classList.add('open');
 }
 function updateLightbox() {
-  document.getElementById('lightboxImg').src = lightboxPhotos[lightboxIndex] || '';
+  document.getElementById('lightboxImg').src = fotoSrc(lightboxPhotos[lightboxIndex] || '');
   const multi = lightboxPhotos.length > 1;
   document.getElementById('lightboxPrev').style.display = multi ? 'block' : 'none';
   document.getElementById('lightboxNext').style.display = multi ? 'block' : 'none';
@@ -1003,24 +1111,35 @@ function closeLightbox() {
   lightboxPhotos = [];
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+// export nese fotky jako data URL – soubor jde naimportovat kdekoli (i do starší verze)
+async function exportData() {
+  const fotky = new Map();
+  try {
+    const [klice, hodnoty] = await Promise.all([
+      fotoTx('readonly', st => st.getAllKeys()), fotoTx('readonly', st => st.getAll())]);
+    for (let i = 0; i < klice.length; i++) fotky.set(klice[i], await blobNaDataUrl(hodnoty[i]));
+  } catch (e) { /* bez IndexedDB jsou fotky přímo v záznamech */ }
+  const vystup = { ...db, entries: db.entries.map(e => ({ ...e,
+    photos: (e.photos || []).map(p => String(p).startsWith('data:') ? p : fotky.get(p)).filter(Boolean) })) };
+  const blob = new Blob([JSON.stringify(vystup, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `cestovni_denik_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
+  try { localStorage.setItem(KLIC_ZALOHA, '0'); } catch (e) {}
 }
 
 function importData(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const data = JSON.parse(e.target.result);
       if (data.trips && data.entries) {
         data.entries.forEach(en => { if (!Array.isArray(en.photos)) en.photos = []; });
         db = data;
+        try { await prevedDataUrl(); } catch (err) { /* bez IndexedDB zůstanou data URL */ }
         save();
         activeTrip = null; activeEntry = null;
         cancelTripEdit();
@@ -1060,6 +1179,21 @@ document.addEventListener('keydown', e => {
 
 renderTripList();
 renderEntries();
+(async () => {
+  try {
+    await nactiFotky();
+    // převod starších fotek z localStorage; localStorage se přepíše, až když
+    // jsou fotky bezpečně v IndexedDB (fotoTx čeká na 'complete')
+    if (await prevedDataUrl()) {
+      save();
+      Dialog.info('📷 Fotky deníku jsou nově uložené mimo sdílené úložiště prohlížeče – ostatním aplikacím se uvolnilo místo.');
+    }
+  } catch (err) {
+    console.warn('Cestovní deník: IndexedDB nedostupná, fotky zůstávají v localStorage', err);
+  }
+  renderEntries();
+  if (activeEntry) showEntryDetail(activeEntry);
+})();
 </script>
 </body>
 </html>

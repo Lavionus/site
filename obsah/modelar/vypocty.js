@@ -83,6 +83,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         worker.onmessage = e => {
           const c = cekajici.get(e.data.id);
           if (!c) return;
+          if (e.data.prubeh != null) { if (c.prubeh) c.prubeh(e.data.prubeh); return; }      // průběh dlouhé úlohy
           // worker se nerozběhl (manifold nejde načíst): všechno rozdělané i další spočítá hlavní vlákno
           if (e.data.start) { prepniNaZalohu(e.data.chyba); return; }
           cekajici.delete(e.data.id);
@@ -352,6 +353,23 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         } else vHlavnimVlakne(uzel, typ).then(resolve, reject);
       });
     }
+
+    /** Zjednodušení sítě (jadro/zjednoduseni.js) ve workeru; bez workeru v hlavním vlákně.
+        prubeh(podil) hlásí postup. Vrací {poz, idx, puvodne, ted, chyba}. */
+    M.zjednodusSitVeWorkeru = function (sit, volby = {}, prubeh = null) {
+      const v = Object.assign({}, volby); delete v.prubeh;
+      const zaloha = () => M.zjednodusSit(sit, Object.assign({}, v, prubeh ? { prubeh } : {}));
+      return new Promise((resolve, reject) => {
+        if (!worker) { Promise.resolve().then(zaloha).then(resolve, reject); return; }
+        const id = ++dalsiId;
+        // kopie (síť zdroje zůstává v registru), přenos bez další kopie
+        const poz = new Float32Array(sit.poz), idx = sit.idx ? new Uint32Array(sit.idx) : null;
+        const odeslat = () => worker.postMessage({ id, typ: 'zjednodus', sit: { poz, idx }, volby: v }, []);
+        cekajici.set(id, { resolve: d => resolve(d.vysledek), reject, zaloha, odeslat, prubeh });
+        try { odeslat(); }
+        catch (e) { cekajici.delete(id); reject(e); }
+      });
+    };
 
     /** Technický výkres (jadro/vykres.js) ve workeru; bez workeru v hlavním vlákně. */
     M.spocitejVykres = function (site, volby) {

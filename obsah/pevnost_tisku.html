@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pevnost výtisků (FDM)</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="pevnost_tisku/jadro.js"></script>
+  <script src="pevnost_tisku/grafy.js"></script>
+  <style>
+    :root { --text-chyba: #ff8f85; --text-mez: #f0bd5e; --c-perim: #6aa6fd; --c-skin: #c792ea; --c-vypln: #4caf7d; --c-pas: rgba(106,166,253,.22); --c-sila: #f07575; }
+    :root[data-theme="light"] { --text-chyba: var(--danger); --text-mez: #8a5a00; --c-perim: #2862bb; --c-skin: #7b3fa8; --c-vypln: #177540; --c-pas: rgba(40,98,187,.16); --c-sila: #b3261e; }
+    * { box-sizing: border-box; }
+    body { background-color: var(--bg-deep); color: var(--text); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; margin: 0; font-family: var(--font); }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1rem; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 12px; max-width: 980px; line-height: 1.5; }
+    .upozorneni { max-width: 1320px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .upozorneni b { color: var(--text-mez); }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 410px) minmax(0, 1fr); gap: 18px; max-width: 1320px; }
+    @media (max-width: 980px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
+    input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 8px 10px; font-size: 0.95rem; min-width: 0; font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    .zaskrt { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; line-height: 1.35; }
+    .zaskrt input { width: 18px; height: 18px; accent-color: var(--accent); flex: 0 0 auto; margin: 0; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0 12px; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    a { color: var(--accent); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .prepinac { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .prepinac button { padding: 8px 4px; font-size: 0.8rem; line-height: 1.25; }
+    .prepinac svg { display: block; margin: 0 auto 4px; width: 56px; height: 34px; color: var(--text-muted); }
+    .prepinac button[aria-pressed="true"] svg { color: var(--accent); }
+    .s-jednotkou { position: relative; min-width: 0; }
+    .s-jednotkou input { padding-right: 46px; }
+    .jednotka { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.78rem; pointer-events: none; }
+    .sila-radek { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; align-items: end; }
+    .sila-radek label { margin-top: 6px; }
+    .sila-radek button { height: 38px; }
+    .iv-tab { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 6px; }
+    .iv-tab td, .iv-tab th { padding: 3px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .iv-tab th { color: var(--text-muted); font-weight: 600; text-align: left; }
+    .iv-tab input { padding: 5px 6px; font-size: 0.85rem; }
+    .iv-tab td:first-child { width: 46%; line-height: 1.25; }
+    .doklad { font-size: 0.74rem; color: var(--text-muted); line-height: 1.45; margin-top: 8px; padding: 8px; border: 1px dashed var(--border-strong); border-radius: 6px; }
+    .lista { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between;
+      max-width: 1320px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 6px 10px; margin-bottom: 14px; box-shadow: var(--shadow); }
+    .lista .souhrn { font-size: 0.86rem; display: flex; gap: 4px 12px; flex-wrap: wrap; }
+    .lista .akce { display: flex; gap: 4px; flex-wrap: wrap; }
+    .ok-t { color: var(--ok); } .mez-t { color: var(--text-mez); } .chyba-t { color: var(--text-chyba); }
+    :root[data-theme="light"] .ok-t { color: var(--ok); }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); gap: 8px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; min-width: 0; }
+    .box .popis { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 4px; }
+    .box .cislo { font-size: 1.1rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; line-height: 1.35; }
+    .verdikt { margin: 0 0 10px; padding: 9px 12px; border-radius: 6px; font-size: 0.88rem; border: 1px solid var(--border); border-left-width: 4px; background: var(--bg-elevated); line-height: 1.45; }
+    .verdikt.ok { border-color: var(--ok); } .verdikt.mez { border-color: var(--warn); } .verdikt.chyba { border-color: var(--danger); }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 6px; }
+    table.tab { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .tab th, .tab td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    .tab th:first-child, .tab td:first-child { text-align: left; }
+    .tab td.vlevo, .tab th.vlevo { text-align: left; white-space: normal; }
+    .tab th { color: var(--text-muted); font-weight: 600; }
+    .graf-obal { position: relative; margin-top: 4px; }
+    .graf-obal svg { display: block; max-width: 100%; }
+    .graf { font-family: var(--font); }
+    .g-titul { fill: var(--text); font-size: 12.5px; font-weight: 600; }
+    .g-osa { fill: var(--text-muted); font-size: 11px; }
+    .g-mriz { stroke: var(--border); stroke-width: 1; }
+    .g-nula { stroke: var(--text-muted); stroke-width: 1.2; }
+    .g-cara { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+    .g-plocha { fill: var(--accent-soft); stroke: none; }
+    .g-pas { fill: var(--c-pas); stroke: none; }
+    .g-bod { fill: var(--accent); }
+    .g-hodn { fill: var(--text); font-size: 11.5px; font-weight: 600; paint-order: stroke; stroke: var(--bg-panel); stroke-width: 3px; }
+    .g-kurzor { stroke: var(--text-muted); stroke-dasharray: 3 3; }
+    .graf.g-M .g-cara { stroke: var(--c-skin); } .graf.g-M .g-plocha { fill: color-mix(in srgb, var(--c-skin) 18%, transparent); } .graf.g-M .g-bod { fill: var(--c-skin); }
+    .graf.g-V .g-cara { stroke: var(--c-vypln); } .graf.g-V .g-plocha { fill: color-mix(in srgb, var(--c-vypln) 18%, transparent); } .graf.g-V .g-bod { fill: var(--c-vypln); }
+    .graf.g-w .g-plocha { fill: none; }
+    .ctecka { font-size: 0.78rem; color: var(--text-muted); min-height: 1.3em; margin-top: 4px; }
+    .ctecka b { color: var(--text); }
+    .schema { display: block; max-width: 100%; }
+    .s-nosnik { fill: var(--bg-control); stroke: var(--text-muted); stroke-width: 1.2; }
+    .s-podpora { fill: none; stroke: var(--text-muted); stroke-width: 1.5; }
+    .s-podpora-c { stroke: var(--text-muted); stroke-width: 1.5; }
+    .s-zed { fill: var(--bg-hover); stroke: var(--text-muted); }
+    .s-sila { stroke: var(--c-sila); stroke-width: 2.4; }
+    .s-sipka { fill: var(--c-sila); }
+    .s-q { fill: color-mix(in srgb, var(--c-sila) 10%, transparent); stroke: var(--c-sila); stroke-width: 1; }
+    .s-qs { stroke: var(--c-sila); stroke-width: 1.2; }
+    .s-text { fill: var(--text); font-size: 12px; } .s-tucne { font-weight: 600; }
+    .s-reakce { fill: var(--text-muted); font-size: 11.5px; }
+    .prurez-svg { display: block; margin: 6px auto 0; max-width: 100%; }
+    .p-perim { fill: var(--c-perim); } .p-skin { fill: var(--c-skin); } .p-plny { fill: var(--c-perim); }
+    .p-vypln { fill: color-mix(in srgb, var(--c-vypln) 25%, var(--bg-panel)); } .p-vypln-s { fill: url(#srafa); } .p-srafa { stroke: var(--c-vypln); stroke-width: 1; }
+    .p-no { stroke: var(--text-muted); stroke-dasharray: 6 3 1 3; }
+    .p-zat { stroke: var(--c-sila); stroke-width: 2; }
+    .p-text { fill: var(--text-muted); font-size: 11px; }
+    .p-z { stroke: var(--text); stroke-width: 1.6; } .p-zsip { fill: var(--text); } .p-ztext { fill: var(--text); font-size: 12px; font-weight: 700; }
+    .p-zkruh { fill: none; stroke: var(--text); stroke-width: 1.6; } .p-ztecka { fill: var(--text); }
+    .legenda { display: flex; gap: 6px 12px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; justify-content: center; }
+    .legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+    .varovani { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .varovani li { font-size: 0.8rem; line-height: 1.45; padding: 6px 10px; border-radius: 6px; background: var(--bg-elevated); border-left: 4px solid var(--text-faint); }
+    .varovani li.chyba { border-left-color: var(--danger); } .varovani li.mez { border-left-color: var(--warn); }
+    .tornado { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .tor-radek { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px; align-items: center; font-size: 0.76rem; }
+    .tor-pruh { position: relative; height: 18px; background: var(--bg-elevated); border-radius: 4px; }
+    .tor-pruh .usek { position: absolute; top: 2px; bottom: 2px; background: var(--accent); border-radius: 3px; opacity: .8; }
+    .tor-pruh .stred { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--text); }
+    .tor-pruh span { position: absolute; top: 1px; font-size: 0.68rem; color: var(--text); white-space: nowrap; }
+    pre.protokol { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 0.74rem; line-height: 1.45; max-height: 460px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin: 8px 0 0; }
+    .priklady { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+    .priklad { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 0.78rem; line-height: 1.45; min-width: 0; }
+    .priklad h4 { margin: 0 0 4px; font-size: 0.86rem; }
+    .priklad ol { margin: 4px 0; padding-left: 18px; color: var(--text-muted); }
+    .priklad .kontr { font-size: 0.74rem; margin-top: 4px; }
+    .pozn { color: var(--text-muted); font-size: 0.8rem; line-height: 1.55; max-width: 1320px; margin-top: 18px; }
+    .pozn h2 { color: var(--text); margin-top: 18px; }
+    .pozn details { margin: 6px 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; }
+    .pozn summary { cursor: pointer; color: var(--text); font-weight: 600; }
+    .pozn code, .vzorec { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--text); }
+    .vzorec { display: block; background: var(--bg-input); padding: 6px 8px; border-radius: 4px; margin: 4px 0; overflow-x: auto; white-space: pre; }
+    .pozn .tab td, .pozn .tab th { white-space: normal; text-align: left; vertical-align: top; }
+    .pozn ol, .pozn ul { padding-left: 20px; }
+    .chybovy { color: var(--text-chyba); font-size: 0.86rem; padding: 6px 0; }
+    .skryt { display: none !important; }
+    .zvyr { background: var(--accent-soft); }
+    @media (max-width: 600px) {
+      body { padding: 14px 10px; }
+      .karta { padding: 12px; }
+      .prepinac button { font-size: 0.74rem; }
+      .tor-radek { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    }
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      body > *:not(#tiskProtokol) { display: none !important; }
+      #tiskProtokol { display: block !important; white-space: pre-wrap; font: 10pt/1.4 ui-monospace, monospace; }
+    }
+    #tiskProtokol { display: none; }
+  </style>
+</head>
+<body>
+  <h1>🧱 Pevnost výtisků (FDM)</h1>
+  <p class="podtitul">Orientační výpočet ohýbaného nosníku (prostý nosník, konzola) a prostého tahu pro díly tištěné
+    technologií FDM: reakce, posouvající síla, ohybový moment, napětí ve skořepině a výplni, průhyb – vše jako
+    <b>interval</b> přes nejistoty materiálu, orientace vrstev a výplně. Porovnání variant, výpočtový protokol a příklady
+    ověřené ručním výpočtem.</p>
+  <div class="upozorneni" role="note"><b>⚠️ Orientační pomůcka, ne návrh nosné konstrukce.</b> Vlastnosti výtisku závisí na
+    tiskárně, teplotě, chlazení, vlhkosti filamentu i geometrii dílu víc, než jakýkoli model popíše. Hodnoty materiálů jsou
+    editovatelné intervaly z technických listů a literatury (zdroje dole), ne zaručené konstanty. Pro díly, jejichž selhání
+    může někoho zranit, rozhoduje zkouška skutečného výtisku.</div>
+
+  <div class="lista" role="region" aria-label="Souhrn výsledku">
+    <div class="souhrn" id="souhrn" aria-live="polite"></div>
+    <div class="akce">
+      <button id="btnUlozit" class="male" title="Uložit aktuální zadání jako variantu k porovnání">📌 Uložit variantu</button>
+      <button id="btnOrientace" class="male" title="Spočítat stejný díl ve všech třech orientacích a přidat je do porovnání">⇄ Porovnat orientace</button>
+      <button id="btnReset" class="male" title="Vrátit výchozí zadání">↺</button>
+    </div>
+  </div>
+
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="hUloha">
+        <h2 id="hUloha">1. Úloha a zatížení</h2>
+        <div class="prepinac" role="group" aria-label="Typ úlohy">
+          <button data-uloha="prosty" aria-pressed="true"><svg viewBox="0 0 56 34" aria-hidden="true"><rect x="4" y="12" width="48" height="5" fill="currentColor"/><path d="M8 17l-5 9h10zM48 17l-5 9h10z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M28 1v9" stroke="currentColor" stroke-width="2"/></svg>Prostý nosník</button>
+          <button data-uloha="konzola" aria-pressed="false"><svg viewBox="0 0 56 34" aria-hidden="true"><rect x="2" y="3" width="6" height="26" fill="currentColor" opacity=".5"/><rect x="8" y="12" width="44" height="5" fill="currentColor"/><path d="M48 1v9" stroke="currentColor" stroke-width="2"/></svg>Konzola</button>
+          <button data-uloha="tah" aria-pressed="false"><svg viewBox="0 0 56 34" aria-hidden="true"><rect x="12" y="12" width="32" height="10" fill="currentColor"/><path d="M12 17H2M44 17h10M5 13l-3 4 3 4M51 13l3 4-3 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Prostý tah</button>
+        </div>
+        <label for="vL">Délka L (rozpětí / vyložení / měřená délka)</label>
+        <div class="s-jednotkou"><input type="text" inputmode="decimal" id="vL" data-pole="L"><span class="jednotka">mm</span></div>
+        <div id="ohybVstupy">
+          <h3>Osamělé síly (kladně dolů)</h3>
+          <div id="sily"></div>
+          <div class="tlacitka"><button id="btnPridatSilu" class="male">+ Přidat sílu</button></div>
+          <div class="napoveda" id="napovedaA">Poloha a se měří od levé podpory.</div>
+          <label for="vq">Spojité zatížení q po celé délce</label>
+          <div class="s-jednotkou"><input type="text" inputmode="decimal" id="vq" data-pole="q"><span class="jednotka">N/mm</span></div>
+          <div class="napoveda">1 N/mm = 1 kN/m. Například 1 kg rozložený na 100 mm ≈ 0,098 N/mm.</div>
+          <label class="zaskrt"><input type="checkbox" id="vTiha"> Přičíst vlastní tíhu dílu</label>
+        </div>
+        <div id="tahVstupy" class="skryt">
+          <label for="vFtah">Tahová síla F</label>
+          <div class="s-jednotkou"><input type="text" inputmode="decimal" id="vFtah"><span class="jednotka">N</span></div>
+          <div class="napoveda">Tlak a vzpěr stránka neposuzuje.</div>
+        </div>
+      </section>
+
+      <section class="karta" aria-labelledby="hPrurez">
+        <h2 id="hPrurez">2. Průřez a tisk</h2>
+        <div class="mrizka2">
+          <div><label for="vTvar">Tvar průřezu</label>
+            <select id="vTvar"><option value="obdelnik">Obdélník b × h</option><option value="kruh">Kruh d</option></select></div>
+          <div><label for="vModel">Model průřezu</label>
+            <select id="vModel"><option value="tisk">Výtisk (skořepina + výplň)</option><option value="homogenni">Homogenní plný (učebnicový)</option></select></div>
+        </div>
+        <div class="mrizka2" id="rozmeryObd">
+          <div><label for="vb">Šířka b</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="vb"><span class="jednotka">mm</span></div></div>
+          <div><label for="vh">Výška h (ve směru zatížení)</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="vh"><span class="jednotka">mm</span></div></div>
+        </div>
+        <div id="rozmeryKruh" class="skryt"><label for="vd">Průměr d</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="vd"><span class="jednotka">mm</span></div></div>
+        <div id="tiskVstupy">
+          <h3>Orientace dílu při tisku</h3>
+          <div class="prepinac" role="group" aria-label="Orientace tisku">
+            <button data-orient="A" aria-pressed="false"><svg viewBox="0 0 56 34" aria-hidden="true"><g stroke="currentColor" stroke-width="1.2"><path d="M6 14h44M6 18h44M6 22h44M6 26h44"/></g><rect x="6" y="12" width="44" height="16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 32h50" stroke="currentColor" stroke-width="2.4"/></svg>Naplocho</button>
+            <button data-orient="B" aria-pressed="true"><svg viewBox="0 0 56 34" aria-hidden="true"><g stroke="currentColor" stroke-width="1.2"><path d="M6 8h44M6 12h44M6 16h44M6 20h44M6 24h44"/></g><rect x="6" y="5" width="44" height="23" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 32h50" stroke="currentColor" stroke-width="2.4"/><text x="28" y="18" font-size="7" text-anchor="middle" fill="currentColor"></text></svg>Na boku</button>
+            <button data-orient="C" aria-pressed="false"><svg viewBox="0 0 56 34" aria-hidden="true"><g stroke="currentColor" stroke-width="1.2"><path d="M22 6h12M22 10h12M22 14h12M22 18h12M22 22h12M22 26h12"/></g><rect x="22" y="2" width="12" height="27" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 32h50" stroke="currentColor" stroke-width="2.4"/></svg>Nastojato</button>
+          </div>
+          <div class="napoveda" id="orientPopis"></div>
+          <div class="mrizka2">
+            <div><label for="vPerim">Počet perimetrů</label><input type="text" inputmode="numeric" id="vPerim"></div>
+            <div><label for="vStopa">Šířka stopy (extruze)</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="vStopa"><span class="jednotka">mm</span></div></div>
+            <div><label for="vPlne">Plné vrstvy nahoře/dole</label><input type="text" inputmode="numeric" id="vPlne"></div>
+            <div><label for="vVrstva">Výška vrstvy</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="vVrstva"><span class="jednotka">mm</span></div></div>
+            <div><label for="vVypln">Výplň (hustota)</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="vVypln"><span class="jednotka">%</span></div></div>
+          </div>
+          <details class="napoveda" style="margin-top:8px">
+            <summary style="cursor:pointer;color:var(--text)">Model výplně (rozsah modulu)</summary>
+            <p>Modul výplně E_výpl = E · ρ<sup>n</sup>, kde ρ je relativní hustota výplně. Horní mez n = 1 odpovídá Voigtově mezi
+              (stěny výplně dokonale zarovnané s napětím), dolní mez n = 2 ohybově namáhaným buňkám podle Gibsona a Ashbyho
+              (gyroid, kubická, šikmé čáry). Skutečná hodnota závisí na vzoru a směru – proto interval.</p>
+            <div class="mrizka2">
+              <div><label for="vNhor">n – horní mez (tuhá)</label><input type="text" inputmode="decimal" id="vNhor"></div>
+              <div><label for="vNdol">n – dolní mez (poddajná)</label><input type="text" inputmode="decimal" id="vNdol"></div>
+            </div>
+            <label class="zaskrt"><input type="checkbox" id="vZanedbat"> Dolní mez: výplň úplně zanedbat (nejkonzervativnější)</label>
+          </details>
+        </div>
+        <label class="zaskrt" id="smykRadek"><input type="checkbox" id="vSmyk"> Zahrnout smykový průhyb (Timošenko, odhad)</label>
+        <div id="nahledPrurezu"></div>
+        <div class="legenda" id="legendaPrurezu"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hMat">
+        <h2 id="hMat">3. Materiál a nejistoty</h2>
+        <label for="vMat">Materiál</label>
+        <select id="vMat"></select>
+        <table class="iv-tab" aria-label="Intervaly materiálových hodnot">
+          <thead><tr><th>Veličina</th><th>min</th><th>max</th></tr></thead>
+          <tbody id="ivTab"></tbody>
+        </table>
+        <div class="mrizka2">
+          <div><label for="vNu">Poissonovo číslo ν</label><input type="text" inputmode="decimal" id="vNu"></div>
+          <div><label for="vHust">Hustota</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="vHust"><span class="jednotka">g/cm³</span></div></div>
+        </div>
+        <div class="tlacitka"><button id="btnMatReset" class="male">Obnovit hodnoty materiálu</button></div>
+        <div class="doklad" id="matDoklad"></div>
+        <label for="vBezp">Požadovaná bezpečnost (pevnost / napětí)</label>
+        <input type="text" inputmode="decimal" id="vBezp">
+        <div class="napoveda">Volba uživatele, ne normová hodnota. Pro trvalé zatížení (creep), rázy či únavu volte výrazně víc než 2.</div>
+      </section>
+    </div>
+
+    <div class="sloupec">
+      <section class="karta" aria-labelledby="hVysl" id="vysledek">
+        <h2 id="hVysl">Výsledek</h2>
+        <div id="chyby" class="chybovy" role="alert"></div>
+        <div id="vyslObsah">
+          <div class="verdikt" id="verdikt"></div>
+          <div class="vysledky" id="dlazdice"></div>
+          <h3>Scénáře (rohy intervalů)</h3>
+          <div class="obal-tab"><table class="tab" id="tabScenare"></table></div>
+          <div class="napoveda">Meze jsou přesné obálky: výsledky jsou monotónní v každé nejisté veličině, proto stačí projít všechny
+            kombinace jejich mezí (<span id="pocetRohu"></span>). Střed = střed intervalů, ne „nejpravděpodobnější“ hodnota.</div>
+        </div>
+      </section>
+
+      <section class="karta" aria-labelledby="hDiag" id="kartaDiag">
+        <h2 id="hDiag">Schéma a diagramy</h2>
+        <div class="graf-obal" id="gSchema"></div>
+        <div class="graf-obal" id="gV"></div>
+        <div class="graf-obal" id="gM"></div>
+        <div class="graf-obal" id="gW"></div>
+        <div class="legenda" id="legW"><span><i style="background:var(--accent)"></i>střední hodnoty</span><span><i style="background:var(--c-pas)"></i>pás nejistoty (nejtužší – nejpoddajnější kombinace)</span></div>
+        <div class="ctecka" id="ctecka">Najetím nebo dotykem na diagram odečtete hodnoty v libovolném místě.</div>
+        <div class="napoveda" id="pozMoment">Moment je vynesen na stranu tažených vláken (kladný = táhne spodní vlákna), průhyb kladně dolů.</div>
+      </section>
+
+      <section class="karta" aria-labelledby="hObl">
+        <h2 id="hObl">Napětí v oblastech průřezu</h2>
+        <div class="obal-tab"><table class="tab" id="tabOblasti"></table></div>
+        <div class="napoveda" id="pozSmyk"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hCit">
+        <h2 id="hCit">Co nejvíc ovlivňuje výsledek</h2>
+        <div class="napoveda">Každá nejistá veličina zvlášť posunutá na mez intervalu, ostatní ve středu. Delší pruh = větší vliv –
+          tam se vyplatí zpřesnit údaj (např. vlastní zkouškou).</div>
+        <h3>Bezpečnost</h3><div class="tornado" id="torB"></div>
+        <h3 id="hTorW">Průhyb</h3><div class="tornado" id="torW"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hVar">
+        <h2 id="hVar">Upozornění</h2>
+        <ul class="varovani" id="varovani"></ul>
+      </section>
+
+      <section class="karta" aria-labelledby="hPor">
+        <h2 id="hPor">Porovnání variant</h2>
+        <div class="napoveda" id="porPrazdne">Uložte aktuální zadání tlačítkem 📌 nebo nechte spočítat všechny orientace (⇄). Varianty zůstanou
+          v tomto prohlížeči.</div>
+        <div class="obal-tab"><table class="tab" id="tabVarianty"></table></div>
+        <div class="tlacitka"><button id="btnSmazVar" class="male skryt">Smazat všechny varianty</button></div>
+      </section>
+
+      <section class="karta" aria-labelledby="hProt">
+        <h2 id="hProt">Výpočtový protokol</h2>
+        <div class="tlacitka">
+          <button id="btnKopir" class="male">Kopírovat</button>
+          <button id="btnStahni" class="male">Stáhnout .txt</button>
+          <button id="btnTisk" class="male">Tisk</button>
+        </div>
+        <pre class="protokol" id="protokol"></pre>
+      </section>
+    </div>
+  </div>
+
+  <div class="pozn">
+    <h2>Příklady ověřené ručním výpočtem</h2>
+    <p>Každý příklad je spočítán ručně podle klasických vzorců; vedle je hodnota, kterou vrací výpočetní jádro stránky.
+      Tlačítkem příklad načtete do formuláře.</p>
+    <div class="priklady" id="priklady"></div>
+
+    <h2>Metodika</h2>
+    <details open><summary>Nosník: statika a průhyb</summary>
+      <p>Staticky určité nosníky – prostý nosník (kloubové podpory v x = 0 a x = L) a konzola (vetknutí v x = 0). Osamělé síly
+        F<sub>i</sub> v místech a<sub>i</sub> a rovnoměrné zatížení q po celé délce se skládají superpozicí. Ohybový průhyb podle
+        Euler–Bernoulliho teorie (Roark, tab. 8.1; Gere &amp; Goodno, kap. 9):</p>
+      <span class="vzorec">Prostý nosník, síla F v a (b = L − a):
+  R_A = F·b/L,  R_B = F·a/L,  M(a) = F·a·b/L
+  EI·w(x) = F·b·x·(L² − b² − x²)/(6L)              pro x ≤ a
+  síla uprostřed: M = F·L/4,  w = F·L³/(48·EI)
+  w_max = F·b·(L² − b²)^(3/2)/(9√3·L·EI) v x = √((L² − b²)/3)  (pro a ≥ b)
+Prostý nosník, q:  M = q·L²/8,  EI·w(x) = q·x·(L³ − 2L·x² + x³)/24,  w_max = 5·q·L⁴/(384·EI)
+Konzola, síla F v a:  R = F,  M_A = F·a,  EI·w(x) = F·x²·(3a − x)/6 (x ≤ a),  F·a²·(3x − a)/6 (x ≥ a)
+  síla na konci: w = F·L³/(3·EI)
+Konzola, q:  M_A = q·L²/2,  EI·w(x) = q·x²·(6L² − 4L·x + x²)/24,  w_max = q·L⁴/(8·EI)
+Tah:  σ = F·E_i/ΣE·A,  ΔL = F·L/ΣE·A</span>
+      <p>Maximum momentu se hledá přesně (v podporách, pod silami a v nulových bodech posouvající síly), maximum průhybu
+        vzorkováním a zlatým řezem. Smykový průhyb (volitelný, Timošenko) w<sub>s</sub>(x) = (M(x) − M(0)) / (κ·ΣG<sub>i</sub>A<sub>i</sub>),
+        G<sub>i</sub> = E<sub>i</sub>/(2(1 + ν)), κ = 5/6 (obdélník) nebo 0,9 (kruh). U krátkých nosníků se skořepinou a řídkou
+        výplní (sendvič) bývá skutečný smykový průhyb větší, než tento odhad ukáže.</p>
+    </details>
+    <details><summary>Složený průřez výtisku</summary>
+      <p>Průřez se rozdělí na oblasti: perimetry (stopy podél osy nosníku – vlastnosti jako v technickém listu), plné vrchní
+        a spodní vrstvy (rastr ±45° – faktory k<sub>E</sub>, k<sub>σ</sub> plných vrstev) a výplň. Tloušťka skořepiny je
+        počet perimetrů × šířka stopy, resp. počet plných vrstev × výška vrstvy. Podle orientace:</p>
+      <ul>
+        <li><b>Naplocho</b> – plné vrstvy tvoří horní a dolní pás (nejvíc namáhaná vlákna), perimetry boční stěny.</li>
+        <li><b>Na boku</b> – perimetry tvoří horní a dolní pás, plné vrstvy boční stěny. Obvykle nejpříznivější.</li>
+        <li><b>Nastojato</b> – v každé vrstvě obvodový rám z perimetrů a výplň; napětí prochází spoji vrstev, proto se všechny
+          oblasti násobí faktory směru Z (k<sub>E,Z</sub>, k<sub>σ,Z</sub>).</li>
+      </ul>
+      <span class="vzorec">EI = Σ E_i·I_i       (souměrný průřez → neutrální osa ve středu)
+σ_i = M·y_max,i·E_i / EI                 (transformovaný průřez)
+E_výpl = E·ρⁿ,  n ∈ ⟨1; 2⟩               (Voigtova mez … Gibson–Ashby, ohybově namáhané buňky)
+σ_výpl,dov = σ·⟨0,3·ρ^1,5; ρ⟩            (Gibson–Ashby, plastický kolaps … Voigt)
+τ = V·Σ(E_i·S_i) / (EI·b)                (průměrné smykové napětí na neutrální ose)
+τ_dov ≈ σ·k_σ,Z / √3                     (hrubý odhad pevnosti spoje vrstev ve smyku)</span>
+      <p>Kruhový průřez se modeluje jako rovnoměrné mezikruží z perimetrů a jádro z výplně. U ležícího válce je skořepina ve
+        skutečnosti nerovnoměrná (nahoře a dole ji tvoří plné vrstvy) – model to zanedbává.</p>
+      <p>Rozhodující pro bezpečnost je skořepina (perimetry, plné vrstvy) a u orientací naplocho a nastojato i smyk mezi
+        vrstvami. Využití výplně se ukazuje zvlášť – její porucha nemusí znamenat zlom dílu.</p>
+    </details>
+    <details><summary>Proč intervaly, a ne jeden koeficient</summary>
+      <p>Pevnost výtisku ve směru Z (soudržnost vrstev) se v literatuře pohybuje zhruba od třetiny do ~90 % pevnosti v rovině vrstev
+        podle materiálu, teploty, chlazení, výšky vrstvy a doby mezi vrstvami (Ahn a kol. 2002, Chacón a kol. 2017; u PC Blend
+        naměřil CNC Kitchen 25–35 MPa mezi vrstvami proti 68–71 MPa naplocho). Technické listy uvádějí nejlepší případ za
+        laboratorních podmínek. Modul výplně závisí na vzoru a směru zatížení až o řád. Jeden „univerzální koeficient“
+        by tedy dával falešnou přesnost – stránka místo toho počítá všechny kombinace mezí a ukazuje rozsah výsledku a citlivost.</p>
+      <p>Interval lze zúžit vlastní zkouškou: vytiskněte tahové těleso nebo trámeček se stejnými parametry, změřte sílu při lomu
+        a průhyb a dosaďte naměřené hodnoty jako min = max.</p>
+    </details>
+    <details><summary>Co stránka neřeší</summary>
+      <ul>
+        <li>Koncentrace napětí u děr, vrubů, ostrých vnitřních rohů, závitů a šroubů (často skutečná příčina lomu).</li>
+        <li>Místní otlačení pod silou a v podporách, boulení tenkých stěn, vzpěr tlačených prutů, kroucení.</li>
+        <li>Creep (dotvarování) pod trvalým zatížením, únava při opakovaném zatížení, rázy, vliv teploty, UV a vlhkosti.</li>
+        <li>Staticky neurčité nosníky (spojité, oboustranně vetknuté) a proměnný průřez.</li>
+        <li>Vady tisku: podextruze, delaminace, špatně vysušený filament, odlišná šířka stopy.</li>
+      </ul>
+    </details>
+
+    <h2>Materiálové intervaly a jejich původ</h2>
+    <p>Pravidlo: horní mez = nejvyšší hodnota z uvedených technických listů (tělesa tištěná za ideálních podmínek, 100 % výplň);
+      dolní mez = 0,85 × nejnižší hodnota z listů. Faktor směru Z: horní mez = poměr Z/XY z listu Polymaker, dolní mez = 0,35
+      (konzervativní odhad z literatury; u navlhlého PA 0,6 × poměr). Faktory plných vrstev ±45° (k<sub>E</sub> 0,85–1,
+      k<sub>σ</sub> 0,7–1) jsou odhad podle studií vlivu úhlu rastru (Rodríguez a kol. 2001, Ahn a kol. 2002). Údaje ověřeny
+      10/2026; výrobci listy aktualizují (např. Polymaker PETG mezi verzemi V4 a V5 výrazně změnil hodnoty).</p>
+    <div class="obal-tab"><table class="tab" id="tabMaterialy"></table></div>
+
+    <h2>Zdroje</h2>
+    <ol id="zdroje"></ol>
+  </div>
+  <pre id="tiskProtokol"></pre>
+
+<script>
+(function () {
+  'use strict';
+  const P = window.PevnostTisku, G = window.PevnostGrafy;
+  const KLIC_STAV = 'webapp_pevnost_tisku_stav', KLIC_VAR = 'webapp_pevnost_tisku_varianty';
+  const $ = id => document.getElementById(id);
+  const fmt = P.fmt;
+  const fmtB = x => x === Infinity ? '∞' : fmt(x, 3);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const cti = s => { const t = String(s).trim().replace(/\s/g, '').replace(',', '.').replace('−', '-'); return t === '' ? NaN : Number(t); };
+  const zobraz = x => (x == null || !isFinite(x)) ? '' : String(Math.round(x * 1e6) / 1e6).replace('.', ',');
+
+  let stav = nacti() || P.vychozi();
+  let vysledek = null, prubeh = null;
+
+  function nacti() {
+    try { const s = JSON.parse(localStorage.getItem(KLIC_STAV)); if (s && s.material && s.prurez) return s; } catch (e) { }
+    return null;
+  }
+  function uloz() { try { localStorage.setItem(KLIC_STAV, JSON.stringify(stav)); } catch (e) { } }
+  function nactiVarianty() { try { const v = JSON.parse(localStorage.getItem(KLIC_VAR)); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function ulozVarianty(v) { try { localStorage.setItem(KLIC_VAR, JSON.stringify(v)); } catch (e) { } }
+
+  /* ---------- materiály: výběr a intervaly ---------- */
+  const IV_RADKY = [
+    ['E', 'Modul pružnosti E v rovině vrstev', 'MPa'],
+    ['sigma', 'Pevnost v tahu σ v rovině vrstev', 'MPa'],
+    ['kEs', 'Plné vrstvy ±45°: faktor modulu (naplocho, na boku)', '–'],
+    ['kSs', 'Plné vrstvy ±45°: faktor pevnosti (naplocho, na boku)', '–'],
+    ['kEZ', 'Směr Z: faktor modulu (nastojato)', '–'],
+    ['kSZ', 'Směr Z: faktor pevnosti – soudržnost vrstev (nastojato, smyk naplocho)', '–'],
+  ];
+  $('vMat').innerHTML = Object.entries(P.MATERIALY).map(([k, m]) => `<option value="${k}">${esc(m.nazev)}</option>`).join('');
+  $('ivTab').innerHTML = IV_RADKY.map(([k, n, j]) => `<tr><td>${esc(n)}${j !== '–' ? ' [' + j + ']' : ''}</td>
+    <td><input type="text" inputmode="decimal" data-iv="${k}" data-mez="0" aria-label="${esc(n)} – minimum"></td>
+    <td><input type="text" inputmode="decimal" data-iv="${k}" data-mez="1" aria-label="${esc(n)} – maximum"></td></tr>`).join('');
+
+  /* ---------- naplnění formuláře ze stavu ---------- */
+  function doFormulare() {
+    document.querySelectorAll('[data-uloha]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.uloha === stav.uloha)));
+    document.querySelectorAll('[data-orient]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.orient === stav.orientace)));
+    $('vL').value = zobraz(stav.L);
+    $('vq').value = zobraz(stav.q || 0);
+    $('vTiha').checked = !!stav.vlastniTiha;
+    $('vFtah').value = zobraz(stav.sily[0] ? stav.sily[0].F : 0);
+    $('vTvar').value = stav.prurez.tvar;
+    $('vModel').value = stav.tisk.model === 'homogenni' ? 'homogenni' : 'tisk';
+    $('vb').value = zobraz(stav.prurez.b != null ? stav.prurez.b : 10);
+    $('vh').value = zobraz(stav.prurez.h != null ? stav.prurez.h : 10);
+    $('vd').value = zobraz(stav.prurez.d != null ? stav.prurez.d : 10);
+    const t = Object.assign({ nPerim: 3, stopa: 0.45, nPlne: 4, vrstva: 0.2, vypln: 0.2 }, stav.tisk);
+    $('vPerim').value = t.nPerim; $('vStopa').value = zobraz(t.stopa); $('vPlne').value = t.nPlne;
+    $('vVrstva').value = zobraz(t.vrstva); $('vVypln').value = zobraz(t.vypln * 100);
+    $('vNhor').value = zobraz(stav.vyplnModel.nHor); $('vNdol').value = zobraz(stav.vyplnModel.nDol);
+    $('vZanedbat').checked = !!stav.vyplnModel.zanedbat;
+    $('vSmyk').checked = stav.smyk !== false;
+    $('vMat').value = stav.material.klic;
+    document.querySelectorAll('[data-iv]').forEach(i => { i.value = zobraz(stav.material[i.dataset.iv][+i.dataset.mez]); });
+    $('vNu').value = zobraz(stav.material.nu); $('vHust').value = zobraz(stav.material.hustota);
+    $('vBezp').value = zobraz(stav.pozadovanaBezpecnost);
+    vykresliSily();
+    viditelnost();
+  }
+  function vykresliSily() {
+    const od = stav.uloha === 'konzola' ? 'od vetknutí' : 'od levé podpory';
+    $('napovedaA').textContent = 'Poloha a se měří ' + od + '. Záporná síla působí nahoru.';
+    $('sily').innerHTML = stav.sily.map((s, i) => `<div class="sila-radek">
+      <div><label for="sF${i}">F${stav.sily.length > 1 ? i + 1 : ''}</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="sF${i}" data-sila="${i}" data-co="F" value="${zobraz(s.F)}"><span class="jednotka">N</span></div></div>
+      <div><label for="sA${i}">a${stav.sily.length > 1 ? i + 1 : ''}</label><div class="s-jednotkou"><input type="text" inputmode="decimal" id="sA${i}" data-sila="${i}" data-co="a" value="${zobraz(s.a)}"><span class="jednotka">mm</span></div></div>
+      <button class="male" data-odeber="${i}" aria-label="Odebrat sílu ${i + 1}" title="Odebrat sílu">✕</button></div>`).join('');
+    $('btnPridatSilu').disabled = stav.sily.length >= 6;
+  }
+  function viditelnost() {
+    const tah = stav.uloha === 'tah';
+    $('ohybVstupy').classList.toggle('skryt', tah);
+    $('tahVstupy').classList.toggle('skryt', !tah);
+    $('smykRadek').classList.toggle('skryt', tah);
+    $('pozMoment').classList.toggle('skryt', tah);
+    $('rozmeryObd').classList.toggle('skryt', stav.prurez.tvar !== 'obdelnik');
+    $('rozmeryKruh').classList.toggle('skryt', stav.prurez.tvar !== 'kruh');
+    const homog = stav.tisk.model === 'homogenni';
+    $('tiskVstupy').classList.toggle('skryt', homog);
+    $('orientPopis').textContent = P.ORIENTACE[stav.orientace].popis;
+    $('hTorW').textContent = tah ? 'Prodloužení' : 'Průhyb';
+    const mat = P.MATERIALY[stav.material.klic];
+    const zdr = (mat.zdroje || []).map(z => P.ZDROJE[z]).filter(Boolean);
+    $('matDoklad').innerHTML = '<b>Doklad hodnot:</b> ' + esc(mat.doklad) + (mat.pozn ? '<br><b>Pozor:</b> ' + esc(mat.pozn) : '')
+      + (zdr.length ? '<br>Zdroje: ' + zdr.map(z => z.url ? `<a href="${esc(z.url)}" target="_blank" rel="noopener">${esc(z.text.split(' – ')[0].split(':')[0])}</a>` : esc(z.text)).join(', ') : '');
+  }
+
+  /* ---------- čtení formuláře do stavu ---------- */
+  function cteniCisla(el, kam, nastav) {
+    const x = cti(el.value);
+    el.classList.toggle('chyba', !isFinite(x));
+    if (isFinite(x)) nastav(x);
+  }
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement)) return;
+    if (el.dataset.sila != null) {
+      cteniCisla(el, null, x => { stav.sily[+el.dataset.sila][el.dataset.co] = x; });
+    } else if (el.dataset.iv) {
+      cteniCisla(el, null, x => { stav.material[el.dataset.iv][+el.dataset.mez] = x; });
+    } else {
+      const mapa = {
+        vL: x => stav.L = x, vq: x => stav.q = x, vFtah: x => { if (stav.uloha === 'tah') stav.sily = [{ F: x, a: 0 }]; },
+        vb: x => stav.prurez.b = x, vh: x => stav.prurez.h = x, vd: x => stav.prurez.d = x,
+        vPerim: x => stav.tisk.nPerim = x, vStopa: x => stav.tisk.stopa = x, vPlne: x => stav.tisk.nPlne = x,
+        vVrstva: x => stav.tisk.vrstva = x, vVypln: x => stav.tisk.vypln = x / 100,
+        vNhor: x => stav.vyplnModel.nHor = x, vNdol: x => stav.vyplnModel.nDol = x,
+        vNu: x => stav.material.nu = x, vHust: x => stav.material.hustota = x, vBezp: x => stav.pozadovanaBezpecnost = x,
+      };
+      if (mapa[el.id]) cteniCisla(el, null, mapa[el.id]);
+      else if (el.type === 'checkbox') {
+        if (el.id === 'vTiha') stav.vlastniTiha = el.checked;
+        if (el.id === 'vZanedbat') stav.vyplnModel.zanedbat = el.checked;
+        if (el.id === 'vSmyk') stav.smyk = el.checked;
+      } else return;
+    }
+    prepocitej();
+  });
+  document.addEventListener('change', e => {
+    const el = e.target;
+    if (el.id === 'vTvar') { stav.prurez.tvar = el.value; normalizujPrurez(); viditelnost(); prepocitej(); }
+    if (el.id === 'vModel') { stav.tisk = el.value === 'homogenni' ? Object.assign({}, stav.tisk, { model: 'homogenni' }) : Object.assign({ nPerim: 3, stopa: 0.45, nPlne: 4, vrstva: 0.2, vypln: 0.2 }, stav.tisk, { model: 'tisk' }); viditelnost(); prepocitej(); }
+    if (el.id === 'vMat') { stav.material = P.materialVstup(el.value); doFormulare(); prepocitej(); }
+  });
+  function normalizujPrurez() {
+    const p = stav.prurez;
+    if (p.tvar === 'kruh' && !(p.d > 0)) p.d = cti($('vd').value) || 10;
+    if (p.tvar === 'obdelnik') { if (!(p.b > 0)) p.b = cti($('vb').value) || 10; if (!(p.h > 0)) p.h = cti($('vh').value) || 10; }
+  }
+  // tisk: doplnit chybějící parametry, aby přepnutí na homogenní a zpět neztratilo hodnoty
+  function tiskVstup() {
+    const t = Object.assign({}, stav.tisk);
+    if (t.model !== 'homogenni') { t.nPerim = Math.round(t.nPerim); t.nPlne = Math.round(t.nPlne); }
+    return t;
+  }
+  document.querySelectorAll('[data-uloha]').forEach(b => b.addEventListener('click', () => {
+    const pred = stav.uloha; stav.uloha = b.dataset.uloha;
+    if (stav.uloha === 'tah') { const F = pred === 'tah' ? stav.sily[0].F : (cti($('vFtah').value) || 500); stav._silyOhyb = stav.sily; stav.sily = [{ F: F > 0 ? F : 500, a: 0 }]; }
+    else if (pred === 'tah') { stav.sily = stav._silyOhyb && stav._silyOhyb.length ? stav._silyOhyb : [{ F: 100, a: stav.uloha === 'konzola' ? stav.L : stav.L / 2 }]; }
+    doFormulare(); prepocitej();
+  }));
+  document.querySelectorAll('[data-orient]').forEach(b => b.addEventListener('click', () => { stav.orientace = b.dataset.orient; doFormulare(); prepocitej(); }));
+  $('btnPridatSilu').addEventListener('click', () => { stav.sily.push({ F: 50, a: Math.round(stav.L * 0.75 * 10) / 10 }); vykresliSily(); prepocitej(); });
+  $('sily').addEventListener('click', e => {
+    const b = e.target.closest('[data-odeber]'); if (!b) return;
+    stav.sily.splice(+b.dataset.odeber, 1); vykresliSily(); prepocitej();
+  });
+  $('btnMatReset').addEventListener('click', () => { stav.material = P.materialVstup(stav.material.klic); doFormulare(); prepocitej(); });
+  $('btnReset').addEventListener('click', async () => {
+    if (!(await Dialog.potvrd('Vrátit výchozí zadání? Uložené varianty zůstanou.'))) return;
+    stav = P.vychozi(); doFormulare(); prepocitej();
+  });
+
+  /* ---------- výpočet a vykreslení ---------- */
+  function vstupProVypocet(s) {
+    const v = JSON.parse(JSON.stringify(s || stav));
+    delete v._silyOhyb;
+    v.tisk = s ? v.tisk : tiskVstup();
+    if (v.tisk.model !== 'homogenni') { v.tisk.nPerim = Math.round(v.tisk.nPerim); v.tisk.nPlne = Math.round(v.tisk.nPlne); }
+    if (v.uloha === 'tah') v.sily = [v.sily[0] || { F: 0, a: 0 }];
+    return v;
+  }
+  let casovac = null;
+  function prepocitej() { clearTimeout(casovac); casovac = setTimeout(vypocti, 60); }
+  function vypocti() {
+    uloz();
+    const r = P.vypocet(vstupProVypocet());
+    nahledPrurezu(r);
+    if (r.chyby) {
+      vysledek = null;
+      $('chyby').innerHTML = r.chyby.map(esc).join('<br>');
+      $('vyslObsah').classList.add('skryt');
+      $('souhrn').innerHTML = '<span class="chyba-t">Zadání obsahuje chybu</span>';
+      ['gSchema', 'gV', 'gM', 'gW'].forEach(id => $(id).innerHTML = '');
+      $('protokol').textContent = ''; $('tabOblasti').innerHTML = ''; $('torB').innerHTML = ''; $('torW').innerHTML = ''; $('varovani').innerHTML = '';
+      return;
+    }
+    vysledek = r;
+    $('chyby').innerHTML = '';
+    $('vyslObsah').classList.remove('skryt');
+    vykresliVysledek(r);
+    vykresliDiagramy();
+    vykresliOblasti(r);
+    vykresliCitlivost(r);
+    $('varovani').innerHTML = r.varovani.map(w => `<li class="${w.uroven}">${esc(w.text)}</li>`).join('');
+    $('protokol').textContent = P.protokol(r);
+    vykresliVarianty();
+  }
+
+  function nahledPrurezu(r) {
+    const v = vstupProVypocet();
+    const ok = v.prurez.tvar === 'kruh' ? v.prurez.d > 0 : (v.prurez.b > 0 && v.prurez.h > 0);
+    if (!ok || (v.tisk.model !== 'homogenni' && !(v.tisk.nPerim >= 1 && v.tisk.stopa > 0 && v.tisk.vrstva > 0 && v.tisk.nPlne >= 0))) { $('nahledPrurezu').innerHTML = ''; $('legendaPrurezu').innerHTML = ''; return; }
+    $('nahledPrurezu').innerHTML = G.prurez(v, null);
+    const homog = v.tisk.model === 'homogenni';
+    const leg = homog ? [['var(--c-perim)', 'plný materiál']] :
+      [['var(--c-perim)', 'perimetry'], ...(v.orientace !== 'C' && v.prurez.tvar !== 'kruh' ? [['var(--c-skin)', 'plné vrstvy ±45°']] : []), ['color-mix(in srgb, var(--c-vypln) 45%, var(--bg-panel))', 'výplň ' + fmt(v.tisk.vypln * 100, 3) + ' %']];
+    $('legendaPrurezu').innerHTML = leg.map(([c, t]) => `<span><i style="background:${c}"></i>${esc(t)}</span>`).join('')
+      + (homog ? '' : '<span>Z = směr stavby tiskárny</span>');
+  }
+
+  function tridaB(b, cil) { return b >= cil ? 'ok-t' : (b >= 1 ? 'mez-t' : 'chyba-t'); }
+
+  function vykresliVysledek(r) {
+    const v = r.vstup, ob = r.obalka, n = r.nominal, cil = v.pozadovanaBezpecnost, tah = v.uloha === 'tah';
+    $('verdikt').className = 'verdikt ' + r.verdikt.stav;
+    $('verdikt').textContent = r.verdikt.text;
+    const rozsah = (a, j, p) => `${fmt(a[0], p || 3)} – ${fmt(a[1], p || 3)}${j ? ' ' + j : ''}`;
+    const dl = [];
+    dl.push(`<div class="box"><div class="popis">Bezpečnost</div><div class="cislo"><span class="${tridaB(ob.bezpecnostCelk[0], cil)}">${fmtB(ob.bezpecnostCelk[0])}</span> – <span class="${tridaB(ob.bezpecnostCelk[1], cil)}">${fmtB(ob.bezpecnostCelk[1])}</span></div><div class="dalsi">střed ${fmtB(n.bezpecnostCelk)}, požadováno ${fmt(cil)}</div></div>`);
+    dl.push(`<div class="box"><div class="popis">${tah ? 'Prodloužení ΔL' : 'Max. průhyb'}</div><div class="cislo">${rozsah(ob.wMax, 'mm')}</div><div class="dalsi">střed ${fmt(Math.abs(n.wMax), 3)} mm${tah ? '' : ' (' + fmt(Math.abs(n.wMax) / v.L * 100, 2) + ' % L)'}</div></div>`);
+    dl.push(`<div class="box"><div class="popis">Napětí (rozhodující)</div><div class="cislo">${rozsah(ob.sigmaRozh, 'MPa')}</div><div class="dalsi">${esc(n.rozhodujici ? n.rozhodujici.nazev : '')}</div></div>`);
+    if (!tah) {
+      dl.push(`<div class="box"><div class="popis">Max. moment</div><div class="cislo">${fmt(Math.abs(r.nos.Mmax), 4)} N·mm</div><div class="dalsi">= ${fmt(Math.abs(r.nos.Mmax) / 1000, 4)} N·m v x = ${fmt(r.nos.xM, 4)} mm</div></div>`);
+      dl.push(`<div class="box"><div class="popis">Reakce</div><div class="cislo">${v.uloha === 'prosty' ? 'R<sub>A</sub> ' + fmt(r.nos.RA, 4) + ' N' : 'R ' + fmt(r.nos.RA, 4) + ' N'}</div><div class="dalsi">${v.uloha === 'prosty' ? 'R<sub>B</sub> = ' + fmt(r.nos.RB, 4) + ' N' : 'M<sub>A</sub> = ' + fmt(r.nos.MA, 4) + ' N·mm'}; |V|max ${fmt(Math.abs(r.nos.Vmax), 4)} N</div></div>`);
+    }
+    dl.push(`<div class="box"><div class="popis">Únosnost (odhad)</div><div class="cislo">${fmtB(ob.bezpecnostCelk[0])}× – ${fmtB(ob.bezpecnostCelk[1])}×</div><div class="dalsi">násobek zadaného zatížení při dosažení pevnosti (lineárně)</div></div>`);
+    dl.push(`<div class="box"><div class="popis">${tah ? 'Tuhost EA' : 'Ohybová tuhost EI'}</div><div class="cislo">${rozsah(tah ? ob.EA : ob.EI, tah ? 'N' : 'N·mm²')}</div><div class="dalsi">plný průřez při středním E: ${fmt((tah ? r.Acelk : plneI(v)) * (v.material.E[0] + v.material.E[1]) / 2, 3)}</div></div>`);
+    dl.push(`<div class="box"><div class="popis">Hmotnost dílu</div><div class="cislo">${fmt(r.hmotnost, 3)} g</div><div class="dalsi">plocha s materiálem ${fmt(r.Ahmot, 3)} z ${fmt(r.Acelk, 3)} mm²</div></div>`);
+    $('dlazdice').innerHTML = dl.join('');
+    // scénáře
+    const radky = [
+      ['Nejtužší kombinace', r.tuhy], ['Střed intervalů', n], ['Nejpoddajnější kombinace', r.poddajny],
+      ['Nejvyšší bezpečnost', r.optPev], ['Nejnižší bezpečnost', r.pesPev],
+    ];
+    const nazvy = { E: 'E', sigma: 'σ', kEs: 'k_E,pl', kSs: 'k_σ,pl', kEZ: 'k_E,Z', kSZ: 'k_σ,Z', phiE: 'E_výpl/E', phiS: 'σ_výpl/σ' };
+    const rel = r.relevantni;
+    $('tabScenare').innerHTML = `<thead><tr><th>Kombinace</th>${rel.map(k => `<th>${nazvy[k]}</th>`).join('')}<th>${tah ? 'EA [N]' : 'EI [N·mm²]'}</th><th>${tah ? 'ΔL' : 'w_max'} [mm]</th><th>σ [MPa]</th><th>Bezp.</th></tr></thead><tbody>`
+      + radky.map(([nz, s]) => `<tr${s === n ? ' class="zvyr"' : ''}><td>${nz}</td>${rel.map(k => `<td>${fmt(s.s[k], 3)}</td>`).join('')}<td>${fmt(tah ? s.EA : s.EI, 4)}</td><td>${fmt(Math.abs(s.wMax), 4)}</td><td>${fmt(Math.abs(s.rozhodujici.sigma), 4)}</td><td class="${tridaB(s.bezpecnostCelk, cil)}">${fmtB(s.bezpecnostCelk)}</td></tr>`).join('') + '</tbody>';
+    $('pocetRohu').textContent = r.pocetRohu + ' kombinací';
+    // lišta
+    $('souhrn').innerHTML = `<span>Bezpečnost <b class="${tridaB(ob.bezpecnostCelk[0], cil)}">${fmtB(ob.bezpecnostCelk[0])}</b> – <b class="${tridaB(ob.bezpecnostCelk[1], cil)}">${fmtB(ob.bezpecnostCelk[1])}</b></span>`
+      + `<span>${tah ? 'ΔL' : 'Průhyb'} <b>${fmt(ob.wMax[0], 3)} – ${fmt(ob.wMax[1], 3)} mm</b></span>`
+      + `<span class="${r.verdikt.stav === 'ok' ? 'ok-t' : r.verdikt.stav === 'mez' ? 'mez-t' : 'chyba-t'}">${r.verdikt.stav === 'ok' ? '✓ vyhovuje' : r.verdikt.stav === 'mez' ? '⚠ nejisté' : '✗ nevyhovuje'}</span>`;
+  }
+  function plneI(v) { return v.prurez.tvar === 'kruh' ? Math.PI * Math.pow(v.prurez.d, 4) / 64 : v.prurez.b * Math.pow(v.prurez.h, 3) / 12; }
+
+  function sirkaGrafu() { return Math.max(260, Math.floor($('kartaDiag').clientWidth - 34)); }
+  let mapy = {};
+  function vykresliDiagramy() {
+    const r = vysledek; if (!r) return;
+    const W = sirkaGrafu(), tah = r.vstup.uloha === 'tah';
+    prubeh = P.prubehy(r, Math.min(400, Math.max(120, Math.floor(W / 2))));
+    $('gSchema').innerHTML = G.schema(r, W);
+    mapy = {};
+    if (tah) { $('gV').innerHTML = ''; $('gM').innerHTML = ''; }
+    else {
+      const dV = G.diagram({ x: prubeh.x, y: prubeh.V, L: r.vstup.L, sirka: W, vyska: 150, titul: 'Posouvající síla V', jednotka: 'N', trida: 'g-V' });
+      const dM = G.diagram({ x: prubeh.x, y: prubeh.M, L: r.vstup.L, sirka: W, vyska: 160, titul: 'Ohybový moment M', jednotka: 'N·mm', trida: 'g-M', obratit: true });
+      $('gV').innerHTML = dV.svg; $('gM').innerHTML = dM.svg; mapy.gV = dV.mapa; mapy.gM = dM.mapa;
+    }
+    const dW = G.diagram({ x: prubeh.x, y: prubeh.wNom, pas: [prubeh.wTuh, prubeh.wPod], L: r.vstup.L, sirka: W, vyska: 170, titul: tah ? 'Posunutí u(x) v ose' : 'Průhyb w', jednotka: 'mm', trida: 'g-w', obratit: !tah });
+    $('gW').innerHTML = dW.svg; mapy.gW = dW.mapa;
+  }
+  // odečet hodnot kurzorem
+  function odecet(e) {
+    if (!vysledek || !prubeh) return;
+    const obal = e.currentTarget, svg = obal.querySelector('svg.graf'); if (!svg) return;
+    const m = mapy[obal.id]; if (!m) return;
+    const rect = svg.getBoundingClientRect();
+    const bod = e.touches ? e.touches[0] : e;
+    const sx = (bod.clientX - rect.left) * (svg.viewBox.baseVal.width / rect.width);
+    let x = (sx - m.x0) / (m.x1 - m.x0) * m.L; x = Math.max(0, Math.min(m.L, x));
+    const r = vysledek, nos = r.nos, tah = r.vstup.uloha === 'tah';
+    let txt = `x = <b>${fmt(x, 4)} mm</b>`;
+    if (!tah) txt += ` · V = <b>${fmt(nos.V(x, 'P'), 4)} N</b> · M = <b>${fmt(nos.M(x), 4)} N·mm</b> · w = <b>${fmt(r.nominal.fnW(x), 3)} mm</b> (${fmt(r.tuhy.fnW(x), 3)} – ${fmt(r.poddajny.fnW(x), 3)})`;
+    else txt += ` · u = <b>${fmt(r.vstup.sily[0].F * x / r.nominal.EA, 3)} mm</b>`;
+    $('ctecka').innerHTML = txt;
+    for (const id of Object.keys(mapy)) {
+      const s = $(id).querySelector('svg.graf'); if (!s) continue;
+      const k = s.querySelector('.g-kurzor'); const px = mapy[id].x0 + x / mapy[id].L * (mapy[id].x1 - mapy[id].x0);
+      k.setAttribute('x1', px); k.setAttribute('x2', px); k.setAttribute('visibility', 'visible');
+    }
+  }
+  ['gV', 'gM', 'gW'].forEach(id => { $(id).addEventListener('mousemove', odecet); $(id).addEventListener('touchmove', odecet, { passive: true }); $(id).addEventListener('touchstart', odecet, { passive: true }); });
+  let rsz = null;
+  window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(vykresliDiagramy, 120); });
+
+  function vykresliOblasti(r) {
+    const n = r.nominal, pod = r.pesPev;
+    const najdi = (sc, id) => sc.oblasti.find(o => o.id === id);
+    $('tabOblasti').innerHTML = '<thead><tr><th>Oblast</th><th>E_i [MPa]</th><th>σ [MPa]</th><th>Pevnost [MPa]</th><th>Využití</th><th class="vlevo">Nejnižší bezpečnost: využití</th></tr></thead><tbody>'
+      + n.oblasti.map(o => { const p = najdi(pod, o.id); return `<tr><td>${esc(o.nazev)}</td><td>${fmt(o.E, 4)}</td><td>${fmt(Math.abs(o.sigma), 4)}</td><td>${fmt(o.sigmaDov, 3)}</td><td>${fmt(o.vyuziti * 100, 3)} %</td><td class="${p.vyuziti > 1 ? 'chyba-t' : ''}">${fmt(p.vyuziti * 100, 3)} %</td></tr>`; }).join('') + '</tbody>';
+    const o = P.ORIENTACE[r.vstup.orientace];
+    if (r.vstup.uloha === 'tah') $('pozSmyk').textContent = 'V tahu je napětí v každé oblasti úměrné jejímu modulu: σ_i = F·E_i / Σ E·A.';
+    else $('pozSmyk').textContent = 'Smyk na neutrální ose (průměr přes šířku): τ = ' + fmt(n.tau, 3) + ' MPa'
+      + (n.tauDov ? ' · odhad pevnosti spoje vrstev ve smyku ' + fmt(n.tauDov, 3) + ' MPa → bezpečnost ' + fmtB(n.bezpecnostSmyk) + ' (střed), ' + fmtB(r.pesPev.bezpecnostSmyk) + ' (nejnižší).'
+        : (r.vstup.tisk.model === 'homogenni' ? '.' : ' – v této orientaci nepůsobí v rovině mezi vrstvami.'));
+  }
+
+  function vykresliCitlivost(r) {
+    const c = r.citlivost;
+    if (!c.length) { $('torB').innerHTML = '<div class="napoveda">Žádná veličina nemá nenulový interval – výsledek je jednoznačný (vstupy min = max).</div>'; $('torW').innerHTML = ''; return; }
+    function tornado(hodn, stred, f) {
+      const vse = hodn.flat().filter(isFinite).concat([stred]);
+      const lo = Math.min(...vse), hi = Math.max(...vse), roz = hi - lo || 1;
+      const pos = x => ((Math.min(Math.max(x, lo), hi) - lo) / roz * 100);
+      const serazene = c.map((p, i) => ({ p, h: hodn[i] })).sort((a, b) => Math.abs(b.h[1] - b.h[0]) - Math.abs(a.h[1] - a.h[0]));
+      return serazene.map(({ p, h }) => {
+        const a = pos(Math.min(...h)), b = pos(Math.max(...h)), s = pos(stred);
+        return `<div class="tor-radek"><div>${esc(p.nazev)} <span style="color:var(--text-muted)">[${fmt(p.iv[0], 3)}–${fmt(p.iv[1], 3)}]</span></div>
+          <div class="tor-pruh" title="${f(h[0])} / ${f(h[1])}"><div class="usek" style="left:${a}%;width:${Math.max(0.8, b - a)}%"></div><div class="stred" style="left:${s}%"></div></div></div>`;
+      }).join('') + `<div class="napoveda">Rozsah osy ${f(lo)} až ${f(hi)}; svislá čára = střed (${f(stred)}).</div>`;
+    }
+    $('torB').innerHTML = tornado(c.map(x => x.bezp.map(b => b === Infinity ? 1e9 : b)), r.nominal.bezpecnostCelk, x => fmtB(x));
+    $('torW').innerHTML = tornado(c.map(x => x.w), Math.abs(r.nominal.wMax), x => fmt(x, 3) + ' mm');
+  }
+
+  /* ---------- varianty ---------- */
+  function popisVarianty(s) {
+    const m = P.MATERIALY[s.material.klic];
+    const pr = s.prurez.tvar === 'kruh' ? '⌀' + fmt(s.prurez.d) : fmt(s.prurez.b) + '×' + fmt(s.prurez.h);
+    const tisk = s.tisk.model === 'homogenni' ? 'homogenní' : P.ORIENTACE[s.orientace].nazev.toLowerCase() + ', ' + s.tisk.nPerim + ' per., ' + fmt(s.tisk.vypln * 100, 3) + ' %';
+    return { mat: m ? m.nazev : s.material.klic, pr, tisk };
+  }
+  async function ulozVariantu(nazev, s) {
+    const r = P.vypocet(vstupProVypocet(s));
+    if (r.chyby) return false;
+    const vars = nactiVarianty();
+    vars.push({ nazev, stav: JSON.parse(JSON.stringify(s || stav)), w: r.obalka.wMax, b: r.obalka.bezpecnostCelk.map(x => x === Infinity ? null : x), hm: r.hmotnost, uloha: r.vstup.uloha });
+    while (vars.length > 30) vars.shift();
+    ulozVarianty(vars);
+    return true;
+  }
+  $('btnUlozit').addEventListener('click', async () => {
+    if (!vysledek) return;
+    const d = popisVarianty(stav);
+    const n = await Dialog.zeptej('Název varianty', d.mat + ' ' + d.pr + ', ' + d.tisk);
+    if (n == null) return;
+    if (await ulozVariantu(n.trim() || 'Varianta', stav)) Dialog.info('Varianta uložena');
+    vykresliVarianty();
+    $('tabVarianty').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  $('btnOrientace').addEventListener('click', async () => {
+    const zaklad = JSON.parse(JSON.stringify(stav));
+    zaklad.tisk.model = 'tisk';
+    zaklad.tisk = Object.assign({ nPerim: 3, stopa: 0.45, nPlne: 4, vrstva: 0.2, vypln: 0.2 }, zaklad.tisk);
+    let pocet = 0;
+    for (const o of ['A', 'B', 'C']) {
+      const s = JSON.parse(JSON.stringify(zaklad)); s.orientace = o;
+      const d = popisVarianty(s);
+      if (await ulozVariantu(d.mat + ' ' + d.pr + ' – ' + P.ORIENTACE[o].nazev.toLowerCase(), s)) pocet++;
+    }
+    vykresliVarianty();
+    if (!pocet) Dialog.chyba('Zadání obsahuje chybu – varianty nelze spočítat.');
+    else $('tabVarianty').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  function vykresliVarianty() {
+    const vars = nactiVarianty();
+    $('porPrazdne').classList.toggle('skryt', vars.length > 0);
+    $('btnSmazVar').classList.toggle('skryt', vars.length === 0);
+    if (!vars.length) { $('tabVarianty').innerHTML = ''; return; }
+    // přepočet podle aktuálního jádra (uložené hodnoty jsou jen záloha)
+    const rad = vars.map(v => { const r = P.vypocet(vstupProVypocet(v.stav)); return r.chyby ? v : Object.assign({}, v, { w: r.obalka.wMax, b: r.obalka.bezpecnostCelk, hm: r.hmotnost, cil: r.vstup.pozadovanaBezpecnost }); });
+    const bMax = Math.max(...rad.map(v => v.b && v.b[0] != null ? v.b[0] : -1));
+    const wMin = Math.min(...rad.map(v => v.w ? v.w[1] : Infinity));
+    $('tabVarianty').innerHTML = '<thead><tr><th>Varianta</th><th>Úloha</th><th>Bezpečnost</th><th>Průhyb / ΔL [mm]</th><th>Hmotnost</th><th></th></tr></thead><tbody>'
+      + rad.map((v, i) => `<tr><td class="vlevo">${esc(v.nazev)}</td><td>${esc(P.ULOHY[v.uloha] ? P.ULOHY[v.uloha].split(' ')[0] + (v.uloha === 'prosty' ? ' nosník' : '') : '')}</td>
+        <td class="${v.b[0] === bMax ? 'ok-t' : ''}">${fmtB(v.b[0] == null ? Infinity : v.b[0])} – ${fmtB(v.b[1] == null ? Infinity : v.b[1])}${v.b[0] === bMax && rad.length > 1 ? ' ★' : ''}</td>
+        <td class="${v.w[1] === wMin && rad.length > 1 ? 'ok-t' : ''}">${fmt(v.w[0], 3)} – ${fmt(v.w[1], 3)}${v.w[1] === wMin && rad.length > 1 ? ' ★' : ''}</td>
+        <td>${fmt(v.hm, 3)} g</td>
+        <td><button class="male" data-nacti="${i}" title="Načíst do formuláře">Načíst</button> <button class="male" data-smaz="${i}" aria-label="Smazat variantu" title="Smazat">✕</button></td></tr>`).join('')
+      + '</tbody>';
+  }
+  $('tabVarianty').addEventListener('click', async e => {
+    const n = e.target.closest('[data-nacti]'), s = e.target.closest('[data-smaz]');
+    const vars = nactiVarianty();
+    if (n) { stav = JSON.parse(JSON.stringify(vars[+n.dataset.nacti].stav)); doFormulare(); prepocitej(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    if (s) { vars.splice(+s.dataset.smaz, 1); ulozVarianty(vars); vykresliVarianty(); }
+  });
+  $('btnSmazVar').addEventListener('click', async () => {
+    if (!(await Dialog.potvrd('Smazat všechny uložené varianty?'))) return;
+    ulozVarianty([]); vykresliVarianty();
+  });
+
+  /* ---------- protokol ---------- */
+  $('btnKopir').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('protokol').textContent); $('btnKopir').textContent = 'Zkopírováno ✓'; }
+    catch (e) { $('btnKopir').textContent = 'Kopírování nejde – označte text'; }
+    setTimeout(() => { $('btnKopir').textContent = 'Kopírovat'; }, 1800);
+  });
+  $('btnStahni').addEventListener('click', () => {
+    const blob = new Blob(['﻿' + $('protokol').textContent.replace(/\n/g, '\r\n')], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'pevnost_vytisku_protokol.txt';
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  });
+  $('btnTisk').addEventListener('click', () => { $('tiskProtokol').textContent = $('protokol').textContent; window.print(); });
+
+  /* ---------- příklady, materiály, zdroje ---------- */
+  function vykresliPriklady() {
+    $('priklady').innerHTML = P.PRIKLADY.map(p => {
+      const o = P.overPriklad(p);
+      const vse = o.kontroly.every(k => k.ok);
+      return `<div class="priklad"><h4>${esc(p.nazev)}</h4><ol>${p.rucne.map(t => `<li>${esc(t)}</li>`).join('')}</ol>
+        <div class="kontr">${o.kontroly.map(k => `<span class="${k.ok ? 'ok-t' : 'chyba-t'}">${k.ok ? '✓' : '✗'}</span> ${esc(k.co)}: ručně ${fmt(k.ocekavano, 5)}, stránka ${fmt(k.vypocteno, 5)}`).join('<br>')}</div>
+        <div class="tlacitka"><button class="male" data-priklad="${p.id}">Načíst příklad</button> <span class="${vse ? 'ok-t' : 'chyba-t'}" style="font-size:.76rem;align-self:center">${vse ? 'shoda ✓' : 'NESHODA'}</span></div></div>`;
+    }).join('');
+  }
+  $('priklady').addEventListener('click', e => {
+    const b = e.target.closest('[data-priklad]'); if (!b) return;
+    const p = P.PRIKLADY.find(x => x.id === b.dataset.priklad);
+    stav = p.vstup();
+    if (stav.tisk.model === 'homogenni') stav.tisk = Object.assign({ nPerim: 3, stopa: 0.45, nPlne: 4, vrstva: 0.2, vypln: 0.2 }, stav.tisk);
+    doFormulare(); prepocitej(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  function vykresliMaterialy() {
+    const iv = a => fmt(a[0], 4) + ' – ' + fmt(a[1], 4);
+    $('tabMaterialy').innerHTML = '<thead><tr><th>Materiál</th><th>E [MPa]</th><th>σ [MPa]</th><th>k_E,Z</th><th>k_σ,Z</th><th>ρ [g/cm³]</th><th class="vlevo">Doklad</th></tr></thead><tbody>'
+      + Object.entries(P.MATERIALY).filter(([k]) => k !== 'VLASTNI').map(([k, m]) => `<tr><td><b>${esc(m.nazev)}</b></td><td>${iv(m.E)}</td><td>${iv(m.sigma)}</td><td>${iv(m.kEZ)}</td><td>${iv(m.kSZ)}</td><td>${fmt(m.hustota)}</td><td class="vlevo">${esc(m.doklad)}</td></tr>`).join('') + '</tbody>';
+    $('zdroje').innerHTML = Object.values(P.ZDROJE).map(z => `<li>${esc(z.text)}${z.url ? ` – <a href="${esc(z.url)}" target="_blank" rel="noopener">${esc(z.url.replace(/^https?:\/\//, '').slice(0, 60))}${z.url.length > 68 ? '…' : ''}</a>` : ''}</li>`).join('');
+  }
+
+  vykresliPriklady();
+  vykresliMaterialy();
+  doFormulare();
+  vypocti();
+  window.__pevnost = { stav: () => stav, vysledek: () => vysledek, nastav: s => { stav = s; doFormulare(); vypocti(); } };
+})();
+</script>
+</body>
+</html>

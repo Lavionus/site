@@ -131,6 +131,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         ? `Model byl větší než 10 m – nejspíš je v mikrometrech: zmenšen ${Math.round(1 / meritko).toLocaleString('cs')}× (rozměr uprav v inspektoru, kdyby nesedělo).`
         : `Model byl menší než 0,1 mm – nejspíš je v metrech: zvětšen ${Math.round(meritko).toLocaleString('cs')}× (rozměr uprav v inspektoru, kdyby nesedělo).`);
       if (spatne.length) Dialog.chyba(`Model ${spatne.join(', ')} není uzavřený (má díry v síti). Zobrazí se, ale ve skupině s dírami nemusí jít spočítat.`);
+      if (M.nabidniZjednoduseni) M.nabidniZjednoduseni(uzly);
     }
 
     // přetažení souborů na plochu

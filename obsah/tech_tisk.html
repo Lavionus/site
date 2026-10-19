@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Technický generátor pro tisk</title>
+  <meta name="description" content="Přesná pravítka, úhloměry, kruhové stupnice, vrtací šablony, rozteče otvorů a technické mřížky v měřítku 1:1 – export do PDF, SVG a DXF.">
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/jspdf.umd.min.js"></script>
+  <script src="tech_tisk/jadro.js"></script>
+  <script src="tech_tisk/vystup.js"></script>
+  <script src="tech_tisk/podlozka.js"></script>
+  <script src="tech_tisk/merky.js"></script>
+  <script src="tech_tisk/rozvinuti.js"></script>
+  <script src="tech_tisk/logaritmy.js"></script>
+  <style>
+    body { background-color: var(--bg-deep, var(--bg)); color: var(--text); padding: 16px clamp(10px, 2vw, 26px); min-height: 100vh; font-family: var(--font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif); }
+    h1 { font-size: 1.35rem; margin-bottom: 4px; }
+    h2 { font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 4px; }
+    h3:first-child { margin-top: 2px; }
+    .podtitul { color: var(--text-muted); font-size: 0.86rem; margin-bottom: 12px; max-width: 1100px; line-height: 1.5; }
+    .karta { background: var(--bg-panel, var(--bg-elevated)); border: 1px solid var(--border); border-radius: var(--radius, 8px); padding: 12px; min-width: 0; }
+    label.pop, .popisek { display: block; font-size: 0.74rem; color: var(--text-muted); margin: 7px 0 3px; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%; background: var(--bg-input, var(--bg)); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 6px 8px; font-size: 0.88rem; min-width: 0; font-family: inherit;
+    }
+    textarea { resize: vertical; min-height: 90px; font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input.chyba, textarea.chyba { border-color: var(--danger); }
+    .jedn { position: relative; }
+    .jedn input { padding-right: 34px; }
+    .jedn span { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.74rem; color: var(--text-muted); pointer-events: none; }
+    .zaskrt { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: var(--text); margin: 9px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    button {
+      background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border-strong, var(--border)); color: var(--text);
+      border-radius: 6px; padding: 6px 10px; font-size: 0.82rem; cursor: pointer; font-family: inherit; line-height: 1.25;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #fff); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover, var(--accent)); }
+    button.male { padding: 3px 8px; font-size: 0.76rem; }
+    button.nebezpecne { color: var(--danger); }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    .formular { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+    .formular > * { grid-column: 1 / -1; min-width: 0; }
+    .formular > .pul { grid-column: auto; }
+    .formular > h3 { margin-bottom: 0; }
+
+    /* režimy */
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 12px; align-items: flex-end; }
+    .skupina-rezimu { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; position: relative; padding-top: 15px; }
+    .nazev-skupiny { position: absolute; top: 0; left: 2px; font-size: 0.66rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+    .rezimy button { padding: 7px 10px; font-size: 0.84rem; display: flex; align-items: center; gap: 5px; }
+    #btnGalerie { margin-left: auto; }
+    .rezimy button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #fff); font-weight: 600; }
+
+    /* rozložení */
+    .rozlozeni { display: grid; grid-template-columns: 330px minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
+    @media (max-width: 1280px) { .rozlozeni { grid-template-columns: 320px minmax(0, 1fr); } #panelTisk { grid-column: 1 / -1; } }
+    @media (max-width: 860px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+    /* náhled */
+    .lista { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .lista .mezera { flex: 1; }
+    .lista .info { font-size: 0.78rem; color: var(--text-muted); }
+    #nahled { background: var(--bg-deep, #222); border-radius: 6px; padding: 14px; overflow: auto; max-height: calc(100vh - 150px); min-height: 320px; display: flex; flex-direction: column; align-items: center; gap: 16px; border: 1px solid var(--border); }
+    #nahled.skutecna { align-items: flex-start; }
+    .list { position: relative; box-shadow: 0 2px 12px rgba(0,0,0,.35); background: #fff; flex: none; }
+    .list svg { display: block; width: 100%; height: 100%; }
+    .list .cislo { position: absolute; left: 0; top: -1.5em; font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+    .hlaseni { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .hlaseni div { border-left: 3px solid var(--warn, #e0a030); background: var(--bg-input, var(--bg)); padding: 5px 9px; font-size: 0.8rem; border-radius: 0 6px 6px 0; }
+    .hlaseni div.dobre { border-left-color: var(--success, #3c9); }
+
+    /* tabulka otvorů */
+    .tabulka-obal { overflow: auto; max-height: 340px; margin-top: 8px; border: 1px solid var(--border); border-radius: 6px; }
+    table.otvory { border-collapse: collapse; width: 100%; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+    table.otvory th, table.otvory td { padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    table.otvory th { position: sticky; top: 0; background: var(--bg-panel, var(--bg-elevated)); color: var(--text-muted); font-weight: 600; }
+    table.otvory td.l, table.otvory th.l { text-align: left; }
+    .souhrn { display: grid; grid-template-columns: auto auto; gap: 2px 14px; font-size: 0.8rem; margin-top: 8px; justify-content: start; }
+    .souhrn b { font-variant-numeric: tabular-nums; }
+
+    /* skupiny otvorů ve vrtací šabloně */
+    .skupina { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px 10px; margin-bottom: 8px; background: var(--bg-input, var(--bg)); }
+    .skupina .hlava { display: flex; align-items: center; gap: 6px; }
+    .skupina .hlava b { flex: 1; font-size: 0.84rem; }
+    .skupina.sbalena .formular { display: none; }
+    .pridat { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+
+    .vystupy { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+    .vystupy .cele { grid-column: 1 / -1; }
+    .kalib { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+    details summary { cursor: pointer; font-size: 0.82rem; color: var(--text-muted); margin-top: 10px; }
+    details[open] summary { margin-bottom: 4px; }
+    .karta-kal { margin: 12px auto; background: linear-gradient(135deg, #2f6fd6, #6aa6fd); border-radius: 3.18mm; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+    .modal.otevreno { display: flex; }
+    .modal .karta { max-width: 640px; width: 100%; }
+    .navod { font-size: 0.8rem; line-height: 1.5; color: var(--text); }
+    .navod li { margin: 3px 0 3px 18px; }
+    /* galerie předloh */
+    #modalGalerie .karta { max-width: 1180px; max-height: calc(100vh - 60px); display: flex; flex-direction: column; }
+    #galerieObsah { overflow: auto; padding-right: 4px; }
+    #galerieObsah h3 { font-size: 0.8rem; margin: 16px 0 2px; color: var(--accent); }
+    #galerieObsah h4 { font-size: 0.84rem; margin: 10px 0 6px; font-weight: 600; }
+    .galerie-mrizka { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .predloha { display: flex; flex-direction: column; gap: 5px; padding: 6px; text-align: left; font-size: 0.76rem; line-height: 1.3; }
+    .predloha:hover { border-color: var(--accent); }
+    .nahledG { height: 104px; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; color: #888; padding: 4px; }
+    .nahledG svg { width: 100%; height: 100%; display: block; }
+    .navrh { display: flex; gap: 5px; margin-top: 5px; }
+    .navrh .nacti { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .radek { display: flex; gap: 6px; margin-top: 6px; }
+    .radek input { flex: 1; }
+    #popisRezimu { margin: -2px 0 6px; }
+    .toast { position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%); background: var(--bg-panel, #333); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+    .toast.vid { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>📏 Technický generátor pro tisk</h1>
+  <p class="podtitul">Přesná pravítka, úhloměry, kruhové stupnice, vrtací šablony, rozteče otvorů a technické mřížky.
+    Vše se počítá v milimetrech a tiskne v měřítku 1:1 – do PDF (s kalibrační úsečkou a korekcí tiskárny), do SVG pro Inkscape,
+    laser a plotr, nebo do DXF pro CAD/CNC. Co se nevejde na list, rozdělí se na díly s překryvem a soutiskovými značkami.</p>
+
+  <nav class="rezimy" id="rezimy" role="tablist" aria-label="Druh výstupu"></nav>
+
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <section class="karta" id="panelParametry">
+        <h2><span id="nadpisRezimu">Parametry</span></h2>
+        <p class="napoveda" id="popisRezimu"></p>
+        <label class="pop" for="predvolba">Rychlá volba</label>
+        <div class="radek" style="margin-top:0"><select id="predvolba"></select>
+          <button id="btnNaList" class="male" title="Roztáhnout předlohu přes celou tisknutelnou plochu zvoleného papíru">⤢ Na celý list</button></div>
+        <div id="formular"></div>
+      </section>
+    </div>
+
+    <div class="sloupec">
+      <section class="karta">
+        <div class="lista">
+          <button id="zPrizpusobit" class="male" title="Celý list do okna">Přizpůsobit</button>
+          <button id="zSkutecna" class="male" title="Skutečná velikost na monitoru (po kalibraci)">1:1 na monitoru</button>
+          <button id="zMinus" class="male" aria-label="Oddálit">−</button>
+          <button id="zPlus" class="male" aria-label="Přiblížit">+</button>
+          <button id="zKalibrace" class="male" title="Nastavit skutečnou velikost monitoru">Kalibrace monitoru…</button>
+          <span class="mezera"></span>
+          <span class="info" id="infoRozvrh"></span>
+        </div>
+        <div id="nahled" aria-label="Náhled listů"></div>
+        <div class="hlaseni" id="hlaseni"></div>
+        <div id="vysledkyOtvoru"></div>
+      </section>
+    </div>
+
+    <div class="sloupec" id="panelTisk">
+      <section class="karta">
+        <h2>Tisk a export</h2>
+        <div class="formular" id="formTisk"></div>
+        <div class="vystupy">
+          <button class="hlavni cele" id="btnPdf">⬇ Stáhnout PDF (1:1)</button>
+          <button id="btnPdfOtevrit">Otevřít PDF k tisku</button>
+          <button id="btnSvg" title="Samotný objekt ve skutečné velikosti (mm)">SVG objektu</button>
+          <button id="btnSvgLaser" title="Obrys červeně jako řez, ostatní černě jako gravura">SVG pro laser</button>
+          <button id="btnDxf" title="DXF R12 v mm – pro CAD a CNC">DXF (CAD/CNC)</button>
+          <button id="btnPng300" title="Rastrový obrázek listů s DPI v souboru – tisk 1:1 i v copy centru">PNG 300 dpi</button>
+          <button id="btnPng600" title="Rastrový obrázek listů 600 dpi">PNG 600 dpi</button>
+          <button id="btnCsv" title="Souřadnice otvorů pro tabulku nebo CNC">CSV otvorů</button>
+          <button id="btnOdkaz" title="Odkaz s aktuálním nastavením">Kopírovat odkaz</button>
+        </div>
+        <details open>
+          <summary>Uložené návrhy</summary>
+          <div class="radek"><input type="text" id="nazevNavrhu" placeholder="název návrhu" maxlength="60"><button id="btnUlozNavrh" class="male">Uložit</button></div>
+          <div id="seznamNavrhu"></div>
+          <div class="radek"><button id="btnExportNavrhu" class="male">Export do souboru</button><button id="btnImportNavrhu" class="male">Načíst ze souboru</button>
+            <input type="file" id="souborNavrhu" accept=".json,application/json" hidden></div>
+        </details>
+        <details>
+          <summary>Korekce tiskárny</summary>
+          <p class="napoveda">Vytiskněte libovolné PDF, změřte kalibrační úsečky (vodorovně 100 mm v patičce, svisle 50 mm v levém okraji)
+            a zadejte, kolik doopravdy měří. Tisk se pak přepočte, aby rozměr seděl přesně.</p>
+          <div class="formular" id="formKorekce"></div>
+        </details>
+        <details>
+          <summary>Jak tisknout přesně</summary>
+          <ul class="navod">
+            <li>V dialogu tisku zvolte <b>Skutečná velikost / 100 %</b>, nikdy „Přizpůsobit stránce“ ani „Zmenšit nadměrné stránky“.</li>
+            <li>Formát papíru v tisku musí odpovídat formátu PDF (A4 ≠ Letter).</li>
+            <li>Po tisku přeměřte úsečku 100 mm ocelovým měřítkem. Běžné laserové tiskárny se trefí na ±0,3 %, inkoustové mívají v podélném směru odchylku větší – vyrovná ji <i>Korekce tiskárny</i>.</li>
+            <li>Pravítko nebo úhloměr nalepte na tvrdý podklad (karton, překližka, plast) a teprve potom vyřízněte podle obrysu – papír se vlhkem roztahuje až o 0,5 %.</li>
+            <li>Vrtací šablonu přilepte oboustrannou páskou, středy důlčíkem naznačte přes šablonu a teprve pak vrtejte.</li>
+            <li>Pro laser použijte <b>SVG pro laser</b> (obrys = červený řez, rysky = černá gravura) nebo DXF.</li>
+          </ul>
+        </details>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal" id="modalKalib" role="dialog" aria-modal="true" aria-labelledby="kalNadpis">
+    <div class="karta">
+      <h2 id="kalNadpis">Kalibrace monitoru (zobrazení 1:1)</h2>
+      <p class="napoveda">Přiložte k obrazovce platební nebo jinou kartu formátu ID-1 (85,60 × 53,98 mm) a posuvníkem upravte modrý obdélník, až bude přesně stejně široký.
+        Kalibrace platí jen pro náhled na tomto monitoru – na tisk nemá vliv.</p>
+      <div id="kartaKal" class="karta-kal"></div>
+      <input type="range" id="kalPosuv" min="2" max="8" step="0.005" style="width:100%">
+      <div class="lista" style="margin-top:8px"><span class="info" id="kalInfo"></span><span class="mezera"></span>
+        <button id="kalReset" class="male">Výchozí (96 dpi)</button><button id="kalOk" class="hlavni">Hotovo</button></div>
+    </div>
+  </div>
+  <div class="modal" id="modalGalerie" role="dialog" aria-modal="true" aria-labelledby="galNadpis">
+    <div class="karta">
+      <div class="lista"><h2 id="galNadpis" style="margin:0">📚 Galerie předloh</h2><span class="mezera"></span>
+        <input type="text" id="galerieHledat" placeholder="hledat (např. VESA, podložka, 1:50)…" style="max-width:280px"><button id="galerieZavrit" class="male">Zavřít</button></div>
+      <div id="galerieObsah"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="tech_tisk/ui.js"></script>
+</body>
+</html>

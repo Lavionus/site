@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Štítky a čelní panely</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/opentype.min.js"></script>
+  <script src="stitky_panely/jadro.js"></script>
+  <script src="stitky_panely/pdf.js"></script>
+  <style>
+    :root { --rez: #e5322b; --voditko: #c43ae0; --zabor: #8a8f98; --text-chyba: #ff8f85; --text-mez: #f0bd5e; }
+    :root[data-theme="light"] { --rez: #d0241d; --voditko: #a020c0; --zabor: #6d737c; --text-chyba: var(--danger); --text-mez: var(--warn); }
+    body { background-color: var(--bg-deep); padding: 18px clamp(10px, 2vw, 28px); min-height: 100vh; }
+    h1 { font-size: 1.35rem; margin-bottom: 4px; }
+    h2 { font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 12px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.86rem; margin-bottom: 12px; max-width: 1100px; line-height: 1.5; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; min-width: 0; }
+    label, .popisek { display: block; font-size: 0.74rem; color: var(--text-muted); margin: 8px 0 3px; }
+    input[type="number"], input[type="text"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 6px 8px; font-size: 0.88rem; min-width: 0; font-family: inherit;
+    }
+    textarea { resize: vertical; min-height: 54px; }
+    input[type="color"] { width: 44px; height: 30px; padding: 0 2px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    .zaskrt { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: var(--text); margin: 7px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 6px 10px; font-size: 0.82rem; cursor: pointer; font-family: inherit; line-height: 1.25;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 3px 8px; font-size: 0.76rem; }
+    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    button.nebezpecne { border-color: var(--danger); color: var(--text-chyba); }
+    kbd { font-family: ui-monospace, monospace; font-size: 0.72rem; border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 4px; background: var(--bg-input); color: var(--text); }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+    .mrizka3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 8px; }
+
+    /* horní lišta */
+    .lista { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+    .lista .odd { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
+    .upozorneni { border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius); padding: 8px 12px; font-size: 0.8rem; line-height: 1.45; margin-bottom: 10px; max-width: 1100px; }
+    .upozorneni b { color: var(--text-mez); }
+
+    /* rozložení */
+    .rozlozeni { display: grid; grid-template-columns: 196px minmax(0, 1fr) 330px; gap: 12px; align-items: start; }
+    @media (max-width: 1180px) { .rozlozeni { grid-template-columns: 180px minmax(0, 1fr); } .vpravo { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+    @media (max-width: 820px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } .vpravo { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .vpravo { gap: 12px; align-items: start; }
+
+    /* paleta */
+    .paleta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .paleta button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; font-size: 0.7rem; text-align: center; min-height: 54px; justify-content: center; }
+    .paleta button svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+    .paleta button .zk { font-size: 0.62rem; color: var(--text-faint); }
+    @media (max-width: 820px) { .paleta { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); } }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 5px; }
+    .zarovnani { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .zarovnani button { padding: 4px 2px; font-size: 0.7rem; }
+
+    /* plocha */
+    .plocha-obal { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .stavovy { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 0.76rem; color: var(--text-muted); }
+    .stavovy select, .stavovy input[type="text"] { width: auto; padding: 3px 6px; font-size: 0.78rem; }
+    .stavovy .zaskrt { margin: 0; font-size: 0.76rem; }
+    .souradnice { font-family: ui-monospace, monospace; color: var(--text); min-width: 150px; }
+    #plocha { position: relative; height: min(72vh, 760px); min-height: 360px; background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+    @media (max-width: 820px) { #plocha { height: min(58vh, 520px); min-height: 300px; } }
+    #svg { width: 100%; height: 100%; display: block; cursor: default; }
+    #svg.umistit { cursor: crosshair; }
+    #svg.posun { cursor: grabbing; }
+    .legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.72rem; color: var(--text-muted); }
+    .legenda i { display: inline-block; width: 16px; height: 10px; vertical-align: -1px; margin-right: 4px; border-radius: 2px; }
+    .info-nastroj { position: absolute; left: 8px; top: 8px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 0.74rem; color: var(--text); pointer-events: none; max-width: calc(100% - 16px); }
+    .info-nastroj:empty { display: none; }
+
+    /* SVG editoru */
+    #svg .cut { fill: var(--bg-deep); stroke: var(--rez); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
+    #svg .obrys { fill: none; stroke: var(--rez); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
+    #svg .gf { fill: var(--potisk); }
+    #svg .gs { fill: none; stroke: var(--potisk); stroke-linecap: round; stroke-linejoin: round; }
+    #svg .pf { fill: var(--accent); }
+    #svg .ps { fill: none; stroke: var(--accent); stroke-linecap: round; }
+    #svg .nz { fill: none; stroke: var(--zabor); stroke-width: 1px; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+    #svg .hit { fill: transparent; stroke: none; }
+    #svg .vybrany { fill: none; stroke: var(--accent); stroke-width: 1.3px; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+    #svg .kotva { stroke: var(--accent); stroke-width: 1.3px; vector-effect: non-scaling-stroke; }
+    #svg .voditko { stroke: var(--voditko); stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-dasharray: 6 3; }
+    #svg .ramecek { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+    #svg .mr1 { stroke: var(--mr1); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
+    #svg .mr2 { stroke: var(--mr2); stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
+    #svg .zamceny-prvek { pointer-events: none; }
+    #svg.nahled .nz, #svg.nahled .pf, #svg.nahled .ps, #svg.nahled .mrizka, #svg.nahled .led-nahled { display: none; }
+    #svg.nahled .cut { stroke: none; }
+    #svg.nahled .obrys { stroke: rgba(0, 0, 0, .35); }
+    #svg.bez-zaboru .nz { display: none; }
+
+    /* inspektor, vrstvy, tabulky */
+    .insp-prazdny { color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; }
+    .insp-skupina { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 4px; }
+    .vrstva { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 4px 6px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .vrstva input[type="text"] { padding: 4px 6px; font-size: 0.8rem; }
+    .vrstva select { padding: 3px 4px; font-size: 0.74rem; grid-column: 3; }
+    .vrstva .ovl { display: flex; gap: 3px; grid-column: 4; grid-row: 1 / span 2; flex-direction: column; }
+    .vrstva .ovl button { padding: 1px 6px; font-size: 0.72rem; }
+    .vrstva label { margin: 0; display: flex; align-items: center; gap: 3px; font-size: 0.7rem; }
+    .vrstva .role-znak { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .vrstva.aktivni { background: var(--accent-soft); }
+    .obal-tab { overflow-x: auto; max-height: 320px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+    th, td { padding: 4px 5px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    th:nth-child(2), td:nth-child(2) { text-align: left; white-space: normal; }
+    th { color: var(--text-muted); font-weight: 600; position: sticky; top: 0; background: var(--bg-panel); }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: var(--bg-hover); }
+    tbody tr.vyb { background: var(--accent-soft); }
+    .kontrola-seznam { list-style: none; padding: 0; margin: 0; font-size: 0.78rem; max-height: 300px; overflow-y: auto; }
+    .kontrola-seznam li { padding: 5px 4px 5px 22px; border-bottom: 1px solid var(--border); position: relative; line-height: 1.4; cursor: pointer; }
+    .kontrola-seznam li:hover { background: var(--bg-hover); }
+    .kontrola-seznam li::before { content: ''; position: absolute; left: 5px; top: 9px; width: 10px; height: 10px; border-radius: 50%; }
+    .kontrola-seznam li.chyba::before { background: var(--danger); }
+    .kontrola-seznam li.varovani::before { background: var(--warn); }
+    .kontrola-seznam li.ok { cursor: default; }
+    .kontrola-seznam li.ok::before { background: var(--ok); }
+    .souhrn { font-size: 0.78rem; margin-bottom: 6px; }
+    .souhrn .c { color: var(--text-chyba); font-weight: 600; } .souhrn .v { color: var(--text-mez); font-weight: 600; } .souhrn .o { color: var(--ok); font-weight: 600; }
+
+    /* dialogy */
+    dialog.okno { margin: auto; border: 1px solid var(--border-strong); border-radius: 10px; padding: 0; background: var(--bg-panel); color: var(--text); width: min(96vw, 620px); max-height: 92vh; box-shadow: var(--shadow); }
+    dialog.okno::backdrop { background: rgba(0, 0, 0, .55); }
+    dialog.okno.siroke { width: min(96vw, 860px); }
+    .okno-hlava { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); z-index: 1; }
+    .okno-hlava h2 { margin: 0; font-size: 1rem; }
+    .okno-telo { padding: 12px 16px 16px; }
+    .okno-pata { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 10px 16px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: var(--bg-panel); }
+    .varovani-tisk { border: 1px solid var(--warn); border-left-width: 4px; border-radius: 6px; padding: 8px 10px; font-size: 0.8rem; line-height: 1.45; margin: 8px 0; background: var(--bg-elevated); }
+    .varovani-tisk b { color: var(--text-mez); }
+    .stav-kal { font-size: 0.82rem; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); margin-top: 8px; line-height: 1.45; }
+    .stav-kal.ok { border-color: var(--ok); } .stav-kal.mez { border-color: var(--warn); } .stav-kal.chyba { border-color: var(--danger); }
+    .arch-nahled { display: grid; gap: 3px; margin-top: 6px; background: var(--bg-input); padding: 6px; border-radius: 6px; border: 1px solid var(--border); max-width: 260px; }
+    .arch-nahled button { padding: 0; min-height: 14px; font-size: 0.6rem; border-radius: 3px; }
+    .arch-nahled button.pouzity { background: var(--bg-deep); color: var(--text-faint); }
+    .arch-nahled button.tisk { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .zkratky { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 0.82rem; align-items: baseline; }
+    .projekty-seznam { list-style: none; padding: 0; margin: 0; }
+    .projekty-seznam li { display: flex; gap: 6px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem; flex-wrap: wrap; }
+    .projekty-seznam li span { flex: 1; min-width: 120px; }
+    .projekty-seznam li small { color: var(--text-muted); }
+    .pozn { color: var(--text-muted); font-size: 0.8rem; line-height: 1.55; max-width: 1100px; margin-top: 18px; }
+    .pozn h2 { color: var(--text); margin-top: 14px; }
+    .pozn ul { padding-left: 20px; }
+    .pozn table td, .pozn table th { white-space: normal; text-align: left; }
+    .skryty { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>Štítky a čelní panely</h1>
+  <p class="podtitul">Editor technických štítků, ovládacích panelů a čelních desek v milimetrech. Otvory k výrobě (řez, vrtání) jsou
+    oddělené od grafiky (potisk, gravírování). Export SVG/DXF pro laser a CNC, tisk PDF v měřítku 1:1 s kalibrací, archy samolepek.</p>
+
+  <div class="lista" role="toolbar" aria-label="Soubor a export">
+    <button id="bNovy" class="hlavni" title="Nový návrh ze šablony">Nový ze šablony…</button>
+    <button id="bProjekty" title="Uložené projekty v prohlížeči (Ctrl+S)">Projekty…</button>
+    <button id="bOtevrit" title="Otevřít soubor projektu .panel.json">Otevřít soubor</button>
+    <button id="bUlozitSoubor" title="Stáhnout editovatelný projekt (Ctrl+Shift+S)">Uložit soubor</button>
+    <input type="file" id="soubor" accept=".json,application/json" hidden>
+    <span class="odd"></span>
+    <button id="bZpet" title="Zpět (Ctrl+Z)">↶ Zpět</button>
+    <button id="bZnovu" title="Znovu (Ctrl+Y)">↷ Znovu</button>
+    <span class="odd"></span>
+    <button id="bSvg" title="Export SVG a DXF pro laser / CNC">Export SVG / DXF…</button>
+    <button id="bPdf" title="Tisk PDF v měřítku 1:1">Tisk PDF 1:1…</button>
+    <button id="bArch" title="Tisk na arch samolepek">Arch samolepek…</button>
+    <button id="bKal" title="Kalibrace a kontrola měřítka tiskárny">Kontrola měřítka…</button>
+    <span class="odd"></span>
+    <button id="bZkratky" title="Klávesové zkratky (F1)">Zkratky</button>
+  </div>
+
+  <div class="rozlozeni">
+    <aside class="sloupec">
+      <div class="karta">
+        <h2>Nástroje</h2>
+        <div class="paleta" id="paleta"></div>
+      </div>
+      <div class="karta">
+        <h2>Uspořádat</h2>
+        <h3>Zarovnat výběr</h3>
+        <div class="zarovnani">
+          <button data-zarov="vlevo" title="Zarovnat vlevo">⇤ Vlevo</button>
+          <button data-zarov="stredH" title="Na svislou osu">↔ Střed</button>
+          <button data-zarov="vpravo" title="Zarovnat vpravo">Vpravo ⇥</button>
+          <button data-zarov="nahoru" title="Zarovnat nahoru">⤒ Nahoru</button>
+          <button data-zarov="stredV" title="Na vodorovnou osu">↕ Střed</button>
+          <button data-zarov="dolu" title="Zarovnat dolů">Dolů ⤓</button>
+        </div>
+        <label class="zaskrt"><input type="checkbox" id="zarovPanel"> vůči panelu (ne výběru)</label>
+        <div class="tlacitka" style="margin-top:6px">
+          <button class="male" data-rozmisti="x" title="Rozmístit rovnoměrně vodorovně (aspoň 3 prvky)">Rozmístit ↔</button>
+          <button class="male" data-rozmisti="y" title="Rozmístit rovnoměrně svisle">Rozmístit ↕</button>
+        </div>
+        <h3>Generátory</h3>
+        <div class="tlacitka">
+          <button class="male" id="bRada" title="Řada, mřížka nebo kruh z vybraného prvku">Řada / pole otvorů…</button>
+          <button class="male" id="bOkotovat" title="Okótovat polohy vybraných otvorů od levého horního rohu">Okótovat výběr</button>
+        </div>
+        <h3>Výběr</h3>
+        <div class="tlacitka">
+          <button class="male" id="bDuplikovat" title="Duplikovat (Ctrl+D)">Duplikovat</button>
+          <button class="male" id="bOtocit" title="Otočit o 90° (E)">Otočit 90°</button>
+          <button class="male nebezpecne" id="bSmazat" title="Smazat (Delete)">Smazat</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="plocha-obal">
+      <div class="stavovy">
+        <span class="souradnice" id="kurzor" aria-live="off">X – Y –</span>
+        <label for="mrizkaKrok" style="margin:0">Mřížka</label>
+        <select id="mrizkaKrok" title="Krok mřížky a přichytávání">
+          <option value="0.1">0,1 mm</option><option value="0.25">0,25 mm</option><option value="0.5">0,5 mm</option><option value="1">1 mm</option>
+          <option value="1.27">1,27 mm (0,05")</option><option value="2.54">2,54 mm (0,1")</option><option value="2.5">2,5 mm</option><option value="5">5 mm</option><option value="5.08">5,08 mm (1 HP)</option><option value="10">10 mm</option>
+        </select>
+        <label class="zaskrt"><input type="checkbox" id="mrizkaZobr"> zobrazit <kbd>G</kbd></label>
+        <label class="zaskrt"><input type="checkbox" id="prichyt"> přichytávat <kbd>P</kbd></label>
+        <label class="zaskrt"><input type="checkbox" id="prichytObj"> k osám prvků</label>
+        <label for="pocatek" style="margin:0">Počátek</label>
+        <select id="pocatek" title="Počátek zobrazených souřadnic">
+          <option value="lh">levý horní roh (y ↓)</option><option value="ld">levý dolní roh (y ↑)</option><option value="stred">střed panelu (y ↑)</option>
+        </select>
+        <span style="display:flex;gap:4px;align-items:center">
+          <button class="male" id="bOddalit" title="Oddálit (−)">−</button>
+          <span id="zoomInfo" style="min-width:58px;text-align:center">100 %</span>
+          <button class="male" id="bPriblizit" title="Přiblížit (+)">+</button>
+          <button class="male" id="bCele" title="Zobrazit celý panel (0)">Celé</button>
+        </span>
+        <label class="zaskrt"><input type="checkbox" id="nahledHotovy"> náhled hotového panelu</label>
+        <label class="zaskrt"><input type="checkbox" id="zaborZobr" checked> zábor knoflíků</label>
+      </div>
+      <div id="plocha">
+        <svg id="svg" xmlns="http://www.w3.org/2000/svg" aria-label="Pracovní plocha panelu"></svg>
+        <div class="info-nastroj" id="infoNastroj"></div>
+      </div>
+      <div class="legenda">
+        <span><i style="border:2px solid var(--rez)"></i>výroba – řez, otvory (vrstva <b>cut</b>)</span>
+        <span><i style="background:var(--text)"></i>potisk / gravírování (<b>engrave</b>)</span>
+        <span><i style="background:var(--accent)"></i>kóty a poznámky (nevyrábí se)</span>
+        <span><i style="border:1px dashed var(--zabor)"></i>zábor knoflíku či matice (jen náhled)</span>
+      </div>
+    </main>
+
+    <aside class="sloupec vpravo">
+      <div class="karta" id="kartaInsp">
+        <h2 id="inspTitul">Vlastnosti</h2>
+        <div id="insp"></div>
+      </div>
+      <div class="karta">
+        <h2>Panel</h2>
+        <label for="pNazev">Název</label>
+        <input type="text" id="pNazev">
+        <div class="mrizka3">
+          <div><label for="pSirka">Šířka (mm)</label><input type="text" id="pSirka" inputmode="decimal"></div>
+          <div><label for="pVyska">Výška (mm)</label><input type="text" id="pVyska" inputmode="decimal"></div>
+          <div><label for="pR">Rádius rohů</label><input type="text" id="pR" inputmode="decimal"></div>
+        </div>
+        <div class="mrizka2">
+          <div><label for="pMaterial">Materiál (náhled)</label>
+            <select id="pMaterial">
+              <option value="hlinik">Hliník přírodní</option><option value="cerny">Černý elox</option><option value="bily">Bílý plast</option>
+              <option value="zluty">Žlutý štítek</option><option value="fr4">DPS (zelená maska)</option><option value="mosaz">Mosaz</option>
+            </select></div>
+          <div><label class="zaskrt" style="margin-top:26px"><input type="checkbox" id="pObrys"> obrys je řez</label></div>
+        </div>
+        <p class="napoveda" id="pInfo"></p>
+      </div>
+      <div class="karta">
+        <h2>Vrstvy <button class="male" id="bVrstvaPridat" title="Přidat vrstvu">+ Vrstva</button></h2>
+        <div id="vrstvy"></div>
+        <p class="napoveda">Role vrstvy určuje export: <b>výroba</b> → SVG vrstva <code>cut</code>, <b>potisk</b> → <code>engrave</code>,
+          <b>pomocná</b> → jen kóty a poznámky. Otvory jdou do řezu vždy, i když jsou na jiné vrstvě. Klepnutím na řádek zvolíte vrstvu pro nové prvky.</p>
+      </div>
+      <div class="karta">
+        <h2>Kontrola výroby</h2>
+        <div class="mrizka2">
+          <div><label for="minMustek">Min. můstek (mm)</label><input type="text" id="minMustek" value="1,5" inputmode="decimal"></div>
+          <div><label for="minText">Min. výška písma</label><input type="text" id="minText" value="1,5" inputmode="decimal"></div>
+        </div>
+        <div class="souhrn" id="kontrolaSouhrn"></div>
+        <ul class="kontrola-seznam" id="kontrola"></ul>
+      </div>
+      <div class="karta">
+        <h2>Tabulka otvorů <button class="male" id="bCsv" title="Stáhnout CSV">CSV</button></h2>
+        <div class="obal-tab"><table><thead><tr><th>č.</th><th>Prvek</th><th>X</th><th>Y</th><th>Rozměr</th></tr></thead><tbody id="tabOtvoru"></tbody></table></div>
+        <p class="napoveda">Středy otvorů vůči zvolenému počátku. Rozměry součástek jsou typické hodnoty – před výrobou je ověřte v datasheetu.</p>
+      </div>
+    </aside>
+  </div>
+
+  <section class="pozn">
+    <h2>Jak na přesný tisk a výrobu</h2>
+    <ul>
+      <li><b>Tisk 1:1:</b> v tiskovém dialogu zvolte <b>„Skutečná velikost“ / „Měřítko 100 %“</b>. Volba „Přizpůsobit stránce“ (často výchozí) návrh tiše zmenší
+        na 94–97 %. Každé PDF má kalibrační úsečky 100 mm – změřte je a případnou zbytkovou chybu tiskárny zadejte v <i>Kontrole měřítka</i>.</li>
+      <li><b>Laser:</b> SVG má vrstvy <code>cut</code> (červená #FF0000, vlasová čára) a <code>engrave</code> (černá výplň); texty jsou převedené na křivky,
+        takže nezáleží na písmech v počítači. Barvy lze v exportu změnit podle vašeho softwaru (LightBurn, RDWorks, Inkscape).</li>
+      <li><b>CNC / frézování:</b> DXF (R12, mm) má hladiny <code>CUT</code>, <code>ENGRAVE</code>, <code>DIM</code>; kruhy a oblouky jsou přesné entity, ne lomené čáry.</li>
+      <li><b>Vrtací šablona:</b> v PDF zapněte „středové křížky“, vytiskněte, přilepte na panel a důlčíkem označte středy.</li>
+      <li><b>Samolepky:</b> v textu lze použít <code>{n}</code> (pořadové číslo), <code>{n:4}</code> (s nulami), <code>{datum}</code> a <code>{rok}</code>.</li>
+      <li><b>Výrazy v polích:</b> čísla lze zadat i jako výpočet – <code>128,5/2</code>, <code>8hp</code>, <code>1in</code>, <code>2u−0,8</code>.</li>
+    </ul>
+    <h2>Normy a omezení</h2>
+    <ul>
+      <li>Eurorack: výška 3U = 128,5 mm, šířka = n · 5,08 − 0,3 mm, montážní otvory Ø 3,2 mm 7,5 mm od kraje a 3 mm od horní/dolní hrany (Doepfer A-100).
+        Kontrola upozorní na otvory v pásu 9,5 mm u lišt. Rozměry 1U (Intellijel 39,65 mm, Pulp Logic 43,18 mm) jsou podle výrobců.</li>
+      <li>19" panel: šířka 482,6 mm, výška n · 44,45 − 0,8 mm, rozteč otvorů 465,1 mm (EIA-310). U vyšších panelů jsou předvyplněné jen krajní otvory.</li>
+      <li>Víka krabiček Hammond jsou vnější rozměry a rádius rohů je přibližný – změřte konkrétní kus. Rozměry otvorů součástek jsou typické hodnoty, ne závazné.</li>
+      <li>Písmo Liberation Sans (licence SIL OFL 1.1) se kreslí jako obrysy – PDF i SVG vypadají všude stejně. Kontrola výroby je pomůcka, nenahrazuje
+        posouzení výrobce (minimální můstek závisí na materiálu a technologii).</li>
+      <li>Projekt se průběžně ukládá v tomto prohlížeči; pro zálohu a přenos použijte „Uložit soubor“ (.panel.json).</li>
+    </ul>
+  </section>
+
+  <!-- ===== dialogy ===== -->
+  <dialog class="okno" id="dlgNovy">
+    <div class="okno-hlava"><h2>Nový návrh ze šablony</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo">
+      <label for="nSablona">Šablona</label>
+      <select id="nSablona"></select>
+      <div id="nParam" class="mrizka3"></div>
+      <p class="napoveda" id="nInfo"></p>
+      <label class="zaskrt"><input type="checkbox" id="nPonechat"> ponechat prvky současného návrhu (jen změnit rozměr)</label>
+    </div>
+    <div class="okno-pata"><button data-zavrit>Zrušit</button><button class="hlavni" id="nVytvorit">Vytvořit</button></div>
+  </dialog>
+
+  <dialog class="okno" id="dlgProjekty">
+    <div class="okno-hlava"><h2>Projekty v prohlížeči</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo">
+      <div class="mrizka2" style="align-items:end">
+        <div><label for="prNazev">Uložit současný návrh jako</label><input type="text" id="prNazev" placeholder="např. VCF 8 HP"></div>
+        <div><button class="hlavni" id="prUlozit">Uložit</button></div>
+      </div>
+      <h3>Uložené</h3>
+      <ul class="projekty-seznam" id="prSeznam"></ul>
+      <p class="napoveda">Projekty jsou jen v tomto prohlížeči (localStorage). Pro zálohu použijte „Uložit soubor“.</p>
+    </div>
+  </dialog>
+
+  <dialog class="okno" id="dlgSvg">
+    <div class="okno-hlava"><h2>Export SVG / DXF</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo">
+      <h3>Obsah</h3>
+      <label class="zaskrt"><input type="checkbox" id="sCut" checked> výroba – obrys a otvory (vrstva <code>cut</code>)</label>
+      <label class="zaskrt"><input type="checkbox" id="sGraf" checked> potisk / gravírování (vrstva <code>engrave</code>)</label>
+      <label class="zaskrt"><input type="checkbox" id="sPom"> kóty a poznámky (vrstva <code>koty</code>)</label>
+      <h3>Možnosti SVG</h3>
+      <div class="mrizka3">
+        <div><label for="sTah">Tloušťka řezu (mm)</label><input type="text" id="sTah" value="0,1" inputmode="decimal"></div>
+        <div><label for="sBarvaRez">Barva řezu</label><input type="color" id="sBarvaRez" value="#ff0000"></div>
+        <div><label for="sBarvaGraf">Barva potisku</label><input type="color" id="sBarvaGraf" value="#000000"></div>
+      </div>
+      <div class="mrizka2">
+        <div><label for="sN">Pořadové číslo {n}</label><input type="number" id="sN" value="1" min="0" step="1"></div>
+        <div></div>
+      </div>
+      <label class="zaskrt"><input type="checkbox" id="sKrivky" checked> texty převést na křivky (doporučeno)</label>
+      <label class="zaskrt"><input type="checkbox" id="sZrcadlit"> zrcadlit (tisk na rub průhledné fólie, gravírování zezadu)</label>
+      <p class="napoveda">Konvence laserů: <b>červená</b> = řez, <b>modrá</b> = vektorové rytí, <b>černá</b> = rastrové gravírování. Řez je v SVG nahoře,
+        takže se vyřezává až po gravírování. Rozměry SVG jsou v mm (width/height „mm“, viewBox 1:1).</p>
+    </div>
+    <div class="okno-pata"><button id="sDxf">Stáhnout DXF</button><button class="hlavni" id="sStahnout">Stáhnout SVG</button></div>
+  </dialog>
+
+  <dialog class="okno" id="dlgPdf">
+    <div class="okno-hlava"><h2>Tisk PDF v měřítku 1:1</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo">
+      <div class="varovani-tisk"><b>Pozor na tiskový dialog:</b> zvolte „Skutečná velikost“ / „Měřítko 100 %“. „Přizpůsobit stránce“ návrh zmenší.
+        Po tisku změřte kalibrační úsečky (100 mm).</div>
+      <div class="mrizka2">
+        <div><label for="tFormat">Papír</label>
+          <select id="tFormat"><option value="auto">automaticky (A4 / A3)</option><option value="A4">A4</option><option value="A3">A3</option><option value="A5">A5</option><option value="Letter">Letter</option><option value="panel">stránka přesně na míru panelu</option></select></div>
+        <div><label for="tBarva">Barva potisku</label><input type="color" id="tBarva" value="#000000"></div>
+      </div>
+      <h3>Obsah</h3>
+      <div class="mrizka2">
+        <label class="zaskrt"><input type="checkbox" id="tPotisk" checked> potisk / grafika</label>
+        <label class="zaskrt"><input type="checkbox" id="tRez" checked> otvory a obrys (řez)</label>
+        <label class="zaskrt"><input type="checkbox" id="tKrizky" checked> středové křížky (vrtání)</label>
+        <label class="zaskrt"><input type="checkbox" id="tKoty"> kóty a poznámky</label>
+        <label class="zaskrt"><input type="checkbox" id="tOrez" checked> ořezové značky</label>
+        <label class="zaskrt"><input type="checkbox" id="tKal" checked> kalibrační pravítka</label>
+        <label class="zaskrt"><input type="checkbox" id="tTabulka" checked> tabulka otvorů</label>
+        <label class="zaskrt"><input type="checkbox" id="tZrcadlit"> zrcadlit</label>
+      </div>
+      <div class="mrizka2">
+        <div><label for="tPrekryv">Překryv dlaždic (mm)</label><input type="text" id="tPrekryv" value="10" inputmode="decimal"></div>
+        <div><label for="tN">Pořadové číslo {n}</label><input type="number" id="tN" value="1" min="0" step="1"></div>
+      </div>
+      <label class="zaskrt"><input type="checkbox" id="tKorekce"> použít korekci tiskárny <span id="tKorInfo" class="napoveda"></span></label>
+      <p class="napoveda" id="tInfo"></p>
+    </div>
+    <div class="okno-pata"><button id="tOtevrit">Otevřít PDF</button><button class="hlavni" id="tStahnout">Stáhnout PDF</button></div>
+  </dialog>
+
+  <dialog class="okno siroke" id="dlgArch">
+    <div class="okno-hlava"><h2>Tisk na arch samolepek</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo">
+      <div class="varovani-tisk"><b>Tiskněte se „Skutečnou velikostí / 100 %“.</b> Nejdřív zkuste obyčejný papír se zapnutým „obrysem štítků“ a přiložte ho k archu proti světlu.</div>
+      <label for="aArch">Arch</label>
+      <select id="aArch"></select>
+      <div class="mrizka3" id="aVlastni">
+        <div><label for="aSl">Sloupce</label><input type="text" id="aSl" inputmode="numeric"></div>
+        <div><label for="aRa">Řádky</label><input type="text" id="aRa" inputmode="numeric"></div>
+        <div><label for="aW">Šířka štítku</label><input type="text" id="aW" inputmode="decimal"></div>
+        <div><label for="aH">Výška štítku</label><input type="text" id="aH" inputmode="decimal"></div>
+        <div><label for="aX0">Levý okraj</label><input type="text" id="aX0" inputmode="decimal"></div>
+        <div><label for="aY0">Horní okraj</label><input type="text" id="aY0" inputmode="decimal"></div>
+        <div><label for="aDx">Rozteč vodorovně</label><input type="text" id="aDx" inputmode="decimal"></div>
+        <div><label for="aDy">Rozteč svisle</label><input type="text" id="aDy" inputmode="decimal"></div>
+      </div>
+      <div class="mrizka2">
+        <div>
+          <label>Začít na pozici (klepněte; šedé = už použité)</label>
+          <div class="arch-nahled" id="aNahled"></div>
+        </div>
+        <div>
+          <label for="aPocet">Počet štítků (prázdné = do konce archu)</label><input type="text" id="aPocet" inputmode="numeric">
+          <label for="aNOd">Číslování {n} od</label><input type="number" id="aNOd" value="1" min="0" step="1">
+          <label class="zaskrt"><input type="checkbox" id="aObrys"> obrys štítků (zkušební tisk)</label>
+          <label class="zaskrt"><input type="checkbox" id="aOrez" checked> oříznout grafiku na štítek</label>
+          <label class="zaskrt"><input type="checkbox" id="aRez"> tisknout i otvory a obrys</label>
+          <label class="zaskrt"><input type="checkbox" id="aKorekce"> použít korekci tiskárny</label>
+        </div>
+      </div>
+      <p class="napoveda" id="aInfo"></p>
+    </div>
+    <div class="okno-pata"><button id="aRozmer">Návrh na rozměr štítku</button><button id="aOtevrit">Otevřít PDF</button><button class="hlavni" id="aStahnout">Stáhnout PDF</button></div>
+  </dialog>
+
+  <dialog class="okno" id="dlgKal">
+    <div class="okno-hlava"><h2>Kontrola měřítka tisku</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo">
+      <p class="napoveda">1) Stáhněte kalibrační list (nebo použijte pravítka na okraji libovolného PDF z editoru). 2) Vytiskněte se skutečnou velikostí.
+        3) Změřte úsečky posuvkou či ocelovým pravítkem a zadejte hodnoty. Editor spočítá korekci, kterou lze použít v dalších tiscích.</p>
+      <div class="mrizka2">
+        <div><label for="kNomX">Vodorovný úsek – jmenovitě (mm)</label><input type="text" id="kNomX" value="100" inputmode="decimal"></div>
+        <div><label for="kMerX">naměřeno (mm)</label><input type="text" id="kMerX" inputmode="decimal" placeholder="např. 99,6"></div>
+        <div><label for="kNomY">Svislý úsek – jmenovitě (mm)</label><input type="text" id="kNomY" value="100" inputmode="decimal"></div>
+        <div><label for="kMerY">naměřeno (mm)</label><input type="text" id="kMerY" inputmode="decimal" placeholder="např. 100,3"></div>
+      </div>
+      <div class="stav-kal" id="kStav">Zadejte naměřené délky.</div>
+      <p class="napoveda" id="kUlozena"></p>
+    </div>
+    <div class="okno-pata"><button id="kList">Stáhnout kalibrační list</button><button id="kZrusit">Zrušit korekci</button><button class="hlavni" id="kUlozit">Uložit korekci</button></div>
+  </dialog>
+
+  <dialog class="okno" id="dlgRada">
+    <div class="okno-hlava"><h2>Řada / pole z výběru</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo">
+      <p class="napoveda" id="rInfo"></p>
+      <label for="rTyp">Uspořádání</label>
+      <select id="rTyp"><option value="lin">lineární řada</option><option value="mriz">mřížka</option><option value="kruh">po kružnici (roztečná kružnice)</option><option value="mezi">rovnoměrně mezi dvěma body</option></select>
+      <div id="rLin" class="mrizka3">
+        <div><label for="rN">Počet</label><input type="text" id="rN" value="4" inputmode="numeric"></div>
+        <div><label for="rRoz">Rozteč (mm)</label><input type="text" id="rRoz" value="10" inputmode="decimal"></div>
+        <div><label for="rUhel">Směr (° , 0 = vpravo, 90 = dolů)</label><input type="text" id="rUhel" value="0" inputmode="decimal"></div>
+      </div>
+      <div id="rMriz" class="mrizka3">
+        <div><label for="rSl">Sloupce</label><input type="text" id="rSl" value="3" inputmode="numeric"></div>
+        <div><label for="rRa">Řádky</label><input type="text" id="rRa" value="2" inputmode="numeric"></div>
+        <div><label class="zaskrt" style="margin-top:24px"><input type="checkbox" id="rSach"> šachovnice</label></div>
+        <div><label for="rDx">Rozteč X (mm)</label><input type="text" id="rDx" value="10" inputmode="decimal"></div>
+        <div><label for="rDy">Rozteč Y (mm)</label><input type="text" id="rDy" value="10" inputmode="decimal"></div>
+      </div>
+      <div id="rKruh" class="mrizka3">
+        <div><label for="rKN">Počet</label><input type="text" id="rKN" value="6" inputmode="numeric"></div>
+        <div><label for="rKD">Průměr roztečné kružnice</label><input type="text" id="rKD" value="30" inputmode="decimal"></div>
+        <div><label for="rKStart">Počáteční úhel (° od 12 h)</label><input type="text" id="rKStart" value="0" inputmode="decimal"></div>
+        <div><label for="rKRoz">Rozsah (°)</label><input type="text" id="rKRoz" value="360" inputmode="decimal"></div>
+        <div><label for="rKX">Střed X</label><input type="text" id="rKX" inputmode="decimal"></div>
+        <div><label for="rKY">Střed Y</label><input type="text" id="rKY" inputmode="decimal"></div>
+        <div><label class="zaskrt" style="margin-top:6px"><input type="checkbox" id="rKOtacet"> otáčet prvky</label></div>
+      </div>
+      <div id="rMezi" class="mrizka3">
+        <div><label for="rMN">Počet</label><input type="text" id="rMN" value="5" inputmode="numeric"></div>
+        <div><label for="rMX">Koncový bod X</label><input type="text" id="rMX" inputmode="decimal"></div>
+        <div><label for="rMY">Koncový bod Y</label><input type="text" id="rMY" inputmode="decimal"></div>
+      </div>
+      <p class="napoveda">Souřadnice středu a bodů jsou v interních souřadnicích (mm od levého horního rohu). Výběr se stane prvním prvkem řady.</p>
+    </div>
+    <div class="okno-pata"><button data-zavrit>Zrušit</button><button class="hlavni" id="rVytvorit">Vytvořit</button></div>
+  </dialog>
+
+  <dialog class="okno" id="dlgZkratky">
+    <div class="okno-hlava"><h2>Klávesové zkratky</h2><button class="male" data-zavrit>Zavřít</button></div>
+    <div class="okno-telo"><div class="zkratky" id="zkratky"></div></div>
+  </dialog>
+
+  <script src="stitky_panely/editor.js"></script>
+</body>
+</html>

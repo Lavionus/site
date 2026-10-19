@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Výletní deník</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/leaflet/leaflet.js"></script>
+  <script src="vyletni_denik/jadro.js"></script>
+  <script src="vyletni_denik/ulozeni.js"></script>
+  <script src="vyletni_denik/tisk.js"></script>
+  <style>
+    :root {
+      --trasa: #ff6b5e; --trasa-obrys: #3a0d09; --misto: #f0b03f; --foto: #5fb3ff; --start: #4caf7d;
+      --profil-plocha: rgba(106, 166, 253, 0.25); --profil-syrovy: #9e9e9e;
+      --rok-0: #ff6b5e; --rok-1: #5fb3ff; --rok-2: #c792ea; --rok-3: #4fd1a5; --rok-4: #f0b03f; --rok-5: #ff8fc8;
+    }
+    :root[data-theme="light"] {
+      --trasa: #c0392b; --trasa-obrys: #ffffff; --misto: #e8a33a; --foto: #1f6fb5; --start: #177540;
+      --profil-plocha: rgba(40, 98, 187, 0.18); --profil-syrovy: #6b7280;
+      --rok-0: #c0392b; --rok-1: #1f6fb5; --rok-2: #7d3c98; --rok-3: #117a65; --rok-4: #b9770e; --rok-5: #c2185b;
+    }
+    * { box-sizing: border-box; }
+    body { background: var(--bg-deep); color: var(--text); padding: 20px clamp(10px, 3vw, 36px); min-height: 100vh; margin: 0; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1.05rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 12px; max-width: 980px; line-height: 1.5; }
+    .obal { max-width: 1360px; margin: 0 auto; }
+    .hlava { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .zalozky button { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit; font-size: 0.88rem; }
+    .zalozky button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; min-width: 0; }
+    .karta + .karta { margin-top: 14px; }
+    .dva-sloupce > .karta { margin-top: 0; }
+    [hidden] { display: none !important; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
+    input[type="text"], input[type="number"], input[type="date"], input[type="search"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+      padding: 7px 9px; font: inherit; font-size: 0.92rem; min-width: 0;
+    }
+    textarea { resize: vertical; min-height: 70px; line-height: 1.45; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+    .tl { background: var(--bg-control); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; font: inherit; font-size: 0.88rem; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+    .tl:hover { background: var(--bg-hover); }
+    .tl:focus-visible, .zalozky button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .tl.hlavni { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+    .tl.hlavni:hover { background: var(--accent-hover); }
+    .tl.nebezpeci { color: var(--danger); border-color: var(--danger); background: transparent; }
+    .tl.male { padding: 4px 8px; font-size: 0.8rem; }
+    .tl[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .tl:disabled { opacity: .55; cursor: not-allowed; }
+    .rada { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .rada.mezera { margin-top: 10px; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
+    .ztlum { color: var(--text-muted); font-size: 0.84rem; line-height: 1.5; }
+    .male-pismo { font-size: 0.78rem; color: var(--text-faint); }
+    .chyba-pruh { border: 1px solid var(--danger); border-left-width: 4px; background: var(--bg-panel); padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; }
+    .info-pruh { border: 1px solid var(--border); border-left: 4px solid var(--accent); background: var(--bg-panel); padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 0.86rem; line-height: 1.5; }
+
+    /* filtry */
+    .filtry { display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)) auto; gap: 8px; align-items: end; margin-bottom: 14px; }
+    .filtry label { margin-top: 0; }
+    @media (max-width: 760px) { .filtry { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .filtry .hledat { grid-column: 1 / -1; } }
+
+    /* seznam výletů */
+    .seznam { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    @media (max-width: 400px) { .seznam { grid-template-columns: minmax(0, 1fr); } }
+    .vylet-karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; display: flex; flex-direction: column; text-align: left; color: var(--text); font: inherit; padding: 0; }
+    .vylet-karta:hover, .vylet-karta:focus-visible { border-color: var(--accent); outline: none; }
+    .vylet-karta .obr { height: 140px; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 2rem; overflow: hidden; }
+    .vylet-karta .obr img, .vylet-karta .obr svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .vylet-karta .telo { padding: 10px 12px 12px; }
+    .vylet-karta .nazev { font-weight: 600; font-size: 1rem; margin-bottom: 2px; overflow-wrap: anywhere; }
+    .vylet-karta .kdy { color: var(--text-muted); font-size: 0.82rem; }
+    .stitky { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 8px; }
+    .stitek { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+    .prazdne { text-align: center; padding: 34px 16px; color: var(--text-muted); }
+    .prazdne p { margin: 6px 0 14px; }
+
+    /* detail */
+    .detail-hlava { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .detail-hlava h2 { margin: 0; font-size: 1.25rem; overflow-wrap: anywhere; min-width: 0; }
+    .ulozeno { font-size: 0.8rem; color: var(--text-faint); min-width: 90px; }
+    .detail { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 14px; }
+    @media (max-width: 1000px) { .detail { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { min-width: 0; }
+    .doprava { display: flex; flex-wrap: wrap; gap: 6px; }
+    .doprava label { margin: 0; display: inline-flex; align-items: center; gap: 5px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 0.82rem; color: var(--text); cursor: pointer; }
+    .doprava input { accent-color: var(--accent); margin: 0; }
+    .doprava label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+    .naklady-radek { display: grid; grid-template-columns: minmax(0, 1fr) 96px 74px 34px; gap: 6px; margin-bottom: 6px; }
+    @media (max-width: 460px) { .naklady-radek { grid-template-columns: minmax(0, 1fr) 70px 34px; } .naklady-radek input[data-k="popis"] { grid-column: 1 / -1; } }
+    .naklady-soucet { font-size: 0.86rem; margin-top: 4px; }
+    .hvezdy { display: flex; gap: 2px; }
+    .hvezdy button { background: none; border: none; font-size: 1.35rem; cursor: pointer; color: var(--text-faint); padding: 0 2px; line-height: 1; }
+    .hvezdy button.zap { color: var(--misto); }
+    .mapa { height: 420px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-elevated); z-index: 0; }
+    .mapa-velka { height: min(64vh, 620px); }
+    @media (max-width: 600px) { .mapa { height: 320px; } }
+    .leaflet-container { font-family: var(--font); }
+    .leaflet-popup-content { font-size: 0.85rem; }
+    .leaflet-popup-content a { color: #1f5bb5; }
+    .znacka-misto { background: var(--misto); color: #1b1b1b; border: 2px solid #1b1b1b; border-radius: 50%; width: 24px !important; height: 24px !important; display: flex; align-items: center; justify-content: center; font: 700 12px/1 var(--font); box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+    .znacka-foto { border: 2px solid #ffffff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 5px rgba(0,0,0,.6); background: #333; }
+    .znacka-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .profil-obal { position: relative; margin-top: 10px; }
+    .profil-obal canvas { width: 100%; height: 170px; display: block; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; touch-action: pan-y; }
+    .profil-popis { position: absolute; top: 6px; right: 8px; font-size: 0.78rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; pointer-events: none; }
+    .legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
+    .legenda i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+    .tab-stat { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .tab-stat th, .tab-stat td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+    .tab-stat th { color: var(--text-muted); font-weight: 500; }
+    .tab-stat td.c, .tab-stat th.c { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .tabulka-obal { overflow-x: auto; max-width: 100%; }
+    .trasa-radek, .misto-radek { display: grid; gap: 6px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .trasa-radek { grid-template-columns: minmax(0, 1fr) auto auto; }
+    .misto-radek { grid-template-columns: 28px minmax(0, 1fr) auto; }
+    .misto-radek .cislo { width: 24px; height: 24px; border-radius: 50%; background: var(--misto); color: #1b1b1b; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; }
+    .misto-pole { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 6px; }
+    @media (max-width: 520px) { .misto-pole { grid-template-columns: minmax(0, 1fr); } }
+    .shoz { border: 2px dashed var(--border-strong); border-radius: var(--radius); padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.86rem; }
+    .shoz.nad { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+    .galerie { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+    @media (max-width: 460px) { .galerie { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .foto { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+    .foto .nahled { aspect-ratio: 4 / 3; background: var(--bg-input); display: block; width: 100%; border: 0; padding: 0; cursor: zoom-in; }
+    .foto .nahled img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .foto .telo { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .foto .telo input, .foto .telo select { font-size: 0.82rem; padding: 5px 7px; }
+    .foto .meta { font-size: 0.74rem; color: var(--text-faint); line-height: 1.4; overflow-wrap: anywhere; }
+    .foto .akce { display: flex; flex-wrap: wrap; gap: 4px; }
+    .poloha-ok { color: var(--ok); }
+    .postup { font-size: 0.84rem; color: var(--text-muted); margin-top: 8px; min-height: 1.2em; }
+
+    /* lightbox */
+    #lightbox { border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text); border-radius: 10px; padding: 0; max-width: min(96vw, 1400px); width: max-content; }
+    #lightbox::backdrop { background: rgba(0, 0, 0, .8); }
+    #lightbox img { display: block; max-width: min(94vw, 1380px); max-height: 78vh; margin: 0 auto; }
+    #lightbox .lb-pata { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 12px; }
+    #lightbox .lb-popis { font-size: 0.9rem; overflow-wrap: anywhere; min-width: 0; flex: 1 1 200px; }
+
+    /* kalendář */
+    .kal-hlava { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .kal-hlava h2 { margin: 0; text-transform: capitalize; }
+    .kal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .kal .dn { font-size: 0.74rem; color: var(--text-muted); text-align: center; padding: 2px 0; text-transform: uppercase; }
+    .kal .den { min-height: 86px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 4px; min-width: 0; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+    .kal .den.mimo { opacity: .5; }
+    .kal .den.dnes { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+    .kal .den .c { font-size: 0.78rem; color: var(--text-muted); }
+    .kal .cip { background: var(--accent); color: var(--on-accent); border: 0; border-radius: 4px; padding: 2px 5px; font: inherit; font-size: 0.72rem; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+    @media (max-width: 600px) { .kal .den { min-height: 54px; padding: 2px; } .kal .cip { font-size: 0; height: 8px; padding: 0; } }
+    .rok-pas { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; margin-top: 14px; }
+    .rok-pas button { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font: inherit; font-size: 0.72rem; padding: 6px 0; cursor: pointer; min-width: 0; }
+    .rok-pas button b { display: block; font-size: 0.95rem; }
+    .rok-pas button.akt { border-color: var(--accent); }
+    @media (max-width: 600px) { .rok-pas { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+    /* statistiky */
+    .dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .dlazdice div { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+    .dlazdice b { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .dlazdice span { font-size: 0.78rem; color: var(--text-muted); }
+    .graf { width: 100%; height: 240px; display: block; }
+    .dva-sloupce { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 14px; }
+    @media (max-width: 400px) { .dva-sloupce { grid-template-columns: minmax(0, 1fr); } }
+    .odkaz { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+
+    /* úložiště */
+    .mira { height: 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 7px; overflow: hidden; margin: 8px 0 4px; }
+    .mira div { height: 100%; background: var(--accent); width: 0; }
+    .mira.plno div { background: var(--danger); }
+    .volby-rada { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.86rem; margin: 6px 0; }
+    .volby-rada label { display: inline-flex; gap: 6px; align-items: center; margin: 0; color: var(--text); font-size: 0.86rem; }
+    .volby-rada input { accent-color: var(--accent); }
+
+
+    .vstup-tl { display: flex; gap: 6px; } .vstup-tl input { flex: 1 1 auto; }
+    .pocasi { font-size: 0.86rem; line-height: 1.5; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .pocasi .den-p { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }
+    #shozVse { position: fixed; inset: 0; z-index: 3000; background: rgba(0, 0, 0, .55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    #shozVse > div { background: var(--bg-elevated); color: var(--text); border: 3px dashed var(--accent); border-radius: 14px; padding: 30px 36px; font-size: 1.1rem; text-align: center; line-height: 1.6; }
+    .osa-rok { font-size: 1.1rem; margin: 18px 0 6px; }
+    .osa-mesic { margin: 0 0 10px 10px; padding-left: 14px; border-left: 3px solid var(--accent); }
+    .osa-mesic h3 { margin: 4px 0 6px; }
+    .osa-polozka { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px; margin-bottom: 6px; cursor: pointer; width: 100%; text-align: left; color: var(--text); font: inherit; }
+    .osa-polozka:hover, .osa-polozka:focus-visible { border-color: var(--accent); outline: none; }
+    .osa-polozka .obr { width: 64px; height: 48px; border-radius: 4px; overflow: hidden; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; }
+    .osa-polozka .obr img, .osa-polozka .obr svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rekordy { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .rekordy > div { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+    .rekordy b { display: block; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+    .rekordy span { font-size: 0.78rem; color: var(--text-muted); }
+    .porovnani-vyber { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+    .stitek.tag { border-color: var(--accent); color: var(--text); }
+    @media (max-width: 600px) {
+      .zalozky { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+      .zalozky::-webkit-scrollbar { display: none; }
+      .zalozky button { flex: 0 0 auto; }
+      .hlava .rada { width: 100%; } .hlava .rada .tl { flex: 1 1 auto; justify-content: center; }
+    }
+    #tisk { display: none; }
+    @media print {
+      body { background: #fff !important; padding: 0 !important; }
+      body > *:not(#tisk) { display: none !important; }
+      #tisk { display: block !important; }
+    }
+  </style>
+  <style id="tisk-styl" media="print"></style>
+</head>
+<body>
+<div class="obal" id="aplikace">
+  <div class="hlava">
+    <div>
+      <h1>📔 Výletní deník</h1>
+      <p class="podtitul">Evidence uskutečněných výletů: datum, lidé, doprava, náklady, trasa z GPX/KML s výškovým profilem, místa a fotografie. Vše se ukládá jen v tomto prohlížeči (IndexedDB) – nezapomínejte na zálohy. Trasy si můžete předem naplánovat ve <a href="trip_planner.html" style="color: var(--accent)">Správci pěších tras</a> a jeho GPX sem převzít.</p>
+    </div>
+    <div class="rada">
+      <button class="tl" id="btnZeSouboru" type="button" title="Výlet se založí sám: datum z trasy nebo EXIFu fotek, oblast a počasí z internetu">Založit z GPX / fotek…</button>
+      <button class="tl hlavni" id="btnNovy" type="button">+ Nový výlet</button>
+      <input type="file" id="souborAuto" multiple hidden accept=".gpx,.kml,.kmz,image/*">
+    </div>
+  </div>
+  <div id="shozVse" hidden><div>Pusťte soubory – GPX/KML/KMZ a fotky<br><small id="shozVseText">založí nový výlet</small></div></div>
+  <div id="chybaDb" class="chyba-pruh" hidden></div>
+  <nav class="zalozky" role="tablist" aria-label="Části deníku">
+    <button type="button" role="tab" data-z="vylety" aria-selected="true">Výlety</button>
+    <button type="button" role="tab" data-z="kalendar" aria-selected="false">Kalendář</button>
+    <button type="button" role="tab" data-z="mapa" aria-selected="false">Mapa míst</button>
+    <button type="button" role="tab" data-z="statistiky" aria-selected="false">Statistiky</button>
+    <button type="button" role="tab" data-z="zaloha" aria-selected="false">Záloha a tisk</button>
+  </nav>
+
+  <div class="filtry" id="filtry">
+    <div class="hledat"><label for="fText">Hledat (název, popis, lidé, místa)</label><input type="search" id="fText" placeholder="např. Sněžka"></div>
+    <div><label for="fRok">Rok</label><select id="fRok"><option value="">všechny</option></select></div>
+    <div><label for="fOblast">Oblast</label><select id="fOblast"><option value="">všechny</option></select></div>
+    <div><label for="fDoprava">Doprava</label><select id="fDoprava"><option value="">jakákoli</option></select></div>
+    <div><label for="fStitek">Štítek</label><select id="fStitek"><option value="">jakýkoli</option></select></div>
+    <div><button class="tl" type="button" id="fZrus" title="Zrušit filtry">Zrušit</button></div>
+  </div>
+
+  <!-- ===== Výlety ===== -->
+  <section id="z-vylety" role="tabpanel">
+    <div class="rada" style="justify-content: space-between; margin-bottom: 10px">
+      <div class="ztlum" id="pocetVyletu"></div>
+      <div class="rada">
+      <label class="ztlum" style="margin: 0; display: inline-flex; gap: 6px; align-items: center">Zobrazit
+        <select id="pohled" style="width: auto"><option value="karty">karty</option><option value="osa">časová osa</option></select></label>
+      <label class="ztlum" style="margin: 0; display: inline-flex; gap: 6px; align-items: center">Řadit
+        <select id="razeni" style="width: auto"><option value="sestupne">od nejnovějších</option><option value="vzestupne">od nejstarších</option></select></label>
+      </div>
+    </div>
+    <div class="seznam" id="seznam"></div>
+  </section>
+
+  <!-- ===== Detail ===== -->
+  <section id="z-detail" hidden>
+    <div class="detail-hlava">
+      <div class="rada" style="min-width: 0; flex: 1 1 260px">
+        <button class="tl" type="button" id="btnZpet">← Zpět</button>
+        <h2 id="dNadpis">Výlet</h2>
+      </div>
+      <div class="rada">
+        <span class="ulozeno" id="ulozeno" aria-live="polite"></span>
+        <button class="tl" type="button" id="btnTiskVylet">Tisk / PDF</button>
+        <button class="tl" type="button" id="btnHtmlVylet">Export HTML</button>
+        <button class="tl nebezpeci" type="button" id="btnSmazVylet">Smazat výlet</button>
+      </div>
+    </div>
+    <div class="detail">
+      <div class="sloupec">
+        <div class="karta" id="formular">
+          <h2>Údaje</h2>
+          <label for="dNazev">Název</label><input type="text" id="dNazev" maxlength="200" data-pole="nazev">
+          <div class="mrizka2">
+            <div><label for="dOd">Datum od</label><input type="date" id="dOd" data-pole="datumOd"></div>
+            <div><label for="dDo">Datum do (vícedenní)</label><input type="date" id="dDo" data-pole="datumDo"></div>
+          </div>
+          <div class="mrizka2">
+            <div><label for="dOblast">Oblast</label><div class="vstup-tl"><input type="text" id="dOblast" list="oblastiSeznam" data-pole="oblast" placeholder="např. Krkonoše"><button class="tl male" type="button" id="btnOblast" title="Zjistit z polohy trasy (OpenStreetMap Nominatim)">📍</button></div><datalist id="oblastiSeznam"></datalist></div>
+            <div><span class="popisek">Hodnocení</span><div class="hvezdy" id="dHvezdy" role="radiogroup" aria-label="Hodnocení"></div></div>
+          </div>
+          <label for="dUcastnici">Účastníci (oddělte čárkou)</label><input type="text" id="dUcastnici" list="ucastniciSeznam" placeholder="Jana, Petr"><datalist id="ucastniciSeznam"></datalist>
+          <label for="dStitky">Štítky (oddělte čárkou)</label><input type="text" id="dStitky" list="stitkySeznam" placeholder="hory, s dětmi, okruh"><datalist id="stitkySeznam"></datalist>
+          <span class="popisek">Počasí v den výletu</span>
+          <div class="pocasi" id="dPocasi"></div>
+          <span class="popisek">Doprava</span><div class="doprava" id="dDoprava"></div>
+          <label for="dPopis">Popis</label><textarea id="dPopis" data-pole="popis" rows="4" placeholder="Co jsme viděli a zažili…"></textarea>
+          <span class="popisek">Náklady</span>
+          <div id="dNaklady"></div>
+          <div class="rada"><button class="tl male" type="button" id="btnNaklad">+ Položka</button><span class="naklady-soucet" id="dNakladySoucet"></span></div>
+          <label for="dPoznamky">Poznámky (praktické: parkování, otevírací doba, co příště jinak)</label><textarea id="dPoznamky" data-pole="poznamky" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="sloupec">
+        <div class="karta" id="shozTrasa">
+          <h2>Trasa a mapa</h2>
+          <div class="rada">
+            <button class="tl hlavni" type="button" id="btnImportTrasy">Importovat GPX / KML / KMZ</button>
+            <button class="tl" type="button" id="btnPlanovac">Převzít z plánovače</button>
+            <button class="tl" type="button" id="btnExportGpx">Export GPX</button>
+            <button class="tl" type="button" id="btnPridatMisto" aria-pressed="false">+ Místo kliknutím do mapy</button>
+            <input type="file" id="souborTrasy" accept=".gpx,.kml,.kmz,application/gpx+xml,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz" multiple hidden>
+          </div>
+          <div class="volby-rada"><label><input type="checkbox" id="optBodyZGpx" checked> importovat i body (waypointy) jako místa</label></div>
+          <div class="mapa" id="dMapa" style="margin-top: 8px"></div>
+          <div class="male-pismo" id="mapaPozn" style="margin-top: 4px">Soubor s trasou můžete přetáhnout i přímo sem. Mapové podklady se načítají z internetu (OSM, OpenTopoMap, CyclOSM, Esri – volba vpravo nahoře v mapě; když podklad nejde, mapa sama přepne na záložní); bez připojení se trasa vykreslí na prázdném podkladu.</div>
+          <div id="dTrasy"></div>
+          <div class="profil-obal" id="profilObal" hidden>
+            <canvas id="profil" aria-label="Výškový profil trasy"></canvas>
+            <div class="profil-popis" id="profilPopis" hidden></div>
+            <div class="legenda"><span><i style="background: var(--accent)"></i>vyhlazená výška</span><span><i style="background: var(--profil-syrovy)"></i>syrová data</span><span>tažením prstem / myší ukážete místo na mapě</span></div>
+          </div>
+        </div>
+        <div class="karta">
+          <h2>Statistika trasy</h2>
+          <div id="dStat" class="tabulka-obal"><p class="ztlum">Zatím bez trasy – importujte GPX/KML nebo převezměte trasu z plánovače.</p></div>
+          <details style="margin-top: 10px">
+            <summary class="ztlum" style="cursor: pointer">Jak se počítá převýšení</summary>
+            <p class="ztlum">Syrové stoupání je prostý součet všech kladných rozdílů sousedních výšek – u GPS (a i barometrů) nafukuje výsledek šumem. Vyhlazené stoupání: výšky se nejprve zprůměrují klouzavým oknem po délce trasy (±&nbsp;polovina okna), pak se kladné a záporné změny sčítají s hysterezí – změna se započte, až když se výška od posledního započteného bodu liší alespoň o práh. Délka je součet vzdáleností po kouli (haversine, R&nbsp;=&nbsp;6&nbsp;371&nbsp;km) bez vlivu výšky; mezery mezi segmenty se nepočítají. Čas v pohybu = úseky rychlejší než 1,8&nbsp;km/h a kratší než 5&nbsp;min.</p>
+            <div class="mrizka2">
+              <div><label for="optOkno">Okno vyhlazení (m)</label><input type="number" id="optOkno" min="0" max="1000" step="10"></div>
+              <div><label for="optPrah">Práh hystereze (m)</label><input type="number" id="optPrah" min="0" max="50" step="0.5"></div>
+            </div>
+          </details>
+          <details id="mezicasyObal" hidden style="margin-top: 8px">
+            <summary class="ztlum" style="cursor: pointer">Mezičasy po kilometrech</summary>
+            <div class="tabulka-obal" id="dMezicasy"></div>
+          </details>
+        </div>
+      </div>
+    </div>
+    <div class="karta">
+      <h2>Místa (body zájmu) <span class="male-pismo" id="pocetMist"></span></h2>
+      <div id="dMista"></div>
+      <p class="male-pismo" style="margin-top: 8px">Místa přidáte tlačítkem „+ Místo kliknutím do mapy“ nebo importem waypointů z GPX/KML. Značku na mapě lze přetáhnout.</p>
+    </div>
+    <div class="karta" id="shozFotky">
+      <h2>Fotografie <span class="male-pismo" id="pocetFotek"></span></h2>
+      <div class="shoz" id="zonaFotky">Přetáhněte sem fotky, nebo <button class="tl male hlavni" type="button" id="btnFotky">vyberte soubory</button>
+        <input type="file" id="souborFotky" accept="image/*" multiple hidden></div>
+      <div class="volby-rada">
+        <label>Zmenšit na <select id="optMax" style="width: auto"><option value="1280">1280 px</option><option value="2048">2048 px</option><option value="3072">3072 px</option><option value="0">původní rozměr</option></select></label>
+        <label>Formát <select id="optFormat" style="width: auto"><option value="image/webp">WebP</option><option value="image/jpeg">JPEG</option></select></label>
+        <label><input type="checkbox" id="optOriginal"> ponechat i originál</label>
+        <label><input type="checkbox" id="optPodleCasu" checked> fotky bez GPS umístit podle času trasy</label>
+        <label>posun hodin fotoaparátu <input type="number" id="optPosun" value="0" step="1" style="width: 70px"> min</label>
+      </div>
+      <div class="rada">
+        <button class="tl male" type="button" id="btnAutoMista">Přiřadit fotky k nejbližším místům</button>
+        <label class="ztlum" style="margin: 0; display: inline-flex; gap: 6px; align-items: center">do <input type="number" id="optDosah" value="300" min="10" step="10" style="width: 80px"> m</label>
+      </div>
+      <div class="postup" id="postupFotky" aria-live="polite"></div>
+      <div class="galerie" id="galerie"></div>
+      <p class="male-pismo" style="margin-top: 8px">Datum pořízení a GPS se čtou z EXIFu (JPEG, WebP, PNG). Zmenšené kopie EXIF neobsahují (poloha se neprozradí při sdílení exportu); originál se ukládá beze změny jen při zaškrtnutí volby. Formát HEIC prohlížeč obvykle neumí dekódovat – převeďte jej na JPEG.</p>
+    </div>
+  </section>
+
+  <!-- ===== Kalendář ===== -->
+  <section id="z-kalendar" hidden>
+    <div class="karta">
+      <div class="kal-hlava">
+        <button class="tl" type="button" id="kalPred" aria-label="Předchozí měsíc">◀</button>
+        <h2 id="kalNadpis"></h2>
+        <div class="rada"><button class="tl" type="button" id="kalDnes">Dnes</button><button class="tl" type="button" id="kalDalsi" aria-label="Další měsíc">▶</button></div>
+      </div>
+      <div class="kal" id="kal"></div>
+      <div class="rok-pas" id="rokPas"></div>
+      <h3>Výlety v měsíci</h3>
+      <div id="kalSeznam" class="ztlum"></div>
+    </div>
+  </section>
+
+  <!-- ===== Mapa míst ===== -->
+  <section id="z-mapa" hidden>
+    <div class="karta">
+      <div class="volby-rada">
+        <label><input type="checkbox" id="optVyrez"> seznam jen pro výlety ve výřezu mapy</label>
+        <label><input type="checkbox" id="optMapaFotky"> zobrazit fotky s polohou</label>
+        <label><input type="checkbox" id="optMapaMista" checked> zobrazit místa</label>
+        <label><input type="checkbox" id="optBarvyRoku" checked> barvy podle roku</label>
+      </div>
+      <div class="legenda" id="mLegenda" style="margin-bottom: 6px"></div>
+      <div class="mapa mapa-velka" id="mMapa"></div>
+      <h3 id="mNadpis">Výlety na mapě</h3>
+      <div id="mSeznam"></div>
+    </div>
+  </section>
+
+  <!-- ===== Statistiky ===== -->
+  <section id="z-statistiky" hidden>
+    <div class="dlazdice" id="sDlazdice"></div>
+    <div class="karta">
+      <h2>Osobní rekordy</h2>
+      <div class="rekordy" id="sRekordy"></div>
+    </div>
+    <div class="karta">
+      <h2>Podle měsíců <select id="sMesicRok" style="width: auto; font-size: 0.85rem"></select></h2>
+      <canvas class="graf" id="sMesice" aria-label="Graf výletů podle měsíců"></canvas>
+      <div class="legenda"><span><i style="background: var(--accent)"></i>kilometry</span><span><i style="background: var(--misto)"></i>počet výletů</span></div>
+    </div>
+    <div class="karta">
+      <h2>Podle let</h2>
+      <canvas class="graf" id="sGraf" aria-label="Graf kilometrů a počtu výletů podle let"></canvas>
+      <div class="legenda"><span><i style="background: var(--accent)"></i>kilometry</span><span><i style="background: var(--misto)"></i>počet výletů</span></div>
+      <div class="tabulka-obal" style="margin-top: 10px"><table class="tab-stat" id="sTab"></table></div>
+    </div>
+    <div class="dva-sloupce">
+      <div class="karta"><h2>Podle oblastí</h2><div class="tabulka-obal"><table class="tab-stat" id="sOblasti"></table></div></div>
+      <div class="karta"><h2>Doprava</h2><div class="tabulka-obal"><table class="tab-stat" id="sDoprava"></table></div></div>
+      <div class="karta"><h2>Nejdelší trasy</h2><div class="tabulka-obal"><table class="tab-stat" id="sNejdelsi"></table></div></div>
+      <div class="karta"><h2>Největší stoupání</h2><div class="tabulka-obal"><table class="tab-stat" id="sNejvyssi"></table></div></div>
+    </div>
+    <div class="karta" style="margin-top: 14px">
+      <h2>Porovnání výletů</h2>
+      <div class="porovnani-vyber" id="porVyber"></div>
+      <div class="tabulka-obal" style="margin-top: 10px"><table class="tab-stat" id="porTab"></table></div>
+      <canvas class="graf" id="porProfil" aria-label="Porovnání výškových profilů" hidden></canvas>
+      <div class="legenda" id="porLegenda"></div>
+    </div>
+    <p class="male-pismo" style="margin-top: 10px">Výlet se počítá do roku, ve kterém začal. Náklady se sčítají zvlášť pro každou měnu (bez přepočtu kurzů). Statistiky respektují filtry nahoře.</p>
+  </section>
+
+  <!-- ===== Záloha a tisk ===== -->
+  <section id="z-zaloha" hidden>
+    <div class="dva-sloupce" style="margin-top: 0">
+      <div class="karta">
+        <h2>Úložiště prohlížeče</h2>
+        <div id="ulStav" class="ztlum">Zjišťuji…</div>
+        <div class="mira" id="ulMira"><div></div></div>
+        <div class="male-pismo" id="ulTrvale"></div>
+        <div class="rada mezera"><button class="tl" type="button" id="btnTrvale">Požádat o trvalé úložiště</button><button class="tl" type="button" id="btnObnovStav">Obnovit</button></div>
+        <p class="male-pismo" style="margin-top: 10px">Bez trvalého úložiště může prohlížeč data smazat při nedostatku místa. I s ním je ale jedinou jistotou pravidelná záloha do souboru.</p>
+      </div>
+      <div class="karta">
+        <h2>Kompletní záloha</h2>
+        <p class="ztlum">Jeden soubor ZIP (bez komprese – fotky už komprimované jsou): <code>vyletni_denik.json</code> s výlety, trasami a popisy fotek + složka <code>fotky/</code> se zmenšenými fotkami, náhledy a originály.</p>
+        <div class="rada mezera"><button class="tl hlavni" type="button" id="btnZaloha">Stáhnout zálohu (ZIP)</button><button class="tl" type="button" id="btnObnova">Obnovit ze zálohy…</button><input type="file" id="souborZaloha" accept=".zip,application/zip" hidden></div>
+        <div class="volby-rada"><label><input type="radio" name="rezimObnovy" value="sloucit" checked> sloučit s aktuálními daty</label><label><input type="radio" name="rezimObnovy" value="nahradit"> nahradit vše</label></div>
+        <div class="postup" id="postupZaloha" aria-live="polite"></div>
+      </div>
+      <div class="karta">
+        <h2>Tisk, PDF a HTML</h2>
+        <p class="ztlum">Deník s mapami tras (SVG bez podkladu), výškovými profily, místy a fotkami. PDF vytvoříte v dialogu tisku volbou „Uložit jako PDF“.</p>
+        <div class="volby-rada"><label><input type="radio" name="rozsahTisku" value="filtr" checked> výlety podle filtru</label><label><input type="radio" name="rozsahTisku" value="vse"> všechny výlety</label></div>
+        <div class="volby-rada"><label>Fotky <select id="optTiskFoto" style="width: auto"><option value="nahled">náhledy (menší soubor)</option><option value="plne">plná velikost</option><option value="zadne">bez fotek</option></select></label></div>
+        <div class="rada mezera"><button class="tl hlavni" type="button" id="btnTisk">Tisk / PDF</button><button class="tl" type="button" id="btnHtml">Stáhnout HTML</button></div>
+        <div class="postup" id="postupTisk" aria-live="polite"></div>
+      </div>
+      <div class="karta">
+        <h2>Ukázka a mazání</h2>
+        <p class="ztlum">Ukázkový výlet (Sněžka, syntetická trasa s výškami a časy, dvě kreslené fotky) se hodí k vyzkoušení funkcí.</p>
+        <div class="rada mezera"><button class="tl" type="button" id="btnUkazka">Vložit ukázkový výlet</button><button class="tl nebezpeci" type="button" id="btnSmazVse">Smazat všechna data</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<dialog id="lightbox" aria-label="Fotografie">
+  <img id="lbObr" alt="">
+  <div class="lb-pata">
+    <button class="tl" type="button" id="lbPred" aria-label="Předchozí">◀</button>
+    <div class="lb-popis" id="lbPopis"></div>
+    <div class="rada"><a class="tl" id="lbOriginal" download hidden>Stáhnout originál</a><button class="tl" type="button" id="lbDalsi" aria-label="Další">▶</button><button class="tl" type="button" id="lbZavri">Zavřít</button></div>
+  </div>
+</dialog>
+
+<div id="tisk"></div>
+<script src="vyletni_denik/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evolventní ozubená kola – přesný generátor</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/three.r128.min.js"></script>
+  <script src="evolventni_kola/jadro.js"></script>
+  <script src="evolventni_kola/pohled3d.js"></script>
+  <style>
+    :root { --text-chyba: #ff8f85; --text-mez: #f0bd5e; }
+    :root[data-theme="light"] { --text-chyba: var(--danger); --text-mez: var(--warn); }
+    body { background-color: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 14px; max-width: 980px; line-height: 1.5; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 18px; max-width: 1400px; }
+    @media (max-width: 980px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
+    .karta[hidden], [hidden] { display: none !important; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
+    input[type="text"], input[type="number"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.95rem; min-width: 0; font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+    .mrizka2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+    .mrizka3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 10px; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button[aria-pressed="true"], button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+    .prepinac { display: flex; gap: 0; }
+    .prepinac button { border-radius: 0; flex: 1; }
+    .prepinac button:first-child { border-radius: 6px 0 0 6px; }
+    .prepinac button:last-child { border-radius: 0 6px 6px 0; }
+    .stitek { display: inline-block; font-size: 0.68rem; padding: 1px 7px; border-radius: 9px; border: 1px solid var(--accent); color: var(--accent); font-weight: 600; }
+    .stitek.exp { border-color: var(--warn); color: var(--text-mez); }
+    details.exp { border: 1px dashed var(--warn); border-radius: var(--radius); padding: 10px 14px; background: var(--bg-panel); }
+    details.exp summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+    .kolo-nadpis { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; margin-top: 12px; }
+    .kolo-nadpis i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .vykres { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; position: relative; overflow: hidden; touch-action: none; }
+    .vykres svg { width: 100%; height: min(62vh, 560px, max(280px, 80vw)); min-height: 280px; display: block; cursor: grab; }
+    .vykres svg:active { cursor: grabbing; }
+    #platno3d { width: 100%; height: min(60vh, 520px, max(280px, 85vw)); min-height: 280px; border-radius: 6px; overflow: hidden; background: var(--bg-input); border: 1px solid var(--border); position: relative; }
+    .info-plocha { position: absolute; left: 8px; bottom: 6px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; background: color-mix(in srgb, var(--bg-input) 80%, transparent); padding: 2px 6px; border-radius: 4px; }
+    .legenda { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-muted); margin-top: 8px; align-items: center; }
+    .legenda label { display: inline-flex; align-items: center; gap: 5px; margin: 0; color: var(--text-muted); font-size: 0.74rem; cursor: pointer; }
+    .legenda i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; white-space: normal; }
+    th { color: var(--text-muted); font-weight: 600; }
+    td .sym { color: var(--text-muted); font-style: italic; margin-left: 4px; }
+    .kontroly { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .kontroly li { border-left: 4px solid var(--ok); background: var(--bg-elevated); padding: 7px 10px; border-radius: 4px; font-size: 0.83rem; line-height: 1.45; }
+    .kontroly li.mez { border-color: var(--warn); }
+    .kontroly li.chyba { border-color: var(--danger); }
+    .kontroly li.info { border-color: var(--text-faint); }
+    .kontroly li b { font-weight: 700; }
+    .kontroly li.chyba b { color: var(--text-chyba); }
+    .kontroly li.mez b { color: var(--text-mez); }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 10px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px; min-width: 0; }
+    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 3px; }
+    .box .cislo { font-size: 1.08rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box.hl .cislo { color: var(--accent); }
+    .box.spatne .cislo { color: var(--text-chyba); }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+    .zalozky button { border-radius: 6px 6px 0 0; border-bottom: 0; }
+    .vyuka-svg { width: 100%; height: min(52vh, 440px); min-height: 260px; display: block; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; }
+    .vyuka-text { font-size: 0.85rem; line-height: 1.6; color: var(--text); }
+    .vyuka-text p { margin: 8px 0; }
+    .vyuka-text code, .vzorec { font-family: ui-monospace, Consolas, monospace; background: var(--bg-elevated); padding: 1px 5px; border-radius: 4px; font-size: 0.82rem; }
+    .posuvnik { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+    .posuvnik input[type="range"] { flex: 1; min-width: 160px; accent-color: var(--accent); }
+    .hodnoty { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+    .pozn { color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; max-width: 1400px; margin-top: 22px; }
+    .pozn h2 { color: var(--text); }
+    .pozn ul { padding-left: 20px; }
+    .souhrn { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.88rem; border: 1px solid var(--ok); background: var(--bg-elevated); }
+    .souhrn.mez { border-color: var(--warn); } .souhrn.chyba { border-color: var(--danger); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 420px) { .mrizka3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <h1>⚙️ Evolventní ozubená kola</h1>
+  <p class="podtitul">Přesný generátor čelních kol s přímými zuby: profil vzniká simulací výroby odvalovacím hřebenovým nástrojem
+    (evolventa + skutečná trochoidní přechodová křivka v patě, včetně podřezání). Dvojice kol s výpočtem úhlu záběru α<sub>w</sub>,
+    osové vzdálenosti a součinitele záběru, animace záběru, export SVG/DXF/STL a výukový režim.</p>
+
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <div class="karta">
+        <h2>Režim</h2>
+        <div class="prepinac" role="group" aria-label="Režim">
+          <button type="button" id="rezJedno" aria-pressed="true">Jedno kolo</button>
+          <button type="button" id="rezDvojice" aria-pressed="false">Dvojice kol</button>
+        </div>
+      </div>
+
+      <div class="karta" id="kartaStd">
+        <h2>Ozubení <span class="stitek" id="stitekGeom">standardní geometrie</span></h2>
+        <div class="mrizka2">
+          <div>
+            <label for="vModul">Modul m [mm]</label>
+            <select id="vModul"></select>
+          </div>
+          <div>
+            <label for="vAlfa">Tlakový úhel α</label>
+            <select id="vAlfa">
+              <option value="20">20° (ISO 53)</option>
+            </select>
+          </div>
+        </div>
+        <p class="napoveda" id="napovedaStd">Základní profil ISO 53 / ČSN 01 4607 typ A: α = 20°, h<sub>a</sub>* = 1, c* = 0,25, ρ<sub>f</sub>* = 0,38. Moduly podle ČSN 01 4608 (řada 1 přednostní).</p>
+
+        <div class="kolo-nadpis"><i style="background: var(--accent)"></i>Kolo 1<span id="nadpis1Doplnek"></span></div>
+        <div class="mrizka3">
+          <div><label for="vZ1">Počet zubů z₁</label><input type="number" id="vZ1" min="3" max="1000" step="1" value="20"></div>
+          <div><label for="vX1">Korekce x₁</label><input type="text" inputmode="decimal" id="vX1" value="0"></div>
+          <div><label for="vD1">Otvor Ø [mm]</label><input type="text" inputmode="decimal" id="vD1" value="8"></div>
+        </div>
+        <div class="tlacitka"><button type="button" class="male" id="btnXmin1" title="Nastaví nejmenší korekci bez podřezání">x bez podřezání</button></div>
+
+        <div id="blokKolo2" hidden>
+          <div class="kolo-nadpis"><i style="background: var(--warn)"></i>Kolo 2 (hnané)</div>
+          <div class="mrizka3">
+            <div><label for="vZ2">Počet zubů z₂</label><input type="number" id="vZ2" min="3" max="1000" step="1" value="40"></div>
+            <div><label for="vX2">Korekce x₂</label><input type="text" inputmode="decimal" id="vX2" value="0"></div>
+            <div><label for="vD2">Otvor Ø [mm]</label><input type="text" inputmode="decimal" id="vD2" value="8"></div>
+          </div>
+          <div class="tlacitka"><button type="button" class="male" id="btnXmin2">x bez podřezání</button></div>
+        </div>
+        <label for="vB">Šířka kola b [mm]</label>
+        <input type="text" inputmode="decimal" id="vB" value="10">
+      </div>
+
+      <div class="karta" id="kartaSoukoli" hidden>
+        <h2>Soukolí</h2>
+        <label class="zaskrt"><input type="checkbox" id="vZkratit" checked> Zkrátit hlavy o k·m (zachovat hlavovou vůli c*·m)</label>
+        <p class="napoveda">Při Σx ≠ 0 vzroste osová vzdálenost méně než výška hlav; zkrácení hlavy o k = Σx − y vrátí hlavovou vůli na c*·m.</p>
+        <h3>Korekce pro zadanou osovou vzdálenost</h3>
+        <div class="mrizka2">
+          <div><label for="vAwZad">Požadovaná a<sub>w</sub> [mm]</label><input type="text" inputmode="decimal" id="vAwZad" placeholder="např. 61"></div>
+          <div style="display:flex;align-items:flex-end"><button type="button" id="btnAw" style="width:100%">Rozdělit Σx</button></div>
+        </div>
+        <p class="napoveda" id="awInfo">Z rovnice inv α<sub>w</sub> = inv α + 2(x₁+x₂)·tg α/(z₁+z₂) se dopočte Σx a rozdělí se tak, aby pastorek nebyl podřezaný.</p>
+      </div>
+
+      <div class="karta">
+        <h2>Vůle a tisková korekce</h2>
+        <div class="mrizka2">
+          <div><label for="vJn">Boční vůle j<sub>n</sub> [mm]</label><input type="text" inputmode="decimal" id="vJn" value="0"></div>
+          <div><label for="vCt">Tisková korekce XY [mm]</label><input type="text" inputmode="decimal" id="vCt" value="0"></div>
+        </div>
+        <label for="vKo">Dodatečné zvětšení otvoru [mm na průměru]</label>
+        <input type="text" inputmode="decimal" id="vKo" value="0">
+        <p class="napoveda">Boční vůle (normálová, měřená po přímce záběru) se dělí rovným dílem: každý zub se na roztečné kružnici ztenčí o
+          Δs = j<sub>n</sub>/(2 cos α). Tisková korekce c ekvidistantně zmenší celý obrys o c (hlava −c, boky −c v normále,
+          pata hlouběji – nástroj „nafouknutý“ o c) a otvor zvětší o 2c. Pro FDM tisk obvykle j<sub>n</sub> ≈ 0,1–0,2 mm, c ≈ 0–0,1 mm podle tiskárny.</p>
+      </div>
+
+      <div class="karta">
+        <h2>Kvalita aproximace křivek</h2>
+        <label for="vTol">Max. odchylka tětivy od evolventy/trochoidy</label>
+        <select id="vTol">
+          <option value="0.1">0,1 mm – hrubé (náhled)</option>
+          <option value="0.02">0,02 mm – 3D tisk</option>
+          <option value="0.005" selected>0,005 mm – obrábění</option>
+          <option value="0.001">0,001 mm – přesné</option>
+          <option value="0.0002">0,0002 mm – velmi přesné</option>
+        </select>
+        <p class="napoveda" id="infoKvalita"></p>
+      </div>
+
+      <details class="exp" id="detExp">
+        <summary>Experimentální nastavení <span class="stitek exp">mimo normu</span></summary>
+        <label class="zaskrt"><input type="checkbox" id="vExp"> Použít experimentální hodnoty místo standardních</label>
+        <div class="mrizka2">
+          <div><label for="eModul">Libovolný modul [mm]</label><input type="text" inputmode="decimal" id="eModul" value="1"></div>
+          <div><label for="eAlfa">Tlakový úhel α [°]</label><input type="text" inputmode="decimal" id="eAlfa" value="20"></div>
+          <div><label for="eHa">Výška hlavy h<sub>a</sub>*</label><input type="text" inputmode="decimal" id="eHa" value="1"></div>
+          <div><label for="eC">Hlavová vůle c*</label><input type="text" inputmode="decimal" id="eC" value="0.25"></div>
+          <div><label for="eRho">Zaoblení nástroje ρ<sub>f</sub>*</label><input type="text" inputmode="decimal" id="eRho" value="0.38"></div>
+        </div>
+        <p class="napoveda">Např. α = 14,5° (starší americké normy), 25° (silněji zatížená kola, ρ<sub>f</sub>* ≈ 0,25), zkrácené zuby h<sub>a</sub>* = 0,8 (Stub).
+          Experimentální kola spolu zabírají jen při shodném modulu a tlakovém úhlu – nejsou zaměnitelná se standardními.</p>
+      </details>
+    </div>
+
+    <div class="sloupec">
+      <div class="karta">
+        <h2>2D profil <span class="stitek" id="stitek2D"></span></h2>
+        <div class="tlacitka" style="margin-top:0;margin-bottom:8px">
+          <div class="prepinac" role="group" aria-label="Výřez">
+            <button type="button" class="male" id="pohCelek" aria-pressed="true">Celek</button>
+            <button type="button" class="male" id="pohDetail" aria-pressed="false">Detail zubu / záběru</button>
+          </div>
+          <button type="button" class="male" id="btnAnim" aria-pressed="false">▶ Animace záběru</button>
+          <label class="zaskrt" style="margin:0"><input type="checkbox" id="vDosed" checked> dosednout hnací boky</label>
+        </div>
+        <div class="vykres" id="vykres2d"></div>
+        <div class="legenda" id="legenda2d">
+          <label><input type="checkbox" data-vrstva="ra" checked><i style="border-color: var(--text-muted)"></i>hlavová d<sub>a</sub></label>
+          <label><input type="checkbox" data-vrstva="r" checked><i style="border-color: var(--accent); border-top-style: dashed"></i>roztečná d</label>
+          <label><input type="checkbox" data-vrstva="rb" checked><i style="border-color: var(--ok); border-top-style: dashed"></i>základní d<sub>b</sub></label>
+          <label><input type="checkbox" data-vrstva="rf" checked><i style="border-color: var(--warn)"></i>patní d<sub>f</sub></label>
+          <label><input type="checkbox" data-vrstva="rForm"><i style="border-color: var(--danger); border-top-style: dotted"></i>začátek evolventy d<sub>Ff</sub></label>
+          <label><input type="checkbox" data-vrstva="rw" checked><i style="border-color: var(--text); border-top-style: dashed"></i>valivá d<sub>w</sub> / přímka záběru</label>
+        </div>
+        <p class="napoveda">Tažením posouvat, kolečkem nebo dvěma prsty přibližovat. Kolo 1 je hnací a točí se proti směru hodinových ručiček; body dotyku leží na přímce záběru.</p>
+      </div>
+
+      <div class="karta">
+        <h2>3D model</h2>
+        <div id="platno3d"><div class="info-plocha" id="info3d"></div></div>
+        <div class="tlacitka">
+          <button type="button" class="male" id="btn3dReset">Výchozí pohled</button>
+          <span class="napoveda" style="margin:0">Tažení = otáčení, kolečko = přiblížení, Shift/pravé tlačítko + tažení = posun.</span>
+        </div>
+      </div>
+
+      <div class="karta">
+        <h2>Výsledky</h2>
+        <div class="souhrn" id="souhrn"></div>
+        <div class="vysledky" id="boxy"></div>
+        <div class="obal-tab"><table id="tabVysl"></table></div>
+      </div>
+
+      <div class="karta">
+        <h2>Kontroly</h2>
+        <ul class="kontroly" id="kontroly"></ul>
+      </div>
+
+      <div class="karta">
+        <h2>Export</h2>
+        <div class="tlacitka">
+          <button type="button" class="hlavni" id="exSvg">SVG</button>
+          <button type="button" class="hlavni" id="exDxf">DXF</button>
+          <button type="button" id="exStl1">STL kolo 1</button>
+          <button type="button" id="exStl2" hidden>STL kolo 2</button>
+          <button type="button" id="exStlS" hidden>STL sestava</button>
+          <button type="button" id="exJson">Parametry (JSON)</button>
+        </div>
+        <label class="zaskrt"><input type="checkbox" id="vPomocne"> Do SVG/DXF přidat roztečnou a základní kružnici (vrstva POMOCNE)</label>
+        <p class="napoveda">SVG a DXF jsou v milimetrech 1 : 1. Oblouky hlavy a paty jsou přesné (SVG příkaz A, DXF „bulge“), evolventa
+          a trochoida jsou lomené čáry s odchylkou nejvýš podle zvolené kvality. DXF je ve formátu R12 (AC1009) – otevře ho LibreCAD,
+          QCAD, FreeCAD, Inkscape i laserové a CNC programy. STL je binární, uzavřená (vodotěsná) síť s normálami ven; kontroluje se
+          při každém exportu.</p>
+        <p class="napoveda" id="infoExport"></p>
+      </div>
+
+      <div class="karta" id="kartaVyuka">
+        <h2>Výukový režim</h2>
+        <div class="zalozky" role="tablist">
+          <button type="button" role="tab" id="tabEv" aria-selected="true">Evolventa</button>
+          <button type="button" role="tab" id="tabVyr" aria-selected="false">Výroba odvalováním</button>
+          <button type="button" role="tab" id="tabZab" aria-selected="false">Záběr a korekce</button>
+        </div>
+        <div id="panEv">
+          <svg class="vyuka-svg" id="svgEv" aria-label="Odvíjení evolventy ze základní kružnice"></svg>
+          <div class="posuvnik"><label for="slEv" style="margin:0">Úhel odvalení u</label><input type="range" id="slEv" min="0" max="1.4" step="0.005" value="0.6"><button type="button" class="male" id="btnEvAnim">▶</button></div>
+          <div class="hodnoty" id="hodEv"></div>
+          <div class="vyuka-text">
+            <p><b>Evolventa</b> je dráha konce napjatého vlákna odvíjeného ze <b>základní kružnice</b> o poloměru r<sub>b</sub>.
+              Délka odvinutého vlákna se rovná délce oblouku, ze kterého se odvinulo: |TP| = r<sub>b</sub>·u.
+              Odtud bod evolventy v polárních souřadnicích: <span class="vzorec">r = r<sub>b</sub>/cos α<sub>y</sub></span>,
+              <span class="vzorec">θ = inv α<sub>y</sub> = tg α<sub>y</sub> − α<sub>y</sub></span>, kde α<sub>y</sub> = arctg u je tlakový úhel v bodě P.</p>
+            <p>Vlákno TP je vždy <b>normálou</b> evolventy a tečnou základní kružnice. Proto se dvě evolventní kola dotýkají
+              na jediné přímce – <b>přímce záběru</b> (společné tečně obou základních kružnic) a přenos je rovnoměrný i při změně osové vzdálenosti.</p>
+            <p>Tloušťka zubu na libovolném poloměru: <span class="vzorec">s<sub>y</sub> = 2r<sub>y</sub>·(s/(2r) + inv α − inv α<sub>y</sub>)</span>,
+              kde na roztečné kružnici <span class="vzorec">s = m·(π/2 + 2x·tg α)</span>.</p>
+          </div>
+        </div>
+        <div id="panVyr" hidden>
+          <svg class="vyuka-svg" id="svgVyr" aria-label="Simulace výroby kola hřebenovým nástrojem"></svg>
+          <div class="posuvnik"><label for="slVyr" style="margin:0">Poloha nástroje</label><input type="range" id="slVyr" min="-1" max="1" step="0.002" value="0.3"><button type="button" class="male" id="btnVyrAnim">▶</button></div>
+          <label class="zaskrt"><input type="checkbox" id="vStopa" checked> Zobrazit stopy nástroje a trochoidu středu zaoblení</label>
+          <div class="vyuka-text">
+            <p>Kolo se vyrábí <b>odvalováním</b>: hřebenový nástroj (základní profil ISO 53) se posouvá a obrobek se natáčí tak,
+              že se <b>valivá přímka nástroje odvaluje bez skluzu po roztečné kružnici</b> kola. Přímé boky nástroje obalí evolventu,
+              zaoblená hlava nástroje (poloměr ρ<sub>f</sub> = 0,38·m) opíše <b>prodlouženou cykloidu (trochoidu)</b> a její ekvidistanta je
+              skutečná <b>přechodová křivka</b> v patě zubu. Generátor ji počítá přesně, ne jako oblouk „od oka“.</p>
+            <p><b>Podřezání:</b> u malého počtu zubů zasáhne hlava nástroje pod bod dotyku přímky záběru se základní kružnicí
+              a odřízne spodek evolventy – zub zeslábne a zkrátí se aktivní profil. Mez pro x = 0 je z<sub>min</sub> = 2/sin²α ≈ 17,1.</p>
+            <p><b>Korekce x</b> (posunutí profilu) odsune nástroj od středu kola o x·m: zub zesílí v patě, zúží se na hlavě a podřezání
+              zmizí, když <span class="vzorec">x ≥ 1 − z·sin²α/2</span>.</p>
+          </div>
+        </div>
+        <div id="panZab" hidden>
+          <div class="vyuka-text" id="textZab"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="pozn">
+    <h2>Metodika a omezení</h2>
+    <ul>
+      <li>Geometrie podle ISO 21771 / ČSN 01 4686 (čelní kola s vnějším přímým ozubením), základní profil ISO 53 typ A, moduly ČSN 01 4608 / ISO 54.</li>
+      <li>Boky: analytická evolventa; pata: ekvidistanta trochoidy středu zaoblení hlavy nástroje; při podřezání průnik s evolventou (vnitřní obálka). Správnost profilu se v testech ověřuje nezávislou simulací odvalování nástroje.</li>
+      <li>Soukolí s korekcemi: úhel záběru z rovnice <span class="vzorec">inv α<sub>w</sub> = inv α + 2(x₁+x₂)·tg α/(z₁+z₂)</span> (řeší se Newtonovou metodou), a<sub>w</sub> = a·cos α / cos α<sub>w</sub>, součinitel záběru ε<sub>α</sub> z délky dráhy záběru.</li>
+      <li>Nejsou zahrnuta kola s vnitřním ozubením, šikmé zuby, modifikace profilu (sražení hlavy, bombírování) a pevnostní výpočet (ISO 6336) – generátor řeší geometrii.</li>
+      <li>Vůle je modelována ztenčením zubů (posun boků), tisková korekce jako ekvidistanta celého obrysu – skutečné chování tiskárny ověřte zkušebním výtiskem.</li>
+    </ul>
+  </section>
+
+  <script src="evolventni_kola/ui.js"></script>
+</body>
+</html>

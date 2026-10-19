@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evidence domácího majetku</title>
+  <meta name="description" content="Offline evidence domácího majetku: místnosti, kategorie, záruky, přílohy, QR štítky, CSV a záloha ZIP.">
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/qrcode/qrcode.js"></script>
+  <script src="majetek/jadro.js"></script>
+  <script src="majetek/stitky.js"></script>
+  <script src="majetek/uloziste.js"></script>
+  <style>
+    :root { --ok-text: #6fd19b; --warn-text: #f0bd5e; --danger-text: #ff8f85; }
+    :root[data-theme="light"] { --ok-text: var(--ok); --warn-text: var(--warn); --danger-text: var(--danger); }
+    body { background-color: var(--bg-deep); padding: 20px clamp(10px, 3vw, 36px) 40px; min-height: 100vh; line-height: 1.45; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1.05rem; margin: 0 0 10px; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 16px 0 6px; }
+    .obal { max-width: 1240px; margin: 0 auto; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 900px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+    .karta + .karta { margin-top: 14px; }
+    .muted { color: var(--text-muted); } .faint { color: var(--text-faint); font-size: .82rem; }
+    .male { font-size: .82rem; }
+    a { color: var(--accent); }
+
+    button, .tl { font: inherit; font-size: .88rem; background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong);
+      border-radius: 6px; padding: 7px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }
+    button:hover, .tl:hover { background: var(--bg-hover); }
+    button:focus-visible, .tl:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    button.hlavni { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.nebezpecne { color: var(--danger-text); border-color: var(--danger); background: transparent; }
+    button.nebezpecne:hover { background: var(--bg-hover); }
+    button.maly { padding: 4px 9px; font-size: .8rem; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .rada { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .rada.mezera { margin-top: 10px; }
+    .roztah { flex: 1 1 auto; }
+
+    label.p, .popisek { display: block; font-size: .78rem; color: var(--text-muted); margin: 8px 0 3px; }
+    input[type="text"], input[type="number"], input[type="date"], input[type="search"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+      padding: 7px 9px; font: inherit; font-size: .92rem; min-width: 0; }
+    textarea { resize: vertical; min-height: 64px; }
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .zaskrt { display: inline-flex; align-items: center; gap: 7px; font-size: .86rem; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0 12px; }
+    .mrizka .siroke { grid-column: 1 / -1; }
+
+    /* záložky */
+    .listy { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin: 6px 0 14px; }
+    .listy button { background: transparent; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; color: var(--text-muted); padding: 8px 12px; }
+    .listy button[aria-selected="true"] { background: var(--bg-panel); color: var(--text); border-color: var(--border); position: relative; top: 1px; font-weight: 600; }
+    .listy .pocet { font-size: .74rem; background: var(--bg-control); color: var(--text); border-radius: 9px; padding: 0 6px; }
+    .list[hidden] { display: none; }
+    .horni-lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+
+    /* upozornění */
+    #upozorneni:empty { display: none; }
+    .hlaseni { border: 1px solid var(--border); border-left: 4px solid var(--warn); background: var(--bg-panel); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 12px; font-size: .88rem; }
+    .hlaseni.chyba { border-left-color: var(--danger); }
+    .hlaseni.info { border-left-color: var(--accent); }
+    .hlaseni b.t { color: var(--warn-text); }
+    .hlaseni ul { margin: 6px 0 4px 18px; }
+    .hlaseni li { margin: 2px 0; }
+    .hlaseni li button.odkaz { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; font-size: inherit; white-space: normal; text-align: left; display: inline; }
+
+    /* filtry a seznam */
+    .filtry { display: grid; grid-template-columns: minmax(200px, 2fr) repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; align-items: end; }
+    .filtry label.p { margin-top: 0; }
+    .souhrn-filtru { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 10px 0 8px; font-size: .86rem; }
+    .seznam { display: flex; flex-direction: column; gap: 8px; }
+    .pol { display: grid; grid-template-columns: auto 64px minmax(0, 1fr) auto; gap: 10px 12px; align-items: center; background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; cursor: pointer; }
+    .pol:hover { border-color: var(--border-strong); background: var(--bg-elevated); }
+    .pol.vybrana { border-color: var(--accent); }
+    .pol .nahl { width: 64px; height: 64px; border-radius: 6px; background: var(--bg-control); object-fit: cover; display: grid; place-items: center; font-size: 1.6rem; overflow: hidden; }
+    .pol .nahl img { width: 100%; height: 100%; object-fit: cover; }
+    .pol .nazev { font-weight: 600; overflow-wrap: anywhere; }
+    .pol .det { font-size: .8rem; color: var(--text-muted); overflow-wrap: anywhere; }
+    .pol .vpravo { text-align: right; font-size: .85rem; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+    .pol .cena { font-weight: 600; white-space: nowrap; }
+    .pol input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    @media (max-width: 620px) {
+      .pol { grid-template-columns: auto 48px minmax(0, 1fr); }
+      .pol .nahl { width: 48px; height: 48px; font-size: 1.2rem; }
+      .pol .vpravo { grid-column: 2 / -1; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; text-align: left; }
+    }
+    .stitek { display: inline-block; font-size: .74rem; background: var(--accent-soft); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 0 7px; margin: 2px 3px 0 0; }
+    .zaruka { display: inline-block; font-size: .74rem; border-radius: 10px; padding: 1px 8px; border: 1px solid var(--border); white-space: nowrap; }
+    .zaruka.platna { color: var(--ok-text); border-color: var(--ok); }
+    .zaruka.konci { color: var(--warn-text); border-color: var(--warn); font-weight: 600; }
+    .zaruka.prosla { color: var(--text-muted); }
+    .zaruka.bez { color: var(--text-faint); }
+    .prazdne { text-align: center; padding: 30px 10px; color: var(--text-muted); }
+
+    /* přehled */
+    .ukazatele { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .ukazatel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; }
+    .ukazatel .h { font-size: 1.3rem; font-weight: 700; overflow-wrap: anywhere; }
+    .ukazatel .n { font-size: .78rem; color: var(--text-muted); }
+    .dva { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 14px; }
+    .dva .karta + .karta { margin-top: 0; }
+    table { border-collapse: collapse; width: 100%; font-size: .86rem; }
+    th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--text-muted); font-weight: 600; font-size: .78rem; }
+    td.c, th.c { text-align: right; white-space: nowrap; }
+    .tab-obal { overflow-x: auto; }
+    .sloupec-graf { min-width: 70px; width: 30%; }
+    .bar { height: 10px; background: var(--accent); border-radius: 3px; min-width: 1px; }
+
+    /* číselníky */
+    .ciselnik li { display: flex; gap: 6px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .ciselnik ul { list-style: none; }
+    .ciselnik .jm { flex: 1 1 120px; min-width: 0; overflow-wrap: anywhere; }
+    .ciselnik .skupina { font-size: .78rem; color: var(--text-muted); margin-top: 10px; text-transform: uppercase; letter-spacing: .3px; }
+
+    /* úložiště */
+    .meridlo { height: 14px; background: var(--bg-control); border-radius: 7px; overflow: hidden; border: 1px solid var(--border); margin: 6px 0; }
+    .meridlo > div { height: 100%; background: var(--accent); }
+    .meridlo.plne > div { background: var(--danger); }
+
+    /* dialogy */
+    dialog.okno { margin: auto; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--bg-panel); color: var(--text); padding: 0;
+      width: min(920px, calc(100vw - 16px)); max-height: calc(100vh - 16px); box-shadow: var(--shadow); }
+    dialog.okno::backdrop { background: rgba(0, 0, 0, .55); }
+    dialog.okno .hlava { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); z-index: 2; }
+    dialog.okno .hlava h2 { margin: 0; flex: 1; overflow-wrap: anywhere; }
+    dialog.okno .telo { padding: 6px 16px 14px; }
+    dialog.okno .pata { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: var(--bg-panel); }
+    .zaruka-info { font-size: .84rem; margin-top: 6px; padding: 6px 10px; background: var(--bg-deep); border-radius: 6px; }
+    .prilohy { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 6px; }
+    .pril { border: 1px solid var(--border); border-radius: 6px; padding: 6px; font-size: .78rem; background: var(--bg-deep); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .pril.cekajici { border-style: dashed; border-color: var(--accent); }
+    .pril.odebrana { opacity: .5; text-decoration: line-through; }
+    .pril .nh { height: 90px; display: grid; place-items: center; background: var(--bg-control); border-radius: 4px; overflow: hidden; font-size: 1.8rem; cursor: zoom-in; }
+    .pril .nh img { width: 100%; height: 100%; object-fit: cover; }
+    .pril .jm { overflow-wrap: anywhere; }
+    .pril select { font-size: .78rem; padding: 3px 5px; }
+    .servis-tab input { padding: 5px 6px; font-size: .85rem; }
+    .servis-tab td { padding: 3px; }
+    @media (max-width: 620px) {
+      .servis-tab thead { display: none; }
+      .servis-tab tr { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border-bottom: 1px solid var(--border); padding: 6px 0; }
+      .servis-tab td { border: none; }
+      .servis-tab td.popis { grid-column: 1 / -1; }
+    }
+    #nahledVelky img { max-width: 100%; max-height: 75vh; display: block; margin: 0 auto; }
+    #ctecka video { width: 100%; max-height: 60vh; background: #000; border-radius: 6px; }
+
+    /* štítky */
+    .arch-nahled { overflow: auto; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; padding: 10px; max-height: 70vh; }
+    .arch { width: 210mm; height: 297mm; background: #fff; position: relative; box-shadow: 0 0 0 1px #999; margin: 0 auto 10px; transform-origin: top left; }
+    .etiketa { position: absolute; box-sizing: border-box; padding: 2.5mm; display: flex; gap: 2.5mm; align-items: center; color: #000; overflow: hidden; font-family: Arial, Helvetica, sans-serif; }
+    .arch-nahled .etiketa { outline: 1px dashed #bbb; outline-offset: -1px; }
+    .etiketa .qr { flex: 0 0 auto; }
+    .etiketa .qr svg { width: 100%; height: 100%; display: block; }
+    .etiketa .txt { min-width: 0; line-height: 1.15; }
+    .etiketa .id { font-family: "DejaVu Sans Mono", Consolas, monospace; font-weight: 700; letter-spacing: .3px; }
+    .etiketa .nz { font-weight: 700; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .etiketa .mi, .etiketa .vl { color: #222; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    #tisk { display: none; }
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+      body.tisk-stitky > *:not(#tisk) { display: none !important; }
+      body.tisk-stitky #tisk { display: block; }
+      #tisk .arch { box-shadow: none; margin: 0; page-break-after: always; break-after: page; transform: none !important; }
+      #tisk .arch:last-child { page-break-after: auto; break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="obal">
+  <h1>📦 Evidence domácího majetku</h1>
+  <p class="podtitul">Soupis věcí v domácnosti s cenami, zárukami, účtenkami, návody a servisní historií. Vše zůstává jen v tomto prohlížeči
+    (IndexedDB) – nic se neodesílá na server. Pravidelně si stahujte zálohu ZIP.</p>
+
+  <div id="upozorneni" aria-live="polite"></div>
+
+  <div class="horni-lista">
+    <div class="listy" role="tablist" id="listy">
+      <button role="tab" data-list="polozky" aria-selected="true">Položky <span class="pocet" id="pocetPolozek">0</span></button>
+      <button role="tab" data-list="prehled" aria-selected="false">Přehled hodnoty</button>
+      <button role="tab" data-list="stitky" aria-selected="false">Štítky QR</button>
+      <button role="tab" data-list="ciselniky" aria-selected="false">Místa a kategorie</button>
+      <button role="tab" data-list="kos" aria-selected="false">Koš <span class="pocet" id="pocetKos">0</span></button>
+      <button role="tab" data-list="zaloha" aria-selected="false">Záloha a úložiště</button>
+    </div>
+    <div class="rada">
+      <button id="btnSken" title="Načíst QR štítek kamerou nebo z fotky">📷 Skenovat štítek</button>
+      <button id="btnNova" class="hlavni">+ Nová položka</button>
+    </div>
+  </div>
+
+  <!-- POLOŽKY -->
+  <section class="list" id="list-polozky" role="tabpanel">
+    <div class="karta">
+      <div class="filtry">
+        <div><label class="p" for="fDotaz">Hledat (název, výrobce, sériové číslo, ID, poznámka…)</label>
+          <input type="search" id="fDotaz" placeholder="např. bosch lednice  ·  -prošlé vyloučí slovo" autocomplete="off"></div>
+        <div><label class="p" for="fKategorie">Kategorie</label><select id="fKategorie"></select></div>
+        <div><label class="p" for="fLokalita">Lokalita</label><select id="fLokalita"></select></div>
+        <div><label class="p" for="fMistnost">Místnost</label><select id="fMistnost"></select></div>
+        <div><label class="p" for="fStitek">Štítek</label><select id="fStitek"></select></div>
+        <div><label class="p" for="fZaruka">Záruka</label>
+          <select id="fZaruka"><option value="">vše</option><option value="aktivni">platná (vč. končících)</option><option value="konci">brzy končí</option>
+            <option value="prosla">prošlá</option><option value="bez">bez údaje</option></select></div>
+        <div><label class="p" for="fRazeni">Řadit podle</label>
+          <select id="fRazeni"><option value="nazev">názvu</option><option value="zmena">poslední změny</option><option value="cena">ceny (nejdražší)</option>
+            <option value="nakup">data nákupu (nejnovější)</option><option value="zaruka">konce záruky</option><option value="misto">umístění</option></select></div>
+      </div>
+      <div class="rada mezera">
+        <label class="zaskrt"><input type="checkbox" id="fPriloha"> jen s přílohou</label>
+        <label class="zaskrt"><input type="checkbox" id="fBezCeny"> jen bez ceny</label>
+        <button class="maly" id="btnZrusFiltry">Zrušit filtry</button>
+      </div>
+    </div>
+    <div class="souhrn-filtru">
+      <span id="souhrnFiltru"></span>
+      <span class="roztah"></span>
+      <label class="zaskrt"><input type="checkbox" id="vybratVse"> vybrat zobrazené</label>
+      <button class="maly" id="btnCsv" title="Seznam zobrazených položek pro Excel">⬇ CSV</button>
+      <button class="maly" id="btnIcs" title="Konce záruk jako události do kalendáře">📅 Kalendář (.ics)</button>
+      <button class="maly" id="btnStitkyVybr">🏷 Štítky</button>
+      <button class="maly nebezpecne" id="btnKosVybr" disabled>Do koše</button>
+    </div>
+    <div class="seznam" id="seznam"></div>
+  </section>
+
+  <!-- PŘEHLED -->
+  <section class="list" id="list-prehled" role="tabpanel" hidden>
+    <div class="ukazatele" id="ukazatele"></div>
+    <div class="dva">
+      <div class="karta"><h2>Hodnota podle kategorií</h2><div class="tab-obal" id="prehledKat"></div></div>
+      <div class="karta"><h2>Hodnota podle lokalit</h2><div class="tab-obal" id="prehledLok"></div></div>
+      <div class="karta"><h2>Záruky</h2><div id="prehledZaruk"></div></div>
+      <div class="karta"><h2>Nejcennější položky</h2><div class="tab-obal" id="prehledTop"></div></div>
+    </div>
+    <p class="faint" style="margin-top:10px">Hodnoty jsou <b>pořizovací ceny</b> zadané u položek (bez odpisů a bez položek v koši). Pro pojišťovnu
+      bývá rozhodující pojistná nebo časová cena – tu tato evidence neodhaduje.</p>
+  </section>
+
+  <!-- ŠTÍTKY -->
+  <section class="list" id="list-stitky" role="tabpanel" hidden>
+    <div class="karta">
+      <h2>Inventární štítky s QR kódem</h2>
+      <div class="mrizka">
+        <div><label class="p" for="sZdroj">Které položky</label>
+          <select id="sZdroj"><option value="vybrane">vybrané v seznamu</option><option value="filtr">zobrazené aktuálním filtrem</option><option value="vse">všechny</option></select></div>
+        <div><label class="p" for="sArch">Arch etiket A4</label><select id="sArch"></select></div>
+        <div><label class="p" for="sPreskocit">Přeskočit už použité pozice</label><input type="number" id="sPreskocit" min="0" value="0" step="1"></div>
+        <div><label class="p" for="sObsahQr">Obsah QR kódu</label>
+          <select id="sObsahQr"><option value="id">jen identifikátor (MAJ:M-…)</option><option value="odkaz">odkaz na tuto stránku s ID</option></select></div>
+      </div>
+      <div class="rada mezera">
+        <label class="zaskrt"><input type="checkbox" id="sNazev" checked> název</label>
+        <label class="zaskrt"><input type="checkbox" id="sMisto" checked> umístění</label>
+        <label class="zaskrt"><input type="checkbox" id="sVyrobce"> výrobce a model</label>
+        <label class="zaskrt"><input type="checkbox" id="sSeriove"> sériové číslo</label>
+        <span class="roztah"></span>
+        <button id="btnTisk" class="hlavni">🖨 Tisknout štítky</button>
+      </div>
+      <p class="faint" style="margin-top:8px">QR kód nese jen <b>lokální identifikátor</b> položky – data zůstávají v tomto prohlížeči. Načtený štítek otevře položku jen
+        tady (tlačítko „Skenovat štítek“), na jiném zařízení s jinou kopií dat ne. Odkaz v QR otevře stránku, ale položku najde jen prohlížeč, kde jsou data.
+        Tiskněte se skutečnou velikostí (100&nbsp;%, bez přizpůsobení stránce) a bez okrajů.</p>
+      <p id="sInfo" class="male" style="margin-top:6px"></p>
+    </div>
+    <div class="karta"><div class="arch-nahled" id="archNahled"></div></div>
+  </section>
+
+  <!-- ČÍSELNÍKY -->
+  <section class="list" id="list-ciselniky" role="tabpanel" hidden>
+    <div class="dva">
+      <div class="karta ciselnik">
+        <h2>Lokality a místnosti</h2>
+        <p class="faint">Lokalita = byt, dům, chata, garáž… Místnost patří do lokality.</p>
+        <div class="rada mezera"><button id="btnNovaLok">+ Lokalita</button><button id="btnNovaMist">+ Místnost</button></div>
+        <div id="cisMista"></div>
+      </div>
+      <div class="karta ciselnik">
+        <h2>Kategorie</h2>
+        <div class="rada mezera"><button id="btnNovaKat">+ Kategorie</button></div>
+        <ul id="cisKat"></ul>
+        <h3>Štítky</h3>
+        <p class="faint">Štítky se zakládají přímo u položek (oddělené čárkou). Zde je jejich přehled; kliknutím vyfiltrujete položky.</p>
+        <div id="cisStitky"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KOŠ -->
+  <section class="list" id="list-kos" role="tabpanel" hidden>
+    <div class="karta">
+      <div class="rada"><h2 class="roztah" style="margin:0">Koš</h2>
+        <button id="btnVysypat" class="nebezpecne">Vysypat koš…</button></div>
+      <p class="faint" style="margin:6px 0 10px">Smazané položky zůstávají v koši i s přílohami, dokud je trvale neodstraníte. Koš se sám nevyprazdňuje.</p>
+      <div class="seznam" id="seznamKos"></div>
+    </div>
+  </section>
+
+  <!-- ZÁLOHA -->
+  <section class="list" id="list-zaloha" role="tabpanel" hidden>
+    <div class="dva">
+      <div class="karta">
+        <h2>Záloha a obnova</h2>
+        <p class="male">Kompletní záloha je soubor ZIP: <code>data.json</code> (všechny položky, číselníky a nastavení), složka <code>prilohy/</code> s originály souborů
+          a pro pohodlí i <code>seznam.csv</code>. Lze ji otevřít libovolným programem na ZIP.</p>
+        <p class="male" id="infoZaloha" style="margin-top:6px"></p>
+        <div class="rada mezera">
+          <button id="btnZaloha" class="hlavni">⬇ Stáhnout zálohu (ZIP)</button>
+          <button id="btnCsvVse">⬇ Seznam do CSV (Excel)</button>
+        </div>
+        <h3>Obnova ze zálohy</h3>
+        <p class="male">Vyberte soubor ZIP z této aplikace (nebo starší export JSON). Před obnovou uvidíte obsah a zvolíte, zda data sloučit, nebo nahradit.</p>
+        <div class="rada mezera"><label class="tl" for="souborObnova">📂 Vybrat zálohu…</label>
+          <input type="file" id="souborObnova" accept=".zip,.json,application/zip,application/json" hidden></div>
+      </div>
+      <div class="karta">
+        <h2>Úložiště prohlížeče</h2>
+        <div id="infoUloziste" class="male"></div>
+        <div class="rada mezera"><button id="btnTrvale">Požádat o trvalé úložiště</button><button id="btnObnovUloziste" class="maly">Přepočítat</button></div>
+        <p class="faint" style="margin-top:8px">Bez trvalého úložiště smí prohlížeč při nedostatku místa data webu sám smazat. Ani trvalé úložiště ale neochrání před
+          ručním vymazáním dat prohlížeče, přeinstalací nebo ztrátou zařízení – proto zálohujte.</p>
+      </div>
+      <div class="karta">
+        <h2>Nastavení</h2>
+        <div class="mrizka">
+          <div><label class="p" for="nZaruka">Výchozí záruka nové položky (měsíce)</label><input type="number" id="nZaruka" min="0" max="1200" step="1"></div>
+          <div><label class="p" for="nPredem">Upozornit na konec záruky (dní předem)</label><input type="number" id="nPredem" min="0" max="365" step="1"></div>
+          <div><label class="p" for="nFoto">Zmenšit fotografie na delší stranu (px, 0 = nezmenšovat)</label><input type="number" id="nFoto" min="0" max="8000" step="100"></div>
+          <div><label class="p" for="nZalohaDni">Připomenout zálohu po (dnech)</label><input type="number" id="nZalohaDni" min="0" max="365" step="1"></div>
+        </div>
+        <p class="faint" style="margin-top:8px">24 měsíců je zákonná doba pro uplatnění práv z vadného plnění u spotřebitele (§ 2165 OZ); u použitého zboží
+          ji lze smluvně zkrátit až na 12 měsíců, výrobce může dát delší záruku za jakost. Upozornění se vyhodnocují <b>jen při otevření stránky</b> –
+          aplikace nemá server ani běh na pozadí, takže neposílá oznámení ani e-maily. Spolehlivou připomínku si vytvoříte exportem do kalendáře (.ics).</p>
+        <h3>Ukázka a mazání</h3>
+        <div class="rada"><button id="btnUkazka">Vložit ukázková data</button><button id="btnSmazVse" class="nebezpecne">Smazat všechna data…</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- editor položky -->
+<dialog class="okno" id="dlgPolozka" aria-labelledby="pTitulek">
+  <form method="dialog" id="formPolozka" novalidate>
+    <div class="hlava"><h2 id="pTitulek">Položka</h2><span class="faint" id="pId"></span><button type="button" class="maly" data-zavrit>✕</button></div>
+    <div class="telo">
+      <div class="mrizka">
+        <div class="siroke"><label class="p" for="pNazev">Název *</label><input type="text" id="pNazev" required maxlength="200" placeholder="např. Pračka, televize, horské kolo"></div>
+        <div><label class="p" for="pVyrobce">Výrobce</label><input type="text" id="pVyrobce" maxlength="120" list="dlVyrobci"></div>
+        <div><label class="p" for="pModel">Model</label><input type="text" id="pModel" maxlength="120"></div>
+        <div><label class="p" for="pSeriove">Sériové číslo</label><input type="text" id="pSeriove" maxlength="120" autocomplete="off" spellcheck="false"></div>
+        <div><label class="p" for="pKategorie">Kategorie</label><select id="pKategorie"></select></div>
+        <div><label class="p" for="pLokalita">Lokalita</label><select id="pLokalita"></select></div>
+        <div><label class="p" for="pMistnost">Místnost</label><select id="pMistnost"></select></div>
+        <div><label class="p" for="pCena">Pořizovací cena (Kč)</label><input type="text" id="pCena" inputmode="decimal" placeholder="např. 12 490,50"></div>
+        <div><label class="p" for="pNakup">Datum nákupu</label><input type="date" id="pNakup"></div>
+        <div><label class="p" for="pPrevzeti">Datum převzetí (je-li jiné)</label><input type="date" id="pPrevzeti"></div>
+        <div><label class="p" for="pProdejce">Prodejce</label><input type="text" id="pProdejce" maxlength="200" list="dlProdejci"></div>
+        <div><label class="p" for="pZaruka">Záruční lhůta (měsíce)</label><input type="number" id="pZaruka" min="0" max="1200" step="1"></div>
+        <div class="siroke"><div class="zaruka-info" id="pZarukaInfo"></div></div>
+        <div class="siroke"><label class="p" for="pStitky">Štítky (oddělené čárkou)</label><input type="text" id="pStitky" placeholder="např. dárek, pojištěno, k prodeji" list="dlStitky"></div>
+        <div class="siroke"><label class="p" for="pPoznamka">Poznámka</label><textarea id="pPoznamka" rows="2" maxlength="5000"></textarea></div>
+      </div>
+      <h3>Přílohy – fotografie, účtenky, návody, servisní doklady</h3>
+      <div class="rada">
+        <label class="tl" for="pSoubory">📎 Přidat soubory…</label>
+        <input type="file" id="pSoubory" multiple hidden>
+        <label class="tl" for="pFoto">📷 Vyfotit</label>
+        <input type="file" id="pFoto" accept="image/*" capture="environment" hidden>
+        <span class="faint" id="pPrilohyInfo"></span>
+      </div>
+      <div class="prilohy" id="pPrilohy"></div>
+      <h3>Servisní záznamy</h3>
+      <div class="tab-obal"><table class="servis-tab"><thead><tr><th style="width:150px">Datum</th><th>Popis zásahu</th><th style="width:160px">Servis</th><th style="width:110px">Cena (Kč)</th><th style="width:40px"></th></tr></thead>
+        <tbody id="pServis"></tbody></table></div>
+      <div class="rada mezera"><button type="button" class="maly" id="pServisPridat">+ Servisní záznam</button></div>
+    </div>
+    <div class="pata">
+      <button type="submit" class="hlavni" id="pUlozit" value="ulozit">Uložit</button>
+      <button type="button" data-zavrit>Zrušit</button>
+      <span class="roztah"></span>
+      <button type="button" id="pStitek">🏷 Štítek</button>
+      <button type="button" id="pIcs">📅 .ics</button>
+      <button type="button" id="pDuplikat">Duplikovat</button>
+      <button type="button" class="nebezpecne" id="pSmazat">Do koše</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="dlVyrobci"></datalist><datalist id="dlProdejci"></datalist><datalist id="dlStitky"></datalist>
+
+<dialog class="okno" id="dlgNahled"><div class="hlava"><h2 id="nahledTitulek">Náhled</h2><button type="button" class="maly" data-zavrit>✕</button></div>
+  <div class="telo" id="nahledVelky"></div></dialog>
+
+<dialog class="okno" id="dlgCtecka"><div class="hlava"><h2>Skenovat inventární štítek</h2><button type="button" class="maly" data-zavrit>✕</button></div>
+  <div class="telo" id="ctecka">
+    <p class="male" id="cteckaStav">Namiřte kameru na QR kód štítku.</p>
+    <video id="cteckaVideo" playsinline muted hidden></video>
+    <div class="rada mezera">
+      <label class="tl" for="cteckaSoubor">🖼 Načíst z fotky…</label><input type="file" id="cteckaSoubor" accept="image/*" hidden>
+      <input type="text" id="cteckaRucne" placeholder="nebo opište ID, např. M-4K7Q2Z9A" style="flex:1 1 180px;width:auto" spellcheck="false" autocomplete="off">
+      <button id="cteckaOtevrit">Otevřít</button>
+    </div>
+  </div></dialog>
+
+<dialog class="okno" id="dlgObnova"><div class="hlava"><h2>Obnova ze zálohy</h2><button type="button" class="maly" data-zavrit>✕</button></div>
+  <div class="telo">
+    <div id="obnovaInfo" class="male"></div>
+    <h3>Způsob obnovy</h3>
+    <label class="zaskrt" style="display:flex;margin:6px 0"><input type="radio" name="obnovaRezim" value="sloucit" checked> <span><b>Sloučit</b> – přidá chybějící položky a přílohy; u položky se stejným ID ponechá novější verzi.</span></label>
+    <label class="zaskrt" style="display:flex;margin:6px 0"><input type="radio" name="obnovaRezim" value="nahradit"> <span><b>Nahradit vše</b> – současná data se smažou a nahradí obsahem zálohy.</span></label>
+    <label class="zaskrt" style="display:flex;margin:10px 0 0"><input type="checkbox" id="obnovaZalohaPred" checked> nejdřív stáhnout zálohu současného stavu</label>
+  </div>
+  <div class="pata"><button class="hlavni" id="obnovaProvest">Obnovit</button><button data-zavrit>Zrušit</button></div></dialog>
+
+<div id="tisk" aria-hidden="true"></div>
+
+<script src="majetek/aplikace.js"></script>
+</body>
+</html>

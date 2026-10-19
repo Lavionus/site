@@ -1,7 +1,9 @@
 /* Modelář 3D – 2D skici a tělesa z nich (bez DOM, jde v node i ve workeru).
-   Uzel 'skica': param = { tvary: [...], rezim: 'vytazeni' | 'rotace',
+   Uzel 'skica': param = { tvary: [...], rezim: 'vytazeni' | 'rotace' | 'tazeni',
      vyska (mm), horni (velikost horní plochy v %), zkrouceni (°),
-     posunX, posunY (posun horní plochy v mm), uhel (° rotace), segmentu },
+     posunX, posunY (posun horní plochy v mm), uhel (° rotace), segmentu,
+     tažení po dráze (jadro/tazeni.js): draha 'krivka' | 'sroubovice', drahaBody, uzavrena,
+     polomerS, stoupaniS, otacekS, levotoc },
    stred = střed obálky tělesa v souřadnicích skici, zaklad = její velikost.
    Tvary (souřadnice skici v mm, y nahoru; každý může mít otvor: true):
      obdelnik {x, y (střed), w, h, r (zaoblení rohů)}
@@ -20,15 +22,26 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   'use strict';
   const PI = Math.PI;
 
-  M.SKICA_VYCHOZI = { tvary: [], rezim: 'vytazeni', vyska: 10, horni: 100, zkrouceni: 0, posunX: 0, posunY: 0, uhel: 360, segmentu: 64 };
+  M.SKICA_VYCHOZI = { tvary: [], rezim: 'vytazeni', vyska: 10, horni: 100, zkrouceni: 0, posunX: 0, posunY: 0, uhel: 360, segmentu: 64,
+    draha: 'krivka', polomerS: 10, stoupaniS: 5, otacekS: 3, levotoc: false, uzavrena: false };
   M.SKICA_PARAMETRY = [
-    { klic: 'rezim', popis: 'Těleso', volby: [['vytazeni', 'Vytažení'], ['rotace', 'Rotace kolem osy']] },
+    { klic: 'rezim', popis: 'Těleso', volby: [['vytazeni', 'Vytažení'], ['rotace', 'Rotace kolem osy'], ['tazeni', 'Tažení po dráze']] },
     { klic: 'vyska', popis: 'Výška vytažení', jednotka: 'mm', min: 0.01, max: 2000, krok: 1, rezim: 'vytazeni' },
     { klic: 'horni', popis: 'Horní plocha', jednotka: '%', min: 0, max: 1000, krok: 5, rezim: 'vytazeni' },
     { klic: 'zkrouceni', popis: 'Zkroucení', jednotka: '°', min: -3600, max: 3600, krok: 15, rezim: 'vytazeni' },
     { klic: 'posunX', popis: 'Posun vršku X', jednotka: 'mm', min: -2000, max: 2000, krok: 1, rezim: 'vytazeni' },
     { klic: 'posunY', popis: 'Posun vršku Y', jednotka: 'mm', min: -2000, max: 2000, krok: 1, rezim: 'vytazeni' },
     { klic: 'uhel', popis: 'Úhel rotace', jednotka: '°', min: 1, max: 360, krok: 15, rezim: 'rotace' },
+    // tažení po dráze (jadro/tazeni.js); 'draha' u položky = jen pro tu dráhu (inspektor podle ní filtruje).
+    // horni a zkrouceni podruhé se stejnými mezemi – jen aby je inspektor ukázal i v režimu tažení
+    { klic: 'draha', popis: 'Dráha', volby: [['krivka', 'Křivka'], ['sroubovice', 'Šroubovice']], rezim: 'tazeni' },
+    { klic: 'uzavrena', popis: 'Uzavřená dráha', prepinac: true, rezim: 'tazeni', draha: 'krivka' },
+    { klic: 'polomerS', popis: 'Poloměr šroubovice', jednotka: 'mm', min: 0.1, max: 5000, krok: 1, rezim: 'tazeni', draha: 'sroubovice' },
+    { klic: 'stoupaniS', popis: 'Stoupání', jednotka: 'mm', min: 0.01, max: 2000, krok: 0.5, rezim: 'tazeni', draha: 'sroubovice' },
+    { klic: 'otacekS', popis: 'Otáček', min: 0.05, max: 500, krok: 0.5, rezim: 'tazeni', draha: 'sroubovice' },
+    { klic: 'levotoc', popis: 'Levotočivá', prepinac: true, rezim: 'tazeni', draha: 'sroubovice' },
+    { klic: 'horni', popis: 'Profil na konci', jednotka: '%', min: 0, max: 1000, krok: 5, rezim: 'tazeni' },
+    { klic: 'zkrouceni', popis: 'Zkroucení po délce', jednotka: '°', min: -3600, max: 3600, krok: 15, rezim: 'tazeni' },
     { klic: 'segmentu', popis: 'Segmenty oblouků', min: 8, max: 256, krok: 4, cele: true },
   ];
 
@@ -39,6 +52,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   function normalizujTvar(t) {
     if (!t || typeof t !== 'object') return null;
     const z = { typ: t.typ, otvor: !!t.otvor };
+    if (typeof t.id === 'string' && /^[\w-]{1,24}$/.test(t.id)) z.id = t.id;       // stálé id (vazby a kóty skici na něj odkazují)
     const c = (k, nahr, min = -1e5, max = 1e5) => { z[k] = M.omez(cislo(t[k], nahr), min, max); };
     switch (t.typ) {
       case 'obdelnik': c('x', 0); c('y', 0); c('w', 10, 0.01); c('h', 10, 0.01); c('r', 0, 0); break;
@@ -74,11 +88,24 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const z = {};
     for (const d of M.SKICA_PARAMETRY) {
       if (d.volby) { z[d.klic] = d.volby.some(v => v[0] === p[d.klic]) ? p[d.klic] : M.SKICA_VYCHOZI[d.klic]; continue; }
+      if (d.prepinac) { const v = p[d.klic]; z[d.klic] = typeof v === 'boolean' ? v : v === 1 || v === 'true' ? true : v === 0 || v === 'false' ? false : M.SKICA_VYCHOZI[d.klic]; continue; }
       let v = cislo(p[d.klic], M.SKICA_VYCHOZI[d.klic]);
       if (d.cele) v = Math.round(v);
       z[d.klic] = M.omez(v, d.min, d.max);
     }
+    // body dráhy tažení jen když jsou (staré skici je nemají)
+    if (p.drahaBody !== undefined && M.normalizujDrahu) z.drahaBody = M.normalizujDrahu({ drahaBody: p.drahaBody }).drahaBody;
     z.tvary = (Array.isArray(p.tvary) ? p.tvary : []).map(normalizujTvar).filter(Boolean);
+    // každý tvar má jedinečné id (chybějící nebo zdvojené dostane další volné „t1“, „t2“…)
+    const pouzita = new Set();
+    let dalsi = 1;
+    for (const t of z.tvary) {
+      if (!t.id || pouzita.has(t.id)) { while (pouzita.has('t' + dalsi) || z.tvary.some(x => x.id === 't' + dalsi)) dalsi++; t.id = 't' + dalsi++; }
+      pouzita.add(t.id);
+    }
+    // vazby a kóty skici (jadro/vazby.js); jen platné odkazy na existující tvary
+    const vazby = M.normalizujVazbySkici ? M.normalizujVazbySkici(p.vazby, z.tvary) : [];
+    if (vazby.length) z.vazby = vazby;
     let bodu = 0;
     for (const t of z.tvary) bodu += (t.body ? t.body.length : 0) + (t.kontury ? t.kontury.reduce((s, k) => s + k.length, 0) : 0);
     if (bodu > MAX_BODU) throw new Error('skica má příliš mnoho bodů');
@@ -229,6 +256,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     const c = [(x0 + x1) / 2, (y0 + y1) / 2];
+    if (p.rezim === 'tazeni') {
+      if (!M.bodyObalkyTazeni) return { body: new Float32Array(0), stredObrysu: c };
+      const kontury = [];
+      for (const t of zdroj) for (const k of M.konturyTvaru(t, p.segmentu)) kontury.push(k);
+      return { body: M.bodyObalkyTazeni(p, kontury), stredObrysu: c };
+    }
     const out = [];
     if (p.rezim === 'rotace') {
       // skutečné body tělesa: konvexní obal profilu v rovině (r, z) otočený po krocích kolem osy
@@ -283,7 +316,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // při zkroucení zhustit body obrysu: dlouhé hrany by mezi pootočenými vrstvami
     // dávaly silně zborcené stěny a triangulace by soustavně přidávala objem
     let maxUsek = Infinity;
-    if (p.rezim !== 'rotace' && p.zkrouceni) {
+    if (p.rezim !== 'rotace' && p.rezim !== 'tazeni' && p.zkrouceni) {     // tažení si obrys zhustí samo
       const { body } = M.bodyObalkySkici(Object.assign({}, p, { zkrouceni: 0, horni: 100, posunX: 0, posunY: 0 }));
       let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
       for (let i = 0; i < body.length; i += 3) { x0 = Math.min(x0, body[i]); x1 = Math.max(x1, body[i]); y0 = Math.min(y0, body[i + 1]); y1 = Math.max(y1, body[i + 1]); }
@@ -310,6 +343,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       let oblast = CrossSection.union(plne); smazat.push(oblast);
       if (otvory.length) { const o = CrossSection.union(otvory); smazat.push(o); oblast = CrossSection.difference(oblast, o); smazat.push(oblast); }
       if (oblast.isEmpty()) throw new Error('skica je prázdná (otvory zakryly všechno)');
+      if (p.rezim === 'tazeni') {
+        if (!M.manifoldTazeni) throw new Error('tažení po dráze není načtené (jadro/tazeni.js)');
+        return M.manifoldTazeni(w, p, oblast);
+      }
       if (p.rezim === 'rotace') {
         const m = oblast.revolve(p.segmentu, p.uhel);
         if (m.isEmpty()) { m.delete(); throw new Error('pro rotaci musí část skici ležet vpravo od osy (x > 0)'); }

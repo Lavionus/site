@@ -6,7 +6,10 @@
    Skupiny počítá worker (M.spocitejSkupinu); dokud nový výsledek nedorazí,
    zůstává vidět předchozí geometrie (o.zobrazenyKlic), takže nic nebliká.
    Objekt drží odkaz na požadovanou geometrii (o.klic) a navíc na zobrazenou,
-   pokud se liší. */
+   pokud se liší.
+   Duchové (T.ukazDuchy): tělesa mimo dokument kreslená čárkovaně – náhled výsledku
+   úpravy před potvrzením (průhledná výplň + čárkované hrany) nebo původní tvar
+   během rozpracované úpravy (jen čárkované hrany). Hrany prosvítají i skrz tělesa. */
 var MDL = globalThis.MDL = globalThis.MDL || {};
 (function (M) {
   'use strict';
@@ -181,6 +184,75 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       o.uzel = u;
     }
 
+    // ------------------------------------------------------------ duchové (náhled / původní tvar)
+    const duchove = new Map();          // klíč funkce → [{uzel, styl, klic, skupina, cary, mesh}]
+    const barvaDucha = styl => styl === 'nahled' ? M.barvaCss('--accent', '#6aa6fd') : (M.svetlaScena() ? '#3b4450' : '#dfe5ec');
+    /** Čárkované hrany: vlastní geometrie s délkami čar ve světových mm (skupina může mít nerovnoměrné měřítko). */
+    function obnovCary(d) {
+      const g = geometrie.get(d.klic);
+      const p = g && g.hrany.getAttribute('position');
+      const n = p ? p.count : 0, a = p ? p.array : new Float32Array(0);
+      const e = d.skupina.matrix.elements, del = new Float32Array(n);
+      const sv = (i, k) => e[k] * a[3 * i] + e[4 + k] * a[3 * i + 1] + e[8 + k] * a[3 * i + 2];
+      let s = 0;
+      for (let i = 0; i + 1 < n; i += 2) {
+        del[i] = s;
+        s += Math.hypot(sv(i + 1, 0) - sv(i, 0), sv(i + 1, 1) - sv(i, 1), sv(i + 1, 2) - sv(i, 2));
+        del[i + 1] = s;
+      }
+      for (const c of d.cary) {
+        // vlastní atribut nad stejným polem: dispose ducha nesmaže GPU buffer hran tělesa ve scéně
+        c.geometry.setAttribute('position', new THREE.BufferAttribute(p ? p.array : new Float32Array(0), 3));
+        c.geometry.setAttribute('lineDistance', new THREE.BufferAttribute(del, 1));
+        c.geometry.computeBoundingSphere();
+      }
+    }
+    function vytvorDucha(u, styl) {
+      const klic = M.klicGeometrie(u);
+      const g = ziskejGeometrii(klic, u);
+      const skupina = new THREE.Group();
+      skupina.matrixAutoUpdate = false;
+      M.maticeUzlu(u, skupina.matrix);
+      // délka čárky podle velikosti tělesa (malý čep i velká krabice: pár čárek na hranu)
+      const dash = M.omez(Math.hypot(...u.rozmer) / 45, 0.35, 4);
+      const barva = barvaDucha(styl);
+      const mat = (opacity, depthTest) => new THREE.LineDashedMaterial({ color: barva, dashSize: dash, gapSize: dash * 0.65, transparent: true, opacity, depthTest, depthWrite: false });
+      // viditelné hrany výrazně, zakryté (uvnitř tělesa, za ním) slabě – zmenšené těleso je celé uvnitř původního
+      const cary = [new THREE.LineSegments(new THREE.BufferGeometry(), mat(styl === 'nahled' ? 1 : 0.9, true)),
+        new THREE.LineSegments(new THREE.BufferGeometry(), mat(styl === 'nahled' ? 0.55 : 0.35, false))];
+      cary[0].renderOrder = 5; cary[1].renderOrder = 4;
+      for (const c of cary) { c.raycast = () => {}; skupina.add(c); }
+      // výplň s obrysem: na okrajích (plocha z boku) sytější – oblé tvary po zaoblení / odsazení nemají
+      // ostré hrany, obrys je pak vidět jen takhle; původní tvar jen obrysem, bez výplně
+      const mesh = new THREE.Mesh(g.geom, materialDucha(barva, styl === 'nahled' ? 0.14 : 0, styl === 'nahled' ? 0.6 : 0.4));
+      mesh.raycast = () => {};
+      mesh.renderOrder = 3;
+      skupina.add(mesh);
+      // dokud worker počítá, je v geometrii jen náhradní tvar (bez úpravy) – duch by lhal, ukáže se až s výsledkem
+      skupina.visible = !g.ceka;
+      S.scena.add(skupina);
+      const d = { uzel: u, styl, klic, skupina, cary, mesh };
+      obnovCary(d);
+      return d;
+    }
+    function materialDucha(barva, zaklad, okraj) {
+      return new THREE.ShaderMaterial({
+        uniforms: { barva: { value: new THREE.Color(barva) }, zaklad: { value: zaklad }, okraj: { value: okraj } },
+        vertexShader: `varying vec3 vN; varying vec3 vV;
+          void main() { vec4 p = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(-p.xyz);
+            gl_Position = projectionMatrix * p; }`,
+        fragmentShader: `uniform vec3 barva; uniform float zaklad; uniform float okraj; varying vec3 vN; varying vec3 vV;
+          void main() { float r = 1.0 - abs(dot(normalize(vN), normalize(vV))); gl_FragColor = vec4(barva, zaklad + okraj * pow(r, 3.0)); }`,
+        transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      });
+    }
+    function zrusDucha(d) {
+      S.scena.remove(d.skupina);
+      for (const c of d.cary) { c.geometry.dispose(); c.material.dispose(); }
+      d.mesh.material.dispose();
+      uvolniGeometrii(d.klic);
+    }
+
     const T = {
       /** Srovná scénu s dokumentem a výběrem. */
       sync() {
@@ -275,6 +347,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       /** Motiv webu se změnil: barvy rámečků a děr. */
       motiv() {
         const akc = M.barvaCss('--accent', '#6aa6fd');
+        for (const s of duchove.values()) for (const d of s) { const b = barvaDucha(d.styl); for (const c of d.cary) c.material.color.set(b); d.mesh.material.uniforms.barva.value.set(b); }
         matRam.color.set(akc);
         matHranyVyber.color.set(akc);
         matHranyDira.color.set(M.svetlaScena() ? 0x5d6672 : 0xc4ccd6);
@@ -287,6 +360,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       /** Výsledek výpočtu dorazil: objekty, které na něj čekají, ho zobrazí. */
       hotovaGeometrie(klic) {
         for (const o of objekty.values()) if (o.klic === klic) zobraz(o);
+        for (const s of duchove.values()) for (const d of s) if (d.klic === klic) { obnovCary(d); d.skupina.visible = true; }
         M.vysli('geometrie', klic);
         M.prekresli();
       },
@@ -311,6 +385,25 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         return g ? { trojuhelniku: g.trojuhelniku, objem: g.objem, ceka: !!g.ceka, chyba: g.chyba,
                      zobrazena: o.zobrazenyKlic === o.klic, barvy: !!g.geom.getAttribute('color'),
                      vrcholu: g.geom.getAttribute('position') ? g.geom.getAttribute('position').count : 0 } : null;
+      },
+
+      /** Duchové pod klíčem (každá funkce svoje): uzly = tělesa ve světě, styl 'nahled' (výsledek před
+          potvrzením) nebo 'puvodni' (tvar před úpravou). Prázdný seznam duchy pod klíčem zruší. */
+      ukazDuchy(klicSkupiny, uzly, styl = 'nahled') {
+        uzly = (uzly || []).filter(u => u && !u.skryto).slice(0, 60);
+        const stare = duchove.get(klicSkupiny) || [];
+        // stejné uzly a styl (tažení posílá dokument s každým pohybem myši): nic nestavět znovu
+        if (stare.length === uzly.length && stare.every((d, i) => d.uzel === uzly[i] && d.styl === styl)) return;
+        const nove = uzly.map(u => vytvorDucha(u, styl));
+        for (const d of stare) zrusDucha(d);
+        if (nove.length) duchove.set(klicSkupiny, nove); else duchove.delete(klicSkupiny);
+        M.prekresli();
+      },
+      /** Počet duchů (pro testy): {klíč: [{id, styl, car}]} */
+      duchove() {
+        const o = {};
+        for (const [k, s] of duchove) o[k] = s.map(d => ({ id: d.uzel.id, styl: d.styl, videt: d.skupina.visible, car: d.cary[0].geometry.getAttribute('position') ? d.cary[0].geometry.getAttribute('position').count / 2 : 0 }));
+        return o;
       },
 
       // náhled při přetahování z knihovny (poloprůhledný, mimo dokument)
@@ -349,6 +442,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     new MutationObserver(T.motiv).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     M.na('dokument', T.sync);
     M.na('vyber', T.sync);
+    // rozpracovaná úprava (tažení, úchyty, zarovnání, zrcadlení, pole…): původní tvar změněných těles čárkovaně
+    M.na('dokument', () => {
+      const up = M.app.uprava;
+      if (!up || !up.zaklad) { T.ukazDuchy('uprava', []); return; }
+      const ted = new Map(M.app.dok.uzly.map(u => [u.id, u]));
+      T.ukazDuchy('uprava', up.zaklad.uzly.filter(u => ted.get(u.id) !== u), 'puvodni');
+    });
     return T;
   };
 })(MDL);

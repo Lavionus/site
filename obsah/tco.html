@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Celkové náklady vlastnictví (TCO)</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/chart.min.js"></script>
+  <script src="tco/jadro.js"></script>
+  <script src="tco/dema.js"></script>
+  <script src="tco/grafy.js"></script>
+  <script src="tco/pdf.js"></script>
+  <script src="tco/ui.js" defer></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(10px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1.02rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 1000px; line-height: 1.5; }
+    .upozorneni { max-width: 1400px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 14px; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 430px) minmax(0, 1fr); gap: 16px; max-width: 1400px; align-items: start; }
+    @media (max-width: 1020px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+    .lista { max-width: 1400px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: end; }
+    .lista .skupina { display: flex; flex-wrap: wrap; gap: 6px; align-items: end; }
+    .lista .nazev-sc { flex: 1 1 240px; min-width: 0; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 9px 0 3px; }
+    input[type="text"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border-strong); border-radius: 6px;
+      color: var(--text); padding: 7px 9px; font-size: 0.93rem; min-width: 0; font-family: inherit;
+    }
+    textarea { resize: vertical; min-height: 54px; font-size: 0.85rem; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+    input.chyba { border-color: var(--danger); }
+    input.mez { border-color: var(--warn); }
+    .mrizka2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+    .mrizka3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 10px; }
+    @media (max-width: 420px) { .mrizka3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .pole { min-width: 0; }
+    .pole-stav { font-size: 0.74rem; line-height: 1.35; margin-top: 2px; }
+    .pole-stav.chyba { color: var(--danger); }
+    .pole-stav.mez { color: var(--warn); }
+    .s-jednotkou { display: flex; align-items: center; gap: 6px; }
+    .s-jednotkou span { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+    .napoveda { font-size: 0.76rem; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
+    .napoveda b { color: var(--text); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit; white-space: nowrap;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button.nebezpecne { color: var(--danger); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .prepinac { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 7px; overflow: hidden; flex-wrap: wrap; }
+    .prepinac button { border: 0; border-radius: 0; background: var(--bg-control); }
+    .prepinac button + button { border-left: 1px solid var(--border-strong); }
+    .prepinac button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+    .zalozky button { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .zalozky button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+    .tecka { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+    fieldset { border: 1px solid var(--border); border-radius: 7px; padding: 4px 12px 10px; margin-top: 10px; min-width: 0; }
+    legend { font-size: 0.8rem; font-weight: 600; padding: 0 6px; color: var(--text); }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; margin: 8px 0 2px; cursor: pointer; color: var(--text); }
+    .zaskrt input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .rezim-pruh { border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 8px 12px; font-size: 0.84rem; line-height: 1.5; margin: 8px 0 10px; }
+    .rezim-pruh b { color: var(--text); }
+    .tabulka-obal { overflow-x: auto; max-width: 100%; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; vertical-align: top; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; white-space: nowrap; }
+    tbody th { font-weight: normal; color: var(--text-muted); }
+    td.nej { color: var(--ok); font-weight: 700; }
+    tr.hlavni-radek td, tr.hlavni-radek th { font-weight: 700; color: var(--text); }
+    @media (max-width: 520px) { table { font-size: 0.8rem; } th, td { padding: 5px 5px; } tbody th { min-width: 120px; } }
+    .graf { position: relative; height: 340px; width: 100%; }
+    .graf.nizky { height: 260px; }
+    .graf canvas { display: block; }
+    .ovladani { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; margin-bottom: 8px; }
+    .ovladani > div { min-width: 0; flex: 1 1 150px; }
+    .ovladani label { margin-top: 0; }
+    .shrnuti { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .dlazdice { border: 1px solid var(--border); border-radius: 7px; padding: 9px 11px; background: var(--bg-elevated); min-width: 0; }
+    .dlazdice .t { font-size: 0.76rem; color: var(--text-muted); display: flex; gap: 6px; align-items: center; }
+    .dlazdice .h { font-size: 1.2rem; font-weight: 700; margin-top: 2px; overflow-wrap: anywhere; }
+    .dlazdice .p { font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; }
+    .zvrat { font-size: 0.86rem; line-height: 1.6; }
+    .zvrat li { margin-left: 18px; }
+    .stitek { display: inline-block; font-size: 0.72rem; border: 1px solid var(--border-strong); border-radius: 10px; padding: 1px 8px; color: var(--text-muted); }
+    .stitek.ok { border-color: var(--ok); color: var(--ok); }
+    details { margin-top: 8px; }
+    details summary { cursor: pointer; font-size: 0.86rem; color: var(--accent); }
+    .metodika { font-size: 0.86rem; line-height: 1.6; max-width: 1400px; }
+    .metodika h3 { margin-top: 16px; }
+    .metodika p, .metodika li { margin: 4px 0; }
+    .metodika ul { padding-left: 20px; }
+    .metodika code, .vzorec { font-family: ui-monospace, Consolas, monospace; font-size: 0.82rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+    .seznam-sc { list-style: none; padding: 0; margin: 0; }
+    .seznam-sc li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.86rem; }
+    .seznam-sc .jm { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+    .seznam-sc .kdy { color: var(--text-muted); font-size: 0.76rem; }
+    .demo-info { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; border-left: 3px solid var(--warn); padding: 4px 10px; margin-top: 8px; }
+    .demo-info b { color: var(--text); }
+    .skryty { display: none !important; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .lista, #editor, #karta-scenare, .ovladani, .tlacitka, details:not([open]), #autor-podpis, .upozorneni { display: none !important; }
+      .rozlozeni { display: block; }
+      .karta { border: 1px solid #999; break-inside: avoid; margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>💰 Celkové náklady vlastnictví (TCO)</h1>
+  <p class="podtitul">Porovnej několik výrobků, zařízení nebo variant řešení podle toho, kolik tě <b>doopravdy</b> stojí za celou dobu
+    používání: pořizovací cena, energie, servis, spotřební materiál, pojištění, zůstatková hodnota i úvěr. Měsíční časová osa,
+    nominální i diskontovaný pohled, ekvivalentní roční náklad (EAC) pro poctivé srovnání různých životností, bod zvratu,
+    tornádový graf citlivosti, ukládání a export do PDF, CSV a JSON.</p>
+  <div class="upozorneni" role="note"><b>⚠️ Orientační model, ne daňové ani investiční poradenství.</b> Daně, odpisy, odpočet DPH,
+    dotace a leasing se speciálními podmínkami se nemodelují. Ceny v ukázkových scénářích jsou odhady s datem – stárnou, dosaď vlastní nabídky.</div>
+
+  <div class="lista karta" role="region" aria-label="Scénář">
+    <div class="nazev-sc">
+      <label for="scNazev">Název scénáře</label>
+      <input type="text" id="scNazev" maxlength="120">
+    </div>
+    <div class="skupina">
+      <div>
+        <label for="demoVyber">Ukázkový scénář</label>
+        <select id="demoVyber"><option value="">— vyber ukázku —</option></select>
+      </div>
+      <button id="btnNovy" title="Prázdný scénář s jednou variantou">Nový</button>
+      <button id="btnUlozit" class="hlavni" title="Uloží scénář do tohoto prohlížeče">💾 Uložit</button>
+      <button id="btnUlozitJako">Uložit jako…</button>
+    </div>
+    <div class="skupina">
+      <button id="btnPdf">📄 PDF</button>
+      <button id="btnCsv">CSV</button>
+      <button id="btnJson">JSON</button>
+      <button id="btnImport">Import JSON…</button>
+      <button id="btnTisk">🖨️ Tisk</button>
+      <input type="file" id="souborImport" accept=".json,application/json" class="skryty">
+    </div>
+    <div id="demoInfo" class="demo-info skryty" style="flex-basis:100%"></div>
+  </div>
+
+  <div class="rozlozeni">
+    <div class="sloupec" id="editor">
+      <section class="karta" aria-labelledby="h-predpoklady">
+        <h2 id="h-predpoklady">⚙️ Společné předpoklady</h2>
+        <div class="mrizka2">
+          <div class="pole">
+            <label for="gDiskont">Diskontní sazba</label>
+            <div class="s-jednotkou"><input type="text" inputmode="decimal" id="gDiskont" data-g="diskont"><span>% p.a.</span></div>
+          </div>
+          <div class="pole">
+            <label for="gDiskontTyp">Sazba je</label>
+            <select id="gDiskontTyp" data-g="diskontTyp">
+              <option value="nominalni">nominální</option>
+              <option value="realna">reálná (bez inflace)</option>
+            </select>
+          </div>
+          <div class="pole">
+            <label for="gInflace">Obecná inflace</label>
+            <div class="s-jednotkou"><input type="text" inputmode="decimal" id="gInflace" data-g="inflace"><span>% p.a.</span></div>
+          </div>
+          <div class="pole">
+            <label for="gRustEnergie">Růst ceny energie</label>
+            <div class="s-jednotkou"><input type="text" inputmode="decimal" id="gRustEnergie" data-g="rustEnergie"><span>% p.a.</span></div>
+          </div>
+          <div class="pole">
+            <label for="gHorizontTyp">Společný horizont srovnání</label>
+            <select id="gHorizontTyp" data-g="horizontTyp">
+              <option value="nejdelsi">nejdelší životnost</option>
+              <option value="nsn">nejmenší společný násobek</option>
+              <option value="vlastni">vlastní počet let</option>
+            </select>
+          </div>
+          <div class="pole" id="poleHorizontLet">
+            <label for="gHorizontLet">Horizont</label>
+            <div class="s-jednotkou"><input type="text" inputmode="decimal" id="gHorizontLet" data-g="horizontLet"><span>let</span></div>
+          </div>
+        </div>
+        <div id="gStav" class="pole-stav chyba"></div>
+        <p class="napoveda" id="fisherText"></p>
+        <p class="napoveda">Všechny ceny zadávej <b>v dnešních cenách</b>. Inflace (u energie její vlastní růst) je přepočte na ceny
+          v okamžiku platby – skokem vždy k výročí pořízení. Varianta s kratší životností se na společném horizontu nahrazuje stejnou.</p>
+      </section>
+
+      <section class="karta" aria-labelledby="h-varianty">
+        <h2 id="h-varianty">🧾 Varianty <span class="stitek" id="pocetVariant"></span></h2>
+        <div class="zalozky" role="tablist" id="zalozky"></div>
+        <div class="tlacitka" style="margin-top:0">
+          <button class="male" id="btnPridat">+ Přidat variantu</button>
+          <button class="male" id="btnDuplikovat">Duplikovat</button>
+          <button class="male nebezpecne" id="btnSmazat">Smazat</button>
+        </div>
+        <div id="formVarianta" role="tabpanel"></div>
+      </section>
+    </div>
+
+    <div class="sloupec" id="vystup">
+      <section class="karta" aria-labelledby="h-vysledky" id="vysledek">
+        <h2 id="h-vysledky">📊 Výsledky</h2>
+        <div class="prepinac" role="group" aria-label="Způsob počítání peněžních toků">
+          <button data-rezim="nominalni" aria-pressed="true">Nominálně (prostý součet)</button>
+          <button data-rezim="diskontovane" aria-pressed="false">Diskontovaně (současná hodnota)</button>
+        </div>
+        <div class="rezim-pruh" id="rezimText" aria-live="polite"></div>
+        <div class="shrnuti" id="dlazdice"></div>
+        <div class="tabulka-obal"><table id="tabVysledky"></table></div>
+        <p class="napoveda" id="horizontText"></p>
+      </section>
+
+      <section class="karta" aria-labelledby="h-cas">
+        <h2 id="h-cas">📈 Náklady v čase a bod zvratu</h2>
+        <div class="prepinac" role="group" aria-label="Typ grafu nákladů v čase">
+          <button data-casgraf="kum" aria-pressed="true">Kumulativně</button>
+          <button data-casgraf="roky" aria-pressed="false">Po letech</button>
+        </div>
+        <div class="graf" style="margin-top:8px"><canvas id="grafCas" role="img" aria-label="Graf nákladů v čase"></canvas></div>
+        <div class="zvrat" id="zvratText"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="h-struktura">
+        <h2 id="h-struktura">🧩 Struktura nákladů za životnost</h2>
+        <div class="graf nizky"><canvas id="grafStruktura" role="img" aria-label="Struktura nákladů podle kategorií"></canvas></div>
+        <details><summary>Tabulka struktury</summary><div class="tabulka-obal"><table id="tabStruktura"></table></div></details>
+      </section>
+
+      <section class="karta" aria-labelledby="h-citlivost">
+        <h2 id="h-citlivost">🌪️ Citlivostní analýza</h2>
+        <div class="ovladani">
+          <div><label for="cVarianta">Co sleduji</label><select id="cVarianta"></select></div>
+          <div><label for="cMetrika">Ukazatel</label><select id="cMetrika">
+            <option value="rocni">roční náklad</option>
+            <option value="jednotka">náklad na jednotku použití</option>
+            <option value="horizont">celkem za společný horizont</option>
+          </select></div>
+          <div><label for="cDelta">Změna parametrů</label><select id="cDelta">
+            <option value="0.1">±10 %</option><option value="0.2" selected>±20 %</option><option value="0.3">±30 %</option><option value="0.5">±50 %</option>
+          </select></div>
+        </div>
+        <p class="napoveda" id="citlivostPopis"></p>
+        <div class="graf"><canvas id="grafTornado" role="img" aria-label="Tornádový graf citlivosti"></canvas></div>
+        <details><summary>Tabulka citlivosti</summary><div class="tabulka-obal"><table id="tabCitlivost"></table></div></details>
+        <h3>Průběh při změně jednoho parametru</h3>
+        <div class="ovladani">
+          <div><label for="pParametr">Parametr</label><select id="pParametr">
+            <option value="cenaEnergie">cena energie</option>
+            <option value="zivotnost">životnost</option>
+            <option value="cetnost">četnost používání</option>
+            <option value="cena">pořizovací cena</option>
+          </select></div>
+        </div>
+        <div class="graf nizky"><canvas id="grafPrubeh" role="img" aria-label="Průběh ukazatele při změně parametru"></canvas></div>
+        <div class="zvrat" id="prahText"></div>
+      </section>
+
+      <section class="karta skryty" aria-labelledby="h-uver" id="kartaUver">
+        <h2 id="h-uver">🏦 Financování</h2>
+        <div class="tabulka-obal"><table id="tabUver"></table></div>
+        <div id="kalendare"></div>
+      </section>
+
+      <section class="karta" aria-labelledby="h-scenare" id="karta-scenare">
+        <h2 id="h-scenare">🗂️ Uložené scénáře a jejich porovnání</h2>
+        <p class="napoveda">Scénáře se ukládají jen do tohoto prohlížeče. Zaškrtni dva a více a porovnej je. Pro zálohu nebo přenos použij export JSON.</p>
+        <ul class="seznam-sc" id="seznamSc"></ul>
+        <div class="tlacitka">
+          <button id="btnPorovnat" disabled>Porovnat vybrané</button>
+          <button id="btnExportVse">Exportovat všechny (JSON)</button>
+        </div>
+        <div id="porovnani"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="karta metodika" style="margin-top:16px" aria-labelledby="h-metodika">
+    <h2 id="h-metodika">📚 Jak kalkulátor počítá</h2>
+    <h3>Časová osa a peněžní toky</h3>
+    <p>Osa je <b>měsíční</b>. Měsíc 0 je den pořízení (cena nebo akontace a poplatek za úvěr), běžné náklady se platí na konci každého měsíce
+      (roční částka / 12). Zůstatková hodnota se připíše jako příjem v posledním měsíci životnosti; záporná zůstatková hodnota znamená
+      náklad na likvidaci. Periodický servis (např. každé 4 roky) nastává uvnitř životnosti, ne v měsíci vyřazení.</p>
+    <h3>Nominálně, nebo diskontovaně – nikdy obojí v jednom čísle</h3>
+    <ul>
+      <li><b>Nominálně</b>: prostý součet korun tak, jak budou zaplaceny (včetně případné inflace). Průměr za rok = součet / počet let,
+        náklad na jednotku = součet / počet použití.</li>
+      <li><b>Diskontovaně</b>: každý tok se přepočte na dnešní hodnotu <span class="vzorec">PV = Σ CF<sub>m</sub> / (1 + n)<sup>m/12</sup></span>,
+        kde <i>n</i> je nominální roční diskontní sazba. Součet je čistá současná hodnota nákladů (NPV).</li>
+      <li>Diskontní sazba vyjadřuje, kolik by peníze vynesly jinde (alternativní výnos), případně náklad kapitálu firmy. Domácnost obvykle
+        použije úrok spořicího účtu nebo hypotéky, firma svůj WACC.</li>
+      <li><b>Fisherova rovnice</b>: <span class="vzorec">(1 + n) = (1 + r) · (1 + π)</span>, kde <i>r</i> je reálná sazba a <i>π</i> obecná inflace.
+        Toky jsou vždy nominální, proto se zadaná reálná sazba nejdřív převede na nominální. Diskontovat nominální toky reálnou sazbou
+        (nebo naopak) by byla chyba – kalkulátor to nedělá.</li>
+    </ul>
+    <h3>Různé životnosti: EAC a společný horizont</h3>
+    <p>Sečíst náklady pračky na 7 let a pračky na 14 let a porovnat je nejde – ta druhá slouží dvakrát déle. Proto:</p>
+    <ul>
+      <li><b>Průměr za rok</b> (nominálně) a <b>ekvivalentní roční náklad EAC</b> (diskontovaně):
+        <span class="vzorec">EAC = PV · r / (1 − (1 + r)<sup>−L</sup>)</span> – konstantní roční platba, která má stejnou současnou hodnotu jako
+        celé vlastnictví. Počítá se <b>reálnou</b> sazbou <i>r</i>, takže vychází v dnešních korunách a je srovnatelná mezi variantami.
+        EAC předpokládá, že se zařízení po skončení životnosti opakovaně nahrazuje stejným za stejnou reálnou cenu.</li>
+      <li><b>Společný horizont s náhradou</b>: každá varianta se po skončení životnosti koupí znovu (cena roste s obecnou inflací). Na konci
+        horizontu se rozpracované zařízení „prodá“ za lineárně odepsanou hodnotu mezi cenou a zůstatkovou hodnotou a doplatí se zbytek úvěru.
+        Horizont = nejmenší společný násobek životností dává bez inflace stejné pořadí jako EAC; kratší horizont ukazuje situaci, kdy
+        o zařízení rozhoduješ jen na určitou dobu.</li>
+      <li><b>Nivelizovaný náklad na jednotku</b> (diskontovaně) = PV nákladů / PV počtu použití diskontovaného reálnou sazbou – obdoba LCOE u elektráren.</li>
+    </ul>
+    <h3>Financování</h3>
+    <p>Úvěr je anuitní: <span class="vzorec">splátka = J · i / (1 − (1 + i)<sup>−N</sup>)</span>, J = cena − akontace, N počet měsíčních splátek.
+      Při zadání <b>úrokové sazby</b> je měsíční sazba i = sazba / 12 a jednorázový poplatek se platí při sjednání; při zadání <b>RPSN</b>
+      (už obsahuje všechny náklady úvěru) je i = (1 + RPSN)<sup>1/12</sup> − 1 a poplatek se nepřičítá. Výsledná RPSN se vždy dopočítá
+      z peněžních toků (vnitřní výnosové procento). Je-li úvěr delší než životnost, zbytek jistiny se doplatí při vyřazení.
+      Nominálně úvěr TCO vždy zvyšuje o úroky; diskontovaně může levný úvěr TCO snížit, pokud je jeho sazba nižší než diskontní.</p>
+    <h3>Bod zvratu a citlivost</h3>
+    <p>Bod zvratu je okamžik, kdy se kumulativní náklady dvou variant na společném horizontu vyrovnají (v aktuálním režimu – nominálně, nebo diskontovaně).
+      Mezi dvěma měsíci se hledá lineární interpolací. Při náhradě zařízení může průsečíků být víc. Tornádový graf ukazuje, jak se zvolený ukazatel změní,
+      když se jeden parametr všech variant změní o ±X % (u sazeb o ±2 procentní body) a ostatní zůstanou. Delší pruh = citlivější parametr.</p>
+    <h3>Co se nemodeluje</h3>
+    <ul>
+      <li>daně z příjmu, odpisy, odpočet DPH (zadávej ceny konzistentně – všude s DPH, nebo všude bez), dotace a bonusy (odečti je od ceny);</li>
+      <li>operativní leasing (zadej jako ostatní měsíční náklad bez ceny), pokuty za předčasné splacení, pojištění úvěru;</li>
+      <li>riziko poruchy a nejistotu – citlivostní analýza ukazuje jen vliv jednotlivých parametrů, ne pravděpodobnost.</li>
+    </ul>
+  </section>
+</body>
+</html>

@@ -29,6 +29,45 @@
   const KOREN = new URL('.', document.currentScript.src);
 
   if (window.self !== window.top) return;   // v rámu podpis patří nadřazené stránce
+
+  // Štítek fáze vývoje (vývoj / beta / stable) vpravo nahoře u stránky
+  // otevřené samostatně – v rozcestníku ho ukazuje hlavička. Katalog se
+  // načte jako <script>, ne přes fetch: to by přes file:// selhalo.
+  // Stránky, které apps.js načítají samy, ho už mají (soubor je defer,
+  // běží až po jejich skriptech) – druhé načtení by shodilo `const`.
+  function stitekStavu() {
+    const cesta = cestaStranky();
+    if (!cesta) return;
+    const ukaz = () => {
+      let sekce, stavy;
+      try { sekce = KATALOG_SEKCE; stavy = KATALOG_STAVY; } catch { return; }   // eslint-disable-line no-undef
+      let polozka = null;
+      for (const s of sekce) for (const p of s.polozky) if (p.soubor === cesta) polozka = p;
+      const stav = polozka && stavy.find(s => s.id === polozka.stav);
+      if (!stav || document.getElementById(ID + '-stav')) return;
+      const barvy = { vyvoj: 'var(--warn, #e0a63f)', beta: 'var(--accent, #4a9eff)', stable: 'var(--ok, #4caf7d)' };
+      const el = document.createElement('div');
+      el.id = ID + '-stav';
+      el.textContent = stav.label;
+      el.title = stav.popis;
+      el.style.cssText = `position:fixed;top:6px;right:8px;z-index:2147483001;
+        pointer-events:none;user-select:none;
+        font:700 9px/1 var(--font, -apple-system, 'Segoe UI', Roboto, sans-serif);
+        letter-spacing:.05em;text-transform:uppercase;padding:2px 5px;border-radius:6px;
+        border:1px solid currentColor;color:${barvy[stav.id] || 'inherit'};
+        background:var(--bg, #1a1a1a);opacity:.9`;
+      document.body.appendChild(el);
+    };
+    let jeKatalog = true;
+    try { KATALOG_SEKCE; } catch { jeKatalog = false; }   // eslint-disable-line no-undef
+    if (jeKatalog) { ukaz(); return; }
+    const sc = document.createElement('script');
+    sc.src = new URL('apps.js', KOREN).href;
+    sc.onload = ukaz;
+    document.head.appendChild(sc);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', stitekStavu);
+  else stitekStavu();
   // stránka spuštěná z plochy jako aplikace (PWA) podpis neukazuje – autora uvádí sama v sekci o aplikaci
   if (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) return;
 
@@ -156,7 +195,7 @@
   // Odkaz zpět do rozcestníku – jen na podstránce otevřené samostatně.
   // Cesta stránky vůči kořeni webu je zároveň klíčem v katalogu aplikací,
   // takže se dá rovnou předat rozcestníku v hashi (index.html#obsah/x.html).
-  function odkazZpet() {
+  function cestaStranky() {
     const koren = KOREN.href;
     const zde = location.href.split('#')[0].split('?')[0];
     if (!zde.startsWith(koren)) return null;
@@ -165,6 +204,13 @@
     try { cesta = decodeURIComponent(zde.slice(koren.length)); } catch { return null; }
     // prázdná cesta i samotný index.html = rozcestník, ten odkaz na sebe nepotřebuje
     if (!cesta || cesta === 'index.html') return null;
+    return cesta;
+  }
+
+  function odkazZpet() {
+    const koren = KOREN.href;
+    const cesta = cestaStranky();
+    if (!cesta) return null;
 
     const a = document.createElement('a');
     a.className = 'podpis-zpet';
