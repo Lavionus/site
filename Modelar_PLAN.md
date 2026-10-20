@@ -1017,3 +1017,14 @@ Přepínač projekce mění jen text za ikonou. Nové tlačítko s příkazem do
 - Úprava 2 (19. 10.): kóty posunu v barvách os (obrys štítku i čáry jako kóty velikosti), štítek se světlou výplní,
   čárkovaně; štítky se rozmístí bez překryvu (`rozmistiStitky`: kolmo od kóty, překážky = druhý štítek a křížek).
   Past testu: tah tělesa začne až po 4 px – při malém posunu nejdřív odjet stranou.
+
+## Připomínky 20. 10. 2026
+- **Skica jako normální těleso při změně velikosti**: `M.zapecMeritkoSkici` (jadro/model.js) + `M.skicaSMeritkem` (jadro/skica.js) –
+  po puštění úchytu velikosti (uchyty.js konec), poli Rozměr v inspektoru a kótě ve scéně se měřítko zapeče do parametrů:
+  tvary dostanou nové rozměry a polohy (zaoblení obdélníku zůstane), výška vytažení = rozměr Z, měřítko 1, počátek skici
+  ve světě zůstane. N-úhelník a text při nestejném měřítku přejdou na obrysy, kóty se přeměří. Nezapéká se: rotace,
+  tažení po dráze, kóty s proměnnými (zůstane měřítko). Během tahu se dál jen škáluje (bez přepočtu ve workeru).
+- **Otáčení více těles od osy**: `tah.zakladUhel = 0` výchozí (místo null) – stupnice s nulou na ose, výseč od osy,
+  popisek „Z 30° (+30°)“ jako u jednoho tělesa; přichytávání k násobkům od osy. Test modelar_ui_prani3 upraven.
+- Úchyty středu hran (uchyty.js): práh délky hrany na obrazovce 36 px → 16 px. Dřív chyběly na kratších hranách
+  i u výchozího kvádru 20 mm (34 px), u malých skic byly vidět jen dva ze čtyř.

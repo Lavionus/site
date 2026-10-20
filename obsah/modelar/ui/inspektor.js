@@ -424,8 +424,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       }
       M.upravVybrane(u => {
         const rozmer = u.rozmer.slice(); rozmer[i] = v;
-        // spodek zůstane na místě, X a Y kolem středu
-        return { rozmer, poloha: M.polohaSeSpodkem(Object.assign({}, u, { rozmer }), M.spodekUzlu(u)) };
+        // spodek zůstane na místě, X a Y kolem středu; skica dostane změnu do parametrů (jako normální těleso)
+        const z = { rozmer, poloha: M.polohaSeSpodkem(Object.assign({}, u, { rozmer }), M.spodekUzlu(u)) };
+        return u.druh === 'skica' ? M.zapecMeritkoSkici(M.normalizujUzel(Object.assign({}, u, z))) : z;
       }, 'Rozměr');
     }
     function zmenPolohu(i, v) {

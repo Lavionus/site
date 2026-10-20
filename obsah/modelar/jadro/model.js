@@ -610,6 +610,26 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return { param: p, stred: r.stred, zaklad: r.zaklad, rozmer, poloha: u.poloha.map((x, i) => Math.round((x + d.getComponent(i)) * 1e6) / 1e6) };
   };
 
+  /** Skica změněná úchytem nebo polem rozměru (měřítko rozmer/zaklad ≠ 1): změna se zapeče do parametrů
+      (šířka, hloubka, výška vytažení), měřítko zůstane 1 a těleso má skutečné rozměry jako normální tvar –
+      zaoblení a otvory se nedeformují. Jinak (rotace, tažení, kóty s proměnnými) beze změny. */
+  M.zapecMeritkoSkici = function (u) {
+    if (!u || u.druh !== 'skica' || !M.lzeZapectMeritkoSkici || !M.lzeZapectMeritkoSkici(u.param)) return u;
+    const k = M.meritkoUzlu(u);
+    if (k.every(x => Math.abs(x - 1) < 1e-9)) return u;
+    // stejné těleso v měřítku 1 se zvětšenými přirozenými souřadnicemi, pak nové parametry se zachovaným počátkem skici
+    const u1 = Object.assign({}, u, { zaklad: u.rozmer.slice(), stred: u.stred.map((x, i) => x * k[i]) });
+    const p = M.skicaSMeritkem(u.param, k[0], k[1], k[2]);
+    return M.normalizujUzel(Object.assign({}, u1, M.upravPrirozeny(u1, p), { id: u.id }));
+  };
+  /** Zapéct měřítko skic mezi uzly ids (nejvyšší úroveň). */
+  M.zapecMeritkaSkic = function (dok, ids) {
+    const mn = new Set(ids);
+    let zmena = false;
+    const uzly = dok.uzly.map(u => { if (!mn.has(u.id)) return u; const n = M.zapecMeritkoSkici(u); if (n !== u) zmena = true; return n; });
+    return zmena ? Object.assign({}, dok, { uzly }) : dok;
+  };
+
   // ------------------------------------------------------------ moje vůle pro tisk (z kalibrační destičky)
   /** Parametry vůle dílu nebo tvaru pro změřenou radiální vůli v (mezera kolík–díra na stranu), nebo null.
       Šroub má svou malou výchozí vůli 0,1 mm na průměr (0,05 na stranu) – zbytek nese matice / díra. */

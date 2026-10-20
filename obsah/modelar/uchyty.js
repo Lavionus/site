@@ -139,11 +139,21 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         }
         for (const [sx, sy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const p = bod(sx * h[0], sy * h[1], -h[2]);
-          // na krátké hraně (malé těleso, pohled z boku) by střed hrany zakrýval těleso
+          // jen na úplně krátké hraně (čtverečky rohů a středu by se překrývaly) se úchyt středu vynechá;
+          // dřív práh 36 px schovával úchyty i u výchozího kvádru 20 mm (hrana 34 px)
           const k1 = bod(sx ? sx * h[0] : -h[0], sy ? sy * h[1] : -h[1], -h[2]);
           const k2 = bod(sx ? sx * h[0] : h[0], sy ? sy * h[1] : h[1], -h[2]);
-          if (!p || !k1 || !k2 || Math.hypot(k1[0] - k2[0], k1[1] - k2[1]) < 3.6 * vel) continue;
+          if (!p || !k1 || !k2 || Math.hypot(k1[0] - k2[0], k1[1] - k2[1]) < 1.6 * vel) continue;
           ctverec(p[0], p[1], 8, 'hrana', { druh: 'velikost', uchyt: { sx, sy }, nazev: `hrana${sx}${sy}` });
+        }
+        // středy hran i na horní stěně (tažené v její rovině jako horní rohy): natočené těleso (skica na boční
+        // stěně, pracovní rovina) má „spodek“ přiložený k jinému tělesu – úchyty pak jsou i na straně, kterou je vidět
+        if (dmin >= 1.6 * vel) for (const [sx, sy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const p = bod(sx * h[0], sy * h[1], h[2]), dole = bod(sx * h[0], sy * h[1], -h[2]);
+          const k1 = bod(sx ? sx * h[0] : -h[0], sy ? sy * h[1] : -h[1], h[2]);
+          const k2 = bod(sx ? sx * h[0] : h[0], sy ? sy * h[1] : h[1], h[2]);
+          if (!p || !dole || !k1 || !k2 || Math.hypot(k1[0] - k2[0], k1[1] - k2[1]) < 1.6 * vel || Math.hypot(p[0] - dole[0], p[1] - dole[1]) < 1.2 * vel) continue;
+          ctverec(p[0], p[1], 8, 'hrana horni', { druh: 'velikost', uchyt: { sx, sy, horni: true }, nazev: `hornihrana${sx}${sy}` });
         }
         const pv = bod(0, 0, h[2]);
         const pd = bod(0, 0, -h[2]);
@@ -309,9 +319,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         M.otaciUchytem = true;
         // tělesa stojící na desce / rovině na ní při otáčení zůstanou (otočení kolem X / Y by je zanořilo)
         tah.naRovine = ids.filter(id => Math.abs(M.minNadRovinou(M.najdiUzel(tah.zaklad, id), M.rovina())) < 0.01);
-        // jedno těleso otáčené kolem osy, kterou má ve svém natočení samostatně (ostatní složky se
-        // nemění): úhel se ukazuje i přichytává absolutně – navazuje na předchozí otočení, ne od nuly
-        tah.zakladUhel = null;
+        // úhel se ukazuje i přichytává vždy od osy (0° = osa na úhloměru), ne od místa kliknutí:
+        // jedno těleso otáčené kolem osy, kterou má ve svém natočení samostatně, navazuje na své natočení;
+        // víc těles (nebo cizí osa) začíná na 0° – výseč a čísla jdou od osy jako u jednoho tělesa
+        tah.zakladUhel = 0; tah.znUhlu = 1;
         if (ids.length === 1) {
           const u = M.najdiUzel(tah.zaklad, ids[0]);
           const zk = M.otocUzly(tah.zaklad, ids, h.osa.toArray(), 10, h.stred.toArray());
@@ -452,11 +463,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // rysky po 5°, delší po 15°, nejdelší s popisem po 45°; 0° leží na ose (otáčení kolem Z: směr X,
       // kolem X: směr Y, kolem Y: směr Z), popisky = natočení měřené od ní
       const zn = tah.zakladUhel != null ? tah.znUhlu : 1;
-      // absolutní úhel (jedno těleso kolem své osy): 0° leží na ose; jinak (víc těles, cizí osa) se otáčí
-      // o přírůstek – 0° stupnice leží tam, kde tah začal, a čísla na ní sedí s popiskem „+X°“
-      const nula = tah.zakladUhel != null ? 0 : tah.a0;
       for (let k = 0; k < 72; k++) {
-        const t = nula + k * 5 * M.st, dlouha = k % 9 === 0, stredni = k % 3 === 0;
+        const t = k * 5 * M.st, dlouha = k % 9 === 0, stredni = k % 3 === 0;
         const smer = tah.b1.clone().multiplyScalar(Math.cos(t)).addScaledVector(tah.b2, Math.sin(t));
         const a = S.naObrazovku(tah.kresba.clone().addScaledVector(smer, tah.R * (dlouha ? 0.84 : stredni ? 0.91 : 0.955)));
         const b = S.naObrazovku(tah.kresba.clone().addScaledVector(smer, tah.R));
@@ -467,13 +475,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           let st = zn * k * 5;
           st = ((st % 360) + 540) % 360 - 180;
           if (st === -180) st = 180;
-          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' + (k === 0 ? ' nula' : '') }, vrstvaKresby).textContent = k === 0 ? (tah.zakladUhel != null ? `0° ${nazevOsy((tah.index + 1) % 3)}` : '0°') : (tah.zakladUhel != null ? '' : st > 0 ? '+' : '') + st + '°';
+          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' + (k === 0 ? ' nula' : '') }, vrstvaKresby).textContent = k === 0 ? `0° ${nazevOsy((tah.index + 1) % 3)}` : st + '°';
         }
       }
       // osa nuly: čárkovaně od středu za okraj úhloměru
       {
-        const sn = tah.b1.clone().multiplyScalar(Math.cos(nula)).addScaledVector(tah.b2, Math.sin(nula));
-        const a = S.naObrazovku(tah.kresba), b = S.naObrazovku(tah.kresba.clone().addScaledVector(sn, tah.R * 1.12));
+        const a = S.naObrazovku(tah.kresba), b = S.naObrazovku(tah.kresba.clone().addScaledVector(tah.b1, tah.R * 1.12));
         if (a && b) el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'osa-nuly', stroke: BARVY_OS[tah.index] }, vrstvaKresby);
       }
       const cs = S.naObrazovku(tah.kresba);
@@ -501,6 +508,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // klik na šipku otáčení bez tažení: zadat úhel číslem
       const zadat = !zrusit && tah.druh === 'otoceni' && !tah.pohnuto ? tah : null;
       if (zadat) zrusit = true;
+      // skica změněná úchytem velikosti: změna do jejích parametrů (zaoblení a otvory se nedeformují, rozměry skutečné)
+      if (!zrusit && tah.druh === 'velikost' && tah.ids && M.app.uprava) {
+        const d = M.zapecMeritkaSkic(M.app.dok, tah.ids);
+        if (d !== M.app.dok) M.zmenDokument(d, '', { docasne: true });
+      }
       tah = null;
       M.otaciUchytem = false;
       M.ovladaniBlokovano = false;

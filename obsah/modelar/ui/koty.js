@@ -141,7 +141,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           if (Math.abs(o - u.rozmer[osa]) < 1e-9) return;
           M.upravVybrane(x2 => {
             const rozmer = x2.rozmer.slice(); rozmer[osa] = o;
-            return { rozmer, poloha: M.polohaSeSpodkem(Object.assign({}, x2, { rozmer }), M.spodekUzlu(x2)) };
+            const z = { rozmer, poloha: M.polohaSeSpodkem(Object.assign({}, x2, { rozmer }), M.spodekUzlu(x2)) };
+            // skica: nový rozměr do parametrů (jako normální těleso), ne měřítkem
+            return x2.druh === 'skica' ? M.zapecMeritkoSkici(M.normalizujUzel(Object.assign({}, x2, z))) : z;
           }, 'Rozměr');
         }
       });

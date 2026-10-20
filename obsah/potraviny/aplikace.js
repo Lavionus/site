@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-19a';
+  const VERZE_KODU = '2026-10-20c';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -806,35 +806,37 @@
         h('div', { class: 'slabe' }, 'Vyplň profil a uvidíš svůj denní cíl. '),
         h('button', { class: 'btn mini', type: 'button', onclick: () => prepni('profil') }, '🎯 Nastavit cíl'));
     }
-    const mk = h('div', { class: 'makra' });
-    const radekMakra = (nazev, kl, barva) => {
-      const v = soub.celkem[kl] || 0, cil = c.zivinyCil[kl];
-      const pod = cil ? Math.min(100, 100 * v / cil) : 0;
-      return klikaci(kl, [
-        h('div', { class: 'mbar-hl' }, h('span', { text: nazev }), h('span', { text: fc(v) + (cil ? ' / ' + fc(cil) : '') + ' g' })),
-        h('div', { class: 'mbar' + (cil && v > cil * 1.1 ? ' nad' : ''), role: 'progressbar', 'aria-label': nazev, 'aria-valuenow': String(Math.round(v)), 'aria-valuemax': cil ? String(Math.round(cil)) : null },
-          h('i', { style: { width: pod + '%', background: barva } }))]);
-    };
-    pridat(mk, radekMakra('Bílkoviny', 'bilkoviny', 'var(--c-bil)'), radekMakra('Sacharidy', 'sacharidy', 'var(--c-sach)'), radekMakra('Tuky', 'tuk', 'var(--c-tuk)'));
-    el.appendChild(mk);
-    const lim = (nazev, kl, max, min, d, jed, mekce, popis) => {
-      const v = soub.celkem[kl] || 0;
-      const hrana = max || min;
-      const j = jed || 'g';
-      const nad = max && v > max;
-      const b = klikaci(kl, [h('span', { text: nazev }),
-        h('b', { class: nad ? (mekce ? 'warn-text' : 'chyba-text') : (min && v >= min ? 'ok-text' : ''), text: fc(v, d || 0) + (hrana ? ' / ' + fc(hrana, d || 0) : '') + ' ' + j })]);
-      b.title = (popis || (max ? 'nejvýše ' + fc(max, d || 0) + ' ' + j : min ? 'aspoň ' + fc(min, d || 0) + ' ' + j : '')) + ' – klepni: odkud to dnes mám';
+    // teploměr živiny: pruh k cíli/limitu, pozadí zelené v normě, červené přes normu
+    //   o.cil = horní hranice (makra s tolerancí 10 %, limity přesně), o.min = jen dolní cíl (vláknina – „přes“ nejde)
+    const teplomer = (nazev, kl, barva, o) => {
+      o = o || {};
+      const v = soub.celkem[kl] || 0, d = o.d || 0, j = o.j || 'g';
+      const hrana = o.cil || o.min || null;
+      const nad = !!(o.cil && v > o.cil * (o.tolerance || 1));
+      const tesne = !nad && !!(o.cil && o.tolerance && v > o.cil);   // 100–110 % u maker: ještě v toleranci
+      const stav = !hrana ? 'bez-cile' : nad ? 'pres-normu' : tesne ? 'tesne' : 'v-norme';
+      const pod = hrana ? Math.min(100, 100 * v / hrana) : 0;
+      const b = klikaci(kl, [
+        h('div', { class: 'mbar-hl' }, h('span', { text: nazev }),
+          h('span', { class: nad ? 'chyba-text' : tesne ? 'warn-text' : (o.min && v >= o.min ? 'ok-text' : ''), text: fc(v, d) + (hrana ? ' / ' + fc(hrana, d) : '') + ' ' + j })),
+        h('div', { class: 'mbar' + (nad ? ' nad' : ''), role: 'progressbar', 'aria-label': nazev, 'aria-valuenow': String(Math.round(v)), 'aria-valuemax': hrana ? String(Math.round(hrana)) : null },
+          h('i', { style: { width: pod + '%', background: barva } }))], 'teplomer ' + stav);
+      b.title = (o.popis || (o.cil ? 'nejvýše ' + fc(o.cil, d) + ' ' + j + (o.tolerance ? ' (do ' + fc(o.cil * o.tolerance, d) + ' ' + j + ' ještě v toleranci)' : '')
+        : o.min ? 'aspoň ' + fc(o.min, d) + ' ' + j : 'bez cíle – vyplň profil')) + ' – klepni: odkud to dnes mám';
       return b;
     };
-    el.appendChild(h('div', { class: 'limity' },
-      lim('Vláknina', 'vlaknina', null, c.zivinyCil.vlaknina),
-      lim('Cukry celkem', 'cukry', c.limity.cukry, null, 0, 'g', true,
-        'Orientační: WHO doporučuje volné (přidané) cukry pod 10 % energie. Etikety uvádějí všechny cukry včetně přirozených z ovoce a mléka, proto se limit jen zvýrazní.'),
-      lim('Nasycené MK', 'nasycene', c.limity.nasycene),
-      lim('Sůl', 'sul', c.limity.sul, null, 1),
-      (soub.celkem.kof || 0) > 0 ? lim('Kofein', 'kof', c.kofeinLimit || 400, null, 0, 'mg', false, 'EFSA: do 400 mg denně je pro dospělé bezpečné, v těhotenství a při kojení do 200 mg. Kofein je uveden jen u části potravin.') : null,
-      null));
+    // všechny teploměry v jedné mřížce stejně velkých boxů
+    el.appendChild(pridat(h('div', { class: 'limity' }),
+      teplomer('Bílkoviny', 'bilkoviny', 'var(--c-bil)', { cil: c.zivinyCil.bilkoviny, tolerance: 1.1 }),
+      teplomer('Sacharidy', 'sacharidy', 'var(--c-sach)', { cil: c.zivinyCil.sacharidy, tolerance: 1.1 }),
+      teplomer('Tuky', 'tuk', 'var(--c-tuk)', { cil: c.zivinyCil.tuk, tolerance: 1.1 }),
+      teplomer('Vláknina', 'vlaknina', 'var(--ok)', { min: c.zivinyCil.vlaknina }),
+      teplomer('Cukry celkem', 'cukry', 'var(--c-sach)', { cil: c.limity.cukry,
+        popis: 'Orientační: WHO doporučuje volné (přidané) cukry pod 10 % energie. Etikety uvádějí všechny cukry včetně přirozených z ovoce a mléka.' }),
+      teplomer('Nasycené MK', 'nasycene', 'var(--c-tuk)', { cil: c.limity.nasycene }),
+      teplomer('Sůl', 'sul', 'var(--c-voda)', { cil: c.limity.sul, d: 1 }),
+      (soub.celkem.kof || 0) > 0 ? teplomer('Kofein', 'kof', 'var(--c-alk)', { cil: c.kofeinLimit || 400, j: 'mg',
+        popis: 'EFSA: do 400 mg denně je pro dospělé bezpečné, v těhotenství a při kojení do 200 mg. Kofein je uveden jen u části potravin.' }) : null));
     // voda
     const cilVoda = Math.round((c.vodaMl || 2000) * 0.8 / 250) * 250; // ~80 % vody z nápojů
     const napoje = soub.napoje || 0;
@@ -926,7 +928,32 @@
         sVracenim('Smazáno: ' + J.pocet(pocet, 'položka', 'položky', 'položek'), () => { if (S.dny[den]) S.dny[den].z = []; });
       } });
     }
+    pol.push('-', { text: '🧪 TEST – naplň dnešek', akce: naplnTestDnes });
     nabidka(btn, pol);
+  }
+  // testovací naplnění dnešního deníku: pestrý den přes všechna jídla (kofein, alkohol, nápoje, sůl přes limit),
+  // aby šlo vyzkoušet souhrn, teploměry, pitný režim i plovoucí okna; vrátit jde lištou Vrátit
+  const TEST_DEN = [
+    ['snidane', 'su172688', 80], ['snidane', 'su173430', 10], ['snidane', 'su173864', 50], ['snidane', 'su171890', 200],
+    ['svacina1', 'su173944', 120], ['svacina1', 'su171284', 150],
+    ['obed', 'su2646170', 150], ['obed', 'su169756', 80], ['obed', 'su169967', 150], ['obed', 'su173468', 6],
+    ['svacina2', 'su171688', 150], ['svacina2', 'sf307', 125],
+    ['vecere', 'su172793', 100], ['vecere', 'su173419', 40], ['vecere', 'su170457', 120], ['vecere', 'su168746', 500],
+  ];
+  function naplnTestDnes() {
+    if (!DB.nacteno) { D.info('Databáze se ještě načítá.'); return; }
+    const dnes = J.datumKlic(new Date());
+    const vid = jidla().map(j => j.id);
+    const polozky = TEST_DEN.map(([jid, id, g]) => ({ jid: vid.includes(jid) ? jid : vid[0], id, f: potravina(id), g }));
+    const chybi = polozky.filter(x => !x.f).map(x => x.id);
+    const n = polozky.length - chybi.length;
+    aktivniDen = dnes;
+    sVracenim('🧪 Testovací den: ' + J.pocet(n, 'položka', 'položky', 'položek') + ' + 750 ml vody', () => {
+      for (const x of polozky) if (x.f) J.pridejZaznam(S, dnes, x.jid, x.f, x.g);
+      const d = J.den(S, dnes);
+      d.voda = (d.voda || 0) + 750;
+    });
+    if (chybi.length) D.info('V databázi chybí: ' + chybi.join(', '));
   }
   async function vyberDatum(titulek, vychozi) {
     return new Promise(ok => {

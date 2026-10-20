@@ -299,6 +299,38 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return { body: new Float32Array(out), stredObrysu: c };
   };
 
+  // ------------------------------------------------------------ změna velikosti jako u normálního tělesa
+  /** Tvar skici zvětšený kx, ky kolem počátku skici – rozměry a polohy, ne zaoblení (obdélník s r 5 mm
+      zůstane s r 5 mm, jako kvádr se zaoblením). N-úhelník a text při nestejném měřítku přejdou na obrysy. */
+  function tvarSMeritkem(t, kx, ky) {
+    const z = Object.assign({}, t), stejne = Math.abs(kx - ky) < 1e-9;
+    const bod = p => [p[0] * kx, p[1] * ky];
+    switch (t.typ) {
+      case 'obdelnik': Object.assign(z, { x: t.x * kx, y: t.y * ky, w: t.w * kx, h: t.h * ky }); break;
+      case 'kruh': Object.assign(z, { x: t.x * kx, y: t.y * ky, rx: t.rx * kx, ry: t.ry * ky }); break;
+      case 'nuhelnik':
+        if (stejne) { Object.assign(z, { x: t.x * kx, y: t.y * ky, r: t.r * kx }); break; }
+        return Object.assign({ id: t.id, typ: 'cesta', otvor: t.otvor, zaobleni: 0 }, { body: M.konturyTvaru(t)[0].map(p => ({ x: p[0] * kx, y: p[1] * ky, b: 0 })) });
+      case 'cesta': z.body = t.body.map(b => Object.assign({}, b, { x: b.x * kx, y: b.y * ky })); break;
+      case 'text':
+        if (stejne) { Object.assign(z, { x: t.x * kx, y: t.y * ky, velikost: t.velikost * kx, kontury: t.kontury.map(k => k.map(p => [p[0] * kx, p[1] * ky])) }); break; }
+        return { id: t.id, typ: 'polygony', otvor: t.otvor, x: 0, y: 0, meritko: 1, kontury: M.konturyTvaru(t).map(k => k.map(bod)) };
+      case 'polygony':
+        if (stejne) { Object.assign(z, { x: t.x * kx, y: t.y * ky, meritko: t.meritko * kx }); break; }
+        return { id: t.id, typ: 'polygony', otvor: t.otvor, x: 0, y: 0, meritko: 1, kontury: M.konturyTvaru(t).map(k => k.map(bod)) };
+    }
+    return z;
+  }
+  /** Lze změnu velikosti skici zapéct do jejích parametrů? (vytažení bez kót s proměnnými – ty by zapečení přepsalo) */
+  M.lzeZapectMeritkoSkici = p => p.rezim === 'vytazeni' && !(p.vazby || []).some(v => v.vyraz);
+  /** Parametry skici zvětšené kx, ky (tvary a posun vršku) a kz (výška vytažení); kóty se přeměří. */
+  M.skicaSMeritkem = function (p, kx, ky, kz) {
+    const tvary = p.tvary.map(t => tvarSMeritkem(t, kx, ky));
+    const z = Object.assign({}, p, { tvary, vyska: p.vyska * kz, posunX: p.posunX * kx, posunY: p.posunY * ky });
+    if (p.vazby && M.zmerVazbu) z.vazby = p.vazby.map(v => typeof v.hodnota === 'number' && v.typ !== 'pevny' ? Object.assign({}, v, { hodnota: M.zmerVazbu(tvary, v) }) : v.typ === 'pevny' && Array.isArray(v.hodnota) ? Object.assign({}, v, { hodnota: [v.hodnota[0] * kx, v.hodnota[1] * ky] }) : v);
+    return z;
+  };
+
   /** Střed a velikost tělesa skici (pro uzel): {stred: [x, y, z], zaklad: [x, y, z]}. */
   M.rozmeryTelesaSkici = function (p) {
     const { body } = M.bodyObalkySkici(p);
