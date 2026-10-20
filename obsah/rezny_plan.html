@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📏 Řezný plán – optimalizace dělení</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script src="lib/qrcode/qrcode.js" defer></script>
+<script src="rezny_plan/jadro.js"></script>
+<script src="rezny_plan/vystup.js"></script>
+<script src="rezny_plan/princip.js"></script>
+<script src="rezny_plan/scena3d.js"></script>
+<script src="rezny_plan/ui.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:18px 14px 40px}
+h1{font-size:1.55rem;font-weight:600;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:16px}
+.layout{display:grid;grid-template-columns:minmax(300px,420px) minmax(0,1fr);gap:16px;align-items:start;max-width:1600px;margin:0 auto}
+@media(max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:14px;margin-bottom:14px;min-width:0}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:9px 0 3px}
+label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.86rem;margin:8px 0 2px;cursor:pointer}
+label.chk input{width:auto;margin-top:2px;accent-color:var(--accent);flex:none}
+input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.92rem;font-family:inherit;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+textarea{font-family:ui-monospace,Consolas,monospace;font-size:.8rem;min-height:110px;resize:vertical}
+.r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 8px;align-items:end}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 8px;align-items:end}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn-mini{padding:4px 8px;font-size:.78rem;font-weight:500}
+.btn:disabled{opacity:.5;cursor:default}
+.tlacitka{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tlacitka .btn{flex:1 1 auto}
+.info{font-size:.82rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
+.info b{color:var(--text)}
+.varovani{font-size:.82rem;color:var(--warn);line-height:1.45;margin-top:6px}
+.varovani li{margin-left:16px}
+.chyba{color:var(--danger)} .ok{color:var(--ok)}
+.papir{background:#fff;border:1px solid var(--border-strong);border-radius:6px;padding:6px;overflow:hidden;position:relative}
+.papir svg{display:block;width:100%;height:auto;max-height:76vh}
+#nahled svg .dil{cursor:pointer}
+#nahled svg .dil:hover{stroke:#000;stroke-width:3}
+table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--border);padding:3px 4px;text-align:left;white-space:nowrap}
+th{color:var(--text-faint);font-weight:500;position:sticky;top:0;background:var(--bg-elevated);z-index:1}
+td.c,th.c{text-align:center} td.r,th.r{text-align:right}
+.tab-obal{overflow:auto;max-height:440px;border:1px solid var(--border);border-radius:6px}
+.edit input,.edit select{padding:3px 4px;font-size:.8rem;border-radius:4px}
+.edit input[type=number]{width:74px}
+.edit input.nazev{min-width:120px}
+.edit input.mat{min-width:130px}
+.edit input.uzke{width:52px}
+.edit select{width:auto;min-width:58px;max-width:120px}
+.edit input[type=checkbox]{width:auto;accent-color:var(--accent)}
+.edit td{padding:2px 3px}
+.edit tr.vybrany td{background:var(--accent-soft)}
+.smaz{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:1rem;padding:0 4px}
+.smaz:hover{color:var(--danger)}
+.zalozky{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:7px 10px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel[hidden]{display:none}
+.navod{font-size:.86rem;line-height:1.55;color:var(--text)}
+.navod h3{font-size:.95rem;margin:14px 0 4px}
+.navod h3:first-child{margin-top:2px}
+.navod p{margin:4px 0}
+.navod ol,.navod ul{padding-left:20px}
+.navod li{margin:3px 0}
+.schema{margin:8px 0 12px}
+.schema svg{width:100%;height:auto;display:block;color:var(--text);max-width:600px}
+.schema figcaption{font-size:.78rem;color:var(--text-faint);margin-top:2px}
+pre.kod{background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:.75rem;overflow:auto;max-width:100%;white-space:pre}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.82em;background:var(--bg-input);padding:0 3px;border-radius:3px}
+details{margin-top:8px;font-size:.84rem}
+details summary{cursor:pointer;color:var(--accent)}
+details .vnitrek{padding:6px 0 2px}
+kbd{font-family:inherit;font-size:.75rem;border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;background:var(--bg-control);color:var(--text)}
+.skryte{display:none!important}
+.rezimy{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rezimy button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:7px 6px;cursor:pointer;font-size:.8rem;line-height:1.25;font-family:inherit;text-align:left}
+.rezimy button b{display:block;font-size:.86rem}
+.rezimy button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.kpi{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.kpi div{background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:7px 9px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--text-faint)}
+.vypocet{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.vypocet .btn{flex:0 0 auto}
+.prubeh{flex:1 1 140px;height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.prubeh i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.stav{font-size:.8rem;color:var(--text-muted)}
+.desky-nahledy{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:6px}
+.desky-nahledy button{flex:0 0 auto;width:118px;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;padding:4px;cursor:pointer;color:var(--text);font-family:inherit;font-size:.72rem;text-align:center}
+.desky-nahledy button[aria-selected=true]{border-color:var(--accent);outline:2px solid var(--accent)}
+.desky-nahledy button .mini{background:#fff;border-radius:3px;margin-bottom:3px;overflow:hidden}
+.desky-nahledy button .mini svg{width:100%;height:auto;display:block}
+.desky-nahledy .skup{flex:0 0 auto;align-self:center;font-size:.72rem;color:var(--text-faint);writing-mode:vertical-rl;transform:rotate(180deg);max-height:110px;overflow:hidden}
+.prepinace{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0}
+.prepinace label.chk{margin:0}
+.detail{font-size:.82rem;color:var(--text-muted);margin-top:6px;min-height:1.3em}
+.detail b{color:var(--text)}
+#obal3d{height:420px;border-radius:6px;overflow:hidden;border:1px solid var(--border-strong);background:var(--bg-deep);position:relative}
+@media(max-width:600px){#obal3d{height:300px}}
+.stav3d{position:absolute;left:10px;top:8px;font-size:.8rem;color:var(--text-muted);pointer-events:none}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--text-faint);margin-top:6px}
+.legenda i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+.projekty{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:end;margin-top:6px}
+.sklad-zb td{font-size:.76rem}
+.nahl1d{background:#fff;border:1px solid var(--border-strong);border-radius:6px;padding:6px;margin-bottom:10px}
+.nahl1d svg{width:100%;height:auto;display:block}
+.nahl1d h3{font-size:.82rem;color:#334155;margin:0 0 4px}
+</style>
+</head>
+<body>
+<h1>📏 Řezný plán – optimalizace dělení</h1>
+<p class="sub">Dělení velkoplošných desek (DTD, MDF, překližka) i tyčí a profilů: gilotinové řezy s pořadím pro pilu, volné uložení pro CNC, směr vláken, hranování, zbytky, PDF plán a štítky.</p>
+
+<div class="layout">
+  <div class="levy">
+    <div class="card">
+      <h2>🧭 Projekt <small>předvolby</small></h2>
+      <div class="r2">
+        <div><label for="predvolba">Předvolba (přepíše zadání)</label><select id="predvolba"></select></div>
+        <div><label for="nazevProjektu">Název</label><input id="nazevProjektu" type="text" maxlength="90"></div>
+      </div>
+      <div class="projekty">
+        <div><label for="seznamProjektu">Uložené projekty</label><select id="seznamProjektu"></select></div>
+        <button class="btn btn-sec btn-mini" id="btnNacist" type="button" style="height:34px">Načíst</button>
+        <button class="btn btn-sec btn-mini" id="btnSmazatProjekt" type="button" style="height:34px">Smazat</button>
+      </div>
+      <div class="tlacitka">
+        <button class="btn btn-mini" id="btnUlozit" type="button">💾 Uložit projekt</button>
+        <button class="btn btn-sec btn-mini" id="btnExportProjekt" type="button">Export projektu</button>
+        <button class="btn btn-sec btn-mini" id="btnImport" type="button">Import JSON / CSV…</button>
+      </div>
+      <input type="file" id="soubor" accept=".json,.csv,.txt,.tsv,application/json,text/csv" class="skryte">
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Nastavení 2D</h2>
+      <div class="rezimy" id="rezimy">
+        <button type="button" data-rezim="gilotina" aria-pressed="true"><b>🪚 Gilotinové řezy</b>formátovací pila, ruční pila s lištou – s pořadím řezů</button>
+        <button type="button" data-rezim="volne" aria-pressed="false"><b>🤖 Volné uložení</b>CNC frézka – dílce kamkoli, mezera = fréza</button>
+      </div>
+      <div class="r3">
+        <div><label for="n_rez">Šířka řezu (mm)</label><input id="n_rez" type="number" min="0" max="30" step="0.1"></div>
+        <div><label for="n_okraj">Okraj desky (mm)</label><input id="n_okraj" type="number" min="0" max="100" step="1"></div>
+        <div><label for="n_prvniRez">První řezy</label><select id="n_prvniRez"><option value="auto">auto (méně řezů)</option><option value="H">podélně (pruhy)</option><option value="V">příčně</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="n_odecistHranu"> Zadávám hotové rozměry – odečíst tloušťku hran od řezného rozměru</label>
+      <div class="r3">
+        <div><label for="n_premill">Přídavek frézování (mm/strana)</label><input id="n_premill" type="number" min="0" max="3" step="0.1"></div>
+        <div><label for="n_pridavekHrany">Přídavek hrany (mm/kus)</label><input id="n_pridavekHrany" type="number" min="0" max="200" step="5"></div>
+        <div><label for="n_rezervaHran">Rezerva hran (%)</label><input id="n_rezervaHran" type="number" min="0" max="50" step="1"></div>
+      </div>
+      <div class="r3">
+        <div><label for="n_minZbytekStrana">Zbytek – min. strana</label><input id="n_minZbytekStrana" type="number" min="20" max="2000" step="10"></div>
+        <div><label for="n_minZbytekPlocha">Zbytek – min. m²</label><input id="n_minZbytekPlocha" type="number" min="0" max="5" step="0.01"></div>
+        <div><label for="n_usili">Hledání</label><select id="n_usili"><option value="rychle">rychlé (~0,5 s)</option><option value="normalni">normální (~2 s)</option><option value="dukladne">důkladné (~8 s)</option></select></div>
+      </div>
+      <p class="info">Šířka řezu: kotouč formátovací pily typicky 3,2–4,4 mm, ruční pila 2,2–2,8 mm, CNC = průměr frézy (6–8 mm). Okraj odřízne poškozenou tovární hranu (typicky 8–15 mm).</p>
+    </div>
+
+    <div class="card">
+      <h2>🪵 Desky (sklad) <small>prázdné ks = neomezeně</small></h2>
+      <div class="tab-obal"><table class="edit" id="tabDesky"></table></div>
+      <div class="r2">
+        <div><label for="pridatFormat">Přidat formát</label><select id="pridatFormat"></select></div>
+        <button class="btn btn-sec btn-mini" id="btnPridatDesku" type="button" style="height:34px">+ deska</button>
+      </div>
+      <p class="info">Délka = rozměr ve směru vláken / dekoru. Cena za kus (typické orientační hodnoty – přepište podle ceníku).</p>
+    </div>
+
+    <div class="card">
+      <h2>🎞️ Hrany (ABS) <small>Kč za metr</small></h2>
+      <div class="tab-obal"><table class="edit" id="tabHrany"></table></div>
+      <div class="tlacitka"><button class="btn btn-sec btn-mini" id="btnPridatHranu" type="button">+ hrana</button></div>
+    </div>
+
+    <div class="card">
+      <h2>♻️ Sklad zbytků <small id="pocetZbytku"></small></h2>
+      <label class="chk"><input type="checkbox" id="n_zbytkyZeSkladu"> Použít zbytky ze skladu při výpočtu (mají přednost, cena 0)</label>
+      <div class="tab-obal" style="max-height:220px"><table class="edit sklad-zb" id="tabZbytky"></table></div>
+      <div class="tlacitka">
+        <button class="btn btn-sec btn-mini" id="btnNarezano" type="button" title="Odepíše použité zbytky a zapíše nové použitelné zbytky z výsledku">✅ Nařezáno – aktualizovat sklad</button>
+        <button class="btn btn-sec btn-mini" id="btnZbytekRucne" type="button">+ zbytek ručně</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📐 Nastavení 1D (tyče, profily)</h2>
+      <div class="r3">
+        <div><label for="n_rez1D">Šířka řezu (mm)</label><input id="n_rez1D" type="number" min="0" max="20" step="0.1"></div>
+        <div><label for="n_okraj1D">Zarovnání čela (mm)</label><input id="n_okraj1D" type="number" min="0" max="200" step="1"></div>
+        <div><label for="n_minZbytek1D">Zbytek – min. délka</label><input id="n_minZbytek1D" type="number" min="0" max="3000" step="10"></div>
+      </div>
+      <label>Polotovary (délky, ceny)</label>
+      <div class="tab-obal"><table class="edit" id="tabPolotovary"></table></div>
+      <div class="tlacitka"><button class="btn btn-sec btn-mini" id="btnPridatPolotovar" type="button">+ polotovar</button></div>
+    </div>
+  </div>
+
+  <div class="pravy">
+    <div class="card">
+      <h2>📋 Dílce (2D) <small id="pocetDilcu"></small></h2>
+      <div class="tab-obal"><table class="edit" id="tabDilce"></table></div>
+      <div class="tlacitka">
+        <button class="btn btn-sec btn-mini" id="btnPridatDilec" type="button">+ dílec</button>
+        <button class="btn btn-sec btn-mini" id="btnSmazatDilce" type="button">Smazat vše</button>
+        <button class="btn btn-sec btn-mini" id="btnExportKusovnik" type="button">Export kusovníku (JSON)</button>
+      </div>
+      <details id="detVlozit"><summary>Vložit tabulku ze schránky (Excel, CSV)</summary><div class="vnitrek">
+        <textarea id="vlozText" placeholder="Název;Délka;Šířka;Ks;Materiál;Vlákna;Hrany&#10;Bok;720;560;2;DTD 18 bílá;ne;1/2"></textarea>
+        <div class="tlacitka"><button class="btn btn-mini" id="btnVlozitNahradit" type="button">Nahradit dílce</button><button class="btn btn-sec btn-mini" id="btnVlozitPridat" type="button">Přidat k dílcům</button></div>
+        <p class="info">Formát viz záložka „Formáty importu“ dole. Řádky bez šířky se načtou jako 1D kusy.</p>
+      </div></details>
+      <p class="info">D1/D2 = podélné strany (podél délky), Š1/Š2 = příčné. ↕ = zachovat směr vláken (dílec se neotáčí). Rozměry hotové, mm.</p>
+    </div>
+
+    <div class="card">
+      <h2>📏 Kusy 1D (tyče, lišty, profily) <small id="pocetKusu"></small></h2>
+      <div class="tab-obal"><table class="edit" id="tabKusy"></table></div>
+      <div class="tlacitka"><button class="btn btn-sec btn-mini" id="btnPridatKus" type="button">+ kus</button><button class="btn btn-sec btn-mini" id="btnSmazatKusy" type="button">Smazat vše</button></div>
+    </div>
+
+    <div class="card">
+      <div class="vypocet">
+        <button class="btn" id="btnSpocitat" type="button">▶ Optimalizovat <kbd style="background:transparent;color:inherit;border-color:currentColor">Ctrl+Enter</kbd></button>
+        <button class="btn btn-sec btn-mini skryte" id="btnZrusit" type="button">Zastavit</button>
+        <div class="prubeh"><i id="prubeh"></i></div>
+        <span class="stav" id="stav"></span>
+      </div>
+      <div class="kpi" id="kpi" style="margin-top:10px"></div>
+      <ul class="varovani" id="varovani"></ul>
+    </div>
+
+    <div class="card">
+      <h2><span>🗺️ Řezný plán – desky</span> <small><kbd>1</kbd>–<kbd>9</kbd> deska, <kbd>←</kbd><kbd>→</kbd></small></h2>
+      <div class="desky-nahledy" id="deskyNahledy" role="tablist" aria-label="Desky"></div>
+      <div class="prepinace">
+        <label class="chk"><input type="checkbox" id="o_rezy" checked> pořadí řezů</label>
+        <label class="chk"><input type="checkbox" id="o_koty" checked> kóty</label>
+        <label class="chk"><input type="checkbox" id="o_zbytky" checked> zbytky</label>
+        <label class="chk"><input type="checkbox" id="o_hrany" checked> hrany</label>
+      </div>
+      <div class="papir" id="nahled"><p class="info" style="padding:20px">Zadejte dílce a desky – výpočet proběhne automaticky.</p></div>
+      <div class="detail" id="detailDilce"></div>
+      <div class="legenda">
+        <span><i style="background:#1d4ed8"></i>hrana</span>
+        <span><i style="background:#c2410c"></i>řez (číslo = pořadí)</span>
+        <span><i style="background:#15803d"></i>použitelný zbytek</span>
+        <span><i style="background:#a08c6a"></i>okraj / zarovnání</span>
+      </div>
+      <details id="detRezy"><summary>Pořadí řezů vybrané desky (nastavení pravítka)</summary><div class="vnitrek">
+        <div class="tab-obal" style="max-height:340px"><table id="tabRezy"></table></div>
+      </div></details>
+    </div>
+
+    <div class="card" id="karta1D">
+      <h2>📏 Dělení tyčí</h2>
+      <div id="nahled1D"><p class="info">Žádné 1D kusy.</p></div>
+    </div>
+
+    <div class="card">
+      <h2>🖨️ Výstupy</h2>
+      <div class="r3">
+        <div><label for="o_stitky">Etikety</label><select id="o_stitky"></select></div>
+        <div><label for="o_zacatek">Začít od pozice</label><input id="o_zacatek" type="number" min="1" max="60" step="1" value="1"></div>
+        <div><label class="chk" style="margin-bottom:8px"><input type="checkbox" id="o_qr"> QR kód</label><label class="chk" style="margin-bottom:8px"><input type="checkbox" id="o_ramecky"> rámečky</label></div>
+      </div>
+      <div class="tlacitka">
+        <button class="btn" id="btnPdf" type="button">📄 PDF řezný plán</button>
+        <button class="btn btn-sec" id="btnStitky" type="button">🏷️ PDF štítky</button>
+        <button class="btn btn-sec" id="btnCsv" type="button">CSV dílců</button>
+        <button class="btn btn-sec" id="btnCsvRezy" type="button">CSV řezů</button>
+        <button class="btn btn-sec" id="btnCsv1D" type="button">CSV 1D</button>
+        <button class="btn btn-sec" id="btnSvg" type="button">SVG desky</button>
+        <button class="btn btn-sec" id="btnDxf" type="button">DXF (CNC)</button>
+      </div>
+      <p class="info">PDF plán: souhrn, kusovník, každá deska s čísly dílců, kótami a tabulkou řezů, dělení tyčí. Desky jsou v měřítku (na listu je kontrolní čtverec 50 mm pro ověření tisku). DXF v mm, desky vedle sebe.</p>
+    </div>
+
+    <div class="card">
+      <h2>🧊 3D stoh desek <small>táhněte myší / prstem, kolečko = přiblížení</small></h2>
+      <div id="obal3d"><div class="stav3d" id="stav3d">3D se načte, až bude karta vidět…</div></div>
+      <div class="r2" style="align-items:center">
+        <div><label for="rozlozit">Rozložení stohu</label><input id="rozlozit" type="range" min="0" max="1" step="0.05" value="0.6"></div>
+        <div class="tlacitka"><button class="btn btn-sec btn-mini" id="b3dVychozi" type="button">Výchozí</button><button class="btn btn-sec btn-mini" id="b3dShora" type="button">Shora</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="zalozky" role="tablist" id="zalozky">
+        <button role="tab" data-z="princip" aria-selected="true">Jak to funguje</button>
+        <button role="tab" data-z="postup" aria-selected="false">Postup a bezpečnost</button>
+        <button role="tab" data-z="tipy" aria-selected="false">Tipy</button>
+        <button role="tab" data-z="formaty" aria-selected="false">Formáty importu</button>
+      </div>
+      <div class="panel navod" data-p="princip" id="princip"></div>
+      <div class="panel navod" data-p="postup" hidden id="postup"></div>
+      <div class="panel navod" data-p="tipy" hidden id="tipy"></div>
+      <div class="panel navod" data-p="formaty" hidden id="formaty"></div>
+    </div>
+  </div>
+</div>
+<datalist id="dlMaterialy"></datalist>
+<datalist id="dlProfily"></datalist>
+</body>
+</html>

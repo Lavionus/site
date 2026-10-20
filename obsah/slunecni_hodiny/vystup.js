@@ -6,14 +6,21 @@
   'use strict';
   const BARVY = {
     obrys: '#000000', ram: '#000000', hodiny: '#000000', pul: '#222222', ctvrt: '#222222', datum: '#1f5fa8',
-    cisla: '#000000', dst: '#b3261e', text: '#000000', pomoc: '#7a7a7a', stin: '#3a3a3a', stinbod: '#d04a00',
+    cisla: '#000000', dst: '#b3261e', text: '#000000', pomoc: '#7a7a7a', stin: '#3a3a3a', stinbod: '#d04a00', vypln: '#dfe3e8',
   };
-  const PORADI = ['pomoc', 'ram', 'datum', 'ctvrt', 'pul', 'hodiny', 'cisla', 'dst', 'text', 'obrys'];
-  const DXF_BARVA = { obrys: 1, ram: 7, hodiny: 7, pul: 8, ctvrt: 8, datum: 5, cisla: 7, dst: 3, text: 7, pomoc: 9 };
+  const PORADI = ['vypln', 'vysec', 'pomoc', 'ram', 'datum', 'ctvrt', 'pul', 'hodiny', 'ornament', 'cisla', 'dst', 'text', 'obrys'];
+  const DXF_BARVA = { obrys: 1, ram: 7, hodiny: 7, pul: 8, ctvrt: 8, datum: 5, cisla: 7, dst: 3, text: 7, pomoc: 9, ornament: 6 };
   const n = (x) => (Math.round(x * 1000) / 1000).toString();
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const R = Math.PI / 180;
-  const barva = (v, o) => (o && o.cernobile && v !== 'stin' && v !== 'stinbod' ? '#000000' : BARVY[v] || '#000000');
+  // barva prvku: explicitní e.c > barvy stylu scény > výchozí; černobíle vše kromě výplní černě
+  const barvaE = (e, o, sc) => {
+    if (o && o.cernobile && e.v !== 'stin' && e.v !== 'stinbod' && e.v !== 'vypln' && e.v !== 'vysec') return '#000000';
+    if (e.c) return e.c;
+    const b = sc && sc.styl && sc.styl.barvy;
+    return (b && b[e.v]) || BARVY[e.v] || '#000000';
+  };
+  const barva = (v, o, sc) => barvaE({ v }, o, sc);
 
   /** bod účaří textu: střed (x, y) posunutý o 0,35 h „dolů“ vzhledem k otočení */
   function ucari(e) {
@@ -22,12 +29,12 @@
   }
 
   /* ---------------- SVG ---------------- */
-  function svgPrvek(e, o) {
-    const c = barva(e.v, o);
+  function svgPrvek(e, o, sc) {
+    const c = barvaE(e, o, sc);
     if (e.t === 'l' || e.t === 'p') {
       const d = e.b.map((q, i) => (i ? 'L' : 'M') + n(q[0]) + ' ' + n(q[1])).join('') + (e.z || e.t === 'p' ? 'Z' : '');
       if (e.f || e.t === 'p') return `<path d="${d}" fill="${c}"${e.v === 'stin' ? ' fill-opacity="0.55"' : ''}/>`;
-      return `<path d="${d}" fill="none" stroke="${c}" stroke-width="${n(e.s || 0.2)}" stroke-linejoin="round" stroke-linecap="round"${e.d ? ` stroke-dasharray="${n((e.s || 0.2) * 6)} ${n((e.s || 0.2) * 4)}"` : ''}${e.v === 'stin' ? ' stroke-opacity="0.6"' : ''}/>`;
+      return `<path d="${d}" fill="none" stroke="${c}" stroke-width="${n(e.s || 0.2)}" stroke-linejoin="round" stroke-linecap="${(sc && sc.styl && sc.styl.konce) || 'round'}"${e.d ? ` stroke-dasharray="${n((e.s || 0.2) * 6)} ${n((e.s || 0.2) * 4)}"` : ''}${e.v === 'stin' ? ' stroke-opacity="0.6"' : ''}/>`;
     }
     if (e.t === 'k') return e.f ? `<circle cx="${n(e.x)}" cy="${n(e.y)}" r="${n(e.r)}" fill="${c}"/>` : `<circle cx="${n(e.x)}" cy="${n(e.y)}" r="${n(e.r)}" fill="none" stroke="${c}" stroke-width="${n(e.s || 0.2)}"/>`;
     if (e.t === 'txt') {
@@ -42,26 +49,31 @@
     o = Object.assign({ okraj: 4, pozadi: '#ffffff', pomoc: true }, o || {});
     const m = o.okraj, x = sc.x0 - m, y = sc.y0 - m, w = sc.w + 2 * m, h = sc.h + 2 * m;
     const rozm = o.sirkaPx ? `width="100%"` : `width="${n(w)}mm" height="${n(h)}mm"`;
-    let s = `<svg xmlns="http://www.w3.org/2000/svg" ${rozm} viewBox="${n(x)} ${n(y)} ${n(w)} ${n(h)}" font-family="Liberation Sans, Arial, Helvetica, sans-serif">`;
+    const pis = sc.styl && sc.styl.pismo;
+    const rodina = (pis ? `'${pis.rodina}', ` : '') + 'Liberation Sans, Arial, Helvetica, sans-serif';
+    let s = `<svg xmlns="http://www.w3.org/2000/svg" ${rozm} viewBox="${n(x)} ${n(y)} ${n(w)} ${n(h)}" font-family="${esc(rodina)}">`;
+    // písmo stylu vložit (samostatné SVG, textura pro 3D); v náhledu na stránce stačí @font-face stránky
+    const b64 = pis && o.vlozitPismo !== false && koren.FONTY_JS && koren.FONTY_JS[pis.soubor];
+    if (b64 && o.vlozitPismo) s += `<style>@font-face{font-family:'${pis.rodina}';src:url(data:font/ttf;base64,${b64}) format('truetype');}</style>`;
     if (o.pozadi) s += `<rect x="${n(x)}" y="${n(y)}" width="${n(w)}" height="${n(h)}" fill="${o.pozadi}"/>`;
-    for (const v of PORADI) {
+    for (const v of PORADI.concat(['stin', 'stinbod'])) {
       if (v === 'pomoc' && !o.pomoc) continue;
       const el = sc.prvky.filter((e) => e.v === v);
       if (!el.length) continue;
       s += `<g id="vrstva-${v}" inkscape:label="${v}" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" inkscape:groupmode="layer">`;
-      for (const e of el) s += svgPrvek(e, o);
+      for (const e of el) s += svgPrvek(e, o, sc);
       s += '</g>';
     }
     if (o.simulace) s += '<g id="simStin"></g>';
     return s + '</svg>';
   }
-  const svgPrvky = (prvky, o) => prvky.map((e) => svgPrvek(e, o)).join('');
+  const svgPrvky = (prvky, o, sc) => prvky.map((e) => svgPrvek(e, o, sc)).join('');
 
   /* ---------------- DXF (R12, mm, osa y nahoru) ---------------- */
   function dxf(sc, o) {
     o = Object.assign({ pomoc: false }, o || {});
     const L = [], g = (k, v) => { L.push(String(k)); L.push(String(v)); };
-    const vrstvy = Object.keys(DXF_BARVA).filter((v) => o.pomoc || v !== 'pomoc');
+    const vrstvy = Object.keys(DXF_BARVA).filter((v) => o.pomoc || v !== 'pomoc');   // výplně (vypln, vysec) do DXF nepatří
     g(0, 'SECTION'); g(2, 'HEADER'); g(9, '$ACADVER'); g(1, 'AC1009'); g(9, '$INSUNITS'); g(70, 4); g(0, 'ENDSEC');
     g(0, 'SECTION'); g(2, 'TABLES'); g(0, 'TABLE'); g(2, 'LAYER'); g(70, vrstvy.length);
     for (const v of vrstvy) { g(0, 'LAYER'); g(2, v.toUpperCase()); g(70, 0); g(62, DXF_BARVA[v]); g(6, 'CONTINUOUS'); }
@@ -70,6 +82,7 @@
     const Y = (y) => -y;
     for (const e of sc.prvky) {
       if (!vrstvy.includes(e.v)) continue;
+      if (e.t === 'k' && e.f && e.v === 'vypln') continue;
       const ly = e.v.toUpperCase();
       if (e.t === 'l' || e.t === 'p') {
         g(0, 'POLYLINE'); g(8, ly); g(66, 1); g(10, 0); g(20, 0); g(30, 0); g(70, e.z || e.t === 'p' ? 1 : 0);
@@ -122,8 +135,25 @@
   function pdf(jsPDF, stranky, o) {
     o = Object.assign({ papir: [210, 297], okraj: 8, prekryv: 12 }, o || {});
     const [pw, ph] = o.papir;
-    let doc = null, uni = false;
+    let doc = null, uni = false, aktPismo = null;
     const T = (s) => (uni ? String(s) : bezDiakritiky(s));
+    const vlozena = {};
+    // písmo stylu scény (TTF base64 v o.pismaStylu[soubor]); když chybí nebo nemá znaky, Liberation
+    const nastavPismo = (sc) => {
+      const pis = sc && sc.styl && sc.styl.pismo, b64 = pis && o.pismaStylu && o.pismaStylu[pis.soubor];
+      aktPismo = null;
+      if (b64) {
+        try {
+          if (!vlozena[pis.soubor]) { doc.addFileToVFS(pis.soubor, b64); doc.addFont(pis.soubor, 'ST_' + pis.soubor, 'normal'); vlozena[pis.soubor] = 'ST_' + pis.soubor; }
+          aktPismo = { jmeno: vlozena[pis.soubor], chybi: pis.chybi || '' };
+        } catch (e) { aktPismo = null; }
+      }
+      doc.setLineCap(({ round: 'round', butt: 'butt', square: 'square' })[(sc && sc.styl && sc.styl.konce) || 'round'] || 'round');
+    };
+    const pismoPro = (t) => {
+      if (aktPismo && ![...String(t)].some((ch) => aktPismo.chybi.includes(ch))) doc.setFont(aktPismo.jmeno, 'normal');
+      else if (uni) doc.setFont('LS', 'normal'); else doc.setFont('helvetica', 'normal');
+    };
     const novaStrana = (W, H) => {
       if (doc) { doc.addPage([W, H], W > H ? 'l' : 'p'); return; }
       doc = new jsPDF({ unit: 'mm', format: [W, H], orientation: W > H ? 'l' : 'p', compress: true });
@@ -134,6 +164,7 @@
       doc.setProperties({ title: o.nazev || 'Sluneční hodiny', creator: 'Sluneční hodiny – návrh a tisk' });
     };
     const text = (txt, x, y, h, a, u, c) => {
+      pismoPro(txt);
       doc.setFontSize(h / 0.3528);
       if (c) doc.setTextColor(...rgb(c));
       const t = T(txt), w = doc.getTextWidth(t), uu = (u || 0) * R;
@@ -142,8 +173,9 @@
       const sx = bx - Math.cos(uu) * k, sy = by + Math.sin(uu) * k;
       doc.text(t, sx, sy, u ? { angle: u } : undefined);
     };
+    let aktSc = null;
     const kresli = (e, X, Y) => {
-      const c = rgb(barva(e.v, o));
+      const c = rgb(barvaE(e, o, aktSc));
       doc.setDrawColor(...c); doc.setFillColor(...c);
       if (e.t === 'l' || e.t === 'p') {
         doc.setLineWidth(Math.max(0.05, e.s || 0.2));
@@ -155,9 +187,9 @@
       } else if (e.t === 'k') {
         doc.setLineWidth(Math.max(0.05, e.s || 0.2));
         doc.circle(X(e.x), Y(e.y), e.r, e.f ? 'F' : 'S');
-      } else if (e.t === 'txt') text(e.txt, X(e.x), Y(e.y), e.h, e.a, e.u, barva(e.v, o));
+      } else if (e.t === 'txt') text(e.txt, X(e.x), Y(e.y), e.h, e.a, e.u, barvaE(e, o, aktSc));
     };
-    const vse = (sc, X, Y) => { for (const v of PORADI) for (const e of sc.prvky) if (e.v === v && (o.pomoc !== false || v !== 'pomoc')) kresli(e, X, Y); };
+    const vse = (sc, X, Y) => { aktSc = sc; nastavPismo(sc); for (const v of PORADI) for (const e of sc.prvky) if (e.v === v && (o.pomoc !== false || v !== 'pomoc')) kresli(e, X, Y); aktPismo = null; aktSc = null; doc.setLineCap('round'); };
     const meritko = (x, y) => {
       // úsečka 50 mm s dílky po 10 mm
       doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.25);
@@ -216,17 +248,19 @@
           if (k < 1) {
             // graf zmenšit (není to měřená šablona)
             const X = (x) => o.okraj + (x - sc.x0) * k, Y = (yy) => y + (yy - sc.y0) * k;
+            aktSc = sc; nastavPismo(sc);
             for (const v of PORADI) for (const e of sc.prvky) if (e.v === v) {
               const f = Object.assign({}, e);
               if (f.h) f.h *= k; if (f.r) f.r *= k; if (f.s) f.s *= k;
               kresli(f, X, Y);
             }
+            aktPismo = null; aktSc = null;
           } else vse(sc, (x) => o.okraj + (x - sc.x0), (yy) => y + (yy - sc.y0));
           y += sc.h * k + 6;
         }
         for (const r of st.text || []) {
           const tucne = r.startsWith('# '), t = tucne ? r.slice(2) : r, vel = tucne ? 3.8 : 3;
-          doc.setFontSize(vel / 0.3528);
+          pismoPro(''); doc.setFontSize(vel / 0.3528);
           const radky = doc.splitTextToSize(T(t), pw - 2 * o.okraj);
           for (const rr of radky) {
             if (y > ph - o.okraj - 8) { novaStrana(pw, ph); y = o.okraj + 6; }

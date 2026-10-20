@@ -333,7 +333,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const skryte = [deska.objekt, rovina.objekt];
       const ramy = [];
       // rámečky výběru a červené převisy do náhledu nepatří
-      model.traverse(o => { if (o.visible && (o.userData.previs || (o.isLineSegments && o.material && o.material.depthTest === false))) ramy.push(o); });
+      model.traverse(o => { if (o.visible && (o.userData.previs || o.userData.prekryv || o.userData.pomocne || (o.isLineSegments && o.material && o.material.depthTest === false))) ramy.push(o); });
       scena.children.forEach(o => { if (o.visible && o.userData.prekryv) ramy.push(o); });
       if (jen) model.traverse(o => { if (o.visible && o.userData.id && !jen.has(o.userData.id)) ramy.push(o); });
       const puvodni = skryte.map(o => o.visible);
@@ -389,7 +389,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       rt.texture.colorSpace = THREE.SRGBColorSpace;
       const skryte = (sDeskou ? [] : [deska.objekt]).concat([rovina.objekt]);
       const ramy = [];
-      model.traverse(o => { if (o.visible && (o.userData.previs || (!vyber && o.isLineSegments && o.material && o.material.depthTest === false))) ramy.push(o); });
+      model.traverse(o => { if (o.visible && (o.userData.previs || o.userData.prekryv || o.userData.pomocne || (!vyber && o.isLineSegments && o.material && o.material.depthTest === false))) ramy.push(o); });
       scena.children.forEach(o => { if (o.visible && o.userData.prekryv) ramy.push(o); });
       const puvodni = skryte.map(o => o.visible);
       skryte.concat(ramy).forEach(o => { o.visible = false; });

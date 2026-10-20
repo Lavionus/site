@@ -130,10 +130,16 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     $('btnPanel').setAttribute('aria-controls', 'panelBocni');
     // telefon: panel se vysouvá přes plátno (panel-ukazany); střední šířka: panel je vedle plátna a jde schovat (panel-skryty)
     const telefon = () => matchMedia('(max-width: 760px)').matches;
-    $('btnPanel').onclick = () => {
-      if (telefon()) document.body.classList.toggle('panel-ukazany');
-      else { document.body.classList.toggle('panel-skryty'); window.dispatchEvent(new Event('resize')); }
+    // schovaný pravý panel (širší okno) si prohlížeč pamatuje
+    const KLIC_PANEL = 'modelar_panelSkryty';
+    try { if (localStorage.getItem(KLIC_PANEL) === '1') document.body.classList.add('panel-skryty'); } catch (e) { /* bez úložiště */ }
+    M.prepniPanel = function () {
+      if (telefon()) { document.body.classList.toggle('panel-ukazany'); return; }
+      const skryty = document.body.classList.toggle('panel-skryty');
+      try { localStorage.setItem(KLIC_PANEL, skryty ? '1' : '0'); } catch (e) { /* bez úložiště */ }
+      window.dispatchEvent(new Event('resize'));
     };
+    $('btnPanel').onclick = () => M.prepniPanel();
     // stav tlačítka podle třídy těla (panel schovává i přidání tvaru a tah z knihovny)
     const stavPanelu = () => $('btnPanel').setAttribute('aria-expanded', String(telefon() ? document.body.classList.contains('panel-ukazany') : !document.body.classList.contains('panel-skryty')));
     stavPanelu();
@@ -177,6 +183,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const ukazRezim = () => {
       stavRezim.textContent = M.app.rezim === 'rovina' ? 'Klikni na stěnu tělesa pro pracovní rovinu (vedle = deska, Esc = zpět)'
         : M.app.rezim === 'plochou' ? 'Klikni na stěnu, která má ležet dole (Esc = zpět)'
+        : M.app.rezim === 'textNaPlochu' ? 'Text: klikni na těleso, kam patří střed textu – nalepí se i na zaoblenou plochu (Esc = zpět)'
         : M.app.rezim === 'magnet' ? 'Magnet: klikni na plochu tělesa, kterou chceš přisadit (Esc = zpět)'
         : M.app.rezim === 'magnet2' ? 'Magnet: teď klikni na plochu, ke které se má přisadit – dosedne tam středem (Esc = zrušit)'
         : M.app.rezim === 'vzorDer' ? 'Klikni na rovnou plochu tělesa, do které se vyvrtají díry (Esc = zpět)'

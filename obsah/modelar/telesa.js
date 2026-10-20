@@ -24,10 +24,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const MAX_TROJ_HRANY = 300000, MAX_CAR_HRAN = 25000;
     function naplnHrany(cil, geom) {
       const p = geom.getAttribute('position');
-      if (!p || p.count / 3 > MAX_TROJ_HRANY) { cil.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3)); return cil; }
+      if (!p || p.count / 3 > MAX_TROJ_HRANY) { cil.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3)); cil.setAttribute('lineDistance', new THREE.BufferAttribute(new Float32Array(0), 1)); return cil; }
       const e = new THREE.EdgesGeometry(geom, 25);
       const ep = e.getAttribute('position');
       cil.setAttribute('position', ep.count / 2 > MAX_CAR_HRAN ? new THREE.BufferAttribute(new Float32Array(0), 3) : ep);
+      // délka po čarách (v přirozených mm) – vzor čerchování zakrytých hran
+      const pp = cil.getAttribute('position'), del = new Float32Array(pp.count);
+      for (let i = 0, d = 0; i + 1 < pp.count; i += 2) {
+        del[i] = d;
+        d += Math.hypot(pp.getX(i + 1) - pp.getX(i), pp.getY(i + 1) - pp.getY(i), pp.getZ(i + 1) - pp.getZ(i));
+        del[i + 1] = d;
+      }
+      cil.setAttribute('lineDistance', new THREE.BufferAttribute(del, 1));
       cil.computeBoundingSphere();
       e.dispose();
       return cil;
@@ -105,6 +113,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const matHrany = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 });
     const matHranyVyber = new THREE.LineBasicMaterial({ depthTest: true });
     const matHranyDira = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.7 });
+    /* Zakryté hrany (za povrchem z pohledu kamery): světlejší čerchovaná čára. Kreslí se jen tam, kde je hrana
+       za tím, co už je v hloubkovém bufferu (GreaterDepth); čára je posunutá o 0,3 % vzdálenosti ke kameře,
+       ať viditelné hrany na povrchu neblikají. Vzor v pixelech obrazovky: čárka 8, mezera 3, tečka 2, mezera 3. */
+    const matSkryte = new THREE.ShaderMaterial({
+      uniforms: { barva: { value: new THREE.Color(0x7a828c) }, pruhlednost: { value: 0.55 }, mmNaPx: { value: 0.2 } },
+      vertexShader: `#include <clipping_planes_pars_vertex>
+        attribute float lineDistance; varying float vD;
+        void main() {
+          vD = lineDistance;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          mvPosition.xyz *= 0.997;
+          gl_Position = projectionMatrix * mvPosition;
+          #include <clipping_planes_vertex>
+        }`,
+      fragmentShader: `#include <clipping_planes_pars_fragment>
+        uniform vec3 barva; uniform float pruhlednost; uniform float mmNaPx; varying float vD;
+        void main() {
+          #include <clipping_planes_fragment>
+          float p = mod(vD / max(mmNaPx, 1e-6), 16.0);
+          if ((p > 8.0 && p < 11.0) || p > 13.0) discard;
+          gl_FragColor = vec4(barva, pruhlednost);
+        }`,
+      transparent: true, depthWrite: false, depthFunc: THREE.GreaterDepth, clipping: true,
+    });
+    let skryteZapnute = true;
+    try { skryteZapnute = localStorage.getItem('modelar_skryteHrany') !== '0'; } catch (e) { /* bez úložiště */ }
 
     function materialTelesa(barva) {
       return new THREE.MeshStandardMaterial({
@@ -138,13 +172,17 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       mesh.userData.id = u.id;
       const hrany = new THREE.LineSegments(g.hrany, matHrany);
       hrany.raycast = () => {};
+      const skryte = new THREE.LineSegments(g.hrany, matSkryte);
+      skryte.raycast = () => {};
+      skryte.renderOrder = 2;                        // po tělesech (hloubka už je v bufferu)
+      skryte.userData.pomocne = true;                // pomocná čára: do náhledu projektu a obrázku PNG nepatří
       const ram = new THREE.LineSegments(ramGeom, matRam);
       ram.raycast = () => {};
       ram.renderOrder = 3;
       ram.visible = false;
-      skupina.add(mesh, hrany, ram);
+      skupina.add(mesh, hrany, skryte, ram);
       S.model.add(skupina);
-      return { skupina, mesh, hrany, ram, klic, zobrazenyKlic: klic, uzel: null };
+      return { skupina, mesh, hrany, skryte, ram, klic, zobrazenyKlic: klic, uzel: null };
     }
 
     /** Zobrazí požadovanou geometrii, jakmile je hotová (do té doby zůstává stará). */
@@ -155,6 +193,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       o.zobrazenyKlic = o.klic;
       o.mesh.geometry = g.geom;
       o.hrany.geometry = g.hrany;
+      o.skryte.geometry = g.hrany;
     }
 
     function aktualizuj(o, u, vybrany) {
@@ -181,6 +220,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       o.ram.scale.set(...u.rozmer.map((v, i) => (v + 0.02) / k[i]));
       o.ram.visible = vybrany;
       o.hrany.material = vybrany ? matHranyVyber : (u.role === 'dira' ? matHranyDira : matHrany);
+      o.skryte.visible = skryteZapnute && u.role !== 'dira';          // díra je průhledná – její hrany jsou vidět celé
       o.uzel = u;
     }
 
@@ -346,11 +386,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
       /** Motiv webu se změnil: barvy rámečků a děr. */
       motiv() {
-        const akc = M.barvaCss('--accent', '#6aa6fd');
         for (const s of duchove.values()) for (const d of s) { const b = barvaDucha(d.styl); for (const c of d.cary) c.material.color.set(b); d.mesh.material.uniforms.barva.value.set(b); }
-        matRam.color.set(akc);
-        matHranyVyber.color.set(akc);
+        // vybrané těleso: hrany černé (přání uživatele 20. 10. 2026, dřív barva zvýraznění); rámeček výběru
+        // na světlé ploše černý, na tmavé světle šedý (černý by na ní zmizel)
+        matRam.color.set(M.svetlaScena() ? 0x111111 : 0xd8dce2);
+        matHranyVyber.color.set(0x000000);
         matHranyDira.color.set(M.svetlaScena() ? 0x5d6672 : 0xc4ccd6);
+        matSkryte.uniforms.barva.value.set(M.svetlaScena() ? 0x6f7782 : 0xb8c0ca);
         for (const o of objekty.values()) if (o.uzel && o.uzel.role === 'dira') {
           o.mesh.material.dispose(); o.mesh.material = materialDiry();
         }
@@ -449,6 +491,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const ted = new Map(M.app.dok.uzly.map(u => [u.id, u]));
       T.ukazDuchy('uprava', up.zaklad.uzly.filter(u => ted.get(u.id) !== u), 'puvodni');
     });
+    // čerchování zakrytých hran: vzor v pixelech – měřítko mm/px u cíle kamery (každý snímek, levné)
+    M.na('kamera', () => { const v = S.mmNaPixel(S.kamera.cil); if (isFinite(v) && v > 0) matSkryte.uniforms.mmNaPx.value = v; });
+    /** Zakryté hrany čerchovaně – zapnout / vypnout (pamatuje si prohlížeč). */
+    M.prepniSkryteHrany = function (zap = !skryteZapnute) {
+      skryteZapnute = !!zap;
+      try { localStorage.setItem('modelar_skryteHrany', skryteZapnute ? '1' : '0'); } catch (e) { /* bez úložiště */ }
+      for (const o of objekty.values()) o.skryte.visible = skryteZapnute && !!o.uzel && o.uzel.role !== 'dira';
+      document.querySelectorAll('[data-prikaz=skryteHrany]').forEach(b => b.setAttribute('aria-pressed', skryteZapnute ? 'true' : 'false'));
+      M.prekresli();
+    };
+    M.skryteHranyZapnute = () => skryteZapnute;
+    if (typeof document !== 'undefined') document.querySelectorAll('[data-prikaz=skryteHrany]').forEach(b => b.setAttribute('aria-pressed', skryteZapnute ? 'true' : 'false'));
     return T;
   };
 })(MDL);

@@ -293,6 +293,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         // velká síť (import STL, závit): těleso z trojúhelníků místo slučování rovinných ploch
         return { t: zRovinnychPlochNeboTrojuhelniky(s, u.nazev, proStep), z: S };
       }
+      const prohozene = prohozeneVrstvy(u, site, S);
+      if (prohozene) return prohozene;
       const obal = u.deti.length === 1;
       const stejne = S.every(x => Math.abs(x - S[0]) < 1e-6 * Math.max(1, S[0]));
       const plne = [], diry = [];
@@ -355,6 +357,61 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       });
       return { t: uprav(t, o), z: JEDNA };
     }
+    /** Dvě vrstvy úprav hran nad sebou (obal B s jedním dítětem = obal A, obě zaoblení / sražení): nejdřív novější B
+        na tělese bez A, pak A navrch. Hrana B po A v rohu pokračuje průsečnicí dvou zaoblení / sražení a OCCT ji
+        neumí upravit čistě (sražení skončí špičkou, zaoblení zářezem); v opačném pořadí rohy vyjdou správně
+        (horní hrany pak tvoří uzavřený řetěz i s novými úseky v rozích – prodluzVyber). I ve zvětšené skupině, jen bez natočení;
+        cokoli selže (hrana B vznikla až úpravou A, OCCT neumí) → null a počítá se postaru. */
+    const HRANOVE = new Set(['zaobleni', 'srazeni']);
+    function prohozeneVrstvy(u, site, S) {
+      if (!u.occt || !HRANOVE.has(u.occt.operace) || u.deti.length !== 1 || !(u.occt.hrany || []).length) return null;
+      const d = u.deti[0];
+      // A smí sedět i přímo na skupině více těles (kvádr s kapsou): těleso bez A postaví brepR z jejích dětí
+      if (d.druh !== 'skupina' || !d.occt || !HRANOVE.has(d.occt.operace) || !(d.occt.hrany || []).length) return null;
+      if ((d.rotace || []).some(x => Math.abs(x) > 1e-9) || (d.zrcadlo || []).some(Boolean)) return null;
+      // (starší úprava A větší než poloměr nového zaoblení B se kolem jeho oblouku přetočí přes sebe – takový
+      // výsledek zachytí kontrola samoprůniků v hranyNativne a zkusí se další pořadí)
+      // zvětšená skupina (roztažená úchyty – úprava A se uloží přímo do ní): vše ve skutečné velikosti Diag(S·měřítko A),
+      // hrany obou úprav převedené stejně jako při výpočtu postaru
+      const Sd = krat(S, M.meritkoUzlu(d)), p = krat(d.poloha, S);
+      const volne = (o, f, p0) => {
+        const q = x => x && x.map((c, i) => c * f[i] + (p0 ? p0[i] : 0));
+        const odch = jeJedna(f) ? {} : { odchylka: Math.max(...f.map(x => Math.abs(1 - 1 / x))) };
+        return Object.assign({}, o, { hrany: o.hrany.map(h => Object.assign({}, h, { stred: q(h.stred), bod: q(h.bod), konce: h.konce && h.konce.map(q) },
+          { delka: null, bezDelky: true }, odch)) });
+      };
+      try {
+        const z = brepR(Object.assign({}, d, { occt: null }), site, Sd);
+        const zaklad = posun(jeJedna(z.z) ? z.t : meritko(z.t, ...z.z), p[0], p[1], p[2]);
+        const A = volne(d.occt, Sd, p), B = volne(u.occt, S, null);
+        const svisla = h => { if (!h.konce) return false; const d0 = h.konce[1].map((v, j) => v - h.konce[0][j]), l = Math.hypot(...d0) || 1; return Math.abs(d0[2]) / l > 0.7; };
+        // svislé hrany A a v B žádné (zaoblené svislé hrany, pak sražený okraj): A už je ve správném pořadí –
+        // prohozením by se svislé hrany upravily až po okraji a roh pod sražením by zůstal do „V“
+        if (!(A.hrany.some(svisla) && !B.hrany.some(svisla))) {
+          try {
+            const t1 = uprav(zaklad, B, true);
+            return { t: uprav(t1, A, true), z: JEDNA };
+          } catch (e) { /* smíšené pořadí níž */ }
+        }
+        // smíšené pořadí podle druhu hran, ne podle vrstev: nejdřív svislé hrany obou úprav (každá úprava zvlášť),
+        // pak ostatní (okraje, dna) v obou pořadích – roh, kde se potká zaoblený okraj se sraženým, tak vznikne
+        // ze dvou hotových svislých úprav
+        const cast = (o, sv) => Object.assign({}, o, { hrany: o.hrany.filter(h => svisla(h) === sv) });
+        const kroky = [cast(A, true), cast(B, true)].filter(o => o.hrany.length);
+        let t = zaklad;
+        for (const o of kroky) t = uprav(t, o, true);
+        // novější úprava B napřed: okraj, který plynule obíhá zaoblený roh, je pro OCCT jeden řetěz a úprava se po něm
+        // rozběhne celá – dostane ho B (poslední záměr) a hrana A, kterou B pohltila, se přeskočí ('pohlcene')
+        const ostatni = [cast(B, false), cast(A, false)].filter(o => o.hrany.length);
+        for (const poradi of [ostatni, ostatni.slice().reverse()]) {
+          // první úprava musí najít všechny své hrany, druhá smí přeskočit jen ty, které první pohltila (ne všechny)
+          try { let y = t; poradi.forEach((o, i) => { y = uprav(y, o, i === 0 ? true : 'pohlcene'); }); return { t: y, z: JEDNA }; }
+          catch (e) { /* druhé pořadí */ }
+        }
+        return null;
+      } catch (e) { return null; }
+    }
+
     /** Těleso uzlu ve skutečné velikosti jeho vlastního měřítka: {t, z, f} – přirozené souřadnice = f·(Diag(z)·t),
         f = 1 / vlastní měřítko (síť a body hran se převedou lineárně, bez další transformace tělesa). */
     function brepSkut(u, site = {}) {
@@ -559,7 +616,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const ZPRAVA = { zaobleni: 'zaoblení hran se nepodařilo (zkus menší poloměr nebo méně hran)',
       srazeni: 'sražení hran se nepodařilo (zkus menší vzdálenost nebo méně hran)', skorepina: 'skořepina se nepodařila (zkus tenčí stěnu)' };
     /** Zaoblení, sražení nebo skořepina – každé těleso výsledku zvlášť, s hranami/plochami, které mu patří. */
-    function uprav(t, o) {
+    function uprav(t, o, jenNativne = false) {
       const tl = telesa(t);
       if (o.operace === 'odsazeni') {
         // odsazení stěn: kladné zvětší (vypouklé rohy zaoblí), záporné zmenší; objem se musí změnit správným směrem
@@ -663,15 +720,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         });
         // hranu po sloučení ploch (starší projekt) nebo po změně tvaru nenajde: vynechat, pokud zbydou jiné
         if (!nej) {
+          // prohozené vrstvy: oblouk, který vznikl až starší úpravou (roh zaoblený svislou hranou), na tělese bez ní
+          // není – přeskočit, vrátí se jako navazující řetěz (tečný / prodluzVyber) při opakování starší úpravy
+          if ((jenNativne && !h.konce) || jenNativne === 'pohlcene') { chybi++; continue; }
           // nová data (s bodem hrany) chybu ohlásí – tiše vynechaná hrana by dala jiný tvar
           if (h.bod) throw new Error('vybraná hrana se v tělese nenašla (změnil se tvar?) – otevři úpravu a vyber hrany znovu');
           chybi++; continue;
         }
         if (!vybrane[kde].includes(nej.id)) vybrane[kde].push(nej.id);
       }
+      // ani jedna hrana (ani v režimu pohlcených): úprava by se tiše vynechala – chyba, počítá se jinou cestou
       if (chybi === o.hrany.length) throw new Error('vybraná hrana se v tělese nenašla (změnil se tvar?)');
       return slozit(tl.map((x, i) => {
         if (!vybrane[i].length) return x;
+        // hrana, která v rohu pokračuje ostrou hranou po dřívější úpravě (svislá hrana → průsečnice dvou zaoblení
+        // nebo dvou sražení nahoře): upravit i pokračování, jinak roh zůstane se špičkou nebo zářezem
+        const rozsirene = prodluzVyber(hrany[i], vybrane[i]);
+        if (rozsirene.length > vybrane[i].length) {
+          try { return hranyNativne(x, rozsirene, o.operace, o.hodnota); } catch (e) { /* bez pokračování jako dřív */ }
+        }
+        // prohozené vrstvy: jen nativně (naráz, nebo po částech) – žádné náhradní ořezy
+        if (jenNativne) {
+          try { return hranyNativne(x, vybrane[i], o.operace, o.hodnota); } catch (e) { /* po částech */ }
+          // po částech i s pokračováním v rozích (okraj obíhající sražený roh), jinak bez něj
+          if (rozsirene.length > vybrane[i].length) { try { return hranyPostupne(x, rozsirene, o.operace, o.hodnota); } catch (e) { /* bez pokračování */ } }
+          return hranyPostupne(x, vybrane[i], o.operace, o.hodnota);
+        }
         try { return hranyNativne(x, vybrane[i], o.operace, o.hodnota); }
         catch (e) {
           // naráz to OCCT neumí (vnitřní i vnější hrany okraje, vyduté vedle vypouklých): po skupinách –
@@ -708,6 +782,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
               }
             } catch (e3) { if (/větší, než je plocha/.test(e3.message)) throw e3; }
           }
+          // naráz to nejde: po souvislých skupinách, svislé napřed (vodorovné okraje pak obejdou hotové rohy),
+          // neprojde-li skupina, hrana po hraně – výsledek bez špiček záložního ořezu
+          if (rozsirene.length > vybrane[i].length) { try { return hranyPostupne(x, rozsirene, o.operace, o.hodnota); } catch (e6) { /* bez pokračování */ } }
+          try { return hranyPostupne(x, vybrane[i], o.operace, o.hodnota); } catch (e5) { if (/větší, než je plocha/.test(e5.message)) throw e5; }
           // OCCT neumí třeba sražení hrany, která končí v zaoblení: rovné hrany mezi rovinami ořezat booleanem
           const y = hranyBooleanem(x, vybrane[i], o.operace, o.hodnota);
           if (y) return y;
@@ -733,10 +811,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         } catch (x2) { /* bez kontroly */ }
         // u smíšených hran objem nic neřekne: rozbité těleso pozná až síť (děravá); síť nejde = rozbité.
         // Síť z kopie – triangulace v tělese by rozbila pozdější nerovnoměrné měřítko (zvětšená skupina)
-        if (platne) { try { if (!M.zkontrolujSit(sitZTelesa(k.copy(y))).vodotesna) platne = false; } catch (x3) { platne = false; } }
+        if (platne && !zdravaSit(y)) platne = false;
         if (!platne) throw new Error(op === 'srazeni' ? ZPRAVA.srazeni : ZPRAVA.zaobleni);
         return y;
       } finally { v.delete(); }
+    }
+
+    /** Síť tělesa po úpravě hran je uzavřená a neprotíná sama sebe. OCCT občas vrátí „platné“ těleso s přetočeným
+        zaoblením nebo přeloženou rohovou ploškou (isValid ani vodotěsnost to nepoznají) – na obrazovce zubatá „čočka“
+        nebo rozbitý plášť. Takový výsledek se zahodí a zkusí se jiný postup. Síť z kopie (triangulace v tělese by
+        rozbila pozdější nerovnoměrné měřítko). */
+    const MEZ_ZVRASNENI = +(globalThis.MEZ_ZVRASNENI || 45);
+    function zdravaSit(y) {
+      try {
+        const s = sitZTelesa(k.copy(y));
+        return M.zkontrolujSit(s).vodotesna && M.samopruniky(s, 1) === 0 && zvrasneniPloch(y) <= MEZ_ZVRASNENI;
+      } catch (e) { return false; }
     }
 
     /** Popis hrany, podle kterého se najde i po úpravě sousedních hran (zkrácená, posunutý střed):
@@ -806,6 +896,79 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const A = bod(a), B = bod(b);
         return [{ bod: A, smer: ven(A, bod(a + eps)) }, { bod: B, smer: ven(B, bod(b - eps)) }];
       } catch (z) { return null; }
+    }
+    /** Úprava hran po částech: souvislé skupiny (sdílený konec), nejdřív ty, které vedou spíš svisle; skupina,
+        která naráz neprojde, hrana po hraně. Po každém kroku se zbylé hrany v novém tělese dohledají
+        (rovná hrana na své přímce, oblá podle středu a délky). Jakákoli hrana nejde → chyba. */
+    function hranyPostupne(x, hrany, op, h) {
+      if (hrany.length < 2) throw new Error(op === 'srazeni' ? ZPRAVA.srazeni : ZPRAVA.zaobleni);
+      const kon = hrany.map(e => konceSTecnou(e)), popisy = hrany.map(e => popisHranyProDohledani(x, e));
+      const n = hrany.length, rodic = [...Array(n).keys()];
+      const koren = i => { while (rodic[i] !== i) i = rodic[i] = rodic[rodic[i]]; return i; };
+      for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
+        if (!kon[a] || !kon[b]) continue;
+        if (kon[a].some(p => kon[b].some(q => Math.hypot(p.bod[0] - q.bod[0], p.bod[1] - q.bod[1], p.bod[2] - q.bod[2]) < 1e-4))) rodic[koren(a)] = koren(b);
+      }
+      const skupiny = new Map();
+      for (let i = 0; i < n; i++) { const r = koren(i); if (!skupiny.has(r)) skupiny.set(r, []); skupiny.get(r).push(i); }
+      // svislost hrany: podíl délky ve směru Z (konce)
+      const svisla = i => { const k = kon[i]; if (!k) return 0; const d = k[1].bod.map((v, j) => v - k[0].bod[j]), l = Math.hypot(...d) || 1; return Math.abs(d[2]) / l; };
+      // nejdřív svislé hrany (každá zvlášť), pak zbytek po souvislých skupinách – vodorovné okraje a dna pak
+      // obejdou hotové rohy jako celek
+      const svisle = [...Array(n).keys()].filter(i => svisla(i) > 0.7);
+      const poradi = svisle.map(i => [i]).concat([...skupiny.values()].map(g => g.filter(i => !svisle.includes(i))).filter(g => g.length));
+      let y = x;
+      for (const g of poradi) {
+        const ed = g.map(i => dohledejHranu(y, popisy[i]));
+        if (ed.some(e => e == null)) throw new Error('hranu po předchozím kroku nejde dohledat');
+        try { y = hranyNativne(y, ed, op, h); continue; } catch (e) { /* menší hodnota nebo po hranách */ }
+        // plné zaoblení / sražení tenké stěny (okraj kapsy po zaoblení vnějšího okraje stejným poloměrem): hodnota
+        // spotřebuje celou horní plochu a OCCT to neumí – o kousek menší hodnota dá skoro stejný tvar bez kazů
+        // (po hranách nebo ořezem by v rozích zůstaly zuby)
+        let hotovo = false;
+        for (const f of [0.97, 0.94, 0.9]) {
+          try { y = hranyNativne(y, ed, op, h * f); hotovo = true; break; } catch (e) { /* ještě menší */ }
+        }
+        if (hotovo) continue;
+        if (g.length === 1) throw new Error(op === 'srazeni' ? ZPRAVA.srazeni : ZPRAVA.zaobleni);
+        for (const i of g) {
+          const e1 = dohledejHranu(y, popisy[i]);
+          if (e1 == null) throw new Error('hranu po předchozím kroku nejde dohledat');
+          y = hranyNativne(y, [e1], op, h);
+        }
+      }
+      return y;
+    }
+
+    /** Výběr hran prodloužený o pokračování v rozích: v každém konci vybrané hrany nejvýš jedna nevybraná hrana,
+        která plynule pokračuje (odklon tečen do 60°, jednoznačně nejlepší) – průsečnice dvou zaoblení nebo dvou
+        sražení, kterou po dřívější úpravě pokračuje svislá hrana. Jen jeden krok (žádné řetězení dál), hladké
+        přechody a švy popisHran vůbec nenabízí. seznam = popisHran tělesa, vybrane = id (z téhož seznamu). */
+    function prodluzVyber(seznam, vybrane) {
+      const vyb = new Set(vybrane), kon = new Map();
+      const konce = e => { if (!kon.has(e)) kon.set(e, konceSTecnou(e)); return kon.get(e); };
+      const delka = seznam.reduce((m, e) => Math.max(m, e.delka || 0), 1), tol = Math.max(1e-5, delka * 1e-6);
+      const pridat = [];
+      for (const s of vybrane) {
+        const ks = konce(s);
+        if (!ks) continue;
+        for (const a of ks) {
+          const ven = a.smer.map(x => -x);                    // směr, kterým hrana z konce „pokračuje“
+          const kand = [];
+          for (const e of seznam) {
+            if (vyb.has(e.id)) continue;
+            const kg = konce(e.id);
+            if (!kg) continue;
+            for (const b of kg) {
+              if (Math.hypot(a.bod[0] - b.bod[0], a.bod[1] - b.bod[1], a.bod[2] - b.bod[2]) > tol) continue;
+              kand.push({ id: e.id, cos: ven[0] * b.smer[0] + ven[1] * b.smer[1] + ven[2] * b.smer[2] });
+            }
+          }
+          kand.sort((p, q) => q.cos - p.cos);
+          if (kand.length && kand[0].cos > 0.5 && (kand.length === 1 || kand[0].cos - kand[1].cos > 0.15) && !pridat.includes(kand[0].id)) pridat.push(kand[0].id);
+        }
+      }
+      return vybrane.concat(pridat);
     }
     /** Délka tečně navazujícího řetězu hran od hrany e (OCCT zaoblí / srazí celý řetěz – třeba okraj
         kolem už zaoblených rohů). */
@@ -992,7 +1155,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const v = k.getVolume(y);
         if (s.length !== 1 || !(v > 1e-9) || Math.abs(v - v0) > v0 * 0.5) return null;
         if (Math.abs(v - v0) > mezZmenyObjemu(x, hrany, op, h)) return null;
-        try { if (!M.zkontrolujSit(sitZTelesa(k.copy(s[0]))).vodotesna) return null; } catch (e) { /* bez kontroly */ }
+        if (!zdravaSit(s[0])) return null;
         try { if (!k.isValid(s[0])) return null; } catch (e) { /* bez kontroly */ }
         return s[0];
       } catch (e) {
@@ -1015,6 +1178,45 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       } finally { r.delete(); }
     }
 
+    /** Zvrásnění ploch: největší zlom (°) mezi sousedními trojúhelníky uvnitř jedné plochy tělesa. Hladká plocha má
+        zlomy do úhlové přesnosti tessellace (~14°); OCCT ale v rozích, kde se potká zaoblení se sražením, občas
+        postaví rohovou plošku zvlněnou – na obrazovce zubatá „čočka“ (samoprůnik to není, síť je v pořádku).
+        Trojúhelníky každé plochy mají vlastní vrcholy (skupiny tessellace), sousedé = společná hrana ve skupině. */
+    function zvrasneniPloch(t, sMistem = false) {
+      const bb = k.getBoundingBox(t, false);
+      const vel = Math.hypot(bb.xmax - bb.xmin, bb.ymax - bb.ymin, bb.zmax - bb.zmin);
+      const r = k.tessellate(t, Math.max(0.005, vel * 0.0012), 0.25);
+      try {
+        const poz = new Float32Array(m.HEAPF32.buffer.slice(r.getPositionsPtr(), r.getPositionsPtr() + r.positionCount * 4));
+        const idx = new Uint32Array(m.HEAPU32.buffer.slice(r.getIndicesPtr(), r.getIndicesPtr() + r.indexCount * 4));
+        const sk = new Int32Array(m.HEAP32.buffer.slice(r.getFaceGroupsPtr(), r.getFaceGroupsPtr() + r.faceGroupCount * 4));
+        let nej = 0, misto = null;
+        for (let g = 0; g + 2 < sk.length; g += 3) {
+          const od = sk[g], do_ = od + sk[g + 1], hrany = new Map(), nor = [];
+          for (let i = od; i < do_; i += 3) {
+            const a = idx[i] * 3, b = idx[i + 1] * 3, c = idx[i + 2] * 3;
+            const ux = poz[b] - poz[a], uy = poz[b + 1] - poz[a + 1], uz = poz[b + 2] - poz[a + 2];
+            const vx = poz[c] - poz[a], vy = poz[c + 1] - poz[a + 1], vz = poz[c + 2] - poz[a + 2];
+            const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz);
+            const f = nor.length;
+            nor.push(l > 1e-12 ? [nx / l, ny / l, nz / l] : null);
+            for (let q = 0; q < 3; q++) {
+              const x = idx[i + q], y = idx[i + (q + 1) % 3], kl = x < y ? x + ',' + y : y + ',' + x;
+              const o = hrany.get(kl);
+              if (o === undefined) hrany.set(kl, f);
+              else if (o >= 0) {
+                const n1 = nor[o], n2 = nor[f];
+                const uh = n1 && n2 ? Math.acos(Math.max(-1, Math.min(1, n1[0] * n2[0] + n1[1] * n2[1] + n1[2] * n2[2]))) * 180 / Math.PI : 0;
+                if (uh > nej) { nej = uh; if (sMistem) misto = [poz[x * 3], poz[x * 3 + 1], poz[x * 3 + 2]]; }
+                hrany.set(kl, -1);
+              }
+            }
+          }
+        }
+        return sMistem ? { uhel: nej, misto } : nej;
+      } finally { r.delete(); }
+    }
+
     /** Spustí f s úklidem: všechna tělesa vytvořená během f se uvolní. Výjimka WebAssembly (není Error,
         uživateli by se ukázalo „[object WebAssembly.Exception]“) se převede na českou chybu. */
     function sUklidem(f) {
@@ -1030,6 +1232,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     return {
       kernel: k, modul: m,
+      /** Pro testy a ladění: zvrásnění ploch tělesa uzlu (°). */
+      zvrasneni: (u, site, sMistem) => sUklidem(() => { const r = brepSkut(u, site), z = zvrasneniPloch(r.t, sMistem); if (z.misto) z.misto = z.misto.map((c, i) => c * r.f[i]); return z; }),
       brep: (u, site) => sUklidem(() => { const r = brepSkut(u, site); return { objem: occC(PRAZDNE, () => k.getVolume(r.t)) * r.f[0] * r.f[1] * r.f[2] }; }),
       hrany: (u, site) => sUklidem(() => {
         zeSite = 0;

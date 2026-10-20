@@ -605,7 +605,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/potraviny.html",
         "nazev": "🥗 Deník jídla",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["kalorie", "počítadlo kalorií", "jídelníček", "výživa", "makroživiny", "bílkoviny", "čárový kód", "EAN", "skenování",
                  "hubnutí", "potraviny", "nutriční hodnoty", "vitaminy", "recepty", "pitný režim", "hmotnost", "Open Food Facts"]
       },
@@ -956,6 +956,18 @@ const KATALOG_SEKCE = [
           "sklizeň",
           "agro"
         ]
+      },
+      {
+        "soubor": "obsah/zahradni_stavby.html",
+        "nazev": "🌿 Zahradní stavby ze dřeva",
+        "stav": "vyvoj",
+        "tagy": ["zahrada", "vyvýšený záhon", "kompostér", "pergola", "lamely", "stínění", "zemní tlak", "průhyb", "statika", "dřevo", "kusovník", "plán řezů", "PDF", "DXF", "STL", "3D"]
+      },
+      {
+        "soubor": "obsah/ptaci_budky.html",
+        "nazev": "🐦 Ptačí budky a hmyzí hotely",
+        "stav": "vyvoj",
+        "tagy": ["budka", "ptáci", "hmyzí hotel", "truhlařina", "řezný plán", "šablona", "PDF 1:1", "DXF", "STL", "3D", "netopýři", "zahrada"]
       }
     ]
   },
@@ -1168,7 +1180,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/slunecni_hodiny.html",
         "nazev": "☀️ Sluneční hodiny",
         "stav": "vyvoj",
-        "tagy": ["sluneční hodiny", "gnomon", "rovnice času", "analema", "šablona", "tisk 1:1", "PDF", "DXF", "astronomie", "deklinace stěny"]
+        "tagy": ["sluneční hodiny", "gnomon", "rovnice času", "analema", "šablona", "tisk 1:1", "PDF", "DXF", "astronomie", "deklinace stěny", "Canterbury", "kapesní hodiny", "výškové hodiny"]
       }
     ]
   },
@@ -1427,6 +1439,12 @@ const KATALOG_SEKCE = [
         "nazev": "📌 Plakát s útržky",
         "stav": "vyvoj",
         "tagy": ["plakát", "inzerát", "vývěska", "útržky", "nástěnka", "tisk", "PDF", "QR"]
+      },
+      {
+        "soubor": "obsah/volvelle.html",
+        "nazev": "🎡 Volvelle – otočné kotouče",
+        "stav": "vyvoj",
+        "tagy": ["volvelle", "papír", "tisk", "šablona", "kalendář", "měsíc", "šifra", "planisféra", "hvězdy", "logaritmické pravítko", "převodník", "PDF", "SVG", "DXF", "3D", "pro děti"]
       }
     ]
   },
@@ -1958,6 +1976,108 @@ const KATALOG_SEKCE = [
         "nazev": "📦 Krabice z kartonu (FEFCO)",
         "stav": "vyvoj",
         "tagy": ["krabice", "FEFCO", "vlnitá lepenka", "karton", "rozvin", "výsek", "dieline", "skládačka", "obal", "SVG", "DXF", "PDF", "plotr", "laser", "3D"]
+      },
+      {
+        "soubor": "obsah/vrtaci_sablony.html",
+        "nazev": "🔩 Vrtací šablony",
+        "stav": "vyvoj",
+        "tagy": ["vrtání", "šablona", "systém 32", "závěsy", "kolíky", "úchytky", "VESA", "KU 68", "PCD", "PDF 1:1", "STL", "3D tisk", "přípravek"]
+      },
+      {
+        "soubor": "obsah/truhlarske_spoje.html",
+        "nazev": "🪚 Šablony truhlářských spojů",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "dřevo", "spoje", "rybina", "dovetail", "cinky", "čep a dlab", "přeplátování", "pero a drážka", "kolíky", "lamely", "šablona", "tisk 1:1", "PDF", "SVG", "DXF", "STL", "3D", "kusovník", "CNC"]
+      },
+      {
+        "soubor": "obsah/planetarium.html",
+        "nazev": "🌍 Planetárium Slunce–Země–Měsíc",
+        "stav": "vyvoj",
+        "tagy": ["tellurium", "orrery", "planetárium", "ozubená kola", "převody", "Měsíc", "fáze", "roční období", "zatmění", "STL", "DXF", "3D tisk"]
+      },
+      {
+        "soubor": "obsah/ohyb_dreva.html",
+        "nazev": "🌙 Ohýbání dřeva – formy a kopyta",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "ohýbání dřeva", "laminování", "pára", "kerf", "formy", "MDF", "tisk 1:1", "DXF", "STL", "kusovník"]
+      },
+      {
+        "soubor": "obsah/drevo_vypocty.html",
+        "nazev": "🌳 Dřevo – pohyb, průhyb, povrchy",
+        "stav": "vyvoj",
+        "tagy": ["dřevo", "truhlářství", "vlhkost", "EMC", "sesychání", "průhyb", "police", "povrchová úprava", "lak", "olej", "řezivo", "objem"]
+      },
+      {
+        "soubor": "obsah/sablony_frezka.html",
+        "nazev": "🌀 Šablony pro horní frézku",
+        "stav": "vyvoj",
+        "tagy": ["frézka", "kopírovací kroužek", "šablona", "ofset", "truhlářství", "kruhové rameno", "motýlek", "DXF", "STL", "PDF 1:1"]
+      },
+      {
+        "soubor": "obsah/navrh_skrini.html",
+        "nazev": "🗄️ Návrh skříní a korpusů",
+        "stav": "vyvoj",
+        "tagy": ["skříň", "korpus", "nábytek", "kuchyňská linka", "DTD", "kusovník", "řezný plán", "systém 32", "závěsy", "zásuvky", "výsuvy", "konfirmát", "vrtání", "DXF", "CNC", "PDF", "3D"]
+      },
+      {
+        "soubor": "obsah/rezny_plan.html",
+        "nazev": "📏 Řezný plán – optimalizace dělení",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "nábytek", "dělení desek", "optimalizace", "DTD", "MDF", "překližka", "hranování", "1D řezání", "CNC", "PDF", "štítky", "DXF"]
+      },
+      {
+        "soubor": "obsah/ostreni.html",
+        "nazev": "🔪 Ostření dlát a hoblíků – přípravky",
+        "stav": "vyvoj",
+        "tagy": ["ostření", "dláto", "hoblík", "honovací vozík", "3D tisk", "STL", "bruska", "truhlářství", "šablona"]
+      },
+      {
+        "soubor": "obsah/kolikovaci_pripravky.html",
+        "nazev": "🔩 Kolíkovací a kapsové přípravky",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "kolíky", "pocket hole", "kapsový spoj", "konfirmát", "excentr", "přípravek", "3D tisk", "STL", "šablona", "PDF 1:1"]
+      },
+      {
+        "soubor": "obsah/intarzie.html",
+        "nazev": "🧩 Intarzie a parketáž",
+        "stav": "vyvoj",
+        "tagy": ["intarzie", "marketerie", "parketáž", "dýha", "rybí kost", "šachovnice", "kompasová růžice", "teselace", "Escher", "bookmatch", "řezný plán", "laser", "kerf", "SVG", "DXF", "PDF", "3D", "truhlářství"]
+      },
+      {
+        "soubor": "obsah/prkenka.html",
+        "nazev": "🔲 Prkénka a lepené vzory",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "krájecí prkénko", "end grain", "šachovnice", "3D kostky", "chevron", "řezný seznam", "PDF", "DXF", "3D"]
+      },
+      {
+        "soubor": "obsah/segmentove_soustruzeni.html",
+        "nazev": "🏺 Segmentové soustružení",
+        "stav": "vyvoj",
+        "tagy": ["soustružení", "segmentové soustružení", "segmented turning", "mísa", "váza", "kroužky", "segmenty", "pokos", "ozdobný pás", "řezný plán", "šablona 1:1", "PDF", "DXF", "STL", "3D", "truhlářství"]
+      },
+      {
+        "soubor": "obsah/drevene_hracky.html",
+        "nazev": "🧸 Dřevěné hračky a dětský nábytek",
+        "stav": "vyvoj",
+        "tagy": ["hračky", "kostky", "stavebnice", "kuličková dráha", "puzzle", "lupenková pila", "zvířátka", "tahací hračka", "učící věž", "dětský nábytek", "EN 71-1", "ergonomie", "stabilita", "šablona 1:1", "PDF", "DXF", "STL", "3D"]
+      },
+      {
+        "soubor": "obsah/pripravky_pila.html",
+        "nazev": "🪚 Přípravky pro pilu a vrtačku",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "stolní pila", "okružní pila", "pokosová pila", "vrtačka", "přípravky", "3D tisk", "STL", "DXF", "PDF 1:1", "kalkulačka"]
+      },
+      {
+        "soubor": "obsah/drzaky_naradi.html",
+        "nazev": "🧰 Držáky nářadí a Gridfinity",
+        "stav": "vyvoj",
+        "tagy": ["gridfinity", "3D tisk", "STL", "dílna", "nářadí", "French cleat", "pegboard", "truhlářství", "PDF 1:1", "kusovník"]
+      },
+      {
+        "soubor": "obsah/oblouky_profily.html",
+        "nazev": "〰️ Šablony oblouků a profilů",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "oblouk", "elipsa", "parabola", "řetězovka", "spline", "pružná lať", "kabriolová noha", "kuželová noha", "soustružení", "měrka průměrů", "ogee", "profil lišty", "šablona", "tisk 1:1", "PDF", "DXF", "STL", "3D"]
       }
     ]
   },

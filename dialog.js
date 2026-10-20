@@ -148,3 +148,5 @@ const Dialog = (function () {
     zeptej: (text, vychozi, volby) => okno(Object.assign({ text, vstup: true, vychozi }, volby)),
   };
 })();
+/* const není vlastnost window – stránky testují window.Dialog, proto ho vystavit i tam */
+window.Dialog = Dialog;

@@ -1046,3 +1046,71 @@ Přepínač projekce mění jen text za ikonou. Nové tlačítko s příkazem do
   posun středu A na bod kliknutí na B), `ui/magnet.js` (režimy 'magnet' → 'magnet2', zvýraznění plochy A oranžově
   ze `M.oblastPlochy` + ShapeGeometry, cílová plocha pod kurzorem zeleně, oblá plocha = jen trojúhelník), tlačítko
   v liště Uspořádat s ikonou magnet.webp (od uživatele, sw v425). Lišta 1300 px: ikonová tlačítka padding 6 px.
+
+## Text na zakřivenou plochu (20. 10. 2026)
+Stránka v apps.js přepnuta na „beta“ (pokyn uživatele). `jadro/textNaPlose.js`: `M.indexPovrchu` (nejbližší bod sítě
+přes mřížku buněk, normály rohů vyhlazené jen přes hrany do 40° – ostré hrany zůstanou), `M.mrizkaNaPovrchu`
+(krokování po povrchu: účaří od bodu kliknutí, z každého bodu sloupec nahoru/dolů, krok h = výška písma / 25,
+délky po povrchu zachované = samolepka bez natažení), `M.jemnaSitObrysu` (Clipper: pásy a čtverečky h,
+THREE.ShapeUtils, svaření; bez T-spojů), `M.textNaPovrch` (vršek +výška, spodek −zanoření po normále, boky po
+hraničních hranách → uzavřená síť), `M.textNaTeleso` (uzel sítě s osami desky, seskupení: vystouplý sjednocení,
+vyrytý díra). UI: okno Text (ui/reliefy.js) má výchozí režim „Na plochu tělesa“ → režim scény 'textNaPlochu',
+směr účaří = pravá osa kamery promítnutá do tečné roviny + natočení. Funguje na zaoblení, kouli, skupiny s dírou
+(dřív jen holý válec), importy. Testy: node `modelar_text_plocha.js` (19), prohlížeč v modelar_ui_prani5.py
+(212); modelar_ui_prani4 upraven (výchozí režim). Past testu: dítě skupiny má polohu v souřadnicích skupiny.
+
+## Rohy při kombinaci sražení a zaoblení (20. 10. 2026)
+Problém: druhá úprava hran na tělese s první (obal B nad obalem A) – svislá hrana po úpravě horních hran pokračuje
+v rohu průsečnicí dvou zaoblení / sražení; OCCT ji nativně neupraví (prodlužuje jen přesně tečné řetězce), záložní
+ořez booleanem dal u sražení špičku, u zaoblení zářez. Řešení v jadro/occt.js:
+- `prohozeneVrstvy(u, site, S)` na začátku skupiny v brepR: B se spočítá na tělese bez A a A se zopakuje navrch
+  (hrany obou dohledané bez délky, A posunuté o polohu vnitřního obalu); jen bez zvětšení / natočení, obě operace
+  hranové, a když je B zaoblení, musí být A < 0,95·r_B (jinak se A kolem oblouku přetočí – sražení 5 kolem r 3 nejde,
+  zůstane původní pořadí). `uprav(t, o, jenNativne)` – v prohozeném pořadí žádné záložní ořezy, selhání = postaru.
+- `prodluzVyber` (jeden krok): k vybrané hraně v každém konci jednoznačně nejlépe navazující hranu (odklon ≤ 60°) –
+  nové úseky v rozích (sražené rohy) při opakování A; zkusí se nativně, při selhání bez prodloužení.
+Test: node `_test/modelar_occt_rohy.js` (9: obě pořadí, dvě zaoblení, kvádr bez prodloužení). Ladicí snímky rohů
+přes UI: Úpravy → zaoblit/srazit + tlačítka skupin hran.
+- Doplněk (20. 10.): prohození vrstev i když starší úprava sedí přímo na skupině více těles (kvádr s kapsou) –
+  dřív jen obal s jedním dítětem, proto se u kapsy nespustilo (zářez ve vnějším rohu). Test rohy 12 kontrol.
+- Hrany vybraného tělesa černé, rámeček výběru černý / na tmavé ploše světle šedý (telesa.js motiv) – přání.
+- Num 8 = přepnout vybrané Těleso ↔ Díra (příkaz teleso_dira).
+- **Zakryté hrany čerchovaně** (telesa.js): ke každému tělesu (ne díře) druhá LineSegments se stejnou geometrií hran,
+  ShaderMaterial s depthFunc GreaterDepth (jen za povrchem), vrchol posunutý o 0,3 % ke kameře (viditelné hrany
+  neblikají), vzor v px (čárka 8, mezera 3, tečka 2, mezera 3) z atributu lineDistance (naplnHrany) a uniformy
+  mm/px u cíle kamery; řez pohledem přes clipping chunky; v náhledu projektu a PNG ne (userData.prekryv).
+  Přepínač Pohled ▾ / příkaz skryteHrany (localStorage modelar_skryteHrany).
+- Doplněk 2 (20. 10.): smíšený okraj kapsy (část zaoblená, část sražená, rohy obojí, sražené dno). `hranyPostupne`
+  (svislé hrany jednotlivě napřed, pak souvislé skupiny, pak hrana po hraně) – stupeň před záložním ořezem; v
+  prohozených vrstvách i „smíšené pořadí“: svislé hrany obou úprav, pak ostatní (novější úprava napřed). Okraj, který
+  plynule obíhá zaoblený roh, je pro OCCT jeden tečný řetěz – dostane ho celý novější úprava, pohlcené hrany starší
+  se přeskočí (režim 'pohlcene': jen u druhé úpravy a nikdy všechny – jinak by se úprava tiše vynechala, past z
+  testu modelar_occt „krychle zaoblená + sražené svislé“). Test rohy 14. Zakryté hrany mají příznak userData.pomocne
+  (ne prekryv – ten počítá test tenkých stěn). Šipky otáčení kratší (ROZPETI 28°).
+- Pravý panel jde schovat ☰ na všech šířkách nad 760 px (dřív jen 761–1250), stav v localStorage
+  `modelar_panelSkryty`, příkaz 'panel' (M.prepniPanel). Lišta na 1300 px: mezera ve skupinách 2 px (jinak přetekla o 8 px).
+- Doplněk 3 (20. 10.): kazy v rozích (sražené svislé + zaoblený okraj kapsy). Pravidlo: svislé hrany vždy napřed –
+  prohození vrstev se přeskočí, když má svislé hrany jen starší úprava A (zaoblené svislé, pak sražený okraj → dřív „V“
+  v rohu). `hranyPostupne` zkusí i výběr prodloužený o pokračování v rozích (prodluzVyber – sražený roh na okraji),
+  a když skupina nejde (plné zaoblení tenké stěny: r = půl tloušťky, OCCT neumí), zkusí hodnotu 0,97/0,94/0,9×
+  dřív než po hranách (ty v rozích nechávaly zuby). Test rohy 20 (bodové sondy; objem rozdíl nepozná).
+- Doplněk 4 (20. 10.): roztažená skupina (úchyty) – úprava hran se uloží přímo do ní (obalUpravou nedělá nový obal),
+  takže A měla měřítko a prohození vrstev se vynechalo → nad sražením „ucho“ zaoblení. prohozeneVrstvy teď počítá
+  ve skutečné velikosti: těleso bez A brepR(…, S·měřítko A) (+ zbylé měřítko), hrany A ×(S·měřítko A) + poloha·S,
+  hrany B ×S, obě s odchylkou. Test rohy 24.
+- Doplněk 5 (20. 10.) – hloubková oprava rohů „jednou provždy“: OCCT u kombinací zaoblení/sražení občas vrátí těleso,
+  které je „platné“ a uzavřené, ale plášť se protíná sám se sebou (přeložená rohová ploška = zubatá čočka, přetočené
+  zaoblení = rozbitý plášť). isValid ani vodotěsnost to nepoznají. Nová kontrola `M.samopruniky` (jadro/sit.js:
+  zametání obálek + průnik trojúhelníků bez společného vrcholu, práh 0,15 % velikosti – mikropřehyby se nepočítají)
+  je v `zdravaSit` a projde jí každý mezivýsledek (hranyNativne i záložní ořez). Neprojde-li postup, zkusí se další
+  (pořadí vrstev, smíšené, po částech, menší hodnota, ořez); neprojde-li nic, úprava skončí chybou – rozbité těleso už
+  nikdy. Podmínka „A < 0,95·r B“ pro prohození zrušena (přetočení zachytí kontrola). Zátěžový test
+  `_test/modelar_occt_zatez.js` (40 náhodných scénářů 2–3 vrstev, i roztažené; se starým jádrem 4 rozbitá tělesa,
+  teď 0; chyba jen u nemožných zadání – zaoblení větší než stěna, sražení tečné hrany).
+- Doplněk 6 (20. 10.): projekt uživatele (tmp/Projekt 2.modelar – skořepina, zaoblení 2 horních hran, sražení zbylých
+  horních a 3 svislých) – v rozích zvlněná rohová ploška (zlom 104° uvnitř jedné plochy, 3930 trojúhelníků): síť
+  uzavřená, bez samoprůniků, ale zubatá „čočka“. `zvrasneniPloch` (occt.js) – největší zlom mezi sousedními
+  trojúhelníky uvnitř plochy (skupiny tessellace getFaceGroupsPtr); zdravaSit ho omezuje na 45° (hladké plochy do
+  ~10°, zvlněné 56–178°). Pak se vezme jiný postup – u projektu hladké rohy (5°, 152 trojúhelníků). Zátěžový test:
+  10 z 11 zvlněných výsledků má čistou náhradu, 1 chyba (sražení tečné hrany). Výpočet asi 1,5× pomalejší.
+  Test rohy 27 (projekt jako případ), zátěž hlídá i zvlnění. O.zvrasneni(u, site, sMistem) pro ladění.

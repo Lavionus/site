@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌍 Planetárium Slunce–Země–Měsíc</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script src="lib/three.0.160.0.min.js" defer></script>
+<script src="evolventni_kola/jadro.js"></script>
+<script src="planetarium/jadro.js"></script>
+<script src="planetarium/site.js"></script>
+<script src="planetarium/vystup.js"></script>
+<script src="planetarium/kresba.js"></script>
+<script src="planetarium/princip.js"></script>
+<script src="planetarium/scena3d.js"></script>
+<script src="planetarium/ui.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:18px 14px 40px}
+h1{font-size:1.55rem;font-weight:600;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:16px}
+.layout{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:16px;align-items:start;max-width:1500px;margin:0 auto}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:14px;margin-bottom:14px;min-width:0}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:9px 0 3px}
+label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.86rem;margin:8px 0 2px;cursor:pointer}
+label.chk input{width:auto;margin-top:2px;accent-color:var(--accent)}
+input,select{width:100%;background:var(--bg-input,var(--bg));border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.92rem;font-family:inherit;min-width:0}
+input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--accent)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn-sec{background:var(--bg-control,var(--bg));color:var(--text);border:1px solid var(--border-strong)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.tlacitka{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tlacitka .btn{flex:1 1 auto}
+.info{font-size:.82rem;color:var(--text-muted,var(--text-faint));line-height:1.5;margin-top:6px}
+.info b{color:var(--text)}
+.varovani{color:var(--warn,#b26a00)} .chyba{color:var(--danger)} .ok{color:var(--ok,#2e7d32)}
+.papir{background:#fff;color:#222;border:1px solid var(--border-strong);border-radius:6px;padding:6px;overflow:hidden}
+.papir svg{display:block;width:100%;height:auto;max-height:72vh}
+#obal3d{height:520px;border-radius:6px;overflow:hidden;border:1px solid var(--border-strong);background:#20252e;position:relative}
+@media(max-width:600px){#obal3d{height:360px}}
+.prepinac{display:inline-flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden}
+.prepinac button{background:var(--bg-control,var(--bg));color:var(--text);border:none;padding:6px 10px;cursor:pointer;font-size:.8rem;font-family:inherit}
+.prepinac button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff)}
+.sim .radek{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:8px;font-size:.85rem}
+.sim .radek > span:first-child{color:var(--text-faint);min-width:48px}
+.stavy{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;margin-top:10px}
+.ikonaFaze svg{display:block;width:64px;height:64px}
+.udaje{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:3px 14px;font-size:.82rem}
+.udaje div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--border);padding:2px 0;min-width:0}
+.udaje span:first-child{color:var(--text-faint)}
+.udaje span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+.zatmeni{margin-top:8px;font-size:.84rem;padding:6px 9px;border-radius:6px;border:1px solid var(--border)}
+.zatmeni.aktivni{border-color:var(--danger);color:var(--danger);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--border);padding:3px 5px;text-align:right;vertical-align:top}
+th{color:var(--text-faint);font-weight:500}
+th:first-child,td:first-child{text-align:left}
+td.l,th.l{text-align:left}
+.tab-obal{overflow-x:auto;max-height:420px;overflow-y:auto}
+tr.vyber{cursor:pointer}
+tr.vyber:hover td{background:var(--bg-control,var(--bg))}
+tr.aktivni td{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.zalozky{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted,var(--text-faint));padding:7px 10px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel[hidden]{display:none}
+.navod{font-size:.86rem;line-height:1.55;color:var(--text)}
+.navod h3{font-size:.92rem;margin:14px 0 4px}
+.navod p{margin:4px 0}
+.navod ol,.navod ul{padding-left:20px}
+.navod li{margin:3px 0}
+.schema{margin:8px 0 12px}
+.schema svg{width:100%;height:auto;display:block;color:var(--text)}
+.schema figcaption{font-size:.78rem;color:var(--text-faint);margin-top:2px}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--text-faint);margin-top:6px}
+.legenda i{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:4px;border-radius:2px}
+kbd{font-family:inherit;font-size:.75rem;border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;background:var(--bg-control,var(--bg))}
+.skryte{display:none!important}
+#zK,#zA{padding:7px 4px;text-align:center}
+.vyber3d{position:absolute;left:8px;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:.8rem;padding:6px 9px;border-radius:6px;pointer-events:none}
+.stitky{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.stitky span{font-size:.75rem;padding:2px 7px;border-radius:10px;border:1px solid var(--border-strong);color:var(--text-faint)}
+details{margin-top:8px;font-size:.84rem}
+details summary{cursor:pointer;color:var(--accent)}
+</style>
+</head>
+<body>
+<h1>🌍 Planetárium Slunce–Země–Měsíc</h1>
+<p class="sub">Tellurium s ozubeným převodem k výrobě: osa Země zůstává rovnoběžná, Měsíc obíhá podle převodu, ukáže roční období, fáze i zatmění. Hledání převodů, kontrola roztečí, STL / SVG / DXF / PDF 1:1.</p>
+
+<div class="layout">
+  <div class="levy">
+    <div class="card">
+      <h2>⚙️ Mechanismus</h2>
+      <div class="r3">
+        <div><label for="m">Modul m (mm)</label><select id="m"></select></div>
+        <div><label for="b">Šířka kol (mm)</label><input id="b" type="number" min="2" max="30" step="0.5"></div>
+        <div><label for="mezera">Mezera vrstev</label><input id="mezera" type="number" min="0.5" max="10" step="0.5"></div>
+      </div>
+      <div class="r3">
+        <div><label for="zMin">Zubů min</label><input id="zMin" type="number" min="6" max="60" step="1"></div>
+        <div><label for="zMax">Zubů max</label><input id="zMax" type="number" min="20" max="250" step="1"></div>
+        <div><label for="D">Rameno D (0 = auto)</label><input id="D" type="number" min="0" max="1000" step="1"></div>
+      </div>
+      <div class="r2">
+        <div><label for="zemeTyp">Rovnoběžná osa Země</label><select id="zemeTyp"><option value="mezikolo">pevné kolo + mezikolo</option><option value="remen">řemínek 1 : 1 (O-kroužek)</option></select></div>
+        <div id="blokZC"><label for="zC">Pevné kolo = kolo Země (z)</label><input id="zC" type="number" min="10" max="150" step="1"></div>
+        <div id="blokRem" class="skryte"><label for="dRemenice">Ø řemenic (mm)</label><input id="dRemenice" type="number" min="10" max="120" step="1"></div>
+      </div>
+      <div class="r3">
+        <div><label for="dStred">Ø sloupu</label><input id="dStred" type="number" min="3" max="30" step="0.5"></div>
+        <div><label for="dHridel">Ø čepů / os</label><input id="dHridel" type="number" min="2" max="12" step="0.5"></div>
+        <div><label for="tlRamene">Tl. ramene</label><input id="tlRamene" type="number" min="2" max="20" step="0.5"></div>
+      </div>
+      <div class="r3">
+        <div><label for="vuleOtvor">Vůle otvoru</label><input id="vuleOtvor" type="number" min="0" max="1" step="0.05"></div>
+        <div><label for="vuleZub">Ztenčení zubu</label><input id="vuleZub" type="number" min="0" max="0.5" step="0.02"></div>
+        <div><label for="zK">Klika z<sub>K</sub> : z<sub>A</sub></label><div style="display:flex;gap:4px"><input id="zK" type="number" min="8" max="60" step="1"><input id="zA" type="number" min="10" max="200" step="1"></div></div>
+      </div>
+      <div class="info" id="infoMech"></div>
+    </div>
+
+    <div class="card">
+      <h2>🌙 Měsíc, glóbus a rozšíření</h2>
+      <label class="chk"><input type="checkbox" id="mesic"> Měsíc na vlastním soukolí</label>
+      <div class="r2">
+        <div><label for="mesicStupne">Stupně převodu Měsíce</label><select id="mesicStupne"><option value="2">2 stupně</option><option value="3">3 stupně</option></select></div>
+        <div><label for="mesicR">Poloměr dráhy Měsíce</label><input id="mesicR" type="number" min="20" max="300" step="1"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="naklon"> Náklon dráhy Měsíce 5,14° (šikmý kotouč) → zatmění jen u uzlů</label>
+      <label class="chk"><input type="checkbox" id="uzly"> Precese uzlů (18,6 r) – kotouč otáčí další soukolí</label>
+      <label class="chk"><input type="checkbox" id="den"> Rotace Země (366,24 otáček za rok, 3 stupně)</label>
+      <label class="chk"><input type="checkbox" id="planety"> Venuše a Merkur (orrery, z hřídele kliky)</label>
+      <div class="r3">
+        <div><label for="globus">Ø glóbu</label><input id="globus" type="number" min="20" max="300" step="1"></div>
+        <div><label for="mesicD">Ø Měsíce</label><input id="mesicD" type="number" min="5" max="80" step="1"></div>
+        <div><label for="lampa">Ø lampy</label><input id="lampa" type="number" min="10" max="150" step="1"></div>
+      </div>
+      <div class="info" id="infoVlaky"></div>
+    </div>
+
+    <div class="card">
+      <h2>🔎 Hledání převodů <small>řetězové zlomky + součiny dvojic</small></h2>
+      <label for="hCilVolba">Požadovaný poměr</label>
+      <select id="hCilVolba"></select>
+      <div class="r3">
+        <div><label for="hCil">Poměr (výstup : vstup)</label><input id="hCil" type="number" step="any" min="0"></div>
+        <div><label for="hStupne">Stupňů</label><select id="hStupne"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+        <div><label for="hRazeni">Řadit podle</label><select id="hRazeni"><option value="chyba">přesnosti</option><option value="velikost">velikosti</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="hSouose"> Souosé (z1+z2 = z3+z4, jen 2 stupně)</label>
+      <div class="tlacitka"><button class="btn" id="btnHledej" type="button">Hledat převody <kbd>Enter</kbd></button></div>
+      <div class="info" id="infoHledani"></div>
+      <div class="tab-obal" style="margin-top:6px"><table id="tabHledani"></table></div>
+      <details><summary>Řetězový zlomek a sblížené zlomky</summary><div class="tab-obal" style="margin-top:6px"><table id="tabRetez"></table></div></details>
+    </div>
+
+    <div class="card">
+      <h2>🖨️ Výroba a export</h2>
+      <div class="r3">
+        <div><label for="papir">Papír</label><select id="papir"><option value="a4">A4</option><option value="a3">A3</option><option value="letter">Letter</option><option value="vlastni">vlastní</option></select></div>
+        <div><label for="okraj">Okraj (mm)</label><input id="okraj" type="number" min="5" max="30" step="1"></div>
+        <div><label for="prekryv">Přesah lepení</label><input id="prekryv" type="number" min="0" max="40" step="1"></div>
+      </div>
+      <div class="r2 skryte" id="blokPapir">
+        <div><label for="papirW">Šířka papíru (mm)</label><input id="papirW" type="number" min="80" max="2000"></div>
+        <div><label for="papirH">Výška papíru (mm)</label><input id="papirH" type="number" min="80" max="5000"></div>
+      </div>
+      <div class="r2">
+        <div><label for="sirkaDesky">Laser: šířka desky (mm)</label><input id="sirkaDesky" type="number" min="80" max="3000" step="10"></div>
+        <div><label for="sirkaStolu">3D tisk: šířka stolu (mm)</label><input id="sirkaStolu" type="number" min="80" max="1000" step="10"></div>
+      </div>
+      <div class="tlacitka">
+        <button class="btn" id="btnPdf" type="button">📄 PDF 1:1 + kusovník + návod</button>
+        <button class="btn btn-sec" id="btnSvg" type="button">SVG profilů</button>
+        <button class="btn btn-sec" id="btnDxf" type="button">DXF profilů</button>
+      </div>
+      <label for="stlDil">STL jednoho dílu</label>
+      <div style="display:flex;gap:6px"><select id="stlDil"></select><button class="btn btn-sec" id="btnStlDil" type="button" style="flex:0 0 auto">STL</button></div>
+      <div class="tlacitka">
+        <button class="btn btn-sec" id="btnStlVse" type="button">STL všech dílů (na stole vedle sebe)</button>
+        <button class="btn btn-sec" id="btnStlKazdy" type="button">STL každý díl zvlášť</button>
+      </div>
+      <div class="info" id="infoExport"></div>
+      <div class="tlacitka"><button class="btn btn-sec" id="btnReset" type="button">Výchozí nastavení</button></div>
+    </div>
+  </div>
+
+  <div class="pravy">
+    <div class="card" id="karta3d">
+      <h2>🧊 3D sestava <span class="prepinac" role="group" aria-label="Režim"><button type="button" id="rezModel" aria-pressed="true">model z převodů</button><button type="button" id="rezIdeal" aria-pressed="false">ideální astronomie</button></span></h2>
+      <div id="obal3d"><div class="info" id="stav3d" style="padding:12px;color:#ddd">3D se načte, až bude karta vidět…</div><div class="vyber3d skryte" id="vyber3d"></div></div>
+      <div class="tlacitka">
+        <button class="btn btn-sec" id="b3dVychozi" type="button">Výchozí pohled</button>
+        <button class="btn btn-sec" id="b3dShora" type="button">Shora</button>
+        <button class="btn btn-sec" id="b3dBok" type="button">Z boku</button>
+        <button class="btn btn-sec" id="b3dBlizko" type="button">Detail Země</button>
+      </div>
+      <p class="info">Táhněte myší nebo prstem, kolečkem / dvěma prsty přibližte. <b>Klik na kolo</b> ukáže jeho údaje, <b>klik na kliku</b> nebo pastorek ji otočí o jednu otáčku. Zelený drátěný Měsíc = ideální poloha (v režimu modelu).</p>
+      <div class="sim">
+        <div class="radek"><span>Datum</span><input type="range" id="simPosun" min="-366" max="3653" step="1"><span><input type="date" id="simDatum" style="width:145px;padding:3px 5px"></span></div>
+        <div class="tlacitka">
+          <button class="btn btn-sec" id="simHraj" type="button">▶ Přehrát <kbd>mezera</kbd></button>
+          <select id="simRychlost" style="flex:1 1 140px;width:auto"><option value="1">1 den/s</option><option value="7">1 týden/s</option><option value="30" selected>1 měsíc/s</option><option value="365">1 rok/s</option></select>
+          <button class="btn btn-sec" id="simKlika" type="button">↻ Otočit klikou</button>
+          <button class="btn btn-sec" id="simDnes" type="button">Dnes</button>
+          <button class="btn btn-sec" id="simZatmeni" type="button">Další zatmění</button>
+        </div>
+        <div class="stavy">
+          <div class="ikonaFaze" id="ikonaFaze"></div>
+          <div class="udaje" id="simUdaje"></div>
+        </div>
+        <div class="zatmeni" id="simZatm"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="zalozky" role="tablist" id="zalozky">
+        <button role="tab" data-z="pudorys" aria-selected="true">Půdorys</button>
+        <button role="tab" data-z="bok" aria-selected="false">Boční pohled</button>
+        <button role="tab" data-z="schema" aria-selected="false">Schéma převodu</button>
+        <button role="tab" data-z="kusovnik" aria-selected="false">Kusovník</button>
+        <button role="tab" data-z="kontroly" aria-selected="false">Kontroly a rozteče</button>
+        <button role="tab" data-z="rozchazeni" aria-selected="false">Model × skutečnost</button>
+        <button role="tab" data-z="princip" aria-selected="false">Jak to funguje</button>
+        <button role="tab" data-z="navod" aria-selected="false">Montáž</button>
+      </div>
+      <div class="panel" data-p="pudorys">
+        <div class="papir" id="vykPudorys"></div>
+        <div class="legenda" id="legenda"></div>
+        <p class="info">Rameno při pohledu shora, Slunce (sloup) vlevo, osa Země vpravo. Plné obrysy jsou zuby, čárkovaně roztečné kružnice. Kóty <b>a</b> = skutečné vzdálenosti os, musí platit a = (z₁+z₂)·m/2.</p>
+      </div>
+      <div class="panel" data-p="bok" hidden><div class="papir" id="vykBok"></div><p class="info">Průmět do svislé roviny procházející sloupem a osou Země. Kola dalších soukolí leží za touto rovinou nebo před ní.</p></div>
+      <div class="panel" data-p="schema" hidden><div class="papir" id="vykSchema"></div><p class="info">Rozvinutý řez: každé soukolí je narovnané podél své cesty od sloupu (O) k ose Země (E). Šrafované = nehybné. ω = otáčky za rok vůči podstavci (absolutně).</p></div>
+      <div class="panel" data-p="kusovnik" hidden><div class="tab-obal"><table id="tabKusovnik"></table></div></div>
+      <div class="panel" data-p="kontroly" hidden><div id="kontroly" class="info"></div><div class="tab-obal" style="margin-top:8px"><table id="tabOsy"></table></div></div>
+      <div class="panel" data-p="rozchazeni" hidden><div id="rozchazeni" class="info"></div><div class="tab-obal" style="margin-top:8px"><table id="tabRozch"></table></div></div>
+      <div class="panel navod" data-p="princip" hidden id="princip"></div>
+      <div class="panel navod" data-p="navod" hidden id="navod"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

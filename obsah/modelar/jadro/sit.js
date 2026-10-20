@@ -239,5 +239,83 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     };
   };
 
+  /** Samoprůniky pláště: počet dvojic trojúhelníků bez společného vrcholu, které se skutečně protínají
+      (ne jen dotýkají) – nejvýš `limit`. Svařená síť (sdílené vrcholy). Uzavřená a „platná“ síť se může
+      protínat sama se sebou (přetočené zaoblení, přeložené plošky) – to vodotěsnost ani OCCT isValid nepozná.
+      Průnik musí mít délku aspoň `podil` velikosti tělesa – dotyky, zaokrouhlení float32 a mikroskopické přehyby
+      rohových plošek OCCT (setiny mm, okem neviditelné) se nepočítají. */
+  M.samopruniky = function (s, limit = 1, podil = 1.5e-3) {
+    const p = s.poz, t = s.idx, nt = t.length / 3;
+    if (!nt) return 0;
+    const ob = M.obalkaSite(s), diag = Math.hypot(ob.max[0] - ob.min[0], ob.max[1] - ob.min[1], ob.max[2] - ob.min[2]) || 1;
+    const epsD = 1e-5 * diag, epsL = podil * diag;
+    // obálky trojúhelníků, řazení podle x (zametání)
+    const bb = new Float64Array(nt * 6), poradi = new Uint32Array(nt);
+    for (let f = 0; f < nt; f++) {
+      poradi[f] = f;
+      for (let o = 0; o < 3; o++) {
+        let lo = Infinity, hi = -Infinity;
+        for (let k = 0; k < 3; k++) { const v = p[t[f * 3 + k] * 3 + o]; if (v < lo) lo = v; if (v > hi) hi = v; }
+        bb[f * 6 + o] = lo; bb[f * 6 + 3 + o] = hi;
+      }
+    }
+    poradi.sort((a, b) => bb[a * 6] - bb[b * 6]);
+    const V = (f, k, o) => p[t[f * 3 + k] * 3 + o];
+    const rovina = f => {
+      const ux = V(f, 1, 0) - V(f, 0, 0), uy = V(f, 1, 1) - V(f, 0, 1), uz = V(f, 1, 2) - V(f, 0, 2);
+      const vx = V(f, 2, 0) - V(f, 0, 0), vy = V(f, 2, 1) - V(f, 0, 1), vz = V(f, 2, 2) - V(f, 0, 2);
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+      const l = Math.hypot(nx, ny, nz);
+      if (l < 1e-14) return null;
+      nx /= l; ny /= l; nz /= l;
+      return [nx, ny, nz, nx * V(f, 0, 0) + ny * V(f, 0, 1) + nz * V(f, 0, 2)];
+    };
+    const roviny = new Array(nt);
+    const rov = f => roviny[f] !== undefined ? roviny[f] : (roviny[f] = rovina(f));
+    /** Úsek, ve kterém trojúhelník f protíná rovinu R: [bod, bod] nebo null. */
+    const usek = (f, R) => {
+      const d = [0, 1, 2].map(k => { const x = R[0] * V(f, k, 0) + R[1] * V(f, k, 1) + R[2] * V(f, k, 2) - R[3]; return Math.abs(x) <= epsD ? 0 : x; });
+      if ((d[0] > 0 && d[1] > 0 && d[2] > 0) || (d[0] < 0 && d[1] < 0 && d[2] < 0)) return null;
+      if (d[0] === 0 && d[1] === 0 && d[2] === 0) return null;               // v jedné rovině: dotyk, ne průnik
+      const body = [];
+      for (let k = 0; k < 3; k++) {
+        const a = k, b = (k + 1) % 3;
+        if (d[a] === 0) body.push([V(f, a, 0), V(f, a, 1), V(f, a, 2)]);
+        if ((d[a] > 0 && d[b] < 0) || (d[a] < 0 && d[b] > 0)) {
+          const u = d[a] / (d[a] - d[b]);
+          body.push([0, 1, 2].map(o => V(f, a, o) + u * (V(f, b, o) - V(f, a, o))));
+        }
+      }
+      return body.length >= 2 ? body : null;
+    };
+    let pocet = 0;
+    for (let i = 0; i < nt; i++) {
+      const a = poradi[i], axmax = bb[a * 6 + 3];
+      for (let j = i + 1; j < nt; j++) {
+        const b = poradi[j];
+        if (bb[b * 6] > axmax) break;
+        if (bb[b * 6 + 1] > bb[a * 6 + 4] || bb[a * 6 + 1] > bb[b * 6 + 4] || bb[b * 6 + 2] > bb[a * 6 + 5] || bb[a * 6 + 2] > bb[b * 6 + 5]) continue;
+        // sousedé (společný vrchol) se neberou – dotýkají se z principu
+        const a0 = t[a * 3], a1 = t[a * 3 + 1], a2 = t[a * 3 + 2], b0 = t[b * 3], b1 = t[b * 3 + 1], b2 = t[b * 3 + 2];
+        if (a0 === b0 || a0 === b1 || a0 === b2 || a1 === b0 || a1 === b1 || a1 === b2 || a2 === b0 || a2 === b1 || a2 === b2) continue;
+        const Ra = rov(a), Rb = rov(b);
+        if (!Ra || !Rb) continue;
+        const sa = usek(a, Rb);
+        if (!sa) continue;
+        const sb = usek(b, Ra);
+        if (!sb) continue;
+        // oba úseky leží na průsečnici rovin: překryv jejich průmětů na ni
+        const L = [Ra[1] * Rb[2] - Ra[2] * Rb[1], Ra[2] * Rb[0] - Ra[0] * Rb[2], Ra[0] * Rb[1] - Ra[1] * Rb[0]];
+        const ll = Math.hypot(...L);
+        if (ll < 1e-9) continue;
+        const pr = q => (q[0] * L[0] + q[1] * L[1] + q[2] * L[2]) / ll;
+        const ia = sa.map(pr), ib = sb.map(pr);
+        const prekryv = Math.min(Math.max(...ia), Math.max(...ib)) - Math.max(Math.min(...ia), Math.min(...ib));
+        if (prekryv > epsL && ++pocet >= limit) return pocet;
+      }
+    }
+    return pocet;
+  };
+
   if (typeof module !== 'undefined') module.exports = M;
 })(MDL);

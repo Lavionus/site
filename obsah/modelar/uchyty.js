@@ -89,7 +89,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
 
     /** Obrys zahnuté dvojité šipky podél lomené čáry (body na obrazovce): pás šířky 2w a hroty na koncích. */
-    const ROZPETI = 40;                 // úhel oblouku šipky otáčení (°)
+    const ROZPETI = 28;                 // úhel oblouku šipky otáčení (°) – kratší šipky (přání 20. 10. 2026, dřív 40)
     function zahnutaSipka(body, w) {
       const n = body.length, nor = body.map((p, i) => {
         const a = body[Math.max(0, i - 1)], b = body[Math.min(n - 1, i + 1)];

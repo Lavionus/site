@@ -11,14 +11,21 @@
  *
  * Při vydání nové verze zvyšte VERSION – stará cache se při aktivaci smaže.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const PREFIX = 'forecast-cache-';
 const CACHE_NAME = PREFIX + VERSION;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(['./forecast.html']))
+      .then((cache) => cache.addAll([
+        './forecast.html', './forecast.webmanifest', './forecast-icon-192.png', './forecast-icon-512.png',
+        '../common.css', '../theme.js', '../podpis.js',
+        './lib/chart.min.js', './lib/hammer.min.js', './lib/chartjs-plugin-zoom.min.js',
+        './lib/leaflet/leaflet.css', './lib/leaflet/leaflet.js',
+        './lib/maplibre/maplibre-gl.css', './lib/maplibre/maplibre-gl.js',
+        './lib/maplibre/leaflet-maplibre-gl.js', './lib/maplibre/ofm-basemap.js',
+      ]))
       .then(() => self.skipWaiting())
   );
 });

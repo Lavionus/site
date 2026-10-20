@@ -59,10 +59,12 @@
     }
     $('posun').innerHTML = o;
   }
+  $('styl').innerHTML = Object.entries(SHStyly.STYLY).map(([id, st]) => `<option value="${id}">${st.nazev}</option>`).join('');
+  $('stylyMini').innerHTML = Object.entries(SHStyly.STYLY).map(([id, st]) => `<button type="button" role="radio" data-styl="${id}" aria-checked="false" title="${st.nazev}: ${st.popis}"><span class="mini" data-mini="${id}"></span>${st.nazev}</button>`).join('');
   $('typy').innerHTML = TYPY.map((t, i) => `<button type="button" data-typ="${t.id}" title="${t.nazev} (klávesa ${i + 1})"><svg viewBox="0 0 34 26" aria-hidden="true">${t.ikona}</svg>${t.nazev}</button>`).join('');
 
   const POLE_P = ['sirka', 'delka', 'posun', 'rok', 'letniCas', 'korekceDelky', 'deklinace', 'tvar', 'sirkaMm', 'vyskaMm', 'nodusAuto', 'nodusMm', 'posunX', 'posunY',
-    'mezVysky', 'prumerTyce', 'kapSteny', 'kapSloupce', 'kapCasy', 'tloustkaMm', 'styl', 'cislice', 'krok', 'datum', 'caryMeziDaty', 'analema', 'tabulka', 'popisky', 'motto'];
+    'mezVysky', 'prumerTyce', 'kapSteny', 'kapSloupce', 'kapCasy', 'tloustkaMm', 'kapDvaKoliky', 'nodusZimaMm', 'kapOriginal', 'kapVule', 'kapOcko', 'styl', 'cislice', 'krok', 'datum', 'caryMeziDaty', 'analema', 'tabulka', 'popisky', 'motto'];
   const POLE_T = ['papir', 'okraj', 'prekryv', 'papirW', 'papirH', 'cernobile'];
   const klicP = (id) => (id === 'posun' ? 'posunUTC' : id);
 
@@ -73,6 +75,9 @@
     }
     for (const id of POLE_T) { const el = $(id); if (el.type === 'checkbox') el.checked = !!S.tisk[id]; else el.value = S.tisk[id]; }
     for (const b of $('typy').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.typ === S.p.typ));
+    for (const b of $('stylyMini').querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.styl === S.p.styl));
+    $('vlastniBarvy').checked = !!S.p.barvaDeska;
+    if (S.p.barvaDeska) { $('barvaDeska').value = S.p.barvaDeska; $('barvaCary').value = S.p.barvaCary; $('barvaAkcent').value = S.p.barvaAkcent; }
     const i = MESTA.findIndex((m) => Math.abs(m[1] - S.p.sirka) < 1e-3 && Math.abs(m[2] - S.p.delka) < 1e-3);
     $('mesto').value = i >= 0 ? String(i) : '';
     viditelnost();
@@ -94,9 +99,11 @@
     $('blokDeklinace').classList.toggle('skryte', t !== 'deklinujici');
     const kap = t === 'kapesni';
     $('blokKapesni').classList.toggle('skryte', !kap);
-    $('btnStl').classList.toggle('skryte', !kap);
+    for (const id of ['btnStl', 'btnStlKolik', 'btnStlVse']) $(id).classList.toggle('skryte', !kap);
     $('tloustkaMm').parentElement.classList.toggle('skryte', +S.p.kapSteny !== 2);
-    for (const el of [$('mezVysky'), document.querySelector('label[for=mezVysky]'), $('styl').parentElement, $('krok').parentElement.parentElement, $('motto'), document.querySelector('label[for=motto]'), $('tabulka').parentElement]) el.classList.toggle('skryte', kap);
+    $('blokZima').classList.toggle('skryte', !S.p.kapDvaKoliky || !!S.p.nodusAuto);
+    $('kapOriginal').parentElement.classList.toggle('skryte', S.p.kapSloupce !== 'canterbury');
+    for (const el of [$('mezVysky'), document.querySelector('label[for=mezVysky]'), $('krok').parentElement.parentElement, $('motto'), document.querySelector('label[for=motto]'), $('tabulka').parentElement]) el.classList.toggle('skryte', kap);
     $('lNodusAuto').textContent = kap ? 'Délku kolíku navrhnout automaticky (letní poledne na konci sloupce)' : 'Výšku nodu a jeho polohu navrhnout automaticky';
     $('lTyc').textContent = kap ? 'Průměr kolíku (mm)' : 'Průměr tyče (mm)';
     $('blokTvar').classList.toggle('skryte', t !== 'vodorovne' && t !== 'svisle' && t !== 'deklinujici');
@@ -118,6 +125,30 @@
 
   /* ---------- výpočet a vykreslení ---------- */
   let R = null;
+  /* ---------- písma stylů: TTF v base64 (fonty/js) pro PDF, vložené SVG a 3D texturu ---------- */
+  const pismaSlib = {};
+  function nactiPismoStylu(id) {
+    const st = SHStyly.STYLY[id], pis = st && st.pismo && SHStyly.PISMA[st.pismo];
+    if (!pis) return Promise.resolve(null);
+    if (window.FONTY_JS && window.FONTY_JS[pis.soubor]) return Promise.resolve(window.FONTY_JS[pis.soubor]);
+    if (!pismaSlib[pis.soubor]) pismaSlib[pis.soubor] = new Promise((ok) => {
+      const el = document.createElement('script'); el.src = 'fonty/js/' + pis.soubor + '.js';
+      el.onload = () => ok((window.FONTY_JS || {})[pis.soubor] || null);
+      el.onerror = () => { delete pismaSlib[pis.soubor]; ok(null); };
+      document.head.appendChild(el);
+    });
+    return pismaSlib[pis.soubor];
+  }
+  function miniatury() {
+    for (const el of $('stylyMini').querySelectorAll('[data-mini]')) {
+      const id = el.dataset.mini, st = SHStyly.STYLY[id];
+      try {
+        const r = SH.navrh({ typ: 'vodorovne', styl: id, tvar: 'kruh', sirkaMm: 120, datum: 'zakladni', krok: 60, letniCas: false, popisky: false, motto: '', cislice: st.cislice || 'arabske', sirka: 50, delka: 15, posunUTC: 1, rok: S.p.rok, tabulka: false, analema: false });
+        r.cifernik.prvky = r.cifernik.prvky.filter((e) => e.v !== 'pomoc');
+        el.innerHTML = SHV.svg(r.cifernik, { sirkaPx: true, okraj: 1, pozadi: '#ffffff' });
+      } catch (e) { console.error(e); }
+    }
+  }
   function prepocti() {
     try { R = SH.navrh(S.p); }
     catch (e) { console.error(e); toast('Chyba výpočtu: ' + e.message, true); return; }
@@ -129,6 +160,8 @@
     $('nadpisNahled').textContent = 'Ciferník – ' + TYPY.find((t) => t.id === S.p.typ).nazev;
     $('rozmerNahled').textContent = f1(R.cifernik.w, 0) + ' × ' + f1(R.cifernik.h, 0) + ' mm';
     $('nahledGnomon').innerHTML = SHV.svg(R.gnomon, { sirkaPx: true, okraj: 4 });
+    try { $('nahledBok').innerHTML = SHV.svg(SHP.bokorys(R), { sirkaPx: true, okraj: 4 }); } catch (e) { console.error(e); $('nahledBok').textContent = 'Boční pohled nelze nakreslit.'; }
+    $('princip').innerHTML = SHPrincip.html(S.p.typ, S.p);
     $('graf').innerHTML = SHV.svg(SH.grafRovniceCasu(S.p, 180, 90), { sirkaPx: true, okraj: 2 });
     infoPoloha(); kontrola(); tabulkaRovnice(); navod(); infoListy(); mereni();
     simuluj();
@@ -146,14 +179,16 @@
 
   function kontrolaKapesni() {
     const I = R.info, h = [];
-    h.push(`Kolík vyčnívá <b>${f1(I.vyskaNodu)} mm</b> kolmo ze stěny; použitelná délka sloupce pod osou kolíku <b>${f1(I.delkaSloupce)} mm</b>. Rozvin pláště ${f1(I.rozvin.sirka, 0)} × ${f1(I.rozvin.vyska, 0)} mm, ${I.rozvin.steny} stěny, ${I.rozvin.sloupcuNaStenu} sloupce na stěnu.`);
+    h.push(`Kolík vyčnívá <b>${f1(I.vyskaNodu)} mm</b>${I.kolikZima ? ' (letní sloupce), v zimních <b>' + f1(I.kolikZima) + ' mm</b>' : ''} kolmo ze stěny; použitelná délka sloupce pod osou kolíku <b>${f1(I.delkaSloupce)} mm</b>. Rozvin pláště ${f1(I.rozvin.sirka, 0)} × ${f1(I.rozvin.vyska, 0)} mm, ${I.rozvin.steny} stěny, ${I.rozvin.sloupcuNaStenu} sloupce na stěnu.`);
     h.push('Stín konce kolíku leží o <b>d = L · tan h</b> níž než osa kolíku (h = výška Slunce): vysoké Slunce = dlouhý stín, v zimě jsou značky těsně pod otvorem.');
     for (const v of I.varovani) h.push(`<span class="varovani">⚠ ${v}</span>`);
     $('kontrola').innerHTML = h.join('<br>');
     const casy = [...new Set(I.sloupce.flatMap((c) => c.znacky.map((z) => z.txt)))];
     const rad = I.sloupce.map((c) => `<tr><td>${c.nazev}<br><small style="color:var(--text-faint)">${c.obdobi.join(' + ')}</small></td><td>${f1(c.d, 2)}°<br><small style="color:var(--text-faint)">${f1(c.dMin, 1)} … ${f1(c.dMax, 1)}°</small></td>` +
       casy.map((tx) => { const z = c.znacky.find((q) => q.txt === tx); return `<td>${z ? (z.mimo ? '<span class="varovani">' : '') + f1(z.pad, 1) + ' mm<br><small style="color:var(--text-faint)">h ' + f1(z.h, 1) + '°</small>' + (z.mimo ? '</span>' : '') : '–'}</td>`; }).join('') + '</tr>');
-    $('tabHodin').innerHTML = `<thead><tr><th>Sloupec</th><th>deklinace (rozptyl)</th>${casy.map((x) => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rad.join('')}</tbody>`;
+    const orig = I.sloupce.some((c) => c.mereni);
+    const rad2 = orig ? rad.map((r, i) => { const m = I.sloupce[i].mereni; return r.replace('</tr>', `<td>${m ? f1(m[0]) + ' / ' + f1(m[1]) + ' mm' : '–'}</td></tr>`); }) : rad;
+    $('tabHodin').innerHTML = `<thead><tr><th>Sloupec</th><th>deklinace (rozptyl)</th>${casy.map((x) => `<th>${x}</th>`).join('')}${orig ? '<th>originál III·IX / VI</th>' : ''}</tr></thead><tbody>${rad2.join('')}</tbody>`;
     $('infoGnomon').innerHTML = `Kolík (gnomon) délky <b>${f1(I.vyskaNodu)} mm</b> nad stěnou, průměr ${f1(S.p.prumerTyce)} mm. Na originálu je kolík zlatý, zakončený zvířecí hlavou, a dal se uschovat v hranolu.`;
   }
   function kontrola() {
@@ -200,10 +235,12 @@
 
   function navodKapesni() {
     const k = [];
-    k.push(`<h3>Historie</h3><p>Kapesní sluneční hodiny z Canterbury jsou anglosaské, nejspíš z 10. století. Našli je v roce 1938 při úpravách v rajském dvoře (Great Cloister) katedrály v Canterbury. Jde o stříbrnou destičku o délce asi 6 cm (udává se 61 × 16 mm) se zlatou hlavicí a řetízkem a se samostatným zlatým kolíkem. Na obou širokých stranách jsou tři sloupce s latinskými zkratkami dvojic měsíců – podle popisu replik IAN·DEC, FEB·NOV, MAR·OCT na jedné a MAI·AVG, IVN·IVL, APR·SEP na druhé straně; nahoře v každém sloupci je otvor pro kolík. Po bocích je nápis +SALVS FACTORI / +PAX POSSESSORI („zdraví tvůrci, pokoj majiteli“). Hodiny měří <b>výšku Slunce</b> a ukazovaly tři denní časy – podle literatury nejspíš modlitby tercie, sexty (poledne) a nony; A. Mills je popsal jako výškové hodiny pro <b>nestejné (sezónní) hodiny</b>.</p>`);
+    k.push(`<h3>Historie</h3><p>Kapesní sluneční hodiny z Canterbury jsou anglosaské, nejspíš z 10. století. Našli je v roce 1938 při úpravách v rajském dvoře (Great Cloister) katedrály v Canterbury. Jde o stříbrnou destičku o délce asi 6 cm (katedrála uvádí 61 × 16 mm, M. Arnaldi 65 × 19 × 5 mm) se zlatou hlavicí a řetízkem a se samostatným zlatým kolíkem (asi 30 mm, zakončený dračí hlavou). Na obou širokých stranách jsou tři sloupce s latinskými zkratkami dvojic měsíců – podle popisu replik IAN·DEC, FEB·NOV, MAR·OCT na jedné a MAI·AVG, IVN·IVL, APR·SEP na druhé straně; nahoře v každém sloupci je otvor pro kolík. Po bocích je nápis +SALVS FACTORI / +PAX POSSESSORI („zdraví tvůrci, pokoj majiteli“). Hodiny měří <b>výšku Slunce</b> a body ve sloupcích ukazují jen <b>třetí, šestou a devátou</b> nestejnou (sezónní) hodinu – časy modliteb tercie, sexty (poledne) a nony (M. Arnaldi 2011; A. Mills 1995 je nazval „seasonal-hour altitude dial“).</p>
+      <p>Návod na podobné hodiny dochoval text <i>Libellus de mensura horologii</i> (připisovaný Bedovi, nejspíš 8.–10. stol.): šestiboký hranol asi na pět prstů (~9 cm), na každé stěně sloupec pro dvojici měsíců; sloupce mají délky odvozené jednoduchým pravidlem a každý se dělí na <b>šest stejných dílů</b> = hodiny. Tuto konstrukci nabízí volba „podle Libellu“.</p>
+      <p><b>Dva kolíky:</b> A. Mills a M. Arnaldi ukázali, že kolík lze použít dvěma způsoby – v zimních sloupcích vyčnívá 25 mm, v letních (prostrčený skrz destičku až po dračí hlavu) 20 mm. S tím vycházejí polední body originálu pro šířku kolem 50–51° dobře; body tercie a nony ale leží skoro v polovině mezi otvorem a poledním bodem, tedy spíš podle „stejných dílů“ než podle přesné astronomie (srovnání v tabulce Kontrola, kroužky v náhledu).</p>`);
     k.push(`<h3>Použití</h3><ol><li>Kolík zasuňte vodorovně do otvoru sloupce s dnešním měsícem.</li><li>Hodiny zavěste za řetízek (visí svisle) a natočte je stěnou ke Slunci tak, aby <b>stín kolíku padal přesně svisle dolů po sloupci</b> – stěna pak míří k azimutu Slunce.</li><li>Konec stínu ukazuje čas: u nejnižší značky je poledne (sexta), výše tercie / nona. Dopoledne a odpoledne se nerozliší – v jednom sloupci je výška Slunce v 9 a 15 h stejná.</li></ol>`);
     k.push(`<h3>Výroba</h3><ul><li>Rozvin vytiskněte 1:1 (kontrolní úsečka 50 mm), nalepte na dřevěný hranolek přesných rozměrů (${f1(S.p.sirkaMm, 0)} × ${+S.p.kapSteny === 2 ? f1(S.p.tloustkaMm, 0) + ' × ' : ''}${f1(S.p.vyskaMm, 0)} mm), přeložte po čárkovaných hranách.</li><li>Otvory provrtejte kolmo ke stěně. Délka kolíku nad stěnou musí přesně odpovídat (${f1(R.info.vyskaNodu)} mm) – chyba 1 mm posune polední značku v létě asi o 2 mm.</li><li>STL je hranol s otvory a rýhami značek pro 3D tisk (nápisy se nerývají).</li></ul>`);
-    k.push(`<h3>Historické hodiny × přesná astronomie</h3><ul><li><b>Dvojice měsíců</b> mají jednu stupnici, ale jejich deklinace nejsou stejné: např. březen má střední deklinaci asi −1,6°, říjen −8,9° (rozdíl kolem 7°). Párování Jan–Dec, Feb–Nov… předpokládá slunovrat na rozhraní měsíců (tradiční datum VIII Kal. Ian. = 25. 12.), astronomicky je však 21. 12. (gregoriánsky); v juliánském kalendáři 10. století připadal zhruba na 15.–16. 12. Volba „6 dvojic znamení“ páruje období se shodnou deklinací.</li><li>Výškové hodiny platí jen pro jednu zeměpisnou šířku. Podle článku D. Sherlocka v časopise Kentské archeologické společnosti se pro přesné čtení hodí spíš šířka severní Anglie než Canterbury, takže hodiny možná nevznikly v Kentu. Výklad značek a poloh kolíku je předmětem diskuse (A. Mills 1995, M. Arnaldi 2011–12, P. Drinkwater 2012); J. Davis (BSS Monograph 14) spojuje kov hodin s Edgarovou mincovní reformou roku 973.</li><li>Tercie a nona jsou zde spočítané jako konec 3. a 9. nestejné hodiny (pravý sluneční čas, polovina doby mezi východem Slunce a polednem); středověké tabulky stínů (např. tabulka připojená k Řeholi sv. Benedikta v Canterbury) byly jen přibližné.</li><li>Kolem poledne se výška Slunce téměř nemění, takže výškové hodiny tam čtou čas nejhůř (chyba i čtvrt hodiny); nejpřesnější jsou dopoledne a odpoledne.</li><li>Čtení je v <b>pravém slunečním čase</b>; na hodinky ho převedete korekcí z tabulky Rovnice času.</li></ul>`);
+    k.push(`<h3>Historické hodiny × přesná astronomie</h3><ul><li><b>Dvojice měsíců</b>: podle Libellu nejde o kalendářní, ale o <b>sluneční měsíce</b> s hranicí 12 dní před kalendami (~21. den): sloupec IVN·IVL platí od 21. 5. do 21. 7., IAN·DEC od 21. 11. do 20. 1. – obě poloviny mají stejnou deklinaci. Kdyby se párovaly kalendářní měsíce, liší se třeba březen (střední deklinace −1,6°) a říjen (−8,9°) o 7°. Hranice 21. dne (rovnodennost XII Kal. Apr. = 21. 3.) je pokoncilní konvence; v juliánském kalendáři 10. století ale skutečná rovnodennost a slunovraty připadaly asi o 5 dní dřív (výpočet: posun 1 den za ~128 let).</li><li><b>Stejné díly</b>: Libellus dělí sloupec na 6 stejných částí, což astronomicky neplatí – skutečné značky (ostatní volby) jsou rozmístěné nerovnoměrně, kolem poledne hustě. Arnaldi soudí, že pravidlo vychází z římských tabulek polední délky stínu pro „klima“ Anglie.</li><li>Výškové hodiny platí jen pro jednu zeměpisnou šířku. Podle článku D. Sherlocka v časopise Kentské archeologické společnosti se pro přesné čtení hodí spíš šířka severní Anglie než Canterbury, takže hodiny možná nevznikly v Kentu; M. Arnaldi (2012) naopak soudí, že se dvěma délkami kolíku odpovídají právě „klimatu“ Canterbury. Výklad značek a poloh kolíku je předmětem diskuse (A. Mills 1995, M. Arnaldi 2011–12, P. Drinkwater 2012); J. Davis (BSS Monograph 14) spojuje kov hodin s Edgarovou mincovní reformou roku 973.</li><li>Tercie a nona jsou zde spočítané jako konec 3. a 9. nestejné hodiny (pravý sluneční čas, polovina doby mezi východem Slunce a polednem); středověké tabulky stínů (např. tabulka připojená k Řeholi sv. Benedikta v Canterbury) byly jen přibližné.</li><li>Kolem poledne se výška Slunce téměř nemění, takže výškové hodiny tam čtou čas nejhůř (chyba i čtvrt hodiny); nejpřesnější jsou dopoledne a odpoledne.</li><li>Čtení je v <b>pravém slunečním čase</b>; na hodinky ho převedete korekcí z tabulky Rovnice času.</li></ul>`);
     $('navod').innerHTML = k.join('');
   }
   function navod() {
@@ -259,6 +296,7 @@
     const { ms, dst } = msSim();
     $('simCasH').textContent = SH.fmtCas(S.sim.cas / 60) + (dst ? ' letní' : '');
     const v = R.sim(ms), pol = v.poloha, g = document.getElementById('simStin');
+    if (S3) { try { S3.aktualizuj(R, SHP.sestava(R, ms)); } catch (e) { console.error(e); } }
     if (g) g.innerHTML = v.prvky ? SHV.svgPrvky(v.prvky) : '';
     const kd = korekceMin();
     if (S.p.typ === 'kapesni') {
@@ -385,11 +423,13 @@
       const pismo = await nactiPismo();
       if (!pismo) toast('Písmo se nepodařilo načíst – PDF bude bez diakritiky.');
       const nazev = 'Sluneční hodiny – ' + TYPY.find((t) => t.id === S.p.typ).nazev;
+      const ps = await nactiPismoStylu(S.p.styl), pisSt = SHStyly.STYLY[S.p.styl] && SHStyly.STYLY[S.p.styl].pismo && SHStyly.PISMA[SHStyly.STYLY[S.p.styl].pismo];
+      const pismaStylu = ps && pisSt ? { [pisSt.soubor]: ps } : {};
       const doc = SHV.pdf(window.jspdf.jsPDF, [
         { scena: R.cifernik, nadpis: nazev + ' – ciferník' },
         { scena: R.gnomon, nadpis: nazev + ' – gnomon / šablona' },
         { nadpis: nazev + ' – rovnice času a návod', scena: SH.grafRovniceCasu(S.p, 180, 90), text: textNavodu(), ctverec: true },
-      ], { papir: papir(), okraj: +S.tisk.okraj || 8, prekryv: +S.tisk.prekryv || 0, pismo, cernobile: S.tisk.cernobile, pomoc: S.p.popisky, nazev });
+      ], { papir: papir(), okraj: +S.tisk.okraj || 8, prekryv: +S.tisk.prekryv || 0, pismo, pismaStylu, cernobile: S.tisk.cernobile, pomoc: S.p.popisky, nazev });
       stahni(doc.output('blob'), nazevSouboru('pdf'));
     } catch (e) { console.error(e); toast('Chyba PDF: ' + e.message, true); }
     finally { b.disabled = false; b.textContent = puv; }
@@ -474,7 +514,16 @@
     manifoldSlib.catch(() => { manifoldSlib = null; });
     return manifoldSlib;
   }
-  async function stlSit() { const w = await nactiManifold(); return SHSTL.postavKapesni(w, R); }
+  async function stlSit(co) { const w = await nactiManifold(); return co === 'kolik' ? SHSTL.postavKolik(w, R) : co === 'vse' ? SHSTL.postavVse(w, R) : SHSTL.postavKapesni(w, R); }
+  for (const [id, co, pr] of [['btnStlKolik', 'kolik', '_kolik'], ['btnStlVse', 'vse', '_vse']]) $(id).addEventListener('click', async () => {
+    const b = $(id), puv = b.textContent; b.disabled = true; b.textContent = 'Počítám STL…';
+    try {
+      const m = await stlSit(co);
+      stahni(new Blob([SHSTL.stlBinarni(m.poz, m.idx, 'kapesni slunecni hodiny ' + co)], { type: 'model/stl' }), nazevSouboru('stl', pr));
+      toast(co === 'kolik' ? m.koliky.map((q) => q.popis + ', průměr ' + f1(q.prumer, 2) + ' mm').join('; ') : 'STL: hranol a kolík(y) vedle sebe, ' + (m.idx.length / 3) + ' trojúhelníků.');
+    } catch (e) { console.error(e); toast('STL se nepodařilo vytvořit: ' + e.message, true); }
+    finally { b.disabled = false; b.textContent = puv; }
+  });
   $('btnStl').addEventListener('click', async () => {
     const b = $('btnStl'), puv = b.textContent; b.disabled = true; b.textContent = 'Počítám STL…';
     try { const m = await stlSit(); stahni(new Blob([SHSTL.stlBinarni(m.poz, m.idx, 'kapesni slunecni hodiny')], { type: 'model/stl' }), nazevSouboru('stl')); toast('STL: ' + (m.idx.length / 3) + ' trojúhelníků, objem ' + f1(m.objem / 1000, 1) + ' cm³.'); }
@@ -483,11 +532,34 @@
   });
   $('btnCanterbury').addEventListener('click', () => {
     // poloha katedrály v Canterbury; rozměry podle popisu originálu (61 × 16 mm celkem i s hlavicí) – tloušťka a délka kolíku jsou odhad
-    Object.assign(S.p, { sirka: 51.2798, delka: 1.0828, posunUTC: 0, kapSteny: 2, kapSloupce: 'canterbury', kapCasy: 'historicke', sirkaMm: 16, vyskaMm: 48, tloustkaMm: 5, prumerTyce: 1.5, nodusAuto: true, cislice: 'rimske' });
-    S.rozmery.kapesni = { tvar: 'obd', sirkaMm: 16, vyskaMm: 48, nodusMm: S.p.nodusMm, tloustkaMm: 5, prumerTyce: 1.5 };
-    doFormulare(); prepocti(); toast('Předvolba Canterbury: 51,28° s. š., destička 16 × 48 mm (tloušťka a kolík odhadem).');
+    // rozměry podle M. Arnaldiho (BSS Bulletin 24(i), 2012): destička 65 × 19 × 5 mm, kolík 25 mm (zima) / 20 mm (léto); průměr kolíku je odhad
+    Object.assign(S.p, { sirka: 51.2798, delka: 1.0828, posunUTC: 0, kapSteny: 2, kapSloupce: 'canterbury', kapCasy: 'historicke', sirkaMm: 19, vyskaMm: 65, tloustkaMm: 5, prumerTyce: 1.5, nodusAuto: false, nodusMm: 20, nodusZimaMm: 25, kapDvaKoliky: true, kapOriginal: true, cislice: 'rimske' });
+    S.rozmery.kapesni = { tvar: 'obd', sirkaMm: 19, vyskaMm: 65, nodusMm: 20, tloustkaMm: 5, prumerTyce: 1.5 };
+    doFormulare(); prepocti(); toast('Předvolba Canterbury: 51,28° s. š., destička 65 × 19 × 5 mm, kolík 25 / 20 mm (průměr kolíku odhadem).');
   });
-  $('btnSvg').addEventListener('click', () => stahni(SHV.svg(R.cifernik, { pomoc: S.p.popisky, cernobile: S.tisk.cernobile, okraj: 2 }), nazevSouboru('svg'), 'image/svg+xml'));
+  $('btnSvg').addEventListener('click', async () => { await nactiPismoStylu(S.p.styl); stahni(SHV.svg(R.cifernik, { pomoc: S.p.popisky, cernobile: S.tisk.cernobile, okraj: 2, vlozitPismo: true }), nazevSouboru('svg'), 'image/svg+xml'); });
+  // výběr stylu (miniatury) – styl nastaví i své výchozí číslice, datové křivky a tabulku
+  function nastavStyl(id) {
+    const st = SHStyly.STYLY[id]; if (!st) return;
+    S.p.styl = id;
+    if (st.cislice) S.p.cislice = st.cislice;
+    if (st.datum && (S.p.datum === 'zakladni' || S.p.datum === 'zadne')) S.p.datum = st.datum;
+    if (st.tabulka) S.p.tabulka = true;
+    doFormulare();
+    nactiPismoStylu(id).then(() => prepocti());
+  }
+  $('stylyMini').addEventListener('click', (e) => { const b = e.target.closest('button[data-styl]'); if (b) nastavStyl(b.dataset.styl); });
+  $('styl').addEventListener('change', () => nastavStyl($('styl').value));
+  const barvyZFormulare = () => {
+    if ($('vlastniBarvy').checked) { S.p.barvaDeska = $('barvaDeska').value; S.p.barvaCary = $('barvaCary').value; S.p.barvaAkcent = $('barvaAkcent').value; }
+    else { S.p.barvaDeska = ''; S.p.barvaCary = ''; S.p.barvaAkcent = ''; }
+    naplanuj();
+  };
+  for (const id of ['vlastniBarvy', 'barvaDeska', 'barvaCary', 'barvaAkcent']) $(id).addEventListener('input', barvyZFormulare);
+  $('vlastniBarvy').addEventListener('change', () => {
+    if ($('vlastniBarvy').checked && R && R.styl) { const b = R.styl.barvy; $('barvaDeska').value = b.deska || '#ffffff'; $('barvaCary').value = b.hodiny || '#000000'; $('barvaAkcent').value = b.datum || '#1f5fa8'; }
+    barvyZFormulare();
+  });
   $('btnGnSvg').addEventListener('click', () => stahni(SHV.svg(R.gnomon, { cernobile: S.tisk.cernobile, okraj: 2 }), nazevSouboru('svg', '_gnomon'), 'image/svg+xml'));
   $('btnDxf').addEventListener('click', () => stahni(SHV.dxf(R.cifernik, { pomoc: S.p.popisky }), nazevSouboru('dxf'), 'application/dxf'));
   $('btnReset').addEventListener('click', async () => {
@@ -512,9 +584,33 @@
     }
   });
 
+  /* ---------- 3D (three.js se načte, až bude karta vidět) ---------- */
+  let S3 = null, nacita3d = false;
+  function spust3d() {
+    if (S3 || nacita3d) return;
+    nacita3d = true;
+    const hotovo = () => {
+      try { $('obal3d').innerHTML = ''; S3 = SH3D.vytvor($('obal3d')); simuluj(); }
+      catch (e) { console.error(e); $('obal3d').innerHTML = '<div class="info chyba" style="padding:12px">3D pohled nelze spustit (WebGL): ' + e.message + '</div>'; }
+    };
+    if (window.THREE) { hotovo(); return; }
+    nactiSkript('lib/three.0.160.0.min.js').then(hotovo).catch((e) => { nacita3d = false; $('stav3d').textContent = 'three.js se nenačetl: ' + e.message; });
+  }
+  new IntersectionObserver((z) => { if (z.some((x) => x.isIntersecting)) spust3d(); }, { rootMargin: '200px' }).observe($('karta3d'));
+  $('b3dVychozi').addEventListener('click', () => S3 && S3.vychoziPohled());
+  $('b3dShora').addEventListener('click', () => S3 && S3.pohled(0, 89));
+  $('b3dJih').addEventListener('click', () => S3 && S3.pohled(0, 12));
+  $('b3dSlunce').addEventListener('click', () => {
+    if (!S3) return;
+    const pol = SH.polohaSlunce(msSim().ms, S.p.sirka, S.p.delka), v = pol.vektor;
+    S3.pohled(Math.atan2(v[0], -v[1]) / Math.PI * 180 + 14, Math.max(5, Math.min(80, pol.vyska + 6)));
+  });
+
   doFormulare();
   simTed(true);
   prepocti();
+  nactiPismoStylu(S.p.styl).then((b) => { if (b) prepocti(); });
+  setTimeout(miniatury, 50);
   // ladění / testy
-  window.SHApp = { get S() { return S; }, get R() { return R; }, prepocti, simuluj, nastavTyp, doFormulare, stlSit };
+  window.SHApp = { get S() { return S; }, get R() { return R; }, get S3() { return S3; }, prepocti, simuluj, nastavTyp, doFormulare, stlSit, spust3d };
 })();

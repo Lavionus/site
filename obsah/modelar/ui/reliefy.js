@@ -15,8 +15,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const rezim = () => vybrano(okno, 'toRezim');
     function aktualizuj() {
       if (bezi) return;                                  // během načítání písma tlačítko nepovolovat
-      okno.querySelectorAll('[data-to]').forEach(el => { el.hidden = el.dataset.to !== rezim(); });
+      okno.querySelectorAll('[data-to]').forEach(el => { el.hidden = !el.dataset.to.split(' ').includes(rezim()); });
       const r = rezim();
+      $('toOk').textContent = r === 'plocha' ? 'Umístit kliknutím' : 'Vytvořit';
       $('toChyba').textContent = r === 'valec' && !valec ? '⚠ Vyber nejdřív jeden válec (pak otevři toto okno znovu), nebo zvol „Po kružnici“.' : '';
       $('toInfo').textContent = r === 'valec' && valec ? `Válec ⌀\u00a0${M.mm(valec.rozmer[0], 1)}\u00a0mm, obvod ${M.mm(Math.PI * valec.rozmer[0], 1)}\u00a0mm, výška ${M.mm(valec.rozmer[2], 1)}\u00a0mm.` : '';
       $('toOk').disabled = !!$('toChyba').textContent || !$('toText').value.trim();
@@ -25,7 +26,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const v = M.vybraneVolne();
       valec = v.length === 1 && v[0].druh === 'valec' && v[0].role !== 'dira' && Math.abs(v[0].rozmer[0] - v[0].rozmer[1]) < 1e-3 * v[0].rozmer[0] ? v[0] : null;
       bezi = false; zruseno = false;
-      okno.querySelector(`input[name=toRezim][value=${valec ? 'valec' : 'kruh'}]`).checked = true;
+      okno.querySelector(`input[name=toRezim][value=${valec ? 'valec' : 'plocha'}]`).checked = true;
       if (valec) $('toVyska').value = M.mm(valec.rozmer[2] / 2, 1);
       okno.showModal(); aktualizuj();
     };
@@ -65,8 +66,55 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       M.nastavVyber([u2.id]);
       return u2.id;
     };
+    // ------------------------------------------------------------ text na plochu (klik na těleso)
+    let cekaTextNaPlochu = null;                   // hodnoty z okna, čeká se na klik do scény
+    /** Klik v režimu textNaPlochu (z vyber.js): nalepí text na těleso pod kurzorem. */
+    M.klikTextNaPlochu = async function (zasah) {
+      const v = cekaTextNaPlochu;
+      if (!v) { M.nastavRezim(null); return; }
+      const u = zasah && M.najdiUzel(M.app.dok, zasah.id);
+      if (!u || u.role === 'dira') { Dialog.info('Klikni na plné těleso, na které má text přijít.'); return; }
+      const sit = S.telesa.svetovaSit(u.id);
+      if (!sit) { Dialog.info('Těleso se ještě počítá – zkus to za chvíli.'); return; }
+      M.nastavRezim(null);
+      cekaTextNaPlochu = null;
+      M.cekej('textPlocha', 'Načítám písmo…', null, 0);
+      try {
+        const font = await FONTY.opentype(v.pismo);
+        let k = M.konturyTextu(font, v.text, v.velikost);
+        if (!k.length) throw new Error('text nemá žádné obrysy (jen mezery?)');
+        let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        for (const c of k) for (const [x, y] of c) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+        k = k.map(c => c.map(([x, y]) => [x - (x0 + x1) / 2, y - (y0 + y1) / 2]));
+        // směr účaří: vpravo podle kamery (text se čte z pohledu, ze kterého se kliklo), natočený kolem normály plochy
+        const kam = S.kamera.aktivni(), vpravo = new THREE.Vector3(1, 0, 0).applyQuaternion(kam.quaternion);
+        const n = zasah.normala.clone().normalize();
+        const smer = vpravo.addScaledVector(n, -vpravo.dot(n)).normalize().applyAxisAngle(n, (v.uhel || 0) * M.st);
+        M.cekej('textPlocha', 'Lepím text na plochu…', null, 0);
+        await M.dejVykreslit();
+        const krok = M.omez(v.velikost / 25, 0.12, 0.6);
+        const dok0 = M.app.dok;
+        const r = M.textNaTeleso(dok0, u.id, sit, k, { bod: zasah.bod.toArray(), smer: smer.toArray(), vyska: v.hloubka, hloubka: v.hloubka,
+          vzor: v.vzor, krok, nazev: 'Text ' + v.text.slice(0, 30) });
+        if (M.app.dok !== dok0) return;
+        M.zmenDokument(r.dok, v.vzor === 'vyryty' ? 'Vyrytý text' : 'Text na plochu');
+        M.nastavVyber([r.id]);
+      } catch (e) { Dialog.chyba('Text nejde nalepit: ' + e.message); }
+      finally { M.hotovoCekani('textPlocha'); }
+    };
+    M.na('rezim', r => { if (r !== 'textNaPlochu') cekaTextNaPlochu = null; });
+
     $('toOk').onclick = async () => {
       if (bezi) return;
+      if (rezim() === 'plocha') {
+        const text = $('toText').value.trim();
+        if (!text) return;
+        cekaTextNaPlochu = { text, pismo: $('toPismo').value, velikost: M.omez(cti('toVelikost') || 6, 0.5, 300), vzor: vybrano(okno, 'toVzor'),
+          hloubka: M.omez(cti('toHloubka') || 0.8, 0.05, 20), uhel: cti('toUhel') || 0 };
+        okno.close();
+        M.nastavRezim('textNaPlochu');
+        return;
+      }
       const vy = cti('toVyska');
       const v = { rezim: rezim(), id: valec && valec.id, text: $('toText').value.trim(), pismo: $('toPismo').value, velikost: M.omez(cti('toVelikost') || 6, 1, 300),
         vzor: vybrano(okno, 'toVzor'), hloubka: M.omez(cti('toHloubka') || 0.8, 0.1, 20), vyska: valec ? (isFinite(vy) && $('toVyska').value.trim() ? M.omez(vy, 0, valec.rozmer[2]) : valec.rozmer[2] / 2) : 0, natoceni: cti('toNatoceni') || 0,

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌳 Dřevo – pohyb, průhyb, povrchy</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script src="drevo_vypocty/data.js"></script>
+<script src="drevo_vypocty/jadro.js"></script>
+<script src="drevo_vypocty/grafy.js"></script>
+<script src="drevo_vypocty/princip.js"></script>
+<script src="drevo_vypocty/vystup.js"></script>
+<script src="drevo_vypocty/scena3d.js"></script>
+<script src="drevo_vypocty/ui.js" defer></script>
+<style>
+:root{--serie-1:#3987e5;--serie-2:#d95926;--serie-3:#199e70;--serie-4:#9085e9}
+:root[data-theme="light"]{--serie-1:#2a78d6;--serie-2:#eb6834;--serie-3:#1baf7a;--serie-4:#6250d6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:18px 14px 40px}
+h1{font-size:1.55rem;font-weight:600;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:14px}
+.hlavni-zalozky{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:1500px;margin:0 auto 14px;border-bottom:1px solid var(--border)}
+.hlavni-zalozky button{background:none;border:none;border-bottom:3px solid transparent;color:var(--text-muted);padding:9px 14px;cursor:pointer;font-size:.95rem;font-family:inherit}
+.hlavni-zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.hlavni-zalozky kbd{margin-left:4px}
+.layout{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:16px;align-items:start;max-width:1500px;margin:0 auto}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:14px;margin-bottom:14px;min-width:0}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+.card h3{font-size:.9rem;margin:10px 0 4px}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:9px 0 3px}
+label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.86rem;margin:8px 0 2px;cursor:pointer}
+label.chk input{width:auto;margin-top:2px;accent-color:var(--accent)}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.92rem;font-family:inherit;min-width:0}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.r4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn-mini{padding:4px 8px;font-size:.78rem;font-weight:500}
+.btn:disabled{opacity:.5;cursor:default}
+.tlacitka{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tlacitka .btn{flex:1 1 auto}
+.info{font-size:.82rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
+.info b{color:var(--text)}
+.zdroj{font-size:.74rem;color:var(--text-faint);margin-top:4px}
+.panel[hidden]{display:none}
+.navod{font-size:.86rem;line-height:1.55;color:var(--text)}
+.navod h3{font-size:.92rem;margin:12px 0 4px}
+.navod p{margin:4px 0}
+.navod ol,.navod ul{padding-left:20px}
+.navod li{margin:3px 0}
+.navod code{font-size:.82rem;background:var(--bg-control);padding:1px 4px;border-radius:3px;overflow-wrap:anywhere}
+.udaje{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:3px 16px;font-size:.84rem;margin-top:6px}
+.udaje div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--border);padding:3px 0}
+.udaje span:first-child{color:var(--text-faint)}
+.udaje span:last-child{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.hlavni-cislo{display:flex;gap:18px;flex-wrap:wrap;margin:4px 0 8px}
+.hlavni-cislo div{min-width:120px}
+.hlavni-cislo b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.hlavni-cislo span{font-size:.76rem;color:var(--text-faint)}
+.verdikt{padding:8px 10px;border-radius:6px;border-left:4px solid var(--border-strong);background:var(--bg-control);font-size:.9rem;margin-bottom:8px;line-height:1.4}
+.verdikt.ok{border-left-color:var(--ok)} .verdikt.chyba{border-left-color:var(--danger)} .verdikt.varovani{border-left-color:var(--warn)}
+table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--border);padding:4px 5px;text-align:left;vertical-align:middle}
+th{color:var(--text-faint);font-weight:500}
+td.c,th.c{text-align:right;white-space:nowrap}
+.tab-obal{overflow-x:auto;max-width:100%}
+table.edit input,table.edit select{padding:4px 5px;font-size:.82rem}
+table.edit td{padding:2px 3px}
+table.edit input[type=number]{min-width:56px}
+table.edit .smaz{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:2px 6px}
+.graf{background:var(--bg-elevated);border-radius:6px;min-width:0}
+.graf svg{display:block;width:100%;height:auto;color:var(--text)}
+.graf-tip{position:absolute;display:none;pointer-events:none;background:var(--bg);border:1px solid var(--border-strong);border-radius:6px;padding:6px 8px;font-size:.76rem;line-height:1.45;box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:5;white-space:nowrap}
+.graf-tip i{display:inline-block;width:10px;height:3px;margin-right:5px;vertical-align:middle}
+.graf-tip-x{color:var(--text-faint);margin-bottom:2px}
+.dva{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media(max-width:700px){.dva{grid-template-columns:minmax(0,1fr)}}
+#obal3d{height:380px;border-radius:6px;overflow:hidden;border:1px solid var(--border-strong);background:var(--bg-deep);position:relative}
+@media(max-width:600px){#obal3d{height:280px}}
+.pod-zalozky{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.pod-zalozky button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:inherit;font-size:.82rem}
+.pod-zalozky button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.mesice{display:grid;grid-template-columns:auto repeat(12,minmax(0,1fr));gap:2px;font-size:.72rem;align-items:center}
+.mesice input{padding:3px 1px;font-size:.74rem;text-align:center}
+.mesice span{color:var(--text-faint);text-align:center}
+details{margin-top:8px}
+summary{cursor:pointer;font-size:.84rem;color:var(--text)}
+.projekty{list-style:none;padding:0;margin:6px 0 0;font-size:.84rem;max-height:200px;overflow:auto}
+.projekty li{display:flex;gap:6px;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)}
+.projekty li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projekty button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:.78rem;font-family:inherit}
+.skryte{display:none!important}
+kbd{font-family:inherit;font-size:.72rem;border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;background:var(--bg-control)}
+.plan td:first-child{white-space:nowrap;color:var(--text-faint)}
+.plan tr.den td{background:var(--bg-control);font-weight:600;color:var(--text)}
+.stitek{display:inline-block;font-size:.7rem;padding:0 5px;border-radius:3px;border:1px solid var(--border-strong);color:var(--text-faint)}
+.vystraha{border-left:3px solid var(--warn);padding:5px 8px;background:var(--bg-control);border-radius:0 5px 5px 0;font-size:.82rem;margin:6px 0;line-height:1.4}
+@media(max-width:420px){.r4{grid-template-columns:repeat(2,minmax(0,1fr))}.hlavni-zalozky button{padding:8px 8px;font-size:.86rem}.hlavni-zalozky kbd{display:none}}
+</style>
+</head>
+<body>
+<h1>🌳 Dřevo – pohyb, průhyb, povrchy</h1>
+<p class="sub">Rovnovážná vlhkost a pohyb masivu podle klimatu · mezery výplní, desek a palubek · průhyb polic se složeným průřezem a dotvarováním · spotřeba a plán povrchové úpravy · objem, hmotnost a sušení řeziva</p>
+
+<nav class="hlavni-zalozky" role="tablist" id="zalozky">
+  <button role="tab" data-tab="pohyb" aria-selected="true">💧 Pohyb dřeva<kbd>1</kbd></button>
+  <button role="tab" data-tab="police" aria-selected="false">📏 Průhyb polic<kbd>2</kbd></button>
+  <button role="tab" data-tab="povrch" aria-selected="false">🖌️ Povrchy<kbd>3</kbd></button>
+  <button role="tab" data-tab="objem" aria-selected="false">🪵 Objem a hmotnost<kbd>4</kbd></button>
+</nav>
+
+<!-- ======================= 1. POHYB ======================= -->
+<section class="panel" data-panel="pohyb">
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2>🌳 Dřevina <small id="zdrojDreviny"></small></h2>
+      <select data-k="pohyb.drevina" id="selDrevina"></select>
+      <div class="r3">
+        <div><label title="tangenciální koeficient rozměrové změny, % na 1 % vlhkosti">C<sub>T</sub> (%/%)</label><input type="number" step="0.001" min="0.05" max="1" data-k="pohyb.ctP"></div>
+        <div><label title="radiální koeficient, % na 1 % vlhkosti">C<sub>R</sub> (%/%)</label><input type="number" step="0.001" min="0.02" max="1" data-k="pohyb.crP"></div>
+        <div><label>Hustota 12 % (kg/m³)</label><input type="number" step="5" min="100" max="1300" data-k="pohyb.rho"></div>
+      </div>
+      <p class="zdroj">Typické hodnoty, editovatelné. Tabulka všech dřevin je dole na stránce.</p>
+    </div>
+    <div class="card">
+      <h2>🪵 Deska a řez</h2>
+      <div class="r2">
+        <div><label>Šířka napříč vlákny (mm)</label><input type="number" min="10" max="3000" step="1" data-k="pohyb.sirka"></div>
+        <div><label>Tloušťka (mm)</label><input type="number" min="3" max="300" step="1" data-k="pohyb.tloustka"></div>
+      </div>
+      <label>Orientace letokruhů</label>
+      <select data-k="pohyb.rez">
+        <option value="tang">tangenciální řez (flat-sawn, letokruhy ∥ plocha)</option>
+        <option value="rad">radiální / zrcadlový řez (quarter-sawn)</option>
+        <option value="uhel">zadat úhel letokruhů k ploše</option>
+        <option value="kmen">z polohy desky v kmeni</option>
+      </select>
+      <div data-zobraz="pohyb.rez=uhel"><label>Úhel letokruhů k ploše (°) – 0 = tang., 90 = rad.</label><input type="number" min="0" max="90" step="1" data-k="pohyb.uhel"></div>
+      <div data-zobraz="pohyb.rez=kmen" class="r2">
+        <div><label title="vodorovný posun středu desky od dřeně">Posun středu od dřeně (mm)</label><input type="number" min="-1000" max="1000" step="1" data-k="pohyb.x0"></div>
+        <div><label title="vzdálenost spodní plochy desky od dřeně">Plocha od dřeně (mm)</label><input type="number" min="0" max="1000" step="1" data-k="pohyb.y0"></div>
+      </div>
+      <div class="graf" id="grafKmen" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h2>🌡️ Klima <small>12 měsíců</small></h2>
+      <select data-k="pohyb.klima" id="selKlima"></select>
+      <div data-zobraz="pohyb.klima=om_in|om_out">
+        <label>Místo (Open-Meteo, historická data posledních 3 let)</label>
+        <div class="r2"><input type="text" id="omMisto" data-k="pohyb.omMisto" placeholder="např. Brno"><div style="display:flex;gap:6px"><button class="btn btn-mini" type="button" id="btnOm">Načíst</button><button class="btn btn-sec btn-mini" type="button" id="btnOmPoloha" title="Moje poloha">📍</button></div></div>
+        <p class="info" id="omStav"></p>
+        <div data-zobraz="pohyb.klima=om_in" class="r3">
+          <div><label title="teplota vytápění">Topení (°C)</label><input type="number" step="0.5" min="10" max="28" data-k="pohyb.tTopeni"></div>
+          <div><label title="vnitřní produkce vlhkosti – EN ISO 13788: 0–270 Pa kancelář, 270–540 byt, výš kuchyně, koupelna">Δp (Pa)</label><input type="number" step="10" min="0" max="1500" data-k="pohyb.dp"></div>
+          <div><label title="o kolik je v létě uvnitř tepleji než venku">Léto +°C</label><input type="number" step="0.5" min="-5" max="10" data-k="pohyb.dtLeto"></div>
+        </div>
+      </div>
+      <details id="detMesice"><summary>Upravit měsíční hodnoty</summary>
+        <div class="mesice" id="mesice" style="margin-top:6px"></div>
+      </details>
+      <div class="r2">
+        <div><label title="Časová konstanta – za τ dní dřevo dožene 63 % změny. 20 mm bez úpravy ~15 d, 40 mm ~50 d, lak 2–5×">Zpoždění dřeva τ (dny)</label><input type="number" min="0" max="365" step="1" data-k="pohyb.tau"></div>
+        <div><label>Vlhkost při výrobě (%)</label><div style="display:flex;gap:4px"><input type="number" min="3" max="28" step="0.1" data-k="pohyb.mcVyroba"><button class="btn btn-sec btn-mini" type="button" id="btnMcPrumer" title="= roční průměr">⌀</button></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🧮 Rovnovážná vlhkost (EMC)</h2>
+      <div class="r2">
+        <div><label>Teplota (°C)</label><input type="number" min="-20" max="90" step="0.5" data-k="pohyb.emcT"></div>
+        <div><label>Relativní vlhkost (%)</label><input type="number" min="1" max="99" step="1" data-k="pohyb.emcRH"></div>
+      </div>
+      <div class="hlavni-cislo"><div><b id="emcVysl">–</b><span>EMC dřeva</span></div><div><b id="emcInv">–</b><span id="emcInvPopis">RH pro cílovou vlhkost</span></div></div>
+      <div class="r2"><div><label>Cílová vlhkost dřeva (%)</label><input type="number" min="2" max="25" step="0.5" data-k="pohyb.emcCil"></div><div></div></div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2>📈 Roční průběh vlhkosti a šířky <small id="klimaPopis"></small></h2>
+      <div class="hlavni-cislo" id="pohybCisla"></div>
+      <div class="graf" id="grafRok"></div>
+      <div class="graf" id="grafSirka" style="margin-top:10px"></div>
+      <div class="udaje" id="pohybUdaje"></div>
+      <div id="pohybVarovani"></div>
+    </div>
+    <div class="card">
+      <h2>📐 Doporučené mezery <small>z rozsahu vlhkosti dřeva v roce</small></h2>
+      <div class="pod-zalozky" id="mezeryVolba">
+        <button type="button" data-m="ram" aria-pressed="true">Výplň rámu</button>
+        <button type="button" data-m="stul" aria-pressed="false">Deska stolu</button>
+        <button type="button" data-m="palubky" aria-pressed="false">Palubky / obklad</button>
+      </div>
+      <div data-mp="ram">
+        <div class="r4">
+          <div><label title="viditelný otvor rámu napříč vlákny výplně">Světlost (mm)</label><input type="number" min="20" max="3000" data-k="pohyb.ramSvetlost"></div>
+          <div><label>Hloubka drážky (mm)</label><input type="number" min="3" max="40" step="0.5" data-k="pohyb.ramDrazka"></div>
+          <div><label title="bezpečnostní vůle na každé straně navíc">Rezerva (mm)</label><input type="number" min="0" max="5" step="0.1" data-k="pohyb.ramRezerva"></div>
+          <div><label>Min. zasunutí (mm)</label><input type="number" min="1" max="20" step="0.5" data-k="pohyb.ramZasunuti"></div>
+        </div>
+        <div class="dva" style="margin-top:8px"><div class="graf" id="schemaRam"></div><div class="udaje" id="ramUdaje" style="grid-template-columns:minmax(0,1fr)"></div></div>
+      </div>
+      <div data-mp="stul" hidden>
+        <div class="r4">
+          <div><label>Šířka desky (mm)</label><input type="number" min="100" max="3000" data-k="pohyb.stulSirka"></div>
+          <div><label>Pevný bod</label><select data-k="pohyb.stulPevny"><option value="stred">uprostřed</option><option value="zadni">zadní hrana</option></select></div>
+          <div><label>Rozteč úchytů (mm)</label><input type="number" min="50" max="1000" data-k="pohyb.stulRozestup"></div>
+          <div><label>Průměr šroubu (mm)</label><input type="number" min="2" max="12" step="0.5" data-k="pohyb.stulSroub"></div>
+        </div>
+        <div class="udaje" id="stulUdaje"></div>
+        <div class="tab-obal" style="margin-top:8px"><table id="tabStul"></table></div>
+      </div>
+      <div data-mp="palubky" hidden>
+        <div class="r3">
+          <div><label>Krycí šířka (mm)</label><input type="number" min="20" max="400" data-k="pohyb.palKryci"></div>
+          <div><label>Počet palubek</label><input type="number" min="1" max="500" data-k="pohyb.palPocet"></div>
+          <div><label>Vlhkost při montáži (%)</label><input type="number" min="4" max="25" step="0.5" data-k="pohyb.palMontaz"></div>
+        </div>
+        <div class="udaje" id="palUdaje"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📉 Sorpční izotermy <small>EMC podle RH pro různé teploty</small></h2>
+      <div class="graf" id="grafIzotermy"></div>
+    </div>
+    <div class="card">
+      <h2>📋 Tabulka dřevin</h2>
+      <div class="tab-obal"><table id="tabDreviny"></table></div>
+      <p class="zdroj">USDA = Wood Handbook (USDA FPL, GTR-190, 2010, public domain), tab. 4-5 a 5-3a. EU = typické hodnoty z evropské literatury, orientační. Platí pro vlhkost cca 6–14 %; jednotlivé kusy se liší o ±15–25 %.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= 2. POLICE ======================= -->
+<section class="panel" data-panel="police" hidden>
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2>🧱 Materiál police</h2>
+      <select data-k="police.material" id="selMaterial"></select>
+      <div class="r4">
+        <div><label title="modul pružnosti v ohybu ve směru rozpětí">E (MPa)</label><input type="number" min="100" max="30000" step="100" data-k="police.E"></div>
+        <div><label>ρ (kg/m³)</label><input type="number" min="100" max="1500" step="10" data-k="police.rho"></div>
+        <div><label title="součinitel dotvarování EN 1995-1-1, třída provozu 1">k<sub>def</sub></label><input type="number" min="0" max="5" step="0.05" data-k="police.kdef"></div>
+        <div><label title="orientační pevnost v ohybu">f<sub>m</sub> (MPa)</label><input type="number" min="1" max="150" step="1" data-k="police.fm"></div>
+      </div>
+      <div class="r3">
+        <div><label>Délka (mm)</label><input type="number" min="100" max="5000" step="10" data-k="police.delka"></div>
+        <div><label>Hloubka (mm)</label><input type="number" min="30" max="1500" step="5" data-k="police.hloubka"></div>
+        <div><label>Tloušťka (mm)</label><input type="number" min="3" max="100" step="1" data-k="police.tloustka"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📚 Zatížení</h2>
+      <select data-k="police.zatizeni" id="selZatizeni"></select>
+      <div class="r3">
+        <div><label>Užitné (kg/m)</label><input type="number" min="0" max="1000" step="1" data-k="police.kgm"></div>
+        <div><label>Bodové (kg)</label><input type="number" min="0" max="500" step="0.5" data-k="police.bodKg"></div>
+        <div><label>Poloha bodu (mm)</label><input type="number" min="0" max="5000" step="10" data-k="police.bodX"></div>
+      </div>
+      <label class="chk"><input type="checkbox" data-k="police.vlastniTiha"> Započítat vlastní tíhu police a lišt</label>
+      <label class="chk"><input type="checkbox" data-k="police.dotvarovani"> Dotvarování (trvalé zatížení, δ × (1 + k<sub>def</sub>))</label>
+      <label>Limit průhybu</label>
+      <select data-k="police.limit" id="selLimit"></select>
+    </div>
+    <div class="card">
+      <h2>📍 Podpory</h2>
+      <select data-k="police.podporyTyp">
+        <option value="konce">na koncích (kolíčky, nosníky)</option>
+        <option value="n">rovnoměrně N podpor</option>
+        <option value="vlastni">vlastní polohy</option>
+      </select>
+      <div class="r2" data-zobraz="police.podporyTyp=konce|n">
+        <div data-zobraz="police.podporyTyp=n"><label>Počet podpor</label><input type="number" min="2" max="12" step="1" data-k="police.podporyN"></div>
+        <div><label title="vzdálenost krajní podpory od konce police (převis)">Odsazení od konce (mm)</label><input type="number" min="0" max="2000" step="5" data-k="police.odsazeni"></div>
+      </div>
+      <div data-zobraz="police.podporyTyp=vlastni"><label>Polohy podpor (mm, oddělené čárkou)</label><input type="text" data-k="police.podporyVlastni"></div>
+      <label class="chk"><input type="checkbox" data-k="police.vetknuti"> Krajní podpory vetknuté (police v drážce lepená / pevně šroubovaná)</label>
+    </div>
+    <div class="card">
+      <h2>➕ Výztuhy <small>složený průřez, lepené po celé délce</small></h2>
+      <label class="chk"><input type="checkbox" data-k="police.lista"> Přední lišta</label>
+      <div data-zobraz="police.lista=true">
+        <select data-k="police.listaMat" id="selListaMat"></select>
+        <div class="r4">
+          <div><label>Tl. (mm)</label><input type="number" min="2" max="100" step="1" data-k="police.listaB"></div>
+          <div><label>Výška (mm)</label><input type="number" min="2" max="200" step="1" data-k="police.listaH"></div>
+          <div><label>E (MPa)</label><input type="number" min="100" max="30000" step="100" data-k="police.listaE"></div>
+          <div><label>Poloha</label><select data-k="police.listaPoloha"><option value="horni">líc nahoře</option><option value="dolni">líc dole</option><option value="stred">na střed</option></select></div>
+        </div>
+      </div>
+      <label class="chk"><input type="checkbox" data-k="police.zadni"> Zadní lišta</label>
+      <div data-zobraz="police.zadni=true">
+        <select data-k="police.zadniMat" id="selZadniMat"></select>
+        <div class="r4">
+          <div><label>Tl. (mm)</label><input type="number" min="2" max="100" step="1" data-k="police.zadniB"></div>
+          <div><label>Výška (mm)</label><input type="number" min="2" max="200" step="1" data-k="police.zadniH"></div>
+          <div><label>E (MPa)</label><input type="number" min="100" max="30000" step="100" data-k="police.zadniE"></div>
+          <div><label>Poloha</label><select data-k="police.zadniPoloha"><option value="horni">líc nahoře</option><option value="dolni">líc dole</option><option value="stred">na střed</option></select></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2>📏 Výsledek</h2>
+      <div id="policeVerdikt"></div>
+      <div class="hlavni-cislo" id="policeCisla"></div>
+      <div class="graf" id="bokorys"></div>
+      <div class="dva" style="margin-top:10px">
+        <div class="graf" id="prurez"></div>
+        <div class="udaje" id="policeUdaje" style="grid-template-columns:minmax(0,1fr);align-content:start"></div>
+      </div>
+    </div>
+    <div class="card" id="karta3d">
+      <h2>🧊 3D náhled <small>průhyb zvětšen · táhněte myší / prstem, kolečko = přiblížení</small></h2>
+      <div id="obal3d"><div class="info" id="stav3d" style="padding:12px">3D se načte, až bude karta vidět…</div></div>
+      <div class="r3" style="align-items:end">
+        <div><label>Zvětšení průhybu × (0 = auto)</label><input type="number" min="0" max="500" step="1" data-k="police.zvetseni"></div>
+        <label class="chk"><input type="checkbox" data-k="police.barvit"> Barva podle průhybu</label>
+        <label class="chk"><input type="checkbox" data-k="police.knihy"> Knihy</label>
+      </div>
+      <div class="tlacitka">
+        <button class="btn btn-sec btn-mini" type="button" data-pohled="iso">Izometrie</button>
+        <button class="btn btn-sec btn-mini" type="button" data-pohled="predni">Zepředu</button>
+        <button class="btn btn-sec btn-mini" type="button" data-pohled="shora">Shora</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📈 Průhybová čára a moment</h2>
+      <div class="graf" id="grafPruhyb"></div>
+      <div class="graf" id="grafMoment" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h2>🔁 Porovnání materiálů <small>stejné rozměry, zatížení a podpory</small></h2>
+      <div class="tab-obal"><table id="tabPorovnani"></table></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= 3. POVRCHY ======================= -->
+<section class="panel" data-panel="povrch" hidden>
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2>📐 Plocha</h2>
+      <div class="pod-zalozky" id="plochaVolba">
+        <button type="button" data-v="kusovnik" aria-pressed="true">Z kusovníku</button>
+        <button type="button" data-v="rucne" aria-pressed="false">Zadat m²</button>
+      </div>
+      <div data-zobraz="povrch.rezim=rucne"><label>Plocha (m²)</label><input type="number" min="0.01" max="10000" step="0.01" data-k="povrch.plochaRucne"></div>
+      <div data-zobraz="povrch.rezim=kusovnik">
+        <label>Předvolba výrobku</label>
+        <div class="r2"><select id="selPredvolbaKus"></select><button class="btn btn-sec" type="button" id="btnPredvolbaKus">Použít</button></div>
+        <p class="info">Díly upravíte v tabulce vpravo.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🖌️ Systém úpravy <small>v pořadí nanášení</small></h2>
+      <div id="systemSeznam"></div>
+      <div class="r2" style="margin-top:8px"><select id="selPridatNater"></select><button class="btn btn-sec" type="button" id="btnPridatNater">+ Přidat</button></div>
+      <div class="r2">
+        <div><label>Nanášení</label><select data-k="povrch.nanaseni" id="selNanaseni"></select></div>
+        <div><label>Rezerva (%)</label><input type="number" min="0" max="100" step="1" data-k="povrch.rezerva"></div>
+      </div>
+      <label>Velikosti balení (l, oddělené čárkou)</label>
+      <input type="text" data-k="povrch.baleni">
+    </div>
+    <div class="card">
+      <h2>🗓️ Plán prací</h2>
+      <div class="r3">
+        <div><label>Začátek (h)</label><input type="number" min="0" max="23.5" step="0.5" data-k="povrch.start"></div>
+        <div><label>Okno od (h)</label><input type="number" min="0" max="23" step="0.5" data-k="povrch.zacatek"></div>
+        <div><label>Okno do (h)</label><input type="number" min="1" max="24" step="0.5" data-k="povrch.konec"></div>
+      </div>
+      <label class="chk"><input type="checkbox" data-k="povrch.zvednout"> Zvednout vlákno před vodou ředitelnou hmotou</label>
+    </div>
+  </div>
+  <div>
+    <div class="card" data-zobraz="povrch.rezim=kusovnik">
+      <h2>📋 Kusovník <small id="kusSouhrn"></small></h2>
+      <div class="tab-obal"><table class="edit" id="tabKus"></table></div>
+      <div class="tlacitka"><button class="btn btn-sec" type="button" id="btnPridatDil">+ Díl</button></div>
+    </div>
+    <div class="card">
+      <h2>🧴 Spotřeba</h2>
+      <div class="hlavni-cislo" id="povrchCisla"></div>
+      <div class="tab-obal"><table id="tabSpotreba"></table></div>
+      <p class="zdroj">Vydatnosti a časy jsou typické orientační hodnoty – přednost má technický list výrobku. Čela pijí 2–3× víc.</p>
+    </div>
+    <div class="card">
+      <h2>🗓️ Plán po dnech <small id="planSouhrn"></small></h2>
+      <div class="graf" id="grafPlan"></div>
+      <div class="tab-obal" style="margin-top:8px"><table class="plan" id="tabPlan"></table></div>
+      <div class="vystraha">⚠️ Hadry nasáklé olejem se mohou samovolně vznítit – rozložit naplocho venku nebo uložit do kovové nádoby s vodou.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= 4. OBJEM ======================= -->
+<section class="panel" data-panel="objem" hidden>
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2>⚙️ Nastavení řezného seznamu</h2>
+      <div class="r2">
+        <div><label title="prořez, vady, hoblování – přidá se k objemu pro nákup">Odpad / prořez (%)</label><input type="number" min="0" max="200" step="1" data-k="objem.odpad"></div>
+        <div><label>Vlhkost pro hmotnost (%)</label><input type="number" min="0" max="150" step="0.5" data-k="objem.mc"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🌲 Kulatina a prostorové metry</h2>
+      <select data-k="objem.kulMetoda"><option value="huber">Huber – střední průměr</option><option value="smalian">Smalian – průměry čel</option></select>
+      <div class="r4">
+        <div><label id="lKulD">d střed (cm)</label><input type="number" min="1" max="300" step="0.5" data-k="objem.kulD"></div>
+        <div data-zobraz="objem.kulMetoda=smalian"><label>d₂ (cm)</label><input type="number" min="1" max="300" step="0.5" data-k="objem.kulD2"></div>
+        <div><label>Délka (m)</label><input type="number" min="0.1" max="40" step="0.1" data-k="objem.kulL"></div>
+        <div><label>Kusů</label><input type="number" min="1" max="1000" step="1" data-k="objem.kulKs"></div>
+      </div>
+      <div class="udaje" id="kulUdaje"></div>
+      <div class="r2">
+        <div><label>Prostorové metry (prm)</label><input type="number" min="0" max="10000" step="0.5" data-k="objem.prm"></div>
+        <div><label title="rovnané štípané ~0,6–0,7, sypané ~0,4">Koeficient plm/prm</label><input type="number" min="0.2" max="0.9" step="0.01" data-k="objem.prmFaktor"></div>
+      </div>
+      <div class="udaje" id="prmUdaje"></div>
+    </div>
+    <div class="card">
+      <h2>💧 Sušení a vlhkost</h2>
+      <h3>Úbytek hmotnosti sušením</h3>
+      <div class="r3">
+        <div><label>Hmotnost nyní (kg)</label><input type="number" min="0.001" step="0.1" data-k="objem.m1"></div>
+        <div><label>Vlhkost nyní (%)</label><input type="number" min="0" max="250" step="0.5" data-k="objem.mc1"></div>
+        <div><label>Cílová vlhkost (%)</label><input type="number" min="0" max="250" step="0.5" data-k="objem.mc2"></div>
+      </div>
+      <div class="udaje" id="susUdaje"></div>
+      <h3>Vlhkost vážením (sušárenská metoda)</h3>
+      <div class="r2">
+        <div><label>Hmotnost vzorku (g)</label><input type="number" min="0.001" step="0.1" data-k="objem.mVaz"></div>
+        <div><label>Po vysušení 103 °C (g)</label><input type="number" min="0.001" step="0.1" data-k="objem.m0Vaz"></div>
+      </div>
+      <div class="udaje" id="vazUdaje"></div>
+      <h3>Absolutní ↔ relativní vlhkost</h3>
+      <div class="r2">
+        <div><label>Absolutní MC (% na sušinu)</label><input type="number" min="0" max="300" step="0.5" id="inAbs"></div>
+        <div><label>Relativní w (% na mokrou hm.)</label><input type="number" min="0" max="75" step="0.5" id="inRel"></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2>🪵 Řezný seznam <small id="rezSouhrn"></small></h2>
+      <div class="hlavni-cislo" id="objemCisla"></div>
+      <div class="tab-obal"><table class="edit" id="tabRez"></table></div>
+      <div class="tlacitka"><button class="btn btn-sec" type="button" id="btnPridatRez">+ Položka</button><button class="btn btn-sec" type="button" id="btnRezZKus">Převzít kusovník z Povrchů</button><button class="btn btn-sec" type="button" id="btnCsv">CSV</button></div>
+      <p class="zdroj">Ceny jsou ilustrativní – přepište podle dodavatele. Hmotnost: rozměry platí při 12 %, sušina = objem × ρ₁₂ / 1,12, hmotnost = sušina × (1 + MC).</p>
+    </div>
+    <div class="card">
+      <h2>📈 Hmotnost seznamu podle vlhkosti</h2>
+      <div class="graf" id="grafHmotnost"></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<div class="layout" style="margin-top:0">
+  <div>
+    <div class="card">
+      <h2>💾 Projekty a export</h2>
+      <label for="nazevProjektu">Název projektu</label>
+      <div class="r2"><input id="nazevProjektu" type="text" maxlength="60" placeholder="např. Knihovna do obýváku"><button class="btn" id="btnUlozit" type="button">💾 Uložit</button></div>
+      <ul class="projekty" id="projekty"></ul>
+      <div class="tlacitka">
+        <button class="btn" id="btnPdf" type="button">📄 PDF report</button>
+        <button class="btn btn-sec" id="btnSvg" type="button">SVG grafů</button>
+      </div>
+      <div class="tlacitka">
+        <button class="btn btn-sec" id="btnExportJson" type="button">Export JSON</button>
+        <button class="btn btn-sec" id="btnImportJson" type="button">Import JSON</button>
+        <button class="btn btn-sec" id="btnReset" type="button">Výchozí</button>
+        <input type="file" id="souborJson" accept=".json,application/json" class="skryte">
+      </div>
+      <label class="chk"><input type="checkbox" id="pdfVse" checked> PDF se všemi záložkami (jinak jen aktuální)</label>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2>❓ Jak to funguje <small id="principNazev"></small></h2>
+      <div class="navod" id="princip"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

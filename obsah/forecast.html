@@ -63,6 +63,44 @@
       color: var(--text);
     }
 
+    /* === Instalace do telefonu (PWA) === */
+    .instal-banner {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: -24px 0 20px;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .instal-banner > span { flex: 1; }
+    .instal-btn {
+      background: var(--accent);
+      color: var(--on-accent, #fff);
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    .instal-btn:hover { background: var(--accent-hover); }
+    .instal-zavrit {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px 6px;
+    }
+    #instalNavod p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; }
+    @media (max-width: 768px) { .instal-banner { margin-top: -10px; } }
+
     .tabs {
       display: flex;
       margin-bottom: 20px;
@@ -1734,6 +1772,7 @@
     <div class="header">
       <h1>🌦️ Předpověď počasí</h1>
     </div>
+    <div id="instalBanner"></div>
     
     <div class="tabs" role="tablist" aria-label="Sekce předpovědi">
       <div class="tab active" data-tab="forecast" role="tab" tabindex="0" aria-selected="true">📊 Předpověď</div>
@@ -2144,6 +2183,10 @@
       </div>
     </div>
     <div class="tab-content" id="settings-tab">
+      <div class="controls-section" style="margin-bottom:20px;">
+        <h3 style="font-size:0.9rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600;">📲 Instalace do telefonu</h3>
+        <div id="instalNavod"></div>
+      </div>
       <div class="controls-section">
         <h3 style="font-size:0.9rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600;">📊 Grafy předpovědi</h3>
         <p style="color:var(--text-faint);font-size:0.85rem;margin-bottom:16px;">Zapněte/vypněte grafy a přetažením (☰) změňte jejich pořadí. Nastavení se ukládá do prohlížeče.</p>
@@ -7837,11 +7880,75 @@
 
     // PWA: registrace service workeru (jen přes HTTPS, tj. na GitHub Pages).
     // SW používá network-first pro HTML – stránka se tedy nikdy nedrží stará.
+    // Scope jen „obsah/forecast…“ – dřívější scope celé složky obsah/ přebíral
+    // ostatním stránkám webu jejich service worker rozcestníku; starou registraci rušíme.
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('forecast-sw.js').catch(() => {});
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          const stary = new URL('./', location.href).href;
+          regs.forEach((r) => {
+            const skript = (r.active || r.waiting || r.installing || {}).scriptURL || '';
+            if (r.scope === stary && skript.endsWith('/forecast-sw.js')) r.unregister();
+          });
+        }).catch(() => {});
+        navigator.serviceWorker.register('forecast-sw.js', { scope: './forecast' }).catch(() => {});
       });
     }
+
+    // PWA: nabídka instalace do telefonu (banner pod nadpisem + návod v Nastavení)
+    (function () {
+      const KLIC_SKRYTO = 'webapp_forecast_instal_skryto';
+      let vyzva = null;
+      const samostatne = () => (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) || navigator.standalone === true;
+      let vRamu = false;
+      try { vRamu = window.self !== window.top; } catch (e) { vRamu = true; }
+      const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const skryto = () => { try { return localStorage.getItem(KLIC_SKRYTO) === '1'; } catch (e) { return false; } };
+      const samostatneOdkaz = '<a class="instal-btn" href="forecast.html" target="_blank" rel="noopener">↗ Otevřít samostatně</a>';
+
+      function navodText() {
+        if (samostatne()) return '<p>✅ Předpověď už běží jako nainstalovaná aplikace.</p>';
+        if (vRamu) return '<p>Uvnitř rozcestníku se aplikace instalovat nedá. Otevřete předpověď samostatně a pak ji přidejte na plochu.</p><p>' + samostatneOdkaz + '</p>';
+        let t = '<p>Předpověď jde nainstalovat jako aplikace – bude mít vlastní ikonu na ploše, poběží přes celou obrazovku a poslední stažená předpověď se ukáže i bez internetu.</p>';
+        if (vyzva) return t + '<p><button class="instal-btn" data-instaluj>📲 Nainstalovat</button></p>';
+        if (iOS) return t + '<p><b>iPhone / iPad (Safari):</b> klepněte dole na <b>Sdílet</b> (čtverec se šipkou) a zvolte <b>„Přidat na plochu“</b>.</p>';
+        return t + '<p><b>Android (Chrome):</b> menu ⋮ → <b>„Přidat na plochu“</b> nebo <b>„Nainstalovat aplikaci“</b>.</p>' +
+          '<p><b>iPhone / iPad (Safari):</b> <b>Sdílet</b> → <b>„Přidat na plochu“</b>.</p>';
+      }
+
+      function vykresli() {
+        const navod = document.getElementById('instalNavod');
+        if (navod) navod.innerHTML = navodText();
+        const el = document.getElementById('instalBanner');
+        if (!el) return;
+        // Banner jen na dotykových zařízeních (nebo když prohlížeč instalaci sám nabízí)
+        const dotyk = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+        if (samostatne() || skryto() || (!dotyk && !vyzva)) { el.innerHTML = ''; return; }
+        let text, tlacitko = '';
+        if (vRamu) { text = '📲 Předpověď si můžete dát do telefonu jako aplikaci.'; tlacitko = samostatneOdkaz; }
+        else if (vyzva) { text = '📲 Nainstalujte si předpověď jako aplikaci – ikona na ploše, celá obrazovka.'; tlacitko = '<button class="instal-btn" data-instaluj>Instalovat</button>'; }
+        else if (iOS) text = '📲 Do iPhonu: v Safari <b>Sdílet</b> → <b>Přidat na plochu</b>.';
+        else text = '📲 Do telefonu: v menu prohlížeče zvolte <b>Přidat na plochu</b> / <b>Nainstalovat</b>.';
+        el.innerHTML = '<div class="instal-banner"><span>' + text + '</span>' + tlacitko +
+          '<button class="instal-zavrit" data-skryj-banner aria-label="Skrýt nabídku instalace" title="Skrýt">✕</button></div>';
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); vyzva = e; vykresli(); });
+      window.addEventListener('appinstalled', () => { vyzva = null; vykresli(); });
+      document.addEventListener('click', async (e) => {
+        if (e.target.closest('[data-instaluj]') && vyzva) {
+          const v = vyzva;
+          v.prompt();
+          try { await v.userChoice; } catch (err) { /* nic */ }
+          vyzva = null; vykresli();
+        }
+        if (e.target.closest('[data-skryj-banner]')) {
+          try { localStorage.setItem(KLIC_SKRYTO, '1'); } catch (err) { /* nic */ }
+          vykresli();
+        }
+      });
+      document.addEventListener('DOMContentLoaded', vykresli);
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧩 Intarzie a parketáž</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/clipper.min.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script src="intarzie/jadro.js"></script>
+<script src="intarzie/vystup.js"></script>
+<script src="intarzie/nahled.js"></script>
+<script src="intarzie/princip.js"></script>
+<script src="intarzie/scena3d.js"></script>
+<script src="intarzie/ui.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:18px 14px 40px}
+h1{font-size:1.55rem;font-weight:600;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:16px}
+.layout{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:16px;align-items:start;max-width:1560px;margin:0 auto}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:14px;margin-bottom:14px;min-width:0}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:9px 0 3px}
+label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.86rem;margin:8px 0 2px;cursor:pointer}
+label.chk input{width:auto;margin-top:2px;accent-color:var(--accent)}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.92rem;font-family:inherit;min-width:0}
+input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--accent)}
+input[type=color]{padding:1px 2px;height:32px}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.r4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.typy{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+@media(max-width:420px){.typy{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.typy button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:5px 2px;cursor:pointer;font-size:.7rem;line-height:1.15;font-family:inherit;min-width:0;overflow:hidden}
+.typy button svg{display:block;margin:0 auto 3px;width:38px;height:28px}
+.typy button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn-mini{padding:4px 8px;font-size:.78rem;font-weight:500}
+.btn:disabled{opacity:.5;cursor:default}
+.tlacitka{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tlacitka .btn{flex:1 1 auto}
+.info{font-size:.82rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
+.info b{color:var(--text)}
+.rozsah{display:grid;grid-template-columns:minmax(0,1fr) 74px;gap:8px;align-items:center}
+.sloty{display:flex;flex-direction:column;gap:6px}
+.slot{display:grid;grid-template-columns:22px 26px minmax(0,1fr) 62px 54px 26px;gap:5px;align-items:center}
+.slot b{font-size:.9rem;text-align:center}
+.slot input,.slot select{padding:5px 4px;font-size:.82rem}
+.vzorek{width:26px;height:26px;border-radius:4px;border:1px solid var(--border-strong);background-size:cover}
+.slot button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;cursor:pointer;height:28px;font-family:inherit}
+.hlav-slot{display:grid;grid-template-columns:22px 26px minmax(0,1fr) 62px 54px 26px;gap:5px;font-size:.7rem;color:var(--text-faint)}
+.skupiny{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.skupina{display:grid;grid-template-columns:minmax(0,1fr) 92px 74px;gap:6px;align-items:center;font-size:.84rem}
+.skupina select{padding:5px 4px;font-size:.82rem}
+.skupina span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#obal2d{position:relative;border-radius:6px;overflow:hidden;border:1px solid var(--border-strong);background:var(--bg-deep)}
+#platno{display:block;width:100%;touch-action:pan-y;cursor:crosshair}
+#popisNajeti{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.72);color:#fff;font-size:.78rem;padding:4px 8px;border-radius:5px;pointer-events:none;max-width:calc(100% - 16px)}
+#popisNajeti:empty{display:none}
+#obal3d{height:440px;border-radius:6px;overflow:hidden;border:1px solid var(--border-strong);background:var(--bg-deep);position:relative}
+@media(max-width:600px){#obal3d{height:320px}}
+.ovl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:8px;font-size:.85rem}
+.ovl span:first-child{color:var(--text-faint)}
+.prepinace{display:flex;gap:4px 14px;flex-wrap:wrap;margin-top:6px}
+.prepinace label.chk{margin:0}
+.papir{background:#fff;border:1px solid var(--border-strong);border-radius:6px;padding:6px;overflow:auto;max-height:70vh}
+.papir svg{display:block;width:100%;height:auto}
+.zalozky{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:7px 10px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel[hidden]{display:none}
+.navod{font-size:.86rem;line-height:1.55;color:var(--text)}
+.navod h3{font-size:.92rem;margin:14px 0 4px}
+.navod p{margin:4px 0}
+.navod ol,.navod ul{padding-left:20px}
+.navod li{margin:3px 0}
+.schema{margin:6px 0 10px;max-width:460px}
+.schema svg{width:100%;height:auto;display:block;color:var(--text)}
+.schema figcaption{font-size:.78rem;color:var(--text-muted);margin-top:2px}
+.varovani-seznam{list-style:none;padding:0 !important;margin:0;font-size:.84rem}
+.varovani-seznam li{padding:5px 8px;border-left:3px solid var(--border-strong);margin:4px 0;background:var(--bg-control);border-radius:0 5px 5px 0;line-height:1.4}
+.varovani-seznam li.chyba{border-left-color:var(--danger)} .varovani-seznam li.varovani{border-left-color:var(--warn)} .varovani-seznam li.info{border-left-color:var(--accent)}
+.varovani-seznam li.ok{border-left-color:var(--ok)}
+.udaje{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:3px 16px;font-size:.82rem;margin-top:10px}
+.udaje div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--border);padding:2px 0}
+.udaje span:first-child{color:var(--text-faint)}
+.udaje span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--border);padding:4px 5px;text-align:left;white-space:nowrap}
+th{color:var(--text-faint);font-weight:500}
+td.c{text-align:right}
+.tab-obal{overflow-x:auto;max-height:420px;overflow-y:auto}
+.projekty{list-style:none;padding:0;margin:6px 0 0;font-size:.84rem;max-height:200px;overflow:auto}
+.projekty li{display:flex;gap:6px;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)}
+.projekty li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projekty button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:.78rem;font-family:inherit}
+.skryte{display:none!important}
+kbd{font-family:inherit;font-size:.75rem;border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;background:var(--bg-control)}
+#editDilku{border:1px solid var(--accent);border-radius:6px;padding:8px 10px;margin-top:10px;font-size:.84rem}
+#editDilku .tlacitka{margin-top:6px}
+.plan-hlavicka{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.plan-hlavicka select{width:auto;flex:1 1 180px}
+</style>
+</head>
+<body>
+<h1>🧩 Intarzie a parketáž</h1>
+<p class="sub">Návrh vzorů z dýh: rybí kost, šachovnice, koš, Versailles, hexagony, kostky, kompasová růžice, Escherovské teselace, marketerie z SVG · směr vláken každého dílku · bookmatch / slip match · řezný plán z listů dýhy · šablony 1:1 · SVG / DXF pro laser s kompenzací řezu · PDF · 3D náhled s chatoyancí</p>
+
+<div class="layout">
+  <div class="levy">
+    <div class="card">
+      <h2>🧩 Vzor <small><kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd></small></h2>
+      <div class="typy" id="typy"></div>
+      <div id="parVzoru"></div>
+      <div id="blokMrizka">
+        <label for="alfa">Natočení vzoru (°)</label>
+        <div class="rozsah"><input type="range" id="alfaR" min="-180" max="180" step="1"><input id="alfa" type="number" min="-180" max="180" step="0.5"></div>
+        <div class="r2" id="blokPosun">
+          <div><label for="posunX">Posun vzoru X (mm)</label><input id="posunX" type="number" step="0.5"></div>
+          <div><label for="posunY">Posun vzoru Y (mm)</label><input id="posunY" type="number" step="0.5"></div>
+        </div>
+      </div>
+      <div id="blokSvg" class="skryte">
+        <div class="tlacitka">
+          <button class="btn" id="btnSvgNacist" type="button">📂 Načíst SVG motiv</button>
+          <button class="btn btn-sec" id="btnSvgUkazka" type="button">Ukázkový motiv</button>
+          <input type="file" id="souborSvg" accept=".svg,image/svg+xml" class="skryte">
+        </div>
+        <p class="info" id="infoSvg">Motiv z vyplněných ploch (path, rect, circle, ellipse, polygon). Každá barva = jedna dřevina, pozdější tvar překrývá dřívější, zbytek pole je podklad.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📏 Deska <small>mm</small></h2>
+      <div class="r2">
+        <div><label for="sirka">Šířka desky</label><input id="sirka" type="number" min="20" max="5000" step="1"></div>
+        <div><label for="vyska">Hloubka desky</label><input id="vyska" type="number" min="20" max="5000" step="1"></div>
+      </div>
+      <div class="r2">
+        <div><label for="bordura" title="pás po obvodu s vlákny podél strany, rohy na pokos">Bordura (0 = bez)</label><input id="bordura" type="number" min="0" max="500" step="0.5"></div>
+        <div><label for="linka" title="tenký proužek mezi vzorem a bordurou">Linka (0 = bez)</label><input id="linka" type="number" min="0" max="50" step="0.5"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🪵 Dřeviny a vlákna</h2>
+      <div class="hlav-slot"><span></span><span></span><span>dřevina</span><span title="délka listu dýhy podél vláken">list d.</span><span title="šířka listu dýhy">list š.</span><span></span></div>
+      <div class="sloty" id="sloty"></div>
+      <div class="tlacitka" style="margin-top:6px"><button class="btn btn-sec btn-mini" id="btnPridatSlot" type="button">+ přidat dřevinu</button></div>
+      <p class="info">Rozměry listů jsou <b>typické</b> výchozí hodnoty – zadejte skutečné listy z balíku (délka = podél vláken).</p>
+      <label>Skupiny dílků → dřevina, otočení vláken</label>
+      <div class="skupiny" id="skupiny"></div>
+      <label for="shoda">Sesazení dýh</label>
+      <select id="shoda">
+        <option value="souvisle">souvislá kresba (jako z jednoho listu)</option>
+        <option value="slip">slip match – listy posunuté vedle sebe</option>
+        <option value="bookmatch">bookmatch – každý 2. list obrácený</option>
+        <option value="nahodne">náhodně (každý dílek odjinud)</option>
+      </select>
+      <div id="editDilku" class="skryte"></div>
+      <p class="info">Kliknutím na dílek v náhledu ho vyberete a můžete mu změnit dřevinu nebo směr vláken.</p>
+    </div>
+
+    <div class="card">
+      <h2>✂️ Řezání a řezný plán</h2>
+      <div class="r2">
+        <div><label for="kerf" title="šířka řezu laseru / pily">Šířka řezu – kerf (mm)</label><input id="kerf" type="number" min="0" max="3" step="0.01"></div>
+        <div><label for="rozestup" title="mezera mezi dílky na listu (≥ kerf)">Rozestup dílků (mm)</label><input id="rozestup" type="number" min="0" max="30" step="0.5"></div>
+      </div>
+      <div class="r2">
+        <div><label for="okrajListu" title="potrhané / zvlněné okraje listu se nepoužijí">Okraj listu (mm)</label><input id="okrajListu" type="number" min="0" max="50" step="1"></div>
+        <div><label for="rezerva" title="přídavek na zkušební kusy, vady listů a zmetky">Rezerva (%)</label><input id="rezerva" type="number" min="0" max="200" step="1"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💾 Předvolby a projekty</h2>
+      <label for="predvolba">Předvolba výrobku</label>
+      <div class="r2"><select id="predvolba"></select><button class="btn btn-sec" id="btnPredvolba" type="button">Použít</button></div>
+      <label for="nazevProjektu">Název projektu</label>
+      <div class="r2"><input id="nazevProjektu" type="text" maxlength="60" placeholder="např. Deska konferenčního stolku"><button class="btn" id="btnUlozit" type="button">💾 Uložit</button></div>
+      <ul class="projekty" id="projekty"></ul>
+      <div class="tlacitka">
+        <button class="btn btn-sec" id="btnExportJson" type="button">Export JSON</button>
+        <button class="btn btn-sec" id="btnImportJson" type="button">Import JSON</button>
+        <button class="btn btn-sec" id="btnReset" type="button">Výchozí</button>
+        <input type="file" id="souborJson" accept=".json,application/json" class="skryte">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🖨️ Tisk a export</h2>
+      <div class="r3">
+        <div><label for="papir">Papír</label><select id="papir"><option value="a4">A4</option><option value="a3">A3</option><option value="letter">Letter</option><option value="vlastni">vlastní</option></select></div>
+        <div><label for="okraj">Okraj (mm)</label><input id="okraj" type="number" min="3" max="30" step="1" value="8"></div>
+        <div><label for="prekryv">Pásmo lepení</label><input id="prekryv" type="number" min="0" max="40" step="1" value="12"></div>
+      </div>
+      <div class="r2 skryte" id="blokPapir">
+        <div><label for="papirW">Šířka papíru (mm)</label><input id="papirW" type="number" min="50" max="2000" value="210"></div>
+        <div><label for="papirH">Výška papíru (mm)</label><input id="papirH" type="number" min="50" max="5000" value="297"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="pdfBarvy" checked> Sestava s barevnými výplněmi dřevin</label>
+      <label class="chk"><input type="checkbox" id="pdfListy" checked> Přidat listy řezného plánu 1:1</label>
+      <label class="chk"><input type="checkbox" id="pdfTvary" checked> Přidat šablony jedinečných dílků 1:1</label>
+      <label class="chk"><input type="checkbox" id="cernobile"> Černobíle</label>
+      <label class="chk"><input type="checkbox" id="gravir"> Laser: gravírovat čísla dílků (vrstva GRAVIR)</label>
+      <div class="info" id="infoListy"></div>
+      <div class="tlacitka">
+        <button class="btn" id="btnPdf" type="button">📄 PDF 1:1</button>
+        <button class="btn btn-sec" id="btnSvg" type="button">SVG sestavy</button>
+        <button class="btn btn-sec" id="btnDxf" type="button">DXF sestavy</button>
+      </div>
+      <div class="tlacitka">
+        <button class="btn btn-sec" id="btnSvgLaser" type="button">SVG laser (kerf)</button>
+        <button class="btn btn-sec" id="btnDxfLaser" type="button">DXF laser (kerf)</button>
+        <button class="btn btn-sec" id="btnCsv" type="button">CSV kusovník</button>
+        <button class="btn btn-sec" id="btnPng" type="button">PNG náhled</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pravy">
+    <div class="card">
+      <h2><span>🖼️ Náhled vzoru</span> <small id="rozmerDesky"></small></h2>
+      <div id="obal2d"><canvas id="platno" aria-label="Náhled vzoru z dýh"></canvas><div id="popisNajeti"></div></div>
+      <div class="prepinace">
+        <label class="chk"><input type="checkbox" id="zCisla" checked> čísla</label>
+        <label class="chk"><input type="checkbox" id="zSipky"> šipky vláken</label>
+        <label class="chk"><input type="checkbox" id="zSpary" checked> spáry</label>
+        <label class="chk"><input type="checkbox" id="zTextura" checked> textura dřeva</label>
+        <span class="info" style="margin:0">kolečko + Ctrl = zoom, tažení = posun, dvojklik = celé</span>
+      </div>
+    </div>
+
+    <div class="card" id="karta3d">
+      <h2>🧊 3D náhled <small>táhněte myší / prstem, kolečko = přiblížení</small></h2>
+      <div id="obal3d"><div class="info" id="stav3d" style="padding:12px">3D se načte, až bude karta vidět…</div></div>
+      <div class="ovl"><span>Výrobek</span><select id="typ3d"><option value="deska">stolová deska</option><option value="krabicka">krabička s víkem</option></select><span></span></div>
+      <div class="ovl"><span>Chatoyance</span><input type="range" id="chat" min="0" max="1.5" step="0.05" value="0.7"><span id="chatHodn">0,7</span></div>
+      <div class="ovl"><span>Světlo</span><input type="range" id="svetloAz" min="0" max="360" step="1" value="35"><button class="btn btn-sec btn-mini" id="btnSvetlo" type="button">▶ otáčet <kbd>mezera</kbd></button></div>
+      <div class="tlacitka">
+        <button class="btn btn-sec btn-mini" data-pohled="iso" type="button">Izometrie</button>
+        <button class="btn btn-sec btn-mini" data-pohled="shora" type="button">Shora</button>
+        <button class="btn btn-sec btn-mini" data-pohled="bok" type="button">Nízko z boku</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span>📋 Řezný plán z listů dýhy</span> <small>vlákna podél délky listu</small></h2>
+      <div class="plan-hlavicka"><select id="planSlot" aria-label="Dřevina řezného plánu"></select><span class="info" id="planInfo" style="margin:0"></span></div>
+      <div class="papir" id="planNahled" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <div class="zalozky" role="tablist" id="zalozky">
+        <button role="tab" data-z="spotreba" aria-selected="true">Spotřeba</button>
+        <button role="tab" data-z="kontrola" aria-selected="false">Kontrola</button>
+        <button role="tab" data-z="kusovnik" aria-selected="false">Kusovník</button>
+        <button role="tab" data-z="tvary" aria-selected="false">Jedinečné dílky</button>
+        <button role="tab" data-z="princip" aria-selected="false">Jak to funguje</button>
+        <button role="tab" data-z="postup" aria-selected="false">Postup výroby</button>
+      </div>
+      <div class="panel" data-p="spotreba">
+        <div class="tab-obal"><table id="tabSpotreba"></table></div>
+        <p class="info" id="spotrebaInfo"></p>
+      </div>
+      <div class="panel" data-p="kontrola" hidden>
+        <ul class="varovani-seznam" id="varovani"></ul>
+        <div class="udaje" id="udaje"></div>
+        <div class="tlacitka" style="max-width:360px"><button class="btn btn-sec" id="btnOverit" type="button">Ověřit pokrytí (průniky dílků)</button></div>
+        <p class="info" id="infoOvereni"></p>
+      </div>
+      <div class="panel" data-p="kusovnik" hidden>
+        <div class="tab-obal"><table id="tabKusovnik"></table></div>
+        <p class="info" id="kusInfo"></p>
+      </div>
+      <div class="panel" data-p="tvary" hidden>
+        <p class="info">Dílky shodného tvaru (po natočení vláken vodorovně) – podle nich si připravte šablonu nebo doraz přípravku pro sériové řezání. Ořezy u okraje se počítají zvlášť.</p>
+        <div class="papir" id="tvaryNahled" style="margin-top:8px"></div>
+      </div>
+      <div class="panel navod" data-p="princip" hidden id="princip"></div>
+      <div class="panel navod" data-p="postup" hidden id="postup"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

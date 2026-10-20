@@ -27,6 +27,9 @@
   const minus = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
   const omez = (x, a, b) => Math.max(a, Math.min(b, x));
   const DEN = 86400000;
+  const STY = typeof module !== 'undefined' && module.exports ? require('./styly.js') : koren.SHStyly;
+  let kPismo = 1;          // šířka písma aktuálního stylu proti Liberation Sans (nastaví navrh)
+  let ST = null;           // aktuální styl (nastaví navrh)
 
   /* ---------------- astronomie ---------------- */
   const julianskeDatum = (ms) => ms / DEN + 2440587.5;
@@ -112,7 +115,7 @@
       else if ('fjrtJ'.includes(c)) w += 0.36;
       else w += 0.56;
     }
-    return w * h;
+    return w * h * kPismo;
   }
 
   /* ---------------- model rovinného ciferníku ---------------- */
@@ -219,7 +222,7 @@
     deklinace: 0, krok: 30, cislice: 'arabske', datum: 'zakladni', analema: false, rok: new Date().getFullYear(),
     tvar: 'kruh', sirkaMm: 250, vyskaMm: 250, nodusAuto: true, nodusMm: 40, posunX: 0, posunY: 0,
     mezVysky: 15, motto: '', styl: 'klasicky', tabulka: false, popisky: true, caryMeziDaty: false, prumerTyce: 6,
-    kapSteny: 2, kapSloupce: 'canterbury', kapCasy: 'historicke', tloustkaMm: 10,
+    kapSteny: 2, kapSloupce: 'canterbury', kapCasy: 'historicke', tloustkaMm: 10, kapDvaKoliky: false, nodusZimaMm: 25, kapOriginal: false, kapVule: 0.2, kapOcko: true,
   };
   const EKL_KRIVKY = 23.44;
 
@@ -239,7 +242,8 @@
       return [270, 300, 330, 0, 30, 60, 90].map((lr) => {
         const ld = ((180 - lr) % 360 + 360) % 360;
         const d = asin(sin(EKL_KRIVKY) * sin(lr));
-        return { d, l: ZNAMENI[lr / 30 % 12], r: ld === lr ? '' : ZNAMENI[ld / 30], hlavni: lr % 90 === 0 };
+        const jm = ST && ST.latina ? STY.ZNAMENI_LAT : ZNAMENI;
+        return { d, l: jm[lr / 30 % 12], r: ld === lr ? '' : jm[ld / 30], hlavni: lr % 90 === 0 };
       });
     }
     return [{ d: EKL_KRIVKY, l: '21. 6.', r: '', hlavni: true }, { d: 0, l: '21. 3.', r: '23. 9.', hlavni: true }, { d: -EKL_KRIVKY, l: '21. 12.', r: '', hlavni: true }];
@@ -260,9 +264,9 @@
   function rozmery(p, S) {
     const pas = omez(S * 0.085, 5, 70);
     return {
-      pas, okraj: omez(S * 0.025, 2, 25), motto: p.motto ? omez(S * 0.075, 5, 50) : 0,
-      cislo: pas * (p.letniCas ? 0.44 : 0.56), dst: pas * 0.3, popis: omez(pas * 0.3, 2.2, 14),
-      cara: omez(S * 0.0024, 0.25, 3) * (p.styl === 'klasicky' ? 1.5 : 1), mezStred: S * 0.035,
+      pas, okraj: omez(S * 0.025, 2, 25) * (ST.okrajK || 1), motto: p.motto ? omez(S * 0.075, 5, 50) : 0,
+      cislo: pas * (p.letniCas ? 0.44 : 0.56) * (ST.velkaCisla || 1), dst: pas * 0.3, popis: omez(pas * 0.3, 2.2, 14),
+      cara: ST.laser ? 0.3 : omez(S * 0.0024, 0.25, 3) * ST.kCara, mezStred: S * 0.035,
     };
   }
 
@@ -282,6 +286,24 @@
    * cifernik/gnomon/graf jsou scény v mm (y dolů); sim(ms) vrací stín pro okamžik.
    */
   function navrh(vstup) {
+    const predK = kPismo, predST = ST;
+    try {
+      const p0 = Object.assign({}, VYCHOZI, vstup || {});
+      ST = STY.styl(p0);
+      kPismo = ST.pismoInfo ? ST.pismoInfo.kSirka : 1;
+      if (ST.ctverec && p0.typ !== 'ekvatorialni' && p0.typ !== 'kapesni') { p0.tvar = 'obd'; p0.vyskaMm = p0.sirkaMm; }
+      const R = navrhVnitrni(p0);
+      dokonciScenu(R.cifernik, ST);
+      R.styl = ST;
+      return R;
+    } finally { kPismo = predK; ST = predST; }
+  }
+  /** barvy, písmo a konce čar stylu do scény; laser = jen obrysy */
+  function dokonciScenu(sc, st) {
+    if (st.laser) sc.prvky = STY.naLaser(sc.prvky);
+    sc.styl = { id: st.id, barvy: st.barvy, pismo: st.pismoInfo, konce: st.konce };
+  }
+  function navrhVnitrni(vstup) {
     const p = Object.assign({}, VYCHOZI, vstup || {});
     p.sirka = omez(+p.sirka, -89.5, 89.5); p.delka = +p.delka; p.posunUTC = +p.posunUTC;
     p.deklinace = +p.deklinace || 0; p.krok = [60, 30, 15].includes(+p.krok) ? +p.krok : 60;
@@ -298,24 +320,23 @@
   /** společné prvky desky: obrys, rámeček, motto; vrací oblast ciferníku */
   function deska(p, prvky, rz, W, H, kruh) {
     const L = (b, s, v, z, d) => prvky.push({ t: 'l', b, s, v, z, d });
+    const barvaDesky = ST.barvy.deska;
     if (kruh) {
       const r = W / 2;
+      if (barvaDesky) prvky.push({ t: 'k', x: 0, y: 0, r, s: 0, v: 'vypln', f: true, c: barvaDesky });
       prvky.push({ t: 'k', x: 0, y: 0, r, s: rz.cara, v: 'obrys' });
       const rObl = r - rz.okraj - rz.motto;
-      if (p.styl === 'klasicky') {
-        prvky.push({ t: 'k', x: 0, y: 0, r: r - rz.okraj * 0.6, s: rz.cara * 0.7, v: 'ram' });
-        prvky.push({ t: 'k', x: 0, y: 0, r: rObl, s: rz.cara * 0.7, v: 'ram' });
-      }
+      for (const e of STY.ram(ST.ram, { tvar: 'kruh', r }, rz.okraj, ST, rz.cara)) prvky.push(e);
+      if (ST.ram !== 'zadny') prvky.push({ t: 'k', x: 0, y: 0, r: rObl, s: rz.cara * 0.7, v: 'ram' });
+      if (ST.ram !== 'zadny' && rz.motto) prvky.push({ t: 'k', x: 0, y: 0, r: r - rz.okraj, s: rz.cara * 0.5, v: 'ram' });
       if (p.motto) textNaOblouku(prvky, p.motto, 0, 0, r - rz.okraj - rz.motto / 2, rz.motto * 0.5);
       return { tvar: 'kruh', cx: 0, cy: 0, r: rObl };
     }
+    if (barvaDesky) prvky.push({ t: 'p', b: [[-W / 2, -H / 2], [W / 2, -H / 2], [W / 2, H / 2], [-W / 2, H / 2]], v: 'vypln', f: true, c: barvaDesky });
     L([[-W / 2, -H / 2], [W / 2, -H / 2], [W / 2, H / 2], [-W / 2, H / 2]], rz.cara, 'obrys', true);
     const a = W / 2 - rz.okraj, b = (H - rz.motto) / 2 - rz.okraj, cy = rz.motto / 2;
-    if (p.styl === 'klasicky') {
-      const k = rz.okraj * 0.6;
-      L([[-W / 2 + k, -H / 2 + k], [W / 2 - k, -H / 2 + k], [W / 2 - k, H / 2 - k], [-W / 2 + k, H / 2 - k]], rz.cara * 0.7, 'ram', true);
-      L([[-a, cy - b], [a, cy - b], [a, cy + b], [-a, cy + b]], rz.cara * 0.7, 'ram', true);
-    }
+    for (const e of STY.ram(ST.ram, { tvar: 'obd', a: W / 2, b: H / 2 }, rz.okraj, ST, rz.cara)) prvky.push(e);
+    if (ST.ram !== 'zadny') L([[-a, cy - b], [a, cy - b], [a, cy + b], [-a, cy + b]], rz.cara * 0.7, 'ram', true);
     if (p.motto) prvky.push({ t: 'txt', x: 0, y: -H / 2 + rz.okraj + rz.motto * 0.45, txt: p.motto, h: rz.motto * 0.55, a: 'c', u: 0, v: 'text' });
     return { tvar: 'obd', cx: 0, cy, a, b };
   }
@@ -343,6 +364,7 @@
     const ctvrtDelka = rz.pas * 0.35;
     const info = [];
     const kontrola = [];
+    const konce = [];
     // hodinové čáry
     for (const H of hodiny) {
       const d = smerHodinoveCary(m, H.t);
@@ -366,20 +388,21 @@
         if (iv[1] <= iv[0]) continue;
       }
       const A = [X0[0] + d[0] * iv[0], X0[1] + d[1] * iv[0]], B = [X0[0] + d[0] * iv[1], X0[1] + d[1] * iv[1]];
+      if (H.cela) konce.push({ T: H.T, t: H.t, A, B });
       if (H.cela) prvky.push({ t: 'l', b: [A, B], s: rz.cara, v: 'hodiny' });
       else if (H.pul) prvky.push({ t: 'l', b: [A, B], s: rz.cara * 0.55, v: 'pul' });
       else {
         const u0 = Math.max(iv[0], iv[1] - ctvrtDelka);
         prvky.push({ t: 'l', b: [[X0[0] + d[0] * u0, X0[1] + d[1] * u0], B], s: rz.cara * 0.5, v: 'ctvrt' });
       }
-      if (p.krok < 60 && H.pul && !H.cela && p.styl === 'klasicky') {
+      if (p.krok < 60 && H.pul && !H.cela && ST.puldot) {
         // tečka v pásu čísel u půlhodin
         const ivb = intervalPrimky(obl, vnitrni * 0.5, X0, d);
         if (ivb) prvky.push({ t: 'k', x: X0[0] + d[0] * ivb[1], y: X0[1] + d[1] * ivb[1], r: rz.cara * 0.9, s: 0, v: 'pul', f: true });
       }
       if (H.cela) {
         const ang = atan2(d[1], d[0]);
-        let u = p.styl === 'klasicky' ? ang - 90 : 0;
+        let u = ST.otacet ? ang - 90 : 0;
         if (u <= -90) u += 180; if (u > 90) u -= 180;
         const umisti = (inset, txt, vel, vrstva) => {
           const ivc = intervalPrimky(obl, inset, X0, d); if (!ivc) return;
@@ -391,6 +414,7 @@
       }
     }
     zmensiCisla(prvky);
+    doplnkyStylu(p, m, obl, h, O, rz, prvky, konce, Cq, Q);
     // datové křivky (stín nodu)
     const krivky = volby.bezData ? [] : datoveKrivky(p);
     for (const k of krivky) {
@@ -426,6 +450,41 @@
       kontrola.push({ datum: k.n, d: k.d, vejde: ano, mimo: ne });
     }
     return { info, kontrola, Cq };
+  }
+
+  /** doplňky stylu na rovinné ploše: výseče, popisky poledne, sluníčko, minutové čárky */
+  function doplnkyStylu(p, m, obl, h, O, rz, prvky, konce, Cq, Q) {
+    konce.sort((a, b) => a.t - b.t);
+    if (ST.vysece && konce.length > 1) {
+      for (const [cast, barva, nazev] of [[konce.filter((k) => k.t <= 1e-9), ST.barvy.vysecDop, 'dopoledne'], [konce.filter((k) => k.t >= -1e-9), ST.barvy.vysecOdp, 'odpoledne']]) {
+        if (cast.length < 2) continue;
+        prvky.unshift({ t: 'p', b: cast.map((k) => k.A).concat(cast.map((k) => k.B).reverse()), v: 'vysec', f: true, c: barva });
+        let cx = 0, cy = 0; for (const k of cast) { cx += (k.A[0] + 2 * k.B[0]) / 3; cy += (k.A[1] + 2 * k.B[1]) / 3; }
+        prvky.push({ t: 'txt', x: cx / cast.length, y: cy / cast.length, txt: nazev, h: rz.popis * 1.2, a: 'c', u: 0, v: 'text' });
+      }
+    }
+    if (ST.popisPoledne || ST.ikony) {
+      const pol = konce.reduce((a, k) => (Math.abs(k.t) < Math.abs(a.t) ? k : a), konce[0] || { t: 999 });
+      if (pol && pol.A) {
+        const dx = pol.B[0] - pol.A[0], dy = pol.B[1] - pol.A[1];
+        let u = atan2(dy, dx); if (u > 90) u -= 180; if (u < -90) u += 180;
+        if (ST.popisPoledne) prvky.push({ t: 'txt', x: pol.A[0] + dx * 0.45 + (-dy) * 0.03, y: pol.A[1] + dy * 0.45 + dx * 0.03, txt: 'poledne', h: rz.popis * 1.3, a: 'c', u, v: 'text' });
+        if (ST.ikony) for (const e of STY.ornament('slunicko', pol.A[0] + dx * 0.78, pol.A[1] + dy * 0.78, rz.pas * 0.45, ST, rz.cara * 0.6)) prvky.push(e);
+      }
+    }
+    if (ST.minuty) {
+      const kor = p.korekceDelky ? (p.delka - 15 * p.posunUTC) : 0;
+      for (let k = 0; k < 288; k++) {
+        const T = k / 12; if (Math.abs(T * 60 / p.krok - Math.round(T * 60 / p.krok)) < 1e-9) continue;
+        let t = 15 * (T - 12) + kor; t = ((t + 540) % 360) - 180;
+        const d = smerHodinoveCary(m, t); if (!d) continue;
+        let X0 = Cq;
+        if (!X0) { let P = null; for (let dd = 0; dd <= EKL_KRIVKY && !P; dd += 1) P = m.stin(t, dd) || m.stin(t, -dd); if (!P) continue; X0 = Q(P); }
+        const iv = intervalPrimky(obl, rz.pas, X0, d); if (!iv || iv[1] <= Math.max(iv[0], rz.mezStred)) continue;
+        const dl = rz.pas * (k % 2 ? 0.16 : 0.26);
+        prvky.push({ t: 'l', b: [[X0[0] + d[0] * (iv[1] - dl), X0[1] + d[1] * (iv[1] - dl)], [X0[0] + d[0] * iv[1], X0[1] + d[1] * iv[1]]], s: rz.cara * 0.4, v: 'ctvrt' });
+      }
+    }
   }
 
   /** zmenší čísla hodin, pokud by se sousední překrývala (polární hodiny, malé ciferníky) */
@@ -490,7 +549,13 @@
       // svislé stěny: střed čar (nahoře) přisadit k hornímu okraji, volné místo nechat dole
       if (obl.tvar === 'obd' && m.C && (p.typ === 'svisle' || p.typ === 'deklinujici') && m.C[1] >= by1 - 1e-6) O[1] = obl.cy + (obl.b - rz.pas) - h * by1;
     }
+    // ornament v místě paty stylu (C), čáry začnou až za ním
+    const Cq0 = m.C ? [O[0] + h * m.C[0], O[1] + h * m.C[1]] : null, rOrn = rz.pas * 0.85;
+    const ornOk = ST.ornament && Cq0 && uvnitr(obl, rOrn, Cq0);
+    if (ornOk) rz.mezStred = Math.max(rz.mezStred, rOrn * 1.08);
     const vys = kresliPlochu(p, m, obl, h, O, rz, prvky);
+    if (ornOk) for (const e of STY.ornament(ST.ornament, Cq0[0], Cq0[1], rOrn, ST, rz.cara * 0.6, p.typ === 'vodorovne')) prvky.push(e);
+    if (ST.udaje) udajePoloha(p, prvky, rz, -Hh / 2, h, m.vyskaStylu);
     // značky pro osazení gnomonu
     const Cq = vys.Cq;
     if (p.popisky) {
@@ -513,6 +578,7 @@
     const g = sablonaGnomonu(p, m, h, rz, Cq, O);
     const vysl = vysledek(p, m, cifernik, g, vys, h, O, rz, var_, (s) => simPlochy(m, s, h, O, Cq, obl));
     vysl.info.posunPaty = [O[0] - obl.cx, O[1] - obl.cy];
+    vysl.info.Cq = Cq; vysl.info.oblast = obl;
     return vysl;
   }
 
@@ -566,10 +632,17 @@
     return naPapir(pr);
   }
 
+  /** údaje o poloze (technický styl) pod deskou */
+  function udajePoloha(p, prvky, rz, yDole, h, psi) {
+    const f = (x, n) => Math.abs(x).toFixed(n).replace('.', ',');
+    const txt = `φ ${f(p.sirka, 4)}° ${p.sirka >= 0 ? 's' : 'j'}. š. · λ ${f(p.delka, 4)}° ${p.delka >= 0 ? 'v' : 'z'}. d. · UTC${p.posunUTC >= 0 ? '+' : '−'}${Math.abs(p.posunUTC)} · nodus ${f(h, 1)} mm` + (psi ? ` · styl ${f(psi, 2)}°` : '') + (p.typ === 'deklinujici' ? ` · D ${f(p.deklinace, 1)}°` : '');
+    prvky.push({ t: 'txt', x: 0, y: yDole - rz.popis * 1.2 - (p.tabulka ? 0 : 0), txt, h: rz.popis * 0.9, a: 'c', u: 0, v: 'text' });
+  }
+
   /** pás s tabulkou korekcí pod deskou (hodinky = sluneční čas + K) */
   function tabulkaNaDesku(p, prvky, rz, W, Hh, kruh) {
     const tab = korekce(p), Wt = Math.min(W, 260), bunka = Wt / 12, hh = Math.max(2, bunka * 0.22);
-    const y0 = -Hh / 2 - rz.okraj * 2, vys = hh * 6.2;
+    const y0 = -Hh / 2 - rz.okraj * 2 - (ST.udaje ? rz.popis * 2.4 : 0), vys = hh * 6.2;
     prvky.push({ t: 'l', b: [[-Wt / 2, y0], [Wt / 2, y0], [Wt / 2, y0 - vys], [-Wt / 2, y0 - vys]], s: rz.cara * 0.6, v: 'obrys', z: true });
     prvky.push({ t: 'txt', x: 0, y: y0 - hh * 1.1, txt: 'Hodinky = sluneční čas + korekce (min)' + (p.letniCas ? ', v létě +1 h' : ''), h: hh * 0.9, a: 'c', u: 0, v: 'text' });
     for (let i = 0; i < 12; i++) {
@@ -602,7 +675,10 @@
       const m = model(st.typ, p.sirka, 0), prvky = [];
       const ox = (i ? 1 : -1) * (D / 2 + mezera / 2);
       const obl = deska(p, prvky, rz, D, D, true);
+      const rOrn = rz.pas * 0.85;
+      if (ST.ornament) rz.mezStred = Math.max(rz.mezStred, rOrn * 1.08);
       const vys = kresliPlochu(p, m, obl, h, [0, 0], rz, prvky, { bezData: p.datum === 'zadne' });
+      if (ST.ornament) for (const e of STY.ornament(ST.ornament, 0, 0, rOrn, ST, rz.cara * 0.6, false)) prvky.push(e);
       prvky.push({ t: 'k', x: 0, y: 0, r: Math.max(0.5, p.prumerTyce / 2), s: rz.cara * 0.6, v: 'obrys' });
       // horní okraj = jižní (vyšší) hrana: šipka
       if (p.popisky) {
@@ -627,7 +703,7 @@
     const gnomon = naPapir(pr);
     const vys = { info: infoVse, kontrola };
     const m0 = plochy[0].m;
-    return vysledek(p, m0, cifernik, gnomon, vys, h, [0, 0], rz, var_, (sv) => {
+    const vyslE = vysledek(p, m0, cifernik, gnomon, vys, h, [0, 0], rz, var_, (sv) => {
       for (const pl of plochy) {
         const P0 = pl.m.stinVektor(sv); if (!P0) continue;
         const P = [pl.ox + h * P0[0], h * P0[1]];
@@ -641,6 +717,8 @@
       }
       return null;
     });
+    vyslE.info.plochy = plochy.map((q) => ({ typ: q.m.typ, ox: q.ox })); vyslE.info.D = D; vyslE.info.oblast = { tvar: 'kruh', cx: 0, cy: 0, r: D / 2 - rz.okraj - rz.motto };
+    return vyslE;
   }
 
   /* ---------------- analematické ---------------- */
@@ -711,8 +789,8 @@
       const iv = intervalPrimky(obl, 0, F, [smer[0] / (L || 1), smer[1] / (L || 1)]);
       if (iv && L > iv[1]) T = [F[0] + smer[0] / L * iv[1], F[1] + smer[1] / L * iv[1]];
       const prvkySim = [{ t: 'l', b: [F, T], s: Math.max(1.5, rz.cara * 3), v: 'stin' }, { t: 'k', x: F[0], y: F[1], r: Math.max(1.5, rz.cara * 3), s: 0, v: 'stinbod', f: true }];
-      return { prvky: naPapir(prvkySim).prvky, bod: T, pata: F, naCifernku: true };
-    }, { M, bodHod, yD, stred: c, kor });
+      return { prvky: naPapir(prvkySim).prvky, bod: T, pata: F, hrot: [F[0] - s[0] * k, F[1] - s[1] * k], vyskaGnomonu: hg, naCifernku: true };
+    }, { M, bodHod, yD, stred: c, kor, vyskaGnomonu: Math.max(vyskaG, M * 0.5) });
   }
 
   /* ---------------- kapesní výškové hodiny (Canterbury) ----------------
@@ -723,6 +801,8 @@
   const MES_LAT = ['IAN', 'FEB', 'MAR', 'APR', 'MAI', 'IVN', 'IVL', 'AVG', 'SEP', 'OCT', 'NOV', 'DEC'];
   // pořadí sloupců na Canterburském originálu: strana A IAN·DEC, FEB·NOV, MAR·OCT; strana B MAI·AVG, IVN·IVL, APR·SEP
   const CANTERBURY = [[0, 11], [1, 10], [2, 9], [4, 7], [5, 6], [3, 8]];
+  // body vyryté na originálu: [3. a 9. hodina, 6. hodina] v mm pod středem otvoru – M. Arnaldi, BSS Bulletin 24(i), 2012, tab. 1
+  const CANTERBURY_MERENI = { 'IVN·IVL': [19.5, 37.7], 'MAI·AVG': [19.5, 31.5], 'APR·SEP': [12.7, 21.7], 'MAR·OCT': [11.5, 18.7], 'FEB·NOV': [6.6, 11.5], 'IAN·DEC': [4.2, 8.5] };
   const DVOJICE = [[0, 11], [1, 10], [2, 9], [3, 8], [4, 7], [5, 6]];
 
   const ZNAMENI_DVOJICE = [[270, 240], [300, 210], [330, 180], [0, 150], [30, 120], [60, 90]];   // počátky 30° úseků délky Slunce
@@ -831,15 +911,19 @@
     const delkaSloupce = H - ho - okr - zonaNazvu;
     // délka kolíku: ručně, nebo tak, aby nejvyšší značka (léto, poledne) vyplnila 92 % sloupce
     const pAst = Object.assign({}, p, { kapCasy: p.kapCasy === 'libellus' ? 'historicke' : p.kapCasy });
-    const hMax = Math.max(...cols.map((c) => Math.max(0, ...znackyKapesni(pAst, c.d).map((z) => z.h))));
-    const L = p.nodusAuto ? Math.max(1, delkaSloupce * 0.92 / Math.max(0.05, tan(Math.min(hMax, 89)))) : Math.max(1, +p.nodusMm);
+    // dva kolíky (Mills, Arnaldi 2012): zimní sloupce (δ < 0) delší kolík, letní kratší; poměr na originálu 25 : 20 mm
+    const dva = !!p.kapDvaKoliky, pomerZ = dva ? (p.nodusAuto ? 1.25 : Math.max(0.1, +p.nodusZimaMm || +p.nodusMm) / Math.max(0.1, +p.nodusMm)) : 1;
+    const kz = (c) => (dva && c.d < 0 ? pomerZ : 1);
+    const tMax = Math.max(...cols.map((c) => kz(c) * Math.max(0, ...znackyKapesni(pAst, c.d).map((z) => tan(Math.min(z.h, 89))))));
+    const L = p.nodusAuto ? Math.max(1, delkaSloupce * 0.92 / Math.max(0.05, tMax)) : Math.max(1, +p.nodusMm);
+    const Lsl = (c) => L * kz(c), Lz = L * pomerZ;
     p.nodusMmEf = L;
     if (p.kapCasy === 'libellus') {
       // poměry délek sloupců podle textu (sloupec 1 = IVN·IVL libovolně dlouhý, ostatní odvozené z dílků předchozího)
       const poradi = ['IVN·IVL', 'MAI·AVG', 'APR·SEP', 'MAR·OCT', 'FEB·NOV', 'IAN·DEC'], pom = libellusPomery();
       const sloupec1 = cols.find((c) => c.nazev === 'IVN·IVL');
       if (cols.length === 6 && sloupec1) {
-        const S1 = L * tan(vyskaZ(p.sirka, sloupec1.d, 0));
+        const S1 = Lsl(sloupec1) * tan(vyskaZ(p.sirka, sloupec1.d, 0));
         p._libellusDelka = (d) => { const c = cols.find((q) => Math.abs(q.d - d) < 1e-9); const i = c ? poradi.indexOf(c.nazev) : -1; return i < 0 ? null : S1 * pom[i]; };
       } else var0.push('Konstrukce podle Libellu platí jen pro 6 dvojic měsíců (Canterbury) – použity astronomické značky tercie/sexta/nona.');
     }
@@ -849,6 +933,7 @@
     if (n === 2) { pruhy.push([x, W, 'stena', 0]); x += W; pruhy.push([x, T, 'bok', 0]); x += T; pruhy.push([x, W, 'stena', 1]); x += W; pruhy.push([x, T, 'bok', 1]); x += T; }
     else for (let i = 0; i < n; i++) { pruhy.push([x, W, 'stena', i]); x += W; }
     const chl = Math.min(8, Math.max(4, W * 0.3)), Wc = x;
+    if (ST.barvy.deska) pr.push({ t: 'p', b: [[0, 0], [Wc, 0], [Wc, -H], [0, -H]], v: 'vypln', f: true, c: ST.barvy.deska });
     pr.push({ t: 'l', b: [[0, 0], [Wc, 0], [Wc + chl, -chl * 0.6], [Wc + chl, -H + chl * 0.6], [Wc, -H], [0, -H]], s: cara, v: 'obrys', z: true });
     for (const [x0] of pruhy.slice(1).concat([[Wc]])) pr.push({ t: 'l', b: [[x0, 0], [x0, -H]], s: cara * 0.7, v: 'pomoc', d: true });
     const steny = pruhy.filter((q) => q[2] === 'stena');
@@ -867,7 +952,7 @@
       else { const hN = Math.min(velN, colW * 0.55), k = Math.min(1, (zonaNazvu - 1) / Math.max(1e-6, sirkaTextu(c.nazev, hN))); pr.push({ t: 'txt', x: xc, y: yN, txt: c.nazev, h: hN * k, a: 'c', u: 90, v: 'text' }); }
       let yPosl = Infinity;
       const zn = znackyKapesni(p, c.d).sort((a2, b2) => a2.h - b2.h).map((z) => {
-        const pad = z.padPevny != null ? z.padPevny : L * tan(z.h), y = -ho - pad, mimo = pad > delkaSloupce;
+        const pad = z.padPevny != null ? z.padPevny : Lsl(c) * tan(z.h), y = -ho - pad, mimo = pad > delkaSloupce;
         if (mimo) var_.push(`${c.nazev}: značka ${z.txt} (výška Slunce ${z.h.toFixed(1).replace('.', ',')}°) by ležela ${pad.toFixed(1).replace('.', ',')} mm pod kolíkem – sloupec má jen ${delkaSloupce.toFixed(1).replace('.', ',')} mm. Zkraťte kolík nebo prodlužte hranol.`);
         else {
           pr.push({ t: 'l', b: [[x0 + colW * 0.12, y], [x0 + colW * (z.hlavni ? 0.62 : 0.5), y]], s: cara * (z.hlavni ? 1.1 : 0.7), v: 'hodiny' });
@@ -877,7 +962,10 @@
         }
         return Object.assign({ pad, y, mimo }, z);
       });
-      sloupce.push(Object.assign({ x0, xc, stena: st[3], znacky: zn }, c));
+      // měřené body originálu (Arnaldi 2012, tab. 1) pro srovnání
+      const mer = p.kapOriginal && p.kapSloupce === 'canterbury' ? CANTERBURY_MERENI[c.nazev] : null;
+      if (mer) for (const d of mer) if (d <= delkaSloupce) pr.push({ t: 'k', x: xc + colW * 0.2, y: -ho - d, r: Math.max(0.3, colW * 0.07), s: cara * 0.5, v: 'pomoc' });
+      sloupce.push(Object.assign({ x0, xc, stena: st[3], znacky: zn, kolik: Lsl(c), mereni: mer }, c));
     });
     // spojnice stejných značek v sousedních sloupcích jedné stěny (křivky hodin), ne u historického pořadí
     if (p.kapSloupce !== 'canterbury') {
@@ -910,7 +998,12 @@
     gp.push({ t: 'l', b: [[0, 0], [L + zas, 0], [L + zas, dk], [0, dk]], s: 0.3, v: 'obrys', z: true });
     gp.push({ t: 'l', b: [[zas, -2], [zas, dk + 2]], s: 0.25, v: 'pomoc', d: true });
     gp.push({ t: 'txt', x: zas / 2, y: dk + 4, txt: 'zasunout', h: 2.6, a: 'c', u: 0, v: 'text' });
-    gp.push({ t: 'txt', x: zas + L / 2, y: dk + 4, txt: 'vyčnívá ' + L.toFixed(1).replace('.', ',') + ' mm', h: 2.6, a: 'c', u: 0, v: 'text' });
+    gp.push({ t: 'txt', x: zas + L / 2, y: dk + 4, txt: 'vyčnívá ' + L.toFixed(1).replace('.', ',') + ' mm' + (dva ? ' (léto)' : ''), h: 2.6, a: 'c', u: 0, v: 'text' });
+    if (dva) {
+      gp.push({ t: 'l', b: [[zas + L, -2], [zas + L, dk + 2]], s: 0.25, v: 'pomoc', d: true });
+      gp.push({ t: 'l', b: [[zas + L, 0], [zas + Lz, 0], [zas + Lz, dk], [zas + L, dk]], s: 0.3, v: 'obrys', z: true });
+      gp.push({ t: 'txt', x: zas, y: -11, txt: 'Dvě polohy: v zimních sloupcích vyčnívá ' + Lz.toFixed(1).replace('.', ',') + ' mm, v letních ' + L.toFixed(1).replace('.', ',') + ' mm (originál: 25 a 20 mm, kolík prostrčený skrz destičku).', h: 2.6, a: 'l', u: 0, v: 'text' });
+    }
     gp.push({ t: 'txt', x: 0, y: -6, txt: 'Kolík (gnomon): průměr ' + dk.toFixed(1).replace('.', ',') + ' mm, kolmo ke stěně. Chyba 1 mm v délce posune polední značku až o tan(h) mm.', h: 3, a: 'l', u: 0, v: 'text' });
     const gnomon = naPapir(gp);
     // kontrola: tabulka sloupců
@@ -918,7 +1011,7 @@
     if (n === 2 && per > 3 && colW < 4) var_.push('Sloupce jsou užší než 4 mm – zvětšete šířku stěny.');
     const vys = {
       p, m: { typ: 'kapesni', fi: p.sirka, vyskaStylu: null, C: null }, cifernik, gnomon, rz: { cara },
-      info: { vyskaNodu: L, pataNodu: [0, 0], vyskaStylu: null, hodiny: [], kontrola, varovani: var_, korekceDelkyMin: korekceDelkyMin(p.delka, p.posunUTC), sloupce, delkaSloupce, otvor: ho, rozvin: { sirka: Wc + chl, vyska: H, steny: n, sloupcuNaStenu: per } },
+      info: { vyskaNodu: L, kolikZima: dva ? Lz : null, pataNodu: [0, 0], vyskaStylu: null, hodiny: [], kontrola, varovani: var_, korekceDelkyMin: korekceDelkyMin(p.delka, p.posunUTC), sloupce, delkaSloupce, otvor: ho, rozvin: { sirka: Wc + chl, vyska: H, steny: n, sloupcuNaStenu: per, pruhy, W, T, chl } },
       analema: null,
       sloupecProDatum(ms) {
         const d = new Date(ms), lam = slunce(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12)).delka;
@@ -930,7 +1023,7 @@
         const i = this.sloupecProDatum(ms + p.posunUTC * 3600000), c = sloupce[i];
         const out = { poloha: pol, prvky: null, sloupec: c ? c.nazev : null, cteni: null };
         if (!c || pol.vyska <= 0) return out;
-        const pad = L * tan(pol.vyska), mimo = pad > delkaSloupce, py = -ho - Math.min(pad, delkaSloupce);
+        const pad = c.kolik * tan(pol.vyska), mimo = pad > delkaSloupce, py = -ho - Math.min(pad, delkaSloupce);
         const prv = [{ t: 'p', b: [[c.xc - dk / 2, -ho], [c.xc + dk / 2, -ho], [c.xc + dk / 2, py], [c.xc - dk / 2, py]], v: 'stin', f: true }];
         if (!mimo) prv.push({ t: 'k', x: c.xc, y: py, r: Math.max(0.5, dk * 0.45), s: 0, v: 'stinbod', f: true });
         // čtení: výška → hodinový úhel pro deklinaci sloupce (dopoledne / odpoledne nelze rozlišit)
@@ -1012,7 +1105,7 @@
   }
 
   const API = {
-    jeLetniCasEU, deklinaceSteny, sloupceKapesni, znackyKapesni, pulOblouk, libellusPomery, vyskaZ, MES_LAT, CANTERBURY,
+    jeLetniCasEU, deklinaceSteny, sloupceKapesni, znackyKapesni, pulOblouk, libellusPomery, CANTERBURY_MERENI, vyskaZ, MES_LAT, CANTERBURY,
     slunce, polohaSlunce, vektorSlunce, msZCasu, tabulkaRoku, korekceDelkyMin, korekce, denVRoce,
     rovina, model, smerHodinoveCary, intervalPrimky, uvnitr, krivka, seznamHodin, datoveKrivky,
     navrh, grafRovniceCasu, rimske, textHodiny, sirkaTextu, fmtMin, fmtCas, MESICE, ZNAMENI, VYCHOZI, EKL_KRIVKY,
