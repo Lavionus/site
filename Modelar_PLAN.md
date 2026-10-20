@@ -1028,3 +1028,7 @@ Přepínač projekce mění jen text za ikonou. Nové tlačítko s příkazem do
   popisek „Z 30° (+30°)“ jako u jednoho tělesa; přichytávání k násobkům od osy. Test modelar_ui_prani3 upraven.
 - Úchyty středu hran (uchyty.js): práh délky hrany na obrazovce 36 px → 16 px. Dřív chyběly na kratších hranách
   i u výchozího kvádru 20 mm (34 px), u malých skic byly vidět jen dva ze čtyř.
+- Úchyty středu hran i na horní stěně (`hornihrana±1…`, `uchyt.horni` – tažené v rovině horní stěny jako horní rohy):
+  natočené těleso (skica na boční stěně, pracovní rovina) má vlastní „spodek“ přiložený k jinému tělesu, takže na
+  viditelné straně černé úchyty chyběly. Horní úchyt hrany se vynechá, když by ležel < 1,4 × velikost od jiného
+  (dolní roh / hrana mají přednost – jinak by tah prstem za roh chytil hranu, test modelar_ui_revize).

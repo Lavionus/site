@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-20c';
+  const VERZE_KODU = '2026-10-20d';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -817,6 +817,7 @@
       const stav = !hrana ? 'bez-cile' : nad ? 'pres-normu' : tesne ? 'tesne' : 'v-norme';
       const pod = hrana ? Math.min(100, 100 * v / hrana) : 0;
       const b = klikaci(kl, [
+        hrana ? h('span', { class: 'ziv-procenta', 'aria-hidden': 'true', text: Math.round(100 * v / hrana) + ' %' }) : null,
         h('div', { class: 'mbar-hl' }, h('span', { text: nazev }),
           h('span', { class: nad ? 'chyba-text' : tesne ? 'warn-text' : (o.min && v >= o.min ? 'ok-text' : ''), text: fc(v, d) + (hrana ? ' / ' + fc(hrana, d) : '') + ' ' + j })),
         h('div', { class: 'mbar' + (nad ? ' nad' : ''), role: 'progressbar', 'aria-label': nazev, 'aria-valuenow': String(Math.round(v)), 'aria-valuemax': hrana ? String(Math.round(hrana)) : null },

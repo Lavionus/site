@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Šablona na sprej (stencil)</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/opentype.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="fonty/fonty.js"></script>
+<script src="stencil/jadro.js"></script>
+<script src="stencil/vystup.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{font-family:var(--font,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);min-height:100vh;padding:12px 12px 16px}
+h1{font-size:1.45rem;font-weight:600;text-align:center}
+.sub{text-align:center;color:var(--text-faint);font-size:.86rem;margin:4px 0 12px}
+.rozlozeni{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);gap:12px;align-items:start}
+.panel{display:flex;flex-direction:column;gap:10px;min-width:0}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 12px;min-width:0}
+.karta>summary{cursor:pointer;font-weight:600;font-size:.95rem;list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.karta>summary::-webkit-details-marker{display:none}
+.karta>summary::after{content:'▾';margin-left:auto;color:var(--text-faint);transition:transform .15s}
+.karta:not([open])>summary::after{transform:rotate(-90deg)}
+.karta[open]>summary{margin-bottom:6px}
+label.pop{display:block;font-size:.78rem;color:var(--text-faint);margin:8px 0 3px}
+input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.9rem;font-family:inherit}
+input[type=range]{padding:0;border:none;background:none;accent-color:var(--accent)}
+input[type=color]{padding:2px;height:32px}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--accent)}
+textarea{resize:vertical;min-height:70px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.mrizka2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.mrizka3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.posuv{display:grid;grid-template-columns:minmax(0,1fr) 4.2em;gap:8px;align-items:center}
+.posuv output{font-size:.8rem;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted)}
+.chk{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--text-muted);font-size:.85rem;cursor:pointer}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:default}
+.tlacitka{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tlacitka .btn{flex:1 1 auto}
+.prepinac{display:flex;gap:0;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden;flex-wrap:wrap}
+.prepinac button{flex:1 1 auto;background:var(--bg-control);color:var(--text);border:none;border-right:1px solid var(--border-strong);padding:7px 8px;cursor:pointer;font-size:.83rem;font-family:inherit}
+.prepinac button:last-child{border-right:none}
+.prepinac button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff)}
+.zona{border:2px dashed var(--border-strong);border-radius:8px;padding:14px 10px;text-align:center;color:var(--text-muted);font-size:.85rem;cursor:pointer;line-height:1.5}
+.zona:hover,.zona.nad{border-color:var(--accent);background:var(--accent-soft)}
+.zona b{color:var(--text)}
+.note{font-size:.76rem;color:var(--text-faint);line-height:1.5;margin-top:6px}
+.note b{color:var(--text-muted)}
+#histogram{width:100%;height:60px;display:block;background:var(--bg-input);border:1px solid var(--border);border-radius:5px;margin-top:6px}
+.vrstva-radek{display:grid;grid-template-columns:auto minmax(0,1fr) 40px;gap:8px;align-items:center;margin-top:6px;font-size:.82rem}
+.vrstva-radek input[type=color]{width:40px}
+/* plocha s náhledem */
+.plocha{position:sticky;top:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.lista{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lista .prepinac button{padding:6px 9px}
+.lista .mezera{flex:1}
+.ikona{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:6px 9px;cursor:pointer;font-size:.85rem;min-width:34px;font-family:inherit}
+.ikona[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.ikona:disabled{opacity:.4;cursor:default}
+#obalPlatna{position:relative;height:calc(100vh - 175px);min-height:340px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-deep);touch-action:none}
+#platno{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#platno.kreslit{cursor:crosshair}
+#pocitam{position:absolute;top:8px;right:8px;background:var(--bg-panel);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:.75rem;pointer-events:none}
+#prazdno{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text-faint);padding:20px;font-size:.92rem;line-height:1.6;pointer-events:none}
+.stav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--text-muted);padding:2px 2px}
+.stav b{color:var(--text)}
+.stav .zle{color:var(--danger);font-weight:600}
+.stav .pozor{color:var(--warn)}
+.stav .dobre{color:var(--ok)}
+.hlaseni{display:flex;flex-direction:column;gap:4px}
+.hlaseni div{font-size:.8rem;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-elevated);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hlaseni .h-zle{border-color:var(--danger)}
+.hlaseni .h-pozor{border-color:var(--warn)}
+.hlaseni span{flex:1;min-width:12em}
+.hlaseni button{font-size:.75rem;padding:4px 8px}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.74rem;color:var(--text-faint)}
+.legenda i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:4px;border:1px solid var(--border-strong)}
+[hidden]{display:none!important}
+input[type=file]{display:none}
+kbd{font-family:inherit;font-size:.72rem;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--bg-control)}
+@media (max-width:900px){
+  .rozlozeni{grid-template-columns:minmax(0,1fr)}
+  .plocha{position:static;order:-1}
+  #obalPlatna{height:62vh;min-height:300px}
+}
+@media (max-width:420px){
+  body{padding:8px 8px 14px}
+  .mrizka3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  h1{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+<h1>🎨 Šablona na sprej (stencil)</h1>
+<p class="sub">Z obrázku nebo textu udělá šablonu k vyříznutí – hlídá vypadávající ostrůvky, tenká místa a dělí velké šablony na listy.</p>
+
+<div class="rozlozeni">
+  <div class="panel">
+    <details class="karta" open id="kZdroj">
+      <summary>📥 Zdroj</summary>
+      <div class="prepinac" id="druhZdroje" role="group" aria-label="Druh zdroje">
+        <button type="button" data-h="obrazek" aria-pressed="true">🖼️ Obrázek</button>
+        <button type="button" data-h="text" aria-pressed="false">🔤 Text</button>
+      </div>
+      <div id="zdrojObrazek">
+        <div class="zona" id="zona" tabindex="0" role="button" aria-label="Vybrat obrázek" style="margin-top:8px">
+          <b>Přetáhněte obrázek sem</b><br>nebo klepněte a vyberte soubor,<br>případně vložte ze schránky (<kbd>Ctrl</kbd>+<kbd>V</kbd>)
+        </div>
+        <input type="file" id="soubor" accept="image/*">
+        <div class="tlacitka">
+          <button type="button" class="btn btn-sec" id="ukazka">✨ Ukázkový obrázek</button>
+        </div>
+        <div class="note" id="infoObrazek"></div>
+      </div>
+      <div id="zdrojText" hidden>
+        <label class="pop" for="text">Text (víc řádků = Enter)</label>
+        <textarea id="text" rows="2">STENCIL</textarea>
+        <label class="pop">Písmo</label>
+        <div id="font"></div>
+        <input type="file" id="souborFontu" accept=".ttf,.otf,.woff,font/ttf,font/otf">
+        <div class="mrizka3">
+          <div><label class="pop" for="zarovnani">Zarovnání</label>
+            <select id="zarovnani"><option value="left">vlevo</option><option value="center" selected>na střed</option><option value="right">vpravo</option></select></div>
+          <div><label class="pop" for="prostrk">Prostrkání</label><input type="number" id="prostrk" value="0" step="1" min="-20" max="100"></div>
+          <div><label class="pop" for="radkovani">Řádkování</label><input type="number" id="radkovani" value="1.1" step="0.05" min="0.6" max="3"></div>
+        </div>
+        <p class="note">Tip: šablonová písma (<b>Saira Stencil One</b>, <b>Black Ops One</b>) mají přerušení už v sobě. U běžného písma navrhne můstky stránka – v části Můstky lze zvolit i styl „svisle jako šablonové písmo“.</p>
+      </div>
+    </details>
+
+    <details class="karta" open>
+      <summary>📏 Velikost</summary>
+      <div class="mrizka2">
+        <div><label class="pop" for="sirka">Šířka motivu (mm)</label><input type="number" id="sirka" value="300" min="10" max="5000" step="1"></div>
+        <div><label class="pop" for="vyska">Výška motivu (mm)</label><input type="number" id="vyska" value="200" min="10" max="5000" step="1"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="pomer" checked> Zachovat poměr stran</label>
+      <div class="mrizka2">
+        <div><label class="pop" for="okraj">Rám kolem (mm)</label><input type="number" id="okraj" value="15" min="0" max="200" step="1"></div>
+        <div><label class="pop" for="rozliseni">Jemnost výpočtu</label>
+          <select id="rozliseni"><option value="450">rychlá (450 px)</option><option value="750" selected>běžná (750 px)</option><option value="1100">jemná (1100 px)</option><option value="1600">velmi jemná (1600 px)</option></select></div>
+      </div>
+      <p class="note" id="infoVelikost"></p>
+    </details>
+
+    <details class="karta" id="kObraz" open>
+      <summary>🌗 Úpravy obrazu</summary>
+      <label class="pop" for="jas">Jas</label>
+      <div class="posuv"><input type="range" id="jas" min="-100" max="100" value="0"><output for="jas"></output></div>
+      <label class="pop" for="kontrast">Kontrast</label>
+      <div class="posuv"><input type="range" id="kontrast" min="-100" max="100" value="0"><output for="kontrast"></output></div>
+      <label class="pop" for="gama">Gama (střední tóny)</label>
+      <div class="posuv"><input type="range" id="gama" min="0.3" max="3" step="0.05" value="1"><output for="gama"></output></div>
+      <label class="pop" for="rozmazani">Rozmazání (mm) – potlačí šum a drobnosti</label>
+      <div class="posuv"><input type="range" id="rozmazani" min="0" max="5" step="0.1" value="0.3"><output for="rozmazani"></output></div>
+    </details>
+
+    <details class="karta" open>
+      <summary>✂️ Šablona</summary>
+      <label class="pop">Počet vrstev (barev)</label>
+      <div class="prepinac" id="vrstev" role="group" aria-label="Počet vrstev">
+        <button type="button" data-h="1" aria-pressed="true">1</button><button type="button" data-h="2" aria-pressed="false">2</button><button type="button" data-h="3" aria-pressed="false">3</button><button type="button" data-h="4" aria-pressed="false">4</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="prahAuto" checked> Práh automaticky (Otsu)</label>
+      <canvas id="histogram" width="300" height="60" aria-label="Histogram jasu s prahy"></canvas>
+      <div id="prahy"></div>
+      <label class="chk" id="rKumul"><input type="checkbox" id="kumulativni" checked> Vrstvy se překrývají (tmavší tón přes světlejší)</label>
+      <label class="chk"><input type="checkbox" id="inverze"> Inverze (vyříznout světlé místo tmavého)</label>
+      <label class="pop" for="vyhlazeni">Vyhlazení obrysu (mm)</label>
+      <div class="posuv"><input type="range" id="vyhlazeni" min="0" max="5" step="0.1" value="0.5"><output for="vyhlazeni"></output></div>
+      <label class="pop" for="minPlocha">Odstranit drobnosti menší než (mm²)</label>
+      <div class="posuv"><input type="range" id="minPlocha" min="0" max="100" step="1" value="6"><output for="minPlocha"></output></div>
+      <div id="barvyVrstev"></div>
+    </details>
+
+    <details class="karta" open id="kMustky">
+      <summary>🌉 Můstky a ostrůvky</summary>
+      <p class="note" style="margin-top:0"><b>Ostrůvek</b> je kousek šablony uvnitř výřezu (vnitřek O, A, B…) – bez můstku by vypadl. Nepodložené ostrůvky svítí <b style="color:#e53935">červeně</b>.</p>
+      <label class="chk"><input type="checkbox" id="mustkyAuto" checked> Navrhovat můstky automaticky</label>
+      <div class="mrizka2">
+        <div><label class="pop" for="smerMustku">Styl</label>
+          <select id="smerMustku"><option value="nejkratsi">nejkratší cestou</option><option value="svisle">svisle (šablonové písmo)</option><option value="vodorovne">vodorovně</option></select></div>
+        <div><label class="pop" for="mustkuNaOstrov">Na ostrůvek</label>
+          <select id="mustkuNaOstrov"><option value="1">1 můstek</option><option value="2" selected>2 můstky</option></select></div>
+      </div>
+      <label class="pop" for="sirkaMustku">Šířka můstku (mm)</label>
+      <div class="posuv"><input type="range" id="sirkaMustku" min="0.5" max="15" step="0.5" value="3"><output for="sirkaMustku"></output></div>
+      <div class="tlacitka">
+        <button type="button" class="btn btn-sec" id="doplnit" title="Navrhne můstky pro ostrůvky, které ještě žádný nemají">➕ Doplnit chybějící</button>
+        <button type="button" class="btn btn-sec" id="smazatRucni">🗑️ Smazat ruční</button>
+      </div>
+      <p class="note">Úpravy myší i prstem: nástroj <b>➕ Můstek</b> – táhněte přes výřez. Nástroj <b>✋ Výběr</b> – klepnutím vyberete můstek, táhnete jeho konce nebo celý, <kbd>Del</kbd> smaže. Klepnutí na červený ostrůvek mu navrhne můstek. První ruční úprava převezme automatické můstky a automatiku vypne.</p>
+    </details>
+
+    <details class="karta" open>
+      <summary>🔍 Kontrola</summary>
+      <label class="chk"><input type="checkbox" id="kontrolaTenkych" checked> Hlídat tenká místa materiálu</label>
+      <label class="pop" for="limitTenkych">Nejmenší šířka materiálu (mm)</label>
+      <div class="posuv"><input type="range" id="limitTenkych" min="0.5" max="10" step="0.1" value="2"><output for="limitTenkych"></output></div>
+      <p class="note">Tenká místa (oranžově) se trhají a při sprejování se zvedají. U fólie 0,1–0,2 mm volte aspoň 1,5–2 mm, u kartonu víc.</p>
+    </details>
+
+    <details class="karta">
+      <summary>〰️ Vektor (obrysy)</summary>
+      <label class="pop" for="zjednoduseni">Zjednodušení (px výpočtu)</label>
+      <div class="posuv"><input type="range" id="zjednoduseni" min="0" max="3" step="0.1" value="0.7"><output for="zjednoduseni"></output></div>
+      <label class="pop" for="vyhlazeniVektoru">Vyhlazení křivek (kroky)</label>
+      <div class="posuv"><input type="range" id="vyhlazeniVektoru" min="0" max="3" step="1" value="1"><output for="vyhlazeniVektoru"></output></div>
+      <p class="note">Obrysy jsou vlastní vektorizace (marching squares + Douglas–Peucker + Chaikin) s kontrolou, že se křivky nekříží.</p>
+    </details>
+
+    <details class="karta" open>
+      <summary>💾 Výstup</summary>
+      <label class="chk"><input type="checkbox" id="registrace" checked> Registrační otvory v rohu rámu (u víc vrstev)</label>
+      <label class="pop" for="exVrstvy">Vrstvy do souboru</label>
+      <select id="exVrstvy"><option value="vse">všechny (vedle sebe / každá na své listy)</option><option value="aktualni">jen zobrazená vrstva</option></select>
+      <div class="mrizka2">
+        <div><label class="pop" for="svgStyl">SVG</label>
+          <select id="svgStyl"><option value="vypln">plná výplň (Cricut, Silhouette)</option><option value="linky">řezné linky 0,1 mm (laser)</option></select></div>
+        <div><label class="pop" for="pngDpi">PNG (DPI)</label>
+          <select id="pngDpi"><option>150</option><option selected>300</option><option>600</option></select></div>
+      </div>
+      <div class="tlacitka">
+        <button type="button" class="btn" id="exSvg">⬇ SVG</button>
+        <button type="button" class="btn" id="exDxf">⬇ DXF</button>
+        <button type="button" class="btn" id="exPng">⬇ PNG</button>
+      </div>
+      <label class="pop" for="papir">PDF k tisku 1:1</label>
+      <div class="mrizka2">
+        <select id="papir"><option value="210x297" selected>A4</option><option value="297x420">A3</option><option value="215.9x279.4">Letter</option><option value="420x594">A2</option><option value="vlastni">vlastní…</option></select>
+        <select id="orientace"><option value="auto">orientace: nejméně listů</option><option value="na_vysku">na výšku</option><option value="na_sirku">na šířku</option></select>
+      </div>
+      <div class="mrizka2" id="vlastniPapir" hidden>
+        <div><label class="pop" for="papirW">Šířka papíru (mm)</label><input type="number" id="papirW" value="210" min="50" max="2000"></div>
+        <div><label class="pop" for="papirH">Výška papíru (mm)</label><input type="number" id="papirH" value="297" min="50" max="2000"></div>
+      </div>
+      <div class="mrizka2">
+        <div><label class="pop" for="okrajTisku">Okraj tisku (mm)</label><input type="number" id="okrajTisku" value="8" min="0" max="40" step="0.5"></div>
+        <div><label class="pop" for="preklad">Překryv listů (mm)</label><input type="number" id="preklad" value="10" min="0" max="60" step="1"></div>
+      </div>
+      <div class="tlacitka"><button type="button" class="btn" id="exPdf">⬇ PDF 1:1</button></div>
+      <p class="note" id="infoListy"></p>
+      <div class="tlacitka"><button type="button" class="btn btn-sec" id="novy">🆕 Nový projekt</button></div>
+    </details>
+  </div>
+
+  <div class="plocha">
+    <div class="lista">
+      <div class="prepinac" id="pohled" role="group" aria-label="Pohled">
+        <button type="button" data-h="sablona" aria-pressed="true" title="Šablona (materiál a výřezy)">✂️ Šablona</button>
+        <button type="button" data-h="nastrik" aria-pressed="false" title="Simulace nástřiku přes šablonu">🎨 Nástřik</button>
+        <button type="button" data-h="original" aria-pressed="false" title="Původní obrázek">🖼️ Předloha</button>
+      </div>
+      <div class="prepinac" id="vrstvaVyber" role="group" aria-label="Vrstva"></div>
+      <span class="mezera"></span>
+      <button type="button" class="ikona" id="nVyber" aria-pressed="true" title="Výběr a posun (V)">✋</button>
+      <button type="button" class="ikona" id="nMustek" aria-pressed="false" title="Kreslit můstek (B)">➕ Můstek</button>
+      <button type="button" class="ikona" id="nSmazat" disabled title="Smazat vybraný můstek (Delete)">🗑️</button>
+      <button type="button" class="ikona" id="zMensi" title="Oddálit (−)">−</button>
+      <button type="button" class="ikona" id="zCele" title="Celá šablona (0)">⤢</button>
+      <button type="button" class="ikona" id="zVetsi" title="Přiblížit (+)">+</button>
+    </div>
+    <div id="obalPlatna">
+      <canvas id="platno"></canvas>
+      <div id="prazdno">Vložte obrázek (přetažením, souborem nebo <kbd>Ctrl</kbd>+<kbd>V</kbd>)<br>nebo přepněte na text.</div>
+      <div id="pocitam" hidden>počítám…</div>
+    </div>
+    <div class="lista" style="gap:10px">
+      <label class="chk" style="margin:0"><input type="checkbox" id="ukazObrysy"> řezné obrysy</label>
+      <label class="chk" style="margin:0"><input type="checkbox" id="ukazPodklad"> předloha pod šablonou</label>
+      <label class="chk" style="margin:0" id="rPodkladNastriku"><span>Podklad:</span>
+        <select id="podkladNastriku" style="width:auto;padding:3px 6px"><option value="bila">bílá zeď</option><option value="beton">beton</option><option value="cihly">cihly</option><option value="karton">karton</option><option value="cerna">černá</option></select></label>
+    </div>
+    <div class="legenda" id="legenda">
+      <span><i style="background:#2f7f9f"></i>materiál šablony</span>
+      <span><i style="background:#ffffff"></i>výřez (barva)</span>
+      <span><i style="background:#e53935"></i>nepodložený ostrůvek</span>
+      <span><i style="background:#ff9800"></i>tenké místo</span>
+      <span><i style="background:#ffd54f"></i>můstek</span>
+    </div>
+    <div class="stav" id="stav"></div>
+    <div class="hlaseni" id="hlaseni"></div>
+  </div>
+</div>
+
+<script src="stencil/ui.js"></script>
+</body>
+</html>

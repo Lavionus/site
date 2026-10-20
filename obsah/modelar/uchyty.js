@@ -84,7 +84,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     function ctverec(x, y, vel, trida, data) {
       if (hrubyUkazatel.matches) vel *= 1.8;          // prst: větší úchyty
       const r = el('rect', { x: x - vel / 2, y: y - vel / 2, width: vel, height: vel, class: 'uchyt ' + trida }, vrstvaUchytu);
-      uchyty.push(Object.assign({ prvek: r }, data));
+      uchyty.push(Object.assign({ prvek: r, obrX: x, obrY: y }, data));
       return r;
     }
 
@@ -153,6 +153,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           const k1 = bod(sx ? sx * h[0] : -h[0], sy ? sy * h[1] : -h[1], h[2]);
           const k2 = bod(sx ? sx * h[0] : h[0], sy ? sy * h[1] : h[1], h[2]);
           if (!p || !dole || !k1 || !k2 || Math.hypot(k1[0] - k2[0], k1[1] - k2[1]) < 1.6 * vel || Math.hypot(p[0] - dole[0], p[1] - dole[1]) < 1.2 * vel) continue;
+          // v pohledu se horní hrana může promítnout na dolní roh nebo hranu – ten má přednost (jinak by ho zakryla)
+          if (uchyty.some(q => q.obrX != null && Math.hypot(q.obrX - p[0], q.obrY - p[1]) < 1.4 * vel)) continue;
           ctverec(p[0], p[1], 8, 'hrana horni', { druh: 'velikost', uchyt: { sx, sy, horni: true }, nazev: `hornihrana${sx}${sy}` });
         }
         const pv = bod(0, 0, h[2]);

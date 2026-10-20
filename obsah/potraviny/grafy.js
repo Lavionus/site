@@ -44,9 +44,16 @@
           'stroke-dasharray': (Math.min(1, podil - 1) * obvod) + ' ' + obvod, transform: 'rotate(-90 64 64)' }, svg);
       }
     }
-    txt(svg, 64, 60, fmt(hodnota), { class: 'kruh-cislo', 'text-anchor': 'middle' });
     const jed = (volby && volby.jednotka) || 'kcal';
-    txt(svg, 64, 80, cil ? 'z ' + fmt(cil) + ' ' + jed : jed, { class: 'kruh-popis', 'text-anchor': 'middle' });
+    if (cil > 0) {   // s cílem tři řádky: číslo, „z cíle“, procenta
+      const pr = Math.round(100 * Math.max(0, hodnota) / cil);
+      txt(svg, 64, 56, fmt(hodnota), { class: 'kruh-cislo', 'text-anchor': 'middle' });
+      txt(svg, 64, 73, 'z ' + fmt(cil) + ' ' + jed, { class: 'kruh-popis', 'text-anchor': 'middle' });
+      txt(svg, 64, 92, pr + ' %', { class: 'kruh-procenta' + (pr > 105 ? ' nad' : ''), 'text-anchor': 'middle' });
+    } else {
+      txt(svg, 64, 60, fmt(hodnota), { class: 'kruh-cislo', 'text-anchor': 'middle' });
+      txt(svg, 64, 80, jed, { class: 'kruh-popis', 'text-anchor': 'middle' });
+    }
     return svg;
   }
 
