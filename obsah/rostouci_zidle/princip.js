@@ -28,7 +28,7 @@
   koren.RZPrincip = {
     princip: () => `
       <h3>Proč „roste s dítětem“</h3>
-      <p>Batole i dospělý sedí u stejného stolu (72–76 cm). Mění se jen výška sedu a výška opory chodidel. Sedák a podnožka jsou proto dvě desky zasunuté do <b>vodorovných drážek</b> ve dvou bocích; přestaví se do jiné drážky a sevřou se dvěma svorníky. Jde o obecný princip známý z mnoha „rostoucích“ židlí – tady je to <b>vlastní konstrukce</b> (rozměry, počet drážek, ližiny, svorníky i opěradlo počítá tato stránka). Konkrétní komerční design (např. Tripp Trapp® od Stokke, chráněný průmyslovým vzorem) nekopírujeme.</p>
+      <p>Batole i dospělý sedí u stejného stolu (72–76 cm). Mění se jen výška sedu a výška opory chodidel. Sedák a podnožka jsou proto dvě desky zasunuté do <b>vodorovných drážek</b> ve dvou bocích; přestaví se do jiné drážky a sevřou se dvěma svorníky. Jde o obecný princip známý z mnoha „rostoucích“ židlí – tady je to <b>vlastní konstrukce</b> (rozměry, počet drážek, ližiny, svorníky i opěradlo počítá tato stránka). Konkrétní komerční design (např. Tripp Trapp® od Stokke – chráněný design) nekopírujeme.</p>
       ${schemaSklon()}
       <h3>Proč šikmé boky</h3>
       <ul><li>Podnožka leží o výšku podkolení níž než sedák – na šikmém boku je tím automaticky o <i>podkolení × tg sklonu</i> vpředu, tedy pod chodidly.</li>
@@ -63,6 +63,6 @@
       <li><b>ČSN EN 14988</b> Dětské vysoké židle – Požadavky a zkušební metody (pro děti do 36 měsíců: stabilita, zádržný systém, mezery). <i>Jen odkaz – konstrukci vůči normě ověřte, tato stránka zkoušky nenahrazuje.</i></li>
       <li><b>ČSN EN 71-3</b> Bezpečnost hraček – Migrace určitých prvků (povrchové úpravy).</li>
       <li>Antropometrické podíly (výška podkolení, délka stehna, segmenty těla) – zjednodušeně podle Drillise a Contiho; u konkrétního dítěte je lepší změřit.</li></ul>
-      <p class="info">Princip „rostoucí židle“ je obecný. Tripp Trapp® je ochranná známka a chráněný design společnosti Stokke – tato stránka nekopíruje jeho tvar ani rozměry.</p>`,
+      <p class="info">Princip „rostoucí židle“ je obecný. Tripp Trapp® je ochranná známka společnosti Stokke a jeho design je chráněný – tato stránka nekopíruje jeho tvar ani rozměry.</p>`,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
