@@ -1,146 +1,165 @@
-/* dalekohled/ui.js – ovládání simulátoru „Hvězdářský dalekohled“ */
+/* dalekohled/ui.js – jádro aplikace „Hvězdářský dalekohled“: stav, čas, směr dalekohledu,
+   vybavení, hlavní smyčka (okulár, mapa, karta objektu), nástroje v okuláru, sdílení.
+   Ostatní moduly (hledani, planovac, ukazy, panely, denik) používají window.DALEK_APP. */
 (function () {
   'use strict';
   const D = window.DALEK, DATA = window.DALEK_DATA, OK = window.DALEK_OKULAR, OB = window.DALEK_OBLOHA, A = window.ASTRO;
+  const K = window.DALEK_KAT, V = window.DALEK_VYBAVA;
   const $ = id => document.getElementById(id);
   const RAD = Math.PI / 180;
   const KLIC = 'webapp_dalekohled';
 
-  const DALEKOHLEDY = [
-    { id: 'galileo', nazev: 'Galileův dalekohled 1609 (replika, 20×)', D: 26, F: 980, typ: 'galileo', vada: 'cocka', obstrukce: 0, pevneZvetseni: 20, pevnePole: 0.25, montaz: 'az', diag: 0 },
-    { id: 'r70', nazev: 'Refraktor 70/700 (začátečnický)', D: 70, F: 700, typ: 'refraktor', vada: 'achromat', obstrukce: 0, montaz: 'az', diag: 1 },
-    { id: 'r102', nazev: 'Refraktor 102/1000 achromát', D: 102, F: 1000, typ: 'refraktor', vada: 'achromat', obstrukce: 0, montaz: 'eq', diag: 1 },
-    { id: 'apo80', nazev: 'Apochromát 80/480', D: 80, F: 480, typ: 'refraktor', vada: 'apo', obstrukce: 0, montaz: 'eq', diag: 1 },
-    { id: 'n114', nazev: 'Newton 114/900', D: 114, F: 900, typ: 'newton', vada: 'zadna', obstrukce: 0.25, montaz: 'eq', diag: 0 },
-    { id: 'd150', nazev: 'Dobson 150/1200', D: 150, F: 1200, typ: 'newton', vada: 'zadna', obstrukce: 0.22, montaz: 'az', diag: 0 },
-    { id: 'd200', nazev: 'Dobson 200/1200', D: 200, F: 1200, typ: 'newton', vada: 'zadna', obstrukce: 0.22, montaz: 'az', diag: 0 },
-    { id: 'd300', nazev: 'Dobson 300/1500', D: 300, F: 1500, typ: 'newton', vada: 'zadna', obstrukce: 0.2, montaz: 'az', diag: 0 },
-    { id: 'sct8', nazev: 'Schmidt-Cassegrain 203/2032 (GoTo)', D: 203, F: 2032, typ: 'sct', vada: 'zadna', obstrukce: 0.34, montaz: 'az', diag: 1, sledovani: true },
-    { id: 'mak127', nazev: 'Maksutov 127/1500', D: 127, F: 1500, typ: 'mak', vada: 'zadna', obstrukce: 0.3, montaz: 'eq', diag: 1, sledovani: true },
-    { id: 'triedr', nazev: 'Triedr 10×50', D: 50, F: 200, typ: 'triedr', vada: 'achromat', obstrukce: 0, pevneZvetseni: 10, pevnePole: 6.5, montaz: 'az', diag: 0 },
-    { id: 'vlastni', nazev: 'Vlastní…', D: 200, F: 1000, typ: 'newton', vada: 'zadna', obstrukce: 0.22, montaz: 'az', diag: 0 },
-  ];
-  const OKULARY = [
-    { f: 40, afov: 43, n: 'Plössl' }, { f: 32, afov: 52, n: 'Plössl' }, { f: 25, afov: 52, n: 'Plössl' }, { f: 20, afov: 68, n: 'širokoúhlý' },
-    { f: 15, afov: 52, n: 'Plössl' }, { f: 12, afov: 52, n: 'Plössl' }, { f: 10, afov: 52, n: 'Plössl' }, { f: 8, afov: 68, n: 'širokoúhlý' },
-    { f: 6, afov: 60, n: 'planetární' }, { f: 5, afov: 60, n: 'planetární' }, { f: 4, afov: 58, n: 'planetární' }, { f: 3, afov: 58, n: 'planetární' },
-  ];
   const MISTA = [
     ['Praha', 50.087, 14.421, 250], ['Brno', 49.195, 16.608, 230], ['Ostrava', 49.835, 18.292, 220], ['Plzeň', 49.738, 13.373, 310],
     ['České Budějovice', 48.975, 14.474, 390], ['Hradec Králové', 50.209, 15.833, 235], ['Liberec', 50.767, 15.056, 380],
     ['Olomouc', 49.594, 17.251, 220], ['Ondřejov (observatoř)', 49.910, 14.781, 530], ['Jizerka (tmavá obloha)', 50.820, 15.333, 860],
-    ['Bratislava', 48.148, 17.107, 140], ['Vlastní', null, null, 300],
+    ['Úpice (hvězdárna)', 50.512, 16.012, 410], ['Kleť (observatoř)', 48.863, 14.284, 1070], ['Bratislava', 48.148, 17.107, 140],
+    ['Vlastní', null, null, 300],
   ];
 
   /* ---------- stav ---------- */
   const S = {
-    dal: 'd200', vlastni: { D: 200, F: 1000, typ: 'newton', vada: 'zadna', obstrukce: 0.22 },
-    montaz: 'az', diag: 0, sledovani: false, okular: 2, barlow: 1, fokus: 0, fokusCil: 0,
+    dal: 'd200', montaz: 'az', diag: 0, sledovani: false, okular: 'p25', barlow: '1', fokus: 0, fokusCil: 0,
+    rezim: 'okular', kamera: 'asi2600', expozice: 30, barlowK: '1', filtr: 'zadny',
     misto: 0, lat: 50.087, lon: 14.421, vyska: 250,
-    seeing: 2.5, bortle: 4, lupa: 1, zornice: 7, popisky: true, rychlost: 1, mapaPole: 70, pohyb: 64,
-    zalozka: 'planety', jenNad: true,
+    seeing: 2.5, bortle: 4, zornice: 7, popisky: true, rychlost: 1, mapaPole: 70, mapaMez: 5.5, pohyb: 64, lupa: 1,
+    kriz: false, sit: false, sipka: true, nocni: false,
+    mRovnik: false, mEkliptika: true, mTelrad: false, mOkulary: false, mDso: true,
+    cil: null, seznam: [], zalozka: 'planovac', grs: 75,
   };
   try { Object.assign(S, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { /* bez uložení */ }
+  // starší uložený stav (číselné okuláry, barlow jako číslo)
+  if (typeof S.okular === 'number') S.okular = 'p25';
+  if (typeof S.barlow === 'number') S.barlow = '1';
   const uloz = () => { try { const { fokusCil, ...u } = S; localStorage.setItem(KLIC, JSON.stringify(u)); } catch (e) { /* nevadí */ } };
 
   // čas simulace
-  let jd0 = D ? A.jdZData(new Date()) : 0, t0 = performance.now();
+  let jd0 = A.jdZData(new Date()), t0 = performance.now();
   const jdTed = () => jd0 + (performance.now() - t0) / 86400000 * S.rychlost;
-  const nastavJd = jd => { jd0 = jd; t0 = performance.now(); };
+  const nastavJd = jd => { jd0 = jd; t0 = performance.now(); prepocet(); };
 
   // směr dalekohledu: c (J2000) při sledování, jinak {alt, az}
   let smer = { alt: 35, az: 180 }, cJ2000 = null;
+  // střed mapy: null = sleduje dalekohled
+  let mapaStred = null;
 
   const misto = () => ({ lat: S.lat, lon: S.lon, vyska: S.vyska });
-  const dalekohled = () => {
-    const p = DALEKOHLEDY.find(d => d.id === S.dal) || DALEKOHLEDY[6];
-    return p.id === 'vlastni' ? { ...p, ...S.vlastni } : p;
-  };
-  const okular = () => OKULARY[Math.max(0, Math.min(OKULARY.length - 1, S.okular))];
+  const dalekohled = () => V.dalekohled(S.dal);
+  const okular = () => V.okular(S.okular);
+  const fotoRezim = () => S.rezim === 'kamera' && !dalekohled().pevneZvetseni;
+  const barlowK = () => V.prislusenstvi(fotoRezim() ? S.barlowK : S.barlow).k;
+
+  // posluchači změn (moduly se přepočítají při změně času, místa, vybavení)
+  const posluchaci = [];
+  let prepocetCas = null;
+  function prepocet() {
+    clearTimeout(prepocetCas);
+    prepocetCas = setTimeout(() => { for (const f of posluchaci) try { f(); } catch (e) { console.error(e); } }, 120);
+  }
 
   /* ---------- ovládací prvky ---------- */
-  const selDal = $('selDalekohled');
-  DALEKOHLEDY.forEach(d => selDal.add(new Option(d.nazev, d.id)));
-  const selOk = $('selOkular');
-  const naplnOkulary = () => {
+  const selDal = $('selDalekohled'), selOk = $('selOkular'), selMisto = $('selMisto');
+  function naplnVybavu() {
+    selDal.innerHTML = '';
+    const skup = { n: document.createElement('optgroup'), v: document.createElement('optgroup') };
+    skup.n.label = 'Předvolby'; skup.v.label = 'Moje dalekohledy';
+    for (const d of V.dalekohledy()) skup[d.vlastni ? 'v' : 'n'].appendChild(new Option(d.nazev, d.id));
+    selDal.appendChild(skup.n); if (skup.v.children.length) selDal.appendChild(skup.v);
+    selDal.value = dalekohled().id;
+    naplnOkulary();
+    for (const id of ['selBarlow', 'selBarlowK']) {
+      const s = $(id); s.innerHTML = '';
+      for (const p of V.PRISLUSENSTVI) s.add(new Option(p.n, p.id));
+    }
+    $('selBarlow').value = S.barlow; $('selBarlowK').value = S.barlowK;
+    const sk = $('selKamera'); sk.innerHTML = '';
+    for (const k of V.kamery()) sk.add(new Option(k.n + (k.vlastni ? ' (vlastní)' : ''), k.id));
+    sk.value = V.kamera(S.kamera).id;
+    const sf = $('selFiltr'); sf.innerHTML = '';
+    for (const f of V.FILTRY) sf.add(new Option(f.n, f.id));
+    sf.value = S.filtr;
+  }
+  function naplnOkulary() {
     selOk.innerHTML = '';
     const dal = dalekohled();
-    OKULARY.forEach((o, i) => {
-      const M = dal.F * S.barlow / o.f;
-      selOk.add(new Option(`${o.f} mm ${o.n} ${o.afov}° – ${Math.round(M)}×`, i));
-    });
+    const seznam = V.okulary();
+    if (!seznam.find(o => o.id === S.okular) && seznam.length) S.okular = seznam[Math.min(2, seznam.length - 1)].id;
+    for (const o of seznam) {
+      const M = dal.F * V.prislusenstvi(S.barlow).k / o.f;
+      selOk.add(new Option(`${String(o.f).replace('.', ',')} mm ${o.n} ${o.afov}° – ${Math.round(M)}×`, o.id));
+    }
     selOk.value = S.okular;
     selOk.disabled = !!dal.pevneZvetseni;
     $('selBarlow').disabled = !!dal.pevneZvetseni;
-  };
-  const selMisto = $('selMisto');
+  }
   MISTA.forEach((m, i) => selMisto.add(new Option(m[0], i)));
 
   function nahodnyFokus() {
-    // každý okulár má ohnisko jinde (nejsou parfokální); triedr a Galileo jsou zaostřené
     const dal = dalekohled();
     S.fokusCil = dal.pevneZvetseni ? 0 : Math.round((Math.random() * 2.4 - 1.2) * 100) / 100;
   }
   function doFormulare() {
-    selDal.value = S.dal;
-    const v = S.dal === 'vlastni';
-    $('vlastni').hidden = !v;
-    $('inD').value = S.vlastni.D; $('inF').value = S.vlastni.F; $('selTyp').value = S.vlastni.typ;
-    $('selVada').value = S.vlastni.vada; $('inObstr').value = S.vlastni.obstrukce;
-    $('vObstr').textContent = Math.round(S.vlastni.obstrukce * 100) + ' %';
+    naplnVybavu();
     $('selMontaz').value = S.montaz; $('selDiag').value = String(S.diag);
     $('chkSledovani').checked = S.sledovani;
-    naplnOkulary();
-    $('selBarlow').value = String(S.barlow);
     $('inFokus').value = S.fokus;
     selMisto.value = S.misto;
     $('inLat').value = S.lat; $('inLon').value = S.lon;
-    $('inSeeing').value = S.seeing; $('vSeeing').textContent = S.seeing.toFixed(1) + '″';
+    $('inSeeing').value = S.seeing; $('vSeeing').textContent = S.seeing.toFixed(1).replace('.', ',') + '″';
     $('selBortle').value = S.bortle; $('selZornice').value = S.zornice;
-    $('chkPopisky').checked = S.popisky;
     $('selRychlost').value = String(S.rychlost);
     $('inMapaPole').value = S.mapaPole; $('vMapaPole').textContent = S.mapaPole + '°';
+    $('inMapaMez').value = S.mapaMez; $('vMapaMez').textContent = String(S.mapaMez).replace('.', ',') + ' mag';
     $('selPohyb').value = String(S.pohyb);
     $('selLupa').value = String(S.lupa);
+    $('inExpozice').value = S.expozice;
+    const fr = fotoRezim();
+    $('rezOkular').setAttribute('aria-pressed', String(!fr)); $('rezKamera').setAttribute('aria-pressed', String(fr));
+    $('blokOkular').hidden = fr; $('blokKamera').hidden = !fr;
+    const tg = { tPopisky: S.popisky, tKriz: S.kriz, tSit: S.sit, tMereni: mereni.zap, tSipka: S.sipka, btnNocni: S.nocni, mRovnik: S.mRovnik, mEkliptika: S.mEkliptika, mTelrad: S.mTelrad, mOkulary: S.mOkulary, mDso: S.mDso };
+    for (const [id, v] of Object.entries(tg)) $(id).setAttribute('aria-pressed', String(!!v));
+    document.body.classList.toggle('nocni', !!S.nocni);
   }
   function zmenaDalekohledu() {
-    const d = DALEKOHLEDY.find(x => x.id === S.dal);
-    if (d && d.id !== 'vlastni') { S.montaz = d.montaz; S.diag = d.diag; prepniSledovani(!!d.sledovani); }
-    if (d && d.pevneZvetseni) S.barlow = 1;
-    nahodnyFokus(); S.fokus = 0;
-    doFormulare(); uloz();
+    const d = dalekohled();
+    if (!d.vlastni || d.montaz) { S.montaz = d.montaz || 'az'; S.diag = d.diag || 0; prepniSledovani(!!d.sledovani); }
+    if (d.pevneZvetseni) { S.barlow = '1'; if (S.rezim === 'kamera') S.rezim = 'okular'; }
+    nahodnyFokus(); S.fokus = S.fokusCil;
+    doFormulare(); uloz(); prepocet();
   }
   selDal.addEventListener('change', () => { S.dal = selDal.value; zmenaDalekohledu(); });
-  for (const [id, k, f] of [['inD', 'D', Number], ['inF', 'F', Number], ['selTyp', 'typ', String], ['selVada', 'vada', String], ['inObstr', 'obstrukce', Number]]) {
-    $(id).addEventListener('input', () => {
-      const v = f($(id).value);
-      if (f === Number && !(v >= 0)) return;
-      S.vlastni[k] = v;
-      if (k === 'typ') { S.vlastni.vada = v === 'refraktor' ? 'achromat' : 'zadna'; S.vlastni.obstrukce = v === 'refraktor' ? 0 : v === 'newton' ? 0.22 : 0.33; S.diag = v === 'newton' ? 0 : 1; }
-      doFormulare(); uloz();
-    });
-  }
   $('selMontaz').addEventListener('change', e => { S.montaz = e.target.value; uloz(); });
   $('selDiag').addEventListener('change', e => { S.diag = +e.target.value; uloz(); });
   $('chkSledovani').addEventListener('change', e => { prepniSledovani(e.target.checked); uloz(); });
-  selOk.addEventListener('change', () => { S.okular = +selOk.value; nahodnyFokus(); uloz(); });
-  $('selBarlow').addEventListener('change', e => { S.barlow = +e.target.value; naplnOkulary(); nahodnyFokus(); uloz(); });
+  selOk.addEventListener('change', () => { S.okular = selOk.value; nahodnyFokus(); uloz(); prepocet(); });
+  $('selBarlow').addEventListener('change', e => { S.barlow = e.target.value; naplnOkulary(); nahodnyFokus(); uloz(); prepocet(); });
+  $('selBarlowK').addEventListener('change', e => { S.barlowK = e.target.value; uloz(); prepocet(); });
+  $('selKamera').addEventListener('change', e => { S.kamera = e.target.value; uloz(); prepocet(); });
+  $('selFiltr').addEventListener('change', e => { S.filtr = e.target.value; uloz(); prepocet(); });
+  $('inExpozice').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { S.expozice = v; uloz(); prepocet(); } });
+  $('rezOkular').addEventListener('click', () => { S.rezim = 'okular'; doFormulare(); uloz(); prepocet(); });
+  $('rezKamera').addEventListener('click', () => {
+    if (dalekohled().pevneZvetseni) return zprava('Tento přístroj nemá výměnný okulár – kameru k němu nepřipojíte.');
+    S.rezim = 'kamera'; doFormulare(); uloz(); prepocet();
+  });
   $('inFokus').addEventListener('input', e => { S.fokus = +e.target.value; });
   $('btnZaostrit').addEventListener('click', () => { S.fokus = S.fokusCil; $('inFokus').value = S.fokus; });
+  $('odkazVybava').addEventListener('click', e => { e.preventDefault(); otevriZalozku('vybava'); $('panel-vybava').scrollIntoView({ behavior: 'smooth' }); });
   selMisto.addEventListener('change', () => {
     S.misto = +selMisto.value; const m = MISTA[S.misto];
     if (m[1] !== null) { S.lat = m[1]; S.lon = m[2]; S.vyska = m[3]; }
-    doFormulare(); uloz(); prepocetCilu(true);
+    doFormulare(); uloz(); prepocet();
   });
   for (const id of ['inLat', 'inLon']) $(id).addEventListener('change', () => {
     const la = +$('inLat').value, lo = +$('inLon').value;
-    if (la >= -90 && la <= 90 && lo >= -180 && lo <= 180) { S.lat = la; S.lon = lo; S.misto = MISTA.length - 1; selMisto.value = S.misto; uloz(); prepocetCilu(true); }
+    if (la >= -90 && la <= 90 && lo >= -180 && lo <= 180) { S.lat = la; S.lon = lo; S.misto = MISTA.length - 1; selMisto.value = S.misto; uloz(); prepocet(); }
   });
   $('btnGeo').addEventListener('click', () => {
     if (!navigator.geolocation) return zprava('Prohlížeč neumí zjistit polohu.');
     navigator.geolocation.getCurrentPosition(p => {
       S.lat = Math.round(p.coords.latitude * 1000) / 1000; S.lon = Math.round(p.coords.longitude * 1000) / 1000;
-      S.misto = MISTA.length - 1; doFormulare(); uloz(); prepocetCilu(true);
+      if (p.coords.altitude) S.vyska = Math.round(p.coords.altitude);
+      S.misto = MISTA.length - 1; doFormulare(); uloz(); prepocet();
     }, () => zprava('Poloha není k dispozici (zamítnuto nebo nedostupné).'));
   });
   // čas
@@ -148,29 +167,36 @@
     const p = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
   };
-  $('inCas').addEventListener('change', e => {
-    const d = new Date(e.target.value);
-    if (!isNaN(d)) { nastavJd(A.jdZData(d)); prepocetCilu(true); }
+  $('inCas').addEventListener('change', e => { const d = new Date(e.target.value); if (!isNaN(d)) nastavJd(A.jdZData(d)); });
+  $('selRychlost').addEventListener('change', e => { jd0 = jdTed(); t0 = performance.now(); S.rychlost = +e.target.value; uloz(); });
+  const ted = () => { nastavJd(A.jdZData(new Date())); S.rychlost = 1; $('selRychlost').value = '1'; };
+  $('btnTed').addEventListener('click', ted);
+  $('btnNoc').addEventListener('click', () => { const d = A.dataZJd(jdTed()); d.setHours(22, 0, 0, 0); nastavJd(A.jdZData(d)); });
+  $('btnCasPlus').addEventListener('click', () => nastavJd(jdTed() + 1 / 24));
+  $('btnCasMinus').addEventListener('click', () => nastavJd(jdTed() - 1 / 24));
+  $('btnDenPlus').addEventListener('click', () => nastavJd(jdTed() + 1));
+  $('btnDenMinus').addEventListener('click', () => nastavJd(jdTed() - 1));
+  $('btnTma').addEventListener('click', () => {
+    const n = D.noc(D.poledne(jdTed() - 0.3, misto()), misto());
+    if (n.astroKonec) nastavJd(n.astroKonec); else if (n.nautickyKonec) nastavJd(n.nautickyKonec); else zprava('Slunce tu dnes neklesne pod −12° (letní noc / polární den).');
   });
-  $('selRychlost').addEventListener('change', e => { nastavJd(jdTed()); S.rychlost = +e.target.value; uloz(); });
-  $('btnTed').addEventListener('click', () => { nastavJd(A.jdZData(new Date())); S.rychlost = 1; $('selRychlost').value = '1'; prepocetCilu(true); });
-  $('btnNoc').addEventListener('click', () => { const d = new Date(); d.setHours(22, 0, 0, 0); nastavJd(A.jdZData(d)); prepocetCilu(true); });
-  $('btnHodPlus').addEventListener('click', () => { nastavJd(jdTed() + 1 / 24); prepocetCilu(true); });
-  $('btnDenPlus').addEventListener('click', () => { nastavJd(jdTed() + 1); prepocetCilu(true); });
+  const pauza = () => { jd0 = jdTed(); t0 = performance.now(); S.rychlost = S.rychlost ? 0 : 1; $('selRychlost').value = String(S.rychlost); };
+  $('btnPauza').addEventListener('click', pauza);
   // podmínky
-  $('inSeeing').addEventListener('input', e => { S.seeing = +e.target.value; $('vSeeing').textContent = S.seeing.toFixed(1) + '″'; uloz(); });
-  $('selBortle').addEventListener('change', e => { S.bortle = +e.target.value; uloz(); });
-  $('selZornice').addEventListener('change', e => { S.zornice = +e.target.value; uloz(); });
-  $('chkPopisky').addEventListener('change', e => { S.popisky = e.target.checked; uloz(); });
+  $('inSeeing').addEventListener('input', e => { S.seeing = +e.target.value; $('vSeeing').textContent = S.seeing.toFixed(1).replace('.', ',') + '″'; uloz(); });
+  $('selBortle').addEventListener('change', e => { S.bortle = +e.target.value; uloz(); prepocet(); });
+  $('selZornice').addEventListener('change', e => { S.zornice = +e.target.value; uloz(); prepocet(); });
   $('inMapaPole').addEventListener('input', e => { S.mapaPole = +e.target.value; $('vMapaPole').textContent = S.mapaPole + '°'; uloz(); });
+  $('inMapaMez').addEventListener('input', e => { S.mapaMez = +e.target.value; $('vMapaMez').textContent = String(S.mapaMez).replace('.', ',') + ' mag'; uloz(); });
   $('selPohyb').addEventListener('change', e => { S.pohyb = +e.target.value; uloz(); });
   $('selLupa').addEventListener('change', e => { S.lupa = +e.target.value; uloz(); });
-  $('chkJenNad').addEventListener('change', e => { S.jenNad = e.target.checked; prepocetCilu(true); });
-  for (const b of document.querySelectorAll('#zalozkyCilu button')) b.addEventListener('click', () => {
-    S.zalozka = b.dataset.k; uloz();
-    for (const x of document.querySelectorAll('#zalozkyCilu button')) x.setAttribute('aria-selected', String(x === b));
-    prepocetCilu(true);
-  });
+  // přepínače
+  const prepinac = (id, klic, po) => $(id).addEventListener('click', () => { S[klic] = !S[klic]; $(id).setAttribute('aria-pressed', String(S[klic])); uloz(); if (po) po(); });
+  prepinac('tPopisky', 'popisky'); prepinac('tKriz', 'kriz'); prepinac('tSit', 'sit'); prepinac('tSipka', 'sipka');
+  prepinac('btnNocni', 'nocni', () => document.body.classList.toggle('nocni', S.nocni));
+  for (const id of ['mRovnik', 'mEkliptika', 'mTelrad', 'mOkulary', 'mDso']) prepinac(id, id, () => { mapaPosl.t = 0; });
+  $('tMereni').addEventListener('click', () => { mereni.zap = !mereni.zap; mereni.a = mereni.b = null; $('tMereni').setAttribute('aria-pressed', String(mereni.zap)); cv.classList.toggle('meri', mereni.zap); });
+  $('mZpet').addEventListener('click', () => { mapaStred = null; mapaPosl.t = 0; });
 
   let zpravaDo = 0;
   function zprava(t, nebezpeci) {
@@ -184,7 +210,6 @@
     return D.zObzoru(smer.alt, smer.az, jd, misto(), prec);
   }
   function nastavC(c, jd, prec) {
-    if (S.sledovani) cJ2000 = D.unit(c);
     const o = D.naObzor(D.unit(c), jd, misto(), prec);
     smer = { alt: o.alt, az: o.az };
     if (S.sledovani) cJ2000 = D.unit(c);
@@ -201,162 +226,173 @@
     if (S.sledovani) cJ2000 = D.unit(v);
     const o = D.naObzor(D.unit(v), jd, misto());
     smer = { alt: o.alt, az: o.az };
+    mapaStred = null;
   }
+  // výběr cíle (z hledání, mapy, plánovače…); namirit = rovnou na něj otočit dalekohled
+  function vyber(id, namirit = true) {
+    const o = K.objekt(id);
+    if (!o) return;
+    S.cil = id; uloz();
+    if (namirit) {
+      const v = K.smer(id, jdTed(), misto());
+      namir(v);
+      const alt = D.naObzor(v, jdTed(), misto()).alt;
+      zprava('Namířeno: ' + o.nazev + (alt < 0 ? ' – je ale pod obzorem.' : ''));
+    }
+    infoCas = 0;
+    for (const f of posluchaciCile) try { f(id); } catch (e) { console.error(e); }
+  }
+  const posluchaciCile = [];
   // posun o (dx, dy) obrazovkových px zorného pole → změna směru
-  let posledni = null;      // poslední stav kreslení (k, A, c)
+  let posledni = null;      // poslední stav kreslení
   function posunObrazem(dxPx, dyPx) {
     if (!posledni) return;
     const { k, A: M, c } = posledni;
-    // obrazovka = k·M·[x_w, y_n] ⇒ [x_w, y_n] = M⁻¹·obrazovka / k
     const det = M[0] * M[3] - M[1] * M[2];
     const xw = (M[3] * dxPx - M[1] * dyPx) / det / k, yn = (-M[2] * dxPx + M[0] * dyPx) / det / k;
     const b = D.baze(c);
     const nc = D.unit(D.add(c, D.add(D.mul(b.x, xw / 206265), D.mul(b.y, yn / 206265))));
     nastavC(nc, posledni.jd, posledni.prec);
+    posledni.c = nc;
   }
 
-  /* ---------- okulár: tažení a klávesy ---------- */
+  /* ---------- okulár: tažení, měření, klávesy ---------- */
   const cv = $('okular'), mapa = $('mapa');
+  const mereni = { zap: false, a: null, b: null, tahne: false };
   let tah = null;
+  const bodPlatna = e => { const r = cv.getBoundingClientRect(), dpr = cv.width / r.width; return [(e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr]; };
+  function prichyt(x, y) {
+    // přichytit k nejbližší hvězdě do 12 px
+    if (!posledni || !posledni.vysledek) return null;
+    const dpr = cv.width / cv.getBoundingClientRect().width;
+    let best = null, bd = 12 * dpr;
+    for (const h of posledni.vysledek.hvezdy || []) { const d = Math.hypot(h.x - x, h.y - y); if (d < bd) { bd = d; best = h; } }
+    return best ? { v: best.v, jmeno: best.jmeno || (best.i >= 0 ? (DATA.JMENA[best.i] || DATA.BAYER[best.i]) : null) } : { v: posledni.vysledek.zpet(x, y) };
+  }
   cv.addEventListener('pointerdown', e => {
-    tah = { x: e.clientX, y: e.clientY };
     try { cv.setPointerCapture(e.pointerId); } catch (er) { /* syntetická událost */ }
-    cv.classList.add('tahne'); cv.focus();
+    cv.focus();
+    if (mereni.zap) {
+      const [x, y] = bodPlatna(e);
+      mereni.a = prichyt(x, y); mereni.b = mereni.a; mereni.tahne = true;
+      return;
+    }
+    tah = { x: e.clientX, y: e.clientY };
+    cv.classList.add('tahne');
   });
   cv.addEventListener('pointermove', e => {
+    if (mereni.zap && mereni.tahne) { const [x, y] = bodPlatna(e); mereni.b = prichyt(x, y); return; }
     if (!tah) return;
     const dpr = cv.width / cv.clientWidth;
-    // „chytit oblohu“: obraz jde s prstem ⇒ dalekohled opačně
     posunObrazem(-(e.clientX - tah.x) * dpr, -(e.clientY - tah.y) * dpr);
     tah = { x: e.clientX, y: e.clientY };
   });
-  const konecTahu = () => { tah = null; cv.classList.remove('tahne'); };
+  const konecTahu = () => { tah = null; mereni.tahne = false; cv.classList.remove('tahne'); };
   cv.addEventListener('pointerup', konecTahu); cv.addEventListener('pointercancel', konecTahu);
+  function zmenOkular(smerZmeny) {
+    const seznam = V.okulary(); const i = seznam.findIndex(o => o.id === S.okular);
+    const n = Math.max(0, Math.min(seznam.length - 1, i + smerZmeny));
+    if (n !== i && seznam[n]) { S.okular = seznam[n].id; selOk.value = S.okular; nahodnyFokus(); uloz(); prepocet(); }
+  }
   cv.addEventListener('wheel', e => {
     e.preventDefault();
-    const dal = dalekohled(); if (dal.pevneZvetseni) return;
-    S.okular = Math.max(0, Math.min(OKULARY.length - 1, S.okular + (e.deltaY > 0 ? -1 : 1)));
-    selOk.value = S.okular; nahodnyFokus(); uloz();
+    if (dalekohled().pevneZvetseni || fotoRezim()) return;
+    zmenOkular(e.deltaY > 0 ? -1 : 1);
   }, { passive: false });
   const drzene = new Set();
   let shift = false;
   document.addEventListener('keydown', e => {
-    if (e.target.matches('input, select, textarea')) return;
+    if (e.target.matches('input, select, textarea') || !$('paleta').hidden) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     shift = e.shiftKey;
-    const smerKlav = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    const smerKlav = { ArrowLeft: 1, ArrowRight: 1, ArrowUp: 1, ArrowDown: 1 }[e.key];
     if (smerKlav) { drzene.add(e.key); e.preventDefault(); return; }
-    if (e.key === '+' || e.code === 'NumpadAdd' || e.key === '=') { if (S.okular < OKULARY.length - 1) { S.okular++; selOk.value = S.okular; nahodnyFokus(); } e.preventDefault(); }
-    else if (e.key === '-' || e.code === 'NumpadSubtract') { if (S.okular > 0) { S.okular--; selOk.value = S.okular; nahodnyFokus(); } e.preventDefault(); }
+    const k = e.key.toLowerCase();
+    if (e.key === '+' || e.code === 'NumpadAdd' || e.key === '=') { zmenOkular(1); e.preventDefault(); }
+    else if (e.key === '-' || e.code === 'NumpadSubtract') { zmenOkular(-1); e.preventDefault(); }
     else if (e.code === 'Comma') { S.fokus = Math.max(-2.5, S.fokus - 0.03); $('inFokus').value = S.fokus; }
     else if (e.code === 'Period') { S.fokus = Math.min(2.5, S.fokus + 0.03); $('inFokus').value = S.fokus; }
-    else if (e.key.toLowerCase() === 'l') { S.popisky = !S.popisky; $('chkPopisky').checked = S.popisky; }
-    else if (e.key.toLowerCase() === 'z') { const L = [1, 1.5, 2, 3, 4, 6]; S.lupa = L[(L.indexOf(S.lupa) + 1) % L.length]; $('selLupa').value = String(S.lupa); uloz(); }
-    else if (e.code === 'Space') { e.preventDefault(); nastavJd(jdTed()); S.rychlost = S.rychlost ? 0 : 1; $('selRychlost').value = String(S.rychlost); }
+    else if (k === 'l') $('tPopisky').click();
+    else if (k === 'k') $('tKriz').click();
+    else if (k === 'g') $('tSit').click();
+    else if (k === 'm') $('tMereni').click();
+    else if (k === 'n') $('btnNocni').click();
+    else if (k === 'z') { const L = [1, 1.5, 2, 3, 4, 6]; S.lupa = L[(L.indexOf(S.lupa) + 1) % L.length]; $('selLupa').value = String(S.lupa); uloz(); }
+    else if (e.code === 'Space') { e.preventDefault(); pauza(); }
   });
   document.addEventListener('keyup', e => { drzene.delete(e.key); shift = e.shiftKey; });
   window.addEventListener('blur', () => drzene.clear());
-  // tlačítka ručního ovladače (držení)
   for (const b of document.querySelectorAll('.ovladac button[data-smer]')) {
     const k = 'btn' + b.dataset.smer;
     const start = e => { e.preventDefault(); drzene.add(k); };
     const stop = () => drzene.delete(k);
     b.addEventListener('pointerdown', start); b.addEventListener('pointerup', stop); b.addEventListener('pointerleave', stop); b.addEventListener('pointercancel', stop);
   }
-  $('btnStred').addEventListener('click', () => {
-    if (posledni && posledni.nejblizsi) namir(posledni.nejblizsi.v);
-  });
+  $('btnStred').addEventListener('click', () => { if (S.cil) vyber(S.cil, true); else if (posledni && posledni.nejblizsi) namir(posledni.nejblizsi.v); });
+  $('btnNamirit').addEventListener('click', () => { if (S.cil) vyber(S.cil, true); });
   function pohybOvladacem(dt) {
     let dx = 0, dy = 0;
     for (const k of drzene) {
       const s = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k] || (k.startsWith('btn') ? k.slice(3).split(',').map(Number) : null);
       if (s) { dx += s[0]; dy += s[1]; }
     }
-    if (!dx && !dy || !posledni) return;
-    // rychlost v ″/s (násobek hvězdné rychlosti 15″/s) → px
-    const rychl = S.pohyb * 15.04 * (shift ? 8 : 1);
-    const px = rychl * dt * posledni.k;
-    // šipka nahoru posune pohled nahoru = obraz jde dolů
+    if ((!dx && !dy) || !posledni) return;
+    const px = S.pohyb * 15.04 * (shift ? 8 : 1) * dt * posledni.k;
     posunObrazem(dx * px, dy * px);
   }
 
-  /* ---------- mapa oblohy ---------- */
+  /* ---------- mapa: klik = namířit, tah = posun mapy, kolečko = zoom ---------- */
   const mapaOb = OB.vytvor(mapa);
-  mapa.addEventListener('click', e => {
-    const r = mapa.getBoundingClientRect(), dpr = mapa.width / r.width;
-    const X = (e.clientX - r.left) * dpr, Y = (e.clientY - r.top) * dpr;
-    const p = mapaOb.nejblizsi(X, Y, 12 * dpr);
-    if (p) { namir(p.v); zprava('Namířeno: ' + p.jmeno); return; }
-    const h = mapaOb.zpet(X, Y);
-    const jd = jdTed();
-    namir(D.zObzoru(h.alt, h.az, jd, misto()));
+  let mapaTah = null;
+  const bodMapy = e => { const r = mapa.getBoundingClientRect(), dpr = mapa.width / r.width; return [(e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr, dpr]; };
+  mapa.addEventListener('pointerdown', e => {
+    try { mapa.setPointerCapture(e.pointerId); } catch (er) { /* nic */ }
+    const [x, y] = bodMapy(e);
+    mapaTah = { x, y, x0: x, y0: y, posun: false, stred: { ...(mapaStred || mapaOb.st.stred) } };
   });
-  mapa.addEventListener('mousemove', e => {
-    const r = mapa.getBoundingClientRect(), dpr = mapa.width / r.width;
-    const p = mapaOb.nejblizsi((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr, 12 * dpr);
-    mapa.title = p ? p.jmeno : '';
+  mapa.addEventListener('pointermove', e => {
+    const [x, y, dpr] = bodMapy(e);
+    if (!mapaTah) { const p = mapaOb.nejblizsi(x, y, 12 * dpr); mapa.title = p ? p.jmeno : ''; return; }
+    if (Math.hypot(x - mapaTah.x0, y - mapaTah.y0) > 6 * dpr) mapaTah.posun = true;
+    if (mapaTah.posun) {
+      // posun středu mapy: rozdíl obzorníkových souřadnic pod kurzorem
+      const a = mapaOb.zpet(mapaTah.x, mapaTah.y), b = mapaOb.zpet(x, y);
+      const st = mapaStred || { ...mapaOb.st.stred };
+      st.az = ((st.az - (b.az - a.az)) % 360 + 360) % 360;
+      st.alt = Math.max(-20, Math.min(89, st.alt - (b.alt - a.alt)));
+      mapaStred = st; mapaOb.st.stred = st;
+      mapaTah.x = x; mapaTah.y = y;
+      kresliMapu(true);
+    }
+  });
+  mapa.addEventListener('pointerup', e => {
+    if (!mapaTah) return;
+    const posun = mapaTah.posun; mapaTah = null;
+    if (posun) return;
+    const [x, y, dpr] = bodMapy(e);
+    const p = mapaOb.nejblizsi(x, y, 12 * dpr);
+    if (p && p.id) { vyber(p.id, true); return; }
+    const h = mapaOb.zpet(x, y);
+    namir(D.zObzoru(h.alt, h.az, jdTed(), misto()));
   });
   mapa.addEventListener('wheel', e => {
     e.preventDefault();
-    S.mapaPole = Math.max(10, Math.min(180, Math.round(S.mapaPole * (e.deltaY > 0 ? 1.15 : 1 / 1.15))));
+    S.mapaPole = Math.max(2, Math.min(180, Math.round(S.mapaPole * (e.deltaY > 0 ? 1.15 : 1 / 1.15))));
     $('inMapaPole').value = S.mapaPole; $('vMapaPole').textContent = S.mapaPole + '°';
+    kresliMapu(true);
   }, { passive: false });
 
-  /* ---------- seznam cílů ---------- */
-  const fmtCas = jd => jd === null ? '–' : A.dataZJd(jd).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-  const fmtMag = m => (m < 0 ? '−' : '') + Math.abs(m).toFixed(1);
-  const fmtUhel = s => s >= 3600 ? (s / 3600).toFixed(2).replace('.', ',') + '°' : s >= 60 ? (s / 60).toFixed(1).replace('.', ',') + '′' : s.toFixed(1).replace('.', ',') + '″';
-  const TYPY = { gc: 'kulová hvězdokupa', oc: 'otevřená hvězdokupa', s: 'spirální galaxie', e: 'eliptická galaxie', i: 'nepravidelná galaxie', sd: 'galaxie', pn: 'planetární mlhovina', sfr: 'emisní mlhovina', rn: 'reflexní mlhovina', snr: 'pozůstatek supernovy', pos: 'skupina hvězd', en: 'emisní mlhovina' };
-  let cileCas = 0, cileSeznam = [];
-  function prepocetCilu(hned) {
-    const nyni = performance.now();
-    if (!hned && nyni - cileCas < 4000) return;
-    cileCas = nyni;
-    const jd = jdTed(), m = misto(), prec = D.precese(A.utNaJde(jd));
-    const radky = [];
-    if (S.zalozka === 'planety') {
-      for (const k of D.KLICE_TELES) {
-        const t = D.teleso(k, jd, m, prec);
-        radky.push({ jmeno: t.jmeno, popis: `${fmtMag(t.mag)} mag · ${fmtUhel(2 * t.rUhel)}`, alt: t.obzor.alt, v: t.v });
-      }
-    } else if (S.zalozka === 'dvojhvezdy') {
-      for (const [idx, jm, sl] of DATA.DVOJHVEZDY) {
-        const v = D.v3(DATA.H[idx * 4], DATA.H[idx * 4 + 1]);
-        radky.push({ jmeno: jm, popis: `${fmtMag(DATA.H[idx * 4 + 2])}/${fmtMag(sl[0][0])} mag · ${sl.map(x => x[2].toFixed(1).replace('.', ',') + '″').join(', ')}`, alt: D.naObzor(v, jd, m, prec).alt, v });
-      }
-    } else if (S.zalozka === 'dso') {
-      for (const o of DATA.MESSIER) {
-        const v = D.v3(o[1], o[2]);
-        radky.push({ jmeno: o[0] + (o[8] ? ' ' + o[8] : ''), popis: `${TYPY[o[3]] || o[3]} · ${fmtMag(+o[4])} mag`, alt: D.naObzor(v, jd, m, prec).alt, v });
-      }
-    } else {
-      for (const [i, jm] of Object.entries(DATA.JMENA)) {
-        const v = D.v3(DATA.H[i * 4], DATA.H[i * 4 + 1]);
-        radky.push({ jmeno: jm, popis: `${fmtMag(DATA.H[i * 4 + 2])} mag · ${DATA.BAYER[i] || ''}`, alt: D.naObzor(v, jd, m, prec).alt, v, mag: DATA.H[i * 4 + 2] });
-      }
-      radky.sort((a, b) => a.mag - b.mag);
-    }
-    cileSeznam = radky.filter(r => !S.jenNad || r.alt > 0);
-    const tab = $('tabCile');
-    tab.innerHTML = '';
-    for (const r of cileSeznam) {
-      const tr = tab.insertRow();
-      if (r.alt <= 0) tr.className = 'pod';
-      tr.insertCell().innerHTML = `<b>${r.jmeno}</b><br><span style="color:var(--text-faint)">${r.popis}</span>`;
-      const c = tr.insertCell(); c.className = 'r'; c.textContent = r.alt > 0 ? Math.round(r.alt) + '°' : 'pod obzorem';
-      tr.title = 'Namířit dalekohled';
-      tr.addEventListener('click', () => { namir(r.v); zprava('Namířeno: ' + r.jmeno + (r.alt < 0 ? ' – je ale pod obzorem.' : '')); });
-    }
-    if (!cileSeznam.length) tab.insertRow().insertCell().textContent = 'Nic z tohoto seznamu teď není nad obzorem.';
-    $('cileNadpis').textContent = `${cileSeznam.length} nad obzorem`.replace(/^(\d+) nad obzorem$/, S.jenNad ? '$1 nad obzorem' : '$1 položek');
-  }
+  /* ---------- formátování ---------- */
+  const fmtCas = jd => jd === null || jd === undefined ? '–' : A.dataZJd(jd).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  const fmtDatumCas = jd => A.dataZJd(jd).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const fmtMag = K.fmtMag, fmtUhel = K.fmtUhel;
+  const c1 = (x, d = 1) => (+x).toFixed(d).replace('.', ',').replace('-', '−');
 
-  /* ---------- hlavní smyčka ---------- */
-  let mapaPosl = { t: 0 };
-  let posledniT = performance.now(), infoCas = 0, vychodCache = { klic: '', jd: 0, data: null };
-  function velikostPlatna(c, maxCss) {
+  /* ---------- výpočet stavu snímku ---------- */
+  function velikostPlatna(c) {
     const r = c.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = Math.min(1200, Math.round(Math.min(r.width, maxCss || 9999) * dpr));
+    const w = Math.min(1200, Math.round(r.width * dpr));
     if (w > 0 && (c.width !== w || c.height !== w)) { c.width = w; c.height = w; }
     return w / Math.max(1, r.width);
   }
@@ -369,10 +405,11 @@
     let th = 0;
     if (S.montaz === 'az' || dal.typ === 'triedr' || dal.typ === 'galileo') th = -Math.PI / 2 - Math.atan2(-zy, zx);
     const co = Math.cos(th), si = Math.sin(th);
-    // R·B0 = [[c, s], [s, −c]]
     let M = [co, si, si, -co];
     let zrcadlo = false, otoc = false;
-    if (dal.typ === 'newton') otoc = true;
+    // kamera: obraz bez zrcadlení (jak ho uloží software)
+    if (fotoRezim()) { /* bez optického převrácení */ }
+    else if (dal.typ === 'newton') otoc = true;
     else if (dal.typ === 'refraktor' || dal.typ === 'sct' || dal.typ === 'mak') { if (S.diag) zrcadlo = true; else otoc = true; }
     if (zrcadlo) M = [-M[0], -M[1], M[2], M[3]];
     if (otoc) M = M.map(x => -x);
@@ -380,8 +417,26 @@
     const zsl = Math.hypot(zs[0], zs[1]) || 1;
     return { A: M, zenit: [zs[0] / zsl, zs[1] / zsl], zrcadlo, otoc };
   }
+  // mezní hvězdná velikost kamery (přibližný model: šum oblohy, plocha objektivu, expozice)
+  function mezKamery(dal, kam, F, sb, seeing, t, alt) {
+    const meritko = 206.265 * kam.pixel / F;
+    const fwhm = Math.max(seeing, 2 * meritko);
+    // signál ~ D²·t, šum oblohy ~ sqrt(jas·plocha hvězdy·D²·t) → mez roste o 1,25·log t a 2,5·log D a s tmavší oblohou
+    let lm = 15.0 + 2.5 * Math.log10((dal.D / 100) ** 2 * (1 - (dal.obstrukce || 0) ** 2)) * 1.0 + 1.25 * Math.log10(t / 30) + 0.5 * (sb - 20) - 1.25 * Math.log10(fwhm / 2.5);
+    lm -= 0.25 * (D.vzdusnaHmota(alt) - 1);
+    if (!kam.barevna) lm += 0.4;
+    return Math.min(21.5, lm);
+  }
+
+  let mapaPosl = { t: 0 };
+  let posledniT = performance.now(), infoCas = 0, vychodCache = { klic: '', jd: 0, data: null };
+  let ramec = null;        // sdílený stav posledního snímku pro moduly
 
   function snimek() {
+    try { snimekVnitrni(); } catch (e) { console.error(e); }
+    requestAnimationFrame(snimek);
+  }
+  function snimekVnitrni() {
     const nyni = performance.now();
     const dt = Math.min(0.1, (nyni - posledniT) / 1000);
     posledniT = nyni;
@@ -390,92 +445,136 @@
     const m = misto();
     const prec = D.precese(A.utNaJde(jd));
     const dal = dalekohled(), ok = okular();
-    const o = D.optika(dal, ok, S.barlow);
+    const foto = fotoRezim();
+    const kam = foto ? V.kamera(S.kamera) : null;
+    const kB = barlowK();
+    let o = D.optika(dal, ok, kB);
+    const Fe = dal.F * kB;
+    if (foto) {
+      const w = 2 * Math.atan(kam.sirka / 2 / Fe) / RAD, h = 2 * Math.atan(kam.vyska / 2 / Fe) / RAD;
+      o = { ...o, pole: Math.hypot(w, h), poleW: w, poleH: h, M: dal.D, pupila: 1 };
+    }
     const c = aktualniC(jd, prec);
     const obz = D.naObzor(c, jd, m, prec);
-    if (!S.sledovani) { /* směr držíme v alt/az */ } else smer = { alt: obz.alt, az: obz.az };
+    if (S.sledovani) smer = { alt: obz.alt, az: obz.az };
     const altStred = S.sledovani ? obz.alt : smer.alt;
+    const filtr = V.filtr(S.filtr);
 
-    // tělesa
     const telesa = ['slunce', ...D.KLICE_TELES].map(k => D.teleso(k, jd, m, prec));
     const slunce = telesa[0], mesic = telesa[1];
     for (const t of telesa) if (t.klic !== 'slunce') t.povrchJas = t.mag + 2.5 * Math.log10(Math.PI * t.rUhel * t.rUhel * t.zplosteni * Math.max(0.02, t.k));
     const hS = slunce.obzor.alt;
-    const sb = D.jasOblohy({ bortle: S.bortle, hSlunce: hS, mesic: { alt: mesic.obzor.alt, k: mesic.k, uhel: D.uhel(mesic.v, c) } }, altStred);
-    const sbOk = D.jasPozadi(sb, o, S.zornice);
-    const lm = D.mezniVelikost(o, dal, sb, altStred, S.zornice);
+    const sb0 = D.jasOblohy({ bortle: S.bortle, hSlunce: hS, mesic: { alt: mesic.obzor.alt, k: mesic.k, uhel: D.uhel(mesic.v, c) } }, altStred);
+    const sb = sb0 + filtr.pozadi;
+    const sbOk = foto ? sb : D.jasPozadi(sb, o, S.zornice);
     const X = D.vzdusnaHmota(altStred);
-    const seeingEf = S.seeing * Math.pow(Math.min(X, 10), 0.6) * (dal.typ === 'triedr' ? 1 : 1);
-    // rozostření: posun ohniska ε (mm) → úhlový průměr kroužku ε·D/F² (rad)
-    const Fe = dal.F * S.barlow;
+    const seeingEf = S.seeing * Math.pow(Math.min(X, 10), 0.6);
+    const lm = foto ? mezKamery(dal, kam, Fe, sb, seeingEf, S.expozice, altStred) : D.mezniVelikost(o, dal, sb, altStred, S.zornice);
     const eps = dal.pevneZvetseni ? 0 : Math.abs(S.fokus - S.fokusCil);
     const rozost = eps * dal.D / (Fe * Fe) * 206265;
     const CAidx = (dal.F / dal.D) / (dal.D / 25.4);
     const barevnaVada = dal.vada === 'cocka' ? 1.6 : dal.vada === 'achromat' ? Math.max(0, Math.min(1, (5 - CAidx) / 4)) : 0;
     const orient = orientace(c, jd, prec, dal);
     const sluncVzd = D.uhel(slunce.v, c);
+    // stopy hvězd bez pointace během expozice (posun k západu)
+    let stopa = null;
+    if (foto && !S.sledovani) {
+      const drift = 15.041 * Math.cos(D.raDec(c).dec * RAD) * Math.min(S.expozice, 600);
+      stopa = [orient.A[0] * drift, orient.A[2] * drift];       // ve ″, převede se na px níže
+    }
 
     const dprO = velikostPlatna(cv);
-    const vysledek = OK.kresli({
-      cv, jd, misto: m, prec, c, dal, o, lm, sbOk, hSlunce: hS, seeing: seeingEf, difrakce: 1.03 * 0.55e-3 / dal.D * 206265,
-      rayleigh: 138 / dal.D, rozostreni: rozost, lupa: S.lupa, orient, telesa, popisky: S.popisky, dt, dpr: dprO, barevnaVada,
-      disperze: D.disperze(altStred), altStred, extinkce: X - 1,
-      jasPozadiPosun: x => x + 5 * Math.log10(Math.max(1, S.zornice / o.pupila)),
-      slunce: { vPoli: hS > -1 && sluncVzd < o.pole / 2 + 0.3 }, cestaTextur: 'dalekohled/tex/',
-    });
-    posledni = { k: vysledek.k || 1, A: orient.A, c, jd, prec, seeing: seeingEf };
-    // kompas v rohu
-    if (!vysledek.oslneni) kompas(cv, orient, dprO, c, prec, jd);
+    const kamRozmer = foto ? { sirka: o.poleW * 3600, vyska: o.poleH * 3600 } : null;
+    const stav = {
+      cv, jd, misto: m, prec, c, dal, o, lm, sbOk: foto ? sb : sbOk, hSlunce: hS, seeing: foto ? seeingEf * 0.75 : seeingEf,
+      difrakce: 1.03 * 0.55e-3 / dal.D * 206265, rayleigh: 138 / dal.D, rozostreni: rozost, lupa: S.lupa, orient, telesa,
+      popisky: S.popisky, dt, dpr: dprO, barevnaVada: foto ? barevnaVada * 0.5 : barevnaVada,
+      disperze: D.disperze(altStred), altStred, extinkce: X - 1, filtr, sit: S.sit,
+      jasPozadiPosun: foto ? (x => x) : (x => x + 5 * Math.log10(Math.max(1, S.zornice / o.pupila))),
+      slunce: { vPoli: hS > -1 && sluncVzd < o.pole / 2 + 0.3 && !filtr.slunecni }, cestaTextur: 'dalekohled/tex/',
+      kamera: kamRozmer, foto: foto ? { expozice: S.expozice } : null,
+    };
+    if (stopa) {
+      const kk = Math.min(cv.width, cv.height) * 0.94 * S.lupa / Math.max(kamRozmer.sirka, kamRozmer.vyska);
+      stav.stopa = [stopa[0] * kk, stopa[1] * kk];
+    }
+    const vysledek = OK.kresli(stav);
+    posledni = { k: vysledek.k || 1, A: orient.A, c, jd, prec, seeing: seeingEf, vysledek };
+    if (!vysledek.oslneni) {
+      kompas(cv, orient, dprO);
+      if (S.kriz) kriz(cv, vysledek, dprO, o);
+      if (S.sipka && S.cil) sipkaKCili(cv, vysledek, dprO, jd, m, c, o);
+      if (mereni.a) kresliMereni(cv, vysledek, dprO);
+    }
     // nejbližší objekt ke středu
     let nejbl = null, nd = Infinity;
-    for (const t of vysledek.telesa || []) { const d = D.uhel(t.t.v, c); if (d < nd) { nd = d; nejbl = { jmeno: t.t.jmeno, v: t.t.v, t: t.t }; } }
+    for (const t of vysledek.telesa || []) { const d = D.uhel(t.t.v, c); if (d < nd) { nd = d; nejbl = { id: 'p:' + t.t.klic, jmeno: t.t.jmeno, v: t.t.v }; } }
     for (const v of vysledek.viditelne || []) {
-      if (v.typ === 'dso') { const vv = D.v3(v.o[1], v.o[2]); const d = D.uhel(vv, c); if (d < nd) { nd = d; nejbl = { jmeno: v.o[0], v: vv, o: v.o }; } }
-      else if (v.typ === 'hvezda' && v.i >= 0) { const vv = D.v3(DATA.H[v.i * 4], DATA.H[v.i * 4 + 1]); const d = D.uhel(vv, c) + 0.002 * (v.m - 3); if (d < nd) { nd = d; nejbl = { jmeno: DATA.JMENA[v.i] || DATA.BAYER[v.i] || 'hvězda', v: vv, i: v.i }; } }
+      if (v.typ === 'dso') { const vv = D.v3(v.o[1], v.o[2]); const d = D.uhel(vv, c); if (d < nd) { nd = d; nejbl = { id: 'd:' + v.o[0], jmeno: v.o[0], v: vv }; } }
     }
-    posledni.nejblizsi = nejbl;
+    for (const h of vysledek.hvezdy || []) {
+      if (h.i < 0 || h.m > 7) continue;
+      const d = D.uhel(h.v, c) + 0.002 * (h.m - 3);
+      if (d < nd) { nd = d; nejbl = { id: 'h:' + h.i, jmeno: DATA.JMENA[h.i] || DATA.BAYER[h.i] || 'HR ' + DATA.HR[h.i], v: h.v }; }
+    }
+    posledni.nejblizsi = nd < o.pole / 2 ? nejbl : null;
+
+    ramec = { jd, misto: m, prec, dal, ok, o, c, obz, altStred, telesa, slunce, mesic, hS, sb, sbOk, lm, X, seeingEf, foto, kam, Fe, filtr, eps, rozost };
 
     // lišty
-    $('lsZvetseni').textContent = `${Math.round(o.M)}× · pole ${fmtUhel(o.pole * 3600)} · mez ${lm.toFixed(1).replace('.', ',')} mag`;
-    $('lsSmer').textContent = `výška ${altStred.toFixed(1).replace('.', ',')}° · azimut ${Math.round(S.sledovani ? obz.az : smer.az)}°`;
+    $('lsZvetseni').textContent = foto
+      ? `${kam.n.replace(/\s*\(.*\)/, '')} · ${fmtUhel(o.poleW * 3600)} × ${fmtUhel(o.poleH * 3600)} · ${c1(206.265 * kam.pixel / Fe, 2)}″/px · ${S.expozice} s`
+      : `${Math.round(o.M)}× · pole ${fmtUhel(o.pole * 3600)} · mez ${c1(lm)} mag`;
+    $('lsSmer').textContent = `výška ${c1(altStred)}° · azimut ${Math.round(S.sledovani ? obz.az : smer.az)}°`;
     $('lsCas').textContent = A.dataZJd(jd).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    $('lsObjekt').textContent = nejbl && nd < o.pole ? nejbl.jmeno : '';
+    $('lsObjekt').textContent = posledni.nejblizsi ? posledni.nejblizsi.jmeno : '';
+    $('lsCasHlavni').textContent = A.dataZJd(jd).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + (S.rychlost === 0 ? ' ⏸' : S.rychlost > 1 ? ' ' + S.rychlost + '×' : '');
+    $('btnPauza').textContent = S.rychlost ? '⏸' : '▶';
 
-    // mapa
-    const dprM = velikostPlatna(mapa);
-    const mez = D.nelm(sb);
-    const smerMapy = S.sledovani ? obz : smer;
-    const zmena = !mapaPosl.smer || Math.abs(mapaPosl.smer.alt - smerMapy.alt) + Math.abs(mapaPosl.smer.az - smerMapy.az) > 0.05 || mapaPosl.fov !== S.mapaPole || mapaPosl.w !== mapa.width;
-    if (zmena || nyni - mapaPosl.t > 350) {
-      mapaPosl = { t: nyni, smer: { ...smerMapy }, fov: S.mapaPole, w: mapa.width };
-      mapaOb.st.fov = S.mapaPole;
-      mapaOb.kresli({ jd, misto: m, prec, smer: S.sledovani ? obz : smer, telesa, hSlunce: hS, poleOk: o.pole, poleHledacku: 6, lmOko: mez, dpr: dprM });
-    }
+    kresliMapu(false);
 
     // varování
-    if (hS > -1 && sluncVzd < 12) zprava(sluncVzd < o.pole / 2 + 0.3 ? '☀ Dalekohled míří na Slunce! Ve skutečnosti by to znamenalo okamžité a trvalé poškození zraku.' : '⚠ Dalekohled míří blízko Slunce – ve skutečnosti nebezpečné!', true);
+    if (hS > -1 && sluncVzd < 12 && !filtr.slunecni) zprava(sluncVzd < o.pole / 2 + 0.3 ? '☀ Dalekohled míří na Slunce! Ve skutečnosti by to znamenalo okamžité a trvalé poškození zraku.' : '⚠ Dalekohled míří blízko Slunce – ve skutečnosti nebezpečné!', true);
     else if (altStred < 0 && performance.now() > zpravaDo) zprava('Dalekohled míří pod obzor.');
     else if (performance.now() > zpravaDo && $('zprava').textContent) { $('zprava').textContent = ''; $('zprava').className = ''; }
 
-    // panely (méně často)
-    if (nyni - infoCas > 400) {
+    if (nyni - infoCas > 500) {
       infoCas = nyni;
-      panelOptiky(dal, o, lm, sb, sbOk, seeingEf, X, eps, rozost);
-      panelObjektu(nejbl, nd, o, jd, m, prec);
-      $('inCas').value === lokalniText(A.dataZJd(jd)) || document.activeElement === $('inCas') || ($('inCas').value = lokalniText(A.dataZJd(jd)));
+      panelOptiky();
+      panelObjektu();
+      if (document.activeElement !== $('inCas')) $('inCas').value = lokalniText(A.dataZJd(jd));
       const tma = hS < -18 ? 'astronomická noc' : hS < -12 ? 'astronomický soumrak' : hS < -6 ? 'nautický soumrak' : hS < -0.8 ? 'občanský soumrak' : 'den';
-      $('casInfo').innerHTML = `Slunce ${hS.toFixed(0)}° (${tma}) · Měsíc ${mesic.obzor.alt > 0 ? Math.round(mesic.obzor.alt) + '° nad obzorem' : 'pod obzorem'}, osvětlen z ${Math.round(mesic.k * 100)} %`;
-      $('podminkyInfo').innerHTML = `Jas oblohy ve směru dalekohledu <b>${sb.toFixed(1).replace('.', ',')} mag/″²</b>, okem vidíte hvězdy do <b>${mez.toFixed(1).replace('.', ',')} mag</b>. Vzdušná hmota ${X.toFixed(1).replace('.', ',')}, seeing v tomto směru ${seeingEf.toFixed(1).replace('.', ',')}″.`;
-      $('mapaInfo').textContent = `Mapa: zenit nahoře, ${S.mapaPole}° na šířku.`;
-      prepocetCilu(false);
+      const im = D.infoMesice(jd, m);
+      $('casInfo').innerHTML = `Slunce ${c1(hS, 0)}° (${tma}) · Měsíc ${mesic.obzor.alt > 0 ? Math.round(mesic.obzor.alt) + '° nad obzorem' : 'pod obzorem'}, ${Math.round(mesic.k * 100)} % (${c1(im.stari)} d)`;
+      $('podminkyInfo').innerHTML = `Jas oblohy ve směru dalekohledu <b>${c1(sb0)} mag/″²</b>${filtr.pozadi ? ` (s filtrem ${c1(sb)})` : ''}, okem do <b>${c1(D.nelm(sb0))} mag</b>. Vzdušná hmota ${c1(X)}, seeing v tomto směru ${c1(seeingEf)}″.`;
     }
-    requestAnimationFrame(snimek);
   }
 
-  function kompas(cv, orient, dpr, c, prec, jd) {
+  function kresliMapu(hned) {
+    if (!ramec) return;
+    const nyni = performance.now();
+    const smerDal = S.sledovani ? ramec.obz : smer;
+    const stred = mapaStred || smerDal;
+    const zmena = hned || !mapaPosl.smer || Math.abs(mapaPosl.smer.alt - stred.alt) + Math.abs(mapaPosl.smer.az - stred.az) > 0.05 || mapaPosl.fov !== S.mapaPole || mapaPosl.w !== mapa.width || mapaPosl.mez !== S.mapaMez;
+    if (!zmena && nyni - mapaPosl.t < 400) return;
+    const dprM = velikostPlatna(mapa);
+    mapaPosl = { t: nyni, smer: { ...stred }, fov: S.mapaPole, w: mapa.width, mez: S.mapaMez };
+    mapaOb.st.fov = S.mapaPole;
+    const r = ramec;
+    mapaOb.kresli({
+      jd: r.jd, misto: r.misto, prec: r.prec, stred, smerDal, telesa: r.telesa, hSlunce: r.hS, poleOk: r.o.pole, poleHledacku: 6,
+      mez: S.mapaMez, dpr: dprM, rovnik: S.mRovnik, ekliptika: S.mEkliptika, telrad: S.mTelrad, dso: S.mDso,
+      polaOkularu: S.mOkulary && !r.foto ? V.okulary().map(ok => D.optika(r.dal, ok, barlowK()).pole) : null,
+      ramecek: r.foto ? [r.o.poleW, r.o.poleH] : null,
+      cilV: S.cil ? K.smer(S.cil, r.jd, r.misto) : null,
+    });
+  }
+
+  /* ---------- překryvy okuláru ---------- */
+  function kompas(cv, orient, dpr) {
     const ctx = cv.getContext('2d');
     const M = orient.A;
-    const n = [M[1], M[3]], e = [-M[0], -M[2]];        // sever = [0,1], východ = [−1,0] v (x_w, y_n)
+    const n = [M[1], M[3]], e = [-M[0], -M[2]];
     const x0 = cv.width - 46 * dpr, y0 = cv.height - 70 * dpr, L = 24 * dpr;
     ctx.save();
     ctx.lineWidth = 1.5 * dpr; ctx.font = `bold ${11 * dpr}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -486,121 +585,309 @@
       ctx.fillText(t, x0 + v[0] * (L + 8 * dpr), y0 + v[1] * (L + 8 * dpr));
     }
     ctx.restore();
-    void c; void prec; void jd;
+  }
+  function kriz(cv, r, dpr, o) {
+    // osvětlený záměrný kříž s ryskami po 1′ / 10′ (podle pole)
+    const ctx = cv.getContext('2d');
+    const { cx, cy, k } = r;
+    const pole = o.pole * 3600;
+    const krok = [1, 2, 5, 10, 30, 60, 120, 300, 600, 1800].find(x => x * 10 >= pole / 2) || 1800;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,60,40,0.75)'; ctx.fillStyle = 'rgba(255,90,70,0.85)'; ctx.lineWidth = dpr;
+    ctx.beginPath(); ctx.moveTo(cx - r.R, cy); ctx.lineTo(cx - 6 * dpr, cy); ctx.moveTo(cx + 6 * dpr, cy); ctx.lineTo(cx + r.R, cy);
+    ctx.moveTo(cx, cy - r.R); ctx.lineTo(cx, cy - 6 * dpr); ctx.moveTo(cx, cy + 6 * dpr); ctx.lineTo(cx, cy + r.R); ctx.stroke();
+    for (let i = 1; i * krok * k < r.R; i++) {
+      const d = i * krok * k, l = (i % 5 ? 3 : 6) * dpr;
+      ctx.beginPath(); ctx.moveTo(cx + d, cy - l); ctx.lineTo(cx + d, cy + l); ctx.moveTo(cx - d, cy - l); ctx.lineTo(cx - d, cy + l);
+      ctx.moveTo(cx - l, cy + d); ctx.lineTo(cx + l, cy + d); ctx.moveTo(cx - l, cy - d); ctx.lineTo(cx + l, cy - d); ctx.stroke();
+    }
+    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+    ctx.fillText('rysky po ' + fmtUhel(krok), cx + 8 * dpr, cy - 8 * dpr);
+    ctx.restore();
+  }
+  function sipkaKCili(cv, r, dpr, jd, m, c, o) {
+    const v = K.smer(S.cil, jd, m); if (!v) return;
+    const d = D.uhel(v, c);
+    if (d < o.pole / 2 * 0.9) return;
+    const p = r.proj(v);
+    const ctx = cv.getContext('2d');
+    // směr na obrazovce: pro vzdálené cíle přes tečnou rovinu
+    let dx, dy;
+    if (p) { dx = p[0] - r.cx; dy = p[1] - r.cy; }
+    else {
+      const b = D.baze(c), xw = D.dot(v, b.x), yn = D.dot(v, b.y);
+      dx = posledni.A[0] * xw + posledni.A[1] * yn; dy = posledni.A[2] * xw + posledni.A[3] * yn;
+    }
+    const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const rr = Math.min(r.R, Math.min(cv.width, cv.height) / 2) - 26 * dpr;
+    const x = r.cx + dx * rr, y = r.cy + dy * rr;
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx));
+    ctx.fillStyle = 'rgba(125,255,176,0.9)';
+    ctx.beginPath(); ctx.moveTo(14 * dpr, 0); ctx.lineTo(-6 * dpr, -8 * dpr); ctx.lineTo(-6 * dpr, 8 * dpr); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle = 'rgba(125,255,176,0.95)'; ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = dx > 0.3 ? 'right' : dx < -0.3 ? 'left' : 'center';
+    const o2 = K.objekt(S.cil);
+    ctx.fillText(`${o2 ? o2.nazev.split(' – ')[0] : ''} ${fmtUhel(d * 3600)}`, x - dx * 22 * dpr, y - dy * 22 * dpr + 4 * dpr);
+    ctx.restore();
+  }
+  function kresliMereni(cv, r, dpr) {
+    const pa = r.proj(mereni.a.v), pb = r.proj(mereni.b.v);
+    if (!pa || !pb) return;
+    const ctx = cv.getContext('2d');
+    const sep = D.uhel(mereni.a.v, mereni.b.v) * 3600;
+    const PA = D.pozicniUhel(mereni.a.v, mereni.b.v);
+    ctx.save();
+    ctx.strokeStyle = '#ffe24a'; ctx.fillStyle = '#ffe24a'; ctx.lineWidth = 1.5 * dpr;
+    ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
+    for (const p of [pa, pb]) { ctx.beginPath(); ctx.arc(p[0], p[1], 5 * dpr, 0, 2 * Math.PI); ctx.stroke(); }
+    ctx.font = `bold ${12 * dpr}px system-ui, sans-serif`;
+    const t = `${fmtUhel(sep)} · PA ${c1(PA)}°`;
+    const tx = (pa[0] + pb[0]) / 2 + 10 * dpr, ty = (pa[1] + pb[1]) / 2 - 10 * dpr;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; const w = ctx.measureText(t).width;
+    ctx.fillRect(tx - 4 * dpr, ty - 13 * dpr, w + 8 * dpr, 18 * dpr);
+    ctx.fillStyle = '#ffe24a'; ctx.fillText(t, tx, ty);
+    ctx.restore();
+    $('lsObjekt').textContent = `měření: ${fmtUhel(sep)}, PA ${c1(PA)}°` + (mereni.a.jmeno && mereni.b.jmeno && mereni.a.jmeno !== mereni.b.jmeno ? ` (${mereni.a.jmeno} → ${mereni.b.jmeno})` : '');
   }
 
+  /* ---------- panely: optika, objekt ---------- */
   function radek(a, b) { return `<div><span>${a}</span><span>${b}</span></div>`; }
-  function panelOptiky(dal, o, lm, sb, sbOk, seeingEf, X, eps, rozost) {
+  function panelOptiky() {
+    const r = ramec; if (!r) return;
+    const { dal, o, lm, seeingEf, eps, rozost } = r;
+    if (r.foto) {
+      const af = D.astrofoto(r.kam, r.Fe, dal.D, seeingEf, D.raDec(r.c).dec, S.sledovani);
+      $('optika').innerHTML = [
+        radek('Ohnisko / světelnost', `${Math.round(r.Fe)} mm · f/${c1(r.Fe / dal.D)}`),
+        radek('Zorné pole čipu', `${fmtUhel(o.poleW * 3600)} × ${fmtUhel(o.poleH * 3600)}`),
+        radek('Měřítko', c1(af.meritko, 2) + '″/px'),
+        radek('Vzorkování seeingu', c1(af.vzorkovani, 1) + ' px/FWHM'),
+        radek('Bez pointace max.', af.tMax < 1 ? c1(af.tMax, 2) + ' s (1 px)' : c1(af.tMax, 1) + ' s (1 px)'),
+        radek('Mezní velikost snímku', c1(lm) + ' mag'),
+      ].join('');
+      const p = [af.doporuceni];
+      if (!S.sledovani && S.expozice > af.tMax * 3) p.push('<span class="varovani">Bez motorového sledování se hvězdy protáhnou do čárek.</span>');
+      if (S.sledovani && S.montaz === 'az' && S.expozice > 30) p.push('<span class="varovani">Azimutální montáž: při dlouhé expozici se pole otáčí (rotace pole) – použijte paralaktickou.</span>');
+      $('optikaPozn').innerHTML = p.join('<br>');
+      $('vFokus').textContent = eps < 0.02 ? 'zaostřeno' : 'mimo ohnisko ' + c1(eps, 2) + ' mm';
+      return;
+    }
     $('optika').innerHTML = [
       radek('Zvětšení', Math.round(o.M) + '×'),
       radek('Skutečné zorné pole', fmtUhel(o.pole * 3600)),
-      radek('Výstupní pupila', o.pupila.toFixed(2).replace('.', ',') + ' mm'),
-      radek('Světelnost', 'f/' + o.svetelnost.toFixed(1).replace('.', ',')),
-      radek('Rozlišení (Dawes)', o.dawes.toFixed(2).replace('.', ',') + '″'),
+      radek('Výstupní pupila', c1(o.pupila, 2) + ' mm'),
+      radek('Světelnost', 'f/' + c1(o.svetelnost)),
+      radek('Rozlišení (Dawes)', c1(o.dawes, 2) + '″'),
       radek('Sběr světla proti oku', Math.round(o.sbirani) + '×'),
-      radek('Mezní hvězdná velikost', lm.toFixed(1).replace('.', ',') + ' mag'),
+      radek('Mezní hvězdná velikost', c1(lm) + ' mag'),
       radek('Rozumné zvětšení', `${Math.round(o.minZvetseni)}–${Math.round(o.maxZvetseni)}×`),
     ].join('');
     const p = [];
     if (o.M > o.maxZvetseni) p.push('<span class="varovani">Prázdné zvětšení – víc než 2× průměr v mm, obraz už jen roste a tmavne.</span>');
     if (o.pupila > S.zornice + 0.05) p.push('<span class="varovani">Výstupní pupila je větší než zornice – část světla se ztrácí' + (dal.obstrukce ? ' a ve dne uvidíte stín sekundáru' : '') + '.</span>');
-    if (seeingEf > o.dawes * 2 && o.M > 150) p.push(`Seeing ${seeingEf.toFixed(1).replace('.', ',')}″ je horší než rozlišení dalekohledu – větší zvětšení nepomůže.`);
+    if (seeingEf > o.dawes * 2 && o.M > 150) p.push(`Seeing ${c1(seeingEf)}″ je horší než rozlišení dalekohledu – větší zvětšení nepomůže.`);
     if (rozost > 1.5 * Math.max(seeingEf, o.dawes)) p.push('<span class="varovani">Obraz je rozostřený – použijte zaostřování.</span>');
     if (dal.vada === 'achromat' && o.M > 30) p.push('Achromát: kolem jasných objektů fialový lem (barevná vada).');
     if (dal.typ === 'galileo') p.push('Galileův dalekohled: jednoduchá čočka s velkou barevnou vadou a zorné pole jen čtvrt stupně.');
+    if (r.filtr.id !== 'zadny') p.push(`Filtr ${r.filtr.n}: pozadí −${c1(r.filtr.pozadi)} mag, hvězdy −${c1(r.filtr.hvezdy)} mag, emisní mlhoviny −${c1(r.filtr.emisni)} mag.`);
     $('optikaPozn').innerHTML = p.join('<br>');
-    $('vFokus').textContent = eps < 0.02 ? 'zaostřeno' : (S.fokus - S.fokusCil > 0 ? 'za ohniskem ' : 'před ohniskem ') + eps.toFixed(2).replace('.', ',') + ' mm';
-    void sb; void sbOk; void X;
+    $('vFokus').textContent = eps < 0.02 ? 'zaostřeno' : (S.fokus - S.fokusCil > 0 ? 'za ohniskem ' : 'před ohniskem ') + c1(eps, 2) + ' mm';
   }
 
-  function vychodZapad(klic, fce, jd) {
+  function vychodZapad(klic, fce, jd, h0) {
     if (vychodCache.klic === klic && Math.abs(vychodCache.jd - jd) < 0.02) return vychodCache.data;
-    const data = D.prechody(fce, jd, klic === 'Slunce' || klic === 'Měsíc' ? -0.833 : -0.5667);
+    const data = D.prechody(fce, jd, h0);
     vychodCache = { klic, jd, data };
     return data;
   }
-  function panelObjektu(n, nd, o, jd, m, prec) {
+  function panelObjektu() {
+    const r = ramec; if (!r) return;
     const el = $('infoObjekt');
-    if (!n || nd > Math.max(o.pole, 0.5)) { el.innerHTML = '<div><span>Ve středu zorného pole není žádný pojmenovaný objekt.</span><span></span></div>'; return; }
-    const r = [];
-    const rd = D.raDec(D.mxv(prec, n.v));
-    const hms = x => { const h = x / 15; const hh = Math.floor(h), mm = Math.floor((h - hh) * 60), ss = Math.round(((h - hh) * 60 - mm) * 60); return `${hh}h ${String(mm).padStart(2, '0')}m ${String(ss % 60).padStart(2, '0')}s`; };
-    const dms = x => { const s = x < 0 ? '−' : '+', a = Math.abs(x), d = Math.floor(a), mm = Math.floor((a - d) * 60); return `${s}${d}° ${String(mm).padStart(2, '0')}′`; };
-    r.push(radek('<b>' + n.jmeno + '</b>', ''));
-    if (n.t) {
-      const t = n.t;
-      r.push(radek('Jasnost', fmtMag(t.mag) + ' mag'));
-      r.push(radek('Úhlový průměr', fmtUhel(2 * t.rUhel)));
-      r.push(radek('Vzdálenost', t.klic === 'mesic' ? Math.round(t.D * D.AU).toLocaleString('cs-CZ') + ' km' : t.D.toFixed(3).replace('.', ',') + ' au (' + (t.D * D.AU / 1e6).toFixed(0) + ' mil. km)'));
-      r.push(radek('Osvětlený podíl disku', Math.round(t.k * 100) + ' %'));
-      if (t.klic === 'saturn') r.push(radek('Sklon prstenců k Zemi', t.B.toFixed(1).replace('.', ',') + '°'));
-      if (t.klic === 'mars' || t.klic === 'jupiter') r.push(radek('Centrální poledník', Math.round((360 - t.cm) % 360) + '° (západní délka' + (t.klic === 'jupiter' ? ', Systém II' : '') + ')'));
-      if (t.klic === 'mesic') r.push(radek('Librace (délka, šířka)', `${((t.cm + 180) % 360 - 180).toFixed(1).replace('.', ',')}°, ${t.De.toFixed(1).replace('.', ',')}°`));
-      if (t.mesice) {
-        const ms = window.DALEK_TELESA.mesiceJupiteru(t);
-        r.push(radek('Měsíce (″ od středu)', ms.map(x => `${x.jmeno} ${x.x > 0 ? 'Z' : 'V'} ${Math.abs(x.x * t.rUhel).toFixed(0)}${x.zakryt ? ' (za Jupiterem)' : x.zatmeni ? ' (zatmění)' : x.z > 0 && Math.abs(x.x) < 1 && Math.abs(x.y) < 1 ? ' (přechod)' : ''}${x.stin ? ' + stín na disku' : ''}`).join(', ')));
+    const id = S.cil || (posledni.nejblizsi && posledni.nejblizsi.id);
+    $('objektStav').textContent = S.cil ? 'vybraný cíl' : id ? 've středu pole' : '';
+    if (!id) { el.innerHTML = '<div class="info">Vyberte objekt v mapě, v plánovači nebo hledáním (Ctrl+K).</div>'; return; }
+    const ob = K.objekt(id); if (!ob) return;
+    const { jd, misto: m, prec, o } = r;
+    const v = K.smer(id, jd, m);
+    const rdD = D.raDec(D.mxv(prec, v)), rdJ = D.raDec(v);
+    const obz = D.naObzor(v, jd, m, prec);
+    const lst = A.gast(jd) + m.lon;
+    let H = ((lst - rdD.ra) % 360 + 540) % 360 - 180;
+    const souh = D.souhvezdi(v);
+    let typ = '', h = '';
+    const u = [];
+    if (ob.druh === 'p') {
+      const t = D.teleso(ob.klic, jd, m, prec);
+      typ = ob.klic === 'mesic' ? 'Měsíc' : ob.klic === 'slunce' ? 'hvězda – Slunce' : 'planeta';
+      u.push(radek('Jasnost', fmtMag(t.mag) + ' mag'));
+      u.push(radek('Úhlový průměr', fmtUhel(2 * t.rUhel) + (t.zplosteni < 0.99 ? ` × ${fmtUhel(2 * t.rUhel * t.zplosteni)}` : '')));
+      u.push(radek('Vzdálenost', ob.klic === 'mesic' ? Math.round(t.D * D.AU).toLocaleString('cs-CZ') + ' km' : c1(t.D, 3) + ' au · světlo ' + c1(t.D * 8.317, 1) + ' min'));
+      if (ob.klic !== 'slunce') {
+        u.push(radek('Fáze / fázový úhel', `${Math.round(t.k * 100)} % · ${c1(t.fazovyUhel)}°`));
+        u.push(radek('Elongace od Slunce', c1(D.uhel(t.v, r.slunce.v)) + '° ' + (((D.raDec(t.v).ra - D.raDec(r.slunce.v).ra + 540) % 360 - 180) > 0 ? 'východně (večer)' : 'západně (ráno)')));
+        if (t.povrchJas !== undefined) u.push(radek('Povrchový jas', c1(t.povrchJas) + ' mag/″²'));
       }
-      const v = vychodZapad(t.jmeno, j => D.teleso(t.klic, j, m).obzor.alt, jd);
-      r.push(radek('Východ / kulminace / západ', `${fmtCas(v.vychod)} / ${fmtCas(v.kulminace)} / ${fmtCas(v.zapad)}`));
-    } else if (n.o) {
-      const ob = n.o;
-      r.push(radek('Typ', TYPY[ob[3]] || ob[3]));
-      r.push(radek('Katalog', ob[9] || ''));
-      r.push(radek('Jasnost', fmtMag(+ob[4]) + ' mag'));
-      r.push(radek('Rozměr', ob[5] === ob[6] ? ob[5] + '′' : `${ob[5]}′ × ${ob[6]}′`));
-      const v = vychodZapad(ob[0], j => D.naObzor(n.v, j, m).alt, jd);
-      r.push(radek('Východ / kulminace / západ', `${fmtCas(v.vychod)} / ${fmtCas(v.kulminace)} / ${fmtCas(v.zapad)}`));
-    } else if (n.i !== undefined) {
-      r.push(radek('Označení', DATA.BAYER[n.i] || '—'));
-      r.push(radek('Jasnost', fmtMag(DATA.H[n.i * 4 + 2]) + ' mag'));
-      r.push(radek('Barevný index B−V', DATA.H[n.i * 4 + 3].toFixed(2).replace('.', ',')));
-      const dv = DATA.DVOJHVEZDY.find(x => x[0] === n.i);
+      if (t.P !== undefined && ob.klic !== 'mesic') u.push(radek('Poziční úhel osy / sklon', `${c1(t.P)}° / ${c1(t.De)}°`));
+      if (ob.klic === 'saturn') u.push(radek('Sklon prstenců B', c1(t.B) + '°'));
+      if (ob.klic === 'jupiter') {
+        const cm2 = (360 - t.cm) % 360, cm1 = (cm2 + 7.6 * 0 + ((877.8169088 - 870.1869088) * (A.utNaJde(jd) - 2451545)) + 23.75) % 360;
+        u.push(radek('Centrální poledník II / I', `${c1(cm2)}° / ${c1((cm1 + 360) % 360)}°`));
+        const gr = D.pruchodyGRS(jd - 0.05, jd + 0.5, S.grs, m);
+        if (gr.length) u.push(radek(`Rudá skvrna (λ ${S.grs}°) přejde`, gr.slice(0, 2).map(fmtCas).join(', ')));
+        const ms = D.mesiceJupiteru(t);
+        for (const x of ms) u.push(radek(x.jmeno, `${x.x > 0 ? 'Z' : 'V'} ${c1(Math.abs(x.x), 1)} R · ${fmtMag(x.mag)} mag${x.zakryt ? ' · za Jupiterem' : x.zatmeni ? ' · v zatmění' : x.prechod ? ' · přechod' : ''}${x.stin ? ' · stín na disku' : ''}`));
+      }
+      if (ob.klic === 'mars') u.push(radek('Centrální poledník', c1((360 - t.cm) % 360) + '° z. d.'));
+      if (ob.klic === 'mesic') {
+        const im = D.infoMesice(jd, m);
+        u.push(radek('Stáří / kolongituda', `${c1(im.stari)} d / ${c1(im.kolongituda)}°`));
+        u.push(radek('Librace (délka, šířka)', `${c1(im.librL)}°, ${c1(im.librB)}°`));
+      }
+      const vz = vychodZapad(id, j => D.teleso(ob.klic, j, m).obzor.alt, jd, ob.klic === 'mesic' ? 0.125 : ob.klic === 'slunce' ? -0.833 : -0.5667);
+      u.push(radek('Východ · kulminace · západ', `${fmtCas(vz.vychod)} · ${fmtCas(vz.kulminace)} (${c1(vz.maxVyska, 0)}°) · ${fmtCas(vz.zapad)}`));
+    } else if (ob.druh === 'd') {
+      const x = ob.o;
+      typ = (K.TYPY[x[3]] || x[3]) + (x[10] && x[10].startsWith('N:') ? ' · ' + x[10].slice(2) : '');
+      if (x[10] === 'M' && x[9]) u.push(radek('Katalog', x[9]));
+      u.push(radek('Jasnost', fmtMag(+x[4]) + ' mag'));
+      u.push(radek('Rozměr', K.fmtRozmer(x)));
+      if (['s', 'e', 'i', 'sd', 'gc', 'pn', 'sfr', 'rn', 'snr'].includes(x[3]) && x[4] < 90) {
+        const vd = D.viditelnostDSO(x, o.M, r.sbOk, y => y + 5 * Math.log10(Math.max(1, S.zornice / o.pupila)), r.X - 1, r.filtr);
+        u.push(radek('Povrchový jas', c1(vd.sb) + ' mag/″²'));
+        u.push(radek('Viditelnost teď', vd.vis > 0.6 ? '<span class="ok">dobře</span>' : vd.vis > 0.15 ? '<span class="varovani">slabě</span>' : '<span class="chyba">neviditelný</span>'));
+      }
+      const vz = vychodZapad(id, j => D.naObzor(v, j, m).alt, jd, -0.5667);
+      u.push(radek('Východ · kulminace · západ', `${fmtCas(vz.vychod)} · ${fmtCas(vz.kulminace)} (${c1(vz.maxVyska, 0)}°) · ${fmtCas(vz.zapad)}`));
+    } else if (ob.druh === 'h') {
+      const i = ob.i;
+      typ = 'hvězda' + (DATA.PROMENNE[i] ? ' · proměnná ' + DATA.PROMENNE[i] : '');
+      u.push(radek('Označení', [DATA.BAYER[i], 'HR ' + DATA.HR[i], DATA.HD[i] ? 'HD ' + DATA.HD[i] : ''].filter(Boolean).join(' · ')));
+      if (DATA.JMENA_EN[i] && DATA.JMENA_EN[i] !== ob.nazev) u.push(radek('Mezinárodní jméno', DATA.JMENA_EN[i]));
+      u.push(radek('Jasnost V / B−V', `${fmtMag(DATA.H[i * 4 + 2])} mag / ${c1(DATA.H[i * 4 + 3], 2)}`));
+      const dv = DATA.DVOJHVEZDY.find(x => x[0] === i);
       if (dv) {
-        r.push(radek('Dvojhvězda', dv[2].map(s => `${fmtMag(s[0])} mag, ${s[2].toString().replace('.', ',')}″, PA ${s[3]}°`).join('; ')));
+        u.push(radek('Dvojhvězda', dv[2].map(s => `${fmtMag(s[0])} mag, ${c1(s[2], 1)}″, PA ${s[3]}°`).join('; ')));
         const sep = Math.min(...dv[2].map(s => s[2]));
-        const dal = dalekohled();
-        const mez = Math.max(116 / dal.D, posledni.seeing || 0);
-        const zdanlive = sep * o.M / 60;           // zdánlivá vzdálenost v ′ (oko rozliší ~1–2′)
+        const mez = Math.max(116 / r.dal.D, r.seeingEf);
+        const zdanlive = sep * o.M / 60;
         let t;
-        if (sep < 116 / dal.D * 0.9) t = '<span class="chyba">ne – pod rozlišovací mezí dalekohledu</span>';
+        if (sep < 116 / r.dal.D * 0.9) t = '<span class="chyba">ne – pod rozlišovací mezí</span>';
         else if (sep < mez * 0.8) t = '<span class="varovani">ne – rozmazává seeing</span>';
-        else if (zdanlive < 1.5) t = '<span class="varovani">zvyšte zvětšení (zdánlivě jen ' + zdanlive.toFixed(1).replace('.', ',') + '′)</span>';
-        else t = '<span class="ok">ano</span>' + (posledni.k * sep < 6 ? ' (na obrazovce použijte lupu)' : '');
-        r.push(radek('Rozlišitelná nyní', t));
+        else if (zdanlive < 1.5) t = '<span class="varovani">zvyšte zvětšení</span>';
+        else t = '<span class="ok">ano</span>' + (posledni.k * sep < 6 ? ' (zapněte lupu)' : '');
+        u.push(radek('Rozlišitelná nyní', t));
       }
-    }
-    r.push(radek('Rektascenze / deklinace', `${hms(rd.ra)} / ${dms(rd.dec)}`));
-    el.innerHTML = r.join('');
+      const vz = vychodZapad(id, j => D.naObzor(v, j, m).alt, jd, -0.5667);
+      u.push(radek('Východ · kulminace · západ', `${fmtCas(vz.vychod)} · ${fmtCas(vz.kulminace)} (${c1(vz.maxVyska, 0)}°) · ${fmtCas(vz.zapad)}`));
+    } else typ = 'bod na obloze';
+    h += `<div class="objekt-nazev">${ob.nazev}</div><div class="objekt-typ">${typ}${souh ? ' · ' + K.souhvezdiJmeno(souh) : ''}</div>`;
+    const vzd = D.uhel(v, r.c);
+    const p = [
+      radek('Výška · azimut', obz.alt < -1 ? `<span class="chyba">${c1(obz.alt)}° (pod obzorem)</span> · ${c1(obz.az)}°` : `${c1(obz.alt)}° · ${c1(obz.az)}°`),
+      radek('Vzdušná hmota', obz.alt > 0 ? c1(D.vzdusnaHmota(obz.alt), 2) : '–'),
+      radek('α, δ (J2000)', `${K.fmtRa(rdJ.ra)} ${K.fmtDec(rdJ.dec)}`),
+      radek('α, δ (datum)', `${K.fmtRa(rdD.ra)} ${K.fmtDec(rdD.dec)}`),
+      radek('Hodinový úhel', (H < 0 ? '−' : '+') + K.fmtRa(Math.abs(H)).replace(/,\ds$/, 's')),
+      radek('Od středu pole', fmtUhel(vzd * 3600)),
+    ];
+    el.innerHTML = h + '<div class="udaje">' + u.join('') + p.join('') + '</div>';
+    $('btnDoSeznamu').textContent = S.seznam.includes(id) ? '★ V seznamu' : '☆ Do seznamu';
+  }
+  $('btnDoSeznamu').addEventListener('click', () => {
+    const id = S.cil || (posledni && posledni.nejblizsi && posledni.nejblizsi.id);
+    if (!id) return;
+    if (S.seznam.includes(id)) S.seznam = S.seznam.filter(x => x !== id); else S.seznam.push(id);
+    uloz(); infoCas = 0; prepocet();
+  });
+
+  /* ---------- záložky pracovního panelu ---------- */
+  function otevriZalozku(p) {
+    S.zalozka = p; uloz();
+    for (const b of document.querySelectorAll('#zalozky button')) b.setAttribute('aria-selected', String(b.dataset.p === p));
+    for (const el of document.querySelectorAll('.pracovni .panel')) el.hidden = el.id !== 'panel-' + p;
+    for (const f of posluchaciZalozek) try { f(p); } catch (e) { console.error(e); }
+  }
+  const posluchaciZalozek = [];
+  for (const b of document.querySelectorAll('#zalozky button')) b.addEventListener('click', () => otevriZalozku(b.dataset.p));
+
+  /* ---------- sdílení a export ---------- */
+  function odkaz() {
+    const c = aktualniC(jdTed()), rd = D.raDec(c);
+    const p = new URLSearchParams({
+      t: A.dataZJd(jdTed()).toISOString().slice(0, 16), lat: S.lat, lon: S.lon, ra: rd.ra.toFixed(4), dec: rd.dec.toFixed(4),
+      dal: S.dal, ok: S.okular, b: S.barlow, f: S.filtr, sd: S.sledovani ? 1 : 0,
+    });
+    if (S.cil) p.set('cil', S.cil);
+    if (S.rezim === 'kamera') { p.set('kam', S.kamera); p.set('exp', S.expozice); }
+    return location.origin + location.pathname + '#' + p.toString();
+  }
+  $('btnSdilet').addEventListener('click', async () => {
+    const u = odkaz();
+    try { await navigator.clipboard.writeText(u); zprava('Odkaz na tento pohled je ve schránce.'); }
+    catch (e) { history.replaceState(null, '', u); zprava('Odkaz je v adresním řádku – zkopírujte ho.'); }
+  });
+  $('btnSnimek').addEventListener('click', () => {
+    cv.toBlob(b => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'okular-' + A.dataZJd(jdTed()).toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.png';
+      a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
+  });
+  function nactiOdkaz() {
+    if (!location.hash || location.hash.length < 5) return false;
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (!p.get('ra')) return false;
+    if (p.get('t')) { const d = new Date(p.get('t') + 'Z'); if (!isNaN(d)) { jd0 = A.jdZData(d); t0 = performance.now(); } }
+    if (p.get('lat')) { S.lat = +p.get('lat'); S.lon = +p.get('lon'); S.misto = MISTA.length - 1; }
+    if (p.get('dal')) S.dal = p.get('dal');
+    if (p.get('ok')) S.okular = p.get('ok');
+    if (p.get('b')) S.barlow = p.get('b');
+    if (p.get('f')) S.filtr = p.get('f');
+    S.sledovani = p.get('sd') === '1';
+    if (p.get('kam')) { S.rezim = 'kamera'; S.kamera = p.get('kam'); S.expozice = +p.get('exp') || 30; } else S.rezim = 'okular';
+    S.cil = p.get('cil') || null;
+    const v = D.v3(+p.get('ra'), +p.get('dec'));
+    cJ2000 = v;
+    const o = D.naObzor(v, jdTed(), misto()); smer = { alt: o.alt, az: o.az };
+    S.rychlost = 0;
+    return true;
   }
 
   /* ---------- start ---------- */
-  nahodnyFokus(); S.fokus = S.fokusCil;      // na začátku zaostřeno, rozostří se až výměnou okuláru
+  const zOdkazu = nactiOdkaz();
+  nahodnyFokus(); S.fokus = S.fokusCil;
   doFormulare();
-  // výchozí cíl: nejjasnější planeta nad obzorem v noci, jinak Měsíc
-  (function vychoziCil() {
+  if (!zOdkazu) (function vychoziCil() {
     let jd = jdTed();
     const m = misto();
-    // ve dne začít dnešní nocí (Slunce aspoň 12° pod obzorem)
     const hSl = j => D.teleso('slunce', j, m).obzor.alt;
     if (hSl(jd) > -12) {
       let j = jd;
       for (let i = 0; i < 24 * 6 && hSl(j) > -12; i++) j += 1 / 144;
       if (hSl(j) <= -12) {
-        nastavJd(j + 1 / 48);
+        jd0 = j + 1 / 48; t0 = performance.now();
         jd = jdTed();
         setTimeout(() => zprava('Teď je světlo, simulace proto začíná dnešní nocí v ' + fmtCas(jd) + '. Tlačítko „Teď“ vrátí skutečný čas.'), 50);
       }
     }
+    if (S.cil && K.objekt(S.cil) && D.naObzor(K.smer(S.cil, jd, m), jd, m).alt > 5) { vyber(S.cil, true); return; }
     const sl = D.teleso('slunce', jd, m);
     const kand = D.KLICE_TELES.map(k => D.teleso(k, jd, m)).filter(t => t.obzor.alt > 12 && D.uhel(t.v, sl.v) > 25).sort((a, b) => a.mag - b.mag);
-    const vyber = kand.find(t => t.klic !== 'mesic') || kand[0];
-    if (vyber) { namir(vyber.v); if (!S.sledovani) { /* alt/az */ } }
-    else namir(D.zObzoru(40, 180, jd, m));
-    if (S.sledovani) cJ2000 = vyber ? vyber.v : cJ2000;
+    const v = kand.find(t => t.klic !== 'mesic') || kand[0];
+    if (v) vyber('p:' + v.klic, true); else namir(D.zObzoru(40, 180, jd, m));
   })();
-  prepocetCilu(true);
-  // přednačíst texturu Měsíce a planet (na pozadí)
+  otevriZalozku(S.zalozka || 'planovac');
   for (const k of ['jupiter', 'saturn', 'mars', 'venuse', 'merkur', 'mesic']) window.DALEK_TELESA.nactiTexturu(k, 'dalekohled/tex/' + k + '.jpg');
   requestAnimationFrame(snimek);
-  window.DALEK_UI = { S, namir, jdTed, nastavJd, posunObrazem, smer: () => smer, prepniSledovani, posledni: () => posledni, dalekohled, okular, zmenaDalekohledu, doFormulare };
+
+  window.DALEK_APP = window.DALEK_UI = {
+    S, MISTA, uloz, jdTed, nastavJd, misto, dalekohled, okular, barlowK, fotoRezim, namir, vyber, zprava, prepocet,
+    posunObrazem, smer: () => smer, prepniSledovani, posledni: () => posledni, ramec: () => ramec, doFormulare, zmenaDalekohledu,
+    naZmenu: f => posluchaci.push(f), naCil: f => posluchaciCile.push(f), naZalozku: f => posluchaciZalozek.push(f),
+    otevriZalozku, fmtCas, fmtDatumCas, c1, radek, odkaz, mapaOb, aktualniC, naplnVybavu,
+  };
 })();

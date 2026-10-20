@@ -1015,11 +1015,21 @@
     }
     return o;
   }
+  // druh 'r' = recept, 's' = uložené jídlo (id = jejich id), 'j' = chod jídla z deníku (id = { den, jidlo, nazev })
   function balikSdileni(stav, druh, id) {
-    const zdroj = druh === 'r' ? stav.recepty[id] : druh === 's' ? stav.sablony[id] : null;
-    if (!zdroj || !vlastniKlic(druh === 'r' ? stav.recepty : stav.sablony, id)) throw new Error('Položka ke sdílení neexistuje');
-    const polozky = druh === 'r' ? zdroj.suroviny : zdroj.polozky;
+    let zdroj, polozky;
+    if (druh === 'j') {
+      const d = id && typeof id.den === 'string' && vlastniKlic(stav.dny, id.den) ? stav.dny[id.den] : null;
+      polozky = polozkyZaznamu(stav, d ? d.z.filter(z => z.j === id.jidlo) : []);
+      if (!polozky.length) throw new Error('Jídlo je prázdné – není co sdílet');
+      zdroj = { nazev: String(id.nazev || 'Jídlo').trim().slice(0, 80) || 'Jídlo' };
+    } else {
+      zdroj = druh === 'r' ? stav.recepty[id] : druh === 's' ? stav.sablony[id] : null;
+      if (!zdroj || !vlastniKlic(druh === 'r' ? stav.recepty : stav.sablony, id)) throw new Error('Položka ke sdílení neexistuje');
+      polozky = druh === 'r' ? zdroj.suroviny : zdroj.polozky;
+    }
     const b = { f: FORMAT_SDILENI, t: druh, n: zdroj.nazev, p: [] };
+    if (druh === 'j' && typeof id.jidlo === 'string') b.j = id.jidlo;
     if (druh === 'r') {
       b.porci = zdroj.porci || 1;
       if (cislo(zdroj.hmotnost) > 0) b.hm = zdroj.hmotnost;
@@ -1042,11 +1052,12 @@
   // balík (nedůvěryhodný – z QR/odkazu) → { druh, nazev, porci, hmotnost, postup, polozky: [{ f, g, porce?, rychly? }], zDatabaze, nahradni }
   // najdi(id) vrátí potravinu z databáze příjemce (nebo null – pak se použijí údaje z balíku)
   function zBalikuSdileni(b, najdi) {
-    if (!b || typeof b !== 'object' || b.f !== FORMAT_SDILENI || (b.t !== 'r' && b.t !== 's') || !Array.isArray(b.p)) throw new Error('Tohle není sdílený recept ani uložené jídlo z Deníku jídla.');
+    if (!b || typeof b !== 'object' || b.f !== FORMAT_SDILENI || !['r', 's', 'j'].includes(b.t) || !Array.isArray(b.p)) throw new Error('Tohle není sdílený recept ani jídlo z Deníku jídla.');
     const nazev = typeof b.n === 'string' && b.n.trim() ? b.n.trim().slice(0, b.t === 'r' ? 120 : 80) : '';
     if (!nazev) throw new Error('Sdílená položka nemá název.');
     if (!b.p.length || b.p.length > 150) throw new Error('Sdílená položka nemá platný seznam potravin.');
     const vys = { druh: b.t, nazev, polozky: [], zDatabaze: 0, nahradni: [] };
+    if (b.t === 'j') vys.jidlo = typeof b.j === 'string' && /^[a-z0-9_]{1,24}$/.test(b.j) ? b.j : null;   // chod u odesílatele (snidane, obed…)
     if (b.t === 'r') {
       vys.porci = Math.min(100, Math.max(1, Math.round(cislo(b.porci) || 1)));
       if (cislo(b.hm) > 0 && cislo(b.hm) < 100000) vys.hmotnost = cislo(b.hm);
@@ -1081,7 +1092,15 @@
   // uloží přijatou položku do stavu jako nový recept nebo uložené jídlo (potraviny jsou v něm jako snímky)
   function ulozSdilene(stav, x) {
     if (x.druh === 'r') return ulozRecept(stav, { nazev: x.nazev, porci: x.porci, hmotnost: x.hmotnost, postup: x.postup, suroviny: x.polozky.map(p => ({ f: p.f, g: p.g })) });
-    return ulozSablonu(stav, x.nazev, x.polozky);
+    return ulozSablonu(stav, x.nazev, x.polozky);   // uložené jídlo i sdílený chod jídla
+  }
+  // přijatý chod jídla (nebo uložené jídlo) rovnou do deníku: den k, jídlo dne jidlo
+  function pridejSdileneDoDne(stav, x, k, jidlo) {
+    return x.polozky.map(p => {
+      const z = pridejZaznam(stav, k, jidlo, p.f, p.g, p.porce ? { porce: { n: p.porce.n, pocet: p.porce.pocet } } : null);
+      if (p.rychly) z.rychly = true;
+      return z;
+    });
   }
 
   /* ---------- k čemu živiny jsou ----------
@@ -2001,9 +2020,9 @@
 
   /* ---------- vlastní potraviny a recepty ---------- */
   /* ---------- uložená jídla (šablony) ---------- */
-  function ulozSablonu(stav, nazev, zaznamy, id) {
-    if (!nazev || !String(nazev).trim()) throw new Error('Chybí název');
-    const polozky = (zaznamy || []).map(z => {
+  // záznamy deníku (nebo položky { f, g }) → položky se snímky potravin
+  function polozkyZaznamu(stav, zaznamy) {
+    return (zaznamy || []).map(z => {
       const f = z.f || stav.potraviny[z.p];
       if (!f || !(cislo(z.g) > 0)) return null;
       const p = { f: snimek(f), g: cislo(z.g) };
@@ -2011,6 +2030,10 @@
       if (z.rychly) p.rychly = true;
       return p;
     }).filter(Boolean);
+  }
+  function ulozSablonu(stav, nazev, zaznamy, id) {
+    if (!nazev || !String(nazev).trim()) throw new Error('Chybí název');
+    const polozky = polozkyZaznamu(stav, zaznamy);
     if (!polozky.length) throw new Error('Jídlo je prázdné');
     const s = { id: id && stav.sablony[id] ? id : noveId('t'), nazev: String(nazev).trim().slice(0, 80), polozky, zmeneno: Date.now() };
     stav.sablony[s.id] = s;
@@ -2534,7 +2557,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-20e', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-20f', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
@@ -2549,7 +2572,7 @@
     exportJson, importJson, normalizujStav, overPohyb, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
     rozeberTabulkuJidel, importujPolozky,
     UCINKY, UCINKY_ZDROJ, vyskytZiviny, nejlepsiZdroje,
-    FORMAT_SDILENI, balikSdileni, zBalikuSdileni, ulozSdilene,
+    FORMAT_SDILENI, balikSdileni, zBalikuSdileni, ulozSdilene, pridejSdileneDoDne,
     INTENZITA, intenzitaMet, pripravPohyby, rychlostPohybu, popisRychlosti, tempoMinKm, pohybPodleRychlosti, hmotnostKDni, energiePohybu, vypoctiPohyb, nedavnePohyby, tydenPohybu, dvojiPohyb, hledejPohyb,
     ulozSablonu, pouzijSablonu, souhrnSablony, vzdalenost, kontrolaAlergenu, slucAlergeny, ALERGENY, porovnej,
   };

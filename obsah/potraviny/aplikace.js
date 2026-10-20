@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-20e';
+  const VERZE_KODU = '2026-10-20f';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -889,6 +889,7 @@
       pol.push({ text: '➡️ Zkopírovat na jiný den…', akce: () => kopirujNaDen(jid, den) });
       pol.push({ text: '💾 Uložit jídlo pro příště…', akce: () => ulozJakoSablonu(zaznamy, jid) });
       pol.push({ text: '🍲 Uložit jako recept', akce: () => jidloJakoRecept(zaznamy) });
+      pol.push({ text: '📤 Sdílet jídlo (QR kód, odkaz)', akce: () => sdilejPolozku('j', { den, jidlo: jid, nazev: nazevJidla(jid) }) });
       pol.push('-');
       pol.push({ text: '🗑️ Smazat celé jídlo', nebezpecne: true, akce: () => {
         sVracenim('Smazáno: ' + nazevJidla(jid) + ' (' + J.pocet(zaznamy.length, 'položka', 'položky', 'položek') + ')', () => {
@@ -4048,7 +4049,7 @@
   async function sdilejPolozku(druh, id) {
     let b;
     try { b = J.balikSdileni(S, druh, id); } catch (e) { D.chyba(e.message); return; }
-    const co = druh === 'r' ? 'recept' : 'uložené jídlo';
+    const co = druh === 'r' ? 'recept' : druh === 'j' ? 'jídlo' : 'uložené jídlo';
     const kod = await kodSdileni(b);
     const url = odkazSdileni(kod);
     const velky = url.length > MAX_ODKAZ;
@@ -4060,7 +4061,7 @@
       h('div', { class: 'qr-ram' }, platno), info,
       h('p', { class: 'slabe', text: velky
         ? 'Je toho hodně, proto se promítá řada QR kódů. Na druhém telefonu otevři Deník jídla → Data → 📷 Přijmout přes QR a namiř kameru na obrazovku.'
-        : 'Naskenuj kód fotoaparátem druhého telefonu (otevře se Deník s nabídkou uložit ' + co + '), nebo v Deníku: Data → 📷 Přijmout přes QR. Případně pošli odkaz.' }));
+        : 'Naskenuj kód fotoaparátem druhého telefonu (otevře se Deník s nabídkou ' + (druh === 'j' ? 'přidat jídlo do deníku' : 'uložit ' + co) + '), nebo v Deníku: Data → 📷 Přijmout přes QR. Případně pošli odkaz.' }));
     const sdilet = h('button', { class: 'btn primary', type: 'button' }, '📤 Poslat odkaz');
     const kopirovat = h('button', { class: 'btn', type: 'button' }, '📋 Kopírovat odkaz');
     const pata = h('div', { class: 'sheet-pata' }, kopirovat, h('div', { class: 'vpravo' }, sdilet));
@@ -4108,6 +4109,7 @@
     let x;
     try { x = J.zBalikuSdileni(b, id => DB.podleId.get(id) || null); }
     catch (e) { D.chyba(e.message); return; }
+    if (x.druh === 'j') { prijmiJidlo(x); return; }
     const co = x.druh === 'r' ? 'Recept' : 'Uložené jídlo';
     let kcal = 0;
     for (const p of x.polozky) kcal += (p.f.n.kcal || 0) * p.g / 100;
@@ -4126,6 +4128,44 @@
         uloz(); v.zavri(); obnovIndexUzivatele();
         if (pohled === 'potraviny') vykresliPotraviny();
         D.info(co + ' „' + nova.nazev + '“ uloženo.');
+      } catch (e) { D.chyba(e.message); }
+    });
+  }
+
+  // přijatý chod jídla: přidat do deníku (vybraný den a jídlo) nebo uložit jako uložené jídlo
+  function prijmiJidlo(x) {
+    let kcal = 0;
+    for (const p of x.polozky) kcal += (p.f.n.kcal || 0) * p.g / 100;
+    const vid = jidla();
+    const vyber = h('select', { class: 'vstup', 'aria-label': 'Do kterého jídla' },
+      ...vid.map(j => h('option', { value: j.id, selected: j.id === (vid.some(q => q.id === x.jidlo) ? x.jidlo : vychoziJidlo()) ? true : null, text: j.nazev })));
+    const den = h('input', { type: 'date', class: 'vstup', value: aktivniDen, 'aria-label': 'Den' });
+    const telo = h('div', { class: 'sheet-telo' },
+      h('p', {}, 'Jídlo ', h('b', { text: x.nazev }), ' – ' + J.pocet(x.polozky.length, 'položka', 'položky', 'položek') + ', celkem ' + en(kcal) + '.'),
+      h('ul', { class: 'seznam' }, ...x.polozky.slice(0, 40).map(p => h('li', {}, h('span', { class: 'nazev', text: p.f.nazev }),
+        h('span', { class: 'slabe', text: p.rychly ? 'rychlý záznam · ' + en(p.f.n.kcal * p.g / 100) : p.porce && p.porce.pocet ? fc(p.porce.pocet, 2) + ' × ' + p.porce.n : fc(p.g) + ' ' + (p.f.ml ? 'ml' : 'g') })))),
+      x.nahradni.length ? h('p', { class: 'slabe', text: 'Některé potraviny (' + x.nahradni.slice(0, 5).join(', ') + (x.nahradni.length > 5 ? '…' : '') + ') v tvé databázi nejsou – použijí se základní hodnoty od odesílatele.' }) : null,
+      h('div', { class: 'radek', style: { gap: '10px', flexWrap: 'wrap', marginTop: '12px', alignItems: 'flex-end' } },
+        h('label', { style: { flex: '1 1 10rem' } }, h('span', { class: 'slabe', style: { display: 'block', marginBottom: '3px' }, text: 'Den' }), den),
+        h('label', { style: { flex: '1 1 10rem' } }, h('span', { class: 'slabe', style: { display: 'block', marginBottom: '3px' }, text: 'Jídlo' }), vyber)));
+    const pridat = h('button', { class: 'btn primary', type: 'button', 'data-akce': 'pridat-jidlo' }, '➕ Přidat do deníku');
+    const ulozit = h('button', { class: 'btn', type: 'button', 'data-akce': 'ulozit-jidlo', title: 'Přidat → 📋 Uložená jídla' }, '💾 Uložit na později');
+    const pata = h('div', { class: 'sheet-pata' }, ulozit, h('div', { class: 'vpravo' }, pridat));   // zavřít bez akce: ✕ / Esc / Zpět
+    const v = otevriVrstvu({ titulek: '📥 Přijato jídlo: ' + x.nazev, telo, pata, sirka: '520px' });
+    pridat.addEventListener('click', () => {
+      const k = J.zKlice(den.value) ? den.value : aktivniDen;
+      const jid = vyber.value;
+      v.zavri();
+      aktivniDen = k;
+      prepni('denik');
+      sVracenim('Přidáno: ' + x.nazev + ' → ' + nazevJidla(jid) + ' (' + J.pocet(x.polozky.length, 'položka', 'položky', 'položek') + ')', () => J.pridejSdileneDoDne(S, x, k, jid));
+    });
+    ulozit.addEventListener('click', () => {
+      try {
+        const nova = J.ulozSdilene(S, x);
+        uloz(); v.zavri(); obnovIndexUzivatele();
+        if (pohled === 'potraviny') vykresliPotraviny();
+        D.info('Jídlo „' + nova.nazev + '“ uloženo – najdeš ho v Přidat → 📋 Uložená jídla.');
       } catch (e) { D.chyba(e.message); }
     });
   }

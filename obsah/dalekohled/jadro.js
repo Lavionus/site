@@ -274,7 +274,8 @@
     const Fe = dal.F * barlow;
     const M = dal.pevneZvetseni || Fe / ok.f;
     const pupila = dal.D / M;
-    const pole = (dal.pevnePole || ok.afov / M);               // skutečné zorné pole (°)
+    // skutečné zorné pole (°): z clony okuláru, je-li známa, jinak ze zdánlivého pole
+    const pole = dal.pevnePole || (ok.clona ? ok.clona / Fe * DEG : ok.afov / M);
     return {
       M, pupila, pole, afov: dal.pevnePole ? dal.pevnePole * M : ok.afov,
       svetelnost: dal.F / dal.D,
@@ -490,12 +491,184 @@
     return { vychod: vych, zapad: zap, kulminace: maxT, maxVyska: maxH };
   }
 
+
+  /* ---------------- souhvězdí (hranice d3-celestial, paprsek po poledníku k severu) ---------------- */
+  let HRANICE = null;
+  function souhvezdi(v) {
+    if (!HRANICE) {
+      const data = koren.DALEK_DATA || (typeof require !== 'undefined' ? require('./data.js') : null);
+      HRANICE = data ? data.HRANICE : {};
+    }
+    const { ra, dec } = raDec(v);
+    const wrap = x => { let d = ((x - ra) % 360 + 540) % 360 - 180; return d; };
+    for (const [id, polys] of Object.entries(HRANICE)) {
+      let n = 0;
+      for (const ring of polys) {
+        // prstenec kolem severního pólu: paprsek k severu pól „opustí“ ⇒ obrácená parita
+        let vinuti = 0;
+        for (let i = 0; i < ring.length; i++) { const a = ring[i], b = ring[(i + 1) % ring.length]; vinuti += ((b[0] - a[0]) % 360 + 540) % 360 - 180; }
+        if (Math.abs(vinuti) > 180 && ring.reduce((x, p) => x + p[1], 0) > 0) n++;
+        for (let i = 0; i < ring.length; i++) {
+          const a = ring[i], b = ring[(i + 1) % ring.length];
+          const la = wrap(a[0]), lb = wrap(b[0]);
+          if (Math.abs(la - lb) > 180) continue;            // hrana přes protilehlý poledník
+          if ((la > 0) === (lb > 0)) continue;
+          const t = la / (la - lb), d = a[1] + t * (b[1] - a[1]);
+          if (d > dec) n++;
+        }
+      }
+      if (n % 2) return id.replace(/\d$/, '');
+    }
+    return '';
+  }
+
+  /* ---------------- viditelnost plošného objektu ---------------- */
+  // o = [id, α, δ, typ, mag, a′, b′, …]; sbOkPozadi = jas pozadí v okuláru (mag/″²), posun(sb) = ztmavení okulárem
+  // vrací {vis 0–1, C kontrast, sb povrchový jas}
+  function viditelnostDSO(o, M, sbOkPozadi, posun, extinkce = 0, filtr = null) {
+    const plocha = Math.PI / 4 * o[5] * o[6] * 3600;
+    const typ = o[3];
+    let sbObj = o[4] + 2.5 * Math.log10(Math.max(1, plocha)) - (typ === 'gc' ? 1.2 : typ === 'pn' ? 0.3 : 1.0);
+    if (filtr) sbObj += (typ === 'pn' || typ === 'sfr' || typ === 'snr') ? filtr.emisni : filtr.hvezdy;
+    const sbOk = posun(sbObj) + 0.25 * extinkce;
+    const C = 10 ** (-0.4 * (sbOk - sbOkPozadi));
+    const velikost = o[5] * M;
+    const Cth = 0.025 * (1 + 25 / Math.max(1, velikost)) * 10 ** (0.12 * Math.max(0, sbOkPozadi - 21));
+    const vis = Math.max(0, Math.min(1, Math.log10(C / Cth) / 1.3));
+    return { vis, C, sb: sbObj };
+  }
+
+  /* ---------------- Galileovy měsíce: geometrie vůči disku ---------------- */
+  // vrací polohy v soustavě oblohy (x západ, y sever, z k Zemi) v poloměrech Jupiteru + stavy
+  function kouleProsek(p, d, viditelny) {
+    const b = 2 * (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]);
+    const c = p[0] * p[0] + p[1] * p[1] + p[2] * p[2] - 1;
+    const disc = b * b - 4 * c;
+    if (disc < 0) return null;
+    const t = (-b - Math.sqrt(disc)) / 2;
+    if (t <= 0) return null;
+    const q = [p[0] + t * d[0], p[1] + t * d[1], p[2] + t * d[2]];
+    if (viditelny && q[2] < 0) return null;
+    return q;
+  }
+  function mesiceJupiteru(t) {
+    const P = t.P * RAD;
+    const uW = [Math.cos(P), Math.sin(P)], uN = [-Math.sin(P), Math.cos(P)];
+    const b = baze(t.v);
+    const s = [dot(t.kSlunci, b.x), dot(t.kSlunci, b.y), dot(t.kSlunci, b.z)];
+    return t.mesice.map(m => {
+      const x = m.X * uW[0] + m.Y * uN[0], y = m.X * uW[1] + m.Y * uN[1], z = m.Z;
+      const naDisku = x * x + (y / 0.935) ** 2 < 1;
+      // stín se počítá na kouli zploštělou převodem y → y/0.935
+      const p = [x, y / 0.935, z];
+      const zat = kouleProsek(p, s);
+      const st = kouleProsek(p, [-s[0], -s[1], -s[2]], true);
+      return { ...m, x, y, z, prechod: z > 0 && naDisku, zakryt: z < 0 && naDisku, zatmeni: !!zat, stin: st ? [st[0], st[1] * 0.935, st[2]] : null };
+    });
+  }
+  const STAVY_MESICU = [
+    ['prechod', 'přechod přes disk'], ['stin', 'stín na disku'], ['zakryt', 'zákryt planetou'], ['zatmeni', 'zatmění ve stínu planety'],
+  ];
+  // úkazy Galileových měsíců v intervalu [jd0, jd1] (UT); přesnost Meeusovy metody ~ minuty
+  function ukazyJupiteru(jd0, jd1, misto, krok = 2 / 1440) {
+    const stav = jd => {
+      const t = teleso('jupiter', jd, misto);
+      return mesiceJupiteru(t).map(m => ({ jmeno: m.jmeno, prechod: m.prechod, stin: !!m.stin, zakryt: m.zakryt, zatmeni: m.zatmeni }));
+    };
+    const out = [];
+    let pred = stav(jd0);
+    for (let jd = jd0 + krok; jd <= jd1 + 1e-9; jd += krok) {
+      const ted = stav(jd);
+      for (let i = 0; i < 4; i++) for (const [k, popis] of STAVY_MESICU) {
+        if (pred[i][k] === ted[i][k]) continue;
+        // zpřesnění bisekcí
+        let a = jd - krok, b = jd;
+        const va = pred[i][k];
+        for (let n = 0; n < 9; n++) { const m = (a + b) / 2; if (stav(m)[i][k] === va) a = m; else b = m; }
+        out.push({ jd: (a + b) / 2, mesic: ted[i].jmeno, druh: k, zacatek: !va, popis: (va ? 'konec: ' : 'začátek: ') + popis });
+      }
+      pred = ted;
+    }
+    return out;
+  }
+  // průchody bodu o délce L (Systém II, západní) centrálním poledníkem Jupiteru
+  function cmII(jd, misto) { const t = teleso('jupiter', jd, misto); return norm(360 - t.cm); }
+  function pruchodyGRS(jd0, jd1, L, misto) {
+    const out = [];
+    const f = jd => { let d = cmII(jd, misto) - L; d = ((d + 540) % 360) - 180; return d; };
+    let a = jd0, fa = f(a);
+    const krok = 0.02;
+    for (let b = jd0 + krok; b <= jd1 + krok; b += krok) {
+      const fb = f(b);
+      if (fa < 0 && fb >= 0 && fb - fa < 90) {
+        let x0 = a, x1 = b;
+        for (let n = 0; n < 25; n++) { const m = (x0 + x1) / 2; if (f(m) < 0) x0 = m; else x1 = m; }
+        if ((x0 + x1) / 2 <= jd1) out.push((x0 + x1) / 2);
+      }
+      a = b; fa = fb;
+    }
+    return out;
+  }
+
+  /* ---------------- Měsíc: stáří, kolongituda ---------------- */
+  function infoMesice(jd, misto) {
+    const t = teleso('mesic', jd, misto);
+    const sb = mxv(t.rot.M, t.kSlunci);
+    const l0 = Math.atan2(sb[1], sb[0]) * DEG;
+    const kolong = norm(90 - l0);
+    // stáří: čas od posledního novu (fáze z elongace)
+    const s = teleso('slunce', jd, misto);
+    const elong = uhel(t.v, s.v);
+    const roste = (() => { const t2 = teleso('mesic', jd + 0.05, misto); return uhel(t2.v, teleso('slunce', jd + 0.05, misto).v) > elong; })();
+    const stari = (roste ? elong : 360 - elong) / 360 * 29.530589;
+    return { kolongituda: kolong, stari, roste, k: t.k, librL: ((t.cm + 180) % 360) - 180, librB: t.De };
+  }
+
+  /* ---------------- soumraky a noc ---------------- */
+  // vrátí časy (UT jd) západu/východu Slunce a konců soumraků pro noc začínající v den jd (místní poledne → poledne)
+  function noc(jdPoledne, misto) {
+    const h = jd => teleso('slunce', jd, misto).obzor.alt;
+    const najdi = (h0, klesa) => {
+      let a = jdPoledne, fa = h(a) - h0;
+      for (let b = jdPoledne + 1 / 48; b <= jdPoledne + 1.0001; b += 1 / 48) {
+        const fb = h(b) - h0;
+        if (klesa ? (fa > 0 && fb <= 0) : (fa < 0 && fb >= 0)) {
+          let x0 = a, x1 = b;
+          for (let n = 0; n < 20; n++) { const m = (x0 + x1) / 2; if ((h(m) - h0 > 0) === klesa) x0 = m; else x1 = m; }
+          return (x0 + x1) / 2;
+        }
+        a = b; fa = fb;
+      }
+      return null;
+    };
+    return {
+      zapad: najdi(-0.833, true), obcanskyKonec: najdi(-6, true), nautickyKonec: najdi(-12, true), astroKonec: najdi(-18, true),
+      astroZacatek: najdi(-18, false), nautickyZacatek: najdi(-12, false), obcanskyZacatek: najdi(-6, false), vychod: najdi(-0.833, false),
+    };
+  }
+  // místní poledne (UT jd) přibližně pro den obsahující jd
+  function poledne(jd, misto) { return Math.floor(jd - 0.5 + misto.lon / 360) + 0.5 - misto.lon / 360 + 0.5; }
+
+  /* ---------------- astrofotografie ---------------- */
+  function astrofoto(kam, F, D, seeing, dec, sledovani) {
+    const meritko = 206.265 * kam.pixel / F;                 // ″/px
+    const poleW = 2 * Math.atan(kam.sirka / 2 / F) * DEG, poleH = 2 * Math.atan(kam.vyska / 2 / F) * DEG;
+    const vzorkovani = seeing / meritko;                      // px na FWHM
+    // bez sledování: posun o 1 px
+    const tMax = meritko / (15.041 * Math.max(0.02, Math.cos(dec * RAD)));
+    const tNpf = (35 * (F / D) + 30 * kam.pixel) / (F) * 1;     // NPF (Starry Landscape Stacker) – sekundy
+    return { meritko, poleW, poleH, vzorkovani, tMax, tNpf, svetelnost: F / D,
+      doporuceni: vzorkovani < 1.5 ? 'podvzorkováno (hvězdy hranaté) – delší ohnisko nebo menší pixely' : vzorkovani > 4 ? 'převzorkováno – pomůže binning ' + Math.min(4, Math.floor(vzorkovani / 2)) + '×' + Math.min(4, Math.floor(vzorkovani / 2)) + ' nebo reduktor' : 'vzorkování odpovídá seeingu',
+      sledovani };
+  }
+
   const API = {
     RAD, DEG, AU, v3, dot, sub, add, mul, len, unit, cross, raDec, uhel, mxv, mtxv, precese, eklNaRov,
     naObzor, zObzoru, refrakceStupne, pozorovatel, TELESA, KLICE_TELES, teleso, rotaceTelesa, polohaPlanety,
     galileovyMesice, pozicniUhel, baze, jasnost, optika, BORTLE, jasSoumraku, jasOblohy, nelm, mezniVelikost,
     jasPozadi, vzdusnaHmota, pocetDo, galakticke, slabeHvezdy, hvezdyBunky, mulberry, hashCislo, gauss,
-    barvaBV, rozmazani, disperze, prechody, slozMag,
+    barvaBV, rozmazani, disperze, prechody, slozMag, souhvezdi, viditelnostDSO, mesiceJupiteru, ukazyJupiteru,
+    cmII, pruchodyGRS, infoMesice, noc, poledne, astrofoto, kouleProsek,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   koren.DALEK = API;

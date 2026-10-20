@@ -175,35 +175,7 @@
     return { canvas: cv, rPx, stred };
   }
 
-  /* Poloha Galileových měsíců a jejich stínů v soustavě oblohy (x západ, y sever, z k nám) v poloměrech Jupiteru */
-  function mesiceJupiteru(t) {
-    const P = t.P * RAD;
-    const uW = [Math.cos(P), Math.sin(P)], uN = [-Math.sin(P), Math.cos(P)];
-    const b = D.baze(t.v);
-    const s = [D.dot(t.kSlunci, b.x), D.dot(t.kSlunci, b.y), D.dot(t.kSlunci, b.z)];
-    return t.mesice.map(m => {
-      const x = m.X * uW[0] + m.Y * uN[0], y = m.X * uW[1] + m.Y * uN[1], z = m.Z;
-      const r2 = x * x + (y / 0.935) ** 2;
-      const zakryt = z < 0 && r2 < 1;                      // za planetou
-      // zatmění: paprsek od měsíce ke Slunci protne Jupiter
-      const zatmeni = koule([x, y, z], s);
-      // stín na disku: paprsek od měsíce směrem od Slunce
-      const st = koule([x, y, z], [-s[0], -s[1], -s[2]], true);
-      return { ...m, x, y, z, zakryt, zatmeni: !!zatmeni, stin: st };
-    });
-  }
-  // průsečík polopřímky z bodu p ve směru d s koulí o poloměru 1 – vrací bod (přední stranu k pozorovateli) nebo null
-  function koule(p, d, viditelny) {
-    const b = 2 * (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]);
-    const c = p[0] * p[0] + p[1] * p[1] + p[2] * p[2] - 1;
-    const disc = b * b - 4 * c;
-    if (disc < 0) return null;
-    const t = (-b - Math.sqrt(disc)) / 2;
-    if (t <= 0) return null;
-    const q = [p[0] + t * d[0], p[1] + t * d[1], p[2] + t * d[2]];
-    if (viditelny && q[2] < 0) return null;
-    return q;
-  }
+  const mesiceJupiteru = t => D.mesiceJupiteru(t);
 
   const API = { nactiTexturu, textura, vykresli, mesiceJupiteru, prstenec, prusecik };
   koren.DALEK_TELESA = API;

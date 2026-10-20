@@ -4,6 +4,9 @@
 (function (koren) {
   'use strict';
   const D = koren.DALEK, T = koren.DALEK_TELESA, DATA = koren.DALEK_DATA;
+  const DSO = () => (koren.DALEK_KAT ? koren.DALEK_KAT.DSO : DATA.MESSIER);
+  // barvy objektů na fotografii (Hα červená, OIII tyrkysová, reflexní modrá…)
+  const BARVY_FOTO = { sfr: [255, 70, 105], en: [255, 70, 105], snr: [255, 110, 120], pn: [80, 225, 230], rn: [110, 150, 255], s: [255, 236, 214], e: [255, 225, 190], i: [220, 225, 255], sd: [240, 230, 220], gc: [255, 238, 210] };
   const RAD = Math.PI / 180;
 
   const POTLACENE = new Set(DATA.DVOJHVEZDY.flatMap(d => d[3] || []));
@@ -90,14 +93,16 @@
   }
   // sprite objektu podle typu (bílý jas na průhledném pozadí, kreslí se se složením 'lighter')
   const spriteDSO = new Map();
-  function spriteObjektu(o) {
-    if (spriteDSO.has(o[0])) return spriteDSO.get(o[0]);
+  function spriteObjektu(o, foto) {
+    const klicS = o[0] + (foto ? '#f' : '');
+    if (spriteDSO.has(klicS)) return spriteDSO.get(klicS);
     const N = 160, c = platno(N), x = c.getContext('2d'), im = x.createImageData(N, N);
     const typ = o[3], seed = D.hashCislo(...o[0].split('').map(ch => ch.charCodeAt(0)));
     const sum = sumovaPole(seed, N);
     const pomer = o[6] / o[5];
     let barva = [255, 255, 255];
     if (typ === 'pn') barva = [180, 255, 230];
+    if (foto) barva = BARVY_FOTO[typ] || barva;
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       const u = (i + 0.5) / N * 2 - 1, v = (j + 0.5) / N * 2 - 1;     // u podél velké osy, v kolmo
       const r = Math.hypot(u, v);
@@ -133,7 +138,7 @@
     }
     x.putImageData(im, 0, 0);
     const s = { c, pomer };
-    spriteDSO.set(o[0], s);
+    spriteDSO.set(klicS, s);
     return s;
   }
   // členové hvězdokup (generované, stálé)
@@ -210,8 +215,16 @@
     const cv = s.cv, ctx = cv.getContext('2d');
     const W = cv.width, H = cv.height, cx = W / 2, cy = H / 2;
     const lupa = s.lupa || 1;
-    const R = Math.min(W, H) / 2 * 0.94 * lupa;      // lupa obrazovky zvětší celý výřez (okraj pole pak může být mimo plátno)
-    const k = R / (s.o.pole * 1800);          // px na ″
+    const kam = s.kamera;                     // {sirka, vyska} v ″ – režim kamery (obdélník čipu místo kruhu)
+    let R, k;
+    if (kam) {
+      k = Math.min(W, H) * 0.94 * lupa / Math.max(kam.sirka, kam.vyska);
+      R = Math.hypot(kam.sirka, kam.vyska) / 2 * k;
+    } else {
+      R = Math.min(W, H) / 2 * 0.94 * lupa;      // lupa obrazovky zvětší celý výřez (okraj pole pak může být mimo plátno)
+      k = R / (s.o.pole * 1800);                 // px na ″
+    }
+    const filtr = s.filtr || { pozadi: 0, hvezdy: 0, emisni: 0, telesa: 0 };
     const A = s.orient.A;
     const b = D.baze(s.c);
     krokChveni(s.dt || 0.016, Math.min(1.5, s.seeing / 2));
@@ -235,7 +248,10 @@
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
     ctx.save();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.clip();
+    ctx.beginPath();
+    if (kam) ctx.rect(cx - kam.sirka * k / 2, cy - kam.vyska * k / 2, kam.sirka * k, kam.vyska * k);
+    else ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+    ctx.clip();
 
     // oslnění Sluncem
     if (s.slunce && s.slunce.vPoli) {
@@ -250,24 +266,23 @@
 
     // --- objekty vzdáleného vesmíru ---
     ctx.globalCompositeOperation = 'lighter';
-    const polomerPole = s.o.pole / 2;
-    for (const o of DATA.MESSIER) {
+    const polomerPole = kam ? Math.hypot(kam.sirka, kam.vyska) / 7200 : s.o.pole / 2;
+    const cosPole = Math.cos((polomerPole + 0.05) * RAD);
+    const foto = !!s.foto;
+    for (const o of DSO()) {
+      // rychlé vyřazení podle deklinace a skalárního součinu
       const v = D.v3(o[1], o[2]);
-      const vzd = D.uhel(v, s.c);
-      if (vzd > polomerPole + o[5] / 60) continue;
+      const dd = D.dot(v, s.c);
+      if (dd < Math.cos(Math.min(89, polomerPole + o[5] / 60 + 0.05) * RAD)) continue;
       const p = proj(v); if (!p) continue;
       viditelne.push({ typ: 'dso', o, p });
       if (!['s', 'e', 'i', 'sd', 'gc', 'pn', 'sfr', 'rn', 'snr', 'en'].includes(o[3])) continue;
-      // průměrný povrchový jas a viditelnost
-      const plocha = Math.PI / 4 * o[5] * o[6] * 3600;
-      const sbObj = o[4] + 2.5 * Math.log10(plocha) - (o[3] === 'gc' ? 1.2 : o[3] === 'pn' ? 0.3 : 1.0);
-      const sbObjOk = s.jasPozadiPosun(sbObj) + 0.25 * (s.extinkce || 0);
-      const C = 10 ** (-0.4 * sbObjOk) / Lbg;
-      const velikost = o[5] * s.o.M;                 // zdánlivá velikost v ′
-      const Cth = 0.025 * (1 + 25 / Math.max(1, velikost)) * 10 ** (0.12 * Math.max(0, s.sbOk - 21));
-      const vis = Math.max(0, Math.min(1, Math.log10(C / Cth) / 1.3));
+      const vd = D.viditelnostDSO(o, s.o.M, s.sbOk, s.jasPozadiPosun, s.extinkce || 0, filtr);
+      const C = vd.C;
+      // fotografie integruje světlo – práh kontrastu podle expozice
+      const vis = foto ? Math.max(0, Math.min(1, Math.log10(C / (0.004 / Math.sqrt(Math.max(1, s.foto.expozice) / 30))) / 1.8)) : vd.vis;
       if (vis <= 0) continue;
-      const sp = spriteObjektu(o);
+      const sp = spriteObjektu(o, foto);
       const pa = o[7] * RAD;
       // velká osa ve směru PA (od severu k východu): (x_w, y_n) = (−sin, cos)
       const mx = -Math.sin(pa), my = Math.cos(pa), nx = Math.cos(pa), ny = Math.sin(pa);
@@ -275,14 +290,14 @@
       const m11 = (A[0] * mx + A[1] * my) * a, m21 = (A[2] * mx + A[3] * my) * a;
       const m12 = (A[0] * nx + A[1] * ny) * bb, m22 = (A[2] * nx + A[3] * ny) * bb;
       ctx.setTransform(m11, m21, m12, m22, p[0], p[1]);
-      ctx.globalAlpha = Math.min(0.85, vis * (0.3 + 0.22 * Math.log10(1 + C)));
+      ctx.globalAlpha = foto ? Math.min(0.95, vis * (0.45 + 0.25 * Math.log10(1 + C))) : Math.min(0.85, vis * (0.3 + 0.22 * Math.log10(1 + C)));
       ctx.drawImage(sp.c, -sp.c.width / 2, -sp.c.height / 2);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     // --- hvězdy ---
     const hvezdy = [];
-    const H4 = DATA.H, cosR = Math.cos((polomerPole + 0.05) * RAD);
+    const H4 = DATA.H, cosR = cosPole;
     for (let i = 0; i < H4.length; i += 4) {
       if (POTLACENE.has(i / 4)) continue;
       const v = D.v3(H4[i], H4[i + 1]);
@@ -304,9 +319,9 @@
       }
     }
     for (const h of D.slabeHvezdy(s.c, polomerPole, s.lm)) hvezdy.push([h, h[3], h[4], -1]);
-    for (const o of DATA.MESSIER) {
+    for (const o of DSO()) {
       if (!['gc', 'oc', 'pos', 'sfr'].includes(o[3])) continue;
-      if (o[4] + 2 > s.lm) continue;
+      if (o[4] + 2 > s.lm || o[4] > 12) continue;
       const v = D.v3(o[1], o[2]);
       if (D.uhel(v, s.c) > polomerPole + o[5] / 60) continue;
       for (const h of hvezdyKupy(o)) if (h[3] < s.lm + 0.5) hvezdy.push([h, h[3], h[4], -1]);
@@ -330,17 +345,20 @@
     const obstr = s.dal.obstrukce || 0;
     const kotouc = kotouce[obstr] || (kotouce[obstr] = spriteKotouc(obstr));
     const pavouk = s.dal.typ === 'newton';
+    const naObrazovce = [];
+    const stopa = s.stopa;                       // [dx, dy] px – ujetí hvězd během expozice bez pointace
     for (const h of hvezdy) {
-      const m = h[1];
+      const m = h[1] + filtr.hvezdy;
       if (m > s.lm + 0.3) continue;
       const p = proj(h[0]); if (!p) continue;
+      naObrazovce.push({ x: p[0], y: p[1], m: h[1], v: h[0], i: h[3], jmeno: h[4] });
       const nad = s.lm - m;                       // o kolik nad mezí
       let jas = Math.max(0.04, Math.min(1, 0.1 + 0.16 * nad));
       if (nad < 0.3) jas *= Math.max(0, (nad + 0.3) / 0.6);
       const tr = Math.max(0, Math.min(9, Math.round((h[2] + 0.3) / 0.25)));
       let tridy = BV_TRIDY.findIndex(x => x >= h[2]); if (tridy < 0) tridy = 9;
       // slabé hvězdy oko vnímá bez barvy
-      const sp = nad > 3.5 ? spriteHvezd[tridy] : spriteBila;
+      const sp = nad > 3.5 || foto ? spriteHvezd[tridy] : spriteBila;
       void tr;
       const zar = Math.max(0, nad - 5);
       if (rozost > Math.max(2, blurPx * 0.7)) {
@@ -350,6 +368,14 @@
         continue;
       }
       let r = Math.max(1.6 * dpr, blurPx * 1.3) * (1 + 0.22 * zar);
+      if (stopa && Math.hypot(stopa[0], stopa[1]) > 1.5) {
+        // hvězda se během expozice protáhne do čárky
+        const [cr, cg, cb] = D.barvaBV(h[2]);
+        ctx.globalAlpha = jas;
+        ctx.strokeStyle = `rgb(${cr},${cg},${cb})`; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1, r * 0.9);
+        ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + stopa[0], p[1] + stopa[1]); ctx.stroke();
+        continue;
+      }
       if (airy && nad > 2) {
         const sir = s.rayleigh * k / (spriteAiry.r1rel / 2);     // šířka spritu, aby 1. tmavý kroužek ležel na r1
         ctx.globalAlpha = Math.min(1, jas * 1.1);
@@ -424,7 +450,7 @@
         }
       }
       // jas disku v okuláru
-      const sbTel = s.jasPozadiPosun(t.povrchJas);
+      const sbTel = s.jasPozadiPosun(t.povrchJas + filtr.telesa);
       const zisk = Math.max(0.35, Math.min(1.25, 1.25 - (sbTel - 3) * 0.075));
       const kontrast = Math.max(0.12, Math.min(1, Math.log10(10 ** (-0.4 * sbTel) / Lbg) / 1.2));
       const rozm = Math.max(0.35, blurPx / 2.355 + s.rozostreni * k / 4);
@@ -481,11 +507,22 @@
       ctx.lineTo(hx + tx * 3 * W - z[0] * 3 * W, hy + ty * 3 * W - z[1] * 3 * W);
       ctx.closePath(); ctx.fill();
     }
+    // --- barevný filtr ---
+    if (filtr.barva && !foto) {
+      ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.55;
+      ctx.fillStyle = `rgb(${filtr.barva.join(',')})`; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    }
+    // --- rovníková síť (α, δ) ---
+    if (s.sit) kresliSit(ctx, s.c, polomerPole, proj, dpr);
     ctx.restore();
 
-    // --- okraj zorného pole (clona okuláru) ---
-    ctx.strokeStyle = 'rgba(70,70,70,0.9)'; ctx.lineWidth = 2 * dpr;
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke();
+    // --- okraj zorného pole (clona okuláru / okraj čipu) ---
+    ctx.strokeStyle = 'rgba(90,90,90,0.95)'; ctx.lineWidth = 2 * dpr;
+    ctx.beginPath();
+    if (kam) ctx.rect(cx - kam.sirka * k / 2, cy - kam.vyska * k / 2, kam.sirka * k, kam.vyska * k);
+    else ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+    ctx.stroke();
 
     // --- popisky ---
     if (s.popisky) {
@@ -507,7 +544,46 @@
       }
       for (const e of extra) { const p = proj(e.v); if (p) nap(p[0], p[1], e.jmeno); }
     }
-    return { viditelne, telesa: info.telesa, k, R, cx, cy, blurPx, pocetHvezd: hvezdy.length };
+    // obrácená projekce: obrazovka → směr (J2000)
+    const det = A[0] * A[3] - A[1] * A[2];
+    const zpet = (x, y) => {
+      const dx = (x - cx - jx) / k, dy = (y - cy - jy) / k;
+      const xw = (A[3] * dx - A[1] * dy) / det, yn = (-A[2] * dx + A[0] * dy) / det;
+      return D.unit(D.add(s.c, D.add(D.mul(b.x, xw / 206265), D.mul(b.y, yn / 206265))));
+    };
+    return { viditelne, telesa: info.telesa, k, R, cx, cy, blurPx, pocetHvezd: hvezdy.length, proj, zpet, hvezdy: naObrazovce };
+  }
+
+  // síť rektascenze a deklinace v zorném poli s popisky
+  function kresliSit(ctx, c, polomer, proj, dpr) {
+    const rd = D.raDec(c);
+    const pole = polomer * 2;
+    const KROKY = [1 / 60, 2 / 60, 5 / 60, 10 / 60, 0.25, 0.5, 1, 2, 5, 10];
+    const krokD = KROKY.find(x => x >= pole / 5) || 10;
+    const KROKY_RA = [1 / 240, 2 / 240, 5 / 240, 10 / 240, 1 / 4, 0.5, 1, 2.5, 5, 10, 15];        // °; 1/240 ° = 1 s času
+    const cd = Math.max(0.05, Math.cos(rd.dec * RAD));
+    const krokR = KROKY_RA.find(x => x * cd >= pole / 5) || 15;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120,170,255,0.38)'; ctx.fillStyle = 'rgba(150,190,255,0.85)';
+    ctx.lineWidth = dpr; ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+    const rozsahRa = Math.min(180, (polomer + krokR) / cd + krokR);
+    const kresli = body => { ctx.beginPath(); let prvni = true; for (const v of body) { const p = proj(v); if (!p) { prvni = true; continue; } if (prvni) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]); prvni = false; } ctx.stroke(); };
+    const fmtD = d => { const a = Math.abs(d), dd = Math.floor(a + 1e-9), mm = Math.round((a - dd) * 60); return (d < 0 ? '−' : '+') + dd + '°' + (mm ? String(mm).padStart(2, '0') + '′' : ''); };
+    const fmtR = r => { const h = ((r / 15) % 24 + 24) % 24, hh = Math.floor(h + 1e-9), m = (h - hh) * 60, mm = Math.floor(m + 1e-6), ss = Math.round((m - mm) * 60); return `${hh}h${String(mm).padStart(2, '0')}m` + (krokR < 0.25 ? String(ss).padStart(2, '0') + 's' : ''); };
+    for (let d = Math.ceil((rd.dec - polomer - krokD) / krokD) * krokD; d <= rd.dec + polomer + krokD; d += krokD) {
+      if (Math.abs(d) > 89.99) continue;
+      const body = [];
+      for (let r = rd.ra - rozsahRa; r <= rd.ra + rozsahRa; r += rozsahRa / 40) body.push(D.v3(r, d));
+      kresli(body);
+      const p = proj(D.v3(rd.ra, d)); if (p) ctx.fillText(fmtD(d), p[0] + 3 * dpr, p[1] - 3 * dpr);
+    }
+    for (let r = Math.ceil((rd.ra - rozsahRa) / krokR) * krokR; r <= rd.ra + rozsahRa; r += krokR) {
+      const body = [];
+      for (let d = Math.max(-89.9, rd.dec - polomer - krokD); d <= Math.min(89.9, rd.dec + polomer + krokD); d += (2 * polomer + 2 * krokD) / 40) body.push(D.v3(r, d));
+      kresli(body);
+      const p = proj(D.v3(r, rd.dec)); if (p) ctx.fillText(fmtR(r), p[0] + 3 * dpr, p[1] + 11 * dpr);
+    }
+    ctx.restore();
   }
 
   koren.DALEK_OKULAR = { kresli, chveni, cacheTeles, barvaPozadi };
