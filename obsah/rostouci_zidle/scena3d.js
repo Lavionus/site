@@ -17,7 +17,7 @@
     const hemi = new THREE.HemisphereLight(0xffffff, 0x8a8170, 0.95), svetlo = new THREE.DirectionalLight(0xffffff, 1.5);
     scena.add(hemi, svetlo, svetlo.target);
     const koren3 = new THREE.Group(); scena.add(koren3);
-    const orbit = { az: -55, el: 18, vzd: 2400, nasob: 1 };
+    const orbit = { az: -125, el: 20, vzd: 2400, nasob: 1 };
     let stred = new THREE.Vector3(0, 450, -200), viditelne = true, spinave = true, zrusen = false;
     let N = null, pevne = [], pohybl = {}, dite = null, stul = null, stav = null, rozlozeno = 0, cilRozlozeni = 0, montaz = null, prechod = null, ukazDite = true, ukazStul = true;
     const V3 = (x, y, z) => new THREE.Vector3(x, z, -y);
@@ -142,7 +142,7 @@
       else { for (const k of Object.keys(z)) pohybl[k].m.userData.zakl.copy(pohybl[k].m.userData.cil); dokoncePrechod(Q); }
       spinave = true;
     }
-    function dokoncePrechod(Q) { stav = Q; postavDite(Q); postavStul(Q); postavMadlo(Q); umisti(); }
+    function dokoncePrechod(Q) { stav = Q; postavDite(Q); postavStul(Q); postavMadlo(Q); umisti(); spinave = true; }
     function umisti() {
       const f = rozlozeno;
       for (const q of pevne) q.m.position.copy(q.skupina ? new THREE.Vector3() : q.m.userData.zakl).addScaledVector(q.rozlet, f);
@@ -205,7 +205,7 @@
       montaz() { rozlozeno = 0; cilRozlozeni = 0; montaz = { t0: performance.now() }; },
       zobrazit(o) { if (o.dite != null) ukazDite = o.dite; if (o.stul != null) ukazStul = o.stul; if (N && stav) { postavDite(stav); postavStul(stav); umisti(); } spinave = true; },
       pohled(az, elv) { orbit.az = az; orbit.el = elv; orbit.nasob = 1; spinave = true; },
-      get stav() { return { viditelne, snimku, dilu: pevne.length + Object.keys(pohybl).length, dite: !!dite, animace: !!(prechod || montaz), rozlozeno }; },
+      get stav() { return { viditelne, snimku, dilu: pevne.length + Object.keys(pohybl).length, dite: dite ? { vid: dite.visible, n: dite.children.length, p: dite.children[0] && dite.children[0].position.toArray().map(Math.round) } : null, stul: stul ? stul.userData.yt : null, animace: !!(prechod || montaz), rozlozeno }; },
       zrus() { zrusen = true; ro.disconnect(); io.disconnect(); mo.disconnect(); vycisti(); renderer.dispose(); el.remove(); },
     };
   }

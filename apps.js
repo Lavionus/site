@@ -1177,6 +1177,12 @@ const KATALOG_SEKCE = [
         "tagy": ["astronomie", "Měsíc", "zatmění", "meteory", "planety", "kalendář", "ics"]
       },
       {
+        "soubor": "obsah/dalekohled.html",
+        "nazev": "🔭 Hvězdářský dalekohled",
+        "stav": "vyvoj",
+        "tagy": ["astronomie", "dalekohled", "teleskop", "simulace", "planety", "Měsíc", "Jupiter", "Saturn", "dvojhvězdy", "Messier", "galaxie", "mlhoviny", "okulár", "zvětšení", "seeing", "světelné znečištění", "Dobson", "pozorování"]
+      },
+      {
         "soubor": "obsah/slunecni_hodiny.html",
         "nazev": "☀️ Sluneční hodiny",
         "stav": "vyvoj",
@@ -2078,6 +2084,12 @@ const KATALOG_SEKCE = [
         "nazev": "〰️ Šablony oblouků a profilů",
         "stav": "vyvoj",
         "tagy": ["truhlářství", "oblouk", "elipsa", "parabola", "řetězovka", "spline", "pružná lať", "kabriolová noha", "kuželová noha", "soustružení", "měrka průměrů", "ogee", "profil lišty", "šablona", "tisk 1:1", "PDF", "DXF", "STL", "3D"]
+      },
+      {
+        "soubor": "obsah/rostouci_zidle.html",
+        "nazev": "🪑 Rostoucí židle",
+        "stav": "vyvoj",
+        "tagy": ["rostoucí židle", "dětská židle", "nábytek", "ergonomie", "EN 1729", "WHO", "drážky", "stabilita", "truhlářství", "šablona 1:1", "PDF", "DXF", "SVG", "CNC", "STL", "řezný plán", "3D"]
       }
     ]
   },

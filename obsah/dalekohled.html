@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔭 Hvězdářský dalekohled – simulátor pozorování</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="sky_events/astro.js"></script>
+<script src="dalekohled/data.js"></script>
+<script src="dalekohled/jadro.js"></script>
+<script src="dalekohled/telesa.js"></script>
+<script src="dalekohled/okular.js"></script>
+<script src="dalekohled/obloha.js"></script>
+<script src="dalekohled/ui.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:16px 12px 40px}
+h1{font-size:1.5rem;font-weight:600;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:14px}
+.layout{display:grid;grid-template-columns:minmax(270px,320px) minmax(0,1fr) minmax(280px,360px);gap:14px;align-items:start;max-width:1700px;margin:0 auto}
+@media(max-width:1250px){.layout{grid-template-columns:minmax(270px,330px) minmax(0,1fr)}.pravy{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}}
+@media(max-width:820px){.layout{grid-template-columns:minmax(0,1fr)}.stred{order:-1}}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px;margin-bottom:14px;min-width:0}
+.pravy .card{margin-bottom:14px}
+.card h2{font-size:.98rem;font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+label{display:block;font-size:.78rem;color:var(--text-faint);margin:8px 0 3px}
+label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.85rem;margin:7px 0 2px;cursor:pointer}
+label.chk input{width:auto;margin-top:2px;accent-color:var(--accent)}
+input,select{width:100%;background:var(--bg-input,var(--bg));border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:6px 7px;font-size:.9rem;font-family:inherit;min-width:0}
+input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--accent)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:7px 11px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.84rem;font-family:inherit}
+.btn-sec{background:var(--bg-control,var(--bg));color:var(--text);border:1px solid var(--border-strong)}
+.btn[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.tlacitka{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tlacitka .btn{flex:1 1 auto}
+.info{font-size:.8rem;color:var(--text-muted,var(--text-faint));line-height:1.5;margin-top:6px}
+.info b{color:var(--text)}
+.varovani{color:var(--warn,#b26a00)} .chyba{color:var(--danger)} .ok{color:var(--ok,#2e7d32)}
+.hodnota{float:right;color:var(--text);font-variant-numeric:tabular-nums}
+/* okulár */
+.okular-obal{position:relative;background:#000;border-radius:var(--radius,8px);border:1px solid var(--border);overflow:hidden;touch-action:none;user-select:none}
+#okular{display:block;width:100%;aspect-ratio:1/1;cursor:grab}
+#okular.tahne{cursor:grabbing}
+.okular-lista{position:absolute;left:8px;right:8px;top:6px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;color:#c9c9c9;font-size:.78rem;text-shadow:0 0 3px #000;font-variant-numeric:tabular-nums}
+.okular-lista span{background:rgba(0,0,0,.45);padding:2px 6px;border-radius:4px}
+.okular-dole{position:absolute;left:8px;right:8px;bottom:6px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;color:#c9c9c9;font-size:.78rem;text-shadow:0 0 3px #000}
+.okular-dole span{background:rgba(0,0,0,.45);padding:2px 6px;border-radius:4px}
+.ovladac{display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(3,34px);gap:3px}
+.ovladac button{background:var(--bg-control,var(--bg));color:var(--text);border:1px solid var(--border-strong);border-radius:5px;cursor:pointer;font-size:1rem}
+.ovladac button:active{background:var(--accent);color:var(--on-accent,#fff)}
+.ovl-radek{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.ovl-radek .vpravo{flex:1 1 220px;min-width:0}
+#zprava{margin-top:8px;font-size:.84rem;min-height:1.3em}
+#zprava.nebezpeci{color:#fff;background:#b3261e;border-radius:6px;padding:6px 9px;font-weight:600}
+#mapa{display:block;width:100%;aspect-ratio:1/1;border-radius:6px;cursor:crosshair;background:#0a0e1c}
+.udaje{display:grid;grid-template-columns:minmax(0,1fr);gap:1px;font-size:.8rem}
+.udaje div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--border);padding:2px 0;min-width:0}
+.udaje span:first-child{color:var(--text-faint)}
+.udaje span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+.cile{max-height:330px;overflow-y:auto;border:1px solid var(--border);border-radius:6px}
+.cile table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+.cile td{border-bottom:1px solid var(--border);padding:4px 6px;vertical-align:middle}
+.cile td.r{text-align:right;white-space:nowrap}
+.cile tr{cursor:pointer}
+.cile tr:hover td{background:var(--bg-hover,var(--bg-control))}
+.cile tr.pod td{color:var(--text-faint)}
+.zalozky{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted,var(--text-faint));padding:6px 8px;cursor:pointer;font-size:.82rem;font-family:inherit}
+.zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.navod{max-width:1100px;margin:6px auto 0;font-size:.9rem;line-height:1.6}
+.navod h2{font-size:1.1rem;margin:18px 0 6px}
+.navod h3{font-size:.95rem;margin:12px 0 4px}
+.navod p,.navod li{margin:4px 0}
+.navod ul{padding-left:20px}
+.navod details{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 14px;margin-bottom:10px}
+.navod summary{cursor:pointer;font-weight:600}
+.navod code{background:var(--bg-control);padding:0 4px;border-radius:3px}
+.navod table{border-collapse:collapse;font-size:.84rem;margin:6px 0}
+.navod td,.navod th{border-bottom:1px solid var(--border);padding:3px 8px;text-align:left}
+.kbd{font-family:monospace;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;font-size:.8em}
+</style>
+</head>
+<body>
+<h1>🔭 Hvězdářský dalekohled</h1>
+<p class="sub">Simulace pohledu do okuláru: skutečná obloha pro zvolené místo a čas, optika, seeing, rozlišení i světelné znečištění</p>
+
+<div class="layout">
+  <!-- levý sloupec: nastavení -->
+  <div class="levy">
+    <div class="card">
+      <h2>Dalekohled</h2>
+      <select id="selDalekohled"></select>
+      <div id="vlastni" hidden>
+        <div class="r2">
+          <div><label for="inD">Průměr objektivu D (mm)</label><input id="inD" type="number" min="20" max="1000" step="1"></div>
+          <div><label for="inF">Ohnisková vzdálenost F (mm)</label><input id="inF" type="number" min="100" max="10000" step="10"></div>
+        </div>
+        <div class="r2">
+          <div><label for="selTyp">Konstrukce</label>
+            <select id="selTyp"><option value="refraktor">refraktor (čočkový)</option><option value="newton">Newton (zrcadlový)</option><option value="sct">Schmidt-Cassegrain</option><option value="mak">Maksutov</option></select></div>
+          <div><label for="selVada">Barevná korekce</label>
+            <select id="selVada"><option value="achromat">achromát</option><option value="apo">apochromát</option><option value="zadna">zrcadlo (bez vady)</option></select></div>
+        </div>
+        <label for="inObstr">Stínění sekundárním zrcátkem <span class="hodnota" id="vObstr"></span></label>
+        <input id="inObstr" type="range" min="0" max="0.45" step="0.01">
+      </div>
+      <div class="r2">
+        <div><label for="selMontaz">Montáž</label>
+          <select id="selMontaz"><option value="az">azimutální (Dobson)</option><option value="eq">paralaktická</option></select></div>
+        <div><label for="selDiag">Zalomení</label>
+          <select id="selDiag"><option value="1">s diagonálou</option><option value="0">přímý průhled</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="chkSledovani"> Motorové sledování (kompenzuje otáčení Země)</label>
+    </div>
+
+    <div class="card">
+      <h2>Okulár</h2>
+      <div class="r2">
+        <div><label for="selOkular">Okulár</label><select id="selOkular"></select></div>
+        <div><label for="selBarlow">Barlowova čočka</label>
+          <select id="selBarlow"><option value="1">bez</option><option value="2">2×</option><option value="3">3×</option></select></div>
+      </div>
+      <label for="inFokus">Zaostření <span class="hodnota" id="vFokus"></span></label>
+      <input id="inFokus" type="range" min="-2.5" max="2.5" step="0.01">
+      <div class="tlacitka">
+        <button class="btn btn-sec" id="btnZaostrit" title="Nastaví přesné ohnisko">Zaostřit přesně</button>
+      </div>
+      <div class="udaje" id="optika" style="margin-top:10px"></div>
+      <div class="info" id="optikaPozn"></div>
+    </div>
+
+    <div class="card">
+      <h2>Místo a čas</h2>
+      <select id="selMisto"></select>
+      <div class="r2">
+        <div><label for="inLat">Šířka (°)</label><input id="inLat" type="number" step="0.001" min="-90" max="90"></div>
+        <div><label for="inLon">Délka (° V)</label><input id="inLon" type="number" step="0.001" min="-180" max="180"></div>
+      </div>
+      <div class="tlacitka"><button class="btn btn-sec" id="btnGeo">📍 Moje poloha</button></div>
+      <label for="inCas">Datum a čas (místní)</label>
+      <input id="inCas" type="datetime-local" step="60">
+      <div class="r2">
+        <div><label for="selRychlost">Běh času</label>
+          <select id="selRychlost"><option value="0">zastaven</option><option value="1" selected>skutečný (1×)</option><option value="10">10×</option><option value="60">60× (min/s)</option><option value="600">600×</option><option value="3600">3600× (h/s)</option></select></div>
+        <div><label>&nbsp;</label><button class="btn btn-sec" id="btnTed" style="width:100%">Teď</button></div>
+      </div>
+      <div class="tlacitka">
+        <button class="btn btn-sec" id="btnNoc">Dnes ve 22:00</button>
+        <button class="btn btn-sec" id="btnHodPlus">+1 h</button>
+        <button class="btn btn-sec" id="btnDenPlus">+1 den</button>
+      </div>
+      <div class="info" id="casInfo"></div>
+    </div>
+
+    <div class="card">
+      <h2>Podmínky</h2>
+      <label for="inSeeing">Seeing (neklid ovzduší) <span class="hodnota" id="vSeeing"></span></label>
+      <input id="inSeeing" type="range" min="0.5" max="6" step="0.1">
+      <label for="selBortle">Světelné znečištění (Bortleho stupnice)</label>
+      <select id="selBortle">
+        <option value="1">1 – výjimečně tmavé místo</option><option value="2">2 – typické tmavé místo</option>
+        <option value="3">3 – venkov</option><option value="4">4 – přechod venkov/předměstí</option>
+        <option value="5">5 – předměstí</option><option value="6">6 – jasné předměstí</option>
+        <option value="7">7 – okraj města</option><option value="8">8 – město</option><option value="9">9 – centrum velkoměsta</option>
+      </select>
+      <label for="selZornice">Zornice oka (po adaptaci na tmu)</label>
+      <select id="selZornice"><option value="7">7 mm (do ~25 let)</option><option value="6">6 mm (~40 let)</option><option value="5">5 mm (~60 let)</option></select>
+      <label class="chk"><input type="checkbox" id="chkPopisky" checked> Popisky v okuláru</label>
+      <div class="info" id="podminkyInfo"></div>
+    </div>
+  </div>
+
+  <!-- střed: okulár -->
+  <div class="stred">
+    <div class="okular-obal" id="okularObal">
+      <canvas id="okular" aria-label="Pohled do okuláru dalekohledu" tabindex="0"></canvas>
+      <div class="okular-lista"><span id="lsZvetseni"></span><span id="lsSmer"></span></div>
+      <div class="okular-dole"><span id="lsCas"></span><span id="lsObjekt"></span></div>
+    </div>
+    <div class="ovl-radek">
+      <div class="ovladac" aria-label="Ruční ovladač">
+        <span></span><button data-smer="0,-1" title="Nahoru (šipka ↑)">▲</button><span></span>
+        <button data-smer="-1,0" title="Vlevo (šipka ←)">◀</button><button id="btnStred" title="Vycentrovat nejbližší objekt">◎</button><button data-smer="1,0" title="Vpravo (šipka →)">▶</button>
+        <span></span><button data-smer="0,1" title="Dolů (šipka ↓)">▼</button><span></span>
+      </div>
+      <div class="vpravo">
+        <label for="selPohyb" style="margin-top:0">Rychlost ručního ovladače</label>
+        <div class="r2">
+          <div><select id="selPohyb"><option value="2">2× hvězdná (jemně)</option><option value="16">16×</option><option value="64" selected>64×</option><option value="400">400×</option><option value="2000">2000× (přejezd)</option></select></div>
+          <div><select id="selLupa" title="Jen zvětší obraz na obrazovce – okulár vidíte pod větším úhlem než monitor"><option value="1">lupa obrazovky 1×</option><option value="1.5">lupa 1,5×</option><option value="2">lupa 2×</option><option value="3">lupa 3×</option><option value="4">lupa 4×</option><option value="6">lupa 6×</option></select></div>
+        </div>
+        <div class="info">Obraz lze i táhnout myší nebo prstem. Klávesy: <span class="kbd">←↑→↓</span> pohyb (se <span class="kbd">Shift</span> rychleji), <span class="kbd">+</span>/<span class="kbd">−</span> okulár, <span class="kbd">,</span>/<span class="kbd">.</span> zaostřování, <span class="kbd">L</span> popisky, <span class="kbd">Z</span> lupa obrazovky, <span class="kbd">mezerník</span> zastaví čas.</div>
+      </div>
+    </div>
+    <div id="zprava" role="status"></div>
+  </div>
+
+  <!-- pravý sloupec: mapa, cíle, informace -->
+  <div class="pravy">
+    <div class="card">
+      <h2>Vyhledávací mapa <small>kliknutím namíříte</small></h2>
+      <canvas id="mapa" aria-label="Mapa oblohy kolem směru dalekohledu"></canvas>
+      <div class="r2" style="margin-top:6px">
+        <div><label for="inMapaPole" style="margin-top:0">Pole mapy <span class="hodnota" id="vMapaPole"></span></label><input id="inMapaPole" type="range" min="10" max="180" step="1"></div>
+        <div class="info" id="mapaInfo" style="margin-top:0"></div>
+      </div>
+      <div class="info">Červený kroužek = zorné pole okuláru, větší kříž = hledáček 8×50 (6°).</div>
+    </div>
+    <div class="card">
+      <h2>Co pozorovat <small id="cileNadpis"></small></h2>
+      <div class="zalozky" role="tablist" id="zalozkyCilu">
+        <button role="tab" data-k="planety" aria-selected="true">Planety</button>
+        <button role="tab" data-k="dvojhvezdy" aria-selected="false">Dvojhvězdy</button>
+        <button role="tab" data-k="dso" aria-selected="false">Mlhoviny a kupy</button>
+        <button role="tab" data-k="hvezdy" aria-selected="false">Hvězdy</button>
+      </div>
+      <label class="chk" style="margin-top:0"><input type="checkbox" id="chkJenNad" checked> jen nad obzorem</label>
+      <div class="cile"><table id="tabCile"></table></div>
+    </div>
+    <div class="card">
+      <h2>V zorném poli</h2>
+      <div class="udaje" id="infoObjekt"></div>
+    </div>
+  </div>
+</div>
+
+<div class="navod">
+  <h2>Jak to funguje</h2>
+  <details open>
+    <summary>Zvětšení, výstupní pupila a zorné pole</summary>
+    <p><b>Zvětšení</b> je poměr ohniskových vzdáleností objektivu a okuláru: <code>M = F / f</code>. Dalekohled 200/1200 s okulárem 10 mm zvětšuje 120×. Barlowova čočka prodlužuje ohnisko objektivu (2× nebo 3×).</p>
+    <p><b>Výstupní pupila</b> <code>d = D / M</code> je průměr svazku světla, který vychází z okuláru do oka. Je-li větší než zornice (7 mm v mládí, s věkem méně), část světla se nevyužije. Je-li menší než asi 0,5 mm, obraz je tmavý a rozmazaný (tzv. prázdné zvětšení) – za rozumnou hranici se bere <code>M ≈ 2·D</code> (v mm).</p>
+    <p><b>Skutečné zorné pole</b> ≈ zdánlivé pole okuláru / zvětšení. Plössl s 52° při 120× ukáže výsek oblohy o průměru asi 0,43° – méně než úplněk. Proto se objekty hledají s malým zvětšením a teprve pak se okulár mění.</p>
+  </details>
+  <details>
+    <summary>Rozlišení, difrakce a seeing</summary>
+    <p>I dokonalá optika zobrazí hvězdu jako malý kotouček s kroužky – <b>Airyho difrakční obrazec</b>. Jeho první tmavý kroužek má poloměr <code>1,22·λ/D</code>, tedy asi <code>138″/D</code> (D v mm) pro zelené světlo. Empirická <b>Dawesova mez</b> <code>116″/D</code> udává, jak blízké dvojhvězdy stejné jasnosti ještě rozlišíte.</p>
+    <p>Obraz ale většinou kazí <b>seeing</b> – turbulence v atmosféře, která hvězdu rozmazává a rozechvívá. V Česku bývá 2–4″, výborná noc pod 1″. Při seeingu 3″ je tedy rozlišení 200mm dalekohledu (0,6″) k ničemu – simulace to ukazuje: při dobrém seeingu a velkém zvětšení uvidíte Airyho kroužky, při špatném jen „vroucí“ skvrnku. Nízko nad obzorem je vzduchu víc, seeing se zhoršuje a atmosféra navíc působí jako hranol: planety mají nahoře modrý a dole červený lem (<b>atmosférická disperze</b>).</p>
+  </details>
+  <details>
+    <summary>Mezní hvězdná velikost a světelné znečištění</summary>
+    <p>Dalekohled sbírá světlo plochou objektivu – 200mm objektiv zachytí (200/7)² ≈ 800× víc než oko. Mezní velikost bodových zdrojů roste o <code>5·log(D/zornice)</code> magnitud. Na tmavé obloze vychází okem asi 6,5 mag, s dalekohledem 200 mm asi 14 mag.</p>
+    <p>Jas oblohy (v mag/″², podle Bortleho stupnice, soumraku a Měsíce) určuje, co je vidět. Plošné objekty – galaxie a mlhoviny – se zvětšením neztmavují vůči pozadí, ale <b>zvětšení ztmaví pozadí</b>, takže slabé hvězdy vyniknou. U galaxií rozhoduje kontrast: na městské obloze Galaxie v Andromedě zmizí, na horách je vidět i s prachovými pásy.</p>
+    <p>Slabé hvězdy oko vnímá bez barvy (tyčinky barvy nerozlišují), proto jsou v simulaci bílé; barvu mají jen jasné hvězdy – zlatá a modrá složka Albirea je klasická ukázka.</p>
+  </details>
+  <details>
+    <summary>Proč je obraz otočený</summary>
+    <p>Keplerův dalekohled (spojná čočka objektivu i okuláru) dává obraz <b>převrácený o 180°</b>. Newtonův dalekohled také. S <b>diagonálním zrcátkem</b> (refraktory, Schmidt-Cassegrainy) je obraz zrcadlově obrácený – nahoře je nahoře, ale vlevo a vpravo jsou prohozené. Galileův dalekohled s rozptylkou a triedr s hranoly dávají obraz vzpřímený.</p>
+    <p>Na <b>azimutální montáži</b> (Dobson) je v okuláru nahoře zenit a hvězdné pole se během noci pomalu otáčí. Na <b>paralaktické montáži</b> míří osa k pólu a nahoře je sever. Šipky S a V v rohu okuláru ukazují, kam je sever a východ.</p>
+    <p>Bez motorového sledování obraz ujíždí – Země se otáčí rychlostí 15″ za sekundu. Při 200× projde objekt zorným polem za necelou minutu a půl. Vyzkoušejte to s vypnutým sledováním.</p>
+  </details>
+  <details>
+    <summary>Planety, Měsíc a jejich podrobnosti</summary>
+    <p>Polohy Slunce, Měsíce a planet se počítají podle algoritmů J. Meeuse a Keplerových elementů JPL (s opravou o dobu letu světla a o paralaxu pozorovatele). Natočení os, poledníků a sklon Saturnových prstenců vychází z rotačních modelů IAU (2015), fáze a jasnosti z Mallamy a Hiltona (2018). Polohy Galileových měsíců Jupiteru jsou podle Meeuse (kap. 44) – simulace ukazuje i jejich přechody přes disk, stíny a zatmění v Jupiterově stínu.</p>
+    <p>Povrchy jsou z map Solar System Scope (CC BY 4.0) promítnutých na kouli se správnou librací Měsíce, centrálním poledníkem Marsu a otáčením Jupiteru. Velká rudá skvrna driftuje – její poloha v simulaci je jen přibližná.</p>
+  </details>
+
+  <h2>Z historie dalekohledu</h2>
+  <ul>
+    <li><b>1608</b> – Hans Lipperhey v Middelburgu žádá o patent na „přístroj k vidění do dálky“.</li>
+    <li><b>1609–1610</b> – Galileo Galilei míří vlastním dalekohledem (zvětšení ~20×, zorné pole jen ~15′) na oblohu: krátery na Měsíci, čtyři měsíce Jupiteru, fáze Venuše, hvězdy Mléčné dráhy. Zkuste si jeho přístroj v nabídce – a uvidíte, jak těžké bylo Saturnovy prstence rozpoznat; Galileo je popsal jako „ucha“.</li>
+    <li><b>1611</b> – Johannes Kepler navrhuje dalekohled se spojným okulárem: převrácený obraz, ale mnohem větší zorné pole.</li>
+    <li><b>1655–1659</b> – Christiaan Huygens objevuje Titan a vysvětluje Saturnův prstenec; dalekohledy kvůli barevné vadě dosahují délky desítek metrů.</li>
+    <li><b>1668</b> – Isaac Newton staví zrcadlový dalekohled bez barevné vady.</li>
+    <li><b>1758</b> – John Dollond prodává achromatický objektiv ze dvou druhů skla.</li>
+    <li><b>1781</b> – William Herschel objevuje vlastním zrcadlovým dalekohledem Uran.</li>
+    <li><b>1845</b> – „Leviatan z Parsonstownu“ lorda Rosse (1,8 m) ukazuje spirální strukturu M51.</li>
+    <li><b>1897</b> – Yerkesův refraktor (102 cm), dodnes největší funkční čočkový dalekohled.</li>
+    <li><b>1930</b> – Bernhard Schmidt vynalézá korekční desku; z ní vychází dnešní Schmidt-Cassegrainy.</li>
+    <li><b>1965</b> – John Dobson začíná stavět levné dalekohledy na jednoduché otočné montáži – „dobsony“ zpřístupnily velké zrcadlo amatérům.</li>
+    <li><b>1990, 2021</b> – Hubbleův a Webbův kosmický dalekohled: konec boje se seeingem.</li>
+  </ul>
+
+  <h2>Tipy pro pozorování</h2>
+  <ul>
+    <li>Začněte nejmenším zvětšením, objekt vycentrujte a teprve pak zvětšujte. Každý okulár je potřeba doostřit.</li>
+    <li>Na dvojhvězdy a planety volte zvětšení podle seeingu, ne podle dalekohledu. Zkuste rozlišit ε Lyrae („dvojitou dvojhvězdu“) nebo Cassiniho dělení v Saturnových prstencích.</li>
+    <li>Rozostřená hvězda ukáže tvar stínu sekundárního zrcátka – u Newtonu a Schmidt-Cassegrainu je uprostřed tmavá skvrna.</li>
+    <li>Galaxie a mlhoviny hledejte za tmavé noci bez Měsíce, daleko od měst. Pomůže boční pohled: slabé objekty se objeví, když se díváte trochu vedle.</li>
+    <li><b>Nikdy nemiřte dalekohledem ani hledáčkem na Slunce</b> bez certifikovaného filtru před objektivem – i zlomek sekundy může trvale poškodit zrak.</li>
+  </ul>
+
+  <h2>Zdroje a zjednodušení</h2>
+  <p>Hvězdy do 6,6 mag: Yale Bright Star Catalogue, 5. vyd. (volné dílo), s vlastním pohybem. Čáry souhvězdí a Messierův katalog: <a href="https://github.com/ofrohn/d3-celestial">d3-celestial</a> © Olaf Frohn (BSD-3). Textury Měsíce a planet: <a href="https://www.solarsystemscope.com/textures/">Solar System Scope</a> (CC BY 4.0). Algoritmy: J. Meeus, <i>Astronomical Algorithms</i>; IAU WGCCRE 2015; Mallama a Hilton 2018; Schaefer 1990.</p>
+  <p><b>Zjednodušení:</b> Hvězdy slabší než 6,6 mag nejsou skutečný katalog, ale <b>náhodně generované pole</b> se správnou hustotou podle galaktické šířky (stejné místo ukáže vždy stejné hvězdy). Stejně tak jednotlivé hvězdy kulových a otevřených hvězdokup. Tvary galaxií a mlhovin jsou schematické. Saturnovy měsíce nejsou zobrazeny. Jas oblohy a viditelnost plošných objektů jsou přibližné modely.</p>
+</div>
+</body>
+</html>

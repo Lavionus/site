@@ -320,6 +320,7 @@
     if (minB < 1) N.bezpecnost.push({ u: 'chyba', t: `Převržení: ${minC.q.dite || cz(minC.q.vek, 1) + ' r.'} – ${minC.c.nazev}: bezpečnost ${cz(minB, 2)}. ${minC.c.k === 'bok' ? 'Rozšiřte židli (šířka sedáku).' : 'Prodlužte ližiny.'}` });
     else if (minB < P.bezpecnost) N.bezpecnost.push({ u: 'pozor', t: `Nejmenší bezpečnost proti převržení ${cz(minB, 2)} (${minC.c.nazev}, ${minC.q.dite || cz(minC.q.vek, 1) + ' r.'}) – pod cílem ${cz(P.bezpecnost, 1)}.` });
     else N.bezpecnost.push({ u: 'ok', t: `Stabilita ve všech ${N.polohy.length} polohách: nejmenší bezpečnost ${cz(minB, 2)} (${minC.c.nazev}, ${minC.q.dite || cz(minC.q.vek, 1) + ' r.'}).` });
+    if (L.bok && minB < P.bezpecnost) N.info.push(`Do boku nepomůže delší ližina – rozhoduje šířka židle ${cz(K.W, 0)} mm. Pro bezpečnost ${cz(P.bezpecnost, 1)} rozšiřte sedák nebo snižte sílu opření.`);
     N.info.push(`Ližiny: ${cz(K.y1 - K.y0, 0)} mm, vpředu ${cz(K.ext.vpred, 0)} mm před bokem, vzadu ${cz(K.ext.vzad, 0)} mm za bokem${!(+P.vzad > 0) || !(+P.vpred > 0) ? ' (spočteno na bezpečnost ' + cz(P.bezpecnost, 1) + ')' : ''}.`);
     // --- stehna pod stolem ---
     const tesno = N.polohy.filter((q) => q.sedTop + q.T.tlStehna > P.podStolem - 10);
@@ -340,6 +341,7 @@
     }
     if (K.opery.length > 1) mez.push(['všichni', 'mezi příčkami opěradla', K.opery[0].z0 - K.opery[1].z1]);
     const mezRiz = mez.map(([a, b, g, S]) => { const q = DH.mezera(g, { jenPrsty: !(S && S < 1000) || b.startsWith('podnožka') }); return [a, b, `${cz(g, 0)} mm`, q.u === 'ok' ? 'v pořádku' : q.t, q.u]; });
+    N.tabulky.push({ nadpis: 'Mezery (prsty 5–12 mm u všech; hlava 65–230 mm u batolat do ~100 cm)', hlavicka: ['poloha', 'místo', 'mezera', 'posouzení'], radky: mezRiz.map((r) => r.slice(0, 4)) });
     const prsty = mezRiz.filter((r) => r[4] === 'chyba');
     if (prsty.length) N.bezpecnost.push({ u: 'chyba', t: `Mezery v pásmu prstů (5–12 mm): ${prsty.slice(0, 3).map((r) => r[0] + ' – ' + r[1] + ' ' + r[2]).join('; ')}.` });
     else N.bezpecnost.push({ u: 'ok', t: 'Žádná mezera mezi sedákem, podnožkou a opěradlem neleží v pásmu prstů 5–12 mm.' });
@@ -386,7 +388,7 @@
     // štítek „věk → drážka“ k nalepení na zadní stranu boku
     const rad = N.polohy, h = 4.2, Wt = 120, Ht = 14 + rad.length * h * 1.3;
     const tx = [{ x: 4, y: Ht - 7, txt: 'Rostoucí židle – nastavení', h: 4 }];
-    rad.forEach((q, i) => tx.push({ x: 4, y: Ht - 13 - i * h * 1.3, txt: `${q.dite ? q.dite : q.vek >= 18 ? 'dospělý' : cz(q.vek, 1) + ' r.'} (${cz(q.S / 10, 0)} cm): sedák D${q.ks + 1}, podnožka ${q.kp < 0 ? 'dole/vyjmout' : 'D' + (q.kp + 1)}, sedák ${cz(B.yF(q.gs) - q.ysf, 0)} mm před bokem`, h: h * 0.72 }));
+    rad.forEach((q, i) => tx.push({ x: 4, y: Ht - 13 - i * h * 1.3, txt: `${q.dite ? q.dite : q.vek >= 18 ? 'dospělý' : cz(q.vek, 1) + ' r.'} (${cz(q.S / 10, 0)} cm): sedák D${q.ks + 1}, podnožka ${q.kp < 0 ? 'dole/vyjmout' : 'D' + (q.kp + 1)}, ${RZ.posunTxt(N, q)}`, h: h * 0.72 }));
     N.dily.push({ id: 'S', nazev: 'štítek nastavení (nalepit)', ks: 1, tl: 0, sablona: true, obrysy: [{ b: DH.obdelnik(0, 0, Wt, Ht), typ: 'pomocna' }], kruhy: [], texty: tx });
     // kusovník
     const Ls = (K.Hs - P.hl) / Math.cos(P.sklon * RAD) + P.B * Math.tan(P.sklon * RAD);
@@ -409,6 +411,9 @@
     N.stl.push({ id: 'krytka', nazev: 'Krytka kloboukové matice M8', ks: 4 }, { id: 'klinek', nazev: 'Klínek do drážky (vymezí vůli)', ks: 4 }, { id: 'krouzek', nazev: 'Distanční kroužek k trubce', ks: 4 }, { id: 'zarazka', nazev: 'Zarážka / patka konce ližiny', ks: 4 });
     N.Ls = Ls;
   }
+
+  /** text posunu sedáku vůči přední hraně boku */
+  RZ.posunTxt = (N, q, html) => { const v = N.K.bok.yF(q.gs) - q.ysf, b = (x) => (html ? `<b>${x}</b>` : x); return v >= 0 ? `sedák vysunout ${b(cz(v, 0) + ' mm')} před přední hranu boku` : `sedák zasunout ${b(cz(-v, 0) + ' mm')} za přední hranu boku`; };
 
   /* ---------------- export kusovníku pro Řezný plán ---------------- */
   RZ.exportReznyPlan = (N, o) => {
