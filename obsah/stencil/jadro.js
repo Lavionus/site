@@ -462,16 +462,34 @@
     const vyrez = new Uint8Array(n); let jeVyrez = false;
     for (let i = 0; i < n; i++) if (m[i]) { vyrez[i] = 1; jeVyrez = true; }
     if (!jeVyrez) return { mapa, pocet: 0, plocha: 0, mista: [] };
-    const d1 = S.edt(vyrez, w, h).d2;
+    const e1 = S.edt(vyrez, w, h), d1 = e1.d2, id1 = e1.idx;
     const jadro = new Uint8Array(n), prah1 = (r + 0.5) * (r + 0.5);
     for (let i = 0; i < n; i++) if (!m[i] && d1[i] >= prah1) jadro[i] = 1;
     const d2 = S.edt(jadro, w, h).d2, prah2 = (r + 0.5) * (r + 0.5);
     for (let i = 0; i < n; i++) if (!m[i] && !(d2[i] <= prah2)) mapa[i] = 1;
+    /* Otevření ubírá i vypouklé rohy materiálu, které tenké nejsou. Skutečně
+       tenké místo má výřez z protilehlých stran: paprsek od nejbližšího
+       výřezu na opačnou stranu narazí do výřezu do vzdálenosti limitu. */
+    const protilehly = i => {
+      const q = id1[i]; if (q < 0) return false;
+      const x = i % w, y = (i - x) / w, qx = q % w, qy = (q - qx) / w;
+      let ux = x - qx, uy = y - qy; const l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l;
+      const max = limit * 1.05 - l;
+      for (let t = 0.5; t <= max; t += 0.5) {
+        const X = Math.round(x + ux * t), Y = Math.round(y + uy * t);
+        if (X < 0 || Y < 0 || X >= w || Y >= h) return false;
+        if (m[Y * w + X]) return true;
+      }
+      return false;
+    };
     const k = S.komponenty(mapa, w, h, 1, true);
-    const minPl = Math.max(3, 0.6 * r * r), mista = [];
+    const minPl = Math.max(2, 0.25 * r * r), mista = [];
+    const potvrzeno = new Int32Array(k.pocet);
+    for (let i = 0; i < n; i++) { const s = k.stitky[i]; if (s >= 0 && protilehly(i)) potvrzeno[s]++; }
     let plocha = 0;
-    for (let i = 0; i < n; i++) { const s = k.stitky[i]; if (s >= 0 && k.plochy[s] < minPl) mapa[i] = 0; }
-    for (let s = 0; s < k.pocet; s++) if (k.plochy[s] >= minPl) { mista.push({ x: k.tx[s], y: k.ty[s], plocha: k.plochy[s], bbox: k.bbox[s] }); plocha += k.plochy[s]; }
+    const plati = s => k.plochy[s] >= minPl && potvrzeno[s] >= Math.max(1, 0.1 * k.plochy[s]);
+    for (let i = 0; i < n; i++) { const s = k.stitky[i]; if (s >= 0 && !plati(s)) mapa[i] = 0; }
+    for (let s = 0; s < k.pocet; s++) if (plati(s)) { mista.push({ x: k.tx[s], y: k.ty[s], plocha: k.plochy[s], bbox: k.bbox[s] }); plocha += k.plochy[s]; }
     return { mapa, pocet: mista.length, plocha, mista };
   };
 

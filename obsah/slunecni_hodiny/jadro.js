@@ -219,6 +219,7 @@
     deklinace: 0, krok: 30, cislice: 'arabske', datum: 'zakladni', analema: false, rok: new Date().getFullYear(),
     tvar: 'kruh', sirkaMm: 250, vyskaMm: 250, nodusAuto: true, nodusMm: 40, posunX: 0, posunY: 0,
     mezVysky: 15, motto: '', styl: 'klasicky', tabulka: false, popisky: true, caryMeziDaty: false, prumerTyce: 6,
+    kapSteny: 2, kapSloupce: 'canterbury', kapCasy: 'historicke', tloustkaMm: 10,
   };
   const EKL_KRIVKY = 23.44;
 
@@ -231,7 +232,7 @@
         const s = slunce(Date.UTC(p.rok, mm, 1, 12));
         out.push({ d: s.deklinace, l: mm < 6 ? '1. ' + (mm + 1) + '.' : '', r: mm >= 6 ? '1. ' + (mm + 1) + '.' : '', hlavni: false });
       }
-      out.push({ d: EKL_KRIVKY, l: '21. 6.', r: '', hlavni: true }, { d: -EKL_KRIVKY, l: '21. 12.', r: '', hlavni: true }, { d: 0, l: '', r: '', hlavni: true });
+      out.push({ d: EKL_KRIVKY, l: '', r: '', hlavni: true }, { d: -EKL_KRIVKY, l: '', r: '', hlavni: true }, { d: 0, l: '', r: '', hlavni: true });
       return out;
     }
     if (p.datum === 'znameni') {
@@ -284,6 +285,7 @@
     const p = Object.assign({}, VYCHOZI, vstup || {});
     p.sirka = omez(+p.sirka, -89.5, 89.5); p.delka = +p.delka; p.posunUTC = +p.posunUTC;
     p.deklinace = +p.deklinace || 0; p.krok = [60, 30, 15].includes(+p.krok) ? +p.krok : 60;
+    if (p.typ === 'kapesni') return navrhKapesni(p);
     p.sirkaMm = Math.max(20, +p.sirkaMm || 200); p.vyskaMm = Math.max(20, +p.vyskaMm || 200);
     p.mezVysky = omez(+p.mezVysky || 0, 0, 60);
     if (p.typ === 'ekvatorialni') p.tvar = 'kruh';
@@ -388,6 +390,7 @@
         info.push({ T: H.T, t: H.t, smer: d, uhel: m.typ === 'vodorovne' ? atan2(d[0], d[1]) : atan2(d[0], -d[1]), x: Cq ? null : X0[0] - O[0] });
       }
     }
+    zmensiCisla(prvky);
     // datové křivky (stín nodu)
     const krivky = volby.bezData ? [] : datoveKrivky(p);
     for (const k of krivky) {
@@ -423,6 +426,22 @@
       kontrola.push({ datum: k.n, d: k.d, vejde: ano, mimo: ne });
     }
     return { info, kontrola, Cq };
+  }
+
+  /** zmenší čísla hodin, pokud by se sousední překrývala (polární hodiny, malé ciferníky) */
+  function zmensiCisla(prvky) {
+    let k = 1;
+    for (const v of ['cisla', 'dst']) {
+      const c = prvky.filter((e) => e.t === 'txt' && e.v === v);
+      for (let i = 1; i < c.length; i++) {
+        const a = c[i - 1], b = c[i], d = Math.hypot(a.x - b.x, a.y - b.y);
+        const tl = Math.abs(a.u || 0) > 1e-6 || Math.abs(b.u || 0) > 1e-6;
+        const potreba = tl ? Math.max(sirkaTextu(a.txt, a.h), sirkaTextu(b.txt, b.h)) * 0.5 + a.h * 0.6 : (sirkaTextu(a.txt, a.h) + sirkaTextu(b.txt, b.h)) / 2 + a.h * 0.15;
+        if (d < potreba) k = Math.min(k, d / potreba);
+      }
+    }
+    k = Math.max(0.35, k);
+    if (k < 1) for (const e of prvky) if (e.t === 'txt' && (e.v === 'cisla' || e.v === 'dst')) e.h *= k;
   }
 
   /** převod prvků z roviny (y nahoru) na papír (y dolů) a výpočet obálky */
@@ -468,6 +487,8 @@
       } else h = Math.min((2 * (obl.a - rz.pas)) / Math.max(1e-9, bx1 - bx0), (2 * (obl.b - rz.pas)) / Math.max(1e-9, by1 - by0));
       h = Math.max(1, h);
       O = [obl.cx - h * sx, obl.cy - h * sy];
+      // svislé stěny: střed čar (nahoře) přisadit k hornímu okraji, volné místo nechat dole
+      if (obl.tvar === 'obd' && m.C && (p.typ === 'svisle' || p.typ === 'deklinujici') && m.C[1] >= by1 - 1e-6) O[1] = obl.cy + (obl.b - rz.pas) - h * by1;
     }
     const vys = kresliPlochu(p, m, obl, h, O, rz, prvky);
     // značky pro osazení gnomonu
@@ -490,7 +511,9 @@
     if (p.tabulka) tabulkaNaDesku(p, prvky, rz, W, Hh, kruh);
     const cifernik = naPapir(prvky);
     const g = sablonaGnomonu(p, m, h, rz, Cq, O);
-    return vysledek(p, m, cifernik, g, vys, h, O, rz, var_, (s) => simPlochy(m, s, h, O, Cq, obl));
+    const vysl = vysledek(p, m, cifernik, g, vys, h, O, rz, var_, (s) => simPlochy(m, s, h, O, Cq, obl));
+    vysl.info.posunPaty = [O[0] - obl.cx, O[1] - obl.cy];
+    return vysl;
   }
 
   function simPlochy(m, s, h, O, Cq, obl) {
@@ -523,13 +546,14 @@
       // oblouk úhlu u C
       const ro = Math.min(L, h) * 0.35 + 6, ob = []; for (let a = 0; a <= psi + 1e-9; a += psi / 24) ob.push([ro * cos(a), ro * sin(a)]);
       pr.push({ t: 'l', b: ob, s: s * 0.8, v: 'pomoc' });
-      T(ro * cos(psi / 2) + 2, ro * sin(psi / 2), f(psi) + '°');
+      if (ro * cos(psi / 2) + 1.5 + sirkaTextu(f(psi) + '°', vel * 0.9) < L - 1) T(ro * cos(psi / 2) + 1.5, ro * sin(psi / 2) * 0.6, f(psi) + '°', 'l', vel * 0.9);
       T(L + 2, h / 2, 'výška nodu ' + f(h) + ' mm');
-      T(L / 2, -chl / 2 - vel * 0.35, 'ohnout – chlopeň k přilepení', 'c', vel * 0.8);
-      T(0, h + vel * 3.2, 'Gnomon – styl svírá s ciferníkem ' + f(psi) + '°, podstava ' + f(L) + ' mm', 'l', vel * 1.1);
-      T(0, h + vel * 1.8, 'Vrchol (nodus) je přesně nad značkou paty nodu; špička C patří do středu hodinových čar.', 'l', vel * 0.8);
-      T(L - 2, h + vel * 0.6, 'nodus', 'r', vel * 0.8);
-      T(1, -chl - vel * 1.1, 'C', 'l', vel * 0.8);
+      T(L - 1, h + vel * 0.8, 'nodus', 'r', vel * 0.8);
+      T(-1.5, 0, 'C', 'r', vel * 0.9);
+      const y0 = -chl - vel * 1.6;
+      T(0, y0, 'Gnomon – styl svírá s ciferníkem ' + f(psi) + '°, podstava C–pata ' + f(L) + ' mm, výška nodu ' + f(h) + ' mm', 'l', vel * 1.05);
+      T(0, y0 - vel * 1.5, 'Čárkovaně ohnout, chlopeň přilepit. Špička C patří do středu hodinových čar, vrchol (nodus) je kolmo nad značkou +.', 'l', vel * 0.8);
+      T(0, y0 - vel * 2.8, 'Pro tlustý materiál: hranu stylu zbrousit do ostří, nebo počítat se šířkou stínu.', 'l', vel * 0.8);
     } else {
       // polární: styl rovnoběžně s deskou ve výšce h – destička se dvěma nožkami
       const L = Math.max(40, p.vyskaMm * 0.9), chl = 10;
@@ -625,15 +649,18 @@
     const obl = deska(p, prvky, rz, W, Hh, false);
     const sf = sin(p.sirka), cf = cos(p.sirka);
     const Ai = obl.a - rz.pas, Bi = obl.b - rz.pas;
-    const M = Math.max(5, Math.min(Ai, Bi / Math.max(0.05, Math.abs(sf))));
-    const c = [obl.cx, obl.cy];
+    const t0 = Math.abs(p.sirka) < 66 ? Math.acos(-tan(Math.abs(p.sirka)) * tan(EKL_KRIVKY)) / R : 180;
+    // obálka využité části (jednotkové M): hodinové body + datová stupnice
+    let ux0 = 0, ux1 = 0, uy0 = Infinity, uy1 = -Infinity;
+    for (let t = -t0; t <= t0 + 1e-9; t += Math.max(0.5, t0 / 90)) { const x = sin(t), y = sf * cos(t); ux0 = Math.min(ux0, x); ux1 = Math.max(ux1, x); uy0 = Math.min(uy0, y); uy1 = Math.max(uy1, y); }
+    for (const z of [-1, 1]) { const y = z * cf * tan(EKL_KRIVKY) * 1.08; uy0 = Math.min(uy0, y); uy1 = Math.max(uy1, y); }
+    const M = Math.max(5, Math.min((2 * Ai) / Math.max(1e-6, ux1 - ux0), (2 * Bi) / Math.max(1e-6, uy1 - uy0)));
+    const c = [obl.cx - M * (ux0 + ux1) / 2, obl.cy - M * (uy0 + uy1) / 2];
     const kor = p.korekceDelky ? (p.delka - 15 * p.posunUTC) : 0;
     const bodHod = (t) => [c[0] + M * sin(t), c[1] + M * sf * cos(t)];
     // elipsa
-    const el = []; for (let a = 0; a <= 360; a += 2) el.push([c[0] + M * sin(a), c[1] + M * sf * cos(a)]);
-    prvky.push({ t: 'l', b: el, s: rz.cara * 0.6, v: 'ram' });
+    for (const el of krivka((a) => [c[0] + M * sin(a), c[1] + M * sf * cos(a)], -180, 180, 360, obl, rz.pas * 0.15)) prvky.push({ t: 'l', b: el, s: rz.cara * 0.6, v: 'ram' });
     // hodinové body a čísla
-    const t0 = Math.abs(p.sirka) < 66 ? Math.acos(-tan(Math.abs(p.sirka)) * tan(EKL_KRIVKY)) / R : 180;
     const info = [];
     for (const H of seznamHodin(p)) {
       const t = H.t;
@@ -649,6 +676,7 @@
         info.push({ T: H.T, t, x: B[0] - c[0], y: B[1] - c[1] });
       }
     }
+    zmensiCisla(prvky);
     // datová stupnice gnomonu (osa sever–jih)
     const yD = (d) => c[1] + M * cf * tan(d);
     const sir = rz.pas * 0.5, vel = rz.popis;
@@ -662,8 +690,8 @@
       }
     }
     if (p.popisky) {
-      prvky.push({ t: 'txt', x: c[0], y: yD(EKL_KRIVKY) + vel * 1.2, txt: 'S (sever)', h: vel, a: 'c', u: 0, v: 'pomoc' });
-      prvky.push({ t: 'txt', x: c[0], y: yD(-EKL_KRIVKY) - vel * 1.2, txt: 'stupnice: zde stojí gnomon', h: vel * 0.8, a: 'c', u: 0, v: 'pomoc' });
+      prvky.push({ t: 'txt', x: c[0], y: Math.max(yD(EKL_KRIVKY), yD(-EKL_KRIVKY)) + vel * 2.2, txt: 'sever', h: vel, a: 'c', u: 0, v: 'pomoc' });
+      prvky.push({ t: 'txt', x: c[0], y: Math.min(yD(EKL_KRIVKY), yD(-EKL_KRIVKY)) - vel * 1.4, txt: 'datová stupnice – sem se staví gnomon', h: vel * 0.8, a: 'c', u: 0, v: 'pomoc' });
     }
     if (p.tabulka) tabulkaNaDesku(p, prvky, rz, W, Hh, false);
     const cifernik = naPapir(prvky);
@@ -685,6 +713,233 @@
       const prvkySim = [{ t: 'l', b: [F, T], s: Math.max(1.5, rz.cara * 3), v: 'stin' }, { t: 'k', x: F[0], y: F[1], r: Math.max(1.5, rz.cara * 3), s: 0, v: 'stinbod', f: true }];
       return { prvky: naPapir(prvkySim).prvky, bod: T, pata: F, naCifernku: true };
     }, { M, bodHod, yD, stred: c, kor });
+  }
+
+  /* ---------------- kapesní výškové hodiny (Canterbury) ----------------
+     Svislý hranol zavěšený na řetízku, nahoře otvory pro kolík (jeden sloupec = měsíc nebo dvojice měsíců).
+     Hodiny se natočí ke Slunci tak, aby stín kolíku padal svisle dolů po sloupci. Kolík délky L
+     kolmý ke stěně: stín jeho konce je o d = L · tan(h) níže než osa kolíku (h = výška Slunce),
+     takže vysoké Slunce (poledne, léto) = dlouhý stín, nízké Slunce = krátký. */
+  const MES_LAT = ['IAN', 'FEB', 'MAR', 'APR', 'MAI', 'IVN', 'IVL', 'AVG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  // pořadí sloupců na Canterburském originálu: strana A IAN·DEC, FEB·NOV, MAR·OCT; strana B MAI·AVG, IVN·IVL, APR·SEP
+  const CANTERBURY = [[0, 11], [1, 10], [2, 9], [4, 7], [5, 6], [3, 8]];
+  const DVOJICE = [[0, 11], [1, 10], [2, 9], [3, 8], [4, 7], [5, 6]];
+
+  const ZNAMENI_DVOJICE = [[270, 240], [300, 210], [330, 180], [0, 150], [30, 120], [60, 90]];   // počátky 30° úseků délky Slunce
+  /** sloupce: [{nazev, test(m, den, lam), d (střední deklinace), dMin, dMax, mesicni:[střední δ jednotlivých úseků], obdobi:[text]}] */
+  function sloupceKapesni(p) {
+    const rok = p.rok, dniM = (m) => new Date(Date.UTC(rok, m + 1, 0)).getUTCDate();
+    let cols;
+    const dvoj = (por) => por.map(([a, b]) => ({ nazev: MES_LAT[a] + '·' + MES_LAT[b], casti: [(m) => m === a, (m) => m === b] }));
+    if (p.kapSloupce === 'mesice') cols = MES_LAT.map((n, mm) => ({ nazev: n, casti: [(m) => m === mm] }));
+    else if (p.kapSloupce === 'pulmesice') {
+      cols = [];
+      for (let mm = 0; mm < 12; mm++) {
+        cols.push({ nazev: MES_LAT[mm] + ' I', casti: [(m, d) => m === mm && d <= 15] });
+        cols.push({ nazev: MES_LAT[mm] + ' II', casti: [(m, d) => m === mm && d > 15] });
+      }
+    } else if (p.kapSloupce === 'znameni') {
+      const v = (l0) => (m, d, lam) => ((lam - l0 + 360) % 360) < 30;
+      cols = ZNAMENI_DVOJICE.map(([a, b]) => ({ nazev: ZNAMENI[a / 30 % 12] + '·' + ZNAMENI[b / 30 % 12], casti: [v(a), v(b)] }));
+    } else if (p.kapSloupce === 'dvojice') cols = dvoj(DVOJICE);
+    else {
+      // Canterbury / Libellus: „sluneční měsíce“ s hranicí 12 dní před kalendami (~21.), dvojice se shodnou deklinací
+      // (sluneční červen = 21. 5.–20. 6. = Blíženci, červenec = Rak …) – M. Arnaldi, BSS Bulletin 23(iv), 2011
+      const v = (l0) => (m, d, lam) => ((lam - l0 + 360) % 360) < 30;
+      const lamMesice = (m) => ((m * 30 + 270) % 360);   // sluneční leden = Kozoroh (270°), únor = Vodnář …
+      cols = CANTERBURY.map(([a, b]) => ({ nazev: MES_LAT[a] + '·' + MES_LAT[b], casti: [v(lamMesice(a)), v(lamMesice(b))] }));
+    }
+    const st = cols.map((c) => c.casti.map(() => ({ s: 0, n: 0, od: null, do: null })));
+    for (let m = 0; m < 12; m++) for (let d = 1; d <= dniM(m); d++) {
+      const z = slunce(Date.UTC(rok, m, d, 12));
+      cols.forEach((c, i) => c.casti.forEach((f, j) => {
+        if (!f(m, d, z.delka)) return;
+        const q = st[i][j]; q.s += z.deklinace; q.n++;
+        q.min = Math.min(q.min == null ? Infinity : q.min, z.deklinace); q.max = Math.max(q.max == null ? -Infinity : q.max, z.deklinace);
+        (q.dny = q.dny || []).push([m, d]);
+      }));
+    }
+    cols.forEach((c, i) => {
+      const q = st[i].filter((x) => x.n);
+      c.mesicni = q.map((x) => x.s / x.n);
+      c.d = q.reduce((a, x) => a + x.s, 0) / q.reduce((a, x) => a + x.n, 0);
+      c.dMin = Math.min(...q.map((x) => x.min)); c.dMax = Math.max(...q.map((x) => x.max));
+      c.obdobi = q.map((x) => {
+        // souvislý úsek (i přes Nový rok): začátek = den, před kterým úsek není
+        const k = x.dny.map(([m, d]) => m * 100 + d), je = new Set(k);
+        const pred = (m, d) => { const t = new Date(Date.UTC(rok, m, d - 1)); return t.getUTCFullYear() < rok ? 1131 : t.getUTCMonth() * 100 + t.getUTCDate(); };
+        const za = (m, d) => { const t = new Date(Date.UTC(rok, m, d + 1)); return t.getUTCFullYear() > rok ? 1 : t.getUTCMonth() * 100 + t.getUTCDate(); };
+        const od = x.dny.find(([m, d]) => !je.has(pred(m, d))) || x.dny[0], kon = x.dny.find(([m, d]) => !je.has(za(m, d))) || x.dny[x.dny.length - 1];
+        return `${od[1]}. ${od[0] + 1}.–${kon[1]}. ${kon[0] + 1}.`;
+      });
+      c.test = (m, d, lam) => c.casti.some((f) => f(m, d, lam));
+    });
+    return cols;
+  }
+
+  /** poměry délek šesti sloupců podle Libellus de mensura horologii (překlad M. Arnaldi 2011):
+      2. = střed 6. dílku 1., 3. = ¾ předposledního dílku 2., 4. = ⅓ předposl. 3., 5. = ⅕ předposl. 4., 6. = konec 4. dílku 5. */
+  function libellusPomery() {
+    const S = [1];
+    S.push(S[0] * 5.5 / 6); S.push(S[1] * 4.75 / 6); S.push(S[2] * (4 + 1 / 3) / 6); S.push(S[3] * 4.2 / 6); S.push(S[4] * 4 / 6);
+    return S;
+  }
+
+  /** výška Slunce [°] pro šířku fi, deklinaci d a hodinový úhel t */
+  const vyskaZ = (fi, d, t) => asin(sin(fi) * sin(d) + cos(fi) * cos(d) * cos(t));
+  /** polovina denního oblouku [°] (0 = Slunce nevyjde, 180 = nezapadá) */
+  function pulOblouk(fi, d) { const x = -tan(fi) * tan(d); return x >= 1 ? 0 : x <= -1 ? 180 : Math.acos(x) / R; }
+
+  /** značky jednoho sloupce: [{t, h, txt, klic, hlavni}] (t ≥ 0, dopoledne je symetrické) */
+  function znackyKapesni(p, d) {
+    const fi = p.sirka, H0 = pulOblouk(fi, d), rim = p.cislice === 'rimske', out = [];
+    const pridej = (t, txt, klic, hlavni) => { const h = vyskaZ(fi, d, t); if (h > 0.5) out.push({ t, h, txt, klic, hlavni }); };
+    if (!H0) return out;
+    if (p.kapCasy === 'libellus' && p._libellusDelka) {
+      // Libellus de mensura horologii: sloupec (délka poledního stínu S) rozdělen na 6 STEJNÝCH dílů = hodiny 1–6 a 6–11
+      const S = p._libellusDelka(d);
+      if (S != null) {
+        for (let k = 6; k >= 1; k--) {
+          const pad = S * k / 6;
+          out.push({ t: NaN, h: Math.atan(pad / p.nodusMmEf) / R, txt: k === 6 ? (rim ? 'VI' : '6') : (rim ? rimske(k) + '·' + rimske(12 - k) : k + '·' + (12 - k)), klic: 's' + k, hlavni: k === 6 || k === 3, padPevny: pad });
+        }
+        return out;
+      }
+    }
+    if (p.kapCasy === 'historicke' || p.kapCasy === 'libellus') {
+      // tercie a nona = konec 3. a 9. nestejné (sezónní) hodiny = půl cesty mezi východem a polednem
+      pridej(0, rim ? 'VI' : '6', 'sexta', true);
+      pridej(H0 / 2, rim ? 'III·IX' : '3·9', 'tercie', false);
+    } else if (p.kapCasy === 'sezonni') {
+      for (let k = 6; k >= 1; k--) pridej(H0 * (6 - k) / 6, k === 6 ? (rim ? 'VI' : '6') : (rim ? rimske(k) + '·' + rimske(12 - k) : k + '·' + (12 - k)), 's' + k, k === 6 || k === 3);
+    } else {
+      for (let m = 0; m < 12; m++) pridej(15 * m, m === 0 ? textHodiny(12, p.cislice) : textHodiny(12 - m, p.cislice) + '·' + textHodiny(12 + m, p.cislice), 'h' + m, m === 0 || m === 3);
+    }
+    return out;
+  }
+
+  function navrhKapesni(p) {
+    const n = [2, 4, 6].includes(+p.kapSteny) ? +p.kapSteny : 2;
+    const W = Math.max(5, +p.sirkaMm), H = Math.max(15, +p.vyskaMm), T = Math.max(1, +p.tloustkaMm || 6);
+    const dk = Math.max(0.5, +p.prumerTyce || 2), var0 = [];
+    const cols = sloupceKapesni(p), N = cols.length, per = Math.ceil(N / n);
+    const colW = W / per, ho = Math.max(dk * 1.3, H * 0.07, 2), okr = Math.max(1.5, H * 0.025);
+    const velN = omez(colW * 0.3, 1.2, 4);
+    const sirkaNazvu = Math.max(...cols.map((c) => sirkaTextu(c.nazev, velN)));
+    const nazevNaStojato = sirkaNazvu > colW * 0.92;
+    const zonaNazvu = nazevNaStojato ? Math.min(sirkaNazvu, H * 0.3) + 1 : velN * 1.6;
+    const delkaSloupce = H - ho - okr - zonaNazvu;
+    // délka kolíku: ručně, nebo tak, aby nejvyšší značka (léto, poledne) vyplnila 92 % sloupce
+    const pAst = Object.assign({}, p, { kapCasy: p.kapCasy === 'libellus' ? 'historicke' : p.kapCasy });
+    const hMax = Math.max(...cols.map((c) => Math.max(0, ...znackyKapesni(pAst, c.d).map((z) => z.h))));
+    const L = p.nodusAuto ? Math.max(1, delkaSloupce * 0.92 / Math.max(0.05, tan(Math.min(hMax, 89)))) : Math.max(1, +p.nodusMm);
+    p.nodusMmEf = L;
+    if (p.kapCasy === 'libellus') {
+      // poměry délek sloupců podle textu (sloupec 1 = IVN·IVL libovolně dlouhý, ostatní odvozené z dílků předchozího)
+      const poradi = ['IVN·IVL', 'MAI·AVG', 'APR·SEP', 'MAR·OCT', 'FEB·NOV', 'IAN·DEC'], pom = libellusPomery();
+      const sloupec1 = cols.find((c) => c.nazev === 'IVN·IVL');
+      if (cols.length === 6 && sloupec1) {
+        const S1 = L * tan(vyskaZ(p.sirka, sloupec1.d, 0));
+        p._libellusDelka = (d) => { const c = cols.find((q) => Math.abs(q.d - d) < 1e-9); const i = c ? poradi.indexOf(c.nazev) : -1; return i < 0 ? null : S1 * pom[i]; };
+      } else var0.push('Konstrukce podle Libellu platí jen pro 6 dvojic měsíců (Canterbury) – použity astronomické značky tercie/sexta/nona.');
+    }
+    const pr = [], var_ = var0, S = Math.min(W, H), cara = omez(S * 0.012, 0.15, 0.6);
+    // pruhy rozvinu: [x0, šířka, druh, stěna]
+    const pruhy = []; let x = 0;
+    if (n === 2) { pruhy.push([x, W, 'stena', 0]); x += W; pruhy.push([x, T, 'bok', 0]); x += T; pruhy.push([x, W, 'stena', 1]); x += W; pruhy.push([x, T, 'bok', 1]); x += T; }
+    else for (let i = 0; i < n; i++) { pruhy.push([x, W, 'stena', i]); x += W; }
+    const chl = Math.min(8, Math.max(4, W * 0.3)), Wc = x;
+    pr.push({ t: 'l', b: [[0, 0], [Wc, 0], [Wc + chl, -chl * 0.6], [Wc + chl, -H + chl * 0.6], [Wc, -H], [0, -H]], s: cara, v: 'obrys', z: true });
+    for (const [x0] of pruhy.slice(1).concat([[Wc]])) pr.push({ t: 'l', b: [[x0, 0], [x0, -H]], s: cara * 0.7, v: 'pomoc', d: true });
+    const steny = pruhy.filter((q) => q[2] === 'stena');
+    const vel = omez(colW * 0.24, 1, 3.2);
+    const sloupce = [];
+    cols.forEach((c, i) => {
+      const st = steny[Math.floor(i / per)], j = i % per;
+      if (!st) return;
+      const x0 = st[0] + j * colW, xc = x0 + colW / 2;
+      if (j > 0) pr.push({ t: 'l', b: [[x0, -ho * 0.4], [x0, -H + okr * 0.5]], s: cara * 0.5, v: 'ram' });
+      pr.push({ t: 'k', x: xc, y: -ho, r: dk / 2, s: cara * 0.7, v: 'obrys' });
+      // název sloupce pod otvorem (otočený, pokud se nevejde)
+      // název sloupce v dolní části sloupce (otočený, pokud se nevejde vodorovně)
+      const yN = -H + okr + zonaNazvu / 2;
+      if (!nazevNaStojato) pr.push({ t: 'txt', x: xc, y: yN, txt: c.nazev, h: velN, a: 'c', u: 0, v: 'text' });
+      else { const hN = Math.min(velN, colW * 0.55), k = Math.min(1, (zonaNazvu - 1) / Math.max(1e-6, sirkaTextu(c.nazev, hN))); pr.push({ t: 'txt', x: xc, y: yN, txt: c.nazev, h: hN * k, a: 'c', u: 90, v: 'text' }); }
+      let yPosl = Infinity;
+      const zn = znackyKapesni(p, c.d).sort((a2, b2) => a2.h - b2.h).map((z) => {
+        const pad = z.padPevny != null ? z.padPevny : L * tan(z.h), y = -ho - pad, mimo = pad > delkaSloupce;
+        if (mimo) var_.push(`${c.nazev}: značka ${z.txt} (výška Slunce ${z.h.toFixed(1).replace('.', ',')}°) by ležela ${pad.toFixed(1).replace('.', ',')} mm pod kolíkem – sloupec má jen ${delkaSloupce.toFixed(1).replace('.', ',')} mm. Zkraťte kolík nebo prodlužte hranol.`);
+        else {
+          pr.push({ t: 'l', b: [[x0 + colW * 0.12, y], [x0 + colW * (z.hlavni ? 0.62 : 0.5), y]], s: cara * (z.hlavni ? 1.1 : 0.7), v: 'hodiny' });
+          pr.push({ t: 'k', x: xc - colW * 0.13, y, r: Math.max(0.25, colW * (z.hlavni ? 0.06 : 0.045)), s: 0, v: 'hodiny', f: true });
+          const hT = Math.min(vel, colW * 0.33 / Math.max(0.3, sirkaTextu(z.txt, 1)));
+          if (p.popisky !== false && yPosl - y >= hT * 0.95) { pr.push({ t: 'txt', x: x0 + colW * 0.65, y, txt: z.txt, h: hT, a: 'l', u: 0, v: 'cisla' }); yPosl = y; }
+        }
+        return Object.assign({ pad, y, mimo }, z);
+      });
+      sloupce.push(Object.assign({ x0, xc, stena: st[3], znacky: zn }, c));
+    });
+    // spojnice stejných značek v sousedních sloupcích jedné stěny (křivky hodin), ne u historického pořadí
+    if (p.kapSloupce !== 'canterbury') {
+      for (let s = 0; s < steny.length; s++) {
+        const ss = sloupce.filter((c) => c.stena === steny[s][3]);
+        const klice = new Set(); ss.forEach((c) => c.znacky.forEach((z) => klice.add(z.klic)));
+        for (const k of klice) {
+          let cur = [];
+          for (const c of ss) {
+            const z = c.znacky.find((q) => q.klic === k && !q.mimo);
+            if (z) cur.push([c.xc - colW * 0.13, z.y]); else { if (cur.length > 1) pr.push({ t: 'l', b: cur, s: cara * 0.4, v: 'datum' }); cur = []; }
+          }
+          if (cur.length > 1) pr.push({ t: 'l', b: cur, s: cara * 0.4, v: 'datum' });
+        }
+      }
+    }
+    if (p.popisky !== false) {
+      if (n === 2) {
+        const bk = pruhy.filter((q) => q[2] === 'bok'), t = ['+ SALVS FACTORI', '+ PAX POSSESSORI'];
+        bk.forEach((q, i) => pr.push({ t: 'txt', x: q[0] + q[1] / 2, y: -H / 2, txt: t[i], h: omez(q[1] * 0.5, 1, 5), a: 'c', u: 90, v: 'text' }));
+      }
+      steny.forEach((q, i) => pr.push({ t: 'txt', x: q[0] + q[1] / 2, y: vel * 1.2, txt: 'strana ' + String.fromCharCode(65 + i) + ' ↑ nahoru', h: Math.max(1.6, vel * 0.8), a: 'c', u: 0, v: 'pomoc' }));
+      pr.push({ t: 'txt', x: Wc + chl / 2, y: -H / 2, txt: 'lepit', h: Math.min(chl * 0.5, 3), a: 'c', u: 90, v: 'pomoc' });
+    }
+    // nápis „↑“ nemá Liberation – nahradit
+    for (const e of pr) if (e.t === 'txt') e.txt = e.txt.replace(' ↑ nahoru', ' – nahoru');
+    const cifernik = naPapir(pr);
+    // šablona kolíku (bokorys): vyčnívající část L + zasunutá část
+    const zas = n === 2 ? Math.max(1, T * 0.45) : Math.max(2, W / (2 * Math.tan(Math.PI / n)) * 0.6), gp = [];
+    gp.push({ t: 'l', b: [[0, 0], [L + zas, 0], [L + zas, dk], [0, dk]], s: 0.3, v: 'obrys', z: true });
+    gp.push({ t: 'l', b: [[zas, -2], [zas, dk + 2]], s: 0.25, v: 'pomoc', d: true });
+    gp.push({ t: 'txt', x: zas / 2, y: dk + 4, txt: 'zasunout', h: 2.6, a: 'c', u: 0, v: 'text' });
+    gp.push({ t: 'txt', x: zas + L / 2, y: dk + 4, txt: 'vyčnívá ' + L.toFixed(1).replace('.', ',') + ' mm', h: 2.6, a: 'c', u: 0, v: 'text' });
+    gp.push({ t: 'txt', x: 0, y: -6, txt: 'Kolík (gnomon): průměr ' + dk.toFixed(1).replace('.', ',') + ' mm, kolmo ke stěně. Chyba 1 mm v délce posune polední značku až o tan(h) mm.', h: 3, a: 'l', u: 0, v: 'text' });
+    const gnomon = naPapir(gp);
+    // kontrola: tabulka sloupců
+    const kontrola = sloupce.map((c) => ({ datum: c.nazev, d: c.d, vejde: c.znacky.filter((z) => !z.mimo).map((z) => z.txt), mimo: c.znacky.filter((z) => z.mimo).map((z) => z.txt) }));
+    if (n === 2 && per > 3 && colW < 4) var_.push('Sloupce jsou užší než 4 mm – zvětšete šířku stěny.');
+    const vys = {
+      p, m: { typ: 'kapesni', fi: p.sirka, vyskaStylu: null, C: null }, cifernik, gnomon, rz: { cara },
+      info: { vyskaNodu: L, pataNodu: [0, 0], vyskaStylu: null, hodiny: [], kontrola, varovani: var_, korekceDelkyMin: korekceDelkyMin(p.delka, p.posunUTC), sloupce, delkaSloupce, otvor: ho, rozvin: { sirka: Wc + chl, vyska: H, steny: n, sloupcuNaStenu: per } },
+      analema: null,
+      sloupecProDatum(ms) {
+        const d = new Date(ms), lam = slunce(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12)).delka;
+        return sloupce.findIndex((c) => c.test(d.getUTCMonth(), d.getUTCDate(), lam));
+      },
+      sim(ms) {
+        const pol = polohaSlunce(ms, p.sirka, p.delka);
+        // datum podle místního (pásmového) času
+        const i = this.sloupecProDatum(ms + p.posunUTC * 3600000), c = sloupce[i];
+        const out = { poloha: pol, prvky: null, sloupec: c ? c.nazev : null, cteni: null };
+        if (!c || pol.vyska <= 0) return out;
+        const pad = L * tan(pol.vyska), mimo = pad > delkaSloupce, py = -ho - Math.min(pad, delkaSloupce);
+        const prv = [{ t: 'p', b: [[c.xc - dk / 2, -ho], [c.xc + dk / 2, -ho], [c.xc + dk / 2, py], [c.xc - dk / 2, py]], v: 'stin', f: true }];
+        if (!mimo) prv.push({ t: 'k', x: c.xc, y: py, r: Math.max(0.5, dk * 0.45), s: 0, v: 'stinbod', f: true });
+        // čtení: výška → hodinový úhel pro deklinaci sloupce (dopoledne / odpoledne nelze rozlišit)
+        const cosT = (sin(pol.vyska) - sin(p.sirka) * sin(c.d)) / (cos(p.sirka) * cos(c.d));
+        const t = Math.abs(cosT) <= 1 ? Math.acos(cosT) / R : cosT > 1 ? 0 : null;
+        return Object.assign(out, { prvky: naPapir(prv).prvky, bod: [c.xc, py], pad, mimo, naCifernku: !mimo, cteni: t == null ? null : 12 - t / 15, cteni2: t == null ? null : 12 + t / 15, deklinaceSloupce: c.d });
+      },
+    };
+    return vys;
   }
 
   /* ---------------- souhrnný výsledek ---------------- */
@@ -737,7 +992,27 @@
     return { prvky: pr, x0: 0, y0: 0, x1: W, y1: H, w: W, h: H };
   }
 
+  /** letní čas podle pravidla EU: od poslední neděle v březnu 1:00 UTC do poslední neděle v říjnu 1:00 UTC */
+  function jeLetniCasEU(ms) {
+    const r = new Date(ms).getUTCFullYear();
+    const posledniNedele = (m) => { const d = new Date(Date.UTC(r, m + 1, 0)); return Date.UTC(r, m, d.getUTCDate() - d.getUTCDay(), 1); };
+    return ms >= posledniNedele(2) && ms < posledniNedele(9);
+  }
+
+  /**
+   * Deklinace stěny z měření stínu: na vodorovné prkénko kolmé ke stěně se v čase ms změří úhel beta
+   * mezi stínem svislého kolíku a kolmicí ke stěně (+ = stín uhýbá doprava při pohledu na stěnu).
+   * Vrací D (° od jihu, + na západ) a azimut Slunce.
+   */
+  function deklinaceSteny(ms, fi, la, beta) {
+    const pol = polohaSlunce(ms, fi, la);
+    let D = (pol.azimut - 180) - beta;
+    D = ((D + 540) % 360) - 180;
+    return { D, azimutSlunce: pol.azimut, vyskaSlunce: pol.vyska };
+  }
+
   const API = {
+    jeLetniCasEU, deklinaceSteny, sloupceKapesni, znackyKapesni, pulOblouk, libellusPomery, vyskaZ, MES_LAT, CANTERBURY,
     slunce, polohaSlunce, vektorSlunce, msZCasu, tabulkaRoku, korekceDelkyMin, korekce, denVRoce,
     rovina, model, smerHodinoveCary, intervalPrimky, uvnitr, krivka, seznamHodin, datoveKrivky,
     navrh, grafRovniceCasu, rimske, textHodiny, sirkaTextu, fmtMin, fmtCas, MESICE, ZNAMENI, VYCHOZI, EKL_KRIVKY,

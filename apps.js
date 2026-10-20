@@ -1163,6 +1163,12 @@ const KATALOG_SEKCE = [
         "nazev": "🔭 Astronomický kalendář úkazů",
         "stav": "beta",
         "tagy": ["astronomie", "Měsíc", "zatmění", "meteory", "planety", "kalendář", "ics"]
+      },
+      {
+        "soubor": "obsah/slunecni_hodiny.html",
+        "nazev": "☀️ Sluneční hodiny",
+        "stav": "vyvoj",
+        "tagy": ["sluneční hodiny", "gnomon", "rovnice času", "analema", "šablona", "tisk 1:1", "PDF", "DXF", "astronomie", "deklinace stěny"]
       }
     ]
   },
@@ -1415,6 +1421,12 @@ const KATALOG_SEKCE = [
         "nazev": "🪢 Keltské uzly",
         "stav": "vyvoj",
         "tagy": ["keltské uzly", "pletenec", "cop", "uzel", "triquetra", "trojlístek", "ornament", "vzory", "mandala", "SVG"]
+      },
+      {
+        "soubor": "obsah/plakat_utrzky.html",
+        "nazev": "📌 Plakát s útržky",
+        "stav": "vyvoj",
+        "tagy": ["plakát", "inzerát", "vývěska", "útržky", "nástěnka", "tisk", "PDF", "QR"]
       }
     ]
   },
@@ -1495,6 +1507,12 @@ const KATALOG_SEKCE = [
         "nazev": "✂️ Ořez obrázku",
         "stav": "beta",
         "tagy": ["ořez", "crop", "obrázek", "poměr stran", "úprava fotky"]
+      },
+      {
+        "soubor": "obsah/stencil.html",
+        "nazev": "🎨 Šablona na sprej (stencil)",
+        "stav": "vyvoj",
+        "tagy": ["stencil", "šablona", "sprej", "graffiti", "můstky", "ostrůvky", "plotr", "cricut", "silhouette", "laser", "svg", "dxf", "pdf", "vyřezávání", "vrstvy"]
       }
     ]
   },
@@ -1840,7 +1858,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/modelar.html",
         "nazev": "🧊 Modelář 3D",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": [
           "3d",
           "modelování",
@@ -1934,6 +1952,12 @@ const KATALOG_SEKCE = [
         "nazev": "📏 Technický generátor pro tisk",
         "stav": "vyvoj",
         "tagy": ["pravítko", "úhloměr", "stupnice", "číselník", "dělicí kotouč", "vrtací šablona", "rozteč otvorů", "PCD", "VESA", "NEMA", "mřížka", "milimetrový papír", "π-páska", "měřítko", "řezací podložka", "kalibrace tiskárny", "rádiusové měrky", "závitové měrky", "logaritmické pravítko", "semilogaritmický papír", "ternární diagram", "rozvinutí kužele", "sedlo trubky", "segmentové koleno", "šablona kružnic", "elipsa", "tisk 1:1", "PDF", "SVG", "DXF", "PNG", "laser"]
+      },
+      {
+        "soubor": "obsah/krabice_fefco.html",
+        "nazev": "📦 Krabice z kartonu (FEFCO)",
+        "stav": "vyvoj",
+        "tagy": ["krabice", "FEFCO", "vlnitá lepenka", "karton", "rozvin", "výsek", "dieline", "skládačka", "obal", "SVG", "DXF", "PDF", "plotr", "laser", "3D"]
       }
     ]
   },

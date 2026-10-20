@@ -70,7 +70,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       odsVzd: 2, odsSpoj: 'kulaty', odsVysledek: 'obrys', odsOtevreno: false, odsPamet: null,
       pohled: { s: 4, ox: 0, oy: 0 }, tah: null, cesta: null, kurzor: null, prichyceno: null,
       historie: [], index: -1,
-      ent: [], vazbaVyber: null, reseni: null, naPlose: null, reference: null,
+      ent: [], vazbaVyber: null, reseni: null, naPlose: null, reference: null, vysledek: 'teleso',
     };
     M.skicar = st;
 
@@ -441,6 +441,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           <ul class="vazby-seznam">${(p.vazby || []).map(v => `<li class="${r && !r.ok && (r.konflikt || []).includes(v.id) ? 'spor' : ''}${st.vazbaVyber === v.id ? ' vybrana' : ''}"><button type="button" class="odkaz-tl" data-akce="vybratVazbu:${v.id}">${esc(M.ikonaVazby(v.typ))} ${esc(M.popisVazby(v, prom))}</button>${M.TYPY_VAZEB[v.typ].hodnota ? `<button type="button" class="tl ik" data-akce="upravVazbu:${v.id}" title="Změnit hodnotu" aria-label="Změnit hodnotu">✎</button>` : ''}<button type="button" class="tl ik" data-akce="smazVazbu:${v.id}" title="Smazat vazbu" aria-label="Smazat vazbu">✕</button></li>`).join('')}</ul>
           ${maVazby() ? '<button type="button" class="tl" data-akce="smazVazby">Odebrat všechny vazby</button>' : ''}</section>`;
       }
+      h += `<section class="vysledek-skici"><h3>Po dokončení</h3>
+        <label class="zaskrt"><input type="radio" name="skicarVysledek" data-pole="st.vysledek" value="teleso" ${st.vysledek !== 'skica' ? 'checked' : ''}> Běžné těleso (osy desky, skica se už neupravuje)</label>
+        <label class="zaskrt"><input type="radio" name="skicarVysledek" data-pole="st.vysledek" value="skica" ${st.vysledek === 'skica' ? 'checked' : ''}> Ponechat jako skicu (profil pro tažení, pole po křivce)</label></section>`;
       h += `<section><h3>Nový tvar</h3>
         <label class="zaskrt"><input type="checkbox" data-pole="st.otvor" ${st.otvor ? 'checked' : ''}> Kreslit jako otvor</label>
         <label class="zaskrt"><input type="checkbox" data-pole="st.prichytit" ${st.prichytit ? 'checked' : ''}> Přichytávat (mřížka ${M.mm(krok(), 2)} mm, body)</label>
@@ -531,7 +534,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     panel.addEventListener('change', e => {
       const i = e.target.closest('[data-pole]');
       if (!i) return;
-      if (i.type === 'checkbox') zapisPole(i.dataset.pole, i.checked);
+      if (i.type === 'radio') zapisPole(i.dataset.pole, i.value);
+      else if (i.type === 'checkbox') zapisPole(i.dataset.pole, i.checked);
       else if (i.tagName === 'SELECT' || i.classList.contains('text-pole')) zapisPole(i.dataset.pole, i.value);
       else { const v = M.prectiCislo(i.value); if (isFinite(v)) zapisPole(i.dataset.pole, v); else vykresliPanel(); }
     });
@@ -841,6 +845,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       st.naPlose = naPlose ? { id: naPlose.id, nazev: naPlose.nazev, plocha: naPlose.plocha, operace: naPlose.operace || 'pridat', skrz: false, spojit: true } : null;
       st.reference = naPlose ? naPlose.plocha.oblast : null;
       st.ent = []; st.vazbaVyber = null; st.reseni = null;
+      st.vysledek = id ? 'skica' : 'teleso';
       st.uzelId = u && u.druh === 'skica' ? u.id : null;
       st.param = JSON.parse(JSON.stringify(st.uzelId ? u.param : M.normalizujParamSkici({})));
       st.podklad = st.uzelId && u.podklad ? Object.assign({}, u.podklad) : null;
@@ -863,30 +868,52 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     $('skicarZrusit').onclick = zavri;
     $('skicarPrizpusob').onclick = () => { prizpusobPohled(); vykresli(); };
-    $('skicarHotovo').onclick = () => {
+    /** Skica uzlu id (kdekoli ve stromu) převedená na běžné těleso s osami desky (síť spočítá worker). */
+    M.skicuNaTeleso = async function (dok, id) {
+      const u = M.najdiVeStromu(dok, id);
+      if (!u || u.druh !== 'skica') return dok;
+      const r = await M.sitSkupiny(u);
+      const n = M.sitZeSkici(u, { poz: r.poz, idx: r.idx });
+      return M.upravVnorene(dok, id, n);
+    };
+    let dokoncuji = false;
+    $('skicarHotovo').onclick = async () => {
+      if (dokoncuji) return;
       if (st.cesta) dokonciCestu();
       if (!st.param.tvary.some(t => !t.otvor)) { Dialog.chyba('Skica potřebuje aspoň jeden plný tvar.'); return; }
       if (st.param.rezim === 'rotace' && !st.param.tvary.some(t => !t.otvor && M.konturyTvaru(t, 16).some(k => k.some(p => p[0] > 0)))) {
         Dialog.chyba('Pro rotaci musí část skici ležet vpravo od osy Y.'); return;
       }
       if (maVazby()) { const r = vyres(); if (r && !r.ok) { Dialog.chyba('Některé vazby nejdou splnit – oprav nebo smaž je (v panelu jsou červeně).'); vykresliPanel(); vykresli(); return; } }
-      if (st.naPlose) {
-        try {
+      // výsledek: běžné těleso (síť s osami desky, skica se zahodí) nebo upravitelná skica (profil pro tažení, pole po křivce)
+      const teleso = st.vysledek !== 'skica';
+      let dok, popis, vyber;
+      try {
+        if (st.naPlose) {
           const np = st.naPlose;
           const r = M.skicaNaPlose(M.app.dok, np.id, np.plocha, st.param, { operace: np.operace, skrz: np.skrz, spojit: np.spojit });
-          M.zmenDokument(r.dok, np.operace === 'vyriznout' ? 'Kapsa ze skici' : 'Skica na ploše');
-          M.nastavVyber([r.id]);
-        } catch (e) { Dialog.chyba('Skicu nejde umístit: ' + e.message); return; }
-      } else if (st.uzelId) {
-        M.upravVybrane(u => Object.assign(M.upravSkicu(u, st.param), { podklad: st.podklad }), 'Upravit skicu', [st.uzelId]);
-      } else {
-        M.pridejSkicu(st.param, st.podklad);
-      }
+          dok = r.dok; vyber = r.id; popis = np.operace === 'vyriznout' ? 'Kapsa ze skici' : 'Skica na ploše';
+          if (teleso) { dokoncuji = true; M.cekej('skicaTeleso', 'Vytvářím těleso…'); dok = await M.skicuNaTeleso(dok, r.skicaId); }
+        } else if (st.uzelId) {
+          const u = M.najdiUzel(M.app.dok, st.uzelId);
+          dok = M.upravUzly(M.app.dok, [st.uzelId], Object.assign(M.upravSkicu(u, st.param), { podklad: st.podklad }));
+          vyber = st.uzelId; popis = 'Upravit skicu';
+          if (teleso) { dokoncuji = true; M.cekej('skicaTeleso', 'Vytvářím těleso…'); dok = await M.skicuNaTeleso(dok, st.uzelId); }
+        } else {
+          dokoncuji = true;
+          const n = await M.pridejSkicu(st.param, st.podklad, null, { teleso, zapsat: false });
+          dok = n.dok; vyber = n.id; popis = 'Přidat ' + n.nazev;
+        }
+      } catch (e) { Dialog.chyba((teleso ? 'Z kresby nejde udělat těleso: ' : 'Skicu nejde umístit: ') + e.message); return; }
+      finally { dokoncuji = false; M.hotovoCekani('skicaTeleso'); }
+      M.zmenDokument(dok, popis);
+      M.nastavVyber([vyber]);
       okno.close();
     };
 
-    /** Přidá novou skicu: počátek skici doprostřed pohledu na desku (nebo do počátku pracovní roviny). */
-    M.pridejSkicu = function (param, podklad = null, nazev = null) {
+    /** Přidá novou skicu: počátek skici doprostřed pohledu na desku (nebo do počátku pracovní roviny).
+        volby.teleso = rovnou převést na běžné těleso (osy desky, bez skici); zapsat: false = jen vrátit {dok, id, nazev}. */
+    M.pridejSkicu = async function (param, podklad = null, nazev = null, { teleso = true, zapsat = true } = {}) {
       const r = M.app.rovina;
       const k = Math.max(S.deska.krok, 1);
       const pocatek = r ? new THREE.Vector3(...r.puvod) : new THREE.Vector3(Math.round(S.kamera.cil.x / k) * k, Math.round(S.kamera.cil.y / k) * k, 0);
@@ -894,9 +921,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const u = M.novaSkica(param, nazev ? { podklad, nazev } : { podklad }, M.app.dok);
       const poloha = new THREE.Vector3(...u.stred).applyQuaternion(q).add(pocatek);
       const n = M.normalizujUzel(Object.assign({}, u, { poloha: poloha.toArray().map(x => zaokr(x)), rotace: M.rotaceZQuat(q) }));
-      M.zmenDokument(M.pridejUzly(M.app.dok, [n]), 'Přidat ' + n.nazev);
+      let dok = M.pridejUzly(M.app.dok, [n]);
+      if (teleso) {
+        M.cekej('skicaTeleso', 'Vytvářím těleso…');
+        try { dok = await M.skicuNaTeleso(dok, n.id); } finally { M.hotovoCekani('skicaTeleso'); }
+      }
+      if (!zapsat) return { dok, id: n.id, nazev: n.nazev };
+      M.zmenDokument(dok, 'Přidat ' + n.nazev);
       M.nastavVyber([n.id]);
-      return n;
+      return M.najdiUzel(M.app.dok, n.id);
     };
 
     /** Klik na plochu v režimu 'skicaNaPlose': rovná plocha pod kurzorem → skicář s jejím obrysem. */

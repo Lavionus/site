@@ -177,6 +177,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const ukazRezim = () => {
       stavRezim.textContent = M.app.rezim === 'rovina' ? 'Klikni na stěnu tělesa pro pracovní rovinu (vedle = deska, Esc = zpět)'
         : M.app.rezim === 'plochou' ? 'Klikni na stěnu, která má ležet dole (Esc = zpět)'
+        : M.app.rezim === 'magnet' ? 'Magnet: klikni na plochu tělesa, kterou chceš přisadit (Esc = zpět)'
+        : M.app.rezim === 'magnet2' ? 'Magnet: teď klikni na plochu, ke které se má přisadit – dosedne tam středem (Esc = zrušit)'
         : M.app.rezim === 'vzorDer' ? 'Klikni na rovnou plochu tělesa, do které se vyvrtají díry (Esc = zpět)'
         : M.app.rezim === 'skicaNaPlose' ? 'Klikni na rovnou plochu tělesa – otevře se skica na ní (Esc = zpět)'
         : M.app.rezim === 'kapsaNaPlose' ? 'Klikni na rovnou plochu tělesa – nakreslíš tvar kapsy nebo otvoru (Esc = zpět)'
@@ -228,6 +230,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.vytvorObrazek(S);
     M.vytvorTazeni();
     M.vytvorRychleKoty(S);
+    M.vytvorMagnet(S, S.telesa);
     M.pouzijIkony();
     M.cekej('start', 'Otevírám projekt…', null, 0);
     U.start().finally(() => { M.hotovoCekani('start'); M.pripraveno = true; M.vysli('pripraveno'); M.pruvodceNaZacatku(); });

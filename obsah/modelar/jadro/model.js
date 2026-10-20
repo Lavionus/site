@@ -622,6 +622,26 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const p = M.skicaSMeritkem(u.param, k[0], k[1], k[2]);
     return M.normalizujUzel(Object.assign({}, u1, M.upravPrirozeny(u1, p), { id: u.id }));
   };
+  /** Skica (nebo díl) převedená na běžné těleso: síť sit v přirozených souřadnicích uzlu (jak ji vrací výpočet,
+      vystředěná) se převede maticí uzlu do jeho rámce (svět, ve skupině souřadnice skupiny), natočení se zapeče
+      do sítě – výsledek je model s osami desky (rotace 0, obálka = skutečná velikost), id zůstane. */
+  M.sitZeSkici = function (u, sit) {
+    const m = M.maticeUzlu(u), e = m.elements, a = sit.poz, poz = new Float32Array(a.length);
+    for (let i = 0; i < a.length; i += 3)
+      for (let k = 0; k < 3; k++) poz[i + k] = e[k] * a[i] + e[4 + k] * a[i + 1] + e[8 + k] * a[i + 2] + e[12 + k];
+    const idx = new Uint32Array(sit.idx);
+    if (m.determinant() < 0) for (let i = 0; i < idx.length; i += 3) { const x = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = x; }
+    const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < poz.length; i += 3) for (let k = 0; k < 3; k++) { min[k] = Math.min(min[k], poz[i + k]); max[k] = Math.max(max[k], poz[i + k]); }
+    if (!(max[0] >= min[0])) throw new Error('skica nedala žádné těleso');
+    const c = [0, 1, 2].map(k => (min[k] + max[k]) / 2);
+    for (let i = 0; i < poz.length; i += 3) for (let k = 0; k < 3; k++) poz[i + k] -= c[k];
+    const zdroj = M.pridejZdroj({ poz, idx }, u.nazev, 'skica');
+    const zaklad = [0, 1, 2].map(k => Math.max(0.01, Math.round((max[k] - min[k]) * 1e6) / 1e6));
+    return M.normalizujUzel({ id: u.id, druh: 'sit', zdroj, zaklad, rozmer: zaklad, nazev: u.nazev, barva: u.barva, role: u.role,
+      skryto: u.skryto, zamceno: u.zamceno, poloha: c.map(x => Math.round(x * 1e6) / 1e6), rotace: [0, 0, 0] });
+  };
+
   /** Zapéct měřítko skic mezi uzly ids (nejvyšší úroveň). */
   M.zapecMeritkaSkic = function (dok, ids) {
     const mn = new Set(ids);

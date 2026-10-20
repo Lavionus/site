@@ -34,6 +34,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (M.app.rezim === 'zarovnani') { M.klikZarovnani(zasah); return; }
       if (M.app.rezim === 'zrcadleni') { M.klikZrcadleni(zasah); return; }
       if (M.app.rezim === 'pivot') { M.klikPivot(zasah, px, py); return; }
+      if (M.app.rezim === 'magnet' || M.app.rezim === 'magnet2') { M.klikMagnet(zasah); return; }
       // hrany chytá SVG vrstva přesných úprav; klik na rovnou plochu vedle hran = celý její obrys
       if (M.app.rezim === 'hrany') { if (M.klikObrysPlochy) M.klikObrysPlochy(zasah); return; }
       if (M.app.rezim === 'plochy') { M.klikOcct(zasah); return; }

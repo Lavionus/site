@@ -515,10 +515,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const poloha = new V(...sk.stred).applyQuaternion(q).add(pocatek);
     const s = M.normalizujUzel(Object.assign({}, sk, { poloha: poloha.toArray().map(x => zaokr(x)), rotace: M.rotaceZQuat(q) }));
     const d1 = M.pridejUzly(dok, [s]);
-    if (!vyriz && !spojit) return { dok: d1, id: s.id };
+    if (!vyriz && !spojit) return { dok: d1, id: s.id, skicaId: s.id };
     const r = M.seskupUzly(d1, [id, s.id], { nazev: u.nazev + (vyriz ? ' s kapsou' : '') });
-    if (!r.id) return { dok: d1, id: s.id };            // zamčené těleso: skica zůstane vedle
-    return { dok: M.upravUzly(r.dok, [r.id], { barva: u.barva }), id: r.id };
+    if (!r.id) return { dok: d1, id: s.id, skicaId: s.id };            // zamčené těleso: skica zůstane vedle
+    return { dok: M.upravUzly(r.dok, [r.id], { barva: u.barva }), id: r.id, skicaId: s.id };
   };
 
   // ------------------------------------------------------------ přesné úpravy (zaoblení, sražení, skořepina)

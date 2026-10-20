@@ -35,9 +35,6 @@
     const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
     const s = Math.sign(f), cx = mx - nx * s * (r - Math.abs(f)), cy = my - ny * s * (r - Math.abs(f));
     let ua = Math.atan2(a[1] - cy, a[0] - cx), ub = Math.atan2(b[1] - cy, b[0] - cx);
-    // jdeme přes vrchol oblouku
-    const uv = Math.atan2(my + nx * s * Math.abs(f) - cy + (ny * s * Math.abs(f)) * 0 - (my - cy) + (my - cy), 0) * 0; // (nepoužito)
-    void uv;
     const vx = mx + nx * f, vy = my + ny * f, uvr = Math.atan2(vy - cy, vx - cx);
     // zvol směr, který prochází vrcholem
     const norm = (u) => { while (u < 0) u += 2 * Math.PI; while (u >= 2 * Math.PI) u -= 2 * Math.PI; return u; };
@@ -73,7 +70,7 @@
     this.nazev = nazev; this.panely = []; this.diry = []; this.perf = []; this.lepidlo = []; this.seti = []; this.kot = []; this.popisy = [];
   }
   // panel: id, poly, rodic (id), kloub [a,b] (body na společné hraně), uhel (° ke středu krabice = +z), faze (pořadí skládání), vrstva (odsazení ven ve 3D v násobcích t)
-  Dil.prototype.p = function (id, poly, o) { o = o || {}; this.panely.push({ id, poly, rodic: o.rodic || null, kloub: o.kloub || null, uhel: o.uhel == null ? 90 : o.uhel, faze: o.faze || 0, vrstva: o.vrstva || 0, druh: o.druh || 'stena' }); return this; };
+  Dil.prototype.p = function (id, poly, o) { o = o || {}; this.panely.push({ id, poly, rodic: o.rodic || null, kloub: o.kloub || null, uhel: o.uhel == null ? 90 : o.uhel, faze: o.faze || 0, vrstva: o.vrstva || 0, druh: o.druh || 'stena', zakriveny: !!o.zakriveny }); return this; };
   Dil.prototype.kota = function (a, b, odsaz, text) { this.kot.push({ a, b, odsaz, text: text == null ? fmt(Math.hypot(b[0] - a[0], b[1] - a[1])) : text }); };
 
   /* ---------- přídavky (vnitřní → výrobní rozměry) ----------
@@ -140,10 +137,10 @@
     }
     // kóty
     for (let i = 0; i < 4; i++) d.kota([xs[i], H + (o.nahore ? (o.nahore.max || 0) : 0)], [xs[i + 1], H + (o.nahore ? (o.nahore.max || 0) : 0)], 12);
-    d.kota([xs[4], 0], [xs[4], H], 12);
-    if (o.dole && o.dole.max) d.kota([xs[4], -o.dole.max], [xs[4], 0], 12);
-    if (o.nahore && o.nahore.max) d.kota([xs[4], H], [xs[4], H + o.nahore.max], 12);
-    return { L, W, H, xs };
+    d.kota([xs[4], 0], [xs[4], H], -12);
+    if (o.dole && o.dole.max) d.kota([xs[4], -o.dole.max], [xs[4], 0], -12);
+    if (o.nahore && o.nahore.max) d.kota([xs[4], H], [xs[4], H + o.nahore.max], -12);
+    return { L, W, H, xs, vnejsiV: P.V + t * (vrstvyDole + vrstvyNahore) };
   }
 
   function typ02(kod) {
@@ -153,26 +150,26 @@
       if (kod === '0200') def = { dole: { vnejsi: W / 2, vnitrni: W / 2, vrstvy: 2 } };
       else if (kod === '0201') def = { dole: { vnejsi: W / 2, vnitrni: W / 2, vrstvy: 2 }, nahore: { vnejsi: W / 2, vnitrni: W / 2, vrstvy: 2 } };
       else if (kod === '0202') { const o = Math.min(P.presah, W * 0.9); def = { dole: { vnejsi: (W + o) / 2, vnitrni: W / 2, vrstvy: 3, prekryv: true }, nahore: { vnejsi: (W + o) / 2, vnitrni: W / 2, vrstvy: 3, prekryv: true } }; }
-      else if (kod === '0203') def = { dole: { vnejsi: W, vnitrni: W / 2, vrstvy: 3, prekryv: true }, nahore: { vnejsi: W, vnitrni: W / 2, vrstvy: 3, prekryv: true } };
+      else if (kod === '0203') { const vi = Math.min(W, L / 2); def = { dole: { vnejsi: W, vnitrni: vi, vrstvy: 3, prekryv: true }, nahore: { vnejsi: W, vnitrni: vi, vrstvy: 3, prekryv: true } }; }
       else if (kod === '0204') def = { dole: { vnejsi: W / 2, vnitrni: L / 2, vrstvy: 2 }, nahore: { vnejsi: W / 2, vnitrni: L / 2, vrstvy: 2 } };
       for (const k of ['dole', 'nahore']) if (def[k]) def[k].max = Math.max(def[k].vnejsi, def[k].vnitrni);
       const g = plast02(d, P, def);
-      return { dily: [d], vyrobni: { D: g.L, S: g.W, V: g.H }, vnejsi: { D: P.D + 2 * t, S: P.S + 2 * t, V: g.H + t } };
+      return { dily: [d], vyrobni: { D: g.L, S: g.W, V: g.H }, vnejsi: { D: P.D + 2 * t, S: P.S + 2 * t, V: g.vnejsiV } };
     };
   }
 
   /* ---------- tác s rohovými chlopněmi (víko/dno pro 03xx) ----------
      dno Lb×Wb (mezi bigy), podélné stěny s rohovými chlopněmi na koncích, čela bez chlopní. */
   function tac(nazev, Li, Wi, hloubka, P) {
-    const t = P.t, d = new Dil(nazev);
+    const t = P.t, d = new Dil(nazev); d.lezato = true;
     const Lb = Li + t, Wb = Wi + t, h = hloubka + 0.5 * t; // stěna nad dnem: ½ t dna
     const mez = Math.max(t, 1.5);
     const sirkaRoh = Math.min(h - mez, Wb / 2 - mez - t);
     d.p('dno', R(0, 0, Lb, Wb));
     d.p('stena_p', R(0, -h, Lb, h), { rodic: 'dno', kloub: [[0, 0], [Lb, 0]], faze: 1 });
     d.p('stena_z', R(0, Wb, Lb, h), { rodic: 'dno', kloub: [[0, Wb], [Lb, Wb]], faze: 1 });
-    d.p('celo_l', R(-h, 0, h, Wb), { rodic: 'dno', kloub: [[0, 0], [0, Wb]], faze: 2, vrstva: 1 });
-    d.p('celo_r', R(Lb, 0, h, Wb), { rodic: 'dno', kloub: [[Lb, 0], [Lb, Wb]], faze: 2, vrstva: 1 });
+    d.p('celo_l', R(-h, 0, h, Wb), { rodic: 'dno', kloub: [[0, 0], [0, Wb]], faze: 2 });
+    d.p('celo_r', R(Lb, 0, h, Wb), { rodic: 'dno', kloub: [[Lb, 0], [Lb, Wb]], faze: 2 });
     if (sirkaRoh > 3) {
       // rohové chlopně – přiléhají zevnitř k čelům (vrstva −1 = dovnitř)
       const y1 = -mez, y0 = -h;
@@ -188,7 +185,7 @@
         d.lepidlo.push(R(xa, z0 + zk + m, xb - xa, z1 - (z0 + zk) - 2 * m));
       }
     }
-    d.kota([0, Wb + h], [Lb, Wb + h], 12); d.kota([Lb + h, 0], [Lb + h, Wb], 12); d.kota([Lb + h, Wb], [Lb + h, Wb + h], 12);
+    d.kota([0, Wb + h], [Lb, Wb + h], 12); d.kota([Lb + h, 0], [Lb + h, Wb], -12); d.kota([Lb + h, Wb], [Lb + h, Wb + h], -12);
     return { dil: d, Lb, Wb, h, vnejsi: { D: Li + 2 * t, S: Wi + 2 * t } };
   }
 
@@ -199,7 +196,7 @@
     for (let i = 0; i < 4; i++) d.p(ids[i], R(xs[i], 0, xs[i + 1] - xs[i], H), i === 0 ? {} : { rodic: ids[i - 1], kloub: [[xs[i], 0], [xs[i], H]], faze: 0 });
     pridejChlopen(d, 0, 0, H, P, 'celo1');
     for (let i = 0; i < 4; i++) d.kota([xs[i], H], [xs[i + 1], H], 12);
-    d.kota([xs[4], 0], [xs[4], H], 12);
+    d.kota([xs[4], 0], [xs[4], H], -12);
     const v = P.vule, hl = Math.min(P.hloubkaVika, H / 2);
     const tv = tac('víko', P.D + 2 * t + v, P.S + 2 * t + v, hl, P), td = tac('dno', P.D + 2 * t + v, P.S + 2 * t + v, hl, P);
     return { dily: [d, td.dil, tv.dil], vyrobni: { D: L, S: W, V: H }, vnejsi: { D: tv.vnejsi.D, S: tv.vnejsi.S, V: H + 2 * t },
@@ -211,11 +208,12 @@
     const t = P.t, v = P.vule;
     const Pd = Object.assign({}, P);
     const dno = typ02('0200')(Pd);
-    const Pv = Object.assign({}, P, { D: P.D + 2 * t + v, S: P.S + 2 * t + v, V: Math.min(P.hloubkaVika, P.V + 0.5 * t) + (P.hloubkaVika >= P.V ? 0 : 0) });
-    // víko je obrácená 0200: klopy tvoří strop; plná teleskopická výška = výška dna
+    // víko je obrácená 0200 o vnějším rozměru dna + vůle; plný teleskop = vnitřní výška víka = vnější výška dna
+    const hv = P.plnyTeleskop ? dno.vnejsi.V : Math.min(P.hloubkaVika, dno.vnejsi.V);
+    const Pv = Object.assign({}, P, { D: P.D + 2 * t + v, S: P.S + 2 * t + v, V: hv, perforace: false });
     const vik = typ02('0200')(Pv);
     dno.dily[0].nazev = 'dno (0200)'; vik.dily[0].nazev = 'víko (0200)';
-    return { dily: [dno.dily[0], vik.dily[0]], vyrobni: dno.vyrobni, vnejsi: { D: Pv.D + 2 * t, S: Pv.S + 2 * t, V: dno.vnejsi.V + t },
+    return { dily: [dno.dily[0], vik.dily[0]], vyrobni: dno.vyrobni, vnejsi: { D: Pv.D + 2 * t, S: Pv.S + 2 * t, V: Math.max(dno.vnejsi.V, vik.vnejsi.V) },
       poznamka: 'Víko (obrácená 0200) se přetáhne přes dno. Hloubka víka = výška dna → plný teleskop.' };
   }
 
@@ -223,7 +221,7 @@
      dno uprostřed; vpředu přední stěna s ušima, vzadu zadní stěna s ušima → víko → zasouvací klopa,
      po stranách dvojité boční stěny (vnější + přeložená vnitřní se zámky do dna). Uši se zasunou mezi vrstvy boku. */
   function typ0427(P) {
-    const t = P.t, d = new Dil('poštovní krabice');
+    const t = P.t, d = new Dil('poštovní krabice'); d.lezato = true;
     const BX = P.D + 5 * t;           // vnější bok (½t) + ucho (t) + vnitřní bok (t) + ½t … na obou stranách
     const BY = P.S + t;               // přední a zadní stěna jednoduché
     const ho = P.V + t;               // výška stěn (½ t dna + ½ t víka)
@@ -272,15 +270,14 @@
     const LY = BY - t, yv0 = BY + ho, yv1 = yv0 + LY;
     d.p('viko', R(0, yv0, BX, LY), { rodic: 'zadni', kloub: [[0, yv0], [BX, yv0]], faze: 5 });
     const zh = Math.min(ho * 0.7, Math.max(15, ho - 10)), zi = Math.max(t, 1.5) + 1;
-    const zas = zaobli([[zi, yv1], [BX - zi, yv1], [BX - zi - 2, yv1 + zh], [zi + 2, yv1 + zh]].map(p => p), [2, 3], Math.min(10, zh * 0.4));
-    d.p('zasuv', [[0, yv1], [BX, yv1], ...zas.slice(1, -1).reverse().reverse(), ].length ? zasuvPoly(zi, BX, yv1, zh) : [], { rodic: 'viko', kloub: [[zi, yv1], [BX - zi, yv1]], faze: 4.5, druh: 'klopa' });
+    d.p('zasuv', zasuvPoly(zi, BX, yv1, zh), { rodic: 'viko', kloub: [[zi, yv1], [BX - zi, yv1]], faze: 4.5, vrstva: -1, druh: 'klopa' });
     const ph = Math.min(ho - t - 2, ho * 0.85), pm = Math.max(t, 2) + 1;
     const pk = Math.min(LY * 0.2, 25);
     d.p('prach_l', [[0, yv0 + pm], [0, yv1 - pm], [-ph, yv1 - pm - pk], [-ph, yv0 + pm + pk * 0.5]], { rodic: 'viko', kloub: [[0, yv0 + pm], [0, yv1 - pm]], faze: 4.5, vrstva: -3, druh: 'klopa' });
     d.p('prach_r', [[BX, yv0 + pm], [BX + ph, yv0 + pm + pk * 0.5], [BX + ph, yv1 - pm - pk], [BX, yv1 - pm]], { rodic: 'viko', kloub: [[BX, yv0 + pm], [BX, yv1 - pm]], faze: 4.5, vrstva: -3, druh: 'klopa' });
     // kóty
-    d.kota([0, -ho - 12], [BX, -ho - 12], 0); d.kota([BX + ho + pas + hi + zamek, 0], [BX + ho + pas + hi + zamek, BY], 10);
-    d.kota([BX + ho + pas + hi + zamek, -ho], [BX + ho + pas + hi + zamek, 0], 10); d.kota([BX + ho + pas + hi + zamek, yv0], [BX + ho + pas + hi + zamek, yv1], 10);
+    d.kota([0, -ho - 12], [BX, -ho - 12], 0); d.kota([BX + ho + pas + hi + zamek, 0], [BX + ho + pas + hi + zamek, BY], -10);
+    d.kota([BX + ho + pas + hi + zamek, -ho], [BX + ho + pas + hi + zamek, 0], -10); d.kota([BX + ho + pas + hi + zamek, yv0], [BX + ho + pas + hi + zamek, yv1], -10);
     d.kota([BX, BY / 2], [BX + ho, BY / 2], 0);
     return { dily: [d], vyrobni: { D: BX, S: BY, V: ho }, vnejsi: { D: P.D + 6 * t, S: P.S + 2 * t, V: P.V + 2 * t },
       poznamka: 'Boky jsou dvojité (přeložené přes pásek 2t), uši přední a zadní stěny se zasunou mezi vrstvy boků, jazýčky vnitřních boků zapadnou do drážek ve dně.' };
@@ -314,18 +311,15 @@
         const yk = yv + strana * zh;
         let tk = [[x0 + zi, yv], [x1 - zi, yv], [x1 - zi, yk], [x0 + zi, yk]];
         tk = zaobli(tk, [2, 3], zr, 7);
-        if (strana < 0) tk = tk.map(p => p).reverse();
-        d.p(nm + '_zasuv', tk, { rodic: nm, kloub: [[x0 + zi, yv], [x1 - zi, yv]], faze: strana > 0 ? 3.5 : 1.5, uhel: 90, druh: 'klopa' });
+        d.p(nm + '_zasuv', tk, { rodic: nm, kloub: [[x0 + zi, yv], [x1 - zi, yv]], faze: strana > 0 ? 3.5 : 1.5, uhel: 90, vrstva: -1, druh: 'klopa' });
         // prachové klopy na bocích
         for (const b of ['bok1', 'bok2']) {
           const j = ids.indexOf(b), a0 = xs[j] + mez, a1 = xs[j + 1] - mez;
           const yp = yb + strana * pd, sk = Math.min((a1 - a0) * 0.3, pd * 0.5);
           // zkosení na straně u víčka (aby klopa nezavadila o kloub víčka)
           const uVicka = (j === i + 1) ? 'vlevo' : (j === i - 1 || (i === 0 && j === 3)) ? 'vpravo' : 'ne';
-          let poly = [[a0, yb], [a1, yb], [a1 - (uVicka === 'vpravo' ? 0 : 0), yp], [a0, yp]];
-          poly = [[a0, yb], [a1, yb], [a1 - (uVicka !== 'vlevo' ? sk : sk * 0.4), yp], [a0 + (uVicka === 'vlevo' ? sk : sk * 0.4), yp]];
+          let poly = [[a0, yb], [a1, yb], [a1 - (uVicka !== 'vlevo' ? sk : sk * 0.4), yp], [a0 + (uVicka === 'vlevo' ? sk : sk * 0.4), yp]];
           poly = zaobli(poly, [2, 3], Math.min(4, pd * 0.2), 4);
-          if (strana < 0) poly = poly.map(p => [p[0], p[1]]).reverse();
           d.p((strana > 0 ? 'prach_h_' : 'prach_d_') + b, poly, { rodic: b, kloub: [[a0, yb], [a1, yb]], faze: strana > 0 ? 3 : 1, vrstva: 0, druh: 'klopa' });
         }
         d.kota([x0, yk + strana * 10], [x1, yk + strana * 10], 0);
@@ -345,24 +339,16 @@
      řez je zrcadlový oblouk ven (čočka = koncová klopa). Šipka oblouku f ≈ polovina tloušťky. */
   function typPolstar(P) {
     const t = P.t, d = new Dil('polštářková krabička');
-    const w = P.S + P.V * 0.5 + t, Hd = P.D + t, f = Math.max(3, P.V * 0.5);
+    const w = P.S + P.V * 0.5 + t, Hd = P.D + t, f = Math.max(2, Math.min(P.V * 0.5, w * 0.3, Hd * 0.2));
     const n = 24;
     for (let i = 0; i < 2; i++) {
-      const x0 = i * w, x1 = x0 + w;
-      const bigD = oblouk([x0, 0], [x1, 0], f, n), bigH = oblouk([x1, Hd], [x0, Hd], f, n); // prohnuté dovnitř panelu (+y dole, −y nahoře)
+      const x0 = i * w, x1 = x0 + w, id = 'panel' + (i + 1);
+      // bigy prohnuté do panelu, řezy zrcadlově ven → čočkové koncové klopy
+      const bigD = oblouk([x0, 0], [x1, 0], f, n), bigH = oblouk([x1, Hd], [x0, Hd], f, n);
       const rezD = oblouk([x1, 0], [x0, 0], f, n), rezH = oblouk([x0, Hd], [x1, Hd], f, n);
-      const id = 'panel' + (i + 1);
       d.p(id, [[x0, 0], ...bigD, [x1, 0], [x1, Hd], ...bigH, [x0, Hd]], i ? { rodic: 'panel1', kloub: [[x0, 0], [x0, Hd]], uhel: 175, faze: 0 } : {});
-      d.p(id + '_d', [[x1, 0], ...bigD.slice().reverse(), [x0, 0], ...rezD.slice()].reverse().reverse(), { rodic: id, kloub: [[x0, 0], [x1, 0]], uhel: 0, faze: 1, druh: 'klopa' });
-      d.p(id + '_h', [[x0, Hd], ...bigH.slice().reverse(), [x1, Hd], ...rezH.slice().reverse()].length ? [[x0, Hd], ...rezH, [x1, Hd], ...bigH] : [], { rodic: id, kloub: [[x0, Hd], [x1, Hd]], uhel: 0, faze: 1, druh: 'klopa' });
-    }
-    // klopy dole: obrys = big (prohnutý nahoru) + řez (prohnutý dolů)
-    for (const p of d.panely) if (p.id.endsWith('_d')) {
-      const i = p.id === 'panel1_d' ? 0 : 1, x0 = i * w, x1 = x0 + w;
-      p.poly = [[x0, 0], ...oblouk([x0, 0], [x1, 0], -f, n), [x1, 0], ...oblouk([x1, 0], [x0, 0], -f, n)];
-      // pozn.: big = oblouk z x0 do x1 se šipkou +f (nahoru); řez = oblouk zpět se šipkou −f (dolů)
-      p.poly = [[x0, 0], ...oblouk([x0, 0], [x1, 0], f, n).map(q => q), [x1, 0], ...oblouk([x1, 0], [x0, 0], -f, n)];
-      p.poly = [[x0, 0], ...p.poly.slice(1, n), [x1, 0], ...oblouk([x1, 0], [x0, 0], f, n)];
+      d.p(id + '_d', [[x0, 0], ...bigD, [x1, 0], ...rezD], { rodic: id, kloub: [[x0, 0], [x1, 0]], uhel: 0, faze: 1, druh: 'klopa', zakriveny: true });
+      d.p(id + '_h', [[x1, Hd], ...bigH, [x0, Hd], ...rezH], { rodic: id, kloub: [[x0, Hd], [x1, Hd]], uhel: 0, faze: 1, druh: 'klopa', zakriveny: true });
     }
     pridejChlopen(d, 0, 0, Hd, Object.assign({}, P, { spoj: P.spoj === 'paska' ? 'lepena' : P.spoj }), 'panel1');
     d.kota([0, -f - 10], [w, -f - 10], 0); d.kota([w, -f - 10], [2 * w, -f - 10], 0); d.kota([2 * w + 10, 0], [2 * w + 10, Hd], 0);
@@ -372,23 +358,23 @@
 
   /* ---------- karton: obálka (čtyři klopy) ---------- */
   function typObalka(P) {
-    const t = P.t, d = new Dil('obálka');
+    const t = P.t, d = new Dil('obálka'); d.lezato = true;
     const L = P.D + 2 * t, W = P.S + 2 * t;
     const mez = Math.max(t, 1);
     const hb = L * 0.28, hs = Math.min(W * 0.55, W - 5), hz = Math.min(W * 0.4, 70);
     d.p('zada', R(0, 0, L, W));
     // boční klopy (zkosené)
-    d.p('bok_l', [[0, mez], [0, W - mez], [-hb, W - mez - hb * 0.5], [-hb, mez + hb * 0.3]], { rodic: 'zada', kloub: [[0, mez], [0, W - mez]], faze: 1, druh: 'klopa' });
-    d.p('bok_r', [[L, mez], [L + hb, mez + hb * 0.3], [L + hb, W - mez - hb * 0.5], [L, W - mez]], { rodic: 'zada', kloub: [[L, mez], [L, W - mez]], faze: 1, druh: 'klopa' });
+    d.p('bok_l', [[0, mez], [0, W - mez], [-hb, W - mez - hb * 0.5], [-hb, mez + hb * 0.3]], { rodic: 'zada', kloub: [[0, mez], [0, W - mez]], faze: 1, uhel: 180, druh: 'klopa' });
+    d.p('bok_r', [[L, mez], [L + hb, mez + hb * 0.3], [L + hb, W - mez - hb * 0.5], [L, W - mez]], { rodic: 'zada', kloub: [[L, mez], [L, W - mez]], faze: 1, uhel: 180, druh: 'klopa' });
     // spodní klopa – lepí se na boční
     let sp = [[0, 0], [L, 0], [L - hb * 0.6, -hs], [hb * 0.6, -hs]];
     sp = zaobli(sp, [2, 3], Math.min(10, hs * 0.2), 5);
-    d.p('spodni', sp.slice().reverse().reverse(), { rodic: 'zada', kloub: [[0, 0], [L, 0]], faze: 2, vrstva: 1, druh: 'klopa' });
+    d.p('spodni', sp, { rodic: 'zada', kloub: [[0, 0], [L, 0]], faze: 2, uhel: 180, vrstva: 1, druh: 'klopa' });
     // uzavírací klopa – zaoblená
     let hz2 = [[0, W], [L, W], [L - L * 0.12, W + hz], [L * 0.12, W + hz]];
     hz2 = zaobli(hz2.slice(), [2, 3], Math.min(hz * 0.6, L * 0.15), 8);
     // pořadí: (0,W) → (L,W) → … horní body (opačný směr než zaobli předpokládá – polygon je jen seznam)
-    d.p('zaviraci', hz2, { rodic: 'zada', kloub: [[0, W], [L, W]], faze: 3, vrstva: 2, druh: 'klopa' });
+    d.p('zaviraci', hz2, { rodic: 'zada', kloub: [[0, W], [L, W]], faze: 3, uhel: 180, vrstva: 2, druh: 'klopa' });
     const m = 4;
     if (P.spoj !== 'paska') d.lepidlo.push([[m + hb * 0.6, -m], [L - m - hb * 0.6, -m], [L - hb * 0.6 - m - hb * 0.3, -Math.min(hs * 0.35, 25)], [hb * 0.6 + m + hb * 0.3, -Math.min(hs * 0.35, 25)]]);
     d.kota([0, W + hz + 10], [L, W + hz + 10], 0); d.kota([L + hb + 10, 0], [L + hb + 10, W], 0);
@@ -404,7 +390,7 @@
     { kod: '0202', skup: 'vlna', nazev: 'FEFCO 0202 – vnější klopy se překrývají', stavitel: typ02('0202'), vlnaSvisle: true, presah: true,
       popis: 'Jako 0201, ale vnější klopy jsou delší a překrývají se o zadaný přesah; vnitřní klopy se nepotkají.' },
     { kod: '0203', skup: 'vlna', nazev: 'FEFCO 0203 – plně překrývající vnější klopy', stavitel: typ02('0203'), vlnaSvisle: true,
-      popis: 'Vnější klopy mají plnou šířku krabice a překrývají se celé – pevné dno i víko (stohování, těžký obsah).' },
+      popis: 'Všechny klopy mají délku rovnou šířce krabice, vnější klopy se překrývají celé – pevné dno i víko (stohování, těžký obsah). Je-li délka menší než 2× šířka, vnitřní klopy se zkrátí na ½ délky, aby se nesrazily.' },
     { kod: '0204', skup: 'vlna', nazev: 'FEFCO 0204 – vnitřní i vnější klopy se potkají', stavitel: typ02('0204'), vlnaSvisle: true,
       popis: 'Vnitřní klopy (na bocích) mají ½ délky a potkají se ve středu stejně jako vnější – dno je dvouvrstvé po celé ploše.' },
     { kod: '0310', skup: 'vlna', nazev: 'FEFCO 0310 – plášť s víkem a dnem (tácy)', stavitel: typ0310, vlnaSvisle: true, vicko: true,
@@ -425,7 +411,7 @@
   const typPodle = (kod) => TYPY.find(x => x.kod === kod);
 
   const VYCHOZI = { typ: '0201', D: 300, S: 200, V: 150, material: 'B', t: 3, g: 520, spoj: 'lepena', chlopen: 0, presah: 30,
-    vule: 3, hloubkaVika: 60, perforace: false, vyskaPerf: 60, koty: true, popis: true, vlna: true, rozestup: 25 };
+    vule: 3, hloubkaVika: 60, plnyTeleskop: true, perforace: false, vyskaPerf: 60, koty: true, popis: true, vlna: true, rozestup: 25 };
 
   function normalizuj(vst) {
     const P = Object.assign({}, VYCHOZI, vst || {});

@@ -52,7 +52,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const ik = M.ikonyTvaru && M.ikonyTvaru[u.druh];
         h += `<div class="hlava">${ik ? `<img src="${ik}" alt="">` : `<span class="ikona-druhu">${t.ikona}</span>`}
           <input id="inspNazev" class="nazev" type="text" maxlength="80" aria-label="Název tělesa">
-          <span class="druh">${esc(t.nazev)}</span></div>`;
+          <span class="druh">${esc(u.druh === 'sit' && (M.zdroje.get(u.zdroj) || {}).format === 'skica' ? 'Těleso' : t.nazev)}</span></div>`;
         skupinaPoli = 'Rozměr';
         // natočené těleso: rozměry jsou podél jeho vlastních os (poloha je ve světě) – říct to
         const natocene = u.rotace && u.rotace.some(x => Math.abs(x % 360) > 1e-6);
@@ -72,7 +72,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         skupinaPoli = '';
         if (u.druh === 'sit') {
           const z = M.zdroje.get(u.zdroj);
-          h += `<div class="skupina"><div class="nadpis">Importovaný model</div><div class="pozn">${z ? `${esc(z.nazev || '')} · ${M.pocet(z.idx.length / 3, 'trojúhelník', 'trojúhelníky', 'trojúhelníků').replace(/^\d+/, (z.idx.length / 3).toLocaleString('cs'))} · původně ${u.zaklad.map(x => M.mm(x)).join(' × ')} mm` : 'geometrie chybí'}</div>`
+          h += `<div class="skupina"><div class="nadpis">${z && z.format === 'skica' ? 'Těleso ze skici' : 'Importovaný model'}</div><div class="pozn">${z ? `${esc(z.nazev || '')} · ${M.pocet(z.idx.length / 3, 'trojúhelník', 'trojúhelníky', 'trojúhelníků').replace(/^\d+/, (z.idx.length / 3).toLocaleString('cs'))} · původně ${u.zaklad.map(x => M.mm(x)).join(' × ')} mm` : 'geometrie chybí'}</div>`
             + (z && z.paleta && z.paleta.length > 1 ? `<label class="zaskrt"><input type="checkbox" id="inspBarvySouboru"> Barvy ze souboru (${z.paleta.length})</label>` : '')
             + (z && z.idx.length / 3 > 200 ? `<button type="button" class="tl siroke-tl" id="inspZjednodusit" title="Méně trojúhelníků – rychlejší práce, menší soubor">🔻 Zjednodušit síť…</button>` : '') + `</div>`;
         }

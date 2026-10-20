@@ -55,6 +55,25 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     });
   };
 
+  /** Magnet: přisadí těleso id plochou A na plochu B jiného tělesa. a, b = {bod: [x,y,z], normala: [x,y,z]} ve světě
+      (bod A = střed přisazované plochy, bod B = místo kliknutí na cílové ploše). Těleso se otočí nejkratší cestou tak,
+      aby normála A mířila proti normále B (plochy k sobě), a posune, aby bod A ležel na bodu B. Vrací nový dokument. */
+  M.prisadPlochu = function (dok, id, a, b) {
+    const u = M.najdiUzel(dok, id);
+    if (!u || u.zamceno) return dok;
+    const nA = new V(...a.normala).normalize(), cil = new V(...b.normala).normalize().negate();
+    const q = new THREE.Quaternion().setFromUnitVectors(nA, cil);
+    let d = dok;
+    const uhel = 2 * Math.acos(M.omez(q.w, -1, 1)) / M.st;
+    if (Math.abs(uhel) > 1e-6) {
+      const s = Math.sqrt(Math.max(0, 1 - q.w * q.w));
+      const osa = s > 1e-9 ? [q.x / s, q.y / s, q.z / s] : [0, 0, 1];
+      d = M.otocUzly(d, [id], osa, uhel, a.bod);
+    }
+    const posun = [0, 1, 2].map(i => b.bod[i] - a.bod[i]);
+    return M.posunUzly(d, [id], posun);
+  };
+
   /** Zrcadlení podle světové osy (0 X, 1 Y, 2 Z) přes rovinu procházející bodem stred.
       S·R·Z(m) = (S·R·L_b)·Z(m ⊕ b): b je lokální osa nejbližší ose zrcadlení,
       takže nenatočené těleso rotaci nezmění. */

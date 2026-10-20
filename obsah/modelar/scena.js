@@ -240,9 +240,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       (dx, dy) => { kamera.otoc(dx, dy, S.stredOtaceni()); M.prekresli(); });
 
     /** Střed otáčení pohledu: střed vybraných těles, bez výběru střed pracovní desky. */
+    // pevný střed otáčení (numerická 6 – „otáčet kolem tohoto tělesa“); platí i po zrušení výběru, Domů ho zruší
+    let pevnyStred = null;
+    S.nastavStredOtaceni = b => { pevnyStred = b ? new THREE.Vector3(...b) : null; };
     S.stredOtaceni = function () {
       const uzly = M.app && M.app.dok ? M.app.dok.uzly.filter(u => M.app.vyber.includes(u.id) && !u.skryto) : [];
-      return uzly.length ? new THREE.Vector3(...M.obalkaVice(uzly).stred) : new THREE.Vector3(0, 0, 0);
+      return uzly.length ? new THREE.Vector3(...M.obalkaVice(uzly).stred) : pevnyStred ? pevnyStred.clone() : new THREE.Vector3(0, 0, 0);
     };
     /** Pohled „Domů“ na celou desku. */
     /** Šířka plátna zakrytá zleva a zprava panely (inspektor, otevřené nástroje). */
@@ -258,6 +261,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return okraje;
     };
     S.domu = function (ms = 400) {
+      pevnyStred = null;
       // panely, které leží přes plátno (inspektor na úzké obrazovce): deska do volné části
       const r = renderer.domElement.getBoundingClientRect();
       kamera.domu(new THREE.Vector3(0, 0, 0), deska.rohy(), ms, r.width < 800 ? S.okrajePanelu() : null);     // širší plátno: vpravo leží panely nástrojů

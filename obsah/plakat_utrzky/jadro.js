@@ -226,10 +226,8 @@
       for (const sl of slova) {
         const ws = sl.map(b => PU.sirka(b.tucne ? mB : mR, b.text, vel));
         const wSl = ws.reduce((a, b) => a + b, 0);
-        const tucMez = sl[0].tucne && rad.runy.length && rad.runy[rad.runy.length - 1].tucne;
-        const mez = PU.sirka(tucMez ? mB : mR, ' ', vel);
-        if (rad.runy.length && rad.x + mez + wSl > sir + 1e-9) zacni();
-        if (rad.runy.length) zarazBeh({ text: ' ', tucne: !!tucMez }, mez);
+        if (rad.runy.length && rad.x + PU.sirka(rad.runy[rad.runy.length - 1].tucne ? mB : mR, ' ', vel) + wSl > sir + 1e-9) zacni();
+        if (rad.runy.length) { const posl = rad.runy[rad.runy.length - 1]; const mz = PU.sirka(posl.tucne ? mB : mR, ' ', vel); posl.text += ' '; posl.s += mz; rad.x += mz; }
         if (wSl <= sir + 1e-9) { sl.forEach((b, i) => zarazBeh(b, ws[i])); continue; }
         // příliš dlouhé slovo – lámeme po znacích
         for (const b of sl) {
@@ -371,7 +369,7 @@
     const pricne = sw - 2 * padV;
     let qrVel = 0, qr = null;
     if (qrM) {
-      qrVel = Math.min(pricne, delka * 0.42);
+      qrVel = Math.min(pricne, Math.max(9, delka * 0.3), 16);
       const n = qrM.length, m = qrVel / (n + 2);
       const qx = x0 + (sw - qrVel) / 2, qy = y0 + sh - padU - qrVel;
       prim.push({ t: 'obd', x: qx, y: qy, w: qrVel, h: qrVel, vypln: '#ffffff' });

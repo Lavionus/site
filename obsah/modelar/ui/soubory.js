@@ -249,9 +249,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const sirka = M.prectiCislo($('svgSirka').value);
       const meritko = sirka > 0 && svgVysledek.sirka > 0 ? sirka / svgVysledek.sirka : 1;
       const vyska = M.prectiCislo($('svgVyska').value) || 3;
-      M.pridejSkicu({ tvary: [{ typ: 'polygony', kontury: svgVysledek.kontury, x: 0, y: 0, meritko }], vyska }, null, svgNazev);
+      const pocet = svgVysledek.kontury.length;
       oknoSvg.close();
-      Dialog.info(`SVG „${svgNazev}“ převedeno na skicu (${M.pocet(svgVysledek.kontury.length, 'obrys', 'obrysy', 'obrysů')}). Dvojklik ji otevře v editoru.`);
+      M.pridejSkicu({ tvary: [{ typ: 'polygony', kontury: svgVysledek.kontury, x: 0, y: 0, meritko }], vyska }, null, svgNazev)
+        .then(() => Dialog.info(`SVG „${svgNazev}“ převedeno na těleso vysoké ${M.mm(vyska, 2)} mm (${M.pocet(pocet, 'obrys', 'obrysy', 'obrysů')}).`))
+        .catch(e => Dialog.chyba('Z SVG nejde udělat těleso: ' + e.message));
     };
 
     // ------------------------------------------------------------ projekt do souboru

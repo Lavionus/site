@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 Krabice z kartonu (FEFCO)</title>
+<meta name="description" content="Generátor rozvinutých střihů krabic z vlnité lepenky a kartonu podle kódů FEFCO (0200–0204, 0310, 0320, 0427) a kartonových skládaček: přídavky na tloušťku, 3D náhled skládání, export SVG, DXF a PDF 1:1.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/three.0.160.0.min.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script src="krabice_fefco/jadro.js"></script>
+<script src="krabice_fefco/vystup.js"></script>
+<script src="krabice_fefco/nahled3d.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:18px clamp(10px,2.5vw,28px)}
+h1{font-size:1.5rem;font-weight:600;margin-bottom:4px}
+.sub{color:var(--text-faint);font-size:.88rem;margin-bottom:16px;max-width:1100px;line-height:1.45}
+.rozlozeni{display:grid;grid-template-columns:minmax(0,370px) minmax(0,1fr);gap:16px;align-items:start;max-width:1600px}
+@media(max-width:900px){.rozlozeni{grid-template-columns:minmax(0,1fr)}}
+.sloupec{display:flex;flex-direction:column;gap:14px;min-width:0}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:14px;min-width:0}
+.karta h2{font-size:.98rem;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.karta h2 .vpravo{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:9px 0 3px}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 9px;font-size:.92rem;font-family:inherit}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input[type=checkbox]{width:auto;accent-color:var(--accent)}
+input[type=range]{padding:0;border:none;background:none;accent-color:var(--accent)}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.r2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.chk{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:.86rem;color:var(--text-muted);cursor:pointer}
+.popis-typu{font-size:.8rem;color:var(--text-muted);margin-top:6px;line-height:1.45}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 13px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn:hover{filter:brightness(1.08)}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn-mini{padding:4px 9px;font-size:.8rem;font-weight:600}
+.btn:disabled{opacity:.5;cursor:default}
+.tlacitka{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tlacitka .btn{flex:1 1 auto}
+#plocha2d{position:relative;background:#fff;border:1px solid var(--border);border-radius:6px;height:min(62vh,560px);overflow:hidden;touch-action:none;cursor:grab}
+#plocha2d svg{width:100%;height:100%;display:block}
+#plocha2d.tahne{cursor:grabbing}
+.napoveda2d{position:absolute;right:8px;bottom:6px;font-size:.72rem;color:#555;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:4px;pointer-events:none}
+#plocha3d{background:var(--bg-deep);border:1px solid var(--border);border-radius:6px;height:min(52vh,460px);position:relative;color:var(--text-faint);display:flex;align-items:center;justify-content:center;text-align:center;font-size:.9rem}
+#plocha3d canvas{position:absolute;inset:0}
+.slozit{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.slozit input{flex:1 1 160px}
+.slozit output{min-width:3.5em;font-variant-numeric:tabular-nums;color:var(--text-muted);font-size:.85rem}
+.legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--text-muted);margin-top:8px}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+.legenda i{display:inline-block;width:26px;height:0;border-top:2px solid}
+.tab{width:100%;border-collapse:collapse;font-size:.86rem}
+.tab td{padding:4px 0;border-bottom:1px dashed var(--border);vertical-align:top}
+.tab td:first-child{color:var(--text-faint);padding-right:10px}
+.tab td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.chyba{color:var(--danger);font-size:.85rem;margin-top:8px}
+.pozn{font-size:.8rem;color:var(--text-muted);margin-top:8px;line-height:1.45}
+.predvolby{list-style:none;margin-top:8px}
+.predvolby li{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);padding:5px 0;font-size:.86rem}
+.predvolby li .pv-nazev{flex:1;min-width:0;cursor:pointer;padding:3px 4px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.predvolby li .pv-nazev:hover{background:var(--bg-hover)}
+.predvolby li small{color:var(--text-faint)}
+.predvolby li button{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:1rem;padding:2px 6px}
+.prazdne{color:var(--text-faint);font-size:.84rem;margin-top:6px}
+details.karta>summary{cursor:pointer;font-weight:600;font-size:.95rem}
+details.karta[open]>summary{margin-bottom:8px}
+.info-text{font-size:.84rem;color:var(--text-muted);line-height:1.55}
+.info-text p+p{margin-top:6px}
+.info-text b{color:var(--text)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<h1>📦 Krabice z kartonu (FEFCO)</h1>
+<p class="sub">Rozvinutý střih (výsek) krabice z vlnité lepenky podle kódů FEFCO-ESBO nebo kartonové skládačky. Zadáte vnitřní rozměry a materiál, přídavky na tloušťku se dopočítají. Export pro řezací plotr či laser (SVG, DXF) a tisk šablony 1:1 do PDF.</p>
+
+<div class="rozlozeni">
+  <div class="sloupec">
+    <section class="karta">
+      <h2>Typ krabice</h2>
+      <select id="typ" aria-label="Typ krabice"></select>
+      <div class="popis-typu" id="popisTypu"></div>
+    </section>
+
+    <section class="karta">
+      <h2>Vnitřní rozměry (mm)</h2>
+      <div class="r3">
+        <div><label for="D" id="lD">Délka D</label><input id="D" type="number" min="10" step="1" inputmode="decimal"></div>
+        <div><label for="S" id="lS">Šířka Š</label><input id="S" type="number" min="10" step="1" inputmode="decimal"></div>
+        <div id="boxV"><label for="V" id="lV">Výška V</label><input id="V" type="number" min="5" step="1" inputmode="decimal"></div>
+      </div>
+      <label for="material">Materiál</label>
+      <select id="material"></select>
+      <div class="r2">
+        <div><label for="t">Tloušťka t (mm)</label><input id="t" type="number" min="0.1" max="15" step="0.1" inputmode="decimal"></div>
+        <div><label for="g">Gramáž (g/m²)</label><input id="g" type="number" min="50" step="10" inputmode="decimal"></div>
+      </div>
+    </section>
+
+    <section class="karta">
+      <h2>Konstrukce</h2>
+      <div class="r2">
+        <div><label for="spoj">Spoj pláště</label>
+          <select id="spoj"><option value="lepena">lepená chlopeň</option><option value="seti">šitá chlopeň (sponky)</option><option value="paska">bez chlopně (páska)</option></select></div>
+        <div><label for="chlopen">Šířka chlopně (0 = auto)</label><input id="chlopen" type="number" min="0" max="80" step="1"></div>
+      </div>
+      <div id="boxPresah"><label for="presah">Přesah vnějších klop (mm)</label><input id="presah" type="number" min="0" step="1"></div>
+      <div id="boxVicko">
+        <div class="r2">
+          <div><label for="vule">Vůle víka (mm)</label><input id="vule" type="number" min="0" step="0.5"></div>
+          <div id="boxHloubka"><label for="hloubkaVika">Hloubka víka (mm)</label><input id="hloubkaVika" type="number" min="5" step="1"></div>
+        </div>
+        <label class="chk" id="boxTeleskop"><input type="checkbox" id="plnyTeleskop"> plný teleskop (víko přes celou výšku)</label>
+      </div>
+      <div id="boxPerf">
+        <label class="chk"><input type="checkbox" id="perforace"> trhací perforace kolem pláště</label>
+        <div id="boxPerfV"><label for="vyskaPerf">Výška perforace ode dna (mm)</label><input id="vyskaPerf" type="number" min="5" step="1"></div>
+      </div>
+    </section>
+
+    <section class="karta">
+      <h2>Zobrazení a popis</h2>
+      <label class="chk"><input type="checkbox" id="koty"> kóty</label>
+      <label class="chk"><input type="checkbox" id="popis"> popis typu a rozměrů</label>
+      <label class="chk"><input type="checkbox" id="vlna"> šipka směru vlny / vlákna</label>
+    </section>
+
+    <section class="karta">
+      <h2>Vlastní předvolby</h2>
+      <div class="tlacitka" style="margin-top:0"><button class="btn btn-sec" id="ulozPredvolbu">💾 Uložit aktuální</button><button class="btn btn-sec" id="vychozi">↺ Výchozí</button></div>
+      <ul class="predvolby" id="predvolby"></ul>
+    </section>
+  </div>
+
+  <div class="sloupec">
+    <section class="karta">
+      <h2>Rozvinutý střih <span class="vpravo"><button class="btn btn-sec btn-mini" id="z2dFit" title="Přizpůsobit (klávesa 0)">⤢ Celé</button><button class="btn btn-sec btn-mini" id="z2dPlus" aria-label="Přiblížit">+</button><button class="btn btn-sec btn-mini" id="z2dMinus" aria-label="Oddálit">−</button></span></h2>
+      <div id="plocha2d" aria-label="Náhled rozvinutého střihu"><span class="napoveda2d">kolečko = zoom, tažení = posun</span></div>
+      <div class="legenda">
+        <span><i style="border-color:#d40000"></i>řez</span>
+        <span><i style="border-color:#0057d8;border-top-style:dashed"></i>big / ohyb</span>
+        <span><i style="border-color:#008a2e;border-top-style:dotted"></i>perforace</span>
+        <span><i style="border-color:#c27c00"></i>lepení</span>
+        <span><i style="border-color:#7a3db8"></i>šití</span>
+      </div>
+      <div class="chyba" id="chyby" hidden></div>
+    </section>
+
+    <section class="karta">
+      <h2>3D náhled skládání <span class="vpravo"><button class="btn btn-sec btn-mini" id="pohled3d">⟲ Pohled</button></span></h2>
+      <div id="plocha3d"></div>
+      <div class="slozit">
+        <button class="btn btn-mini" id="prehrat" aria-label="Přehrát skládání">▶ Složit</button>
+        <label for="slozeni" style="margin:0">Složit</label>
+        <input type="range" id="slozeni" min="0" max="1000" value="1000">
+        <output id="slozeniHod">100 %</output>
+      </div>
+      <p class="pozn">Náhled ukazuje přířez z vnitřní strany; přeložené vrstvy jsou pro názornost odsazené o tloušťku materiálu.</p>
+    </section>
+
+    <section class="karta">
+      <h2>Přířez a materiál</h2>
+      <table class="tab" id="info"></table>
+      <p class="pozn" id="poznamka"></p>
+    </section>
+
+    <section class="karta">
+      <h2>Export</h2>
+      <label class="chk"><input type="checkbox" id="jenVyroba"> SVG / DXF jen výrobní vrstvy (řez, big, perforace)</label>
+      <div class="tlacitka">
+        <button class="btn" id="btnSvg">⬇ SVG</button>
+        <button class="btn" id="btnDxf">⬇ DXF</button>
+      </div>
+      <div class="r3" style="margin-top:6px">
+        <div><label for="format">Formát PDF</label><select id="format"><option>A4</option><option>A3</option><option>A2</option><option>Letter</option><option value="vlastni">vlastní</option></select></div>
+        <div><label for="orientace">Orientace</label><select id="orientace"><option value="auto">nejméně listů</option><option value="p">na výšku</option><option value="l">na šířku</option></select></div>
+        <div><label for="prekryv">Překryv (mm)</label><input id="prekryv" type="number" min="0" max="50" step="1"></div>
+      </div>
+      <div class="r2" id="boxVlastniList" hidden>
+        <div><label for="sirkaListu">Šířka listu (mm)</label><input id="sirkaListu" type="number" min="50" step="1"></div>
+        <div><label for="vyskaListu">Výška listu (mm)</label><input id="vyskaListu" type="number" min="50" step="1"></div>
+      </div>
+      <div class="tlacitka"><button class="btn" id="btnPdf">⬇ PDF 1:1</button></div>
+      <p class="pozn" id="listyInfo"></p>
+    </section>
+
+    <details class="karta">
+      <summary>Jak se počítají přídavky</summary>
+      <div class="info-text">
+        <p>Bigy (rýhy) leží ve střední rovině lepenky. Stěna z jedné vrstvy proto přidá <b>½ t</b> na každé straně: rozměr mezi bigy = vnitřní rozměr + <b>t</b>.</p>
+        <p>Výška pláště klopových krabic (02xx) = V + ½ t × počet vrstev klop nad a pod obsahem: 0201 a 0204 → <b>V + 2t</b>, 0200 → V + t, 0202 a 0203 (tři vrstvy v místě překrytí) → V + 3t. Klopy 0201 mají ½ šířky mezi bigy, takže se vnější klopy potkají ve středu.</p>
+        <p>0427 má dvojité boky: vnější bok, ucho přední/zadní stěny a přeložený vnitřní bok – dno je o <b>5 t</b> delší než vnitřní délka, stěny jsou vysoké V + t.</p>
+        <p>Drážky mezi klopami mají šířku t (nejméně 2 mm). Gramáže v předvolbách jsou orientační – pro hmotnost zadejte údaj dodavatele.</p>
+        <p>Typy, jejichž přesnou podobu podle katalogu FEFCO nelze bez výkresu zaručit (např. 0711 s automatickým dnem, 0421), stránka záměrně nenabízí.</p>
+      </div>
+    </details>
+  </div>
+</div>
+<script src="krabice_fefco/ui.js"></script>
+</body>
+</html>

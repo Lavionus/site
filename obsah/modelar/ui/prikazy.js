@@ -22,6 +22,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'smazat', nazev: 'Smazat', klavesy: ['Delete', 'Backspace'], akce: M.smazVybrane, povoleno: volne },
       { id: 'vybratVse', nazev: 'Vybrat vše', klavesy: ['Ctrl+A'], akce: () => M.nastavVyber(M.app.dok.uzly.map(u => u.id)), povoleno: () => M.app.dok.uzly.length > 0 },
       { id: 'zrusitVyber', nazev: 'Zrušit výběr', klavesy: ['Escape'], akce: () => M.nastavVyber([]), povoleno: vybrano },
+      { id: 'magnet', nazev: 'Magnet – přisadit plochou na plochu (klikni na plochu tělesa, pak na cílovou)', klavesy: ['G'], povoleno: () => M.app.rezim === 'magnet' || M.app.rezim === 'magnet2' || M.app.dok.uzly.some(u => !u.skryto && !u.zamceno),
+        akce: () => M.prepniMagnet() },
+      { id: 'zameritStred', nazev: 'Vycentrovat pohled na výběr a otáčet kolem něj', klavesy: ['Num6'], povoleno: vybrano,
+        akce: () => { S.zamerit(M.app.vyber); S.nastavStredOtaceni(M.obalkaVice(M.vybraneUzly()).stred); } },
+      { id: 'naZakladniDesku', nazev: 'Posadit vybrané na základní desku (Z = 0)', klavesy: ['Num4'], povoleno: volne,
+        akce: () => M.provedNaVybranych((d, ids) => M.polozNaRovinu(d, ids, M.ROVINA_DESKY), 'Na základní desku') },
       { id: 'naDesku', nazev: 'Položit na desku / rovinu', klavesy: ['D'], povoleno: volne,
         akce: () => M.provedNaVybranych((d, ids) => M.polozNaRovinu(d, ids, M.rovina()), 'Položit') },
       { id: 'plochou', nazev: 'Položit plochou (klikni na stěnu)', klavesy: ['F'], povoleno: volne,
@@ -200,6 +206,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (M.ovladaniBlokovano || M.modalniOkno()) return;
       // náhled pod myší (zarovnání, zrcadlení) se před příkazem zruší – jinak by příkaz zapsal do dočasného stavu
       if (M.app.uprava && !(M.zrusNahledy && M.zrusNahledy())) return;
+      if (/^Numpad\d$/.test(e.code || '') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const p = mapa.get('Num' + e.code.slice(6));
+        if (p) { e.preventDefault(); if (p.povoleno()) p.akce(); return; }
+      }
       if (e.key.startsWith('Arrow')) {
         // tělesa posouvají šipky jen s fokusem na scéně (ne na tlačítku, v seznamu, nabídce ani panelu)
         if (cil && cil !== document.body && cil !== S.renderer.domElement && cil.closest && cil.closest('button, a, summary, [role], [tabindex], dialog, #seznam, .panel')) return;
@@ -234,7 +244,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const polozky = [...pol.querySelectorAll('[data-prikaz]')];
         if (polozky.length) b.disabled = !polozky.some(x => !x.disabled);
       });
-      document.querySelectorAll('[data-rezim]').forEach(b => b.setAttribute('aria-pressed', M.app.rezim === b.dataset.rezim ? 'true' : 'false'));
+      document.querySelectorAll('[data-rezim]').forEach(b => b.setAttribute('aria-pressed', M.app.rezim && (M.app.rezim === b.dataset.rezim || M.app.rezim === b.dataset.rezim + '2') ? 'true' : 'false'));   // magnet2 = druhý krok magnetu
     }
     document.addEventListener('click', e => {
       const b = e.target.closest('[data-prikaz]');

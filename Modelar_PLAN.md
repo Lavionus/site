@@ -1032,3 +1032,17 @@ Přepínač projekce mění jen text za ikonou. Nové tlačítko s příkazem do
   natočené těleso (skica na boční stěně, pracovní rovina) má vlastní „spodek“ přiložený k jinému tělesu, takže na
   viditelné straně černé úchyty chyběly. Horní úchyt hrany se vynechá, když by ležel < 1,4 × velikost od jiného
   (dolní roh / hrana mají přednost – jinak by tah prstem za roh chytil hranu, test modelar_ui_revize).
+- **Objekt ze skici = běžné těleso** (přání 20. 10. 2026, uživatel to chce takto, i když skica byla „logicky správně“):
+  po Hotovo (nová kresba, skica na ploše, import SVG, tažení po dráze) se skica převede na síť s osami desky
+  (`M.sitZeSkici` v jadro/model.js: síť z workeru `M.sitSkupiny`, matice uzlu zapečená do vrcholů, rotace 0, zdroj
+  formátu 'skica', id zůstane; `M.skicuNaTeleso` v ui/skica.js, i uvnitř skupiny přes `M.upravVnorene`). Skica se pak
+  neupravuje. Volba ve skicáři „Ponechat jako skicu“ (`st.vysledek`; výchozí: nová kresba = těleso, úprava staré skici
+  = skica) a v okně tažení – pro profily a dráhy tažení / pole po křivce. Inspektor u tělesa ze skici: „Těleso“.
+  `M.pridejSkicu` je teď async (volby {teleso, zapsat}). Testy e6, offset, prani5 upravené (pomocník objem_vyberu).
+- **Numerická klávesnice** (podle `e.code`, i s vypnutým NumLockem): Num 6 = zaměřit výběr + pevný střed otáčení
+  (`S.nastavStredOtaceni`, platí i bez výběru, Domů ho zruší); Num 4 = posadit výběr na základní desku (Z = 0,
+  `M.ROVINA_DESKY`, i se zapnutou pracovní rovinou). Klávesy v M.PRIKAZY jako 'Num4' / 'Num6'.
+- **Magnet (G)** – `M.prisadPlochu` (jadro/transformace.js: otočení nejkratší cestou nA → −nB kolem středu plochy A,
+  posun středu A na bod kliknutí na B), `ui/magnet.js` (režimy 'magnet' → 'magnet2', zvýraznění plochy A oranžově
+  ze `M.oblastPlochy` + ShapeGeometry, cílová plocha pod kurzorem zeleně, oblá plocha = jen trojúhelník), tlačítko
+  v liště Uspořádat s ikonou magnet.webp (od uživatele, sw v425). Lišta 1300 px: ikonová tlačítka padding 6 px.

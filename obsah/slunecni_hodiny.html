@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☀️ Sluneční hodiny</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script src="lib/suncalc.min.js" defer></script>
+<script src="slunecni_hodiny/jadro.js"></script>
+<script src="slunecni_hodiny/vystup.js"></script>
+<script src="slunecni_hodiny/stl.js"></script>
+<script src="slunecni_hodiny/ui.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:18px 14px 40px}
+h1{font-size:1.55rem;font-weight:600;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:16px}
+.layout{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:16px;align-items:start;max-width:1500px;margin:0 auto}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:14px;margin-bottom:14px;min-width:0}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h2 small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:9px 0 3px}
+label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.86rem;margin:8px 0 2px;cursor:pointer}
+label.chk input{width:auto;margin-top:2px;accent-color:var(--accent)}
+input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.92rem;font-family:inherit;min-width:0}
+input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--accent)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.typy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.typy button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:7px 4px;cursor:pointer;font-size:.8rem;line-height:1.2;font-family:inherit}
+.typy button svg{display:block;margin:0 auto 3px;width:34px;height:26px}
+.typy button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn:disabled{opacity:.5;cursor:default}
+.tlacitka{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tlacitka .btn{flex:1 1 auto}
+.info{font-size:.82rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
+.info b{color:var(--text)}
+.varovani{color:var(--warn)} .chyba{color:var(--danger)} .ok{color:var(--ok)}
+.papir{background:#fff;border:1px solid var(--border-strong);border-radius:6px;padding:6px;overflow:hidden}
+.papir svg{display:block;width:100%;height:auto;max-height:78vh}
+.sim .radek{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:8px;font-size:.85rem}
+.sim .radek span:first-child{color:var(--text-faint);min-width:52px}
+.sim .hodn{font-variant-numeric:tabular-nums;min-width:86px;text-align:right}
+.udaje{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;font-size:.82rem;margin-top:10px}
+.udaje div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--border);padding:2px 0}
+.udaje span:first-child{color:var(--text-faint)}
+.udaje span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+.udaje .velky{grid-column:1/-1;font-size:.95rem}
+table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--border);padding:3px 5px;text-align:right}
+th{color:var(--text-faint);font-weight:500}
+th:first-child,td:first-child{text-align:left}
+.tab-obal{overflow-x:auto;max-height:360px;overflow-y:auto}
+.zalozky{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:7px 10px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel[hidden]{display:none}
+.navod{font-size:.86rem;line-height:1.55;color:var(--text)}
+.navod h3{font-size:.92rem;margin:12px 0 4px}
+.navod ol,.navod ul{padding-left:20px}
+.navod li{margin:3px 0}
+details{margin-top:8px;font-size:.84rem}
+details summary{cursor:pointer;color:var(--accent)}
+details .vnitrek{padding:8px 0 2px;line-height:1.5}
+.skryte{display:none!important}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--text-faint);margin-top:6px}
+.legenda i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+kbd{font-family:inherit;font-size:.75rem;border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;background:var(--bg-control)}
+</style>
+</head>
+<body>
+<h1>☀️ Sluneční hodiny</h1>
+<p class="sub">Návrh a tisk šablon slunečních hodin 1:1 – vodorovné, svislé, deklinující, polární, ekvatoriální i analematické. Simulace stínu, rovnice času, PDF / SVG / DXF.</p>
+
+<div class="layout">
+  <div class="levy">
+    <div class="card">
+      <h2>📍 Poloha a čas</h2>
+      <label for="mesto">Rychlá volba místa</label>
+      <select id="mesto"></select>
+      <div class="r2">
+        <div><label for="sirka">Zeměpisná šířka (°, + sever)</label><input id="sirka" type="number" step="0.0001" min="-89.5" max="89.5"></div>
+        <div><label for="delka">Zeměpisná délka (°, + východ)</label><input id="delka" type="number" step="0.0001" min="-180" max="180"></div>
+      </div>
+      <div class="tlacitka"><button class="btn btn-sec" id="btnGps" type="button">📡 Moje poloha (GPS)</button></div>
+      <div class="r2">
+        <div><label for="posun">Časové pásmo</label><select id="posun"></select></div>
+        <div><label for="rok">Rok (datové křivky)</label><input id="rok" type="number" min="1900" max="2200" step="1"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="letniCas"> Letní čas – druhá sada čísel (o hodinu víc)</label>
+      <label class="chk"><input type="checkbox" id="korekceDelky"> Korigovat na zeměpisnou délku (čáry ukazují čas pásma, ne místní čas)</label>
+      <div class="info" id="infoPoloha"></div>
+    </div>
+
+    <div class="card">
+      <h2>🕰️ Typ hodin <small><kbd>1</kbd>–<kbd>7</kbd></small></h2>
+      <div class="typy" id="typy"></div>
+      <div id="blokDeklinace" class="skryte">
+        <label for="deklinace">Deklinace stěny D (°): 0 = jih, + na západ, − na východ</label>
+        <input id="deklinace" type="number" step="0.5" min="-179" max="180">
+        <details id="detMereni">
+          <summary>Jak deklinaci stěny změřit (kalkulačka)</summary>
+          <div class="vnitrek">
+            <ol style="padding-left:18px">
+              <li>Ke stěně přiložte <b>vodorovné prkénko</b> (vodováha) a narýsujte na něj čáru <b>kolmou ke stěně</b>.</li>
+              <li>Na čáru postavte svislý kolík (hřebík, olovnici). V přesně známém čase označte <b>stín kolíku</b>.</li>
+              <li>Úhloměrem změřte úhel β mezi stínem a kolmicí. Když stín uhýbá <b>doprava</b> (díváte-li se na zeď), je β kladné.</li>
+              <li>Měřte víckrát během dne a výsledky zprůměrujte. Kompas na zdi bývá nepřesný kvůli železu ve zdi.</li>
+            </ol>
+            <div class="r3">
+              <div><label for="mDatum">Datum</label><input id="mDatum" type="date"></div>
+              <div><label for="mCas">Čas (hodinky)</label><input id="mCas" type="time" step="60"></div>
+              <div><label for="mBeta">Úhel β (°)</label><input id="mBeta" type="number" step="0.5" value="0"></div>
+            </div>
+            <div class="info" id="mVysledek"></div>
+            <div class="tlacitka"><button class="btn btn-sec" id="mPouzit" type="button">Použít jako deklinaci stěny</button></div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📏 Ciferník a gnomon</h2>
+      <div id="blokKapesni" class="skryte">
+        <div class="r2">
+          <div><label for="kapSteny">Hranol</label><select id="kapSteny"><option value="2">destička – 2 stěny (originál)</option><option value="4">čtyřboký</option><option value="6">šestiboký</option></select></div>
+          <div><label for="tloustkaMm">Tloušťka destičky (mm)</label><input id="tloustkaMm" type="number" min="1" max="100" step="0.5"></div>
+        </div>
+        <label for="kapSloupce">Sloupce (otvory pro kolík)</label>
+        <select id="kapSloupce">
+          <option value="canterbury">6 dvojic měsíců – pořadí z Canterbury</option>
+          <option value="dvojice">6 dvojic měsíců – seřazeno podle deklinace</option>
+          <option value="znameni">6 dvojic znamení – shodná deklinace</option>
+          <option value="mesice">12 sloupců – po měsících</option>
+          <option value="pulmesice">24 sloupců – po půlměsících</option>
+        </select>
+        <label for="kapCasy">Značené časy</label>
+        <select id="kapCasy">
+          <option value="historicke">historicky: tercie, sexta (poledne), nona</option>
+          <option value="sezonni">všechny nestejné (sezónní) hodiny</option>
+          <option value="hodiny">celé hodiny pravého slunečního času</option>
+        </select>
+        <div class="tlacitka"><button class="btn btn-sec" id="btnCanterbury" type="button">Předvolba Canterbury (51,28° s. š.)</button></div>
+      </div>
+      <div id="blokTvar"><label for="tvar">Tvar desky</label>
+        <select id="tvar"><option value="kruh">kruh</option><option value="obd">obdélník</option></select></div>
+      <div class="r2">
+        <div><label for="sirkaMm" id="lSirkaMm">Šířka (mm)</label><input id="sirkaMm" type="number" min="40" max="20000" step="1"></div>
+        <div id="blokVyska"><label for="vyskaMm">Výška (mm)</label><input id="vyskaMm" type="number" min="40" max="20000" step="1"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="nodusAuto"> <span id="lNodusAuto">Výšku nodu a jeho polohu navrhnout automaticky</span></label>
+      <div class="r3" id="blokNodus">
+        <div><label for="nodusMm" id="lNodus">Výška nodu (mm)</label><input id="nodusMm" type="number" min="1" step="0.5"></div>
+        <div><label for="posunX">Pata X (mm)</label><input id="posunX" type="number" step="1"></div>
+        <div><label for="posunY">Pata Y (mm)</label><input id="posunY" type="number" step="1"></div>
+      </div>
+      <label for="mezVysky">Stín se má vejít od výšky Slunce: <b id="mezVyskyH"></b></label>
+      <input id="mezVysky" type="range" min="0" max="40" step="1">
+      <div id="blokTyc"><label for="prumerTyce" id="lTyc">Průměr tyče (mm)</label><input id="prumerTyce" type="number" min="1" max="60" step="0.5"></div>
+    </div>
+
+    <div class="card" id="kartaVzhled">
+      <h2>🎨 Vzhled</h2>
+      <div class="r2">
+        <div><label for="styl">Styl</label><select id="styl"><option value="klasicky">klasický</option><option value="minimalni">minimální</option></select></div>
+        <div><label for="cislice">Číslice</label><select id="cislice"><option value="arabske">arabské (24 h)</option><option value="rimske">římské (12 h)</option></select></div>
+      </div>
+      <div class="r2">
+        <div><label for="krok">Hodinové čáry</label><select id="krok"><option value="60">po 1 h</option><option value="30">po ½ h</option><option value="15">po ¼ h</option></select></div>
+        <div><label for="datum">Datové křivky</label><select id="datum"><option value="zadne">žádné</option><option value="zakladni">slunovraty + rovnodennost</option><option value="mesice">začátky měsíců</option><option value="znameni">znamení zvěrokruhu</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="caryMeziDaty"> Hodinové čáry jen mezi slunovraty</label>
+      <label class="chk"><input type="checkbox" id="analema"> Analema (osmička) pro poledne v čase pásma</label>
+      <label class="chk"><input type="checkbox" id="tabulka"> Tabulka korekcí (rovnice času) na desce</label>
+      <label class="chk"><input type="checkbox" id="popisky"> Značky pro osazení gnomonu a popisky</label>
+      <label for="motto">Motto</label>
+      <input id="motto" type="text" maxlength="80" placeholder="např. Carpe diem · Hora fugit · Ultima latet" list="motta">
+      <datalist id="motta"><option value="Carpe diem"><option value="Hora fugit"><option value="Ultima latet"><option value="Sine sole sileo"><option value="Tempus fugit"><option value="Čas letí"><option value="Bez slunce mlčím"><option value="Počítám jen jasné hodiny"></datalist>
+    </div>
+
+    <div class="card">
+      <h2>🖨️ Tisk a export</h2>
+      <div class="r3">
+        <div><label for="papir">Papír</label><select id="papir"><option value="a4">A4</option><option value="a3">A3</option><option value="letter">Letter</option><option value="vlastni">vlastní</option></select></div>
+        <div><label for="okraj">Okraj (mm)</label><input id="okraj" type="number" min="3" max="30" step="1"></div>
+        <div><label for="prekryv">Přesah lepení</label><input id="prekryv" type="number" min="0" max="40" step="1"></div>
+      </div>
+      <div class="r2 skryte" id="blokPapir">
+        <div><label for="papirW">Šířka papíru (mm)</label><input id="papirW" type="number" min="50" max="2000"></div>
+        <div><label for="papirH">Výška papíru (mm)</label><input id="papirH" type="number" min="50" max="5000"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="cernobile"> Černobíle (vše černě, např. pro laser)</label>
+      <div class="info" id="infoListy"></div>
+      <div class="tlacitka">
+        <button class="btn" id="btnPdf" type="button">📄 PDF 1:1</button>
+        <button class="btn btn-sec" id="btnSvg" type="button">SVG</button>
+        <button class="btn btn-sec" id="btnDxf" type="button">DXF</button>
+        <button class="btn btn-sec" id="btnGnSvg" type="button">Gnomon SVG</button>
+        <button class="btn btn-sec skryte" id="btnStl" type="button">STL hranolu</button>
+      </div>
+      <div class="tlacitka"><button class="btn btn-sec" id="btnReset" type="button">Výchozí nastavení</button></div>
+    </div>
+  </div>
+
+  <div class="pravy">
+    <div class="card">
+      <h2><span id="nadpisNahled">Ciferník</span> <small id="rozmerNahled"></small></h2>
+      <div class="papir" id="nahled"></div>
+      <div class="legenda">
+        <span><i style="background:#000"></i>hodinové čáry</span>
+        <span><i style="background:#1f5fa8"></i>datové křivky</span>
+        <span><i style="background:#b3261e"></i>letní čas</span>
+        <span><i style="background:#7a7a7a"></i>pomocné značky (osazení)</span>
+        <span><i style="background:#d04a00"></i>stín nodu</span>
+      </div>
+      <div class="sim">
+        <div class="radek"><span>Datum</span><input type="range" id="simDen" min="1" max="365" step="1"><span class="hodn"><input type="date" id="simDatum" style="width:140px;padding:3px 5px"></span></div>
+        <div class="radek"><span>Hodinky</span><input type="range" id="simCas" min="0" max="1439" step="1"><span class="hodn" id="simCasH"></span></div>
+        <div class="tlacitka">
+          <button class="btn btn-sec" id="simTed" type="button">⏱ Teď</button>
+          <button class="btn btn-sec" id="simHraj" type="button">▶ Přehrát den <kbd>mezera</kbd></button>
+          <button class="btn btn-sec" id="simRok" type="button">📅 Rok ve 12:00</button>
+        </div>
+        <div class="udaje" id="simUdaje"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="zalozky" role="tablist" id="zalozky">
+        <button role="tab" data-z="kontrola" aria-selected="true">Kontrola a rozměry</button>
+        <button role="tab" data-z="gnomon" aria-selected="false">Gnomon</button>
+        <button role="tab" data-z="rovnice" aria-selected="false">Rovnice času</button>
+        <button role="tab" data-z="navod" aria-selected="false">Návod k osazení</button>
+      </div>
+      <div class="panel" data-p="kontrola">
+        <div id="kontrola" class="info"></div>
+        <div class="tab-obal" style="margin-top:10px"><table id="tabHodin"></table></div>
+      </div>
+      <div class="panel" data-p="gnomon" hidden>
+        <div class="papir" id="nahledGnomon"></div>
+        <div class="info" id="infoGnomon"></div>
+      </div>
+      <div class="panel" data-p="rovnice" hidden>
+        <div class="papir" id="graf"></div>
+        <p class="info">Rovnice času = pravý sluneční čas − střední čas. <b>Hodinky = údaj slunečních hodin + korekce.</b> Korekce už obsahuje opravu na zeměpisnou délku (pokud ji hodiny samy nemají); v létě přičtěte ještě 1 h, pokud nečtete červenou sadu čísel.</p>
+        <div class="tab-obal" style="margin-top:8px"><table id="tabRovnice"></table></div>
+      </div>
+      <div class="panel navod" data-p="navod" hidden id="navod"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

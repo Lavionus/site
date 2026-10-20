@@ -17,7 +17,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       <fieldset><legend>Která skica je profil (průřez)?</legend><div id="tazVolba"></div></fieldset>
       <label class="zaskrt"><input type="checkbox" id="tazOtevrena"> Otevřená dráha (konec se nespojí se začátkem)</label>
       <label class="zaskrt"><input type="checkbox" id="tazStred" checked> Profil na střed dráhy (střed obrysu profilu jede po křivce)</label>
-      <p class="poznamka">Profil jede po nejdelším obrysu druhé skici, „nahoru“ v profilu zůstává nahoře (jako průřez lišty). Zkroucení, zúžení ke konci a šroubovici nastavíš pak v inspektoru.</p>
+      <label class="zaskrt"><input type="checkbox" id="tazSkica"> Ponechat jako skicu (zkroucení, šroubovice a další volby tažení v inspektoru); jinak běžné těleso</label>
+      <p class="poznamka">Profil jede po nejdelším obrysu druhé skici, „nahoru“ v profilu zůstává nahoře (jako průřez lišty). Výsledek je běžné těleso; pro zkroucení, zúžení ke konci nebo šroubovici v inspektoru zaškrtni „Ponechat jako skicu“.</p>
       <p class="chyba-text" id="tazChyba" aria-live="polite"></p>
       <div class="tlacitka"><button type="button" class="tl" id="tazZrusit">Zrušit</button><button type="button" class="tl hlavni-tl" id="tazOk">Vytvořit</button></div>`;
     document.body.appendChild(okno);
@@ -35,18 +36,23 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       $('tazChyba').textContent = '';
       okno.showModal();
     };
-    $('tazOk').onclick = () => {
+    $('tazOk').onclick = async () => {
       const prof = okno.querySelector('[name=tazProfil]:checked').value, draha = ids.find(id => id !== prof);
       try {
         const r = M.tazeniZeSkic(M.app.dok, prof, draha, { otevrena: $('tazOtevrena').checked, centrovat: $('tazStred').checked });
         let d = r.dok;
-        // trubka kolem dráhy na desce by zčásti ležela pod deskou: položit
         const u = M.najdiUzel(d, r.id);
-        if (M.spodekUzlu(u) < -1e-6) d = M.polozNaRovinu(d, [r.id], M.ROVINA_DESKY);
+        const v = M.kontrolaTazeni && M.kontrolaTazeni(u.param, kontury(u.param));
+        // výsledek je běžné těleso s osami desky (jako objekt ze skicáře); profil a dráha zůstanou skryté
+        if (!$('tazSkica').checked) {
+          M.cekej('tazeni', 'Vytvářím těleso…');
+          try { d = await M.skicuNaTeleso(d, r.id); } finally { M.hotovoCekani('tazeni'); }
+        }
+        // trubka kolem dráhy na desce by zčásti ležela pod deskou: položit
+        if (M.spodekUzlu(M.najdiUzel(d, r.id)) < -1e-6) d = M.polozNaRovinu(d, [r.id], M.ROVINA_DESKY);
         M.zmenDokument(d, 'Tažení po dráze');
         M.nastavVyber([r.id]);
         okno.close();
-        const v = M.kontrolaTazeni && M.kontrolaTazeni(u.param, kontury(u.param));
         if (v && v.varovani) Dialog.info(v.varovani);
       } catch (e) { $('tazChyba').textContent = e.message.charAt(0).toUpperCase() + e.message.slice(1) + '.'; }
     };

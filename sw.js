@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v423';
+const CACHE = PREFIX + 'v425';
 const JADRO = [
   './',
   './index.html',
@@ -220,6 +220,8 @@ const MODELAR = [
   './obsah/modelar/ui/obrazek.js',
   './obsah/modelar/ui/tazeni.js',
   './obsah/modelar/ui/rychleKoty.js',
+  './obsah/modelar/ui/magnet.js',
+  './obsah/modelar/assets/icons-cad/ui/magnet.webp',
   './obsah/modelar/ui/ikony.js',
   './obsah/modelar/assets/icons-cad/ui/add-shape.webp',
   './obsah/modelar/assets/icons-cad/ui/align-x-center.webp',

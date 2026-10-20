@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-20d';
+  const VERZE_KODU = '2026-10-20e';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -955,6 +955,25 @@
       d.voda = (d.voda || 0) + 750;
     });
     if (chybi.length) D.info('V databázi chybí: ' + chybi.join(', '));
+  }
+  // upozornění na nevyplněný profil – při každém otevření aplikace, dokud z profilu nejde spočítat denní cíl
+  function chybiVProfilu() {
+    const p = S.profil || {};
+    return [!p.pohlavi && 'pohlaví', !J.zKlice(p.narozeni || '') && 'datum narození', !(J.cislo(p.vyska) > 0) && 'výška', !(J.cislo(p.vaha) > 0) && 'hmotnost'].filter(Boolean);
+  }
+  function upozorneniNaProfil() {
+    if (cileDne().kcal || document.querySelector('.sheet')) return;   // profil stačí, nebo už je otevřené jiné okno
+    const chybi = chybiVProfilu();
+    const v = otevriVrstvu({
+      titulek: '🎯 Vyplň svůj profil', sirka: '440px',
+      telo: h('div', { class: 'sheet-telo' },
+        h('p', { style: { margin: '0 0 .7em' }, text: 'Bez profilu deník neví, kolik energie a živin denně potřebuješ – kruh energie ani bílkoviny, sacharidy a tuky pak nemají cíl, procenta ani barvy.' }),
+        chybi.length ? h('p', { style: { margin: '0 0 .7em' } }, 'Chybí: ', h('b', { text: chybi.join(', ') }), '.') : null,
+        h('p', { class: 'slabe', style: { margin: '0' }, text: 'Údaje zůstávají jen v tomto prohlížeči. Upozornění se ukáže při každém otevření, dokud profil nevyplníš.' })),
+      pata: h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' },
+        h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Teď ne'),
+        h('button', { class: 'btn primary', type: 'button', 'data-akce': 'vyplnit-profil', onclick: () => { v.zavri(); prepni('profil'); } }, '🎯 Vyplnit profil'))),
+    });
   }
   async function vyberDatum(titulek, vychozi) {
     return new Promise(ok => {
@@ -4577,6 +4596,8 @@
       return;
     }
     window.DENIK.spusteno = true;
+    // po případných oknech z odkazu (#sdileni, #plocha – otevírají se za 300 ms) a jen mimo samotný Profil
+    if (v !== 'profil') setTimeout(upozorneniNaProfil, 600);
     db.then(() => {
       if (hlidaSe() && DB.nacteno) nactiSlozeni().then(() => document.dispatchEvent(new Event('denik-data')), () => { slozeniChyba = true; document.dispatchEvent(new Event('denik-data')); });
     });
