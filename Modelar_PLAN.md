@@ -1114,3 +1114,19 @@ přes UI: Úpravy → zaoblit/srazit + tlačítka skupin hran.
   ~10°, zvlněné 56–178°). Pak se vezme jiný postup – u projektu hladké rohy (5°, 152 trojúhelníků). Zátěžový test:
   10 z 11 zvlněných výsledků má čistou náhradu, 1 chyba (sražení tečné hrany). Výpočet asi 1,5× pomalejší.
   Test rohy 27 (projekt jako případ), zátěž hlídá i zvlnění. O.zvrasneni(u, site, sMistem) pro ladění.
+- 21. 10.: **pole podél křivky** rozšířené – křivka = okraj rovné plochy tělesa (režim 'poleKrivka', klik u okraje → obrys
+  nejbližší kliknutí, i otvoru; M.oblastPlochy) nebo obrys skici i v šikmé rovině (M.drahaZeSkici + osy skici). Jádro
+  `M.bodyKrivkyPole(v)` (jadro/upravy.js): rovina {bod,u,v,normala}, počet nebo rozteč (otevřená přesně po rozteči,
+  uzavřená rovnoměrně), od–do (0…1), odstup (clipper offset uzavřené křivky, + dovnitř), natáčení kolem normály,
+  originál na začátek jen v rovině (výška/hloubka zůstane). Pole se standardně seskupí a skupina nese `pole`
+  {v, originalu} (M.normalizujMetuPole, extraUzlu) → inspektor „▦ Upravit pole…“ (M.upravPole: rozloží, smaže kopie,
+  otevře okno s parametry; Zrušit vrátí). Čísla v okně smí být proměnné. Oranžová čára křivky ve scéně (prekryv).
+  **Názorné návody** ui/navody.js: 12 návodů / 41 kroků s izometrickými SVG (kvadr, valec, otvor, kapsa, rotace,
+  kvadrHrana, cara, sipka, kurzor s klikem, stitek, klavesa, okno; scéna se vycentruje do rámce, okna v px).
+  Okno #oknoNavodu (seznam, obrázek, kroky, ▶ Vyzkoušet spustí příkaz), tlačítka data-navod v Pole, zaoblení/skořepině,
+  tažení, sestavě, proměnných, inspektoru pole a v nápovědě; příkaz 'navody' v paletě. Testy: node modelar_upravy (49),
+  prohlížeč _test/modelar_ui_pole_navody.py (84, server i file://). Výchozí křivka: skica v projektu, jinak okraj plochy; seskupení se zapne při volbě „Podél křivky“ (řada/kruh beze změny, test e8).
+- 21. 10.: lišta – část (Pohled) se schovávala za prolínáním vpravo už pod ~1420 px (pevné meze @media neodpovídaly
+  šířce obsahu, ve vloženém rámu rozcestníku ještě hůř). Teď zhušťování podle měřeného přetečení (třídy husta-1…5 na
+  .lista: jméno aplikace, stav uložení, texty tlačítek, šířka názvu, mezery) – celá se vejde do ~1000 px; pod tím šipky
+  ‹ › na okrajích (sticky, záporný okraj – šířku nepřidají) a posun kolečkem. Test v modelar_ui_pole_navody.py.

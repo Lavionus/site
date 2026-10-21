@@ -17,7 +17,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     okno.id = 'oknoSestavy';
     okno.className = 'okno vedle okno-sestavy';
     okno.setAttribute('aria-labelledby', 'sesNadpis');
-    okno.innerHTML = `<h2 id="sesNadpis">⚙ Pohyblivá sestava</h2>
+    okno.innerHTML = `<h2 id="sesNadpis">⚙ Pohyblivá sestava <button type="button" class="tl tl-navod" data-navod="sestava" title="Názorný návod">❔ Návod</button></h2>
       <div id="sesKlouby" class="ses-klouby"></div>
       <details id="sesNovy" class="ses-novy"><summary>✚ Nový kloub z vybraných těles</summary>
         <fieldset><legend>Pohyb</legend>

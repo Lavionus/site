@@ -6,58 +6,22 @@
   <title>🔧 Redukce se zploštělými přírubami</title>
   <script src="lib/three.r128.min.js"></script>
   <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="trubky_gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
   <script src="../tvary.js"></script>
+  <script src="trubky_gui.js"></script>
   <script src="../podpis.js" defer></script>
   <style>
-    /* Vychází ze stylopisu tubeRed.html: ovládání ve dvou úzkých sloupcích
-       po stranách náhledu, pod náhledem kónus a sražení vedle sebe. */
+    /* Rozvržení aplikace: horní lišta s nabídkami (jako Modelář), vlevo box
+       vstupní příruby, vpravo výstupní, uprostřed náhled a pod ním obecná
+       nastavení v záložkách. Na úzkém displeji se boxy přepínají. */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      min-height: 100vh;
-    }
-
-    .container { max-width: 1800px; margin: 0 auto; padding: 14px; }
-
-    .header { text-align: center; margin-bottom: 14px; }
-    .header h1 { font-size: 1.2rem; font-weight: 600; color: var(--text); }
-    .header p { font-size: 0.8rem; color: var(--text-faint); margin-top: 4px; }
-
-    /* --- rozvržení: ovládání | náhled | ovládání ------------------------ */
-    .main-content {
-      display: grid;
-      gap: 14px;
-      align-items: start;
-      grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(250px, 300px);
-      grid-template-areas: "vlevo nahled vpravo";
-    }
-
-    .sloupec { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-    .sloupec-vlevo { grid-area: vlevo; }
-    .sloupec-vpravo { grid-area: vpravo; }
-    .viewer-section { grid-area: nahled; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-
-    .pod-nahledem { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    @media (max-width: 1250px) {
-      .main-content {
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas: "nahled nahled" "vlevo vpravo";
-      }
-      #canvas-container { height: clamp(300px, 45vh, 460px); }
-    }
-
-    @media (max-width: 780px) {
-      .main-content {
-        grid-template-columns: 1fr;
-        grid-template-areas: "nahled" "vlevo" "vpravo";
-      }
-      .pod-nahledem { grid-template-columns: 1fr; }
     }
 
     /* --- panely --------------------------------------------------------- */
@@ -220,13 +184,6 @@
     #canvas-container:active { cursor: grabbing; }
     #canvas-container:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    /* neplatné zadání: náhled zůstane, ale zešedne a nahoře je důvod */
-    .neplatne {
-      position: absolute; left: 10px; right: 10px; top: 10px; z-index: 2;
-      padding: 8px 12px; border-radius: 6px; font-size: 0.82rem; line-height: 1.4;
-      background: #c62828; color: #fff; pointer-events: none;
-    }
-    #canvas-container.je-neplatne canvas { opacity: 0.3; filter: grayscale(1); }
 
     #hlasky { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
     #hlasky .notification { position: static; }
@@ -326,45 +283,209 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🔧 Redukce se zploštělými přírubami</h1>
-      <p>Přechod mezi kruhovou a zploštělou trubkou (ovál, zaoblený nebo ostrý obdélník, elipsa) — i mezi dvěma zploštělými</p>
-    </div>
-
-    <div class="main-content">
-      <!-- ================= levý sloupec: tvar ================= -->
-      <div class="sloupec sloupec-vlevo">
-        <div class="panel">
-          <h2>Rozměry dílu</h2>
-          <div class="mrizka2">
-            <div class="form-group">
-              <label for="wallThickness">Tloušťka stěny</label>
-              <input type="number" id="wallThickness" value="3" min="0.4" max="20" step="0.2">
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Redukce se zploštělými přírubami"><span aria-hidden="true">🔧</span><span class="jmeno"> Redukce se zploštěním</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <button class="pol" role="menuitem" onclick="resetParameters()">✨ Nový tvar (výchozí hodnoty)</button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">💾 Uložené tvary…</button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk</div>
+            <button class="pol" role="menuitem" onclick="exportSTL()">⬇ STL <span class="pozn">binární</span></button>
+            <button class="pol" role="menuitem" onclick="export3MF()">⬇ 3MF <span class="pozn">díly jako objekty</span></button>
+            <button class="pol" role="menuitem" onclick="exportOBJ()">⬇ OBJ</button>
+            <div class="form-group nab-pole">
+              <label for="exportQuality">Kvalita exportu</label>
+              <select id="exportQuality">
+                <option value="48">Střední (48 bodů obvodu)</option>
+                <option value="64">Vysoká (64 bodů)</option>
+                <option value="96" selected>Ultra (96 bodů)</option>
+                <option value="160">Maximum (160 bodů)</option>
+              </select>
             </div>
-            <div class="form-group" id="skupinaPrechod">
-              <label for="transitionLength">Délka přechodu</label>
-              <input type="number" id="transitionLength" value="100" min="5" max="1000" step="5">
+            <div class="nab-tip">Díl se exportuje v orientaci tisku (záložka Tisk), dělené díly vedle sebe.</div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkresy<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" role="menuitem" onclick="exportVykres(false)">📄 Výkres s kótami <span class="pozn">SVG</span></button>
+            <button class="pol" role="menuitem" onclick="exportVykres(true)">🖨 Výkres k tisku <span class="pozn">PDF</span></button>
+            <button class="pol" role="menuitem" onclick="exportSablona()">🎯 Vrtací šablona 1 : 1</button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka nabidka-siroka" id="nabZobrazeni" role="menu" hidden>
+            <div class="nab-nadpis" id="typNahleduPopis">Typ náhledu</div>
+            <div class="radio-group" role="radiogroup" aria-labelledby="typNahleduPopis">
+              <div class="radio-option"><input type="radio" id="viewNormal" name="viewType" value="normal" checked><label for="viewNormal">Normální</label></div>
+              <div class="radio-option"><input type="radio" id="viewWireframe" name="viewType" value="wireframe"><label for="viewWireframe">Drátový</label></div>
+              <div class="radio-option"><input type="radio" id="viewEdges" name="viewType" value="edges"><label for="viewEdges">S hranami</label></div>
+            </div>
+            <hr>
+            <label class="zaskrt"><input type="checkbox" id="zobrazPrurezy" checked><span>Nákres průřezů v rohu náhledu</span></label>
+            <div class="form-group">
+              <label for="previewQuality">Kvalita náhledu</label>
+              <select id="previewQuality">
+                <option value="32">Nízká (32 bodů obvodu)</option>
+                <option value="48" selected>Střední (48 bodů)</option>
+                <option value="64">Vysoká (64 bodů)</option>
+                <option value="96">Ultra (96 bodů)</option>
+              </select>
             </div>
             <div class="form-group">
-              <label for="inputLength">Délka vstupu</label>
-              <input type="number" id="inputLength" value="50" min="3" max="500" step="1">
+              <label for="opacitySlider">Průhlednost <span class="slider-value" id="opacityValue">100%</span></label>
+              <input type="range" id="opacitySlider" min="0" max="100" value="100" step="1">
             </div>
-            <div class="form-group">
-              <label for="outputLength">Délka výstupu</label>
-              <input type="number" id="outputLength" value="50" min="3" max="500" step="1">
+            <div class="mrizka2">
+              <div class="form-group"><label for="bgColorPicker">Pozadí</label><input type="color" id="bgColorPicker" value="#1a1a1a"></div>
+              <div class="form-group"><label for="objectColorPicker">Objekt</label><input type="color" id="objectColorPicker" value="#6aa6fd"></div>
             </div>
           </div>
         </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" role="menuitem" data-pohled="iso">◇ Šikmo (výchozí)</button>
+            <button class="pol" role="menuitem" data-pohled="bok">▭ Z boku <span class="pozn">rovina ohybu</span></button>
+            <button class="pol" role="menuitem" data-pohled="shora">▤ Shora</button>
+            <button class="pol" role="menuitem" data-pohled="vstup">◎ Na čelo vstupu</button>
+            <button class="pol" role="menuitem" data-pohled="vystup">◎ Na čelo výstupu</button>
+          </div>
+        </div>
+        <button class="tl" id="btnNapoveda" title="Nápověda a ovládání">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav" title="Kontrola sítě: každá hrana patří dvěma trojúhelníkům, objem je kladný">
+        <span id="sitStav">–</span>
+        <span class="stav-pocty"><span id="vertexCount">0</span> vrch. · <span id="faceCount">0</span> △</span>
+      </div>
+    </header>
 
-        <!-- průřezy obou přírub se vloží skriptem (stejná políčka s předponou in/out) -->
-        <div id="panelVstup"></div>
-        <div id="panelVystup"></div>
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">⇥ Vstup</button>
+      <button data-ukaz="obecne" class="aktivni">⚙ Obecné</button>
+      <button data-ukaz="out" class="je-vystup">Výstup ⇤</button>
+    </nav>
 
-        <div class="panel">
-          <h2>Typ redukce</h2>
+    <main class="plocha" data-zobrazeno="obecne">
 
-          <div class="form-group">
+      <aside class="box box-in tvar-pole" id="boxVstup" data-box="in" aria-label="Vstup">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⇥</span><h2>Vstup</h2><span class="box-chyba" id="inBoxChyba" title="Chyba v zadání této příruby">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="in-prurez" open>
+            <summary><span class="oddil-nazev">Průřez a délka</span><span class="souhrn" id="inSouhrnPrurez"></span></summary>
+            <div class="oddil-telo">
+              <div id="panelVstup"></div>
+              <div class="form-group" style="margin-top:9px">
+                <label for="inputLength">Délka příruby (mm)</label>
+                <input type="number" id="inputLength" value="50" min="3" max="500" step="1">
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="in-konec">
+            <summary><span class="oddil-nazev">Kónus a sražení konce</span><span class="souhrn" id="inSouhrnKonec"></span></summary>
+            <div class="oddil-telo">
+              <div class="form-group">
+                <label for="inKonusMode">Kónus konce</label>
+                <select id="inKonusMode">
+                  <option value="zadny" selected>Bez kónusu</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="mrizka2 konus-hodnoty" id="inKonusHodnoty">
+                <div class="form-group" id="inKonusOuterGroup">
+                  <label for="inKonusOuter">Zvenku (mm)</label>
+                  <input type="number" id="inKonusOuter" value="2" min="-100" max="100" step="0.5">
+                </div>
+                <div class="form-group" id="inKonusInnerGroup">
+                  <label for="inKonusInner">Zevnitř (mm)</label>
+                  <input type="number" id="inKonusInner" value="2" min="-100" max="100" step="0.5">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:9px">
+                <label for="inSrazMode">Sražení hrany</label>
+                <select id="inSrazMode">
+                  <option value="zadny" selected>Bez sražení</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="konus-hodnoty" id="inSrazHodnoty">
+                <div class="mrizka2" id="inSrazOuterGroup">
+                  <div class="form-group">
+                    <label for="inSrazOuter">Zvenku (mm)</label>
+                    <input type="number" id="inSrazOuter" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="inSrazOuterAngle">Úhel (°)</label>
+                    <input type="number" id="inSrazOuterAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+                <div class="mrizka2" id="inSrazInnerGroup">
+                  <div class="form-group">
+                    <label for="inSrazInner">Zevnitř (mm)</label>
+                    <input type="number" id="inSrazInner" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="inSrazInnerAngle">Úhel (°)</label>
+                    <input type="number" id="inSrazInnerAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+              </div>
+              <details class="vysvetli"><summary>Jak kónus a sražení fungují</summary>
+                Kónus mění průměr (u zploštělé příruby šířku i výšku) na volném konci. Obrys se odsadí
+                rovnoběžně, stěna zůstane všude stejně silná. Zvenku se plášť <strong>zužuje</strong>, zevnitř
+                se díra <strong>rozšiřuje</strong>; záporná hodnota kónus obrátí. Sražení je fazeta na hraně
+                konce po celém obvodu: rozměr říká, o kolik se obrys odsadí, úhel se měří od osy (45° = stejně
+                hluboká jako dlouhá). Počítá se od plochy, kterou nechal kónus.
+              </details>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="in-doraz">
+            <summary><span class="oddil-nazev">Doraz a zajištění</span><span class="souhrn" id="inSouhrnDoraz"></span></summary>
+            <div class="oddil-telo" id="panelKonecVstup"></div>
+          </details>
+          <details class="oddil" data-oddil="in-limec">
+            <summary><span class="oddil-nazev">Příruba (montážní deska)</span><span class="souhrn" id="inSouhrnLimec"></span></summary>
+            <div class="oddil-telo" id="panelLimecVstup"></div>
+          </details>
+        </div>
+      </aside>
+
+      <section class="stred">
+        <div id="canvas-container" tabindex="0" aria-label="3D náhled redukce — šipky otáčejí, + a − přibližují">
+          <div id="neplatneZadani" class="neplatne skryto" role="alert"></div>
+          <div class="nahled-prurezy" id="nahledPrurezy">
+            <canvas id="prurezy" role="img" aria-label="Průřezy přírub"></canvas>
+            <div class="legenda"><span class="l-vstup">vstup</span><span class="l-vystup">výstup</span></div>
+          </div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
+        </div>
+
+        <div class="box box-obecne" aria-label="Obecné nastavení">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="dil" aria-selected="true">⚙ Díl</button>
+            <button role="tab" data-zalozka="deleni" aria-selected="false">✂ Dělení</button>
+            <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk</button>
+            <button role="tab" data-zalozka="info" aria-selected="false">📏 Informace</button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Tvary</button>
+          </div>
+          <div class="zalozka-telo tvar-pole" data-telo="dil" role="tabpanel">
+            <div class="dva-sloupce">
+              <div>
+                <div class="form-group">
+                  <label for="wallThickness">Tloušťka stěny (mm)</label>
+                  <input type="number" id="wallThickness" value="3" min="0.4" max="20" step="0.2">
+                </div>
+                <div class="nab-nadpis">Typ redukce</div>
+                <div class="form-group">
             <div class="radio-group" style="flex-direction:column;gap:6px">
               <div class="radio-option">
                 <input type="radio" id="reductionShort" name="reductionType" value="short">
@@ -380,8 +501,13 @@
               </div>
             </div>
           </div>
-
-          <div id="skupinaDlouha">
+              </div>
+              <div>
+                <div class="form-group" id="skupinaPrechod">
+                  <label for="transitionLength">Délka přechodu (mm)</label>
+                  <input type="number" id="transitionLength" value="100" min="5" max="1000" step="5">
+                </div>
+                <div id="skupinaDlouha">
             <div class="mrizka2">
               <div class="form-group">
                 <label for="bendAngle">Úhel ohybu (°)</label>
@@ -409,219 +535,72 @@
                 <input type="number" id="smerOhybuUhel" value="45" min="-360" max="360" step="15">
               </div>
             </div>
-          </div>
-
-          <div class="poznamka" id="poznamkaTyp"></div>
-        </div>
-      </div>
-
-      <!-- ================= střed: náhled ================= -->
-      <div class="viewer-section">
-        <div id="canvas-container" tabindex="0" aria-label="3D náhled redukce — šipky otáčejí, + a − přibližují">
-          <div id="neplatneZadani" class="neplatne skryto" role="alert"></div>
-        </div>
-
-        <div class="controls-hint">
-          <strong>Levé tlačítko</strong> rotace · <strong>pravé</strong> posun · <strong>kolečko</strong> přiblížení
-        </div>
-
-        <div class="button-group">
-          <button class="btn btn-primary" onclick="generateReduction()">Vygenerovat</button>
-          <button class="btn" onclick="resetParameters()">Reset</button>
-        </div>
-
-        <div class="pod-nahledem">
-          <div class="panel">
-            <h2>Kónické konce</h2>
-
-            <div class="form-group">
-              <label for="inKonusMode">Vstupní příruba</label>
-              <select id="inKonusMode">
-                <option value="zadny" selected>Bez kónusu</option>
-                <option value="vnejsi">Zvenku</option>
-                <option value="vnitrni">Zevnitř</option>
-                <option value="oboje">Zvenku i zevnitř</option>
-              </select>
-            </div>
-            <div class="mrizka2 konus-hodnoty" id="inKonusHodnoty">
-              <div class="form-group" id="inKonusOuterGroup">
-                <label for="inKonusOuter">Zvenku (mm)</label>
-                <input type="number" id="inKonusOuter" value="2" min="-100" max="100" step="0.5">
-              </div>
-              <div class="form-group" id="inKonusInnerGroup">
-                <label for="inKonusInner">Zevnitř (mm)</label>
-                <input type="number" id="inKonusInner" value="2" min="-100" max="100" step="0.5">
-              </div>
-            </div>
-
-            <div class="form-group" style="margin-top:9px">
-              <label for="outKonusMode">Výstupní příruba</label>
-              <select id="outKonusMode">
-                <option value="zadny" selected>Bez kónusu</option>
-                <option value="vnejsi">Zvenku</option>
-                <option value="vnitrni">Zevnitř</option>
-                <option value="oboje">Zvenku i zevnitř</option>
-              </select>
-            </div>
-            <div class="mrizka2 konus-hodnoty" id="outKonusHodnoty">
-              <div class="form-group" id="outKonusOuterGroup">
-                <label for="outKonusOuter">Zvenku (mm)</label>
-                <input type="number" id="outKonusOuter" value="2" min="-100" max="100" step="0.5">
-              </div>
-              <div class="form-group" id="outKonusInnerGroup">
-                <label for="outKonusInner">Zevnitř (mm)</label>
-                <input type="number" id="outKonusInner" value="2" min="-100" max="100" step="0.5">
-              </div>
-            </div>
-
-            <div class="poznamka">
-              Hodnota je změna průměru (u zploštělé příruby šířky i výšky) na volném konci.
-              Obrys se odsadí rovnoběžně, takže stěna zůstává všude stejně silná. Zvenku se
-              plášť <strong>zužuje</strong>, zevnitř se díra <strong>rozšiřuje</strong>;
-              záporná hodnota kónus obrátí.
-            </div>
-          </div>
-
-          <div class="panel">
-            <h2>Sražení konců</h2>
-
-            <div class="form-group">
-              <label for="inSrazMode">Vstupní příruba</label>
-              <select id="inSrazMode">
-                <option value="zadny" selected>Bez sražení</option>
-                <option value="vnejsi">Zvenku</option>
-                <option value="vnitrni">Zevnitř</option>
-                <option value="oboje">Zvenku i zevnitř</option>
-              </select>
-            </div>
-            <div class="konus-hodnoty" id="inSrazHodnoty">
-              <div class="mrizka2" id="inSrazOuterGroup">
-                <div class="form-group">
-                  <label for="inSrazOuter">Zvenku (mm)</label>
-                  <input type="number" id="inSrazOuter" value="1" min="0" max="100" step="0.5">
-                </div>
-                <div class="form-group">
-                  <label for="inSrazOuterAngle">Úhel (°)</label>
-                  <input type="number" id="inSrazOuterAngle" value="45" min="5" max="85" step="5">
-                </div>
-              </div>
-              <div class="mrizka2" id="inSrazInnerGroup">
-                <div class="form-group">
-                  <label for="inSrazInner">Zevnitř (mm)</label>
-                  <input type="number" id="inSrazInner" value="1" min="0" max="100" step="0.5">
-                </div>
-                <div class="form-group">
-                  <label for="inSrazInnerAngle">Úhel (°)</label>
-                  <input type="number" id="inSrazInnerAngle" value="45" min="5" max="85" step="5">
                 </div>
               </div>
             </div>
-
-            <div class="form-group" style="margin-top:9px">
-              <label for="outSrazMode">Výstupní příruba</label>
-              <select id="outSrazMode">
-                <option value="zadny" selected>Bez sražení</option>
-                <option value="vnejsi">Zvenku</option>
-                <option value="vnitrni">Zevnitř</option>
-                <option value="oboje">Zvenku i zevnitř</option>
-              </select>
-            </div>
-            <div class="konus-hodnoty" id="outSrazHodnoty">
-              <div class="mrizka2" id="outSrazOuterGroup">
+            <div class="poznamka" id="poznamkaTyp"></div>
+          </div>
+          <div class="zalozka-telo tvar-pole" data-telo="deleni" role="tabpanel" hidden>
+            <div id="panelyDeleni">
+            <label class="zaskrt"><input type="checkbox" id="deleni">
+              <span>Rozdělit na dva díly zasunuté do sebe (hrdlo a čep) — každý se tiskne přírubou na podložce</span></label>
+            <div class="poznamka skryto" id="deleniJenDlouha">Dělení je k dispozici u dlouhé redukce.</div>
+            <div id="deleniTelo">
+              <div class="mrizka2">
                 <div class="form-group">
-                  <label for="outSrazOuter">Zvenku (mm)</label>
-                  <input type="number" id="outSrazOuter" value="1" min="0" max="100" step="0.5">
+                  <label for="deleniTyp">Typ spoje</label>
+                  <select id="deleniTyp">
+                    <option value="polodrazka" selected>Polodrážka (hladký vnějšek)</option>
+                    <option value="hrdlo">Hrdlo přes celou stěnu (pevnější)</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                  <label for="outSrazOuterAngle">Úhel (°)</label>
-                  <input type="number" id="outSrazOuterAngle" value="45" min="5" max="85" step="5">
+                  <label for="deleniKde">Oddělit</label>
+                  <select id="deleniKde">
+                    <option value="vystup" selected>Přírubu výstupu</option>
+                    <option value="vstup">Přírubu vstupu</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="deleniW">Řez od čela (mm)</label>
+                  <input type="number" id="deleniW" value="19" min="1" step="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="deleniH">Délka zasunutí</label>
+                  <input type="number" id="deleniH" value="10" min="2" step="1">
+                </div>
+                <div class="form-group">
+                  <label for="deleniVule">Vůle na stranu</label>
+                  <input type="number" id="deleniVule" value="0.15" min="0" max="1" step="0.05">
+                </div>
+                <div class="form-group">
+                  <label for="deleniZes">Zesílení hrdla zvenku</label>
+                  <input type="number" id="deleniZes" value="0" min="0" step="0.5">
+                </div>
+                <div class="form-group" id="deleniKorenSk">
+                  <label for="deleniKoren">Náběh v rohu hrdla (mm)</label>
+                  <input type="number" id="deleniKoren" value="1" min="0" step="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="deleniDrazky">Drážky na lepidlo (0 = bez)</label>
+                  <input type="number" id="deleniDrazky" value="0" min="0" max="6" step="1">
+                </div>
+                <div class="form-group" id="deleniDrHlSk">
+                  <label for="deleniDrHl">Hloubka drážek (mm)</label>
+                  <input type="number" id="deleniDrHl" value="0.4" min="0.1" max="1.5" step="0.1">
                 </div>
               </div>
-              <div class="mrizka2" id="outSrazInnerGroup">
-                <div class="form-group">
-                  <label for="outSrazInner">Zevnitř (mm)</label>
-                  <input type="number" id="outSrazInner" value="1" min="0" max="100" step="0.5">
-                </div>
-                <div class="form-group">
-                  <label for="outSrazInnerAngle">Úhel (°)</label>
-                  <input type="number" id="outSrazInnerAngle" value="45" min="5" max="85" step="5">
-                </div>
-              </div>
+              <label class="zaskrt"><input type="checkbox" id="deleniAuto" checked>
+                <span>Místo řezu dopočítat (2 mm za přírubou, žebry a prvky konce)</span></label>
+              <label class="zaskrt"><input type="checkbox" id="deleniRozlozit" checked>
+                <span>V náhledu díly oddálit</span></label>
+              <div class="poznamka" id="deleniPoznamka"></div>
             </div>
-
-            <div class="poznamka">
-              Fazeta na hraně volného konce, po celém obvodu příruby. Rozměr v mm říká, o kolik
-              se obrys odsadí, úhel se měří od osy dílu (45° = stejně hluboká jako dlouhá).
-              Počítá se od plochy, kterou nechal kónus.
             </div>
           </div>
-        </div>
-
-        <div class="pod-nahledem" id="panelyKoncu">
-          <div id="panelKonecVstup"></div>
-          <div id="panelKonecVystup"></div>
-        </div>
-
-        <div class="pod-nahledem" id="panelyLimcu">
-          <div id="panelLimecVstup"></div>
-          <div id="panelLimecVystup"></div>
-        </div>
-
-        <div id="tvary"></div>
-      </div>
-
-      <!-- ================= pravý sloupec: výstup a zobrazení ================= -->
-      <div class="sloupec sloupec-vpravo">
-        <div class="panel">
-          <h2>Průřezy přírub</h2>
-          <canvas id="prurezy" role="img" aria-label="Průřezy přírub"></canvas>
-          <div class="legenda">
-            <span class="l-vstup">vstup</span>
-            <span class="l-vystup">výstup</span>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>📐 Informace o přírubách</h2>
-          <div id="infoPriruby"></div>
-        </div>
-
-        <div class="panel">
-          <h2>Export</h2>
-          <div class="form-group">
-            <label for="exportQuality">Kvalita exportu</label>
-            <select id="exportQuality">
-              <option value="48">Střední (48 bodů obvodu)</option>
-              <option value="64">Vysoká (64 bodů)</option>
-              <option value="96" selected>Ultra (96 bodů)</option>
-              <option value="160">Maximum (160 bodů)</option>
-            </select>
-          </div>
-          <div class="button-group">
-            <button class="btn btn-primary" onclick="exportSTL()">STL</button>
-            <button class="btn btn-primary" onclick="export3MF()">3MF</button>
-            <button class="btn btn-primary" onclick="exportOBJ()">OBJ</button>
-          </div>
-          <div class="button-group" style="margin-top:6px">
-            <button class="btn" onclick="exportVykres(false)" title="Řez a pohledy na konce s kótami (SVG)">Výkres</button>
-            <button class="btn" onclick="exportVykres(true)" title="Otevře výkres k tisku — „Uložit jako PDF“">PDF</button>
-            <button class="btn" onclick="exportSablona()" title="Obrys a otvory v měřítku 1 : 1 pro vrtání protikusu">Šablona</button>
-          </div>
-          <div class="poznamka">Díl se exportuje v orientaci tisku z panelu „3D tisk a provoz“.</div>
-          <div class="stats-item" style="margin-top:9px">
-            <span class="stats-label">Vrcholů / trojúhelníků:</span>
-            <span><span class="stats-value" id="vertexCount">0</span>
-              <span class="stats-label">/</span>
-              <span class="stats-value" id="faceCount">0</span></span>
-          </div>
-          <div class="stats-item">
-            <span class="stats-label">Síť:</span>
-            <span id="sitStav">–</span>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>3D tisk a provoz</h2>
+          <div class="zalozka-telo" data-telo="tisk" role="tabpanel" hidden>
+            <div class="dva-sloupce">
+              <div>
           <div class="form-group">
             <label for="orientaceTisku">Orientace tisku (a exportu)</label>
             <select id="orientaceTisku">
@@ -663,59 +642,124 @@
               <option value="vystup">Z výstupu do vstupu</option>
             </select>
           </div>
-          <div id="infoTisk"></div>
-        </div>
-
-        <div class="panel">
-          <h2>Zobrazení</h2>
-
-          <div class="form-group">
-            <label id="typNahleduPopis">Typ náhledu</label>
-            <div class="radio-group" role="radiogroup" aria-labelledby="typNahleduPopis">
-              <div class="radio-option">
-                <input type="radio" id="viewNormal" name="viewType" value="normal" checked>
-                <label for="viewNormal">Normální</label>
+          
               </div>
-              <div class="radio-option">
-                <input type="radio" id="viewWireframe" name="viewType" value="wireframe">
-                <label for="viewWireframe">Drátový</label>
-              </div>
-              <div class="radio-option">
-                <input type="radio" id="viewEdges" name="viewType" value="edges">
-                <label for="viewEdges">S hranami</label>
-              </div>
+              <div><div id="infoTisk"></div></div>
             </div>
           </div>
-
-          <div class="form-group">
-            <label for="previewQuality">Kvalita náhledu</label>
-            <select id="previewQuality">
-              <option value="32">Nízká (32 bodů obvodu)</option>
-              <option value="48" selected>Střední (48 bodů)</option>
-              <option value="64">Vysoká (64 bodů)</option>
-              <option value="96">Ultra (96 bodů)</option>
-            </select>
+          <div class="zalozka-telo" data-telo="info" role="tabpanel" hidden>
+            <div id="infoPriruby" class="info-mrizka"></div>
           </div>
-
-          <div class="form-group">
-            <label for="opacitySlider">Průhlednost <span class="slider-value" id="opacityValue">100%</span></label>
-            <input type="range" id="opacitySlider" min="0" max="100" value="100" step="1">
-          </div>
-
-          <div class="mrizka2">
-            <div class="form-group">
-              <label for="bgColorPicker">Pozadí</label>
-              <input type="color" id="bgColorPicker" value="#1a1a1a">
-            </div>
-            <div class="form-group">
-              <label for="objectColorPicker">Objekt</label>
-              <input type="color" id="objectColorPicker" value="#6aa6fd">
-            </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden>
+            <div id="tvary"></div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      <aside class="box box-out tvar-pole" id="boxVystup" data-box="out" aria-label="Výstup">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⇤</span><h2>Výstup</h2><span class="box-chyba" id="outBoxChyba" title="Chyba v zadání této příruby">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="out-prurez" open>
+            <summary><span class="oddil-nazev">Průřez a délka</span><span class="souhrn" id="outSouhrnPrurez"></span></summary>
+            <div class="oddil-telo">
+              <div id="panelVystup"></div>
+              <div class="form-group" style="margin-top:9px">
+                <label for="outputLength">Délka příruby (mm)</label>
+                <input type="number" id="outputLength" value="50" min="3" max="500" step="1">
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="out-konec">
+            <summary><span class="oddil-nazev">Kónus a sražení konce</span><span class="souhrn" id="outSouhrnKonec"></span></summary>
+            <div class="oddil-telo">
+              <div class="form-group">
+                <label for="outKonusMode">Kónus konce</label>
+                <select id="outKonusMode">
+                  <option value="zadny" selected>Bez kónusu</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="mrizka2 konus-hodnoty" id="outKonusHodnoty">
+                <div class="form-group" id="outKonusOuterGroup">
+                  <label for="outKonusOuter">Zvenku (mm)</label>
+                  <input type="number" id="outKonusOuter" value="2" min="-100" max="100" step="0.5">
+                </div>
+                <div class="form-group" id="outKonusInnerGroup">
+                  <label for="outKonusInner">Zevnitř (mm)</label>
+                  <input type="number" id="outKonusInner" value="2" min="-100" max="100" step="0.5">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:9px">
+                <label for="outSrazMode">Sražení hrany</label>
+                <select id="outSrazMode">
+                  <option value="zadny" selected>Bez sražení</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="konus-hodnoty" id="outSrazHodnoty">
+                <div class="mrizka2" id="outSrazOuterGroup">
+                  <div class="form-group">
+                    <label for="outSrazOuter">Zvenku (mm)</label>
+                    <input type="number" id="outSrazOuter" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="outSrazOuterAngle">Úhel (°)</label>
+                    <input type="number" id="outSrazOuterAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+                <div class="mrizka2" id="outSrazInnerGroup">
+                  <div class="form-group">
+                    <label for="outSrazInner">Zevnitř (mm)</label>
+                    <input type="number" id="outSrazInner" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="outSrazInnerAngle">Úhel (°)</label>
+                    <input type="number" id="outSrazInnerAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+              </div>
+              <details class="vysvetli"><summary>Jak kónus a sražení fungují</summary>
+                Kónus mění průměr (u zploštělé příruby šířku i výšku) na volném konci. Obrys se odsadí
+                rovnoběžně, stěna zůstane všude stejně silná. Zvenku se plášť <strong>zužuje</strong>, zevnitř
+                se díra <strong>rozšiřuje</strong>; záporná hodnota kónus obrátí. Sražení je fazeta na hraně
+                konce po celém obvodu: rozměr říká, o kolik se obrys odsadí, úhel se měří od osy (45° = stejně
+                hluboká jako dlouhá). Počítá se od plochy, kterou nechal kónus.
+              </details>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="out-doraz">
+            <summary><span class="oddil-nazev">Doraz a zajištění</span><span class="souhrn" id="outSouhrnDoraz"></span></summary>
+            <div class="oddil-telo" id="panelKonecVystup"></div>
+          </details>
+          <details class="oddil" data-oddil="out-limec">
+            <summary><span class="oddil-nazev">Příruba (montážní deska)</span><span class="souhrn" id="outSouhrnLimec"></span></summary>
+            <div class="oddil-telo" id="panelLimecVystup"></div>
+          </details>
+        </div>
+      </aside>
+    </main>
   </div>
+
+  <dialog id="napoveda" class="okno-napovedy" aria-labelledby="napovedaNadpis">
+    <h2 id="napovedaNadpis">Jak na to</h2>
+    <ol>
+      <li><strong>Vstup</strong> (vlevo) a <strong>výstup</strong> (vpravo) mají každý svůj box: průřez a délku, konec (kónus, sražení), doraz a zajištění a montážní přírubu. Záhlaví každého oddílu ukazuje, co je nastavené, i když je sbalený.</li>
+      <li>Pod náhledem jsou <strong>obecná nastavení</strong>: tloušťka stěny, typ redukce a ohyb, dělení na dva díly, tisk, informace a uložené tvary.</li>
+      <li>Každá změna se hned promítne do náhledu. Neplatné zadání náhled zešedí a nahoře řekne proč; box s chybou má v záhlaví červený vykřičník.</li>
+      <li>Hotový díl stáhnete v nabídce <strong>Soubor</strong> (STL, 3MF, OBJ), výkres a vrtací šablonu v nabídce <strong>Výkresy</strong>.</li>
+    </ol>
+    <h3>Ovládání náhledu</h3>
+    <ul>
+      <li>levé tlačítko / jeden prst — otáčení · pravé tlačítko — posun · kolečko / dva prsty — přiblížení</li>
+      <li>klávesnice v náhledu: šipky otáčejí, + a − přibližují</li>
+      <li>nabídka <strong>Pohled</strong>: z boku, shora, na čela</li>
+    </ul>
+    <form method="dialog"><button class="btn btn-primary">Rozumím</button></form>
+  </dialog>
 
   <script>
     /* ================================================================== */
@@ -1030,10 +1074,11 @@
       return { obvod, bod, zacatek, promitni };
     }
 
-    // `pocet` bodů rovnoměrně po obvodu, první na polárním úhlu `uhel`
-    function bodyPoObvodu(P, pocet, uhel, rot, posun) {
+    /* `pocet` bodů rovnoměrně po obvodu, první na polárním úhlu `uhel`
+       (posunutý o `faze` kroku — 0,5 = řada souměrně mezi osami) */
+    function bodyPoObvodu(P, pocet, uhel, rot, posun, faze) {
       const c = obvodovaCesta(P, rot, posun), s0 = c.zacatek(uhel), out = [];
-      for (let k = 0; k < pocet; k++) out.push(c.bod(s0 + c.obvod * k / pocet));
+      for (let k = 0; k < pocet; k++) out.push(c.bod(s0 + c.obvod * (k + (faze || 0)) / pocet));
       return out;
     }
 
@@ -1283,6 +1328,207 @@
     /* Dlouhá redukce: vstupní příruba, přechod (rovný nebo po oblouku),    */
     /* výstupní příruba                                                    */
     /* ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------ */
+    /* Dělení na dva díly                                                   */
+    /* ------------------------------------------------------------------ */
+    /* Redukce s límci na obou koncích se špatně tiskne: jeden límec leží na
+       podložce, druhý visí ve vzduchu. Jedna příruba se proto může oddělit
+       řezem kolmo k ose v rovné části příruby (za límcem a žebry) a oba kusy
+       se zasunou do sebe — polodrážkou ve stěně, takže vnějšek i díra zůstanou
+       hladké:
+
+           hlavní díl             oddělený kus (s límcem)
+           ───────┐                 ┌──────────────
+            hrdlo │▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒│ ← vnější líc v rovině
+           ─────┐ └─┐ ░░ čep ░░░░ ┌─┘
+                │   │░░░░░░░░░░░░░│
+           ─────┴───┴─────────────┴──── díra
+                    ↑ dno hrdla    ↑ řez (rameno čepu)
+
+       Stěna se v délce zasunutí rozdělí napůl (minus vůle): vnější polovina
+       je hrdlo na hlavním dílu, vnitřní čep na odděleném kusu. Oba kusy se
+       tisknou řezem nahoru — rameno i dno hrdla jsou pak shora podepřené
+       stupně, žádný převis. Dno hrdla je o MEZERA_DNA hlouběji než čep, aby
+       kusy dosedly na rameno. Zesílení hrdla přidá stěnu zvenku (se
+       zkosením 45° pod sebou, tiskne se bez podpor).
+
+       Druhý typ spoje (typ 'hrdlo') stěnu nezeslabí: konec trubky v plné
+       tloušťce se zasune do hrdla, které se rozšíří ven a má také plnou stěnu.
+       Zvenku tak přibude obruč (se zkosením 45° pod sebou). Konec čepu dosedne
+       na dno hrdla; roh mezi dnem a stěnou hrdla vyplní náběh 45° (ostrý
+       vnitřní roh by byl vrub), konec čepu je o kousek víc sražený, aby náběh
+       minul, a okraj hrdla má vstupní sražení.
+
+           hlavní díl                 oddělený kus
+             ┌──┐ obruč
+             │  └──────────────────┐
+             │ hrdlo   ┌───────────┘ ← trubka v plné stěně (čep)
+           ──┘  ◣dno   │
+                ↑ náběh
+
+       p.deleni = { kde: 'vstup'|'vystup', typ: 'polodrazka'|'hrdlo', auto,
+                    w (řez od čela), h (zasunutí), vule (na stranu), zesileni,
+                    koren (náběh v rohu hrdla, jen u typu hrdlo),
+                    drazky (počet drážek na lepidlo, 0 = bez), hloubkaDrazek } */
+    const MEZERA_DNA = 0.5;
+    const DNO_DRAZKY = 0.8;    // šířka dna drážky na lepidlo (mm); boky 45°
+
+    /* Drážky na lepidlo: obvodové drážky na čepu se šikmými boky 45° (tisknou
+       se bez převisů), rovnoměrně v délce zasunutí s odstupem od ramene
+       a od konce čepu. Lepidlo v nich po vytvrzení drží i tvarově a čep
+       z hrdla nevyklouzne, ani když lepidlo k plastu špatně přilne.
+       Vrací [{ a (začátek od čela), g (hloubka), b (dno), l (délka) }]. */
+    function drazkyNaLepidlo(d, od, po) {
+      const n = Math.round(d.drazky || 0);
+      if (!(n > 0)) return [];
+      const g = d.hloubkaDrazek, b = DNO_DRAZKY, l = 2 * g + b;
+      const mezi = (po - od - n * l) / (n + 1);
+      return Array.from({ length: n }, (_, k) => ({ a: od + mezi * (k + 1) + l * k, g, b, l, mezi }));
+    }
+    // vyřízne drážky do profilu vnějšku čepu ([d, w] vzestupně podle w)
+    function vlozDrazky(prof, drazky) {
+      let out = prof;
+      for (const z of drazky) {
+        const w0 = z.a, w1 = z.a + z.g, w2 = w1 + z.b, w3 = z.a + z.l, P = out;
+        out = P.filter(q => q[1] < w0 - 1e-9)
+          .concat([[profilVe(P, w0, false), w0], [profilVe(P, w1) - z.g, w1], [profilVe(P, w2) - z.g, w2], [profilVe(P, w3, true), w3]])
+          .concat(P.filter(q => q[1] > w3 + 1e-9));
+      }
+      return out;
+    }
+    const VSTUP_HRDLA = 0.5;   // vstupní sražení okraje hrdla (mm)
+
+    // hodnota profilu [d, w] (vzestupně podle w) ve vzdálenosti w; na stupni
+    // (dva body se stejným w) první, nebo s `posledni` poslední z nich
+    function profilVe(prof, w, posledni) {
+      const n = prof.length;
+      if (w <= prof[0][1]) return prof[0][0];
+      if (w >= prof[n - 1][1]) return prof[n - 1][0];
+      for (let k = 0; k + 1 < n; k++) {
+        const i = posledni ? n - 2 - k : k, a = prof[i], b = prof[i + 1];
+        if (a[1] <= w && w <= b[1]) {
+          return b[1] - a[1] > 1e-12 ? a[0] + (b[0] - a[0]) * (w - a[1]) / (b[1] - a[1]) : (posledni ? b[0] : a[0]);
+        }
+      }
+      return prof[n - 1][0];
+    }
+    // část profilu od začátku do w, a od w do konce
+    const profilDo = (prof, w) => prof.filter(q => q[1] < w - 1e-9).concat([[profilVe(prof, w, false), w]]);
+    const profilOd = (prof, w) => [[profilVe(prof, w, true), w]].concat(prof.filter(q => q[1] > w + 1e-9));
+
+    // příruba, která se odděluje, a její kónusy a sražení
+    function prirubaDeleni(p) {
+      const vstup = p.deleni.kde === 'vstup', kde = vstup ? 'Vstup' : 'Vystup';
+      const f = vstup ? p.vstup : p.vystup, L = vstup ? p.inputLength : p.outputLength;
+      return { vstup, kde, f, L, kr: parametryKonce(p, kde, L) };
+    }
+
+    /* Jak daleko od čela sahají prvky konce příruby (límec se zesílením
+       a žebry, sražení, doraz, ozuby, kolíky) — řez musí ležet až za nimi. */
+    function konecPrvkuPriruby(f, kr) {
+      let w = Math.max(kr.hloubkaSrazuVen, kr.hloubkaSrazuVnitr);
+      const lim = f.limec;
+      if (lim) {
+        const z = lim.zesileni && lim.zesileni.velikost > 0 ? lim.zesileni.velikost : 0;
+        w = Math.max(w, lim.tl + z, lim.tl + (lim.zebra && lim.zebra.pocet > 0 ? lim.zebra.vyska : 0));
+      }
+      const k = f.konec;
+      if (k && k.doraz) {
+        const dz = k.doraz;
+        w = Math.max(w, dz.a + dz.l + ((dz.ukos === 'konec' || dz.ukos === 'oba') ? dz.s : 0)
+          + ((dz.ukos === 'prechod' || dz.ukos === 'oba') ? dz.s : 0));
+      }
+      if (k && k.ozuby) w = Math.max(w, k.ozuby.zacatek + k.ozuby.pocet * k.ozuby.roztec);
+      if (k && k.koliky) w = Math.max(w, k.koliky.w + k.koliky.prumer / 2);
+      return w;
+    }
+
+    // automatické místo řezu: 2 mm za prvky konce, zaokrouhleno na 0,5 mm nahoru
+    const autoRezDeleni = (f, kr) => Math.ceil((konecPrvkuPriruby(f, kr) + 2) * 2 - 1e-9) / 2;
+
+    /* Rozměry spoje: řez wc, konec čepu wj, dno hrdla ws (vše od čela
+       oddělované příruby), odsazení obrysu vnějšku čepu dS a vnitřku hrdla dH. */
+    function spojDeleni(p) {
+      if (!p.deleni) return null;
+      const d = p.deleni, { vstup, f, L, kr } = prirubaDeleni(p);
+      const wc = d.w, wj = wc + d.h, ws = wj + MEZERA_DNA, e = d.zesileni > 0 ? d.zesileni : 0;
+      const plast = w => linearne(f.dO - kr.kO / 2, f.dO, L, w);    // vnějšek po kónusu
+      const dira = w => linearne(f.dI + kr.kI / 2, f.dI, L, w);     // díra po kónusu
+      if (d.typ === 'hrdlo') {
+        // čep = trubka v plné stěně, dosedne na dno hrdla (ws = wj)
+        const wj = wc + d.h, vnejsek = Math.max(plast(wc), plast(wj)), vnitrek = Math.max(dira(wc), dira(wj));
+        const dH = vnejsek + d.vule, stenaHrdla = p.wallThickness + e, dVen = dH + stenaHrdla;
+        const nabeh = Math.max(0, d.koren || 0), sraz = nabeh > 0 ? nabeh + 0.1 : 0;
+        return { typ: 'hrdlo', vstup, f, L, kr, wc, wj, ws: wj, e, dH, dVen, nabeh, sraz, vnejsek, plast, dira,
+                 drazky: drazkyNaLepidlo(d, wc + 1, wj - 1 - sraz),
+                 obruc: dVen - plast(wj), vstupHrdla: stenaHrdla >= VSTUP_HRDLA + 1 ? VSTUP_HRDLA : 0,
+                 stenaCepu: vnejsek - vnitrek, stenaKonceCepu: plast(wj) - sraz - dira(wj), stenaHrdla, delkaKusu: wj };
+      }
+      // kónusy se ke konci rozšiřují (díra) či zužují (vnějšek) — nejtenčí je stěna u řezu
+      const vnejsek = Math.min(plast(wc), plast(ws)), vnitrek = Math.max(dira(wc), dira(ws));
+      const dS = vnitrek + (vnejsek - vnitrek - d.vule) / 2, dH = dS + d.vule;
+      return { typ: 'polodrazka', vstup, f, L, kr, wc, wj, ws, e, dS, dH, vnejsek, drazky: drazkyNaLepidlo(d, wc + 1, wj - 1),
+               stenaCepu: dS - vnitrek, stenaHrdla: vnejsek + e - dH, delkaKusu: wj, plast };
+    }
+
+    // kontrola zadání dělení; vrací text chyby nebo null
+    function kontrolaDeleni(p) {
+      const d = p.deleni;
+      if (neplatnaCisla(d)) return 'Dělení na dva díly má nevyplněné či neplatné číslo';
+      const { f, L, kr, vstup } = prirubaDeleni(p);
+      const nazev = vstup ? 'vstupní' : 'výstupní';
+      if (!(d.h >= 2)) return 'Délka zasunutí spoje musí být aspoň 2 mm';
+      if (!(d.vule >= 0 && d.vule <= 1)) return 'Vůle ve spoji musí být mezi 0 a 1 mm';
+      if (!(d.zesileni >= 0)) return 'Zesílení hrdla nesmí být záporné';
+      const odCela = konecPrvkuPriruby(f, kr) + 1;
+      if (d.w < odCela - 1e-6) {
+        return 'Řez ' + nazev + ' příruby zasahuje do ' + (f.limec ? 'příruby, žeber či zesílení' : 'konce trubky (sražení, doraz, ozuby, kolíky)')
+          + ' — veďte ho aspoň ' + des(odCela, 1) + ' mm od čela (nebo zapněte dopočet místa řezu)';
+      }
+      const s = spojDeleni(p);
+      if (d.drazky > 0) {
+        if (!(d.drazky <= 6)) return 'Drážek na lepidlo může být nejvýš 6';
+        if (!(d.hloubkaDrazek >= 0.1 - 1e-9 && d.hloubkaDrazek <= 1.5)) return 'Hloubka drážek na lepidlo musí být 0,1 až 1,5 mm';
+        if (s.drazky[0].mezi < 0.8) {
+          const potreba = Math.round(d.drazky) * (s.drazky[0].l + 0.8) + 0.8 + 2 + (s.sraz || 0);
+          return 'Drážky na lepidlo se na čep nevejdou — prodlužte zasunutí aspoň na ' + des(Math.ceil(potreba), 0) + ' mm, nebo uberte drážek';
+        }
+        if (s.stenaCepu >= 0.8 && s.stenaCepu - d.hloubkaDrazek < 0.8) {
+          return 'Drážky na lepidlo jsou na stěnu čepu hluboké — zbylo by ' + des(s.stenaCepu - d.hloubkaDrazek, 2)
+            + ' mm (nejméně 0,8); zmenšete hloubku nejvýš na ' + des(Math.max(0, s.stenaCepu - 0.8), 1) + ' mm';
+        }
+      }
+      if (s.typ === 'hrdlo') {
+        const potrebaH = s.ws + s.obruc + 0.5;
+        if (potrebaH > L + 1e-6) {
+          return 'Hrdlo se nevejde do rovné části ' + nazev + ' příruby: řez ' + des(s.wc, 1) + ' + zasunutí ' + des(d.h, 1)
+            + ' + zkosení obruče ' + des(s.obruc, 1) + ' mm potřebuje přírubu dlouhou aspoň ' + des(Math.ceil(potrebaH * 2) / 2, 1)
+            + ' mm (má ' + des(L, 1) + ') — prodlužte ji, nebo zkraťte zasunutí';
+        }
+        if (!(d.koren >= 0)) return 'Náběh v rohu hrdla nesmí být záporný';
+        if (s.stenaKonceCepu < 0.8) {
+          return 'Náběh v rohu hrdla je na tuto stěnu velký — konec čepu by po sražení měl jen ' + des(s.stenaKonceCepu, 2)
+            + ' mm (nejméně 0,8); zmenšete náběh nejvýš na ' + des(Math.max(0, s.nabeh - (0.8 - s.stenaKonceCepu)), 1) + ' mm';
+        }
+        if (s.nabeh > s.stenaHrdla + d.vule - 0.8) return 'Náběh v rohu hrdla je širší než dno hrdla — zmenšete ho';
+        if (s.stenaCepu < 0.8) return 'Stěna trubky je v místě spoje jen ' + des(s.stenaCepu, 2) + ' mm (nejméně 0,8) — zesilte stěnu';
+        return null;
+      }
+      const potreba = s.ws + s.e + 0.5;
+      if (potreba > L + 1e-6) {
+        return 'Spoj se nevejde do rovné části ' + nazev + ' příruby: řez ' + des(s.wc, 1) + ' + zasunutí ' + des(d.h, 1)
+          + (s.e ? ' + zesílení ' + des(s.e, 1) : '') + ' mm potřebuje přírubu dlouhou aspoň ' + des(Math.ceil(potreba * 2) / 2, 1)
+          + ' mm (má ' + des(L, 1) + ') — prodlužte ji, nebo zkraťte zasunutí';
+      }
+      // hrdlo = čep + zesílení, takže tenčí je vždy čep
+      if (s.stenaCepu < 0.8) {
+        const chybi = 0.8 - s.stenaCepu;
+        return 'Stěna je na spoj tenká: čep by měl jen ' + des(s.stenaCepu, 2) + ' mm (nejméně 0,8) — zesilte stěnu aspoň na ' + des(Math.ceil((p.wallThickness + 2 * chybi) * 10) / 10, 1)
+          + ' mm' + (d.vule > 0.3 ? ', nebo zmenšete vůli' : '');
+      }
+      return null;
+    }
+
     function geometrieDlouha(p) {
       const a = azimutOhybu(p);
       if (!p.bendAngle || Math.abs(Math.sin(a)) < 1e-12 && Math.cos(a) > 0) return geometrieDlouhaYZ(p);
@@ -1358,47 +1604,105 @@
         return out;
       };
 
+      // Dělení: oddělovaná příruba má v hlavním dílu hrdlo (profil od řezu dál),
+      // oddělený kus je její začátek s límcem a čepem.
+      const spoj = spojDeleni(p);
+      let venA = retA.ven, vnitrA = retA.vnitr, venB = retB.ven, vnitrB = retB.vnitr, kus = null;
+      if (spoj && spoj.typ === 'hrdlo') {
+        // hrdlo přes celou stěnu: obruč zvenku, náběh v rohu dna, sražený konec čepu
+        const ret = spoj.vstup ? retA : retB, { wc, wj, ws, dH, dVen, nabeh, sraz, vstupHrdla: vh } = spoj;
+        const hrdloVen = [[dVen, wc], [dVen, ws]].concat(profilOd(ret.ven, ws + spoj.obruc));
+        const hrdloVnitr = (vh > 0 ? [[dH + vh, wc], [dH, wc + vh]] : [[dH, wc]])
+          .concat(nabeh > 0 ? [[dH, ws - nabeh], [dH - nabeh, ws]] : [[dH, ws]])
+          .concat(profilOd(ret.vnitr, ws));
+        kus = { ven: sraz > 0 ? profilDo(ret.ven, wj - sraz).concat([[spoj.plast(wj) - sraz, wj]]) : profilDo(ret.ven, wj),
+                vnitr: profilDo(ret.vnitr, wj) };
+        if (spoj.vstup) { venA = hrdloVen; vnitrA = hrdloVnitr; } else { venB = hrdloVen; vnitrB = hrdloVnitr; }
+      } else if (spoj) {
+        const ret = spoj.vstup ? retA : retB, { wc, wj, ws, e, dS, dH } = spoj;
+        const hrdloVen = e > 0
+          ? [[spoj.plast(wc) + e, wc], [spoj.plast(wc) + e, ws]].concat(profilOd(ret.ven, ws + e))
+          : profilOd(ret.ven, wc);
+        const hrdloVnitr = [[dH, wc], [dH, ws]].concat(profilOd(ret.vnitr, ws));
+        kus = { ven: profilDo(ret.ven, wc).concat([[dS, wc], [dS, wj]]), vnitr: profilDo(ret.vnitr, wj) };
+        if (spoj.vstup) { venA = hrdloVen; vnitrA = hrdloVnitr; } else { venB = hrdloVen; vnitrB = hrdloVnitr; }
+      }
+      if (kus && spoj.drazky.length) kus.ven = vlozDrazky(kus.ven, spoj.drazky);
+      const limAh = spoj && spoj.vstup ? null : limA, limBh = spoj && !spoj.vstup ? null : limB;
+
       const st = [];
-      for (const [d, w] of retA.ven) st.push(stanA(d, w));             // vstup zvenku → přechod
+      for (const [d, w] of venA) st.push(stanA(d, w));                 // vstup zvenku → přechod
       const trubkaA = st[0];
       st.push(...prechod(vs.dO, vy.dO));
-      for (const [d, w] of retB.ven.slice().reverse()) st.push(stanB(d, w));   // výstup → volný konec
+      for (const [d, w] of venB.slice().reverse()) st.push(stanB(d, w));   // výstup → volný konec
       const trubkaB = st[st.length - 1];
-      if (limB) trubkaB.mezera = true;                                 // čelo nahradí límec
-      for (const [d, w] of retB.vnitr) st.push(stanB(d, w));           // čelo, díra zpět
-      const vrtaniB = st[st.length - retB.vnitr.length];
+      if (limBh) trubkaB.mezera = true;                                // čelo nahradí límec
+      for (const [d, w] of vnitrB) st.push(stanB(d, w));               // čelo, díra zpět
+      const vrtaniB = st[st.length - vnitrB.length];
       st.push(...prechod(vs.dI, vy.dI).reverse());
-      for (const [d, w] of retA.vnitr.slice().reverse()) st.push(stanA(d, w));
+      for (const [d, w] of vnitrA.slice().reverse()) st.push(stanA(d, w));
       const vrtaniA = st[st.length - 1];
-      if (limA) vrtaniA.mezera = true;
+      if (limAh) vrtaniA.mezera = true;
       const sit = sitZeStanic(st, N);
 
       sit.Iz = [];
       sit.zeber = 0;
       sit.nouze = 0;
-      const t = p.wallThickness;
-      if (limA) {
-        const r = pridejLimec(sit.V, sit.I, sit.Iz, vs, limA, N, (x, y, w) => [x, y, w], false,
-          krajStanice(trubkaA), krajStanice(vrtaniA), t);
-        sit.zeber += r.zeber; sit.nouze += r.nouze; sit.zeberVstup = r.zeber;
-      }
-      if (limB) {
-        // výstupní příruba má souřadnice obrysu přečíslované (nejlepsiPosun) —
-        // límec si staví vlastní body, kraje trubky bere z jejích stanic
-        const r = pridejLimec(sit.V, sit.I, sit.Iz, vy, limB, N, (x, y, w) => ram(x, y, Lout - w, konec), true,
-          krajStanice(trubkaB), krajStanice(vrtaniB), t);
-        sit.zeber += r.zeber; sit.nouze += r.nouze; sit.zeberVystup = r.zeber;
-      }
-      // bajonetové kolíky (samostatná tělesa jako žebra)
       sit.koliku = 0;
-      for (const [f, L, kO, mapuj] of [[vs, Lin, p.konusVstupVnejsi || 0, (x, y, w) => [x, y, w]],
-                                       [vy, Lout, p.konusVystupVnejsi || 0, (x, y, w) => ram(x, y, Lout - w, konec)]]) {
+      const t = p.wallThickness;
+      const mapA = (x, y, w) => [x, y, w], mapB = (x, y, w) => ram(x, y, Lout - w, konec);
+      // límec a kolíky jedné příruby do sítě `cil`
+      const prislusenstvi = (cil, vstup, trubka, vrtani) => {
+        const f = vstup ? vs : vy, lim = f.limec, mapuj = vstup ? mapA : mapB;
+        if (lim) {
+          // výstupní příruba má souřadnice obrysu přečíslované (nejlepsiPosun) —
+          // límec si staví vlastní body, kraje trubky bere z jejích stanic
+          const r = pridejLimec(cil.V, cil.I, cil.Iz, f, lim, N, mapuj, !vstup, krajStanice(trubka), krajStanice(vrtani), t);
+          sit.zeber += r.zeber; sit.nouze += r.nouze;
+          if (vstup) sit.zeberVstup = r.zeber; else sit.zeberVystup = r.zeber;
+        }
+        // bajonetové kolíky (samostatná tělesa jako žebra)
         const kol = f.konec && f.konec.koliky;
-        if (!kol || !(kol.pocet > 0)) continue;
-        const dPlast = f.dO - kO / 2 + (kO / 2) * (kol.w / L);   // plášť po kónusu v místě kolíku
-        const stena = stenaUKoliku(t, L, kol, parametryKonce(p, f === vs ? 'Vstup' : 'Vystup', L));
-        pridejKoliky(sit.V, sit.Iz, f, kol, dPlast, mapuj, Math.max(0.05, Math.min(1, 0.45 * stena)));
-        sit.koliku += kol.pocet;
+        if (kol && kol.pocet > 0) {
+          const L = vstup ? Lin : Lout, kO = (vstup ? p.konusVstupVnejsi : p.konusVystupVnejsi) || 0;
+          const dPlast = f.dO - kO / 2 + (kO / 2) * (kol.w / L);   // plášť po kónusu v místě kolíku
+          const stena = stenaUKoliku(t, L, kol, parametryKonce(p, vstup ? 'Vstup' : 'Vystup', L));
+          pridejKoliky(cil.V, cil.Iz, f, kol, dPlast, mapuj, Math.max(0.05, Math.min(1, 0.45 * stena)));
+          sit.koliku += kol.pocet;
+        }
+      };
+      if (!(spoj && spoj.vstup)) prislusenstvi(sit, true, trubkaA, vrtaniA);
+      if (!(spoj && !spoj.vstup)) prislusenstvi(sit, false, trubkaB, vrtaniB);
+
+      if (kus) {
+        // oddělený kus: vlastní smyčka stanic ve stejném směru oběhu jako příruba v hlavní síti
+        const stan = spoj.vstup ? stanA : stanB, lim = spoj.vstup ? limA : limB, sk = [];
+        let trubka, vrtani;
+        if (spoj.vstup) {
+          for (const [d, w] of kus.ven) sk.push(stan(d, w));
+          trubka = sk[0];
+          for (const [d, w] of kus.vnitr.slice().reverse()) sk.push(stan(d, w));
+          vrtani = sk[sk.length - 1];
+          if (lim) vrtani.mezera = true;
+        } else {
+          for (const [d, w] of kus.ven.slice().reverse()) sk.push(stan(d, w));
+          trubka = sk[sk.length - 1];
+          if (lim) trubka.mezera = true;
+          for (const [d, w] of kus.vnitr) sk.push(stan(d, w));
+          vrtani = sk[sk.length - kus.vnitr.length];
+        }
+        const sitK = sitZeStanic(sk, N);
+        sitK.Iz = [];
+        prislusenstvi(sitK, spoj.vstup, trubka, vrtani);
+        // jedna sada vrcholů, díly jako dva seznamy trojúhelníků
+        const o = sit.V.length / 3;
+        for (const v of sitK.V) sit.V.push(v);
+        const Ik = sitK.I.map(i => i + o), Izk = sitK.Iz.map(i => i + o);
+        sit.dily = [{ nazev: 'hlavní díl', I: sit.I.slice(), Iz: sit.Iz.slice() },
+                    { nazev: spoj.vstup ? 'příruba vstupu' : 'příruba výstupu', I: Ik, Iz: Izk, kus: true }];
+        for (const i of Ik) sit.I.push(i);
+        for (const i of Izk) sit.Iz.push(i);
+        sit.kusVstup = spoj.vstup;
       }
       // směr od napojení k volnému konci výstupu (pro orientaci tisku)
       sit.smerVystupu = [0, Math.sin(konec.fi), Math.cos(konec.fi)];
@@ -1630,6 +1934,13 @@
             if (chyba) return chyba;
           }
         }
+        // dělení na dva díly (automatické místo řezu se doplní sem)
+        if (p.deleni) {
+          const { f, kr } = prirubaDeleni(p);
+          if (p.deleni.auto && isFinite(konecPrvkuPriruby(f, kr))) p.deleni.w = autoRezDeleni(f, kr);
+          const chyba = kontrolaDeleni(p);
+          if (chyba) return chyba;
+        }
         // vnitřní strana oblouku musí zůstat před osou ohybu (jinak se oblouk protne)
         if (p.bendAngle) {
           const vnitrniR = polomerOhybu(p) - rozmeryOhybu(p).vnitrni;
@@ -1705,11 +2016,17 @@
        samostatná uzavřená tělesa zapuštěná do desky i do stěny trubky (slicer
        je sloučí s dílem).
 
-       lim = { tvar: 'obrys'|'obdelnik'|'kruh', sirka, W, H, R, D, tl,
+       lim = { tvar: 'obrys'|'obdelnik'|'kruh', sirka, W, H, R, D, tl, sym,
                otvory: { rozmisteni: 'zadne'|'rohy'|'kruznice'|'obvod', pocet, X, Y,
-                         roztec, osa, uhel, d, zahloubeni: 'zadne'|'kuzel'|'valec'|'matice',
-                         Dh, hloubka, strana: 'zadni'|'celni' },
-               zebra: { pocet, vyska, tloustka, delka, meziOtvory } }  */
+                         roztec, osa, uhel, faze, d, zahloubeni: 'zadne'|'kuzel'|'valec'|'matice',
+                         Dh, hloubka, strana: 'zadni'|'celni', sym },
+               zebra: { pocet, vyska, tloustka, delka, meziOtvory } }
+
+       Souměrnost (sym): otvory i žebra leží zrcadlově podle obou os příruby,
+       takže vrtací šablona (i díl) sedí, ať ji člověk přiloží jakkoli
+       (otočenou o 180° i obrácenou). Všechny průřezy i límce jsou souměrné
+       podle obou os, stačí tedy sudý počet a řada začínající na ose x
+       (faze 0) nebo o půl kroku vedle (faze 0,5 — otvory mezi osami).  */
 
     // obrys desky v souřadnicích příruby (stejné natočení a posun jako příruba)
     function obrysLimce(f, lim, N) {
@@ -1745,14 +2062,14 @@
       if (o.rozmisteni === 'kruznice') {
         const out = [];
         for (let k = 0; k < n; k++) {
-          const u = ((o.uhel || 0) + 360 * k / n) * Math.PI / 180;
+          const u = ((o.uhel || 0) + 360 * (k + (o.faze || 0)) / n) * Math.PI / 180;
           out.push(tr([o.roztec / 2 * Math.cos(u), o.roztec / 2 * Math.sin(u)]));
         }
         return out;
       }
       // po obvodu: rovnoměrně po délce obrysu příruby odsazeného o `osa`
       const P = obrys(f.tvar, struktura(f.tvar, 720), f.dO + o.osa, f.rot, f.posun);
-      return bodyPoObvodu(P, n, o.uhel || 0, f.rot, f.posun).map(b => b.Q);
+      return bodyPoObvodu(P, n, o.uhel || 0, f.rot, f.posun, o.faze).map(b => b.Q);
     }
 
     // vzdálenost bodu od obrysu (k nejbližší hraně), kladná vně, záporná uvnitř
@@ -2087,6 +2404,13 @@
       // výchozí natočení: první žebro na kladné ose x (u souměrných tvarů souměrně)
       const s0 = cesta.zacatek(0);
       const rovnomerne = faze => zebra(Array.from({ length: n }, (_, k) => s0 + obvod * (faze + k) / n));
+      /* Souměrné podle obou os? Poloha s po obvodu (od kladné osy x) se
+         zrcadlením přes osu x mění na −s, přes osu y na obvod/2 − s. */
+      const soumerne = r => {
+        const S = r.map(b => ((b.s - s0) % obvod + obvod) % obvod);
+        const je = t => { t = ((t % obvod) + obvod) % obvod; return S.some(u => Math.min(Math.abs(u - t), obvod - Math.abs(u - t)) < 0.05); };
+        return S.every(u => je(-u) && je(obvod / 2 - u));
+      };
       let nej = rovnomerne(0);
       if (z.meziOtvory && otv.length) {
         // skóre: délka žeber (do 40 mm) a vůle od otvorů (do 6 mm, váha 2);
@@ -2097,20 +2421,31 @@
           return a + Math.min(b.L, 40) + 2 * Math.max(-6, Math.min(v, 6)) + 0.05 * Math.max(-6, Math.min(v, 60));
         }, 0);
         let nejSk = skore(nej);
-        const zkus = r => { const sk = skore(r); if (sk > nejSk + 1e-6) { nejSk = sk; nej = r; } };
+        // u souměrného límce přijde v úvahu jen souměrné rozmístění
+        const zkus = r => {
+          if (lim.sym && !soumerne(r)) return;
+          const sk = skore(r);
+          if (sk > nejSk + 1e-6) { nejSk = sk; nej = r; }
+        };
         for (let k = 1; k < 64; k++) zkus(rovnomerne(k / 64));
         // do mezer mezi otvory: počty po mezerách jako Bresenham podle délky mezery
         const h = otv.map(c => cesta.promitni(c)).sort((a, b) => a - b);
         const m = h.length;
-        for (const fi of [0, 0.25, 0.5, 0.75]) {
+        const mezery = kolikDo => {
           const poloha = [];
           for (let i = 0; i < m; i++) {
-            const a = h[i], b = i + 1 < m ? h[i + 1] : h[0] + obvod, g = b - a;
-            const kolik = Math.floor((b - h[0]) * n / obvod + fi) - Math.floor((a - h[0]) * n / obvod + fi);
+            const a = h[i], b = i + 1 < m ? h[i + 1] : h[0] + obvod, g = b - a, kolik = kolikDo(a, b);
             for (let j = 0; j < kolik; j++) poloha.push(a + g * (j + 1) / (kolik + 1));
           }
           if (poloha.length === n) zkus(zebra(poloha));
+        };
+        const fazi = lim.sym ? 16 : 4;
+        for (let k = 0; k < fazi; k++) {
+          const fi = k / fazi;
+          mezery((a, b) => Math.floor((b - h[0]) * n / obvod + fi) - Math.floor((a - h[0]) * n / obvod + fi));
         }
+        // stejně žeber do každé mezery (souměrné, když jsou souměrné otvory)
+        if (n % m === 0) mezery(() => n / m);
       }
       return nej.filter(b => b.L >= 3);
     }
@@ -2194,43 +2529,49 @@
     function nevejdouSe(f, lim, dVrtani, rezerva, duvod) {
       const o = lim.otvory, chybi = Math.ceil(-2 * rezerva * 2 + 0.01) / 2;
       const otv = 'Otvory Ø' + des(o.d, 1) + (o.zahloubeni !== 'zadne' ? ' s hlavou Ø' + des(o.Dh, 1) : '');
-      if (duvod === 'prekryv') return otv + ' se po obvodu nevejdou vedle sebe — snižte počet otvorů nebo zvětšete límec';
-      const kolik = lim.tvar === 'obrys' ? 'rozšiřte okraj límce aspoň na ' + des(lim.sirka + chybi, 1) + ' mm'
-        : lim.tvar === 'kruh' ? 'zvětšete průměr límce aspoň na ' + des(lim.D + 2 * chybi, 1) + ' mm'
-        : 'zvětšete límec aspoň o ' + des(2 * chybi, 1) + ' mm';
-      return otv + ' se na límec nevejdou' + (duvod === 'drazka' ? ' vedle těsnicí drážky' : '') + ' — ' + kolik
+      if (duvod === 'prekryv') return otv + ' se po obvodu nevejdou vedle sebe — snižte počet otvorů nebo zvětšete přírubu';
+      const kolik = lim.tvar === 'obrys' ? 'rozšiřte okraj příruby aspoň na ' + des(lim.sirka + chybi, 1) + ' mm'
+        : lim.tvar === 'kruh' ? 'zvětšete průměr příruby aspoň na ' + des(lim.D + 2 * chybi, 1) + ' mm'
+        : 'zvětšete přírubu aspoň o ' + des(2 * chybi, 1) + ' mm';
+      return otv + ' se na přírubu nevejdou' + (duvod === 'drazka' ? ' vedle těsnicí drážky' : '') + ' — ' + kolik
         + (o.zahloubeni !== 'zadne' ? ', nebo zvolte menší šroub' : '');
     }
 
     function kontrolaLimce(f, lim, L, dVrtani, nazev) {
-      const kde = ' (límec ' + nazev + ' příruby)';
-      if (neplatnaCisla(lim)) return 'Límec má nevyplněné či neplatné číslo' + kde;
-      if (!(lim.tl >= 0.8)) return 'Tloušťka límce musí být aspoň 0,8 mm' + kde;
-      if (lim.tl > L - 1) return 'Límec je tlustší, než dovolí délka příruby (nejvýš ' + des(L - 1, 1) + ' mm)' + kde;
-      if (lim.tvar === 'obrys' && !(lim.sirka >= 1)) return 'Šířka okraje límce musí být aspoň 1 mm' + kde;
-      if (lim.tvar === 'obdelnik' && !(lim.W > 0 && lim.H > 0)) return 'Rozměry límce musí být kladné' + kde;
-      if (lim.tvar === 'kruh' && !(lim.D > 0)) return 'Průměr límce musí být kladný' + kde;
+      const kde = ' (příruba na ' + (nazev === 'vstupní' ? 'vstupu' : 'výstupu') + ')';
+      if (neplatnaCisla(lim)) return 'Příruba má nevyplněné či neplatné číslo' + kde;
+      if (!(lim.tl >= 0.8)) return 'Tloušťka příruby musí být aspoň 0,8 mm' + kde;
+      if (lim.tl > L - 1) return 'Příruba je tlustší, než dovolí délka trubky (nejvýš ' + des(L - 1, 1) + ' mm)' + kde;
+      if (lim.tvar === 'obrys' && !(lim.sirka >= 1)) return 'Šířka okraje příruby musí být aspoň 1 mm' + kde;
+      if (lim.tvar === 'obdelnik' && !(lim.W > 0 && lim.H > 0)) return 'Rozměry příruby musí být kladné' + kde;
+      if (lim.tvar === 'kruh' && !(lim.D > 0)) return 'Průměr příruby musí být kladný' + kde;
       const plat = obrysLimce(f, lim, 256);
       const z = lim.zesileni && lim.zesileni.velikost > 0 ? lim.zesileni.velikost : 0;
-      if (z > 0 && lim.tl + z > L - 0.5) return 'Zesílení u límce je delší, než dovolí délka příruby' + kde;
+      if (z > 0 && lim.tl + z > L - 0.5) return 'Zesílení u příruby je delší, než dovolí délka trubky' + kde;
       const strF = struktura(f.tvar, 256);
       const trubka = obrys(f.tvar, strF, f.dO + z, f.rot, f.posun);   // pata trubky na zadní straně desky
       if (!obsahuje(plat, obrys(f.tvar, strF, f.dO + z + 1, f.rot, f.posun))) {
-        return 'Límec musí přesahovat přírubu' + (z ? ' i se zesílením' : '') + ' všude aspoň o 1 mm' + kde;
+        return 'Příruba musí přesahovat trubku' + (z ? ' i se zesílením' : '') + ' všude aspoň o 1 mm' + kde;
       }
       const dr = lim.drazka;
       if (dr) {
         if (!(dr.sirka >= 0.5 && dr.hloubka >= 0.3)) return 'Drážka musí být široká aspoň 0,5 mm a hluboká aspoň 0,3 mm' + kde;
-        if (dr.hloubka > lim.tl - 0.8) return 'Drážka je hlubší, než dovolí límec (nejvýš ' + des(lim.tl - 0.8, 1) + ' mm)' + kde;
+        if (dr.hloubka > lim.tl - 0.8) return 'Drážka je hlubší, než dovolí příruba (nejvýš ' + des(lim.tl - 0.8, 1) + ' mm)' + kde;
         const vrt = obrys(f.tvar, strF, dVrtani + 0.8, f.rot, f.posun);
         if (!obsahuje(obrys(f.tvar, strF, f.dO + dr.osa - dr.sirka / 2, f.rot, f.posun), vrt)) {
           return 'Drážka zasahuje do díry příruby — zvětšete osu drážky' + kde;
         }
         if (!obsahuje(plat, obrys(f.tvar, strF, f.dO + dr.osa + dr.sirka / 2 + 0.8, f.rot, f.posun))) {
-          return 'Drážka zasahuje za okraj límce' + kde;
+          return 'Drážka zasahuje za okraj příruby' + kde;
         }
       }
       const o = lim.otvory;
+      if (lim.sym && (o.rozmisteni === 'obvod' || o.rozmisteni === 'kruznice') && Math.round(o.pocet) % 2) {
+        return 'Souměrně podle obou os jde jen sudý počet otvorů (zadáno ' + Math.round(o.pocet) + ')' + kde;
+      }
+      if (lim.sym && lim.zebra && Math.round(lim.zebra.pocet) % 2) {
+        return 'Souměrně podle obou os jde jen sudý počet žeber (zadáno ' + Math.round(lim.zebra.pocet) + ')' + kde;
+      }
       const otv = otvoryLimce(f, lim);
       if (otv.length) {
         if (!(o.d > 0)) return 'Průměr otvoru musí být kladný' + kde;
@@ -2240,8 +2581,8 @@
             + ' musí být větší než otvor' + kde;
           const hl = o.zahloubeni === 'kuzel' ? (o.Dh - o.d) / 2 : o.hloubka;
           if (!(hl > 0)) return 'Hloubka zahloubení musí být kladná' + kde;
-          if (hl > lim.tl - 0.4) return 'Zahloubení (' + des(hl, 1) + ' mm) je hlubší, než dovolí límec ' + des(lim.tl, 1)
-            + ' mm — zesilte límec nebo zmenšete hlavu' + kde;
+          if (hl > lim.tl - 0.4) return 'Zahloubení (' + des(hl, 1) + ' mm) je hlubší, než dovolí příruba ' + des(lim.tl, 1)
+            + ' mm — zesilte přírubu nebo zmenšete hlavu' + kde;
         }
         // automatická poloha se nevešla: říct, co s tím, místo hlášky o jednom otvoru
         if (o.auto && o.autoRezerva < 0) return nevejdouSe(f, lim, dVrtani, o.autoRezerva, o.autoDuvod) + kde;
@@ -2261,7 +2602,7 @@
         const mimo = (A, B) => !A.some(p => uvnitr(p, B)) && !B.some(p => uvnitr(p, A));
         for (let i = 0; i < otv.length; i++) {
           const c = otv[i], rmax = Math.max(r.celo, r.zada);
-          if (!obsahuje(plat, kruh(c, rmax + 0.8))) return 'Otvor č. ' + (i + 1) + ' zasahuje za okraj límce' + kde + rada();
+          if (!obsahuje(plat, kruh(c, rmax + 0.8))) return 'Otvor č. ' + (i + 1) + ' zasahuje za okraj příruby' + kde + rada();
           if (!mimo(kruh(c, r.zada + 0.5), trubka)) return 'Otvor č. ' + (i + 1) + ' zasahuje do trubky' + kde + rada();
           if (!mimo(kruh(c, r.celo + 0.5), vrtani)) return 'Otvor č. ' + (i + 1) + ' zasahuje do díry příruby' + kde + rada();
           if (dr) {
@@ -2285,7 +2626,7 @@
         if (!(zb.tloustka >= 0.8)) return 'Žebra musí být silná aspoň 0,8 mm' + kde;
         if (zb.pocet > 32) return 'Žeber může být nejvýš 32' + kde;
         if (!(zb.vyska >= 2)) return 'Žebra musí být vysoká aspoň 2 mm' + kde;
-        if (zb.vyska > L - lim.tl - 0.5) return 'Žebra jsou vyšší, než kolik zbývá z příruby nad límcem ('
+        if (zb.vyska > L - lim.tl - 0.5) return 'Žebra jsou vyšší, než kolik zbývá z trubky nad přírubou ('
           + des(Math.max(0, L - lim.tl - 0.5), 1) + ' mm)' + kde;
       }
       return null;
@@ -2319,7 +2660,7 @@
         if (-dMin >= 0.95 * minKrivost(tv)) return 'Doraz je na tuto plochou elipsu příliš vysoký' + kde;
       }
       const oz = k.ozuby, kol = k.koliky;
-      if ((oz || kol) && f.limec) return 'Ozuby ani kolíky nejdou na přírubě s límcem — konec zakrývá deska' + kde;
+      if ((oz || kol) && f.limec) return 'Ozuby ani kolíky nejdou na konci s přírubou — konec zakrývá deska' + kde;
       if (oz) {
         if (!(oz.pocet >= 1 && oz.vyska >= 0.2 && oz.roztec >= 1)) return 'Ozuby: aspoň 1 zub, výška 0,2 mm a rozteč 1 mm' + kde;
         if (oz.pocet > 30) return 'Ozubů může být nejvýš 30' + kde;
@@ -2419,12 +2760,14 @@
     }
 
     /* 3MF: díl a žebra jako dvě části jednoho objektu (slicer je sloučí).
+       U dělené redukce má každý díl svůj objekt: casti = [[jméno, I, skupina]],
+       skupiny = jména objektů (bez nich je vše jeden objekt `nazev`).
        Vrací seznam souborů balíčku; zip() je zabalí. */
-    function soubory3MF(V, casti, nazev) {
+    function soubory3MF(V, casti, nazev, skupiny) {
       const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
       const objekty = [];
       let id = 1;
-      for (const [jm, I] of casti) {
+      for (const [jm, I, sk] of casti) {
         if (!I.length) continue;
         const mapa = new Map(), vv = [], tt = [];
         const idx = i => {
@@ -2432,16 +2775,17 @@
           return mapa.get(i);
         };
         for (let f = 0; f < I.length; f += 3) tt.push(`<triangle v1="${idx(I[f])}" v2="${idx(I[f + 1])}" v3="${idx(I[f + 2])}"/>`);
-        objekty.push({ id: id++, xml: `<object id="${id - 1}" type="model" name="${esc(jm)}"><mesh><vertices>${vv.join('')}</vertices><triangles>${tt.join('')}</triangles></mesh></object>` });
+        objekty.push({ id: id++, sk: sk || 0, xml: `<object id="${id - 1}" type="model" name="${esc(jm)}"><mesh><vertices>${vv.join('')}</vertices><triangles>${tt.join('')}</triangles></mesh></object>` });
       }
-      const slozeny = id;
+      const slozene = (skupiny || [nazev]).map((jm, k) => ({ id: id + k, jm, casti: objekty.filter(o => o.sk === k) }))
+        .filter(g => g.casti.length);
       const model = '<?xml version="1.0" encoding="UTF-8"?>\n'
         + '<model unit="millimeter" xml:lang="cs-CZ" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         + `<metadata name="Title">${esc(nazev)}</metadata><metadata name="Application">Redukce se zploštěním</metadata><resources>`
         + objekty.map(o => o.xml).join('')
-        + `<object id="${slozeny}" type="model" name="${esc(nazev)}"><components>`
-        + objekty.map(o => `<component objectid="${o.id}"/>`).join('')
-        + `</components></object></resources><build><item objectid="${slozeny}"/></build></model>`;
+        + slozene.map(g => `<object id="${g.id}" type="model" name="${esc(g.jm)}"><components>`
+          + g.casti.map(o => `<component objectid="${o.id}"/>`).join('') + '</components></object>').join('')
+        + '</resources><build>' + slozene.map(g => `<item objectid="${g.id}"/>`).join('') + '</build></model>';
       const enc = new TextEncoder();
       return ([
         { jmeno: '[Content_Types].xml', data: enc.encode('<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
@@ -2453,7 +2797,7 @@
       ]);
     }
     // nezabalený 3MF (pro testy a prohlížeče bez CompressionStream)
-    const soubor3MF = (V, casti, nazev) => zip(soubory3MF(V, casti, nazev));
+    const soubor3MF = (V, casti, nazev, skupiny) => zip(soubory3MF(V, casti, nazev, skupiny));
 
     /* Řez sítí rovinou x = 0 (rovina ohybu, prochází osou): úsečky [y1, z1, y2, z2]. */
     function rezRovinouX(V, I) {
@@ -2567,8 +2911,6 @@
             </div>
           </div>` : '';
       return `
-        <div class="panel">
-          <h2>${nadpis}</h2>
           <div class="form-group">
             <label for="${pref}Tvar">Tvar průřezu</label>
             <select id="${pref}Tvar">${moznosti}</select>
@@ -2609,8 +2951,7 @@
             </div>
           </div>
           ${vyoseni}
-          <div class="poznamka" id="${pref}Poznamka"></div>
-        </div>`;
+          <div class="poznamka" id="${pref}Poznamka"></div>`;
     }
 
     const VYCHOZI_VSTUP = { tvar: 'kruh', D: 100, W: 120, H: 40, R: 8 };
@@ -2619,7 +2960,7 @@
     /* Límec: výchozí hodnoty (klíč = přípona id za předponou inL / outL). */
     const VYCHOZI_LIMEC = {
       Tvar: 'obrys', Sirka: 18, W: 160, H: 130, R: 6, D: 170, Tl: 5,
-      Rozm: 'obvod', Auto: true, Pocet: 4, X: 136, Y: 106, Roztec: 140, Osa: 9, Uhel: 0,
+      Rozm: 'obvod', Auto: true, Pocet: 4, X: 136, Y: 106, Roztec: 140, Osa: 9, Uhel: 0, Sym: true, Rada: 'mimo',
       Sroub: 'M4', Dira: 4.5, Zah: 'kuzel', Dh: 8.4, Hl: 4.3, Strana: 'zadni',
       ZPocet: 4, ZVyska: 12, ZTl: 2.4, ZDelka: 0, ZMezi: true,
       ZesV: 0, ZesT: 'zaobleni',
@@ -2645,8 +2986,6 @@
         + moznosti.map(([k, n]) => `<option value="${k}"${k === hodnota ? ' selected' : ''}>${n}</option>`).join('')
         + `</select></div>`;
       return `
-        <div class="panel">
-          <h2>${nadpis}</h2>
           <div class="poznamka skryto" id="${K}JenDlouha">Doraz a zajištění jsou k dispozici u dlouhé redukce.</div>
           <div id="${K}Telo">
             <label class="zaskrt"><input type="checkbox" id="${pref}Doraz">
@@ -2672,8 +3011,7 @@
               ${pole('KUhel', 'Natočení (°)', v.KUhel, 'step="15"')}
             </div>
             <div class="poznamka" id="${K}Poznamka"></div>
-          </div>
-        </div>`;
+          </div>`;
     }
 
     function ctiKonec(pref) {
@@ -2714,34 +3052,36 @@
         + moznosti.map(([k, n]) => `<option value="${k}"${k === hodnota ? ' selected' : ''}>${n}</option>`).join('')
         + `</select></div>`;
       return `
-        <div class="panel">
-          <h2>${nadpis}</h2>
           <label class="zaskrt"><input type="checkbox" id="${pref}Limec">
-            <span>Límec na konci příruby (montážní deska pro přišroubování)</span></label>
-          <div class="poznamka skryto" id="${L}JenDlouha">Límec je k dispozici u dlouhé redukce.</div>
+            <span>Příruba na konci trubky (montážní deska pro přišroubování)</span></label>
+          <div class="poznamka skryto" id="${L}JenDlouha">Příruba je k dispozici u dlouhé redukce.</div>
           <div id="${L}Telo">
-            ${vyber('Tvar', 'Tvar límce', [['obrys', 'Kopíruje obrys příruby'], ['obdelnik', 'Obdélník'], ['kruh', 'Kruh']], v.Tvar)}
+            ${vyber('Tvar', 'Tvar příruby', [['obrys', 'Kopíruje obrys trubky'], ['obdelnik', 'Obdélník'], ['kruh', 'Kruh']], v.Tvar)}
             <div class="mrizka2">
               ${pole('Sirka', 'Šířka okraje', v.Sirka, 'min="1" step="1"')}
               ${pole('W', 'Šířka (mm)', v.W, 'min="1" step="1"')}
               ${pole('H', 'Výška (mm)', v.H, 'min="1" step="1"')}
               ${pole('R', 'Zaoblení rohů', v.R, 'min="0" step="1"')}
               ${pole('D', 'Průměr (mm)', v.D, 'min="1" step="1"')}
-              ${pole('Tl', 'Tloušťka límce', v.Tl, 'min="0.8" step="0.5"')}
+              ${pole('Tl', 'Tloušťka příruby', v.Tl, 'min="0.8" step="0.5"')}
             </div>
 
+            <label class="zaskrt" id="${L}SymSk"><input type="checkbox" id="${L}Sym"${v.Sym ? ' checked' : ''}>
+              <span>Otvory a žebra souměrně podle obou os (vrtací šablona ani díl nejdou přiložit obráceně)</span></label>
+
             <div class="podnadpis">Otvory pro šrouby</div>
-            ${vyber('Rozm', 'Rozmístění', [['zadne', 'Bez otvorů'], ['obvod', 'Po obvodu (kolem příruby)'],
+            ${vyber('Rozm', 'Rozmístění', [['zadne', 'Bez otvorů'], ['obvod', 'Po obvodu (kolem trubky)'],
               ['kruznice', 'Na roztečné kružnici'], ['rohy', 'Do rohů obdélníku (4×)']], v.Rozm)}
             <label class="zaskrt" id="${L}AutoSk"><input type="checkbox" id="${L}Auto"${v.Auto ? ' checked' : ''}>
               <span>Polohu otvorů dopočítat (doprostřed okraje, s místem na matici)</span></label>
             <div class="mrizka2" id="${L}OtvorySk">
               ${pole('Pocet', 'Počet otvorů', v.Pocet, 'min="1" max="48" step="1"')}
-              ${pole('Osa', 'Osa od příruby', v.Osa, 'min="1" step="0.5"')}
+              ${pole('Osa', 'Osa od trubky', v.Osa, 'min="1" step="0.5"')}
               ${pole('Roztec', 'Roztečný Ø', v.Roztec, 'min="1" step="1"')}
               ${pole('X', 'Rozteč X', v.X, 'min="1" step="1"')}
               ${pole('Y', 'Rozteč Y', v.Y, 'min="1" step="1"')}
               ${pole('Uhel', 'Natočení řady (°)', v.Uhel, 'step="5"')}
+              ${vyber('Rada', 'Řada otvorů', [['mimo', 'Mezi osami'], ['osa', 'První na ose x']], v.Rada)}
               ${vyber('Sroub', 'Šroub', [['M3', 'M3'], ['M4', 'M4'], ['M5', 'M5'], ['M6', 'M6'], ['vlastni', 'Vlastní']], v.Sroub)}
               ${pole('Dira', 'Otvor Ø', v.Dira, 'min="0.5" step="0.1"')}
               ${vyber('Zah', 'Zahloubení', [['zadne', 'Bez'], ['kuzel', 'Kužel 90° (zápustný)'],
@@ -2762,7 +3102,7 @@
             <label class="zaskrt" id="${L}ZMeziSk"><input type="checkbox" id="${L}ZMezi"${v.ZMezi ? ' checked' : ''}>
               <span>Natočit žebra mezi otvory (aby nepřekážela šroubům)</span></label>
             <div class="mrizka2">
-              ${pole('ZesV', 'Zesílení stěny u límce', v.ZesV, 'min="0" step="0.5"')}
+              ${pole('ZesV', 'Zesílení stěny u příruby', v.ZesV, 'min="0" step="0.5"')}
               ${vyber('ZesT', 'Tvar zesílení', [['zaobleni', 'Zaoblení'], ['zkoseni', 'Zkosení 45°']], v.ZesT)}
             </div>
 
@@ -2771,13 +3111,12 @@
               <span>Drážka pro těsnicí šňůru / O-kroužek</span></label>
             <div class="mrizka2" id="${L}DrazkaSk">
               ${vyber('DrSnura', 'Šňůra Ø', [['1.5', '1,5 mm'], ['2', '2 mm'], ['2.5', '2,5 mm'], ['3', '3 mm'], ['4', '4 mm'], ['vlastni', 'Vlastní']], v.DrSnura)}
-              ${pole('DrOsa', 'Osa od příruby', v.DrOsa, 'min="0.5" step="0.5"')}
+              ${pole('DrOsa', 'Osa od trubky', v.DrOsa, 'min="0.5" step="0.5"')}
               ${pole('DrSirka', 'Šířka drážky', v.DrSirka, 'min="0.5" step="0.1"')}
               ${pole('DrHloubka', 'Hloubka drážky', v.DrHloubka, 'min="0.3" step="0.1"')}
             </div>
             <div class="poznamka" id="${L}Poznamka"></div>
-          </div>
-        </div>`;
+          </div>`;
     }
 
     function ctiLimec(pref) {
@@ -2785,11 +3124,14 @@
       const L = pref + 'L';
       const c = (id, n) => cislo(L + id, n === undefined ? 0 : n);
       const h = id => document.getElementById(L + id).value;
+      // souměrně: řada na ose x, nebo o půl kroku vedle (natočení se nepoužije)
+      const sym = document.getElementById(L + 'Sym').checked;
       return {
-        tvar: h('Tvar'), sirka: c('Sirka'), W: c('W'), H: c('H'), R: c('R'), D: c('D'), tl: c('Tl'),
+        tvar: h('Tvar'), sirka: c('Sirka'), W: c('W'), H: c('H'), R: c('R'), D: c('D'), tl: c('Tl'), sym,
         otvory: { rozmisteni: h('Rozm'), auto: document.getElementById(L + 'Auto').checked,
                   pocet: c('Pocet', 1), X: c('X'), Y: c('Y'), roztec: c('Roztec'),
-                  osa: c('Osa'), uhel: c('Uhel'), d: c('Dira'), zahloubeni: h('Zah'), Dh: c('Dh'),
+                  osa: c('Osa'), uhel: sym ? 0 : c('Uhel'), faze: sym && h('Rada') === 'mimo' ? 0.5 : 0, sym,
+                  d: c('Dira'), zahloubeni: h('Zah'), Dh: c('Dh'),
                   hloubka: c('Hl'), strana: h('Strana') },
         zebra: { pocet: c('ZPocet'), vyska: c('ZVyska'), tloustka: c('ZTl'), delka: c('ZDelka'),
                  meziOtvory: document.getElementById(L + 'ZMezi').checked },
@@ -2974,6 +3316,12 @@
       p.vystup.konec = typ === 'short' ? null : ctiKonec('out');
       if (p.vstup.limec) { p.konusVstupVnejsi = 0; p.srazVstupVnejsi = 0; }
       if (p.vystup.limec) { p.konusVystupVnejsi = 0; p.srazVystupVnejsi = 0; }
+      p.deleni = typ !== 'short' && document.getElementById('deleni').checked
+        ? { kde: document.getElementById('deleniKde').value, typ: document.getElementById('deleniTyp').value,
+            auto: document.getElementById('deleniAuto').checked, w: cislo('deleniW'), h: cislo('deleniH'),
+            vule: cislo('deleniVule'), zesileni: cislo('deleniZes'), koren: cislo('deleniKoren'),
+            drazky: Math.round(cislo('deleniDrazky', 0)), hloubkaDrazek: cislo('deleniDrHl') }
+        : null;
 
       if (typ === 'short') p.stenaObjimky = stenaObjimky(p);
       const chyba = zkontrolujZadani(p);
@@ -2986,6 +3334,8 @@
         else if (o.rozmisteni === 'kruznice') pis('Roztec', o.roztec);
         else if (o.rozmisteni === 'rohy') { pis('X', o.X); pis('Y', o.Y); }
       }
+      // dopočtené místo řezu
+      if (p.deleni && p.deleni.auto && isFinite(p.deleni.w)) document.getElementById('deleniW').value = p.deleni.w;
       return chyba ? { chyba } : { p };
     }
 
@@ -3033,11 +3383,13 @@
         // dopočtená poloha: políčka jen ukazují výsledek
         for (const id of ['Osa', 'Roztec', 'X', 'Y']) {
           el(id).readOnly = el('Auto').checked;
-          el(id).title = el('Auto').checked ? 'Dopočteno z límce — pro ruční zadání vypněte „Polohu otvorů dopočítat“' : '';
+          el(id).title = el('Auto').checked ? 'Dopočteno z příruby — pro ruční zadání vypněte „Polohu otvorů dopočítat“' : '';
         }
         ukaz('Pocet', rozm === 'obvod' || rozm === 'kruznice'); ukaz('Osa', rozm === 'obvod');
         ukaz('Roztec', rozm === 'kruznice'); ukaz('X', rozm === 'rohy'); ukaz('Y', rozm === 'rohy');
-        ukaz('Uhel', rozm === 'obvod' || rozm === 'kruznice');
+        const sym = el('Sym').checked, rada = rozm === 'obvod' || rozm === 'kruznice';
+        ukaz('Uhel', rada && !sym); ukaz('Rada', rada && sym);
+        ukaz('Sym', rozm !== 'zadne' || cislo(L + 'ZPocet', 0) > 0);
         ukaz('Dh', zah !== 'zadne'); ukaz('Hl', zah === 'valec' || zah === 'matice'); ukaz('Strana', zah !== 'zadne');
         document.getElementById(L + 'DhPopis').textContent = zah === 'matice' ? 'Matice — klíč S' : 'Hlava Ø';
         el('HlSk').querySelector('label').textContent = zah === 'matice' ? 'Výška matice' : 'Hloubka';
@@ -3048,20 +3400,25 @@
         const pozn = [];
         const konus = document.getElementById(pref + 'KonusMode').value, sraz = document.getElementById(pref + 'SrazMode').value;
         if (zapnuto && (konus === 'vnejsi' || konus === 'oboje' || sraz === 'vnejsi' || sraz === 'oboje')) {
-          pozn.push('Kónus a sražení zvenku se u příruby s límcem nepoužijí — konec zakrývá deska (zevnitř platí dál).');
+          pozn.push('Kónus a sražení zvenku se u konce s přírubou nepoužijí — konec zakrývá deska (zevnitř platí dál).');
         }
         if (zah === 'kuzel' && rozm !== 'zadne') {
           pozn.push('Kuželové zahloubení 90° je hluboké ' + des(Math.max(0, (cislo(L + 'Dh', 0) - cislo(L + 'Dira', 0)) / 2), 1) + ' mm.');
         }
         if (zah !== 'zadne' && rozm !== 'zadne') {
           pozn.push(el('Strana').value === 'zadni'
-            ? 'Hlava (matice) je na zadní straně, čelo límce zůstane rovné a dosedne celou plochou.'
+            ? 'Hlava (matice) je na zadní straně, čelo příruby zůstane rovné a dosedne celou plochou.'
             : 'Hlava (matice) je zapuštěná v čele — šroubuje se z dosedací strany.');
         }
-        if (zebra) pozn.push('Žebra jsou samostatná tělesa zapuštěná do límce i stěny; slicer je s dílem sloučí. '
-          + 'Svazují límec s trubkou přes víc vrstev, takže se límec neutrhne po vrstvě.');
-        if (cislo(L + 'ZesV', 0) > 0) pozn.push('Zesílení rozloží namáhání v rohu mezi límcem a trubkou (vrubový účinek) a tiskne se bez podpor.');
-        if (el('Drazka').checked) pozn.push('Drážka obíhá přírubu v zadané vzdálenosti; otvory musí ležet celé uvnitř, nebo celé vně drážky.');
+        if (sym && (rozm !== 'zadne' || zebra)) {
+          const n = Math.round(cislo(L + 'Pocet', 0));
+          pozn.push('Souměrně podle obou os: šablona i díl sednou otočené o 180° i obrácené, počet otvorů a žeber musí být sudý'
+            + (rada && el('Rada').value === 'mimo' && n % 4 === 2 ? ' (u ' + n + ' otvorů zůstane jedna dvojice na ose y)' : '') + '.');
+        }
+        if (zebra) pozn.push('Žebra jsou samostatná tělesa zapuštěná do příruby i stěny; slicer je s dílem sloučí. '
+          + 'Svazují přírubu s trubkou přes víc vrstev, takže se příruba neutrhne po vrstvě.');
+        if (cislo(L + 'ZesV', 0) > 0) pozn.push('Zesílení rozloží namáhání v rohu mezi přírubou a trubkou (vrubový účinek) a tiskne se bez podpor.');
+        if (el('Drazka').checked) pozn.push('Drážka obíhá trubku v zadané vzdálenosti; otvory musí ležet celé uvnitř, nebo celé vně drážky.');
         el('Poznamka').textContent = pozn.join(' ');
 
         // doraz a zajištění
@@ -3076,8 +3433,37 @@
         if (document.getElementById(pref + 'Doraz').checked) pk.push('Doraz zúží díru ve vzdálenosti „hloubka zasunutí“ od konce. Úkos 45° na spodní straně (při tisku) se obejde bez podpor.');
         if (zaj === 'ozuby') pk.push('Zuby od konce pozvolna stoupají, hadice se nasune; kolmý stupeň za každým zubem ji drží. Na hadici dejte ještě sponu.');
         if (zaj === 'koliky') pk.push('Kolíky kolmo k plášti; do protikusu vyřízněte drážku tvaru L (zasunout a pootočit). Kolíky jsou samostatná tělesa zapuštěná do stěny.');
-        if (zaj !== 'zadne' && zapnuto) pk.push('Pozor: na přírubě s límcem zajištění nejde.');
+        if (zaj !== 'zadne' && zapnuto) pk.push('Pozor: na konci s přírubou zajištění nejde.');
         ek('Poznamka').textContent = pk.join(' ');
+      }
+      {
+        const zap = document.getElementById('deleni').checked, auto = document.getElementById('deleniAuto').checked;
+        document.getElementById('deleniJenDlouha').classList.toggle('skryto', !(zap && typ === 'short'));
+        document.getElementById('deleniTelo').classList.toggle('skryto', !zap || typ === 'short');
+        const w = document.getElementById('deleniW');
+        w.readOnly = auto;
+        // dělené díly se tisknou vždy řezem nahoru — volba orientace neplatí
+        const orient = document.getElementById('orientaceTisku');
+        orient.disabled = zap && typ !== 'short';
+        orient.title = orient.disabled ? 'U dělené redukce se oba díly tisknou řezem nahoru (čelem s přírubou dolů)' : '';
+        w.title = auto ? 'Dopočteno — pro ruční zadání vypněte „Místo řezu dopočítat“' : '';
+        const oba = document.getElementById('inLimec').checked && document.getElementById('outLimec').checked;
+        const pd = [];
+        if (typ !== 'short' && !zap && oba) pd.push('Příruby na obou koncích: při tisku jedna leží na podložce a druhá visí ve vzduchu (potřebuje podpory). Rozdělením se z dílu stanou dva kusy, každý se tiskne přírubou dolů.');
+        const hrdlo = document.getElementById('deleniTyp').value === 'hrdlo';
+        document.getElementById('deleniKorenSk').classList.toggle('skryto', !hrdlo);
+        const drazky = cislo('deleniDrazky', 0) > 0;
+        document.getElementById('deleniDrHlSk').classList.toggle('skryto', !drazky);
+        if (zap && !hrdlo) pd.push('Řez vede kolmo k ose v rovné části příruby. Stěna se v délce zasunutí rozdělí napůl: vnější polovina je hrdlo na hlavním dílu, vnitřní čep na odděleném kusu — vnějšek i díra zůstanou hladké, ale ve spoji má každý kus jen poloviční stěnu.');
+        if (zap && hrdlo) pd.push('Konec trubky zůstane v plné stěně a zasune se do hrdla, které se rozšíří ven a má také plnou stěnu — nic se nezeslabí, zvenku jen přibude obruč se zkosením 45° (tiskne se bez podpor). '
+          + 'Čep dosedne na dno hrdla; roh dna vyplní náběh 45° (ostrý vnitřní roh by byl vrub, kde praská), konec čepu je o kousek víc sražený, aby náběh minul, a okraj hrdla má vstupní sražení. Pro lepený spoj volte zasunutí aspoň polovinu průměru.');
+        if (zap && drazky && cislo('deleniDrHl', 0) < 0.3) pd.push('Pozor: drážka mělčí než asi 0,3 mm je pod rozlišením běžné trysky 0,4 — slicer ji může vyhladit; ověřte v náhledu sliceru.');
+        if (zap && drazky) pd.push('Drážky na lepidlo obíhají čep (boky 45°, tisknou se bez podpor): lepidlo v nich po vytvrzení drží i tvarově, takže čep nevyklouzne, ani když lepidlo k plastu špatně přilne. Lepidlo naneste do drážek i na hrdlo, přebytek vyteče u okraje hrdla.');
+        if (zap) pd.push('Oba kusy se tisknou řezem nahoru (bez podpor; export je tak rovnou natočí vedle sebe), slepí se nebo utěsní silikonem. Vůle 0,1–0,2 mm na stranu sedí na PLA/PETG s tryskou 0,4.');
+        if (zap && document.getElementById(document.getElementById('deleniKde').value === 'vstup' ? 'inTvar' : 'outTvar').value === 'kruh') {
+          pd.push('Kruhový čep se v hrdle volně otáčí — před slepením natočte otvory obou přírub podle protikusů.');
+        }
+        document.getElementById('deleniPoznamka').textContent = pd.join(' ');
       }
       document.getElementById('smerProudeniSk').classList.toggle('skryto', !(cislo('prutokQ', 0) > 0));
       const ohyb = cislo('bendAngle', 0) !== 0;
@@ -3099,10 +3485,11 @@
       document.getElementById('poznamkaTyp').textContent = typ === 'short'
         ? 'Vnějškem se díl zasune do vstupní trubky, do díry se zasune výstupní. Objímka je vložená '
           + 'dovnitř, takže délka dílu je délka vstupní příruby (délka přechodu se nepoužije).'
-        : 'Vstupní příruba zůstává na místě, výstupní se stočí po oblouku o zadaný úhel a zvoleným směrem '
+        : 'Vstup zůstává na místě, výstup se stočí po oblouku o zadaný úhel a zvoleným směrem '
           + '(u zploštělé příruby rozhoduje, zda se ohýbá přes výšku, nebo přes šířku; záporný úhel směr obrátí; '
           + 'šipka v nákresu průřezů ukazuje, kam se díl ohne). Plynulý '
           + 'přechod navazuje na příruby bez zlomu, přímý je rovná plocha (snáz se tiskne bez podpor).';
+      aktualizujSouhrny();
     }
 
     /* ------------------------------------------------------------------ */
@@ -3126,8 +3513,8 @@
       const prurezy = [];
       let html = '';
       for (const [f, nazev, kO, kI, sO, sI, steny] of [
-        [p.vstup, 'Vstupní příruba', p.konusVstupVnejsi, p.konusVstupVnitrni, p.srazVstupVnejsi, p.srazVstupVnitrni, p.wallThickness],
-        [p.vystup, vlozena ? 'Výstup (díra s objímkou)' : 'Výstupní příruba', p.konusVystupVnejsi, p.konusVystupVnitrni,
+        [p.vstup, 'Vstup', p.konusVstupVnejsi, p.konusVstupVnitrni, p.srazVstupVnejsi, p.srazVstupVnitrni, p.wallThickness],
+        [p.vystup, vlozena ? 'Výstup (díra s objímkou)' : 'Výstup', p.konusVystupVnejsi, p.konusVystupVnitrni,
           p.srazVystupVnejsi, p.srazVystupVnitrni, vlozena ? p.stenaObjimky : p.wallThickness]]) {
         const str = struktura(f.tvar, N);
         const dOut = vlozena && f === p.vystup ? f.dO + steny : f.dO;
@@ -3153,7 +3540,7 @@
         if (f.konec && f.konec.koliky) html += radek('Kolíky:', f.konec.koliky.pocet + '× Ø' + f.konec.koliky.prumer.toLocaleString('cs-CZ') + ' mm');
         if (f.limec) {
           const l = f.limec, o = l.otvory;
-          html += radek('Límec:', wh(obrysLimce({ ...f, rot: 0, posun: null }, l, 128)) + ' × ' + l.tl.toLocaleString('cs-CZ') + ' mm');
+          html += radek('Příruba:', wh(obrysLimce({ ...f, rot: 0, posun: null }, l, 128)) + ' × ' + l.tl.toLocaleString('cs-CZ') + ' mm');
           const otv = otvoryLimce(f, l);
           if (otv.length) {
             const zah = { zadne: '', kuzel: ', zápustné', valec: ', válcová hlava', matice: ', matice' }[o.zahloubeni];
@@ -3169,6 +3556,27 @@
         }
         html += radek('Světlý průřez:', Math.round(A).toLocaleString('cs-CZ') + ' mm²');
         html += radek('Hydraulický Ø:', mm(4 * A / O));
+        html += '</div>';
+      }
+      if (p.deleni) {
+        const sp = spojDeleni(p), d = p.deleni;
+        html += '<div class="flange-info-group"><div class="flange-info-title">Dělení na dva díly</div>';
+        html += radek('Oddělená příruba:', sp.vstup ? 'vstup' : 'výstup');
+        html += radek('Řez od čela:', mm(sp.wc));
+        html += radek('Oddělený kus:', mm(sp.delkaKusu) + ' (s čepem)');
+        if (sp.typ === 'hrdlo') {
+          html += radek('Typ spoje:', 'hrdlo přes celou stěnu');
+          html += radek('Zasunutí:', mm(sp.wj - sp.wc) + ' · čep ' + des(sp.stenaCepu, 2) + ' mm (plná stěna)');
+          html += radek('Hrdlo:', 'stěna ' + des(sp.stenaHrdla, 2) + ' mm, obruč +' + des(sp.obruc, 1) + ' mm zvenku');
+          if (sp.nabeh) html += radek('Náběh / sražení čepu:', des(sp.nabeh, 1) + ' / ' + des(sp.sraz, 1) + ' mm');
+          html += radek('Vůle:', des(d.vule, 2) + ' mm na stranu, čep dosedne na dno');
+        } else {
+          html += radek('Typ spoje:', 'polodrážka');
+          html += radek('Čep / hrdlo:', mm(sp.wj - sp.wc) + ' · stěna ' + des(sp.stenaCepu, 2) + ' / ' + des(sp.stenaHrdla, 2) + ' mm');
+          html += radek('Vůle:', des(d.vule, 2) + ' mm na stranu, u dna ' + des(MEZERA_DNA, 1) + ' mm');
+        }
+        if (sp.drazky.length) html += radek('Drážky na lepidlo:', sp.drazky.length + '× ' + des(sp.drazky[0].g, 1) + ' mm, šířka '
+          + des(sp.drazky[0].l, 1) + ' mm');
         html += '</div>';
       }
       html += '<div class="flange-info-group">';
@@ -3297,8 +3705,8 @@
       document.getElementById('panelVystup').innerHTML = panelPrurezu('out', 'Výstupní příruba', VYCHOZI_VYSTUP);
       document.getElementById('panelKonecVstup').innerHTML = panelKonec('in', 'Konec vstupu — doraz a zajištění');
       document.getElementById('panelKonecVystup').innerHTML = panelKonec('out', 'Konec výstupu — doraz a zajištění');
-      document.getElementById('panelLimecVstup').innerHTML = panelLimce('in', 'Límec vstupu');
-      document.getElementById('panelLimecVystup').innerHTML = panelLimce('out', 'Límec výstupu');
+      document.getElementById('panelLimecVstup').innerHTML = panelLimce('in', 'Příruba vstupu');
+      document.getElementById('panelLimecVystup').innerHTML = panelLimce('out', 'Příruba výstupu');
       pripojPredvolbySroubu('in');
       pripojPredvolbySroubu('out');
       for (const pref of ['in', 'out']) {
@@ -3317,7 +3725,7 @@
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(container.clientWidth, container.clientHeight);
-      container.appendChild(renderer.domElement);
+      container.prepend(renderer.domElement);   // 3D plátno pod překryvy (průřezy, hlášky)
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.6));
       const svetlo1 = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -3373,8 +3781,9 @@
       });
 
       // změna jakéhokoli rozměru nebo režimu překreslí díl
-      document.querySelectorAll('.sloupec-vlevo input, .sloupec-vlevo select, .pod-nahledem input, .pod-nahledem select')
+      document.querySelectorAll('.tvar-pole input, .tvar-pole select')
         .forEach(el => el.addEventListener('change', () => { aktualizujUI(); generateReduction(); }));
+      pripojOvladani();
 
       window.addEventListener('resize', onWindowResize);
       // přepnutí motivu změní barvy 2D průřezů
@@ -3383,6 +3792,7 @@
 
       animate();
       loadSettings();
+      ukazPrurezy();
       aktualizujUI();
       generateReduction();
 
@@ -3395,6 +3805,80 @@
         pouzij: pouzijTvar,
         popis: popisTvaru
       });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Ovládání stránky: nabídky lišty, záložky, oddíly, přepínač boxů     */
+    /* ------------------------------------------------------------------ */
+    // otevřené oddíly, záložka a box na mobilu (trubky_gui.js) — jen pohodlí jednoho prohlížeče
+    const KLIC_ROZLOZENI = 'webapp_redukce_plocha_rozlozeni';
+    // natočení pohledů (model má osu v z, otočenou o +90° kolem z; ohyb nahoru = rovina pohledu z boku)
+    const POHLEDY = { iso: VYCHOZI_POHLED, bok: { x: -Math.PI / 2, y: Math.PI / 2 }, shora: { x: 0, y: Math.PI / 2 },
+                      vstup: { x: 0, y: Math.PI }, vystup: { x: 0, y: 0 } };
+    function nastavPohled(jm) {
+      rotation = { ...POHLEDY[jm] };
+      natoc(0, 0);
+    }
+    function ukazPrurezy() {
+      document.getElementById('nahledPrurezy').classList.toggle('skryto', !document.getElementById('zobrazPrurezy').checked);
+      if (posledniParametry) kresliPrurezy(posledniParametry);
+    }
+
+    function pripojOvladani() {
+      TrubkyGui.pripoj({ klic: KLIC_ROZLOZENI, pohled: nastavPohled, zmenaVelikosti: onWindowResize });
+      document.getElementById('zobrazPrurezy').addEventListener('change', () => { ukazPrurezy(); saveSettings(); });
+    }
+
+    /* Souhrn v záhlaví oddílů boxů přírub — co je nastavené, i když je oddíl sbalený. */
+    const KRATKE_TVARY = { kruh: 'Kruh', oval: 'Ovál', zaobleny: 'Zaoblený obdélník', hranaty: 'Obdélník', elipsa: 'Elipsa' };
+    const sklonuj = (n, a, b, c) => n + ' ' + (n === 1 ? a : n >= 2 && n <= 4 ? b : c);
+    function aktualizujSouhrny() {
+      const el = id => document.getElementById(id);
+      const n = id => (Math.round(cislo(id, 0) * 10) / 10).toLocaleString('cs-CZ');
+      const pis = TrubkyGui.souhrn;
+      const vlozena = typRedukce() === 'short';
+      const strana = { vnejsi: 'zvenku', vnitrni: 'zevnitř', oboje: 'zvenku i zevnitř' };
+      for (const pref of ['in', 'out']) {
+        const druh = el(pref + 'Tvar').value;
+        const rozm = druh === 'kruh' ? 'Ø' + n(pref + 'D') : n(pref + 'W') + ' × ' + n(pref + 'H');
+        pis(pref + 'SouhrnPrurez', KRATKE_TVARY[druh] + ' ' + rozm + ' · délka ' + n(pref === 'in' ? 'inputLength' : 'outputLength'), true);
+
+        const km = el(pref + 'KonusMode').value, sm = el(pref + 'SrazMode').value, kon = [];
+        if (km !== 'zadny') kon.push('kónus ' + strana[km]);
+        if (sm !== 'zadny') kon.push('sražení ' + strana[sm]);
+        pis(pref + 'SouhrnKonec', kon.join(' · ') || 'bez úprav', kon.length);
+
+        const K = pref + 'K', dor = [];
+        if (el(pref + 'Doraz').checked) dor.push('doraz v ' + n(K + 'A') + ' mm');
+        const zaj = el(K + 'Zaj').value;
+        if (zaj === 'ozuby') dor.push(sklonuj(Math.round(cislo(K + 'OPocet', 0)), 'ozub', 'ozuby', 'ozubů'));
+        if (zaj === 'koliky') dor.push(sklonuj(Math.round(cislo(K + 'KPocet', 0)), 'kolík', 'kolíky', 'kolíků'));
+        pis(pref + 'SouhrnDoraz', vlozena ? 'jen u dlouhé redukce' : dor.join(' · ') || 'bez dorazu a zajištění', !vlozena && dor.length);
+
+        const L = pref + 'L';
+        if (vlozena || !el(pref + 'Limec').checked) {
+          pis(pref + 'SouhrnLimec', vlozena ? 'jen u dlouhé redukce' : 'bez příruby', false);
+          continue;
+        }
+        const tv = el(L + 'Tvar').value, lim = [];
+        lim.push(tv === 'obrys' ? 'okraj ' + n(L + 'Sirka') : tv === 'kruh' ? 'Ø' + n(L + 'D') : n(L + 'W') + ' × ' + n(L + 'H'));
+        const rz = el(L + 'Rozm').value;
+        if (rz !== 'zadne') {
+          const pocet = rz === 'rohy' ? 4 : Math.round(cislo(L + 'Pocet', 0));
+          lim.push(pocet + '× ' + (el(L + 'Sroub').value !== 'vlastni' ? el(L + 'Sroub').value : 'Ø' + n(L + 'Dira')));
+        }
+        const zb = Math.round(cislo(L + 'ZPocet', 0));
+        if (zb > 0) lim.push(sklonuj(zb, 'žebro', 'žebra', 'žeber'));
+        if (el(L + 'Drazka').checked) lim.push('drážka');
+        pis(pref + 'SouhrnLimec', lim.join(' · '), true);
+      }
+    }
+
+    /* Chyba zadání: box příruby, které se týká, dostane v záhlaví vykřičník. */
+    function oznacChybu(chyba) {
+      const t = (chyba || '').toLowerCase();
+      TrubkyGui.oznacChybu('boxVstup', /vstupní|vstupu/.test(t));
+      TrubkyGui.oznacChybu('boxVystup', /výstupní|výstupu|výstup /.test(t));
     }
 
     function sestavMesh(sit, previs, barva) {
@@ -3446,6 +3930,7 @@
       const neplatne = document.getElementById('neplatneZadani');
       document.getElementById('canvas-container').classList.toggle('je-neplatne', !!chyba);
       neplatne.classList.toggle('skryto', !chyba);
+      oznacChybu(chyba);
       if (chyba) {
         neplatne.textContent = 'Neplatné zadání — náhled ukazuje poslední platný tvar. ' + chyba;
         const stav = document.getElementById('sitStav');
@@ -3464,11 +3949,20 @@
         reductionMesh.geometry.dispose();
         reductionMesh.material.dispose();
       }
-      const vse = sit.I.concat(sit.Iz);
-      const orient = orientaceTisku(sit, vse);
+      const dily = dilySite(sit);
+      const orient = orientaceDilu(sit, dily);
       const ukazPrevisy = document.getElementById('zobrazPrevisy').checked;
       const barva = document.getElementById('objectColorPicker').value;
-      const geometry = sestavMesh({ V: sit.V, I: vse }, ukazPrevisy ? orient.priznak : null, barva);
+      // náhled: díly za sebou, oddělený kus případně odsunutý po ose své příruby
+      const Vn = [], In = [], priznak = [];
+      const odsun = sit.dily && document.getElementById('deleniRozlozit').checked ? p.deleni.h + 15 : 0;
+      dily.forEach((d, k) => {
+        const o = Vn.length / 3, sm = smerKusu(sit), posun = d.kus ? odsun : 0;
+        for (let i = 0; i < d.V.length; i++) Vn.push(d.V[i] + sm[i % 3] * posun);
+        for (const i of d.Idil.concat(d.Iz)) In.push(i + o);
+        for (const v of orient[k].priznak) priznak.push(v);
+      });
+      const geometry = sestavMesh({ V: Vn, I: In }, ukazPrevisy ? priznak : null, barva);
       const material = new THREE.MeshPhongMaterial({
         color: ukazPrevisy ? '#ffffff' : barva,
         vertexColors: ukazPrevisy,
@@ -3495,7 +3989,7 @@
       stav.className = ok ? 'sit-ok' : 'sit-chyba';
       stav.textContent = ok
         ? 'uzavřená ✓ · ' + (kontrola.objem / 1000).toLocaleString('cs-CZ', { maximumFractionDigits: 1 }) + ' cm³'
-          + (sit.zeber ? ' + ' + sit.zeber + ' žeber' : '')
+          + (sit.zeber ? ' + ' + sit.zeber + ' žeber' : '') + (sit.dily ? ' · 2 díly' : '')
         : 'chyba (' + (kontrola.spatneHrany + kontrolaZeber.spatneHrany) + ' hran' + (sit.nouze ? ', nouzová triangulace' : '') + ')';
 
       posledniParametry = p;
@@ -3593,10 +4087,10 @@
     /* ------------------------------------------------------------------ */
     /* Směr „nahoru“ pro tisk: čelem vstupu na podložce je +z, čelem výstupu
        proti směru výstupní příruby. Doporučená = ta s menší plochou převisů. */
-    function orientaceTisku(sit, I) {
+    function orientaceTisku(sit, I, vynucena) {
       const uVstup = [0, 0, 1], uVystup = sit.smerVystupu.map(v => -v);
       const a = previsy(sit.V, I, uVstup), b = previsy(sit.V, I, uVystup);
-      let volba = document.getElementById('orientaceTisku').value;
+      let volba = vynucena || document.getElementById('orientaceTisku').value;
       const doporucena = a.plocha <= b.plocha * 1.02 ? 'vstup' : 'vystup';
       if (volba === 'doporucena') volba = doporucena;
       const vyb = volba === 'vstup' ? a : b;
@@ -3604,15 +4098,51 @@
                plochy: { vstup: a.plocha, vystup: b.plocha }, celkem: a.celkem };
     }
 
-    function aktualizujTisk(p, sit, kontrola, kontrolaZeber, orient) {
+    /* Díly k tisku, každý jako samostatná síť: [{ nazev, V, Idil, Iz, kus }]
+       (nedělená redukce = jeden díl). */
+    function dilySite(sit) {
+      if (!sit.dily) return [{ nazev: 'redukce', V: sit.V, Idil: sit.I, Iz: sit.Iz, kus: false }];
+      return sit.dily.map(d => {
+        const m = new Map(), V = [];
+        const prevod = I => I.map(i => {
+          if (!m.has(i)) { m.set(i, V.length / 3); V.push(sit.V[3 * i], sit.V[3 * i + 1], sit.V[3 * i + 2]); }
+          return m.get(i);
+        });
+        return { nazev: d.nazev, V, Idil: prevod(d.I), Iz: prevod(d.Iz), kus: !!d.kus };
+      });
+    }
+    /* Orientace tisku po dílech: celek podle volby v panelu; u dělené redukce
+       oba díly řezem nahoru — hlavní díl čelem neoddělené příruby dolů (dno
+       hrdla je pak shora podepřený stupeň, ne převis), oddělený kus límcem dolů. */
+    function orientaceDilu(sit, dily) {
+      return dily.map(d => {
+        const I = d.Idil.concat(d.Iz);
+        if (!d.kus) return orientaceTisku({ V: d.V, smerVystupu: sit.smerVystupu }, I,
+          sit.dily ? (sit.kusVstup ? 'vystup' : 'vstup') : null);
+        const u = sit.kusVstup ? [0, 0, 1] : sit.smerVystupu.map(v => -v);
+        const a = previsy(d.V, I, u);
+        return { u, priznak: a.priznak, plocha: a.plocha, celkem: a.celkem, kus: true };
+      });
+    }
+    // směr, kterým se oddělený kus odsune od hlavního dílu (po ose své příruby)
+    const smerKusu = sit => sit.kusVstup ? [0, 0, -1] : sit.smerVystupu;
+
+    function aktualizujTisk(p, sit, kontrola, kontrolaZeber, orienty) {
+      const orient = orienty[0];
       const radek = (popis, hodnota, trida) =>
         `<div class="flange-info-item"><span class="flange-info-label">${popis}</span>`
         + `<span class="flange-info-value${trida ? ' ' + trida : ''}">${hodnota}</span></div>`;
       const cm2 = v => (v / 100).toLocaleString('cs-CZ', { maximumFractionDigits: 1 }) + ' cm²';
       const pr = v => Math.round(100 * v / orient.celkem) + ' %';
       let html = '<div class="flange-info-group"><div class="flange-info-title">Převisy nad 45°</div>';
-      html += radek('Čelem vstupu dolů:', cm2(orient.plochy.vstup) + ' · ' + pr(orient.plochy.vstup) + (orient.doporucena === 'vstup' ? ' ✓' : ''));
-      html += radek('Čelem výstupu dolů:', cm2(orient.plochy.vystup) + ' · ' + pr(orient.plochy.vystup) + (orient.doporucena === 'vystup' ? ' ✓' : ''));
+      // u dělené redukce stojí hlavní díl na čele, nebo na řezu oddělené příruby
+      const popisy = !sit.dily ? ['Čelem vstupu dolů:', 'Čelem výstupu dolů:']
+        : sit.kusVstup ? ['Hlavní díl řezem dolů:', 'Hlavní díl čelem výstupu dolů:']
+        : ['Hlavní díl čelem vstupu dolů:', 'Hlavní díl řezem dolů:'];
+      html += radek(popisy[0], cm2(orient.plochy.vstup) + ' · ' + pr(orient.plochy.vstup) + (orient.doporucena === 'vstup' ? ' ✓' : ''));
+      html += radek(popisy[1], cm2(orient.plochy.vystup) + ' · ' + pr(orient.plochy.vystup) + (orient.doporucena === 'vystup' ? ' ✓' : ''));
+      const kus = orienty.find(o => o.kus);
+      if (kus) html += radek('Oddělený kus přírubou dolů:', cm2(kus.plocha) + ' · ' + Math.round(100 * kus.plocha / kus.celkem) + ' %');
       html += '</div>';
 
       // dráhy trysky: stěny by měly být násobkem šířky dráhy, aspoň 2 dráhy
@@ -3629,6 +4159,14 @@
         if (konec < zaklad - 1e-6) steny.push(['Konec ' + nazev, konec]);
         if (f.limec && f.limec.zebra.pocet > 0) steny.push(['Žebra ' + nazev, f.limec.zebra.tloustka]);
         if (f.konec && f.konec.doraz) steny.push(['Doraz ' + nazev, f.konec.doraz.s]);
+      }
+      if (p.deleni) {
+        const sp = spojDeleni(p);
+        if (sp.typ === 'hrdlo') steny.push(['Hrdlo spoje', sp.stenaHrdla]);
+        else {
+          steny.push(['Čep spoje', sp.stenaCepu]);
+          if (sp.e) steny.push(['Hrdlo spoje', sp.stenaHrdla]);
+        }
       }
       html += '<div class="flange-info-group"><div class="flange-info-title">Dráhy trysky (' + w.toLocaleString('cs-CZ') + ' mm)</div>';
       for (const [nazev, t] of steny) {
@@ -3955,10 +4493,11 @@
             const sm = [prvni[0] - px, -(prvni[1] - py)];
             znacka([Pp[0] + sm[0] / (Math.hypot(...sm) || 1) * o.d / 2 * m, Pp[1] + sm[1] / (Math.hypot(...sm) || 1) * o.d / 2 * m], sm,
               c.otvory.length + '× otvor Ø' + cz(o.d) + zah + (o.zahloubeni !== 'zadne' ? (o.strana === 'zadni' ? ' ze zadní strany' : ' z čela') : '')
-              + (o.rozmisteni === 'obvod' ? '; rovnoměrně po obvodu, osa ' + cz(o.osa) + ' od příruby' : ''));
+              + (o.rozmisteni === 'obvod' ? '; rovnoměrně po obvodu, osa ' + cz(o.osa) + ' od trubky' : '')
+              + (l.sym ? '; souměrně podle obou os' : ''));
             if (o.rozmisteni === 'kruznice') {
               out.push(`<circle cx="${f2(ox + px * m)}" cy="${f2(oy - py * m)}" r="${f2(o.roztec / 2 * m)}" class="osa"/>`);
-              const u = ((o.uhel || 0) + (f.rot || 0) + 360 / Math.max(1, o.pocet) / 2) * Math.PI / 180;
+              const u = ((o.uhel || 0) + (f.rot || 0) + 360 * ((o.faze || 0) + 0.5) / Math.max(1, o.pocet)) * Math.PI / 180;
               const B = P([px + o.roztec / 2 * Math.cos(u), py + o.roztec / 2 * Math.sin(u)]);
               znacka(B, [Math.cos(u), -Math.sin(u)], 'roztečná kružnice Ø' + cz(o.roztec) + ', ' + o.pocet + ' otvorů po ' + cz(360 / o.pocet) + '°');
             } else if (o.rozmisteni === 'rohy') {
@@ -3969,7 +4508,7 @@
           if (l.drazka) {
             const Dp = obrys(f.tvar, struktura(f.tvar, 64), f.dO + l.drazka.osa, f.rot, f.posun);
             const b = Dp[Math.round(Dp.length * 0.375)], B = P(b);
-            znacka(B, [b[0] - px, -(b[1] - py)], 'těsnicí drážka ' + cz(l.drazka.sirka) + ' × ' + cz(l.drazka.hloubka) + ' mm, osa ' + cz(l.drazka.osa) + ' od příruby');
+            znacka(B, [b[0] - px, -(b[1] - py)], 'těsnicí drážka ' + cz(l.drazka.sirka) + ' × ' + cz(l.drazka.hloubka) + ' mm, osa ' + cz(l.drazka.osa) + ' od trubky');
           }
         }
         if (fSkut.rot) legenda.push('kresleno v osách příruby; příruba je natočená o ' + cz(fSkut.rot) + '° (pohled od vstupu)');
@@ -4010,7 +4549,7 @@
         if (f.konec && f.konec.koliky) r.push(f.konec.koliky.pocet + ' kolíky Ø' + cz(f.konec.koliky.prumer) + '×' + cz(f.konec.koliky.vyska) + ' v ' + cz(f.konec.koliky.w));
         if (f.limec) {
           const l = f.limec;
-          r.push('límec ' + cz(l.tl) + (l.zebra.pocet ? ', ' + l.zebra.pocet + ' žeber ' + cz(l.zebra.tloustka) + '×' + cz(l.zebra.vyska) : '')
+          r.push('příruba ' + cz(l.tl) + (l.zebra.pocet ? ', ' + l.zebra.pocet + ' žeber ' + cz(l.zebra.tloustka) + '×' + cz(l.zebra.vyska) : '')
             + (l.zesileni ? ', zesílení ' + cz(l.zesileni.velikost) : ''));
         }
         return r.length ? nazevP + ': ' + r.join('; ') : null;
@@ -4049,7 +4588,7 @@
       const nazvy = Object.fromEntries(TVARY_PRURZU);
       const P = obrys(f.tvar, struktura(f.tvar, 96), f.dO, 0, null), r = meze2([P]);
       return nazvy[f.druhUI] + ' ' + cz(r.w) + ' × ' + cz(r.h) + (f.rot ? ', natočení ' + cz(f.rot) + '°' : '')
-        + (f.limec ? ', límec' : '') + (f.konec && f.konec.doraz ? ', doraz' : '')
+        + (f.limec ? ', příruba' : '') + (f.konec && f.konec.doraz ? ', doraz' : '')
         + (f.konec && f.konec.ozuby ? ', ozuby' : '') + (f.konec && f.konec.koliky ? ', kolíky' : '');
     }
 
@@ -4116,7 +4655,7 @@
       out.push(`<line x1="${okraj}" y1="${yk}" x2="${okraj + 50}" y2="${yk}" class="obrys"/>`);
       out.push(`<line x1="${okraj}" y1="${yk - 2}" x2="${okraj}" y2="${yk + 2}" class="obrys"/><line x1="${okraj + 50}" y1="${yk - 2}" x2="${okraj + 50}" y2="${yk + 2}" class="obrys"/>`);
       out.push(`<text x="${okraj + 25}" y="${yk - 1.5}" font-size="3" text-anchor="middle">kontrola měřítka: 50 mm</text>`);
-      out.push(`<text x="${okraj}" y="${yk + 7}" font-size="3">Plná čára: obrys límce a otvory · čárkovaně: výřez pro trubku (+0,5 mm vůle)</text>`);
+      out.push(`<text x="${okraj}" y="${yk + 7}" font-size="3">Plná čára: obrys příruby a otvory · čárkovaně: výřez pro trubku (+0,5 mm vůle)</text>`);
       out.push(`<text x="${okraj}" y="${yk + 11}" font-size="3">Tiskněte v měřítku 100 %; úsečka musí měřit přesně 50 mm.</text>`);
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sirka.toFixed(1)}mm" height="${vyskaS.toFixed(1)}mm" viewBox="0 0 ${sirka.toFixed(1)} ${vyskaS.toFixed(1)}">`
         + '<style>line,path,circle{fill:none;stroke:#000}.obrys{stroke-width:.3}.tenka{stroke-width:.15}.vyrez{stroke-width:.3;stroke-dasharray:3 1.5}text{font-family:sans-serif}</style>'
@@ -4137,18 +4676,29 @@
       const sit = geometrie(p);
       const k = kontrolaSite(sit.V, sit.I.concat(sit.Iz));
       if (k.spatneHrany || !(k.objem > 0)) showNotification('Pozor: síť není uzavřená (' + k.spatneHrany + ' hran)', 'warning');
-      // otočí díl do orientace tisku (zvolené čelo na podložce, z = 0)
-      const R = rotaceDoZ(orientaceTisku(sit, sit.I.concat(sit.Iz)).u);
-      const V = sit.V.slice();
-      for (let i = 0; i < V.length; i += 3) {
-        const x = sit.V[i], y = sit.V[i + 1], z = sit.V[i + 2];
-        V[i] = R[0] * x + R[1] * y + R[2] * z; V[i + 1] = R[3] * x + R[4] * y + R[5] * z; V[i + 2] = R[6] * x + R[7] * y + R[8] * z;
-      }
-      const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
-      for (let i = 0; i < V.length; i++) { const o = i % 3; lo[o] = Math.min(lo[o], V[i]); hi[o] = Math.max(hi[o], V[i]); }
-      // díl stojí na podložce (z = 0), v x/y vycentrovaný
-      const posun = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, lo[2]];
-      return { V: V.map((v, i) => v - posun[i % 3]), I: sit.I.concat(sit.Iz), Idil: sit.I, Iz: sit.Iz };
+      // každý díl otočit do orientace tisku (čelo na podložce, z = 0); dělené díly vedle sebe po x
+      const dily = dilySite(sit), orient = orientaceDilu(sit, dily);
+      const V = [], Idil = [], Iz = [], casti = [];
+      let x = 0;
+      dily.forEach((d, j) => {
+        const R = rotaceDoZ(orient[j].u), W = d.V.slice();
+        for (let i = 0; i < W.length; i += 3) {
+          const a = d.V[i], b = d.V[i + 1], c = d.V[i + 2];
+          W[i] = R[0] * a + R[1] * b + R[2] * c; W[i + 1] = R[3] * a + R[4] * b + R[5] * c; W[i + 2] = R[6] * a + R[7] * b + R[8] * c;
+        }
+        const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+        for (let i = 0; i < W.length; i++) { const o = i % 3; lo[o] = Math.min(lo[o], W[i]); hi[o] = Math.max(hi[o], W[i]); }
+        const posun = [lo[0] - x, (lo[1] + hi[1]) / 2, lo[2]], o = V.length / 3;
+        x += hi[0] - lo[0] + 10;
+        for (let i = 0; i < W.length; i++) V.push(W[i] - posun[i % 3]);
+        const Id = d.Idil.map(i => i + o), Ie = d.Iz.map(i => i + o);
+        Idil.push(...Id); Iz.push(...Ie);
+        casti.push([dily.length > 1 ? d.nazev : 'redukce', Id, j], [(dily.length > 1 ? d.nazev + ' – ' : '') + 'žebra a kolíky', Ie, j]);
+      });
+      // celek vycentrovaný v x
+      const sirka = x - 10;
+      for (let i = 0; i < V.length; i += 3) V[i] -= sirka / 2;
+      return { V, I: Idil.concat(Iz), Idil, Iz, casti, skupiny: dily.length > 1 ? dily.map(d => d.nazev) : null };
     }
 
     function exportSTL() {
@@ -4180,7 +4730,7 @@
       const sit = exportniSit();
       if (!sit) return;
       const nazev = (sbirka && sbirka.aktivni()) || 'Redukce se zploštěním';
-      const soubory = soubory3MF(sit.V, [['redukce', sit.Idil], ['žebra a kolíky', sit.Iz]], nazev);
+      const soubory = soubory3MF(sit.V, sit.casti, nazev, sit.skupiny && sit.skupiny.map(s => nazev + ' – ' + s));
       // 3MF je ZIP — bez komprese by byl větší než STL; deflate umí prohlížeč sám
       if (typeof CompressionStream === 'function') {
         try {
@@ -4198,13 +4748,13 @@
     function exportOBJ() {
       const sit = exportniSit();
       if (!sit) return;
-      const { V, Idil, Iz } = sit;
+      const { V, casti } = sit;
       const r = ['# Redukce se zploštělými přírubami (mm)'];
       for (let i = 0; i < V.length; i += 3) r.push(`v ${+V[i].toFixed(5)} ${+V[i + 1].toFixed(5)} ${+V[i + 2].toFixed(5)}`);
-      // díl a žebra jako dva objekty (žebra jsou samostatná tělesa zapuštěná do dílu)
-      for (const [nazev, I] of [['redukce', Idil], ['zebra', Iz]]) {
+      // díl a žebra jako samostatné objekty (žebra jsou tělesa zapuštěná do dílu)
+      for (const [nazev, I] of casti) {
         if (!I.length) continue;
-        r.push('o ' + nazev);
+        r.push('o ' + nazev.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_'));
         for (let i = 0; i < I.length; i += 3) r.push(`f ${I[i] + 1} ${I[i + 1] + 1} ${I[i + 2] + 1}`);
       }
       downloadFile(r.join('\n') + '\n', jmenoSouboru('obj'), 'text/plain');
@@ -4228,11 +4778,10 @@
     /* ------------------------------------------------------------------ */
     const KLIC_NASTAVENI = 'webapp_redukce_plocha';
     // políčka tvaru (bez zobrazení) — ukládají se i do sbírky tvarů
-    const polickaTvaru = () => [...document.querySelectorAll(
-      '.sloupec-vlevo input[id], .sloupec-vlevo select[id], .pod-nahledem input[id], .pod-nahledem select[id]')];
+    const polickaTvaru = () => [...document.querySelectorAll('.tvar-pole input[id], .tvar-pole select[id]')];
     const POLICKA_ZOBRAZENI = ['orientaceTisku', 'zobrazPrevisy', 'sirkaDrahy', 'material', 'cenaKg', 'prutokQ', 'smerProudeni',
       'previewQuality', 'exportQuality', 'opacitySlider', 'bgColorPicker',
-      'objectColorPicker', 'viewNormal', 'viewWireframe', 'viewEdges'];
+      'objectColorPicker', 'viewNormal', 'viewWireframe', 'viewEdges', 'zobrazPrurezy'];
 
     function hodnotyPolicek(policka) {
       const o = {};
@@ -4292,6 +4841,7 @@
         wallThickness: 3, transitionLength: 100, inputLength: 50, outputLength: 50,
         reductionShort: false, reductionLong: true, reductionLongShort: false,
         bendAngle: 0, prechodTvar: 'plynuly', smerOhybu: '90', smerOhybuUhel: 45,
+        deleni: false, deleniTyp: 'polodrazka', deleniKoren: 1, deleniDrazky: 0, deleniDrHl: 0.4, deleniKde: 'vystup', deleniAuto: true, deleniW: 19, deleniH: 10, deleniVule: 0.15, deleniZes: 0, deleniRozlozit: true,
         inKonusMode: 'zadny', outKonusMode: 'zadny', inKonusOuter: 2, inKonusInner: 2, outKonusOuter: 2, outKonusInner: 2,
         inSrazMode: 'zadny', outSrazMode: 'zadny', inSrazOuter: 1, inSrazInner: 1, outSrazOuter: 1, outSrazInner: 1,
         inSrazOuterAngle: 45, inSrazInnerAngle: 45, outSrazOuterAngle: 45, outSrazInnerAngle: 45
@@ -4300,7 +4850,7 @@
     const VYCHOZI_ZOBRAZENI = {
       opacitySlider: 100, viewNormal: true, viewWireframe: false, viewEdges: false, bgColorPicker: '#1a1a1a', objectColorPicker: '#6aa6fd',
       previewQuality: '48', exportQuality: '96',
-      orientaceTisku: 'vstup', zobrazPrevisy: false, sirkaDrahy: 0.45, material: '1.24', cenaKg: 500, prutokQ: 0, smerProudeni: 'vstup'
+      orientaceTisku: 'vstup', zobrazPrevisy: false, zobrazPrurezy: true, sirkaDrahy: 0.45, material: '1.24', cenaKg: 500, prutokQ: 0, smerProudeni: 'vstup'
     };
 
     function resetParameters() {
@@ -4310,9 +4860,10 @@
       scene.background = new THREE.Color('#1a1a1a');
       rotation = { ...VYCHOZI_POHLED };
       kameraNastavena = false;
+      ukazPrurezy();
       aktualizujUI();
       generateReduction();
-      showNotification('Parametry resetovány', 'info');
+      showNotification('Nový tvar s výchozími hodnotami', 'info');
     }
 
     function limecVychozi(pref) {
@@ -4331,9 +4882,17 @@
 
     function platnyTvar(p) { return !!(p && p.inTvar && p.outTvar); }
 
+    /* Uložené tvary z doby před souměrným rozmístěním si nechají volné
+       rozmístění (natočení řady a žebra beze změny). */
+    function volneUStarych(z) {
+      const o = { ...z };
+      for (const pref of ['in', 'out']) if ((pref + 'LOsa') in o && !((pref + 'LSym') in o)) o[pref + 'LSym'] = false;
+      return o;
+    }
+
     function pouzijTvar(p) {
       if (!platnyTvar(p)) throw new Error('uložený tvar nepatří generátoru redukcí se zploštěním');
-      nastavPolicka({ ...vychoziTvar(), ...rucniPolohaUStarych(p) });
+      nastavPolicka({ ...vychoziTvar(), ...volneUStarych(rucniPolohaUStarych(p)) });
       aktualizujUI();
       generateReduction();
     }
@@ -4358,7 +4917,7 @@
         .map(k => (k === 'in' ? 'vstup' : 'výstup') + (p[k + 'LRozm'] && p[k + 'LRozm'] !== 'zadne'
           ? ' + šrouby' + (p[k + 'LSroub'] && p[k + 'LSroub'] !== 'vlastni' ? ' ' + p[k + 'LSroub'] : '') : ''));
       return popisPriruby(p, 'in') + ' → ' + popisPriruby(p, 'out') + ' mm (' + typ + uhel + ')'
-        + (limce.length ? ', límec ' + limce.join(', ') : '');
+        + (limce.length ? ', příruba ' + limce.join(', ') : '');
     }
 
     function jmenoSouboru(pripona) {

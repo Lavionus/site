@@ -23,7 +23,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     historie: 'history', kontrolaTisku: 'print-check', rozmistit: 'arrange-on-bed', orientace: 'best-orientation', promenne: 'variables',
     sestava: 'assembly', vykres: 'technical-drawing', ulozitTvar: 'save-custom-shape', paleta: 'command-palette',
     zamerit: 'focus-selection', koty: 'dimensions', rychleKoty: 'clearance-check', prevesy: 'overhangs', podpery: 'overhangs',
-    obrazek: 'save-image', napoveda: 'help', skladacka: 'puzzle-assembly', magnet: 'magnet', skryteHrany: 'section-view', zameritStred: 'focus-selection', naZakladniDesku: 'place-on-bed',
+    obrazek: 'save-image', napoveda: 'help', skladacka: 'puzzle-assembly', magnet: 'magnet', skryteHrany: 'section-view', zameritStred: 'focus-selection', naZakladniDesku: 'place-on-bed', navody: 'help',
     // Soubor (data-soubor) a paleta (souborXxx)
     novyProjekt: 'new-project', souborNovy: 'new-project', sablony: 'new-template', projekty: 'my-projects',
     otevritSoubor: 'open-file', ulozitSoubor: 'save-file', exportovat: 'export',

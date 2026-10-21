@@ -13,13 +13,14 @@ const KATALOG_STAVY = [
 const KATALOG_SKUPINY = [
   { id: 'produktivita', label: '🗂️ Produktivita' },
   { id: 'zdravi',       label: '🩺 Zdraví' },
+  { id: 'vareni',       label: '🍳 Vaření & recepty' },
   { id: 'priroda',      label: '🌿 Příroda & venku' },
   { id: 'tvorba',       label: '🎨 Tvorba & média' },
   { id: 'technika',     label: '📐 Technika' },
+  { id: '3d',           label: '🧊 3D' },
   { id: 'vyvoj',        label: '💻 Vývoj & data' },
   { id: 'hry',          label: '🎮 Hry' },
   { id: 'vysetrovani',  label: '🕵️ Vyšetřování' },
-  { id: 'vareni',       label: '🍳 Vaření & recepty' },
   { id: 'dokumenty',    label: '📜 Právo & dokumenty' },
   { id: 'duchovno',     label: '📖 Duchovní život' },
   { id: 'ostatni',      label: '✉️ Ostatní' },
@@ -41,6 +42,35 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/skriptorium.html",
+        "nazev": "📖 Skriptorium (tvůrce knih)",
+        "stav": "beta",
+        "tagy": [
+          "kniha",
+          "epub",
+          "publikace",
+          "book creator"
+        ]
+      },
+      {
+        "soubor": "obsah/print_editor.html",
+        "nazev": "🖨️ Editor pro tisk a export",
+        "stav": "beta",
+        "tagy": ["tisk", "markdown", "export", "html editor", "wysiwyg", "formátování"]
+      },
+      {
+        "soubor": "obsah/md_html.html",
+        "nazev": "📝 Markdown ↔ HTML",
+        "stav": "beta",
+        "tagy": ["markdown", "html", "převod", "konverze", "readme"]
+      },
+      {
+        "soubor": "obsah/md_dokument.html",
+        "nazev": "📄 Markdown → DOCX / ODT",
+        "stav": "beta",
+        "tagy": ["markdown", "word", "docx", "odt", "odf", "doc", "libreoffice", "převod", "konverze", "dokument"]
+      },
+      {
         "soubor": "obsah/brainstorm.html",
         "nazev": "💡 Brainstorm",
         "stav": "beta",
@@ -56,40 +86,6 @@ const KATALOG_SEKCE = [
         "tagy": ["mapa souvislostí", "pojmová mapa", "concept map", "znalostní graf", "graf", "uzly", "vztahy", "myšlenková mapa", "časová osa", "dějiny", "výuka", "export svg", "json", "analýza sítě", "centralita", "komunity", "skupiny", "prezentace", "graphml", "gexf", "csv", "graphviz", "mermaid", "wikipedie", "kumu", "obsidian canvas"]
       },
       {
-        "soubor": "obsah/md_html.html",
-        "nazev": "📝 Markdown ↔ HTML",
-        "stav": "beta",
-        "tagy": ["markdown", "html", "převod", "konverze", "readme"]
-      },
-      {
-        "soubor": "obsah/md_dokument.html",
-        "nazev": "📄 Markdown → DOCX / ODT",
-        "stav": "beta",
-        "tagy": ["markdown", "word", "docx", "odt", "odf", "doc", "libreoffice", "převod", "konverze", "dokument"]
-      },
-      {
-        "soubor": "obsah/word_counter.html",
-        "nazev": "🔡 Počítadlo slov",
-        "stav": "beta",
-        "tagy": ["počet slov", "znaky", "délka textu", "statistika textu"]
-      },
-      {
-        "soubor": "obsah/secure_notes.html",
-        "nazev": "🔒 Šifrované poznámky",
-        "stav": "beta",
-        "tagy": [
-          "heslo",
-          "šifrování",
-          "soukromé"
-        ]
-      },
-      {
-        "soubor": "obsah/password_vault.html",
-        "nazev": "🔐 Trezor hesel",
-        "stav": "beta",
-        "tagy": ["heslo", "šifrování", "přihlašovací údaje", "login", "správce hesel"]
-      },
-      {
         "soubor": "obsah/notes_graph.html",
         "nazev": "🕸️ Zettelkasten (propojené poznámky)",
         "stav": "beta",
@@ -101,24 +97,35 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/skriptorium.html",
-        "nazev": "📖 Skriptorium (tvůrce knih)",
+        "soubor": "obsah/flowchart.html",
+        "nazev": "🔀 Editor diagramů",
         "stav": "beta",
         "tagy": [
-          "kniha",
-          "epub",
-          "publikace",
-          "book creator"
+          "diagram",
+          "schéma",
+          "vývojový",
+          "flowchart",
+          "mermaid",
+          "postup",
+          "proces",
+          "svg",
+          "png"
         ]
       },
       {
-        "soubor": "obsah/amount_words.html",
-        "nazev": "💬 Částka slovy",
+        "soubor": "obsah/prompty.html",
+        "nazev": "🤖 Databanka promptů",
+        "stav": "vyvoj",
+        "tagy": ["prompt", "AI", "ChatGPT", "Claude", "umělá inteligence", "šablony", "proměnné", "knihovna promptů"]
+      },
+      {
+        "soubor": "obsah/cvGen.html",
+        "nazev": "📄 Životopis",
         "stav": "beta",
         "tagy": [
-          "faktura",
-          "slovy",
-          "koruna"
+          "cv",
+          "resume",
+          "zaměstnání"
         ]
       },
       {
@@ -135,16 +142,10 @@ const KATALOG_SEKCE = [
                  "hledání slov", "slovník", "český slovník", "anglický slovník", "slova obsahující", "křížovky", "osmisměrka", "scrabble pomocník", "přesmyčky"]
       },
       {
-        "soubor": "obsah/print_editor.html",
-        "nazev": "🖨️ Editor pro tisk a export",
+        "soubor": "obsah/word_counter.html",
+        "nazev": "🔡 Počítadlo slov",
         "stav": "beta",
-        "tagy": ["tisk", "markdown", "export", "html editor", "wysiwyg", "formátování"]
-      },
-      {
-        "soubor": "obsah/prompty.html",
-        "nazev": "🤖 Databanka promptů",
-        "stav": "vyvoj",
-        "tagy": ["prompt", "AI", "ChatGPT", "Claude", "umělá inteligence", "šablony", "proměnné", "knihovna promptů"]
+        "tagy": ["počet slov", "znaky", "délka textu", "statistika textu"]
       }
     ]
   },
@@ -163,12 +164,6 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/kulturni_akce.html",
-        "nazev": "🎪 Kulturní akce v krajích",
-        "stav": "beta",
-        "tagy": ["akce", "výstavy", "hody", "poutě", "festivaly", "vinobraní", "jarmark", "posezení", "kraje", "kultura"]
-      },
-      {
         "soubor": "obsah/todo.html",
         "nazev": "✅ Úkoly",
         "stav": "beta",
@@ -177,22 +172,6 @@ const KATALOG_SEKCE = [
           "to-do",
           "checklist"
         ]
-      },
-      {
-        "soubor": "obsah/pomodoro.html",
-        "nazev": "🍅 Pomodoro",
-        "stav": "beta",
-        "tagy": [
-          "časovač",
-          "soustředění",
-          "produktivita"
-        ]
-      },
-      {
-        "soubor": "obsah/habit_tracker.html",
-        "nazev": "🎯 Sledování návyků",
-        "stav": "beta",
-        "tagy": ["návyky", "denní rutina", "série", "streak", "sebekázeň"]
       },
       {
         "soubor": "obsah/kanban.html",
@@ -215,27 +194,32 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/habit_tracker.html",
+        "nazev": "🎯 Sledování návyků",
+        "stav": "beta",
+        "tagy": ["návyky", "denní rutina", "série", "streak", "sebekázeň"]
+      },
+      {
+        "soubor": "obsah/pomodoro.html",
+        "nazev": "🍅 Pomodoro",
+        "stav": "beta",
+        "tagy": [
+          "časovač",
+          "soustředění",
+          "produktivita"
+        ]
+      },
+      {
+        "soubor": "obsah/timers.html",
+        "nazev": "⏲️ Stopky & časovače",
+        "stav": "beta",
+        "tagy": ["stopky", "časovač", "minutka", "pomodoro", "intervaly"]
+      },
+      {
         "soubor": "obsah/countdown.html",
         "nazev": "⏳ Odpočet do události",
         "stav": "beta",
         "tagy": ["odpočet", "kolik zbývá", "termín", "událost", "svatba", "dovolená"]
-      },
-      {
-        "soubor": "obsah/time_calc.html",
-        "nazev": "⏱️ Kalkulačka času",
-        "stav": "beta",
-        "tagy": ["sčítání času", "rozdíl časů", "hodiny", "minuty", "výpočet času"]
-      },
-      {
-        "soubor": "obsah/timesheet.html",
-        "nazev": "⏱️ Docházka / evidence hodin",
-        "stav": "beta",
-        "tagy": [
-          "docházka",
-          "výkaz",
-          "hodiny",
-          "fakturace"
-        ]
       },
       {
         "soubor": "obsah/meeting_notes.html",
@@ -249,10 +233,43 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/timesheet.html",
+        "nazev": "⏱️ Docházka / evidence hodin",
+        "stav": "beta",
+        "tagy": [
+          "docházka",
+          "výkaz",
+          "hodiny",
+          "fakturace"
+        ]
+      },
+      {
+        "soubor": "obsah/rozhodovani.html",
+        "nazev": "⚖️ Vícekriteriální rozhodování",
+        "stav": "vyvoj",
+        "tagy": ["rozhodování", "rozhodovací matice", "AHP", "TOPSIS", "PROMETHEE", "vážený součet", "VIKOR", "průvodce", "Monte Carlo", "citlivostní analýza", "kritéria", "váhy", "decision_matrix"]
+      },
+      {
         "soubor": "obsah/calendar_print.html",
         "nazev": "🗓️ Tisknutelný kalendář",
         "stav": "beta",
         "tagy": ["kalendář", "tisk", "měsíční plánovač", "rok"]
+      },
+      {
+        "soubor": "obsah/world_clock.html",
+        "nazev": "🕐 Světové hodiny",
+        "stav": "beta",
+        "tagy": [
+          "časová pásma",
+          "čas",
+          "hodiny"
+        ]
+      },
+      {
+        "soubor": "obsah/time_calc.html",
+        "nazev": "⏱️ Kalkulačka času",
+        "stav": "beta",
+        "tagy": ["sčítání času", "rozdíl časů", "hodiny", "minuty", "výpočet času"]
       },
       {
         "soubor": "obsah/date_calc.html",
@@ -264,29 +281,6 @@ const KATALOG_SEKCE = [
           "svátky",
           "datum"
         ]
-      },
-      {
-        "soubor": "obsah/meal_planner.html",
-        "nazev": "🍽️ Týdenní jídelníček",
-        "stav": "beta",
-        "tagy": [
-          "jídlo",
-          "vaření",
-          "nákup",
-          "recepty"
-        ]
-      },
-      {
-        "soubor": "obsah/rozhodovani.html",
-        "nazev": "⚖️ Vícekriteriální rozhodování",
-        "stav": "vyvoj",
-        "tagy": ["rozhodování", "rozhodovací matice", "AHP", "TOPSIS", "PROMETHEE", "vážený součet", "VIKOR", "průvodce", "Monte Carlo", "citlivostní analýza", "kritéria", "váhy", "decision_matrix"]
-      },
-      {
-        "soubor": "obsah/timers.html",
-        "nazev": "⏲️ Stopky & časovače",
-        "stav": "beta",
-        "tagy": ["stopky", "časovač", "minutka", "pomodoro", "intervaly"]
       }
     ]
   },
@@ -295,26 +289,6 @@ const KATALOG_SEKCE = [
     "skupina": "produktivita",
     "polozky": [
       {
-        "soubor": "obsah/cvGen.html",
-        "nazev": "📄 Životopis",
-        "stav": "beta",
-        "tagy": [
-          "cv",
-          "resume",
-          "zaměstnání"
-        ]
-      },
-      {
-        "soubor": "obsah/invoice_gen.html",
-        "nazev": "🧾 Faktura / nabídka",
-        "stav": "beta",
-        "tagy": [
-          "účet",
-          "objednávka",
-          "fakturace"
-        ]
-      },
-      {
         "soubor": "obsah/expense_tracker.html",
         "nazev": "💰 Sledování výdajů",
         "stav": "beta",
@@ -322,6 +296,44 @@ const KATALOG_SEKCE = [
           "rozpočet",
           "peníze",
           "útrata"
+        ]
+      },
+      {
+        "soubor": "obsah/majetek.html",
+        "nazev": "📦 Evidence domácího majetku",
+        "stav": "vyvoj",
+        "tagy": ["domácnost", "záruky", "inventář", "QR štítky", "offline", "záloha"]
+      },
+      {
+        "soubor": "obsah/odecty.html",
+        "nazev": "🔌 Domácí odečty",
+        "stav": "beta",
+        "tagy": [
+          "elektřina",
+          "voda",
+          "plyn",
+          "energie",
+          "měřák"
+        ]
+      },
+      {
+        "soubor": "obsah/car_tracker.html",
+        "nazev": "🚗 Spotřeba auta",
+        "stav": "beta",
+        "tagy": [
+          "benzín",
+          "nafta",
+          "tankování",
+          "palivo"
+        ]
+      },
+      {
+        "soubor": "obsah/shopplanner.html",
+        "nazev": "🛒 Plánovač nákupů",
+        "stav": "beta",
+        "tagy": [
+          "nákupní seznam",
+          "obchod"
         ]
       },
       {
@@ -360,35 +372,37 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/shopplanner.html",
-        "nazev": "🛒 Plánovač nákupů",
+        "soubor": "obsah/tco.html",
+        "nazev": "💰 Celkové náklady vlastnictví (TCO)",
+        "stav": "vyvoj",
+        "tagy": ["kalkulačka", "finance", "ekonomika", "porovnání", "energie", "úvěr", "grafy"]
+      },
+      {
+        "soubor": "obsah/inflace.html",
+        "nazev": "📉 Inflační kalkulačka ČR",
+        "stav": "beta",
+        "tagy": ["inflace", "kupní síla", "čsú", "znehodnocení", "přepočet", "reálná mzda", "ceny v minulosti", "koruna"]
+      },
+      {
+        "soubor": "obsah/net_salary.html",
+        "nazev": "💵 Čistá mzda ČR",
         "stav": "beta",
         "tagy": [
-          "nákupní seznam",
-          "obchod"
+          "hrubá mzda",
+          "plat",
+          "odvody",
+          "daň",
+          "superhrubá"
         ]
       },
       {
-        "soubor": "obsah/car_tracker.html",
-        "nazev": "🚗 Spotřeba auta",
+        "soubor": "obsah/invoice_gen.html",
+        "nazev": "🧾 Faktura / nabídka",
         "stav": "beta",
         "tagy": [
-          "benzín",
-          "nafta",
-          "tankování",
-          "palivo"
-        ]
-      },
-      {
-        "soubor": "obsah/odecty.html",
-        "nazev": "🔌 Domácí odečty",
-        "stav": "beta",
-        "tagy": [
-          "elektřina",
-          "voda",
-          "plyn",
-          "energie",
-          "měřák"
+          "účet",
+          "objednávka",
+          "fakturace"
         ]
       },
       {
@@ -407,18 +421,6 @@ const KATALOG_SEKCE = [
         "nazev": "🧾 Kalkulačka marže a cenotvorby",
         "stav": "beta",
         "tagy": ["marže", "přirážka", "markup", "cenotvorba", "prodejní cena"]
-      },
-      {
-        "soubor": "obsah/net_salary.html",
-        "nazev": "💵 Čistá mzda ČR",
-        "stav": "beta",
-        "tagy": [
-          "hrubá mzda",
-          "plat",
-          "odvody",
-          "daň",
-          "superhrubá"
-        ]
       },
       {
         "soubor": "obsah/currency_conv.html",
@@ -461,22 +463,14 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/inflace.html",
-        "nazev": "📉 Inflační kalkulačka ČR",
+        "soubor": "obsah/amount_words.html",
+        "nazev": "💬 Částka slovy",
         "stav": "beta",
-        "tagy": ["inflace", "kupní síla", "čsú", "znehodnocení", "přepočet", "reálná mzda", "ceny v minulosti", "koruna"]
-      },
-      {
-        "soubor": "obsah/tco.html",
-        "nazev": "💰 Celkové náklady vlastnictví (TCO)",
-        "stav": "vyvoj",
-        "tagy": ["kalkulačka", "finance", "ekonomika", "porovnání", "energie", "úvěr", "grafy"]
-      },
-      {
-        "soubor": "obsah/majetek.html",
-        "nazev": "📦 Evidence domácího majetku",
-        "stav": "vyvoj",
-        "tagy": ["domácnost", "záruky", "inventář", "QR štítky", "offline", "záloha"]
+        "tagy": [
+          "faktura",
+          "slovy",
+          "koruna"
+        ]
       }
     ]
   },
@@ -485,14 +479,19 @@ const KATALOG_SEKCE = [
     "skupina": "produktivita",
     "polozky": [
       {
-        "soubor": "obsah/unit_converter.html",
-        "nazev": "⚖️ Konvertor jednotek",
+        "soubor": "obsah/password_vault.html",
+        "nazev": "🔐 Trezor hesel",
+        "stav": "beta",
+        "tagy": ["heslo", "šifrování", "přihlašovací údaje", "login", "správce hesel"]
+      },
+      {
+        "soubor": "obsah/secure_notes.html",
+        "nazev": "🔒 Šifrované poznámky",
         "stav": "beta",
         "tagy": [
-          "jednotky",
-          "míry",
-          "váhy",
-          "převod"
+          "heslo",
+          "šifrování",
+          "soukromé"
         ]
       },
       {
@@ -515,40 +514,6 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/barcode_gen.html",
-        "nazev": "▥ Generátor čárových kódů",
-        "stav": "beta",
-        "tagy": ["čárový kód", "ean", "ean-13", "ean-8", "upc", "code 128", "isbn", "štítky", "sklad", "barcode"]
-      },
-      {
-        "soubor": "obsah/random_picker.html",
-        "nazev": "🎡 Losovač / kolo štěstí",
-        "stav": "beta",
-        "tagy": [
-          "náhoda",
-          "losování",
-          "ruleta",
-          "výběr"
-        ]
-      },
-      {
-        "soubor": "obsah/email_signature.html",
-        "nazev": "✉️ E-mailový podpis",
-        "stav": "beta",
-        "tagy": ["podpis", "e-mail", "signature", "kontaktní údaje", "html podpis"]
-      },
-      {
-        "soubor": "obsah/vcard_gen.html",
-        "nazev": "📇 Vizitka (vCard + QR)",
-        "stav": "beta",
-        "tagy": [
-          "vizitka",
-          "vcard",
-          "kontakt",
-          "qr"
-        ]
-      },
-      {
         "soubor": "obsah/qr_platba.html",
         "nazev": "💳 QR platba",
         "stav": "vyvoj",
@@ -565,77 +530,68 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/vcard_gen.html",
+        "nazev": "📇 Vizitka (vCard + QR)",
+        "stav": "beta",
+        "tagy": [
+          "vizitka",
+          "vcard",
+          "kontakt",
+          "qr"
+        ]
+      },
+      {
+        "soubor": "obsah/barcode_gen.html",
+        "nazev": "▥ Generátor čárových kódů",
+        "stav": "beta",
+        "tagy": ["čárový kód", "ean", "ean-13", "ean-8", "upc", "code 128", "isbn", "štítky", "sklad", "barcode"]
+      },
+      {
+        "soubor": "obsah/email_signature.html",
+        "nazev": "✉️ E-mailový podpis",
+        "stav": "beta",
+        "tagy": ["podpis", "e-mail", "signature", "kontaktní údaje", "html podpis"]
+      },
+      {
         "soubor": "obsah/snippet_manager.html",
-        "nazev": "📋 Snippet manager",
+        "nazev": "📋 Textové šablony (snippety)",
         "stav": "beta",
         "tagy": ["šablony", "textové bloky", "e-mail", "rychlé odpovědi", "clipboard"]
+      },
+      {
+        "soubor": "obsah/random_picker.html",
+        "nazev": "🎡 Losovač / kolo štěstí",
+        "stav": "beta",
+        "tagy": [
+          "náhoda",
+          "losování",
+          "ruleta",
+          "výběr"
+        ]
+      },
+      {
+        "soubor": "obsah/unit_converter.html",
+        "nazev": "⚖️ Konvertor jednotek",
+        "stav": "beta",
+        "tagy": [
+          "jednotky",
+          "míry",
+          "váhy",
+          "převod"
+        ]
       }
     ]
   },
   {
-    "nazev": "🩺 Zdraví & kondice",
+    "nazev": "📓 Zdravotní deníky",
     "skupina": "zdravi",
     "polozky": [
-      {
-        "soubor": "obsah/kondiciogram.html",
-        "nazev": "📊 Kondiciogram",
-        "stav": "beta",
-        "tagy": [
-          "biorytmus",
-          "kondice"
-        ]
-      },
-      {
-        "soubor": "obsah/kondiciogram_retro.html",
-        "nazev": "🖨️ Kondiciogram retro",
-        "stav": "beta",
-        "tagy": ["biorytmus", "kondice", "cykly", "retro", "tisk"]
-      },
-      {
-        "soubor": "obsah/relaxsounds.html",
-        "nazev": "🌧️ Relaxační zvuky",
-        "stav": "beta",
-        "tagy": [
-          "déšť",
-          "zvuky",
-          "spánek",
-          "meditace"
-        ]
-      },
       {
         "soubor": "obsah/potraviny.html",
         "nazev": "🥗 Deník jídla",
         "stav": "beta",
         "tagy": ["kalorie", "počítadlo kalorií", "jídelníček", "výživa", "makroživiny", "bílkoviny", "čárový kód", "EAN", "skenování",
                  "hubnutí", "potraviny", "nutriční hodnoty", "vitaminy", "recepty", "pitný režim", "hmotnost", "Open Food Facts"]
-      },
-      {
-        "soubor": "obsah/bmi_calc.html",
-        "nazev": "🩺 BMI & kalorie",
-        "stav": "beta",
-        "tagy": [
-          "váha",
-          "kalorie",
-          "dieta",
-          "index"
-        ]
-      },
-      {
-        "soubor": "obsah/breathing.html",
-        "nazev": "🫁 Dechové cvičení",
-        "stav": "beta",
-        "tagy": [
-          "relaxace",
-          "stres",
-          "meditace"
-        ]
-      },
-      {
-        "soubor": "obsah/cviceni/index.html",
-        "nazev": "💪 Časovač cvičení",
-        "stav": "vyvoj",
-        "tagy": ["časovač", "intervaly", "tabata", "HIIT", "EMOM", "AMRAP", "kruhový trénink", "pauza mezi sériemi", "odpočet", "stopky",
-                 "box", "posilovna", "fitness", "cvičení", "trénink", "mobil", "aplikace", "interval timer"]
       },
       {
         "soubor": "obsah/workout_log.html",
@@ -658,14 +614,37 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/heart_zones.html",
-        "nazev": "❤️ Tepové zóny",
+        "soubor": "obsah/mood_tracker.html",
+        "nazev": "😊 Tracker nálady",
+        "stav": "beta",
+        "tagy": ["nálada", "deník", "emoce", "psychika", "sledování"]
+      },
+      {
+        "soubor": "obsah/sleep_tracker.html",
+        "nazev": "😴 Tracker spánku",
         "stav": "beta",
         "tagy": [
-          "tep",
-          "puls",
-          "kardio",
-          "běh"
+          "spánek",
+          "usínání"
+        ]
+      },
+      {
+        "soubor": "obsah/water_tracker.html",
+        "nazev": "💧 Pitný režim",
+        "stav": "beta",
+        "tagy": [
+          "voda",
+          "hydratace"
+        ]
+      },
+      {
+        "soubor": "obsah/caffeine_tracker.html",
+        "nazev": "☕ Kalkulačka kofeinu",
+        "stav": "beta",
+        "tagy": [
+          "kofein",
+          "káva",
+          "energy drink"
         ]
       },
       {
@@ -690,12 +669,23 @@ const KATALOG_SEKCE = [
           "perioda",
           "PMS"
         ]
-      },
+      }
+    ]
+  },
+  {
+    "nazev": "🩺 Zdravotní kalkulačky",
+    "skupina": "zdravi",
+    "polozky": [
       {
-        "soubor": "obsah/mood_tracker.html",
-        "nazev": "😊 Tracker nálady",
+        "soubor": "obsah/bmi_calc.html",
+        "nazev": "🩺 BMI & kalorie",
         "stav": "beta",
-        "tagy": ["nálada", "deník", "emoce", "psychika", "sledování"]
+        "tagy": [
+          "váha",
+          "kalorie",
+          "dieta",
+          "index"
+        ]
       },
       {
         "soubor": "obsah/ideal_weight.html",
@@ -704,87 +694,14 @@ const KATALOG_SEKCE = [
         "tagy": ["hmotnost", "váha", "postava", "zdravá váha", "kalkulačka"]
       },
       {
-        "soubor": "obsah/sleep_tracker.html",
-        "nazev": "😴 Tracker spánku",
+        "soubor": "obsah/heart_zones.html",
+        "nazev": "❤️ Tepové zóny",
         "stav": "beta",
         "tagy": [
-          "spánek",
-          "usínání"
-        ]
-      },
-      {
-        "soubor": "obsah/water_tracker.html",
-        "nazev": "💧 Pitný režim",
-        "stav": "beta",
-        "tagy": [
-          "voda",
-          "hydratace"
-        ]
-      },
-      {
-        "soubor": "obsah/reaction_test.html",
-        "nazev": "⚡ Reakční test",
-        "stav": "beta",
-        "tagy": ["reakce", "rychlost", "postřeh", "ms", "test"]
-      },
-      {
-        "soubor": "obsah/color_vision.html",
-        "nazev": "👁️ Test barvocitu",
-        "stav": "beta",
-        "tagy": ["barvocit", "ishihara", "barvoslepost", "zrak", "test"]
-      },
-      {
-        "soubor": "obsah/sleep_cycle_alarm.html",
-        "nazev": "😴 Budík dle spánkových cyklů",
-        "stav": "beta",
-        "tagy": [
-          "spánek",
-          "budík",
-          "cykly",
-          "usínání"
-        ]
-      },
-      {
-        "soubor": "obsah/vision_test.html",
-        "nazev": "👁️ Oční tabulka (test zraku)",
-        "stav": "beta",
-        "tagy": [
-          "zrak",
-          "snellen",
-          "oči"
-        ]
-      },
-      {
-        "soubor": "obsah/growth_chart.html",
-        "nazev": "📈 Kalendář růstu dítěte (percentily)",
-        "stav": "beta",
-        "tagy": [
-          "dítě",
-          "růst",
-          "percentil",
-          "výška",
-          "váha"
-        ]
-      },
-      {
-        "soubor": "obsah/first_aid_ref.html",
-        "nazev": "🩹 Lékárnička – první pomoc",
-        "stav": "beta",
-        "tagy": [
-          "první pomoc",
-          "úraz",
-          "kpr",
-          "resuscitace"
-        ]
-      },
-      {
-        "soubor": "obsah/caffeine_tracker.html",
-        "nazev": "☕ Kalkulačka kofeinu",
-        "stav": "beta",
-        "tagy": [
-          "kofein",
-          "káva",
-          "energy drink"
+          "tep",
+          "puls",
+          "kardio",
+          "běh"
         ]
       },
       {
@@ -800,10 +717,180 @@ const KATALOG_SEKCE = [
         "tagy": ["těhotenství", "termín porodu", "Naegele", "týden těhotenství", "trimestr", "screening", "porod"]
       },
       {
+        "soubor": "obsah/growth_chart.html",
+        "nazev": "📈 Kalendář růstu dítěte (percentily)",
+        "stav": "beta",
+        "tagy": [
+          "dítě",
+          "růst",
+          "percentil",
+          "výška",
+          "váha"
+        ]
+      },
+      {
         "soubor": "obsah/ockovani.html",
         "nazev": "💉 Očkovací kalendář",
         "stav": "vyvoj",
         "tagy": ["očkování", "vakcíny", "hexavakcína", "MMR", "děti", "přeočkování", "tetanus", "klíšťová encefalitida", "HPV"]
+      },
+      {
+        "soubor": "obsah/sleep_cycle_alarm.html",
+        "nazev": "😴 Budík dle spánkových cyklů",
+        "stav": "beta",
+        "tagy": [
+          "spánek",
+          "budík",
+          "cykly",
+          "usínání"
+        ]
+      },
+      {
+        "soubor": "obsah/kondiciogram.html",
+        "nazev": "📊 Kondiciogram",
+        "stav": "beta",
+        "tagy": [
+          "biorytmus",
+          "kondice"
+        ]
+      },
+      {
+        "soubor": "obsah/kondiciogram_retro.html",
+        "nazev": "🖨️ Kondiciogram retro",
+        "stav": "beta",
+        "tagy": ["biorytmus", "kondice", "cykly", "retro", "tisk"]
+      }
+    ]
+  },
+  {
+    "nazev": "🧘 Cvičení, relax & testy",
+    "skupina": "zdravi",
+    "polozky": [
+      {
+        "soubor": "obsah/cviceni/index.html",
+        "nazev": "💪 Časovač cvičení",
+        "stav": "vyvoj",
+        "tagy": ["časovač", "intervaly", "tabata", "HIIT", "EMOM", "AMRAP", "kruhový trénink", "pauza mezi sériemi", "odpočet", "stopky",
+                 "box", "posilovna", "fitness", "cvičení", "trénink", "mobil", "aplikace", "interval timer"]
+      },
+      {
+        "soubor": "obsah/breathing.html",
+        "nazev": "🫁 Dechové cvičení",
+        "stav": "beta",
+        "tagy": [
+          "relaxace",
+          "stres",
+          "meditace"
+        ]
+      },
+      {
+        "soubor": "obsah/relaxsounds.html",
+        "nazev": "🌧️ Relaxační zvuky",
+        "stav": "beta",
+        "tagy": [
+          "déšť",
+          "zvuky",
+          "spánek",
+          "meditace"
+        ]
+      },
+      {
+        "soubor": "obsah/reaction_test.html",
+        "nazev": "⚡ Reakční test",
+        "stav": "beta",
+        "tagy": ["reakce", "rychlost", "postřeh", "ms", "test"]
+      },
+      {
+        "soubor": "obsah/color_vision.html",
+        "nazev": "👁️ Test barvocitu",
+        "stav": "beta",
+        "tagy": ["barvocit", "ishihara", "barvoslepost", "zrak", "test"]
+      },
+      {
+        "soubor": "obsah/vision_test.html",
+        "nazev": "👁️ Oční tabulka (test zraku)",
+        "stav": "beta",
+        "tagy": [
+          "zrak",
+          "snellen",
+          "oči"
+        ]
+      },
+      {
+        "soubor": "obsah/first_aid_ref.html",
+        "nazev": "🩹 Lékárnička – první pomoc",
+        "stav": "beta",
+        "tagy": [
+          "první pomoc",
+          "úraz",
+          "kpr",
+          "resuscitace"
+        ]
+      }
+    ]
+  },
+  {
+    "nazev": "🍳 Recepty & kuchyně",
+    "skupina": "vareni",
+    "polozky": [
+      {
+        "soubor": "obsah/recipes.html",
+        "nazev": "🍳 Kniha receptů",
+        "stav": "beta",
+        "tagy": ["vaření", "recept", "porce", "přepočet množství", "ingredience"]
+      },
+      {
+        "soubor": "obsah/prepocet_receptu.html",
+        "nazev": "🔁 Přepočet receptu",
+        "stav": "vyvoj",
+        "tagy": ["recept", "porce", "přepočet", "forma na dort", "plech", "hrnky", "lžíce", "cup", "oz", "zlomky", "vejce", "škálování"]
+      },
+      {
+        "soubor": "obsah/meal_planner.html",
+        "nazev": "🍽️ Týdenní jídelníček",
+        "stav": "beta",
+        "tagy": [
+          "jídlo",
+          "vaření",
+          "nákup",
+          "recepty"
+        ]
+      },
+      {
+        "soubor": "obsah/kuchynske_miry.html",
+        "nazev": "🥄 Kuchyňské míry podle suroviny",
+        "stav": "beta",
+        "tagy": ["hrnek", "lžíce", "lžička", "gramy", "převod", "mouka", "cukr", "cup", "forma na dort", "trouba", "droždí"]
+      },
+      {
+        "soubor": "obsah/kvasek_chleb.html",
+        "nazev": "🍞 Kvásek a chleba",
+        "stav": "beta",
+        "tagy": ["kvásek", "chléb", "pečení", "pekařská procenta", "hydratace", "kvas", "žitný", "sourdough", "krmení kvásku"]
+      },
+      {
+        "soubor": "obsah/fermentace.html",
+        "nazev": "🫙 Fermentace a zavařování",
+        "stav": "beta",
+        "tagy": ["kvašení", "kysané zelí", "okurky", "solanka", "sterilace", "zavařování", "nálev", "kompot", "kimči", "ocet"]
+      },
+      {
+        "soubor": "obsah/peceni_masa.html",
+        "nazev": "🥩 Pečení a uzení masa",
+        "stav": "vyvoj",
+        "tagy": ["maso", "pečeně", "teplota jádra", "propečení", "steak", "sous-vide", "uzení", "udírna", "gril", "časovač", "drůbež", "zvěřina"]
+      },
+      {
+        "soubor": "obsah/kava_pomery.html",
+        "nazev": "☕ Kávové poměry",
+        "stav": "vyvoj",
+        "tagy": ["káva", "espresso", "V60", "pour-over", "french press", "AeroPress", "moka", "cold brew", "poměr", "mletí", "barista", "časovač"]
+      },
+      {
+        "soubor": "obsah/sezonni_potraviny.html",
+        "nazev": "🍎 Sezónní kalendář potravin",
+        "stav": "vyvoj",
+        "tagy": ["sezóna", "sezónní", "zelenina", "ovoce", "houby", "bylinky", "zvěřina", "ryby", "nákup", "kalendář", "lokální", "co vařit"]
       }
     ]
   },
@@ -823,21 +910,6 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/weather_globe.html",
-        "nazev": "🌍 Glóbus počasí",
-        "stav": "beta",
-        "tagy": ["počasí", "glóbus", "3d", "mapa", "teplota", "svět"]
-      },
-      {
-        "soubor": "obsah/pocasi_eu.html",
-        "nazev": "🌦️ Počasí Evropy",
-        "stav": "beta",
-        "tagy": [
-          "meteo",
-          "mapa počasí"
-        ]
-      },
-      {
         "soubor": "obsah/radareu.html",
         "nazev": "📡 Radar EU",
         "stav": "beta",
@@ -849,8 +921,29 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/bourky.html",
+        "nazev": "⚡ Bouřky a blesky živě",
+        "stav": "vyvoj",
+        "tagy": ["blesky", "bouřky", "radar", "počasí", "mapa", "živá data"]
+      },
+      {
+        "soubor": "obsah/pocasi_eu.html",
+        "nazev": "🌦️ Počasí Evropy",
+        "stav": "beta",
+        "tagy": [
+          "meteo",
+          "mapa počasí"
+        ]
+      },
+      {
+        "soubor": "obsah/weather_globe.html",
+        "nazev": "🌍 Glóbus počasí",
+        "stav": "beta",
+        "tagy": ["počasí", "glóbus", "3d", "mapa", "teplota", "svět"]
+      },
+      {
         "soubor": "obsah/historicalWeather.html",
-        "nazev": "📉 Historie",
+        "nazev": "📉 Historie počasí",
         "stav": "beta",
         "tagy": [
           "počasí",
@@ -870,12 +963,6 @@ const KATALOG_SEKCE = [
         "nazev": "🌡️ Převodník meteo jednotek",
         "stav": "beta",
         "tagy": ["převod jednotek", "teplota", "tlak", "rychlost větru", "srážky"]
-      },
-      {
-        "soubor": "obsah/bourky.html",
-        "nazev": "⚡ Bouřky a blesky živě",
-        "stav": "vyvoj",
-        "tagy": ["blesky", "bouřky", "radar", "počasí", "mapa", "živá data"]
       }
     ]
   },
@@ -883,6 +970,17 @@ const KATALOG_SEKCE = [
     "nazev": "🌱 Zahrada & pěstování",
     "skupina": "priroda",
     "polozky": [
+      {
+        "soubor": "obsah/garden_layout.html",
+        "nazev": "🌱 Plánovač záhonů",
+        "stav": "beta",
+        "tagy": [
+          "zahrada",
+          "záhon",
+          "rozvržení",
+          "plán"
+        ]
+      },
       {
         "soubor": "obsah/crop_rotation.html",
         "nazev": "🔄 Plánovač střídání plodin",
@@ -894,14 +992,14 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/garden_layout.html",
-        "nazev": "🌱 Plánovač záhonů",
+        "soubor": "obsah/agri_calendar.html",
+        "nazev": "🌱 Zemědělský kalendář",
         "stav": "beta",
         "tagy": [
-          "zahrada",
-          "záhon",
-          "rozvržení",
-          "plán"
+          "polní práce",
+          "setí",
+          "sklizeň",
+          "agro"
         ]
       },
       {
@@ -936,28 +1034,6 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/fishing_calendar.html",
-        "nazev": "🎣 Rybářský kalendář",
-        "stav": "beta",
-        "tagy": [
-          "rybaření",
-          "solunární",
-          "měsíc",
-          "ryby"
-        ]
-      },
-      {
-        "soubor": "obsah/agri_calendar.html",
-        "nazev": "🌱 Zemědělský kalendář",
-        "stav": "beta",
-        "tagy": [
-          "polní práce",
-          "setí",
-          "sklizeň",
-          "agro"
-        ]
-      },
-      {
         "soubor": "obsah/zahradni_stavby.html",
         "nazev": "🌿 Zahradní stavby ze dřeva",
         "stav": "vyvoj",
@@ -972,69 +1048,9 @@ const KATALOG_SEKCE = [
     ]
   },
   {
-    "nazev": "🗺️ Mapy & cesty",
+    "nazev": "🗺️ Mapy & GPS",
     "skupina": "priroda",
     "polozky": [
-      {
-        "soubor": "obsah/dvere_do_sveta.html",
-        "nazev": "🚪 Dveře do světa",
-        "stav": "vyvoj",
-        "tagy": ["webkamera", "webkamery", "živě", "live", "kamera", "výhled", "cestování", "svět", "náhodné místo", "příroda", "zvířata", "hory", "moře", "sopky", "polární záře", "přístavy", "lodě", "street view"]
-      },
-      {
-        "soubor": "obsah/trip_planner.html",
-        "nazev": "🥾 Plánovač tras",
-        "stav": "beta",
-        "tagy": [
-          "trasa",
-          "výlet",
-          "turistika",
-          "mapa"
-        ]
-      },
-      {
-        "soubor": "obsah/vacation_planner.html",
-        "nazev": "🗺️ Plánovač dovolené",
-        "stav": "beta",
-        "tagy": [
-          "dovolená",
-          "cestování",
-          "itinerář"
-        ]
-      },
-      {
-        "soubor": "obsah/gpx_viewer.html",
-        "nazev": "📡 GPX Viewer",
-        "stav": "beta",
-        "tagy": [
-          "trasa",
-          "gps",
-          "záznam",
-          "mapa"
-        ]
-      },
-      {
-        "soubor": "obsah/travel_diary.html",
-        "nazev": "✈️ Cestovní deník",
-        "stav": "beta",
-        "tagy": ["cestování", "deník", "zápisky", "výlety", "fotky"]
-      },
-      {
-        "soubor": "obsah/packing_list.html",
-        "nazev": "🎒 Balicí seznam",
-        "stav": "beta",
-        "tagy": [
-          "kufr",
-          "dovolená",
-          "seznam"
-        ]
-      },
-      {
-        "soubor": "obsah/travel_budget.html",
-        "nazev": "💶 Cestovní rozpočet",
-        "stav": "beta",
-        "tagy": ["rozpočet", "cestování", "útrata", "rozdělení nákladů", "měna"]
-      },
       {
         "soubor": "obsah/map_export.html",
         "nazev": "🗺️ Mapový exportér",
@@ -1052,6 +1068,17 @@ const KATALOG_SEKCE = [
         "tagy": [
           "historické mapy",
           "porovnání"
+        ]
+      },
+      {
+        "soubor": "obsah/gpx_viewer.html",
+        "nazev": "📡 Prohlížeč GPX",
+        "stav": "beta",
+        "tagy": [
+          "trasa",
+          "gps",
+          "záznam",
+          "mapa"
         ]
       },
       {
@@ -1087,47 +1114,6 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/trip_cost.html",
-        "nazev": "🚗 Náklady na cestu",
-        "stav": "beta",
-        "tagy": [
-          "palivo",
-          "benzín",
-          "spolujezdci",
-          "kilometrovné"
-        ]
-      },
-      {
-        "soubor": "obsah/ziva_zeme.html",
-        "nazev": "🌋 Živá Země",
-        "stav": "vyvoj",
-        "tagy": ["zemětřesení", "požáry", "sopky", "ISS", "mapa", "živá data"]
-      },
-      {
-        "soubor": "obsah/zaplavy.html",
-        "nazev": "🌊 Zaplavení terénu",
-        "stav": "vyvoj",
-        "tagy": ["mapa", "povodně", "záplavy", "DEM", "GIS", "terén", "GeoTIFF"]
-      },
-      {
-        "soubor": "obsah/vyletni_denik.html",
-        "nazev": "📔 Výletní deník",
-        "stav": "vyvoj",
-        "tagy": ["výlety", "deník", "GPX", "KML", "mapa", "fotografie", "výškový profil", "statistiky", "kalendář", "počasí", "offline"]
-      },
-      {
-        "soubor": "obsah/svetelne_znecisteni.html",
-        "nazev": "🌌 Světelné znečištění a tmavá obloha",
-        "stav": "vyvoj",
-        "tagy": ["astronomie", "mapa", "světelné znečištění", "Bortle", "Měsíc", "soumrak", "oblačnost", "pozorování hvězd", "GPX"]
-      }
-    ]
-  },
-  {
-    "nazev": "🧭 Navigace & čas",
-    "skupina": "priroda",
-    "polozky": [
-      {
         "soubor": "obsah/gps_converter.html",
         "nazev": "🧭 Převodník GPS",
         "stav": "beta",
@@ -1142,6 +1128,137 @@ const KATALOG_SEKCE = [
         "nazev": "🧭 Kompas & azimut",
         "stav": "beta",
         "tagy": ["kompas", "azimut", "orientace", "buzola", "sever"]
+      }
+    ]
+  },
+  {
+    "nazev": "🧳 Cestování & výlety",
+    "skupina": "priroda",
+    "polozky": [
+      {
+        "soubor": "obsah/trip_planner.html",
+        "nazev": "🥾 Plánovač tras",
+        "stav": "beta",
+        "tagy": [
+          "trasa",
+          "výlet",
+          "turistika",
+          "mapa"
+        ]
+      },
+      {
+        "soubor": "obsah/vacation_planner.html",
+        "nazev": "🗺️ Plánovač dovolené",
+        "stav": "beta",
+        "tagy": [
+          "dovolená",
+          "cestování",
+          "itinerář"
+        ]
+      },
+      {
+        "soubor": "obsah/travel_diary.html",
+        "nazev": "✈️ Cestovní deník",
+        "stav": "beta",
+        "tagy": ["cestování", "deník", "zápisky", "výlety", "fotky"]
+      },
+      {
+        "soubor": "obsah/vyletni_denik.html",
+        "nazev": "📔 Výletní deník",
+        "stav": "vyvoj",
+        "tagy": ["výlety", "deník", "GPX", "KML", "mapa", "fotografie", "výškový profil", "statistiky", "kalendář", "počasí", "offline"]
+      },
+      {
+        "soubor": "obsah/packing_list.html",
+        "nazev": "🎒 Balicí seznam",
+        "stav": "beta",
+        "tagy": [
+          "kufr",
+          "dovolená",
+          "seznam"
+        ]
+      },
+      {
+        "soubor": "obsah/travel_budget.html",
+        "nazev": "💶 Cestovní rozpočet",
+        "stav": "beta",
+        "tagy": ["rozpočet", "cestování", "útrata", "rozdělení nákladů", "měna"]
+      },
+      {
+        "soubor": "obsah/trip_cost.html",
+        "nazev": "🚗 Náklady na cestu",
+        "stav": "beta",
+        "tagy": [
+          "palivo",
+          "benzín",
+          "spolujezdci",
+          "kilometrovné"
+        ]
+      },
+      {
+        "soubor": "obsah/kulturni_akce.html",
+        "nazev": "🎪 Kulturní akce v krajích",
+        "stav": "beta",
+        "tagy": ["akce", "výstavy", "hody", "poutě", "festivaly", "vinobraní", "jarmark", "posezení", "kraje", "kultura"]
+      },
+      {
+        "soubor": "obsah/fishing_calendar.html",
+        "nazev": "🎣 Rybářský kalendář",
+        "stav": "beta",
+        "tagy": [
+          "rybaření",
+          "solunární",
+          "měsíc",
+          "ryby"
+        ]
+      }
+    ]
+  },
+  {
+    "nazev": "🌍 Země živě",
+    "skupina": "priroda",
+    "polozky": [
+      {
+        "soubor": "obsah/dvere_do_sveta.html",
+        "nazev": "🚪 Dveře do světa",
+        "stav": "vyvoj",
+        "tagy": ["webkamera", "webkamery", "živě", "live", "kamera", "výhled", "cestování", "svět", "náhodné místo", "příroda", "zvířata", "hory", "moře", "sopky", "polární záře", "přístavy", "lodě", "street view"]
+      },
+      {
+        "soubor": "obsah/ziva_zeme.html",
+        "nazev": "🌋 Živá Země",
+        "stav": "vyvoj",
+        "tagy": ["zemětřesení", "požáry", "sopky", "ISS", "mapa", "živá data"]
+      },
+      {
+        "soubor": "obsah/zaplavy.html",
+        "nazev": "🌊 Zaplavení terénu",
+        "stav": "vyvoj",
+        "tagy": ["mapa", "povodně", "záplavy", "DEM", "GIS", "terén", "GeoTIFF"]
+      },
+      {
+        "soubor": "obsah/svetelne_znecisteni.html",
+        "nazev": "🌌 Světelné znečištění a tmavá obloha",
+        "stav": "vyvoj",
+        "tagy": ["astronomie", "mapa", "světelné znečištění", "Bortle", "Měsíc", "soumrak", "oblačnost", "pozorování hvězd", "GPX"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔭 Astronomie",
+    "skupina": "priroda",
+    "polozky": [
+      {
+        "soubor": "obsah/dalekohled.html",
+        "nazev": "🔭 Hvězdářský dalekohled",
+        "stav": "vyvoj",
+        "tagy": ["astronomie", "dalekohled", "teleskop", "simulace", "planetárium", "planety", "Měsíc", "Jupiter", "Saturn", "dvojhvězdy", "Messier", "NGC", "galaxie", "mlhoviny", "okulár", "zvětšení", "seeing", "světelné znečištění", "Dobson", "pozorování", "plánovač noci", "pozorovací seznam", "deník pozorování", "astrofotografie", "kamera", "efemeridy", "úkazy", "konjunkce", "vyhledávací mapa", "PDF"]
+      },
+      {
+        "soubor": "obsah/sky_events.html",
+        "nazev": "🔭 Astronomický kalendář úkazů",
+        "stav": "beta",
+        "tagy": ["astronomie", "Měsíc", "zatmění", "meteory", "planety", "kalendář", "ics"]
       },
       {
         "soubor": "obsah/sun_moon.html",
@@ -1155,43 +1272,27 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/world_clock.html",
-        "nazev": "🕐 Světové hodiny",
-        "stav": "beta",
-        "tagy": [
-          "časová pásma",
-          "čas",
-          "hodiny"
-        ]
-      },
-      {
-        "soubor": "obsah/sextant.html",
-        "nazev": "🧭 Sextant – poloha podle hvězd",
-        "stav": "beta",
-        "tagy": ["astronavigace", "polárka", "zeměpisná šířka", "slunce v poledne"]
-      },
-      {
-        "soubor": "obsah/sky_events.html",
-        "nazev": "🔭 Astronomický kalendář úkazů",
-        "stav": "beta",
-        "tagy": ["astronomie", "Měsíc", "zatmění", "meteory", "planety", "kalendář", "ics"]
-      },
-      {
-        "soubor": "obsah/dalekohled.html",
-        "nazev": "🔭 Hvězdářský dalekohled",
+        "soubor": "obsah/planetarium.html",
+        "nazev": "🌍 Planetárium Slunce–Země–Měsíc",
         "stav": "vyvoj",
-        "tagy": ["astronomie", "dalekohled", "teleskop", "simulace", "planety", "Měsíc", "Jupiter", "Saturn", "dvojhvězdy", "Messier", "galaxie", "mlhoviny", "okulár", "zvětšení", "seeing", "světelné znečištění", "Dobson", "pozorování"]
+        "tagy": ["tellurium", "orrery", "planetárium", "ozubená kola", "převody", "Měsíc", "fáze", "roční období", "zatmění", "STL", "DXF", "3D tisk"]
       },
       {
         "soubor": "obsah/slunecni_hodiny.html",
         "nazev": "☀️ Sluneční hodiny",
         "stav": "vyvoj",
         "tagy": ["sluneční hodiny", "gnomon", "rovnice času", "analema", "šablona", "tisk 1:1", "PDF", "DXF", "astronomie", "deklinace stěny", "Canterbury", "kapesní hodiny", "výškové hodiny"]
+      },
+      {
+        "soubor": "obsah/sextant.html",
+        "nazev": "🧭 Sextant – poloha podle hvězd",
+        "stav": "beta",
+        "tagy": ["astronavigace", "polárka", "zeměpisná šířka", "slunce v poledne"]
       }
     ]
   },
   {
-    "nazev": "🎨 Grafika & generátory",
+    "nazev": "🎨 Barvy & web design",
     "skupina": "tvorba",
     "polozky": [
       {
@@ -1203,6 +1304,17 @@ const KATALOG_SEKCE = [
           "paleta",
           "hex",
           "rgb"
+        ]
+      },
+      {
+        "soubor": "obsah/palette_from_image.html",
+        "nazev": "🎨 Paleta z obrázku",
+        "stav": "beta",
+        "tagy": [
+          "barvy",
+          "paleta",
+          "extrakce",
+          "hex"
         ]
       },
       {
@@ -1236,78 +1348,27 @@ const KATALOG_SEKCE = [
         "tagy": ["favicon", "ikona", "web", "png", "záložka"]
       },
       {
-        "soubor": "obsah/Circle_generator.html",
-        "nazev": "⭕ Kružnice",
+        "soubor": "obsah/colorblind_sim.html",
+        "nazev": "🌈 Simulace barvosleposti",
         "stav": "beta",
-        "tagy": ["kružnice", "obrazce", "geometrie", "generátor", "tisk"]
+        "tagy": ["barvoslepost", "přístupnost", "simulace", "daltonismus", "kontrast"]
       },
       {
-        "soubor": "obsah/stained_glass.html",
-        "nazev": "🔷 Vitráž",
-        "stav": "beta",
-        "tagy": ["vitráž", "sklo", "mozaika", "generátor", "výtvarka"]
-      },
-      {
-        "soubor": "obsah/comic3d.html",
-        "nazev": "💥 Komiksový 3D prostor",
-        "stav": "beta",
-        "tagy": ["komiks", "3d", "scéna", "bubliny", "kreslení"]
-      },
-      {
-        "soubor": "obsah/comic3d_walk.html",
-        "nazev": "🚶 Komiksový 3D svět (procházka)",
-        "stav": "beta",
-        "tagy": ["komiks", "3d", "procházka", "prostor", "walk"]
-      },
-      {
-        "soubor": "obsah/comic_strip.html",
-        "nazev": "💬 Generátor komiksových stripů",
+        "soubor": "obsah/contrast_checker.html",
+        "nazev": "🌗 Kontrast (WCAG)",
         "stav": "beta",
         "tagy": [
-          "komiks",
-          "bublina",
-          "panely",
-          "strip"
+          "wcag",
+          "přístupnost",
+          "barvy"
         ]
-      },
-      {
-        "soubor": "obsah/storyboard.html",
-        "nazev": "🎬 Storyboard tvůrce",
-        "stav": "beta",
-        "tagy": [
-          "scénář",
-          "video",
-          "film",
-          "scény"
-        ]
-      },
-      {
-        "soubor": "obsah/palette_from_image.html",
-        "nazev": "🎨 Paleta z obrázku",
-        "stav": "beta",
-        "tagy": [
-          "barvy",
-          "paleta",
-          "extrakce",
-          "hex"
-        ]
-      },
-      {
-        "soubor": "obsah/sticker_maker.html",
-        "nazev": "🏷️ Generátor nálepek",
-        "stav": "beta",
-        "tagy": [
-          "sticker",
-          "nálepka",
-          "obrys"
-        ]
-      },
-      {
-        "soubor": "obsah/ascii_art.html",
-        "nazev": "🔤 ASCII art",
-        "stav": "beta",
-        "tagy": ["ascii", "art", "obrázek na text", "terminál"]
-      },
+      }
+    ]
+  },
+  {
+    "nazev": "✏️ Kreslení & komiks",
+    "skupina": "tvorba",
+    "polozky": [
       {
         "soubor": "obsah/pixel_art.html",
         "nazev": "🎨 Pixel art editor",
@@ -1355,18 +1416,6 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/meme_gen.html",
-        "nazev": "🖼️ Generátor meme",
-        "stav": "beta",
-        "tagy": ["meme", "vtip", "obrázek s textem", "popisek"]
-      },
-      {
-        "soubor": "obsah/emoji_picker.html",
-        "nazev": "😀 Picker emoji",
-        "stav": "beta",
-        "tagy": ["emoji", "symboly", "znaky", "kopírovat", "unicode"]
-      },
-      {
         "soubor": "obsah/whiteboard.html",
         "nazev": "✏️ Whiteboard",
         "stav": "beta",
@@ -1377,33 +1426,69 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/wedding_invite.html",
-        "nazev": "💍 Svatební oznámení",
-        "stav": "beta",
-        "tagy": ["svatba", "oznámení", "pozvánka", "tisk", "šablona"]
-      },
-      {
-        "soubor": "obsah/flowchart.html",
-        "nazev": "🔀 Editor diagramů",
+        "soubor": "obsah/comic_strip.html",
+        "nazev": "💬 Generátor komiksových stripů",
         "stav": "beta",
         "tagy": [
-          "diagram",
-          "schéma",
-          "vývojový",
-          "flowchart",
-          "mermaid",
-          "postup",
-          "proces",
-          "svg",
-          "png"
+          "komiks",
+          "bublina",
+          "panely",
+          "strip"
         ]
       },
       {
-        "soubor": "obsah/certificate_gen.html",
-        "nazev": "🏆 Generátor diplomů",
+        "soubor": "obsah/storyboard.html",
+        "nazev": "🎬 Storyboard tvůrce",
         "stav": "beta",
-        "tagy": ["diplom", "certifikát", "ocenění", "tisk", "soutěž"]
+        "tagy": [
+          "scénář",
+          "video",
+          "film",
+          "scény"
+        ]
       },
+      {
+        "soubor": "obsah/comic3d.html",
+        "nazev": "💥 Komiksový 3D prostor",
+        "stav": "beta",
+        "tagy": ["komiks", "3d", "scéna", "bubliny", "kreslení"]
+      },
+      {
+        "soubor": "obsah/comic3d_walk.html",
+        "nazev": "🚶 Komiksový 3D svět (procházka)",
+        "stav": "beta",
+        "tagy": ["komiks", "3d", "procházka", "prostor", "walk"]
+      },
+      {
+        "soubor": "obsah/ascii_art.html",
+        "nazev": "🔤 ASCII art",
+        "stav": "beta",
+        "tagy": ["ascii", "art", "obrázek na text", "terminál"]
+      },
+      {
+        "soubor": "obsah/spirograf.html",
+        "nazev": "✒️ Spirograf",
+        "stav": "vyvoj",
+        "tagy": ["spirograf", "hypotrochoida", "epitrochoida", "kreslení", "vzory", "mandala", "SVG"]
+      },
+      {
+        "soubor": "obsah/stained_glass.html",
+        "nazev": "🔷 Vitráž",
+        "stav": "beta",
+        "tagy": ["vitráž", "sklo", "mozaika", "generátor", "výtvarka"]
+      },
+      {
+        "soubor": "obsah/keltske_uzly.html",
+        "nazev": "🪢 Keltské uzly",
+        "stav": "vyvoj",
+        "tagy": ["keltské uzly", "pletenec", "cop", "uzel", "triquetra", "trojlístek", "ornament", "vzory", "mandala", "SVG"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔤 Písmo & znaky",
+    "skupina": "tvorba",
+    "polozky": [
       {
         "soubor": "obsah/font_preview.html",
         "nazev": "🔤 Náhled fontů",
@@ -1417,28 +1502,44 @@ const KATALOG_SEKCE = [
         "tagy": ["fonty", "písmo", "elfí písmo", "tengwar", "tolkien", "pán prstenů", "runy", "futhark", "hlaholice", "azbuka", "cyrilice", "alfabeta", "řečtina", "ogam", "braille", "slepecké písmo", "hieroglyfy", "egypt", "fénické písmo", "etruské písmo", "gótské písmo", "morseovka", "přepis", "transliterace", "vlastní font"]
       },
       {
-        "soubor": "obsah/hieroglyfy.html",
-        "nazev": "🏺 Egyptský písař",
-        "stav": "vyvoj",
-        "tagy": ["hieroglyfy", "egypt", "egyptské písmo", "faraon", "kartuše", "přepis", "jméno hieroglyfy", "kleopatra", "gardiner", "jsesh", "mdc", "starověk", "písmo", "dějepis"]
-      },
-      {
-        "soubor": "obsah/colorblind_sim.html",
-        "nazev": "🌈 Simulace barvosleposti",
+        "soubor": "obsah/emoji_picker.html",
+        "nazev": "😀 Picker emoji",
         "stav": "beta",
-        "tagy": ["barvoslepost", "přístupnost", "simulace", "daltonismus", "kontrast"]
+        "tagy": ["emoji", "symboly", "znaky", "kopírovat", "unicode"]
+      }
+    ]
+  },
+  {
+    "nazev": "🖨️ Tiskoviny & šablony",
+    "skupina": "tvorba",
+    "polozky": [
+      {
+        "soubor": "obsah/wedding_invite.html",
+        "nazev": "💍 Svatební oznámení",
+        "stav": "beta",
+        "tagy": ["svatba", "oznámení", "pozvánka", "tisk", "šablona"]
       },
       {
-        "soubor": "obsah/spirograf.html",
-        "nazev": "✒️ Spirograf",
-        "stav": "vyvoj",
-        "tagy": ["spirograf", "hypotrochoida", "epitrochoida", "kreslení", "vzory", "mandala", "SVG"]
+        "soubor": "obsah/certificate_gen.html",
+        "nazev": "🏆 Generátor diplomů",
+        "stav": "beta",
+        "tagy": ["diplom", "certifikát", "ocenění", "tisk", "soutěž"]
       },
       {
-        "soubor": "obsah/keltske_uzly.html",
-        "nazev": "🪢 Keltské uzly",
-        "stav": "vyvoj",
-        "tagy": ["keltské uzly", "pletenec", "cop", "uzel", "triquetra", "trojlístek", "ornament", "vzory", "mandala", "SVG"]
+        "soubor": "obsah/sticker_maker.html",
+        "nazev": "🏷️ Generátor nálepek",
+        "stav": "beta",
+        "tagy": [
+          "sticker",
+          "nálepka",
+          "obrys"
+        ]
+      },
+      {
+        "soubor": "obsah/meme_gen.html",
+        "nazev": "🖼️ Generátor meme",
+        "stav": "beta",
+        "tagy": ["meme", "vtip", "obrázek s textem", "popisek"]
       },
       {
         "soubor": "obsah/plakat_utrzky.html",
@@ -1451,6 +1552,54 @@ const KATALOG_SEKCE = [
         "nazev": "🎡 Volvelle – otočné kotouče",
         "stav": "vyvoj",
         "tagy": ["volvelle", "papír", "tisk", "šablona", "kalendář", "měsíc", "šifra", "planisféra", "hvězdy", "logaritmické pravítko", "převodník", "PDF", "SVG", "DXF", "3D", "pro děti"]
+      },
+      {
+        "soubor": "obsah/stencil.html",
+        "nazev": "🎨 Šablona na sprej (stencil)",
+        "stav": "vyvoj",
+        "tagy": ["stencil", "šablona", "sprej", "graffiti", "můstky", "ostrůvky", "plotr", "cricut", "silhouette", "laser", "svg", "dxf", "pdf", "vyřezávání", "vrstvy"]
+      },
+      {
+        "soubor": "obsah/gridGen.html",
+        "nazev": "📏 Papíry na tisk",
+        "stav": "beta",
+        "tagy": ["mřížka", "a4", "a3", "a5", "tisk", "papír", "čtverečky", "milimetrový papír", "linky", "tečky", "izometrie", "notová osnova", "tabulatura", "šestiúhelníky", "kaligrafie", "pdf", "svg"]
+      },
+      {
+        "soubor": "obsah/splitGen.html",
+        "nazev": "🍕 Dělič kruhu",
+        "stav": "beta",
+        "tagy": ["kruh", "dělení", "paprsky", "úhly", "šablona"]
+      },
+      {
+        "soubor": "obsah/Circle_generator.html",
+        "nazev": "⭕ Kružnice",
+        "stav": "beta",
+        "tagy": ["kružnice", "obrazce", "geometrie", "generátor", "tisk"]
+      },
+      {
+        "soubor": "obsah/strihy.html",
+        "nazev": "✂️ Střihy – oděvy a kopací míč",
+        "stav": "beta",
+        "tagy": ["střih", "šití", "oblečení", "tričko", "mikina", "sukně", "kalhoty", "šaty", "halenka", "košile", "vesta", "župan", "kimono", "šortky", "legíny", "zavinovací sukně", "zástěra", "čepice", "kšiltovka", "klobouk", "pelerína", "pončo", "míč", "fotbalový míč", "panely", "šestiúhelník", "pětiúhelník", "střihový plán", "spotřeba látky", "tisk po stranách", "vnořený střih", "pdf", "dxf"]
+      },
+      {
+        "soubor": "obsah/tech_tisk.html",
+        "nazev": "📏 Technický generátor pro tisk",
+        "stav": "vyvoj",
+        "tagy": ["pravítko", "úhloměr", "stupnice", "číselník", "dělicí kotouč", "vrtací šablona", "rozteč otvorů", "PCD", "VESA", "NEMA", "mřížka", "milimetrový papír", "π-páska", "měřítko", "řezací podložka", "kalibrace tiskárny", "rádiusové měrky", "závitové měrky", "logaritmické pravítko", "semilogaritmický papír", "ternární diagram", "rozvinutí kužele", "sedlo trubky", "segmentové koleno", "šablona kružnic", "elipsa", "tisk 1:1", "PDF", "SVG", "DXF", "PNG", "laser"]
+      },
+      {
+        "soubor": "obsah/stitky_panely.html",
+        "nazev": "🎛️ Štítky a čelní panely",
+        "stav": "vyvoj",
+        "tagy": ["štítky", "čelní panel", "Eurorack", "19\" rack", "laser", "CNC", "SVG", "DXF", "PDF 1:1", "samolepky", "elektronika"]
+      },
+      {
+        "soubor": "obsah/krabice_fefco.html",
+        "nazev": "📦 Krabice z kartonu (FEFCO)",
+        "stav": "vyvoj",
+        "tagy": ["krabice", "FEFCO", "vlnitá lepenka", "karton", "rozvin", "výsek", "dieline", "skládačka", "obal", "SVG", "DXF", "PDF", "plotr", "laser", "3D"]
       }
     ]
   },
@@ -1459,18 +1608,8 @@ const KATALOG_SEKCE = [
     "skupina": "tvorba",
     "polozky": [
       {
-        "soubor": "obsah/PNG_merger.html",
-        "nazev": "🖼️ Koláže",
-        "stav": "beta",
-        "tagy": [
-          "koláž",
-          "spojení obrázků",
-          "mřížka"
-        ]
-      },
-      {
         "soubor": "obsah/IMG_print.html",
-        "nazev": "🖼️ Resizer obrázků",
+        "nazev": "🖼️ Tisk obrázků na A4",
         "stav": "beta",
         "tagy": [
           "tisk",
@@ -1490,35 +1629,10 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/dither.html",
-        "nazev": "🌫️ Dithering obrázku",
+        "soubor": "obsah/image_crop.html",
+        "nazev": "✂️ Ořez obrázku",
         "stav": "beta",
-        "tagy": ["dithering", "pixelizace", "rastr", "retro", "obrázek"]
-      },
-      {
-        "soubor": "obsah/rodokmen.html",
-        "nazev": "🌳 Stavitel rodokmenu",
-        "stav": "beta",
-        "tagy": ["rodokmen", "genealogie", "předkové", "rodina", "strom", "gedcom", "vývod", "matrika",
-                 "příbuznost", "ověření", "sosa", "ahnentafel", "profesionální"]
-      },
-      {
-        "soubor": "obsah/Heritage.html",
-        "nazev": "🌳 Heritage tree",
-        "stav": "beta",
-        "tagy": ["rodokmen", "genealogie", "předkové", "rodina", "strom", "gedcom", "příbuznost", "matrika", "bratranec", "rodinný strom", "export"]
-      },
-      {
-        "soubor": "obsah/gene_map.html",
-        "nazev": "🧬 Mapa dědičnosti",
-        "stav": "beta",
-        "tagy": ["dědičnost", "genetika", "geny", "rodokmen", "znaky"]
-      },
-      {
-        "soubor": "obsah/exif_viewer.html",
-        "nazev": "📷 EXIF prohlížeč",
-        "stav": "beta",
-        "tagy": ["exif", "metadata", "foto", "gps", "expozice"]
+        "tagy": ["ořez", "crop", "obrázek", "poměr stran", "úprava fotky"]
       },
       {
         "soubor": "obsah/watermark.html",
@@ -1527,16 +1641,26 @@ const KATALOG_SEKCE = [
         "tagy": ["vodoznak", "logo", "ochrana fotky", "copyright"]
       },
       {
-        "soubor": "obsah/image_crop.html",
-        "nazev": "✂️ Ořez obrázku",
+        "soubor": "obsah/PNG_merger.html",
+        "nazev": "🖼️ Koláže",
         "stav": "beta",
-        "tagy": ["ořez", "crop", "obrázek", "poměr stran", "úprava fotky"]
+        "tagy": [
+          "koláž",
+          "spojení obrázků",
+          "mřížka"
+        ]
       },
       {
-        "soubor": "obsah/stencil.html",
-        "nazev": "🎨 Šablona na sprej (stencil)",
-        "stav": "vyvoj",
-        "tagy": ["stencil", "šablona", "sprej", "graffiti", "můstky", "ostrůvky", "plotr", "cricut", "silhouette", "laser", "svg", "dxf", "pdf", "vyřezávání", "vrstvy"]
+        "soubor": "obsah/dither.html",
+        "nazev": "🌫️ Dithering obrázku",
+        "stav": "beta",
+        "tagy": ["dithering", "pixelizace", "rastr", "retro", "obrázek"]
+      },
+      {
+        "soubor": "obsah/exif_viewer.html",
+        "nazev": "📷 EXIF prohlížeč",
+        "stav": "beta",
+        "tagy": ["exif", "metadata", "foto", "gps", "expozice"]
       }
     ]
   },
@@ -1544,17 +1668,6 @@ const KATALOG_SEKCE = [
     "nazev": "🎬 Audio & video",
     "skupina": "tvorba",
     "polozky": [
-      {
-        "soubor": "obsah/mp3cutter.html",
-        "nazev": "✂️ MP3 ořez",
-        "stav": "beta",
-        "tagy": [
-          "hudba",
-          "střih",
-          "audio",
-          "vyzvánění"
-        ]
-      },
       {
         "soubor": "obsah/videocutter.html",
         "nazev": "🎬 Video ořez",
@@ -1577,6 +1690,23 @@ const KATALOG_SEKCE = [
         "tagy": ["video", "videa", "nahnoji", "přehrávač", "galerie", "videotéka", "sdílení"]
       },
       {
+        "soubor": "obsah/mp3cutter.html",
+        "nazev": "✂️ MP3 ořez",
+        "stav": "beta",
+        "tagy": [
+          "hudba",
+          "střih",
+          "audio",
+          "vyzvánění"
+        ]
+      },
+      {
+        "soubor": "obsah/voice_recorder.html",
+        "nazev": "🎙️ Hlasový záznamník",
+        "stav": "beta",
+        "tagy": ["nahrávání", "diktafon", "mikrofon", "audio", "záznam"]
+      },
+      {
         "soubor": "obsah/soundGen.html",
         "nazev": "🎵 Generátor zvuku",
         "stav": "beta",
@@ -1589,10 +1719,10 @@ const KATALOG_SEKCE = [
         "tagy": ["spektrum", "vizualizace", "hudba", "fft", "analyzér"]
       },
       {
-        "soubor": "obsah/voice_recorder.html",
-        "nazev": "🎙️ Hlasový záznamník",
+        "soubor": "obsah/piano.html",
+        "nazev": "🎹 Piano",
         "stav": "beta",
-        "tagy": ["nahrávání", "diktafon", "mikrofon", "audio", "záznam"]
+        "tagy": ["klavír", "klávesy", "hudba", "tóny", "nástroj"]
       },
       {
         "soubor": "obsah/tuner.html",
@@ -1605,78 +1735,13 @@ const KATALOG_SEKCE = [
         "nazev": "🥁 Metronom",
         "stav": "beta",
         "tagy": ["metronom", "tempo", "bpm", "rytmus", "cvičení"]
-      },
-      {
-        "soubor": "obsah/piano.html",
-        "nazev": "🎹 Piano",
-        "stav": "beta",
-        "tagy": ["klavír", "klávesy", "hudba", "tóny", "nástroj"]
       }
     ]
   },
   {
-    "nazev": "📐 Strojní & 3D",
+    "nazev": "⚙️ Strojírenství",
     "skupina": "technika",
     "polozky": [
-      {
-        "soubor": "obsah/Vzorce.html",
-        "nazev": "🧮 Modul vzorců",
-        "stav": "beta",
-        "tagy": [
-          "matematika",
-          "výpočty",
-          "vzorce",
-          "latex"
-        ]
-      },
-      {
-        "soubor": "obsah/tubeRed.html",
-        "nazev": "🔧 Redukce trubek",
-        "stav": "beta",
-        "tagy": ["trubky", "redukce", "rozvin", "plech", "svařování", "kónus", "sražení", "fazeta"]
-      },
-      {
-        "soubor": "obsah/tubeRedFlat.html",
-        "nazev": "🔧 Redukce se zploštěním",
-        "stav": "vyvoj",
-        "tagy": ["trubky", "redukce", "zploštění", "ovál", "obdélník", "elipsa", "plochá trubka", "vzduchotechnika", "odsávání", "3d tisk", "stl", "3mf", "kónus", "sražení", "límec", "příruba", "šrouby", "těsnění", "hadice", "bajonet", "výkres", "šablona"]
-      },
-      {
-        "soubor": "obsah/tubeSplit.html",
-        "nazev": "🔱 Rozbočka trubek",
-        "stav": "beta",
-        "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování", "kónus", "sražení", "fazeta"]
-      },
-      {
-        "soubor": "obsah/kleste.html",
-        "nazev": "🗜️ Kleště, pinzety a svorky",
-        "stav": "vyvoj",
-        "tagy": ["kleště", "pinzeta", "svorka", "peán", "jehelec", "kocher", "reverzní pinzeta", "samosvorná", "rohatka", "kleště na topinky", "kleště na pečivo", "grilovací kleště", "kleště na salát", "kleště na led", "kleště na sklenice", "kleště na cukr", "kolíček", "klip na sáčky", "svorka na hadičky", "čelisti", "zoubkování", "print-in-place", "kloub", "čep", "3d tisk", "stl", "3mf"]
-      },
-      {
-        "soubor": "obsah/cookieCutter.html",
-        "nazev": "🍪 Vykrajovátka",
-        "stav": "beta",
-        "tagy": ["vykrajovátka", "cukroví", "3d tisk", "pečení", "stl", "obj", "svg", "vánoce", "velikonoce", "perníčky", "monogram", "z obrázku", "šablona", "50 tvarů", "zvířátka", "srdíčko", "hvězda", "stromek"]
-      },
-      {
-        "soubor": "obsah/text3d.html",
-        "nazev": "🔠 3D text z písma",
-        "stav": "beta",
-        "tagy": ["3d tisk", "stl", "3mf", "svg", "číslo domu", "popisné číslo", "cedulka", "jmenovka", "nápis", "písmena", "font", "písmo", "reliéf", "rytina", "šablona", "sprej", "tengwar", "elfí písmo", "runy", "braille", "hieroglyfy", "podložka", "tiskárna", "vlastní font"]
-      },
-      {
-        "soubor": "obsah/povrch3d.html",
-        "nazev": "🧱 Struktury a hrany 3D modelu",
-        "stav": "vyvoj",
-        "tagy": ["3d tisk", "stl", "obj", "3mf", "struktura", "textura", "reliéf", "cihly", "kámen", "dlažba", "prkna", "šupiny", "vroubkování", "slzičkový plech", "výšková mapa", "displacement", "sražení", "fazeta", "zaoblení", "rádius", "hrany", "úprava modelu", "vlastní vzor", "nápis", "logo", "gravírování", "šindel", "palisáda", "bosáž", "měření tloušťky"]
-      },
-      {
-        "soubor": "obsah/turbina_navrhar.html",
-        "nazev": "🌀 Návrhář turbín a proudění",
-        "stav": "beta",
-        "tagy": ["turbína", "vrtule", "proudění", "cfd", "lbm", "větrná elektrárna", "savonius", "darrieus", "gorlov", "tesla", "pelton", "kaplan", "bánki", "cross-flow", "lopatka", "naca", "bem", "aerodynamika", "hydrodynamika", "stl"]
-      },
       {
         "soubor": "obsah/ozubena_kola.html",
         "nazev": "⚙️ Návrhář ozubených soukolí",
@@ -1684,49 +1749,34 @@ const KATALOG_SEKCE = [
         "tagy": ["ozubená kola", "ozubení", "převod", "převodovka", "evolventa", "modul", "pastorek", "šikmé zuby", "šípové zuby", "hřeben", "planetová převodovka", "vnitřní ozubení", "cevové soukolí", "lucerna", "mlýn", "hodinové kolo", "cykloida", "maltézský kříž", "rohatka", "západka", "kusovník", "stl", "3mf", "dxf", "3d tisk"]
       },
       {
-        "soubor": "obsah/soukoli_skladacka.html",
-        "nazev": "🧩 Skládačka soukolí",
-        "stav": "beta",
-        "tagy": ["ozubená kola", "převod", "převodovka", "skládačka", "hřiště", "simulace", "převodový poměr", "řemen", "řetěz", "řemenice", "hřeben", "věnec", "vložené kolo", "hodinový převod", "otáčky", "moment", "kinematika"]
-      },
-      {
-        "soubor": "obsah/voronoi_stl.html",
-        "nazev": "🕸 Voronoi z STL",
+        "soubor": "obsah/evolventni_kola.html",
+        "nazev": "⚙️ Evolventní kola – přesný generátor",
         "stav": "vyvoj",
-        "tagy": ["voronoi", "stl", "3d model", "síť", "odlehčení"]
+        "tagy": ["strojírenství", "ozubení", "CAD", "3D tisk", "STL", "DXF", "SVG", "výuka", "gear_generator"]
       },
       {
-        "soubor": "obsah/papercraft.html",
-        "nazev": "📦 Papírové modely",
-        "stav": "beta",
-        "tagy": [
-          "pepakura",
-          "papercraft",
-          "stl",
-          "obj",
-          "3d",
-          "střih",
-          "rozklad",
-          "lepení"
-        ]
+        "soubor": "obsah/prevody_mech.html",
+        "nazev": "⚙️ Návrhář mechanických převodů",
+        "stav": "vyvoj",
+        "tagy": ["strojírenství", "převody", "ozubená kola", "řemen", "řetěz", "kinematika", "simulace"]
       },
       {
-        "soubor": "obsah/strihy.html",
-        "nazev": "✂️ Střihy – oděvy a kopací míč",
+        "soubor": "obsah/gear_ratio.html",
+        "nazev": "⚙️ Kalkulačka převodového poměru",
         "stav": "beta",
-        "tagy": ["střih", "šití", "oblečení", "tričko", "mikina", "sukně", "kalhoty", "šaty", "halenka", "košile", "vesta", "župan", "kimono", "šortky", "legíny", "zavinovací sukně", "zástěra", "čepice", "kšiltovka", "klobouk", "pelerína", "pončo", "míč", "fotbalový míč", "panely", "šestiúhelník", "pětiúhelník", "střihový plán", "spotřeba látky", "tisk po stranách", "vnořený střih", "pdf", "dxf"]
+        "tagy": ["převod", "poměr", "kola", "otáčky", "řemenice"]
       },
       {
-        "soubor": "obsah/gridGen.html",
-        "nazev": "📏 Papíry na tisk",
-        "stav": "beta",
-        "tagy": ["mřížka", "a4", "a3", "a5", "tisk", "papír", "čtverečky", "milimetrový papír", "linky", "tečky", "izometrie", "notová osnova", "tabulatura", "šestiúhelníky", "kaligrafie", "pdf", "svg"]
+        "soubor": "obsah/vacky.html",
+        "nazev": "⚙️ Návrhář diskových vaček",
+        "stav": "vyvoj",
+        "tagy": ["strojírenství", "mechanismy", "vačky", "kinematika", "CAD", "export", "3D tisk"]
       },
       {
-        "soubor": "obsah/splitGen.html",
-        "nazev": "🍕 Dělič kruhu",
+        "soubor": "obsah/turbina_navrhar.html",
+        "nazev": "🌀 Návrhář turbín a proudění",
         "stav": "beta",
-        "tagy": ["kruh", "dělení", "paprsky", "úhly", "šablona"]
+        "tagy": ["turbína", "vrtule", "proudění", "cfd", "lbm", "větrná elektrárna", "savonius", "darrieus", "gorlov", "tesla", "pelton", "kaplan", "bánki", "cross-flow", "lopatka", "naca", "bem", "aerodynamika", "hydrodynamika", "stl"]
       },
       {
         "soubor": "obsah/screw_calc.html",
@@ -1739,10 +1789,14 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/evolventni_kola.html",
-        "nazev": "⚙️ Evolventní ozubená kola",
-        "stav": "vyvoj",
-        "tagy": ["strojírenství", "ozubení", "CAD", "3D tisk", "STL", "DXF", "SVG", "výuka", "gear_generator"]
+        "soubor": "obsah/spring_calc.html",
+        "nazev": "🌀 Kalkulačka pružin",
+        "stav": "beta",
+        "tagy": [
+          "pružina",
+          "tuhost",
+          "strojírenství"
+        ]
       },
       {
         "soubor": "obsah/sheet_bend.html",
@@ -1755,27 +1809,6 @@ const KATALOG_SEKCE = [
         "nazev": "⚙️ Řezné podmínky",
         "stav": "beta",
         "tagy": ["obrábění", "otáčky", "posuv", "fréza", "soustružení"]
-      },
-      {
-        "soubor": "obsah/material_weight.html",
-        "nazev": "⚖️ Hmotnost materiálu",
-        "stav": "beta",
-        "tagy": [
-          "ocel",
-          "hliník",
-          "hustota",
-          "hmotnost"
-        ]
-      },
-      {
-        "soubor": "obsah/filament_calc.html",
-        "nazev": "🧵 Spotřeba filamentu",
-        "stav": "beta",
-        "tagy": [
-          "3d tisk",
-          "pla",
-          "petg"
-        ]
       },
       {
         "soubor": "obsah/iso_tolerance.html",
@@ -1796,66 +1829,124 @@ const KATALOG_SEKCE = [
         "tagy": ["tvrdost", "hrc", "hb", "vickers", "rockwell"]
       },
       {
-        "soubor": "obsah/gear_ratio.html",
-        "nazev": "⚙️ Převodové poměry",
-        "stav": "beta",
-        "tagy": ["převod", "poměr", "kola", "otáčky", "řemenice"]
-      },
-      {
-        "soubor": "obsah/paint_coverage_calc.html",
-        "nazev": "🎨 Spotřeba barvy/tapety",
+        "soubor": "obsah/material_weight.html",
+        "nazev": "⚖️ Hmotnost materiálu",
         "stav": "beta",
         "tagy": [
-          "malování",
-          "barva",
-          "tapeta",
-          "místnost"
+          "ocel",
+          "hliník",
+          "hustota",
+          "hmotnost"
         ]
-      },
+      }
+    ]
+  },
+  {
+    "nazev": "🪚 Truhlářství",
+    "skupina": "technika",
+    "polozky": [
       {
-        "soubor": "obsah/concrete_mix_calc.html",
-        "nazev": "🧱 Betonová směs",
-        "stav": "beta",
-        "tagy": [
-          "beton",
-          "cement",
-          "stavba",
-          "základy"
-        ]
-      },
-      {
-        "soubor": "obsah/roof_pitch_calc.html",
-        "nazev": "🏠 Sklon střechy, krokve a plocha",
-        "stav": "beta",
-        "tagy": [
-          "střecha",
-          "krov",
-          "krokev",
-          "tesařina",
-          "valbová",
-          "pultová",
-          "stanová"
-        ]
-      },
-      {
-        "soubor": "obsah/schodiste.html",
-        "nazev": "🪜 Návrh schodiště",
+        "soubor": "obsah/navrh_skrini.html",
+        "nazev": "🗄️ Návrh skříní a korpusů",
         "stav": "vyvoj",
-        "tagy": ["schody", "schodiště", "ČSN 73 4130", "stupně", "kosé stupně", "točité", "vřetenové", "schodnice", "podchodná výška", "stropní otvor", "zábradlí", "DXF", "rodinný dům", "tesařina"]
+        "tagy": ["skříň", "korpus", "nábytek", "kuchyňská linka", "DTD", "kusovník", "řezný plán", "systém 32", "závěsy", "zásuvky", "výsuvy", "konfirmát", "vrtání", "DXF", "CNC", "PDF", "3D"]
       },
       {
-        "soubor": "obsah/rafter_spacing_calc.html",
-        "nazev": "📐 Rozteč krokví / trámků",
-        "stav": "beta",
-        "tagy": [
-          "krokev",
-          "rozteč",
-          "pozednice",
-          "krov",
-          "tesařina",
-          "rozestup"
-        ]
+        "soubor": "obsah/rezny_plan.html",
+        "nazev": "📏 Řezný plán – optimalizace dělení",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "nábytek", "dělení desek", "optimalizace", "DTD", "MDF", "překližka", "hranování", "1D řezání", "CNC", "PDF", "štítky", "DXF"]
       },
+      {
+        "soubor": "obsah/truhlarske_spoje.html",
+        "nazev": "🪚 Šablony truhlářských spojů",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "dřevo", "spoje", "rybina", "dovetail", "cinky", "čep a dlab", "přeplátování", "pero a drážka", "kolíky", "lamely", "šablona", "tisk 1:1", "PDF", "SVG", "DXF", "STL", "3D", "kusovník", "CNC"]
+      },
+      {
+        "soubor": "obsah/kolikovaci_pripravky.html",
+        "nazev": "🔩 Kolíkovací a kapsové přípravky",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "kolíky", "pocket hole", "kapsový spoj", "konfirmát", "excentr", "přípravek", "3D tisk", "STL", "šablona", "PDF 1:1"]
+      },
+      {
+        "soubor": "obsah/pripravky_pila.html",
+        "nazev": "🪚 Přípravky pro pilu a vrtačku",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "stolní pila", "okružní pila", "pokosová pila", "vrtačka", "přípravky", "3D tisk", "STL", "DXF", "PDF 1:1", "kalkulačka"]
+      },
+      {
+        "soubor": "obsah/sablony_frezka.html",
+        "nazev": "🌀 Šablony pro horní frézku",
+        "stav": "vyvoj",
+        "tagy": ["frézka", "kopírovací kroužek", "šablona", "ofset", "truhlářství", "kruhové rameno", "motýlek", "DXF", "STL", "PDF 1:1"]
+      },
+      {
+        "soubor": "obsah/vrtaci_sablony.html",
+        "nazev": "🔩 Vrtací šablony",
+        "stav": "vyvoj",
+        "tagy": ["vrtání", "šablona", "systém 32", "závěsy", "kolíky", "úchytky", "VESA", "KU 68", "PCD", "PDF 1:1", "STL", "3D tisk", "přípravek"]
+      },
+      {
+        "soubor": "obsah/oblouky_profily.html",
+        "nazev": "〰️ Šablony oblouků a profilů",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "oblouk", "elipsa", "parabola", "řetězovka", "spline", "pružná lať", "kabriolová noha", "kuželová noha", "soustružení", "měrka průměrů", "ogee", "profil lišty", "šablona", "tisk 1:1", "PDF", "DXF", "STL", "3D"]
+      },
+      {
+        "soubor": "obsah/ohyb_dreva.html",
+        "nazev": "🌙 Ohýbání dřeva – formy a kopyta",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "ohýbání dřeva", "laminování", "pára", "kerf", "formy", "MDF", "tisk 1:1", "DXF", "STL", "kusovník"]
+      },
+      {
+        "soubor": "obsah/segmentove_soustruzeni.html",
+        "nazev": "🏺 Segmentové soustružení",
+        "stav": "vyvoj",
+        "tagy": ["soustružení", "segmentové soustružení", "segmented turning", "mísa", "váza", "kroužky", "segmenty", "pokos", "ozdobný pás", "řezný plán", "šablona 1:1", "PDF", "DXF", "STL", "3D", "truhlářství"]
+      },
+      {
+        "soubor": "obsah/intarzie.html",
+        "nazev": "🧩 Intarzie a parketáž",
+        "stav": "vyvoj",
+        "tagy": ["intarzie", "marketerie", "parketáž", "dýha", "rybí kost", "šachovnice", "kompasová růžice", "teselace", "Escher", "bookmatch", "řezný plán", "laser", "kerf", "SVG", "DXF", "PDF", "3D", "truhlářství"]
+      },
+      {
+        "soubor": "obsah/prkenka.html",
+        "nazev": "🔲 Prkénka a lepené vzory",
+        "stav": "vyvoj",
+        "tagy": ["truhlářství", "krájecí prkénko", "end grain", "šachovnice", "3D kostky", "chevron", "řezný seznam", "PDF", "DXF", "3D"]
+      },
+      {
+        "soubor": "obsah/drevene_hracky.html",
+        "nazev": "🧸 Dřevěné hračky a dětský nábytek",
+        "stav": "vyvoj",
+        "tagy": ["hračky", "kostky", "stavebnice", "kuličková dráha", "puzzle", "lupenková pila", "zvířátka", "tahací hračka", "učící věž", "dětský nábytek", "EN 71-1", "ergonomie", "stabilita", "šablona 1:1", "PDF", "DXF", "STL", "3D"]
+      },
+      {
+        "soubor": "obsah/rostouci_zidle.html",
+        "nazev": "🪑 Rostoucí židle",
+        "stav": "vyvoj",
+        "tagy": ["rostoucí židle", "dětská židle", "nábytek", "ergonomie", "EN 1729", "WHO", "drážky", "stabilita", "truhlářství", "šablona 1:1", "PDF", "DXF", "SVG", "CNC", "STL", "řezný plán", "3D"]
+      },
+      {
+        "soubor": "obsah/ostreni.html",
+        "nazev": "🔪 Ostření dlát a hoblíků – přípravky",
+        "stav": "vyvoj",
+        "tagy": ["ostření", "dláto", "hoblík", "honovací vozík", "3D tisk", "STL", "bruska", "truhlářství", "šablona"]
+      },
+      {
+        "soubor": "obsah/drevo_vypocty.html",
+        "nazev": "🌳 Dřevo – pohyb, průhyb, povrchy",
+        "stav": "vyvoj",
+        "tagy": ["dřevo", "truhlářství", "vlhkost", "EMC", "sesychání", "průhyb", "police", "povrchová úprava", "lak", "olej", "řezivo", "objem"]
+      }
+    ]
+  },
+  {
+    "nazev": "🏠 Stavba & dům",
+    "skupina": "technika",
+    "polozky": [
       {
         "soubor": "obsah/pudorys.html",
         "nazev": "🏠 Půdorys a rozvody",
@@ -1880,216 +1971,59 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/modelar.html",
-        "nazev": "🧊 Modelář 3D",
+        "soubor": "obsah/schodiste.html",
+        "nazev": "🪜 Návrh schodiště",
+        "stav": "vyvoj",
+        "tagy": ["schody", "schodiště", "ČSN 73 4130", "stupně", "kosé stupně", "točité", "vřetenové", "schodnice", "podchodná výška", "stropní otvor", "zábradlí", "DXF", "rodinný dům", "tesařina"]
+      },
+      {
+        "soubor": "obsah/roof_pitch_calc.html",
+        "nazev": "🏠 Sklon střechy, krokve a plocha",
         "stav": "beta",
         "tagy": [
-          "3d",
-          "modelování",
-          "tinkercad",
-          "tvary",
-          "cad",
-          "3d tisk",
-          "stl",
-          "3mf",
-          "step",
-          "závity",
-          "výkres"
+          "střecha",
+          "krov",
+          "krokev",
+          "tesařina",
+          "valbová",
+          "pultová",
+          "stanová"
         ]
       },
       {
-        "soubor": "obsah/quake_lab.html",
-        "nazev": "🏚️ Zemětřesná laboratoř",
+        "soubor": "obsah/rafter_spacing_calc.html",
+        "nazev": "📐 Rozteč krokví / trámků",
         "stav": "beta",
         "tagy": [
-          "zemětřesení",
-          "simulátor",
-          "konstrukce",
-          "statika",
-          "seizmicita",
-          "pevnost",
-          "nosník",
-          "vzpěra",
-          "spoje",
-          "materiály"
+          "krokev",
+          "rozteč",
+          "pozednice",
+          "krov",
+          "tesařina",
+          "rozestup"
         ]
       },
       {
-        "soubor": "obsah/cable_sizing_calc.html",
-        "nazev": "🔌 Dimenzování kabelu",
+        "soubor": "obsah/concrete_mix_calc.html",
+        "nazev": "🧱 Betonová směs",
         "stav": "beta",
         "tagy": [
-          "elektro",
-          "kabel",
-          "úbytek napětí",
-          "průřez"
+          "beton",
+          "cement",
+          "stavba",
+          "základy"
         ]
       },
       {
-        "soubor": "obsah/spring_calc.html",
-        "nazev": "🌀 Kalkulačka pružin",
+        "soubor": "obsah/paint_coverage_calc.html",
+        "nazev": "🎨 Spotřeba barvy/tapety",
         "stav": "beta",
         "tagy": [
-          "pružina",
-          "tuhost",
-          "strojírenství"
+          "malování",
+          "barva",
+          "tapeta",
+          "místnost"
         ]
-      },
-      {
-        "soubor": "obsah/vacky.html",
-        "nazev": "⚙️ Návrhář diskových vaček",
-        "stav": "vyvoj",
-        "tagy": ["strojírenství", "mechanismy", "vačky", "kinematika", "CAD", "export", "3D tisk"]
-      },
-      {
-        "soubor": "obsah/prevody_mech.html",
-        "nazev": "⚙️ Návrhář mechanických převodů",
-        "stav": "vyvoj",
-        "tagy": ["strojírenství", "převody", "ozubená kola", "řemen", "řetěz", "kinematika", "simulace"]
-      },
-      {
-        "soubor": "obsah/pevnost_tisku.html",
-        "nazev": "🧱 Pevnost výtisků (FDM)",
-        "stav": "vyvoj",
-        "tagy": ["3D tisk", "FDM", "pevnost", "nosník", "průhyb", "výpočet", "inženýrství", "materiály"]
-      },
-      {
-        "soubor": "obsah/krabicky.html",
-        "nazev": "📦 Krabičky pro elektroniku",
-        "stav": "vyvoj",
-        "tagy": ["3D tisk", "CAD", "elektronika", "Arduino", "ESP32", "STL", "3MF", "generátor"]
-      },
-      {
-        "soubor": "obsah/panty.html",
-        "nazev": "🔩 Panty a klouby pro 3D tisk",
-        "stav": "vyvoj",
-        "tagy": ["3D tisk", "CAD", "STL", "pant", "kloub", "FDM", "návrh", "strojírenství"]
-      },
-      {
-        "soubor": "obsah/stitky_panely.html",
-        "nazev": "🎛️ Štítky a čelní panely",
-        "stav": "vyvoj",
-        "tagy": ["štítky", "čelní panel", "Eurorack", "19\" rack", "laser", "CNC", "SVG", "DXF", "PDF 1:1", "samolepky", "elektronika"]
-      },
-      {
-        "soubor": "obsah/tech_tisk.html",
-        "nazev": "📏 Technický generátor pro tisk",
-        "stav": "vyvoj",
-        "tagy": ["pravítko", "úhloměr", "stupnice", "číselník", "dělicí kotouč", "vrtací šablona", "rozteč otvorů", "PCD", "VESA", "NEMA", "mřížka", "milimetrový papír", "π-páska", "měřítko", "řezací podložka", "kalibrace tiskárny", "rádiusové měrky", "závitové měrky", "logaritmické pravítko", "semilogaritmický papír", "ternární diagram", "rozvinutí kužele", "sedlo trubky", "segmentové koleno", "šablona kružnic", "elipsa", "tisk 1:1", "PDF", "SVG", "DXF", "PNG", "laser"]
-      },
-      {
-        "soubor": "obsah/krabice_fefco.html",
-        "nazev": "📦 Krabice z kartonu (FEFCO)",
-        "stav": "vyvoj",
-        "tagy": ["krabice", "FEFCO", "vlnitá lepenka", "karton", "rozvin", "výsek", "dieline", "skládačka", "obal", "SVG", "DXF", "PDF", "plotr", "laser", "3D"]
-      },
-      {
-        "soubor": "obsah/vrtaci_sablony.html",
-        "nazev": "🔩 Vrtací šablony",
-        "stav": "vyvoj",
-        "tagy": ["vrtání", "šablona", "systém 32", "závěsy", "kolíky", "úchytky", "VESA", "KU 68", "PCD", "PDF 1:1", "STL", "3D tisk", "přípravek"]
-      },
-      {
-        "soubor": "obsah/truhlarske_spoje.html",
-        "nazev": "🪚 Šablony truhlářských spojů",
-        "stav": "vyvoj",
-        "tagy": ["truhlářství", "dřevo", "spoje", "rybina", "dovetail", "cinky", "čep a dlab", "přeplátování", "pero a drážka", "kolíky", "lamely", "šablona", "tisk 1:1", "PDF", "SVG", "DXF", "STL", "3D", "kusovník", "CNC"]
-      },
-      {
-        "soubor": "obsah/planetarium.html",
-        "nazev": "🌍 Planetárium Slunce–Země–Měsíc",
-        "stav": "vyvoj",
-        "tagy": ["tellurium", "orrery", "planetárium", "ozubená kola", "převody", "Měsíc", "fáze", "roční období", "zatmění", "STL", "DXF", "3D tisk"]
-      },
-      {
-        "soubor": "obsah/ohyb_dreva.html",
-        "nazev": "🌙 Ohýbání dřeva – formy a kopyta",
-        "stav": "vyvoj",
-        "tagy": ["truhlářství", "ohýbání dřeva", "laminování", "pára", "kerf", "formy", "MDF", "tisk 1:1", "DXF", "STL", "kusovník"]
-      },
-      {
-        "soubor": "obsah/drevo_vypocty.html",
-        "nazev": "🌳 Dřevo – pohyb, průhyb, povrchy",
-        "stav": "vyvoj",
-        "tagy": ["dřevo", "truhlářství", "vlhkost", "EMC", "sesychání", "průhyb", "police", "povrchová úprava", "lak", "olej", "řezivo", "objem"]
-      },
-      {
-        "soubor": "obsah/sablony_frezka.html",
-        "nazev": "🌀 Šablony pro horní frézku",
-        "stav": "vyvoj",
-        "tagy": ["frézka", "kopírovací kroužek", "šablona", "ofset", "truhlářství", "kruhové rameno", "motýlek", "DXF", "STL", "PDF 1:1"]
-      },
-      {
-        "soubor": "obsah/navrh_skrini.html",
-        "nazev": "🗄️ Návrh skříní a korpusů",
-        "stav": "vyvoj",
-        "tagy": ["skříň", "korpus", "nábytek", "kuchyňská linka", "DTD", "kusovník", "řezný plán", "systém 32", "závěsy", "zásuvky", "výsuvy", "konfirmát", "vrtání", "DXF", "CNC", "PDF", "3D"]
-      },
-      {
-        "soubor": "obsah/rezny_plan.html",
-        "nazev": "📏 Řezný plán – optimalizace dělení",
-        "stav": "vyvoj",
-        "tagy": ["truhlářství", "nábytek", "dělení desek", "optimalizace", "DTD", "MDF", "překližka", "hranování", "1D řezání", "CNC", "PDF", "štítky", "DXF"]
-      },
-      {
-        "soubor": "obsah/ostreni.html",
-        "nazev": "🔪 Ostření dlát a hoblíků – přípravky",
-        "stav": "vyvoj",
-        "tagy": ["ostření", "dláto", "hoblík", "honovací vozík", "3D tisk", "STL", "bruska", "truhlářství", "šablona"]
-      },
-      {
-        "soubor": "obsah/kolikovaci_pripravky.html",
-        "nazev": "🔩 Kolíkovací a kapsové přípravky",
-        "stav": "vyvoj",
-        "tagy": ["truhlářství", "kolíky", "pocket hole", "kapsový spoj", "konfirmát", "excentr", "přípravek", "3D tisk", "STL", "šablona", "PDF 1:1"]
-      },
-      {
-        "soubor": "obsah/intarzie.html",
-        "nazev": "🧩 Intarzie a parketáž",
-        "stav": "vyvoj",
-        "tagy": ["intarzie", "marketerie", "parketáž", "dýha", "rybí kost", "šachovnice", "kompasová růžice", "teselace", "Escher", "bookmatch", "řezný plán", "laser", "kerf", "SVG", "DXF", "PDF", "3D", "truhlářství"]
-      },
-      {
-        "soubor": "obsah/prkenka.html",
-        "nazev": "🔲 Prkénka a lepené vzory",
-        "stav": "vyvoj",
-        "tagy": ["truhlářství", "krájecí prkénko", "end grain", "šachovnice", "3D kostky", "chevron", "řezný seznam", "PDF", "DXF", "3D"]
-      },
-      {
-        "soubor": "obsah/segmentove_soustruzeni.html",
-        "nazev": "🏺 Segmentové soustružení",
-        "stav": "vyvoj",
-        "tagy": ["soustružení", "segmentové soustružení", "segmented turning", "mísa", "váza", "kroužky", "segmenty", "pokos", "ozdobný pás", "řezný plán", "šablona 1:1", "PDF", "DXF", "STL", "3D", "truhlářství"]
-      },
-      {
-        "soubor": "obsah/drevene_hracky.html",
-        "nazev": "🧸 Dřevěné hračky a dětský nábytek",
-        "stav": "vyvoj",
-        "tagy": ["hračky", "kostky", "stavebnice", "kuličková dráha", "puzzle", "lupenková pila", "zvířátka", "tahací hračka", "učící věž", "dětský nábytek", "EN 71-1", "ergonomie", "stabilita", "šablona 1:1", "PDF", "DXF", "STL", "3D"]
-      },
-      {
-        "soubor": "obsah/pripravky_pila.html",
-        "nazev": "🪚 Přípravky pro pilu a vrtačku",
-        "stav": "vyvoj",
-        "tagy": ["truhlářství", "stolní pila", "okružní pila", "pokosová pila", "vrtačka", "přípravky", "3D tisk", "STL", "DXF", "PDF 1:1", "kalkulačka"]
-      },
-      {
-        "soubor": "obsah/drzaky_naradi.html",
-        "nazev": "🧰 Držáky nářadí a Gridfinity",
-        "stav": "vyvoj",
-        "tagy": ["gridfinity", "3D tisk", "STL", "dílna", "nářadí", "French cleat", "pegboard", "truhlářství", "PDF 1:1", "kusovník"]
-      },
-      {
-        "soubor": "obsah/oblouky_profily.html",
-        "nazev": "〰️ Šablony oblouků a profilů",
-        "stav": "vyvoj",
-        "tagy": ["truhlářství", "oblouk", "elipsa", "parabola", "řetězovka", "spline", "pružná lať", "kabriolová noha", "kuželová noha", "soustružení", "měrka průměrů", "ogee", "profil lišty", "šablona", "tisk 1:1", "PDF", "DXF", "STL", "3D"]
-      },
-      {
-        "soubor": "obsah/rostouci_zidle.html",
-        "nazev": "🪑 Rostoucí židle",
-        "stav": "vyvoj",
-        "tagy": ["rostoucí židle", "dětská židle", "nábytek", "ergonomie", "EN 1729", "WHO", "drážky", "stabilita", "truhlářství", "šablona 1:1", "PDF", "DXF", "SVG", "CNC", "STL", "řezný plán", "3D"]
       }
     ]
   },
@@ -2098,28 +2032,33 @@ const KATALOG_SEKCE = [
     "skupina": "technika",
     "polozky": [
       {
-        "soubor": "obsah/angle_converter.html",
-        "nazev": "📐 Úhly & měřítka",
+        "soubor": "obsah/Vzorce.html",
+        "nazev": "🧮 Modul vzorců",
         "stav": "beta",
-        "tagy": ["úhly", "stupně", "radiány", "měřítko", "sklon"]
+        "tagy": [
+          "matematika",
+          "výpočty",
+          "vzorce",
+          "latex"
+        ]
       },
       {
-        "soubor": "obsah/ohm_calc.html",
-        "nazev": "⚡ Ohmův zákon",
+        "soubor": "obsah/equation_solver.html",
+        "nazev": "🧮 Řešič rovnic",
         "stav": "beta",
-        "tagy": ["ohmův zákon", "proud", "napětí", "odpor", "výkon", "elektro"]
+        "tagy": ["rovnice", "kvadratická", "soustava", "řešení", "kořeny"]
       },
       {
-        "soubor": "obsah/number_base.html",
-        "nazev": "🔢 Číselné soustavy",
+        "soubor": "obsah/function_plot.html",
+        "nazev": "📈 Kreslič grafů funkcí",
         "stav": "beta",
-        "tagy": ["binární", "hexadecimální", "osmičková", "soustava", "převod"]
+        "tagy": ["graf funkce", "kreslení", "matematika", "parabola", "průběh"]
       },
       {
-        "soubor": "obsah/pressure_force.html",
-        "nazev": "🔧 Tlak / síla / moment",
+        "soubor": "obsah/statistics.html",
+        "nazev": "📊 Statistika dat",
         "stav": "beta",
-        "tagy": ["tlak", "síla", "moment", "bar", "newton", "převod"]
+        "tagy": ["průměr", "medián", "směrodatná odchylka", "data", "statistika"]
       },
       {
         "soubor": "obsah/triangle_calc.html",
@@ -2134,28 +2073,28 @@ const KATALOG_SEKCE = [
         "tagy": ["pravoúhlý", "pythagoras", "odvěsna", "přepona", "trojúhelník"]
       },
       {
+        "soubor": "obsah/angle_converter.html",
+        "nazev": "📐 Úhly & měřítka",
+        "stav": "beta",
+        "tagy": ["úhly", "stupně", "radiány", "měřítko", "sklon"]
+      },
+      {
+        "soubor": "obsah/number_base.html",
+        "nazev": "🔢 Číselné soustavy",
+        "stav": "beta",
+        "tagy": ["binární", "hexadecimální", "osmičková", "soustava", "převod"]
+      },
+      {
+        "soubor": "obsah/pressure_force.html",
+        "nazev": "🔧 Tlak / síla / moment",
+        "stav": "beta",
+        "tagy": ["tlak", "síla", "moment", "bar", "newton", "převod"]
+      },
+      {
         "soubor": "obsah/beam_deflection.html",
         "nazev": "🏗️ Průhyb nosníku",
         "stav": "beta",
         "tagy": ["nosník", "průhyb", "zatížení", "statika", "ohyb"]
-      },
-      {
-        "soubor": "obsah/statistics.html",
-        "nazev": "📊 Statistika dat",
-        "stav": "beta",
-        "tagy": ["průměr", "medián", "směrodatná odchylka", "data", "statistika"]
-      },
-      {
-        "soubor": "obsah/function_plot.html",
-        "nazev": "📈 Kreslič grafů funkcí",
-        "stav": "beta",
-        "tagy": ["graf funkce", "kreslení", "matematika", "parabola", "průběh"]
-      },
-      {
-        "soubor": "obsah/equation_solver.html",
-        "nazev": "🧮 Řešič rovnic",
-        "stav": "beta",
-        "tagy": ["rovnice", "kvadratická", "soustava", "řešení", "kořeny"]
       }
     ]
   },
@@ -2170,16 +2109,33 @@ const KATALOG_SEKCE = [
         "tagy": ["fotovoltaika", "FVE", "solár", "výroba elektřiny", "návratnost", "PVGIS", "energie"]
       },
       {
+        "soubor": "obsah/offgrid_baterie.html",
+        "nazev": "🔋 Ostrovní systém",
+        "stav": "vyvoj",
+        "tagy": ["off-grid", "baterie", "LiFePO4", "měnič", "solární panel", "MPPT", "chata", "průřez kabelu"]
+      },
+      {
         "soubor": "obsah/tarif_spot.html",
         "nazev": "⚡ Fixní, nebo spotový tarif?",
         "stav": "vyvoj",
         "tagy": ["elektřina", "spot", "spotová cena", "OTE", "fixace", "distribuční sazba", "ERÚ", "TDD", "energie", "cena elektřiny"]
       },
       {
-        "soubor": "obsah/offgrid_baterie.html",
-        "nazev": "🔋 Ostrovní systém",
-        "stav": "vyvoj",
-        "tagy": ["off-grid", "baterie", "LiFePO4", "měnič", "solární panel", "MPPT", "chata", "průřez kabelu"]
+        "soubor": "obsah/cable_sizing_calc.html",
+        "nazev": "🔌 Dimenzování kabelu",
+        "stav": "beta",
+        "tagy": [
+          "elektro",
+          "kabel",
+          "úbytek napětí",
+          "průřez"
+        ]
+      },
+      {
+        "soubor": "obsah/ohm_calc.html",
+        "nazev": "⚡ Ohmův zákon",
+        "stav": "beta",
+        "tagy": ["ohmův zákon", "proud", "napětí", "odpor", "výkon", "elektro"]
       },
       {
         "soubor": "obsah/logic_gates.html",
@@ -2188,16 +2144,16 @@ const KATALOG_SEKCE = [
         "tagy": ["logika", "hradla", "digitální obvody", "sčítačka", "klopný obvod", "pravdivostní tabulka", "elektronika"]
       },
       {
-        "soubor": "obsah/cpu8.html",
-        "nazev": "🧮 CPU 6502 – emulátor a assembler",
-        "stav": "vyvoj",
-        "tagy": ["6502", "procesor", "assembler", "emulátor", "výuka", "programování", "retro", "C64", "NES", "8bit"]
-      },
-      {
         "soubor": "obsah/plc.html",
         "nazev": "🏭 Simulátor PLC – Ladder",
         "stav": "vyvoj",
         "tagy": ["PLC", "automatizace", "ladder", "IEC 61131-3", "PID", "simulátor", "výuka", "elektro"]
+      },
+      {
+        "soubor": "obsah/cpu8.html",
+        "nazev": "🧮 CPU 6502 – emulátor a assembler",
+        "stav": "vyvoj",
+        "tagy": ["6502", "procesor", "assembler", "emulátor", "výuka", "programování", "retro", "C64", "NES", "8bit"]
       }
     ]
   },
@@ -2222,6 +2178,168 @@ const KATALOG_SEKCE = [
         "nazev": "🧫 Laboratoř buněčných automatů",
         "stav": "vyvoj",
         "tagy": ["simulace", "matematika", "game of life", "celulární automat", "wolfram", "wireworld"]
+      },
+      {
+        "soubor": "obsah/quake_lab.html",
+        "nazev": "🏚️ Zemětřesná laboratoř",
+        "stav": "beta",
+        "tagy": [
+          "zemětřesení",
+          "simulátor",
+          "konstrukce",
+          "statika",
+          "seizmicita",
+          "pevnost",
+          "nosník",
+          "vzpěra",
+          "spoje",
+          "materiály"
+        ]
+      },
+      {
+        "soubor": "obsah/nemozne.html",
+        "nazev": "♾️ Laboratoř nemožných tvarů",
+        "stav": "vyvoj",
+        "tagy": ["matematika", "topologie", "Möbiova páska", "Kleinova láhev", "Boyova plocha", "uzly", "minimální plochy", "Costa", "Gömböc", "fraktály", "Mandelbulb", "Menger", "Penrose", "iluze", "3D", "3D tisk", "STL", "výuka"]
+      }
+    ]
+  },
+  {
+    "nazev": "🧊 3D modelování",
+    "skupina": "3d",
+    "polozky": [
+      {
+        "soubor": "obsah/modelar.html",
+        "nazev": "🧊 Modelář 3D",
+        "stav": "beta",
+        "tagy": [
+          "3d",
+          "modelování",
+          "tinkercad",
+          "tvary",
+          "cad",
+          "3d tisk",
+          "stl",
+          "3mf",
+          "step",
+          "závity",
+          "výkres"
+        ]
+      },
+      {
+        "soubor": "obsah/text3d.html",
+        "nazev": "🔠 3D text z písma",
+        "stav": "beta",
+        "tagy": ["3d tisk", "stl", "3mf", "svg", "číslo domu", "popisné číslo", "cedulka", "jmenovka", "nápis", "písmena", "font", "písmo", "reliéf", "rytina", "šablona", "sprej", "tengwar", "elfí písmo", "runy", "braille", "hieroglyfy", "podložka", "tiskárna", "vlastní font"]
+      },
+      {
+        "soubor": "obsah/povrch3d.html",
+        "nazev": "🧱 Struktury a hrany 3D modelu",
+        "stav": "vyvoj",
+        "tagy": ["3d tisk", "stl", "obj", "3mf", "struktura", "textura", "reliéf", "cihly", "kámen", "dlažba", "prkna", "šupiny", "vroubkování", "slzičkový plech", "výšková mapa", "displacement", "sražení", "fazeta", "zaoblení", "rádius", "hrany", "úprava modelu", "vlastní vzor", "nápis", "logo", "gravírování", "šindel", "palisáda", "bosáž", "měření tloušťky"]
+      },
+      {
+        "soubor": "obsah/voronoi_stl.html",
+        "nazev": "🕸 Voronoi z STL",
+        "stav": "vyvoj",
+        "tagy": ["voronoi", "stl", "3d model", "síť", "odlehčení"]
+      },
+      {
+        "soubor": "obsah/papercraft.html",
+        "nazev": "📦 Papírové modely",
+        "stav": "beta",
+        "tagy": [
+          "pepakura",
+          "papercraft",
+          "stl",
+          "obj",
+          "3d",
+          "střih",
+          "rozklad",
+          "lepení"
+        ]
+      }
+    ]
+  },
+  {
+    "nazev": "🖨️ 3D tisk – díly a přípravky",
+    "skupina": "3d",
+    "polozky": [
+      {
+        "soubor": "obsah/krabicky.html",
+        "nazev": "📦 Krabičky pro elektroniku",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "CAD", "elektronika", "Arduino", "ESP32", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/panty.html",
+        "nazev": "🔩 Panty a klouby pro 3D tisk",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "CAD", "STL", "pant", "kloub", "FDM", "návrh", "strojírenství"]
+      },
+      {
+        "soubor": "obsah/drzaky_naradi.html",
+        "nazev": "🧰 Držáky nářadí a Gridfinity",
+        "stav": "vyvoj",
+        "tagy": ["gridfinity", "3D tisk", "STL", "dílna", "nářadí", "French cleat", "pegboard", "truhlářství", "PDF 1:1", "kusovník"]
+      },
+      {
+        "soubor": "obsah/kleste.html",
+        "nazev": "🗜️ Kleště, pinzety a svorky",
+        "stav": "vyvoj",
+        "tagy": ["kleště", "pinzeta", "svorka", "peán", "jehelec", "kocher", "reverzní pinzeta", "samosvorná", "rohatka", "kleště na topinky", "kleště na pečivo", "grilovací kleště", "kleště na salát", "kleště na led", "kleště na sklenice", "kleště na cukr", "kolíček", "klip na sáčky", "svorka na hadičky", "čelisti", "zoubkování", "print-in-place", "kloub", "čep", "3d tisk", "stl", "3mf"]
+      },
+      {
+        "soubor": "obsah/odizolovac.html",
+        "nazev": "✂️ Stahovák izolace pro 3D tisk",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "elektro", "elektrikář", "odizolování", "stahovák", "kabel", "CYKY", "CY", "CYSY", "CYKYLo", "ulamovací nůž", "čepel", "generátor", "pružný kloub", "flexure", "kleště", "V-zářez", "AWG", "měrka průřezu", "podélný řez"]
+      },
+      {
+        "soubor": "obsah/tubeRed.html",
+        "nazev": "🔧 Redukce trubek",
+        "stav": "beta",
+        "tagy": ["trubky", "redukce", "rozvin", "plech", "svařování", "kónus", "sražení", "fazeta"]
+      },
+      {
+        "soubor": "obsah/tubeRedFlat.html",
+        "nazev": "🔧 Redukce se zploštěním",
+        "stav": "vyvoj",
+        "tagy": ["trubky", "redukce", "zploštění", "ovál", "obdélník", "elipsa", "plochá trubka", "vzduchotechnika", "odsávání", "3d tisk", "stl", "3mf", "kónus", "sražení", "límec", "příruba", "šrouby", "těsnění", "hadice", "bajonet", "výkres", "šablona"]
+      },
+      {
+        "soubor": "obsah/tubeSplit.html",
+        "nazev": "🔱 Rozbočka trubek",
+        "stav": "beta",
+        "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování", "kónus", "sražení", "fazeta"]
+      },
+      {
+        "soubor": "obsah/cookieCutter.html",
+        "nazev": "🍪 Vykrajovátka",
+        "stav": "beta",
+        "tagy": ["vykrajovátka", "cukroví", "3d tisk", "pečení", "stl", "obj", "svg", "vánoce", "velikonoce", "perníčky", "monogram", "z obrázku", "šablona", "50 tvarů", "zvířátka", "srdíčko", "hvězda", "stromek"]
+      },
+      {
+        "soubor": "obsah/soukoli_skladacka.html",
+        "nazev": "🧩 Skládačka soukolí",
+        "stav": "beta",
+        "tagy": ["ozubená kola", "převod", "převodovka", "skládačka", "hřiště", "simulace", "převodový poměr", "řemen", "řetěz", "řemenice", "hřeben", "věnec", "vložené kolo", "hodinový převod", "otáčky", "moment", "kinematika"]
+      },
+      {
+        "soubor": "obsah/pevnost_tisku.html",
+        "nazev": "🧱 Pevnost výtisků (FDM)",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "FDM", "pevnost", "nosník", "průhyb", "výpočet", "inženýrství", "materiály"]
+      },
+      {
+        "soubor": "obsah/filament_calc.html",
+        "nazev": "🧵 Spotřeba filamentu",
+        "stav": "beta",
+        "tagy": [
+          "3d tisk",
+          "pla",
+          "petg"
+        ]
       }
     ]
   },
@@ -2229,41 +2347,6 @@ const KATALOG_SEKCE = [
     "nazev": "💻 Vývoj & nástroje",
     "skupina": "vyvoj",
     "polozky": [
-      {
-        "soubor": "obsah/er_diagram.html",
-        "nazev": "🗂️ ER Diagram Editor",
-        "stav": "beta",
-        "tagy": [
-          "databáze",
-          "entity",
-          "schéma"
-        ]
-      },
-      {
-        "soubor": "obsah/json_formatter.html",
-        "nazev": "🗂️ JSON formatter",
-        "stav": "beta",
-        "tagy": [
-          "validátor",
-          "pretty print"
-        ]
-      },
-      {
-        "soubor": "obsah/sql_formatter.html",
-        "nazev": "🗄️ SQL formatter",
-        "stav": "beta",
-        "tagy": ["sql", "formátování", "dotaz", "databáze", "select"]
-      },
-      {
-        "soubor": "obsah/diff_tool.html",
-        "nazev": "🔀 Diff nástroj",
-        "stav": "beta",
-        "tagy": [
-          "porovnání",
-          "rozdíl",
-          "text"
-        ]
-      },
       {
         "soubor": "obsah/live_editor.html",
         "nazev": "💻 Live HTML/CSS/JS editor",
@@ -2276,6 +2359,17 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/api_tester.html",
+        "nazev": "🛰️ API / webhook tester",
+        "stav": "beta",
+        "tagy": [
+          "api",
+          "http",
+          "webhook",
+          "rest"
+        ]
+      },
+      {
         "soubor": "obsah/regex_tester.html",
         "nazev": "🔍 Regex tester",
         "stav": "beta",
@@ -2285,16 +2379,26 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/http_status.html",
-        "nazev": "🌐 HTTP stavové kódy",
+        "soubor": "obsah/diff_tool.html",
+        "nazev": "🔀 Diff nástroj",
         "stav": "beta",
-        "tagy": ["http", "kódy", "404", "500", "api", "reference"]
+        "tagy": [
+          "porovnání",
+          "rozdíl",
+          "text"
+        ]
       },
       {
-        "soubor": "obsah/gitignore_gen.html",
-        "nazev": "🚫 .gitignore generátor",
-        "stav": "beta",
-        "tagy": ["git", "gitignore", "šablona", "repozitář"]
+        "soubor": "obsah/git_historie.html",
+        "nazev": "🌳 Historie Gitu",
+        "stav": "vyvoj",
+        "tagy": ["git", "vývoj", "vizualizace", "graf", "statistiky", "GitHub"]
+      },
+      {
+        "soubor": "obsah/analyzator_logu.html",
+        "nazev": "📜 Analyzátor logů",
+        "stav": "vyvoj",
+        "tagy": ["logy", "syslog", "nginx", "apache", "json", "regex", "analýza", "nástroje", "IT"]
       },
       {
         "soubor": "obsah/cron_builder.html",
@@ -2303,10 +2407,20 @@ const KATALOG_SEKCE = [
         "tagy": ["cron", "plánovač", "crontab", "výraz", "linux"]
       },
       {
-        "soubor": "obsah/md_table.html",
-        "nazev": "📋 Markdown tabulky",
+        "soubor": "obsah/env_gen.html",
+        "nazev": "⚙️ Generátor .env souborů",
         "stav": "beta",
-        "tagy": ["markdown", "tabulka", "generátor", "readme"]
+        "tagy": [
+          "env",
+          "konfigurace",
+          "docker"
+        ]
+      },
+      {
+        "soubor": "obsah/gitignore_gen.html",
+        "nazev": "🚫 .gitignore generátor",
+        "stav": "beta",
+        "tagy": ["git", "gitignore", "šablona", "repozitář"]
       },
       {
         "soubor": "obsah/keycode.html",
@@ -2315,15 +2429,10 @@ const KATALOG_SEKCE = [
         "tagy": ["klávesy", "keycode", "javascript", "event", "test"]
       },
       {
-        "soubor": "obsah/mock_data.html",
-        "nazev": "🧪 Testovací data",
+        "soubor": "obsah/http_status.html",
+        "nazev": "🌐 HTTP stavové kódy",
         "stav": "beta",
-        "tagy": [
-          "fake data",
-          "generátor",
-          "testování",
-          "ičo"
-        ]
+        "tagy": ["http", "kódy", "404", "500", "api", "reference"]
       },
       {
         "soubor": "obsah/git_cheatsheet.html",
@@ -2340,40 +2449,13 @@ const KATALOG_SEKCE = [
         "nazev": "⌨️ Přehled klávesových zkratek",
         "stav": "beta",
         "tagy": ["excel", "vs code", "photoshop", "prohlížeč", "hotkeys", "kombinace kláves"]
-      },
-      {
-        "soubor": "obsah/env_gen.html",
-        "nazev": "⚙️ Generátor .env souborů",
-        "stav": "beta",
-        "tagy": [
-          "env",
-          "konfigurace",
-          "docker"
-        ]
-      },
-      {
-        "soubor": "obsah/api_tester.html",
-        "nazev": "🛰️ API / webhook tester",
-        "stav": "beta",
-        "tagy": [
-          "api",
-          "http",
-          "webhook",
-          "rest"
-        ]
-      },
-      {
-        "soubor": "obsah/git_historie.html",
-        "nazev": "🌳 Historie Gitu",
-        "stav": "vyvoj",
-        "tagy": ["git", "vývoj", "vizualizace", "graf", "statistiky", "GitHub"]
-      },
-      {
-        "soubor": "obsah/testovaci_data.html",
-        "nazev": "🧪 Generátor testovacích dat",
-        "stav": "vyvoj",
-        "tagy": ["vývoj", "databáze", "SQL", "CSV", "JSON", "testování", "syntetická data"]
-      },
+      }
+    ]
+  },
+  {
+    "nazev": "🗄️ Databáze & testovací data",
+    "skupina": "vyvoj",
+    "polozky": [
       {
         "soubor": "obsah/sqlite.html",
         "nazev": "🗄️ SQLite – prohlížeč a editor",
@@ -2381,10 +2463,37 @@ const KATALOG_SEKCE = [
         "tagy": ["databáze", "SQL", "SQLite", "nástroje", "ER diagram", "export", "offline"]
       },
       {
-        "soubor": "obsah/analyzator_logu.html",
-        "nazev": "📜 Analyzátor logů",
+        "soubor": "obsah/er_diagram.html",
+        "nazev": "🗂️ Editor ER diagramů",
+        "stav": "beta",
+        "tagy": [
+          "databáze",
+          "entity",
+          "schéma"
+        ]
+      },
+      {
+        "soubor": "obsah/sql_formatter.html",
+        "nazev": "🗄️ Formátovač SQL",
+        "stav": "beta",
+        "tagy": ["sql", "formátování", "dotaz", "databáze", "select"]
+      },
+      {
+        "soubor": "obsah/testovaci_data.html",
+        "nazev": "🧪 Testovací data pro databáze",
         "stav": "vyvoj",
-        "tagy": ["logy", "syslog", "nginx", "apache", "json", "regex", "analýza", "nástroje", "IT"]
+        "tagy": ["vývoj", "databáze", "SQL", "CSV", "JSON", "testování", "syntetická data"]
+      },
+      {
+        "soubor": "obsah/mock_data.html",
+        "nazev": "🪪 Fiktivní osoby a firmy",
+        "stav": "beta",
+        "tagy": [
+          "fake data",
+          "generátor",
+          "testování",
+          "ičo"
+        ]
       }
     ]
   },
@@ -2393,41 +2502,22 @@ const KATALOG_SEKCE = [
     "skupina": "vyvoj",
     "polozky": [
       {
-        "soubor": "obsah/base64_encoder.html",
-        "nazev": "🔐 Base64 / URL encoder",
+        "soubor": "obsah/json_formatter.html",
+        "nazev": "🗂️ Formátovač JSON",
         "stav": "beta",
         "tagy": [
-          "kódování",
-          "url",
-          "encode",
-          "decode"
+          "validátor",
+          "pretty print"
         ]
       },
       {
-        "soubor": "obsah/uuid_gen.html",
-        "nazev": "🆔 UUID generátor",
-        "stav": "beta",
-        "tagy": ["uuid", "guid", "identifikátor", "náhodné id"]
-      },
-      {
-        "soubor": "obsah/hash_gen.html",
-        "nazev": "#️⃣ Hash generátor",
+        "soubor": "obsah/yaml_json.html",
+        "nazev": "🔄 YAML ↔ JSON převodník",
         "stav": "beta",
         "tagy": [
-          "md5",
-          "sha",
-          "otisk"
-        ]
-      },
-      {
-        "soubor": "obsah/timestamp_conv.html",
-        "nazev": "🕰️ Unix timestamp",
-        "stav": "beta",
-        "tagy": [
-          "unix",
-          "epoch",
-          "čas",
-          "datum"
+          "yaml",
+          "json",
+          "konfigurace"
         ]
       },
       {
@@ -2441,19 +2531,30 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/lorem_ipsum.html",
-        "nazev": "📝 Lorem ipsum",
+        "soubor": "obsah/md_table.html",
+        "nazev": "📋 Markdown tabulky",
         "stav": "beta",
-        "tagy": ["lorem ipsum", "výplňový text", "testovací data", "placeholder"]
+        "tagy": ["markdown", "tabulka", "generátor", "readme"]
       },
       {
-        "soubor": "obsah/contrast_checker.html",
-        "nazev": "🌗 Kontrast (WCAG)",
+        "soubor": "obsah/base64_encoder.html",
+        "nazev": "🔐 Base64 / URL encoder",
         "stav": "beta",
         "tagy": [
-          "wcag",
-          "přístupnost",
-          "barvy"
+          "kódování",
+          "url",
+          "encode",
+          "decode"
+        ]
+      },
+      {
+        "soubor": "obsah/url_builder.html",
+        "nazev": "🔗 URL builder / parser",
+        "stav": "beta",
+        "tagy": [
+          "url",
+          "query string",
+          "parametry"
         ]
       },
       {
@@ -2461,6 +2562,33 @@ const KATALOG_SEKCE = [
         "nazev": "🔑 JWT decoder",
         "stav": "beta",
         "tagy": ["jwt", "token", "dekodér", "payload", "autentizace"]
+      },
+      {
+        "soubor": "obsah/hash_gen.html",
+        "nazev": "#️⃣ Hash generátor",
+        "stav": "beta",
+        "tagy": [
+          "md5",
+          "sha",
+          "otisk"
+        ]
+      },
+      {
+        "soubor": "obsah/uuid_gen.html",
+        "nazev": "🆔 UUID generátor",
+        "stav": "beta",
+        "tagy": ["uuid", "guid", "identifikátor", "náhodné id"]
+      },
+      {
+        "soubor": "obsah/timestamp_conv.html",
+        "nazev": "🕰️ Unix timestamp",
+        "stav": "beta",
+        "tagy": [
+          "unix",
+          "epoch",
+          "čas",
+          "datum"
+        ]
       },
       {
         "soubor": "obsah/case_converter.html",
@@ -2475,29 +2603,15 @@ const KATALOG_SEKCE = [
         "tagy": ["slug", "url", "diakritika", "seo", "adresa"]
       },
       {
-        "soubor": "obsah/url_builder.html",
-        "nazev": "🔗 URL builder / parser",
+        "soubor": "obsah/lorem_ipsum.html",
+        "nazev": "📝 Lorem ipsum",
         "stav": "beta",
-        "tagy": [
-          "url",
-          "query string",
-          "parametry"
-        ]
-      },
-      {
-        "soubor": "obsah/yaml_json.html",
-        "nazev": "🔄 YAML ↔ JSON převodník",
-        "stav": "beta",
-        "tagy": [
-          "yaml",
-          "json",
-          "konfigurace"
-        ]
+        "tagy": ["lorem ipsum", "výplňový text", "testovací data", "placeholder"]
       }
     ]
   },
   {
-    "nazev": "🕹️ Akční & arkády",
+    "nazev": "🕹️ Arkády",
     "skupina": "hry",
     "polozky": [
       {
@@ -2508,6 +2622,60 @@ const KATALOG_SEKCE = [
           "snake",
           "hra"
         ]
+      },
+      {
+        "soubor": "obsah/retro_tetris.html",
+        "nazev": "🟦 Retro Tetris",
+        "stav": "beta",
+        "tagy": ["tetris", "kostky", "retro", "skládání"]
+      },
+      {
+        "soubor": "obsah/retro_pacman.html",
+        "nazev": "🟡 Retro Pac-Man",
+        "stav": "beta",
+        "tagy": ["pacman", "bludiště", "retro", "arkáda"]
+      },
+      {
+        "soubor": "obsah/retro_invaders.html",
+        "nazev": "👾 Retro Invaders",
+        "stav": "beta",
+        "tagy": ["space invaders", "střílečka", "retro", "arkáda"]
+      },
+      {
+        "soubor": "obsah/tank1990.html",
+        "nazev": "🪖 Tank 1990",
+        "stav": "vyvoj",
+        "tagy": ["tank a 1990", "battle city", "tanky", "nes", "famiclone", "retro", "arkáda", "dva hráči", "orel", "editor map"]
+      },
+      {
+        "soubor": "obsah/krumpac.html",
+        "nazev": "⛏️ Krumpáč",
+        "stav": "vyvoj",
+        "tagy": ["plošinovka", "trpaslík", "jeskyně", "pixel art", "skákačka", "retro", "arkáda", "bossové", "obchod", "světy"]
+      },
+      {
+        "soubor": "obsah/bomberman.html",
+        "nazev": "💣 Bomberman",
+        "stav": "vyvoj",
+        "tagy": ["hra", "arkáda", "retro", "boti", "2 hráči"]
+      },
+      {
+        "soubor": "obsah/breakout.html",
+        "nazev": "🧱 Breakout",
+        "stav": "beta",
+        "tagy": ["arkanoid", "cihly", "pálka", "míček", "arkáda"]
+      },
+      {
+        "soubor": "obsah/pong.html",
+        "nazev": "🏓 Pong",
+        "stav": "beta",
+        "tagy": ["pong", "pálky", "retro", "arkáda"]
+      },
+      {
+        "soubor": "obsah/asteroids.html",
+        "nazev": "🚀 Asteroids",
+        "stav": "beta",
+        "tagy": ["asteroidy", "vesmír", "loď", "retro", "arkáda"]
       },
       {
         "soubor": "obsah/stack-attack.html",
@@ -2528,101 +2696,10 @@ const KATALOG_SEKCE = [
         "tagy": ["couvání", "vozík", "přívěs", "simulátor", "řidič"]
       },
       {
-        "soubor": "obsah/retro_invaders.html",
-        "nazev": "👾 Retro Invaders",
-        "stav": "beta",
-        "tagy": ["space invaders", "střílečka", "retro", "arkáda"]
-      },
-      {
-        "soubor": "obsah/retro_tetris.html",
-        "nazev": "🟦 Retro Tetris",
-        "stav": "beta",
-        "tagy": ["tetris", "kostky", "retro", "skládání"]
-      },
-      {
-        "soubor": "obsah/retro_pacman.html",
-        "nazev": "🟡 Retro Pac-Man",
-        "stav": "beta",
-        "tagy": ["pacman", "bludiště", "retro", "arkáda"]
-      },
-      {
-        "soubor": "obsah/tank1990.html",
-        "nazev": "🪖 Tank 1990",
-        "stav": "vyvoj",
-        "tagy": ["tank a 1990", "battle city", "tanky", "nes", "famiclone", "retro", "arkáda", "dva hráči", "orel", "editor map"]
-      },
-      {
-        "soubor": "obsah/ostruvek.html",
-        "nazev": "🏝️ Ostrůvek (three.js + Blender)",
-        "stav": "vyvoj",
-        "tagy": ["ostrov", "skřítek", "krystaly", "3d", "three.js", "blender", "gltf", "low-poly", "demo", "hra"]
-      },
-      {
-        "soubor": "obsah/breakout.html",
-        "nazev": "🧱 Breakout",
-        "stav": "beta",
-        "tagy": ["arkanoid", "cihly", "pálka", "míček", "arkáda"]
-      },
-      {
         "soubor": "obsah/pozirani_bunek.html",
         "nazev": "🦠 Požírání buněk",
         "stav": "beta",
         "tagy": ["buňky", "agar", "mikrosvět", "plankton", "přežití", "arkáda", "hra"]
-      },
-      {
-        "soubor": "obsah/pirateers/index.html",
-        "nazev": "🏴‍☠️ Pirateers",
-        "stav": "beta",
-        "tagy": [
-          "piráti",
-          "lodě",
-          "plachetnice",
-          "námořní bitva",
-          "ostrovy",
-          "hra"
-        ]
-      },
-      {
-        "soubor": "obsah/tower_defense.html",
-        "nazev": "🏰 Tower Defense",
-        "stav": "beta",
-        "tagy": ["obrana věží", "strategie", "vlny", "věže"]
-      },
-      {
-        "soubor": "obsah/podzemi.html",
-        "nazev": "🗡️ Nekonečné podzemí",
-        "stav": "beta",
-        "tagy": ["dungeon", "crawler", "roguelike", "dungeon master", "podzemí", "bludiště", "rpg", "hra"]
-      },
-      {
-        "soubor": "obsah/tower_defense_sc.html",
-        "nazev": "🛰️ Sector Defense",
-        "stav": "beta",
-        "tagy": ["obrana věží", "vesmír", "strategie", "sci-fi"]
-      },
-      {
-        "soubor": "obsah/obleheni.html",
-        "nazev": "🏝️ Ostrov v obležení",
-        "stav": "vyvoj",
-        "tagy": ["obrana věží", "tower defense", "ostrov", "lodě", "piráti", "kraken", "wyverny", "fantasy", "strategie", "procedurální mapa", "seed", "kampaň"]
-      },
-      {
-        "soubor": "obsah/dron.html",
-        "nazev": "🚁 Nad krajinou",
-        "stav": "vyvoj",
-        "tagy": ["dron", "simulátor", "let", "fpv", "kvadrokoptéra", "krajina", "3d", "focení", "závody", "letová škola", "vysílačka", "hra"]
-      },
-      {
-        "soubor": "obsah/pong.html",
-        "nazev": "🏓 Pong",
-        "stav": "beta",
-        "tagy": ["pong", "pálky", "retro", "arkáda"]
-      },
-      {
-        "soubor": "obsah/asteroids.html",
-        "nazev": "🚀 Asteroids",
-        "stav": "beta",
-        "tagy": ["asteroidy", "vesmír", "loď", "retro", "arkáda"]
       },
       {
         "soubor": "obsah/fps_arena.html",
@@ -2640,7 +2717,13 @@ const KATALOG_SEKCE = [
           "venge",
           "aréna"
         ]
-      },
+      }
+    ]
+  },
+  {
+    "nazev": "🏰 Strategie & simulace",
+    "skupina": "hry",
+    "polozky": [
       {
         "soubor": "obsah/trpaslici.html",
         "nazev": "⛰️ Srdce hory",
@@ -2669,6 +2752,43 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/obleheni.html",
+        "nazev": "🏝️ Ostrov v obležení",
+        "stav": "vyvoj",
+        "tagy": ["obrana věží", "tower defense", "ostrov", "lodě", "piráti", "kraken", "wyverny", "fantasy", "strategie", "procedurální mapa", "seed", "kampaň"]
+      },
+      {
+        "soubor": "obsah/tower_defense.html",
+        "nazev": "🏰 Tower Defense",
+        "stav": "beta",
+        "tagy": ["obrana věží", "strategie", "vlny", "věže"]
+      },
+      {
+        "soubor": "obsah/tower_defense_sc.html",
+        "nazev": "🛰️ Sector Defense",
+        "stav": "beta",
+        "tagy": ["obrana věží", "vesmír", "strategie", "sci-fi"]
+      },
+      {
+        "soubor": "obsah/podzemi.html",
+        "nazev": "🗡️ Nekonečné podzemí",
+        "stav": "beta",
+        "tagy": ["dungeon", "crawler", "roguelike", "dungeon master", "podzemí", "bludiště", "rpg", "hra"]
+      },
+      {
+        "soubor": "obsah/pirateers/index.html",
+        "nazev": "🏴‍☠️ Pirateers",
+        "stav": "beta",
+        "tagy": [
+          "piráti",
+          "lodě",
+          "plachetnice",
+          "námořní bitva",
+          "ostrovy",
+          "hra"
+        ]
+      },
+      {
         "soubor": "obsah/cesta_rodu.html",
         "nazev": "⚜️ Cesta rodu",
         "stav": "beta",
@@ -2686,17 +2806,48 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/bomberman.html",
-        "nazev": "💣 Bomberman",
+        "soubor": "obsah/dron.html",
+        "nazev": "🚁 Nad krajinou",
         "stav": "vyvoj",
-        "tagy": ["hra", "arkáda", "retro", "boti", "2 hráči"]
+        "tagy": ["dron", "simulátor", "let", "fpv", "kvadrokoptéra", "krajina", "3d", "focení", "závody", "letová škola", "vysílačka", "hra"]
+      },
+      {
+        "soubor": "obsah/ostruvek.html",
+        "nazev": "🏝️ Ostrůvek (three.js + Blender)",
+        "stav": "vyvoj",
+        "tagy": ["ostrov", "skřítek", "krystaly", "3d", "three.js", "blender", "gltf", "low-poly", "demo", "hra"]
       }
     ]
   },
   {
-    "nazev": "🧩 Hlavolamy & logické",
+    "nazev": "♟️ Deskové & karetní",
     "skupina": "hry",
     "polozky": [
+      {
+        "soubor": "obsah/chess.html",
+        "nazev": "♟️ Šachy",
+        "stav": "beta",
+        "tagy": [
+          "šachy",
+          "hra",
+          "figurky"
+        ]
+      },
+      {
+        "soubor": "obsah/checkers.html",
+        "nazev": "♟️ Dáma",
+        "stav": "beta",
+        "tagy": [
+          "dáma",
+          "hra"
+        ]
+      },
+      {
+        "soubor": "obsah/reversi.html",
+        "nazev": "⚫ Reversi",
+        "stav": "beta",
+        "tagy": ["reversi", "othello", "desková hra", "kameny"]
+      },
       {
         "soubor": "obsah/piskvorky.html",
         "nazev": "⭕ Piškvorky",
@@ -2707,24 +2858,32 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/game_2048.html",
-        "nazev": "🔢 2048",
+        "soubor": "obsah/connect4.html",
+        "nazev": "🔴 Čtyři v řadě",
+        "stav": "beta",
+        "tagy": ["čtyři v řadě", "connect four", "desková hra", "dva hráči"]
+      },
+      {
+        "soubor": "obsah/battleship.html",
+        "nazev": "🚢 Lodě",
+        "stav": "beta",
+        "tagy": ["lodě", "battleship", "námořní bitva", "mřížka"]
+      },
+      {
+        "soubor": "obsah/solitaire.html",
+        "nazev": "🃏 Solitaire",
         "stav": "beta",
         "tagy": [
-          "čísla",
-          "posouvání",
-          "hra"
+          "karty",
+          "klondike",
+          "pasiáns"
         ]
       },
       {
-        "soubor": "obsah/minesweeper.html",
-        "nazev": "💣 Hledání min",
+        "soubor": "obsah/yahtzee.html",
+        "nazev": "🎲 Kostky (Yahtzee)",
         "stav": "beta",
-        "tagy": [
-          "miny",
-          "sapér",
-          "hra"
-        ]
+        "tagy": ["kostky", "yahtzee", "vrhcáby", "hod kostkou", "desková hra"]
       },
       {
         "soubor": "obsah/memory_game.html",
@@ -2737,33 +2896,17 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/sudoku.html",
-        "nazev": "🔢 Sudoku",
+        "soubor": "obsah/rock_paper_scissors.html",
+        "nazev": "✊ Kámen nůžky papír",
         "stav": "beta",
-        "tagy": ["sudoku", "čísla", "hlavolam", "logika"]
-      },
-      {
-        "soubor": "obsah/wordle.html",
-        "nazev": "🟩 Slovo (Wordle)",
-        "stav": "beta",
-        "tagy": [
-          "slova",
-          "hádání",
-          "hra"
-        ]
-      },
-      {
-        "soubor": "obsah/sokoban.html",
-        "nazev": "📦 Sokoban",
-        "stav": "beta",
-        "tagy": ["bedny", "hlavolam", "logika", "skladiště"]
-      },
-      {
-        "soubor": "obsah/osmismerka.html",
-        "nazev": "🔡 Osmisměrka",
-        "stav": "beta",
-        "tagy": ["osmisměrka", "hledání slov", "mřížka", "slovní hra"]
-      },
+        "tagy": ["kámen nůžky papír", "hra", "náhoda"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔤 Slovní & společenské",
+    "skupina": "hry",
+    "polozky": [
       {
         "soubor": "obsah/scrabble.html",
         "nazev": "🔤 Scrabble",
@@ -2777,6 +2920,28 @@ const KATALOG_SEKCE = [
         "tagy": ["scrabble", "angličtina", "english", "slovní hra", "slovíčka", "skládání slov", "výuka"]
       },
       {
+        "soubor": "obsah/wordle.html",
+        "nazev": "🟩 Slovo (Wordle)",
+        "stav": "beta",
+        "tagy": [
+          "slova",
+          "hádání",
+          "hra"
+        ]
+      },
+      {
+        "soubor": "obsah/hangman.html",
+        "nazev": "🪢 Šibenice",
+        "stav": "beta",
+        "tagy": ["šibenice", "hádání slov", "slovní hra", "písmena"]
+      },
+      {
+        "soubor": "obsah/osmismerka.html",
+        "nazev": "🔡 Osmisměrka",
+        "stav": "beta",
+        "tagy": ["osmisměrka", "hledání slov", "mřížka", "slovní hra"]
+      },
+      {
         "soubor": "obsah/crossword_gen.html",
         "nazev": "🧩 Generátor křížovek",
         "stav": "beta",
@@ -2787,15 +2952,10 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/bingo_gen.html",
-        "nazev": "🎱 Generátor bingo kartiček",
+        "soubor": "obsah/trivia.html",
+        "nazev": "❓ Vědomostní kvíz",
         "stav": "beta",
-        "tagy": [
-          "bingo",
-          "oslava",
-          "tisk",
-          "party"
-        ]
+        "tagy": ["kvíz", "vědomosti", "otázky", "test", "soutěž"]
       },
       {
         "soubor": "obsah/tabooGame.html",
@@ -2816,6 +2976,103 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/bingo_gen.html",
+        "nazev": "🎱 Generátor bingo kartiček",
+        "stav": "beta",
+        "tagy": [
+          "bingo",
+          "oslava",
+          "tisk",
+          "party"
+        ]
+      }
+    ]
+  },
+  {
+    "nazev": "🧩 Hlavolamy",
+    "skupina": "hry",
+    "polozky": [
+      {
+        "soubor": "obsah/sudoku.html",
+        "nazev": "🔢 Sudoku",
+        "stav": "beta",
+        "tagy": ["sudoku", "čísla", "hlavolam", "logika"]
+      },
+      {
+        "soubor": "obsah/nonogram.html",
+        "nazev": "🎨 Nonogramy",
+        "stav": "beta",
+        "tagy": ["nonogram", "japonské křížovky", "logika", "obrázek"]
+      },
+      {
+        "soubor": "obsah/queens.html",
+        "nazev": "👑 Královny (Queens)",
+        "stav": "beta",
+        "tagy": ["queens", "královny", "dáma", "oblasti", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/akari.html",
+        "nazev": "💡 Akari (Light Up)",
+        "stav": "beta",
+        "tagy": ["akari", "light up", "žárovky", "osvětlení", "logika", "hlavolam", "nikoli", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/kakuro.html",
+        "nazev": "🔢 Kakuro",
+        "stav": "beta",
+        "tagy": ["kakuro", "číselná křížovka", "součty", "čísla", "sudoku", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/hashi.html",
+        "nazev": "🔗 Mosty (Hashi)",
+        "stav": "beta",
+        "tagy": ["hashi", "hashiwokakero", "bridges", "mosty", "ostrovy", "propojování", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/nurikabe.html",
+        "nazev": "🏝️ Nurikabe",
+        "stav": "beta",
+        "tagy": ["nurikabe", "ostrovy", "moře", "zatápění", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/slitherlink.html",
+        "nazev": "⭕ Slitherlink",
+        "stav": "beta",
+        "tagy": ["slitherlink", "smyčka", "loop", "tečky", "čáry", "fences", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/mastermind.html",
+        "nazev": "🧠 Mastermind",
+        "stav": "beta",
+        "tagy": ["mastermind", "logik", "hádání kombinace", "barvy", "kolíčky", "dedukce", "bulls and cows"]
+      },
+      {
+        "soubor": "obsah/minesweeper.html",
+        "nazev": "💣 Hledání min",
+        "stav": "beta",
+        "tagy": [
+          "miny",
+          "sapér",
+          "hra"
+        ]
+      },
+      {
+        "soubor": "obsah/game_2048.html",
+        "nazev": "🔢 2048",
+        "stav": "beta",
+        "tagy": [
+          "čísla",
+          "posouvání",
+          "hra"
+        ]
+      },
+      {
+        "soubor": "obsah/sokoban.html",
+        "nazev": "📦 Sokoban",
+        "stav": "beta",
+        "tagy": ["bedny", "hlavolam", "logika", "skladiště"]
+      },
+      {
         "soubor": "obsah/lights_out.html",
         "nazev": "💡 Lights Out",
         "stav": "beta",
@@ -2832,131 +3089,6 @@ const KATALOG_SEKCE = [
         "nazev": "🎵 Simon",
         "stav": "beta",
         "tagy": ["simon", "paměť", "sekvence", "barvy", "zvuky"]
-      },
-      {
-        "soubor": "obsah/connect4.html",
-        "nazev": "🔴 Čtyři v řadě",
-        "stav": "beta",
-        "tagy": ["čtyři v řadě", "connect four", "desková hra", "dva hráči"]
-      },
-      {
-        "soubor": "obsah/battleship.html",
-        "nazev": "🚢 Lodě",
-        "stav": "beta",
-        "tagy": ["lodě", "battleship", "námořní bitva", "mřížka"]
-      },
-      {
-        "soubor": "obsah/rock_paper_scissors.html",
-        "nazev": "✊ Kámen nůžky papír",
-        "stav": "beta",
-        "tagy": ["kámen nůžky papír", "hra", "náhoda"]
-      },
-      {
-        "soubor": "obsah/hangman.html",
-        "nazev": "🪢 Šibenice",
-        "stav": "beta",
-        "tagy": ["šibenice", "hádání slov", "slovní hra", "písmena"]
-      },
-      {
-        "soubor": "obsah/nonogram.html",
-        "nazev": "🎨 Nonogramy",
-        "stav": "beta",
-        "tagy": ["nonogram", "japonské křížovky", "logika", "obrázek"]
-      },
-      {
-        "soubor": "obsah/checkers.html",
-        "nazev": "♟️ Dáma",
-        "stav": "beta",
-        "tagy": [
-          "dáma",
-          "hra"
-        ]
-      },
-      {
-        "soubor": "obsah/chess.html",
-        "nazev": "♟️ Šachy",
-        "stav": "beta",
-        "tagy": [
-          "šachy",
-          "hra",
-          "figurky"
-        ]
-      },
-      {
-        "soubor": "obsah/solitaire.html",
-        "nazev": "🃏 Solitaire",
-        "stav": "beta",
-        "tagy": [
-          "karty",
-          "klondike",
-          "pasiáns"
-        ]
-      },
-      {
-        "soubor": "obsah/yahtzee.html",
-        "nazev": "🎲 Kostky (Yahtzee)",
-        "stav": "beta",
-        "tagy": ["kostky", "yahtzee", "vrhcáby", "hod kostkou", "desková hra"]
-      },
-      {
-        "soubor": "obsah/reversi.html",
-        "nazev": "⚫ Reversi",
-        "stav": "beta",
-        "tagy": ["reversi", "othello", "desková hra", "kameny"]
-      },
-      {
-        "soubor": "obsah/trivia.html",
-        "nazev": "❓ Vědomostní kvíz",
-        "stav": "beta",
-        "tagy": ["kvíz", "vědomosti", "otázky", "test", "soutěž"]
-      }
-    ]
-  },
-  {
-    "nazev": "🧠 Logické mřížky",
-    "skupina": "hry",
-    "polozky": [
-      {
-        "soubor": "obsah/queens.html",
-        "nazev": "👑 Královny (Queens)",
-        "stav": "beta",
-        "tagy": ["queens", "královny", "dáma", "oblasti", "logika", "hlavolam", "denní hádanka"]
-      },
-      {
-        "soubor": "obsah/akari.html",
-        "nazev": "💡 Akari (Light Up)",
-        "stav": "beta",
-        "tagy": ["akari", "light up", "žárovky", "osvětlení", "logika", "hlavolam", "nikoli", "denní hádanka"]
-      },
-      {
-        "soubor": "obsah/mastermind.html",
-        "nazev": "🧠 Mastermind",
-        "stav": "beta",
-        "tagy": ["mastermind", "logik", "hádání kombinace", "barvy", "kolíčky", "dedukce", "bulls and cows"]
-      },
-      {
-        "soubor": "obsah/hashi.html",
-        "nazev": "🔗 Mosty (Hashi)",
-        "stav": "beta",
-        "tagy": ["hashi", "hashiwokakero", "bridges", "mosty", "ostrovy", "propojování", "logika", "hlavolam", "denní hádanka"]
-      },
-      {
-        "soubor": "obsah/kakuro.html",
-        "nazev": "🔢 Kakuro",
-        "stav": "beta",
-        "tagy": ["kakuro", "číselná křížovka", "součty", "čísla", "sudoku", "logika", "hlavolam", "denní hádanka"]
-      },
-      {
-        "soubor": "obsah/nurikabe.html",
-        "nazev": "🏝️ Nurikabe",
-        "stav": "beta",
-        "tagy": ["nurikabe", "ostrovy", "moře", "zatápění", "logika", "hlavolam", "denní hádanka"]
-      },
-      {
-        "soubor": "obsah/slitherlink.html",
-        "nazev": "⭕ Slitherlink",
-        "stav": "beta",
-        "tagy": ["slitherlink", "smyčka", "loop", "tečky", "čáry", "fences", "logika", "hlavolam", "denní hádanka"]
       }
     ]
   },
@@ -3162,9 +3294,15 @@ const KATALOG_SEKCE = [
     ]
   },
   {
-    "nazev": "🔬 Forenzní výpočty",
+    "nazev": "🔬 Forenzní výpočty & dokumentace",
     "skupina": "vysetrovani",
     "polozky": [
+      {
+        "soubor": "obsah/scene_sketch.html",
+        "nazev": "📐 Náčrt místa činu",
+        "stav": "beta",
+        "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů", "kóty", "půdorys", "fotka jako podklad", "fotopozice", "kriminalistika"]
+      },
       {
         "soubor": "obsah/brzdna_draha.html",
         "nazev": "🚗 Rychlost z brzdné stopy",
@@ -3176,83 +3314,17 @@ const KATALOG_SEKCE = [
         "nazev": "🌡️ Odhad doby smrti",
         "stav": "vyvoj",
         "tagy": ["soudní lékařství", "Henssge", "nomogram", "posmrtné skvrny", "ztuhlost"]
-      }
-    ]
-  },
-  {
-    "nazev": "⚖️ Právní a mapové pomůcky",
-    "skupina": "vysetrovani",
-    "polozky": [
+      },
       {
         "soubor": "obsah/trestni_zakonik_ref.html",
         "nazev": "⚖️ Rychlá reference trestního zákoníku",
         "stav": "beta",
         "tagy": ["zákon", "paragraf", "trestní zákoník", "skutková podstata"]
-      },
-      {
-        "soubor": "obsah/scene_sketch.html",
-        "nazev": "📐 Náčrt místa činu",
-        "stav": "beta",
-        "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů", "kóty", "půdorys", "fotka jako podklad", "fotopozice", "kriminalistika"]
       }
     ]
   },
   {
-    "nazev": "🍳 Recepty",
-    "skupina": "vareni",
-    "polozky": [
-      {
-        "soubor": "obsah/recipes.html",
-        "nazev": "🍳 Kniha receptů",
-        "stav": "beta",
-        "tagy": ["vaření", "recept", "porce", "přepočet množství", "ingredience"]
-      },
-      {
-        "soubor": "obsah/kvasek_chleb.html",
-        "nazev": "🍞 Kvásek a chleba",
-        "stav": "beta",
-        "tagy": ["kvásek", "chléb", "pečení", "pekařská procenta", "hydratace", "kvas", "žitný", "sourdough", "krmení kvásku"]
-      },
-      {
-        "soubor": "obsah/kuchynske_miry.html",
-        "nazev": "🥄 Kuchyňské míry podle suroviny",
-        "stav": "beta",
-        "tagy": ["hrnek", "lžíce", "lžička", "gramy", "převod", "mouka", "cukr", "cup", "forma na dort", "trouba", "droždí"]
-      },
-      {
-        "soubor": "obsah/fermentace.html",
-        "nazev": "🫙 Fermentace a zavařování",
-        "stav": "beta",
-        "tagy": ["kvašení", "kysané zelí", "okurky", "solanka", "sterilace", "zavařování", "nálev", "kompot", "kimči", "ocet"]
-      },
-      {
-        "soubor": "obsah/peceni_masa.html",
-        "nazev": "🥩 Pečení a uzení masa",
-        "stav": "vyvoj",
-        "tagy": ["maso", "pečeně", "teplota jádra", "propečení", "steak", "sous-vide", "uzení", "udírna", "gril", "časovač", "drůbež", "zvěřina"]
-      },
-      {
-        "soubor": "obsah/kava_pomery.html",
-        "nazev": "☕ Kávové poměry",
-        "stav": "vyvoj",
-        "tagy": ["káva", "espresso", "V60", "pour-over", "french press", "AeroPress", "moka", "cold brew", "poměr", "mletí", "barista", "časovač"]
-      },
-      {
-        "soubor": "obsah/prepocet_receptu.html",
-        "nazev": "🔁 Přepočet receptu",
-        "stav": "vyvoj",
-        "tagy": ["recept", "porce", "přepočet", "forma na dort", "plech", "hrnky", "lžíce", "cup", "oz", "zlomky", "vejce", "škálování"]
-      },
-      {
-        "soubor": "obsah/sezonni_potraviny.html",
-        "nazev": "🍎 Sezónní kalendář potravin",
-        "stav": "vyvoj",
-        "tagy": ["sezóna", "sezónní", "zelenina", "ovoce", "houby", "bylinky", "zvěřina", "ryby", "nákup", "kalendář", "lokální", "co vařit"]
-      }
-    ]
-  },
-  {
-    "nazev": "📜 Vzory dokumentů",
+    "nazev": "⚖️ Právo & dokumenty",
     "skupina": "dokumenty",
     "polozky": [
       {
@@ -3260,13 +3332,7 @@ const KATALOG_SEKCE = [
         "nazev": "📜 Vzory dokumentů pro domácnost",
         "stav": "beta",
         "tagy": ["plná moc", "výpověď z nájmu", "půjčka", "reklamace", "smlouva"]
-      }
-    ]
-  },
-  {
-    "nazev": "⚖️ Právní výpočty",
-    "skupina": "dokumenty",
-    "polozky": [
+      },
       {
         "soubor": "obsah/dedicke_podily.html",
         "nazev": "⚖️ Dědické podíly",
@@ -3324,7 +3390,7 @@ const KATALOG_SEKCE = [
     ]
   },
   {
-    "nazev": "🏛️ Dějiny",
+    "nazev": "🏛️ Dějiny & genealogie",
     "skupina": "ostatni",
     "polozky": [
       {
@@ -3332,6 +3398,31 @@ const KATALOG_SEKCE = [
         "nazev": "🏛️ Historická časová osa",
         "stav": "beta",
         "tagy": ["historie", "dějepis", "chronologie", "timeline", "časová osa", "civilizace", "srovnání", "starověk", "středověk", "světové války", "kosmonautika", "juliánský kalendář", "panovníci", "osobnosti"]
+      },
+      {
+        "soubor": "obsah/rodokmen.html",
+        "nazev": "🌳 Stavitel rodokmenu",
+        "stav": "beta",
+        "tagy": ["rodokmen", "genealogie", "předkové", "rodina", "strom", "gedcom", "vývod", "matrika",
+                 "příbuznost", "ověření", "sosa", "ahnentafel", "profesionální"]
+      },
+      {
+        "soubor": "obsah/Heritage.html",
+        "nazev": "🌳 Heritage – genealogická aplikace",
+        "stav": "beta",
+        "tagy": ["rodokmen", "genealogie", "předkové", "rodina", "strom", "gedcom", "příbuznost", "matrika", "bratranec", "rodinný strom", "export"]
+      },
+      {
+        "soubor": "obsah/gene_map.html",
+        "nazev": "🧬 Mapa dědičnosti",
+        "stav": "beta",
+        "tagy": ["dědičnost", "genetika", "geny", "rodokmen", "znaky"]
+      },
+      {
+        "soubor": "obsah/hieroglyfy.html",
+        "nazev": "🏺 Egyptský písař",
+        "stav": "vyvoj",
+        "tagy": ["hieroglyfy", "egypt", "egyptské písmo", "faraon", "kartuše", "přepis", "jméno hieroglyfy", "kleopatra", "gardiner", "jsesh", "mdc", "starověk", "písmo", "dějepis"]
       },
       {
         "soubor": "obsah/voynich.html",
@@ -3352,12 +3443,6 @@ const KATALOG_SEKCE = [
         "tagy": ["ukrajina", "válka", "rusko", "isw", "fronta", "mapa fronty", "okupace", "deepstate", "oryx", "ztráty", "osn", "uprchlíci", "zprávy"]
       },
       {
-        "soubor": "obsah/contact_page.html",
-        "nazev": "Kontakt",
-        "stav": "beta",
-        "tagy": ["kontakt", "e-mail", "napište nám", "autor"]
-      },
-      {
         "soubor": "obsah/about.html",
         "nazev": "ℹ️ O projektu",
         "stav": "beta",
@@ -3366,6 +3451,12 @@ const KATALOG_SEKCE = [
           "statistiky",
           "github"
         ]
+      },
+      {
+        "soubor": "obsah/contact_page.html",
+        "nazev": "✉️ Kontakt",
+        "stav": "beta",
+        "tagy": ["kontakt", "e-mail", "napište nám", "autor"]
       }
     ]
   }

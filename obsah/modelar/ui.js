@@ -185,6 +185,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         : M.app.rezim === 'plochou' ? 'Klikni na stěnu, která má ležet dole (Esc = zpět)'
         : M.app.rezim === 'textNaPlochu' ? 'Text: klikni na těleso, kam patří střed textu – nalepí se i na zaoblenou plochu (Esc = zpět)'
         : M.app.rezim === 'magnet' ? 'Magnet: klikni na plochu tělesa, kterou chceš přisadit (Esc = zpět)'
+        : M.app.rezim === 'poleKrivka' ? 'Pole: klikni na rovnou plochu kousek od okraje, podél kterého mají být kopie (Esc = zpět do okna)'
         : M.app.rezim === 'magnet2' ? 'Magnet: teď klikni na plochu, ke které se má přisadit – dosedne tam středem (Esc = zrušit)'
         : M.app.rezim === 'vzorDer' ? 'Klikni na rovnou plochu tělesa, do které se vyvrtají díry (Esc = zpět)'
         : M.app.rezim === 'skicaNaPlose' ? 'Klikni na rovnou plochu tělesa – otevře se skica na ní (Esc = zpět)'
@@ -226,6 +227,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.vytvorDilnu(S, T, U);
     M.pripraveno = false;               // do otevření projektu z úložiště (testy na to čekají)
     M.vytvorNapovedu();
+    M.vytvorNavody();
     M.vytvorZarovnani(S);
     M.vytvorZrcadleni(S);
     M.vytvorPivot(S);

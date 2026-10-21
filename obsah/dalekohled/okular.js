@@ -461,7 +461,7 @@
       ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(0, rPx - 0.5), 0, 2 * Math.PI); ctx.fill();
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = kontrast;
-      const filtr = `blur(${rozm.toFixed(2)}px) brightness(${zisk.toFixed(3)})`;
+      const filtrCss = `blur(${rozm.toFixed(2)}px) brightness(${zisk.toFixed(3)})`;
       // filtry jen na okolí tělesa (u velkého plátna je rozmazání celé vrstvy drahé)
       const okraj = rPx * presah * (t.klic === 'saturn' ? 1.05 : 1) + rozm * 3 + (s.barevnaVada > 0 ? rozm * 3 + 30 : 0) + s.disperze * k + 4;
       const x0 = Math.max(0, Math.floor(p[0] - okraj)), y0 = Math.max(0, Math.floor(p[1] - okraj));
@@ -473,12 +473,12 @@
         // atmosférická disperze: obraz rozložený na barevné kanály, červený posunutý k obzoru, modrý k zenitu
         const dd = s.disperze * k / 2;
         const zx = s.orient.zenit[0] * dd, zy = s.orient.zenit[1] * dd;
-        ctx.filter = filtr;
+        ctx.filter = filtrCss;
         kresliVyrez(kanal(vrstva.c, '#f00', 0, x0, y0, rw, rh), -zx, -zy);
         kresliVyrez(kanal(vrstva.c, '#0f0', 1, x0, y0, rw, rh), 0, 0);
         kresliVyrez(kanal(vrstva.c, '#00f', 2, x0, y0, rw, rh), zx, zy);
       } else {
-        ctx.filter = filtr;
+        ctx.filter = filtrCss;
         kresliVyrez(vrstva.c, 0, 0);
       }
       if (s.barevnaVada > 0) {

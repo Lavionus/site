@@ -117,6 +117,9 @@
       padding: 16px 18px;
     }
     .tip .emoji { font-size: 1.8rem; }
+    /* ikona z balíku assets/index-icons místo emoji */
+    img.emoji { width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0; margin: -6px 0; }
+    .tip img.emoji { width: 60px; height: 60px; border-radius: 14px; margin: 0; }
     .tip .text b { display: block; margin-bottom: 3px; }
     .tip .text span { color: var(--text-muted); font-size: 0.85rem; }
     .tip a.otevrit {
@@ -197,6 +200,7 @@
     <a href="about.html#podminky" id="odkazPodminky">podmínkách užívání na stránce O projektu</a>.</p>
 
   <script src="../apps.js"></script>
+  <script src="../assets/index-icons/ikony.js"></script>
   <script>
     const podleSouboru = new Map();
     KATALOG_SEKCE.forEach(s => s.polozky.forEach(p => podleSouboru.set(p.soubor, p)));
@@ -219,10 +223,28 @@
       catch { return []; }
     };
 
-    // rozdělení "🌧️ Předpověď" na emoji + text
+    // rozdělení "🌧️ Předpověď" na emoji + text; první slovo je emoji, když obsahuje
+    // znak, který není písmeno ani číslice ("🔢 2048" -> 🔢 + 2048)
     function rozdel(nazev) {
-      const m = nazev.match(/^(\P{L}+)\s*(.*)$/u);
-      return (m && m[2]) ? { emoji: m[1].trim(), text: m[2] } : { emoji: '🔹', text: nazev };
+      const m = nazev.match(/^(\S+)\s+(.+)$/u);
+      return (m && /[^\p{L}\p{N}]/u.test(m[1])) ? { emoji: m[1], text: m[2] } : { emoji: '🔹', text: nazev };
+    }
+
+    // ikona stránky z balíku assets/index-icons, jinak emoji z názvu
+    const IKONY = typeof KATALOG_IKONY !== 'undefined' ? KATALOG_IKONY : null;
+    function symbol(p, emoji) {
+      const cesta = IKONY?.stranky[p.soubor];
+      if (cesta) {
+        const img = document.createElement('img');
+        img.className = 'emoji';
+        img.src = '../' + IKONY.koren + cesta + '.webp';
+        img.alt = '';
+        return img;
+      }
+      const e = document.createElement('span');
+      e.className = 'emoji';
+      e.textContent = emoji;
+      return e;
     }
 
     // otevření aplikace: uvnitř rozcestníku přes postMessage, samostatně přímým odkazem
@@ -235,9 +257,7 @@
         a.textContent = popisek;
       } else {
         const { emoji, text } = rozdel(p.nazev);
-        const e = document.createElement('span');
-        e.className = 'emoji';
-        e.textContent = emoji;
+        const e = symbol(p, emoji);
         const n = document.createElement('span');
         n.className = 'nazev';
         n.textContent = text;
@@ -281,7 +301,7 @@
       'Historie je prázdná – otevřete první aplikaci z menu.');
 
     document.getElementById('statistika').textContent =
-      `K dispozici je ${vsechny.length} aplikací ve ${KATALOG_SEKCE.length} kategoriích`
+      `K dispozici je ${vsechny.length} aplikací v ${KATALOG_SKUPINY.length} kategoriích a ${KATALOG_SEKCE.length} sekcích`
       + ' (' + KATALOG_STAVY.map(s =>
         `${s.label.toLowerCase()} ${vsechny.filter(p => p.stav === s.id).length}`).join(', ') + ').';
 
@@ -290,9 +310,7 @@
     const tipApp = vsechny[den % vsechny.length];
     const { emoji, text } = rozdel(tipApp.nazev);
     const tipEl = document.getElementById('tip');
-    const te = document.createElement('span');
-    te.className = 'emoji';
-    te.textContent = emoji;
+    const te = symbol(tipApp, emoji);
     const tt = document.createElement('div');
     tt.className = 'text';
     const b = document.createElement('b');

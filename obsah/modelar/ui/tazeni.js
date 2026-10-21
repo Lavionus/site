@@ -13,7 +13,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     okno.id = 'oknoTazeni';
     okno.className = 'okno';
     okno.setAttribute('aria-labelledby', 'tazNadpis');
-    okno.innerHTML = `<h2 id="tazNadpis">➰ Tažení profilu po dráze</h2>
+    okno.innerHTML = `<h2 id="tazNadpis">➰ Tažení profilu po dráze <button type="button" class="tl tl-navod" data-navod="tazeni" title="Názorný návod">❔ Návod</button></h2>
       <fieldset><legend>Která skica je profil (průřez)?</legend><div id="tazVolba"></div></fieldset>
       <label class="zaskrt"><input type="checkbox" id="tazOtevrena"> Otevřená dráha (konec se nespojí se začátkem)</label>
       <label class="zaskrt"><input type="checkbox" id="tazStred" checked> Profil na střed dráhy (střed obrysu profilu jede po křivce)</label>

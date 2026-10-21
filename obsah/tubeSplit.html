@@ -6,9 +6,11 @@
   <title>🔱 Rozbočka trubek</title>
   <script src="lib/three.r128.min.js"></script>
   <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="trubky_gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
   <script src="../tvary.js"></script>
+  <script src="trubky_gui.js"></script>
   <script src="../podpis.js" defer></script>
   <style>
     /* Společný stylopis obou generátorů trubek. Ovládání je rozdělené do dvou
@@ -19,41 +21,6 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      min-height: 100vh;
-    }
-
-    .container { max-width: 1800px; margin: 0 auto; padding: 14px; }
-
-    .header { text-align: center; margin-bottom: 14px; }
-    .header h1 { font-size: 1.2rem; font-weight: 600; color: var(--text); }
-
-    /* --- rozvržení: ovládání | náhled | ovládání ------------------------ */
-    .main-content {
-      display: grid;
-      gap: 14px;
-      align-items: start;
-      grid-template-columns: minmax(235px, 290px) minmax(0, 1fr) minmax(235px, 290px);
-      grid-template-areas: "vlevo nahled vpravo";
-    }
-
-    .sloupec { display: flex; flex-direction: column; gap: 12px; }
-    .sloupec-vlevo { grid-area: vlevo; }
-    .sloupec-vpravo { grid-area: vpravo; }
-    .viewer-section { grid-area: nahled; display: flex; flex-direction: column; gap: 12px; }
-
-    @media (max-width: 1250px) {
-      .main-content {
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas: "nahled nahled" "vlevo vpravo";
-      }
-      #canvas-container { height: clamp(300px, 45vh, 460px); }
-    }
-
-    @media (max-width: 780px) {
-      .main-content {
-        grid-template-columns: 1fr;
-        grid-template-areas: "nahled" "vlevo" "vpravo";
-      }
     }
 
     /* --- panely --------------------------------------------------------- */
@@ -312,293 +279,200 @@
     :root[data-theme="light"] .controls-hint { color: var(--text-muted); }
   </style></head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🔱 Rozbočka trubek</h1>
-    </div>
-
-    <div class="main-content">
-      <!-- ================= levý sloupec: tvar ================= -->
-      <div class="sloupec sloupec-vlevo">
-        <div class="panel">
-          <h2>Vstup a přechod</h2>
-
-          <div class="mrizka2">
-            <div class="form-group">
-              <label>Průměr OD (mm)</label>
-              <input type="number" id="vstupPrumer" value="100" min="20" max="1000" step="1">
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Rozbočka trubek"><span aria-hidden="true">🔱</span><span class="jmeno"> Rozbočka trubek</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <button class="pol" role="menuitem" onclick="resetParametru()">✨ Nový tvar (výchozí hodnoty)</button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">💾 Uložené tvary…</button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk</div>
+            <button class="pol" role="menuitem" onclick="exportSTL()">⬇ STL</button>
+            <button class="pol" role="menuitem" onclick="exportOBJ()">⬇ OBJ</button>
+            <div class="form-group nab-pole">
+              <label for="exportQuality">Kvalita exportu</label>
+              <select id="exportQuality">
+                <option value="32">Střední (32 segmentů)</option>
+                <option value="48">Vysoká (48 segmentů)</option>
+                <option value="64" selected>Ultra (64 segmentů)</option>
+                <option value="128">Maximum (128 segmentů)</option>
+              </select>
             </div>
-            <div class="form-group">
-              <label>Délka příruby</label>
-              <input type="number" id="vstupDelka" value="50" min="5" max="500" step="1">
-            </div>
-            <div class="form-group">
-              <label>Délka přechodu</label>
-              <input type="number" id="prechodDelka" value="90" min="5" max="500" step="5">
-            </div>
-            <div class="form-group">
-              <label>Tloušťka stěny</label>
-              <input type="number" id="tloustka" value="3" min="0.5" max="20" step="0.5">
-            </div>
-            <div class="form-group">
-              <label>Mezera vývodů</label>
-              <input type="number" id="mezera" value="2" min="0" max="50" step="0.5">
-            </div>
-            <div class="form-group">
-              <label>Natočení (°)</label>
-              <input type="number" id="natoceni" value="0" min="-180" max="180" step="5">
-            </div>
-          </div>
-
-          <div class="poznamka">
-            Průřez vstupu se po délce přechodu plynule rozdělí na kruhy vývodů —
-            jako u kalhotového kusu. Nestihnou-li se oddělit, stránka to ohlásí
-            i s potřebnou délkou.
           </div>
         </div>
-
-        <div class="panel">
-          <h2>Vývody</h2>
-
-          <div class="form-group">
-            <label>Počet</label>
-            <div class="radio-group">
-              <div class="radio-option">
-                <input type="radio" id="pocet1" name="pocetVyvodu" value="1">
-                <label for="pocet1">1</label>
-              </div>
-              <div class="radio-option">
-                <input type="radio" id="pocet2" name="pocetVyvodu" value="2" checked>
-                <label for="pocet2">2 (kalhoty)</label>
-              </div>
-              <div class="radio-option">
-                <input type="radio" id="pocet3" name="pocetVyvodu" value="3">
-                <label for="pocet3">3</label>
-              </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka nabidka-siroka" id="nabZobrazeni" role="menu" hidden>
+            <div class="nab-nadpis" id="typNahleduPopis">Typ náhledu</div>
+            <div class="radio-group" role="radiogroup" aria-labelledby="typNahleduPopis">
+              <div class="radio-option"><input type="radio" id="viewNormal" name="viewType" value="normal" checked><label for="viewNormal">Normální</label></div>
+              <div class="radio-option"><input type="radio" id="viewWireframe" name="viewType" value="wireframe"><label for="viewWireframe">Drátový</label></div>
+              <div class="radio-option"><input type="radio" id="viewEdges" name="viewType" value="edges"><label for="viewEdges">S hranami</label></div>
             </div>
-          </div>
-
-          <div class="vyvod-karta" id="karta0">
-            <h4>Vývod 1</h4>
-            <div class="mrizka3">
-              <div class="form-group">
-                <label>OD</label>
-                <input type="number" class="vyvodPrumer" id="vyvodPrumer0" value="40" min="10" max="1000" step="1">
-              </div>
-              <div class="form-group">
-                <label>Délka</label>
-                <input type="number" class="vyvodDelka" id="vyvodDelka0" value="50" min="5" max="500" step="1">
-              </div>
-              <div class="form-group">
-                <label>Úhel</label>
-                <input type="number" class="vyvodUhel" id="vyvodUhel0" value="20" min="0" max="60" step="1">
-              </div>
+            <hr>
+            <div class="form-group">
+              <label for="previewQuality">Kvalita náhledu</label>
+              <select id="previewQuality">
+                <option value="16">Nízká (16 segmentů)</option>
+                <option value="32" selected>Střední (32 segmentů)</option>
+                <option value="48">Vysoká (48 segmentů)</option>
+                <option value="64">Ultra (64 segmentů)</option>
+              </select>
             </div>
-            <label class="dopocet" for="vyvodAuto0">
-              <input type="checkbox" id="vyvodAuto0">
-              dopočítat průměr
-            </label>
-          </div>
-
-          <div class="vyvod-karta" id="karta1">
-            <h4>Vývod 2</h4>
-            <div class="mrizka3">
-              <div class="form-group">
-                <label>OD</label>
-                <input type="number" class="vyvodPrumer" id="vyvodPrumer1" value="40" min="10" max="1000" step="1">
-              </div>
-              <div class="form-group">
-                <label>Délka</label>
-                <input type="number" class="vyvodDelka" id="vyvodDelka1" value="50" min="5" max="500" step="1">
-              </div>
-              <div class="form-group">
-                <label>Úhel</label>
-                <input type="number" class="vyvodUhel" id="vyvodUhel1" value="20" min="0" max="60" step="1">
-              </div>
+            <div class="form-group">
+              <label for="opacitySlider">Průhlednost <span class="slider-value" id="opacityValue">100%</span></label>
+              <input type="range" id="opacitySlider" min="0" max="100" value="100" step="1">
             </div>
-            <label class="dopocet" for="vyvodAuto1">
-              <input type="checkbox" id="vyvodAuto1">
-              dopočítat průměr
-            </label>
-          </div>
-
-          <div class="vyvod-karta skryta" id="karta2">
-            <h4>Vývod 3</h4>
-            <div class="mrizka3">
-              <div class="form-group">
-                <label>OD</label>
-                <input type="number" class="vyvodPrumer" id="vyvodPrumer2" value="40" min="10" max="1000" step="1">
-              </div>
-              <div class="form-group">
-                <label>Délka</label>
-                <input type="number" class="vyvodDelka" id="vyvodDelka2" value="50" min="5" max="500" step="1">
-              </div>
-              <div class="form-group">
-                <label>Úhel</label>
-                <input type="number" class="vyvodUhel" id="vyvodUhel2" value="20" min="0" max="60" step="1">
-              </div>
+            <div class="mrizka2">
+              <div class="form-group"><label for="bgColorPicker">Pozadí</label><input type="color" id="bgColorPicker" value="#1a1a1a"></div>
+              <div class="form-group"><label for="objectColorPicker">Objekt</label><input type="color" id="objectColorPicker" value="#6aa6fd"></div>
             </div>
-            <label class="dopocet" for="vyvodAuto2">
-              <input type="checkbox" id="vyvodAuto2">
-              dopočítat průměr
-            </label>
-          </div>
-
-          <button class="btn" style="width:100%" onclick="dopoctiPrumery(false); vygeneruj();"
-                  title="Zaškrtnutým vývodům dopočítá průměr tak, aby součet jejich průtočných průřezů odpovídal průřezu vstupu — při současně otevřených vývodech tedy zůstane rychlost proudění stejná jako ve vstupní trubce. Zbytek průřezu se dělí rovným dílem.">
-            ⚖ Dopočítat průměry
-          </button>
-          <div class="poznamka">Zaškrtnutým vývodům dopočítá průměr na stejný celkový průtok jako vstup.</div>
-        </div>
-
-        <div class="panel">
-          <h2>Kónické konce</h2>
-
-          <div class="form-group">
-            <label>Vstupní příruba</label>
-            <select id="inKonusMode">
-              <option value="zadny" selected>Bez kónusu</option>
-              <option value="vnejsi">Zvenku</option>
-              <option value="vnitrni">Zevnitř</option>
-              <option value="oboje">Zvenku i zevnitř</option>
-            </select>
-          </div>
-          <div class="mrizka2 konus-hodnoty" id="inKonusHodnoty">
-            <div class="form-group" id="inKonusOuterGroup">
-              <label>Zvenku Ø (mm)</label>
-              <input type="number" id="inKonusOuter" value="2" min="-100" max="100" step="0.5">
-            </div>
-            <div class="form-group" id="inKonusInnerGroup">
-              <label>Zevnitř Ø (mm)</label>
-              <input type="number" id="inKonusInner" value="2" min="-100" max="100" step="0.5">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Vývody (všechny stejně)</label>
-            <select id="outKonusMode">
-              <option value="zadny" selected>Bez kónusu</option>
-              <option value="vnejsi">Zvenku</option>
-              <option value="vnitrni">Zevnitř</option>
-              <option value="oboje">Zvenku i zevnitř</option>
-            </select>
-          </div>
-          <div class="mrizka2 konus-hodnoty" id="outKonusHodnoty">
-            <div class="form-group" id="outKonusOuterGroup">
-              <label>Zvenku Ø (mm)</label>
-              <input type="number" id="outKonusOuter" value="2" min="-100" max="100" step="0.5">
-            </div>
-            <div class="form-group" id="outKonusInnerGroup">
-              <label>Zevnitř Ø (mm)</label>
-              <input type="number" id="outKonusInner" value="2" min="-100" max="100" step="0.5">
-            </div>
-          </div>
-
-          <div class="poznamka">
-            U napojení na zbytek dílu má příruba rozměry podle zadání (OD a ID) a ke svému
-            volnému konci se plynule mění o zadanou hodnotu průměru: zvenku se plášť
-            <strong>zužuje</strong>, zevnitř se díra <strong>rozšiřuje</strong> — obojí usnadní
-            nasunutí. Záporná hodnota kónus obrátí. Kónus jde přes celou délku příruby,
-            u vývodů po celé délce za přechodem.
           </div>
         </div>
-
-        <div class="panel">
-          <h2>Sražení konců</h2>
-
-          <div class="form-group">
-            <label>Vstupní příruba</label>
-            <select id="inSrazMode">
-              <option value="zadny" selected>Bez sražení</option>
-              <option value="vnejsi">Zvenku</option>
-              <option value="vnitrni">Zevnitř</option>
-              <option value="oboje">Zvenku i zevnitř</option>
-            </select>
-          </div>
-          <div class="konus-hodnoty" id="inSrazHodnoty">
-            <div class="mrizka2" id="inSrazOuterGroup">
-              <div class="form-group">
-                <label>Zvenku (mm)</label>
-                <input type="number" id="inSrazOuter" value="1" min="0" max="100" step="0.5">
-              </div>
-              <div class="form-group">
-                <label>Zvenku úhel (°)</label>
-                <input type="number" id="inSrazOuterAngle" value="45" min="5" max="85" step="5">
-              </div>
-            </div>
-            <div class="mrizka2" id="inSrazInnerGroup">
-              <div class="form-group">
-                <label>Zevnitř (mm)</label>
-                <input type="number" id="inSrazInner" value="1" min="0" max="100" step="0.5">
-              </div>
-              <div class="form-group">
-                <label>Zevnitř úhel (°)</label>
-                <input type="number" id="inSrazInnerAngle" value="45" min="5" max="85" step="5">
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Vývody (všechny stejně)</label>
-            <select id="outSrazMode">
-              <option value="zadny" selected>Bez sražení</option>
-              <option value="vnejsi">Zvenku</option>
-              <option value="vnitrni">Zevnitř</option>
-              <option value="oboje">Zvenku i zevnitř</option>
-            </select>
-          </div>
-          <div class="konus-hodnoty" id="outSrazHodnoty">
-            <div class="mrizka2" id="outSrazOuterGroup">
-              <div class="form-group">
-                <label>Zvenku (mm)</label>
-                <input type="number" id="outSrazOuter" value="1" min="0" max="100" step="0.5">
-              </div>
-              <div class="form-group">
-                <label>Zvenku úhel (°)</label>
-                <input type="number" id="outSrazOuterAngle" value="45" min="5" max="85" step="5">
-              </div>
-            </div>
-            <div class="mrizka2" id="outSrazInnerGroup">
-              <div class="form-group">
-                <label>Zevnitř (mm)</label>
-                <input type="number" id="outSrazInner" value="1" min="0" max="100" step="0.5">
-              </div>
-              <div class="form-group">
-                <label>Zevnitř úhel (°)</label>
-                <input type="number" id="outSrazInnerAngle" value="45" min="5" max="85" step="5">
-              </div>
-            </div>
-          </div>
-
-          <div class="poznamka">
-            Sražení je fazeta na hraně volného konce: zvenku ubere materiál z pláště, zevnitř
-            rozšíří díru. Rozměr v mm říká, o kolik se posune poloměr, úhel se měří od osy
-            příruby — 45° je fazeta stejně hluboká jako dlouhá, menší úhel dá delší plošší
-            náběh. Počítá se od plochy, kterou určuje kónus, takže se dá použít i s ním.
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" role="menuitem" data-pohled="iso">◇ Šikmo (výchozí)</button>
+            <button class="pol" role="menuitem" data-pohled="bok">▭ Z boku</button>
+            <button class="pol" role="menuitem" data-pohled="shora">▤ Shora</button>
+            <button class="pol" role="menuitem" data-pohled="vstup">◎ Na čelo vstupu</button>
+            <button class="pol" role="menuitem" data-pohled="vystup">◎ Na čelo výstupu</button>
           </div>
         </div>
+        <button class="tl" id="btnNapoveda" title="Nápověda a ovládání">❓<span class="jmeno"> Nápověda</span></button>
       </div>
+      <div class="lista-stav"><span id="stavText">–</span><span class="stav-pocty"><span id="vertexCount">0</span> vrch. · <span id="faceCount">0</span> △</span></div>
+    </header>
 
-      <!-- ================= střed: náhled ================= -->
-      <div class="viewer-section">
-        <div id="canvas-container"></div>
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">⇥ Vstup</button>
+      <button data-ukaz="obecne" class="aktivni">⚙ Obecné</button>
+      <button data-ukaz="out" class="je-vystup">Vývody ⑂</button>
+    </nav>
 
-        <div class="controls-hint">
-          <strong>Levé tlačítko</strong> rotace · <strong>pravé</strong> posun · <strong>kolečko</strong> přiblížení
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in tvar-pole" id="boxVstup" data-box="in" aria-label="Vstup">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⇥</span><h2>Vstup</h2><span class="box-chyba" title="Chyba v zadání této části">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="in-prurez" open>
+            <summary><span class="oddil-nazev">Průměr a délka</span><span class="souhrn" id="inSouhrnPrurez"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka2">
+                <div class="form-group">
+                  <label for="vstupPrumer">Průměr OD (mm)</label>
+                  <input type="number" id="vstupPrumer" value="100" min="20" max="1000" step="1">
+                </div>
+                <div class="form-group">
+                  <label for="vstupDelka">Délka příruby (mm)</label>
+                  <input type="number" id="vstupDelka" value="50" min="5" max="500" step="1">
+                </div>
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="in-konec">
+            <summary><span class="oddil-nazev">Kónus a sražení konce</span><span class="souhrn" id="inSouhrnKonec"></span></summary>
+            <div class="oddil-telo">
+              <div class="form-group">
+                <label for="inKonusMode">Kónus konce</label>
+                <select id="inKonusMode">
+                  <option value="zadny" selected>Bez kónusu</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="mrizka2 konus-hodnoty" id="inKonusHodnoty">
+                <div class="form-group" id="inKonusOuterGroup">
+                  <label for="inKonusOuter">Zvenku Ø (mm)</label>
+                  <input type="number" id="inKonusOuter" value="2" min="-100" max="100" step="0.5">
+                </div>
+                <div class="form-group" id="inKonusInnerGroup">
+                  <label for="inKonusInner">Zevnitř Ø (mm)</label>
+                  <input type="number" id="inKonusInner" value="2" min="-100" max="100" step="0.5">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:9px">
+                <label for="inSrazMode">Sražení hrany</label>
+                <select id="inSrazMode">
+                  <option value="zadny" selected>Bez sražení</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="konus-hodnoty" id="inSrazHodnoty">
+                <div class="mrizka2" id="inSrazOuterGroup">
+                  <div class="form-group">
+                    <label for="inSrazOuter">Zvenku (mm)</label>
+                    <input type="number" id="inSrazOuter" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="inSrazOuterAngle">Úhel (°)</label>
+                    <input type="number" id="inSrazOuterAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+                <div class="mrizka2" id="inSrazInnerGroup">
+                  <div class="form-group">
+                    <label for="inSrazInner">Zevnitř (mm)</label>
+                    <input type="number" id="inSrazInner" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="inSrazInnerAngle">Úhel (°)</label>
+                    <input type="number" id="inSrazInnerAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+              </div>
+              <details class="vysvetli"><summary>Jak kónus a sražení fungují</summary>
+                Kónus mění průměr volného konce: u napojení má příruba rozměry podle zadání a ke konci se plynule změní o zadanou hodnotu — zvenku se plášť <strong>zužuje</strong>, zevnitř se díra <strong>rozšiřuje</strong>, obojí usnadní nasunutí; záporná hodnota kónus obrátí. U vývodů jde kónus po celé délce za přechodem. Sražení je fazeta na hraně konce: rozměr říká, o kolik se posune poloměr, úhel se měří od osy (45° = stejně hluboká jako dlouhá). Počítá se od plochy, kterou nechal kónus.
+              </details>
+            </div>
+          </details>
         </div>
-
-        <div class="button-group">
-          <button class="btn btn-primary" onclick="vygeneruj()">Vygenerovat</button>
-          <button class="btn" onclick="resetParametru()">Reset</button>
+      </aside>
+      <section class="stred">
+        <div id="canvas-container" tabindex="0" aria-label="3D náhled — tažení otáčí, kolečko přibližuje">
+          <div id="neplatneZadani" class="neplatne skryto" role="alert"></div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
-
-        <div id="tvary"></div>
-      </div>
-
-      <!-- ================= pravý sloupec: výstup a zobrazení ================= -->
-      <div class="sloupec sloupec-vpravo">
-        <div class="panel">
-          <h2>📐 Rozměry</h2>
+        <div class="box box-obecne" aria-label="Obecné nastavení">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="dil" aria-selected="true">⚙ Díl</button>
+            <button role="tab" data-zalozka="info" aria-selected="false">📏 Rozměry</button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Tvary</button>
+          </div>
+          <div class="zalozka-telo tvar-pole" data-telo="dil" role="tabpanel">
+            <div class="dva-sloupce">
+              <div class="mrizka2">
+                <div class="form-group">
+                  <label for="tloustka">Tloušťka stěny (mm)</label>
+                  <input type="number" id="tloustka" value="3" min="0.5" max="20" step="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="prechodDelka">Délka přechodu (mm)</label>
+                  <input type="number" id="prechodDelka" value="90" min="5" max="500" step="5">
+                </div>
+              </div>
+              <div class="mrizka2">
+                <div class="form-group">
+                  <label for="mezera">Mezera vývodů (mm)</label>
+                  <input type="number" id="mezera" value="2" min="0" max="50" step="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="natoceni">Natočení vývodů (°)</label>
+                  <input type="number" id="natoceni" value="0" min="-180" max="180" step="5">
+                </div>
+              </div>
+            </div>
+            <div class="poznamka">
+              Průřez vstupu se po délce přechodu plynule rozdělí na kruhy vývodů — jako u kalhotového kusu.
+              Nestihnou-li se oddělit, stránka to ohlásí i s potřebnou délkou.
+            </div>
+          </div>
+          <div class="zalozka-telo" data-telo="info" role="tabpanel" hidden>
+            <div class="info-mrizka">
 
           <div class="flange-info-group">
             <div class="flange-info-title">Vstup</div>
@@ -641,87 +515,199 @@
               <span class="flange-info-value" id="infoPomer">– %</span>
             </div>
           </div>
-        </div>
-
-        <div class="panel">
-          <h2>Export</h2>
-          <div class="form-group">
-            <label>Kvalita exportu</label>
-            <select id="exportQuality">
-              <option value="32">Střední (32 segmentů)</option>
-              <option value="48">Vysoká (48 segmentů)</option>
-              <option value="64" selected>Ultra (64 segmentů)</option>
-              <option value="128">Maximum (128 segmentů)</option>
-            </select>
+        
+            </div>
           </div>
-          <div class="button-group">
-            <button class="btn btn-primary" onclick="exportSTL()">STL</button>
-            <button class="btn btn-primary" onclick="exportOBJ()">OBJ</button>
-          </div>
-          <div class="stats-item" style="margin-top:9px">
-            <span class="stats-label">Vrcholů / trojúhelníků:</span>
-            <span><span class="stats-value" id="vertexCount">0</span>
-              <span class="stats-label">/</span>
-              <span class="stats-value" id="faceCount">0</span></span>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden>
+            <div id="tvary"></div>
           </div>
         </div>
-
-        <div class="panel">
-          <h2>Zobrazení</h2>
+      </section>
+      <aside class="box box-out tvar-pole" id="boxVystup" data-box="out" aria-label="Vývody">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⑂</span><h2>Vývody</h2><span class="box-chyba" title="Chyba v zadání této části">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="out-prurez" open>
+            <summary><span class="oddil-nazev">Počet a rozměry vývodů</span><span class="souhrn" id="outSouhrnPrurez"></span></summary>
+            <div class="oddil-telo">
 
           <div class="form-group">
-            <label>Typ náhledu</label>
-            <div class="radio-group">
+            <label id="pocetPopis">Počet vývodů</label>
+            <div class="radio-group" role="radiogroup" aria-labelledby="pocetPopis">
               <div class="radio-option">
-                <input type="radio" id="viewNormal" name="viewType" value="normal" checked>
-                <label for="viewNormal">Normální</label>
+                <input type="radio" id="pocet1" name="pocetVyvodu" value="1">
+                <label for="pocet1">1</label>
               </div>
               <div class="radio-option">
-                <input type="radio" id="viewWireframe" name="viewType" value="wireframe">
-                <label for="viewWireframe">Drátový</label>
+                <input type="radio" id="pocet2" name="pocetVyvodu" value="2" checked>
+                <label for="pocet2">2 (kalhoty)</label>
               </div>
               <div class="radio-option">
-                <input type="radio" id="viewEdges" name="viewType" value="edges">
-                <label for="viewEdges">S hranami</label>
+                <input type="radio" id="pocet3" name="pocetVyvodu" value="3">
+                <label for="pocet3">3</label>
               </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Kvalita náhledu</label>
-            <select id="previewQuality">
-              <option value="16">Nízká (16 segmentů)</option>
-              <option value="32" selected>Střední (32 segmentů)</option>
-              <option value="48">Vysoká (48 segmentů)</option>
-              <option value="64">Ultra (64 segmentů)</option>
-            </select>
+          <div class="vyvod-karta" id="karta0">
+            <h4>Vývod 1</h4>
+            <div class="mrizka3">
+              <div class="form-group">
+                <label for="vyvodPrumer0">OD</label>
+                <input type="number" class="vyvodPrumer" id="vyvodPrumer0" value="40" min="10" max="1000" step="1">
+              </div>
+              <div class="form-group">
+                <label for="vyvodDelka0">Délka</label>
+                <input type="number" class="vyvodDelka" id="vyvodDelka0" value="50" min="5" max="500" step="1">
+              </div>
+              <div class="form-group">
+                <label for="vyvodUhel0">Úhel</label>
+                <input type="number" class="vyvodUhel" id="vyvodUhel0" value="20" min="0" max="60" step="1">
+              </div>
+            </div>
+            <label class="dopocet" for="vyvodAuto0">
+              <input type="checkbox" id="vyvodAuto0">
+              dopočítat průměr
+            </label>
           </div>
 
-          <div class="form-group">
-            <label>Průhlednost <span class="slider-value" id="opacityValue">100%</span></label>
-            <input type="range" id="opacitySlider" min="0" max="100" value="100" step="1">
+          <div class="vyvod-karta" id="karta1">
+            <h4>Vývod 2</h4>
+            <div class="mrizka3">
+              <div class="form-group">
+                <label for="vyvodPrumer1">OD</label>
+                <input type="number" class="vyvodPrumer" id="vyvodPrumer1" value="40" min="10" max="1000" step="1">
+              </div>
+              <div class="form-group">
+                <label for="vyvodDelka1">Délka</label>
+                <input type="number" class="vyvodDelka" id="vyvodDelka1" value="50" min="5" max="500" step="1">
+              </div>
+              <div class="form-group">
+                <label for="vyvodUhel1">Úhel</label>
+                <input type="number" class="vyvodUhel" id="vyvodUhel1" value="20" min="0" max="60" step="1">
+              </div>
+            </div>
+            <label class="dopocet" for="vyvodAuto1">
+              <input type="checkbox" id="vyvodAuto1">
+              dopočítat průměr
+            </label>
           </div>
 
-          <div class="mrizka2">
-            <div class="form-group">
-              <label>Pozadí</label>
-              <input type="color" id="bgColorPicker" value="#1a1a1a">
+          <div class="vyvod-karta skryta" id="karta2">
+            <h4>Vývod 3</h4>
+            <div class="mrizka3">
+              <div class="form-group">
+                <label for="vyvodPrumer2">OD</label>
+                <input type="number" class="vyvodPrumer" id="vyvodPrumer2" value="40" min="10" max="1000" step="1">
+              </div>
+              <div class="form-group">
+                <label for="vyvodDelka2">Délka</label>
+                <input type="number" class="vyvodDelka" id="vyvodDelka2" value="50" min="5" max="500" step="1">
+              </div>
+              <div class="form-group">
+                <label for="vyvodUhel2">Úhel</label>
+                <input type="number" class="vyvodUhel" id="vyvodUhel2" value="20" min="0" max="60" step="1">
+              </div>
             </div>
-            <div class="form-group">
-              <label>Objekt</label>
-              <input type="color" id="objectColorPicker" value="#6aa6fd">
-            </div>
+            <label class="dopocet" for="vyvodAuto2">
+              <input type="checkbox" id="vyvodAuto2">
+              dopočítat průměr
+            </label>
           </div>
+
+          <button class="btn" style="width:100%" onclick="dopoctiPrumery(false); vygeneruj();"
+                  title="Zaškrtnutým vývodům dopočítá průměr tak, aby součet jejich průtočných průřezů odpovídal průřezu vstupu — při současně otevřených vývodech tedy zůstane rychlost proudění stejná jako ve vstupní trubce. Zbytek průřezu se dělí rovným dílem.">
+            ⚖ Dopočítat průměry
+          </button>
+          <div class="poznamka">Zaškrtnutým vývodům dopočítá průměr na stejný celkový průtok jako vstup.</div>
+        
+            </div>
+          </details>
+          <details class="oddil" data-oddil="out-konec">
+            <summary><span class="oddil-nazev">Kónus a sražení konců</span><span class="souhrn" id="outSouhrnKonec"></span></summary>
+            <div class="oddil-telo">
+              <div class="form-group">
+                <label for="outKonusMode">Kónus konce</label>
+                <select id="outKonusMode">
+                  <option value="zadny" selected>Bez kónusu</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="mrizka2 konus-hodnoty" id="outKonusHodnoty">
+                <div class="form-group" id="outKonusOuterGroup">
+                  <label for="outKonusOuter">Zvenku Ø (mm)</label>
+                  <input type="number" id="outKonusOuter" value="2" min="-100" max="100" step="0.5">
+                </div>
+                <div class="form-group" id="outKonusInnerGroup">
+                  <label for="outKonusInner">Zevnitř Ø (mm)</label>
+                  <input type="number" id="outKonusInner" value="2" min="-100" max="100" step="0.5">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:9px">
+                <label for="outSrazMode">Sražení hrany</label>
+                <select id="outSrazMode">
+                  <option value="zadny" selected>Bez sražení</option>
+                  <option value="vnejsi">Zvenku</option>
+                  <option value="vnitrni">Zevnitř</option>
+                  <option value="oboje">Zvenku i zevnitř</option>
+                </select>
+              </div>
+              <div class="konus-hodnoty" id="outSrazHodnoty">
+                <div class="mrizka2" id="outSrazOuterGroup">
+                  <div class="form-group">
+                    <label for="outSrazOuter">Zvenku (mm)</label>
+                    <input type="number" id="outSrazOuter" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="outSrazOuterAngle">Úhel (°)</label>
+                    <input type="number" id="outSrazOuterAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+                <div class="mrizka2" id="outSrazInnerGroup">
+                  <div class="form-group">
+                    <label for="outSrazInner">Zevnitř (mm)</label>
+                    <input type="number" id="outSrazInner" value="1" min="0" max="100" step="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="outSrazInnerAngle">Úhel (°)</label>
+                    <input type="number" id="outSrazInnerAngle" value="45" min="5" max="85" step="5">
+                  </div>
+                </div>
+              </div>
+              <details class="vysvetli"><summary>Jak kónus a sražení fungují</summary>
+                Kónus mění průměr volného konce: u napojení má příruba rozměry podle zadání a ke konci se plynule změní o zadanou hodnotu — zvenku se plášť <strong>zužuje</strong>, zevnitř se díra <strong>rozšiřuje</strong>, obojí usnadní nasunutí; záporná hodnota kónus obrátí. U vývodů jde kónus po celé délce za přechodem. Sražení je fazeta na hraně konce: rozměr říká, o kolik se posune poloměr, úhel se měří od osy (45° = stejně hluboká jako dlouhá). Počítá se od plochy, kterou nechal kónus.
+              </details>
+            </div>
+          </details>
         </div>
-      </div>
-    </div>
+      </aside>
+    </main>
   </div>
+
+  <dialog id="napoveda" class="okno-napovedy" aria-labelledby="napovedaNadpis">
+    <h2 id="napovedaNadpis">Jak na to</h2>
+    <ol>
+      <li><strong>Vstup</strong> (vlevo) má průměr, délku příruby a úpravy konce; box <strong>Vývody</strong> (vpravo) počet vývodů, průměr, délku a úhel každého z nich a úpravy jejich konců. Záhlaví oddílu ukazuje, co je nastavené, i když je sbalený.</li>
+      <li>Pod náhledem jsou <strong>obecná nastavení</strong>: tloušťka stěny, délka přechodu, mezera a natočení vývodů, rozměry dílu a uložené tvary.</li>
+      <li>Zaškrtnutým vývodům tlačítko <strong>⚖ Dopočítat průměry</strong> nastaví průměr tak, aby součet průřezů odpovídal vstupu.</li>
+      <li>Každá změna se hned promítne do náhledu; neplatné zadání náhled zešedí a nahoře řekne proč. Hotový díl stáhnete v nabídce <strong>Soubor</strong> (STL, OBJ).</li>
+    </ol>
+    <h3>Ovládání náhledu</h3>
+    <ul>
+      <li>levé tlačítko / jeden prst — otáčení · pravé tlačítko — posun · kolečko / dva prsty — přiblížení</li>
+      <li>nabídka <strong>Pohled</strong>: z boku, shora, na čela</li>
+    </ul>
+    <form method="dialog"><button class="btn btn-primary">Rozumím</button></form>
+  </dialog>
   <script>
     let scene, camera, renderer, telesoMesh, edgesObject;
     let isDragging = false;
     let isPanning = false;
     let previousMousePosition = { x: 0, y: 0 };
-    let rotation = { x: 0, y: 0 };
+    // šikmo zboku, aby byly vidět všechny vývody (rozevírají se v rovině pohledu z boku)
+    const VYCHOZI_POHLED = { x: 0.5, y: 1.0 };
+    let rotation = { ...VYCHOZI_POHLED };
     let cameraPosition = { x: 0, y: 0, z: 500 };
     let currentOpacity = 1.0;
     let posledniInfo = null;
@@ -1507,7 +1493,7 @@
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(container.clientWidth, container.clientHeight);
-      container.appendChild(renderer.domElement);
+      container.prepend(renderer.domElement);   // 3D plátno pod překryvy (hlášky)
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.6));
       const svetlo1 = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -1549,6 +1535,7 @@
       nactiNastaveni();
       updateKonusUI();
       prepniKarty();
+      TrubkyGui.pripoj({ klic: 'webapp_rozbocka_rozlozeni', pohled: nastavPohled, zmenaVelikosti: onWindowResize });
       vygeneruj();
 
       sbirka = Tvary.pripoj({
@@ -1690,7 +1677,21 @@
     function vygeneruj() {
       const p = precti(parseInt(document.getElementById('previewQuality').value));
       const chyba = zkontroluj(p);
-      if (chyba) { showNotification(chyba, 'error'); return; }
+      // neplatné zadání: náhled zůstane, zešedne a nahoře je důvod
+      const neplatne = document.getElementById('neplatneZadani');
+      document.getElementById('canvas-container').classList.toggle('je-neplatne', !!chyba);
+      neplatne.classList.toggle('skryto', !chyba);
+      const t = (chyba || '').toLowerCase();
+      TrubkyGui.oznacChybu('boxVstup', /vstup/.test(t));
+      TrubkyGui.oznacChybu('boxVystup', /vývod/.test(t));
+      aktualizujSouhrny();
+      if (chyba) {
+        neplatne.textContent = 'Neplatné zadání — náhled ukazuje poslední platný tvar. ' + chyba;
+        document.getElementById('stavText').textContent = 'neplatné zadání';
+        document.getElementById('stavText').className = 'stav-chyba';
+        showNotification(chyba, 'error');
+        return;
+      }
 
       if (telesoMesh) {
         scene.remove(telesoMesh);
@@ -1740,6 +1741,41 @@
       zobrazInfo();
       updateViewType();
       ulozNastaveni();
+      const stav = document.getElementById('stavText');
+      stav.textContent = 'hotovo ✓ · ' + (posledniInfo && isFinite(posledniInfo.vyska) ? 'výška ' + posledniInfo.vyska.toFixed(0) + ' mm' : '');
+      stav.className = 'stav-ok';
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Rozvržení stránky (trubky_gui.js): pohledy a souhrny                */
+    /* ------------------------------------------------------------------ */
+    // osa dílu je z, vývody se rozevírají v rovině xz; náhled je otočený o +90° kolem z
+    const POHLEDY = { iso: VYCHOZI_POHLED, bok: { x: 0, y: Math.PI / 2 }, shora: { x: Math.PI / 2, y: Math.PI / 2 },
+                      vstup: { x: 0, y: Math.PI }, vystup: { x: 0, y: 0 } };
+    function nastavPohled(jm) {
+      rotation = { ...POHLEDY[jm] };
+      if (!telesoMesh) return;
+      telesoMesh.rotation.x = rotation.x;
+      telesoMesh.rotation.y = rotation.y;
+      if (edgesObject) edgesObject.rotation.copy(telesoMesh.rotation);
+    }
+    // souhrn v záhlaví oddílů boxů — co je nastavené, i když je oddíl sbalený
+    function aktualizujSouhrny() {
+      const el = id => document.getElementById(id);
+      const n = id => (Math.round(parseFloat(el(id).value) * 10) / 10).toLocaleString('cs-CZ');
+      const strana = { vnejsi: 'zvenku', vnitrni: 'zevnitř', oboje: 'zvenku i zevnitř' };
+      TrubkyGui.souhrn('inSouhrnPrurez', 'Ø' + n('vstupPrumer') + ' · délka ' + n('vstupDelka'), true);
+      const pocet = parseInt(document.querySelector('input[name="pocetVyvodu"]:checked').value, 10);
+      const prumery = [...Array(pocet).keys()].map(i => n('vyvodPrumer' + i));
+      const stejne = prumery.every(d => d === prumery[0]);
+      TrubkyGui.souhrn('outSouhrnPrurez', (stejne ? pocet + '× Ø' + prumery[0] : 'Ø' + prumery.join(' + Ø'))
+        + ' · délka ' + n('vyvodDelka0'), true);
+      for (const pref of ['in', 'out']) {
+        const km = el(pref + 'KonusMode').value, sm = el(pref + 'SrazMode').value, kon = [];
+        if (km !== 'zadny') kon.push('kónus ' + strana[km]);
+        if (sm !== 'zadny') kon.push('sražení ' + strana[sm]);
+        TrubkyGui.souhrn(pref + 'SouhrnKonec', kon.join(' · ') || 'bez úprav', kon.length);
+      }
     }
 
     /* ------------------------------------------------------------------ */
@@ -1923,8 +1959,7 @@
       document.getElementById('exportQuality').value = '64';
       currentOpacity = 1.0;
       scene.background = new THREE.Color('#1a1a1a');
-      rotation.x = 0;
-      rotation.y = 0;
+      rotation = { ...VYCHOZI_POHLED };
       kameraNastavena = false;
 
       prepniKarty();

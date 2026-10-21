@@ -13,7 +13,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     okno.id = 'oknoPromenne';
     okno.className = 'okno vedle okno-promenne';
     okno.setAttribute('aria-labelledby', 'promNadpis');
-    okno.innerHTML = `<h2 id="promNadpis">ƒx Proměnné projektu</h2>
+    okno.innerHTML = `<h2 id="promNadpis">ƒx Proměnné projektu <button type="button" class="tl tl-navod" data-navod="promenne" title="Názorný návod">❔ Návod</button></h2>
       <p class="poznamka">Do kteréhokoli číselného pole v inspektoru (rozměr, poloha, parametr dílu) nebo do kóty ve skice napiš výraz s proměnnou – třeba <code>D/2 + vule</code>. Po změně proměnné se všechno přepočítá.</p>
       <table class="prom-tabulka"><thead><tr><th>Jméno</th><th>Výraz</th><th>Hodnota</th><th><span class="sr">Akce</span></th></tr></thead><tbody id="promRadky"></tbody></table>
       <div class="radek"><button type="button" class="tl" id="promPridat">✚ Přidat proměnnou</button></div>

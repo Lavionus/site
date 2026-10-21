@@ -17,15 +17,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       v.typ 'linearni': pocet [nx, ny, nz], rozestup [dx, dy, dz]
       v.typ 'kruhove':  pocet, uhel (celkový rozsah °; 360 = rovnoměrně dokola), stred [x, y], natacet
       v.typ 'spiralove': pocet, uhelKrok (°), stoupaniKrok (mm), polomerKrok (mm), stred [x, y], natacet
-      Vrací {dok, kopie}. */
+      v.typ 'krivka':   cesta [[x, y(, z)], …] ve světě, rovina {bod, u, v, normala} (bez ní vodorovná XY), otevrena,
+                        pocet nebo rozestup (mm, > 0 má přednost), od / do (0…1 délky), odsazeni (mm dovnitř uzavřené
+                        křivky, záporné ven), natacet (kolem normály roviny podle tečny), naZacatek
+      Vrací {dok, kopie, info} (info u křivky: {delka, roztec, pocet}). */
   M.poleUzlu = function (dok, ids, v) {
     const set = new Set(ids);
     let zdroje = dok.uzly.filter(u => set.has(u.id) && !u.zamceno);
     if (!zdroje.length) return { dok, kopie: [] };
-    // podél křivky: originál (střed obálky výběru) na začátek křivky – kopie se pak skládají od něj
-    if (v.typ === 'krivka' && v.naZacatek && (v.cesta || []).length >= 2) {
-      const ob = M.obalkaVice(zdroje), dx = v.cesta[0][0] - (ob.min[0] + ob.max[0]) / 2, dy = v.cesta[0][1] - (ob.min[1] + ob.max[1]) / 2;
-      const posunute = new Map(zdroje.map(u => [u.id, M.normalizujUzel(Object.assign({}, u, { poloha: [zaokr(u.poloha[0] + dx), zaokr(u.poloha[1] + dy), u.poloha[2]] }))]));
+    // podél křivky: body v rovině křivky; originál (střed obálky výběru) na začátek – kopie se skládají od něj
+    const kr = v.typ === 'krivka' ? M.bodyKrivkyPole(v) : null;
+    if (kr && v.naZacatek && kr.body.length) {
+      const ob = M.obalkaVice(zdroje), c = new V(...[0, 1, 2].map(i => (ob.min[i] + ob.max[i]) / 2));
+      // posun jen v rovině křivky (vzdálenost od ní – výška nad deskou, hloubka díry – zůstane)
+      const d = kr.body[0].W.clone().sub(c), n = kr.rovina.n;
+      d.addScaledVector(n, -d.dot(n));
+      const posunute = new Map(zdroje.map(u => [u.id, M.normalizujUzel(Object.assign({}, u, { poloha: u.poloha.map((x, i) => zaokr(x + d.getComponent(i))) }))]));
       dok = Object.assign({}, dok, { uzly: dok.uzly.map(u => posunute.get(u.id) || u) });
       zdroje = zdroje.map(u => posunute.get(u.id));
     }
@@ -36,9 +43,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       for (let k = 0; k < nz; k++) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++)
         if (i || j || k) transformace.push({ posun: [i * d[0], j * d[1], k * d[2]], uhel: 0 });
     } else if (v.typ === 'krivka') {
-      // kopie rovnoměrně po délce křivky; originál odpovídá jejímu začátku (posun a natočení podle tečny)
-      const n = Math.max(1, Math.round(v.pocet || 1)), body = M.bodyNaCeste(v.cesta || [], n, !v.otevrena);
-      for (let i = 1; i < body.length; i++) transformace.push({ krivka: { P0: body[0], P: body[i], du: body[i].uhel - body[0].uhel } });
+      // kopie po délce křivky; originál odpovídá jejímu začátku (posun a natočení podle tečny kolem normály roviny)
+      const body = kr.body;
+      for (let i = 1; i < body.length; i++) transformace.push({ krivka: { P0: body[0].W, P: body[i].W, n: kr.rovina.n, du: body[i].uhel - body[0].uhel } });
     } else {
       const n = Math.max(1, Math.round(v.pocet || 1));
       const c = v.stred || [0, 0];
@@ -58,9 +65,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (t.posun) p.add(new V(...t.posun));
       else if (t.krivka) {
         const k = t.krivka, du = v.natacet !== false ? k.du : 0;
-        const qa = new THREE.Quaternion().setFromAxisAngle(new V(0, 0, 1), du);
-        const rel = new V(p.x - k.P0.x, p.y - k.P0.y, 0).applyQuaternion(qa);
-        p = new V(k.P.x + rel.x, k.P.y + rel.y, p.z);
+        const qa = new THREE.Quaternion().setFromAxisAngle(k.n, du);
+        p = p.clone().sub(k.P0).applyQuaternion(qa).add(k.P);
         if (v.natacet !== false) q = qa.clone().multiply(q);
       } else {
         const c = new V(t.stred[0], t.stred[1], 0), rel = p.clone().sub(c);
@@ -78,8 +84,121 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       nove.push(k); kopie.push(k.id);
     }
     d = M.pridejUzly(d, nove);
-    return { dok: d, kopie };
+    return { dok: d, kopie, info: kr ? { delka: kr.delka, roztec: kr.roztec, pocet: kr.body.length } : null };
   };
+
+  /** Body pole podél křivky: {body: [{W (Vector3 ve světě), uhel (tečna v rovině, rad)}], rovina {bod, u, v, n}
+      (Vector3), delka (mm použitého úseku), roztec (mm mezi sousedy)}. Viz v.typ 'krivka' u M.poleUzlu. */
+  M.bodyKrivkyPole = function (v) {
+    const cesta = (v.cesta || []).filter(b => Array.isArray(b) && b.length >= 2);
+    const r = v.rovina;
+    const rov = r ? { bod: new V(...r.bod), u: new V(...r.u).normalize(), v: new V(...r.v).normalize(), n: new V(...r.normala).normalize() }
+      : { bod: new V(0, 0, 0), u: new V(1, 0, 0), v: new V(0, 1, 0), n: new V(0, 0, 1) };
+    const prazdne = { body: [], rovina: rov, delka: 0, roztec: 0 };
+    if (cesta.length < 2) return prazdne;
+    // do 2D roviny křivky (bez roviny: půdorys XY, výška zůstává u kopií)
+    let b2 = cesta.map(b => { if (!r) return [b[0], b[1]]; const d = new V(b[0], b[1], b[2] || 0).sub(rov.bod); return [d.dot(rov.u), d.dot(rov.v)]; });
+    let uzavrena = !v.otevrena;
+    // odstup od uzavřené křivky: kladný dovnitř (díry 5 mm od okraje víka), záporný ven
+    if (uzavrena && Math.abs(v.odsazeni || 0) > 1e-9) b2 = odsadUzavrenou(b2, v.odsazeni);
+    if (b2.length < 2) return prazdne;
+    // délky úseků
+    const bb = uzavrena ? b2.concat([b2[0]]) : b2, L = [0];
+    for (let i = 0; i + 1 < bb.length; i++) L.push(L[i] + Math.hypot(bb[i + 1][0] - bb[i][0], bb[i + 1][1] - bb[i][1]));
+    const celkem = L[L.length - 1];
+    if (!(celkem > 1e-9)) return prazdne;
+    // úsek od–do: dál jako otevřená křivka (u uzavřené jen když není celá)
+    let od = M.omez(+(v.od || 0), 0, 1), doo = M.omez(v.do == null ? 1 : +v.do, 0, 1);
+    if (doo < od) [od, doo] = [doo, od];
+    let cast = bb, delka = celkem;
+    if (od > 1e-9 || doo < 1 - 1e-9) {
+      cast = vyrizniUsek(bb, L, od * celkem, doo * celkem);
+      uzavrena = false; delka = (doo - od) * celkem;
+    }
+    if (cast.length < 2 || !(delka > 1e-9)) return prazdne;
+    // počet z rozteče: otevřená přesně po rozteči od začátku (úsek se zkrátí), uzavřená rovnoměrně dokola
+    let n = Math.max(1, Math.round(v.pocet || 1)), roztec;
+    if (v.rozestup > 0) {
+      if (uzavrena) { n = Math.max(1, Math.round(delka / v.rozestup)); roztec = delka / n; }
+      else {
+        n = Math.floor(delka / v.rozestup + 1e-9) + 1; roztec = v.rozestup;
+        const Lc = [0];
+        for (let i = 0; i + 1 < cast.length; i++) Lc.push(Lc[i] + Math.hypot(cast[i + 1][0] - cast[i][0], cast[i + 1][1] - cast[i][1]));
+        if (n > 1) cast = vyrizniUsek(cast, Lc, 0, (n - 1) * v.rozestup);
+      }
+      n = Math.min(n, 2000);
+    } else roztec = uzavrena ? delka / n : (n > 1 ? delka / (n - 1) : 0);
+    const do3D = (x, y) => rov.bod.clone().addScaledVector(rov.u, x).addScaledVector(rov.v, y);
+    const body = M.bodyNaCeste(uzavrena ? cast.slice(0, -1) : cast, n, uzavrena).map(p => ({ W: do3D(p.x, p.y), uhel: p.uhel }));
+    // použitý úsek křivky (pro náhled ve scéně); bez roviny ve výšce prvního kusu se nepočítá – výška 0
+    return { body, rovina: rov, delka, roztec, cara: cast.map(([x, y]) => do3D(x, y)) };
+  };
+
+  /** Parametry pole uložené ve skupině (Upravit pole): {v, originalu}, nebo null. */
+  M.normalizujMetuPole = function (m) {
+    if (!m || typeof m !== 'object' || !m.v || !['linearni', 'kruhove', 'spiralove', 'krivka'].includes(m.v.typ)) return null;
+    const c = (x, d, a = -1e6, b = 1e6) => typeof x === 'number' && isFinite(x) ? M.omez(x, a, b) : d;
+    const t3 = (x, d) => [0, 1, 2].map(i => c(Array.isArray(x) ? x[i] : undefined, d[i]));
+    const v = m.v, o = { typ: v.typ };
+    if (v.typ === 'linearni') { o.pocet = t3(v.pocet, [1, 1, 1]).map(n => M.omez(Math.round(n), 1, 100)); o.rozestup = t3(v.rozestup, [0, 0, 0]); }
+    else {
+      o.pocet = M.omez(Math.round(c(v.pocet, 2)), 1, 2000);
+      o.natacet = v.natacet !== false;
+      if (v.typ === 'kruhove') o.uhel = c(v.uhel, 360, -3600, 3600);
+      if (v.typ === 'spiralove') { o.uhelKrok = c(v.uhelKrok, 30, -360, 360); o.stoupaniKrok = c(v.stoupaniKrok, 0); o.polomerKrok = c(v.polomerKrok, 0); }
+      if (v.typ !== 'krivka') o.stred = [c((v.stred || [])[0], 0), c((v.stred || [])[1], 0)];
+      if (v.typ === 'krivka') {
+        const cesta = (Array.isArray(v.cesta) ? v.cesta : []).slice(0, 20000).filter(b => Array.isArray(b) && b.length >= 2 && b.every(x => typeof x === 'number' && isFinite(x)))
+          .map(b => b.slice(0, 3).map(x => Math.round(x * 1e6) / 1e6));
+        if (cesta.length < 2) return null;
+        o.cesta = cesta;
+        const r = v.rovina;
+        if (r && ['bod', 'u', 'v', 'normala'].every(k => Array.isArray(r[k]) && r[k].length === 3 && r[k].every(x => typeof x === 'number' && isFinite(x))))
+          o.rovina = { bod: r.bod.slice(), u: r.u.slice(), v: r.v.slice(), normala: r.normala.slice() };
+        o.otevrena = !!v.otevrena; o.naZacatek = v.naZacatek !== false;
+        o.rozestup = Math.max(0, c(v.rozestup, 0)); o.odsazeni = c(v.odsazeni, 0, -1e4, 1e4);
+        o.od = c(v.od, 0, 0, 1); o.do = c(v.do, 1, 0, 1);
+        o.zdroj = v.zdroj === 'skica' ? 'skica' : 'plocha';
+        if (typeof v.skica === 'string' && M.idOk(v.skica)) o.skica = v.skica;
+      }
+    }
+    return { v: o, originalu: M.omez(Math.round(c(m.originalu, 1)), 1, 1000) };
+  };
+  /** Úsek lomené čáry bb (kumulované délky L) mezi vzdálenostmi s0 a s1. */
+  function vyrizniUsek(bb, L, s0, s1) {
+    const bod = s => {
+      let j = 0;
+      while (j < L.length - 2 && L[j + 1] < s) j++;
+      const l = L[j + 1] - L[j], f = l > 0 ? (s - L[j]) / l : 0;
+      return [bb[j][0] + (bb[j + 1][0] - bb[j][0]) * f, bb[j][1] + (bb[j + 1][1] - bb[j][1]) * f];
+    };
+    const out = [bod(s0)];
+    for (let i = 1; i < bb.length - 1; i++) if (L[i] > s0 + 1e-9 && L[i] < s1 - 1e-9) out.push(bb[i]);
+    out.push(bod(s1));
+    return out;
+  }
+  /** Uzavřená křivka odsazená o d (kladné dovnitř). Začátek zůstane u původního začátku, směr oběhu stejný. */
+  function odsadUzavrenou(b2, d) {
+    const CL = globalThis.ClipperLib;
+    if (!CL) return b2;
+    const S2 = 1e4;
+    let cesta = b2.map(([x, y]) => ({ X: Math.round(x * S2), Y: Math.round(y * S2) }));
+    const kladna = CL.Clipper.Area(cesta) > 0;
+    if (!kladna) cesta = cesta.slice().reverse();
+    const co = new CL.ClipperOffset(2, 0.002 * S2);
+    co.AddPath(cesta, CL.JoinType.jtRound, CL.EndType.etClosedPolygon);
+    const res = new CL.Paths();
+    co.Execute(res, -d * S2);
+    if (!res.length) return [];
+    let nej = res[0];
+    for (const x of res) if (Math.abs(CL.Clipper.Area(x)) > Math.abs(CL.Clipper.Area(nej))) nej = x;
+    let out = nej.map(q => [q.X / S2, q.Y / S2]);
+    if ((CL.Clipper.Area(nej) > 0) !== kladna) out.reverse();
+    // začátek u bodu nejbližšího původnímu začátku
+    let k = 0, dmin = Infinity;
+    out.forEach((q, i) => { const dd = Math.hypot(q[0] - b2[0][0], q[1] - b2[0][1]); if (dd < dmin) { dmin = dd; k = i; } });
+    return out.slice(k).concat(out.slice(0, k));
+  }
 
   // ------------------------------------------------------------ reliéf z obrázku a text po kružnici
   /** Uzavřená síť reliéfu z jasu jas[w × h] (0…1, řádky shora dolů): v.sirka (mm, rozměr X), v.vyska (mm reliéfu),

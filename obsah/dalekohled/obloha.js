@@ -48,8 +48,9 @@
       nastavBazi();
       const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, dpr = s.dpr || 1;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      const den = Math.max(0, Math.min(1, (s.hSlunce + 12) / 14));
-      ctx.fillStyle = `rgb(${(8 + 90 * den) | 0},${(12 + 130 * den) | 0},${(28 + 180 * den) | 0})`;
+      const tisk = !!s.tisk;
+      const den = tisk ? 0 : Math.max(0, Math.min(1, (s.hSlunce + 12) / 14));
+      ctx.fillStyle = tisk ? '#fff' : `rgb(${(8 + 90 * den) | 0},${(12 + 130 * den) | 0},${(28 + 180 * den) | 0})`;
       ctx.fillRect(0, 0, W, H);
       const prvky = [];
       const P = v => projekce(D.mxv(st.M, v));
@@ -66,12 +67,12 @@
       };
       ctx.font = `${11 * dpr}px system-ui, sans-serif`;
       // výšková síť
-      ctx.strokeStyle = den > 0.5 ? 'rgba(255,255,255,0.16)' : 'rgba(110,140,190,0.2)'; ctx.lineWidth = dpr;
+      ctx.strokeStyle = tisk ? 'rgba(0,0,0,0.12)' : den > 0.5 ? 'rgba(255,255,255,0.16)' : 'rgba(110,140,190,0.2)'; ctx.lineWidth = dpr;
       for (let alt = 0; alt < 90; alt += 15) { const b = []; for (let az = 0; az <= 360; az += 3) b.push(hVec(alt, az)); cara(b, projekce); }
       for (let az = 0; az < 360; az += 30) { const b = []; for (let alt = 0; alt <= 88; alt += 2) b.push(hVec(alt, az)); cara(b, projekce); }
       // rovníková síť
       if (s.rovnik) {
-        ctx.strokeStyle = 'rgba(90,200,255,0.28)';
+        ctx.strokeStyle = tisk ? 'rgba(0,90,200,0.3)' : 'rgba(90,200,255,0.28)';
         const kd = st.fov > 60 ? 15 : st.fov > 20 ? 5 : st.fov > 6 ? 1 : 0.5, kr = st.fov > 60 ? 15 : st.fov > 20 ? 5 : st.fov > 6 ? 1.25 : 0.25;
         for (let d = -90 + kd; d < 90; d += kd) { const b = []; for (let r = 0; r <= 360; r += 2) b.push(D.v3(r, d)); cara(b, P); }
         for (let r = 0; r < 360; r += kr) { const b = []; for (let d = -88; d <= 88; d += 2) b.push(D.v3(r, d)); cara(b, P); }
@@ -83,12 +84,12 @@
         cara(b, P); ctx.setLineDash([]);
       }
       // souhvězdí
-      ctx.strokeStyle = den > 0.5 ? 'rgba(255,255,255,0.25)' : 'rgba(120,160,230,0.45)';
+      ctx.strokeStyle = tisk ? 'rgba(0,0,0,0.35)' : den > 0.5 ? 'rgba(255,255,255,0.25)' : 'rgba(120,160,230,0.45)';
       for (const sh of DATA.SOUHVEZDI) {
         for (const seg of sh.c) cara(seg.map(([ra, dec]) => D.v3(ra, dec)), P);
         if (st.fov <= 120 && st.fov > 4) {
           const p = P(D.v3(sh.p[0], sh.p[1]));
-          if (p && p[0] > 0 && p[0] < W && p[1] > 0 && p[1] < H) { ctx.fillStyle = 'rgba(140,170,230,0.55)'; ctx.fillText(sh.cz, p[0], p[1]); }
+          if (p && p[0] > 0 && p[0] < W && p[1] > 0 && p[1] < H) { ctx.fillStyle = tisk ? 'rgba(0,0,0,0.45)' : 'rgba(140,170,230,0.55)'; ctx.fillText(sh.cz, p[0], p[1]); }
         }
       }
       // hvězdy (z katalogu do zvolené meze)
@@ -100,17 +101,17 @@
         const v = D.v3(Hh[i], Hh[i + 1]);
         const p = P(v); if (!naPlatne(p)) continue;
         const [cr, cg, cb] = D.barvaBV(Hh[i + 3]);
-        ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+        ctx.fillStyle = tisk ? '#000' : `rgb(${cr},${cg},${cb})`;
         ctx.beginPath(); ctx.arc(p[0], p[1], velikost(m), 0, 2 * Math.PI); ctx.fill();
         const idx = i / 4;
         prvky.push({ x: p[0], y: p[1], id: 'h:' + idx, jmeno: DATA.JMENA[idx] || DATA.JMENA_EN[idx] || DATA.BAYER[idx] || `HR ${DATA.HR[idx]} (${m.toFixed(1)} mag)`, mag: m, v });
         const jm = DATA.JMENA[idx] || (st.fov < 25 ? DATA.BAYER[idx] : null);
-        if (jm && m < 1.8 + (st.fov < 40 ? 2 : 0) + (st.fov < 12 ? 1.5 : 0)) { ctx.fillStyle = 'rgba(255,230,190,0.75)'; ctx.fillText(jm, p[0] + 4 * dpr, p[1] - 4 * dpr); }
+        if (jm && m < 1.8 + (st.fov < 40 ? 2 : 0) + (st.fov < 12 ? 1.5 : 0)) { ctx.fillStyle = tisk ? '#333' : 'rgba(255,230,190,0.75)'; ctx.fillText(jm, p[0] + 4 * dpr, p[1] - 4 * dpr); }
       }
       // slabší generované hvězdy při velkém přiblížení
       if (st.fov < 8) {
         const c = vJ2000(st.stred);
-        ctx.fillStyle = 'rgba(230,230,240,0.85)';
+        ctx.fillStyle = tisk ? '#000' : 'rgba(230,230,240,0.85)';
         for (const h of D.slabeHvezdy(c, st.fov * 0.75, Math.min(mez + 2.5, 11))) {
           const p = P(h); if (!naPlatne(p)) continue;
           ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(0.5, (mez + 2.5 - h[3]) * 0.45) * dpr, 0, 2 * Math.PI); ctx.fill();
@@ -127,8 +128,8 @@
         }
         const p = P(D.v3(o[1], o[2])); if (!naPlatne(p)) continue;
         const r = Math.max(2.5 * dpr, o[5] / 60 / st.fov * W / 2);
-        ctx.strokeStyle = jeM ? 'rgba(255,170,90,0.85)' : o[3] === 'dn' ? 'rgba(160,160,160,0.5)' : 'rgba(255,190,120,0.55)';
-        ctx.fillStyle = jeM ? 'rgba(255,190,120,0.9)' : 'rgba(255,200,150,0.65)';
+        ctx.strokeStyle = tisk ? (jeM ? '#b03000' : '#a05020') : jeM ? 'rgba(255,170,90,0.85)' : o[3] === 'dn' ? 'rgba(160,160,160,0.5)' : 'rgba(255,190,120,0.55)';
+        ctx.fillStyle = tisk ? '#8a2a00' : jeM ? 'rgba(255,190,120,0.9)' : 'rgba(255,200,150,0.65)';
         ctx.beginPath();
         if (o[3] === 'gc') { ctx.arc(p[0], p[1], r, 0, 2 * Math.PI); ctx.moveTo(p[0] - r, p[1]); ctx.lineTo(p[0] + r, p[1]); ctx.moveTo(p[0], p[1] - r); ctx.lineTo(p[0], p[1] + r); }
         else if (o[3] === 'oc' || o[3] === 'pos') { ctx.setLineDash([2 * dpr, 2 * dpr]); ctx.arc(p[0], p[1], r, 0, 2 * Math.PI); }
@@ -144,9 +145,9 @@
       for (const t of s.telesa) {
         const p = P(t.v); if (!naPlatne(p)) continue;
         const r = Math.max((t.klic === 'slunce' || t.klic === 'mesic' ? 5 : 3) * dpr, t.rUhel / 3600 / st.fov * W);
-        ctx.fillStyle = t.klic === 'slunce' ? '#ffe066' : t.klic === 'mesic' ? '#e8e8e0' : t.klic === 'mars' ? '#ff9a6a' : '#fff4d6';
+        ctx.fillStyle = tisk ? '#555' : t.klic === 'slunce' ? '#ffe066' : t.klic === 'mesic' ? '#e8e8e0' : t.klic === 'mars' ? '#ff9a6a' : '#fff4d6';
         ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, 2 * Math.PI); ctx.fill();
-        ctx.fillStyle = '#ffd27a'; ctx.fillText(t.jmeno, p[0] + r + 3, p[1] - 3);
+        ctx.fillStyle = tisk ? '#000' : '#ffd27a'; ctx.fillText(t.jmeno, p[0] + r + 3, p[1] - 3);
         prvky.push({ x: p[0], y: p[1], id: 'p:' + t.klic, jmeno: t.jmeno, v: t.v, priorita: 2 });
       }
       // obzor a zem
@@ -155,13 +156,13 @@
       const dolu = [];
       for (let az = 360; az >= 0; az -= 6) dolu.push(projekce(hVec(-55, (st.stred.az + 180 + az) % 360)));
       if (body.every(Boolean) && dolu.every(Boolean)) {
-        ctx.fillStyle = den > 0.4 ? 'rgba(40,52,30,0.96)' : 'rgba(8,12,8,0.96)';
+        ctx.fillStyle = tisk ? 'rgba(200,200,200,0.5)' : den > 0.4 ? 'rgba(40,52,30,0.96)' : 'rgba(8,12,8,0.96)';
         ctx.beginPath(); body.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
         dolu.forEach(p => ctx.lineTo(p[0], p[1])); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = 'rgba(160,200,120,0.6)'; ctx.lineWidth = 1.5 * dpr;
         ctx.beginPath(); body.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
       }
-      ctx.fillStyle = '#ffcf7a'; ctx.font = `bold ${13 * dpr}px system-ui, sans-serif`; ctx.textAlign = 'center';
+      ctx.fillStyle = tisk ? '#000' : '#ffcf7a'; ctx.font = `bold ${13 * dpr}px system-ui, sans-serif`; ctx.textAlign = 'center';
       for (const [az, t] of [[0, 'S'], [45, 'SV'], [90, 'V'], [135, 'JV'], [180, 'J'], [225, 'JZ'], [270, 'Z'], [315, 'SZ']]) {
         const p = projekce(hVec(1.5, az)); if (p && p[0] > 0 && p[0] < W) ctx.fillText(t, p[0], p[1] - 4 * dpr);
       }
@@ -172,7 +173,7 @@
       if (s.cilV) {
         const p = P(s.cilV);
         if (p) {
-          ctx.strokeStyle = '#7dffb0'; ctx.lineWidth = 2 * dpr;
+          ctx.strokeStyle = tisk ? '#008a3a' : '#7dffb0'; ctx.lineWidth = 2 * dpr;
           const q = 9 * dpr;
           ctx.beginPath();
           for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { ctx.moveTo(p[0] + sx * q, p[1] + sy * q * 0.45); ctx.lineTo(p[0] + sx * q, p[1] + sy * q); ctx.lineTo(p[0] + sx * q * 0.45, p[1] + sy * q); }

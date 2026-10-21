@@ -11,7 +11,7 @@
  *
  * Při vydání nové verze zvyšte VERSION – stará cache se při aktivaci smaže.
  */
-const VERSION = 'v4';
+const VERSION = 'v8';
 const PREFIX = 'forecast-cache-';
 const CACHE_NAME = PREFIX + VERSION;
 
@@ -19,7 +19,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll([
-        './forecast.html', './forecast.webmanifest', './forecast-icon-192.png', './forecast-icon-512.png',
+        './forecast.html', './forecast.webmanifest', './forecast-orp.json', './forecast-icon-192.png', './forecast-icon-512.png',
         '../common.css', '../theme.js', '../podpis.js',
         './lib/chart.min.js', './lib/hammer.min.js', './lib/chartjs-plugin-zoom.min.js',
         './lib/leaflet/leaflet.css', './lib/leaflet/leaflet.js',

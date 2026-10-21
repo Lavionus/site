@@ -414,6 +414,37 @@
       padding-left: 30px;
     }
 
+    /* Ikony z balíku assets/index-icons (místo úvodního emoji názvu) */
+    .ikona {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      border-radius: 5px;
+    }
+    /* záporný okraj: větší ikona nezvětší výšku řádku menu */
+    .sekce a .ikona {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      vertical-align: middle;
+      margin: -6px 10px -6px -4px;
+    }
+    .sekce h2 .titulek {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .sekce h2 .ikona {
+      width: 24px;
+      height: 24px;
+      margin: -4px 0;
+    }
+    #skupinyToggleLabel .ikona {
+      vertical-align: middle;
+      margin: -4px 6px -4px 0;
+    }
+
     .sekce a.active {
       background-color: var(--bg-control);
       border-left-color: var(--accent);
@@ -641,6 +672,7 @@
   </div>
 
   <script src="apps.js"></script>
+  <script src="assets/index-icons/ikony.js"></script>
   <script>
     /* ============================================================
        Rozcestník: menu se generuje z katalogu v apps.js.
@@ -723,13 +755,40 @@
     // hledání bez diakritiky
     const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+    /* ---- Ikony z balíku assets/index-icons ----
+       Ikona nahrazuje úvodní emoji názvu. Co v mapě ikon chybí (nová
+       stránka před přegenerováním balíku), zůstává s emoji jako dřív. */
+    const IKONY = typeof KATALOG_IKONY !== 'undefined' ? KATALOG_IKONY : null;
+    function ikona(cesta) {
+      if (!IKONY || !cesta) return null;
+      const img = document.createElement('img');
+      img.className = 'ikona';
+      img.src = IKONY.koren + cesta + '.webp';
+      img.alt = '';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      return img;
+    }
+    // "🌧️ Předpověď" -> "Předpověď": první slovo se zahodí, když obsahuje znak, který
+    // není písmeno ani číslice (stejně jako symbol ikony určuje tools/generate-index-icons.mjs)
+    function bezEmoji(nazev) {
+      const m = nazev.match(/^(\S+)\s+(.+)$/u);
+      return (m && /[^\p{L}\p{N}]/u.test(m[1])) ? m[2] : nazev;
+    }
+    // obsah prvku: ikona + název bez emoji, nebo původní název s emoji
+    function naplnSIkonou(el, cesta, nazev) {
+      const img = ikona(cesta);
+      if (img) el.append(img, bezEmoji(nazev));
+      else el.textContent = nazev;
+    }
+
     /* ---- Stavba menu z katalogu ---- */
     function vytvorPolozku(p) {
       const li = document.createElement('li');
       const a = document.createElement('a');
       a.href = '#' + p.soubor;               // klik = změna hashe -> hashchange otevře aplikaci
       a.dataset.page = p.soubor;
-      a.textContent = p.nazev;
+      naplnSIkonou(a, IKONY?.stranky[p.soubor], p.nazev);
       a.dataset.hledani = norm(p.nazev + ' ' + (p.tagy || []).join(' '));
       const stav = stavPodleId.get(p.stav);
       if (stav) {
@@ -757,7 +816,8 @@
       div.dataset.skupina = skupina;
       const h2 = document.createElement('h2');
       const span = document.createElement('span');
-      span.textContent = nazev;
+      span.className = 'titulek';
+      naplnSIkonou(span, IKONY?.sekce[nazev], nazev);
       const badge = document.createElement('span');
       badge.className = 'pocet';
       badge.textContent = polozky.length;
@@ -940,7 +1000,10 @@
         p.setAttribute('aria-selected', String(je));
       });
       const aktivni = polozkySkupin.find(p => p.dataset.skupina === aktivniSkupina);
-      if (aktivni) skupinyToggleLabel.textContent = aktivni.dataset.label;
+      if (aktivni) {
+        skupinyToggleLabel.textContent = '';
+        naplnSIkonou(skupinyToggleLabel, IKONY?.skupiny[aktivni.dataset.skupina], aktivni.dataset.label);
+      }
     }
     function makeSkupina(id, label) {
       const b = document.createElement('button');
@@ -948,7 +1011,10 @@
       b.dataset.skupina = id;
       b.dataset.label = label;
       b.setAttribute('role', 'option');
-      b.innerHTML = `<span class="nazev">${label}</span><span class="pill-pocet">${skupinaPocet(id)}</span>`;
+      b.innerHTML = `<span class="nazev"></span><span class="pill-pocet">${skupinaPocet(id)}</span>`;
+      const img = ikona(IKONY?.skupiny[id]);
+      if (img) b.prepend(img);
+      b.querySelector('.nazev').textContent = img ? bezEmoji(label) : label;
       b.addEventListener('click', () => {
         aktivniSkupina = id;
         uloz(localStorage, KEY_SKUPINA, id);

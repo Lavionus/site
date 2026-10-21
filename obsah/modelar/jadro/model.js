@@ -320,6 +320,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const z = {};
     const vz = M.normalizujVzorce ? M.normalizujVzorce(u.vzorce) : null;
     if (vz) z.vzorce = vz;
+    // seskupené pole: parametry pro „Upravit pole“
+    if (u.druh === 'skupina' && u.pole && M.normalizujMetuPole) { const p = M.normalizujMetuPole(u.pole); if (p) z.pole = p; }
     if (u.druh === 'skupina' && M.normalizujPromenne && Array.isArray(u.promenne)) {
       const p = M.normalizujPromenne(u.promenne);
       if (p.length) z.promenne = p;

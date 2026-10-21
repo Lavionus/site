@@ -87,6 +87,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
               + u.promenne.map((p, k) => `<label class="ip"><span class="osa">${esc(p.popis || p.jmeno)}</span><input type="text" class="param-dilu" data-pdil="${k}" spellcheck="false" autocomplete="off" aria-label="Parametr dílu ${esc(p.popis || p.jmeno)}"></label>`).join('')
               + `<p class="dil-tip">Hodnota smí být výraz i s proměnnými projektu.</p></div>`;
           }
+          if (u.pole) {
+            const v = u.pole.v, kusu = v.typ === 'linearni' ? v.pocet[0] * v.pocet[1] * v.pocet[2] : null;
+            const co = { linearni: 'řada / mřížka', kruhove: 'kruh', spiralove: 'spirála', krivka: v.zdroj === 'skica' ? 'podél skici' : 'podél okraje plochy' }[v.typ];
+            const kolik = kusu ? `${kusu} ks` : v.typ === 'krivka' && v.rozestup > 0 ? `rozteč ${M.mm(v.rozestup, 2)} mm` : `${v.pocet} ks`;
+            h += `<div class="skupina"><div class="nadpis">Pole <span class="pozn">(${co}, ${kolik})</span></div>
+              <div class="role"><button type="button" class="tl" id="inspUpravitPole">▦ Upravit pole…</button>
+              <button type="button" class="tl tl-navod" data-navod="pole" title="Názorný návod">❔</button></div></div>`;
+          }
           if (u.occt) {
             const o = u.occt, n = o.operace === 'skorepina' ? (o.plochy.length ? `otevřené plochy: ${o.plochy.length}` : 'uzavřená')
               : o.operace === 'odsazeni' ? (o.hodnota > 0 ? 'zvětšené' : 'zmenšené') : `hrany: ${o.hrany.length}`;
@@ -277,6 +285,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           + (narazi ? ' Pozor: kolem kola není volné místo – protikolo se překrývá s jiným tělesem, posuň ho.' : ''));
       };
       karta.querySelectorAll('[data-operace]').forEach(b => b.onclick = () => M.upravVybrane({ operace: b.dataset.operace }, b.dataset.operace === 'prunik' ? 'Průnik' : 'Sjednocení'));
+      const tlPole = karta.querySelector('#inspUpravitPole');
+      if (tlPole) tlPole.onclick = () => M.upravPole(u.id);
       const tlOcct = karta.querySelector('#inspOcctUpravit');
       if (tlOcct) {
         tlOcct.onclick = () => u.occt.operace === 'odsazeni' ? M.otevriOdsazeni() : M.otevriUpravuHran(u.occt.operace);

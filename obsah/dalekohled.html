@@ -3,25 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔭 Hvězdářský dalekohled – simulátor pozorování</title>
+<title>🔭 Hvězdářský dalekohled – simulátor a plánovač pozorování</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
 <script src="sky_events/astro.js"></script>
 <script src="dalekohled/data.js"></script>
+<script src="dalekohled/ngc.js"></script>
 <script src="dalekohled/jadro.js"></script>
+<script src="dalekohled/katalog.js"></script>
+<script src="dalekohled/vybava.js"></script>
 <script src="dalekohled/telesa.js"></script>
 <script src="dalekohled/okular.js"></script>
 <script src="dalekohled/obloha.js"></script>
 <script src="dalekohled/ui.js" defer></script>
+<script src="dalekohled/hledani.js" defer></script>
+<script src="dalekohled/planovac.js" defer></script>
+<script src="dalekohled/ukazy.js" defer></script>
+<script src="dalekohled/panely.js" defer></script>
+<script src="dalekohled/denik.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:16px 12px 40px}
-h1{font-size:1.5rem;font-weight:600;text-align:center;margin-bottom:4px}
-.sub{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:14px}
-.layout{display:grid;grid-template-columns:minmax(270px,320px) minmax(0,1fr) minmax(280px,360px);gap:14px;align-items:start;max-width:1700px;margin:0 auto}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:0 12px 40px}
+html.nocni{filter:grayscale(1) sepia(1) saturate(9) hue-rotate(-45deg) brightness(.62) contrast(1.1)}
+/* horní lišta */
+.lista{position:sticky;top:0;z-index:20;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 64px 8px 0;margin:0 auto 12px;max-width:1700px;background:var(--bg);border-bottom:1px solid var(--border)}
+.lista h1{font-size:1.15rem;font-weight:650;margin-right:6px;white-space:nowrap}
+.lista .mezera{flex:1 1 auto}
+.hledat{flex:1 1 260px;max-width:460px;min-width:0;white-space:nowrap;overflow:hidden;display:flex;align-items:center;gap:8px;background:var(--bg-input,var(--bg));border:1px solid var(--border-strong);border-radius:7px;padding:7px 10px;color:var(--text-faint);cursor:text;font:inherit;font-size:.88rem;text-align:left}
+.hledat:hover{border-color:var(--accent)}
+.hledat .kbd{margin-left:auto}
+.casovac{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;font-size:.85rem}
+.casovac .cas{min-width:150px;text-align:center;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-elevated)}
+.ikona{background:var(--bg-control,var(--bg));color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:6px 9px;cursor:pointer;font-size:.9rem;font-family:inherit;line-height:1.1}
+.ikona:hover{border-color:var(--accent)}
+.ikona[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.layout{display:grid;grid-template-columns:minmax(270px,320px) minmax(0,1fr) minmax(290px,370px);gap:14px;align-items:start;max-width:1700px;margin:0 auto}
 @media(max-width:1250px){.layout{grid-template-columns:minmax(270px,330px) minmax(0,1fr)}.pravy{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}}
-@media(max-width:820px){.layout{grid-template-columns:minmax(0,1fr)}.stred{order:-1}}
+@media(max-width:820px){.layout{grid-template-columns:minmax(0,1fr)}.stred{order:-1}.lista h1{display:none}.lista{position:static;padding-right:0}.casovac .cas{min-width:0}.ikona{white-space:nowrap}}
 .card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px;margin-bottom:14px;min-width:0}
 .pravy .card{margin-bottom:14px}
 .card h2{font-size:.98rem;font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
@@ -29,16 +50,23 @@ h1{font-size:1.5rem;font-weight:600;text-align:center;margin-bottom:4px}
 label{display:block;font-size:.78rem;color:var(--text-faint);margin:8px 0 3px}
 label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.85rem;margin:7px 0 2px;cursor:pointer}
 label.chk input{width:auto;margin-top:2px;accent-color:var(--accent)}
-input,select{width:100%;background:var(--bg-input,var(--bg));border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:6px 7px;font-size:.9rem;font-family:inherit;min-width:0}
+input,select,textarea{width:100%;background:var(--bg-input,var(--bg));border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:6px 7px;font-size:.9rem;font-family:inherit;min-width:0}
+textarea{resize:vertical;min-height:60px}
 input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--accent)}
-input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
 .r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.r4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media(max-width:600px){.r4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:7px 11px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.84rem;font-family:inherit}
 .btn-sec{background:var(--bg-control,var(--bg));color:var(--text);border:1px solid var(--border-strong)}
+.btn-mini{padding:3px 8px;font-size:.78rem;font-weight:500}
 .btn[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
 .tlacitka{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .tlacitka .btn{flex:1 1 auto}
+.prepinac{display:flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden;margin-top:8px}
+.prepinac button{flex:1;background:var(--bg-control,var(--bg));color:var(--text);border:none;padding:6px 8px;cursor:pointer;font-size:.82rem;font-family:inherit}
+.prepinac button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);font-weight:600}
 .info{font-size:.8rem;color:var(--text-muted,var(--text-faint));line-height:1.5;margin-top:6px}
 .info b{color:var(--text)}
 .varovani{color:var(--warn,#b26a00)} .chyba{color:var(--danger)} .ok{color:var(--ok,#2e7d32)}
@@ -47,10 +75,13 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .okular-obal{position:relative;background:#000;border-radius:var(--radius,8px);border:1px solid var(--border);overflow:hidden;touch-action:none;user-select:none}
 #okular{display:block;width:100%;aspect-ratio:1/1;cursor:grab}
 #okular.tahne{cursor:grabbing}
+#okular.meri{cursor:crosshair}
 .okular-lista{position:absolute;left:8px;right:8px;top:6px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;color:#c9c9c9;font-size:.78rem;text-shadow:0 0 3px #000;font-variant-numeric:tabular-nums}
 .okular-lista span{background:rgba(0,0,0,.45);padding:2px 6px;border-radius:4px}
 .okular-dole{position:absolute;left:8px;right:8px;bottom:6px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;color:#c9c9c9;font-size:.78rem;text-shadow:0 0 3px #000}
 .okular-dole span{background:rgba(0,0,0,.45);padding:2px 6px;border-radius:4px}
+.nastroje-okular{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.nastroje-okular .ikona{font-size:.8rem}
 .ovladac{display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(3,34px);gap:3px}
 .ovladac button{background:var(--bg-control,var(--bg));color:var(--text);border:1px solid var(--border-strong);border-radius:5px;cursor:pointer;font-size:1rem}
 .ovladac button:active{background:var(--accent);color:var(--on-accent,#fff)}
@@ -58,21 +89,53 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .ovl-radek .vpravo{flex:1 1 220px;min-width:0}
 #zprava{margin-top:8px;font-size:.84rem;min-height:1.3em}
 #zprava.nebezpeci{color:#fff;background:#b3261e;border-radius:6px;padding:6px 9px;font-weight:600}
-#mapa{display:block;width:100%;aspect-ratio:1/1;border-radius:6px;cursor:crosshair;background:#0a0e1c}
+#mapa{display:block;width:100%;aspect-ratio:1/1;border-radius:6px;cursor:crosshair;background:#0a0e1c;touch-action:none}
 .udaje{display:grid;grid-template-columns:minmax(0,1fr);gap:1px;font-size:.8rem}
 .udaje div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--border);padding:2px 0;min-width:0}
 .udaje span:first-child{color:var(--text-faint)}
 .udaje span:last-child{font-variant-numeric:tabular-nums;text-align:right}
-.cile{max-height:330px;overflow-y:auto;border:1px solid var(--border);border-radius:6px}
-.cile table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
-.cile td{border-bottom:1px solid var(--border);padding:4px 6px;vertical-align:middle}
-.cile td.r{text-align:right;white-space:nowrap}
-.cile tr{cursor:pointer}
-.cile tr:hover td{background:var(--bg-hover,var(--bg-control))}
-.cile tr.pod td{color:var(--text-faint)}
-.zalozky{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:8px;border-bottom:1px solid var(--border)}
-.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted,var(--text-faint));padding:6px 8px;cursor:pointer;font-size:.82rem;font-family:inherit}
+.udaje .nadpis{border-bottom:none;padding-top:6px}
+.udaje .nadpis span:first-child{color:var(--text);font-weight:600}
+.objekt-nazev{font-size:1.05rem;font-weight:650;margin-bottom:2px}
+.objekt-typ{font-size:.8rem;color:var(--text-faint);margin-bottom:6px}
+/* záložky pracovního panelu */
+.pracovni{max-width:1700px;margin:4px auto 0}
+.zalozky{display:flex;gap:2px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:12px}
+.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted,var(--text-faint));padding:8px 11px;cursor:pointer;font-size:.88rem;font-family:inherit}
 .zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel[hidden]{display:none}
+.panel-mrizka{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:900px){.panel-mrizka{grid-template-columns:minmax(0,1fr)}}
+.tab-obal{overflow:auto;max-height:560px;border:1px solid var(--border);border-radius:6px}
+table.tab{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+table.tab th,table.tab td{border-bottom:1px solid var(--border);padding:4px 6px;text-align:left;vertical-align:middle;white-space:nowrap}
+table.tab th{position:sticky;top:0;background:var(--bg-elevated);color:var(--text-faint);font-weight:500;cursor:pointer;z-index:1}
+table.tab td.r,table.tab th.r{text-align:right}
+table.tab td.zal{white-space:normal;min-width:160px}
+table.tab tbody tr{cursor:pointer}
+table.tab tbody tr:hover td{background:var(--bg-hover,var(--bg-control))}
+table.tab tr.vybrany td{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.pruh{display:block;height:12px;width:144px;border-radius:2px}
+.hvezdicka{background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-faint);padding:0 2px}
+.hvezdicka.zap{color:#e0a63f}
+#grafVysek{display:block;width:100%;height:280px;border:1px solid var(--border);border-radius:6px;background:var(--bg-deep,var(--bg))}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--text-faint);margin-top:4px}
+.legenda i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.kalk{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.vysledek{font-size:.86rem;margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--bg-control,var(--bg));line-height:1.55}
+/* hledání */
+.paleta{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding:8vh 12px}
+.paleta[hidden]{display:none}
+.paleta-okno{width:min(680px,100%);background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.paleta-okno input{border:none;border-bottom:1px solid var(--border);border-radius:0;padding:13px 14px;font-size:1rem;background:transparent}
+.paleta-okno input:focus{outline:none}
+#paletaVysledky{max-height:60vh;overflow:auto}
+.vysl{display:flex;gap:10px;align-items:baseline;padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--border)}
+.vysl b{font-weight:600}
+.vysl span{color:var(--text-faint);font-size:.8rem;margin-left:auto;text-align:right}
+.vysl.akt{background:var(--accent-soft,rgba(106,166,253,.15))}
+.paleta-pata{font-size:.75rem;color:var(--text-faint);padding:6px 14px}
+.kbd{font-family:monospace;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;font-size:.8em}
 .navod{max-width:1100px;margin:6px auto 0;font-size:.9rem;line-height:1.6}
 .navod h2{font-size:1.1rem;margin:18px 0 6px}
 .navod h3{font-size:.95rem;margin:12px 0 4px}
@@ -81,56 +144,64 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .navod details{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 14px;margin-bottom:10px}
 .navod summary{cursor:pointer;font-weight:600}
 .navod code{background:var(--bg-control);padding:0 4px;border-radius:3px}
-.navod table{border-collapse:collapse;font-size:.84rem;margin:6px 0}
-.navod td,.navod th{border-bottom:1px solid var(--border);padding:3px 8px;text-align:left}
-.kbd{font-family:monospace;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:3px;padding:0 4px;font-size:.8em}
+.denik-polozka{border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:.84rem}
+.denik-polozka .hl{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.denik-polozka .meta{color:var(--text-faint);font-size:.78rem}
 </style>
 </head>
 <body>
-<h1>🔭 Hvězdářský dalekohled</h1>
-<p class="sub">Simulace pohledu do okuláru: skutečná obloha pro zvolené místo a čas, optika, seeing, rozlišení i světelné znečištění</p>
+<header class="lista">
+  <h1>🔭 Hvězdářský dalekohled</h1>
+  <button class="hledat" id="btnHledat" aria-label="Hledat objekt">🔍 <span style="overflow:hidden;text-overflow:ellipsis">Hledat: M42, Saturn, Albireo, NGC 7000, 5h35m −5°23′…</span> <span class="kbd">Ctrl K</span></button>
+  <div class="casovac" aria-label="Čas simulace">
+    <button class="ikona" id="btnCasMinus" title="−1 hodina">−1 h</button>
+    <span class="cas" id="lsCasHlavni"></span>
+    <button class="ikona" id="btnCasPlus" title="+1 hodina">+1 h</button>
+    <button class="ikona" id="btnPauza" title="Zastavit / spustit čas (mezerník)">⏸</button>
+    <button class="ikona" id="btnTed" title="Skutečný čas">Teď</button>
+  </div>
+  <span class="mezera"></span>
+  <button class="ikona" id="btnNocni" aria-pressed="false" title="Noční režim – červené světlo nenaruší adaptaci na tmu">🔴 Noc</button>
+  <button class="ikona" id="btnSdilet" title="Zkopírovat odkaz na tento pohled">🔗 Sdílet</button>
+  <button class="ikona" id="btnSnimek" title="Uložit pohled do okuláru jako PNG">📷 PNG</button>
+</header>
 
 <div class="layout">
-  <!-- levý sloupec: nastavení -->
+  <!-- levý sloupec: vybavení a podmínky -->
   <div class="levy">
     <div class="card">
-      <h2>Dalekohled</h2>
+      <h2>Vybavení <small><a href="#" id="odkazVybava">spravovat</a></small></h2>
+      <label for="selDalekohled" style="margin-top:0">Dalekohled</label>
       <select id="selDalekohled"></select>
-      <div id="vlastni" hidden>
-        <div class="r2">
-          <div><label for="inD">Průměr objektivu D (mm)</label><input id="inD" type="number" min="20" max="1000" step="1"></div>
-          <div><label for="inF">Ohnisková vzdálenost F (mm)</label><input id="inF" type="number" min="100" max="10000" step="10"></div>
-        </div>
-        <div class="r2">
-          <div><label for="selTyp">Konstrukce</label>
-            <select id="selTyp"><option value="refraktor">refraktor (čočkový)</option><option value="newton">Newton (zrcadlový)</option><option value="sct">Schmidt-Cassegrain</option><option value="mak">Maksutov</option></select></div>
-          <div><label for="selVada">Barevná korekce</label>
-            <select id="selVada"><option value="achromat">achromát</option><option value="apo">apochromát</option><option value="zadna">zrcadlo (bez vady)</option></select></div>
-        </div>
-        <label for="inObstr">Stínění sekundárním zrcátkem <span class="hodnota" id="vObstr"></span></label>
-        <input id="inObstr" type="range" min="0" max="0.45" step="0.01">
+      <div class="prepinac" role="group" aria-label="Režim">
+        <button id="rezOkular" aria-pressed="true">👁 Okulár</button>
+        <button id="rezKamera" aria-pressed="false">📷 Kamera</button>
       </div>
+      <div id="blokOkular">
+        <div class="r2">
+          <div><label for="selOkular">Okulár</label><select id="selOkular"></select></div>
+          <div><label for="selBarlow">Barlow / reduktor</label><select id="selBarlow"></select></div>
+        </div>
+      </div>
+      <div id="blokKamera" hidden>
+        <label for="selKamera">Kamera</label><select id="selKamera"></select>
+        <div class="r2">
+          <div><label for="selBarlowK">Barlow / reduktor</label><select id="selBarlowK"></select></div>
+          <div><label for="inExpozice">Expozice (s)</label><input id="inExpozice" type="number" min="0.001" max="3600" step="any"></div>
+        </div>
+      </div>
+      <label for="selFiltr">Filtr</label>
+      <select id="selFiltr"></select>
       <div class="r2">
         <div><label for="selMontaz">Montáž</label>
-          <select id="selMontaz"><option value="az">azimutální (Dobson)</option><option value="eq">paralaktická</option></select></div>
+          <select id="selMontaz"><option value="az">azimutální</option><option value="eq">paralaktická</option></select></div>
         <div><label for="selDiag">Zalomení</label>
           <select id="selDiag"><option value="1">s diagonálou</option><option value="0">přímý průhled</option></select></div>
       </div>
-      <label class="chk"><input type="checkbox" id="chkSledovani"> Motorové sledování (kompenzuje otáčení Země)</label>
-    </div>
-
-    <div class="card">
-      <h2>Okulár</h2>
-      <div class="r2">
-        <div><label for="selOkular">Okulár</label><select id="selOkular"></select></div>
-        <div><label for="selBarlow">Barlowova čočka</label>
-          <select id="selBarlow"><option value="1">bez</option><option value="2">2×</option><option value="3">3×</option></select></div>
-      </div>
+      <label class="chk"><input type="checkbox" id="chkSledovani"> Motorové sledování (pointace)</label>
       <label for="inFokus">Zaostření <span class="hodnota" id="vFokus"></span></label>
       <input id="inFokus" type="range" min="-2.5" max="2.5" step="0.01">
-      <div class="tlacitka">
-        <button class="btn btn-sec" id="btnZaostrit" title="Nastaví přesné ohnisko">Zaostřit přesně</button>
-      </div>
+      <div class="tlacitka"><button class="btn btn-sec" id="btnZaostrit">Zaostřit přesně</button></div>
       <div class="udaje" id="optika" style="margin-top:10px"></div>
       <div class="info" id="optikaPozn"></div>
     </div>
@@ -148,30 +219,25 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
       <div class="r2">
         <div><label for="selRychlost">Běh času</label>
           <select id="selRychlost"><option value="0">zastaven</option><option value="1" selected>skutečný (1×)</option><option value="10">10×</option><option value="60">60× (min/s)</option><option value="600">600×</option><option value="3600">3600× (h/s)</option></select></div>
-        <div><label>&nbsp;</label><button class="btn btn-sec" id="btnTed" style="width:100%">Teď</button></div>
+        <div><label>&nbsp;</label><button class="btn btn-sec" id="btnNoc" style="width:100%">Dnes 22:00</button></div>
       </div>
-      <div class="tlacitka">
-        <button class="btn btn-sec" id="btnNoc">Dnes ve 22:00</button>
-        <button class="btn btn-sec" id="btnHodPlus">+1 h</button>
-        <button class="btn btn-sec" id="btnDenPlus">+1 den</button>
-      </div>
+      <div class="tlacitka"><button class="btn btn-sec" id="btnDenMinus">−1 den</button><button class="btn btn-sec" id="btnDenPlus">+1 den</button><button class="btn btn-sec" id="btnTma">Konec soumraku</button></div>
       <div class="info" id="casInfo"></div>
     </div>
 
     <div class="card">
       <h2>Podmínky</h2>
-      <label for="inSeeing">Seeing (neklid ovzduší) <span class="hodnota" id="vSeeing"></span></label>
+      <label for="inSeeing">Seeing (FWHM) <span class="hodnota" id="vSeeing"></span></label>
       <input id="inSeeing" type="range" min="0.5" max="6" step="0.1">
-      <label for="selBortle">Světelné znečištění (Bortleho stupnice)</label>
+      <label for="selBortle">Světelné znečištění (Bortle / SQM)</label>
       <select id="selBortle">
-        <option value="1">1 – výjimečně tmavé místo</option><option value="2">2 – typické tmavé místo</option>
-        <option value="3">3 – venkov</option><option value="4">4 – přechod venkov/předměstí</option>
-        <option value="5">5 – předměstí</option><option value="6">6 – jasné předměstí</option>
-        <option value="7">7 – okraj města</option><option value="8">8 – město</option><option value="9">9 – centrum velkoměsta</option>
+        <option value="1">1 – výjimečně tmavé místo (22,0)</option><option value="2">2 – typické tmavé místo (21,9)</option>
+        <option value="3">3 – venkov (21,7)</option><option value="4">4 – venkov/předměstí (21,3)</option>
+        <option value="5">5 – předměstí (20,6)</option><option value="6">6 – jasné předměstí (19,5)</option>
+        <option value="7">7 – okraj města (18,9)</option><option value="8">8 – město (18,4)</option><option value="9">9 – centrum velkoměsta (17,8)</option>
       </select>
       <label for="selZornice">Zornice oka (po adaptaci na tmu)</label>
       <select id="selZornice"><option value="7">7 mm (do ~25 let)</option><option value="6">6 mm (~40 let)</option><option value="5">5 mm (~60 let)</option></select>
-      <label class="chk"><input type="checkbox" id="chkPopisky" checked> Popisky v okuláru</label>
       <div class="info" id="podminkyInfo"></div>
     </div>
   </div>
@@ -183,54 +249,103 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
       <div class="okular-lista"><span id="lsZvetseni"></span><span id="lsSmer"></span></div>
       <div class="okular-dole"><span id="lsCas"></span><span id="lsObjekt"></span></div>
     </div>
+    <div class="nastroje-okular" role="toolbar" aria-label="Nástroje okuláru">
+      <button class="ikona" id="tPopisky" aria-pressed="true" title="Popisky (L)">🏷 Popisky</button>
+      <button class="ikona" id="tKriz" aria-pressed="false" title="Záměrný kříž (K)">✛ Kříž</button>
+      <button class="ikona" id="tSit" aria-pressed="false" title="Síť rektascenze a deklinace (G)">▦ Síť α/δ</button>
+      <button class="ikona" id="tMereni" aria-pressed="false" title="Měření vzdálenosti a pozičního úhlu (M) – táhněte v okuláru">📏 Měřit</button>
+      <button class="ikona" id="tSipka" aria-pressed="true" title="Šipka k vybranému cíli mimo zorné pole">➚ Šipka k cíli</button>
+      <select id="selLupa" title="Lupa obrazovky – jen zvětší obraz na monitoru (Z)" style="width:auto"><option value="1">lupa 1×</option><option value="1.5">lupa 1,5×</option><option value="2">lupa 2×</option><option value="3">lupa 3×</option><option value="4">lupa 4×</option><option value="6">lupa 6×</option></select>
+    </div>
     <div class="ovl-radek">
       <div class="ovladac" aria-label="Ruční ovladač">
         <span></span><button data-smer="0,-1" title="Nahoru (šipka ↑)">▲</button><span></span>
-        <button data-smer="-1,0" title="Vlevo (šipka ←)">◀</button><button id="btnStred" title="Vycentrovat nejbližší objekt">◎</button><button data-smer="1,0" title="Vpravo (šipka →)">▶</button>
+        <button data-smer="-1,0" title="Vlevo (šipka ←)">◀</button><button id="btnStred" title="Namířit na vybraný cíl">◎</button><button data-smer="1,0" title="Vpravo (šipka →)">▶</button>
         <span></span><button data-smer="0,1" title="Dolů (šipka ↓)">▼</button><span></span>
       </div>
       <div class="vpravo">
         <label for="selPohyb" style="margin-top:0">Rychlost ručního ovladače</label>
-        <div class="r2">
-          <div><select id="selPohyb"><option value="2">2× hvězdná (jemně)</option><option value="16">16×</option><option value="64" selected>64×</option><option value="400">400×</option><option value="2000">2000× (přejezd)</option></select></div>
-          <div><select id="selLupa" title="Jen zvětší obraz na obrazovce – okulár vidíte pod větším úhlem než monitor"><option value="1">lupa obrazovky 1×</option><option value="1.5">lupa 1,5×</option><option value="2">lupa 2×</option><option value="3">lupa 3×</option><option value="4">lupa 4×</option><option value="6">lupa 6×</option></select></div>
-        </div>
-        <div class="info">Obraz lze i táhnout myší nebo prstem. Klávesy: <span class="kbd">←↑→↓</span> pohyb (se <span class="kbd">Shift</span> rychleji), <span class="kbd">+</span>/<span class="kbd">−</span> okulár, <span class="kbd">,</span>/<span class="kbd">.</span> zaostřování, <span class="kbd">L</span> popisky, <span class="kbd">Z</span> lupa obrazovky, <span class="kbd">mezerník</span> zastaví čas.</div>
+        <select id="selPohyb"><option value="2">2× hvězdná (jemně)</option><option value="16">16×</option><option value="64" selected>64×</option><option value="400">400×</option><option value="2000">2000× (přejezd)</option></select>
+        <div class="info">Obraz lze táhnout myší nebo prstem, kolečko mění okulár. Klávesy: <span class="kbd">←↑→↓</span> pohyb (<span class="kbd">Shift</span> rychleji), <span class="kbd">+</span>/<span class="kbd">−</span> okulár, <span class="kbd">,</span>/<span class="kbd">.</span> ostření, <span class="kbd">L</span> popisky, <span class="kbd">K</span> kříž, <span class="kbd">G</span> síť, <span class="kbd">M</span> měření, <span class="kbd">Z</span> lupa, <span class="kbd">N</span> noční režim, <span class="kbd">mezerník</span> čas, <span class="kbd">Ctrl K</span> hledání.</div>
       </div>
     </div>
     <div id="zprava" role="status"></div>
   </div>
 
-  <!-- pravý sloupec: mapa, cíle, informace -->
+  <!-- pravý sloupec -->
   <div class="pravy">
     <div class="card">
-      <h2>Vyhledávací mapa <small>kliknutím namíříte</small></h2>
-      <canvas id="mapa" aria-label="Mapa oblohy kolem směru dalekohledu"></canvas>
+      <h2>Objekt <small id="objektStav"></small></h2>
+      <div id="infoObjekt"></div>
+      <div class="tlacitka">
+        <button class="btn btn-mini" id="btnNamirit">◎ Namířit</button>
+        <button class="btn btn-sec btn-mini" id="btnDoSeznamu">☆ Do seznamu</button>
+        <button class="btn btn-sec btn-mini" id="btnDoDeniku">📓 Zapsat</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Vyhledávací mapa <small>klik = namířit · tah = posun · kolečko = zoom</small></h2>
+      <canvas id="mapa" aria-label="Mapa oblohy"></canvas>
       <div class="r2" style="margin-top:6px">
-        <div><label for="inMapaPole" style="margin-top:0">Pole mapy <span class="hodnota" id="vMapaPole"></span></label><input id="inMapaPole" type="range" min="10" max="180" step="1"></div>
-        <div class="info" id="mapaInfo" style="margin-top:0"></div>
+        <div><label for="inMapaPole" style="margin-top:0">Pole mapy <span class="hodnota" id="vMapaPole"></span></label><input id="inMapaPole" type="range" min="2" max="180" step="1"></div>
+        <div><label for="inMapaMez" style="margin-top:0">Hvězdy do <span class="hodnota" id="vMapaMez"></span></label><input id="inMapaMez" type="range" min="3" max="9" step="0.5"></div>
       </div>
-      <div class="info">Červený kroužek = zorné pole okuláru, větší kříž = hledáček 8×50 (6°).</div>
-    </div>
-    <div class="card">
-      <h2>Co pozorovat <small id="cileNadpis"></small></h2>
-      <div class="zalozky" role="tablist" id="zalozkyCilu">
-        <button role="tab" data-k="planety" aria-selected="true">Planety</button>
-        <button role="tab" data-k="dvojhvezdy" aria-selected="false">Dvojhvězdy</button>
-        <button role="tab" data-k="dso" aria-selected="false">Mlhoviny a kupy</button>
-        <button role="tab" data-k="hvezdy" aria-selected="false">Hvězdy</button>
+      <div class="tlacitka">
+        <button class="ikona" id="mRovnik" aria-pressed="false" title="Síť rektascenze a deklinace">α/δ</button>
+        <button class="ikona" id="mEkliptika" aria-pressed="true" title="Ekliptika">ekliptika</button>
+        <button class="ikona" id="mTelrad" aria-pressed="false" title="Kroužky Telradu 0,5°/2°/4°">Telrad</button>
+        <button class="ikona" id="mOkulary" aria-pressed="false" title="Zorná pole všech okulárů">pole okulárů</button>
+        <button class="ikona" id="mDso" aria-pressed="true" title="Objekty NGC/IC">NGC/IC</button>
+        <button class="ikona" id="mZpet" title="Vrátit mapu na dalekohled">⌖</button>
+        <button class="ikona" id="mPdf" title="Vyhledávací mapka do PDF k tisku">🖨 PDF</button>
       </div>
-      <label class="chk" style="margin-top:0"><input type="checkbox" id="chkJenNad" checked> jen nad obzorem</label>
-      <div class="cile"><table id="tabCile"></table></div>
-    </div>
-    <div class="card">
-      <h2>V zorném poli</h2>
-      <div class="udaje" id="infoObjekt"></div>
     </div>
   </div>
 </div>
 
+<!-- pracovní panel -->
+<section class="pracovni">
+  <div class="zalozky" role="tablist" id="zalozky">
+    <button role="tab" data-p="planovac" aria-selected="true">🗓 Plánovač noci</button>
+    <button role="tab" data-p="seznam" aria-selected="false">☆ Pozorovací seznam</button>
+    <button role="tab" data-p="ukazy" aria-selected="false">🪐 Úkazy a efemeridy</button>
+    <button role="tab" data-p="vybava" aria-selected="false">🧰 Vybavení</button>
+    <button role="tab" data-p="foto" aria-selected="false">📷 Astrofoto</button>
+    <button role="tab" data-p="denik" aria-selected="false">📓 Deník</button>
+    <button role="tab" data-p="kalk" aria-selected="false">🧮 Kalkulačky</button>
+  </div>
+  <div class="panel" id="panel-planovac"></div>
+  <div class="panel" id="panel-seznam" hidden></div>
+  <div class="panel" id="panel-ukazy" hidden></div>
+  <div class="panel" id="panel-vybava" hidden></div>
+  <div class="panel" id="panel-foto" hidden></div>
+  <div class="panel" id="panel-denik" hidden></div>
+  <div class="panel" id="panel-kalk" hidden></div>
+</section>
+
+<div class="paleta" id="paleta" hidden role="dialog" aria-modal="true" aria-label="Hledání objektu">
+  <div class="paleta-okno">
+    <input id="paletaVstup" type="search" placeholder="Název, katalog (M, NGC, IC, HR, HD), Bayer (ε Lyr), souřadnice (5h35m −5°23′ nebo 83.8 −5.4)…" autocomplete="off">
+    <div id="paletaVysledky"></div>
+    <div class="paleta-pata"><span class="kbd">↑↓</span> výběr · <span class="kbd">Enter</span> namířit · <span class="kbd">Esc</span> zavřít · prohledává planety, 8 800 hvězd, Messierův katalog a ~3 900 objektů NGC/IC a dalších</div>
+  </div>
+</div>
+
 <div class="navod">
+  <h2>Jak pracovat s nástrojem</h2>
+  <details open>
+    <summary>Rychlý start</summary>
+    <ul>
+      <li><b>Najděte cíl</b> tlačítkem 🔍 nebo <span class="kbd">Ctrl K</span> – název, katalogové číslo (M 13, NGC 7331, IC 434, HR 7001, HD 172167), Bayerovo označení (ε Lyr, beta Cyg) nebo souřadnice.</li>
+      <li><b>Naplánujte noc</b> v záložce Plánovač: vybere, co je s vaším vybavením vidět, kdy nejlépe, jak vysoko a jak daleko od Měsíce. Hvězdičkou si objekty dáte do Pozorovacího seznamu, který jde seřadit podle času, vytisknout a exportovat.</li>
+      <li><b>Nastavte vlastní vybavení</b> v záložce Vybavení – dalekohledy, okuláry (i s clonou pole), kamery. Záloha do JSON.</li>
+      <li><b>Režim kamery</b> ukáže rámování čipu, měřítko, vzorkování, stopy hvězd bez pointace a barvy mlhovin na snímku.</li>
+      <li><b>V okuláru</b> lze měřit vzdálenosti a poziční úhly (📏, přichytává se k hvězdám), zapnout záměrný kříž s ryskami nebo síť rektascenze a deklinace. Zelená šipka ukazuje směr k vybranému cíli.</li>
+      <li><b>Úkazy</b>: přechody a stíny Jupiterových měsíců, průchody rudé skvrny, konjunkce, efemeridy libovolného objektu do CSV.</li>
+      <li><b>Deník</b> zapisuje pozorování s automaticky vyplněnou výbavou a podmínkami; počítá i odpozorované Messierovy objekty.</li>
+      <li><b>Noční režim</b> 🔴 přebarví stránku do červena, aby nerušila adaptaci oka. <b>Sdílet</b> zkopíruje odkaz na přesně tento pohled (čas, místo, směr, vybavení).</li>
+    </ul>
+  </details>
   <h2>Jak to funguje</h2>
   <details open>
     <summary>Zvětšení, výstupní pupila a zorné pole</summary>
@@ -287,8 +402,8 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
   </ul>
 
   <h2>Zdroje a zjednodušení</h2>
-  <p>Hvězdy do 6,6 mag: Yale Bright Star Catalogue, 5. vyd. (volné dílo), s vlastním pohybem. Čáry souhvězdí a Messierův katalog: <a href="https://github.com/ofrohn/d3-celestial">d3-celestial</a> © Olaf Frohn (BSD-3). Textury Měsíce a planet: <a href="https://www.solarsystemscope.com/textures/">Solar System Scope</a> (CC BY 4.0). Algoritmy: J. Meeus, <i>Astronomical Algorithms</i>; IAU WGCCRE 2015; Mallama a Hilton 2018; Schaefer 1990.</p>
-  <p><b>Zjednodušení:</b> Hvězdy slabší než 6,6 mag nejsou skutečný katalog, ale <b>náhodně generované pole</b> se správnou hustotou podle galaktické šířky (stejné místo ukáže vždy stejné hvězdy). Stejně tak jednotlivé hvězdy kulových a otevřených hvězdokup. Tvary galaxií a mlhovin jsou schematické. Saturnovy měsíce nejsou zobrazeny. Jas oblohy a viditelnost plošných objektů jsou přibližné modely.</p>
+  <p>Hvězdy do 6,6 mag: Yale Bright Star Catalogue, 5. vyd. (volné dílo), s vlastním pohybem. Čáry a hranice souhvězdí, Messierův katalog, ~3 900 objektů NGC/IC/Collinder/Melotte/Sharpless/Barnard a vlastní jména hvězd: <a href="https://github.com/ofrohn/d3-celestial">d3-celestial</a> © Olaf Frohn (BSD-3). Předpověď oblačnosti: <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0). Textury Měsíce a planet: <a href="https://www.solarsystemscope.com/textures/">Solar System Scope</a> (CC BY 4.0). Algoritmy: J. Meeus, <i>Astronomical Algorithms</i>; IAU WGCCRE 2015; Mallama a Hilton 2018; Schaefer 1990.</p>
+  <p><b>Zjednodušení:</b> Hvězdy slabší než 6,6 mag nejsou skutečný katalog, ale <b>náhodně generované pole</b> se správnou hustotou podle galaktické šířky (stejné místo ukáže vždy stejné hvězdy). Stejně tak jednotlivé hvězdy kulových a otevřených hvězdokup. Tvary galaxií a mlhovin jsou schematické. Saturnovy měsíce nejsou zobrazeny. Model mezní velikosti kamery je orientační (nepočítá s konkrétní kvantovou účinností a šumem čipu). Úkazy Galileových měsíců mají přesnost několika minut. Jas oblohy a viditelnost plošných objektů jsou přibližné modely.</p>
 </div>
 </body>
 </html>

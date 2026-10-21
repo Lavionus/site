@@ -22,77 +22,202 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   M.vytvorUpravy = function (S) {
     // ------------------------------------------------------------ pole
     const oknoPole = $('oknoPole');
-    let pole = null;
+    let pole = null, caraKrivky = null;
+    /** Číslo z pole dialogu – smí obsahovat proměnné projektu. */
+    const ctiP = id => M.prectiCislo($(id).value, M.hodnotyPromennych ? M.hodnotyPromennych(M.app.dok) : null);
+    /** Oranžová čára křivky ve scéně (použitý úsek po odstupu a omezení od–do). */
+    function ukazKrivku(body) {
+      if (caraKrivky) { S.scena.remove(caraKrivky); caraKrivky.geometry.dispose(); caraKrivky = null; }
+      if (body && body.length > 1) {
+        const g = new THREE.BufferGeometry().setFromPoints(body);
+        caraKrivky = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xff8c1a, depthTest: false, transparent: true }));
+        caraKrivky.renderOrder = 7;
+        caraKrivky.userData.prekryv = true;
+        S.scena.add(caraKrivky);
+      }
+      M.prekresli();
+    }
+    /** Křivka podle zvoleného zdroje: {cesta, rovina} nebo null. */
+    function krivkaZeZdroje() {
+      if (vybrano(oknoPole, 'poleZdroj') === 'plocha') return pole.plocha;
+      const skica = M.najdiUzel(pole.zaklad, $('poleSkica').value);
+      if (!skica) return null;
+      const q = M.quatUzlu(skica), osa = x => new THREE.Vector3(...x).applyQuaternion(q).toArray();
+      const cesta = M.drahaZeSkici(skica);
+      return cesta.length ? { cesta, rovina: { bod: cesta[0], u: osa([1, 0, 0]), v: osa([0, 1, 0]), normala: osa([0, 0, 1]) } } : null;
+    }
+    function parametryPole() {
+      const typ = vybrano(oknoPole, 'poleTyp');
+      if (typ === 'krivka') {
+        const k = krivkaZeZdroje();
+        if (!k) return { typ, chyba: vybrano(oknoPole, 'poleZdroj') === 'plocha' ? '👆 Klikni na „Vybrat okraj na tělese…“ a pak na rovnou plochu.' : '⚠ V projektu není žádná skica – nakresli křivku (Tvary → Skica, „Ponechat jako skicu“), nebo vezmi okraj plochy.' };
+        const roztec = vybrano(oknoPole, 'poleRozmisteni') === 'roztec';
+        return { typ, cesta: k.cesta, rovina: k.rovina, otevrena: $('poleOtevrena').checked, natacet: $('poleNatacet').checked, naZacatek: $('poleNaZacatek').checked,
+          pocet: M.omez(Math.round(ctiP('polePocet')) || 2, 1, 360), rozestup: roztec ? Math.max(0.1, ctiP('poleRoztec') || 10) : 0,
+          odsazeni: ctiP('poleOdsazeni') || 0, od: M.omez((ctiP('poleOd') || 0) / 100, 0, 1), do: M.omez((isFinite(ctiP('poleDo')) ? ctiP('poleDo') : 100) / 100, 0, 1),
+          zdroj: vybrano(oknoPole, 'poleZdroj'), skica: $('poleSkica').value };
+      }
+      return typ === 'linearni'
+        ? { typ, pocet: [ctiP('poleNx'), ctiP('poleNy'), ctiP('poleNz')].map(n => M.omez(Math.round(n) || 1, 1, 100)), rozestup: [ctiP('poleDx'), ctiP('poleDy'), ctiP('poleDz')].map(x => x || 0) }
+        : { typ, pocet: M.omez(Math.round(ctiP('polePocet')) || 2, 1, 360), uhel: M.omez(isFinite(ctiP('poleUhel')) && ctiP('poleUhel') !== 0 ? ctiP('poleUhel') : 360, -3600, 3600),
+            uhelKrok: M.omez(isFinite(ctiP('poleUhelKrok')) && ctiP('poleUhelKrok') !== 0 ? ctiP('poleUhelKrok') : 30, -360, 360),
+            stoupaniKrok: ctiP('poleStoupani') || 0, polomerKrok: ctiP('polePolomer') || 0, stred: [ctiP('poleSx') || 0, ctiP('poleSy') || 0], natacet: $('poleNatacet').checked };
+    }
+    function bezNahledu(text) {
+      pole.kopie = []; pole.v = null;
+      M.zmenDokument(pole.zaklad, '', { docasne: true });
+      $('poleInfo').textContent = text;
+      $('poleOk').disabled = true;
+    }
     function aktualizujPole() {
       const typ = vybrano(oknoPole, 'poleTyp');
       oknoPole.querySelectorAll('[data-typ]').forEach(el => { el.hidden = !el.dataset.typ.split(' ').includes(typ); });
-      const skica = typ === 'krivka' ? M.najdiUzel(pole.zaklad, $('poleSkica').value) : null;
-      if (typ === 'krivka' && !skica) {
-        pole.kopie = []; M.zmenDokument(pole.zaklad, '', { docasne: true });
-        $('poleInfo').textContent = '⚠ V projektu není žádná skica – nakresli křivku (Tvary → Skica) a pak otevři pole znovu.';
-        $('poleOk').disabled = true; return;
-      }
-      const v = typ === 'krivka'
-        ? { typ, pocet: M.omez(Math.round(cti('polePocet')) || 2, 1, 360), cesta: M.cestaZeSkici(skica), otevrena: $('poleOtevrena').checked, natacet: $('poleNatacet').checked,
-            naZacatek: $('poleNaZacatek').checked }
-        : typ === 'linearni'
-        ? { typ, pocet: [cti('poleNx'), cti('poleNy'), cti('poleNz')].map(n => M.omez(Math.round(n) || 1, 1, 100)), rozestup: [cti('poleDx'), cti('poleDy'), cti('poleDz')].map(x => x || 0) }
-        : { typ, pocet: M.omez(Math.round(cti('polePocet')) || 2, 1, 360), uhel: M.omez(isFinite(cti('poleUhel')) && cti('poleUhel') !== 0 ? cti('poleUhel') : 360, -3600, 3600),
-            uhelKrok: M.omez(isFinite(cti('poleUhelKrok')) && cti('poleUhelKrok') !== 0 ? cti('poleUhelKrok') : 30, -360, 360),
-            stoupaniKrok: cti('poleStoupani') || 0, polomerKrok: cti('polePolomer') || 0, stred: [cti('poleSx') || 0, cti('poleSy') || 0], natacet: $('poleNatacet').checked };
-      if (typ === 'krivka' && v.cesta.length < 2) {
-        pole.kopie = []; M.zmenDokument(pole.zaklad, '', { docasne: true });
-        $('poleInfo').textContent = '⚠ Vybraná skica nemá žádný obrys, podél kterého by šlo kopie rozmístit.';
-        $('poleOk').disabled = true; return;
-      }
-      const kusu = typ === 'linearni' ? v.pocet[0] * v.pocet[1] * v.pocet[2] : v.pocet;
-      if (kusu * pole.ids.length > 2000) {
-        // náhled zpět na původní stav a Vytvořit vypnout (jinak by potvrdil starý náhled)
-        pole.kopie = [];
-        M.zmenDokument(pole.zaklad, '', { docasne: true });
-        $('poleInfo').textContent = '⚠ Víc než 2000 kopií – zmenši počet.';
-        $('poleOk').disabled = true;
-        return;
-      }
+      const zdroj = vybrano(oknoPole, 'poleZdroj'), roztec = vybrano(oknoPole, 'poleRozmisteni') === 'roztec';
+      oknoPole.querySelectorAll('[data-zdroj]').forEach(el => { el.hidden = el.dataset.zdroj !== zdroj; });
+      oknoPole.querySelectorAll('[data-rozm]').forEach(el => { el.hidden = typ !== 'krivka' || !roztec; });
+      $('polePocetRadek').hidden = typ === 'krivka' && roztec;
+      const v = parametryPole();
+      if (v.chyba) { ukazKrivku(null); bezNahledu(v.chyba); return; }
+      const kr = typ === 'krivka' ? M.bodyKrivkyPole(v) : null;
+      if (kr) ukazKrivku(kr.cara);
+      else ukazKrivku(null);
+      if (kr && !kr.body.length) { bezNahledu('⚠ Na křivce nezbylo místo (odstup je větší než plocha, nebo úsek od–do je prázdný).'); return; }
+      const kusu = typ === 'linearni' ? v.pocet[0] * v.pocet[1] * v.pocet[2] : kr ? kr.body.length : v.pocet;
+      if (kusu * pole.ids.length > 2000) { bezNahledu('⚠ Víc než 2000 kopií – zmenši počet (nebo zvětši rozteč).'); return; }
       $('poleOk').disabled = false;
       const r = M.poleUzlu(pole.zaklad, pole.ids, v);
-      pole.kopie = r.kopie;
+      pole.kopie = r.kopie; pole.v = v;
       M.zmenDokument(r.dok, '', { docasne: true });
-      const omezeno = typ === 'linearni' ? [cti('poleNx'), cti('poleNy'), cti('poleNz')].some(n => n > 100) : cti('polePocet') > 360;
-      // skica na svislé / šikmé pracovní rovině: křivka se promítne do vodorovné roviny (kopie zůstanou ve své výšce)
-      const sikma = skica && new THREE.Vector3(0, 0, 1).applyQuaternion(M.quatUzlu(skica)).z < 0.999;
+      const omezeno = typ === 'linearni' ? [ctiP('poleNx'), ctiP('poleNy'), ctiP('poleNz')].some(n => n > 100) : typ !== 'krivka' && ctiP('polePocet') > 360;
       $('poleInfo').textContent = `${M.pocet(r.kopie.length, 'kopie', 'kopie', 'kopií')} (celkem ${M.pocet(kusu, 'prvek', 'prvky', 'prvků')} pole)`
-        + (omezeno ? (typ === 'linearni' ? ' – nejvýš 100 v jedné ose' : ' – nejvýš 360 kusů') : '')
-        + (sikma ? ' ⚠ Skica neleží vodorovně – kopie se rozmístí podle jejího půdorysu.' : '');
+        + (kr ? ` · křivka ${M.mm(kr.delka, 1)} mm, rozteč ${M.mm(kr.roztec, 2)} mm` : '')
+        + (omezeno ? (typ === 'linearni' ? ' – nejvýš 100 v jedné ose' : ' – nejvýš 360 kusů') : '');
+    }
+    /** Okraj rovné plochy pod kliknutím: obrys (vnější nebo otvoru) nejbližší místu kliknutí, ve světě. */
+    function okrajPlochy(zasah) {
+      const u = M.najdiUzel(M.app.dok, zasah.id);
+      const sit = u && S.telesa.svetovaSit(u.id);
+      if (!sit || zasah.trojuhelnik == null) return null;
+      let p;
+      try { p = M.oblastPlochy(sit, zasah.trojuhelnik); } catch (e) { return null; }
+      if (!p.oblast.length) return null;
+      const U = new THREE.Vector3(...p.u), Vv = new THREE.Vector3(...p.v), B = new THREE.Vector3(...p.bod);
+      const d = zasah.bod.clone().sub(B), k = [d.dot(U), d.dot(Vv)];
+      // vzdálenost bodu od obrysu (nejbližší úsek)
+      const vzd = obr => {
+        let m = Infinity;
+        for (let i = 0; i < obr.length; i++) {
+          const a = obr[i], b = obr[(i + 1) % obr.length], ab = [b[0] - a[0], b[1] - a[1]], l2 = ab[0] * ab[0] + ab[1] * ab[1] || 1e-12;
+          const t = M.omez(((k[0] - a[0]) * ab[0] + (k[1] - a[1]) * ab[1]) / l2, 0, 1);
+          m = Math.min(m, Math.hypot(a[0] + t * ab[0] - k[0], a[1] + t * ab[1] - k[1]));
+        }
+        return m;
+      };
+      let obr = p.oblast[0];
+      for (const o of p.oblast) if (vzd(o) < vzd(obr)) obr = o;
+      const dira = obr !== p.oblast[0];
+      const cesta = obr.map(([x, y]) => B.clone().addScaledVector(U, x).addScaledVector(Vv, y).toArray().map(c => Math.round(c * 1e6) / 1e6));
+      // otvor obíhat stejným směrem jako vnější obrys (kladný odstup = dál od materiálu… u otvoru ven z díry)
+      return { cesta, rovina: { bod: p.bod, u: p.u, v: p.v, normala: p.normala }, dira, teleso: u.nazev };
+    }
+    let vybiraPlochu = false;
+    $('poleVybratPlochu').onclick = () => {
+      if (!pole) return;
+      vybiraPlochu = true;
+      ukazKrivku(null);
+      M.zmenDokument(pole.zaklad, '', { docasne: true });
+      oknoPole.close();
+      M.nastavRezim('poleKrivka');
+    };
+    M.klikPoleKrivka = function (zasah) {
+      if (!zasah) return;
+      const k = okrajPlochy(zasah);
+      if (!k) { Dialog.info('Tahle plocha není rovná – klikni na rovnou stěnu (víko, příruba, deska).'); return; }
+      pole.plocha = k;
+      $('polePlochaInfo').textContent = `✓ ${k.dira ? 'Okraj otvoru' : 'Vnější okraj'} plochy tělesa „${k.teleso}“ (${k.cesta.length} bodů). Jiný okraj: klikni na tlačítko znovu.`;
+      vybiraPlochu = false;
+      M.nastavRezim(null);
+      oknoPole.showModal();
+      aktualizujPole();
+    };
+    // Esc nebo jiný nástroj během výběru plochy: zpátky do okna
+    M.na('rezim', r => { if (vybiraPlochu && r !== 'poleKrivka' && pole) { vybiraPlochu = false; oknoPole.showModal(); aktualizujPole(); } });
+
+    /** Hodnoty dialogu z uložených parametrů pole (Upravit pole). */
+    function vyplnPole(v) {
+      const nastav = (id, x) => { if (x != null && isFinite(x)) $(id).value = M.mm(x, 4); };
+      oknoPole.querySelector(`input[name=poleTyp][value=${v.typ}]`).checked = true;
+      if (v.typ === 'linearni') { ['poleNx', 'poleNy', 'poleNz'].forEach((id, i) => nastav(id, v.pocet[i])); ['poleDx', 'poleDy', 'poleDz'].forEach((id, i) => nastav(id, v.rozestup[i])); return; }
+      nastav('polePocet', v.pocet);
+      if (v.natacet != null) $('poleNatacet').checked = v.natacet !== false;
+      if (v.typ === 'kruhove') nastav('poleUhel', v.uhel);
+      if (v.typ === 'spiralove') { nastav('poleUhelKrok', v.uhelKrok); nastav('poleStoupani', v.stoupaniKrok); nastav('polePolomer', v.polomerKrok); }
+      if (v.typ === 'kruhove' || v.typ === 'spiralove') { nastav('poleSx', v.stred[0]); nastav('poleSy', v.stred[1]); }
+      if (v.typ === 'krivka') {
+        const zeSkici = v.zdroj === 'skica' && M.najdiUzel(M.app.dok, v.skica);
+        oknoPole.querySelector(`input[name=poleZdroj][value=${zeSkici ? 'skica' : 'plocha'}]`).checked = true;
+        if (zeSkici) $('poleSkica').value = v.skica;
+        else { pole.plocha = { cesta: v.cesta, rovina: v.rovina }; $('polePlochaInfo').textContent = '✓ Okraj plochy z původního pole. Jiný okraj: klikni na tlačítko.'; }
+        oknoPole.querySelector(`input[name=poleRozmisteni][value=${v.rozestup > 0 ? 'roztec' : 'pocet'}]`).checked = true;
+        if (v.rozestup > 0) nastav('poleRoztec', v.rozestup);
+        nastav('poleOdsazeni', v.odsazeni || 0); nastav('poleOd', (v.od || 0) * 100); nastav('poleDo', (v.do == null ? 1 : v.do) * 100);
+        $('poleOtevrena').checked = !!v.otevrena; $('poleNaZacatek').checked = v.naZacatek !== false;
+      }
+    }
+    function otevriOknoPole(ids, zaklad, v) {
+      const skici = zaklad.uzly.filter(u => u.druh === 'skica');
+      $('poleSkica').innerHTML = skici.map(u => `<option value="${u.id}">${u.nazev.replace(/[<&]/g, '')}</option>`).join('');
+      oknoPole.querySelector('input[name=poleZdroj][value=skica]').disabled = !skici.length;
+      const vybSkica = skici.find(u => ids.includes(u.id));
+      if (vybSkica) { $('poleSkica').value = vybSkica.id; if (ids.length > 1) ids.splice(ids.indexOf(vybSkica.id), 1); }
+      // křivka: vybraná skica, jinak skica v projektu (kdo si ji nakreslil, chce ji použít), jinak okraj plochy
+      oknoPole.querySelector(`input[name=poleZdroj][value=${skici.length ? 'skica' : 'plocha'}]`).checked = true;
+      $('polePlochaInfo').textContent = 'Klikni na rovnou plochu tělesa kousek od okraje, podél kterého chceš kopie – vezme se obrys (vnější i otvoru), který je kliknutí nejblíž.';
+      pole = { ids, zaklad, kopie: [], plocha: null, v: null };
+      if (v) vyplnPole(v);
+      oknoPole.showModal();
+      const prvni = oknoPole.querySelector('input:not([type=radio]):not([hidden])');
+      if (prvni && !v) { prvni.focus(); prvni.select && prvni.select(); }
+      aktualizujPole();
     }
     M.otevriPole = function () {
       const ids = M.vybraneVolne().map(u => u.id);
       if (!ids.length) return;
       const ob = M.obalkaVice(M.vybraneUzly());
       $('poleDx').value = M.mm(ob.max[0] - ob.min[0] + 5, 2); $('poleDy').value = M.mm(ob.max[1] - ob.min[1] + 5, 2); $('poleDz').value = '0';
-      // skici v projektu jako křivky pro pole podél křivky (vybraná skica napřed; vybrané těleso samo křivkou není)
-      const skici = M.app.dok.uzly.filter(u => u.druh === 'skica');
-      $('poleSkica').innerHTML = skici.map(u => `<option value="${u.id}">${u.nazev.replace(/[<&]/g, '')}</option>`).join('');
-      const vybSkica = skici.find(u => ids.includes(u.id));
-      if (vybSkica) { $('poleSkica').value = vybSkica.id; if (ids.length > 1) ids.splice(ids.indexOf(vybSkica.id), 1); }
-      pole = { ids, zaklad: M.zacniUpravu(), kopie: [] };
-      oknoPole.showModal();
-      const prvni = oknoPole.querySelector('input:not([type=radio]):not([hidden])');
-      if (prvni) { prvni.focus(); prvni.select && prvni.select(); }
-      aktualizujPole();
+      otevriOknoPole(ids, M.zacniUpravu(), null);
     };
+    /** Upravit pole: seskupené pole s uloženými parametry se rozloží, kopie zmizí a okno se otevře s původním nastavením. */
+    M.upravPole = function (id) {
+      const g = M.najdiUzel(M.app.dok, id);
+      if (!g || !g.pole || g.zamceno) return;
+      const zaklad0 = M.zacniUpravu();
+      const r = M.rozdelSkupiny(zaklad0, [id]);
+      const n = Math.max(1, Math.min(g.pole.originalu || 1, r.ids.length));
+      const dok = M.odeberUzly(r.dok, r.ids.slice(n));
+      M.zmenDokument(dok, '', { docasne: true });
+      $('poleSeskupit').checked = true;
+      otevriOknoPole(r.ids.slice(0, n), dok, g.pole.v);
+    };
+    // pole podél křivky se seskupí (jde pak upravit v inspektoru); řada a kruh zůstávají jako dřív
+    oknoPole.addEventListener('change', e => { if (e.target.name === 'poleTyp' && e.target.value === 'krivka') $('poleSeskupit').checked = true; });
     oknoPole.addEventListener('input', () => { if (pole) aktualizujPole(); });
     oknoPole.addEventListener('change', () => { if (pole) aktualizujPole(); });
     const zavriPole = ok => {
       if (!pole) return;
       const p = pole; pole = null;
+      ukazKrivku(null);
       oknoPole.close();
       if (!ok) { M.zrusUpravu(); return; }
       let vyber = p.ids.concat(p.kopie);
-      // seskupení je součástí téže úpravy: celé pole = jeden krok Zpět
+      // seskupení je součástí téže úpravy: celé pole = jeden krok Zpět; parametry zůstanou ve skupině (Upravit pole)
       if ($('poleSeskupit').checked && vyber.length > 1) {
         const r = M.seskupUzly(M.app.dok, vyber, { nazev: 'Pole' });
-        if (r.id) { M.zmenDokument(r.dok, '', { docasne: true }); vyber = [r.id]; }
+        if (r.id) {
+          const meta = p.v ? M.normalizujMetuPole({ v: p.v, originalu: p.ids.length }) : null;
+          const dok = meta ? M.upravUzly(r.dok, [r.id], { pole: meta }) : r.dok;
+          M.zmenDokument(dok, '', { docasne: true }); vyber = [r.id];
+        }
       }
       M.nastavVyber(vyber);
       M.dokonciUpravu('Pole');

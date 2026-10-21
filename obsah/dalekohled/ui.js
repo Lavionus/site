@@ -118,7 +118,7 @@
     $('blokOkular').hidden = fr; $('blokKamera').hidden = !fr;
     const tg = { tPopisky: S.popisky, tKriz: S.kriz, tSit: S.sit, tMereni: mereni.zap, tSipka: S.sipka, btnNocni: S.nocni, mRovnik: S.mRovnik, mEkliptika: S.mEkliptika, mTelrad: S.mTelrad, mOkulary: S.mOkulary, mDso: S.mDso };
     for (const [id, v] of Object.entries(tg)) $(id).setAttribute('aria-pressed', String(!!v));
-    document.body.classList.toggle('nocni', !!S.nocni);
+    document.documentElement.classList.toggle('nocni', !!S.nocni);
   }
   function zmenaDalekohledu() {
     const d = dalekohled();
@@ -193,7 +193,7 @@
   // přepínače
   const prepinac = (id, klic, po) => $(id).addEventListener('click', () => { S[klic] = !S[klic]; $(id).setAttribute('aria-pressed', String(S[klic])); uloz(); if (po) po(); });
   prepinac('tPopisky', 'popisky'); prepinac('tKriz', 'kriz'); prepinac('tSit', 'sit'); prepinac('tSipka', 'sipka');
-  prepinac('btnNocni', 'nocni', () => document.body.classList.toggle('nocni', S.nocni));
+  prepinac('btnNocni', 'nocni', () => document.documentElement.classList.toggle('nocni', S.nocni));
   for (const id of ['mRovnik', 'mEkliptika', 'mTelrad', 'mOkulary', 'mDso']) prepinac(id, id, () => { mapaPosl.t = 0; });
   $('tMereni').addEventListener('click', () => { mereni.zap = !mereni.zap; mereni.a = mereni.b = null; $('tMereni').setAttribute('aria-pressed', String(mereni.zap)); cv.classList.toggle('meri', mereni.zap); });
   $('mZpet').addEventListener('click', () => { mapaStred = null; mapaPosl.t = 0; });
@@ -233,6 +233,7 @@
     const o = K.objekt(id);
     if (!o) return;
     S.cil = id; uloz();
+    mereni.a = mereni.b = null;
     if (namirit) {
       const v = K.smer(id, jdTed(), misto());
       namir(v);
@@ -524,10 +525,10 @@
     // lišty
     $('lsZvetseni').textContent = foto
       ? `${kam.n.replace(/\s*\(.*\)/, '')} · ${fmtUhel(o.poleW * 3600)} × ${fmtUhel(o.poleH * 3600)} · ${c1(206.265 * kam.pixel / Fe, 2)}″/px · ${S.expozice} s`
-      : `${Math.round(o.M)}× · pole ${fmtUhel(o.pole * 3600)} · mez ${c1(lm)} mag`;
+      : `${Math.round(o.M)}× · pole ${fmtUhel(o.pole * 3600)} · mez ${c1(lm - filtr.hvezdy)} mag`;
     $('lsSmer').textContent = `výška ${c1(altStred)}° · azimut ${Math.round(S.sledovani ? obz.az : smer.az)}°`;
     $('lsCas').textContent = A.dataZJd(jd).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    $('lsObjekt').textContent = posledni.nejblizsi ? posledni.nejblizsi.jmeno : '';
+    if (!mereni.a) $('lsObjekt').textContent = posledni.nejblizsi ? posledni.nejblizsi.jmeno : '';
     $('lsCasHlavni').textContent = A.dataZJd(jd).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + (S.rychlost === 0 ? ' ⏸' : S.rychlost > 1 ? ' ' + S.rychlost + '×' : '');
     $('btnPauza').textContent = S.rychlost ? '⏸' : '▶';
 
@@ -682,7 +683,7 @@
       radek('Světelnost', 'f/' + c1(o.svetelnost)),
       radek('Rozlišení (Dawes)', c1(o.dawes, 2) + '″'),
       radek('Sběr světla proti oku', Math.round(o.sbirani) + '×'),
-      radek('Mezní hvězdná velikost', c1(lm) + ' mag'),
+      radek('Mezní hvězdná velikost', c1(lm - r.filtr.hvezdy) + ' mag'),
       radek('Rozumné zvětšení', `${Math.round(o.minZvetseni)}–${Math.round(o.maxZvetseni)}×`),
     ].join('');
     const p = [];
@@ -733,7 +734,8 @@
       if (t.P !== undefined && ob.klic !== 'mesic') u.push(radek('Poziční úhel osy / sklon', `${c1(t.P)}° / ${c1(t.De)}°`));
       if (ob.klic === 'saturn') u.push(radek('Sklon prstenců B', c1(t.B) + '°'));
       if (ob.klic === 'jupiter') {
-        const cm2 = (360 - t.cm) % 360, cm1 = (cm2 + 7.6 * 0 + ((877.8169088 - 870.1869088) * (A.utNaJde(jd) - 2451545)) + 23.75) % 360;
+        // Systém I se od Systému II liší jen rychlostí rotace (Meeus kap. 43: ω1 − ω2 = 23,75° + 7,63°·d)
+        const cm2 = (360 - t.cm) % 360, cm1 = (cm2 + 23.75 + 7.63 * (A.utNaJde(jd) - 2451545)) % 360;
         u.push(radek('Centrální poledník II / I', `${c1(cm2)}° / ${c1((cm1 + 360) % 360)}°`));
         const gr = D.pruchodyGRS(jd - 0.05, jd + 0.5, S.grs, m);
         if (gr.length) u.push(radek(`Rudá skvrna (λ ${S.grs}°) přejde`, gr.slice(0, 2).map(fmtCas).join(', ')));

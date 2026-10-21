@@ -5,11 +5,12 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v439';
+const CACHE = PREFIX + 'v470';
 const JADRO = [
   './',
   './index.html',
   './apps.js',
+  './assets/index-icons/ikony.js',
   './common.css',
   './theme.js',
   './podpis.js',
@@ -198,6 +199,7 @@ const MODELAR = [
   './obsah/modelar/ui/inspektor.js',
   './obsah/modelar/ui/knihovna.js',
   './obsah/modelar/ui/napoveda.js',
+  './obsah/modelar/ui/navody.js',
   './obsah/modelar/ui/occt.js',
   './obsah/modelar/ui/prikazy.js',
   './obsah/modelar/ui/projekty.js',

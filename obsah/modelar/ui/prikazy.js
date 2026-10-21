@@ -98,6 +98,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'teleso_dira', nazev: 'Přepnout vybrané Těleso ↔ Díra', klavesy: ['Num8'], povoleno: volne,
         akce: () => { const dira = !M.vybraneVolne().every(u => u.role === 'dira'); M.upravVybrane({ role: dira ? 'dira' : 'teleso' }, dira ? 'Na díru' : 'Na těleso'); } },
       { id: 'panel', nazev: 'Ukázat / skrýt pravý panel (objekty, deska, ovládání)', klavesy: [], povoleno: () => true, akce: () => M.prepniPanel() },
+      { id: 'navody', nazev: 'Názorné návody s obrázky (pole po okraji, zaoblení, skořepina, skica, tažení…)', klavesy: [], povoleno: () => true, akce: () => M.otevriNavod() },
       { id: 'paleta', nazev: 'Paleta příkazů', klavesy: ['Ctrl+K'], povoleno: () => true, akce: () => M.otevriPaletu() },
       { id: 'zarovnat', nazev: 'Zarovnat (puntíky ve scéně)', klavesy: ['L'], povoleno: () => M.app.rezim === 'zarovnani' || (M.vybraneUzly().length > 1 && volne()),
         akce: () => M.prepniZarovnani() },
@@ -344,10 +345,36 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         lista.classList.toggle('dal-vpravo', dal && lista.scrollLeft + lista.clientWidth < lista.scrollWidth - 2);
         lista.classList.toggle('dal-vlevo', dal && lista.scrollLeft > 2);
       };
+      // zhuštění: stupně husta-1…5 na liště, dokud přetéká (nejmenší stupeň, při kterém se vejde)
+      const hlava = lista.closest('.lista');
+      const STUPNU = 5;
+      let sirkaMinule = -1;
+      const zhusti = () => {
+        if (!hlava || hlava.clientWidth === sirkaMinule) return;
+        sirkaMinule = hlava.clientWidth;
+        for (let i = 1; i <= STUPNU; i++) hlava.classList.remove('husta-' + i);
+        for (let i = 1; i <= STUPNU && lista.scrollWidth > lista.clientWidth + 1; i++) hlava.classList.add('husta-' + i);
+      };
+      const prepocti = () => { zhusti(); okraje(); };
       lista.addEventListener('scroll', okraje, { passive: true });
-      window.addEventListener('resize', okraje);
-      if (typeof ResizeObserver === 'function') new ResizeObserver(okraje).observe(lista);
-      okraje();
+      window.addEventListener('resize', prepocti);
+      if (typeof ResizeObserver === 'function') new ResizeObserver(prepocti).observe(hlava || lista);
+      prepocti();
+      // obsah lišty se změnil (načtené ikony, písmo): spočítat znovu, jednou za snímek
+      let plan = 0;
+      const znovu = () => { if (plan) return; plan = requestAnimationFrame(() => { plan = 0; sirkaMinule = -1; prepocti(); }); };
+      lista.addEventListener('load', znovu, true);
+      window.addEventListener('load', znovu);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(znovu);
+      // šipky na okrajích a kolečko myši: posun lišty, když se nevejde
+      lista.querySelectorAll('.lista-sipka').forEach(b => b.addEventListener('click', () => {
+        lista.scrollBy({ left: (b.classList.contains('vlevo') ? -1 : 1) * Math.max(120, lista.clientWidth * 0.6), behavior: 'smooth' });
+      }));
+      lista.addEventListener('wheel', e => {
+        if (lista.scrollWidth <= lista.clientWidth + 1 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+        e.preventDefault();
+        lista.scrollLeft += e.deltaY;
+      }, { passive: false });
       // fokus (Tab) na tlačítko zčásti mimo viditelnou část lišty: dorovnat
       lista.addEventListener('focusin', e => {
         const r = e.target.getBoundingClientRect(), l = lista.getBoundingClientRect();

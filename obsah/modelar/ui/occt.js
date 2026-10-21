@@ -314,6 +314,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const op = ed.op;
       $('occtHodnotaPopis').textContent = HODNOTA[op];
       $('occtNadpis').textContent = { zaobleni: '◠ ', srazeni: '◿ ', skorepina: '▢ ' }[op] + POPIS[op];
+      $('occtNavod').dataset.navod = op === 'skorepina' ? 'skorepina' : 'hrany';
       $('occtVyberHran').hidden = op === 'skorepina';
       $('occtVyberPloch').hidden = op !== 'skorepina';
       $('occtUzavrena').setAttribute('aria-pressed', ed.uzavrena ? 'true' : 'false');
