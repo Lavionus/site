@@ -1397,10 +1397,10 @@
     }
 
     /* === MINIMAPKA POLOHY (malá, statická) === */
-    .loc-minimap-wrap { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+    .loc-minimap-wrap { gap: 12px; padding: 12px 14px; border-left-color: #ff5b4f; order: -1; }
     .loc-minimap-wrap[hidden] { display: none; }
     .loc-minimap {
-      flex: none; width: 150px; position: relative; overflow: hidden;
+      flex: none; width: 120px; position: relative; overflow: hidden;
       border-radius: 8px; background: rgba(120, 160, 220, .10);
     }
     .loc-minimap svg { display: block; width: 100%; height: auto; max-height: 90px; }
@@ -1473,6 +1473,9 @@
     .radar-motion[hidden] { display: none; }
     .radar-motion-icon { font-size: 1.3rem; line-height: 1.2; }
     .radar-motion-meta { margin-top: 4px; font-size: 0.78rem; color: var(--text-faint); }
+    .radar-motion-legend { margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
+    .radar-motion-legend[hidden] { display: none; }
+    .radar-motion-legend-key { color: #f59e0b; font-weight: 700; white-space: nowrap; margin-right: 4px; }
     .radar-motion-arrow div {
       width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
       color: #f59e0b; font-size: 22px; text-shadow: 0 0 3px #000, 0 0 6px #000;
@@ -1912,15 +1915,6 @@
         <div class="recent-locations-bar" id="recentLocationsBar">
           <span class="recent-locations-label">Nedávné:</span>
         </div>
-        <!-- Minimapka: kde přesně vybraná poloha leží (statické SVG jako v Dveřích do světa) -->
-        <div class="loc-minimap-wrap" id="locMinimapWrap" hidden>
-          <div class="loc-minimap" id="locMinimap" aria-hidden="true"></div>
-          <div class="loc-minimap-info">
-            <span class="loc-minimap-name" id="locMinimapName"></span>
-            <span class="loc-minimap-coords" id="locMinimapCoords"></span>
-            <a id="locMinimapLink" href="#" target="_blank" rel="noopener">Ukázat na Mapy.cz ↗</a>
-          </div>
-        </div>
       </div>
       
 
@@ -1943,6 +1937,16 @@
 
       <!-- Panel aktuálních podmínek: riziko bouřek + UV index -->
       <div class="conditions-panel" id="conditionsPanel" style="display: none;">
+        <!-- Minimapka: kde přesně vybraná poloha leží – vždy první karta (vlevo nahoře) -->
+        <div class="condition-card loc-minimap-wrap" id="locMinimapWrap" hidden>
+          <div class="loc-minimap" id="locMinimap" aria-hidden="true"></div>
+          <div class="loc-minimap-info">
+            <div class="condition-label">Poloha</div>
+            <span class="loc-minimap-name" id="locMinimapName"></span>
+            <span class="loc-minimap-coords" id="locMinimapCoords"></span>
+            <a id="locMinimapLink" href="#" target="_blank" rel="noopener">Ukázat na Mapy.cz ↗</a>
+          </div>
+        </div>
         <div class="condition-card" id="nowCard">
           <div class="condition-icon" id="nowIcon">🌡️</div>
           <div class="condition-body">
@@ -2200,6 +2204,9 @@
           <div>
             <div class="radar-motion-text"></div>
             <div class="radar-motion-meta"></div>
+            <div class="radar-motion-legend" hidden><span class="radar-motion-legend-key">- - ➤</span>
+              Oranžová šipka na mapě ukazuje směr posunu srážek: čárkovaná stopa vede z místa, kde byly srážky
+              před hodinou, k vybranému místu (červený křížek <span style="color:#ff5b4f">✚</span>).</div>
           </div>
         </div>
 
@@ -8448,7 +8455,9 @@
       if (!box) return;
       const text = box.querySelector('.radar-motion-text');
       const meta = box.querySelector('.radar-motion-meta');
+      const legend = box.querySelector('.radar-motion-legend');
       box.hidden = false;
+      legend.hidden = true;
       radarMotionClearLayers();
       if (!res || res.error) {
         text.textContent = res && res.error === 'tiles' ? 'Výhled se nepodařilo spočítat – chybí radarové snímky.'
@@ -8496,12 +8505,16 @@
         const p = crs.latLngToPoint(L.latLng(loc.lat, loc.lon), RADAR_MOTION_ZOOM);
         const from = crs.pointToLatLng(L.point(p.x - res.vx * 60, p.y - res.vy * 60), RADAR_MOTION_ZOOM);
         const line = L.polyline([from, [loc.lat, loc.lon]], { color: '#f59e0b', weight: 3, dashArray: '6 6', interactive: false });
+        // hrot šipky odsadit po stopě proti směru pohybu, ať nezakrývá křížek polohy
+        const b = res.bearingTo * Math.PI / 180, OFF = 24;
         const arrow = L.marker([loc.lat, loc.lon], {
           interactive: false, keyboard: false,
-          icon: L.divIcon({ className: 'radar-motion-arrow', iconSize: [28, 28], iconAnchor: [14, 14],
+          icon: L.divIcon({ className: 'radar-motion-arrow', iconSize: [28, 28],
+                            iconAnchor: [14 + OFF * Math.sin(b), 14 - OFF * Math.cos(b)],
                             html: `<div style="transform: rotate(${res.bearingTo}deg)">➤</div>` })
         });
         radarMotionLayers = [line.addTo(radarMap), arrow.addTo(radarMap)];
+        legend.hidden = false;
       }
     }
 

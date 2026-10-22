@@ -9,6 +9,8 @@
 <script src="../podpis.js" defer></script>
 <script src="../dialog.js"></script>
 <script src="nahnoji_videa.js"></script>
+<script src="nahnoji_serialy.js"></script>
+<script src="nahnoji_stav.js"></script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -19,7 +21,7 @@
   }
   .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px 40px; }
   h1 { font-size: 1.7rem; margin: 0 0 6px; }
-  .podnadpis { color: var(--text-muted); margin: 0 0 18px; }
+  .podnadpis { color: var(--text-muted); margin: 0 0 14px; }
   .podnadpis a { color: var(--accent); }
 
   button, select, input, textarea { font: inherit; color: inherit; }
@@ -32,6 +34,7 @@
     white-space: nowrap;
   }
   button:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+  button:disabled { opacity: .45; cursor: default; }
   button.hlavni { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
   button.hlavni:hover { background: var(--accent-hover); }
   input[type=search], select, textarea {
@@ -41,15 +44,67 @@
     padding: 7px 10px;
   }
 
+  /* ── menu: všechna videa / seriály ── */
+  .menu {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .menu button {
+    border: 1px solid transparent; border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    background: transparent;
+    padding: 8px 14px;
+    margin-bottom: -1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .menu button:hover { background: var(--bg-hover); border-color: transparent; }
+  .menu button.aktivni {
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .menu .pocitadlo { font-size: .8rem; color: var(--text-faint); font-weight: 400; }
+
   /* ── ovládací lišta ── */
   .lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
   .lista input[type=search] { flex: 1 1 220px; min-width: 0; }
   .stitky { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .stitky:empty { display: none; }
   .stitky button { border-radius: 999px; padding: 4px 12px; font-size: 0.9rem; }
   .stitky button.aktivni { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .stitky .nadpis-rad { color: var(--text-faint); font-size: .85rem; align-self: center; margin-right: 2px; }
+  .stitky button.cela { border-color: var(--accent); }
   .pocet { color: var(--text-faint); font-size: 0.9rem; margin-left: auto; }
 
+  /* ── hlavička seriálu ── */
+  .serial-hlava {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: center;
+  }
+  .serial-hlava .ikona-serialu { font-size: 2.6rem; line-height: 1; }
+  .serial-hlava .texty { flex: 1 1 260px; min-width: 0; }
+  .serial-hlava h2 { margin: 0 0 4px; font-size: 1.35rem; }
+  .serial-hlava p { margin: 0 0 8px; color: var(--text-muted); }
+  .postup { display: flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--text-muted); }
+  .postup .pruh { flex: 0 1 220px; height: 8px; border-radius: 4px; background: var(--bg-panel); overflow: hidden; border: 1px solid var(--border); }
+  .postup .pruh span { display: block; height: 100%; background: var(--accent); }
+  .serial-hlava .tlacitka { flex: 0 1 auto; }
+  .serial-hlava .zdroj { font-size: .8rem; color: var(--text-faint); margin-top: 6px; }
+  .serial-hlava .zdroj a { color: var(--text-muted); }
+
   /* ── mřížka karet ── */
+  .rada-nadpis {
+    display: flex; align-items: baseline; gap: 10px;
+    margin: 20px 0 10px; font-size: 1.1rem;
+  }
+  .rada-nadpis:first-child { margin-top: 0; }
+  .rada-nadpis small { color: var(--text-faint); font-weight: 400; font-size: .85rem; }
   .mrizka {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -67,6 +122,7 @@
     transition: transform .12s, border-color .12s;
   }
   .karta:hover, .karta:focus-visible { border-color: var(--accent); transform: translateY(-2px); background: var(--bg-elevated); }
+  .karta.dalsi { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .plakat {
     aspect-ratio: 16 / 9;
     display: grid; place-items: center;
@@ -79,14 +135,18 @@
     display: grid; place-items: center;
     font-size: 22px; padding-left: 4px;
   }
-  .plakat .cislo {
-    position: absolute; right: 8px; bottom: 6px;
-    font-size: .78rem; background: rgba(0,0,0,.45); padding: 1px 7px; border-radius: 4px;
+  .plakat .velka-ikona { font-size: 54px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+  .plakat .stitek-roh {
+    position: absolute;
+    font-size: .78rem; background: rgba(0,0,0,.55); padding: 1px 7px; border-radius: 4px;
   }
-  .plakat .mistni {
-    position: absolute; left: 8px; top: 6px;
-    font-size: .72rem; background: rgba(0,0,0,.45); padding: 1px 7px; border-radius: 4px;
-  }
+  .plakat .cislo { right: 8px; bottom: 6px; }
+  .plakat .epizoda { left: 8px; bottom: 6px; font-weight: 700; font-size: .85rem; }
+  .plakat .mistni { left: 8px; top: 6px; font-size: .72rem; }
+  .plakat .videno { right: 8px; top: 6px; background: rgba(20,120,60,.85); }
+  .plakat .nezprac { right: 8px; top: 6px; background: rgba(170,90,0,.9); }
+  .plakat .pristi { left: 8px; top: 6px; background: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .karta.zhlednuto .plakat { filter: saturate(.35) brightness(.8); }
   .popisek { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .popisek .nazev { font-weight: 600; overflow-wrap: anywhere; }
   .popisek .meta { color: var(--text-faint); font-size: .85rem; }
@@ -105,10 +165,10 @@
   /* ── přehrávač ── */
   .prekryv {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,.72);
+    background: rgba(0,0,0,.78);
     display: none;
     align-items: center; justify-content: center;
-    padding: 16px;
+    padding: 12px;
     z-index: 50;
   }
   .prekryv.otevreno { display: flex; }
@@ -117,21 +177,62 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    width: min(960px, 100%);
+    width: min(1280px, 100%);
     max-height: 100%;
     overflow: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
   }
+  .okno.s-dily { grid-template-columns: minmax(0, 1fr) 290px; }
+  .hlavni-sloupec { min-width: 0; display: flex; flex-direction: column; }
   .okno-hlava { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
-  .okno-hlava h2 { margin: 0; font-size: 1.1rem; flex: 1; min-width: 0; overflow-wrap: anywhere; }
-  .platno { aspect-ratio: 4 / 3; max-height: 70vh; width: 100%; background: #000; display: grid; place-items: center; }
+  .okno-hlava .tituly { flex: 1; min-width: 0; }
+  .okno-hlava .nad { color: var(--text-faint); font-size: .85rem; }
+  .okno-hlava h2 { margin: 0; font-size: 1.15rem; overflow-wrap: anywhere; }
+  .platno { aspect-ratio: 16 / 9; max-height: calc(100vh - 190px); width: 100%; background: #000; display: grid; place-items: center; }
   .platno iframe { width: 100%; height: 100%; border: 0; display: block; }
-  .blokovano { padding: 24px; text-align: center; color: #ddd; max-width: 520px; }
+  .blokovano { padding: 24px; text-align: center; color: #ddd; max-width: 540px; }
   .blokovano p { margin: 0 0 14px; line-height: 1.45; }
   .blokovano .tlacitka { justify-content: center; }
+  .blokovano h3 { margin: 0 0 10px; color: #ffc46b; font-size: 1.1rem; }
   .okno-pata { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; align-items: center; }
   .tlacitka { display: flex; flex-wrap: wrap; gap: 8px; }
   .okno-pata .vpravo { margin-left: auto; }
   .okno-pata .info { color: var(--text-faint); font-size: .85rem; width: 100%; }
+  #btnVideno.ano { background: rgba(20,120,60,.18); border-color: #2e9d5b; }
+  .klavesy { color: var(--text-faint); font-size: .8rem; }
+  .klavesy kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-family: inherit; font-size: .78rem; }
+
+  /* Seznam dílů vedle videa */
+  .dily { border-left: 1px solid var(--border); display: none; flex-direction: column; min-height: 0; max-height: calc(100vh - 26px); }
+  .okno.s-dily .dily { display: flex; }
+  .dily-hlava { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+  .dily-hlava strong { flex: 1; }
+  .dily-hlava select { padding: 4px 6px; }
+  .dily-seznam { overflow: auto; flex: 1; padding: 4px 0; }
+  .dily-seznam .rada { padding: 8px 12px 4px; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-faint); }
+  .dil {
+    display: flex; gap: 8px; align-items: baseline;
+    width: 100%; text-align: left; white-space: normal;
+    border: 0; border-radius: 0; background: transparent;
+    padding: 6px 12px;
+  }
+  .dil:hover { background: var(--bg-hover); }
+  .dil .c { color: var(--text-faint); font-variant-numeric: tabular-nums; min-width: 2.6em; font-size: .85rem; }
+  .dil .n { flex: 1; }
+  .dil .v { color: #2e9d5b; }
+  .dil .v.pozor { color: #d88a1c; }
+  .dil.zhlednuto .n { color: var(--text-muted); }
+  .dil.aktualni { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+  .dil.aktualni .n { color: var(--accent); font-weight: 600; }
+
+  /* Celá obrazovka – video přes celou plochu, ovládání zůstane dole */
+  .okno:fullscreen { width: 100%; max-height: none; border-radius: 0; border: 0; background: #000; }
+  .okno:fullscreen .hlavni-sloupec { height: 100vh; }
+  .okno:fullscreen .platno { flex: 1; aspect-ratio: auto; max-height: none; }
+  .okno:fullscreen .okno-hlava, .okno:fullscreen .okno-pata { background: var(--bg-panel); }
+  .okno:fullscreen .okno-pata .info, .okno:fullscreen .klavesy { display: none; }
+  .okno:fullscreen .dily { max-height: 100vh; background: var(--bg-panel); }
 
   /* ── přidání videí ── */
   .panel {
@@ -147,10 +248,20 @@
   .napoveda { color: var(--text-muted); font-size: .9rem; margin: 0 0 10px; line-height: 1.45; }
   .panel .tlacitka { margin-top: 10px; }
 
+  @media (max-width: 900px) {
+    .okno.s-dily { grid-template-columns: minmax(0, 1fr); }
+    .dily { border-left: 0; border-top: 1px solid var(--border); max-height: 40vh; }
+    .klavesy { display: none; }
+  }
   @media (max-width: 520px) {
     h1 { font-size: 1.4rem; }
+    .container { padding-top: 16px; }
     .mrizka { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
     .okno-pata .vpravo { margin-left: 0; }
+    .prekryv { padding: 0; }
+    .okno { border-radius: 0; border: 0; height: 100%; }
+    .menu { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+    .menu button { padding: 7px 10px; flex: 0 0 auto; }
   }
 </style>
 </head>
@@ -158,6 +269,8 @@
 <div class="container">
   <h1>📼 Videotéka Nahnoji.cz</h1>
   <p class="podnadpis">Prohlížeč videí nahraných na <a href="http://nahnoji.cz/" target="_blank" rel="noopener">nahnoji.cz</a>.</p>
+
+  <nav class="menu" id="menu" aria-label="Seriály a sbírky"></nav>
 
   <div class="lista">
     <input type="search" id="hledat" placeholder="Hledat podle názvu, štítku nebo čísla…" autocomplete="off">
@@ -174,6 +287,7 @@
     <p class="napoveda">
       Vlož obsah souboru <code>nahnoji_odkazy.tsv</code> z nahrávače, nebo prostě odkazy na videa – každý na samostatný řádek.
       Před odkaz můžeš napsat název a oddělit ho svislítkem: <code>Dovolená 2026 | http://nahnoji.cz/video?id=21400&amp;s=wide</code>.
+      Soubory pojmenované <code>Serial_1_2-Nazev_dilu.mp4</code> se samy zařadí jako 1. řada, 2. díl seriálu.
       Přidaná videa se uloží jen v tomto prohlížeči; pro všechny návštěvníky je zkopíruj do souboru <code>obsah/nahnoji_videa.js</code>.
     </p>
     <textarea id="vstup" spellcheck="false" placeholder="http://nahnoji.cz/video?id=…"></textarea>
@@ -185,29 +299,48 @@
     </div>
   </div>
 
+  <div id="serialHlava"></div>
   <div class="stitky" id="stitky"></div>
-  <div class="mrizka" id="mrizka"></div>
+  <div id="obsah"></div>
 </div>
 
 <div class="prekryv" id="prekryv" role="dialog" aria-modal="true" aria-labelledby="prehNazev">
-  <div class="okno">
-    <div class="okno-hlava">
-      <h2 id="prehNazev"></h2>
-      <button id="btnZavrit" title="Zavřít (Esc)">✕</button>
-    </div>
-    <div class="platno" id="platno"></div>
-    <div class="okno-pata">
-      <div class="tlacitka">
-        <button id="btnPredchozi" title="Předchozí video (←)">◀ Předchozí</button>
-        <button id="btnDalsi" title="Další video (→)">Další ▶</button>
+  <div class="okno" id="okno">
+    <div class="hlavni-sloupec">
+      <div class="okno-hlava">
+        <div class="tituly">
+          <div class="nad" id="prehNad"></div>
+          <h2 id="prehNazev"></h2>
+        </div>
+        <button id="btnZavrit" title="Zavřít (Esc)">✕</button>
       </div>
-      <div class="tlacitka vpravo">
-        <button id="btnOkno">Otevřít v okně</button>
-        <button id="btnKopirovat">Kopírovat odkaz</button>
-        <button id="btnNaWebu">Na nahnoji.cz ↗</button>
+      <div class="platno" id="platno"></div>
+      <div class="okno-pata">
+        <div class="tlacitka">
+          <button id="btnPredchozi" title="Předchozí (← nebo P)">◀ Předchozí</button>
+          <button id="btnDalsi" class="hlavni" title="Další (→ nebo N)">Další ▶</button>
+          <button id="btnVideno" title="Označit jako zhlédnuté (M)">☐ Zhlédnuto</button>
+        </div>
+        <div class="tlacitka vpravo">
+          <button id="btnCela" title="Celá obrazovka i s ovládáním (F)">⛶ Celá obrazovka</button>
+          <button id="btnOkno">Otevřít v okně</button>
+          <button id="btnKopirovat">Kopírovat odkaz</button>
+          <button id="btnNaWebu">Na nahnoji.cz ↗</button>
+        </div>
+        <div class="info">
+          <span id="prehInfo"></span>
+          <span class="klavesy"> · <kbd>←</kbd><kbd>→</kbd> díly · <kbd>M</kbd> zhlédnuto · <kbd>F</kbd> celá obrazovka · <kbd>Esc</kbd> zavřít
+            (po kliknutí do videa klávesy chytá přehrávač – stačí kliknout vedle)</span>
+        </div>
       </div>
-      <div class="info" id="prehInfo"></div>
     </div>
+    <aside class="dily" id="dily">
+      <div class="dily-hlava">
+        <strong id="dilyNazev">Díly</strong>
+        <select id="dilyRada" title="Přejít na řadu"></select>
+      </div>
+      <div class="dily-seznam" id="dilySeznam"></div>
+    </aside>
   </div>
 </div>
 
@@ -217,6 +350,7 @@
 
   const ZDROJ = 'http://nahnoji.cz';
   const KLIC = 'webapp_nahnoji_vlastni';
+  const KLIC_DIVANI = 'webapp_nahnoji_divani';
   // Nahnoji.cz běží jen přes http. Stránka z https (GitHub Pages) nesmí
   // vložit http rámec ani video – prohlížeč je zablokuje jako „mixed content".
   // Nové okno (navigace nejvyšší úrovně) blokované není. ?okno vynutí
@@ -224,35 +358,85 @@
   const LZE_VLOZIT = location.protocol !== 'https:' && !/[?&]okno\b/.test(location.search);
 
   const $ = id => document.getElementById(id);
-  const stav = { hledat: '', razeni: 'nove', stitek: '', zobrazena: [], aktualni: -1 };
+  // pohled: '' = všechna videa, 's:<název seriálu>', 'ostatni' = videa mimo seriály
+  const stav = { pohled: '', hledat: '', razeni: 'nove', stitek: '', rada: -1, zobrazena: [], fronta: [], aktualni: -1 };
+  let oknoPrehr = null;   // vyskakovací přehrávač v https režimu
 
   const odkazVidea = id => `${ZDROJ}/video?id=${id}&s=wide`;
   const odkazEmbed = id => `${ZDROJ}/embed?id=${id}`;
 
   // ── data ──────────────────────────────────────────────────────────────────
 
-  function nactiMistni() {
-    try { return JSON.parse(localStorage.getItem(KLIC)) || []; } catch (e) { return []; }
+  function nactiJson(klic, vychozi) {
+    try { return JSON.parse(localStorage.getItem(klic)) || vychozi; } catch (e) { return vychozi; }
   }
-  function ulozMistni(seznam) {
-    try { localStorage.setItem(KLIC, JSON.stringify(seznam)); } catch (e) { Dialog.chyba('Nelze uložit do prohlížeče'); }
+  function ulozJson(klic, data) {
+    try { localStorage.setItem(klic, JSON.stringify(data)); } catch (e) { Dialog.chyba('Nelze uložit do prohlížeče'); }
+  }
+  const nactiMistni = () => nactiJson(KLIC, []);
+  const ulozMistni = seznam => ulozJson(KLIC, seznam);
+
+  // Co už kdo viděl: { zhlednuto: {id: 1}, posledni: {serial: id} } – jen v tomto prohlížeči.
+  const divani = nactiJson(KLIC_DIVANI, {});
+  divani.zhlednuto = divani.zhlednuto || {};
+  divani.posledni = divani.posledni || {};
+  const ulozDivani = () => ulozJson(KLIC_DIVANI, divani);
+  const jeVideno = v => !!divani.zhlednuto[v.id];
+  function nastavVideno(v, ano) {
+    if (ano) divani.zhlednuto[v.id] = 1; else delete divani.zhlednuto[v.id];
+    ulozDivani();
   }
 
   function vsechnaVidea() {
     const mapa = new Map();
-    for (const v of (window.NAHNOJI_VIDEA || [])) {
+    const pridej = (v, mistni) => {
       const id = parseInt(v.id, 10);
-      if (id) mapa.set(id, Object.assign({}, v, { id, mistni: false }));
-    }
-    for (const v of nactiMistni()) {
-      if (!mapa.has(v.id)) mapa.set(v.id, Object.assign({}, v, { mistni: true }));
-    }
+      if (!id || mapa.has(id)) return;
+      const z = Object.assign({}, v, { id, mistni });
+      if (z.serial) { z.rada = parseInt(z.rada, 10) || 1; z.dil = parseInt(z.dil, 10) || 0; }
+      mapa.set(id, z);
+    };
+    (window.NAHNOJI_VIDEA || []).forEach(v => pridej(v, false));
+    (window.NAHNOJI_VIDEA_SERIALY || []).forEach(v => pridej(v, false));
+    nactiMistni().forEach(v => pridej(v, true));
     return [...mapa.values()];
   }
 
-  /* Rozpozná řádky z nahnoji_odkazy.tsv (čas, soubor, video, smazání),
-     „název | odkaz" i holé odkazy. */
+  const poDilech = (a, b) => a.rada - b.rada || a.dil - b.dil || a.id - b.id;
+
+  function serialy() {
+    const mapa = new Map();
+    for (const v of vsechnaVidea()) {
+      if (!v.serial) continue;
+      if (!mapa.has(v.serial)) mapa.set(v.serial, []);
+      mapa.get(v.serial).push(v);
+    }
+    for (const d of mapa.values()) d.sort(poDilech);
+    return mapa;
+  }
+  const infoSerialu = nazev => (window.NAHNOJI_SERIALY || {})[nazev] || {};
+  // Videa, která kontrolní skript našel bez dat (nahnoji.cz je nezpracoval / smazal).
+  const NEDOSTUPNE = window.NAHNOJI_NEDOSTUPNE || {};
+  const nedostupne = v => NEDOSTUPNE[v.id];
+  const oznaceniDilu = v => `${v.rada}×${String(v.dil).padStart(2, '0')}`;
+
+  // Který díl pustit tlačítkem „Pokračovat": rozkoukaný, jinak první
+  // nezhlédnutý po naposledy puštěném, jinak první nezhlédnutý vůbec.
+  function dalsiDil(dily) {
+    if (!dily.length) return null;
+    const i = dily.findIndex(v => v.id === divani.posledni[dily[0].serial]);
+    if (i >= 0 && !jeVideno(dily[i])) return dily[i];
+    const zaPoslednim = dily.slice(i + 1).find(v => !jeVideno(v));
+    return zaPoslednim || dily.find(v => !jeVideno(v)) || null;
+  }
+
+  const bezDiakritiky = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  /* Rozpozná řádky z nahnoji_odkazy.tsv (čas, soubor, video, smazání, název,
+     velikost, stav), „název | odkaz" i holé odkazy. Soubor „Serial_1_2-Nazev"
+     zařadí jako 1. řadu, 2. díl. */
   function rozeberVstup(text) {
+    const znameSerialy = [...serialy().keys()];
     const vysledek = [];
     for (const radek of text.split(/\r?\n/)) {
       if (!radek.trim() || radek.startsWith('#')) continue;
@@ -262,17 +446,29 @@
       let nazev = '', datum = '';
       const sloupce = radek.split('\t');
       if (sloupce.length >= 3) {
+        if (/^NEOVERENO/.test(sloupce[6] || '')) continue;   // nahrání se nepotvrdilo
         datum = (sloupce[0].match(/^\d{4}-\d{2}-\d{2}/) || [''])[0];
         nazev = sloupce[1].split(/[\\/]/).pop().replace(/\.[^.]+$/, '');
       } else if (radek.includes('|')) {
         nazev = radek.split('|')[0].trim();
       }
-      vysledek.push({ id, nazev: nazev || `Video ${id}`, datum });
+      const v = { id, nazev: nazev || `Video ${id}`, datum };
+      const s = /^(.+?)[_ ](\d{1,2})[_ ](\d{1,3})\s*-\s*(.+)$/.exec(nazev);
+      if (s) {
+        const hruby = s[1].replace(/_/g, ' ').trim();
+        v.serial = znameSerialy.find(z => bezDiakritiky(z) === bezDiakritiky(hruby)) || hruby;
+        v.rada = +s[2];
+        v.dil = +s[3];
+        v.nazev = s[4].replace(/_/g, ' ').trim();
+      } else {
+        v.nazev = v.nazev.replace(/_/g, ' ');
+      }
+      vysledek.push(v);
     }
     return vysledek;
   }
 
-  // ── vzhled karet ──────────────────────────────────────────────────────────
+  // ── vzhled ────────────────────────────────────────────────────────────────
 
   function barvy(id) {
     const h = (id * 137.508) % 360;
@@ -291,27 +487,80 @@
     return e;
   }
 
-  function filtrovana() {
+  function odpovida(v, q) {
+    if (stav.stitek && !(v.stitky || []).includes(stav.stitek)) return false;
+    if (!q) return true;
+    return [v.nazev, v.popis, v.serial, String(v.id), v.serial ? oznaceniDilu(v) : '', ...(v.stitky || [])]
+      .some(t => t && String(t).toLowerCase().includes(q));
+  }
+
+  function filtrovana(seznam) {
     const q = stav.hledat.trim().toLowerCase();
-    let seznam = vsechnaVidea().filter(v => {
-      if (stav.stitek && !(v.stitky || []).includes(stav.stitek)) return false;
-      if (!q) return true;
-      return [v.nazev, v.popis, String(v.id), ...(v.stitky || [])]
-        .some(t => t && String(t).toLowerCase().includes(q));
-    });
+    const vysledek = seznam.filter(v => odpovida(v, q));
+    if (stav.pohled.startsWith('s:')) return vysledek.sort(poDilech);
     const podle = {
       nove: (a, b) => (b.datum || '').localeCompare(a.datum || '') || b.id - a.id,
       stare: (a, b) => (a.datum || '').localeCompare(b.datum || '') || a.id - b.id,
       nazev: (a, b) => a.nazev.localeCompare(b.nazev, 'cs'),
     }[stav.razeni];
-    return seznam.sort(podle);
+    return vysledek.sort(podle);
   }
 
-  function vykresliStitky() {
+  function vykresliMenu() {
+    const box = $('menu');
+    box.textContent = '';
+    const vse = vsechnaVidea();
+    const ser = serialy();
+    const volna = vse.filter(v => !v.serial).length;
+    const tl = (ikona, text, pocet, pohled, titulek) => {
+      const b = el('button', pohled === stav.pohled ? 'aktivni' : '');
+      b.type = 'button';
+      b.append(el('span', '', ikona), el('span', '', text));
+      if (pocet) b.appendChild(el('span', 'pocitadlo', pocet));
+      if (titulek) b.title = titulek;
+      b.onclick = () => prepniPohled(pohled);
+      box.appendChild(b);
+    };
+    tl('📼', 'Všechna videa', String(vse.length), '');
+    const poradi = Object.keys(window.NAHNOJI_SERIALY || {});
+    const nazvy = [...ser.keys()].sort((a, b) =>
+      ((poradi.indexOf(a) + 1) || 1e9) - ((poradi.indexOf(b) + 1) || 1e9) || a.localeCompare(b, 'cs'));
+    for (const n of nazvy) {
+      const dily = ser.get(n);
+      const videno = dily.filter(jeVideno).length;
+      tl(infoSerialu(n).ikona || '📺', n, videno ? `${videno}/${dily.length}` : String(dily.length), 's:' + n,
+        `${dily.length} dílů, zhlédnuto ${videno}`);
+    }
+    if (ser.size && volna) tl('🎞️', 'Ostatní videa', String(volna), 'ostatni');
+  }
+
+  // V seriálu místo štítků výběr řady – u dlouhých seriálů (Simpsonovi 35 řad)
+  // se nevykreslují stovky karet najednou.
+  function vykresliRady(dily) {
+    const box = $('stitky');
+    box.textContent = '';
+    const rady = [...new Set(dily.map(v => v.rada))];
+    if (rady.length < 2) return;
+    box.appendChild(el('span', 'nadpis-rad', 'Řada:'));
+    const tl = (text, hodnota, titulek) => {
+      const b = el('button', hodnota === stav.rada ? 'aktivni' : '', text);
+      if (titulek) b.title = titulek;
+      b.onclick = () => { stav.rada = hodnota; vykresli(); };
+      box.appendChild(b);
+    };
+    for (const r of rady) {
+      const d = dily.filter(v => v.rada === r);
+      const videno = d.filter(jeVideno).length;
+      tl(videno === d.length ? `${r} ✓` : String(r), r, `${r}. řada – zhlédnuto ${videno} z ${d.length}`);
+    }
+    tl('Všechny', 0);
+  }
+
+  function vykresliStitky(zdroj) {
     const box = $('stitky');
     box.textContent = '';
     const vse = new Set();
-    vsechnaVidea().forEach(v => (v.stitky || []).forEach(s => vse.add(s)));
+    zdroj.forEach(v => (v.stitky || []).forEach(s => vse.add(s)));
     if (!vse.size) return;
     const tl = (text, hodnota) => {
       const b = el('button', hodnota === stav.stitek ? 'aktivni' : '', text);
@@ -322,58 +571,231 @@
     [...vse].sort((a, b) => a.localeCompare(b, 'cs')).forEach(s => tl(s, s));
   }
 
-  function vykresli() {
-    vykresliStitky();
-    const box = $('mrizka');
+  function vykresliSerialHlavu(nazev, dily) {
+    const box = $('serialHlava');
     box.textContent = '';
-    const celkem = vsechnaVidea().length;
-    stav.zobrazena = filtrovana();
-    $('pocet').textContent = !celkem ? '' :
-      stav.zobrazena.length === celkem ? `${celkem} videí` : `${stav.zobrazena.length} z ${celkem}`;
+    if (!nazev) return;
+    const info = infoSerialu(nazev);
+    const h = el('div', 'serial-hlava');
+    h.appendChild(el('div', 'ikona-serialu', info.ikona || '📺'));
+    const t = el('div', 'texty');
+    t.appendChild(el('h2', '', nazev));
+    if (info.popis) t.appendChild(el('p', '', info.popis));
+    const videno = dily.filter(jeVideno).length;
+    const rady = new Set(dily.map(v => v.rada)).size;
+    const p = el('div', 'postup');
+    const pruh = el('span', 'pruh');
+    const vypln = el('span');
+    vypln.style.width = (dily.length ? 100 * videno / dily.length : 0) + '%';
+    pruh.appendChild(vypln);
+    p.append(pruh, el('span', '', `zhlédnuto ${videno} z ${dily.length} · ${rady} ${rady === 1 ? 'řada' : rady < 5 ? 'řady' : 'řad'}`));
+    t.appendChild(p);
+    if (info.zdroj) {
+      const z = el('div', 'zdroj', 'Seznam dílů převzat z ');
+      const a = el('a', '', info.zdroj.replace(/^https?:\/\/|\/$/g, ''));
+      a.href = info.zdroj; a.target = '_blank'; a.rel = 'noopener';
+      z.appendChild(a);
+      t.appendChild(z);
+    }
+    h.appendChild(t);
 
-    if (!celkem) {
+    const tl = el('div', 'tlacitka');
+    const dalsi = dalsiDil(dily);
+    if (dalsi) {
+      const zacato = videno > 0 || divani.posledni[nazev];
+      const b = el('button', 'hlavni', `▶ ${zacato ? 'Pokračovat' : 'Začít'}: ${oznaceniDilu(dalsi)} ${dalsi.nazev}`);
+      b.onclick = () => prehraj(dalsi);
+      tl.appendChild(b);
+    } else if (dily.length) {
+      const b = el('button', 'hlavni', '↻ Vše zhlédnuto – znovu od začátku');
+      b.onclick = () => prehraj(dily[0]);
+      tl.appendChild(b);
+    }
+    if (videno || divani.posledni[nazev]) {
+      const b = el('button', '', '↺ Resetovat postup');
+      b.title = 'Zruší zhlédnuté díly i rozkoukaný díl – seriál začne znovu od 1. dílu';
+      b.onclick = async () => {
+        if (!await Dialog.potvrd(`Resetovat postup v seriálu ${nazev}? Zruší se označení ${videno} zhlédnutých dílů a seriál začne znovu od začátku.`)) return;
+        dily.forEach(v => delete divani.zhlednuto[v.id]);
+        delete divani.posledni[nazev];
+        ulozDivani();
+        stav.rada = -1;
+        vykresli();
+      };
+      tl.appendChild(b);
+    }
+    h.appendChild(tl);
+    box.appendChild(h);
+  }
+
+  function karta(v, i, dalsi) {
+    const k = el('button', 'karta');
+    k.type = 'button';
+    k.title = v.serial ? `${oznaceniDilu(v)} ${v.nazev}` : v.nazev;
+    if (jeVideno(v)) k.classList.add('zhlednuto');
+    if (dalsi && dalsi.id === v.id) k.classList.add('dalsi');
+    const plakat = el('div', 'plakat');
+    plakat.style.background = barvy(v.id);
+    plakat.appendChild(el('span', 'ikona', '▶'));
+    plakat.appendChild(el('span', 'stitek-roh cislo', '#' + v.id));
+    if (v.serial) plakat.appendChild(el('span', 'stitek-roh epizoda', oznaceniDilu(v)));
+    if (jeVideno(v)) plakat.appendChild(el('span', 'stitek-roh videno', '✓ zhlédnuto'));
+    if (nedostupne(v) && !jeVideno(v)) plakat.appendChild(el('span', 'stitek-roh nezprac', '⚠ bez dat'));
+    if (dalsi && dalsi.id === v.id) plakat.appendChild(el('span', 'stitek-roh pristi', 'na řadě'));
+    else if (v.mistni) plakat.appendChild(el('span', 'stitek-roh mistni', 'jen v prohlížeči'));
+    const pop = el('div', 'popisek');
+    pop.appendChild(el('span', 'nazev', v.nazev));
+    const meta = [stav.pohled.startsWith('s:') ? '' : v.serial, formatDatum(v.datum), (v.stitky || []).join(', ')]
+      .filter(Boolean).join(' · ');
+    if (meta) pop.appendChild(el('span', 'meta', meta));
+    if (v.popis) pop.appendChild(el('span', 'text', v.popis));
+    k.append(plakat, pop);
+    k.onclick = () => otevri(i);
+    return k;
+  }
+
+  // Dlaždice seriálu v přehledu „Všechna videa" – otevře jeho vlastní stránku.
+  function kartaSerialu(nazev, dily) {
+    const info = infoSerialu(nazev);
+    const k = el('button', 'karta');
+    k.type = 'button';
+    const plakat = el('div', 'plakat');
+    plakat.style.background = barvy(dily[0].id + 7);
+    plakat.appendChild(el('span', 'velka-ikona', info.ikona || '📺'));
+    const videno = dily.filter(jeVideno).length;
+    plakat.appendChild(el('span', 'stitek-roh epizoda', `${dily.length} dílů`));
+    if (videno) plakat.appendChild(el('span', 'stitek-roh videno', `✓ ${videno}/${dily.length}`));
+    const pop = el('div', 'popisek');
+    pop.appendChild(el('span', 'nazev', nazev));
+    const dalsi = dalsiDil(dily);
+    pop.appendChild(el('span', 'meta', dalsi ? `Na řadě: ${oznaceniDilu(dalsi)} ${dalsi.nazev}` : 'Vše zhlédnuto'));
+    k.append(plakat, pop);
+    k.onclick = () => prepniPohled('s:' + nazev);
+    return k;
+  }
+
+  function vykresli() {
+    const vse = vsechnaVidea();
+    const ser = serialy();
+    if (stav.pohled.startsWith('s:') && !ser.has(stav.pohled.slice(2))) stav.pohled = '';
+    if (stav.pohled === 'ostatni' && !ser.size) stav.pohled = '';
+    vykresliMenu();
+
+    const jeSerial = stav.pohled.startsWith('s:');
+    const nazevSerialu = jeSerial ? stav.pohled.slice(2) : '';
+    const zdroj = jeSerial ? ser.get(nazevSerialu) : stav.pohled === 'ostatni' ? vse.filter(v => !v.serial) : vse;
+    $('razeni').hidden = jeSerial;
+    vykresliSerialHlavu(nazevSerialu, zdroj || []);
+    if (jeSerial) {
+      // -1 = vyber sám: řadu s dílem, který je na řadě
+      if (stav.rada === -1 || (stav.rada && !zdroj.some(v => v.rada === stav.rada))) {
+        const d = dalsiDil(zdroj);
+        stav.rada = d ? d.rada : zdroj[0].rada;
+      }
+      vykresliRady(zdroj);
+    } else vykresliStitky(zdroj);
+
+    const box = $('obsah');
+    box.textContent = '';
+    stav.zobrazena = filtrovana(jeSerial && stav.rada > 0 && !stav.hledat.trim() ? zdroj.filter(v => v.rada === stav.rada) : zdroj);
+    $('pocet').textContent = !zdroj.length ? '' :
+      stav.zobrazena.length === zdroj.length ? `${zdroj.length} videí` : `${stav.zobrazena.length} z ${zdroj.length}`;
+
+    if (!vse.length) {
       const p = el('div', 'prazdno');
       p.appendChild(el('h2', '', 'Zatím tu nejsou žádná videa'));
       p.appendChild(el('p', '', 'Seznam se doplní do souboru obsah/nahnoji_videa.js. Do té doby můžeš videa přidat tlačítkem „+ Přidat videa“ – uloží se jen v tomto prohlížeči.'));
       box.appendChild(p);
       return;
     }
+
+    // Přehled bez hledání: seriály jako složky, pod nimi videa mimo seriály.
+    const slozky = stav.pohled === '' && !stav.hledat.trim() && !stav.stitek && ser.size;
+    if (slozky) {
+      stav.zobrazena = stav.zobrazena.filter(v => !v.serial);
+      const m = el('div', 'mrizka');
+      for (const [n, dily] of ser) m.appendChild(kartaSerialu(n, dily));
+      box.appendChild(el('h2', 'rada-nadpis', 'Seriály'));
+      box.appendChild(m);
+      if (stav.zobrazena.length) box.appendChild(el('h2', 'rada-nadpis', 'Videa'));
+    }
+
     if (!stav.zobrazena.length) {
-      box.appendChild(el('div', 'prazdno', 'Hledání neodpovídá žádné video.'));
+      if (!slozky) box.appendChild(el('div', 'prazdno', 'Hledání neodpovídá žádné video.'));
       return;
     }
 
-    stav.zobrazena.forEach((v, i) => {
-      const k = el('button', 'karta');
-      k.type = 'button';
-      k.title = v.nazev;
-      const plakat = el('div', 'plakat');
-      plakat.style.background = barvy(v.id);
-      plakat.appendChild(el('span', 'ikona', '▶'));
-      plakat.appendChild(el('span', 'cislo', '#' + v.id));
-      if (v.mistni) plakat.appendChild(el('span', 'mistni', 'jen v prohlížeči'));
-      const pop = el('div', 'popisek');
-      pop.appendChild(el('span', 'nazev', v.nazev));
-      const meta = [formatDatum(v.datum), (v.stitky || []).join(', ')].filter(Boolean).join(' · ');
-      if (meta) pop.appendChild(el('span', 'meta', meta));
-      if (v.popis) pop.appendChild(el('span', 'text', v.popis));
-      k.append(plakat, pop);
-      k.onclick = () => otevri(i);
-      box.appendChild(k);
-    });
+    if (jeSerial) {
+      const dalsi = dalsiDil(zdroj);
+      const rady = [...new Set(stav.zobrazena.map(v => v.rada))];
+      for (const r of rady) {
+        const dilyRady = zdroj.filter(v => v.rada === r);
+        const h = el('h2', 'rada-nadpis', `${r}. řada`);
+        h.id = 'rada-' + r;
+        h.appendChild(el('small', '', `${dilyRady.filter(jeVideno).length}/${dilyRady.length} zhlédnuto`));
+        box.appendChild(h);
+        const m = el('div', 'mrizka');
+        stav.zobrazena.forEach((v, i) => { if (v.rada === r) m.appendChild(karta(v, i, dalsi)); });
+        box.appendChild(m);
+      }
+    } else {
+      const m = el('div', 'mrizka');
+      stav.zobrazena.forEach((v, i) => m.appendChild(karta(v, i)));
+      box.appendChild(m);
+    }
+  }
+
+  function prepniPohled(pohled) {
+    stav.pohled = pohled;
+    stav.stitek = '';
+    stav.rada = -1;
+    vykresli();
+    history.replaceState(null, '', pohled ? '#s=' + encodeURIComponent(pohled.startsWith('s:') ? pohled.slice(2) : '*ostatni') : location.pathname + location.search);
+    window.scrollTo(0, 0);
   }
 
   // ── přehrávač ─────────────────────────────────────────────────────────────
 
-  function otevri(i) {
-    const v = stav.zobrazena[i];
+  // Díl seriálu se vždy prochází v pořadí celého seriálu (bez ohledu na
+  // hledání), ostatní videa v pořadí, jak jsou zobrazená.
+  function prehraj(v) {
+    const fronta = v.serial ? serialy().get(v.serial) : stav.zobrazena;
+    stav.fronta = fronta;
+    hraj(fronta.findIndex(x => x.id === v.id));
+  }
+  const otevri = i => { if (stav.zobrazena[i]) prehraj(stav.zobrazena[i]); };
+
+  function hraj(i) {
+    const v = stav.fronta[i];
     if (!v) return;
     stav.aktualni = i;
+    if (v.serial) { divani.posledni[v.serial] = v.id; ulozDivani(); }
+
+    $('prehNad').textContent = v.serial ? `${v.serial} · ${v.rada}. řada, ${v.dil}. díl` : '';
     $('prehNazev').textContent = v.nazev;
     const platno = $('platno');
     platno.textContent = '';
 
-    if (LZE_VLOZIT) {
+    const chyba = nedostupne(v);
+    if (chyba && !stav.presto) {
+      const b = el('div', 'blokovano');
+      b.appendChild(el('h3', '', '⚠ Video na nahnoji.cz zatím nejde přehrát'));
+      b.appendChild(el('p', '', chyba === 'prazdne'
+        ? 'Soubor na serveru má 0 bajtů – nahnoji.cz video po nahrání ještě nezpracoval (fronta konverze tam stojí). Přehrávač by jen ukázal chybu „DEMUXER_ERROR_COULD_NOT_OPEN“.'
+        : 'Při poslední kontrole video na serveru chybělo nebo nešlo stáhnout.'));
+      if (window.NAHNOJI_OVERENO) b.appendChild(el('p', '', `Zjištěno ${formatDatum(window.NAHNOJI_OVERENO)}. Když se mezitím zpracovalo, půjde přehrát.`));
+      const t = el('div', 'tlacitka');
+      const b1 = el('button', 'hlavni', 'Zkusit přesto');
+      b1.onclick = () => { stav.presto = true; hraj(stav.aktualni); stav.presto = false; };
+      t.appendChild(b1);
+      if (stav.fronta[i + 1]) {
+        const b2 = el('button', '', 'Další díl ▶');
+        b2.onclick = () => hraj(i + 1);
+        t.appendChild(b2);
+      }
+      b.appendChild(t);
+      platno.appendChild(b);
+    } else if (LZE_VLOZIT) {
       const f = document.createElement('iframe');
       f.src = odkazEmbed(v.id);
       f.allowFullscreen = true;
@@ -382,35 +804,114 @@
       platno.appendChild(f);
     } else {
       const b = el('div', 'blokovano');
-      b.appendChild(el('p', '', 'Nahnoji.cz posílá videa jen nezabezpečeně (http), a tahle stránka běží přes https – prohlížeč proto přehrávač přímo sem vložit nedovolí.'));
+      const otevreno = oknoPrehr && !oknoPrehr.closed;
+      b.appendChild(el('p', '', otevreno
+        ? 'Video běží ve vedlejším okně přehrávače. Tady můžeš přepínat díly – okno se přepne samo.'
+        : 'Nahnoji.cz posílá videa jen nezabezpečeně (http), a tahle stránka běží přes https – prohlížeč proto přehrávač přímo sem vložit nedovolí. Otevři ho v okně; další díly se pak do něj přepínají odsud.'));
       const t = el('div', 'tlacitka');
-      const b1 = el('button', 'hlavni', '▶ Přehrát v okně');
+      const b1 = el('button', 'hlavni', otevreno ? '▶ Přehrát znovu v okně' : '▶ Přehrát v okně');
       b1.onclick = () => oknoPrehravace(v);
       const b2 = el('button', '', 'Na nahnoji.cz ↗');
       b2.onclick = () => window.open(odkazVidea(v.id), '_blank', 'noopener');
       t.append(b1, b2);
       b.appendChild(t);
       platno.appendChild(b);
+      if (otevreno) oknoPrehravace(v);
     }
 
     $('prehInfo').textContent = [`Video #${v.id}`, formatDatum(v.datum), v.popis].filter(Boolean).join(' · ');
-    $('btnPredchozi').disabled = i <= 0;
-    $('btnDalsi').disabled = i >= stav.zobrazena.length - 1;
+    const predchozi = stav.fronta[i - 1], dalsi = stav.fronta[i + 1];
+    const tlPopis = (x, smer) => x ? (x.serial ? `${smer} díl: ${oznaceniDilu(x)} ${x.nazev}` : `${smer}: ${x.nazev}`) : '';
+    $('btnPredchozi').disabled = !predchozi;
+    $('btnDalsi').disabled = !dalsi;
+    $('btnPredchozi').title = (tlPopis(predchozi, 'Předchozí') || 'Předchozí') + ' (← nebo P)';
+    $('btnDalsi').title = (tlPopis(dalsi, 'Další') || 'Další') + ' (→ nebo N)';
+    $('btnPredchozi').textContent = v.serial ? '◀ Předchozí díl' : '◀ Předchozí';
+    $('btnDalsi').textContent = v.serial ? 'Další díl ▶' : 'Další ▶';
+    aktualizujVideno();
+    vykresliDily();
     $('prekryv').classList.add('otevreno');
     history.replaceState(null, '', '#v=' + v.id);
   }
 
+  function aktualizujVideno() {
+    const v = stav.fronta[stav.aktualni];
+    if (!v) return;
+    const ano = jeVideno(v);
+    $('btnVideno').textContent = ano ? '☑ Zhlédnuto' : '☐ Zhlédnuto';
+    $('btnVideno').classList.toggle('ano', ano);
+  }
+
+  function vykresliDily() {
+    const v = stav.fronta[stav.aktualni];
+    const sDily = !!(v && v.serial);
+    $('okno').classList.toggle('s-dily', sDily);
+    if (!sDily) return;
+    const dily = stav.fronta;
+    $('dilyNazev').textContent = v.serial;
+    const vyber = $('dilyRada');
+    vyber.textContent = '';
+    const rady = [...new Set(dily.map(d => d.rada))];
+    rady.forEach(r => { const o = el('option', '', `${r}. řada`); o.value = r; vyber.appendChild(o); });
+    vyber.value = v.rada;
+    vyber.hidden = rady.length < 2;
+
+    const box = $('dilySeznam');
+    box.textContent = '';
+    let aktivni = null, rada = null;
+    dily.forEach((d, i) => {
+      if (d.rada !== rada) {
+        rada = d.rada;
+        const r = el('div', 'rada', `${rada}. řada`);
+        r.dataset.rada = rada;
+        box.appendChild(r);
+      }
+      const b = el('button', 'dil');
+      b.type = 'button';
+      if (jeVideno(d)) b.classList.add('zhlednuto');
+      if (i === stav.aktualni) { b.classList.add('aktualni'); aktivni = b; }
+      b.append(el('span', 'c', oznaceniDilu(d)), el('span', 'n', d.nazev));
+      if (jeVideno(d)) b.appendChild(el('span', 'v', '✓'));
+      else if (nedostupne(d)) { b.appendChild(el('span', 'v pozor', '⚠')); b.title = 'Na nahnoji.cz zatím bez dat'; }
+      b.onclick = () => hraj(i);
+      box.appendChild(b);
+    });
+    if (aktivni) {
+      // Aktuální díl doprostřed seznamu, bez posouvání celé stránky.
+      box.scrollTop = aktivni.offsetTop - box.clientHeight / 2 + aktivni.offsetHeight / 2;
+    }
+  }
+
+  function dalsiVFronte(smer) {
+    const i = stav.aktualni + smer;
+    if (!stav.fronta[i]) return;
+    // Kdo přejde na další díl, ten předchozí dokoukal.
+    if (smer > 0) nastavVideno(stav.fronta[stav.aktualni], true);
+    hraj(i);
+  }
+
   function zavri() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     $('prekryv').classList.remove('otevreno');
     $('platno').textContent = '';   // zastaví přehrávání
+    const v = stav.fronta[stav.aktualni];
+    if (v && v.serial && stav.pohled === 's:' + v.serial && !stav.hledat.trim()) stav.rada = -1;   // ukázat řadu, kde se skončilo
     stav.aktualni = -1;
-    history.replaceState(null, '', location.pathname + location.search);
+    vykresli();                      // promítne zhlédnuté díly do přehledu
+    const s = stav.pohled;
+    history.replaceState(null, '', s ? '#s=' + encodeURIComponent(s.startsWith('s:') ? s.slice(2) : '*ostatni') : location.pathname + location.search);
   }
 
   function oknoPrehravace(v) {
-    const w = Math.min(960, screen.availWidth - 40), h = Math.round(w * 0.75);
-    const okno = window.open(odkazEmbed(v.id), 'nahnoji_prehravac', `popup,width=${w},height=${h}`);
-    if (!okno) window.open(odkazVidea(v.id), '_blank', 'noopener');
+    const w = Math.min(960, screen.availWidth - 40), h = Math.round(w * 9 / 16) + 60;
+    // Stejné jméno okna = další díl se načte do už otevřeného přehrávače.
+    oknoPrehr = window.open(odkazEmbed(v.id), 'nahnoji_prehravac', `popup,width=${w},height=${h}`);
+    if (!oknoPrehr) window.open(odkazVidea(v.id), '_blank', 'noopener');
+  }
+
+  function celaObrazovka() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if ($('okno').requestFullscreen) $('okno').requestFullscreen().catch(() => {});
   }
 
   async function kopiruj(text, hlaska) {
@@ -439,10 +940,12 @@
   function jsRetezec(s) { return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"; }
 
   function exportJs() {
-    const seznam = vsechnaVidea().sort((a, b) => a.id - b.id);
+    const seznam = vsechnaVidea().sort((a, b) =>
+      (a.serial || '').localeCompare(b.serial || '', 'cs') || (a.serial ? poDilech(a, b) : a.id - b.id));
     if (!seznam.length) { Dialog.chyba('Seznam je prázdný'); return; }
     const radky = seznam.map(v => {
       const casti = [`id: ${v.id}`, `nazev: ${jsRetezec(v.nazev)}`];
+      if (v.serial) casti.push(`serial: ${jsRetezec(v.serial)}`, `rada: ${v.rada}`, `dil: ${v.dil}`);
       if (v.datum) casti.push(`datum: ${jsRetezec(v.datum)}`);
       if (v.stitky && v.stitky.length) casti.push(`stitky: [${v.stitky.map(jsRetezec).join(', ')}]`);
       if (v.popis) casti.push(`popis: ${jsRetezec(v.popis)}`);
@@ -468,35 +971,64 @@
     }
   };
 
+  const aktualniVideo = () => stav.fronta[stav.aktualni];
   $('btnZavrit').onclick = zavri;
   $('prekryv').addEventListener('click', e => { if (e.target === e.currentTarget) zavri(); });
-  $('btnPredchozi').onclick = () => otevri(stav.aktualni - 1);
-  $('btnDalsi').onclick = () => otevri(stav.aktualni + 1);
-  $('btnOkno').onclick = () => oknoPrehravace(stav.zobrazena[stav.aktualni]);
-  $('btnNaWebu').onclick = () => window.open(odkazVidea(stav.zobrazena[stav.aktualni].id), '_blank', 'noopener');
-  $('btnKopirovat').onclick = () => kopiruj(odkazVidea(stav.zobrazena[stav.aktualni].id), 'Odkaz zkopírován');
-
-  document.addEventListener('keydown', e => {
-    if (stav.aktualni < 0) return;
-    if (e.key === 'Escape') zavri();
-    else if (e.key === 'ArrowLeft' && stav.aktualni > 0) otevri(stav.aktualni - 1);
-    else if (e.key === 'ArrowRight' && stav.aktualni < stav.zobrazena.length - 1) otevri(stav.aktualni + 1);
+  $('btnPredchozi').onclick = () => dalsiVFronte(-1);
+  $('btnDalsi').onclick = () => dalsiVFronte(1);
+  $('btnVideno').onclick = () => {
+    const v = aktualniVideo();
+    nastavVideno(v, !jeVideno(v));
+    aktualizujVideno();
+    vykresliDily();
+  };
+  $('btnCela').onclick = celaObrazovka;
+  $('btnOkno').onclick = () => oknoPrehravace(aktualniVideo());
+  $('btnNaWebu').onclick = () => window.open(odkazVidea(aktualniVideo().id), '_blank', 'noopener');
+  $('btnKopirovat').onclick = () => kopiruj(odkazVidea(aktualniVideo().id), 'Odkaz zkopírován');
+  $('dilyRada').addEventListener('change', e => {
+    const nadpis = $('dilySeznam').querySelector(`.rada[data-rada="${e.target.value}"]`);
+    if (nadpis) $('dilySeznam').scrollTop = nadpis.offsetTop - $('dilySeznam').offsetTop;
+  });
+  document.addEventListener('fullscreenchange', () => {
+    $('btnCela').textContent = document.fullscreenElement ? '⛶ Zmenšit' : '⛶ Celá obrazovka';
   });
 
-  // Bez vložení jsou tyhle dvě volby přímo v hlášce na plátně.
-  if (!LZE_VLOZIT) { $('btnOkno').hidden = true; $('btnNaWebu').hidden = true; }
+  document.addEventListener('keydown', e => {
+    if (stav.aktualni < 0 || e.ctrlKey || e.altKey || e.metaKey) return;
+    if (e.target.closest && e.target.closest('input, textarea, select')) return;
+    // Písmena podle e.code – nezávisle na rozložení klávesnice.
+    const k = e.key === 'Escape' ? 'esc'
+      : e.key === 'ArrowLeft' || e.key === 'PageUp' || e.code === 'KeyP' ? 'zpet'
+      : e.key === 'ArrowRight' || e.key === 'PageDown' || e.code === 'KeyN' ? 'dal'
+      : e.code === 'KeyM' ? 'videno'
+      : e.code === 'KeyF' ? 'cela' : '';
+    if (!k) return;
+    e.preventDefault();
+    if (k === 'esc') { if (!document.fullscreenElement) zavri(); }   // Esc z celé obrazovky jen zmenší
+    else if (k === 'zpet') dalsiVFronte(-1);
+    else if (k === 'dal') dalsiVFronte(1);
+    else if (k === 'videno') $('btnVideno').click();
+    else if (k === 'cela') celaObrazovka();
+  });
 
-  vykresli();
+  // Bez vložení jsou tyhle volby přímo v hlášce na plátně.
+  if (!LZE_VLOZIT) { $('btnOkno').hidden = true; $('btnNaWebu').hidden = true; $('btnCela').hidden = true; }
 
-  // Přímý odkaz na video: nahnoji.html#v=21400
-  const m = /^#v=(\d+)/.exec(location.hash);
-  if (m) {
-    const i = stav.zobrazena.findIndex(v => v.id === +m[1]);
-    if (i >= 0) otevri(i);
+  // Odkazy: nahnoji.html#s=Král%20džungle (seriál), #v=21527 (video)
+  const ms = /^#s=([^&]+)/.exec(location.hash);
+  if (ms) {
+    const n = decodeURIComponent(ms[1]);
+    stav.pohled = n === '*ostatni' ? 'ostatni' : 's:' + n;
   }
+  const mv = /^#v=(\d+)/.exec(location.hash);
+  const pozadovane = mv && vsechnaVidea().find(v => v.id === +mv[1]);
+  if (pozadovane && pozadovane.serial) stav.pohled = 's:' + pozadovane.serial;
+  vykresli();
+  if (pozadovane) prehraj(pozadovane);
 
   // Pro testy.
-  window.NAHNOJI = { rozeberVstup, vsechnaVidea, otevri, zavri, LZE_VLOZIT };
+  window.NAHNOJI = { rozeberVstup, vsechnaVidea, serialy, dalsiDil, otevri, prehraj, zavri, stav, divani, LZE_VLOZIT };
 })();
 </script>
 </body>
