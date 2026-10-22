@@ -74,6 +74,9 @@
   .stitky:empty { display: none; }
   .stitky button { border-radius: 999px; padding: 4px 12px; font-size: 0.9rem; }
   .stitky button.aktivni { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .odkazy-jinde { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-top: 22px; padding-top: 12px; border-top: 1px solid var(--border); font-size: .92rem; }
+  .odkazy-jinde .nadpis-rad { color: var(--text-faint); }
+  .odkazy-jinde a { color: var(--accent); }
   .stitky .nadpis-rad { color: var(--text-faint); font-size: .85rem; align-self: center; margin-right: 2px; }
   .stitky button.cela { border-color: var(--accent); }
   .pocet { color: var(--text-faint); font-size: 0.9rem; margin-left: auto; }
@@ -364,6 +367,7 @@
 
   const odkazVidea = id => `${ZDROJ}/video?id=${id}&s=wide`;
   const odkazEmbed = id => `${ZDROJ}/embed?id=${id}`;
+  const hostitel = url => url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
 
   // ── data ──────────────────────────────────────────────────────────────────
 
@@ -389,15 +393,15 @@
 
   function vsechnaVidea() {
     const mapa = new Map();
-    const pridej = (v, mistni) => {
+    const pridej = (v, mistni, generovane) => {
       const id = parseInt(v.id, 10);
       if (!id || mapa.has(id)) return;
-      const z = Object.assign({}, v, { id, mistni });
+      const z = Object.assign({}, v, { id, mistni, generovane });
       if (z.serial) { z.rada = parseInt(z.rada, 10) || 1; z.dil = parseInt(z.dil, 10) || 0; }
       mapa.set(id, z);
     };
     (window.NAHNOJI_VIDEA || []).forEach(v => pridej(v, false));
-    (window.NAHNOJI_VIDEA_SERIALY || []).forEach(v => pridej(v, false));
+    (window.NAHNOJI_VIDEA_SERIALY || []).forEach(v => pridej(v, false, true));
     nactiMistni().forEach(v => pridej(v, true));
     return [...mapa.values()];
   }
@@ -719,6 +723,17 @@
       box.appendChild(m);
       if (stav.zobrazena.length) box.appendChild(el('h2', 'rada-nadpis', 'Videa'));
     }
+    if (slozky && (window.NAHNOJI_ODKAZY || []).length) {
+      // Seriály, které nejsou celé na nahnoji.cz – jen odkaz na web, kde se dají pustit.
+      const o = el('div', 'odkazy-jinde');
+      o.appendChild(el('span', 'nadpis-rad', 'Další seriály na jiných webech:'));
+      for (const x of window.NAHNOJI_ODKAZY) {
+        const a = el('a', '', x.nazev + ' ↗');
+        a.href = x.url; a.target = '_blank'; a.rel = 'noopener'; a.title = hostitel(x.url);
+        o.appendChild(a);
+      }
+      box.appendChild(o);
+    }
 
     if (!stav.zobrazena.length) {
       if (!slozky) box.appendChild(el('div', 'prazdno', 'Hledání neodpovídá žádné video.'));
@@ -803,20 +818,25 @@
       f.title = v.nazev;
       platno.appendChild(f);
     } else {
+      // https (GitHub Pages): http přehrávač sem vložit nejde, hraje se v samostatném
+      // okně. Klik na díl je gesto uživatele, takže okno jde otevřít hned.
+      const otevreno = oknoPrehravace(v, true);
       const b = el('div', 'blokovano');
-      const otevreno = oknoPrehr && !oknoPrehr.closed;
+      b.appendChild(el('h3', '', otevreno ? '▶ Hraje v samostatném okně' : 'Přehrát v samostatném okně'));
       b.appendChild(el('p', '', otevreno
-        ? 'Video běží ve vedlejším okně přehrávače. Tady můžeš přepínat díly – okno se přepne samo.'
-        : 'Nahnoji.cz posílá videa jen nezabezpečeně (http), a tahle stránka běží přes https – prohlížeč proto přehrávač přímo sem vložit nedovolí. Otevři ho v okně; další díly se pak do něj přepínají odsud.'));
+        ? 'Nahnoji.cz posílá video jen přes http, proto nemůže hrát přímo tady na https stránce. Další díly přepínej odsud (tlačítka dole nebo šipky) – okno přehrávače se přepne samo.'
+        : 'Nahnoji.cz posílá video jen přes http, proto nemůže hrát přímo tady na https stránce. Prohlížeč okno sám neotevřel – klikni na tlačítko.'));
       const t = el('div', 'tlacitka');
-      const b1 = el('button', 'hlavni', otevreno ? '▶ Přehrát znovu v okně' : '▶ Přehrát v okně');
+      const b1 = el('button', 'hlavni', otevreno ? '▶ Přehrát znovu' : '▶ Přehrát v okně');
       b1.onclick = () => oknoPrehravace(v);
-      const b2 = el('button', '', 'Na nahnoji.cz ↗');
-      b2.onclick = () => window.open(odkazVidea(v.id), '_blank', 'noopener');
-      t.append(b1, b2);
+      t.appendChild(b1);
+      if (stav.fronta[i + 1]) {
+        const b2 = el('button', '', 'Další díl ▶');
+        b2.onclick = () => dalsiVFronte(1);
+        t.appendChild(b2);
+      }
       b.appendChild(t);
       platno.appendChild(b);
-      if (otevreno) oknoPrehravace(v);
     }
 
     $('prehInfo').textContent = [`Video #${v.id}`, formatDatum(v.datum), v.popis].filter(Boolean).join(' · ');
@@ -894,6 +914,8 @@
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     $('prekryv').classList.remove('otevreno');
     $('platno').textContent = '';   // zastaví přehrávání
+    if (oknoPrehr && !oknoPrehr.closed) oknoPrehr.close();   // i okno přehrávače (https režim)
+    oknoPrehr = null;
     const v = stav.fronta[stav.aktualni];
     if (v && v.serial && stav.pohled === 's:' + v.serial && !stav.hledat.trim()) stav.rada = -1;   // ukázat řadu, kde se skončilo
     stav.aktualni = -1;
@@ -902,11 +924,15 @@
     history.replaceState(null, '', s ? '#s=' + encodeURIComponent(s.startsWith('s:') ? s.slice(2) : '*ostatni') : location.pathname + location.search);
   }
 
-  function oknoPrehravace(v) {
+  // Vrací true, když se okno otevřelo. tise = bez náhradní záložky (při automatickém
+  // otevření bez gesta by stejně byla zablokovaná).
+  function oknoPrehravace(v, tise) {
     const w = Math.min(960, screen.availWidth - 40), h = Math.round(w * 9 / 16) + 60;
     // Stejné jméno okna = další díl se načte do už otevřeného přehrávače.
-    oknoPrehr = window.open(odkazEmbed(v.id), 'nahnoji_prehravac', `popup,width=${w},height=${h}`);
-    if (!oknoPrehr) window.open(odkazVidea(v.id), '_blank', 'noopener');
+    const o = window.open(odkazEmbed(v.id), 'nahnoji_prehravac', `popup,width=${w},height=${h}`);
+    if (o) { oknoPrehr = o; try { o.focus(); } catch (e) {} return true; }
+    if (!tise) window.open(odkazVidea(v.id), '_blank', 'noopener');
+    return false;
   }
 
   function celaObrazovka() {
@@ -940,7 +966,8 @@
   function jsRetezec(s) { return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"; }
 
   function exportJs() {
-    const seznam = vsechnaVidea().sort((a, b) =>
+    // Seriály z nahnoji_serialy.js se generují skriptem – do ručního seznamu nepatří.
+    const seznam = vsechnaVidea().filter(v => !v.generovane).sort((a, b) =>
       (a.serial || '').localeCompare(b.serial || '', 'cs') || (a.serial ? poDilech(a, b) : a.id - b.id));
     if (!seznam.length) { Dialog.chyba('Seznam je prázdný'); return; }
     const radky = seznam.map(v => {
@@ -1016,16 +1043,22 @@
   if (!LZE_VLOZIT) { $('btnOkno').hidden = true; $('btnNaWebu').hidden = true; $('btnCela').hidden = true; }
 
   // Odkazy: nahnoji.html#s=Král%20džungle (seriál), #v=21527 (video)
-  const ms = /^#s=([^&]+)/.exec(location.hash);
-  if (ms) {
-    const n = decodeURIComponent(ms[1]);
-    stav.pohled = n === '*ostatni' ? 'ostatni' : 's:' + n;
+  function podleAdresy() {
+    const ms = /^#s=([^&]+)/.exec(location.hash);
+    if (ms) {
+      const n = decodeURIComponent(ms[1]);
+      stav.pohled = n === '*ostatni' ? 'ostatni' : 's:' + n;
+      stav.rada = -1;
+    }
+    const mv = /^#v=(\d+)/.exec(location.hash);
+    const pozadovane = mv && vsechnaVidea().find(v => v.id === +mv[1]);
+    if (pozadovane && pozadovane.serial) { stav.pohled = 's:' + pozadovane.serial; stav.rada = pozadovane.rada; }
+    vykresli();
+    if (pozadovane) prehraj(pozadovane);
+    else if (stav.aktualni >= 0) zavri();
   }
-  const mv = /^#v=(\d+)/.exec(location.hash);
-  const pozadovane = mv && vsechnaVidea().find(v => v.id === +mv[1]);
-  if (pozadovane && pozadovane.serial) stav.pohled = 's:' + pozadovane.serial;
-  vykresli();
-  if (pozadovane) prehraj(pozadovane);
+  window.addEventListener('hashchange', podleAdresy);
+  podleAdresy();
 
   // Pro testy.
   window.NAHNOJI = { rozeberVstup, vsechnaVidea, serialy, dalsiDil, otevri, prehraj, zavri, stav, divani, LZE_VLOZIT };

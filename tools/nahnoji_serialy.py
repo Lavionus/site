@@ -6,7 +6,7 @@ seznam dílů seriálů a zapíše obsah/nahnoji_serialy.js pro videotéku.
 Spuštění:  python3 tools/nahnoji_serialy.py   (stažené stránky se drží
 v mezipaměti /tmp/nahnoji_serialy_cache, opakovaný běh je rychlý).
 Potom ověřit dostupnost:  python3 tools/nahnoji_stav.py"""
-import urllib.request, re, os, json, hashlib, time, html, sys, threading
+import urllib.request, re, os, json, hashlib, time, html, sys, threading, zlib
 from concurrent.futures import ThreadPoolExecutor
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VYSTUP = os.path.join(KOREN, 'obsah', 'nahnoji_serialy.js')
@@ -14,12 +14,16 @@ CACHE = os.environ.get('NAHNOJI_CACHE', '/tmp/nahnoji_serialy_cache')
 os.makedirs(CACHE, exist_ok=True)
 WEBY = [
   ('M*A*S*H', 'http://mash.alyss.cz/'),
-  ('Jak jsem poznal vaši matku', 'http://himym.alyss.cz/'),
-  ('Hvězdná brána: Atlantida', 'http://sga.alyss.cz/'),
   ('Futurama', 'http://futurama.nikee.net/'),
-  ('Hra o trůny', 'http://hraotruny.sifee.biz/'),
   ('Krajní meze', 'http://krajnimeze.sifee.biz/'),
   ('Rozčarování', 'http://rozcarovani.sifee.biz/'),
+]
+# Seriály, které mají na nahnoji.cz jen pár dílů (zbytek je na hqq.tv) – na
+# stránce jen odkaz na jejich web, díly se nepřebírají.
+ODKAZY = [
+  ('Jak jsem poznal vaši matku', 'http://himym.alyss.cz/'),
+  ('Hvězdná brána: Atlantida', 'http://sga.alyss.cz/'),
+  ('Hra o trůny', 'http://hraotruny.sifee.biz/'),
   ('Star Trek: Nová generace', 'http://startrek.enkii.cz/'),
 ]
 zamek = threading.Lock(); posledni = {}
@@ -71,13 +75,9 @@ def nahnoji(web, vid):
 
 INFO = {
   'M*A*S*H': ('🚁', 'Komediální seriál z polní nemocnice za korejské války (1972–1983).'),
-  'Jak jsem poznal vaši matku': ('🍺', 'Ted Mosby vypráví dětem, jak poznal jejich matku (2005–2014).'),
-  'Hvězdná brána: Atlantida': ('🌀', 'Výprava do galaxie Pegasu a ztraceného města Antiků (2004–2009).'),
   'Futurama': ('🚀', 'Poslíček Fry se po zmrazení probudí v roce 3000 (1999–2013).'),
-  'Hra o trůny': ('🐉', 'Boj šlechtických rodů o Železný trůn Západozemí (2011–2017).'),
   'Krajní meze': ('👽', 'Sci-fi antologie The Outer Limits, každý díl samostatný příběh (1995–2002).'),
   'Rozčarování': ('👑', 'Animovaná fantasy o princezně Bean od Matta Groeninga (Disenchantment).'),
-  'Star Trek: Nová generace': ('🖖', 'Kapitán Picard a posádka lodi Enterprise-D (1987–1994).'),
 }
 
 def zapis_js(data):
@@ -86,19 +86,20 @@ def zapis_js(data):
     for nazev, s in data.items():
         for r in s['rady']:
             for d in r['dily']:
-                if not d['nahnoji']:
-                    chybi.append(f"{nazev} {r['rada']}×{d['dil']:02d}"); continue
-                if len(d['nahnoji']) > 1: vic.append(f"{nazev} {r['rada']}×{d['dil']:02d} {d['nahnoji']}")
                 t = re.sub(r'^\d+\s*x\s*\d+\s*-\s*', '', d['nazev']).strip() or f"Díl {d['dil']}"
+                if not d['nahnoji']:
+                    chybi.append(f"{nazev} {r['rada']}×{d['dil']:02d}"); continue   # díl jen mimo nahnoji.cz
+                if len(d['nahnoji']) > 1: vic.append(f"{nazev} {r['rada']}×{d['dil']:02d} {d['nahnoji']}")
                 radky.append(f"  {{ id: {d['nahnoji'][0]}, nazev: {jsr(t)}, serial: {jsr(nazev)}, rada: {r['rada']}, dil: {d['dil']} }},")
     info = ',\n'.join(f"  {jsr(n)}: {{ ikona: {jsr(INFO.get(n, ('📺', ''))[0])}, popis: {jsr(INFO.get(n, ('', ''))[1])}, zdroj: {jsr(data[n]['web'])} }}" for n in data)
     with open(VYSTUP, 'w', encoding='utf-8') as f:
         f.write('/* Generuje tools/nahnoji_serialy.py z fanouškovských webů se seriály – neupravovat ručně.\n'
                 '   Vlastní videa a ručně psané seriály patří do nahnoji_videa.js. */\n')
         f.write('window.NAHNOJI_SERIALY = Object.assign(window.NAHNOJI_SERIALY || {}, {\n' + info + '\n});\n\n')
+        f.write('window.NAHNOJI_ODKAZY = [\n' + ',\n'.join(f'  {{ nazev: {jsr(n)}, url: {jsr(u)} }}' for n, u in ODKAZY) + '\n];\n\n')
         f.write('window.NAHNOJI_VIDEA_SERIALY = [\n' + '\n'.join(radky) + '\n];\n')
     print(f'{len(radky)} dílů → {VYSTUP}')
-    if chybi: print('bez odkazu na nahnoji.cz:', ', '.join(chybi))
+    if chybi: print('vynecháno (není na nahnoji.cz):', ', '.join(chybi))
     if vic: print('díly s více videi (použito první):', '; '.join(vic))
 
 if __name__ == '__main__':
