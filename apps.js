@@ -1685,9 +1685,9 @@ const KATALOG_SEKCE = [
       },
       {
         "soubor": "obsah/nahnoji.html",
-        "nazev": "📼 Videotéka Nahnoji.cz",
+        "nazev": "📼 Videotéka",
         "stav": "vyvoj",
-        "tagy": ["video", "videa", "nahnoji", "přehrávač", "galerie", "videotéka", "sdílení"]
+        "tagy": ["video", "videa", "nahnoji", "přehrávač", "galerie", "videotéka", "seriály", "sdílení"]
       },
       {
         "soubor": "obsah/mp3cutter.html",

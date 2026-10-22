@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📼 Videotéka Nahnoji.cz</title>
+<title>📼 Videotéka</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
@@ -193,10 +193,20 @@
   .okno-hlava .nad { color: var(--text-faint); font-size: .85rem; }
   .okno-hlava h2 { margin: 0; font-size: 1.15rem; overflow-wrap: anywhere; }
   .platno { aspect-ratio: 16 / 9; max-height: calc(100vh - 190px); width: 100%; background: #000; display: grid; place-items: center; }
-  .platno iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .platno { position: relative; }
+  .platno iframe { width: 100%; height: 100%; border: 0; display: block; grid-area: 1 / 1; }
+  .zablokovano {
+    position: absolute; left: 12px; right: 12px; top: 12px;
+    background: rgba(30,30,30,.95); color: #eee; border: 1px solid #d88a1c; border-radius: 8px;
+    padding: 12px 14px; font-size: .9rem;
+  }
+  .zablokovano strong { color: #ffc46b; }
+  .zablokovano p { margin: 6px 0 10px; color: #ccc; }
   .blokovano { padding: 24px; text-align: center; color: #ddd; max-width: 540px; }
   .blokovano p { margin: 0 0 14px; line-height: 1.45; }
   .blokovano .tlacitka { justify-content: center; }
+  .blokovano .navod { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid #444; font-size: .85rem; color: #bbb; text-align: left; }
+  .blokovano .navod button { margin-top: 8px; display: block; }
   .blokovano h3 { margin: 0 0 10px; color: #ffc46b; font-size: 1.1rem; }
   .okno-pata { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; align-items: center; }
   .tlacitka { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -230,12 +240,15 @@
   .dil.aktualni .n { color: var(--accent); font-weight: 600; }
 
   /* Celá obrazovka – video přes celou plochu, ovládání zůstane dole */
-  .okno:fullscreen { width: 100%; max-height: none; border-radius: 0; border: 0; background: #000; }
-  .okno:fullscreen .hlavni-sloupec { height: 100vh; }
-  .okno:fullscreen .platno { flex: 1; aspect-ratio: auto; max-height: none; }
-  .okno:fullscreen .okno-hlava, .okno:fullscreen .okno-pata { background: var(--bg-panel); }
-  .okno:fullscreen .okno-pata .info, .okno:fullscreen .klavesy { display: none; }
-  .okno:fullscreen .dily { max-height: 100vh; background: var(--bg-panel); }
+  /* Režim kina = náhrada, když prohlížeč celou obrazovku odmítne: okno přes celou plochu stránky. */
+  .prekryv.kino { padding: 0; }
+  .okno.kino { height: 100%; }
+  .okno:fullscreen, .okno.kino { width: 100%; max-height: none; border-radius: 0; border: 0; background: #000; }
+  .okno:fullscreen .hlavni-sloupec, .okno.kino .hlavni-sloupec { height: 100vh; }
+  .okno:fullscreen .platno, .okno.kino .platno { flex: 1; aspect-ratio: auto; max-height: none; }
+  .okno:fullscreen .okno-hlava, .okno:fullscreen .okno-pata, .okno.kino .okno-hlava, .okno.kino .okno-pata { background: var(--bg-panel); }
+  .okno:fullscreen .okno-pata .info, .okno:fullscreen .klavesy, .okno.kino .okno-pata .info, .okno.kino .klavesy { display: none; }
+  .okno:fullscreen .dily, .okno.kino .dily { max-height: 100vh; background: var(--bg-panel); }
 
   /* ── přidání videí ── */
   .panel {
@@ -270,8 +283,8 @@
 </head>
 <body>
 <div class="container">
-  <h1>📼 Videotéka Nahnoji.cz</h1>
-  <p class="podnadpis">Prohlížeč videí nahraných na <a href="http://nahnoji.cz/" target="_blank" rel="noopener">nahnoji.cz</a>.</p>
+  <h1>📼 Videotéka</h1>
+  <p class="podnadpis">Seriály a videa – přehrávač si pamatuje, kde jsi skončil.</p>
 
   <nav class="menu" id="menu" aria-label="Seriály a sbírky"></nav>
 
@@ -328,7 +341,7 @@
           <button id="btnCela" title="Celá obrazovka i s ovládáním (F)">⛶ Celá obrazovka</button>
           <button id="btnOkno">Otevřít v okně</button>
           <button id="btnKopirovat">Kopírovat odkaz</button>
-          <button id="btnNaWebu">Na nahnoji.cz ↗</button>
+          <button id="btnRezim" title="Přehrávač zůstává prázdný? Vrátit přehrávání do samostatného okna">🪟 Přehrávat v okně</button>
         </div>
         <div class="info">
           <span id="prehInfo"></span>
@@ -358,7 +371,18 @@
   // vložit http rámec ani video – prohlížeč je zablokuje jako „mixed content".
   // Nové okno (navigace nejvyšší úrovně) blokované není. ?okno vynutí
   // https režim i lokálně (pro vyzkoušení).
-  const LZE_VLOZIT = location.protocol !== 'https:' && !/[?&]okno\b/.test(location.search);
+  const JE_HTTPS = location.protocol === 'https:' || /[?&]okno\b/.test(location.search);
+  // Na https jde přehrávač vložit jen tomu, kdo si v prohlížeči pro tenhle web
+  // povolil „Nezabezpečený obsah" (Chrome/Brave/Edge: Nastavení webu). Volba se pamatuje.
+  const KLIC_VKLADAT = 'webapp_nahnoji_vkladat';
+  let vkladat = !JE_HTTPS || (() => { try { return localStorage.getItem(KLIC_VKLADAT) === '1'; } catch (e) { return false; } })();
+  function nastavVkladani(ano) {
+    vkladat = ano;
+    try { ano ? localStorage.setItem(KLIC_VKLADAT, '1') : localStorage.removeItem(KLIC_VKLADAT); } catch (e) {}
+    if (ano && oknoPrehr && !oknoPrehr.closed) oknoPrehr.close();
+    if (stav.aktualni >= 0) hraj(stav.aktualni);
+  }
+  const NAVOD_NEZABEZPECENY = 'Brave / Chrome / Edge: klikni na ikonu vlevo od adresy (⚙ nebo zámek) → Nastavení webu → Nezabezpečený obsah → Povolit, pak stránku obnov. Povolí se tím http obsah jen pro tento web. Ve Firefoxu jednotlivému webu povolit nejde.';
 
   const $ = id => document.getElementById(id);
   // pohled: '' = všechna videa, 's:<název seriálu>', 'ostatni' = videa mimo seriály
@@ -644,12 +668,13 @@
     plakat.appendChild(el('span', 'stitek-roh cislo', '#' + v.id));
     if (v.serial) plakat.appendChild(el('span', 'stitek-roh epizoda', oznaceniDilu(v)));
     if (jeVideno(v)) plakat.appendChild(el('span', 'stitek-roh videno', '✓ zhlédnuto'));
-    if (nedostupne(v) && !jeVideno(v)) plakat.appendChild(el('span', 'stitek-roh nezprac', '⚠ bez dat'));
+    if (nedostupne(v) && !jeVideno(v)) plakat.appendChild(el('span', 'stitek-roh nezprac', '⏳ zpracovává se'));
     if (dalsi && dalsi.id === v.id) plakat.appendChild(el('span', 'stitek-roh pristi', 'na řadě'));
     else if (v.mistni) plakat.appendChild(el('span', 'stitek-roh mistni', 'jen v prohlížeči'));
     const pop = el('div', 'popisek');
     pop.appendChild(el('span', 'nazev', v.nazev));
-    const meta = [stav.pohled.startsWith('s:') ? '' : v.serial, formatDatum(v.datum), (v.stitky || []).join(', ')]
+    // U dílů seriálu je datum nahrání k ničemu – stačí řada a díl.
+    const meta = [stav.pohled.startsWith('s:') ? '' : v.serial, v.serial ? '' : formatDatum(v.datum), (v.stitky || []).join(', ')]
       .filter(Boolean).join(' · ');
     if (meta) pop.appendChild(el('span', 'meta', meta));
     if (v.popis) pop.appendChild(el('span', 'text', v.popis));
@@ -794,10 +819,10 @@
     const chyba = nedostupne(v);
     if (chyba && !stav.presto) {
       const b = el('div', 'blokovano');
-      b.appendChild(el('h3', '', '⚠ Video na nahnoji.cz zatím nejde přehrát'));
+      b.appendChild(el('h3', '', '⚠ Video zatím nejde přehrát'));
       b.appendChild(el('p', '', chyba === 'prazdne'
-        ? 'Soubor na serveru má 0 bajtů – nahnoji.cz video po nahrání ještě nezpracoval (fronta konverze tam stojí). Přehrávač by jen ukázal chybu „DEMUXER_ERROR_COULD_NOT_OPEN“.'
-        : 'Při poslední kontrole video na serveru chybělo nebo nešlo stáhnout.'));
+        ? 'Video je nahrané, ale ještě se zpracovává. Do té doby by přehrávač ukázal jen chybu.'
+        : 'Při poslední kontrole video chybělo nebo nešlo načíst.'));
       if (window.NAHNOJI_OVERENO) b.appendChild(el('p', '', `Zjištěno ${formatDatum(window.NAHNOJI_OVERENO)}. Když se mezitím zpracovalo, půjde přehrát.`));
       const t = el('div', 'tlacitka');
       const b1 = el('button', 'hlavni', 'Zkusit přesto');
@@ -810,13 +835,14 @@
       }
       b.appendChild(t);
       platno.appendChild(b);
-    } else if (LZE_VLOZIT) {
+    } else if (vkladat) {
       const f = document.createElement('iframe');
       f.src = odkazEmbed(v.id);
       f.allowFullscreen = true;
       f.allow = 'autoplay; fullscreen';
       f.title = v.nazev;
       platno.appendChild(f);
+      if (JE_HTTPS) hlidejZablokovani(f, v);
     } else {
       // https (GitHub Pages): http přehrávač sem vložit nejde, hraje se v samostatném
       // okně. Klik na díl je gesto uživatele, takže okno jde otevřít hned.
@@ -824,8 +850,8 @@
       const b = el('div', 'blokovano');
       b.appendChild(el('h3', '', otevreno ? '▶ Hraje v samostatném okně' : 'Přehrát v samostatném okně'));
       b.appendChild(el('p', '', otevreno
-        ? 'Nahnoji.cz posílá video jen přes http, proto nemůže hrát přímo tady na https stránce. Další díly přepínej odsud (tlačítka dole nebo šipky) – okno přehrávače se přepne samo.'
-        : 'Nahnoji.cz posílá video jen přes http, proto nemůže hrát přímo tady na https stránce. Prohlížeč okno sám neotevřel – klikni na tlačítko.'));
+        ? 'Další díly přepínej odsud (tlačítka dole nebo šipky) – okno přehrávače se přepne samo.'
+        : 'Prohlížeč okno sám neotevřel – klikni na tlačítko.'));
       const t = el('div', 'tlacitka');
       const b1 = el('button', 'hlavni', otevreno ? '▶ Přehrát znovu' : '▶ Přehrát v okně');
       b1.onclick = () => oknoPrehravace(v);
@@ -836,10 +862,19 @@
         t.appendChild(b2);
       }
       b.appendChild(t);
+      const n = el('p', 'navod');
+      n.appendChild(el('strong', '', 'Chceš přehrávat přímo tady, bez okna? '));
+      n.appendChild(document.createTextNode(NAVOD_NEZABEZPECENY + ' '));
+      const b3 = el('button', '', '▣ Mám povoleno – přehrávat na stránce');
+      b3.onclick = () => nastavVkladani(true);
+      n.appendChild(b3);
+      b.appendChild(n);
       platno.appendChild(b);
     }
+    nastavTlacitka();
 
-    $('prehInfo').textContent = [`Video #${v.id}`, formatDatum(v.datum), v.popis].filter(Boolean).join(' · ');
+    $('prehInfo').textContent = [`Video #${v.id}`, v.serial ? '' : formatDatum(v.datum), v.popis,
+      JE_HTTPS && vkladat ? 'Prázdný přehrávač = prohlížeč blokuje http obsah (povol Nezabezpečený obsah, nebo 🪟 Přehrávat v okně)' : ''].filter(Boolean).join(' · ');
     const predchozi = stav.fronta[i - 1], dalsi = stav.fronta[i + 1];
     const tlPopis = (x, smer) => x ? (x.serial ? `${smer} díl: ${oznaceniDilu(x)} ${x.nazev}` : `${smer}: ${x.nazev}`) : '';
     $('btnPredchozi').disabled = !predchozi;
@@ -852,6 +887,28 @@
     vykresliDily();
     $('prekryv').classList.add('otevreno');
     history.replaceState(null, '', '#v=' + v.id);
+  }
+
+  // Zablokovaný http rámec na https stránce nevyvolá vůbec „load" (povolený ano,
+  // s cizím originem). Když do 6 s nic nepřijde, nabídne se okno a návod;
+  // načte-li se přehrávač později, lišta zmizí.
+  function hlidejZablokovani(f, v) {
+    let nacteno = false, lista = null;
+    f.addEventListener('load', () => { nacteno = true; if (lista) lista.remove(); });
+    setTimeout(() => {
+      if (nacteno || !f.isConnected) return;
+      lista = el('div', 'zablokovano');
+      lista.appendChild(el('strong', '', 'Prohlížeč přehrávač zablokoval – nemá pro tento web povolený nezabezpečený (http) obsah.'));
+      lista.appendChild(el('p', '', NAVOD_NEZABEZPECENY));
+      const t = el('div', 'tlacitka');
+      const b1 = el('button', 'hlavni', '▶ Přehrát v okně');
+      b1.onclick = () => oknoPrehravace(v);
+      const b2 = el('button', '', '🪟 Vždy přehrávat v okně');
+      b2.onclick = () => nastavVkladani(false);
+      t.append(b1, b2);
+      lista.appendChild(t);
+      $('platno').appendChild(lista);
+    }, 6000);
   }
 
   function aktualizujVideno() {
@@ -892,7 +949,7 @@
       if (i === stav.aktualni) { b.classList.add('aktualni'); aktivni = b; }
       b.append(el('span', 'c', oznaceniDilu(d)), el('span', 'n', d.nazev));
       if (jeVideno(d)) b.appendChild(el('span', 'v', '✓'));
-      else if (nedostupne(d)) { b.appendChild(el('span', 'v pozor', '⚠')); b.title = 'Na nahnoji.cz zatím bez dat'; }
+      else if (nedostupne(d)) { b.appendChild(el('span', 'v pozor', '⚠')); b.title = 'Video se ještě zpracovává'; }
       b.onclick = () => hraj(i);
       box.appendChild(b);
     });
@@ -912,6 +969,7 @@
 
   function zavri() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    kino(false);
     $('prekryv').classList.remove('otevreno');
     $('platno').textContent = '';   // zastaví přehrávání
     if (oknoPrehr && !oknoPrehr.closed) oknoPrehr.close();   // i okno přehrávače (https režim)
@@ -936,8 +994,26 @@
   }
 
   function celaObrazovka() {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else if ($('okno').requestFullscreen) $('okno').requestFullscreen().catch(() => {});
+    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
+    if ($('okno').classList.contains('kino')) { kino(false); return; }
+    const okno = $('okno');
+    const pozadej = okno.requestFullscreen || okno.webkitRequestFullscreen;
+    if (!pozadej) { kino(true, 'prohlížeč celou obrazovku nepodporuje'); return; }
+    try {
+      Promise.resolve(pozadej.call(okno)).catch(e => kino(true, e && (e.message || e.name)));
+    } catch (e) { kino(true, e && (e.message || e.name)); }
+  }
+
+  // Náhradní „režim kina": přehrávač přes celé okno prohlížeče (F11 pak doplní celou obrazovku).
+  let kinoVysvetleno = false;
+  function kino(zapnout, duvod) {
+    $('okno').classList.toggle('kino', zapnout);
+    $('prekryv').classList.toggle('kino', zapnout);
+    $('btnCela').textContent = zapnout ? '⛶ Zmenšit' : '⛶ Celá obrazovka';
+    if (zapnout && duvod && !kinoVysvetleno) {
+      kinoVysvetleno = true;
+      Dialog.info(`Prohlížeč celou obrazovku nepovolil (${duvod}). Přehrávač je aspoň přes celé okno – klávesou F11 ho roztáhneš na celou obrazovku.`);
+    }
   }
 
   async function kopiruj(text, hlaska) {
@@ -949,7 +1025,7 @@
 
   function pridej() {
     const nove = rozeberVstup($('vstup').value);
-    if (!nove.length) { Dialog.chyba('Nenašel jsem žádný odkaz na nahnoji.cz'); return; }
+    if (!nove.length) { Dialog.chyba('Nenašel jsem žádný odkaz na video'); return; }
     const mistni = nactiMistni();
     const znama = new Set(vsechnaVidea().map(v => v.id));
     let pridano = 0;
@@ -993,7 +1069,7 @@
   $('btnSmazatMistni').onclick = async () => {
     const n = nactiMistni().length;
     if (!n) { Dialog.info('V prohlížeči nejsou žádná přidaná videa'); return; }
-    if (await Dialog.potvrd(`Odebrat ${n} videí přidaných v tomto prohlížeči? Na nahnoji.cz zůstanou.`)) {
+    if (await Dialog.potvrd(`Odebrat ${n} videí přidaných v tomto prohlížeči? Nahraná videa se tím nesmažou.`)) {
       ulozMistni([]); vykresli();
     }
   };
@@ -1011,7 +1087,6 @@
   };
   $('btnCela').onclick = celaObrazovka;
   $('btnOkno').onclick = () => oknoPrehravace(aktualniVideo());
-  $('btnNaWebu').onclick = () => window.open(odkazVidea(aktualniVideo().id), '_blank', 'noopener');
   $('btnKopirovat').onclick = () => kopiruj(odkazVidea(aktualniVideo().id), 'Odkaz zkopírován');
   $('dilyRada').addEventListener('change', e => {
     const nadpis = $('dilySeznam').querySelector(`.rada[data-rada="${e.target.value}"]`);
@@ -1032,7 +1107,10 @@
       : e.code === 'KeyF' ? 'cela' : '';
     if (!k) return;
     e.preventDefault();
-    if (k === 'esc') { if (!document.fullscreenElement) zavri(); }   // Esc z celé obrazovky jen zmenší
+    if (k === 'esc') {   // Esc z celé obrazovky / kina jen zmenší
+      if ($('okno').classList.contains('kino')) kino(false);
+      else if (!document.fullscreenElement) zavri();
+    }
     else if (k === 'zpet') dalsiVFronte(-1);
     else if (k === 'dal') dalsiVFronte(1);
     else if (k === 'videno') $('btnVideno').click();
@@ -1040,7 +1118,12 @@
   });
 
   // Bez vložení jsou tyhle volby přímo v hlášce na plátně.
-  if (!LZE_VLOZIT) { $('btnOkno').hidden = true; $('btnNaWebu').hidden = true; $('btnCela').hidden = true; }
+  function nastavTlacitka() {
+    $('btnOkno').hidden = $('btnCela').hidden = !vkladat;
+    $('btnRezim').hidden = !(JE_HTTPS && vkladat);
+  }
+  $('btnRezim').onclick = () => nastavVkladani(false);
+  nastavTlacitka();
 
   // Odkazy: nahnoji.html#s=Král%20džungle (seriál), #v=21527 (video)
   function podleAdresy() {
@@ -1061,7 +1144,7 @@
   podleAdresy();
 
   // Pro testy.
-  window.NAHNOJI = { rozeberVstup, vsechnaVidea, serialy, dalsiDil, otevri, prehraj, zavri, stav, divani, LZE_VLOZIT };
+  window.NAHNOJI = { rozeberVstup, vsechnaVidea, serialy, dalsiDil, otevri, prehraj, zavri, stav, divani, JE_HTTPS, vkladat: () => vkladat };
 })();
 </script>
 </body>
