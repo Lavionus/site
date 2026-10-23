@@ -1502,6 +1502,12 @@ const KATALOG_SEKCE = [
         "tagy": ["fonty", "písmo", "elfí písmo", "tengwar", "tolkien", "pán prstenů", "runy", "futhark", "hlaholice", "azbuka", "cyrilice", "alfabeta", "řečtina", "ogam", "braille", "slepecké písmo", "hieroglyfy", "egypt", "fénické písmo", "etruské písmo", "gótské písmo", "morseovka", "přepis", "transliterace", "vlastní font"]
       },
       {
+        "soubor": "obsah/pismolijna.html",
+        "nazev": "🅰️ Písmolijna – editor písma",
+        "stav": "vyvoj",
+        "tagy": ["fonty", "písmo", "editor fontů", "fontforge", "glyfy", "bézierovy křivky", "kerning", "ligatury", "diakritika", "ttf", "otf", "woff", "svg font", "typografie", "rukopisné písmo", "obtahování", "vlastní font"]
+      },
+      {
         "soubor": "obsah/emoji_picker.html",
         "nazev": "😀 Picker emoji",
         "stav": "beta",
@@ -2276,6 +2282,12 @@ const KATALOG_SEKCE = [
         "nazev": "🔩 Panty a klouby pro 3D tisk",
         "stav": "vyvoj",
         "tagy": ["3D tisk", "CAD", "STL", "pant", "kloub", "FDM", "návrh", "strojírenství"]
+      },
+      {
+        "soubor": "obsah/krabicka_pant.html",
+        "nazev": "🗃️ Krabička s víčkem na pantu",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "CAD", "STL", "3MF", "krabička", "víčko", "pant", "čep", "zapínání", "chlopeň", "přihrádky", "organizér", "magnety", "generátor"]
       },
       {
         "soubor": "obsah/drzaky_naradi.html",

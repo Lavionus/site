@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🅰️ Písmolijna – editor písma</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<link rel="stylesheet" href="pismolijna/pismolijna.css">
+</head>
+<body>
+
+<header class="lista">
+  <h1 title="Písmolijna – editor písma">🅰️ Písmolijna</h1>
+  <nav class="menu" id="menu" aria-label="Hlavní nabídka"></nav>
+  <div class="rezim" role="group" aria-label="Režim rozhraní">
+    <button type="button" data-rezim="jednoduchy" title="Jen základní nástroje – kreslení, symetrie, generátor, stažení fontu">Jednoduchý</button>
+    <button type="button" data-rezim="pokrocily" title="Všechny nástroje: kerning, kontrola chyb, komponenty, kotvy, transformace, export do všech formátů">Pokročilý</button>
+  </div>
+  <div class="nazev-fontu" id="nazevFontu" title="Rodina a řez – kliknutím otevřete Informace o fontu"></div>
+  <span class="ulozeno" id="ulozeno" aria-live="polite"></span>
+</header>
+
+<div class="karty" role="tablist" id="karty">
+  <button role="tab" data-pohled="znaky" aria-selected="true">🔠 Znaky</button>
+  <button role="tab" data-pohled="glyf">✒️ Glyf</button>
+  <button role="tab" data-pohled="metriky" class="pokrocile">↔️ Metriky a kerning</button>
+  <button role="tab" data-pohled="nahled">👁️ Náhled</button>
+  <button role="tab" data-pohled="kontrola" class="pokrocile">🩺 Kontrola</button>
+  <button role="tab" data-pohled="generator">✨ Generátor</button>
+</div>
+
+<main class="prostor">
+  <!-- ===== mřížka znaků ===== -->
+  <section class="pohled" id="pohled-znaky" data-pohled="znaky">
+    <aside class="bloky" id="bloky" aria-label="Bloky znaků"></aside>
+    <div class="znaky-obal">
+      <div class="znaky-lista">
+        <input type="search" id="hledatZnak" placeholder="Hledat: znak, název nebo U+010D" aria-label="Hledat glyf">
+        <label class="mala">Velikost <input type="range" id="velikostBunky" min="40" max="140" value="64"></label>
+        <span class="vyber-info" id="vyberInfo"></span>
+        <span class="mezera"></span>
+        <button class="tl pokrocile" id="tlNovyGlyf" title="Nový glyf bez Unicode (např. a.alt, f_i)">+ Glyf</button>
+        <button class="tl" id="tlOtevritGlyf" title="Otevřít vybraný glyf v editoru (dvojklik)">✒️ Upravit</button>
+        <button class="tl" id="tlSmazGlyfy" title="Smazat vybrané glyfy (Delete)">🗑️</button>
+      </div>
+      <div class="znaky" id="znaky" tabindex="0" aria-label="Mřížka znaků"></div>
+    </div>
+  </section>
+
+  <!-- ===== editor glyfu ===== -->
+  <section class="pohled" id="pohled-glyf" data-pohled="glyf" hidden>
+    <div class="nastroje" id="nastroje" role="toolbar" aria-label="Nástroje" aria-orientation="vertical"></div>
+    <div class="plocha-obal">
+      <div class="plocha-lista">
+        <button class="tl ik" id="tlPredGlyf" title="Předchozí glyf (Page Up)">◀</button>
+        <span class="glyf-nazev" id="edNazev"></span>
+        <button class="tl ik" id="tlDalsiGlyf" title="Další glyf (Page Down)">▶</button>
+        <label class="mala" title="Glyfy vykreslené vlevo a vpravo kvůli posouzení mezer. Zápis jako text, / pro název: „nn“, „HH“, „/a.alt“">Kontext
+          <input id="edKontextL" value="n" size="4" aria-label="Kontext vlevo"> · <input id="edKontextP" value="n" size="4" aria-label="Kontext vpravo"></label>
+        <span class="mezera"></span>
+        <span class="souradnice" id="edSouradnice"></span>
+        <button class="tl ik" id="tlZoomVse" title="Celý glyf (Ctrl+0)">⤢</button>
+      </div>
+      <div class="plocha" id="plocha"><canvas id="platno" tabindex="0" aria-label="Plocha editoru glyfu"></canvas>
+        <div class="napoveda-nastroje" id="napovedaNastroje"></div>
+      </div>
+    </div>
+    <aside class="panel" id="panelGlyf" aria-label="Vlastnosti glyfu"></aside>
+  </section>
+
+  <!-- ===== metriky a kerning ===== -->
+  <section class="pohled" id="pohled-metriky" data-pohled="metriky" hidden>
+    <div class="metriky-obal">
+      <div class="metriky-lista">
+        <input id="metText" value="AVATAR Tomáš Váňa ŤAVA Yo P. „ano“" aria-label="Text pro kerning" title="Text; / a název vloží glyf podle jména (např. /a.alt)">
+        <label class="mala">Velikost <input type="range" id="metVelikost" min="40" max="400" value="140"></label>
+        <label class="mala"><input type="checkbox" id="metKern" checked> kerning</label>
+        <label class="mala"><input type="checkbox" id="metLig" checked> ligatury</label>
+        <label class="mala"><input type="checkbox" id="metSkupiny" checked title="Úprava páru, který patří do skupin, změní kerning celých skupin"> upravovat skupiny</label>
+      </div>
+      <div class="metriky-plocha" id="metPlocha"><canvas id="metPlatno" tabindex="0" aria-label="Text s kerningem"></canvas></div>
+      <div class="metriky-spodek">
+        <div class="met-par" id="metPar"></div>
+        <div class="met-tabulky">
+          <details open><summary>Páry kerningu <span id="metPocet"></span></summary>
+            <input type="search" id="metHledat" placeholder="Filtr párů (např. A nebo @kulate)" aria-label="Filtr párů">
+            <div class="tabulka" id="metPary"></div></details>
+          <details><summary>Skupiny kerningu</summary><div id="metSkupinyEd"></div></details>
+          <details><summary>Ligatury</summary><div id="metLigatury"></div></details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== náhled ===== -->
+  <section class="pohled" id="pohled-nahled" data-pohled="nahled" hidden>
+    <div class="nahled" id="nahled"></div>
+  </section>
+
+  <!-- ===== kontrola ===== -->
+  <section class="pohled" id="pohled-kontrola" data-pohled="kontrola" hidden>
+    <div class="kontrola" id="kontrola"></div>
+  </section>
+  <!-- ===== generátor ===== -->
+  <section class="pohled" id="pohled-generator" data-pohled="generator" hidden>
+    <div class="generator" id="generator"></div>
+  </section>
+</main>
+
+<div class="zprava" id="zprava" role="status" aria-live="polite" hidden></div>
+<input type="file" id="soubor" hidden>
+
+<script src="lib/opentype.min.js"></script>
+<script src="lib/clipper.min.js"></script>
+<script src="fonty/fonty.js"></script>
+<script src="pismolijna/jadro/model.js"></script>
+<script src="pismolijna/jadro/krivky.js"></script>
+<script src="pismolijna/jadro/operace.js"></script>
+<script src="pismolijna/jadro/kontrola.js"></script>
+<script src="pismolijna/jadro/obtah.js"></script>
+<script src="pismolijna/jadro/export.js"></script>
+<script src="pismolijna/jadro/import.js"></script>
+<script src="pismolijna/jadro/generator.js"></script>
+<script src="pismolijna/ui/stav.js"></script>
+<script src="pismolijna/ui/mrizka.js"></script>
+<script src="pismolijna/ui/editor.js"></script>
+<script src="pismolijna/ui/panel.js"></script>
+<script src="pismolijna/ui/metriky.js"></script>
+<script src="pismolijna/ui/nahled.js"></script>
+<script src="pismolijna/ui/kontrola.js"></script>
+<script src="pismolijna/ui/dialogy.js"></script>
+<script src="pismolijna/ui/generator.js"></script>
+<script src="pismolijna/ui/app.js"></script>
+</body>
+</html>

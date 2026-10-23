@@ -95,6 +95,10 @@
       upraveno: cas(p.upraveno) || zal || ted,
       naposledy: cas(p.naposledy),
       verze: Array.isArray(p.verze) ? p.verze.filter(v => v && typeof v.text === 'string').slice(-MAX_VERZI) : [],
+      kolekce: cistyStitky(p.kolekce),
+      pripnuty: !!p.pripnuty,
+      // řetěz = prompt s kroky (id jiných promptů), kopírují se postupně
+      kroky: Array.isArray(p.kroky) ? p.kroky.map(String).filter(Boolean) : [],
     };
   }
 
@@ -115,7 +119,7 @@
      „-slovo" vylučuje. */
   function rozeberDotaz(q) {
     const tok = String(q || '').match(/"[^"]*"|\S+/g) || [];
-    const d = { slova: [], ne: [], stitky: [], kat: [], model: [] };
+    const d = { slova: [], ne: [], stitky: [], kat: [], model: [], kol: [] };
     for (let t of tok) {
       let neg = false;
       if (t[0] === '-' && t.length > 1) { neg = true; t = t.slice(1); }
@@ -124,6 +128,7 @@
       if (t[0] === '#' && t.length > 1) d.stitky.push(norm(t.slice(1)));
       else if (/^kat:/i.test(t)) d.kat.push(norm(t.slice(4)));
       else if (/^model:/i.test(t)) d.model.push(norm(t.slice(6)));
+      else if (/^kol:/i.test(t)) d.kol.push(norm(t.slice(4)));
       else (neg ? d.ne : d.slova).push(norm(t));
     }
     return d;
@@ -135,6 +140,7 @@
     if (d.stitky.some(s => !st.some(x => x.includes(s)))) return false;
     if (d.kat.some(k => !norm(p.kategorie).includes(k))) return false;
     if (d.model.some(k => !norm(p.model).includes(k))) return false;
+    if (d.kol.some(k => !p.kolekce.some(x => norm(x).includes(k)))) return false;
     const vse = norm([p.nazev, p.text, p.kategorie, p.model, p.poznamka, p.stitky.join(' ')].join('\n'));
     if (d.slova.some(s => !vse.includes(s))) return false;
     if (d.ne.some(s => vse.includes(s))) return false;
@@ -148,6 +154,8 @@
       (!f.kategorie || p.kategorie === f.kategorie) &&
       (!f.stitek || p.stitky.includes(f.stitek)) &&
       (!f.oblibene || p.oblibeny) &&
+      (!f.kolekce || p.kolekce.includes(f.kolekce)) &&
+      (!f.retezy || p.kroky.length > 0) &&
       odpovida(p, d));
   }
 
@@ -170,13 +178,70 @@
   }
 
   function prehled(seznam) {
-    const kat = new Map(), st = new Map();
+    const kat = new Map(), st = new Map(), kol = new Map();
     for (const p of seznam) {
       if (p.kategorie) kat.set(p.kategorie, (kat.get(p.kategorie) || 0) + 1);
       for (const t of p.stitky) st.set(t, (st.get(t) || 0) + 1);
+      for (const k of p.kolekce || []) kol.set(k, (kol.get(k) || 0) + 1);
     }
     const pole = m => [...m].sort((a, b) => b[1] - a[1] || porovnejText(a[0], b[0]));
-    return { kategorie: pole(kat), stitky: pole(st) };
+    return { kategorie: pole(kat), stitky: pole(st), kolekce: [...kol].sort((a, b) => porovnejText(a[0], b[0])) };
+  }
+
+  /* ---------- řetězy ---------- */
+  function krokyRetezu(retez, vse) {
+    const podleId = new Map(vse.map(p => [p.id, p]));
+    return retez.kroky.map(id => podleId.get(id) || null);
+  }
+  function promenneRetezu(retez, vse) {
+    const vys = [], videno = new Set();
+    for (const k of krokyRetezu(retez, vse)) {
+      if (!k) continue;
+      for (const v of promenne(k.text)) if (!videno.has(v.jmeno)) { videno.add(v.jmeno); vys.push(v); }
+    }
+    return vys;
+  }
+
+  /* ---------- kontrola promptu ----------
+     Vrací [{uroven: 'chyba'|'varovani'|'tip', text}]. vse = celá databanka (duplicity, řetězy). */
+  const MAX_TOKENU = 8000;
+  function kontrola(p, vse) {
+    const vys = [];
+    const pridej = (uroven, text) => vys.push({ uroven, text });
+    if (p.kroky && p.kroky.length) {
+      const chybi = krokyRetezu(p, vse || []).filter(k => !k).length;
+      if (chybi) pridej('chyba', `Řetěz odkazuje na ${chybi} smazaný prompt – odeberte ho z kroků.`);
+      if (p.kroky.length < 2) pridej('tip', 'Řetěz má jen jeden krok.');
+      return vys;
+    }
+    const t = String(p.text || '');
+    const otv = (t.match(/\{\{/g) || []).length, zav = (t.match(/\}\}/g) || []).length;
+    if (otv !== zav) pridej('chyba', `Nepárové závorky proměnných: {{ ×${otv}, }} ×${zav}.`);
+    if (/\{\{\s*(\|[^{}]*)?\}\}/.test(t)) pridej('chyba', 'Proměnná bez jména {{ }}.');
+    // stejná proměnná s různými výchozími hodnotami / jména lišící se jen velikostí či diakritikou
+    const vych = new Map(), jmena = new Map();
+    t.replace(RE_PROM, (m, jm, v) => {
+      const k = jm.trim();
+      if (!vych.has(k)) vych.set(k, new Set());
+      vych.get(k).add((v || '').trim());
+      const n = norm(k);
+      if (!jmena.has(n)) jmena.set(n, new Set());
+      jmena.get(n).add(k);
+      return m;
+    });
+    for (const [k, mn] of vych) if (mn.size > 1) pridej('varovani', `Proměnná „${k}" má v textu různé výchozí hodnoty (${[...mn].map(x => x || 'žádná').join(' / ')}).`);
+    for (const mn of jmena.values()) if (mn.size > 1) pridej('varovani', `Proměnné se liší jen velikostí písmen nebo diakritikou: ${[...mn].join(', ')} – vyplňují se zvlášť.`);
+    const tok = odhadTokenu(t);
+    if (tok > MAX_TOKENU) pridej('varovani', `Prompt má ≈ ${tok.toLocaleString('cs')} tokenů – některé modely ho zkrátí.`);
+    if (t.trim().length < 40 && !promenne(t).length) pridej('tip', 'Velmi krátký prompt – zvažte doplnit kontext, roli nebo požadovaný formát odpovědi.');
+    if (/\[(TEXT|ZDE|DOPLŇ|DOPLN|VLOŽ|VLOZ|INSERT|XXX)[^\]]*\]|<(text|vlož|vloz|insert)[^>]*>|\bXXX\b/i.test(t)) pridej('tip', 'Vypadá to na ruční zástupný text ([TEXT], XXX…) – jako {{proměnná}} se vyplní ve formuláři.');
+    if (!p.kategorie && !(p.stitky || []).length) pridej('tip', 'Bez kategorie a štítků – hůř se dohledá.');
+    if (vse && t.trim()) {
+      const k = klicTextu(p);
+      const dvojce = vse.find(x => x.id !== p.id && !x.kroky.length && klicTextu(x) === k);
+      if (dvojce) pridej('varovani', `Stejný text má i prompt „${dvojce.nazev}".`);
+    }
+    return vys;
   }
 
   /* ---------- export ---------- */
@@ -207,6 +272,7 @@
       r.push('## ' + p.nazev.replace(/\n/g, ' '), '');
       if (p.kategorie) r.push('- Kategorie: ' + p.kategorie);
       if (p.stitky.length) r.push('- Štítky: ' + p.stitky.join(', '));
+      if (p.kolekce && p.kolekce.length) r.push('- Kolekce: ' + p.kolekce.join(', '));
       if (p.model) r.push('- Model: ' + p.model);
       if (p.hodnoceni) r.push('- Hodnocení: ' + p.hodnoceni + '/5');
       if (p.oblibeny) r.push('- Oblíbený: ano');
@@ -218,7 +284,7 @@
     return r.join('\n');
   }
 
-  const SLOUPCE = ['nazev', 'text', 'kategorie', 'stitky', 'model', 'poznamka', 'oblibeny', 'hodnoceni', 'pouziti', 'vytvoreno', 'upraveno'];
+  const SLOUPCE = ['nazev', 'text', 'kategorie', 'stitky', 'kolekce', 'model', 'poznamka', 'oblibeny', 'hodnoceni', 'pouziti', 'vytvoreno', 'upraveno'];
 
   function csvBunka(v) {
     const s = String(v == null ? '' : v);
@@ -230,7 +296,7 @@
     for (const p of seznam) {
       r.push(SLOUPCE.map(k => {
         let v = p[k];
-        if (k === 'stitky') v = v.join(', ');
+        if (k === 'stitky' || k === 'kolekce') v = v.join(', ');
         else if (k === 'oblibeny') v = v ? 1 : 0;
         else if (k === 'vytvoreno' || k === 'upraveno') v = new Date(v).toISOString();
         return csvBunka(v);
@@ -268,6 +334,7 @@
     text: ['text', 'prompt', 'content', 'obsah', 'body'],
     kategorie: ['kategorie', 'category', 'kat'],
     stitky: ['stitky', 'štítky', 'tags', 'tagy'],
+    kolekce: ['kolekce', 'collections'],
     model: ['model'],
     poznamka: ['poznamka', 'poznámka', 'notes', 'note', 'description', 'popis'],
     oblibeny: ['oblibeny', 'oblíbený', 'favorite', 'favourite'],
@@ -288,13 +355,16 @@
     }
     if (mapa.text == null) {
       // bez hlavičky s textem: jeden sloupec = text, dva = název + text
-      const bezHlavicky = r.map(x => x.length >= 2 ? { nazev: x[0], text: x[1] } : { text: x[0] });
+      // tři sloupce = TextExpander (zkratka, obsah, popisek)
+      const bezHlavicky = r.map(x => x.length === 3 ? { nazev: x[2] || x[0], text: x[1], poznamka: 'Zkratka: ' + x[0], stitky: ['textexpander'] }
+        : x.length >= 2 ? { nazev: x[0], text: x[1] } : { text: x[0] });
       return bezHlavicky.filter(p => String(p.text).trim()).map(normalizuj);
     }
     return r.slice(1).map(rad => {
       const o = {};
       for (const [pole, i] of Object.entries(mapa)) o[pole] = rad[i];
       if (o.oblibeny != null) o.oblibeny = /^(1|ano|true|yes|x)$/i.test(String(o.oblibeny).trim());
+      if (o.kolekce != null) o.kolekce = String(o.kolekce).split(/[,;]/);
       return o;
     }).filter(o => String(o.text || '').trim()).map(normalizuj);
   }
@@ -330,6 +400,7 @@
         const k = norm(meta[1].trim()), v = meta[2].trim();
         if (k === 'kategorie' || k === 'category') akt.kategorie = v;
         else if (k === 'stitky' || k === 'tags') akt.stitky = v;
+        else if (k === 'kolekce' || k === 'collections') akt.kolekce = v.split(',').map(x => x.trim()).filter(Boolean);
         else if (k === 'model') akt.model = v;
         else if (k === 'hodnoceni' || k === 'rating') akt.hodnoceni = parseInt(v, 10) || 0;
         else if (k === 'oblibeny' || k === 'favorite') akt.oblibeny = /^(ano|yes|true|1)$/i.test(v);
@@ -348,7 +419,79 @@
   }
 
   /* Rozpozná formát podle obsahu (a přípony, je-li známa). */
-  function importuj(text, nazevSouboru) {
+  /* Jednoduchý frontmatter: klíč: hodnota, seznamy [a, b] nebo odrážky „- a". */
+  function frontmatter(s) {
+    const m = s.match(/^---\s*\n([\s\S]*?)\n---\s*(\n|$)/);
+    if (!m) return { data: {}, telo: s };
+    const data = {};
+    let posl = null;
+    for (const l of m[1].split('\n')) {
+      const pol = l.match(/^\s*-\s+(.*)$/);
+      if (pol && posl) { (data[posl] = Array.isArray(data[posl]) ? data[posl] : []).push(pol[1].trim().replace(/^["']|["']$/g, '')); continue; }
+      const kv = l.match(/^([\w\u00C0-\u017F-]+)\s*:\s*(.*)$/);
+      if (!kv) continue;
+      posl = kv[1].toLowerCase();
+      let v = kv[2].trim();
+      if (/^\[.*\]$/.test(v)) v = v.slice(1, -1).split(',').map(x => x.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+      else v = v.replace(/^["']|["']$/g, '');
+      data[posl] = v === '' ? [] : v;
+    }
+    return { data, telo: s.slice(m[0].length) };
+  }
+  function importPoznamka(s, nazevSouboru) {
+    const { data, telo } = frontmatter(String(s).replace(/\r\n?/g, '\n'));
+    const zSouboru = String(nazevSouboru || '').split('/').pop().replace(/\.(md|markdown)$/i, '');
+    let text = telo.replace(/^\s*\n/, '');
+    let nazev = data.title || data.nazev || data['název'] || '';
+    const h1 = text.match(/^#\s+(.+)\n?/);
+    if (h1 && (!nazev || h1[1].trim() === nazev)) { nazev = nazev || h1[1].trim(); text = text.slice(h1[0].length).replace(/^\s*\n/, ''); }
+    const pole = v => Array.isArray(v) ? v : (v ? String(v).split(',') : []);
+    return normalizuj({
+      nazev: nazev || zSouboru, text: text.trim(),
+      kategorie: data.kategorie || data.category || '',
+      stitky: pole(data.tags || data.stitky || data['štítky']),
+      kolekce: pole(data.kolekce || data.collections),
+      model: data.model || '', poznamka: data.poznamka || data.description || '',
+    });
+  }
+  /* Espanso: matches: - trigger: ":x" / replace: "…" nebo blok „replace: |". */
+  function importEspanso(s) {
+    const radky = String(s).replace(/\r\n?/g, '\n').split('\n');
+    const vys = [];
+    let akt = null;
+    const hodnota = v => {
+      v = v.trim();
+      if (/^".*"$/.test(v)) { try { return JSON.parse(v); } catch (e) { return v.slice(1, -1); } }
+      return v.replace(/^'(.*)'$/, '$1').replace(/''/g, "'");
+    };
+    for (let i = 0; i < radky.length; i++) {
+      const l = radky[i];
+      const zac = l.match(/^(\s*)-\s+(\w+)\s*:\s*(.*)$/);
+      const kv = zac ? [null, zac[2], zac[3]] : l.match(/^\s+(\w+)\s*:\s*(.*)$/);
+      if (zac) { if (akt) vys.push(akt); akt = {}; }
+      if (!akt || !kv) continue;
+      const k = kv[1], v = kv[2];
+      if (/^[|>][-+]?\s*$/.test(v.trim())) {
+        // blok: odsazené řádky pod klíčem
+        const telo = [];
+        let odsaz = null;
+        while (i + 1 < radky.length && (radky[i + 1].trim() === '' || (odsaz == null ? /^\s+/.test(radky[i + 1]) : radky[i + 1].startsWith(odsaz)))) {
+          const r = radky[++i];
+          if (odsaz == null && r.trim()) odsaz = r.match(/^\s*/)[0];
+          if (odsaz != null && !r.startsWith(odsaz) && r.trim()) { i--; break; }
+          telo.push(odsaz ? r.slice(odsaz.length) : r.trim());
+        }
+        akt[k] = v.trim()[0] === '>' ? telo.join(' ').trim() : telo.join('\n').replace(/\n+$/, '');
+      } else akt[k] = hodnota(v);
+    }
+    if (akt) vys.push(akt);
+    return vys.filter(m => m.replace && (m.trigger || m.label)).map(m => normalizuj({
+      nazev: m.label || m.trigger, text: m.replace,
+      poznamka: m.trigger ? 'Zkratka Espanso: ' + m.trigger : '', stitky: ['espanso'],
+    }));
+  }
+
+  function importuj(text, nazevSouboru, volby) {
     const s = String(text || '').replace(/^﻿/, '');
     const pr = (nazevSouboru || '').toLowerCase().split('.').pop();
     const t = s.trim();
@@ -363,8 +506,12 @@
       if (!pole) throw new Error('V JSONu chybí seznam promptů (pole nebo klíč „prompty").');
       pole = pole.map(x => typeof x === 'string' ? { text: x } : x)
         .map(x => (x && x.obsah != null && x.text == null) ? Object.assign({}, x, { text: x.obsah }) : x);
-      return { format: 'JSON', prompty: pole.filter(x => x && String(x.text || x.prompt || x.content || '').trim()).map(normalizuj) };
+      return { format: 'JSON', prompty: pole.filter(x => x && (String(x.text || x.prompt || x.content || '').trim() || (Array.isArray(x.kroky) && x.kroky.length))).map(normalizuj) };
     }
+    if ((pr === 'yml' || pr === 'yaml' || !pr) && /^matches\s*:/m.test(s)) return { format: 'Espanso', prompty: importEspanso(s) };
+    // poznámka s frontmatterem (Obsidian) nebo samostatný soubor ze složky = jeden prompt
+    if ((pr === 'md' || pr === 'markdown') && (/^---\s*\n/.test(s) || (volby && volby.jedenSoubor && !/^# Databanka promptů/.test(t))))
+      return { format: 'Markdown (poznámka)', prompty: [importPoznamka(s, nazevSouboru)] };
     if (pr === 'csv' || pr === 'tsv') return { format: 'CSV', prompty: importCSV(s) };
     if (pr === 'md' || pr === 'markdown' || /^##\s/m.test(s)) return { format: 'Markdown', prompty: importMD(s) };
     if (pr === 'txt' || !pr) {
@@ -381,7 +528,7 @@
   /* Sloučení importu do databanky.
      rezim: 'pridat' (vše jako nové), 'preskocit' (shodný text/id přeskočí),
             'prepsat' (shodné id nebo text přepíše importovaným). */
-  function klicTextu(p) { return norm(p.text).replace(/\s+/g, ' ').trim(); }
+  function klicTextu(p) { return norm(p.text).replace(/\s+/g, ' ').trim() + (p.kroky && p.kroky.length ? '|' + p.kroky.join(',') : ''); }
 
   function sluc(stavajici, nove, rezim) {
     const vys = stavajici.slice();
@@ -407,6 +554,110 @@
     return { prompty: vys, stat };
   }
 
+  /* Podobné prompty (Jaccard nad množinami slov bez diakritiky).
+     Vrací páry [{a, b, podobnost}] seřazené od nejpodobnějších. */
+  function podobne(seznam, prah) {
+    prah = prah == null ? 0.8 : prah;
+    const slova = seznam.map(p => new Set(norm(p.text).match(/[a-z0-9]+/g) || []));
+    const vys = [];
+    for (let i = 0; i < seznam.length; i++) {
+      for (let j = i + 1; j < seznam.length; j++) {
+        const A = slova[i], B = slova[j];
+        if (!A.size || !B.size) continue;
+        // Jaccard nemůže přesáhnout poměr velikostí → rychlé vyřazení
+        if (Math.min(A.size, B.size) / Math.max(A.size, B.size) < prah) continue;
+        let spol = 0;
+        for (const w of A) if (B.has(w)) spol++;
+        const pod = spol / (A.size + B.size - spol);
+        if (pod >= prah) vys.push({ a: seznam[i], b: seznam[j], podobnost: pod });
+      }
+    }
+    return vys.sort((x, y) => y.podobnost - x.podobnost);
+  }
+
+  /* Přejmenování (i sloučení) kategorie nebo štítku. Vrací počet změněných promptů. */
+  function prejmenuj(seznam, co, stare, nove) {
+    nove = String(nove || '').trim();
+    let n = 0;
+    for (const p of seznam) {
+      if (co === 'kategorie') {
+        if (p.kategorie === stare) { p.kategorie = nove; n++; }
+      } else if (p.stitky.includes(stare)) {
+        p.stitky = [...new Set(p.stitky.map(s => s === stare ? nove : s).filter(Boolean))];
+        n++;
+      }
+    }
+    return n;
+  }
+
+  /* ---------- sdílení odkazem: JSON → deflate → base64url ---------- */
+  const SDILET_POLE = { n: 'nazev', t: 'text', k: 'kategorie', s: 'stitky', m: 'model', p: 'poznamka' };
+  function b64url(bajty) {
+    let bin = '';
+    for (let i = 0; i < bajty.length; i += 0x8000) bin += String.fromCharCode.apply(null, bajty.subarray(i, i + 0x8000));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function zB64url(s) {
+    const bin = atob(String(s).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(bin, c => c.charCodeAt(0));
+  }
+  async function proud(bajty, Trida, druh) {
+    const s = new Blob([bajty]).stream().pipeThrough(new Trida(druh));
+    return new Uint8Array(await new Response(s).arrayBuffer());
+  }
+  async function kodSdileni(seznam) {
+    const data = seznam.map(p => {
+      const o = {};
+      for (const [k, pole] of Object.entries(SDILET_POLE)) {
+        const v = p[pole];
+        if (Array.isArray(v) ? v.length : v) o[k] = v;
+      }
+      return o;
+    });
+    const json = new TextEncoder().encode(JSON.stringify({ v: 1, p: data }));
+    return b64url(await proud(json, CompressionStream, 'deflate-raw'));
+  }
+  async function zKoduSdileni(kod) {
+    let data;
+    try { data = JSON.parse(new TextDecoder().decode(await proud(zB64url(kod), DecompressionStream, 'deflate-raw'))); }
+    catch (e) { throw new Error('Odkaz je poškozený nebo neúplný.'); }
+    if (!data || !Array.isArray(data.p)) throw new Error('Odkaz neobsahuje prompty.');
+    return data.p.map(o => {
+      const p = {};
+      for (const [k, pole] of Object.entries(SDILET_POLE)) if (o[k] != null) p[pole] = o[k];
+      return normalizuj(p);
+    }).filter(p => p.text.trim());
+  }
+
+  /* ---------- statistiky ----------
+     log = { 'YYYY-MM-DD': počet kopírování } (vede se od zavedení statistik). */
+  const DEN = 86400000;
+  function denKlic(t) { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function statistiky(seznam, log, ted) {
+    ted = ted || Date.now();
+    log = log || {};
+    const dny = [];
+    for (let i = 29; i >= 0; i--) { const k = denKlic(ted - i * DEN); dny.push([k, log[k] || 0]); }
+    const tydny = [];
+    for (let w = 25; w >= 0; w--) {
+      let n = 0;
+      for (let d = 0; d < 7; d++) n += log[denKlic(ted - (w * 7 + d) * DEN)] || 0;
+      tydny.push([denKlic(ted - (w * 7 + 6) * DEN), n]);
+    }
+    const pulRoku = ted - 182 * DEN;
+    const kat = new Map();
+    for (const p of seznam) { const k = p.kategorie || ''; kat.set(k, (kat.get(k) || 0) + 1); }
+    return {
+      pocet: seznam.length,
+      pouziti: seznam.reduce((a, p) => a + p.pouziti, 0),
+      tokenu: seznam.reduce((a, p) => a + odhadTokenu(p.text), 0),
+      top: seznam.filter(p => p.pouziti > 0).sort((a, b) => b.pouziti - a.pouziti).slice(0, 10),
+      nepouzite: seznam.filter(p => (p.naposledy || p.vytvoreno) < pulRoku).sort((a, b) => (a.naposledy || a.vytvoreno) - (b.naposledy || b.vytvoreno)),
+      kategorie: [...kat].sort((a, b) => b[1] - a[1]),
+      dny, tydny,
+    };
+  }
+
   /* Odkazy pro otevření promptu v chatu (text jde v URL; u dlouhých
      promptů se raději jen zkopíruje). */
   const CHATY = [
@@ -420,7 +671,9 @@
     FORMAT, MAX_VERZI, CHATY, MAX_URL_TEXT,
     noveId, norm, promenne, dosad, odhadTokenu, slov, normalizuj, uprav,
     rozeberDotaz, odpovida, filtruj, serad, prehled,
-    exportJSON, exportMD, exportCSV, parseCSV, importCSV, importMD, importuj, sluc, datum,
+    exportJSON, exportMD, exportCSV, parseCSV, importCSV, importMD, importuj, sluc, datum, podobne, prejmenuj,
+    krokyRetezu, promenneRetezu, kontrola, MAX_TOKENU, importPoznamka, importEspanso, frontmatter,
+    kodSdileni, zKoduSdileni, statistiky, denKlic,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else koren.PROMPTY_JADRO = api;
