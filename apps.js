@@ -2666,6 +2666,12 @@ const KATALOG_SEKCE = [
         "tagy": ["plošinovka", "trpaslík", "jeskyně", "pixel art", "skákačka", "retro", "arkáda", "bossové", "obchod", "světy"]
       },
       {
+        "soubor": "obsah/starfall.html",
+        "nazev": "🚀 Starfall: Iron Horizon",
+        "stav": "vyvoj",
+        "tagy": ["shoot-em-up", "střílečka", "vesmír", "tyrian", "pixel art", "bossové", "hangár", "obchod", "kampaň", "arkáda"]
+      },
+      {
         "soubor": "obsah/bomberman.html",
         "nazev": "💣 Bomberman",
         "stav": "vyvoj",

@@ -311,6 +311,7 @@ const KATALOG_IKONY = {
   "obsah/retro_invaders.html": "pages/page-retro_invaders",
   "obsah/tank1990.html": "pages/page-tank1990",
   "obsah/krumpac.html": "pages/page-krumpac",
+  "obsah/starfall.html": "pages/page-starfall",
   "obsah/bomberman.html": "pages/page-bomberman",
   "obsah/breakout.html": "pages/page-breakout",
   "obsah/pong.html": "pages/page-pong",
