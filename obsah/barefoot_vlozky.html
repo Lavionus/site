@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦶 Barefoot vložky – šablony</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script src="lib/clipper.min.js"></script>
+<script src="barefoot_vlozky/jadro.js"></script>
+<script src="barefoot_vlozky/vystup.js"></script>
+<script src="barefoot_vlozky/princip.js"></script>
+<script src="barefoot_vlozky/scena3d.js"></script>
+<script src="barefoot_vlozky/vlastni.js"></script>
+<script src="barefoot_vlozky/arch.js"></script>
+<script src="barefoot_vlozky/vlastni_ui.js" defer></script>
+<script src="barefoot_vlozky/ui.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+/* horní lišta se skupinami a rozbalovacími nabídkami (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:50}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin-right:6px}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1100px){.lista .txt{display:none}}
+/* na počítači se lišta zalomí, aby byly vidět všechny skupiny; na mobilu se posouvá */
+@media (min-width:700px){.lista{flex-wrap:wrap;row-gap:4px;overflow-x:visible}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel,var(--bg-elevated));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka[hidden]{display:none}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+.nabidka .radek{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:4px 10px}
+.nabidka .radek label{margin:0 0 2px}
+.nabidka .pozn{font-size:.76rem;color:var(--text-faint);padding:2px 10px 4px;max-width:300px;line-height:1.35}
+
+main{padding:14px 14px 40px}
+.layout{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:16px;align-items:start;max-width:1500px;margin:0 auto}
+@media(max-width:760px){.layout{grid-template-columns:minmax(0,1fr)}.pravy{order:-1}}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:14px;margin-bottom:14px;min-width:0}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin:9px 0 3px}
+label.chk{display:flex;gap:7px;align-items:flex-start;color:var(--text);font-size:.86rem;margin:8px 0 2px;cursor:pointer}
+label.chk input{width:auto;margin-top:2px;accent-color:var(--accent)}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.92rem;font-family:inherit;min-width:0}
+input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--accent)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.r2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.noha-hlava{font-size:.82rem;font-weight:600;margin-top:10px;color:var(--text-muted)}
+.prepinac{display:flex;gap:4px;flex-wrap:wrap}
+.prepinac button{flex:1 1 auto;background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:inherit;font-size:.82rem}
+.prepinac button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.tvary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tvary button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:5px 3px;cursor:pointer;font-size:.74rem;line-height:1.15;font-family:inherit}
+.tvary button svg{display:block;margin:0 auto 3px;width:46px;height:30px}
+.tvary button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn{background:var(--accent);color:var(--on-accent,#fff);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:inherit}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.tlacitka{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.info{font-size:.82rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
+.info b{color:var(--text)}
+.papir{background:#fff;border:1px solid var(--border-strong);border-radius:6px;padding:6px;overflow:hidden;position:relative}
+.papir svg{display:block;width:100%;height:auto;max-height:78vh}
+.papir.nastroj svg,.papir.posun svg{touch-action:none}
+.papir.nastroj svg{cursor:crosshair}
+.papir.posun svg{cursor:move}
+.nastrojLista{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.84rem;margin-top:8px}
+.nastrojLista[hidden]{display:none}
+.nastrojLista .btn{padding:5px 9px;font-size:.8rem}
+#obal3d{height:380px;border-radius:6px;overflow:hidden;border:1px solid var(--border-strong);background:var(--bg-deep,var(--bg));position:relative}
+@media(max-width:600px){#obal3d{height:280px}}
+.navod{font-size:.86rem;line-height:1.55}
+.navod h3{font-size:.92rem;margin:12px 0 4px}
+.navod p{margin:4px 0}
+.schema{margin:6px 0 10px;max-width:420px}
+.schema svg{width:100%;height:auto;display:block;color:var(--text)}
+.varovani-seznam{list-style:none;padding:0;margin:0;font-size:.84rem}
+.varovani-seznam li{padding:5px 8px;border-left:3px solid var(--border-strong);margin:4px 0;background:var(--bg-control);border-radius:0 5px 5px 0;line-height:1.4}
+.varovani-seznam li.chyba{border-left-color:var(--danger)} .varovani-seznam li.varovani{border-left-color:var(--warn)} .varovani-seznam li.info{border-left-color:var(--accent)} .varovani-seznam li.ok{border-left-color:var(--ok)}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--border);padding:4px 6px;text-align:left}
+th{color:var(--text-faint);font-weight:500}
+td.c,th.c{text-align:right}
+.tab-obal{overflow-x:auto}
+.zalozky{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.zalozky button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:7px 10px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.zalozky button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel[hidden]{display:none}
+.panel-nadpis{font-size:1rem;font-weight:600;margin:0 0 8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.panel-nadpis small{font-weight:400;color:var(--text-faint);font-size:.75rem}
+.nazev-projektu .vstup-nazev{width:clamp(140px,18vw,260px);padding:4px 8px;font-size:.88rem;font-weight:600}
+.nazev-projektu .stav-ulozeni{text-transform:none;letter-spacing:0;font-size:9px}
+.porovnani{display:grid;grid-template-columns:minmax(120px,240px) minmax(0,1fr);gap:14px;align-items:start;margin-top:10px}
+.porovnani .obr{background:#fff;border:1px solid var(--border-strong);border-radius:6px;padding:6px}
+.porovnani svg{display:block;width:100%;height:auto;max-height:60vh}
+@media(max-width:520px){.porovnani{grid-template-columns:minmax(0,1fr)}}
+.projekty{list-style:none;padding:0 6px;margin:0;font-size:.84rem;max-height:220px;overflow:auto}
+.projekty li{display:flex;gap:6px;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)}
+.projekty li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projekty button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:.78rem;font-family:inherit}
+.skryte{display:none!important}
+body.typ-vlastni .jen-uni,body:not(.typ-vlastni) .jen-vlastni{display:none!important}
+textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:7px 8px;font-size:.9rem;font-family:inherit;resize:vertical;min-height:52px}
+.seznam{list-style:none;margin:6px 0 0;padding:0;font-size:.85rem}
+.seznam li{display:flex;gap:6px;align-items:center;padding:5px 6px;border:1px solid var(--border);border-radius:6px;margin-top:4px;cursor:pointer;background:var(--bg-control)}
+.seznam li:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seznam li[aria-selected=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.seznam li .nz{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seznam li small{color:var(--text-faint)}
+.seznam li input[type=checkbox]{width:auto;accent-color:var(--accent)}
+.seznam li select{width:auto;padding:2px 4px;font-size:.8rem}
+.mini{background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:.78rem;font-family:inherit;white-space:nowrap}
+.mini:disabled{opacity:.45;cursor:default}
+.podkarta{border-top:1px dashed var(--border);margin-top:12px;padding-top:6px}
+.podkarta h3{font-size:.86rem;margin:4px 0 2px;color:var(--text-muted)}
+.stav-ulozeni{font-size:.75rem;color:var(--text-faint)}
+#editor{height:62vh;min-height:320px;background:var(--bg-deep,#222);border:1px solid var(--border-strong);border-radius:6px;overflow:hidden;position:relative;touch-action:none}
+#editor svg{display:block;width:100%;height:100%;user-select:none}
+#editor .prazdny{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--text-muted);font-size:.9rem;line-height:1.5}
+#editor.r-posun svg{cursor:grab} #editor.r-uzly svg{cursor:default} #editor.r-rez svg,#editor.r-kal svg{cursor:crosshair}
+.edLista{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.edLista .tl{font-size:.8rem}
+.edLista select.tl{width:auto;padding:4px 6px}
+.edStav{font-size:.82rem;color:var(--text-muted);margin-top:6px;min-height:1.3em}
+.edStav b{color:var(--text)}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--text-muted);margin-top:6px}
+.legenda span::before{content:'';display:inline-block;width:18px;height:0;border-top:2px solid currentColor;vertical-align:middle;margin-right:5px}
+.nabidka.formular{min-width:300px;width:360px;padding:8px 12px 12px}
+.nabidka.formular label{margin:7px 0 3px}
+.nabidka.formular .tl{padding:5px 6px}
+.nabidka.formular .podkarta:first-child{border-top:0;margin-top:0;padding-top:0}
+details.sbal{margin-top:10px;border-top:1px dashed var(--border);padding-top:6px}
+details.sbal summary{cursor:pointer;font-size:.86rem;font-weight:600;color:var(--text-muted)}
+details.sbal summary small{font-weight:400;color:var(--text-faint);margin-left:4px}
+details.sbal[open] summary{margin-bottom:4px}
+.radka-stav{display:flex;gap:6px;align-items:center;justify-content:space-between;font-size:.8rem;color:var(--text-muted);margin-top:6px}
+.legenda.skryte{display:none}
+/* kalibrace na očích */
+.tl.kal-tl{background:linear-gradient(135deg,#e67e22,#d35400);color:#fff;border-color:#d35400;font-weight:700}
+.tl.kal-tl:hover{filter:brightness(1.08);background:linear-gradient(135deg,#e67e22,#d35400)}
+.tl.kal-tl.ok{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff)}
+.tl.kal-tl.pozor{animation:kalPuls 1.6s ease-in-out infinite}
+@keyframes kalPuls{0%,100%{box-shadow:0 0 0 0 rgba(230,126,34,.6)}50%{box-shadow:0 0 0 5px rgba(230,126,34,0)}}
+.kal-stav{margin-left:5px;font-size:.78rem}
+.btn.kal-velke{display:block;width:100%;margin-top:10px;padding:11px;font-size:.95rem;background:linear-gradient(135deg,#e67e22,#d35400);color:#fff}
+.btn.kal-velke.ok{background:var(--bg-control);color:var(--text);border:1px solid var(--ok)}
+/* dialogy */
+dialog.dlg{border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-elevated);color:var(--text);padding:14px 16px;width:min(620px,calc(100vw - 20px));max-height:calc(100vh - 30px);overflow:auto}
+dialog.dlg::backdrop{background:rgba(0,0,0,.45)}
+.dlg-hlava{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.dlg-hlava h2{font-size:1.1rem}
+.kal-volby{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.kamera{position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:3/4;max-height:65vh;margin:0 auto}
+.kamera video{width:100%;height:100%;object-fit:cover;display:block}
+.kamera-ram{position:absolute;inset:6% 8%;border:2px dashed rgba(255,255,255,.75);border-radius:6px;pointer-events:none}
+.kamera-ram span{position:absolute;width:18px;height:18px;background:#fff}
+.kamera-ram span:nth-child(1){left:6px;top:6px}.kamera-ram span:nth-child(2){right:6px;top:6px}.kamera-ram span:nth-child(3){right:6px;bottom:6px}.kamera-ram span:nth-child(4){left:6px;bottom:6px}
+.qr{display:flex;justify-content:center;margin:10px 0}
+.qr img,.qr canvas{width:min(260px,70vw)!important;height:auto!important;background:#fff;padding:8px;border-radius:6px}
+dialog.dlg-paleta{width:min(560px,calc(100vw - 20px));padding:10px}
+.paleta-seznam{list-style:none;padding:0;margin:8px 0 0;max-height:50vh;overflow:auto}
+.paleta-seznam li{padding:6px 8px;border-radius:5px;cursor:pointer;font-size:.88rem}
+.paleta-seznam li[aria-selected=true],.paleta-seznam li:hover{background:var(--bg-hover)}
+.paleta-seznam li small{color:var(--text-faint);margin-left:6px}
+.graf svg{width:100%;height:auto;display:block;color:var(--text)}
+.rychle-kroky{padding-left:20px;font-size:.88rem;line-height:1.55}
+/* jednoduchý režim */
+body:not(.jednoduse) .jen-jednoduse{display:none!important}
+body.jednoduse .pokrocile{display:none!important}
+.legenda .l-vrstva::before{border-top:2px dashed #7b3fa0} .legenda .l-podpora::before{border-top:2px dashed #a0522d}
+details.podpory{margin-top:8px;font-size:.86rem} details.podpory summary{cursor:pointer;color:var(--text-muted)}
+.zvyrazni{animation:zvyrazni 1.6s ease-out}
+@keyframes zvyrazni{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.stitek-stav{display:inline-block;font-size:.7rem;padding:0 6px;border-radius:8px;border:1px solid var(--border-strong);color:var(--text-muted);margin-left:4px}
+.verze{list-style:none;padding:0 6px;margin:0;font-size:.82rem;max-height:200px;overflow:auto}
+.verze li{display:flex;gap:6px;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)}
+.verze li span{flex:1;min-width:0}
+.verze button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;padding:2px 7px;cursor:pointer;font-size:.76rem;font-family:inherit}
+.boty td input{width:100%;padding:4px 5px;font-size:.84rem}
+.ok-t{color:var(--ok)} .warn-t{color:var(--warn)} .err-t{color:var(--danger)}
+.legenda .l-obrys::before{border-top-color:#000} .legenda .l-noha::before{border-top:2px dashed #1f5fa8} .legenda .l-orez::before{border-top:2px dashed #c0392b} .legenda .l-znacka::before{border-top-color:#1e7d3a}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🦶 Barefoot vložky</h1>
+  <div class="skup jen-vlastni nazev-projektu" role="group" aria-label="Projekt"><span class="skup-nazev" aria-hidden="true">Projekt <span class="stav-ulozeni" id="vpStav"></span></span><div class="skup-tl">
+    <input id="vpNazev" type="text" maxlength="80" class="vstup-nazev" aria-label="Název projektu" placeholder="Název projektu">
+  </div></div>
+  <div class="skup" role="group" aria-label="Typ"><span class="skup-nazev" aria-hidden="true">Typ</span><div class="skup-tl">
+    <button class="tl" id="typUni" aria-pressed="true" title="Univerzální vložka spočítaná z rozměrů chodidla">📐<span class="txt"> Univerzální</span></button>
+    <button class="tl" id="typVlastni" aria-pressed="false" title="Vložka na míru podle obkresleného chodidla nebo staré vložky">✍️<span class="txt"> Na míru</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Kalibrace"><span class="skup-nazev" aria-hidden="true">Kalibrace</span><div class="skup-tl">
+    <button class="tl kal-tl" id="btnKalibrace2" title="Kalibrace měřítka předlohy, rozměrů šablon a tiskárny">📏 Kalibrace<span class="kal-stav" id="kalStav"></span></button>
+  </div></div>
+  <div class="skup pokrocile" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl jen-uni" data-nabidka="nabSoubor" title="Projekty, import a export nastavení">📁<span class="txt"> Projekty</span> ▾</button>
+    <button class="tl jen-vlastni" data-nabidka="nabProjekt" title="Projekty, historie verzí, zakázky">📁<span class="txt"> Projekt</span> ▾</button>
+  </div></div>
+  <div class="skup pokrocile" role="group" aria-label="Šablona"><span class="skup-nazev" aria-hidden="true">Šablona</span><div class="skup-tl">
+    <button class="tl" id="rzVlozka" aria-pressed="true" title="Vložka k vystřižení z plsti, korku, kůže…">👣<span class="txt"> Vložka</span></button>
+    <button class="tl" id="rzKontrolni" aria-pressed="false" title="Papírová šablona s jazýčkem na zkoušení délky bot">📏<span class="txt"> Zkoušení bot</span></button>
+    <button class="tl" data-nabidka="nabSablona" title="Ořezové čáry, délka boty, perforace, popisky, jazýček" aria-label="Nastavení šablony">⚙ ▾</button>
+  </div></div>
+  <div class="skup pokrocile" role="group" aria-label="Výroba"><span class="skup-nazev" aria-hidden="true">Výroba</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabVyroba" title="Materiál, tloušťka, dvě vrstvy, podpory">🧶<span class="txt" id="vyrobaPopis"> Materiál</span> ▾</button>
+  </div></div>
+  <div class="skup jen-vlastni" role="group" aria-label="Předloha"><span class="skup-nazev" aria-hidden="true">Předloha</span><div class="skup-tl">
+    <button class="tl" id="btnFotoLista" title="Vyfotit nohu na kalibrační kartě fotoaparátem">📷<span class="txt"> Vyfotit</span></button>
+    <button class="tl" id="btnPridatLista" title="Přidat sken nebo fotku ze souboru">📂<span class="txt"> Přidat</span></button>
+    <button class="tl" data-nabidka="nabPredlohaVl" id="btnPredlohaVl" title="Měřítko obrázku a hledání obrysů vybrané předlohy">📏<span class="txt"> Měřítko</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Tisk"><span class="skup-nazev" aria-hidden="true">Tisk</span><div class="skup-tl">
+    <button class="tl hlavni-tl" id="btnPdf" title="PDF se souhrnem a šablonou 1:1">📄 PDF 1:1</button>
+    <button class="tl" data-nabidka="nabTisk" title="Papír, zrcadlení, SVG a DXF pro plotr nebo laser">🖨<span class="txt"> Další</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabZobrazit" title="Co kreslit do náhledu">👁<span class="txt"> Zobrazit</span> ▾</button>
+    <button class="tl jen-uni" data-nabidka="nabPredloha" title="Fotka obkresleného chodidla nebo staré vložky pod šablonou, měření">🖼<span class="txt"> Předloha</span> ▾</button>
+  </div></div>
+  <div class="skup pokrocile" role="group" aria-label="Nástroje"><span class="skup-nazev" aria-hidden="true">Nástroje</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabNastroje" title="Porovnání, boty, arch materiálu, kalibrační karta">🧰<span class="txt"> Nástroje</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" id="btnNavod" title="Jak změřit chodidlo a jak to funguje">❓<span class="txt"> Jak měřit</span></button>
+  </span>
+</header>
+
+<div id="nabSablona" class="nabidka formular" hidden>
+  <div class="titulek">Do šablony kreslit</div>
+  <button class="tl prep" data-prep="noha" aria-pressed="true">Obrys chodidla / předlohy (modře)</button>
+  <button class="tl prep" data-prep="popisky" aria-pressed="true">Popisky ve vložce (P/L, velikost)</button>
+    <div class="jen-uni"><label for="jmeno">Jméno / poznámka do šablony</label>
+    <input id="jmeno" type="text" maxlength="40" placeholder="např. Anička – zimní boty"></div>
+  <hr>
+  <div id="sekceVlozka">
+    <label class="chk"><input type="checkbox" id="orez"> Ořezové čáry ve špičce (pro menší čísla)</label>
+    <div class="r2" id="blokOrez">
+      <div><label for="orezKrok">Krok mm</label><input id="orezKrok" type="number" step="1"></div>
+      <div><label for="orezPocet">Počet čar</label><input id="orezPocet" type="number" step="1"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="perforace"> Perforace (větrací otvory)</label>
+    <div class="r3" id="blokPerf">
+      <div><label for="perfRozt">Rozteč</label><input id="perfRozt" type="number" step="1"></div>
+      <div><label for="perfPrumer">Ø otvoru</label><input id="perfPrumer" type="number" step="0.5"></div>
+      <div><label for="perfOkraj">Od okraje</label><input id="perfOkraj" type="number" step="1"></div>
+    </div>
+    <div class="r2">
+      <div><label for="delkaBoty" title="vnitřní délka konkrétní boty – plná červená ořezová čára přesně na ni (0 = vypnuto)">Ořez na délku boty mm</label><input id="delkaBoty" type="number" min="0" max="400" step="1"></div>
+      <div><label for="botaVyber">… z mých bot</label><select id="botaVyber"></select></div>
+    </div>
+  </div>
+  <div class="skryte" id="kartaKontrolni">
+    <div class="titulek">Šablona na zkoušení bot</div>
+      <div class="r2">
+        <div><label for="jazyk">Délka jazýčku mm</label><input id="jazyk" type="number" step="5"></div>
+        <div style="align-self:end"><label class="chk"><input type="checkbox" id="znacky"> Značky +0 / +5 / +10</label></div>
+      </div>
+    <p class="pozn" style="padding:4px 0 0">Vystřihněte z tvrdšího papíru, zasuňte do boty až k patě. Šablona musí ležet rovně – když se ve špičce ohýbá, bota je krátká.</p>
+  </div>
+</div>
+<div id="nabVyroba" class="nabidka formular" hidden>
+  <div class="pozn skryte" id="vyrobaKontrolni">Materiál, vrstvy a podpory se týkají jen režimu Vložka.</div>
+  <div id="kartaMaterial">
+      <div class="r2">
+        <div><label for="material">Materiál</label><select id="material"></select></div>
+        <div><label for="tloustka">Tloušťka mm</label><input id="tloustka" type="number" step="0.5"></div>
+      </div>
+      <p class="info" id="infoMaterial"></p>
+      <label class="chk"><input type="checkbox" id="vrstvy"> Dvouvrstvá vložka (spodní vrstva menší)</label>
+      <div class="r3" id="blokVrstvy">
+        <div><label for="material2">Spodní materiál</label><select id="material2"></select></div>
+        <div><label for="tloustka2">Tloušťka mm</label><input id="tloustka2" type="number" step="0.5"></div>
+        <div><label for="vrstvaOds" title="o kolik je spodní vrstva menší po obvodu">Menší o mm</label><input id="vrstvaOds" type="number" step="0.5"></div>
+      </div>
+      <details class="podpory"><summary>Podpory (pelota, podpatěnka) – jen na doporučení odborníka</summary>
+        <label class="chk"><input type="checkbox" id="pelota"> Pelota pod příčnou klenbou</label>
+        <div class="r3" id="blokPelota">
+          <div><label for="pelotaDelka">Délka mm</label><input id="pelotaDelka" type="number" step="1"></div>
+          <div><label for="pelotaSirka">Šířka mm</label><input id="pelotaSirka" type="number" step="1"></div>
+          <div><label for="pelotaPoz" title="střed peloty v % délky vložky od paty">Střed % od paty</label><input id="pelotaPoz" type="number" step="1"></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="podpatenka"> Podpatěnka (polštářek pod patou)</label>
+        <div class="r2" id="blokPodpatenka"><div><label for="podpatenkaPrumer">Šířka mm</label><input id="podpatenkaPrumer" type="number" step="1"></div></div>
+      </details>
+  </div>
+</div>
+<div id="nabPredlohaVl" class="nabidka formular" hidden>
+  <div class="pozn skryte" id="predlohaZadna">Nejdřív přidejte obrázek (Předloha → Přidat).</div>
+  <div id="vpObrDetail">
+        <div class="podkarta">
+          <h3>📏 Měřítko obrázku</h3>
+          <select id="vpKalTyp">
+            <option value="odhad">Neznámé – kalibruji až délkou a šířkou šablony</option>
+            <option value="dpi">Sken – zadám rozlišení (DPI)</option>
+            <option value="body">Dva body se známou vzdáleností (pravítko)</option>
+            <option value="list">Čtyři rohy listu papíru (srovná i perspektivu fotky)</option>
+            <option value="karta">Kalibrační karta (čtyři černé čtverce)</option>
+          </select>
+          <div class="r2" id="vpKalDpi"><div><label for="vpDpi">DPI skenu</label><input id="vpDpi" type="number" min="50" max="2400" step="1" value="300"></div></div>
+          <div class="r2" id="vpKalList"><div><label for="vpPapir">List</label><select id="vpPapir"><option value="a4">A4 (210 × 297)</option><option value="a3">A3 (297 × 420)</option><option value="a5">A5 (148 × 210)</option><option value="letter">Letter</option></select></div><div style="align-self:end"><button class="btn btn-sec" id="vpKlikRohy" type="button">Klikat rohy</button></div></div>
+          <div id="vpKalBody"><button class="btn btn-sec" id="vpKlikBody" type="button">Klikat 2 body</button></div>
+          <div class="tlacitka" style="margin-top:6px"><button class="btn btn-sec" id="vpAutoMeritko" type="button">🔍 Najít list nebo kartu automaticky</button></div>
+          <p class="info" id="vpKalInfo"></p>
+        </div>
+        <div class="podkarta">
+          <h3>🔍 Hledání obrysů</h3>
+          <div class="r2">
+            <div><label for="vpRezim">Co je na obrázku</label><select id="vpRezim"><option value="cara">Obkreslená čára</option><option value="tmavy">Tmavý předmět na světlém</option><option value="svetly">Světlý předmět na tmavém</option></select></div>
+            <div id="vpHranaBlok"><label for="vpHrana">Obrys brát</label><select id="vpHrana"><option value="stred">ze středu čáry</option><option value="vnitrni">z vnitřní hrany</option><option value="vnejsi">z vnější hrany</option></select></div>
+          </div>
+          <div class="r3">
+            <div><label for="vpCitlivost" title="víc = zachytí i slabší čáry, ale i šum">Citlivost</label><input id="vpCitlivost" type="range" min="0" max="1" step="0.05"></div>
+            <div><label for="vpUzavrit" title="zacelí přerušenou čáru (mm)">Zacelit mm</label><input id="vpUzavrit" type="number" min="0" max="4" step="0.1"></div>
+            <div><label for="vpVyhlazeni" title="mm – vyhladí zubatý obrys">Vyhlazení</label><input id="vpVyhlazeni" type="number" min="0" max="10" step="1"></div>
+          </div>
+          <div class="r2"><div><label for="vpKorekce" title="+ zvětší, − zmenší nalezený obrys (např. tloušťka tužky)">Korekce obrysu mm</label><input id="vpKorekce" type="number" min="-5" max="5" step="0.1"></div></div>
+          <div class="tlacitka">
+            <button class="btn" id="vpNajit" type="button">🔍 Najít obrysy</button>
+            <button class="btn btn-sec" id="vpRez" type="button" title="Rozdělí slepené obrysy (např. obě nohy na sobě)">✂️ Rozdělit čarou</button>
+            <button class="btn btn-sec" id="vpRezSmazat" type="button">Smazat dělení</button>
+          </div>
+        </div>
+  </div>
+</div>
+<div id="nabVyhladit" class="nabidka formular" hidden>
+  <div class="titulek">〰️ Vyhladit vlnky – náhled oranžově v editoru</div>
+  <div class="r2">
+    <div><label for="vhPrsty">U prstů <output id="vhPrstyH"></output></label><input id="vhPrsty" type="range" min="0" max="10" step="0.5" value="6"></div>
+    <div><label for="vhCelek" title="mírné narovnání po celém obrysu">Celý obrys <output id="vhCelekH"></output></label><input id="vhCelek" type="range" min="0" max="10" step="0.5" value="2"></div>
+  </div>
+  <div class="r2">
+    <div><label for="vhOd" title="odkud začínají prsty, % délky od paty">Prsty od <output id="vhOdH"></output></label><input id="vhOd" type="range" min="40" max="80" step="1" value="55"></div>
+    <div style="align-self:end"><label class="chk"><input type="checkbox" id="vhObalka" checked> Vyplnit zářezy (obálka)</label></div>
+  </div>
+  <label for="vhRozsah">Použít na</label>
+  <select id="vhRozsah"><option value="vse">všechny obrysy předlohy</option><option value="vybrana">jen vybranou šablonu</option></select>
+  <div class="tlacitka"><button class="btn" id="vhPouzit" type="button">Použít</button><button class="btn btn-sec" id="vhZrusit" type="button">Zrušit</button></div>
+</div>
+<div id="nabNastroje" class="nabidka" hidden>
+  <button class="tl" data-skok="porovnani">⚖️ Porovnání obrysů (L/P, stélka, vestoje/vsedě)</button>
+  <button class="tl" data-skok="boty">👟 Moje boty – jak sedí</button>
+  <button class="tl" data-skok="arch">🧩 Rozvržení na arch materiálu</button>
+  <button class="tl" data-skok="velikosti">📏 Rozměry a velikosti</button>
+  <button class="tl" data-skok="kontrola">🩺 Kontrola návrhu</button>
+  <hr>
+  <button class="tl jen-vlastni" id="nstVyhladit" title="Náhled a vyhlazení vlnek obrysů (hlavně u prstů)">〰️ Vyhladit vlnky obrysů…</button>
+  <button class="tl jen-vlastni" id="nstKreslit">✏️ Obkreslit obrys ručně</button>
+  <button class="tl jen-vlastni" data-skok="vyvoj">📈 Vývoj nohou klienta</button>
+  <button class="tl" id="nstPaleta">⌘ Paleta příkazů <kbd>Ctrl+K</kbd></button>
+  <button class="tl jen-vlastni" id="nstMerit">📐 Měřit v editoru (vzdálenost, úhel)</button>
+  <button class="tl" id="nstKarta">📄 Kalibrační karta A4 (PDF)</button>
+  <button class="tl" data-skok="princip">📖 Jak to funguje</button>
+</div>
+
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <div class="titulek">Uložené projekty</div>
+  <ul class="projekty" id="projekty"></ul>
+  <hr>
+  <button class="tl" id="btnUlozit">💾 Uložit jako projekt…</button>
+  <button class="tl" id="btnExportJson">⬇️ Export nastavení (JSON)</button>
+  <button class="tl" id="btnImportJson">📂 Import nastavení (JSON)…</button>
+  <hr>
+  <button class="tl" id="btnReset">↺ Výchozí hodnoty</button>
+</div>
+<div id="nabProjekt" class="nabidka formular" hidden>
+  <div class="titulek">Údaje projektu <small id="vpZakazkaSouhrn"></small></div>
+  <div class="r2">
+    <div><label for="vpKlient">Klient / pro koho</label><input id="vpKlient" type="text" maxlength="60" placeholder="tiskne se do šablony"></div>
+    <div><label for="vpDatum">Vytvořeno</label><input id="vpDatum" type="text" readonly tabindex="-1"></div>
+  </div>
+  <div class="r3">
+    <div><label for="vpZStav">Stav zakázky</label><select id="vpZStav"><option value="rozpracovano">rozpracováno</option><option value="zmereno">změřeno</option><option value="vyrobeno">vyrobeno</option><option value="predano">předáno</option></select></div>
+    <div><label for="vpTermin">Termín</label><input id="vpTermin" type="date"></div>
+    <div><label for="vpPary">Párů</label><input id="vpPary" type="number" min="1" max="100" step="1"></div>
+  </div>
+  <label for="vpPoznamka">Poznámka (boty, materiál, zjištění)</label><textarea id="vpPoznamka" maxlength="600"></textarea>
+  <hr>
+  <button class="tl" id="vpNovy">✚ Nový projekt…</button>
+  <button class="tl" id="vpDuplikovat">⧉ Duplikovat projekt</button>
+  <hr>
+  <div class="titulek">Projekty v tomto prohlížeči</div>
+  <ul class="projekty" id="vpSeznam"></ul>
+  <hr>
+  <div class="titulek">Historie verzí</div>
+  <ul class="verze" id="vpHistorie"></ul>
+  <button class="tl" id="vpUlozVerzi">🕘 Uložit verzi teď</button>
+  <hr>
+  <button class="tl" id="vpExport">⬇️ Export projektu i s předlohami (JSON)</button>
+  <button class="tl" id="vpCsv">📋 Seznam zakázek (CSV)</button>
+  <button class="tl" id="vpStitek">🏷️ Štítek zakázky s QR (PDF)</button>
+  <button class="tl" id="vpSdilet">🔗 Sdílet obrysy odkazem / QR…</button>
+  <hr>
+  <button class="tl" id="vpZalohaVse">💾 Záloha všech projektů</button>
+  <button class="tl" id="vpZalohaObnov">♻️ Obnovit ze zálohy…</button>
+  <button class="tl" id="vpImport">📂 Import projektu…</button>
+  <hr>
+  <button class="tl" id="vpSmazat">🗑 Smazat tento projekt</button>
+</div>
+<div id="nabTisk" class="nabidka" hidden>
+  <div class="titulek">Papír pro PDF</div>
+  <div class="radek">
+    <div><label for="papir">Formát</label><select id="papir"><option value="a4">A4</option><option value="a3">A3</option><option value="letter">Letter</option></select></div>
+    <div><label for="okraj">Okraj mm</label><input id="okraj" type="number" min="3" max="25" step="1" value="8"></div>
+    <div><label for="prekryv">Přesah mm</label><input id="prekryv" type="number" min="0" max="40" step="1" value="15"></div>
+  </div>
+  <div class="pozn" id="infoListy"></div>
+  <hr>
+  <div class="titulek">Do PDF</div>
+  <button class="tl prep" data-tisk="souhrn" aria-pressed="true">Souhrn s kontrolním čtvercem</button>
+  <button class="tl prep" data-tisk="navod" aria-pressed="true">Návod „Jak to funguje“</button>
+  <button class="tl prep" data-tisk="zrcadlit" aria-pressed="false" title="Pro obkreslení na rub materiálu (kůže, korek s potiskem)">Zrcadlit šablony (řez z rubu)</button>
+  <hr>
+  <button class="tl" id="btnSvg">🖼 SVG 1:1 (plotr, Cricut, laser)</button>
+  <button class="tl" id="btnDxf">📐 DXF (CAD, vrstvy po nohách)</button>
+  <button class="tl" id="btnPng">📷 Obrázek náhledu (PNG)</button>
+  <hr>
+  <div class="titulek">✂️ Pro řezací stroj</div>
+  <div class="radek" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+    <div><label for="rezProfil">Stroj</label><select id="rezProfil"><option value="laser">Laser (LightBurn, Glowforge, xTool)</option><option value="cricut">Cricut</option><option value="silhouette">Silhouette</option><option value="noz">CNC nůž / plotr</option></select></div>
+    <div><label for="rezKerf" title="šířka řezu – obrys se o polovinu posune ven, otvory zmenší">Šířka řezu mm</label><input id="rezKerf" type="number" min="0" max="3" step="0.05"></div>
+  </div>
+  <button class="tl prep" data-rez="gravirovat" aria-pressed="false">Gravírovat popisky (strana, velikost, jméno)</button>
+  <button class="tl prep" data-rez="bigovat" aria-pressed="false">Bigovat ořezové čáry</button>
+  <button class="tl" id="btnSvgRez">✂️ SVG pro stroj</button>
+  <button class="tl" id="btnDxfRez">✂️ DXF pro stroj (vrstvy REZ / BIGOVANI / GRAVIROVANI)</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <div class="titulek">Jen v náhledu</div>
+  <button class="tl prep" data-zobr="koty" aria-pressed="true">Kóty délky a šířek</button>
+  <button class="tl prep" data-zobr="prsty" aria-pressed="true">Naznačené prsty</button>
+  <button class="tl prep" data-zobr="mrizka" aria-pressed="false">Mřížka 1 cm</button>
+  <button class="tl prep" data-zobr="legenda" aria-pressed="true">Legenda barev</button>
+  <hr>
+  <button class="tl prep" data-zobr="jednoduse" aria-pressed="false" title="Jen to nejnutnější: nahrát fotku, zkontrolovat, stáhnout PDF">Jednoduchý režim</button>
+  <hr>
+  <div class="titulek jen-uni">Tisknout</div>
+  <button class="tl prep jen-uni" data-strany="obe" aria-pressed="true">Obě nohy</button>
+  <button class="tl prep jen-uni" data-strany="prava" aria-pressed="false">Jen pravou</button>
+  <button class="tl prep jen-uni" data-strany="leva" aria-pressed="false">Jen levou</button>
+</div>
+<div id="nabPredloha" class="nabidka" hidden>
+  <div class="pozn">Vyfoťte shora obkreslené chodidlo nebo starou vložku i s pravítkem. Po kalibraci podle pravítka můžete měřit a porovnat obrys se šablonou.</div>
+  <button class="tl" id="btnObrazek">📂 Načíst obrázek…</button>
+  <button class="tl" id="btnKalibrace" disabled>📏 Kalibrovat (2 body se známou vzdáleností)</button>
+  <button class="tl" id="btnMerit">📐 Měřit vzdálenost (2 body)</button>
+  <div class="radek" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+    <div><label for="predUhel">Otočení °</label><input id="predUhel" type="range" min="-180" max="180" step="0.5" value="0" disabled></div>
+    <div><label for="predPruhl">Průhlednost</label><input id="predPruhl" type="range" min="0.1" max="1" step="0.05" value="0.6" disabled></div>
+  </div>
+  <div class="pozn">Obrázek posunete tažením v náhledu. Do souboru ani do projektu se neukládá.</div>
+  <button class="tl" id="btnOdebrat" disabled>✕ Odebrat předlohu</button>
+</div>
+<input type="file" id="souborJson" accept=".json,application/json" class="skryte">
+<input type="file" id="souborObr" accept="image/*" class="skryte">
+<input type="file" id="vpSoubor" accept=".json,application/json" class="skryte">
+<input type="file" id="vpObrazky" accept="image/*" multiple class="skryte">
+
+<dialog id="dlgKalibrace" class="dlg">
+  <div class="dlg-hlava"><h2>📏 Kalibrace</h2><button class="mini" type="button" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="zalozky" role="tablist" id="kalZalozky">
+    <button role="tab" data-kz="predloha" class="jen-vlastni" aria-selected="true">🖼 Měřítko předlohy</button>
+    <button role="tab" data-kz="sablony" class="jen-vlastni" aria-selected="false">👣 Rozměry šablon</button>
+    <button role="tab" data-kz="tiskarna" aria-selected="false">🖨 Tiskárna</button>
+  </div>
+  <div data-kp="predloha" class="jen-vlastni">
+    <p class="info" id="kalPredlohaInfo"></p>
+    <ul class="varovani-seznam" id="kalKvalita"></ul>
+    <div class="kal-volby">
+      <button class="btn" type="button" id="kalAuto">🔍 Najít kartu nebo list automaticky</button>
+      <button class="btn btn-sec" type="button" id="kalRohy">📐 Klikat 4 rohy listu</button>
+      <button class="btn btn-sec" type="button" id="kalBody">📏 Klikat 2 body na pravítku</button>
+    </div>
+    <div class="r3">
+      <div><label for="kalPapir">Formát listu</label><select id="kalPapir"><option value="a4">A4</option><option value="a3">A3</option><option value="a5">A5</option><option value="letter">Letter</option></select></div>
+      <div><label for="kalDpi">DPI skenu</label><input id="kalDpi" type="number" min="50" max="2400" step="1" value="300"></div>
+      <div style="align-self:end"><button class="btn btn-sec" type="button" id="kalDpiPouzit">Použít DPI</button></div>
+    </div>
+    <p class="info">Nejpřesnější je <b>kalibrační karta</b>: vytiskněte ji (s kalibrovanou tiskárnou), obkreslete na ni nohu a vyfoťte – měřítko i perspektiva se najdou samy. <button class="mini" type="button" id="kalKarta">📄 Stáhnout kartu</button></p>
+  </div>
+  <div data-kp="sablony" class="jen-vlastni" hidden>
+    <p class="info" style="margin-top:0">Pokud znáte skutečné rozměry (změřené pravítkem nebo posuvkou), zadejte je – délka a šířka se kalibrují nezávisle, takže opraví i šikmou fotku.</p>
+    <div class="tab-obal"><table id="kalSablony"></table></div>
+  </div>
+  <div data-kp="tiskarna" hidden>
+    <p class="info" style="margin-top:0">Některé tiskárny tisknou o 1–3 % menší nebo větší. Vytiskněte zkušební list, změřte obě úsečky a šablony, karta i arch se pak tisknou s vyrovnáním.</p>
+    <div class="tlacitka"><button class="btn btn-sec" type="button" id="kalTiskList">📄 Stáhnout zkušební list</button></div>
+    <div class="r2">
+      <div><label for="kalTiskX">Vodorovná úsečka (150 mm) měří</label><input id="kalTiskX" type="number" min="100" max="200" step="0.1" placeholder="150,0"></div>
+      <div><label for="kalTiskY">Svislá úsečka (200 mm) měří</label><input id="kalTiskY" type="number" min="150" max="250" step="0.1" placeholder="200,0"></div>
+    </div>
+    <p class="info" id="kalTiskInfo"></p>
+    <div class="tlacitka"><button class="btn" type="button" id="kalTiskUlozit">Uložit korekci</button><button class="btn btn-sec" type="button" id="kalTiskZrusit">Zrušit korekci</button></div>
+  </div>
+</dialog>
+<dialog id="dlgKamera" class="dlg dlg-kamera">
+  <div class="dlg-hlava"><h2>📷 Vyfotit nohu</h2><button class="mini" type="button" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="kamera"><video id="kamVideo" playsinline muted></video><div class="kamera-ram"><span></span><span></span><span></span><span></span></div></div>
+  <p class="info" id="kamInfo">Položte kartu (nebo list s obkreslenou nohou) celou do rámečku, telefon držte kolmo nad ní a nechte zaostřit.</p>
+  <div class="tlacitka"><button class="btn" type="button" id="kamFoto">📸 Vyfotit</button><button class="btn btn-sec" type="button" id="kamSoubor">Použít fotoaparát telefonu…</button></div>
+</dialog>
+<dialog id="dlgSdilet" class="dlg">
+  <div class="dlg-hlava"><h2>🔗 Sdílet obrysy</h2><button class="mini" type="button" data-zavrit aria-label="Zavřít">✕</button></div>
+  <p class="info" style="margin-top:0">Odkaz obsahuje obrysy a nastavení šablon (ne fotky) přímo v sobě – nic se neodesílá na server. Kdo ho otevře, dostane kopii projektu.</p>
+  <div class="r2" style="grid-template-columns:minmax(0,1fr) auto;align-items:end"><div><label for="sdilOdkaz">Odkaz</label><input id="sdilOdkaz" type="text" readonly></div><button class="btn" type="button" id="sdilKopirovat">Kopírovat</button></div>
+  <div id="sdilQr" class="qr"></div>
+  <p class="info" id="sdilInfo"></p>
+</dialog>
+<dialog id="dlgPaleta" class="dlg dlg-paleta">
+  <input id="palHledat" type="search" placeholder="Hledat příkaz… (Enter = spustit, Esc = zavřít)" aria-label="Hledat příkaz">
+  <ul id="palSeznam" class="paleta-seznam" role="listbox"></ul>
+  <p class="info" style="margin:6px 0 0">Zkratky v editoru (Na míru): <kbd>P</kbd> posun, <kbd>U</kbd> uzly, <kbd>M</kbd> měřit, <kbd>K</kbd> kreslit, <kbd>H</kbd> vyhladit, <kbd>Ctrl+Z</kbd> zpět · <kbd>Ctrl+P</kbd> PDF · <kbd>Ctrl+K</kbd> paleta</p>
+</dialog>
+<input type="file" id="vpFoto" accept="image/*" capture="environment" class="skryte">
+<input type="file" id="vpZalohaSoubor" accept=".json,application/json" class="skryte">
+
+<main>
+<div class="layout">
+  <div class="levy">
+    <div class="card jen-vlastni jen-jednoduse" id="kartaRychle">
+      <h2>⚡ Rychle k šabloně</h2>
+      <ol class="rychle-kroky"><li>Vytiskněte <a href="#" id="rchKarta">kalibrační kartu</a>, obkreslete na ni nohu (nebo obě).</li><li>Vyfoťte ji nebo nahrajte sken – obrysy, měřítko i vyhlazení se udělají samy.</li><li>Zkontrolujte náhled a stáhněte PDF.</li></ol>
+      <div class="tlacitka"><button class="btn" id="rchFoto" type="button">📷 Vyfotit</button><button class="btn btn-sec" id="rchNahrat" type="button">📂 Nahrát</button><button class="btn" id="rchPdf" type="button">📄 Stáhnout PDF</button></div>
+      <p class="info" id="rchStav"></p>
+    </div>
+
+    <div class="card jen-vlastni pokrocile" id="kartaPredlohy">
+      <h2>🖼️ Předlohy <small>sken nebo fotka shora</small></h2>
+      <div class="tlacitka" style="margin-top:0"><button class="btn" id="vpFotit" type="button">📷 Vyfotit</button><button class="btn" id="vpPridat" type="button">📂 Přidat obrázek…</button><button class="btn btn-sec" id="vpKarta" type="button" title="List A4 se čtyřmi značkami – měřítko se pak najde samo">📄 Kalibrační karta</button></div>
+      <button class="btn kal-velke" id="vpKalibrace" type="button">📏 Kalibrovat měřítko a rozměry</button>
+      <ul class="seznam" id="vpObrSeznam" role="listbox" aria-label="Předlohy"></ul>
+      <div class="radka-stav" id="vpObrStav"><span id="vpObrStavText"></span><button class="mini" type="button" id="vpOtevritMeritko">📏 Měřítko a obrysy…</button></div>
+    </div>
+
+    <div class="card jen-vlastni pokrocile" id="kartaSablony">
+      <h2>👣 Šablony</h2>
+      <div class="podkarta" style="border-top:0;margin-top:0;padding-top:0">
+        <h3>Společný offset kolem všech předloh <small>mm</small></h3>
+        <div class="r3">
+          <div><label for="vpSpOx" title="do stran (osa X)">Offset X</label><input id="vpSpOx" type="number" step="0.5"></div>
+          <div><label for="vpSpOy" title="vpředu i vzadu (osa Y)">Offset Y</label><input id="vpSpOy" type="number" step="0.5"></div>
+          <div><label for="vpSpSp" title="navíc jen ve špičce">Ve špičce</label><input id="vpSpSp" type="number" step="0.5"></div>
+        </div>
+      </div>
+      <ul class="seznam" id="vpSabSeznam" role="listbox" aria-label="Šablony"></ul>
+      <div id="vpSabDetail">
+        <div class="podkarta">
+          <h3>📏 Kalibrace délky a šířky</h3>
+          <p class="info" id="vpZmereno"></p>
+          <div class="r2">
+            <div><label for="vpSkDelka">Skutečná délka mm</label><input id="vpSkDelka" type="number" step="0.5"></div>
+            <div><label for="vpSkSirka">Skutečná šířka mm</label><input id="vpSkSirka" type="number" step="0.5"></div>
+          </div>
+          <div class="tlacitka" style="margin-top:6px"><button class="mini" id="vpKalPrenest" type="button" title="Stejné měřítko X/Y pro ostatní šablony z téže předlohy">⇉ Na ostatní šablony</button><button class="mini" id="vpKalZrusit" type="button">Zrušit kalibraci</button></div>
+        </div>
+        <div class="podkarta">
+          <h3>↔️ Vlastní offset této šablony <small>(přičte se ke společnému)</small></h3>
+          <div class="r3">
+            <div><label for="vpOx">Offset X</label><input id="vpOx" type="number" step="0.5"></div>
+            <div><label for="vpOy">Offset Y</label><input id="vpOy" type="number" step="0.5"></div>
+            <div><label for="vpSp">Ve špičce</label><input id="vpSp" type="number" step="0.5"></div>
+          </div>
+          <p class="info" id="vpVysledek"></p>
+        </div>
+        <details class="sbal"><summary>✋ Vyhlazení prstů a zjednodušení <small id="vpPrstySouhrn"></small></summary>
+          <div class="r3">
+            <div><label for="vpPrstyRezim">Úprava</label><select id="vpPrstyRezim"><option value="zadne">žádná</option><option value="vyhladit">vyhladit vlnky</option><option value="obalka">obálka prstů (vyplní zářezy)</option></select></div>
+            <div><label for="vpPrstySila">Síla <output id="vpPrstySilaH"></output></label><input id="vpPrstySila" type="range" min="0" max="10" step="0.5"></div>
+            <div><label for="vpPrstyOd" title="odkud začíná oblast prstů (% délky od paty)">Od % délky <output id="vpPrstyOdH"></output></label><input id="vpPrstyOd" type="range" min="40" max="85" step="1"></div>
+          </div>
+          <div class="r2" style="align-items:end">
+            <div><label for="vpTolerance" title="jak daleko smí zjednodušený obrys odbočit od původního">Zjednodušit, odchylka mm</label><input id="vpTolerance" type="number" min="0.05" max="3" step="0.05" value="0.3"></div>
+            <button class="btn btn-sec" id="vpZapect" type="button" title="Vyhlazení zapéct do uzlů a obrys zjednodušit (méně uzlů na ruční úpravy)">Zapéct a zjednodušit</button>
+          </div>
+        </details>
+        <details class="sbal"><summary>🧩 Další úpravy <small>průměr, dorovnání, stélka</small></summary>
+          <label for="vpDruha">S jinou šablonou</label>
+          <select id="vpDruha"></select>
+          <div class="tlacitka" style="margin-top:6px">
+            <button class="mini" id="vpPrumer" type="button" title="Dvě obkreslení téže nohy (např. vestoje a znovu) → průměrný obrys jako nová šablona">⊕ Zprůměrovat</button>
+            <button class="mini" id="vpDorovnat" type="button" title="Tvar druhé nohy (zrcadlený) přenese na tuto, se zachováním její délky a šířky">⇆ Dorovnat tvar podle ní</button>
+            <button class="mini" id="vpZeStelky" type="button" title="Stélku z boty použít přímo jako vložku do té boty (o 1 mm menší)">👟 Vložka ze stélky</button>
+          </div>
+        </details>
+        <details class="sbal"><summary>🏷️ Role a zarovnání <small id="vpRoleSouhrn"></small></summary>
+          <label for="vpRole">Co je to za obrys</label>
+          <select id="vpRole"><option value="noha">chodidlo (obkreslené)</option><option value="vlozka">stará vložka, která sedí</option><option value="stelka">stélka vyjmutá z boty (jen k porovnání)</option></select>
+          <div class="r3">
+            <div><label for="vpZarovnani">Osa nohy</label><select id="vpZarovnani"><option value="osa">hlavní osa tvaru</option><option value="tecna">vnitřní tečna pata–palec</option></select></div>
+            <div><label for="vpUhel">Pootočit °</label><input id="vpUhel" type="number" step="0.5"></div>
+            <div style="align-self:end"><label class="chk"><input type="checkbox" id="vpZrcadlit"> Zrcadlit</label></div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="card jen-uni">
+      <h2>🦶 Chodidlo <small>mm, vestoje</small></h2>
+      <div class="prepinac" role="group" aria-label="Rozměry nohou">
+        <button type="button" id="nohyStejne" aria-pressed="true">Obě nohy stejně</button>
+        <button type="button" id="nohyZvlast" aria-pressed="false">Každá zvlášť</button>
+      </div>
+      <div class="noha-hlava" id="hlavaP">Pravá noha</div>
+      <div class="r3">
+        <div><label for="pDelka" title="od paty k nejdelšímu prstu">Délka</label><input id="pDelka" type="number" step="1"></div>
+        <div><label for="pSirka" title="přes klouby palce a malíku, jako posuvkou">Šířka přes klouby</label><input id="pSirka" type="number" step="1"></div>
+        <div><label for="pPata" title="nejširší místo paty">Šířka paty</label><input id="pPata" type="number" step="1"></div>
+      </div>
+      <div id="blokLeva" class="skryte">
+        <div class="noha-hlava">Levá noha</div>
+        <div class="r3">
+          <div><label for="lDelka">Délka</label><input id="lDelka" type="number" step="1"></div>
+          <div><label for="lSirka">Šířka přes klouby</label><input id="lSirka" type="number" step="1"></div>
+          <div><label for="lPata">Šířka paty</label><input id="lPata" type="number" step="1"></div>
+        </div>
+      </div>
+      <details class="sbal"><summary>Nemáte změřeno? Odhad z čísla EU</summary>
+      <div class="r2" style="align-items:end">
+        <div><label for="odhadEu">Číslo EU</label><input id="odhadEu" type="number" min="18" max="50" step="0.5" placeholder="např. 41"></div>
+        <button class="btn btn-sec" id="btnOdhad" type="button">Odhadnout rozměry</button>
+      </div>
+      </details>
+      <p class="info" id="infoNoha"></p>
+    </div>
+
+    <div class="card jen-uni">
+      <h2>✋ Tvar prstů</h2>
+      <div class="tvary" id="tvary"></div>
+      <p class="info" id="infoTvar"></p>
+    </div>
+
+    <div class="card jen-uni">
+      <h2>↔️ Rezervy a tvar <small>mm</small></h2>
+      <label for="predvolba">Předvolba</label>
+      <select id="predvolba"></select>
+      <div class="r3">
+        <div><label for="rezPrsty" title="za nejdelším prstem">Ve špičce</label><input id="rezPrsty" type="number" step="1"></div>
+        <div><label for="rezBok" title="na každou stranu">Do stran</label><input id="rezBok" type="number" step="0.5"></div>
+        <div><label for="rezPata">Za patou</label><input id="rezPata" type="number" step="0.5"></div>
+      </div>
+      <details class="sbal"><summary>Tvar obrysu (klenba, vnější hrana)</summary>
+      <div class="r2">
+        <div><label for="klenba" title="prohnutí vnitřní hrany u klenby; barefoot ~0–4 mm">Prohnutí u klenby</label><input id="klenba" type="number" step="0.5"></div>
+        <div><label for="pas" title="zúžení vnější hrany v půlce délky">Zúžení vnější hrany</label><input id="pas" type="number" step="0.5"></div>
+      </div>
+      </details>
+    </div>
+
+
+  </div>
+
+  <div class="pravy">
+    <div class="card karta-zalozky">
+      <div class="zalozky" role="tablist" id="zalozky">
+        <button role="tab" data-z="editor" aria-selected="false" class="jen-vlastni">✍️ Předloha a obrysy</button>
+        <button role="tab" data-z="sablona" aria-selected="true">📐 Šablona</button>
+        <button role="tab" data-z="3d" aria-selected="false" class="pokrocile">🧊 3D</button>
+        <button role="tab" data-z="velikosti" aria-selected="false">Rozměry</button>
+        <button role="tab" data-z="kontrola" aria-selected="false" class="pokrocile">Kontrola</button>
+        <button role="tab" data-z="porovnani" aria-selected="false" class="pokrocile">Porovnání</button>
+        <button role="tab" data-z="boty" aria-selected="false" class="pokrocile">👟 Moje boty</button>
+        <button role="tab" data-z="vyvoj" aria-selected="false" class="jen-vlastni pokrocile">Vývoj</button>
+        <button role="tab" data-z="arch" aria-selected="false" class="pokrocile">Arch materiálu</button>
+        <button role="tab" data-z="princip" aria-selected="false">Jak to funguje</button>
+      </div>
+      <div class="panel jen-vlastni" data-p="editor" hidden>
+        <p class="info" style="margin:0 0 6px">Kolečko = zoom, tažení = posun, dva prsty = zoom na dotyku.</p>
+      <div class="edLista" role="toolbar" aria-label="Nástroje editoru">
+        <button class="tl" data-edrezim="posun" aria-pressed="true" title="Posun a zoom">✋ Posun</button>
+        <button class="tl" id="edVyhladit" data-nabidka="nabVyhladit" title="Vyhladit vlnky obrysů (hlavně u prstů) – s náhledem">〰️ Vyhladit ▾</button>
+        <button class="tl" data-edrezim="kreslit" aria-pressed="false" title="Obkreslit obrys ručně: klikejte body nebo táhněte; uzavřete klikem na první bod nebo Enter">✏️ Kreslit</button>
+        <button class="tl" data-edrezim="merit" aria-pressed="false" title="Klik = body: 2 body vzdálenost, 3 body úhel (např. palce)">📐 Měřit</button>
+        <button class="tl" data-edrezim="uzly" aria-pressed="false" title="Táhnout uzly; dvojklik na obrys = nový uzel; pravé tlačítko / Delete = smazat uzel">◉ Uzly</button>
+        <button class="tl" id="edPlus" title="Přiblížit" aria-label="Přiblížit">+</button>
+        <button class="tl" id="edMinus" title="Oddálit" aria-label="Oddálit">−</button>
+        <button class="tl" id="edCelek" title="Zobrazit celý obrázek">⤢ Celé</button>
+        <button class="tl" id="edSmazUzel" title="Smazat vybraný uzel (Delete)" disabled>🗑 Uzel</button>
+        <select id="edDosah" class="tl" title="Dosah tažení uzlu – sousední uzly se posunou plynule s ním" aria-label="Dosah tažení"><option value="0">tah: 1 uzel</option><option value="10">tah: 10 mm</option><option value="20">tah: 20 mm</option><option value="40">tah: 40 mm</option></select>
+        <button class="tl" id="edZpet" title="Vrátit úpravu (Ctrl+Z)" disabled>↶ Zpět</button>
+        <button class="tl prep" id="edVlozka" aria-pressed="true" title="Výsledná vložka promítnutá zpět na předlohu">Vložka na předloze</button>
+      </div>
+      <div id="editor" class="r-posun"><div class="prazdny" id="edPrazdny"><div>Přidejte sken nebo fotku shora – obkreslené chodidlo nebo starou vložku, ideálně celý list papíru nebo pravítko v záběru. Obě nohy můžou být na jednom obrázku.<br><br><button class="btn" id="edPridat" type="button">📂 Přidat obrázek…</button></div></div></div>
+      <div class="edStav" id="edStav"></div>
+      </div>
+      <div class="panel" data-p="sablona">
+        <h3 class="panel-nadpis"><span id="nazevVysledku">Šablona</span> <small>pohled shora na lícní stranu</small></h3>
+        <div class="papir" id="nahled"></div>
+        <div class="nastrojLista" id="nastrojLista" hidden><span id="nastrojText"></span><span id="nastrojTlacitka"></span><button class="btn btn-sec" id="btnNastrojKonec" type="button">Hotovo</button></div>
+        <div class="legenda"><span class="l-obrys">střih</span><span class="l-noha">chodidlo</span><span class="l-orez">ořez pro menší číslo</span><span class="l-znacka">značky délky</span><span class="l-vrstva">spodní vrstva</span><span class="l-podpora">podpory</span></div>
+      </div>
+      <div class="panel" data-p="3d" hidden>
+        <p class="info" style="margin:0 0 6px">Táhněte myší / prstem, kolečko = přiblížení.</p>
+      <div id="obal3d"><div class="info" id="stav3d" style="padding:12px">3D se načte, až bude karta vidět…</div></div>
+      <div class="tlacitka">
+        <button class="btn btn-sec" data-pohled="-25,48" type="button">Šikmo</button>
+        <button class="btn btn-sec" data-pohled="0,89" type="button">Shora</button>
+        <button class="btn btn-sec" data-pohled="90,8" type="button">Z boku</button>
+      </div>
+      </div>
+      <div class="panel" data-p="velikosti" hidden>
+        <div class="tab-obal"><table id="tabVelikosti"></table></div>
+        <p class="info">Čísla EU/UK/US jsou <b>orientační</b> – výrobci se liší i o jedno číslo. Při nákupu porovnávejte <b>vnitřní délku</b> boty (stélky), kterou výrobce uvádí, nebo zkoušejte s kontrolní šablonou.</p>
+      </div>
+      <div class="panel" data-p="kontrola" hidden><ul class="varovani-seznam" id="varovani"></ul></div>
+      <div class="panel" data-p="porovnani" hidden>
+        <div class="prepinac" role="group" aria-label="Co porovnat" style="max-width:360px"><button type="button" data-por="noha" aria-pressed="true">Chodidla / předlohy</button><button type="button" data-por="vlozka" aria-pressed="false">Vložky</button></div>
+        <div class="r3 jen-vlastni" style="margin-top:8px">
+          <div><label for="porA">Obrys A (červeně)</label><select id="porA"></select></div>
+          <div><label for="porB">Obrys B (modře)</label><select id="porB"></select></div>
+          <div style="align-self:end"><label class="chk"><input type="checkbox" id="porZrc"> Zrcadlit A</label></div>
+        </div>
+        <div class="porovnani" id="porovnani"></div>
+      </div>
+      <div class="panel" data-p="vyvoj" hidden>
+        <div class="r2"><div><label for="vyvKlient">Klient</label><select id="vyvKlient"></select></div></div>
+        <div id="vyvGraf" class="graf"></div>
+        <div class="tab-obal"><table id="vyvTab"></table></div>
+        <p class="info">Projekty se stejným klientem seřazené podle data vytvoření – u dětí ukáže růst nohy a kdy bude potřeba větší bota.</p>
+      </div>
+      <div class="panel" data-p="boty" hidden>
+        <p class="info" style="margin-top:0">Vnitřní rozměry vašich bot (výrobce je uvádí jako délku stélky nebo vnitřní délku). Stránka ukáže, jak sedí na nohy z aktuálního návrhu. Ukládá se jen v tomto prohlížeči.</p>
+        <div class="tab-obal"><table class="boty" id="tabBoty"></table></div>
+        <div class="tlacitka"><button class="btn btn-sec" id="botaPridat" type="button">✚ Přidat botu</button></div>
+        <p class="info">Délka: rezerva 10–17 mm je pro barefoot obvykle dobrá, pod 8 mm těsné, nad 20 mm volné. Šířka: bota má být aspoň tak široká jako noha přes klouby.</p>
+      </div>
+      <div class="panel" data-p="arch" hidden>
+        <p class="info" style="margin-top:0">Kolik párů se vejde na arch plsti, korku nebo kůže – vložky se střídavě otáčejí špičkou proti patě. Export pro laser, plotr nebo CNC nůž.</p>
+        <div class="r3">
+          <div><label for="archPredvolba">Arch</label><select id="archPredvolba"><option value="">vlastní</option><option value="300x450">plsť 30 × 45 cm</option><option value="500x500">plsť 50 × 50 cm</option><option value="1000x500">plsť 100 × 50 cm</option><option value="600x900">korek 60 × 90 cm</option><option value="210x297">A4</option><option value="297x420">A3</option><option value="600x400">laser 60 × 40 cm</option></select></div>
+          <div><label for="archSirka">Šířka mm</label><input id="archSirka" type="number" min="100" max="5000" step="10"></div>
+          <div><label for="archVyska">Výška mm</label><input id="archVyska" type="number" min="100" max="5000" step="10"></div>
+        </div>
+        <div class="r3">
+          <div><label for="archMezera" title="mezi vložkami – u laseru stačí 2 mm, u nože víc">Mezera mm</label><input id="archMezera" type="number" min="0" max="30" step="0.5"></div>
+          <div><label for="archOkraj">Okraj mm</label><input id="archOkraj" type="number" min="0" max="50" step="1"></div>
+          <div><label for="archPary" title="0 = co nejvíc">Párů (0 = max)</label><input id="archPary" type="number" min="0" max="500" step="1"></div>
+        </div>
+        <div class="r2">
+          <div><label for="archSmer" title="u materiálu se směrem vlasu nebo vláken zvolte jeden směr">Směr vložek</label><select id="archSmer"><option value="auto">nejlepší využití (i napříč do zbytku)</option><option value="podel">jen podél výšky archu</option><option value="napric">jen podél šířky archu</option></select></div>
+        </div>
+        <div class="r2">
+          <div id="archVrstvaBlok"><label for="archVrstva">Vrstva</label><select id="archVrstva"><option value="horni">svrchní vrstva</option><option value="spodni">spodní vrstva</option></select></div>
+          <div><label for="archCena" title="cena jednoho archu – spočítá materiál na pár">Cena archu Kč</label><input id="archCena" type="number" min="0" max="100000" step="1"></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="archOtacet"> Otáčet o 180° (špička proti patě – lepší využití)</label>
+        <details class="jen-uni" id="archRada" style="margin-top:8px"><summary>Velikostní řada (sériová výroba)</summary>
+          <label class="chk"><input type="checkbox" id="radaZap"> Rozvrhnout velikostní řadu místo aktuálního návrhu</label>
+          <div class="r3">
+            <div><label for="radaOd">Od EU</label><input id="radaOd" type="number" min="18" max="50" step="0.5" value="36"></div>
+            <div><label for="radaDo">Do EU</label><input id="radaDo" type="number" min="18" max="50" step="0.5" value="46"></div>
+            <div><label for="radaKrok">Krok</label><select id="radaKrok"><option value="1">1 číslo</option><option value="0.5">půl čísla</option></select></div>
+          </div>
+          <div class="r2"><div><label for="radaPary">Párů z každé velikosti</label><input id="radaPary" type="number" min="1" max="20" step="1" value="1"></div></div>
+          <p class="info">Šířky a rezervy se berou z aktuálního návrhu (poměr šířky k délce zůstává).</p>
+        </details>
+        <details class="jen-vlastni" id="archMix" style="margin-top:8px"><summary>Přidat na arch vložky z dalších projektů</summary><div id="archMixSeznam" class="info"></div></details>
+        <p class="info" id="archInfo"></p>
+        <div class="papir" id="archNahled" style="margin-top:8px"></div>
+        <div class="tlacitka"><button class="btn btn-sec" id="archSvg" type="button">SVG archu 1:1</button><button class="btn btn-sec" id="archDxf" type="button">DXF archu</button><button class="btn btn-sec" id="archPdf" type="button">PDF archu 1:1</button><button class="btn btn-sec" id="archRez" type="button" title="Podle nastavení Tisk → Pro řezací stroj">✂️ SVG pro stroj</button></div>
+      </div>
+      <div class="panel navod" data-p="princip" hidden id="princip"></div>
+    </div>
+  </div>
+</div>
+</main>
+</body>
+</html>

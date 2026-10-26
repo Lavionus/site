@@ -22,6 +22,7 @@ const KATALOG_SKUPINY = [
   { id: 'hry',          label: '🎮 Hry' },
   { id: 'vysetrovani',  label: '🕵️ Vyšetřování' },
   { id: 'dokumenty',    label: '📜 Právo & dokumenty' },
+  { id: 'formulare',    label: '📋 Formuláře & tiskopisy' },
   { id: 'duchovno',     label: '📖 Duchovní život' },
   { id: 'ostatni',      label: '✉️ Ostatní' },
 ];
@@ -1566,6 +1567,18 @@ const KATALOG_SEKCE = [
         "tagy": ["stencil", "šablona", "sprej", "graffiti", "můstky", "ostrůvky", "plotr", "cricut", "silhouette", "laser", "svg", "dxf", "pdf", "vyřezávání", "vrstvy"]
       },
       {
+        "soubor": "obsah/krajky.html",
+        "nazev": "🪡 Generátor krajek",
+        "stav": "vyvoj",
+        "tagy": ["krajka", "dečka", "vystřihovánka", "papírová dečka", "lemovka", "paličkování", "podvinek", "torchon", "pavouk", "plátno", "půlhod", "můstky", "plotr", "cricut", "laser", "svg", "dxf", "pdf", "vzor"]
+      },
+      {
+        "soubor": "obsah/halloween.html",
+        "nazev": "🎃 Halloweenská dílna",
+        "stav": "vyvoj",
+        "tagy": ["halloween", "pavučina", "dýně", "šablona na dýni", "vyřezávání dýně", "girlanda", "harmonika", "řetěz z papíru", "netopýr", "duch", "siluety", "dekorace", "okno", "vystřihovánka", "plotr", "cricut", "svg", "dxf", "pdf", "pro děti"]
+      },
+      {
         "soubor": "obsah/gridGen.html",
         "nazev": "📏 Papíry na tisk",
         "stav": "beta",
@@ -1588,6 +1601,12 @@ const KATALOG_SEKCE = [
         "nazev": "✂️ Střihy – oděvy a kopací míč",
         "stav": "beta",
         "tagy": ["střih", "šití", "oblečení", "tričko", "mikina", "sukně", "kalhoty", "šaty", "halenka", "košile", "vesta", "župan", "kimono", "šortky", "legíny", "zavinovací sukně", "zástěra", "čepice", "kšiltovka", "klobouk", "pelerína", "pončo", "míč", "fotbalový míč", "panely", "šestiúhelník", "pětiúhelník", "střihový plán", "spotřeba látky", "tisk po stranách", "vnořený střih", "pdf", "dxf"]
+      },
+      {
+        "soubor": "obsah/barefoot_vlozky.html",
+        "nazev": "🦶 Barefoot vložky – šablony",
+        "stav": "vyvoj",
+        "tagy": ["barefoot", "vložka", "stélka", "boty", "obuv", "minimalistická obuv", "chodidlo", "noha", "měření nohy", "velikost bot", "EU", "UK", "US", "Mondopoint", "vnitřní délka", "kontrolní šablona", "zkoušení bot", "plsť", "korek", "kůže", "ořezové čáry", "na míru", "obkreslení", "sken", "fotka", "předloha", "kalibrace", "offset", "obrys", "projekt", "porovnání levé a pravé", "rozvržení na arch", "nesting", "laser", "plotr", "výroba", "kalibrační karta", "stélka", "vyhlazení obrysu", "pelota", "dvouvrstvá vložka", "zakázky", "šablona 1:1", "pdf", "svg", "dxf", "3D"]
       },
       {
         "soubor": "obsah/tech_tisk.html",
@@ -2979,7 +2998,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/tabooGame.html",
         "nazev": "🚫 Tabu (slovní popis)",
         "stav": "beta",
-        "tagy": ["tabu", "slovní hra", "popis", "párty", "zakázaná slova"]
+        "tagy": ["tabu", "slovní hra", "popis", "párty", "zakázaná slova", "tisk kartiček", "karty"]
       },
       {
         "soubor": "obsah/pantomima.html",
@@ -2987,6 +3006,7 @@ const KATALOG_SEKCE = [
         "stav": "beta",
         "tagy": [
           "šarády",
+          "tisk kartiček",
           "charades",
           "předvádění",
           "zvířata",
@@ -3380,6 +3400,126 @@ const KATALOG_SEKCE = [
         "nazev": "🏛️ Soudní poplatky",
         "stav": "vyvoj",
         "tagy": ["soudní poplatek", "sazebník", "žaloba", "platební rozkaz", "odvolání", "dovolání", "rozvod", "katastr", "notář", "549/1991"]
+      }
+    ]
+  },
+  {
+    "nazev": "🦺 BOZP a požární ochrana",
+    "skupina": "formulare",
+    "polozky": [
+      {
+        "soubor": "obsah/kniha_urazu.html",
+        "nazev": "🩹 Kniha úrazů",
+        "stav": "vyvoj",
+        "tagy": ["kniha úrazů", "úraz", "pracovní úraz", "BOZP", "evidence úrazů", "NV 322/2025", "201/2010", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/zaznam_urazu.html",
+        "nazev": "📝 Záznam o úrazu – koncept",
+        "stav": "vyvoj",
+        "tagy": ["záznam o úrazu", "pracovní úraz", "SÚIP", "hlášení úrazu", "NV 322/2025", "BOZP", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/prezencni_listina.html",
+        "nazev": "✍️ Prezenční listina ze školení",
+        "stav": "vyvoj",
+        "tagy": ["prezenční listina", "školení", "BOZP", "PO", "požární ochrana", "podpisy", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/karta_oopp.html",
+        "nazev": "🦺 Karta výdeje OOPP",
+        "stav": "vyvoj",
+        "tagy": ["OOPP", "ochranné pomůcky", "výdejka", "osobní karta", "pracovní oděv", "BOZP", "390/2021", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/kontrolni_list.html",
+        "nazev": "☑️ Kontrolní listy",
+        "stav": "vyvoj",
+        "tagy": ["kontrolní list", "checklist", "prověrka BOZP", "audit", "kontrola vozidla", "kontrola", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/pozarni_kniha.html",
+        "nazev": "🧯 Požární kniha a kontroly PHP",
+        "stav": "vyvoj",
+        "tagy": ["požární kniha", "požární ochrana", "PO", "hasicí přístroje", "PHP", "246/2001", "preventivní požární prohlídka", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/provozni_denik.html",
+        "nazev": "🛠️ Provozní deníky a revize",
+        "stav": "vyvoj",
+        "tagy": ["provozní deník", "kotelna", "vysokozdvižný vozík", "VZV", "žebříky", "regály", "revize", "lhůty revizí", "elektro", "tiskopis", "formulář", "tisk", "šablona"]
+      }
+    ]
+  },
+  {
+    "nazev": "👥 Zaměstnanci",
+    "skupina": "formulare",
+    "polozky": [
+      {
+        "soubor": "obsah/dochazka.html",
+        "nazev": "🕒 Evidence pracovní doby",
+        "stav": "vyvoj",
+        "tagy": ["docházka", "výkaz práce", "evidence pracovní doby", "přesčas", "noční práce", "svátky", "fond pracovní doby", "§ 96", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/smenny_rozpis.html",
+        "nazev": "📅 Směnný rozpis",
+        "stav": "vyvoj",
+        "tagy": ["směny", "směnný rozpis", "rozvrh pracovní doby", "plán směn", "§ 84", "služby", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/plan_dovolenych.html",
+        "nazev": "🏖️ Plán dovolených",
+        "stav": "vyvoj",
+        "tagy": ["dovolená", "plán dovolených", "rozvrh čerpání dovolené", "§ 217", "nárok", "tiskopis", "formulář", "tisk", "šablona"]
+      }
+    ]
+  },
+  {
+    "nazev": "🏢 Firma, provoz a protokoly",
+    "skupina": "formulare",
+    "polozky": [
+      {
+        "soubor": "obsah/pokladna.html",
+        "nazev": "💰 Pokladní doklady a kniha",
+        "stav": "vyvoj",
+        "tagy": ["pokladní doklad", "příjmový doklad", "výdajový doklad", "pokladní kniha", "částka slovy", "účetnictví", "pokladna", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/kniha_jizd.html",
+        "nazev": "🚗 Kniha jízd",
+        "stav": "vyvoj",
+        "tagy": ["kniha jízd", "evidence jízd", "služební auto", "tachometr", "PHM", "daně", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/cestovni_prikaz.html",
+        "nazev": "🧳 Cestovní příkaz",
+        "stav": "vyvoj",
+        "tagy": ["cestovní příkaz", "pracovní cesta", "cestovní náhrady", "stravné", "vyúčtování", "služební cesta", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/predavaci_protokol.html",
+        "nazev": "🔑 Předávací protokoly",
+        "stav": "vyvoj",
+        "tagy": ["předávací protokol", "předání bytu", "nájem", "měřidla", "klíče", "předání vozidla", "předání díla", "svěřené věci", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/haccp.html",
+        "nazev": "🌡️ HACCP a hygiena",
+        "stav": "vyvoj",
+        "tagy": ["HACCP", "teploty", "lednice", "sanitační plán", "úklid", "příjem zboží", "hygiena potravin", "852/2004", "gastro", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/evidence_odpadu.html",
+        "nazev": "♻️ Evidence odpadů",
+        "stav": "vyvoj",
+        "tagy": ["odpady", "evidence odpadů", "průběžná evidence", "541/2020", "273/2021", "ISPOP", "katalogové číslo", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/vlastni_tiskopis.html",
+        "nazev": "🧩 Vlastní tiskopis",
+        "stav": "vyvoj",
+        "tagy": ["vlastní tiskopis", "editor formulářů", "návrh formuláře", "tabulka k tisku", "prázdný formulář", "JSON", "tiskopis", "formulář", "tisk", "šablona"]
       }
     ]
   },

@@ -25,6 +25,7 @@ const palette = {
   vyvoj: ['#4f46e5', '#1e1b4b'], hry: ['#db2777', '#500724'],
   vysetrovani: ['#ca8a04', '#422006'], vareni: ['#dc2626', '#450a0a'],
   dokumenty: ['#a16207', '#422006'], duchovno: ['#7c3aed', '#2e1065'],
+  formulare: ['#0d9488', '#042f2e'],
   ostatni: ['#475569', '#0f172a'],
 };
 

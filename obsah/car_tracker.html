@@ -8,6 +8,7 @@
   <script src="../theme.js"></script>
   <script src="../podpis.js" defer></script>
 <script src="../dialog.js" defer></script>
+<script src="lib/chart.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -76,7 +77,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow-y: auto;
     }
     .section-title {
       font-size: 0.72rem;
@@ -123,14 +124,19 @@
     .stat-card .label { font-size: 0.65rem; color: #8ab4f8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .stat-card .value { font-size: 1.15rem; font-weight: 700; color: var(--text); }
     .stat-card .unit  { font-size: 0.7rem; color: #8ab4f8; }
-    .chart-area { padding: 12px; border-bottom: 1px solid var(--bg-hover); }
-    canvas { width: 100%; display: block; }
-    .table-area {
-      flex: 1;
-      overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) var(--bg);
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--bg-hover);
     }
+    .chart-card { background: var(--bg-panel); border: 1px solid var(--bg-hover); border-radius: 8px; padding: 8px 10px; min-width: 0; cursor: zoom-in; }
+    .chart-card:hover { border-color: var(--border-strong); }
+    .chart-card h4 { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 4px; }
+    .chart-box { position: relative; height: 170px; }
+    .chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 0.8rem; }
+    .table-area { flex: none; }
     table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     thead th {
       background: var(--bg-elevated);
@@ -207,6 +213,10 @@
       padding: 7px 10px;
       margin-top: 2px;
     }
+    .modal.modal-graf { width: 1100px; padding: 14px 16px; }
+    .modal-graf-hlava { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .modal-graf-hlava h3 { margin: 0; }
+    .modal-graf .chart-box { height: min(70vh, 600px); }
     .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
   :root[data-theme="light"] .empty { color: var(--text) !important; }
 </style>
@@ -300,8 +310,13 @@
       <div class="stat-card"><div class="label">Nejhorší spotřeba</div><div class="value" id="worstCons">—</div><div class="unit">l/100km</div></div>
     </div>
 
-    <div class="chart-area">
-      <canvas id="consChart" height="80"></canvas>
+    <div class="charts-grid">
+      <div class="chart-card"><h4>Spotřeba (l/100 km) a klouzavý průměr</h4><div class="chart-box"><canvas id="chSpotreba"></canvas></div></div>
+      <div class="chart-card"><h4>Cena paliva (Kč/l)</h4><div class="chart-box"><canvas id="chCena"></canvas></div></div>
+      <div class="chart-card"><h4>Náklady po měsících (Kč)</h4><div class="chart-box"><canvas id="chNakladyMes"></canvas></div></div>
+      <div class="chart-card"><h4>Ujeto po měsících (km)</h4><div class="chart-box"><canvas id="chKmMes"></canvas></div></div>
+      <div class="chart-card"><h4>Náklady na 100 km (Kč)</h4><div class="chart-box"><canvas id="chKc100"></canvas></div></div>
+      <div class="chart-card"><h4>Spotřeba podle měsíce v roce (l/100 km)</h4><div class="chart-box"><canvas id="chSezona"></canvas></div></div>
     </div>
 
     <div class="table-area">
@@ -324,6 +339,17 @@
       </table>
       <div class="empty" id="emptyState">Vyberte auto a přidejte první tankování</div>
     </div>
+  </div>
+</div>
+
+<!-- Modal: zvětšený graf -->
+<div class="modal-bg" id="grafModal" onclick="if (event.target === this) closeGrafModal()">
+  <div class="modal modal-graf">
+    <div class="modal-graf-hlava">
+      <h3 id="grafModalTitle"></h3>
+      <button class="btn btn-red btn-xs" onclick="closeGrafModal()" title="Zavřít (Esc)">✕</button>
+    </div>
+    <div class="chart-box"><canvas id="grafModalCanvas"></canvas></div>
   </div>
 </div>
 
@@ -665,7 +691,7 @@ function renderAll() {
   document.getElementById('worstCons').textContent   = worstCons   ? worstCons.toFixed(2)                     : '—';
 
   renderTable(recs, consData);
-  drawChart(consData);
+  drawCharts(recs, consData);
   document.getElementById('emptyState').style.display = recs.length ? 'none' : 'block';
 }
 
@@ -711,56 +737,187 @@ function renderTable(recs, consData) {
   }).join('');
 }
 
-function drawChart(consData) {
-  const canvas = document.getElementById('consChart');
-  const ctx    = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth || 600;
-  canvas.height = 80;
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-  if (consData.length < 2) return;
+// ── Grafy (Chart.js) ──────────────────────────────────────────────────────────
 
-  const vals  = consData.map(c => c.cons);
-  const minV  = Math.min(...vals) * 0.9;
-  const maxV  = Math.max(...vals) * 1.1;
-  const rangeV = maxV - minV || 1;
-  const padX = 40, padY = 8, padB = 18;
-  const chartW = W - padX - 8, chartH = H - padY - padB;
+const grafy = {};
+const grafCfg = {};   // kopie konfigurací pro zvětšení v modalu
+let grafModal = null;
+const MESICE = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
 
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
-  [0, 0.5, 1].forEach(t => {
-    const y = padY + t * chartH;
-    ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(W - 8, y); ctx.stroke();
-    ctx.fillStyle = '#777'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
-    ctx.fillText((maxV - t * rangeV).toFixed(1), padX - 3, y + 3);
-  });
+function cssVar(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
 
-  ctx.beginPath();
-  ctx.strokeStyle = '#4a9eff'; ctx.lineWidth = 2;
-  consData.forEach((c, i) => {
-    const x = padX + (i / (consData.length - 1)) * chartW;
-    const y = padY + chartH - ((c.cons - minV) / rangeV) * chartH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-
-  consData.forEach((c, i) => {
-    const x = padX + (i / (consData.length - 1)) * chartW;
-    const y = padY + chartH - ((c.cons - minV) / rangeV) * chartH;
-    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = c.id === editingRecordId ? '#f0c060' : '#4a9eff';
-    ctx.fill();
-  });
-
-  ctx.fillStyle = '#555'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(consData.length / 6));
-  consData.forEach((c, i) => {
-    if (i % step === 0) {
-      const x = padX + (i / (consData.length - 1)) * chartW;
-      ctx.fillText(c.date.slice(5), x, H - 2);
+// Měsíční součty: náklady podle data tankování, km přiřazené k tankování, které je uzavírá
+function monthlyTotals(recs) {
+  const map = {};
+  recs.forEach((r, i) => {
+    const m = r.date.slice(0, 7);
+    map[m] = map[m] || { cost: 0, km: 0 };
+    map[m].cost += r.liters * (r.price || 0);
+    if (i > 0) {
+      const km = r.odo - recs[i - 1].odo;
+      if (km > 0 && km < 5000) map[m].km += km;
     }
   });
+  // vyplnit i měsíce bez tankování, ať osa nelže
+  const keys = Object.keys(map).sort();
+  const out = [];
+  if (!keys.length) return out;
+  let [y, mo] = keys[0].split('-').map(Number);
+  const last = keys[keys.length - 1];
+  for (;;) {
+    const k = `${y}-${String(mo).padStart(2, '0')}`;
+    out.push({ month: k, ...(map[k] || { cost: 0, km: 0 }) });
+    if (k === last) break;
+    if (++mo > 12) { mo = 1; y++; }
+  }
+  return out;
 }
+
+function movingAvg(vals, n) {
+  return vals.map((_, i) => {
+    const part = vals.slice(Math.max(0, i - n + 1), i + 1);
+    return part.reduce((s, v) => s + v, 0) / part.length;
+  });
+}
+
+function fmtDate(d) { return d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(2, 4); }
+function fmtMonth(m) { return MESICE[+m.slice(5, 7) - 1] + ' ' + m.slice(2, 4); }
+
+function drawCharts(recs, consData) {
+  if (typeof Chart === 'undefined') return;
+  const text = cssVar('--text-faint', '#888');
+  const grid = cssVar('--border', '#333');
+  const accent = '#4a9eff';
+  Chart.defaults.color = text;
+  Chart.defaults.font.size = 10;
+
+  const recById = {};
+  recs.forEach(r => { recById[r.id] = r; });
+  const avgCons = consData.length ? consData.reduce((s, c) => s + c.cons, 0) / consData.length : 0;
+  const months = monthlyTotals(recs);
+  const priced = recs.filter(r => r.price > 0);
+  const kc100 = consData.filter(c => recById[c.id].price > 0);
+
+  const sezona = Array.from({ length: 12 }, () => []);
+  consData.forEach(c => sezona[+c.date.slice(5, 7) - 1].push(c.cons));
+
+  const scales = unit => ({
+    x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 8 } },
+    y: { grid: { color: grid }, title: { display: !!unit, text: unit } },
+  });
+  const base = unit => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: false } },
+    scales: scales(unit),
+  });
+
+  const defs = {
+    chSpotreba: consData.length >= 2 && {
+      type: 'line',
+      data: {
+        labels: consData.map(c => fmtDate(c.date)),
+        datasets: [
+          { label: 'Spotřeba', data: consData.map(c => +c.cons.toFixed(2)), borderColor: accent, backgroundColor: accent,
+            pointBackgroundColor: consData.map(c => c.id === editingRecordId ? '#f0c060' : accent), pointRadius: 3, tension: 0.2 },
+          { label: 'Klouzavý průměr (3)', data: movingAvg(consData.map(c => c.cons), 3).map(v => +v.toFixed(2)),
+            borderColor: '#f0a040', pointRadius: 0, borderWidth: 2, tension: 0.3 },
+          { label: 'Průměr', data: consData.map(() => +avgCons.toFixed(2)), borderColor: '#8a8a8a',
+            borderDash: [5, 4], pointRadius: 0, borderWidth: 1 },
+        ],
+      },
+      options: { ...base('l/100 km'), plugins: { legend: { display: true, labels: { boxWidth: 12 } } } },
+    },
+    chCena: priced.length >= 2 && {
+      type: 'line',
+      data: {
+        labels: priced.map(r => fmtDate(r.date)),
+        datasets: [{ label: 'Cena', data: priced.map(r => r.price), borderColor: '#c080ff', backgroundColor: '#c080ff33',
+          fill: true, pointRadius: 2, tension: 0.2 }],
+      },
+      options: base('Kč/l'),
+    },
+    chNakladyMes: months.some(m => m.cost > 0) && {
+      type: 'bar',
+      data: {
+        labels: months.map(m => fmtMonth(m.month)),
+        datasets: [{ label: 'Náklady', data: months.map(m => Math.round(m.cost)), backgroundColor: '#e0705a' }],
+      },
+      options: base('Kč'),
+    },
+    chKmMes: months.some(m => m.km > 0) && {
+      type: 'bar',
+      data: {
+        labels: months.map(m => fmtMonth(m.month)),
+        datasets: [{ label: 'Ujeto', data: months.map(m => m.km), backgroundColor: '#5ab87a' }],
+      },
+      options: base('km'),
+    },
+    chKc100: kc100.length >= 2 && {
+      type: 'line',
+      data: {
+        labels: kc100.map(c => fmtDate(c.date)),
+        datasets: [{ label: 'Kč na 100 km', data: kc100.map(c => +(c.cons * recById[c.id].price).toFixed(0)),
+          borderColor: '#e0b040', backgroundColor: '#e0b040', pointRadius: 3, tension: 0.2 }],
+      },
+      options: base('Kč/100 km'),
+    },
+    chSezona: consData.length >= 2 && {
+      type: 'bar',
+      data: {
+        labels: MESICE,
+        datasets: [{ label: 'Průměrná spotřeba',
+          data: sezona.map(v => v.length ? +(v.reduce((s, x) => s + x, 0) / v.length).toFixed(2) : null),
+          backgroundColor: MESICE.map((_, i) => [11, 0, 1].includes(i) ? '#6aa8ff' : [5, 6, 7].includes(i) ? '#f0a040' : '#8ab48a') }],
+      },
+      options: base('l/100 km'),
+    },
+  };
+
+  for (const [id, cfg] of Object.entries(defs)) {
+    if (grafy[id]) { grafy[id].destroy(); delete grafy[id]; }
+    const canvas = document.getElementById(id);
+    const box = canvas.parentElement;
+    box.querySelector('.chart-empty')?.remove();
+    canvas.style.display = cfg ? '' : 'none';
+    grafCfg[id] = cfg ? JSON.parse(JSON.stringify(cfg)) : null;
+    if (cfg) grafy[id] = new Chart(canvas, cfg);
+    else box.insertAdjacentHTML('beforeend', '<div class="chart-empty">Málo dat</div>');
+  }
+}
+
+function openGrafModal(id) {
+  if (!grafCfg[id]) return;
+  const cfg = JSON.parse(JSON.stringify(grafCfg[id]));
+  const font = { size: 13 };
+  const { x, y } = cfg.options.scales;
+  x.ticks.font = y.title.font = font;
+  y.ticks = { font };
+  cfg.options.plugins.legend = { display: cfg.data.datasets.length > 1, labels: { boxWidth: 14, font } };
+  cfg.options.plugins.tooltip = { titleFont: font, bodyFont: font };
+  closeGrafModal();
+  document.getElementById('grafModalTitle').textContent =
+    document.getElementById(id).closest('.chart-card').querySelector('h4').textContent;
+  document.getElementById('grafModal').classList.add('open');
+  grafModal = new Chart(document.getElementById('grafModalCanvas'), cfg);
+}
+
+function closeGrafModal() {
+  if (grafModal) { grafModal.destroy(); grafModal = null; }
+  document.getElementById('grafModal').classList.remove('open');
+}
+
+document.querySelectorAll('.chart-card').forEach(card => {
+  card.addEventListener('click', () => openGrafModal(card.querySelector('canvas').id));
+});
+
+// Přepnutí tématu → překreslit grafy novými barvami
+new MutationObserver(() => renderAll())
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // ── Export / Import ───────────────────────────────────────────────────────────
 
@@ -796,6 +953,7 @@ function importData(input) {
 // ── Klávesové zkratky ─────────────────────────────────────────────────────────
 
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && grafModal) { closeGrafModal(); return; }
   if (e.key === 'Escape' && editingRecordId) cancelEdit();
   if ((e.key === 'Enter') && (e.ctrlKey || e.metaKey)) saveRecord();
 });

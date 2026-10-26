@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎃 Halloweenská dílna</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="../tvary.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/clipper.min.js"></script>
+<script src="stencil/vystup.js"></script>
+<script src="krajky/jadro.js"></script>
+<script src="krajky/vystup.js"></script>
+<script src="halloween/jadro.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{font-family:var(--font,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);min-height:100vh}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista>*{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin-right:4px}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+.rozlozeni{display:grid;grid-template-columns:minmax(290px,350px) minmax(0,1fr);gap:12px;align-items:start;padding:10px 12px 16px}
+.panel{display:flex;flex-direction:column;gap:10px;min-width:0}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 12px;min-width:0}
+.karta>summary{cursor:pointer;font-weight:600;font-size:.95rem;list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.karta>summary::-webkit-details-marker{display:none}
+.karta>summary::after{content:'▾';margin-left:auto;color:var(--text-faint);transition:transform .15s}
+.karta:not([open])>summary::after{transform:rotate(-90deg)}
+.karta[open]>summary{margin-bottom:6px}
+label.pop{display:block;font-size:.78rem;color:var(--text-faint);margin:8px 0 3px}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:6px 7px;font-size:.88rem;font-family:inherit}
+input[type=range]{padding:0;border:none;background:none;accent-color:var(--accent)}
+input[type=color]{padding:2px;height:32px}
+input[type=checkbox]{width:auto;accent-color:var(--accent)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.mrizka2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.mrizka3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.chk{display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--text-muted);font-size:.83rem;cursor:pointer}
+.motivy{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:0 8px}
+.note{font-size:.76rem;color:var(--text-faint);line-height:1.5;margin-top:6px}
+.note b{color:var(--text-muted)}
+.plocha{position:sticky;top:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+#obal{position:relative;height:calc(100vh - 140px);min-height:340px;border:1px solid var(--border);border-radius:8px;overflow:hidden;touch-action:none}
+#platno{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+.zoom .tl{background:var(--bg-panel)}
+.stav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--text-muted);padding:2px}
+.stav b{color:var(--text)}
+.stav .zle{color:var(--danger);font-weight:600}
+.stav .dobre{color:var(--ok)}
+.hlaseni{display:flex;flex-direction:column;gap:4px}
+.hlaseni div{font-size:.8rem;padding:6px 8px;border-radius:6px;border:1px solid var(--warn);background:var(--bg-elevated)}
+.legenda{font-size:.76rem;color:var(--text-muted)}
+.legenda i{display:inline-block;width:18px;height:3px;vertical-align:3px;margin:0 4px 0 10px;border-radius:2px}
+dialog{max-width:min(760px,94vw);max-height:88vh;margin:auto;background:var(--bg-panel);color:var(--text);border:1px solid var(--border-strong);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h2{font-size:1.15rem;margin-bottom:8px}
+dialog h3{font-size:.98rem;margin:14px 0 4px}
+dialog p,dialog li{font-size:.88rem;line-height:1.55;color:var(--text-muted)}
+dialog ul{padding-left:1.2em}
+dialog .zavrit{float:right}
+[hidden]{display:none!important}
+@media (max-width:900px){
+  .rozlozeni{grid-template-columns:minmax(0,1fr)}
+  .plocha{position:static;order:-1}
+  #obal{height:min(60vh,520px);min-height:280px}
+}
+@media (max-width:420px){.rozlozeni{padding:8px}.mrizka3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🎃 Halloweenská dílna</h1>
+  <div class="skup" role="group" aria-label="Co vyrobit"><span class="skup-nazev" aria-hidden="true">Co vyrobit</span><div class="skup-tl" id="druhy">
+    <button class="tl" data-druh="pavucina" title="Pavučina k vystřižení nebo pro plotr">🕸️<span class="txt"> Pavučina</span></button>
+    <button class="tl" data-druh="dyne" title="Šablona na vyřezání dýně">🎃<span class="txt"> Dýně</span></button>
+    <button class="tl" data-druh="girlanda" title="Řetěz z harmonikově složeného papíru">🦇<span class="txt"> Girlanda</span></button>
+    <button class="tl" data-druh="siluety" title="List siluet na okno a zeď">👻<span class="txt"> Siluety</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Vzor"><span class="skup-nazev" aria-hidden="true">Vzor</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="nahodny" title="Náhodně (R)">🎲<span class="txt"> Náhodně</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
+    <button class="tl" data-prikaz="pdf" title="PDF v měřítku 1:1 k tisku">🖨<span class="txt"> PDF 1:1</span></button>
+    <button class="tl" data-nabidka="nabExport" title="Další formáty">⬇<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabZobrazit" title="Co ukázat v náhledu">👁<span class="txt"> Zobrazit</span> ▾</button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Jak na to (F1)">❓<span class="txt"> Jak na to</span></button></span>
+</header>
+
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pdf">🖨 PDF 1:1 k tisku</button>
+  <hr>
+  <button class="tl" data-prikaz="svgRez">✂️ SVG pro plotr / laser (červené řezné čáry)</button>
+  <button class="tl" data-prikaz="dxf">📐 DXF (mm)</button>
+  <button class="tl" data-prikaz="svg">🖼 SVG jako v náhledu</button>
+  <button class="tl" data-prikaz="png">🖼 PNG 300 dpi</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl prep" data-prikaz="ukMeritko" aria-pressed="true">Měřítko 10 mm</button>
+  <button class="tl prep" data-prikaz="ukMustek" aria-pressed="true">Nejužší můstek dýně</button>
+  <hr>
+  <button class="tl" data-prikaz="prizpusob">⤢ Přizpůsobit náhled</button>
+</div>
+
+<div class="rozlozeni">
+  <div class="panel">
+    <details class="karta" open data-jen="pavucina">
+      <summary>🕸️ Pavučina</summary>
+      <div class="mrizka2">
+        <div><label class="pop" for="pvTvar">Tvar</label><select id="pvTvar" data-p="pavucina.tvar"><option value="kruh">celá (kruh)</option><option value="roh">do rohu okna</option></select></div>
+        <div><label class="pop" for="pvStyl">Provedení</label><select id="pvStyl" data-p="pavucina.styl"><option value="rez">k vystřižení</option><option value="cary">čárová (plotr, fix)</option></select></div>
+      </div>
+      <div class="mrizka3">
+        <div><label class="pop" for="pvVel">Velikost (mm)</label><input type="number" id="pvVel" data-p="pavucina.velikost" min="40" max="1500" step="5"></div>
+        <div><label class="pop" for="pvPap">Paprsků</label><input type="number" id="pvPap" data-p="pavucina.paprsky" min="4" max="48" step="1"></div>
+        <div><label class="pop" for="pvZav">Závitů</label><input type="number" id="pvZav" data-p="pavucina.zavity" min="2" max="40" step="1"></div>
+      </div>
+      <label class="pop" for="pvNep">Nepravidelnost</label><input type="range" id="pvNep" data-p="pavucina.nepravidelnost" min="0" max="1" step="0.05">
+      <label class="pop" for="pvPro">Prověšení závitů</label><input type="range" id="pvPro" data-p="pavucina.prohnuti" min="0" max="0.8" step="0.05">
+      <div class="mrizka2">
+        <div><label class="pop" for="pvVl">Tloušťka vlákna (mm)</label><input type="number" id="pvVl" data-p="pavucina.vlakno" min="0.2" max="20" step="0.1"></div>
+        <div><label class="pop" for="pvPs">Pavouk (mm)</label><input type="number" id="pvPs" data-p="pavucina.velPavouka" min="8" max="400" step="1"></div>
+      </div>
+      <label class="chk"><input type="checkbox" data-p="pavucina.pavouk"> Pavouk na síti</label>
+      <p class="note">Papír nůžkami: vlákno ≥ 2 mm, plotr ≥ 1 mm. Čárová pavučina se kreslí perem plotru nebo se řeže z vinylu jako čáry dané tloušťky.</p>
+    </details>
+
+    <details class="karta" open data-jen="dyne">
+      <summary>🎃 Obličej dýně</summary>
+      <div class="mrizka3">
+        <div><label class="pop" for="dyOci">Oči</label><select id="dyOci" data-p="dyne.oci"></select></div>
+        <div><label class="pop" for="dyNos">Nos</label><select id="dyNos" data-p="dyne.nos"></select></div>
+        <div><label class="pop" for="dyUsta">Ústa</label><select id="dyUsta" data-p="dyne.usta"></select></div>
+      </div>
+      <div class="mrizka3">
+        <div><label class="pop" for="dyVys">Výška dýně (mm)</label><input type="number" id="dyVys" data-p="dyne.vyska" min="40" max="800" step="5"></div>
+        <div><label class="pop" for="dyZub">Zubů</label><input type="number" id="dyZub" data-p="dyne.zubu" min="1" max="9" step="1"></div>
+        <div><label class="pop" for="dyMus">Můstek (mm)</label><input type="number" id="dyMus" data-p="dyne.mustek" min="1" max="30" step="0.5"></div>
+      </div>
+      <p class="note"><b>Výška</b> = výška dýně od stopky dolů, změřte ji krejčovským metrem přes obličej. Můstek dužiny drží zuby – u velké dýně volte aspoň 6–8 mm.</p>
+    </details>
+
+    <details class="karta" open data-jen="girlanda">
+      <summary>🦇 Girlanda z harmoniky</summary>
+      <label class="pop" for="gMotiv">Motiv</label><select id="gMotiv" data-p="girlanda.motiv"></select>
+      <div class="mrizka3">
+        <div><label class="pop" for="gSir">Šířka dílu (mm)</label><input type="number" id="gSir" data-p="girlanda.sirka" min="20" max="400" step="1"></div>
+        <div><label class="pop" for="gVys">Výška (mm)</label><input type="number" id="gVys" data-p="girlanda.vyska" min="20" max="400" step="1"></div>
+        <div><label class="pop" for="gPan">Dílů</label><input type="number" id="gPan" data-p="girlanda.panelu" min="2" max="40" step="1"></div>
+      </div>
+      <label class="pop" for="gSpoj">Výška spojky</label><input type="range" id="gSpoj" data-p="girlanda.spojka" min="0.05" max="0.95" step="0.01">
+      <label class="pop" for="gTl">Šířka spojky (mm)</label><input type="number" id="gTl" data-p="girlanda.tloustka" min="1" max="60" step="0.5">
+      <label class="chk"><input type="checkbox" data-p="girlanda.retez"> Ukázat rozložený řetěz (PDF tiskne vždy šablonu jednoho dílu)</label>
+      <p class="note">Pruh papíru o výšce dílu složte harmonikově podle šířky dílu, šablonu přiložte na vrchní díl a stříhejte všemi vrstvami. <b>Zelené</b> úseky na ohybech nestříhat – drží řetěz pohromadě.</p>
+    </details>
+
+    <details class="karta" open data-jen="siluety">
+      <summary>👻 Siluety na list</summary>
+      <div class="motivy" id="slMotivy"></div>
+      <div class="mrizka3">
+        <div><label class="pop" for="slPoc">Počet</label><input type="number" id="slPoc" data-p="siluety.pocet" min="1" max="200" step="1"></div>
+        <div><label class="pop" for="slMin">Nejmenší (mm)</label><input type="number" id="slMin" data-p="siluety.min" min="10" max="800" step="1"></div>
+        <div><label class="pop" for="slMax">Největší (mm)</label><input type="number" id="slMax" data-p="siluety.max" min="10" max="800" step="1"></div>
+      </div>
+      <div class="mrizka2">
+        <div><label class="pop" for="slList">List</label><select id="slList" data-p="siluety.list"><option value="210x297">A4 na výšku</option><option value="297x210">A4 na šířku</option><option value="297x420">A3 na výšku</option><option value="420x297">A3 na šířku</option><option value="305x305">Cricut 12″ × 12″</option></select></div>
+        <div><label class="pop" for="slMez">Mezera (mm)</label><input type="number" id="slMez" data-p="siluety.mezera" min="1" max="30" step="1"></div>
+      </div>
+      <label class="chk"><input type="checkbox" data-p="siluety.zrcadlit"> Náhodně zrcadlit</label>
+      <label class="chk"><input type="checkbox" data-p="siluety.obliceje"> Dýně s obličejem</label>
+      <p class="note">Velikost = delší strana siluety. 🎲 rozmístí a vylosuje velikosti znovu.</p>
+    </details>
+
+    <details class="karta">
+      <summary>🎨 Barvy náhledu</summary>
+      <div class="mrizka2">
+        <div><label class="pop" for="barva">Výrobek</label><input type="color" id="barva"></div>
+        <div><label class="pop" for="podklad">Podklad</label><input type="color" id="podklad"></div>
+      </div>
+    </details>
+
+    <details class="karta">
+      <summary>🖨 Tisk</summary>
+      <div class="mrizka2">
+        <div><label class="pop" for="papir">Papír</label>
+          <select id="papir"><option value="210x297">A4</option><option value="297x420">A3</option><option value="216x279">Letter</option></select></div>
+        <div><label class="pop" for="okrajTisku">Okraj tisku (mm)</label><input type="number" id="okrajTisku" min="3" max="30" step="1" value="10"></div>
+      </div>
+      <p class="note">Co se nevejde na jeden list, rozdělí se na víc listů s překryvem a křížky k slepení. List siluet vychází přesně na zvolený formát.</p>
+    </details>
+
+    <details class="karta">
+      <summary>💾 Moje výrobky</summary>
+      <div id="tvary"></div>
+    </details>
+  </div>
+
+  <div class="plocha">
+    <div id="obal">
+      <canvas id="platno" aria-label="Náhled"></canvas>
+      <div class="zoom">
+        <button class="tl" data-prikaz="oddal" aria-label="Oddálit">−</button>
+        <button class="tl" data-prikaz="prizpusob" aria-label="Přizpůsobit">⤢</button>
+        <button class="tl" data-prikaz="pribliz" aria-label="Přiblížit">+</button>
+      </div>
+    </div>
+    <div class="stav" id="stav"></div>
+    <div class="legenda" id="legenda" hidden><i style="background:#1f6fd1"></i>ohyb<i style="background:#2e9b3a"></i>nestříhat</div>
+    <div class="hlaseni" id="hlaseni"></div>
+  </div>
+</div>
+
+<dialog id="napoveda">
+  <button class="tl zavrit" data-prikaz="zavritNapovedu" aria-label="Zavřít">✕</button>
+  <h2>🎃 Jak na to</h2>
+  <h3>🕸️ Pavučina</h3>
+  <p>Kruhová síť pavouka křižáka má paprsky ze středu k rámu a lepkavou spirálu, která se mezi paprsky prověšuje ke středu. Generátor rozloží paprsky (s volitelnou nepravidelností), mezi ně napne prověšené oblouky a celou kresbu převede na plochy dané tloušťky – výsledek je jeden souvislý kus, který po vystřižení nespadne. Verze „do rohu okna“ začíná v rohu a krajní paprsky leží na rámu.</p>
+  <h3>🎃 Dýně</h3>
+  <ul>
+    <li>Vytiskněte šablonu 1:1, vystřihněte obrys a přilepte ji páskou na dýni (udělejte pár nástřihů okrajem, ať přilne k oblé ploše).</li>
+    <li>Obrysy otvorů přeneste propichováním – špendlíkem nebo jehlou po 2–3 mm – pak šablonu sundejte a řežte podle teček.</li>
+    <li>Stránka měří nejužší místo dužiny mezi otvory; u zubů je to přímo šířka zubu. Moc úzký můstek se při řezání ulomí.</li>
+  </ul>
+  <h3>🦇 Girlanda</h3>
+  <p>Postava se nakreslí na jeden díl a na obou ohybech se dotýká okraje pruhem (spojkou). Po složení do harmoniky se stříhá všemi vrstvami najednou; na ohybech, kde je spojka, se nestříhá – tam zůstanou postavy držet za ruce (křídla, pacičky).</p>
+  <h3>👻 Siluety</h3>
+  <p>Siluety se poskládají na list po řádcích od nejvyšších. Vystřihněte je z černého papíru a nalepte na okno – večer proti světlu vyniknou nejlíp. SVG pro řezání jde přímo do plotru (Cricut, Silhouette).</p>
+  <h3>Trocha historie</h3>
+  <p>Halloween (All Hallows' Eve, předvečer Všech svatých) navazuje na keltský svátek Samhain na přelomu podzimu a zimy. V Irsku a Skotsku se vyřezávaly lucerny z tuřínu a vodnice; dýně je přišly nahradit až v Severní Americe, kde byly větší a snáz se dlabaly. Jméno <i>jack-o'-lantern</i> pochází z irské pověsti o Skoupém Jackovi, který bloudí se svítilnou mezi světy.</p>
+</dialog>
+
+<script src="halloween/ui.js"></script>
+</body>
+</html>
