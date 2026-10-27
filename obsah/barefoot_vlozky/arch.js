@@ -108,13 +108,17 @@
   function rozvrh(v, o) {
     o = Object.assign({ sirka: 500, vyska: 500, okraj: 5, mezera: 3, pary: 0, otacet: true, smer: 'auto', vrstva: 'horni' }, o || {});
     const vrstva = (n) => (o.vrstva === 'spodni' && n.vrstva2 ? Object.assign({}, n, { vlozka: n.vrstva2, perf: [], roz: J.rozmery(n.vrstva2) }) : n);
-    const sady = (o.sady || [{ nohy: v.nohy, pary: o.pary, nazev: '' }]).filter((q) => q.nohy.length).map((q) => ({ nazev: q.nazev, pary: q.pary, nohy: q.nohy.map(vrstva) }));
+    /* sady „co nejvíc“ (pary 0) až na konec – jinak by zablokovaly ty s pevným počtem */
+    const sady = (o.sady || [{ nohy: v.nohy, pary: o.pary, nazev: '' }]).filter((q) => q.nohy.length).map((q) => ({ nazev: q.nazev, pary: q.pary, nohy: q.nohy.map(vrstva) })).sort((a, b) => (a.pary > 0 ? 0 : 1) - (b.pary > 0 ? 0 : 1));
     if (!sady.length) return { kusy: [], pary: 0, sady: [], vyuziti: 0, o };
     const rowMax = Math.max(...sady.flatMap((q) => q.nohy.map((n) => n.Lt)));
     sady.forEach((q) => { q.typy = q.nohy.map((n) => [kus(n, false), kus(n, true)]); q.pocet = q.pary > 0 ? q.pary * q.nohy.length : Infinity; });
     /* pořadí kusů: sady za sebou, každá po celých sadách; „co nejvíc“ se opakuje do zaplnění */
+    /* pořadí stran v sadě: L P L P…, P L P L…, L P P L…, po dvou a po čtyřech stejných (hladový postup je na pořadí citlivý – vybere se nejlepší) */
+    const PORADI = [(i, n) => i % n, (i, n) => n - 1 - (i % n), (i, n) => (Math.floor(i / n) % 2 ? n - 1 - (i % n) : i % n), (i, n) => Math.floor(i / 2) % n, (i, n) => Math.floor(i / 4) % n];
+    let poradi = PORADI[0];
     const typAt = (i) => {
-      for (let s = 0; s < sady.length; s++) { const q = sady[s]; if (i < q.pocet) { const t = q.typy[i % q.nohy.length]; t.sada = s; return t; } i -= q.pocet; }
+      for (let s = 0; s < sady.length; s++) { const q = sady[s]; if (i < q.pocet) { const t = q.typy[poradi(i, q.nohy.length)]; t.sada = s; return t; } i -= q.pocet; }
       return null;
     };
     const varianta = (napric) => {
@@ -134,15 +138,18 @@
     /* jen celé sady (páry) z každého projektu */
     const zCelych = (kusy) => {
       const sada = (q) => { let i = q.i; for (let s = 0; s < sady.length; s++) { if (i < sady[s].pocet) return s; i -= sady[s].pocet; } return -1; };
-      const pocty = sady.map(() => 0); for (const q of kusy) pocty[sada(q)]++;
-      const cele = pocty.map((n, s) => Math.floor(n / sady[s].nohy.length) * sady[s].nohy.length), zbyva = cele.slice();
-      const out = kusy.filter((q) => { const s = sada(q); if (zbyva[s] > 0) { zbyva[s]--; return true; } return false; });
-      return { kusy: out, pary: cele.map((n, s) => n / sady[s].nohy.length) };
+      /* pár = jeden kus od každé strany sady (pořadí po blocích může dát víc levých než pravých) */
+      const strana = (q, s) => sady[s].nohy.indexOf(q.n);
+      const pocty = sady.map((q) => q.nohy.map(() => 0)); for (const q of kusy) { const s = sada(q); pocty[s][strana(q, s)]++; }
+      const pary = pocty.map((L, s) => Math.min(...L, sady[s].pary > 0 ? sady[s].pary : Infinity)), zbyva = pocty.map((L, s) => L.map(() => pary[s]));
+      const out = kusy.filter((q) => { const s = sada(q), k = strana(q, s); if (zbyva[s][k] > 0) { zbyva[s][k]--; return true; } return false; });
+      return { kusy: out, pary };
     };
-    const kandidati = (o.smer === 'podel' ? [false] : o.smer === 'napric' ? [true] : [false, true]).map((napric) => zCelych(varianta(napric)));
+    const smery = o.smer === 'podel' ? [false] : o.smer === 'napric' ? [true] : [false, true], kandidati = [];
+    for (const f of sady.some((q) => q.nohy.length > 1) ? PORADI : [PORADI[0]]) { poradi = f; for (const napric of smery) kandidati.push(zCelych(varianta(napric))); }
     const nej = kandidati.reduce((m, k) => (k.kusy.length > m.kusy.length ? k : m));
     const plocha = nej.kusy.reduce((s, q) => s + q.n.roz.plocha, 0);
-    return { kusy: nej.kusy, pary: nej.pary.reduce((a, b) => a + b, 0), sady: sady.map((q, s) => ({ nazev: q.nazev, pary: nej.pary[s] })), vyuziti: plocha / (o.sirka * o.vyska), plochaKusu: plocha, o };
+    return { kusy: nej.kusy, pary: nej.pary.reduce((a, b) => a + b, 0), sady: sady.map((q, s) => ({ nazev: q.nazev, pary: nej.pary[s] })), vyuziti: o.sirka * o.vyska > 0 ? plocha / (o.sirka * o.vyska) : 0, plochaKusu: plocha, o };
   }
   /* scéna pro BFV.svgPrvky / BFV.dxfSceny */
   function scenaArchu(r, popisky) {

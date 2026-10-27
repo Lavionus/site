@@ -7,7 +7,7 @@
   const ODDILY = [
     ['Co je barefoot vložka', [
       'Barefoot (minimalistická) bota má plochou podrážku bez podpatku (zero drop), ohebnou podešev a širokou špičku, ve které se prsty volně roztáhnou. Vložka do ní proto není „ortopedická“ – nemá podporu klenby ani zvýšenou patu. Je to tenká rovná deska ve tvaru chodidla, která hřeje, saje pot a dá se vyprat nebo vyměnit.',
-      'Generátor kreslí vložku ze tří rozměrů chodidla. Vnitřní strana je skoro rovná (palec míří dopředu, ne do špičky), přední okraj sleduje délky prstů a k obrysu se přičítá rezerva.',
+      'V režimu Univerzální generátor kreslí vložku ze tří rozměrů chodidla. Vnitřní strana je skoro rovná (palec míří dopředu, ne do špičky), přední okraj sleduje délky prstů a k obrysu se přičítá rezerva.',
     ]],
     ['Jak změřit chodidlo', [
       'Měřte odpoledne nebo večer (noha během dne nateče), vestoje a s váhou na obou nohou, v ponožkách, které budete v botách nosit.',
@@ -34,16 +34,16 @@
       'Perforace (otvory) zlepšuje odvod vlhkosti u kůže a EVA; plsť a tkanina ji nepotřebují.',
     ]],
     ['Vložky na míru z předlohy', [
-      'Režim „Na míru“ nekreslí model, ale skutečný obrys: obkreslené chodidlo (tužkou drženou svisle, vestoje), otisk nebo starou vložku, která sedí. Předlohu naskenujte nebo vyfoťte kolmo shora. Na jednom obrázku můžou být obě nohy – každý uzavřený obrys se stane samostatnou šablonou; když se dva dotýkají, rozdělte je čarou.',
-      'Měřítko obrázku: u skenu stačí zadat DPI. U fotky klikněte čtyři rohy listu papíru – obrázek se srovná do pravého úhlu a zároveň dostane přesné měřítko (list A4 má 210 × 297 mm). Jde to i podle dvou bodů na pravítku. Když měřítko neznáte, zadejte u šablony skutečnou délku a šířku chodidla změřenou pravítkem – kalibrace v ose délky a v ose šířky je nezávislá, takže opraví i mírně šikmou fotku.',
+      'Režim „Na míru“ nekreslí model, ale skutečný obrys: obkreslené chodidlo (tužkou drženou svisle, vestoje), otisk nebo starou vložku, která sedí. Předlohu naskenujte nebo vyfoťte kolmo shora. Na jednom obrázku mohou být obě nohy – každý uzavřený obrys se stane samostatnou šablonou; když se dva dotýkají, rozdělte je čarou.',
+      'Měřítko obrázku: u skenu stačí zadat DPI. U fotky klikněte na čtyři rohy listu papíru – obrázek se srovná do pravého úhlu a zároveň dostane přesné měřítko (list A4 má 210 × 297 mm). Jde to i podle dvou bodů na pravítku. Když měřítko neznáte, zadejte skutečnou délku a šířku chodidla změřenou pravítkem (okno 📏 Kalibrace → Rozměry obrysů, nebo u vybraného obrysu) – kalibrace v ose délky a v ose šířky je nezávislá, takže opraví i mírně šikmou fotku.',
       'U obkreslené čáry vyberte, zda brát obrys ze středu, vnitřní, nebo vnější hrany čáry; tužka vede kousek vedle chodidla, proto bývá potřeba korekce asi −1 až −2 mm (nebo záporný offset).',
       'Šablona se natočí podle hlavní osy tvaru (od paty ke špičce) nebo podle vnitřní tečny paty a kloubu palce – tak, jak se měří u obuvi. Pootočení lze doladit ručně.',
       'Offset X rozšíří vložku do stran, offset Y prodlouží vpředu i vzadu, „ve špičce“ přidá délku jen v přední části. Offset se počítá jako obálka elipsy kolem obrysu, takže sleduje tvar i v prohlubních. Společný offset platí pro všechny šablony projektu, vlastní offset šablony se k němu přičte.',
-      'Uzly obrysu lze táhnout myší, dvojklikem přidat a pravým tlačítkem smazat – třeba když čáru přerušil prst nebo stín. Projekt se ukládá automaticky do prohlížeče (i s předlohami); pro zálohu nebo přenos na jiný počítač použijte export projektu.',
+      'V režimu ◉ Uzly lze uzly obrysu táhnout myší, dvojklikem přidat a pravým tlačítkem nebo klávesou Delete smazat – třeba když čáru přerušil prst nebo stín. Projekt se ukládá automaticky do prohlížeče (i s předlohami); pro zálohu nebo přenos na jiný počítač použijte export projektu.',
     ]],
     ['Kalibrační karta, vyhlazení prstů a měření', [
-      'Nejpřesnější a nejpohodlnější cesta je kalibrační karta (Tisk → Další, nebo tlačítko u Předloh): list A4 se čtyřmi černými čtverci. Nohu obkreslíte přímo na kartu a vyfotíte ji mobilem – stránka čtverce najde sama, srovná perspektivu a nastaví měřítko. Bez karty zkusí najít okraje celého listu papíru (papír musí být celý v záběru a kontrastní proti podložce).',
-      'Tužka u prstů obvykle zajede do mezer mezi nimi a obrys je zvlněný. Nejrychlejší je tlačítko 〰️ Vyhladit (v liště editoru nebo v Nástrojích): přímo narovná trasy všech obrysů předlohy – u prstů vyplní zářezy a vlnky vyhladí, jinde obrys jen mírně narovná a uzly rozloží rovnoměrně; další klik vyhladí víc, Zpět vrátí. Jemnější, nevratně nezapečené nastavení je u šablony v části Vyhlazení prstů. „Vyhladit vlnky“ je vyhlazení, které obrys nesmršťuje (Taubinova metoda) a působí jen na přední část od zvoleného procenta délky. „Obálka prstů“ zářezy mezi prsty vyplní a vede obrys po jejich špičkách. Úpravu lze zapéct do uzlů a obrys zjednodušit – zbude méně uzlů na ruční úpravy.',
+      'Nejpřesnější a nejpohodlnější cesta je kalibrační karta (Nástroje → Kalibrační karta A4, okno 📏 Kalibrace, nebo tlačítko 📄 Kalibrační karta v panelu Předlohy): list A4 se čtyřmi černými čtverci. Nohu obkreslíte přímo na kartu a vyfotíte ji mobilem – stránka čtverce najde sama, srovná perspektivu a nastaví měřítko. Bez karty zkusí najít okraje celého listu papíru (papír musí být celý v záběru a kontrastní proti podložce).',
+      'Tužka u prstů obvykle zajede do mezer mezi nimi a obrys je zvlněný. Nejrychlejší je 〰️ Vyhladit (v liště editoru, v Nástrojích nebo klávesa H): otevře nastavení síly u prstů a po celém obrysu a změnu ukáže oranžově v editoru; tlačítko Použít ji provede (u prstů vyplní zářezy, jinde obrys jen mírně narovná a uzly rozloží rovnoměrně), další použití vyhladí víc, Zpět (Ctrl+Z) vrátí. Vratné nastavení, které obrys trvale nemění, je u obrysu v části ✋ Vyhlazení prstů.',
       'Nástroj Měřit v editoru změří vzdálenost dvou bodů a úhel u prostředního ze tří bodů, např. odklon palce nebo šířku paty v libovolném místě.',
       'Šablona může být chodidlo, stará vložka, nebo stélka vyjmutá z boty. Stélka se netiskne, ale v záložce Porovnání ukáže, kde noha přesahuje botu (červeně) a kolik zbývá místa (zeleně). Stejně lze porovnat chodidlo vestoje a vsedě – rozdíl ukáže, o kolik se noha zatížením prodlouží a rozšíří.',
     ]],
@@ -54,14 +54,14 @@
       'Projekt má stav zakázky, termín a počet párů; seznam všech zakázek jde stáhnout jako CSV. Před každou velkou změnou (nové hledání obrysů, měřítko, mazání, zapečení) se uloží verze, ke které se lze vrátit v nabídce Projekt.',
     ]],
     ['Kalibrace, fotka a sdílení', [
-      'Tlačítko 📏 Kalibrace v liště svítí oranžově, dokud předloha nemá skutečné měřítko. Okno Kalibrace má tři části: měřítko předlohy (kalibrační karta, list papíru, pravítko, DPI), skutečné rozměry šablon (délka a šířka zvlášť) a tiskárnu. Tiskárny často tisknou o 1–3 % jinak – ze zkušebního listu se změří úsečky 150 a 200 mm a všechna PDF (šablony, arch, karta) se pak tisknou s vyrovnáním.',
+      'Tlačítko 📏 Kalibrace v liště pulzuje s vykřičníkem, dokud předloha nemá skutečné měřítko (ani zadané skutečné rozměry obrysů); po kalibraci ukáže ✓. Okno Kalibrace má tři části: měřítko předlohy (kalibrační karta, list papíru, pravítko, DPI), skutečné rozměry šablon (délka a šířka zvlášť) a tiskárnu. Tiskárny často tisknou o 1–3 % jinak – ze zkušebního listu se změří úsečky 150 a 200 mm a všechna PDF (šablony, arch, karta) se pak tisknou s vyrovnáním.',
       'Fotku lze pořídit přímo fotoaparátem (📷 Vyfotit). Po načtení se hodnotí kvalita: ostrost, přesvícení, tma, kontrast a šikmost snímku; při problému stránka poradí, co zlepšit.',
       'Dvě obkreslení téže nohy lze zprůměrovat – stránka ukáže, jak moc se liší (přesnost měření). Poškozenou předlohu jedné nohy lze dorovnat tvarem druhé (zrcadleně, se zachováním vlastní délky a šířky). Obrys jde také obkreslit ručně v editoru, uzly táhnout s dosahem (sousední uzly se posunou plynule) a vyhlazení vlnek nejdřív prohlédnout oranžově v náhledu.',
-      'Sdílení odkazem nese obrysy a nastavení přímo v odkazu (zkomprimované) – nic se neukládá na server, fotky se nepřenášejí. Odkaz jde předat i jako QR kód, třeba na štítku zakázky.',
+      'Sdílení odkazem nese obrysy a nastavení přímo v odkazu (zkomprimované) – nic se neukládá na server; fotky, jméno klienta ani poznámka se nepřenášejí. Odkaz jde předat i jako QR kód, třeba na štítku zakázky.',
       'Pro laser, Cricut, Silhouette nebo CNC nůž je výstup jen s tím, co stroj dělá: řez (s kompenzací šířky řezu – obrys se posune ven o polovinu, otvory zmenší), bigování ořezových čar a gravírování popisků.',
     ]],
     ['Porovnání nohou a výroba z archu', [
-      'Záložka Porovnání L/P zrcadlí levou nohu a přiloží ji patou na pravou. Ukáže rozdíl délky, šířky, paty a plochy i místo největší odchylky obrysu. Rozdíl do 2–3 mm bývá běžný; větší rozdíl je důvod mít každou vložku podle své nohy.',
+      'Záložka Porovnání zrcadlí levou nohu a přiloží ji patou na pravou. Ukáže rozdíl délky, šířky, paty a plochy i místo největší odchylky obrysu. Rozdíl do 3–4 mm bývá běžný; větší rozdíl je důvod mít každou vložku podle své nohy.',
       'Záložka Arch materiálu spočítá, kolik párů se vejde na arch plsti, korku nebo kůže. Vložky se kladou do řad, střídavě špičkou proti patě, a zbytek archu se dovyplní vložkami napříč. Mezera mezi díly odpovídá nástroji: laser 1–2 mm, nůž nebo nůžky 3–5 mm. U materiálu se směrem vlasu nebo vláken zvolte jen jeden směr. Rozvržení jde stáhnout jako SVG nebo DXF pro laser, plotr či CNC nůž.',
     ]],
     ['Jak se kreslí obrys', [
@@ -83,10 +83,10 @@
   const SCHEMA = `<svg viewBox="0 0 260 150" role="img" aria-label="Měření chodidla: délka od paty k nejdelšímu prstu, šířka přes klouby a šířka paty">
 <path d="M28 75c0-22 12-33 34-35 22-2 50-6 80-12 32-6 55-6 70 2 15 8 22 22 22 45s-7 37-22 45c-15 8-38 8-70 2-30-6-58-10-80-12-22-2-34-13-34-35z" fill="none" stroke="currentColor" stroke-width="1.6"/>
 <line x1="20" y1="20" x2="20" y2="130" stroke="currentColor" stroke-width="3"/><text x="23" y="16" font-size="8" fill="currentColor">zeď</text>
-<line x1="20" y1="142" x2="236" y2="142" stroke="#c0392b" stroke-width="1.2"/><text x="128" y="139" font-size="9" text-anchor="middle" fill="#c0392b">délka k nejdelšímu prstu</text>
-<line x1="236" y1="128" x2="236" y2="146" stroke="#c0392b" stroke-width="1"/>
-<line x1="176" y1="26" x2="176" y2="124" stroke="#1f5fa8" stroke-width="1.2"/><text x="180" y="78" font-size="9" fill="#1f5fa8">šířka přes klouby</text>
-<line x1="52" y1="44" x2="52" y2="106" stroke="#1e7d3a" stroke-width="1.2"/><text x="56" y="78" font-size="9" fill="#1e7d3a">pata</text>
+<line x1="20" y1="142" x2="236" y2="142" style="stroke:var(--danger)" stroke-width="1.2"/><text x="128" y="139" font-size="9" text-anchor="middle" style="fill:var(--danger)">délka k nejdelšímu prstu</text>
+<line x1="236" y1="128" x2="236" y2="146" style="stroke:var(--danger)" stroke-width="1"/>
+<line x1="176" y1="26" x2="176" y2="124" style="stroke:var(--accent)" stroke-width="1.2"/><text x="180" y="78" font-size="9" style="fill:var(--accent)">šířka přes klouby</text>
+<line x1="52" y1="44" x2="52" y2="106" style="stroke:var(--ok)" stroke-width="1.2"/><text x="56" y="78" font-size="9" style="fill:var(--ok)">pata</text>
 </svg>`;
 
   function html() {

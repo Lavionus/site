@@ -93,17 +93,20 @@
     const W = Math.max(1, Math.ceil(m.sirka * R)), Hh = Math.max(1, Math.ceil(m.vyska * R)), Hi = inverze3(m.H);
     const rgba = new Uint8ClampedArray(W * Hh * 4), seda = new Uint8Array(W * Hh), d = zdroj.data, sw = zdroj.w, sh = zdroj.h;
     for (let v = 0; v < Hh; v++) for (let u = 0; u < W; u++) {
-      const [x, y] = hBod(Hi, (u + 0.5) / R, (v + 0.5) / R), o = (v * W + u) * 4;
-      let c = [255, 255, 255];
-      if (x >= 0 && y >= 0 && x <= sw - 1 && y <= sh - 1) {
+      const q = hBod(Hi, (u + 0.5) / R, (v + 0.5) / R), o = (v * W + u) * 4;
+      /* souřadnice v px mají střed pixelu i na i + 0,5 (kliky, rohy listu); vzorek d[i] leží ve středu → posun o půl pixelu */
+      const x = Math.min(sw - 1, Math.max(0, q[0] - 0.5)), y = Math.min(sh - 1, Math.max(0, q[1] - 0.5));
+      let r = 255, gg = 255, bb = 255;   // bez alokací – miliony pixelů
+      if (q[0] >= 0 && q[1] >= 0 && q[0] <= sw && q[1] <= sh) {
         const x0 = Math.floor(x), y0 = Math.floor(y), x1 = Math.min(sw - 1, x0 + 1), y1 = Math.min(sh - 1, y0 + 1), fx = x - x0, fy = y - y0;
-        c = [0, 1, 2].map((k) => {
-          const a = d[(y0 * sw + x0) * 4 + k], b = d[(y0 * sw + x1) * 4 + k], e = d[(y1 * sw + x0) * 4 + k], f = d[(y1 * sw + x1) * 4 + k];
-          return (a * (1 - fx) + b * fx) * (1 - fy) + (e * (1 - fx) + f * fx) * fy;
-        });
+        const i00 = (y0 * sw + x0) * 4, i01 = (y0 * sw + x1) * 4, i10 = (y1 * sw + x0) * 4, i11 = (y1 * sw + x1) * 4;
+        const w00 = (1 - fx) * (1 - fy), w01 = fx * (1 - fy), w10 = (1 - fx) * fy, w11 = fx * fy;
+        r = d[i00] * w00 + d[i01] * w01 + d[i10] * w10 + d[i11] * w11;
+        gg = d[i00 + 1] * w00 + d[i01 + 1] * w01 + d[i10 + 1] * w10 + d[i11 + 1] * w11;
+        bb = d[i00 + 2] * w00 + d[i01 + 2] * w01 + d[i10 + 2] * w10 + d[i11 + 2] * w11;
       }
-      rgba[o] = c[0]; rgba[o + 1] = c[1]; rgba[o + 2] = c[2]; rgba[o + 3] = 255;
-      seda[v * W + u] = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
+      rgba[o] = r; rgba[o + 1] = gg; rgba[o + 2] = bb; rgba[o + 3] = 255;
+      seda[v * W + u] = 0.299 * r + 0.587 * gg + 0.114 * bb;
     }
     return { w: W, h: Hh, R, rgba, seda };
   }
@@ -288,6 +291,9 @@
     const plnaPlocha = N - nVen;
     const obr = obrysSlozky(lab, S.w, S.h, nej.id, nej.start), Q = nejvetsiCtyruhelnik(obalovy(obr));
     if (!Q || plochaQ(Q) < 0.1 * N || plnaPlocha < 0.9 * plochaQ(Q)) return null;   // musí to být opravdu čtyřúhelník
+    /* list uříznutý okrajem snímku (nebo celý bílý snímek): rohy by byly rohy záběru a měřítko by tiše ujelo */
+    const uOkraje = Q.filter(([x, y]) => x < 2 || y < 2 || x > S.w - 3 || y > S.h - 3).length;
+    if (uOkraje >= 2) return null;
     /* hrany: body obrysu mezi rohy (bez 12 % u rohů), proložit přímku, posunout o půl pixelu ven */
     const ci = Q.map((q) => obr.reduce((m, p, i) => (Math.hypot(p[0] - q[0], p[1] - q[1]) < Math.hypot(obr[m][0] - q[0], obr[m][1] - q[1]) ? i : m), 0));
     const stred = teziste(Q), hrany = [];
@@ -510,7 +516,18 @@
         Q = naPatu(Q);
       }
     }
-    return taubin(Q, vahy(Q), Math.round(Math.max(n.rezim === 'obalka' ? 1 : 0, n.sila) ** 2 * 6));
+    const W = vahy(Q), R = taubin(Q, W, Math.round(Math.max(n.rezim === 'obalka' ? 1 : 0, Math.min(10, +n.sila || 0)) ** 2 * 6));
+    /* Taubin špičku mírně protáhne – delší než předloha být nesmí; srovná se jen přední část (pata a bok zůstanou) */
+    const dy = Math.min(0, o.y1 - J.obalka(R).y1);
+    /* totéž pro šířku přední části */
+    const oF = J.obalka(Q.filter((_, i) => W[i] > 0)), rF = J.obalka(R.filter((_, i) => W[i] > 0)), k = rF.w > oF.w && rF.w > 0 ? oF.w / rF.w : 1, cx = rF.x0 + rF.w / 2;
+    return R.map(([x, y], i) => [cx + (x - cx) * (1 - W[i] * (1 - k)), y + dy * W[i]]);
+  }
+  /* Taubin obrys mírně nafukuje (u prstů o milimetry, opakováním víc) – vrátit délku a šířku na obálku o (pata a bok na místě) */
+  function drzObalku(Q, o) {
+    const q = J.obalka(Q); if (!(q.w > 0 && q.h > 0)) return Q;
+    const kx = o.w / q.w, ky = o.h / q.h;
+    return Q.map(([x, y]) => [o.x0 + (x - q.x0) * kx, o.y0 + (y - q.y0) * ky]);
   }
   /* Taubinovo vyhlazení uzavřeného obrysu: krok λ = 0,5 a zpětný krok μ = −0,53 – vlnky zmizí, obrys se nesmrští.
      w = váha bodu (0 = nehýbat), it = počet opakování */
@@ -539,10 +556,11 @@
      jinde jen mírné; výsledek jako rovnoměrné řídící body v souřadnicích předlohy. o = { prsty 0–10, celek 0–10, obalka, od, tol } */
   function vyhladObrys(s, o) {
     o = Object.assign({ prsty: 6, celek: 2, obalka: true, od: 0.55, tol: 0.2 }, o);
+    o.prsty = Math.min(10, Math.max(0, +o.prsty || 0));
     const s0 = Object.assign({}, s, { sx: 1, sy: 1, ox: 0, oy: 0, spicka: 0, prsty: { rezim: o.obalka ? 'obalka' : 'vyhladit', sila: o.prsty, od: o.od } });
-    const g = geometrie(s0);
+    const g = geometrie(s0), cel = Math.min(10, Math.max(0, +o.celek || 0));
     let Q = prevzorkuj(g.noha, 1.5);
-    Q = taubin(Q, null, Math.round(o.celek * o.celek * 6));
+    Q = drzObalku(taubin(Q, null, Math.round(cel * cel * 6)), J.obalka(Q));
     return ridiciBody(Q.map(g.zpet), o.tol);
   }
   /* zapéct úpravy obrysu (vyhlazení prstů) do uzlů šablony a zjednodušit s tolerancí tol mm */
@@ -554,6 +572,14 @@
   /* ---------- šablona → obrys chodidla a vložky ---------- */
   /* s = šablona (body v mm předlohy, y dolů); vrací { noha, vlozka (normované, y nahoru, CCW, start u paty), off (součet společného a vlastního offsetu),
      zmereno (délka/šířka před kalibrací), tam(bod předlohy) → výsledné souřadnice, zpet(…) } */
+  /* obrys, který sám sebe protíná (motýlek z přetažených uzlů): Clipper ho rozloží na víc ploch nebo změní plochu */
+  function sebeprotnuty(P) {
+    if (!CL || P.length < 4) return false;
+    const K = 100, cesta = P.map(([x, y]) => ({ X: Math.round(x * K), Y: Math.round(y * K) }));
+    const R = CL.Clipper.SimplifyPolygon(cesta, CL.PolyFillType.pftNonZero).filter((q) => Math.abs(CL.Clipper.Area(q)) > 4 * K * K);   // smyčky pod 4 mm² nevadí
+    const a0 = Math.abs(CL.Clipper.Area(cesta)), a1 = R.reduce((a, q) => a + Math.abs(CL.Clipper.Area(q)), 0);
+    return R.length > 1 || Math.abs(a1 - a0) > 0.02 * a0;
+  }
   function geometrie(s, spol) {
     s = Object.assign({}, SABLONA, s);
     const sp = spol || {}, off = { ox: (sp.ox || 0) + (s.ox || 0), oy: (sp.oy || 0) + (s.oy || 0), spicka: (sp.spicka || 0) + (s.spicka || 0) };   // společný + vlastní
@@ -595,7 +621,12 @@
     aktivni.sort((a, b) => (a.strana === b.strana ? 0 : a.strana === 'L' ? -1 : 1));
     const pocty = { L: 0, P: 0 };
     for (const s of aktivni) {
-      const g = geometrie(s, projekt.spolecne);
+      let g = null;
+      try { g = volby.geo ? volby.geo(s) : geometrie(s, projekt.spolecne); } catch (e) { g = null; }   // volby.geo = mezipaměť z UI
+      /* rozbitý obrys (jeden bod, úsečka – např. z podvrženého odkazu) nesmí shodit ostatní šablony */
+      if (!g || !(Math.abs(J.plocha(g.noha)) > 500)) { vv('chyba', `Šablona ${s.strana}: obrys je poškozený (nemá plochu) – smažte ji nebo najděte obrysy znovu.`); continue; }
+      if (!(g.vlozka.length >= 8) || !(Math.abs(J.plocha(g.vlozka)) > 500)) { vv('chyba', `Šablona ${s.strana}: záporný offset vložku skoro celou ubral – zmenšete ho.`); continue; }
+      if (sebeprotnuty(g.noha)) vv('chyba', `Šablona ${s.strana}: obrys sám sebe protíná (překřížené uzly) – upravte uzly v editoru, jinak offset a vložka nedávají smysl.`);
       const V = g.vlozka, N = g.noha, roz = J.rozmery(V), rozN = J.rozmery(N), Lt = roz.delka, Wt = roz.sirka;
       const m = { delka: rozN.delka, sirka: rozN.sirka, pata: rozN.pata };
       const yNoha = J.obalka(N).y1;
@@ -621,7 +652,7 @@
       const dl = Math.abs(L[0].m.delka - P[0].m.delka), ds = Math.abs(L[0].m.sirka - P[0].m.sirka);
       if (dl >= 4 || ds >= 3) vv('info', `Nohy se liší (délka o ${fmt(dl)} mm, šířka o ${fmt(ds)} mm) – každá vložka má vlastní obrys.`);
     }
-    if (!nohy.length) vv('info', 'Zatím žádná šablona – načtěte předlohu a najděte obrysy.');
+    if (!nohy.length && !varovani.some((x) => x.uroven === 'chyba')) vv('info', 'Zatím žádná šablona – načtěte předlohu a najděte obrysy.');
     else if (!varovani.some((x) => x.uroven !== 'info')) vv('ok', 'Šablony vypadají věrohodně.');
     const nazev = (p.rezim === 'kontrolni' ? 'Kontrolní šablona' : 'Vložky na míru') + (p.jmeno ? ' – ' + p.jmeno : '') + (nohy.length ? ` (${nohy.map((n) => n.strana + ' ' + fmt(n.roz.delka) + '×' + fmt(n.roz.sirka)).join(', ')} mm)` : '');
     const popis = [
@@ -667,20 +698,27 @@
         prsty: { rezim: vyb(pr.rezim, ['zadne', 'vyhladit', 'obalka'], 'zadne'), sila: cis(pr.sila, 4, 0, 10), od: cis(pr.od, 0.62, 0.4, 0.85) },
       };
     };
-    const sablonyZ = (L, mapa) => (Array.isArray(L) ? L : []).slice(0, 100).filter((t) => t && mapa.has(t.obr) && Array.isArray(t.body) && t.body.length <= 20000).map((t) => sab(t, mapa)).filter((t) => t.body.length >= 8);
+    const sablonyZ = (L, mapa) => (Array.isArray(L) ? L : []).slice(0, 100).filter((t) => t && mapa.has(t.obr) && Array.isArray(t.body) && t.body.length <= 20000).map((t) => sab(t, mapa)).filter((t) => t.body.length >= 8 && Math.abs(J.plocha(t.body)) > 100);   // obrys bez plochy (jeden bod, úsečka) zahodit
+    const pouzite = new Set();
     const obrazky = (Array.isArray(x.obrazky) ? x.obrazky : []).slice(0, 40).filter((o) => o && typeof o.src === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(o.src)).map((o) => {
-      const id = ident(o.id) || novId(); if (o.id !== undefined) mapaId.set(o.id, id);
+      let id = ident(o.id) || novId();
+      if (pouzite.has(id)) id = novId();   // duplicitní id → nové, šablony zůstanou u první předlohy s tím id
+      pouzite.add(id);
+      if (o.id !== undefined && !mapaId.has(o.id)) mapaId.set(o.id, id);
       const kv = o.kvalita && typeof o.kvalita === 'object' ? { skore: cis(o.kvalita.skore, 100, 0, 100), varovani: (Array.isArray(o.kvalita.varovani) ? o.kvalita.varovani : []).slice(0, 8).map((q) => ({ uroven: vyb(q && q.uroven, ['info', 'varovani'], 'info'), text: txt(q && q.text, 200) })) } : null;
       return Object.assign({ id, nazev: txt(o.nazev, 80) || 'předloha', src: o.src, w: cis(o.w, 1, 1, 20000) | 0, h: cis(o.h, 1, 1, 20000) | 0, kvalita: kv }, metaObr(o));
     });
-    const sablony = sablonyZ(x.sablony, mapaId);
+    /* celkový strop bodů (šablony + historie) – obří import by vyčerpal paměť */
+    let zbyva = 300000;
+    const strop = (L) => L.filter((t) => { zbyva -= t.body.length; return zbyva >= 0; });
+    const sablony = strop(sablonyZ(x.sablony, mapaId));
     /* historie verzí: šablony, společný offset a metadata předloh (obrázky se neukládají znovu) */
     const vlastniId = new Map(obrazky.map((o) => [o.id, o.id]));
     for (const [a, b] of mapaId) vlastniId.set(a, b);
     const historie = (Array.isArray(x.historie) ? x.historie : []).slice(-30).filter((h) => h && h.data && typeof h.data === 'object').map((h) => ({
       cas: datum(h.cas), popis: txt(h.popis, 80) || 'verze',
       data: {
-        sablony: sablonyZ(h.data.sablony, vlastniId),
+        sablony: strop(sablonyZ(h.data.sablony, vlastniId)),
         spolecne: { ox: cis((h.data.spolecne || {}).ox, 0, -20, 40), oy: cis((h.data.spolecne || {}).oy, 0, -20, 40), spicka: cis((h.data.spolecne || {}).spicka, 0, -20, 40) },
         obrazky: (Array.isArray(h.data.obrazky) ? h.data.obrazky : []).filter((o) => o && vlastniId.has(o.id)).map((o) => Object.assign({ id: vlastniId.get(o.id) }, metaObr(o))),
       },
@@ -757,34 +795,52 @@
   /* ---------- sdílení obrysů odkazem (bez obrázků, data přímo v odkazu) ---------- */
   const b64url = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return (typeof btoa !== 'undefined' ? btoa(s) : Buffer.from(s, 'binary').toString('base64')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
   const zB64url = (t) => { const s = (typeof atob !== 'undefined' ? atob : (x) => Buffer.from(x, 'base64').toString('binary'))(t.replace(/-/g, '+').replace(/_/g, '/')); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
-  async function proud(data, tam) {
+  /* limit = nejvíc bajtů výstupu (rozbalení podvrženého odkazu nesmí zahltit paměť) */
+  async function proud(data, tam, limit) {
     const cs = tam ? new CompressionStream('deflate-raw') : new DecompressionStream('deflate-raw');
-    const w = cs.writable.getWriter(); w.write(data); w.close();
-    return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    const w = cs.writable.getWriter();
+    w.write(data).catch(() => {}); w.close().catch(() => {});   // chybu poškozených dat ohlásí čtení níže, ne nezachycená výjimka
+    const rd = cs.readable.getReader(), kusy = []; let n = 0;
+    for (;;) {
+      const { done, value } = await rd.read(); if (done) break;
+      n += value.length; if (limit && n > limit) { rd.cancel().catch(() => {}); throw new Error('odkaz je příliš velký'); }
+      kusy.push(value);
+    }
+    const out = new Uint8Array(n); let i = 0; for (const k of kusy) { out.set(k, i); i += k.length; }
+    return out;
   }
   /* projekt → krátký řetězec: body po 0,1 mm, rozdílově (dobře se komprimují); každá šablona posunutá na počátek */
-  async function zakoduj(pr) {
+  /* volby.osobni = přiložit i klienta a poznámku (výchozí ne: odkaz může putovat dál) */
+  async function zakoduj(pr, volby) {
     const sab = pr.sablony.map((t) => {
       const o = J.obalka(t.body); let px = 0, py = 0;
       const b = []; for (const [x, y] of t.body) { const X = Math.round((x - o.x0) * 10), Y = Math.round((y - o.y0) * 10); b.push(X - px, Y - py); px = X; py = Y; }
       return { s: t.strana, r: t.role, a: t.aktivni !== false ? 1 : 0, b, k: [t.sx, t.sy, t.ox, t.oy, t.spicka, t.uhelPlus].map((x) => Math.round((+x || 0) * 10000) / 10000), z: t.zarovnani, m: t.zrcadlit ? 1 : 0, p: t.prsty };
     });
-    const json = JSON.stringify({ v: 1, n: pr.nazev, kl: pr.klient, po: pr.poznamka, sp: pr.spolecne, vy: pr.vyroba, t: sab });
+    const os = volby && volby.osobni, json = JSON.stringify({ v: 1, n: pr.nazev, kl: os ? pr.klient : '', po: os ? pr.poznamka : '', sp: pr.spolecne, vy: pr.vyroba, t: sab });
     return b64url(await proud(new TextEncoder().encode(json), true));
   }
   /* řetězec → surový projekt; obrázek (bílá plocha 1 px = 1 mm) dodá volající jako data URL podle rozměru */
   async function dekoduj(kod, bilyObrazek) {
-    const d = JSON.parse(new TextDecoder().decode(await proud(zB64url(kod), false)));
-    if (!d || d.v !== 1 || !Array.isArray(d.t)) throw new Error('odkaz neobsahuje obrysy vložek');
+    let d = null;
+    try { d = JSON.parse(new TextDecoder().decode(await proud(zB64url(kod), false, 2e6))); }
+    catch (e) { throw new Error(/příliš velký/.test(e.message) ? e.message : 'odkaz je poškozený (neúplně zkopírovaný?)'); }
+    if (!d || typeof d !== 'object' || d.v !== 1 || !Array.isArray(d.t)) throw new Error('odkaz neobsahuje obrysy vložek');
     let x0 = 10; const H = [];
-    const sablony = d.t.slice(0, 40).map((t) => {
+    const sablony = d.t.slice(0, 40).filter((t) => t && typeof t === 'object' && Array.isArray(t.b)).map((t) => {
       let X = 0, Y = 0; const body = [];
-      for (let i = 0; i + 1 < (t.b || []).length && i < 40000; i += 2) { X += t.b[i]; Y += t.b[i + 1]; body.push([X / 10 + x0, Y / 10 + 10]); }
+      for (let i = 0; i + 1 < t.b.length && i < 40000; i += 2) {
+        const a = t.b[i], b = t.b[i + 1];
+        if (typeof a !== 'number' || typeof b !== 'number' || !Number.isFinite(a) || !Number.isFinite(b) || Math.abs(a) > 1e5 || Math.abs(b) > 1e5) throw new Error('odkaz je poškozený');
+        X += a; Y += b; body.push([X / 10 + x0, Y / 10 + 10]);
+      }
+      if (body.some(([x, y]) => Math.abs(x) > 5000 || Math.abs(y) > 5000)) throw new Error('odkaz je poškozený (obrys mimo rozsah)');
       const o = J.obalka(body.length ? body : [[x0, 10]]); x0 = o.x1 + 20; H.push(o.y1 + 10);
       const k = Array.isArray(t.k) ? t.k : [];
       return { id: novId(), obr: 'sdileno', body, strana: t.s, role: t.r, aktivni: t.a !== 0, sx: k[0], sy: k[1], ox: k[2], oy: k[3], spicka: k[4], uhelPlus: k[5], zarovnani: t.z, zrcadlit: !!t.m, prsty: t.p };
     });
-    const w = Math.ceil(x0 - 10), h = Math.ceil(Math.max(100, ...H));
+    if (!sablony.length) throw new Error('odkaz neobsahuje obrysy vložek');
+    const w = Math.min(20000, Math.ceil(x0 - 10)), h = Math.min(20000, Math.ceil(Math.max(100, ...H)));
     return { nazev: d.n, klient: d.kl, poznamka: d.po, spolecne: d.sp, vyroba: d.vy, sablony, obrazky: [{ id: 'sdileno', nazev: 'sdílené obrysy', src: bilyObrazek(w, h), w, h, kalibrace: { typ: 'dpi', dpi: 25.4 } }] };
   }
 

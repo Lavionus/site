@@ -705,6 +705,8 @@
     const KEY_SKUPINA = 'webapp_skupina';
     const KEY_OBLIBENE = 'webapp_oblibene';
     const KEY_NEDAVNE = 'webapp_nedavne';
+    const KEY_POCTY = 'webapp_pocty';     // soubor -> počet otevření (úvod: Nejčastěji používané)
+    const MAX_NEDAVNYCH = 24;
     const KEY_TEMA = 'webapp_theme';
     const KEY_STAV = 'webapp_stav_filtr';
 
@@ -744,6 +746,7 @@
     // Oblíbené nemají vlastní sekci v menu, hvězdičky plní dlaždice na úvodní stránce.
     let oblibene = nactiJson(KEY_OBLIBENE, []);
     let nedavne = nactiJson(KEY_NEDAVNE, []);
+    let pocty = nactiJson(KEY_POCTY, {});
     let aktivniStav = precti(localStorage, KEY_STAV) || 'vse';
     const stavPodleId = new Map(KATALOG_STAVY.map(s => [s.id, s]));
     if (aktivniStav !== 'vse' && !stavPodleId.has(aktivniStav)) aktivniStav = 'vse';
@@ -883,11 +886,23 @@
     }
     // Menu sekci „Nedávné“ nemá; historie se vede kvůli dlaždicím
     // „🕘 Naposledy otevřené“ na úvodní stránce (obsah/aplikace.html).
-    function pridejNedavnou(soubor) {
+    // zapocitat = otevřel uživatel (F5 se do „Nejčastěji používané“ nepočítá)
+    function pridejNedavnou(soubor, zapocitat) {
       if (soubor === DOMOVSKA || soubor === NASTAVENI) return;
-      nedavne = [soubor, ...nedavne.filter(f => f !== soubor)].slice(0, 8);
+      nedavne = [soubor, ...nedavne.filter(f => f !== soubor)].slice(0, MAX_NEDAVNYCH);
       uloz(localStorage, KEY_NEDAVNE, JSON.stringify(nedavne));
+      if (!zapocitat) return;
+      pocty[soubor] = (pocty[soubor] || 0) + 1;
+      uloz(localStorage, KEY_POCTY, JSON.stringify(pocty));
     }
+    // Oblíbené, historii i počty mění i úvodní stránka (křížek, řazení, import;
+    // jiný dokument, stejný origin) – bez převzetí změny by je další zápis
+    // z rozcestníku přepsal starým stavem.
+    window.addEventListener('storage', e => {
+      if (e.key === KEY_OBLIBENE) { oblibene = nactiJson(KEY_OBLIBENE, []); obnovHvezdy(); }
+      else if (e.key === KEY_NEDAVNE) nedavne = nactiJson(KEY_NEDAVNE, []);
+      else if (e.key === KEY_POCTY) pocty = nactiJson(KEY_POCTY, {});
+    });
 
     /* ---- Otevírání aplikací (hash = deep-link) ---- */
     let aktualni = null;
@@ -917,7 +932,7 @@
       const zaklad = page.split('?')[0];
       zobrazStav(zaklad);
       uloz(sessionStorage, KEY_PAGE, zaklad);
-      pridejNedavnou(zaklad);
+      pridejNedavnou(zaklad, zUzivatele);
       updateActiveLink(zaklad);
       // sekci s aktivní aplikací rozbalit – jen když aplikaci otevřel uživatel
       if (zUzivatele) {
@@ -947,6 +962,11 @@
       if (e.data && typeof e.data.otevri === 'string') {
         location.hash = e.data.otevri;
         otevri(e.data.otevri);
+      }
+      // dlaždice kategorie na úvodu: přepnout skupinu v menu jako klik v nabídce
+      if (e.data && typeof e.data.skupina === 'string') {
+        polozkySkupin.find(b => b.dataset.skupina === e.data.skupina)?.click();
+        if (window.matchMedia('(max-width: 1024px)').matches) openMenu();
       }
     });
 

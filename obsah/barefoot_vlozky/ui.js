@@ -10,6 +10,7 @@
   const toast = (t, chyba) => { try { chyba ? Dialog.chyba(t) : Dialog.info(t); } catch (e) { console.log(t); } };
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   if (window.self === window.top) document.body.classList.add('samostatne');
+  const poKliku = (f) => window.BFV_UI.poKliku(f);   // překreslení až po dokončení kliknutí (vlastni_ui.js)
 
   const CISLA = ['pDelka', 'pSirka', 'pPata', 'lDelka', 'lSirka', 'lPata', 'rezPrsty', 'rezBok', 'rezPata', 'klenba', 'pas', 'tloustka', 'orezKrok', 'orezPocet', 'perfRozt', 'perfPrumer', 'perfOkraj', 'jazyk',
     'delkaBoty', 'tloustka2', 'vrstvaOds', 'pelotaDelka', 'pelotaSirka', 'pelotaPoz', 'podpatenkaPrumer'];
@@ -32,7 +33,7 @@
   const vlastni = () => typ === 'vlastni' && window.BFV_UI;
   /* volby náhledu a tisku – jen pohodlí jednoho prohlížeče */
   const KLIC_ZOBR = 'webapp_barefoot_vlozky_zobrazeni';
-  const ulozene = (() => { try { return JSON.parse(localStorage.getItem(KLIC_ZOBR) || '{}'); } catch (e) { return {}; } })();
+  const ulozene = (() => { try { const x = JSON.parse(localStorage.getItem(KLIC_ZOBR) || '{}'); return x && typeof x === 'object' ? x : {}; } catch (e) { return {}; } })();
   const zobr = Object.assign({ koty: true, prsty: true, mrizka: false, legenda: true }, ulozene.zobr);
   const tisk = Object.assign({ souhrn: true, navod: true, zrcadlit: false }, ulozene.tisk);
   const rez = Object.assign({ profil: 'laser', kerf: 0.15, gravirovat: false, bigovat: false }, ulozene.rez);
@@ -44,10 +45,15 @@
   const ulozStav = () => { if (typ !== 'uni') return; try { localStorage.setItem(KLIC, JSON.stringify(p)); } catch (e) { /* úložiště zakázané – nevadí */ } };
 
   /* ---------- nabídky lišty ---------- */
-  function zavriNabidky() {
+  function zavriNabidky(vratitFokus) {
+    const otevrene = document.querySelector('[data-nabidka][aria-expanded="true"]');
     document.querySelectorAll('.nabidka:not([hidden])').forEach((n) => { n.hidden = true; });
     document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    if (vratitFokus === true && otevrene) otevrene.focus();
   }
+  document.querySelectorAll('[data-nabidka]').forEach((b) => { b.setAttribute('aria-controls', b.dataset.nabidka); b.setAttribute('aria-expanded', 'false'); });
+  /* tlačítka lišty, která na úzké obrazovce ukazují jen ikonu, mají přístupné jméno */
+  document.querySelectorAll('.lista button').forEach((b) => { if (!b.getAttribute('aria-label') && !/\p{L}{3}/u.test(b.textContent || '')) b.setAttribute('aria-label', (b.textContent || '').replace('▾', '').replace(/\s+/g, ' ').trim() || b.title); });
   document.querySelectorAll('[data-nabidka]').forEach((b) => b.addEventListener('click', (e) => {
     e.stopPropagation();
     const n = $(b.dataset.nabidka), bylo = !n.hidden;
@@ -57,11 +63,21 @@
     n.hidden = false; b.setAttribute('aria-expanded', 'true');
     const r = b.getBoundingClientRect();
     n.style.top = (r.bottom + 4) + 'px';
+    n.style.maxHeight = Math.max(160, innerHeight - r.bottom - 12) + 'px';
     n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+    /* z klávesnice skočit do nabídky (nabídky jsou v DOM až za lištou) */
+    if (e.detail === 0) { const prvni = n.querySelector('button:not([disabled]),input,select,textarea'); if (prvni) prvni.focus(); }
   }));
   document.addEventListener('click', (e) => { if (!e.target.closest('.nabidka')) zavriNabidky(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { zavriNabidky(); konecNastroje(); } });
-  addEventListener('resize', zavriNabidky);
+  /* Tab ven z nabídky ji zavře (fokus jinam než do nabídky nebo na její tlačítko) */
+  document.addEventListener('focusout', (e) => {
+    const n = e.target.closest && e.target.closest('.nabidka'); if (!n || n.hidden || !e.relatedTarget) return;
+    if (!n.contains(e.relatedTarget) && e.relatedTarget.dataset.nabidka !== n.id && !e.relatedTarget.closest('dialog')) zavriNabidky();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { zavriNabidky(true); konecNastroje(); } });
+  /* jen při změně šířky – na mobilu mění výšku okna vysunutá klávesnice a nabídka s polem by se hned zavřela */
+  let sirkaOkna = innerWidth;
+  addEventListener('resize', () => { if (innerWidth !== sirkaOkna) { sirkaOkna = innerWidth; zavriNabidky(); } });
   /* tlačítka akcí v nabídce ji po kliknutí zavřou (pole a přepínače ne) */
   document.querySelectorAll('.nabidka button.tl:not(.prep)').forEach((b) => b.addEventListener('click', zavriNabidky));
 
@@ -105,7 +121,7 @@
     document.querySelector('.legenda').classList.toggle('skryte', !zobr.legenda);
     document.body.classList.toggle('jednoduse', zobr.jednoduse);
     document.querySelectorAll('[data-rez]').forEach((b) => b.setAttribute('aria-pressed', String(!!rez[b.dataset.rez])));
-    $('rezProfil').value = rez.profil; if (document.activeElement !== $('rezKerf')) $('rezKerf').value = rez.kerf;
+    $('rezProfil').value = rez.profil; $('rezDil').value = rez.dil || 'horni'; if (document.activeElement !== $('rezKerf')) $('rezKerf').value = rez.kerf;
     $('blokOrez').classList.toggle('skryte', !p.orez);
     $('blokPerf').classList.toggle('skryte', !p.perforace);
     $('material2').value = p.material2;
@@ -132,12 +148,14 @@
     if (p.tloustka2 < m.tl[0] || p.tloustka2 > m.tl[1]) o.tloustka2 = (m.tl[0] + m.tl[1]) / 2;
     zmena(o);
   });
-  $('jmeno').addEventListener('input', () => { p.jmeno = $('jmeno').value.slice(0, 40); prepocitej(); });
+  let casJmeno = 0;
+  $('jmeno').addEventListener('input', () => { p.jmeno = $('jmeno').value.slice(0, 40); clearTimeout(casJmeno); casJmeno = setTimeout(prepocitej, 300); });
   $('tvary').addEventListener('click', (e) => { const b = e.target.closest('[data-tvar]'); if (b) zmena({ tvar: b.dataset.tvar }); });
   $('nohyStejne').addEventListener('click', () => zmena({ nohy: 'stejne' }));
   $('nohyZvlast').addEventListener('click', () => zmena({ nohy: 'zvlast', lDelka: p.pDelka, lSirka: p.pSirka, lPata: p.pPata }));
   function nastavTyp(t) {
     if (t === typ) return;
+    if (t === 'uni' && window.BFV_UI) window.BFV_UI.zrus();
     typ = t; try { localStorage.setItem(KLIC_TYP, t); } catch (e) { /* nevadí */ }
     konecNastroje();
     if (t === 'uni') p = nactiUni();
@@ -153,12 +171,16 @@
   $('predvolba').addEventListener('change', () => { const q = PREDVOLBY[+$('predvolba').value]; if (q) { zmena(q[1]); toast('Předvolba: ' + q[0]); } $('predvolba').value = ''; });
   document.querySelectorAll('[data-prep]').forEach((b) => b.addEventListener('click', () => zmena({ [b.dataset.prep]: !p[b.dataset.prep] })));
   document.querySelectorAll('[data-strany]').forEach((b) => b.addEventListener('click', () => zmena({ strany: b.dataset.strany })));
-  document.querySelectorAll('[data-zobr]').forEach((b) => b.addEventListener('click', () => { zobr[b.dataset.zobr] = !zobr[b.dataset.zobr]; ulozZobr(); obnovFormular(); kresliNahled(); }));
+  document.querySelectorAll('[data-zobr]').forEach((b) => b.addEventListener('click', () => {
+    zobr[b.dataset.zobr] = !zobr[b.dataset.zobr]; ulozZobr(); obnovFormular(); kresliNahled();
+    if (b.dataset.zobr === 'jednoduse' && zobr.jednoduse && !['editor', 'sablona', 'velikosti', 'princip'].includes(zalozkaZ)) zalozka(vlastni() ? 'editor' : 'sablona');
+  }));
   document.querySelectorAll('[data-tisk]').forEach((b) => b.addEventListener('click', () => {
     tisk[b.dataset.tisk] = !tisk[b.dataset.tisk]; ulozZobr(); obnovFormular();
     if (b.dataset.tisk === 'zrcadlit') toast(tisk.zrcadlit ? 'Šablony v PDF, SVG a DXF budou zrcadlené – pro obkreslení na rub materiálu. Náhled zůstává lícem nahoru.' : 'Šablony se tisknou lícem nahoru.');
   }));
   document.querySelectorAll('[data-rez]').forEach((b) => b.addEventListener('click', () => { rez[b.dataset.rez] = !rez[b.dataset.rez]; ulozZobr(); obnovFormular(); }));
+  $('rezDil').addEventListener('change', () => { rez.dil = $('rezDil').value; ulozZobr(); });
   $('rezProfil').addEventListener('change', () => { rez.profil = $('rezProfil').value; if (rez.profil === 'cricut') rez.kerf = 0; ulozZobr(); obnovFormular(); });
   $('rezKerf').addEventListener('change', () => { const x = parseFloat(String($('rezKerf').value).replace(',', '.')); rez.kerf = Number.isFinite(x) ? Math.max(0, Math.min(3, x)) : 0; ulozZobr(); obnovFormular(); });
   /* Nástroje: skok na záložku */
@@ -184,7 +206,7 @@
     kresliNahled(); kresliTabulku();
     $('varovani').innerHTML = v.varovani.map((q) => `<li class="${q.uroven}">${esc(q.text)}</li>`).join('');
     const pocet = v.varovani.filter((q) => q.uroven === 'chyba' || q.uroven === 'varovani').length;
-    document.querySelector('[data-z="kontrola"]').textContent = pocet ? `Kontrola (${pocet})` : 'Kontrola';
+    document.querySelector('[data-z="kontrola"]').textContent = pocet ? `🩺 Kontrola (${pocet})` : '🩺 Kontrola';
     obnov3d();
     kresliZalozku();
     stavKalibrace();
@@ -195,7 +217,7 @@
     const ok = vlastni() ? !pozor && v.nohy.length > 0 : !!tiskarna;
     b.classList.toggle('pozor', !!pozor); b.classList.toggle('ok', ok);
     $('kalStav').textContent = pozor ? '!' : ok ? '✓' : '';
-    b.title = pozor ? 'Předloha nemá měřítko – rozměry jsou jen odhad. Klikněte a zkalibrujte.' : 'Kalibrace měřítka předlohy, rozměrů šablon a tiskárny' + (tiskarna ? ' (tiskárna zkalibrovaná)' : '');
+    b.title = pozor ? 'Předloha nemá měřítko – rozměry jsou jen odhad. Klikněte a zkalibrujte.' : !vlastni() ? 'Kalibrace tiskárny (vyrovnání měřítka tisku)' : 'Kalibrace měřítka předlohy, rozměrů obrysů a tiskárny' + (tiskarna ? ' (tiskárna zkalibrovaná)' : '');
     const vk = $('vpKalibrace'); if (vk) { vk.classList.toggle('ok', !pozor); vk.textContent = pozor ? '📏 Kalibrovat měřítko a rozměry – zatím jen odhad!' : '📏 Kalibrace ✓ (upravit)'; }
   }
   /* ---------- okno Kalibrace ---------- */
@@ -207,15 +229,23 @@
     kresliTiskarnu();
     const d = $('dlgKalibrace'); if (!d.open) d.showModal();
   }
+  document.querySelectorAll('#dlgKalibrace [data-kp]').forEach((el) => { el.id = 'kalPanel-' + el.dataset.kp; el.setAttribute('role', 'tabpanel'); });
+  document.querySelectorAll('#kalZalozky [data-kz]').forEach((b) => { b.id = 'kalTab-' + b.dataset.kz; b.setAttribute('aria-controls', 'kalPanel-' + b.dataset.kz); $('kalPanel-' + b.dataset.kz).setAttribute('aria-labelledby', b.id); });
   function kalZalozka(z) {
-    document.querySelectorAll('#kalZalozky [data-kz]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.kz === z)));
+    document.querySelectorAll('#kalZalozky [data-kz]').forEach((b) => { b.setAttribute('aria-selected', String(b.dataset.kz === z)); b.tabIndex = b.dataset.kz === z ? 0 : -1; });
     document.querySelectorAll('#dlgKalibrace [data-kp]').forEach((el) => { el.hidden = el.dataset.kp !== z; });
   }
   $('kalZalozky').addEventListener('click', (e) => { const b = e.target.closest('[data-kz]'); if (b) { kalZalozka(b.dataset.kz); if (vlastni()) window.BFV_UI.kresliKalibraci(); } });
+  $('kalZalozky').addEventListener('keydown', (e) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const L = [...document.querySelectorAll('#kalZalozky [data-kz]')].filter((b) => b.offsetParent !== null), i = L.indexOf(document.activeElement);
+    const j = e.key === 'Home' ? 0 : e.key === 'End' ? L.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + L.length) % L.length;
+    e.preventDefault(); L[j].click(); L[j].focus();
+  });
   $('btnKalibrace2').addEventListener('click', () => otevriKalibraci());
   $('vpKalibrace').addEventListener('click', () => otevriKalibraci('predloha'));
   function kresliTiskarnu() {
-    $('kalTiskInfo').innerHTML = tiskarna ? `Korekce zapnutá: vodorovně <b>${fmt((tiskarna.kx - 1) * 100, 2)} %</b>, svisle <b>${fmt((tiskarna.ky - 1) * 100, 2)} %</b> (šablony se tisknou o tolik větší, aby po tisku seděly).` : 'Korekce vypnutá – tiskne se přesně 1:1.';
+    $('kalTiskInfo').innerHTML = tiskarna ? `Korekce zapnutá: vodorovně <b>${fmt((tiskarna.kx - 1) * 100, 2)} %</b>, svisle <b>${fmt((tiskarna.ky - 1) * 100, 2)} %</b> (šablony se tisknou o tolik upravené, aby po tisku seděly).` : 'Korekce vypnutá – tiskne se přesně 1:1.';
   }
   $('kalTiskList').addEventListener('click', async () => {
     if (!window.jspdf) { toast('jsPDF se nenačetl', true); return; }
@@ -231,7 +261,11 @@
   $('kalTiskZrusit').addEventListener('click', () => { tiskarna = null; try { localStorage.removeItem(KLIC_TISKARNA); } catch (e) { /* nevadí */ } $('kalTiskX').value = ''; $('kalTiskY').value = ''; kresliTiskarnu(); stavKalibrace(); });
   /* zavírací křížky všech dialogů */
   document.querySelectorAll('dialog [data-zavrit]').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));
-  document.querySelectorAll('dialog.dlg').forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
+  document.querySelectorAll('dialog.dlg').forEach((d) => d.addEventListener('click', (e) => {
+    if (e.target !== d) return;
+    const r = d.getBoundingClientRect();   // klik do odsazení dialogu má také target === d – zavírat jen mimo rámeček
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) d.close();
+  }));
 
   let sc = null;
   function kresliNahled() {
@@ -267,7 +301,7 @@
   function infoListy() {
     if (!v.nohy.length) { $('infoListy').textContent = 'Zatím není co tisknout.'; return; }
     const pw = PAPIRY[$('papir').value] || PAPIRY.a4, ok = okrajPdf(), pr = prekryvPdf();
-    const plan = V.planSablon(v, pw[0], pw[1], ok, pr), n = plan.reduce((a, q) => a + q.rv.listy.length, 0);
+    const plan = V.planSablon(v, pw[0], pw[1], ok, pr, tisk.zrcadlit, tiskarna ? tiskarna.kx : 1, tiskarna ? tiskarna.ky : 1), n = plan.reduce((a, q) => a + q.rv.listy.length, 0);
     $('infoListy').textContent = `Šablona se vejde na ${n} ${n === 1 ? 'list' : n < 5 ? 'listy' : 'listů'}` + (plan.some((q) => !q.rv.jeden) ? ' – dlouhé vložky se slepí z více listů s přesahem.' : '.') + ' K tomu souhrn s kontrolním čtvercem a návod.';
   }
   ['papir', 'okraj', 'prekryv'].forEach((id) => $(id).addEventListener('change', infoListy));
@@ -275,13 +309,16 @@
   /* ---------- porovnání L/P a arch materiálu (počítá se jen na otevřené záložce) ---------- */
   let zalozkaZ = 'sablona', porCo = 'noha';
   const KLIC_ARCH = 'webapp_barefoot_vlozky_arch';
-  const arch = Object.assign({ sirka: 500, vyska: 500, okraj: 5, mezera: 3, pary: 0, otacet: true, smer: 'auto', vrstva: 'horni', cena: 0, mix: {} }, (() => { try { return JSON.parse(localStorage.getItem(KLIC_ARCH) || '{}'); } catch (e) { return {}; } })());
+  const arch = Object.assign({ sirka: 500, vyska: 500, okraj: 5, mezera: 3, pary: 0, otacet: true, smer: 'auto', vrstva: 'horni', cena: 0, mix: {} }, (() => { try { const x = JSON.parse(localStorage.getItem(KLIC_ARCH) || '{}'); return x && typeof x === 'object' && !Array.isArray(x) ? x : {}; } catch (e) { return {}; } })());
+  for (const k of ['sirka', 'vyska', 'okraj', 'mezera', 'pary', 'cena']) if (!Number.isFinite(+arch[k])) arch[k] = { sirka: 500, vyska: 500, okraj: 5, mezera: 3, pary: 0, cena: 0 }[k];
+  if (!arch.mix || typeof arch.mix !== 'object') arch.mix = {};
   let archVysledek = null;
-  function kresliZalozku() {
+  function kresliZalozku(prepnuto) {
     if (zalozkaZ === 'porovnani') kresliPorovnani();
     if (zalozkaZ === 'arch') kresliArch();
     if (zalozkaZ === 'boty') kresliBoty();
-    if (zalozkaZ === 'vyvoj' && vlastni()) window.BFV_UI.kresliVyvoj();
+    if (zalozkaZ === '3d' && zastaraly3d) obnov3d();
+    if (zalozkaZ === 'vyvoj' && vlastni() && prepnuto) window.BFV_UI.kresliVyvoj();
   }
   /* výběr obrysů k porovnání (režim Na míru): id A, id B, zrcadlit A (null = podle stran) */
   const porSel = { a: null, b: null, zrc: null };
@@ -306,7 +343,7 @@
     } else {
       nA = v.nohy.find((n) => n.strana === 'L'); nB = v.nohy.find((n) => n.strana === 'P');
     }
-    if (!nA || !nB || nA === nB) { $('porovnani').innerHTML = '<p class="info">Porovnání potřebuje dva obrysy' + (typ === 'uni' ? ' – zvolte „Každá zvlášť“ a obě strany.' : ' – např. levou a pravou nohu, chodidlo vestoje a vsedě, nebo chodidlo a stélku vyjmutou z boty.') + '</p>'; return; }
+    if (!nA || !nB || nA === nB) { $('porovnani').innerHTML = '<p class="info">Porovnání potřebuje dva obrysy' + (typ === 'uni' ? ' – v kartě Chodidlo zvolte „Každá zvlášť“ a v Tisku → Další „Obě nohy“.' : ' – např. levou a pravou nohu, chodidlo vestoje a vsedě, nebo chodidlo a stélku vyjmutou z boty.') + '</p>'; return; }
     const r = A.porovnejNohy(nA, nB, porCo, zrc);
     const z = (x, d) => { d = d === undefined ? 1 : d; const q = Math.round(x * 10 ** d) / 10 ** d; return (q > 0 ? '+' : q < 0 ? '−' : '±') + fmt(Math.abs(q), d); };
     const jmA = typ === 'uni' ? 'levá' : 'A', jmB = typ === 'uni' ? 'pravá' : 'B';
@@ -322,9 +359,9 @@
       <tr><td>Šířka</td><td class="c">${fmt(r.ra.sirka, 1)}</td><td class="c">${fmt(r.rb.sirka, 1)}</td><td class="c"><b>${z(r.rozdil.sirka)}</b></td></tr>
       <tr><td>Pata</td><td class="c">${fmt(r.ra.pata, 1)}</td><td class="c">${fmt(r.rb.pata, 1)}</td><td class="c">${z(r.rozdil.pata)}</td></tr>
       <tr><td>Plocha cm²</td><td class="c">${fmt(r.ra.plocha / 100)}</td><td class="c">${fmt(r.rb.plocha / 100)}</td><td class="c">${z(r.rozdil.plocha / 100, 0)}</td></tr>
-      <tr><td><span style="color:#c0392b">■</span> ${jmA} přesahuje ${jmB}</td><td class="c" colspan="3">až ${fmt(r.presahA.d, 1)} mm, ${fmt(r.plochaA / 100, 1)} cm²</td></tr>
-      <tr><td><span style="color:#1e9e4a">■</span> ${jmB} přesahuje ${jmA}</td><td class="c" colspan="3">až ${fmt(r.presahB.d, 1)} mm, ${fmt(r.plochaB / 100, 1)} cm²</td></tr></table>
-      <p class="info">${zrc ? `${jmA} je zrcadlená a ` : ''}obrysy jsou přiložené patou: <span style="color:#c0392b">červeně čárkovaně ${jmA}</span>, <span style="color:#1f5fa8">modře ${jmB}</span>. ${zaver}</p></div>`;
+      <tr><td><span class="err-t">■</span> ${jmA} přesahuje ${jmB}</td><td class="c" colspan="3">až ${fmt(r.presahA.d, 1)} mm, ${fmt(r.plochaA / 100, 1)} cm²</td></tr>
+      <tr><td><span class="ok-t">■</span> ${jmB} přesahuje ${jmA}</td><td class="c" colspan="3">až ${fmt(r.presahB.d, 1)} mm, ${fmt(r.plochaB / 100, 1)} cm²</td></tr></table>
+      <p class="info">${zrc ? `${jmA} je zrcadlená a ` : ''}obrysy jsou přiložené patou: <span class="err-t">červeně čárkovaně ${jmA}</span>, <span style="color:var(--accent)">modře ${jmB}</span>. ${zaver}</p></div>`;
   }
   $('porA').addEventListener('change', () => { porSel.a = $('porA').value; porSel.zrc = null; kresliPorovnani(); });
   $('porB').addEventListener('change', () => { porSel.b = $('porB').value; porSel.zrc = null; kresliPorovnani(); });
@@ -372,6 +409,7 @@
   $('archMix').addEventListener('toggle', async () => {
     if (!$('archMix').open || !vlastni()) return;
     const L = await window.BFV_UI.jineProjekty();
+    kresliArch();
     $('archMixSeznam').innerHTML = L.length ? L.map((q) => `<label class="chk" style="justify-content:space-between"><span>${esc(q.nazev)}${q.klient ? ' · ' + esc(q.klient) : ''}</span><input type="number" min="0" max="50" step="1" data-mix="${q.id}" value="${arch.mix[q.id] || 0}" style="width:70px" aria-label="Párů z projektu ${esc(q.nazev)}"></label>`).join('') + '<small>Počet párů z každého projektu (0 = nepřidávat).</small>' : 'Žádné další projekty.';
   });
   $('archMixSeznam').addEventListener('change', (e) => {
@@ -395,7 +433,7 @@
       toast(`PDF archu: ${doc.getNumberOfPages()} listů 1:1 (papír podle nabídky Tisk → Další).`);
     } catch (e) { console.error(e); toast('PDF se nepodařilo vytvořit: ' + e.message, true); }
   });
-  $('archRez').addEventListener('click', () => { if (archPrazdny()) return; stahni(new Blob([V.svgRez(A.scenaArchu(archVysledek, rez.gravirovat), rez)], { type: 'image/svg+xml' }), zaklad() + '_arch_' + rez.profil + '.svg'); });
+  $('archRez').addEventListener('click', () => { if (archPrazdny()) return; stahni(new Blob([V.svgRez(A.scenaArchu(archVysledek, rez.gravirovat), Object.assign({}, rez, { dil: 'horni' }))], { type: 'image/svg+xml' }), zaklad() + '_arch_' + rez.profil + '.svg'); });
   $('archDxf').addEventListener('click', () => { if (archPrazdny()) return; stahni(new Blob([V.dxfSceny(A.scenaArchu(archVysledek, true))], { type: 'application/dxf' }), zaklad() + '_arch.dxf'); });
 
   /* ---------- moje boty: vnitřní rozměry a jak sedí na nohy z návrhu ---------- */
@@ -415,16 +453,18 @@
       const tl = dl < 8 ? 'err-t' : dl > 20 ? 'warn-t' : 'ok-t', ts = !b.sirka ? '' : sr < 0 ? 'err-t' : 'ok-t';
       return `<span class="${tl}">${dl >= 0 ? '+' : '−'}${fmt(Math.abs(dl))}</span>` + (b.sirka ? ` / <span class="${ts}">${sr >= 0 ? '+' : '−'}${fmt(Math.abs(sr))}</span>` : '');
     };
+    const fok = document.activeElement && document.activeElement.closest('#tabBoty [data-bota]') ? [document.activeElement.closest('[data-bota]').dataset.bota, document.activeElement.dataset.k] : null;
     $('tabBoty').innerHTML = `<tr><th>Bota</th><th class="c">Vnitřní délka</th><th class="c">Šířka</th>${nohy.map((n) => `<th class="c">${esc(n.nazev)}<br><small>délka / šířka</small></th>`).join('')}<th></th></tr>` +
       (L.map((b, i) => `<tr data-bota="${i}"><td><input data-k="nazev" value="${esc(b.nazev)}" maxlength="60" aria-label="Název boty"></td><td><input data-k="delka" type="number" min="0" max="400" step="1" value="${+b.delka || ''}" aria-label="Vnitřní délka mm"></td><td><input data-k="sirka" type="number" min="0" max="200" step="1" value="${+b.sirka || ''}" aria-label="Vnitřní šířka mm"></td>${nohy.map((n) => `<td class="c">${b.delka ? sedi(b, n) : ''}</td>`).join('')}<td style="white-space:nowrap"><button class="mini" data-orez title="Ořez vložky na délku této boty">✂ ořez</button> <button class="mini" data-smaz aria-label="Smazat">✕</button></td></tr>`).join('') ||
       `<tr><td colspan="${4 + nohy.length}" class="info">Zatím žádná bota.</td></tr>`);
+    if (fok && fok[1]) { const el = document.querySelector(`#tabBoty [data-bota="${fok[0]}"] [data-k="${fok[1]}"]`); if (el) el.focus(); }
   }
   $('botaPridat').addEventListener('click', () => { const L = boty(); L.push({ nazev: 'Bota ' + (L.length + 1), delka: Math.round((v.nohy[0] ? v.nohy[0].m.delka : 255) + 12), sirka: 0 }); ulozBoty(L); kresliBoty(); kresliVyberBot(); });
   $('tabBoty').addEventListener('change', (e) => {
     const tr = e.target.closest('[data-bota]'), k = e.target.dataset.k; if (!tr || !k) return;
     const L = boty(), b = L[+tr.dataset.bota]; if (!b) return;
     b[k] = k === 'nazev' ? e.target.value.slice(0, 60) : Math.max(0, Math.min(400, +e.target.value || 0));
-    ulozBoty(L); kresliBoty(); kresliVyberBot();
+    ulozBoty(L); poKliku(() => { kresliBoty(); kresliVyberBot(); });   // až po přesunu fokusu (Tab) a po kliknutí, kvůli kterému pole ztratilo fokus
   });
   $('tabBoty').addEventListener('click', async (e) => {
     const tr = e.target.closest('[data-bota]'); if (!tr) return;
@@ -438,9 +478,17 @@
     zalozkaZ = z;
     document.querySelectorAll('#zalozky [data-z]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.z === z)));
     document.querySelectorAll('.panel[data-p]').forEach((el) => { el.hidden = el.dataset.p !== z; });
-    kresliZalozku();
+    document.querySelectorAll('#zalozky [data-z]').forEach((b) => { b.tabIndex = b.dataset.z === z ? 0 : -1; });
+    kresliZalozku(true);
   }
   $('zalozky').addEventListener('click', (e) => { const b = e.target.closest('[data-z]'); if (b) zalozka(b.dataset.z); });
+  /* šipky mezi záložkami (jen viditelné) */
+  $('zalozky').addEventListener('keydown', (e) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const L = [...document.querySelectorAll('#zalozky [data-z]')].filter((b) => b.offsetParent !== null), i = L.findIndex((b) => b.dataset.z === zalozkaZ);
+    const j = e.key === 'Home' ? 0 : e.key === 'End' ? L.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + L.length) % L.length;
+    e.preventDefault(); zalozka(L[j].dataset.z); L[j].focus();
+  });
   $('btnNavod').addEventListener('click', () => { zalozka('princip'); $('princip').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
 
   /* ---------- předloha a měření ---------- */
@@ -470,7 +518,7 @@
         pred.sirka = Math.min(sc.w, 220); pred.dx = sc.w / 2 - sc.xPrvni; pred.dy = -(pred.sirka * pred.h / pred.w) / 2;
         $('predUhel').value = 0; $('predPruhl').value = 0.6;
         predlohaAktivni(true); kresliNahled();
-        toast('Předloha načtena. Teď ji zkalibrujte: Předloha → Kalibrovat a klikněte na dva body pravítka.');
+        toast('Předloha načtena. Teď nastavte měřítko: Předloha → Měřítko obrázku a klikněte na dva body pravítka.');
       };
       img.onerror = () => { URL.revokeObjectURL(url); toast('Obrázek se nepodařilo načíst.', true); };
       img.src = url;
@@ -551,12 +599,14 @@
       S3 = window.BF3D.vytvor($('obal3d'));
       $('stav3d').remove();
       obnov3d();
-    })().catch((e) => { console.error(e); nacitani3d = null; if ($('stav3d')) $('stav3d').textContent = '3D se nepodařilo zobrazit (prohlížeč nepodporuje WebGL?): ' + e.message; });
+    })().catch((e) => { console.error(e); pozor3d.disconnect(); if ($('stav3d')) $('stav3d').textContent = '3D se nepodařilo zobrazit (prohlížeč nepodporuje WebGL?): ' + e.message; });
     return nacitani3d;
   }
-  new IntersectionObserver((z) => { if (z.some((x) => x.isIntersecting)) nacti3d(); }, { rootMargin: '200px' }).observe($('obal3d'));
+  const pozor3d = new IntersectionObserver((z) => { if (z.some((x) => x.isIntersecting)) nacti3d(); }, { rootMargin: '200px' });
+  pozor3d.observe($('obal3d'));
   let cas3d = 0;
-  function obnov3d() { if (!S3) return; clearTimeout(cas3d); cas3d = setTimeout(() => S3.nastav(v), 120); }
+  let zastaraly3d = false;   // 3D se staví jen na viditelné záložce, jinak až po přepnutí
+  function obnov3d() { if (!S3) return; if (zalozkaZ !== '3d') { zastaraly3d = true; return; } zastaraly3d = false; clearTimeout(cas3d); cas3d = setTimeout(() => S3.nastav(v), 120); }
   document.querySelectorAll('[data-pohled]').forEach((b) => b.addEventListener('click', () => { if (S3) { const [a, e] = b.dataset.pohled.split(',').map(Number); S3.pohled(a, e); } }));
 
   /* ---------- export ---------- */
@@ -566,8 +616,8 @@
   $('btnSvg').addEventListener('click', () => !prazdne() && stahni(new Blob([V.svg(v, { zrcadlit: tisk.zrcadlit })], { type: 'image/svg+xml' }), zaklad() + (tisk.zrcadlit ? '_zrcadlene' : '') + '.svg'));
   $('btnDxf').addEventListener('click', () => !prazdne() && stahni(new Blob([V.dxf(v, { zrcadlit: tisk.zrcadlit })], { type: 'application/dxf' }), zaklad() + (tisk.zrcadlit ? '_zrcadlene' : '') + '.dxf'));
   const scenaStroj = () => V.scena(v, { zrcadlit: tisk.zrcadlit });
-  $('btnSvgRez').addEventListener('click', () => !prazdne() && stahni(new Blob([V.svgRez(scenaStroj(), rez)], { type: 'image/svg+xml' }), zaklad() + '_' + rez.profil + '.svg'));
-  $('btnDxfRez').addEventListener('click', () => !prazdne() && stahni(new Blob([V.dxfRez(scenaStroj(), rez)], { type: 'application/dxf' }), zaklad() + '_' + rez.profil + '.dxf'));
+  $('btnSvgRez').addEventListener('click', () => !prazdne() && stahni(new Blob([V.svgRez(scenaStroj(), rez)], { type: 'image/svg+xml' }), zaklad() + '_' + rez.profil + (rez.dil && rez.dil !== 'horni' ? '_' + rez.dil : '') + '.svg'));
+  $('btnDxfRez').addEventListener('click', () => !prazdne() && stahni(new Blob([V.dxfRez(scenaStroj(), rez)], { type: 'application/dxf' }), zaklad() + '_' + rez.profil + (rez.dil && rez.dil !== 'horni' ? '_' + rez.dil : '') + '.dxf'));
   $('btnPng').addEventListener('click', () => {
     if (prazdne()) return;
     const k = 4, vb = $('nahledSvg').viewBox.baseVal, kl = $('nahledSvg').cloneNode(true), img = new Image();
@@ -606,7 +656,7 @@
   });
 
   /* ---------- projekty a JSON ---------- */
-  const projekty = () => { try { return JSON.parse(localStorage.getItem(KLIC_PROJ) || '[]'); } catch (e) { return []; } };
+  const projekty = () => { try { const L = JSON.parse(localStorage.getItem(KLIC_PROJ) || '[]'); return Array.isArray(L) ? L.filter((q) => q && typeof q.nazev === 'string' && q.p) : []; } catch (e) { return []; } };
   const ulozProjekty = (L) => { try { localStorage.setItem(KLIC_PROJ, JSON.stringify(L)); return true; } catch (e) { toast('Projekt se nepodařilo uložit (úložiště je plné nebo zakázané).', true); return false; } };
   function kresliProjekty() {
     const L = projekty(), ul = $('projekty');
@@ -639,7 +689,8 @@
   obnovFormular(); kresliProjekty(); prepocitej();
   /* ---------- paleta příkazů (Ctrl+K) a zkratky ---------- */
   function prikazy() {
-    const L = [], vid = (el) => !el.closest('.skryte') && !(el.closest('.jen-uni') && typ !== 'uni') && !(el.closest('.jen-vlastni') && typ !== 'vlastni') && !el.disabled;
+    const viditelny = (el) => { const n = el.closest('.nabidka'); if (!n) return el.offsetParent !== null; const t = document.querySelector(`[data-nabidka="${n.id}"]`); return !!t && t.offsetParent !== null && !el.closest('.skryte'); };
+    const L = [], vid = (el) => viditelny(el) && !(el.closest('.jen-uni') && typ !== 'uni') && !(el.closest('.jen-vlastni') && typ !== 'vlastni') && !el.disabled;
     document.querySelectorAll('.lista button, .nabidka button.tl, #zalozky [data-z], .edLista button').forEach((el) => {
       if (!vid(el) || el.id === 'nstPaleta') return;
       const t = (el.textContent || '').replace(/\s+/g, ' ').replace('▾', '').trim(), sk = el.closest('.nabidka') ? ((document.querySelector(`[data-nabidka="${el.closest('.nabidka').id}"]`) || {}).textContent || '').replace('▾', '').trim() || 'nabídka' : el.closest('#zalozky') ? 'záložka' : el.closest('.edLista') ? 'editor' : 'lišta';
@@ -666,7 +717,7 @@
   $('palSeznam').addEventListener('click', (e) => { const li = e.target.closest('[data-i]'); if (li) spustPrikaz(+li.dataset.i); });
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); otevriPaletu(); }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') { e.preventDefault(); $('btnPdf').click(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p' && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); $('btnPdf').click(); }
   });
 
   zalozka(vlastni() ? 'editor' : 'sablona');

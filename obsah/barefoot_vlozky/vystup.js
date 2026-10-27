@@ -14,17 +14,21 @@
   function scena(v, o) {
     o = o || {};
     const p = v.p, nohy = (o.nohy || v.nohy.map((_, i) => i)).map((i) => v.nohy[i]);
-    const dole = p.rezim === 'kontrolni' ? p.jazyk : 0;
-    const top = Math.max(...nohy.map((n) => n.Lt)), prvky = [];
+    /* obálka každé nohy: vložka (i s jazýčkem) a obrys chodidla – při záporném offsetu je chodidlo větší než vložka */
+    const obalky = nohy.map((n) => J.obalka((n.tab ? n.tab.obrys : n.vlozka).concat(p.noha ? n.noha : [])));
+    const top = Math.max(...obalky.map((q) => q.y1)), spodek = Math.min(...obalky.map((q) => q.y0)), prvky = [];
     const levyOkraj = o.koty ? 16 : 0;
     let ox = OKRAJ_SC + levyOkraj;
-    for (const n of nohy) {
-      const X = (x) => ox + x, Y = (y) => OKRAJ_SC + top - y, tr = (P) => P.map(([x, y]) => [X(x), Y(y)]);
+    const xPrvni = ox - obalky[0].x0;
+    nohy.forEach((n, ni) => {
+      const ob = obalky[ni], x0 = ox - ob.x0;
+      const X = (x) => x0 + x, Y = (y) => OKRAJ_SC + top - y, tr = (P) => P.map(([x, y]) => [X(x), Y(y)]);
       const vrstva = (s) => s + '_' + n.strana;
       prvky.push({ t: 'l', b: tr(n.tab ? n.tab.obrys : n.vlozka), z: true, s: 0.4, c: BARVY.obrys, v: vrstva('OBRYS') });
       if (p.noha) prvky.push({ t: 'l', b: tr(n.noha), z: true, s: 0.2, c: BARVY.noha, d: true, v: vrstva('NOHA') });
       if (o.nahled && p.noha) for (const q of n.prsty) prvky.push({ t: 'k', x: X(q.x), y: Y(q.y), r: q.r, s: 0.15, c: BARVY.prst, d: true, v: 'NAHLED' });
       for (const r of n.orez) {
+        if (r.body.length < 2) continue;
         prvky.push({ t: 'l', b: tr(r.body), s: r.bota ? 0.4 : 0.2, c: BARVY.orez, d: !r.bota, v: vrstva('OREZ') });
         const sp = r.body.reduce((a, q) => (q[1] > a[1] ? q : a), r.body[0]);
         prvky.push({ t: 'txt', x: X(sp[0]), y: Y(sp[1]) + 3.4, h: 2.3, txt: r.bota ? `bota ${fmt(p.delkaBoty)} mm` : `−${fmt(r.d)}`, a: 'c', c: BARVY.orez, v: vrstva('OREZ') });
@@ -63,15 +67,15 @@
         const ob = J.obalka(n.vlozka); kota(prvky, [X(ob.x0), Y(rz.ySirka)], [X(ob.x1), Y(rz.ySirka)], `${fmt(rz.sirka)}`);
         const pb = J.rezNaY(n.vlozka, rz.yPata); if (pb) kota(prvky, [X(pb[0]), Y(rz.yPata)], [X(pb[1]), Y(rz.yPata)], `${fmt(rz.pata)}`);
       }
-      ox += n.Wt + MEZERA + levyOkraj;
-    }
-    const w = ox - MEZERA - levyOkraj + OKRAJ_SC, h = top + dole + 2 * OKRAJ_SC + (p.popisky && !dole ? 4 : 0);
+      ox += ob.w + MEZERA + levyOkraj;
+    });
+    const w = ox - MEZERA - levyOkraj + OKRAJ_SC, h = top - spodek + 2 * OKRAJ_SC + (p.popisky && spodek >= 0 ? 4 : 0);
     /* zrcadlení pro řez z rubu: geometrie se překlopí, texty zůstanou čitelné (jen se přesunou) */
     if (o.zrcadlit) for (const e of prvky) {
       if (e.t === 'l') e.b = e.b.map(([x, y]) => [w - x, y]);
       else e.x = w - e.x;
     }
-    return { prvky, x0: 0, y0: 0, w, h, yPata: OKRAJ_SC + top, xPrvni: OKRAJ_SC + levyOkraj };
+    return { prvky, x0: 0, y0: 0, w, h, yPata: OKRAJ_SC + top, xPrvni };
   }
   function kota(prvky, a, b, txt, smer) {
     prvky.push({ t: 'l', b: [a, b], s: 0.18, c: BARVY.kota, v: 'KOTY' });
@@ -110,8 +114,10 @@
     const g = (c, x) => L.push(String(c), String(x));
     const vrstvy = [...new Set(sc.prvky.map((e) => e.v))];
     g(0, 'SECTION'); g(2, 'HEADER'); g(9, '$ACADVER'); g(1, 'AC1009'); g(0, 'ENDSEC');   // R12, jednotky mm
-    g(0, 'SECTION'); g(2, 'TABLES'); g(0, 'TABLE'); g(2, 'LAYER'); g(70, vrstvy.length);
-    for (const s of vrstvy) { g(0, 'LAYER'); g(2, s); g(70, 0); g(62, /OREZ|^REZ$/.test(s) ? 1 : /NOHA|BIGOVANI/.test(s) ? 5 : /ZNACKY|ARCH/.test(s) ? 3 : 7); g(6, 'CONTINUOUS'); }
+    g(0, 'SECTION'); g(2, 'TABLES');
+    g(0, 'TABLE'); g(2, 'LTYPE'); g(70, 1); g(0, 'LTYPE'); g(2, 'CONTINUOUS'); g(70, 0); g(3, 'Solid line'); g(72, 65); g(73, 0); g(40, 0); g(0, 'ENDTAB');
+    g(0, 'TABLE'); g(2, 'LAYER'); g(70, vrstvy.length);
+    for (const s of vrstvy) { g(0, 'LAYER'); g(2, s); g(70, 0); g(62, /OREZ|^REZ/.test(s) ? 1 : /NOHA|BIGOVANI/.test(s) ? 5 : /ZNACKY|ARCH/.test(s) ? 3 : 7); g(6, 'CONTINUOUS'); }
     g(0, 'ENDTAB'); g(0, 'ENDSEC');
     g(0, 'SECTION'); g(2, 'ENTITIES');
     for (const e of sc.prvky) {
@@ -133,7 +139,8 @@
 
   /* ---------- dělení na listy ---------- */
   const PATA = 13, PRAVY = 9;
-  function rozvrhListu(sc, pw, ph, okraj, prekryv) {
+  /* orient: 'v' = jen na výšku, 's' = jen na šířku, jinak ta s menším počtem listů */
+  function rozvrhListu(sc, pw, ph, okraj, prekryv, orient) {
     const varianta = (W, H) => {
       const uw = W - 2 * okraj - PRAVY, uh = H - 2 * okraj - PATA;
       if (sc.w <= uw + 1e-6 && sc.h <= uh + 1e-6) return { W, H, uw, uh, nx: 1, ny: 1, g: 0, jeden: true };
@@ -142,7 +149,7 @@
       return { W, H, uw, uh, nx, ny, g, jeden: false };
     };
     const a = varianta(pw, ph), b = varianta(ph, pw);
-    const r = b.nx * b.ny < a.nx * a.ny ? b : a, listy = [];
+    const r = orient === 'v' ? a : orient === 's' ? b : b.nx * b.ny < a.nx * a.ny ? b : a, listy = [];
     if (r.jeden) listy.push({ sx: sc.x0 - (r.uw - sc.w) / 2, sy: sc.y0 - (r.uh - sc.h) / 2, r: 0, c: 0 });
     else {
       const cw = r.nx * (r.uw - r.g) + r.g, chh = r.ny * (r.uh - r.g) + r.g;
@@ -152,10 +159,20 @@
     return Object.assign(r, { listy });
   }
   /* které scény jdou na šablonové listy: obě vložky na jeden list, jinak každá zvlášť */
-  function planSablon(v, pw, ph, okraj, prekryv, zrcadlit) {
-    const spolu = scena(v, { zrcadlit }), rs = rozvrhListu(spolu, pw, ph, okraj, prekryv);
-    if (rs.jeden || v.nohy.length === 1) return [{ sc: spolu, rv: rs, nazev: v.nohy.length === 1 ? v.nohy[0].nazev : 'obě' }];
-    return v.nohy.map((n, i) => { const sc = scena(v, { nohy: [i], zrcadlit }); return { sc, rv: rozvrhListu(sc, pw, ph, okraj, prekryv), nazev: n.nazev }; });
+  /* scéna zvětšená o korekci tiskárny a rozvržená na listy; kx/ky platí pro list na výšku – u listu na šířku
+     tiskárna papír otočí, takže se osy korekce prohodí */
+  function naListy(sc, pw, ph, okraj, prekryv, kx, ky) {
+    kx = kx || 1; ky = ky || 1;
+    if (kx === ky) { const s1 = skaluj(sc, kx, ky); return { sc: s1, rv: rozvrhListu(s1, pw, ph, okraj, prekryv) }; }
+    /* každá orientace se svou korekcí, vítězí menší počet listů (při shodě na výšku) */
+    const sv = skaluj(sc, kx, ky), rv = rozvrhListu(sv, pw, ph, okraj, prekryv, 'v');
+    const ss = skaluj(sc, ky, kx), rs = rozvrhListu(ss, pw, ph, okraj, prekryv, 's');
+    return rs.listy.length < rv.listy.length ? { sc: ss, rv: rs } : { sc: sv, rv };
+  }
+  function planSablon(v, pw, ph, okraj, prekryv, zrcadlit, kx, ky) {
+    const spolu = naListy(scena(v, { zrcadlit }), pw, ph, okraj, prekryv, kx, ky);
+    if (spolu.rv.jeden || v.nohy.length === 1) return [Object.assign(spolu, { nazev: v.nohy.length === 1 ? v.nohy[0].nazev : 'obě' })];
+    return v.nohy.map((n, i) => Object.assign(naListy(scena(v, { nohy: [i], zrcadlit }), pw, ph, okraj, prekryv, kx, ky), { nazev: n.nazev }));
   }
 
   /* ---------- PDF ---------- */
@@ -199,9 +216,9 @@
       }
     };
     /* korekce tiskárny: co tiskárna zmenší/zvětší, se předem vyrovná (kx, ky = poměr skutečné / vytištěné délky) */
-    const kx = (o.tiskarna && o.tiskarna.kx) || 1, ky = (o.tiskarna && o.tiskarna.ky) || 1;
+    const kx = (o.tiskarna && o.tiskarna.kx) || 1, ky = (o.tiskarna && o.tiskarna.ky) || 1, kx0 = kx, ky0 = ky;
     const meritka = (W, H) => {
-      const ok = o.okraj, y = H - ok - 3, x0 = ok;
+      const ok = o.okraj, y = H - ok - 3, x0 = ok, [kx, ky] = W > H ? [ky0, kx0] : [kx0, ky0];   // list na šířku: osy korekce prohozené
       doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.25);
       doc.line(x0, y, x0 + 100 * kx, y);
       for (let i = 0; i <= 10; i++) doc.line(x0 + i * 10 * kx, y, x0 + i * 10 * kx, y - (i % 5 ? 1.5 : 3));
@@ -246,8 +263,8 @@
   function pdfSceny(jsPDF, sc, o) {
     o = Object.assign({ papir: [210, 297], okraj: 8, prekryv: 15, nazev: 'Arch' }, o || {});
     const kx = (o.tiskarna && o.tiskarna.kx) || 1, ky = (o.tiskarna && o.tiskarna.ky) || 1;
-    sc = skaluj(sc, kx, ky);
-    const rv = rozvrhListu(sc, o.papir[0], o.papir[1], o.okraj, o.prekryv), c = platno(jsPDF, rv.W, rv.H, o, o.nazev);
+    const q = naListy(sc, o.papir[0], o.papir[1], o.okraj, o.prekryv, kx, ky), rv = q.rv, c = platno(jsPDF, rv.W, rv.H, o, o.nazev);
+    sc = q.sc;
     listy(c, sc, rv, o.okraj, (n, N) => `${o.nazev} · 1:1${N > 1 ? ` · list ${n}/${N}` : ''}`);
     return c.doc;
   }
@@ -259,26 +276,27 @@
     /* čtverce s korekcí tiskárny (kolem středu listu), aby jejich vzdálenosti po tisku přesně seděly */
     const kX = (x) => K.w / 2 + (x - K.w / 2) * kx, kY = (y) => K.h / 2 + (y - K.h / 2) * ky;
     for (const [x, y] of [[K.inset, K.inset], [K.w - K.inset, K.inset], [K.w - K.inset, K.h - K.inset], [K.inset, K.h - K.inset]]) doc.rect(kX(x) - K.strana * kx / 2, kY(y) - K.strana * ky / 2, K.strana * kx, K.strana * ky, 'F');
-    text('Kalibrační karta pro vložky na míru', K.w / 2, 30, 5, 'c');
-    text('Tiskněte ve skutečné velikosti (100 %). Postavte se na kartu, obkreslete chodidlo tužkou drženou svisle,', K.w / 2, 38, 2.8, 'c', '#333333');
-    text('pak kartu vyfoťte kolmo shora tak, aby byly vidět všechny čtyři černé čtverce. Nezakrývejte je.', K.w / 2, 43, 2.8, 'c', '#333333');
+    /* texty mezi horními čtverci, místo pro chodidlo co největší (dospělá noha), pravítka mezi dolními čtverci */
+    text('Kalibrační karta pro vložky na míru', K.w / 2, 15, 4, 'c');
+    text('Tiskněte ve skutečné velikosti (100 %). Postavte se na kartu, obkreslete chodidlo tužkou drženou svisle', K.w / 2, 21, 2.4, 'c', '#333333');
+    text('a kartu vyfoťte kolmo shora – všechny čtyři černé čtverce musí být vidět a nezakryté.', K.w / 2, 25, 2.4, 'c', '#333333');
     doc.setDrawColor(150, 150, 150); doc.setLineWidth(0.3); doc.setLineDashPattern([3, 2], 0);
-    doc.roundedRect(30, 52, K.w - 60, K.h - 82, 6, 6, 'S'); doc.setLineDashPattern([], 0);
-    text('místo pro chodidlo (pata dole)', K.w / 2, K.h - 34, 2.6, 'c', '#888888');
+    doc.roundedRect(24, 30, K.w - 48, K.h - 58, 6, 6, 'S'); doc.setLineDashPattern([], 0);
+    text('místo pro chodidlo (pata dole) – noha delší než 24 cm se vejde šikmo po úhlopříčce', K.w / 2, K.h - 31, 2.4, 'c', '#888888');
     doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.25);
-    doc.rect(K.w - 72, K.h - 26, 50, 0.01, 'S');
-    for (let i = 0; i <= 5; i++) doc.line(K.w - 72 + i * 10, K.h - 26, K.w - 72 + i * 10, K.h - 28.5);
-    text('50 mm', K.w - 47, K.h - 22, 2.4, 'c');
-    doc.line(28, K.h - 26, 28 + 100 * kx, K.h - 26);
-    for (let i = 0; i <= 10; i++) doc.line(28 + i * 10 * kx, K.h - 26, 28 + i * 10 * kx, K.h - (i % 5 ? 27.5 : 28.5));
-    text('kontrola tisku: 100 mm', 78, K.h - 22, 2.4, 'c');
+    doc.line(K.w - 72, K.h - 17, K.w - 72 + 50 * kx, K.h - 17);
+    for (let i = 0; i <= 5; i++) doc.line(K.w - 72 + i * 10 * kx, K.h - 17, K.w - 72 + i * 10 * kx, K.h - 19.5);
+    text('50 mm', K.w - 72 + 25 * kx, K.h - 13, 2.4, 'c');
+    doc.line(28, K.h - 17, 28 + 100 * kx, K.h - 17);
+    for (let i = 0; i <= 10; i++) doc.line(28 + i * 10 * kx, K.h - 17, 28 + i * 10 * kx, K.h - (i % 5 ? 18.5 : 19.5));
+    text('kontrola tisku: 100 mm', 28 + 50 * kx, K.h - 13, 2.4, 'c');
     return doc;
   }
   /* zkušební list pro kalibraci tiskárny: tiskne se BEZ korekce, změří se úsečky 150 a 200 mm */
   function pdfTiskarna(jsPDF, o) {
     const c = platno(jsPDF, 210, 297, Object.assign({ okraj: 8 }, o, { tiskarna: null }), 'Kalibrace tiskárny'), { doc, text } = c;
     text('Kalibrace tiskárny', 105, 22, 5, 'c');
-    text('Vytiskněte ve skutečné velikosti (100 %, ne „přizpůsobit stránce“). Pravítkem změřte obě úsečky od ryzky 0 po ryzku na konci', 105, 30, 2.7, 'c', '#333333');
+    text('Vytiskněte ve skutečné velikosti (100 %, ne „přizpůsobit stránce“). Pravítkem změřte obě úsečky od rysky 0 po rysku na konci', 105, 30, 2.7, 'c', '#333333');
     text('a délky zapište do stránky (Kalibrace → Tiskárna). Šablony se pak tisknou s vyrovnáním.', 105, 35, 2.7, 'c', '#333333');
     doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3);
     const x0 = 30, y0 = 60;
@@ -304,15 +322,22 @@
   /* ze scény jen to, co stroj dělá: řez (obrysy, otvory; s kompenzací šířky řezu), bigování (ořezové čáry), gravírování (popisky).
      o: { profil, kerf (mm), bigovat, gravirovat } */
   function scenaRez(sc, o) {
-    o = Object.assign({ profil: 'laser', kerf: 0, bigovat: false, gravirovat: false }, o);
+    /* o.dil: 'horni' = vložka (svrchní vrstva) s otvory, 'spodni' = spodní vrstva, 'podpory' = pelota a podpatěnka –
+       každý díl se řeže z jiného materiálu, proto zvlášť */
+    o = Object.assign({ profil: 'laser', kerf: 0, bigovat: false, gravirovat: false, dil: 'horni' }, o);
     const P = PROFILY[o.profil] || PROFILY.laser, kr = Math.max(0, o.kerf) / 2, prvky = [];
     const ven = (B) => {   // posun obrysu ven o polovinu řezu (orientace ve scéně je y dolů – vezme se větší z obou směrů)
       if (!kr) return B;
-      const a = J.posun(B, kr), b = J.posun(B, -kr);
-      return Math.abs(J.plocha(a)) > Math.abs(J.plocha(b)) ? a : b;
+      const a = J.odsadClip(B, kr);   // Clipper zvětšuje kladným posunem bez ohledu na orientaci, bez smyček v zářezech
+      return a.length > 8 ? a : B;
     };
     for (const e of sc.prvky) {
       const L = String(e.v || '');
+      if (o.dil !== 'horni') {
+        if (e.t === 'l' && e.z && (o.dil === 'spodni' ? /^VRSTVA2/ : /^PODPORY/).test(L)) prvky.push({ t: 'l', b: ven(e.b), z: true, s: P.s, c: P.rez, v: 'REZ' });
+        else if (e.t === 'txt' && o.gravirovat && /^TEXT/.test(L) && e.h > 10) prvky.push(Object.assign({}, e, { c: P.grav, v: 'GRAVIROVANI' }));   // jen velké P/L
+        continue;
+      }
       if (/^(OBRYS|REZ)/.test(L) || /^PERFORACE/.test(L)) {
         if (e.t === 'l' && e.z) prvky.push({ t: 'l', b: ven(e.b), z: true, s: P.s, c: P.rez, v: 'REZ' });
         else if (e.t === 'k') prvky.push({ t: 'k', x: e.x, y: e.y, r: Math.max(0.2, e.r - kr), s: P.s, c: P.rez, v: 'REZ' });
@@ -376,9 +401,9 @@
       const sl = v.nohy.map((n) => n.nazev);
       const R = (f) => v.nohy.map(f);
       tabulka(['', ...sl], [
-        [v.vlastni ? 'Délka předlohy mm' : 'Délka chodidla (Mondopoint) mm', ...R((n) => fmt(n.m.delka))],
-        [v.vlastni ? 'Šířka předlohy mm' : 'Šířka přes klouby mm', ...R((n) => fmt(n.m.sirka))],
-        [v.vlastni ? 'Šířka paty předlohy mm' : 'Šířka paty mm', ...R((n) => fmt(n.m.pata))],
+        [v.vlastni ? 'Délka obrysu mm' : 'Délka chodidla (Mondopoint) mm', ...R((n) => fmt(n.m.delka))],
+        [v.vlastni ? 'Šířka obrysu mm' : 'Šířka přes klouby mm', ...R((n) => fmt(n.m.sirka))],
+        [v.vlastni ? 'Šířka paty obrysu mm' : 'Šířka paty mm', ...R((n) => fmt(n.m.pata))],
         ['Šířka chodidla', ...R((n) => `${n.sirka.nazev} (${fmt(n.sirka.r * 100)} %)`)],
         [p.rezim === 'kontrolni' ? 'Šablona: délka × šířka mm' : 'Vložka: délka × šířka mm', ...R((n) => `${fmt(n.roz.delka)} × ${fmt(n.roz.sirka)}`)],
         ['Pata vložky mm', ...R((n) => fmt(n.roz.pata))],
@@ -389,12 +414,12 @@
       odstavce([
         ...(v.popis || [`Rezerva ve špičce ${fmt(p.rezPrsty)} mm, na každé straně ${fmt(p.rezBok)} mm, za patou ${fmt(p.rezPata)} mm · tvar prstů ${J.TVARY[p.tvar].nazev.toLowerCase()}` + (p.rezim === 'vlozka' ? ` · ${J.MATERIALY[p.material].nazev.toLowerCase()} ${fmt(p.tloustka, 1)} mm.` : '.')]),
         ...(p.rezim === 'vlozka' && p.vrstvy ? [`Dvě vrstvy: svrchní ${J.MATERIALY[p.material].nazev.toLowerCase()} ${fmt(p.tloustka, 1)} mm (plná čára), spodní ${J.MATERIALY[p.material2].nazev.toLowerCase()} ${fmt(p.tloustka2, 1)} mm o ${fmt(p.vrstvaOds)} mm menší (fialová čárkovaná čára) – spodní vrstvu přilepte doprostřed, hrana se pak nedrolí.`] : []),
-        ...(p.rezim === 'vlozka' && (p.pelota || p.podpatenka) ? ['Hnědě: ' + [p.pelota ? `pelota ${fmt(p.pelotaDelka)} × ${fmt(p.pelotaSirka)} mm` : '', p.podpatenka ? `podpatěnka průměr ${fmt(p.podpatenkaPrumer)} mm` : ''].filter(Boolean).join(', ') + ' – vystřihněte zvlášť a přilepte na spodní stranu vložky na vyznačené místo.'] : []),
+        ...(p.rezim === 'vlozka' && (p.pelota || p.podpatenka) ? ['Hnědě: ' + [p.pelota ? `pelota ${fmt(p.pelotaDelka)} × ${fmt(p.pelotaSirka)} mm` : '', p.podpatenka ? `podpatěnka šířka ${fmt(p.podpatenkaPrumer)} mm` : ''].filter(Boolean).join(', ') + ' – vystřihněte zvlášť a přilepte na spodní stranu vložky na vyznačené místo.'] : []),
         ...(p.rezim === 'vlozka' && p.delkaBoty > 0 ? [`Plná červená čára = ořez na vnitřní délku boty ${fmt(p.delkaBoty)} mm.`] : []),
-        `Vytvořeno ${new Date().toLocaleDateString('cs-CZ')}.`,
+        `Vygenerováno ${new Date().toLocaleDateString('cs-CZ')}.`,
         'Velikosti EU/UK/US jsou jen orientační – výrobci se liší i o jedno číslo. Porovnávejte vnitřní délku a šířku boty, ne číslo.',
         ...(p.rezim === 'vlozka'
-          ? ['# Jak vyrobit', '1. Šablonu vystřihněte po plné černé čáře a přiložte k původní vložce nebo vložte do boty – nesmí se nikde ohýbat ani mít vůli přes 3 mm.', '2. Je-li bota kratší, odstřihněte špičku po červené ořezové čáře (každá ubírá uvedenou délku).', '3. Šablonu obkreslete na materiál (lícem dolů, pak je levá a pravá správně) a vystřihněte o 0,5 mm vně čáry; hrany plsti a korku zabruste.', '4. Modrá čárkovaná čára je obrys chodidla – pomůže zkontrolovat, že prsty nikde nepřesahují.']
+          ? ['# Jak vyrobit', '1. Šablonu vystřihněte po plné černé čáře a přiložte k původní vložce nebo vložte do boty – nesmí se nikde ohýbat ani mít vůli přes 3 mm.', '2. Je-li bota kratší, odstřihněte špičku po červené ořezové čáře (každá ubírá uvedenou délku).', '3. Šablonu položte potiskem nahoru na líc materiálu, obkreslete a vystřihněte o 0,5 mm vně čáry; hrany plsti a korku zabruste. Kreslíte-li na rub (kůže, korek s potiskem), vytiskněte šablony zrcadlené (Tisk → Další → Zrcadlit šablony).', '4. Modrá čárkovaná čára je obrys chodidla – pomůže zkontrolovat, že prsty nikde nepřesahují.']
           : ['# Jak zkoušet', '1. Šablonu vystřihněte z tvrdšího papíru nebo tenkého kartonu i s jazýčkem.', '2. Zasuňte ji do boty až k patě. Šablona musí ležet rovně – když se ve špičce ohýbá nebo krabatí, bota je krátká nebo úzká.', '3. Zelené značky ukazují, kde končí noha (+0) a kolik místa zbývá; za jazýček šablonu vytáhněte a podívejte se, o kolik je bota delší.']),
       ], pw - 2 * ok);
       if (v.varovani.length) odstavce(['# Kontrola', ...v.varovani.map((q) => (q.uroven === 'chyba' ? '!! ' : q.uroven === 'varovani' ? '! ' : '') + q.text)], pw - 2 * ok);
@@ -410,7 +435,7 @@
     }
 
     /* 2) šablony 1:1 */
-    for (const q of planSablon(v, pw, ph, ok, o.prekryv, o.zrcadlit)) listy(c, skaluj(q.sc, c.kx, c.ky), rozvrhListu(skaluj(q.sc, c.kx, c.ky), pw, ph, ok, o.prekryv), ok, (n, N) => `Šablona 1:1${o.zrcadlit ? ' (zrcadlená – rub)' : ''} · ${q.nazev} · ${v.nazev}${N > 1 ? ` · list ${n}/${N}` : ''}`);
+    for (const q of planSablon(v, pw, ph, ok, o.prekryv, o.zrcadlit, c.kx, c.ky)) listy(c, q.sc, q.rv, ok, (n, N) => `Šablona 1:1${o.zrcadlit ? ' (zrcadlená – rub)' : ''} · ${q.nazev} · ${v.nazev}${N > 1 ? ` · list ${n}/${N}` : ''}`);
 
     /* 3) jak to funguje */
     if (o.texty && o.texty.length) { nova(pw, ph); y = ok + 6; text('Jak to funguje', ok, y, 5, 'l'); y += 8; odstavce(o.texty, pw - 2 * ok); }

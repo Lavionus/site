@@ -1,1630 +1,536 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CV Manager Professional v7 - Import/Export</title>
-    <script src="lib/fontawesome/js/all.min.js"></script>
-    <script>
-        // Suppress Tailwind CDN production warning
-        const origWarn = console.warn;
-        console.warn = (...args) => {
-            if (args[0]?.includes?.('cdn.tailwindcss.com')) return;
-            origWarn.apply(console, args);
-        };
-    </script>
-    <script src="lib/tailwind-play.js"></script>
-    <link rel="stylesheet" href="../common.css">
-    <script src="../theme.js"></script>
-    <script src="../podpis.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Životopis – tvorba CV</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
 <script src="../dialog.js" defer></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; }
-
-        @media print {
-            .no-print { display: none !important; }
-        }
-
-        .preview-container {
-            background-color: #3d4043;
-            display: flex;
-            justify-content: center;
-            padding: 40px 20px;
-            overflow-y: auto;
-            height: calc(100vh - 64px);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-
-        .tab-active {
-            border-bottom: 3px solid #f97316;
-            color: #f97316;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 11px;
-            font-weight: 800;
-            color: #94a3b8;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-        }
-        
-        .input-field {
-            width: 100%;
-            padding: 12px 14px;
-            background-color: #334155;
-            border: 1px solid #475569;
-            border-radius: 8px;
-            color: #f1f5f9;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-        }
-        .input-field:focus {
-            border-color: #f97316;
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
-        }
-        .input-field::placeholder {
-            color: #64748b;
-        }
-        
-        /* Styl pro vykreslený markdown v CV */
-        .cv-markdown ul { list-style-type: disc; margin-left: 1.1rem; margin-top: 0.25rem; padding: 0; }
-        .cv-markdown li { margin-bottom: 1px; }
-        .cv-markdown li.indent-item { margin-left: 1rem; }
-        .cv-markdown strong { font-weight: 700; }
-        .cv-markdown p { margin-bottom: 0.25rem; }
-
-        /* MD textarea */
-        .md-textarea {
-            width: 100%;
-            min-height: 200px;
-            padding: 16px;
-            background-color: #334155;
-            border: 2px solid #475569;
-            border-radius: 10px;
-            color: #e2e8f0;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            line-height: 1.7;
-            resize: vertical;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            display: block;
-            box-sizing: border-box;
-        }
-        .md-textarea:focus {
-            border-color: #f97316;
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
-        }
-        .md-textarea::placeholder {
-            color: #64748b;
-        }
-
-        /* Photo Crop Modal */
-        .crop-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-        .crop-modal.active { display: flex; }
-        .crop-container {
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
-        .crop-canvas-wrapper {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid #f97316;
-            cursor: grab;
-            background: #0f172a;
-        }
-        .crop-canvas-wrapper:active { cursor: grabbing; }
-        .crop-canvas-wrapper canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        .crop-overlay {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: 50%;
-            box-shadow: 0 0 0 150px rgba(15, 23, 42, 0.7);
-        }
-        .crop-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .crop-slider-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .crop-slider-row label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #94a3b8;
-            width: 60px;
-        }
-        .crop-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 6px;
-            border-radius: 3px;
-            background: #334155;
-            outline: none;
-        }
-        .crop-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #f97316;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .crop-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
-        .crop-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 8px;
-        }
-    </style>
-</head>
-<body class="bg-slate-900 h-screen overflow-hidden">
-
-    <!-- Photo Crop Modal -->
-    <div id="crop-modal" class="crop-modal">
-        <div class="crop-container">
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-crop text-orange-500"></i> Upravit fotografii
-            </h3>
-            <p class="text-slate-400 text-sm mb-4">Přetáhněte obrázek pro posun, použijte posuvník pro přiblížení</p>
-            <div class="crop-canvas-wrapper" id="crop-wrapper">
-                <canvas id="crop-canvas"></canvas>
-            </div>
-            <div class="crop-controls">
-                <div class="crop-slider-row">
-                    <label><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Zoom</label>
-                    <input type="range" id="crop-zoom" class="crop-slider" min="100" max="300" value="100">
-                    <span id="crop-zoom-val" class="text-slate-400 text-xs w-12 text-right">100%</span>
-                </div>
-                <div class="crop-buttons">
-                    <button onclick="closeCropModal()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-semibold transition-colors">
-                        <i class="fa-solid fa-xmark mr-1"></i> Zrušit
-                    </button>
-                    <button onclick="applyCrop()" class="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors">
-                        <i class="fa-solid fa-check mr-1"></i> Použít
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Header -->
-    <header class="h-16 bg-slate-950 text-white flex items-center justify-between px-6 shadow-xl z-50 relative no-print">
-        <div class="flex items-center gap-3">
-            <div class="bg-orange-500 p-2 rounded-lg">
-                <i class="fa-solid fa-id-badge text-white text-xl"></i>
-            </div>
-            <h1 class="text-lg font-bold tracking-tight">CV Builder <span class="text-orange-500 text-xs">ULTIMATE v7</span></h1>
-        </div>
-        <div class="flex gap-2">
-            <button onclick="clearLocalStorage()" class="bg-slate-800 hover:bg-red-600 px-3 py-2 rounded-full transition-all font-bold flex items-center gap-2 shadow-lg text-slate-400 hover:text-white text-sm" title="Smazat uložená data">
-                <i class="fa-solid fa-trash-can"></i>
-            </button>
-            <input type="file" id="json-import" accept=".json" class="hidden" onchange="importFromJSON(this)">
-            <button onclick="document.getElementById('json-import').click()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-full transition-all font-bold flex items-center gap-2 shadow-lg text-sm">
-                <i class="fa-solid fa-file-import"></i> Import JSON
-            </button>
-            <button onclick="exportToJSON()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-full transition-all font-bold flex items-center gap-2 shadow-lg text-slate-200 text-sm">
-                <i class="fa-solid fa-file-export"></i> Export JSON
-            </button>
-            <button onclick="exportToHTML()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-full transition-all font-bold flex items-center gap-2 shadow-lg text-slate-200 text-sm">
-                <i class="fa-solid fa-code"></i> HTML
-            </button>
-            <button onclick="window.print()" class="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-full transition-all font-bold flex items-center gap-2 shadow-lg text-sm">
-                <i class="fa-solid fa-file-pdf"></i> PDF
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Workspace -->
-    <main class="h-[calc(100vh-64px)] no-print">
-        <!-- Tab Navigation -->
-        <nav class="bg-slate-800 border-b border-slate-700 flex px-6 no-print">
-            <button onclick="switchTab('content')" id="btn-content" class="px-8 py-4 text-sm font-bold uppercase tracking-wider tab-active transition-all">
-                <i class="fa-solid fa-database mr-2"></i>Obsah (Editace dat)
-            </button>
-            <button onclick="switchTab('style')" id="btn-style" class="px-8 py-4 text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-slate-200 transition-all">
-                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Vzhled & Náhled
-            </button>
-        </nav>
-
-        <!-- OBSAH -->
-        <section id="view-content" class="h-full overflow-y-auto custom-scrollbar p-8 max-w-6xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 pb-20">
-                
-                <!-- Osobní údaje -->
-                <div class="space-y-6">
-                    <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
-                        <i class="fa-solid fa-user-circle text-orange-500"></i> Osobní údaje
-                    </h2>
-                    
-                    <!-- Fotka a jméno -->
-                    <div class="flex items-start gap-6 bg-slate-800 p-6 rounded-xl border border-slate-700">
-                        <div class="relative group flex-shrink-0">
-                            <div id="photo-preview" class="w-28 h-28 rounded-full bg-slate-700 border-2 border-dashed border-slate-500 flex items-center justify-center overflow-hidden">
-                                <i class="fa-solid fa-camera text-slate-500 text-2xl"></i>
-                            </div>
-                            <input type="file" id="photo-upload" accept="image/*" class="hidden" onchange="handlePhotoUpload(this)">
-                            <button onclick="document.getElementById('photo-upload').click()" class="absolute -bottom-1 -right-1 bg-orange-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform" title="Nahrát fotku">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                            </button>
-                            <button id="btn-edit-photo" onclick="editExistingPhoto()" class="hidden absolute -bottom-1 left-0 bg-slate-600 text-white p-2 rounded-full shadow-lg hover:scale-110 hover:bg-slate-500 transition-transform" title="Upravit ořez">
-                                <i class="fa-solid fa-crop text-xs"></i>
-                            </button>
-                        </div>
-                        <div class="flex-1 space-y-4">
-                            <div class="flex gap-3">
-                                <div class="w-20">
-                                    <label class="input-label">Titul</label>
-                                    <input type="text" id="data-title-prefix" value="" oninput="updateCV()" class="input-field" placeholder="Bc.">
-                                </div>
-                                <div class="flex-1">
-                                    <label class="input-label">Celé jméno</label>
-                                    <input type="text" id="data-name" value="Jan Novák" oninput="updateCV()" class="input-field">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="input-label">Pracovní pozice / Role</label>
-                                <input type="text" id="data-title" value="Senior Project Manager" oninput="updateCV()" class="input-field">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Kontakty -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="input-label">Telefon</label>
-                            <input type="text" id="data-phone" value="+420 777 666 555" oninput="updateCV()" class="input-field" placeholder="+420 ...">
-                        </div>
-                        <div>
-                            <label class="input-label">Email</label>
-                            <input type="email" id="data-email" value="novak.cv@seznam.cz" oninput="updateCV()" class="input-field" placeholder="email@domena.cz">
-                        </div>
-                    </div>
-
-                    <!-- Adresa -->
-                    <div>
-                        <label class="input-label">Adresa</label>
-                        <input type="text" id="data-address" value="" oninput="updateCV()" class="input-field" placeholder="Ulice 123, 110 00 Praha">
-                    </div>
-
-                    <!-- Rok narození -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="input-label">Rok narození</label>
-                            <input type="text" id="data-birthdate" value="" oninput="updateCV()" class="input-field" placeholder="1990">
-                        </div>
-                        <div>
-                            <label class="input-label">Zájmy</label>
-                            <input type="text" id="data-interests" value="" oninput="updateCV()" class="input-field" placeholder="turistika, sport...">
-                        </div>
-                    </div>
-
-                    <!-- Odkazy -->
-                    <div class="space-y-4 bg-slate-800 p-5 rounded-xl border border-slate-700">
-                        <div class="flex justify-between items-center">
-                            <label class="input-label !mb-0">Sociální sítě & Odkazy</label>
-                            <button onclick="addLink()" class="text-orange-500 font-bold text-xs hover:underline">+ PŘIDAT</button>
-                        </div>
-                        <div id="links-container" class="space-y-2"></div>
-                    </div>
-                </div>
-
-                <!-- Dovednosti + Jazyky -->
-                <div class="space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
-                            <i class="fa-solid fa-bolt text-orange-500"></i> Dovednosti
-                        </h2>
-                        <button onclick="addItem('skills')" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-xs font-bold">+ Přidat</button>
-                    </div>
-                    <div id="editor-skills" class="space-y-3 bg-slate-800 p-5 rounded-xl border border-slate-700 max-h-64 overflow-y-auto custom-scrollbar"></div>
-
-                    <!-- Jazyky -->
-                    <div class="flex justify-between items-center pt-4">
-                        <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
-                            <i class="fa-solid fa-language text-orange-500"></i> Jazyky
-                        </h2>
-                        <button onclick="addItem('languages')" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-xs font-bold">+ Přidat</button>
-                    </div>
-                    <div id="editor-languages" class="space-y-3 bg-slate-800 p-5 rounded-xl border border-slate-700"></div>
-                </div>
-
-                <!-- O MNĚ - na celou šířku -->
-                <div class="md:col-span-2 space-y-4">
-                    <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
-                        <i class="fa-solid fa-user-pen text-orange-500"></i> O mně / Profil
-                    </h2>
-                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                        <label class="input-label">Markdown Editor - použijte **tučně** a * odrážky</label>
-                        <textarea id="data-bio" oninput="updateCV()" class="md-textarea" placeholder="Popište své silné stránky, zkušenosti a cíle..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Zkušenosti -->
-                <div class="md:col-span-2 space-y-6 pt-6 border-t border-slate-700">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
-                            <i class="fa-solid fa-briefcase text-orange-500"></i> Pracovní zkušenosti
-                        </h2>
-                        <button onclick="addItem('experience')" class="bg-orange-500 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-orange-600 transition-colors">+ Přidat zkušenost</button>
-                    </div>
-                    <div id="editor-experience" class="space-y-6"></div>
-                </div>
-
-                <!-- Vzdělání -->
-                <div class="md:col-span-2 space-y-6 pt-6 border-t border-slate-700">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-extrabold text-slate-100 flex items-center gap-2">
-                            <i class="fa-solid fa-graduation-cap text-orange-500"></i> Vzdělání
-                        </h2>
-                        <button onclick="addItem('education')" class="bg-orange-500 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-orange-600 transition-colors">+ Přidat vzdělání</button>
-                    </div>
-                    <div id="editor-education" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- VZHLED & NÁHLED -->
-        <section id="view-style" class="hidden h-full flex">
-            <aside class="w-80 bg-slate-800 border-r border-slate-700 p-6 overflow-y-auto custom-scrollbar">
-                <div class="space-y-8">
-                    <div>
-                        <h3 class="input-label">Barevné schéma</h3>
-                        <div class="grid grid-cols-2 gap-4 mt-3">
-                            <div>
-                                <label class="text-[10px] text-slate-400 block mb-1 font-bold">Hlavní panel</label>
-                                <input type="color" id="cfg-primary" value="#0f172a" oninput="updateCV()" class="w-full h-10 rounded border-none cursor-pointer">
-                            </div>
-                            <div>
-                                <label class="text-[10px] text-slate-400 block mb-1 font-bold">Akcenty</label>
-                                <input type="color" id="cfg-accent" value="#f97316" oninput="updateCV()" class="w-full h-10 rounded border-none cursor-pointer">
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="input-label">Typografie & Rozměry</h3>
-                        <div class="space-y-6 mt-3">
-                            <div>
-                                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase"><span>Šířka panelu</span><span id="val-sidebar-w">75 mm</span></div>
-                                <input type="range" id="cfg-sidebar-w" min="60" max="100" value="75" oninput="document.getElementById('val-sidebar-w').innerText=this.value+' mm'; updateCV()" class="w-full accent-orange-500">
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase"><span>Základní písmo</span><span id="val-font-s">13 px</span></div>
-                                <input type="range" id="cfg-font-s" min="10" max="16" value="13" oninput="document.getElementById('val-font-s').innerText=this.value+' px'; updateCV()" class="w-full accent-orange-500">
-                            </div>
-                            <!-- NOVÝ SLIDER: Velikost jména -->
-                            <div>
-                                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase"><span>Velikost jména</span><span id="val-name-font">42 px</span></div>
-                                <input type="range" id="cfg-name-font" min="24" max="60" value="42" oninput="document.getElementById('val-name-font').innerText=this.value+' px'; updateCV()" class="w-full accent-orange-500">
-                            </div>
-                            <!-- NOVÝ SLIDER: Velikost pracovní pozice -->
-                            <div>
-                                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase"><span>Velikost pozice</span><span id="val-title-font">16 px</span></div>
-                                <input type="range" id="cfg-title-font" min="10" max="28" value="16" oninput="document.getElementById('val-title-font').innerText=this.value+' px'; updateCV()" class="w-full accent-orange-500">
-                            </div>
-                            <!-- NOVÝ SLIDER: Velikost textu zkušeností -->
-                            <div>
-                                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase"><span>Text zkušeností</span><span id="val-exp-font">11 px</span></div>
-                                <input type="range" id="cfg-exp-font" min="8" max="14" value="11" oninput="document.getElementById('val-exp-font').innerText=this.value+' px'; updateCV()" class="w-full accent-orange-500">
-                            </div>
-                            <div class="pt-4 border-t border-slate-700">
-                                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase"><span>Zoom náhledu</span><span id="val-zoom">80%</span></div>
-                                <input type="range" id="cfg-zoom" min="40" max="120" value="80" oninput="document.getElementById('val-zoom').innerText=this.value+'%'; document.getElementById('cv-preview-wrapper').style.transform='scale('+(this.value/100)+')';" class="w-full accent-orange-500">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- ROZLOŽENÍ SEKCÍ -->
-                    <div class="pt-6 border-t border-slate-700">
-                        <h3 class="input-label mb-4"><i class="fa-solid fa-arrows-left-right mr-2"></i>Rozložení sekcí</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <div class="text-[9px] font-bold text-slate-500 uppercase mb-2 text-center">◀ Postranní panel</div>
-                                <div id="sections-sidebar" class="space-y-1 min-h-[100px] bg-slate-900/50 rounded-lg p-2"></div>
-                            </div>
-                            <div>
-                                <div class="text-[9px] font-bold text-slate-500 uppercase mb-2 text-center">Hlavní panel ▶</div>
-                                <div id="sections-main" class="space-y-1 min-h-[100px] bg-slate-900/50 rounded-lg p-2"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <div class="flex-1 preview-container overflow-y-auto custom-scrollbar">
-                <div id="cv-preview-wrapper" style="transform: scale(0.8); transform-origin: top center;">
-                    <div id="cv-rendered-content" class="shadow-2xl"></div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script>
-        // Datové struktury
-        let profilePhoto = null;
-        let links = [
-            { platform: 'LinkedIn', url: 'linkedin.com/in/jnovak' },
-            { platform: 'GitHub', url: 'github.com/jnovak' }
-        ];
-
-        let skills = [
-            { name: 'Strategické plánování', level: 90 },
-            { name: 'Krizový management', level: 85 }
-        ];
-
-        let languages = [
-            { name: 'Čeština', level: 'rodilý mluvčí' },
-            { name: 'Angličtina', level: 'B2' }
-        ];
-
-        let experience = [
-            { 
-                date: '2020 — Dnes', 
-                role: 'Global Manager', 
-                company: 'Super Tech Ltd.', 
-                desc: 'Vedení týmů v **5 zemích**.\n\n* Zvýšení obratu o **20%**\n* Implementace Agile metodiky' 
-            }
-        ];
-
-        let education = [
-            { date: '2015 — 2017', degree: 'Ing. Management', school: 'Vysoká škola ekonomická', desc: '' }
-        ];
-
-        // Konfigurace rozložení sekcí
-        let sectionLayout = {
-            sidebar: ['contact', 'links', 'skills', 'languages', 'interests'],
-            main: ['profile', 'experience', 'education']
-        };
-
-        // Definice sekcí s názvy a ikonami
-        const sectionDefs = {
-            contact: { name: 'Kontakt', icon: 'fa-address-card' },
-            links: { name: 'Odkazy', icon: 'fa-link' },
-            skills: { name: 'Dovednosti', icon: 'fa-bolt' },
-            languages: { name: 'Jazyky', icon: 'fa-language' },
-            interests: { name: 'Zájmy', icon: 'fa-heart' },
-            profile: { name: 'Profil', icon: 'fa-user' },
-            experience: { name: 'Zkušenosti', icon: 'fa-briefcase' },
-            education: { name: 'Vzdělání', icon: 'fa-graduation-cap' }
-        };
-
-        document.getElementById('data-bio').value = "Motivovaný **profesionál** s prokazatelnou historií v řízení komplexních projektů.";
-
-        // ============ IMPORT Z JSON ============
-        function importFromJSON(input) {
-            if (!input.files || !input.files[0]) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    // Jméno
-                    const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ');
-                    document.getElementById('data-name').value = fullName || '';
-                    document.getElementById('data-title-prefix').value = data.title || '';
-                    
-                    // Kontakty
-                    document.getElementById('data-email').value = data.email || '';
-                    document.getElementById('data-phone').value = data.phone || '';
-                    document.getElementById('data-birthdate').value = data.birthDate || data.extraInfo || '';
-                    document.getElementById('data-interests').value = data.interests || '';
-                    
-                    // Parsování addressLinkedinWeb
-                    links = []; // Vyčistit před importem
-                    if (data.addressLinkedinWeb) {
-                        const lines = data.addressLinkedinWeb.split('\n');
-                        let address = '';
-                        
-                        lines.forEach(line => {
-                            line = line.trim();
-                            if (!line) return;
-                            
-                            // LinkedIn (ohraničeno |)
-                            if (line.startsWith('|') && line.endsWith('|')) {
-                                const url = line.slice(1, -1);
-                                links.push({ platform: 'LinkedIn', url: url });
-                            }
-                            // LinkedIn (obsahuje linkedin.com)
-                            else if (line.includes('linkedin.com')) {
-                                links.push({ platform: 'LinkedIn', url: line.replace(/^\||\|$/g, '') });
-                            }
-                            // GitHub
-                            else if (line.includes('github.com') || line.includes('github.io')) {
-                                links.push({ platform: 'Web', url: line });
-                            }
-                            // Jiné URL
-                            else if (line.startsWith('http://') || line.startsWith('https://') || line.match(/\.[a-z]{2,}(\/|$)/i)) {
-                                links.push({ platform: 'Web', url: line });
-                            }
-                            // Adresa (neobsahuje URL pattern)
-                            else if (!address) {
-                                address = line;
-                            }
-                        });
-                        
-                        document.getElementById('data-address').value = address;
-                    }
-                    
-                    // Pokud nejsou žádné odkazy, přidat prázdný
-                    if (links.length === 0) {
-                        links.push({ platform: 'Web', url: '' });
-                    }
-                    
-                    // Bio / Summary
-                    document.getElementById('data-bio').value = data.summary || '';
-                    
-                    // Pracovní pozice (z první zkušenosti nebo prázdné)
-                    if (data.experiences && data.experiences.length > 0) {
-                        document.getElementById('data-title').value = data.experiences[0].role || '';
-                    }
-                    
-                    // Zkušenosti
-                    if (data.experiences && data.experiences.length > 0) {
-                        experience = data.experiences.map(exp => ({
-                            date: exp.period || '',
-                            role: exp.role || '',
-                            company: exp.company || '',
-                            desc: exp.desc || ''
-                        }));
-                    }
-                    
-                    // Vzdělání
-                    if (data.education && data.education.length > 0) {
-                        education = data.education.map(edu => ({
-                            date: edu.period || '',
-                            degree: edu.degree || '',
-                            school: edu.school || '',
-                            desc: edu.desc || ''
-                        }));
-                    }
-                    
-                    // Dovednosti
-                    if (data.skills && data.skills.length > 0) {
-                        skills = data.skills.map(s => ({
-                            name: s.name || '',
-                            level: parseInt(s.level) || 50
-                        }));
-                    }
-                    
-                    // Jazyky
-                    if (data.languages && data.languages.length > 0) {
-                        languages = data.languages.map(l => ({
-                            name: l.name || '',
-                            level: l.level || ''
-                        }));
-                    }
-                    
-                    // Pracovní pozice (jobTitle má přednost)
-                    if (data.jobTitle) {
-                        document.getElementById('data-title').value = data.jobTitle;
-                    }
-                    
-                    // Fotka
-                    if (data.profilePhoto) {
-                        profilePhoto = data.profilePhoto;
-                        document.getElementById('photo-preview').innerHTML = `<img src="${profilePhoto}" class="w-full h-full object-cover">`;
-                    }
-                    if (data.originalPhoto) {
-                        originalPhoto = data.originalPhoto;
-                        document.getElementById('btn-edit-photo').classList.remove('hidden');
-                    }
-                    
-                    // Links (pokud jsou uloženy jako pole)
-                    if (data.links && data.links.length > 0 && links.length <= 1 && (!links[0] || !links[0].url)) {
-                        links = data.links.map(l => ({
-                            platform: l.platform || 'Web',
-                            url: l.url || ''
-                        }));
-                    }
-                    
-                    // Nastavení vzhledu
-                    if (data.settings) {
-                        if (data.settings.primary) {
-                            document.getElementById('cfg-primary').value = data.settings.primary;
-                        }
-                        if (data.settings.accent) {
-                            document.getElementById('cfg-accent').value = data.settings.accent;
-                        }
-                        if (data.settings.sidebarW) {
-                            document.getElementById('cfg-sidebar-w').value = data.settings.sidebarW;
-                            document.getElementById('val-sidebar-w').innerText = data.settings.sidebarW + ' mm';
-                        }
-                        if (data.settings.fontSize) {
-                            document.getElementById('cfg-font-s').value = data.settings.fontSize;
-                            document.getElementById('val-font-s').innerText = data.settings.fontSize + ' px';
-                        }
-                        if (data.settings.nameFontSize) {
-                            document.getElementById('cfg-name-font').value = data.settings.nameFontSize;
-                            document.getElementById('val-name-font').innerText = data.settings.nameFontSize + ' px';
-                        }
-                        if (data.settings.titleFontSize) {
-                            document.getElementById('cfg-title-font').value = data.settings.titleFontSize;
-                            document.getElementById('val-title-font').innerText = data.settings.titleFontSize + ' px';
-                        }
-                        if (data.settings.expFontSize) {
-                            document.getElementById('cfg-exp-font').value = data.settings.expFontSize;
-                            document.getElementById('val-exp-font').innerText = data.settings.expFontSize + ' px';
-                        }
-                    }
-                    
-                    // Rozložení sekcí
-                    if (data.sectionLayout) {
-                        sectionLayout = data.sectionLayout;
-                        renderSectionLayout();
-                    }
-                    
-                    // Překreslit vše
-                    renderLinkEditor();
-                    renderEditors();
-                    updateCV();
-                    
-                    Dialog.info('✅ Data úspěšně importována!');
-                } catch (err) {
-                    Dialog.info('❌ Chyba při importu: ' + err.message);
-                    console.error(err);
-                }
-            };
-            reader.readAsText(input.files[0]);
-            input.value = ''; // Reset pro opakovaný import
-        }
-
-        // ============ EXPORT DO JSON ============
-        function exportToJSON() {
-            const nameParts = document.getElementById('data-name').value.trim().split(' ');
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.slice(1).join(' ') || '';
-            
-            // Sestavení addressLinkedinWeb
-            const address = document.getElementById('data-address').value;
-            const linkLines = links.filter(l => l.url && l.url.trim()).map(l => {
-                if (l.platform.toLowerCase() === 'linkedin') {
-                    return '|' + l.url + '|';
-                }
-                return l.url;
-            });
-            const addressLinkedinWeb = [address, ...linkLines].filter(Boolean).join('\n');
-            
-            const jsonData = {
-                version: 4,
-                firstName: firstName,
-                lastName: lastName,
-                title: document.getElementById('data-title-prefix').value,
-                jobTitle: document.getElementById('data-title').value,
-                email: document.getElementById('data-email').value,
-                phone: document.getElementById('data-phone').value,
-                addressLinkedinWeb: addressLinkedinWeb,
-                summary: document.getElementById('data-bio').value,
-                experiences: experience.map(e => ({
-                    company: e.company,
-                    role: e.role,
-                    period: e.date,
-                    desc: e.desc
-                })),
-                education: education.map(e => ({
-                    school: e.school,
-                    degree: e.degree,
-                    period: e.date,
-                    desc: e.desc || ''
-                })),
-                skills: skills.map(s => ({
-                    name: s.name,
-                    level: s.level
-                })),
-                languages: languages.map(l => ({
-                    name: l.name,
-                    level: l.level
-                })),
-                links: links.map(l => ({
-                    platform: l.platform,
-                    url: l.url
-                })),
-                birthDate: document.getElementById('data-birthdate').value,
-                interests: document.getElementById('data-interests').value,
-                extraInfo: document.getElementById('data-birthdate').value,
-                profilePhoto: profilePhoto,
-                originalPhoto: originalPhoto,
-                sectionLayout: sectionLayout,
-                settings: {
-                    primary: document.getElementById('cfg-primary').value,
-                    accent: document.getElementById('cfg-accent').value,
-                    sidebarW: document.getElementById('cfg-sidebar-w').value,
-                    fontSize: document.getElementById('cfg-font-s').value,
-                    nameFontSize: document.getElementById('cfg-name-font').value,
-                    titleFontSize: document.getElementById('cfg-title-font').value,
-                    expFontSize: document.getElementById('cfg-exp-font').value
-                }
-            };
-            
-            const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `CV_${firstName}_${lastName}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // ============ PHOTO CROP MODAL ============
-        let cropImage = null;
-        let cropScale = 1;
-        let cropOffsetX = 0;
-        let cropOffsetY = 0;
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let originalPhoto = null; // Uložíme původní neoříznutou fotku
-
-        function handlePhotoUpload(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    originalPhoto = e.target.result; // Uložit originál
-                    openCropModal(e.target.result);
-                }
-                reader.readAsDataURL(input.files[0]);
-                input.value = ''; // Reset pro opětovné nahrání stejného souboru
-            }
-        }
-
-        function editExistingPhoto() {
-            if (originalPhoto) {
-                openCropModal(originalPhoto);
-            }
-        }
-
-        function openCropModal(imageSrc) {
-            cropImage = new Image();
-            cropImage.onload = function() {
-                cropScale = 1;
-                cropOffsetX = 0;
-                cropOffsetY = 0;
-                document.getElementById('crop-zoom').value = 100;
-                document.getElementById('crop-zoom-val').textContent = '100%';
-                document.getElementById('crop-modal').classList.add('active');
-                initCropCanvas();
-                drawCropCanvas();
-            };
-            cropImage.src = imageSrc;
-        }
-
-        function closeCropModal() {
-            document.getElementById('crop-modal').classList.remove('active');
-            cropImage = null;
-        }
-
-        function initCropCanvas() {
-            const wrapper = document.getElementById('crop-wrapper');
-            const canvas = document.getElementById('crop-canvas');
-            const size = 300;
-            canvas.width = size;
-            canvas.height = size;
-
-            // Drag events
-            wrapper.onmousedown = function(e) {
-                isDragging = true;
-                dragStartX = e.clientX - cropOffsetX;
-                dragStartY = e.clientY - cropOffsetY;
-            };
-            document.onmousemove = function(e) {
-                if (!isDragging) return;
-                cropOffsetX = e.clientX - dragStartX;
-                cropOffsetY = e.clientY - dragStartY;
-                drawCropCanvas();
-            };
-            document.onmouseup = function() { isDragging = false; };
-
-            // Touch events
-            wrapper.ontouchstart = function(e) {
-                isDragging = true;
-                const touch = e.touches[0];
-                dragStartX = touch.clientX - cropOffsetX;
-                dragStartY = touch.clientY - cropOffsetY;
-            };
-            wrapper.ontouchmove = function(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                const touch = e.touches[0];
-                cropOffsetX = touch.clientX - dragStartX;
-                cropOffsetY = touch.clientY - dragStartY;
-                drawCropCanvas();
-            };
-            wrapper.ontouchend = function() { isDragging = false; };
-
-            // Zoom slider
-            document.getElementById('crop-zoom').oninput = function() {
-                cropScale = this.value / 100;
-                document.getElementById('crop-zoom-val').textContent = this.value + '%';
-                drawCropCanvas();
-            };
-        }
-
-        function drawCropCanvas() {
-            const canvas = document.getElementById('crop-canvas');
-            const ctx = canvas.getContext('2d');
-            const size = 300;
-
-            ctx.clearRect(0, 0, size, size);
-
-            if (!cropImage) return;
-
-            // Vypočítat rozměry pro vycentrování
-            const imgRatio = cropImage.width / cropImage.height;
-            let drawW, drawH;
-            if (imgRatio > 1) {
-                drawH = size * cropScale;
-                drawW = drawH * imgRatio;
-            } else {
-                drawW = size * cropScale;
-                drawH = drawW / imgRatio;
-            }
-
-            const x = (size - drawW) / 2 + cropOffsetX;
-            const y = (size - drawH) / 2 + cropOffsetY;
-
-            ctx.drawImage(cropImage, x, y, drawW, drawH);
-        }
-
-        function applyCrop() {
-            const canvas = document.getElementById('crop-canvas');
-            const size = 300;
-
-            // Vytvořit výstupní canvas s kruhovým ořezem
-            const outputCanvas = document.createElement('canvas');
-            outputCanvas.width = size;
-            outputCanvas.height = size;
-            const ctx = outputCanvas.getContext('2d');
-
-            // Kruhová maska
-            ctx.beginPath();
-            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.clip();
-
-            // Překreslit obsah z crop canvasu
-            ctx.drawImage(canvas, 0, 0);
-
-            // Uložit jako base64
-            profilePhoto = outputCanvas.toDataURL('image/png');
-            document.getElementById('photo-preview').innerHTML = `<img src="${profilePhoto}" class="w-full h-full object-cover">`;
-            
-            // Zobrazit tlačítko pro editaci
-            document.getElementById('btn-edit-photo').classList.remove('hidden');
-            
-            closeCropModal();
-            updateCV();
-        }
-
-        function addLink() {
-            links.push({ platform: 'Web', url: '' });
-            renderLinkEditor();
-            updateCV();
-        }
-
-        function removeLink(index) {
-            links.splice(index, 1);
-            renderLinkEditor();
-            updateCV();
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-
-        function renderLinkEditor() {
-            const container = document.getElementById('links-container');
-            container.innerHTML = links.map((link, i) => `
-                <div class="flex gap-2 items-center">
-                    <input type="text" value="${escapeHtml(link.platform)}" oninput="updateLink(${i}, 'platform', this.value)" class="input-field !py-2 !px-3 !text-xs font-bold uppercase w-28" placeholder="Platforma">
-                    <input type="text" value="${escapeHtml(link.url)}" oninput="updateLink(${i}, 'url', this.value)" class="input-field !py-2 !px-3 !text-xs flex-1" placeholder="URL nebo username">
-                    <button onclick="removeLink(${i})" class="text-slate-500 hover:text-red-400 px-2 transition-colors"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-            `).join('');
-        }
-
-        function updateLink(index, field, value) {
-            links[index][field] = value;
-            updateCV();
-        }
-
-        function parseMarkdown(text) {
-            if (!text) return "";
-            
-            const lines = text.split('\n');
-            let result = [];
-            let inList = false;
-            
-            lines.forEach(line => {
-                const trimmed = line.trim();
-                
-                // Odrážka (- nebo *)
-                if (trimmed.match(/^[-*] /)) {
-                    const content = trimmed.substring(2);
-                    if (!inList) {
-                        result.push('<ul>');
-                        inList = true;
-                    }
-                    // Odskok pro řádky BEZ tučného textu na začátku
-                    const hasBoldStart = content.match(/^\*\*/) || content.match(/^__/);
-                    const indentClass = hasBoldStart ? '' : ' class="indent-item"';
-                    result.push('<li' + indentClass + '>' + processInline(content) + '</li>');
-                } 
-                // Prázdný řádek
-                else if (!trimmed) {
-                    if (inList) {
-                        result.push('</ul>');
-                        inList = false;
-                    }
-                    result.push('<br>');
-                }
-                // Běžný text
-                else {
-                    if (inList) {
-                        result.push('</ul>');
-                        inList = false;
-                    }
-                    result.push(processInline(trimmed) + '<br>');
-                }
-            });
-            
-            if (inList) result.push('</ul>');
-            
-            return result.join('');
-        }
-
-        function processInline(text) {
-            // Tučně: **text** nebo __text__
-            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
-            // Kurzíva: *text* nebo _text_
-            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-            text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
-            return text;
-        }
-
-        function switchTab(tab) {
-            const contentBtn = document.getElementById('btn-content');
-            const styleBtn = document.getElementById('btn-style');
-            const viewContent = document.getElementById('view-content');
-            const viewStyle = document.getElementById('view-style');
-            
-            if (tab === 'content') {
-                viewContent.classList.remove('hidden');
-                viewStyle.classList.add('hidden');
-                contentBtn.classList.add('tab-active');
-                styleBtn.classList.remove('tab-active');
-                styleBtn.classList.add('text-slate-400');
-            } else {
-                viewContent.classList.add('hidden');
-                viewStyle.classList.remove('hidden');
-                styleBtn.classList.add('tab-active');
-                contentBtn.classList.remove('tab-active');
-                contentBtn.classList.add('text-slate-400');
-                updateCV();
-            }
-        }
-
-        function addItem(type) {
-            if (type === 'skills') {
-                skills.push({ name: 'Nová dovednost', level: 70 });
-            } else if (type === 'languages') {
-                languages.push({ name: 'Nový jazyk', level: 'B1' });
-            } else if (type === 'experience') {
-                experience.push({ date: '', role: '', company: '', desc: '' });
-            } else if (type === 'education') {
-                education.push({ date: '', degree: '', school: '', desc: '' });
-            }
-            renderEditors();
-            updateCV();
-        }
-
-        function removeItem(type, index) {
-            if (type === 'skills') skills.splice(index, 1);
-            else if (type === 'languages') languages.splice(index, 1);
-            else if (type === 'experience') experience.splice(index, 1);
-            else if (type === 'education') education.splice(index, 1);
-            renderEditors();
-            updateCV();
-        }
-
-        function renderEditors() {
-            // Skills
-            const skillsList = document.getElementById('editor-skills');
-            skillsList.innerHTML = skills.map((s, i) => `
-                <div class="flex items-center gap-3">
-                    <input type="text" value="${escapeHtml(s.name)}" oninput="skills[${i}].name=this.value; updateCV()" class="input-field !py-2 !px-3 !text-sm flex-1">
-                    <input type="range" min="0" max="100" value="${s.level}" oninput="skills[${i}].level=parseInt(this.value); updateCV()" class="w-24 accent-orange-500">
-                    <span class="text-xs text-slate-400 w-10 text-right">${s.level}%</span>
-                    <button onclick="removeItem('skills', ${i})" class="text-slate-500 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
-                </div>
-            `).join('');
-
-            // Languages
-            const langList = document.getElementById('editor-languages');
-            langList.innerHTML = languages.map((l, i) => `
-                <div class="flex items-center gap-3">
-                    <input type="text" value="${escapeHtml(l.name)}" oninput="languages[${i}].name=this.value; updateCV()" class="input-field !py-2 !px-3 !text-sm flex-1" placeholder="Jazyk">
-                    <input type="text" value="${escapeHtml(l.level)}" oninput="languages[${i}].level=this.value; updateCV()" class="input-field !py-2 !px-3 !text-sm w-32" placeholder="B2, rodilý...">
-                    <button onclick="removeItem('languages', ${i})" class="text-slate-500 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
-                </div>
-            `).join('');
-
-            // Experience
-            const expList = document.getElementById('editor-experience');
-            expList.innerHTML = experience.map((e, i) => `
-                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 relative">
-                    <button onclick="removeItem('experience', ${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash"></i></button>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                            <label class="input-label">Období</label>
-                            <input type="text" value="${escapeHtml(e.date)}" oninput="experience[${i}].date=this.value; updateCV()" class="input-field" placeholder="2020 — Dnes">
-                        </div>
-                        <div>
-                            <label class="input-label">Role / Pozice</label>
-                            <input type="text" value="${escapeHtml(e.role)}" oninput="experience[${i}].role=this.value; updateCV()" class="input-field font-semibold">
-                        </div>
-                        <div>
-                            <label class="input-label">Firma</label>
-                            <input type="text" value="${escapeHtml(e.company)}" oninput="experience[${i}].company=this.value; updateCV()" class="input-field">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="input-label">Popis práce (Markdown)</label>
-                        <textarea oninput="experience[${i}].desc=this.value; updateCV()" class="md-textarea" placeholder="* Odpovědnost 1&#10;* Odpovědnost 2">${escapeHtml(e.desc)}</textarea>
-                    </div>
-                </div>
-            `).join('');
-
-            // Education
-            const edList = document.getElementById('editor-education');
-            edList.innerHTML = education.map((e, i) => `
-                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 relative">
-                    <button onclick="removeItem('education', ${i})" class="absolute top-3 right-3 text-slate-500 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash"></i></button>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="input-label">Období</label>
-                            <input type="text" value="${escapeHtml(e.date)}" oninput="education[${i}].date=this.value; updateCV()" class="input-field">
-                        </div>
-                        <div>
-                            <label class="input-label">Titul / Obor</label>
-                            <input type="text" value="${escapeHtml(e.degree)}" oninput="education[${i}].degree=this.value; updateCV()" class="input-field font-semibold">
-                        </div>
-                        <div>
-                            <label class="input-label">Škola</label>
-                            <input type="text" value="${escapeHtml(e.school)}" oninput="education[${i}].school=this.value; updateCV()" class="input-field">
-                        </div>
-                        <div>
-                            <label class="input-label">Popis</label>
-                            <input type="text" value="${escapeHtml(e.desc || '')}" oninput="education[${i}].desc=this.value; updateCV()" class="input-field" placeholder="obor, zaměření...">
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function formatUrl(url) {
-            if (!url) return "#";
-            if (url.startsWith('http')) return url;
-            return `https://${url}`;
-        }
-
-        function getLinkIcon(platform) {
-            const p = platform.toLowerCase();
-            if (p.includes('linkedin')) return '🔗';
-            if (p.includes('github')) return '💻';
-            if (p.includes('twitter') || p.includes('x')) return '🐦';
-            if (p.includes('facebook') || p.includes('fb')) return '📘';
-            if (p.includes('instagram') || p.includes('ig')) return '📷';
-            if (p.includes('youtube')) return '▶️';
-            if (p.includes('portfolio') || p.includes('web')) return '🌐';
-            if (p.includes('behance')) return '🎨';
-            if (p.includes('dribbble')) return '🏀';
-            if (p.includes('telegram')) return '✈️';
-            return '🔗';
-        }
-
-        function updateCV() {
-            const titlePrefix = document.getElementById('data-title-prefix').value;
-            const name = document.getElementById('data-name').value;
-            const displayName = titlePrefix ? `${titlePrefix} ${name}` : name;
-            
-            const data = {
-                name: displayName,
-                title: document.getElementById('data-title').value,
-                bio: parseMarkdown(document.getElementById('data-bio').value),
-                phone: document.getElementById('data-phone').value,
-                email: document.getElementById('data-email').value,
-                address: document.getElementById('data-address').value,
-                birthDate: document.getElementById('data-birthdate').value,
-                interests: document.getElementById('data-interests').value,
-                primary: document.getElementById('cfg-primary').value,
-                accent: document.getElementById('cfg-accent').value,
-                sidebarW: document.getElementById('cfg-sidebar-w').value,
-                fontSize: document.getElementById('cfg-font-s').value,
-                nameFontSize: document.getElementById('cfg-name-font').value,
-                titleFontSize: document.getElementById('cfg-title-font').value,
-                expFontSize: document.getElementById('cfg-exp-font').value
-            };
-
-            const photoHtml = profilePhoto 
-                ? `<div style="width:140px; height:140px; border-radius:50%; border:5px solid ${data.accent}; overflow:hidden; margin:0 auto 30px; box-shadow:0 15px 30px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%; height:100%; object-fit:cover;"></div>`
-                : `<div style="width:140px; height:140px; background:rgba(255,255,255,0.05); border-radius:50%; margin:0 auto 30px; border:3px dashed rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:50px; color:${data.accent}">👤</div>`;
-
-            const contactHtml = `
-                <div style="font-size:11px; margin-bottom:30px; line-height:2;">
-                    ${data.phone ? `<div><a href="tel:${data.phone}" style="color:white; text-decoration:none;">📞 ${data.phone}</a></div>` : ''}
-                    ${data.email ? `<div><a href="mailto:${data.email}" style="color:white; text-decoration:none;">📧 ${data.email}</a></div>` : ''}
-                    ${data.address ? `<div style="color:rgba(255,255,255,0.8);">📍 ${data.address}</div>` : ''}
-                    ${data.birthDate ? `<div style="color:rgba(255,255,255,0.8);">🎂 ${data.birthDate}</div>` : ''}
-                </div>
-            `;
-
-            const linksHtml = links.map(link => {
-                const icon = getLinkIcon(link.platform);
-                return `<div style="margin-bottom:6px;">
-                    <a href="${formatUrl(link.url)}" target="_blank" style="color:white; text-decoration:none; font-size:10px; display:flex; align-items:center; gap:6px;">
-                        <span style="font-size:12px;">${icon}</span>
-                        <span style="opacity:0.9;">${link.platform}</span>
-                    </a>
-                </div>`;
-            }).join('');
-
-            const skillsHtml = skills.map(s => `
-                <div style="margin-bottom: 10px;">
-                    <div style="display:flex; justify-content:space-between; font-size:9px; font-weight:700; margin-bottom:2px; text-transform:uppercase;">
-                        <span>${s.name}</span><span>${s.level}%</span>
-                    </div>
-                    <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
-                        <div style="height:100%; background:${data.accent}; width:${s.level}%;"></div>
-                    </div>
-                </div>
-            `).join('');
-
-            const languagesHtml = languages.map(l => `
-                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px;">
-                    <span>${l.name}</span>
-                    <span style="color:${data.accent}; font-weight:700;">${l.level}</span>
-                </div>
-            `).join('');
-
-            const experienceHtml = experience.map(e => `
-                <div style="margin-bottom:12px; border-left:2px solid #f1f5f9; padding-left:18px; position:relative;">
-                    <div style="position:absolute; left:-5px; top:4px; width:8px; height:8px; border-radius:50%; background:${data.accent}; box-shadow:0 0 0 3px white;"></div>
-                    <div style="font-size:9px; font-weight:800; color:${data.accent}; text-transform:uppercase; letter-spacing:1px; margin-bottom:1px;">${e.date}</div>
-                    <div style="font-size:14px; font-weight:800; color:${data.primary}; margin-bottom:0; line-height:1.3;">${e.role}</div>
-                    <div style="font-size:11px; font-weight:600; color:#64748b; margin-bottom:4px; font-style:italic;">${e.company}</div>
-                    <div class="cv-markdown" style="font-size:${data.expFontSize || 11}px; color:#475569; line-height:1.4;">${parseMarkdown(e.desc)}</div>
-                </div>
-            `).join('');
-
-            const educationHtml = education.map(e => `
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:10px; font-weight:700; color:#94a3b8; margin-bottom:2px;">${e.date}</div>
-                    <div style="font-size:14px; font-weight:700; color:${data.primary};">${e.degree}</div>
-                    <div style="font-size:12px; color:#64748b;">${e.school}</div>
-                    ${e.desc ? `<div style="font-size:11px; color:#94a3b8; margin-top:2px;">${e.desc}</div>` : ''}
-                </div>
-            `).join('');
-
-            // Funkce pro renderování sekcí v SIDEBAR stylu
-            function renderSidebarSection(sectionId) {
-                const headerStyle = `font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:${data.accent}; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px; margin-bottom:15px;`;
-                
-                switch(sectionId) {
-                    case 'contact':
-                        return `<h3 style="${headerStyle}">Kontakt</h3>${contactHtml}`;
-                    case 'links':
-                        return links.length > 0 && links.some(l => l.url) ? `<h3 style="${headerStyle}">Odkazy</h3><div style="margin-bottom:30px;">${linksHtml}</div>` : '';
-                    case 'skills':
-                        return skills.length > 0 ? `<h3 style="${headerStyle}">Dovednosti</h3>${skillsHtml}` : '';
-                    case 'languages':
-                        return languages.length > 0 ? `<h3 style="${headerStyle} margin-top:25px;">Jazyky</h3>${languagesHtml}` : '';
-                    case 'interests':
-                        return data.interests ? `<h3 style="${headerStyle} margin-top:25px;">Zájmy</h3><div style="font-size:11px; color:rgba(255,255,255,0.8); line-height:1.6;">${data.interests}</div>` : '';
-                    case 'profile':
-                        return data.bio ? `<h3 style="${headerStyle} margin-top:25px;">Profil</h3><div style="font-size:11px; color:rgba(255,255,255,0.8); line-height:1.6;">${data.bio}</div>` : '';
-                    case 'experience':
-                        const expSidebar = experience.map(e => `
-                            <div style="margin-bottom:12px;">
-                                <div style="font-size:9px; font-weight:800; color:${data.accent};">${e.date}</div>
-                                <div style="font-size:11px; font-weight:700; color:white;">${e.role}</div>
-                                <div style="font-size:10px; color:rgba(255,255,255,0.7); font-style:italic;">${e.company}</div>
-                            </div>
-                        `).join('');
-                        return experience.length > 0 ? `<h3 style="${headerStyle} margin-top:25px;">Zkušenosti</h3>${expSidebar}` : '';
-                    case 'education':
-                        const eduSidebar = education.map(e => `
-                            <div style="margin-bottom:10px;">
-                                <div style="font-size:9px; font-weight:700; color:rgba(255,255,255,0.6);">${e.date}</div>
-                                <div style="font-size:11px; font-weight:700; color:white;">${e.degree}</div>
-                                <div style="font-size:10px; color:rgba(255,255,255,0.7);">${e.school}</div>
-                            </div>
-                        `).join('');
-                        return education.length > 0 ? `<h3 style="${headerStyle} margin-top:25px;">Vzdělání</h3>${eduSidebar}` : '';
-                    default:
-                        return '';
-                }
-            }
-
-            // Funkce pro renderování sekcí v MAIN stylu
-            function renderMainSection(sectionId) {
-                const headerStyle = `font-size:14px; font-weight:800; text-transform:uppercase; margin-bottom:12px; color:${data.primary}; border-bottom:2px solid #f1f5f9; display:inline-block; padding-bottom:4px;`;
-                
-                switch(sectionId) {
-                    case 'contact':
-                        const contactMain = `
-                            <div style="display:flex; flex-wrap:wrap; gap:15px; font-size:12px; color:#475569;">
-                                ${data.phone ? `<span>📞 ${data.phone}</span>` : ''}
-                                ${data.email ? `<span>📧 ${data.email}</span>` : ''}
-                                ${data.address ? `<span>📍 ${data.address}</span>` : ''}
-                                ${data.birthDate ? `<span>🎂 ${data.birthDate}</span>` : ''}
-                            </div>
-                        `;
-                        return `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Kontakt</h2>${contactMain}</div>`;
-                    case 'links':
-                        if (!links.length || !links.some(l => l.url)) return '';
-                        const linksMain = `<div style="display:flex; flex-wrap:wrap; gap:12px; font-size:12px;">${links.filter(l => l.url).map(l => `<a href="${formatUrl(l.url)}" style="color:${data.accent}; text-decoration:none;">${getLinkIcon(l.platform)} ${l.platform}</a>`).join('')}</div>`;
-                        return `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Odkazy</h2>${linksMain}</div>`;
-                    case 'skills':
-                        if (!skills.length) return '';
-                        const skillsMain = skills.map(s => `
-                            <div style="margin-bottom:8px;">
-                                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:600; margin-bottom:2px;">
-                                    <span>${s.name}</span><span style="color:${data.accent};">${s.level}%</span>
-                                </div>
-                                <div style="height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden;">
-                                    <div style="height:100%; background:${data.accent}; width:${s.level}%;"></div>
-                                </div>
-                            </div>
-                        `).join('');
-                        return `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Dovednosti</h2>${skillsMain}</div>`;
-                    case 'languages':
-                        if (!languages.length) return '';
-                        const langMain = `<div style="display:flex; flex-wrap:wrap; gap:15px; font-size:12px;">${languages.map(l => `<span><strong>${l.name}:</strong> ${l.level}</span>`).join('')}</div>`;
-                        return `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Jazyky</h2>${langMain}</div>`;
-                    case 'interests':
-                        return data.interests ? `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Zájmy</h2><div style="color:#475569; font-size:12px;">${data.interests}</div></div>` : '';
-                    case 'profile':
-                        return data.bio ? `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Profil</h2><div class="cv-markdown" style="color:#475569; text-align:justify; line-height:1.7;">${data.bio}</div></div>` : '';
-                    case 'experience':
-                        return experience.length > 0 ? `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Zkušenosti</h2>${experienceHtml}</div>` : '';
-                    case 'education':
-                        return education.length > 0 ? `<div style="margin-bottom:25px;"><h2 style="${headerStyle}">Vzdělání</h2>${educationHtml}</div>` : '';
-                    default:
-                        return '';
-                }
-            }
-
-            // Dynamické sestavení sekcí
-            const sidebarSectionsHtml = sectionLayout.sidebar.map(id => renderSidebarSection(id)).join('');
-            const mainSectionsHtml = sectionLayout.main.map(id => renderMainSection(id)).join('');
-
-            const cvHtml = `
-                <div id="cv-root" style="width:210mm; min-height:297mm; display:flex; font-size:${data.fontSize}px; background:white; color:#334155; line-height:1.5;">
-                    <!-- LEVÝ PANEL -->
-                    <div style="width:${data.sidebarW}mm; background:${data.primary}; color:white; padding:45px 25px; flex-shrink:0;">
-                        ${photoHtml}
-                        <div style="margin-top:35px;">
-                            ${sidebarSectionsHtml}
-                        </div>
-                    </div>
-
-                    <!-- HLAVNÍ OBSAH -->
-                    <div style="flex-grow:1; padding:50px 45px;">
-                        <h1 style="font-size:${data.nameFontSize}px; font-weight:900; color:${data.primary}; line-height:1; margin:0; letter-spacing:-1px;">${data.name}</h1>
-                        <div style="height:4px; width:50px; background:${data.accent}; margin:15px 0;"></div>
-                        <p style="font-size:${data.titleFontSize}px; color:${data.accent}; font-weight:300; letter-spacing:4px; margin-bottom:30px;">${data.title}</p>
-                        
-                        ${mainSectionsHtml}
-                    </div>
-                </div>
-            `;
-            document.getElementById('cv-rendered-content').innerHTML = cvHtml;
-            
-            // Auto-save do localStorage
-            saveToLocalStorage();
-        }
-
-        function exportToHTML() {
-            updateCV();
-            const cvContent = document.getElementById('cv-rendered-content').innerHTML;
-            const fullHtml = `<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CV - ${document.getElementById('data-name').value}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .cv-markdown ul { list-style-type: disc; margin-left: 1.25rem; margin-top: 0.5rem; }
-        .cv-markdown li { margin-bottom: 1px; }
-        .cv-markdown li.indent-item { margin-left: 1rem; }
-        .cv-markdown strong { font-weight: 700; }
-        .cv-markdown p { margin-bottom: 0.5rem; }
-        @media print {
-            @page { margin: 0; size: A4; }
-            body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-    </style>
+<script src="lib/qrcode/qrcode.js" defer></script>
+<script src="cvGen/jadro.js" defer></script>
+<script src="cvGen/stranka.js" defer></script>
+<style id="cv-css"></style>
+<style id="tiskPozadi"></style>
+<style>
+html,body{height:100%}
+body{display:flex;flex-direction:column;overflow:hidden}
+
+/* horní lišta – stejný vzor jako Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.4;cursor:default}
+.tl.mini{padding:2px 7px;font-size:.8rem}
+@media (max-width:700px){.lista .txt{display:none}.lista{gap:4px;padding:4px 6px}.lista .jen-uzke{order:-1}.lista .skup-projekt{order:-2;margin-right:0}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka[hidden]{display:none}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.verze-r{display:flex;align-items:center;gap:2px}
+.verze-r .tl:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.verze-r small{margin-left:auto;padding-left:10px;color:var(--text-faint);font-size:.72rem}
+.verze-r .tl.mini{background:none;border-color:transparent;padding:4px 6px}
+
+/* plocha: editor vlevo, náhled vpravo; na úzkém displeji přepínání */
+.plocha{flex:1;min-height:0;display:grid;grid-template-columns:minmax(380px,46%) 1fr}
+.editor{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border)}
+.zalozky{display:flex;gap:2px;padding:4px 10px 0;border-bottom:1px solid var(--border);background:var(--bg-panel);flex-shrink:0;overflow-x:auto}
+.zalozky button{background:none;border:0;border-bottom:3px solid transparent;color:var(--text-muted);padding:8px 12px;cursor:pointer;font:inherit;font-size:.88rem;font-weight:600;white-space:nowrap}
+.zalozky button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{flex:1;overflow-y:auto;padding:12px 12px 70px}
+.panel[hidden]{display:none}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px}
+.karta-nadpis{padding:10px 14px 8px;font-size:.95rem;font-weight:700}
+.karta[hidden]{display:none}
+.pz-vyber{display:flex;gap:6px;position:sticky;top:-12px;z-index:5;margin:-12px -12px 12px;padding:12px 12px 10px;background:var(--bg);border-bottom:1px solid var(--border)}
+.pz-tl{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:.95rem;font-weight:600;text-align:left}
+.pz-tl .pz-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.pz-tl::after{content:'▾';color:var(--text-faint)}
+.pz-krok{padding:6px 12px;font-size:1.1rem;font-weight:700}
+.pz-ik{width:1.4em;flex-shrink:0;text-align:center}
+#nabSekce .tl{gap:8px}
+.kontrola{max-width:min(420px,calc(100vw - 12px))}
+.kontrola .tl{white-space:normal;align-items:flex-start;line-height:1.4}
+.kontrola .ok{padding:8px 10px;color:var(--ok);font-size:.88rem}
+#kontrolaTl .pocet.je-chyba{background:var(--danger);color:var(--bg)}
+#kontrolaTl .pocet.je-tip{background:var(--warn);color:var(--bg)}
+#nabSekce .tl[aria-selected="true"]{background:var(--accent-soft);font-weight:600}
+.pocet{flex-shrink:0;min-width:1.5em;margin-left:auto;padding:0 6px;border-radius:9px;font-size:.72rem;text-align:center;background:var(--bg-control);color:var(--text-muted);font-weight:600}
+#cv .cv-sekce,#cv .cv-hlava,#cv .cv-jmeno,#cv .cv-gdpr{cursor:pointer}
+#cv .cv-sekce:hover,#cv .cv-gdpr:hover{outline:2px dashed color-mix(in srgb,var(--accent) 70%,transparent);outline-offset:3px}
+.karta-telo{padding:0 14px 14px}
+.mriz{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mriz .cela{grid-column:1/-1}
+.pole{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--text-muted);font-weight:600;min-width:0}
+.pole > span{display:flex;justify-content:space-between;gap:6px}
+.pole output{color:var(--text-faint);font-weight:400}
+.pole.zaskrt{flex-direction:row;align-items:center;gap:8px;font-size:.86rem;color:var(--text);font-weight:400;cursor:pointer}
+.vstup{width:100%;padding:7px 10px;background:var(--bg-input);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;font:inherit;font-size:.9rem;font-weight:400}
+.vstup:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.vstup::placeholder{color:var(--text-faint);opacity:.8}
+textarea.vstup{min-height:96px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:.84rem;line-height:1.55}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=color]{width:100%;height:34px;border:1px solid var(--border-strong);border-radius:6px;background:var(--bg-input);padding:2px;cursor:pointer}
+.napoveda{font-size:.76rem;color:var(--text-faint);margin-top:6px;line-height:1.45;font-weight:400}
+.pridat{margin-top:4px}
+.pol{border:1px solid var(--border);border-radius:6px;padding:8px 10px 10px;margin-bottom:8px;background:var(--bg-elevated)}
+.pol-hl{display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:.78rem;color:var(--text-faint)}
+.pol-hl > span:first-child{margin-right:auto}
+.pol-tl{display:flex;gap:2px;flex-shrink:0}
+.pol.radek{display:flex;align-items:flex-end;gap:8px;padding:8px}
+.pol.radek .pole{flex:1}
+.pol.radek .pole.uzke{flex:0 0 32%}
+.foto-blok{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.foto-nahled{width:92px;height:92px;border-radius:50%;border:2px dashed var(--border-strong);display:grid;place-items:center;overflow:hidden;font-size:2rem;background:var(--bg-input);flex-shrink:0}
+.foto-nahled img{width:100%;height:100%;object-fit:cover}
+.foto-tl{display:flex;flex-wrap:wrap;gap:6px}
+.foto-tl [hidden]{display:none}
+.sablony{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.sablony label{position:relative;border:1px solid var(--border-strong);border-radius:8px;padding:8px;cursor:pointer;font-size:.8rem;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.sablony label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.sablony input{position:absolute;opacity:0;pointer-events:none}
+.sablony label:has(input:focus-visible){outline:2px solid var(--accent)}
+.mini-list{width:42px;height:56px;border:1px solid var(--border-strong);border-radius:3px;background:#fff;display:flex;overflow:hidden}
+.mini-list.m-panel::before,.mini-list.m-vpravo::after{content:'';width:38%;background:#1e293b}
+.mini-list.m-vpravo{justify-content:flex-end}
+.mini-list.m-klasik{border-top:8px solid #fff;box-shadow:inset 0 3px 0 #f97316}
+.mini-list.m-minimal{background:linear-gradient(#fff 9px,#cbd5e1 9px 10px,#fff 10px) ,repeating-linear-gradient(90deg,#fff 0 4px,#f97316 4px 13px,#fff 13px 42px) 0 16px/100% 2px no-repeat,#fff}
+.mini-list.m-kompakt{border-top:14px solid #1e293b;background:linear-gradient(90deg,#eef2f7 38%,#cbd5e1 38% 40%,#fff 40%)}
+.mini-list.m-osa{background:linear-gradient(90deg,#fff 30%,#cbd5e1 30% 34%,#fff 34%) 0 10px/100% 100% no-repeat,#fff;border-top:3px solid #fff}
+.mini-list.m-pruh{border-left:7px solid #1e293b;box-shadow:inset 2px 0 0 #f97316}
+.mini-list.m-elegant{background:linear-gradient(#fff 3px,#1e293b 3px 4px,#fff 4px 12px,#1e293b 12px 13px,#fff 13px)}
+.mini-list.m-karty{padding:3px;gap:3px;background:#fff;flex-wrap:wrap;align-content:flex-start}
+.mini-list.m-karty::before,.mini-list.m-karty::after{content:'';border-radius:3px;background:#e2e8f0}
+.mini-list.m-karty::before{width:100%;height:12px}
+.mini-list.m-karty::after{width:100%;height:30px;background:linear-gradient(90deg,#e2e8f0 35%,#fff 35% 42%,#e2e8f0 42%)}
+.mini-list.m-zahlavi{border-top:12px solid #1e293b;background:linear-gradient(90deg,#334155 36%,#fff 36%)}
+.mini-list.m-moderni{border-top:14px solid #1e293b;box-shadow:inset 0 2px 0 #f97316;background:linear-gradient(90deg,#fff 58%,#e2e8f0 58% 92%,#fff 92%) 0 4px/100% 70% no-repeat,#fff}
+.temata{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
+.temata button,.papiry button{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-strong);border-radius:8px;padding:6px 8px;cursor:pointer;font:inherit;font-size:.78rem;text-align:left}
+.temata button:hover,.papiry button:hover{border-color:var(--accent)}
+.temata button[aria-pressed="true"],.papiry button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
+.qr-karta{display:grid;grid-template-columns:1fr 128px;gap:12px;align-items:start}
+.qr-nahled{display:flex;flex-direction:column;gap:6px;align-items:center}
+.qr-obr{width:128px;height:128px;background:#fff;border-radius:8px;border:1px solid var(--border-strong);display:grid;place-items:center;color:#94a3b8;font-size:.75rem;text-align:center;padding:4px}
+.qr-obr svg{width:100%;height:100%;display:block}
+.qr-tl{display:flex;gap:4px}
+[data-qr-jen][hidden],[data-vzqr-jen][hidden]{display:none}
+.vz-volby{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 12px}
+.mini-vz{width:60px;height:38px;border:1px solid var(--border-strong);border-radius:3px;background:#fff;position:relative;overflow:hidden}
+.mini-vz::before,.mini-vz::after{content:'';position:absolute}
+.mini-vz.m-qr{border-left:5px solid #1e293b}
+.mini-vz.m-qr::after{right:5px;top:9px;width:18px;height:18px;background:repeating-conic-gradient(#1e293b 0 25%,#fff 0 50%) 0 0/6px 6px}
+.mini-vz.m-pas::before{left:0;right:0;top:0;height:11px;background:#1e293b}
+.mini-vz.m-pas::after{right:5px;top:16px;width:16px;height:16px;background:repeating-conic-gradient(#1e293b 0 25%,#fff 0 50%) 0 0/6px 6px}
+.mini-vz.m-tmava{background:#1e293b}
+.mini-vz.m-tmava::after{right:5px;top:9px;width:18px;height:18px;background:repeating-conic-gradient(#1e293b 0 25%,#fff 0 50%) 0 0/6px 6px;outline:2px solid #fff}
+.mini-vz.m-stred::before{left:50%;top:0;width:20px;margin-left:-10px;height:3px;background:#f97316}
+.mini-vz.m-stred::after{left:14px;right:14px;top:12px;height:12px;background:linear-gradient(#1e293b 0 4px,#fff 4px 7px,#94a3b8 7px 9px,#fff 9px)}
+@media (max-width:520px){.qr-karta{grid-template-columns:1fr}}
+.kostka-radek{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.kostka-radek .tl{padding:7px 12px;font-size:.88rem}
+.kostka-radek .napoveda{margin:0}
+.kostka{display:inline-block;font-size:1.15rem}
+.kostka.toc{animation:kostka-toc .45s ease-out}
+@keyframes kostka-toc{0%{transform:rotate(0) scale(1)}50%{transform:rotate(200deg) scale(1.3)}100%{transform:rotate(360deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.kostka.toc{animation:none}}
+.vzorek{display:flex;flex-shrink:0;width:34px;height:22px;border-radius:4px;overflow:hidden;border:1px solid rgba(0,0,0,.15)}
+.vzorek i{flex:1}
+.papiry{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.papiry button{flex-direction:column;gap:4px;padding:6px}
+.papir-vz{width:100%;height:34px;border-radius:4px;border:1px solid rgba(0,0,0,.15)}
+.rozl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rozl-sl h3{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px}
+.rozl-sl.skryte{grid-column:1/-1}
+.rozl-pol{display:flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:4px 4px 4px 8px;margin-bottom:4px;font-size:.84rem}
+.rozl-pol > span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rozl-pol .tl.mini{background:none;border-color:transparent;padding:2px 5px}
+
+.nahled{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--bg-deep)}
+.nahled-lista{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--bg-panel);font-size:.84rem;flex-shrink:0}
+.nahled-lista select{width:auto}
+#strany{margin-left:auto;color:var(--text-muted)}
+#strany.upoz{color:var(--warn);font-weight:600}
+.papir{flex:1;overflow:auto;padding:16px}
+#zoom{width:max-content;margin:0 auto}
+#cv{position:relative;box-shadow:0 6px 30px rgba(0,0,0,.35)}
+.zlom{position:absolute;left:0;right:0;border-top:2px dashed #dc2626;pointer-events:none}
+.zlom span{position:absolute;right:6px;top:-20px;font:600 11px/1 sans-serif;color:#fff;background:#dc2626;padding:3px 6px;border-radius:3px}
+.jen-uzke{display:none !important}
+@media (max-width:1100px){
+  .plocha{grid-template-columns:minmax(0,1fr)}
+  .editor{border-right:0}
+  .plocha[data-pohled="editor"] .nahled,.plocha[data-pohled="nahled"] .editor{display:none}
+  .jen-uzke{display:flex !important}
+}
+@media (max-width:520px){
+  .mriz,.rozl{grid-template-columns:1fr}
+  .zalozky{padding:4px 4px 0}
+  .zalozky button{padding:8px 7px;font-size:.84rem}
+  .pol.radek{flex-wrap:wrap}
+  .pol.radek .pole,.pol.radek .pole.uzke{flex:1 1 100%}
+  .pol.radek .pol-tl{margin-left:auto}
+}
+
+/* ořez fotky */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100;padding:12px}
+.modal.zobraz{display:flex}
+.modal-okno{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:16px;width:min(100%,370px);box-shadow:var(--shadow)}
+.modal-okno h2{font-size:1.05rem;margin-bottom:4px}
+.orez{position:relative;width:min(300px,100%);aspect-ratio:1;margin:12px auto;border-radius:50%;overflow:hidden;cursor:grab;touch-action:none;background:#000;box-shadow:0 0 0 3px var(--accent)}
+.orez:active{cursor:grabbing}
+.orez:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+.orez canvas{width:100%;height:100%;display:block}
+.modal-tl{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.modal-tl .tl{padding:7px 14px}
+
+/* tisk: jen list životopisu */
+#tisk{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{height:auto;overflow:visible}
+  body{background:none;padding:0 !important}   /* podpis.js přidává odsazení kvůli pruhu – v tisku by dalo prázdnou stranu */
+  body > *:not(#tisk){display:none !important}
+  #tisk .cv{box-shadow:none}
+  #tisk{display:block}
+}
+</style>
 </head>
 <body>
-${cvContent}
-</body>
-</html>`;
-            
-            const blob = new Blob([fullHtml], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `CV_${document.getElementById('data-name').value.replace(/\s+/g, '_')}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+<header class="lista" id="lista">
+  <div class="skup skup-projekt"><h1>📄<span class="txt"> Životopis</span></h1></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Nový, import, export">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="tisk" title="Vytisknout nebo uložit jako PDF (Ctrl+P)">🖨<span class="txt"> PDF</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Verze"><span class="skup-nazev" aria-hidden="true">Verze</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabVerze" aria-expanded="false" title="Uložené verze životopisu (pro různé pozice)">📚<span class="txt"> Verze</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
+    <button class="tl" data-prikaz="zpet" id="tlZpet" title="Zpět (Ctrl+Z mimo textové pole)" aria-label="Zpět" disabled>↶</button>
+    <button class="tl" data-prikaz="znovu" id="tlZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+  </div></div>
+  <div class="skup jen-uzke" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="pohled-editor" aria-pressed="true">✏️<span class="txt"> Úpravy</span></button>
+    <button class="tl" data-prikaz="pohled-nahled" aria-pressed="false">👁<span class="txt"> Náhled</span></button>
+  </div></div>
+</header>
 
-        // Print logic
-        window.onbeforeprint = function() {
-            const content = document.getElementById('cv-rendered-content').innerHTML;
-            const printArea = document.createElement('div');
-            printArea.id = 'print-area';
-            printArea.innerHTML = content;
-            document.body.appendChild(printArea);
-            const style = document.createElement('style');
-            style.innerHTML = `@media print { body > *:not(#print-area) { display: none !important; } #print-area { display: block !important; } #print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .cv-markdown ul { list-style-type: disc !important; margin-left: 1.5rem !important; } @page { margin: 0; size: A4; } }`;
-            document.head.appendChild(style);
-        };
-        window.onafterprint = function() { document.getElementById('print-area')?.remove(); };
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">🧹 Nový prázdný životopis…</button>
+  <button class="tl" data-prikaz="ukazka">✨ Načíst ukázku…</button>
+  <hr>
+  <button class="tl" data-prikaz="import">📂 Import JSON…</button>
+  <button class="tl" data-prikaz="expJson">🗂 Export JSON (záloha, lze načíst zpět)</button>
+  <button class="tl" data-prikaz="expHtml">🌐 Export HTML (samostatná stránka)</button>
+  <button class="tl" data-prikaz="kopieText">📋 Kopírovat jako prostý text (pro portály)</button>
+  <hr>
+  <button class="tl" data-prikaz="tisk">🖨 Tisk / uložit jako PDF <kbd>Ctrl+P</kbd></button>
+</div>
+<div id="nabVerze" class="nabidka" hidden>
+  <button class="tl" data-prikaz="ulozVerzi">💾 Uložit jako novou verzi…</button>
+  <hr>
+  <div class="titulek">Uložené verze (fotka je společná)</div>
+  <div id="verzeSeznam"></div>
+</div>
+<div id="nabKontrola" class="nabidka kontrola" hidden></div>
+<input type="file" id="importSoubor" accept=".json,application/json" hidden>
 
-        renderLinkEditor();
-        renderEditors();
-        loadFromLocalStorage();
-        renderSectionLayout();
-        updateCV();
-        
-        // ============ ROZLOŽENÍ SEKCÍ ============
-        function renderSectionLayout() {
-            const sidebarContainer = document.getElementById('sections-sidebar');
-            const mainContainer = document.getElementById('sections-main');
-            
-            sidebarContainer.innerHTML = sectionLayout.sidebar.map((id, idx) => {
-                const def = sectionDefs[id];
-                const isFirst = idx === 0;
-                const isLast = idx === sectionLayout.sidebar.length - 1;
-                return `<div class="flex items-center justify-between bg-slate-700 rounded px-2 py-1.5 text-xs">
-                    <div class="flex items-center gap-1">
-                        <div class="flex flex-col">
-                            <button onclick="moveSectionInPanel('sidebar', ${idx}, -1)" class="text-slate-500 hover:text-orange-400 transition-colors ${isFirst ? 'opacity-30 pointer-events-none' : ''}" title="Nahoru">
-                                <i class="fa-solid fa-caret-up text-[10px]"></i>
-                            </button>
-                            <button onclick="moveSectionInPanel('sidebar', ${idx}, 1)" class="text-slate-500 hover:text-orange-400 transition-colors ${isLast ? 'opacity-30 pointer-events-none' : ''}" title="Dolů">
-                                <i class="fa-solid fa-caret-down text-[10px]"></i>
-                            </button>
-                        </div>
-                        <span class="flex items-center gap-2 text-slate-200">
-                            <i class="fa-solid ${def.icon} text-orange-400 w-4"></i>${def.name}
-                        </span>
-                    </div>
-                    <button onclick="moveSection('${id}', 'main')" class="text-slate-400 hover:text-orange-400 transition-colors" title="Přesunout doprava">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>`;
-            }).join('');
-            
-            mainContainer.innerHTML = sectionLayout.main.map((id, idx) => {
-                const def = sectionDefs[id];
-                const isFirst = idx === 0;
-                const isLast = idx === sectionLayout.main.length - 1;
-                return `<div class="flex items-center justify-between bg-slate-700 rounded px-2 py-1.5 text-xs">
-                    <button onclick="moveSection('${id}', 'sidebar')" class="text-slate-400 hover:text-orange-400 transition-colors" title="Přesunout doleva">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
-                    <span class="flex items-center gap-2 text-slate-200">
-                        <i class="fa-solid ${def.icon} text-orange-400 w-4"></i>${def.name}
-                    </span>
-                    <div class="flex items-center gap-1">
-                        <div class="flex flex-col">
-                            <button onclick="moveSectionInPanel('main', ${idx}, -1)" class="text-slate-500 hover:text-orange-400 transition-colors ${isFirst ? 'opacity-30 pointer-events-none' : ''}" title="Nahoru">
-                                <i class="fa-solid fa-caret-up text-[10px]"></i>
-                            </button>
-                            <button onclick="moveSectionInPanel('main', ${idx}, 1)" class="text-slate-500 hover:text-orange-400 transition-colors ${isLast ? 'opacity-30 pointer-events-none' : ''}" title="Dolů">
-                                <i class="fa-solid fa-caret-down text-[10px]"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-        
-        function moveSectionInPanel(panel, index, direction) {
-            const arr = sectionLayout[panel];
-            const newIndex = index + direction;
-            
-            if (newIndex < 0 || newIndex >= arr.length) return;
-            
-            // Prohodit prvky
-            [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
-            
-            renderSectionLayout();
-            updateCV();
-        }
-        
-        function moveSection(sectionId, target) {
-            // Odebrat ze stávající pozice
-            sectionLayout.sidebar = sectionLayout.sidebar.filter(id => id !== sectionId);
-            sectionLayout.main = sectionLayout.main.filter(id => id !== sectionId);
-            
-            // Přidat na novou pozici
-            if (target === 'sidebar') {
-                sectionLayout.sidebar.push(sectionId);
-            } else {
-                sectionLayout.main.push(sectionId);
-            }
-            
-            renderSectionLayout();
-            updateCV();
-        }
-        
-        // ============ LOCAL STORAGE ============
-        function saveToLocalStorage() {
-            const storageData = {
-                // Osobní údaje
-                name: document.getElementById('data-name').value,
-                titlePrefix: document.getElementById('data-title-prefix').value,
-                title: document.getElementById('data-title').value,
-                email: document.getElementById('data-email').value,
-                phone: document.getElementById('data-phone').value,
-                address: document.getElementById('data-address').value,
-                birthDate: document.getElementById('data-birthdate').value,
-                interests: document.getElementById('data-interests').value,
-                bio: document.getElementById('data-bio').value,
-                // Pole
-                links: links,
-                skills: skills,
-                languages: languages,
-                experience: experience,
-                education: education,
-                // Fotka
-                profilePhoto: profilePhoto,
-                originalPhoto: originalPhoto,
-                // Rozložení sekcí
-                sectionLayout: sectionLayout,
-                // Nastavení vzhledu
-                settings: {
-                    primary: document.getElementById('cfg-primary').value,
-                    accent: document.getElementById('cfg-accent').value,
-                    sidebarW: document.getElementById('cfg-sidebar-w').value,
-                    fontSize: document.getElementById('cfg-font-s').value,
-                    nameFontSize: document.getElementById('cfg-name-font').value,
-                    titleFontSize: document.getElementById('cfg-title-font').value,
-                    expFontSize: document.getElementById('cfg-exp-font').value
-                }
-            };
-            localStorage.setItem('cvBuilderData', JSON.stringify(storageData));
-        }
-        
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('cvBuilderData');
-            if (!saved) return;
-            
-            try {
-                const data = JSON.parse(saved);
-                
-                // Osobní údaje
-                if (data.name) document.getElementById('data-name').value = data.name;
-                if (data.titlePrefix) document.getElementById('data-title-prefix').value = data.titlePrefix;
-                if (data.title) document.getElementById('data-title').value = data.title;
-                if (data.email) document.getElementById('data-email').value = data.email;
-                if (data.phone) document.getElementById('data-phone').value = data.phone;
-                if (data.address) document.getElementById('data-address').value = data.address;
-                if (data.birthDate) document.getElementById('data-birthdate').value = data.birthDate;
-                if (data.interests) document.getElementById('data-interests').value = data.interests;
-                if (data.bio) document.getElementById('data-bio').value = data.bio;
-                
-                // Pole
-                if (data.links && data.links.length > 0) links = data.links;
-                if (data.skills && data.skills.length > 0) skills = data.skills;
-                if (data.languages && data.languages.length > 0) languages = data.languages;
-                if (data.experience && data.experience.length > 0) experience = data.experience;
-                if (data.education && data.education.length > 0) education = data.education;
-                
-                // Fotka
-                if (data.profilePhoto) {
-                    profilePhoto = data.profilePhoto;
-                    document.getElementById('photo-preview').innerHTML = `<img src="${profilePhoto}" class="w-full h-full object-cover">`;
-                }
-                if (data.originalPhoto) {
-                    originalPhoto = data.originalPhoto;
-                    document.getElementById('btn-edit-photo').classList.remove('hidden');
-                }
-                
-                // Nastavení vzhledu
-                if (data.settings) {
-                    if (data.settings.primary) document.getElementById('cfg-primary').value = data.settings.primary;
-                    if (data.settings.accent) document.getElementById('cfg-accent').value = data.settings.accent;
-                    if (data.settings.sidebarW) {
-                        document.getElementById('cfg-sidebar-w').value = data.settings.sidebarW;
-                        document.getElementById('val-sidebar-w').innerText = data.settings.sidebarW + ' mm';
-                    }
-                    if (data.settings.fontSize) {
-                        document.getElementById('cfg-font-s').value = data.settings.fontSize;
-                        document.getElementById('val-font-s').innerText = data.settings.fontSize + ' px';
-                    }
-                    if (data.settings.nameFontSize) {
-                        document.getElementById('cfg-name-font').value = data.settings.nameFontSize;
-                        document.getElementById('val-name-font').innerText = data.settings.nameFontSize + ' px';
-                    }
-                    if (data.settings.titleFontSize) {
-                        document.getElementById('cfg-title-font').value = data.settings.titleFontSize;
-                        document.getElementById('val-title-font').innerText = data.settings.titleFontSize + ' px';
-                    }
-                    if (data.settings.expFontSize) {
-                        document.getElementById('cfg-exp-font').value = data.settings.expFontSize;
-                        document.getElementById('val-exp-font').innerText = data.settings.expFontSize + ' px';
-                    }
-                }
-                
-                // Rozložení sekcí
-                if (data.sectionLayout) {
-                    sectionLayout = data.sectionLayout;
-                    renderSectionLayout();
-                }
-                
-                // Překreslit editory
-                renderLinkEditor();
-                renderEditors();
-                
-                console.log('💾 Data načtena z localStorage');
-            } catch (err) {
-                console.error('Chyba načítání z localStorage:', err);
-            }
-        }
-        
-        async function clearLocalStorage() {
-            if (await Dialog.potvrd('Opravdu chcete smazat všechna uložená data?')) {
-                localStorage.removeItem('cvBuilderData');
-                location.reload();
-            }
-        }
-    </script>
+<div class="plocha" id="plocha" data-pohled="editor">
+  <section class="editor" id="editor" aria-label="Úpravy">
+    <div class="zalozky" role="tablist">
+      <button role="tab" data-zalozka="obsah" aria-selected="true">📝 Obsah</button>
+      <button role="tab" data-zalozka="vzhled" aria-selected="false">🎨 Vzhled</button>
+      <button role="tab" data-zalozka="rozlozeni" aria-selected="false">🧩 Rozložení</button>
+      <button role="tab" data-zalozka="dopis" aria-selected="false">✉️ Dopis</button>
+      <button role="tab" data-zalozka="vizitky" aria-selected="false">🪪 Vizitky</button>
+    </div>
+
+    <div class="panel" id="panel-obsah" role="tabpanel">
+      <div class="pz-obsah">
+      <div class="karta" data-pz="osobni"><h2 class="karta-nadpis">👤 Osobní údaje</h2><div class="karta-telo">
+        <div class="foto-blok">
+          <div class="foto-nahled" id="fotoNahled">📷</div>
+          <div class="foto-tl">
+            <button type="button" class="tl" id="fotoNahrat">📷 Nahrát fotku</button>
+            <button type="button" class="tl" id="fotoOrez" hidden>✂️ Upravit ořez</button>
+            <button type="button" class="tl" id="fotoSmaz" hidden>🗑 Odebrat</button>
+            <input type="file" id="fotoSoubor" accept="image/*" hidden>
+          </div>
+        </div>
+        <div class="mriz">
+          <label class="pole"><span>Titul</span><input class="vstup" data-pole="titlePrefix" placeholder="Bc., Ing."></label>
+          <label class="pole"><span>Jméno a příjmení</span><input class="vstup" data-pole="name" autocomplete="name"></label>
+          <label class="pole cela"><span>Pozice / profese</span><input class="vstup" data-pole="title" placeholder="např. Účetní, Projektový manažer"></label>
+          <label class="pole"><span>Telefon</span><input class="vstup" type="tel" data-pole="phone" placeholder="+420 …" autocomplete="tel"></label>
+          <label class="pole"><span>E-mail</span><input class="vstup" type="email" data-pole="email" placeholder="jmeno@domena.cz" autocomplete="email"></label>
+          <label class="pole cela"><span>Adresa</span><input class="vstup" data-pole="address" placeholder="Ulice 123, 110 00 Praha (stačí i jen město)"></label>
+          <label class="pole"><span>Rok narození</span><input class="vstup" data-pole="birthDate" placeholder="1990"></label>
+          <label class="pole"><span>Řidičský průkaz</span><input class="vstup" data-pole="license" placeholder="sk. B"></label>
+          <label class="pole cela"><span>Zájmy</span><input class="vstup" data-pole="interests" placeholder="turistika, sport…"></label>
+        </div>
+        <p class="napoveda">Prázdná pole se v životopisu nezobrazí. Rok narození, adresu a fotku zákon nevyžaduje – uvádějte je, jen pokud chcete.</p>
+      </div></div>
+
+      <div class="karta" data-pz="osobni"><h2 class="karta-nadpis">🔗 Odkazy</h2><div class="karta-telo">
+        <div data-seznam="links"></div>
+        <button type="button" class="tl pridat" data-pridat="links">+ Přidat odkaz</button>
+      </div></div>
+
+      <div class="karta" data-pz="profil"><h2 class="karta-nadpis">🧑‍💼 Profil / o mně</h2><div class="karta-telo">
+        <label class="pole"><span>Krátké shrnutí</span><textarea class="vstup" data-pole="bio" placeholder="Kdo jste, co umíte a co hledáte – 2 až 4 věty."></textarea></label>
+        <p class="napoveda">Formátování: **tučně**, *kurzíva*, řádek začínající „* “ nebo „- “ je odrážka.</p>
+      </div></div>
+
+      <div class="karta" data-pz="zkusenosti"><h2 class="karta-nadpis">💼 Pracovní zkušenosti</h2><div class="karta-telo">
+        <div data-seznam="experience"></div>
+        <button type="button" class="tl pridat" data-pridat="experience">+ Přidat zkušenost</button>
+        <p class="napoveda">Nejnovější nahoru (šipkami ↑ ↓). U náplně práce pomáhají čísla: „zkrácení dodacích lhůt o 30 %“.</p>
+      </div></div>
+
+      <div class="karta" data-pz="vzdelani"><h2 class="karta-nadpis">🎓 Vzdělání</h2><div class="karta-telo">
+        <div data-seznam="education"></div>
+        <button type="button" class="tl pridat" data-pridat="education">+ Přidat vzdělání</button>
+      </div></div>
+
+      <div class="karta" data-pz="dovednosti"><h2 class="karta-nadpis">⚡ Dovednosti</h2><div class="karta-telo">
+        <div data-seznam="skills"></div>
+        <button type="button" class="tl pridat" data-pridat="skills">+ Přidat dovednost</button>
+        <p class="napoveda">Jak se úroveň zobrazí (tečky, pruh, procenta, jen výčet), nastavíte ve Vzhledu.</p>
+      </div></div>
+
+      <div class="karta" data-pz="dovednosti"><h2 class="karta-nadpis">🌍 Jazyky</h2><div class="karta-telo">
+        <div data-seznam="languages"></div>
+        <button type="button" class="tl pridat" data-pridat="languages">+ Přidat jazyk</button>
+      </div></div>
+
+      <div class="karta" data-pz="certifikaty"><h2 class="karta-nadpis">📜 Certifikáty a kurzy</h2><div class="karta-telo">
+        <div data-seznam="certificates"></div>
+        <button type="button" class="tl pridat" data-pridat="certificates">+ Přidat certifikát</button>
+      </div></div>
+
+      <div class="karta" data-pz="projekty"><h2 class="karta-nadpis">🛠 Projekty</h2><div class="karta-telo">
+        <div data-seznam="projects"></div>
+        <button type="button" class="tl pridat" data-pridat="projects">+ Přidat projekt</button>
+      </div></div>
+
+      <div class="karta" data-pz="reference"><h2 class="karta-nadpis">🤝 Reference</h2><div class="karta-telo">
+        <div data-seznam="references"></div>
+        <button type="button" class="tl pridat" data-pridat="references">+ Přidat referenci</button>
+        <p class="napoveda">Kontakt na referenci uvádějte jen se souhlasem dotyčného.</p>
+      </div></div>
+
+      <div class="karta" data-pz="vlastni"><h2 class="karta-nadpis">➕ Vlastní sekce</h2><div class="karta-telo">
+        <div class="mriz">
+          <label class="pole cela"><span>Nadpis</span><input class="vstup" data-pole="custom.heading" placeholder="např. Dobrovolnictví, Publikace, Ocenění"></label>
+          <label class="pole cela"><span>Text</span><textarea class="vstup" data-pole="custom.text"></textarea></label>
+        </div>
+      </div></div>
+
+      <div class="karta" data-pz="souhlas"><h2 class="karta-nadpis">✍️ Souhlas se zpracováním údajů</h2><div class="karta-telo">
+        <label class="pole zaskrt"><input type="checkbox" data-pole="gdpr.show"> Zobrazit na konci životopisu</label>
+        <div class="mriz" style="margin-top:10px">
+          <label class="pole cela"><span>Text</span><textarea class="vstup" data-pole="gdpr.text" style="min-height:60px"></textarea></label>
+          <label class="pole"><span>Místo (V …)</span><input class="vstup" data-pole="gdpr.place" placeholder="Praze"></label>
+          <label class="pole"><span>Datum (dne …)</span><input class="vstup" data-pole="gdpr.date" placeholder="1. 11. 2026"></label>
+        </div>
+        <p class="napoveda">Pro výběrové řízení souhlas podle GDPR nutný není, někteří zaměstnavatelé ho ale v inzerátu chtějí.</p>
+      </div></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-vzhled" role="tabpanel" hidden>
+      <div class="karta" data-vz="sablona"><div class="karta-telo" style="padding-top:12px">
+        <div class="pole" style="margin-bottom:6px"><span>Šablona</span></div>
+        <div class="sablony" id="sablony"></div>
+        <p class="napoveda">Klasickou nebo minimalistickou šablonu bez ikon nejlépe přečtou automatické systémy firem (ATS).</p>
+      </div></div>
+
+      <div class="karta" data-vz="barvy"><div class="karta-telo" style="padding-top:12px">
+        <div class="pole" style="margin-bottom:6px"><span>Barevné téma</span></div>
+        <div class="kostka-radek">
+          <button type="button" class="tl" id="kostka" title="Vygenerovat náhodnou kombinaci ladicích barev"><span class="kostka" aria-hidden="true">🎲</span> Náhodné ladicí barvy</button>
+          <span class="napoveda" id="kostkaInfo" aria-live="polite">Hoďte kostkou – barvy se vždy sladí podle barevného kruhu.</span>
+        </div>
+        <div class="temata" id="temata"></div>
+        <div class="mriz" style="margin-top:10px">
+          <label class="pole"><span>Vlastní hlavní barva</span><input type="color" data-pole="settings.primary"></label>
+          <label class="pole"><span>Vlastní akcent</span><input type="color" data-pole="settings.accent"></label>
+        </div>
+      </div></div>
+
+      <div class="karta" data-vz="papir"><div class="karta-telo" style="padding-top:12px">
+        <div class="pole" style="margin-bottom:6px"><span>Pozadí papíru</span></div>
+        <div class="papiry" id="papiry"></div>
+        <p class="napoveda">Vzor se tiskne na všechny strany. Při tisku z prohlížeče nechte zapnuté „Grafika na pozadí“.</p>
+      </div></div>
+
+      <div class="karta" data-vz="text"><div class="karta-telo" style="padding-top:12px">
+        <div class="mriz">
+          <label class="pole"><span>Písmo</span><select class="vstup" data-pole="settings.font">
+            <option value="sans">Bezpatkové (moderní)</option>
+            <option value="serif">Patkové (klasické)</option>
+          </select></label>
+          <label class="pole"><span>Fotka</span><select class="vstup" data-pole="settings.photoShape">
+            <option value="kruh">Kruh</option>
+            <option value="zaobleny">Zaoblený čtverec</option>
+            <option value="ctverec">Čtverec</option>
+            <option value="skryt">Nezobrazovat (zůstane uložená)</option>
+          </select></label>
+          <label class="pole"><span>Jazyk životopisu</span><select class="vstup" data-pole="settings.lang">
+            <option value="cs">Čeština</option>
+            <option value="en">English (nadpisy a popisky)</option>
+            <option value="sk">Slovenčina</option>
+            <option value="de">Deutsch</option>
+          </select></label>
+          <label class="pole"><span>Úroveň dovedností</span><select class="vstup" data-pole="settings.skillStyle">
+            <option value="tecky">Tečky ●●●○○</option>
+            <option value="pruh">Pruh</option>
+            <option value="procenta">Pruh s procenty</option>
+            <option value="text">Jen výčet</option>
+          </select></label>
+          <label class="pole"><span>Základní písmo <output></output></span><input type="range" min="10" max="16" data-pole="settings.fontSize" data-jednotka=" px"></label>
+          <label class="pole"><span>Šířka panelu <output></output></span><input type="range" min="55" max="100" data-pole="settings.sidebarW" data-jednotka=" mm"></label>
+          <label class="pole"><span>Jméno <output></output></span><input type="range" min="24" max="60" data-pole="settings.nameFontSize" data-jednotka=" px"></label>
+          <label class="pole"><span>Pozice <output></output></span><input type="range" min="10" max="28" data-pole="settings.titleFontSize" data-jednotka=" px"></label>
+          <label class="pole"><span>Text popisů <output></output></span><input type="range" min="8" max="14" step="0.5" data-pole="settings.expFontSize" data-jednotka=" px"></label>
+        </div>
+        <label class="pole zaskrt" style="margin-top:10px"><input type="checkbox" data-pole="settings.icons"> Ikony u kontaktů a odkazů (jinak popisky „Tel.:“, „E-mail:“)</label>
+        <label class="pole zaskrt" style="margin-top:6px"><input type="checkbox" data-pole="settings.linkUrl"> U odkazů vypsat i adresu (hodí se pro tištěný životopis)</label>
+      </div></div>
+
+      <div class="karta" id="kartaQr" data-vz="qr"><h2 class="karta-nadpis">📱 QR kód</h2><div class="karta-telo">
+        <div class="qr-karta">
+          <div class="mriz">
+            <label class="pole cela"><span>Co se načte</span><select class="vstup" data-pole="settings.qr" id="qrTyp"></select></label>
+            <label class="pole cela" data-qr-jen="odkaz"><span>Který odkaz</span><select class="vstup" data-pole="settings.qrLink" id="qrOdkaz"></select></label>
+            <label class="pole cela" data-qr-jen="vlastni"><span>Vlastní text nebo adresa</span><input class="vstup" data-pole="settings.qrText" maxlength="600" placeholder="https://… nebo libovolný text"></label>
+            <label class="pole"><span>Umístění</span><select class="vstup" data-pole="settings.qrPlace" id="qrMisto"></select></label>
+            <label class="pole"><span>Velikost</span><select class="vstup" data-pole="settings.qrSize">
+              <option value="S">Malý (17 mm)</option><option value="M">Střední (22 mm)</option><option value="L">Velký (30 mm)</option>
+            </select></label>
+            <label class="pole cela"><span>Popisek pod kódem</span><input class="vstup" data-pole="settings.qrLabel" maxlength="60" placeholder="automaticky (např. LinkedIn)"></label>
+          </div>
+          <div class="qr-nahled">
+            <div id="qrNahled" class="qr-obr" aria-live="polite"></div>
+            <div class="qr-tl"><button type="button" class="tl mini" id="qrSvg">⬇ SVG</button><button type="button" class="tl mini" id="qrPng">⬇ PNG</button></div>
+          </div>
+        </div>
+        <label class="pole zaskrt" style="margin-top:10px"><input type="checkbox" data-pole="settings.qrLinks"> Malé QR kódy u všech odkazů (řada dole na listu)</label>
+        <label class="pole zaskrt" style="margin-top:6px"><input type="checkbox" data-pole="settings.qrLetter"> QR kód i v průvodním dopise</label>
+        <p class="napoveda" id="qrInfo"></p>
+      </div></div>
+    </div>
+
+    <div class="panel" id="panel-rozlozeni" role="tabpanel" hidden>
+      <div class="rozl" id="rozlozeni"></div>
+      <p class="napoveda">Šipky ↑ ↓ mění pořadí, ◀ ▶ přesouvají mezi sloupci, 🙈 sekci skryje (data zůstanou), ✎ přejmenuje nadpis sekce.
+        U šablon Klasická a Minimalistická jdou sekce pod sebou (nejdřív hlavní sloupec). U šablon se záhlavím (Klasická, Minimalistická,
+        Kompaktní, Moderní) jsou kontakt a odkazy v záhlaví.</p>
+    </div>
+
+    <div class="panel" id="panel-dopis" role="tabpanel" hidden>
+      <div class="karta"><h2 class="karta-nadpis">✉️ Průvodní dopis</h2><div class="karta-telo">
+        <div class="mriz">
+          <label class="pole cela"><span>Adresát</span><textarea class="vstup" data-pole="letter.recipient" style="min-height:76px;font-family:inherit;font-size:.9rem" placeholder="Firma a.s.&#10;Personální oddělení&#10;Ulice 1, 110 00 Praha"></textarea></label>
+          <label class="pole"><span>Místo (V …)</span><input class="vstup" data-pole="letter.place" placeholder="Praze"></label>
+          <label class="pole"><span>Datum (dne …)</span><input class="vstup" data-pole="letter.date" placeholder="1. 11. 2026"></label>
+          <label class="pole cela"><span>Předmět</span><input class="vstup" data-pole="letter.subject" placeholder="Žádost o místo – Projektový manažer (ref. č. 123)"></label>
+          <label class="pole cela"><span>Text dopisu</span><textarea class="vstup" data-pole="letter.body" style="min-height:260px;font-family:inherit;font-size:.9rem"
+            placeholder="Vážená paní Nováková,&#10;&#10;na portálu jsem si přečetl vaši nabídku… (proč vy, co nabízím, čím přispěji)&#10;&#10;Rád se s vámi setkám osobně."></textarea></label>
+          <label class="pole"><span>Pozdrav</span><input class="vstup" data-pole="letter.closing" placeholder="S pozdravem"></label>
+          <div class="pole" style="justify-content:flex-end"><button type="button" class="tl" id="kostraDopisu" style="padding:7px 12px" title="Vloží osnovu dopisu ve zvoleném jazyce životopisu, doplněnou údaji z CV">✨ Vložit kostru dopisu</button></div>
+        </div>
+        <p class="napoveda">Dopis převezme jméno, kontakty, barvy, písmo a papír ze životopisu. Stačí 3–4 odstavce na jednu stranu.
+          Při otevřené záložce Dopis se náhled, tisk do PDF i kopírování textu týkají dopisu.</p>
+      </div></div>
+    </div>
+
+    <div class="panel" id="panel-vizitky" role="tabpanel" hidden>
+      <div class="karta"><h2 class="karta-nadpis">🪪 Co bude na vizitce</h2><div class="karta-telo">
+        <p class="napoveda" style="margin:0 0 8px">Jméno se bere ze životopisu (Osobní údaje), ostatní si zaškrtněte.</p>
+        <div class="vz-volby">
+          <label class="pole zaskrt"><input type="checkbox" data-pole="card.title"> Pozice / profese</label>
+          <label class="pole zaskrt"><input type="checkbox" data-pole="card.phone"> Telefon</label>
+          <label class="pole zaskrt"><input type="checkbox" data-pole="card.email"> E-mail</label>
+          <label class="pole zaskrt"><input type="checkbox" data-pole="card.address"> Adresa</label>
+          <label class="pole zaskrt"><input type="checkbox" data-pole="card.photo"> Fotka</label>
+        </div>
+        <div class="mriz" style="margin-top:10px">
+          <label class="pole"><span>Odkaz</span><select class="vstup" data-pole="card.web" id="vzWeb"></select></label>
+          <label class="pole"><span>Vlastní řádek</span><input class="vstup" data-pole="card.extra" maxlength="80" placeholder="např. Konzultace zdarma"></label>
+        </div>
+      </div></div>
+      <div class="karta"><h2 class="karta-nadpis">📱 QR kód na vizitce</h2><div class="karta-telo">
+        <div class="mriz">
+          <label class="pole cela"><span>Co se načte</span><select class="vstup" data-pole="card.qr" id="vzQr"></select></label>
+          <label class="pole cela" data-vzqr-jen="odkaz"><span>Který odkaz</span><select class="vstup" data-pole="card.qrLink" id="vzQrOdkaz"></select></label>
+          <label class="pole cela" data-vzqr-jen="vlastni"><span>Vlastní text nebo adresa</span><input class="vstup" data-pole="card.qrText" maxlength="600" placeholder="https://…"></label>
+        </div>
+      </div></div>
+      <div class="karta"><h2 class="karta-nadpis">🎨 Rozvržení a tisk</h2><div class="karta-telo">
+        <div class="sablony" id="vzRozvrzeni"></div>
+        <div class="mriz" style="margin-top:10px">
+          <label class="pole"><span>Zadní strana</span><select class="vstup" data-pole="card.back">
+            <option value="ne">Žádná (jednostranné)</option>
+            <option value="barva">Barevná se jménem</option>
+            <option value="qr">Velký QR kód</option>
+          </select></label>
+          <label class="pole zaskrt" style="align-self:end;margin-bottom:8px"><input type="checkbox" data-pole="card.marks"> Čáry pro řezání</label>
+        </div>
+        <p class="napoveda">10 vizitek 85 × 55 mm na A4, barvy a písmo podle Vzhledu. Se zadní stranou tiskněte oboustranně
+          (otáčet podle delší strany) – arch je souměrný, rub sedí na líc. Na tvrdý papír 250–300 g/m².</p>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="nahled" aria-label="Náhled">
+    <div class="nahled-lista">
+      <label>Zobrazit <select class="vstup" id="dokVolba" style="padding:3px 6px">
+        <option value="cv">Životopis</option><option value="dopis">Průvodní dopis</option><option value="vizitky">Vizitky</option>
+      </select></label>
+      <label>Zvětšení <select class="vstup" id="zoomVolba" style="padding:3px 6px">
+        <option value="fit">Na šířku</option><option value="0.5">50 %</option><option value="0.75">75 %</option>
+        <option value="1">100 %</option><option value="1.25">125 %</option>
+      </select></label>
+      <button type="button" class="tl" id="kontrolaTl" data-nabidka="nabKontrola" aria-expanded="false" title="Kontrola životopisu – chyby a tipy">🩺 Kontrola <span class="pocet" id="kontrolaPocet"></span></button>
+      <span id="strany"></span>
+    </div>
+    <div class="papir" id="papir"><div id="zoom"><div id="cv"></div></div></div>
+  </section>
+</div>
+
+<div class="modal" id="orezModal" role="dialog" aria-modal="true" aria-labelledby="orezTitul">
+  <div class="modal-okno">
+    <h2 id="orezTitul">✂️ Ořez fotografie</h2>
+    <p class="napoveda">Táhněte pro posun (nebo šipky), kolečkem myši, posuvníkem či klávesami + − přibližte.</p>
+    <div class="orez" id="orez" tabindex="0" role="application" aria-label="Výřez fotky – šipky posouvají, + a − přibližují"><canvas id="orezPlatno" width="600" height="600"></canvas></div>
+    <label class="pole"><span>Přiblížení <output></output></span><input type="range" id="orezZoom" min="100" max="400" value="100" data-jednotka=" %"></label>
+    <div class="modal-tl">
+      <button type="button" class="tl" id="orezZrusit">Zrušit</button>
+      <button type="button" class="tl hlavni-tl" id="orezPouzit">Použít</button>
+    </div>
+  </div>
+</div>
+
+<div id="tisk"></div>
 </body>
 </html>

@@ -9,6 +9,17 @@
 
   const fmt = (x, d) => { d = d || 0; const v = Math.round(x * Math.pow(10, d)) / Math.pow(10, d); return (Object.is(v, -0) ? 0 : v).toFixed(d).replace('.', ','); };
   const lerp = (a, b, t) => a + (b - a) * t;
+  const CL = koren.ClipperLib || (typeof require !== 'undefined' ? require('../lib/clipper.min.js') : null);
+  /* odsazení dovnitř/ven přes Clipper (zaoblené rohy, bez smyček); bez Clipperu normálový posun */
+  function odsadClip(P, d) {
+    if (!CL) return posun(P, d);
+    const SC = 1000, o = new CL.ClipperOffset(2, 0.01 * SC), r = new CL.Paths();
+    o.AddPath(P.map(([x, y]) => ({ X: Math.round(x * SC), Y: Math.round(y * SC) })), CL.JoinType.jtRound, CL.EndType.etClosedPolygon);
+    o.Execute(r, d * SC);
+    if (!r.length) return [];
+    const Q = r.reduce((m, q) => (Math.abs(CL.Clipper.Area(q)) > Math.abs(CL.Clipper.Area(m)) ? q : m)).map((q) => [q.X / SC, q.Y / SC]);
+    return plocha(Q) * plocha(P) < 0 ? Q.reverse() : Q;
+  }
 
   /* Špičky prstů od palce k malíčku: [podíl šířky přes klouby od vnitřní hrany, podíl délky chodidla] */
   const TVARY = {
@@ -179,7 +190,7 @@
   function obrys(m, tvar, klenba, pas, r) {
     const Lt = m.delka + r.f + r.h, Wt = m.sirka + 2 * r.s, Ht = m.pata + 2 * r.s;
     let pata = m.pata, P = null;
-    for (let it = 0; it < 4; it++) {
+    for (let it = 0; it < 10; it++) {
       const S = spline(kontrolniBody({ delka: m.delka, sirka: m.sirka, pata }, tvar, klenba, pas, r), 26);
       const o = obalka(S);
       P = S.map(([x, y]) => [(x - o.x0) * Wt / o.w, (y - o.y0) * Lt / o.h]);
@@ -188,6 +199,20 @@
       pata = Math.max(15, Math.min(m.sirka - 1, pata * Ht / hp));
     }
     return P;
+  }
+  /* vložka a chodidlo jsou dva samostatné spliny – při malé rezervě může chodidlo místy (bok paty, palec) vyčnívat.
+     Takové místo vložky se vytlačí po normále (plynule, Gaussovsky do okolí), indexy bodů zůstanou. */
+  function nevycnivat(V, N) {
+    const ven = N.map((q) => (bodVPolygonu(V, q[0], q[1]) ? 0 : vzdalenostKObrysu(V, q[0], q[1]))).map((d, i) => [N[i], d]).filter(([, d]) => d > 0.02);
+    if (!ven.length) return V;
+    const zn = plocha(V) > 0 ? 1 : -1, n = V.length;
+    return V.map((q, i) => {
+      let t = 0;
+      for (const [b, d] of ven) t = Math.max(t, (d + 0.05) * Math.exp(-(((q[0] - b[0]) ** 2 + (q[1] - b[1]) ** 2) / 64)));
+      if (t < 1e-3) return q;
+      const a = V[(i - 1 + n) % n], c = V[(i + 1) % n], tx = c[0] - a[0], ty = c[1] - a[1], l = Math.hypot(tx, ty) || 1;
+      return [q[0] + zn * ty / l * t, q[1] - zn * tx / l * t];
+    });
   }
   function rozmery(P) {
     /* šířka jako posuvkou kolmo na délku (obálka), pata jako nejširší vodorovný řez v zadní části */
@@ -215,32 +240,73 @@
   }
 
   /* ---------- prvky šablony ---------- */
+  /* ořezové čáry ve špičce: vnitřní ekvidistanta obrysu; u ostré špičky (poloměr < d) by ležela níž, než říká popisek,
+     proto se posun dohledá půlením tak, aby vrchol čáry ležel přesně na Lt − d. Čára, která by se rozpadla (bota je
+     mnohem kratší než vložka), se vynechá – varování přidá doplnVyrobu. */
   function orezoveCary(P, p, Lt) {
     const L = [];
     if (p.rezim !== 'vlozka') return L;
-    const dd = p.orez ? Array.from({ length: p.orezPocet }, (_, k) => (k + 1) * p.orezKrok) : [];
-    const dBota = p.delkaBoty > 0 ? Lt - p.delkaBoty : 0;
-    if (dBota >= 0.5) dd.push(dBota);
-    for (const d of dd) {
-      if (Lt - d < 60) break;
-      const O = posun(P, -d), N = O.length, ylim = 0.74 * Lt;
-      let i0 = -1, i1 = -1;
-      for (let i = 0; i < N; i++) if (P[i][1] > ylim) { if (i0 < 0) i0 = i; i1 = i; }
-      if (i0 < 0) continue;
-      /* kde je obrys zakřivenější než d (špička palce), vytvoří posun smyčku – takové body vyhodit */
-      const body = O.slice(i0, i1 + 1).filter(([x, y]) => vzdalenostKObrysu(P, x, y) >= d - 0.25);
-      L.push({ d, body, vnitrni: Lt - d, bota: d === dBota });
+    const cile = new Map();   // d → bota (stejná vzdálenost jen jednou)
+    if (p.orez) for (let k = 1; k <= p.orezPocet; k++) cile.set(Math.round(k * p.orezKrok * 100) / 100, false);
+    const dBota = p.delkaBoty > 0 ? Math.round((Lt - p.delkaBoty) * 100) / 100 : 0;
+    if (dBota >= 0.5) cile.set(dBota, true);
+    const ylim = 0.74 * Lt;
+    let i0 = -1, i1 = -1;
+    for (let i = 0; i < P.length; i++) if (P[i][1] > ylim) { if (i0 < 0) i0 = i; i1 = i; }
+    if (i0 < 0) return L;
+    /* kde je obrys zakřivenější než e (špička palce), vytvoří posun smyčku – takové body vyhodit.
+       Vzdálenost stačí měřit k přední části obrysu (body čáry leží nad ylim − e), výsledky půlení se pamatují. */
+    /* úseky přední části v mřížce po 4 mm: stačí zjistit, jestli je některý blíž než lim */
+    const dMax = Math.max(0, ...cile.keys()), yPredni = ylim - 2 * dMax - 2, K = 4, mriz = new Map(), bunka = (cx, cy) => cx * 100003 + cy;
+    for (let i = 0; i < P.length; i++) {
+      const a = P[i], b = P[(i + 1) % P.length]; if (a[1] <= yPredni && b[1] <= yPredni) continue;
+      for (let cx = Math.floor(Math.min(a[0], b[0]) / K); cx <= Math.floor(Math.max(a[0], b[0]) / K); cx++)
+        for (let cy = Math.floor(Math.min(a[1], b[1]) / K); cy <= Math.floor(Math.max(a[1], b[1]) / K); cy++) { const k = bunka(cx, cy); if (!mriz.has(k)) mriz.set(k, []); mriz.get(k).push(a, b); }
+    }
+    const dal = (x, y, lim) => {
+      const r = Math.ceil(lim / K), x0 = Math.floor(x / K), y0 = Math.floor(y / K);
+      for (let cx = x0 - r; cx <= x0 + r; cx++) for (let cy = y0 - r; cy <= y0 + r; cy++) {
+        const U = mriz.get(bunka(cx, cy)); if (!U) continue;
+        for (let i = 0; i < U.length; i += 2) { const a = U[i], b = U[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy, t = l2 ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / l2)) : 0; if (Math.hypot(a[0] + t * dx - x, a[1] + t * dy - y) < lim) return false; }
+      }
+      return true;
+    };
+    const pamet = new Map();
+    const cara = (e) => { if (!pamet.has(e)) pamet.set(e, posun(P, -e).slice(i0, i1 + 1).filter(([x, y]) => dal(x, y, e - 0.25))); return pamet.get(e); };
+    const vrch = (B) => B.reduce((m, q) => Math.max(m, q[1]), -Infinity);
+    L.vynechano = 0;   // čáry, které se na tuto vložku nevejdou (doplnVyrobu je ohlásí)
+    for (const [d, bota] of [...cile].sort((a, b) => a[0] - b[0])) {
+      if (Lt - d < 60) { if (!bota) L.vynechano++; continue; }
+      let body = cara(d);
+      if (body.length >= 2 && vrch(body) < Lt - d - 0.2) {
+        let lo = 0, hi = d;
+        for (let k = 0; k < 11; k++) { const e = (lo + hi) / 2, B = cara(e); if (B.length >= 2 && vrch(B) > Lt - d) lo = e; else hi = e; }
+        body = cara(lo);
+      }
+      if (body.length < 2) { if (!bota) L.vynechano++; continue; }
+      L.push({ d, body, vnitrni: Lt - d, bota });
     }
     return L;
   }
+
   function perforace(P, p) {
     const out = [];
     if (!p.perforace || p.rezim !== 'vlozka') return out;
     const o = obalka(P), a = p.perfRozt, r = p.perfPrumer / 2, hy = a * Math.sqrt(3) / 2, min = p.perfOkraj + r;
+    /* střed otvoru musí ležet ve vnitřní ekvidistantě (vzdálenost od okraje ≥ min) – po řádcích přes průsečíky */
+    const Q = CL ? odsadClip(P, -min) : null;
     let rad = 0;
     for (let y = o.y0 + min; y <= o.y1 - min; y += hy, rad++) {
+      if (!Q) {
+        for (let x = o.x0 + (rad % 2 ? a / 2 : 0); x <= o.x1; x += a) if (bodVPolygonu(P, x, y) && vzdalenostKObrysu(P, x, y) >= min) out.push({ x, y, r });
+        continue;
+      }
+      const xs = [];
+      for (let i = 0; i < Q.length; i++) { const u = Q[i], w = Q[(i + 1) % Q.length]; if ((u[1] > y) !== (w[1] > y)) xs.push(u[0] + (y - u[1]) / (w[1] - u[1]) * (w[0] - u[0])); }
+      xs.sort((m, n) => m - n);
       for (let x = o.x0 + (rad % 2 ? a / 2 : 0); x <= o.x1; x += a) {
-        if (bodVPolygonu(P, x, y) && vzdalenostKObrysu(P, x, y) >= min) out.push({ x, y, r });
+        let k = 0; while (k < xs.length && xs[k] < x) k++;
+        if (k % 2) out.push({ x, y, r });
       }
     }
     return out;
@@ -277,19 +343,25 @@
     return P;
   }
   function doplnVyrobu(v) {
-    const p = v.p;
+    const p = v.p, zmenseno = [];
     for (const n of v.nohy) {
       n.vrstva2 = null; n.podpory = [];
       if (p.rezim !== 'vlozka') continue;
-      if (p.vrstvy && p.vrstvaOds > 0) n.vrstva2 = posun(n.vlozka, -p.vrstvaOds);
+      if (p.vrstvy && p.vrstvaOds > 0) { const V2 = odsadClip(n.vlozka, -p.vrstvaOds); n.vrstva2 = V2.length > 8 ? V2 : null; }
       else if (p.vrstvy) n.vrstva2 = n.vlozka.slice();
       const medVlevo = n.strana === 'P';   // pohled shora: u pravé nohy je palec vlevo
       if (p.pelota) {
         const cy = p.pelotaPoz / 100 * n.Lt, r = rezNaY(n.vlozka, cy);
-        if (r) { const cx = medVlevo ? r[0] + 0.45 * (r[1] - r[0]) : r[1] - 0.45 * (r[1] - r[0]); n.podpory.push({ nazev: 'pelota', body: kapka(cx, cy, p.pelotaDelka, p.pelotaSirka) }); }
+        if (r) {
+          const cx = medVlevo ? r[0] + 0.45 * (r[1] - r[0]) : r[1] - 0.45 * (r[1] - r[0]), sMax = 0.6 * (r[1] - r[0]), sir = Math.min(p.pelotaSirka, sMax);
+          if (sir < p.pelotaSirka - 0.5) zmenseno.push(`${n.nazev}: pelota zúžena na ${fmt(sir)} mm (vložka je v tom místě široká ${fmt(r[1] - r[0])} mm)`);
+          n.podpory.push({ nazev: 'pelota', body: kapka(cx, cy, p.pelotaDelka, sir) });
+        }
       }
       if (p.podpatenka) {
-        const rx = p.podpatenkaPrumer / 2, ry = rx * 1.15, cy = Math.max(ry + 4, 0.13 * n.Lt), r = rezNaY(n.vlozka, cy), cx = r ? (r[0] + r[1]) / 2 : n.Wt / 2, P = [];
+        let rx = p.podpatenkaPrumer / 2, ry = rx * 1.15;
+        const cy = Math.max(ry + 4, 0.13 * n.Lt), r = rezNaY(n.vlozka, cy), cx = r ? (r[0] + r[1]) / 2 : n.Wt / 2, P = [], rMax = 0.4 * (r ? r[1] - r[0] : n.Wt);
+        if (rx > rMax) { zmenseno.push(`${n.nazev}: podpatěnka zmenšena na ${fmt(2 * rMax)} mm (pata je široká ${fmt(r ? r[1] - r[0] : n.Wt)} mm)`); rx = rMax; ry = rx * 1.15; }
         for (let k = 0; k < 48; k++) { const u = 2 * Math.PI * k / 48; P.push([cx + rx * Math.cos(u), cy + ry * Math.sin(u)]); }
         n.podpory.push({ nazev: 'podpatěnka', body: P });
       }
@@ -300,9 +372,13 @@
     };
     if (p.rezim === 'vlozka' && p.delkaBoty > 0) for (const n of v.nohy) {
       const d = n.Lt - p.delkaBoty;
-      if (d < -2) vv('info', `${n.nazev}: vložka je o ${fmt(-d)} mm kratší než bota (${fmt(p.delkaBoty)} mm) – v botě bude klouzat, zvětšete rezervu nebo offset.`);
+      if (d >= 0.5 && !n.orez.some((q) => q.bota)) vv('varovani', `${n.nazev}: bota (${fmt(p.delkaBoty)} mm) je o ${fmt(d)} mm kratší než vložka – tolik ve špičce oříznout nejde, zvolte menší rezervu nebo jinou botu.`);
+      else if (d < -2) vv('info', `${n.nazev}: vložka je o ${fmt(-d)} mm kratší než bota (${fmt(p.delkaBoty)} mm) – v botě bude klouzat, zvětšete rezervu nebo offset.`);
       else if (d >= 0.5) vv('info', `${n.nazev}: na délku boty ${fmt(p.delkaBoty)} mm zkraťte vložku o ${fmt(d, 1)} mm po zvýrazněné červené čáře.`);
     }
+    for (const t of zmenseno) vv('info', t + ' – jinak by přečnívala přes okraj vložky.');
+    const vyn = Math.max(0, ...v.nohy.map((n) => (n.orez && n.orez.vynechano) || 0));
+    if (p.rezim === 'vlozka' && p.orez && vyn) vv('info', `${vyn === 1 ? 'Jedna ořezová čára se' : vyn + ' ořezové čáry se'} na vložku nevejde (byla by blíž než 60 mm od paty nebo mimo špičku) – zmenšete krok nebo počet čar.`);
     if (p.rezim === 'vlozka' && p.vrstvy && p.tloustka + p.tloustka2 > 6) vv('varovani', `Dvě vrstvy mají dohromady ${fmt(p.tloustka + p.tloustka2, 1)} mm – v barefoot botě to ubere hodně místa nad prsty.`);
     if (p.rezim === 'vlozka' && (p.pelota || p.podpatenka)) vv('info', 'Pelota a podpatěnka jsou korekční prvky – patří k vložce doporučené odborníkem; u čistě barefoot vložky je obvykle nedáváme.');
     return v;
@@ -314,6 +390,7 @@
     const r = { f: p.rezPrsty, s: p.rezBok, h: p.rezPata };
     let V = obrys(m, p.tvar, p.klenba, p.pas, r);
     let N = obrys(m, p.tvar, p.klenba, p.pas, { f: 0, s: 0, h: 0 }).map(([x, y]) => [x + r.s, y + r.h]);
+    V = nevycnivat(V, N);
     const Lt = m.delka + r.f + r.h, Wt = m.sirka + 2 * r.s;
     const T = (TVARY[p.tvar] || TVARY.egyptsky).body;
     let prsty = T.map(([fx, fy], i) => ({ x: r.s + fx * m.sirka, y: r.h + fy * m.delka - [12, 8, 7, 6, 5.5][i] * m.delka / 255, r: [12, 8, 7, 6, 5.5][i] * m.delka / 255 }));
@@ -372,7 +449,7 @@
   /* odhad délky chodidla z velikosti EU (zpětně k velikosti(); jen pro rychlý start) */
   function delkaZEu(eu, rezerva) { return Math.round(eu * 6.667 - NAVYSENI_KOPYTA - (rezerva === undefined ? 12 : rezerva)); }
 
-  const API = { fmt, TVARY, MATERIALY, VYCHOZI, MEZE, normalizuj, spline, obalka, plocha, obvod, bodVPolygonu, vzdalenostKObrysu, rezNaY, nejsirsi, posun, zrcadli, kontrolniBody, obrys, rozmery, velikosti, tridaSirky, delkaZEu, spocitej, NAVYSENI_KOPYTA, doplnVyrobu, kapka, orezoveCary, perforace, jazycek, znackyDelky };
+  const API = { fmt, TVARY, MATERIALY, VYCHOZI, MEZE, normalizuj, spline, obalka, plocha, obvod, bodVPolygonu, vzdalenostKObrysu, rezNaY, nejsirsi, posun, zrcadli, kontrolniBody, obrys, rozmery, velikosti, tridaSirky, delkaZEu, spocitej, NAVYSENI_KOPYTA, doplnVyrobu, odsadClip, kapka, orezoveCary, perforace, jazycek, znackyDelky };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   koren.BFJ = API;
 })(typeof window !== 'undefined' ? window : globalThis);
