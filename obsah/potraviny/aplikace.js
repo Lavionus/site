@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-20f';
+  const VERZE_KODU = '2026-10-28a';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -174,6 +174,8 @@
   let obdobi = 7;
 
   const NAZVY_SKUPIN_ZIVIN = { tuky: 'Mastné kyseliny a cholesterol', mineraly: 'Minerální látky', vitaminy: 'Vitaminy', ostatni: 'Ostatní' };
+  // výrobek z databáze bez nutričních hodnot (v hledání skrytý, pokud to uživatel nezapne)
+  const bezHodnot = f => (f.priznaky & 2) || !(f.n && Number.isFinite(f.n.kcal));
   /* ================= pomocné DOM ================= */
   function h(tag, atr, ...deti) {
     const e = document.createElement(tag);
@@ -1352,7 +1354,7 @@
       f.nutriscore ? h('span', { class: 'nutri ' + f.nutriscore, title: 'Nutri-Score ' + f.nutriscore.toUpperCase(), text: f.nutriscore }) : null,
       h('div', { class: 'kc' }, Number.isFinite(kcal) ? fc(E(kcal)) : '–', h('small', { text: ej() + '/100 ' + jedn(f) })),
       // „+“ je zkratka pro myš/dotyk; klávesnice přidává přes detail (interaktivní prvek uvnitř option by byl neplatný)
-      naPlus ? h('button', { class: 'btn ikona plus', type: 'button', tabindex: '-1', 'aria-hidden': 'true', title: 'Rovnou přidat (naposledy použité množství)',
+      naPlus && !bezHodnot(f) ? h('button', { class: 'btn ikona plus', type: 'button', tabindex: '-1', 'aria-hidden': 'true', title: 'Rovnou přidat (naposledy použité množství)',
         onclick: e => { e.stopPropagation(); naPlus(f); } }, '+') : null);
     li.addEventListener('click', () => naVyber(f));
     if (samostatny) li.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === li) { e.preventDefault(); naVyber(f); } });
@@ -1373,7 +1375,7 @@
     const cipy = h('div', { class: 'cipy', role: 'group', 'aria-label': 'Výběr seznamu' });
     const seznam = h('ul', { class: 'vysledky', role: 'listbox', 'aria-label': 'Výsledky', id: idSeznamu });
     const info = h('div', { class: 'slabe', style: { padding: '6px 14px' }, 'aria-live': 'polite' });
-    let karta = 'nedavne', filtr = 'vse', aktivni = -1;
+    let karta = 'nedavne', filtr = 'vse', aktivni = -1, ukazPrazdne = false;
     const KARTY = [['nedavne', '🕘 Nedávné'], ['caste', '⭐ Časté'], ['oblibene', '♥ Oblíbené'], ['moje', '✎ Moje'], ['recepty', '🍲 Recepty']]
       .concat(rezimVyber ? [] : [['sablony', '📋 Uložená jídla']]);
     const FILTRY = [['vse', 'Vše'], ['s', 'Obecné potraviny'], ['v', 'Výrobky'], ['m', 'Moje a recepty']];
@@ -1419,7 +1421,7 @@
       const akt = q ? filtr : karta;
       for (const [id, text] of sada) {
         cipy.appendChild(h('button', { class: 'cip', type: 'button', 'aria-pressed': String(id === akt),
-          onclick: () => { if (q) filtr = id; else karta = id; vykresliCipy(); vykresliVysledky(); } }, text));
+          onclick: () => { if (q) filtr = id; else karta = id; ukazPrazdne = false; vykresliCipy(); vykresliVysledky(); } }, text));
       }
     }
     function vykresliVysledky() {
@@ -1430,9 +1432,25 @@
       let polozky = [];
       if (q) {
         if (!DB.nacteno && !DB.indexUziv.length) { info.textContent = DB.chyba ? 'Databáze není načtená.' : 'Databáze se ještě načítá…'; return; }
-        const filtrF = filtr === 'vse' ? null : filtr === 's' ? f => f.typ === 's' : filtr === 'v' ? f => f.typ === 'v' || f.typ === 'o' || f.typ === 'd' : f => f.typ === 'm' || f.typ === 'r';
-        polozky = J.hledej(DB.vse.length ? DB.vse : DB.indexUziv, q, { limit: 80, bonus: bonusy(), filtr: filtrF });
+        const filtrT = filtr === 'vse' ? null : filtr === 's' ? f => f.typ === 's' : filtr === 'v' ? f => f.typ === 'v' || f.typ === 'o' || f.typ === 'd' : f => f.typ === 'm' || f.typ === 'r';
+        // potraviny bez hodnot jen se zapnutou volbou (podle čárového kódu vždy – dají se doplnit)
+        const skrytPrazdne = !S.nastaveni.bezHodnot && !ukazPrazdne && !/^\d{6,14}$/.test(q.replace(/\s/g, ''));
+        const filtrF = skrytPrazdne ? f => !bezHodnot(f) && (!filtrT || filtrT(f)) : filtrT;
+        const index = DB.vse.length ? DB.vse : DB.indexUziv;
+        polozky = J.hledej(index, q, { limit: 80, bonus: bonusy(), filtr: filtrF });
         info.textContent = polozky.tolerantni ? 'Přesná shoda nenalezena – zobrazuji podobně psané výsledky.' : '';
+        // přesnou shodu může mít jen skrytá potravina bez hodnot – říct to, ne tvrdit „nic nenalezeno“
+        let skryto = 0;
+        if (skrytPrazdne && (!polozky.length || polozky.tolerantni)) {
+          // jen přesné hledání – tolerantní by se zbytečně počítalo podruhé
+          skryto = J.hledej(index, q, { limit: 1000, filtr: filtrT, presne: true }).filter(bezHodnot).length;
+        }
+        if (skryto) {
+          // podobně psané výsledky by vedle skryté přesné shody mátly – ukáže se jen hláška
+          info.textContent = (skryto === 1 ? 'Shoduje se 1 potravina' : skryto < 5 ? 'Shodují se ' + skryto + ' potraviny' : 'Shoduje se ' + skryto + ' potravin') + ' bez vyplněných hodnot (skryté). ';
+          pridat(info, h('button', { class: 'btn mini', type: 'button', onclick: zobrazPrazdne }, 'Zobrazit'));
+          return;
+        }
         if (!polozky.length) {
           const cisla = q.replace(/\s/g, '');
           const p = h('li', { class: 'prazdny' }, 'Nic nenalezeno pro „' + q + '“.', h('br'));
@@ -1490,9 +1508,9 @@
     // potravina z deníku (snímek) → aktuální verze z databáze, pokud existuje
     function aktualni(snim) { return potravina(snim.id) || snim; }
     let casovac = null;
-    vstup.addEventListener('input', () => { clearTimeout(casovac); casovac = setTimeout(() => { vykresliCipy(); vykresliVysledky(); }, 90); });
+    vstup.addEventListener('input', () => { ukazPrazdne = false; clearTimeout(casovac); casovac = setTimeout(() => { casovac = null; vykresliCipy(); vykresliVysledky(); }, 90); });
     vstup.addEventListener('keydown', e => {
-      const li = seznam.querySelectorAll('.vysledek');
+      let li = seznam.querySelectorAll('.vysledek');
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
         if (!li.length) return;
@@ -1502,14 +1520,19 @@
         vstup.setAttribute('aria-activedescendant', li[aktivni].id);
       } else if (e.key === 'Enter') {
         e.preventDefault();
+        // Enter hned po psaní: výsledky se kreslí se zpožděním – dokreslit hned
+        if (casovac) { clearTimeout(casovac); casovac = null; vykresliCipy(); vykresliVysledky(); li = seznam.querySelectorAll('.vysledek'); }
         const x = li[aktivni >= 0 ? aktivni : 0];
         if (x && x._f) vybrano(x._f);
         else {
           const c = vstup.value.replace(/\s/g, '');
           if (/^\d{8,14}$/.test(c)) hledejKod(c);
+          else if (info.querySelector('button')) zobrazPrazdne();   // jen skryté shody → Enter je ukáže
         }
       }
     });
+    // ukáže skryté potraviny bez hodnot; fokus zpět do pole (tlačítko překreslením zmizí)
+    function zobrazPrazdne() { ukazPrazdne = true; vykresliVysledky(); vstup.focus(); }
     const priData = () => { if (document.contains(seznam)) vykresliVysledky(); };
     document.addEventListener('denik-data', priData);
     const puvodniZavri = v.zavri;
@@ -1577,7 +1600,7 @@
     const rezim = volby.rezim;
     const z = volby.zaznam || null;
     const j = jedn(f);
-    const bezHodnot = !Number.isFinite(f.n && f.n.kcal);
+    const prazdna = !Number.isFinite(f.n && f.n.kcal);
     // jednotky: g/ml + porce
     // u nápojů i typické porce (půllitr, sklenka, panák) – i u starších záznamů a vlastních potravin
     const porceVse = f.ml ? J.doplnNapoj({ ...f, porce: (f.porce || []).slice() }).porce : (f.porce || []);
@@ -1709,7 +1732,7 @@
     };
     if (hlidaSe()) { if ((f.typ === 'v' || f.typ === 'r' || f.polozky || f.ean) && !DB.slozeni) nactiSlozeni().then(ukazAlergeny, () => { slozeniChyba = true; ukazAlergeny(); }); else ukazAlergeny(); }
     // upozornění
-    if (bezHodnot) {
+    if (prazdna) {
       telo.appendChild(h('div', { class: 'upozorneni' }, 'Tento výrobek nemá v databázi nutriční hodnoty. ',
         h('button', { class: 'btn mini', type: 'button', onclick: () => doplnHodnoty(f) }, '✎ Doplnit z etikety')));
     } else if (f.priznaky & 512) {
@@ -1752,7 +1775,7 @@
 
     let tlacitkoHlavni = h('button', { class: 'btn primary', type: 'button' });
     let tlacitkoDalsi = null;
-    if (rezim !== 'nahled' && !bezHodnot) {
+    if (rezim !== 'nahled' && !prazdna) {
       telo.appendChild(h('div', { class: 'mnozstvi' }, vstupM, vyberJ));
       if (prevodPrepinac) { telo.appendChild(prevodPrepinac); telo.appendChild(prevodInfo); }
       telo.appendChild(napoveda);
@@ -1818,7 +1841,7 @@
       vstupM.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); tlacitkoHlavni.click(); } });
     }
     // tabulka živin na 100 g
-    if (!bezHodnot) telo.appendChild(tabulkaZivin(f));
+    if (!prazdna) telo.appendChild(tabulkaZivin(f));
     // složení
     const slozeniSekce = h('div', { class: 'sekce' });
     telo.appendChild(slozeniSekce);
@@ -1834,14 +1857,14 @@
           sVracenim('Smazáno: ' + f.nazev, () => J.smazZaznam(S, volby.den, z.id));
         } }, '🗑️ Smazat'));
     }
-    const porovnat = bezHodnot ? null : h('button', { class: 'btn ikona plain', type: 'button', 'aria-pressed': String(vPorovnani(f)), 'aria-label': 'Porovnat s jinými potravinami', title: 'Přidat do porovnání / odebrat' }, '⚖️');
+    const porovnat = prazdna ? null : h('button', { class: 'btn ikona plain', type: 'button', 'aria-pressed': String(vPorovnani(f)), 'aria-label': 'Porovnat s jinými potravinami', title: 'Přidat do porovnání / odebrat' }, '⚖️');
     if (porovnat) porovnat.addEventListener('click', () => { prepniPorovnani(f); porovnat.setAttribute('aria-pressed', String(vPorovnani(f))); });
     const vic = h('button', { class: 'btn ikona', type: 'button', 'aria-label': 'Další akce', 'aria-haspopup': 'menu', text: '⋯' });
     vic.addEventListener('click', () => {
       const pol = [];
       if (f.typ !== 'm' && f.typ !== 'r') pol.push({ text: '✎ Vytvořit vlastní upravenou kopii', akce: () => doplnHodnoty(f) });
       if (f.typ === 'm') pol.push({ text: '✎ Upravit potravinu', akce: () => editorPotraviny(S.vlastni[f.id] || f, () => { v.zavri(); }) });
-      if (f.typ === 'm' && !bezHodnot) pol.push({ text: '📮 Navrhnout do společné databáze', akce: () => navrhniDoplnek(S.vlastni[f.id] || f) });
+      if (f.typ === 'm' && !prazdna) pol.push({ text: '📮 Navrhnout do společné databáze', akce: () => navrhniDoplnek(S.vlastni[f.id] || f) });
       if (f.typ === 'm' && S.nastaveni.spravce) pol.push({ text: '🛠️ Exportovat pro společnou databázi', akce: () => exportDoplnkuDialog([f.id]) });
       if (f.typ === 'r' && S.recepty[f.id]) pol.push({ text: '✎ Upravit recept', akce: () => { v.zavri(); editorReceptu(S.recepty[f.id]); } });
       if (f.ean) pol.push({ text: '🌐 Otevřít na Open Food Facts', akce: () => window.open('https://world.openfoodfacts.org/product/' + encodeURIComponent(f.ean), '_blank', 'noopener') });
@@ -1851,11 +1874,11 @@
     });
     pridat(pata, srdce, porovnat, vic, h('div', { class: 'vpravo' },
       h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, rezim === 'nahled' ? 'Zavřít' : 'Zrušit'),
-      rezim !== 'nahled' && !bezHodnot ? tlacitkoDalsi : null,
-      rezim !== 'nahled' && !bezHodnot ? tlacitkoHlavni : null));
+      rezim !== 'nahled' && !prazdna ? tlacitkoDalsi : null,
+      rezim !== 'nahled' && !prazdna ? tlacitkoHlavni : null));
     const v = otevriVrstvu({ titulek: rezim === 'upravit' ? 'Upravit záznam' : f.nazev, telo, pata, sirka: '600px' });
     prepocti();
-    if (rezim !== 'nahled' && !bezHodnot) setTimeout(() => { vstupM.focus(); vstupM.select(); }, 30);
+    if (rezim !== 'nahled' && !prazdna) setTimeout(() => { vstupM.focus(); vstupM.select(); }, 30);
     return v;
   }
   /* ----- společná databáze: návrh od uživatele, export správce ----- */
@@ -3670,6 +3693,7 @@
     $('#nMikro').checked = !!S.nastaveni.mikro;
     $('#nPohyb').checked = !!S.nastaveni.pohybKCili;
     $('#nNapoje').checked = S.nastaveni.napojeDoVody !== false;
+    $('#nBezHodnot').checked = !!S.nastaveni.bezHodnot;
     $('#nPitny').value = S.nastaveni.pitnyRezim || 'bezny';
     $('#nPitny').disabled = S.nastaveni.napojeDoVody === false;
     const av = $('#alergenyVolby');
@@ -4552,7 +4576,7 @@
       uloz(); vykresliJidlaNastaveni();
     });
     const prep = (id, kl, poZmene) => $(id).addEventListener('change', e => { S.nastaveni[kl] = e.target.checked; uloz(); if (poZmene) poZmene(); });
-    prep('#nOnline', 'online'); prep('#nObrazky', 'obrazky'); prep('#nMikro', 'mikro'); prep('#nPohyb', 'pohybKCili'); prep('#nNapoje', 'napojeDoVody', () => { $('#nPitny').disabled = S.nastaveni.napojeDoVody === false; vykresliDenik(); });
+    prep('#nOnline', 'online'); prep('#nObrazky', 'obrazky'); prep('#nMikro', 'mikro'); prep('#nBezHodnot', 'bezHodnot'); prep('#nPohyb', 'pohybKCili'); prep('#nNapoje', 'napojeDoVody', () => { $('#nPitny').disabled = S.nastaveni.napojeDoVody === false; vykresliDenik(); });
     $('#nPitny').addEventListener('change', e => { S.nastaveni.pitnyRezim = e.target.value; uloz(); vykresliDenik(); });
     $('#importTl').addEventListener('click', () => $('#importJson').click());
     $('#importTabulkaTl').addEventListener('click', () => $('#importTabulka').click());

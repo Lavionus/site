@@ -409,10 +409,21 @@
     ['Fazole bílé (suché)', 'Fazole bílé vařené', 'susina'], ['Cizrna (suchá)', 'Cizrna vařená', 'susina'],
     ['Kuřecí prsa (syrová)', 'Kuřecí prsa pečená', 'bilkoviny'], ['Kuřecí stehna bez kůže (syrová)', 'Kuřecí stehna pečená (bez kůže)', 'bilkoviny'],
     ['Kuře s kůží (syrové)', 'Kuře s kůží pečené', 'bilkoviny'], ['Vepřová plec (syrová)', 'Vepřová plec pečená', 'bilkoviny'],
-    ['Vepřová panenka / kotleta libová (syrová)', 'Vepřová kotleta smažená (bez obalu)', 'bilkoviny'], ['Hovězí hrudí (syrové)', 'Hovězí hrudí vařené', 'bilkoviny'],
+    ['Vepřová pečeně / kotleta libová (karé, syrová)', 'Vepřová kotleta libová dušená', 'bilkoviny'], ['Vepřová panenka (syrová)', 'Vepřová panenka pečená', 'bilkoviny'], ['Hovězí hrudí (syrové)', 'Hovězí hrudí dušené (libové)', 'bilkoviny'],
     ['Mleté hovězí 15 % tuku (syrové)', 'Hovězí karbanátek opečený (hamburgerový)', 'bilkoviny'],
     ['Kapr (syrový)', 'Kapr pečený', 'bilkoviny'], ['Losos (syrový)', 'Losos pečený', 'bilkoviny'], ['Treska (syrová)', 'Treska pečená', 'bilkoviny'],
     ['Pstruh duhový (syrový)', 'Pstruh pečený', 'bilkoviny'], ['Krevety (syrové)', 'Krevety vařené', 'bilkoviny'],
+    ['Vepřová krkovice (syrová)', 'Vepřová krkovice dušená', 'bilkoviny'], ['Vepřová žebra (syrová)', 'Vepřová žebra pečená', 'bilkoviny'],
+    ['Vepřová kýta (syrová)', 'Vepřová kýta pečená', 'bilkoviny'], ['Hovězí plec libová (syrová)', 'Hovězí plec dušená (libová)', 'bilkoviny'],
+    ['Hovězí na guláš (plec, syrové)', 'Hovězí na guláš dušené (plec)', 'bilkoviny'], ['Jehněčí kýta libová (syrová)', 'Jehněčí kýta pečená (libová)', 'bilkoviny'],
+    ['Kuřecí křídla s kůží (syrová)', 'Kuřecí křídla pečená (s kůží)', 'bilkoviny'],
+    ['Hrách loupaný zelený (suchý)', 'Hrách loupaný vařený', 'susina'], ['Špalda (zrno, syrová)', 'Špalda vařená', 'susina'],
+    ['Rýže parboiled (syrová)', 'Rýže parboiled vařená', 'susina'], ['Vaječné těstoviny (suché)', 'Vaječné těstoviny vařené', 'susina'],
+    ['Kuřecí srdce (syrová)', 'Kuřecí srdce vařená', 'bilkoviny'],
+    ['Kuřecí žaludky (syrové)', 'Kuřecí žaludky vařené', 'bilkoviny'], ['Vepřové ledvinky (syrové)', 'Vepřové ledvinky dušené', 'bilkoviny'],
+    ['Vepřový mozeček (syrový)', 'Vepřový mozeček dušený', 'bilkoviny'], ['Mleté krůtí (syrové)', 'Mleté krůtí tepelně upravené', 'bilkoviny'],
+    ['Sumeček americký (kanálový, syrový)', 'Sumeček americký (kanálový) pečený', 'bilkoviny'], ['Úhoř (syrový)', 'Úhoř pečený', 'bilkoviny'],
+    ['Pangasius (syrový)', 'Pangasius tepelně upravený', 'bilkoviny'],
   ];
   let faktoryVahy = {};   // název → {stav, protejsek, faktor, metoda}; plní nastavPrevody() z databáze
   // spočítá poměry z naměřeného složení dvojic (potraviny = obecné potraviny z databáze)
@@ -452,6 +463,8 @@
     'Ovesná kaše na mléce': 'Ovesná kaše z vloček na polotučném mléce', 'Lasagne boloňské': 'Lasagne s masem',
     'Sushi maki s lososem': 'Sushi nebo maki s mořskými plody', 'Gyros v pitě': 'Gyros v pitě (sendvič)', 'Palačinky': 'Palačinka bez náplně (balená)',
     'Palačinky s marmeládou': 'Palačinka s marmeládou (domácí)',
+    'Kuřecí řízek smažený': 'Kuřecí prsa smažená v obalu', 'Strouhanka': 'Strouhanka (suchá, bez koření)',
+    'Pečená kachna (bez kůže)': 'Kachna pečená bez kůže',
   };
   // naměřená varianta pro odhadnutou položku (obecné potraviny = suroviny z databáze), jinak null
   function namerenaVarianta(f, suroviny) {
@@ -485,7 +498,7 @@
     'Mléko polotučné (medián etiket)': 'mléko, polotučné mléko',
     'Tvaroh polotučný (medián etiket)': 'tvaroh, měkký tvaroh',
     'Eidam 30 % (medián etiket)': 'eidam, sýr, plátkový sýr',
-    'Párky (vepřové a hovězí)': 'párek, párky, vídeňské párky',
+    'Párky (vepřové a hovězí)': 'párky, vídeňské párky', 'Párek vepřový': 'párek',
     'Šunka (cca 11 % tuku)': 'šunka, šunka výběrová',
     'Ovesná kaše z vloček na polotučném mléce': 'ovesná kaše, kaše, porridge',
     'Batáty pečené (sladké brambory)': 'sladké brambory, batát',
@@ -493,7 +506,7 @@
     'Hamburger': 'burger',
     'Oříšková pomazánka s kakaem': 'nutella, nugeta',
     'Kobliha glazovaná (donut)': 'donut, kobliha',
-    'Kuřecí prsa pečená': 'kuřecí maso, kuřecí plátek, kuře pečené',
+    'Kuřecí prsa pečená': 'kuřecí maso, kuřecí plátek', 'Kuře s kůží pečené': 'kuře pečené, pečené kuře',
     'Hummus': 'humus, cizrnová pomazánka',
     'Gyros v pitě': 'gyros',
     'Kebab v tortille': 'kebab, wrap',
@@ -501,7 +514,23 @@
     'Krabí tyčinky (surimi)': 'krabí tyčinky',
     'Espresso': 'káva espresso, presso',
     'Káva (černá, bez cukru)': 'káva, kafe, turek',
+    'Kuřecí prsa smažená v obalu': 'kuřecí řízek', 'Telecí řízek v obalu opečený na pánvi (vídeňský)': 'vídeňský řízek, wiener schnitzel',
+    'Hovězí na guláš (plec, syrové)': 'gulášové maso', 'Hovězí kýta libová (syrová)': 'hovězí zadní, zadní',
+    'Sleď uzený': 'uzenáč', 'Hovězí dršťky vařené': 'dršťky', 'Obilná káva (kávovina) připravená s vodou': 'melta, caro, kávovina, cikorka',
+    'Kapusta (syrová)': 'kapusta hlávková, savojská kapusta', 'Přepuštěné máslo (ghí)': 'přepuštěné máslo, ghee, přepuštěné', 'Strouhanka (suchá, bez koření)': 'strouhanka',
+    'Vaječné těstoviny (suché)': 'vaječné nudle, nudle do polévky', 'Jarní cibulka': 'zelená cibulka, jarní cibulka, zelené cibulky, zelenou cibulku', 'Bazalka čerstvá': 'bazalka, čerstvá bazalka', 'Petržel kořenová (syrová)': 'petrželový kořen, kořenová petržel, petržel kořen',
+    'Petrželová nať': 'petrželka, petržel nať', 'Chilli mleté (kajenský pepř)': 'mleté chilli, kajenský pepř', 'Chilli paprička čerstvá (červená)': 'chilli, chilli paprička, chilli papričky', 'Zázvor čerstvý (kořen)': 'čerstvý zázvor, zázvor',
+    'Losos uzený (z chovu)': 'uzený losos', 'Pangasius (syrový)': 'pangas', 'Kuřecí srdce (syrová)': 'kuřecí srdíčka, kuřecí srdíčky, srdíčka, srdíčky',
+    'Kondenzované mléko neslazené (plnotučné)': 'zahuštěné mléko', 'Bujón hovězí (kostka, suchý)': 'bujón, kostka bujónu, hovězí bujón', 'Bujón drůbeží (kostka, suchý)': 'kuřecí bujón, drůbeží bujón',
+    'Topinambur': 'jeruzalémský artyčok', 'Jablečné pyré neslazené (přesnídávka)': 'jablečná přesnídávka, jablečné pyré', 'Gnocchi bramborové (syrové, balené)': 'gnocchi, bramborové noky',
+    'Vepřový mozeček (syrový)': 'mozeček', 'Husí sádlo': 'sádlo husí',
   };
+  // vařená zelenina (bez tuku a soli) se najde i jako dušená bez tuku – makroživiny prakticky stejné
+  for (const n of ['Brokolice vařená', 'Květák vařený', 'Mrkev vařená', 'Špenát vařený', 'Zelí bílé vařené', 'Zelí červené vařené', 'Kapusta vařená',
+    'Kedluben vařený', 'Pórek vařený', 'Cuketa vařená', 'Lilek vařený', 'Růžičková kapusta vařená', 'Celer bulvový vařený', 'Cibule vařená',
+    'Pastinák vařený', 'Paprika červená vařená', 'Hrášek zelený vařený', 'Fazolky zelené vařené', 'Kadeřávek vařený', 'Chřest vařený (mražený)']) {
+    ALIASY[n] = (ALIASY[n] ? ALIASY[n] + ', ' : '') + 'dušená bez tuku, dušené bez tuku, dušený bez tuku';
+  }
   // nářeční a slovenské názvy (připojí se k synonymům výše)
   const ALIASY_NAREC = {
     'Brambory syrové': 'zemáky, erteple, brambory, zemiaky', 'Brambory vařené (loupané)': 'vařené zemáky, zemiaky varené',
@@ -509,8 +538,8 @@
     'Okurky kyselé': 'kyselé okurky, sterilované okurky, čalamáda, kyslé uhorky', 'Mrkev': 'mrkva', 'Cibule': 'cibuľa',
     'Česnek': 'cesnak', 'Paprika červená': 'paprika', 'Jablko': 'jabĺko, jablka', 'Hruška': 'hruška, hrušky',
     'Švestky': 'slivky, trnky, švestka', 'Meruňky': 'marhule, meruňka', 'Borůvky': 'čučoriedky, černice, borůvka',
-    'Brusinky čerstvé': 'brusnice', 'Zelí bílé': 'zelí, kapusta', 'Kysané zelí': 'kyslá kapusta', 'Kukuřice sterilovaná (scezená)': 'kukurica',
-    'Hrášek zelený': 'hrach, hrášek', 'Cuketa': 'cukina', 'Lilek': 'baklažán', 'Dýně': 'tekvica, tykev', 'Celer bulvový': 'zeler, celer',
+    'Brusinky čerstvé': 'brusnice', 'Zelí bílé': 'zelí, biela kapusta', 'Kysané zelí': 'kyslá kapusta', 'Kukuřice sterilovaná (scezená)': 'kukurica',
+    'Hrášek zelený': 'hrášek', 'Cuketa': 'cukina', 'Lilek': 'baklažán', 'Dýně': 'tekvica, tykev', 'Celer bulvový': 'zeler, celer',
     'Pórek': 'pór', 'Červená řepa': 'cvikla, řepa', 'Máslo': 'maslo', 'Cukr krystal': 'cukr, cukor', 'Smetana ke šlehání (cca 36 %)': 'šlehačka, smotana na šľahanie',
     'Zakysaná smetana': 'kyslá smotana', 'Rohlík tukový': 'rožok, rohlíček', 'Houska': 'žemle, žemľa, buchta (pečivo)',
     'Chléb konzumní (kmínový)': 'chlieb, šumava chléb', 'Vejce celé': 'vajce, vajíčka', 'Tvaroh polotučný (medián etiket)': 'tvaroh, tvarôh',
@@ -535,11 +564,13 @@
   }
   function slova(t) { return t.split(/[^a-z0-9%]+/).filter(Boolean); }
 
+  // syrová surovina podle normalizovaného názvu („(karé, syrová)“, „Brambory syrové“; ne „Pizza sýrová (margherita)“)
+  const SYROVE = /[(,] ?syrov|\bsyrov[aey]?$/;
   // společné body za typ, kvalitu dat, oblibu a délku názvu (přesné i tolerantní hledání)
   function bodyPotraviny(x, volby) {
     const f = x.f;
     let b = 0;
-    if (f.typ === 's') b += 6;          // obecné suroviny – krátké, časté
+    if (f.typ === 's') b += SYROVE.test(x.nz) ? 9 : 6;   // obecné suroviny – krátké, časté; syrové před tepelně upravenými
     if (f.typ === 'm' || f.typ === 'r') b += 14;
     if (f.typ === 'd') b += f.odhad ? 1 : 4;   // doplňky správce; odhady až za naměřenými
     if (f.priznaky & 2) b -= 15;        // výrobek bez živin
@@ -1545,6 +1576,8 @@
     return cislo(s);
   }
   const RE_CISLO = '(\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)?(?:\\s*[-–]\\s*\\d+(?:[.,]\\d+)?)?\\s*[½¼¾⅓⅔]?|[½¼¾⅓⅔])';
+  // způsob krájení („nakrájená na plátky“, „na kostičky“) není součást názvu ani porce
+  const RE_KRAJENI = /(^|\s)(((na|po|roz)?krájen|nasekan|nastrouhan|natrhan)\S*\s*)?na\s+((malé|velké|větší|menší|jemné|tenké|silné|drobné|hrubé)\s+)?(plát|kostič|kostk|koleč|nudlič|proužk|kous|čtvrt|půl|polovin|osmin|jemno|hrubo|drobno|měsíč|klínk|plátk|krouž|hranol)\S*/gi;
   function rozeberSuroviny(text) {
     const vys = [];
     for (let radek of String(text || '').split(/\r?\n|;|(?<!\d),(?=\s*\d)|,(?=\s+\d)/)) {
@@ -1552,15 +1585,16 @@
       if (!radek || /:$/.test(radek) || radek.length > 120) continue;
       let mn = null, jed = null, g = null, druh = null, nazev = radek;
       const zkusJednotku = slovo => { const s = norm(slovo).replace(/\.$/, ''); for (const [re, gr, d] of JEDNOTKY_RECEPTU) if (re.test(s) || re.test(slovo.toLowerCase().replace(/\.$/, ''))) return { gr, d: d || null }; return null; };
-      let m = radek.match(new RegExp('^' + RE_CISLO + '\\s*([^\\s\\d]+\\.?)?\\s*(.*)$'));
-      if (!m) m = (() => { const k = radek.match(new RegExp('^(.*?)[\\s,–-]+' + RE_CISLO + '\\s*([^\\s\\d]+\\.?)?$')); return k ? [k[0], k[2], k[3], k[1]] : null; })();
+      const cist = radek.replace(RE_KRAJENI, ' ').replace(/\s+/g, ' ').trim() || radek;
+      let m = cist.match(new RegExp('^' + RE_CISLO + '\\s*([^\\s\\d]+\\.?)?\\s*(.*)$'));
+      if (!m) m = (() => { const k = cist.match(new RegExp('^(.*?)[\\s,–-]+' + RE_CISLO + '\\s*([^\\s\\d]+\\.?)?$')); return k ? [k[0], k[2], k[3], k[1]] : null; })();
       if (m) {
         mn = cisloRecept(m[1]);
         const j = m[2] ? zkusJednotku(m[2]) : null;
         if (j) { jed = m[2].replace(/\.$/, ''); druh = j.d; if (j.gr !== null && mn !== null) g = mn * j.gr; nazev = m[3]; }
         else { nazev = ((m[2] || '') + ' ' + (m[3] || '')).trim(); druh = 'kus'; }   // „2 vejce“
       }
-      nazev = nazev.replace(/\(.*?\)/g, ' ').replace(/(^|\s)(dle chuti|podle chuti|na ozdobu|na posypání|na vymazání|na smažení|na podlití|cca|asi|trochu|případně)(?=\s|$|,)/gi, ' ')
+      nazev = nazev.replace(/\(.*?\)/g, ' ').replace(RE_KRAJENI, ' ').replace(/(^|\s)(dle chuti|podle chuti|na ozdobu|na posypání|na vymazání|na smažení|na podlití|cca|asi|trochu|případně)(?=\s|$|,)/gi, ' ')
         .replace(/^(\s*(of|z|ze)\s+)/i, '').replace(/[,.;:]+$/, '').replace(/\s+/g, ' ').trim();
       if (!nazev) continue;
       vys.push({ radek, mnozstvi: mn, jednotka: jed, druh, g: g !== null ? zaokrouhli(g, 1) : null, nazev });
@@ -1568,7 +1602,7 @@
     return vys;
   }
   // tvary slov ze seznamu surovin (2. pád) → 1. pád; nepravidelné a typické případy zvlášť
-  const NEPRAVIDELNE = { soli: 'sůl', soľ: 'sůl', syra: 'eidam', syru: 'eidam', syr: 'eidam', vajec: 'vejce', vajicek: 'vejce', vejci: 'vejce', masla: 'máslo',
+  const NEPRAVIDELNE = { jater: 'játra', soli: 'sůl', soľ: 'sůl', syra: 'eidam', syru: 'eidam', syr: 'eidam', vajec: 'vejce', vajicek: 'vejce', vejci: 'vejce', masla: 'máslo',
     rajcat: 'rajče', rajcata: 'rajče', rajcete: 'rajče', brambor: 'brambory', jablek: 'jablko', hrusek: 'hruška', svestek: 'švestky', cibuli: 'cibule',
     testovin: 'těstoviny', spaget: 'těstoviny', spagety: 'těstoviny', nudli: 'těstoviny', orechu: 'ořechy', mandli: 'mandle', banany: 'banán',
     oleje: 'řepkový olej', olej: 'řepkový olej', octa: 'ocet', pepre: 'pepř', vody: 'voda', mleka: 'mléko', masa: 'maso', zeli: 'zelí', mrkve: 'mrkev', prsou: 'prsa', medu: 'med',
@@ -1579,7 +1613,7 @@
       const v = new Set([s]);
       if (NEPRAVIDELNE[s]) v.add(norm(NEPRAVIDELNE[s]));
       const k = (kon, nah) => { if (s.length > kon.length + 2 && s.endsWith(kon)) v.add(s.slice(0, -kon.length) + nah); };
-      k('ych', 'e'); k('ych', 'y'); k('ich', 'i'); k('eho', 'e'); k('eho', 'y'); k('ou', 'a'); k('ek', 'ky');
+      k('ych', 'e'); k('ych', 'y'); k('ych', 'a'); k('ich', 'i'); k('iho', 'i'); k('eho', 'e'); k('eho', 'y'); k('ou', 'a'); k('ek', 'ky');
       k('y', 'a'); k('u', ''); k('a', 'o'); k('a', ''); k('e', ''); k('i', 'e'); k('i', 'a');
       return [...v];
     };
@@ -1592,7 +1626,7 @@
   // potravina pro řádek receptu: nejdřív obecné suroviny (a vlastní potraviny), syrové před tepelně upravenými;
   // když nic nesedí, výrobky z databáze
   function najdiSurovinu(indexSurovin, indexVse, nazev) {
-    let nej = null, nejB = 0;
+    let nej = null, nejB = 0, nejUpr = false, syr = null, syrB = 0;
     const slova = norm(nazev).split(' ').filter(Boolean).slice(0, 3);
     const kmeny = slova.map(w => tvaryNazvu(w).filter(x => !x.includes(' ')).map(x => x.slice(0, Math.max(3, x.length - 2))));
     // kandidáti: celý název; bez prvního slova (přídavné jméno: „strouhaného sýra“) s malou srážkou
@@ -1604,30 +1638,46 @@
         if (prvni.length < 2) continue;
         for (const f of hledej(index, t, { limit: 8 })) {
           if (!Number.isFinite(f.n.kcal)) continue;
-          const slovaF = norm(f.nazev).replace(/[()/,.]/g, ' ').split(' ').filter(Boolean);
+          const slovaF = norm(f.nazev).replace(/\bbez \S+/g, ' ').replace(/[()/,.]/g, ' ').split(' ').filter(Boolean);
           if (!slovaF.length) continue;
           let b = 0;
           if (slovaF[0] === prvni) b = 4;
           else if (slovaF[0].startsWith(prvni) && prvni.length >= 4) b = 3;
           else if (slovaF.includes(prvni)) b = 2.5;
           else if (slovaF.some(w => w.startsWith(prvni) && prvni.length >= 4)) b = 2;
+          // celý řádek (i ve 2. pádě) je synonymem potraviny („gulášové maso“, „melty“; krátká jako „sýr“ ne)
+          const al = sr === 0 && (t.includes(' ') || t.length >= 5) && (f.aliasy || ALIASY[f.nazev]);
+          const shodaAlias = !!al && norm(al).split(/\s*,\s*/).includes(t);
+          if (shodaAlias) b = Math.max(b, 4.5);
           if (!b) continue;
-          // ostatní slova původního názvu: shoda přidá, chybějící (např. „hladké“, „hrubé“) ubere
-          kmeny.forEach((km, i) => {
-            if (slova[i] && t.split(' ')[0].startsWith(km[0] || '~')) return;
+          // ostatní slova původního názvu: shoda přidá, chybějící (např. „hladké“, „hrubé“) ubere;
+          // synonymum celý řádek pokrývá, předložky a krátká slova („na plátky“) se nepočítají
+          if (!shodaAlias) kmeny.forEach((km, i) => {
+            if (!slova[i] || slova[i].length < 3 || /^(bez|pro|nebo|pod|nad)$/.test(slova[i])) return;
+            if (t.split(' ')[0].startsWith(km[0] || '~')) return;
             const shoda = slovaF.some(x => km.some(k => x.startsWith(k)));
             b += shoda ? 0.8 : -0.5;
           });
           if (/syrov|such|\(syr/.test(norm(f.nazev))) b += 0.4;
-          if (/varen|pecen|smazen|michan|natvrdo|volske|kase|konzerv|tycink|poleva|dezert|cokolad|protein/.test(norm(f.nazev)) && !/varen|pecen|cokolad|protein/.test(t)) b -= 0.8;
+          // upravená potravina, když řádek receptu úpravu nezmiňuje („pečeně“ v „(karé, syrová)“ je kus masa, ne úprava)
+          const nzF = norm(f.nazev);
+          const upr = !SYROVE.test(nzF) && /varen|pecen|smazen|dusen|grilovan|opecen|upraven|obal|michan|natvrdo|volske|kase|konzerv|tycink|poleva|dezert|cokolad|protein/.test(nzF) && !/varen|pecen|smazen|dusen|grilovan|opecen|obal|cokolad|protein/.test(t + ' ' + norm(nazev));
+          if (upr) b -= 0.8;
           if (f.typ === 'm') b += 0.3;
           b -= sr + srazka + (t === norm(nazev) ? 0 : 0.1);
-          if (b > nejB) { nejB = b; nej = f; }
+          if (/(^|\s)(srdce|jazyk|ledvin|mozec|zaludk|drstk|nozick)/.test(nzF) && !/srdc|srdic|jazyk|ledvin|mozec|zaludk|drst|nozic/.test(norm(nazev))) b -= 1;
+          // při shodném skóre čerstvá / nezpracovaná před sušenou, mletou a práškem („cibule na kroužky“)
+          const zprac = x => /susen|mlet|prasek/.test(norm(x.nazev));
+          if (b > nejB + 1e-9 || (Math.abs(b - nejB) < 1e-9 && nej && zprac(nej) && !zprac(f))) { nejB = b; nej = f; nejUpr = upr; }
+          if (SYROVE.test(nzF) && b > syrB) { syrB = b; syr = f; }
         }
       }
     };
     ohodnot(indexSurovin, 0);
-    if (!(nej && nejB >= 3.5)) ohodnot(indexVse, 0.5);    // výrobky jen když obecná surovina nesedí dobře
+    // recept počítá se syrovou vahou: dobře sedící syrová surovina má přednost před upravenou („kuřecí prsa bez kůže“)
+    if (nejUpr && syr && syrB >= 3) { nej = syr; nejB = syrB; nejUpr = false; }
+    // výrobky jen když obecná surovina nesedí dobře (nebo sedí jen tepelně upravená – v receptu bývá syrová)
+    if (!(nej && nejB >= 3.5 && !nejUpr)) ohodnot(indexVse, 0.5);
     if (nej && nejB >= 1.8) return nej;
     const nal = hledej(indexVse, nazev, { limit: 6 });
     return nal.find(f => Number.isFinite(f.n.kcal)) || null;
@@ -1635,19 +1685,32 @@
   // gramy suroviny podle spárované potraviny (u „kusů“ a balení podle jejích porcí)
   function gramySuroviny(r, f) {
     if (r.g !== null && r.g !== undefined) return { g: r.g, odhad: false };
-    const pocet = r.mnozstvi || 1;
+    if (r.mnozstvi === null || r.mnozstvi === undefined) return { g: null, odhad: true };   // „máslo na vymazání“
+    const pocet = r.mnozstvi;
     const porce = (f && f.porce) || [];
     let p = null;
+    // běžná balení do pečení (na 1 balení) – i bez slova „balení“: „1 vanilkový cukr“, „1 prášek do pečiva“
+    const radek = norm(r.radek || r.nazev);
+    const typ = (r.druh === 'balení' || r.druh === 'kus') && !/(^|\s)(list|platk|kelim|chia)/.test(radek) && !/hotov/.test(norm((f && f.nazev) || '')) &&
+      [[/kypr|prasek do pec|prasku do pec/, 12], [/pudink/, 40], [/vanilk[a-z]* cukr|vanilin/, 20], [/drozdi|kvasnic/, 42], [/zelatin/, 20]]
+        .find(([re]) => re.test(radek) && !(re.source.startsWith('drozdi') && /susen|pivo/.test(radek)));
+    if (typ) return { g: zaokrouhli(pocet * typ[1], 1), odhad: false };
     if (r.druh === 'balení') {
-      // běžná balení do pečení (na 1 balení)
-      const typ = [[/kypř|prášek do peč|prášku do peč/i, 12], [/vanilk/i, 20], [/droždí|kvasnic/i, 42], [/želatin/i, 20], [/pudink/i, 40]].find(([re]) => re.test(r.nazev + ' ' + ((f && f.nazev) || '')));
-      if (typ) return { g: zaokrouhli(pocet * typ[1], 1), odhad: false };
-      p = porce.find(x => /balení/.test(x.n));
+      p = porce.find(x => /balení/.test(x.n)) || (/^kost/.test(norm(r.jednotka || '')) && porce.find(x => /^kostka/.test(x.n)));
     }
     else if (r.druh === 'stroužek') p = porce.find(x => /stroužek/.test(x.n));
-    else p = porce.find(x => /^(střední kus|kus)\b/.test(x.n)) || porce.find(x => /kus|vejce/.test(x.n));
+    else {
+      // „2 cm zázvoru“ podle porce „kousek (2 cm)“; „2 bobkové listy“, „1 hlávka“ podle porce stejného slova
+      const text = norm((r.radek || r.nazev).replace(RE_KRAJENI, ' '));
+      const cm = text.match(/(^|\s)(\d+(?:[.,]\d+)?)\s*cm\b/), pcm = cm && porce.find(x => /\(\d+ cm\)/.test(x.n));
+      if (pcm) return { g: zaokrouhli(cislo(cm[2]) / +pcm.n.match(/\((\d+) cm\)/)[1] * pcm.g, 1), odhad: false };
+      p = porce.find(x => { const w = norm(x.n).split(/[ (]/)[0]; return w.length >= 4 && !/^(porce|hrnek|lzice|lzicka|balen|mal|vel|stred|prso|filet)/.test(w) && new RegExp('(^|\\s)' + w.slice(0, Math.max(3, w.length - 2))).test(text); })
+        || porce.find(x => /^střední kus\b/.test(x.n)) || porce.find(x => /^kus\b/.test(x.n)) || porce.find(x => /kus|vejce/.test(x.n))
+        || porce.find(x => /^(balení|kostka)(?=\s|$|\()/.test(x.n));   // „1 vanilkový cukr“ = 1 balení
+    }
     if (p) return { g: zaokrouhli(pocet * p.g, 1), odhad: false };
-    return { g: r.mnozstvi ? zaokrouhli(pocet * 100, 1) : null, odhad: true };
+    if (f && f.skupina === 'koreni') return { g: null, odhad: true };   // „3 hřebíčky“ nejsou 300 g
+    return { g: zaokrouhli(pocet * 100, 1), odhad: true };
   }
   /* ---------- tabulka výživových údajů z textu (OCR fotky etikety) ---------- */
   // pořadí je důležité: „z toho nasycené…“ a „z toho cukry“ dřív než tuky a sacharidy
@@ -2450,7 +2513,7 @@
       if (!['100', '112', '125', '140'].includes(s.nastaveni.pismo)) delete s.nastaveni.pismo;
       if (s.nastaveni.energie !== 'kj') delete s.nastaveni.energie;
       if (s.nastaveni.spravce !== true) delete s.nastaveni.spravce;
-      for (const k of ['online', 'obrazky', 'mikro', 'pohybKCili', 'napojeDoVody', 'infoOnline', 'infoPlocha']) {
+      for (const k of ['online', 'obrazky', 'mikro', 'pohybKCili', 'napojeDoVody', 'infoOnline', 'infoPlocha', 'bezHodnot']) {
         if (k in s.nastaveni && typeof s.nastaveni[k] !== 'boolean') { if (k in novyStav().nastaveni) s.nastaveni[k] = novyStav().nastaveni[k]; else delete s.nastaveni[k]; }
       }
       for (const k of ['zaloha', 'uklid']) if (k in s.nastaveni && !(typeof s.nastaveni[k] === 'string' && zKlice(s.nastaveni[k]))) delete s.nastaveni[k];
@@ -2557,7 +2620,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-20f', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-28a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
