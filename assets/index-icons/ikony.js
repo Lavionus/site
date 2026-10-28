@@ -270,6 +270,7 @@ const KATALOG_IKONY = {
   "obsah/drzaky_naradi.html": "pages/page-drzaky_naradi",
   "obsah/kleste.html": "pages/page-kleste",
   "obsah/odizolovac.html": "pages/page-odizolovac",
+  "obsah/s_hak.html": "pages/page-s_hak",
   "obsah/tubeRed.html": "pages/page-tubeRed",
   "obsah/tubeRedFlat.html": "pages/page-tubeRedFlat",
   "obsah/tubeSplit.html": "pages/page-tubeSplit",

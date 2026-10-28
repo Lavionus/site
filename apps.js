@@ -2327,6 +2327,12 @@ const KATALOG_SEKCE = [
         "tagy": ["3D tisk", "STL", "elektro", "elektrikář", "odizolování", "stahovák", "kabel", "CYKY", "CY", "CYSY", "CYKYLo", "ulamovací nůž", "čepel", "generátor", "pružný kloub", "flexure", "kleště", "V-zářez", "AWG", "měrka průřezu", "podélný řez"]
       },
       {
+        "soubor": "obsah/s_hak.html",
+        "nazev": "🪝 S hák na trubky",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "S hák", "háček", "trubka", "tyč", "šatní tyč", "zacvaknutí", "průřez", "žebro", "prolnutí", "nosnost", "generátor", "CAD"]
+      },
+      {
         "soubor": "obsah/tubeRed.html",
         "nazev": "🔧 Redukce trubek",
         "stav": "beta",
