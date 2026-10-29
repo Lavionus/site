@@ -528,7 +528,7 @@
     velikonoce, svatky, jePracovniDen, posunNaPracovni, zaruka, stavZaruky,
     cislo, formatCislo, formatKc, formatDatum, velikost, bezDiakritiky, normStitky, novyId, idZeSkenu, textQr,
     normPolozka, migruj, kontext, nazevMista, filtruj, serad, souhrn,
-    csvBunka, csv, ctiCsv, crc32, zapisZip, spoj, ctiZip, bezpecneJmeno, planSlouceni, ics
+    csvBunka, csv, ctiCsv, crc32, zapisZip, spoj, ctiZip, bezpecneJmeno, planSlouceni, ics, icsText, icsZalom
   };
   if (typeof module !== 'undefined') module.exports = API; else window.MajetekJadro = API;
 })();

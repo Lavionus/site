@@ -1,109 +1,79 @@
 # Návrhy na další stránky/aplikace
 
-Návrhy vycházejí z toho, co už katalog v `apps.js` obsahuje (přes 200 existujících
-aplikací), aby se nedublovalo. Řazeno podle stávajících skupin v katalogu, u každé
-položky krátký popis a proč by mohla mít smysl vedle existujících appek.
+Stav k 29. 10. 2026. Návrhy vycházejí z katalogu hlavního webu (`apps.js`, 438 stránek)
+**i z katalogu Metodu** (`../metodus/apps.js`, 274 stránek), aby se nedublovalo.
 
-## 🗂️ Produktivita
+Pravidla:
 
-- **Zettelkasten / propojené poznámky** (`notes_graph.html`) – krátké lístky s odkazy mezi
-  sebou a grafovým náhledem. `editor.html` a `secure_notes.html` jsou lineární, chybí
-  propojování.
-- **Generátor vizitky / vCard + QR** (`vcard_gen.html`) – vyplníš údaje, dostaneš QR
-  s vCard k naskenování do telefonu. Navazuje na `wifi_qr.html` a `qr_generator.html`,
-  ale konkrétně pro kontaktní údaje.
-- **Docházka / evidence odpracovaných hodin** (`timesheet.html`) – jednoduchý týdenní
-  výkaz s exportem do CSV, součty pro fakturaci. Doplňuje `invoice_gen.html`.
-- **Generátor agendy schůzky / zápisu z porady** (`meeting_notes.html`) – šablona s body,
-  akčními kroky a termíny, tisk/export do PDF.
+- Před přidáním návrhu ověřit oba katalogy (`grep -i <téma> apps.js ../metodus/apps.js`).
+- Výuková témata (učivo ZŠ: jazyky, matematika, fyzika, přírodopis, hudební nauka…)
+  patří do Metodu, ne sem.
+- Zahradnická témata uživatel teď nechce (sekce Zahrada & pěstování se nerozšiřuje).
+- Hotové návrhy přesunout do archivu na konci souboru.
 
-## 🩺 Zdraví
+## Otevřené návrhy
 
-- **Budík dle spánkových cyklů** (`sleep_cycle_alarm.html`) – zadáš čas buzení nebo
-  usnutí, spočítá optimální časy (násobky 90 min). `sleep_tracker.html` jen loguje spánek
-  zpětně, tohle by bylo plánovací.
-- **Oční tabulka / rychlý test zraku (Snellenova tabulka)** (`vision_test.html`) – tisk
-  nebo zobrazení na monitoru pro orientační test ostrosti vidění, doplňuje
-  `color_vision.html` a `colorblind_sim.html`.
-- **Kalendář růstu dítěte (percentily)** (`growth_chart.html`) – zadání výšky/váhy podle
-  věku a zobrazení v percentilových křivkách. V katalogu chybí cokoliv pro rodiče
-  malých dětí kromě `clock_learning`.
-- **Lékárnička – rychlá první pomoc** (`first_aid_ref.html`) – přehledová referenční
-  příručka (popáleniny, zlomeniny, alergická reakce) s vyhledáváním, offline. Podobný
-  princip jako `physics_ref.html`, jen pro první pomoc.
-- **Kalkulačka kofeinu za den** (`caffeine_tracker.html`) – sčítání dávek kofeinu z nápojů
-  a upozornění na doporučený denní limit, doplňuje `water_tracker.html`.
+### 🌿 Příroda & venku
 
-## 🌿 Příroda & venku
+- **Atlas hub – houbaření a záměny** (`houby_atlas.html`). Praktický průvodce pro sběr:
+  karta druhu s jednotnou ilustrací, jedlost/jedovatost, **nebezpečné záměny vedle sebe**,
+  jednoduchý klíč (ano/ne otázky), sezónnost. Odlišit od Metodu: `pr6_houby` a „Houby
+  a lišejníky“ učí systém a stavbu hub, tohle má být terénní pomůcka. Obrázky jsou jádro
+  (Codex na pokyn, nebo lokální Z-Image).
 
-- **Rybářský kalendář (fáze měsíce a aktivita ryb)** (`fishing_calendar.html`) – využívá
-  stejná data jako `sun_moon.html`, ale cílené na predikci „kdy brát na ryby".
-- **Plánovač záhonů (vizuální rozvržení zahrady)** (`garden_layout.html`) – interaktivní
-  mřížka záhonů s přetahováním plodin, respektuje `crop_rotation.html` (střídání plodin)
-  a `seeding_calc.html`, ale řeší prostorové rozmístění, ne jen termíny.
-- **Astronomický kalendář úkazů** (`sky_events.html`) – meteorické roje, zatmění,
-  konjunkce planet v daném roce a místě; navazuje na `star_map.html` a `sun_moon.html`.
+### 🩺 Zdraví
 
-## 🎨 Tvorba & média
+- **Ilustrovaná první pomoc – rozšíření Lékárničky** (`first_aid_ref.html`, ne nová stránka).
+  Postupy krok za krokem v obrázcích (zotavovací poloha, Heimlichův manévr, resuscitace)
+  a tisk karty A4/A6 do auta a dílny. Metodus (`pr8_prvni_pomoc`, „Zdraví, nemoc a první
+  pomoc“) to probírá jako učivo; tady jde o rychlou referenci a tisk.
 
-- **Generátor komiksových stripů (2D, panely + bubliny)** (`comic_strip.html`) – jiný
-  přístup než `comic3d.html`/`comic3d_walk.html` (ty jsou 3D scény) – klasické 2D panely
-  s textovými bublinami z vlastních obrázků.
-- **Storyboard tvůrce** (`storyboard.html`) – mřížka scén s náčrtem, popiskem a časováním,
-  pro video/film projekty.
-- **Generátor nálepek (sticker) s obrysem** (`sticker_maker.html`) – nahraješ obrázek,
-  aplikace vytvoří bílý obrys a export na tisk, jiné zaměření než `watermark.html`.
-- **Paleta z obrázku (extrakce barev)** (`palette_from_image.html`) – nahrát fotku a
-  vytáhnout dominantní barvy do palety; doplňuje `color_picker.html`, který barvy jen
-  vybírá ručně.
+### 📐 Technika
 
-## 📐 Technika
+- **Průvodce spojovacím materiálem a nářadím** (`sprav_material.html`). Hmoždinky
+  (do čeho kterou), nýty, hřebíky, typy hlav a bitů, vrtáky podle materiálu, pilové listy;
+  kreslené karty + „čím to přichytit“ (materiál podkladu a zátěž → doporučení). Závity
+  a šrouby vynechat – ty už jsou na hlavním webu (`Šrouby & závity`) i v Metodu.
 
-- **Kalkulačka spotřeby barvy/tapety na místnost** (`paint_coverage_calc.html`) – rozměry
-  místnosti, počet vrstev → litry barvy nebo role tapety. Doplňuje `material_weight.html`
-  a `filament_calc.html`, které řeší jiné materiály.
-- **Kalkulačka betonové směsi** (`concrete_mix_calc.html`) – objem základu/desky →
-  množství cementu, písku, štěrku, vody.
-- **Sklon střechy / délka krokví** (`roof_pitch_calc.html`) – zadání rozpětí a sklonu,
-  výpočet délky krokve a úhlů řezu.
-- **Průřez a úbytek napětí na kabelu** (`cable_sizing_calc.html`) – doplňuje
-  `ohm_calc.html`, ale cíleně pro dimenzování vodičů podle proudu a délky.
-- **Kalkulačka pružin (tažné/tlačné)** (`spring_calc.html`) – tuhost, síla, počet závitů;
-  zapadá vedle `gear_ratio.html`, `screw_calc.html`.
+### 🎮 Hry
 
-## 💻 Vývoj & data
+- **Další gamebooky** do sekce 📖 Gamebooky. Engine (`obsah/gamebook/jadro.js`) je obecný,
+  nový příběh = nový datový soubor jako `gamebook/pribeh.js` + ilustrace. Pak udělat
+  výběr příběhu na titulní straně.
+- **Dobble / Postřeh** (`dobble.html`). Generátor karet, kde mají každé dvě karty právě
+  jeden společný symbol (projektivní rovina řádu 7 → 55 karet, 57 symbolů); hra na
+  obrazovce + tisk karet. Potřebuje sadu 57 jednotných ikon (arch 4×4 přes Codex nebo
+  lokální SD).
+- **Obrazové sady pro Pexeso** (rozšíření `memory_game.html`, ne nová stránka). Tematické balíčky
+  (zvířata, památky ČR, nářadí). Vlajky ne – Metodus má „Kvíz vlajky a města“.
+- **Uzly – rozšíření Námořnických uzlů** (`uzly.html`) o horolezecké a rybářské uzly s animací kroků.
 
-- **Query string / URL builder a parser** (`url_builder.html`) – rozklad URL na části,
-  skládání s parametry, encode/decode. Chybí vedle `base64_encoder.html`.
-- **YAML ↔ JSON převodník** (`yaml_json.html`) – analogicky k `csv_json.html`.
-- **Cheatsheet Git příkazů s vyhledáváním** (`git_cheatsheet.html`) – rychlá offline
-  referenční příručka, podobný princip jako `http_status.html`.
-- **Generátor .env / konfiguračních souborů** (`env_gen.html`) – formulář → `.env` nebo
-  `docker-compose` úryvek, doplňuje `gitignore_gen.html`.
-- **API/webhook tester** (`api_tester.html`) – jednoduchý klient pro GET/POST s hlavičkami,
-  doplňuje `regex_tester.html` a `json_formatter.html`.
+### 🏠 Domácnost
 
-## 🎓 Vzdělávání
+- **Domácí údržba – návaznosti.** Propojit s Evidencí majetku (úkol údržby u konkrétního
+  spotřebiče) a s Domácími odečty (připomínka měsíčního odečtu). Až po zpětné vazbě
+  uživatele na `udrzba.html`.
 
-> Vzdělávací aplikace mají od srpna 2026 samostatný web ve složce `metodus/`
-> (vlastní katalog `metodus/apps.js`). Nové návrhy z této sekce patří tam.
+## Už je v Metodu (sem nepatří)
 
-- **Němčina – slovíčka a časování** (`de_slovicka.html`) – katalog má jen angličtinu
-  (`aj_slovicka`, `aj_slovesa`), němčina/další jazyk chybí úplně.
-- **Fyzikální pokusy pro děti (simulace)** (`physics_playground.html`) – navazuje na
-  `gravitacni_hriste.html`, ale širší (kyvadlo, nakloněná rovina, srážky).
-- **Notová osnova – čtení not (trénink)** (`notes_reading.html`) – doplňuje
-  `music_theory.html`, ale zaměřené na rychlé rozpoznávání not na lince.
+| Návrh | Kde je v Metodu |
+|---|---|
+| Němčina – slovíčka a časování | „🇩🇪 Němčina – slovíčka“, „Slovní zásoba NJ a FJ“, „Výslovnost NJ a FJ“ |
+| Fyzikální pokusy pro děti (simulace) | „🔬 Fyzikální hřiště – síla, pohyb a energie“, „⚖️ Páka a jednoduché stroje“ |
+| Notová osnova – čtení not | „🎼 Notová osnova – čtení not“, „🎹 Intervaly“, „🥁 Rytmus, délky not a takt“ |
+| Obrazový slovník cizích jazyků | předměty `aj` a `dcj` (slovní zásoba) |
+| Sekce pro děti (násobilka, vyjmenovaná slova, hodiny, zlomky) | „✖️ Procvičování násobilky“, „✍️ Vyjmenovaná slova“, „🕐 Učení hodin“, „🍕 Zlomky…“ |
+| Houby a rostliny jako učivo | `pr6_houby`, „🍄 Houby a lišejníky“, „🌿 Stavba a systém rostlin“ |
 
-## 🎮 Hry
+## Archiv – realizováno
 
-- **Generátor bingo kartiček** (`bingo_gen.html`) – pro oslavy/výuku, tisk kartiček
-  s náhodným rozmístěním čísel/slov.
-- **Křížovka – generátor** (`crossword_gen.html`) – doplňuje `osmismerka.html` (ta je jen
-  na hledání slov v mřížce), křížovka je jiný typ hádanky.
+**29. 10. 2026:** 🔧 Domácí údržba a revize (`udrzba.html`), ⛏️ gamebook Hlubina pod
+Černou horou (`gamebook.html`, nová sekce 📖 Gamebooky).
 
-## ✉️ Ostatní
-
-- **Stránka „O projektu" / changelog** (`about.html`) – přehled, kdy co přibylo v
-  katalogu, odkaz na GitHub repo. Vhodné pro návštěvníky, kteří se ptají „co je nového".
-
+**Dřívější návrhy z tohoto souboru (všechny na webu):** Zettelkasten, vCard + QR,
+docházka, zápis z porady, budík dle spánkových cyklů, oční tabulka, kalendář růstu dítěte,
+lékárnička, kalkulačka kofeinu, rybářský kalendář, plánovač záhonů, astronomický kalendář
+úkazů, komiksové stripy, storyboard, generátor nálepek, paleta z obrázku, spotřeba
+barvy/tapety, betonová směs, sklon střechy, dimenzování kabelu, kalkulačka pružin,
+URL builder, YAML ↔ JSON, Git cheatsheet, generátor .env, API tester, bingo kartičky,
+generátor křížovek, O projektu.

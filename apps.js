@@ -306,6 +306,12 @@ const KATALOG_SEKCE = [
         "tagy": ["domácnost", "záruky", "inventář", "QR štítky", "offline", "záloha"]
       },
       {
+        "soubor": "obsah/udrzba.html",
+        "nazev": "🔧 Domácí údržba a revize",
+        "stav": "vyvoj",
+        "tagy": ["údržba", "revize", "kominík", "kotel", "STK", "filtry", "detektor kouře", "připomínky", "kalendář", "servis"]
+      },
+      {
         "soubor": "obsah/odecty.html",
         "nazev": "🔌 Domácí odečty",
         "stav": "beta",
@@ -2859,6 +2865,18 @@ const KATALOG_SEKCE = [
         "nazev": "🏝️ Ostrůvek (three.js + Blender)",
         "stav": "vyvoj",
         "tagy": ["ostrov", "skřítek", "krystaly", "3d", "three.js", "blender", "gltf", "low-poly", "demo", "hra"]
+      }
+    ]
+  },
+  {
+    "nazev": "📖 Gamebooky",
+    "skupina": "hry",
+    "polozky": [
+      {
+        "soubor": "obsah/gamebook.html",
+        "nazev": "⛏️ Hlubina pod Černou horou",
+        "stav": "vyvoj",
+        "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "permoník", "důl", "fighting fantasy"]
       }
     ]
   },

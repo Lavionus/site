@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domácí údržba a revize</title>
+<meta name="description" content="Kdy měnit filtry, servis kotle, kominík, STK, revize: opakované úkoly údržby domu a auta, historie s náklady, plán na rok a připomínky do kalendáře (ICS).">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="majetek/jadro.js"></script>
+<script src="udrzba/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 200px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.dlazdice:hover{border-color:var(--border-strong)}
+.dlazdice b{display:block;font-size:1.5rem;line-height:1.1}
+.dlazdice span{font-size:.78rem;color:var(--text-muted)}
+.dlazdice.po b{color:var(--danger)}
+.dlazdice.brzy b{color:var(--warn)}
+.dlazdice.ok b{color:var(--ok)}
+.dlazdice[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+
+h2.skupina{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:16px 0 6px}
+.seznam{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px}
+.ukol{--pruh:var(--border-strong);background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--pruh);border-radius:var(--radius,8px);padding:9px 11px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.ukol.po{--pruh:var(--danger)} .ukol.brzy{--pruh:var(--warn)} .ukol.ok{--pruh:var(--ok)}
+.ukol h3{margin:0;font-size:.92rem;line-height:1.3;word-break:break-word}
+.ukol .meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.76rem;color:var(--text-muted)}
+.ukol .termin{font-size:.85rem}
+.ukol.po .termin b{color:var(--danger)}
+.ukol .akce{display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
+.znacka{display:inline-block;font-size:.7rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border)}
+.znacka.zakon{border-color:var(--accent);color:var(--text)}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.6}
+
+/* plán roku */
+.plan{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.mesic{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:0}
+.mesic h3{margin:0 0 6px;font-size:.86rem;text-transform:capitalize}
+.mesic ul{list-style:none;margin:0;padding:0;font-size:.8rem;line-height:1.5}
+.mesic li{display:flex;gap:6px}
+.mesic li span:first-child{color:var(--text-faint);min-width:2.2em;text-align:right;flex:none}
+.mesic li.po span:last-child{color:var(--danger)}
+.mesic .nic{color:var(--text-faint);font-size:.78rem}
+
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em}
+td.cena,th.cena{text-align:right;white-space:nowrap}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,820px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:480px){.radek,.radek3{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info.zakon{border-left:3px solid var(--accent)}
+.predlohy h4{margin:10px 0 4px;font-size:.8rem;color:var(--text-muted)}
+.predlohy label{display:flex;gap:8px;align-items:flex-start;padding:4px 2px;font-size:.84rem;cursor:pointer;line-height:1.35}
+.predlohy label small{color:var(--text-faint)}
+.predlohy label.ma{opacity:.5}
+
+@media print{
+  .lista,.akce,.souhrn,dialog,#podpis-pruh{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .ukol,.mesic,.tab-obal{break-inside:avoid;background:#fff;border-color:#999}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🔧 Domácí údržba</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Záloha, import, kalendář, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úkoly"><span class="skup-nazev" aria-hidden="true">Úkoly</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="novy" title="Nový úkol údržby">✚<span class="txt"> Nový</span></button>
+    <button class="tl" data-prikaz="predlohy" title="Přidat typické úkoly (kotel, kominík, STK, filtry…)">📚<span class="txt"> Z předloh</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="ukoly" aria-pressed="true">📋<span class="txt"> Úkoly</span></button>
+    <button class="tl" data-pohled="plan" aria-pressed="false">🗓️<span class="txt"> Plán na rok</span></button>
+    <button class="tl" data-pohled="historie" aria-pressed="false">🧾<span class="txt"> Historie</span></button>
+    <select class="tl" id="filtrKat" aria-label="Kategorie"><option value="">Všechny kategorie</option></select>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat…" aria-label="Hledat">
+  </div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="ics">📅 Připomínky do kalendáře (.ics)…</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <button class="tl" data-prikaz="csv">📊 Historie do CSV</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+
+<!-- úprava úkolu -->
+<dialog class="okno" id="dlgUkol"><form method="dialog">
+  <header id="dlgUkolTitul">Úkol</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" required maxlength="200"></label>
+    <div class="radek">
+      <label class="pole">Kategorie<select class="vstup" name="kat"></select></label>
+      <label class="pole">Místo / zařízení<input class="vstup" name="misto" maxlength="120" placeholder="např. kotel v kotelně"></label>
+    </div>
+    <div class="radek3">
+      <label class="pole">Opakovat každých<input class="vstup" name="n" type="number" min="0" max="999" step="1"></label>
+      <label class="pole">Jednotka<select class="vstup" name="j"><option value="d">dní</option><option value="t">týdnů</option><option value="m">měsíců</option><option value="r">let</option></select></label>
+      <label class="pole">Upozornit dní předem<input class="vstup" name="predem" type="number" min="0" max="365" step="1"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Naposledy provedeno<input class="vstup" name="posledni" type="date"></label>
+      <label class="pole">První termín (když ještě nebylo)<input class="vstup" name="od" type="date"></label>
+    </div>
+    <label class="pole">Kontakt (firma, telefon)<input class="vstup" name="kontakt" maxlength="300"></label>
+    <label class="pole">Poznámka<textarea class="vstup" name="poznamka" rows="3" maxlength="4000"></textarea></label>
+    <label class="pole">Zákonná povinnost (prázdné = není)<textarea class="vstup" name="povinne" rows="2" maxlength="1000"></textarea></label>
+    <div class="info" id="dlgUkolRada" hidden></div>
+    <label style="display:flex;gap:6px;font-size:.84rem;align-items:center"><input type="checkbox" name="archiv"> Archivovat (skrýt, nepočítat do termínů)</label>
+    <p class="info" style="margin:0">Interval 0 = jednorázový úkol.</p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgUkolSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- zápis provedení -->
+<dialog class="okno" id="dlgHotovo"><form method="dialog">
+  <header id="dlgHotovoTitul">Provedeno</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Datum<input class="vstup" name="datum" type="date" required></label>
+      <label class="pole">Cena (Kč)<input class="vstup" name="cena" inputmode="decimal" placeholder="0"></label>
+    </div>
+    <label class="pole">Kdo (firma, technik)<input class="vstup" name="kdo" maxlength="200"></label>
+    <label class="pole">Poznámka, číslo zprávy / revize<textarea class="vstup" name="pozn" rows="3" maxlength="2000"></textarea></label>
+    <p class="info" id="dlgHotovoDalsi" style="margin:0"></p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">✓ Zapsat</button>
+  </footer>
+</form></dialog>
+
+<!-- předlohy -->
+<dialog class="okno siroke" id="dlgPredlohy"><form method="dialog">
+  <header>📚 Typické úkoly údržby</header>
+  <div class="telo predlohy" id="predlohySeznam"></div>
+  <footer>
+    <span class="vlevo info" style="border:0;background:none;padding:0">⚖️ = zákonná povinnost (stav k 10/2026, orientačně)</span>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary" id="predlohyPridat">Přidat vybrané</button>
+  </footer>
+</form></dialog>
+
+<!-- historie úkolu -->
+<dialog class="okno siroke" id="dlgHistorie"><form method="dialog">
+  <header id="dlgHistorieTitul">Historie</header>
+  <div class="telo" id="dlgHistorieTelo"></div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0">Každý úkol má <b>interval</b> (např. každý rok). Příští termín = <b>naposledy provedeno + interval</b>. Když jste úkol ještě nedělali, zadejte <b>první termín</b>.</p>
+    <p style="margin:0">Tlačítkem <b>✓ Hotovo</b> zapíšete provedení (datum, cenu, kdo) – termín se posune a záznam zůstane v historii i s náklady.</p>
+    <p style="margin:0"><b>Připomínky:</b> prohlížeč vás upozornit neumí, když stránka není otevřená. Proto <i>Soubor → Připomínky do kalendáře</i> stáhne soubor .ics, který otevřete v kalendáři telefonu nebo Googlu – u každého termínu bude upozornění zadaný počet dní předem. Po zápisu provedení soubor vyexportujte znovu.</p>
+    <p style="margin:0"><b>Zákonné povinnosti</b> u předloh odpovídají stavu k říjnu 2026 a jsou orientační – v případě pochybností se obraťte na revizního technika, kominíka nebo úřad.</p>
+    <p style="margin:0">Data jsou jen v tomto prohlížeči. Zálohujte přes <i>Soubor → Záloha</i>. Stav měřidel si vedete v <a href="odecty.html" style="color:var(--accent)">Domácích odečtech</a>, záruky v <a href="majetek.html" style="color:var(--accent)">Evidenci majetku</a>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.UdrzbaJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const NAZEV_KAT = Object.fromEntries(J.KATEGORIE.map(k => [k.id, k.nazev]));
+const NADPISY = { po: '⛔ Po termínu', brzy: '⏰ Blíží se', ok: '✅ V pořádku', nezadano: '❔ Bez termínu', hotovo: '✔️ Jednorázové – hotovo', archiv: '🗄️ Archiv' };
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let pohled = 'ukoly', filtrStav = '';
+try { pohled = localStorage.getItem(J.KLIC + '_pohled') || 'ukoly'; } catch (e) {}
+const dnes = () => J.dnesIso();
+
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+
+/* ---------- vykreslení ---------- */
+function filtr() { return { text: $('hledat').value, kat: $('filtrKat').value, stav: filtrStav }; }
+
+function kartaUkolu(u, s) {
+  const termin = s.termin ? `<b>${J.formatDatum(s.termin)}</b> · ${J.popisZbyva(s.zbyva)}` : (s.stav === 'nezadano' ? 'Termín nezadán' : '');
+  return `<article class="ukol ${s.stav}" data-id="${esc(u.id)}">
+    <h3>${esc(u.nazev)}</h3>
+    <div class="termin">${termin}</div>
+    <div class="meta">
+      <span>${esc(NAZEV_KAT[u.kat])}</span>
+      <span>🔁 ${J.popisIntervalu(u.interval)}</span>
+      ${u.posledni ? `<span>naposledy ${J.formatDatum(u.posledni)}</span>` : ''}
+      ${u.misto ? `<span>📍 ${esc(u.misto)}</span>` : ''}
+      ${u.povinne ? `<span class="znacka zakon" title="${esc(u.povinne)}">⚖️ povinné</span>` : ''}
+    </div>
+    <div class="akce">
+      ${s.stav !== 'archiv' ? `<button class="btn mini primary" data-akce="hotovo">✓ Hotovo</button>` : ''}
+      <button class="btn mini" data-akce="upravit">✎ Upravit</button>
+      <button class="btn mini" data-akce="historie">🧾 Historie (${data.historie.filter(h => h.ukol === u.id).length})</button>
+    </div>
+  </article>`;
+}
+
+function vykresliUkoly() {
+  const d = dnes(), sh = J.souhrn(data, d);
+  const dl = (st, cislo, popis) => `<button class="dlazdice ${st}" data-filtr="${st}" aria-pressed="${filtrStav === st}"><b>${cislo}</b><span>${popis}</span></button>`;
+  let h = `<div class="souhrn">
+    ${dl('', sh.celkem, 'všechny úkoly')}
+    ${dl('pozornost', sh.po + sh.brzy, `⛔ ${sh.po} po termínu · ⏰ ${sh.brzy} brzy`)}
+    ${dl('povinne', data.ukoly.filter(u => u.povinne && !u.archiv).length, '⚖️ zákonné povinnosti')}
+    <div class="dlazdice" style="cursor:default"><b>${J.formatKc(sh.nakladyRok, 0)}</b><span>náklady za posledních 12 měsíců</span></div>
+    ${dl('archiv', data.ukoly.filter(u => u.archiv).length, '🗄️ archiv')}
+  </div>`;
+  if (!data.ukoly.length) {
+    h += `<div class="prazdno">Zatím žádné úkoly.<br>Začněte <button class="btn primary" data-prikaz="predlohy">📚 výběrem z předloh</button> (kotel, kominík, STK, filtry, detektory kouře…) nebo <button class="btn" data-prikaz="novy">✚ vlastním úkolem</button>.</div>`;
+    $('obsah').innerHTML = h; return;
+  }
+  const rad = J.serad(J.filtruj(data.ukoly, d, filtr()), d);
+  if (!rad.length) h += '<div class="prazdno">Filtru nic neodpovídá.</div>';
+  let akt = null;
+  for (const { u, s } of rad) {
+    if (s.stav !== akt) { if (akt) h += '</div>'; akt = s.stav; h += `<h2 class="skupina">${NADPISY[akt]}</h2><div class="seznam">`; }
+    h += kartaUkolu(u, s);
+  }
+  if (akt) h += '</div>';
+  $('obsah').innerHTML = h;
+}
+
+function vykresliPlan() {
+  const d = dnes();
+  const do12 = J.pridejMesice(d.slice(0, 8) + '01', 12);
+  const ukoly = J.filtruj(data.ukoly, d, Object.assign(filtr(), { stav: '' }));
+  const mesice = [];
+  for (let i = 0; i < 12; i++) mesice.push({ klic: J.pridejMesice(d.slice(0, 8) + '01', i).slice(0, 7), polozky: [] });
+  const po = [];
+  for (const u of ukoly) {
+    const s = J.stav(u, d);
+    if (s.stav === 'po') po.push({ u, t: s.termin });
+    for (const t of J.vyskyty(u, d.slice(0, 8) + '01', do12)) {
+      if (t >= do12) continue;
+      const m = mesice.find(x => x.klic === t.slice(0, 7));
+      if (m) m.polozky.push({ u, t, po: t < d });
+    }
+  }
+  const fmtM = k => new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, 1).toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' });
+  let h = '';
+  if (po.length) h += `<div class="info zakon" style="margin-bottom:10px">⛔ Po termínu: ${po.map(x => `<b>${esc(x.u.nazev)}</b> (${J.formatDatum(x.t)})`).join(', ')}</div>`;
+  h += '<div class="plan">' + mesice.map(m => {
+    m.polozky.sort((a, b) => a.t < b.t ? -1 : 1);
+    return `<section class="mesic"><h3>${fmtM(m.klic)}</h3>${m.polozky.length ? '<ul>' + m.polozky.map(p =>
+      `<li class="${p.po ? 'po' : ''}"><span>${+p.t.slice(8)}.</span><span>${esc(p.u.nazev)}</span></li>`).join('') + '</ul>' : '<div class="nic">nic</div>'}</section>`;
+  }).join('') + '</div>';
+  if (!ukoly.length) h = '<div class="prazdno">Žádné úkoly s termínem.</div>';
+  $('obsah').innerHTML = h;
+}
+
+function tabulkaHistorie(zaznamy, sUkolem) {
+  if (!zaznamy.length) return '<div class="prazdno">Zatím žádné zápisy.</div>';
+  const nazev = id => (data.ukoly.find(u => u.id === id) || {}).nazev || '?';
+  return `<div class="tab-obal"><table><thead><tr><th>Datum</th>${sUkolem ? '<th>Úkol</th>' : ''}<th>Kdo</th><th>Poznámka</th><th class="cena">Cena</th><th></th></tr></thead><tbody>` +
+    zaznamy.map(z => `<tr><td>${J.formatDatum(z.datum)}</td>${sUkolem ? `<td>${esc(nazev(z.ukol))}</td>` : ''}<td>${esc(z.kdo)}</td><td>${esc(z.pozn)}</td><td class="cena">${z.cena == null ? '' : J.formatKc(z.cena, 0)}</td>
+      <td><button type="button" class="btn mini danger" data-smaz-zaznam="${esc(z.id)}" title="Smazat zápis" aria-label="Smazat zápis">✕</button></td></tr>`).join('') +
+    '</tbody></table></div>';
+}
+
+function vykresliHistorii() {
+  const ids = new Set(J.filtruj(data.ukoly, dnes(), Object.assign(filtr(), { stav: '' })).map(u => u.id));
+  data.ukoly.filter(u => u.archiv).forEach(u => { if (!$('filtrKat').value || u.kat === $('filtrKat').value) ids.add(u.id); });
+  const z = data.historie.filter(h => ids.has(h.ukol)).sort((a, b) => a.datum < b.datum ? 1 : -1);
+  const roky = {};
+  for (const x of z) roky[x.datum.slice(0, 4)] = (roky[x.datum.slice(0, 4)] || 0) + (x.cena || 0);
+  const souhrn = Object.keys(roky).sort().reverse().map(r => `<span class="znacka">${r}: ${J.formatKc(roky[r], 0)}</span>`).join(' ');
+  $('obsah').innerHTML = (souhrn ? `<p style="margin:0 0 10px;display:flex;gap:6px;flex-wrap:wrap">Náklady po letech: ${souhrn}</p>` : '') + tabulkaHistorie(z, true);
+}
+
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pohled === pohled));
+  if (pohled === 'plan') vykresliPlan();
+  else if (pohled === 'historie') vykresliHistorii();
+  else vykresliUkoly();
+}
+
+/* ---------- dialogy ---------- */
+function otevri(dlg) {
+  return new Promise(res => {
+    dlg.addEventListener('close', () => res(dlg.returnValue), { once: true });
+    dlg.returnValue = '';
+    dlg.showModal();
+  });
+}
+
+async function upravUkol(u) {
+  const dlg = $('dlgUkol'), f = dlg.querySelector('form');
+  const novy = !u;
+  u = u || J.normUkol({ nazev: '', interval: { n: 1, j: 'r' }, od: dnes(), kat: $('filtrKat').value || 'jine' });
+  $('dlgUkolTitul').textContent = novy ? '✚ Nový úkol' : '✎ ' + u.nazev;
+  f.nazev.value = novy ? '' : u.nazev; f.kat.value = u.kat; f.misto.value = u.misto;
+  f.n.value = u.interval ? u.interval.n : 0; f.j.value = u.interval ? u.interval.j : 'r';
+  f.predem.value = u.predem; f.posledni.value = u.posledni; f.od.value = u.od;
+  f.kontakt.value = u.kontakt; f.poznamka.value = u.poznamka; f.povinne.value = u.povinne; f.archiv.checked = u.archiv;
+  $('dlgUkolRada').hidden = !u.rada; $('dlgUkolRada').textContent = '💡 ' + u.rada;
+  $('dlgUkolSmaz').hidden = novy;
+  $('dlgUkolSmaz').onclick = async () => {
+    if (!await Dialog.potvrd(`Smazat úkol „${u.nazev}“ i s historií (${data.historie.filter(h => h.ukol === u.id).length} zápisů)?`)) return;
+    J.smazUkol(data, u.id); uloz(); dlg.close('smazano'); vykresli();
+  };
+  if (await otevri(dlg) !== 'ok') return;
+  const n = J.normUkol(Object.assign({}, u, {
+    nazev: f.nazev.value, kat: f.kat.value, misto: f.misto.value, interval: { n: +f.n.value, j: f.j.value },
+    predem: f.predem.value, posledni: f.posledni.value, od: f.od.value, kontakt: f.kontakt.value,
+    poznamka: f.poznamka.value, povinne: f.povinne.value, archiv: f.archiv.checked
+  }));
+  const i = data.ukoly.findIndex(x => x.id === n.id);
+  if (i >= 0) data.ukoly[i] = n; else data.ukoly.push(n);
+  uloz(); vykresli();
+}
+
+async function hotovo(u) {
+  const dlg = $('dlgHotovo'), f = dlg.querySelector('form');
+  $('dlgHotovoTitul').textContent = '✓ ' + u.nazev;
+  f.datum.value = dnes(); f.cena.value = ''; f.kdo.value = (J.historieUkolu(data, u.id)[0] || {}).kdo || ''; f.pozn.value = '';
+  const dalsi = () => { $('dlgHotovoDalsi').textContent = u.interval && J.jeDatum(f.datum.value) ? 'Příští termín: ' + J.formatDatum(J.posun(f.datum.value, u.interval)) : 'Jednorázový úkol – po zápisu bude hotový.'; };
+  f.datum.oninput = dalsi; dalsi();
+  if (await otevri(dlg) !== 'ok') return;
+  try { J.provedeno(data, u.id, { datum: f.datum.value, cena: f.cena.value, kdo: f.kdo.value, pozn: f.pozn.value }); }
+  catch (e) { return Dialog.chyba(e.message); }
+  uloz(); vykresli(); Dialog.info('Zapsáno.');
+}
+
+async function historie(u) {
+  $('dlgHistorieTitul').textContent = '🧾 ' + u.nazev;
+  const prekresli = () => {
+    const z = J.historieUkolu(data, u.id), suma = z.reduce((a, x) => a + (x.cena || 0), 0);
+    $('dlgHistorieTelo').innerHTML = (u.povinne ? `<div class="info zakon">⚖️ ${esc(u.povinne)}</div>` : '') + (u.rada ? `<div class="info">💡 ${esc(u.rada)}</div>` : '') +
+      (u.kontakt ? `<div>📞 ${esc(u.kontakt)}</div>` : '') + (u.poznamka ? `<div style="white-space:pre-wrap">${esc(u.poznamka)}</div>` : '') +
+      tabulkaHistorie(z, false) + (z.length ? `<div style="text-align:right">Celkem ${z.length}× · ${J.formatKc(suma, 0)}</div>` : '');
+  };
+  prekresli();
+  $('dlgHistorieTelo').onclick = async e => {
+    const b = e.target.closest('[data-smaz-zaznam]'); if (!b) return;
+    if (!await Dialog.potvrd('Smazat tento zápis?')) return;
+    J.smazZaznam(data, b.dataset.smazZaznam); uloz(); prekresli(); vykresli();
+  };
+  await otevri($('dlgHistorie'));
+}
+
+async function predlohy() {
+  const mam = new Set(data.ukoly.map(u => u.nazev));
+  $('predlohySeznam').innerHTML = J.KATEGORIE.map(k => {
+    const p = J.PREDLOHY.map((x, i) => ({ x, i })).filter(o => o.x.kat === k.id);
+    if (!p.length) return '';
+    return `<h4>${k.nazev}</h4>` + p.map(({ x, i }) => `<label class="${mam.has(x.nazev) ? 'ma' : ''}" title="${esc(x.povinne || x.rada || '')}">
+      <input type="checkbox" value="${i}" ${mam.has(x.nazev) ? 'disabled' : ''}>
+      <span>${x.povinne ? '⚖️ ' : ''}${esc(x.nazev)} <small>· ${J.popisIntervalu({ n: x.int[0], j: x.int[1] })}${mam.has(x.nazev) ? ' · už máte' : ''}</small></span></label>`).join('');
+  }).join('');
+  if (await otevri($('dlgPredlohy')) !== 'ok') return;
+  const vybrane = [...$('predlohySeznam').querySelectorAll('input:checked')].map(c => J.PREDLOHY[+c.value]);
+  if (!vybrane.length) return;
+  vybrane.forEach(p => data.ukoly.push(J.zPredlohy(p, dnes())));
+  uloz(); pohled = 'ukoly'; vykresli();
+  Dialog.info(`Přidáno ${vybrane.length} úkolů. U každého doplňte, kdy jste ho dělali naposledy (✎ Upravit) – jinak je první termín dnes.`);
+}
+
+/* ---------- soubor ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const csvB = v => { const s = String(v == null ? '' : v); return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+
+const PRIKAZY = {
+  novy: () => upravUkol(null),
+  predlohy,
+  napoveda: () => otevri($('dlgNapoveda')),
+  tisk: () => print(),
+  export: () => stahni('udrzba-' + dnes() + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  csv: () => {
+    const nazev = id => (data.ukoly.find(u => u.id === id) || {}).nazev || '';
+    const r = [['Datum', 'Úkol', 'Kdo', 'Cena', 'Poznámka']].concat(data.historie.slice().sort((a, b) => a.datum < b.datum ? -1 : 1)
+      .map(h => [h.datum, nazev(h.ukol), h.kdo, h.cena == null ? '' : String(h.cena).replace('.', ','), h.pozn]));
+    stahni('udrzba-historie.csv', '﻿' + r.map(x => x.map(csvB).join(';')).join('\r\n'), 'text/csv');
+  },
+  ics: async () => {
+    const ukoly = data.ukoly.filter(u => J.priste(u));
+    if (!ukoly.length) return Dialog.info('Žádný úkol nemá termín.');
+    if (!await Dialog.potvrd(`Stáhnout ${ukoly.length} termínů jako kalendář (.ics)?\n\nKaždý úkol dostane událost v příštím termínu s upozorněním zadaný počet dní předem. Po zápisu provedení soubor stáhněte znovu – starý import v kalendáři nahradí události se stejným ID jen některé kalendáře, jinak je smažte ručně.`)) return;
+    const ts = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+    stahni('udrzba-pripominky.ics', J.ics(ukoly, dnes(), ts), 'text/calendar');
+  },
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Opravdu smazat všechny úkoly a historii? Doporučujeme nejdřív zálohu.')) return;
+    data = J.prazdna(); uloz(); vykresli();
+  }
+};
+
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.ukoly)) return Dialog.chyba('Tohle není záloha Domácí údržby.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.ukoly.length} úkolů a ${m.historie.length} zápisů. Nahradit jimi současná data?`)) return;
+  data = m; uloz(); vykresli(); Dialog.info('Obnoveno.');
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; try { localStorage.setItem(J.KLIC + '_pohled', pohled); } catch (er) {} return vykresli(); }
+  const fl = e.target.closest('[data-filtr]');
+  if (fl) { filtrStav = filtrStav === fl.dataset.filtr ? '' : fl.dataset.filtr; return vykresli(); }
+  const a = e.target.closest('[data-akce]');
+  if (a) {
+    const u = data.ukoly.find(x => x.id === a.closest('[data-id]').dataset.id); if (!u) return;
+    if (a.dataset.akce === 'hotovo') hotovo(u);
+    else if (a.dataset.akce === 'upravit') upravUkol(u);
+    else historie(u);
+  }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+$('hledat').addEventListener('input', vykresli);
+$('filtrKat').addEventListener('change', vykresli);
+addEventListener('storage', e => { if (e.key === J.KLIC) { data = J.migruj(JSON.parse(e.newValue || 'null')); vykresli(); } });
+
+const opt = J.KATEGORIE.map(k => `<option value="${k.id}">${esc(k.nazev)}</option>`).join('');
+$('filtrKat').insertAdjacentHTML('beforeend', opt);
+$('dlgUkol').querySelector('[name=kat]').innerHTML = opt;
+vykresli();
+window.UDRZBA_APP = { data: () => data };
+})();
+</script>
+</body>
+</html>

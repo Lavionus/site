@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hlubina pod Černou horou – gamebook</title>
+<meta name="description" content="Ilustrovaný gamebook: hledej otce ve starém stříbrném dole. Volby, kostky, souboje, předměty, světlo v kahanu a šest různých konců.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="gamebook/jadro.js"></script>
+<script src="gamebook/pribeh.js"></script>
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;--pismo:1.06rem}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.volba:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+@media (max-width:820px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+
+main{flex:1;min-height:0;overflow:auto}
+.rozvrh{max-width:1180px;margin:0 auto;padding:14px clamp(10px,2.5vw,24px) 40px;display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:start}
+@media (max-width:860px){.rozvrh{grid-template-columns:1fr}.postava{order:-1;position:static;display:grid;grid-template-columns:1fr 1fr;gap:0 14px;padding:10px 12px}
+  .postava > h2{grid-column:1/-1}.postava .sekce{grid-column:1/-1;margin-top:6px}.postava .vl{margin-bottom:5px}.postava .vl .r{font-size:.8rem}}
+
+.kniha{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.obraz{display:block;width:100%;aspect-ratio:1216/832;object-fit:cover;background:var(--bg-control);border-bottom:1px solid var(--border)}
+.strana{padding:16px clamp(14px,3vw,30px) 22px}
+.paragraf{font-size:.8rem;color:var(--text-faint);letter-spacing:.08em;margin-bottom:6px}
+.text p{font-size:var(--pismo);line-height:1.7;margin:0 0 .9em;font-family:Georgia,"Times New Roman",serif}
+.zmeny{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.zmena{font-size:.8rem;border-radius:10px;padding:2px 9px;border:1px solid var(--border);background:var(--bg-control)}
+.zmena.plus{border-color:var(--ok)} .zmena.minus{border-color:var(--danger)}
+.hod{font-size:.88rem;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elevated);margin:0 0 12px}
+.hod.ok{border-left:4px solid var(--ok)} .hod.ne{border-left:4px solid var(--danger)}
+.kostka{display:inline-block;min-width:1.7em;text-align:center;border:1px solid var(--border-strong);border-radius:5px;padding:0 4px;margin:0 2px;background:var(--bg-control);font-weight:700}
+.volby{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.volba{text-align:left;background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:8px;padding:10px 14px;font:inherit;font-size:.95rem;cursor:pointer;display:flex;gap:10px;align-items:baseline}
+.volba:hover{background:var(--bg-hover);border-color:var(--accent)}
+.volba .c{color:var(--accent);font-weight:700;flex:none}
+.konec-stitek{display:inline-block;padding:4px 12px;border-radius:12px;font-weight:600;margin-bottom:10px;border:1px solid var(--border-strong)}
+.konec-stitek.vyhra{border-color:var(--ok);color:var(--ok)}
+.konec-stitek.prohra{border-color:var(--danger);color:var(--danger)}
+
+.boj{border:1px solid var(--danger);border-radius:8px;padding:12px;margin-top:12px;background:var(--bg-elevated)}
+.boj h3{margin:0 0 8px;font-size:1rem}
+.souperi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.souperi .jm{font-size:.82rem;color:var(--text-muted)}
+.lista-boje{max-height:150px;overflow:auto;font-size:.82rem;line-height:1.55;color:var(--text-muted);margin:8px 0}
+.boj .akce{display:flex;gap:8px;flex-wrap:wrap}
+
+.postava{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:sticky;top:0}
+.postava h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:0 0 8px}
+.postava h2 + * {margin-top:0}
+.vl{margin-bottom:8px}
+.vl .r{display:flex;justify-content:space-between;font-size:.86rem}
+.mer{height:7px;border-radius:4px;background:var(--bg-control);overflow:hidden;margin-top:3px}
+.mer > i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.mer.zdravi > i{background:var(--danger)} .mer.olej > i{background:var(--warn)} .mer.stesti > i{background:var(--ok)}
+.predmety{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.predmety li{display:flex;align-items:center;gap:6px;font-size:.86rem;justify-content:space-between}
+.predmety li span{min-width:0}
+.predmety .btn{padding:2px 8px;font-size:.76rem}
+.postava .sekce{margin-top:14px}
+.malo{color:var(--text-faint);font-size:.82rem}
+
+.uvod{max-width:760px;margin:0 auto;padding:18px clamp(10px,2.5vw,24px) 40px}
+.uvod .kniha .strana{text-align:center}
+.uvod h2{font-family:Georgia,serif;font-size:1.9rem;margin:6px 0 4px}
+.uvod .pod{color:var(--text-muted);margin-bottom:14px}
+.uvod .tlacitka{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.pravidla{text-align:left;font-size:.9rem;line-height:1.6;color:var(--text-muted)}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:88vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:88vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;font-size:.9rem;line-height:1.55}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.konce-seznam{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.konce-seznam li{padding:7px 10px;border:1px solid var(--border);border-radius:6px}
+.konce-seznam li.ne{color:var(--text-faint);border-style:dashed}
+.denik{margin:0;padding-left:1.2em}
+.denik li{margin-bottom:3px}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>⛏️ Hlubina pod Černou horou</h1>
+  <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabHra" aria-expanded="false">🎲<span class="txt"> Hra</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Kniha"><span class="skup-nazev" aria-hidden="true">Kniha</span><div class="skup-tl">
+    <button class="tl" data-prikaz="denik" title="Navštívené oddíly">📜<span class="txt"> Deník</span></button>
+    <button class="tl" data-prikaz="konce" title="Nalezené konce">🏆<span class="txt"> Konce</span></button>
+    <button class="tl" data-nabidka="nabZobrazit" aria-expanded="false">Aa<span class="txt"> Písmo</span> ▾</button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" aria-label="Pravidla">❓</button></span>
+</header>
+
+<div id="nabHra" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nova">✚ Nová hra (nové vlastnosti)</button>
+  <button class="tl" data-prikaz="uvod">🏠 Titulní strana</button>
+  <hr>
+  <div class="titulek">Uložené pozice</div>
+  <div id="pozice"></div>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl" data-pismo="0.95rem">Menší písmo</button>
+  <button class="tl" data-pismo="1.06rem">Střední písmo</button>
+  <button class="tl" data-pismo="1.22rem">Větší písmo</button>
+  <hr>
+  <button class="tl" data-prikaz="obrazky" id="prepObr">🖼️ Skrýt ilustrace</button>
+</div>
+
+<main id="main"></main>
+
+<dialog class="okno" id="dlg"><form method="dialog">
+  <header id="dlgTitul"></header>
+  <div class="telo" id="dlgTelo"></div>
+  <footer><button class="btn primary" value="ok">Zavřít</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.GamebookJadro, P = window.GAMEBOOK_PRIBEH;
+const KLIC = 'webapp_hra_gamebook';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const NAZVY = { obratnost: '🤸 Obratnost', zdravi: '❤️ Zdraví', stesti: '🍀 Štěstí', olej: '🪔 Olej v kahanu', zlato: '🪙 Groše' };
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let ulozene = { hra: null, pozice: [null, null, null], konce: {}, pismo: '1.06rem', obrazky: true };
+try { Object.assign(ulozene, JSON.parse(localStorage.getItem(KLIC)) || {}); } catch (e) {}
+let st = J.nactiStav(P, ulozene.hra);
+let posledni = null;   // výsledek poslední akce (hody, změny) k zobrazení
+
+function uloz() {
+  ulozene.hra = st;
+  try { localStorage.setItem(KLIC, JSON.stringify(ulozene)); } catch (e) {}
+}
+
+/* ---------- vykreslení ---------- */
+function popisZmen(zm) {
+  return zm.filter(z => z.o).map(z => {
+    const t = z.co === 'predmet' ? (z.o > 0 ? '+ ' : '− ') + (P.predmety[z.x] ? P.predmety[z.x].nazev : z.x) : NAZVY[z.co] + ' ' + (z.o > 0 ? '+' : '−') + Math.abs(z.o);
+    return `<span class="zmena ${z.o > 0 ? 'plus' : 'minus'}">${esc(t)}</span>`;
+  }).join('');
+}
+function textHtml(t) { return t.split(/\n\n+/).map(o => `<p>${esc(o)}</p>`).join(''); }
+function obrazek(klic) {
+  return ulozene.obrazky ? `<img class="obraz" src="gamebook/obr/${klic}.webp" alt="" onerror="this.hidden=true">` : '';
+}
+
+function panelPostavy() {
+  const vl = ['zdravi', 'obratnost', 'stesti', 'olej'].map(v => `<div class="vl"><div class="r"><span>${NAZVY[v]}</span><b>${st[v]} / ${st[v + 'Max']}</b></div>
+    <div class="mer ${v}"><i style="width:${Math.round(100 * st[v] / st[v + 'Max'])}%"></i></div></div>`).join('') +
+    `<div class="vl"><div class="r"><span>${NAZVY.zlato}</span><b>${st.zlato}</b></div></div>`;
+  const pocty = {};
+  st.predmety.forEach(x => { pocty[x] = (pocty[x] || 0) + 1; });
+  const pr = Object.keys(pocty).map(x => {
+    const d = P.predmety[x] || { nazev: x };
+    const lze = d.pouziti && !st.konec;
+    return `<li title="${esc(d.popis || '')}"><span>${esc(d.nazev)}${pocty[x] > 1 ? ' ×' + pocty[x] : ''}</span>${lze ? `<button class="btn" data-pouzij="${esc(x)}">Použít</button>` : ''}</li>`;
+  }).join('');
+  return `<aside class="postava" aria-label="Postava"><h2>Postava</h2>${vl}
+    <div class="sekce"><h2>Torba</h2>${pr ? `<ul class="predmety">${pr}</ul>` : '<div class="malo">prázdná</div>'}</div></aside>`;
+}
+
+function hodHtml(z) {
+  if (!z) return '';
+  const nazev = { obratnost: 'obratnosti', stesti: 'štěstí' }[z.co] || z.co;
+  return `<div class="hod ${z.ok ? 'ok' : 'ne'}">🎲 Zkouška ${nazev}: <span class="kostka">${z.hod[0]}</span>+<span class="kostka">${z.hod[1]}</span> = <b>${z.soucet}</b> ${z.ok ? '≤' : '>'} ${z.hodnota} → <b>${z.ok ? 'úspěch' : 'neúspěch'}</b></div>`;
+}
+
+function bojHtml() {
+  const b = st.boj;
+  const log = b.log.slice().reverse().map(k => `Kolo ${k.kolo}: ty ${k.ja} proti ${k.on} – ${k.vysledek === 'zasah' ? 'zasáhneš (−2 soupeři)' : k.vysledek === 'zraneni' ? 'zasáhne tě (−2 zdraví)' : 'nikdo nezasáhl'}`).join('<br>');
+  return `<div class="boj" role="region" aria-label="Souboj"><h3>⚔️ Souboj: ${esc(b.jmeno)}</h3>
+    <div class="souperi">
+      <div><div class="jm">Ty – zdraví ${st.zdravi}</div><div class="mer zdravi"><i style="width:${Math.round(100 * st.zdravi / st.zdraviMax)}%"></i></div></div>
+      <div><div class="jm">${esc(b.jmeno)} – zdraví ${b.zdravi} · obratnost ${b.obratnost}</div><div class="mer zdravi"><i style="width:${Math.round(100 * b.zdravi / b.zdraviMax)}%"></i></div></div>
+    </div>
+    <div class="malo">Každé kolo: 2 kostky + obratnost. Kdo má víc, zasáhne za 2 zdraví.</div>
+    ${log ? `<div class="lista-boje">${log}</div>` : ''}
+    <div class="akce"><button class="btn primary" data-boj="kolo">⚔️ Bojovat (kolo ${b.kolo + 1})</button>
+    ${b.utek ? '<button class="btn" data-boj="utek">🏃 Utéct (−2 zdraví)</button>' : ''}</div></div>`;
+}
+
+function vykresliHru() {
+  const s = P.sceny[st.scena];
+  let h = '';
+  if (posledni) h += hodHtml(posledni.zkouska) + (posledni.boj ? `<div class="hod ${posledni.boj === 'vyhra' ? 'ok' : 'ne'}">⚔️ ${posledni.boj === 'vyhra' ? 'Souboj vyhrán.' : 'Souboj prohrán.'}</div>` : '');
+  const zm = (posledni && posledni.zmeny || []).concat(st.posledniZmeny || []);
+  const zmH = popisZmen(zm);
+  let telo = '';
+  if (s.konec) {
+    const k = P.konce[s.konec];
+    telo = `<div class="konec-stitek ${k.typ}">${k.typ === 'vyhra' ? '🏆' : k.typ === 'prohra' ? '💀' : '🚪'} Konec: ${esc(k.nazev)}</div>` + textHtml(s.text) +
+      `<div class="volby"><button class="btn primary" data-prikaz="nova">✚ Hrát znovu (nové vlastnosti)</button><button class="btn" data-prikaz="konce">🏆 Nalezené konce (${Object.keys(ulozene.konce).length}/${Object.keys(P.konce).length})</button></div>`;
+  } else {
+    telo = textHtml(s.text) + (zmH ? `<div class="zmeny">${zmH}</div>` : '') +
+      (st.boj ? bojHtml() : `<div class="volby">${J.volby(st, P).map((o, n) => `<button class="volba" data-volba="${o.i}"><span class="c">${n + 1}.</span><span>${esc(o.v.text)}</span></button>`).join('')}</div>`);
+  }
+  $('main').innerHTML = `<div class="rozvrh"><article class="kniha">${obrazek(s.obr)}<div class="strana">
+    <div class="paragraf">§ ${esc(st.scena)}</div>${h}<div class="text">${telo}</div></div></article>${panelPostavy()}</div>`;
+  $('main').scrollTop = 0;
+  const prvni = $('main').querySelector('.volba, [data-boj="kolo"]');
+  if (prvni && document.activeElement && document.activeElement !== document.body) prvni.focus({ preventScroll: true });
+}
+
+function vykresliUvod() {
+  st = J.nactiStav(P, ulozene.hra);
+  const nalez = Object.keys(ulozene.konce).length;
+  $('main').innerHTML = `<div class="uvod"><article class="kniha">${obrazek('vstup')}<div class="strana">
+    <h2>${esc(P.nazev)}</h2><div class="pod">${esc(P.podtitul)}</div>
+    <div class="tlacitka">
+      ${st && !st.konec ? `<button class="btn primary" data-prikaz="pokracovat">▶ Pokračovat (§ ${esc(st.scena)})</button>` : ''}
+      <button class="btn ${st && !st.konec ? '' : 'primary'}" data-prikaz="nova">✚ Nová hra</button>
+      <button class="btn" data-prikaz="konce">🏆 Konce ${nalez}/${Object.keys(P.konce).length}</button>
+    </div>
+    <div class="pravidla">${pravidla()}</div></div></article></div>`;
+}
+
+function pravidla() {
+  return `<p>Čteš příběh a na konci každého oddílu (§) volíš, co uděláš. Některé volby jsou dostupné jen s určitým předmětem nebo když se ti něco podařilo dřív.</p>
+  <p><b>Vlastnosti</b> se hodí na začátku kostkami: obratnost 7–12, zdraví 14–24, štěstí 7–12.</p>
+  <p><b>Zkouška</b>: hodíš 2 kostkami; když padne součet menší nebo rovný vlastnosti, uspěješ. Každá zkouška štěstí ho sníží o 1.</p>
+  <p><b>Souboj</b> běží po kolech: ty i soupeř hodíte 2 kostkami a přičtete obratnost. Kdo má víc, ubere druhému 2 zdraví.</p>
+  <p><b>Kahan</b>: v hloubi hory ubývá oleje. Když dojde, zůstaneš ve tmě. <b>Zdraví</b> doplní krajíc chleba z torby.</p>
+  <p>Hra se ukládá sama; v nabídce Hra jsou navíc tři pozice pro uložení. Najdi všech ${Object.keys(P.konce).length} konců!</p>`;
+}
+
+function vykresli() { if (st) vykresliHru(); else vykresliUvod(); }
+
+/* ---------- akce ---------- */
+function zapisKonec() { if (st.konec) { const t = P.sceny[st.konec].konec; if (!ulozene.konce[t]) ulozene.konce[t] = new Date().toISOString().slice(0, 10); } }
+function poAkci(vysl) { posledni = vysl; zapisKonec(); uloz(); vykresliHru(); }
+
+function zvol(i) { poAkci(J.zvol(st, P, i)); }
+function boj(co) {
+  if (co === 'utek') { J.utec(st, P); return poAkci({ zmeny: [{ co: 'zdravi', o: -2 }] }); }
+  const k = J.koloBoje(st, P);
+  if (k.konec) return poAkci({ boj: k.konec });
+  posledni = null; st.posledniZmeny = []; uloz(); vykresliHru();
+}
+function pouzij(x) { const zm = J.pouzij(st, P, x); posledni = { zmeny: zm }; st.posledniZmeny = []; uloz(); vykresliHru(); }
+
+async function novaHra() {
+  if (st && !st.konec && !await Dialog.potvrd('Začít novou hru? Rozehraná hra se přepíše (uložené pozice zůstanou).')) return;
+  st = J.novaHra(P); posledni = null; uloz(); vykresliHru();
+  Dialog.info(`Tvoje vlastnosti: obratnost ${st.obratnost}, zdraví ${st.zdravi}, štěstí ${st.stesti}.`);
+}
+
+function okno(titul, html) { $('dlgTitul').textContent = titul; $('dlgTelo').innerHTML = html; $('dlg').showModal(); }
+
+function vykresliPozice() {
+  $('pozice').innerHTML = [0, 1, 2].map(i => {
+    const p = ulozene.pozice[i];
+    const popis = p ? `§ ${esc(p.hra.scena)} · ${esc(p.kdy)}` : 'prázdná';
+    return `<button class="tl" data-ulozit="${i}" ${st && !st.konec ? '' : 'disabled'}>💾 Uložit do pozice ${i + 1}</button>
+      <button class="tl" data-nacist="${i}" ${p ? '' : 'disabled'}>📂 Načíst ${i + 1} <small style="color:var(--text-faint)">(${popis})</small></button>`;
+  }).join('<hr>');
+}
+
+const PRIKAZY = {
+  nova: novaHra,
+  pokracovat: () => { posledni = null; vykresliHru(); },
+  uvod: () => { posledni = null; st = null; vykresliUvod(); },
+  napoveda: () => okno('❓ Pravidla', pravidla()),
+  denik: () => {
+    if (!st) return okno('📜 Deník', '<p>Cesta ještě nezačala.</p>');
+    const prvni = s => (P.sceny[s].text.split(/[.!?…]/)[0] || '').slice(0, 90);
+    okno('📜 Deník cesty', `<ol class="denik">${st.denik.map(s => `<li>§ ${esc(s)} – ${esc(prvni(s))}…</li>`).join('')}</ol>`);
+  },
+  konce: () => okno('🏆 Konce', `<ul class="konce-seznam">${Object.entries(P.konce).map(([id, k]) =>
+    ulozene.konce[id] != null ? `<li>${k.typ === 'vyhra' ? '🏆' : k.typ === 'prohra' ? '💀' : '🚪'} <b>${esc(k.nazev)}</b> – ${esc(k.popis)}</li>` : `<li class="ne">❔ ${esc(k.popis)} – zatím nenalezeno</li>`).join('')}</ul>`),
+  obrazky: () => { ulozene.obrazky = !ulozene.obrazky; uloz(); nastavZobrazeni(); vykresli(); }
+};
+
+function nastavZobrazeni() {
+  document.body.style.setProperty('--pismo', ulozene.pismo);
+  $('prepObr').textContent = ulozene.obrazky ? '🖼️ Skrýt ilustrace' : '🖼️ Zobrazit ilustrace';
+  document.querySelectorAll('[data-pismo]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pismo === ulozene.pismo));
+}
+
+/* ---------- události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  if (n.id === 'nabHra') vykresliPozice();
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', async e => {
+  const t = e.target.closest('button');
+  if (!t) { if (!e.target.closest('.nabidka')) zavriNabidky(); return; }
+  const d = t.dataset;
+  if (t.closest('.nabidka') || d.prikaz) zavriNabidky();
+  if (d.prikaz) return PRIKAZY[d.prikaz]();
+  if (d.volba != null) return zvol(+d.volba);
+  if (d.boj) return boj(d.boj);
+  if (d.pouzij) return pouzij(d.pouzij);
+  if (d.pismo) { ulozene.pismo = d.pismo; uloz(); return nastavZobrazeni(); }
+  if (d.ulozit != null) {
+    ulozene.pozice[+d.ulozit] = { hra: JSON.parse(JSON.stringify(st)), kdy: new Date().toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) };
+    uloz(); return Dialog.info('Uloženo do pozice ' + (+d.ulozit + 1) + '.');
+  }
+  if (d.nacist != null) {
+    const p = ulozene.pozice[+d.nacist], s = p && J.nactiStav(P, JSON.parse(JSON.stringify(p.hra)));
+    if (!s) return Dialog.chyba('Pozice je prázdná nebo poškozená.');
+    if (st && !st.konec && !await Dialog.potvrd('Načíst pozici? Rozehraná hra se přepíše.')) return;
+    st = s; posledni = null; uloz(); return vykresliHru();
+  }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') return zavriNabidky();
+  if (!st || $('dlg').open || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (/^[1-9]$/.test(e.key)) {
+    const b = $('main').querySelectorAll('.volba')[+e.key - 1];
+    if (b) { e.preventDefault(); b.click(); }
+  } else if ((e.key === ' ' || e.key === 'b') && st.boj) { e.preventDefault(); boj('kolo'); }
+});
+
+nastavZobrazeni();
+vykresliUvod();
+window.GAMEBOOK_APP = { stav: () => st, prekresli: () => { posledni = null; uloz(); vykresli(); } };
+})();
+</script>
+</body>
+</html>
