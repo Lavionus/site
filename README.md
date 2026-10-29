@@ -417,5 +417,340 @@ a `#autor-podpis` skryje. Rám rozcestníku (`index.html`) má kvůli tomu
 `allow="fullscreen"` — bez něj by celou obrazovku z podstránky nešlo zapnout
 vůbec.
 
+## Úpravy souborů a generátory (29. 10. 2026)
+
+Dvanáct stránek, vše lokálně v prohlížeči; jádra bez DOM s testy `node _test/<jmeno>_test.js`.
+Nové knihovny: `obsah/lib/pdflib/` (pdf-lib + fontkit, MIT; Liberation Sans OFL),
+`obsah/lib/pdfjs/` (PDF.js 4.10, Apache 2.0), `obsah/lib/onnx/` (onnxruntime-web 1.22, MIT + model u2netp, Apache 2.0),
+`obsah/lib/tesseract/eng.traineddata` (Apache 2.0).
+
+**PDF dílna** (`obsah/pdf_dilna.html` + `obsah/pdf_dilna/{jadro,ui}.js`) je
+práce s PDF celá v prohlížeči nad pdf-lib (`obsah/lib/pdflib`) a PDF.js
+(`obsah/lib/pdfjs`, náhledy). Načte víc PDF i obrázků (JPG/PNG/WebP → stránka
+na A4 nebo ve velikosti obrázku, JPEG s EXIF otočením se srovná), ukáže mřížku
+náhledů s barevným proužkem původního souboru; stránky jde vybírat (Ctrl/Shift,
+na dotyku klepnutím), přetahovat myší, otáčet, duplikovat, mazat, vkládat
+prázdné a obracet pořadí. Export spojí vše do jednoho PDF, **Rozdělit** stáhne
+ZIP (po N stránkách, podle rozsahů `1-3,5,8-`, každá zvlášť; vlastní ZIP
+„uloženo“ + CRC32), „Vyjmout vybrané“ uloží výběr. Nástroje s živým náhledem
+stránky: vodoznak (text s diakritikou přes fontkit + Liberation Sans, krytí,
+úhel, dlaždice, nebo obrázek), číslování (`{n} / {celkem}`, pozice, okraj, od
+stránky, první číslo), záhlaví/zápatí se značkami, ořez okrajů v mm, změna na
+A4 a **zmenšení velikosti** rastrováním přes PDF.js do JPEG (DPI, kvalita,
+odstíny šedi; varování, že text přestane jít označit). Podpis se kreslí myší
+či prstem nebo nahraje (s odstraněním bílého pozadí) a umístí rámečkem na
+náhledu; razítko je vektorový text s rámečkem a `{datum}`. Metadata jde
+nastavit i úplně odstranit (Info + XMP). Model: stránky odkazují do neměnných
+zdrojů, úprava obsahu vyrobí nový zdroj jen z dotčených stránek → Zpět/Znovu
+jsou snímky seznamu. Souřadnice nástrojů jsou „vizuální“ (`naUzivatel`), takže
+text i podpis sedí i na stránkách s `/Rotate`. Šifrovaná PDF se slušně
+odmítnou (pdf-lib je neotevře ani nevytvoří, XFA neumí). Rozpracovaná práce
+se ukládá do IndexedDB `webapp_pdf_dilna`, nastavení do
+`webapp_pdf_dilna_nast`. Test jádra `node _test/pdf_dilna_test.js` (polohy
+textu ověřuje přes poppler `pdftotext -bbox`, šifrování přes qpdf).
+
+**OCR – text z obrázku a skenu** (`obsah/ocr.html`, moduly `obsah/ocr/`) převádí
+fotky, skeny a PDF na text přímo v prohlížeči (Tesseract.js 5 z `lib/tesseract`,
+modely `ces` a `eng` z tessdata_fast, přepínač ces / eng / ces+eng). Vstup: více
+obrázků najednou, přetažení, `Ctrl+V` ze schránky, PDF (vybrané stránky se
+rasterizují přes PDF.js v 150–400 DPI). Jádro `ocr/jadro.js` (`window.OCR`, bez
+DOM) dělá předzpracování nad polem ve tvaru ImageData: otočení o 90° i o libovolný
+úhel (bilineárně, plátno se zvětší), ořez, zvětšení, šedá, vyrovnání úrovní,
+kontrast/jas, medián 3×3, práh Otsu nebo adaptivní Sauvola (integrální obrazy;
+polarita textu se pozná podle bodů výrazně tmavších/světlejších než místní
+průměr, takže ji nezmate stín). Sklon odhaduje promítnutím černobílé zmenšeniny
+(nejostřejší profil řádků, krok 0,5° a pak 0,1°). Geometrie (otočení, ořez,
+oblasti) se pamatuje u stránky v normalizovaných souřadnicích, úpravy pro čtení
+platí pro všechny stránky; náhled počítá stejný řetězec nad zmenšeninou do
+1 400 px (bez zvětšení). Oblasti myší se čtou zvlášť (`rectangle`, PSM 6)
+v pořadí čísel (ručně ↑↓ nebo `seradOblasti` po řádcích/sloupcích), bez oblastí
+celá stránka (PSM 3). Text se skládá ze slov Tesseractu (`slozText`), každé slovo
+si nese pozici v textu, takže klik na slovo v náhledu ho označí v textu (po
+úpravách textu se hledá nejbližší výskyt); slova pod prahem jistoty jsou
+oranžová. Export: kopírování, TXT stránky/všech, **prohledávatelné PDF** přes
+pdf-lib + fontkit s Liberation Sans – obraz (barevný JPEG nebo zpracovaný PNG)
+a neviditelný text (render mode 3) slovo po slovu, roztažený matice textu na
+šířku slova (`vrstvaTextu`); opravy z textu se přenesou, když sedí počet slov.
+Worker Tesseractu vzniká až při prvním čtení, dávka ukazuje průběh a jde zrušit
+(`Esc` – worker se ukončí a příště vznikne znovu). Testy: `node
+_test/ocr_test.js` (90 kontrol jádra) a snímky přes `_test/snimek_cela.py`
+s ukázkovým generovaným skenem (natočení, stín, šum).
+
+**Hromadné úpravy obrázků** (`obsah/obrazky_davka.html`) zpracují celou složku
+najednou – soubory i složky jdou vybrat (`webkitdirectory`) nebo přetáhnout
+(rekurzivně přes `webkitGetAsEntry`, podsložky se pamatují a do ZIPu i do složky
+se dají zachovat). Vlevo se skládá **řetěz kroků** (ořez na poměr ze středu,
+volitelně otočený podle orientace fotky; změna velikosti podle delší strany,
+šířky, výšky, procent nebo do rámečku s „jen zmenšovat“; jas/kontrast/sytost;
+stupně šedi; ruční otočení a zrcadlení; okraj v px nebo % kratší strany;
+vodoznak textem či logem v 9 pozicích nebo jako dlaždice), pod ním výstup
+(JPEG/WebP/PNG/AVIF – AVIF jen když ho prohlížeč umí zakódovat, zjišťuje se
+`toBlob`; kvalita; **cílová velikost** binárním hledáním kvality) a vzor jmen
+(`{nazev}`, `{n:3}`, `{datum:YYYYMMDD_HHmmss}` z EXIF DateTimeOriginal, jinak
+datum změny souboru, `{sirka}x{vyska}`, `{ext}`; kolize dostanou `_2`…).
+Orientaci z EXIF aplikuje už dekodér (`createImageBitmap(..., {imageOrientation:
+'from-image'})`), výstup přes plátno EXIF ani GPS nenese – fotky s polohou mají
+v seznamu značku 📍 GPS. Náhled před/po s porovnávacím posuvníkem a odhad
+úspory pro celou dávku. Zpracování běží ve 1–3 workerech přes `OffscreenCanvas`
+(záložně v hlavním vlákně) s průběhem a zrušením (`Esc`); uložit jde ZIP
+(vlastní zapisovač „uloženo“ s CRC32 a UTF-8 jmény), jednotlivě nebo přímo do
+složky přes `showDirectoryPicker`. Řetězy jdou ukládat jako předvolby
+(`webapp_obrazky_davka_predvolby`, aktuální stav `webapp_obrazky_davka_nastaveni`),
+logo vodoznaku leží v IndexedDB `webapp_obrazky_davka`. Jádro bez DOM
+(`obrazky_davka/jadro.js`: rozměry, šablona jmen, čtečka hlaviček a EXIF pro
+JPEG/PNG/WebP/GIF/BMP, úpravy pixelů, binární hledání, ZIP) testuje
+`node _test/obrazky_davka_test.js` (87 kontrol, ZIP ověřuje Python `zipfile`
+a `unzip -t`, skutečné vzorky vyrábí `_test/obrazky_davka_vzorky.py` přes PIL);
+kreslení je v `obrazky_davka/vykresli.js`, sdílené workerem i hlavním vláknem.
+
+`obsah/pozadi.html` – **Odstranění pozadí** (jádro `obsah/pozadi/jadro.js` = `window.POZADI`,
+UI `obsah/pozadi/stranka.js`). Automaticky AI modelem přímo v prohlížeči: U²-Net
+`u2netp` (Apache 2.0, 4,6 MB) přes onnxruntime-web 1.22.0 jen s wasm backendem
+(`obsah/lib/onnx/`, MIT, viz README.txt); prostředí i model se stahují až po
+kliknutí s průběhem (wasm se předává přes `ort.env.wasm.wasmBinary`, jedno
+vlákno – GitHub Pages nejsou crossOriginIsolated). Model běží na zmenšenině
+320×320, maska se na plné rozlišení přenáší rychlým řízeným filtrem podle jasu
+obrazu (hrana sedne na obrys), pak úrovně a čištění ostrůvků. Bez AI: klíčování
+barvou (vzdálenost v CbCr přepočtená na jas pixelu – stíny na plátně zůstanou
+pozadím, měkkost, potlačení přesvitu) a kouzelná hůlka (souvislý/globální výběr,
+přidat/odebrat, Alt otočí). Ruční doladění štětcem obnovit/vymazat (velikost,
+tvrdost, tahy se nesčítají), zoom/posun/štípnutí, náhled masky a červený
+překryv, undo/redo (hloubka podle paměti), zúžení/rozšíření hrany přes
+vzdálenostní pole, feather, „přimknout k obrazu“, invertovat, uložit/načíst
+masku. Výstup PNG/WebP/JPEG, průhledné nebo nové pozadí (barva, rozmazaný
+originál, vlastní obrázek), ořez na obsah s okrajem, stín (v ‰ delší strany).
+Pracuje do 8192 px delší strany. Dvě kreslené ukázky (zátiší pro AI, zelené
+plátno pro klíčování). Testy: `node _test/pozadi_test.js` (57 kontrol).
+
+**Vektorizace** (`obsah/vektorizace.html`, jádro `obsah/vektorizace/jadro.js`
+= `window.VEKTORIZACE`, trasování ve Workeru `vektorizace/worker.js`, ovládání
+`vektorizace/ui.js`) převádí bitmapu na SVG/DXF vlastní implementací čistou
+místností (potrace je GPL, z něj nic). Obrys se sleduje **po hranách pixelů**
+s pevným pravidlem odbočení na křižovatkách, takže vnější obrysy vycházejí
+kladně a díry záporně orientované. Vnoření (díra v rámu, ostrov v díře) se
+určí přes nejmenší obsahující smyčku opačného znaménka a SVG kreslí
+`fill-rule="evenodd"`. Vyhlazení: rohy k-kosinovou mírou (práh úhlu, poloha
+upřesněná průsečíkem stran) → úsek mezi rohy se pokryje co nejdelšími
+**digitálními přímkami** (odchylka ≤ eps) → každou hranu nahradí přímka
+proložená jejími body (PCA), vrcholy = průsečíky → v hladkých vrcholech
+kvadratika ze středu hrany do středu další (spojitá tečna) → **korekce
+plochy** posunem po normále na plochu mřížkového obrysu → zhuštění kubikami
+(Schneider, nejmenší čtverce + Newton) s doladěním délky táhel na plochu.
+Bez toho proložení na surových schodech dělalo hrboly a kruh ztrácel 2 %
+plochy; teď je odchylka plochy kruhu, čtverce s dírou i písmene pod 1 %.
+Hladká smyčka bez rohů se dělí na 4 části (dvě kubiky kruh nevystihnou).
+Režimy: **černobílý** (Otsu / ruční práh, invert), **vícebarevný** (k-means++
+nebo median cut s posunem dělení na změnu hodnoty; malé oblasti se sloučí se
+sousedem; vrstvy „na sobě bez mezer" = každá vrstva je sjednocení své a všech
+vyšších barev, nebo „vedle sebe" pro řezání), **obrys k řezání** (jen čáry)
+a **středová čára** (Zhang–Suen, graf kostry s m-sousedstvím bez trojúhelníků,
+ořez výběžků). Předzpracování: ořez tažením, automatické zvětšení malých
+obrázků (bilineárně, max 4,5 Mpx), rozostření. Náhled vedle sebe / posuvník /
+prolnutí, lupa a posun (i dvěma prsty), uzly (rohy čtverečkem). Výstup SVG
+(zaokrouhlení, relativní příkazy počítané ze zaokrouhlených souřadnic, jedna
+cesta na barvu, fyzická šířka v mm), DXF R12 (POLYLINE po vrstvách, ACI barva,
+křivky zploštěné s odchylkou v mm, osa y nahoru) a PNG přes vykreslené SVG.
+Poslední obrázek v IndexedDB `webapp_vektorizace`, nastavení
+`webapp_vektorizace_nastaveni`. Testy: `node _test/vektorizace_test.js`
+(76 kontrol – kruh, kruh AA ×2, čtverec s dírou a ostrovem, písmeno A,
+skvrny, Otsu, barvy oběma kvantizacemi, průhlednost, středová čára, SVG/DXF,
+výkon 600×600 pod 4 s).
+
+**GIF, animace a sprite sheety** (`obsah/animace_gif.html`) skládá animace ze
+snímků. Vstupem jsou obrázky (řazené podle názvu), animovaný GIF (vlastní
+dekodér s LZW, prokládáním, disposal 1/2/3 a průhledností), video (úsek a FPS,
+snímky přes Mediabunny `CanvasSink`, záloha posouváním `<video>`) a sprite sheet
+(řez podle mřížky – počet buněk nebo velikost, okraj, mezera – nebo automaticky
+podle souvislých oblastí na průhledném či barevném pozadí, blízké části se
+slučují). Časová osa umí výběr Shift/Ctrl, přeřazení tažením, délku snímku
+jednotlivě i hromadně, duplikovat/smazat, obrátit, ping-pong, onion skin
+a přehrávání s rychlostí; úpravy ořez (tažením), změna velikosti (nejbližší
+soused pro pixel art, plynule plošným filtrem), otočení/zrcadlení a text přes
+animaci (obrys, ostré hrany). Výstupy: GIF z vlastního kodéru (median-cut nebo
+oktanový strom, přesná paleta pro ≤ 256 barev, společná/lokální paleta,
+Floyd–Steinberg, ukládání jen změněného obdélníku s průhledností pro
+nezměněné pixely, smyčky), APNG (vlastní zápis bloků s CRC, zlib přes
+`CompressionStream`, adaptivní filtry řádků), WebM přes Mediabunny
+`CanvasSource` (VP9/VP8/AV1 podle prohlížeče), sprite sheet PNG + JSON
+TexturePacker „hash“/„array“ (trim, `duration`, `meta.frameTags`) v ZIPu
+a ZIP jednotlivých PNG (zapisovač „uloženo“ + CRC32). Odhad velikosti kóduje
+vzorek ze středu animace ve workeru (`animace_gif/worker.js`). Jádro bez DOM je
+`obsah/animace_gif/jadro.js` (`window.ANIMACE_GIF`), UI `animace_gif/stranka.js`;
+rozpracovaná animace se ukládá do IndexedDB. Test jádra
+`node _test/animace_gif_test.js` (kulatá cesta GIF/APNG/LZW, kontrola s Pillow,
+ZIP přes Python `zipfile`, balení a řez sprite sheetů).
+
+**Editor titulků** (`obsah/titulky.html` + `obsah/titulky/{jadro,app}.js`) čte
+a zapisuje **SRT, WebVTT, ASS/SSA, SBV, MicroDVD (SUB) a TXT**. Jádro
+(`window.TITULKY`, v node `require`) nemá DOM: titulek je `{id, od, do, text,
+styl, akter}` s časy v ms a textem se značkami `<i> <b> <u>` jako v SRT; ostatní
+ASS přepisy (`{\pos(…)}`) zůstávají v textu, takže ASS → ASS je bezztrátové
+a do SRT se přenese jen `{\an8}`. **Kódování** se pozná samo (BOM, UTF-16 bez
+BOM, platné UTF-8, jinak skóre českých písmen mezi windows-1250, ISO-8859-2
+a windows-1252) a jde ručně přepnout ve stavovém řádku; ukládá se vždy UTF-8,
+volitelně s BOM a CRLF. MicroDVD přepočítává snímky ↔ čas podle FPS (i z řádku
+`{1}{1}23.976`). Přečasování: posun všeho/výběru/od výběru, změna FPS
+(23,976 ↔ 25) a lineární synchronizace podle dvou bodů. Kontrola kvality hlídá
+překryvy, délku, CPS, délku a počet řádků, prázdné a malé mezery; automatické
+opravy zalamují na 2 vyvážené řádky (předložka nezůstane na konci), prodlužují
+krátké a dorovnávají mezery. Video běží v `<video>`, titulky se kreslí na plátno
+**stejnou funkcí jako při vypálení** (`kresliTitulkyNa`), vlna zvuku se čte
+proudově přes Mediabunny (`AudioBufferSink`, nejvýš 4 h, záloha WebAudio do
+150 MB). Bloky na ose se táhnou (posun i okraje), klávesy A/S/D (F3/F4/F9 i při
+psaní) nastavují časy, režim **Přepis** zachytí začátek při prvním písmenu.
+**Vypálení** jde přes `MB.Conversion` s `video.process` (WebCodecs), bez nich
+stránka srozumitelně odmítne. Rozpracovaný projekt se ukládá do IndexedDB
+`webapp_titulky`. Testy: `node _test/titulky_test.js` (jádro vč. kulatých cest
+a kódování).
+
+**Generátor karet a kartiček** (`obsah/karty_generator.html` + `obsah/karty_generator/`)
+skládá hromadně karty z šablony a tabulky – vlastní deskovky, flashcards, RPG
+předměty a kouzla, kvízové a slovíčkové kartičky, karty úkolů. Šablona je
+seznam vrstev v milimetrech (text, ikona/emoji, obrázek, tvar, rámeček) pro
+líc i rub; ve všech textových vlastnostech, i v barvách, fungují proměnné
+`{sloupec}`, `{sloupec|výchozí}`, `{#}` a `{celkem}`. **Podmíněné styly** mění
+vlastnost vrstvy podle hodnoty sloupce (barva rámečku podle „vzácnosti“, červené
+♥ ♦, skrytí prázdné možnosti D). Text se zalamuje a **zmenší písmo, aby se vešel**;
+měření je v jádře injektované (v prohlížeči z plátna, v testu odhadem), takže
+stejný algoritmus hlídá přetečení i v souhrnu před tiskem. Data se píšou
+v mřížce (vložení bloku z Excelu Ctrl+V, přejmenování sloupce přepíše proměnné
+v šabloně) nebo importují z CSV/TSV (oddělovač se odhadne) a XLSX/ODS přes
+SheetJS; sloupec `pocet` určuje kopie. Obrázky se nahrají hromadně do IndexedDB
+a přiřazují se **podle jména souboru** (i bez přípony). Formáty poker, bridž,
+tarot, mini, A7… nebo vlastní, spadávka, bezpečná zóna, zaoblené rohy.
+Rozložení na A4/A3/Letter volí orientaci s nejvíc kartami, kreslí ořezové
+značky a volitelně obrys řezu; **rub se zrcadlí** podle hrany překlápění, a když
+by po obrácení karty stál vzhůru nohama (otočené karty, krátká hrana), otočí se
+o 180°; posun rubu dorovná nepřesnou duplexní tiskárnu. Výstupy: PDF přes
+pdf-lib (karty jako obrázky v nastaveném DPI, každá jedinečná karta vložená
+jednou), tisk přes prohlížeč se stejným rozložením a PNG všech karet v ZIPu
+(metoda „uloženo“ + CRC32). Projekty se ukládají průběžně do IndexedDB, s
+historií zpět/znovu; export JSON i s obrázky. Sedm předloh (hrací karty 52 ks,
+flashcard, RPG předmět, RPG kouzlo, kvíz, slovíčka, úkol) je jen z tvarů
+a emoji. Kontroly: `_test/karty_generator_test.js` (217 kontrol: proměnné,
+podmínky, CSV, kopie, zalomení a písmo, rozložení, zrcadlení a otočení rubu,
+značky, hledání obrázků, normalizace projektu, všechny předlohy).
+
+**Hromadný tisk štítků** (`obsah/stitky_hromadne.html` + `obsah/stitky_hromadne/{jadro,vykres,ui}.js`)
+tiskne adresní štítky, cenovky, jmenovky, inventární a kuchyňské štítky na samolepicí
+archy A4. Postup je ve čtyřech kartách: **Arch** (databáze 28 běžných archů Avery
+Zweckform 3474/3475/3651/3657/3666… a Avery L7160/L7163/L7651…, hledání podle
+rozměru `70x37` i kódu, vlastní arch a papír, „moje archy“, kontrola přesahu a okrajů,
+kalibrace posunu tiskárny X/Y se zkušebním tiskem obrysů), **Data** (editor mřížky
+s vkládáním bloků z Excelu, import CSV/TSV s poznáním oddělovače a hlavičky, XLSX/ODS
+přes SheetJS, kopie záznamu, začátek od N-tého štítku načatého archu, výběr `1-5, 9`,
+číslování s předponou/nulami jako pole `{cislo}` i bez tabulky), **Návrh** (text
+s poli `{jmeno}` s automatickým zmenšením a zalamováním, QR kód, EAN-13/EAN-8/Code 128,
+obrázek, rámeček; prvky se táhnou myší a jejich polohy jsou v % vnitřní plochy, takže
+návrh pasuje i na jiný arch) a **Náhled a tisk**. Jádro bez DOM rozloží každý štítek do
+primitiv v milimetrech (text, obdélníky, rámeček, obrázek) a z nich vzniká **náhled
+i tisk jako SVG v přesných mm** (`@page` podle papíru) a **vektorové PDF** v jsPDF —
+jedna geometrie, dva výstupy. Text se měří písmem Liberation Sans načteným přes
+FontFace a stejné písmo se vkládá do PDF, takže zmenšení písma sedí v obou. Logika
+čárových kódů je převzatá z Generátoru čárových kódů (tam je vložená ve stránce).
+Projekty včetně obrázků jsou v IndexedDB, export/import JSON. Rozměry archů jsou
+z katalogů výrobců (stav 10/2026) a ve stránce označené „ověřit podle balení“.
+Kontroly: `_test/stitky_hromadne_test.js` (201 kontrol – archy, geometrie, rozdělení
+na archy, CSV, číslování, EAN/Code128, rozvržení textu, předlohy, SVG a PDF výstup).
+
+**Vstupenky, kupóny a poukazy** (`obsah/vstupenky.html` + `obsah/vstupenky/`)
+vyrábí série tiskovin s unikátním číslem a u vchodu je kontroluje. Sedm
+předloh (vstupenka s ústřižkem, dárkový poukaz DL, slevový kupón, tombola –
+los + kontrolní ústřižek, šatnový lístek, stravenka, parkovací lístek),
+ústřižek vlevo/vpravo/dole s perforací. Číslování řadou (od–do, krok, nuly,
+předpona/přípona) nebo náhodnými unikátními kódy z abecedy bez záměnných znaků
+(0/O/1/I), semínko z `crypto.getRandomValues` a deterministický xoshiro128**
+(náhled se nemění), varování, když je platný víc než každý 10 000. kód;
+kontrolní znak Luhn mod N nad libovolnou abecedou nebo Damm. Generátor sedadel
+zápisem `A-F: 1-20`, `Balkon | 1-3: 1-12 liché`, `vynechat: A1 B/7` – kus na
+každé místo. Texty s proměnnými (`{kod}`, `{rada}`, `{misto}`, `{url}`…), QR
+(`lib/qrcode`, i URL se `{kod}`) a Code 128 – všechny prvky se tahají myší
+v náhledu. Kreslí se jedním rendererem (`kresli.js`) do plátna: náhled, arch
+(automatické otočení kusu, vystředěná mřížka, ořezové značky jen vně mřížky),
+tisk přes `@page` v mm i PDF (jsPDF, obrázky kusů v 200–400 DPI + vektorové
+značky). CSV vydaných kódů je zároveň vstupem režimu **Kontrola na vstupu**:
+seznamy v IndexedDB, skenování kamerou (BarcodeDetector, jinak zxing-wasm),
+ruční čtečky přes Enter, kód z URL v QR (`?kod=` nebo poslední úsek cesty),
+výsledek platný / už použitý (s časem) / neznámý / překlep v kontrolním znaku,
+zvuk + vibrace, vrácení posledního odbavení, export stavu a sloučení stavu
+z jiného zařízení. Jádro bez DOM (`vstupenky/jadro.js`, `window.VSTUPENKY`)
+testuje `node _test/vstupenky_test.js` (506 kontrol; Code 128 se ověřuje
+skutečným dekodérem zxing-wasm v node).
+
+**🧩 Generátor puzzle z fotky** (`obsah/puzzle_generator.html` + `puzzle_generator/{jadro,vystup,ui}.js`)
+vytvoří řezací šablonu jigsaw puzzle. Mřížka se dopočítá z celkového počtu dílků
+podle poměru stran (nebo sloupce × řádky), vnitřní uzly mřížky se náhodně posunou
+a každá vnitřní hrana dostane vlastní zámek z osmi kubických Bézierových křivek
+(tvar klasický/kulatý/protáhlý, velikost, náhodnost polohy, hlavy, krčku i zvlnění,
+semínko pro opakovatelnost). Hrana existuje v puzzle jen jednou a oba sousední dílky
+na ni odkazují (jeden obráceně) – sdílená hrana je totožná z principu a laser ji
+řeže jen jednou; hrany se navíc řetězí do souvislých řezů po řadách a sloupcích.
+`P.pruseciky()` hlídá, aby se hrany nekřížily ani nepřiblížily pod minimální mezeru
+(2,5 % dílku), kolidující zámky se zmenšují. Varianty: zaoblené rohy obrysu, „whimsy“
+(srdce/kruh/hvězda vyříznuté kolem středového uzlu, čtyři okolní dílky mají rovný
+řez k tvaru) a dětské čtverce 2×2–4×4. Výstupy: SVG pro laser/plotter (předvolby
+vlasová čára 0,01 mm / LightBurn / Cricut, volitelně čísla ke gravírování),
+DXF R12, SVG rubu se zrcadleným rozmístěním čísel, PDF přes jsPDF (fotka s řeznými
+linkami rozdělená na listy A4/A3 bez překryvu s ořezovými značkami, úvodní list
+s mapou listů a kontrolním čtvercem, za každým lícem zrcadlený rub s čísly pro
+oboustranný tisk) a PNG líce i rubu. Fotka se ořízne na poměr puzzle (tažení +
+přiblížení), stránka hlídá DPI ve výsledné velikosti (< 150 varování). Bonus: hra
+na obrazovce – dílky (předkreslené sprity) se přetahují, k sousedovi i na desku
+zapadnou podle shody posunu (`P.prichyt`), spojené se táhnou jako skupina; čas,
+předloha, jen okraje, průběžné ukládání do IndexedDB. Testy:
+`node _test/puzzle_generator_test.js` (sdílení hran, plochy dílků = plocha puzzle,
+žádné průsečíky, řezy bez duplicit, SVG/DXF/PDF, listy, přichycení; ~2500 kontrol).
+
+**Plakát mapy** (`obsah/plakat_mapy.html` + `obsah/plakat_mapy/{jadro,ui}.js`) dělá
+minimalistické plakáty místa k tisku ve stylu „city map poster“. Mapa jsou vektorové
+dlaždice OpenFreeMap (schéma OpenMapTiles, zdarma bez klíče, CORS `*`) vykreslené
+přes `lib/maplibre`; styl se **generuje v JS z palety** (`PLAKAT.generujStyl`) –
+10 palet (černobílý, inkoust, modrotisk, sépie, noční, pastel, minimal jen silnice,
+voda a zeleň, terakota, černý kontrast) a editor barev vrstev (voda, zeleň, budovy,
+železnice, pozadí, pět tříd silnic s vlastní barvou, tloušťkou a skrytím), popisky
+volitelně. Hledání přes Nominatim jen po potvrzení, nejvýš 1 dotaz/s, výsledky
+v paměti; souřadnice se čtou i ve tvaru `50°4'31"N 14°26'16"E`. Plakát: A4/A3/A2/
+50×70/30×40/vlastní, orientace, okraj, rámeček, maska obdélník/kruh/srdce, text
+dole/přes mapu/v pruhu, písma z `obsah/fonty`, značka místa. **Náhled i export
+kreslí stejná funkce nad `PLAKAT.rozvrzeni(n, W, H)`** (vše úměrné kratší straně),
+takže export odpovídá náhledu. Export PNG/PDF (jsPDF, JPEG 93 %) v 100–300 DPI
+vykreslí mapu znovu ve skrytém kontejneru stejné CSS velikosti jako náhled
+s `pixelRatio` = cílové px / CSS px (`preserveDrawingBuffer`, `maxCanvasSize`);
+při překročení limitu WebGL (`MAX_RENDERBUFFER_SIZE`/viewport) nebo 150 Mpx
+nabídne nižší DPI. „Podrobnost mapy“ 1,5×/2× zvětší CSS plochu a zoom o log2
+(víc ulic, tenčí čáry). Atribuce © OpenStreetMap / OpenFreeMap je vždy v rohu.
+Režim **Hvězdná obloha** líně načte katalog `obsah/dalekohled/data.js`
+(Yale BSC + čáry souhvězdí d3-celestial) a kreslí stereografickou projekci od zenitu
+(sever nahoře, východ vlevo) k datu, času a pásmu; polohy J2000 bez precese.
+Ukládá do `webapp_plakat_mapy_posledni` a `webapp_plakat_mapy_ulozene`, nastavení
+jde exportovat/načíst jako `.json` (i přetažením). Test `node _test/plakat_mapy_test.js`
+(formáty a DPI, souřadnice, styly všech palet, rozvržení, tvary, hvězdný čas, 280 kontrol).
+
+## Lamamp – přehrávač (29. 10. 2026)
+
+**Lamamp** (`obsah/lamamp.html` + `obsah/lamamp/`) je retro přehrávač hudby (vzhled klasických
+přehrávačů z přelomu tisíciletí, umí jejich skiny `.wsz`), vlastní implementace (plán a stav etap `Lamamp_PLAN.md`).
+HD (od 2×, vestavěné skiny): archy skinu se kreslí v měřítku okna (`vychozi(motiv, m)`, arch.m), okno se vykresluje přímo v rozlišení obrazovky; nápisy skutečným písmem na místech pixelových znaků, text displeje s diakritikou (`textHD`), číslice jako vektorové segmenty, bitmapové ikony přes EPX, hladká křivka EQ. Skiny .wsz a 1× zůstávají pixelové, volitelně vyhlazené (`vyhlazeni.js`: Scale2x 2–3× + bilineární zmenšení, jen změněný obdélník; Zobrazit → Vyhlazovat skiny .wsz, výchozí vypnuto). Test `python3 _test/lamamp_vyhlazeni.py`. Vestavěné skiny (10 motivů: Lamamp, Grafit, Okna 98, Stříbro, Terminál, Jantar, Neon, Les, Rubín, Oceán) jsou jedna kresba s přemapováním barev podle role (neutrální / akcent / displej, `TEMATA` ve `skin.js`, `nast.skin = 'tema:<id>'`; přehled `python3 _test/lamamp_skiny.py`). Výchozí skin se kreslí kódem (`skin.js`) do archů s rozměry a rozložením bitmap
+klasického skinu (main, titlebar, cbuttons, numbers, text, playpaus, monoster, posbar, volume,
+balance, shufrep, eqmain, eq_ex, pledit), takže skin `.wsz` je jen výměna zdrojů: vlastní
+rozbalení ZIPu (`DecompressionStream`), dekodér BMP, `viscolor.txt`, `pledit.txt`, `region.txt`
+(tvar okna přes `clip-path`) a `nums_ex.bmp`. Okna (`hlavni.js`, `ekvalizer.js`, `playlist.js`)
+jsou bez DOM, kreslí se v pixelech skinu a zvětšují celočíselně v pixelech zařízení (ostré na
+každém DPI); text playlistu se kreslí zvlášť v plném rozlišení s diakritikou. Zvuk (`zvuk.js`):
+`<audio>` → prolínání → preamp → 10× peaking filtr → vyvážení → hlasitost → analyzátor;
+dvě mechaniky pro prolínání, režim „přímo“ bez Web Audio (výchozí na iPhonu – hraje se
+zamčeným displejem) a stream bez CORS se přehraje přímo. Tagy (`tagy.js`): ID3v1/v2.2–2.4
+(i windows-1250), Xing/Info/VBRI, FLAC, OGG Vorbis/Opus, MP4/M4A/ALAC, WAV INFO. Jádro
+(`jadro.js`): playlist, výběr, shuffle/repeat, M3U/PLS, předvolby EQ a `.eqf`. Správce oken
+(`okna.js`): přichytávání, skupina tažená hlavním oknem, posun oken při zmenšení. Úložiště
+IndexedDB `webapp_lamamp` (playlist, kopie skladeb – výchozí zapnuté, skiny, složky na ploše), nastavení v
+`webapp_lamamp_nastaveni`. Složky s hudbou na ploše (`plocha.js`): ikony ve stylu Windows 98 vedle oken; v Chrome/Edge zástupce
+složky na disku (File System Access, handle v IndexedDB, po reloadu `requestPermission` na kliknutí; přetažení
+složky z Průzkumníka přes `getAsFileSystemHandle`), jinde kopie skladeb v IndexedDB. Položky playlistu ze
+složky nesou `slozka` + `rel` (+ `blobKlic`) a nekopírují se znovu. Testy: `node _test/lamamp_test.js` (113, vzorky z
+`_test/lamamp_vzorky.sh` přes ffmpeg), `python3 _test/lamamp_ui.py [dpi]` (65 kontrol skutečnou
+myší, prstem a klávesami vč. přehrávání, EQ, prolínání, skinu a obnovy po reloadu),
+`python3 _test/lamamp_snimek.py [dpi] [--archy]`, `python3 _test/lamamp_pruzkum.py` (okrajové scénáře: prázdný seznam, klávesy v dialozích, zmenšená okna, 3×, úzké okno, téma, poškozené nastavení), `node _test/lamamp_fuzz.js [počet] [seed]` (mutace vzorků do parserů tagů, BMP, ZIP, textů a .eqf – hlídá zamrznutí), `python3 _test/lamamp_opice.py [kroků] [seed]` (náhodné klikání, tažení a klávesy v prohlížeči – chyby JS, živé kreslení, soulad stavu se zvukem), `node _test/lamamp_firefox.js` (Firefox přes nativní WebDriver BiDi, bez geckodriveru), `python3 _test/lamamp_zatez.py` (3000 skladeb, plynulost, 1500 přepnutí a paměť). Zapisuje jen jedna záložka (Web Locks `webapp_lamamp_zapis`), další jen čte.
+
 Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`) – jinak návštěvník uvidí
 novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/sw.js`.

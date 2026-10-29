@@ -190,10 +190,15 @@
     .metodus a.otevrit:hover { background-color: var(--accent-hover); }
 
     /* hledání přímo na úvodu */
-    .hledani {
-      width: 100%;
+    .hledani-radek {
+      display: flex;
+      gap: 8px;
       max-width: 520px;
       margin-top: 14px;
+    }
+    .hledani {
+      flex: 1;
+      min-width: 0;
       padding: 10px 14px;
       font: inherit;
       font-size: 0.95rem;
@@ -203,6 +208,32 @@
       border-radius: var(--radius);
     }
     .hledani:focus { outline: none; border-color: var(--accent); }
+    /* vestavěný křížek je drobný – nahrazuje ho samostatné tlačítko */
+    .hledani::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+    .hledani-zrus {
+      flex: none;
+      width: 44px;
+      display: grid;
+      place-items: center;
+      padding: 2px;
+      background-clip: content-box; /* podbarvení 2 px od okraje */
+      font-size: 1.2rem;
+      line-height: 1;
+      color: var(--text-muted);
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    /* s textem v poli lehce červený, po najetí výrazněji */
+    .hledani-zrus:not(:disabled) {
+      color: var(--danger);
+      background-color: color-mix(in srgb, var(--danger) 14%, transparent);
+    }
+    .hledani-zrus:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--danger) 30%, transparent);
+    }
+    .hledani-zrus:disabled { opacity: 0.45; cursor: default; }
 
     section h2 .akce { float: right; text-transform: none; letter-spacing: 0; font-weight: 400; }
     .akce button, .tip button.dalsi {
@@ -295,7 +326,10 @@
     <h1>👋 Vítejte</h1>
     <p>Vyberte aplikaci v menu vlevo, nebo začněte jednou z dlaždic níže.</p>
     <div class="statistika" id="statistika"></div>
-    <input type="search" class="hledani" id="hledani" placeholder="🔍 Hledat aplikaci…" autocomplete="off" aria-label="Hledat aplikaci">
+    <div class="hledani-radek">
+      <input type="search" class="hledani" id="hledani" placeholder="🔍 Hledat aplikaci…" autocomplete="off" aria-label="Hledat aplikaci">
+      <button type="button" class="hledani-zrus" id="hledaniZrus" title="Zrušit hledání" aria-label="Zrušit hledání" disabled>✕</button>
+    </div>
   </header>
 
   <section id="vysledkySekce" hidden>
@@ -402,6 +436,11 @@
     // hledání bez diakritiky (stejně jako menu rozcestníku)
     const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+    // v jiném jazyce se hledá česky i v tom jazyce (i18n.js, slovník _katalog)
+    const preloz = s => (window.I18N ? I18N.preloz(s) : s);
+    const dvojjazycne = s => (preloz(s) === s ? s : s + ' ' + preloz(s));
+    const tagyJazyka = soubor => (window.I18N ? I18N.tagy(soubor) : []);
+
     // rozdělení "🌧️ Předpověď" na emoji + text; první slovo je emoji, když obsahuje
     // znak, který není písmeno ani číslice ("🔢 2048" -> 🔢 + 2048)
     function rozdel(nazev) {
@@ -461,7 +500,7 @@
       obal.dataset.soubor = p.soubor;
       const b = document.createElement('button');
       b.type = 'button';
-      const nazev = rozdel(p.nazev).text;
+      const nazev = preloz(rozdel(p.nazev).text);
       if (oblibenaSekce) {
         b.className = 'odebrat';
         b.textContent = '✕';
@@ -518,7 +557,7 @@
       seznam.splice(i, 1);
       ulozJson(KEY_OBLIBENE, seznam);
       prekresli();
-      ukazToast(`„${rozdel(podleSouboru.get(soubor)?.nazev || soubor).text}“ odebráno z oblíbených`, () => {
+      ukazToast(`„${preloz(rozdel(podleSouboru.get(soubor)?.nazev || soubor).text)}“ odebráno z oblíbených`, () => {
         const s = nactiJson(KEY_OBLIBENE);
         if (!s.includes(soubor)) s.splice(Math.min(i, s.length), 0, soubor);
         ulozJson(KEY_OBLIBENE, s);
@@ -672,9 +711,16 @@
 
     /* ---- Hledání ---- */
     const hledani = document.getElementById('hledani');
-    const hledaciText = new Map(vsechny.map(p => [p, norm(p.nazev + ' ' + (p.tagy || []).join(' '))]));
+    // hledá se i podle názvu sekce (podkategorie) a skupiny (kategorie)
+    const skupinaPodleId = new Map(KATALOG_SKUPINY.map(g => [g.id, g.label]));
+    const kontextHledani = new Map();
+    KATALOG_SEKCE.forEach(s => s.polozky.forEach(p => kontextHledani.set(p.soubor,
+      (kontextHledani.get(p.soubor) || '') + ' ' + dvojjazycne(s.nazev) + ' ' + dvojjazycne(skupinaPodleId.get(s.skupina) || ''))));
+    const hledaciText = new Map(vsechny.map(p => [p, norm(dvojjazycne(p.nazev) + ' '
+      + [...(p.tagy || []), ...tagyJazyka(p.soubor)].join(' ') + (kontextHledani.get(p.soubor) || ''))]));
     function hledej() {
       const q = norm(hledani.value.trim());
+      document.getElementById('hledaniZrus').disabled = !q;
       const sekce = document.getElementById('vysledkySekce');
       sekce.hidden = !q;
       if (!q) return [];
@@ -685,6 +731,11 @@
       return shody;
     }
     hledani.addEventListener('input', hledej);
+    document.getElementById('hledaniZrus').addEventListener('click', () => {
+      hledani.value = '';
+      hledej();
+      hledani.focus();
+    });
     hledani.addEventListener('keydown', e => {
       if (e.key === 'Enter') document.querySelector('#vysledky a')?.click();
       if (e.key === 'Escape') { hledani.value = ''; hledej(); }
@@ -700,7 +751,8 @@
       const st = stitek(p);
       if (st) b.appendChild(st);
       const sub = document.createElement('span');
-      sub.textContent = (p.tagy || []).join(' · ') || 'Vyzkoušejte dnešní náhodně vybranou aplikaci.';
+      const tagy = tagyJazyka(p.soubor).length ? tagyJazyka(p.soubor) : p.tagy || [];
+      sub.textContent = tagy.join(' · ') || 'Vyzkoušejte dnešní náhodně vybranou aplikaci.';
       tt.append(b, sub);
       el.replaceChildren(symbol(IKONY?.stranky[p.soubor], emoji), tt);
       if (dalsi) el.appendChild(dalsi);
@@ -757,9 +809,9 @@
 
     // nulové stavy (např. zatím žádná stable) se nevypisují
     document.getElementById('statistika').textContent =
-      `K dispozici je ${vsechny.length} aplikací v ${KATALOG_SKUPINY.length} kategoriích a ${KATALOG_SEKCE.length} sekcích`
+      preloz(`K dispozici je ${vsechny.length} aplikací v ${KATALOG_SKUPINY.length} kategoriích a ${KATALOG_SEKCE.length} sekcích`)
       + ' (' + KATALOG_STAVY
-        .map(s => [s.label.toLowerCase(), vsechny.filter(p => p.stav === s.id).length])
+        .map(s => [preloz(s.label).toLowerCase(), vsechny.filter(p => p.stav === s.id).length])
         .filter(([, n]) => n > 0)
         .map(([l, n]) => `${l} ${n}`).join(', ') + ').';
 

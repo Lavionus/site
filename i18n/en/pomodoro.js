@@ -1,0 +1,23 @@
+// pomodoro – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Pomodoro časovač': 'Pomodoro timer',
+  'Práce': 'Work',
+  'Krátká pauza': 'Short break',
+  'Dlouhá pauza': 'Long break',
+  'Práce (min)': 'Work (min)',
+  'Krátká (min)': 'Short (min)',
+  'Dlouhá (min)': 'Long (min)',
+  'Dnes dokončeno': 'Completed today',
+  'Minut práce dnes': 'Minutes worked today',
+  'Log relací': 'Session log',
+  'Zatím žádné dokončené relace': 'No completed sessions yet',
+  'Vymazat log': 'Clear log',
+  'Hotovo! Čas na pauzu 🎉': 'Done! Time for a break 🎉',
+  'Pauza skončila, zpět do práce!': 'Break is over, back to work!',
+  '{min} min práce': '{min} min of work',
+  'Vymazat celý log?': 'Clear the whole log?',
+  'Start': 'Start',
+  'Reset': 'Reset',
+  'Pauza': 'Pause',
+  'Pomodoro': 'Pomodoro',
+});

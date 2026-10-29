@@ -73,7 +73,8 @@ opačně ne. `upload.sh` nahrává všechny tři.
    Stránka, která ukládá → `python3 _test/nastaveni_klice.py`.
 4. Záznam do příslušné sekce v `apps.js` (`soubor`, `nazev` s emoji, `"stav": "vyvoj"`,
    `tagy`). **Vkládat textově** – formát souboru je smíšený, nepřeserializovávat
-   přes `JSON.stringify`.
+   přes `JSON.stringify`. Anglický název a hledací slova téže stránky do `i18n/en/_katalog.js`
+   (viz `Multijazycnost_PLAN.md`).
 5. `node tools/generate-index-icons.mjs`, zvednout verzi v `sw.js`.
 6. Nový sdílený soubor → ověřit `git check-ignore -v <soubor>` (`.gitignore` má
    `*copy*`, `*kopie*`, `*.bak*` – tiše by se nenahrál). Sdílené moduly patří do `JADRO`.

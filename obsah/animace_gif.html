@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎞️ GIF, animace a sprite sheety</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="animace_gif/jadro.js"></script>
+<script src="lib/mediabunny.min.js" defer></script>
+<script src="animace_gif/stranka.js" defer></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+[hidden]{display:none !important}
+input,select,textarea,button{font-family:inherit}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.pocet{color:var(--text-faint);font-size:.78rem;white-space:nowrap}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn:disabled{opacity:.5;cursor:default}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.85rem;min-width:0}
+.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+input[type=number].vstup{width:78px}
+input[type=range]{accent-color:var(--accent)}
+input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
+
+/* pracovní plocha: náhled | výstup, dole časová osa */
+.prace{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 310px}
+.scena{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+.platno-obal{flex:1;min-height:0;overflow:auto;display:flex;padding:16px}
+.platno-ram{margin:auto;line-height:0;box-shadow:0 0 0 1px var(--border);
+  background-color:#fff;background-image:linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%);
+  background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.platno-ram.bez-sachovnice{background:var(--bg-panel)}
+#platno{display:block}
+#platno.pixel{image-rendering:pixelated}
+.prehravac{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 12px;border-top:1px solid var(--border);background:var(--bg-panel);font-size:.82rem}
+.prehravac .info{color:var(--text-muted);margin-left:auto;white-space:nowrap}
+.prehravac select{padding:3px 4px}
+.prazdne{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;pointer-events:none}
+.prazdne .karta{pointer-events:auto;max-width:520px;text-align:center;background:var(--bg-panel);border:2px dashed var(--border-strong);border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.prazdne h2{font-size:1.15rem}
+.prazdne p{color:var(--text-muted);font-size:.88rem;line-height:1.5}
+.prazdne .tlacitka{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.soukromi{font-size:.76rem;color:var(--text-faint)}
+body.pretahuji .platno-obal{outline:3px dashed var(--accent);outline-offset:-8px}
+
+aside.vystup{background:var(--bg-panel);border-left:1px solid var(--border);overflow-y:auto;padding:12px 14px 30px;display:flex;flex-direction:column;gap:10px;min-height:0}
+aside h3{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint)}
+.pole{display:flex;flex-direction:column;gap:3px;font-size:.82rem}
+.pole > span{color:var(--text-muted);font-size:.76rem}
+.pole-radek{display:flex;align-items:center;gap:8px;font-size:.82rem;flex-wrap:wrap}
+.pole-radek > label{display:flex;align-items:center;gap:5px}
+.vystup .vstup{width:100%}
+.vystup input[type=number].vstup{width:90px}
+.format-tlacitka{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.format-tlacitka .tl{padding:6px 4px;text-align:center}
+.odhad{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.84rem;display:flex;justify-content:space-between;gap:8px}
+.odhad b{font-size:1rem}
+.napoveda-mala{font-size:.74rem;color:var(--text-faint);line-height:1.45}
+.prubeh{height:6px;background:var(--bg-control);border-radius:3px;overflow:hidden}
+.prubeh > div{height:100%;width:0;background:var(--accent);transition:width .1s}
+
+/* časová osa */
+.osa-obal{flex-shrink:0;border-top:1px solid var(--border);background:var(--bg-panel);display:flex;flex-direction:column}
+.osa-lista{display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:.78rem;color:var(--text-muted);flex-wrap:wrap}
+.osa{display:flex;gap:6px;overflow-x:auto;padding:4px 10px 10px;min-height:118px;align-items:flex-start}
+.snimek{flex:none;display:flex;flex-direction:column;gap:3px;align-items:center;padding:4px;border:2px solid transparent;border-radius:8px;background:var(--bg-elevated);cursor:pointer;user-select:none;position:relative}
+.snimek:hover{border-color:var(--border-strong)}
+.snimek.vybrany{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:var(--accent-soft)}
+.snimek.aktualni{border-color:var(--accent)}
+.snimek canvas{height:64px;max-width:120px;display:block;image-rendering:pixelated;
+  background-color:#fff;background-image:linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%);
+  background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0}
+.snimek .cislo{position:absolute;top:6px;left:6px;font-size:.66rem;background:var(--bg-panel);color:var(--text);border-radius:4px;padding:0 4px;opacity:.9}
+.snimek input{width:62px;font-size:.72rem;padding:1px 4px;text-align:right}
+.snimek.cil-pred::before{content:'';position:absolute;left:-5px;top:4px;bottom:4px;width:3px;background:var(--accent);border-radius:2px}
+.snimek.cil-za::after{content:'';position:absolute;right:-5px;top:4px;bottom:4px;width:3px;background:var(--accent);border-radius:2px}
+
+/* modální okna */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:110;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px}
+.modal-bg.zobraz{display:flex}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:640px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.modal.siroky{max-width:980px}
+.modal h2{font-size:1.1rem;display:flex;align-items:center;gap:8px}
+.modal h2 .zavrit{margin-left:auto}
+.modal .akce{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.dvojice{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
+.nahled-obal{background:var(--bg-deep);border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:62vh;display:flex;align-items:flex-start;justify-content:center;padding:8px}
+.nahled-obal canvas{image-rendering:pixelated;max-width:100%;cursor:crosshair;touch-action:none}
+.nahled-obal video{max-width:100%;max-height:50vh}
+.formular{display:flex;flex-direction:column;gap:9px}
+.formular fieldset{border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+.formular legend{font-size:.76rem;color:var(--text-faint);padding:0 4px}
+.mrizka2{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.pomoc{font-size:.86rem;line-height:1.55;display:flex;flex-direction:column;gap:8px}
+.pomoc table{border-collapse:collapse;width:100%}
+.pomoc td{padding:3px 6px;border-bottom:1px solid var(--border);vertical-align:top}
+.pomoc h3{font-size:.95rem;margin-top:6px}
+.pomoc ul{padding-left:20px}
+
+@media (max-width:820px){
+  body{height:auto;overflow:auto}
+  .prace{display:contents}   /* scéna, osa a výstup pod sebou: scéna → osa → výstup */
+  .scena{order:1}
+  .osa-obal{order:2}
+  aside.vystup{order:3;border-left:0;border-top:1px solid var(--border);overflow:visible}
+  .platno-obal{min-height:260px;max-height:62vh}
+  .dvojice{grid-template-columns:1fr}
+}
+@media (max-width:420px){
+  .lista{padding:4px 6px}
+  .lista h1{font-size:.92rem}
+  .prehravac .info{margin-left:0}
+  .mrizka2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <div class="skup skup-projekt">
+    <h1>🎞️ Animace &amp; GIF</h1>
+    <span class="pocet" id="pocet"></span>
+  </div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Otevřít obrázky, GIF, video nebo sprite sheet">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Snímky"><span class="skup-nazev" aria-hidden="true">Snímky</span><div class="skup-tl">
+    <button class="tl" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl" data-prikaz="znovu" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷</button>
+    <button class="tl" data-nabidka="nabSnimky" title="Duplikovat, smazat, obrátit, ping-pong, délka snímků">🎬<span class="txt"> Snímky</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Obraz"><span class="skup-nazev" aria-hidden="true">Obraz</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabObraz" title="Ořez, změna velikosti, text, otočení">🖼<span class="txt"> Obraz</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="cibule" aria-pressed="false" title="Onion skin – průsvitný předchozí a další snímek (O)">🧅<span class="txt"> Onion</span></button>
+    <button class="tl" data-nabidka="nabZobrazit" title="Zvětšení, pozadí, vyhlazení">👁<span class="txt"> Zobrazit</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít (nahradit animaci)… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="pridat">➕ Přidat snímky ze souborů…</button>
+  <button class="tl" data-prikaz="video">🎥 Snímky z videa…</button>
+  <button class="tl" data-prikaz="sprite">🧩 Rozřezat sprite sheet…</button>
+  <hr>
+  <button class="tl" data-prikaz="ukazka">✨ Ukázková animace</button>
+  <button class="tl" data-prikaz="novy">🗑 Nová (vyprázdnit)</button>
+  <hr>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit ve zvoleném formátu <kbd>Ctrl+S</kbd></button>
+  <div class="titulek">Rozpracovaná animace se sama ukládá v tomto prohlížeči.</div>
+</div>
+<div id="nabSnimky" class="nabidka" hidden>
+  <button class="tl" data-prikaz="vybratVse">☑ Vybrat vše <kbd>Ctrl+A</kbd></button>
+  <button class="tl" data-prikaz="duplikovat">⧉ Duplikovat vybrané <kbd>Ctrl+D</kbd></button>
+  <button class="tl" data-prikaz="smazat">🗑 Smazat vybrané <kbd>Del</kbd></button>
+  <button class="tl" data-prikaz="prazdny">⬚ Vložit prázdný snímek</button>
+  <hr>
+  <button class="tl" data-prikaz="vlevo">◀ Posunout vybrané dopředu <kbd>Alt+←</kbd></button>
+  <button class="tl" data-prikaz="vpravo">▶ Posunout vybrané dozadu <kbd>Alt+→</kbd></button>
+  <button class="tl" data-prikaz="obratit">⇄ Obrátit pořadí (vybrané nebo vše)</button>
+  <button class="tl" data-prikaz="pingpong">↔ Ping-pong (tam a zpět)</button>
+  <hr>
+  <button class="tl" data-prikaz="delka">⏱ Délka snímků… <kbd>T</kbd></button>
+</div>
+<div id="nabObraz" class="nabidka" hidden>
+  <button class="tl" data-prikaz="orez">✂ Ořez… <kbd>C</kbd></button>
+  <button class="tl" data-prikaz="orezPruhl">⬚ Oříznout průhledné okraje</button>
+  <button class="tl" data-prikaz="velikost">⤡ Změnit velikost… <kbd>R</kbd></button>
+  <button class="tl" data-prikaz="text">🔤 Text přes animaci…</button>
+  <hr>
+  <button class="tl" data-prikaz="otocVpravo">↻ Otočit o 90° doprava</button>
+  <button class="tl" data-prikaz="otocVlevo">↺ Otočit o 90° doleva</button>
+  <button class="tl" data-prikaz="zrcadliH">⇋ Zrcadlit vodorovně</button>
+  <button class="tl" data-prikaz="zrcadliV">⇵ Zrcadlit svisle</button>
+  <div class="titulek">Úpravy obrazu platí pro všechny snímky</div>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <div class="titulek">Zvětšení</div>
+  <button class="tl prep" data-prikaz="zoom-0" data-zoom="0">Přizpůsobit oknu <kbd>0</kbd></button>
+  <button class="tl prep" data-prikaz="zoom-1" data-zoom="1">100 % <kbd>1</kbd></button>
+  <button class="tl prep" data-prikaz="zoom-2" data-zoom="2">200 % <kbd>2</kbd></button>
+  <button class="tl prep" data-prikaz="zoom-4" data-zoom="4">400 % <kbd>4</kbd></button>
+  <hr>
+  <button class="tl prep" data-prikaz="pixel" id="tlPixel">Ostré pixely (pixel art)</button>
+  <button class="tl prep" data-prikaz="sachovnice" id="tlSach">Šachovnice pod průhledností</button>
+  <button class="tl prep" data-prikaz="cibuleDalsi" id="tlCibuleDalsi">Onion skin i s následujícím snímkem</button>
+</div>
+
+<div class="prace">
+  <div class="scena">
+    <div class="platno-obal" id="platnoObal">
+      <div class="platno-ram" id="platnoRam"><canvas id="platno" width="1" height="1"></canvas></div>
+    </div>
+    <div class="prazdne" id="prazdne">
+      <div class="karta">
+        <h2>Přetáhněte sem obrázky, GIF nebo video</h2>
+        <p>Vyrobte animovaný GIF, APNG, WebM nebo sprite sheet pro hry. Snímky můžete přeřadit, upravit jejich délku, oříznout, zvětšit pro pixel art i doplnit text.</p>
+        <div class="tlacitka">
+          <button class="btn primary" data-prikaz="otevrit">📂 Otevřít soubory</button>
+          <button class="btn" data-prikaz="video">🎥 Z videa</button>
+          <button class="btn" data-prikaz="sprite">🧩 Sprite sheet</button>
+          <button class="btn" data-prikaz="ukazka">✨ Ukázka</button>
+        </div>
+        <div class="soukromi">🔒 Vše běží jen ve vašem prohlížeči – soubory se nikam neodesílají.</div>
+      </div>
+    </div>
+    <div class="prehravac">
+      <button class="tl" data-prikaz="prvni" title="První snímek (Home)" aria-label="První snímek">⏮</button>
+      <button class="tl" data-prikaz="predchozi" title="Předchozí snímek (←)" aria-label="Předchozí snímek">◀</button>
+      <button class="tl hlavni-tl" data-prikaz="prehrat" id="tlPrehrat" title="Přehrát / zastavit (mezerník)">▶ Přehrát</button>
+      <button class="tl" data-prikaz="dalsi" title="Další snímek (→)" aria-label="Další snímek">▶</button>
+      <button class="tl" data-prikaz="posledni" title="Poslední snímek (End)" aria-label="Poslední snímek">⏭</button>
+      <label title="Rychlost přehrávání náhledu (export ji nemění)">⚡ <select id="rychlost" class="vstup">
+        <option value="0.25">0,25×</option><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+      </select></label>
+      <span class="info" id="infoSnimek">–</span>
+    </div>
+  </div>
+
+  <aside class="vystup" id="panelVystup">
+    <h3>Výstup</h3>
+    <div class="format-tlacitka" role="group" aria-label="Formát výstupu">
+      <button class="tl" data-format="gif">GIF</button>
+      <button class="tl" data-format="apng">APNG</button>
+      <button class="tl" data-format="webm">WebM</button>
+      <button class="tl" data-format="sprite">Sprite sheet</button>
+      <button class="tl" data-format="zip">ZIP snímků</button>
+    </div>
+
+    <div class="formular" data-pro="gif">
+      <label class="pole"><span>Počet barev: <b id="barevHodn">256</b></span><input type="range" id="gifBarev" min="2" max="256" value="256"></label>
+      <label class="pole"><span>Paleta</span><select id="gifPaleta" class="vstup">
+        <option value="globalni">Společná pro celou animaci (menší soubor)</option>
+        <option value="lokalni">Lokální pro každý snímek (věrnější barvy)</option></select></label>
+      <label class="pole"><span>Kvantizace barev</span><select id="gifMetoda" class="vstup">
+        <option value="mediancut">Median-cut</option><option value="oktan">Oktanový strom</option></select></label>
+      <div class="pole-radek"><label><input type="checkbox" id="gifDither"> Rozptyl Floyd–Steinberg</label></div>
+      <div class="pole-radek"><label><input type="checkbox" id="gifOpt" checked> Ukládat jen změněný obdélník</label></div>
+      <label class="pole"><span>Průhledné pod alfou: <b id="prahHodn">128</b></span><input type="range" id="gifPrah" min="1" max="255" value="128"></label>
+    </div>
+    <div class="formular" data-pro="apng">
+      <div class="pole-radek"><label><input type="checkbox" id="apngOpt" checked> Ukládat jen změněný obdélník</label></div>
+      <p class="napoveda-mala">APNG uchová plné barvy i poloprůhlednost. Přehraje ho každý moderní prohlížeč; jinde se ukáže jen první snímek.</p>
+    </div>
+    <div class="formular" data-pro="webm">
+      <label class="pole"><span>Kvalita</span><select id="webmKvalita" class="vstup">
+        <option value="LOW">Nízká</option><option value="MEDIUM">Střední</option><option value="HIGH" selected>Vysoká</option><option value="VERY_HIGH">Velmi vysoká</option></select></label>
+      <label class="pole"><span>Pozadí místo průhlednosti</span><input type="color" id="webmPozadi" value="#ffffff" class="vstup" style="height:32px;padding:2px"></label>
+      <p class="napoveda-mala" id="webmStav">Zjišťuji, zda prohlížeč umí kódovat video…</p>
+    </div>
+    <div class="formular" data-pro="sprite">
+      <label class="pole"><span>Rozložení</span><select id="spRezim" class="vstup">
+        <option value="mrizka">Mřížka (stejné buňky)</option><option value="baleni">Těsné balení</option></select></label>
+      <div class="mrizka2">
+        <label class="pole"><span>Sloupců (0 = auto)</span><input type="number" id="spSloupcu" class="vstup" min="0" value="0"></label>
+        <label class="pole"><span>Mezera (px)</span><input type="number" id="spMezera" class="vstup" min="0" value="0"></label>
+        <label class="pole"><span>Okraj (px)</span><input type="number" id="spOkraj" class="vstup" min="0" value="0"></label>
+        <label class="pole"><span>JSON</span><select id="spFormat" class="vstup"><option value="hash">hash</option><option value="array">array</option></select></label>
+      </div>
+      <div class="pole-radek"><label><input type="checkbox" id="spOrez"> Oříznout průhledné okraje snímků</label></div>
+      <div class="pole-radek"><label><input type="checkbox" id="spMocnina"> Rozměry na mocninu dvou</label></div>
+      <label class="pole"><span>Předpona názvů snímků</span><input type="text" id="spPredpona" class="vstup" value="snimek_"></label>
+      <p class="napoveda-mala">JSON odpovídá formátu TexturePacker (JSON Hash / JSON Array) – v Phaseru <code>this.load.atlas(klíč, 'list.png', 'list.json')</code>. Uloží se ZIP s PNG a JSON.</p>
+    </div>
+    <div class="formular" data-pro="zip">
+      <label class="pole"><span>Předpona souborů</span><input type="text" id="zipPredpona" class="vstup" value="snimek_"></label>
+      <p class="napoveda-mala">Každý snímek jako PNG v plném rozlišení, v archivu také <code>snimky.json</code> s délkami.</p>
+    </div>
+
+    <div class="formular" data-pro="gif apng">
+      <label class="pole"><span>Opakování</span><select id="prehrani" class="vstup">
+        <option value="0">Stále dokola</option><option value="1">Přehrát jednou</option><option value="2">2×</option><option value="3">3×</option><option value="5">5×</option></select></label>
+    </div>
+    <label class="pole"><span>Název souboru</span><input type="text" id="nazevSouboru" class="vstup" value="animace"></label>
+    <div class="odhad"><span>Odhad velikosti</span><b id="odhad">–</b></div>
+    <button class="btn primary" data-prikaz="ulozit" id="tlUlozit">💾 Uložit GIF</button>
+    <div class="prubeh" id="prubeh" hidden><div></div></div>
+    <p class="napoveda-mala">🔒 Nic se neodesílá, vše se počítá ve vašem prohlížeči.</p>
+  </aside>
+</div>
+
+<div class="osa-obal">
+  <div class="osa-lista">
+    <span id="infoVyber">Žádné snímky</span>
+    <button class="btn mini" data-prikaz="duplikovat" title="Duplikovat vybrané (Ctrl+D)">⧉ Duplikovat</button>
+    <button class="btn mini" data-prikaz="smazat" title="Smazat vybrané (Delete)">🗑 Smazat</button>
+    <button class="btn mini" data-prikaz="delka" title="Délka vybraných snímků (T)">⏱ Délka…</button>
+    <span class="napoveda-mala">Klik = vybrat, Shift/Ctrl = více, tažením přeřadíte</span>
+  </div>
+  <div class="osa" id="osa" role="listbox" aria-label="Časová osa snímků" aria-multiselectable="true"></div>
+</div>
+
+<input type="file" id="souborOtevrit" multiple accept="image/*,video/*,.gif,.png,.apng,.webp" hidden>
+<input type="file" id="souborPridat" multiple accept="image/*,.gif" hidden>
+<input type="file" id="souborVideo" accept="video/*" hidden>
+<input type="file" id="souborSprite" accept="image/*" hidden>
+
+<!-- video -->
+<div class="modal-bg" id="mVideo"><div class="modal siroky" role="dialog" aria-modal="true" aria-labelledby="mVideoT">
+  <h2 id="mVideoT">🎥 Snímky z videa <button class="tl zavrit" data-zavrit aria-label="Zavřít">✕</button></h2>
+  <div class="dvojice">
+    <div class="nahled-obal"><video id="vidNahled" controls muted playsinline></video></div>
+    <div class="formular">
+      <p class="napoveda-mala" id="vidInfo"></p>
+      <div class="mrizka2">
+        <label class="pole"><span>Od (s)</span><input type="number" id="vidOd" class="vstup" min="0" step="0.1" value="0"></label>
+        <label class="pole"><span>Do (s)</span><input type="number" id="vidDo" class="vstup" min="0" step="0.1" value="3"></label>
+      </div>
+      <div class="pole-radek"><button class="btn mini" id="vidOdTed">⇤ Od = aktuální čas</button><button class="btn mini" id="vidDoTed">Do = aktuální čas ⇥</button></div>
+      <div class="mrizka2">
+        <label class="pole"><span>Snímků za sekundu</span><input type="number" id="vidFps" class="vstup" min="1" max="60" value="10"></label>
+        <label class="pole"><span>Šířka (px)</span><input type="number" id="vidSirka" class="vstup" min="16" max="4096" value="480"></label>
+      </div>
+      <label class="pole"><span>Vložit</span><select id="vidVlozit" class="vstup"><option value="nahradit">Nahradit animaci</option><option value="pridat">Přidat na konec</option></select></label>
+      <p class="napoveda-mala" id="vidPocet"></p>
+      <div class="prubeh" id="vidPrubeh" hidden><div></div></div>
+    </div>
+  </div>
+  <div class="akce"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="vidImport">Načíst snímky</button></div>
+</div></div>
+
+<!-- sprite sheet -->
+<div class="modal-bg" id="mSprite"><div class="modal siroky" role="dialog" aria-modal="true" aria-labelledby="mSpriteT">
+  <h2 id="mSpriteT">🧩 Rozřezat sprite sheet <button class="tl zavrit" data-zavrit aria-label="Zavřít">✕</button></h2>
+  <div class="dvojice">
+    <div class="nahled-obal"><canvas id="spNahled" width="1" height="1"></canvas></div>
+    <div class="formular">
+      <p class="napoveda-mala" id="spInfo"></p>
+      <div class="pole-radek"><label><input type="radio" name="spMod" value="mrizka" checked> Podle mřížky</label><label><input type="radio" name="spMod" value="auto"> Automaticky (podle mezer)</label></div>
+      <fieldset data-sp="mrizka"><legend>Mřížka</legend>
+        <div class="pole-radek"><label><input type="radio" name="spPodle" value="pocet" checked> počet buněk</label><label><input type="radio" name="spPodle" value="velikost"> velikost buňky</label></div>
+        <div class="mrizka2">
+          <label class="pole" data-podle="pocet"><span>Sloupců</span><input type="number" id="spSl" class="vstup" min="1" value="4"></label>
+          <label class="pole" data-podle="pocet"><span>Řádků</span><input type="number" id="spRa" class="vstup" min="1" value="1"></label>
+          <label class="pole" data-podle="velikost"><span>Šířka buňky</span><input type="number" id="spBW" class="vstup" min="1" value="32"></label>
+          <label class="pole" data-podle="velikost"><span>Výška buňky</span><input type="number" id="spBH" class="vstup" min="1" value="32"></label>
+          <label class="pole"><span>Okraj X / Y</span><span class="pole-radek"><input type="number" id="spOX" class="vstup" min="0" value="0" style="width:60px"><input type="number" id="spOY" class="vstup" min="0" value="0" style="width:60px"></span></label>
+          <label class="pole"><span>Mezera X / Y</span><span class="pole-radek"><input type="number" id="spMX" class="vstup" min="0" value="0" style="width:60px"><input type="number" id="spMY" class="vstup" min="0" value="0" style="width:60px"></span></label>
+        </div>
+        <label><input type="checkbox" id="spVynechat" checked> Vynechat prázdné buňky</label>
+      </fieldset>
+      <fieldset data-sp="auto" hidden><legend>Automaticky</legend>
+        <label class="pole"><span>Pozadí</span><select id="spPozadi" class="vstup"><option value="alfa">Průhlednost</option><option value="roh">Barva levého horního rohu</option></select></label>
+        <div class="mrizka2">
+          <label class="pole"><span>Tolerance</span><input type="number" id="spTol" class="vstup" min="0" max="255" value="8"></label>
+          <label class="pole"><span>Spojit části do (px)</span><input type="number" id="spSpoj" class="vstup" min="0" value="2"></label>
+          <label class="pole"><span>Min. plocha (px)</span><input type="number" id="spMin" class="vstup" min="1" value="6"></label>
+        </div>
+        <label class="pole"><span>Zarovnání snímků různé velikosti</span><select id="spZarovnani" class="vstup"><option value="dole">Dole uprostřed (postavy)</option><option value="stred">Na střed</option><option value="vlevo-nahore">Vlevo nahoře</option></select></label>
+      </fieldset>
+      <div class="mrizka2">
+        <label class="pole"><span>Délka snímku (ms)</span><input type="number" id="spDelka" class="vstup" min="10" value="100"></label>
+        <label class="pole"><span>Vložit</span><select id="spVlozit" class="vstup"><option value="nahradit">Nahradit animaci</option><option value="pridat">Přidat na konec</option></select></label>
+      </div>
+    </div>
+  </div>
+  <div class="akce"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="spImport">Načíst snímky</button></div>
+</div></div>
+
+<!-- ořez -->
+<div class="modal-bg" id="mOrez"><div class="modal siroky" role="dialog" aria-modal="true" aria-labelledby="mOrezT">
+  <h2 id="mOrezT">✂ Ořez <button class="tl zavrit" data-zavrit aria-label="Zavřít">✕</button></h2>
+  <div class="dvojice">
+    <div class="nahled-obal"><canvas id="orezNahled" width="1" height="1"></canvas></div>
+    <div class="formular">
+      <p class="napoveda-mala">Táhněte myší přes náhled, nebo zadejte čísla. Ořez platí pro všechny snímky.</p>
+      <div class="mrizka2">
+        <label class="pole"><span>X</span><input type="number" id="orezX" class="vstup" min="0" value="0"></label>
+        <label class="pole"><span>Y</span><input type="number" id="orezY" class="vstup" min="0" value="0"></label>
+        <label class="pole"><span>Šířka</span><input type="number" id="orezW" class="vstup" min="1" value="1"></label>
+        <label class="pole"><span>Výška</span><input type="number" id="orezH" class="vstup" min="1" value="1"></label>
+      </div>
+      <label class="pole"><span>Poměr stran při tažení</span><select id="orezPomer" class="vstup"><option value="0">Volný</option><option value="1">1 : 1</option><option value="1.3333">4 : 3</option><option value="1.7778">16 : 9</option><option value="0.5625">9 : 16</option></select></label>
+      <button class="btn mini" id="orezVse">Celý obraz</button>
+    </div>
+  </div>
+  <div class="akce"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="orezOk">Oříznout</button></div>
+</div></div>
+
+<!-- velikost -->
+<div class="modal-bg" id="mVelikost"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mVelikostT">
+  <h2 id="mVelikostT">⤡ Změnit velikost <button class="tl zavrit" data-zavrit aria-label="Zavřít">✕</button></h2>
+  <div class="formular">
+    <div class="mrizka2">
+      <label class="pole"><span>Šířka (px)</span><input type="number" id="velW" class="vstup" min="1" max="8192"></label>
+      <label class="pole"><span>Výška (px)</span><input type="number" id="velH" class="vstup" min="1" max="8192"></label>
+    </div>
+    <label><input type="checkbox" id="velZamek" checked> Zachovat poměr stran</label>
+    <div class="pole-radek">
+      <button class="btn mini" data-proc="25">25 %</button><button class="btn mini" data-proc="50">50 %</button><button class="btn mini" data-proc="200">200 %</button><button class="btn mini" data-proc="300">300 %</button><button class="btn mini" data-proc="400">400 %</button>
+    </div>
+    <label class="pole"><span>Metoda</span><select id="velMetoda" class="vstup">
+      <option value="plynule">Plynule (fotky, video)</option><option value="nejblizsi">Nejbližší soused (pixel art – ostré pixely)</option></select></label>
+  </div>
+  <div class="akce"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="velOk">Změnit</button></div>
+</div></div>
+
+<!-- text -->
+<div class="modal-bg" id="mText"><div class="modal siroky" role="dialog" aria-modal="true" aria-labelledby="mTextT">
+  <h2 id="mTextT">🔤 Text přes animaci <button class="tl zavrit" data-zavrit aria-label="Zavřít">✕</button></h2>
+  <div class="dvojice">
+    <div class="nahled-obal"><canvas id="textNahled" width="1" height="1"></canvas></div>
+    <div class="formular">
+      <label class="pole"><span>Text (víc řádků = Enter)</span><textarea id="txtText" class="vstup" rows="2">Ahoj!</textarea></label>
+      <div class="mrizka2">
+        <label class="pole"><span>Písmo</span><select id="txtPismo" class="vstup">
+          <option value="Impact, 'Arial Black', sans-serif">Impact (meme)</option>
+          <option value="sans-serif">Bezpatkové</option><option value="serif">Patkové</option><option value="monospace">Strojové</option></select></label>
+        <label class="pole"><span>Velikost (px)</span><input type="number" id="txtVel" class="vstup" min="4" max="500" value="32"></label>
+        <label class="pole"><span>Barva</span><input type="color" id="txtBarva" class="vstup" value="#ffffff" style="height:32px;padding:2px"></label>
+        <label class="pole"><span>Obrys</span><input type="color" id="txtObrysB" class="vstup" value="#000000" style="height:32px;padding:2px"></label>
+        <label class="pole"><span>Tloušťka obrysu</span><input type="number" id="txtObrys" class="vstup" min="0" max="40" value="3"></label>
+        <label class="pole"><span>Poloha</span><select id="txtPoloha" class="vstup"><option value="dole">Dole</option><option value="nahore">Nahoře</option><option value="stred">Uprostřed</option><option value="vlastni">Kliknutím do náhledu</option></select></label>
+      </div>
+      <label><input type="checkbox" id="txtTucne" checked> Tučně</label>
+      <label><input type="checkbox" id="txtOstre"> Ostré hrany (pixel art, bez vyhlazení)</label>
+      <label class="pole"><span>Použít na</span><select id="txtRozsah" class="vstup"><option value="vse">Všechny snímky</option><option value="vyber">Vybrané snímky</option></select></label>
+    </div>
+  </div>
+  <div class="akce"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="txtOk">Vložit text</button></div>
+</div></div>
+
+<!-- délka -->
+<div class="modal-bg" id="mDelka"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mDelkaT">
+  <h2 id="mDelkaT">⏱ Délka snímků <button class="tl zavrit" data-zavrit aria-label="Zavřít">✕</button></h2>
+  <div class="formular">
+    <p class="napoveda-mala" id="delkaInfo"></p>
+    <div class="pole-radek"><label><input type="radio" name="dlMod" value="ms" checked> Nastavit</label>
+      <input type="number" id="dlMs" class="vstup" min="10" max="65000" value="100"> ms
+      <span class="napoveda-mala">= <span id="dlFps">10</span> sn./s</span></div>
+    <div class="pole-radek"><label><input type="radio" name="dlMod" value="nasob"> Zrychlit / zpomalit</label>
+      <select id="dlNasob" class="vstup"><option value="0.5">2× rychleji</option><option value="0.6667">1,5× rychleji</option><option value="1.5">1,5× pomaleji</option><option value="2">2× pomaleji</option></select></div>
+    <label class="pole"><span>Použít na</span><select id="dlRozsah" class="vstup"><option value="vyber">Vybrané snímky</option><option value="vse">Všechny snímky</option></select></label>
+    <p class="napoveda-mala">GIF ukládá délku v setinách sekundy a prohlížeče kratší snímky než 20 ms zpomalují na 100 ms.</p>
+  </div>
+  <div class="akce"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="dlOk">Použít</button></div>
+</div></div>
+
+<!-- nápověda -->
+<div class="modal-bg" id="mNapoveda"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mNapovedaT">
+  <h2 id="mNapovedaT">❓ Nápověda <button class="tl zavrit" data-zavrit aria-label="Zavřít">✕</button></h2>
+  <div class="pomoc">
+    <p>Nástroj skládá animace ze snímků a ukládá je jako <b>GIF</b>, <b>APNG</b>, <b>WebM</b>, <b>sprite sheet</b> (PNG + JSON pro hry) nebo <b>ZIP</b> jednotlivých PNG. Vše běží lokálně – soubory se nikam neodesílají; rozpracovaná animace se průběžně ukládá do úložiště tohoto prohlížeče (IndexedDB).</p>
+    <h3>Vstupy</h3>
+    <ul>
+      <li><b>Obrázky</b> (PNG, JPG, WebP…) – každý soubor je jeden snímek, řadí se podle názvu.</li>
+      <li><b>Animovaný GIF</b> – rozloží se na snímky včetně délek, průhlednosti a způsobů mazání (disposal).</li>
+      <li><b>Video</b> – vyberete úsek, počet snímků za sekundu a šířku.</li>
+      <li><b>Sprite sheet</b> – rozřezání podle mřížky, nebo automaticky podle průhledných mezer či barvy pozadí.</li>
+    </ul>
+    <h3>Tipy k GIFu</h3>
+    <ul>
+      <li>GIF má nejvýš 256 barev. Pixel art s málo barvami se uloží přesně; u fotek a videa pomůže <i>rozptyl Floyd–Steinberg</i>.</li>
+      <li><i>Jen změněný obdélník</i> ukládá z každého snímku jen to, co se změnilo – u animací se statickým pozadím to soubor výrazně zmenší.</li>
+      <li>GIF zná jen plnou průhlednost; poloprůhledné pixely se rozhodnou podle prahu alfy. Plnou alfu zachová APNG.</li>
+      <li>Pro pixel art zvětšujte metodou <i>nejbližší soused</i> (celé násobky – 200 %, 300 %).</li>
+    </ul>
+    <h3>Klávesové zkratky</h3>
+    <table>
+      <tr><td><kbd>Mezerník</kbd></td><td>Přehrát / zastavit</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>Home</kbd> <kbd>End</kbd></td><td>Předchozí / další / první / poslední snímek</td></tr>
+      <tr><td><kbd>Shift+←/→</kbd></td><td>Rozšířit výběr</td></tr>
+      <tr><td><kbd>Alt+←/→</kbd></td><td>Posunout vybrané snímky</td></tr>
+      <tr><td><kbd>Ctrl+A</kbd> <kbd>Ctrl+D</kbd> <kbd>Delete</kbd></td><td>Vybrat vše, duplikovat, smazat</td></tr>
+      <tr><td><kbd>Ctrl+Z</kbd> <kbd>Ctrl+Y</kbd></td><td>Zpět / znovu</td></tr>
+      <tr><td><kbd>Ctrl+O</kbd> <kbd>Ctrl+S</kbd></td><td>Otevřít / uložit</td></tr>
+      <tr><td><kbd>O</kbd> <kbd>T</kbd> <kbd>C</kbd> <kbd>R</kbd></td><td>Onion skin, délka snímků, ořez, změna velikosti</td></tr>
+      <tr><td><kbd>0</kbd> <kbd>1</kbd> <kbd>2</kbd> <kbd>4</kbd></td><td>Zvětšení náhledu</td></tr>
+    </table>
+    <h3>Sprite sheet pro hry</h3>
+    <p>JSON ve formátu TexturePacker „hash“ nebo „array“ obsahuje polohu každého snímku (<code>frame</code>), ořez (<code>spriteSourceSize</code>, <code>sourceSize</code>), délku (<code>duration</code>) a značku animace (<code>meta.frameTags</code>). V Phaseru: <code>this.load.atlas('hrdina', 'hrdina.png', 'hrdina.json')</code> a <code>this.anims.generateFrameNames('hrdina', { prefix: 'snimek_', start: 0, end: 7, zeroPad: 3 })</code>.</p>
+  </div>
+</div></div>
+</body>
+</html>

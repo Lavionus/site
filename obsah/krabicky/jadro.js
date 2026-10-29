@@ -168,7 +168,8 @@
   const cislo = (x, d) => { const n = typeof x === 'string' ? parseFloat(x.replace(',', '.')) : Number(x); return Number.isFinite(n) ? n : d; };
   function fmt(x, des = 1) {
     if (!Number.isFinite(x)) return '–';
-    const s = (Math.round(x * 10 ** des) / 10 ** des).toFixed(des).replace(/\.?0+$/, '');
+    let s = (Math.round(x * 10 ** des) / 10 ** des).toFixed(des);
+    if (des > 0) s = s.replace(/\.?0+$/, '');
     return s.replace('-', '−').replace('.', ',');
   }
 

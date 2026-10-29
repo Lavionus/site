@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎴 Generátor karet a kartiček</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="karty_generator/jadro.js"></script>
+<script src="karty_generator/predlohy.js"></script>
+<script src="karty_generator/kresba.js"></script>
+<script src="karty_generator/vystup.js"></script>
+<script src="karty_generator/aplikace.js" defer></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+[hidden]{display:none !important}
+input,select,textarea,button{font-family:inherit}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto}
+.samostatne .lista{padding-right:72px}
+#nazevProjektu{font-size:.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);border:1px solid var(--border);border-radius:4px;padding:0 5px;font-family:inherit}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0;width:100%}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.mini{padding:2px 7px;font-size:.78rem}
+.btn.danger{color:var(--danger)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 7px;font-size:.84rem;min-width:0}
+.vstup:focus{outline:2px solid var(--accent);outline-offset:0}
+textarea.vstup{resize:vertical;min-height:52px;width:100%;box-sizing:border-box}
+
+/* plochy */
+.plocha{flex:1;min-height:0;display:flex}
+.plocha > section{flex:1;min-width:0;min-height:0}
+aside{background:var(--bg-panel);border-right:1px solid var(--border);overflow:auto;padding:10px 12px 40px;box-sizing:border-box}
+aside.pravy{border-right:0;border-left:1px solid var(--border)}
+aside h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin:14px 0 6px;display:flex;align-items:center;gap:6px}
+aside h3:first-child{margin-top:0}
+aside h3 .btn{margin-left:auto;text-transform:none;letter-spacing:0}
+.pole{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 8px;align-items:center;font-size:.82rem;margin-bottom:5px}
+.pole > label{color:var(--text-muted)}
+.pole .vstup{width:100%;box-sizing:border-box}
+.radek2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.barva{display:flex;gap:4px}
+.barva input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--border);border-radius:6px;background:none;flex:none}
+.zaskrt{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--text-muted);margin:4px 0}
+.cipy{display:flex;flex-wrap:wrap;gap:3px;margin:3px 0 6px}
+.cip{background:var(--accent-soft);border:1px solid var(--accent);color:var(--text);border-radius:10px;padding:0 7px;font-size:.72rem;cursor:pointer}
+.napoveda-mala{font-size:.74rem;color:var(--text-faint);line-height:1.4;margin:4px 0}
+
+/* NÁVRH */
+#pohledNavrh{display:grid;grid-template-columns:250px minmax(0,1fr) 290px}
+.vrstvy{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.vrstvy li{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:.83rem;border:1px solid transparent}
+.vrstvy li:hover{background:var(--bg-hover)}
+.vrstvy li.vybrana{background:var(--accent-soft);border-color:var(--accent)}
+.vrstvy li .jm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vrstvy li.skryta .jm{opacity:.5;text-decoration:line-through}
+.vrstvy li button{background:none;border:0;color:var(--text-muted);cursor:pointer;padding:0 3px;font-size:.8rem}
+.vrstvy li button:hover{color:var(--text)}
+.stred{display:flex;flex-direction:column;min-height:0;min-width:0}
+.stred-lista{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg-panel);font-size:.83rem}
+.stred-lista .info{color:var(--text-faint);font-size:.78rem}
+.prepinac{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.prepinac button{background:var(--bg-control);border:0;color:var(--text);padding:4px 10px;cursor:pointer;font-size:.82rem}
+.prepinac button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent,#fff)}
+.platno-obal{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto;position:relative}
+#platno{box-shadow:0 3px 14px rgba(0,0,0,.35);touch-action:none;cursor:default;max-width:100%}
+.varovani{color:var(--danger);font-size:.78rem}
+.podm{border:1px solid var(--border);border-radius:8px;padding:6px;margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.8rem;background:var(--bg-elevated)}
+.podm .cele{grid-column:1/-1;display:flex;gap:4px;align-items:center}
+.podm .cele .vstup{flex:1}
+.podm .sipka{color:var(--text-faint);font-size:.72rem;grid-column:1/-1}
+
+/* DATA */
+#pohledData{display:flex;flex-direction:column}
+.data-lista{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-panel);font-size:.82rem}
+.data-obal{flex:1;overflow:auto;min-height:0}
+table.mrizka{border-collapse:collapse;font-size:.83rem}
+.mrizka th,.mrizka td{border:1px solid var(--border);padding:0;background:var(--bg-panel)}
+.mrizka th{position:sticky;top:0;z-index:2;background:var(--bg-elevated)}
+.mrizka th.cislo,.mrizka td.cislo{position:sticky;left:0;z-index:1;background:var(--bg-elevated);color:var(--text-faint);font-size:.74rem;padding:0 4px;white-space:nowrap;text-align:right}
+.mrizka th.cislo{z-index:3}
+.mrizka input{border:0;background:transparent;color:var(--text);padding:5px 6px;width:140px;font-size:.83rem;box-sizing:border-box}
+.mrizka th input{font-weight:600}
+.mrizka input:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg-input)}
+.mrizka tr.aktivni td{background:var(--accent-soft)}
+.mrizka .hl{display:flex;align-items:center}
+.mrizka button{background:none;border:0;color:var(--text-faint);cursor:pointer;padding:0 5px}
+.mrizka button:hover{color:var(--danger)}
+.mrizka td.cislo button:hover{color:var(--accent)}
+
+/* TISK */
+#pohledTisk{display:grid;grid-template-columns:300px minmax(0,1fr)}
+.archy{overflow:auto;padding:14px;display:flex;flex-wrap:wrap;gap:16px;align-content:flex-start;justify-content:center}
+.archy figure{margin:0;text-align:center;font-size:.78rem;color:var(--text-muted)}
+.archy canvas{box-shadow:0 2px 10px rgba(0,0,0,.3);background:#fff;display:block;margin-bottom:4px}
+.souhrn{font-size:.82rem;line-height:1.55;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:6px 0}
+.souhrn .varovani{display:block}
+.prubeh{height:6px;background:var(--bg-control);border-radius:3px;overflow:hidden;margin:6px 0}
+.prubeh > div{height:100%;background:var(--accent);width:0}
+.akce-export{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:12px;background:var(--bg-panel);color:var(--text);padding:0;width:min(760px,94vw);max-height:88vh;box-shadow:var(--shadow)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno-hlava{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-panel);z-index:1}
+.okno-hlava h2{font-size:1rem;margin:0;flex:1}
+.okno-telo{padding:12px 14px 16px;font-size:.88rem;line-height:1.5}
+.okno-telo code{background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px;padding:0 4px;font-size:.8rem}
+.dlazdice{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.dlazdice button{text-align:left;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;color:var(--text);display:flex;flex-direction:column;gap:4px}
+.dlazdice button:hover{border-color:var(--accent)}
+.dlazdice b{font-size:.92rem}
+.dlazdice span{font-size:.76rem;color:var(--text-faint)}
+.dlazdice canvas{align-self:center;max-width:100%;border-radius:4px;box-shadow:0 1px 5px rgba(0,0,0,.3)}
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:10px}
+.galerie figure{margin:0;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:5px;font-size:.72rem;text-align:center;word-break:break-all;position:relative}
+.galerie img{width:100%;height:80px;object-fit:contain;display:block}
+.galerie button{position:absolute;top:2px;right:2px;background:var(--bg-panel);border:1px solid var(--border);border-radius:5px;color:var(--danger);cursor:pointer;font-size:.72rem}
+.seznam-proj{display:flex;flex-direction:column;gap:6px}
+.seznam-proj > div{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--bg-elevated)}
+.seznam-proj .jm{flex:1;min-width:0}
+.seznam-proj small{color:var(--text-faint);display:block}
+.pretahni{position:fixed;inset:0;z-index:80;background:color-mix(in srgb,var(--accent) 22%,transparent);border:3px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text);pointer-events:none}
+.soukromi{font-size:.74rem;color:var(--text-faint)}
+
+/* tisk přes prohlížeč */
+#tiskArchy{display:none}
+@media print{
+  body{display:block;height:auto;overflow:visible;background:#fff}
+  body > *:not(#tiskArchy){display:none !important}
+  #tiskArchy{display:block}
+  .tisk-list{position:relative;overflow:hidden;page-break-after:always;break-after:page}
+  .tisk-list img{position:absolute}
+  .tisk-list .zn{position:absolute;background:#000}
+}
+
+/* úzké okno */
+@media (max-width:980px){
+  #pohledNavrh{grid-template-columns:minmax(0,1fr);overflow:auto;display:block}
+  #pohledNavrh aside{border:0;border-bottom:1px solid var(--border);overflow:visible;padding-bottom:12px}
+  .platno-obal{min-height:360px}
+  #pohledTisk{grid-template-columns:minmax(0,1fr);overflow:auto;display:block}
+  #pohledTisk aside{border:0;border-bottom:1px solid var(--border);overflow:visible}
+  .plocha > section{overflow:auto}
+}
+@media (max-width:480px){
+  .pole{grid-template-columns:82px minmax(0,1fr)}
+  .mrizka input{width:110px}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <div class="skup skup-projekt"><h1>🎴 Generátor karet</h1><span id="nazevProjektu" title="Název projektu"></span></div>
+  <div class="skup" role="group" aria-label="Projekt"><span class="skup-nazev" aria-hidden="true">Projekt</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Projekty, předlohy, import a export JSON">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="zpet" id="tlZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl" data-prikaz="vpred" id="tlVpred" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pohled"><span class="skup-nazev" aria-hidden="true">Pohled</span><div class="skup-tl">
+    <button class="tl" data-pohled="navrh" aria-pressed="true" title="Návrh šablony (1)">✏️<span class="txt"> Návrh</span></button>
+    <button class="tl" data-pohled="data" aria-pressed="false" title="Tabulka dat (2)">📊<span class="txt"> Data</span></button>
+    <button class="tl" data-pohled="tisk" aria-pressed="false" title="Rozložení na arch, PDF, tisk, PNG (3)">🖨️<span class="txt"> Tisk a export</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Vložit"><span class="skup-nazev" aria-hidden="true">Šablona</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabVlozit" aria-expanded="false" title="Přidat vrstvu">➕<span class="txt"> Vrstva</span> ▾</button>
+    <button class="tl" data-nabidka="nabData" aria-expanded="false" title="Import dat, obrázky">📥<span class="txt"> Data</span> ▾</button>
+    <button class="tl" data-nabidka="nabExport" aria-expanded="false" title="PDF, tisk, PNG">⬇️<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Nápověda (F1)" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="predlohy">✨ Nový z předlohy…</button>
+  <button class="tl" data-prikaz="prazdny">📄 Nový prázdný</button>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít uložený… <kbd>Ctrl+O</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="prejmenovat">✎ Přejmenovat…</button>
+  <button class="tl" data-prikaz="kopie">⧉ Uložit jako kopii</button>
+  <hr>
+  <div class="titulek">Soubor JSON (šablona + data)</div>
+  <button class="tl" data-prikaz="expJson">⬇️ Exportovat projekt</button>
+  <button class="tl" data-prikaz="expJsonObr">⬇️ Exportovat i s obrázky</button>
+  <button class="tl" data-prikaz="impJson">⬆️ Importovat projekt…</button>
+</div>
+<div id="nabVlozit" class="nabidka" hidden>
+  <button class="tl" data-prikaz="v-text">🔤 Text <kbd>T</kbd></button>
+  <button class="tl" data-prikaz="v-ikona">⭐ Ikona / emoji</button>
+  <button class="tl" data-prikaz="v-obrazek">🖼 Obrázek</button>
+  <button class="tl" data-prikaz="v-tvar">⬛ Tvar</button>
+  <button class="tl" data-prikaz="v-ramecek">🔲 Rámeček</button>
+  <hr>
+  <button class="tl" data-prikaz="duplikovat">⧉ Duplikovat vrstvu <kbd>Ctrl+D</kbd></button>
+  <button class="tl" data-prikaz="smazatVrstvu">🗑 Smazat vrstvu <kbd>Del</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="licNaRub">⇄ Zkopírovat vrstvy líce na rub</button>
+</div>
+<div id="nabData" class="nabidka" hidden>
+  <button class="tl" data-prikaz="impData">📥 Import CSV / TSV / XLSX…</button>
+  <button class="tl" data-prikaz="vlozitData">📋 Vložit tabulku ze schránky…</button>
+  <button class="tl" data-prikaz="expCsv">⬇️ Export CSV</button>
+  <hr>
+  <button class="tl" data-prikaz="obrazky">🖼 Knihovna obrázků…</button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pdf">📄 PDF k tisku <kbd>Ctrl+P</kbd></button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisknout přes prohlížeč</button>
+  <button class="tl" data-prikaz="zip">🗜 PNG všech karet (ZIP)</button>
+  <button class="tl" data-prikaz="pngJedna">🖼 PNG zobrazené karty</button>
+</div>
+
+<main class="plocha">
+  <!-- ===== NÁVRH ===== -->
+  <section id="pohledNavrh">
+    <aside>
+      <h3>Karta</h3>
+      <div class="pole"><label for="kFormat">Formát</label><select id="kFormat" class="vstup"></select></div>
+      <div class="pole"><label>Rozměr mm</label><div class="radek2"><input id="kW" class="vstup" type="number" min="10" max="300" step="0.5" aria-label="Šířka"><input id="kH" class="vstup" type="number" min="10" max="400" step="0.5" aria-label="Výška"></div></div>
+      <div class="pole"><label for="kB">Spadávka</label><input id="kB" class="vstup" type="number" min="0" max="10" step="0.5"></div>
+      <div class="pole"><label for="kS">Bezpečná zóna</label><input id="kS" class="vstup" type="number" min="0" max="20" step="0.5"></div>
+      <div class="pole"><label for="kR">Zaoblení rohů</label><input id="kR" class="vstup" type="number" min="0" max="20" step="0.5"></div>
+      <div class="pole"><label for="kRub">Rub</label><select id="kRub" class="vstup"><option value="ne">bez rubu</option><option value="spolecny">společný pro všechny</option><option value="data">z dat (každá karta jiný)</option></select></div>
+      <div class="pole"><label>Pozadí strany</label><div class="barva" id="kPozadi"></div></div>
+      <h3>Vrstvy <span id="stranaVrstev"></span><button class="btn mini" data-nabidka="nabVlozit" aria-expanded="false">➕ Přidat</button></h3>
+      <ul class="vrstvy" id="seznamVrstev"></ul>
+      <p class="napoveda-mala">Nahoře v seznamu = navrchu karty. Vrstvu posuneš myší v náhledu, roh vpravo dole mění velikost, šipky posouvají o 0,5 mm (Shift o 5 mm).</p>
+    </aside>
+    <div class="stred">
+      <div class="stred-lista">
+        <span class="prepinac" role="group" aria-label="Strana karty"><button data-strana="lic" aria-pressed="true">Líc</button><button data-strana="rub" aria-pressed="false">Rub</button></span>
+        <button class="btn mini" id="predKarta" title="Předchozí karta (PgUp)" aria-label="Předchozí karta">◀</button>
+        <span id="cisloKarty" class="info"></span>
+        <button class="btn mini" id="dalsiKarta" title="Další karta (PgDn)" aria-label="Další karta">▶</button>
+        <label class="zaskrt"><input type="checkbox" id="ukazVoditka" checked> vodítka</label>
+        <span id="stavKarty" class="varovani"></span>
+      </div>
+      <div class="platno-obal" id="platnoObal"><canvas id="platno" width="300" height="400" aria-label="Náhled karty"></canvas></div>
+    </div>
+    <aside class="pravy">
+      <h3>Vlastnosti vrstvy</h3>
+      <div id="vlastnosti"><p class="napoveda-mala">Vyber vrstvu v seznamu nebo kliknutím do náhledu.</p></div>
+      <h3>Podmíněné styly <button class="btn mini" id="pridatPodminku">➕ Pravidlo</button></h3>
+      <p class="napoveda-mala">Když sloupec splní podmínku, nastaví se vrstvě vlastnost (např. barva rámečku podle sloupce „typ“). Pozdější pravidlo přebije dřívější.</p>
+      <div id="podminky"></div>
+    </aside>
+  </section>
+
+  <!-- ===== DATA ===== -->
+  <section id="pohledData" hidden>
+    <div class="data-lista">
+      <button class="btn" data-prikaz="pridatRadek">➕ Řádek</button>
+      <button class="btn" data-prikaz="pridatSloupec">➕ Sloupec</button>
+      <button class="btn" data-prikaz="impData">📥 Import CSV / XLSX</button>
+      <button class="btn" data-prikaz="expCsv">⬇️ CSV</button>
+      <button class="btn" data-prikaz="obrazky">🖼 Obrázky</button>
+      <span id="dataInfo" class="napoveda-mala"></span>
+    </div>
+    <p class="napoveda-mala" style="padding:0 12px">Hlavička = jméno proměnné (<code>{nazev}</code>). Sloupec <b>pocet</b> určuje počet kopií karty. Do buňky lze vložit tabulku z Excelu (Ctrl+V). Klik na číslo řádku ukáže kartu v návrhu.</p>
+    <div class="data-obal"><table class="mrizka" id="mrizka"></table></div>
+  </section>
+
+  <!-- ===== TISK ===== -->
+  <section id="pohledTisk" hidden>
+    <aside>
+      <h3>Arch</h3>
+      <div class="pole"><label for="aPapir">Papír</label><select id="aPapir" class="vstup"></select></div>
+      <div class="pole"><label for="aOrient">Orientace</label><select id="aOrient" class="vstup"><option value="auto">nejvíc karet</option><option value="na-vysku">na výšku</option><option value="na-sirku">na šířku</option></select></div>
+      <div class="pole"><label for="aOkraj">Okraj mm</label><input id="aOkraj" class="vstup" type="number" min="0" max="40" step="0.5"></div>
+      <div class="pole"><label for="aMezera">Mezera mm</label><input id="aMezera" class="vstup" type="number" min="0" max="20" step="0.5"></div>
+      <label class="zaskrt"><input type="checkbox" id="aOtocit"> karty otočit o 90°</label>
+      <label class="zaskrt"><input type="checkbox" id="aZnacky"> ořezové značky</label>
+      <label class="zaskrt"><input type="checkbox" id="aObrys"> obrys řezu (tenká čára po ořezu)</label>
+      <h3>Oboustranný tisk</h3>
+      <div class="pole"><label for="aPreklap">Překlápění</label><select id="aPreklap" class="vstup"><option value="dlouha">přes dlouhou hranu</option><option value="kratka">přes krátkou hranu</option></select></div>
+      <div class="pole"><label>Posun rubu</label><div class="radek2"><input id="aPosX" class="vstup" type="number" step="0.1" aria-label="Posun rubu X mm" title="X mm"><input id="aPosY" class="vstup" type="number" step="0.1" aria-label="Posun rubu Y mm" title="Y mm"></div></div>
+      <p class="napoveda-mala">Rub se zrcadlí, aby po otočení listu seděl na líc, a kde je potřeba, otočí se o 180°, aby stál rovně, když kartu obrátíš jako list knihy. Když tiskárna posouvá, dorovnej posunem (mm).</p>
+      <h3>Export</h3>
+      <div class="pole"><label for="aDpi">Rozlišení</label><select id="aDpi" class="vstup"><option value="150">150 DPI (rychlé)</option><option value="300">300 DPI (tisk)</option><option value="450">450 DPI</option></select></div>
+      <label class="zaskrt"><input type="checkbox" id="aPngB"> PNG se spadávkou</label>
+      <div class="souhrn" id="souhrn"></div>
+      <div class="prubeh" id="prubeh" hidden><div></div></div>
+      <div class="akce-export">
+        <button class="btn primary" data-prikaz="pdf">📄 Stáhnout PDF</button>
+        <button class="btn" data-prikaz="tisk">🖨️ Tisknout přes prohlížeč</button>
+        <button class="btn" data-prikaz="zip">🗜 PNG karet v ZIPu</button>
+      </div>
+      <p class="soukromi">🔒 Vše běží jen ve tvém prohlížeči – data ani obrázky se nikam neodesílají.</p>
+    </aside>
+    <div class="archy" id="archy"></div>
+  </section>
+</main>
+
+<!-- dialogy -->
+<dialog class="okno" id="oknoPredlohy"><div class="okno-hlava"><h2>✨ Nový z předlohy</h2><button class="btn mini" data-zavrit>✕</button></div>
+  <div class="okno-telo"><p class="napoveda-mala">Předloha vytvoří nový projekt (šablonu i ukázková data). Současný projekt zůstane uložený.</p><div class="dlazdice" id="seznamPredloh"></div></div></dialog>
+<dialog class="okno" id="oknoProjekty"><div class="okno-hlava"><h2>📂 Uložené projekty</h2><button class="btn mini" data-zavrit>✕</button></div>
+  <div class="okno-telo"><div class="seznam-proj" id="seznamProjektu"></div></div></dialog>
+<dialog class="okno" id="oknoObrazky"><div class="okno-hlava"><h2>🖼 Knihovna obrázků</h2><button class="btn mini" data-zavrit>✕</button></div>
+  <div class="okno-telo">
+    <p>Obrázky se přiřazují <b>podle jména souboru</b>: ve sloupci (např. <code>obrazek</code>) stačí napsat <code>mec.png</code> nebo jen <code>mec</code>. Uložené jsou v prohlížeči (IndexedDB) a sdílí je všechny projekty.</p>
+    <button class="btn primary" id="nahratObrazky">⬆️ Nahrát obrázky…</button>
+    <div id="chybiObrazky" class="varovani" style="margin-top:8px"></div>
+    <div class="galerie" id="galerie"></div>
+  </div></dialog>
+<dialog class="okno" id="oknoNapoveda"><div class="okno-hlava"><h2>❓ Nápověda</h2><button class="btn mini" data-zavrit>✕</button></div>
+  <div class="okno-telo">
+    <p><b>Postup:</b> vyber předlohu (Soubor → Nový z předlohy) nebo začni prázdnou kartou → v <b>Návrhu</b> uprav vrstvy → v <b>Datech</b> vyplň nebo importuj tabulku → v <b>Tisku</b> stáhni PDF.</p>
+    <p><b>Proměnné:</b> <code>{sloupec}</code> dosadí hodnotu z tabulky, <code>{sloupec|výchozí}</code> použije výchozí text, když je buňka prázdná, <code>{#}</code> = pořadí karty, <code>{celkem}</code> = počet karet. Proměnné fungují v textu, obrázku i v barvách (např. barva <code>{barva|#333}</code>). Doslovná závorka: <code>\{</code>.</p>
+    <p><b>Vrstvy:</b> text (zalamuje se a sám zmenší písmo, aby se vešel – nejvýš na „min. velikost“; přetékající text je v náhledu orámovaný červeně), ikona/emoji (vyplní rámeček), obrázek (z knihovny podle jména), tvar, rámeček (podle okraje karty).</p>
+    <p><b>Spadávka</b> = přesah pozadí za ořez (obvykle 3 mm), aby po ořezu nezůstal bílý okraj. <b>Bezpečná zóna</b> (modře čárkovaně) = sem dávej důležitý text. Červená čára = ořez.</p>
+    <p><b>Počet kopií:</b> sloupec <code>pocet</code> (také <code>počet</code>, <code>ks</code>, <code>count</code>). 0 = karta se netiskne.</p>
+    <p><b>Rub:</b> společný (jeden pro všechny) nebo z dat (např. odpověď flashcardy). Při tisku se list rubů zrcadlí podle hrany překlápění. Vytiskni zkušební list a případný posun dorovnej v „Posun rubu“.</p>
+    <p><b>Import:</b> CSV/TSV (oddělovač se pozná sám), XLSX/XLS/ODS (první list), JSON projektu. Soubory lze přetáhnout myší do okna – obrázky jdou do knihovny.</p>
+    <p><b>Zkratky:</b> <code>1</code> <code>2</code> <code>3</code> pohledy · <code>T</code> nový text · <code>Del</code> smazat vrstvu · <code>Ctrl+D</code> duplikovat · šipky posun · <code>PgUp/PgDn</code> další karta · <code>R</code> líc/rub · <code>Ctrl+Z/Y</code> zpět/znovu · <code>Ctrl+S</code> uložit · <code>Ctrl+O</code> otevřít · <code>Ctrl+P</code> PDF · <code>F1</code> nápověda.</p>
+    <p class="soukromi">🔒 Vše se zpracovává lokálně v prohlížeči. Projekty a obrázky jsou uložené jen v tomto prohlížeči (IndexedDB) – pro zálohu exportuj JSON s obrázky.</p>
+  </div></dialog>
+
+<input type="file" id="souborData" accept=".csv,.tsv,.txt,.xlsx,.xls,.ods" hidden>
+<input type="file" id="souborJson" accept=".json,application/json" hidden>
+<input type="file" id="souborObrazky" accept="image/*" multiple hidden>
+<div id="pretahni" class="pretahni" hidden>Pusť soubor: CSV/XLSX → data · obrázky → knihovna · JSON → projekt</div>
+<div id="tiskArchy"></div>
+</body>
+</html>

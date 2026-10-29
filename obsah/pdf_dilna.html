@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📄 PDF dílna</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="lib/pdflib/pdf-lib.min.js"></script>
+<script src="lib/pdflib/fontkit.umd.min.js"></script>
+<script src="pdf_dilna/jadro.js"></script>
+<script type="module" src="pdf_dilna/ui.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+[hidden]{display:none !important}
+input,select,textarea,button{font-family:inherit}
+
+/* horní lišta – vzor prompty.html */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.pocet{color:var(--text-faint);font-size:.78rem;white-space:nowrap}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.ik{min-width:32px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover:not(:disabled){background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1250px){.lista .txt{display:none}}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);border:1px solid var(--border);border-radius:4px;padding:0 5px;font-family:inherit}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+/* pracovní plocha */
+main{flex:1;min-height:0;overflow:auto;padding:12px 14px 40px;position:relative}
+.panel-vyber{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:.84rem;color:var(--text-muted)}
+.panel-vyber .tl{font-size:.8rem}
+.soubory{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.soubor-stitek{--sb:var(--accent);display:inline-flex;align-items:center;gap:5px;font-size:.74rem;color:var(--text-muted);border:1px solid var(--border);border-radius:10px;padding:1px 8px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.soubor-stitek::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--sb);flex:none}
+
+.mrizka{--sirka:150px;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--sirka),1fr));gap:12px;user-select:none}
+.mrizka[data-vel="S"]{--sirka:110px}
+.mrizka[data-vel="L"]{--sirka:220px}
+.karta{--sb:var(--border-strong);position:relative;background:var(--bg-panel);border:1px solid var(--border);border-bottom:3px solid var(--sb);border-radius:var(--radius);padding:8px 8px 6px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:0;outline:none}
+.karta:hover{border-color:var(--border-strong);border-bottom-color:var(--sb)}
+.karta:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.karta.vybrana{background:var(--accent-soft);border-color:var(--accent);border-bottom-color:var(--sb)}
+.karta.tazena{opacity:.35}
+.karta.cil-pred::before,.karta.cil-za::after{content:'';position:absolute;top:4px;bottom:4px;width:4px;border-radius:2px;background:var(--accent)}
+.karta.cil-pred::before{left:-9px}
+.karta.cil-za::after{right:-9px}
+.obr{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:4px;background:color-mix(in srgb,var(--text) 6%,transparent)}
+.obr img{max-width:100%;max-height:100%;box-shadow:0 1px 4px rgba(0,0,0,.35);background:#fff;transition:transform .15s}
+.obr .nacitam{width:60%;aspect-ratio:1/1.41;background:color-mix(in srgb,var(--text) 10%,transparent);border-radius:2px}
+.karta .popis{display:flex;justify-content:space-between;gap:4px;font-size:.74rem;color:var(--text-faint);min-width:0}
+.karta .popis b{color:var(--text);font-size:.8rem}
+.karta .popis span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.karta .akce-k{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;visibility:hidden}
+.karta:hover .akce-k,.karta:focus-within .akce-k{visibility:visible}
+.akce-k button{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);cursor:pointer;font-size:.85rem;padding:0}
+.akce-k button:hover{background:var(--bg-hover)}
+@media (hover:none){.karta:hover .akce-k,.karta:focus-within .akce-k{visibility:hidden}.karta.vybrana .akce-k{visibility:visible}}
+.duch{position:fixed;z-index:80;pointer-events:none;background:var(--accent);color:var(--on-accent,#fff);border-radius:8px;padding:6px 10px;font-size:.82rem;font-weight:600;box-shadow:var(--shadow)}
+
+.prazdne{max-width:620px;margin:40px auto;text-align:center;border:2px dashed var(--border-strong);border-radius:14px;padding:40px 22px;color:var(--text-muted)}
+.prazdne h2{color:var(--text);margin:0 0 8px;font-size:1.3rem}
+.prazdne p{margin:8px 0;line-height:1.55}
+.prazdne .tlacitka{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.soukromi{font-size:.8rem;color:var(--text-faint)}
+body.pretahuji main{outline:3px dashed var(--accent);outline-offset:-8px}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.86rem;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover:not(:disabled){background:var(--accent-hover)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* okna nástrojů */
+dialog.okno{border:1px solid var(--border);border-radius:12px;background:var(--bg-panel);color:var(--text);padding:0;width:min(980px,96vw);max-height:94vh;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+dialog.okno.male{width:min(520px,96vw)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno-obsah{display:flex;flex-direction:column;max-height:94vh}
+.okno-hlava{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.okno-hlava h2{font-size:1.05rem;margin:0}
+.okno-telo{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;padding:14px 16px;overflow:auto;min-height:0}
+dialog.male .okno-telo{grid-template-columns:1fr}
+.okno-pata{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border)}
+.okno-pata .mezera{flex:1}
+@media (max-width:760px){.okno-telo{grid-template-columns:1fr}}
+.formular{display:flex;flex-direction:column;gap:10px;font-size:.86rem}
+.formular label{display:flex;flex-direction:column;gap:4px;color:var(--text-muted)}
+.formular label.radek{flex-direction:row;align-items:center;gap:8px;color:var(--text)}
+.formular .dva{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.formular .ctyri{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.vstup,.formular input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),.formular select,.formular textarea{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.86rem;width:100%;box-sizing:border-box}
+.formular input[type=color]{width:100%;height:32px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);padding:2px}
+.formular input[type=range]{width:100%;accent-color:var(--accent)}
+.formular textarea{resize:vertical;min-height:56px}
+.formular .pozn{font-size:.78rem;color:var(--text-faint);line-height:1.45}
+.formular .varovani{font-size:.82rem;line-height:1.45;border-left:3px solid var(--warn);padding:6px 10px;background:color-mix(in srgb,var(--warn) 12%,transparent);border-radius:4px;color:var(--text)}
+.formular code{background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px;padding:0 4px;font-size:.78rem}
+.nahled-plocha{display:flex;align-items:flex-start;justify-content:center;background:color-mix(in srgb,var(--text) 6%,transparent);border-radius:8px;padding:12px;min-height:240px;position:relative}
+.nahled-plocha canvas{max-width:100%;max-height:64vh;box-shadow:0 2px 10px rgba(0,0,0,.35);background:#fff}
+.nahled-plocha .stav{position:absolute;top:8px;left:10px;font-size:.75rem;color:var(--text-faint)}
+.navigace{display:flex;align-items:center;gap:6px;justify-content:center;font-size:.84rem;color:var(--text-muted);margin-top:8px}
+
+/* umístění podpisu / razítka */
+.umisteni{position:relative;display:inline-block;line-height:0;touch-action:none}
+.umisteni canvas{max-width:100%;max-height:62vh}
+.ram{position:absolute;border:2px dashed var(--accent);cursor:move;box-sizing:border-box;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.ram img{width:100%;height:100%;object-fit:fill;pointer-events:none}
+.ram .uchyt{position:absolute;right:-8px;bottom:-8px;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-panel);cursor:nwse-resize}
+.kresleni{width:100%;aspect-ratio:3/1;background:#fff;border:1px solid var(--border-strong);border-radius:6px;touch-action:none;cursor:crosshair;display:block}
+.zalozky{display:flex;gap:4px}
+.zalozky .tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+
+.prubeh{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35)}
+.prubeh div{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:16px 22px;font-size:.9rem;box-shadow:var(--shadow);min-width:240px;text-align:center}
+.prubeh progress{width:100%;margin-top:10px;accent-color:var(--accent)}
+
+.pomoc{font-size:.88rem;line-height:1.55}
+.pomoc h3{font-size:.95rem;margin:14px 0 4px}
+.pomoc ul{margin:4px 0;padding-left:20px}
+.pomoc table{border-collapse:collapse;width:100%;font-size:.84rem}
+.pomoc td{padding:3px 6px;border-bottom:1px solid var(--border)}
+.pomoc td:first-child{white-space:nowrap;width:1%}
+.pomoc kbd{margin:0}
+@media (max-width:520px){main{padding:10px 8px 40px}.mrizka{--sirka:96px;gap:8px}.mrizka[data-vel="L"]{--sirka:150px}.karta{padding:5px}}
+</style>
+</head>
+<body>
+<header class="lista">
+  <div class="skup skup-projekt"><h1>📄 PDF dílna</h1><span class="pocet" id="pocet"></span></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Otevřít, exportovat, rozdělit">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="otevrit" title="Přidat PDF nebo obrázky (Ctrl+O)">📂<span class="txt"> Přidat</span></button>
+    <button class="tl hlavni-tl" data-prikaz="export" data-potreba="stranky" title="Uložit PDF (Ctrl+S)">⬇ Export</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
+    <button class="tl ik" data-prikaz="zpet" id="tlZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl ik" data-prikaz="vpred" id="tlVpred" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷</button>
+    <button class="tl ik" data-prikaz="otocVlevo" data-potreba="vyber" title="Otočit vybrané doleva (Shift+R)" aria-label="Otočit doleva">⟲</button>
+    <button class="tl ik" data-prikaz="otocVpravo" data-potreba="vyber" title="Otočit vybrané doprava (R)" aria-label="Otočit doprava">⟳</button>
+    <button class="tl ik" data-prikaz="smazat" data-potreba="vyber" title="Smazat vybrané (Delete)" aria-label="Smazat">🗑</button>
+    <button class="tl" data-nabidka="nabUpravy" title="Stránky a výběr">🛠<span class="txt"> Stránky</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroje"><span class="skup-nazev" aria-hidden="true">Nástroje</span><div class="skup-tl">
+    <button class="tl" data-prikaz="podpis" data-potreba="stranky" title="Vložit podpis">✍️<span class="txt"> Podpis</span></button>
+    <button class="tl" data-nabidka="nabNastroje" title="Vodoznak, číslování, ořez, zmenšení…">🧰<span class="txt"> Nástroje</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabZobrazit" title="Velikost náhledů">👁<span class="txt"> Zobrazit</span> ▾</button>
+  </div></div>
+  <span class="vpravo"><button class="tl ik" data-prikaz="napoveda" title="Nápověda (F1)" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">📂 Přidat PDF nebo obrázky… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="ukazka">✨ Ukázkový dokument</button>
+  <div class="titulek">Obrázky (JPG, PNG, WebP) vkládat</div>
+  <button class="tl prep" data-prikaz="obrA4">Na stránku A4 s okrajem</button>
+  <button class="tl prep" data-prikaz="obrVelikost">Ve velikosti obrázku (96 DPI)</button>
+  <hr>
+  <button class="tl" data-prikaz="export" data-potreba="stranky">⬇ Exportovat PDF <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="exportVybrane" data-potreba="vyber">⬇ Vyjmout vybrané do nového PDF</button>
+  <button class="tl" data-prikaz="rozdelit" data-potreba="stranky">✂ Rozdělit na více souborů (ZIP)…</button>
+  <hr>
+  <button class="tl" data-prikaz="metadata" data-potreba="stranky">🏷 Metadata (název, autor)…</button>
+  <hr>
+  <button class="tl" data-prikaz="zavritVse" data-potreba="stranky">✖ Zavřít vše a začít znovu</button>
+</div>
+<div id="nabUpravy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="zpet">↶ Zpět <kbd>Ctrl+Z</kbd></button>
+  <button class="tl" data-prikaz="vpred">↷ Znovu <kbd>Ctrl+Y</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="vybratVse" data-potreba="stranky">☑ Vybrat vše <kbd>Ctrl+A</kbd></button>
+  <button class="tl" data-prikaz="vybratLiche" data-potreba="stranky">☑ Vybrat liché stránky</button>
+  <button class="tl" data-prikaz="vybratSude" data-potreba="stranky">☑ Vybrat sudé stránky</button>
+  <button class="tl" data-prikaz="vybratRozsah" data-potreba="stranky">☑ Vybrat rozsah…</button>
+  <button class="tl" data-prikaz="zrusitVyber">☐ Zrušit výběr <kbd>Esc</kbd></button>
+  <hr>
+  <div class="titulek">Vybrané stránky</div>
+  <button class="tl" data-prikaz="otocVpravo" data-potreba="vyber">⟳ Otočit doprava <kbd>R</kbd></button>
+  <button class="tl" data-prikaz="otocVlevo" data-potreba="vyber">⟲ Otočit doleva <kbd>Shift+R</kbd></button>
+  <button class="tl" data-prikaz="duplikovat" data-potreba="vyber">⧉ Duplikovat <kbd>D</kbd></button>
+  <button class="tl" data-prikaz="posunVlevo" data-potreba="vyber">◀ Posunout dopředu <kbd>Alt+←</kbd></button>
+  <button class="tl" data-prikaz="posunVpravo" data-potreba="vyber">▶ Posunout dozadu <kbd>Alt+→</kbd></button>
+  <button class="tl" data-prikaz="smazat" data-potreba="vyber">🗑 Smazat <kbd>Delete</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="prazdna">➕ Vložit prázdnou stránku <kbd>B</kbd></button>
+  <button class="tl" data-prikaz="obratit" data-potreba="stranky">⇅ Obrátit pořadí (vybrané, jinak vše)</button>
+  <button class="tl" data-prikaz="nahled" data-potreba="stranky">🔍 Zvětšený náhled <kbd>Enter</kbd></button>
+</div>
+<div id="nabNastroje" class="nabidka" hidden>
+  <button class="tl" data-prikaz="podpis" data-potreba="stranky">✍️ Podpis (nakreslit / obrázek)…</button>
+  <button class="tl" data-prikaz="razitko" data-potreba="stranky">🔖 Razítko s textem a datem…</button>
+  <hr>
+  <button class="tl" data-prikaz="vodoznak" data-potreba="stranky">💧 Vodoznak…</button>
+  <button class="tl" data-prikaz="cislovani" data-potreba="stranky">🔢 Číslování stránek…</button>
+  <button class="tl" data-prikaz="zahlavi" data-potreba="stranky">📑 Záhlaví a zápatí…</button>
+  <hr>
+  <button class="tl" data-prikaz="orez" data-potreba="stranky">✂ Oříznout okraje…</button>
+  <button class="tl" data-prikaz="naA4" data-potreba="stranky">📐 Změnit velikost na A4…</button>
+  <button class="tl" data-prikaz="zmensit" data-potreba="stranky">🗜 Zmenšit velikost souboru…</button>
+  <hr>
+  <button class="tl" data-prikaz="metadata" data-potreba="stranky">🏷 Metadata…</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl prep" data-prikaz="vel-S">Malé náhledy</button>
+  <button class="tl prep" data-prikaz="vel-M">Střední náhledy</button>
+  <button class="tl prep" data-prikaz="vel-L">Velké náhledy</button>
+</div>
+
+<main id="plocha">
+  <div class="prazdne" id="prazdne">
+    <h2>Přetáhni sem PDF nebo obrázky</h2>
+    <p>Spojuj, rozděluj, přeřazuj a otáčej stránky, přidej vodoznak, čísla stránek, podpis nebo razítko, zmenši velikost souboru.</p>
+    <div class="tlacitka">
+      <button class="btn primary" data-prikaz="otevrit">📂 Vybrat soubory</button>
+      <button class="btn" data-prikaz="ukazka">✨ Vyzkoušet na ukázce</button>
+    </div>
+    <p class="soukromi">🔒 Vše běží jen v tomto prohlížeči – soubory se nikam neodesílají. Rozpracovaná práce se uloží v prohlížeči (IndexedDB).</p>
+  </div>
+  <div id="prace" hidden>
+    <div class="panel-vyber">
+      <span id="infoVyber"></span>
+      <div class="soubory" id="soubory"></div>
+    </div>
+    <div class="mrizka" id="mrizka" data-vel="M"></div>
+  </div>
+</main>
+
+<input type="file" id="vstupSoubor" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp" multiple hidden>
+
+<dialog class="okno" id="okno"><div class="okno-obsah">
+  <div class="okno-hlava"><h2 id="oknoTitul"></h2><button type="button" class="tl ik" id="oknoZavrit" aria-label="Zavřít">✕</button></div>
+  <div class="okno-telo" id="oknoTelo"></div>
+  <div class="okno-pata" id="oknoPata"></div>
+</div></dialog>
+</body>
+</html>

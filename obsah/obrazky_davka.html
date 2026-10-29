@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗂️ Hromadné úpravy obrázků</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="obrazky_davka/jadro.js"></script>
+<script src="obrazky_davka/vykresli.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+[hidden]{display:none !important}
+input,select,textarea,button{font-family:inherit}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .pocet{color:var(--text-faint);font-size:.78rem;white-space:nowrap}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px;align-items:center}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni:hover:not(:disabled){background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+.tl.mini{padding:2px 7px;font-size:.78rem}
+@media (max-width:900px){.lista .txt{display:none}}
+@media (max-width:600px){.lista{flex-wrap:wrap}.lista h1{font-size:.95rem}}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);border:1px solid var(--border);border-radius:4px;padding:0 5px;font-family:inherit}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .radek-pv{display:flex;align-items:center}
+.nabidka .radek-pv .tl:first-child{flex:1}
+.nabidka .prazdno{font-size:.8rem;color:var(--text-faint);padding:2px 10px 6px}
+
+/* průběh */
+.prubeh{display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--accent-soft);border-bottom:1px solid var(--accent);font-size:.85rem;flex-shrink:0;flex-wrap:wrap}
+.prubeh progress{flex:1;min-width:120px;height:10px;accent-color:var(--accent)}
+
+/* plocha */
+.plocha{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr) 390px;grid-template-areas:"kroky seznam nahled"}
+.panel{min-height:0;overflow:auto;padding:12px}
+#panKroky{grid-area:kroky;background:var(--bg-panel);border-right:1px solid var(--border)}
+#panSeznam{grid-area:seznam;padding:10px 12px 40px}
+#panNahled{grid-area:nahled;background:var(--bg-panel);border-left:1px solid var(--border)}
+@media (max-width:1250px){
+  .plocha{grid-template-columns:320px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"kroky seznam" "kroky nahled"}
+  #panNahled{border-left:0;border-top:1px solid var(--border);max-height:48vh}
+}
+@media (max-width:760px){
+  body{height:auto;overflow:auto}
+  .plocha{display:flex;flex-direction:column}
+  .panel{overflow:visible}
+  #panKroky{order:3;border-right:0;border-top:1px solid var(--border)}
+  #panNahled{order:2;max-height:none}
+}
+h2{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin:14px 0 6px;display:flex;align-items:center;gap:6px}
+h2:first-child{margin-top:0}
+h2 .tl{margin-left:auto;text-transform:none;letter-spacing:0}
+.pozn{font-size:.76rem;color:var(--text-faint);line-height:1.45;margin:6px 0}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.84rem;min-width:0}
+input[type=color].vstup{padding:1px 2px;height:30px;width:46px}
+input[type=range]{accent-color:var(--accent)}
+
+/* kroky řetězu */
+.krok{background:var(--bg-elevated);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;margin-bottom:8px}
+.krok.vyp{border-left-color:var(--border-strong);opacity:.65}
+.krok-hlava{display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;user-select:none}
+.krok-hlava input{accent-color:var(--accent);width:16px;height:16px;flex:none}
+.krok-hlava .jm{font-weight:600;font-size:.86rem;white-space:nowrap}
+.krok-hlava .popis{font-size:.74rem;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.krok-hlava .tl{padding:1px 6px;font-size:.75rem;background:none;border-color:transparent}
+.krok-hlava .tl:hover:not(:disabled){border-color:var(--border)}
+.krok-telo{padding:2px 10px 10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 8px;align-items:center;font-size:.82rem}
+.krok.sbaleny .krok-telo{display:none}
+.krok-telo > label{color:var(--text-muted)}
+.krok-telo .cele{grid-column:1/-1;display:flex;align-items:center;gap:6px;color:var(--text-muted)}
+.posuv{display:flex;align-items:center;gap:6px}
+.posuv input{flex:1;min-width:0}
+.posuv output{min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.pozice{display:grid;grid-template-columns:repeat(3,26px);gap:3px;align-items:center}
+.pozice button{width:26px;height:22px;border:1px solid var(--border);background:var(--bg-control);border-radius:4px;cursor:pointer;padding:0;color:var(--text-faint);font-size:.7rem}
+.pozice button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff)}
+.pozice .dlazdice{grid-column:1/-1;width:auto}
+.sekce{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 8px;align-items:center;font-size:.82rem}
+.sekce > label{color:var(--text-muted)}
+.sekce .cele{grid-column:1/-1}
+.tokeny{display:flex;flex-wrap:wrap;gap:4px}
+.tokeny button{font-family:ui-monospace,Consolas,monospace;font-size:.72rem;background:var(--bg-control);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:1px 6px;cursor:pointer}
+
+/* seznam souborů */
+.souhrn{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:.82rem;color:var(--text-muted);margin-bottom:8px}
+.souhrn b{color:var(--text)}
+.uspora{color:var(--ok);font-weight:600}
+.hor{color:var(--danger);font-weight:600}
+.seznam{display:flex;flex-direction:column;gap:4px}
+.radek{display:grid;grid-template-columns:58px minmax(0,1.2fr) minmax(0,1.2fr) 120px auto;grid-template-areas:"nahl info nove vel akce";gap:4px 10px;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:4px 8px 4px 4px;cursor:pointer;min-width:0}
+.radek > img,.radek > .nahl{grid-area:nahl}
+.radek .info{grid-area:info}.radek .nove{grid-area:nove}.radek .vel{grid-area:vel}.radek .akce{grid-area:akce}
+.radek:hover{border-color:var(--border-strong)}
+.radek.vybrany{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.radek img,.radek .nahl{width:58px;height:44px;object-fit:cover;border-radius:5px;background:var(--bg-control);display:block}
+.radek .nahl{display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:1.1rem}
+.radek .bunka{min-width:0;font-size:.8rem;line-height:1.35}
+.radek .bunka .h{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.radek .bunka .m{color:var(--text-faint);font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.radek .nove .h{font-family:ui-monospace,Consolas,monospace;font-weight:500;font-size:.78rem}
+.radek .nove .h.kolize{color:var(--warn)}
+.radek .vel{text-align:right;font-variant-numeric:tabular-nums}
+.radek .akce{display:flex;gap:2px}
+.radek .akce .tl{padding:1px 6px;background:none;border-color:transparent;font-size:.8rem}
+.radek .akce .tl:hover:not(:disabled){border-color:var(--border)}
+.znacka{display:inline-block;font-size:.66rem;border-radius:4px;padding:0 4px;border:1px solid var(--border);color:var(--text-muted);margin-left:4px;vertical-align:1px;font-weight:500}
+.znacka.gps{border-color:var(--warn);color:var(--warn)}
+.stav-chyba{color:var(--danger)}
+.stav-ok{color:var(--ok)}
+#panSeznam{container:seznam / inline-size}
+@container seznam (max-width:760px){.radek{grid-template-columns:58px minmax(0,1fr) auto auto;grid-template-areas:"nahl info vel akce" "nahl nove vel akce"}}
+@container seznam (max-width:440px){.radek{grid-template-columns:58px minmax(0,1fr) auto;grid-template-areas:"nahl info akce" "nahl nove akce" "nahl vel akce"}.radek .vel{text-align:left}.radek .akce{flex-direction:column}}
+.prazdne{border:2px dashed var(--border-strong);border-radius:12px;padding:40px 20px;text-align:center;color:var(--text-muted);display:flex;flex-direction:column;gap:12px;align-items:center}
+.prazdne .velke{font-size:2.4rem}
+.prazdne .tlacitka{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.soukromi{font-size:.78rem;color:var(--ok)}
+
+/* porovnání před/po */
+.porovnani{position:relative;height:330px;background:repeating-conic-gradient(var(--bg-control) 0 25%,var(--bg-elevated) 0 50%) 0 0/16px 16px;border:1px solid var(--border);border-radius:8px;overflow:hidden;user-select:none}
+.porovnani img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.porovnani #pPo{clip-path:inset(0 0 0 var(--x,50%))}
+.porovnani .cara{position:absolute;top:0;bottom:0;left:var(--x,50%);width:2px;margin-left:-1px;background:var(--accent);pointer-events:none;box-shadow:0 0 3px rgba(0,0,0,.5)}
+.porovnani .cara::after{content:'⇔';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--accent);color:var(--on-accent,#fff);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.porovnani input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.porovnani .stitek{position:absolute;top:6px;font-size:.72rem;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:1px 6px;pointer-events:none}
+.porovnani .stitek.l{left:6px}.porovnani .stitek.p{right:6px}
+.porovnani img:not([src]){visibility:hidden}
+.porovnani.bez .cara,.porovnani.bez .stitek,.porovnani.bez input{display:none}
+.porovnani .zprava{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--text-muted);font-size:.85rem;background:color-mix(in srgb,var(--bg-panel) 70%,transparent)}
+@media (max-width:1250px){.porovnani{height:260px}}
+.nahled-info{font-size:.8rem;line-height:1.55;color:var(--text-muted);margin-top:8px}
+.nahled-info b{color:var(--text)}
+
+/* přetažení souborů */
+.pretah{position:fixed;inset:0;z-index:80;background:color-mix(in srgb,var(--accent) 18%,transparent);border:3px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:600;color:var(--text);pointer-events:none}
+
+dialog.pomoc{max-width:min(720px,calc(100vw - 24px));background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:16px 20px;box-shadow:var(--shadow)}
+dialog.pomoc::backdrop{background:rgba(0,0,0,.5)}
+dialog.pomoc h3{margin:12px 0 4px;font-size:.95rem}
+dialog.pomoc p,dialog.pomoc li{font-size:.85rem;line-height:1.5}
+dialog.pomoc code,dialog.pomoc kbd{background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px;padding:0 4px;font-size:.8rem;font-family:ui-monospace,Consolas,monospace}
+dialog.pomoc .zavrit{float:right}
+</style>
+</head>
+<body>
+
+<header class="lista" id="lista">
+  <h1>🗂️ Hromadné úpravy obrázků</h1>
+  <span class="pocet" id="pocet"></span>
+  <button class="tl" data-nabidka="nabSoubor" title="Přidat obrázky nebo složku, řazení">📁<span class="txt"> Soubory</span> ▾</button>
+  <button class="tl" data-nabidka="nabPredvolby" title="Uložené řetězy kroků">⭐<span class="txt"> Předvolby</span> ▾</button>
+  <button class="tl hlavni" id="btnZpracovat" data-prikaz="zpracovat" title="Zpracovat všechny obrázky (Ctrl+Enter)">▶ Zpracovat</button>
+  <button class="tl" data-nabidka="nabUlozit" title="Stáhnout ZIP, jednotlivě, nebo uložit do složky">💾<span class="txt"> Uložit</span> ▾</button>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pridatSoubory">🖼️ Přidat obrázky… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="pridatSlozku">🗂️ Přidat celou složku… <kbd>Ctrl+Shift+O</kbd></button>
+  <hr>
+  <div class="titulek">Seřadit (pořadí určuje {n})</div>
+  <button class="tl" data-prikaz="seraditNazev">🔤 Podle názvu (přirozeně)</button>
+  <button class="tl" data-prikaz="seraditDatum">📅 Podle data pořízení</button>
+  <button class="tl" data-prikaz="seraditVelikost">⚖️ Podle velikosti souboru</button>
+  <button class="tl" data-prikaz="obratit">⇅ Obrátit pořadí</button>
+  <hr>
+  <button class="tl" data-prikaz="odebrat">✕ Odebrat vybraný <kbd>Del</kbd></button>
+  <button class="tl" data-prikaz="vyprazdnit">🗑️ Vyprázdnit seznam</button>
+</div>
+
+<div id="nabPredvolby" class="nabidka" hidden>
+  <div class="titulek">Vestavěné</div>
+  <div id="pvVestavene"></div>
+  <hr>
+  <div class="titulek">Moje předvolby</div>
+  <div id="pvMoje"></div>
+  <hr>
+  <button class="tl" data-prikaz="ulozitPredvolbu">💾 Uložit současné nastavení jako předvolbu…</button>
+  <button class="tl" data-prikaz="vychozi">↺ Obnovit výchozí nastavení</button>
+</div>
+
+<div id="nabUlozit" class="nabidka" hidden>
+  <button class="tl" data-prikaz="ulozitZip">🗜️ Stáhnout vše jako ZIP <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="ulozitJednotlive">⬇️ Stáhnout jednotlivě</button>
+  <button class="tl" data-prikaz="ulozitSlozka" id="mnSlozka">📂 Uložit přímo do složky…</button>
+  <hr>
+  <button class="tl" data-prikaz="ulozitVybrany">⬇️ Stáhnout jen vybraný obrázek</button>
+  <div class="prazdno">Nezpracované obrázky se před uložením zpracují.</div>
+</div>
+
+<div class="prubeh" id="prubeh" hidden>
+  <span id="prubehText">Zpracovávám…</span>
+  <progress id="prubehBar" max="1" value="0"></progress>
+  <button class="tl mini" data-prikaz="zrusit" title="Zrušit (Esc)">✕ Zrušit</button>
+</div>
+
+<div class="plocha">
+  <aside class="panel" id="panKroky" aria-label="Řetěz kroků">
+    <h2>Řetěz kroků <button class="tl mini" data-nabidka="nabPridatKrok" title="Přidat krok">✚ Krok ▾</button></h2>
+    <div id="kroky"></div>
+    <p class="pozn" id="krokyPrazdne" hidden>Žádný krok – obrázky se jen převedou do zvoleného formátu.</p>
+
+    <h2>Výstup</h2>
+    <div class="sekce">
+      <label for="vFormat">Formát</label>
+      <select id="vFormat" class="vstup">
+        <option value="jpeg">JPEG</option>
+        <option value="webp">WebP</option>
+        <option value="png">PNG (bezeztrátový)</option>
+        <option value="avif">AVIF</option>
+        <option value="puvodni">Původní (GIF/BMP → PNG)</option>
+      </select>
+      <label for="vKvalita">Kvalita</label>
+      <div class="posuv"><input type="range" id="vKvalita" min="10" max="100" step="1"><output id="vKvalitaO"></output></div>
+      <label for="vCil">Cílová velikost</label>
+      <div class="posuv"><input type="number" id="vCil" class="vstup" min="0" step="10" style="width:90px"> kB <span class="pozn" style="margin:0">(0 = vypnuto)</span></div>
+      <label for="vPozadi">Pozadí JPEG</label>
+      <div class="posuv"><input type="color" id="vPozadi" class="vstup"><span class="pozn" style="margin:0">místo průhlednosti</span></div>
+      <p class="pozn cele" id="vInfo"></p>
+    </div>
+
+    <h2>Přejmenování</h2>
+    <div class="sekce">
+      <label for="jVzor">Vzor</label>
+      <input id="jVzor" class="vstup" spellcheck="false" autocomplete="off">
+      <div class="cele tokeny" id="jTokeny">
+        <button type="button" data-token="{nazev}" title="Původní název bez přípony">{nazev}</button>
+        <button type="button" data-token="{n:3}" title="Pořadí s nulami na 3 místa">{n:3}</button>
+        <button type="button" data-token="{datum}" title="Datum pořízení z EXIF (jinak datum změny souboru)">{datum}</button>
+        <button type="button" data-token="{datum:YYYYMMDD_HHmmss}" title="Datum a čas pořízení">{datum:…}</button>
+        <button type="button" data-token="{sirka}x{vyska}" title="Výsledné rozměry">{sirka}x{vyska}</button>
+        <button type="button" data-token=".{ext}" title="Přípona výstupního formátu">.{ext}</button>
+      </div>
+      <label for="jStart">{n} od</label>
+      <input id="jStart" type="number" class="vstup" min="0" step="1" style="width:90px">
+      <label class="cele"><input type="checkbox" id="jSlozky"> Zachovat podsložky (ZIP i uložení do složky)</label>
+      <p class="pozn cele" id="jInfo"></p>
+    </div>
+    <p class="pozn soukromi">🔒 Vše se zpracuje přímo ve vašem prohlížeči – soubory se nikam neodesílají.</p>
+  </aside>
+
+  <main class="panel" id="panSeznam" aria-label="Seznam obrázků">
+    <div class="souhrn" id="souhrn" hidden></div>
+    <div class="seznam" id="seznam"></div>
+    <div class="prazdne" id="prazdne">
+      <div class="velke">🗂️</div>
+      <div><b>Přetáhněte sem obrázky nebo celou složku</b><br>JPEG, PNG, WebP, GIF, BMP, AVIF (podle prohlížeče)</div>
+      <div class="tlacitka">
+        <button class="tl hlavni" data-prikaz="pridatSoubory">🖼️ Vybrat obrázky</button>
+        <button class="tl" data-prikaz="pridatSlozku">🗂️ Vybrat složku</button>
+      </div>
+      <div class="soukromi">🔒 Soubory zůstávají ve vašem počítači, nic se nenahrává na server.</div>
+    </div>
+  </main>
+
+  <section class="panel" id="panNahled" aria-label="Náhled před a po">
+    <h2>Náhled před / po <span id="nahledJmeno" style="text-transform:none;letter-spacing:0;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></h2>
+    <div class="porovnani" id="porovnani">
+      <img id="pPred" alt="Původní obrázek">
+      <img id="pPo" alt="Upravený obrázek">
+      <div class="cara"></div>
+      <input type="range" id="pPosuv" min="0" max="100" value="50" step="0.5" aria-label="Porovnávací posuvník">
+      <span class="stitek l">Před</span><span class="stitek p">Po</span>
+      <div class="zprava" id="pZprava">Vyberte obrázek ze seznamu.</div>
+    </div>
+    <div class="nahled-info" id="nahledInfo"></div>
+  </section>
+</div>
+
+<div id="nabPridatKrok" class="nabidka" hidden></div>
+
+<input type="file" id="vstSoubory" accept="image/*,.heic,.heif" multiple hidden>
+<input type="file" id="vstSlozka" webkitdirectory multiple hidden>
+<input type="file" id="vstLogo" accept="image/*" hidden>
+<div class="pretah" id="pretah" hidden>📥 Pusťte obrázky nebo složky</div>
+
+<dialog class="pomoc" id="pomoc">
+  <button class="tl mini zavrit" data-zavrit>✕</button>
+  <h3 style="margin-top:0">🗂️ Hromadné úpravy obrázků</h3>
+  <p>Přidejte obrázky nebo celou složku (i přetažením), poskládejte <b>řetěz kroků</b> vlevo, zkontrolujte <b>náhled před/po</b> a uložte výsledek jako ZIP, jednotlivě nebo přímo do složky. Vše běží lokálně v prohlížeči.</p>
+  <h3>Kroky</h3>
+  <ul>
+    <li>Kroky se provádějí shora dolů, pořadí měňte šipkami ↑↓; každý jde dočasně vypnout zaškrtnutím. Kroky se mohou opakovat.</li>
+    <li><b>Otočení podle EXIF</b> proběhne vždy automaticky už při načtení (fotky z mobilu „na výšku“ budou správně). Krok Otočení přidá ruční otočení či zrcadlení.</li>
+    <li><b>Ořez</b> bere výřez ze středu. „Otočit poměr podle orientace“ udělá z 3:2 u fotky na výšku 2:3.</li>
+    <li><b>Změna velikosti</b>: delší strana, šířka, výška, procenta nebo „do rámečku“. „Jen zmenšovat“ menší obrázky nezvětší.</li>
+    <li><b>Vodoznak</b>: text nebo obrázek (logo, nejlépe PNG s průhledností), 9 pozic nebo dlaždice přes celý obrázek. Velikost a odsazení jsou v procentech, takže sedí na malé i velké fotky.</li>
+  </ul>
+  <h3>Výstup</h3>
+  <ul>
+    <li><b>Cílová velikost</b> hledá binárně nejvyšší kvalitu (max. nastavená kvalita), při které je soubor menší než cíl. U PNG kvalita nejde, cíl se ignoruje.</li>
+    <li><b>EXIF a GPS se odstraní</b> – převod přes plátno metadata nepřenáší. Obrázky s polohou mají v seznamu značku 📍 GPS.</li>
+    <li>AVIF je v nabídce jen tam, kde ho prohlížeč umí zakódovat.</li>
+  </ul>
+  <h3>Přejmenování</h3>
+  <p><code>{nazev}</code> původní název, <code>{n}</code> pořadí (<code>{n:3}</code> = 001), <code>{datum}</code> datum pořízení z EXIF (bez EXIF datum změny souboru; formát <code>{datum:YYYYMMDD_HHmmss}</code>, tokeny YYYY YY MM DD HH mm ss), <code>{sirka}</code>, <code>{vyska}</code>, <code>{ext}</code>. Přípona se doplní sama. Stejná jména dostanou <code>_2</code>, <code>_3</code>… (zvýrazněno oranžově).</p>
+  <h3>Klávesy</h3>
+  <p><kbd>Ctrl+O</kbd> přidat obrázky · <kbd>Ctrl+Shift+O</kbd> složka · <kbd>Ctrl+Enter</kbd> zpracovat · <kbd>Ctrl+S</kbd> ZIP · <kbd>↑</kbd><kbd>↓</kbd> výběr · <kbd>Alt+↑</kbd><kbd>Alt+↓</kbd> přesun · <kbd>Del</kbd> odebrat · <kbd>Esc</kbd> zrušit · <kbd>F1</kbd> nápověda</p>
+  <p class="pozn" id="pomocTech"></p>
+</dialog>
+
+<script>
+'use strict';
+const J = OBRAZKY_DAVKA, K = OBRAZKY_DAVKA_KRESLENI;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const KLIC_NAST = 'webapp_obrazky_davka_nastaveni', KLIC_PV = 'webapp_obrazky_davka_predvolby';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+/* ---------- stav ---------- */
+function nactiJson(klic, vychozi) {
+  try { const v = JSON.parse(localStorage.getItem(klic)); return v == null ? vychozi : v; } catch (e) { return vychozi; }
+}
+function ulozJson(klic, v) { try { localStorage.setItem(klic, JSON.stringify(v)); } catch (e) { /* plné úložiště */ } }
+const VYCHOZI = { kroky: [{ typ: 'zmensi' }] };
+let nast = J.normalizujNastaveni(nactiJson(KLIC_NAST, VYCHOZI));
+let polozky = [];            // { id, soubor, cesta, meta, w, h, nahledUrl, vysledek, chyba, stav }
+let vybranyId = null, dalsiId = 1;
+const sbalene = new Set();   // indexy sbalených kroků
+let podporaAvif = false, rezim = 'hlavni', pocetPracantu = 1;
+let vodoznakBlob = null, vodoznakKlic = null;
+
+/* ---------- IndexedDB (obrázek vodoznaku) ---------- */
+function db() {
+  return new Promise((ok, chyba) => {
+    const r = indexedDB.open('webapp_obrazky_davka', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('soubory');
+    r.onsuccess = () => ok(r.result); r.onerror = () => chyba(r.error);
+  });
+}
+async function dbUloz(klic, hodnota) {
+  const d = await db();
+  await new Promise((ok, chyba) => { const t = d.transaction('soubory', 'readwrite'); t.objectStore('soubory').put(hodnota, klic); t.oncomplete = ok; t.onerror = () => chyba(t.error); });
+  d.close();
+}
+async function dbNacti(klic) {
+  const d = await db();
+  const v = await new Promise((ok, chyba) => { const r = d.transaction('soubory').objectStore('soubory').get(klic); r.onsuccess = () => ok(r.result); r.onerror = () => chyba(r.error); });
+  d.close();
+  return v;
+}
+
+/* ---------- formulář kroků ---------- */
+const POZICE_NAZVY = ['vlevo nahoře', 'nahoře', 'vpravo nahoře', 'vlevo', 'uprostřed', 'vpravo', 'vlevo dole', 'dole', 'vpravo dole'];
+const jeText = k => k.druh !== 'obrazek', jeObr = k => k.druh === 'obrazek';
+const POLE = {
+  otoc: [
+    { k: 'uhel', t: 'vyber', n: 'Otočit', m: [[0, 'neotáčet'], [90, '90° ↻'], [180, '180°'], [270, '90° ↺']] },
+    { k: 'zrcadlo', t: 'vyber', n: 'Zrcadlit', m: [['ne', 'ne'], ['h', 'vodorovně ↔'], ['v', 'svisle ↕']] },
+  ],
+  orez: [
+    { k: 'pomer', t: 'pomer', n: 'Poměr' },
+    { k: 'podleOrientace', t: 'zatr', n: 'Otočit poměr podle orientace fotky' },
+  ],
+  zmensi: [
+    { k: 'rezim', t: 'vyber', n: 'Podle', obnov: true, m: [['dlouha', 'delší strany'], ['sirka', 'šířky'], ['vyska', 'výšky'], ['procenta', 'procent'], ['ramec', 'do rámečku š × v']] },
+    { k: 'hodnota', t: 'cislo', n: k => k.rezim === 'procenta' ? 'Procent' : k.rezim === 'ramec' ? 'Šířka px' : 'Pixelů', min: 1 },
+    { k: 'hodnota2', t: 'cislo', n: 'Výška px', min: 1, kdy: k => k.rezim === 'ramec' },
+    { k: 'jenZmensovat', t: 'zatr', n: 'Jen zmenšovat (menší nezvětšovat)' },
+  ],
+  upravy: [
+    { k: 'jas', t: 'posuv', n: 'Jas', min: -100, max: 100 },
+    { k: 'kontrast', t: 'posuv', n: 'Kontrast', min: -100, max: 100 },
+    { k: 'sytost', t: 'posuv', n: 'Sytost', min: -100, max: 100 },
+  ],
+  seda: [],
+  okraj: [
+    { k: 'sirka', t: 'cislo', n: 'Šířka', min: 0, krok: 0.5 },
+    { k: 'jednotka', t: 'vyber', n: 'Jednotka', m: [['px', 'px'], ['procenta', '% kratší strany']] },
+    { k: 'barva', t: 'barva', n: 'Barva' },
+  ],
+  vodoznak: [
+    { k: 'druh', t: 'vyber', n: 'Druh', obnov: true, m: [['text', 'text'], ['obrazek', 'obrázek (logo)']] },
+    { k: 'text', t: 'text', n: 'Text', kdy: jeText },
+    { k: 'velikost', t: 'posuv', n: 'Velikost %', min: 1, max: 20, krok: 0.5, kdy: jeText },
+    { k: 'barva', t: 'barva', n: 'Barva', kdy: jeText },
+    { k: 'stin', t: 'zatr', n: 'Stín pro čitelnost', kdy: jeText },
+    { k: 'logo', t: 'logo', n: 'Obrázek', kdy: jeObr },
+    { k: 'sirkaObr', t: 'posuv', n: 'Šířka %', min: 2, max: 80, kdy: jeObr },
+    { k: 'pozice', t: 'pozice', n: 'Pozice' },
+    { k: 'pruhlednost', t: 'posuv', n: 'Průhlednost %', min: 0, max: 95 },
+    { k: 'odsazeni', t: 'posuv', n: 'Odsazení %', min: 0, max: 20, krok: 0.5 },
+  ],
+};
+
+function poleHtml(p, k, i) {
+  const id = `k${i}_${p.k}`, v = k[p.k], n = typeof p.n === 'function' ? p.n(k) : p.n;
+  const a = `id="${id}" data-i="${i}" data-k="${p.k}"`;
+  switch (p.t) {
+    case 'vyber': return `<label for="${id}">${n}</label><select class="vstup" ${a} data-t="vyber"${p.obnov ? ' data-obnov="1"' : ''}>${p.m.map(([h, t]) => `<option value="${h}"${String(h) === String(v) ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+    case 'cislo': return `<label for="${id}">${n}</label><input type="number" class="vstup" ${a} data-t="cislo" value="${esc(v)}" min="${p.min ?? ''}" step="${p.krok || 1}">`;
+    case 'text': return `<label for="${id}">${n}</label><input class="vstup" ${a} data-t="text" value="${esc(v)}">`;
+    case 'barva': return `<label for="${id}">${n}</label><div class="posuv"><input type="color" class="vstup" ${a} data-t="text" value="${esc(v)}"></div>`;
+    case 'zatr': return `<label class="cele"><input type="checkbox" ${a} data-t="zatr"${v ? ' checked' : ''}> ${n}</label>`;
+    case 'posuv': return `<label for="${id}">${n}</label><div class="posuv"><input type="range" ${a} data-t="cislo" min="${p.min}" max="${p.max}" step="${p.krok || 1}" value="${v}"><output>${v}</output></div>`;
+    case 'pomer': return `<label for="${id}">${n}</label><input class="vstup" ${a} data-t="text" list="pomery" value="${esc(v)}" placeholder="např. 16:9">`;
+    case 'pozice': return `<label>${n}</label><div class="pozice">${POZICE_NAZVY.map((t, j) => `<button type="button" data-i="${i}" data-k="pozice" data-t="pozice" data-h="${j}" aria-pressed="${Number(v) === j}" title="${t}">●</button>`).join('')}<button type="button" class="dlazdice" data-i="${i}" data-k="pozice" data-t="pozice" data-h="9" aria-pressed="${Number(v) === 9}" title="Opakovat přes celý obrázek">▦ dlaždice</button></div>`;
+    case 'logo': return `<label>${n}</label><div class="posuv"><button type="button" class="tl mini" data-prikaz="vybratLogo">📂 Vybrat…</button><span class="pozn" style="margin:0" id="logoInfo">${vodoznakBlob ? '✔ ' + esc(vodoznakBlob.name || 'obrázek') : 'nevybráno'}</span></div>`;
+  }
+  return '';
+}
+
+function vykresliKroky() {
+  const t = J.TYPY_KROKU;
+  $('kroky').innerHTML = nast.kroky.map((k, i) => `
+    <div class="krok${k.zap ? '' : ' vyp'}${sbalene.has(i) ? ' sbaleny' : ''}" data-krok="${i}">
+      <div class="krok-hlava" data-sbalit="${i}">
+        <input type="checkbox" data-i="${i}" data-k="zap" data-t="zatr" ${k.zap ? 'checked' : ''} title="Zapnout / vypnout krok" aria-label="Zapnout krok">
+        <span class="jm">${t[k.typ].ikona} ${t[k.typ].nazev}</span>
+        <span class="popis" id="popis${i}">${esc(J.popisKroku(k))}</span>
+        <button class="tl" data-presun="${i}" data-smer="-1" title="Posunout výš" aria-label="Posunout výš"${i ? '' : ' disabled'}>↑</button>
+        <button class="tl" data-presun="${i}" data-smer="1" title="Posunout níž" aria-label="Posunout níž"${i < nast.kroky.length - 1 ? '' : ' disabled'}>↓</button>
+        <button class="tl" data-smazat="${i}" title="Odebrat krok" aria-label="Odebrat krok">✕</button>
+      </div>
+      ${POLE[k.typ].length ? `<div class="krok-telo">${POLE[k.typ].filter(p => !p.kdy || p.kdy(k)).map(p => poleHtml(p, k, i)).join('')}</div>` : ''}
+    </div>`).join('');
+  $('krokyPrazdne').hidden = nast.kroky.length > 0;
+}
+
+$('kroky').addEventListener('input', e => zmenaPole(e.target, false));
+$('kroky').addEventListener('change', e => zmenaPole(e.target, true));
+function zmenaPole(el, konec) {
+  const i = el.dataset.i, kl = el.dataset.k;
+  if (i === undefined || !kl || el.dataset.t === 'pozice') return;
+  const k = nast.kroky[i];
+  let v = el.dataset.t === 'zatr' ? el.checked : el.value;
+  if (el.dataset.t === 'cislo') { v = Number(v); if (!isFinite(v)) return; }
+  if (el.dataset.t === 'vyber' && /^\d+$/.test(v)) v = Number(v);
+  if (k[kl] === v) return;
+  k[kl] = v;
+  if (el.nextElementSibling && el.nextElementSibling.tagName === 'OUTPUT') el.nextElementSibling.textContent = v;
+  if (kl === 'zap' || (el.dataset.obnov && konec)) vykresliKroky();
+  else { const p = $('popis' + i); if (p) p.textContent = J.popisKroku(k); }
+  zmenaNastaveni();
+}
+$('kroky').addEventListener('click', e => {
+  const b = e.target.closest('button, input');
+  if (b && b.dataset.t === 'pozice') {
+    nast.kroky[b.dataset.i].pozice = Number(b.dataset.h);
+    b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    return zmenaNastaveni();
+  }
+  if (b && b.dataset.presun !== undefined) {
+    const i = Number(b.dataset.presun), j = i + Number(b.dataset.smer);
+    [nast.kroky[i], nast.kroky[j]] = [nast.kroky[j], nast.kroky[i]];
+    sbalene.clear(); vykresliKroky(); return zmenaNastaveni();
+  }
+  if (b && b.dataset.smazat !== undefined) {
+    nast.kroky.splice(Number(b.dataset.smazat), 1);
+    sbalene.clear(); vykresliKroky(); return zmenaNastaveni();
+  }
+  if (b) return;
+  const h = e.target.closest('[data-sbalit]');
+  if (h) { const i = Number(h.dataset.sbalit); sbalene.has(i) ? sbalene.delete(i) : sbalene.add(i); h.parentNode.classList.toggle('sbaleny'); }
+});
+
+$('nabPridatKrok').innerHTML = Object.entries(J.TYPY_KROKU)
+  .map(([typ, t]) => `<button class="tl" data-pridat-krok="${typ}">${t.ikona} ${t.nazev}</button>`).join('');
+$('nabPridatKrok').addEventListener('click', e => {
+  const b = e.target.closest('[data-pridat-krok]');
+  if (!b) return;
+  zavriNabidky();
+  nast.kroky.push(J.vychoziKrok(b.dataset.pridatKrok));
+  vykresliKroky(); zmenaNastaveni();
+  $('kroky').lastElementChild.scrollIntoView({ block: 'nearest' });
+});
+document.body.insertAdjacentHTML('beforeend', '<datalist id="pomery">' +
+  ['1:1', '4:3', '3:2', '16:9', '5:4', '4:5', '2:3', '9:16', '21:9', '1.414'].map(p => `<option value="${p}">`).join('') + '</datalist>');
+
+/* ---------- výstup a přejmenování ---------- */
+function vyplnVystup() {
+  const v = nast.vystup, j = nast.jmena;
+  $('vFormat').value = v.format; $('vKvalita').value = v.kvalita; $('vKvalitaO').textContent = v.kvalita;
+  $('vCil').value = v.cilKB; $('vPozadi').value = v.pozadi;
+  $('jVzor').value = j.vzor; $('jStart').value = j.start; $('jSlozky').checked = j.podslozky;
+  infoVystupu();
+}
+function infoVystupu() {
+  const v = nast.vystup;
+  const bezKvality = v.format === 'png';
+  $('vKvalita').disabled = $('vCil').disabled = bezKvality;
+  $('vPozadi').disabled = !(v.format === 'jpeg' || v.format === 'puvodni');
+  let t = 'ℹ️ Výstup <b>neobsahuje EXIF ani GPS</b> – převod přes plátno metadata nepřenáší.';
+  if (bezKvality) t += ' PNG je bezeztrátové, kvalita ani cílová velikost se nepoužijí.';
+  else if (v.cilKB > 0) t += ` Kvalita se hledá binárně (≤ ${v.kvalita}), aby soubor měl nejvýš ${v.cilKB} kB.`;
+  $('vInfo').innerHTML = t;
+}
+['vFormat', 'vKvalita', 'vCil', 'vPozadi'].forEach(id => $(id).addEventListener('input', () => {
+  const v = nast.vystup;
+  v.format = $('vFormat').value; v.kvalita = Number($('vKvalita').value);
+  v.cilKB = Math.max(0, Number($('vCil').value) || 0); v.pozadi = $('vPozadi').value;
+  $('vKvalitaO').textContent = v.kvalita;
+  infoVystupu(); zmenaNastaveni();
+}));
+['jVzor', 'jStart', 'jSlozky'].forEach(id => $(id).addEventListener('input', () => {
+  const j = nast.jmena;
+  j.vzor = $('jVzor').value; j.start = Math.max(0, Math.floor(Number($('jStart').value) || 0)); j.podslozky = $('jSlozky').checked;
+  ulozJson(KLIC_NAST, nast); obnovJmena();   // jména nemění obsah obrázků → výsledky platí dál
+}));
+$('jTokeny').addEventListener('click', e => {
+  const b = e.target.closest('[data-token]');
+  if (!b) return;
+  const el = $('jVzor'), a = el.selectionStart ?? el.value.length, z = el.selectionEnd ?? a;
+  el.value = el.value.slice(0, a) + b.dataset.token + el.value.slice(z);
+  el.focus(); el.setSelectionRange(a + b.dataset.token.length, a + b.dataset.token.length);
+  el.dispatchEvent(new Event('input'));
+});
+
+let casovacNahledu = 0;
+function zmenaNastaveni() {
+  ulozJson(KLIC_NAST, nast);
+  zrusDavku(); nahledSeq++;   // rozpracované výsledky by odpovídaly starému nastavení
+  for (const p of polozky) if (p.stav !== 'chyba-cteni') { p.vysledek = null; p.stav = ''; p.chyba = null; }
+  vykresliSeznam();
+  clearTimeout(casovacNahledu); casovacNahledu = setTimeout(obnovNahled, 350);
+}
+
+/* ---------- jména výstupu ---------- */
+function vystupniJmena() {
+  const surova = polozky.map((p, i) => {
+    const ext = J.FORMATY[J.vystupniFormat(nast.vystup.format, p.meta.typ)].pripona;
+    const r = p.vysledek ? { w: p.vysledek.w, h: p.vysledek.h } : (p.w ? J.vyslednyRozmer(p.w, p.h, nast.kroky) : { w: '?', h: '?' });
+    const jm = J.noveJmeno(nast.jmena.vzor, {
+      nazev: p.soubor.name, n: nast.jmena.start + i, ext, sirka: r.w, vyska: r.h,
+      datum: J.parsujExifDatum(p.meta.datum) || J.datumZDate(new Date(p.soubor.lastModified)),
+    });
+    const slozka = nast.jmena.podslozky && p.cesta.includes('/') ? p.cesta.slice(0, p.cesta.lastIndexOf('/') + 1) : '';
+    return slozka + jm;
+  });
+  const v = J.vyresKolize(surova);
+  const kolize = new Set(v.kolize);
+  return v.jmena.map((cela, i) => ({ cela, jmeno: cela.slice(cela.lastIndexOf('/') + 1), kolize: kolize.has(i) }));
+}
+
+/* ---------- seznam ---------- */
+let posledniJmena = [];
+function vykresliSeznam() {
+  const jmena = posledniJmena = vystupniJmena();
+  $('prazdne').hidden = polozky.length > 0;
+  $('seznam').innerHTML = polozky.map((p, i) => radekHtml(p, jmena[i])).join('');
+  obnovSouhrn(jmena);
+}
+function radekHtml(p, jm) {
+  const r = p.vysledek;
+  const cil = r ? { w: r.w, h: r.h } : (p.w ? J.vyslednyRozmer(p.w, p.h, nast.kroky) : null);
+  let stav = '';
+  if (p.stav === 'bezi') stav = '⏳';
+  else if (p.chyba) stav = `<span class="stav-chyba" title="${esc(p.chyba)}">⚠️ ${esc(p.chyba)}</span>`;
+  let vel = J.formatVelikost(p.soubor.size);
+  if (r) {
+    const proc = Math.round((r.blob.size / p.soubor.size - 1) * 100);
+    vel += ` → <b>${J.formatVelikost(r.blob.size)}</b><div class="m ${proc <= 0 ? 'uspora' : 'hor'}">${proc > 0 ? '+' : ''}${proc} %${r.kvalita != null ? ' · q ' + r.kvalita : ''}${r.splneno ? '' : ' · cíl nesplněn'}</div>`;
+  }
+  const slozka = p.cesta.includes('/') ? p.cesta.slice(0, p.cesta.lastIndexOf('/')) : '';
+  return `<div class="radek${p.id === vybranyId ? ' vybrany' : ''}" data-id="${p.id}">
+    ${p.nahledUrl ? `<img src="${p.nahledUrl}" alt="" loading="lazy">` : '<div class="nahl">🖼️</div>'}
+    <div class="bunka info"><div class="h" title="${esc(p.cesta)}">${esc(p.soubor.name)}</div>
+      <div class="m">${p.w ? p.w + '×' + p.h : '?'}${cil ? ' → ' + cil.w + '×' + cil.h : ''}${p.meta.typ ? ' · ' + p.meta.typ.toUpperCase() : ''}${p.meta.gps ? '<span class="znacka gps" title="Obsahuje polohu GPS – ve výstupu se odstraní">📍 GPS</span>' : ''}${p.meta.datum ? '<span class="znacka" title="Datum pořízení z EXIF">' + esc(p.meta.datum.slice(0, 10).replace(/:/g, '-')) + '</span>' : ''}${slozka ? ' · 📁 ' + esc(slozka) : ''}</div></div>
+    <div class="bunka nove"><div class="h${jm.kolize ? ' kolize' : ''}" title="${jm.kolize ? 'Stejné jméno už existuje – doplněno číslo' : 'Nové jméno'}">${jm.kolize ? '⚠ ' : '→ '}${esc(jm.jmeno)}</div><div class="m">${stav}</div></div>
+    <div class="bunka vel">${vel}</div>
+    <div class="akce"><button class="tl" data-posun="-1" title="Posunout výš (Alt+↑)" aria-label="Posunout výš">↑</button><button class="tl" data-posun="1" title="Posunout níž (Alt+↓)" aria-label="Posunout níž">↓</button><button class="tl" data-odebrat title="Odebrat (Del)" aria-label="Odebrat">✕</button></div>
+  </div>`;
+}
+function obnovRadek(p) {
+  const el = $('seznam').querySelector(`[data-id="${p.id}"]`);
+  if (!el) return;
+  const i = polozky.indexOf(p);
+  el.outerHTML = radekHtml(p, posledniJmena[i] || vystupniJmena()[i]);
+}
+function obnovJmena() { vykresliSeznam(); }
+
+function obnovSouhrn(jmena) {
+  const n = polozky.length;
+  $('pocet').textContent = n ? n + ' ' + (n === 1 ? 'obrázek' : n < 5 ? 'obrázky' : 'obrázků') : '';
+  $('souhrn').hidden = !n;
+  if (!n) return;
+  const celkem = polozky.reduce((s, p) => s + p.soubor.size, 0);
+  const hotove = polozky.filter(p => p.vysledek);
+  let t = `<span><b>${n}</b> ${n === 1 ? 'obrázek' : n < 5 ? 'obrázky' : 'obrázků'}, <b>${J.formatVelikost(celkem)}</b></span>`;
+  if (hotove.length) {
+    const pred = hotove.reduce((s, p) => s + p.soubor.size, 0), po = hotove.reduce((s, p) => s + p.vysledek.blob.size, 0);
+    t += `<span>zpracováno ${hotove.length}/${n}: ${J.formatVelikost(pred)} → <b>${J.formatVelikost(po)}</b> <span class="${po <= pred ? 'uspora' : 'hor'}">(${po <= pred ? '−' : '+'}${Math.abs(Math.round((1 - po / pred) * 100))} %)</span></span>`;
+  } else if (odhadPomer) {
+    t += `<span>odhad výstupu ~<b>${J.formatVelikost(celkem * odhadPomer)}</b> <span class="pozn" style="margin:0">(podle náhledu)</span></span>`;
+  }
+  const chyby = polozky.filter(p => p.chyba).length;
+  if (chyby) t += `<span class="stav-chyba">⚠️ ${chyby} s chybou</span>`;
+  const kol = jmena.filter(j => j.kolize).length;
+  if (kol) t += `<span style="color:var(--warn)">⚠ ${kol} kolizí jmen (doplněno _2…)</span>`;
+  $('souhrn').innerHTML = t;
+}
+
+$('seznam').addEventListener('click', e => {
+  const r = e.target.closest('.radek');
+  if (!r) return;
+  const p = polozky.find(x => x.id === Number(r.dataset.id));
+  const b = e.target.closest('button');
+  if (b && b.dataset.posun) return posun(p, Number(b.dataset.posun));
+  if (b && b.hasAttribute('data-odebrat')) return odeber(p);
+  vyber(p);
+});
+function vyber(p) {
+  if (!p || p.id === vybranyId) return;
+  vybranyId = p.id;
+  $('seznam').querySelectorAll('.radek').forEach(r => r.classList.toggle('vybrany', Number(r.dataset.id) === p.id));
+  const el = $('seznam').querySelector(`[data-id="${p.id}"]`);
+  if (el) el.scrollIntoView({ block: 'nearest' });
+  obnovNahled();
+}
+function posun(p, smer) {
+  const i = polozky.indexOf(p), j = i + smer;
+  if (j < 0 || j >= polozky.length) return;
+  [polozky[i], polozky[j]] = [polozky[j], polozky[i]];
+  vykresliSeznam();
+}
+function odeber(p) {
+  if (!p) return;
+  const i = polozky.indexOf(p);
+  polozky.splice(i, 1);
+  if (p.nahledUrl) URL.revokeObjectURL(p.nahledUrl);
+  if (p.id === vybranyId) { vybranyId = null; const d = polozky[Math.min(i, polozky.length - 1)]; vykresliSeznam(); if (d) vyber(d); else obnovNahled(); }
+  else vykresliSeznam();
+}
+
+/* ---------- přidávání souborů ---------- */
+async function pridejSoubory(seznam) {
+  let preskoceno = 0, pridano = 0;
+  const znam = new Set(polozky.map(p => p.cesta + '|' + p.soubor.size + '|' + p.soubor.lastModified));
+  for (const { soubor, cesta } of seznam) {
+    if (!J.jeObrazek(soubor.name, soubor.type)) { preskoceno++; continue; }
+    const klic = cesta + '|' + soubor.size + '|' + soubor.lastModified;
+    if (znam.has(klic)) continue;
+    znam.add(klic);
+    let meta;
+    try { meta = J.ctiMetadata(await soubor.slice(0, 512 * 1024).arrayBuffer()); }
+    catch (e) { meta = J.ctiMetadata(new Uint8Array(0)); }
+    const z = J.zobrazenyRozmer(meta);
+    polozky.push({ id: dalsiId++, soubor, cesta, meta, w: z.w, h: z.h, nahledUrl: null, vysledek: null, chyba: null, stav: '' });
+    pridano++;
+  }
+  vykresliSeznam();
+  if (preskoceno) Dialog.info(`Přeskočeno ${preskoceno} souborů, které nejsou obrázky.`);
+  if (pridano && !vybranyId) vyber(polozky[0]);
+  frontaNahledu();
+  return pridano;
+}
+let nahledyBezi = false;
+async function frontaNahledu() {
+  if (nahledyBezi) return;
+  nahledyBezi = true;
+  try {
+    for (let p; (p = polozky.find(x => !x.nahledUrl && x.stav !== 'chyba-cteni'));) {
+      try {
+        let bmp;
+        if (p.w && p.h) {
+          const k = Math.min(1, 120 / Math.max(p.w, p.h));
+          // jen šířka – výška se dopočte z poměru, takže nezáleží, zda prohlížeč zmenšuje před otočením podle EXIF, nebo po něm
+          bmp = await createImageBitmap(p.soubor, { resizeWidth: Math.max(1, Math.round(p.w * k)), resizeQuality: 'medium', imageOrientation: 'from-image' });
+        } else {
+          bmp = await createImageBitmap(p.soubor, { imageOrientation: 'from-image' });
+          p.w = bmp.width; p.h = bmp.height;
+        }
+        const k = Math.min(1, 120 / Math.max(bmp.width, bmp.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
+        c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+        bmp.close();
+        const b = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.75));
+        if (!polozky.includes(p)) continue;
+        p.nahledUrl = URL.createObjectURL(b);
+      } catch (e) {
+        p.stav = 'chyba-cteni'; p.chyba = 'Prohlížeč tento obrázek neumí načíst';
+      }
+      obnovRadek(p);
+    }
+  } finally { nahledyBezi = false; }
+  vykresliSeznam();   // rozměry zjištěné až dekódováním mění {sirka}x{vyska}
+}
+
+function zVstupu(input) {
+  const s = [...input.files].map(f => ({ soubor: f, cesta: f.webkitRelativePath || f.name }));
+  input.value = '';
+  return pridejSoubory(s);
+}
+$('vstSoubory').addEventListener('change', e => zVstupu(e.target));
+$('vstSlozka').addEventListener('change', e => zVstupu(e.target));
+
+/* přetažení souborů i složek */
+let pretahCit = 0;
+addEventListener('dragenter', e => { if (e.dataTransfer.types.includes('Files')) { pretahCit++; $('pretah').hidden = false; } });
+addEventListener('dragleave', () => { if (--pretahCit <= 0) { pretahCit = 0; $('pretah').hidden = true; } });
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', async e => {
+  e.preventDefault(); pretahCit = 0; $('pretah').hidden = true;
+  const polozkyDt = [...(e.dataTransfer.items || [])].filter(i => i.kind === 'file');
+  const vstupy = polozkyDt.map(i => i.webkitGetAsEntry ? i.webkitGetAsEntry() : null);
+  if (!vstupy.length || vstupy.some(v => !v)) {
+    return pridejSoubory([...e.dataTransfer.files].map(f => ({ soubor: f, cesta: f.name })));
+  }
+  const vysl = [];
+  for (const v of vstupy) await projdiZaznam(v, vysl);
+  pridejSoubory(vysl);
+});
+async function projdiZaznam(zaznam, vysl) {
+  if (zaznam.isFile) {
+    const soubor = await new Promise((ok, chyba) => zaznam.file(ok, chyba)).catch(() => null);
+    if (soubor) vysl.push({ soubor, cesta: zaznam.fullPath.replace(/^\//, '') });
+    return;
+  }
+  const ctenar = zaznam.createReader();
+  for (;;) {
+    const davka = await new Promise((ok, chyba) => ctenar.readEntries(ok, chyba)).catch(() => []);
+    if (!davka.length) break;
+    for (const d of davka) await projdiZaznam(d, vysl);
+  }
+}
+
+function serad(fn) { polozky.sort(fn); vykresliSeznam(); }
+const porovnej = new Intl.Collator('cs', { numeric: true, sensitivity: 'base' }).compare;
+const klicData = p => { const d = J.parsujExifDatum(p.meta.datum) || J.datumZDate(new Date(p.soubor.lastModified)); return J.formatujDatum(d, 'YYYYMMDDHHmmss'); };
+
+/* ---------- vodoznak – obrázek ---------- */
+$('vstLogo').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  nastavLogo(f);
+  try { await dbUloz('vodoznak', f); } catch (err) { Dialog.chyba('Obrázek vodoznaku se nepodařilo uložit pro příště.'); }
+  zmenaNastaveni();
+});
+function nastavLogo(blob) {
+  vodoznakBlob = blob;
+  vodoznakKlic = (blob.name || '') + '|' + blob.size + '|' + (blob.lastModified || 0);
+  logoBmp = null;
+  const el = $('logoInfo');
+  if (el) el.textContent = '✔ ' + (blob.name || 'obrázek');
+}
+let logoBmp = null;
+async function logoProHlavniVlakno() {
+  if (!vodoznakBlob) return null;
+  if (!logoBmp) logoBmp = await createImageBitmap(vodoznakBlob);
+  return logoBmp;
+}
+const potrebujeLogo = () => nast.kroky.some(k => k.zap && k.typ === 'vodoznak' && k.druh === 'obrazek');
+
+/* ---------- pracanti (workery) ---------- */
+class Pracant {
+  constructor() {
+    this.w = new Worker('obrazky_davka/worker.js');
+    this.cekajici = new Map(); this.id = 0;
+    this.w.onmessage = e => {
+      const c = this.cekajici.get(e.data.id);
+      if (!c) return;
+      this.cekajici.delete(e.data.id);
+      e.data.ok ? c.ok(e.data.vysledek) : c.chyba(new Error(e.data.chyba));
+    };
+    this.w.onerror = e => { e.preventDefault(); this.zrus(new Error(e.message || 'Chyba workeru')); };
+  }
+  zpracuj(p) {
+    const id = ++this.id;
+    return new Promise((ok, chyba) => {
+      this.cekajici.set(id, { ok, chyba });
+      this.w.postMessage({ id, soubor: p.soubor, kroky: nast.kroky, vystup: nast.vystup, typVstupu: p.meta.typ,
+        vodoznak: potrebujeLogo() && vodoznakBlob ? { klic: vodoznakKlic, blob: vodoznakBlob } : null });
+    });
+  }
+  zrus(duvod) {
+    this.w.terminate();
+    for (const c of this.cekajici.values()) c.chyba(duvod);
+    this.cekajici.clear();
+  }
+}
+async function zjistiPodporu() {
+  // AVIF: prohlížeč, který ho neumí, vrátí PNG
+  const c = document.createElement('canvas'); c.width = c.height = 2;
+  const b = await new Promise(ok => c.toBlob(ok, 'image/avif', 0.5));
+  podporaAvif = !!b && b.type === 'image/avif';
+  const o = $('vFormat').querySelector('[value="avif"]');
+  o.disabled = !podporaAvif;
+  if (!podporaAvif) { o.textContent = 'AVIF (tento prohlížeč neumí zakódovat)'; if (nast.vystup.format === 'avif') { nast.vystup.format = 'webp'; vyplnVystup(); } }
+  try {
+    const w = new Worker('obrazky_davka/worker.js');
+    const ok = await new Promise(res => {
+      const t = setTimeout(() => res(false), 4000);
+      w.onmessage = e => { clearTimeout(t); res(!!e.data.podpora); };
+      w.onerror = () => { clearTimeout(t); res(false); };
+      w.postMessage({ typ: 'test' });
+    });
+    w.terminate();
+    if (ok) { rezim = 'worker'; pocetPracantu = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1)); }
+  } catch (e) { /* bez workeru */ }
+  $('pomocTech').textContent = `Tento prohlížeč: zpracování ${rezim === 'worker' ? `ve workeru přes OffscreenCanvas (${pocetPracantu} souběžně)` : 'v hlavním vlákně (bez OffscreenCanvas)'}, AVIF ${podporaAvif ? 'ano' : 'ne'}, uložení do složky ${'showDirectoryPicker' in window ? 'ano' : 'ne'}.`;
+}
+
+/** Zpracuje jeden obrázek mimo dávku (náhled). */
+let nahledPracant = null;
+async function zpracujJeden(p) {
+  if (rezim === 'worker') {
+    if (!nahledPracant) nahledPracant = new Pracant();
+    return nahledPracant.zpracuj(p);
+  }
+  return K.zpracujSoubor(p.soubor, nast.kroky, nast.vystup, p.meta.typ, potrebujeLogo() ? await logoProHlavniVlakno() : null);
+}
+
+/* ---------- dávka ---------- */
+let davka = null;   // { zruseno, pracanti }
+async function zpracujVse(jenChybejici = true) {
+  if (davka) return false;
+  const fronta = polozky.filter(p => p.stav !== 'chyba-cteni' && (!jenChybejici || !p.vysledek));
+  if (!polozky.length) { Dialog.info('Nejdřív přidejte obrázky.'); return false; }
+  if (potrebujeLogo() && !vodoznakBlob) { Dialog.chyba('Vodoznak: vyberte obrázek (logo), nebo přepněte na text.'); return false; }
+  if (!fronta.length) return true;
+  davka = { zruseno: false, pracanti: [] };
+  const start = performance.now(), celkem = fronta.length;
+  let hotovo = 0;
+  $('prubeh').hidden = false; $('btnZpracovat').disabled = true;
+  const ukazPrubeh = () => {
+    const s = (performance.now() - start) / 1000;
+    const zbyva = hotovo ? Math.round(s / hotovo * (celkem - hotovo)) : null;
+    $('prubehText').textContent = `Zpracováno ${hotovo} / ${celkem}` + (zbyva != null && hotovo < celkem ? ` · zbývá ~${zbyva} s` : '');
+    $('prubehBar').value = hotovo / celkem;
+  };
+  ukazPrubeh();
+  const logo = rezim === 'hlavni' && potrebujeLogo() ? await logoProHlavniVlakno() : null;
+  const smycka = async pracant => {
+    for (let p; !davka.zruseno && (p = fronta.shift());) {
+      p.stav = 'bezi'; p.chyba = null; obnovRadek(p);
+      try {
+        p.vysledek = pracant ? await pracant.zpracuj(p) : await K.zpracujSoubor(p.soubor, nast.kroky, nast.vystup, p.meta.typ, logo);
+        p.stav = 'hotovo';
+      } catch (e) {
+        p.stav = ''; p.vysledek = null;
+        if (!davka.zruseno) p.chyba = e.message;
+      }
+      hotovo++; ukazPrubeh(); obnovRadek(p);
+      if (!pracant) await new Promise(r => setTimeout(r));   // hlavní vlákno: nechat dýchat UI
+    }
+  };
+  if (rezim === 'worker') {
+    davka.pracanti = Array.from({ length: Math.min(pocetPracantu, celkem) }, () => new Pracant());
+    await Promise.all(davka.pracanti.map(smycka));
+    davka.pracanti.forEach(w => w.w.terminate());
+  } else await smycka(null);
+  const zruseno = davka.zruseno;
+  davka = null;
+  $('prubeh').hidden = true; $('btnZpracovat').disabled = false;
+  vykresliSeznam();
+  const chyby = polozky.filter(p => p.chyba).length;
+  if (zruseno) Dialog.info('Zpracování zrušeno.');
+  else Dialog.info(`Hotovo: ${celkem - chyby} obrázků za ${((performance.now() - start) / 1000).toFixed(1).replace('.', ',')} s` + (chyby ? `, ${chyby} s chybou` : '') + '.');
+  return !zruseno;
+}
+function zrusDavku() {
+  if (!davka) return;
+  davka.zruseno = true;
+  davka.pracanti.forEach(w => w.zrus(new Error('zrušeno')));
+}
+
+/* ---------- uložení ---------- */
+function stahni(blob, jmeno) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = jmeno;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+async function pripravVysledky() {
+  if (!(await zpracujVse(true))) return null;
+  const jmena = vystupniJmena();
+  return polozky.map((p, i) => ({ p, jm: jmena[i] })).filter(x => x.p.vysledek);
+}
+async function ulozZip() {
+  const v = await pripravVysledky();
+  if (!v || !v.length) return;
+  const data = await Promise.all(v.map(async x => ({ jmeno: x.jm.cela, data: new Uint8Array(await x.p.vysledek.blob.arrayBuffer()) })));
+  let casti;
+  try { casti = J.zip(data); } catch (e) { return Dialog.chyba(e.message); }
+  const koreny = new Set(polozky.map(p => p.cesta.includes('/') ? p.cesta.split('/')[0] : ''));
+  const nazev = koreny.size === 1 && [...koreny][0] ? [...koreny][0] : 'obrazky_' + J.formatujDatum(J.datumZDate(new Date()), 'YYYY-MM-DD');
+  stahni(new Blob(casti, { type: 'application/zip' }), nazev + '.zip');
+}
+async function ulozJednotlive() {
+  const v = await pripravVysledky();
+  if (!v || !v.length) return;
+  if (v.length > 5 && !(await Dialog.potvrd(`Stáhnout ${v.length} souborů jednotlivě? Prohlížeč se může zeptat na povolení více stažení. Podsložky se nezachovají.`))) return;
+  for (const x of v) { stahni(x.p.vysledek.blob, x.jm.jmeno); await new Promise(r => setTimeout(r, 250)); }
+}
+async function ulozVybrany() {
+  const p = polozky.find(x => x.id === vybranyId);
+  if (!p) return Dialog.info('Vyberte obrázek v seznamu.');
+  try {
+    if (!p.vysledek) p.vysledek = await zpracujJeden(p);
+    stahni(p.vysledek.blob, vystupniJmena()[polozky.indexOf(p)].jmeno);
+    obnovRadek(p);
+  } catch (e) { Dialog.chyba('Zpracování selhalo: ' + e.message); }
+}
+async function ulozDoSlozky() {
+  if (!('showDirectoryPicker' in window)) return Dialog.chyba('Tento prohlížeč neumí ukládat přímo do složky (File System Access API). Použijte ZIP.');
+  let koren;
+  try { koren = await showDirectoryPicker({ mode: 'readwrite', id: 'obrazky_davka' }); }
+  catch (e) { return; }   // uživatel zrušil výběr
+  const v = await pripravVysledky();
+  if (!v || !v.length) return;
+  const slozky = new Map([['', koren]]);
+  const slozka = async cesta => {
+    if (slozky.has(cesta)) return slozky.get(cesta);
+    const i = cesta.lastIndexOf('/', cesta.length - 2);
+    const rodic = await slozka(i < 0 ? '' : cesta.slice(0, i + 1));
+    const h = await rodic.getDirectoryHandle(cesta.slice(i + 1, -1), { create: true });
+    slozky.set(cesta, h);
+    return h;
+  };
+  try {
+    let existuje = 0;
+    for (const x of v) {
+      const s = x.jm.cela.slice(0, x.jm.cela.length - x.jm.jmeno.length);
+      try { await (await slozka(s)).getFileHandle(x.jm.jmeno); existuje++; } catch (e) { /* neexistuje */ }
+    }
+    if (existuje && !(await Dialog.potvrd(`Ve složce už existuje ${existuje} souborů se stejným jménem. Přepsat je?`))) return;
+    for (const x of v) {
+      const s = x.jm.cela.slice(0, x.jm.cela.length - x.jm.jmeno.length);
+      const fh = await (await slozka(s)).getFileHandle(x.jm.jmeno, { create: true });
+      const w = await fh.createWritable();
+      await w.write(x.p.vysledek.blob); await w.close();
+    }
+    Dialog.info(`Uloženo ${v.length} souborů do složky „${koren.name}“.`);
+  } catch (e) { Dialog.chyba('Ukládání do složky selhalo: ' + e.message); }
+}
+
+/* ---------- náhled před/po ---------- */
+let nahledSeq = 0, nahledPredUrl = null, nahledPoUrl = null, odhadPomer = null;
+async function obnovNahled() {
+  const p = polozky.find(x => x.id === vybranyId), seq = ++nahledSeq;
+  const zprava = t => { $('pZprava').hidden = !t; $('pZprava').textContent = t || ''; $('porovnani').classList.toggle('bez', !$('pPo').getAttribute('src')); };
+  if (!p) {
+    $('pPred').removeAttribute('src'); $('pPo').removeAttribute('src');
+    $('nahledJmeno').textContent = ''; $('nahledInfo').innerHTML = '';
+    return zprava(polozky.length ? 'Vyberte obrázek ze seznamu.' : 'Zatím žádné obrázky.');
+  }
+  $('nahledJmeno').textContent = '· ' + p.soubor.name;
+  if (nahledPredUrl) URL.revokeObjectURL(nahledPredUrl);
+  nahledPredUrl = URL.createObjectURL(p.soubor);
+  $('pPred').src = nahledPredUrl;
+  if (p.stav === 'chyba-cteni') { $('pPo').removeAttribute('src'); return zprava(p.chyba); }
+  if (potrebujeLogo() && !vodoznakBlob) { $('pPo').removeAttribute('src'); return zprava('Vodoznak: vyberte obrázek (logo).'); }
+  zprava('⏳ Počítám náhled…');
+  let r;
+  try { r = p.vysledek || await zpracujJeden(p); }
+  catch (e) { if (seq === nahledSeq) zprava('⚠️ ' + e.message); return; }
+  if (seq !== nahledSeq) return;
+  if (!p.vysledek && polozky.includes(p)) { p.vysledek = r; p.stav = 'hotovo'; obnovRadek(p); }
+  if (nahledPoUrl) URL.revokeObjectURL(nahledPoUrl);
+  nahledPoUrl = URL.createObjectURL(r.blob);
+  $('pPo').src = nahledPoUrl;
+  zprava('');
+  const jinyPomer = p.w && Math.abs(r.w / r.h - p.w / p.h) > 0.01;
+  odhadPomer = r.blob.size / p.soubor.size;
+  const proc = Math.round((odhadPomer - 1) * 100);
+  const celkem = polozky.reduce((s, x) => s + x.soubor.size, 0);
+  $('nahledInfo').innerHTML =
+    `Před: <b>${p.w || '?'}×${p.h || '?'}</b>, ${J.formatVelikost(p.soubor.size)}${p.meta.exif ? ' · EXIF' + (p.meta.gps ? ' + 📍GPS' : '') + (p.meta.model ? ' (' + esc(p.meta.model) + ')' : '') : ''}<br>` +
+    `Po: <b>${r.w}×${r.h}</b>, <b>${J.formatVelikost(r.blob.size)}</b> ${r.format.toUpperCase()}${r.kvalita != null ? ', kvalita ' + r.kvalita : ''} · <span class="${proc <= 0 ? 'uspora' : 'hor'}">${proc > 0 ? '+' : ''}${proc} %</span>` +
+    (r.splneno ? '' : ' · <span class="hor">cílovou velikost nešlo splnit ani při nejnižší kvalitě</span>') +
+    (jinyPomer ? '<br><span class="pozn">Jiný poměr stran (ořez, otočení, okraj) – porovnání posuvníkem je jen orientační.</span>' : '') +
+    (polozky.length > 1 ? `<br>Odhad pro celou dávku: ${J.formatVelikost(celkem)} → ~<b>${J.formatVelikost(celkem * odhadPomer)}</b> <span class="pozn">(podle tohoto obrázku)</span>` : '');
+  obnovSouhrn(posledniJmena);
+}
+$('pPosuv').addEventListener('input', e => $('porovnani').style.setProperty('--x', e.target.value + '%'));
+
+/* ---------- předvolby ---------- */
+function vykresliPredvolby() {
+  $('pvVestavene').innerHTML = J.VESTAVENE_PREDVOLBY.map((p, i) => `<button class="tl" data-pv-vest="${i}">${esc(p.nazev)}</button>`).join('');
+  const moje = nactiJson(KLIC_PV, []);
+  $('pvMoje').innerHTML = moje.length ? moje.map((p, i) => `<div class="radek-pv"><button class="tl" data-pv-moje="${i}">${esc(p.nazev)}</button><button class="tl" data-pv-smazat="${i}" title="Smazat předvolbu" aria-label="Smazat předvolbu">✕</button></div>`).join('')
+    : '<div class="prazdno">Zatím žádné – uložte si svůj řetěz kroků.</div>';
+}
+function pouzijNastaveni(n) {
+  nast = J.normalizujNastaveni(JSON.parse(JSON.stringify(n)));
+  if (nast.vystup.format === 'avif' && !podporaAvif) nast.vystup.format = 'webp';
+  sbalene.clear(); vykresliKroky(); vyplnVystup(); zmenaNastaveni();
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-pv-vest],[data-pv-moje],[data-pv-smazat]');
+  if (!b) return;
+  zavriNabidky();
+  const moje = nactiJson(KLIC_PV, []);
+  if (b.dataset.pvVest) { pouzijNastaveni(J.VESTAVENE_PREDVOLBY[b.dataset.pvVest]); Dialog.info('Načteno: ' + J.VESTAVENE_PREDVOLBY[b.dataset.pvVest].nazev); }
+  else if (b.dataset.pvMoje) { pouzijNastaveni(moje[b.dataset.pvMoje]); Dialog.info('Načteno: ' + moje[b.dataset.pvMoje].nazev); }
+  else if (await Dialog.potvrd(`Smazat předvolbu „${moje[b.dataset.pvSmazat].nazev}“?`)) {
+    moje.splice(Number(b.dataset.pvSmazat), 1); ulozJson(KLIC_PV, moje); vykresliPredvolby();
+  }
+});
+async function ulozPredvolbu() {
+  const nazev = await Dialog.zeptej('Název předvolby', nast.kroky.map(k => J.TYPY_KROKU[k.typ].nazev).join(' + ') || 'Převod formátu');
+  if (!nazev || !nazev.trim()) return;
+  const moje = nactiJson(KLIC_PV, []);
+  const i = moje.findIndex(p => p.nazev === nazev.trim());
+  const pv = Object.assign({ nazev: nazev.trim() }, JSON.parse(JSON.stringify(nast)));
+  if (i >= 0) { if (!(await Dialog.potvrd('Předvolba s tímto názvem existuje. Přepsat?'))) return; moje[i] = pv; }
+  else moje.push(pv);
+  ulozJson(KLIC_PV, moje); vykresliPredvolby();
+  Dialog.info('Předvolba uložena.' + (potrebujeLogo() ? ' Obrázek vodoznaku se pamatuje zvlášť (jeden společný).' : ''));
+}
+
+/* ---------- nabídky a příkazy ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  if (n.id === 'nabPredvolby') vykresliPredvolby();
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+const PRIKAZY = {
+  pridatSoubory: () => $('vstSoubory').click(),
+  pridatSlozku: () => $('vstSlozka').click(),
+  seraditNazev: () => serad((a, b) => porovnej(a.cesta, b.cesta)),
+  seraditDatum: () => serad((a, b) => klicData(a).localeCompare(klicData(b)) || porovnej(a.cesta, b.cesta)),
+  seraditVelikost: () => serad((a, b) => b.soubor.size - a.soubor.size),
+  obratit: () => { polozky.reverse(); vykresliSeznam(); },
+  odebrat: () => odeber(polozky.find(p => p.id === vybranyId)),
+  vyprazdnit: async () => {
+    if (!polozky.length || !(await Dialog.potvrd(`Odebrat všech ${polozky.length} obrázků ze seznamu? (Soubory na disku zůstanou.)`))) return;
+    zrusDavku();
+    polozky.forEach(p => p.nahledUrl && URL.revokeObjectURL(p.nahledUrl));
+    polozky = []; vybranyId = null; odhadPomer = null; vykresliSeznam(); obnovNahled();
+  },
+  ulozitPredvolbu: ulozPredvolbu,
+  vychozi: async () => { if (await Dialog.potvrd('Obnovit výchozí nastavení kroků, výstupu i jmen?')) pouzijNastaveni(VYCHOZI); },
+  zpracovat: () => zpracujVse(true),
+  zrusit: zrusDavku,
+  ulozitZip: ulozZip,
+  ulozitJednotlive: ulozJednotlive,
+  ulozitSlozka: ulozDoSlozky,
+  ulozitVybrany: ulozVybrany,
+  vybratLogo: () => $('vstLogo').click(),
+  napoveda: () => $('pomoc').showModal(),
+};
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-prikaz]');
+  if (b && !b.disabled) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[b.dataset.prikaz](); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+addEventListener('resize', zavriNabidky);
+$('pomoc').addEventListener('click', e => { if (e.target.closest('[data-zavrit]') || e.target === $('pomoc')) $('pomoc').close(); });
+
+addEventListener('keydown', e => {
+  const ctrl = e.ctrlKey || e.metaKey, k = e.key;
+  const vPoli = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName) || $('pomoc').open;
+  if (ctrl && k.toLowerCase() === 'o') { e.preventDefault(); return PRIKAZY[e.shiftKey ? 'pridatSlozku' : 'pridatSoubory'](); }
+  if (ctrl && k === 'Enter') { e.preventDefault(); return PRIKAZY.zpracovat(); }
+  if (ctrl && k.toLowerCase() === 's') { e.preventDefault(); return PRIKAZY.ulozitZip(); }
+  if (k === 'F1') { e.preventDefault(); return PRIKAZY.napoveda(); }
+  if (k === 'Escape') { zavriNabidky(); zrusDavku(); return; }
+  if (vPoli || ctrl) return;
+  const i = polozky.findIndex(p => p.id === vybranyId);
+  if ((k === 'ArrowDown' || k === 'ArrowUp') && polozky.length) {
+    e.preventDefault();
+    const smer = k === 'ArrowDown' ? 1 : -1;
+    if (e.altKey && i >= 0) return posun(polozky[i], smer);
+    return vyber(polozky[Math.max(0, Math.min(polozky.length - 1, i + smer))]);
+  }
+  if (k === 'Delete' && i >= 0) { e.preventDefault(); odeber(polozky[i]); }
+});
+
+/* ---------- start ---------- */
+if (!('showDirectoryPicker' in window)) { $('mnSlozka').disabled = true; $('mnSlozka').title = 'Prohlížeč nepodporuje File System Access API – použijte ZIP'; }
+vykresliKroky(); vyplnVystup(); vykresliSeznam(); obnovNahled();
+zjistiPodporu();
+dbNacti('vodoznak').then(b => { if (b) { nastavLogo(b); if (potrebujeLogo()) obnovNahled(); } }).catch(() => {});
+
+/* pro testy */
+window.OBRDAVKA_APP = { pridejSoubory, zpracujVse, vystupniJmena, get polozky() { return polozky; }, get nast() { return nast; }, pouzijNastaveni, ulozZip, vyber };
+</script>
+</body>
+</html>

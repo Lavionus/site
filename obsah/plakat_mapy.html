@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗺️ Plakát mapy</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<link rel="stylesheet" href="lib/maplibre/maplibre-gl.css">
+<script src="lib/maplibre/maplibre-gl.js"></script>
+<script src="fonty/fonty.js"></script>
+<script src="plakat_mapy/jadro.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+[hidden]{display:none !important}
+input,select,textarea,button{font-family:inherit}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .hledat{flex:1 1 240px;flex-shrink:1;min-width:150px;display:flex;gap:4px;position:relative}
+.lista .hledat .vstup{flex:1;min-width:0}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1000px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+.vysledky{position:fixed;max-height:60vh;overflow:auto;z-index:61;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:4px}
+.vysledky button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--text);padding:7px 9px;border-radius:5px;cursor:pointer;font-size:.84rem}
+.vysledky button:hover,.vysledky button:focus{background:var(--bg-hover)}
+.vysledky small{color:var(--text-faint)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;box-sizing:border-box}
+
+/* rozložení: panel nastavení | náhled */
+.rozlozeni{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr)}
+aside{background:var(--bg-panel);border-right:1px solid var(--border);overflow:auto;padding:4px 12px 40px}
+details{border-bottom:1px solid var(--border);padding:6px 0}
+summary{cursor:pointer;font-weight:600;padding:6px 0;font-size:.9rem;list-style:none;display:flex;align-items:center;gap:6px}
+summary::before{content:'▸';color:var(--text-faint);font-size:.8rem}
+details[open] > summary::before{content:'▾'}
+.pole{display:grid;grid-template-columns:110px minmax(0,1fr);align-items:center;gap:6px 8px;margin:6px 0;font-size:.84rem}
+.pole > label,.pole > span{color:var(--text-muted)}
+.pole .vstup,.pole select{width:100%}
+.radek{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.radek .vstup{flex:1;min-width:0}
+.hodnota{font-variant-numeric:tabular-nums;color:var(--text-muted);font-size:.78rem;min-width:3.2em;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.radek input[type=range]{flex:1;width:auto;min-width:0}
+.radek{flex-wrap:nowrap}
+.zaskrt{display:flex;align-items:center;gap:6px;font-size:.84rem;margin:5px 0;cursor:pointer}
+.segment{display:flex;flex-wrap:wrap;gap:3px}
+.segment button{flex:1 1 auto;background:var(--bg-control);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 6px;font-size:.8rem;cursor:pointer}
+.segment button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.palety{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;margin:6px 0}
+.paleta{border:2px solid var(--border);border-radius:8px;cursor:pointer;padding:0;background:none;overflow:hidden;color:var(--text);font-size:.72rem;text-align:center}
+.paleta[aria-pressed="true"]{border-color:var(--accent)}
+.paleta .vzor{height:38px;display:block}
+.paleta span{display:block;padding:3px 2px;background:var(--bg-elevated)}
+.barvy{display:grid;grid-template-columns:auto 34px 1fr;gap:4px 8px;align-items:center;font-size:.8rem}
+.barvy input[type=color]{width:34px;height:24px;padding:0;border:1px solid var(--border);border-radius:4px;background:none;cursor:pointer}
+.barvy input[type=color]:disabled{opacity:.3}
+.barvy .nazev{color:var(--text-muted)}
+.pozn{font-size:.76rem;color:var(--text-faint);line-height:1.4;margin:6px 0}
+
+main{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:18px;min-height:0}
+#plakat{position:relative;box-shadow:0 6px 28px rgba(0,0,0,.35);flex-shrink:0}
+#plakat canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+#prekryv{pointer-events:none}
+#mapa{position:absolute}
+#mapa .maplibregl-canvas{cursor:grab}
+.stav{position:absolute;left:10px;bottom:8px;font-size:.75rem;color:var(--text-faint);pointer-events:none}
+.bezgl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:.8rem;background:rgba(127,127,127,.15)}
+.nahled-info{position:absolute;right:10px;top:8px;font-size:.75rem;color:var(--text-faint)}
+
+/* dialogy */
+dialog{margin:auto;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:16px 18px;max-width:min(560px,calc(100vw - 24px));width:100%;box-sizing:border-box}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 10px;font-size:1.05rem}
+dialog .tlacitka{display:flex;gap:6px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.ulozene{display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow:auto}
+.ulozene .polozka{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 8px}
+.ulozene .polozka b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ulozene small{color:var(--text-faint)}
+.napoveda p,.napoveda li{line-height:1.5;font-size:.86rem}
+.napoveda kbd{border:1px solid var(--border);border-radius:4px;padding:0 5px;font-size:.78rem}
+.prubeh{font-size:.84rem;color:var(--text-muted);margin-top:8px;min-height:1.2em}
+.varovani{color:var(--warn)}
+.pretahni{position:fixed;inset:0;z-index:80;background:var(--accent-soft);border:3px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.2rem;pointer-events:none}
+
+@media (max-width:760px){
+  body{height:auto;overflow:auto}
+  .rozlozeni{display:flex;flex-direction:column-reverse}
+  aside{border-right:0;border-top:1px solid var(--border);overflow:visible}
+  main{height:min(78vh,135vw);padding:10px}
+  .lista{flex-wrap:wrap}
+  .nahled-info{display:none}
+  .lista .hledat{flex-basis:100%;order:9}
+  .pole{grid-template-columns:96px minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="lista">
+  <h1>🗺️ Plakát mapy</h1>
+  <button class="tl" data-nabidka="nabSoubor">📁<span class="txt"> Soubor</span> ▾</button>
+  <button class="tl" data-nabidka="nabZobrazit">👁<span class="txt"> Zobrazit</span> ▾</button>
+  <button class="tl" data-nabidka="nabNapoveda">❓<span class="txt"> Nápověda</span> ▾</button>
+  <form class="hledat" id="hledatForm" autocomplete="off">
+    <input class="vstup" id="hledat" type="search" placeholder="Hledat místo nebo souřadnice (50.0755, 14.4378)" aria-label="Hledat místo">
+    <button class="tl" type="submit" title="Hledat (Enter)">🔍</button>
+    <div class="vysledky" id="vysledky" hidden></div>
+  </form>
+  <button class="tl hlavni" data-prikaz="export" title="Export PNG/PDF (Ctrl+E)">⬇<span class="txt"> Export</span></button>
+</div>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">🆕 Nový plakát</button>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="ulozene">📂 Uložené plakáty…</button>
+  <hr>
+  <button class="tl" data-prikaz="export">🖼 Export PNG / PDF… <kbd>Ctrl+E</kbd></button>
+  <button class="tl" data-prikaz="jsonVen">📤 Uložit nastavení do souboru (.json)</button>
+  <button class="tl" data-prikaz="jsonDovnitr">📥 Načíst nastavení ze souboru…</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl prep" data-prikaz="popisky" id="prepPopisky">Popisky na mapě</button>
+  <button class="tl" data-prikaz="vodorovne">🧭 Sever nahoru (zrušit natočení)</button>
+  <hr>
+  <button class="tl" data-prikaz="znackaStred">📍 Značku na střed mapy</button>
+  <button class="tl" data-prikaz="naZnacku">🎯 Mapu na značku</button>
+</div>
+<div id="nabNapoveda" class="nabidka" hidden>
+  <button class="tl" data-prikaz="napoveda">📖 Jak na to</button>
+  <button class="tl" data-prikaz="zdroje">ⓘ Zdroje dat a licence</button>
+</div>
+<input type="file" id="soubor" accept=".json,application/json" hidden>
+
+<div class="rozlozeni">
+  <aside id="panel">
+    <details open>
+      <summary>📍 Místo a výřez</summary>
+      <div class="segment" id="rezim" style="margin:6px 0">
+        <button data-h="mapa" aria-pressed="true">🗺️ Mapa</button>
+        <button data-h="hvezdy" aria-pressed="false">✨ Hvězdná obloha</button>
+      </div>
+      <div class="pole"><label for="souradnice">Souřadnice</label>
+        <div class="radek"><input class="vstup" id="souradnice" placeholder="50.0755, 14.4378"><button class="tl" id="naSouradnice" title="Přesunout">↵</button></div></div>
+      <div class="pole" data-jen="mapa"><label for="zoom">Přiblížení</label><div class="radek"><input type="range" id="zoom" min="2" max="18" step="0.1"><span class="hodnota" id="zoomH"></span></div></div>
+      <div class="pole" data-jen="mapa"><label for="natoceni">Natočení</label><div class="radek"><input type="range" id="natoceni" min="-180" max="180" step="1"><span class="hodnota" id="natoceniH"></span></div></div>
+      <div data-jen="hvezdy">
+        <div class="pole"><label for="datum">Datum a čas</label><input class="vstup" type="datetime-local" id="datum"></div>
+        <div class="pole"><label for="pasmo">Pásmo</label><select class="vstup" id="pasmo"></select></div>
+        <label class="zaskrt"><input type="checkbox" id="souhvezdi"> Čáry souhvězdí</label>
+        <label class="zaskrt"><input type="checkbox" id="mrizka"> Mřížka výšky a azimutu</label>
+        <div class="pole"><label for="mezMag">Nejslabší hvězdy</label><div class="radek"><input type="range" id="mezMag" min="3" max="6.5" step="0.1"><span class="hodnota" id="mezMagH"></span></div></div>
+        <button class="tl" id="datumDoTextu">Vložit datum do podtitulku</button>
+        <p class="pozn">Obloha nad zadaným místem, sever nahoře, východ vlevo (pohled vzhůru). Hvězdy z katalogu stránky Hvězdářský dalekohled.</p>
+      </div>
+    </details>
+
+    <details open>
+      <summary>🎨 Styl mapy</summary>
+      <div class="palety" id="palety"></div>
+      <label class="zaskrt" data-jen="mapa"><input type="checkbox" id="popisky"> Popisky (názvy míst a ulic)</label>
+      <details id="editor">
+        <summary>Editor barev vrstev</summary>
+        <div class="barvy" id="barvy"></div>
+        <div class="pole" data-jen="mapa"><label for="tloustka">Tloušťka silnic</label><div class="radek"><input type="range" id="tloustka" min="0.3" max="3" step="0.05"><span class="hodnota" id="tloustkaH"></span></div></div>
+      </details>
+    </details>
+
+    <details open>
+      <summary>📐 Plakát</summary>
+      <div class="pole"><label for="format">Formát</label><select class="vstup" id="format"></select></div>
+      <div class="pole" id="vlastniPole" hidden><span>Rozměr (mm)</span>
+        <div class="radek"><input class="vstup" type="number" id="vlS" min="50" max="2000"> × <input class="vstup" type="number" id="vlV" min="50" max="2000"></div></div>
+      <div class="pole"><span>Orientace</span><div class="segment" id="orientace"><button data-h="vyska">▯ Na výšku</button><button data-h="sirka">▭ Na šířku</button></div></div>
+      <div class="pole"><span>Maska</span><div class="segment" id="tvar"><button data-h="obdelnik">▭ Obdélník</button><button data-h="kruh">◯ Kruh</button><button data-h="srdce">♡ Srdce</button></div></div>
+      <div class="pole"><span>Text</span><div class="segment" id="rozlozeniText"><button data-h="dole">Dole</button><button data-h="pres">Přes mapu</button><button data-h="pruh">V pruhu</button></div></div>
+      <div class="pole"><label for="okraj">Okraj</label><div class="radek"><input type="range" id="okraj" min="0" max="15" step="0.5"><span class="hodnota" id="okrajH"></span></div></div>
+      <div class="pole"><label for="ramecek">Rámeček</label><select class="vstup" id="ramecek"><option value="zadny">žádný</option><option value="tenky">tenký</option><option value="silny">silný</option><option value="dvojity">dvojitý</option></select></div>
+      <div class="pole"><label for="znacka">Značka</label><select class="vstup" id="znacka"><option value="zadna">žádná</option><option value="pin">špendlík</option><option value="kruh">kroužek</option><option value="srdce">srdíčko</option><option value="hvezda">hvězdička</option></select></div>
+    </details>
+
+    <details open>
+      <summary>🔤 Text</summary>
+      <div class="pole"><label for="titulek">Titulek</label><input class="vstup" id="titulek" maxlength="60"></div>
+      <div class="pole"><label for="podtitulek">Podtitulek</label><input class="vstup" id="podtitulek" maxlength="90"></div>
+      <label class="zaskrt"><input type="checkbox" id="souradniceText"> Souřadnice pod textem</label>
+      <label class="zaskrt"><input type="checkbox" id="velkaPismena"> Titulek velkými písmeny</label>
+      <div class="pole"><label for="pismo">Písmo titulku</label><select class="vstup" id="pismo"></select></div>
+      <div class="pole"><label for="pismoPodtitulku">Písmo podtitulku</label><select class="vstup" id="pismoPodtitulku"></select></div>
+      <div class="pole"><label for="velikostTextu">Velikost</label><div class="radek"><input type="range" id="velikostTextu" min="0.5" max="2" step="0.05"><span class="hodnota" id="velikostTextuH"></span></div></div>
+      <div class="pole"><label for="prolozeni">Proložení</label><div class="radek"><input type="range" id="prolozeni" min="0" max="1" step="0.02"><span class="hodnota" id="prolozeniH"></span></div></div>
+    </details>
+    <p class="pozn">Vše běží lokálně v prohlížeči – nic se nikam neodesílá. Ze sítě se stahují jen mapové dlaždice (OpenFreeMap) a výsledky hledání (Nominatim).</p>
+  </aside>
+  <main id="hlavni">
+    <div id="plakat">
+      <canvas id="podklad"></canvas>
+      <div id="mapa"></div>
+      <canvas id="prekryv"></canvas>
+    </div>
+    <div class="nahled-info" id="nahledInfo"></div>
+    <div class="stav" id="stav"></div>
+  </main>
+</div>
+
+<dialog id="dlgExport">
+  <h2>⬇ Export plakátu</h2>
+  <div class="pole"><span>Formát</span><div class="segment" id="exFormat"><button data-h="png" aria-pressed="true">PNG</button><button data-h="pdf" aria-pressed="false">PDF</button></div></div>
+  <div class="pole"><label for="exDpi">Rozlišení</label><select class="vstup" id="exDpi"><option value="100">100 DPI (náhled)</option><option value="150">150 DPI</option><option value="200">200 DPI</option><option value="240">240 DPI</option><option value="300" selected>300 DPI (tisk)</option></select></div>
+  <div class="pole"><label for="exDetail">Podrobnost mapy</label><select class="vstup" id="exDetail"><option value="1">jako náhled</option><option value="1.5">1,5× víc ulic</option><option value="2">2× víc ulic</option></select></div>
+  <p class="pozn" id="exInfo"></p>
+  <p class="pozn">Mapa se vykreslí znovu ve skrytém plátně v plném rozlišení. Větší rozměry trvají déle a potřebují víc paměti; když je plakát nad možnosti grafické karty, nabídne se nižší DPI.</p>
+  <div class="prubeh" id="exPrubeh"></div>
+  <div class="tlacitka"><button class="tl" id="exZavrit">Zavřít</button><button class="tl hlavni" id="exStart">Exportovat</button></div>
+</dialog>
+
+<dialog id="dlgUlozene">
+  <h2>📂 Uložené plakáty</h2>
+  <div class="ulozene" id="seznamUlozenych"></div>
+  <div class="tlacitka"><button class="tl" id="ulZavrit">Zavřít</button></div>
+</dialog>
+
+<dialog id="dlgNapoveda" class="napoveda">
+  <h2>📖 Plakát mapy – jak na to</h2>
+  <ol>
+    <li><b>Místo</b> najdete v horním poli (název obce, ulice, památky) nebo zadáte souřadnice, např. <code>50.0755, 14.4378</code> či <code>50°4'31"N 14°26'16"E</code>.</li>
+    <li>Výřez posouváte myší přímo v náhledu, kolečkem přibližujete, pravým tlačítkem (nebo Ctrl + tažení) otáčíte. Přesně jde nastavit posuvníky vlevo.</li>
+    <li><b>Styl</b> vyberete z hotových palet; v editoru barev upravíte vodu, zeleň, budovy, pozadí a každou třídu silnic zvlášť (barva, tloušťka, skrytí).</li>
+    <li><b>Plakát</b>: formát, orientace, okraj, rámeček, maska tvaru (obdélník, kruh, srdce), rozložení textu a značka místa.</li>
+    <li><b>Export</b> vykreslí mapu znovu v plném rozlišení (150–300 DPI) do PNG nebo PDF. Atribuce OpenStreetMap je vždy v rohu plakátu.</li>
+    <li>Režim <b>Hvězdná obloha</b> nakreslí oblohu nad místem k zadanému datu a času – vhodné na památku narození, svatby…</li>
+  </ol>
+  <p>Klávesy: <kbd>Ctrl+S</kbd> uložit, <kbd>Ctrl+E</kbd> export, <kbd>/</kbd> hledat, <kbd>Esc</kbd> zavřít nabídku. Soubor <code>.json</code> s nastavením lze přetáhnout do okna.</p>
+  <p>Rozpracované plakáty se ukládají v prohlížeči (localStorage). Nic se neodesílá; ze sítě se stahují jen mapové dlaždice a výsledky hledání.</p>
+  <div class="tlacitka"><button class="tl" data-zavri>Zavřít</button></div>
+</dialog>
+
+<dialog id="dlgZdroje" class="napoveda">
+  <h2>ⓘ Zdroje dat a licence</h2>
+  <ul>
+    <li>Mapová data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap přispěvatelé</a> (ODbL), vektorové dlaždice <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> ve schématu <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a>. Plakát vždy nese atribuci v rohu – při tisku ji nezakrývejte.</li>
+    <li>Vyhledávání: <a href="https://nominatim.org/" target="_blank" rel="noopener">Nominatim</a> (© OpenStreetMap), nejvýš jeden dotaz za sekundu, jen po potvrzení.</li>
+    <li>Vykreslování: MapLibre GL JS (BSD-3), PDF: jsPDF (MIT), písma: SIL OFL / Apache 2.0 (složka fonty).</li>
+    <li>Hvězdy: Yale Bright Star Catalogue (volné dílo), čáry souhvězdí: d3-celestial © Olaf Frohn (BSD-3) – převzato ze stránky Hvězdářský dalekohled. Polohy J2000 bez precese (chyba do 0,4°).</li>
+  </ul>
+  <div class="tlacitka"><button class="tl" data-zavri>Zavřít</button></div>
+</dialog>
+
+<script src="plakat_mapy/ui.js"></script>
+</body>
+</html>

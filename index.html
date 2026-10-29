@@ -153,11 +153,14 @@
     }
 
     .menu-search-wrap {
+      display: flex;
+      gap: 6px;
       padding: 10px 10px 6px 10px;
     }
 
     .menu-search {
-      width: 100%;
+      flex: 1;
+      min-width: 0;
       background-color: var(--bg-input);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -171,6 +174,33 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 2px var(--accent-soft);
     }
+    /* vestavěný křížek je drobný – nahrazuje ho samostatné tlačítko */
+    .menu-search::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+    .menu-search-zrus {
+      flex: none;
+      align-self: stretch;
+      width: 34px;
+      display: grid;
+      place-items: center;
+      padding: 2px;
+      background-clip: content-box; /* podbarvení 2 px od okraje */
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    /* s textem v poli lehce červený, po najetí výrazněji */
+    .menu-search-zrus:not(:disabled) {
+      color: var(--danger);
+      background-color: color-mix(in srgb, var(--danger) 14%, transparent);
+    }
+    .menu-search-zrus:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--danger) 30%, transparent);
+    }
+    .menu-search-zrus:disabled { opacity: 0.45; cursor: default; }
 
     /* Rozbalovací tlačítko s kategoriemi (dřív pilulky pod hlavičkou —
        zabíraly nahoře v menu moc místa) */
@@ -561,6 +591,29 @@
       border-color: var(--accent);
     }
 
+    /* Volba jazyka – nabídka se generuje z rejstříku i18n/jazyky.js */
+    .jazyk-wrap { position: relative; }
+    .jazyk-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      z-index: 30;
+      min-width: 150px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 4px;
+    }
+    .ovladani .jazyk-menu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: none;
+    }
+    .ovladani .jazyk-menu button[aria-checked="true"] { color: var(--text); font-weight: 600; }
+
     /* zvýraznění při hledání */
     .sekce a.zvyrazneno {
       background-color: var(--accent-soft);
@@ -626,6 +679,10 @@
         <span id="stavAplikace" class="stav-stitek" hidden></span>
         <button id="btnDomu" title="Úvodní přehled">🏠</button>
         <button id="btnTema" title="Přepnout světlý / tmavý režim">🌙</button>
+        <span class="jazyk-wrap" id="jazykWrap" data-i18n="ne" hidden>
+          <button id="btnJazyk" title="Jazyk / Language" aria-haspopup="menu" aria-expanded="false" aria-controls="jazykMenu"></button>
+          <div class="jazyk-menu" id="jazykMenu" role="menu" hidden></div>
+        </span>
         <button id="btnInfo" title="O projektu – podmínky užívání a autorská práva">ℹ️</button>
         <button id="btnNastaveni" title="Nastavení – data uložená v prohlížeči">⚙️</button>
         <button id="btnNoveOkno" title="Otevřít aktuální aplikaci v novém okně">🗗</button>
@@ -641,6 +698,7 @@
         <div class="menu-top">
           <div class="menu-search-wrap">
             <input type="search" id="hledatMenu" class="menu-search" placeholder="🔍 Hledat aplikaci… (Ctrl+K)" autocomplete="off" />
+            <button type="button" id="zrusHledani" class="menu-search-zrus" title="Zrušit hledání" aria-label="Zrušit hledání" disabled>✕</button>
           </div>
           <a class="odkaz-metodus" href="https://lavionus.github.io/metodus/" target="_blank" rel="noopener" title="Samostatný web s výukovými aplikacemi">
             <svg class="znak" viewBox="0 0 655 488" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0,488) scale(0.1,-0.1)"><path d="M5911 4824 c-708 -239 -1389 -584 -1876 -950 -352 -264 -547 -485 -738 -835 -22 -40 -20 -42 -92 91 -182 335 -566 695 -1067 999 -428 259 -1117 569 -1582 710 -225 69 -459 -49 -526 -266 -33 -109 -31 -4397 3 -4463 39 -78 132 -121 215 -100 247 62 474 296 558 575 17 56 18 153 21 1635 1 866 2 1588 3 1604 0 40 33 34 285 -50 976 -324 1596 -753 1810 -1254 117 -274 117 -276 124 -1170 7 -837 2 -784 71 -843 111 -95 297 -66 363 56 22 42 22 42 28 817 5 741 6 779 26 865 124 529 489 910 1200 1252 354 169 962 387 984 351 5 -7 9 -727 9 -1599 0 -1587 0 -1587 25 -1673 45 -155 115 -267 238 -382 223 -208 448 -238 531 -72 26 52 26 52 26 2204 0 1529 -3 2168 -11 2206 -41 199 -219 348 -413 348 -35 0 -102 -17 -215 -56z"/></g></svg>
@@ -757,6 +815,15 @@
 
     // hledání bez diakritiky
     const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    // hledá se i podle názvu sekce (podkategorie) a skupiny (kategorie)
+    const skupinaPodleId = new Map(KATALOG_SKUPINY.map(g => [g.id, g.label]));
+    // v jiném jazyce se hledá česky i v tom jazyce (i18n.js, slovník _katalog)
+    const preloz = s => (window.I18N ? I18N.preloz(s) : s);
+    const dvojjazycne = s => (preloz(s) === s ? s : s + ' ' + preloz(s));
+    const tagyJazyka = soubor => (window.I18N ? I18N.tagy(soubor) : []);
+    const kontextHledani = new Map();
+    KATALOG_SEKCE.forEach(s => s.polozky.forEach(p => kontextHledani.set(p.soubor,
+      (kontextHledani.get(p.soubor) || '') + ' ' + dvojjazycne(s.nazev) + ' ' + dvojjazycne(skupinaPodleId.get(s.skupina) || ''))));
 
     /* ---- Ikony z balíku assets/index-icons ----
        Ikona nahrazuje úvodní emoji názvu. Co v mapě ikon chybí (nová
@@ -792,11 +859,12 @@
       a.href = '#' + p.soubor;               // klik = změna hashe -> hashchange otevře aplikaci
       a.dataset.page = p.soubor;
       naplnSIkonou(a, IKONY?.stranky[p.soubor], p.nazev);
-      a.dataset.hledani = norm(p.nazev + ' ' + (p.tagy || []).join(' '));
+      a.dataset.hledani = norm(dvojjazycne(p.nazev) + ' ' + [...(p.tagy || []), ...tagyJazyka(p.soubor)].join(' ')
+        + (kontextHledani.get(p.soubor) || ''));
       const stav = stavPodleId.get(p.stav);
       if (stav) {
         li.dataset.stav = stav.id;
-        a.title = `${p.nazev} – ${stav.label}: ${stav.popis}`;
+        a.title = `${preloz(p.nazev)} – ${preloz(stav.label)}: ${preloz(stav.popis)}`;
       }
       const st = document.createElement('button');
       st.className = 'hvezda';
@@ -984,6 +1052,40 @@
       window.open(aktualni || DOMOVSKA, '_blank');
     });
 
+    /* ---- Volba jazyka ---- */
+    // Jazyky bere z rejstříku (i18n/jazyky.js); testovací jazyk (stav 'test')
+    // jen když je zrovna zvolený. Po volbě se znovu načte celý rozcestník
+    // i s iframem – překlad se dělá jen při načtení stránky.
+    if (window.I18N) {
+      const jazykWrap = document.getElementById('jazykWrap');
+      const btnJazyk = document.getElementById('btnJazyk');
+      const jazykMenu = document.getElementById('jazykMenu');
+      const otevriJazyky = ano => {
+        jazykMenu.hidden = !ano;
+        btnJazyk.setAttribute('aria-expanded', ano);
+      };
+      btnJazyk.textContent = I18N.jazyk.toUpperCase();
+      for (const j of I18N.jazyky()) {
+        if (j.stav === 'test' && j.kod !== I18N.jazyk) continue;
+        const b = document.createElement('button');
+        b.setAttribute('role', 'menuitemradio');
+        b.setAttribute('aria-checked', j.kod === I18N.jazyk);
+        b.textContent = j.nazev + (j.stav === 'stable' ? '' : ' 🚧');
+        b.title = j.stav === 'stable' ? j.nazev : j.nazev + ' – překlad se připravuje / translation in progress';
+        b.addEventListener('click', () => {
+          otevriJazyky(false);
+          if (j.kod === I18N.jazyk) return;
+          uloz(localStorage, 'webapp_lang', j.kod);
+          location.reload();
+        });
+        jazykMenu.appendChild(b);
+      }
+      btnJazyk.addEventListener('click', () => otevriJazyky(jazykMenu.hidden));
+      document.addEventListener('click', e => { if (!jazykWrap.contains(e.target)) otevriJazyky(false); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') otevriJazyky(false); });
+      jazykWrap.hidden = false;
+    }
+
     /* ---- Přepínání tématu ---- */
     // theme.js už téma použil při načtení; tady se jen přepíná a rozesílá.
     const btnTema = document.getElementById('btnTema');
@@ -1064,7 +1166,7 @@
       b.dataset.stav = id;
       const pocet = KATALOG_SEKCE.reduce((n, s) =>
         n + s.polozky.filter(p => id === 'vse' || p.stav === id).length, 0);
-      b.title = `${popis} (${pocet})`;
+      b.title = `${preloz(popis)} (${pocet})`;
       if (id !== 'vse') {
         const t = document.createElement('span');
         t.className = 'tecka';
@@ -1105,6 +1207,7 @@
 
     function aplikujFiltr() {
       const q = aktualniDotaz();
+      document.getElementById('zrusHledani').disabled = !q;
       zrusKbFokus();
       if (q) {
         let celkemShod = 0;
@@ -1145,11 +1248,17 @@
       bezVysledku.classList.toggle('zobraz', celkem === 0);
     }
 
+    const zrusHledani = document.getElementById('zrusHledani');
     searchInputs.forEach(input => {
       input.addEventListener('input', () => {
         nastavDotaz(input.value);
         aplikujFiltr();
       });
+    });
+    zrusHledani.addEventListener('click', () => {
+      nastavDotaz('');
+      aplikujFiltr();
+      hledatMenu.focus();
     });
 
     /* ---- Klávesové ovládání ---- */

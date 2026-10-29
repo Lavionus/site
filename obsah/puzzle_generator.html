@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧩 Generátor puzzle z fotky</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="puzzle_generator/jadro.js"></script>
+<script src="puzzle_generator/vystup.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font)}
+body{min-height:100vh;display:flex;flex-direction:column}
+[hidden]{display:none!important}
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:0;z-index:40}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px;align-items:center}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+kbd{font-family:inherit;font-size:.7rem;color:var(--text-faint);border:1px solid var(--border);border-radius:4px;padding:0 5px}
+/* rozložení */
+.rozlozeni{display:grid;grid-template-columns:minmax(290px,350px) minmax(0,1fr);gap:12px;padding:12px;align-items:start;flex:1}
+.panel{display:flex;flex-direction:column;gap:10px;min-width:0}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 12px;min-width:0}
+.karta>summary{cursor:pointer;font-weight:600;font-size:.95rem;list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.karta>summary::-webkit-details-marker{display:none}
+.karta>summary::after{content:'▾';margin-left:auto;color:var(--text-faint)}
+.karta:not([open])>summary::after{transform:rotate(-90deg)}
+.karta[open]>summary{margin-bottom:6px}
+label.pop{display:block;font-size:.78rem;color:var(--text-faint);margin:8px 0 3px}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:6px 8px;font-size:.9rem;font-family:inherit}
+input[type=range]{padding:0;border:none;background:none;accent-color:var(--accent)}
+input[type=color]{padding:2px;height:32px}
+input[type=checkbox]{width:auto;accent-color:var(--accent)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input[type=file]{display:none}
+.mrizka2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.posuv{display:grid;grid-template-columns:minmax(0,1fr) 3.6em;gap:8px;align-items:center}
+.posuv output{font-size:.8rem;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted)}
+.chk{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--text-muted);font-size:.85rem;cursor:pointer}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 10px;border-radius:6px;cursor:pointer;font-size:.84rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tlacitka{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tlacitka .btn{flex:1 1 auto}
+.prepinac{display:flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden;flex-wrap:wrap}
+.prepinac button{flex:1 1 auto;background:var(--bg-control);color:var(--text);border:none;border-right:1px solid var(--border-strong);padding:6px 8px;cursor:pointer;font-size:.83rem;font-family:inherit}
+.prepinac button:last-child{border-right:none}
+.prepinac button[aria-pressed=true]{background:var(--accent);color:var(--on-accent,#fff)}
+.zona{border:2px dashed var(--border-strong);border-radius:8px;padding:12px 10px;text-align:center;color:var(--text-muted);font-size:.85rem;cursor:pointer;line-height:1.5}
+.zona:hover,.zona.nad,body.nad .zona{border-color:var(--accent);background:var(--accent-soft)}
+.zona b{color:var(--text)}
+.note{font-size:.76rem;color:var(--text-faint);line-height:1.5;margin:6px 0 0}
+.note b{color:var(--text-muted)}
+.plocha{position:sticky;top:56px;display:flex;flex-direction:column;gap:6px;min-width:0}
+#obalNahled{position:relative;height:calc(100vh - 150px);min-height:320px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-deep);touch-action:none}
+#nahled{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#nahled.tahne{cursor:grabbing}
+.stav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--text-muted)}
+.stav b{color:var(--text)}
+.zle{color:var(--danger);font-weight:600}.pozor{color:var(--warn);font-weight:600}.dobre{color:var(--ok);font-weight:600}
+.soukromi{font-size:.74rem;color:var(--text-faint)}
+/* hra */
+#hra{position:fixed;inset:0;z-index:50;background:var(--bg-deep);display:flex;flex-direction:column}
+#hra .lista{position:static}
+#hraObal{position:relative;flex:1;min-height:0;touch-action:none}
+#hraPlatno{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hraInfo{font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--text-muted);padding:0 6px}
+.hraInfo b{color:var(--text)}
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;background:var(--bg-elevated);color:var(--text);max-width:min(94vw,640px);padding:0;box-shadow:var(--shadow)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+dialog.okno .obsah{padding:16px 18px;max-height:75vh;overflow:auto;line-height:1.55;font-size:.9rem}
+dialog.okno h2{font-size:1.1rem;margin:0 0 8px}
+dialog.okno h3{font-size:.95rem;margin:14px 0 4px}
+dialog.okno .paticka{display:flex;justify-content:flex-end;gap:8px;padding:10px 18px;border-top:1px solid var(--border)}
+.seznamHer{display:flex;flex-direction:column;gap:6px}
+.seznamHer .radek{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--border);border-radius:8px;padding:6px}
+.seznamHer img{width:64px;height:48px;object-fit:cover;border-radius:4px;background:var(--bg-control)}
+.seznamHer small{color:var(--text-faint)}
+@media (max-width:900px){
+  .rozlozeni{grid-template-columns:minmax(0,1fr)}
+  .plocha{position:static;order:-1}
+  #obalNahled{height:min(60vh,520px);min-height:260px}
+}
+@media (max-width:420px){
+  .rozlozeni{padding:8px}
+  .lista h1{font-size:.92rem}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🧩 Generátor puzzle</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Fotka a exporty">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Puzzle"><span class="skup-nazev" aria-hidden="true">Puzzle</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPuzzle" title="Druh puzzle, nový tvar">🧩<span class="txt"> Puzzle</span> ▾</button>
+    <button class="tl" data-prikaz="novyTvar" title="Nový náhodný tvar dílků (R)">🎲<span class="txt"> Nový tvar</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabZobrazit" title="Co ukázat v náhledu">👁<span class="txt"> Zobrazit</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
+    <button class="tl" data-prikaz="svg" title="SVG řezací čáry pro laser / plotter (Ctrl+E)">✂️<span class="txt"> SVG</span></button>
+    <button class="tl" data-prikaz="pdf" title="PDF k tisku a vystřižení (Ctrl+P)">🖨️<span class="txt"> PDF</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="hrat" title="Skládat puzzle na obrazovce (G)">🎮<span class="txt"> Hrát</span></button>
+    <button class="tl" data-prikaz="ulozeneHry" title="Rozehrané hry">💾<span class="txt"> Uložené</span></button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Nápověda (F1)" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít fotku… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="ukazka">✨ Ukázková fotka</button>
+  <button class="tl" data-prikaz="odebrat">🗑 Odebrat fotku</button>
+  <hr>
+  <div class="titulek">Laser a plotter (1:1 v mm)</div>
+  <button class="tl" data-prikaz="svg">✂️ SVG řezací čáry <kbd>Ctrl+E</kbd></button>
+  <button class="tl" data-prikaz="dxf">📐 DXF řezací čáry (R12)</button>
+  <button class="tl" data-prikaz="svgRub">🔢 SVG rub s čísly (gravírování, zrcadlově)</button>
+  <hr>
+  <div class="titulek">Tisk a vystřižení</div>
+  <button class="tl" data-prikaz="pdf">🖨️ PDF fotky s řeznými linkami <kbd>Ctrl+P</kbd></button>
+  <button class="tl" data-prikaz="png">🖼️ PNG líc (fotka + čáry)</button>
+  <button class="tl" data-prikaz="pngRub">🖼️ PNG rub s čísly (zrcadlený)</button>
+</div>
+<div id="nabPuzzle" class="nabidka" hidden>
+  <div class="titulek">Druh</div>
+  <button class="tl prep" data-prikaz="druh-klasicke">Klasické se zámky</button>
+  <button class="tl prep" data-prikaz="druh-whimsy">Whimsy – tvar vyříznutý uprostřed</button>
+  <button class="tl prep" data-prikaz="druh-ctverce">Dětské čtverce bez zámků (2×2 až 4×4)</button>
+  <hr>
+  <button class="tl" data-prikaz="novyTvar">🎲 Nový tvar dílků <kbd>R</kbd></button>
+  <button class="tl" data-prikaz="prohodit">⇄ Prohodit šířku a výšku</button>
+  <button class="tl" data-prikaz="podleFotky">📷 Výška podle poměru fotky</button>
+  <button class="tl" data-prikaz="vychozi">↺ Výchozí nastavení</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl prep" data-prikaz="zobr-foto">Fotka</button>
+  <button class="tl prep" data-prikaz="zobr-cisla">Čísla dílků</button>
+  <button class="tl prep" data-prikaz="zobr-rub">Rub (zrcadlený, s čísly)</button>
+  <button class="tl prep" data-prikaz="zobr-listy">Rozdělení na listy papíru</button>
+</div>
+
+<div class="rozlozeni">
+  <div class="panel">
+    <details class="karta" open>
+      <summary>📷 Fotka</summary>
+      <div class="zona" id="zona" tabindex="0" role="button" aria-label="Vybrat fotku"><b>Přetáhněte fotku sem</b><br>nebo klepněte a vyberte soubor,<br>případně vložte ze schránky (<kbd>Ctrl</kbd>+<kbd>V</kbd>)</div>
+      <input type="file" id="soubor" accept="image/*">
+      <div class="tlacitka"><button type="button" class="btn" data-prikaz="ukazka">✨ Ukázková fotka</button></div>
+      <label class="pop" for="zoom">Přiblížení výřezu (posun tažením v náhledu)</label>
+      <div class="posuv"><input type="range" id="zoom" min="1" max="4" step="0.01" value="1"><output id="zoomOut"></output></div>
+      <p class="note" id="infoFoto">Bez fotky se generuje jen řezací šablona.</p>
+      <p class="soukromi">🔒 Fotka zůstává ve vašem prohlížeči, nikam se neodesílá.</p>
+    </details>
+
+    <details class="karta" open>
+      <summary>📏 Velikost puzzle</summary>
+      <div class="mrizka2">
+        <div><label class="pop" for="sirkaCm">Šířka (cm)</label><input type="number" id="sirkaCm" min="3" max="300" step="0.1"></div>
+        <div><label class="pop" for="vyskaCm">Výška (cm)</label><input type="number" id="vyskaCm" min="3" max="300" step="0.1"></div>
+      </div>
+      <label class="pop" for="predvolba">Předvolba</label>
+      <select id="predvolba">
+        <option value="">– vlastní –</option>
+        <option value="14.8x10.5">A6 / pohlednice 14,8 × 10,5</option>
+        <option value="21x14.8">A5 21 × 14,8</option>
+        <option value="29.7x21">A4 29,7 × 21</option>
+        <option value="42x29.7">A3 42 × 29,7</option>
+        <option value="30x20">30 × 20 (foto 3:2)</option>
+        <option value="48x33">48 × 33 (500 dílků)</option>
+        <option value="68x48">68 × 48 (1000 dílků)</option>
+        <option value="20x20">20 × 20 čtverec</option>
+      </select>
+      <p class="note">Rozměr platí pro laser (1:1) i tisk.</p>
+    </details>
+
+    <details class="karta" open>
+      <summary>🧩 Dílky</summary>
+      <div class="prepinac" id="druh" role="group" aria-label="Druh puzzle">
+        <button type="button" data-h="klasicke">Klasické</button><button type="button" data-h="whimsy">Whimsy</button><button type="button" data-h="ctverce">Dětské</button>
+      </div>
+      <div class="prepinac" id="rezim" role="group" aria-label="Zadání počtu" style="margin-top:8px">
+        <button type="button" data-h="celkem">Celkem dílků</button><button type="button" data-h="mrizka">Sloupce × řádky</button>
+      </div>
+      <div id="bCelkem"><label class="pop" for="celkem">Počet dílků (mřížka se dopočítá podle poměru stran)</label>
+        <input type="number" id="celkem" min="2" max="2000" step="1" list="celkemSeznam">
+        <datalist id="celkemSeznam"><option value="12"><option value="24"><option value="35"><option value="48"><option value="100"><option value="150"><option value="300"><option value="500"><option value="1000"></datalist></div>
+      <div id="bMrizka" class="mrizka2"><div><label class="pop" for="sloupce">Sloupce</label><input type="number" id="sloupce" min="1" max="60" step="1"></div>
+        <div><label class="pop" for="radky">Řádky</label><input type="number" id="radky" min="1" max="60" step="1"></div></div>
+      <p class="note" id="infoDilky"></p>
+    </details>
+
+    <details class="karta" open id="kZamky">
+      <summary>🔗 Zámky</summary>
+      <label class="pop" for="tvar">Tvar zámku</label>
+      <select id="tvar"></select>
+      <label class="pop" for="velikost">Velikost zámku (% dílku)</label>
+      <div class="posuv"><input type="range" id="velikost" min="6" max="14" step="0.5"><output id="velikostOut"></output></div>
+      <label class="pop" for="nahodnost">Náhodnost tvaru a mřížky</label>
+      <div class="posuv"><input type="range" id="nahodnost" min="0" max="100" step="1"><output id="nahodnostOut"></output></div>
+      <div class="mrizka2"><div><label class="pop" for="seed">Semínko tvaru</label><input type="number" id="seed" min="1" max="999999" step="1"></div>
+        <div style="display:flex;align-items:flex-end"><button type="button" class="btn" data-prikaz="novyTvar" style="width:100%">🎲 Nový tvar</button></div></div>
+    </details>
+
+    <details class="karta" open>
+      <summary>⬜ Obrys a whimsy</summary>
+      <label class="pop" for="polomer">Zaoblení rohů obrysu (mm, 0 = rovné)</label>
+      <div class="posuv"><input type="range" id="polomer" min="0" max="40" step="1"><output id="polomerOut"></output></div>
+      <div id="bWhimsy">
+        <div class="mrizka2"><div><label class="pop" for="whimsy">Tvar uprostřed</label><select id="whimsy"></select></div>
+          <div><label class="pop" for="whimsyVel">Velikost (% dílku)</label><input type="number" id="whimsyVel" min="20" max="75" step="1"></div></div>
+        <p class="note">Tvar se vyřízne kolem středového uzlu mřížky; čtyři okolní dílky dostanou rovný řez k tvaru.</p>
+      </div>
+    </details>
+
+    <details class="karta" open>
+      <summary>✂️ Laser a plotter</summary>
+      <label class="pop" for="laser">Styl čáry</label>
+      <select id="laser"></select>
+      <div class="mrizka2"><div><label class="pop" for="laserBarva">Barva</label><input type="color" id="laserBarva"></div>
+        <div><label class="pop" for="laserTl">Tloušťka (mm)</label><input type="number" id="laserTl" min="0.001" max="2" step="0.01"></div></div>
+      <label class="chk"><input type="checkbox" id="cislaGrav"> Čísla dílků ke gravírování (modře)</label>
+      <div class="tlacitka"><button class="btn primary" data-prikaz="svg">✂️ SVG</button><button class="btn" data-prikaz="dxf">📐 DXF</button><button class="btn" data-prikaz="svgRub">🔢 Rub</button></div>
+      <p class="note">Každá hrana je v souboru jen jednou (sousední dílky ji sdílejí) – laser neřeže dvakrát. Čáry jsou spojené do souvislých řezů po řadách a sloupcích.</p>
+    </details>
+
+    <details class="karta" open>
+      <summary>🖨️ Tisk na papír</summary>
+      <div class="mrizka2">
+        <div><label class="pop" for="papir">Papír</label><select id="papir"><option value="210x297">A4</option><option value="297x420">A3</option><option value="215.9x279.4">Letter</option></select></div>
+        <div><label class="pop" for="orientace">Orientace</label><select id="orientace"><option value="auto">automaticky</option><option value="na_vysku">na výšku</option><option value="na_sirku">na šířku</option></select></div>
+        <div><label class="pop" for="okrajTisk">Okraj listu (mm)</label><input type="number" id="okrajTisk" min="3" max="30" step="1"></div>
+        <div><label class="pop" for="dpiTisk">Rozlišení fotky</label><select id="dpiTisk"><option value="150">150 DPI</option><option value="200">200 DPI</option><option value="300">300 DPI</option></select></div>
+        <div><label class="pop" for="caraTisk">Barva čar</label><select id="caraTisk"><option value="cerna">černá</option><option value="bila">bílá</option><option value="seda">šedá</option></select></div>
+        <div><label class="pop" for="caraTl">Tloušťka čar (mm)</label><input type="number" id="caraTl" min="0.1" max="1.5" step="0.05"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="rub"> Zrcadlený rub s čísly (oboustranný tisk)</label>
+      <label class="chk"><input type="checkbox" id="uvod"> Úvodní list s návodem a mapou listů</label>
+      <p class="note" id="infoListy"></p>
+      <div class="tlacitka"><button class="btn primary" data-prikaz="pdf">🖨️ PDF</button><button class="btn" data-prikaz="png">🖼️ PNG</button><button class="btn" data-prikaz="pngRub">🖼️ PNG rub</button></div>
+    </details>
+  </div>
+
+  <div class="plocha">
+    <div id="obalNahled"><canvas id="nahled" aria-label="Náhled puzzle – tažením posunete výřez fotky, kolečkem přiblížíte"></canvas></div>
+    <div class="stav" id="stav"></div>
+  </div>
+</div>
+
+<section id="hra" hidden aria-label="Hra – skládání puzzle">
+  <header class="lista">
+    <h1>🧩 Skládání</h1>
+    <span class="hraInfo">⏱ <b id="hraCas">0:00</b></span>
+    <span class="hraInfo">✔ <b id="hraMisto">0</b> / <b id="hraCelkem">0</b></span>
+    <div class="skup-tl" style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="tl" id="hraNahled" aria-pressed="false" title="Průsvitná předloha na desce (H)">👁<span class="txt"> Předloha</span></button>
+      <button class="tl" id="hraOkraje" aria-pressed="false" title="Ukázat jen okrajové dílky (E)">🔲<span class="txt"> Jen okraje</span></button>
+      <button class="tl" id="hraUklid" title="Rozházet volné dílky kolem desky">🔀<span class="txt"> Rozházet</span></button>
+      <button class="tl" id="hraCelek" title="Zobrazit vše (0)">🔍<span class="txt"> Vše</span></button>
+      <button class="tl" id="hraUlozit" title="Uložit rozehranou hru (Ctrl+S)">💾<span class="txt"> Uložit</span></button>
+    </div>
+    <span class="vpravo"><button class="tl" id="hraKonec" title="Ukončit (hra se uloží) – Esc">✖<span class="txt"> Konec</span></button></span>
+  </header>
+  <div id="hraObal"><canvas id="hraPlatno" aria-label="Dílky puzzle – přetahujte myší nebo prstem"></canvas></div>
+</section>
+
+<dialog class="okno" id="dlgHry">
+  <div class="obsah"><h2>💾 Uložené hry</h2><div class="seznamHer" id="seznamHer"></div></div>
+  <div class="paticka"><button class="btn" data-zavrit>Zavřít</button></div>
+</dialog>
+
+<dialog class="okno" id="dlgNapoveda">
+  <div class="obsah">
+    <h2>❓ Nápověda</h2>
+    <p>Stránka vytvoří <b>řezací šablonu puzzle</b> (jigsaw) a připraví ji pro laser, řezací plotter nebo tisk na papír s vystřižením nůžkami. Hotové puzzle si můžete rovnou <b>složit na obrazovce</b>.</p>
+    <h3>Postup</h3>
+    <ol>
+      <li>Nahrajte fotku (přetažením, výběrem nebo <kbd>Ctrl</kbd>+<kbd>V</kbd>). Výřez se přizpůsobí poměru puzzle – v náhledu ho posunete tažením, kolečkem nebo posuvníkem přiblížíte.</li>
+      <li>Zadejte velikost v cm a počet dílků (celkem → mřížka se dopočítá, nebo přímo sloupce × řádky).</li>
+      <li>Upravte zámky: tvar, velikost, náhodnost. 🎲 vygeneruje jiný tvar se stejnými parametry.</li>
+      <li>Exportujte: <b>SVG/DXF</b> pro laser (1:1 v mm), <b>PDF</b> k tisku na A4/A3 (rozdělené na listy s ořezovými značkami, volitelně se zrcadleným rubem s čísly), nebo <b>PNG</b>.</li>
+    </ol>
+    <h3>Kontrola rozlišení</h3>
+    <p>Pro tisk je ideál 240–300 DPI (pixelů na palec ve výsledné velikosti). Pod 150 DPI bude fotka viditelně rozmazaná – zmenšete puzzle nebo použijte větší fotku.</p>
+    <h3>Laser</h3>
+    <p>Každá hrana je v souboru jen jednou, sousední dílky ji sdílejí – nevznikne dvojitý řez. Mezi zámky je hlídaná minimální mezera, zámky, které by se dotkly, se automaticky zmenší. Čísla dílků v SVG jsou text – v programu laseru je případně převeďte na křivky. „Rub“ je zvlášť soubor se zrcadleným rozmístěním čísel (zelený obrys jen k zarovnání).</p>
+    <h3>Tisk a oboustranný rub</h3>
+    <p>Tiskněte ve skutečné velikosti (100 %). Rub je zrcadlený zleva doprava: list na výšku otáčejte podle dlouhé hrany, na šířku podle krátké. Listy ořízněte podle značek, přiložte k sobě, nalepte na karton a rozřežte.</p>
+    <h3>Hra</h3>
+    <p>Přetahujte dílky; dílek zapadne, když ho přiblížíte k sousedovi nebo na jeho místo na desce. Spojené dílky se pak táhnou společně. Pozadí posunete tažením, kolečkem přiblížíte. Hra se ukládá do prohlížeče (IndexedDB) a lze ji později dokončit.</p>
+    <h3>Klávesy</h3>
+    <p><kbd>Ctrl</kbd>+<kbd>O</kbd> fotka · <kbd>Ctrl</kbd>+<kbd>E</kbd> SVG · <kbd>Ctrl</kbd>+<kbd>P</kbd> PDF · <kbd>R</kbd> nový tvar · <kbd>G</kbd> hrát · <kbd>F1</kbd> nápověda · ve hře <kbd>H</kbd> předloha, <kbd>E</kbd> jen okraje, <kbd>0</kbd> vše, <kbd>Ctrl</kbd>+<kbd>S</kbd> uložit, <kbd>Esc</kbd> konec.</p>
+    <p class="soukromi">🔒 Vše běží jen ve vašem prohlížeči, fotky ani hry se nikam neodesílají.</p>
+  </div>
+  <div class="paticka"><button class="btn" data-zavrit>Zavřít</button></div>
+</dialog>
+
+<script src="puzzle_generator/ui.js"></script>
+</body>
+</html>

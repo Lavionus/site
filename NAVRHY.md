@@ -67,6 +67,11 @@ Pravidla:
 
 ## Archiv – realizováno
 
+**29. 10. 2026 (úpravy souborů a generátory):** 📄 PDF dílna (`pdf_dilna`), 🔍 OCR (`ocr`),
+nová sekce 📄 PDF & skeny; 🗂️ Hromadné úpravy obrázků, ✂️ Odstranění pozadí, 〰️ Vektorizace,
+🎞️ GIF a sprite sheety, 💬 Editor titulků, 🎴 Generátor karet, 🏷️ Hromadný tisk štítků,
+🎟️ Vstupenky a poukazy, 🧩 Generátor puzzle, 🗺️ Plakát mapy. Odloženo: ZIP nástroj, převodník zvuku.
+
 **29. 10. 2026:** 🔧 Domácí údržba a revize (`udrzba.html`), ⛏️ gamebook Hlubina pod
 Černou horou (`gamebook.html`, nová sekce 📖 Gamebooky).
 

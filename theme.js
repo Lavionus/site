@@ -28,3 +28,9 @@
     if (e.data && typeof e.data.tema === 'string') pouzij(e.data.tema);
   });
 })();
+
+// Překlad do dalších jazyků (i18n.js) musí běžet synchronně v <head> – theme.js
+// tam je skoro na všech stránkách, takže se připíše odsud a stránky se nemění.
+if (document.readyState === 'loading' && !window.I18N) {
+  document.write('<script src="' + new URL('i18n.js', document.currentScript.src).href + '"><\/script>');
+}

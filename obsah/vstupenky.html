@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎟️ Vstupenky, kupóny a poukazy</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="lib/qrcode/qrcode.js"></script>
+<script src="vstupenky/jadro.js"></script>
+<script src="vstupenky/kresli.js"></script>
+<style>
+body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+[hidden]{display:none !important}
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.pocet{color:var(--text-faint);font-size:.78rem;white-space:nowrap}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft,var(--bg-hover));border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover,var(--accent))}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+
+/* rozložení */
+.plocha{flex:1;display:flex;min-height:0}
+.panel{width:380px;flex-shrink:0;overflow-y:auto;background:var(--bg-panel);border-right:1px solid var(--border);padding:8px 10px 60px}
+.nahled{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:14px;align-items:center;min-width:0}
+details.sekce{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elevated)}
+details.sekce > summary{cursor:pointer;padding:7px 10px;font-weight:600;user-select:none;list-style:none}
+details.sekce > summary::before{content:'▸ ';color:var(--text-muted)}
+details.sekce[open] > summary::before{content:'▾ '}
+.sekce .obsah{padding:4px 10px 10px;display:flex;flex-direction:column;gap:7px}
+.radek{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.radek > label{flex:1 1 120px;display:flex;flex-direction:column;gap:2px;font-size:.78rem;color:var(--text-muted);min-width:0}
+.radek > label.uzky{flex:0 1 80px}
+.radek > label.zaskrt{flex-direction:row;align-items:center;gap:6px;color:var(--text);font-size:.84rem}
+input,select,textarea{font:inherit;font-size:.86rem;color:var(--text);background:var(--bg-input,var(--bg));border:1px solid var(--border-strong);border-radius:5px;padding:4px 6px;min-width:0;box-sizing:border-box;width:100%}
+input[type=checkbox],input[type=radio]{width:auto}
+input[type=color]{padding:1px;height:30px}
+textarea{resize:vertical;font-family:ui-monospace,Consolas,monospace}
+.pozn{font-size:.76rem;color:var(--text-faint);line-height:1.35}
+.varovani{font-size:.8rem;color:var(--warn);border-left:3px solid var(--warn);padding:3px 8px}
+.chyba-box{font-size:.84rem;color:var(--danger);border-left:3px solid var(--danger);padding:3px 8px}
+.prvky{display:flex;flex-direction:column;gap:6px}
+.prvek{border:1px solid var(--border);border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px;background:var(--bg-panel)}
+.prvek.vybrany{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.prvek .radek input[type=number]{width:62px}
+.prvek .radek > select{width:auto;flex:0 1 auto}
+.promenne{display:flex;flex-wrap:wrap;gap:3px}
+.promenne code{font-size:.72rem;background:var(--bg-control);border:1px solid var(--border);border-radius:4px;padding:0 4px;cursor:pointer}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:10px;max-width:100%;box-sizing:border-box}
+.karta h2{font-size:.9rem;margin:0 0 8px;color:var(--text-muted);font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#platno{display:block;max-width:100%;height:auto;cursor:grab;touch-action:none;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+#platno.tahne{cursor:grabbing}
+#arch{display:block;max-width:100%;height:auto;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:.84rem}
+.nav input{width:80px}
+.souhrn{font-size:.84rem;color:var(--text-muted)}
+.lokalne{font-size:.76rem;color:var(--text-faint);text-align:center;max-width:640px}
+.prubeh{position:fixed;left:50%;top:60px;transform:translateX(-50%);z-index:80;background:var(--bg-panel);border:1px solid var(--accent);border-radius:8px;padding:10px 16px;box-shadow:var(--shadow);min-width:260px;text-align:center}
+.prubeh progress{width:100%}
+
+/* kontrola na vstupu */
+.kontrola{flex:1;display:flex;min-height:0}
+.kontrola .panel{width:320px}
+.kontrola .hlavni{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.zadani{display:flex;gap:6px}
+.zadani input{font-size:1.4rem;padding:8px 10px;font-family:ui-monospace,Consolas,monospace;text-transform:uppercase}
+.vysledek{border-radius:12px;padding:18px;text-align:center;border:2px solid var(--border);background:var(--bg-elevated);min-height:110px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.vysledek .velky{font-size:2rem;font-weight:800}
+.vysledek .kod{font-family:ui-monospace,Consolas,monospace;font-size:1.2rem}
+.vysledek.platny{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 22%,var(--bg-elevated))}
+.vysledek.pouzity{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 25%,var(--bg-elevated))}
+.vysledek.neznamy,.vysledek.chyba_kontrolni{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 22%,var(--bg-elevated))}
+.statistika{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.statistika div{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center}
+.statistika b{display:block;font-size:1.4rem}
+.kamera{position:relative;max-width:520px;width:100%;align-self:center}
+.kamera video{width:100%;border-radius:10px;background:#000;display:block}
+.kamera .ramec{position:absolute;inset:18%;border:3px solid color-mix(in srgb,var(--accent) 80%,transparent);border-radius:12px;pointer-events:none}
+table.log{width:100%;border-collapse:collapse;font-size:.82rem}
+table.log td,table.log th{border-bottom:1px solid var(--border);padding:3px 6px;text-align:left}
+table.log .s-platny{color:var(--ok)} table.log .s-pouzity{color:var(--warn)} table.log .s-neznamy,table.log .s-chyba_kontrolni{color:var(--danger)}
+.seznamy{display:flex;flex-direction:column;gap:4px}
+.seznamy .tl{text-align:left;white-space:normal}
+.seznamy .tl small{color:var(--text-faint)}
+
+/* modální okna */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:70;display:flex;align-items:center;justify-content:center;padding:12px}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:14px 18px;box-shadow:var(--shadow)}
+.modal h2{margin-top:0;font-size:1.1rem}
+.modal h3{font-size:.95rem;margin:14px 0 4px}
+.modal p,.modal li{font-size:.86rem;line-height:1.45}
+.modal code{background:var(--bg-control);border-radius:4px;padding:0 4px}
+.projekty{display:flex;flex-direction:column;gap:6px}
+.projekty .pol{display:flex;gap:6px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:6px 8px}
+.projekty .pol .n{flex:1;min-width:0}
+.projekty .pol small{color:var(--text-faint);display:block}
+.predlohy{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.predlohy .tl{white-space:normal;text-align:left;padding:10px}
+
+/* tisk */
+#tisk{display:none}
+@media print{
+  body{display:block;height:auto;overflow:visible;background:#fff}
+  body > *:not(#tisk){display:none !important}
+  #tisk{display:block}
+  .list{position:relative;overflow:hidden;break-after:page;page-break-after:always}
+  .list:last-child{break-after:auto;page-break-after:auto}
+  .list img{position:absolute;display:block}
+  .list .znacka{position:absolute;background:#000}
+}
+
+@media (max-width:760px){
+  body{height:auto;overflow:auto}
+  .plocha,.kontrola{flex-direction:column}
+  .panel,.kontrola .panel{width:auto;border-right:0;border-bottom:1px solid var(--border);overflow:visible;padding-bottom:12px}
+  .lista{flex-wrap:wrap;overflow:visible}
+  .nahled{padding:8px}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <div class="skup skup-projekt">
+    <h1>🎟️ Vstupenky</h1>
+    <span class="pocet" id="nazevProjektu"></span>
+  </div>
+  <div class="skup" role="group" aria-label="Projekt"><span class="skup-nazev" aria-hidden="true">Projekt</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Nový, uložit, otevřít, export">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="predlohy" title="Nový projekt z předlohy">✚<span class="txt"> Nový</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="pdf" title="Uložit celou sérii jako PDF">📄 PDF</button>
+    <button class="tl" data-prikaz="tisk" title="Vytisknout (Ctrl+P)">🖨<span class="txt"> Tisk</span></button>
+    <button class="tl" data-nabidka="nabVystup" title="CSV vydaných kódů, PNG">📊<span class="txt"> Kódy</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Režim"><span class="skup-nazev" aria-hidden="true">Režim</span><div class="skup-tl">
+    <button class="tl" id="rezNavrh" data-prikaz="rezimNavrh" aria-pressed="true" title="Návrh a tisk série (F2)">✏️<span class="txt"> Návrh</span></button>
+    <button class="tl" id="rezKontrola" data-prikaz="rezimKontrola" aria-pressed="false" title="Kontrola vstupenek u vchodu (F3)">✅<span class="txt"> Kontrola na vstupu</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="predlohy">✚ Nový z předlohy…</button>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit projekt <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="ulozitJako">📑 Uložit jako kopii…</button>
+  <button class="tl" data-prikaz="projekty">🗂 Moje projekty… <kbd>Ctrl+O</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="exportJson">⬇️ Exportovat projekt (JSON)</button>
+  <button class="tl" data-prikaz="importJson">⬆️ Importovat projekt (JSON)…</button>
+</div>
+<div id="nabVystup" class="nabidka" hidden>
+  <div class="titulek">Seznam vydaných kódů</div>
+  <button class="tl" data-prikaz="csv">📊 CSV vydaných kódů (pro kontrolu na vstupu)</button>
+  <button class="tl" data-prikaz="doKontroly">✅ Převzít sérii do kontroly na vstupu</button>
+  <hr>
+  <button class="tl" data-prikaz="png">🖼 Aktuální kus jako PNG (300 DPI)</button>
+  <button class="tl" data-prikaz="noveKody">🎲 Vygenerovat jiné náhodné kódy</button>
+</div>
+
+<!-- ============ NÁVRH ============ -->
+<main class="plocha" id="navrh">
+  <aside class="panel" id="panel">
+    <details class="sekce" open>
+      <summary>Druh a rozměr</summary>
+      <div class="obsah">
+        <div class="radek">
+          <label>Název projektu<input data-p="nazev"></label>
+        </div>
+        <div class="radek">
+          <label>Rozměr kusu<select id="rozmerPreset"></select></label>
+        </div>
+        <div class="radek">
+          <label class="uzky">Šířka mm<input type="number" min="10" max="420" step="1" data-p="rozmer.w"></label>
+          <label class="uzky">Výška mm<input type="number" min="10" max="420" step="1" data-p="rozmer.h"></label>
+        </div>
+        <div class="radek">
+          <label>Ústřižek<select data-p="ustrizek.strana">
+            <option value="zadny">bez ústřižku</option><option value="vpravo">vpravo</option><option value="vlevo">vlevo</option><option value="dole">dole</option>
+          </select></label>
+          <label class="uzky">Šířka mm<input type="number" min="0" max="200" step="1" data-p="ustrizek.sirka"></label>
+        </div>
+        <div class="radek">
+          <label class="zaskrt"><input type="checkbox" data-p="perforace"> perforace (čárkovaná linka)</label>
+          <label class="zaskrt"><input type="checkbox" data-p="ramecek"> ozdobný rámeček</label>
+        </div>
+      </div>
+    </details>
+
+    <details class="sekce" open>
+      <summary>Texty akce</summary>
+      <div class="obsah">
+        <div class="radek"><label>Akce / nadpis {akce}<input data-p="texty.akce"></label></div>
+        <div class="radek"><label>Podtitul {podtitul}<input data-p="texty.podtitul"></label></div>
+        <div class="radek"><label>Datum {datum}<input data-p="texty.datum"></label><label>Místo konání {misto_konani}<input data-p="texty.misto_konani"></label></div>
+        <div class="radek"><label>Cena {cena}<input data-p="texty.cena"></label></div>
+        <div class="radek"><label>Poznámka {poznamka}<input data-p="texty.poznamka"></label></div>
+              </div>
+    </details>
+
+    <details class="sekce" open>
+      <summary>Číslování a kódy</summary>
+      <div class="obsah">
+        <div class="radek">
+          <label>Režim<select data-p="cislovani.rezim">
+            <option value="rada">číselná řada od–do</option><option value="nahodne">náhodné unikátní kódy</option>
+          </select></label>
+        </div>
+        <div class="radek" data-rezim="rada">
+          <label class="uzky">Od<input type="number" step="1" data-p="cislovani.od"></label>
+          <label class="uzky">Do<input type="number" step="1" data-p="cislovani.do"></label>
+          <label class="uzky">Krok<input type="number" step="1" data-p="cislovani.krok"></label>
+          <label class="uzky">Číslic<input type="number" min="0" max="20" step="1" data-p="cislovani.nuly" title="Doplnit nulami zleva na tento počet číslic"></label>
+        </div>
+        <div class="radek" data-rezim="nahodne">
+          <label class="uzky">Počet<input type="number" min="1" step="1" data-p="cislovani.pocet"></label>
+          <label class="uzky">Délka<input type="number" min="3" max="40" step="1" data-p="cislovani.delka"></label>
+          <label class="uzky">Skupiny po<input type="number" min="0" max="10" step="1" data-p="cislovani.skupiny" title="Pomlčka po každých N znacích, 0 = bez"></label>
+        </div>
+        <div class="radek" data-rezim="nahodne">
+          <label>Abeceda<select data-p="cislovani.abeceda" id="selAbeceda"></select></label>
+        </div>
+        <div class="radek">
+          <label class="uzky">Předpona<input data-p="cislovani.predpona"></label>
+          <label class="uzky">Přípona<input data-p="cislovani.pripona"></label>
+          <label>Kontrolní znak<select data-p="cislovani.kontrolni" id="selKontrolni"></select></label>
+        </div>
+        <div class="radek"><label>Vynechat kódy (už vydané, jeden na řádek nebo čárkou)<textarea rows="2" data-p="cislovani.vynechatText" placeholder="např. 0007, 0013"></textarea></label></div>
+        <div id="infoKody" class="pozn"></div>
+        <div id="varovani"></div>
+      </div>
+    </details>
+
+    <details class="sekce">
+      <summary>Sedadla (řada × místo)</summary>
+      <div class="obsah">
+        <label class="zaskrt" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-p="sedadla.zapnuto"> číslovat sedadla – kus na každé místo</label>
+        <textarea rows="5" data-p="sedadla.text" spellcheck="false"></textarea>
+        <p class="pozn">Řádek = <code>řady: místa</code>, např. <code>A-F: 1-20</code>, <code>G, H: 1-24 liché</code>, sektor <code>Balkon | 1-3: 1-12</code>, vynechání <code>vynechat: A1 A20 B/7</code>. Proměnné <code>{rada}</code>, <code>{misto}</code>, <code>{sektor}</code>.</p>
+        <div id="infoSedadla" class="pozn"></div>
+      </div>
+    </details>
+
+    <details class="sekce" open>
+      <summary>Prvky na vstupence</summary>
+      <div class="obsah">
+        <div class="promenne" id="promenne" title="Klikem vložíš proměnnou do vybraného textu"></div>
+        <div class="prvky" id="prvky"></div>
+        <div class="radek"><button class="tl" id="pridatPrvek">✚ Přidat text</button><span class="pozn">Prvky lze tahat myší v náhledu.</span></div>
+      </div>
+    </details>
+
+    <details class="sekce">
+      <summary>QR kód a čárový kód</summary>
+      <div class="obsah">
+        <label class="zaskrt" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-p="qr.zapnuto"> QR kód</label>
+        <div class="radek">
+          <label>Obsah QR<select data-p="qr.obsah"><option value="{kod}">kód vstupenky</option><option value="url">adresa URL s {kod}</option><option value="vlastni">vlastní text s proměnnými</option></select></label>
+        </div>
+        <div class="radek" id="qrUrlRadek"><label>URL / text (proměnná <code>{kod}</code>)<input data-p="qr.url" placeholder="https://moje-akce.cz/vstup?kod={kod}"></label></div>
+        <div class="radek">
+          <label>Oblast<select data-p="qr.oblast"><option value="hlavni">hlavní část</option><option value="ustrizek">ústřižek</option></select></label>
+          <label class="uzky">Velikost mm<input type="number" min="8" max="100" step="1" data-p="qr.mm"></label>
+        </div>
+        <hr style="border:0;border-top:1px solid var(--border);width:100%">
+        <label class="zaskrt" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-p="carovy.zapnuto"> čárový kód Code 128</label>
+        <div class="radek">
+          <label>Obsah<input data-p="carovy.obsah"></label>
+          <label>Oblast<select data-p="carovy.oblast"><option value="hlavni">hlavní část</option><option value="ustrizek">ústřižek</option></select></label>
+        </div>
+        <div class="radek">
+          <label class="uzky">Šířka mm<input type="number" min="15" max="200" step="1" data-p="carovy.w"></label>
+          <label class="uzky">Výška mm<input type="number" min="3" max="60" step="1" data-p="carovy.h"></label>
+        </div>
+        <p class="pozn">Polohu obou kódů nastavíš tažením v náhledu.</p>
+      </div>
+    </details>
+
+    <details class="sekce">
+      <summary>Vzhled – pozadí, písmo, logo</summary>
+      <div class="obsah">
+        <div class="radek">
+          <label>Pozadí<select data-p="pozadi.druh"><option value="barva">barva</option><option value="prechod">přechod</option><option value="obrazek">obrázek</option></select></label>
+          <label class="uzky">Barva 1<input type="color" data-p="pozadi.barva1"></label>
+          <label class="uzky">Barva 2<input type="color" data-p="pozadi.barva2"></label>
+          <label class="uzky">Úhel °<input type="number" step="15" data-p="pozadi.uhel"></label>
+        </div>
+        <div class="radek">
+          <button class="tl" id="btnPozadi">🖼 Obrázek pozadí…</button>
+          <button class="tl" id="btnPozadiPryc">✕</button>
+          <label class="uzky">Ztmavení %<input type="number" min="0" max="90" step="5" data-p="pozadi.zakryti"></label>
+        </div>
+        <div class="radek">
+          <label class="uzky">Barva textu<input type="color" data-p="barvaTextu"></label>
+          <label>Písmo<select data-p="pismo">
+            <option value="sans">Bezpatkové</option><option value="serif">Patkové</option><option value="kondenz">Úzké</option><option value="mono">Strojové</option>
+          </select></label>
+        </div>
+        <div class="radek">
+          <button class="tl" id="btnLogo">🏷 Logo…</button>
+          <button class="tl" id="btnLogoPryc">✕</button>
+          <label>Oblast loga<select data-p="logoPozice.oblast"><option value="hlavni">hlavní část</option><option value="ustrizek">ústřižek</option></select></label>
+          <label class="uzky">Šířka mm<input type="number" min="4" max="150" step="1" data-p="logoPozice.mm"></label>
+        </div>
+        <p class="pozn">Obrázky můžeš také přetáhnout na stránku.</p>
+      </div>
+    </details>
+
+    <details class="sekce" open>
+      <summary>Arch a tisk</summary>
+      <div class="obsah">
+        <div class="radek">
+          <label>Arch<select data-p="arch.format" id="selArch"></select></label>
+          <label class="uzky">Šířka<input type="number" min="50" max="1000" step="1" data-p="arch.w"></label>
+          <label class="uzky">Výška<input type="number" min="50" max="1000" step="1" data-p="arch.h"></label>
+        </div>
+        <div class="radek">
+          <label class="uzky">Okraj mm<input type="number" min="0" max="40" step="0.5" data-p="arch.okraj"></label>
+          <label class="uzky">Mezera mm<input type="number" min="0" max="30" step="0.5" data-p="arch.mezera"></label>
+          <label>Otočit kus<select data-p="arch.otoceni"><option value="auto">automaticky</option><option value="ne">ne</option><option value="ano">ano (90°)</option></select></label>
+        </div>
+        <div class="radek">
+          <label class="zaskrt"><input type="checkbox" data-p="arch.znacky"> ořezové značky</label>
+          <label class="zaskrt"><input type="checkbox" data-p="arch.obrys"> tenký obrys kusů</label>
+        </div>
+        <div class="radek">
+          <label class="uzky">Tisk od č.<input type="number" min="1" step="1" data-p="arch.tiskOd" placeholder="1"></label>
+          <label class="uzky">do č.<input type="number" min="1" step="1" data-p="arch.tiskDo" placeholder="vše"></label>
+          <label class="uzky">DPI<select data-p="arch.dpi"><option value="200">200</option><option value="300">300</option><option value="400">400</option></select></label>
+        </div>
+        <div id="infoArch" class="souhrn"></div>
+      </div>
+    </details>
+  </aside>
+
+  <section class="nahled" id="nahled">
+    <div class="karta">
+      <h2>Náhled kusu <span class="pocet" id="infoKus"></span></h2>
+      <canvas id="platno" width="600" height="220" aria-label="Náhled vstupenky"></canvas>
+      <div class="nav">
+        <button class="tl" data-prikaz="predchozi" title="Předchozí kus (←)">◀</button>
+        <input type="number" id="cisloKusu" min="1" value="1" aria-label="Pořadí kusu">
+        <span id="celkemKusu"></span>
+        <button class="tl" data-prikaz="dalsi" title="Další kus (→)">▶</button>
+      </div>
+    </div>
+    <div class="karta">
+      <h2>Arch <span class="pocet" id="infoArchNahled"></span>
+        <button class="tl" data-prikaz="archPred">◀</button><span id="cisloArchu" class="pocet"></span><button class="tl" data-prikaz="archDal">▶</button></h2>
+      <canvas id="arch" width="420" height="594" aria-label="Náhled archu"></canvas>
+    </div>
+    <p class="lokalne">🔒 Vše běží jen ve vašem prohlížeči – obrázky, kódy ani seznamy se nikam neodesílají. Projekty a stav kontroly se ukládají do úložiště tohoto prohlížeče.</p>
+  </section>
+</main>
+
+<!-- ============ KONTROLA NA VSTUPU ============ -->
+<main class="kontrola" id="kontrola" hidden>
+  <aside class="panel">
+    <details class="sekce" open>
+      <summary>Seznamy platných kódů</summary>
+      <div class="obsah">
+        <div class="seznamy" id="seznamy"></div>
+        <div class="radek">
+          <button class="tl" id="btnNactiCsv">📂 Načíst CSV…</button>
+          <button class="tl" data-prikaz="doKontroly">🎟 Z aktuálního projektu</button>
+        </div>
+        <p class="pozn">CSV s kódy v prvním sloupci nebo ve sloupci „kod“. Soubor můžeš i přetáhnout sem.</p>
+      </div>
+    </details>
+    <details class="sekce" open id="sekceSeznam">
+      <summary>Aktivní seznam</summary>
+      <div class="obsah">
+        <div id="infoSeznam" class="souhrn"></div>
+        <div class="radek">
+          <button class="tl" id="btnExportStav">⬇️ Export stavu (CSV)</button>
+          <button class="tl" id="btnSloucit" title="Sloučit použité kódy z exportu jiného zařízení">🔀 Sloučit stav…</button>
+        </div>
+        <div class="radek">
+          <button class="tl" id="btnVratit">↩️ Vrátit poslední odbavení</button>
+          <button class="tl" id="btnVynulovat">♻️ Vynulovat</button>
+          <button class="tl" id="btnSmazatSeznam">🗑 Smazat</button>
+        </div>
+        <div class="radek">
+          <label class="zaskrt"><input type="checkbox" id="zvuk" checked> zvuk</label>
+          <label class="zaskrt"><input type="checkbox" id="jenOverit"> jen ověřit (neodškrtávat)</label>
+        </div>
+      </div>
+    </details>
+  </aside>
+  <section class="hlavni">
+    <form class="zadani" id="formKod" autocomplete="off">
+      <input id="vstupKod" placeholder="Naskenuj nebo napiš kód…" aria-label="Kód vstupenky" autocapitalize="characters" spellcheck="false">
+      <button class="tl hlavni-tl" type="submit">Ověřit</button>
+      <button class="tl" type="button" id="btnKamera" title="Skenovat QR a čárové kódy kamerou">📷<span class="txt"> Kamera</span></button>
+    </form>
+    <div class="kamera" id="kameraBox" hidden>
+      <video id="video" playsinline muted></video><div class="ramec"></div>
+    </div>
+    <div class="vysledek" id="vysledek"><div class="velky">Připraveno</div><div class="pozn">Vyber nebo načti seznam kódů a začni skenovat. Ruční čtečky (USB/Bluetooth) píšou do pole výše a odešlou Enterem.</div></div>
+    <div class="statistika" id="statistika"></div>
+    <div class="karta" style="width:100%">
+      <h2>Poslední odbavení</h2>
+      <table class="log"><thead><tr><th>Čas</th><th>Kód</th><th>Výsledek</th></tr></thead><tbody id="logTelo"></tbody></table>
+    </div>
+    <p class="lokalne">🔒 Stav odbavení se ukládá jen v tomto zařízení. Při více vchodech použij export stavu a „Sloučit stav“.</p>
+  </section>
+</main>
+
+<div class="modal-bg" id="predlohyBg" hidden><div class="modal" role="dialog" aria-label="Předlohy">
+  <h2>Nový projekt z předlohy</h2>
+  <div class="predlohy" id="predlohyMrizka"></div>
+  <p style="text-align:right"><button class="tl" data-zavrit>Zavřít</button></p>
+</div></div>
+
+<div class="modal-bg" id="projektyBg" hidden><div class="modal" role="dialog" aria-label="Moje projekty">
+  <h2>Moje projekty</h2>
+  <div class="projekty" id="projektySeznam"></div>
+  <p style="text-align:right"><button class="tl" data-zavrit>Zavřít</button></p>
+</div></div>
+
+<div class="modal-bg" id="napovedaBg" hidden><div class="modal" role="dialog" aria-label="Nápověda">
+  <h2>❓ Nápověda – Vstupenky, kupóny a poukazy</h2>
+  <p>Stránka vyrábí <b>série tiskovin s unikátním číslem</b> – vstupenky s ústřižkem, dárkové poukazy, slevové kupóny, losy do tomboly, šatnové lístky, stravenky a parkovací lístky – a u vchodu je pak umí <b>kontrolovat</b>. (Na jednotlivé diplomy a certifikáty je samostatný Generátor diplomů.)</p>
+  <h3>Postup</h3>
+  <ol>
+    <li><b>Nový z předlohy</b> → vyber druh. Uprav texty akce, rozměr a ústřižek.</li>
+    <li><b>Číslování</b>: řada od–do s krokem a nulami, nebo náhodné kódy z abecedy bez záměnných znaků (0/O, 1/I). Kontrolní znak (Luhn mod N, Damm) odhalí překlep při ručním zadání.</li>
+    <li><b>Sedadla</b>: zapni a popiš řady a místa – vznikne kus na každé sedadlo.</li>
+    <li><b>Prvky</b>: texty s proměnnými, QR a čárový kód; vše tahej myší v náhledu.</li>
+    <li><b>Arch</b>: kolik kusů se vejde, ořezové značky, otočení. Pak <b>PDF</b> nebo <b>Tisk</b> (v tiskovém okně měřítko 100 %, bez okrajů).</li>
+    <li><b>CSV vydaných kódů</b> si ulož – slouží pro kontrolu u vchodu.</li>
+  </ol>
+  <h3>Proměnné</h3>
+  <p><code>{akce}</code> <code>{podtitul}</code> <code>{datum}</code> <code>{misto_konani}</code> <code>{cena}</code> <code>{poznamka}</code> · <code>{kod}</code> celý kód · <code>{cislo}</code> číslo bez předpony · <code>{poradi}</code>/<code>{celkem}</code> · <code>{rada}</code> <code>{misto}</code> <code>{sektor}</code> · <code>{url}</code> adresa z QR.</p>
+  <h3>Kontrola na vstupu</h3>
+  <p>Načti CSV seznam (nebo převezmi sérii z projektu), pak skenuj kamerou, ruční čtečkou, nebo piš kód. Výsledek: <b style="color:var(--ok)">platný</b> (a rovnou se odškrtne), <b style="color:var(--warn)">už použitý</b> (s časem), <b style="color:var(--danger)">neznámý</b> / chybný kontrolní znak. QR s URL se rozpozná podle parametru <code>?kod=</code> nebo posledního úseku adresy. Stav se ukládá v prohlížeči; export stavu a sloučení slouží pro více vchodů.</p>
+  <h3>Zkratky</h3>
+  <p><code>Ctrl+S</code> uložit · <code>Ctrl+O</code> projekty · <code>Ctrl+P</code> tisk · <code>←</code> <code>→</code> listování kusy · <code>F2</code> návrh · <code>F3</code> kontrola · <code>F1</code> nápověda · v kontrole <code>Ctrl+Z</code> vrátí poslední odbavení.</p>
+  <h3>Bezpečnost</h3>
+  <p>Náhodné kódy z kryptografického semínka nejde odvodit z jiných vstupenek. Délku volte tak, aby platný byl nanejvýš každý 10 000. kód (stránka upozorní). Řadová čísla jsou snadno uhodnutelná – hodí se na šatnu nebo tombolu, ne na placené vstupy.</p>
+  <p style="text-align:right"><button class="tl" data-zavrit>Zavřít</button></p>
+</div></div>
+
+<input type="file" id="souborJson" accept=".json,application/json" hidden>
+<input type="file" id="souborObr" accept="image/*" hidden>
+<input type="file" id="souborCsv" accept=".csv,.txt,text/csv,text/plain" hidden>
+<div id="tisk"></div>
+<script src="vstupenky/app.js"></script>
+<script src="vstupenky/kontrola.js"></script>
+</body>
+</html>

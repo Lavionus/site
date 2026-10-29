@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Klíčenky a jmenovky (vícebarevné) – generátor pro 3D tisk</title>
+  <meta name="description" content="Klíčenka, jmenovka na stůl, magnet na lednici nebo záložka s textem z písma: podklad jako bublina kolem písmen nebo štítek, očko, rámeček, kapsa na magnet. Vícebarevný tisk – 3MF s barevnými díly nebo výměna filamentu M600/PAUSE na přesné vrstvě. Dávka jmen na podložku.">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="trubky_gui.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="trubky_gui.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/three.r128.min.js"></script>
+  <script src="lib/opentype.min.js"></script>
+  <script src="fonty/fonty.js"></script>
+  <script src="krabicky/jadro.js"></script>
+  <script src="klicenky/jadro.js"></script>
+  <script src="klicenky/nahled.js"></script>
+  <script src="../tvary.js"></script>
+  <style>
+    button, select, input, textarea { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border);
+      background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
+    #canvas-container:active { cursor: grabbing; }
+    #platno { position: absolute; inset: 0; }
+    .stav3d { position: absolute; left: 10px; top: 10px; font-size: 0.8rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: calc(100% - 20px); z-index: 2; }
+    .stav3d:empty { display: none; }
+    .stav3d.chyba { color: var(--danger); border-color: var(--danger); }
+    .karta3d { position: absolute; right: 10px; top: 10px; z-index: 2; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; max-width: min(250px, 55%); pointer-events: none; }
+    .karta3d:empty { display: none; }
+    .karta3d b { color: var(--text); font-variant-numeric: tabular-nums; }
+    @media (max-width: 600px) { .karta3d { display: none; } }
+    .box-obecne { max-height: 52%; }
+    .box-out > .box-telo { padding: 10px 12px 14px; }
+
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    .aplikace input[type="text"], .aplikace select, .aplikace textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 6px 8px; font-size: 0.9rem; min-width: 0; box-sizing: border-box; }
+    .aplikace textarea { resize: vertical; min-height: 62px; line-height: 1.35; }
+    .aplikace input:focus, .aplikace select:focus, .aplikace textarea:focus { outline: none; border-color: var(--accent); }
+    input.spatne { border-color: var(--danger) !important; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 0 10px; align-items: end; }
+    .pole { min-width: 0; position: relative; }
+    .jedn { position: absolute; right: 9px; bottom: 7px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .pole input.mm { padding-right: 30px; }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin: 6px 0 0; line-height: 1.45; }
+    .barvy { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 0 10px; }
+    .barvy input[type="color"] { width: 100%; height: 32px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); cursor: pointer; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+    .dlazdice { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 9px; min-width: 0; }
+    .dlazdice .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px; }
+    .dlazdice .cislo { font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
+    .dlazdice .dalsi { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .ok-t { color: var(--ok); } .mez-t { color: var(--warn); } .chyba-t { color: var(--danger); }
+    .tecka { display: inline-block; width: .8em; height: .8em; border-radius: 50%; vertical-align: -0.08em; border: 1px solid var(--border-strong); }
+    .hlaseni { list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; line-height: 1.4; padding: 0; margin: 0; }
+    .hlaseni li { padding: 5px 9px; border-left: 3px solid var(--border-strong); background: var(--bg-elevated); border-radius: 4px; }
+    .hlaseni li.chyba { border-left-color: var(--danger); } .hlaseni li.varovani { border-left-color: var(--warn); }
+    .hlaseni li.info { border-left-color: var(--text-faint); color: var(--text-muted); } .hlaseni li.ok { border-left-color: var(--ok); }
+    .hlaseni li.skok { cursor: pointer; }
+    .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+    .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
+    .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
+    @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
+    .zvyrazni { animation: zvyrazni 2.4s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .zvyrazni { animation: none; box-shadow: 0 0 0 3px var(--accent); } }
+    .kroky { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; }
+    .kroky li { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; line-height: 1.45; }
+    .kroky b { font-variant-numeric: tabular-nums; }
+    pre.kod { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; font: 0.76rem/1.45 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 0; color: var(--text); }
+    .radek-tl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    h3 { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 12px 0 4px; }
+    .skryty { display: none; }
+    .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
+    .zalozky .souhrn-zal:empty { display: none; }
+    .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-pressed="false"]::before { content: '✓ '; visibility: hidden; }
+    .nab-pole input { width: 100%; box-sizing: border-box; }
+    .sloupec-nab { display: flex; flex-direction: column; }
+    .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
+    .lista-stav .odznak:hover { background: var(--bg-hover); }
+    .odznak.ok { color: var(--ok); } .odznak.mez { color: var(--warn); } .odznak.chyba { color: var(--danger); }
+    .box-telo .tl, .zalozka-telo .tl, .napoveda-dlg .tl { background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font: inherit; font-size: 0.82rem; color: var(--text); cursor: pointer; }
+    .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
+    .tl:disabled { opacity: .4; cursor: default; }
+    .tl.hlavni { background: var(--accent) !important; color: var(--on-accent, #fff) !important; border-color: var(--accent) !important; }
+    dialog.napoveda-dlg { margin: auto; max-width: min(760px, 94vw); max-height: 86vh; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-panel); color: var(--text); padding: 0; }
+    dialog.napoveda-dlg::backdrop { background: color-mix(in srgb, var(--bg-deep, #000) 70%, transparent); }
+    .napoveda-dlg .hlava { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); }
+    .napoveda-dlg .hlava h2 { font-size: 1rem; margin: 0; }
+    .napoveda-dlg .telo { padding: 6px 18px 16px; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+    .napoveda-dlg .telo b { color: var(--text); }
+    .napoveda-dlg .telo ul { padding-left: 20px; }
+    kbd { font-family: inherit; font-size: 0.72rem; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg-elevated); color: var(--text); }
+    #vyberPisma { margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Klíčenky a jmenovky"><span aria-hidden="true">🔑</span><span class="jmeno"> Klíčenky</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label>
+              <input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
+            <hr>
+            <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty</button>
+            <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
+            <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje klíčenky…</button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk</div>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF barevný <span class="pozn">díly s barvami</span></button>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btnStlBarvy" role="menuitem">⬇ STL po barvách <span class="pozn">ZIP</span></button>
+            <div class="nab-tip">3MF: podklad, text a rámeček jsou části jednoho objektu s vlastní barvou a extruderem (PrusaSlicer, OrcaSlicer). Jiný slicer: STL po barvách načtěte naráz jako jeden objekt s více díly.</div>
+            <hr>
+            <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Ponechá text a barvy</div>
+            <div class="sloupec-nab" id="seznamPredvoleb"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tRoviny" role="menuitemcheckbox" aria-pressed="true">🟧 Roviny výměny barvy <span class="pozn">R</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku – výšky vrstev <span class="pozn">3</span></button>
+          </div>
+        </div>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNapoveda" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
+    </header>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryty">
+
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">Aa Text</button>
+      <button data-ukaz="obecne" class="aktivni">🔑 Náhled</button>
+      <button data-ukaz="out" class="je-vystup">Tvar ▭</button>
+    </nav>
+
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in" id="boxText" data-box="in" aria-label="Text">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">Aa</span><h2>Text</h2></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="text" open>
+            <summary><span class="oddil-nazev">Text a písmo</span><span class="souhrn" id="sText"></span></summary>
+            <div class="oddil-telo">
+              <label for="f_text">Text (1–3 řádky)</label>
+              <textarea id="f_text" data-p="text.obsah" data-typ="text" rows="2" spellcheck="false"></textarea>
+              <label>Písmo</label>
+              <div id="vyberPisma"></div>
+              <p class="napoveda" id="stavPisma" role="status"></p>
+              <div class="mrizka">
+                <div class="pole"><label for="f_vel">Výška verzálek</label><input type="text" inputmode="decimal" class="mm" id="f_vel" data-p="text.velikost"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_nasirku">Zmenšit na šířku</label><input type="text" inputmode="decimal" class="mm" id="f_nasirku" data-p="text.naSirku" title="0 = vypnuto; text se zmenší, aby nebyl širší"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_radk">Řádkování</label><input type="text" inputmode="decimal" class="mm" id="f_radk" data-p="text.radkovani" title="Rozteč řádků jako násobek výšky verzálek"><span class="jedn">×</span></div>
+                <div class="pole"><label for="f_zar">Zarovnání</label><select id="f_zar" data-p="text.zarovnani" data-typ="text"><option value="stred">na střed</option><option value="vlevo">vlevo</option><option value="vpravo">vpravo</option></select></div>
+                <div class="pole"><label for="f_otoc">Směr</label><select id="f_otoc" data-p="text.otoceni" data-typ="text"><option value="0">vodorovně</option><option value="90">svisle (90°)</option></select></div>
+              </div>
+              <p class="napoveda">Výška verzálek je největší; „Zmenšit na šířku“ a pevný podklad text zmenší, aby se vešel. Řádky se dělí Enterem.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="styl" open>
+            <summary><span class="oddil-nazev">Styl textu</span><span class="souhrn" id="sStyl"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_rez">Text je</label><select id="f_rez" data-p="text.rezim" data-typ="text"><option value="vystouply">vystouplý</option><option value="vyryty">vyrytý</option><option value="zarovnany">zarovnaný (vykládaný)</option></select></div>
+                <div class="pole" data-jen="vystouply"><label for="f_tv">Výška textu</label><input type="text" inputmode="decimal" class="mm" id="f_tv" data-p="text.vyska"><span class="jedn">mm</span></div>
+                <div class="pole" data-jen="vyryty zarovnany"><label for="f_th">Hloubka</label><input type="text" inputmode="decimal" class="mm" id="f_th" data-p="text.hloubka"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda"><b>Vystouplý</b>: text nad podkladem, barva se mění na horní ploše podkladu. <b>Vyrytý</b>: dno rytiny má barvu textu, nad ním podklad – jedna výměna filamentu. <b>Zarovnaný</b>: text vložený do podkladu v rovině – jen pro tiskárnu s více barvami (AMS/MMU).</p>
+            </div>
+          </details>
+        </div>
+      </aside>
+
+      <section class="stred">
+        <div id="canvas-container" aria-label="3D náhled">
+          <div id="platno"></div>
+          <div class="stav3d" id="stav3d">Načítám…</div>
+          <div class="karta3d" id="karta3d" aria-live="polite"></div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
+        </div>
+        <div class="box box-obecne" aria-label="Výsledky a tisk">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="barvy" aria-selected="true">🎨 Barvy a vrstvy <span class="souhrn-zal" id="sBarvy"></span></button>
+            <button role="tab" data-zalozka="vysledky" aria-selected="false">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
+            <button role="tab" data-zalozka="davka" aria-selected="false">📦 Dávka <span class="souhrn-zal" id="sDavka"></span></button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje klíčenky</button>
+          </div>
+          <div class="zalozka-telo" data-telo="barvy" role="tabpanel">
+            <div class="barvy">
+              <div><label for="f_bp">Podklad</label><input type="color" id="f_bp" data-p="barvy.podklad" data-typ="text"></div>
+              <div><label for="f_bt">Text</label><input type="color" id="f_bt" data-p="barvy.text" data-typ="text"></div>
+              <div><label for="f_br">Rámeček</label><input type="color" id="f_br" data-p="barvy.ramecek" data-typ="text"></div>
+            </div>
+            <div class="mrizka">
+              <div class="pole"><label for="f_trez">Tiskárna</label><select id="f_trez" data-p="tisk.rezim" data-typ="text"><option value="jedna">jedna tryska (M600)</option><option value="vice">více barev (AMS/MMU)</option></select></div>
+              <div class="pole"><label for="f_vrstva">Výška vrstvy</label><input type="text" inputmode="decimal" class="mm" id="f_vrstva" data-p="tisk.vrstva"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_prvni">První vrstva</label><input type="text" inputmode="decimal" class="mm" id="f_prvni" data-p="tisk.prvni"><span class="jedn">mm</span></div>
+            </div>
+            <label class="zaskrt"><input type="checkbox" id="f_prich" data-p="tisk.prichytit" data-typ="bool"> Přichytit výšky na hranice vrstev (rozhraní barev přesně mezi vrstvami)</label>
+            <div id="pokyny"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_mat">Materiál</label><select id="f_mat" data-p="tisk.material" data-typ="text"></select></div>
+              <div class="pole"><label for="f_vypln">Výplň</label><input type="text" inputmode="decimal" class="mm" id="f_vypln" data-p="tisk.vypln"><span class="jedn">%</span></div>
+            </div>
+            <div class="vysledky" id="vysledky" style="margin-top:8px"></div>
+            <p class="napoveda">Hmotnost a čas jsou hrubý odhad (obvod plný, zbytek podle výplně, průtok ≈ 6 mm³/s, výměna filamentu ≈ 2 min).</p>
+          </div>
+          <div class="zalozka-telo" data-telo="davka" role="tabpanel" hidden>
+            <label for="f_jmena">Seznam jmen – jedno na řádek („|“ = nový řádek ve jméně)</label>
+            <textarea id="f_jmena" data-p="davka.jmena" data-typ="text" rows="5" spellcheck="false" placeholder="Anna&#10;Petr&#10;Babička | 2026"></textarea>
+            <div class="mrizka">
+              <div class="pole"><label for="f_mez">Mezera mezi kusy</label><input type="text" inputmode="decimal" class="mm" id="f_mez" data-p="davka.mezera"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_podl">Podložka (strana)</label><input type="text" inputmode="decimal" class="mm" id="f_podl" data-p="tisk.podlozka"><span class="jedn">mm</span></div>
+            </div>
+            <div class="radek-tl">
+              <button class="tl" type="button" id="btnDavkaNahled">👁 Ukázat na podložce</button>
+              <button class="tl" type="button" id="btnDavka3mf">⬇ 3MF dávky</button>
+              <button class="tl" type="button" id="btnDavkaZip">⬇ ZIP po kusech <span class="pozn">3MF</span></button>
+              <button class="tl" type="button" id="btnDavkaStl">⬇ STL po barvách</button>
+            </div>
+            <ul class="hlaseni" id="davkaStav" style="margin-top:8px"></ul>
+            <p class="napoveda">Každé jméno dostane stejné nastavení (písmo, tvar, výšky). Kusy se řadí do řad na čtvercovou podložku; ZIP obsahuje každý kus jako samostatný 3MF.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
+            <ul class="hlaseni" id="hlaseni"></ul>
+            <div class="vysledky" id="vSit" style="margin-top:8px"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
+        </div>
+      </section>
+
+      <aside class="box box-out" id="boxTvar" data-box="out" aria-label="Tvar">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">▭</span><h2>Tvar</h2><span class="souhrn" id="sTvar"></span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="podklad" open>
+            <summary><span class="oddil-nazev">Podklad</span><span class="souhrn" id="sPodklad"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_tvar">Tvar</label><select id="f_tvar" data-p="podklad.tvar" data-typ="text"><option value="obrys">obrys textu (bublina)</option><option value="obdelnik">obdélník</option><option value="zaobleny">zaoblený obdélník</option><option value="oval">ovál</option><option value="stitek">štítek s ouškem</option></select></div>
+                <div class="pole"><label for="f_tl">Tloušťka</label><input type="text" inputmode="decimal" class="mm" id="f_tl" data-p="podklad.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_okraj">Okraj kolem textu</label><input type="text" inputmode="decimal" class="mm" id="f_okraj" data-p="podklad.okraj"><span class="jedn">mm</span></div>
+                <div class="pole" data-tvar="obrys"><label for="f_spoj">Spojit mezery</label><input type="text" inputmode="decimal" class="mm" id="f_spoj" data-p="podklad.spoj" title="Zaplní mezery mezi písmeny a řádky do této šířky"><span class="jedn">mm</span></div>
+                <div class="pole" data-tvar="zaobleny stitek"><label for="f_zaob">Zaoblení rohů</label><input type="text" inputmode="decimal" class="mm" id="f_zaob" data-p="podklad.zaobleni"><span class="jedn">mm</span></div>
+              </div>
+              <div data-tvar="obdelnik zaobleny oval stitek">
+                <label class="zaskrt"><input type="checkbox" id="f_pevny" data-p="podklad.pevny" data-typ="bool"> Pevný rozměr (text se zmenší dovnitř)</label>
+                <div class="mrizka" id="gPevny">
+                  <div class="pole"><label for="f_ps">Šířka</label><input type="text" inputmode="decimal" class="mm" id="f_ps" data-p="podklad.sirka"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_pv">Výška</label><input type="text" inputmode="decimal" class="mm" id="f_pv" data-p="podklad.vyska"><span class="jedn">mm</span></div>
+                </div>
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="ocko" open>
+            <summary><span class="oddil-nazev">Očko na kroužek</span><span class="souhrn" id="sOcko"></span></summary>
+            <div class="oddil-telo">
+              <label class="zaskrt"><input type="checkbox" id="f_ocko" data-p="ocko.zap" data-typ="bool"> Očko (štítek s ouškem ho má vždy)</label>
+              <div class="mrizka">
+                <div class="pole"><label for="f_opol">Poloha</label><select id="f_opol" data-p="ocko.poloha" data-typ="text"><option value="vlevo">vlevo</option><option value="vpravo">vpravo</option><option value="nahore">nahoře</option></select></div>
+                <div class="pole"><label for="f_od">⌀ otvoru</label><input type="text" inputmode="decimal" class="mm" id="f_od" data-p="ocko.prumer" title="Průměr drátu kroužku + 1 mm"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_os">Stěna kolem</label><input type="text" inputmode="decimal" class="mm" id="f_os" data-p="ocko.stena"><span class="jedn">mm</span></div>
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="ramecek">
+            <summary><span class="oddil-nazev">Rámeček</span><span class="souhrn" id="sRamecek"></span></summary>
+            <div class="oddil-telo">
+              <label class="zaskrt"><input type="checkbox" id="f_ram" data-p="ramecek.zap" data-typ="bool"> Vystouplý rámeček po obvodu a kolem očka</label>
+              <div class="mrizka"><div class="pole"><label for="f_rs">Šířka rámečku</label><input type="text" inputmode="decimal" class="mm" id="f_rs" data-p="ramecek.sirka"><span class="jedn">mm</span></div></div>
+              <p class="napoveda">Rámeček má výšku textu a vlastní barvu (při jedné trysce barvu textu).</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="magnet">
+            <summary><span class="oddil-nazev">Magnet na lednici</span><span class="souhrn" id="sMagnet"></span></summary>
+            <div class="oddil-telo">
+              <label class="zaskrt"><input type="checkbox" id="f_mag" data-p="magnet.zap" data-typ="bool"> Skrytá kapsa na magnet (pauza tisku)</label>
+              <div class="mrizka">
+                <div class="pole"><label for="f_md">⌀ magnetu</label><input type="text" inputmode="decimal" class="mm" id="f_md" data-p="magnet.prumer"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mh">Výška magnetu</label><input type="text" inputmode="decimal" class="mm" id="f_mh" data-p="magnet.vyska"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mv">Vůle</label><input type="text" inputmode="decimal" class="mm" id="f_mv" data-p="magnet.vule" title="Přidá se k poloměru i k výšce kapsy"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mdno">Dno pod magnetem</label><input type="text" inputmode="decimal" class="mm" id="f_mdno" data-p="magnet.dno"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Kapsa je uzavřená uvnitř podkladu; tisk se na její horní hraně zastaví, vložíte magnet a strop ho zakryje.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="stojanek">
+            <summary><span class="oddil-nazev">Stojánek (jmenovka na stůl)</span><span class="souhrn" id="sStojanek"></span></summary>
+            <div class="oddil-telo">
+              <label class="zaskrt"><input type="checkbox" id="f_st" data-p="stojanek.zap" data-typ="bool"> Přidat stojánek se šikmou drážkou</label>
+              <div class="mrizka">
+                <div class="pole"><label for="f_su">Sklon dozadu</label><input type="text" inputmode="decimal" class="mm" id="f_su" data-p="stojanek.uhel"><span class="jedn">°</span></div>
+                <div class="pole"><label for="f_sh">Hloubka drážky</label><input type="text" inputmode="decimal" class="mm" id="f_sh" data-p="stojanek.hloubka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_sv">Vůle drážky</label><input type="text" inputmode="decimal" class="mm" id="f_sv" data-p="stojanek.vule"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Drážka = tloušťka podkladu + vůle; jmenovka se do ní zasune spodní hranou.</p>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+<dialog class="napoveda-dlg" id="dlgNapoveda">
+  <div class="hlava"><h2>Klíčenky a jmenovky – nápověda</h2><button class="tl" id="btnZavritNap" aria-label="Zavřít">✕</button></div>
+  <div class="telo">
+    <p><b>Tisk.</b> Tiskne se naplocho přesně v exportované poloze (podklad dole), bez podpor. PLA nebo PETG, 3–4 obvodové stěny,
+      výplň 15–25 %, výška vrstvy stejná jako v záložce Barvy a vrstvy – <b>bez proměnné výšky vrstvy</b>, jinak výměna barvy nesedí.</p>
+    <p><b>Jedna tryska.</b> Výšky jsou přichycené na hranice vrstev. V záložce Barvy a vrstvy je číslo vrstvy a výška, kde se mění
+      filament: v PrusaSlicer po slicování posuňte svislý jezdec na uvedenou výšku a klikněte na <b>+</b> (výměna barvy, M600);
+      v Bambu / Orca pravým klikem na jezdec „Přidat výměnu filamentu“ nebo „Pauza“. Klipper potřebuje makro <code>PAUSE</code>
+      (nebo <code>M600</code>). U magnetu se tisk zastaví nad kapsou – vložte magnet (pozor na polaritu) a pokračujte.</p>
+    <p><b>Více barev.</b> 3MF barevný obsahuje každý kus jako jeden objekt, podklad/text/rámeček jako jeho části s barvou
+      a číslem extruderu (stejná barva = stejný extruder). Pokud slicer díly spojí, použijte <b>STL po barvách</b> a načtěte
+      je naráz jako jeden objekt s více díly.</p>
+    <p><b>Písmo.</b> Volte tučná písma (v nabídce bez poznámky „tenké tahy“). Kontrola upozorní na tahy užší než stopa trysky 0,4 mm.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>3</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>R</kbd> roviny výměny, <kbd>↑</kbd>/<kbd>↓</kbd> v poli ± 1
+      (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd>, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+  </div>
+</dialog>
+<script src="klicenky/ui.js"></script>
+</body>
+</html>

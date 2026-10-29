@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>〰️ Vektorizace – bitmapa → SVG/DXF</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="vektorizace/jadro.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+[hidden]{display:none !important}
+input,select,button,textarea{font-family:inherit}
+
+/* horní lišta (vzor Databanka promptů) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+select.tl{padding:4px 6px}
+@media (max-width:1250px){.lista .txt{display:none}}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+/* rozložení: nastavení vlevo, náhled vpravo */
+.rozlozeni{flex:1;min-height:0;display:grid;grid-template-columns:290px minmax(0,1fr)}
+aside{background:var(--bg-panel);border-right:1px solid var(--border);padding:10px 12px 40px;overflow:auto;min-height:0;font-size:.85rem}
+aside details{border-bottom:1px solid var(--border);padding:6px 0}
+aside summary{cursor:pointer;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);font-weight:600;padding:4px 0;user-select:none}
+.pole{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 8px;margin:7px 0}
+.pole > label{color:var(--text)}
+.pole .hod{color:var(--text-faint);font-variant-numeric:tabular-nums;font-size:.8rem;min-width:3.2em;text-align:right}
+.pole input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.pole select,.pole input[type=number]{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:.84rem;max-width:150px}
+.pole input[type=number]{width:90px}
+.zaskrt{display:flex;gap:8px;align-items:center;margin:7px 0;cursor:pointer}
+.zaskrt input{accent-color:var(--accent);width:16px;height:16px}
+.napoveda-mala{font-size:.76rem;color:var(--text-faint);line-height:1.4;margin:2px 0 6px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:.82rem}
+.btn:hover{background:var(--bg-hover)}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.radek-tl{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.paleta{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.paleta span{width:22px;height:22px;border-radius:5px;border:1px solid var(--border-strong)}
+.soukromi{font-size:.75rem;color:var(--text-faint);margin-top:10px;line-height:1.45}
+
+main{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+.plocha{flex:1;min-height:0;display:flex;gap:6px;padding:6px;position:relative}
+.okno{flex:1;min-width:0;position:relative;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)}
+.okno canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.okno canvas.tahne{cursor:grabbing}
+.okno.orez canvas{cursor:crosshair}
+.okno .stitek{position:absolute;left:8px;top:6px;font-size:.72rem;background:color-mix(in srgb,var(--bg-panel) 85%,transparent);border:1px solid var(--border);border-radius:6px;padding:1px 7px;color:var(--text-muted);pointer-events:none}
+.posuv{position:absolute;left:12px;right:12px;bottom:10px;display:flex;gap:8px;align-items:center;background:color-mix(in srgb,var(--bg-panel) 88%,transparent);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.78rem;color:var(--text-muted)}
+.posuv input{flex:1;accent-color:var(--accent)}
+.stav{display:flex;flex-wrap:wrap;gap:4px 14px;padding:5px 12px;border-top:1px solid var(--border);background:var(--bg-elevated);font-size:.78rem;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.stav b{color:var(--text);font-weight:600}
+.stav .prace{color:var(--accent)}
+.prazdne{position:absolute;inset:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;color:var(--text-muted);border:2px dashed var(--border-strong);border-radius:12px;padding:20px;background:var(--bg)}
+.prazdne h2{font-size:1.15rem;color:var(--text);margin:0}
+.prazdne p{margin:0;max-width:460px;line-height:1.5;font-size:.88rem}
+.prazdne .radek-tl{justify-content:center}
+.pretahni{position:fixed;inset:0;z-index:80;background:color-mix(in srgb,var(--accent) 18%,transparent);border:3px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text);pointer-events:none}
+
+/* nápověda */
+.modal-bg{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:14px}
+.pomoc{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;max-width:680px;max-height:calc(100vh - 40px);overflow:auto;padding:18px 22px;font-size:.88rem;line-height:1.55}
+.pomoc h2{margin:0 0 8px;font-size:1.1rem}
+.pomoc h3{margin:14px 0 4px;font-size:.95rem}
+.pomoc ul{margin:4px 0;padding-left:20px}
+.pomoc table{border-collapse:collapse;font-size:.84rem}
+.pomoc td{padding:2px 10px 2px 0}
+.pomoc kbd{margin:0}
+
+@media (max-width:760px){
+  body{height:auto;min-height:100vh;overflow:auto}
+  .rozlozeni{display:flex;flex-direction:column}
+  aside{border-right:0;border-bottom:1px solid var(--border);order:2;padding-bottom:20px}
+  main{order:1;height:min(70vh,560px);min-height:340px}
+  .plocha{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <div class="skup skup-projekt"><h1>〰️ Vektorizace</h1></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Otevřít, ukázky, export">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="otevrit" title="Otevřít obrázek (Ctrl+O)">📂<span class="txt"> Otevřít</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Režim"><span class="skup-nazev" aria-hidden="true">Režim</span><div class="skup-tl">
+    <select id="rezim" class="tl" aria-label="Režim trasování" title="Režim trasování">
+      <option value="cb">⚫ Černobílý</option>
+      <option value="barvy">🎨 Vícebarevný</option>
+      <option value="stred">✏️ Středová čára</option>
+    </select>
+    <select id="styl" class="tl" aria-label="Styl výstupu" title="Výplň, nebo jen obrysové čáry pro laser/plotter">
+      <option value="vypln">⬛ Výplň</option>
+      <option value="cary">🔲 Obrys k řezání</option>
+    </select>
+  </div></div>
+  <div class="skup" role="group" aria-label="Náhled"><span class="skup-nazev" aria-hidden="true">Náhled</span><div class="skup-tl">
+    <button class="tl" data-prikaz="pohled-vedle" title="Originál a vektor vedle sebe (1)">◫<span class="txt"> Vedle</span></button>
+    <button class="tl" data-prikaz="pohled-posuvnik" title="Posuvník přes obrázek (2)">⇹<span class="txt"> Posuvník</span></button>
+    <button class="tl" data-prikaz="pohled-prolnuti" title="Prolnutí originálu a vektoru (3)">🌓<span class="txt"> Prolnutí</span></button>
+    <button class="tl" data-prikaz="uzly" title="Zobrazit uzly (U)">◆<span class="txt"> Uzly</span></button>
+    <button class="tl" data-nabidka="nabZobrazit" title="Další možnosti náhledu">▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="exp-svg" title="Uložit SVG (Ctrl+S)">⬇ SVG</button>
+    <button class="tl" data-prikaz="exp-dxf" title="Uložit DXF (Ctrl+Shift+S)">DXF</button>
+    <button class="tl" data-nabidka="nabExport" title="Další exporty">▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít obrázek… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="vlozit">📋 Vložit ze schránky <kbd>Ctrl+V</kbd></button>
+  <hr>
+  <div class="titulek">Ukázky</div>
+  <button class="tl" data-prikaz="ukazka-logo">⚫ Logo s písmem (černobílé)</button>
+  <button class="tl" data-prikaz="ukazka-barvy">🎨 Barevná ilustrace</button>
+  <button class="tl" data-prikaz="ukazka-kresba">✏️ Tahy perem (středová čára)</button>
+  <hr>
+  <button class="tl" data-prikaz="zapomenout">🗑 Zavřít obrázek a zapomenout</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl prep" data-prikaz="pohled-vedle">Vedle sebe <kbd>1</kbd></button>
+  <button class="tl prep" data-prikaz="pohled-posuvnik">Posuvník <kbd>2</kbd></button>
+  <button class="tl prep" data-prikaz="pohled-prolnuti">Prolnutí <kbd>3</kbd></button>
+  <hr>
+  <button class="tl prep" data-prikaz="uzly">Uzly (rohy čtverečkem) <kbd>U</kbd></button>
+  <button class="tl prep" data-prikaz="obrysy">Tenké obrysy přes výplň <kbd>O</kbd></button>
+  <button class="tl prep" data-prikaz="sachovnice">Šachovnice pod průhledností</button>
+  <hr>
+  <button class="tl" data-prikaz="prizpusobit">⤢ Přizpůsobit oknu <kbd>F</kbd></button>
+  <button class="tl" data-prikaz="lupa-1">1 : 1 (pixel na pixel) <kbd>0</kbd></button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="exp-svg">⬇ SVG <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="exp-dxf">⬇ DXF (polyline, mm) <kbd>Ctrl+Shift+S</kbd></button>
+  <button class="tl" data-prikaz="exp-png">⬇ PNG náhled…</button>
+  <hr>
+  <button class="tl" data-prikaz="kop-svg">📋 Kopírovat SVG do schránky</button>
+  <hr>
+  <div class="titulek">Navazující stránky</div>
+  <a class="tl" href="stencil.html" target="_self">🖌 Šablona na sprej (Stencil)</a>
+  <a class="tl" href="modelar.html" target="_self">🧊 Modelář 3D (import SVG)</a>
+</div>
+
+<div class="rozlozeni">
+  <aside id="bocni">
+    <details open id="sekPred"><summary>Předzpracování</summary>
+      <div class="radek-tl">
+        <button class="btn" id="btnOrez" aria-pressed="false" title="Tažením myši na originálu vyberte oblast (C)">✂ Oříznout</button>
+        <button class="btn" id="btnOrezZrus" disabled>Zrušit ořez</button>
+      </div>
+      <div class="napoveda-mala" id="orezInfo">Celý obrázek.</div>
+      <div class="pole"><label for="zvetseni">Zvětšení malých obrázků</label>
+        <select id="zvetseni"><option value="auto">automaticky</option><option value="1">bez zvětšení</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option></select></div>
+      <div class="pole"><label for="rozmazani">Rozostření (šum, JPEG)</label><span class="hod" id="rozmazaniH"></span>
+        <input type="range" id="rozmazani" min="0" max="4" step="0.1"></div>
+    </details>
+    <details open id="sekPrah"><summary>Práh (černobílý)</summary>
+      <label class="zaskrt"><input type="checkbox" id="otsu"> Automaticky (Otsu)</label>
+      <div class="pole"><label for="prah">Práh jasu</label><span class="hod" id="prahH"></span>
+        <input type="range" id="prah" min="1" max="255" step="1"></div>
+      <label class="zaskrt"><input type="checkbox" id="invert"> Invertovat (světlé kreslit)</label>
+    </details>
+    <details open id="sekBarvy"><summary>Barvy</summary>
+      <div class="pole"><label for="barev">Počet barev</label><span class="hod" id="barevH"></span>
+        <input type="range" id="barev" min="2" max="16" step="1"></div>
+      <div class="pole"><label for="kvantizace">Kvantizace</label>
+        <select id="kvantizace"><option value="kmeans">k-means</option><option value="mediancut">median cut</option></select></div>
+      <div class="pole"><label for="vrstveni">Vrstvy</label>
+        <select id="vrstveni"><option value="stoh">na sobě bez mezer</option><option value="vedle">vedle sebe (řezání)</option></select></div>
+      <label class="zaskrt"><input type="checkbox" id="bezPozadi"> Vynechat pozadí (největší barvu)</label>
+      <div class="paleta" id="paleta" aria-label="Paleta"></div>
+    </details>
+    <details open id="sekTras"><summary>Trasování</summary>
+      <div class="pole"><label for="skvrny" id="skvrnyL">Potlačit skvrny menší než</label><span class="hod" id="skvrnyH"></span>
+        <input type="range" id="skvrny" min="0" max="300" step="1"></div>
+      <div class="pole"><label for="krivky">Tvar cest</label>
+        <select id="krivky"><option value="1">Bézierovy křivky</option><option value="0">jen úsečky (polygon)</option></select></div>
+      <div class="pole"><label for="tolerance">Tolerance (přesnost)</label><span class="hod" id="toleranceH"></span>
+        <input type="range" id="tolerance" min="0.2" max="4" step="0.1"></div>
+      <div class="pole"><label for="uhel">Práh rohu</label><span class="hod" id="uhelH"></span>
+        <input type="range" id="uhel" min="20" max="180" step="5"></div>
+      <div class="napoveda-mala">Ostřejší ohyb než práh = roh (ostrý uzel). 180° = žádné rohy.</div>
+      <label class="zaskrt"><input type="checkbox" id="osmi"> Spojovat pixely dotýkající se rohem</label>
+    </details>
+    <details open id="sekVystup"><summary>Výstup</summary>
+      <div class="pole"><label for="sirkaMm">Šířka (mm, 0 = v px)</label><input type="number" id="sirkaMm" min="0" step="1"></div>
+      <div class="pole"><label for="vyskaMm">Výška (mm)</label><input type="number" id="vyskaMm" min="0" step="1"></div>
+      <div class="pole"><label for="tloustka">Tloušťka čar (mm)</label><input type="number" id="tloustka" min="0.01" step="0.05"></div>
+      <div class="pole"><label for="des">Desetinná místa</label>
+        <select id="des"><option>0</option><option>1</option><option>2</option><option>3</option></select></div>
+      <label class="zaskrt"><input type="checkbox" id="rel"> Relativní příkazy (menší SVG)</label>
+      <label class="zaskrt"><input type="checkbox" id="jednaCesta"> Jedna cesta na barvu</label>
+      <div class="pole"><label for="tolDxf">Aproximace křivek v DXF (mm)</label><input type="number" id="tolDxf" min="0.005" step="0.01"></div>
+      <div class="radek-tl"><button class="btn" id="btnVychozi">↺ Výchozí nastavení</button></div>
+    </details>
+    <p class="soukromi">🔒 Vše běží lokálně v prohlížeči. Obrázky se nikam neodesílají; poslední obrázek si stránka pamatuje jen u vás (IndexedDB).</p>
+  </aside>
+
+  <main>
+    <div class="plocha" id="plocha">
+      <div class="okno" id="oknoA"><canvas id="platnoA" aria-label="Originál"></canvas><span class="stitek" id="stitekA">Originál</span></div>
+      <div class="okno" id="oknoB"><canvas id="platnoB" aria-label="Vektor"></canvas><span class="stitek" id="stitekB">Vektor</span>
+        <div class="posuv" id="posuv" hidden><span id="posuvTxt">Posuvník</span><input type="range" id="posuvHod" min="0" max="100" value="50" aria-label="Poměr originálu a vektoru"></div>
+      </div>
+      <div class="prazdne" id="prazdne">
+        <h2>Přetáhněte sem obrázek</h2>
+        <p>PNG, JPEG, WebP, GIF, BMP… Logo, sken kresby nebo fotku převedu na vektor (SVG, DXF) – černobíle, barevně, jako obrys k řezání nebo středovou čárou.</p>
+        <div class="radek-tl">
+          <button class="btn" data-prikaz="otevrit">📂 Otevřít obrázek</button>
+          <button class="btn" data-prikaz="ukazka-logo">⚫ Ukázka: logo</button>
+          <button class="btn" data-prikaz="ukazka-barvy">🎨 Ukázka: barvy</button>
+          <button class="btn" data-prikaz="ukazka-kresba">✏️ Ukázka: kresba</button>
+        </div>
+        <p class="napoveda-mala">Lze i vložit ze schránky (Ctrl+V). Soubory se nikam neodesílají.</p>
+      </div>
+    </div>
+    <div class="stav" id="stav" aria-live="polite"><span>Žádný obrázek</span></div>
+  </main>
+</div>
+
+<input type="file" id="soubor" accept="image/*" hidden>
+<div class="pretahni" id="pretahni" hidden>Pusťte obrázek</div>
+
+<div class="modal-bg" id="napoveda" hidden>
+  <div class="pomoc" role="dialog" aria-label="Nápověda">
+    <h2>〰️ Vektorizace – nápověda</h2>
+    <p>Převádí bitmapu (pixely) na vektorové cesty. Výsledek lze zvětšit bez ztráty kvality, poslat na laser, plotter, řezačku fólie nebo do CADu.</p>
+    <h3>Režimy</h3>
+    <ul>
+      <li><b>Černobílý</b> – pixely tmavší než práh se stanou výplní. Práh volí Otsu automaticky, lze ho posunout ručně nebo invertovat.</li>
+      <li><b>Vícebarevný</b> – barvy se sloučí na N odstínů (k-means nebo median cut) a každá barva je jedna vrstva. <i>Na sobě bez mezer</i> = spodní vrstvy pokračují pod horními (žádné bílé spáry); <i>vedle sebe</i> = přesné oblasti pro řezání fólie po barvách.</li>
+      <li><b>Středová čára</b> – kresba se ztenčí na osu (Zhang–Suen) a vznikne jeden tah na čáru – pro plotter, gravírování perem, vyšívání.</li>
+      <li><b>Obrys k řezání</b> – místo výplní jen tenké čáry (tloušťka v mm), vhodné pro laser a řezací plotr.</li>
+    </ul>
+    <h3>Ladění</h3>
+    <ul>
+      <li><b>Potlačit skvrny</b> – zahodí tečky i dírky menší než N pixelů (prach skeneru, šum JPEG).</li>
+      <li><b>Tolerance</b> – jak daleko smí křivka uhnout od obrysu pixelů. Vyšší = méně uzlů, hladší tvar.</li>
+      <li><b>Práh rohu</b> – změna směru nad tento úhel se zachová jako ostrý roh, menší se vyhladí.</li>
+      <li><b>Zvětšení</b> malých obrázků a <b>rozostření</b> dají hladší obrysy z hrubých pixelů.</li>
+      <li><b>Šířka v mm</b> nastaví fyzický rozměr SVG (atributy width/height v mm) i DXF (souřadnice v mm). Hodí se pro Stencil, Štítky a Modelář 3D.</li>
+    </ul>
+    <h3>Náhled</h3>
+    <p>Kolečko myši = lupa, tažení = posun, dvojklik = přizpůsobit. Uzly ukážou, kolik bodů cesta má (čtvereček = roh, kroužek = hladký uzel).</p>
+    <h3>Klávesy</h3>
+    <table>
+      <tr><td><kbd>Ctrl+O</kbd></td><td>otevřít obrázek</td><td><kbd>Ctrl+V</kbd></td><td>vložit ze schránky</td></tr>
+      <tr><td><kbd>Ctrl+S</kbd></td><td>uložit SVG</td><td><kbd>Ctrl+Shift+S</kbd></td><td>uložit DXF</td></tr>
+      <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>vedle / posuvník / prolnutí</td><td><kbd>U</kbd></td><td>uzly</td></tr>
+      <tr><td><kbd>F</kbd></td><td>přizpůsobit</td><td><kbd>0</kbd></td><td>lupa 1 : 1</td></tr>
+      <tr><td><kbd>+</kbd> <kbd>−</kbd></td><td>lupa</td><td><kbd>C</kbd></td><td>ořez tažením</td></tr>
+    </table>
+    <h3>Jak to funguje</h3>
+    <p>Vlastní implementace: sledování hranic pixelů (vnější obrysy po směru, díry proti směru, výplň evenodd), rohy podle k-kosinové míry, proložení kubickými Bézierovými křivkami metodou nejmenších čtverců (Schneider), polygony Douglasem–Peuckerem. DXF je verze R12 (POLYLINE), čitelná v LibreCADu, QCADu, Inkscapu i softwaru laserů.</p>
+    <p class="radek-tl"><button class="btn" id="zavriNapovedu">Zavřít</button></p>
+  </div>
+</div>
+
+<script src="vektorizace/ui.js"></script>
+</body>
+</html>

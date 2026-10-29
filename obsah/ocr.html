@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔍 OCR – text z obrázku a skenu</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="ocr/jadro.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--text)}
+[hidden]{display:none !important}
+kbd{font-size:.72rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+select.tl{padding:4px 6px}
+@media (max-width:1250px){.lista .txt{display:none}}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:8px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+/* průběh dávky */
+.prubeh{display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--border);font-size:.84rem;flex-shrink:0}
+.prubeh .pruh{flex:1;height:8px;background:var(--bg-control);border-radius:4px;overflow:hidden;min-width:60px}
+.prubeh .pruh i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.prubeh #prubehText{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
+
+/* rozložení: stránky | náhled | panel */
+.rozlozeni{flex:1;min-height:0;display:grid;grid-template-columns:150px minmax(0,1fr) 340px}
+aside.strany{background:var(--bg-panel);border-right:1px solid var(--border);overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+.strana{position:relative;border:2px solid transparent;border-radius:6px;padding:4px;cursor:pointer;background:var(--bg-elevated);text-align:center;font-size:.72rem;color:var(--text-muted)}
+.strana:hover{border-color:var(--border-strong)}
+.strana.aktivni{border-color:var(--accent)}
+.strana .nahl{width:100%;height:110px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.strana img{max-width:100%;max-height:110px;background:#fff}
+.strana .stav{position:absolute;top:6px;right:6px;background:var(--bg-panel);border-radius:10px;padding:0 5px;font-size:.7rem;border:1px solid var(--border)}
+.strana .stav.ok{color:var(--ok)}
+.strana .stav.slabe{color:var(--warn)}
+.strana .jm{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}
+.strany-prazdne{color:var(--text-faint);font-size:.78rem;text-align:center;padding:10px 2px}
+
+main.plocha{overflow:auto;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;position:relative}
+.prazdno{margin:auto;max-width:520px;text-align:center;border:2px dashed var(--border-strong);border-radius:14px;padding:34px 22px;color:var(--text-muted);background:var(--bg-panel)}
+.prazdno h2{margin:0 0 8px;color:var(--text);font-size:1.25rem}
+.prazdno p{margin:6px 0;line-height:1.5}
+.prazdno .tlacitka{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0 6px}
+.prazdno .soukromi{font-size:.78rem;color:var(--text-faint);margin-top:14px}
+body.pretahovani main.plocha{outline:3px dashed var(--accent);outline-offset:-8px}
+.okno{position:relative;display:inline-block;box-shadow:var(--shadow);background:#fff;line-height:0}
+.okno canvas{display:block;max-width:100%;max-height:calc(100vh - 140px);width:auto;height:auto}
+.okno.plna canvas{max-width:none;max-height:none}
+.okno svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.okno.rezim-oblast svg,.okno.rezim-orez svg{cursor:crosshair}
+.info-radek{font-size:.78rem;color:var(--text-faint);text-align:center}
+/* překryvné značky (SVG); vector-effect drží tloušťku čar nezávisle na zvětšení */
+.okno rect,.okno path{vector-effect:non-scaling-stroke}
+.sl{fill:transparent;stroke:none;cursor:pointer}
+.sl.vse{stroke:color-mix(in srgb,var(--accent) 55%,transparent);stroke-width:1}
+.sl.nizka{fill:color-mix(in srgb,var(--warn) 28%,transparent);stroke:var(--warn);stroke-width:1.5}
+.sl.vybrane{fill:color-mix(in srgb,var(--accent) 30%,transparent);stroke:var(--accent);stroke-width:2.5}
+.sl:hover{stroke:var(--accent);stroke-width:2}
+.obl{fill:color-mix(in srgb,var(--accent) 10%,transparent);stroke:var(--accent);stroke-width:2;stroke-dasharray:6 3}
+.obl-cislo{fill:var(--accent);font-weight:700;paint-order:stroke;stroke:var(--bg-panel);stroke-width:3px}
+.orez-maska{fill:rgba(0,0,0,.45);fill-rule:evenodd}
+.orez-ram{fill:none;stroke:var(--warn);stroke-width:2}
+.kresleni{fill:none;stroke:var(--warn);stroke-width:2;stroke-dasharray:4 3}
+
+/* pravý panel */
+section.panel{background:var(--bg-panel);border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+.zalozky{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.zalozky button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-muted);padding:9px 6px;cursor:pointer;font-family:inherit;font-size:.86rem}
+.zalozky button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.obsah-zal{overflow:auto;padding:10px 12px 40px;flex:1;min-height:0}
+.obsah-zal h3{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin:14px 0 6px}
+.obsah-zal h3:first-child{margin-top:2px}
+.radek{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.84rem;flex-wrap:wrap}
+.radek > label:first-child{min-width:92px;color:var(--text-muted)}
+.radek input[type=range]{flex:1;min-width:90px;accent-color:var(--accent)}
+.radek output{min-width:44px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted)}
+.zaskrt{display:flex;align-items:center;gap:6px;font-size:.84rem;margin:5px 0;cursor:pointer}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.84rem;font-family:inherit}
+.vstup.cislo{width:70px}
+.pozn{font-size:.76rem;color:var(--text-faint);line-height:1.45;margin:4px 0}
+.tlacitka-r{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.oblasti{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.oblasti li{display:flex;align-items:center;gap:6px;font-size:.8rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:3px 6px}
+.oblasti li b{color:var(--accent);min-width:18px}
+.oblasti li span{flex:1;color:var(--text-muted)}
+.oblasti .tl{padding:1px 6px;font-size:.78rem}
+textarea.text{width:100%;box-sizing:border-box;min-height:300px;height:calc(100vh - 330px);resize:vertical;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px;font:.88rem/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap}
+.zrcadlo{position:absolute;visibility:hidden;white-space:pre-wrap;overflow-wrap:break-word;font:.88rem/1.5 ui-monospace,Consolas,monospace;padding:8px;border:1px solid transparent;box-sizing:border-box;top:0;left:-9999px}
+.stat{font-size:.82rem;color:var(--text-muted);margin:4px 0 8px}
+.stat b{color:var(--text)}
+.stat .slabe{color:var(--warn)}
+
+dialog.napoveda{margin:auto;max-height:calc(100vh - 40px);overflow:auto;max-width:680px;width:calc(100% - 32px);background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:18px 22px}
+dialog.napoveda::backdrop{background:rgba(0,0,0,.45)}
+dialog.napoveda h2{margin:0 0 8px;font-size:1.15rem}
+dialog.napoveda h3{font-size:.95rem;margin:14px 0 4px}
+dialog.napoveda p,dialog.napoveda li{font-size:.87rem;line-height:1.5;color:var(--text-muted)}
+dialog.napoveda table{font-size:.84rem;border-collapse:collapse}
+dialog.napoveda td{padding:2px 10px 2px 0;color:var(--text-muted)}
+
+/* mobil / úzké okno: vše pod sebou, stránka se posouvá celá */
+@media (max-width:900px){
+  body{height:auto;overflow:auto;min-height:100vh}
+  .rozlozeni{display:flex;flex-direction:column}
+  aside.strany{flex-direction:row;border-right:0;border-bottom:1px solid var(--border);overflow-x:auto;overflow-y:hidden}
+  aside.strany .strana{flex:0 0 96px}
+  .strana .nahl{height:70px}.strana img{max-height:70px}
+  main.plocha{padding:8px;overflow:visible}
+  .okno canvas{max-height:70vh}
+  section.panel{border-left:0;border-top:1px solid var(--border)}
+  .obsah-zal{overflow:visible}
+  textarea.text{height:320px}
+  .prazdno{padding:22px 14px}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🔍 OCR</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Otevřít obrázky a PDF, vložit, zavřít">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Stránka"><span class="skup-nazev" aria-hidden="true">Stránka</span><div class="skup-tl">
+    <button class="tl" data-prikaz="vlevo" title="Otočit o 90° doleva ( [ )" aria-label="Otočit doleva">↺</button>
+    <button class="tl" data-prikaz="vpravo" title="Otočit o 90° doprava ( ] )" aria-label="Otočit doprava">↻</button>
+    <button class="tl" data-prikaz="narovnat" title="Narovnat podle odhadu sklonu (A)">📐<span class="txt"> Narovnat</span></button>
+    <button class="tl" data-nabidka="nabStrana" title="Další úpravy stránky a oblastí">▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroj myši"><span class="skup-nazev" aria-hidden="true">Myš</span><div class="skup-tl">
+    <button class="tl" data-rezim="slova" title="Klik na slovo = skok v textu (1)">☝<span class="txt"> Slova</span></button>
+    <button class="tl" data-rezim="oblast" title="Tažením přidat oblast ke čtení (2)">▭<span class="txt"> Oblast</span></button>
+    <button class="tl" data-rezim="orez" title="Tažením oříznout stránku (3)">✂<span class="txt"> Ořez</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="nahled" id="tlNahled" aria-pressed="true" title="Zpracovaný / původní obraz (P)">◐<span class="txt"> Zpracovaný</span></button>
+    <button class="tl" data-prikaz="zoom" id="tlZoom" aria-pressed="false" title="Přizpůsobit / skutečná velikost náhledu (Z)" aria-label="Zvětšení">🔎</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Rozpoznat"><span class="skup-nazev" aria-hidden="true">Rozpoznat</span><div class="skup-tl">
+    <select class="tl" id="jazyk" title="Jazyk textu" aria-label="Jazyk textu">
+      <option value="ces">čeština</option>
+      <option value="eng">angličtina</option>
+      <option value="ces+eng">čeština + angličtina</option>
+    </select>
+    <button class="tl hlavni" data-prikaz="cti" title="Přečíst aktuální stránku (Ctrl+Enter)">▶<span class="txt"> Přečíst</span></button>
+    <button class="tl" data-nabidka="nabRozpoznat" title="Přečíst všechny stránky nebo rozsah">▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
+    <button class="tl" data-prikaz="kopiruj" title="Kopírovat text stránky (Ctrl+Shift+C)">📋<span class="txt"> Kopírovat</span></button>
+    <button class="tl" data-nabidka="nabExport" title="TXT a prohledávatelné PDF">💾<span class="txt"> Uložit</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít obrázky / PDF… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="vlozit">📋 Vložit obrázek ze schránky <kbd>Ctrl+V</kbd></button>
+  <button class="tl" data-prikaz="ukazka">🧪 Ukázkový sken</button>
+  <hr>
+  <button class="tl" data-prikaz="odebrat">🗑 Odebrat stránku <kbd>Del</kbd></button>
+  <button class="tl" data-prikaz="zavritVse">✖ Zavřít vše</button>
+</div>
+<div id="nabStrana" class="nabidka" hidden>
+  <button class="tl" data-prikaz="narovnat">📐 Narovnat stránku <kbd>A</kbd></button>
+  <button class="tl" data-prikaz="narovnatVse">📐 Narovnat všechny stránky</button>
+  <button class="tl" data-prikaz="vlevo">↺ Otočit doleva <kbd>[</kbd></button>
+  <button class="tl" data-prikaz="vpravo">↻ Otočit doprava <kbd>]</kbd></button>
+  <button class="tl" data-prikaz="zrusOrez">⤢ Zrušit ořez</button>
+  <hr>
+  <button class="tl" data-prikaz="seradRadky">↧ Seřadit oblasti po řádcích</button>
+  <button class="tl" data-prikaz="seradSloupce">⇥ Seřadit oblasti po sloupcích</button>
+  <button class="tl" data-prikaz="smazOblasti">🗑 Smazat oblasti (celá stránka)</button>
+  <hr>
+  <button class="tl" data-prikaz="geomVsem">⇉ Použít otočení a ořez na všechny stránky</button>
+</div>
+<div id="nabRozpoznat" class="nabidka" hidden>
+  <button class="tl" data-prikaz="cti">▶ Přečíst stránku <kbd>Ctrl+Enter</kbd></button>
+  <button class="tl" data-prikaz="ctiVse">⏩ Přečíst všechny stránky <kbd>Ctrl+Shift+Enter</kbd></button>
+  <button class="tl" data-prikaz="ctiRozsah">🔢 Přečíst rozsah stránek…</button>
+  <button class="tl" data-prikaz="ctiNeprectene">⏭ Přečíst nepřečtené</button>
+  <hr>
+  <button class="tl" data-prikaz="zrusit">⏹ Zrušit běžící čtení <kbd>Esc</kbd></button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="kopiruj">📋 Kopírovat text stránky <kbd>Ctrl+Shift+C</kbd></button>
+  <button class="tl" data-prikaz="kopirujVse">📋 Kopírovat text všech stránek</button>
+  <hr>
+  <button class="tl" data-prikaz="txt">📄 Stáhnout TXT – stránka</button>
+  <button class="tl" data-prikaz="txtVse">📄 Stáhnout TXT – všechny stránky <kbd>Ctrl+S</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="pdf">📕 Prohledávatelné PDF…</button>
+</div>
+
+<div class="prubeh" id="prubeh" hidden>
+  <span id="prubehText">Čtu…</span>
+  <span class="pruh"><i id="prubehPruh"></i></span>
+  <button class="tl" data-prikaz="zrusit">⏹ Zrušit</button>
+</div>
+
+<div class="rozlozeni">
+  <aside class="strany" id="strany" aria-label="Stránky"></aside>
+  <main class="plocha" id="plocha">
+    <div class="prazdno" id="prazdno">
+      <h2>Text z obrázku a skenu</h2>
+      <p>Přetáhněte sem <b>obrázky</b> (i více najednou) nebo <b>PDF</b>, vložte obrázek ze schránky <kbd>Ctrl+V</kbd>, nebo otevřete soubor.</p>
+      <div class="tlacitka">
+        <button class="tl hlavni" data-prikaz="otevrit">📂 Otevřít soubory…</button>
+        <button class="tl" data-prikaz="ukazka">🧪 Vyzkoušet na ukázce</button>
+      </div>
+      <p class="pozn">Upravte obraz (narovnání, ořez, prahování), vyberte oblasti myší a stiskněte <b>▶ Přečíst</b>. Slova s nízkou jistotou se zvýrazní, kliknutím na ně skočíte v textu. Výsledek uložíte jako TXT nebo prohledávatelné PDF.</p>
+      <p class="soukromi">🔒 Vše běží jen ve vašem prohlížeči – soubory se nikam neodesílají. Rozpoznávání (Tesseract) se načte až při prvním čtení.</p>
+    </div>
+    <div class="okno" id="okno" hidden>
+      <canvas id="platno"></canvas>
+      <svg id="vrstva" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="info-radek" id="infoRadek"></div>
+  </main>
+  <section class="panel" aria-label="Nastavení a text">
+    <div class="zalozky" role="tablist">
+      <button role="tab" id="zalObraz" aria-selected="true" data-zal="obraz">🖼 Obraz</button>
+      <button role="tab" id="zalText" aria-selected="false" data-zal="text">📝 Text</button>
+    </div>
+    <div class="obsah-zal" id="panelObraz" role="tabpanel">
+      <h3>Stránka</h3>
+      <div class="radek"><label for="uhel">Natočení</label><input type="range" id="uhel" min="-20" max="20" step="0.1" value="0"><output id="uhelV">0°</output></div>
+      <div class="tlacitka-r">
+        <button class="tl" data-prikaz="narovnat">📐 Narovnat</button>
+        <button class="tl" data-prikaz="vlevo">↺ 90°</button>
+        <button class="tl" data-prikaz="vpravo">↻ 90°</button>
+        <button class="tl" data-prikaz="zrusOrez" id="tlZrusOrez">⤢ Zrušit ořez</button>
+      </div>
+      <h3>Úpravy pro čtení <span style="text-transform:none;letter-spacing:0">(všechny stránky)</span></h3>
+      <div class="radek"><label for="zvetseni">Zvětšení</label>
+        <select id="zvetseni" class="vstup"><option value="auto">automaticky</option><option value="1">1×</option><option value="1.5">1,5×</option><option value="2">2×</option><option value="3">3×</option></select></div>
+      <label class="zaskrt"><input type="checkbox" id="seda"> Převést na šedou</label>
+      <label class="zaskrt"><input type="checkbox" id="autoKontrast"> Automatický kontrast (vyrovnat úrovně)</label>
+      <div class="radek"><label for="kontrast">Kontrast</label><input type="range" id="kontrast" min="-100" max="100" step="1"><output id="kontrastV"></output></div>
+      <div class="radek"><label for="jas">Jas</label><input type="range" id="jas" min="-100" max="100" step="1"><output id="jasV"></output></div>
+      <div class="radek"><label for="odsum">Odšumění</label>
+        <select id="odsum" class="vstup"><option value="0">žádné</option><option value="1">mírné (medián 3×3)</option><option value="2">silné (2 průchody)</option></select></div>
+      <div class="radek"><label for="prah">Prahování</label>
+        <select id="prah" class="vstup"><option value="zadny">žádné</option><option value="otsu">Otsu (celá stránka)</option><option value="adaptivni">adaptivní (Sauvola) – doporučeno</option></select></div>
+      <div id="adaptivniVolby">
+        <div class="radek"><label for="okno">Okno</label><input type="range" id="okno" min="0.5" max="10" step="0.5"><output id="oknoV"></output></div>
+        <div class="radek"><label for="citlivost">Citlivost</label><input type="range" id="citlivost" min="0.05" max="0.6" step="0.01"><output id="citlivostV"></output></div>
+        <p class="pozn">Adaptivní práh zvládá stíny a nerovnoměrné osvětlení fotek. Větší okno = hrubší, vyšší citlivost = světlejší výsledek.</p>
+      </div>
+      <label class="zaskrt"><input type="checkbox" id="invertovat"> Invertovat (světlý text na tmavém)</label>
+      <div class="tlacitka-r"><button class="tl" data-prikaz="vychozi">↺ Výchozí úpravy</button></div>
+      <h3>Oblasti ke čtení</h3>
+      <ol class="oblasti" id="oblasti"></ol>
+      <p class="pozn" id="oblastiPozn">Bez oblastí se čte celá stránka. Nástrojem <b>▭ Oblast</b> (klávesa 2) natáhněte obdélníky – čtou se v pořadí čísel. Dvojklik na oblast ji smaže.</p>
+      <h3>PDF na vstupu</h3>
+      <div class="radek"><label for="pdfDpi">Rozlišení</label>
+        <select id="pdfDpi" class="vstup"><option value="150">150 DPI</option><option value="200">200 DPI</option><option value="300">300 DPI</option><option value="400">400 DPI</option></select></div>
+      <p class="pozn">Stránky PDF se převedou na obraz v tomto rozlišení (platí pro nově otevřená PDF). Pro běžný text stačí 300 DPI.</p>
+    </div>
+    <div class="obsah-zal" id="panelText" role="tabpanel" hidden>
+      <div class="stat" id="stat">Stránka zatím není přečtená.</div>
+      <div class="radek"><label for="prahJistoty">Zvýraznit pod</label><input type="number" id="prahJistoty" class="vstup cislo" min="0" max="100" step="5"> % jistoty</div>
+      <label class="zaskrt"><input type="checkbox" id="vsechnaSlova"> Rámečky všech slov</label>
+      <textarea class="text" id="text" spellcheck="true" lang="cs" placeholder="Rozpoznaný text se objeví tady. Můžete ho opravovat."></textarea>
+      <div class="tlacitka-r">
+        <button class="tl hlavni" data-prikaz="cti" title="Přečíst stránku (Ctrl+Enter)">▶ Přečíst</button>
+        <button class="tl" data-prikaz="kopiruj">📋 Kopírovat</button>
+        <button class="tl" data-prikaz="txt">📄 TXT</button>
+        <button class="tl" data-prikaz="pdf">📕 PDF</button>
+      </div>
+      <h3>Prohledávatelné PDF</h3>
+      <div class="radek"><label for="pdfObraz">Obraz</label>
+        <select id="pdfObraz" class="vstup"><option value="puvodni">původní barevný (JPEG)</option><option value="zpracovany">zpracovaný pro čtení</option></select></div>
+      <div class="radek"><label for="obrDpi">DPI obrázků</label><input type="number" id="obrDpi" class="vstup cislo" min="50" max="1200" step="10"></div>
+      <p class="pozn">Textová vrstva je neviditelná a leží přesně na slovech – PDF jde prohledávat a kopírovat z něj. Opravy v textu se přenesou, pokud počet slov zůstane stejný. DPI obrázků určuje velikost stránky u fotek a skenů (u PDF se bere jeho rozlišení).</p>
+    </div>
+  </section>
+</div>
+
+<div class="zrcadlo" id="zrcadlo" aria-hidden="true"></div>
+<input type="file" id="soubor" accept="image/*,application/pdf,.pdf" multiple hidden>
+
+<dialog class="napoveda" id="napoveda">
+  <h2>🔍 OCR – nápověda</h2>
+  <p>Stránka převádí text z fotek, skenů a PDF na upravitelný text. Rozpoznávání dělá <b>Tesseract</b> přímo ve vašem prohlížeči – nic se neodesílá na server.</p>
+  <h3>Postup</h3>
+  <ol>
+    <li><b>Načtěte</b> obrázky nebo PDF (tlačítko, přetažení, <kbd>Ctrl+V</kbd>). PDF se převede na obrázky stránek.</li>
+    <li><b>Upravte obraz</b> v záložce Obraz: narovnání (odhad sklonu), otočení, ořez, šedá, kontrast, odšumění a prahování. Náhled ukazuje přesně to, co uvidí Tesseract; přepínač ◐ ukáže původní obraz.</li>
+    <li>Volitelně <b>vyberte oblasti</b> (nástroj ▭) – přečtou se jen ony, v pořadí čísel. Pořadí změníte šipkami nebo automaticky (po řádcích / po sloupcích).</li>
+    <li><b>Přečtěte</b> stránku nebo celou dávku. Čtení jde kdykoli zrušit.</li>
+    <li>V záložce Text <b>opravte</b> výsledek. Oranžově jsou slova s nízkou jistotou; klik na slovo v náhledu ho označí v textu.</li>
+    <li><b>Uložte</b> TXT nebo prohledávatelné PDF (obraz + neviditelný text).</li>
+  </ol>
+  <h3>Rady</h3>
+  <ul>
+    <li>Nejlepší výsledky dává ostrý, rovný sken kolem 300 DPI. Malé písmo pomůže zvětšit.</li>
+    <li>Fotky se stínem: adaptivní prahování. Čistý sken: obvykle stačí šedá + automatický kontrast.</li>
+    <li>Sloupce, tabulky a popisky čtěte přes oblasti – jinak se může plést pořadí řádků.</li>
+    <li>Při změně natočení nebo ořezu po čtení je potřeba stránku přečíst znovu.</li>
+  </ul>
+  <h3>Klávesy</h3>
+  <table>
+    <tr><td><kbd>Ctrl+O</kbd></td><td>otevřít soubory</td><td><kbd>Ctrl+V</kbd></td><td>vložit obrázek</td></tr>
+    <tr><td><kbd>Ctrl+Enter</kbd></td><td>přečíst stránku</td><td><kbd>Ctrl+Shift+Enter</kbd></td><td>přečíst vše</td></tr>
+    <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>slova / oblast / ořez</td><td><kbd>Esc</kbd></td><td>zrušit čtení</td></tr>
+    <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>otočit o 90°</td><td><kbd>A</kbd></td><td>narovnat</td></tr>
+    <tr><td><kbd>PgUp</kbd> <kbd>PgDn</kbd></td><td>předchozí / další stránka</td><td><kbd>P</kbd> <kbd>Z</kbd></td><td>zpracovaný náhled / zvětšení</td></tr>
+    <tr><td><kbd>Ctrl+S</kbd></td><td>TXT všech stránek</td><td><kbd>Del</kbd></td><td>odebrat stránku</td></tr>
+  </table>
+  <p class="pozn">Knihovny: Tesseract.js 5 a jazykové modely tessdata_fast (Apache 2.0), PDF.js (Apache 2.0), pdf-lib + fontkit (MIT), písmo Liberation Sans (OFL).</p>
+  <div class="tlacitka-r" style="justify-content:flex-end"><button class="tl hlavni" id="napovedaZavrit">Zavřít</button></div>
+</dialog>
+
+<script src="ocr/aplikace.js"></script>
+</body>
+</html>

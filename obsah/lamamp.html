@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#14141b">
+<title>🦙 Lamamp – přehrávač</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lamamp/skin.js"></script>
+<script src="lamamp/hlavni.js"></script>
+<script src="lamamp/ekvalizer.js"></script>
+<script src="lamamp/playlist.js"></script>
+<script src="lamamp/vizualizace.js"></script>
+<script src="lamamp/okna.js"></script>
+<script src="lamamp/tagy.js"></script>
+<script src="lamamp/jadro.js"></script>
+<script src="lamamp/zvuk.js"></script>
+<script src="lamamp/uloziste.js"></script>
+<script src="lamamp/plocha.js"></script>
+<script src="lamamp/vyhlazeni.js"></script>
+<style>
+body{margin:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;background:var(--bg-deep)}
+[hidden]{display:none !important}
+/* horní lišta jako v Databance promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl:disabled{opacity:.45;cursor:default}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:230px}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+@media (max-width:560px){.lista .txt{display:none}}
+/* plocha s okny – vlastní barvy, s tématem webu se nemění (přehrávač má svůj skin) */
+.plocha{flex:1;min-height:0;position:relative;overflow:hidden;background:#14141b radial-gradient(circle at 30% 20%,#23232f,#0f0f14 70%);touch-action:none;user-select:none;-webkit-user-select:none}
+.plocha.win98{background:#008080}
+.plocha.pretahovani{outline:3px dashed #6cff6c;outline-offset:-6px}
+.okno{position:absolute;touch-action:none;line-height:0;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
+.plocha.win98 .okno{filter:none}
+.okno canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-touch-callout:none}
+/* složky s hudbou na ploše – ikony jako ve Windows 98 */
+.ikony{position:absolute;inset:0;pointer-events:none}
+.ikona{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 2px;pointer-events:auto;cursor:default;outline:none;touch-action:none;-webkit-touch-callout:none}
+.ikona canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+.ikona .popisek{font-family:Tahoma,"MS Sans Serif",Verdana,sans-serif;font-size:var(--ikona-pismo,11px);line-height:1.25;color:#fff;text-shadow:1px 1px 0 #000;text-align:center;padding:0 3px;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.plocha.win98 .ikona .popisek{text-shadow:none}
+.ikona.vybrana .popisek{background:#000080;color:#fff;text-shadow:none;outline:1px dotted #ffff80}
+.ikona.hraje .popisek{color:#b8ffb8}
+.ikona.vybrana.hraje .popisek{color:#fff}
+.ikona.tazena{opacity:.75;z-index:40}
+/* minimalizované okno: tlačítko jako na hlavním panelu Windows 98 */
+.obnovit{position:absolute;left:8px;bottom:36px;max-width:min(320px,calc(100% - 16px));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Win98 nabídky a dialogy */
+.menu98{position:fixed;inset:0;z-index:80;pointer-events:none}
+.menu98-seznam{position:fixed;pointer-events:auto;background:#c0c0c0;color:#000;border:1px solid;border-color:#dfdfdf #000 #000 #dfdfdf;box-shadow:inset 1px 1px #fff,inset -1px -1px #808080,2px 2px 0 rgba(0,0,0,.35);padding:2px;min-width:190px;font:12px/1.2 Tahoma,"MS Sans Serif",Verdana,sans-serif}
+.menu98-pol{display:flex;align-items:center;width:100%;background:none;border:0;padding:4px 6px 4px 2px;font:inherit;color:inherit;text-align:left;cursor:default;white-space:nowrap}
+.menu98-pol:hover:not(:disabled),.menu98-pol:focus-visible{background:#000080;color:#fff;outline:0}
+.menu98-pol:disabled{color:#808080;text-shadow:1px 1px #fff}
+.m98-zn{width:18px;text-align:center;flex-shrink:0}
+.m98-t{flex:1}
+.m98-k{margin-left:18px;opacity:.85}
+.m98-s{width:14px;text-align:right}
+.menu98-oddel{border-top:1px solid #808080;border-bottom:1px solid #fff;margin:3px 2px}
+@media (pointer:coarse){.menu98-pol{padding:9px 8px 9px 4px;font-size:14px}}
+.dialog98{margin:auto;padding:0;border:1px solid;border-color:#dfdfdf #000 #000 #dfdfdf;box-shadow:inset 1px 1px #fff,inset -1px -1px #808080,4px 4px 0 rgba(0,0,0,.4);background:#c0c0c0;color:#000;font:12px/1.4 Tahoma,"MS Sans Serif",Verdana,sans-serif;max-width:min(460px,94vw);min-width:min(300px,94vw)}
+.dialog98::backdrop{background:rgba(0,0,0,.35)}
+.d98-titul{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:bold;padding:3px 6px;margin:2px}
+.d98-telo{padding:10px 12px 4px}
+.d98-telo p{margin:0 0 8px}
+.d98-tlacitka{display:flex;justify-content:flex-end;gap:6px;padding:6px 12px 12px}
+.tl98{min-width:75px;padding:4px 10px;background:#c0c0c0;color:#000;border:1px solid;border-color:#fff #000 #000 #fff;box-shadow:inset -1px -1px #808080,inset 1px 1px #dfdfdf;font:inherit;cursor:pointer}
+.tl98:active{border-color:#000 #fff #fff #000;box-shadow:inset 1px 1px #808080}
+.tl98:focus-visible{outline:1px dotted #000;outline-offset:-4px}
+.vstup98{width:100%;box-sizing:border-box;padding:3px 4px;border:1px solid;border-color:#808080 #fff #fff #808080;box-shadow:inset 1px 1px #000;background:#fff;color:#000;font:inherit;margin:2px 0 8px}
+.m98-pozn{color:#404040;font-size:11px}
+.d98-info{display:flex;gap:10px;align-items:flex-start}
+.d98-info img{width:96px;height:96px;object-fit:cover;border:1px solid #808080;flex-shrink:0}
+.d98-info table{border-collapse:collapse}
+.d98-info th{text-align:left;padding:1px 8px 1px 0;white-space:nowrap;vertical-align:top;font-weight:normal;color:#404040}
+.d98-info td{padding:1px 0;word-break:break-word}
+.d98-seznam{height:220px;overflow:auto;background:#fff;border:1px solid;border-color:#808080 #fff #fff #808080;box-shadow:inset 1px 1px #000}
+.d98-radek{padding:2px 4px;cursor:default;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d98-radek.vybrany{background:#000080;color:#fff}
+.d98-o{display:flex;gap:12px;align-items:flex-start}
+.d98-o canvas{width:52px;height:60px;image-rendering:pixelated;flex-shrink:0}
+@media (max-width:420px){.d98-info{flex-direction:column}}
+/* nápověda v barvách webu */
+.pomoc{margin:auto;max-width:min(640px,94vw);max-height:90vh;overflow:auto;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:16px 20px;line-height:1.5;font-size:.9rem}
+.pomoc::backdrop{background:rgba(0,0,0,.5)}
+.pomoc h2{margin:0 0 8px;font-size:1.1rem}
+.pomoc h3{margin:14px 0 4px;font-size:.95rem}
+.pomoc ul{padding-left:20px;margin:4px 0}
+.pomoc kbd{font-size:.75rem;border:1px solid var(--border);border-radius:4px;padding:0 5px;background:var(--bg-elevated)}
+.pomoc form{text-align:right;margin-top:10px}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🦙 Lamamp</h1>
+  <button class="tl" data-nabidka="nabSoubor" title="Otevřít a přidat skladby, seznamy">📂<span class="txt"> Soubor</span> ▾</button>
+  <button class="tl" data-nabidka="nabOkna" title="Okna, velikost a pozadí">🪟<span class="txt"> Zobrazit</span> ▾</button>
+  <button class="tl" data-prikaz="skiny" title="Skiny .wsz">🎨<span class="txt"> Skiny</span></button>
+  <button class="tl" data-prikaz="menu" title="Hlavní nabídka přehrávače (jako pravé tlačítko na okně)">☰<span class="txt"> Nabídka</span></button>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">⏏ Otevřít skladby (nahradit seznam)…</button>
+  <button class="tl" data-prikaz="pridat">➕ Přidat skladby…</button>
+  <button class="tl" data-prikaz="slozka">🗂 Přidat složku…</button>
+  <button class="tl" data-prikaz="adresa">📻 Přidat adresu (rádio)…</button>
+  <button class="tl" data-prikaz="novaSlozka">📁 Nová složka s hudbou na ploše…</button>
+  <hr>
+  <button class="tl" data-prikaz="ulozitSeznam">💾 Uložit seznam (M3U/PLS)…</button>
+</div>
+<div id="nabOkna" class="nabidka" hidden>
+  <button class="tl" data-prikaz="rozlozeni">↺ Výchozí rozložení oken</button>
+  <hr>
+  <div class="titulek">Velikost oken</div>
+  <button class="tl prep" data-prikaz="zoom" data-hodnota="auto">Podle místa</button>
+  <button class="tl prep" data-prikaz="zoom" data-hodnota="1">Původní 1×</button>
+  <button class="tl prep" data-prikaz="zoom" data-hodnota="2">Dvojitá 2× <kbd>Ctrl+D</kbd></button>
+  <button class="tl prep" data-prikaz="zoom" data-hodnota="3">Trojitá 3×</button>
+  <button class="tl prep" data-prikaz="vyhlazeni" data-hodnota="1" title="Skiny .wsz jsou bitmapy: při zvětšení dopočítat šikmé hrany a jemně vyhladit (vypnuto = ostré pixely). Vestavěné skiny se od 2× kreslí v HD.">Vyhlazovat skiny .wsz</button>
+  <hr>
+  <div class="titulek">Pozadí</div>
+  <button class="tl prep" data-prikaz="pozadi" data-hodnota="tmave">Tmavé</button>
+  <button class="tl prep" data-prikaz="pozadi" data-hodnota="win98">Plocha Windows 98</button>
+</div>
+
+<main class="plocha" id="plocha">
+  <div class="ikony" id="ikony"></div>
+  <div class="okno" id="okno-hlavni"><canvas aria-label="Hlavní okno přehrávače"></canvas></div>
+  <div class="okno" id="okno-eq"><canvas aria-label="Ekvalizér"></canvas></div>
+  <div class="okno" id="okno-pl"><canvas aria-label="Playlist"></canvas></div>
+  <button class="tl obnovit" id="obnovit" hidden></button>
+</main>
+
+<input type="file" id="vstupSoubory" multiple accept="audio/*,.mp3,.m4a,.aac,.flac,.ogg,.oga,.opus,.wav,.webm,.m3u,.m3u8,.pls,.wsz" hidden>
+<input type="file" id="vstupSlozka" webkitdirectory multiple hidden>
+<input type="file" id="vstupSkin" accept=".wsz,.zip" hidden>
+<input type="file" id="vstupEqf" accept=".eqf" hidden>
+<div class="menu98" id="menu98" hidden></div>
+<dialog class="dialog98" id="dialog98"><div class="d98-titul"></div><div class="d98-telo"></div><div class="d98-tlacitka"></div></dialog>
+
+<dialog id="napoveda" class="pomoc">
+  <h2>🦙 Lamamp – retro přehrávač hudby</h2>
+  <p>Hraje skladby z tvého zařízení přímo v prohlížeči – nic se nikam neodesílá. Formáty: MP3, M4A/AAC, FLAC, OGG, Opus a WAV
+    (podle prohlížeče). Okna se přesouvají za titulní lištu a přichytávají se k sobě; hlavní okno táhne přichycená okna s sebou.
+    Dvojklik na lištu okno zmenší do proužku, velikost playlistu se mění úchytem vpravo dole.</p>
+  <h3>Klávesy</h3>
+  <ul>
+    <li><kbd>Z</kbd> předchozí, <kbd>X</kbd> přehrát, <kbd>C</kbd> pauza, <kbd>V</kbd> stop (<kbd>Shift+V</kbd> se ztlumením), <kbd>B</kbd> další</li>
+    <li><kbd>←</kbd> <kbd>→</kbd> posun o 5 s, <kbd>↑</kbd> <kbd>↓</kbd> hlasitost, <kbd>J</kbd> skok na skladbu, <kbd>L</kbd> otevřít soubory</li>
+    <li><kbd>R</kbd> repeat, <kbd>S</kbd> shuffle, <kbd>Ctrl+T</kbd> zbývající čas, <kbd>Ctrl+D</kbd> dvojitá velikost</li>
+    <li><kbd>Alt+G</kbd> ekvalizér, <kbd>Alt+E</kbd> playlist, <kbd>Alt+3</kbd> informace o skladbě</li>
+    <li>V playlistu: <kbd>Ctrl</kbd>/<kbd>Shift</kbd> + klik výběr, tažením přesun, <kbd>Delete</kbd> odebrat, <kbd>Enter</kbd> přehrát</li>
+  </ul>
+  <h3>Hlavní okno</h3>
+  <ul>
+    <li>Klik na čas: uplynulý ↔ zbývající. Klik na vizualizaci: spektrum → osciloskop → vypnuto.</li>
+    <li>Písmena vlevo: <b>O</b> nabídka, <b>A</b> vždy navrchu, <b>I</b> informace o skladbě, <b>D</b> dvojitá velikost, <b>V</b> vizualizace.</li>
+    <li>Kolečko myši nad oknem mění hlasitost.</li>
+    <li>Ve 2× a větší velikosti se vestavěné skiny kreslí <b>v HD</b>: skutečné písmo (i s háčky a čárkami), hladké číslice a ikony. Ve velikosti 1× a u skinů <code>.wsz</code> zůstávají pixely; skiny .wsz jde při zvětšení vyhladit volbou <b>Zobrazit → Vyhlazovat skiny .wsz</b>.</li>
+  </ul>
+  <h3>Ekvalizér</h3>
+  <p>10 pásem a předzesílení ±12 dB. <b>ON</b> zapíná ekvalizér, <b>AUTO</b> si pamatuje nastavení ke každé skladbě.
+    <b>PRESETS</b>: hotové předvolby, vlastní předvolby a soubory <code>.eqf</code>.</p>
+  <h3>Složky s hudbou na ploše</h3>
+  <ul>
+    <li>Ikonou <b>Přidat složku</b> (nebo pravým tlačítkem na prázdné ploše) přidáš složku s hudbou. Dvojklik na složku ji přehraje – nahradí playlist.</li>
+    <li>Přetažením ikony na playlist se skladby přidají, na hlavní okno se složka přehraje; jinam na ploše ikonu jen přesuneš.</li>
+    <li>Pravé tlačítko na složce: zamíchat a přehrát, přidat do playlistu, barva, přejmenovat (<kbd>F2</kbd>), odebrat (<kbd>Del</kbd>).</li>
+    <li>V Chrome a Edge na počítači je složka <b>zástupce</b> (šipka v rohu) – skladby zůstávají na disku a nic se nekopíruje; po obnovení
+      stránky prohlížeč jednou požádá o přístup. Složku jde na plochu i přetáhnout z Průzkumníka. Jinde (Firefox, Safari, iPhone) se skladby zkopírují do prohlížeče.</li>
+  </ul>
+  <h3>Skiny</h3>
+  <p>Tlačítko <b>Skiny</b> nabízí 10 vestavěných vzhledů (Lamamp, Grafit, Okna 98, Stříbro, Terminál, Jantar, Neon, Les, Rubín, Oceán). Načíst jde i klasický skin (<code>.wsz</code>) – přes Skiny nebo přetažením souboru na plochu; načtené skiny se ukládají v prohlížeči.</p>
+  <h3>Telefon a iPhone</h3>
+  <ul>
+    <li>Skladby se vybírají z aplikace Soubory (i iCloud Drive); hudbu z Apple Music web nevidí. Celou složku na iPhonu vybrat nejde.</li>
+    <li>Dlouhé podržení prstu na okně = nabídka, dvojí ťuknutí = dvojklik.</li>
+    <li>Složky na ploše se na iPhonu ukládají jako kopie skladeb v prohlížeči (vybereš je z aplikace Soubory).</li>
+    <li>Na iPhonu je výchozí „zvuk přímo“: hraje i se zamčeným displejem a ovládá se ze zamčené obrazovky, ale bez ekvalizéru a vizualizace
+      (a hlasitost se řídí tlačítky telefonu). Přepnutí: nabídka → Možnosti.</li>
+    <li>Přehrávač si skladby pamatuje i po zavření stránky (kopie v prohlížeči, vypnout jde v nabídce Možnosti). Na iPhonu přidej stránku na plochu – Safari pak data nemaže.</li>
+  </ul>
+  <form method="dialog"><button class="tl">Zavřít</button></form>
+</dialog>
+<script src="lamamp/app.js"></script>
+</body>
+</html>

@@ -9,7 +9,7 @@
  * Při vydání nové verze zvyš VERZE – stará cache se při aktivaci smaže.
  */
 const PREFIX = 'cviceni-';
-const VERZE = 'v2';
+const VERZE = 'v3';
 const CACHE = PREFIX + VERZE;
 const SOUBORY = [
   './',
@@ -23,6 +23,11 @@ const SOUBORY = [
   '../../podpis.js',
   '../../dialog.js',
   '../../apps.js',
+  '../../i18n.js',
+  '../../i18n/jazyky.js',
+  '../../i18n/en/_seznam.js',
+  '../../i18n/en/_spolecne.js',
+  '../../i18n/en/cviceni/index.js',
 ];
 const LIMIT_MS = 2500;
 

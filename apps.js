@@ -151,6 +151,24 @@ const KATALOG_SEKCE = [
     ]
   },
   {
+    "nazev": "📄 PDF & skeny",
+    "skupina": "produktivita",
+    "polozky": [
+      {
+        "soubor": "obsah/pdf_dilna.html",
+        "nazev": "📄 PDF dílna",
+        "stav": "vyvoj",
+        "tagy": ["pdf", "spojit pdf", "rozdělit pdf", "sloučit", "přeřadit stránky", "otočit stránky", "smazat stránky", "obrázky do pdf", "jpg do pdf", "vodoznak", "číslování stránek", "záhlaví", "zápatí", "podpis", "razítko", "ořez", "a4", "metadata", "zmenšit pdf", "komprese", "zip", "offline"]
+      },
+      {
+        "soubor": "obsah/ocr.html",
+        "nazev": "🔍 OCR – text z obrázku a skenu",
+        "stav": "vyvoj",
+        "tagy": ["ocr", "rozpoznání textu", "sken", "pdf", "prohledávatelné pdf", "tesseract", "fotka", "přepis"]
+      }
+    ]
+  },
+  {
     "nazev": "✅ Organizace & čas",
     "skupina": "produktivita",
     "polozky": [
@@ -1631,6 +1649,36 @@ const KATALOG_SEKCE = [
         "nazev": "📦 Krabice z kartonu (FEFCO)",
         "stav": "vyvoj",
         "tagy": ["krabice", "FEFCO", "vlnitá lepenka", "karton", "rozvin", "výsek", "dieline", "skládačka", "obal", "SVG", "DXF", "PDF", "plotr", "laser", "3D"]
+      },
+      {
+        "soubor": "obsah/karty_generator.html",
+        "nazev": "🎴 Generátor karet a kartiček",
+        "stav": "vyvoj",
+        "tagy": ["karty", "kartičky", "deskovka", "flashcards", "RPG", "kvíz", "slovíčka", "hromadný tisk", "CSV", "XLSX", "PDF", "spadávka", "ořezové značky", "oboustranný tisk"]
+      },
+      {
+        "soubor": "obsah/stitky_hromadne.html",
+        "nazev": "🏷️ Hromadný tisk štítků",
+        "stav": "vyvoj",
+        "tagy": ["štítky", "etikety", "adresy", "cenovky", "jmenovky", "inventář", "QR", "EAN", "Code128", "Avery", "Zweckform", "arch", "hromadná korespondence", "CSV", "XLSX", "tisk", "PDF"]
+      },
+      {
+        "soubor": "obsah/vstupenky.html",
+        "nazev": "🎟️ Vstupenky, kupóny a poukazy",
+        "stav": "vyvoj",
+        "tagy": ["vstupenka", "kupón", "poukaz", "tombola", "číslování", "QR", "sedadla", "kontrola vstupu", "tisk", "PDF"]
+      },
+      {
+        "soubor": "obsah/puzzle_generator.html",
+        "nazev": "🧩 Generátor puzzle z fotky",
+        "stav": "vyvoj",
+        "tagy": ["puzzle", "jigsaw", "skládačka", "fotka", "laser", "plotter", "SVG", "DXF", "PDF", "řezací šablona", "whimsy", "dětské puzzle", "hra"]
+      },
+      {
+        "soubor": "obsah/plakat_mapy.html",
+        "nazev": "🗺️ Plakát mapy",
+        "stav": "vyvoj",
+        "tagy": ["plakát", "mapa", "city map poster", "tisk", "hvězdná obloha", "OpenStreetMap", "PDF", "dárek"]
       }
     ]
   },
@@ -1692,6 +1740,30 @@ const KATALOG_SEKCE = [
         "nazev": "📷 EXIF prohlížeč",
         "stav": "beta",
         "tagy": ["exif", "metadata", "foto", "gps", "expozice"]
+      },
+      {
+        "soubor": "obsah/obrazky_davka.html",
+        "nazev": "🗂️ Hromadné úpravy obrázků",
+        "stav": "vyvoj",
+        "tagy": ["hromadně", "dávka", "složka", "zmenšení", "ořez", "převod", "webp", "avif", "jpg", "vodoznak", "přejmenování", "exif", "gps", "cílová velikost", "zip"]
+      },
+      {
+        "soubor": "obsah/pozadi.html",
+        "nazev": "✂️ Odstranění pozadí",
+        "stav": "vyvoj",
+        "tagy": ["pozadí", "odstranit pozadí", "průhledné PNG", "AI", "U2-Net", "chroma key", "zelené plátno", "kouzelná hůlka", "maska", "výřez", "fotka", "stín"]
+      },
+      {
+        "soubor": "obsah/vektorizace.html",
+        "nazev": "〰️ Vektorizace – bitmapa → SVG/DXF",
+        "stav": "vyvoj",
+        "tagy": ["vektorizace", "trasování", "trace", "bitmapa", "obrázek", "svg", "dxf", "png", "logo", "laser", "plotr", "řezání", "fólie", "středová čára", "centerline", "barvy", "kvantizace", "bézier", "mm"]
+      },
+      {
+        "soubor": "obsah/animace_gif.html",
+        "nazev": "🎞️ GIF, animace a sprite sheety",
+        "stav": "vyvoj",
+        "tagy": ["gif", "animace", "apng", "webm", "sprite sheet", "pixel art", "video na gif", "texturepacker", "phaser", "časová osa"]
       }
     ]
   },
@@ -1713,6 +1785,12 @@ const KATALOG_SEKCE = [
         "nazev": "🎞️ Dělení videa na sekce",
         "stav": "vyvoj",
         "tagy": ["video", "střih", "sekce", "rozdělit", "snímek", "export"]
+      },
+      {
+        "soubor": "obsah/lamamp.html",
+        "nazev": "🦙 Lamamp – přehrávač",
+        "stav": "vyvoj",
+        "tagy": ["hudba", "přehrávač", "mp3", "lamamp", "retro", "playlist", "ekvalizér", "skin"]
       },
       {
         "soubor": "obsah/nahnoji.html",
@@ -1766,6 +1844,12 @@ const KATALOG_SEKCE = [
         "nazev": "🥁 Metronom",
         "stav": "beta",
         "tagy": ["metronom", "tempo", "bpm", "rytmus", "cvičení"]
+      },
+      {
+        "soubor": "obsah/titulky.html",
+        "nazev": "💬 Editor titulků",
+        "stav": "vyvoj",
+        "tagy": ["titulky", "srt", "vtt", "ass", "ssa", "sub", "sbv", "přečasování", "synchronizace", "fps", "kódování", "windows-1250", "vypálení", "video", "přepis"]
       }
     ]
   },
@@ -1869,6 +1953,12 @@ const KATALOG_SEKCE = [
           "hustota",
           "hmotnost"
         ]
+      },
+      {
+        "soubor": "obsah/remenice.html",
+        "nazev": "🛞 Řemenice GT2/HTD a napínáky",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "řemenice", "GT2", "HTD", "T5", "MXL", "ozubený řemen", "napínák", "kladka", "ložisko", "délka řemene", "převod"]
       }
     ]
   },
@@ -2289,6 +2379,36 @@ const KATALOG_SEKCE = [
           "rozklad",
           "lepení"
         ]
+      },
+      {
+        "soubor": "obsah/bludiste3d.html",
+        "nazev": "🌀 Bludiště – krabička, kostka, deska",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "bludiště", "labyrint", "hlavolam", "dárková krabička", "maze gift box", "kulička", "generátor"]
+      },
+      {
+        "soubor": "obsah/formy.html",
+        "nazev": "🫙 Formy na odlévání",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "forma", "odlévání", "silikon", "sádra", "epoxid", "beton", "mýdlo", "čokoláda", "podkosy", "manifold"]
+      },
+      {
+        "soubor": "obsah/klicenky.html",
+        "nazev": "🔑 Klíčenky a jmenovky (vícebarevné)",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "klíčenka", "jmenovka", "text", "vícebarevný tisk", "M600", "magnet", "záložka"]
+      },
+      {
+        "soubor": "obsah/kostky3d.html",
+        "nazev": "🎲 Herní kostky a žetony",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "kostka", "D6", "D20", "RPG", "žetony", "figurky", "těžiště", "deskové hry"]
+      },
+      {
+        "soubor": "obsah/razitko.html",
+        "nazev": "🔏 Razítka, pečeti a reliéfy",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "razítko", "pečeť", "vosk", "plaketa", "reliéf", "text po kruhu", "SVG", "generátor"]
       }
     ]
   },
@@ -2383,6 +2503,48 @@ const KATALOG_SEKCE = [
           "pla",
           "petg"
         ]
+      },
+      {
+        "soubor": "obsah/kabely3d.html",
+        "nazev": "🔌 Kabelové průchodky a organizéry",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "kabely", "průchodka", "organizér", "hřebínek", "klip", "zacvaknutí", "PETG", "TPU"]
+      },
+      {
+        "soubor": "obsah/knofliky.html",
+        "nazev": "🎛️ Knoflíky a hlavice",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "knoflík", "potenciometr", "hlavice", "hvězdice", "matice", "šroub", "knopka", "kolečko", "generátor"]
+      },
+      {
+        "soubor": "obsah/nozicky.html",
+        "nazev": "🪑 Nožičky, krytky a podložky",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "nožička", "pantofle", "krytka trubky", "záslepka", "klín", "podložka", "TPU", "nábytek"]
+      },
+      {
+        "soubor": "obsah/pruzne.html",
+        "nazev": "🪢 Pružné mechanismy a živé panty",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "živý pant", "pružný mechanismus", "compliant", "bistabilní", "snap-fit", "spona", "pružina", "křížový kloub", "flexure", "paralelogram", "krabička", "generátor"]
+      },
+      {
+        "soubor": "obsah/spojky.html",
+        "nazev": "🔗 Spojky profilů, trubek a latí",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "spojka", "hliníkový profil", "2020", "3030", "4040", "T-matice", "úhelník", "trubka", "jäkl", "uzel", "kopule", "stan", "latě", "rám"]
+      },
+      {
+        "soubor": "obsah/bryle.html",
+        "nazev": "👓 Brýlové obroučky",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "brýle", "obroučky", "generátor", "optika", "pant", "stranice", "most", "drážka pro sklo", "boxing", "obruba"]
+      },
+      {
+        "soubor": "obsah/ibc.html",
+        "nazev": "🛢️ Napojení hadic na IBC",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "IBC", "kontejner", "adaptér", "hadice", "hadicový trn", "závit", "S60×6", "redukce", "průchodka", "víko", "záslepka"]
       }
     ]
   },
@@ -3623,6 +3785,12 @@ const KATALOG_SEKCE = [
         "nazev": "🇺🇦 Vývoj války na Ukrajině",
         "stav": "vyvoj",
         "tagy": ["ukrajina", "válka", "rusko", "isw", "fronta", "mapa fronty", "okupace", "deepstate", "oryx", "ztráty", "osn", "uprchlíci", "zprávy"]
+      },
+      {
+        "soubor": "obsah/AI_prednaska.html",
+        "nazev": "🤖 Přednáška: Úvod do AI",
+        "stav": "vyvoj",
+        "tagy": ["AI", "umělá inteligence", "přednáška", "prezentace", "slidy", "ChatGPT", "prompt", "LLM", "pro laiky"]
       },
       {
         "soubor": "obsah/about.html",

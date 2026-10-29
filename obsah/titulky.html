@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💬 Editor titulků</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="titulky/jadro.js"></script>
+<script src="lib/mediabunny.min.js" defer></script>
+<script src="titulky/app.js" defer></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+[hidden]{display:none !important}
+input,select,textarea,button{font-family:inherit}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin-right:6px}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:270px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn:disabled{opacity:.45;cursor:default}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.86rem;min-width:0}
+.cas-vstup{width:9.6em;font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums}
+
+/* rozložení: nahoře přehrávač | editor, pod tím osa, dole tabulka */
+.plocha{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,1fr);grid-template-rows:auto auto minmax(0,1fr);gap:8px;padding:8px}
+.prehravac{grid-column:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.obraz{position:relative;background:#000;border-radius:var(--radius);overflow:hidden;aspect-ratio:16/9;max-height:42vh;width:100%}
+.obraz video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.obraz canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.obraz .vyzva{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#ccc;text-align:center;padding:16px;font-size:.88rem}
+.obraz .vyzva .btn{color:var(--text)}
+.ovladani{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.ovladani .cas{font-family:ui-monospace,Consolas,monospace;font-size:.85rem;color:var(--text-muted);margin-left:4px;font-variant-numeric:tabular-nums}
+.panel{grid-column:2;grid-row:1;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-width:0;overflow:auto;max-height:calc(42vh + 40px)}
+.panel h2{font-size:.95rem;display:flex;gap:8px;align-items:center}
+.panel h2 .pocet{margin-left:auto;font-weight:400;font-size:.78rem;color:var(--text-faint)}
+.casy{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.casy label{display:flex;flex-direction:column;font-size:.72rem;color:var(--text-faint);gap:2px}
+.casy .krok{display:flex;gap:2px}
+.casy .krok .btn{padding:2px 6px;font-size:.75rem}
+#edText,#prepisText{width:100%;min-height:76px;resize:vertical;font-size:1rem;line-height:1.45}
+.info-text{display:flex;gap:10px;flex-wrap:wrap;font-size:.76rem;color:var(--text-faint)}
+.info-text .spatne{color:var(--danger);font-weight:600}
+.problemy{display:flex;gap:4px;flex-wrap:wrap}
+.znacka{font-size:.72rem;border-radius:8px;padding:1px 7px;background:color-mix(in srgb,var(--warn) 22%,transparent);color:color-mix(in srgb,var(--warn) 45%,var(--text))}
+.znacka.chyba{background:color-mix(in srgb,var(--danger) 22%,transparent);color:color-mix(in srgb,var(--danger) 45%,var(--text))}
+.akce{display:flex;gap:5px;flex-wrap:wrap}
+.napoveda-mala{font-size:.74rem;color:var(--text-faint);line-height:1.45}
+
+.osa-obal{grid-column:1/-1;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:4px 6px;display:flex;flex-direction:column;gap:3px}
+.osa-lista{display:flex;gap:4px;align-items:center;font-size:.76rem;color:var(--text-faint);flex-wrap:wrap}
+.osa-lista .stav-vlny{margin-left:auto}
+#osa{width:100%;height:120px;display:block;touch-action:none;cursor:crosshair;border-radius:4px}
+
+.tabulka-obal{grid-column:1/-1;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);overflow:auto;min-height:140px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th{position:sticky;top:0;background:var(--bg-elevated);text-align:left;font-weight:600;font-size:.74rem;color:var(--text-muted);padding:5px 8px;border-bottom:1px solid var(--border);z-index:1;white-space:nowrap}
+td{padding:4px 8px;border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent);vertical-align:top}
+td.c{font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-muted)}
+td.n{color:var(--text-faint);text-align:right;width:1%}
+td.t{width:100%;word-break:break-word}
+td.t .zl{color:var(--text-faint);padding:0 3px}
+td.p{width:1%;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--bg-hover)}
+tr.vybrany{background:var(--accent-soft)}
+tr.aktivni td.n{color:var(--accent);font-weight:700}
+tr.aktivni{box-shadow:inset 3px 0 0 var(--accent)}
+td.spatne{color:var(--danger);font-weight:600}
+.ikona-pr{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--warn)}
+.ikona-pr.chyba{background:var(--danger)}
+.prazdne{padding:40px 16px;text-align:center;color:var(--text-faint)}
+
+.stavovy{display:flex;gap:14px;align-items:center;padding:3px 12px;background:var(--bg-elevated);border-top:1px solid var(--border);font-size:.76rem;color:var(--text-faint);flex-wrap:wrap;flex-shrink:0}
+.stavovy select{font-size:.74rem;padding:1px 4px}
+.stavovy .vpravo{margin-left:auto}
+.samostatne .stavovy{padding-bottom:26px}
+
+/* modální okna */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:110;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 14px}
+.modal-bg.zobraz{display:flex}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:560px;padding:18px;display:flex;flex-direction:column;gap:11px}
+.modal h2{font-size:1.08rem}
+.modal .radky{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;font-size:.86rem}
+.modal .radky label{color:var(--text-muted)}
+.modal .tlacitka{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.modal .volby{display:flex;flex-direction:column;gap:5px;font-size:.86rem}
+.modal .volby label{display:flex;gap:7px;align-items:center;cursor:pointer}
+.modal p{font-size:.86rem;line-height:1.5;color:var(--text-muted)}
+.seznam-problemu{max-height:50vh;overflow:auto;border:1px solid var(--border);border-radius:6px}
+.seznam-problemu button{display:flex;gap:8px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--border);padding:6px 9px;color:var(--text);cursor:pointer;font-size:.82rem}
+.seznam-problemu button:hover{background:var(--bg-hover)}
+.seznam-problemu .c{font-family:ui-monospace,monospace;color:var(--text-faint)}
+.souhrn{display:flex;gap:6px;flex-wrap:wrap}
+.prubeh{height:8px;background:var(--bg-control);border-radius:4px;overflow:hidden}
+.prubeh > div{height:100%;width:0;background:var(--accent);transition:width .2s}
+.pomoc{font-size:.85rem;line-height:1.55}
+.pomoc table{font-size:.82rem}
+.pomoc td{padding:3px 6px}
+.pomoc h3{font-size:.9rem;margin:10px 0 4px}
+.pomoc ul{padding-left:18px}
+.drop{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);color:#fff;font-size:1.3rem;border:4px dashed var(--accent);pointer-events:none}
+.drop.zobraz{display:flex}
+
+@media (max-width:860px){
+  body{height:auto;min-height:100vh;overflow:visible;display:block}
+  .lista{flex-wrap:wrap;overflow:visible}
+  .plocha{display:flex;flex-direction:column}
+  .panel{max-height:none}
+  .obraz{max-height:none}
+  .tabulka-obal{max-height:70vh}
+  td.c.d,th.d,td.c.cps,th.cps{display:none}
+}
+@media (max-width:420px){
+  .lista .skup-nazev{display:none}
+  td{padding:4px 5px}
+  .cas-vstup{width:8.8em}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>💬 Editor titulků</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Otevřít, uložit, převést">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="export" title="Uložit titulky (Ctrl+S)">💾<span class="txt"> Uložit</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
+    <button class="tl" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl" data-prikaz="znovu" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷</button>
+    <button class="tl" data-nabidka="nabUpravy" title="Vložit, rozdělit, spojit, smazat">✂<span class="txt"> Úpravy</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Čas"><span class="skup-nazev" aria-hidden="true">Čas</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabCas" title="Posun, FPS, synchronizace">⏱<span class="txt"> Přečasování</span> ▾</button>
+    <button class="tl" data-prikaz="prepis" aria-pressed="false" title="Režim přepisu – psaní během přehrávání">⌨<span class="txt"> Přepis</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Kontrola"><span class="skup-nazev" aria-hidden="true">Kontrola</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabKontrola" title="Kontrola kvality a automatické opravy">🩺<span class="txt"> Kontrola</span> <span id="pocetProblemu"></span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Video"><span class="skup-nazev" aria-hidden="true">Video</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabVideo" title="Video, vzhled titulků, vypálení">🎬<span class="txt"> Video</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevritTitulky">📂 Otevřít titulky… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="otevritVideo">🎞 Otevřít video / zvuk…</button>
+  <button class="tl" data-prikaz="vlozitText">📋 Vložit text titulků…</button>
+  <button class="tl" data-prikaz="novy">✚ Nový prázdný projekt</button>
+  <hr>
+  <div class="titulek">Uložit (UTF-8)</div>
+  <button class="tl" data-prikaz="export">💾 Uložit jako… <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="exp-srt">SRT (SubRip)</button>
+  <button class="tl" data-prikaz="exp-vtt">WebVTT</button>
+  <button class="tl" data-prikaz="exp-ass">ASS (Advanced SubStation)</button>
+  <button class="tl" data-prikaz="exp-ssa">SSA (SubStation Alpha)</button>
+  <button class="tl" data-prikaz="exp-sbv">SBV (YouTube)</button>
+  <button class="tl" data-prikaz="exp-sub">SUB (MicroDVD, snímky)</button>
+  <button class="tl" data-prikaz="exp-txt">TXT (jen text)</button>
+  <hr>
+  <button class="tl" data-prikaz="ukazka">✨ Načíst ukázku</button>
+</div>
+<div id="nabUpravy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="vlozit">➕ Vložit titulek za vybraný <kbd>Ins</kbd></button>
+  <button class="tl" data-prikaz="vlozitTed">➕ Vložit titulek na aktuální čas</button>
+  <button class="tl" data-prikaz="rozdelit">✂ Rozdělit (v čase přehrávání) <kbd>Ctrl+D</kbd></button>
+  <button class="tl" data-prikaz="spojit">🔗 Spojit vybrané / s dalším <kbd>Ctrl+J</kbd></button>
+  <button class="tl" data-prikaz="smazat">🗑 Smazat vybrané <kbd>Del</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="vybratVse">☑ Vybrat vše <kbd>Ctrl+A</kbd></button>
+  <button class="tl" data-prikaz="kurziva">𝐼 Kurzíva vybraných (přepnout)</button>
+  <button class="tl" data-prikaz="hledat">🔍 Najít a nahradit… <kbd>Ctrl+H</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="zpet">↶ Zpět <kbd>Ctrl+Z</kbd></button>
+  <button class="tl" data-prikaz="znovu">↷ Znovu <kbd>Ctrl+Y</kbd></button>
+</div>
+<div id="nabCas" class="nabidka" hidden>
+  <div class="titulek">Vybraný titulek</div>
+  <button class="tl" data-prikaz="zacatekTed">⇤ Začátek na aktuální čas <kbd>A / F3</kbd></button>
+  <button class="tl" data-prikaz="konecTed">⇥ Konec na aktuální čas <kbd>S / F4</kbd></button>
+  <button class="tl" data-prikaz="konecDalsi">⇥⇤ Konec teď a další začíná <kbd>D / F9</kbd></button>
+  <hr>
+  <div class="titulek">Všechny / vybrané</div>
+  <button class="tl" data-prikaz="posun">± Posunout o milisekundy…</button>
+  <button class="tl" data-prikaz="fps">🎞 Změnit snímkovou frekvenci (23,976 ↔ 25)…</button>
+  <button class="tl" data-prikaz="sync">📐 Synchronizace podle dvou bodů…</button>
+  <hr>
+  <button class="tl" data-prikaz="prepis">⌨ Režim přepisu (psaní při přehrávání)</button>
+</div>
+<div id="nabKontrola" class="nabidka" hidden>
+  <button class="tl" data-prikaz="kontrola">🩺 Seznam problémů…</button>
+  <button class="tl" data-prikaz="opravy">🔧 Automatické opravy…</button>
+  <button class="tl" data-prikaz="limity">⚙ Limity kontroly…</button>
+  <hr>
+  <button class="tl prep" data-prikaz="jenProblemy" aria-pressed="false">Tabulka jen s problémy</button>
+</div>
+<div id="nabVideo" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevritVideo">🎞 Otevřít video / zvuk…</button>
+  <button class="tl" data-prikaz="vzhled">🎨 Vzhled titulků (styly)…</button>
+  <button class="tl" data-prikaz="vypalit">🔥 Vypálit titulky do videa…</button>
+  <hr>
+  <button class="tl prep" data-prikaz="sledovat" aria-pressed="true">Osa sleduje přehrávání</button>
+  <button class="tl prep" data-prikaz="vyberSleduje" aria-pressed="true">Výběr sleduje přehrávání</button>
+</div>
+
+<div class="plocha">
+  <section class="prehravac" aria-label="Přehrávač">
+    <div class="obraz" id="obraz">
+      <video id="video" playsinline preload="auto"></video>
+      <canvas id="titulkyPlatno" aria-hidden="true"></canvas>
+      <div class="vyzva" id="vyzva">
+        <div>Přetáhněte sem <b>video</b> a/nebo <b>titulky</b> (SRT, VTT, ASS, SSA, SBV, SUB, TXT).</div>
+        <div><button class="btn" data-prikaz="otevritVideo">🎞 Otevřít video</button> <button class="btn" data-prikaz="otevritTitulky">📂 Otevřít titulky</button></div>
+        <div style="font-size:.76rem;opacity:.8">Vše běží jen ve vašem prohlížeči – soubory se nikam neodesílají.</div>
+      </div>
+    </div>
+    <div class="ovladani">
+      <button class="btn mini" data-prikaz="zpet5" title="−5 s (Shift+←)">⏪</button>
+      <button class="btn mini" data-prikaz="hraj" id="tlHraj" title="Přehrát / pauza (mezerník, F2)">▶</button>
+      <button class="btn mini" data-prikaz="vpred5" title="+5 s (Shift+→)">⏩</button>
+      <button class="btn mini" data-prikaz="hrajVybrany" title="Přehrát vybraný titulek (P)">▶ titulek</button>
+      <select id="rychlost" class="vstup" title="Rychlost přehrávání" aria-label="Rychlost přehrávání">
+        <option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option><option value="2">2×</option>
+      </select>
+      <span class="cas" id="casText">0:00.000</span>
+    </div>
+  </section>
+
+  <section class="panel" id="panelEditor" aria-label="Úprava titulku">
+    <h2>✎ Titulek <span id="edCislo"></span><span class="pocet" id="edPocet"></span></h2>
+    <div class="casy">
+      <label>Začátek<span class="krok"><input class="vstup cas-vstup" id="edOd" aria-label="Začátek"></span></label>
+      <label>Konec<span class="krok"><input class="vstup cas-vstup" id="edDo" aria-label="Konec"></span></label>
+      <label>Délka (s)<input class="vstup" id="edDelka" style="width:5.5em" aria-label="Délka v sekundách"></label>
+      <label id="edStylObal" hidden>Styl<select class="vstup" id="edStyl" aria-label="Styl"></select></label>
+    </div>
+    <div class="akce">
+      <button class="btn mini" data-prikaz="zacatekTed" title="Začátek na aktuální čas (A, F3)">⇤ začátek teď</button>
+      <button class="btn mini" data-prikaz="konecTed" title="Konec na aktuální čas (S, F4)">konec teď ⇥</button>
+      <button class="btn mini" data-prikaz="konecDalsi" title="Konec teď a další titulek začíná (D, F9)">⇥⇤ další</button>
+    </div>
+    <textarea class="vstup" id="edText" placeholder="Text titulku – Enter = nový řádek, &lt;i&gt;kurzíva&lt;/i&gt;, Esc = zpět do tabulky" aria-label="Text titulku"></textarea>
+    <div class="info-text" id="edInfo"></div>
+    <div class="problemy" id="edProblemy"></div>
+    <div class="akce">
+      <button class="btn mini" data-prikaz="vlozit">➕ Vložit za</button>
+      <button class="btn mini" data-prikaz="rozdelit">✂ Rozdělit</button>
+      <button class="btn mini" data-prikaz="spojit">🔗 Spojit s dalším</button>
+      <button class="btn mini" data-prikaz="zalomitJeden">↵ Zalomit</button>
+      <button class="btn mini danger" data-prikaz="smazat">🗑</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panelPrepis" aria-label="Režim přepisu" hidden>
+    <h2>⌨ Režim přepisu <span class="pocet" id="prepisStav"></span></h2>
+    <p class="napoveda-mala">Spusťte přehrávání a pište, co zaznělo. Začátek titulku se zaznamená při prvním písmenu (posunutý o náskok), <b>Enter</b> titulek uloží s koncem v tu chvíli, <b>Shift+Enter</b> = nový řádek, <b>Esc</b> = pauza / pokračovat, <b>F2</b> přehrát. Zpomalené přehrávání pomůže.</p>
+    <div class="casy">
+      <label>Náskok začátku (s)<input class="vstup" id="prepisNaskok" type="number" step="0.1" min="0" max="5" value="0.6" style="width:5em"></label>
+      <label>Rychlost<select class="vstup" id="prepisRychlost"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option></select></label>
+      <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="prepisPauza"> pauza při psaní</label>
+    </div>
+    <textarea class="vstup" id="prepisText" placeholder="Pište během přehrávání… Enter = uložit titulek" aria-label="Text přepisu"></textarea>
+    <div class="info-text" id="prepisInfo"></div>
+    <div class="akce"><button class="btn mini" data-prikaz="prepis">✕ Ukončit přepis</button></div>
+  </section>
+
+  <section class="osa-obal" aria-label="Časová osa">
+    <div class="osa-lista">
+      <button class="btn mini" data-prikaz="osaMinus" title="Oddálit (Ctrl+kolečko)">−</button>
+      <button class="btn mini" data-prikaz="osaPlus" title="Přiblížit (Ctrl+kolečko)">+</button>
+      <button class="btn mini" data-prikaz="osaVse" title="Zobrazit vše">↔ vše</button>
+      <span>Táhněte blok = posun, okraj = začátek/konec, klik = skok, kolečko = posun osy.</span>
+      <span class="stav-vlny" id="stavVlny"></span>
+    </div>
+    <canvas id="osa" aria-label="Časová osa s vlnou zvuku a bloky titulků"></canvas>
+  </section>
+
+  <section class="tabulka-obal" id="tabulkaObal" aria-label="Seznam titulků">
+    <table>
+      <thead><tr><th></th><th>#</th><th>Začátek</th><th>Konec</th><th class="d">Délka</th><th class="cps">CPS</th><th>Text</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="prazdne" id="prazdne">Zatím žádné titulky. Otevřete soubor, vložte text, nebo zapněte <b>⌨ Přepis</b> a pište během přehrávání.</div>
+  </section>
+</div>
+
+<footer class="stavovy">
+  <span id="stFormat">–</span>
+  <span>Kódování: <select class="vstup" id="stKodovani" title="Kódování naposledy otevřeného souboru – změnou se načte znovu">
+    <option value="auto">rozpoznat</option><option value="utf-8">UTF-8</option><option value="windows-1250">windows-1250</option>
+    <option value="iso-8859-2">ISO-8859-2</option><option value="utf-16le">UTF-16 LE</option><option value="utf-16be">UTF-16 BE</option><option value="windows-1252">windows-1252</option>
+  </select> <span id="stKodInfo"></span></span>
+  <span>FPS: <select class="vstup" id="stFps" title="Snímková frekvence pro MicroDVD (SUB)">
+    <option>23.976</option><option>24</option><option selected>25</option><option>29.97</option><option>30</option><option>50</option><option>59.94</option><option>60</option>
+  </select></span>
+  <span id="stUlozeno"></span>
+  <span class="vpravo">🔒 Soubory zůstávají ve vašem prohlížeči.</span>
+</footer>
+
+<input type="file" id="souborTitulky" accept=".srt,.vtt,.ass,.ssa,.sbv,.sub,.txt,text/*" hidden>
+<input type="file" id="souborVideo" accept="video/*,audio/*,.mkv,.mov,.mp4,.webm" hidden>
+<div class="drop" id="drop">📥 Pusťte video nebo titulky</div>
+
+<!-- Uložit -->
+<div class="modal-bg" id="dlgExport"><div class="modal" role="dialog" aria-label="Uložit titulky">
+  <h2>💾 Uložit titulky</h2>
+  <div class="radky">
+    <label for="expFormat">Formát</label><select class="vstup" id="expFormat"></select>
+    <label for="expNazev">Název souboru</label><input class="vstup" id="expNazev">
+    <label for="expFps" id="expFpsLbl">FPS (SUB)</label><select class="vstup" id="expFps"><option>23.976</option><option>24</option><option>25</option><option>29.97</option><option>30</option><option>50</option><option>60</option></select>
+  </div>
+  <div class="volby">
+    <label><input type="checkbox" id="expBom"> UTF-8 s BOM (pro staré přehrávače a Windows)</label>
+    <label><input type="checkbox" id="expCrlf" checked> Konce řádků Windows (CRLF)</label>
+    <label id="expFpsRadekLbl"><input type="checkbox" id="expFpsRadek"> SUB: první řádek {1}{1}fps</label>
+  </div>
+  <p id="expPozn"></p>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zrušit</button><button class="btn" id="expKopirovat">📋 Kopírovat</button><button class="btn primary" id="expStahnout">⬇ Stáhnout</button></div>
+</div></div>
+
+<!-- Vložit text -->
+<div class="modal-bg" id="dlgVlozit"><div class="modal" role="dialog" aria-label="Vložit text titulků">
+  <h2>📋 Vložit text titulků</h2>
+  <p>Vložte obsah SRT, VTT, ASS, SBV, SUB – formát se pozná sám. Prostý text (odstavce oddělené prázdným řádkem) dostane odhadnuté časy, které pak doladíte klávesou <b>D</b> během přehrávání.</p>
+  <textarea class="vstup" id="vlozitText" style="min-height:200px;font-family:ui-monospace,monospace;font-size:.82rem"></textarea>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="vlozitOk">Načíst</button></div>
+</div></div>
+
+<!-- Posun -->
+<div class="modal-bg" id="dlgPosun"><div class="modal" role="dialog" aria-label="Posun titulků">
+  <h2>± Posunout titulky</h2>
+  <div class="radky">
+    <label for="posunMs">Posun (ms)</label><input class="vstup" id="posunMs" type="number" step="100" value="0">
+    <label>Rychle</label><div class="akce"><button class="btn mini" data-posun="-1000">−1 s</button><button class="btn mini" data-posun="-100">−100</button><button class="btn mini" data-posun="100">+100</button><button class="btn mini" data-posun="1000">+1 s</button><button class="btn mini" id="posunNaTed" title="Vybraný titulek začne v aktuálním čase přehrávání">↦ vybraný na teď</button></div>
+  </div>
+  <div class="volby">
+    <label><input type="radio" name="posunRozsah" value="vse" checked> všechny titulky</label>
+    <label><input type="radio" name="posunRozsah" value="vyber"> jen vybrané (<span class="pocetVyber">0</span>)</label>
+    <label><input type="radio" name="posunRozsah" value="odVyberu"> od vybraného do konce</label>
+  </div>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="posunOk">Posunout</button></div>
+</div></div>
+
+<!-- FPS -->
+<div class="modal-bg" id="dlgFps"><div class="modal" role="dialog" aria-label="Změna snímkové frekvence">
+  <h2>🎞 Změna snímkové frekvence</h2>
+  <p>Titulky časované pro video s frekvencí <b>Z</b> přepočítá pro video s frekvencí <b>NA</b> (typicky verze filmu 23,976 fps z Blu-ray vs. 25 fps z televize – titulky se postupně rozjíždějí).</p>
+  <div class="radky">
+    <label for="fpsZ">Z (fps)</label><select class="vstup" id="fpsZ"><option>23.976</option><option>24</option><option>25</option><option>29.97</option><option>30</option></select>
+    <label for="fpsNa">NA (fps)</label><select class="vstup" id="fpsNa"><option>23.976</option><option>24</option><option selected>25</option><option>29.97</option><option>30</option></select>
+  </div>
+  <div class="volby"><label><input type="checkbox" id="fpsVyber"> jen vybrané titulky</label></div>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="fpsOk">Přepočítat</button></div>
+</div></div>
+
+<!-- Synchronizace -->
+<div class="modal-bg" id="dlgSync"><div class="modal" role="dialog" aria-label="Synchronizace podle dvou bodů">
+  <h2>📐 Synchronizace podle dvou bodů</h2>
+  <p>Vyberte titulek blízko začátku a blízko konce a zadejte, kdy mají ve videu opravdu začínat. Ostatní časy se lineárně přepočítají (srovná posun i rozdílnou rychlost).</p>
+  <div class="radky">
+    <label for="sync1">1. titulek</label><select class="vstup" id="sync1"></select>
+    <label for="sync1Cas">má začít v</label><span class="akce"><input class="vstup cas-vstup" id="sync1Cas"><button class="btn mini" data-synted="1">⏱ teď</button></span>
+    <label for="sync2">2. titulek</label><select class="vstup" id="sync2"></select>
+    <label for="sync2Cas">má začít v</label><span class="akce"><input class="vstup cas-vstup" id="sync2Cas"><button class="btn mini" data-synted="2">⏱ teď</button></span>
+  </div>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="syncOk">Synchronizovat</button></div>
+</div></div>
+
+<!-- Kontrola -->
+<div class="modal-bg" id="dlgKontrola"><div class="modal" role="dialog" aria-label="Kontrola kvality" style="max-width:680px">
+  <h2>🩺 Kontrola kvality</h2>
+  <div class="souhrn" id="kontrolaSouhrn"></div>
+  <div class="seznam-problemu" id="kontrolaSeznam"></div>
+  <div class="tlacitka"><button class="btn" data-prikaz="limity">⚙ Limity…</button><button class="btn" data-prikaz="opravy">🔧 Automatické opravy…</button><button class="btn primary" data-zavrit>Zavřít</button></div>
+</div></div>
+
+<!-- Opravy -->
+<div class="modal-bg" id="dlgOpravy"><div class="modal" role="dialog" aria-label="Automatické opravy">
+  <h2>🔧 Automatické opravy</h2>
+  <div class="volby">
+    <label><input type="checkbox" id="opSeradit" checked> seřadit podle času</label>
+    <label><input type="checkbox" id="opPrazdne" checked> odstranit prázdné titulky</label>
+    <label><input type="checkbox" id="opMezeryText" checked> odstranit nadbytečné mezery a prázdné řádky v textu</label>
+    <label><input type="checkbox" id="opZalomit" checked> zalomit dlouhé řádky na nejvýš 2 vyvážené řádky</label>
+    <label><input type="checkbox" id="opKratke" checked> prodloužit krátké titulky (min. délka a CPS, jen do mezery k dalšímu)</label>
+    <label><input type="checkbox" id="opMezery" checked> opravit překryvy a dodržet minimální mezeru</label>
+  </div>
+  <div class="volby"><label><input type="checkbox" id="opVyber"> jen vybrané titulky</label></div>
+  <p>Limity se berou z nastavení kontroly. Změnu lze vrátit (Ctrl+Z).</p>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="opravyOk">Opravit</button></div>
+</div></div>
+
+<!-- Limity -->
+<div class="modal-bg" id="dlgLimity"><div class="modal" role="dialog" aria-label="Limity kontroly">
+  <h2>⚙ Limity kontroly</h2>
+  <div class="radky">
+    <label for="limMinDelka">Min. délka (ms)</label><input class="vstup" type="number" id="limMinDelka" step="50">
+    <label for="limMaxDelka">Max. délka (ms)</label><input class="vstup" type="number" id="limMaxDelka" step="500">
+    <label for="limMaxCps">Max. znaků za sekundu</label><input class="vstup" type="number" id="limMaxCps" step="1">
+    <label for="limMaxRadek">Max. znaků na řádek</label><input class="vstup" type="number" id="limMaxRadek" step="1">
+    <label for="limMaxRadku">Max. řádků</label><input class="vstup" type="number" id="limMaxRadku" step="1" min="1">
+    <label for="limMinMezera">Min. mezera (ms)</label><input class="vstup" type="number" id="limMinMezera" step="10">
+  </div>
+  <p>Výchozí hodnoty odpovídají běžným zásadám pro televizní a streamové titulky (800 ms – 7 s, 17 CPS, 42 znaků, 2 řádky, mezera 2 snímky).</p>
+  <div class="tlacitka"><button class="btn" id="limVychozi">Výchozí</button><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="limOk">Uložit</button></div>
+</div></div>
+
+<!-- Hledat -->
+<div class="modal-bg" id="dlgHledat"><div class="modal" role="dialog" aria-label="Najít a nahradit">
+  <h2>🔍 Najít a nahradit</h2>
+  <div class="radky">
+    <label for="hlCo">Najít</label><input class="vstup" id="hlCo">
+    <label for="hlCim">Nahradit</label><input class="vstup" id="hlCim">
+  </div>
+  <div class="volby"><label><input type="checkbox" id="hlVelka"> rozlišovat velká/malá</label><label><input type="checkbox" id="hlRegex"> regulární výraz</label></div>
+  <p id="hlInfo"></p>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zavřít</button><button class="btn" id="hlDalsi">Najít další</button><button class="btn primary" id="hlVse">Nahradit vše</button></div>
+</div></div>
+
+<!-- Vzhled -->
+<div class="modal-bg" id="dlgVzhled"><div class="modal" role="dialog" aria-label="Vzhled titulků">
+  <h2>🎨 Vzhled titulků</h2>
+  <p>Styl se použije v náhledu, při vypálení do videa a uloží se do ASS/SSA. Velikosti jsou v bodech vůči výšce plátna <b id="vzPlayRes"></b> px.</p>
+  <div class="radky">
+    <label for="vzStyl">Styl</label><span class="akce"><select class="vstup" id="vzStyl"></select><button class="btn mini" id="vzNovy">+ nový</button></span>
+    <label for="vzFont">Písmo</label><select class="vstup" id="vzFont"><option>Arial</option><option>Verdana</option><option>Tahoma</option><option>Trebuchet MS</option><option>Georgia</option><option>Times New Roman</option><option>Liberation Sans</option><option>DejaVu Sans</option><option>sans-serif</option><option>serif</option></select>
+    <label for="vzVelikost">Velikost</label><input class="vstup" type="number" id="vzVelikost" min="4" max="400">
+    <label for="vzBarva">Barva</label><input type="color" id="vzBarva">
+    <label for="vzObrys">Obrys</label><span class="akce"><input type="color" id="vzObrys"><input class="vstup" type="number" id="vzObrysSirka" min="0" max="20" step="0.5" style="width:5em" aria-label="Šířka obrysu"></span>
+    <label for="vzZarovnani">Umístění</label><select class="vstup" id="vzZarovnani"><option value="2">dole uprostřed</option><option value="1">dole vlevo</option><option value="3">dole vpravo</option><option value="8">nahoře uprostřed</option><option value="7">nahoře vlevo</option><option value="9">nahoře vpravo</option><option value="5">uprostřed</option></select>
+    <label for="vzOkraj">Okraj svisle</label><input class="vstup" type="number" id="vzOkraj" min="0">
+    <label>Řez</label><span class="volby" style="flex-direction:row;gap:14px"><label><input type="checkbox" id="vzTucne"> tučné</label><label><input type="checkbox" id="vzKurziva"> kurzíva</label><label><input type="checkbox" id="vzPodklad"> tmavý podklad</label></span>
+  </div>
+  <div class="tlacitka"><button class="btn" data-zavrit>Zavřít</button><button class="btn primary" id="vzOk">Použít</button></div>
+</div></div>
+
+<!-- Vypálení -->
+<div class="modal-bg" id="dlgVypalit"><div class="modal" role="dialog" aria-label="Vypálit titulky do videa">
+  <h2>🔥 Vypálit titulky do videa</h2>
+  <p id="vypInfo">Video se dekóduje snímek po snímku, titulky se vykreslí do obrazu a vše se znovu zakóduje (WebCodecs). Zvuk se zkopíruje beze změny. Trvá to zhruba jako přehrání videa, podle výkonu počítače.</p>
+  <div class="radky">
+    <label for="vypVyska">Rozlišení</label><select class="vstup" id="vypVyska"><option value="0">původní</option><option value="1080">1080p</option><option value="720" selected>720p</option><option value="480">480p</option></select>
+    <label for="vypFormat">Formát</label><select class="vstup" id="vypFormat"><option value="mp4">MP4</option><option value="webm">WebM</option></select>
+    <label for="vypKvalita">Kvalita</label><select class="vstup" id="vypKvalita"><option value="MEDIUM">střední</option><option value="HIGH" selected>vysoká</option><option value="VERY_HIGH">velmi vysoká</option></select>
+  </div>
+  <div class="prubeh" id="vypPrubeh" hidden><div></div></div>
+  <p id="vypStav"></p>
+  <div class="tlacitka"><button class="btn" data-zavrit id="vypZavrit">Zavřít</button><button class="btn danger" id="vypZrusit" hidden>Zastavit</button><button class="btn primary" id="vypStart">🔥 Vypálit</button></div>
+</div></div>
+
+<!-- Nápověda -->
+<div class="modal-bg" id="dlgNapoveda"><div class="modal pomoc" role="dialog" aria-label="Nápověda" style="max-width:700px">
+  <h2>❓ Editor titulků – nápověda</h2>
+  <p>Otevřete video a titulky (nebo je přetáhněte na stránku). Kódování se pozná samo – UTF-8, UTF-16 i starší česká windows-1250 a ISO-8859-2; když se přesto ukážou „rozsypané“ znaky, změňte kódování dole ve stavovém řádku. Ukládá se vždy do UTF-8. Rozpracovaný projekt se průběžně ukládá do prohlížeče (bez videa – to po obnovení otevřete znovu).</p>
+  <h3>Klávesy (mimo textové pole)</h3>
+  <table>
+    <tr><td><kbd>Mezerník</kbd></td><td>přehrát / pauza</td><td><kbd>←</kbd> <kbd>→</kbd></td><td>±1 s (se Shift ±5 s, s Alt ±1 snímek)</td></tr>
+    <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>předchozí / další titulek</td><td><kbd>P</kbd></td><td>přehrát vybraný titulek</td></tr>
+    <tr><td><kbd>A</kbd></td><td>začátek na aktuální čas</td><td><kbd>S</kbd></td><td>konec na aktuální čas</td></tr>
+    <tr><td><kbd>D</kbd></td><td>konec teď a další titulek začíná teď</td><td><kbd>Enter</kbd></td><td>upravit text</td></tr>
+    <tr><td><kbd>Ins</kbd></td><td>vložit titulek</td><td><kbd>Del</kbd></td><td>smazat vybrané</td></tr>
+    <tr><td><kbd>Ctrl+D</kbd></td><td>rozdělit</td><td><kbd>Ctrl+J</kbd></td><td>spojit</td></tr>
+    <tr><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>zpět / znovu</td><td><kbd>Ctrl+S</kbd> / <kbd>Ctrl+O</kbd></td><td>uložit / otevřít</td></tr>
+  </table>
+  <h3>Klávesy fungující i při psaní</h3>
+  <p><kbd>F2</kbd> přehrát/pauza · <kbd>F3</kbd> začátek teď · <kbd>F4</kbd> konec teď · <kbd>F9</kbd> konec teď + další · <kbd>Esc</kbd> zpět do tabulky.</p>
+  <h3>Postupy</h3>
+  <ul>
+    <li><b>Časování hotového textu:</b> vložte text (odstavce), vyberte první titulek, pusťte video a v každé změně řeči stiskněte <kbd>D</kbd>.</li>
+    <li><b>Přepis:</b> tlačítko ⌨ Přepis – pište během přehrávání, Enter uloží titulek s časy.</li>
+    <li><b>Titulky se rozjíždějí:</b> nejdřív zkuste Změnu FPS (23,976 ↔ 25), jinak Synchronizaci podle dvou bodů.</li>
+    <li><b>Kontrola:</b> tečka v tabulce = problém (červená chyba, žlutá varování); CPS = znaky za sekundu.</li>
+    <li><b>Formátování:</b> &lt;i&gt;kurzíva&lt;/i&gt;, &lt;b&gt;tučné&lt;/b&gt;, <code>{\an8}</code> na začátku = titulek nahoře.</li>
+  </ul>
+  <div class="tlacitka"><button class="btn primary" data-zavrit>Zavřít</button></div>
+</div></div>
+</body>
+</html>
