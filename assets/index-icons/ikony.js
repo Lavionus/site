@@ -365,6 +365,7 @@ const KATALOG_IKONY = {
   "obsah/ostruvek.html": "pages/page-ostruvek",
   "obsah/gamebook.html": "pages/page-gamebook",
   "obsah/gamebook_praha.html": "pages/page-gamebook_praha",
+  "obsah/gamebook_jan.html": "pages/page-gamebook_jan",
   "obsah/chess.html": "pages/page-chess",
   "obsah/checkers.html": "pages/page-checkers",
   "obsah/reversi.html": "pages/page-reversi",

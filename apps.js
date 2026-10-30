@@ -3052,6 +3052,13 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "alchymie", "Praha", "Rudolf II.", "homunkulus", "orloj"]
+      },
+      {
+        "soubor": "obsah/gamebook_jan.html",
+        "nazev": "🌿 Svatojánská noc",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "pověsti", "jezinky", "vodník", "Krakonoš", "kapradí"]
       }
     ]
   },
