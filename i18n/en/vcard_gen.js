@@ -1,0 +1,22 @@
+// vcard_gen – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Generátor vizitky (vCard + QR)': 'Business Card Generator (vCard + QR)',
+  'Vyplň údaje, QR kód naskenovaný telefonem uloží kontakt přímo do adresáře': 'Fill in the details – scanning the QR code with a phone saves the contact straight to the address book',
+  'Jméno': 'First name',
+  'Jan': 'John',
+  'Příjmení': 'Surname',
+  'Novák': 'Smith',
+  'Firma': 'Company',
+  'Firma s.r.o.': 'Company Ltd',
+  'Pozice': 'Position',
+  'Obchodní zástupce': 'Sales representative',
+  'Telefon': 'Phone',
+  'Mobil': 'Mobile',
+  'Web': 'Web',
+  'Adresa': 'Address',
+  'Ulice 1, 100 00 Praha': '1 Street, 100 00 Prague',
+  'Jan Novák': 'John Smith',
+  'Stáhnout QR': 'Download QR',
+  'Stáhnout .vcf soubor': 'Download .vcf file',
+  'Vše se generuje lokálně v prohlížeči, nikam se neodesílá. QR obsahuje standardní formát vCard 3.0 – funguje s fotoaparátem iOS i Androidu.': 'Everything is generated locally in the browser and nothing is sent anywhere. The QR contains the standard vCard 3.0 format – it works with both the iOS and Android camera.',
+});

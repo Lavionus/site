@@ -100,4 +100,5 @@ I18N.pridej('en', {
   'vlastní': 'custom',
   'Smazat font': 'Delete font',
   'Žádný font neodpovídá.': 'No font matches.',
+  'Nahrát vlastní font…': 'Upload your own font…',
 });

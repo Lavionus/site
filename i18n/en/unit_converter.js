@@ -1,7 +1,6 @@
 // unit_converter – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
 I18N.pridej('en', {
   // výběr jednotky: "Milimetr (mm)" – název se přeloží jako parametr
-  '{nazev} ({sym})': '{nazev} ({sym})',
   'Délka': 'Length',
   'Míle (mile)': 'Mile',
   'Námořní míle': 'Nautical mile',
@@ -122,4 +121,5 @@ I18N.pridej('en', {
   'Popis': 'Description',
   'Konvertor jednotek': 'Unit converter',
   'Výsledek...': 'Result...',
+  '{nazev} ({sym})': '{nazev} ({sym})',
 });

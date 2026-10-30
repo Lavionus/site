@@ -1,0 +1,22 @@
+// notes_graph – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Zettelkasten – propojené poznámky': 'Zettelkasten – linked notes',
+  'Zettelkasten': 'Zettelkasten',
+  'Nová poznámka': 'New note',
+  'Hledat…': 'Search…',
+  'Editor': 'Editor',
+  'Graf': 'Graph',
+  'Název poznámky…': 'Note title…',
+  'Štítky (oddělené čárkou)…': 'Tags (comma-separated)…',
+  'Tip: napiš': 'Tip: type',
+  'pro odkaz na jinou poznámku – pokud neexistuje, vytvoří se sama.': 'to link to another note – if it does not exist, it is created automatically.',
+  'Náhled s odkazy': 'Preview with links',
+  'Zatím žádné poznámky.': 'No notes yet.',
+  'Klikni na „+ Nová poznámka".': 'Click “+ New note”.',
+  'Prázdné.': 'Empty.',
+  'Odkazuje sem ({n})': 'Linked from ({n})',
+  'Smazat poznámku „{title}"?': 'Delete note “{title}”?',
+  'bez názvu)': 'untitled)',
+  'Zatím žádné poznámky k zobrazení.': 'No notes to display yet.',
+  '[[Název]]': '[[Title]]',
+});

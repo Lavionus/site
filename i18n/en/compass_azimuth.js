@@ -1,0 +1,22 @@
+// compass_azimuth – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Kompas & azimut': 'Compass & azimuth',
+  'Kompas & azimut mezi body': 'Compass & azimuth between points',
+  'Body (klikni do mapy nebo zadej)': 'Points (click the map or enter)',
+  'Bod A (výchozí)': 'Point A (start)',
+  'Bod B (cíl)': 'Point B (destination)',
+  'azimut A → B': 'azimuth A → B',
+  'Vzdálenost': 'Distance',
+  'Světová strana': 'Cardinal direction',
+  'Zpětný azimut (B → A)': 'Back azimuth (B → A)',
+  'Vizuální kompas': 'Visual compass',
+  'Azimut se měří ve směru hodinových ručiček od severu (0° = sever, 90° = východ, 180° = jih, 270° = západ).': 'Azimuth is measured clockwise from north (0° = north, 90° = east, 180° = south, 270° = west).',
+  'Východ': 'East',
+  'Západ': 'West',
+  'Sever': 'North',
+  'Jih': 'South',
+  'SV': 'NE',
+  'JV': 'SE',
+  'JZ': 'SW',
+  'SZ': 'NW',
+});

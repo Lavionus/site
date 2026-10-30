@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 Číselný kód</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="../rekord.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;min-height:100vh;color:var(--text)}
+[hidden]{display:none !important}
+
+/* horní lišta se skupinami a rozbalovacími nabídkami (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .info{margin-left:auto;font-size:.8rem;color:var(--text-muted);white-space:nowrap;padding-right:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:640px){.lista .txt{display:none}}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+main{max-width:1100px;margin:0 auto;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:start}
+@media (max-width:820px){main{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.lista{flex-wrap:wrap}.lista .info{margin-left:0}}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,10px);padding:14px}
+.panel h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin:0 0 10px;font-weight:600}
+
+/* zámek */
+.zamek{display:flex;justify-content:center;gap:8px;flex-wrap:nowrap}
+.kolecko{display:flex;flex-direction:column;align-items:center;gap:4px}
+.kolecko button.sipka{background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;width:100%;cursor:pointer;font-size:.8rem;padding:2px 0}
+.kolecko button.sipka:hover{background:var(--bg-hover);color:var(--text)}
+.cislice{width:clamp(38px,11vw,58px);height:clamp(52px,14vw,74px);font:700 clamp(1.6rem,7vw,2.4rem)/1 ui-monospace,Consolas,monospace;text-align:center;background:var(--bg-input);color:var(--text);border:2px solid var(--border-strong);border-radius:10px;caret-color:transparent;padding:0}
+.cislice::selection{background:transparent}
+.cislice:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.cislice.odhaleno{border-color:var(--warn);color:var(--warn)}
+.kolecko .poz{font-size:.7rem;color:var(--text-faint)}
+.akce{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:7px;cursor:pointer;font-size:.9rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.zprava{text-align:center;min-height:1.4em;margin-top:10px;font-size:.92rem}
+.zprava.ok{color:var(--ok)}
+.zprava.chyba{color:var(--danger)}
+.odemceno .cislice{border-color:var(--ok);color:var(--ok)}
+
+/* pokusy */
+.pokusy{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
+.pokusy span{font-family:ui-monospace,Consolas,monospace;font-size:.85rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--text-muted);text-decoration:line-through}
+
+/* poznámky – sloupec 0–9 pod každou číslicí zámku */
+.poznamky .sloupec{width:clamp(38px,11vw,58px);display:flex;flex-direction:column;gap:3px}
+.poznamky button,.vz{font:600 .85rem ui-monospace,Consolas,monospace;padding:3px 0;border-radius:5px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);cursor:pointer}
+.poznamky button.ne,.vz.ne{background:color-mix(in srgb,var(--text) 22%,var(--bg-elevated));color:var(--text-faint);border-color:transparent}
+.poznamky button.jiste,.vz.jiste{background:color-mix(in srgb,var(--ok) 40%,var(--bg-elevated));border-color:var(--ok)}
+.poznamky button.mozne,.vz.mozne{background:color-mix(in srgb,var(--warn) 40%,var(--bg-elevated));border-color:var(--warn)}
+.vz{display:inline-block;padding:0 6px;cursor:default}
+.premisa{margin:0 0 8px;font-size:.88rem;color:var(--text-muted)}
+.premisa:empty{display:none}
+.napoveda-mala{font-size:.75rem;color:var(--text-faint);margin-top:6px}
+
+/* pravidla */
+ol.pravidla{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:p}
+ol.pravidla li{counter-increment:p;display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-elevated);cursor:pointer;line-height:1.4;font-size:.95rem}
+ol.pravidla li::before{content:counter(p) '.';color:var(--text-faint);font-weight:600;min-width:1.4em}
+ol.pravidla li .stav{margin-left:auto;font-weight:700;min-width:1.2em;text-align:right}
+ol.pravidla li.splneno{border-color:var(--ok)}
+ol.pravidla li.splneno .stav{color:var(--ok)}
+ol.pravidla li.poruseno{border-color:var(--danger)}
+ol.pravidla li.poruseno .stav{color:var(--danger)}
+ol.pravidla .proc{display:block;font-size:.82rem;color:var(--danger);margin-top:2px}
+ol.pravidla .proc:empty{display:none}
+ol.pravidla .rada-txt{display:block;font-size:.8rem;color:var(--text-muted);margin-top:2px}
+ol.pravidla li.rada{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+ol.pravidla li.skrtnuto .text{text-decoration:line-through;color:var(--text-faint)}
+ol.pravidla b{font-family:ui-monospace,Consolas,monospace;font-size:1.05em}
+.rekordy{font-size:.8rem;color:var(--text-muted);margin-top:12px}
+.pomoc{max-width:1100px;width:calc(100% - 28px);margin:14px auto 0;box-sizing:border-box;font-size:.88rem;line-height:1.5;color:var(--text-muted)}
+.pomoc p{margin:.4em 0}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🔐 Číselný kód</h1>
+  <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="nova" title="Nová hádanka (N)">🎲<span class="txt"> Nová</span></button>
+    <button class="tl" data-prikaz="sdilet" title="Sdílet odkaz na tuto hádanku">🔗<span class="txt"> Sdílet</span></button>
+    <button class="tl" data-nabidka="nabHra" title="Denní hádanka, kód hádanky, začít znovu, řešení">📅<span class="txt"> Hra</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Obtížnost"><span class="skup-nazev" aria-hidden="true">Obtížnost</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabObtiznost" title="Počet číslic a druh pravidel"><span id="popisObtiznost">4 číslice</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pomoc"><span class="skup-nazev" aria-hidden="true">Pomoc</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPomoc" title="Nápověda a průběžná kontrola">💡<span class="txt"> Pomoc</span> ▾</button>
+  </div></div>
+  <span class="info" id="info"></span>
+</header>
+
+<div id="nabHra" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nova">🎲 Nová hádanka <kbd>N</kbd></button>
+  <button class="tl" data-prikaz="denni">📅 Denní hádanka</button>
+  <hr>
+  <button class="tl" data-prikaz="sdilet">🔗 Sdílet hádanku</button>
+  <button class="tl" data-prikaz="zadat">⌨️ Zadat kód hádanky…</button>
+  <hr>
+  <button class="tl" data-prikaz="znovu">↺ Začít znovu</button>
+  <button class="tl" data-prikaz="vzdat">🏳️ Vzdát se a ukázat kód</button>
+</div>
+<div id="nabObtiznost" class="nabidka" hidden>
+  <div class="titulek">Počet číslic</div>
+  <button class="tl prep" data-delka="3">3 číslice – lehká</button>
+  <button class="tl prep" data-delka="4">4 číslice – střední</button>
+  <button class="tl prep" data-delka="5">5 číslic – těžká</button>
+  <button class="tl prep" data-delka="6">6 číslic – mistrovská</button>
+  <hr>
+  <div class="titulek">Pravidla</div>
+  <button class="tl prep" data-styl="mix">🧮 Smíšená pravidla</button>
+  <button class="tl prep" data-styl="tipy">🔒 Zámek s tipy (správně / na místě)</button>
+  <hr>
+  <div class="titulek">Číslice v kódu</div>
+  <button class="tl prep" data-opak="ne">Bez opakování</button>
+  <button class="tl prep" data-opak="ano">Mohou se opakovat</button>
+</div>
+<div id="nabPomoc" class="nabidka" hidden>
+  <button class="tl" data-prikaz="poradit">🧠 Poradit další krok <kbd>H</kbd></button>
+  <button class="tl" data-prikaz="odhal">🔎 Odhalit jednu číslici</button>
+  <button class="tl" data-prikaz="vymazPozn">🧹 Vymazat poznámky</button>
+  <button class="tl prep" data-prikaz="zive" id="prepZive">Průběžně ukazovat splněná pravidla</button>
+  <hr>
+  <button class="tl" data-prikaz="jak">❔ Jak hrát</button>
+</div>
+
+<section class="panel pomoc" id="jak" hidden>
+    <p>Hledáte kód, který splňuje <strong>všechna</strong> pravidla. Zadání je vždy sestavené tak, aby mu odpovídal <strong>právě jeden</strong> kód – stačí logicky vyvozovat, hádat není potřeba.</p>
+    <p>Každá hádanka má svůj kód (např. <code>4s-k2x9ab</code>) – je vidět v liště a přes 🔗 Sdílet ho pošlete jako odkaz.</p>
+    <p>Číslice se počítají zleva, kód může začínat nulou. Prvočísla mezi číslicemi jsou 2, 3, 5 a 7 (0 ani 1 prvočíslo není).</p>
+    <p><strong>Zámek s tipy:</strong> u každého tipu je uvedeno, kolik jeho číslic v kódu je a zda stojí na správném místě (jako u hry Logik).</p>
+    <p><strong>🧠 Poradit</strong> nevyzradí číslici, ale ukáže další logický krok: které pravidlo (spolu s vašimi poznámkami) dovolí něco vyškrtnout. Výsledek zapíše do poznámek. Hvězdičky v liště říkají, kolik kol takových úvah hádanka potřebuje.</p>
+    <p>Ovládání: číslice pište z klávesnice, šipkami ↑↓ je měníte, ←→ přecházíte, Enter zkusí otevřít zámek.</p>
+    <button class="btn" data-prikaz="jak">Zavřít</button>
+</section>
+
+<main>
+  <section class="panel" id="panelZamek">
+    <h2>Zámek</h2>
+    <div class="zamek" id="zamek"></div>
+    <div class="akce">
+      <button class="btn primary" id="btnZkus">🔓 Otevřít</button>
+      <button class="btn" id="btnSmaz">⌫ Smazat</button>
+      <button class="btn" data-prikaz="poradit" title="Ukáže, které pravidlo teď vede k dalšímu škrtnutí, a zapíše to do poznámek (H)">🧠 Poradit</button>
+    </div>
+    <div class="zprava" id="zprava" role="status" aria-live="polite"></div>
+    <div class="pokusy" id="pokusy"></div>
+
+    <h2 style="margin-top:18px">Poznámky</h2>
+    <div class="zamek poznamky" id="mrizka"></div>
+    <div class="napoveda-mala">Klepnutí: <span class="vz mozne">možné</span> → <span class="vz jiste">jisté</span> → <span class="vz ne">nemožné</span> → zpět.</div>
+    <div class="rekordy" id="rekord"></div>
+  </section>
+
+  <section class="panel" id="panelPravidla">
+    <h2>Pravidla</h2>
+    <p class="premisa" id="premisa"></p>
+    <ol class="pravidla" id="pravidla"></ol>
+    <div class="napoveda-mala">Klepnutím pravidlo přeškrtnete, až ho vyřešíte. Kód splňuje všechna pravidla najednou a je jediný.</div>
+  </section>
+</main>
+
+
+<script>
+/* ============================================================
+   KodLogika – generátor hádanek bez DOM (testy: _test/ciselny_kod_test.js).
+   Pravidla se staví jen pravdivá pro tajný kód; přidávají se, dokud
+   zadání nemá jediné řešení, a pak se vyhodí ta, bez kterých
+   řešení zůstane jediné.
+   ============================================================ */
+const KodLogika = (function () {
+  const PRVOCISLA = [2, 3, 5, 7];
+  const RAD = ['první', 'druhá', 'třetí', 'čtvrtá', 'pátá', 'šestá'];
+  const RAD_2P = ['první', 'druhé', 'třetí', 'čtvrté', 'páté', 'šesté'];   // 2. pád: „součin druhé a třetí číslice“
+  const SLOVY = ['žádná', 'jedna', 'dvě', 'tři', 'čtyři', 'pět', 'šest'];
+
+  function rng(seed) {   // mulberry32
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const nahodne = (r, n) => Math.floor(r() * n);
+  const vyber = (r, pole) => pole[nahodne(r, pole.length)];
+  const velke = t => t.charAt(0).toUpperCase() + t.slice(1);
+  const vse = N => Array.from({ length: N }, (_, i) => i);
+
+  function poradi(i, N) { return i === N - 1 ? 'poslední' : RAD[i]; }
+  function poradi2(i, N) { return i === N - 1 ? 'poslední' : RAD_2P[i]; }
+  function dvojice2(i, j, N) {
+    if (i === 0 && j === 1) return 'prvních dvou číslic';
+    if (i === N - 2 && j === N - 1) return 'posledních dvou číslic';
+    return poradi2(i, N) + ' a ' + poradi2(j, N) + ' číslice';
+  }
+  function dvojice(i, j, N) {
+    if (i === 0 && j === 1) return 'první dvě číslice';
+    if (i === N - 2 && j === N - 1) return 'poslední dvě číslice';
+    return poradi(i, N) + ' a ' + poradi(j, N) + ' číslice';
+  }
+  // „V kódu je právě jedna sudá číslice / jsou dvě sudé / je pět sudých“
+  function pocetTvar(k, tvary) {
+    if (k === 0) return 'V kódu není ' + tvary[0];
+    if (k === 1) return 'V kódu je právě ' + tvary[1];
+    if (k <= 4) return 'V kódu jsou právě ' + SLOVY[k] + ' ' + tvary[2];
+    return 'V kódu je právě ' + SLOVY[k] + ' ' + tvary[3];
+  }
+  function cislic(k) {   // „jedna číslice je“, „dvě číslice jsou“, „pět číslic je“
+    if (k === 1) return 'jedna číslice je';
+    if (k <= 4) return SLOVY[k] + ' číslice jsou';
+    return SLOVY[k] + ' číslic je';
+  }
+  const hodnota = c => c.reduce((v, x) => v * 10 + x, 0);
+  const soucet = c => c.reduce((a, b) => a + b, 0);
+  const pocet = (c, f) => c.reduce((n, x) => n + (f(x) ? 1 : 0), 0);
+  const jePrvo = x => PRVOCISLA.includes(x);
+  // co pravidlo vidí na zadaném kódu – ukazuje se u nesplněného pravidla
+  const RADY_DELITELNOST = {
+    3: 'Dělitelnost 3: ciferný součet (součet všech číslic) je dělitelný 3.',
+    4: 'Dělitelnost 4: poslední dvojčíslí je dělitelné 4.',
+    6: 'Dělitelnost 6: číslo je sudé a zároveň má ciferný součet dělitelný 3.',
+    7: 'Dělitelnost 7: odtrhněte poslední číslici, její dvojnásobek odečtěte od zbytku a opakujte – výsledek musí být dělitelný 7 (např. 343 → 34 − 6 = 28).',
+    9: 'Dělitelnost 9: ciferný součet je dělitelný 9.',
+    11: 'Dělitelnost 11: střídavý součet číslic (+ − + − …) je dělitelný 11, např. 1 − 2 + 1 = 0 u 121.',
+  };
+  function pomocnyVypocet(c, k) {
+    if (k === 3 || k === 6 || k === 9) return 'ciferný součet ' + c.reduce((a, b) => a + b, 0) + '; ';
+    if (k === 4) return 'poslední dvojčíslí ' + (c[c.length - 2] * 10 + c[c.length - 1]) + '; ';
+    if (k === 11) return 'střídavý součet ' + c.reduce((a, x, i) => a + (i % 2 ? -x : x), 0) + '; ';
+    return '';
+  }
+  const kolikrat = (c, d) => 'číslice ' + d + ' je v kódu ' + pocet(c, x => x === d) + '×';
+  const opakujeSe = c => new Set(c).size < c.length ? 'číslice se opakují' : 'žádná se neopakuje';
+
+  const POCTY_A = new Int8Array(10), POCTY_B = new Int8Array(10);
+  // tip ve stylu Logiku: kolik číslic na místě a kolik jinde
+  function porovnej(tajny, tip) {
+    let mista = 0;
+    const a = POCTY_A.fill(0), b = POCTY_B.fill(0);
+    for (let i = 0; i < tip.length; i++) {
+      if (tip[i] === tajny[i]) mista++;
+      a[tajny[i]]++; b[tip[i]]++;
+    }
+    let spolecne = 0;
+    for (let d = 0; d < 10; d++) spolecne += Math.min(a[d], b[d]);
+    return { mista, jinde: spolecne - mista };
+  }
+  function textTipu(tip, { mista, jinde }) {
+    const t = '<b>' + tip.join('') + '</b> – ';
+    if (!mista && !jinde) return t + 'žádná číslice není správně.';
+    if (!jinde) return t + cislic(mista) + ' správně a na správném místě.';
+    if (!mista) return t + cislic(jinde) + ' správně, ale na špatném místě.';
+    return t + cislic(mista) + ' na správném místě a ' + cislic(jinde).replace(/ číslic[e]?/, '') + ' správně, ale jinde.';
+  }
+
+  /* Každý tvůrce dostane tajný kód s a vrátí pravdivé pravidlo
+     { text, poz (pozice, na kterých závisí), test(c) } nebo null. */
+  const TVURCI = {
+    vlastnost(s, N, r) {
+      const i = nahodne(r, N), x = s[i], kdo = velke(poradi(i, N)) + ' číslice ';
+      const moznosti = [
+        [jePrvo(x) ? 'je prvočíslo' : 'není prvočíslo', c => jePrvo(c[i]) === jePrvo(x)],
+        [x % 2 ? 'je lichá' : 'je sudá', c => c[i] % 2 === x % 2],
+        [x % 3 ? 'není dělitelná třemi' : 'je dělitelná třemi', c => (c[i] % 3 === 0) === (x % 3 === 0)],
+      ];
+      if (x > 0) { const k = nahodne(r, x); moznosti.push(['je větší než ' + k, c => c[i] > k]); }
+      if (x < 9) { const k = x + 1 + nahodne(r, 9 - x); moznosti.push(['je menší než ' + k, c => c[i] < k]); }
+      const [t, test] = vyber(r, moznosti);
+      return { text: kdo + t + '.', poz: [i], test };
+    },
+    dvojice(s, N, r) {
+      const i = nahodne(r, N - 1), j = i + 1 + nahodne(r, N - 1 - i);
+      const a = s[i], b = s[j], obe = dvojice(i, j, N), A = poradi(i, N), B = poradi(j, N);
+      const moznosti = [];
+      if (a === b) moznosti.push([velke(obe) + ' jsou stejné.', c => c[i] === c[j]]);
+      else {
+        moznosti.push([velke(obe) + ' jsou různé.', c => c[i] !== c[j]]);
+        const [v, m, V, M] = a > b ? [i, j, A, B] : [j, i, B, A];
+        moznosti.push([velke(V) + ' číslice je větší než ' + M + '.', c => c[v] > c[m]]);
+        const d = Math.abs(a - b);
+        moznosti.push([velke(V) + ' číslice je o ' + d + ' větší než ' + M + '.', c => c[v] - c[m] === d]);
+        if (Math.min(a, b) > 0 && Math.max(a, b) === 2 * Math.min(a, b))
+          moznosti.push([velke(V) + ' číslice je dvojnásobkem ' + poradi2(m, N) + '.', c => c[v] === 2 * c[m]]);
+      }
+      moznosti.push(['Součet ' + dvojice2(i, j, N) + ' je ' + (a + b) + '.', c => c[i] + c[j] === a + b]);
+      moznosti.push(['Součin ' + dvojice2(i, j, N) + ' je ' + (a * b) + '.', c => c[i] * c[j] === a * b]);
+      const [t, test] = vyber(r, moznosti);
+      const ukaz = t.startsWith('Součet') ? c => c[i] + ' + ' + c[j] + ' = ' + (c[i] + c[j])
+        : t.startsWith('Součin') ? c => c[i] + ' × ' + c[j] + ' = ' + c[i] * c[j] : undefined;
+      return { text: t, poz: [i, j], test, ukaz };
+    },
+    soucet(s, N, r) {
+      const S = soucet(s);
+      return r() < 0.75
+        ? { text: 'Součet všech číslic je ' + S + '.', poz: vse(N), test: c => soucet(c) === S, ukaz: c => 'součet je ' + soucet(c) }
+        : { text: 'Součet všech číslic je ' + (S % 2 ? 'lichý' : 'sudý') + '.', poz: vse(N), test: c => soucet(c) % 2 === S % 2, ukaz: c => 'součet je ' + soucet(c) };
+    },
+    opakovani(s, N, r) {
+      const ruzne = new Set(s).size;
+      if (r() < 0.5) {
+        return ruzne === N
+          ? { text: 'Žádná číslice se v kódu neopakuje.', poz: vse(N), test: c => new Set(c).size === N, ukaz: opakujeSe }
+          : { text: 'Některá číslice se v kódu opakuje.', poz: vse(N), test: c => new Set(c).size < N, ukaz: opakujeSe };
+      }
+      return { text: 'Kód se skládá ' + ['', 'z jediné', 'ze dvou', 'ze tří', 'ze čtyř', 'z pěti', 'ze šesti'][ruzne] + ' různ' + (ruzne === 1 ? 'é číslice' : 'ých číslic') + '.', poz: vse(N), test: c => new Set(c).size === ruzne, ukaz: c => 'různých číslic je ' + new Set(c).size };
+    },
+    obsahuje(s, N, r) {
+      const d = nahodne(r, 10), k = pocet(s, x => x === d);
+      if (k === 0) return { text: 'Kód neobsahuje číslici ' + d + '.', poz: vse(N), test: c => !c.includes(d), ukaz: c => kolikrat(c, d) };
+      if (k === 1 && r() < 0.6) return { text: 'Kód obsahuje číslici ' + d + '.', poz: vse(N), test: c => c.includes(d), ukaz: c => kolikrat(c, d) };
+      const krat = ['', 'právě jednou', 'dvakrát', 'třikrát', 'čtyřikrát', 'pětkrát', 'šestkrát'][k];
+      return { text: 'Číslice ' + d + ' je v kódu ' + krat + '.', poz: vse(N), test: c => pocet(c, x => x === d) === k, ukaz: c => kolikrat(c, d) };
+    },
+    pocty(s, N, r) {
+      const druh = vyber(r, [
+        [x => x % 2 === 0, ['žádná sudá číslice', 'jedna sudá číslice', 'sudé číslice', 'sudých číslic'], 'sudých číslic'],
+        [x => x % 2 === 1, ['žádná lichá číslice', 'jedna lichá číslice', 'liché číslice', 'lichých číslic'], 'lichých číslic'],
+        [jePrvo, ['žádné prvočíslo', 'jedno prvočíslo', 'prvočísla', 'prvočísel'], 'prvočísel'],
+        [x => x > 4, ['žádná číslice větší než 4', 'jedna číslice větší než 4', 'číslice větší než 4', 'číslic větších než 4'], 'číslic větších než 4'],
+      ]);
+      const [f, tvary, coKolik] = druh, k = pocet(s, f);
+      return { text: pocetTvar(k, tvary) + '.', poz: vse(N), test: c => pocet(c, f) === k,
+        ukaz: c => coKolik + ' je ' + pocet(c, f) + (coKolik === 'prvočísel' ? ' (' + (c.filter(jePrvo).join(', ') || 'žádné') + ')' : '') };
+    },
+    poradi(s, N) {
+      const roste = s.every((x, i) => !i || x > s[i - 1]), klesa = s.every((x, i) => !i || x < s[i - 1]);
+      const palindrom = s.every((x, i) => x === s[N - 1 - i]);
+      if (roste) return { text: 'Číslice jdou zleva vzestupně – každá je větší než předchozí.', poz: vse(N), test: c => c.every((x, i) => !i || x > c[i - 1]) };
+      if (klesa) return { text: 'Číslice jdou zleva sestupně – každá je menší než předchozí.', poz: vse(N), test: c => c.every((x, i) => !i || x < c[i - 1]) };
+      if (palindrom) return { text: 'Kód se čte stejně zleva i zprava.', poz: vse(N), test: c => c.every((x, i) => x === c[N - 1 - i]) };
+      return { text: 'Číslice nejdou ani vzestupně, ani sestupně.', poz: vse(N), test: c => !c.every((x, i) => !i || x > c[i - 1]) && !c.every((x, i) => !i || x < c[i - 1]) };
+    },
+    extrem(s, N, r) {
+      if (r() < 0.5) { const m = Math.max(...s); return { text: 'Největší číslice kódu je ' + m + '.', poz: vse(N), test: c => Math.max(...c) === m, ukaz: c => 'největší je ' + Math.max(...c) }; }
+      const m = Math.min(...s); return { text: 'Nejmenší číslice kódu je ' + m + '.', poz: vse(N), test: c => Math.min(...c) === m, ukaz: c => 'nejmenší je ' + Math.min(...c) };
+    },
+    delitelnost(s, N, r) {
+      const v = hodnota(s), delitele = [3, 4, 6, 7, 9, 11].filter(k => v % k === 0);
+      if (!delitele.length) return null;
+      const k = vyber(r, delitele);
+      return { text: 'Kód čtený jako číslo je dělitelný ' + k + '.', poz: vse(N), test: c => hodnota(c) % k === 0,
+        rada: RADY_DELITELNOST[k], ukaz: c => pomocnyVypocet(c, k) + hodnota(c) + ' : ' + k + ' = ' + Math.floor(hodnota(c) / k) + ', zbytek ' + hodnota(c) % k };
+    },
+    tip(s, N, r) {
+      const tip = s.map(() => r() < 0.4 ? s[nahodne(r, N)] : nahodne(r, 10));
+      if (tip.every((x, i) => x === s[i])) return null;
+      const v = porovnej(s, tip);
+      return { text: textTipu(tip, v), poz: vse(N), test: c => { const w = porovnej(c, tip); return w.mista === v.mista && w.jinde === v.jinde; },
+        ukaz: c => { const w = porovnej(c, tip); return w.mista + ' na místě, ' + w.jinde + ' jinde (má být ' + v.mista + ' a ' + v.jinde + ')'; } };
+    },
+  };
+  const VAHY_MIX = { vlastnost: 5, dvojice: 5, soucet: 1, opakovani: 1, obsahuje: 2, pocty: 2, poradi: 1, extrem: 1, delitelnost: 1, tip: 2 };
+
+  function cislice(kod, N, out) {
+    for (let i = N - 1; i >= 0; i--) { out[i] = kod % 10; kod = (kod - out[i]) / 10; }
+    return out;
+  }
+  // splnění pravidla pro všech 10^N kódů (1 = splněno)
+  function tabulka(N, test) {
+    const max = 10 ** N, c = new Array(N), t = new Uint8Array(max);
+    for (let k = 0; k < max; k++) t[k] = test(cislice(k, N, c)) ? 1 : 0;
+    return t;
+  }
+  const bezOpakovani = c => new Set(c).size === c.length;
+  function pocetResenich(N, pravidla, limit, opak) {
+    const c = new Array(N), max = 10 ** N;
+    let n = 0;
+    for (let k = 0; k < max; k++) {
+      cislice(k, N, c);
+      if ((opak || bezOpakovani(c)) && pravidla.every(p => p.test(c)) && ++n >= limit) break;
+    }
+    return n;
+  }
+
+  /* Logické odvození, jak ho dělá člověk s poznámkami: D[i] je bitová maska číslic,
+     které jsou na pozici i ještě možné. Číslice zůstane, jen když ji každé pravidlo
+     samo o sobě připouští – tedy existuje kód z možných číslic (při zákazu opakování
+     bez opakování), který pravidlo splní a má ji na tomto místě. Opakuje se, dokud
+     se něco škrtá. Hádanka je řešitelná bez zkoušení, když zbude na každé pozici jedna. */
+  function odvod(N, pravidla, opak, D0) {
+    const D = D0 ? D0.slice() : new Array(N).fill(1023), c = new Array(N);
+    for (let kola = 1; ; kola++) {
+      const opora = pravidla.map(() => new Array(N).fill(0));
+      (function proch(i, pouzite) {
+        if (i === N) {
+          for (let k = 0; k < pravidla.length; k++)
+            if (pravidla[k].test(c)) for (let j = 0; j < N; j++) opora[k][j] |= 1 << c[j];
+          return;
+        }
+        for (let d = 0; d < 10; d++)
+          if (D[i] >> d & 1 && (opak || !(pouzite >> d & 1))) { c[i] = d; proch(i + 1, pouzite | 1 << d); }
+      })(0, 0);
+      let zmena = false;
+      for (let j = 0; j < N; j++) {
+        let m = D[j];
+        for (const o of opora) m &= o[j];
+        if (m !== D[j]) { D[j] = m; zmena = true; }
+      }
+      if (!zmena) return { D, kola };
+    }
+  }
+  const vyreseno = D => D.every(m => m && !(m & (m - 1)));
+  const zbyva = D => D.reduce((n, m) => { for (; m; m &= m - 1) n++; return n; }, 0);
+
+  function sestav(N, styl, r, opak) {
+    const s = [];
+    while (s.length < N) { const d = nahodne(r, 10); if (opak || !s.includes(d)) s.push(d); }
+    const tajny = hodnota(s);
+    const typy = [];
+    for (const [t, v] of Object.entries(styl === 'tipy' ? { tip: 1 } : VAHY_MIX)) for (let i = 0; i < v; i++) typy.push(t);
+    const c = new Array(N), povoleny = tabulka(N, c => opak || bezOpakovani(c));
+    let kandidati = [];
+    for (let k = 0; k < povoleny.length; k++) if (povoleny[k]) kandidati.push(k);
+    const pravidla = [], tabulky = [], texty = new Set();
+    const pomer = 10 ** (N / (N + 4));   // cílové zúžení jedním pravidlem → zhruba N+4 pravidel před ořezáním
+    for (let kolo = 0; kandidati.length > 1; kolo++) {
+      if (pravidla.length > 30 || kolo > 200) return null;
+      // zúžení se odhaduje na vzorku – u 5 a 6 číslic by plný průchod pro každý návrh trval dlouho
+      const krok = Math.max(1, Math.floor(kandidati.length / 4000));
+      const vzorek = krok === 1 ? kandidati : kandidati.filter((_, i) => i % krok === 0);
+      let nejlepsi = null;
+      for (let pokus = 0; pokus < 24; pokus++) {
+        const p = TVURCI[vyber(r, typy)](s, N, r);
+        if (!p || texty.has(p.text)) continue;
+        let zust = 0;
+        for (const k of vzorek) if (p.test(cislice(k, N, c))) zust++;
+        if (zust === vzorek.length) continue;
+        const odhad = zust * kandidati.length / vzorek.length;
+        const skore = Math.abs(Math.log(kandidati.length / pomer) - Math.log(Math.max(1, odhad))) + r() * 0.3;
+        if (!nejlepsi || skore < nejlepsi.skore) nejlepsi = { p, skore };
+      }
+      if (!nejlepsi) continue;
+      const t = tabulka(N, nejlepsi.p.test), zbytek = kandidati.filter(k => t[k]);
+      if (zbytek.length === kandidati.length) continue;
+      pravidla.push(nejlepsi.p); tabulky.push(t); texty.add(nejlepsi.p.text);
+      kandidati = zbytek;
+    }
+    // vyhodit nadbytečná pravidla: pravidlo jde pryč, pokud žádný jiný kód neporušuje jen je
+    const porusenych = new Uint8Array(10 ** N);   // nepovolené kódy (s opakováním) mají jedno porušení navíc
+    for (let k = 0; k < porusenych.length; k++) porusenych[k] = 1 - povoleny[k];
+    for (const t of tabulky) for (let k = 0; k < t.length; k++) porusenych[k] += 1 - t[k];
+    const poradiZkousek = pravidla.map((_, i) => i).sort(() => r() - 0.5);
+    const pryc = new Set();
+    for (const i of poradiZkousek) {
+      if (pravidla.length - pryc.size <= 2) break;
+      const t = tabulky[i];
+      let nutne = false;
+      for (let k = 0; k < t.length && !nutne; k++) if (!t[k] && porusenych[k] === 1 && k !== tajny) nutne = true;
+      if (nutne) continue;
+      pryc.add(i);
+      for (let k = 0; k < t.length; k++) if (!t[k]) porusenych[k]--;
+    }
+    let zbyla = pravidla.filter((_, i) => !pryc.has(i));
+
+    // jediné řešení ještě neznamená, že se dá najít úvahou – doplnit pravidla, dokud nejde odvodit
+    let { D } = odvod(N, zbyla, opak);
+    for (let kolo = 0; !vyreseno(D); kolo++) {
+      if (zbyla.length > 30 || kolo > 60) return null;
+      let nejlepsi = null;
+      for (let pokus = 0; pokus < 16; pokus++) {
+        const p = TVURCI[vyber(r, typy)](s, N, r);
+        if (!p || zbyla.some(q => q.text === p.text)) continue;
+        const v = odvod(N, zbyla.concat(p), opak, D), n = zbyva(v.D) + r() * 0.5;
+        if (zbyva(v.D) < zbyva(D) && (!nejlepsi || n < nejlepsi.n)) nejlepsi = { p, D: v.D, n };
+      }
+      if (nejlepsi) { zbyla.push(nejlepsi.p); D = nejlepsi.D; }
+    }
+    // a znovu vyhodit, co je navíc – teď s ohledem na odvoditelnost (u 6 číslic s opakováním příliš pomalé)
+    if (10 ** N <= 200000 || !opak) {
+      for (const p of zbyla.slice().sort(() => r() - 0.5)) {
+        if (zbyla.length <= 2) break;
+        const bez = zbyla.filter(q => q !== p);
+        if (vyreseno(odvod(N, bez, opak).D)) zbyla = bez;
+      }
+    }
+    return { kod: s, pravidla: zbyla, kroku: odvod(N, zbyla, opak).kola };
+  }
+
+  /** Hádanka určená semínkem – stejné semínko = stejné zadání (denní hádanka, uložená hra). */
+  function generuj(N, styl, seed, opak) {
+    const r = rng(seed);
+    for (;;) { const h = sestav(N, styl, r, opak); if (h) return Object.assign(h, { N, styl, seed, opak }); }
+  }
+
+  return { generuj, odvod, porovnej, pocetResenich, rng };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const KLIC = 'webapp_hra_ciselny_kod';
+  let nast = { N: 4, styl: 'mix', opak: false, zive: false };
+  const STAVY_POZN = ['', 'mozne', 'jiste', 'ne'];   // poznámka: nic → možné → jisté → nemožné
+  let hra = null;        // { seed, N, styl, denni, vstup[], odhaleno[], poznamky[][], skrt[], pokusy[], start, cas, hotovo }
+  let hadanka = null;    // výsledek KodLogika.generuj
+  let radaPravidlo = -1; // pravidlo zvýrazněné poslední radou
+
+  function uloz() {
+    if (hra && !hra.hotovo) { hra.cas = ubehlo(); hra.start = Date.now(); }   // čas přežije zavření stránky
+    try { localStorage.setItem(KLIC, JSON.stringify({ nast, hra })); } catch { /* nevadí */ }
+  }
+  function nacti() {
+    try {
+      const d = JSON.parse(localStorage.getItem(KLIC) || 'null');
+      if (d && d.nast) nast = Object.assign(nast, d.nast);
+      if (d && d.hra && d.hra.vstup) return Object.assign({ opak: true }, d.hra);   // hry uložené před volbou měly opakování
+    } catch { /* poškozená data – začne se znovu */ }
+    return null;
+  }
+
+  const dnes = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+  const rekord = () => Rekord.sleduj(KLIC + '_cas_' + hra.styl + hra.N + (hra.opak ? '_opak' : ''), {
+    vyssiLepsi: false, format: v => formatCas(v),
+    popisek: 'Nejrychlejší vyřešení (' + hra.N + (hra.N < 5 ? ' číslice, ' : ' číslic, ') + (hra.styl === 'tipy' ? 'tipy' : 'smíšená') + (hra.opak ? ', s opakováním' : '') + ')',
+  });
+  const formatCas = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  const ubehlo = () => hra.hotovo ? hra.cas : hra.cas + Math.floor((Date.now() - hra.start) / 1000);
+
+  // kód hádanky: počet číslic, s/t (smíšená / tipy), o = s opakováním, semínko v base36 – „4s-k2x9ab“
+  const kodHadanky = h => h.N + (h.styl === 'tipy' ? 't' : 's') + (h.opak ? 'o' : '') + '-' + h.seed.toString(36);
+  function ctiKod(t) {
+    const m = String(t || '').trim().toLowerCase().match(/^([3-6])([st])(o?)-([0-9a-z]{1,7})$/);
+    if (!m) return null;
+    const seed = parseInt(m[4], 36);
+    return seed < 2 ** 32 ? { N: +m[1], styl: m[2] === 't' ? 'tipy' : 'mix', opak: !!m[3], seed } : null;
+  }
+  function odkaz() {
+    return new URL('../', location.href).href + '#obsah/ciselny_kod.html?h=' + kodHadanky(hra);
+  }
+  function otevriKod(k) {
+    Object.assign(nast, { N: k.N, styl: k.styl, opak: k.opak });   // „Nová“ pak dá hádanku stejného druhu
+    if (hra && kodHadanky(hra) === kodHadanky(k)) return spust();   // stejná hádanka – nechat rozehraný stav
+    zalozHru(k.seed, false, k);
+  }
+
+  function zalozHru(seed, denni, k) {
+    k = k || (denni ? { N: 4, styl: 'mix', opak: false } : nast);
+    hra = {
+      seed, N: k.N, styl: k.styl, opak: k.opak, denni: !!denni,
+      vstup: [], odhaleno: [], poznamky: [], skrt: [], pokusy: [], start: Date.now(), cas: 0, hotovo: false,
+    };
+    hra.vstup = new Array(hra.N).fill(null);
+    hra.odhaleno = new Array(hra.N).fill(false);
+    hra.poznamky = Array.from({ length: hra.N }, () => new Array(10).fill(0));
+    spust();
+  }
+  function spust() {
+    // 6 číslic se sestavuje až kolem sekundy – nejdřív ukázat, že se něco děje
+    $('zprava').className = 'zprava'; $('zprava').textContent = '⏳ Sestavuji hádanku…';
+    $('pravidla').innerHTML = '';
+    hadanka = null;
+    setTimeout(dokonci, 30);
+  }
+  function dokonci() {
+    hadanka = KodLogika.generuj(hra.N, hra.styl, hra.seed, hra.opak);
+    radaPravidlo = -1;
+    hra.start = Date.now();
+    if (hra.skrt.length !== hadanka.pravidla.length) hra.skrt = new Array(hadanka.pravidla.length).fill(false);
+    $('zprava').textContent = ''; $('zprava').className = 'zprava';
+    if (hra.hotovo) zobrazKonec(false);
+    vykresli();
+    uloz();
+  }
+
+  /* ---------- vykreslení ---------- */
+  function vykresli() {
+    const N = hra.N;
+    $('popisObtiznost').textContent = nast.N + (nast.N < 5 ? ' číslice' : ' číslic') + (nast.styl === 'tipy' ? ' · tipy' : '') + (nast.opak ? ' · opak.' : '');
+    document.querySelectorAll('[data-opak]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.opak === 'ano') === nast.opak)));
+    $('premisa').textContent = (hra.opak ? 'Číslice se v kódu mohou opakovat.' : 'Žádná číslice se v kódu neopakuje.') +
+      (hadanka.pravidla.some(p => p.text.includes('prvočísl')) ? ' Prvočísla mezi číslicemi jsou 2, 3, 5 a 7 (0 ani 1 prvočíslo není).' : '');
+    document.querySelectorAll('[data-delka]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.delka === nast.N)));
+    document.querySelectorAll('[data-styl]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.styl === nast.styl)));
+    $('prepZive').setAttribute('aria-pressed', String(nast.zive));
+
+    const z = $('zamek'); z.innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      const k = document.createElement('div'); k.className = 'kolecko';
+      k.innerHTML = '<button class="sipka" data-i="' + i + '" data-d="1" aria-label="Zvýšit">▲</button>' +
+        '<input class="cislice" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Číslice ' + (i + 1) + '" data-i="' + i + '">' +
+        '<button class="sipka" data-i="' + i + '" data-d="-1" aria-label="Snížit">▼</button><span class="poz">' + (i + 1) + '.</span>';
+      z.appendChild(k);
+    }
+    const m = $('mrizka'); m.innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      let h = '<div class="sloupec">';
+      for (let d = 0; d < 10; d++) h += '<button data-i="' + i + '" data-c="' + d + '" aria-label="Pozice ' + (i + 1) + ', číslice ' + d + '">' + d + '</button>';
+      m.insertAdjacentHTML('beforeend', h + '</div>');
+    }
+    $('pravidla').innerHTML = hadanka.pravidla.map((p, i) => '<li data-p="' + i + '"><span class="text">' + p.text + (p.rada ? '<span class="rada-txt">💡 ' + p.rada + '</span>' : '') + '<span class="proc"></span></span><span class="stav"></span></li>').join('');
+    rekord().prvek($('rekord'));
+    obnov();
+  }
+
+  function obnov(poruseni) {
+    if (!hadanka) return;
+    document.querySelectorAll('#zamek .cislice').forEach((el, i) => {
+      el.value = hra.vstup[i] === null ? '' : hra.vstup[i];
+      el.classList.toggle('odhaleno', hra.odhaleno[i]);
+      el.readOnly = hra.odhaleno[i] || hra.hotovo;
+    });
+    $('panelZamek').classList.toggle('odemceno', hra.hotovo);
+    document.querySelectorAll('#mrizka button').forEach(b => {
+      b.className = STAVY_POZN[hra.poznamky[b.dataset.i][b.dataset.c]];
+    });
+    document.querySelectorAll('#pravidla li').forEach((li, i) => {
+      const p = hadanka.pravidla[i];
+      let stav = '';
+      if (poruseni) stav = poruseni[i] ? 'poruseno' : 'splneno';
+      // pravidlo jde vyhodnotit, jakmile jsou vyplněné pozice, na kterých závisí
+      else if (nast.zive && p.poz.every(j => hra.vstup[j] !== null)) stav = p.test(hra.vstup) ? 'splneno' : 'poruseno';
+      li.className = stav + (hra.skrt[i] ? ' skrtnuto' : '') + (i === radaPravidlo ? ' rada' : '');
+      li.querySelector('.stav').textContent = stav === 'splneno' ? '✓' : stav === 'poruseno' ? '✗' : '';
+      li.querySelector('.proc').textContent = stav === 'poruseno' ? proc(p) : '';
+    });
+    $('pokusy').innerHTML = hra.pokusy.map(k => '<span>' + k + '</span>').join('');
+    $('btnZkus').disabled = hra.hotovo;
+    info();
+  }
+  // obtížnost podle počtu kol logického škrtání, které hádanka potřebuje
+  const hvezdy = k => '★'.repeat(k <= 3 ? 1 : k <= 5 ? 2 : k <= 7 ? 3 : 4);
+  // proč pravidlo nesedí: hodnoty, které vycházejí pro zadaný kód (místní pravidla = jejich pozice)
+  function proc(p) {
+    const c = hra.vstup;
+    return 'U ' + c.map(x => x === null ? '·' : x).join('') + ': ' + (p.ukaz ? p.ukaz(c) : p.poz.map(j => (j + 1) + '. číslice je ' + c[j]).join(', ')) + '.';
+  }
+  function info() {
+    $('info').textContent = (hra.denni ? '📅 denní · ' : '') + '#' + kodHadanky(hra) + ' · ' + hvezdy(hadanka.kroku) + ' · pokusy ' + hra.pokusy.length + ' · ⏱ ' + formatCas(ubehlo());
+  }
+
+  /* ---------- hraní ---------- */
+  function nastav(i, d) {
+    if (hra.hotovo || hra.odhaleno[i]) return;
+    hra.vstup[i] = d;
+    $('zprava').textContent = '';
+    obnov(); uloz();
+  }
+  function fokus(i) {
+    const el = document.querySelectorAll('#zamek .cislice')[Math.max(0, Math.min(hra.N - 1, i))];
+    if (el) { el.focus(); el.select(); }
+  }
+  function zkus() {
+    if (!hadanka || hra.hotovo) return;
+    if (hra.vstup.some(x => x === null)) {
+      $('zprava').className = 'zprava chyba'; $('zprava').textContent = 'Vyplňte všechny číslice.';
+      fokus(hra.vstup.indexOf(null)); return;
+    }
+    const poruseni = hadanka.pravidla.map(p => !p.test(hra.vstup));
+    const kod = hra.vstup.join('');
+    if (!poruseni.some(Boolean)) {
+      hra.hotovo = true; hra.cas = ubehlo();
+      uloz(); obnov(poruseni); zobrazKonec(true); return;
+    }
+    if (!hra.pokusy.includes(kod)) hra.pokusy.push(kod);
+    const n = poruseni.filter(Boolean).length;
+    $('zprava').className = 'zprava chyba';
+    $('zprava').textContent = '🔒 Zamčeno – ' + (n === 1 ? 'jedno pravidlo nesedí.' : 'nesedí ' + n + (n < 5 ? ' pravidla.' : ' pravidel.'));
+    uloz(); obnov(poruseni);
+  }
+  function zobrazKonec(prave) {
+    const napovedy = hra.odhaleno.filter(Boolean).length + (hra.rady || 0);
+    let t = '🔓 Odemčeno! Kód ' + hadanka.kod.join('') + ' · ' + formatCas(hra.cas) + ' · chybných pokusů ' + hra.pokusy.length;
+    if (napovedy) t += ' · nápověd ' + napovedy;
+    if (hra.vzdano) t = '🏳️ Kód byl ' + hadanka.kod.join('') + '.';
+    else if (prave && !napovedy && rekord().zapis(hra.cas)) t += ' · 🏆 nový rekord!';
+    $('zprava').className = 'zprava ' + (hra.vzdano ? '' : 'ok');
+    $('zprava').textContent = t;
+    if (prave) rekord().prvek($('rekord'));
+  }
+
+  /* Rada = jeden logický krok: z poznámek (vyloučené / jisté číslice) se sestaví, co je na
+     každé pozici ještě možné, a hledá se první pravidlo, které samo o sobě něco vyškrtne
+     (KodLogika.odvod s jediným pravidlem). Škrty se zapíší do poznámek. */
+  function poradit() {
+    if (!hadanka || hra.hotovo) return;
+    const N = hra.N, kod = hadanka.kod, zprava = $('zprava');
+    const D = hra.poznamky.map(r => {
+      const jiste = r.reduce((m, st, d) => st === 2 ? m | 1 << d : m, 0);
+      return jiste || r.reduce((m, st, d) => st === 3 ? m : m | 1 << d, 0);
+    });
+    zprava.className = 'zprava';
+    const spatne = D.findIndex((m, i) => !(m >> kod[i] & 1));
+    if (spatne >= 0) {
+      zprava.textContent = '⚠️ V poznámkách k ' + (spatne + 1) + '. pozici je chyba – vyloučili jste správnou číslici, nebo jste jako jistou označili špatnou.';
+      return;
+    }
+    if (D.every(m => !(m & (m - 1)))) { zprava.textContent = '🧠 Poznámky už určují celý kód – zadejte ho do zámku.'; return; }
+    for (let k = 0; k < hadanka.pravidla.length; k++) {
+      const nove = KodLogika.odvod(N, [hadanka.pravidla[k]], hra.opak, D).D;
+      const casti = [];
+      for (let i = 0; i < N; i++) {
+        const pryc = [];
+        for (let d = 0; d < 10; d++) if (D[i] >> d & 1 && !(nove[i] >> d & 1)) { pryc.push(d); hra.poznamky[i][d] = 3; }
+        if (!pryc.length) continue;
+        const jedina = nove[i] && !(nove[i] & (nove[i] - 1)) ? Math.log2(nove[i]) : -1;
+        if (jedina >= 0) hra.poznamky[i][jedina] = 2;
+        casti.push('na ' + (i + 1) + '. pozici ' + (jedina >= 0 ? 'musí být ' + jedina : 'není ' + pryc.join(', ')));
+      }
+      if (!casti.length) continue;
+      hra.rady = (hra.rady || 0) + 1;
+      radaPravidlo = k;
+      // zmínit zákaz opakování jen tehdy, když bez něj by pravidlo tolik nevyškrtlo
+      const sOpak = !hra.opak && KodLogika.odvod(N, [hadanka.pravidla[k]], true, D).D.some((m, i) => m !== nove[i]);
+      zprava.textContent = '🧠 Z pravidla ' + (k + 1) + (sOpak ? ' a toho, že se číslice neopakují,' : '') + ' plyne: ' + casti.join('; ') + '.';
+      uloz(); obnov();
+      return;
+    }
+    zprava.textContent = '🧠 Jednotlivá pravidla už nic dalšího nevyškrtnou – zkuste je kombinovat, nebo odhalte číslici.';
+  }
+
+  const PRIKAZY = {
+    nova() { zalozHru(Math.floor(Math.random() * 36 ** 6), false); },   // 6 znaků v kódu hádanky
+    denni() { zalozHru(dnes(), true); },
+    async sdilet() {
+      if (!hra) return;
+      const url = odkaz(), text = '🔐 Číselný kód – hádanka ' + kodHadanky(hra);
+      if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+        try { await navigator.share({ title: text, url }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      try { await navigator.clipboard.writeText(url); Dialog.info('🔗 Odkaz na hádanku ' + kodHadanky(hra) + ' je ve schránce.'); }
+      catch { await Dialog.zeptej('Zkopírujte odkaz na hádanku:', url); }
+    },
+    async zadat() {
+      const t = await Dialog.zeptej('Kód hádanky (např. 4s-k2x9ab) nebo celý odkaz:', '');
+      if (t === null) return;
+      const k = ctiKod(t.includes('h=') ? t.split('h=')[1].split(/[&#]/)[0] : t);
+      if (!k) return Dialog.chyba('Tohle není platný kód hádanky.');
+      otevriKod(k);
+    },
+    znovu() {
+      hra.vstup.fill(null); hra.odhaleno.fill(false); hra.poznamky.forEach(r => r.fill(0));
+      hra.skrt.fill(false); hra.pokusy = []; hra.cas = 0; hra.hotovo = false; hra.vzdano = false; hra.rady = 0;
+      spust();
+    },
+    async vzdat() {
+      if (!hadanka || hra.hotovo) return;
+      if (!await Dialog.potvrd('Opravdu ukázat kód? Hra skončí bez zápisu rekordu.')) return;
+      hra.vstup = hadanka.kod.slice(); hra.hotovo = true; hra.vzdano = true; hra.cas = ubehlo();
+      uloz(); obnov(); zobrazKonec(false);
+    },
+    odhal() {
+      if (!hadanka || hra.hotovo) return;
+      // přednostně pozici, kde je zadaná číslice špatně nebo chybí
+      const i = hadanka.kod.findIndex((x, j) => !hra.odhaleno[j] && hra.vstup[j] !== x);
+      if (i < 0) return zkus();
+      hra.vstup[i] = hadanka.kod[i]; hra.odhaleno[i] = true;
+      $('zprava').className = 'zprava'; $('zprava').textContent = '🔎 ' + (i + 1) + '. číslice je ' + hadanka.kod[i] + ' (rekord se nezapíše).';
+      uloz(); obnov();
+    },
+    poradit,
+    vymazPozn() { hra.poznamky.forEach(r => r.fill(0)); radaPravidlo = -1; obnov(); uloz(); },
+    zive() { nast.zive = !nast.zive; $('prepZive').setAttribute('aria-pressed', String(nast.zive)); uloz(); obnov(); },
+    jak() { $('jak').hidden = !$('jak').hidden; },
+  };
+
+  /* ---------- události ---------- */
+  function zavriNabidky() {
+    document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+    document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  }
+  document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const n = $(b.dataset.nabidka), bylo = !n.hidden;
+    zavriNabidky();
+    if (bylo) return;
+    n.hidden = false; b.setAttribute('aria-expanded', 'true');
+    const r = b.getBoundingClientRect();
+    n.style.top = (r.bottom + 4) + 'px';
+    n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+  }));
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-prikaz], [data-delka], [data-styl], [data-opak]');
+    if (b) {
+      e.stopPropagation();
+      if (b.dataset.prikaz) { if (b.dataset.prikaz !== 'zive') zavriNabidky(); return PRIKAZY[b.dataset.prikaz](); }
+      if (b.dataset.delka) nast.N = +b.dataset.delka;
+      else if (b.dataset.styl) nast.styl = b.dataset.styl;
+      else nast.opak = b.dataset.opak === 'ano';
+      zavriNabidky();
+      return PRIKAZY.nova();
+    }
+    if (!e.target.closest('.nabidka')) zavriNabidky();
+  });
+  addEventListener('resize', zavriNabidky);
+
+  $('zamek').addEventListener('click', e => {
+    const b = e.target.closest('.sipka');
+    if (!b) return;
+    const i = +b.dataset.i, v = hra.vstup[i];
+    nastav(i, v === null ? (+b.dataset.d > 0 ? 0 : 9) : (v + +b.dataset.d + 10) % 10);
+  });
+  $('zamek').addEventListener('focusin', e => { if (e.target.select) e.target.select(); });
+  $('zamek').addEventListener('input', e => {   // mobilní klávesnice posílá input místo keydown s číslicí
+    const el = e.target, i = +el.dataset.i, m = el.value.match(/\d/g);
+    if (m) { nastav(i, +m[m.length - 1]); fokus(i + 1); } else obnov();
+  });
+  $('zamek').addEventListener('keydown', e => {
+    const el = e.target; if (!el.classList.contains('cislice')) return;
+    const i = +el.dataset.i, v = hra.vstup[i];
+    if (/^Digit\d$|^Numpad\d$/.test(e.code)) { e.preventDefault(); nastav(i, +e.code.slice(-1)); fokus(i + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); nastav(i, v === null ? 0 : (v + 1) % 10); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); nastav(i, v === null ? 9 : (v + 9) % 10); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); fokus(i - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); fokus(i + 1); }
+    else if (e.key === 'Backspace' || e.key === 'Delete') {
+      e.preventDefault();
+      if (v === null || hra.odhaleno[i]) fokus(i - 1); else nastav(i, null);
+    }
+    else if (e.key === 'Enter') { e.preventDefault(); zkus(); }
+  });
+  $('btnZkus').addEventListener('click', zkus);
+  $('btnSmaz').addEventListener('click', () => {
+    if (hra.hotovo) return;
+    hra.vstup = hra.vstup.map((x, i) => hra.odhaleno[i] ? x : null);
+    $('zprava').textContent = ''; obnov(); uloz(); fokus(hra.vstup.indexOf(null));
+  });
+  $('mrizka').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const r = hra.poznamky[b.dataset.i];
+    r[b.dataset.c] = (r[b.dataset.c] + 1) % STAVY_POZN.length;
+    obnov(); uloz();
+  });
+  $('pravidla').addEventListener('click', e => {
+    const li = e.target.closest('li'); if (!li) return;
+    hra.skrt[li.dataset.p] = !hra.skrt[li.dataset.p];
+    obnov(); uloz();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') zavriNabidky();
+    if (e.target.closest('input, textarea, .dialog, dialog') || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'n' || e.key === 'N') PRIKAZY.nova();
+    else if (e.key === 'h' || e.key === 'H') poradit();
+    else if (/^Digit\d$|^Numpad\d$/.test(e.code) && !hra.hotovo) { fokus(Math.max(0, hra.vstup.indexOf(null))); }
+  });
+
+  if (window.self === window.top) document.body.classList.add('samostatne');
+  const ulozena = nacti(), zOdkazu = ctiKod(new URLSearchParams(location.search).get('h'));
+  if (ulozena) hra = ulozena;
+  if (zOdkazu) otevriKod(zOdkazu);
+  else if (ulozena) spust();
+  else PRIKAZY.denni();
+  setInterval(() => { if (hadanka && !hra.hotovo) info(); }, 1000);
+})();
+</script>
+</body>
+</html>

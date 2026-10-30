@@ -1,0 +1,23 @@
+// iso_tolerance – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Tolerance a uložení ISO': 'ISO tolerances and fits',
+  'Tolerance a uložení ISO 286': 'ISO 286 tolerances and fits',
+  'Mezní úchylky děr a hřídelí + charakter uložení. Výpočet dle vzorců ISO 286 (orientační, zaokrouhleno na µm).': 'Limit deviations of holes and shafts + type of fit. Calculated from ISO 286 formulas (approximate, rounded to µm).',
+  'Uložení díra / hřídel': 'Hole / shaft fit',
+  'Jmenovitý ø (mm), 1–500': 'Nominal ø (mm), 1–500',
+  'Díra': 'Hole',
+  'Hřídel': 'Shaft',
+  'Díra – úchylky': 'Hole – deviations',
+  'Hřídel – úchylky': 'Shaft – deviations',
+  'Vůle max / min': 'Clearance max / min',
+  'Běžná uložení: H7/g6 otočné s malou vůlí · H7/h6 posuvné · H7/k6 přechodné (lehké naklepnutí) · H7/n6 pevné · H7/p6 nalisované.': 'Common fits: H7/g6 running with small clearance · H7/h6 sliding · H7/k6 transition (light tap fit) · H7/n6 tight · H7/p6 press fit.',
+  'Tabulka tolerančních stupňů IT pro zadaný průměr': 'Table of IT tolerance grades for the given diameter',
+  'Stupeň': 'Grade',
+  'Tolerance (µm)': 'Tolerance (µm)',
+  'Uložení s vůlí': 'Clearance fit',
+  'Uložení s přesahem (nalisování)': 'Interference fit (press fit)',
+  'Přechodné uložení (vůle i přesah možné)': 'Transition fit (clearance or interference possible)',
+  'ES {ES} µm · EI {EI} µm ({EI2} – {ES2} mm)': 'ES {ES} µm · EI {EI} µm ({EI2} – {ES2} mm)',
+  'es {es} µm · ei {ei} µm ({ei2} – {es2} mm)': 'es {es} µm · ei {ei} µm ({ei2} – {es2} mm)',
+  '{vuleMax} µm / {vuleMin} µm': '{vuleMax} µm / {vuleMin} µm',
+});

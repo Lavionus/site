@@ -1,0 +1,20 @@
+// growth_chart – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Kalendář růstu dítěte (percentily)': 'Child growth chart (percentiles)',
+  'Orientační odhad percentilu výšky a váhy podle věku a pohlaví, na základě zjednodušeného modelu z běžně publikovaných průměrných hodnot WHO.': 'A rough estimate of the height and weight percentile by age and sex, based on a simplified model of commonly published WHO averages.',
+  'Toto je pouze orientační výpočet pro domácí sledování růstového trendu —': 'This is only an approximate calculation for tracking the growth trend at home —',
+  'není to lékařská diagnostika': 'it is not a medical diagnosis',
+  'Přesné percentilové grafy a posouzení růstu svěř dětskému lékaři.': 'Leave accurate percentile charts and growth assessment to a paediatrician.',
+  'Pohlaví': 'Sex',
+  'Chlapec': 'Boy',
+  'Dívka': 'Girl',
+  'Věk (roky)': 'Age (years)',
+  'Věk (měsíce navíc)': 'Age (additional months)',
+  'Výška (cm)': 'Height (cm)',
+  'Váha (kg)': 'Weight (kg)',
+  'Výška': 'Height',
+  'odhadovaný percentil': 'estimated percentile',
+  'Váha': 'Weight',
+  'Mediánová výška pro tento věk je přibližně {medH} cm.': 'The median height for this age is approximately {medH} cm.',
+  'Mediánová váha pro tento věk je přibližně {medW} kg.': 'The median weight for this age is approximately {medW} kg.',
+});

@@ -11,7 +11,7 @@
  *
  * Při vydání nové verze zvyšte VERSION – stará cache se při aktivaci smaže.
  */
-const VERSION = 'v15';
+const VERSION = 'v16';
 const PREFIX = 'forecast-cache-';
 const CACHE_NAME = PREFIX + VERSION;
 
@@ -21,6 +21,7 @@ self.addEventListener('install', (event) => {
       .then((cache) => cache.addAll([
         './forecast.html', './forecast.webmanifest', './forecast-orp.json', './forecast-icon-192.png', './forecast-icon-512.png', './forecast-ikony.js',
         '../common.css', '../theme.js', '../podpis.js',
+        '../i18n.js', '../i18n/jazyky.js', '../i18n/en/_seznam.js', '../i18n/en/_spolecne.js', '../i18n/en/forecast.js',
         './lib/chart.min.js', './lib/hammer.min.js', './lib/chartjs-plugin-zoom.min.js',
         './lib/leaflet/leaflet.css', './lib/leaflet/leaflet.js',
         './lib/maplibre/maplibre-gl.css', './lib/maplibre/maplibre-gl.js',

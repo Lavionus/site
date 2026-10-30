@@ -13,6 +13,7 @@ I18N.pridej('en', {
   'Zkontrolováno autorem, ještě se může měnit': 'Reviewed by the author, may still change',
   'Stable': 'Stable',
   'Hotová, ověřená verze': 'Finished, verified version',
+  'Jen česky': 'Czech only',
 
   // dialog.js – výchozí tlačítka
   'Zrušit': 'Cancel',
@@ -60,4 +61,7 @@ I18N.pridej('en', {
   'V souboru nejsou žádné použitelné tvary.': 'The file contains no usable shapes.',
   'Nahráno {n} tvar': { one: 'Imported {n} shape', other: 'Imported {n} shapes' },
   'Nahráno {n} tvarů': { one: 'Imported {n} shape', other: 'Imported {n} shapes' },
+  'Kč': 'CZK',
+  '{n} Kč': '{n} CZK',
+  'Pozor': 'Warning',
 });

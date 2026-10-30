@@ -7,7 +7,8 @@
   const PRIBEH = {
     id: 'cerna_hora',
     nazev: 'Hlubina pod Černou horou',
-    podtitul: 'Gamebook z hornického kraje, léta Páně 1546',
+    podtitul: 'Gamebook z hornického kraje, léta Páně 1546', ikona: '⛏️',
+    klic: 'webapp_hra_gamebook',
     start: '1', smrt: '99', tma: '95', svetlo: 'kamen',
     zacatek: { olej: 10, zlato: 3, predmety: ['chleb'] },
     predmety: {

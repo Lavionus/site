@@ -1,0 +1,23 @@
+// right_triangle – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Pravoúhlý trojúhelník': 'Right Triangle',
+  'Zadej 2 hodnoty': 'Enter 2 values',
+  'Odvěsna': 'Leg',
+  'kratší strana': 'shorter side',
+  'Přepona': 'Hypotenuse',
+  'nejdelší strana': 'longest side',
+  'Úhel α (°)': 'Angle α (°)',
+  'proti a': 'opposite a',
+  'Úhel β (°)': 'Angle β (°)',
+  'proti b': 'opposite b',
+  'Vymazat': 'Clear',
+  'Výsledek': 'Result',
+  'Využívá Pythagorovu větu (a²+b²=c²) a goniometrické funkce. Úhel γ je vždy 90°.': 'Uses the Pythagorean theorem (a²+b²=c²) and trigonometric functions. Angle γ is always 90°.',
+  'Zadej alespoň 2 hodnoty…': 'Enter at least 2 values…',
+  'Přepona musí být delší než odvěsna.': 'The hypotenuse must be longer than the leg.',
+  'Nedostatek dat pro výpočet.': 'Not enough data to calculate.',
+  'Výška k přeponě': 'Height to hypotenuse',
+  'Úhel α': 'Angle α',
+  'Úhel β': 'Angle β',
+  'Úhel γ': 'Angle γ',
+});

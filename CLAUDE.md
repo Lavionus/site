@@ -81,6 +81,13 @@ opačně ne. `upload.sh` nahrává všechny tři.
 7. Vlastní service worker stránky jen s úzkým `scope` (vzor `forecast-sw.js`).
 8. Ručně stárnoucí data (sazby, ceny, zákonné částky) označit ve stránce datem
    a zmínit v souhrnu.
+9. **Angličtina (i18n):** web je přeložený (`Multijazycnost_PLAN.md`). Nová stránka a každá změna
+   textů → `python3 _test/i18n_vytahni.py <klíč>` (klíč = cesta pod obsah/ bez .html), přeložit `null`
+   (`_test/i18n_vypln.py <klíč> preklady.json [--pridat]`), ověřit `_test/i18n_pokryti.sh <klíč> --zapis -v`.
+   Čeština v kódu zůstává zdrojem – nepřepisovat na `I18N.t()`, jen kde je text mimo DOM a jádro ho
+   nezachytí. Výstup v jiném jazyce než rozhraní (dokument, data uživatele) → `data-i18n="ne"`;
+   plátno/PDF jen s daty uživatele → `<html data-i18n-platno="ne">`. Stránka vázaná na ČR → `"jen_cs": true`.
+   Přehled: `python3 _test/i18n_prehled.py --stranky`.
 
 ## Testování
 

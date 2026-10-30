@@ -1,0 +1,21 @@
+// dph_calc – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Kalkulačka DPH': 'VAT calculator',
+  'Výpočet daně z přidané hodnoty – sazby platné v ČR od 1. 1. 2024.': 'Value added tax (Czech DPH) calculation – rates valid in the Czech Republic from 1 Jan 2024.',
+  'Směr výpočtu': 'Calculation direction',
+  'Bez DPH → s DPH': 'Excl. VAT → incl. VAT',
+  'S DPH → bez DPH': 'Incl. VAT → excl. VAT',
+  'Sazba DPH': 'VAT rate',
+  '21 % základní': '21 % standard',
+  '12 % snížená': '12 % reduced',
+  '0 % (knihy)': '0 % (books)',
+  'Vlastní': 'Custom',
+  'Cena bez DPH (Kč)': 'Price excl. VAT (CZK)',
+  'např. 1000': 'e.g. 1000',
+  'Základ (bez DPH)': 'Base (excl. VAT)',
+  'Celkem s DPH': 'Total incl. VAT',
+  'Od roku 2024 platí v ČR dvě sazby: základní 21 % a snížená 12 % (potraviny, léky, stavební práce pro bydlení, vodné a stočné…). Knihy jsou od DPH osvobozeny (0 %). Kalkulačka je orientační.': 'Since 2024 the Czech Republic has two rates: standard 21 % and reduced 12 % (food, medicines, residential construction work, water and sewerage…). Books are exempt from VAT (0 %). The calculator is for guidance only.',
+  'Kč': 'CZK',
+  'Cena s DPH (Kč)': 'Price incl. VAT (CZK)',
+  'DPH {CZ} %': 'VAT {CZ} %',
+});

@@ -94,13 +94,13 @@ Hodnota může být:
 - [x] F. **Pilot (5 stránek různých typů).** Jednoduchá kalkulačka, `prompty.html` (menu, dialogy,
   IndexedDB), hra s plátnem, generátor s PDF exportem, stránka s modulovou složkou. Změřit čas na stránku,
   podíl textů, které vyžadují `t()`, opravit jádro. Zapsat poučení a odhad zbytku sem do plánu.
-- [ ] G. **Vlna 1 – beta: Produktivita, Zdraví, Vaření, Příroda.**
-- [ ] H. **Vlna 2 – beta: Tvorba & média, Technika, 3D.**
-- [ ] I. **Vlna 3 – beta: Vývoj & data, Formuláře (jen ty, které nejsou v `jen_cs`), Vyšetřování, ostatní sekce.**
-- [ ] J. **Vlna 4 – beta: Hry** (plátno přes `t()`, texty příběhů).
-- [ ] K. **Vlna 5 – vyvoj:** zbylé stránky ve stavu vývoj.
-- [ ] L. **Obsahově těžké stránky** – jen po rozhodnutí autora, jednotlivě.
-- [ ] M. **Zakotvení do postupu.** CLAUDE.md: kontrolní seznam nové stránky (`i18n.js` v `<head>`,
+- [x] G. **Vlna 1 – beta: Produktivita, Zdraví, Vaření, Příroda.**
+- [x] H. **Vlna 2 – beta: Tvorba & média, Technika, 3D.**
+- [x] I. **Vlna 3 – beta: Vývoj & data, Formuláře (jen ty, které nejsou v `jen_cs`), Vyšetřování, ostatní sekce.**
+- [x] J. **Vlna 4 – beta: Hry** (plátno přes `t()`, texty příběhů).
+- [x] K. **Vlna 5 – vyvoj:** zbylé stránky ve stavu vývoj.
+- [x] L. **Obsahově těžké stránky** – jen po rozhodnutí autora, jednotlivě.
+- [x] M. **Zakotvení do postupu.** CLAUDE.md: kontrolní seznam nové stránky (`i18n.js` v `<head>`,
   slovník pro všechny jazyky z rejstříku, nebo `"jen_cs": true` v `apps.js`), `_test/i18n_prehled.py` po každé
   změně textu; README – sekce o jazycích.
 
@@ -205,3 +205,114 @@ a snímky. Na vlnu 30–40 stránek odhadem 1 sezení.
   (tiskopisy podle NV 322/2025 aj.), Právo & dokumenty, QR platba (SPAYD), tarif fix/spot (ERÚ),
   schodiště (ČSN), Metodus odkazy. Gamebooky a obsahově těžké stránky (Voynich, časová osa, Šifry – model češtiny) zvlášť.
 - Jestli vlny pouštět přes agenty (spotřeba tokenů) – a kolik stránek na jednu vlnu.
+
+## Stav vlny G (30. 10. 2026)
+110 beta stránek (Produktivita, Zdraví, Vaření, Příroda) + modul `sky_events/astro`, ~8 700 textů, **20 agentů
+paralelně** (zadání `_test/i18n_ZADANI_vlny.md` (šablona; zámek flock do scratchpadu), prohlížeč přes `flock`). Hotovo za ~14 min, paměť: volná klesla
+nejvýš o ~2,3 GB (z 21,5 na 19,2 GB), Chromium vždy jen jedno. Po kontrole: 119 slovníků, 9 580 klíčů, **všechny stránky 100 %**
+za běhu (výchozí obrazovka), 0 `null`, slovníky se načtou v node.
+
+**Rozhodnutí autora:** `"jen_cs": true` u 26 stránek (Formuláře & tiskopisy, Právo & dokumenty, QR platba, schodiště,
+tarif fix/spot) – v jiném jazyce štítek „CZ“ v menu i na dlaždici. Vlny přes agenty, 20 najednou.
+
+**Opraveno po vlně (jádro a nástroje):**
+- Množné číslo podle `{n}`, jinak podle prvního číselného parametru (`{count}`, `{nights}`).
+- Parametry s diakritikou (`{počet}`) – jádro dřív hledalo jen `\w`; extraktor už dává ASCII jména.
+- Vzory se zkoušejí i na textu bez okrajů (`. Do těsta jde {a}…` za `</b>`).
+- **Data:** na přeložené stránce se `toLocale*String('cs-CZ')` a `Intl.DateTimeFormat('cs')` přesměrují na jazyk webu
+  (čísla ne – stránky je čtou zpět). Ruční klíče měsíců/dnů od agentů jsou teď navíc, neškodí.
+- `--zapis` převádí čísla na parametry (`8 595 Kč / měs.` → `{n} Kč / měs.`); `i18n_vypln.py --pridat` zakládá nové klíče;
+  `jadro_klice` už neuřízne `11:11`. Klíče s konkrétními hodnotami nahrazeny vzory (loan_calc, md_dokument, kulturni_akce,
+  currency_conv, kvasek_chleb, hypo_podil, trip_cost, countdown, menstrual_calendar).
+- `cvGen`: náhled/tisk (`#papir`) `data-i18n="ne"` – dokument je v jazyce životopisu, ne webu. `name_gen`: vygenerovaná jména `data-i18n="ne"`.
+- `forecast-sw.js` (v16) a `cviceni/sw.js` mají i18n soubory v předcache.
+
+**Zbývá (úprava kódu stránek, malé):**
+- `amount_words` – výstup je česká částka slovy → kandidát na `jen_cs` (rozhodne autor) nebo anglický převodník.
+- `shopplanner` 1574/1590 – popisky grafu Chart.js na plátně → `I18N.t`.
+- `trip_planner` – texty v PDF (jsPDF) → `I18N.t`.
+- `email_signature` 37–39 – výchozí hodnoty polí (`value`) česky.
+- `forecast` 8533–8558 – věty výhledu srážek z úlomků kolem `<b>` (anglicky kostrbaté).
+- `historicalWeather` 2086, 4717 – `<0°C` v HTML (má být `&lt;0°C`).
+- `mood_tracker` 68 – zkratky dnů Po/St/So/Ne ověřit okem.
+- `sky_events` – obecné vzory `{a} · {b}` / `{a}, {b}` (překlad = stejný text) maskují pokrytí; seznamy delší než 2 položky jen zčásti.
+
+**Poučení pro další vlny (doplněno do zadání):** výstupní dokument v jiném jazyce než UI (CV, dopis, export) označit
+k vyřazení; klíče s konkrétními čísly nahradit vzorem; texty pro parametry (slova podle počtu) zakládat `--pridat`;
+neskládat obecné vzory beze slov.
+
+## Stav vlny H (30. 10. 2026)
+82 beta stránek (Tvorba & média, Technika, 3D) + moduly `fonty/prepis`, `modelar/jadro/soubory/svg`, ~9 300 textů,
+20 agentů, **až 5 prohlížečů najednou** (povoleno autorem; `_test/i18n_pokryti.sh` = sloty 0–4 se zámkem a vlastními
+porty 8230+/9630+). Hotovo za ~8 min, volná paměť klesla nejvýš o ~2,5 GB (na 18,5 GB). Po kontrole: 201 stránek se
+slovníkem, 19 654 klíčů, 0 `null`, všechny 100 % (rozcestník 99,9 %).
+
+**Opraveno během vlny H:**
+- **PDF:** na přeložené stránce i18n.js zachytí `window.jspdf` (UMD; úprava až v mikroúloze) a obalí `text()` (událost
+  `initialized`) i `splitTextToSize()` – texty v PDF se překládají, i když je stránka předem zbavila diakritiky
+  (index klíčů bez diakritiky). Týká se 36 stránek s jsPDF bez úpravy jejich kódu.
+- Okraj „`):`“ – klíč se závorkou se najde i s dvojtečkou za ní (jádro i nástroje).
+- Extraktor: `\u00a0`, `\u{…}`, `\xHH` v řetězcích JS; poměr „40 : 60“ se neuřezává; `--pridat` zakládá přesné klíče.
+- Pokrytí nepočítá texty, jejichž překlad je totožný s originálem (vzory jen pro parametry, jména, jednotky) –
+  takové vzory (`{nazev} ({sym})`) ve slovníku zůstávají, protože přes ně se překládají parametry.
+- Výstupy uživatele vyřazené z překladu (`data-i18n="ne"`): náhled pozvánky (`wedding_invite`), diplomu
+  (`certificate_gen`), výstup `prevod_pisma`. `emoji_picker`: titulky a hledání přes `I18N.preloz` (hledá i anglicky).
+
+**Zbývá (kód stránek):** `tuner` – noty H→B v angličtině; `roof_pitch_calc:171` věta se u sedlové střechy opakuje
+dvakrát (i česky); `pudorys` – nabídka názvů místností a záhlaví PDF „Kóty v …“; `Vzorce:3049`, `font_preview:198`,
+`map_maker` stavový řádek, `tubeRed:1564`, `ozubena_kola:3255–3305` – věty skládané z kousků (anglicky neobratně).
+
+## Stav vln I + J (30. 10. 2026)
+Spojené: všech zbylých 116 beta stránek (45 neherních + 71 her) + modul `karticky_tisk`, 19 agentů, **až 10 prohlížečů
+najednou** (povoleno autorem; `_test/i18n_pokryti.sh` sloty 0–9, porty 8230–8239 / 9630–9639). Po kontrole: 317 stránek
+se slovníkem, ~33 000 klíčů, 0 `null`, všechny 100 % (Meme generátor 96,7 % = jen měření výchozího textu memu).
+**Zbývá 126 stránek:** 124 ve vývoji (vlna K) + 2 odložené (`casova_osa` 778 historických položek, `trestni_zakonik_ref`
+– česká legislativa, návrh `jen_cs`).
+
+**Nové v jádru (pro všechny stránky):**
+- **Plátno:** na přeložené stránce `fillText`/`strokeText`/`measureText` překládají (mezipaměť); plátno uvnitř
+  `[data-i18n="ne"]` ne (rodokmen Heritage, ER diagram, mapa Map makeru, meme).
+- Jiná velikost písmen (`cukr`/`Cukr`, `CÍL`/`Cíl`) a seznamy spojené „ · “ po částech.
+- Extraktor vynechává datové soubory her (`*Data.js`, `*Slovnik.js`).
+- Tabu a Pantomima: vlastní objekt `I18N` přejmenován na `TEXTY_HRY` (kolize s jádrem); sada slov se v angličtině
+  webu přepne na anglickou. `pozirani_bunek` neměl `i18n.js` (theme.js jen v komentáři) – doplněno.
+
+**Vyřazeno z překladu (`data-i18n="ne"`):** otázky kvízu (trivia), české významy (scrabble_en), karty Tabu/Pantomimy,
+pergamen (lahev), mock_data tbody, výsledky diff_tool, nápovědy křížovky, text Bible (bible_study), náhledy csv_json
+a json_formatter, výsledky case_converter, náhled protokolu (protocol_gen – český policejní tiskopis), rozložení
+kamenů (scrabble), plátna Heritage / ER diagramu / Map makeru / memu.
+
+**Chyby i v češtině (k opravě):** `trosecnici/udalosti.js:90` – u muže „našl“ místo „našel“; `roof_pitch_calc:171`
+poznámka se u sedlové střechy opakuje dvakrát.
+
+**Zbývá (kód stránek, anglicky jen zčásti):** věty skládané z kousků – cron_builder describe(), plaz/zelvy deník,
+karibik úlovek, laguna tip(), obchodnik skloňování, scrabble_en „{jmeno} hraje…“, solitaire nápověda, trpaslici
+události, trosecnici deník, podzemi sloty. contact_page kopíruje českou šablonu (`SABLONA`), osmismerka rekord
+malými písmeny.
+
+## Stav vlny K a konec etap (30. 10. 2026)
+123 stránek ve vývoji, 30 sad agentů (nejvýš 20 najednou), uprostřed vlny vypršel limit relace – přerušení agenti
+pokračovali po obnovení (`SendMessage`), práce zůstala ve slovnících. Výsledek: **440 stránek se slovníkem,
+~81 500 klíčů, 0 `null`**, za běhu 100 % (Mapa souvislostí 91 % a Živá Země 97,5 % = data). Kontrola všech
+stránek v en i xx bez chyb JS.
+
+**Web je přeložený.** Zbývají jen 3 stránky na rozhodnutí autora (etapa L): `gamebook` (příběh),
+`casova_osa` (778 historických položek), `trestni_zakonik_ref` (návrh `jen_cs`). + `amount_words` – výstup je česká
+částka slovy (návrh `jen_cs` nebo anglický převodník).
+
+**Nové v jádru během vlny K:** víceřádkový text po řádcích, seznamy spojené „; “, `<html data-i18n-platno="ne">`
+(vypne překlad plátna i PDF – karty, memy, mapy, vstupenky, plakáty, razítko, rodokmen, ER diagram, OCR),
+`{n} Kč` ve společném slovníku, extraktor vynechává shadery GLSL.
+
+**Chyby i v češtině (nalezené agenty):** `trosecnici/udalosti.js:90` „našl“; `roof_pitch_calc:171` dvojitá poznámka;
+`slunecni_hodiny/ui.js:257` „čáru posunutá“; `nemozne` – „Kouhei“ místo Kokichi Sugihara; `fve_kalk:422` a
+`offgrid_baterie:478` – `slice(0,3)` dává „čer“ pro červen i červenec.
+
+**Zbývá v kódu stránek (angličtina místy kostrbatá):** věty skládané z kousků a ručně skloňované počty
+(„1 errors“) – seznamy v hlášeních agentů: `scratchpad/vlna_*/ukoly.md` (dočasné) a výše v plánu.
+
+## Rozhodnutí autora k etapě L (30. 10. 2026)
+`gamebook`, `casova_osa`, `trestni_zakonik_ref`, `amount_words` zůstávají **jen česky** (`"jen_cs": true`, celkem 30 stránek);
+slovník `amount_words` smazán. Opraveny chyby i v češtině: trosecnici „našl“ → našel/našla, roof_pitch_calc zdvojená věta,
+slunecni_hodiny „čáru posunutá“ → „čára“, nemozne Kouhei → Kokichi Sugihara, fve_kalk/offgrid_baterie zkratky měsíců
+(„čer“ pro červen i červenec → čvn/čvc). **Všechny etapy plánu hotové.**

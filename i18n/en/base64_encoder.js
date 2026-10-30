@@ -1,0 +1,22 @@
+// base64_encoder – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Base64 / URL encoder': 'Base64 / URL encoder',
+  'Base64 / URL encoder & decoder': 'Base64 / URL encoder & decoder',
+  'HTML entity': 'HTML entities',
+  'Text (čitelný)': 'Text (readable)',
+  'Zakódovat do Base64': 'Encode to Base64',
+  'Dekódovat z Base64': 'Decode from Base64',
+  'encodeURIComponent': 'encodeURIComponent',
+  'Dekódovat': 'Decode',
+  'URL zakódováno': 'URL encoded',
+  'Text / HTML': 'Text / HTML',
+  'Escapovat entity': 'Escape entities',
+  'Unescapovat': 'Unescape',
+  'Výsledek': 'Result',
+  'Zakódováno': 'Encoded',
+  'Dekódováno': 'Decoded',
+  'Neplatný Base64': 'Invalid Base64',
+  'Neplatná sekvence': 'Invalid sequence',
+  'Escapováno': 'Escaped',
+  'Unescapováno': 'Unescaped',
+});

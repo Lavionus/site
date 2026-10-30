@@ -1,0 +1,20 @@
+// pattern_gen – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Generátor vzorů': 'Pattern generator',
+  'Generátor opakujících se vzorů': 'Repeating pattern generator',
+  'Nastavení': 'Settings',
+  'Vzor': 'Pattern',
+  'Puntíky': 'Dots',
+  'Mřížka': 'Grid',
+  'Šikmé pruhy': 'Diagonal stripes',
+  'Šachovnice': 'Checkerboard',
+  'Trojúhelníky': 'Triangles',
+  'Křížky': 'Crosses',
+  'Barva pozadí': 'Background colour',
+  'Barva vzoru': 'Pattern colour',
+  'Velikost': 'Size',
+  'Náhodný': 'Random',
+  'Kopírovat CSS': 'Copy CSS',
+  'Stáhnout SVG': 'Download SVG',
+  'Zkopírováno': 'Copied',
+});

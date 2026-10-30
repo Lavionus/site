@@ -1,0 +1,20 @@
+// reversi – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Reversi / Othello': 'Reversi / Othello',
+  'Reversi': 'Reversi',
+  'Dva hráči': 'Two players',
+  'Proti počítači (bílý)': 'Against the computer (white)',
+  'Nová hra': 'New game',
+  'Nejlepší výhra': 'Best win',
+  'o {v} kamenů': 'by {v} discs',
+  'Černý': 'Black',
+  'Bílý': 'White',
+  'nemá tah – hraje znovu': 'has no move – plays again:',
+  'černý': 'black',
+  'bílý': 'white',
+  'Vyhrál černý!': 'Black wins!',
+  'Vyhrál bílý!': 'White wins!',
+  'Remíza!': 'Draw!',
+  'Nejlepší výhra: o': 'Best win: by',
+  'kamenů!': 'discs!',
+});

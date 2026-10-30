@@ -1,0 +1,22 @@
+// workout_log – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Tréninkový deník': 'Workout log',
+  'Nový záznam': 'New entry',
+  'Cvik': 'Exercise',
+  'Dřep, Bench press…': 'Squat, Bench press…',
+  'Série': 'Sets',
+  'Opakování': 'Reps',
+  'Váha (kg)': 'Weight (kg)',
+  'Přidat': 'Add',
+  'Statistiky': 'Statistics',
+  'Záznamů': 'Entries',
+  'Tréninků': 'Workouts',
+  'Celkový objem (kg)': 'Total volume (kg)',
+  'Historie': 'History',
+  'Vymazat vše': 'Clear all',
+  'Smazat celý deník?': 'Delete the whole log?',
+  'Zatím žádné tréninky. Přidej první cvik! 💪': 'No workouts yet. Add your first exercise! 💪',
+  'Objem: {cs} kg': 'Volume: {cs} kg',
+  'Kg': 'Kg',
+  'Objem': 'Volume',
+});

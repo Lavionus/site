@@ -1,0 +1,21 @@
+// breakout – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Breakout': 'Breakout',
+  'Skóre': 'Score',
+  'Životy': 'Lives',
+  'Úroveň': 'Level',
+  'Start': 'Start',
+  'Ovládání: pohyb myší / prstem nebo šipky ←→. Mezerník / klik vypustí přilepený míček. Rozbíjej cihly a chytej bonusy padající z nich!': 'Controls: move with the mouse / finger or arrow keys ←→. Space / click releases a stuck ball. Smash bricks and catch the bonuses falling from them!',
+  'širší pálka · 🔴 multiball · 🐌 zpomalení · ❤️ život navíc · 🧲 lepivá pálka · 💀 užší pálka': 'wider paddle · 🔴 multiball · 🐌 slow-down · ❤️ extra life · 🧲 sticky paddle · 💀 narrower paddle',
+  'Nejvyšší skóre': 'High score',
+  'Široká pálka': 'Wide paddle',
+  'Multiball': 'Multiball',
+  'Zpomalení': 'Slow-down',
+  'Extra život': 'Extra life',
+  'Lepivá pálka': 'Sticky paddle',
+  'Úzká pálka': 'Narrow paddle',
+  'Konec hry! Skóre: {score}': 'Game over! Score: {score}',
+  'Nový rekord: {score} bodů!': 'New record: {score} points!',
+  'splněna!': 'complete!',
+  'Úroveň {n} splněna!': 'Level {n} complete!',
+});

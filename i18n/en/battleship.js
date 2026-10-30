@@ -1,0 +1,21 @@
+// battleship – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Lodě': 'Battleship',
+  'Lodě (Battleship)': 'Battleship',
+  'Klikni na nepřátelské pole a potop všechny lodě!': 'Click the enemy grid and sink all the ships!',
+  'Nová hra': 'New game',
+  'Nepřítel (klikej sem)': 'Enemy (click here)',
+  'Tvoje flotila': 'Your fleet',
+  'Lodě: 1× (4 pole), 2× (3), 3× (2), 4× (1). Střídavě střílíš ty a počítač. Vyhrává, kdo první potopí celou flotilu.': 'Ships: 1× (4 squares), 2× (3), 3× (2), 4× (1). You and the computer take turns firing. The first to sink the whole fleet wins.',
+  'Nejméně výstřelů': 'Fewest shots',
+  'Tvůj tah – střílej na nepřítele!': 'Your turn – fire at the enemy!',
+  'Zásahy: {enemyHits} / {totalShipCells}': 'Hits: {enemyHits} / {totalShipCells}',
+  'Tvé ztráty: {myHits} / {totalShipCells}': 'Your losses: {myHits} / {totalShipCells}',
+  'Vyhráls! Potopil jsi celou flotilu na {vystrelu} výstřelů.': 'You won! You sank the whole fleet in {vystrelu} shots.',
+  'Nový rekord: {vystrelu} výstřelů!': 'New record: {vystrelu} shots!',
+  'Zásah! Střílej znovu.': 'Hit! Fire again.',
+  'Vedle. Tah počítače…': 'Miss. Computer\'s turn…',
+  'Prohráls! Počítač potopil tvou flotilu.': 'You lost! The computer sank your fleet.',
+  'Počítač tě zasáhl! Střílí znovu…': 'The computer hit you! It fires again…',
+  'Tvůj tah – střílej!': 'Your turn – fire!',
+});

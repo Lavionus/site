@@ -1,0 +1,23 @@
+// comic3d – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Komiksový 3D prostor': 'Comic-style 3D space',
+  'Pokusná stránka: jak vytvořit 3D scénu vykreslenou v komiksovém / kreslené stylu. Kombinujeme': 'Experimental page: how to render a 3D scene in a comic / cartoon style. We combine',
+  'toon shading': 'toon shading',
+  'stupňovité stínování),': 'stepped shading),',
+  'inkoustové obrysy': 'ink outlines',
+  'rastr. Táhni myší = rotace, kolečko = zoom.': 'dots. Drag with the mouse = rotate, wheel = zoom.',
+  'Styl vykreslení': 'Render style',
+  'Toon stínování (cel-shading)': 'Toon shading (cel shading)',
+  'Počet stupňů stínu': 'Number of shade steps',
+  'Inkoustové obrysy': 'Ink outlines',
+  'Tloušťka obrysu': 'Outline width',
+  'Komiksové efekty': 'Comic effects',
+  'Halftone rastr': 'Halftone dots',
+  'Hustota rastru': 'Halftone density',
+  'Komiksový rámeček + popisek': 'Comic frame + caption',
+  'Scéna': 'Scene',
+  'Otáčet scénou': 'Rotate the scene',
+  'Barva pozadí (obloha)': 'Background colour (sky)',
+  'Náhodně rozmístit objekty': 'Scatter objects randomly',
+  'Tip: pro „čistě kreslený" vzhled vypni toon a nech jen obrysy. Pro retro tisk zvýši halftone a sniž stupně stínu na 2.': 'Tip: for a “pure line-art” look, turn off toon and keep just the outlines. For a retro print look, increase halftone and reduce shade steps to 2.',
+});

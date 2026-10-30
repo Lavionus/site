@@ -87,7 +87,7 @@ var TROS = globalThis.TROS = globalThis.TROS || {};
       id: 'ovoce_botanik', ikona: '🌴', nazev: 'Neznámé ovoce', vaha: 4,
       kdy: s => T.postavy.maProfesi(s, 'botanik'),
       priprav: s => ({ id: s.lide.find(o => o.profese === 'botanik').id }),
-      text: (s, c) => `${osoba(s, c.id).jmeno} našl${a(osoba(s, c.id))} v džungli strom s neznámým ovocem – a hned pozná, že je jedlé a výživné.`,
+      text: (s, c) => `${osoba(s, c.id).jmeno} ${a(osoba(s, c.id)) ? 'našla' : 'našel'} v džungli strom s neznámým ovocem – a hned pozná, že je jedlé a výživné.`,
       proved: s => 'Sklizeno: ' + popis(zisk(s, { jidlo: 4, vlakna: 1 })) + '.',
     },
     {

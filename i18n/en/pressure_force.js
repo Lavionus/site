@@ -1,0 +1,20 @@
+// pressure_force – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Převodník tlaku, síly a momentu': 'Pressure, force and torque converter',
+  'Tlak': 'Pressure',
+  'Pascal (Pa)': 'Pascal (Pa)',
+  'Kilopascal (kPa)': 'Kilopascal (kPa)',
+  'Bar': 'Bar',
+  'PSI (lb/in²)': 'PSI (lb/in²)',
+  'Atmosféra (atm)': 'Atmosphere (atm)',
+  'Síla': 'Force',
+  'Newton (N)': 'Newton (N)',
+  'Kilonewton (kN)': 'Kilonewton (kN)',
+  'Kilopond / kgf': 'Kilopond / kgf',
+  'Libra síly (lbf)': 'Pound-force (lbf)',
+  'Krouticí moment': 'Torque',
+  'Newton-metr (Nm)': 'Newton-metre (Nm)',
+  'Kilogram-metr (kgm)': 'Kilogram-metre (kgm)',
+  'Libra-stopa (lb-ft)': 'Pound-foot (lb-ft)',
+  'Libra-palec (lb-in)': 'Pound-inch (lb-in)',
+});

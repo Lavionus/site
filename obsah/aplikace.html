@@ -291,6 +291,12 @@
     .kategorie img.emoji { width: 30px; height: 30px; border-radius: 7px; margin: 0; }
     .kategorie .pocet { margin-left: auto; color: var(--text-faint); font-size: 0.78rem; }
 
+    /* výpis kategorie / podkategorie (?skupina=…, ?sekce=…): jen nadpis a dlaždice */
+    body.vypis > :not(#vypis):not(.toast) { display: none; }
+    #vypis section h2 a { color: inherit; text-decoration: none; }
+    #vypis section h2 a:hover { text-decoration: underline; }
+    #vypis .uvod a { color: var(--accent); }
+
     /* lišta „Odebráno · Vrátit“ */
     .toast {
       position: fixed;
@@ -322,6 +328,8 @@
   </style>
 </head>
 <body>
+  <div id="vypis" hidden></div>
+
   <header class="uvod">
     <h1>👋 Vítejte</h1>
     <p>Vyberte aplikaci v menu vlevo, nebo začněte jednou z dlaždic níže.</p>
@@ -423,6 +431,16 @@
       return el;
     }
 
+    // stránka, která se nepřekládá (apps.js jen_cs) – v jiném jazyce webu štítek „CZ“
+    function stitekJenCs(p) {
+      if (!p.jen_cs || !window.I18N || I18N.jazyk === 'cs') return null;
+      const el = document.createElement('span');
+      el.className = 'stav-stitek';
+      el.textContent = 'CZ';
+      el.title = 'Jen česky';
+      return el;
+    }
+
     const nactiJson = (key, def = []) => {
       try { return JSON.parse(localStorage.getItem(key)) || def; }
       catch { return def; }
@@ -481,6 +499,8 @@
         a.append(symbol(IKONY?.stranky[p.soubor], emoji), n);
         const st = stitek(p);
         if (st) a.appendChild(st);
+        const cz = stitekJenCs(p);
+        if (cz) a.appendChild(cz);
       }
       a.addEventListener('click', ev => {
         if (vRozcestniku) {
@@ -661,6 +681,7 @@
         'Historie je prázdná – otevřete první aplikaci z menu.');
       ukazPokracovat();
       hledej();
+      ukazVypis();
     }
     // ★ v menu rozcestníku za otevřené úvodní stránky → překreslit
     window.addEventListener('storage', e => {
@@ -776,7 +797,63 @@
     const kandidati = kandidatiTipu();
     vyplnTip(document.getElementById('tip'), kandidati[den % kandidati.length], 'Otevřít', tlacitkoDalsi);
 
-    /* ---- Kategorie: v rozcestníku přepne skupinu v menu ---- */
+    /* ---- Výpis kategorie / podkategorie ----
+       aplikace.html?skupina=hry nebo ?sekce=hlavolamy – cíl odkazů z drobečkové
+       navigace rozcestníku a dlaždic kategorií. Kód sekce se počítá stejně
+       jako v index.html (název bez emoji, bez diakritiky, pomlčky). */
+    const kodSekce = s => norm(rozdel(s.nazev).text).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const parametry = new URLSearchParams(location.search);
+    const vypisSekce = KATALOG_SEKCE.find(s => kodSekce(s) === parametry.get('sekce'));
+    const vypisSkupina = KATALOG_SKUPINY.find(g => g.id === (vypisSekce ? vypisSekce.skupina : parametry.get('skupina')));
+
+    // v rozcestníku přes postMessage (synchronizuje hash, drobečky i menu)
+    function otevriVypis(dotaz) {
+      const cil = 'obsah/aplikace.html?' + dotaz;
+      if (vRozcestniku) window.parent.postMessage({ otevri: cil }, '*');
+      else location.href = '../index.html#' + cil;
+    }
+    function odkazVypisu(dotaz, text) {
+      const a = document.createElement('a');
+      a.href = '../index.html#obsah/aplikace.html?' + dotaz;
+      a.target = '_top';
+      a.textContent = text;
+      a.addEventListener('click', ev => { ev.preventDefault(); otevriVypis(dotaz); });
+      return a;
+    }
+
+    function ukazVypis() {
+      if (!vypisSkupina) return;
+      document.body.classList.add('vypis');
+      const sekce = vypisSekce ? [vypisSekce] : KATALOG_SEKCE.filter(s => s.skupina === vypisSkupina.id);
+      const pocet = sekce.reduce((n, s) => n + s.polozky.length, 0);
+      const hlava = document.createElement('header');
+      hlava.className = 'uvod';
+      const h1 = document.createElement('h1');
+      h1.textContent = (vypisSekce || vypisSkupina)[vypisSekce ? 'nazev' : 'label'];
+      const popis = document.createElement('p');
+      if (vypisSekce) popis.append(`Aplikací: ${pocet} · kategorie `, odkazVypisu('skupina=' + vypisSkupina.id, vypisSkupina.label));
+      else popis.textContent = `Aplikací: ${pocet} v ${sekce.length} podkategoriích`;
+      hlava.append(h1, popis);
+      const el = document.getElementById('vypis');
+      el.replaceChildren(hlava);
+      sekce.forEach(s => {
+        const sec = document.createElement('section');
+        // u výpisu celé kategorie vede nadpis podkategorie na její vlastní výpis
+        if (!vypisSekce) {
+          const h2 = document.createElement('h2');
+          h2.appendChild(odkazVypisu('sekce=' + kodSekce(s), s.nazev));
+          sec.appendChild(h2);
+        }
+        const dl = document.createElement('div');
+        dl.className = 'dlazdice';
+        s.polozky.forEach(p => dl.appendChild(dlazdice(p)));
+        sec.appendChild(dl);
+        el.appendChild(sec);
+      });
+      el.hidden = false;
+    }
+
+    /* ---- Kategorie: otevře výpis kategorie ---- */
     const kategorieEl = document.getElementById('kategorie');
     KATALOG_SKUPINY.forEach(g => {
       const pocet = KATALOG_SEKCE.reduce((n, s) => n + (s.skupina === g.id ? s.polozky.length : 0), 0);
@@ -790,12 +867,7 @@
       c.className = 'pocet';
       c.textContent = pocet;
       b.append(symbol(IKONY?.skupiny[g.id], emoji), n, c);
-      b.addEventListener('click', () => {
-        if (vRozcestniku) { window.parent.postMessage({ skupina: g.id }, '*'); return; }
-        // samostatně: rozcestník si skupinu přečte při načtení
-        try { localStorage.setItem('webapp_skupina', g.id); } catch { /* nic */ }
-        location.href = '../index.html';
-      });
+      b.addEventListener('click', () => otevriVypis('skupina=' + g.id));
       kategorieEl.appendChild(b);
     });
 

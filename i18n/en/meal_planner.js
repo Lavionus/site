@@ -1,0 +1,22 @@
+// meal_planner – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Týdenní jídelníček': 'Weekly Meal Planner',
+  'Plán na týden': 'Plan for the week',
+  'Snídaně': 'Breakfast',
+  'Oběd': 'Lunch',
+  'Večeře': 'Dinner',
+  'Tisk': 'Print',
+  'Vymazat plán': 'Clear plan',
+  'Nákupní seznam': 'Shopping list',
+  'Přidat položku… (Enter)': 'Add item… (Enter)',
+  'Kopírovat seznam': 'Copy list',
+  'Smazat odškrtnuté': 'Delete ticked',
+  'Pondělí': 'Monday',
+  'Úterý': 'Tuesday',
+  'Středa': 'Wednesday',
+  'Čtvrtek': 'Thursday',
+  'Pátek': 'Friday',
+  'Neděle': 'Sunday',
+  'Opravdu vymazat celý týdenní plán?': 'Really clear the whole weekly plan?',
+  'Zkopírováno': 'Copied',
+});

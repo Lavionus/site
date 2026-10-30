@@ -1,0 +1,23 @@
+// nonogram – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Nonogramy': 'Nonograms',
+  'Nová hra': 'New game',
+  'Přepnout mezi vybarvováním a křížky': 'Switch between filling and crosses',
+  'Vybarvit': 'Fill',
+  'Čísla udávají délky souvislých bloků v řádku/sloupci (v tomto pořadí, s mezerou aspoň 1 pole). ⏱️': 'The numbers give the lengths of contiguous blocks in the row/column (in this order, separated by at least 1 cell). ⏱️',
+  'Levé tlačítko = vybarvit · pravé tlačítko (nebo režim ✕) = křížek': 'Left button = fill · right button (or ✕ mode) = cross',
+  'Srdíčko (5×5)': 'Little heart (5×5)',
+  'Šipka (5×5)': 'Arrow (5×5)',
+  'Kříž (5×5)': 'Cross (5×5)',
+  'Domek (5×5)': 'House (5×5)',
+  'Srdce (10×10)': 'Heart (10×10)',
+  'Strom (10×10)': 'Tree (10×10)',
+  'Hvězda (10×10)': 'Star (10×10)',
+  'Náhodný 5×5': 'Random 5×5',
+  'Náhodný 10×10': 'Random 10×10',
+  'Náhodný 15×15': 'Random 15×15',
+  'Vyřešeno za {cas}!': 'Solved in {cas}!',
+  'Nový rekord: {cas}!': 'New record: {cas}!',
+  'Křížky': 'Crosses',
+  'Smazat rozdělanou hru?': 'Delete the game in progress?',
+});

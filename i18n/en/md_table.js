@@ -1,0 +1,21 @@
+// md_table – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Generátor Markdown tabulek': 'Markdown Table Generator',
+  'Editor': 'Editor',
+  'Řádek': 'Row',
+  'Sloupec': 'Column',
+  'Ukázková data': 'Sample data',
+  'Markdown': 'Markdown',
+  'Kopírovat': 'Copy',
+  'Načíst z Markdownu výše': 'Load from the Markdown above',
+  'Položka': 'Item',
+  'Počet': 'Quantity',
+  '36 Kč': '36 Kč',
+  'Hrušky': 'Pears',
+  '40 Kč': '40 Kč',
+  'vlevo': 'left',
+  'střed': 'centre',
+  'vpravo': 'right',
+  'Zkopírováno': 'Copied',
+  'V poli není platná Markdown tabulka.': 'The field doesn\'t contain a valid Markdown table.',
+});

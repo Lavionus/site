@@ -4,6 +4,7 @@
 // `stav` je fáze vývoje stránky: 'vyvoj' (nová, autor ji ještě nezkontroloval),
 // 'beta' (zkontrolovaná) nebo 'stable' (autor ji uznal za hotovou).
 // Každá nově přidaná stránka začíná jako 'vyvoj'; dál ji posouvá jen autor.
+// `jen_cs: true` = stránka se nepřekládá (česká legislativa, normy, banky) – v jiném jazyce má štítek „CZ“.
 const KATALOG_STAVY = [
   { id: 'vyvoj',  label: 'Vývoj',  popis: 'Ve vývoji – zatím neprošlo kontrolou autora' },
   { id: 'beta',   label: 'Beta',   popis: 'Zkontrolováno autorem, ještě se může měnit' },
@@ -491,6 +492,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/amount_words.html",
         "nazev": "💬 Částka slovy",
         "stav": "beta",
+        "jen_cs": true,
         "tagy": [
           "faktura",
           "slovy",
@@ -542,6 +544,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/qr_platba.html",
         "nazev": "💳 QR platba",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["qr platba", "spayd", "platba", "banka", "účet", "iban", "variabilní symbol", "pay by square", "epc", "sepa", "faktura"]
       },
       {
@@ -2095,6 +2098,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/schodiste.html",
         "nazev": "🪜 Návrh schodiště",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["schody", "schodiště", "ČSN 73 4130", "stupně", "kosé stupně", "točité", "vřetenové", "schodnice", "podchodná výška", "stropní otvor", "zábradlí", "DXF", "rodinný dům", "tesařina"]
       },
       {
@@ -2239,6 +2243,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/tarif_spot.html",
         "nazev": "⚡ Fixní, nebo spotový tarif?",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["elektřina", "spot", "spotová cena", "OTE", "fixace", "distribuční sazba", "ERÚ", "TDD", "energie", "cena elektřiny"]
       },
       {
@@ -3038,7 +3043,15 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/gamebook.html",
         "nazev": "⛏️ Hlubina pod Černou horou",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "permoník", "důl", "fighting fantasy"]
+      },
+      {
+        "soubor": "obsah/gamebook_praha.html",
+        "nazev": "⚗️ Stín nad Zlatou uličkou",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "alchymie", "Praha", "Rudolf II.", "homunkulus", "orloj"]
       }
     ]
   },
@@ -3317,6 +3330,48 @@ const KATALOG_SEKCE = [
     ]
   },
   {
+    "nazev": "❓ Hádanky",
+    "skupina": "hry",
+    "polozky": [
+      {
+        "soubor": "obsah/ciselny_kod.html",
+        "nazev": "🔐 Číselný kód",
+        "stav": "vyvoj",
+        "tagy": ["hádanka", "kód", "zámek", "kombinace", "pravidla", "prvočíslo", "logika", "dedukce", "trezor", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/einstein.html",
+        "nazev": "🦓 Einsteinova hádanka",
+        "stav": "vyvoj",
+        "tagy": ["hádanka", "einstein", "zebra", "logika", "dedukce", "logická mřížka", "křížkovací tabulka", "domy", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/rytiri_padousi.html",
+        "nazev": "🗡️ Rytíři a padouši",
+        "stav": "vyvoj",
+        "tagy": ["rytíři a padouši", "hádanka", "logika", "dedukce", "pravda", "lež", "výroky", "lháři", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/pismenkove_pocty.html",
+        "nazev": "➕ Písmenkové počty",
+        "stav": "vyvoj",
+        "tagy": ["hádanka", "alfametika", "písmenka", "číslice", "sčítání", "šifra", "logika", "dedukce", "SEND+MORE", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/vahy_mince.html",
+        "nazev": "⚖️ Váhy a falešná mince",
+        "stav": "vyvoj",
+        "tagy": ["váhy", "falešná mince", "padělek", "vážení", "hlavolam", "logika", "dedukce", "12 mincí", "strategie", "hádanka"]
+      },
+      {
+        "soubor": "obsah/prevoznik.html",
+        "nazev": "🚣 Převozník",
+        "stav": "vyvoj",
+        "tagy": ["hlavolam", "logika", "převoz", "řeka", "vlk koza zelí", "misionáři a kanibalové", "most a lucerna", "žárliví manželé", "hádanka"]
+      }
+    ]
+  },
+  {
     "nazev": "🏝️ Tropické ostrovy",
     "skupina": "hry",
     "polozky": [
@@ -3543,6 +3598,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/trestni_zakonik_ref.html",
         "nazev": "⚖️ Rychlá reference trestního zákoníku",
         "stav": "beta",
+        "jen_cs": true,
         "tagy": ["zákon", "paragraf", "trestní zákoník", "skutková podstata"]
       }
     ]
@@ -3555,36 +3611,42 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/household_docs.html",
         "nazev": "📜 Vzory dokumentů pro domácnost",
         "stav": "beta",
+        "jen_cs": true,
         "tagy": ["plná moc", "výpověď z nájmu", "půjčka", "reklamace", "smlouva"]
       },
       {
         "soubor": "obsah/dedicke_podily.html",
         "nazev": "⚖️ Dědické podíly",
         "stav": "beta",
+        "jen_cs": true,
         "tagy": ["dědictví", "dědická třída", "zákonná posloupnost", "pozůstalost", "sjm", "povinný díl", "občanský zákoník", "závěť"]
       },
       {
         "soubor": "obsah/lhuty_uroky.html",
         "nazev": "⚖️ Lhůty a úroky z prodlení",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["úrok z prodlení", "repo sazba", "ČNB", "lhůta", "OSŘ", "správní řád", "svátky", "Velikonoce", "fikce doručení", "pracovní dny"]
       },
       {
         "soubor": "obsah/nezabavitelna_castka.html",
         "nazev": "💸 Nezabavitelná částka (exekuce)",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["exekuce", "srážky ze mzdy", "nezabavitelná částka", "přednostní pohledávka", "insolvence", "OSŘ 279", "životní minimum", "2026"]
       },
       {
         "soubor": "obsah/vyzivne.html",
         "nazev": "👨‍👧 Orientační výživné",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["výživné", "alimenty", "tabulka MSp", "střídavá péče", "dítě", "rozvod", "kontrolní částka"]
       },
       {
         "soubor": "obsah/soudni_poplatky.html",
         "nazev": "🏛️ Soudní poplatky",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["soudní poplatek", "sazebník", "žaloba", "platební rozkaz", "odvolání", "dovolání", "rozvod", "katastr", "notář", "549/1991"]
       }
     ]
@@ -3597,42 +3659,49 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/kniha_urazu.html",
         "nazev": "🩹 Kniha úrazů",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["kniha úrazů", "úraz", "pracovní úraz", "BOZP", "evidence úrazů", "NV 322/2025", "201/2010", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/zaznam_urazu.html",
         "nazev": "📝 Záznam o úrazu – koncept",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["záznam o úrazu", "pracovní úraz", "SÚIP", "hlášení úrazu", "NV 322/2025", "BOZP", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/prezencni_listina.html",
         "nazev": "✍️ Prezenční listina ze školení",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["prezenční listina", "školení", "BOZP", "PO", "požární ochrana", "podpisy", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/karta_oopp.html",
         "nazev": "🦺 Karta výdeje OOPP",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["OOPP", "ochranné pomůcky", "výdejka", "osobní karta", "pracovní oděv", "BOZP", "390/2021", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/kontrolni_list.html",
         "nazev": "☑️ Kontrolní listy",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["kontrolní list", "checklist", "prověrka BOZP", "audit", "kontrola vozidla", "kontrola", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/pozarni_kniha.html",
         "nazev": "🧯 Požární kniha a kontroly PHP",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["požární kniha", "požární ochrana", "PO", "hasicí přístroje", "PHP", "246/2001", "preventivní požární prohlídka", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/provozni_denik.html",
         "nazev": "🛠️ Provozní deníky a revize",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["provozní deník", "kotelna", "vysokozdvižný vozík", "VZV", "žebříky", "regály", "revize", "lhůty revizí", "elektro", "tiskopis", "formulář", "tisk", "šablona"]
       }
     ]
@@ -3645,18 +3714,21 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/dochazka.html",
         "nazev": "🕒 Evidence pracovní doby",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["docházka", "výkaz práce", "evidence pracovní doby", "přesčas", "noční práce", "svátky", "fond pracovní doby", "§ 96", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/smenny_rozpis.html",
         "nazev": "📅 Směnný rozpis",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["směny", "směnný rozpis", "rozvrh pracovní doby", "plán směn", "§ 84", "služby", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/plan_dovolenych.html",
         "nazev": "🏖️ Plán dovolených",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["dovolená", "plán dovolených", "rozvrh čerpání dovolené", "§ 217", "nárok", "tiskopis", "formulář", "tisk", "šablona"]
       }
     ]
@@ -3669,42 +3741,49 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/pokladna.html",
         "nazev": "💰 Pokladní doklady a kniha",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["pokladní doklad", "příjmový doklad", "výdajový doklad", "pokladní kniha", "částka slovy", "účetnictví", "pokladna", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/kniha_jizd.html",
         "nazev": "🚗 Kniha jízd",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["kniha jízd", "evidence jízd", "služební auto", "tachometr", "PHM", "daně", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/cestovni_prikaz.html",
         "nazev": "🧳 Cestovní příkaz",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["cestovní příkaz", "pracovní cesta", "cestovní náhrady", "stravné", "vyúčtování", "služební cesta", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/predavaci_protokol.html",
         "nazev": "🔑 Předávací protokoly",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["předávací protokol", "předání bytu", "nájem", "měřidla", "klíče", "předání vozidla", "předání díla", "svěřené věci", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/haccp.html",
         "nazev": "🌡️ HACCP a hygiena",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["HACCP", "teploty", "lednice", "sanitační plán", "úklid", "příjem zboží", "hygiena potravin", "852/2004", "gastro", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/evidence_odpadu.html",
         "nazev": "♻️ Evidence odpadů",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["odpady", "evidence odpadů", "průběžná evidence", "541/2020", "273/2021", "ISPOP", "katalogové číslo", "tiskopis", "formulář", "tisk", "šablona"]
       },
       {
         "soubor": "obsah/vlastni_tiskopis.html",
         "nazev": "🧩 Vlastní tiskopis",
         "stav": "vyvoj",
+        "jen_cs": true,
         "tagy": ["vlastní tiskopis", "editor formulářů", "návrh formuláře", "tabulka k tisku", "prázdný formulář", "JSON", "tiskopis", "formulář", "tisk", "šablona"]
       }
     ]
@@ -3741,6 +3820,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/casova_osa.html",
         "nazev": "🏛️ Historická časová osa",
         "stav": "beta",
+        "jen_cs": true,
         "tagy": ["historie", "dějepis", "chronologie", "timeline", "časová osa", "civilizace", "srovnání", "starověk", "středověk", "světové války", "kosmonautika", "juliánský kalendář", "panovníci", "osobnosti"]
       },
       {

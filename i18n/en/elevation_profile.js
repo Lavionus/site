@@ -1,0 +1,20 @@
+// elevation_profile – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Výškový profil trasy': 'Route Elevation Profile',
+  'Přetáhni GPX soubor sem nebo klikni pro výběr': 'Drag a GPX file here or click to choose one',
+  'nebo vlož ručně body „lat,lon,výška" (každý na řádek)': 'or paste points manually as “lat,lon,elevation” (one per line)',
+  'Načíst body': 'Load points',
+  'Profil': 'Profile',
+  'Délka': 'Length',
+  'Stoupání': 'Ascent',
+  'Klesání': 'Descent',
+  'Min. výška': 'Min. elevation',
+  'Max. výška': 'Max. elevation',
+  'Bodů': 'Points',
+  'Profil ukazuje nadmořskou výšku v závislosti na ujeté vzdálenosti. Vyžaduje, aby GPX obsahoval výškové údaje (<ele>).': 'The profile shows elevation above sea level against distance travelled. The GPX must contain elevation data (<ele>).',
+  'V souboru nebyly nalezeny body trasy.': 'No track points were found in the file.',
+  'Zadej alespoň 2 body.': 'Enter at least 2 points.',
+  'Ruční zadání': 'Manual input',
+  'Výška (m)': 'Elevation (m)',
+  'Vzdálenost (km)': 'Distance (km)',
+});

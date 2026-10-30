@@ -1,0 +1,22 @@
+// concrete_mix_calc – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Kalkulačka betonové směsi': 'Concrete Mix Calculator',
+  'Rozměry konstrukce': 'Structure dimensions',
+  'Sloup (válec)': 'Column (cylinder)',
+  'Délka (m)': 'Length (m)',
+  'Šířka (m)': 'Width (m)',
+  'Tloušťka (cm)': 'Thickness (cm)',
+  'Průměr (cm)': 'Diameter (cm)',
+  'Výška (m)': 'Height (m)',
+  'Směšovací poměr (cement : písek : štěrk)': 'Mix ratio (cement : sand : gravel)',
+  'Cement (díly)': 'Cement (parts)',
+  'Písek (díly)': 'Sand (parts)',
+  'Štěrk (díly)': 'Gravel (parts)',
+  'Výsledek': 'Result',
+  'Cement': 'Cement',
+  'Písek': 'Sand',
+  'Štěrk': 'Gravel',
+  'Voda (orientačně, 0,5 hmot. dílu cementu)': 'Water (approx. 0.5 × cement by weight)',
+  'Pytlů cementu (25 kg)': 'Cement bags (25 kg)',
+  'Orientační výpočet pro běžný beton (~2400 kg/m³, hustota cementu ~1440 kg/m³). Pro nosné konstrukce vždy konzultuj přesnou recepturu s projektantem/statikem.': 'Approximate calculation for ordinary concrete (~2400 kg/m³, cement density ~1440 kg/m³). For load-bearing structures always check the exact mix with a designer/structural engineer.',
+});

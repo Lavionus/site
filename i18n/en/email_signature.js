@@ -1,0 +1,20 @@
+// email_signature – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Generátor e-mailového podpisu': 'Email Signature Generator',
+  'Údaje': 'Details',
+  'Jméno a příjmení': 'Full name',
+  'Pozice': 'Position',
+  'Firma': 'Company',
+  'Telefon': 'Phone',
+  'Web': 'Website',
+  'URL loga (volitelné)': 'Logo URL (optional)',
+  'Hlavní barva': 'Main colour',
+  'Kopírovat HTML': 'Copy HTML',
+  'Kopírovat (vložit do mailu)': 'Copy (paste into email)',
+  'Náhled': 'Preview',
+  'Zkopírováno': 'Copied',
+  'Zkopírováno (vlož do mailu)': 'Copied (paste into email)',
+  'Zkopírováno jako HTML': 'Copied as HTML',
+  'Jan Novák': 'Jan Novák',
+  'Obchodní manažer · Ukázková firma s.r.o.': 'Obchodní manažer · Ukázková firma s.r.o.',
+});

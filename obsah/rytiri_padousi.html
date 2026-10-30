@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗡️ Rytíři a padouši</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="../rekord.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;min-height:100vh;color:var(--text)}
+[hidden]{display:none !important}
+
+/* horní lišta se skupinami a rozbalovacími nabídkami (vzor prompty.html / ciselny_kod.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .info{margin-left:auto;font-size:.8rem;color:var(--text-muted);white-space:nowrap;padding-right:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+@media (max-width:640px){.lista .txt{display:none}.lista{flex-wrap:wrap}.lista .info{margin-left:0}}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+main{max-width:1150px;margin:0 auto;padding:14px}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,10px);padding:14px}
+.uvod{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:14px}
+.uvod p{margin:0;flex:1 1 320px;font-size:.92rem;line-height:1.5;color:var(--text-muted)}
+.uvod .akce{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:7px;cursor:pointer;font-size:.9rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.zprava{min-height:1.4em;margin:0 0 12px;font-size:.92rem;line-height:1.45}
+.zprava.ok{color:var(--ok)}
+.zprava.chyba{color:var(--danger)}
+
+/* obyvatelé jako karty, výroky jako bubliny */
+.ostrov{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;align-items:start}
+.osoba{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;border-top:4px solid var(--border-strong)}
+.osoba.r{border-top-color:var(--accent)}
+.osoba.p{border-top-color:var(--text-faint)}
+.osoba .hlava{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:1.25rem;background:var(--bg-elevated);border:2px solid var(--border-strong);flex:none}
+.osoba.r .avatar{background:var(--accent-soft);border-color:var(--accent)}
+.osoba.p .avatar{background:color-mix(in srgb,var(--text) 14%,var(--bg-elevated))}
+.osoba .jmeno{font-weight:600;font-size:1.05rem;flex:1;min-width:70px}
+.volba{display:flex;gap:4px}
+.volba button{border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-muted);border-radius:7px;padding:5px 9px;cursor:pointer;font:inherit;font-size:.82rem;white-space:nowrap}
+.volba button:hover{background:var(--bg-hover);color:var(--text)}
+.volba button[aria-pressed="true"][data-v="1"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff)}
+.volba button[aria-pressed="true"][data-v="0"]{background:color-mix(in srgb,var(--text) 70%,var(--bg-panel));border-color:transparent;color:var(--bg-panel)}
+.osoba.hotovo .volba button{cursor:default}
+.bubliny{display:flex;flex-direction:column;gap:7px}
+.bublina{position:relative;background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px 12px 12px 3px;padding:8px 34px 8px 10px;font-size:.95rem;line-height:1.45;cursor:pointer}
+.bublina .c{font-size:.72rem;color:var(--text-faint);font-weight:700;margin-right:6px}
+.bublina .stav{position:absolute;right:10px;top:8px;font-weight:700}
+.bublina.splneno{border-color:var(--ok)}
+.bublina.splneno .stav{color:var(--ok)}
+.bublina.poruseno{border-color:var(--danger)}
+.bublina.poruseno .stav{color:var(--danger)}
+.bublina.skrtnuto .t{text-decoration:line-through;color:var(--text-faint)}
+.bublina.rada{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.ticho{font-size:.85rem;color:var(--text-faint);font-style:italic}
+.rekordy{font-size:.8rem;color:var(--text-muted);margin-top:14px}
+.pomoc{max-width:1150px;width:calc(100% - 28px);box-sizing:border-box;margin:14px auto 0;font-size:.88rem;line-height:1.5;color:var(--text-muted)}
+.pomoc p{margin:.4em 0}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🗡️ Rytíři a padouši</h1>
+  <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="nova" title="Nová hádanka (N)">🎲<span class="txt"> Nová</span></button>
+    <button class="tl" data-prikaz="sdilet" title="Sdílet odkaz na tuto hádanku">🔗<span class="txt"> Sdílet</span></button>
+    <button class="tl" data-nabidka="nabHra" title="Denní hádanka, kód hádanky, začít znovu, řešení">📅<span class="txt"> Hra</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Obtížnost"><span class="skup-nazev" aria-hidden="true">Obtížnost</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabObtiznost" title="Počet obyvatel a náročnost úvah"><span id="popisObtiznost">střední</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pomoc"><span class="skup-nazev" aria-hidden="true">Pomoc</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPomoc" title="Rada, průběžná kontrola, jak hrát">💡<span class="txt"> Pomoc</span> ▾</button>
+  </div></div>
+  <span class="info" id="info"></span>
+</header>
+
+<div id="nabHra" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nova">🎲 Nová hádanka <kbd>N</kbd></button>
+  <button class="tl" data-prikaz="denni">📅 Denní hádanka</button>
+  <hr>
+  <button class="tl" data-prikaz="sdilet">🔗 Sdílet hádanku</button>
+  <button class="tl" data-prikaz="zadat">⌨️ Zadat kód hádanky…</button>
+  <hr>
+  <button class="tl" data-prikaz="znovu">↺ Začít znovu</button>
+  <button class="tl" data-prikaz="vzdat">🏳️ Vzdát se a ukázat řešení</button>
+</div>
+<div id="nabObtiznost" class="nabidka" hidden>
+  <div class="titulek">Obtížnost</div>
+  <button class="tl prep" data-obt="l">Lehká – 3 obyvatelé</button>
+  <button class="tl prep" data-obt="s">Střední – 4 obyvatelé</button>
+  <button class="tl prep" data-obt="t">Těžká – 5 obyvatel, úvaha „kdyby…“</button>
+  <button class="tl prep" data-obt="m">Mistrovská – 6 obyvatel, úvaha „kdyby…“</button>
+</div>
+<div id="nabPomoc" class="nabidka" hidden>
+  <button class="tl" data-prikaz="poradit">🧠 Poradit další krok <kbd>H</kbd></button>
+  <button class="tl prep" data-prikaz="zive" id="prepZive">Průběžně ukazovat sedící výroky</button>
+  <button class="tl" data-prikaz="vymaz">🧹 Vymazat označení</button>
+  <hr>
+  <button class="tl" data-prikaz="jak">❔ Jak hrát</button>
+</div>
+
+<section class="panel pomoc" id="jak" hidden>
+  <p>Na ostrově žijí <strong>rytíři</strong>, kteří vždy mluví pravdu, a <strong>padouši</strong>, kteří vždy lžou. Každý je buď rytíř, nebo padouch. Podle toho, co obyvatelé řekli, zjistěte, kdo je kdo.</p>
+  <p>Každá hádanka má <strong>právě jedno řešení</strong> a dá se k němu dojít úvahou. Na lehké a střední obtížnosti stačí vždy jen jeden výrok a to, co už víte. Na těžké a mistrovské je někdy potřeba úvaha „kdyby… tak by výroky vedly ke sporu“.</p>
+  <p>„Mezi námi“ znamená všechny obyvatele včetně mluvčího. „Aspoň jeden z dvojice“ může znamenat i oba.</p>
+  <p>U každého obyvatele zvolte 🛡️ rytíř, nebo 🎭 padouch (druhým klepnutím volbu zrušíte) a stiskněte <strong>Ověřit</strong>. Výrok přeškrtnete klepnutím. <strong>🧠 Poradit</strong> ukáže další úvahu a zapíše její závěr. Hvězdičky v liště říkají, kolik kol úvah hádanka potřebuje.</p>
+  <p>Každá hádanka má svůj kód (např. <code>s-k2x9ab</code>) – přes 🔗 Sdílet ho pošlete jako odkaz.</p>
+  <button class="btn" data-prikaz="jak">Zavřít</button>
+</section>
+
+<main>
+  <div class="uvod">
+    <p id="uvodText">Rytíři vždy mluví pravdu, padouši vždy lžou. Kdo je kdo?</p>
+    <div class="akce">
+      <button class="btn primary" id="btnOver">✔ Ověřit</button>
+      <button class="btn" data-prikaz="poradit" title="Ukáže další logický krok a zapíše ho (H)">🧠 Poradit</button>
+    </div>
+  </div>
+  <div class="zprava" id="zprava" role="status" aria-live="polite"></div>
+  <div class="ostrov" id="ostrov"></div>
+  <div class="rekordy" id="rekord"></div>
+</main>
+
+<script>
+/* ============================================================
+   RytiriLogika – generátor hádanek bez DOM (testy: _test/rytiri_padousi_test.js).
+   Druh obyvatele: 1 = rytíř (mluví pravdu), 0 = padouch (lže).
+   Výrok mluvčího s je omezení  druh[s] === pravdivost výroku.
+   Model lidské úvahy (odvod):
+     1. úroveň – vezme jeden výrok a to, co už je známo (masky možností),
+        a vyškrtne druhy, se kterými výrok nejde splnit; opakuje se do ustálení;
+     2. úroveň (těžká, mistrovská) – „kdyby X byl rytíř“: když z toho první
+        úroveň dojde ke sporu, je X padouch (a naopak).
+   Hádanka je platná, když odvod na své úrovni určí všechny – tím je i jediná.
+   ============================================================ */
+const RytiriLogika = (function () {
+  const JMENA = [
+    ['Anna', 'z'], ['Petr', 'm'], ['Jana', 'z'], ['Tomáš', 'm'], ['Eva', 'z'], ['Jakub', 'm'],
+    ['Marie', 'z'], ['Lukáš', 'm'], ['Klára', 'z'], ['Ondřej', 'm'], ['Lucie', 'z'], ['Martin', 'm'],
+    ['Tereza', 'z'], ['Vojtěch', 'm'], ['Zuzana', 'z'], ['Filip', 'm'], ['Hana', 'z'], ['David', 'm'],
+    ['Barbora', 'z'], ['Radek', 'm'], ['Simona', 'z'], ['Igor', 'm'], ['Gabriela', 'z'], ['Cyril', 'm'],
+  ];
+  const OBTIZNOSTI = {
+    l: { n: 3, uroven: 1, nazev: 'lehká' },
+    s: { n: 4, uroven: 1, nazev: 'střední' },
+    t: { n: 5, uroven: 2, nazev: 'těžká' },
+    m: { n: 6, uroven: 2, nazev: 'mistrovská' },
+  };
+  const SLOVY = ['žádný', 'jeden', 'dva', 'tři', 'čtyři', 'pět', 'šest'];
+  const DRUH = { r: ['rytíř', 'rytíři', 'rytířů'], p: ['padouch', 'padouši', 'padouchů'] };
+
+  function rng(seed) {   // mulberry32
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const nahodne = (r, n) => Math.floor(r() * n);
+  const vyber = (r, pole) => pole[nahodne(r, pole.length)];
+  function jini(r, n, krome, kolik) {   // kolik různých osob mimo `krome`
+    const pole = [];
+    for (let i = 0; i < n; i++) if (!krome.includes(i)) pole.push(i);
+    for (let i = pole.length - 1; i > 0; i--) { const j = nahodne(r, i + 1); [pole[i], pole[j]] = [pole[j], pole[i]]; }
+    return pole.length >= kolik ? pole.slice(0, kolik) : null;
+  }
+
+  // „Mezi námi jsou právě dva rytíři.“ – vztah 'presne' | 'aspon' | 'nejvys'
+  function textPoctu(druh, vztah, k) {
+    const [sg, pl, gen] = DRUH[druh], slovo = { presne: 'právě ', aspon: 'aspoň ', nejvys: 'nejvýš ' }[vztah];
+    if (k === 0) return 'Mezi námi není žádný ' + sg + '.';
+    if (k === 1) return 'Mezi námi je ' + slovo + 'jeden ' + sg + '.';
+    if (k <= 4) return 'Mezi námi jsou ' + slovo + SLOVY[k] + ' ' + pl + '.';
+    return 'Mezi námi je ' + slovo + SLOVY[k] + ' ' + gen + '.';
+  }
+
+  /* Tvůrci výroků: (mluvčí s, počet n, jména, tajné druhy a, rng) → { s, osoby, f, text } nebo null.
+     f(a) je pravdivost výroku; vrací se jen výroky, jejichž pravdivost sedí na druh mluvčího. */
+  const TVURCI = {
+    oDruhem(s, n, J, a, r) {
+      const [x] = jini(r, n, [s], 1), v = nahodne(r, 2);
+      return { osoby: [x], f: b => b[x] === v, text: J[x][0] + (v ? ' mluví pravdu.' : ' lže.') };
+    },
+    stejnyJakoJa(s, n, J, a, r) {
+      const [x] = jini(r, n, [s], 1), stejny = r() < 0.5;
+      return { osoby: [x], f: b => (b[x] === b[s]) === stejny, text: J[x][0] + (stejny ? ' je stejného druhu jako já.' : ' je jiného druhu než já.') };
+    },
+    dvojiceDruh(s, n, J, a, r) {
+      const d = jini(r, n, [s], 2); if (!d) return null;
+      const [x, y] = d, stejny = r() < 0.5;
+      return { osoby: [x, y], f: b => (b[x] === b[y]) === stejny, text: J[x][0] + ' a ' + J[y][0] + (stejny ? ' jsou stejného druhu.' : ' jsou různého druhu.') };
+    },
+    pocet(s, n, J, a, r) {
+      const druh = r() < 0.5 ? 'r' : 'p', vztah = vyber(r, ['presne', 'presne', 'aspon', 'nejvys']);
+      const k = vztah === 'presne' ? nahodne(r, n + 1) : vztah === 'aspon' ? 1 + nahodne(r, n) : nahodne(r, n);
+      if (vztah === 'nejvys' && k === 0) return null;   // „nejvýš žádný“ = „právě žádný“
+      const pocet = b => b.reduce((m, x) => m + (druh === 'r' ? x : 1 - x), 0);
+      const f = vztah === 'presne' ? b => pocet(b) === k : vztah === 'aspon' ? b => pocet(b) >= k : b => pocet(b) <= k;
+      return { osoby: [...Array(n).keys()], f, text: textPoctu(druh, vztah, k) };
+    },
+    kdyz(s, n, J, a, r) {
+      const d = jini(r, n, [s], 2); if (!d) return null;
+      const [x, y] = d, vx = nahodne(r, 2), vy = nahodne(r, 2);
+      return {
+        osoby: [x, y], f: b => b[x] !== vx || b[y] === vy,
+        text: 'Jestli ' + J[x][0] + (vx ? ' mluví pravdu' : ' lže') + ', pak ' + J[y][0] + (vy ? ' mluví pravdu.' : ' lže.'),
+      };
+    },
+    jaNebo(s, n, J, a, r) {
+      const [x] = jini(r, n, [s], 1), v = nahodne(r, 2);
+      return { osoby: [x], f: b => !b[s] || b[x] === v, text: 'Lžu já, nebo ' + J[x][0] + (v ? ' mluví pravdu.' : ' lže.') };
+    },
+    oba(s, n, J, a, r) {
+      const d = jini(r, n, [s], 2); if (!d) return null;
+      const [x, y] = d, vx = nahodne(r, 2), vy = r() < 0.6 ? vx : 1 - vx;
+      const text = vx === vy
+        ? J[x][0] + ' i ' + J[y][0] + (vx ? ' mluví pravdu.' : ' lžou.')
+        : J[x][0] + (vx ? ' mluví pravdu' : ' lže') + ' a ' + J[y][0] + (vy ? ' mluví pravdu.' : ' lže.');
+      return { osoby: [x, y], f: b => b[x] === vx && b[y] === vy, text };
+    },
+    aspon(s, n, J, a, r) {
+      const d = jini(r, n, [s], 2); if (!d) return null;
+      const [x, y] = d, v = nahodne(r, 2);
+      return { osoby: [x, y], f: b => b[x] === v || b[y] === v, text: 'Aspoň jeden z dvojice ' + J[x][0] + ' a ' + J[y][0] + (v ? ' mluví pravdu.' : ' lže.') };
+    },
+  };
+  const VAHY = { oDruhem: 3, stejnyJakoJa: 2, dvojiceDruh: 2, pocet: 3, kdyz: 2, jaNebo: 1, oba: 2, aspon: 2 };
+
+  // výrok platí jako omezení: druh mluvčího odpovídá pravdivosti výroku
+  const sedi = (v, b) => (b[v.s] === 1) === v.f(b);
+  const vyreseno = D => D.every(m => m === 1 || m === 2);
+
+  /* Podpora jednoho výroku: projde všechny kombinace druhů osob výroku (s mluvčím)
+     z jejich možností a vrátí, které druhy se v nějaké vyhovující kombinaci objevily. */
+  function podpora(n, v, D) {
+    const b = new Array(n).fill(0), opora = new Array(n).fill(0), os = v.vsichni;
+    (function proch(k) {
+      if (k === os.length) { if (sedi(v, b)) for (const i of os) opora[i] |= 1 << b[i]; return; }
+      const i = os[k];
+      for (let x = 0; x < 2; x++) if (D[i] >> x & 1) { b[i] = x; proch(k + 1); }
+    })(0);
+    return opora;
+  }
+  /** 1. úroveň. D: pole masek (bit 0 = může být padouch, bit 1 = může být rytíř). */
+  function odvod1(n, vyroky, D0) {
+    const D = D0.slice();
+    for (let kola = 1; ; kola++) {
+      let zmena = false;
+      for (const v of vyroky) {
+        const o = podpora(n, v, D);
+        for (const i of v.vsichni) {
+          const m = D[i] & o[i];
+          if (m !== D[i]) { D[i] = m; zmena = true; if (!m) return { D, spor: true, kola }; }
+        }
+      }
+      if (!zmena) return { D, spor: false, kola };
+    }
+  }
+  /** Odvození na dané úrovni; vrací { D, vyreseno, kroky (kola úvah), hypotez }. */
+  function vyres(n, vyroky, uroven, D0) {
+    let q = odvod1(n, vyroky, D0 || new Array(n).fill(3));
+    if (q.spor) return { D: q.D, vyreseno: false, spor: true, kroky: q.kola, hypotez: 0 };
+    let D = q.D, kroky = q.kola, hypotez = 0;
+    while (uroven >= 2 && !vyreseno(D)) {
+      let pokrok = false;
+      for (let i = 0; i < n && !pokrok; i++) {
+        if (D[i] !== 3) continue;
+        for (let x = 1; x >= 0 && !pokrok; x--) {
+          const t = D.slice(); t[i] = 1 << x;
+          const h = odvod1(n, vyroky, t);
+          if (!h.spor) continue;
+          t[i] = 1 << (1 - x);
+          const w = odvod1(n, vyroky, t);
+          D = w.D; kroky += h.kola + w.kola; hypotez++; pokrok = true;
+        }
+      }
+      if (!pokrok) break;
+    }
+    return { D, vyreseno: vyreseno(D), spor: false, kroky, hypotez };
+  }
+
+  function priprav(v) { v.vsichni = [...new Set([v.s, ...v.osoby])].sort((x, y) => x - y); return v; }
+
+  function sestav(obt, r, chciHypotezu) {
+    const { n, uroven } = OBTIZNOSTI[obt];
+    // jména s různými iniciálami (iniciála je na kartě)
+    const J = [], ini = new Set();
+    while (J.length < n) { const j = vyber(r, JMENA); if (!ini.has(j[0][0])) { ini.add(j[0][0]); J.push(j); } }
+    const a = Array.from({ length: n }, () => nahodne(r, 2));
+    if (a.every(x => x === a[0])) a[nahodne(r, n)] = 1 - a[0];   // aspoň jeden rytíř i padouch
+    const typy = [];
+    for (const [t, w] of Object.entries(VAHY)) for (let i = 0; i < w; i++) typy.push(t);
+
+    const novy = (texty, vyroky) => {
+      const pocty = new Array(n).fill(0);
+      for (const v of vyroky) pocty[v.s]++;
+      for (let pokus = 0; pokus < 20; pokus++) {
+        const s = nahodne(r, n);
+        if (pocty[s] >= 2 && r() < 0.8) continue;   // ať mluví víc obyvatel
+        const v = TVURCI[vyber(r, typy)](s, n, J, a, r);
+        if (!v || v.f(a) !== (a[s] === 1)) continue;
+        v.s = s; priprav(v);
+        if (texty.has(s + v.text)) continue;
+        return v;
+      }
+      return null;
+    };
+    const pocetReseni = vyroky => {
+      let c = 0;
+      const b = new Array(n);
+      for (let m = 0; m < 1 << n; m++) {
+        for (let i = 0; i < n; i++) b[i] = m >> i & 1;
+        if (vyroky.every(v => sedi(v, b))) c++;
+      }
+      return c;
+    };
+
+    // 1) přidávat výroky, dokud není řešení jediné (mírně zužující – víc zajímavých výroků)
+    let vyroky = [];
+    const texty = new Set();
+    let zbyva = 1 << n;
+    for (let kolo = 0; zbyva > 1; kolo++) {
+      if (kolo > 80 || vyroky.length > 14) return null;
+      let nejlepsi = null;
+      for (let p = 0; p < 12; p++) {
+        const v = novy(texty, vyroky); if (!v) continue;
+        const c = pocetReseni(vyroky.concat(v));
+        if (c >= zbyva) continue;
+        const skore = Math.abs(Math.log(c) - Math.log(zbyva / 2.2)) + r() * 0.4;
+        if (!nejlepsi || skore < nejlepsi.skore) nejlepsi = { v, c, skore };
+      }
+      if (!nejlepsi) continue;
+      vyroky.push(nejlepsi.v); texty.add(nejlepsi.v.s + nejlepsi.v.text); zbyva = nejlepsi.c;
+    }
+    // 2) doplnit, dokud nejde odvodit úvahou na dané úrovni
+    let st = vyres(n, vyroky, uroven);
+    for (let kolo = 0; !st.vyreseno; kolo++) {
+      if (kolo > 60 || vyroky.length > 16) return null;
+      let nejlepsi = null;
+      for (let p = 0; p < 10; p++) {
+        const v = novy(texty, vyroky); if (!v) continue;
+        const w = vyres(n, vyroky.concat(v), uroven);
+        const urceno = w.D.filter(m => m === 1 || m === 2).length + r() * 0.5;
+        if (!nejlepsi || urceno > nejlepsi.urceno) nejlepsi = { v, w, urceno };
+      }
+      if (!nejlepsi) continue;
+      vyroky.push(nejlepsi.v); texty.add(nejlepsi.v.s + nejlepsi.v.text); st = nejlepsi.w;
+    }
+    // 3) vyhodit výroky, bez kterých se pořád dá odvodit
+    for (const v of vyroky.slice().sort(() => r() - 0.5)) {
+      const bez = vyroky.filter(w => w !== v);
+      if (bez.length >= 2 && vyres(n, bez, uroven).vyreseno) vyroky = bez;
+    }
+    st = vyres(n, vyroky, uroven);
+    if (chciHypotezu && !st.hypotez) return null;
+    vyroky.sort((x, y) => x.s - y.s);   // bubliny se ukazují u mluvčích
+    return { n, uroven, jmena: J, druhy: a, vyroky, kroky: st.kroky, hypotez: st.hypotez };
+  }
+
+  /** Hádanka určená semínkem – stejné semínko + obtížnost = stejné zadání. */
+  function generuj(obt, seed) {
+    const r = rng(seed);
+    for (let pokus = 0; ; pokus++) {
+      // na úrovni 2 dát přednost hádankám, které úvahu „kdyby…“ opravdu potřebují
+      const h = sestav(obt, r, OBTIZNOSTI[obt].uroven >= 2 && pokus < 40);
+      if (h) return Object.assign(h, { obt, seed });
+    }
+  }
+
+  return { generuj, vyres, odvod1, podpora, sedi, OBTIZNOSTI, rng };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const L = RytiriLogika;
+  const KLIC = 'webapp_hra_rytiri_padousi';
+  let nast = { obt: 's', zive: false };
+  let hra = null;        // { seed, obt, denni, oznaceni[], skrt[], pokusy, start, cas, hotovo, vzdano, rady }
+  let hadanka = null;
+  let radaVyrok = -1;    // výrok zvýrazněný poslední radou
+
+  const rodem = (i, m, z) => hadanka.jmena[i][1] === 'z' ? z : m;
+  const jm = i => hadanka.jmena[i][0];
+
+  function uloz() {
+    if (hra && !hra.hotovo) { hra.cas = ubehlo(); hra.start = Date.now(); }
+    try { localStorage.setItem(KLIC, JSON.stringify({ nast, hra })); } catch { /* nevadí */ }
+  }
+  function nacti() {
+    try {
+      const d = JSON.parse(localStorage.getItem(KLIC) || 'null');
+      if (d && d.nast) nast = Object.assign(nast, d.nast);
+      if (d && d.hra && d.hra.oznaceni) return d.hra;
+    } catch { /* poškozená data – začne se znovu */ }
+    return null;
+  }
+
+  const dnes = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+  const formatCas = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  const ubehlo = () => hra.hotovo ? hra.cas : hra.cas + Math.floor((Date.now() - hra.start) / 1000);
+  const rekord = () => Rekord.sleduj(KLIC + '_cas_' + hra.obt, {
+    vyssiLepsi: false, format: v => formatCas(v), popisek: 'Nejrychlejší vyřešení (' + L.OBTIZNOSTI[hra.obt].nazev + ')',
+  });
+  const hvezdy = k => '★'.repeat(k <= 3 ? 1 : k <= 5 ? 2 : k <= 8 ? 3 : 4);
+
+  // kód hádanky: obtížnost (l/s/t/m) a semínko v base36 – „s-k2x9ab“
+  const kodHadanky = h => h.obt + '-' + h.seed.toString(36);
+  function ctiKod(t) {
+    const m = String(t || '').trim().toLowerCase().match(/^([lstm])-([0-9a-z]{1,7})$/);
+    if (!m) return null;
+    const seed = parseInt(m[2], 36);
+    return seed < 2 ** 32 ? { obt: m[1], seed } : null;
+  }
+  const odkaz = () => new URL('../', location.href).href + '#obsah/rytiri_padousi.html?h=' + kodHadanky(hra);
+  function otevriKod(k) {
+    nast.obt = k.obt;
+    if (hra && kodHadanky(hra) === kodHadanky(k)) return spust();   // stejná hádanka – nechat rozehraný stav
+    zalozHru(k.seed, false, k.obt);
+  }
+
+  function zalozHru(seed, denni, obt) {
+    hra = { seed, obt: obt || (denni ? 's' : nast.obt), denni: !!denni, oznaceni: [], skrt: [], pokusy: 0, start: Date.now(), cas: 0, hotovo: false, vzdano: false, rady: 0 };
+    spust();
+  }
+  function spust() {
+    $('zprava').className = 'zprava'; $('zprava').textContent = '⏳ Sestavuji hádanku…';
+    $('ostrov').innerHTML = '';
+    hadanka = null;
+    setTimeout(dokonci, 30);
+  }
+  function dokonci() {
+    hadanka = L.generuj(hra.obt, hra.seed);
+    radaVyrok = -1;
+    hra.start = Date.now();
+    if (hra.oznaceni.length !== hadanka.n) hra.oznaceni = new Array(hadanka.n).fill(null);
+    if (hra.skrt.length !== hadanka.vyroky.length) hra.skrt = new Array(hadanka.vyroky.length).fill(false);
+    $('zprava').textContent = ''; $('zprava').className = 'zprava';
+    vykresli();
+    if (hra.hotovo) zobrazKonec(false);
+    uloz();
+  }
+
+  /* ---------- vykreslení ---------- */
+  function vykresli() {
+    $('popisObtiznost').textContent = L.OBTIZNOSTI[nast.obt].nazev;
+    document.querySelectorAll('[data-obt]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.obt === nast.obt)));
+    $('prepZive').setAttribute('aria-pressed', String(nast.zive));
+    $('uvodText').textContent = 'Na ostrově žije ' + hadanka.n + ' obyvatel' + (hadanka.n < 5 ? 'é' : '') + '. Rytíři vždy mluví pravdu, padouši vždy lžou. Kdo je kdo?';
+    const html = [];
+    for (let i = 0; i < hadanka.n; i++) {
+      const moje = hadanka.vyroky.map((v, k) => [v, k]).filter(([v]) => v.s === i);
+      html.push('<div class="osoba" data-i="' + i + '"><div class="hlava"><span class="avatar" aria-hidden="true">' + jm(i)[0] + '</span>' +
+        '<span class="jmeno">' + jm(i) + '</span><div class="volba" role="group" aria-label="Druh: ' + jm(i) + '">' +
+        '<button data-v="1" aria-pressed="false">🛡️ Rytíř</button><button data-v="0" aria-pressed="false">🎭 Padouch</button></div></div>' +
+        '<div class="bubliny">' + (moje.length ? moje.map(([v, k]) => '<div class="bublina" data-k="' + k + '"><span class="c">' + (k + 1) + '</span><span class="t">„' + v.text + '“</span><span class="stav"></span></div>').join('')
+          : '<span class="ticho">' + rodem(i, 'Nic neřekl.', 'Nic neřekla.') + '</span>') + '</div></div>');
+    }
+    $('ostrov').innerHTML = html.join('');
+    rekord().prvek($('rekord'));
+    obnov();
+  }
+
+  function obnov(poruseni) {
+    if (!hadanka) return;
+    document.querySelectorAll('.osoba').forEach(el => {
+      const v = hra.oznaceni[el.dataset.i];
+      el.classList.toggle('r', v === 1); el.classList.toggle('p', v === 0); el.classList.toggle('hotovo', hra.hotovo);
+      el.querySelectorAll('.volba button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === v)));
+    });
+    document.querySelectorAll('.bublina').forEach(el => {
+      const k = +el.dataset.k, v = hadanka.vyroky[k];
+      let stav = '';
+      if (poruseni) stav = poruseni[k] ? 'poruseno' : 'splneno';
+      else if (nast.zive && v.vsichni.every(i => hra.oznaceni[i] !== null)) stav = L.sedi(v, hra.oznaceni) ? 'splneno' : 'poruseno';
+      el.className = 'bublina ' + stav + (hra.skrt[k] ? ' skrtnuto' : '') + (k === radaVyrok ? ' rada' : '');
+      el.querySelector('.stav').textContent = stav === 'splneno' ? '✓' : stav === 'poruseno' ? '✗' : '';
+    });
+    $('btnOver').disabled = hra.hotovo;
+    info();
+  }
+  function info() {
+    $('info').textContent = (hra.denni ? '📅 denní · ' : '') + '#' + kodHadanky(hra) + ' · ' + hvezdy(hadanka.kroky) + ' · pokusy ' + hra.pokusy + ' · ⏱ ' + formatCas(ubehlo());
+  }
+
+  /* ---------- hraní ---------- */
+  function over() {
+    if (!hadanka || hra.hotovo) return;
+    const z = $('zprava');
+    if (hra.oznaceni.some(x => x === null)) { z.className = 'zprava chyba'; z.textContent = 'Označte u všech obyvatel, kdo je rytíř a kdo padouch.'; return; }
+    const poruseni = hadanka.vyroky.map(v => !L.sedi(v, hra.oznaceni));
+    if (!poruseni.some(Boolean)) {
+      hra.hotovo = true; hra.cas = ubehlo();
+      uloz(); obnov(poruseni); zobrazKonec(true); return;
+    }
+    hra.pokusy++;
+    const n = poruseni.filter(Boolean).length;
+    z.className = 'zprava chyba';
+    z.textContent = '✗ Takhle to nejde – ' + (n === 1 ? 'jeden výrok nesedí na druh svého mluvčího.' : 'nesedí ' + n + (n < 5 ? ' výroky.' : ' výroků.'));
+    uloz(); obnov(poruseni);
+  }
+  function zobrazKonec(prave) {
+    const z = $('zprava');
+    const rytiri = hadanka.druhy.map((x, i) => x ? jm(i) : null).filter(Boolean);
+    const shrnuti = 'Rytíři: ' + (rytiri.join(', ') || 'nikdo') + '.';
+    if (hra.vzdano) { z.className = 'zprava'; z.textContent = '🏳️ Řešení: ' + shrnuti; return; }
+    let t = '🎉 Správně! ' + shrnuti + ' · ' + formatCas(hra.cas) + ' · chybných pokusů ' + hra.pokusy;
+    if (hra.rady) t += ' · rad ' + hra.rady;
+    else if (prave && rekord().zapis(hra.cas)) t += ' · 🏆 nový rekord!';
+    z.className = 'zprava ok'; z.textContent = t;
+    if (prave) rekord().prvek($('rekord'));
+  }
+
+  /* Rada = jedna úvaha. Z označení se sestaví, co je u koho ještě možné; nejdřív se hledá
+     výrok, který sám (s tím, co už je známo) něco vyloučí, pak úvaha „kdyby…“ (jen těžká
+     a mistrovská – na lehčích ji generátor nepotřebuje). Závěr se zapíše do označení. */
+  const druhSlovy = (i, x) => x ? 'mluví pravdu (rytíř)' : 'lže (padouch)';
+  const kdyby = (i, x) => 'Kdyby ' + jm(i) + ' ' + (x ? rodem(i, 'mluvil', 'mluvila') + ' pravdu' : rodem(i, 'lhal', 'lhala'));
+  function poradit() {
+    if (!hadanka || hra.hotovo) return;
+    const z = $('zprava'), n = hadanka.n;
+    z.className = 'zprava';
+    const spatne = hra.oznaceni.findIndex((x, i) => x !== null && x !== hadanka.druhy[i]);
+    if (spatne >= 0) { z.textContent = '⚠️ Pozor: ' + jm(spatne) + ' je ' + rodem(spatne, 'označen', 'označena') + ' špatně.'; return; }
+    const D = hra.oznaceni.map(x => x === null ? 3 : 1 << x);
+    if (D.every(m => m !== 3)) { z.textContent = '🧠 Všechny máte správně – stačí stisknout Ověřit.'; return; }
+
+    for (let k = 0; k < hadanka.vyroky.length; k++) {
+      const v = hadanka.vyroky[k], o = L.podpora(n, v, D), zavery = [];
+      for (const i of v.vsichni) {
+        const m = D[i] & o[i];
+        if (m === D[i] || !m) continue;
+        const x = m === 2 ? 1 : 0;
+        zavery.push(kdyby(i, 1 - x) + ', výrok ' + (k + 1) + ' by nešel splnit. Proto ' + jm(i) + ' ' + druhSlovy(i, x) + '.');
+        hra.oznaceni[i] = x;
+      }
+      if (!zavery.length) continue;
+      radaVyrok = k; hra.rady++;
+      z.textContent = '🧠 ' + zavery.join(' ');
+      uloz(); obnov(); return;
+    }
+    // úvaha „kdyby…“: předpoklad, ze kterého jednotlivé výroky vedou ke sporu
+    for (let i = 0; i < n; i++) {
+      if (D[i] !== 3) continue;
+      for (let x = 1; x >= 0; x--) {
+        const t = D.slice(); t[i] = 1 << x;
+        const pouzite = [];
+        let spor = false;
+        for (let kolo = 0; kolo < 20 && !spor; kolo++) {
+          let zmena = false;
+          hadanka.vyroky.forEach((v, k) => {
+            if (spor) return;
+            const o = L.podpora(n, v, t);
+            for (const j of v.vsichni) if ((t[j] & o[j]) !== t[j]) {
+              t[j] &= o[j]; zmena = true;
+              if (!pouzite.includes(k + 1)) pouzite.push(k + 1);
+              if (!t[j]) spor = true;
+            }
+          });
+          if (!zmena) break;
+        }
+        if (!spor) continue;
+        hra.oznaceni[i] = 1 - x; hra.rady++; radaVyrok = -1;
+        pouzite.sort((p, q) => p - q);
+        const ktere = pouzite.length === 1 ? 'vedl by výrok ' + pouzite[0] : 'vedly by výroky ' + pouzite.join(', ').replace(/, (\d+)$/, ' a $1');
+        z.textContent = '🧠 ' + kdyby(i, x) + ', ' + ktere + ' ke sporu – někdo by nemohl být ani rytíř, ani padouch. Proto ' + jm(i) + ' ' + druhSlovy(i, 1 - x) + '.';
+        uloz(); obnov(); return;
+      }
+    }
+    z.textContent = '🧠 Tady už pomůže jen kombinace více úvah – zkuste vzdát se, nebo začít znovu.';
+  }
+
+  const PRIKAZY = {
+    nova() { zalozHru(Math.floor(Math.random() * 36 ** 6), false); },
+    denni() { zalozHru(dnes(), true); },
+    async sdilet() {
+      if (!hra) return;
+      const url = odkaz(), text = '🗡️ Rytíři a padouši – hádanka ' + kodHadanky(hra);
+      if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+        try { await navigator.share({ title: text, url }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      try { await navigator.clipboard.writeText(url); Dialog.info('🔗 Odkaz na hádanku ' + kodHadanky(hra) + ' je ve schránce.'); }
+      catch { await Dialog.zeptej('Zkopírujte odkaz na hádanku:', url); }
+    },
+    async zadat() {
+      const t = await Dialog.zeptej('Kód hádanky (např. s-k2x9ab) nebo celý odkaz:', '');
+      if (t === null) return;
+      const k = ctiKod(t.includes('h=') ? t.split('h=')[1].split(/[&#]/)[0] : t);
+      if (!k) return Dialog.chyba('Tohle není platný kód hádanky.');
+      otevriKod(k);
+    },
+    znovu() {
+      hra.oznaceni.fill(null); hra.skrt.fill(false);
+      Object.assign(hra, { pokusy: 0, cas: 0, hotovo: false, vzdano: false, rady: 0 });
+      spust();
+    },
+    async vzdat() {
+      if (!hadanka || hra.hotovo) return;
+      if (!await Dialog.potvrd('Opravdu ukázat řešení? Hra skončí bez zápisu rekordu.')) return;
+      hra.oznaceni = hadanka.druhy.slice(); hra.hotovo = true; hra.vzdano = true; hra.cas = ubehlo();
+      uloz(); obnov(); zobrazKonec(false);
+    },
+    poradit,
+    vymaz() { if (hra.hotovo) return; hra.oznaceni.fill(null); radaVyrok = -1; $('zprava').textContent = ''; obnov(); uloz(); },
+    zive() { nast.zive = !nast.zive; $('prepZive').setAttribute('aria-pressed', String(nast.zive)); uloz(); obnov(); },
+    jak() { $('jak').hidden = !$('jak').hidden; },
+  };
+
+  /* ---------- události ---------- */
+  function zavriNabidky() {
+    document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+    document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  }
+  document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const n = $(b.dataset.nabidka), bylo = !n.hidden;
+    zavriNabidky();
+    if (bylo) return;
+    n.hidden = false; b.setAttribute('aria-expanded', 'true');
+    const r = b.getBoundingClientRect();
+    n.style.top = (r.bottom + 4) + 'px';
+    n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+  }));
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-prikaz], [data-obt]');
+    if (b) {
+      e.stopPropagation();
+      if (b.dataset.prikaz) { if (b.dataset.prikaz !== 'zive') zavriNabidky(); return PRIKAZY[b.dataset.prikaz](); }
+      nast.obt = b.dataset.obt;
+      zavriNabidky();
+      return PRIKAZY.nova();
+    }
+    if (!e.target.closest('.nabidka')) zavriNabidky();
+  });
+  addEventListener('resize', zavriNabidky);
+
+  $('ostrov').addEventListener('click', e => {
+    if (!hadanka) return;
+    const tl = e.target.closest('.volba button');
+    if (tl) {
+      if (hra.hotovo) return;
+      const i = +tl.closest('.osoba').dataset.i, v = +tl.dataset.v;
+      hra.oznaceni[i] = hra.oznaceni[i] === v ? null : v;   // druhé klepnutí volbu zruší
+      $('zprava').textContent = ''; radaVyrok = -1;
+      obnov(); uloz(); return;
+    }
+    const bub = e.target.closest('.bublina');
+    if (bub) { hra.skrt[bub.dataset.k] = !hra.skrt[bub.dataset.k]; obnov(); uloz(); }
+  });
+  $('btnOver').addEventListener('click', over);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') zavriNabidky();
+    if (e.target.closest('input, textarea, dialog') || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'n' || e.key === 'N') PRIKAZY.nova();
+    else if (e.key === 'h' || e.key === 'H') poradit();
+  });
+
+  if (window.self === window.top) document.body.classList.add('samostatne');
+  const ulozena = nacti(), zOdkazu = ctiKod(new URLSearchParams(location.search).get('h'));
+  if (ulozena) hra = ulozena;
+  if (zOdkazu) otevriKod(zOdkazu);
+  else if (ulozena) spust();
+  else PRIKAZY.denni();
+  setInterval(() => { if (hadanka && !hra.hotovo) info(); }, 1000);
+})();
+</script>
+</body>
+</html>

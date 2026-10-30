@@ -182,11 +182,12 @@
     let st = null, y = 0;
     const nova = () => { st = pt(W, H); st.typ = 'text'; out.push(st); y = ok + 6; };
     const radek = (txt, h, c) => { if (!st || y > H - ok - 8) nova(); Tp(st.navrch, ok, y, txt, h || 3, 'l', 0, c); y += (h || 3) * 1.5; };
-    const odstavec = (txt, h) => { const max = Math.floor(sir / ((h || 3) * 0.5)); let r = ''; for (const s of String(txt).split(' ')) { if ((r + ' ' + s).length > max) { radek(r, h); r = s; } else r = r ? r + ' ' + s : s; } if (r) radek(r, h); };
+    // v jiném jazyce webu (i18n.js) přeložit celý odstavec ještě před zalomením do řádků
+    const odstavec = (txt, h) => { if (window.I18N) txt = I18N.preloz(String(txt)); const max = Math.floor(sir / ((h || 3) * 0.5)); let r = ''; for (const s of String(txt).split(' ')) { if ((r + ' ' + s).length > max) { radek(r, h); r = s; } else r = r ? r + ' ' + s : s; } if (r) radek(r, h); };
     nova();
     radek(`${o.nazev || 'Šablona pro horní frézku'}`, 5); y += 1;
     if (nv.info) odstavec(nv.info, 3);
-    for (const v of nv.varovani || []) odstavec('Pozor: ' + v, 2.8);
+    for (const v of nv.varovani || []) odstavec((window.I18N ? I18N.preloz('Pozor:') : 'Pozor:') + ' ' + (window.I18N ? I18N.preloz(v) : v), 2.8);
     y += 2;
     radek('Kusovník', 4);
     for (const r of SF.kusovnik(nv)) odstavec(`${r.polozka} – ${r.ks} ks – ${r.rozmer}${r.pozn ? ' (' + r.pozn + ')' : ''}`, 2.7);

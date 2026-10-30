@@ -1,0 +1,23 @@
+// drevene_hracky/vystup – en (sdílený modul obsah/drevene_hracky/vystup.js). Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Kontrola měřítka: úsečky musí mít přesně 50 a 100 mm vodorovně i svisle.': 'Scale check: the lines must be exactly 50 and 100 mm horizontally and vertically.',
+  'Tiskněte ve skutečné velikosti (100 %), ne „přizpůsobit stránce“.': 'Print at actual size (100 %), not “fit to page”.',
+  'Dřevěné hračky': 'Wooden toys',
+  'Kusovník': 'Bill of materials',
+  'název': 'name',
+  'rozměr (mm)': 'size (mm)',
+  'materiál': 'material',
+  'poznámka': 'note',
+  'Bezpečnost (orientační kontrola, není to certifikace podle EN 71)': 'Safety (indicative check, not a certification to EN 71)',
+  'Kontrolní čtverec 50 × 50 mm': 'Test square 50 × 50 mm',
+  '{nazev} · šablony 1:1 · list {i}': '{nazev} · 1:1 templates · sheet {i}',
+  'oříznout {c}{r}{r2} okraj a přiložit na čárkovanou čáru sousedního listu (přesah {g} mm)': 'trim the {c}{r}{r2} edge and align with the dashed line of the adjacent sheet (overlap {g} mm)',
+  '{id} – {nazev} · list {c}/{ny} (řádek {r}, sloupec {c2}) · tisk 100 %': '{id} – {nazev} · sheet {c}/{ny} (row {r}, column {c2}) · print 100 %',
+  'Dřevěné hračky a dětský nábytek – šablony 1:1': 'Wooden toys and children\'s furniture – 1:1 templates',
+  'Pohled zepředu': 'Front view',
+  'Půdorys': 'Top view',
+  'Hranol {prurez} × {prurez2} mm – {n} ks, využití {vyuziti} %': 'Stock {prurez} × {prurez2} mm – {n} pcs, utilisation {vyuziti} %',
+  'levý': 'left',
+  'horní': 'top',
+  'a': 'and',
+});

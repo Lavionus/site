@@ -174,7 +174,7 @@
       ];
     },
     legenda: '',
-    popis: `<p>Kouhei Sugihara (2016) sestrojil předměty, které vypadají jako kulatá trubka, a v zrcadle jako hranatá.</p>
+    popis: `<p>Kokichi Sugihara (2016) sestrojil předměty, které vypadají jako kulatá trubka, a v zrcadle jako hranatá.</p>
       <p><b>Konstrukce:</b> stěny jsou svislé, celé kouzlo je v prostorové křivce horní hrany. Pozorovatel se dívá shora pod úhlem θ,
       jednou zepředu a jednou zezadu. V obraze 1 má být bod hrany na výšce v₁ (kružnice), v obraze 2 na výšce v₂ (čtverec). Pro každý bod platí
       v₁ = y sin θ + z cos θ a v₂ = −y sin θ + z cos θ. Odtud přesně <b>y = (v₁ − v₂)/(2 sin θ)</b> a <b>z = (v₁ + v₂)/(2 cos θ)</b>.</p>

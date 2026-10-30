@@ -1,0 +1,23 @@
+// watermark – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Vodoznak': 'Watermark',
+  'Vodoznak do obrázku': 'Watermark an image',
+  'Obrázek': 'Image',
+  'Text vodoznaku': 'Watermark text',
+  'Umístění': 'Placement',
+  'Dlaždice přes celý obrázek': 'Tiled across the whole image',
+  'Pravý dolní roh': 'Bottom right corner',
+  'Levý dolní roh': 'Bottom left corner',
+  'Pravý horní roh': 'Top right corner',
+  'Levý horní roh': 'Top left corner',
+  'Střed': 'Centre',
+  'Velikost písma': 'Font size',
+  'šířky': 'of width',
+  'Průhlednost': 'Opacity',
+  'Sklon (jen dlaždice)': 'Angle (tiles only)',
+  'Barva': 'Colour',
+  'Formát ke stažení': 'Download format',
+  'Stáhnout': 'Download',
+  'Vyberte obrázek…': 'Select an image…',
+  'Sklon (jen dlaždice': 'Angle (tiles only',
+});

@@ -1,0 +1,22 @@
+// md_html – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Markdown ↔ HTML': 'Markdown ↔ HTML',
+  'Markdown ↔ HTML převodník': 'Markdown ↔ HTML converter',
+  'Režim: Markdown → HTML': 'Mode: Markdown → HTML',
+  'Kopírovat výstup': 'Copy output',
+  'Stáhnout': 'Download',
+  'Vyčistit': 'Clear',
+  'Náhled se aktualizuje živě': 'Preview updates live',
+  'Markdown vstup': 'Markdown input',
+  'HTML náhled': 'HTML preview',
+  'Vítejte Toto je **Markdown** převodník. - položka 1 - položka 2 ```js console.log("ahoj"); ``` > Citace [Odkaz](https://example.cz)': 'Welcome This is a **Markdown** converter. - item 1 - item 2 ```js console.log("hello"); ``` > Quote [Link](https://example.cz)',
+  'Vítejte': 'Welcome',
+  'Toto je': 'This is',
+  'položka 1': 'item 1',
+  'položka 2': 'item 2',
+  'Režim': 'Mode',
+  'Markdown výstup': 'Markdown output',
+  'Zkopírováno': 'Copied',
+  'převodník.': 'converter.',
+  'Režim: HTML → Markdown': 'Mode: HTML → Markdown',
+});

@@ -30,4 +30,6 @@ I18N.pridej('en', {
   'Podmínky a O projektu': 'Terms and About',
   'Aktivní aplikace': 'Active app',
   'Přidat / odebrat z oblíbených': 'Add to / remove from favourites',
+  'Umístění na webu': 'Location on the website',
+  'Hlavní stránka': 'Home page',
 });

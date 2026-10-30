@@ -1,0 +1,22 @@
+// cable_sizing_calc – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Dimenzování kabelu (úbytek napětí)': 'Cable sizing (voltage drop)',
+  'Parametry vedení': 'Circuit parameters',
+  'Typ sítě': 'Supply type',
+  'Jednofázová (230 V)': 'Single-phase (230 V)',
+  'Třífázová (400 V)': 'Three-phase (400 V)',
+  'Materiál vodiče': 'Conductor material',
+  'Měď (Cu)': 'Copper (Cu)',
+  'Hliník (Al)': 'Aluminium (Al)',
+  'Proud I (A)': 'Current I (A)',
+  'Délka vedení (m, jednosměrně)': 'Cable length (m, one way)',
+  'Průřez vodiče (mm²)': 'Conductor cross-section (mm²)',
+  'Max. povolený úbytek (%)': 'Max. permitted drop (%)',
+  'Výsledek při zadaném průřezu': 'Result for the given cross-section',
+  'Úbytek napětí': 'Voltage drop',
+  'Úbytek v procentech': 'Drop in percent',
+  'Vyhovuje limitu?': 'Within limit?',
+  'Doporučený minimální průřez': 'Recommended minimum cross-section',
+  'Standardní řady průřezů (mm²): 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120. Výpočet řeší pouze úbytek napětí — vždy zkontroluj i dovolenou proudovou zatížitelnost kabelu (dle způsobu uložení) a jištění dle ČSN 33 2000.': 'Standard cross-sections (mm²): 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120. The calculation covers voltage drop only — always also check the cable\'s current-carrying capacity (depending on installation method) and protection according to ČSN 33 2000 (IEC 60364).',
+  'Ne — zvětši průřez': 'No — increase the cross-section',
+});

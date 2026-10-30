@@ -1,0 +1,23 @@
+// trip_cost – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Náklady na cestu': 'Trip cost',
+  'Cesta a vozidlo': 'Trip and vehicle',
+  'Vzdálenost (km, jedna cesta)': 'Distance (km, one way)',
+  'Spotřeba (l/100 km)': 'Consumption (l/100 km)',
+  'Cena paliva (Kč/l)': 'Fuel price (CZK/l)',
+  'Opotřebení (Kč/km, volitelné)': 'Wear and tear (CZK/km, optional)',
+  'Dálnice/parkovné (Kč celkem)': 'Tolls/parking (CZK total)',
+  'Počet osob (vč. řidiče)': 'Number of people (incl. driver)',
+  'Tam i zpět': 'Return trip',
+  'Výsledek': 'Result',
+  'Ujeto celkem': 'Total distance',
+  'Palivo': 'Fuel',
+  'Opotřebení vozidla': 'Vehicle wear and tear',
+  'Poplatky': 'Fees',
+  'Náklady na 1 km': 'Cost per km',
+  'Na osobu': 'Per person',
+  'Opotřebení zahrnuje amortizaci, pneumatiky a servis – běžně 1–3 Kč/km. Pro spolujízdu se obvykle dělí jen palivo a poplatky – viz řádek níže.': 'Wear and tear covers depreciation, tyres and servicing – typically CZK 1–3/km. When car sharing, usually only fuel and fees are split – see the row below.',
+  'Na osobu (jen palivo + poplatky)': 'Per person (fuel + fees only)',
+  'Kč': 'CZK',
+  'Kč/km': 'CZK/km',
+});

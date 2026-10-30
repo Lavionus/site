@@ -1,0 +1,22 @@
+// sudoku – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Sudoku': 'Sudoku',
+  'Lehká': 'Easy',
+  'Střední': 'Medium',
+  'Těžká': 'Hard',
+  'Nová hra': 'New game',
+  'Zpět': 'Undo',
+  'Poznámky': 'Notes',
+  'Zkontrolovat': 'Check',
+  'Uložit snímek': 'Save snapshot',
+  'Snímky': 'Snapshots',
+  'Vyřešeno za {seconds}:': 'Solved in {seconds}:',
+  'Některá čísla jsou špatně': 'Some numbers are wrong',
+  'Správně vyřešeno!': 'Solved correctly!',
+  'Zatím bez chyb!': 'No mistakes so far!',
+  'V režimu poznámek podržením zapíšete poznámku do celého bloku 3×3': 'In notes mode, press and hold to write the note into the whole 3×3 box',
+  'Snímek uložen': 'Snapshot saved',
+  'Žádné uložené snímky.': 'No saved snapshots.',
+  'vyplněno {filled}/81 · ⏱️ {t}': 'filled {filled}/81 · ⏱️ {t}',
+  'Vyřešeno za {t}!': 'Solved in {t}!',
+});

@@ -1,0 +1,23 @@
+// json_formatter – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'JSON formatter': 'JSON formatter',
+  'JSON formatter / validátor': 'JSON formatter / validator',
+  'Formátovat': 'Format',
+  'Minifikovat': 'Minify',
+  '2 mezery': '2 spaces',
+  '4 mezery': '4 spaces',
+  'Tabulátor': 'Tab',
+  'Kopírovat': 'Copy',
+  'Vzorek': 'Sample',
+  'Vyčistit': 'Clear',
+  'Vstup': 'Input',
+  'Výstup': 'Output',
+  'Platný JSON': 'Valid JSON',
+  '{n} znaků': '{n} characters',
+  'řádek {line})': 'line {line})',
+  'Chyba': 'Error',
+  'Farma Zelený statek': 'Farma Zelený statek',
+  'pšenice': 'pšenice',
+  'řepka': 'řepka',
+  'kukuřice': 'kukuřice',
+});

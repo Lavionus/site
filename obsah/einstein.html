@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦓 Einsteinova hádanka</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="../rekord.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;min-height:100vh;color:var(--text)}
+[hidden]{display:none !important}
+
+/* horní lišta se skupinami a rozbalovacími nabídkami (vzor prompty.html, ciselny_kod.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .info{margin-left:auto;font-size:.8rem;color:var(--text-muted);white-space:nowrap;padding-right:4px}
+.samostatne .lista{padding-right:72px}
+@media (max-width:640px){.lista{flex-wrap:wrap}.lista .info{margin-left:0}.lista .txt{display:none}}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+main{max-width:1200px;margin:0 auto;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,10px);padding:14px;min-width:0}
+.panel h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin:0 0 10px;font-weight:600}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:7px;cursor:pointer;font-size:.9rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.akce{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.zprava{min-height:1.4em;margin-top:10px;font-size:.92rem;line-height:1.45}
+.zprava.ok{color:var(--ok)}
+.zprava.chyba{color:var(--danger)}
+.napoveda-mala{font-size:.75rem;color:var(--text-faint);margin-top:6px}
+
+/* otázka a pravidla */
+.otazka{font-size:1.05rem;font-weight:600;margin:0 0 10px;padding:9px 12px;border-radius:8px;background:var(--accent-soft);border:1px solid var(--accent)}
+ol.pravidla{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:p}
+ol.pravidla li{counter-increment:p;display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-elevated);cursor:pointer;line-height:1.4;font-size:.95rem}
+ol.pravidla li::before{content:counter(p) '.';color:var(--text-faint);font-weight:600;min-width:1.6em}
+ol.pravidla li.skrtnuto .text{text-decoration:line-through;color:var(--text-faint)}
+ol.pravidla li.rada{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+/* přehled domů */
+table.domy{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.78rem}
+table.domy th,table.domy td{border:1px solid var(--border);padding:4px 1px;text-align:center;overflow-wrap:break-word;line-height:1.25}
+table.domy thead th{color:var(--text-faint);font-weight:600;background:var(--bg-elevated)}
+table.domy tbody th{width:2.2em;font-weight:400}
+table.domy td.jiste{font-weight:600}
+table.domy td.odpoved{background:color-mix(in srgb,var(--ok) 30%,transparent)}
+
+/* křížkovací mřížka – pro každou kategorii blok hodnota × dům */
+.mrizka{display:flex;flex-wrap:wrap;gap:14px;margin-top:4px}
+table.blok{border-collapse:collapse;font-size:.82rem}
+table.blok caption{text-align:left;font-weight:600;color:var(--text-muted);padding-bottom:3px;font-size:.78rem}
+table.blok th{font-weight:600;color:var(--text-faint);padding:0 4px}
+table.blok tbody th{text-align:right;color:var(--text);font-weight:500;white-space:nowrap;max-width:7.5em;overflow:hidden;text-overflow:ellipsis}
+table.blok td{padding:0}
+table.blok button{width:31px;height:31px;margin:1px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);border-radius:5px;cursor:pointer;font:700 .95rem/1 system-ui,sans-serif;padding:0}
+table.blok button:hover{border-color:var(--accent)}
+table.blok button.ne{background:color-mix(in srgb,var(--text) 14%,var(--bg-elevated));color:var(--text-faint)}
+table.blok button.ano{background:color-mix(in srgb,var(--ok) 40%,var(--bg-elevated));border-color:var(--ok)}
+table.blok button.zmena{box-shadow:0 0 0 2px var(--accent)}
+.pomoc{max-width:1200px;width:calc(100% - 28px);margin:14px auto 0;box-sizing:border-box;font-size:.88rem;line-height:1.5;color:var(--text-muted)}
+.pomoc p{margin:.4em 0}
+.rekordy{font-size:.8rem;color:var(--text-muted);margin-top:12px}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🦓 Einsteinova hádanka</h1>
+  <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="nova" title="Nová hádanka (N)">🎲<span class="txt"> Nová</span></button>
+    <button class="tl" data-prikaz="sdilet" title="Sdílet odkaz na tuto hádanku">🔗<span class="txt"> Sdílet</span></button>
+    <button class="tl" data-nabidka="nabHra" title="Denní hádanka, kód hádanky, začít znovu, řešení">📅<span class="txt"> Hra</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Obtížnost"><span class="skup-nazev" aria-hidden="true">Obtížnost</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabObtiznost" title="Počet domů"><span id="popisObtiznost">4 domy</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pomoc"><span class="skup-nazev" aria-hidden="true">Pomoc</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPomoc" title="Rada, automatické křížky, nápověda">💡<span class="txt"> Pomoc</span> ▾</button>
+  </div></div>
+  <span class="info" id="info"></span>
+</header>
+
+<div id="nabHra" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nova">🎲 Nová hádanka <kbd>N</kbd></button>
+  <button class="tl" data-prikaz="denni">📅 Denní hádanka</button>
+  <hr>
+  <button class="tl" data-prikaz="sdilet">🔗 Sdílet hádanku</button>
+  <button class="tl" data-prikaz="zadat">⌨️ Zadat kód hádanky…</button>
+  <hr>
+  <button class="tl" data-prikaz="znovu">↺ Začít znovu</button>
+  <button class="tl" data-prikaz="vzdat">🏳️ Vzdát se a ukázat řešení</button>
+</div>
+<div id="nabObtiznost" class="nabidka" hidden>
+  <div class="titulek">Velikost</div>
+  <button class="tl prep" data-domu="3">3 domy × 3 vlastnosti – lehká</button>
+  <button class="tl prep" data-domu="4">4 domy × 4 vlastnosti – střední</button>
+  <button class="tl prep" data-domu="5">5 domů × 5 vlastností – klasická</button>
+  <button class="tl prep" data-domu="6">6 domů × 5 vlastností – mistrovská</button>
+</div>
+<div id="nabPomoc" class="nabidka" hidden>
+  <button class="tl" data-prikaz="poradit">🧠 Poradit další krok <kbd>H</kbd></button>
+  <button class="tl prep" data-prikaz="auto" id="prepAuto">Po fajfce doplnit křížky v řádku i sloupci</button>
+  <button class="tl" data-prikaz="vymazPozn">🧹 Vymazat mřížku</button>
+  <hr>
+  <button class="tl" data-prikaz="jak">❔ Jak hrát</button>
+</div>
+
+<section class="panel pomoc" id="jak" hidden>
+  <p>V řadě stojí domy, v každém bydlí jeden člověk. Každý má jinou národnost a každá další vlastnost (barva domu, zvíře, nápoj…) se v řadě vyskytuje právě jednou. Domy se počítají <strong>zleva</strong> – 1. dům je úplně vlevo, „hned vlevo od“ znamená v sousedním domě po levé straně.</p>
+  <p>Z pravidel odvoďte, co patří ke kterému domu. Zadání má vždy <strong>jediné řešení</strong> a dá se k němu dojít úvahou, bez zkoušení.</p>
+  <p><strong>Mřížka:</strong> klepnutím do políčka napíšete ✗ (tady to není), dalším ✓ (tady to je), třetím políčko vyprázdníte. Po fajfce se zbytek řádku i sloupce sám vykřížkuje (lze vypnout v menu Pomoc). Přehled domů nahoře se plní z fajfek.</p>
+  <p><strong>🧠 Poradit</strong> neprozradí řešení, ale ukáže další logický krok – které pravidlo (spolu s vaší mřížkou) dovolí něco vyškrtnout – a zapíše ho do mřížky. Hvězdičky v liště říkají, kolik kol takových úvah hádanka potřebuje.</p>
+  <p>Každá hádanka má kód (např. <code>5z-k2x9ab</code>), přes 🔗 Sdílet ho pošlete jako odkaz.</p>
+  <button class="btn" data-prikaz="jak">Zavřít</button>
+</section>
+
+<main>
+  <section class="panel" id="panelPravidla">
+    <h2>Pravidla</h2>
+    <p class="otazka" id="otazka"></p>
+    <ol class="pravidla" id="pravidla"></ol>
+    <div class="napoveda-mala">Klepnutím pravidlo přeškrtnete, až ho využijete.</div>
+  </section>
+
+  <section class="panel" id="panelMrizka">
+    <h2>Domy</h2>
+    <table class="domy" id="domy"></table>
+    <div class="akce">
+      <button class="btn primary" id="btnOver">✔ Ověřit řešení</button>
+      <button class="btn" data-prikaz="poradit" title="Další logický krok (H)">🧠 Poradit</button>
+    </div>
+    <div class="zprava" id="zprava" role="status" aria-live="polite"></div>
+    <h2 style="margin-top:16px">Mřížka</h2>
+    <div class="mrizka" id="mrizka"></div>
+    <div class="rekordy" id="rekord"></div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   EinsteinLogika – generátor hádanek bez DOM (testy: _test/einstein_test.js).
+   Stav úvahy: D[c*N + v] = bitová maska domů, kde ještě může být hodnota v
+   kategorie c (jako řádek v křížkovací mřížce). Odvození střídá pravidla
+   (každé samo o sobě škrtá podle svého významu) a úvahu v mřížce (v každém
+   domě je každá kategorie právě jednou). Generátor přidává pravdivá pravidla,
+   dokud odvození nevyřeší vše, pak vyhodí ta, bez kterých to jde dál.
+   ============================================================ */
+const EinsteinLogika = (function () {
+  function rng(seed) {   // mulberry32
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const nahodne = (r, n) => Math.floor(r() * n);
+  const vyber = (r, pole) => pole[nahodne(r, pole.length)];
+  const velke = t => t.charAt(0).toUpperCase() + t.slice(1);
+  function zamichej(r, pole) {
+    const a = pole.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = nahodne(r, i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  const jedina = m => m !== 0 && (m & (m - 1)) === 0;
+
+  /* Hodnoty kategorií s tvary pro věty: nom (podmět), gen (vedle/od koho), ins (mezi kým),
+     pred / neg (přísudek), klauze = popis vedlejší větou („ten, kdo pije čaj“) → čárky. */
+  const osoby = seznam => seznam.map(([nom, gen, ins]) => ({ label: nom, nom, gen, ins, pred: 'je ' + nom, neg: 'není ' + nom }));
+  const cinnosti = (sloveso, seznam) => seznam.map(([label, ak]) => {
+    const co = sloveso + ' ' + ak;
+    return { label, nom: 'ten, kdo ' + co, gen: 'toho, kdo ' + co, ins: 'tím, kdo ' + co, pred: co, neg: 'ne' + co, klauze: true };
+  });
+  const barvy = kmeny => kmeny.map(k => ({
+    label: k + 'ý', nom: 'obyvatel ' + k + 'ého domu', gen: 'obyvatele ' + k + 'ého domu', ins: 'obyvatelem ' + k + 'ého domu',
+    pred: 'bydlí v ' + k + 'ém domě', neg: 'nebydlí v ' + k + 'ém domě', dum: k + 'ý dům', domGen: k + 'ého', domIns: k + 'ým',
+  }));
+  const KATEGORIE = [
+    { id: 'narodnost', ikona: '🌍', nazev: 'Národnost', hodnoty: osoby([['Angličan', 'Angličana', 'Angličanem'], ['Němec', 'Němce', 'Němcem'], ['Švéd', 'Švéda', 'Švédem'], ['Nor', 'Nora', 'Norem'], ['Dán', 'Dána', 'Dánem'], ['Čech', 'Čecha', 'Čechem'], ['Ital', 'Itala', 'Italem'], ['Francouz', 'Francouze', 'Francouzem']]) },
+    { id: 'barva', ikona: '🏠', nazev: 'Barva domu', hodnoty: barvy(['červen', 'zelen', 'modr', 'žlut', 'bíl', 'oranžov']) },
+    { id: 'zvire', ikona: '🐾', nazev: 'Zvíře', hodnoty: cinnosti('chová', [['zebra', 'zebru'], ['pes', 'psa'], ['kočka', 'kočku'], ['kůň', 'koně'], ['pták', 'ptáka'], ['ryba', 'rybu'], ['křeček', 'křečka'], ['želva', 'želvu']]) },
+    { id: 'napoj', ikona: '🥤', nazev: 'Nápoj', hodnoty: cinnosti('pije', [['čaj', 'čaj'], ['káva', 'kávu'], ['mléko', 'mléko'], ['voda', 'vodu'], ['džus', 'džus'], ['pivo', 'pivo'], ['limonáda', 'limonádu'], ['kakao', 'kakao']]) },
+    { id: 'povolani', ikona: '💼', nazev: 'Povolání', hodnoty: osoby([['lékař', 'lékaře', 'lékařem'], ['učitel', 'učitele', 'učitelem'], ['zahradník', 'zahradníka', 'zahradníkem'], ['kuchař', 'kuchaře', 'kuchařem'], ['malíř', 'malíře', 'malířem'], ['hudebník', 'hudebníka', 'hudebníkem'], ['pekař', 'pekaře', 'pekařem'], ['pilot', 'pilota', 'pilotem']]) },
+    { id: 'sport', ikona: '⚽', nazev: 'Sport', hodnoty: cinnosti('hraje', [['fotbal', 'fotbal'], ['tenis', 'tenis'], ['šachy', 'šachy'], ['golf', 'golf'], ['hokej', 'hokej'], ['volejbal', 'volejbal'], ['kuželky', 'kuželky'], ['badminton', 'badminton']]) },
+  ];
+
+  // [6. pád, 1. pád] pořadí domu: „v prvním domě“, „Červený dům je v řadě první.“
+  function poradiDomu(h, N) {
+    if (h === 0) return ['prvním', 'první'];
+    if (h === N - 1) return ['posledním', 'poslední'];
+    if (N % 2 && h === (N - 1) / 2) return ['prostředním', 'prostřední'];
+    return [['prvním', 'druhém', 'třetím', 'čtvrtém', 'pátém', 'šestém'][h], ['první', 'druhý', 'třetí', 'čtvrtý', 'pátý', 'šestý'][h]];
+  }
+  const vLok = slovo => (/^(dr|tř|čt)/.test(slovo) ? 've ' : 'v ') + slovo;
+  const podmet = x => velke(x.nom) + (x.klauze ? ',' : '');      // za podmětem vždy pokračuje přísudek
+  const uvnitr = (x, tvar) => x[tvar] + (x.klauze ? ',' : '');    // vedlejší věta uprostřed věty
+
+  function text(p, prvky, N) {
+    const a = prvky[p.a[0]][p.a[1]], b = p.b && prvky[p.b[0]][p.b[1]];
+    const domy = a.dum && b && b.dum;
+    switch (p.typ) {
+      case 'stejny': return podmet(a) + ' ' + b.pred + '.';
+      case 'ne': return podmet(a) + ' ' + b.neg + '.';
+      case 'pozice': {
+        const [lok, nom] = poradiDomu(p.h, N);
+        return a.dum ? velke(a.dum) + ' je v řadě ' + nom + '.' : podmet(a) + ' bydlí ' + vLok(lok) + ' domě.';
+      }
+      case 'krajni': return a.dum ? velke(a.dum) + ' nestojí na kraji řady.' : podmet(a) + ' nebydlí v krajním domě.';
+      case 'vedle': return domy ? velke(a.dum) + ' stojí vedle ' + b.domGen + '.' : podmet(a) + ' bydlí vedle ' + b.gen + '.';
+      case 'mezi': return domy ? 'Mezi ' + a.domIns + ' a ' + b.domIns + ' domem stojí právě jeden dům.'
+        : 'Mezi ' + uvnitr(a, 'ins') + ' a ' + uvnitr(b, 'ins') + ' je právě jeden dům.';
+      case 'vlevo': case 'nalevo': {
+        const kde = p.typ === 'vlevo' ? 'hned' : 'někde', [x, y, smer] = p.obr ? [b, a, 'vpravo'] : [a, b, 'vlevo'];
+        return domy ? velke(x.dum) + ' stojí ' + kde + ' ' + smer + ' od ' + y.domGen + '.'
+          : podmet(x) + ' bydlí ' + kde + ' ' + smer + ' od ' + y.gen + '.';
+      }
+    }
+  }
+
+  // vztahy mezi domy x (a) a y (b) pro poziční pravidla
+  const VZTAHY = {
+    vedle: (x, y) => Math.abs(x - y) === 1,
+    mezi: (x, y) => Math.abs(x - y) === 2,
+    vlevo: (x, y) => y === x + 1,
+    nalevo: (x, y) => x < y,
+  };
+
+  /** Jedno pravidlo samo o sobě: zúží masky D (mění pole), vrací true, pokud něco škrtlo. */
+  function aplikuj(p, D, N) {
+    const ia = p.a[0] * N + p.a[1], ib = p.b ? p.b[0] * N + p.b[1] : -1;
+    const puvA = D[ia], puvB = ib >= 0 ? D[ib] : 0;
+    switch (p.typ) {
+      case 'stejny': D[ia] = D[ib] = D[ia] & D[ib]; break;
+      case 'ne':
+        if (jedina(D[ia])) D[ib] &= ~D[ia];
+        if (jedina(D[ib])) D[ia] &= ~D[ib];
+        break;
+      case 'pozice': D[ia] &= 1 << p.h; break;
+      case 'krajni': D[ia] &= ~(1 | 1 << (N - 1)); break;
+      default: {
+        const f = VZTAHY[p.typ];
+        let ma = 0, mb = 0;
+        for (let x = 0; x < N; x++) if (D[ia] >> x & 1)
+          for (let y = 0; y < N; y++) if (D[ib] >> y & 1 && f(x, y)) { ma |= 1 << x; mb |= 1 << y; }
+        D[ia] = ma; D[ib] = mb;
+      }
+    }
+    return D[ia] !== puvA || (ib >= 0 && D[ib] !== puvB);
+  }
+
+  /** Úvaha v mřížce: hodnota s jediným domem ho zabere ostatním; dům, kam se vejde jen jedna hodnota kategorie, je její. */
+  function kategorie(D, N, A) {
+    let zmena = false;
+    for (let c = 0; c < A; c++) {
+      for (let v = 0; v < N; v++) {
+        const m = D[c * N + v];
+        if (jedina(m)) for (let w = 0; w < N; w++) if (w !== v && D[c * N + w] & m) { D[c * N + w] &= ~m; zmena = true; }
+      }
+      for (let h = 0; h < N; h++) {
+        let kde = -1, n = 0;
+        for (let v = 0; v < N; v++) if (D[c * N + v] >> h & 1) { n++; kde = v; }
+        if (n === 1 && D[c * N + kde] !== 1 << h) { D[c * N + kde] = 1 << h; zmena = true; }
+      }
+    }
+    return zmena;
+  }
+
+  /** Logické odvození do ustálení; kola = kolik kol úvah bylo potřeba (míra obtížnosti). */
+  function odvod(N, A, pravidla, D0) {
+    const D = D0 ? D0.slice() : new Array(A * N).fill((1 << N) - 1);
+    for (let kola = 1; ; kola++) {
+      let zmena = false;
+      for (const p of pravidla) if (aplikuj(p, D, N)) zmena = true;
+      while (kategorie(D, N, A)) zmena = true;
+      if (!zmena || D.some(m => !m)) return { D, kola };
+    }
+  }
+  const vyreseno = D => D.every(jedina);
+
+  const VAHY = { stejny: 6, ne: 2, vedle: 3, vlevo: 2, nalevo: 1, mezi: 1, pozice: 1, krajni: 1 };
+
+  // pravdivé pravidlo podle řešení (pos[c][v] = dům, kdo[c][h] = hodnota v domě) nebo null
+  function tvor(typ, s, r) {
+    const { N, A, pos, kdo } = s, hodn = (c, h) => [c, kdo[c][h]], kat = () => nahodne(r, A);
+    switch (typ) {
+      case 'stejny': {
+        const h = nahodne(r, N), c1 = kat(), c2 = kat();
+        return c1 === c2 ? null : { typ, a: hodn(c1, h), b: hodn(c2, h) };
+      }
+      case 'ne': {
+        const h = nahodne(r, N), h2 = nahodne(r, N), c1 = kat(), c2 = kat();
+        return h === h2 || c1 === c2 ? null : { typ, a: hodn(c1, h), b: hodn(c2, h2) };
+      }
+      case 'pozice': { const c = kat(), v = nahodne(r, N); return { typ, a: [c, v], h: pos[c][v] }; }
+      case 'krajni': {
+        const c = kat(), v = nahodne(r, N), h = pos[c][v];
+        return h === 0 || h === N - 1 ? null : { typ, a: [c, v] };
+      }
+      case 'vedle': case 'mezi': {
+        const d = typ === 'vedle' ? 1 : 2, h = nahodne(r, N), h2 = h + (r() < 0.5 ? d : -d);
+        return h2 < 0 || h2 >= N ? null : { typ, a: hodn(kat(), h), b: hodn(kat(), h2) };
+      }
+      case 'vlevo': { const h = nahodne(r, N - 1); return { typ, a: hodn(kat(), h), b: hodn(kat(), h + 1), obr: r() < 0.5 }; }
+      case 'nalevo': {
+        const h = nahodne(r, N - 1), h2 = h + 1 + nahodne(r, N - 1 - h);
+        return { typ, a: hodn(kat(), h), b: hodn(kat(), h2), obr: r() < 0.5 };
+      }
+    }
+  }
+
+  function sestav(N, r) {
+    const A = Math.min(N, 5);
+    // národnost a zvíře (kvůli otázce na zebru) vždy, zbytek náhodně
+    const kat = [KATEGORIE[0], KATEGORIE[2]].concat(zamichej(r, KATEGORIE.filter((_, i) => i !== 0 && i !== 2)).slice(0, A - 2));
+    const prvky = kat.map(k => {
+      const h = zamichej(r, k.hodnoty).slice(0, N);
+      if (k.id === 'zvire' && !h.includes(k.hodnoty[0])) h[0] = k.hodnoty[0];   // zebra do otázky
+      return h.sort((x, y) => x.label.localeCompare(y.label, 'cs'));
+    });
+    const pos = [], kdo = [];
+    for (let c = 0; c < A; c++) {
+      pos.push(zamichej(r, Array.from({ length: N }, (_, i) => i)));
+      kdo.push([]);
+      pos[c].forEach((h, v) => { kdo[c][h] = v; });
+    }
+    const s = { N, A, pos, kdo }, typy = [];
+    for (const [t, w] of Object.entries(VAHY)) for (let i = 0; i < w; i++) typy.push(t);
+    let pravidla = [];
+    const texty = new Set();
+    let hotovo = false;
+    for (let i = 0; i < 400 && !hotovo; i++) {
+      const p = tvor(vyber(r, typy), s, r);
+      if (!p) continue;
+      p.text = text(p, prvky, N);
+      if (texty.has(p.text)) continue;
+      texty.add(p.text); pravidla.push(p);
+      hotovo = vyreseno(odvod(N, A, pravidla).D);
+    }
+    if (!hotovo) return null;
+    for (const p of zamichej(r, pravidla)) {
+      const bez = pravidla.filter(q => q !== p);
+      if (vyreseno(odvod(N, A, bez).D)) pravidla = bez;
+    }
+    pravidla = zamichej(r, pravidla);
+    const otazka = [1, prvky[1].indexOf(KATEGORIE[2].hodnoty[0])];   // Kdo chová zebru?
+    return { A, kat: kat.map(k => ({ id: k.id, ikona: k.ikona, nazev: k.nazev })), prvky, pos, pravidla, otazka, kroku: odvod(N, A, pravidla).kola };
+  }
+
+  /** Hádanka určená semínkem – stejné semínko = stejné zadání (denní hádanka, sdílený odkaz, uložená hra). */
+  function generuj(N, seed) {
+    const r = rng(seed);
+    for (;;) { const h = sestav(N, r); if (h) return Object.assign(h, { N, seed }); }
+  }
+  // věta odpovědi na otázku: „Nor chová zebru.“
+  function odpoved(h) {
+    const [c, v] = h.otazka, dum = h.pos[c][v], kdo = h.prvky[0][h.pos[0].indexOf(dum)];
+    return { dum, kdo: kdo.label, text: velke(kdo.nom) + ' ' + h.prvky[c][v].pred + '.', otazka: 'Kdo ' + h.prvky[c][v].pred + '?' };
+  }
+
+  return { generuj, odvod, aplikuj, kategorie, vyreseno, odpoved, rng };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const KLIC = 'webapp_hra_einstein';
+  const L = EinsteinLogika;
+  let nast = { N: 4, auto: true };
+  let hra = null;        // { seed, N, denni, poz[c][v][h] (0 nic / 1 ✗ / 2 ✓), skrt[], pokusy, rady, start, cas, hotovo, vzdano }
+  let hadanka = null;    // výsledek EinsteinLogika.generuj
+  let radaPravidlo = -1, zmenene = new Set();   // zvýraznění poslední rady
+
+  function uloz() {
+    if (hra && !hra.hotovo) { hra.cas = ubehlo(); hra.start = Date.now(); }   // čas přežije zavření stránky
+    try { localStorage.setItem(KLIC, JSON.stringify({ nast, hra })); } catch { /* nevadí */ }
+  }
+  function nacti() {
+    try {
+      const d = JSON.parse(localStorage.getItem(KLIC) || 'null');
+      if (d && d.nast) nast = Object.assign(nast, d.nast);
+      if (d && d.hra && d.hra.poz) return d.hra;
+    } catch { /* poškozená data – začne se znovu */ }
+    return null;
+  }
+
+  const dnes = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+  const domu = n => n + (n < 5 ? ' domy' : ' domů');
+  const rekord = () => Rekord.sleduj(KLIC + '_cas_' + hra.N, {
+    vyssiLepsi: false, format: v => formatCas(v), popisek: 'Nejrychlejší vyřešení (' + domu(hra.N) + ')',
+  });
+  const formatCas = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  const ubehlo = () => hra.hotovo ? hra.cas : hra.cas + Math.floor((Date.now() - hra.start) / 1000);
+  const hvezdy = k => '★'.repeat(k <= 4 ? 1 : k <= 7 ? 2 : k <= 10 ? 3 : 4);
+
+  // kód hádanky: počet domů, „z“, semínko v base36 – „5z-k2x9ab“
+  const kodHadanky = h => h.N + 'z-' + h.seed.toString(36);
+  function ctiKod(t) {
+    const m = String(t || '').trim().toLowerCase().match(/^([3-6])z-([0-9a-z]{1,7})$/);
+    if (!m) return null;
+    const seed = parseInt(m[2], 36);
+    return seed < 2 ** 32 ? { N: +m[1], seed } : null;
+  }
+  const odkaz = () => new URL('../', location.href).href + '#obsah/einstein.html?h=' + kodHadanky(hra);
+  function otevriKod(k) {
+    nast.N = k.N;
+    if (hra && kodHadanky(hra) === kodHadanky(k)) return spust();   // stejná hádanka – nechat rozehraný stav
+    zalozHru(k.seed, false, k.N);
+  }
+
+  function zalozHru(seed, denni, N) {
+    hra = { seed, N, denni: !!denni, poz: null, skrt: [], pokusy: 0, rady: 0, start: Date.now(), cas: 0, hotovo: false, vzdano: false };
+    spust();
+  }
+  function spust() {
+    $('zprava').className = 'zprava'; $('zprava').textContent = '⏳ Sestavuji hádanku…';
+    hadanka = null;
+    setTimeout(dokonci, 20);
+  }
+  function dokonci() {
+    hadanka = L.generuj(hra.N, hra.seed);
+    radaPravidlo = -1; zmenene.clear();
+    const { A } = hadanka, N = hra.N;
+    if (!hra.poz || hra.poz.length !== A) hra.poz = Array.from({ length: A }, () => Array.from({ length: N }, () => new Array(N).fill(0)));
+    if (hra.skrt.length !== hadanka.pravidla.length) hra.skrt = new Array(hadanka.pravidla.length).fill(false);
+    hra.start = Date.now();
+    $('zprava').textContent = ''; $('zprava').className = 'zprava';
+    vykresli();
+    if (hra.hotovo) zobrazKonec(false);
+    uloz();
+  }
+
+  /* ---------- vykreslení ---------- */
+  function vykresli() {
+    const N = hra.N, { A, kat, prvky } = hadanka;
+    $('popisObtiznost').textContent = domu(nast.N);
+    document.querySelectorAll('[data-domu]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.domu === nast.N)));
+    $('prepAuto').setAttribute('aria-pressed', String(nast.auto));
+    $('otazka').textContent = '❓ ' + L.odpoved(hadanka).otazka;
+    $('pravidla').innerHTML = hadanka.pravidla.map((p, i) => '<li data-p="' + i + '"><span class="text">' + p.text + '</span></li>').join('');
+    let h = '';
+    for (let c = 0; c < A; c++) {
+      h += '<table class="blok"><caption>' + kat[c].ikona + ' ' + kat[c].nazev + '</caption><thead><tr><th></th>';
+      for (let d = 0; d < N; d++) h += '<th>' + (d + 1) + '.</th>';
+      h += '</tr></thead><tbody>';
+      for (let v = 0; v < N; v++) {
+        h += '<tr><th title="' + prvky[c][v].label + '">' + prvky[c][v].label + '</th>';
+        for (let d = 0; d < N; d++) h += '<td><button data-c="' + c + '" data-v="' + v + '" data-h="' + d + '" aria-label="' + prvky[c][v].label + ', ' + (d + 1) + '. dům"></button></td>';
+        h += '</tr>';
+      }
+      h += '</tbody></table>';
+    }
+    $('mrizka').innerHTML = h;
+    rekord().prvek($('rekord'));
+    obnov();
+  }
+
+  function obnov() {
+    if (!hadanka) return;
+    const N = hra.N, { A, kat, prvky } = hadanka;
+    document.querySelectorAll('#mrizka button').forEach(b => {
+      const s = hra.poz[b.dataset.c][b.dataset.v][b.dataset.h];
+      b.className = (s === 1 ? 'ne' : s === 2 ? 'ano' : '') + (zmenene.has(b.dataset.c + ',' + b.dataset.v + ',' + b.dataset.h) ? ' zmena' : '');
+      b.textContent = s === 1 ? '✗' : s === 2 ? '✓' : '';
+    });
+    // přehled domů z fajfek
+    const odp = L.odpoved(hadanka);
+    let t = '<thead><tr><th></th>';
+    for (let d = 0; d < N; d++) t += '<th>' + (d + 1) + '.</th>';
+    t += '</tr></thead><tbody>';
+    for (let c = 0; c < A; c++) {
+      t += '<tr><th title="' + kat[c].nazev + '">' + kat[c].ikona + '</th>';
+      for (let d = 0; d < N; d++) {
+        const v = [];
+        for (let w = 0; w < N; w++) if (hra.poz[c][w][d] === 2) v.push(prvky[c][w].label);
+        const odpoved = hra.hotovo && !hra.vzdano && c === 0 && d === odp.dum;
+        t += '<td class="' + (v.length === 1 ? 'jiste' : '') + (odpoved ? ' odpoved' : '') + '">' + (v.length > 1 ? '?' : v[0] || '') + '</td>';
+      }
+      t += '</tr>';
+    }
+    $('domy').innerHTML = t + '</tbody>';
+    document.querySelectorAll('#pravidla li').forEach((li, i) => {
+      li.className = (hra.skrt[i] ? 'skrtnuto' : '') + (i === radaPravidlo ? ' rada' : '');
+    });
+    $('btnOver').disabled = hra.hotovo;
+    info();
+  }
+  function info() {
+    $('info').textContent = (hra.denni ? '📅 denní · ' : '') + '#' + kodHadanky(hra) + ' · ' + hvezdy(hadanka.kroku) + ' · ⏱ ' + formatCas(ubehlo());
+  }
+
+  /* ---------- hraní ---------- */
+  function nastavPolicko(c, v, d, s) {
+    const N = hra.N, poz = hra.poz;
+    poz[c][v][d] = s;
+    if (s === 2 && nast.auto) {   // fajfka vykřížkuje zbytek řádku i sloupce bloku
+      for (let x = 0; x < N; x++) {
+        if (x !== d && poz[c][v][x] === 0) poz[c][v][x] = 1;
+        if (x !== v && poz[c][x][d] === 0) poz[c][x][d] = 1;
+      }
+    }
+  }
+  function over() {
+    if (!hadanka || hra.hotovo) return;
+    const N = hra.N, { A, pos } = hadanka;
+    let chybi = 0, spatne = 0;
+    for (let c = 0; c < A; c++) for (let v = 0; v < N; v++) {
+      const ano = [];
+      hra.poz[c][v].forEach((s, d) => { if (s === 2) ano.push(d); });
+      if (ano.length !== 1) chybi++;
+      else if (ano[0] !== pos[c][v]) spatne++;
+    }
+    const z = $('zprava');
+    if (chybi) { z.className = 'zprava chyba'; z.textContent = 'Doplňte do každého řádku mřížky právě jednu fajfku ✓ (chybí nebo přebývá v ' + chybi + (chybi === 1 ? ' řádku).' : ' řádcích).'); return; }
+    if (spatne) {
+      hra.pokusy++;
+      z.className = 'zprava chyba';
+      z.textContent = '✗ Ještě to nesedí – ' + (spatne === 1 ? 'jedna fajfka je' : spatne < 5 ? spatne + ' fajfky jsou' : spatne + ' fajfek je') + ' ve špatném domě.';
+      uloz(); return;
+    }
+    hra.hotovo = true; hra.cas = ubehlo();
+    uloz(); obnov(); zobrazKonec(true);
+  }
+  function zobrazKonec(prave) {
+    const odp = L.odpoved(hadanka);
+    let t;
+    if (hra.vzdano) t = '🏳️ Řešení je v mřížce. ' + odp.text;
+    else {
+      t = '🎉 Vyřešeno! ' + odp.text + ' · ' + formatCas(hra.cas);
+      if (hra.pokusy) t += ' · chybných ověření ' + hra.pokusy;
+      if (hra.rady) t += ' · nápověd ' + hra.rady;
+      else if (prave && rekord().zapis(hra.cas)) t += ' · 🏆 nový rekord!';
+    }
+    $('zprava').className = 'zprava ' + (hra.vzdano ? '' : 'ok');
+    $('zprava').textContent = t;
+    if (prave) rekord().prvek($('rekord'));
+  }
+
+  /* Rada = jeden logický krok nad mřížkou hráče: z ✗/✓ se sestaví masky možných domů,
+     zkusí se úvaha v mřížce a pak pravidla po jednom; první, které něco škrtne, se zapíše. */
+  function poradit() {
+    if (!hadanka || hra.hotovo) return;
+    const N = hra.N, { A, prvky, pos } = hadanka, z = $('zprava');
+    const D = [];
+    for (let c = 0; c < A; c++) for (let v = 0; v < N; v++) {
+      const r = hra.poz[c][v];
+      const ano = r.reduce((m, s, d) => s === 2 ? m | 1 << d : m, 0);
+      D.push(ano || r.reduce((m, s, d) => s === 1 ? m : m | 1 << d, 0));
+    }
+    z.className = 'zprava';
+    // chyba v mřížce: vyškrtnutý správný dům, nebo fajfka jinde
+    for (let c = 0; c < A; c++) for (let v = 0; v < N; v++) {
+      if (!(D[c * N + v] >> pos[c][v] & 1)) {
+        z.className = 'zprava chyba';
+        z.textContent = '⚠️ V řádku „' + prvky[c][v].label + '“ je chyba – vyškrtli jste správný dům, nebo je fajfka jinde, než má být.';
+        return;
+      }
+    }
+    // zapíše rozdíl mezi D a nove do mřížky, vrátí popis změn
+    function zapis(nove) {
+      const casti = [];
+      zmenene.clear();
+      for (let c = 0; c < A; c++) for (let v = 0; v < N; v++) {
+        const i = c * N + v, pryc = [], r = hra.poz[c][v];
+        for (let d = 0; d < N; d++) if (D[i] >> d & 1 && !(nove[i] >> d & 1)) { pryc.push(d + 1); r[d] = 1; zmenene.add(c + ',' + v + ',' + d); }
+        const jistyDum = nove[i] && !(nove[i] & (nove[i] - 1)) ? Math.log2(nove[i]) : -1;
+        const novaFajfka = jistyDum >= 0 && r[jistyDum] !== 2;
+        if (novaFajfka) { nastavPolicko(c, v, jistyDum, 2); zmenene.add(c + ',' + v + ',' + jistyDum); }
+        if (novaFajfka) casti.push(prvky[c][v].label + ' – ' + (jistyDum + 1) + '. dům');
+        else if (pryc.length) casti.push(prvky[c][v].label + ' – ne v ' + pryc.join('., ') + '. domě');
+      }
+      return casti;
+    }
+    function hlas(odkud, casti) {
+      hra.rady++;
+      z.textContent = '🧠 ' + odkud + ' plyne: ' + casti.join('; ') + '.';
+      uloz(); obnov();
+    }
+    // 1) řádek, kde zbývá jediný dům, ale chybí fajfka
+    let casti = zapis(D);
+    if (casti.length) { radaPravidlo = -1; return hlas('Z mřížky (v řádku zbývá jediný dům)', casti); }
+    if (L.vyreseno(D)) { z.textContent = '🧠 Mřížka už určuje celé řešení – stiskněte ✔ Ověřit řešení.'; return; }
+    // 2) úvaha v mřížce: každý dům má v každé kategorii právě jednu hodnotu
+    const nove = D.slice();
+    if (L.kategorie(nove, N, A)) { radaPravidlo = -1; return hlas('Z mřížky (každá hodnota je v jiném domě)', zapis(nove)); }
+    // 3) pravidla po jednom
+    for (let k = 0; k < hadanka.pravidla.length; k++) {
+      const n2 = D.slice();
+      if (!L.aplikuj(hadanka.pravidla[k], n2, N)) continue;
+      radaPravidlo = k;
+      return hlas('Z pravidla ' + (k + 1), zapis(n2));
+    }
+    z.textContent = '🧠 Ze samotných pravidel už nic dalšího neplyne – zkuste je kombinovat.';
+  }
+
+  const PRIKAZY = {
+    nova() { zalozHru(Math.floor(Math.random() * 36 ** 6), false, nast.N); },   // 6 znaků v kódu hádanky
+    denni() { zalozHru(dnes(), true, 4); },
+    async sdilet() {
+      if (!hadanka) return;
+      const url = odkaz(), text = '🦓 Einsteinova hádanka ' + kodHadanky(hra);
+      if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+        try { await navigator.share({ title: text, url }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      try { await navigator.clipboard.writeText(url); Dialog.info('🔗 Odkaz na hádanku ' + kodHadanky(hra) + ' je ve schránce.'); }
+      catch { await Dialog.zeptej('Zkopírujte odkaz na hádanku:', url); }
+    },
+    async zadat() {
+      const t = await Dialog.zeptej('Kód hádanky (např. 5z-k2x9ab) nebo celý odkaz:', '');
+      if (t === null) return;
+      const k = ctiKod(t.includes('h=') ? t.split('h=')[1].split(/[&#]/)[0] : t);
+      if (!k) return Dialog.chyba('Tohle není platný kód hádanky.');
+      otevriKod(k);
+    },
+    znovu() {
+      Object.assign(hra, { poz: null, skrt: [], pokusy: 0, rady: 0, cas: 0, hotovo: false, vzdano: false });
+      spust();
+    },
+    async vzdat() {
+      if (!hadanka || hra.hotovo) return;
+      if (!await Dialog.potvrd('Opravdu ukázat řešení? Hra skončí bez zápisu rekordu.')) return;
+      const N = hra.N;
+      hra.poz.forEach((radky, c) => radky.forEach((r, v) => { for (let d = 0; d < N; d++) r[d] = d === hadanka.pos[c][v] ? 2 : 1; }));
+      hra.hotovo = true; hra.vzdano = true; hra.cas = ubehlo(); zmenene.clear();
+      uloz(); obnov(); zobrazKonec(false);
+    },
+    poradit,
+    vymazPozn() {
+      if (!hadanka || hra.hotovo) return;
+      hra.poz.forEach(radky => radky.forEach(r => r.fill(0)));
+      radaPravidlo = -1; zmenene.clear(); obnov(); uloz();
+    },
+    auto() { nast.auto = !nast.auto; $('prepAuto').setAttribute('aria-pressed', String(nast.auto)); uloz(); },
+    jak() { $('jak').hidden = !$('jak').hidden; },
+  };
+
+  /* ---------- události ---------- */
+  function zavriNabidky() {
+    document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+    document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  }
+  document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const n = $(b.dataset.nabidka), bylo = !n.hidden;
+    zavriNabidky();
+    if (bylo) return;
+    n.hidden = false; b.setAttribute('aria-expanded', 'true');
+    const r = b.getBoundingClientRect();
+    n.style.top = (r.bottom + 4) + 'px';
+    n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+  }));
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-prikaz], [data-domu]');
+    if (b) {
+      e.stopPropagation();
+      if (b.dataset.prikaz) { if (b.dataset.prikaz !== 'auto') zavriNabidky(); return PRIKAZY[b.dataset.prikaz](); }
+      nast.N = +b.dataset.domu;
+      zavriNabidky();
+      return PRIKAZY.nova();
+    }
+    if (!e.target.closest('.nabidka')) zavriNabidky();
+  });
+  addEventListener('resize', zavriNabidky);
+
+  $('mrizka').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !hadanka || hra.hotovo) return;
+    const c = +b.dataset.c, v = +b.dataset.v, d = +b.dataset.h;
+    nastavPolicko(c, v, d, (hra.poz[c][v][d] + 1) % 3);   // nic → ✗ → ✓ → nic
+    zmenene.clear(); radaPravidlo = -1;
+    obnov(); uloz();
+  });
+  $('pravidla').addEventListener('click', e => {
+    const li = e.target.closest('li'); if (!li || !hadanka) return;
+    hra.skrt[li.dataset.p] = !hra.skrt[li.dataset.p];
+    obnov(); uloz();
+  });
+  $('btnOver').addEventListener('click', over);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') zavriNabidky();
+    if (e.target.closest('input, textarea, dialog') || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'n' || e.key === 'N') PRIKAZY.nova();
+    else if (e.key === 'h' || e.key === 'H') poradit();
+  });
+
+  if (window.self === window.top) document.body.classList.add('samostatne');
+  const ulozena = nacti(), zOdkazu = ctiKod(new URLSearchParams(location.search).get('h'));
+  if (ulozena) hra = ulozena;
+  if (zOdkazu) otevriKod(zOdkazu);
+  else if (ulozena) spust();
+  else PRIKAZY.denni();
+  setInterval(() => { if (hadanka && !hra.hotovo) info(); }, 1000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+// favicon_gen – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Favicon generátor': 'Favicon Generator',
+  'Zdroj': 'Source',
+  'Emoji': 'Emoji',
+  'Text': 'Text',
+  'Obrázek': 'Image',
+  'Text (1–3 znaky)': 'Text (1–3 characters)',
+  'Barva textu': 'Text colour',
+  'Nahraj obrázek': 'Upload an image',
+  'Barva pozadí': 'Background colour',
+  'Tvar pozadí': 'Background shape',
+  'Čtverec': 'Square',
+  'Zaoblené rohy': 'Rounded corners',
+  'Kruh': 'Circle',
+  'Velikost prvku': 'Element size',
+  'Stáhnout (PNG sada)': 'Download (PNG set)',
+  'Náhled': 'Preview',
+  'Můj web': 'My website',
+  '180×180 (Apple)': '180×180 (Apple)',
+  'Stáhne se PNG ve velikostech 16, 32, 64, 180 a 512 px. Do HTML vlož': 'Downloads PNGs in sizes 16, 32, 64, 180 and 512 px. Add to your HTML',
+});

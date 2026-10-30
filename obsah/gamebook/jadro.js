@@ -36,10 +36,11 @@
   /* ---------- podmínky a efekty ---------- */
   function splneno(st, pokud) {
     if (!pokud) return true;
-    if (pokud.ma && !st.predmety.includes(pokud.ma)) return false;
-    if (pokud.nema && st.predmety.includes(pokud.nema)) return false;
-    if (pokud.priznak && !st.priznaky.includes(pokud.priznak)) return false;
-    if (pokud.bez && st.priznaky.includes(pokud.bez)) return false;
+    // ma/nema/priznak/bez: jeden klíč nebo seznam (pak musí platit pro všechny)
+    if ([].concat(pokud.ma || []).some(x => !st.predmety.includes(x))) return false;
+    if ([].concat(pokud.nema || []).some(x => st.predmety.includes(x))) return false;
+    if ([].concat(pokud.priznak || []).some(x => !st.priznaky.includes(x))) return false;
+    if ([].concat(pokud.bez || []).some(x => st.priznaky.includes(x))) return false;
     if (pokud.zlato != null && st.zlato < pokud.zlato) return false;
     return true;
   }
@@ -157,8 +158,9 @@
       if (!s.konec && !cile(s).length) chyby.push(id + ': slepá ulička');
       for (const c of cile(s)) if (!p.sceny[c]) chyby.push(id + ' → ' + c + ': neexistuje');
       for (const v of s.volby || []) {
-        const pd = v.pokud && (v.pokud.ma || v.pokud.nema);
-        if (pd && !p.predmety[pd]) chyby.push(id + ': neznámý předmět ' + pd);
+        const pd = v.pokud ? [].concat(v.pokud.ma || [], v.pokud.nema || []) : [];
+        for (const x of pd) if (!p.predmety[x]) chyby.push(id + ': neznámý předmět ' + x);
+        for (const x of [].concat((v.efekty || {}).predmet || [], (v.efekty || {}).odeber || [])) if (!p.predmety[x]) chyby.push(id + ': neznámý předmět ' + x);
       }
       const ef = s.efekty || {};
       for (const x of [].concat(ef.predmet || [], ef.odeber || [])) if (!p.predmety[x]) chyby.push(id + ': neznámý předmět ' + x);

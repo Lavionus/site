@@ -1,0 +1,22 @@
+// gear_ratio – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Převodové poměry': 'Gear ratios',
+  'Ozubená kola, řemenice i řetězová kola – i víc stupňů za sebou. Zadejte zuby nebo průměry.': 'Gears, pulleys and sprockets – including several stages in a row. Enter teeth or diameters.',
+  'Vstup': 'Input',
+  'Otáčky vstupu (ot/min)': 'Input speed (rpm)',
+  'Krout. moment (N·m, volit.)': 'Torque (N·m, optional)',
+  'Účinnost na stupeň (%)': 'Efficiency per stage (%)',
+  'Převodové stupně': 'Gear stages',
+  'Přidat stupeň': 'Add stage',
+  'Výsledek': 'Result',
+  'Otáčky výstupu': 'Output speed',
+  'Krouticí moment výstupu': 'Output torque',
+  'Charakter': 'Type',
+  'Poměr i = z₂/z₁ (poháněné/hnací). i > 1 → otáčky klesají, moment roste (do pomala). Moment se násobí poměrem a účinností.': 'Ratio i = z₂/z₁ (driven/driving). i > 1 → speed drops, torque rises (reduction). Torque is multiplied by the ratio and efficiency.',
+  'Stupeň {i}': 'Stage {i}',
+  'Hnací kolo – zuby / ø': 'Driving wheel – teeth / ø',
+  'Poháněné kolo – zuby / ø': 'Driven wheel – teeth / ø',
+  'Poměr stupně': 'Stage ratio',
+  'Do rychla (multiplikace) – moment klesá': 'Step-up (overdrive) – torque drops',
+  'Do pomala (redukce) – moment roste': 'Reduction (step-down) – torque rises',
+});

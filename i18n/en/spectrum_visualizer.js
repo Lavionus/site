@@ -1,0 +1,20 @@
+// spectrum_visualizer – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Zvukový vizualizér': 'Audio visualiser',
+  'Generátor zvukového spektra / vizualizér': 'Audio spectrum generator / visualiser',
+  'Mikrofon': 'Microphone',
+  'Audio soubor': 'Audio file',
+  'Stop': 'Stop',
+  'Sloupce': 'Bars',
+  'Vlna (osciloskop)': 'Wave (oscilloscope)',
+  'Kruh': 'Circle',
+  'Zrcadlo': 'Mirror',
+  'Duha': 'Rainbow',
+  'Modrá': 'Blue',
+  'Oheň': 'Fire',
+  'Zelená': 'Green',
+  'Klikni na 🎤 Mikrofon (povol přístup) nebo nahraj audio soubor. Vizualizace běží lokálně přes Web Audio API.': 'Click 🎤 Microphone (allow access) or load an audio file. The visualisation runs locally via the Web Audio API.',
+  'Naslouchám mikrofonu…': 'Listening to the microphone…',
+  'Nelze spustit mikrofon: {message}': 'Cannot start the microphone: {message}',
+  'Přehrávám: {name}': 'Playing: {name}',
+});

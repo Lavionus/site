@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚣 Převozník</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="../rekord.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;min-height:100vh;color:var(--text)}
+[hidden]{display:none !important}
+
+/* horní lišta se skupinami a rozbalovacími nabídkami (vzor prompty.html / ciselny_kod.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .info{margin-left:auto;font-size:.8rem;color:var(--text-muted);white-space:nowrap;padding-right:4px}
+.samostatne .lista{padding-right:72px}
+@media (max-width:640px){.lista{flex-wrap:wrap}.lista .info{margin-left:0}.lista .txt{display:none}}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .tl[aria-current="true"]{background:var(--accent-soft)}
+.nabidka .hv{margin-left:auto;color:var(--warn);letter-spacing:1px;font-size:.8rem}
+
+main{max-width:1150px;margin:0 auto;padding:14px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);gap:16px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:minmax(0,1fr)}.panel.hriste{order:-1}}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,10px);padding:14px}
+.panel h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin:0 0 8px;font-weight:600}
+.zadani h3{margin:0 0 6px;font-size:1.1rem}
+.zadani p{margin:0 0 8px;line-height:1.5;font-size:.92rem;color:var(--text-muted)}
+.zadani ul{margin:0 0 6px;padding-left:1.2em;line-height:1.5;font-size:.92rem}
+.zadani li{margin-bottom:3px}
+.historie{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:.88rem;max-height:220px;overflow:auto}
+.historie li{color:var(--text-muted)}
+.historie b{color:var(--text-faint);display:inline-block;min-width:1.8em;font-weight:600}
+.rekordy{font-size:.8rem;color:var(--text-muted);margin-top:10px}
+.pomoc{max-width:1150px;width:calc(100% - 28px);margin:14px auto 0;box-sizing:border-box;font-size:.88rem;line-height:1.5;color:var(--text-muted)}
+.pomoc p{margin:.4em 0}
+
+/* scéna: levý břeh | řeka s lodí | pravý břeh */
+.scena{display:grid;grid-template-columns:1fr minmax(104px,1.15fr) 1fr;min-height:250px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.breh{background:color-mix(in srgb,var(--ok) 16%,var(--bg-elevated));padding:8px 6px;display:flex;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:6px}
+.breh.aktivni{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 60%,transparent)}
+.breh .popis{flex-basis:100%;text-align:center;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint)}
+.reka{position:relative;background:repeating-linear-gradient(170deg,color-mix(in srgb,var(--accent) 34%,var(--bg-elevated)) 0 14px,color-mix(in srgb,var(--accent) 24%,var(--bg-elevated)) 14px 28px)}
+.scena.most .reka{background:linear-gradient(color-mix(in srgb,var(--bg-deep) 40%,#000),color-mix(in srgb,var(--bg-deep) 15%,#000))}   /* propast: tmavá v obou tématech */
+.scena.most .reka::before{content:'';position:absolute;left:0;right:0;top:50%;height:46px;transform:translateY(-50%);background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--warn) 55%,var(--bg-elevated)) 0 9px,color-mix(in srgb,var(--warn) 30%,var(--bg-elevated)) 9px 11px);border-top:2px solid var(--border-strong);border-bottom:2px solid var(--border-strong)}
+.scena.most .breh{background:color-mix(in srgb,var(--text) 10%,var(--bg-elevated))}
+.lod{position:absolute;top:50%;left:3%;width:62%;min-height:58px;transform:translateY(-50%);transition:left .65s ease-in-out;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:3px;padding:6px 3px 4px;box-sizing:border-box;
+  background:color-mix(in srgb,var(--warn) 45%,var(--bg-panel));border:2px solid color-mix(in srgb,var(--warn) 70%,var(--text));border-radius:6px 6px 26px 26px}
+.lod.vpravo{left:35%}
+.lod.rada{box-shadow:0 0 0 3px var(--accent)}
+.lod .prazdna{font-size:1.4rem;opacity:.6}
+.scena.most .lod{background:color-mix(in srgb,var(--warn) 25%,var(--bg-panel));border-radius:10px;border-style:dashed}
+
+.postava{position:relative;display:flex;flex-direction:column;align-items:center;font-size:1.75rem;line-height:1.05;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 3px 2px;min-width:46px;cursor:pointer;font-family:inherit}
+.postava:hover{border-color:var(--accent)}
+.postava small{font-size:.6rem;color:var(--text-muted);margin-top:2px;white-space:nowrap}
+.postava .vesla{position:absolute;top:-6px;right:-5px;font-size:.75rem}
+.lod .postava{font-size:1.25rem;min-width:36px;padding:2px 2px 1px}
+.lod .postava small{font-size:.55rem}
+.postava.daleko{opacity:.55;cursor:default}
+.ovladani{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:7px;cursor:pointer;font-size:.92rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.zprava{text-align:center;min-height:1.4em;margin-top:10px;font-size:.92rem;line-height:1.45}
+.zprava.ok{color:var(--ok)}
+.zprava.chyba{color:var(--danger)}
+.zprava.rada{color:var(--text)}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🚣 Převozník</h1>
+  <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabUlohy" title="Výběr úlohy">📋<span class="txt"> Úloha</span> ▾</button>
+    <button class="tl" data-prikaz="znovu" title="Začít úlohu znovu">↺<span class="txt"> Znovu</span></button>
+    <button class="tl" data-prikaz="reseni" title="Přehrát nejkratší řešení">▶<span class="txt"> Řešení</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Tah"><span class="skup-nazev" aria-hidden="true">Tah</span><div class="skup-tl">
+    <button class="tl" data-prikaz="zpet" id="tlZpet" title="Vrátit plavbu (Ctrl+Z)">↶</button>
+    <button class="tl" data-prikaz="vpred" id="tlVpred" title="Znovu provést plavbu (Ctrl+Y)">↷</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pomoc"><span class="skup-nazev" aria-hidden="true">Pomoc</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="poradit" title="Poradit další plavbu (H)">🧠<span class="txt"> Poradit</span></button>
+    <button class="tl" data-nabidka="nabPomoc" title="Nápověda">❓ ▾</button>
+  </div></div>
+  <span class="info" id="info"></span>
+</header>
+
+<div id="nabUlohy" class="nabidka" hidden></div>
+<div id="nabPomoc" class="nabidka" hidden>
+  <button class="tl" data-prikaz="poradit">🧠 Poradit další plavbu <kbd>H</kbd></button>
+  <button class="tl" data-prikaz="reseni">▶ Přehrát nejkratší řešení</button>
+  <hr>
+  <button class="tl" data-prikaz="jak">❔ Jak hrát</button>
+</div>
+
+<section class="panel pomoc" id="jak" hidden>
+  <p>Všechny postavy je potřeba dostat z levého břehu na pravý. Klepnutím postavu posadíte do lodi (jen z toho břehu, kde loď kotví), dalším klepnutím ji vysadíte. Pak <strong>Plout</strong>. Loď nikdy nejede prázdná a musí v ní být někdo, kdo umí veslovat (🚣).</p>
+  <p>Pravidla platí na obou březích i v lodi – co by pravidlo porušilo, hra nedovolí a vysvětlí proč. U mostu nese lucernu vždy ten, kdo jde, a dvojice jde tempem pomalejšího.</p>
+  <p><strong>🧠 Poradit</strong> spočítá nejkratší cestu z aktuální situace a posadí do lodi, kdo má jet dál. Když se do časového limitu už vejít nedá, řekne, o kolik kroků se vrátit. Hvězdy: ★★★ za nejkratší možné řešení.</p>
+  <p>Klávesy: Enter = plout, Ctrl+Z / Ctrl+Y = zpět / vpřed, H = rada.</p>
+  <button class="btn" data-prikaz="jak">Zavřít</button>
+</section>
+
+<main>
+  <section class="panel zadani">
+    <h2>Úloha</h2>
+    <h3 id="nazev"></h3>
+    <p id="popis"></p>
+    <ul id="pravidla"></ul>
+    <h2 style="margin-top:14px">Plavby</h2>
+    <ol class="historie" id="historie"></ol>
+    <div class="rekordy" id="rekord"></div>
+  </section>
+
+  <section class="panel hriste">
+    <div class="scena" id="scena">
+      <div class="breh" id="breh0"></div>
+      <div class="reka"><div class="lod" id="lod"></div></div>
+      <div class="breh" id="breh1"></div>
+    </div>
+    <div class="ovladani">
+      <button class="btn primary" id="btnPlout">⛵ Plout</button>
+      <button class="btn" id="btnVysadit">Vysadit vše</button>
+    </div>
+    <div class="zprava" id="zprava" role="status" aria-live="polite"></div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   PrevozLogika – úlohy o převážení přes řeku, bez DOM
+   (testy: _test/prevoznik_test.js).
+   Stav = { pravo: bitová maska postav na pravém břehu, lod: 0 vlevo / 1 vpravo }.
+   Tah = maska postav, které jedou. Pravidla (kontrola skupiny) se ověřují
+   na obou březích i v lodi po dokončení plavby.
+   ============================================================ */
+const PrevozLogika = (function () {
+  const P = (id, emoji, jmeno, o) => Object.assign({ id, emoji, jmeno, vesla: true }, o || {});
+  const ma = (g, id) => g.some(p => p.id === id);
+  const pocet = (g, f) => g.filter(f).length;
+
+  const ULOHY = [
+    {
+      id: 'vlk', nazev: 'Vlk, koza a zelí', kapacita: 2,
+      popis: 'Převozník má převézt vlka, kozu a hlávku zelí. Do loďky se vejde jen on a jedna další věc.',
+      pravidla: ['Veslovat umí jen převozník.', 'Bez převozníka vlk sežere kozu.', 'Bez převozníka koza spase zelí.'],
+      postavy: [P('farmar', '🧑‍🌾', 'Převozník'), P('vlk', '🐺', 'Vlk', { vesla: false }), P('koza', '🐐', 'Koza', { vesla: false }), P('zeli', '🥬', 'Zelí', { vesla: false })],
+      kontrola(g) {
+        if (ma(g, 'farmar')) return null;
+        if (ma(g, 'vlk') && ma(g, 'koza')) return 'by vlk sežral kozu';
+        if (ma(g, 'koza') && ma(g, 'zeli')) return 'by koza spásla zelí';
+        return null;
+      },
+    },
+    {
+      id: 'most4', nazev: 'Noční most (17 minut)', kapacita: 2, scena: 'most', casova: true, limit: 17,
+      popis: 'Čtyři lidé musí v noci přejít vratký most. Mají jedinou lucernu a za 17 minut jim dohoří.',
+      pravidla: ['Na mostě smějí být nejvýš dva a vždy s lucernou.', 'Dvojice jde tempem pomalejšího.', 'Lucernu někdo musí přinést zpět.', 'Všichni musí být na druhé straně nejpozději za 17 minut.'],
+      postavy: [P('a', '🧒', 'Adam', { cas: 1 }), P('b', '🧑', 'Bára', { cas: 2 }), P('c', '👨‍🦳', 'Cyril', { cas: 5 }), P('d', '👵', 'Dana', { cas: 10 })],
+    },
+    {
+      id: 'mis3', nazev: 'Misionáři a kanibalové', kapacita: 2,
+      popis: 'Tři misionáři a tři kanibalové mají přeplout řeku v loďce pro dva.',
+      pravidla: ['Veslovat umí všichni.', 'Kde jsou misionáři, nesmí je kanibalové přečíslit – na žádném břehu ani v lodi.'],
+      postavy: [1, 2, 3].map(i => P('m' + i, '🧔', 'Misionář', { typ: 'm' })).concat([1, 2, 3].map(i => P('k' + i, '👹', 'Kanibal', { typ: 'k' }))),
+      kontrola: kontrolaMisionaru,
+    },
+    {
+      id: 'zverinec', nazev: 'Zvěřinec', kapacita: 2,
+      popis: 'Převozník veze psa, kočku, myš a kus sýra. Do loďky se vejde jen on a jeden pasažér.',
+      pravidla: ['Veslovat umí jen převozník.', 'Bez převozníka pes honí kočku a kočka chytá myš.', 'Sýr je v bezpečí – myš je moc vystrašená, aby jedla.'],
+      postavy: [P('farmar', '🧑‍🌾', 'Převozník'), P('pes', '🐕', 'Pes', { vesla: false }), P('kocka', '🐈', 'Kočka', { vesla: false }), P('mys', '🐁', 'Myš', { vesla: false }), P('syr', '🧀', 'Sýr', { vesla: false })],
+      kontrola(g) {
+        if (ma(g, 'farmar')) return null;
+        if (ma(g, 'pes') && ma(g, 'kocka')) return 'by pes honil kočku';
+        if (ma(g, 'kocka') && ma(g, 'mys')) return 'by kočka chytila myš';
+        return null;
+      },
+    },
+    {
+      id: 'vaha', nazev: 'Rodina na vodě', kapacita: 5, nosnost: 100,
+      popis: 'Táta, máma, Kuba, Bára a pes si půjčili loďku, která unese jen 100 kg.',
+      pravidla: ['Loďka unese nejvýš 100 kg.', 'Veslovat umí táta, máma i obě děti, pes ne.', 'Táta 80 kg, máma 70 kg, Kuba 40 kg, Bára 40 kg, pes 20 kg.'],
+      postavy: [P('tata', '👨', 'Táta', { kg: 80 }), P('mama', '👩', 'Máma', { kg: 70 }), P('kuba', '👦', 'Kuba', { kg: 40 }), P('bara', '👧', 'Bára', { kg: 40 }), P('pes', '🐕', 'Pes', { kg: 20, vesla: false })],
+    },
+    {
+      id: 'pary', nazev: 'Žárliví manželé', kapacita: 2,
+      popis: 'Tři manželské páry chtějí přeplout řeku v loďce pro dva. Manželé jsou žárliví.',
+      pravidla: ['Veslovat umí všichni.', 'Žena nesmí být s cizím mužem, pokud u toho není její manžel – na břehu ani v lodi.'],
+      postavy: [
+        P('a', '👨', 'Adam', { typ: 'muz', par: 'a', j2: 'Adama', j7: 'Adamem' }), P('A', '👩', 'Alena', { typ: 'zena', par: 'a' }),
+        P('b', '👨', 'Bohouš', { typ: 'muz', par: 'b', j2: 'Bohouše', j7: 'Bohoušem' }), P('B', '👩', 'Božena', { typ: 'zena', par: 'b' }),
+        P('c', '👨', 'Cyril', { typ: 'muz', par: 'c', j2: 'Cyrila', j7: 'Cyrilem' }), P('C', '👩', 'Cecílie', { typ: 'zena', par: 'c' }),
+      ],
+      kontrola(g) {
+        for (const z of g) {
+          if (z.typ !== 'zena' || g.some(m => m.typ === 'muz' && m.par === z.par)) continue;
+          const cizi = g.find(m => m.typ === 'muz');
+          if (cizi) {
+            const manzel = this.postavy.find(m => m.typ === 'muz' && m.par === z.par);
+            return 'by ' + z.jmeno + ' zůstala s ' + cizi.j7 + ' bez svého muže ' + manzel.j2;
+          }
+        }
+        return null;
+      },
+    },
+    {
+      id: 'most5', nazev: 'Noční most (30 minut)', kapacita: 2, scena: 'most', casova: true, limit: 30,
+      popis: 'Pětičlenná rodina musí v noci přejít most. Lucerna vydrží 30 minut.',
+      pravidla: ['Na mostě smějí být nejvýš dva a vždy s lucernou.', 'Dvojice jde tempem pomalejšího.', 'Všichni musí být na druhé straně nejpozději za 30 minut.'],
+      postavy: [P('a', '👦', 'Ondra', { cas: 1 }), P('b', '👧', 'Ema', { cas: 3 }), P('c', '👨', 'Táta', { cas: 6 }), P('d', '👩', 'Máma', { cas: 8 }), P('e', '👴', 'Děda', { cas: 12 })],
+    },
+    {
+      id: 'mis5', nazev: 'Pět misionářů', kapacita: 3,
+      popis: 'Pět misionářů a pět kanibalů, loďka tentokrát uveze tři.',
+      pravidla: ['Veslovat umí všichni.', 'Kde jsou misionáři, nesmí je kanibalové přečíslit – na žádném břehu ani v lodi.'],
+      postavy: [1, 2, 3, 4, 5].map(i => P('m' + i, '🧔', 'Misionář', { typ: 'm' })).concat([1, 2, 3, 4, 5].map(i => P('k' + i, '👹', 'Kanibal', { typ: 'k' }))),
+      kontrola: kontrolaMisionaru,
+    },
+    {
+      id: 'rodina', nazev: 'Rodina, policista a zloděj', kapacita: 2,
+      popis: 'Japonská klasika: otec, matka, dva synové, dvě dcery, policista a spoutaný zloděj. Vor uveze dva.',
+      pravidla: [
+        'Vor ovládá jen otec, matka a policista.',
+        'Otec nesmí zůstat s žádnou dcerou, pokud u toho není matka.',
+        'Matka nesmí zůstat s žádným synem, pokud u toho není otec.',
+        'Zloděj nesmí zůstat s nikým z rodiny, pokud u toho není policista.',
+        'Platí na obou březích i na voru.',
+      ],
+      postavy: [
+        P('otec', '👨', 'Otec'), P('matka', '👩', 'Matka'),
+        P('syn1', '👦', 'Syn', { vesla: false }), P('syn2', '👦', 'Syn', { vesla: false }),
+        P('dcera1', '👧', 'Dcera', { vesla: false }), P('dcera2', '👧', 'Dcera', { vesla: false }),
+        P('policista', '👮', 'Policista'), P('zlodej', '🦹', 'Zloděj', { vesla: false }),
+      ],
+      kontrola(g) {
+        const dcera = g.some(p => p.id.startsWith('dcera')), syn = g.some(p => p.id.startsWith('syn'));
+        if (ma(g, 'otec') && dcera && !ma(g, 'matka')) return 'by otec zůstal s dcerou bez matky';
+        if (ma(g, 'matka') && syn && !ma(g, 'otec')) return 'by matka zůstala se synem bez otce';
+        if (ma(g, 'zlodej') && !ma(g, 'policista') && g.some(p => p.id !== 'zlodej')) return 'by zloděj zůstal s rodinou bez policisty';
+        return null;
+      },
+    },
+  ];
+  function kontrolaMisionaru(g) {
+    const m = pocet(g, p => p.typ === 'm'), k = pocet(g, p => p.typ === 'k');
+    return m > 0 && k > m ? 'by kanibalové přečíslili misionáře (' + k + ' : ' + m + ')' : null;
+  }
+
+  const plna = u => (1 << u.postavy.length) - 1;
+  const bity = (u, m) => u.postavy.filter((_, i) => m >> i & 1);
+  const pocetBitu = m => { let n = 0; for (; m; m &= m - 1) n++; return n; };
+  const START = { pravo: 0, lod: 0 };
+  const jeCil = (u, s) => s.pravo === plna(u);
+
+  /** Provede plavbu masky m ze stavu s. Vrací { stav, cena } nebo { chyba }. */
+  function proved(u, s, m) {
+    const most = u.scena === 'most';
+    if (!m) return { chyba: most ? 'Na most musí někdo jít – lucerna sama nedojde.' : 'Loď je prázdná – někdo musí jet.' };
+    if (u.nosnost) {
+      const kg = bity(u, m).reduce((a, p) => a + p.kg, 0);
+      if (kg > u.nosnost) return { chyba: 'Loď unese nejvýš ' + u.nosnost + ' kg, tahle posádka váží ' + kg + ' kg.' };
+    }
+    if (pocetBitu(m) > u.kapacita) return { chyba: (most ? 'Na most smějí najednou nejvýš ' : 'Loď uveze nejvýš ') + u.kapacita + '.' };
+    const naStrane = s.lod ? s.pravo : plna(u) & ~s.pravo;
+    if ((m & naStrane) !== m) return { chyba: 'Nastoupit mohou jen ti, kdo jsou na břehu u lodi.' };
+    const jedou = bity(u, m);
+    if (!jedou.some(p => p.vesla)) {
+      const umi = [...new Set(u.postavy.filter(p => p.vesla).map(p => p.jmeno.toLowerCase()))];
+      return { chyba: 'Nikdo z posádky neumí veslovat – to umí jen ' + umi.join(', ') + '.' };
+    }
+    const pravo = s.lod ? s.pravo & ~m : s.pravo | m;
+    if (u.kontrola) {
+      const mista = [['Na levém břehu', plna(u) & ~pravo], ['Na pravém břehu', pravo], [most ? 'Na mostě' : 'V lodi', m]];
+      for (const [kde, sk] of mista) {
+        const proc = u.kontrola(bity(u, sk));
+        if (proc) return { chyba: kde + ' ' + proc + '.' };
+      }
+    }
+    const cena = u.casova ? Math.max(...jedou.map(p => p.cas)) : 1;
+    return { stav: { pravo, lod: 1 - s.lod }, cena };
+  }
+
+  // všechny podmnožiny postav na straně lodi o velikosti 1..kapacita
+  function tahy(u, s) {
+    const naStrane = s.lod ? s.pravo : plna(u) & ~s.pravo, out = [];
+    for (let m = naStrane; m; m = (m - 1) & naStrane) if (pocetBitu(m) <= u.kapacita) out.push(m);
+    return out;
+  }
+
+  /** Nejkratší cesta (Dijkstra; bez času = počet plaveb) ze stavu s do cíle: { cena, tahy[] } nebo null. */
+  function nejkratsi(u, s) {
+    const klic = x => x.pravo * 2 + x.lod, n = (plna(u) + 1) * 2;
+    const dist = new Array(n).fill(Infinity), pred = new Array(n), hotovo = new Uint8Array(n);
+    dist[klic(s)] = 0;
+    const fronta = [s];
+    while (fronta.length) {
+      let bi = 0;
+      for (let i = 1; i < fronta.length; i++) if (dist[klic(fronta[i])] < dist[klic(fronta[bi])]) bi = i;
+      const x = fronta.splice(bi, 1)[0], kx = klic(x);
+      if (hotovo[kx]) continue;
+      hotovo[kx] = 1;
+      if (jeCil(u, x)) {
+        const cesta = [];
+        for (let k = kx; pred[k]; k = pred[k].z) cesta.unshift(pred[k].m);
+        return { cena: dist[kx], tahy: cesta };
+      }
+      for (const m of tahy(u, x)) {
+        const r = proved(u, x, m);
+        if (r.chyba) continue;
+        const ky = klic(r.stav), d = dist[kx] + r.cena;
+        if (d < dist[ky]) { dist[ky] = d; pred[ky] = { z: kx, m }; fronta.push(r.stav); }
+      }
+    }
+    return null;
+  }
+
+  return { ULOHY, START, proved, nejkratsi, jeCil, plna, bity };
+})();
+</script>
+
+<script>
+(function () {
+  const L = PrevozLogika, $ = id => document.getElementById(id);
+  const KLIC = 'webapp_hra_prevoznik';
+  let data = { uloha: L.ULOHY[0].id, hry: {}, vysledky: {} };
+  let u = null, hra = null;   // hra = { tahy: [masky], redo: [], rady, ukazano }
+  let nalozeno = 0, zaneprazdneno = false;
+  const optimum = {};
+
+  const tvar = (n, a, b, c) => n === 1 ? a : n >= 2 && n <= 4 ? b : c;
+  const plaveb = n => n + ' ' + tvar(n, 'plavba', 'plavby', 'plaveb');
+  const hvezdy = h => '★'.repeat(h) + '☆'.repeat(3 - h);
+  const opt = () => optimum[u.id] || (optimum[u.id] = L.nejkratsi(u, L.START));
+
+  function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(data)); } catch { /* nevadí */ } }
+  function nacti() {
+    try {
+      const d = JSON.parse(localStorage.getItem(KLIC) || 'null');
+      if (d && d.hry) data = Object.assign(data, d);
+    } catch { /* poškozená data – začne se znovu */ }
+  }
+
+  // stav po odehraných plavbách (neplatné se do historie nikdy nedostanou)
+  function prehraj(pocetTahu) {
+    let s = L.START, cas = 0;
+    for (const m of hra.tahy.slice(0, pocetTahu === undefined ? hra.tahy.length : pocetTahu)) {
+      const r = L.proved(u, s, m);
+      if (r.chyba) break;
+      s = r.stav; cas += r.cena;
+    }
+    return { s, cas };
+  }
+
+  function vyberUlohu(id) {
+    u = L.ULOHY.find(x => x.id === id) || L.ULOHY[0];
+    data.uloha = u.id;
+    hra = data.hry[u.id] = data.hry[u.id] || { tahy: [], redo: [], rady: 0, ukazano: false };
+    nalozeno = 0;
+    zprava('', '');
+    vykresliZadani();
+    vykresli();
+    uloz();
+  }
+
+  function zprava(t, trida) { $('zprava').textContent = t; $('zprava').className = 'zprava ' + (trida || ''); }
+
+  function vykresliZadani() {
+    $('nazev').textContent = u.nazev;
+    $('popis').textContent = u.popis;
+    $('pravidla').innerHTML = u.pravidla.map(t => '<li>' + t + '</li>').join('');
+    $('scena').classList.toggle('most', u.scena === 'most');
+    Rekord.sleduj(KLIC + '_' + u.id, {
+      vyssiLepsi: false, popisek: 'Nejlepší',
+      format: v => u.casova ? v + ' min' : plaveb(v),
+    }).prvek($('rekord'));
+    $('nabUlohy').innerHTML = L.ULOHY.map((x, i) => {
+      const v = data.vysledky[x.id];
+      return '<button class="tl" data-uloha="' + x.id + '"' + (x.id === u.id ? ' aria-current="true"' : '') + '>' +
+        (i + 1) + '. ' + x.nazev + '<span class="hv">' + (v ? hvezdy(v.hvezdy) : '') + '</span></button>';
+    }).join('');
+  }
+
+  function postavaHtml(p, i, kde) {
+    const vesla = u.postavy.some(q => !q.vesla) && p.vesla ? '<span class="vesla" title="Umí veslovat">🚣</span>' : '';
+    const stitek = u.casova ? p.jmeno + ' ' + p.cas + '′' : u.nosnost ? p.jmeno + ' ' + p.kg : p.jmeno;
+    return '<button class="postava' + (kde === 'daleko' ? ' daleko' : '') + '" data-i="' + i + '" title="' + p.jmeno + '">' +
+      vesla + p.emoji + '<small>' + stitek + '</small></button>';
+  }
+
+  function vykresli(jedouci) {
+    const { s, cas } = prehraj();
+    const strana = jedouci === undefined ? s.lod : 1 - s.lod;
+    for (const b of [0, 1]) {
+      let h = '<span class="popis">' + (b ? 'Pravý břeh' : 'Levý břeh') + '</span>';
+      u.postavy.forEach((p, i) => {
+        const vpravo = (jedouci !== undefined && jedouci >> i & 1) ? 1 - s.lod : (s.pravo >> i & 1);
+        if (vpravo !== b || (jedouci !== undefined ? jedouci >> i & 1 : nalozeno >> i & 1)) return;
+        h += postavaHtml(p, i, b === s.lod ? '' : 'daleko');
+      });
+      $('breh' + b).innerHTML = h;
+      $('breh' + b).classList.toggle('aktivni', b === s.lod && jedouci === undefined);
+    }
+    const vLodi = jedouci !== undefined ? jedouci : nalozeno;
+    const lod = $('lod');
+    lod.classList.toggle('vpravo', strana === 1);
+    lod.classList.remove('rada');
+    lod.innerHTML = vLodi ? u.postavy.map((p, i) => vLodi >> i & 1 ? postavaHtml(p, i, '') : '').join('')
+      : '<span class="prazdna">' + (u.scena === 'most' ? '🔦' : '🛶') + '</span>';
+
+    $('historie').innerHTML = hra.tahy.map((m, k) => {
+      const tam = k % 2 === 0;
+      const r = u.casova ? ' (' + Math.max(...L.bity(u, m).map(p => p.cas)) + ' min)' : '';
+      return '<li><b>' + (k + 1) + '.</b>' + L.bity(u, m).map(p => p.emoji).join(' ') + ' ' + (tam ? '→' : '←') + r + '</li>';
+    }).join('') || '<li>Zatím nikdo nevyplul.</li>';
+
+    const n = hra.tahy.length;
+    $('info').textContent = u.casova
+      ? '⏱ ' + cas + ' / ' + u.limit + ' min · přechodů ' + n
+      : plaveb(n) + ' · nejméně ' + opt().cena;
+    $('tlZpet').disabled = !n || zaneprazdneno;
+    $('tlVpred').disabled = !hra.redo.length || zaneprazdneno;
+    $('btnPlout').disabled = zaneprazdneno || L.jeCil(u, s);
+    $('btnPlout').textContent = (u.scena === 'most' ? '🔦 Přejít ' : '⛵ Plout ') + (s.lod ? '←' : '→');
+  }
+
+  // animace plavby: loď s posádkou přejede, pak se vysadí na břeh
+  function animujTah(m) {
+    return new Promise(hotovo => {
+      zaneprazdneno = true;
+      hra.tahy.push(m);
+      nalozeno = 0;
+      vykresli(m);
+      setTimeout(() => { zaneprazdneno = false; vykresli(); hotovo(); }, 700);
+    });
+  }
+
+  async function plout() {
+    if (zaneprazdneno) return;
+    const { s } = prehraj();
+    const r = L.proved(u, s, nalozeno);
+    if (r.chyba) { zprava('Nelze: ' + r.chyba, 'chyba'); return; }
+    hra.redo = [];
+    zprava('', '');
+    await animujTah(nalozeno);
+    uloz();
+    vyhodnot();
+  }
+
+  function vyhodnot() {
+    const { s, cas } = prehraj();
+    const n = hra.tahy.length;
+    if (!L.jeCil(u, s)) {
+      if (u.casova && cas > u.limit) zprava('⌛ Lucerna dohořela – je ' + cas + ' min z ' + u.limit + '. Vraťte se (↶) nebo začněte znovu.', 'chyba');
+      return;
+    }
+    const cena = u.casova ? cas : n, nej = opt().cena;
+    if (u.casova && cas > u.limit) { zprava('Všichni jsou na druhé straně, ale za ' + cas + ' min – limit je ' + u.limit + '. Zkuste to rychleji.', 'chyba'); return; }
+    if (hra.ukazano) { zprava('▶ Takhle vypadá nejkratší řešení (' + (u.casova ? cena + ' min' : plaveb(cena)) + '). Zkuste ho teď sami – ↺ Znovu.', 'ok'); return; }
+    let h = cena === nej ? 3 : cena <= nej + (u.casova ? Math.max(1, u.limit - nej) : 2) ? 2 : 1;
+    if (hra.rady) h = Math.min(h, 2);
+    const v = data.vysledky[u.id];
+    if (!v || h > v.hvezdy) data.vysledky[u.id] = { hvezdy: h };
+    let t = '🎉 Hotovo! ' + (u.casova ? cena + ' min' : plaveb(cena)) + ' (nejlépe jde ' + nej + ') ' + hvezdy(h);
+    if (hra.rady) t += ' · s nápovědou';
+    else if (Rekord.sleduj(KLIC + '_' + u.id, { vyssiLepsi: false }).zapis(cena)) t += ' · 🏆 nový rekord!';
+    zprava(t, 'ok');
+    uloz();
+    vykresliZadani();
+  }
+
+  function poradit() {
+    if (zaneprazdneno) return;
+    const { s, cas } = prehraj();
+    if (L.jeCil(u, s)) { zprava('Všichni už jsou na druhé straně.', 'rada'); return; }
+    const r = L.nejkratsi(u, s);
+    if (!r || (u.casova && cas + r.cena > u.limit)) {
+      // najít, o kolik plaveb se vrátit, aby se cíl dal stihnout
+      for (let k = 1; k <= hra.tahy.length; k++) {
+        const p = prehraj(hra.tahy.length - k), q = L.nejkratsi(u, p.s);
+        if (q && (!u.casova || p.cas + q.cena <= u.limit)) {
+          zprava('🧠 Odsud už to ' + (u.casova ? 'do ' + u.limit + ' minut ' : '') + 'nejde. Vraťte se o ' + plaveb(k) + ' zpět (↶).', 'rada');
+          return;
+        }
+      }
+      zprava('🧠 Odsud se k cíli dostat nedá – začněte znovu.', 'rada');
+      return;
+    }
+    nalozeno = r.tahy[0];
+    hra.rady = (hra.rady || 0) + 1;
+    vykresli();
+    $('lod').classList.add('rada');
+    const kdo = L.bity(u, nalozeno).map(p => p.emoji + ' ' + p.jmeno).join(' + ');
+    zprava('🧠 Teď ' + (u.scena === 'most' ? 'přejděte' : 'převezte') + ': ' + kdo + (s.lod ? ' ← zpět na levý břeh' : ' → na pravý břeh') +
+      '. Odsud zbývá nejméně ' + (u.casova ? r.cena + ' min (celkem ' + (cas + r.cena) + ' z ' + u.limit + ')' : plaveb(r.cena)) + '.', 'rada');
+    uloz();
+  }
+
+  const PRIKAZY = {
+    znovu() {
+      if (zaneprazdneno) return;
+      hra = data.hry[u.id] = { tahy: [], redo: [], rady: 0, ukazano: false };
+      nalozeno = 0; zprava('', ''); vykresli(); uloz();
+    },
+    zpet() {
+      if (zaneprazdneno || !hra.tahy.length) return;
+      hra.redo.push(hra.tahy.pop()); nalozeno = 0; zprava('', ''); vykresli(); uloz();
+    },
+    vpred() {
+      if (zaneprazdneno || !hra.redo.length) return;
+      hra.tahy.push(hra.redo.pop()); nalozeno = 0; vykresli(); uloz(); vyhodnot();
+    },
+    poradit,
+    async reseni() {
+      if (zaneprazdneno) return;
+      if (!await Dialog.potvrd('Přehrát nejkratší řešení od začátku? Úloha se tím nezapočítá jako vyřešená.')) return;
+      hra = data.hry[u.id] = { tahy: [], redo: [], rady: 0, ukazano: true };
+      nalozeno = 0; zprava('▶ Přehrávám řešení…', 'rada'); vykresli();
+      for (const m of opt().tahy) {
+        nalozeno = m; vykresli();
+        await new Promise(r => setTimeout(r, 450));
+        await animujTah(m);
+      }
+      uloz(); vyhodnot();
+    },
+    jak() { $('jak').hidden = !$('jak').hidden; },
+  };
+
+  /* ---------- události ---------- */
+  function zavriNabidky() {
+    document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+    document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  }
+  document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const n = $(b.dataset.nabidka), bylo = !n.hidden;
+    zavriNabidky();
+    if (bylo) return;
+    n.hidden = false; b.setAttribute('aria-expanded', 'true');
+    const r = b.getBoundingClientRect();
+    n.style.top = (r.bottom + 4) + 'px';
+    n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+  }));
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-prikaz], [data-uloha]');
+    if (b) {
+      e.stopPropagation(); zavriNabidky();
+      if (b.dataset.uloha) { if (!zaneprazdneno) vyberUlohu(b.dataset.uloha); return; }
+      return PRIKAZY[b.dataset.prikaz]();
+    }
+    if (!e.target.closest('.nabidka')) zavriNabidky();
+  });
+  addEventListener('resize', zavriNabidky);
+
+  $('scena').addEventListener('click', e => {
+    const b = e.target.closest('.postava');
+    if (!b || zaneprazdneno) return;
+    const i = +b.dataset.i, { s } = prehraj();
+    if (nalozeno >> i & 1) { nalozeno &= ~(1 << i); zprava('', ''); return vykresli(); }
+    if ((s.pravo >> i & 1) !== s.lod) { zprava((u.scena === 'most' ? 'Lucerna' : 'Loď') + ' je na druhé straně.', 'chyba'); return; }
+    let n = 0; for (let m = nalozeno; m; m &= m - 1) n++;
+    if (n >= u.kapacita) { zprava((u.scena === 'most' ? 'Na most smějí najednou nejvýš ' : 'Loď uveze nejvýš ') + u.kapacita + '.', 'chyba'); return; }
+    nalozeno |= 1 << i; zprava('', ''); vykresli();
+  });
+  $('btnPlout').addEventListener('click', plout);
+  $('btnVysadit').addEventListener('click', () => { if (!zaneprazdneno) { nalozeno = 0; vykresli(); } });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') zavriNabidky();
+    if (e.target.closest('input, textarea, dialog')) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); PRIKAZY.zpet(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); PRIKAZY.vpred(); }
+    else if (e.ctrlKey || e.metaKey || e.altKey) return;
+    else if (e.key === 'h' || e.key === 'H') poradit();
+    else if (e.key === 'Enter' && !e.target.closest('button')) plout();
+  });
+
+  if (window.self === window.top) document.body.classList.add('samostatne');
+  nacti();
+  vyberUlohu(data.uloha);
+})();
+</script>
+</body>
+</html>

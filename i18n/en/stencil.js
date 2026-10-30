@@ -132,7 +132,6 @@ I18N.pridej('en', {
   'Tohle není obrázek.': 'This is not an image.',
   'obrázek': 'image',
   'Nová předloha: ruční můstky odstraněny (Ctrl+Z vrátí), můstky zase navrhuje automatika.': 'New source image: manual bridges removed (Ctrl+Z restores them), bridges are suggested automatically again.',
-  '{nazev} · {naturalWidth} × {naturalHeight} px': '{nazev} · {naturalWidth} × {naturalHeight} px',
   'Obrázek se nepodařilo otevřít.': 'The image could not be opened.',
   'šablonové': 'stencil',
   'Smazat font „{nazev}“? Zmizí i z ostatních stránek s písmy.': 'Delete the font “{nazev}”? It will also disappear from the other font pages.',
@@ -172,7 +171,6 @@ I18N.pridej('en', {
   'ostrůvek nemá': 'island has no',
   'ostrůvků nemá': 'islands have no',
   '{n} {mista} užší než {mm} mm.': '{n} {mista} narrower than {mm} mm.',
-  'tenké místo': 'thin spot',
   'tenká místa': 'thin spots',
   'tenkých míst': 'thin spots',
   '{n} obrysů – na řezání hodně. Zvyšte „Odstranit drobnosti“ nebo rozmazání.': '{n} outlines – a lot to cut. Increase “Remove details” or the blur.',
@@ -181,4 +179,5 @@ I18N.pridej('en', {
   'listů': 'sheets',
   'Práh – tmavší než': 'Threshold – darker than',
   '{vrstva} – tmavší než': '{vrstva} – darker than',
+  '{nazev} · {naturalWidth} × {naturalHeight} px': '{nazev} · {naturalWidth} × {naturalHeight} px',
 });

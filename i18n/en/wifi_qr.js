@@ -1,0 +1,21 @@
+// wifi_qr – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Wi-Fi QR kód': 'Wi-Fi QR code',
+  'Generátor Wi-Fi QR kódu': 'Wi-Fi QR code generator',
+  'Hosté naskenují kód telefonem a připojí se bez psaní hesla': 'Guests scan the code with their phone and connect without typing the password',
+  'Název sítě (SSID)': 'Network name (SSID)',
+  'Název Wi-Fi sítě': 'Wi-Fi network name',
+  'Heslo': 'Password',
+  'Heslo k síti': 'Network password',
+  'Zabezpečení': 'Security',
+  'Bez hesla (otevřená)': 'No password (open)',
+  'Skrytá síť': 'Hidden network',
+  'tajneheslo123': 'secretpassword123',
+  'Stáhnout QR': 'Download QR',
+  'Vytisknout cedulku': 'Print a sign',
+  'QR kód i heslo se generují lokálně v prohlížeči – nikam se neodesílají. Formát odpovídá standardu Wi-Fi QR (funguje na iOS i Androidu z fotoaparátu).': 'The QR code and password are generated locally in your browser – nothing is sent anywhere. The format follows the Wi-Fi QR standard (works from the camera on both iOS and Android).',
+  'Otevřená síť': 'Open network',
+  'Wi-Fi': 'Wi-Fi',
+  'Síť': 'Network',
+  'Naskenujte fotoaparátem telefonu': 'Scan with your phone\'s camera',
+});
