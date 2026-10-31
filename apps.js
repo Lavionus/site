@@ -3878,7 +3878,7 @@ const KATALOG_SEKCE = [
         "nazev": "🐉 Kroniky vyhnanství",
         "stav": "vyvoj",
         "jen_cs": true,
-        "tagy": ["kniha", "román", "čtení", "sága", "fantasy", "Poslední drak", "Krev starších", "Chebsko", "Jáchymov", "středověk", "drak"]
+        "tagy": ["kniha", "román", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sága", "fantasy", "Poslední drak", "Krev starších", "Chebsko", "Jáchymov", "středověk", "drak"]
       }
     ]
   },

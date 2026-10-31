@@ -756,9 +756,38 @@ Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`) – jinak návšt�
 novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/sw.js`.
 
 **Kroniky vyhnanství** (`obsah/kroniky.html`) je čtečka knih ságy (I. Poslední
-drak, II. Krev starších). Kapitoly jsou Markdown v `obsah/kroniky/kniha<N>/`
-a seznam knih je v `obsah/kroniky/knihy.json`. Obojí vzniká z rukopisu
-v `../KronikaLidstva` skriptem `python3 tools/kroniky_export.py`, který vynechá
-redakční bloky `<!-- KONTINUITA -->`. Po přepsání knih stačí skript spustit znovu
-a zvednout `sw.js`. Čtečka si v `webapp_kroniky` pamatuje knihu, kapitolu
-a velikost písma, `?kniha=2` otevře druhou knihu.
+drak, II. Krev starších).
+
+Kapitoly jsou Markdown v `obsah/kroniky/kniha<N>/`, seznam knih
+v `obsah/kroniky/knihy.json`. Obojí vzniká z rukopisu v `../KronikaLidstva`
+skriptem `python3 tools/kroniky_export.py`, který vynechá redakční bloky
+`<!-- KONTINUITA -->`. Po přepsání knih stačí skript spustit znovu a zvednout
+`sw.js`.
+
+Kód je rozdělený na dvě části:
+- `kroniky/jadro.js` (`KRONIKY_JADRO`, bez DOM) obsahuje vlastní rozbor
+  Markdownu (nadpis, odstavce, `*kurzíva*`, samotná `*` = předěl scén),
+  hledání bez diakritiky, věty pro předčítání a EPUB 3 (ZIP bez komprese).
+- `kroniky/ctecka.js` je uživatelské rozhraní.
+
+Co čtečka umí:
+- horní lišta s nabídkami, obsah s přečtenými kapitolami a časem čtení;
+- fulltext v obou knihách;
+- záložky, zvýraznění ve 4 barvách s poznámkou a citace;
+- předčítání přes `speechSynthesis`, po větách, pokračuje do další kapitoly;
+- motivy web / papír / sépie / noc, písmo, velikost, řádkování, šířka sloupce,
+  blok, knižní odstavce;
+- soustředěné čtení, pokrok a zbývající čas, statistiky času čtení;
+- export EPUB, Markdown a poznámek, tisk kapitoly i celé knihy, uložení
+  pro offline;
+- záloha a obnova JSON, odkaz na místo `?kniha=2&kap=05_druha_smrt&blok=12`.
+
+Zvýraznění se ukládá jako blok + offset + citovaný text. Když se text knihy
+po redakci posune, dohledá se podle citace.
+
+Klíče úložiště: `webapp_kroniky` (nastavení, pozice, pokrok, čas) a
+`webapp_kroniky_poznamky`.
+
+Testy: `node _test/kroniky_test.js` (jádro + všechna data + platnost EPUB)
+a `python3 _test/kroniky_ui.py` (proklik; podstrkuje falešnou řečovou
+syntézu, protože headless nemá hlasy).
