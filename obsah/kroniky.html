@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kroniky vyhnanství – čtečka</title>
+<meta name="description" content="Sága Kroniky vyhnanství: I. Poslední drak (Chebsko 1172) a II. Krev starších (Jáchymov 1595). Čtení po kapitolách, pamatuje si, kde jste skončili.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/marked.min.js"></script>
+<style>
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; }
+  header {
+    position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center;
+    padding: .5rem .75rem; background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+  }
+  header strong { margin-right: auto; }
+  select, button {
+    font: inherit; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text); max-width: 100%;
+  }
+  button { cursor: pointer; }
+  button:disabled { opacity: .4; cursor: default; }
+  #kapitola { max-width: 16rem; }
+  main { max-width: 38rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  #text { font-family: Georgia, "Times New Roman", serif; line-height: 1.7; font-size: calc(1.1rem * var(--velikost, 1)); hyphens: auto; text-align: justify; }
+  #text h1 { font-size: 1.6em; text-align: center; margin: 1rem 0 2rem; line-height: 1.3; }
+  #text p { margin: 0 0 .9em; }
+  #text hr { border: 0; text-align: center; margin: 1.5em 0; }
+  #text hr::after { content: "⁂"; color: var(--text-muted); }
+  .uvod { color: var(--text-muted); text-align: center; font-size: .9rem; margin-bottom: 1rem; }
+  nav.dole { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2rem; }
+  nav.dole button { flex: 1; }
+  @media (min-width: 600px) { header { padding-right: 5.5rem; } }
+  @media (max-width: 500px) { #text { text-align: left; } }
+</style>
+</head>
+<body>
+<header>
+  <strong>📚 Kroniky vyhnanství</strong>
+  <select id="kniha" aria-label="Kniha" data-i18n="ne"></select>
+  <select id="kapitola" aria-label="Kapitola" data-i18n="ne"></select>
+  <button id="mensi" title="Menší písmo">A−</button>
+  <button id="vetsi" title="Větší písmo">A+</button>
+</header>
+<main>
+  <div class="uvod" id="uvod" data-i18n="ne"></div>
+  <article id="text" lang="cs" data-i18n="ne"></article>
+  <nav class="dole">
+    <button id="predchozi">◀ Předchozí</button>
+    <button id="dalsi">Další ▶</button>
+  </nav>
+</main>
+<script>
+(async () => {
+  const KLIC = 'webapp_kroniky';
+  const $ = id => document.getElementById(id);
+  let stav = { kniha: 0, kapitola: 0, velikost: 1 };
+  try { Object.assign(stav, JSON.parse(localStorage.getItem(KLIC))); } catch (e) {}
+  const ulozStav = () => localStorage.setItem(KLIC, JSON.stringify(stav));
+
+  const knihy = await (await fetch('kroniky/knihy.json')).json();
+  const parametr = new URLSearchParams(location.search).get('kniha');
+  if (parametr && knihy[parametr - 1]) stav = { ...stav, kniha: parametr - 1, kapitola: 0 };
+  if (!knihy[stav.kniha]) stav.kniha = 0;
+
+  $('kniha').innerHTML = knihy.map((k, i) => `<option value="${i}">${k.nazev}</option>`).join('');
+
+  function naplnKapitoly() {
+    $('kapitola').innerHTML = knihy[stav.kniha].kapitoly
+      .map((k, i) => `<option value="${i}">${k.nazev}</option>`).join('');
+  }
+
+  async function zobraz() {
+    const kniha = knihy[stav.kniha];
+    if (!kniha.kapitoly[stav.kapitola]) stav.kapitola = 0;
+    const kap = kniha.kapitoly[stav.kapitola];
+    $('kniha').value = stav.kniha;
+    $('kapitola').value = stav.kapitola;
+    $('uvod').textContent = `${kniha.nazev} · ${kniha.podtitul} · kapitola ${stav.kapitola + 1} z ${kniha.kapitoly.length}`;
+    $('predchozi').disabled = stav.kapitola === 0;
+    $('dalsi').disabled = stav.kapitola === kniha.kapitoly.length - 1;
+    ulozStav();
+    const md = await (await fetch(`kroniky/${kniha.id}/${kap.soubor}`)).text();
+    $('text').innerHTML = marked.parse(md);
+    window.scrollTo(0, 0);
+  }
+
+  const posun = o => { stav.kapitola += o; zobraz(); };
+  $('kniha').onchange = e => { stav.kniha = +e.target.value; stav.kapitola = 0; naplnKapitoly(); zobraz(); };
+  $('kapitola').onchange = e => { stav.kapitola = +e.target.value; zobraz(); };
+  $('predchozi').onclick = () => posun(-1);
+  $('dalsi').onclick = () => posun(1);
+  const nastavPismo = () => document.documentElement.style.setProperty('--velikost', stav.velikost);
+  const pismo = o => { stav.velikost = Math.min(1.6, Math.max(0.8, +(stav.velikost + o).toFixed(1))); nastavPismo(); ulozStav(); };
+  $('mensi').onclick = () => pismo(-0.1);
+  $('vetsi').onclick = () => pismo(0.1);
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'SELECT') return;
+    if (e.key === 'ArrowLeft' && !$('predchozi').disabled) posun(-1);
+    if (e.key === 'ArrowRight' && !$('dalsi').disabled) posun(1);
+  });
+
+  nastavPismo();
+  naplnKapitoly();
+  zobraz();
+})();
+</script>
+</body>
+</html>

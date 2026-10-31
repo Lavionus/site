@@ -754,3 +754,11 @@ myší, prstem a klávesami vč. přehrávání, EQ, prolínání, skinu a obnov
 
 Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`) – jinak návštěvník uvidí
 novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/sw.js`.
+
+**Kroniky vyhnanství** (`obsah/kroniky.html`) je čtečka knih ságy (I. Poslední
+drak, II. Krev starších). Kapitoly jsou Markdown v `obsah/kroniky/kniha<N>/`
+a seznam knih je v `obsah/kroniky/knihy.json`. Obojí vzniká z rukopisu
+v `../KronikaLidstva` skriptem `python3 tools/kroniky_export.py`, který vynechá
+redakční bloky `<!-- KONTINUITA -->`. Po přepsání knih stačí skript spustit znovu
+a zvednout `sw.js`. Čtečka si v `webapp_kroniky` pamatuje knihu, kapitolu
+a velikost písma, `?kniha=2` otevře druhou knihu.

@@ -2528,6 +2528,12 @@ const KATALOG_SEKCE = [
         "tagy": ["3D tisk", "STL", "3MF", "nožička", "pantofle", "krytka trubky", "záslepka", "klín", "podložka", "TPU", "nábytek"]
       },
       {
+        "soubor": "obsah/odmerky.html",
+        "nazev": "🥄 Odměrky do kuchyně",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "odměrka", "kuchyň", "lžíce", "lžička", "cup", "hrnek", "mouka", "objem", "stupnice", "generátor"]
+      },
+      {
         "soubor": "obsah/pruzne.html",
         "nazev": "🪢 Pružné mechanismy a živé panty",
         "stav": "vyvoj",
@@ -3860,6 +3866,19 @@ const KATALOG_SEKCE = [
         "nazev": "📜 Voynichův rukopis",
         "stav": "vyvoj",
         "tagy": ["voynich", "rukopis", "manuskript", "šifra", "nerozluštěné", "eva", "přepis", "transliterace", "středověk", "rudolf ii", "hořčický", "kryptologie", "lingvistika", "entropie", "zipf", "kwic", "yale", "beinecke"]
+      }
+    ]
+  },
+  {
+    "nazev": "📚 Knihy",
+    "skupina": "ostatni",
+    "polozky": [
+      {
+        "soubor": "obsah/kroniky.html",
+        "nazev": "🐉 Kroniky vyhnanství",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["kniha", "román", "čtení", "sága", "fantasy", "Poslední drak", "Krev starších", "Chebsko", "Jáchymov", "středověk", "drak"]
       }
     ]
   },

@@ -301,6 +301,7 @@ const KATALOG_IKONY = {
   "obsah/kabely3d.html": "pages/page-kabely3d",
   "obsah/knofliky.html": "pages/page-knofliky",
   "obsah/nozicky.html": "pages/page-nozicky",
+  "obsah/odmerky.html": "pages/page-odmerky",
   "obsah/pruzne.html": "pages/page-pruzne",
   "obsah/spojky.html": "pages/page-spojky",
   "obsah/bryle.html": "pages/page-bryle",
@@ -473,6 +474,7 @@ const KATALOG_IKONY = {
   "obsah/gene_map.html": "pages/page-gene_map",
   "obsah/hieroglyfy.html": "pages/page-hieroglyfy",
   "obsah/voynich.html": "pages/page-voynich",
+  "obsah/kroniky.html": "pages/page-kroniky",
   "obsah/valka_ukrajina.html": "pages/page-valka_ukrajina",
   "obsah/AI_prednaska.html": "pages/page-AI_prednaska",
   "obsah/about.html": "pages/page-about",
@@ -528,7 +530,8 @@ const KATALOG_IKONY = {
   "🏢 Firma, provoz a protokoly": "sections/section-47-firma-provoz-a-protokoly",
   "📖 Duchovní život": "sections/section-48-duchovni-zivot",
   "🏛️ Dějiny & genealogie": "sections/section-49-dejiny-genealogie",
-  "✉️ Ostatní": "sections/section-50-ostatni"
+  "📚 Knihy": "sections/section-50-knihy",
+  "✉️ Ostatní": "sections/section-51-ostatni"
  },
  "skupiny": {
   "produktivita": "categories/category-produktivita",
