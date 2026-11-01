@@ -20,6 +20,9 @@ CIL = WEB / "obsah" / "kroniky"
 KNIHY = [
     ("book_01", "kniha1", "I. Poslední drak", "Chebsko, léta Páně 1172"),
     ("book_02", "kniha2", "II. Krev starších", "Jáchymov, 1595"),
+    ("book_03", "kniha3", "III. Paměť kamene", "Yucatán, 2026"),
+    ("book_04", "kniha4", "IV. První vyhnanci", "Pod Atlasem, před 68 400 lety"),
+    ("book_05", "kniha5", "V. Strážci ticha", "Chebsko, 2030"),
 ]
 
 KOMENTAR = re.compile(r"\s*<!--.*?-->\s*", re.S)
