@@ -781,7 +781,10 @@ Co čtečka umí:
 - horní lišta s nabídkami (Obrazovka = celá obrazovka zvlášť), obsah s obálkami,
   přečtenými kapitolami a časem čtení;
 - fulltext v obou knihách;
-- záložky, zvýraznění ve 4 barvách s poznámkou a citace;
+- záložky vázané na slovo a větu: označené slovo, bez výběru první slovo nahoře.
+  Ukládá se `slovo`, `veta` a `vOd`, takže se záložka po redakci dohledá podle
+  věty, pak podle slova. Staré záložky na odstavec se převedou samy;
+- zvýraznění ve 4 barvách s poznámkou a citace;
 - posuvník kapitoly vpravo se značkami záložek a zvýraznění, tažením rychlý posun;
 - ilustrace s lupou (lze vypnout);
 - předčítání po větách:

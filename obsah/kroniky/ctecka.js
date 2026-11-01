@@ -152,7 +152,8 @@
     $('prubeh').style.width = (podil * 100).toFixed(2) + '%';
     const wpm = nast().wpm, zbyvaKap = (kap().slov - slovZde) / wpm, zbyvaKniha = kniha.slov * (1 - podil) / wpm;
     $('stavCteni').textContent = `Kapitola ${kapIdx + 1} z ${kniha.kapitoly.length} · do konce kapitoly ~${J.formatCas(zbyvaKap)} · kniha ${Math.floor(podil * 100)} %, zbývá ~${J.formatCas(zbyvaKniha)}`;
-    const maZalozku = data.zalozky.some(z => z.kniha === kniha.id && z.soubor === kap().soubor && z.blok === i);
+    const okno = plocha.getBoundingClientRect();
+    const maZalozku = [...text.querySelectorAll('mark.zal-slovo')].some(m => { const r = m.getBoundingClientRect(); return r.bottom > okno.top && r.top < okno.bottom; });
     $('tlZalozka').setAttribute('aria-pressed', String(maZalozku));
     kresliPosuvnik();
     ulozStav();
@@ -166,16 +167,25 @@
     otevri(k, c);
   };
 
-  async function skok(knihaId, soubor, blok, hledany) {
+  async function skok(knihaId, soubor, blok, hledany, zalozkaId) {
     const k = knihy.findIndex(x => x.id === knihaId), c = k < 0 ? -1 : indexKap(knihy[k], soubor);
     if (c < 0) { Dialog.chyba('Toto místo už v knize není.'); return; }
     if (k !== stav.kniha || c !== kapIdx) await otevri(k, c, blok);
     if (hledany) vyznacBlok(blok, hledany);
+    const slovo = zalozkaId && text.querySelector(`mark.zal-slovo[data-zal="${zalozkaId}"]`);
+    if (slovo) {
+      // slovo záložky do horní třetiny plochy, jeho věta krátce blikne
+      plocha.scrollTo({ top: plocha.scrollTop + slovo.getBoundingClientRect().top - plocha.getBoundingClientRect().top - plocha.clientHeight / 3, behavior: 'smooth' });
+      const veta = text.querySelectorAll(`.zal-veta[data-zal="${zalozkaId}"]`);
+      veta.forEach(v => v.classList.add('blik'));
+      setTimeout(() => veta.forEach(v => v.classList.remove('blik')), 1800);
+    } else {
     const el = prvekBloku(blok);
     if (el) {
       skocNaBlok(blok);
       el.classList.add('blik');
       setTimeout(() => el.classList.remove('blik'), 1600);
+    }
     }
     if (matchMedia('(max-width:760px)').matches) zavriPanel();
   }
@@ -208,12 +218,35 @@
     return false;
   }
 
+  // záložka = slovo + věta; po redakci se dohledá podle věty, pak podle slova; stará záložka na odstavec → první slovo
+  function ukotviZalozku(z) {
+    const t = bloky[z.blok] && bloky[z.blok].text;
+    const nastav = (blok, rozsah) => {
+      const txt = bloky[blok].text, v = J.vetaKolem(txt, rozsah.od);
+      Object.assign(z, { blok, od: rozsah.od, do: rozsah.do, slovo: txt.slice(rozsah.od, rozsah.do), veta: txt.slice(v.od, v.do), vOd: rozsah.od - v.od });
+      ulozData();
+      return true;
+    };
+    if (z.od == null) { const w = t && J.slovoKolem(t, 0); return w ? nastav(z.blok, w) : false; }
+    if (t && t.slice(z.od, z.do) === z.slovo) return true;
+    for (let k = 0; k < bloky.length; k++) {
+      const i = (z.blok + k) % bloky.length, p = z.veta ? bloky[i].text.indexOf(z.veta) : -1;
+      if (p >= 0) return nastav(i, { od: p + z.vOd, do: p + z.vOd + z.slovo.length });
+    }
+    if (t) {
+      const slova = [...t.matchAll(new RegExp(z.slovo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'))].map(m => m.index);
+      if (slova.length) { const p = slova.reduce((a, b) => Math.abs(b - z.od) < Math.abs(a - z.od) ? b : a); return nastav(z.blok, { od: p, do: p + z.slovo.length }); }
+      const w = J.slovoKolem(t, 0);
+      if (w) return nastav(z.blok, w);
+    }
+    return false;
+  }
+
   function vyznacBlok(i, hledany) {
     const el = prvekBloku(i), b = bloky[i];
     if (!el || !b || (b.typ !== 'p' && b.typ !== 'h')) return;
     el.innerHTML = J.inline(b.md);
     const soubor = kap().soubor;
-    el.classList.toggle('zalozka', data.zalozky.some(z => z.kniha === kniha.id && z.soubor === soubor && z.blok === i));
     data.zvyrazneni
       .filter(z => z.kniha === kniha.id && z.soubor === soubor && ukotvi(z) && z.blok === i)
       .sort((a, b) => a.od - b.od)
@@ -224,6 +257,17 @@
         if (z.poznamka) m.title = z.poznamka;
         return m;
       }));
+    data.zalozky
+      .filter(z => z.kniha === kniha.id && z.soubor === soubor && ukotviZalozku(z) && z.blok === i)
+      .forEach(z => {
+        const v = J.vetaKolem(b.text, z.od);
+        obal(el, v.od, v.do, () => { const sp = document.createElement('span'); sp.className = 'zal-veta'; sp.dataset.zal = z.id; return sp; });
+        obal(el, z.od, z.do, () => {
+          const m = Object.assign(document.createElement('mark'), { className: 'zal-slovo', title: 'Záložka – klepnutím odeberete' });
+          m.dataset.zal = z.id;
+          return m;
+        });
+      });
     planujZnacky();
     if (hledany) {
       const t = J.normalizuj(b.text), q = J.normalizuj(hledany);
@@ -233,17 +277,50 @@
     }
   }
 
+  // první slovo na prvním celém řádku nahoře (bez označeného textu)
+  function prvniViditelneSlovo() {
+    const p = plocha.getBoundingClientRect(), t = text.getBoundingClientRect();
+    for (let y = p.top + 20; y < p.top + 260; y += 10) {
+      let uzel, off;
+      if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(t.left + 2, y); if (r) { uzel = r.startContainer; off = r.startOffset; } }
+      else if (document.caretPositionFromPoint) { const r = document.caretPositionFromPoint(t.left + 2, y); if (r) { uzel = r.offsetNode; off = r.offset; } }
+      const el = uzel && blokZUzlu(uzel);
+      if (!el || !/^(P|H1)$/.test(el.tagName)) continue;
+      const i = +el.dataset.i, w = J.slovoKolem(bloky[i].text, offsetV(el, uzel, off));
+      if (w) return { blok: i, ...w };
+    }
+    for (let i = aktualniBlok(); i < bloky.length; i++) { const w = bloky[i].text && J.slovoKolem(bloky[i].text, 0); if (w) return { blok: i, ...w }; }
+    return null;
+  }
+
+  // záložka na označeném slově (výběr se rozšíří na celá slova), jinak na prvním viditelném slově
   function prepniZalozku() {
     if (!kniha) return;
-    const i = aktualniBlok(), soubor = kap().soubor;
-    const idx = data.zalozky.findIndex(z => z.kniha === kniha.id && z.soubor === soubor && z.blok === i);
+    const cil = vyber && vyber.rezim === 'novy'
+      ? (w => w && { blok: vyber.blok, ...w })(J.slovoKolem(bloky[vyber.blok].text, vyber.od, vyber.do))
+      : prvniViditelneSlovo();
+    zavriVyber(); getSelection().removeAllRanges();
+    if (!cil) { Dialog.info('Tady není slovo, ke kterému by šla záložka připnout.'); return; }
+    const soubor = kap().soubor;
+    const idx = data.zalozky.findIndex(z => z.kniha === kniha.id && z.soubor === soubor && z.blok === cil.blok && z.od < cil.do && cil.od < z.do);
     if (idx >= 0) { data.zalozky.splice(idx, 1); Dialog.info('Záložka odebrána'); }
     else {
-      const ukazka = bloky[i].text.slice(0, 110) + (bloky[i].text.length > 110 ? '…' : '');
-      data.zalozky.push({ id: noveId(), kniha: kniha.id, soubor, blok: i, ukazka, cas: Date.now() });
-      Dialog.info('🔖 Záložka přidána');
+      const t = bloky[cil.blok].text, v = J.vetaKolem(t, cil.od);
+      const z = { id: noveId(), kniha: kniha.id, soubor, blok: cil.blok, od: cil.od, do: cil.do,
+        slovo: t.slice(cil.od, cil.do), veta: t.slice(v.od, v.do), vOd: cil.od - v.od, cas: Date.now() };
+      data.zalozky.push(z);
+      Dialog.info(`🔖 Záložka u slova „${z.slovo.length > 40 ? z.slovo.slice(0, 40) + '…' : z.slovo}“`);
     }
-    ulozData(); vyznacBlok(i); poScrollu();
+    ulozData(); vyznacBlok(cil.blok); poScrollu();
+    if (stav.panel === 'zalozky') vykresliPanel();
+  }
+  async function odeberZalozku(id) {
+    const z = data.zalozky.find(x => x.id === id);
+    if (!z || !(await Dialog.potvrd(`Odebrat záložku u slova „${z.slovo || ''}“?`))) return;
+    data.zalozky = data.zalozky.filter(x => x !== z);
+    ulozData();
+    if (kniha && z.kniha === kniha.id && z.soubor === kap().soubor) vyznacBlok(z.blok);
+    poScrollu();
     if (stav.panel === 'zalozky') vykresliPanel();
   }
 
@@ -257,6 +334,7 @@
     lista.style.top = Math.max(6, Math.min(innerHeight - lista.offsetHeight - 6, top)) + 'px';
     lista.style.left = Math.max(6, Math.min(innerWidth - lista.offsetWidth - 6, rect.left + rect.width / 2 - lista.offsetWidth / 2)) + 'px';
     lista.querySelector('[data-vyber="smazat"]').hidden = vyber.rezim !== 'uprava';
+    lista.querySelector('[data-vyber="zalozka"]').hidden = vyber.rezim !== 'novy';
   }
   function zavriVyber() { lista.hidden = true; vyber = null; }
   const blokZUzlu = u => { const el = (u.nodeType === 3 ? u.parentElement : u).closest('#text [data-i]'); return el; };
@@ -278,6 +356,8 @@
     }, 180);
   });
   text.addEventListener('click', e => {
+    const zal = e.target.closest('mark.zal-slovo');
+    if (zal && getSelection().isCollapsed) { odeberZalozku(zal.dataset.zal); return; }
     const m = e.target.closest('mark.zv');
     if (!m || !getSelection().isCollapsed) return;
     vyber = { rezim: 'uprava', id: m.dataset.id };
@@ -287,6 +367,7 @@
   lista.addEventListener('click', async e => {
     const tl = e.target.closest('button');
     if (!tl || !vyber) return;
+    if (tl.dataset.vyber === 'zalozka') { if (vyber.rezim === 'novy') prepniZalozku(); return; }
     const v = vyber;
     let z = v.rezim === 'uprava' ? data.zvyrazneni.find(x => x.id === v.id) : null;
     const nove = barva => {
@@ -330,7 +411,13 @@
   const poradi = x => { const k = knihy.findIndex(b => b.id === x.kniha); return [k, indexKap(knihy[k] || knihy[0], x.soubor), x.blok, x.od || 0]; };
   const podlePoradi = (a, b) => { const pa = poradi(a), pb = poradi(b); for (let i = 0; i < 4; i++) if (pa[i] !== pb[i]) return pa[i] - pb[i]; return 0; };
   const nazevKap = x => { const soubor = x.soubor || x.kap, k = knihaPodleId(x.kniha), c = k && k.kapitoly[indexKap(k, soubor)]; return c ? c.nazev : soubor; };
-  const skokAttr = (x, hledany) => `data-skok="${x.kniha}|${x.soubor || x.kap}|${x.blok}"${hledany ? ` data-hledany="${J.esc(hledany)}"` : ''}`;
+  const skokAttr = (x, hledany, zal) => `data-skok="${x.kniha}|${x.soubor || x.kap}|${x.blok}"${hledany ? ` data-hledany="${J.esc(hledany)}"` : ''}${zal ? ` data-zal="${zal}"` : ''}`;
+  // věta záložky s vyznačeným slovem (dlouhé okraje zkrácené)
+  const vetaZalozky = (z, f = (pred, slovo, po) => J.esc(pred) + '<b>' + J.esc(slovo) + '</b>' + J.esc(po)) => {
+    if (!z.veta) return f(z.ukazka || '', '', '');
+    const pred = z.veta.slice(0, z.vOd), po = z.veta.slice(z.vOd + z.slovo.length);
+    return f(pred.length > 90 ? '…' + pred.slice(-90) : pred, z.slovo, po.length > 120 ? po.slice(0, 120) + '…' : po);
+  };
 
   let vysledky = null, dotaz = '';
   function vykresliPanel() {
@@ -362,9 +449,9 @@
       }
     } else if (stav.panel === 'zalozky') {
       const z = [...data.zalozky].sort(podlePoradi);
-      h = z.length ? '' : '<p class="prazdne">Zatím žádné záložky. Tlačítkem 🔖 nebo klávesou B si označíte odstavec, který je právě nahoře.</p>';
+      h = z.length ? '' : '<p class="prazdne">Zatím žádné záložky. Označte v textu slovo a klepněte na 🔖 (nebo klávesa B). Bez označení se záložka připne na první slovo nahoře na obrazovce.</p>';
       z.forEach(x => {
-        h += `<div class="polozka pozn" role="button" tabindex="0" ${skokAttr(x)}><small>${e(knihaPodleId(x.kniha)?.nazev || '')} · ${e(nazevKap(x))} · ${datum(x.cas)}</small><span>${e(x.ukazka)}</span>
+        h += `<div class="polozka pozn" role="button" tabindex="0" ${skokAttr(x, '', x.id)}><small>🔖 ${e(knihaPodleId(x.kniha)?.nazev || '')} · ${e(nazevKap(x))} · ${datum(x.cas)}</small><span class="veta-zal">${vetaZalozky(x)}</span>
           <span class="panel-akce"><button class="tl" data-smaz-z="${x.id}">✕ Odebrat</button></span></div>`;
       });
     } else if (stav.panel === 'poznamky') {
@@ -390,7 +477,7 @@
     if (!t) return;
     if (t.dataset.smazZ) {
       data.zalozky = data.zalozky.filter(z => z.id !== t.dataset.smazZ);
-      ulozData(); vykresliPanel(); if (kniha) { text.querySelectorAll('.zalozka').forEach(el => vyznacBlok(+el.dataset.i)); poScrollu(); }
+      ulozData(); vykresliPanel(); if (kniha) { new Set([...text.querySelectorAll('mark.zal-slovo')].map(m => +m.closest('[data-i]').dataset.i)).forEach(vyznacBlok); poScrollu(); }
       return;
     }
     if (t.dataset.smazP || t.dataset.upravP) {
@@ -415,7 +502,7 @@
       return;
     }
     const [k, soubor, blok] = t.dataset.skok.split('|');
-    skok(k, soubor, +blok, t.dataset.hledany);
+    skok(k, soubor, +blok, t.dataset.hledany, t.dataset.zal);
   });
   panelObsah.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[role=button]')) e.target.click(); });
 
@@ -661,7 +748,7 @@
         const zz = z.filter(x => x.soubor === c.soubor).sort(podlePoradi), vv = v.filter(x => x.soubor === c.soubor).sort(podlePoradi);
         if (!zz.length && !vv.length) return;
         md += `\n### ${c.nazev}\n\n`;
-        zz.forEach(x => { md += `- 🔖 ${x.ukazka}\n`; });
+        zz.forEach(x => { md += `- 🔖 ${vetaZalozky(x, (pred, slovo, po) => pred + (slovo ? `**${slovo}**` : '') + po)}\n`; });
         if (zz.length) md += '\n';
         vv.forEach(x => { md += `> ${x.text}\n\n` + (x.poznamka ? `${x.poznamka}\n\n` : ''); });
       });
@@ -841,9 +928,9 @@
   function kresliZnacky() {
     ramecZnacek = 0;
     const vyska = Math.max(1, plocha.scrollHeight), h = drazka.clientHeight;
-    $('znacky').innerHTML = [...text.querySelectorAll('p.zalozka, mark.zv')].map(el => {
-      const top = (el.closest('[data-i]').offsetTop + (el.tagName === 'MARK' ? el.offsetTop : 0)) / vyska * h;
-      return el.tagName === 'MARK' ? `<div class="znacka" style="top:${top.toFixed(1)}px;background:var(--zv-${el.dataset.barva})"></div>`
+    $('znacky').innerHTML = [...text.querySelectorAll('mark.zal-slovo, mark.zv')].map(el => {
+      const top = (el.closest('[data-i]').offsetTop + el.offsetTop) / vyska * h;
+      return el.classList.contains('zv') ? `<div class="znacka" style="top:${top.toFixed(1)}px;background:var(--zv-${el.dataset.barva})"></div>`
         : `<div class="znacka zal" style="top:${top.toFixed(1)}px"></div>`;
     }).join('');
     kresliPosuvnik();

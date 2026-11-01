@@ -222,6 +222,28 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
     return out;
   }
 
+  // hranice slova kolem pozice / výběru (výběr se rozšíří na celá slova); null = žádné slovo
+  const PISMENO = /[\p{L}\p{N}'’-]/u;
+  function slovoKolem(text, od, do_ = od) {
+    let a = Math.max(0, Math.min(od, text.length)), b = Math.max(a, Math.min(do_, text.length));
+    while (a < b && !PISMENO.test(text[a])) a++;
+    while (b > a && !PISMENO.test(text[b - 1])) b--;
+    if (a === b) { while (a < text.length && !PISMENO.test(text[a])) a++; b = a; }
+    while (a > 0 && PISMENO.test(text[a - 1])) a--;
+    while (b < text.length && PISMENO.test(text[b])) b++;
+    return a < b ? { od: a, do: b } : null;
+  }
+
+  // věta, ve které leží pozice: od konce předchozí věty (. ! ? … + uvozovky + mezera) po konec této
+  function vetaKolem(text, pos) {
+    const konce = /[.!?…]+[“"»)]*\s+/g;
+    let od = 0, m;
+    while ((m = konce.exec(text)) && m.index + m[0].length <= pos) od = m.index + m[0].length;
+    konce.lastIndex = pos;
+    m = konce.exec(text);
+    return { od, do: m ? m.index + m[0].trimEnd().length : text.length };
+  }
+
   // věty pro předčítání (dlouhé promluvy prohlížeče se někde utnou, proto po kouscích)
   function vety(text, max = 220) {
     const kusy = text.match(/[^.!?…]+[.!?…]+[“"»]?\s*|[^.!?…]+$/g) || [text];
@@ -233,7 +255,7 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
     return out.map(s => s.trim()).filter(Boolean);
   }
 
-  const API = { rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, esc };
+  const API = { slovoKolem, vetaKolem, rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, esc };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else koren.KRONIKY_JADRO = API;
 })(this);
