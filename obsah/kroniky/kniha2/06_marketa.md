@@ -2,7 +2,7 @@
 
 Lene pohřbili v pátek ráno na hřbitově u špitálu, kousek od Řehoře, a bylo tam méně lidí, než bylo ve středu na mostě.
 
-Ilona stála u zdi, kde stávala vždycky, když pohřbívali někoho, koho ošetřovala, a dívala se. Lenin otec, hromotluk z hutě s rukama černýma až do loktů, stál u jámy a nehýbal se, a jeho žena vedle něj plakala do zástěry tak, že se jí třásla záda. Tři mladší sourozenci, všichni zrzaví. Jobstova žena, sama, bez Jobsta. Pár děveček z města. Starý pan farář odříkal, co se odříká, rychle a bez kázání, a Ilona si všimla, že mladší kazatel nepřišel.
+Ilona stála u zdi a dívala se. Stávala tam vždycky, když pohřbívali někoho, koho ošetřovala. Lenin otec, hromotluk z hutě s rukama černýma až do loktů, stál u jámy a nehýbal se, a jeho žena vedle něj plakala do zástěry tak, že se jí třásla záda. Tři mladší sourozenci, všichni zrzaví. Jobstova žena, sama, bez Jobsta. Pár děveček z města. Starý pan farář odříkal, co se odříká, rychle a bez kázání, a Ilona si všimla, že mladší kazatel nepřišel.
 
 Když hrobník začal házet hlínu, Lenin otec se otočil a podíval se přes hroby přímo na Ilonu. Nic neřekl. Díval se na ni tak dlouho, až žena vedle něj přestala plakat a zatahala ho za rukáv.
 
@@ -14,7 +14,7 @@ Pak odešla první, aby nemusel jít kolem ní.
 
 U její branky na ni čekala žena.
 
-Seděla na kameni u zdi, kde sedávali pacienti, když bylo zavřeno, s rukou zabalenou v hadru a položenou v klíně jako něco cizího, co jí někdo dal pohlídat. Byla hubená, vysoká, s tváří, která kdysi byla pěkná a teď byla hlavně ostrá, a s šátkem staženým do čela tak, že nebylo vidět, jestli má vlasy šedé. Mohlo jí být čtyřicet. Mohlo jí být třicet pět a měla za sebou těžké roky.
+Seděla na kameni u zdi, kde sedávali pacienti, když bylo zavřeno. Ruku měla zabalenou v hadru a položenou v klíně jako něco cizího, co jí někdo dal pohlídat. Byla hubená, vysoká, s tváří, která kdysi byla pěkná a teď byla hlavně ostrá. Šátek měla stažený do čela tak, že nebylo vidět, jestli má vlasy šedé. Mohlo jí být čtyřicet. Mohlo jí být třicet pět a měla za sebou těžké roky.
 
 „Byla jste na pohřbu,“ řekla, když Ilona přišla blíž.
 
@@ -28,7 +28,7 @@ Ilona otevřela branku. „Pojďte dál.“
 
 Ruka byla zlá. Ilona to poznala, ještě než sundala hadr, podle toho, jak ji žena držela, a podle pachu, sladkého a těžkého, který šel z hadru i přes kuchyňský kouř.
 
-Na dlani, pod palcem, ve svalu, kterým člověk svírá, byla boule velká jako holubí vejce. Rudá, lesklá, napjatá, s bílou tečkou uprostřed. Kolem ní kůže horká a zarudlá až k zápěstí, a na předloktí, kudy jdou žíly, se táhla červená čára, tenká, ale jasná, jako když se do vody kápne víno a ono se táhne proudem.
+Na dlani, pod palcem, ve svalu, kterým člověk svírá, byla boule velká jako holubí vejce. Rudá, lesklá, napjatá, s bílou tečkou uprostřed. Kolem ní byla kůže horká a zarudlá až k zápěstí. Po předloktí, kudy jdou žíly, se táhla červená čára, tenká, ale jasná, jako když se do tekoucí vody kápne víno a proud ho roztáhne.
 
 „Kdy?“
 
@@ -40,7 +40,7 @@ Ilona přejela palcem po červené čáře. Žena ani necukla.
 
 „Já vím, co bolí.“
 
-Ilona jí dala napít pálenky, kterou měla na tyhle věci, a žena se napila jako muž, jedním douškem, a vrátila jí hrnek. Pak jí Ilona položila ruku na desku stolu, dlaní nahoru, na čisté plátno, a podržela si zápěstí. Lanceta. Ne ta s rohovou rukojetí; ty ležely v pouzdře, dvě, a jedna chyběla. Vzala Řehořovu, starou, s kostěnou.
+Ilona jí dala napít pálenky, kterou měla na tyhle věci, a žena se napila jako muž, jedním douškem, a vrátila jí hrnek. Pak jí Ilona položila ruku na desku stolu, dlaní nahoru, na čisté plátno, a přidržela jí zápěstí. Lanceta. Ne ty s rohovou rukojetí; ty ležely v pouzdře dvě a jedna chyběla. Vzala Řehořovu, starou, s kostěnou.
 
 Řízla podél, ne napříč, aby nepřeťala šlachu, kterou palec ohýbá. Žena se ani nepohnula. Jen se jí na krku napjaly svaly a zuby zaskřípaly o sebe.
 
@@ -74,7 +74,7 @@ Ilona mlčela.
 
 *
 
-Ilona vzala sešit. Pak ho odložila a vzala z truhly dobrý papír, saský, ten na výpovědi pro horní soud, a nařezala pero, a Markéta se dívala na každý její pohyb, jako se dívá člověk, kterému jednou slíbili hodně a dali málo.
+Ilona vzala sešit. Pak ho odložila a vzala z truhly dobrý papír, saský, ten na výpovědi pro horní soud, a nařezala pero. Markéta sledovala každý její pohyb, jako se dívá člověk, kterému jednou slíbili hodně a dali málo.
 
 „Víte, co se stalo s Lene,“ řekla Ilona. „Musíte vědět, že to, co napíšu, se dostane do rukou lidem, které neznám.“
 
@@ -146,7 +146,7 @@ Ilona psala. Psala to slovo po slově a cítila, jak se jí při každém slově
 
 *Ať je vykouří ven.*
 
-Napsala to. Celé. Protože Markéta to řekla, a co člověk řekl, patří jemu. Ilona neměla právo vybrat z jejích slov ta, která se jí hodila, a ta, která se nehodila, zahodit, jako by třídila rudu na haldě. To by byla jiná výpověď. To by byla její výpověď, a ne Markétina.
+Napsala to. Celé. Protože Markéta to řekla, a co člověk řekl, patří jemu. Ilona neměla právo vybrat z jejích slov ta, která se jí hodila, a ostatní zahodit, jako by třídila rudu na haldě. To by byla jiná výpověď. To by byla její výpověď, a ne Markétina.
 
 „Ještě něco?“
 
@@ -158,7 +158,7 @@ Ilona napsala poslední řádek, *teď by jí bylo patnáct*, a pod to, jako pod
 
 *Víc neřekla.*
 
-Přečetla jí to celé, nahlas, od začátku do konce, česky, pomalu, a Markéta poslouchala se zavřenýma očima a dvakrát ji opravila: ne *buky nad údolím*, ale *buky nad tím údolím*, protože je víc údolí, a ne *bílá jako mouka*, ale *bílá v obličeji jako mouka*, protože Bára to tak řekla. Ilona to opravila. Pak to Markéta podepsala křížkem, protože psát neuměla, a Ilona vedle křížku napsala *znamení Markéty Hauptové, vlastní rukou*.
+Přečetla jí to celé, nahlas, od začátku do konce, česky, pomalu. Markéta poslouchala se zavřenýma očima a dvakrát ji opravila: ne *buky nad údolím*, ale *buky nad tím údolím*, protože je víc údolí, a ne *bílá jako mouka*, ale *bílá v obličeji jako mouka*, protože Bára to tak řekla. Ilona to opravila. Pak to Markéta podepsala křížkem, protože psát neuměla, a Ilona vedle křížku napsala *znamení Markéty Hauptové, vlastní rukou*.
 
 „Ponesete to nahoru?“
 
@@ -166,7 +166,7 @@ Ilona se podívala na desky na kraji stolu, ty, které ve středu přinesla od K
 
 „Ne hned,“ řekla. „Zatím to bude tady.“
 
-Markéta se na desky podívala taky, a pak na Ilonu, a Ilona viděla, že pochopila, a že je to žena, která pochopí víc, než jí kdo řekne.
+Markéta se na desky podívala taky, pak na Ilonu. Ilona viděla, že pochopila. Byla to žena, která pochopí víc, než jí kdo řekne.
 
 „Kvůli Lene,“ řekla Markéta.
 
@@ -184,15 +184,15 @@ Markéta vstala a zavázala si šátek. U dveří se zastavila.
 
 V sobotu seděla v lázni od poledne do nešpor.
 
-Platila Jobstově ženě tři krejcary a ta je vzala bez pohledu, a Ilona si sedla v předsíni na lavici u kolíků, odkud bylo vidět dveře do Jobstovy komory, a dělala, že se suší. Pak dělala, že čeká na sousedku. Pak už nedělala nic, jen seděla a počítala, a ženy kolem ní šly do páry a z páry a dívaly se na ni a šeptaly a nikdo si k ní nesedl.
+Zaplatila Jobstově ženě tři krejcary a ta je vzala, aniž by se na ni podívala. Ilona si sedla v předsíni na lavici u kolíků, odkud bylo vidět dveře do Jobstovy komory, a dělala, že se suší. Pak dělala, že čeká na sousedku. Pak už nedělala nic, jen seděla a počítala, a ženy kolem ní šly do páry a z páry a dívaly se na ni a šeptaly a nikdo si k ní nesedl.
 
 Nová děvečka byla starší, čtyřicetiletá, s tvrdýma rukama a se zavřenou tváří. Nešlehala nikoho po zádech. Nosila vědra a mlčela.
 
-Ilona počítala, kdo jde do komory k mistrovi. Odpoledne ženy, k nešporám muži. Dělala si čárky nehtem do měkkého dřeva lavice, pod stehnem, kde to nikdo neviděl, po pěti, jak to dělal otec, když počítal vozíky rudy u šachty. Devatenáct. Někdo šel baňkovat a nevěděla, jestli se počítá. Dva odešli bez pouštění, jen s vytrhnutým zubem, ty nepočítala. Devatenáct misek, zhruba. Možná o dvě víc nebo míň.
+Ilona počítala, kdo jde do komory k mistrovi. Odpoledne ženy, k nešporám muži. Dělala si nehtem čárky do měkkého dřeva lavice, pod stehnem, kde to nikdo neviděl. Po pěti, jak to dělal otec, když počítal vozíky rudy u šachty. Devatenáct. Někdo šel baňkovat a nevěděla, jestli se počítá. Dva odešli bez pouštění, jen s vytrhnutým zubem, ty nepočítala. Devatenáct misek, zhruba. Možná o dvě víc nebo míň.
 
-Večer, když už lázeň byla prázdná, sešla na dvůr za lázní, jako by šla k potoku, a postavila se ke struze.
+Večer, když už byla lázeň prázdná, sešla na dvůr za lázní, jako by šla k potoku, a postavila se ke struze.
 
-Nová děvečka vyšla zadními dveřmi s vědrem v každé ruce. Nedívala se na Ilonu. Došla ke struze a vylila obě vědra najednou, a z vědra se vyvalila krev, tmavá, hustá, sražená do chuchvalců, a za ní další. Struha zrudla. Krev se valila dolů ke korytu potoka a tam se rozplývala ve vodě, a voda pod mostem zrůžověla, jak to dřív bývalo, jak to vyprávěl Řehoř, a na mostě se zastavily dvě holčičky a dívaly se dolů a jedna z nich začala brečet.
+Nová děvečka vyšla zadními dveřmi s vědrem v každé ruce. Nedívala se na Ilonu. Došla ke struze a vylila obě vědra najednou. Vyvalila se z nich krev, tmavá, hustá, sražená do chuchvalců. Struha zrudla. Krev se valila dolů ke korytu potoka a rozplývala se ve vodě. Voda pod mostem zrůžověla, jak to dřív bývalo, jak to vyprávěl Řehoř. Na mostě se zastavily dvě holčičky, dívaly se dolů a jedna z nich začala brečet.
 
 Děvečka se vrátila pro další vědra. Vylila je taky. Pak třetí pár.
 
@@ -202,17 +202,17 @@ Doma pod první řádek tabulky napsala druhý. *Sobota 27. května.* Nalevo: *a
 
 A pod čáru, sama pro sebe: *Mistr Jobst začal vylévat krev v týdnu, kdy umřela Lene.*
 
-Bylo to, co viděla. Neříkalo to nic o tom, proč. Ale ty dvě věty stály na papíře vedle sebe stejně, jako tam minulý týden stály Jobstova slova a čistá struha, a Ilona je tam nechala a dívala se na ně, a měla pocit, že na sebe obě koukají a čekají, až první uhne.
+Bylo to, co viděla. Neříkalo to nic o tom, proč. Ale ty dvě věty stály na papíře vedle sebe stejně, jako tam minulý týden stály Jobstova slova a čistá struha. Ilona je tam nechala a dívala se na ně. Měla pocit, že na sebe obě koukají a čekají, která uhne první.
 
 *
 
 V neděli po bohoslužbě šla s Markétou nahoru.
 
-Markéta to nenabízela. Ilona se zeptala, a Markéta chvíli mlčela a pak řekla: „Ve dvě u koželuha.“ A ve dvě tam stála, s chlebem v plátně v zdravé ruce, s nemocnou v šátku přes rameno, a vyrazila, aniž by počkala, jestli jde Ilona za ní.
+Markéta to nenabízela. Ilona se zeptala, a Markéta chvíli mlčela a pak řekla: „Ve dvě u koželuha.“ A ve dvě tam stála, s chlebem v plátně ve zdravé ruce, s nemocnou v šátku přes rameno, a vyrazila, aniž by počkala, jestli jde Ilona za ní.
 
-Šly dlouho. Údolím nahoru, kolem posledních hald, kolem šachet, kde se v neděli nepracovalo a kde rumpály stály jako šibenice bez oběšenců. Pak lesem. Nejdřív smrky, temné, s kořeny přes cestu, pak buky, a v bučině bylo světlo zelené a teplé a ticho tak hluboké, že Ilona slyšela svůj dech. Markéta šla rychle a nemluvila. Jen jednou, na místě, kde se cesta dělila a jedna stezka uhýbala doleva, k hřebenům a k Božímu Daru, se zastavila a řekla: „Tady šly doprava.“
+Šly dlouho. Údolím nahoru, kolem posledních hald, kolem šachet, kde se v neděli nepracovalo a kde rumpály stály jako šibenice bez oběšenců. Pak lesem. Nejdřív smrky, temné, s kořeny přes cestu, pak buky, a v bučině bylo světlo zelené a teplé a ticho tak hluboké, že Ilona slyšela svůj dech. Markéta šla rychle a nemluvila. Jen jednou se zastavila, na místě, kde se cesta dělila a jedna stezka uhýbala doleva, k hřebenům a k Božímu Daru, a řekla: „Tady šly doprava.“
 
-Studánka byla v mělkém dolíku pod bukem tak starým, že měl kůru jako slonovinu a kořeny jako prsty, které svírají kámen. Voda vyvěrala zpod plochého kamene, čirá a studená, a stékala do malé nádržky, kterou kdosi před dávnými lety vyzdil z plochých kamenů, a z nádržky odtékala potůčkem do kapradí. Nad studánkou, na kmeni, byl vyřezaný křížek, starý, zarostlý kůrou, že byl sotva vidět.
+Studánka byla v mělkém dolíku pod bukem tak starým, že měl kůru jako slonovinu a kořeny jako prsty, které svírají kámen. Voda vyvěrala zpod plochého kamene, čirá a studená, a stékala do malé nádržky, kterou kdosi před dávnými lety vyzdil z plochých kamenů. Z nádržky odtékala potůčkem do kapradí. Nad studánkou, na kmeni, byl vyřezaný křížek, starý, tak zarostlý kůrou, že byl sotva vidět.
 
 Vedle nádržky ležel větší kámen, plochý a suchý, s mechem po okrajích. Na něm leželo plátno.
 
@@ -224,7 +224,7 @@ Ilona si klekla vedle kamene.
 
 Mech kolem byl neporušený. Žádné stopy po tlapách, žádné chlupy, žádné drobky. Kdyby přišla liška, roztahala by plátno po kapradí, rozcupovala ho zuby, protože pach chleba je v plátně, a liška nerozeznává chleba od plátna, jen pach. Kdyby přišel jezevec, rozryl by mech. Kdyby přišli ptáci, nechali by drobky a trus.
 
-Někdo přišel, vzal chléb, a plátno složil na čtyřikrát a položil ho zpátky na kámen, kde ho našel.
+Někdo přišel, vzal chléb, plátno složil na čtyřikrát a položil ho zpátky na kámen, kde ho našel.
 
 Ilona se podívala na zem kolem kamene, na měkkou lesní zem pod kapradím. Hledala otisk boty. Nic. Hledala otisk bosé nohy. Nic. Jen listí, loňské, hnědé, a mezi ním klíčky buku, a nikde nic.
 
@@ -236,7 +236,7 @@ Ilona se podívala na zem kolem kamene, na měkkou lesní zem pod kapradím. Hle
 
 *
 
-Seděly chvíli u studánky. Markéta se napila z dlaně a pak se dívala do lesa, mezi buky, kde se světlo lámalo do zelených a zlatých pruhů, a Ilona viděla, že se dívá, jako se dívá každou neděli. Jako by čekala, že se v tom světle něco pohne.
+Seděly chvíli u studánky. Markéta se napila z dlaně a pak se dívala do lesa, mezi buky, kde se světlo lámalo do zelených a zlatých pruhů. Ilona viděla, že se dívá tak, jako se dívá každou neděli. Jako by čekala, že se v tom světle něco pohne.
 
 Nic se nepohnulo.
 
@@ -252,7 +252,7 @@ Markéta se krátce zasmála. „To je odpověď písaře.“
 
 „To je poznat.“ Markéta vstala. Podívala se ještě jednou na kámen s chlebem, na plátno, uhlazené. „Budete ji hledat?“
 
-Ilona vstala taky. Myslela na to, co by měla odpovědět. Že nemá čas, že má na krku chlapce pod schodištěm a dvě mrtvé a město, které na ni ukazuje. Že neví, kde hledat. Že kdyby hledala tam, kam Markéta chce, aby hledala, ve štolách, s ohněm, našla by děti, které nejsou Dorota.
+Ilona vstala taky. Myslela na to, co by měla odpovědět. Že nemá čas, že má na krku chlapce pod schodištěm a dvě mrtvé a město, které na ni ukazuje. Že neví, kde hledat. Že kdyby hledala tam, kde chce Markéta, ve štolách, s ohněm, našla by děti, které nejsou Dorota.
 
 „Budu,“ řekla.
 
@@ -310,7 +310,7 @@ Seděla potom ještě dlouho u stolu a přečetla si Markétinu výpověď znovu
 
 Bylo to celé. Bylo to přesné. Markéta to podepsala křížkem a Ilona to četla nahlas a Markéta to dvakrát opravila. Nebylo v tom nic, co by Markéta neřekla, a nebylo vynecháno nic, co řekla.
 
-A kdyby to Ilona v pondělí odnesla nahoru, kdyby to četl Kunz, kdyby to četl perkmistr, kdyby to přečetli na radě, kdyby to přečetl mladší kazatel z kazatelny, slovo po slově, jak to Ilona přesně zapsala, šlo by na svatého Jana nahoru dvakrát víc lidí. S dvakrát větším ohněm. A Markéta by šla s nimi, první, s pochodní v zdravé ruce.
+A kdyby to Ilona v pondělí odnesla nahoru, kdyby to četl Kunz, kdyby to četl perkmistr, kdyby to přečetli na radě, kdyby to přečetl mladší kazatel z kazatelny, slovo po slově, jak to Ilona přesně zapsala, šlo by na svatého Jana nahoru dvakrát víc lidí. S dvakrát větším ohněm. A Markéta by šla s nimi, první, s pochodní ve zdravé ruce.
 
 Ilona položila výpověď na desky s Leninými slovy, s Ursulou, s tabulkou. Na vrch. Pak ji zase vzala a dala ji naspod, pod všechno ostatní.
 

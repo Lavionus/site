@@ -10,13 +10,13 @@ Pak šla dovnitř a rozsvítila.
 
 Kniha ležela na stole, kde ležela vždycky, a Merin ji otevřela na poslední popsané stránce.
 
-Poslední řádek byl stará Aurel. Křížek a datum, které Merin zapsala v noci, kdy u ní seděla denní žena s rukou v obvazu a dívala se na knihu vzhůru nohama. Merin to tehdy věděla. Slyšela, jak se denní žena zvedla z lavice, a slyšela dva kroky a pak nic, a nechala knihu ležet otevřenou ještě chvíli, protože chtěla vědět, co ta žena udělá, až uvidí, co uvidí.
+Poslední řádek patřil staré Aurel. Křížek a datum, které Merin zapsala v noci, kdy u ní seděla denní žena s rukou v obvazu a dívala se na knihu vzhůru nohama. Merin to tehdy věděla. Slyšela, jak se denní žena zvedla z lavice, slyšela dva kroky a pak nic. Nechala knihu ležet otevřenou ještě chvíli, protože chtěla vědět, co ta žena udělá, až uvidí, co uvidí.
 
 Žena neudělala nic. Jen četla.
 
 Čtyři sta let tahle kniha neležela otevřená před denním. Merin to řekla nahlas, tu noc, a nikdo z nich dvou nevěděl, jestli to řekla jako výčitku sobě, nebo jako omluvu. Teď to věděla. Nebylo to ani jedno. Bylo to oznámení.
 
-Kdo nechá knihu otevřenou před denním, ten předá jméno. Tak to bylo, dřív, než Merin věděla, proč to tak je. Teď to věděla taky. Kdo jednou ukázal, ukáže znovu. Ruka si to pamatuje. A kniha nesmí mít strážce, jehož ruka si pamatuje, jak se otvírá.
+Kdo nechá knihu otevřenou před denním, ten předá jméno. Tak to bylo, ještě než Merin věděla, proč to tak je. Teď to věděla taky. Kdo jednou ukázal, ukáže znovu. Ruka si to pamatuje. A kniha nesmí mít strážce, jehož ruka si pamatuje, jak se otvírá.
 
 Dobře, pomyslela si. Aurel by se smála. Aurel se smála všemu, co se dalo spočítat.
 
@@ -54,7 +54,7 @@ Pak Merin vzala pero a ještě jednou ho namočila.
 
 Vedle *angenommen*, na kraji řádku, kde bylo místo, udělala jeden znak. Svým písmem. Ptačí stopu, malou, uzavřenou, která v jejich řeči neznamenala *přijaté*. Znamenala to, co se bere, ne to, co se dává. Znak, který se píše u kořisti, u vody svedené z cizího potoka, u úlu, který se vyřízne ze stromu, když včely nejsou doma.
 
-V celé knize ten znak u jména nestál nikde. Merin to věděla. Prošla knihu v létě, celou, listem po listu, u každého řádku, kde stálo latinkou jméno a *angenommen* nebo *aufgenommen* nebo *in familiam receptus*, podle toho, kdo zrovna držel pero a od koho se naučil psát. Bylo jich víc, než čekala. Méně, než se bála.
+V celé knize ten znak u jména nestál nikde. Merin to věděla. Prošla knihu v létě, celou, list po listu. Zastavila se u každého řádku, kde stálo latinkou jméno a *angenommen* nebo *aufgenommen* nebo *in familiam receptus*, podle toho, kdo zrovna držel pero a od koho se naučil psát. Bylo jich víc, než čekala. Méně, než se bála.
 
 Žádný z nich neměl u sebe tenhle znak. Všichni byli přijatí.
 
@@ -66,7 +66,7 @@ Dorota neuměla číst ani jedno. Dívala se na ten malý znak vedle svého jmé
 
 Merin položila pero.
 
-„Že tě nikdo nepustí ke kraji lesa,“ řekla. „Dva roky. A že ses nikoho neptala.“
+„Že tě nikdo nepouštěl ke kraji lesa,“ řekla. „Dva roky. A že ses nikoho neptala.“
 
 Dorota se dívala na znak. Dlouho. Pak se podívala na *Margaretha*. Pak zase na znak.
 
@@ -84,9 +84,9 @@ Merin to místo našla. Podržela nad ním pero.
 
 Pak ho odložila.
 
-Les na papíře nechceme, řekla tehdy té ženě u studánky. A ta žena pak spálila knihu, ve které byl les, a podle toho, co se doneslo z města, seškrábala i listy, na kterých byla olšová rokle, a nenapsala nikam, kde je Dorota.
+Les na papíře nechceme, řekla tehdy té ženě u studánky. A ta žena pak spálila knihu, ve které byl les. Podle toho, co se doneslo z města, seškrábala i listy, na kterých byla olšová rokle. A nikam nenapsala, kde je Dorota.
 
-Nepsat ji bylo to jediné, co pro ni Merin mohla udělat stejně.
+Nezapsat ji bylo to jediné, čím jí to Merin mohla oplatit.
 
 *
 
@@ -98,13 +98,13 @@ Podala pero Svídě. Svída se na něj dívala a nebrala ho. Věděla, co to zna
 
 „Podepiš to.“
 
-Svída vzala pero. Ruka se jí nechvěla, a Merin ji za to měla ráda. Sklonila se nad řádek s Dorotou a s Markétou a s malým znakem na kraji a pod něj, na konec, udělala znak, který dělala Merin. Větší než ostatní. S dlouhým tahem dolů, jako se dělá ocas za posledním písmenem v podpisu.
+Svída vzala pero. Ruka se jí nechvěla, a Merin ji za to měla ráda. Sklonila se nad řádek s Dorotou, s Markétou a s malým znakem na kraji. Pod něj, na konec, udělala znak, který dělala Merin. Větší než ostatní. S dlouhým tahem dolů, jako se dělá ocas za posledním písmenem v podpisu.
 
 Tah byl stejný. Ruka ne. Tenčí, pomalejší, a inkoust se v ohybu trochu zdvojil, jak pero na okamžik zaváhalo, jestli smí.
 
-Merin se na to dívala a vzpomněla si na Aurel. Na ruku staré Aurel, která jí před sedmdesáti lety, u tohohle stolu, podala pero úplně stejně, a na svůj vlastní první znak, ten s tahem dolů, který se jí zdvojil v ohybu, protože se bála. Aurel se tehdy smála.
+Merin se na to dívala a vzpomněla si na Aurel. Na ruku staré Aurel, která jí před sedmdesáti lety u tohohle stolu podala pero úplně stejně. A na svůj vlastní první znak, ten s tahem dolů, který se jí zdvojil v ohybu, protože se bála. Aurel se tehdy smála.
 
-A řekla tu větu. Kterou Aurel řekl někdo před ní, a tomu někdo ještě před ním, až k listu, který ležel v knize nejhlouběji, s kresbou kopce a s kruhem a se čtyřiceti jednou čárkou, a pod ním ten znak, tlustý a pomalý, v inkoustu, který už ztratil barvu.
+Pak Merin řekla tu větu. Tu, kterou Aurel řekl někdo před ní a tomu zase někdo ještě před ním, až k listu, který ležel v knize nejhlouběji, s kresbou kopce a s kruhem a se čtyřiceti jednou čárkou, a pod ním ten znak, tlustý a pomalý, v inkoustu, který už ztratil barvu.
 
 „To jméno nosí ten, kdo pamatuje,“ řekla Merin.
 
@@ -114,7 +114,7 @@ Svída se na ni podívala.
 
 „Já jsem Jíva,“ řekla. „Jako dřív.“
 
-Znělo to divně. Sedmdesát let to nikdo neřekl. Jíva. Jako keř u potoka, který se ohýbá a nezlomí, a matka ji tak pojmenovala, protože se narodila v zimě a přežila. Musela si to slovo říct ještě jednou, potichu, aby věděla, že je její.
+Znělo to divně. Sedmdesát let to nikdo neřekl. Jíva. Jako keř u potoka, který se ohýbá a nezlomí. Matka ji tak pojmenovala, protože se narodila v zimě a přežila. Musela si to slovo říct ještě jednou, potichu, aby věděla, že je její.
 
 *
 

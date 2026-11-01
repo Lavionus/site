@@ -6,7 +6,7 @@ Ráno šel Matěj k žlabu s vědrem, protože tam chodil každé ráno celé ja
 
 Klekl si k ní. Nastavil vědro.
 
-Plnilo se pomalu. Tak pomalu, že Matěj nejdřív myslel, že se nepoliví vůbec. Pak se dno zalesklo, pak se voda zvedla o prst, a Matěj se modlil a počítal a došel na konec Otčenáše a začal znovu. Na konci druhého bylo vědro plné do poloviny. Na konci třetího se přelilo.
+Plnilo se pomalu. Tak pomalu, že Matěj nejdřív myslel, že se neplní vůbec. Pak se dno zalesklo, pak se voda zvedla o prst, a Matěj se modlil a počítal a došel na konec Otčenáše a začal znovu. Na konci druhého bylo vědro plné do poloviny. Na konci třetího se přelilo.
 
 Tři Otčenáše. Za celé jaro nikdy tolik. Když v březnu po Zvěstování začal měřit, byly to necelé dva, a pak každý týden méně.
 
@@ -14,7 +14,7 @@ Ponořil do vědra ruku.
 
 Voda byla studená. Ne vlažná, jako v únoru, ani teplá, jako v týdnu před svátkem, kdy se z ní za mrazivého rána kouřilo. Studená jako voda ve studni. A čistá. Matěj ji nabral do dlaně a díval se do ní a neviděl v ní nic. Žádnou rez, žádnou šedou hlínu jako mouku. Jen svou dlaň.
 
-Na rezavé kůře, která se celou zimu dělala na kamenech pod žlabem, stál Hensel. Měl ruku ve vodě, která tekla z ústí štoly, po zápěstí, a díval se na ni. Když Matěj přišel, vytáhl ji a ukázal mu ji, mokrou, se třemi prsty.
+Na rezavé kůře, která se celou zimu dělala na kamenech pod žlabem, stál Hensel. Měl ruku po zápěstí ve vodě, která tekla z ústí štoly, a díval se na ni. Když Matěj přišel, vytáhl ji a ukázal mu ji, mokrou, se třemi prsty.
 
 „Kalt,“ řekl.
 
@@ -28,9 +28,9 @@ Nevěděl, proč se dívá. Věděl, že tam nic nebude. Ti, kdo tam dýchali, b
 
 Lutze pohřbili v úterý odpoledne, za kostelíkem v Mlýnci, kde ležel otec.
 
-Kněz přišel z fary za kopcem na mezkovi, mladý, nevyspalý, a vyptával se, jestli byl ten mrtvý pokřtěný a jestli se zpovídal o Velikonocích, a Gotthard mu německy odpovídal, že byl a že se zpovídal, a kněz německy nerozuměl, a tak se podíval na Matěje. Matěj to přeložil. Kněz kývl a šel do kostelíka pro kropenku.
+Kněz přišel z fary za kopcem na mezkovi, mladý, nevyspalý, a vyptával se, jestli byl ten mrtvý pokřtěný a jestli se zpovídal o Velikonocích, a Gotthard mu německy odpovídal, že byl a že se zpovídal. Kněz německy nerozuměl, a tak se podíval na Matěje. Matěj to přeložil. Kněz kývl a šel do kostelíka pro kropenku.
 
-Hrob vykopali Sasové. Ješek jim pomáhal. Matěj stál u zdi a díval se, jak Ješek kope, rovně, hluboko, s krumpáčem, který si půjčil od Kojaty, tak jako si ho půjčil, když kopal otcův hrob, a Matěj tehdy byl za zdí ve Waldsassenu a zpíval žalmy. Teď stál tady. Zpívat nemohl. Tady se nezpívalo latinsky.
+Hrob vykopali Sasové. Ješek jim pomáhal. Matěj stál u zdi a díval se, jak Ješek kope, rovně, hluboko, s krumpáčem, který si půjčil od Kojaty, tak jako si ho půjčil, když kopal otcův hrob. Matěj byl tehdy za zdí ve Waldsassenu a zpíval žalmy. Teď stál tady. Zpívat nemohl. Tady se nezpívalo latinsky.
 
 Gotthard zpíval. Německy, starou píseň, kterou Matěj neznal, s hlasem, který se lámal na vysokých tónech, a Kunz a ti dva mladí Sasové zpívali s ním. Ortlieb nezpíval. Stál u hrobu s rukama podél těla a díval se dolů na plátno, do kterého Lutze zavinuli, a nehýbal se, ani když kněz kropil, ani když Sasové házeli hlínu.
 
@@ -58,7 +58,7 @@ Gotthard říkal *Bergmännlein*. Říkal to v krčmě u Kojaty, kde Sasové pil
 
 Kunz neříkal nic. Seděl v krčmě s mlátkem za pasem a pil a díval se do stolu.
 
-Vítek vyprávěl matce, že měli tváře jako děti a vousy jako dědové, a že mu jedna žena dala placku, a ukazoval jí tu placku, polovinu, ztvrdlou, a matka mu jí vyrazila z ruky a dala mu pohlavek. „Ve vodě se lidem zdají věci,“ řekla. Matěj to slyšel přes plot. Placka ležela v blátě na dvoře a slepice ji klovaly.
+Vítek vyprávěl matce, že měli tváře jako děti a vousy jako dědové, a že mu jedna žena dala placku, a ukazoval jí tu placku, polovinu, ztvrdlou, a matka mu ji vyrazila z ruky a dala mu pohlavek. „Ve vodě se lidem zdají věci,“ řekla. Matěj to slyšel přes plot. Placka ležela v blátě na dvoře a slepice ji klovaly.
 
 Mikuláš, který doběhl, říkal, že neviděl nic, jen tmu a vodu, a že slyšel, jak Lutz křičí, a pak už ne. To říkal pořád dokola, a nikdo se ho na nic jiného neptal.
 
@@ -72,7 +72,7 @@ Lidé kývali. To dávalo smysl. Starý důl, pohanský, každý slyšel, že v 
 
 Matěj stál ve dveřích krčmy a díval se na Ortlieba. Ortlieb se na něj nepodíval. Pil.
 
-Lhal. Matěj to věděl a věděl, že to ví i Ortlieb. Lhal o lidech, ne o věcech. A jeho lež byla věrohodnější než Gotthardova pravda, protože byla menší. Nikdo nechce věřit velké pravdě, když může věřit malé lži. Matěj to věděl od Velikonoc. Od neděle to věděl celá ves.
+Lhal. Matěj to věděl a věděl, že to ví i Ortlieb. Lhal o lidech, ne o věcech. A jeho lež byla věrohodnější než Gotthardova pravda, protože byla menší. Nikdo nechce věřit velké pravdě, když může věřit malé lži. Matěj to věděl od Velikonoc. Od neděle to věděla celá ves.
 
 *
 
@@ -112,7 +112,7 @@ Dobroslava se dívala do lesa.
 
 „Za vodu,“ řekla znovu. A víc neřekla, a Matěj věděl, že víc neřekne, a že to tak má být. Dvacet let s nimi vyměňovala kůže a nikdy nevěděla, kde spí. Teď věděla, kudy šli. Nevěděla kam. A on taky ne.
 
-Ptal se na jednu věc ještě.
+Zeptal se ještě na jednu věc.
 
 „Lovčí tu byl?“
 
@@ -284,7 +284,7 @@ Díval se na ně. Za týden dvojí mzdy, za obě party, za noci, kdy spal tři h
 
 „*Sive per aquam,*“ řekl Ortlieb. Nepodíval se na něj. „Dílo zastavila voda. Já nedostanu nic. Tohle je moje.“ Zavázal vak. „Víc nemám.“
 
-Ješek zavřel dlaň. Pak se otočil a šel, a Matěj viděl jeho záda, jak jde přes paseku k cestě do vsi, a nešel za ním.
+Ješek zavřel dlaň. Pak se otočil a šel, a Matěj se díval, jak jde přes paseku k cestě do vsi, a nešel za ním.
 
 Hensel dostal taky. Vzal to a schoval do košile a ukázal Ortliebovi tři prsty, a Ortlieb se na ty prsty díval a pak řekl jedno slovo, které Hensel viděl na jeho ústech.
 
@@ -292,7 +292,7 @@ Hensel dostal taky. Vzal to a schoval do košile a ukázal Ortliebovi tři prsty
 
 V pondělí za svítání. Do míšeňských hor, kde je stříbro a kde ho Ortlieb pořád ještě uměl najít. Hensel se díval na Ortliebova ústa dlouho. Pak kývl.
 
-K ústí štoly přivezli Rüdigerovi lidé hlínu na dvou vozech. Hensel vzal lopatu, první, a hodil ji do vody, která z ústí pořád tekla, studená a čistá. Pak druhou. Pak lopatu položil a šel k Matějovi.
+K ústí štoly přivezli Rüdigerovi lidé hlínu na dvou vozech. Hensel vzal lopatu a hodil první do vody, která z ústí pořád tekla, studená a čistá. Pak druhou. Pak lopatu položil a šel k Matějovi.
 
 Postavil se před něj. Ukázal na jeho prsa, na místo pod hábitem, kde Matěj nosil tabulku a sešitek. Udělal rukou ten pohyb, jako když se píše. Pak ukázal na svoje oči.
 
@@ -306,7 +306,7 @@ Kývl. Hensel kývl taky. A šel zpátky k lopatě.
 
 Konrád za ním přišel, když muž z Chebu odjel.
 
-Matěj stál u plané hrušně na kraji luk. Voda opadla a na lukách zůstalo bahno, šedé, s vrstvou, která se na slunci leskla, a na kmeni hrušně byla do výšky kolen čára, kam sahala. Hruda pod hrušní byla celá. Drn srostl a voda ho jen umyla. Pupeny se rozvíraly, bílé.
+Matěj stál u plané hrušně na kraji luk. Voda opadla a na lukách zůstalo bahno, šedé, s vrstvou, která se na slunci leskla, a na kmeni hrušně byla ve výšce kolen čára, kam voda sahala. Hruda pod hrušní byla celá. Drn srostl a voda ho jen umyla. Pupeny se rozvíraly, bílé.
 
 Konrád se postavil vedle něj. Bez Volkmara, bez Rüdigera. Sám, v šedém plášti.
 
@@ -336,7 +336,7 @@ Matěj sáhl pod hábit pro tabulku. Vosk byl zvlněný, rozměklý ve vodě a z
 
 Konrád poslouchal se zavřenýma očima. Pak kývl k Volkmarovi, který stál u vrat, a Volkmar přišel s deskami, a Konrád řekl: „Ještě jednou. Pomalu. Ať to má.“
 
-A Matěj to četl ještě jednou, a Volkmar to psal, slovo po slově, a Matěj se díval, jak se jeho řádky, *vidi*, *vidi*, *vidi*, mění pod Volkmarovým rydlem v cizí rukopis, rovný, porýnský, a věděl, co z nich Konrád udělá. Že je přečte znovu, a pak znovu, a že v nich bude číst, co v nich není. Že to *desuper*, shora, bude jednou kázání.
+A Matěj to četl ještě jednou, a Volkmar to psal, slovo po slově, a Matěj se díval, jak se jeho řádky, *vidi*, *vidi*, *vidi*, mění pod Volkmarovým rydlem v cizí rukopis, rovný, porýnský. Věděl, co z nich Konrád udělá. Že je přečte znovu, a pak znovu, a že v nich bude číst, co v nich není. Že to *desuper*, shora, bude jednou kázání.
 
 Četl je stejně. Bylo to, co viděl.
 

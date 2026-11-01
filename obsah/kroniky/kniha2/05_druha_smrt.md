@@ -36,7 +36,7 @@ V úterý pršelo. Ilona pustila žilou mlynářově ženě, která měla horkou
 
 „Že chodíte v noci.“ Pokrčil rameny. „Strážný to slyšel v hospodě. Já to říkám jen proto, abyste to věděla.“
 
-Večer nemohla spát a nevěděla proč. Ležela a poslouchala déšť na šindelích a mezi deštěm stoupy, jak tlučou, dole a nahoře, a v tichu mezi nimi myslela na to, kdy půjde ve středu k lázni, aby viděla, jestli si soudek vyzvedne ten muž, a kde bude stát, aby ji nikdo neviděl. Usnula pozdě. Spala tvrdě, bez snů.
+Večer nemohla spát a nevěděla proč. Ležela a poslouchala déšť na šindelích a mezi deštěm stoupy, jak tlučou, dole a nahoře. V tichu mezi nimi myslela na to, kdy půjde ve středu k lázni, aby viděla, jestli si soudek vyzvedne ten muž, a kde bude stát, aby ji nikdo neviděl. Usnula pozdě. Spala tvrdě, bez snů.
 
 *
 
@@ -48,7 +48,7 @@ Byl to vozka Pankrác, ten, který jí dlužil za nohu, a byl bílý v obličeji
 
 U mostu už stáli lidé. Ilona je slyšela dřív, než je uviděla: hlasy, ne hlasité, ale husté, jako když se na trhu hádá deset lidí o jednu věc a každý o jinou. Ženy s vědry. Havíři z ranní šichty, kteří šli kolem a zůstali. Děti, které tam neměly být. Jobstova žena stála u zábradlí s rukama na ústech a nehýbala se.
 
-Ilona sešla po svahu k vodě, kolem ústí struhy, a lidé jí ustupovali. Neustupovali jako ustupují ranhojičce. Ustupovali, jako se ustupuje někomu, o kom se v hospodě mluví.
+Ilona sešla po svahu k vodě, kolem ústí struhy, a lidé jí ustupovali. Neustupovali, jako se ustupuje ranhojičce. Ustupovali, jako se ustupuje někomu, o kom se v hospodě mluví.
 
 Lene ležela na kamenech u vody, na zádech, s hlavou ke břehu a nohama k proudu. Sukni měla mokrou do pasu a těžkou, a šátek jí sklouzl, takže jí byly vidět vlasy, zrzavé, jak říkal Kunz, a rozpuštěné na kamenech jako mokrá sláma. Ruce ležely podél těla. Někdo jí zavřel oči. Nebo je zavřela sama, než umřela, to se stává.
 
@@ -92,7 +92,7 @@ Pod Lene, na kamenech, nebyla krev. Skoro žádná. Kameny byly mokré od vody a
 
 A krev, která měla být všude, kde Lene umřela, nebyla nikde.
 
-Ilona dlouho klečela na kamenech s Lenininou rukou ve své. Ruka byla studená a už nepovolovala. Ilona myslela na to, jak ta ruka šlehala březovým věníkem, lehce, rytmicky, a jak se v ní krev z misek měnila v tekutou, aby se nesrazila. *Mistr mi dá krejcar, abych mlčela.* Lene to věděla. Lene věděla, jak se krev šlehá, a teď jí někdo vzal krev a nenechal po ní nic.
+Ilona dlouho klečela na kamenech s Lenininou rukou ve své. Ruka byla studená a už nepovolovala. Ilona myslela na to, jak ta ruka šlehala březovým věníkem, lehce, rytmicky, a jak šlehala krev z misek, aby zůstala tekutá a nesrazila se. *Mistr mi dá krejcar, abych mlčela.* Lene to věděla. Lene věděla, jak se krev šlehá, a teď jí někdo vzal krev a nenechal po ní nic.
 
 Za zády už nikdo neříkal Otčenáš.
 
@@ -100,7 +100,7 @@ Za zády už nikdo neříkal Otčenáš.
 
 „Paní ranhojičko.“
 
-Stöckel stál na břehu nad ní, ve sváteční kazajce, jako by ho vytáhli od snídaně, a vedle něj stál kazatel od svatého Jáchyma, ten mladší, s bledou dlouhou tváří a s rukama sepjatýma na prsou, jako by se ještě nedomodlil. Za nimi biřicové. Za biřici lidé, víc než předtím, celý most.
+Stöckel stál na břehu nad ní, ve sváteční kazajce, jako by ho vytáhli od snídaně. Vedle něj stál kazatel od svatého Jáchyma, ten mladší, s bledou dlouhou tváří a s rukama sepjatýma na prsou, jako by se ještě nedomodlil. Za nimi biřicové. Za biřici lidé, víc než předtím, celý most.
 
 „Máte list od pana perkmistra,“ řekl Stöckel. Řekl to hlasitě, aby to slyšel most. „Máte prohlížet těla. Tak nám řekněte, co jste viděla.“
 
@@ -148,7 +148,7 @@ A pak jiný hlas, starý, a Ilona věděla, čí je, dřív než zvedla hlavu: �
 
 Veit. S rukama na zábradlí. Nedíval se na ni zle. Díval se na ni, jako se dívá ponocný na dveře, které ráno našel otevřené: neví, jestli je otevřel zloděj, nebo jestli je jen zapomněl zavřít hospodář.
 
-Hučení na mostě se změnilo. Bylo to jiné hučení. Ilona ho slyšela jednou v Štiavnici, když jí bylo dvanáct, když vedli ženu z Hodruše, o které se říkalo, že dojí cizí krávy přes sekeru zaraženou do trámu. Otec ji tehdy vzal za ruku a odvedl domů jinou ulicí.
+Hučení na mostě se změnilo. Bylo to jiné hučení. Ilona ho slyšela jednou ve Štiavnici. Bylo jí dvanáct a vedli ženu z Hodruše, o které se říkalo, že dojí cizí krávy přes sekeru zaraženou do trámu. Otec ji tehdy vzal za ruku a odvedl domů jinou ulicí.
 
 „Paní ranhojička má list od perkmistra,“ řekl Stöckel. Řekl to nahlas, k mostu, a Ilona v tom poprvé za ta léta slyšela něco jako varování, ne pro sebe, ale pro ně. „Kdo na ni sáhne, sahá na horní úřad.“ Pak se k ní otočil a řekl tiše: „Jděte domů. Jinou cestou.“
 
@@ -158,7 +158,7 @@ Biřicové zvedli Lene na lesi z větví. Hlava jí sklouzla stranou a vlasy vis
 
 Domů nešla. Šla nahoru, k hornímu úřadu, a cestou ji dvakrát předběhli kluci, kteří běželi stejným směrem a křičeli to slovo, jako by to byla hra.
 
-Před horním úřadem už stáli lidé. Ne mnoho, deset, patnáct. Havíři z noční šichty, kteří ještě nebyli doma, a ženy, a jeden mladý muž s kladivem za pasem, který stál pod zamřížovaným okénkem u země a díval se do něj, jako se dívá do chléva, kde je zvíře, které chce koupit. Dva havíři ze stráže stáli ve dveřích s halapartnami a nedívali se na nikoho.
+Před horním úřadem už stáli lidé. Ne mnoho, deset, patnáct. Havíři z noční šichty, kteří ještě nebyli doma, a ženy, a jeden mladý muž s kladivem za pasem, který stál pod zamřížovaným okénkem u země a díval se do něj, jako se člověk dívá do chléva, kde je zvíře, které chce koupit. Dva havíři ze stráže stáli ve dveřích s halapartnami a nedívali se na nikoho.
 
 „Vydejte toho, co jim otvíral,“ řekl někdo, ne hlasitě. Jako by to říkal sousedovi.
 
@@ -220,7 +220,7 @@ Ilona je otevřela.
 
 Bylo tam všechno. Zápis o Ursule, slova Purgy, slova Jobsta. Tabulka. Slova děvečky. Všechno, nic nechybělo, list po listu. Jen tabulka neležela navrchu. Ležela pod zápisem o Ursule, a slova děvečky pod ní, a listy byly srovnané hranu na hranu, přesně, jak je v pondělí srovnal Kunz.
 
-Ilona je v pondělí nesla s tabulkou navrchu. Dávala ji tam už v sobotu večer, aby ji měla po ruce. A v pondělí Kunz četl, srovnal, zavřel. Neměnil pořadí. Viděla to. Tabulka byla navrchu, když je zamykal.
+Ilona je v pondělí nesla s tabulkou navrchu. Dala ji tam už v sobotu večer, aby ji měla po ruce. A v pondělí Kunz četl, srovnal, zavřel. Neměnil pořadí. Viděla to. Tabulka byla navrchu, když je zamykal.
 
 „Četl jste to ještě jednou,“ řekla.
 
@@ -260,9 +260,9 @@ Kunz zvedl oči. Na chvíli se zdálo, že něco řekne, že se mu to dere ven, 
 
 *
 
-Wehrl přijel ve čtvrtek večer, a ještě v zablácených botách a s kompasem pod paží přišel k ní.
+Wehrl přijel ve čtvrtek večer a ještě v zablácených botách a s kompasem pod paží přišel k ní.
 
-Přišel předními dveřmi, za světla, a nechal je otevřené, aby ho bylo vidět z ulice, a Ilona pochopila proč, až když za ním stanuli na prahu dva havíři z horního úřadu a zůstali tam. Sedl si na Řehořovu lavici u pece a dlouho nic neříkal. Vypadal unaveně. Ruce se mu chvěly víc než minule a pod očima měl tmavé stíny.
+Přišel předními dveřmi, za světla, a nechal je otevřené, aby ho bylo vidět z ulice. Ilona pochopila proč, až když za ním stanuli na prahu dva havíři z horního úřadu a zůstali tam. Sedl si na Řehořovu lavici u pece a dlouho nic neříkal. Vypadal unaveně. Ruce se mu chvěly víc než minule a pod očima měl tmavé stíny.
 
 „Slyšel jsem to u brány,“ řekl. „Ještě jsem neslezl z koně a už mi to vykládali. Druhá. Upír. Ranhojička je s nimi.“ Podíval se na ni. „Řekněte mi to vy.“
 
@@ -310,7 +310,7 @@ Ale to nebylo, co viděla. To bylo, co si myslela. Listy ležely jinak, to vidě
 
 Napsala: *Slova její ležela od pondělí 22. května v zamčené truhle horního úřadu. Ve středu 24. května ležely listy v jiném pořadí, než v jakém byly zamčeny.* Nic víc. Žádné jméno. Ani Kunzovo.
 
-Pak dlouho seděla a dívala se na ten řádek a myslela na to, že to je stejné, jako když napsala *děvečka v lázni*. Že to není jméno, a každý, kdo to bude číst, bude vědět, o kom to je.
+Pak dlouho seděla a dívala se na ten řádek a myslela na to, že to je stejné, jako když napsala *děvečka v lázni*. Že to není jméno, a přesto každý, kdo to bude číst, bude vědět, o kom to je.
 
 Nechala to tam.
 

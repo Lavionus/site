@@ -6,7 +6,7 @@ Matěj nad ním stál dlouho a voda mu tekla přes prsty. Bylo to o prosbu dří
 
 Ješek sešel z hory s noční směnou za šera. Ostatní šli po cestě dolů ke vsi, mlčky a s kápěmi přes hlavu. Ješek se od nich oddělil u haldy a sešel ke strouze. Byl mokrý. Ne od potu. Kalhoty měl mokré nad kolena a tmavé, a když se zastavil, kapalo z nich na kamení.
 
-Matěj se podíval na jeho nohy a pak na jeho tvář. Ješek si všiml kam a nic neřekl.
+Matěj se podíval na jeho nohy a pak na jeho tvář. Ješek si všiml, kam se dívá, a nic neřekl.
 
 „Ortlieb odjel,“ řekl místo toho. „Před svítáním. Na Wehrberg, pro mzdy na svátky. Pán si ho tam nechá přes Velikonoce. Vrátí se v pondělí s ním.“ Dřepl si ke strouze a umyl si ruce ve vodě, která tekla ze štoly. Byla vlažná. „Od poledne se nekope. Velí Hensel.“
 
@@ -62,7 +62,7 @@ A pergamen. Jeden list, přeložený na čtvrtky, s pečetí na proužku.
 
 Matěj ho vzal jako první. Nechtěl. Ruka to udělala za něj, jako se ruka natáhne po knize na pultu, kterou nikdo nečte. Rozložil ho u kahanu. Pečeť neznal: jezdec s praporcem a kolem opis, ve kterém se dalo přečíst *CONRADI*. Písmo bylo úhledné, trochu nakloněné, školené někde u Rýna. Kdo jiný v Konrádově službě uměl psát než Volkmar.
 
-Byla to smlouva. Matěj ji přečetl dvakrát, protože latina byla dobrá a jednoduchá a napoprvé se mu nechtělo věřit, jak jednoduchá. Mistr Ortlieb vyrazí pro pana Konráda štolu do hory nad Mlýncem až ke stříbrné žíle, za tolik a tolik denárů za loket a za mzdu pro své lidi, s nimiž přichází, a k tomu dostal předem tolik a tolik, které je povinen vrátit, nedokončí-li dílo. Najde-li žílu, náleží mu desátý díl stříbra z prvního roku. Zastaví-li se dílo před žílou, z jakékoli příčiny, *sive per aquam sive per defectum magistri*, ať vodou, nebo vinou mistra, nenáleží mu nic nad lokty už zaplacené.
+Byla to smlouva. Matěj ji přečetl dvakrát, protože latina byla dobrá a jednoduchá a napoprvé se mu nechtělo věřit, jak jednoduchá. Mistr Ortlieb vyrazí pro pana Konráda štolu do hory nad Mlýncem až ke stříbrné žíle, za tolik a tolik denárů za loket a za mzdu pro své lidi, s nimiž přichází. Předem dostal tolik a tolik a je povinen to vrátit, nedokončí-li dílo. Najde-li žílu, náleží mu desátý díl stříbra z prvního roku. Zastaví-li se dílo před žílou, z jakékoli příčiny, *sive per aquam sive per defectum magistri*, ať vodou, nebo vinou mistra, nenáleží mu nic nad lokty už zaplacené.
 
 *Sive per aquam.*
 
@@ -84,7 +84,7 @@ Složil smlouvu zpátky na čtvrtky a položil ji do truhly, přesně tak, jak l
 
 Nebylo to písmo. Nebo ne celé.
 
-Matěj rozvázal řemínek a otevřel první tabulku u kahanu a chvíli si myslel, že je to k ničemu. Vosk byl popsaný hustě, drobně, ale nebyly to řádky slov. Byly to znaky. Křížek. Svislá čárka s příčkami jako žebřík. Kroužek. Malý čtverec s čárou přes. Šikmá rýha s rozdvojeným koncem jako hadí jazyk. A mezi tím čárky, po pěti přeškrtnuté, jak se počítají ovce v ohradě, a římské číslice, kostrbaté, a sem tam slovo. Německé, napsané hranatými písmeny, jako by je někdo vyřezával do dřeva. *Warm.* *Trüb.* *Drückt.*
+Matěj rozvázal řemínek a u kahanu otevřel první tabulku. Chvíli si myslel, že je to k ničemu. Vosk byl popsaný hustě, drobně, ale nebyly to řádky slov. Byly to znaky. Křížek. Svislá čárka s příčkami jako žebřík. Kroužek. Malý čtverec s čárou přes. Šikmá rýha s rozdvojeným koncem jako hadí jazyk. A mezi tím čárky, po pěti přeškrtnuté, jak se počítají ovce v ohradě, a římské číslice, kostrbaté, a sem tam slovo. Německé, napsané hranatými písmeny, jako by je někdo vyřezával do dřeva. *Warm.* *Trüb.* *Drückt.*
 
 Hensel si přisedl. Vzal tabulku z Matějových rukou do své, tu bez dvou prstů, a dlouho se na ni díval. Pak položil zdravý ukazovák na křížek.
 
@@ -114,7 +114,7 @@ Hensel se podíval. Pak se podíval na Matěje, na jeho kápi, a ukázal na něj
 
 „Der Mönch,“ řekl.
 
-Ješek se zasmál nahlas, a hned se chytil za ústa. Matěj se nesmál. Díval se na tu postavičku s kápí, vyrytou do vosku osmnáctého února, toho dne, kdy stál u čelby s kahanem v ruce jako přistižený ministrant, a Ortlieb si vytáhl tabulku a něco do ní rychle napsal. Matěj si toho tehdy všiml, protože by si všiml každého, kdo píše. Teď věděl, co to bylo. Ortlieb si zapsal vodu a k vodě mnicha.
+Ješek se zasmál nahlas a hned se chytil za ústa. Matěj se nesmál. Díval se na tu postavičku s kápí, vyrytou do vosku osmnáctého února. Toho dne stál u čelby s kahanem v ruce jako přistižený ministrant a Ortlieb si vytáhl tabulku a něco do ní rychle napsal. Matěj si toho tehdy všiml, protože by si všiml každého, kdo píše. Teď věděl, co to bylo. Ortlieb si zapsal vodu a k vodě mnicha.
 
 Opsal postavičku taky. Přesně.
 
@@ -122,7 +122,7 @@ Opsal postavičku taky. Přesně.
 
 Druhá tabulka. Osm kroužků. Deset. U svatého Řehoře dvě souběžné čáry a slovo *Rinne*. Žlab. Druhý žlab. Pak, o týden později, nový znak, čtverec s čárou přes, poprvé, a slovo *unten* a *warm*. Hrázka. Voda zespodu, teplá. Na Zvěstování čtverec a vedle něj čtyři čárky. Čtyřikrát za směnu.
 
-Třetí tabulka. Čtverec, pět čárek. Šest. Sedm. U druhé neděle po Zvěstování, dva dny poté, co Matěj na grangii poprvé zapsal, že se vědro přelilo o půl prosby dřív, stálo vedle sedmi čárek slovo *Bad*. Lázeň. A pod ním, jiným, rychlejším škrabopisem, dvě slova, která Matěj přečetl napoprvé, protože je znal ze Wigandovy almárie, z německých glos k Žalmům, kde hory skákaly jako beránci:
+Třetí tabulka. Čtverec, pět čárek. Šest. Sedm. Druhá neděle po Zvěstování, dva dny poté, co Matěj na grangii poprvé zapsal, že se vědro přelilo o půl prosby dřív. Vedle sedmi čárek tam stálo slovo *Bad*. Lázeň. A pod ním, jiným, rychlejším škrabopisem, dvě slova, která Matěj přečetl napoprvé, protože je znal ze Wigandovy almárie, z německých glos k Žalmům, kde hory skákaly jako beránci:
 
 *Berg zittert.*
 
@@ -170,7 +170,7 @@ Matěj čekal.
 
 „Neukážeš to nikomu, dokud ti neřeknu.“ Ješek mluvil tiše. „Nikomu. Ani pánovi, ani převorovi, ani tý svý uhlířce. Dokud nebudu mít na pole. Nebo dokud neřeknu, že je čas. Já tam stojím, Mates. Já a Hensel. Ne ty.“
 
-Matěj seděl na zemi s otevřeným sešitkem na kolenou. Venku za Ješkem hořel pod hlínou oheň, sotva, rudě, a Hensel u něj stál a díval se na ně dva, a nerozuměl ani slovo.
+Matěj seděl na zemi s otevřeným sešitkem na kolenou. Venku za Ješkem hořel pod hlínou oheň, sotva, rudě, a Hensel u něj stál a díval se na ně dva, a nerozuměl ani slovu.
 
 Slíbil Ješkovi pod smrkem. Slíbil Merinovi pod zemí. Slíbil převorovi, že mu do svatého Jiří řekne jistotu, a slíbil Konrádovi, že na svatého Jiří bude svědčit. Každý slib, který dal, ho teď držel za jinou ruku.
 
@@ -192,7 +192,7 @@ Ješek se mu vytrhl. Vyšel z boudy a šel přes paseku dolů, do tmy, a neohlé
 
 Na grangii se vrátil k vigiliím velikonoční noci.
 
-Udalrich stál v oratoři u oltáře, na kterém zase leželo plátno a stály svíce, a zpíval. Měl hrubý hlas, nevycvičený, jakým se v Bavorsku volá na krávy přes údolí, a zpíval tím hlasem slovo, které nikdo na grangii nezpíval od Devítníku, od poloviny února. *Alleluia.* Jednou, potichu. Podruhé výš. Potřetí ještě výš, až se mu hlas zlomil.
+Udalrich stál v oratoři u oltáře, na kterém zase leželo plátno a stály svíce, a zpíval. Měl hrubý hlas, nevycvičený, jakým se v Bavorsku volá na krávy přes údolí. Tím hlasem zpíval slovo, které nikdo na grangii nezpíval od Devítníku, od poloviny února. *Alleluia.* Jednou, potichu. Podruhé výš. Potřetí ještě výš, až se mu hlas zlomil.
 
 Matěj klečel na kamenné podlaze se sešitkem pod hábitem a zpíval s ním. Nad dveřmi se znovu rozhoupal zvonek.
 
@@ -208,7 +208,7 @@ Ješek stál u ústí s ostatními z obou směn. Na Matěje se ani jednou nepod�
 
 Konrád přijel s Volkmarem a s Rüdigerem a s Ortliebem, který jel vedle něj na svém koni a měl na sobě nový kabátec. Za nimi šli dva psovodi se smečkou na řemenech, šest velkých psů s ohnutými ocasy. Na kraji paseky se psovodi zastavili, chvíli se o něčem radili a pak se se psy stočili do lesa, na tu stranu, kde ležela slatina a Dobroslavina chalupa.
 
-Konrád sesedl. Matěj čekal, že bude mluvit k vsi, a Konrád se nejdřív otočil k Ortliebovi.
+Konrád sesedl. Matěj čekal, že bude mluvit k vsi. Konrád se ale nejdřív otočil k Ortliebovi.
 
 „Kdy?“ zeptal se ho německy, nahlas, aby to slyšeli všichni, kdo rozuměli.
 
@@ -278,7 +278,7 @@ A pak by Konrád řekl *a ta velká voda, Matěji, o které se mluví ve vsi, ta
 
 *Qui probat, dicat unde sciat.*
 
-Mlčel. Konrád mu stiskl rameno a pustil ho a obrátil se k vsi, a Matěj zůstal stát a cítil, jak se mu ve tvářích rozlévá horko, a nevěděl, jestli je to stud, nebo úleva, a bál se, že je to obojí.
+Mlčel. Konrád mu stiskl rameno, pustil ho a obrátil se k vsi. Matěj zůstal stát a cítil, jak se mu ve tvářích rozlévá horko. Nevěděl, jestli je to stud, nebo úleva, a bál se, že je to obojí.
 
 Ješek u ústí sklopil oči.
 
@@ -346,7 +346,7 @@ Matěj neodpověděl. Věděl, že nemyslí jeho. Nebo myslela.
 
 „Pán vzkazuje,“ řekl, „ať si do svatého Jiří rozmyslíte, komu nosíte kůže.“
 
-„Komu nosím kůže,“ opakovala Dobroslava. Pak vstala ze špalku a vzala si od dveří tyč s hákem a postavila ji před sebe, opřenou o zem, a stála tak, jako stála na okraji prohlubně tenkrát, než ho vytáhla. „Řekni mu, že lišky z mrtvých míst tahám dvacet let a že ty kůže jsem nosila na trh do Chebu a prodala je jeho lovčímu. Řekni mu, že nůž jsem si koupila od kramáře. A sůl taky.“
+„Komu nosím kůže,“ opakovala Dobroslava. Pak vstala ze špalku, vzala si od dveří tyč s hákem a postavila ji před sebe, opřenou o zem. Stála tak, jako tenkrát stála na okraji prohlubně, než ho vytáhla. „Řekni mu, že lišky z mrtvých míst tahám dvacet let a že ty kůže jsem nosila na trh do Chebu a prodala je jeho lovčímu. Řekni mu, že nůž jsem si koupila od kramáře. A sůl taky.“
 
 „Neuvěří.“
 
@@ -374,7 +374,7 @@ Do svatého Jiří zbývalo šest dní. Od zítřka se na čelbě bude kopat ve 
 
 A nikdo z nich neví, kolik vody je v hoře. Ani Konrád. Ten ze všech nejmíň.
 
-Matěj zavřel sešitek. Zastrčil ho pod slámu v lůžku, pak ho zase vytáhl a dal si ho pod hábit na prsa, kde nosil tabulku, protože tam to bylo jediné místo, o kterém věděl, že je jeho.
+Matěj zavřel sešitek. Zastrčil ho pod slámu v lůžku, pak ho zase vytáhl a dal si ho pod hábit na prsa, kde nosil tabulku, protože to bylo jediné místo, o kterém věděl, že je jeho.
 
 Ráno půjde k žlabu. Naplní vědro a bude se modlit, pomalu, stejně jako včera. A bude vědět, u které prosby se přelije.
 

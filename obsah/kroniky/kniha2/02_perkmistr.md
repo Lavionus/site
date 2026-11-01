@@ -1,10 +1,10 @@
 # 2. Perkmistr
 
-Dům horního úřadu stál v horní polovině náměstí, které nebylo náměstím, ale širší ulicí s pochybným sklonem, a měl nad vchodem kamenný znak s mlátkem a želízkem, zkříženými jako dva meče, které se nikdy nepřou. Ilona tam chodila s výpověďmi žen léta a pokaždé jí vchod připadal o něco nižší, než si ho pamatovala. Muži z horního úřadu se pod ním skláněli, i když nemuseli. Ona nemusela nikdy.
+Dům horního úřadu stál v horní polovině náměstí, které nebylo náměstím, ale širší ulicí s pochybným sklonem. Nad vchodem měl kamenný znak s mlátkem a želízkem, zkříženými jako dva meče, které se nikdy nepřou. Ilona tam chodila s výpověďmi žen léta a pokaždé jí vchod připadal o něco nižší, než si ho pamatovala. Muži z horního úřadu se pod ním skláněli, i když nemuseli. Ona nemusela nikdy.
 
 Ve psárně bylo teplo. Starý pan horní písař Nickel Kunz topil i v květnu, protože měl, jak říkal, v kostech zimu ze čtyřiceti let po štolách a ta už z nich nevyleze. Seděl u pultu s brýlemi na šňůrce a psal, a když Ilona vešla, nepřestal, jen zvedl levou ruku, aby počkala.
 
-Čekala. Za pultem visely na stěně stejné věci jako vždycky: rejstříky děl v kožených deskách, svazky lístků navlečené na motouzu, pečetidla, a mapa údolí, kterou kdosi kreslil před padesáti lety, kdy se tu ještě všechno teprve otevíralo, a na které štoly vedly do hor jako žíly v ruce. Některé z nich byly přeškrtnuté. U jedné, vysoko nahoře, stálo drobným písmem *verlassen*. Opuštěná.
+Čekala. Za pultem visely na stěně stejné věci jako vždycky: rejstříky děl v kožených deskách, svazky lístků navlečené na motouzu, pečetidla, a mapa údolí. Kdosi ji kreslil před padesáti lety, kdy se tu ještě všechno teprve otevíralo, a štoly na ní vedly do hor jako žíly v ruce. Některé z nich byly přeškrtnuté. U jedné, vysoko nahoře, stálo drobným písmem *verlassen*. Opuštěná.
 
 „Paní Ilona,“ řekl Kunz, když dopsal řádek a posypal ho pískem. „Já vím, proč jdete. Stöckel tu byl včera večer. Křičel na mě, jako by mi patřila ta šatlava.“
 
@@ -28,7 +28,7 @@ Kunz se na ni podíval nad brýlemi, které neměl na nose, a pak se usmál, pop
 
 Hans Wehrl stál ve dveřích a Ilona nevěděla, jak dlouho tam stojí.
 
-Znala ho, jak ho znalo celé město: zdálky, v kostele, na horní slavnosti, na koni u brány, když jel nahoru k dílům. Muž kolem padesáti, vysoký, s plnovousem, který byl kdysi světlý a teď byl barvy popela, a s očima, které se nesnažily vypadat přísně, protože nemusely. Měl na sobě hornický kabát, ne úřednický, a boty mokré až po kolena a od žluté hlíny, a v ruce nesl kožené pouzdro, jaké nosí měřiči na kompas. Byl cítit kouřem a vlhkým kamenem a ještě něčím, co Ilona nepoznala hned. Něčím sladkým a kovovým zároveň.
+Znala ho, jak ho znalo celé město: zdálky, v kostele, na horní slavnosti, na koni u brány, když jel nahoru k dílům. Muž kolem padesáti, vysoký, s plnovousem, který byl kdysi světlý a teď byl barvy popela, a s očima, které se nesnažily vypadat přísně, protože nemusely. Měl na sobě hornický kabát, ne úřednický, a boty až po kolena mokré a umazané žlutou hlínou, a v ruce nesl kožené pouzdro, jaké nosí měřiči na kompas. Byl cítit kouřem a vlhkým kamenem a ještě něčím, co Ilona nepoznala hned. Něčím sladkým a kovovým zároveň.
 
 „Paní ranhojička,“ řekl. Nebyla to otázka. „Kunzi, dejte mi to.“
 
@@ -40,7 +40,7 @@ Když dočetl, chvíli se díval z okna. Pak se otočil.
 
 Ilona vytáhla z kapsy kus nitě. Uvázala ho kolem dvou prstů levé ruky, jak ho viděla na Ursulině paži: dvakrát přetočit, protáhnout, utáhnout. Konce ustřihla nožíkem nakrátko.
 
-Wehrl k ní přistoupil a vzal její ruku do své, aby si uzel prohlédl zblízka. Dotýkal se jí lehce, jako se dotýká lékař, a Ilona si všimla, že se mu prsty chvějí. Nepatrně. Tak, jak se chvějí ruce starým písařům, kteří už nedokážou udělat rovnou čáru, jen tohle chvění bylo jemnější a rychlejší, jako struna, která ještě dozní. A na konečcích prstů měl skvrny. Žlutohnědé, do kůže zažrané, jaké mívají barvíři.
+Wehrl k ní přistoupil a vzal její ruku do své, aby si uzel prohlédl zblízka. Dotýkal se jí lehce, jako se dotýká lékař, a Ilona si všimla, že se mu prsty chvějí. Nepatrně. Tak, jak se chvějí ruce starým písařům, kteří už nedokážou udělat rovnou čáru. Jen tohle chvění bylo jemnější a rychlejší, jako struna, která ještě doznívá. A na konečcích prstů měl skvrny. Žlutohnědé, do kůže zažrané, jaké mívají barvíři.
 
 „Tenhle uzel,“ řekl, „vážou havíři u rumpálu, když se lano spojuje. Vážou ho hutníci u měchů. Vážou ho voraři na Ohři, a vozkové, a každý, kdo kdy dělal s lanem.“ Pustil její ruku. „Takže polovina mužů v tomhle údolí. Ale ten váš chlapec ne?“
 
@@ -50,7 +50,7 @@ Wehrl k ní přistoupil a vzal její ruku do své, aby si uzel prohlédl zblízk
 
 Podala mu list, přišitý v rohu zápisu. Wehrl ho rozevřel u okna, podržel proti světlu a dlouho se díval na pár tmavých vláken.
 
-„Jemná,“ řekl. „Tohle není z naší ovce. Tohle je sukno, jaké se vozí z Nizozemí nebo z Anglie, nebo aspoň z Lipska. Barvené na černo, a dobře.“ Vrátil jí list. „Nosí ho kazatelé, úředníci a lékárníci. A já.“ Ukázal si na rukáv, kde mu pod hornickým kabátem vyčuhoval černý rukáv. „Mám se bát?“
+„Jemná,“ řekl. „Tohle není z naší ovce. Tohle je sukno, jaké se vozí z Nizozemí nebo z Anglie, nebo aspoň z Lipska. Barvené na černo, a dobře.“ Vrátil jí list. „Nosí ho kazatelé, úředníci a lékárníci. A já.“ Ukázal si na zápěstí, kde mu z hornického kabátu vyčuhoval černý rukáv. „Mám se bát?“
 
 „Byl jste v pondělí v noci u Ursuly Kolbové?“
 
@@ -76,7 +76,7 @@ Wehrl mlčel. Díval se na ni a pak na desky v Kunzově ruce, a ona v jeho tvá�
 
 Pak se všechno stalo rychle, jak se věci dějí, když je dělá muž, který je dělat umí.
 
-Wehrl si od Kunze vzal papír a napsal stojící u pultu dopis rychtáři, krátký, latinsky v oslovení a německy v jádru, a přečetl ho Iloně nahlas, protože viděl, že se dívá. *Vdova po havíři, pod pokladnou bratrstva; věc náleží hornímu soudu podle horních svobod; učedník ať je předán do vazby horního úřadu dnes do nešpor; žádné útrpné právo bez rozhodnutí soudu.* Pak vzal druhý list a napsal na něj, co Ilona nejdřív nepochopila: že vdova Ilona, zapisovatelka výpovědí žen pro horní soud, je pověřena prohlédnout těla a vyslechnout svědkyně ve věci smrti Ursuly Kolbové a ve všech věcech s ní souvisejících, a že jí v tom nikdo nemá bránit, ani rada, ani bratrstvo lazebníků. Pod to se podepsal a Kunz to zapečetil a podal jí to přes pult.
+Wehrl si od Kunze vzal papír a vestoje u pultu napsal dopis rychtáři, krátký, latinsky v oslovení a německy v jádru, a přečetl ho Iloně nahlas, protože viděl, že se dívá. *Vdova po havíři, pod pokladnou bratrstva; věc náleží hornímu soudu podle horních svobod; učedník ať je předán do vazby horního úřadu dnes do nešpor; žádné útrpné právo bez rozhodnutí soudu.* Pak vzal druhý list a napsal na něj, co Ilona nejdřív nepochopila: že vdova Ilona, zapisovatelka výpovědí žen pro horní soud, je pověřena prohlédnout těla a vyslechnout svědkyně ve věci smrti Ursuly Kolbové a ve všech věcech s ní souvisejících, a že jí v tom nikdo nemá bránit, ani rada, ani bratrstvo lazebníků. Pod to se podepsal a Kunz to zapečetil a podal jí to přes pult.
 
 Ilona ten list držela a necítila ho, jako by držela vzduch.
 
@@ -100,9 +100,9 @@ Ilona se na něj podívala.
 
 *
 
-Tobiáše přivedli dva biřicové od Stöckela odpoledne a předali ho dvěma havířům, kteří u horního úřadu dělali stráž a kteří ho znali od dětství. Jeden z nich mu podal ruku. Ilona to viděla z ulice a viděla, jak Tobiáš tu ruku chvíli nechápe, a pak ji vezme.
+Tobiáše přivedli odpoledne dva Stöckelovi biřicové a předali ho dvěma havířům, kteří u horního úřadu dělali stráž. Oba ho znali od dětství. Jeden z nich mu podal ruku. Ilona to viděla z ulice a viděla, jak Tobiáš tu ruku chvíli nechápe, a pak ji vezme.
 
-Pustili ji k němu před nešporami. Seděl v komoře pod schodištěm, kde se jindy skladovaly lampy a olej, na lavici, a komora byla suchá a měla okno, malé a zamřížované, ale okno. Ilona mu přinesla chléb, sýr a čistou košili.
+Pustili ji k němu před nešporami. Seděl na lavici v komoře pod schodištěm, kde se jindy skladovaly lampy a olej. Komora byla suchá a měla okno, malé a zamřížované, ale okno. Ilona mu přinesla chléb, sýr a čistou košili.
 
 „Takže teď patřím perkmistrovi,“ řekl Tobiáš.
 
@@ -116,7 +116,7 @@ Ilona mlčela.
 
 „Ten list má ještě jiné řádky.“
 
-„Ty jim nečetl.“
+„Ty mi nečetl.“
 
 „Perkmistr je četl. Všechny.“ Ilona si sedla vedle něj na lavici. „Proto tu sedíš, a ne tam. Proto ti nikdo nezkroutí palce. Proto mám tohle.“ Vytáhla Wehrlův list s pečetí a podala mu ho, a Tobiáš ho četl, pomalu, protože číst se naučil teprve u ní a v němčině mu to šlo hůř než v češtině.
 
@@ -130,7 +130,7 @@ Tobiáš jí list vrátil. „A kdyby ten perkmistr řekl, že tam ten řádek o
 
 „Ne,“ zopakoval Tobiáš. Nebylo v tom vztek. Bylo v tom něco horšího, jakési pochopení. „Vy byste to neudělala ani pro mě.“
 
-„Právě pro tebe ne,“ řekla Ilona. „Kdybych škrtla jeden řádek, kterému by pak věřili ostatním?“
+„Právě pro tebe ne,“ řekla Ilona. „Kdybych škrtla jeden řádek, kdo by pak věřil ostatním?“
 
 Tobiáš se na ni díval, jako se člověk dívá na rovnici, která vyjde, a přesto se mu nelíbí. Pak se natáhl a vzal si sýr.
 
@@ -198,13 +198,13 @@ Wehrl se usmál. „Nemusíte ji poslouchat.“
 
 „Řekl jste, že rád mluvíte.“
 
-„Řekl.“ Vstal a přešel ke kouli a položil na ni dlaň, opatrně, jako se pokládá dlaň na hlavu dítěte. Otočil jí. Hvězdy se posunuly. „Víte, co je tohle?“
+„Řekl.“ Vstal a přešel ke kouli a položil na ni dlaň, opatrně, jako se pokládá dlaň na hlavu dítěte. Otočil s ní. Hvězdy se posunuly. „Víte, co je tohle?“
 
 „Nebe.“
 
 „Nebe, jak ho viděli Řekové. Tady je Velký vůz, tady Labuť, tady,“ ukázal prstem na pět hvězd, spojených čarou do tvaru, který připomínal písmeno W, jen roztažené, jako by ho psala unavená ruka, „Kasiopeja. Královna na trůnu. Pyšná žena, kterou bohové za trest posadili na nebe hlavou dolů.“ Nechal prst ležet na kouli. „Tady, kousek vedle, se v listopadu roku dvaasedmdesát rozsvítila hvězda, která tam předtím nebyla.“
 
-Ilona si vzpomněla. Bylo jí patnáct. V Štiavnici o tom kázali, otec si to zapsal do kalendáře. Hvězda, jasnější než Večernice, vidět i ve dne. Na náměstí stáli lidé a ukazovali a staré ženy říkaly, že přijde mor. Mor nepřišel. Hvězda vybledla a jednoho dne nebyla.
+Ilona si vzpomněla. Bylo jí patnáct. Ve Štiavnici o tom kázali, otec si to zapsal do kalendáře. Hvězda, jasnější než Večernice, vidět i ve dne. Na náměstí stáli lidé a ukazovali a staré ženy říkaly, že přijde mor. Mor nepřišel. Hvězda vybledla a jednoho dne nebyla.
 
 „Pamatuju si ji,“ řekla.
 
@@ -224,7 +224,7 @@ Wehrl dlouho neodpovídal. Pak se vrátil ke stolu a posadil se a vzal pohár do
 
 „Na co?“
 
-„Na to, co se slíbilo.“ Usmál se, a teď v tom úsměvu bylo něco opatrného, jako by stál na kraji, kam nechtěl spadnout, a ještě ne. „Naše rodina je v tomhle kraji dlouho, paní Ilono. Déle než stříbro. Máme svoje staré knihy, jako je mají všechny staré rody. Jsou v nich věci, kterým nerozumím. Můj otec jim rozuměl o kousek víc. Já se snažím rozumět aspoň tolik jako on.“ Ukázal na baňky a trubice, na pec, kterou nebylo vidět, ale cítit, protože od schodů šlo teplo a ten sladkokovový pach. „Tohle je jedna cesta. Hvězdy jsou druhá. Obě vedou k témuž, ale obě jsou pomalé, a já,“ podíval se na své ruce, na to chvění, „já nejsem.“
+„Na to, co se slíbilo.“ Usmál se, a teď v tom úsměvu bylo něco opatrného, jako by stál na kraji, přes který zatím nechtěl spadnout. „Naše rodina je v tomhle kraji dlouho, paní Ilono. Déle než stříbro. Máme svoje staré knihy, jako je mají všechny staré rody. Jsou v nich věci, kterým nerozumím. Můj otec jim rozuměl o kousek víc. Já se snažím rozumět aspoň tolik jako on.“ Ukázal na baňky a trubice, na pec, kterou nebylo vidět, ale cítit, protože od schodů šlo teplo a ten sladkokovový pach. „Tohle je jedna cesta. Hvězdy jsou druhá. Obě vedou k témuž, ale obě jsou pomalé, a já,“ podíval se na své ruce, na to chvění, „já nejsem.“
 
 Ilona věděla, odkud je ten pach. Řehoř jí jednou ukazoval muže z mincovny, který léta pracoval se rtutí při zlacení: ruce se mu třásly, dásně měl na okraji šedomodré, a když mluvil, z úst mu šel ten nasládlý dech. Podívala se na Wehrlova ústa, když se usmál, a viděla to. Tenkou šedou linku na dásních nad zuby.
 
@@ -236,13 +236,13 @@ Ilona tomu rozuměla. Možná víc, než chtěla. Myslela na otce, který umřel
 
 „Rozumím,“ řekla.
 
-„Tak vidíte.“ Wehrl vstal a ona pochopila, že je konec. „Najděte mi toho, kdo umí vázat ten uzel. Já vám budu držet dveře otevřené, jak dlouho to půjde. A kdyby vás někdo ze lazebníků nebo z rady chtěl odvolat, ukažte mu ten list a pošlete ho za mnou.“
+„Tak vidíte.“ Wehrl vstal a ona pochopila, že je konec. „Najděte mi toho, kdo umí vázat ten uzel. Já vám budu držet dveře otevřené, jak dlouho to půjde. A kdyby vás někdo z lazebníků nebo z rady chtěl odvolat, ukažte mu ten list a pošlete ho za mnou.“
 
 Ve dveřích se ještě zastavila.
 
 „Pane perkmistře. Proč to děláte? Pro mě, pro chlapce. Neznáte nás.“
 
-Wehrl se na ni díval přes světnici, přes knihy a přes svíce, a odpověděl až po chvíli, a ona to slyšela a zapamatovala si to slovo od slova, protože tak to uměla, a protože věděla, že to jednou bude chtít mít přesně.
+Wehrl se na ni díval přes světnici, přes knihy a přes svíce, a odpověděl až po chvíli. Ilona si to zapamatovala slovo od slova, protože tak to uměla, a protože věděla, že to jednou bude chtít mít přesně.
 
 „Protože jste napsala, že nevíte,“ řekl. „A protože se mi líbí, když lidé, kteří vědí, mají v rukou pero. Nás je málo, paní Ilono. Těch, co se dívají. Musíme si pomáhat.“
 
@@ -256,7 +256,7 @@ Zastavila se u Tobiášova otce, Matze Lindnera, v domku pod kostelem, kde leže
 
 Starý muž otevřel oči. Díval se na ni, dlouho, a Ilona čekala, že něco řekne, a on řekl jen: „Aha.“ A pak se otočil ke zdi a rozkašlal se a ona nevěděla, co tím myslel, a nezeptala se.
 
-Doma zapálila svíčku a vytáhla sešit. Napsala datum, a pak spočítala na prstech, jak to počítal otec, se rty, které se pohybovaly: svatý Vít ve čtvrtek patnáctého června, soud v týdnu po něm, nejdřív v pondělí. Třicet tři dní. Svatojánská noc o čtyři dny později.
+Doma zapálila svíčku a vytáhla sešit. Napsala datum, a pak počítala na prstech a hýbala přitom rty, jak to dělával otec: svatý Vít ve čtvrtek patnáctého června, soud v týdnu po něm, nejdřív v pondělí. Třicet tři dní. Svatojánská noc o čtyři dny později.
 
 Napsala: *Do soudu 33 dní. Do svatého Jana 37.*
 

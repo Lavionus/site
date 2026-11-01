@@ -8,7 +8,7 @@ Stál na prahu dlouho, než vešel. Díval se na prázdný hák nad dveřmi a pa
 
 „Pojďte dál, pane písaři.“
 
-Vešel. Sedl si na lavici u pece, na kraj, a desky položil na kolena, jak je držel na radě, a brýle na šňůrce mu visely na prsou a on si je nenasadil.
+Vešel. Sedl si na lavici u pece, na kraj, a desky položil na kolena, jak je držel na radě. Brýle na šňůrce mu visely na prsou a nenasadil si je.
 
 „Spis půjde do Prahy,“ řekl. „K vyššímu právu. Kvůli hrdelnímu rozsudku. Musí tam být všechno, z čeho soud soudil, opsané a srovnané.“ Polkl. „Výpovědi žen jste přepsala?“
 
@@ -52,7 +52,7 @@ Kunz stál na prahu. Pak kývl. Jednou, krátce, jak kývl tehdy na radě, jako 
 
 Psala tři noci.
 
-Ve dne nemohla. Ve dne se na ni ulice dívala oknem a děti házely kamínky na hák a jednou přišla žena z dolního konce s klukem, který měl rozseknuté koleno, a stála u dveří a nevěděla, jestli smí zaklepat. Ilona otevřela a podívala se na koleno a řekla, ať jde k Jobstovi, a žena se rozplakala a šla. Ilona se pak dlouho dívala na své ruce.
+Ve dne nemohla. Ve dne se na ni ulice dívala oknem a děti házely kamínky na hák. Jednou přišla žena z dolního konce s klukem, který měl rozseknuté koleno, a stála u dveří a nevěděla, jestli smí zaklepat. Ilona otevřela a podívala se na koleno a řekla, ať jde k Jobstovi, a žena se rozplakala a šla. Ilona se pak dlouho dívala na své ruce.
 
 V noci psala.
 
@@ -66,7 +66,7 @@ A pak to šlo.
 
 *
 
-Psala o Ursule. O dvou řezech, o uzlu, o vlně. O tom, že slyšela vrzat podlahu, a nevěděla, kdo to byl, a že Tobiáš vyšel na dvůr, a že to zapsala, i když to škodilo, protože tehdy věřila, že úplný zápis chrání.
+Psala o Ursule. O dvou řezech, o uzlu, o vlně. O tom, že slyšela vrzat podlahu a nevěděla, kdo to byl. Že Tobiáš vyšel na dvůr a že to zapsala, i když to škodilo, protože tehdy věřila, že úplný zápis chrání.
 
 Psala o lázni a o miskách. O Lene, která ji prosila, aby nebyla jmenována, a o tom, že ji jmenovala, ne jménem, ale tak, že to stačilo. Že Lene umřla devět dní potom. Že neví, kdo Röhrichovi řekl, jak se děvečka z lázně jmenuje. Že ví, kdo mohl.
 
@@ -90,7 +90,7 @@ Pak psala o lahvičkách.
 
 *
 
-O dvaceti lahvičkách ve výklenku za pecí. O papírcích *Sang. antiq.* O tom, co jí řekl Wehrl ve sklepě, *nejspíš kozí krev*, a co řekl Röhrich u soudu, tatáž slova. O tom, co jí Wehrl ukázal na střeše, o hvězdě a o knize v zeleném sametu a o roce, který stál v záhlaví. O tom, že jí řekl den a cestu razie, a že tentýž den a tutéž cestu znali Hladoví den předem od mezkaře, a že neví, proč jí to řekl.
+O dvaceti lahvičkách ve výklenku za pecí. O papírcích *Sang. antiq.* O tom, co jí řekl Wehrl ve sklepě, *nejspíš kozí krev*, a co řekl Röhrich u soudu, tatáž slova. O tom, co jí Wehrl ukázal na střeše, o hvězdě a o knize v zeleném sametu a o roce, který stál v záhlaví. O tom, že jí řekl den a cestu razie. Že tentýž den a tutéž cestu znali Hladoví den předem od mezkaře. A že neví, proč jí to řekl.
 
 A pak o knize jmen.
 
@@ -114,7 +114,7 @@ O tom, že lhala Hessemu a Wehrlovi. O tom, že na radě vyhrožovala jmény z k
 
 Psala to rovně. Bez *protože*. Otec říkal, že *protože* je slovo, kterým se svědek obhajuje, a že obhajoba patří jinam.
 
-Když skončila, bylo šedé světlo a kohouti. Na stole leželo čtrnáct listů. Poslední lipský papír a pak saský, horší, a na saském se jí inkoust trochu rozpíjel, a ona si toho nevšímala.
+Když skončila, bylo šedé světlo a kohouti. Na stole leželo čtrnáct listů. Nejdřív poslední lipský papír, pak saský, horší. Na saském se jí inkoust trochu rozpíjel, ale nevšímala si toho.
 
 Pod posledním řádkem nechala místo. Jeden řádek prázdný. Pak napsala, o řádek níž:
 
@@ -126,13 +126,13 @@ A podepsala se.
 
 Kunzovi to donesla ve čtvrtek ráno, bočními dveřmi do písárny, ne přes síň.
 
-Kunz seděl u pultu, kde vždycky seděl, a v písárně bylo horko, protože topil i v červenci. Vzal od ní listy a nasadil si brýle a četl. Ilona stála a čekala. Viděla, jak jde očima po řádcích, rychle, jak čte člověk, který čte celý život, a jak se na prvních listech nezastavuje, a na pátém se zastavil.
+Kunz seděl u pultu, kde vždycky seděl, a v písárně bylo horko, protože topil i v červenci. Vzal od ní listy a nasadil si brýle a četl. Ilona stála a čekala. Viděla, jak jde očima po řádcích, rychle, jak čte člověk, který čte celý život, a jak se na prvních listech nezastavuje. Na pátém se zastavil.
 
 Na tom, kde stálo jeho *nevím to, vím jen, kdo mohl*.
 
 Četl to dlouho. Pak obrátil list.
 
-Na osmém se zastavil znovu. Ilona věděla, na kterém řádku. Viděla, jak se mu brýle zamlžily, jak si je sundal a otřel do rukávu a zase nasadil, a jak se pak díval na to *W.* s kličkou, které tam stálo jejím písmem, napodobené, protože ho nedokázala napsat jinak, než jak ho viděla.
+Na osmém se zastavil znovu. Ilona věděla, na kterém řádku. Viděla, jak se mu brýle zamlžily, jak si je sundal a otřel do rukávu a zase nasadil. Pak se díval na to *W.* s kličkou. Stálo tam jejím písmem, napodobené, protože ho nedokázala napsat jinak, než jak ho viděla.
 
 „Tohle soud nevezme,“ řekl.
 
@@ -168,7 +168,7 @@ Ilona kývla.
 
 Kunz chvíli mlčel. Pak řekl, jiným hlasem:
 
-„Ti z hor. Ty tři odvezli ve čtvrtek do Lokte. Jedná se o nich zvlášť. Čtvrtý umřel první noc v šatlavě. Ten starý, z žebříku.“ Podíval se na své ruce. „Přísežní se hádali, jestli ho do spisu počítat. Jestli je mrtvý nalezený, nebo ne. Napsal jsem tři nebo čtyři.“
+„Ti z hor. Ty tři odvezli ve čtvrtek do Lokte. Jedná se o nich zvlášť. Čtvrtý umřel první noc v šatlavě. Ten starý, ze žebříku.“ Podíval se na své ruce. „Přísežní se hádali, jestli ho do spisu počítat. Jestli je mrtvý nalezený, nebo ne. Napsal jsem tři nebo čtyři.“
 
 Urban, pomyslela si Ilona. Kdo dává, ten dostává.
 
@@ -188,7 +188,7 @@ Markéta nepřestala dojit.
 
 „Zítra.“
 
-Markéta kývla. Mléko cákalo do hrnce, rovnoměrně, jedna struhka, druhá, jedna, druhá. Ilona stála u zápraží a dívala se na Markétiny ruce, šedé od rudy až k loktům i v neděli, protože ten prach už nejde smýt.
+Markéta kývla. Mléko cákalo do hrnce, rovnoměrně, jedna stružka, druhá, jedna, druhá. Ilona stála u zápraží a dívala se na Markétiny ruce, šedé od rudy až k loktům i v neděli, protože ten prach už nejde smýt.
 
 „Je ještě něco,“ řekla Ilona.
 
@@ -244,6 +244,8 @@ Takové světlo znala. Z olšové rokle, z té první noci, kdy ji tam Kilián v
 
 Ve škvíře se pohnul stín. Skloněná hlava. Ruka. Ilona stála na náměstí a dívala se, jak se ten stín pohybuje, pravidelně, zleva doprava, a pak se vrací, a zase zleva doprava. Jak se pohybuje ruka, která píše dlouho a rovně. Jak píšou písaři, kteří opisují.
 
+![Opis](obrazky/20_opis.webp)
+
 Spis pro Prahu, pomyslela si. Šedesát stran a víc. Mladý písař, který píše ve dne pro radu a v noci pro horní soud.
 
 Rohová stínítka se prodávají na každém trhu.
@@ -254,7 +256,7 @@ Rohová stínítka se prodávají na každém trhu.
 
 Za šera ji vzbudilo klepání. Přední dveře, dvakrát.
 
-Venku stál Jeremiáš. Mladý písař z radnice, s kloboukem se širokou krempou staženým do čela, a pod paží kožené pouzdro na listiny. Nebe nad hřebenem na východě bylo světlé, ale do ulice ještě nedošlo. Bylo to tak brzy, že nekokrhali ani kohouti.
+Venku stál Jeremiáš. Mladý písař z radnice, s kloboukem se širokou krempou staženým do čela, a pod paží kožené pouzdro na listiny. Nebe nad hřebenem na východě bylo světlé, ale světlo do ulice ještě nedošlo. Bylo to tak brzy, že nekokrhali ani kohouti.
 
 „Paní,“ řekl. „Soud vám vrací, co nevzal.“
 
@@ -266,11 +268,11 @@ Ilona se na ně dívala a vzpomněla si na Kunzovu truhlu. Na listy v jiném po�
 
 Teď to znamenalo, že je někdo četl.
 
-Celé. Od prvního do posledního, a pak znovu, a pak je nevrátil, jak byly, protože mu bylo jedno, jestli to pozná.
+Celé. Od prvního do posledního, a pak znovu, a pak je nesrovnal zpátky, jak byly, protože mu bylo jedno, jestli to pozná.
 
 Podívala se na Jeremiáše.
 
-Prsty měl od inkoustu až po druhý článek, černé, jako mívají písaři po celé noci, a víc. Oči zarudlé. A na hřbetu ruky, kde mu z rukávu vyčníval kus zápěstí, měl kůži jinou. Lesklou. Bělavou, s drobnými jamkami, jak bývá kůže, na které se kdysi, dávno, v dětství, udělaly puchýře a zahojily se a nechaly po sobě stopu. Ilona takovou kůži viděla. Na lících dětí v olšové rokli. Johanka ji bude mít za deset let.
+Prsty měl od inkoustu až po druhý článek, černější, než je mívají písaři po celé noci. Oči zarudlé. A na hřbetu ruky, kde mu z rukávu vyčníval kus zápěstí, měl kůži jinou. Lesklou. Bělavou, s drobnými jamkami, jak bývá kůže, na které se kdysi, dávno, v dětství, udělaly puchýře a zahojily se a nechaly po sobě stopu. Ilona takovou kůži viděla. Na lících dětí v olšové rokli. Johanka ji bude mít za deset let.
 
 Jeremiáš si všiml, kam se dívá, a stáhl rukáv přes zápěstí.
 
@@ -278,13 +280,13 @@ Jeremiáš si všiml, kam se dívá, a stáhl rukáv přes zápěstí.
 
 „Celé.“
 
-Řekl to jednoduše. Bez omluvy. Pak zaváhal, jako by chtěl říct ještě něco, a podíval se jí do tváře, a Ilona v tom pohledu neviděla zvědavost písaře, který si přečetl cizí papír. Viděla něco jiného, co neuměla pojmenovat.
+Řekl to jednoduše. Bez omluvy. Pak zaváhal, jako by chtěl říct ještě něco, a podíval se jí do tváře. Ilona v tom pohledu neviděla zvědavost písaře, který si přečetl cizí papír. Viděla něco jiného, co neuměla pojmenovat.
 
 „Píšete rovně, paní,“ řekl. „Jako po pravítku. Dobře se to čte.“
 
 „Kdo to bude číst?“
 
-Jeremiáš se podíval na východ. Nad hřebenem se světlo zvedalo a za chvíli dojde do ulice.
+Jeremiáš se podíval na východ. Nad hřebenem se světlo zvedalo a za chvíli mělo dojít do ulice.
 
 „Nevím, paní,“ řekl.
 
@@ -304,7 +306,7 @@ Zavřela dveře.
 
 Pankrác jel dolů v šest.
 
-Vozka, který před šesti týdny našel Lene u brodu. Vezl prázdné sudy od piva do Ostrova a řekl, že vezme i ji, a nechtěl za to nic, a když mu chtěla dát krejcar, odstrčil jí ruku a podíval se jinam.
+Vozka, který před šesti týdny našel Lene u brodu. Vezl prázdné sudy od piva do Ostrova a řekl, že vezme i ji, a nechtěl za to nic. Když mu chtěla dát krejcar, odstrčil jí ruku a podíval se jinam.
 
 Neměla toho moc. Řehořovu brašnu s nástroji, které si směla ponechat jako vdovský majetek. Bylinářskou knihu, kterou nechal Tobiáš. Sešit. Uzel s šaty. Markétin chléb.
 

@@ -2,9 +2,9 @@
 
 Dva dny chodila po horním konci s Wehrlovým listem v kapse a nikomu ho nemusela ukázat.
 
-Ženy s ní mluvily i bez něj. Mluvily ochotně a mnoho a skoro nic z toho nebylo pravda, nebo spíš: všechno to byla pravda o něčem jiném. O tom, že Ursula byla hodná a že byla divná. Že k ní chodil muž, nebo nechodil nikdo. Že v noci viděla jedna z nich nad haldou světélko, a druhá, že to byla svatojánská muška, a třetí, že na svatojánské mušky je ještě brzo. Ilona to psala. Psala to tak, jak to říkaly, a pod každou výpověď *víc neřekla*, a večer to četla a bylo to jako číst déšť.
+Ženy s ní mluvily i bez něj. Mluvily ochotně a mnoho a skoro nic z toho nebylo pravda, nebo spíš: všechno to byla pravda o něčem jiném. O tom, že Ursula byla hodná a že byla divná. Že k ní chodil muž, nebo nechodil nikdo. Že jedna z nich viděla v noci nad haldou světélko, a druhá, že to byla svatojánská muška, a třetí, že na svatojánské mušky je ještě brzo. Ilona to psala. Psala to tak, jak to říkaly, a pod každou výpověď *víc neřekla*, a večer to četla a bylo to jako číst déšť.
 
-Jen jedna věc se opakovala. Neříkala ji žádná z žen přímo; leželo to pod tím, co říkaly, jako voda pod prkny v dole. *Noční lid.* Nikdo neřekl, že Ursulu vysál. Všechny se ptaly, jestli je to pravda, co se povídá.
+Jen jedna věc se opakovala. Žádná z žen to neřekla přímo; leželo to pod tím, co říkaly, jako voda pod prkny v dole. *Noční lid.* Nikdo neřekl, že Ursulu vysál. Všechny se ptaly, jestli je to pravda, co se povídá.
 
 Ve čtvrtek večer se Ilona vrátila domů tak unavená, že usnula oblečená na lavici u pece, a probudilo ji klepání.
 
@@ -16,7 +16,7 @@ Vzala svíčku a pak ji zase odložila, protože kdo klepe ze dvora v noci, ten 
 
 „Kdo je?“
 
-„Prosím vás.“ Mužský hlas, tichý, německy, ale ne tou němčinou, jakou se mluvilo v Jáchymově, kde se mísily Sasové z Freibergu a Frankové a Čechové z údolí. Tahle zněla jako stará píseň, kterou člověk zná od babičky. „Mám tu dítě. Je popálené.“
+„Prosím vás.“ Mužský hlas, tichý, německy, ale ne tou němčinou, jakou se mluvilo v Jáchymově, kde se mísili Sasové z Freibergu a Frankové a Čechové z údolí. Tahle zněla jako stará píseň, kterou člověk zná od babičky. „Mám tu dítě. Je popálené.“
 
 Ilona odsunula závoru.
 
@@ -50,7 +50,7 @@ Ilona se na něj podívala. Muž stál u dveří, s kloboukem v ruce, a díval s
 
 „Od rána do poledne. Utekla jí koza, šla za ní na haldu a tam usnula ve vřesu. Našli jsme ji až večer.“ Odmlčel se. „Myslím, že to byly tři hodiny. Možná čtyři.“
 
-Ilona to věděla od sekáčů na lukách, od dívek, které v létě hrabaly seno s odkrytými pažemi: slunce pálí, kůže zrudne, svědí, za dva dny se loupe. Viděla jednou žence, který usnul v poledne na strništi a měl pak záda samý puchýř. Ale to bylo v srpnu, v rovině, celý den. Tohle byl květen v horách, kde ještě před týdnem padal v noci mráz, a čtyři hodiny.
+Ilona to znala od sekáčů na lukách, od dívek, které v létě hrabaly seno s odkrytými pažemi: slunce pálí, kůže zrudne, svědí, za dva dny se loupe. Viděla jednou žence, který usnul v poledne na strništi a měl pak záda samý puchýř. Ale to bylo v srpnu, v rovině, celý den. Tohle byl květen v horách, kde ještě před týdnem padal v noci mráz, a čtyři hodiny.
 
 „Svědilo ji to nejdřív,“ řekl muž, jako by slyšel, na co myslí. „Pak pálilo. Pak brečela. Nepálí to jako oheň. Pálí to jako kopřivy. Ale hloub.“
 
@@ -72,7 +72,7 @@ Ilona se na to dlouho dívala. Krev v moči viděla. Ta je jiná, kalná, a na d
 
 Neodpověděl.
 
-Ilona položila nočník na zem. Podívala se na dívku, která teď spala s plátnem přes obličej, a na muže, který stál u dveří a nesundal si rukavice, a poprvé za celou noc si dovolila myslet na to, na co myslela od chvíle, kdy otevřela.
+Ilona položila nočník na zem. Podívala se na dívku, která teď spala s plátnem přes obličej, a na muže, který stál u dveří a nesundal si rukavice, a poprvé za celou noc si dovolila myslet na to, na co myslela od chvíle, kdy otevřela dveře.
 
 *Noční lid.*
 
@@ -114,7 +114,9 @@ Nevedl ji ulicemi. Vedl ji zahradami a za stodolami, po pěšinách, o kterých 
 
 Za poslední haldou bylo boční údolí, úzké a zarostlé olšemi, a na jeho dně šuměl potok. Kilián šel proti proudu. Olše se uzavřely nad nimi. Pak se zastavil, odhrnul větve, a za nimi byla tma, která byla jiná než ostatní tma. Hustší. Ilona ucítila na tváři vzduch, chladný a vlhký, a pach kamene.
 
-Ústí štoly. Staré, vyzděné kdysi kameny, které se teď rozestupovaly a mezi nimiž rostlo kapradí. Nad ústím, na překladu, byl vytesaný křížek a datum, ale v té tmě ho nepřečetla.
+Ústí štoly. Staré, kdysi vyzděné kamením. Kameny se teď rozestupovaly a mezi nimi rostlo kapradí. Nad ústím, na překladu, byl vytesaný křížek a datum, ale v té tmě ho nepřečetla.
+
+![Stará štola v olšové rokli](obrazky/03_nocni_lid.webp)
 
 „Skloňte se,“ řekl Kilián. „A dejte mi ruku.“
 
@@ -128,9 +130,9 @@ Zvedla hlavu, když vešli. Byla bledá stejně jako Kilián, s vlasy svázaným
 
 Pak Ilona viděla víc, protože se jí oči přivykly, a protože lamp tu bylo víc.
 
-Štola se tady rozšiřovala v síň, jakou havíři vylamují, když jdou za bohatou žílou a ta se rozbíhá do stran: nízký, nerovný strop podepřený tu a tam pilíři z neodtěžené skály, a z ní chodby na všechny strany. V jedné z nich, nejbližší, bylo slyšet mečení a cítit kozy, ten těžký, teplý, nezaměnitelný pach. Ve stěnách síně byly výklenky, vysekané do skály nebo zbylé po starých dílech, a v nich ležely na vřesu a ovčích kůžích spící postavy. Velké i malé. Ilona napočítala jedenáct, než přestala počítat. Z jednoho výklenku na ni hledělo dítě, malé, mohlo mu být pět let, s očima dokořán, a Ilona viděla, že má na lících a na čele staré jizvy, bělavé a vrásčité, jaké zůstávají po popálení.
+Štola se tady rozšiřovala v síň, jakou havíři vylamují, když jdou za bohatou žílou a ta se rozbíhá do stran: nízký, nerovný strop podepřený tu a tam pilíři z neodtěžené skály, a ze síně vedly chodby na všechny strany. V jedné z nich, nejbližší, bylo slyšet mečení a cítit kozy, ten těžký, teplý, nezaměnitelný pach. Ve stěnách síně byly výklenky, vysekané do skály nebo zbylé po starých dílech, a v nich ležely na vřesu a ovčích kůžích spící postavy. Velké i malé. Ilona napočítala jedenáct, než přestala počítat. Z jednoho výklenku na ni hledělo dítě, malé, mohlo mu být pět let, s očima dokořán, a Ilona viděla, že má na lících a na čele staré jizvy, bělavé a vrásčité, jaké zůstávají po popálení.
 
-Uprostřed síně hořel oheň. Malý, z dřevěného uhlí, které nekouří, a kouř, kolik ho bylo, stoupal ke stropu a mizel v černém otvoru, nějaké staré šachtici. Nad ohněm visel kotlík a v něm se něco vařilo, a Ilona to poznala po vůni dřív, než to uviděla: kroupy, cibule, kus uzeného. Hornická polévka. Taková, jakou vařila každá druhá žena na horním konci.
+Uprostřed síně hořel oheň. Malý, z dřevěného uhlí, které nekouří. Kouř, kolik ho bylo, stoupal ke stropu a mizel v černém otvoru, nějaké staré šachtici. Nad ohněm visel kotlík a v něm se něco vařilo, a Ilona to poznala po vůni dřív, než to uviděla: kroupy, cibule, kus uzeného. Hornická polévka. Taková, jakou vařila každá druhá žena na horním konci.
 
 *
 
@@ -160,7 +162,7 @@ Tady to nebylo daleko na jihu. Tady to bylo hodinu cesty od jejího stolu.
 
 „Ranhojičko.“
 
-Hlas přišel odněkud zprava, z tmy za pilířem. Byl starý. Ne slabý, ale starý, jako je starý kámen, a mluvil česky, jen s tvary, které Ilona slyšela naposledy u babičky v Štiavnici, když ještě žila a mluvila po svém.
+Hlas přišel odněkud zprava, z tmy za pilířem. Byl starý. Ne slabý, ale starý, jako je starý kámen, a mluvil česky, jen s tvary, které Ilona slyšela naposledy u babičky ve Štiavnici, když ještě žila a mluvila po svém.
 
 „Pojď sem. Ať na tebe nemusím křičet. Už neumím křičet.“
 
@@ -252,7 +254,7 @@ A někdo jiný za ni zaplatil něčím, co chtěl někdo dole.
 
 *
 
-Kilián ji vedl zpátky, když se nebe nad horami začalo šedit. Šel rychleji než v noci a víckrát se ohlédl k východu, a Ilona pochopila proč, a nic neřekla.
+Kilián ji vedl zpátky, když se nebe nad horami začalo šedit. Šel rychleji než v noci a častěji se ohlížel k východu, a Ilona pochopila proč, a nic neřekla.
 
 U její branky se zastavil. Bylo už tolik světla, že mu viděla do tváře pod kloboukem, a ona si všimla, že na čele, na kraji, kde mu klobouk nesahal, má kůži lehce zarudlou. Od včerejška, když hledal Johanku na haldě. Nebo od dnešního rána, od té trochy šedi.
 
@@ -276,11 +278,11 @@ Psala:
 
 Pak se zastavila.
 
-Na tohle místo patřilo: kdo byl ten doprovod, odkud přišel, kam odešel. Patřilo sem, kam ji vedl, kolik kroků, kolik lidí. Patřily sem kozy a krev a mléko a Zikmundovy ruce a Konradsgrün a Hladoví v Horní štole. Patřilo sem všechno, co viděla a slyšela, slovo po slově, jak to umí. *Co člověk řekl, patří jemu. Do knihy patří jen to první.* Zikmund to řekl. Patřilo mu to. A on ji prosil, aby to sem nepatřilo.
+Na tohle místo patřilo: kdo byl ten doprovod, odkud přišel, kam odešel. Patřilo sem, kam ji vedl, kolik kroků, kolik lidí. Patřily sem kozy a krev a mléko a Zikmundovy ruce a Konradsgrün a Hladoví v Horní štole. Patřilo sem všechno, co viděla a slyšela, slovo po slově, jak to uměla. *Co člověk řekl, patří jemu. Do knihy patří jen to první.* Zikmund to řekl. Patřilo mu to. A on ji prosil, aby to sem nepatřilo.
 
 Seděla s olůvkem nad papírem tak dlouho, že venku začali kosi.
 
-Řehoř to věděl. Sedm let to věděl a nenapsal nic, ani řádek, Ilona znala všechny jeho zápisky a v žádném nebyla zmínka o porodu v noci, o zlomenině v noci, o spáleninách. Myslela si, že je to proto, že byl líný psát. Teď věděla, že to bylo proto, že ji znal.
+Řehoř to věděl. Sedm let to věděl a nenapsal nic, ani řádek. Ilona znala všechny jeho zápisky a v žádném nebyla zmínka o porodu v noci, o zlomenině v noci, o spáleninách. Myslela si, že je to proto, že byl líný psát. Teď věděla, že to bylo proto, že ji znal.
 
 Napsala pod poslední řádek čáru. Pod čáru nenapsala nic.
 

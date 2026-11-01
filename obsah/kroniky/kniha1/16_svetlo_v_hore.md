@@ -6,7 +6,7 @@ Matěj to viděl už z cesty, z kraje lesa, kde se svah zvedal k haldě: celá p
 
 Malý Kojatův běžel před ním a u haldy se zastavil a dál nešel.
 
-Konrád stál u ústí. Matěj ho poznal podle pláště, modrého, s kunou kolem krku, který se v tom světle zdál černý, a podle toho, jak stál: rovně, s rukama za zády, s hlavou trochu nakloněnou, jako by poslouchal hudbu, kterou nikdo jiný neslyšel. Vedle něj Volkmar, zabalený do pláště až po bradu. Rüdiger u koní. A Ortlieb, kousek stranou, s tabulkou na pase a s rukama zkříženýma na prsou, a Matěj na první pohled viděl, že se hádali.
+Konrád stál u ústí. Matěj ho poznal podle pláště s kunou kolem krku, modrého, i když se v tom světle zdál černý. A podle toho, jak stál: rovně, s rukama za zády, s hlavou trochu nakloněnou, jako by poslouchal hudbu, kterou nikdo jiný neslyšel. Vedle něj Volkmar, zabalený do pláště až po bradu. Rüdiger u koní. A Ortlieb, kousek stranou, s tabulkou na pase a s rukama zkříženýma na prsou. Matěj na první pohled viděl, že se hádali.
 
 „Matěji!“
 
@@ -38,11 +38,11 @@ Matěj ji poznal, i když ji nepoznal. V únoru z ní kapalo, dvaadvacet kapek n
 
 Volkmar před ním se zastavil a pokřižoval se. Konrád se neohlédl.
 
-U dvousetého kroku si Ortlieb sundal kabátec a nechal ho ležet na rámu. Hensel šel nahý do pasu už od začátku. Matěj cítil, jak mu hábit lne k zádům, jak se mu pot sbírá pod tonzurou a stéká do očí. Lucerna mu v ruce ztěžkla.
+U dvoustého kroku si Ortlieb sundal kabátec a nechal ho ležet na rámu. Hensel šel nahý do pasu už od začátku. Matěj cítil, jak mu hábit lne k zádům, jak se mu pot sbírá pod tonzurou a stéká do očí. Lucerna mu v ruce ztěžkla.
 
 U dvoustého patnáctého, vpravo, prkna.
 
-Byla přes otvor do dutiny přitlučená křížem, šest silných fošen, a hřeby měla zahnuté tak, jak to Ješek říkal, hlavičky ohnuté zpátky do dřeva. Matěj se zastavil. Nevěděl proč. Položil na ně dlaň. Byla horká, horká jako všechno tady, a vlhká, a za nimi bylo ticho. Ležela tam lebka dlouhá jako předloktí a velký valoun s šupinou chybějící zlata a malá stočená kostra u stěny, a za těmi prkny byla tma, jaká byla celé tisíce let předtím, než do ní Ješek prorazil.
+Byla přes otvor do dutiny přitlučená křížem, šest silných fošen, a hřeby měla zahnuté tak, jak to Ješek říkal, hlavičky ohnuté zpátky do dřeva. Matěj se zastavil. Nevěděl proč. Položil na ně dlaň. Byla horká, horká jako všechno tady, a vlhká, a za nimi bylo ticho. Ležela tam lebka dlouhá jako předloktí, velký valoun, ze kterého chyběla šupina zlata, a malá stočená kostra u stěny. Za těmi prkny byla tma, jaká tam byla tisíce let, než do ní Ješek prorazil.
 
 „Matěji,“ řekl Konrád zepředu. „Pojď.“
 
@@ -66,7 +66,9 @@ Pak Ortlieb zvedl svůj kahan a podržel ho vpravo, kde se čelba stáčela, a M
 
 Skála tam nekončila skálou.
 
-V místě velkém asi jako dvoje vrata u stodoly, nebo menším, protože pravý kraj ještě zakrývala rozpukaná hornina, byla skála odloupnutá. A pod ní, kde měla být zase skála, jen jiná, bylo něco hladkého. Tmavého. Ne černého, Matěj neuměl říct, jakou to mělo barvu. Jako voda v hluboké studni, když se do ní člověk podívá za poledne. Bylo to mírně vypouklé, jako bok velikého džbánu, který leží v zemi, a nebyla na tom žádná spára, žádná vrstva, žádná rýha. Po povrchu stékala voda tenkou blánou a kouřila, a tam, kde stekla, zůstávala na té hladkosti suchá místa, která se během dechu zase zamžila.
+Skála tam byla odloupnutá v místě velkém asi jako dvoje vrata u stodoly, možná menším, protože pravý kraj ještě zakrývala rozpukaná hornina. A pod ní, kde měla být zase skála, jen jiná, bylo něco hladkého. Tmavého. Ne černého, Matěj neuměl říct, jakou to mělo barvu. Jako voda v hluboké studni, když se do ní člověk podívá za poledne. Bylo to mírně vypouklé, jako bok velikého džbánu, který leží v zemi, a nebyla na tom žádná spára, žádná vrstva, žádná rýha. Po povrchu stékala voda tenkou blánou a kouřila, a tam, kde stekla, zůstávala na té hladkosti suchá místa, která se během dechu zase zamžila.
+
+![Hladká skála](obrazky/16_svetlo_v_hore.webp)
 
 „Glatt,“ řekl Ortlieb. Hladké. Řekl to tiše, jako se říká nadávka v kostele. „Kein Erz. Kein Stein.“
 
@@ -96,11 +98,11 @@ Matěj ruku stáhl.
 
 Ortlieb se nepohnul. Díval se na tu hladkost a na Konrádovu ruku na ní a jeho tvář byla šedá. Pak se podíval na Ješka.
 
-Ješek se sehnul pro mlátek a želízko. Nikdo mu to nepřikázal. Přistoupil k čelbě, nasadil želízko na kraj, kde ještě držela rozpukaná skála, aby ji odlomil, jak se to dělá, a Matěj viděl jeho ruce. Třásly se. Ješek se nikdy netřásl. Ješek se třásl, protože nespal dva dny, a protože tohle byla dvojí mzda za dvě party, a protože se pán díval.
+Ješek se sehnul pro mlátek a želízko. Nikdo mu to nepřikázal. Přistoupil k čelbě, nasadil želízko na kraj, kde ještě držela rozpukaná skála, aby ji odlomil, jak se to dělá. Matěj viděl jeho ruce. Třásly se. Ješek se nikdy netřásl. Ješek se třásl, protože nespal dva dny, a protože tohle byla dvojí mzda za dvě party, a protože se pán díval.
 
 Udeřil.
 
-Želízko zazvonilo. Ne jako o kámen. Jako o zvon, malý, tlumený, jeden úder a pak dlouhé dozvukování, které nepřestávalo a které Matěj necítil v uších, ale v zubech. Kus rozpukané skály se odlomil a spadl do vody. Pod ním zase ta hladkost. Ani škrábnutí.
+Želízko zazvonilo. Ne jako o kámen. Jako o zvon, malý, tlumený, jeden úder a pak dlouhý dozvuk, který nepřestával a které Matěj necítil v uších, ale v zubech. Kus rozpukané skály se odlomil a spadl do vody. Pod ním zase ta hladkost. Ani škrábnutí.
 
 Ješek nasadil želízko znovu.
 
@@ -112,7 +114,7 @@ A hora se pohnula.
 
 *
 
-Nebylo to velké. Bylo to, jako když se kůň otřese, když na něj sedne moucha, tak to Ješek kdysi řekl, a teď to Matěj cítil celým tělem: pod nohama, v kolenou, v zádech, kterými se opíral o rám. Krátké. Kahany ve výklencích zablikaly všechny najednou. Z rámu nad hlavou se sesypala hlína. Volkmar vykřikl.
+Nebylo to velké. Bylo to, jako když se kůň otřese, když na něj sedne moucha. Tak to Ješek kdysi řekl a teď to Matěj cítil celým tělem: pod nohama, v kolenou, v zádech, kterými se opíral o rám. Krátké. Kahany ve výklencích zablikaly všechny najednou. Z rámu nad hlavou se sesypala hlína. Volkmar vykřikl.
 
 A pak to přestalo, a bylo ticho, a v tom tichu se v hladkosti rozsvítilo světlo.
 
@@ -120,7 +122,7 @@ A pak to přestalo, a bylo ticho, a v tom tichu se v hladkosti rozsvítilo svět
 
 Nepřišlo zvenku. To bylo první, co Matěj věděl jistě. Kahany za jeho zády hořely, jak hořely, a lucerna v jeho ruce taky, a světlo v čelbě s nimi nemělo nic společného. Bylo uvnitř. Hluboko, jako by ta hladkost byla voda, studna, rybník za noci, a na jeho dně, daleko pod hladinou, někdo zapálil světlo a pomalu ho zvedal nahoru.
 
-Nebylo žluté jako svíce ani rudé jako oheň. Bylo bledé. Studené, tak to Matěj cítil, i když teplo z čelby se nezměnilo. Jako měsíc v ledu. Nehýbalo se, neplápolalo. Prostě bylo, a sílilo, a za chvíli bylo tak jasné, že Matěj viděl vlastní ruce, bílé, a Ješkovu tvář vedle sebe, a každou kapku vody na hladkosti, a pak už ty kapky neviděl, protože viděl to, co bylo v tom světle.
+Nebylo žluté jako svíce ani rudé jako oheň. Bylo bledé. Studené, tak to Matěj cítil, i když se teplo z čelby nezměnilo. Jako měsíc v ledu. Nehýbalo se, neplápolalo. Prostě bylo, a sílilo, a za chvíli bylo tak jasné, že Matěj viděl vlastní ruce, bílé, a Ješkovu tvář vedle sebe, a každou kapku vody na hladkosti, a pak už ty kapky neviděl, protože viděl to, co bylo v tom světle.
 
 Tma.
 
@@ -128,7 +130,7 @@ Ne tma štoly. Jiná. Hluboká a čistá, a v ní světla. Mnoho, nespočetně, 
 
 Pak se některá z nich pohnula.
 
-Ne všechna. Několik. Matěj by je nespočítal, protože nemohl odtrhnout oči, ale bylo jich víc než prstů na jedné ruce a míň než na dvou. Pohnula se a padala. Pomalu. Ne jako hvězdy, které padají v srpnu a které člověk zahlédne koutkem oka a už nejsou. Tahle padala tak pomalu, jako padají listy za bezvětří, a za každým zůstávala slabá stopa, bledá, jako za prstem v mouce. Padala v řadě, jedno za druhým, a pod nimi se z tmy vynořilo něco velikého a zakřiveného, zelené a modré a bílé, a Matěj nevěděl, co to je, a pak to pochopil, protože to bylo tak, jako když se člověk dívá z hřbetu dolů do kraje.
+Ne všechna. Několik. Matěj by je nespočítal, protože nemohl odtrhnout oči, ale bylo jich víc než prstů na jedné ruce a míň než na dvou. Pohnula se a padala. Pomalu. Ne jako hvězdy, které padají v srpnu a které člověk zahlédne koutkem oka a už nejsou. Tahle padala tak pomalu, jako padají listy za bezvětří, a za každým zůstávala slabá stopa, bledá, jako za prstem v mouce. Padala v řadě, jedno za druhým. Pod nimi se z tmy vynořilo něco velikého a zakřiveného, zelené a modré a bílé. Matěj nevěděl, co to je, a pak to pochopil, protože to bylo, jako když se člověk dívá z hřbetu dolů do kraje.
 
 Země. Kraj. Hory a mezi nimi voda, lesknoucí se. Viděl to shora, jako to vidí pták, nebo Bůh.
 
@@ -144,7 +146,7 @@ Modlil se. Nevěděl, kdy začal. Rty se mu hýbaly a hlas nevydávaly, a Otčen
 
 Kraj se přiblížil. Byl teď pod ním blíž, jako by sestupoval z hřbetu do údolí, a Matěj uviděl domy.
 
-Nebyly to domy, jaké znal. Nebyly to chalupy z kuláčů ani kamenné zdi jako ve Waldsassenu. Byly nízké a oblé, jako bochníky chleba položené na prkno, nebo jako úly, a stály v řadách. Rovně. V tak rovných řadách, jak Matěj nikdy neviděl stát nic, co postavili lidé, jen písmena na linkovaném listu. Mezi nimi cesty. A na cestách postavy, malé, tak malé, že je neviděl pořádně, jen to, že se pohybují, že chodí, že jsou na dvou nohách.
+Nebyly to domy, jaké znal. Nebyly to chalupy z kuláčů ani kamenné zdi jako ve Waldsassenu. Byly nízké a oblé, jako bochníky chleba položené na prkno, nebo jako úly, a stály v řadách. Rovně. V tak rovných řadách, v jakých Matěj nikdy neviděl stát nic, co postavili lidé. Jen písmena na linkovaném listu. Mezi nimi cesty. A na cestách postavy, malé, tak malé, že je neviděl pořádně, jen to, že se pohybují, že chodí, že jsou na dvou nohách.
 
 Lidé, pomyslel si. A pak si nebyl jistý, protože byli tak daleko.
 
@@ -188,7 +190,7 @@ Ješek. Ješek stál s mlátkem v ruce, ruka mu visela podél těla, a nedíval 
 
 Matěj zavrtěl hlavou. Nevěděl.
 
-Volkmar klečel. Ve vodě, v teplé hnědé vodě, kolena v ní měl až po stehna, a ruce sepjaté pod bradou, a mluvil latinsky, rychle, polohlasem, a Matěj to poznal, protože to zpíval v chóru každý týden. *Caeli enarrant gloriam Dei.* Nebesa vypravují slávu Boží. Volkmar to neříkal, jak se to zpívá. Říkal to, jako by to četl z listu, který mu právě někdo podal.
+Volkmar klečel. Ve vodě, v teplé hnědé vodě, která mu sahala ke stehnům, s rukama sepjatýma pod bradou, a mluvil latinsky, rychle, polohlasem. Matěj to poznal, protože to zpíval v chóru každý týden. *Caeli enarrant gloriam Dei.* Nebesa vypravují slávu Boží. Volkmar to neříkal, jak se to zpívá. Říkal to, jako by to četl z listu, který mu právě někdo podal.
 
 A Konrád.
 
@@ -200,7 +202,7 @@ Nebylo to najednou. Bylo to jako tání. Matěj znal tu tvář: pohyblivou, chyt
 
 Ta tvář odcházela.
 
-Nejdřív ztuhl úsměv. Pak oči. Ty pohyblivé oči se zastavily a přestaly se pohybovat, a Matěj si uvědomil, že je to poprvé, co je vidí stát. Upřené. Nehybné. Ústa se pootevřela. A pak, když světlo, které přicházelo shora, rostlo, se Konrádovi rozevřely ruce. Visely mu podél těla a dlaně se otočily dopředu, k té hladkosti, prázdné, jak se otáčejí dlaně u oltáře, když kněz říká *Dominus vobiscum*. Jak se otáčejí, když člověk něco přijímá.
+Nejdřív ztuhl úsměv. Pak oči. Ty pohyblivé oči se zastavily a přestaly se pohybovat, a Matěj si uvědomil, že je to poprvé, co je vidí stát. Upřené. Nehybné. Ústa se pootevřela. A pak, jak světlo přicházející shora rostlo, se Konrádovi rozevřely ruce. Visely mu podél těla a dlaně se otočily dopředu, k té hladkosti, prázdné, jak se otáčejí dlaně u oltáře, když kněz říká *Dominus vobiscum*. Jak se otáčejí, když člověk něco přijímá.
 
 Po tvářích mu tekly slzy. Nevšiml si jich.
 
@@ -208,13 +210,13 @@ Byl to obličej chlapce. Matěj nevěděl, proč ho to napadlo. Obličej chlapce
 
 A pak Konrád poklekl.
 
-Nepadl. Poklekl pomalu, jak se kleká v kostele, na jedno koleno a pak na druhé, do vody, do té teplé hnědé vody za hrázkou, a ten modrý plášť s kunou se kolem něj rozložil po hladině a nasál se. Konrád si toho nevšiml. Klečel, s rukama otevřenýma, s tváří vzhůru, a díval se.
+Nepadl. Poklekl pomalu, jak se kleká v kostele, na jedno koleno a pak na druhé, do vody, do té teplé hnědé vody za hrázkou, a ten modrý plášť s kunou se kolem něj rozložil po hladině a nasákl. Konrád si toho nevšiml. Klečel, s rukama otevřenýma, s tváří vzhůru, a díval se.
 
 Matěj se díval na něj. Na čelbu už ne.
 
 *
 
-Potřetí zhaslo u *fiat voluntas tua*. A podruhé, ani ne po celém dechu, se rozsvítilo znovu, ale jinak.
+Potřetí zhaslo u *fiat voluntas tua*. A pak, ani ne po celém dechu, se rozsvítilo znovu, ale jinak.
 
 Nebyla to tma s hvězdami. Bylo to jen světlo. To bledé, studené, jako měsíc v ledu, a bylo ho méně, jako by se sbíralo. Stahovalo se z celé hladkosti do jednoho místa, do středu, a tam se zhustilo, až bylo tak jasné, že se na ně nedalo dívat, a Matěj přimhouřil oči a viděl ho i tak, přes víčka, bílé.
 
@@ -230,7 +232,7 @@ Pak nebylo.
 
 *
 
-Bylo dlouho ticho. Ve štole kapala voda. Kahany hořely, a Matěji se zdálo, že hoří slabě, žlutě, ubohé, jako svíčky v chudém kostele.
+Bylo dlouho ticho. Ve štole kapala voda. Kahany hořely a Matějovi se zdálo, že hoří slabě a žlutě, ubohé jako svíčky v chudém kostele.
 
 Hensel natáhl ruku. Tentokrát se dotkl. Položil na hladkost celou dlaň, tu bez dvou prstů, a nechal ji tam, a neucukl.
 
@@ -246,7 +248,7 @@ Pak se hora pohnula ještě jednou, krátce, slaběji než předtím, jako se ot
 
 *
 
-Konrád se zvedl, až když ho Rüdiger, který přišel zvenku, protože se nikdo nevracel, chytil pod paží. Plášť z něj crčel. Volkmar klečel dál a nepřestával mluvit, a Rüdiger se na něj podíval a nechal ho být.
+Rüdiger přišel zvenku, protože se nikdo nevracel. Konrád se zvedl, až když ho chytil pod paží. Plášť z něj crčel. Volkmar klečel dál a nepřestával mluvit, a Rüdiger se na něj podíval a nechal ho být.
 
 „Nikdo,“ řekl Konrád. Hlas měl chraplavý a tichý a Matěj ho skoro nepoznal. „Nikdo na to nesáhne. Mistře. Slyšíš? Nikdo.“
 
@@ -260,7 +262,7 @@ Ortlieb kývl. Ani se nepokusil odpovědět.
 
 „Viděl.“
 
-Konrád k němu přistoupil. Byl celý mokrý, voda mu tekla z vousů, a chytil Matěje za ruku, ne za rameno, jako vždycky, ale za ruku, za zápěstí, a stiskl ji.
+Konrád k němu přistoupil. Byl celý mokrý, voda mu tekla z vousů, a chytil Matěje za ruku, ne za rameno jako vždycky, ale za ruku, za zápěstí, a stiskl ji.
 
 „Co jsi viděl? Řekni mi to. Řekni mi, co jsi viděl ty.“
 
@@ -276,13 +278,13 @@ Konrád se zasmál. Krátce, tiše, a ten smích byl mokrý a nebylo v něm nic 
 
 „Shora,“ opakoval.
 
-Pustil Matějovo zápěstí. Otočil se k čelbě, k té hladkosti, která byla zase tmavá, s vodou, která po ní stékala, a kouřila už míň, a díval se na ni, jako se člověk dívá na zavřené dveře, za kterými někdo před chvílí mluvil.
+Pustil Matějovo zápěstí. Otočil se k čelbě, k té hladkosti. Byla zase tmavá, stékala po ní voda a kouřila už míň. Díval se na ni, jako se člověk dívá na zavřené dveře, za kterými někdo před chvílí mluvil.
 
 „Zapiš to,“ řekl, aniž se otočil. „Všechno, co jsi řekl. Tak, jak jsi to řekl. Chci to v neděli slyšet znovu.“
 
 *
 
-Venku byla studená noc a hvězdy. Pochodně dohořívaly. Horníci stáli, kde stáli předtím, a když vyšli z ústí, ustoupili od nich, jako se ustupuje od lidí, kteří přicházejí z pohřbu. Nikdo se na nic nezeptal. Někdo se pokřižoval. Jeden ze Sasů si klekl do bláta a modlil se nahlas, a Ortlieb prošel kolem něj a nezastavil ho.
+Venku byla studená noc a hvězdy. Pochodně dohořívaly. Horníci stáli, kde stáli předtím, a když Matěj a ostatní vyšli z ústí, ustoupili od nich, jako se ustupuje od lidí, kteří přicházejí z pohřbu. Nikdo se na nic nezeptal. Někdo se pokřižoval. Jeden ze Sasů si klekl do bláta a modlil se nahlas, a Ortlieb prošel kolem něj a nezastavil ho.
 
 Matěj si sedl na kámen u ohně, na Henselův kámen, a vytáhl tabulku. Ruce měl mokré a vosk byl studený a rydlo v něm drhlo, a stejně psal. Psal, dokud si to pamatoval přesně.
 
@@ -321,7 +323,7 @@ Matěj na to neřekl nic. Ješek vstal, zvedl mlátek, zvážil ho v ruce, jako 
 
 Matěj nešel na grangii.
 
-Šel přes paseku a lesem dolů k Dobroslavině chalupě, s lucernou, která už skoro dohořela, a s prasečím měchýřem pod hábitem, a došel k ní před první šedí. Seděla venku na špalku. Spala tam? Nevěděl. Vstala, když ho uviděla, a podívala se na jeho hábit, mokrý do pasu, a na jeho tvář, a nezeptala se.
+Šel přes paseku a lesem dolů k Dobroslavině chalupě, s lucernou, která už skoro dohořela, a s prasečím měchýřem pod hábitem. Došel k ní před první šedí. Seděla venku na špalku. Spala tam? Nevěděl. Vstala, když ho uviděla, a podívala se na jeho hábit, mokrý do pasu, a na jeho tvář, a nezeptala se.
 
 „Je ticho,“ řekl Matěj. „Potřebuju na slatinu.“
 
@@ -345,7 +347,7 @@ Matěj neodpověděl.
 
 Ale to nebyla pravda, a věděl to. Ješek tam udeřil dvakrát. Konrád tam položil ruku. A to světlo, které odešlo vzhůru skrz skálu, jako by hledalo nebe, odešlo odněkud. Z té hladkosti, která byla horká jako pec a potom teplá jako ruka. Z teplé skály. Ze skály, ke které Ostra pokládala dlaň.
 
-Myslel na tu stěnu v nízké místnosti s kahany. Na kamennou lavici, na které ležel zraněný s nohou v dlahách. Na teplý kámen, který mu Ostra dala, a který už dávno nehřál. Na dětský smích v chodbě, kterou nikdy neviděl. Myslel na to, jak tam teď je. Jestli tam je zima. Jestli Ostra stojí u stěny s dlaní na kameni a poslouchá, a neslyší nic.
+Myslel na tu stěnu v nízké místnosti s kahany. Na kamennou lavici, na které ležel zraněný s nohou v dlahách. Na teplý kámen, který mu Ostra dala a který už dávno nehřál. Na dětský smích v chodbě, kterou nikdy neviděl. Myslel na to, jak tam teď je. Jestli tam je zima. Jestli Ostra stojí u stěny s dlaní na kameni a poslouchá, a neslyší nic.
 
 Nemohl tam jít. Nevěděl, kudy. A kdyby věděl, nešel by, protože za ním by šli psi.
 
@@ -355,7 +357,7 @@ Nemohl tam jít. Nevěděl, kudy. A kdyby věděl, nešel by, protože za ním b
 
 Na slatině to šlo na první pokus.
 
-Matěj spustil měchýř do doupěte a nechal ho tam dvanáct Otčenášů, a nemodlil se je pozorně, protože myslel na rokli, a stejně je napočítal správně. Vytáhl ho pomalu, zazátkoval pod okrajem, a pak ho obrátil nad lojovou svíčkou, a svíčka zhasla, jako by na ni někdo položil ruku. Pak spustil měchýř znovu a naplnil ho podruhé. Dobroslava mu dala kus plátna. Namočil ho do kaluže a zabalil do něj měchýř, a hrdlo s trubičkou a se špuntem ovázal provázkem dvakrát, třikrát, až se mu zařezával do prstů.
+Matěj spustil měchýř do doupěte a nechal ho tam dvanáct Otčenášů. Nemodlil se je pozorně, protože myslel na rokli, a stejně je napočítal správně. Vytáhl ho pomalu, zazátkoval pod okrajem a pak ho obrátil nad lojovou svíčkou. Svíčka zhasla, jako by na ni někdo položil ruku. Pak spustil měchýř znovu a naplnil ho podruhé. Dobroslava mu dala kus plátna. Namočil ho do kaluže a zabalil do něj měchýř, a hrdlo s trubičkou a se špuntem ovázal provázkem dvakrát, třikrát, až se mu zařezával do prstů.
 
 Nesl ho pak celou cestu v obou rukou, před sebou, trubičkou nahoru, jako se nese miska s vodou až po okraj. Dobroslava šla vedle něj a nic neříkala. U rokle se oba podívali nahoru. Nic.
 

@@ -2,7 +2,7 @@
 
 V pondělí ráno našla na předních dveřích dvě tečky.
 
-Byly udělané křídou, ve výšce očí, prst od sebe, a nikdo by si jich nevšiml, kdo by nevěděl, co znamenají. Havíři od horního úřadu, kteří přes noc stáli před domem, je neviděli, nebo říkali, že je neviděli. V noci prý šli kolem jen opilci a kočky. Ilona se na ty dvě tečky dívala dlouho, s vědrem v ruce, a pak je smyla. Křída šla dolů snadno. Dřevo pod ní zůstalo o odstín světlejší, takže tečky tam byly dál, jen bílé místo nich byly čisté.
+Byly udělané křídou, ve výšce očí, prst od sebe, a kdo nevěděl, co znamenají, ten by si jich nevšiml. Havíři od horního úřadu, kteří přes noc stáli před domem, je neviděli, nebo říkali, že je neviděli. V noci prý šli kolem jen opilci a kočky. Ilona se na ty dvě tečky dívala dlouho, s vědrem v ruce, a pak je smyla. Křída šla dolů snadno. Dřevo pod ní zůstalo o odstín světlejší, takže tečky tam zůstaly dál, jen už nebyly bílé, ale čisté.
 
 Dopoledne nepřišel nikdo. Mlynářova žena, které ve středu pouštěla, měla přijít na převaz, a nepřišla. Kluk od bednáře s třískou v dlani nepřišel. Purga Sternová šla kolem s košíkem a přešla na druhou stranu ulice, a když ji Ilona pozdravila z okna, kývla a nepodívala se.
 
@@ -12,13 +12,13 @@ Před polednem někdo zaklepal. Opatrně, jednou.
 
 *
 
-Byla to Anna Rieglová od mincovny, žena razidláře, s chlapcem za ruku. Chlapci mohlo být dvanáct, byl hubený a bledý a měl na bradě strup a na rtu jizvu, bělavou, svislou, a Ilona tu jizvu znala dřív, než Anna promluvila. Takovou jizvu mají ti, kdo si v záchvatu překousnou ret.
+Byla to Anna Rieglová od mincovny, žena razidláře, s chlapcem za ruku. Chlapci mohlo být dvanáct, byl hubený a bledý a měl na bradě strup a na rtu jizvu, bělavou, svislou. Ilona tu jizvu poznala dřív, než Anna promluvila. Takovou jizvu mají ti, kdo si v záchvatu překousnou ret.
 
 „Prosím vás,“ řekla Anna, ještě než si sedla. „Já nevím, jestli k vám smím. Muž říkal, že ne. Ale vy jste léčila mou mámu, když měla tu ránu na noze, a ona říkala, že jste lepší než pán.“ Myslela Řehoře. Všichni mysleli Řehoře.
 
 „Sedněte si.“
 
-Chlapec se jmenoval Michel. Od Vánoc padal. Poprvé u stolu, při večeři, spadl ze židle a třásl se a měl pěnu u úst, a otec ho držel a křičel, a matka mu strčila do zubů vařečku, aby si neukousl jazyk, a ukousl si ret. Pak to přišlo v únoru, dvakrát v březnu, a teď už skoro každý týden. Vždycky ráno, po probuzení. Po záchvatu spal jako mrtvý a nic si nepamatoval.
+Chlapec se jmenoval Michel. Od Vánoc padal. Poprvé u stolu, při večeři, spadl ze židle a třásl se a měl pěnu u úst. Otec ho držel a křičel a matka mu strčila do zubů vařečku, aby si neukousl jazyk. Ukousl si ret. Pak to přišlo v únoru, dvakrát v březnu, a teď už skoro každý týden. Vždycky ráno, po probuzení. Po záchvatu spal jako mrtvý a nic si nepamatoval.
 
 Ilona se chlapce vyptávala. Jestli cítí něco předtím, a on řekl, že ano, pach, jako spálené peří, a že se pak bojí, a pak už nic. Jestli ho bolí hlava. Jestli spadl někdy na hlavu, než to začalo. Matka řekla, že ne. Chlapec se podíval stranou a řekl, že jednou v létě, z hrušně u mincovny, ale že to nikomu neřekl, protože tam nesměl lézt.
 
@@ -28,7 +28,7 @@ Ilona mu prohmatala lebku. Na temeni vlevo, pod vlasy, našla místo, kde kost n
 
 Ilona se dívala na chlapce, na jeho ret.
 
-Viděla to jednou. V Štiavnici, když jí bylo čtrnáct a otec musel jako písař být u popravy, protože se tam četl rozsudek, a ona šla za ním, protože si myslela, že je velká. Pod popravištěm stáli lidé s hrnky. Matky s dětmi za ruku. Muž, který se třásl. A když to bylo hotovo, kat jim nalil, nebo jeho pacholek, do hrnků, z čeho, to Ilona neviděla, protože jí otec v tu chvíli dal ruku přes oči. Ale slyšela je pít. A otec jí cestou domů řekl jen: *To je jejich víra, ne tvoje. A neviděl jsem, že by se někomu ulevilo.*
+Viděla to jednou. Ve Štiavnici, když jí bylo čtrnáct. Otec musel být jako písař u popravy, protože se tam četl rozsudek, a ona šla s ním, protože si myslela, že je velká. Pod popravištěm stáli lidé s hrnky. Matky s dětmi za ruku. Muž, který se třásl. A když to bylo hotovo, nalil jim kat, nebo jeho pacholek, do hrnků. Z čeho, to Ilona neviděla, protože jí otec v tu chvíli dal ruku přes oči. Ale slyšela je pít. A otec jí cestou domů řekl jen: *To je jejich víra, ne tvoje. A neviděl jsem, že by se někomu ulevilo.*
 
 „Paní Anno,“ řekla. „Já nevím, jestli kapky pomůžou. Nikdy jsem neviděla, že by pomohly. A nikdy jsem neviděla, že by škodily, kromě peněz.“ Ukázala na chlapcovo temeno. „Tohle je stará rána. Někdy to přijde z rány. Někdy to přejde s věkem a někdy ne. Já vám řeknu, co dělat, když padá, aby si neublížil. Žádnou vařečku do zubů. Položit na bok. Odsunout všechno tvrdé. Nikdy ho nenechat samotného u vody a u ohně. A spát, hodně, protože to chodí po probuzení.“
 
@@ -38,7 +38,9 @@ Viděla to jednou. V Štiavnici, když jí bylo čtrnáct a otec musel jako pís
 
 *
 
-Lékárna U Pelikána stála na horní straně náměstí, v rohovém domě s podloubím, a Ilona do ní za devět let chodila snad stokrát, pro inkoust, který se jí rozléval, pro kafr a pro mák, za Řehořova života pro všechno, co si nedělali sami. Chodila vždycky zepředu, z náměstí, pod podloubím, kde visel nad dveřmi štít: pelikán ve hnízdě, s hlavou skloněnou, jak si zobákem rozdírá hruď, a pod ním tři mláďata s otevřenými zobáky, do kterých kapou tři rudé kapky. Pod štítem stálo latinsky *Sic his qui diligunt*. Tak těm, kdo milují. Kazatel to jednou vykládal o Kristu, který krmí věrné vlastní krví.
+Lékárna U Pelikána stála na horní straně náměstí, v rohovém domě s podloubím. Ilona do ní za devět let chodila snad stokrát: pro inkoust, který se jí rozléval, pro kafr a pro mák, za Řehořova života pro všechno, co si nedělali sami. Chodila vždycky zepředu, z náměstí, pod podloubím, kde nad dveřmi visel štít: pelikán ve hnízdě, s hlavou skloněnou, jak si zobákem rozdírá hruď, a pod ním tři mláďata s otevřenými zobáky, do kterých kapou tři rudé kapky. Pod štítem stálo latinsky *Sic his qui diligunt*. Tak těm, kdo milují. Kazatel to jednou vykládal o Kristu, který krmí věrné vlastní krví.
+
+![Lékárna U Pelikána](obrazky/07_lekarna.webp)
 
 Dnes se na ten štít podívala jinak. A podívala se i na dům. Rohový, dvě patra, tři okna do náměstí a dvě do boční uličky, a za ním, kam zepředu nebylo vidět, dvůr. Ten dvůr, na který se chodilo průchodem mezi domy. Kam v sobotu před týdnem zmizel muž se soudkem.
 
@@ -48,11 +50,11 @@ Vešla.
 
 *
 
-Uvnitř bylo šero a chladno a vonělo to. Vonělo to tak, že na prahu na chvíli zavřela oči, protože to byla vůně, kterou znala, a teprve teď, se zavřenýma očima, ji začala rozebírat, jako se rozplétá provaz. Kafr. Šafrán. Anýz. Pelyněk. Vosk, jako v kostele. Pálenka. Něco zatuchlého a starého, sladkého, jako ze sklepa, kde leží jablka přes zimu. A hluboko pod tím, jako basový hlas pod sborem, hřebíček.
+Uvnitř bylo šero a chladno a vonělo to. Vonělo to tak, že na prahu na chvíli zavřela oči. Byla to vůně, kterou znala, ale teprve teď, se zavřenýma očima, ji začala rozebírat, jako se rozplétá provaz. Kafr. Šafrán. Anýz. Pelyněk. Vosk, jako v kostele. Pálenka. Něco zatuchlého a starého, sladkého, jako ze sklepa, kde leží jablka přes zimu. A hluboko pod tím, jako basový hlas pod sborem, hřebíček.
 
 Otevřela oči.
 
-Officína byla dlouhá a úzká místnost s klenutým stropem, a stěny od podlahy ke klenbě pokrývaly police. Na policích stály nádoby, řada nad řadou: bílé majolikové hrnce s modrými nápisy, skleněné lahve zelené a hnědé, dřevěné krabičky s mosaznými štítky, a ve výšce, kam se dalo dosáhnout jen ze žebříku, velké baňaté nádoby s víky, na kterých byly namalované hlavy. Uprostřed stál dlouhý pult z tmavého dřeva, na něm váhy, mosazné, s miskami na řetízcích, a velký hmoždíř, a vedle hmoždíře mladík, který v něm něco tloukl a kterého Ilona znala od vidění: Florian, tovaryš, s tváří posetou jizvičkami po neštovicích.
+Officína byla dlouhá a úzká místnost s klenutým stropem, a stěny od podlahy ke klenbě pokrývaly police. Na policích stály nádoby, řada nad řadou: bílé majolikové hrnce s modrými nápisy, skleněné lahve zelené a hnědé, dřevěné krabičky s mosaznými štítky, a ve výšce, kam se dalo dosáhnout jen ze žebříku, velké baňaté nádoby s víky, na kterých byly namalované hlavy. Uprostřed stál dlouhý pult z tmavého dřeva, na něm váhy, mosazné, s miskami na řetízcích, a velký hmoždíř. U hmoždíře stál mladík a něco v něm tloukl. Ilona ho znala od vidění: Florian, tovaryš, s tváří posetou jizvičkami po neštovicích.
 
 „Paní ranhojička,“ řekl Florian a přestal tlouct. Podíval se na ni a pak ke dveřím vzadu, jako by se ptal, co s ní. „Mistře!“
 
@@ -60,7 +62,7 @@ Ze zadních dveří vyšel Kašpar Röhrich.
 
 *
 
-Byl vysoký. Ilona to věděla, ale teprve dnes si toho všimla, jako si teprve dnes všimla dvora. Vysoký a trochu shrbený, jak bývají vysocí lidé, kteří celý život sklánějí hlavu nad pultem. Kolem padesáti. Tvář dlouhá, hladce oholená, s jemnými vráskami kolem očí, které vypadaly, že se rády smějí, a ústa, která se smála opatrně, se zavřenými rty. Na sobě měl černý kabát, dlouhý, z jemného sukna, a na prstu pravé ruky těžký prsten s modrým kamenem.
+Byl vysoký. Ilona to věděla, ale teprve dnes si toho všimla, jako si teprve dnes všimla dvora. Vysoký a trochu shrbený, jak bývají vysocí lidé, kteří celý život sklánějí hlavu nad pultem. Kolem padesáti. Tvář dlouhá, hladce oholená, s jemnými vráskami kolem očí, které vypadaly, jako by se rády smály. Ústa se smála opatrně, se zavřenými rty. Na sobě měl černý kabát, dlouhý, z jemného sukna, a na prstu pravé ruky těžký prsten s modrým kamenem.
 
 Černé sukno. Jemné, dobře barvené. Ilona se na rukáv dívala o chvilku déle, než měla. Pak si řekla, co jí řekl Wehrl: *nosí ho kazatelé, úředníci a lékárníci*. A perkmistr.
 
@@ -84,7 +86,7 @@ Nejdřív lahvičku, malou, z nazelenalého skla, se zátkou zalitou červeným 
 
 „Z dobré. Mladé, zdravé, červené.“ Röhrich lahvičku postavil. „Ne z krve starých bab, ta je černá a líná.“
 
-Pak sundal z police majolikový hrnec s modrým nápisem *Mumia* a sejmul víko. Uvnitř ležely kusy něčeho tmavého, hnědočerného, lesklého na lomu jako smola, a vonělo to tím sladkým zatuchlým pachem, který Ilona cítila ve dveřích, a ještě něčím pod tím, pryskyřicí, kořením.
+Pak sundal z police majolikový hrnec s modrým nápisem *Mumia* a sejmul víko. Uvnitř ležely kusy něčeho tmavého, hnědočerného, lesklého na lomu jako smola. Vonělo to tím sladkým zatuchlým pachem, který Ilona cítila ve dveřích, a pod ním ještě něčím, pryskyřicí, kořením.
 
 „Mumie,“ řekl Röhrich. „Pravá. Z Egypta, přes Benátky a Norimberk. Balzamovaná těla starých pohanů, kteří se nechávali nakládat do koření a pryskyřic, aby jim tělo vydrželo do soudného dne. Nevydrželo, jak vidíte.“ Zasmál se, opatrně, se zavřenými rty. „Prášek z toho do vína proti modřinám a vnitřnímu krvácení. Padlí havíři, rozdrcení pod závalem. Kupuje to i horní úřad.“
 
@@ -140,19 +142,19 @@ Vešel Nickel Kunz. V kožichu, s brýlemi na šňůrce, s holí. Když uviděl 
 
 „Pane písaři,“ řekl Röhrich. „Váš teriak, že? Floriane.“
 
-Florian sundal z police lahvičku z hnědého skla, zazátkoval ji, zalil vosk, uvázal papírek. Röhrich mezitím otevřel tlustou knihu, která ležela na kraji pultu, obyčejnou, v hnědé kůži, s hřbetem ošoupaným od rukou, nalistoval stránku a namočil pero.
+Florian sundal z police lahvičku z hnědého skla, zazátkoval ji, zalil vosk, uvázal papírek. Röhrich mezitím otevřel tlustou knihu, která ležela na kraji pultu. Byla obyčejná, v hnědé kůži, s hřbetem ošoupaným od rukou. Röhrich nalistoval stránku a namočil pero.
 
 „Na křídu?“ zeptal se.
 
 Kunz se nepodíval na Ilonu. „Na křídu,“ řekl.
 
-Ilona viděla tu stránku. Viděla ji vzhůru nohama, jak ji naučil otec, když jí bylo devět a sedávala v Štiavnici v písárně naproti němu a četla mu protokoly přes stůl, aby se nenudila. *Nickel Kunz, Bergschreiber.* A pod tím řádky, desítky řádků. *Theriaca. Theriaca. Pflaster. Theriaca.* Data od Hromnic. Sloupec s čísly vpravo, a čísla rostla, a nikde nebyla přeškrtnutá.
+Ilona viděla tu stránku. Viděla ji vzhůru nohama. Tak ji to naučil otec, když jí bylo devět a sedávala ve Štiavnici v písárně naproti němu a četla mu protokoly přes stůl, aby se nenudila. *Nickel Kunz, Bergschreiber.* A pod tím řádky, desítky řádků. *Theriaca. Theriaca. Pflaster. Theriaca.* Data od Hromnic. Sloupec s čísly vpravo, a čísla rostla, a nikde nebyla přeškrtnutá.
 
 Röhrich připsal řádek, posypal ho pískem a knihu zavřel.
 
 Kunz vzal lahvičku a strčil ji do kapsy kožichu. Pak se konečně podíval na Ilonu, krátce, a v tom pohledu bylo něco, co Ilona znala od svědkyň, které přišly vypovídat a v poslední chvíli si to rozmyslely.
 
-„Paní Ilona,“ řekl. Kývl. A šel, a zvonek nad dveřmi zazvonil, a za oknem ho viděla, jak jde přes náměstí, rychle, s holí, rychleji, než ho kdy viděla chodit.
+„Paní Ilona,“ řekl. Kývl. A šel, a zvonek nad dveřmi zazvonil, a Ilona ho za oknem viděla, jak jde přes náměstí, rychle, s holí, rychleji, než ho kdy viděla chodit.
 
 „Starý pán,“ řekl Röhrich s úsměvem. „Kosti ho bolí. Je to smutné, když člověk nemůže ani zaplatit za vlastní bolest.“
 
@@ -164,7 +166,7 @@ Röhrich zaklel, poprvé ne opatrně, a rychle odešel dozadu. Florian za ním.
 
 Ilona zůstala v officíně sama.
 
-Na kraji pultu, vedle hnědé knihy, ležela jiná. Ilona si jí předtím nevšimla, protože ležela pod archem čistého papíru, jako se zakrývá něco, co má zrovna člověk rozepsané. Teď, když Röhrich odcházel, papír zachytil rukávem a ten se posunul. A pod ním byla kniha v černé kůži, menší než ta hnědá, s mosaznou sponou, která byla rozepnutá, a otevřená uprostřed.
+Na kraji pultu, vedle hnědé knihy, ležela jiná. Ilona si jí předtím nevšimla, protože ležela pod archem čistého papíru, jako se zakrývá něco, co má zrovna člověk rozepsané. Když teď Röhrich odcházel, zachytil papír rukávem a ten se posunul. A pod ním byla kniha v černé kůži, menší než ta hnědá, s rozepnutou mosaznou sponou, otevřená uprostřed.
 
 Ilona se nepohnula z místa. Jen sklonila hlavu. Četla vzhůru nohama.
 
@@ -196,7 +198,7 @@ Na chvíli se nehýbal. Pak přešel k pultu, klidně, bez spěchu, a knihu zav�
 
 „Myrhu,“ řekla Ilona. „Lot. Na dásně, pro starou paní.“
 
-Röhrich se na ni díval ještě chvíli. Pak kývl na Floriana, který vyšel zezadu s rukou ovázanou v mokrém plátně, a odešel s černou knihou pod paží zpátky do zadní místnosti.
+Röhrich se na ni díval ještě chvíli. Pak kývl na Floriana, který vyšel zezadu s rukou ovázanou v mokrém plátně. Sám odešel s černou knihou pod paží zpátky do zadní místnosti.
 
 Dveře za sebou nechal pootevřené. Ilona viděla kus místnosti za nimi: stůl, na něm skleněné baňky, mísy, písečnou lázeň na trojnožce, a na polici u stěny dřevěnou bedýnku s přihrádkami, a v každé přihrádce prázdnou lahvičku z nazelenalého skla. Malé, menší než ta s duchem krve. Desítky. A vedle bedýnky svazek tyčinek červeného pečetního vosku, jako svíčky.
 
@@ -214,7 +216,7 @@ Florian se na ni podíval, poprvé, jako by ji viděl, a kývl.
 
 Na náměstí bylo slunce a lidé a kupec s plátnem pod Zlatým jelenem vykládal ze sudu sledě a hádal se o cenu. Ilona stála pod podloubím s kornoutem myrhy v ruce a nevěděla, kam jít.
 
-Kniha byla tam. Na dosah ruky. Ležela otevřená na pultu a Ilona ji četla, a kdyby natáhla ruku, mohla ji mít pod pláštěm dřív, než se Röhrich vrátil od své baňky. Neudělala to. A teď stála na slunci a ptala se sama sebe proč, a odpověď nebyla jedna.
+Kniha byla tam. Na dosah ruky. Ležela otevřená na pultu a Ilona ji četla, a kdyby natáhla ruku, mohla ji mít pod pláštěm dřív, než by se Röhrich vrátil od své baňky. Neudělala to. A teď stála na slunci a ptala se sama sebe proč, a odpověď nebyla jedna.
 
 Protože to nebylo její. Protože by to byla krádež, a ženu, která ukradne měšťanovi knihu, horní soud neposlouchá, ani když má list s pečetí. Wehrlův list jí dával právo prohlížet těla a vyslýchat svědkyně. Nedával jí právo vejít do lékárny a odnést kupcovy účty.
 
@@ -222,7 +224,7 @@ Protože v té knize nebylo nic, co by bylo vražda. Lékárník kupuje krev od 
 
 A protože na té stránce bylo *Z.* U soli, krup a koz.
 
-Kdyby tu knihu odnesla nahoru, ke Kunzovi, k perkmistrovi, kdyby ji předložila soudu, četl by ji soud celou. Řádek po řádku, jako čte Wehrl. A Stöckel by se zeptal, kdo je *Z.*, a kdo kupuje kozy od lékárníka, a proč, a kde ty kozy jsou. A pak by to věděla rada. A pak by to věděl mladší kazatel.
+Kdyby tu knihu odnesla nahoru, ke Kunzovi, k perkmistrovi, kdyby ji předložila soudu, soud by ji četl celou. Řádek po řádku, jako čte Wehrl. A Stöckel by se zeptal, kdo je *Z.*, a kdo kupuje kozy od lékárníka, a proč, a kde ty kozy jsou. A pak by to věděla rada. A pak by to věděl mladší kazatel.
 
 Ilona stála pod podloubím a slunce jí svítilo na kornout a myrha voněla skrz papír, hořce, pryskyřičně, jako Röhrichovy prsty.
 
@@ -264,7 +266,7 @@ Na Kunzově pultu ve středu stála plná lahvička. Na Röhrichově stránce u 
 
 Ilona si to řekla v duchu, slovo po slově, a pak si řekla, co si vždycky říkala, když se jí v hlavě začal skládat džbán: *tohle je výklad*. Neviděla, že by Kunz Röhrichovi něco řekl. Neviděla, že by Röhrich něco věděl o Lene. Viděla dvě lahvičky a jednu stránku, a vůni, kterou má každý, kdo má zkažené zuby.
 
-Ale ve středu ráno ležela Lene na kamenech pod mostem, bílá jako vymetená mouka, a za týden, kdy Lene řekla, co věděla, a Ilona to zapsala a odnesla nahoru a zamkla do truhly, Jobst přestal prodávat a lékárník přestal kupovat. A lékárník věděl, že Ilona sledovala soudek. *Lene to řekla na trhu půlce horního konce, chudinka.*
+Ale ve středu ráno ležela Lene na kamenech pod mostem, bílá jako vymetená mouka. A v týdnu, kdy Lene řekla, co věděla, a Ilona to zapsala, odnesla nahoru a zamkla do truhly, Jobst přestal prodávat a lékárník přestal kupovat. A lékárník věděl, že Ilona sledovala soudek. *Lene to řekla na trhu půlce horního konce, chudinka.*
 
 Možná. Možná to Lene řekla na trhu. Markétě to řekla. Mohla to říct i jiným.
 

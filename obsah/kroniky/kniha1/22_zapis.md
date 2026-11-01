@@ -2,7 +2,7 @@
 
 První týden nenapsal nic.
 
-Dobroslava stavěla nový milíř na pasece nad chalupou a Matěj jí nosil dřevo. Naučila ho to beze slov, jak ho učila všechno: postavila první poleno, druhé, třetí, opřela je o sebe kolem kůlu uprostřed a pak se na něj podívala a čekala, jestli to udělá stejně. Polena stála na stojato, šikmo ke středu, hustě, jedno vedle druhého. Jako lidi kolem ohně, pomyslel si Matěj, když se nahřívají a nikdo nechce stát vzadu. Neřekl to. Dobroslava by se zeptala, jestli si myslí, že dřevo mrzne.
+Dobroslava stavěla nový milíř na pasece nad chalupou a Matěj jí nosil dřevo. Naučila ho to beze slov, jak ho učila všechno: postavila první poleno, druhé, třetí, opřela je o sebe kolem kůlu uprostřed a pak se na něj podívala a čekala, jestli to udělá stejně. Polena stála nastojato, šikmo ke středu, hustě, jedno vedle druhého. Jako lidi kolem ohně, pomyslel si Matěj, když se nahřívají a nikdo nechce stát vzadu. Neřekl to. Dobroslava by se zeptala, jestli si myslí, že dřevo mrzne.
 
 Večer jedl, co mu dala, a spal na lavici u ohně, a než usnul, díval se ke stolu, kde ležel sešitek otevřený na prázdném listu a na něm olůvko, tak jak ho tam položil.
 
@@ -14,7 +14,7 @@ Potřeboval inkoust. Potřeboval pergamen, brk a desky. Neměl nic z toho. Měl 
 
 Inkoust udělal z duběnek a z vody ze slatiny.
 
-Duběnky sbíral pod starými duby na kraji lesa, který už nebyl Konrádův. Byly loňské, suché, s dírkou, kudy z nich na podzim vylezlo, co v nich bydlelo, a ležely ve starém listí jako hnědé kuličky. Ve skriptoriu se k nim přidávala zelená skalice, kterou klášter kupoval od kupců, a ta tady nebyla. Byla tu rezavá voda. Matěj si pamatoval kůru na kamenech pod žlabem a okraje kaluží na slatině, rezavé jako stará podkova, a jednou ráno, za větru, vzal džbán a šel tam.
+Duběnky sbíral pod starými duby na kraji lesa, který už nebyl Konrádův. Byly loňské, suché, s dírkou, kudy z nich na podzim vylezlo, co v nich bydlelo, a ležely ve starém listí jako hnědé kuličky. Ve skriptoriu se k nim přidávala zelená skalice, kterou klášter kupoval od kupců, a ta tady nebyla. Byla tu rezavá voda. Matěj si pamatoval kůru na kamenech pod žlabem a okraje kaluží na slatině, rezavé jako stará podkova. Jednou ráno, za větru, vzal džbán a šel tam.
 
 K prohlubni nešel. Nabral vodu na rovině, kde bublala, a chvíli tam stál a díval se na bubliny, jak se zvedají a praskají, každá zvlášť, a na zemi kolem, kde ještě v únoru ležel sníh a kde teď rostla jen řídká tvrdá tráva.
 
@@ -108,6 +108,8 @@ Víc neřekla a Matěj se víc neptal. Otočil se k cestě, a matka za ním řek
 
 Psal dva týdny.
 
+![Zápis](obrazky/22_zapis.webp)
+
 Ve dne u stolu, u otevřených dveří, kudy šlo světlo, a v noci, když dohořel oheň, při jedné ze dvou hromničních svící, které mu zbyly. Brky si ořezal z matčina křídla, čtyři, a jeden zkazil hned první den, protože ho rozštípl moc hluboko. Inkoust ve džbánu ještě tmavl.
 
 Nejdřív se dlouho díval na první list a nevěděl, komu píše.
@@ -130,7 +132,7 @@ Napsal jsem, co jsem viděl. A co jsem neviděl, zvlášť.
 
 *
 
-Psal tak, jak se učil psát knihy: pomalu, malým pravidelným písmem, řádek pod řádkem, jak se klade dlažba. A na okraj, vedle každé věci, psal rychle, tou rukou, kterou psal do vosku pod smrkem a u ohně a na kolenou ve vodě, svá slova. *Vidi. Non vidi. Audivi, a muliere. Sensi. Tuli. Dixi.*
+Psal tak, jak se učil psát knihy: pomalu, malým pravidelným písmem, řádek pod řádkem, jak se klade dlažba. A na okraj, vedle každé věci, psal svá slova rychle, tou rukou, kterou psal do vosku pod smrkem a u ohně a na kolenou ve vodě. *Vidi. Non vidi. Audivi, a muliere. Sensi. Tuli. Dixi.*
 
 Napsal o kosti a o listině. O svědcích psaných jednou rukou a o chybě v arenze, kterou písař v Lyddě opsal z řezenské knihy, protože nebyl v Lyddě. O bratru Wigandovi, který četl prsty. *Wigandus frater, caecus, digitis legit: rectum est.* Na okraj *audivi*, a pod to, menším písmem, *et vidi*.
 
@@ -138,9 +140,9 @@ Napsal o slatině. O mrtvých ptácích a o lišce a o stopách dovnitř, ne ven
 
 Psa nenapsal. Chvíli nad tím držel brk. Pak napsal jen *canis meus mortuus est*, bez jména, a na okraj nic, protože k tomu nebylo co dodat.
 
-Napsal o štole. Kroky, kapky, vědra, Otčenáše. Teplá čelba, chvění pod dlaní. Opis Ortliebových tabulek už měl v sešitku a nepřepisoval ho. Jen na kraj toho listu, vedle *ab Hensel, per Iesek*, které tam stálo od Velikonoc a které převorovi ukázalo, odkud to ví, nepřipsal nic. Bylo to tam. Ať to tam je.
+Napsal o štole. Kroky, kapky, vědra, Otčenáše. Teplá čelba, chvění pod dlaní. Opis Ortliebových tabulek už měl v sešitku a nepřepisoval ho. Na kraji toho listu stálo od Velikonoc *ab Hensel, per Iesek*, které převorovi ukázalo, odkud to ví. Nepřipsal k tomu nic. Bylo to tam. Ať to tam je.
 
-Napsal o hnízdě. O kostech těžkých jako kámen, tmavých jako med, o lebce dlouhé jako předloktí, o drápech, jejichž rozestup se shodoval s rozestupem rýh. O vrstvách hlíny, stovkách vrstev, tenkých jako list. O malé stočené kostře u stěny, kterou Ješek nazval mládětem, a Matěj nevěděl. Napsal *Fuerunt. Non sunt.* A pak, na okraj toho listu, napsal obě slova vedle sebe, *vidi* u kostí a *non vidi* u draka, živého, a mezi ně udělal čáru. Rovnou, svislou, od horního okraje k dolnímu.
+Napsal o hnízdě. O kostech těžkých jako kámen, tmavých jako med, o lebce dlouhé jako předloktí, o drápech, jejichž rozestup se shodoval s rozestupem rýh. O vrstvách hlíny, stovkách vrstev, tenkých jako list. O malé stočené kostře u stěny, kterou Ješek nazval mládětem. Matěj to nevěděl. Napsal *Fuerunt. Non sunt.* A pak, na okraj toho listu, napsal obě slova vedle sebe, *vidi* u kostí a *non vidi* u draka, živého, a mezi ně udělal čáru. Rovnou, svislou, od horního okraje k dolnímu.
 
 Díval se na ni, když schla. Vypadala jako mez mezi dvěma poli. Jako kolík, který převor zatloukl u Dobroslavina milíře. Tady je jedno a tady druhé, a kdo přejde, ať ví, že přešel.
 
@@ -270,7 +272,7 @@ Krystal, kalný, s rezavými jehličkami uvnitř a s bílou krustou na jedné pl
 
 Co vzal, ať leží u toho, co napsal. Ať se to nerozdělí. Kdo bude jednou číst o krystalu s bílou krustou, ať ho má v ruce. A do hřbetu knihy se nikdo nedívá. Do hřbetu se nedívají ani zloději.
 
-Vložil krystal mezi svazky, do hřbetu, tam, kde se sešívají, a vedle něj šupinu. Pak je šil, matčinou nití, přes kožené řemínky, stehem, který se naučil od bratra vestiáře, když spravovali vazby v almárii, a nit držela. Přes hřbet, přes krystal a zlato, přilepil kus látky, aby se kůže nedřela o kámen.
+Vložil krystal mezi svazky, do hřbetu, tam, kde se sešívají, a vedle něj šupinu. Pak svazky šil matčinou nití, přes kožené řemínky, stehem, který se naučil od bratra vestiáře, když spravovali vazby v almárii, a nit držela. Přes hřbet, přes krystal a zlato, přilepil kus látky, aby se kůže nedřela o kámen.
 
 Cíp hábitu. Šedý, s roztřepeným okrajem, kde ho v únoru utrhl hák. Poslední kus, který mu zbyl.
 
@@ -288,7 +290,7 @@ Poslední list psal poslední noc, při poslední svíci.
 
 Rozbalil kost.
 
-Neudělal to od Waldsassenu. Ležela pod lavicí v plátně, v kterém mu ji převor podal u brány, a teď ji vybalil a položil na stůl, a byla taková, jak si ji pamatoval. Barvy tmavého medu. Těžká jako kámen. Studená jako kámen, i v chalupě, kde se celý den topilo pod lepidlem.
+Neudělal to od Waldsassenu. Ležela pod lavicí v plátně, ve kterém mu ji převor podal u brány, a teď ji vybalil a položil na stůl, a byla taková, jak si ji pamatoval. Barvy tmavého medu. Těžká jako kámen. Studená jako kámen, i v chalupě, kde se celý den topilo pod lepidlem.
 
 Dobroslava se na ni dívala od ohně.
 
@@ -436,7 +438,7 @@ Matěj mu ji podal. Kněz ji vzal a zapřel se, jak se zapřel každý, kdo neč
 
 „Kost.“
 
-Kněz si ji prohlížel, ve světle od dveří. Rytinu nehledal a neviděl. Pak ji zabalil zpátky do plátna, otevřel truhlu a položil ji dospod, pod ornát, pod plátna na oltář, vedle cínového kalicha, který se používal ve všední dny.
+Kněz si ji prohlížel ve světle od dveří. Rytinu nehledal a neviděl. Pak ji zabalil zpátky do plátna, otevřel truhlu a položil ji dospod, pod ornát, pod plátna na oltář, vedle cínového kalicha, který se používal ve všední dny.
 
 „Na oltář ji nedám,“ řekl.
 

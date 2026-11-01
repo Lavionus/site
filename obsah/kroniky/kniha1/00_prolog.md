@@ -8,7 +8,7 @@ Hana Vrbová si ho prohlíží dřív, než si sundá bundu. Je menší, než č
 
 „Na kámen jsem tu já,“ řekne Hana.
 
-Doktorka Šindelářová konečně vzhlédne. Je o deset let starší, má brýle posunuté do vlasů a druhé na nose a dívá se na Hanu tak, jak se v archivech dívají na lidi zvenčí: zdvořile a s pevným odhodláním nenechat je ničeho se dotknout.
+Doktorka Šindelářová konečně vzhlédne. Je o deset let starší, má brýle posunuté do vlasů a druhé na nose a dívá se na Hanu tak, jak se v archivech dívají na lidi zvenčí: zdvořile a s pevným odhodláním nedovolit jim na nic sáhnout.
 
 „Přišel s fondem fary v Mlýnci,“ řekne. „Tedy s tím, co z něj zbylo. Farář ho v osmnáctém století popsal jako *liber de dracone*, knihu o drakovi, a od té doby ho nikdo neotevřel. Písmo je dvanácté století, spíš konec. Latina, místy něco jako staročeské glosy, to ještě nevíme. Kresby,“ zaváhá, „uvidíte sama. A ve vazbě je tohle. Někdo to tam všil úmyslně. Ne do desek, do hřbetu, mezi svazky. Restaurátorka by ráda věděla, co to je, než se rozhodne, jestli to vyjme.“
 
@@ -32,7 +32,9 @@ Písmo je drobné a pravidelné, inkoust zhnědlý, okraje plné poznámek jinou
 
 Pak kresby.
 
-První je hora v řezu, jako ji kreslí geolog: vrstvy, puklina, chodba vedená šikmo dovnitř. Čáry jsou nejisté, místy přetažené, ale ten řez je řez. Někdo, kdo kreslil v dvanáctém století, chápal, že hora má vnitřek. U konce chodby, kousek nad ní, je kruh šrafovaný vlnovkami, a u něj slovo, které Hana přečte i bez latiny, protože ho kdosi vedle připsal česky, starým pravopisem: *teplá skála*.
+První je hora v řezu, jako ji kreslí geolog: vrstvy, puklina, chodba vedená šikmo dovnitř. Čáry jsou nejisté, místy přetažené, ale ten řez je řez. Někdo, kdo kreslil v dvanáctém století, chápal, že hora má vnitřek. U konce chodby, kousek nad ní, je kruh šrafovaný vlnovkami. U něj stojí slovo, které Hana přečte i bez latiny, protože ho tam kdosi připsal česky, starým pravopisem: *teplá skála*.
+
+![Řez horou z kodexu](obrazky/00_rez_horou.webp)
 
 Druhá kresba zabírá celou dvoustranu. Dutina ve skále, nakreslená jako místnost, a v ní uspořádání předmětů. Kroužky, malé čtverce, trojúhelníky, každý tvar pečlivě označený: *aurum, crystallus, lapis*. Mezi nimi rýhy, krátké a dlouhé, ve skupinách. Nevypadá to jako ornament ani jako mapa. Vypadá to, jako by někdo hodinu za hodinou zapisoval, co leží kde, a bál se, že udělá chybu.
 
@@ -54,7 +56,7 @@ Hana přikývne a otočí zpátky na řez horou. Teplá skála. Vlnovky. Puklina
 
 „Na Chebsku. Pod horami, směrem na Karlovy Vary. Proč?“
 
-„Protože tam teplá skála dává smysl,“ řekne Hana a cítí, jak se jí ulevilo, že má vysvětlení. „Celá ta oblast je geologicky aktivní. Termální prameny, výrony oxidu uhličitého, zemětřesné roje. Ve středověku tam museli narážet na teplou vodu při každé studni.“
+„Protože tam teplá skála dává smysl,“ řekne Hana a cítí úlevu, že má vysvětlení. „Celá ta oblast je geologicky aktivní. Termální prameny, výrony oxidu uhličitého, zemětřesné roje. Ve středověku tam museli narážet na teplou vodu, kdykoli kopali studnu.“
 
 „Takže žádný drak.“
 

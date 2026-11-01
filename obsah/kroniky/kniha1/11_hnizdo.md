@@ -1,6 +1,6 @@
 # 11. Hnízdo
 
-U třicátého kroku byl Ješkův křížek na stropním trámu, jako v únoru. U sedmdesátého začalo teplo. Matěj si toho všiml dřív, než na to pomyslel, protože se mu pod kápí orosilo čelo, a teprve potom si uvědomil, že na to čekal. Bylo to jako vracet se do domu, kde se mu kdysi udělalo zle.
+U třicátého kroku byl Ješkův křížek na stropním trámu, jako v únoru. U sedmdesátého začalo teplo. Matěj si toho všiml dřív, než na to pomyslel, protože se mu pod kápí orosilo čelo. Teprve potom si uvědomil, že na to čekal. Bylo to jako vracet se do domu, kde se mu kdysi udělalo zle.
 
 Štola byla jiná. Delší, samozřejmě, o celé ty lokty, které Ješek vylámal od února, ale jiná i jinak. Prkna pod nohama byla mokřejší a pod nimi se ozývala voda, ne jako tichý okap, ale jako potok pod ledem. Na stropních trámech stály kapky a v kahanu se třpytily jako rosa na pavučině. Rámy byly nové a světlé a na každém druhém byl vyřezaný křížek.
 
@@ -10,13 +10,13 @@ U pukliny se Matěj zastavil. Poznal ji podle rezavé skály a podle stužky vod
 
 Dvě stě kroků. Dvě stě pět, tam, kde stál Ješek o Zvěstování, když mu vyprávěl o vodě po kotníky. Vzduch tu byl teplý a těžký, jako v lázni, kde se už nějakou dobu netopí. Dvě stě dvanáct. Na zemi stály prázdné koše, naházené přes sebe, a vedle nich síto, které tu někdo zapomněl. A dál, kde chodba končila, se v kahanu zaleskla voda.
 
-Byla to hrázka. Matěj o ní věděl od Ješka, ale neviděl ji: nízká přepážka z prken a jílu napříč chodbou, dvě píďě před čelbou, a za ní stála voda. Stála až po okraj, klidná, hnědá, a v kahanu z ní stoupala sotva viditelná pára.
+Byla to hrázka. Matěj o ní věděl od Ješka, ale neviděl ji: nízká přepážka z prken a jílu napříč chodbou, dvě pídě před čelbou, a za ní stála voda. Stála až po okraj, klidná, hnědá, a v kahanu z ní stoupala sotva viditelná pára.
 
 Ješek se nezastavil. Klekl si k hrázce, sáhl pod hladinu, něco tam nahmatal a zatáhl. Ozvalo se mlasknutí a voda se dala do pohybu. Valila se otvorem v prknech do žlabu pod podlahou a hladina za hrázkou klesala. Matěj ji viděl klesat. Ješek u toho klečel, s rukou ve vodě, a ani se neohlédl.
 
 „Od včerejška se tu nekopalo,“ řekl, „a nikdo nevypouštěl. Kdyby se to nechalo, ráno tu stojíš po kolena.“
 
-Matěj neřekl nic. Díval se na vodu, jak odtéká, a v duchu počítal, kolik Otčenášů by trvalo naplnit tu hrázku. Nevěděl. Nikdy to neměřil. Ale věděl, že to Hensel ví, a že Ortlieb si to píše.
+Matěj neřekl nic. Díval se na vodu, jak odtéká, a v duchu počítal, kolik Otčenášů by trvalo naplnit tu hrázku. Nevěděl. Nikdy to neměřil. Ale věděl, že to Hensel ví, a že si to Ortlieb píše.
 
 Když voda klesla a Ješek otvor zase ucpal, posvítil kahanem vpravo.
 
@@ -24,7 +24,7 @@ Když voda klesla a Ješek otvor zase ucpal, posvítil kahanem vpravo.
 
 Ve skále byla díra.
 
-Nebyla velká. Nahoře oblá, jako ústí chlebové pece, a tak nízká, že by se jí dospělý muž protáhl jen v předklonu. Kolem byla skála čerstvě otlučená krumpáčem, světlá na lomu, a na zemi pod otvorem ležela šedá hlína, rozšlapaná a rozmazaná, a v ní otisky bot a bosých nohou. Z otvoru šel vzduch. Byl sušší než ve štole a chladnější. Nebyl studený. Byl jen jiný, jako vzduch ze sklepa, do kterého se dlouho nikdo nepodíval.
+Nebyla velká. Nahoře oblá, jako ústí chlebové pece, a tak nízká, že by se jí dospělý muž protáhl jen v předklonu. Kolem byla skála čerstvě otlučená krumpáčem, světlá na lomu. Na zemi pod otvorem ležela šedá hlína, rozšlapaná a rozmazaná, a v ní otisky bot a bosých nohou. Z otvoru šel vzduch. Byl sušší než ve štole a chladnější. Nebyl studený. Byl jen jiný, jako vzduch ze sklepa, do kterého se dlouho nikdo nepodíval.
 
 „Tady,“ řekl Ješek. Zastavil se. „Tady jsem to prorazil.“
 
@@ -58,11 +58,11 @@ Ješek měl pravdu. Nebyly to stopy krumpáče. Byly to rýhy, rovné a mělké,
 
 A mezi rýhami byly důlky.
 
-Mělké, oblé, jako otisky prstu v těstě. Některé byly prázdné a v jejich dně byla hlína uhlazená do lesku, jako by v ní něco dlouho leželo a pak to někdo vytrhl. Matěj si klekl k jednomu z nich. Byl velký asi jako holubí vejce.
+Mělké, oblé, jako otisky prstu v těstě. Některé byly prázdné a na jejich dně byla hlína uhlazená do lesku, jako by v ní něco dlouho leželo a pak to někdo vytrhl. Matěj si klekl k jednomu z nich. Byl velký asi jako holubí vejce.
 
 „Tady bylo zlato,“ řekl.
 
-„Tady.“ Ješek si klekl vedle něj. „A tady. A tady.“ Ukazoval prstem z jednoho důlku do druhého, a Matěj viděl, že jich je hodně, desítky, a že neleží nahodile. Ležely v řadách mezi rýhami. Ne na hromadě, jak by si člověk představoval poklad, ne nasypané jako zrno do truhly. Byly rozestavené, každý v určité vzdálenosti od sousedního, a mezi nimi menší důlky, čtverhrannější, jako by v nich stálo něco hranatého.
+„Tady.“ Ješek si klekl vedle něj. „A tady. A tady.“ Ukazoval prstem z jednoho důlku do druhého a Matěj viděl, že jich je hodně, desítky, a že neleží nahodile. Ležely v řadách mezi rýhami. Ne na hromadě, jak by si člověk představoval poklad, ne nasypané jako zrno do truhly. Byly rozestavené, každý v určité vzdálenosti od sousedního, a mezi nimi menší důlky, čtverhrannější, jako by v nich stálo něco hranatého.
 
 „Krystaly,“ řekl Matěj. Viděl je na haldě. Šestiboké, s hrotem. Kdyby stály hrotem vzhůru, nechaly by po sobě přesně takový otisk.
 
@@ -70,11 +70,11 @@ Dál, kde se podlaha nořila pod svah nevybrané hlíny, nebyly důlky prázdné
 
 Ze šedé hlíny tam vystupovaly věci, které pacholci ještě nestihli vyhrabat. Matěj k nim došel opatrně, po skále, kde už bylo vybráno, a na kraji hlíny se zastavil, jak řekl Hensel. Kahan zvedl nad sebe.
 
-Zlato. Valouny, menší i větší, zpola zapuštěné v hlíně, jak je tam nechal ten, kdo je tam položil, a mezi nimi hroty krystalů, mléčné a průhledné, s bílou krustou na bocích. A tmavé kameny. Oblé, těžké na pohled, černé s rudým nádechem, velké jako ořech, jako slepičí vejce, a ležely v tom řádu také, mezi zlatem a krystaly, ne mimo něj. A rýhy, které pokračovaly pod hlínu, kam nebylo vidět.
+Zlato. Valouny, menší i větší, zpola zapuštěné v hlíně, jak je tam nechal ten, kdo je tam položil, a mezi nimi hroty krystalů, mléčné a průhledné, s bílou krustou na bocích. A tmavé kameny. Oblé, těžké na pohled, černé s rudým nádechem, velké jako ořech i jako slepičí vejce. I ony ležely v tom řádu, mezi zlatem a krystaly, ne mimo něj. A rýhy, které pokračovaly pod hlínu, kam nebylo vidět.
 
 Matěj stál nad tím s kahanem a neslyšel vlastní dech.
 
-Nebyl to poklad. Ves měla pravdu, že je tu zlato, a Konrád měl pravdu, že je ho hodně, a oba se mýlili. Poklad je to, co se nahromadí, aby se to mělo. Tohle se nehromadilo. Tohle bylo *rozestavěné*. Jako písmena na řádku. Jako kameny v mozaice na podlaze v Řezně, kterou Matěj viděl jako novic a nerozuměl, proč se na ni smí šlapat. Někdo tady položil každou věc na její místo a k ní vyryl čáry, a kdo to udělal, ten nechtěl mít. Ten chtěl, aby to bylo vidět.
+Nebyl to poklad. Ves měla pravdu, že je tu zlato, a Konrád měl pravdu, že je ho hodně, a oba se mýlili. Poklad je to, co se nahromadí, aby se to mělo. Tohle se nehromadilo. Tohle bylo *rozestavěné*. Jako písmena na řádku. Jako kameny v mozaice na podlaze v Řezně, kterou Matěj viděl jako novic a nerozuměl, proč se na ni smí šlapat. Někdo tady položil každou věc na její místo a vyryl k ní čáry. Kdo to udělal, ten nechtěl mít. Ten chtěl, aby to bylo vidět.
 
 *Kdo?*
 
@@ -136,6 +136,8 @@ Rozbalil sešitek na koleni a pochopil, že takhle to nepůjde.
 
 Dutina byla velká. Od díry ke svahu hlíny měřila, odhadem, osm kroků, a napříč pět. Na podlaze byly desítky důlků a věcí a stovky rýh a on měl před sebou dvoustranu velkou jako dvě dlaně. Kdyby kreslil, jak to vidí, od oka, pokřivil by to. Posunul by krystal o kus vedle, protože by se mu tam lépe vešel. Spojil by dvě skupiny rýh do jedné, protože by si myslel, že tak to dává smysl. Byl by jako písař, který opravuje *labuntur* na *labantur*, protože ví, jak to má být. A nevěděl, jak to má být. Neměl tušení.
 
+![Hnízdo](obrazky/11_hnizdo.webp)
+
 Vytáhl z mošny Ortliebův provaz.
 
 „Podrž,“ řekl Ješkovi a podal mu konec. „Tady. U díry. Na zemi.“
@@ -154,7 +156,7 @@ První čtverec. Loket na loket. Co v něm leží? Důlek, prázdný, velký. Kr
 
 Druhý čtverec.
 
-Ješek mu svítil. Pak, když Matěj přešel k dalšímu tahu provazu, mu podržel konec. Pak zase svítil. Neptal se. Po chvíli se ptát přestal úplně a jen se díval, jak bratr klečí na skále s nosem nad sešitkem, a jak se pak narovná, podívá na podlahu, zase se skloní a udělá dva tahy olůvkem. Jednou se Matěj zarazil, protože jedna skupina rýh nesouhlasila. Byly v ní čtyři, ale jedna se rozdvojovala, a nevěděl, jestli ji kreslit jako jednu, nebo jako dvě. Dlouho se díval. Pak ji nakreslil tak, jak byla, rozdvojenou, a na okraj připsal *sic*. Tak to je.
+Ješek mu svítil. Pak, když Matěj přešel k dalšímu tahu provazu, mu podržel konec. Pak zase svítil. Neptal se. Po chvíli se ptát přestal úplně a jen se díval, jak bratr klečí na skále s nosem nad sešitkem a jak se pak narovná, podívá na podlahu, zase se skloní a udělá dva tahy olůvkem. Jednou se Matěj zarazil, protože jedna skupina rýh nesouhlasila. Byly v ní čtyři, ale jedna se rozdvojovala, a nevěděl, jestli ji kreslit jako jednu, nebo jako dvě. Dlouho se díval. Pak ji nakreslil tak, jak byla, rozdvojenou, a na okraj připsal *sic*. Tak to je.
 
 U kraje hlíny, kde věci ještě ležely, kreslil pomaleji. Kroužek: *aurum*. Čtvereček: *crystallus*. Trojúhelník, protože ty tmavé kameny potřebovaly vlastní znamení a trojúhelník se nejsnáz kreslí: *lapis*. Na okraj listu nakreslil všechny tři a ke každému napsal slovo, aby ten, kdo to jednou uvidí, nemusel hádat. Pak se zase sklonil.
 
@@ -168,11 +170,11 @@ Matěj se na něj chvíli díval. Měl na sobě zase svou starou kápi z pytlovi
 
 Pak se vrátil k provazu.
 
-Byl teď sám. Dutina kolem něj mlčela. Ne jako mlčí kostel, kde je ticho, protože se v něm mlčí. Mlčela jako něco, kde nikdy žádný zvuk nebyl a kde ho nikdo nečekal. Slyšel jen syčení loje v kahanu a vlastní dech. A ještě něco, jednou, když se opřel dlaní o podlahu: slabé chvění, krátké, jako tenkrát u čelby. Zvedl ruku. Přestalo to. Položil ji znovu. Nic.
+Byl teď sám. Dutina kolem něj mlčela. Ne jako mlčí kostel, kde je ticho, protože se v něm mlčí. Mlčela jako místo, kde nikdy žádný zvuk nebyl a kde ho nikdo nečekal. Slyšel jen syčení loje v kahanu a vlastní dech. A ještě něco, jednou, když se opřel dlaní o podlahu: slabé chvění, krátké, jako tenkrát u čelby. Zvedl ruku. Přestalo to. Položil ji znovu. Nic.
 
 Kreslil.
 
-Někdy po půlnoci došel ke skupině rýh, která už jednou byla. Poznal ji. Čtyři, prostřední kratší. Byla na začátku řady, u stěny, ve třetím čtverci, a teď ji měl znovu, o pět čtverců dál, a vedle ní stejně jako tam ležel kroužek a čtvereček. Ne prázdný kroužek. Plný. Valoun tu ještě ležel.
+Někdy po půlnoci došel ke skupině rýh, která už jednou byla. Poznal ji. Čtyři, prostřední kratší. Byla na začátku řady, u stěny, ve třetím čtverci. Teď ji měl znovu, o pět čtverců dál, a vedle ní ležel stejně jako tam kroužek a čtvereček. Ne prázdný kroužek. Plný. Valoun tu ještě ležel.
 
 Podíval se na list. Pak na podlahu. Pak zase na list. Bylo to stejné.
 
@@ -186,13 +188,13 @@ Pod ní, kde pacholci odkopali hlínu nejhlouběji, vyčnívalo z řezu ještě 
 
 Díval se na ně dlouho. Pak se podíval na rýhy na podlaze, na nejbližší skupinu. Tři vedle sebe.
 
-Natáhl ruku. Neodvážil se drápů dotknout, ale přiložil prsty vedle nich, roztažené tak, aby se každý prst kryl s jedním drápem. Pak, se stejně roztaženými prsty, se otočil a přiložil je k rýhám.
+Natáhl ruku. Neodvážil se drápů dotknout, ale přiložil prsty vedle nich, roztažené tak, aby se každý prst kryl s jedním drápem. Pak se otočil a se stejně roztaženými prsty je přiložil k rýhám.
 
 Seděly. Ne přesně, prsty se mu třásly. Ale skoro. Vzdálenost mezi drápy byla vzdálenost mezi rýhami.
 
 Matěj stáhl ruku a položil si ji do klína.
 
-Vytáhl tabulku. Do vosku napsal, rydlem, protože vosk mu byl bližší než pergamen, a protože tohle nepatřilo na pergamen, ještě ne:
+Vytáhl tabulku. Napsal to rydlem do vosku. Vosk mu byl bližší než pergamen a tohle na pergamen nepatřilo, ještě ne:
 
 *Inter ungues digiti tres; inter sulcos tres idem spatium, fere. Vidi.*
 
@@ -208,7 +210,7 @@ Pod to, menším písmem:
 
 Díval se na to, co napsal, a v tom tichu kolem pochopil něco jiného.
 
-Nebylo to najednou. Bylo to, jako když se v zimě za oknem rozednívá a člověk neví, kdy přesně se ze tmy stalo šero. Seděl a díval se na vrstvy hlíny v řezu svahu, na tisíce tenkých listů ležících jeden na druhém. Na bílou krustu na krystalech, silnou jako nehet. Na rezavou kůru ve žlabu u ústí, o které se mu v únoru zdálo, že roste: za celý půlrok, co štola teče, z ní na dřevě byla sotva vrstva tenká jako papír. Na kost, která byla kamenem.
+Nebylo to najednou. Bylo to, jako když se v zimě za oknem rozednívá a člověk neví, kdy přesně se ze tmy stalo šero. Seděl a díval se na vrstvy hlíny v řezu svahu, na tisíce tenkých listů ležících jeden na druhém. Na bílou krustu na krystalech, silnou jako nehet. Na rezavou kůru ve žlabu u ústí, o které se mu v únoru zdálo, že roste: za celý půlrok, co štola teče, na dřevě narostla sotva vrstva tenká jako papír. Na kost, která byla kamenem.
 
 Nikdo sem nechodil. Kdyby někdo chodil, byla by v hlíně stopa, a nebyla. Kdyby tu něco žilo, cítil by to: pach, trus, zbytky jídla, cokoli. Necítil nic než prach. Hlína padala do téhle díry dlouho, tak dlouho, že ji zaplnila až ke klenbě. A ten, kdo tu ležel, tu ležel, když začala padat, a ležel tu, když přestala, a ležel tu, když na hoře rostly lesy, které Konrád chce kácet, a když na Ohři ještě nebyl Cheb, a když… Matěj nevěděl kdy. Neuměl to spočítat. Neměl vědro, do kterého by to nabral, ani modlitbu, kterou by to odměřil.
 
@@ -294,7 +296,7 @@ Matěj se díval na bratra, na jeho mladou tvář, šedou od únavy a od prachu,
 
 „Byl,“ řekl. „Dávno.“
 
-Ješek kývl. Neřekl nic. Šel ke Henselovi a k ohni, a Matěj se otočil a vešel do lesa, mezi smrky, a teprve tam, kde ho od boudy nebylo vidět, si sedl na kořen. Nebyl to ten smrk z února. Nebo byl, nevěděl. Ruce se mu třásly tak, že nemohl otevřít tabulku.
+Ješek kývl. Neřekl nic. Šel ke Henselovi a k ohni. Matěj se otočil a vešel mezi smrky do lesa. Teprve tam, kde ho od boudy nebylo vidět, si sedl na kořen. Nebyl to ten smrk z února. Nebo byl, nevěděl. Ruce se mu třásly tak, že nemohl otevřít tabulku.
 
 Když ji otevřel, napsal pod *tuli* poslední řádek té noci. Napsal ho velkým písmem, protože už neměl sílu psát malým:
 

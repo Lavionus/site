@@ -8,7 +8,7 @@ Měchýř visel v komoře u oratoře na hřebíku, zabalený v plátně, které 
 
 *
 
-Převor sloužil mši v oratoři, pro konvrše a pro Hartmanna a pro Matěje, a když se po ní svlékal, zavolal si Matěje do sakristie, která byla jen kout za oltářem se dvěma háky na zdi.
+Převor sloužil mši v oratoři, pro konvrše a pro Hartmanna a pro Matěje. Když se po ní svlékal, zavolal si Matěje do sakristie. Byl to jen kout za oltářem se dvěma háky na zdi.
 
 „Rozmyslel sis to?“
 
@@ -20,17 +20,19 @@ Převor pověsil ornát na hák. Pomalu, jako všechno. Na pásu mu cinkly klí�
 
 „Řeknu, co jsem viděl.“
 
-Převor se na něj podíval. Dlouho. Matěj nevěděl, co v té tváři je, a pak se mu zdálo, že ví, a že je to úleva. Převor kývl.
+Převor se na něj podíval. Dlouho. Matěj nevěděl, co v té tváři je, a pak se mu zdálo, že to ví a že je to úleva. Převor kývl.
 
 „To jsem ti říkal,“ řekl. „Nic víc.“
 
-Matěj sklonil hlavu, a převor si to vyložil, jak chtěl.
+Matěj sklonil hlavu a převor si to vyložil, jak chtěl.
 
 *
 
 Stůl postavili venku před vraty, na lukách u potoka, kde začínala cesta ke vsi. Udalrichův stůl, ten, na kterém krájel chleba, přikrytý oltářním plátnem. Na něm truhla s rozšířeným křížem, dvě svíce a na podušce z červené vlny kost. Vedle kosti, složená na čtvrtky, listina z Lyddy. Vedle listiny jiná, nová, ještě bez pečeti, a u ní miska s voskem, který Hartmann držel nad pánví, aby nevychladl.
 
-Lidé přišli už dopoledne. Z Mlýnce, ze vsi za potokem, z dalších, které Matěj neznal, protože se o svátku svatého Jiří rozneslo, že pán z Wehrbergu ukáže dračí kost a že v hoře hořelo světlo. Ženy v čistých šátcích, muži v nedělních kabátcích, děti, které se honily po lukách a kterým to matky nezakazovaly. Kojata s ženou. Mlynář. Bohuna na holi mezi dvěma vnuky. Matka. Stála vzadu, jako vždycky, a dívala se na Ješka.
+![Stůl před vraty grangie](obrazky/17_svaty_jiri.webp)
+
+Lidé přišli už dopoledne. Z Mlýnce, ze vsi za potokem i z dalších, které Matěj neznal. Rozneslo se totiž, že o svátku svatého Jiří pán z Wehrbergu ukáže dračí kost a že v hoře hořelo světlo. Ženy v čistých šátcích, muži v nedělních kabátcích, děti, které se honily po lukách a kterým to matky nezakazovaly. Kojata s ženou. Mlynář. Bohuna na holi mezi dvěma vnuky. Matka. Stála vzadu, jako vždycky, a dívala se na Ješka.
 
 Horníci stáli pohromadě po levé straně. Sasové zvlášť, místní zvlášť, Ortlieb před nimi v kabátci, který si dal vyprat. Hensel mezi nimi, s bílými vousy zažloutlými od kouře, a vedle něj Ješek. Vyspalý. Poprvé od pondělí měl v obličeji barvu.
 
@@ -38,15 +40,15 @@ Na kraji lesa za potokem, pod bukem, kde se louka zvedala ke svahu, stála Dobro
 
 Konrád přijel v poledne.
 
-Nejel v čele. Jel mezi Volkmarem a Rüdigerem, a za nimi lovčí s rozštípnutým uchem a dva psovodi se psy. Neměl na sobě modrý plášť s kunou. Měl šedý, prostý, jaký nosí pacholci na cestu, a Matěj si vzpomněl, že ten modrý zůstal ležet v teplé vodě za hrázkou, nasáklý. Když Konrád sesedl, lidé se k němu nahrnuli, jako se hrnuli v pondělí po Velikonocích, a on je nechal. Ale nesmál se. Díval se přes ně. Hledal někoho, a když našel Matěje, kývl, jen jednou, a to kývnutí nebylo jako dřív.
+Nejel v čele. Jel mezi Volkmarem a Rüdigerem, a za nimi lovčí s rozštípnutým uchem a dva psovodi se psy. Neměl na sobě modrý plášť s kunou. Měl šedý, prostý, jaký nosí pacholci na cestu. Matěj si vzpomněl, že ten modrý zůstal ležet v teplé vodě za hrázkou, nasáklý. Když Konrád sesedl, lidé se k němu nahrnuli, jako se hrnuli v pondělí po Velikonocích, a on je nechal. Ale nesmál se. Díval se přes ně. Hledal někoho, a když našel Matěje, kývl, jen jednou, a to kývnutí nebylo jako dřív.
 
 *
 
 Obřad začal Volkmar.
 
-Přečetl listinu. Nejdřív latinsky, plynně, s porýnským přízvukem, a pak česky, větu po větě. *Ať je všem známo… tato kost, uchovávaná po staletí u kostela svatého Jiří v Lyddě, kde svatý mučedník trpěl… je pravá kost onoho draka…* Lidé se křižovali. Bohuna plakala. Matěj stál u stolu a poslouchal tu arengu, *ne simul labuntur cum tempore*, a slyšel v ní Wigandův hlas, *písař, který opravuje, co vidí, už není písař*, a mlčel, protože ještě nebyl čas.
+Přečetl listinu. Nejdřív latinsky, plynně, s porýnským přízvukem, a pak česky, větu po větě. *Ať je všem známo… tato kost, uchovávaná po staletí u kostela svatého Jiří v Lyddě, kde svatý mučedník trpěl… je pravá kost onoho draka…* Lidé se křižovali. Bohuna plakala. Matěj stál u stolu a poslouchal tu arengu, *ne simul labuntur cum tempore*. Slyšel v ní Wigandův hlas, *písař, který opravuje, co vidí, už není písař*, a mlčel, protože ještě nebyl čas.
 
-Pak převor požehnal kost. Hartmann držel kropenku a převor kropil podušku a kost na ní a říkal modlitbu za ostatky a Matěj odpovídal *amen* s ostatními a slyšel vlastní hlas jako cizí. Kost se v poledním slunci leskla jako kámen v potoce.
+Pak převor požehnal kost. Hartmann držel kropenku a převor kropil podušku a kost na ní a říkal modlitbu za ostatky. Matěj odpovídal *amen* s ostatními a slyšel vlastní hlas jako cizí. Kost se v poledním slunci leskla jako kámen v potoce.
 
 Pak Volkmar přečetl druhou listinu. Krátce, česky, jen to podstatné: že pan Konrád z Wehrbergu dává klášteru ve Waldsassenu les od potoka k hřbetu k pastvě a k dřevu, navěky, za modlitby za duši svého otce. O tom, co je pod drnem, Volkmar nečetl. Hartmann nalil vosk. Konrád stáhl z prstu prsten, ne ten železný s hladkým kamenem, ale druhý, s vyrytým jezdcem, a přitiskl ho do vosku. Převor se podepsal křížkem a jménem.
 
@@ -76,9 +78,9 @@ Nikdy nemluvil k tolika lidem. V klášteře se nemluví, v klášteře se zpív
 
 Bylo ticho.
 
-„Tuhle listinu,“ řekl, a vzal ji ze stolu, „jste slyšeli. Říká, že ji psali v Lyddě, za mořem, kde trpěl svatý Jiří. Nepsali ji tam.“
+„Tuhle listinu,“ řekl a vzal ji ze stolu, „jste slyšeli. Říká, že ji psali v Lyddě, za mořem, kde trpěl svatý Jiří. Nepsali ji tam.“
 
-Za jeho zády se převor nepohnul. Matěj to cítil zády, jak se člověk cítí, když za ním někdo přestane dýchat.
+Za jeho zády se převor nepohnul. Matěj to cítil zády, jak člověk cítí, když za ním někdo přestane dýchat.
 
 „Je na ní dvanáct svědků. Řekové, Latiníci, jeden Armén. Všechna jména psala jedna ruka, jedním inkoustem. Kdo umí psát, podepíše se sám, a kdo neumí, udělá křížek. Tady není ani jeden křížek. První věta je slovo od slova z knihy vzorů, kterou opsal kdekdo v Řezně, i s chybou, kterou tam kdysi udělal písař, a ta chyba je tady taky. Pečeť je z vosku. Za mořem pečetí olovem.“ Odmlčel se. „Bratr Wigand, armarius ve Waldsassenu, ji ohmatal se mnou. Umřel ve Svatém týdnu. Zprávu o tom jsem napsal v březnu a leží v almárii.“
 
@@ -108,7 +110,7 @@ Ticho bylo jiné než předtím. Těžší.
 
 *
 
-Udalrich mu podal měchýř. Matěj ho o to požádal ráno, a Udalrich se nezeptal proč, a teď stál vedle stolu s tím prasečím měchýřem v mokrém plátně v obou rukou, jako by držel monstranci.
+Udalrich mu podal měchýř. Matěj ho o to požádal ráno a Udalrich se nezeptal proč. Teď stál vedle stolu s tím prasečím měchýřem v mokrém plátně v obou rukou, jako by držel monstranci.
 
 Matěj vytáhl z mošny svíci.
 
@@ -144,7 +146,7 @@ Kojata se podíval na převora. Převor stál za stolem a nehýbal se. Kojata se
 
 „Kojatův dech,“ řekl Matěj. „Člověka. Ten svíci nezhasí. Dech země ano.“ Položil měchýř na stůl. „Svíce to pozná dřív než člověk. Kdo jde na slatinu, ať si vezme svíci. Kde zhasne, tam ať nechodí. Za bezvětří do prohlubní nechoďte nikdy. Nesklánějte se. To ví každý, kdo tam chodí. Teď víte proč. Nebo ne proč. Ale víte, co to dělá.“
 
-Otočil se. Převor stál za stolem, a ruce měl sepjaté v rukávech, a Matěj se mu podíval do očí. Šedých. Nic se v nich nepohnulo.
+Otočil se. Převor stál za stolem s rukama sepjatýma v rukávech a Matěj se mu podíval do očí. Šedých. Nic se v nich nepohnulo.
 
 „*Epistola mea, pater, falsa erat,*“ řekl latinsky, protože tohle patřilo převorovi, a ne vsi. A pak česky, protože tohle patřilo všem. „Ten dopis odvolávám. Mýlil jsem se.“
 
@@ -164,7 +166,7 @@ Horníci se na sebe dívali. Místní na Sasy, Sasové na Ortlieba.
 
 „Lže.“
 
-Ortlieb vystoupil. Mluvil česky, nahlas, a hlas mu zněl pevně, jen Matěj, který ho slyšel u strouhy, poznal, že je to jiný hlas než ten v pondělí. „Mnich lže, pane. Ty znaky si vymyslel. Moje tabulky nepřečte nikdo. Nikdo.“
+Ortlieb vystoupil. Mluvil česky, nahlas, a hlas mu zněl pevně. Jen Matěj, který ho slyšel u strouhy, poznal, že je to jiný hlas než ten v pondělí. „Mnich lže, pane. Ty znaky si vymyslel. Moje tabulky nepřečte nikdo. Nikdo.“
 
 „Odkud to máš, Matěji?“
 
@@ -176,7 +178,7 @@ Konrád se neptal zle. Ptal se, jako se ptal tenkrát v hoře, *co jsi viděl ty
 
 Matěj mlčel.
 
-Ortlieb se díval na něj, a pak se otočil, pomalu, a podíval se na horníky za sebou. Na Sasy. Na místní. Na Ješka. Matěj viděl, kam se jeho oči podívaly, a viděl, že tam zůstaly o dech déle, a Ješek pod tím pohledem nesklopil oči, ale zbledl.
+Ortlieb se díval na něj, a pak se otočil, pomalu, a podíval se na horníky za sebou. Na Sasy. Na místní. Na Ješka. Matěj viděl, kam se jeho oči podívaly, a viděl, že tam zůstaly o dech déle. Ješek pod tím pohledem nesklopil oči, ale zbledl.
 
 A pak se mezi horníky pohnul Hensel.
 
@@ -192,11 +194,11 @@ Jen to. Pak se otočil a šel zpátky mezi horníky, na své místo, a postavil 
 
 Rüdiger nasedl a odjel nahoru, k pasece. Nikdo nemluvil. Matěj stál u stolu a počítal, ne Otčenáše, jen tak, tlukoty, a ztratil počet, a začal znovu. Lidé přešlapovali. Děti, které se předtím honily, stály u matek. Ortlieb stál se zkříženýma rukama a nedíval se na nikoho.
 
-Rüdiger se vrátil s truhlou přes sedlo. Postavil ji na zem před stůl a Hensel k ní přišel, i bez klíče, a ukázal na zámek, a Rüdiger mu klíč podal ze stolu. Hensel odemkl. Nářadí v kůži. Váhy. Uzlový provaz. Prázdný vak. Smlouva, složená na čtvrtky, navrchu. A pod tím tabulky, svázané řemínkem.
+Rüdiger se vrátil s truhlou přes sedlo. Postavil ji na zem před stůl. Hensel k ní přišel, i když klíč už neměl, ukázal na zámek a Rüdiger mu podal klíč ze stolu. Hensel odemkl. Nářadí v kůži. Váhy. Uzlový provaz. Prázdný vak. Smlouva, složená na čtvrtky, navrchu. A pod tím tabulky, svázané řemínkem.
 
 Volkmar je rozvázal. Otevřel první.
 
-Vosk byl hladký. Čistý, tmavý od prstů, ale hladký, bez jediné rýhy, jako vosk, který se právě uhladil teplou čepelí. Volkmar otevřel druhou. Třetí. Všech pět.
+Vosk byl hladký. Čistý, tmavý od prstů, ale hladký, bez jediné rýhy, jako vosk, který právě někdo uhladil teplou čepelí. Volkmar otevřel druhou. Třetí. Všech pět.
 
 Nic.
 
@@ -218,7 +220,7 @@ Konrád to řekl tiše. Přistoupil ke stolu, opřel se o něj rukama a díval s
 
 *Qui probat, dicat unde sciat.*
 
-Matěj se díval na Konráda. Za Konrádem, daleko, pod bukem na kraji lesa, stála Dobroslava, a nedívala se jinam. Dívala se na něj.
+Matěj se díval na Konráda. Za Konrádem, daleko, pod bukem na kraji lesa, stála Dobroslava a nedívala se jinam. Dívala se na něj.
 
 „To vám neřeknu,“ řekl Matěj.
 
@@ -254,7 +256,7 @@ Matěj čekal.
 
 „V pátek v noci. V hoře. Viděls to světlo?“
 
-Matěj se na něj díval. Celou noc to věděl, že tahle otázka přijde, a celou noc si říkal, že odpoví, co viděl, a nic víc. A teď stál před vsí, a ta odpověď byla pravdivá, a věděl, co z ní Konrád udělá.
+Matěj se na něj díval. Celou noc věděl, že tahle otázka přijde, a celou noc si říkal, že odpoví, co viděl, a nic víc. A teď stál před vsí, a ta odpověď byla pravdivá, a věděl, co z ní Konrád udělá.
 
 „Viděl jsem světlo,“ řekl.
 
@@ -286,9 +288,9 @@ Postavil se vedle Matěje, ne před něj, a nepodíval se na něj. Mluvil němec
 
 Volkmar to přeložil. Slovo po slovu.
 
-Převor vzal ze stolu podušku s kostí a podal ji Hartmannovi. Pak vzal listinu z Lyddy. Pak tu druhou, s Konrádovou pečetí, ještě teplou. Pak se zarazil nad nožem, a nechal ho ležet.
+Převor vzal ze stolu podušku s kostí a podal ji Hartmannovi. Pak vzal listinu z Lyddy. Pak tu druhou, s Konrádovou pečetí, ještě teplou. Pak se zarazil nad nožem a nechal ho ležet.
 
-Matěj stál vedle něj. Klíče na převorově pásu cinkly, když se převor otočil. Převor si jich nevšiml. Nebo všiml, a nedal to znát.
+Matěj stál vedle něj. Klíče na převorově pásu cinkly, když se převor otočil. Převor si jich nevšiml. Nebo si všiml a nedal to znát.
 
 *
 
@@ -366,7 +368,7 @@ Stáli tak chvíli. Klíče na převorově pásu se nehýbaly.
 
 „Měl jsi pravdu,“ řekl převor potom. Tiše, německy, jak mluvil, když nikdo nebyl kolem. „Ve všem, co jsi řekl. O listině, o slatině, o mistrovi. Věřím ti. Myslím, že ti věří i pan Konrád.“ Odmlčel se. „A nic se tím nezměnilo.“
 
-Otočil se a šel do Udalrichovy komory, a dveře za ním zůstaly chvíli pootevřené, a Matěj viděl na stole svíci a vedle ní jednu věc. Kruh se třemi klíči. Pak se dveře zavřely.
+Otočil se a šel do Udalrichovy komory. Dveře za ním zůstaly chvíli pootevřené a Matěj viděl na stole svíci a vedle ní jednu věc. Kruh se třemi klíči. Pak se dveře zavřely.
 
 *
 
@@ -376,7 +378,7 @@ Augustin. Tabulka. Cíp hábitu. Říční kámen. Sešitek. Ostřin kožený v�
 
 Otevřel tabulku. Vosk byl plný. *Fiat voluntas tua.* *In die illa ero in monte.* *Vidi faciem domini Conradi.* A pod tím místo, sotva na řádek.
 
-Celý život psal *vidi*, *non vidi*. Potom *audivi*. Potom *sensi*, *tuli*. Pokaždé, když se naučil, že věc, kterou zná, se dá poznat ještě jinak, přidal slovo, aby to nepletl. Teď věděl něco, co se nedalo poznat žádným z nich. Nebyla to věc, kterou viděl. Byla to věc, kterou udělal.
+Celý život psal *vidi*, *non vidi*. Potom *audivi*. Potom *sensi*, *tuli*. Pokaždé, když se naučil, že se věc, kterou zná, dá poznat ještě jinak, přidal slovo, aby to nepletl. Teď věděl něco, co se nedalo poznat žádným z nich. Nebyla to věc, kterou viděl. Byla to věc, kterou udělal.
 
 Napsal:
 

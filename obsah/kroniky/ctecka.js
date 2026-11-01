@@ -10,7 +10,7 @@
   if (window.top === window) document.body.classList.add('samostatne');
 
   /* ---------- uložená data ---------- */
-  const VYCHOZI_NAST = { motiv: 'web', pismo: 'patkove', velikost: 1, radkovani: 1.7, sirka: 36, blok: true, knizni: false, wpm: 220, tts: 1, hlas: '' };
+  const VYCHOZI_NAST = { motiv: 'web', pismo: 'patkove', velikost: 1, radkovani: 1.7, sirkaPct: 90, blok: true, knizni: false, obrazky: true, nezhasinat: false, wpm: 220, tts: 1, hlas: '' };
   const cti = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
   let stav = cti(KLIC);
   // starší verze čtečky ukládala jen {kniha, kapitola, velikost}
@@ -61,13 +61,15 @@
     document.body.dataset.motiv = n.motiv;
     s.setProperty('--velikost', n.velikost);
     s.setProperty('--radkovani', n.radkovani);
-    s.setProperty('--sirka', n.sirka + 'rem');
+    s.setProperty('--sirka', n.sirkaPct + '%');
     s.setProperty('--pismo', PISMA[n.pismo] || PISMA.patkove);
     text.classList.toggle('blok', n.blok);
     text.classList.toggle('knizni', n.knizni);
+    text.classList.toggle('bez-obrazku', !n.obrazky);
+    aktualizujZamek();
     $('rVelikost').value = n.velikost; $('oVelikost').value = Math.round(n.velikost * 100) + ' %';
     $('rRadkovani').value = n.radkovani; $('oRadkovani').value = n.radkovani.toFixed(1);
-    $('rSirka').value = n.sirka; $('oSirka').value = n.sirka + ' em';
+    $('rSirka').value = n.sirkaPct; $('oSirka').value = n.sirkaPct + ' %';
     document.querySelectorAll('#nabZobrazeni .prep').forEach(b => {
       const [co, hodnota] = b.dataset.prikaz.split('-');
       b.setAttribute('aria-pressed', String(co === 'motiv' ? n.motiv === hodnota : co === 'pismo' ? n.pismo === hodnota : !!n[co]));
@@ -76,11 +78,12 @@
     ulozStav();
   }
   const nastav = zmena => { Object.assign(stav.nast, zmena); pouzijNastaveni(); };
-  [['rVelikost', 'velikost'], ['rRadkovani', 'radkovani'], ['rSirka', 'sirka']].forEach(([id, klic]) =>
+  [['rVelikost', 'velikost'], ['rRadkovani', 'radkovani'], ['rSirka', 'sirkaPct']].forEach(([id, klic]) =>
     $(id).addEventListener('input', e => nastav({ [klic]: +e.target.value })));
 
   /* ---------- vykreslení kapitoly ---------- */
-  const htmlBloku = (b, i) => b.typ === 'hr' ? `<hr data-i="${i}">`
+  const htmlBloku = (b, i, knihaId = kniha.id) => b.typ === 'hr' ? `<hr data-i="${i}">`
+    : b.typ === 'img' ? `<figure data-i="${i}"><img src="kroniky/${knihaId}/${J.esc(b.src)}" alt="${J.esc(b.popis)}" loading="lazy" decoding="async">${b.popis ? `<figcaption>${J.esc(b.popis)}</figcaption>` : ''}</figure>`
     : b.typ === 'h' ? `<h1 data-i="${i}">${J.inline(b.md)}</h1>` : `<p data-i="${i}">${J.inline(b.md)}</p>`;
   const prvekBloku = i => text.querySelector(`[data-i="${i}"]`);
 
@@ -95,8 +98,8 @@
     bloky = obsah.bloky;
     kum = []; let s = 0;
     bloky.forEach((b, i) => { kum[i] = s; s += J.slov(b.text); });
-    text.innerHTML = bloky.map(htmlBloku).join('');
-    bloky.forEach((b, i) => { if (b.typ !== 'hr') vyznacBlok(i); });
+    text.innerHTML = bloky.map((b, i) => htmlBloku(b, i)).join('');
+    bloky.forEach((b, i) => { if (b.typ === 'p' || b.typ === 'h') vyznacBlok(i); });
     zavriVyber();
     $('zahlavi').textContent = `${kniha.nazev} · ${kniha.podtitul}`;
     $('tlKniha').title = `${kniha.nazev} – výběr knihy a pokrok čtení`;
@@ -151,6 +154,7 @@
     $('stavCteni').textContent = `Kapitola ${kapIdx + 1} z ${kniha.kapitoly.length} · do konce kapitoly ~${J.formatCas(zbyvaKap)} · kniha ${Math.floor(podil * 100)} %, zbývá ~${J.formatCas(zbyvaKniha)}`;
     const maZalozku = data.zalozky.some(z => z.kniha === kniha.id && z.soubor === kap().soubor && z.blok === i);
     $('tlZalozka').setAttribute('aria-pressed', String(maZalozku));
+    kresliPosuvnik();
     ulozStav();
   }
   plocha.addEventListener('scroll', () => { aktivita(); if (!ramec) ramec = requestAnimationFrame(poScrollu); }, { passive: true });
@@ -206,7 +210,7 @@
 
   function vyznacBlok(i, hledany) {
     const el = prvekBloku(i), b = bloky[i];
-    if (!el || !b || b.typ === 'hr') return;
+    if (!el || !b || (b.typ !== 'p' && b.typ !== 'h')) return;
     el.innerHTML = J.inline(b.md);
     const soubor = kap().soubor;
     el.classList.toggle('zalozka', data.zalozky.some(z => z.kniha === kniha.id && z.soubor === soubor && z.blok === i));
@@ -220,6 +224,7 @@
         if (z.poznamka) m.title = z.poznamka;
         return m;
       }));
+    planujZnacky();
     if (hledany) {
       const t = J.normalizuj(b.text), q = J.normalizuj(hledany);
       const pozice = [];
@@ -264,7 +269,7 @@
       const sel = getSelection();
       if (!sel.rangeCount || sel.isCollapsed) { if (vyber && vyber.rezim === 'novy') zavriVyber(); return; }
       const r = sel.getRangeAt(0), el = blokZUzlu(r.startContainer);
-      if (!el || el !== blokZUzlu(r.endContainer) || el.tagName === 'HR') { if (vyber && vyber.rezim === 'novy') zavriVyber(); return; }
+      if (!el || el !== blokZUzlu(r.endContainer) || !/^(P|H1)$/.test(el.tagName)) { if (vyber && vyber.rezim === 'novy') zavriVyber(); return; }
       const od = offsetV(el, r.startContainer, r.startOffset), do_ = offsetV(el, r.endContainer, r.endOffset);
       const i = +el.dataset.i, t = bloky[i].text.slice(od, do_);
       if (!t.trim()) return;
@@ -335,7 +340,7 @@
     let h = '';
     if (stav.panel === 'obsah') {
       knihy.forEach((k, ki) => {
-        h += `<h3>${e(k.nazev)} · ${Math.floor(pokrokKnihy(k) * 100)} %</h3>`;
+        h += `<h3>${k.obalka ? `<img class="obalka-mini" src="kroniky/${k.id}/${e(k.obalka)}" alt="">` : ''}${e(k.nazev)} · ${Math.floor(pokrokKnihy(k) * 100)} %</h3>`;
         k.kapitoly.forEach((c, ci) => {
           const precteno = stav.precteno[k.id] && stav.precteno[k.id][c.soubor];
           const akt = kniha && k.id === kniha.id && ci === kapIdx;
@@ -471,7 +476,7 @@
   async function mluv() {
     const gen = ++tts.gen;
     synt.cancel();
-    while (tts.blok < bloky.length && bloky[tts.blok].typ === 'hr') tts.blok++;
+    while (tts.blok < bloky.length && !bloky[tts.blok].text) tts.blok++;
     if (tts.blok >= bloky.length) {
       const k = stav.kniha, posledniKap = kapIdx === kniha.kapitoly.length - 1;
       if (posledniKap && k === knihy.length - 1) return zastavTts();
@@ -505,6 +510,7 @@
     Object.assign(tts, { aktivni: true, pauza: false, blok: aktualniBlok(), vi: 0, vety: [] });
     $('tts').hidden = false; $('ttsPauza').textContent = '⏸';
     $('tlPredcitat').setAttribute('aria-pressed', 'true');
+    aktualizujZamek();
     if (!hlasy().some(x => /^cs/i.test(x.lang))) Dialog.info('Prohlížeč nemá český hlas – čte se výchozím hlasem.');
     mluv();
   }
@@ -512,6 +518,7 @@
     tts.pauza = !tts.pauza;
     $('ttsPauza').textContent = tts.pauza ? '▶' : '⏸';
     if (tts.pauza) { tts.gen++; synt.cancel(); } else mluv();
+    aktualizujZamek();
   }
   function zastavTts() {
     if (!tts.aktivni) return;
@@ -519,11 +526,12 @@
     synt && synt.cancel();
     $('tts').hidden = true;
     $('tlPredcitat').setAttribute('aria-pressed', 'false');
+    aktualizujZamek();
     text.querySelectorAll('.cte').forEach(el => el.classList.remove('cte'));
   }
   const ttsSkok = smer => {
     let i = tts.blok + smer;
-    while (bloky[i] && bloky[i].typ === 'hr') i += smer;
+    while (bloky[i] && !bloky[i].text) i += smer;
     tts.blok = Math.max(0, i); tts.vi = 0; tts.vety = []; tts.pauza = false; $('ttsPauza').textContent = '⏸';
     mluv();
   };
@@ -532,12 +540,32 @@
   $('ttsZpet').onclick = () => ttsSkok(-1);
   $('ttsVpred').onclick = () => ttsSkok(1);
   addEventListener('pagehide', () => { synt && synt.cancel(); ulozStav(true); });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') ulozStav(true); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { ulozStav(true); return; }
+    aktualizujZamek();   // zámek obrazovky se při skrytí stránky sám uvolní
+    // zamčený telefon řeč prohlížeče zastaví – po odemčení pokračovat od přerušené věty
+    if (tts.aktivni && !tts.pauza && synt && !synt.speaking) mluv();
+  });
+
+  /* ---------- obrazovka nezhasne během předčítání (nebo vždy, je-li zapnuto) ---------- */
+  let zamek = null, zadamZamek = false;
+  async function aktualizujZamek() {
+    const chci = (tts.aktivni && !tts.pauza) || nast().nezhasinat;
+    if (chci && !zamek && !zadamZamek && navigator.wakeLock && document.visibilityState === 'visible') {
+      zadamZamek = true;
+      try {
+        zamek = await navigator.wakeLock.request('screen');
+        zamek.addEventListener('release', () => { zamek = null; });
+      } catch (e) { /* prohlížeč nebo rámec zámek nedovolí – nevadí */ }
+      zadamZamek = false;
+    } else if (!chci && zamek) { zamek.release().catch(() => {}); zamek = null; }
+  }
 
   /* ---------- soustředěné čtení ---------- */
   function soustredeni(zapnout = !document.body.classList.contains('soustredeni')) {
     document.body.classList.toggle('soustredeni', zapnout);
     $('ven').hidden = !zapnout;
+    $('tlCelaObr').setAttribute('aria-pressed', String(zapnout));
     if (zapnout) document.documentElement.requestFullscreen?.().catch(() => {});
     else if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     if (bloky.length) { const b = aktualniBlok(); requestAnimationFrame(() => skocNaBlok(b, false)); }
@@ -588,13 +616,40 @@
   async function exportKnihy(format) {
     try {
       const obsahy = await nactiKnihu(kniha);
-      if (format === 'epub') {
-        stahni(souborNazev(kniha) + '.epub', J.epub(kniha, kniha.kapitoly.map((c, i) => ({ nazev: c.nazev, bloky: obsahy[i].bloky }))), 'application/epub+zip');
+      if (format === 'epub' || format === 'mobi') {
+        Dialog.info('Připravuji e-knihu s ilustracemi…');
+        const kapitoly = kniha.kapitoly.map((c, i) => ({ nazev: c.nazev, bloky: obsahy[i].bloky }));
+        const obrazky = await jpegyKnihy(kniha, kapitoly, format === 'mobi' ? 120000 : 400000);
+        if (format === 'epub') stahni(souborNazev(kniha) + '.epub', J.epub(kniha, kapitoly, obrazky), 'application/epub+zip');
+        else stahni(souborNazev(kniha) + '.mobi', J.mobi(kniha, kapitoly, obrazky), 'application/x-mobipocket-ebook');
       } else {
         const md = `# Kroniky vyhnanství – ${kniha.nazev}\n\n_${kniha.podtitul}_\n\n` + obsahy.map(o => o.md.replace(/^# /, '## ')).join('\n\n');
         stahni(souborNazev(kniha) + '.md', md, 'text/markdown;charset=utf-8');
       }
     } catch (e) { Dialog.chyba('Knihu se nepodařilo načíst celou. Jste offline?'); }
+  }
+  // ilustrace pro e-knihy jako JPEG (WebP starší čtečky neumí, MOBI má limit ~127 kB na obrázek)
+  async function jpegyKnihy(k, kapitoly, maxBajtu) {
+    const srcs = new Set(k.obalka ? [k.obalka] : []);
+    kapitoly.forEach(c => c.bloky.forEach(b => { if (b.typ === 'img') srcs.add(b.src); }));
+    const vysl = {};
+    for (const src of srcs) {
+      try {
+        const bmp = await createImageBitmap(await (await fetch(`kroniky/${k.id}/${src}`)).blob());
+        let sirka = Math.min(bmp.width, 1000), kvalita = 0.82, data;
+        do {
+          const c = document.createElement('canvas');
+          c.width = sirka; c.height = Math.round(bmp.height * sirka / bmp.width);
+          const g = c.getContext('2d');
+          g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+          g.drawImage(bmp, 0, 0, c.width, c.height);
+          data = new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', kvalita))).arrayBuffer());
+          if (kvalita > 0.5) kvalita -= 0.1; else sirka = Math.round(sirka * 0.8);
+        } while (data.length > maxBajtu && sirka > 200);
+        vysl[src] = data;
+      } catch (e) { /* chybějící obrázek e-knihu nezastaví */ }
+    }
+    return vysl;
   }
   function exportPoznamek() {
     let md = '# Kroniky vyhnanství – moje poznámky\n';
@@ -617,7 +672,8 @@
     try {
       const obsahy = await nactiKnihu(kniha);
       $('tisk').innerHTML = `<section><h1>Kroniky vyhnanství</h1><h1>${J.esc(kniha.nazev)}</h1><p style="text-align:center">${J.esc(kniha.podtitul)}</p></section>` +
-        obsahy.map(o => `<section>${o.bloky.map(htmlBloku).join('')}</section>`).join('');
+        obsahy.map(o => `<section>${o.bloky.map((b, i) => b.typ === 'img' && !nast().obrazky ? '' : htmlBloku(b, i).replace(' loading="lazy"', '')).join('')}</section>`).join('');
+      await Promise.all([...$('tisk').querySelectorAll('img')].map(i => i.decode().catch(() => {})));
       document.body.classList.add('tisk-knihy');
       addEventListener('afterprint', () => { document.body.classList.remove('tisk-knihy'); $('tisk').innerHTML = ''; }, { once: true });
       print();
@@ -693,6 +749,7 @@
     odkaz,
     epub: () => exportKnihy('epub'),
     markdown: () => exportKnihy('md'),
+    mobi: () => exportKnihy('mobi'),
     'exp-poznamky': exportPoznamek,
     'tisk-kapitoly': () => print(),
     'tisk-knihy': tiskKnihy,
@@ -729,6 +786,7 @@
   /* ---------- klávesnice ---------- */
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      if (!$('lupa').hidden) { $('lupa').hidden = true; return; }
       if (otevrenyModal()) { otevrenyModal().hidden = true; return; }
       if (!lista.hidden) { zavriVyber(); return; }
       if (document.querySelector('.nabidka:not([hidden])')) { zavriNabidky(); return; }
@@ -759,6 +817,60 @@
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
     if (akce) { e.preventDefault(); akce(); }
   });
+
+  /* ---------- posuvník kapitoly ---------- */
+  const posuvnik = $('posuvnik'), jezdec = $('jezdec'), bublina = $('bublina'), drazka = posuvnik.querySelector('.drazka');
+  let casBubliny = 0, tazeni = false;
+  function kresliPosuvnik() {
+    const max = plocha.scrollHeight - plocha.clientHeight, h = drazka.clientHeight;
+    const vyska = Math.max(28, h * plocha.clientHeight / Math.max(1, plocha.scrollHeight));
+    const podil = max > 0 ? plocha.scrollTop / max : 0;
+    jezdec.style.height = vyska + 'px';
+    jezdec.style.top = (podil * (h - vyska)) + 'px';
+    if (!kniha) return;
+    const zbyva = (kap().slov - (kum[aktualniBlok()] || 0)) / nast().wpm;
+    bublina.textContent = `${Math.round(podil * 100)} % kapitoly · zbývá ~${J.formatCas(zbyva)}`;
+    bublina.style.top = (8 + podil * (h - vyska) + vyska / 2) + 'px';
+    bublina.classList.remove('skryt');
+    clearTimeout(casBubliny);
+    if (!tazeni) casBubliny = setTimeout(() => bublina.classList.add('skryt'), 1200);
+  }
+  // značky záložek a zvýraznění podél posuvníku
+  let ramecZnacek = 0;
+  function planujZnacky() { if (!ramecZnacek) ramecZnacek = requestAnimationFrame(kresliZnacky); }
+  function kresliZnacky() {
+    ramecZnacek = 0;
+    const vyska = Math.max(1, plocha.scrollHeight), h = drazka.clientHeight;
+    $('znacky').innerHTML = [...text.querySelectorAll('p.zalozka, mark.zv')].map(el => {
+      const top = (el.closest('[data-i]').offsetTop + (el.tagName === 'MARK' ? el.offsetTop : 0)) / vyska * h;
+      return el.tagName === 'MARK' ? `<div class="znacka" style="top:${top.toFixed(1)}px;background:var(--zv-${el.dataset.barva})"></div>`
+        : `<div class="znacka zal" style="top:${top.toFixed(1)}px"></div>`;
+    }).join('');
+    kresliPosuvnik();
+  }
+  function posunNa(e) {
+    const r = drazka.getBoundingClientRect(), vyska = jezdec.offsetHeight;
+    const podil = Math.min(1, Math.max(0, (e.clientY - r.top - vyska / 2) / Math.max(1, r.height - vyska)));
+    plocha.scrollTop = podil * (plocha.scrollHeight - plocha.clientHeight);
+  }
+  posuvnik.addEventListener('pointerdown', e => {
+    tazeni = true; posuvnik.classList.add('tazeni'); posuvnik.setPointerCapture(e.pointerId); posunNa(e); e.preventDefault();
+  });
+  posuvnik.addEventListener('pointermove', e => { if (tazeni) posunNa(e); });
+  const konecTazeni = () => { if (!tazeni) return; tazeni = false; posuvnik.classList.remove('tazeni'); kresliPosuvnik(); };
+  posuvnik.addEventListener('pointerup', konecTazeni);
+  posuvnik.addEventListener('pointercancel', konecTazeni);
+  new ResizeObserver(planujZnacky).observe(text);   // dorazily obrázky, změna písma, šířky…
+
+  /* ---------- lupa na ilustrace ---------- */
+  text.addEventListener('click', e => {
+    const img = e.target.closest('figure img');
+    if (!img) return;
+    $('lupa').querySelector('img').src = img.src;
+    $('lupa').querySelector('img').alt = img.alt;
+    $('lupa').hidden = false;
+  });
+  $('lupa').onclick = () => { $('lupa').hidden = true; };
 
   /* ---------- start ---------- */
   function obnovPozici() {

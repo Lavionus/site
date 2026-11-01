@@ -1,6 +1,6 @@
 # 19. Cena
 
-Bartl odešel v sobotu v poledne. Přesně, když zvonili. Postavil se ve dveřích, s kabátem přes rameno, a Kuba za ním, a Bartl chvíli hledal slova a pak je nenašel a řekl ta, která měl.
+Bartl odešel v sobotu v poledne. Přesně když zvonili. Postavil se ve dveřích, s kabátem přes rameno, a Kuba za ním. Bartl chvíli hledal slova, nenašel je a řekl ta, která měl.
 
 „Tak my jdeme.“
 
@@ -26,7 +26,7 @@ Otevřela mu.
 
 „Pojď dál.“
 
-Vešel a nesedl si. Stál uprostřed světnice, tam, kde stál ráno po Ursulině smrti, když mu chyběla lanceta, a rozhlédl se, jako by tu nikdy nebyl. Pec. Stůl. Truhla. Police s hrnci mastí, kde už žádné hrnce nebyly, protože je Ilona nechala v rokli, jen dva prázdné. Lavice, na které ležela v noci s Röhrichovou rukou na ústech.
+Vešel a nesedl si. Stál uprostřed světnice, tam, kde stál ráno po Ursulině smrti, když mu chyběla lanceta, a rozhlédl se, jako by tu nikdy nebyl. Pec. Stůl. Truhla. Police na hrnce s mastmi. Hrnce už tam nebyly, Ilona je nechala v rokli, zůstaly jen dva prázdné. Lavice, na které ležela v noci s Röhrichovou rukou na ústech.
 
 Podíval se na podlahu u stolu. Byla vydrhnutá. Ilona ji drhla v neděli ráno pískem, celou, a pak si uvědomila, co dělá, a přestala. Tmavá skvrna tam zůstala, protože krev jde do dřeva a z dřeva nejde.
 
@@ -44,11 +44,11 @@ Kývl. Pak šel do komory za pecí, kde spával, a Ilona slyšela, jak tam otví
 
 *
 
-Neměl toho moc. Košili na převlečení, druhé spodky, dřevěnou lžíci, kterou si sám vyřezal. Pouzdro z kůže, ve kterém byly tři lůžka a dvě lancety. Třetí lůžko prázdné. Ta třetí zůstala u soudu, s rohovou rukojetí a s *T*, a kdo ví, kdy ji vrátí, jestli vůbec.
+Neměl toho moc. Košili na převlečení, druhé spodky, dřevěnou lžíci, kterou si sám vyřezal. Pouzdro z kůže, ve kterém byla tři lůžka a dvě lancety. Třetí lůžko prázdné. Ta třetí zůstala u soudu, s rohovou rukojetí a s *T*, a kdo ví, kdy ji vrátí, jestli vůbec.
 
 Tobiáš pouzdro otevřel a díval se na prázdné lůžko. Pak ho zavřel.
 
-Z police vzal knihu. Řehořův opis bylinářské knihy, německý, s Ilonininými poznámkami na okrajích, ze kterého ho učila. Podržel ji v ruce. Pak ji položil zpátky.
+Z police vzal knihu. Řehořův opis bylinářské knihy, německý, s Iloninými poznámkami na okrajích, ze kterého ho učila. Podržel ji v ruce. Pak ji položil zpátky.
 
 „Ta je vaše,“ řekl.
 
@@ -56,7 +56,7 @@ Z police vzal knihu. Řehořův opis bylinářské knihy, německý, s Iloninin�
 
 „Ne.“
 
-Svázal věci do uzlu z košile. Ilona stála u stolu a dívala se na něj a čekala, až se otočí, a věděla, že se otočí, protože ho znala tři roky a věděla, že nikdy neodejde od ničeho, co nedořekl.
+Svázal věci do uzlu z košile. Ilona stála u stolu a dívala se na něj a čekala, až se otočí. Věděla, že se otočí. Znala ho tři roky a věděla, že nikdy neodejde od ničeho, co nedořekl.
 
 Otočil se.
 
@@ -128,7 +128,7 @@ Kývl. Pomalu. Jako by si to zapisoval.
 
 Tobiáš položil uzel na lavici. Ne aby zůstal. Aby měl volné ruce, a pak nevěděl, co s nimi, a dal si je za záda.
 
-„Vy jste mě naučila,“ řekl, „že co člověk řekl, patří jemu. Že zapisovatel do toho nesmí sáhnout. Že nesmí přidat ani ubrat. Tak jste mě to učila. První týden. Ještě než jsem směl držet lancetu, jsem musel opisovat výpovědi, slovo za slovo, a vy jste mi škrtala každé slovo, které jsem tam dal navíc.“
+„Vy jste mě naučila,“ řekl, „že co člověk řekl, patří jemu. Že zapisovatel do toho nesmí sáhnout. Že nesmí přidat ani ubrat. Tak jste mě to učila. První týden. Ještě než jsem směl držet lancetu, musel jsem opisovat výpovědi, slovo za slovo, a vy jste mi škrtala každé slovo, které jsem tam dal navíc.“
 
 „Ano.“
 
@@ -162,7 +162,7 @@ Tobiáš zvedl uzel z lavice.
 
 Šel ke dveřím. Ilona se nepohnula. Stála u stolu s rukama na desce, na stejném místě, kde ležely listy, když je škrábala, a cítila pod dlaněmi dřevo, hladké a teplé od slunce z okna.
 
-Ve dveřích se Tobiáš zastavil. Neotočil se hned. Stál zády k ní, s uzlem v ruce, a Ilona viděla, jak se mu zvedají ramena, jak se nadechuje, jako před tím, než vstoupí do studené vody.
+Ve dveřích se Tobiáš zastavil. Neotočil se hned. Stál zády k ní, s uzlem v ruce, a Ilona viděla, jak se mu zvedají ramena, jak se nadechuje, jako se člověk nadechuje, než vstoupí do studené vody.
 
 Pak se otočil.
 
@@ -286,7 +286,7 @@ Ilona mlčela.
 
 „Ne.“
 
-Wehrl se zasmál. Tiše, a pak víc, až se smích zlomil v kašel a kašel trval tak dlouho, že Hesse vykročil z kouta, a Wehrl na něj mávl, ať zůstane. Když přestal, ležel se zavřenýma očima a po spánku mu tekla slza, z kašle nebo z čehokoli.
+Wehrl se zasmál. Tiše, a pak víc, až se smích zlomil v kašel. Kašel trval tak dlouho, že Hesse vykročil z kouta, a Wehrl na něj mávl, ať zůstane. Když přestal, ležel se zavřenýma očima a po spánku mu tekla slza, z kašle nebo z čehokoli.
 
 „Tři týdny,“ řekl. „Tři týdny jsem se bál té knihy. Od noci, kdy jste ji vzala lékárníkovi. Každou noc jsem si představoval, co v ní stojí, řádek po řádku, a jak to čtete. A pak jste ji spálila, a já jsem zachráněný.“ Otevřel oči. „A ani to nebylo kvůli mně. Ani mě jste nevybrala. Byl jsem jen na špatném řádku.“
 
@@ -330,7 +330,7 @@ Wehrl se díval na strop.
 
 „Valentine,“ řekl. „Přines bedýnku.“
 
-Hesse se ani nepohnul hned. Pak odešel a Ilona slyšela jeho kroky na schodech do suterénu a zase nahoru, a vrátil se s bedýnkou v náručí, tou, kterou viděla ve výklenku za pecí. Postavil ji Wehrlovi na pokrývku.
+Hesse se nepohnul hned. Pak odešel a Ilona slyšela jeho kroky na schodech do suterénu a zase nahoru. Vrátil se s bedýnkou v náručí, tou, kterou viděla ve výklenku za pecí. Postavil ji Wehrlovi na pokrývku.
 
 Ve dvaceti přihrádkách byly tři lahvičky. Nazelenalé sklo. Červený vosk. Otisk.
 
@@ -342,7 +342,7 @@ Wehrl vzal jednu do ruky a obracel ji proti svíčce.
 
 „Byla to kozí krev?“
 
-Ilona se na něj dívala. Na lahvičku v jeho ruce. Na prsty se žlutohnědými skvrnami od rtuti, které ji držely, jak se drží svátost.
+Ilona se na něj dívala. Na lahvičku v jeho ruce. Na prsty se žlutohnědými skvrnami od rtuti. Držely ji, jak se drží svátost.
 
 „Ne,“ řekla.
 
@@ -382,13 +382,13 @@ Ilona vstala.
 
 „Přestaňte se rtutí,“ řekla. „Zlato se dá pít i bez ní. Nebo vůbec.“
 
-Wehrl otevřel oči a podíval se na ni. A Ilona v jeho tváři uviděla něco, co tam za celé ty týdny neviděla. Ani na střeše, ani u soudu, ani nad zápisy. Úžas. Jako by se mu po celém tom večeru někdo konečně postaral o to jediné, o co se postarat dalo.
+Wehrl otevřel oči a podíval se na ni. A Ilona v jeho tváři uviděla něco, co tam za celé ty týdny neviděla. Ani na střeše, ani u soudu, ani nad zápisy. Úžas. Jako by se po celém tom večeru někdo konečně postaral o to jediné, o co se u něj postarat dalo.
 
 „Röhrichová dojela do Annabergu,“ řekl. „S dětmi. Má tam bratra. Kdyby se vás někdo ptal.“
 
 Ilona se na něj dívala.
 
-Nevěděla, jestli jí to říká, aby věděla, že slib dodržel. Nebo aby věděla, že někdo slíbil. Nebo jen proto, že je nemocný starý muž a chtěl, aby v jeho poslední věci pro ni bylo i něco dobrého.
+Nevěděla, jestli jí to říká, aby věděla, že slib dodržel. Nebo aby věděla, že někdo slíbil. Nebo jen proto, že je nemocný starý muž a chtěl, aby v tom posledním, co pro ni udělal, bylo i něco dobrého.
 
 Nikdy to nebude vědět. A nikdy to nebude moct napsat.
 
@@ -400,11 +400,11 @@ Domů šla sama. Ulice byla prázdná, jen u Zlatého jelena svítili a zevnitř
 
 U svých dveří se zastavila.
 
-Nad vchodem, na železném háku, visela mosazná mísa. Holičská, s výřezem pro krk, jakou věšeli ranhojiči na znamení, že se tu pouští krev a šijí rány. Řehoř ji přivezl z Lipska a pověsil ji tam první den, a byl v ní důlek, kam ji kdysi trefil kamenem nějaký kluk, a Řehoř ho nikdy nevyrovnal, protože říkal, že ránu je potřeba vidět.
+Nad vchodem, na železném háku, visela mosazná mísa. Holičská, s výřezem pro krk, jakou věšeli ranhojiči na znamení, že se tu pouští krev a šijí rány. Řehoř ji přivezl z Lipska a pověsil ji tam první den. Byl v ní důlek, kam ji kdysi trefil kamenem nějaký kluk. Řehoř ho nikdy nevyrovnal, protože říkal, že ránu je potřeba vidět.
 
 Ilona přitáhla od zdi špalek, na kterém Bartl štípal třísky, a postavila se na něj.
 
-Mísa byla těžší, než si myslela. Sundala ji z háku oběma rukama, opatrně, aby nezazvonila o zeď, a slezla dolů a stála na ulici s mísou v náručí, jako se drží dítě nebo pecen.
+Mísa byla těžší, než si myslela. Sundala ji z háku oběma rukama, opatrně, aby nezazvonila o zeď. Pak slezla dolů a stála na ulici s mísou v náručí, jako se drží dítě nebo pecen.
 
 Nikdo ji neviděl. Nebo ji viděl a nic neřekl.
 

@@ -12,11 +12,11 @@ Za dveřmi stál malý Jockel od Sternů, bosý, s nohama modrýma od rosy.
 
 *
 
-Jáchymov ležel v údolí jako voda v korytě, dlouze a úzce, a domy po obou stranách lezly do svahů tak strmě, že sousedovi člověk viděl do komína. Za devět let si Ilona nezvykla. V Štiavnici byly kopce také, ale tam se město rozkládalo do kotle a z náměstí bylo vidět nebe na všechny strany. Tady bylo nebe pruh nad ulicí, a k ránu, jako teď, šedý a studený. Ještě v polovině května táhlo z hor jako z otevřeného sklepa.
+Jáchymov ležel v údolí jako voda v korytě, dlouze a úzce, a domy po obou stranách lezly do svahů tak strmě, že sousedovi člověk viděl do komína. Za devět let si Ilona nezvykla. Ve Štiavnici byly kopce také, ale tam se město rozkládalo do kotle a z náměstí bylo vidět nebe na všechny strany. Tady bylo nebe pruh nad ulicí, a k ránu, jako teď, šedý a studený. Ještě v polovině května táhlo z hor jako z otevřeného sklepa.
 
-Šla za Jockelem nahoru, kolem kostela, jehož věž stála v šeru jako zavřená kniha, kolem domů horních úředníků s malovanými štíty, které teď nebyly vidět, a pak výš, kde dlažba přestala a pod nohama byla ušlapaná hlína a štěrk z hald. Tady bydleli havíři. Domky z kamene dole a ze dřeva nahoře, s malými okny, a za nimi, v šeru bledé jako kosti, haldy. Celý svah nad městem byl jimi poset. Hlušina z děl, která někdo kdysi vynesl na světlo, protože v ní nebylo nic, a ona tam zůstala, šedá a mrtvá, a nerostlo na ní nic kromě vřesu a břízek, které se nechtěly vzdát.
+Šla za Jockelem nahoru, kolem kostela, jehož věž stála v šeru jako zavřená kniha, kolem domů horních úředníků s malovanými štíty, které teď nebyly vidět, a pak výš, kde dlažba přestala a pod nohama byla ušlapaná hlína a štěrk z hald. Tady bydleli havíři. Domky z kamene dole a ze dřeva nahoře, s malými okny, a za nimi, v šeru bledé jako kosti, haldy. Celý svah nad městem byl jimi poset. Hlušina z děl, kterou někdo kdysi vynesl na světlo, protože v ní nebylo nic. Zůstala tam, šedá a mrtvá, a nerostlo na ní nic kromě vřesu a břízek, které se nechtěly vzdát.
 
-Ursula Kolbová bydlela v posledním domku pod haldou, kterou havíři jmenovali po jedné staré jámě, Ilona si nikdy nezapamatovala po které. Muž jí umřel před třemi lety na tu nemoc, kterou tady mají horníci místo stáří: kašel, který začne tiše, jako škrábání v komíně, a pak trvá rok a pak dva a pak člověk vykašle, co z něj zbylo. Od té doby přadla, prala pro úředníky a chodila k Iloně s hlavou. Hlava ji bolela odpoledne, za očima, a tvář jí přitom rudla. Plnokrevnost, řekl by Řehoř, a Ilona to řekla také, protože nevěděla nic lepšího a protože to pomáhalo. Včera odpoledne k ní poslala Tobiáše. Dvě misky z pravé paže, ze střední žíly v loketní jamce. Tobiáš se vrátil před nešporami a řekl, že paní Kolbová děkuje a že už jí je lehčeji.
+Ursula Kolbová bydlela v posledním domku pod haldou, kterou havíři jmenovali po jedné staré jámě; Ilona si nikdy nezapamatovala, po které. Muž jí umřel před třemi lety na tu nemoc, kterou tady mají horníci místo stáří: kašel, který začne tiše, jako škrábání v komíně, a pak trvá rok a pak dva a pak člověk vykašle, co z něj zbylo. Od té doby přadla, prala pro úředníky a chodila k Iloně s hlavou. Hlava ji bolela odpoledne, za očima, a tvář jí přitom rudla. Plnokrevnost, řekl by Řehoř, a Ilona to řekla také, protože nevěděla nic lepšího a protože to pomáhalo. Včera odpoledne k ní poslala Tobiáše. Dvě misky z pravé paže, ze střední žíly v loketní jamce. Tobiáš se vrátil před nešporami a řekl, že paní Kolbová děkuje a že už jí je lehčeji.
 
 Před domkem stály tři ženy a dívaly se na dveře, jako se lidé dívají na dveře, za kterými je mrtvý. Purga Sternová, Jockelova matka, stála nejblíž, s rukama zkříženýma pod šátkem.
 
@@ -28,7 +28,7 @@ Purga ukázala. Okenice byla otevřená, rám bez měchýře, jen dřevo. Bylo t
 
 „A bylo otevřené, když jste přišla?“
 
-Purga se na ni podívala, jako by se ptala na něco, co se neptá. „Bylo,“ řekla. „Pootevřené.“
+Purga se na ni podívala, jako by se ptala na něco, na co se člověk neptá. „Bylo,“ řekla. „Pootevřené.“
 
 Ilona si to zapamatovala, jak se to naučila: slovo po slově, i to *pootevřené*, které řekla Purga sama od sebe a které neznamenalo totéž co *otevřené*.
 
@@ -38,7 +38,7 @@ Uvnitř byla tma a pach. Ne pach smrti, na ten bylo ještě brzo, ale pach žele
 
 Ursula ležela na posteli na zádech, přikrytá až k bradě, jako by ji někdo uložil. Ruce měla pod přikrývkou. Tvář byla bílá, ne bledá, jak bývají mrtví, ale bílá jako vosk, do žluta, a rty měla stejné barvy jako tvář, takže ústa byla vidět jen jako čára. Oči zavřené. Vlasy spletené do copu, jak si je spletla večer.
 
-Ilona se nejdřív nedotkla ničeho. Stála u postele a dívala se. Tak to dělal otec, když ho v Štiavnici volali k zavalenému dílu a on měl napsat, co se stalo, dřív, než to všichni začnou vysvětlovat: nejdřív stát a dívat se, a teprve potom sahat. *Co vidíš, to tam je. Co si myslíš, to je tvoje.*
+Ilona se nejdřív nedotkla ničeho. Stála u postele a dívala se. Tak to dělal otec, když ho ve Štiavnici volali k zavalenému dílu a on měl napsat, co se stalo, dřív, než to všichni začnou vysvětlovat: nejdřív stát a dívat se, a teprve potom sahat. *Co vidíš, to tam je. Co si myslíš, to je tvoje.*
 
 Podlaha byla z prken. U postele na prknech byly kapky krve, čtyři, pět, zaschlé do hnědé, malé jako čočka. Víc nic. Žádná louže, žádný škopek, žádná miska. Tobiášova miska, ta s modrým okrajem, kterou si od ní vypůjčil, nebyla nikde. Ilona věděla, že ji včera odnesl domů a večer myl na dvoře; slyšela, jak cinká o kámen.
 
@@ -58,19 +58,21 @@ Jeden znala. Malý, šikmý, sotva na šířku nehtu, vedený podél žíly, jak
 
 Druhý řez byl o palec níž. Byl napříč žílou, ne podél, a byl delší, dlouhý jako článek prstu, a hluboký. Okraje se rozevíraly. Nebyl to řez člověka, který chce pustit krev a pak ji zastavit. Byl to řez člověka, který chce, aby tekla.
 
-Ilona se dívala na ten řez a slyšela vlastní dech. Pak si všimla ještě jedné věci, kterou by jinak přehlédla, protože ji nikdo neměl vidět: na kůži pod řezem, v ohbí lokte a na předloktí, byla kůže vymytá. Čistší než ostatní ruka, na které ulpěl prach z přádla a stopy po popelu. Někdo ji umyl.
+Ilona se dívala na ten řez a slyšela vlastní dech. Pak si všimla ještě jedné věci, kterou by jinak přehlédla, protože ji nikdo neměl vidět: pod řezem, v ohbí lokte a na předloktí, byla kůže vymytá. Čistší než zbytek ruky, na které ulpěl prach z přádla a stopy po popelu. Někdo ji umyl.
 
-Někdo pustil ženě krev, víc krve, než kolik se jí vešlo do těla, aby žila, a pak jí umyl ruku a zavázal ji pevným uzlem a přikryl ji až k bradě.
+Někdo pustil ženě krev, víc krve, než kolik mohla ztratit a přežít, a pak jí umyl ruku a zavázal ji pevným uzlem a přikryl ji až k bradě.
 
 A krev tu nebyla.
 
 *
 
-Lancetu našla Purga. Ležela pod postelí u nohou, kousek od zdi, a Purga ji vytáhla dřív, než ji Ilona stihla zastavit, a podržela ji proti oknu, jako se drží zlodějova věc, kterou člověk chytil.
+Lancetu našla Purga. Ležela pod postelí u nohou, kousek od zdi. Purga ji vytáhla dřív, než ji Ilona stihla zarazit, a podržela ji proti oknu, jako se drží věc chyceného zloděje.
 
 Ilona ji poznala dřív, než ji vzala do ruky. Rukojeť z kravského rohu, bělavá, v místě, kde se drží palcem, ohlazená do lesku. A na konci rukojeti vryp, malé *T*, nakřivo, které tam Tobiáš vyřezal v zimě nožem, protože se bál, že si lancety s Ilonou splete. Ilona se mu tehdy smála. Ty její měly rukojeti ze dřeva, po Řehořovi, a nikdo by si je nespletl.
 
-Čepel byla čistá. Ne otřená tak, jak se otírá o zástěru, kdy na hraně zůstane rezavý stín. Čistá, jako ji Tobiáš myl večer v octě, když na to nezapomněl.
+![Pouzdro na tři lancety](obrazky/01_lanceta.webp)
+
+Čepel byla čistá. Nebyla jen otřená o zástěru; po tom zůstává na hraně rezavý stín. Čistá, jako ji Tobiáš myl večer v octě, když na to nezapomněl.
 
 „To je toho kluka,“ řekla Purga. Neříkala to zle. Řekla to, jak se říká, že prší.
 
@@ -80,7 +82,7 @@ Ilona ji poznala dřív, než ji vzala do ruky. Rukojeť z kravského rohu, běl
 
 Rychtář přišel, když už bylo vidět slunce na nejvyšších haldách, ale do údolí ještě nesestoupilo. Lorenz Stöckel byl muž široký v ramenou a úzký v trpělivosti, kožešnický mistr, kterého rada zvolila městským rychtářem, protože se ho všichni trochu báli a nikdo ho neměl rád natolik, aby se s ním hádal. Přivedl dva biřice a jednoho písaře z radnice, mladíka s inkoustem na prstech a s očima, které se nechtěly dívat na postel.
 
-Stöckel se na postel podíval. Pak na Ilonu, pak na lancetu, kterou mezitím Purga podala jemu, a obrátil ji v prstech, jako by ji vážil.
+Stöckel se na postel podíval. Pak na Ilonu, pak na lancetu, kterou mu mezitím Purga podala, a obrátil ji v prstech, jako by ji vážil.
 
 „Ten váš učedník tu včera byl,“ řekl.
 
@@ -100,7 +102,7 @@ Stöckel přikývl, jako by si to už předtím myslel a jen to chtěl slyšet. 
 
 „Viděl jsem mrtvé.“
 
-„Tohle ne.“ Řekla to tišeji, než chtěla, a Stöckel se k ní otočil, protože ženy, které mluví tiše, slyší muži někdy líp. „Jsou tam dva řezy. Jeden je jeho a je zavřený. Druhý je napříč žílou a není od lancety, kterou bych učila. A krev tu není. Je jí tu na slamníku tolik, co by se vešlo do misky, a ona umřela z celého těla. Kam se poděla ta ostatní?“
+„Tohle ne.“ Řekla to tišeji, než chtěla, a Stöckel se k ní otočil, protože ženy, které mluví tiše, slyší muži někdy líp. „Jsou tam dva řezy. Jeden je jeho a je zavřený. Druhý je napříč žílou a takový řez bych nikoho neučila. A krev tu není. Je jí tu na slamníku tolik, co by se vešlo do misky, a ona umřela z celého těla. Kam se poděla ta ostatní?“
 
 Stöckel se podíval na slamník. Pak se podíval na ni.
 
@@ -110,7 +112,7 @@ Stöckel se podíval na slamník. Pak se podíval na ni.
 
 Biřic u dveří se ušklíbl. Písař s inkoustem na prstech se díval do země.
 
-Ilona sáhla do kapsy pod zástěrou, kde nosila všechno, co nosila vždy: zavírací nožík, nit, voskovou svíčku, a sešit z hrubého papíru, prošitý režnou nití, s koženou chlopní, jaký nosil její otec v Štiavnici po štolách. Měla v něm olůvko. Otevřela ho na kolenou.
+Ilona sáhla do kapsy pod zástěrou, kde nosila všechno, co nosila vždy: zavírací nožík, nit, voskovou svíčku, a sešit z hrubého papíru, prošitý režnou nití, s koženou chlopní, jaký nosil její otec ve Štiavnici po štolách. Měla v něm olůvko. Otevřela ho na kolenou.
 
 „Co to děláte?“
 
@@ -124,9 +126,9 @@ Stöckel se zasmál, krátce, jak se smějí muži, kteří nevědí, jestli se 
 
 Psala. Tělo na zádech, přikryté po bradu. Kůže bílá do žluta, rty jako kůže, nehty modrobílé. Na podlaze pět kapek zaschlé krve. Na slamníku pod pravou paží krev, nasáklá, odhadem méně než miska. Obvaz nad loktem, uzel dvojí, přetočený, konce krátce zastřižené. Pod obvazem dva řezy. První šikmý, podél žíly, krátký, zavřený, strup. Druhý o palec níž, napříč žílou, dlouhý jako článek prstu, rozevřený. Kůže pod ním vymytá. Lanceta s rohovou rukojetí a vrypem *T*, pod postelí u nohou, čepel čistá. Okno: okenice pootevřená, podle slov Purgy Sternové. Dveře zavřené na závoru zevnitř.
 
-Pak si klekla k posteli a zvedla Ursuline levou ruku, tu, které se nikdo nedotkl, a otevřela jí prsty. Byly pevně sevřené, zatuhlé, a Ilona je otvírala jeden po druhém, jak se otvírají prsty dítěti, které nechce něco dát. Dlaň byla prázdná. Ale pod nehtem prostředníčku bylo něco tmavého, a Ilona to vyškrábla špičkou nožíku na list sešitu. Nebyla to krev. Byla to vlna, tmavá, skoro černá, pár vláken, jemnějších než z pláště, jaký nosí havíři.
+Pak si klekla k posteli a zvedla Ursulinu levou ruku, tu, které se nikdo nedotkl, a otevřela jí prsty. Byly pevně sevřené, zatuhlé, a Ilona je otvírala jeden po druhém, jak se otvírají prsty dítěti, které nechce něco dát. Dlaň byla prázdná. Ale pod nehtem prostředníčku bylo něco tmavého, a Ilona to vyškrábla špičkou nožíku na list sešitu. Nebyla to krev. Byla to vlna, tmavá, skoro černá, pár vláken, jemnějších než vlna z pláště, jaký nosí havíři.
 
-Ursula nosila přadeno šedé, z ovcí, které pásli na stráních nad Abertamy. Ilona jí to přadeno sama kupovala, když neměla Ursula na zaplacení a platila přízí.
+Ursula nosila přadeno šedé, z ovcí, které pásli na stráních nad Abertamy. Ilona jí to přadeno sama kupovala, když Ursula neměla na zaplacení a platila přízí.
 
 Přeložila list, aby se vlákna nevysypala. Připsala: *pod nehtem prostředníčku levé ruky tmavá vlna, jemná.*
 
@@ -140,7 +142,7 @@ Purga Sternová stála před domem s Jockelem u sukně a čekala, až se Stöcke
 
 „Abych to měla.“
 
-Purga se na ni dívala a Ilona viděla, jak si v duchu skládá, co by měla říct, aby to bylo správně, a věděla, že tohle je okamžik, kdy se z toho, co člověk slyšel, stává to, co si myslí, že slyšel. Otec to nazýval *přeslazování*. Svědek chce dát dobrou výpověď, a tak ji vylepší, jako hospodyně, která pro hosta přisype cukru.
+Purga se na ni dívala a Ilona viděla, jak si v duchu skládá, co by měla říct, aby to bylo správně. Věděla, že tohle je okamžik, kdy se z toho, co člověk slyšel, stává to, co si myslí, že slyšel. Otec to nazýval *přeslazování*. Svědek chce dát dobrou výpověď, a tak ji vylepší, jako hospodyně, která pro hosta přisype cukru.
 
 „Řekněte to tak, jak to bylo,“ řekla Ilona. „Ne tak, jak by to mělo být.“
 
@@ -164,7 +166,7 @@ Ilona přikývla. Zapsala: *slyšela hlas Ursuly: „Už dost. Říkals, že jen
 
 „Bylo to, když přestaly tlouct stoupy u potoka a ještě nezačaly ty nahoře.“
 
-Mezi tím byla v noci hodina, dvě. Ilona to věděla, protože to v noci slyšela i ona, když nemohla spát: stoupy dole umlkly, chvíli bylo ticho, ve kterém bylo slyšet potok, a pak začaly tlouct ty nad městem. V tom tichu dnes v noci slyšela, jak ve světnici zavrzala prkna. Jednou. Pak nic. Myslela si, že je to Tobiáš, že jde na dvůr. Nevstala. Neviděla nic.
+Mezi jedním a druhým bývala v noci hodina, dvě. Ilona to věděla, protože to v noci slyšela i ona, když nemohla spát: stoupy dole umlkly, chvíli bylo ticho, ve kterém bylo slyšet potok, a pak začaly tlouct ty nad městem. V tom tichu dnes v noci slyšela, jak ve světnici zavrzala prkna. Jednou. Pak nic. Myslela si, že je to Tobiáš, že jde na dvůr. Nevstala. Neviděla nic.
 
 Neřekla to Purze. Ale věděla, že to bude muset napsat.
 
@@ -212,7 +214,7 @@ Zvedl oči.
 
 „Tvůj řez je zavřený,“ řekla Ilona. „Je to dobrý řez. Pod ním je jiný. Napříč, hluboký. A ruka je zavázaná uzlem, který neumíš.“
 
-Tobiáš se na ni díval a ona viděla, jak se mu v obličeji něco mění, jak se z viny stává úleva a z úlevy strach, protože mu došlo, co to znamená, že tam někdo byl. Byl skoro tak starý, jako by teď byl její syn, kdyby jí v Štiavnici neumřel třetí den po narození. Myslela na to častěji, než by chtěla.
+Tobiáš se na ni díval a ona viděla, jak se mu v obličeji něco mění, jak se z viny stává úleva a z úlevy strach. Došlo mu, co to znamená, že tam někdo byl. Byl skoro stejně starý, jako by teď byl její syn, kdyby jí ve Štiavnici neumřel třetí den po narození. Myslela na to častěji, než by chtěla.
 
 „Kde máš lancety?“
 
@@ -282,21 +284,21 @@ Biřicové přišli před polednem. Byli zdvořilí, jak bývají zdvořilí lid
 
 „Bude.“
 
-Tobiáš na ni chvíli hleděl, jako by ji viděl poprvé, nebo jako by si ji chtěl zapamatovat. Pak šel. Ilona stála ve dveřích a dívala se za nimi, jak jdou dolů ulicí, dva biřicové a mezi nimi vysoký chlapec s rozcuchanými vlasy, a lidé se zastavovali a dívali se a jedna žena ze sousedství si přitáhla k sobě dítě, jako by šel kolem pes, o kterém se neví, jestli kouše.
+Tobiáš na ni chvíli hleděl, jako by ji viděl poprvé, nebo jako by si ji chtěl zapamatovat. Pak šel. Ilona stála ve dveřích a dívala se za nimi, jak jdou dolů ulicí, dva biřicové a mezi nimi vysoký chlapec s rozcuchanými vlasy. Lidé se zastavovali a dívali se a jedna žena ze sousedství si přitáhla k sobě dítě, jako by šel kolem pes, o kterém se neví, jestli kouše.
 
 Odpoledne přišly dvě pacientky. Jedna s hnisavým prstem, který Ilona rozřízla a vymyla, a druhá jen proto, aby se zeptala, jestli je pravda, co se povídá. Ilona ošetřila prst a té druhé řekla, že se povídá hodně věcí.
 
 *
 
-Večer, když se setmělo a v údolí znovu začaly tlouct stoupy, sedla si ke stolu pod oknem, kde měl Řehoř svoje knihy a kde ona měla teď svoje, a vytáhla z truhly papír. Dobrý, hladký, z mlýna v Sasku, který si šetřila na výpovědi pro horní úřad. Nařezala pero. Rozmíchala inkoust, který dělala sama z duběnek a skalice podle otcova receptu, protože ten z lékárny se jí na papíře rozléval.
+Večer, když se setmělo a v údolí znovu začaly tlouct stoupy, sedla si ke stolu pod oknem, kde měl Řehoř svoje knihy a kde ona měla teď svoje, a vytáhla z truhly papír. Dobrý, hladký, z mlýna v Sasku. Šetřila si ho na výpovědi pro horní úřad. Nařezala pero. Rozmíchala inkoust, který dělala sama z duběnek a skalice podle otcova receptu, protože ten z lékárny se jí na papíře rozléval.
 
 Psala pomalu.
 
-Nejdřív datum: *v úterý svatodušní léta Páně 1595*, a pak, aby to nikdo nemusel počítat, *šestnáctého dne měsíce května podle nového kalendáře*. Pak jméno mrtvé, její stav, kde bydlela. Pak to, co viděla, ve stejném pořádku, v jakém to viděla, ráno ve sešitě, ale celými větami. Nepřidávala slova. Neubírala. Kde byla v sešitě míra odhadem, napsala *odhadem*. Kde něco nevěděla, napsala, že neví.
+Nejdřív datum: *v úterý svatodušní léta Páně 1595*, a pak, aby to nikdo nemusel počítat, *šestnáctého dne měsíce května podle nového kalendáře*. Pak jméno mrtvé, její stav, kde bydlela. Pak to, co viděla, ve stejném pořádku, v jakém to viděla, ráno v sešitě, ale celými větami. Nepřidávala slova. Neubírala. Kde byla v sešitě míra odhadem, napsala *odhadem*. Kde něco nevěděla, napsala, že neví.
 
 Pak slova Purgy Sternové. Tak jak je Purga řekla, nejdřív německy, pak česky, a pod to: *Myslela, že mluví ze spaní. Druhý hlas neslyšela, nebo neví.* A pak to, co Purga řekla jí a co Stöckelovi neřekla: *Jemu jsem řekla, že tam s ní někdo byl. Řekla jsem, co jsem si myslela.* Ilona nad tou větou dlouho seděla. Patřila do zápisu? Patřila. Byla to Purgina slova a Purga je řekla. Že se nehodila nikomu, nebyl důvod je vynechat.
 
-Pak lanceta. Pak vlna pod nehtem, a list se sešitem, kde vlákna ležela přeložená, přiložila k zápisu a přišila nití do rohu, aby se neztratil.
+Pak lanceta. Pak vlna pod nehtem. Přeložený list ze sešitu, ve kterém ležela vlákna, přiložila k zápisu a přišila nití do rohu, aby se neztratil.
 
 Pak Tobiášova slova o lancetách. *Doma jsem je myl v octě se všemi. Nepočítám je. Nevím.*
 
@@ -306,9 +308,9 @@ A nakonec, na samostatný řádek, to, co slyšela sama.
 
 Odložila pero a přečetla to celé.
 
-Bylo to dobré. Bylo to pravdivé, všechno, a bylo to všechno tam. Stöckel z toho mohl vyčíst, že Tobiáš v noci vycházel, a mohl z toho vyčíst, že to Ilona sama napsala a nic neskrývala, a že tedy neskrývá ani to ostatní: řez napříč, uzel, který Tobiáš neumí, krev, která není, vlnu pod nehtem. Kdo to bude číst celé, uvidí celé. Kdo vybere jen jednu větu, ten uvidí jen jednu větu, ale tu by stejně viděl, i kdyby ji nenapsala. Purga má pusu jako zvon. Tobiáš to řekne sám, protože mu řekla, aby řekl, co ví.
+Bylo to dobré. Bylo to pravdivé, všechno, a bylo to všechno tam. Stöckel z toho mohl vyčíst, že Tobiáš v noci vycházel. A mohl z toho vyčíst, že to Ilona sama napsala a nic neskrývala, a že tedy neskrývá ani to ostatní: řez napříč, uzel, který Tobiáš neumí, krev, která není, vlnu pod nehtem. Kdo to bude číst celé, uvidí celé. Kdo vybere jen jednu větu, ten uvidí jen jednu větu, ale tu by stejně viděl, i kdyby ji nenapsala. Purga má pusu jako zvon. Tobiáš to řekne sám, protože mu řekla, aby řekl, co ví.
 
-Tak to dělal otec. Psal i to, co se nehodilo, a právě proto mu věřili, když psal to, co se hodilo. V Štiavnici, když se zavalila chodba na jednom díle a rodiny zavalených žalovaly šichtmistra, že šetřil na výztuži, otec zapsal i to, že jeden z mrtvých byl ten den opilý. Rodiny ho za to proklínaly. A soud pak uvěřil všemu ostatnímu, co otec zapsal o výztuži, a šichtmistr platil. *Co člověk řekl, patří jemu,* říkal otec. *Co si o tom myslíš, patří tobě. Do knihy patří jen to první. Když to tam dáš celé, nikdo ti to nevezme.*
+Tak to dělal otec. Psal i to, co se nehodilo, a právě proto mu věřili, když psal to, co se hodilo. Ve Štiavnici, když se zavalila chodba na jednom díle a rodiny zavalených žalovaly šichtmistra, že šetřil na výztuži, otec zapsal i to, že jeden z mrtvých byl ten den opilý. Rodiny ho za to proklínaly. A soud pak uvěřil všemu ostatnímu, co otec zapsal o výztuži, a šichtmistr platil. *Co člověk řekl, patří jemu,* říkal otec. *Co si o tom myslíš, patří tobě. Do knihy patří jen to první. Když to tam dáš celé, nikdo ti to nevezme.*
 
 Ilona tomu věřila. Věřila tomu od devíti let, kdy ji otec poprvé posadil vedle sebe na lavici v horním soudu a dal jí do ruky tabulku, a věřila tomu ve dvaceti, když se vdávala, a věřila tomu i v tomhle cizím údolí, kde psala za ženy jejich slova a ženy jí za to platily vejci a přízí a jednou, jedna, polibkem na ruku. Přesný zápis je zeď. Za ní se může schovat každý, kdo mluvil pravdu.
 

@@ -758,36 +758,47 @@ novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/
 **Kroniky vyhnanství** (`obsah/kroniky.html`) je čtečka knih ságy (I. Poslední
 drak, II. Krev starších).
 
-Kapitoly jsou Markdown v `obsah/kroniky/kniha<N>/`, seznam knih
-v `obsah/kroniky/knihy.json`. Obojí vzniká z rukopisu v `../KronikaLidstva`
-skriptem `python3 tools/kroniky_export.py`, který vynechá redakční bloky
-`<!-- KONTINUITA -->`. Po přepsání knih stačí skript spustit znovu a zvednout
-`sw.js`.
+Kapitoly jsou Markdown v `obsah/kroniky/kniha<N>/`, ilustrace v `kniha<N>/obrazky/`
+(WebP) a seznam knih včetně obálky v `obsah/kroniky/knihy.json`. Vše vzniká
+z rukopisu v `../KronikaLidstva` skriptem `python3 tools/kroniky_export.py`:
+- vynechá redakční bloky `<!-- KONTINUITA -->`;
+- PNG originály z `books/book_NN/obrazky/zdroj/` převede na WebP (1400 px);
+- na web zkopíruje jen použité obrázky a obálku.
+
+Ilustrace se do kapitoly píší jako samostatný odstavec
+`![popis](obrazky/soubor.webp)`. Po přepsání knih stačí skript spustit znovu
+a zvednout `sw.js`.
 
 Kód je rozdělený na dvě části:
-- `kroniky/jadro.js` (`KRONIKY_JADRO`, bez DOM) obsahuje vlastní rozbor
-  Markdownu (nadpis, odstavce, `*kurzíva*`, samotná `*` = předěl scén),
-  hledání bez diakritiky, věty pro předčítání a EPUB 3 (ZIP bez komprese).
-- `kroniky/ctecka.js` je uživatelské rozhraní.
+- `kroniky/jadro.js` (`KRONIKY_JADRO`, bez DOM) obsahuje rozbor Markdownu,
+  hledání bez diakritiky a věty pro předčítání. Dále sestavuje EPUB 3 (ZIP bez
+  komprese, obálka `cover-image`) a MOBI 6: PalmDB, nekomprimovaný UTF-8 text
+  po 4096 B, JPEG záznamy, EXTH s obálkou, `filepos` měřené v bajtech, FLIS/FCIS/EOF.
+- `kroniky/ctecka.js` je uživatelské rozhraní. Pro e-knihy převádí WebP na JPEG
+  přes plátno; pro MOBI jde nejvýš na 120 kB, kvůli limitu záznamu ~127 kB.
 
 Co čtečka umí:
-- horní lišta s nabídkami, obsah s přečtenými kapitolami a časem čtení;
+- horní lišta s nabídkami (Obrazovka = celá obrazovka zvlášť), obsah s obálkami,
+  přečtenými kapitolami a časem čtení;
 - fulltext v obou knihách;
 - záložky, zvýraznění ve 4 barvách s poznámkou a citace;
-- předčítání přes `speechSynthesis`, po větách, pokračuje do další kapitoly;
-- motivy web / papír / sépie / noc, písmo, velikost, řádkování, šířka sloupce,
-  blok, knižní odstavce;
-- soustředěné čtení, pokrok a zbývající čas, statistiky času čtení;
-- export EPUB, Markdown a poznámek, tisk kapitoly i celé knihy, uložení
-  pro offline;
-- záloha a obnova JSON, odkaz na místo `?kniha=2&kap=05_druha_smrt&blok=12`.
-
-Zvýraznění se ukládá jako blok + offset + citovaný text. Když se text knihy
-po redakci posune, dohledá se podle citace.
+- posuvník kapitoly vpravo se značkami záložek a zvýraznění, tažením rychlý posun;
+- ilustrace s lupou (lze vypnout);
+- předčítání po větách:
+  - Wake Lock drží obrazovku rozsvícenou, iframe rozcestníku má
+    `allow="screen-wake-lock"`;
+  - ručně zamčený telefon řeč prohlížeče zastaví, po odemčení pokračuje od
+    přerušené věty;
+- motivy, písmo, řádkování, šířka sloupce, volba „nezhasínat obrazovku“;
+- export EPUB a MOBI s ilustracemi, Markdown, poznámky, tisk, offline, statistiky,
+  záloha JSON, odkaz `?kniha=2&kap=05_druha_smrt&blok=12`.
 
 Klíče úložiště: `webapp_kroniky` (nastavení, pozice, pokrok, čas) a
 `webapp_kroniky_poznamky`.
 
-Testy: `node _test/kroniky_test.js` (jádro + všechna data + platnost EPUB)
-a `python3 _test/kroniky_ui.py` (proklik; podstrkuje falešnou řečovou
-syntézu, protože headless nemá hlasy).
+Testy:
+- `node _test/kroniky_test.js` kontroluje jádro, všechna data a platnost EPUB
+  a MOBI. S `KRONIKY_MOBI_PY=<python s balíkem mobi>` navíc rozbalí MOBI
+  přes KindleUnpack.
+- `python3 _test/kroniky_ui.py` je proklik včetně tažení posuvníku. Podstrkuje
+  falešnou řečovou syntézu, protože headless nemá hlasy.

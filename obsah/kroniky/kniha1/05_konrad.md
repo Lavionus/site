@@ -6,11 +6,11 @@ Matěj je slyšel z oratoře, kde se modlil sextu sám, protože Udalrich a konv
 
 Na dvoře grangie stálo osm koní. Dva psi, velcí, krátkosrstí, s ušima jako mokré hadry, se točili kolem nohou dvou mužů v hnědých kazajkách, kteří je drželi na řemenech a nadávali jim tiše a s láskou. Na koních seděli muži v pláštích, někteří s meči, a mezi nimi Matěj poznal Rüdigera, s obličejem stejně spáleným jako o Hromnicích. Vedle Rüdigera seděl na mezkovi mladý kněz, hubený a bledý, s rukama v rukávech a s nosem rudým od mrazu.
 
-A uprostřed, na hnědákovi, který byl lepší kůň než všichni ostatní, seděl muž, který se díval na horu.
+A uprostřed, na hnědákovi, lepším než všichni ostatní koně, seděl muž, který se díval na horu.
 
 Neotočil se, když Matěj vyšel z oratoře. Díval se na úbočí, na haldu a na sloupek dýmu nad ní, a Matěj viděl jen jeho záda a plášť, tmavomodrý, podšitý kunou. Pak muž seskočil z koně, lehce, jako by mu bylo dvacet, i když mu nebylo, podal uzdu jednomu z jezdců a otočil se.
 
-Byl mladší, než Matěj čekal. Mohlo mu být pětatřicet. Byl štíhlý, středně vysoký, s tmavě plavými vlasy zastřiženými nad ušima a s krátkým vousem, a měl obličej, jaký by si člověk nezapamatoval, kdyby nebylo očí. Oči měl světlé, šedohnědé, a pohyblivé. Než došel přes dvůr k Matějovi, podíval se na všechno: na oratoř, na dům konvršů, na zvonici, na hromadu sněhu za ovčínem, na Matějovy onuce. Zastavil se dva kroky od něj.
+Byl mladší, než Matěj čekal. Mohlo mu být pětatřicet. Byl štíhlý, středně vysoký, s tmavě plavými vlasy zastřiženými nad ušima a s krátkým vousem. Měl obličej, jaký by si člověk nezapamatoval, nebýt očí. Oči měl světlé, šedohnědé, a pohyblivé. Než došel přes dvůr k Matějovi, podíval se na všechno: na oratoř, na dům konvršů, na zvonici, na hromadu sněhu za ovčínem, na Matějovy onuce. Zastavil se dva kroky od něj.
 
 „Bratr Matthias,“ řekl německy. A pak, česky, s měkkým, trochu cizím přízvukem, ale česky: „Nebo Matěj. Jak ti říkají doma?“
 
@@ -22,7 +22,7 @@ Matěj se na něj díval.
 
 *
 
-Udalrich slanečky vzal a neuvěřil. Matěj to viděl na jeho zádech, když konvrš odnášel sudy do komory, a pak na jeho tváři, když se vrátil a postavil se ke dveřím domu konvršů jako hlídka. Konrád si ho nevšímal. Posadil se v domě konvršů ke stolu, k ohni, sundal si rukavice a natáhl ruce k plamenům, a Matěj si všiml, že má na pravé ruce prsten, ne zlatý, ale železný, s malým hladkým kamenem.
+Udalrich slanečky vzal a neuvěřil. Matěj to viděl na jeho zádech, když konvrš odnášel sudy do komory, a pak na jeho tváři, když se vrátil a postavil se ke dveřím domu konvršů jako hlídka. Konrád si ho nevšímal. Posadil se v domě konvršů ke stolu, k ohni, sundal si rukavice a natáhl ruce k plamenům. Matěj si všiml, že má na pravé ruce prsten, ne zlatý, ale železný, s malým hladkým kamenem.
 
 „Přivezl jsem ti dopis,“ řekl Konrád. „Od převora.“
 
@@ -46,17 +46,17 @@ Matěj si to přečetl dvakrát. Hledal v tom něco, co tam nebylo, a když to n
 
 *
 
-Mladý kněz, který přijel s Konrádem, se jmenoval Volkmar a byl Konrádův kaplan. Seděl u konce stolu a nemluvil, a když Konrád promluvil, díval se na Konráda tak, jak se novic dívá na opata. Rüdiger zůstal venku s koňmi a se psovody. Udalrich stál ve dveřích.
+Mladý kněz, který přijel s Konrádem, se jmenoval Volkmar a byl Konrádův kaplan. Seděl u konce stolu a nemluvil. Když Konrád promluvil, díval se na něj tak, jak se novic dívá na opata. Rüdiger zůstal venku s koňmi a se psovody. Udalrich stál ve dveřích.
 
 Konrád se ptal na doupě.
 
 Ptal se dobře. To si Matěj uvědomil až později, když to všechno v noci znovu procházel. Neptal se jako sedlák, který chce slyšet o drakovi, ani jako kněz, který chce slyšet o zázraku. Ptal se jako člověk, který chce něco vědět. Kolik ptáků? Jakých? Byli ohlodaní? Ne? Proč myslíš, že ne? Liška byla uprostřed, nebo u kraje? A ty ses sklonil, a padl jsi, a ta žena se nesklonila a nepadla? Ty sis to zapsal, Matěji? Ukaž mi to.
 
-Matěj mu ukázal tabulku. Konrád ji vzal opatrně do rukou, jako by to byla relikvie, a díval se na drobné písmo ve vosku, a Matěj pochopil, že Konrád neumí číst. Nepoznal to z ničeho jiného než z toho, jak dlouho se Konrád díval na jeden řádek, a jak potom podal tabulku Volkmarovi, aniž by se na kaplana podíval.
+Matěj mu ukázal tabulku. Konrád ji vzal opatrně do rukou, jako by to byla relikvie, a díval se na drobné písmo ve vosku. Matěj pochopil, že Konrád neumí číst. Poznal to jen podle toho, jak dlouho se Konrád díval na jeden řádek a jak potom podal tabulku Volkmarovi, aniž by se na kaplana podíval.
 
 „Přečti mi to, prosím.“
 
-Volkmar četl. Četl latinsky a překládal do němčiny, plynně, s měkkým porýnským přízvukem, a Matěj poslouchal vlastní slova z cizích úst a zdálo se mu, že znějí lépe, než když je psal. *Ptáci: sýkory dvě, strnad, kos. Liška jedna. Stopy dovnitř, ne ven. Vidi.* Konrád poslouchal se skloněnou hlavou. U *draco – spiritus* zvedl oči.
+Volkmar četl. Četl latinsky a překládal do němčiny, plynně, s měkkým porýnským přízvukem. Matěj poslouchal vlastní slova z cizích úst a zdálo se mu, že znějí lépe, než když je psal. *Ptáci: sýkory dvě, strnad, kos. Liška jedna. Stopy dovnitř, ne ven. Vidi.* Konrád poslouchal se skloněnou hlavou. U *draco – spiritus* zvedl oči.
 
 „Spiritus,“ řekl. „Dech.“
 
@@ -66,7 +66,7 @@ Volkmar četl. Četl latinsky a překládal do němčiny, plynně, s měkkým po
 
 „Dýchal.“
 
-Konrád chvíli mlčel. Pak vrátil tabulku Matějovi, ne přes Volkmara, ale sám, natáhl se přes stůl a položil mu ji do dlaně.
+Konrád chvíli mlčel. Pak vrátil tabulku Matějovi. Ne přes Volkmara, ale sám: natáhl se přes stůl a položil mu ji do dlaně.
 
 „Víš, kolik lidí za posledních sto let vidělo, jak dýchá drak?“ řekl. „V celém císařství, v celém křesťanstvu? Malíři malují oheň. Kněží kážou o ohni. A jeden mnich z Waldsassenu, sedlákův syn z vesnice pod horou, jde do slatiny a uvidí to, co tam opravdu je.“ Odmlčel se. „Já tomu nerozumím, Matěji. Nejsem učený. Ale tomuhle rozumím: že jsi viděl věc, kterou nikdo jiný neviděl. A že jsi ji zapsal.“
 
@@ -84,7 +84,7 @@ Matěj zvedl oči.
 
 „Co jsi tam viděl?“
 
-Matěj se díval na Konráda a Konrád se díval na něj, s tím pohyblivým, světlým pohledem, a v domě konvršů bylo ticho, jen oheň praskal a Volkmar si u konce stolu přetahoval rukávy přes prsty.
+Matěj se díval na Konráda a Konrád se díval na něj, s tím pohyblivým, světlým pohledem. V domě konvršů bylo ticho, jen oheň praskal a Volkmar si u konce stolu přetahoval rukávy přes prsty.
 
 *Neřekneš to nikomu. O vodě.*
 
@@ -102,21 +102,21 @@ Matěj ucítil, jak se mu sevřel žaludek, tak jako v prohlubni na slatině, je
 
 Konrád se na něj ještě chvíli díval. Pak se usmál, tím malým úsměvem očí, a kývl.
 
-„To říká Ortlieb taky,“ řekl. „Slovo od slova.“ A obrátil se k ohni, jako by tím bylo vše řečeno, a Matěj nevěděl, jestli prošel zkouškou, nebo jestli žádná zkouška nebyla, a jestli Konrád ví, nebo neví, a jestli mu to vůbec záleží.
+„To říká Ortlieb taky,“ řekl. „Slovo od slova.“ A obrátil se k ohni, jako by tím bylo vše řečeno. Matěj nevěděl, jestli prošel zkouškou, nebo jestli žádná zkouška nebyla. Nevěděl, jestli Konrád ví, nebo neví, a jestli mu na tom vůbec záleží.
 
 *
 
 Odpoledne šli spolu na horu.
 
-Konrád to navrhl, a Matěj neodmítl, protože převor napsal *vyhov mu*, a protože odmítnout by znamenalo zůstat na grangii s Udalrichem, který se na něj od příjezdu Konrádových lidí díval, jako by Matěj přivedl do ovčína vlka. Šli pěšky, jen oni dva a Volkmar a za nimi v dálce jeden z psovodů s oběma psy. Cesta vedla vzhůru po svahu nad grangií, lesem a pak po holém hřbetu, kde ležel sníh navátý do jazyků a kde fičel vítr. Nahoře se Konrád zastavil.
+Konrád to navrhl a Matěj neodmítl. Převor napsal *vyhov mu*, a odmítnout by navíc znamenalo zůstat na grangii s Udalrichem, který se na něj od příjezdu Konrádových lidí díval, jako by Matěj přivedl do ovčína vlka. Šli pěšky, jen oni dva a Volkmar a za nimi v dálce jeden z psovodů s oběma psy. Cesta vedla vzhůru po svahu nad grangií, lesem a pak po holém hřbetu, kde ležel sníh navátý do jazyků a kde fičel vítr. Nahoře se Konrád zastavil.
 
-Odtud bylo vidět všechno. Grangie dole v údolí, malá jako hračka, se zvonicí a vyšlapanými cestičkami. Mlýnec pod ní, s kouři z dvaceti komínů. Halda na úbočí, štola, bouda. A na druhé straně hřbetu, kam Matěj nikdy nedohlédl, když tu byl dítě, protože se sem děti nesměly chodit dívat, les.
+Odtud bylo vidět všechno. Grangie dole v údolí, malá jako hračka, se zvonicí a vyšlapanými cestičkami. Mlýnec pod ní, s kouři z dvaceti komínů. Halda na úbočí, štola, bouda. A na druhé straně hřbetu les. Jako dítě sem Matěj nikdy nedohlédl, protože se sem děti nesměly chodit dívat.
 
-Byl to jiný les než ten u vsi. Byl tmavší, hustší a starší, a táhl se, kam oko dohlédlo, přes pahorky a údolí, bez jediné paseky, bez jediného kouře. Smrky a jedle a mezi nimi šedé koruny buků. Pod nimi, jak Matěj věděl, ležely kameny porostlé mechem velké jako chalupy, a skály a rokle a potoky, které nikdo nepojmenoval. Matka o tom lese mluvila jen tehdy, když chtěla, aby děti přestaly zlobit.
+Byl to jiný les než ten u vsi. Byl tmavší, hustší a starší a táhl se, kam oko dohlédlo, přes pahorky a údolí, bez jediné paseky, bez jediného kouře. Smrky a jedle a mezi nimi šedé koruny buků. Pod nimi, jak Matěj věděl, ležely mechem porostlé kameny velké jako chalupy, a skály a rokle a potoky, které nikdo nepojmenoval. Matka o tom lese mluvila jen tehdy, když chtěla, aby děti přestaly zlobit.
 
 „Můj,“ řekl Konrád.
 
-Řekl to tiše, a nebylo v tom vychloubání. Spíš údiv, jako by to slovo zkoušel.
+Řekl to tiše a nebylo v tom vychloubání. Spíš údiv, jako by to slovo zkoušel.
 
 „Celý?“
 
@@ -162,7 +162,7 @@ Matěj se zeptal a nevěděl, proč se ptá. V tom lese nežil nikdo. Uhlíři, 
 
 „Matka...“ Matěj zaváhal. „Matka o nich vyprávěla. Pohádky.“
 
-„Pohádky.“ Konrád přikývl. „Moje chůva taky. O lidech v lese, kteří nejsou lidé. Kteří si chodí pro děti. Kteří slouží drakovi.“ Odmlčel se a díval se na les, a pak řekl tiše, už ne tím věcným hlasem: „Loni na podzim se ve vsi za potokem ztratilo dítě. Holčička. Šla na houby a nevrátila se. Hledali ji tři dny. Nenašli nic, ani šátek.“
+„Pohádky.“ Konrád přikývl. „Moje chůva taky. O lidech v lese, kteří nejsou lidé. Kteří si chodí pro děti. Kteří slouží drakovi.“ Odmlčel se a díval se na les. Pak řekl tiše, už ne tím věcným hlasem: „Loni na podzim se ve vsi za potokem ztratilo dítě. Holčička. Šla na houby a nevrátila se. Hledali ji tři dny. Nenašli nic, ani šátek.“
 
 „To se stává,“ řekl Matěj. „Les je velký. Vlci...“
 
@@ -176,7 +176,7 @@ Matěj mlčel. Bylo to tak. Přesně tak to bylo, a slyšet to z cizích úst by
 
 *
 
-Večer, když se Udalrich a konvršové odešli modlit do oratoře a Volkmar s nimi, zůstali u ohně sami. Konrád přivezl rybu, kapra z vlastního rybníka, a Matěj ji jedl, protože to nebylo maso, a protože byl hladový. Konrád nejedl. Pil víno, které si přivezl, a Matějovi nalil jen jednou, málo, jako by věděl, jak nalévá Udalrich.
+Večer, když se Udalrich a konvršové odešli modlit do oratoře a Volkmar s nimi, zůstali u ohně sami. Konrád přivezl rybu, kapra z vlastního rybníka, a Matěj ji jedl, protože to nebylo maso a protože měl hlad. Konrád nejedl. Pil víno, které si přivezl, a Matějovi nalil jen jednou, málo, jako by věděl, jak nalévá Udalrich.
 
 „Teď ti řeknu, o co tě chci požádat,“ řekl. „Převor ti to napsal. A ty můžeš říct ne.“
 
@@ -200,7 +200,7 @@ Konrád se na něj chvíli díval. Pak se zasmál, krátce, ne zle.
 
 „Listina,“ řekl Matěj. „Ještě jsem ji neprověřil. Jsou v ní věci, které...“ Zaváhal. „Které nevím.“
 
-„Kterou listinu z Jeruzaléma bys dal ruku do ohně?“ řekl Konrád klidně. „Já žádnou. Rüdiger mi vyprávěl, jak se tam kupují. Na tržišti, vedle datlí.“ Pokrčil rameny. „Já nevím, jestli je ta listina pravá, Matěji. Nikdy jsem ji neviděl, než ji Rüdiger přivezl, a přečíst si ji neumím. Ale kost jsi viděl. Držels ji v rukou. Je to kost?“
+„Za kterou listinu z Jeruzaléma bys dal ruku do ohně?“ řekl Konrád klidně. „Já žádnou. Rüdiger mi vyprávěl, jak se tam kupují. Na tržišti, vedle datlí.“ Pokrčil rameny. „Já nevím, jestli je ta listina pravá, Matěji. Nikdy jsem ji neviděl, než ji Rüdiger přivezl, a přečíst si ji neumím. Ale kost jsi viděl. Držels ji v rukou. Je to kost?“
 
 „Je.“
 
@@ -214,9 +214,9 @@ Konrád se na něj chvíli díval. Pak se zasmál, krátce, ne zle.
 
 „Převor,“ řekl Konrád tišeji, „hledá armaria. Wigand umírá. To víš líp než já. Já nemůžu převorovi poroučet, koho udělá armariem. Ale můžu mu říct, že knihovna, která má bratra, jenž viděl dračí dech, bude potřebovat knihy. A že já jsem dlužník. A převor ví, co to znamená, když je ministeriál dlužník.“ Opřel se. „To není úplatek. Je to jen pravda. Jestli chceš, nepřijmu od tebe nic a ty ode mě nic, a stejně tě poprosím, abys na svatého Jiří řekl lidem, co jsi viděl. Protože jsi to viděl.“
 
-Oheň praskal. Venku, v oratoři, zpívali konvršové kompletář, nepřesně a pomalu, a hlas Volkmarův se nad ně zvedal, jasný a čistý. Matěj ho slyšel přes zeď jako z dálky.
+Oheň praskal. Venku, v oratoři, zpívali konvršové kompletář, nepřesně a pomalu, a Volkmarův hlas se nad ně zvedal, jasný a čistý. Matěj ho slyšel přes zeď jako z dálky.
 
-Myslel na listinu. Na svědky psané jednou rukou. Na Wiganda, který ohmatával kost a řekl *je to rovné*. Na to, že slíbil převorovi jistotu, a že jistotu nemá, jen tabulku a jeden dopis a jednoho mrtvého psa pod sněhem za ovčínem.
+Myslel na listinu. Na svědky psané jednou rukou. Na Wiganda, který ohmatával kost a řekl *je to rovné*. Na to, že slíbil převorovi jistotu a že jistotu nemá, jen tabulku a jeden dopis a jednoho mrtvého psa pod sněhem za ovčínem.
 
 A myslel na to, že na slatině byl. Že tam padl a vrátil se. Že to není pověst, není to listina koupená vedle datlí, je to to, co sám viděl. *Vidi.*
 
@@ -226,11 +226,11 @@ Konrád se nehnul. Jen se mu rozšířil úsměv v očích.
 
 „Ano,“ opakoval Matěj, a tentokrát to bylo pevnější. „Na svatého Jiří řeknu lidem, co jsem viděl. Že kost je z draka. A že dech draka je na slatině.“
 
-„Děkuji ti, Matěji,“ řekl Konrád. Natáhl ruku přes stůl, a Matěj ji vzal, a Konrádova ruka byla suchá a teplá a pevná, a železný prsten se mu otiskl do dlaně. „Na svatého Jiří.“
+„Děkuji ti, Matěji,“ řekl Konrád. Natáhl ruku přes stůl a Matěj ji stiskl. Konrádova ruka byla suchá a teplá a pevná a železný prsten se mu otiskl do dlaně. „Na svatého Jiří.“
 
 *
 
-Konrád odjel ráno, za šera, se psy a s jezdci a s mlčenlivým Volkmarem na mezkovi. Psi se na dvoře ještě jednou rozštěkali, tím dutým hlasem, a jeden z nich se vytrhl psovodovi a rozběhl se za ovčín, k hromadě sněhu, a začal v ní hrabat. Psovod ho chytil za obojek a odtáhl ho, a Matěj stál ve dveřích oratoře a díval se, a nemohl se pohnout, dokud pes neodběhl.
+Konrád odjel ráno, za šera, se psy a s jezdci a s mlčenlivým Volkmarem na mezkovi. Psi se na dvoře ještě jednou rozštěkali, tím dutým hlasem, a jeden z nich se vytrhl psovodovi a rozběhl se za ovčín, k hromadě sněhu, a začal v ní hrabat. Psovod ho chytil za obojek a odtáhl ho. Matěj stál ve dveřích oratoře, díval se a nemohl se pohnout, dokud pes neodběhl.
 
 Pak, když dusot koní utichl za lesem, šel do komory a vytáhl tabulku.
 
@@ -238,10 +238,10 @@ Na horním okraji, nad vším, co od Hromnic napsal, tam, kde byl vosk nejstarš
 
 *Pan Konrád chce draka v našem kraji. Proč?*
 
-Matěj se na něj dlouho díval. Teď to věděl. Konrád mu to řekl sám, otevřeně, na hřbetě nad lesem a u ohně: stříbro, les, pole, lidé, kteří se bojí. Svoboda, koupená kousek po kousku. Nic z toho nebylo tajemství. Nic z toho nebylo zlé. Konrád chtěl draka, protože drak byl, a protože z toho, že byl, plynuly věci, které Konrád potřeboval, a Matěj by na jeho místě chtěl totéž.
+Matěj se na něj dlouho díval. Teď to věděl. Konrád mu to řekl sám, otevřeně, na hřbetě nad lesem a u ohně: stříbro, les, pole, lidé, kteří se bojí. Svoboda, koupená kousek po kousku. Nic z toho nebylo tajemství. Nic z toho nebylo zlé. Konrád chtěl draka, protože drak byl a protože z toho, že byl, plynuly věci, které Konrád potřeboval. Matěj by na jeho místě chtěl totéž.
 
-Přiložil k řádku palec a pomalu ho uhladil. Vosk byl studený a tvrdý a nešlo to snadno, a Matěj musel přitlačit, až ho palec zabolel. Pak tam bylo hladké místo, jako by tam nikdy nic nebylo.
+Přiložil k řádku palec a pomalu ho uhladil. Vosk byl studený a tvrdý a nešlo to snadno. Matěj musel přitlačit, až ho palec zabolel. Pak tam bylo hladké místo, jako by tam nikdy nic nebylo.
 
 Do hladkého místa napsal datum. Středa po svátku svatého Petra na stolci, léta Páně tisícího stého sedmdesátého druhého. A pod to: *usque ad festum sancti Georgii*. Do svátku svatého Jiří. Spočítal to na prstech, dvakrát, protože ten rok měl únor o den delší. Šedesát dní.
 
-Za oknem komory se rozednívalo. Na hromadě sněhu za ovčínem byla díra, kterou vyhrabal Konrádův pes, a Matěj se k ní musel jít podívat, a díval se do ní dlouho, a pak ji zase zahrabal, holýma rukama, jako tehdy, a sníh byl ještě tvrdší než tehdy a studil víc.
+Za oknem komory se rozednívalo. Na hromadě sněhu za ovčínem byla díra, kterou vyhrabal Konrádův pes. Matěj se k ní musel jít podívat. Díval se do ní dlouho a pak ji zase zahrabal, holýma rukama, jako tehdy, a sníh byl ještě tvrdší než tehdy a studil víc.

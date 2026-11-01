@@ -2,7 +2,7 @@
 
 Kodex leží na stejném pultu jako v lednu a lampa nad ním pořád nehřeje.
 
-Venku je duben. Hana jela z Brna čtyři hodiny, protože v e-mailu stálo *výsledky jsou zpátky, restaurátorka by se ráda rozhodla* a protože posudek, za který už dostala zaplaceno, není hotový, dokud v něm chybí čísla. Čísla má v desce pod paží. Uhlík a kyslík ze sintru, odebraného z krystalu skalpelem v množství, nad kterým restaurátorka ještě teď kroutí hlavou, že to vůbec stačilo.
+Venku je duben. Hana jela z Brna čtyři hodiny, protože v e-mailu stálo *výsledky jsou zpátky, restaurátorka by se ráda rozhodla* a protože posudek, za který už dostala zaplaceno, není hotový, dokud v něm chybí čísla. Čísla má v desce pod paží. Uhlík a kyslík ze sintru, který z krystalu odebrali skalpelem. Bylo ho tak málo, že restaurátorka ještě teď kroutí hlavou, že to vůbec stačilo.
 
 „Tak?“ řekne doktorka Šindelářová. Brýle má tentokrát jen jedny.
 
@@ -50,7 +50,7 @@ A pod tím, bez vysvětlení: *Viděl jsem tvář pana Konráda.*
 
 Hana se dívá na stránku v kodexu, kde to stojí. Písmo je tady jiné, menší, jako by se ruka bála.
 
-Světelné jevy při zemětřesení jsou popsané. Málo, nespolehlivě, o mechanismu se vede spor, piezoelektřina v křemeni, uvolňování náboje v namáhané hornině. A k tomu nevětraná štola, ve které se drží oxid uhličitý u dna, horko, strach, kahan. Lidé v takovém vzduchu vidí věci. Hana to ví. Ví to tak dobře, že ji to skoro uklidní.
+Světelné jevy při zemětřesení jsou popsané. Málo a nespolehlivě; o mechanismu se vede spor – piezoelektřina v křemeni, uvolňování náboje v namáhané hornině. A k tomu nevětraná štola, ve které se drží oxid uhličitý u dna, horko, strach, kahan. Lidé v takovém vzduchu vidí věci. Hana to ví. Ví to tak dobře, že ji to skoro uklidní.
 
 Je to pravda. Všechno, co si teď myslí, je pravda.
 
@@ -62,7 +62,7 @@ Dvoustranu s dutinou otevře teprve teď, s překladem vedle.
 
 Kosti těžké jako kámen. Lebka dlouhá jako předloktí. Vrstvy hlíny, stovky vrstev, tenkých jako list. Bílá krusta na krystalech. *Byli. Nejsou.* U toho odstavce stojí na okraji *vidi* a *non vidi* a mezi nimi ta čára, kterou viděla v lednu. Kosti viděl. Draka neviděl. Čára mezi tím, co je v zemi, a tím, co si o tom vypráví ves.
 
-Fosilní lokalita, pomyslí si Hana. Chebská pánev je plná třetihorních jílů a v jílech leží kdeco. A zároveň už nemá sílu tu druhou myšlenku odsouvat, tu z ledna. Tohle je zápis z výkopu. Mřížka natažená provazem, osm na pět loktů. Značky pro typy nálezů. *Sic* u rozdvojené rýhy, aby si nikdo nemyslel, že se přepsal. Ona sama píše *sic* do terénního deníku. Učila ji to její první vedoucí na exkurzi v Krkonoších, starý pán, který kouřil dýmku a měl deník rozdělený svislou čarou na dvě půlky: vlevo, co vidíš, vpravo, co si myslíš. *A nikdy to nepleť dohromady, děvče, nebo budeš psát romány.*
+Fosilní lokalita, pomyslí si Hana. Chebská pánev je plná třetihorních jílů a v jílech leží kdeco. A zároveň už nemá sílu tu druhou myšlenku odsouvat, tu z ledna. Tohle je zápis z výkopu. Mřížka natažená provazem, osm na pět loktů. Značky pro typy nálezů. *Sic* u rozdvojené rýhy, aby si nikdo nemyslel, že se přepsal. Ona sama píše *sic* do terénního deníku. Učil ji to její první vedoucí na exkurzi v Krkonoších, starý pán, který kouřil dýmku a měl deník rozdělený svislou čarou na dvě půlky: vlevo, co vidíš, vpravo, co si myslíš. *A nikdy to nepleť dohromady, děvče, nebo budeš psát romány.*
 
 A pak ty křížky.
 

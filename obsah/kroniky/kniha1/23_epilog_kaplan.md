@@ -14,7 +14,7 @@ Když mše skončila, žena odnesla syna nahoru a Rüdiger šel ke koním. Konr�
 
 Psali to od svatého Martina, každý týden kus.
 
-Volkmar psal latinsky, protože to tak chtěl Konrád. Latina je jazyk, který přetrvá, řekl mu Volkmar, když se ho Konrád kdysi zeptal, proč kněží nepíšou německy. Latinou se píše to, co se má číst i za sto let. Konrád mluvil německy a Volkmar to převáděl, větu po větě, a pak mu to četl zpátky, a když se Konrádovi něco nelíbilo, Volkmar to seškrábal a napsal znovu. Konrád neviděl rozdíl mezi tím, co bylo seškrábané, a co ne. Věřil Volkmarovi. Musel.
+Volkmar psal latinsky, protože to tak chtěl Konrád. Latina je jazyk, který přetrvá, řekl mu Volkmar, když se ho Konrád kdysi zeptal, proč kněží nepíšou německy. Latinou se píše to, co se má číst i za sto let. Konrád mluvil německy a Volkmar to převáděl, větu po větě, a pak mu to četl zpátky, a když se Konrádovi něco nelíbilo, Volkmar to seškrábal a napsal znovu. Konrád neviděl rozdíl mezi tím, co bylo seškrábané, a tím, co ne. Věřil Volkmarovi. Musel.
 
 Na prvních listech stálo to, co mnich četl u plané hrušně. Volkmar to přepsal ze svých voskových desek na pergamen, slovo od slova, a nic nepřidal. Konrád mu to přikázal. *Ať to stojí, jak to řekl. Řekl to on. Ne já.*
 
@@ -116,7 +116,7 @@ Volkmar to napsal. Pak položil pero a dlouho se díval na list.
 
 „Kdyby se o tom dozvěděl jinak…“
 
-„Nedozví se.“ Konrád vstal. Byl v kapli tma, ale on ji znal, každý kámen. „Biskup by řekl, že to bylo vidění. Že nám to ukázal Bůh, nebo ďábel, a že se máme postit a mlčet. A pak by poslal někoho, kdo neviděl nic, aby to vyložil.“ Došel k oltáři a zase zpátky. „Nebylo to vidění. Viděl to i mnich. A mnich nevidí vidění. Mnich vidí, co je.“
+„Nedozví se.“ Konrád vstal. V kapli byla tma, ale on ji znal, každý kámen. „Biskup by řekl, že to bylo vidění. Že nám to ukázal Bůh, nebo ďábel, a že se máme postit a mlčet. A pak by poslal někoho, kdo neviděl nic, aby to vyložil.“ Došel k oltáři a zase zpátky. „Nebylo to vidění. Viděl to i mnich. A mnich nevidí vidění. Mnich vidí, co je.“
 
 Volkmar mlčel.
 
@@ -172,7 +172,7 @@ Až se vrátí, budeme ti, kdo je přivítají.
 
 Konrád zavřel oči.
 
-Rok mu bylo líto stříbra. Rok si v noci počítal, kolik zaplatil klášteru za luka a za ovce, kolik matce toho Sasa, kterou nakonec nenašli, a tak to dostal kostel v Mlýnci. Rok slyšel toho muže z Chebu, jak mu řekl, co je. *Dienstmann.* Služebník. Narodil se jako něčí. Jeho syn, který teď spal nahoře u kojné, patřil pánovi dřív než jemu. Tak to bylo a tak to bude, a žádné stříbro to nezmění, protože žádné stříbro nebylo.
+Rok mu bylo líto stříbra. Rok si v noci počítal, kolik zaplatil klášteru za luka a za ovce a kolik za toho Sasa. Jeho matku nakonec nenašli, a tak to dostal kostel v Mlýnci. Rok slyšel toho muže z Chebu, jak mu řekl, co je. *Dienstmann.* Služebník. Narodil se jako něčí. Jeho syn, který teď spal nahoře u kojné, patřil pánovi dřív než jemu. Tak to bylo a tak to bude, a žádné stříbro to nezmění, protože žádné stříbro nebylo.
 
 Ale tohle mu nikdo nevezme.
 

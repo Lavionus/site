@@ -2,11 +2,11 @@
 
 Druhý den ráno byla ruka oteklá od lokte k zápěstí a lesklá jako nadmutý měchýř.
 
-Ilona rozvázala obvaz u okna, kde bylo nejvíc světla, a dívala se. Půlměsíce zubů ztmavly do fialova a kůže mezi nimi zežloutla na okrajích, jak žloutne modřina, která se rozhodla zůstat. Na kraji, kde byla rána roztržená do hloubky, trčel knot, nasáklý a hnědý. Kolem celého oblouku, na šířku prstu, byla kůže červená a teplá. Ilona přiložila hřbet zdravé ruky, jak to dělala u cizích ran. Horká. Ne jako oheň. Jako chléb, který se před chvílí vytáhl z pece.
+Ilona rozvázala obvaz u okna, kde bylo nejvíc světla, a dívala se. Půlměsíce zubů ztmavly do fialova a kůže mezi nimi zežloutla na okrajích, jak žloutne modřina, která se rozhodla zůstat. Na kraji, kde byla rána roztržená do hloubky, trčel knot, nasáklý a hnědý. Kolem celého oblouku, na šířku prstu, byla kůže červená a teplá. Ilona přiložila hřbet zdravé ruky, jak to dělala u cizích ran. Horká. Ne jako oheň. Jako chléb, který před chvílí vytáhli z pece.
 
 Přičichla. Krev, myrha, pálenka. Nic sladkého, nic zkaženého. Zatím.
 
-Vytáhla knot pinzetou, levou rukou, a šlo to špatně, protože levá ruka nevěděla, jak pinzetu držet, a cukla, a Ilona se kousla do rtu, aby nevydala hlásku. Vypláchla ránu znovu. Vložila nový knot, namočený v tinktuře. Ovázala. Zavěsila ruku zpátky do šátku a chvíli seděla se zavřenýma očima a čekala, až přestane tepat. Nepřestalo.
+Vytáhla knot pinzetou, levou rukou, a šlo to špatně, protože levá ruka nevěděla, jak pinzetu držet. Cukla a Ilona se kousla do rtu, aby nevydala hlásku. Vypláchla ránu znovu. Vložila nový knot, namočený v tinktuře. Ovázala. Zavěsila ruku zpátky do šátku a chvíli seděla se zavřenýma očima a čekala, až přestane tepat. Nepřestalo.
 
 Řehoř by řekl: *Tři dny. Za tři dny se ukáže, jestli se to bude hojit, nebo jestli to bude hnít.* Řekl to tolikrát, že Ilona slyšela i tón, unavený, trochu posměšný, jako by ty tři dny byly nějaký úředník, se kterým se nedá hádat.
 
@@ -30,7 +30,7 @@ Pak dlouho držela olůvko nad papírem a už nic nepřidala.
 
 Dopoledne přemýšlela, jestli jít nahoru.
 
-Ve středu v noci si to na jehličí nad Horní štolou řekla tak jasně, jako by to už bylo napsané: *půjdu za perkmistrem.* Mezek chodí ve středu. Shrbený muž s mezkem přichází průchodem z Röhrichova dvora a jde mezi haldy a nese soudek nahoru a bedýnku dolů. Stačí, aby příští středu stáli v průchodu dva havíři z Wehrlovy stráže. Fridrich na lavici. Nic víc. Ne štoly, ne pochodně, ne psi. Jeden mezek a jeden shrbený muž a jedna bedýnka s dvaceti lahvičkami, a v ní všechno, co Ilona viděla, jen bez toho, aby musela říct, odkud to ví.
+Ve středu v noci si to na jehličí nad Horní štolou řekla tak jasně, jako by to už bylo napsané: *půjdu za perkmistrem.* Mezek chodí ve středu. Shrbený muž s mezkem přichází průchodem z Röhrichova dvora a jde mezi haldy a nese soudek nahoru a bedýnku dolů. Stačí, aby příští středu stáli v průchodu dva havíři z Wehrlovy stráže. Fridrich na lavici. Nic víc. Ne štoly, ne pochodně, ne psi. Jeden mezek a jeden shrbený muž a jedna bedýnka s dvaceti lahvičkami, a v ní všechno, co Ilona viděla, a přitom by nemusela říct, odkud to ví.
 
 Tak si to řekla. A teď, ve světle, s rukou, která tepala, to rozkládala na kusy a každý kus potěžkala.
 
@@ -44,9 +44,9 @@ Ilona se podívala na ruku v šátku.
 
 Nešla.
 
-Ale odpoledne, když se slunce sklonilo nad haldy a na předních dveřích se nic neobjevilo, ani tečky, ani nic jiného, a když se už podruhé přistihla, že stojí u okna a dívá se ulicí nahoru, kde o dvě ulice výš stál dům s nápisem nad portálem, vzala plášť přes rameno, aby šátek nebyl vidět, a šla.
+Ale odpoledne se slunce sklonilo nad haldy a na předních dveřích se nic neobjevilo, ani tečky, ani nic jiného. Když se už podruhé přistihla, že stojí u okna a dívá se ulicí nahoru, kde o dvě ulice výš stál dům s nápisem nad portálem, přehodila si přes rameno plášť, aby šátek nebyl vidět, a šla.
 
-Řekla si, že jde jen říct, že lékárník kupuje lázeňskou krev, a ať se pan perkmistr podívá, kolik jí kupuje. To bylo pravda a to mohla říct. To nikomu neublíží.
+Řekla si, že jde jen říct, že lékárník kupuje lázeňskou krev, a ať se pan perkmistr podívá, kolik jí kupuje. To byla pravda a to mohla říct. To nikomu neublíží.
 
 *
 
@@ -58,7 +58,7 @@ Sešla dolů.
 
 *
 
-Suterén byl delší než dům nad ním, jako by se do svahu zakousl hlouběji, než bylo vidět z ulice. Klenba z lomového kamene, začouzená. Pec, kterou Ilona viděla před dvěma týdny jen ze schodů, byla zblízka větší, z cihel, s několika dvířky a s komínem, který mizel ve stropě, a kolem ní stály na policích a na zemi věci, kterým Ilona většinou nerozuměla. Baňky s dlouhými zahnutými krky. Hliněné kelímky, černé od ohně. Měchy. Kleště. Měděná pánev s pískem. Mísa, ve které ležela kulička něčeho stříbrného, co se pohnulo, když Ilona sestoupila z posledního schodu a podlaha se pod ní zachvěla. Rtuť. Vzduch byl teplý a kovový a štípal v nose.
+Suterén byl delší než dům nad ním, jako by se do svahu zakousl hlouběji, než bylo vidět z ulice. Klenba z lomového kamene, začouzená. Pec, kterou Ilona viděla před dvěma týdny jen ze schodů, byla zblízka větší, z cihel, s několika dvířky a s komínem, který mizel ve stropě. Kolem ní stály na policích a na zemi věci, kterým Ilona většinou nerozuměla. Baňky s dlouhými zahnutými krky. Hliněné kelímky, černé od ohně. Měchy. Kleště. Měděná pánev s pískem. Mísa, ve které ležela kulička něčeho stříbrného, co se pohnulo, když Ilona sestoupila z posledního schodu a podlaha se pod ní zachvěla. Rtuť. Vzduch byl teplý a kovový a štípal v nose.
 
 U stolu pod jediným okénkem, ve výšce dlažby na dvoře, seděl Valentin Hesse a držel si levou ruku v pravé, jako se drží zraněný pták.
 
@@ -72,7 +72,7 @@ Vyskočil, když ji uviděl, a ruku schoval za záda.
 
 „Ukažte mi to.“
 
-Hesse byl mladší, než si ho pamatovala. Hubený, bledý od suterénu, s vlasy ostříhanými nakrátko, aby se nevznítily, a s tím výrazem, jaký mívají tovaryši, kteří se celý život bojí, že něco rozbijí. Poprvé ho viděla s obvázanými prsty. Obvazy byly pořád tytéž, nebo nové, ale stejně špinavé. Váhal. Pak natáhl ruku.
+Hesse byl mladší, než si ho pamatovala. Hubený, bledý od suterénu, s vlasy ostříhanými nakrátko, aby se nevznítily, a s tím výrazem, jaký mívají tovaryši, kteří se celý život bojí, že něco rozbijí. Už když ho viděla poprvé, měl obvázané prsty. Obvazy byly pořád tytéž, nebo nové, ale stejně špinavé. Váhal. Pak natáhl ruku.
 
 Ilona ji vzala svou zdravou, levou, a Hesse se podíval na šátek a na její druhou ruku a otevřel ústa a zase je zavřel.
 
@@ -86,7 +86,7 @@ Ukazovák a prostředník levé ruky. Spálenina na bříškách, stará dva tý
 
 „Bez dvou prstů se nedá držet nic. A pokud vám to vleze do kosti, budete bez nich.“ Ilona se rozhlédla. „Máte tu čistou vodu? Pálenku? Ne tu vaši. Obyčejnou.“
 
-Hesse přinesl džbán a lahev. Ilona si sedla naproti němu ke stolu, ruku mu položila na desku a vytáhla z brašny, kterou si přehodila přes zdravé rameno, malou lancetu. Ne Tobiášovu. Řehořovu, s kostěnou rukojetí. A pak se zastavila a podívala se na svou levou ruku s lancetou, jako by patřila někomu jinému.
+Hesse přinesl džbán a lahev. Ilona si sedla naproti němu ke stolu, položila mu ruku na desku a z brašny, kterou měla přehozenou přes zdravé rameno, vytáhla malou lancetu. Ne Tobiášovu. Řehořovu, s kostěnou rukojetí. A pak se zastavila a podívala se na svou levou ruku s lancetou, jako by patřila někomu jinému.
 
 „Budete mi muset pomoct,“ řekla. „Držte si ten prst sám. Pevně. Druhou rukou. Takhle.“
 
@@ -124,7 +124,7 @@ Bylo to první, co ji napadlo. A teprve když to řekla, uvědomila si, že to j
 
 Hesse jí šel pro čisté plátno nahoru, protože to dole bylo všechno od sazí, a Ilona zůstala v suterénu sama.
 
-Neměla v úmyslu nic prohlížet. Seděla u stolu s rukou v šátku a čekala, až přestane tepat, a dívala se, protože jinam se dívat nedalo. Na pec. Na baňky. Na kuličku rtuti v míse. Na zeď za pecí, kde byla ve zdi vysekaná nika, hluboká, a v ní stál džbán s vodou, a pod džbánem, na mokrém kameni, protože ze džbánu prosakovalo, dřevěná bedýnka.
+Neměla v úmyslu nic prohlížet. Seděla u stolu s rukou v šátku a čekala, až přestane tepat, a dívala se, protože jinam se dívat nedalo. Na pec. Na baňky. Na kuličku rtuti v míse. Na zeď za pecí, ve které byla vysekaná hluboká nika. V ní stál džbán s vodou a pod džbánem, na kameni mokrém od vody, která ze džbánu prosakovala, dřevěná bedýnka.
 
 Ilona se na tu bedýnku dívala dlouho, než ji poznala.
 
@@ -152,13 +152,13 @@ Viděla velkého muže s holými pažemi, jak jde k soudku s pohárkem. Na vnit�
 
 Žebřík je na pečetích hornických bratrstev, řekla si znovu.
 
-Na každé lahvičce byl kolem hrdla uvázaný proužek papíru. Úzký, jako na lékárnických lahvičkách. Ilona naklonila hlavu a četla, a nemusela číst vzhůru nohama, papírky byly otočené k ní, jako by je někdo chtěl mít po ruce, až sáhne do niky. Písmo drobné a nejisté, s písmeny, která se třásla.
+Na každé lahvičce byl kolem hrdla uvázaný proužek papíru. Úzký, jako na lékárnických lahvičkách. Ilona naklonila hlavu a četla. Tentokrát nemusela číst vzhůru nohama, papírky byly otočené k ní, jako by je někdo chtěl mít po ruce, až sáhne do niky. Písmo drobné a nejisté, s písmeny, která se třásla.
 
 *Sang. antiq.* A pod tím datum. *1. Jun.*
 
 Na všech dvaceti stejně. Čtvrtek. Včera.
 
-Středa v noci, mezek, bedýnka, dvacet lahviček. Ráno ve čtvrtek ji shrbený muž přinesl dolů. A ve čtvrtek je někdo opatřil papírky třesoucí se rukou a postavil do niky ke studené vodě, aby se nezkazily.
+Středa v noci, mezek, bedýnka, dvacet lahviček. Ve čtvrtek ráno ji shrbený muž přinesl dolů. A ve čtvrtek na ně někdo třesoucí se rukou uvázal papírky a postavil je do niky ke studené vodě, aby se nezkazily.
 
 Nahoře zavrzaly schody.
 
@@ -172,7 +172,7 @@ Hesse sešel s plátnem přes rameno a s miskou, ve které byl chléb a kus sýr
 
 „Starších,“ řekla Ilona.
 
-„Starých lidí. Těch, co žijí dlouho.“ Hesse rozmotal plátno a podal jí konec, aby mu mohla ovázat druhý prst, a mluvil dál, a Ilona poznala, že mluví, protože se bojí ticha, ne protože by chtěl něco říct. „Pán říká, že na světě jsou lidé, kteří žijí dvakrát déle než my. Že bývali dřív, ve starých časech, a že je Písmo zná, Metuzalém a ti. A že jejich krev má v sobě to, co naše nemá. Ten… ten oheň, který nevyhasíná.“ Polkl. „Já tomu nerozumím. Já jen dělám, co pán řekne. Udržuju to v chladu. Každý týden dvacet. Pán bere deset kapek ráno, s vínem a se zlatem. Zbytek se destiluje.“
+„Starých lidí. Těch, co žijí dlouho.“ Hesse rozmotal plátno a podal jí konec, aby mu mohla ovázat druhý prst, a mluvil dál. Ilona poznala, že mluví, protože se bojí ticha, ne protože by chtěl něco říct. „Pán říká, že na světě jsou lidé, kteří žijí dvakrát déle než my. Že bývali dřív, ve starých časech, a že je Písmo zná, Metuzalém a ti. A že jejich krev má v sobě to, co naše nemá. Ten… ten oheň, který nevyhasíná.“ Polkl. „Já tomu nerozumím. Já jen dělám, co pán řekne. Udržuju to v chladu. Každý týden dvacet. Pán bere deset kapek ráno, s vínem a se zlatem. Zbytek se destiluje.“
 
 „Odkud to máte?“
 
@@ -194,7 +194,7 @@ Zarazil se a už nedopověděl. Ilona to nemusela slyšet celé. Slyšela to už
 
 Wehrl se vrátil, když dovazovala druhý prst.
 
-Slyšela ho nahoře, jeho hlas, služku, která křičela, že je tu paní ranhojička, a pak jeho kroky na schodech, rychlé, a pak stál na posledním schodu v hornickém kabátě přes černé sukno a díval se na ně, na Hesseho s rukou na stole a na ni s rukou v šátku.
+Slyšela ho nahoře, jeho hlas, služku, která křičela, že je tu paní ranhojička, a pak jeho kroky na schodech, rychlé. Pak stál na posledním schodu v hornickém kabátě přes černé sukno a díval se na ně, na Hesseho s rukou na stole a na ni s rukou v šátku.
 
 „Paní Ilono,“ řekl. Nebyl v tom hněv, ani překvapení. Jen otázka. A pak, když přešel suterén a uviděl Hesseho prsty: „Proboha. Valentine. Proč jsi nic neřekl?“
 
@@ -212,7 +212,7 @@ Wehrl se na ni díval o chvilku déle, než měl.
 
 Ilona nic neřekla. Wehrl kývl, jako by odpověděla.
 
-Pak se podíval do niky. Na bedýnku s odklopeným víkem. A Ilona viděla, že se podíval tam, kam se předtím dívala ona, a že ví, že se tam dívala, protože lidé se dívají na věci, o kterých se mluvilo, a Hesse nebyl člověk, který by uměl mlčet.
+Pak se podíval do niky. Na bedýnku s odklopeným víkem. Ilona viděla, že se podíval tam, kam se předtím dívala ona. A že ví, že se tam dívala, protože lidé se dívají na věci, o kterých se mluvilo, a Hesse nebyl člověk, který by uměl mlčet.
 
 „Valentin vám ukázal můj lék,“ řekl Wehrl.
 
@@ -222,7 +222,7 @@ Pak se podíval do niky. Na bedýnku s odklopeným víkem. A Ilona viděla, že 
 
 „A přesto ji pijete.“
 
-„A přesto ji piju.“ Wehrl se otočil a opřel se zády o zeď vedle niky, a v šeru suterénu vypadal najednou starší, s popelavým plnovousem a s rukama, které se mu třásly, i když je měl založené. „Člověk, který se bojí, že umře den předtím, paní Ilono, pije i kozí krev. Myslel jsem, že to víte. Vy jste přece viděla matky pod popravištěm s hrnky v ruce.“
+„A přesto ji piju.“ Wehrl se otočil a opřel se zády o zeď vedle niky. V šeru suterénu vypadal najednou starší, s popelavým plnovousem a s rukama, které se mu třásly, i když je měl založené. „Člověk, který se bojí, že umře den předtím, paní Ilono, pije i kozí krev. Myslel jsem, že to víte. Vy jste přece viděla matky pod popravištěm s hrnky v ruce.“
 
 Ilona se na něj podívala. Tohle mu nikdy neřekla. Tady to neřekla nikomu. Jen jednou, první zimu v Jáchymově, Řehořovi, v noci, když nemohla spát a on se zeptal, proč se bojí kata, který jim prodával psí sádlo.
 
@@ -254,9 +254,9 @@ Ilona mlčela.
 
 „Napište to dřív. Kdyby se vám něco stalo…“ Podíval se na šátek. „Psi, paní Ilono. Ve městě je hodně psů.“
 
-Podíval se na ni tak, jak se dívá lékař, který je sám nemocný, a Ilona v tom pohledu viděla starost a viděla v něm i něco dalšího, co nedokázala pojmenovat, a co nechala stát, protože to nedokázala pojmenovat.
+Podíval se na ni tak, jak se dívá lékař, který je sám nemocný. Ilona v tom pohledu viděla starost a viděla v něm i něco dalšího, co nedokázala pojmenovat, a proto to nechala stát.
 
-Řekla mu, že napíše. A nenapsala mu, kdo nosí lékárníkovi jeho měšec. Ani on to neřekl jí.
+Řekla mu, že napíše. A neřekla mu, kdo nosí lékárníkovi jeho měšec. Ani on to neřekl jí.
 
 *
 
@@ -264,7 +264,7 @@ Podíval se na ni tak, jak se dívá lékař, který je sám nemocný, a Ilona v
 
 Řekla si to v duchu, jak to dělala vždycky, když se jí v hlavě začal skládat džbán. Slovo po slově.
 
-Pan perkmistr kupuje od lékárníka lék, kterému říká krev starších. Platí za něj hodně. Ví, že ho lékárník šidí. Myslí si, že je to kozí krev. Pije ho, protože se bojí smrti, jako pijí krev matky pod popravištěm. To řekl sám, nahlas, se smíchem, jako Röhrich, když mluvil o lázni.
+Pan perkmistr kupuje od lékárníka lék, kterému říká krev starších. Platí za něj hodně. Ví, že ho lékárník šidí. Myslí si, že je to kozí krev. Pije ho, protože se bojí smrti, jako matky pod popravištěm pijí krev. To řekl sám, nahlas, se smíchem, jako Röhrich, když mluvil o lázni.
 
 Lahvičky jsou tytéž, jaké plní Hladoví. Vosk je týž. Otisk je žebřík. Datum je čtvrtek.
 
@@ -272,7 +272,7 @@ Tohle bylo, co věděla.
 
 A pak to, co nevěděla. Jestli Wehrl ví, odkud lahvičky jsou. Jestli lékárník lže jemu, jako lže všem. Jestli *tam dole chtějí víc* znamenalo dům s nápisem nad portálem, nebo jen lékárníka, který chce víc peněz, nebo Lipsko, nebo kohokoli.
 
-Röhrich je prostředník. To věděla. Prostředník prodává oběma stranám a obě klame. Kdo klame horníka u rumpálu, klame i perkmistra u globusu. Wehrl zaplatí za kůň a dostane lahvičku, a nemá jak poznat, co v ní je, protože nikdy neležel na plošině nad síní plnou kouře a neviděl ženu s lancetou.
+Röhrich je prostředník. To věděla. Prostředník prodává oběma stranám a obě klame. Kdo klame horníka u rumpálu, klame i perkmistra u globusu. Wehrl zaplatí jako za koně a dostane lahvičku, a nemá jak poznat, co v ní je, protože nikdy neležel na plošině nad síní plnou kouře a neviděl ženu s lancetou.
 
 To bylo možné. To bylo dokonce pravděpodobné. Ilona si to opakovala, až to znělo jako pravda.
 

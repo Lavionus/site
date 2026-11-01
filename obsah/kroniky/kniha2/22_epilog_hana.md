@@ -1,6 +1,6 @@
 # Epilog II. Rub
 
-V srpnu je v bytě takové horko, že Hana pracuje v noci s otevřeným oknem a s mokrým ručníkem přes opěradlo židle. Dole na ulici hraje někdo z otevřeného auta pořád tutéž písničku, odjede, vrátí se, a ona přestane slyšet slova a slyší jen basu, jako tlukot, který prochází zdí.
+V srpnu je v bytě takové horko, že Hana pracuje v noci s otevřeným oknem a s mokrým ručníkem přes opěradlo židle. Dole na ulici hraje někdo z otevřeného auta pořád tutéž písničku, odjede a vrátí se. Hana přestane slyšet slova a slyší jen basu, jako tlukot, který prochází zdí.
 
 E-mail přijde ve středu odpoledne. Bez pozdravu, jako všechny.
 
@@ -8,7 +8,7 @@ E-mail přijde ve středu odpoledne. Bez pozdravu, jako všechny.
 
 *P. S. Wehrl. Kolega na něj narazil v jiném fondu, jen tak, při něčem jiném. Zemřel v únoru 1596. Víc nic.*
 
-Hana si přečte postskriptum dvakrát, protože nečeká, že jí bude něco říkat, a neříká jí nic. Únor 1596. Necelý rok po soudu. Horní úředník, jeden z mnoha. Zavře e-mail a otevře přílohu.
+Hana si přečte postskriptum dvakrát, i když nečeká, že jí bude něco říkat. A neříká jí nic. Únor 1596. Necelý rok po soudu. Horní úředník, jeden z mnoha. Zavře e-mail a otevře přílohu.
 
 *
 
@@ -30,7 +30,7 @@ Hana zvětší první.
 
 V bočním světle vypadá papír jako krajina z letadla. Šedý, zdrsnělý, a přes celou plochu jdou rovnoběžné rýhy, husté, jemné, všechny stejným směrem, šikmo, jako by po papíře někdo táhl hřeben. Na okrajích se rýhy zastavují čistě, kousek od hrany, tam, kde by končily řádky. Uprostřed je papír tenčí. Na jednom místě, na pátém listu, tak tenký, že přes něj v bočním světle prosvítá líc, obráceně, zrcadlově, jako písmo viděné ze zadní strany okna.
 
-Rasura. Ví, co to je, i když není kodikoložka. Viděla to na pergamenu, ve vitrínách a na přednáškách, kde někdo seškrábal starý text, aby mohl psát nový. Na papíře je to vzácnější, protože papír to nesnese, ztenčí se, roztřepí, a kdo to dělá, musí vědět jak. Tady to někdo věděl. Ostrou čepelí, naplocho, tahem a ne řezem, a pak to ještě něčím uhladil, protože okraje rýh nejsou roztřepené.
+Rasura. Ví, co to je, i když není kodikoložka. Viděla to ve vitrínách a na přednáškách, na pergamenu, ze kterého někdo seškrábal starý text, aby mohl psát nový. Na papíře je to vzácnější, protože papír to nesnese: ztenčí se a roztřepí. Kdo to dělá, musí vědět jak. Tady to někdo věděl. Ostrou čepelí, naplocho, tahem a ne řezem, a pak to ještě něčím uhladil, protože okraje rýh nejsou roztřepené.
 
 Pět stran. Celých. Každá od horního okraje k dolnímu.
 
@@ -64,7 +64,7 @@ Tatáž ruka, drobná a rovná. Tatáž žena, která jedenáctkrát dokládá, 
 
 A soud se nezeptal dál.
 
-Hana si to přečte ještě jednou, v němčině, protože chce slyšet, jak to znělo. *Die habe ich nicht aufgeschrieben.* Pak si uvědomí, že to tak neznělo. Že tohle je písař, který to po ní zapsal, a ona mluvila nejspíš česky, nebo tou němčinou, jakou se mluvilo v horách, a že mezi tím, co řekla, a tím, co tu stojí, je další ruka. Další opis.
+Hana si to přečte ještě jednou, v němčině, protože chce slyšet, jak to znělo. *Die habe ich nicht aufgeschrieben.* Pak si uvědomí, že to tak neznělo. Že tohle je písař, který to po ní zapsal. Ona mluvila nejspíš česky, nebo tou němčinou, jakou se mluvilo v horách. A že mezi tím, co řekla, a tím, co tu stojí, je další ruka. Další opis.
 
 Jako všude.
 
@@ -74,7 +74,7 @@ Vstane a jde k oknu. Dole odjíždí auto s písničkou a tentokrát se nevrací
 
 Pak jde do předsíně a z batohu vytáhne terénní deník.
 
-Ten, který tam leží od dubna. Od vlaku z Chebu, kdy si na čistou stranu udělala svislou čáru a vlevo napsala, co umí vysvětlit, a vpravo jednu otázku. Od června ho nevytáhla, ani když jí přišel sken a ona si otázku napsala do mobilu, protože batoh byl v předsíni a ona byla unavená a protože, a to si přizná až teď, s deníkem v ruce, nechtěla tu otázku napsat vedle té první.
+Ten, který tam leží od dubna. Od vlaku z Chebu, kdy si na čistou stranu udělala svislou čáru a vlevo napsala, co umí vysvětlit, a vpravo jednu otázku. Od června ho nevytáhla, ani když jí přišel sken a ona si otázku napsala do mobilu. Batoh byl v předsíni a ona byla unavená. A taky, to si přizná až teď, s deníkem v ruce, nechtěla tu otázku napsat vedle té první.
 
 Otevře ho na dvoustraně z dubna. *Proč si byl jistý?*
 
@@ -114,7 +114,7 @@ A pod to, po chvíli, menším písmem:
 
 *Proč by svědkyně ničila vlastní důkaz – a pak to u soudu přiznala?*
 
-Dívá se na to. Je to dobrá otázka. Je to otázka, kterou by položila studentovi, kdyby jí přinesl tenhle spis, a student by na ni odpověděl, že vdova kryla někoho, kdo byl na rubu, a ona by mu řekla, že to je hypotéza a že ji nemá čím doložit, protože rub je pryč. A student by pokrčil rameny a měl by pravdu, že to jinak nejde.
+Dívá se na to. Je to dobrá otázka. Je to otázka, kterou by položila studentovi, kdyby jí přinesl tenhle spis. Student by odpověděl, že vdova kryla někoho, kdo byl na rubu. Ona by mu řekla, že to je hypotéza a že ji nemá čím doložit, protože rub je pryč. A student by pokrčil rameny a měl by pravdu, že to jinak nejde.
 
 Pod to napíše ještě jednu věc. Tu, kterou nechtěla psát vedle té dubnové, a teď ji napíše hned pod ni, na sousední stranu, aby byly vidět obě, když se deník otevře.
 
@@ -126,7 +126,7 @@ Pak sedí a dívá se na dvoustranu, na které jsou teď tři otázky a jedna sv
 
 Vpravo je víc místa. Vždycky bývá.
 
-Napadne ji Šindelářová, jak v dubnu zavírala kodex a pokládala na něj dlaň, a jak řekla *to nenapsal, proto se tomu říká mlčet*. A napadne ji ta druhá žena, jejíž jméno ve spisu nikdo nehledal, protože v matrikách není, a která na rubu pěti listů nenechala ani písmeno, a pak, u soudu, řekla nahlas, že tam něco bylo.
+Napadne ji Šindelářová, jak v dubnu zavírala kodex a pokládala na něj dlaň, a jak řekla *to nenapsal, proto se tomu říká mlčet*. A napadne ji ta druhá žena, jejíž jméno ve spisu nikdo nehledal, protože v matrikách není. Na rubu pěti listů nenechala ani písmeno, a pak u soudu řekla nahlas, že tam něco bylo.
 
 Mohla mlčet. Mohla říct, že to tak našla. Nikdo by se nedozvěděl, že rub nebyl vždycky prázdný.
 
@@ -146,8 +146,8 @@ Hana se k nim nakloní. Kupecká ruka, sloupce, krejcary. Nic, co by nevěděla.
 
 Na tom tenkém místě, kde je papír skoro průhledný, kde britva přitlačila nejvíc, nebylo na líci nic zvláštního. Jen obyčejný řádek o lázni.
 
-Pak ji napadne, že to tenké místo není tam, kde byl líc. Je tam, kde byl rub. Že tam někdo přitlačil, protože tam bylo něco, co muselo zmizet nejvíc.
+Pak ji napadne, že to tenké místo nesouvisí s lícem. Souvisí s rubem. Že tam někdo přitlačil, protože tam bylo něco, co muselo zmizet nejvíc.
 
-Hana si to nezapíše. Je to dohad, a dohady se píšou doprava.
+Hana si to nezapíše vlevo. Je to dohad, a dohady se píšou doprava.
 
-Dá si ho tam. Bez otazníku. Pak se na to podívá a otazník připíše.
+Napíše ho tam. Bez otazníku. Pak se na to podívá a otazník připíše.

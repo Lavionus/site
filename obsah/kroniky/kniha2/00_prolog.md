@@ -12,7 +12,7 @@ Hana se na poslední větu dívá dlouho. Pak zavře tabulku výdajů, aniž by 
 
 *
 
-Sken má dvaašedesát stran. Papír, ne pergamen, s vodoznakem, který se ve skeneru propsal jako šedý stín kance nebo psa, Šindelářová v regestu píše *nejspíš medvěd*. Písmo je německá kurziva a Hana z ní přečte tak každé desáté slovo, a to jen tehdy, když je napsané pečlivěji než ostatní: *Berggericht*, *Sanct Joachimsthal*, *Anno 1595*. Ruka je úřední, rychlá, se smyčkami, které vypadají, jako by je písař dělal ze zvyku, ne proto, že by je písmeno potřebovalo.
+Sken má dvaašedesát stran. Papír, ne pergamen, s vodoznakem, který se ve skeneru propsal jako šedý stín kance nebo psa. Šindelářová v regestu píše *nejspíš medvěd*. Písmo je německá kurziva a Hana z ní přečte tak každé desáté slovo, a to jen tehdy, když je napsané pečlivěji než ostatní: *Berggericht*, *Sanct Joachimsthal*, *Anno 1595*. Ruka je úřední, rychlá, se smyčkami, které vypadají, jako by je písař dělal ze zvyku, ne proto, že by je písmeno potřebovalo.
 
 Regest je napsaný česky, úsporně, jak píšou archiváři, kteří vědí, že po nich nikdo nebude číst víc, než musí.
 
@@ -42,7 +42,7 @@ A každá výpověď začíná stejně.
 
 A každá končí stejně. *Víc neřekla.*
 
-Hana čte ty konce jeden po druhém, jak jdou ve skenu za sebou. Jedenáctkrát *víc neřekla*. Jako refrén. Jako by ta žena, kdo to byla, chtěla mít na papíře doloženo, kde svědkyně přestala mluvit a kde by začala ona sama, kdyby začala.
+Hana čte ty konce jeden po druhém, jak jdou ve skenu za sebou. Jedenáctkrát *víc neřekla*. Jako refrén. Jako by ta žena, ať byla kdokoli, chtěla mít na papíře doloženo, kde svědkyně přestala mluvit a kde by začala ona sama, kdyby začala.
 
 Desátá výpověď končí jinak.
 
@@ -54,7 +54,7 @@ Hana zvětší sken. Písmo je stejné, stejně drobné a rovné, jen ten řáde
 
 *Víc jsem nezapsala.* Ne *víc neřekla*. Ta svědkyně mluvila dál, a zapisovatelka přestala psát. A napsala to tam. Mohla to vynechat a nikdo by se to nedozvěděl. Napsala to tam.
 
-Hana sedí nad tím a čaj jí stydne. Myslí na sedm křížků *a me*, ode mne, na dvoustraně v kodexu, který jí v dubnu Šindelářová zavřela před nosem do krabice z nekyselé lepenky. Myslí na slovo *tacui*. Pak se za to na sebe trochu zlobí, protože tohle je jiný člověk, jiné století, jiná věc, a člověk, který v každém pečlivém písaři vidí toho jednoho, kterého si oblíbil, je člověk, který píše romány. Tak to jí řekl starý pán s dýmkou.
+Hana sedí nad tím a čaj jí stydne. Myslí na sedm křížků *a me*, ode mne, na dvoustraně v kodexu, který jí v dubnu Šindelářová zavřela před nosem do krabice z nekyselé lepenky. Myslí na slovo *tacui*. Pak se za to na sebe trochu zlobí. Tohle je jiný člověk, jiné století, jiná věc. A kdo v každém pečlivém písaři vidí toho jednoho, kterého si oblíbil, ten píše romány. Tak to jí řekl starý pán s dýmkou.
 
 *
 
@@ -88,7 +88,7 @@ Odpověď přijde ráno v sedm dvanáct, jako by Šindelářová na e-mail čeka
 
 *Vdova Ilona: nic. Kolega prošel matriky, co jsou digitalizované, a nic. Cizinka, nejspíš. „Ilona“ tam nikdo nejmenuje dítě. UV: zkusím se zeptat, ale originál není u nás. Perkmistr Wehrl je v jiných fondech, horní úředník, nic zvláštního, jeden z mnoha. Proč vás zajímá desátá výpověď?*
 
-Hana na to neodpoví. Neví, jak by to napsala, aby to neznělo jako něco, co by se ve slušném e-mailu nemělo psát. Že ji zajímá, proč žena, která jedenáctkrát dokládá, kde svědkyně přestala mluvit, jednou doloží, kde přestala psát ona. A proč si to nechala ve spisu, ke kterému byla připojena jako cizí ruka. Jako by někomu, kdo to bude číst po ní, chtěla říct: tady něco chybí, a chybí to, protože jsem to tak chtěla.
+Hana na to neodpoví. Neví, jak by to napsala, aby to neznělo jako něco, co by se ve slušném e-mailu nemělo psát. Že ji zajímá, proč žena, která jedenáctkrát dokládá, kde svědkyně přestala mluvit, jednou doloží, kde přestala psát ona. A proč to nechala ve spisu, ke kterému byla připojena jako cizí ruka. Jako by někomu, kdo to bude číst po ní, chtěla říct: tady něco chybí, a chybí to, protože jsem to tak chtěla.
 
 Sken si uloží do složky, kterou si v dubnu založila a pojmenovala jen *Mlýnec*, protože tehdy nevěděla, jak jinak. Teď tam leží dva soubory. Kodex a spis. Pár desítek kilometrů a čtyři sta let od sebe, napadne ji, a pak si uvědomí, že tu vzdálenost jen odhaduje. Otevře mapu. Odhadla ji dobře.
 

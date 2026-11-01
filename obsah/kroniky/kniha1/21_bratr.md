@@ -20,13 +20,13 @@ Udalrich se pokřižoval. Pomalu, celou dlaní, jak se křižují staří sedlá
 
 Šel dva dny.
 
-Bylo teplo. Poprvé od podzimu. Na lukách kvetly blatouchy a v lese u cesty se rozvíjely buky, tak zeleně, že se na ně skoro nedalo dívat. Ptáci zpívali i u kyselky u břízy, kde je v únoru Udalrich ukázal a kde nezpívali, a Matěj se tam zastavil a poslouchal a nevěděl, jestli se mýlil Udalrich, nebo jestli se mýlí ptáci. Nebo jestli se jen změnil vítr.
+Bylo teplo. Poprvé od podzimu. Na lukách kvetly blatouchy a v lese u cesty se rozvíjely buky, tak zeleně, že se na ně skoro nedalo dívat. Ptáci zpívali i u kyselky u břízy, kterou mu v únoru ukázal Udalrich a kde tehdy nezpívali, a Matěj se tam zastavil a poslouchal a nevěděl, jestli se mýlil Udalrich, nebo jestli se mýlí ptáci. Nebo jestli se jen změnil vítr.
 
 Spal u kostela v jedné vsi a podruhé pod stodolou, protože kostel byl zamčený. Nikdo se ho na nic neptal. Mnich na cestě, s mošnou, roztrhaný na koleni. Mnichů chodí po cestách dost.
 
 V sobotu večer viděl Waldsassen.
 
-Zeď. Věž kostela. Kouř z kuchyně nad refektářem. Stál na kopci nad údolím a díval se na to, a myslel na to, jak se díval z okna skriptoria na Hromnice, když přijel Rüdiger na unaveném koni, s mezkem a s truhlou. Na to, jak tenkrát dýchal na prsty. Bylo mu sedmadvacet a měl dobrou ruku a dobré oči a věděl o obojím.
+Zeď. Věž kostela. Kouř z kuchyně nad refektářem. Stál na kopci nad údolím a díval se na to. Myslel na to, jak se na Hromnice díval z okna skriptoria, když přijel Rüdiger na unaveném koni, s mezkem a s truhlou. Na to, jak tenkrát dýchal na prsty. Bylo mu sedmadvacet a měl dobrou ruku a dobré oči a věděl o obojím.
 
 Pořád mu bylo sedmadvacet.
 
@@ -72,7 +72,7 @@ Matěj nerozuměl. Pak rozuměl. Pak ne.
 
 „Já vím,“ řekl převor.
 
-Bylo dlouho ticho. Za oknem, které tady nebylo zakryté měchýřem, ale mělo sklo, malé, kalné, se stmívalo.
+Bylo dlouho ticho. Za oknem se stmívalo. Tady nebylo zakryté měchýřem, ale mělo sklo, malé a kalné.
 
 „Byl jsem dnes u opata,“ řekl převor. „Je na tom hůř. Ale slyší. Řekl jsem mu všechno.“ Odmlčel se. „Souhlasí.“
 
@@ -92,7 +92,7 @@ K vigiliím vstal sám. Nikdo ho nebudil, jak převor řekl. Šel do kostela s o
 
 *Domine, labia mea aperies.* Pane, otevři mé rty.
 
-Pak ve skriptoriu, po primě, když měl čas do kapituly, sedl ke svému pultu. Na pultu ležel list s opisem svatého Bernarda, jak ho nechal v únoru. Jedenáct řádků, a pak nic. Inkoust v kalamáři byl zaschlý.
+Pak si ve skriptoriu, po primě, když měl čas do kapituly, sedl ke svému pultu. Na pultu ležel list s opisem svatého Bernarda, jak ho nechal v únoru. Jedenáct řádků, a pak nic. Inkoust v kalamáři byl zaschlý.
 
 Wigandův pult vedle byl prázdný. Někdo ho umyl.
 
@@ -104,7 +104,7 @@ Kapitulní síň byla chladná, jako vždycky. Kamenné lavice podél stěn, bra
 
 *De his qui saepius correpti emendari noluerint.*
 
-O těch, kdo ani po častém napomínání nechtějí se napravit.
+O těch, kdo ani po častém napomínání se nechtějí napravit.
 
 Hartmann ji četl a hlas se mu třásl. Matěj ji znal zpaměti. Všichni ji znali. Napomenutí. Vyloučení od stolu. Metla. Modlitba bratří. A když ani to nepomůže:
 
@@ -166,7 +166,7 @@ Matěj sklonil hlavu.
 
 Ve vestiáři byla truhla.
 
-Bratr vestiář ji otevřel a vytáhl ranec, svázaný řemenem, se jménem na proužku pergamenu, který byl přivázaný k uzlu. Matěj to jméno poznal. *Mathias de Mlinez.* Psal to opat, při obláčce, a jednou t, protože opat byl Bavor a nevěděl, jak se to píše.
+Bratr vestiář ji otevřel a vytáhl ranec, svázaný řemenem, se jménem na proužku pergamenu, který byl přivázaný k uzlu. Matěj to jméno poznal. *Mathias de Mlinez.* Psal to opat, při obláčce, s jedním t, protože opat byl Bavor a nevěděl, jak se to píše.
 
 Šest let ten ranec ležel v truhle. Tak to stojí v Řeholi, v osmapadesáté kapitole. Šaty, ve kterých novic přijde, se uloží ve vestiáři, aby je dostal zpátky, kdyby jednou odešel, nebo ho vyhnali. Aby odcházel v tom, v čem přišel.
 
@@ -176,11 +176,11 @@ Košile. Kabátec z hnědého sukna, se záplatou na lokti. Kalhoty. Onuce, ztvr
 
 Všechno to vonělo truhlou. Pelyňkem, který dávali mezi šaty proti molům, a prachem.
 
-Svlékl hábit. Bratr vestiář ho vzal, složil, a dal ho stranou. Pak škapulíř. Pak kápi. Pak stál v ochozu vestiáře v košili, v klášterní košili, a ta se svlékala taky, a pak stál chvíli nahý, a bylo mu zima, a bratr vestiář se díval jinam.
+Svlékl hábit. Bratr vestiář ho vzal, složil, a dal ho stranou. Pak škapulíř. Pak kápi. Pak stál v ochozu vestiáře v košili, v klášterní košili, a tu svlékl taky, a pak stál chvíli nahý, a bylo mu zima, a bratr vestiář se díval jinam.
 
-Oblékl si svou košili. Byla mu volná. V jednadvaceti byl širší, a teď ne, šest let postů a vigilií. Kabátec visel. Záplata na lokti byla z jiného sukna, tmavší, a byla přišitá velkými stehy, nakřivo.
+Oblékl si svou košili. Byla mu volná. V jednadvaceti byl širší; teď, po šesti letech postů a vigilií, už ne. Kabátec visel. Záplata na lokti byla z jiného sukna, tmavší, a byla přišitá velkými stehy, nakřivo.
 
-Matka ji přišila. Den před tím, než odešel. U ohně, a on seděl vedle ní a díval se, jak šije, a ona řekla, že do kláštera nemůže jít s dírou na lokti, co by si o nich pomysleli.
+Matka ji přišila. Den předtím, než odešel. U ohně, a on seděl vedle ní a díval se, jak šije, a ona řekla, že do kláštera nemůže jít s dírou na lokti, co by si o nich pomysleli.
 
 Matěj stál ve vestiáři a díval se na ty stehy.
 
@@ -190,7 +190,7 @@ Převor čekal u brány.
 
 Sám. Fortnýř stál opodál, u své komůrky, a díval se jinam, jako se díval bratr vestiář. Převor držel v jedné ruce mošnu a v druhé něco dlouhého, zabaleného v plátně.
 
-Podal mu mošnu. Matěj ji vzal a cítil, co v ní je, podle tíhy, jak se pozná podle tíhy kost. Tabulka. Kámen. Váček. Měchýř. Svíce. Augustin ne. Augustin patřil klášteru.
+Podal mu mošnu. Matěj ji vzal a podle tíhy poznal, co v ní je, tak jako se podle tíhy pozná kost. Tabulka. Kámen. Váček. Měchýř. Svíce. Augustin ne. Augustin patřil klášteru.
 
 A sešitek.
 
@@ -216,7 +216,7 @@ Matěj nic neřekl.
 
 Převor udělal kříž. Nad ním, ne na čele. Jako se žehná poutníkovi, kterého člověk nezná.
 
-„Jdi s Bohem,“ řekl. A pak, po chvíli, tím svým bavorským přízvukem, který neuměl české jméno vyslovit, protože ho nikdy nevyslovoval: „Mateji.“
+„Jdi s Bohem,“ řekl. A pak, po chvíli, s tím svým bavorským přízvukem, protože české jméno nikdy nevyslovoval a neuměl ho vyslovit: „Mateji.“
 
 Bylo to špatně. Ta hláska, kterou Němci neumějí, mu zněla jako *s*. Matěj to slyšel a neopravil ho.
 
@@ -310,7 +310,7 @@ Matěj mohl říct, že to nebyl on, kdo zavřel důl, ale muž z Chebu. Že to 
 
 Neřekl nic.
 
-Ješek se na něj díval. Čekal. Matěj to viděl v jeho tváři, že čeká, že bratr něco řekne, cokoli, a že by mu to pomohlo, i kdyby to byla výmluva. Že by se pak mohli pohádat, jako se hádali v boudě, a pak by to bylo za nimi.
+Ješek se na něj díval. Čekal. Matěj mu viděl na tváři, že čeká, až bratr něco řekne, cokoli, a že by mu to pomohlo, i kdyby to byla výmluva. Že by se pak mohli pohádat, jako se hádali v boudě, a pak by to bylo za nimi.
 
 Matěj mlčel.
 

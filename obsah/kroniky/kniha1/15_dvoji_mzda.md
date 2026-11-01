@@ -12,7 +12,7 @@ Dvě party. Ješek se upsal do obou.
 
 *
 
-Vyšel, až když se slunce sklonilo nad hřbetem. Nebylo to dlouho, Matěj čekal na kraji paseky a modlil se nešpory, sám, polohlasně, protože k nim na grangii nestihl. Ješek si ho všiml až u strouhy. Klekl si k ní a strčil do vody celou hlavu a dlouho ji tam držel, a když se narovnal, voda mu tekla po krku pod košili a on se netřásl. Ta voda byla vlažná.
+Vyšel, až když se slunce sklonilo nad hřbetem. Nebylo to dlouho, Matěj čekal na kraji paseky a modlil se nešpory, sám, polohlasně, protože k nim na grangii nestihl. Ješek si ho všiml až u strouhy. Klekl si k ní, strčil do vody celou hlavu a dlouho ji tam držel. Když se narovnal, voda mu tekla po krku pod košili a on se netřásl. Ta voda byla vlažná.
 
 „Ty spíš kdy?“ zeptal se Matěj.
 
@@ -22,7 +22,7 @@ Vyšel, až když se slunce sklonilo nad hřbetem. Nebylo to dlouho, Matěj ček
 
 „Ve dne i v noci.“ Ješek se na něj nepodíval. „Dvojí mzda za jednu partu, Mates. Za dvě dvojí dvakrát. Do neděle mám na celý pole. Do neděle, chápeš? Ne do Martina. Do neděle.“
 
-Matěj si sedl vedle něj na kámen u strouhy. Ruce měl studené. Ješkovy, které ležely vedle jeho na kameni, byly rudé a nateklé, s klouby rozedřenými do masa, a pod nehty měly šedou hlínu, kterou už žádná voda nevymyje.
+Matěj si sedl vedle něj na kámen u strouhy. Ruce měl studené. Ješkovy ruce vedle nich na kameni byly rudé a nateklé, s klouby rozedřenými do masa, a pod nehty měly šedou hlínu, kterou už žádná voda nevymyje.
 
 „Převor přijel,“ řekl Matěj.
 
@@ -72,7 +72,7 @@ Pak vešel dovnitř.
 
 Ve vsi u matky seděl Kojata.
 
-Matěj ho uviděl, už když otevřel dveře. Seděl na lavici u stolu, kde sedával otec, široký, s rukama na kolenou a s čepicí v rukou, a matka stála u pece a míchala v hrnci, i když v hrnci nebylo co míchat. Když Matěj vešel, Kojata vstal. To ho překvapilo. Kojata před ním nikdy nevstával.
+Matěj ho uviděl, už když otevřel dveře. Seděl na lavici u stolu, kde sedával otec, široký, s rukama na kolenou a s čepicí v rukou. Matka stála u pece a míchala v hrnci, i když v hrnci nebylo co míchat. Když Matěj vešel, Kojata vstal. To ho překvapilo. Kojata před ním nikdy nevstával.
 
 „Bratře,“ řekl Kojata. Ne Matěji. *Bratře*, jak se říká mnichovi.
 
@@ -104,7 +104,7 @@ Matěj si sedl na lavici, kde seděl Kojata. Byla ještě teplá.
 
 „Co?“
 
-Nevěděl, co chtěl říct. Že štola půjde do vody. Řekl jí to už jednou, a ona se zeptala, jestli je to tak zlé, a on řekl *nevím*. Teď věděl víc. Věděl, kolik vody teče z pukliny. Věděl, kolikrát za směnu se vypouští hrázka. Věděl, že na kůži, kterou mu Merin ukázal na jeden Otčenáš, leží mezi koncem štoly a vlnovkami kus, který je kratší než dvacet kroků. A nevěděl nic, co by mohl říct nahlas.
+Nevěděl, co chtěl říct. Že štola půjde do vody. Řekl jí to už jednou, a ona se zeptala, jestli je to tak zlé, a on řekl *nevím*. Teď věděl víc. Věděl, kolik vody teče z pukliny. Věděl, kolikrát za směnu se vypouští hrázka. Věděl, že na kůži, kterou mu Merin ukázal na jeden Otčenáš, zbývá mezi koncem štoly a vlnovkami necelých dvacet kroků. A nevěděl nic, co by mohl říct nahlas.
 
 „Vy máte ještě ten měchýř?“ zeptal se. „Z prasete. Co z něj Ješek dělal míč.“
 
@@ -114,7 +114,7 @@ Matka se otočila. Dívala se na něj, jako by se zbláznil.
 
 „Potřebuju ho.“
 
-Chvíli stála. Pak bez slova přistavila ke stěně stoličku, vylezla na ni a sáhla do tmy pod střechou, mezi trámy, kde visela kýta, svazky česneku a pytlík se semenem, a vytáhla odtud něco šedého a vrásčitého, velkého jako dvě pěsti. Ztvrdlý prasečí měchýř, nafouknutý a zavázaný provázkem, jak ho dělávali pro děti po zabijačce. Byl prašný a voněl kouřem.
+Chvíli stála. Pak bez slova přistavila ke stěně stoličku, vylezla na ni a sáhla do tmy pod střechou, mezi trámy, kde visela kýta, svazky česneku a pytlík se semenem. Vytáhla odtud něco šedého a vrásčitého, velkého jako dvě pěsti. Ztvrdlý prasečí měchýř, nafouknutý a zavázaný provázkem, jak ho dělávali pro děti po zabijačce. Byl prašný a voněl kouřem.
 
 „Ještě z táty,“ řekla. „Ze zabijačky, poslední, co dělal. Ješek ho nechtěl vyhodit.“
 
@@ -172,7 +172,7 @@ Druhý pokus trval déle.
 
 Matěj měchýř nafoukl. Nejdřív to nešlo. Byl ztvrdlý a nechtěl se roztáhnout, a Matěj do něj foukal tak dlouho, až se mu zatmělo před očima, a pak to povolilo a měchýř se zakulatil. Pomyslel si, že teď je v něm jeho vlastní dech. Ten dech, který mu tenkrát na dně doupěte ani nestačil. Pak měchýř obrátil a zmáčkl. Nad svíčkou. Plamen se ohnul a hořel. Jeho vlastní dech svíci neuhasil.
 
-Potom ho zase spustil dolů. Tentokrát ho nechal dole déle. Deset Otčenášů. Dvanáct. Slunce už bylo nad hřbetem a mlha začala řídnout a Matěj se modlil a myslel na to, že za chvíli se zvedne vítr a hladina se rozlije, a všechno bude zbytečné.
+Potom ho zase spustil dolů. Tentokrát ho nechal dole déle. Deset Otčenášů. Dvanáct. Slunce už bylo nad hřbetem a mlha začala řídnout. Matěj se modlil a myslel na to, že se za chvíli zvedne vítr, hladina se rozlije a všechno bude zbytečné.
 
 Když měchýř vytahoval, udělal to jinak. Ne rychle. Tyč zvedal tak pomalu, jako by na ní visel kahan s plamenem, který nesmí zhasnout. A těsně pod okrajem, kde ještě byla hladina, se natáhl, nechal tyč klesnout na kraj a vzal měchýř do ruky. Trubičkou nahoru. Zastrčil do ní špunt. Až pak se narovnal.
 
@@ -206,7 +206,7 @@ Dobroslava si odfrkla. Pak natáhla ruku, vzala mu měchýř a přičichla k tru
 
 „Kněz tam bude,“ řekl Matěj. „A uvidí to.“
 
-Dobroslava se na něj dlouho dívala. Nezeptala se, co tím myslí. Nezeptala se, jestli se rozhodl. Možná to věděla líp než on. Matěj to nevěděl. Klečel na okraji doupěte se zhaslou svíčkou a s prasečím měchýřem, ve kterém si Ješek kdysi kopal míč po dvoře, a věděl jen, že to jde. Že se to dá ukázat. Že to, co ho v únoru srazilo k zemi a co mu zabilo psa, se dá nalít na svíci před očima celé vsi, a svíce zhasne, a nikdo nebude muset věřit ani jemu, ani převorovi, ani drakovi.
+Dobroslava se na něj dlouho dívala. Nezeptala se, co tím myslí. Nezeptala se, jestli se rozhodl. Možná to věděla líp než on. Matěj to nevěděl. Klečel na okraji doupěte se zhaslou svíčkou a s prasečím měchýřem, který Ješek kdysi kopal po dvoře jako míč, a věděl jen, že to jde. Že se to dá ukázat. Že to, co ho v únoru srazilo k zemi a co mu zabilo psa, se dá nalít na svíci před očima celé vsi, a svíce zhasne, a nikdo nebude muset věřit ani jemu, ani převorovi, ani drakovi.
 
 Co s tím udělá, to nevěděl.
 
@@ -220,7 +220,7 @@ Matěj se podíval. Svah nad nimi byl porostlý buky a mezi nimi, výš, se táh
 
 „Tam dýchají,“ řekla Dobroslava.
 
-Matěj stál a díval se. Vzpomněl si na teplo, které na něj v únoru dýchlo, když ho vedli se zavázanýma očima, náhlé, jako když se otevřou dveře do pece. Na teplou stěnu, ke které Ostra přikládala dlaň. Na děti. Na smích v chodbě.
+Matěj stál a díval se. Vzpomněl si na teplo, které na něj v únoru dýchlo, když ho vedli se zavázanýma očima. Náhlé, jako když se otevřou dveře do pece. Na teplou stěnu, ke které Ostra přikládala dlaň. Na děti. Na smích v chodbě.
 
 „Každé studené ráno,“ řekla Dobroslava. „Dvacet let. V zimě, když mrzne, je to vidět až od mé chalupy. Lidi ze vsi si myslí, že tam pálí uhlí. Nebo že tam drak dýchá.“ Pokrčila rameny. „Já jsem nikdy nechodila blíž.“
 
@@ -234,11 +234,11 @@ Dobroslava neodpověděla hned. Šla dál po pasece a teprve za několik kroků,
 
 Ve čtvrtek v noci šel Matěj do boudy.
 
-Nebylo to rozhodnutí. Nespal a nemohl se modlit a vědro by se do rána nepřelilo jinak, ať by se modlil sebevíc. Udalrich ho viděl vycházet. Tentokrát s lucernou do vrat nestál. Převor spal v jeho komoře, a lucerna zůstala viset na háku.
+Nebylo to rozhodnutí. Nespal a nemohl se modlit a vědro by se do rána nepřelilo jinak, ať by se modlil sebevíc. Udalrich ho viděl vycházet. Tentokrát s lucernou do vrat nestál. Převor spal v jeho komoře a lucerna zůstala viset na háku.
 
 V boudě to páchlo mokrými kápěmi, potem a kouřem. Pod stropem visel jeden kahan a pod ním na zemi, na pytlích a na senu, leželi muži denní party a spali tak tvrdě, jako by je někdo pobil. Hensel seděl venku u ohně. Když Matěj přišel, ukázal palcem do boudy, dovnitř, do kouta.
 
-Ješek ležel u stěny, na boku, s koleny u brady, jako spávají děti. Ještě v mokrých šatech. Matěj si k němu sedl na zem a díval se na něj. Nechtěl ho budit. Seděl tam a díval se, jak spí, a slyšel, jak mu v hrudi chrčí ten kašel, který měl už v únoru a který mu nepřešel, a myslel na to, že za dvě hodiny ho Hensel vzbudí a on vstane a půjde zase dovnitř.
+Ješek ležel u stěny, na boku, s koleny u brady, jako spávají děti. Ještě v mokrých šatech. Matěj si k němu sedl na zem a díval se na něj. Nechtěl ho budit. Seděl tam a díval se, jak spí. Slyšel, jak mu v hrudi chrčí ten kašel, který měl už v únoru a který mu nepřešel. Myslel na to, že za dvě hodiny ho Hensel vzbudí a on vstane a půjde zase dovnitř.
 
 Ješek otevřel oči. Nehýbal se. Jen se díval.
 
@@ -272,7 +272,7 @@ Matěj mlčel.
 
 „Umřeš tam.“
 
-Řekl to nahlas, víc nahlas, než chtěl, a jeden z mužů na seně se převalil a zamručel. Ješek se ani nepohnul.
+Řekl to nahlas, hlasitěji, než chtěl, a jeden z mužů na seně se převalil a zamručel. Ješek se ani nepohnul.
 
 „Tak mi to dokaž,“ řekl tiše.
 
@@ -312,7 +312,7 @@ Matěj nad ním stál a voda mu tekla přes prsty. Od pondělí o prosbu dřív.
 
 Zapsal to. Rydlo se mu zastavilo nad voskem. Pod tím, co napsal, ležely řádky z předchozích dnů, pečlivé, drobné, jedna prosba pod druhou, *sed libera nos*, *et dimitte nobis*, *panem nostrum*, a teď tohle. Řádek po řádku Otčenáš pozpátku. Jako by se hora modlila k začátku.
 
-Napsal pod to, menším písmem, jak psal jen věci, které se za sebe styděl:
+Napsal pod to, menším písmem, jak psal jen věci, za které se styděl:
 
 *In die illa ero in monte.*
 

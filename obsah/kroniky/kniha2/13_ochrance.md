@@ -8,7 +8,7 @@ Dívala se na to a myslela na Wehrlovo psaníčko. *Slyšel jsem.*
 
 Kdyby věděl, co ví lékárník, řekl by to jinak, napadlo ji. Nebo by to řekl právě takhle.
 
-Vzala knihu do ruky. Nechtěla ji otevřít, a otevřela ji, na pravé stránce, na středě, která byla poslední. *W.* Dvě čáry dolů a dvě nahoru. Pět bodů, kdyby je někdo spojil, pět hvězd na kouli v pracovně, Královna na trůnu hlavou dolů. Röhrich psal *W* rychle, s kličkou na prostředním hrotu, jako by to písmeno psal častěji než jiná.
+Vzala knihu do ruky. Nechtěla ji otevřít, a otevřela ji. Na pravé stránce, u středy, která byla poslední. *W.* Dvě čáry dolů a dvě nahoru. Pět bodů, kdyby je někdo spojil, pět hvězd na kouli v pracovně, Královna na trůnu hlavou dolů. Röhrich psal *W* rychle, s kličkou na prostředním hrotu, jako by to písmeno psal častěji než jiná.
 
 Zavřela knihu. Položila ji zpátky, výpověď na ni, pytel přes to. Do prachu na kraji kolébky přibyla druhá stopa, vedle první, a Ilona ji nechala být. Kdo by sem lezl, ten by věděl i bez stop.
 
@@ -26,9 +26,9 @@ Otevřela stará služka, ta hluchá, a podívala se na Ilonu, jako se dívala v
 
 *
 
-Na střechu se šlo po schodech, které byly čím dál užší, a nakonec po žebříku, a Ilona lezla s brašnou přes rameno a s rukou, která ještě nesnesla, aby se jí za ni člověk táhl. Nahoře byl poklop a za ním pavlač. Dřevěná, zastřešená jen do půlky, ohrazená zábradlím, mezi dvěma komíny, a nad ní nebe.
+Na střechu se šlo po schodech, které byly čím dál užší, a nakonec po žebříku. Ilona lezla s brašnou přes rameno a s rukou, za kterou se ještě nemohla vytahovat. Nahoře byl poklop a za ním pavlač. Dřevěná, zastřešená jen do půlky, ohrazená zábradlím, mezi dvěma komíny, a nad ní nebe.
 
-Takové nebe Ilona v Jáchymově ještě neviděla. Z ulice byl vidět pruh. Odtud bylo vidět všechno: údolí dolů k ústí, kde se ztrácelo v šedé, a nahoru k hřebenům, a haldy, jedna za druhou, šedé a holé, a nad nimi temná čára lesa. Na západě nad Klínovcem ještě světlo, žluté a zelené, jako má modřina, která se hojí. Na východě už modrá a v ní první hvězda, sama.
+Takové nebe Ilona v Jáchymově ještě neviděla. Z ulice byl vidět pruh. Odtud bylo vidět všechno: údolí dolů k ústí, kde se ztrácelo v šedé, a nahoru k hřebenům, a haldy, jedna za druhou, šedé a holé, a nad nimi temná čára lesa. Na západě nad Klínovcem ještě světlo, žluté a zelené, jaké má modřina, která se hojí. Na východě už modrá a v ní první hvězda, sama.
 
 Wehrl seděl na stoličce u zábradlí v plášti s kožešinou, i když byl červen, a na kolenou měl dřevěnou hůl s posuvnou příčkou, dlouhou jako paže. Když ji uslyšel, nevstal. Ilona viděla proč, ještě než promluvil. Ruka, kterou se chtěl opřít o zábradlí, se mu třásla tak, že se o zábradlí neopřel.
 
@@ -82,6 +82,8 @@ A v tom světlém se začaly objevovat hvězdy. Jedna. Tři. Pak tolik, že je I
 
 Wehrl zvedl hůl. Opřel si jeden konec pod oko a posunul příčku, a pak hůl podal Iloně.
 
+![Jakubova hůl](obrazky/13_ochrance.webp)
+
 „Sem,“ řekl. „Pod oko. A dívejte se podél. Nízko, nad hřebenem, na severu. Pět hvězd.“
 
 Ilona se dívala. Dřevo bylo vlažné od jeho ruky a vonělo potem a kovem. Podél hole, nízko nad černým hřebenem, kde se nebe dotýkalo lesa, viděla pět hvězd. Roztažené *W*, jako by ho psala unavená ruka. Ležely skoro na boku, hlavou dolů, jak říkal.
@@ -108,7 +110,7 @@ Wehrl se na ni podíval.
 
 *
 
-Kniha ležela na pavlači pod stoličkou, zabalená do kůže, a Ilona si jí nevšimla, dokud ji Wehrl nezvedl. Nebyla velká. Kvart, v deskách potažených vybledlým zeleným sametem, s kováním, které kdysi bylo zlacené. Wehrl ji držel na kolenou oběma rukama, aby se mu netřásla, a pak ji otevřel na prvním listu a podal jí lucernu, kterou měl u nohou, zakrytou plechem až na úzkou škvíru.
+Kniha ležela na pavlači pod stoličkou, zabalená do kůže, a Ilona si jí nevšimla, dokud ji Wehrl nezvedl. Nebyla velká. Kvart, v deskách potažených vybledlým zeleným sametem, s kováním, které kdysi bylo zlacené. Wehrl ji držel na kolenou oběma rukama, aby se mu netřásla. Pak ji otevřel na prvním listu a podal Iloně lucernu, kterou měl u nohou, zakrytou plechem až na úzkou škvíru.
 
 „Posviťte si. Jen na papír. Ne na nebe.“
 
@@ -120,7 +122,7 @@ Na prvním listu stálo nahoře jedno slovo. Velké, červené, písmem, jaké s
 
 Ilona otočila list. Latina. Písmo humanistické, úhledné, s dlouhými tahy, a ten, kdo ho psal, psal pomalu a dbal na každé písmeno, jako se dbá na věci, které se přepisují z jiných věcí. Na okrajích poznámky jiným inkoustem, hnědším, a jinou rukou, menší, nervóznější. A u některých řádků znaky, kterým nerozuměla. Kruh s tečkou. Kruh s rohy jako měsíc. Kříž pod kruhem.
 
-„To jsou planety,“ řekl Wehrl, který ji sledoval. „Slunce, Merkur, Venuše. Psal je můj děd. Byl to učený muž. Víc než otec. Myslel si, že všechno v té knize se dá vyložit hvězdami a kovy, a dlouho jsem si to myslel taky.“
+„To jsou planety,“ řekl Wehrl, který ji sledoval. „Slunce, Merkur, Venuše. Psal je můj děd. Byl to učený muž. Víc než otec. Myslel si, že se všechno v té knize dá vyložit hvězdami a kovy, a dlouho jsem si to myslel taky.“
 
 „Kdo psal ten text?“
 
@@ -154,7 +156,7 @@ Pod *Quae vidit monachus* bylo málo. Několik řádků. Krátké věty, jedna j
 
 Pod *Quae scio ego* bylo mnoho. List za listem.
 
-A čím dál, tím víc bylo v hlavním textu slov, která na začátku stála na okraji, hnědším inkoustem, nervóznější rukou. Ilona to viděla, protože to byla dcera písaře a protože se tomu za devět let naučila u výpovědí. Na začátku stál kruh s tečkou na okraji, vedle řádku. O pár listů dál stál uvnitř řádku, mezi dvěma slovy, stejným inkoustem jako ta slova, a kdo to neviděl začínat, četl by ho jako část věty.
+A čím dál, tím víc bylo v hlavním textu slov, která na začátku stála na okraji, hnědším inkoustem, nervóznější rukou. Ilona to viděla, protože byla dcera písaře a protože se tomu za devět let naučila u výpovědí. Na začátku stál kruh s tečkou na okraji, vedle řádku. O pár listů dál stál uvnitř řádku, mezi dvěma slovy, stejným inkoustem jako ta slova. Kdo neviděl, jak to začalo, četl by ho jako část věty.
 
 Ten, kdo opisoval, opsal i to, co bylo na okraji. Do textu. A ten po něm už nevěděl, že to tam kdysi nebylo.
 
@@ -166,13 +168,13 @@ Neřekla to.
 
 Wehrl jí to vyprávěl. Ne čtením, zpaměti, a Ilona poznala, že to říká, jak se říkají modlitby, které člověk zná tak dlouho, že už je neslyší.
 
-Před čtyřmi sty lety, v kraji pod Chebem, ve vsi, jejíž jméno se v opisech ztratilo, se otevřela hora. Lidé tam kopali, protože hledali stříbro, a místo stříbra našli pod zemí skálu, která byla teplá. A z té skály vyšlo světlo. Nahoru, skrz kámen, skrz trámy, k nebi. A v tom světle šest lidí, kteří tam byli, viděli nebe, jaké neviděl nikdo předtím. Ne to, které je nad námi. Hlubší. A v něm světla. Devět. A to devět sestupovalo.
+Před čtyřmi sty lety, v kraji pod Chebem, ve vsi, jejíž jméno se v opisech ztratilo, se otevřela hora. Lidé tam kopali, protože hledali stříbro, a místo stříbra našli pod zemí skálu, která byla teplá. A z té skály vyšlo světlo. Nahoru, skrz kámen, skrz trámy, k nebi. A v tom světle šest lidí, kteří tam byli, vidělo nebe, jaké neviděl nikdo předtím. Ne to, které je nad námi. Hlubší. A v něm světla. Devět. A to devět sestupovalo.
 
 „Mnich napsal *cadebant*,“ řekl Wehrl. „Padala. Ale náš předek, ten, kdo tam klečel s ním, věděl, že nepadala. Že šla dolů pomalu, v řadě, jako průvod se svícemi o Hromnicích. *Descendebant.* Sestupovala. A tam dole, kam sestoupila, viděli osadu. Domy v řadách, rovné cesty. A po cestách chodili lidé.“ Odmlčel se. „Lidé, paní Ilono. Jako my. Naši otcové.“
 
 Ilona mlčela.
 
-„Bible neříká, kde byl ráj,“ řekl Wehrl. „Neříká to. Hledali ho u Eufratu, v Indii, v Etiopii. A ten muž, můj předek, který neuměl číst, si to v té tmě pod horou spočítal sám. Že ráj byl nahoře. Mezi těmi světly. A že ti první z něj nepadli. Že sestoupili. A že žili dlouho, jako patriarchové, Metuzalém devět set šedesát devět let, Noe devět set padesát, a teprve když se jejich krev mísila s krví ostatních, s krví hlíny, život se zkrátil. Na sedmdesát let. Na osmdesát, když jsme silní.“
+„Bible neříká, kde byl ráj,“ řekl Wehrl. „Neříká to. Hledali ho u Eufratu, v Indii, v Etiopii. A ten muž, můj předek, který neuměl číst, si to v té tmě pod horou spočítal sám. Že ráj byl nahoře. Mezi těmi světly. A že ti první z něj nepadli. Že sestoupili. A že žili dlouho, jako patriarchové, Metuzalém devět set šedesát devět let, Noe devět set padesát, a teprve když se jejich krev mísila s krví ostatních, s krví hlíny, se život zkrátil. Na sedmdesát let. Na osmdesát, když jsme silní.“
 
 Dívala se na něj, jak to říká. Nemluvil jako kazatel. Mluvil jako lékař, který líčí nemoc, kterou sám má.
 
@@ -196,7 +198,7 @@ Nebe nad nimi tmavlo, ale ne do černa. Kasiopeja stála nízko nad hřebenem, a
 
 „Zavřela oči.“ Wehrl to řekl tiše. „Otec říkal, že to bylo znamení, ne příchod. Jako když se v noci rozsvítí okno v domě na kopci a člověk ví, že tam někdo je, a pak to okno zhasne a člověk ví, že tam někdo je pořád. Jen čeká. Jako my.“
 
-Položil dlaň na nápis na listu, tak jak ji Ilona viděla položit Merin na starý pergamen.
+Položil dlaň na nápis na listu, tak jak Ilona viděla Merin položit dlaň na starý pergamen.
 
 „*Expectans expectavi,*“ řekl. „Znáte to? Čtyřicátý žalm. *Očekávaje očekával jsem Hospodina, a on se ke mně sklonil.* Sklonil se. Můj děd to dal vytesat nad dveře, když dům stavěl. Lidé si myslí, že je to zbožnost. Je to.“ Zvedl ruku z listu. „Jen ne ta, kterou si myslí.“
 
@@ -204,11 +206,11 @@ Položil dlaň na nápis na listu, tak jak ji Ilona viděla položit Merin na st
 
 Ilona otočila list zpátky, k začátku, k *Quae vidit monachus*.
 
-Dívala se na rok. Stál nahoře, v záhlaví, římskými číslicemi, a byl to ten řádek, který byl v celé knize nejméně ozdobný, jako by ho opisovač opsal jen proto, že tam byl.
+Dívala se na rok. Stál nahoře, v záhlaví, římskými číslicemi, a byl to nejméně ozdobný řádek v celé knize, jako by ho opisovač opsal jen proto, že tam byl.
 
 *Anno Domini MCLXXII.*
 
-Ilona se na ta písmena dívala a cítila, jak jí po zádech, pod šátkem a pod košilí, přechází chlad, jaký přichází, když si člověk v noci uvědomí, že v místnosti není sám.
+Ilona se na ta písmena dívala a cítila, jak jí po zádech, pod šátkem a pod košilí, přebíhá chlad. Takový, jaký přijde, když si člověk v noci uvědomí, že v místnosti není sám.
 
 Ten rok už jednou viděla. Před devíti dny, ve skále pod převisem, kde bzučely včely. Na jiném pergamenu, pod jinou dlaní. Malými římskými číslicemi vedle kresby kopce s kruhem a se čtyřiceti jednou čárkou. A u hřbetu, drobně, jedno slovo latinkou, které Merin zakryla rukávem, ale ne dost rychle.
 
@@ -238,7 +240,7 @@ Ilona se na něj dívala.
 
 *Kdo platí každý týden víc, ten ví, za co platí.*
 
-Napsala to sama sobě v noci na neděli, nad černou knihou, při dohořívající svíčce. Teď to slyšela znovu, jeho hlasem, obráceně, a obrácené to znělo stejně pravdivě. Člověk může vědět, za co platí, a přitom nevědět, co dostává. Wehrl věděl, odkud lahvičky jsou. Z hor, od lidí, kteří nesnesou slunce. To věděl. Jestli věděl, že ti lidé platí vlastní krví za lidskou, kterou jim lékárník nosí nahoru v soudku, a že ta lidská teče z paží vdov na horním konci, a jednou z hrdla holky, která šlehala krev březovými proutky, to nevěděla.
+Napsala to sama sobě v noci na neděli, nad černou knihou, při dohořívající svíčce. Teď to slyšela znovu, jeho hlasem, obráceně, a obrácené to znělo stejně pravdivě. Člověk může vědět, za co platí, a přitom nevědět, co dostává. Wehrl věděl, odkud lahvičky jsou. Z hor, od lidí, kteří nesnesou slunce. To věděl. Nevěděla, jestli věděl i to, že ti lidé platí vlastní krví za lidskou. Že tu lidskou jim lékárník nosí nahoru v soudku a že teče z paží vdov na horním konci, a jednou z hrdla holky, která šlehala krev březovými proutky.
 
 Nevěděla. A nezeptá se ho. Protože kdyby se zeptala, musela by říct, odkud to ví ona.
 
@@ -266,7 +268,7 @@ Ilona se dívala na jeho ruku na koleni. Třásla se, i když ji tiskl.
 
 Nevyslovil to. Ani jednou. Ani *kniha*, ani *lékárníkova truhla*, ani *noc na sobotu*. Mluvil o lancetě a o listech z lázně a o tovaryšovi a o tom, co řekne lékárník pod šibenicí. A o knize mlčel tak důkladně, že to mlčení stálo mezi nimi na pavlači jako třetí stolička.
 
-Věděl. Musel vědět. *Slyšel jsem, že jste v noci na sobotu zachránila lékárníkovi život.* Röhrich mu to řekl. Ještě v neděli, nebo v noci, s ovázanou tváří. Řekl mu: *Ta ženská má moji knihu.* A Wehrl teď seděl naproti ní a nabízel jí ochranu za to, aby padl jen Röhrich, a nemusel nic dalšího říkat, protože všechno ostatní se řeklo samo. *Nikoho dalšího.*
+Věděl. Musel vědět. *Slyšel jsem, že jste v noci na sobotu zachránila lékárníkovi život.* Röhrich mu to řekl. Ještě v neděli, nebo v noci, s ovázanou tváří. Řekl mu: *Ta ženská má moji knihu.* A Wehrl teď seděl naproti ní a nabízel jí ochranu za to, aby padl jen Röhrich. Nic dalšího říkat nemusel, protože všechno ostatní se řeklo samo. *Nikoho dalšího.*
 
 Ani W.
 
@@ -284,7 +286,7 @@ Wehrl se nepohnul.
 
 Slyšela se, jak to říká, a slyšela, jak je to prázdné.
 
-Před pěti dny vybrala. Z Markétiných slov. Vybrala studánku a Báru a chleba v plátně, a Markéta se na ni dívala a řekla *To jste mi vzala*, a Ilona řekla *Ano*. A na půdě v kolébce ležela kniha, ze které vybere taky, protože nic jiného dělat nemůže, a vybere jinak, než chce on, a stejně vybere.
+Před pěti dny vybrala. Z Markétiných slov. Vybrala studánku a Báru a chleba v plátně, a Markéta se na ni dívala a řekla *To jste mi vzala*, a Ilona řekla *Ano*. A na půdě v kolébce ležela kniha, ze které bude vybírat taky, protože nic jiného dělat nemůže. Vybere jinak, než chce on, ale stejně vybere.
 
 Wehrl to možná slyšel. Možná ne. Díval se na ni dlouho, a pak se opřel zpátky a zavřel oči.
 
@@ -320,7 +322,7 @@ Wehrl se na ni podíval.
 
 Ilona kývla.
 
-Nevěřila mu. Ne že by lhal. Nevěřila tomu *proč*. Seděla naproti muži, který se celý večer díval na nebe, aby nemusel říct jediné slovo, a teď jí řekl tolik slov, kolik nikdo z rady nikomu neřekl, a všechna byla přesná, a ona nevěděla, komu je ta slova určená. Jí. Nebo tomu, ke komu je odnese.
+Nevěřila mu. Ne že by lhal. Nevěřila tomu *proč*. Seděla naproti muži, který se celý večer díval na nebe, aby nemusel říct jediné slovo. A teď jí řekl tolik slov, kolik nikdo z rady nikomu neřekl, všechna přesná, a ona nevěděla, komu jsou ta slova určená. Jí. Nebo tomu, ke komu je odnese.
 
 Horní štola, řekl. Rovnou k Horní štole.
 
@@ -340,7 +342,7 @@ U portálu jí podal ruku. Studenou. Třesoucí se.
 
 *
 
-Šla domů dolů ulicí a Bartl dva kroky za ní. Nebe nad ulicí bylo zase jen pruh, a ve tom pruhu žádná Kasiopeja, jen dvě tři hvězdy, které nikdo nepojmenoval.
+Šla domů dolů ulicí a Bartl dva kroky za ní. Nebe nad ulicí bylo zase jen pruh, a v tom pruhu žádná Kasiopeja, jen dvě tři hvězdy, které nikdo nepojmenoval.
 
 Doma zamkla, nechala svíčku zhasnutou a sedla si potmě na lavici u pece. Neusnula.
 
@@ -366,7 +368,7 @@ Kilián poslouchal se zavřenýma očima, jak poslouchal Zikmund, a Ilona viděl
 
 „Perkmistr.“
 
-Kilián otevřel oči. Díval se na ni dlouho, a v jeho úzké tváři, šedavé jako klíček brambor ve sklepě, se něco pohnulo, co Ilona neuměla číst, protože u nočních lidí to ještě číst neuměla.
+Kilián otevřel oči. Díval se na ni dlouho. V jeho úzké tváři, šedavé jako klíček brambor ve sklepě, se něco pohnulo, ale Ilona to neuměla přečíst. U nočních lidí to ještě číst neuměla.
 
 „Proč vám to řekl?“
 
@@ -376,7 +378,7 @@ Kilián mlčel.
 
 „Horní štola,“ řekl potom tiše. „Rovnou k Horní štole. Matyáš je tam. A strýc.“
 
-Ilona se na něj podívala. Na tvář, kterou mu spálilo slunce, když ji před Matyášem táhl ze šachtice na světlo.
+Ilona se na něj podívala. Na tvář, kterou mu spálilo slunce, když Ilonu před Matyášem táhl ze šachtice na světlo.
 
 „Chtěli vás prodat městu,“ řekla. „Gottfried to řekl nahlas. Před dětmi.“
 
@@ -394,7 +396,7 @@ A šel. Přes dvůr, přes branku do zahrádky, ze svahu dolů k potoku, a Ilona
 
 Stála ve dveřích, dokud nezačalo šednout.
 
-Pak zapálila svíčku a otevřela sešit, a pravou rukou, pomalu, pod zápis ze druhého června, kde stálo jejím křivým levým písmem *Pan perkmistr kupuje od lékárníka. Nevím, zda ví, co kupuje*, připsala:
+Pak zapálila svíčku a otevřela sešit. Pod zápisem z druhého června stálo křivým písmem její levé ruky *Pan perkmistr kupuje od lékárníka. Nevím, zda ví, co kupuje.* Pravou rukou, pomalu, pod to připsala:
 
 *Ví.*
 

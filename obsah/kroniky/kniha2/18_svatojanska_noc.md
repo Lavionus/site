@@ -2,19 +2,19 @@
 
 Od pondělí do pátku se město chystalo na dvě věci a nikdo je od sebe neodděloval.
 
-Kluci tahali na haldy dříví. Suché větve, staré šindele, prkna z rozbitých necek, smůlu z pařezů, a stavěli z toho hranice na každé haldě, která byla vidět z náměstí, jak se to dělávalo každý rok na svatého Jana. Ilona to znala ze Štiavnice. Oheň na nejdelší den, aby slunce vědělo, že se má vrátit, i když už se otáčí k zimě. Mladší kazatel v pátek ráno kázal, že ohně jsou papežská pověra a že pravý luterán je nechá vyhasnout, a kluci tahali dříví dál, a jejich otcové jim pomáhali.
+Kluci tahali na haldy dříví. Suché větve, staré šindele, prkna z rozbitých necek, smůlu z pařezů. Stavěli z toho hranice na každé haldě, která byla vidět z náměstí, jak se to dělávalo každý rok na svatého Jana. Ilona to znala ze Štiavnice. Oheň na nejdelší den, aby slunce vědělo, že se má vrátit, i když už se otáčí k zimě. Mladší kazatel v pátek ráno kázal, že ohně jsou papežská pověra a že pravý luterán je nechá vyhasnout, a kluci tahali dříví dál, a jejich otcové jim pomáhali.
 
-A muži čistili pochodně. Na dvoře za radnicí se smolily louče a koželuh na horním konci půjčoval kožené kazajky a v pátek v poledne přijel z Lokte vůz se psy. Čtyři, velcí, šedí, s ušima jako hadry, a s nimi psovod, který mluvil jen se psy. Děti za vozem běžely až k radnici.
+A muži čistili pochodně. Na dvoře za radnicí se smolily louče a koželuh na horním konci půjčoval kožené kazajky. V pátek v poledne přijel z Lokte vůz se psy. Čtyři, velcí, šedí, s ušima jako hadry, a s nimi psovod, který mluvil jen se psy. Děti za vozem běžely až k radnici.
 
 Ilona to všechno viděla z okna.
 
-Bartl a Kuba ještě stáli před domem. V pondělí po soudu jí Bartl řekl, že pan perkmistr vzkazuje, že stráž zůstane do soboty. Neřekl, co bude v sobotu. Ilona se nezeptala.
+Bartl a Kuba ještě stáli před domem. V pondělí po soudu jí Bartl vyřídil vzkaz pana perkmistra: stráž zůstane do soboty. Neřekl, co bude v sobotu. Ilona se nezeptala.
 
 *
 
 Röhrichovu ruku otevřel Jobst v pondělí večer. Ilona to věděla od Purgy, která to věděla od Jobstovy ženy. Vyteklo prý toho tolik, že to Jobst chytal do misky. Röhrich nekřičel. Jen se smál, říkala Jobstova žena, celou dobu se smál, a Jobst pak doma řekl, že takového člověka ještě neviděl a už nechce vidět.
 
-V úterý odvezli Röhrichovou s dětmi. Zakrytý vůz, ráno, ještě za šera, směrem na Lipsko nebo na Annaberg, to už Purga nevěděla. Lékárnu U Pelikána zamkli a na dveře přibili prkno křížem. Pelikán ve štítu se dál klovl do prsou a krmil mláďata, protože ho nikdo neumí sundat.
+V úterý odvezli Röhrichovou s dětmi. Zakrytý vůz, ráno, ještě za šera, směrem na Lipsko nebo na Annaberg, to už Purga nevěděla. Lékárnu U Pelikána zamkli a na dveře přibili prkno křížem. Pelikán ve štítu se dál kloval do prsou a krmil mláďata, protože ho nikdo neuměl sundat.
 
 Kdo zaplatil vůz, Purga nevěděla. Ilona se nezeptala ani na to.
 
@@ -22,7 +22,7 @@ Kdo zaplatil vůz, Purga nevěděla. Ilona se nezeptala ani na to.
 
 Ve čtvrtek večer zaklepal Jobst.
 
-Stál na prahu s brašnou pod paží a s červenou tváří, ještě červenější než jindy, a nechtěl jít dál. Bartl na schodě se na něj díval.
+Stál na prahu s brašnou pod paží a s červenou tváří, ještě červenější než jindy, a nechtěl jít dál. Bartl se na něj díval ze schodu.
 
 „Ta ruka,“ řekl Jobst. „Lékárníkova.“
 
@@ -34,17 +34,17 @@ Ilona se na něj dívala.
 
 Před měsícem jí ten člověk lhal do očí o vylévání krve. Před týdnem ji Röhrich držel za ústa a přikládal jí lancetu ke krku. A teď stál na jejím prahu lazebník, který ji chtěl připravit o řemeslo, a ptal se jí, jak zachránit lékárníka, aby ho mohli pověsit.
 
-„Otevřete i podpaží,“ řekla. „Tam, kde je nejměkčí. Ne hluboko, na palec. Pak vymývat vínem, třikrát denně, horkými obklady z odvaru heřmánku, a ruku mít výš než srdce. Na horečku vrbovou kůru. Kdyby začal blouznit, je pozdě.“
+„Otevřete i podpaží,“ řekla. „Tam, kde je nejměkčí. Ne hluboko, na palec. Pak vymývat vínem, třikrát denně, přikládat horké obklady z odvaru heřmánku a ruku mít výš než srdce. Na horečku vrbovou kůru. Kdyby začal blouznit, je pozdě.“
 
 Jobst kývl. Opakoval to po ní, potichu, polohlasem, jak to dělával Tobiáš.
 
 „Paní,“ řekl pak. „Proč mi to říkáte?“
 
-Ilona se zamyslela. Nevěděla, proč. Věděla jen, že ruka s jejími zuby leží někde ve sklepě horního úřadu a hnije, a že ji tam dostala ona, a že kdyby byla na její straně stolu ruka kohokoli jiného, řekla by totéž.
+Ilona se zamyslela. Nevěděla, proč. Věděla jen, že ruka s jejími zuby leží někde ve sklepě horního úřadu a hnije a že ji tam dostala ona. A že kdyby šlo o ruku kohokoli jiného, řekla by totéž.
 
 „Protože jste se zeptal,“ řekla.
 
-Jobst odešel. Bartl na schodě se za ním díval a pak se podíval na ni a nic neřekl.
+Jobst odešel. Bartl se za ním díval ze schodu a pak se podíval na ni a nic neřekl.
 
 *
 
@@ -84,11 +84,11 @@ Pak je uviděla.
 
 První zástup vyšel z horního konce, od koželuha, a šel přes haldy nahoru. Šedá řada lidí na šedé hlušině, jako mravenci na popelu. Napočítala jich přes čtyřicet, pak ji to přestalo bavit, protože pořád přicházeli další. Mezi nimi psi, čtyři tečky, a zvuk, který k ní dolétl přes celé údolí až po chvíli, opožděný, jako hrom za bleskem. Štěkot. Louče nesli nezapálené, na rameni. Bylo světlo. Nebylo jich třeba.
 
-Druhý zástup se objevil o něco později. Z dolního konce, od mostu, kudy Ilona přišla. Menší. Dvacet mužů, možná pětadvacet. Šli proti vodě, podél potoka, nahoru, a na každém místě, kde do potoka ústila rokle, se zastavili a pár jich odbočilo a šlo se podívat a pak se vrátili. Ilona viděla, jak jeden z nich strčil hůl do díry pod kořeny vrby a pak ji vytáhl a podíval se na její konec.
+Druhý zástup se objevil o něco později. Z dolního konce, od mostu, kudy Ilona přišla. Menší. Dvacet mužů, možná pětadvacet. Šli proti vodě, podél potoka, nahoru. Kde do potoka ústila rokle, tam se zastavili, pár jich odbočilo, šlo se podívat a pak se vrátili. Ilona viděla, jak jeden z nich strčil hůl do díry pod kořeny vrby a pak ji vytáhl a podíval se na její konec.
 
 *Mezi dvěma ohni,* řekl Stöckel.
 
-Ilona seděla v trávě u Řehořova hrobu a ruce měla složené v klíně. Neměla s sebou nic. Ani sešit. Nechala ho doma na stole, zavřený, a když vycházela, vrátila se ve dveřích a podívala se na něj, a pak ho tam nechala.
+Ilona seděla v trávě u Řehořova hrobu a ruce měla složené v klíně. Neměla s sebou nic. Ani sešit. Nechala ho doma na stole, zavřený. Když vycházela, ve dveřích se otočila a podívala se na něj, a pak ho tam nechala.
 
 *
 
@@ -100,11 +100,13 @@ Pak kouř.
 
 Bílý, hustý, valil se z portálu nahoru a do strany, kam ho nesl vítr, a nad sedlem se roztáhl jako plachta. Zapálili něco u vchodu. Mokrou slámu, čečinu. Aby to šlo dovnitř.
 
+![Svatojánská noc](obrazky/18_svatojanska_noc.webp)
+
 *Ať je vykouří ven,* řekla Markéta. Seděla tehdy u Ilony u stolu s rukou v hadru a řekla to. A Ilona to tehdy napsala. Celé.
 
 Kouř stoupal a Ilona se dívala a nic necítila. Nebo cítila něco, co nemělo jméno a co si odložila na později, jak se odkládá bolest, když je potřeba ještě chvíli držet ruku pevně.
 
-Kolik jich tam je, napadlo ji. Kilián řekl: Urban se smál. Že mají nahoře přítele. Že znají den a cestu. *Po klekání.* Tak to řekl mezkař a tak to řekl Kilián a oba to věděli od Wehrla a Wehrl to řekl ve středu na střeše, kdy ještě nikdo nevěděl, že ve čtvrtek bude Ilona stát v radní síni a říkat Stöckelovi, co je v jeho domě.
+Kolik jich tam je, napadlo ji. Kilián řekl: Urban se smál. Že mají nahoře přítele. Že znají den a cestu. *Po klekání.* Tak to řekl mezkař a tak to řekl Kilián. Oba to věděli od Wehrla. A Wehrl to řekl ve středu na střeše, kdy ještě nikdo nevěděl, že ve čtvrtek bude Ilona stát v radní síni a říkat Stöckelovi, co je v jeho domě.
 
 Kdo věřil příteli nahoře, čekal na klekání. Kdo nevěřil, odešel. Starými díly na saskou stranu, kudy chodí jen ti, kdo nemusí na slunce. Kilián je varoval. Kilián řekl *víc nemůžu.*
 
@@ -116,7 +118,7 @@ Kdo čekal na klekání, ten seděl ve štole, když přišli psi. A ven se dalo
 
 V šest ze štoly vyšel první.
 
-Ilona ho neviděla vyjít. Viděla jen, jak se půlkruh lidí před portálem pohnul, rozvlnil, jak se do něj něco zapletlo, a pak ostrý, krátký štěkot psa, který neštěká, ale drží. A pak křik. Ne slova. Hlas, vysoký, který k ní přes údolí došel slabý a zkreslený, jako křik z hloubky studny.
+Ilona ho neviděla vyjít. Viděla jen, jak se půlkruh lidí před portálem pohnul a rozvlnil, jak se do něj něco zapletlo. Pak se ozval ostrý, krátký štěkot psa, který neštěká, ale drží. A pak křik. Ne slova. Hlas, vysoký, který k ní přes údolí došel slabý a zkreslený, jako křik z hloubky studny.
 
 Pak druhý. Pak dlouho nic. Pak třetí.
 
@@ -142,7 +144,7 @@ Uvnitř nic nebylo. Ilona to věděla. Ohniště zasypané hlínou. Kozí bobky.
 
 Koza tam nebyla. Kilián ji vzal v sobotu v noci, když hlídka spala.
 
-Nitka kouře stoupala a pak se zlomila a rozplynula a muži vycházeli z olší zpátky k potoku, a šli pomaleji, než šli nahoru, jako chodí lidé, kteří nesli něco těžkého a pak zjistili, že to bylo prázdné.
+Nitka kouře stoupala a pak se zlomila a rozplynula. Muži vycházeli z olší zpátky k potoku a šli pomaleji, než šli nahoru, jako chodí lidé, kteří nesli něco těžkého a pak zjistili, že to bylo prázdné.
 
 *
 
@@ -202,7 +204,7 @@ Markéta vedle ní vstala.
 
 „Půjdu dolů,“ řekla. „Mám doma kozu podojit. Sousedovu. Ta se o svatým Janu nestará.“
 
-Stála chvíli a dívala se na Ilonu. Pak se sehnula a položila Iloně ruku na rameno. Šedou ruku, těžkou. Nechala ji tam, na tolik, kolik trvá jeden nádech. Pak ji vzala a šla, mezi hroby, a zídku zase přelezla.
+Stála chvíli a dívala se na Ilonu. Pak se sehnula a položila Iloně ruku na rameno. Šedou ruku, těžkou. Nechala ji tam tak dlouho, jak trvá jeden nádech. Pak ji vzala a šla, mezi hroby, a zídku zase přelezla.
 
 Ilona za ní neotočila hlavu.
 
@@ -210,7 +212,7 @@ Ilona za ní neotočila hlavu.
 
 Pak se rozhořely ohně.
 
-Nejdřív na nejvyšší haldě nad horním koncem, na té, kde Ilona seděla týden předtím s tovaryši zády k rokli. Pak na druhé. Na třetí. Pak naproti, na kopci nad mincovnou, a pak ještě dál, na hřebeni nad Božím Darem, malý, jako jiskra. A Ilona věděla, že v tu chvíli hoří ohně i na kopcích u Annabergu a u Schneebergu a dál, až do Sas, a že je zapalují stejní kluci se stejnou smůlou z pařezů, jako se to dělalo vždycky, a že nikdo z nich neví, že dnes v noci jeden z těch ohňů hoří na haldě, odkud je vidět do prázdné rokle.
+Nejdřív na nejvyšší haldě nad horním koncem, na té, kde Ilona seděla týden předtím s tovaryši zády k rokli. Pak na druhé. Na třetí. Pak naproti, na kopci nad mincovnou, a pak ještě dál, na hřebeni nad Božím Darem, malý, jako jiskra. A Ilona věděla, že v tu chvíli hoří ohně i na kopcích u Annabergu a u Schneebergu a dál, až do Sas. Že je zapalují stejní kluci se stejnou smůlou z pařezů, jako se to dělalo vždycky. A že nikdo z nich neví, že dnes v noci jeden z těch ohňů hoří na haldě, odkud je vidět do prázdné rokle.
 
 U ohňů se zpívalo. Přes údolí k ní dolétaly kusy písní a smích a jednou výkřik, když nějaký kluk přeskakoval oheň a nepřeskočil.
 
@@ -254,15 +256,15 @@ Veit chvíli čekal. Pak pokrčil rameny, zvedl lucernu a šel dál, dolů, k m�
 
 Ohně dohořívaly.
 
-Jeden po druhém, nejdřív ty vzdálené, na hřebenech, pak ty bližší. Na haldě nad horním koncem hořel nejdéle. Někdo do něj přikládal ještě po druhé hodině, a pak už ne, a pak tam zůstala jen rudá skvrna, jako uhlík, který zapomněli v peci.
+Jeden po druhém, nejdřív ty vzdálené, na hřebenech, pak ty bližší. Ten na haldě nad horním koncem hořel nejdéle. Někdo do něj přikládal ještě po druhé hodině, a pak už ne, a pak tam zůstala jen rudá skvrna, jako uhlík, který zapomněli v peci.
 
 Ilona seděla.
 
-Myslela na to, že tam nahoře, kousek pod sedlem, je díra za závalem, kudy se prolézá po břiše, a že tou dírou dnes v noci, nebo včera, nebo předevčírem, odešli lidé, kteří neměli dost víry v přítele nahoře. Saská strana. Víc vody než vzduchu. Gottfried, vyhublý, s hlasem, který mluvil za ostatní. Žena s dítětem v klíně, které kašlalo. Děti s velkýma očima, tři, čtyři.
+Myslela na to, že tam nahoře, kousek pod sedlem, je díra za závalem, kudy se prolézá po břiše. A že tou dírou dnes v noci, nebo včera, nebo předevčírem, odešli lidé, kteří neměli dost víry v přítele nahoře. Saská strana. Víc vody než vzduchu. Gottfried, vyhublý, s hlasem, který mluvil za ostatní. Žena s dítětem v klíně, které kašlalo. Děti s velkýma očima, tři, čtyři.
 
 Nevěděla, kolik jich odešlo. Nevěděla, kolik jich došlo. Nevěděla, jestli ten na žebříku dýchal.
 
-Věděla jen, kdo zůstal. Ti, kdo věřili, že přijdou po klekání. Protože jim to někdo řekl. Protože někdo nahoře byl přítel a přítel dodržel slovo, a pak přišla ženská a řekla v radní síni rychtářovi, co má doma ve skříni, a rychtář musel někam dát svou hanbu.
+Věděla jen, kdo zůstal. Ti, kdo věřili, že přijdou po klekání. Protože jim to někdo řekl. Protože někdo nahoře byl přítel a přítel dodržel slovo. A pak přišla ženská, řekla v radní síni rychtářovi, co má doma ve skříni, a rychtář musel někam dát svou hanbu.
 
 Nedala jim čas. Vzala jim ho. Těm v rokli tím dala útěk a těmhle vzala čas, a byla to tatáž věta, řečená jednou, v poledne, v síni s otevřenými okny.
 
@@ -270,9 +272,9 @@ Nedala jim čas. Vzala jim ho. Těm v rokli tím dala útěk a těmhle vzala ča
 
 Za svítání sešla ze hřbitova.
 
-Byla ztuhlá a tráva byla mokrá a sukni měla promočenou až ke kolenům. Na mostě potkala dva tovaryše, opilé, kteří se opírali jeden o druhého a zpívali, a jeden z nich ji poznal a řekl *upíří* a druhý ho strčil, ať je zticha, a pak se oba smáli.
+Byla ztuhlá a tráva byla mokrá a sukni měla promočenou až ke kolenům. Na mostě potkala dva opilé tovaryše, kteří se opírali jeden o druhého a zpívali. Jeden z nich ji poznal a řekl *upíří* a druhý ho strčil, ať je zticha, a pak se oba smáli.
 
-Doma u dveří stál Bartl. Seděl na schodě, kde sedával celé tři týdny, s loučí v ruce, ohořelou, a když ji uviděl, vstal.
+Doma u dveří čekal Bartl. Seděl na schodě, kde sedával celé tři týdny, s loučí v ruce, ohořelou, a když ji uviděl, vstal.
 
 „Kde jste byla?“
 

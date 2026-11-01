@@ -24,7 +24,7 @@ Po půlnoci klepání. Ze dvora.
 
 Tři rány.
 
-Ilona vstala tak rychle, že si narazila koleno o lavici. Kilián. Za hřebenem. Zikmund to vydržel. Šla potmě, kolem stolu a kolem truhly, a ruka sama nahmatala závoru a odsunula ji, a teprve když ji odsunula, když se dveře začaly otvírat, uslyšela v hlavě to, co neuslyšela ušima.
+Ilona vstala tak rychle, že si narazila koleno o lavici. Kilián. Za hřebenem. Zikmund to vydržel. Šla potmě kolem stolu a kolem truhly a ruka sama nahmatala závoru a odsunula ji. Teprve když se dveře začaly otvírat, uslyšela v hlavě to, co neuslyšela ušima.
 
 Pauzu. A druhé tři rány.
 
@@ -34,7 +34,7 @@ Nebyly tam.
 
 Dveře se otevřely dovnitř, rychleji, než je otvírala ona, a do nich vešla tma, velká, a voněla hřebíčkem.
 
-Ilona couvla. Nestihla vykřiknout. Ruka, velká a teplá, jí přitiskla ústa i nos, a druhá ruka ji chytila za zápěstí, tu levou, a obě ruce ji natlačily zpátky, přes světnici, až narazila kříži na hranu stolu a lázeňské listy pod ní zašustily a sjely na zem.
+Ilona couvla. Nestihla vykřiknout. Ruka, velká a teplá, jí přitiskla ústa i nos, a druhá ruka ji chytila za zápěstí, tu levou, a obě ruce ji natlačily zpátky, přes světnici, až narazila kříži na hranu stolu. Lázeňské listy pod ní zašustily a sjely na zem.
 
 Hřebíček. Myrha. A pod tím, blízko, v dechu, který jí foukal do tváře, ještě něco. Nasládlý pach rány, která se hojí. Rány v ústech, vlevo dole vzadu, kde chybí předposlední zub.
 
@@ -62,7 +62,7 @@ Röhrich se zasmál, tiše, nosem.
 
 A pak, v té tmě, ucítila na krku chlad.
 
-Ne nůž. Menší. Úzký, ostrý, studený jako ranní voda, položený plochou pod levé ucho, pod čelist, tam, kde pod kůží tluče tepna, kterou Řehoř ukazoval učedníkům, aby se jí vyhýbali, a kterou Ilona za devět let nahmatala na tisíci krcích.
+Ne nůž. Menší. Úzký, ostrý, studený jako ranní voda, položený plochou pod levé ucho, pod čelist. Tam, kde pod kůží tluče tepna, kterou Řehoř ukazoval učedníkům, aby se jí vyhýbali. Ilona ji za devět let nahmatala na tisíci krcích.
 
 Lanceta.
 
@@ -88,7 +88,7 @@ Vykřikla. Ne slovo. Hlas. Celý, odspodu, jak křičí rodičky, když už nemy
 
 „*Bartle!*“
 
-Röhrich ji udeřil. Pěstí, krvavou, do spánku, a světnice se převrátila a pec jí vyjela proti rameni, a Ilona ležela na zemi mezi lavicí a pecí a slyšela, jak venku před domem něco spadlo a někdo zaklel a někdo buší pěstí do okenice.
+Röhrich ji udeřil. Pěstí, krvavou, do spánku, a světnice se převrátila a pec jí vyjela proti rameni. Ilona ležela na zemi mezi lavicí a pecí a slyšela, jak venku před domem něco spadlo, někdo zaklel a někdo buší pěstí do okenice.
 
 A slyšela kroky. Těžké, rychlé, zadními dveřmi ven, přes dvůr. Branka. Svah. Potok, a ve vodě něco, co klopýtlo a zvedlo se a šlo dál.
 
@@ -100,17 +100,17 @@ Otevřela mu ze země. Doplazila se ke dveřím a zvedla závoru a dveře se roz
 
 „Zadem,“ řekla Ilona. „K potoku.“
 
-Bartl běžel. Kuba zůstal, protože Ilona ho chytila za nohavici.
+Bartl běžel. Kuba zůstal, protože ho Ilona chytila za nohavici.
 
 „Světlo,“ řekla. „Sem. A podej mi zrcátko. Na polici nad truhlou. Kulaté, v kůži.“
 
-Kuba jí ho podal. Řehořovo, které si vozil z Lipska, aby viděl lidem do krku. Ilona si sedla na zem zády k peci a přidržela si zrcátko před tváří a Kuba nad ni zvedl lucernu.
+Kuba jí ho podal. Řehořovo, které si přivezl z Lipska, aby viděl lidem do krku. Ilona si sedla na zem zády k peci a přidržela si zrcátko před tváří a Kuba nad ni zvedl lucernu.
 
 Řez byl pod levým uchem. Šikmý, dolů k bradě, dlouhý jako článek prstu. Krev tekla, ale netryskala. Tmavá. Ilona přiložila dva prsty na kůži nad řezem a pod ním a nahmatala tep. Byl tam. Silný, rychlý, šílený. Na šířku nehtu od řezu.
 
 Nehet.
 
-Seděla na zemi a dívala se do zrcátka na tu vzdálenost. Na šířku nehtu. Kdyby nekousla, nebo kdyby kousla o chvilku později, kdyby se jeho ruka škubla o nehet víc doprava, seděla by teď na zemi a krev by netekla, ale stříkala, do rytmu toho šíleného tepu, a za tolik, kolik trvá pomodlit se Otčenáš, by tu ležela bílá do žluta, jako Ursula.
+Seděla na zemi a dívala se do zrcátka na tu vzdálenost. Na šířku nehtu. Kdyby nekousla, nebo kdyby kousla o chvilku později, kdyby se jeho ruka škubla o nehet víc doprava, seděla by teď na zemi a krev by netekla, ale stříkala do rytmu toho šíleného tepu. Než by se člověk pomodlil Otčenáš, ležela by tu bílá do žluta jako Ursula.
 
 „Paní,“ řekl Kuba. Hlas měl tenký. „Paní, vy krvácíte.“
 
@@ -150,7 +150,7 @@ Bartl se na ni díval.
 
 Wehrl přišel, když už bylo světlo.
 
-Nešel sám. Podpíral ho Hesse, s rukou pod jeho paží, a Wehrl se opíral o hůl a na každém kroku z ulice do světnice se zastavil, a na prahu se zastavil nejdéle a díval se.
+Nešel sám. Podpíral ho Hesse, s rukou pod jeho paží, a Wehrl se opíral o hůl a cestou z ulice do světnice se zastavoval na každém kroku. Na prahu se zastavil nejdéle a díval se.
 
 Na krev na podlaze. Na rozházené listy. Na ni, sedící na lavici u pece s plátnem kolem krku.
 
@@ -262,7 +262,7 @@ Kilián se díval na plátno. Pak na ni.
 
 Ilona se opřela o zárubeň.
 
-„Já vím, že jste ji viděla,“ řekl Kilián. „Ze haldy. Orta vás viděla, jak se díváte.“
+„Já vím, že jste ji viděla,“ řekl Kilián. „Z haldy. Orta vás viděla, jak se díváte.“
 
 *
 
@@ -290,7 +290,7 @@ A šel. Tentokrát tiše. Navždy, pomyslela si Ilona, a nevěděla, jestli má 
 
 Po desáté zatopila v peci.
 
-Bartl se podíval do dveří, když z komína šel kouř, a Ilona mu řekla, že vyvařuje plátno na zítřek, na soud, kdyby tam někomu bylo zle, a Bartl kývl a zavřel dveře a ona slyšela, jak si venku sedá na schod.
+Když z komína šel kouř, Bartl se podíval do dveří. Ilona mu řekla, že vyvařuje plátno na zítřek, na soud, kdyby tam někomu bylo zle. Bartl kývl a zavřel dveře a ona slyšela, jak si venku sedá na schod.
 
 Postavila na plotnu hrnec s vodou a hodila do něj plátno, aby to byla pravda.
 
@@ -310,7 +310,7 @@ Pak otevřela knihu od začátku a četla ji celou. Naposledy.
 
 Od svatého Martina. *Bad. Oben.* Čísla, která rostla. *Leipzig. Freiberg.* Jobst. *Kolbin*, misku za miskou, od Hromnic do Velikonoc, čtyři krejcary, osm. *Mont. 15. Mai. Kolbin – 3.* Mincmistrova žena. Dva předáci. Mladý konšel s prstenem na malíčku. *Stöckelin – Spiritus, 3 Gläser.* Jiné vdovy z horního konce. *Die lange Gret*, do dubna, a pak nic. *U. – will mehr.*
 
-Četla to, jak čte výpověď, když ji svědkovi čte zpátky. Pomalu. Každé slovo. Aby to slyšela jednou celé, než z toho zůstane jen to, co vybere.
+Četla to, jako když svědkovi čte jeho výpověď zpátky. Pomalu. Každé slovo. Aby to slyšela jednou celé, než z toho zůstane jen to, co vybere.
 
 A pravé stránky. Středy. Jeden řádek za druhým, od Hromnic, Röhrichovým hustým kupeckým písmem, jak šel mezek nahoru a vracel se dolů. *Oben. Dagegen XX Gläser, gesiegelt. Z.: Salz. Graupen. Geiß 2. Erlengrund, hinter den Halden. 40 Mäuler. Wald, durch Z.: Leinen. Nadeln.*
 
@@ -324,7 +324,7 @@ Pak vybírala.
 
 Šest listů. Věděla to od pondělí, kdy si to poprvé spočítala nad prázdnou kolébkou, a od středy, kdy držela mezi prsty list s *frisch* a obrátila ho.
 
-První list: lázeň od svatého Martina do Hromnic. *Bad* a *Oben*, kolik přišlo, kolik šlo nahoru. A peníze Jobstovi, dva krejcary za misku, a za destilaci, a za prášek, a malé částky do Lipska, které se nedaly srovnat s tím, co šlo nahoru. Kdo by to položil vedle jejích lázeňských listů, viděl by, že z lékárny vyjde krve desetina toho, co do ní vteče.
+První list: lázeň od svatého Martina do Hromnic. *Bad* a *Oben*, kolik přišlo, kolik šlo nahoru. A peníze Jobstovi, dva krejcary za misku, a za destilaci, a za prášek, a malé částky do Lipska, které se nedaly srovnat s tím, co šlo nahoru. Kdo by to položil vedle jejích lázeňských listů, viděl by, že z lékárny vyjde jen desetina krve, která do ní vteče.
 
 Druhý list: lázeň od Hromnic do Velikonoc. Totéž, víc.
 
@@ -376,9 +376,9 @@ A když neodpoví, řekne Wehrl, že vdova škrábala lékárníkovu knihu. Že 
 
 A když odpoví, bude to jako v síni u rady. Zase bude držet cizí papír a dávat najevo, že ho drží.
 
-A Röhrich, ve sklepě horního úřadu, s rukou, na které má její zuby. Až se ho zeptají, co bylo v té díře, a on uvidí, že *W.* sedí u stolu a nehne pro něj prstem, řekne to. Ne kvůli pravdě. Kvůli odkladu o den. *Z. je starý z olšové rokle. Čtyřicet úst. A les.* A díra se zaplní. Jeho hlasem. A stane se tím, čím by byla kniha, jen horší, protože z úst odsouzeného, kterému soud najednou bude chtít věřit.
+A Röhrich, ve sklepě horního úřadu, s rukou, na které má její zuby. Až se ho zeptají, co bylo v té díře, a on uvidí, že *W.* sedí u stolu a nehne pro něj prstem, řekne to. Ne kvůli pravdě. Kvůli odkladu o den. *Z. je starý z olšové rokle. Čtyřicet úst. A les.* A díra se zaplní. Jeho hlasem. A díra se stane tím, čím by byla kniha, jen horší, protože to přijde z úst odsouzeného, kterému bude soud najednou chtít věřit.
 
-Díra se čte víc než cokoli jiného. Věděla to od pátého dne, od Kunzovy truhly, kde ležela přeškrtnutá, ale čitelná věta. Věděla to od Markétina stolu, kde vynechávala bez mezery, aby nebylo vidět, že tam něco bývalo. Kde je díra, tam se lidé dívají. A díra tvaru *Erlengrund* uprostřed řádku, který začíná soudkem a končí perkmistrem, by byla to nejčtenější místo v celém spisu.
+Díra se čte víc než cokoli jiného. Věděla to od pátého dne, od Kunzovy truhly, kde ležela přeškrtnutá, ale čitelná věta. Věděla to od Markétina stolu, kde vynechávala bez mezery, aby nebylo vidět, že tam něco bývalo. Kde je díra, tam se lidé dívají. A díra tvaru *Erlengrund* uprostřed řádku, který začíná soudkem a končí perkmistrem, by byla nejčtenějším místem v celém spisu.
 
 A ještě něco. To poslední, co si přiznala, a přiznala si to až s britvou v ruce.
 
@@ -392,7 +392,7 @@ Tady by vybrala z Röhrichových řádků to, co se hodí jí. Polovinu řádku.
 
 Vzala britvu.
 
-Začala odspoda. Od poslední středy na pátém listu, od *Merc. 7. Jun.*, protože odspoda se škrábe líp, ruka nezavadí o to, co už je hotové. Britvu držela šikmo, skoro naplocho, jak ji otec učil škrábat chyby ze smluv, když jí bylo deset a on ještě věřil, že se z ní stane písař. Ne řezat. Hladit. Odebírat papír po vlásku, inkoust s ním.
+Začala odspodu. Od poslední středy na pátém listu, od *Merc. 7. Jun.*, protože odspodu se škrábe líp a ruka nezavadí o to, co už je hotové. Britvu držela šikmo, skoro naplocho, jak ji otec učil škrábat chyby ze smluv, když jí bylo deset a on ještě věřil, že se z ní stane písař. Ne řezat. Hladit. Odebírat papír po vlásku, inkoust s ním.
 
 *Merc. 7. Jun.* Zmizelo.
 
@@ -428,7 +428,7 @@ Pak další řádek. *Merc. 31. Mai.*
 
 Trvalo to do dvou.
 
-Pět stránek. Každá od shora dolů, všechny řádky, každé slovo, i to, které nikomu nic neříkalo, i data, i *Oben*, i *Dagegen*. Všechno. Protože kdyby nechala jen data, bylo by vidět, kde začínaly řádky, a kdo by uměl počítat, spočítal by středy.
+Pět stránek. Každá shora dolů, všechny řádky, každé slovo, i to, které nikomu nic neříkalo, i data, i *Oben*, i *Dagegen*. Všechno. Protože kdyby nechala jen data, bylo by vidět, kde začínaly řádky, a kdo by uměl počítat, spočítal by středy.
 
 Pak vzala pemzu a přejela každou stránku, lehce, jako se přejíždí kůže kolem rány. A pak kostěné hladítko, otcovo, a uhladila papír, aby se dal položit na stůl a aby se neroztřepil, až na něj někdo sáhne.
 
@@ -436,7 +436,7 @@ Na každém z pěti listů byla teď jedna strana psaná, drobně a hustě, Röh
 
 Ilona je položila na Kunzův list, psanou stranou nahoru, hranu na hranu. Šest.
 
-Nikdo nebude vědět, co tam stálo. Ani ona to za rok nebude vědět přesně. Za deset let si nevzpomene, kolik soli šlo kterou středu do *Erlengrund* a jestli to byla jedna koza, nebo dvě. Bude si pamatovat jen to *W.* s kličkou. A to nedokáže nic, protože to bude jen v její hlavě, a hlava není papír.
+Nikdo nebude vědět, co tam stálo. Ani ona to za rok nebude vědět přesně. Za deset let si nevzpomene, kolik soli šlo kterou středu do *Erlengrund* a jestli to byla jedna koza, nebo dvě. Bude si pamatovat jen to *W.* s kličkou. A to nebude nic dokazovat, protože to bude jen v její hlavě, a hlava není papír.
 
 Tobiáš to řekl. *Budu vědět, kde je ta díra. Já ji nenajdu. Ale budu vědět, že tam je.*
 
@@ -446,7 +446,7 @@ Najde ji, pomyslela si. Na rubu pěti listů. Šedou a drsnou. Uvidí ji a bude 
 
 Pak zbytek knihy.
 
-Vytrhla těch pět listů, kde ještě drželo vlákno, opatrně, aby se neroztrhly. Kniha bez nich byla tenčí. Ne o moc. Ilona ji zvážila v ruce, jako ji vážila tu noc u Röhricha, a byla menší a lehčí, a ten pocit byl stejný. Věci, o které se člověk dlouho bojí, se zmenšují.
+Vytrhla těch pět listů, kde ještě drželo vlákno, opatrně, aby se neroztrhly. Kniha bez nich byla tenčí. Ne o moc. Ilona ji zvážila v ruce, jako ji vážila tu noc u Röhricha, a byla menší a lehčí, a ten pocit byl stejný. Věci, kterých se člověk dlouho bojí, se zmenšují.
 
 Otevřela dvířka pece.
 
@@ -460,7 +460,7 @@ Mincmistrova žena. Dva předáci. Mladý konšel. *Stöckelin.*
 
 Další.
 
-*Die lange Gret.* Ilona se na to jméno dívala, když ho strkala do ohně, a pomyslela si, že teď už nikdy nezjistí, jestli Gret žije, protože jediné místo, kde stálo, že přestala v dubnu, bylo tady. Nikdo se po ní nebude ptát. Ani ona.
+*Die lange Gret.* Ilona se na to jméno dívala, když list strkala do ohně, a pomyslela si, že teď už nikdy nezjistí, jestli Gret žije, protože jediné místo, kde stálo, že přestala v dubnu, bylo tady. Nikdo se po ní nebude ptát. Ani ona.
 
 Další. *U. – will mehr.*
 
@@ -518,7 +518,7 @@ A dala ho do ohně.
 
 *
 
-Hořel dlouho. Saský papír je tlustý. Chytil od rohu a pak se rozevřel, jak se v žáru narovnával, a Ilona viděla poslední řádek, *Víc neřekla*, jak zčernal víc než ostatní, jak se na okamžik zvedl, jako by ho někdo zvedl k oknu proti světlu, a pak zbělel.
+Hořel dlouho. Saský papír je tlustý. Chytil od rohu a pak se v žáru narovnal a rozevřel. Ilona viděla poslední řádek, *Víc neřekla*, jak zčernal víc než ostatní a na okamžik se zvedl, jako by ho někdo zvedl k oknu proti světlu. Pak zbělel.
 
 Pak už nic.
 
@@ -528,7 +528,7 @@ Seděla před otevřenou pecí, dokud z papíru nezbyl jen šedý list popela, k
 
 Kolem čtvrté přestala hořet i kůže z desek a v peci zbyly jen uhlíky a popel. Ilona ho prohrábla pohrabáčem. Nic. Ani písmeno.
 
-Umyla si ruce ve vědru u dveří. Voda zešedla. Ilona se dívala na své ruce ve vodě, šedé od popela až k zápěstí, a viděla Markétiny ruce, šedé od rudného prachu až po lokty, jak si je myla ve vědru, když Ilona vešla, a jak se jí v tom prachu slzy dělaly cestičky.
+Umyla si ruce ve vědru u dveří. Voda zešedla. Ilona se dívala na své ruce ve vodě, šedé od popela až k zápěstí, a viděla Markétiny ruce, šedé od rudného prachu až po lokty, jak si je myla ve vědru, když Ilona vešla, a jak jí v tom prachu slzy dělaly cestičky.
 
 Vytáhla ruce z vody a utřela si je do zástěry.
 
@@ -540,9 +540,9 @@ Pod *Čtvrtek, na svatého Víta*, pod kterým nic nestálo, napsala pravou ruko
 
 *V noci na pondělí jsem spálila knihu lékárníka Kašpara Röhricha. Šest listů jsem z ní vytrhla a dám je soudu. Z pěti jsem seškrábala, co bylo na rubu. S knihou jsem spálila i výpověď Markéty Hauptové, celou.*
 
-Dívala se na ty věty. Byly to všechny pravda.
+Dívala se na ty věty. Všechny byly pravda.
 
-A chyběla v nich jedna. Ta, kterou mohla napsat jen ona a která by tady, v jejím sešitu, ležela jako jediná, a to proto, že nic jiného na světě by o ní nevědělo. *S rubem pěti listů jsem seškrábala i to, co dokazovalo, že pan perkmistr ví, co kupuje.*
+A chyběla v nich jedna. Ta, kterou mohla napsat jen ona a která by tady, v jejím sešitu, zůstala jediná, protože nic jiného na světě by už o tom nevědělo. *S rubem pěti listů jsem seškrábala i to, co dokazovalo, že pan perkmistr ví, co kupuje.*
 
 Nenapsala ji. Sešit se dá najít. Sešit se dá přečíst. Sešit má dvě strany.
 

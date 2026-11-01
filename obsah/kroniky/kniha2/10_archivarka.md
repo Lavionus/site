@@ -4,9 +4,9 @@ V neděli horečka povolila a rána začala téct.
 
 Ilona to brala jako dobrou zprávu, protože to byla dobrá zpráva. Hnis byl hustý a světlý a nepáchl, a otok, který v noci sahal až k rameni, ustoupil k lokti. Tři dny, říkal Řehoř. Byl to třetí den. Ruka se rozhodla, že se bude hojit, jen jí to bude trvat a bude to bolet.
 
-Do kostela nešla. Zvony od svatého Jáchyma bily přes střechy a ona seděla u okna s rukou na polštáři a slyšela je, jak se ozývají od hald, zpožděně, jako by hory odpovídaly pozdě a neochotně. Po kázání šli lidé kolem jejích dveří dolů k náměstí a mluvili nahlas. Mladší kazatel prý dnes kázal o Sedmi spáčích, kteří spali v jeskyni dvě stě let a když vyšli, nikdo je nepoznal. *A tak i ti, kdo se skrývají v horách*, řekl prý, *nejsou lidé našeho času.* Purga Sternová to opakovala sousedce a sousedka řekla: „Dvě stě let. Kdo by to vydržel.“
+Do kostela nešla. Zvony od svatého Jáchyma bily přes střechy a ona seděla u okna s rukou na polštáři a slyšela je, jak se ozývají od hald, zpožděně, jako by hory odpovídaly pozdě a neochotně. Po kázání šli lidé kolem jejích dveří dolů k náměstí a mluvili nahlas. Mladší kazatel prý dnes kázal o Sedmi spáčích, kteří spali v jeskyni dvě stě let, a když vyšli, nikdo je nepoznal. *A tak i ti, kdo se skrývají v horách*, řekl prý, *nejsou lidé našeho času.* Purga Sternová to opakovala sousedce a sousedka řekla: „Dvě stě let. Kdo by to vydržel.“
 
-Odpoledne šla kolem Markéta. Nahoru, ne dolů. V ruce uzlík v bílém plátně a krok rychlý, jako by někam pozdě. Ilona ji viděla z okna. Markéta se nepodívala ani na dveře, ani na okno. Šla k bukům nad tím údolím, jako chodila každou neděli, co je sníh pryč.
+Odpoledne šla kolem Markéta. Nahoru, ne dolů. V ruce uzlík v bílém plátně a krok rychlý, jako by někam nestíhala. Ilona ji viděla z okna. Markéta se nepodívala ani na dveře, ani na okno. Šla k bukům nad tím údolím, jako chodila každou neděli, co je sníh pryč.
 
 Ilona se za ní dívala, dokud nezmizela za koželuhem. Pak se podívala na svou ruku a pomyslela si, že plátno bude zase složené. Na čtyřikrát. A že ona neví o nic víc než minulou neděli.
 
@@ -14,7 +14,7 @@ Ilona se za ní dívala, dokud nezmizela za koželuhem. Pak se podívala na svou
 
 Kilián zaklepal krátce před půlnocí. Tři rány, pauza, tři rány.
 
-Když otevřela, nepoznala ho. Přes obličej měl uvázaný šátek jako zloději na obrázcích v kalendáři, a když ho v kuchyni stáhl, viděla proč. Čelo, nos a horní polovina tváře byly pokryté strupy. Tenkými, žlutohnědými, jako kůra na pečeném chlebu, a mezi nimi kůže, která se loupala. Na lícní kosti odřenina, kterou měl už ve čtvrtek ráno na kraji lesa, se zanítila a otekla.
+Když otevřela, nepoznala ho. Přes obličej měl uvázaný šátek jako zloději na obrázcích v kalendáři, a když ho v kuchyni stáhl, viděla proč. Čelo, nos a horní polovina tváře byly pokryté strupy. Tenkými, žlutohnědými, jako kůra na pečeném chlebu, a mezi nimi kůže, která se loupala. Odřenina na lícní kosti, kterou měl už ve čtvrtek ráno na kraji lesa, se zanítila a otekla.
 
 „Sedněte si,“ řekla.
 
@@ -76,11 +76,11 @@ Otočila se.
 
 Stála na druhé straně studánky, na kraji měsíčního světla, a byla vysoká.
 
-Vysoká jako dveře, napadlo Ilonu dřív, než stihla myslet. Kiliána, který se musel sklánět pod překladem, by převyšovala o půl hlavy. Štíhlá, v plášti šedém a hladkém, jaký Ilona nikdy neviděla, ani v Lipsku na trhu, šedém do zelena jako kůra buků kolem. Kápi měla staženou. Vlasy světlé, dlouhé, spletené do jednoho copu přes rameno, a v tom světle nebylo poznat, jestli jsou bílé od lnu, nebo od stáří. Obličej bledý. Ne šedavý jako Kiliánův, jako klíčky brambor ve sklepě. Bílý. Hladký. Jako mouka, jako vápno na stěně kostela.
+Vysoká jako dveře, napadlo Ilonu dřív, než stihla myslet. Kiliána, který se musel sklánět pod překladem, by převyšovala o půl hlavy. Štíhlá, v šedém hladkém plášti, šedém do zelena jako kůra buků kolem. Takový Ilona nikdy neviděla, ani v Lipsku na trhu. Kápi měla staženou. Vlasy světlé, dlouhé, spletené do jednoho copu přes rameno, a v tom světle nebylo poznat, jestli jsou světlé jako len, nebo bílé stářím. Obličej bledý. Ne šedavý jako Kiliánův, jako klíčky brambor ve sklepě. Bílý. Hladký. Jako mouka, jako vápno na stěně kostela.
 
 A oči. Když pohnula hlavou, zachytily měsíc a vrátily ho, zelenavě, jako oči kočky ve tmě stodoly.
 
-Ilona stála a nehýbala se. Myslela na Báru Seidlovou, kterou nikdy neviděla. Myslela na slova, která zapsala do posledního slova, a Markéta je dvakrát opravila. *Bílá v obličeji jako mouka.*
+Ilona stála a nehýbala se. Myslela na Báru Seidlovou, kterou nikdy neviděla. Myslela na slova, která zapsala do posledního slova a která Markéta dvakrát opravila. *Bílá v obličeji jako mouka.*
 
 „Neutíkejte,“ řekla ta žena. Česky. Ale divnou češtinou, opatrnou, se slovy, jaká Ilona slýchala jen od starého faráře, když četl z bible po otcích. „Jste ranhojička Ilona. Vdova po Řehořovi. Která píše.“
 
@@ -92,21 +92,23 @@ Ilona stála a nehýbala se. Myslela na Báru Seidlovou, kterou nikdy neviděla.
 
 *
 
-Šly do kopce asi hodinu. Merin šla napřed a Ilona za ní, a Ilona si všimla, že Merin jde pomalu, kvůli ní, a že se jí nikdy nepodívá na nohy, a přesto pokaždé, když Ilona zakopla o kořen, se zastaví, dřív než Ilona zakopne podruhé. Les byl starý. Buky jako sloupy, hladké, šedé, a mezi nimi skoro nic, jen loňské listí, které šustilo pod Iloninýma nohama a pod Merininýma ne.
+Šly do kopce asi hodinu. Merin šla napřed a Ilona za ní. Všimla si, že Merin jde pomalu, kvůli ní. Nikdy se jí nepodívala na nohy, a přesto se pokaždé, když Ilona zakopla o kořen, zastavila dřív, než Ilona zakopla podruhé. Les byl starý. Buky jako sloupy, hladké, šedé, a mezi nimi skoro nic, jen loňské listí, které šustilo pod Iloninýma nohama a pod Merininýma ne.
 
 Došly ke skále. Vyčnívala ze svahu jako příď lodi, porostlá mechem a borůvčím, a pod ní, pod převisem, byla tma tmavší než les. Před tou tmou stály na kamenech tři nebo čtyři kmeny, vyhloubené a přikryté prkénky, a z nich se ozývalo tiché bzučení, jako když spí včely.
+
+![Skála s převisem](obrazky/10_archivarka.webp)
 
 „Úly,“ řekla Ilona.
 
 „Ano.“
 
-Pod převisem byly dveře. Prkenné, bukové, zasazené do skály tak pečlivě, že je Ilona uviděla, až když je Merin otevřela. Za nimi byla místnost. Malá, suchá, vysekaná do skály, a vonělo to v ní voskem a suchou kůží a kouřem z bukového dřeva, a ještě něčím, co Ilona znala z písárny ve Štiavnici, kde se v truhlách skladovaly staré listiny. Pergamen. Prach, který není špína.
+Pod převisem byly dveře. Prkenné, bukové, zasazené do skály tak pečlivě, že je Ilona uviděla, až když je Merin otevřela. Za nimi byla místnost. Malá, suchá, vysekaná do skály. Vonělo to v ní voskem, suchou kůží a kouřem z bukového dřeva a ještě něčím, co Ilona znala z písárny ve Štiavnici, kde se v truhlách skladovaly staré listiny. Pergamen. Prach, který není špína.
 
 Merin rozsvítila lampu. Voskovou, ne olejovou, a světlo bylo žluté a teplé a nekouřilo.
 
 Ilona se rozhlédla. Po stěnách police vytesané do skály. Na policích svitky, svázané koženými řemínky. Truhly, tři, okované. Na zemi kožešina. A uprostřed stůl, těžký, z jednoho kusu dřeva, a na stole otevřená kniha.
 
-Velká. Větší, než jaké měl horní úřad. Desky z bukového dřeva potažené tmavou kůží, a listy, které Ilona viděla z boku, nebyly všechny stejné: některé bílé, některé žluté, některé tak tmavé, že vypadaly jako spálené. Vedle knihy kalamář, otevřený, a pero, a sypátko s pískem. Na otevřené stránce leskl inkoust. Čerstvý.
+Velká. Větší, než jaké měl horní úřad. Desky z bukového dřeva potažené tmavou kůží, a listy, které Ilona viděla z boku, nebyly všechny stejné: některé bílé, některé žluté, některé tak tmavé, že vypadaly jako spálené. Vedle knihy kalamář, otevřený, a pero, a sypátko s pískem. Na otevřené stránce se leskl inkoust. Čerstvý.
 
 Merin se podívala na knihu a pak na Ilonu.
 
@@ -114,7 +116,7 @@ Merin se podívala na knihu a pak na Ilonu.
 
 *
 
-Posadila se na lavici u zdi, daleko od stolu. Merin si klekla před ni a Ilona jí dovolila rozvázat obvaz, protože si ho jednou rukou sama převázat nedokázala dobře a protože Merin to dělala opatrně, jako člověk, který to dělal už mnohokrát.
+Posadila se na lavici u zdi, daleko od stolu. Merin si klekla před ni a Ilona jí dovolila rozvázat obvaz, protože jednou rukou se sama dobře převázat nedokázala, a protože to Merin dělala opatrně, jako člověk, který to dělal už mnohokrát.
 
 Ruce měla dlouhé a úzké, chladné. Na prostředníku pravé ruky, na boku prvního článku, tvrdý mozol, nažloutlý, s prohlubní uprostřed. Ilona ho viděla tak blízko, že se nemohla nedívat. Takový mozol měl otec. Takový měl Kunz. Takový měla ona sama, na pravé ruce, a teď ho neměla jak používat.
 
@@ -238,7 +240,7 @@ Merin se nepodívala na knihu. Nebo se podívala, a Ilona to neviděla.
 
 „Řekněte mi,“ řekla Ilona, když dopila, „proč bych vám měla věřit, že je převedete. Čtyřicet lidí. Dvacet dětí, které nikdy nebyly v lese. Přes hřeben, v noci.“
 
-Merin se na ni podívala a pak, poprvé, se trochu usmála. Nebyl to úsměv. Byl to jen pohyb v koutku úst, který se rozhodl, že nebude.
+Merin se na ni podívala a pak, poprvé, se trochu usmála. Nebyl to úsměv. Byl to jen pohyb v koutku úst, který se rozhodl, že úsměvem nebude.
 
 „Protože jsme to už dělali,“ řekla.
 
@@ -280,9 +282,9 @@ Podívala se znovu na ten znak na starém pergamenu. Byla to písařka, dcera p�
 
 Ruka stárne, řekla si Ilona. Za čtyři sta let se ruka změní. Za čtyři sta let by se změnilo všechno.
 
-Nevěřila tomu. A nevěřila ani tomu druhému. Seděla v místnosti vysekané do skály s ženou, které bylo čtyři sta let, nebo nebylo, a která měla na prostředníku mozol od pera, a nevěděla, čemu z toho věří, a tak nevěřila ničemu a dívala se.
+Nevěřila tomu. A nevěřila ani tomu druhému. Seděla v místnosti vysekané do skály s ženou, které bylo čtyři sta let, nebo nebylo, a která měla na prostředníku mozol od pera. Nevěděla, čemu z toho věří, a tak nevěřila ničemu a dívala se.
 
-Merin zavřela těch několik set listů zpátky, přes starý pergamen, a pak, jako by si toho všimla teprve teď, se podívala na otevřenou stránku s lesklým inkoustem a s řádkem *Dorothea*. Dlouze. A pak zavřela i ji. Desky dopadly na sebe s tupým zvukem, jako když se zavře truhla.
+Merin obrátila těch několik set listů zpátky přes starý pergamen a pak, jako by si toho všimla teprve teď, se podívala na otevřenou stránku s lesklým inkoustem a s řádkem *Dorothea*. Dlouze. A pak zavřela i ji. Desky dopadly na sebe s tupým zvukem, jako když se zavře truhla.
 
 „Den,“ řekla. „Mast. A papír.“
 
@@ -292,7 +294,7 @@ Ilona mlčela dlouho.
 
 Myslela na olšovou rokli a na Johanku. Na kozu, která byla víc než ona. Na dvacet dětí, které teď spaly někde v bucích, kde nikdy nebyly, a které by na úsvitu nevěděly, kam se schovat. Na Gottfrieda, který to řekl nahlas, před dětmi. *Ať se město nejdřív nažere u nás.*
 
-Myslela na Markétu, jak dnes šla nahoru s uzlíkem v bílém plátně, rychle, jako by někam pozdě.
+Myslela na Markétu, jak dnes šla nahoru s uzlíkem v bílém plátně, rychle, jako by někam nestíhala.
 
 „Mast vám dám,“ řekla. „Hned zítra. Kilián si pro ni může přijít. Den vám řeknu, až ho budu vědět. Pokud ho budu vědět.“
 
@@ -318,7 +320,7 @@ Bylo ticho. Venku bzučely včely. Lampa nekouřila.
 
 Merin se podívala na zavřenou knihu. Pak na svou pravou ruku, na mozol, jako by ji z něčeho obviňovala.
 
-„Nechala jsem ji otevřenou,“ řekla. Ne Iloně. Sama sobě. „Čtyři sta let tahle kniha neležela otevřená před denním. A já ji nechám otevřenou, protože mi v noci umřela stará Aurel a já jsem to chtěla zapsat dřív, než zapomenu, jak dýchala na konci.“
+„Nechala jsem ji otevřenou,“ řekla. Ne Iloně. Sama sobě. „Čtyři sta let tahle kniha neležela otevřená před denním. A já jsem ji nechala otevřenou, protože mi v noci umřela stará Aurel a já jsem to chtěla zapsat dřív, než zapomenu, jak dýchala na konci.“
 
 Ilona nic neřekla. Nebylo co.
 
@@ -364,7 +366,7 @@ Merin kývla, jako by jiná odpověď nebyla. Pak se otočila, a mezi buky bylo 
 
 Doma spali havíři před dveřmi. Ilona prošla zahrádkou a zadními dveřmi, jako tolikrát. Rozdělala oheň. Sedla si ke stolu.
 
-Sešit ležel tam, kde ho nechala. S koženou chlopní zavřenou.
+Sešit ležel tam, kde ho nechala. Se zavřenou koženou chlopní.
 
 Neotevřela ho.
 

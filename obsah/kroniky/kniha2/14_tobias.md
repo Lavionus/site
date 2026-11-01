@@ -80,7 +80,7 @@ Fridrich na lavici pod oknem vstal a kluci utekli. Ženy ne. Dívaly se na Ilonu
 
 Nahoře v písárně seděl Kunz.
 
-Seděl u pultu a nepsal. Brýle mu visely na šňůrce na prsou a ruce měl složené na deskách, které byly zavřené, a když Ilona vešla, nezvedl hlavu, jak to dělal vždycky, aby se podíval přes brýle. Zvedl jen oči.
+Seděl u pultu a nepsal. Brýle mu visely na šňůrce na prsou a ruce měl složené na zavřených deskách. Když Ilona vešla, nezvedl hlavu, aby se podíval přes brýle, jak to dělal vždycky. Zvedl jen oči.
 
 Byly zarudlé. Jako u člověka, který nespí.
 
@@ -90,9 +90,9 @@ Byly zarudlé. Jako u člověka, který nespí.
 
 Chvíli nic. V kamnech praskalo, i když byl červen. Kunz topil vždycky.
 
-„Je pravda…“ začal Kunz, a zarazil se. Podíval se na dveře, zavřené. Pak zpátky na ni. Hlas měl tichý a suchý, jako se šustí papír. „Je pravda, co se povídá? O té knize?“
+„Je pravda…“ začal Kunz, a zarazil se. Podíval se na dveře, zavřené. Pak zpátky na ni. Hlas měl tichý a suchý, jako když šustí papír. „Je pravda, co se povídá? O té knize?“
 
-Ilona se na něj dívala. Na starého muže, který čtyřicet let dýchal prach ve štolách a pak dvacet let prach v písárně, a jehož dluh byl v černé knize vložený mezi listy, přeškrtnutý jednou šikmou čárou. *Getilgt.* Den před středou.
+Ilona se na něj dívala. Na starého muže, který čtyřicet let dýchal prach ve štolách a pak dvacet let prach v písárně. Jeho dluh ležel v černé knize vložený mezi listy, přeškrtnutý jednou šikmou čárou. *Getilgt.* Den před středou.
 
 Nevěděl to. Nebo věděl. Nevěděl, jestli si lékárník tu stránku nechal. Nevěděl, jestli ji ona viděla. Věděl jen, že někde ve městě je kniha, a že v té knize může být i to, za co zaplatil jednou větou.
 
@@ -124,11 +124,11 @@ Ilona položila chleba na pryčnu. Byl ještě trochu teplý.
 
 „Je to pravda?“ Teď se otočil. „Máte ji?“
 
-Mohla říct ne. Nikdo ji neviděl. Wolfova Bětka viděla něco černého velkého jako žaltář, a Ilona nesla brašnu. Mohla říct ne, a Tobiáš by se na ni díval a věděl by, že lže, jako to věděl s tím psem, a pak by to bylo horší, protože by to byla druhá lež o stejné věci, a druhá lež je už zvyk.
+Mohla říct ne. Nikdo ji neviděl. Wolfova Bětka viděla něco černého velkého jako žaltář, a Ilona nesla brašnu. Mohla říct ne. Tobiáš by se na ni díval a věděl by, že lže, jako to věděl s tím psem. A pak by to bylo horší, protože by to byla druhá lež o stejné věci, a druhá lež je už zvyk.
 
 „Mám,“ řekla.
 
-Tobiáš kývl. Ne, jako by se mu ulevilo. Jako by si to zapsal.
+Tobiáš kývl. Ne jako by se mu ulevilo. Jako by si to zapsal.
 
 *
 
@@ -148,13 +148,13 @@ Ilona mlčela.
 
 „*Frisch.*“
 
-Tobiáš německy uměl. Uměl ho z ulice a od otcových kamarádů ze šichty, a od Ilony, která ho učila číst a psát v obou jazycích, protože v Jáchymově se bez obou neobejdeš. Řekl to slovo potichu, česky, jako by ho zkoušel na jazyku.
+Tobiáš německy uměl. Naučil se to na ulici a od otcových kamarádů ze šichty, a od Ilony, která ho učila číst a psát v obou jazycích, protože v Jáchymově se bez obou neobejdeš. Řekl to slovo potichu, česky, jako by ho zkoušel na jazyku.
 
 „Čerstvá.“
 
 Sedl si na pryčnu. Vedle chleba.
 
-Ilona ho viděla, jak se dívá na zem mezi svými botami, a věděla, na co myslí, protože myslela na totéž. Lene u brodu, bílá jako vymetená mouka, se suchými zády haleny. A někde nahoře, v síni plné kouře, Urban, který rozděluje krev podle toho, kdo dává. *Minule to bylo víc. A čerstvější. Minule to bylo dobrý.*
+Ilona viděla, jak se dívá na zem mezi svými botami, a věděla, na co myslí, protože myslela na totéž. Lene u brodu, bílá jako vymetená mouka, se suchými zády haleny. A někde nahoře, v síni plné kouře, Urban, který rozděluje krev podle toho, kdo dává. *Minule to bylo víc. A čerstvější. Minule to bylo dobrý.*
 
 „Dala mi jednou hrušku,“ řekl Tobiáš. „Lene. Když jsme byli malí. U lázně, přes plot.“
 
@@ -280,7 +280,7 @@ Ilona mlčela. Tobiáš se krátce zasmál, a nebyl to jeho smích. Byl to smíc
 
 To slovo vyšlo samo. Ilona ho nezastavila. Bylo to první, co mu za celý měsíc řekla celé.
 
-Tobiáš stál nad ní, shrbený pod schodištěm, a díval se na ni, a v jeho tváři nebyla zlost. Ilona čekala zlost. Byla by lepší. Byla tam ta pozornost, kterou ho naučila, obrácená proti ní, a pod tím něco, co znala z tváří, kterým říkala, že někdo umřel.
+Tobiáš stál nad ní, shrbený pod schodištěm, a díval se na ni, a v jeho tváři nebyla zlost. Ilona čekala zlost. Byla by lepší. Byla tam ta pozornost, kterou ho naučila, obrácená proti ní, a pod tím něco, co znala z tváří lidí, kterým oznamovala, že někdo umřel.
 
 „Proč jste mi to neřekla?“
 
@@ -328,7 +328,7 @@ Díval se na ni. Pak se mu něco v tváři zastavilo, jako se zastaví kolo, kdy
 
 Jen to. Tiše, a ani to nebyla otázka.
 
-Ilona to slovo znala. Slyšela ho před čtyřmi týdny v domě pod kostelem, z postele, ve které kašlal Matz Lindner, když mu řekla, že jeho synovi slíbil ochranu perkmistr. Tentýž tón. Tatáž krátká slabika, kterou havíři říkají, když v štole uslyší, jak nad nimi zapraská strop, a ještě nevědí kde.
+Ilona to slovo znala. Slyšela ho před čtyřmi týdny v domě pod kostelem. Řekl ho Matz Lindner z postele, ve které kašlal, když mu řekla, že jeho synovi slíbil ochranu perkmistr. Tentýž tón. Tatáž krátká slabika, kterou havíři říkají, když ve štole uslyší, jak nad nimi zapraská strop, a ještě nevědí kde.
 
 *
 
@@ -348,7 +348,7 @@ Tobiáš se zasmál, krátce, nosem.
 
 Ilona neodpověděla. Neměla co. Byla to dobrá otázka, a ona ho naučila klást dobré otázky, a teď stála v komoře pod schodištěm a nevěděla na ni odpověď, a on to viděl.
 
-„Řehoř vám říkal, že máte lehkou ruku,“ řekl Tobiáš. „Mně to říkal taky. Že máte lehkou ruku a těžkou hlavu. Že nikdy neřízne víc, než musí.“ Pořád se díval na zeď, na pruh světla, který se po ní posunul o kus níž, od té doby, co přišla. „Teď řežete. Já vidím, že řežete. Nevidím kde.“
+„Řehoř vám říkal, že máte lehkou ruku,“ řekl Tobiáš. „Mně to říkal taky. Že máte lehkou ruku a těžkou hlavu. Že nikdy neřízne víc, než musí.“ Pořád se díval na zeď, na pruh světla, který se po ní od jejího příchodu posunul o kus níž. „Teď řežete. Já vidím, že řežete. Nevidím kde.“
 
 *
 
@@ -378,7 +378,7 @@ Tobiáš kývl. Pak se sklonil k pryčně a vzal chleba, který tam položila. P
 
 Ilona se dívala na chleba v jeho ruce.
 
-Pak ho vzala. Nevěděla, co jiného s tím dělat. Stála v komoře pod schodištěm s bochníkem v náruči, jako žena na trhu, která ho nedokázala prodat, a Tobiáš si sedl na pryčnu a opřel se zády o zeď a zavřel oči.
+Pak ho vzala. Nevěděla, co jiného s tím dělat. Stála v komoře pod schodištěm s bochníkem v náruči, jako žena na trhu, která ho nedokázala prodat. Tobiáš si sedl na pryčnu a opřel se zády o zeď a zavřel oči.
 
 „V pondělí,“ řekl, se zavřenýma očima. „U soudu. Budu poslouchat, co řeknete. Celé. Každé slovo.“
 
@@ -440,17 +440,17 @@ Zvedla pytel a vzala knihu z kolébky, a Markétinu výpověď nechala ležet na
 
 Dívala se na to slovo a myslela na Tobiáše, jak ho vyslovil česky, jako by ho zkoušel na jazyku. *Čerstvá.*
 
-Mohla mu dát tenhle list. Jen tenhle. Mohla ho vytrhnout, jak se vytrhávají listy z knih, které se nedají číst celé, a zítra mu ho přinést pod pláštěm, a on by ho držel v ruce a viděl by Lene, jednu jedinou čárku a jedno slovo, a věděl by, že nelhala. Že mu nevybírá to, co unese, ale že mu dává, co je jeho. Lene mu dala jednou hrušku přes plot.
+Mohla mu dát tenhle list. Jen tenhle. Mohla ho vytrhnout, jak se vytrhávají listy z knih, které se nedají číst celé, a zítra mu ho přinést pod pláštěm. Držel by ho v ruce a viděl by Lene, jednu jedinou čárku a jedno slovo, a věděl by, že nelhala. Že mu nevybírá to, co unese, ale že mu dává, co je jeho. Lene mu dala jednou hrušku přes plot.
 
 Přidržela list mezi prsty, u hřbetu, tam, kde se dá vytrhnout.
 
 Pak ho obrátila.
 
-Na druhé straně toho listu byla pravá stránka. O dvoustranu dřív. Středa, středa, středa, Röhrichovým hustým, kupeckým písmem, každý týden jeden řádek, jak je psal mezek, když šel nahoru a vracel se dolů. *Oben. Dagegen XX. Z.: Salz. Erlengrund, hinter den Halden. 40 Mäuler. Wald, durch Z. W.: XX Gläser. Donn.*
+Na druhé straně toho listu byla pravá stránka. O dvoustranu dřív. Středa, středa, středa, Röhrichovým hustým, kupeckým písmem, každý týden jeden řádek, jak šel mezek nahoru a vracel se dolů. *Oben. Dagegen XX. Z.: Salz. Erlengrund, hinter den Halden. 40 Mäuler. Wald, durch Z. W.: XX Gläser. Donn.*
 
 Ilona se na to dívala.
 
-List měl dvě strany. To ví každé dítě, které kdy drželo v ruce papír. Ona to věděla od devíti let, od otcovy písárny, kde se pro úspornost psalo z obou stran a kde otec jednou nadával písaři, který vytrhl list kvůli chybě na líci a zapomněl, že na rubu je smlouva o prodeji štoly. Věděla to. A přesto na to až do teď nemyslela. Celé tři dny myslela na knihu jako na řádky. Na *Kolbin* a na *frisch* a na *Erlengrund*, každé zvlášť, jako na výpovědi, z nichž si lze vybrat, kterou přečíst a kterou ne.
+List měl dvě strany. To ví každé dítě, které kdy drželo v ruce papír. Ona to věděla od devíti let, z otcovy písárny, kde se kvůli úspornosti psalo z obou stran. Otec tam jednou nadával písaři, který vytrhl list kvůli chybě na líci a zapomněl, že na rubu je smlouva o prodeji štoly. Věděla to. A přesto na to až doteď nemyslela. Celé tři dny myslela na knihu jako na řádky. Na *Kolbin* a na *frisch* a na *Erlengrund*, každé zvlášť, jako na výpovědi, z nichž si lze vybrat, kterou přečíst a kterou ne.
 
 Ale Röhrich nepsal výpovědi. Psal knihu. A kniha se nevybírá po řádcích. Kniha se trhá po listech.
 

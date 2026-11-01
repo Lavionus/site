@@ -2,9 +2,9 @@
 
 V pátek foukalo od rána a Matěj to považoval za dobré znamení. Teprve na cestě si uvědomil, že takhle by uvažovala Dobroslava.
 
-Vítr přišel v noci od západu, vlhký a skoro teplý, a smrky kolem cesty z něj byly neklidné. Shazovaly ze sebe sníh v těžkých chuchvalcích, které padaly za krk i do stopy. Matěj šel bez psa. Poprvé od chvíle, kdy přijel do Mlýnce, šel touhle cestou sám, a cestou si několikrát všiml, že se ohlíží, jestli za ním něco neběží.
+Vítr přišel v noci od západu, vlhký a skoro teplý, a smrky kolem cesty z něj byly neklidné. Shazovaly ze sebe sníh v těžkých chuchvalcích, které padaly za krk i do stopy. Matěj šel bez psa. Poprvé od chvíle, kdy přijel do Mlýnce, šel touhle cestou sám a několikrát si všiml, že se ohlíží, jestli za ním něco neběží.
 
-Dobroslava štípala před chalupou dříví. Když vyšel z lesa, nepřestala, jen sekerka po něm přelétla pohledem stejně jako ona. U dveří stála opřená jasanová tyč s hákem a na háku pořád visel cíp jeho hábitu. Za ty dny zešedl a změkl. Vypadal jako hadr, kterým se utírá kotel.
+Dobroslava štípala před chalupou dříví. Když vyšel z lesa, nepřestala, jen po něm přelétla pohledem. U dveří stála opřená jasanová tyč s hákem a na háku pořád visel cíp jeho hábitu. Za ty dny zešedl a změkl. Vypadal jako hadr, kterým se utírá kotel.
 
 „Pes není,“ řekla.
 
@@ -24,7 +24,7 @@ Dobroslava se na něj podívala tak, jak se dívala tenkrát na kraji lesa, kdy�
 
 „Já vím, co jsem viděla.“ Postavila sekerku k noze. „Viděla jsem lišku na dně. Lišek jsem odtamtud vytáhla víc, než máš let, mnichu. Pan Konrád zatím neví, kdo je tahá. Až budu stát vedle tebe před celou vsí a vyprávět, jak dobře znám mrtvá místa, bude to vědět.“
 
-Matěj otevřel ústa a zase je zavřel. Tohle ho nenapadlo. Napadlo ho, jak to bude znít, žena, která ho vytáhla za nohu, a jak lidé zašumí. Nenapadlo ho, co ji to bude stát.
+Matěj otevřel ústa a zase je zavřel. Tohle ho nenapadlo. Napadlo ho, jak to bude znít – žena, která ho vytáhla za nohu – a jak lidé zašumí. Nenapadlo ho, co ji to bude stát.
 
 „Promiňte,“ řekl.
 
@@ -42,7 +42,7 @@ Matěj si ho vzal. Byl tuhý mrazem a voněl kouřem.
 
 Šli stejnou cestou, jen vítr ji měnil. Na slatině neležel sníh v rovné vrstvě. Vítr ho shrnul do vln a hřbetů a mezi nimi odkryl rákos a trsy šedé trávy. Holé skvrny u vývěrů vypadaly ve větru menší, jako by se schoulily. Kaluže se vlnily a bubliny na nich praskaly, aniž je bylo slyšet.
 
-Dobroslava nešla k borovicím. Zahnula vlevo, kde ze slatiny vystupoval nízký hřbet a na něm začínal starý les. Byl to ten les, na který se Konrád díval z hřbetu hory a řekl o něm *můj*: smrky, jedle a mezi nimi mohutné, šedé kmeny buků. Na kraji lesa vedla zvěřina stezka, úzká rýha ve sněhu, která sestupovala k mrtvým místům. Matěj na ní poznal drobné stopy, řadu otisků jako vtisknutých prstem.
+Dobroslava nešla k borovicím. Zahnula vlevo, kde ze slatiny vystupoval nízký hřbet a na něm začínal starý les. Byl to ten les, na který se Konrád díval z hřbetu hory a řekl o něm *můj*: smrky, jedle a mezi nimi mohutné, šedé kmeny buků. Na kraji lesa vedla stezka zvěře, úzká rýha ve sněhu, která sestupovala k mrtvým místům. Matěj na ní poznal drobné stopy, řadu otisků jako vtisknutých prstem.
 
 „Liška,“ řekl.
 
@@ -60,7 +60,7 @@ Když poklekl do sněhu a otočil postavu k sobě, uviděl vous.
 
 Byl prošedivělý, krátký a hustý a byla v něm zmrzlá krev. Pod vousem byla široká tvář, šedá zimou. Měla tvrdé lícní kosti a ústa sevřená tak pevně, že na nich nebyly vidět rty. Muž nebyl o nic větší než dvanáctiletý chlapec. Ruce, které měl sevřené na hrudi, ale byly větší než Matějovy, širší v dlani a s tlustými prsty. Konečky měl rozedřené do krve. Matěj pochopil proč, když se podíval na nohu.
 
-Byl to drát. Železný, tenký jako struna, ze dvou pramenů stočených k sobě, jaký Matěj viděl jen jednou, u kováře v Řezně, který spravoval kroužkové košile. Byl smotaný do oka a oko se zadrhlo nad kotníkem a zařízlo se do kůže. Muž se z něj zjevně snažil vyvléknout celou noc, prsty i zuby. Na drátě byly stopy po zubech. Kotník pod ním byl oteklý do dvojnásobku a chodidlo se stáčelo do strany, kam se stáčet nemělo.
+Byl to drát. Železný, tenký jako struna, ze dvou pramenů stočených k sobě. Takový Matěj viděl jen jednou, u kováře v Řezně, který spravoval kroužkové košile. Byl smotaný do oka a oko se zadrhlo nad kotníkem a zařízlo se do kůže. Muž se z něj zjevně snažil vyvléknout celou noc, prsty i zuby. Na drátě byly stopy po zubech. Kotník pod ním byl oteklý do dvojnásobku a chodidlo se stáčelo do strany, kam se stáčet nemělo.
 
 „Je živý,“ řekl Matěj.
 
@@ -96,7 +96,7 @@ Muž zavřel oči a jednou kývl.
 
 Nesl ho Matěj. Nikdo to neřekl. Dobroslava namotávala drát na loket a Matěj si zatím klekl, nechal muže, aby se mu chytil kolem krku, a zvedl se s ním na zádech. Zavrávoral. Muž byl malý a těžký, těžší, než by se člověku té velikosti slušelo, jako by měl kosti z jiného dřeva. Držel se ho rukama, které i takhle zesláblé svíraly jako kleště. Zraněnou nohu nechal viset a Matěj cítil při každém kroku, jak sebou cukne.
 
-Myslel na Sivku. Nechtěl na ni myslet a stejně myslel. Nesl ji z téhle slatiny v náručí a cítil, jak mu těžkne a chladne. Teď nesl na zádech někoho, kdo se mu chvěl na hřbetě, a to chvění bylo dobré, protože znamenalo, že je v něm ještě teplo.
+Myslel na Sivku. Nechtěl na ni myslet a stejně myslel. Nesl ji z téhle slatiny v náručí a cítil, jak mu těžkne a chladne. Teď nesl někoho, kdo se mu chvěl na zádech, a to chvění bylo dobré, protože znamenalo, že je v něm ještě teplo.
 
 Dobroslava schovala smotaný drát do vaku. Pak se vrátila k pokácené bříze a nohou zahrnula krev, jak to šlo. Moc to nešlo. Vítr jí pomáhal a vrstvil sníh do stop.
 
@@ -156,7 +156,7 @@ Muž neodpověděl. Zavřel oči, a Matěj nevěděl, jestli usnul, nebo jestli 
 
 Přišli dva. Matěj je neslyšel. Všiml si jich, až když se Dobroslava zvedla. Stáli na kraji šera mezi buky, kde ještě před chvílí nebylo nic, muž a žena, oba malí, oba v tmavé kůži a vlně, a dívali se.
 
-Žena něco řekla. Nebyla to čeština ani němčina a nebyl to žádný jazyk, který kdy Matěj slyšel, ani ten protahovaný Henselův. Zraněný jí odpověděl zpod pláště, krátce. Žena přešla k němu, poklekla, ohmatala mu nohu a zasyčela. Muž zatím sledoval Matěje a v ruce držel tyč, a Matěj si všiml, že ta tyč je kopí, jen bez lesku.
+Žena něco řekla. Nebyla to čeština ani němčina a nebyl to žádný jazyk, který kdy Matěj slyšel, ani ten protahovaný Henselův. Zraněný jí odpověděl zpod pláště, krátce. Žena přešla k němu, poklekla, ohmatala mu nohu a zasyčela. Muž zatím sledoval Matěje. V ruce držel tyč a Matěj si všiml, že je to kopí, jen bez lesku.
 
 „Dobroslavo,“ řekl muž česky. Znal její jméno. „Jdi domů.“
 
@@ -184,7 +184,7 @@ Plst páchla kouřem a něčím dalším, co Matěj neznal, nasládlým a zemit�
 
 Šli.
 
-Matěj počítal. Začal u kamene, jako začal u ústí štoly. Nevěděl, k čemu mu to bude, a nedokázal přestat. Kroky po měkkém, kořeny, kořeny, jednou potok, přes který ho žena převedla po kamenech, a voda mu nabrala do onucí. Tři sta. Stoupání. Pět set. Les nad ním šuměl a vítr se ozýval výš, než by měl, jako by šli roklí. Šest set a něco. V tu chvíli muž vpředu zakopl, nosítka se naklonila a zraněný vykřikl, poprvé nahlas. Matěj chytil tyč oběma rukama a zapřel se. Když se nosítka zase srovnala, nevěděl, jestli je na šesti stech čtyřiceti, nebo na šesti stech sedmdesáti. Vybral si šest set padesát a věděl, že je to lež.
+Matěj počítal. Začal u kamene, jako začal u ústí štoly. Nevěděl, k čemu mu to bude, a nedokázal přestat. Kroky po měkkém, kořeny, kořeny, jednou potok, přes který ho žena převedla po kamenech, a voda mu natekla do onucí. Tři sta. Stoupání. Pět set. Les nad ním šuměl a vítr se ozýval výš, než by měl, jako by šli roklí. Šest set a něco. V tu chvíli muž vpředu zakopl, nosítka se naklonila a zraněný vykřikl, poprvé nahlas. Matěj chytil tyč oběma rukama a zapřel se. Když se nosítka zase srovnala, nevěděl, jestli je na šesti stech čtyřiceti, nebo na šesti stech sedmdesáti. Vybral si šest set padesát a věděl, že je to lež.
 
 U tisíce sto čtyřiceti se pod nohama změnila zem. Mech a jehličí přestaly a začala skála. Vítr ustal najednou, jako když se zavřou dveře. Ozvěna kroků se přiblížila a zúžila. Studený vzduch se nehýbal a voněl kamenem.
 
@@ -234,7 +234,7 @@ Ve dveřích stál muž, kterého nikdo z nich neohlásil.
 
 *
 
-Byl vysoký. To bylo první, co Matěj viděl, protože se musel podívat nahoru, jako se díval nahoru na Ješka: o hlavu vyšší než on a hubený, a ve dveřích, kterými ostatní procházeli zpříma, měl hlavu skloněnou. Byl bledý. Ne jako nemocný, ale jako plátno, které přes zimu leželo ve sklepě a nevidělo slunce. Vlasy měl stažené dozadu a v kahanech nešlo poznat, jestli jsou světlé, nebo šedivé. Neměl vousy. Mohlo mu být třicet. Mohlo mu být šedesát. Matěj by nevsadil na ani jedno.
+Byl vysoký. To bylo první, co Matěj viděl, protože se musel podívat nahoru, jako se díval nahoru na Ješka. Byl o hlavu vyšší než on a hubený. Ve dveřích, kterými ostatní procházeli zpříma, musel sklonit hlavu. Byl bledý. Ne jako nemocný, ale jako plátno, které přes zimu leželo ve sklepě a nevidělo slunce. Vlasy měl stažené dozadu a v kahanech nešlo poznat, jestli jsou světlé, nebo šedivé. Neměl vousy. Mohlo mu být třicet. Mohlo mu být šedesát. Matěj by nevsadil ani na jedno.
 
 Pak vstoupil do místnosti, otočil se od kahanu k Matějovi a Matěj uviděl jeho oči.
 
@@ -242,7 +242,7 @@ Zorničky měl rozšířené tak, že z duhovky zbyl jen úzký proužek. Když 
 
 Matěj si uvědomil, že se pokřižoval. Neudělal to úmyslně. Ruka to udělala za něj.
 
-Vysoký muž to viděl. Nic neřekl. Přešel k lavici, podíval se na zraněného a na ovázanou nohu, a stará žena mu něco řekla tím cizím jazykem. Odpověděl. Měl tichý hlas, který se v nízké místnosti nerozléhal. Pak se otočil k Matějovi.
+Vysoký muž to viděl. Nic neřekl. Přešel k lavici, podíval se na zraněného a na ovázanou nohu. Stará žena mu něco řekla tím cizím jazykem. Odpověděl. Měl tichý hlas, který se v nízké místnosti nerozléhal. Pak se otočil k Matějovi.
 
 „Sedni si,“ řekl česky.
 
@@ -268,7 +268,7 @@ Matěj neodpověděl. Nebylo co.
 
 „A co jsi viděl?“
 
-Matěj se nadechl. Pomyslel na Ješka. *Neřekneš to nikomu.* A pomyslel na to, že tenhle muž s kočičíma očima a s písařským mozolem na prstu se na nic neptá, protože by to nevěděl.
+Matěj se nadechl. Pomyslel na Ješka. *Neřekneš to nikomu.* A pomyslel na to, že tenhle muž s kočičíma očima a s písařským mozolem na prstu se neptá na nic, co by sám nevěděl.
 
 „Vodu,“ řekl.
 
@@ -288,7 +288,7 @@ Matěj to řekl, protože se ho na to před dvěma dny zeptal Konrád, a ta otá
 
 „Tady jsem doma.“
 
-Stará žena u stěny se k nim neotočila. Měla zase dlaň na skále a hlavu skloněnou, a Merin ji oslovil slovem, které znělo jako *Ostra*. Matěj si ho tak zapamatoval. Odpověděla mu něco krátkého a oba na okamžik zmlkli. Pak se Ostra otočila a poprvé se na Matěje podívala přímo, malýma, tmavýma očima pod bílým obočím.
+Stará žena u stěny se k nim neotočila. Měla zase dlaň na skále a hlavu skloněnou. Merin ji oslovil slovem, které znělo jako *Ostra*. Matěj si ho tak zapamatoval. Odpověděla mu něco krátkého a oba na okamžik zmlkli. Pak se Ostra otočila a poprvé se na Matěje podívala přímo, malýma, tmavýma očima pod bílým obočím.
 
 „Ta skála u vás,“ řekla. „Na konci. Jak je teplá?“
 
@@ -332,7 +332,7 @@ Matěj chtěl přísahat. Měl to na jazyku, slova, kterými se přísahá v kap
 
 „Slibuju,“ řekl Matěj.
 
-Bylo to jedno slovo a znělo v té místnosti malé. Matěj ho slyšel, jako slyšel tenkrát v převorově cele *mohu vám to říct s jistotou*: jasně a pozdě. Jenže tentokrát nevěděl, jestli pozdě nepřišlo už dávno, u kamene, nebo pod smrkem.
+Bylo to jedno slovo a znělo v té místnosti malé. Matěj ho slyšel, jako slyšel tenkrát v převorově cele *mohu vám to říct s jistotou*: jasně a pozdě. Jenže tentokrát nevěděl, jestli nebylo pozdě už dávno – u kamene, nebo pod smrkem.
 
 Merin chvíli mlčel. Potom řekl, tiše, stejným hlasem, jakým mluvil celou dobu:
 
@@ -350,7 +350,7 @@ Matěj na něj zíral.
 
 *
 
-Ven ho vedli stejnou cestou a se stejnou plstí na očích. Tentokrát nenesl nic. Žena ho držela za loket a muž s kopím šel vpředu, a Matěj počítal znovu. Šikmá plocha, teplo, šum vody, tentokrát nalevo nahoře, protože šel opačně. Zkusil si zapamatovat, kde přesně začal a kde přestal, a nedokázal to. Schody. Čtyřicet tři. Minule jich bylo čtyřicet dva. Nebo šel tehdy s nosítky a jeden vynechal. Skála, pak mech, pak mráz, který ho udeřil do tváře jako dlaň.
+Ven ho vedli stejnou cestou a se stejnou plstí na očích. Tentokrát nenesl nic. Žena ho držela za loket, muž s kopím šel vpředu a Matěj znovu počítal. Šikmá plocha, teplo, šum vody, tentokrát nalevo nahoře, protože šel opačně. Zkusil si zapamatovat, kde přesně začal a kde přestal, a nedokázal to. Schody. Čtyřicet tři. Minule jich bylo čtyřicet dva. Nebo tehdy s nosítky jeden vynechal. Skála, pak mech, pak mráz, který ho udeřil do tváře jako dlaň.
 
 Než vyšli, vtiskla mu Ostra do ruky váček z kůže. Byl těžký a teplý. Uvnitř byl kámen, hladký, velký jako pěst, a hřál, jako hřeje cihla vytažená z kamen.
 
@@ -358,7 +358,7 @@ U balvanu mu plst sundali. Byla tma a les byl černý. Muž s kopím ukázal sm�
 
 Šel potmě. Dvakrát upadl. U potoka si znovu namočil onuce a cítil, jak mu voda v nich tuhne. Kámen v koženém váčku držel na prsou pod hábitem, kde nosil tabulku. Hřál ho přes celou cestu. Na kraji lesa, u Dobroslaviny chalupy, svítilo škvírou ve dveřích světlo. Dobroslava neotevřela a on nezaklepal. Šel kolem a slyšel, jak se uvnitř posunula lavice. Věděla, že jde.
 
-Udalrich stál ve vratech grangie s lucernou. Bylo po půlnoci. Matěj to poznal podle hvězd a podle toho, že konvrš měl na sobě kožich přes noční košili a u nohou mu ležel sníh, ze kterého vyšlapal kruh.
+Udalrich stál ve vratech grangie s lucernou. Bylo po půlnoci. Matěj to poznal podle hvězd a podle toho, že konvrš měl na sobě kožich přes noční košili a ve sněhu kolem sebe měl vyšlapaný kruh.
 
 „Kde?“ zeptal se Udalrich.
 
@@ -384,9 +384,9 @@ Viděl je, jak by to napsal. Řádek po řádku. *Vidi:* muž, malý jako dítě
 
 *Nebudeš o nás psát. Ani na vosk.*
 
-Pod smrkem si řekl, že zápis není mluvení. Řekl si to dvakrát a podruhé tomu skoro věřil. Teď seděl na lůžku s rydlem nad voskem a věděl, že to byla výmluva. Že ji tenkrát potřeboval, a že tentokrát by ji potřeboval znovu, a že ten, komu dal slib, se díval, když si ji poprvé vymyslel.
+Pod smrkem si řekl, že zápis není mluvení. Řekl si to dvakrát a podruhé tomu skoro věřil. Teď seděl na lůžku s rydlem nad voskem a věděl, že to byla výmluva. Tenkrát ji potřeboval a teď by ji potřeboval znovu. A ten, komu dal slib, se díval, když si ji poprvé vymyslel.
 
-Přiložil palec a uhladil *Feria sexta*. Vosk byl měkčí než na Konrádově řádku, protože ho zahřál kámen, který nosil na prsou, a šlo to snadno.
+Přiložil palec a uhladil *Feria sexta*. Vosk byl měkčí než na Konrádově řádku, protože ho zahřál kámen, který nosil na prsou. Šlo to snadno.
 
 Pak si lehl a v temnotě to všechno opakoval. Ne slovy. Čísly. Tisíc sto čtyřicet. Šest set padesát, které byly lží. Čtyřicet dva a čtyřicet tři. Dvakrát doleva a jednou doprava, nebo naopak. Opakoval je, jako se opakují žalmy, které se novic učí zpaměti, dokud mu nesplynou s dechem. Vosk se dá uhladit, řekl si. Paměť ne.
 

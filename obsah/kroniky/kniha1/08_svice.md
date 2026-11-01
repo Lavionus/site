@@ -26,13 +26,13 @@ Byla bílá a hustá a nehýbala se. Matěj vyšel po laudách na dvůr a nedohl
 
 Za bezvětří nesestupovat.
 
-Vyndal z mošny dvě svíce a zabalil je do cípu hábitu, který mu Dobroslava vrátila, aby nezvlhly. Pak si vypůjčil od Udalricha křesadlo a troud. Udalrich mu je dal a jen řekl, že do nešpor má být zpátky, protože ve čtvrtek je čtvrtek a v postu se nikdo nepotuluje lesem.
+Vyndal z mošny dvě svíce a zabalil je, aby nezvlhly, do cípu hábitu, který mu vrátila Dobroslava. Pak si vypůjčil od Udalricha křesadlo a troud. Udalrich mu je dal a jen řekl, že do nešpor má být zpátky, protože ve čtvrtek je čtvrtek a v postu se nikdo nepotuluje lesem.
 
 *
 
 Dobroslava seděla před chalupou na špalku a spravovala síť. Když ho uviděla, vstala, vešla do chalupy a vrátila se s něčím přes ruku. Podala mu to beze slova.
 
-Byl to jeho plášť. Ten, který nechal pod zemí na kraji kamenné lavice, složený, protože si ho nikdo nevzal. Byl suchý a čistý, a když si ho Matěj přitiskl k obličeji, voněl kouřem a tím nasládlým, zemitým pachem sklepa, kde se skladují jablka.
+Byl to jeho plášť. Ten, který zůstal pod zemí složený na kraji kamenné lavice, protože si ho nikdo nevzal. Byl suchý a čistý, a když si ho Matěj přitiskl k obličeji, voněl kouřem a tím nasládlým, zemitým pachem sklepa, kde se skladují jablka.
 
 „Ležel na kameni,“ řekla Dobroslava. „Před týdnem. Složený, s kamínkem navrchu, aby ho neodnesl vítr.“
 
@@ -42,7 +42,7 @@ Byl to jeho plášť. Ten, který nechal pod zemí na kraji kamenné lavice, slo
 
 Matěj držel plášť v rukou a necítil zimu.
 
-„Byl tu lovčí,“ řekla Dobroslava, aniž zvedla hlavu od sítě. „Pana Konráda. Ptal se, jestli jsem neviděla drát. Že se mu ztratilo oko u slatiny a že bříza je posekaná sekerou.“ Zatáhla uzel zuby. „Řekla jsem mu, že sekeru má každý, kdo má dřevo. A drát že v životě neviděla, že nevím, co to je.“
+„Byl tu lovčí,“ řekla Dobroslava, aniž zvedla hlavu od sítě. „Pana Konráda. Ptal se, jestli jsem neviděla drát. Že se mu ztratilo oko u slatiny a že bříza je posekaná sekerou.“ Zatáhla uzel zuby. „Řekla jsem mu, že sekeru má každý, kdo má dřevo. A drát že jsem v životě neviděla, že nevím, co to je.“
 
 „Uvěřil vám?“
 
@@ -74,7 +74,7 @@ Matěj si klekl na kraj kaluže. Nesklonil se, jen poklekl s rovnými zády, jak
 
 A zhasl.
 
-Z knotu stoupal tenký proužek kouře. Matěj se díval, jak se nehýbe vzhůru, ale vodorovně, po hladině, a pak dolů, k vodě, a jak se tam rozplývá.
+Z knotu stoupal tenký proužek kouře. Matěj se díval, jak nestoupá vzhůru, ale táhne se vodorovně po hladině, a pak dolů, k vodě, a jak se tam rozplývá.
 
 „No,“ řekla Dobroslava za ním.
 
@@ -96,7 +96,7 @@ Bylo tam všechno, jak to opustili. Jen sníh zmizel ze svahů a mísa byla cel�
 
 Matěj si sundal mošnu. Vzal od ní tyč a k háku na jejím konci přivázal svíci tkanicí z tabulky. Přivázal ji dvakrát, pevně, aby se nesmekla, a nechal knot volný. Dobroslava mu ji zapálila svým troudem. Pak se postavil na okraj, rozkročil se a začal tyč spouštět do prohlubně, pomalu, šikmo, jako se spouští vědro do studny.
 
-Plamen klesal. Na úrovni okraje hořel. Pod okrajem hořel dál, klidně a rovně. Pak, asi o dlaň níž, než by člověku stojícímu na dně sahal pás, se zachvěl, jako by do něj někdo dýchl. Zmenšil se. Zmodral.
+Plamen klesal. Na úrovni okraje hořel. Pod okrajem hořel dál, klidně a rovně. Pak se zachvěl, jako by do něj někdo dýchl. Bylo to asi o dlaň níž, než by člověku stojícímu na dně sahal pás. Zmenšil se. Zmodral.
 
 Zhasl.
 
@@ -110,13 +110,13 @@ Udělal to devětkrát. Dobroslava mu pokaždé zapálila troud a nic neříkala
 
 „Kdo to říká?“
 
-„Svíce,“ řekl Matěj. Dobroslava se na něj podívala, jako by se zbláznil. Pak se usmál, poprvé za ten den, a ona to nechala být.
+„Svíce,“ řekl Matěj. Dobroslava se na něj podívala, jako by se zbláznil. Pak se Matěj usmál, poprvé za ten den, a ona to nechala být.
 
 Matěj spouštěl svíci na různých místech. Z této strany, z protější a od borovic. Šikmo, aby se dostal do středu. Pokaždé svíce zhasla ve stejné výšce. Nebo skoro ve stejné. Ne o dlaň výš nebo níž, nanejvýš o prst. Pokaždé udělal do tyče rýhu. Když skončil, měl na kůře šest rýh těsně vedle sebe a tři o kousek dál, protože se tyč smekla.
 
 Pak si sedl na mokrou zem na okraji a díval se do prohlubně.
 
-Viděl ji jinak. Ne jako mísu se suchým dnem. Viděl v ní hladinu. Neviditelnou, ale stejně rovnou, jako je rovná voda v rybníce, když nefouká. Pod ní všechno umíralo. Nad ní hořela svíce. Hladina stála asi tak vysoko, jak byl vysoký klečící člověk, a nebylo na ní nic vidět, žádný třpyt, žádný kouř, a přece tam byla. Když tenkrát poklekl, aby zvedl Sivku, ponořil se do ní až po krk. Dobroslava, která šla dolů vzpřímeně, v ní stála po prsa a hlavu měla nad ní.
+Viděl ji jinak. Ne jako mísu se suchým dnem. Viděl v ní hladinu. Neviditelnou, ale stejně rovnou, jako je rovná voda v rybníce, když nefouká. Pod ní všechno umíralo. Nad ní hořela svíce. Hladina stála asi tak vysoko, jak byl vysoký klečící člověk. Nebylo na ní nic vidět, žádný třpyt, žádný kouř, a přece tam byla. Když tenkrát poklekl, aby zvedl Sivku, ponořil se do ní až po krk. Dobroslava, která šla dolů vzpřímeně, v ní stála po prsa a hlavu měla nad ní.
 
 „Je to jako voda,“ řekl.
 
@@ -184,13 +184,13 @@ Udalrich se na něj podíval tak, jako se díval, když se ho Matěj ptal, jestl
 
 Dobroslava na něj čekala před chalupou s tyčí. Nic neřekla. Šli.
 
-Na slatině vítr hvízdal v rákosí a čeřil kaluže, a bubliny na nich praskaly, aniž bylo vidět, kde vystupují. Matěj šel rovnou k borovicím. U prohlubně zapálil svíci v lucerně, zavřel dvířka a přivázal lucernu za kroužek na hák. Plamen se uvnitř chvěl, ale hořel. Spustil ji do prohlubně, pomalu, šikmo, k rýhám, které měl na tyči od včerejška.
+Na slatině vítr hvízdal v rákosí a čeřil kaluže. Bubliny na nich praskaly, aniž bylo vidět, kde vystupují. Matěj šel rovnou k borovicím. U prohlubně zapálil svíci v lucerně, zavřel dvířka a přivázal lucernu za kroužek na hák. Plamen se uvnitř chvěl, ale hořel. Spustil ji do prohlubně, pomalu, šikmo, k rýhám, které měl na tyči od včerejška.
 
 Hořela.
 
 Spustil ji níž, až ke dnu, k lišce. Lucerna zavadila o zem a převrátila se na bok, a svíce v ní hořela dál, šikmo, a čadila na roh okénka.
 
-Matěj ji vytáhl. Stál na okraji a díval se do prohlubně, na lišku, drozda a sojku, na místo, kde tenkrát klečel se Sivkou v náručí. Vítr mu foukal do zad a přes jeho hlavu dolů do mísy a viděl, jak se v ní pohybuje jehličí a jak se na lišce čechrá srst.
+Matěj ji vytáhl. Stál na okraji a díval se do prohlubně, na lišku, drozda a sojku, na místo, kde tenkrát klečel se Sivkou v náručí. Vítr mu foukal do zad a přes hlavu dolů do mísy. Matěj viděl, jak se v ní pohybuje jehličí a jak se na lišce čechrá srst.
 
 „Když fouká, můžeš jít dolů,“ řekla Dobroslava za ním. Byla to stejná slova jako tenkrát na kraji lesa. Stejným hlasem.
 
@@ -258,7 +258,7 @@ Matěj se díval přes slatinu k hoře. Ze štoly stoupal dým a vítr ho ohýba
 
 *Štola půjde do vody.*
 
-Neviděl tu vodu. Slyšel ji, nebo si myslel, že ji slyší, šum za stěnou, nad hlavou, a jeho čísla byla nejistá. Viděl jen kapky z pukliny, dvaadvacet na Otčenáš, třiadvacet. A viděl Ortlieba, jak si něco zapisuje.
+Neviděl tu vodu. Slyšel ji, nebo si myslel, že ji slyší – šum za stěnou, nad hlavou. A jeho čísla byla nejistá. Viděl jen kapky z pukliny, dvaadvacet na Otčenáš, třiadvacet. A viděl Ortlieba, jak si něco zapisuje.
 
 Kdyby čekal, až bude vědět proč, čekal by navždy. Ten den na slatině to věděl tak jasně, jako věděl, že svíce zhasne.
 
@@ -286,13 +286,13 @@ Dobroslava chvíli mlčela. Potom kývla, jednou, jako kývl ten zraněný pod p
 
 *
 
-Večer v komoře vytáhl tabulku. Pod *draco – spiritus* stálo *cras*. Přiložil palec a uhladil obojí, *spiritus* i *cras*. Vosk byl měkký a šlo to snadno, a na hladké místo napsal:
+Večer v komoře vytáhl tabulku. Pod *draco – spiritus* stálo *cras*. Přiložil palec a uhladil obojí, *spiritus* i *cras*. Vosk byl měkký a šlo to snadno. Na hladké místo napsal:
 
 *Halitus terrae. Ex aqua cum bullis exit, gravis est ut aqua, iacet in fossis, cum silet ventus. Flante vento non est. Candela prius sentit quam homo. Vidi.*
 
 Dech země. Vychází z vody s bublinami, je těžký jako voda, leží v prohlubních, když vítr utichne. Když vane vítr, není. Svíce to pozná dřív než člověk. Viděl jsem.
 
-Pod to napsal jinou rukou, menší, aby ho to nezahanbilo, jako tehdy v knihovně:
+Pod to napsal jiným, menším písmem, aby ho to nezahanbilo, jako tehdy v knihovně:
 
 *Epistola mea ad priorem falsa est.*
 
@@ -304,11 +304,11 @@ Díval se na to dlouho. Neuhladil to.
 
 Pak šel za ovčín.
 
-Už byla tma, jen nad horou zbývalo trochu světla, a vítr utichal. Hromada sněhu klesla ještě víc, a kde v ní kdysi vyhrabal holýma rukama díru, vystupoval z šedé, rozbředlé hmoty kus látky. Jeho starý plášť na cestu. Někdo do něj zatáhl zuby, liška nebo pes, Konrádův pes, a látka byla roztržená. Pod ní byla vidět srst. Šedá, slepená ledem, myší barvy, jakou měla, když ji soused chtěl utopit.
+Už byla tma, jen nad horou zbývalo trochu světla, a vítr utichal. Hromada sněhu klesla ještě víc. Tam, kde v ní kdysi holýma rukama vyhrabal díru, vystupoval z šedé, rozbředlé hmoty kus látky. Jeho starý plášť na cestu. Někdo se do něj zakousl, liška nebo pes, Konrádův pes, a látka byla roztržená. Pod ní byla vidět srst. Šedá, slepená ledem, myší barvy, jakou měla, když ji soused chtěl utopit.
 
 Matěj si klekl do bláta.
 
-Nedotkl se jí. Jen tam klečel a díval se na tu srst, jak se v posledním světle leskne vodou. Myslel na to, jak jí tenkrát v prohlubni položil dlaň na hruď a čekal, jestli uslyší srdce. Myslel na to, že z její smrti udělal svědectví, *canis meus testis*. A teď, když věděl, co ji zabilo, už nesvědčila o ničem. Byla to jen stará fena, která utekla hloupému mnichovi z provazu za liščím pachem. Tak to bylo. A byla to pravda, a pravda byla menší, než co o ní napsal, a přesto mu ta menší pravda ležela na hrudi těžší než ta velká.
+Nedotkl se jí. Jen tam klečel a díval se na tu srst, jak se v posledním světle leskne vodou. Myslel na to, jak jí tenkrát v prohlubni položil dlaň na hruď a čekal, jestli uslyší srdce. Myslel na to, že z její smrti udělal svědectví, *canis meus testis*. A teď, když věděl, co ji zabilo, už nesvědčila o ničem. Byla to jen stará fena, která utekla hloupému mnichovi z provazu za liščím pachem. Tak to bylo. Byla to pravda a ta pravda byla menší, než co o ní napsal. A přesto mu ta menší pravda ležela na hrudi tíž než ta velká.
 
 „Promiň,“ řekl.
 

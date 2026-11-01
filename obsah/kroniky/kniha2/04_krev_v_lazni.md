@@ -1,6 +1,6 @@
 # 4. Krev v lázni
 
-V pátek v noci pro ni Kilián přišel, jak řekl, a ona šla, jak řekla. Johanka spala na vřesu s rukama na přikrývce a otok na tváři opadl tak, že jí byly vidět oči. Puchýře, které Ilona nechala celé, se svraštily a ztmavly. Moč byla světlejší, jako čaj. Ilona vyměnila obvazy, nanesla mast a nechala ženě v šátku hrnek s mastí a ukázala jí, jak tence se nanáší. Žena se na ni dívala, jako se dívají ženy, které celý život dělají věci samy a teď jim někdo ukazuje, jak se to dělá. Pak řekla: „Řehoř to dával tlustě.“ A Ilona řekla: „Řehoř to dělal špatně,“ a žena se poprvé usmála.
+V pátek v noci pro ni Kilián přišel, jak řekl, a ona šla, jak řekla. Johanka spala na vřesu s rukama na přikrývce a otok na tváři opadl tak, že jí byly vidět oči. Puchýře, které Ilona nechala celé, se svraštily a ztmavly. Moč byla světlejší, jako čaj. Ilona vyměnila obvazy, nanesla mast, nechala ženě v šátku hrnek s mastí a ukázala jí, jak tence se nanáší. Žena se na ni dívala, jako se dívají ženy, které celý život dělají věci samy a teď jim někdo ukazuje, jak se to dělá. Pak řekla: „Řehoř to dával tlustě.“ A Ilona řekla: „Řehoř to dělal špatně,“ a žena se poprvé usmála.
 
 Zikmunda neviděla. Spal, řekl Kilián. Starý spí víc než děti.
 
@@ -30,7 +30,7 @@ Ilona mlčela o chvilku déle, než měla.
 
 „U dítěte,“ řekla. „Je to dítě, které nemá nikoho jiného. Nemůžu ti říct kde.“
 
-Tobiáš na ni hleděl. Ilona viděla, jak mu to ukládá někam dovnitř, kde si ukládal věci, o kterých nechtěl mluvit. Pak přikývl.
+Tobiáš na ni hleděl. Ilona viděla, jak si to ukládá někam dovnitř, kam dával věci, o kterých nechtěl mluvit. Pak přikývl.
 
 „Vy jste mi řekla, ať řeknu všechno, co vím,“ řekl. „Před soudem. I to o dvoře.“
 
@@ -44,17 +44,19 @@ Tobiáš na ni hleděl. Ilona viděla, jak mu to ukládá někam dovnitř, kde s
 
 *
 
-Městská lázeň stála dole u potoka, pod mostem, kde se údolí na chvíli rozšiřovalo, a byla to dlouhá stavba z kamene s dřevěným patrem a s komínem, ze kterého v sobotu od rána stoupal kouř. Sobota byla lázeňský den. Kdo měl na lázeň, šel se mýt a potit, a kdo měl na víc, šel se dát baňkovat a pouštět, protože mistr Jobst pouštěl krev lépe než kdokoli v údolí, jak sám říkal, a nikdo se s ním o tom nepřel, protože Řehoř byl mrtvý.
+Městská lázeň stála dole u potoka, pod mostem, kde se údolí na chvíli rozšiřovalo. Byla to dlouhá stavba z kamene s dřevěným patrem a s komínem, ze kterého v sobotu od rána stoupal kouř. Sobota byla lázeňský den. Kdo měl na lázeň, šel se mýt a potit, a kdo měl na víc, šel se dát baňkovat a pouštět. Mistr Jobst totiž pouštěl krev lépe než kdokoli v údolí, jak sám říkal, a nikdo se s ním o tom nepřel, protože Řehoř byl mrtvý.
 
 Ilona tam s Řehořem chodila. Řehoř a mistr Jobst se nenáviděli tak, jak se nenávidí dva řemeslníci, kteří dělají totéž a každý tvrdí, že ten druhý dělá něco jiného. Ranhojič řeže a šije, lazebník myje a pouští, a mezi tím je hranice, o kterou se bratrstva soudila už za Řehořova děda. Řehoř chodil do lázně jen se mýt a pokaždé se vrátil s tím, že Jobst pouští krev jako řezník a že na tom zbohatne.
 
-Tentokrát šla Ilona sama, v sobotu v poledne, kdy byla lázeň vyhrazená ženám, s ručníkem a s kouskem mýdla v uzlíku, a Wehrlův list měla v tom uzlíku až na dně, pod ručníkem, a doufala, že ho nebude potřebovat.
+Tentokrát šla Ilona sama, v sobotu v poledne, kdy byla lázeň vyhrazená ženám, s ručníkem a s kouskem mýdla v uzlíku. Wehrlův list měla v uzlíku až na dně, pod ručníkem, a doufala, že ho nebude potřebovat.
 
 U vchodu seděla na stoličce Jobstova žena a vybírala peníze. Ilona jí dala tři krejcary a ona se na ni podívala, jako by ji chtěla poslat pryč, a pak peníze vzala, protože peníze jsou peníze.
 
 *
 
 Uvnitř byla pára. Ilona se svlékla v předsíni, kde visely ženské sukně a šátky na kolících jako vyprané prádlo, a vešla v košili do potírny. Kamna obložená kameny, na kamenech polévali vodu a pára stoupala ke stropu a zase klesala a v ní se na lavicích pohybovala nahá a polonahá těla, růžová, bílá, stará, mladá, a všude bylo slyšet hovor, smích, plesknutí mokrého ručníku o kůži. Ženy, které Ilona znala z ulice, tady vypadaly jinak. Menší. Svobodnější. Mluvily nahlas a o věcech, o kterých na ulici šeptaly.
+
+![Městská lázeň](obrazky/04_lazen.webp)
 
 Dnes mluvily o jednom.
 
@@ -136,13 +138,13 @@ Za lázní byl dvůr, malý, vydlážděný kameny, a od něj se svažovala k po
 
 Ilona stála u struhy a dívala se na ni.
 
-Struha byla mokrá od vody. Dřevo bylo tmavé, nasáklé, s porostem zelených řas v místech, kam nedosvítilo slunce. Ale na dně, kde by po letech sobot měly být krve rezavé skvrny, tam, kam se dřevo zakousne a kde ho žádná voda nevymyje, byly skvrny staré, vybledlé do šedi, a čerstvé žádné. Sestoupila po svahu k potoku, k ústí struhy. Kameny pod ním byly zelené a čisté. Voda čirá.
+Struha byla mokrá od vody. Dřevo bylo tmavé, nasáklé, s porostem zelených řas v místech, kam nedosvítilo slunce. Ale na dně, kde by po letech sobot měly být rezavé skvrny od krve, tam, kde se krev zakousne do dřeva a žádná voda ji nevymyje, byly jen skvrny staré, vybledlé do šedi. Čerstvé žádné. Sestoupila po svahu k potoku, k ústí struhy. Kameny pod ním byly zelené a čisté. Voda čirá.
 
 Mistr Jobst tedy pouštěl, celé sobotní odpoledne, a krev se do potoka nevylévala. Nebo se vylévala tak dávno, že už to dřevo zapomnělo.
 
 Lene přišla s dvěma vědry, ve kterých byla špinavá voda s mýdlem, a vylila je do struhy. Pak postavila vědra na zem a utřela si ruce do zástěry.
 
-„Mistr říká, ať to nevyléváme,“ řekla. Rychle, šeptem, jako když se odříkává něco, co se člověk naučil nazpaměť. „Už od zimy. Krev z misek dáváme do škopku. A já to musím šlehat.“
+„Mistr říká, ať to nevyléváme,“ řekla. Rychle, šeptem, jako když člověk odříkává něco, co se naučil nazpaměť. „Už od zimy. Krev z misek dáváme do škopku. A já to musím šlehat.“
 
 „Šlehat?“
 
@@ -212,7 +214,7 @@ A byla pryč.
 
 *
 
-Mistr Jobst seděl ve své komoře za potírnou, kde pouštěl krev a trhal zuby, a čistil nůž. Byl to muž menší postavy s velkýma rukama a s červenou tváří, jakou mají lidé, kteří žijí v páře, a když Ilona vešla oblečená a s uzlíkem, nevstal.
+Mistr Jobst seděl a čistil nůž ve své komoře za potírnou, kde pouštěl krev a trhal zuby. Byl to muž menší postavy s velkýma rukama a s červenou tváří, jakou mají lidé, kteří žijí v páře, a když Ilona vešla oblečená a s uzlíkem, nevstal.
 
 „Paní ranhojička,“ řekl. Slovo *ranhojička* vyslovil, jako by ho držel dvěma prsty. „Lázeň jste měla, dobře, zaplatila jste. Do týhle komory vám nic není.“
 
@@ -236,7 +238,7 @@ Dvě věty, které se nesnášely. Postavila je na papír vedle sebe a nechala j
 
 *
 
-Večer se usadila na seníku nad stájí u souseda Jobstovy lázně, starého vozky Pankráce, který jí dlužil za vyléčenou nohu a neptal se. Ze seníku bylo vidět na dvůr za lázní, na struhu a na zadní dveře. Ilona ležela v seně s bradou na rukou a dívala se, jak se setmívá.
+Večer se usadila na seníku nad stájí starého vozky Pankráce, souseda Jobstovy lázně. Dlužil jí za vyléčenou nohu a neptal se. Ze seníku bylo vidět na dvůr za lázní, na struhu a na zadní dveře. Ilona ležela v seně s bradou na rukou a dívala se, jak se setmívá.
 
 Potok šuměl. Na mostě se zastavili dva havíři a hádali se, opilí, a pak šli dál. Lázeň utichla, poslední ženy odešly, kouř z komína zeslábl a jen se líně táhl. V okně Jobstovy komory se rozsvítilo.
 
@@ -256,11 +258,11 @@ Ilona sjela po žebříku ze seníku tak rychle, že si odřela dlaně, a vyběh
 
 Na náměstí se muž zastavil.
 
-Ilona se přitiskla ke zdi pod podloubím. Muž se rozhlédl, krátce, a pak zahnul do průchodu mezi dvěma domy na horní straně náměstí. Průchod byl úzký, klenutý, a Ilona věděla, kam vede: na zadní dvorek, ze kterého měly vchody do dvorů tři domy. Dům se zlatým jelenem nad portálem, kde měl obchod kupec s plátnem. Dům vedle, kde byla pekárna. A třetí, rohový, ze kterého dvůr nebyl vidět, protože se do něj chodilo zezadu přes ten průchod.
+Ilona se přitiskla ke zdi pod podloubím. Muž se rozhlédl, krátce, a pak zahnul do průchodu mezi dvěma domy na horní straně náměstí. Průchod byl úzký, klenutý, a Ilona věděla, kam vede: na zadní dvorek, na který ústily zadní vchody tří domů. Dům se zlatým jelenem nad portálem, kde měl obchod kupec s plátnem. Dům vedle, kde byla pekárna. A třetí, rohový, jehož dvůr nebyl z náměstí vidět, protože se do něj chodilo zezadu přes ten průchod.
 
 Ilona čekala. Počítala, jak počítala v noci kroky. Do sta. Do dvou set. Nic. Muž nevyšel.
 
-Pak, kdy už se rozhodla, že půjde blíž, se z průchodu ozvalo klapání kopyt a vyšel mezek. Malý, šedý, se dvěma koši přes hřbet, a koše byly přikryté pytlovinou. Vedl ho jiný muž, menší, shrbený, v kápi. Ilona viděla, jak se mezek vlní pod nákladem, a viděla, že jeden z košů je hranatý, jako by v něm byl soudek.
+Pak, když už se rozhodla, že půjde blíž, se z průchodu ozvalo klapání kopyt a vyšel mezek. Malý, šedý, se dvěma koši přes hřbet, a koše byly přikryté pytlovinou. Vedl ho jiný muž, menší, shrbený, v kápi. Ilona viděla, jak se mezek vlní pod nákladem, a viděla, že jeden z košů je hranatý, jako by v něm byl soudek.
 
 Mezek prošel náměstím a zamířil nahoru, ulicí, která vedla na horní konec a pak dál, mezi haldy, ke starým dílům.
 
@@ -278,7 +280,7 @@ Na horním konci, kde končila dlažba, ji zastavil ponocný.
 
 „Ten kašle pořád.“ Ponocný ji neochotně pustil, ale ještě chvíli stál a díval se za ní, a když se ohlédla, stál tam pořád, s lucernou zvednutou.
 
-Mezek byl pryč. Ilona došla k poslednímu domu, k Ursulinu domku, kde byly teď okenice zavřené a zatlučené, a zastavila se. Nad ní stoupala k horám cesta mezi haldami, bílá v tom slabém světle hvězd, a na ní nebylo nic. Jen ticho, a v tom tichu, vysoko a daleko, kopyta. Klap, klap. Pomalu, stoupavě, slábnoucí.
+Mezek byl pryč. Ilona došla k poslednímu domu, k Ursulinu domku, který měl teď okenice zavřené a zatlučené, a zastavila se. Nad ní stoupala k horám cesta mezi haldami, bílá v tom slabém světle hvězd, a na ní nebylo nic. Jen ticho, a v tom tichu, vysoko a daleko, kopyta. Klap, klap. Pomalu, stoupavě, slábnoucí.
 
 Tam nahoře, kde se cesta ztrácela ve tmě, byla na Kunzově mapě nakreslená štola a u ní drobným písmem *verlassen*.
 
@@ -294,7 +296,7 @@ Pod to udělala svislou čáru, od horního okraje k dolnímu, a nalevo napsala 
 
 A pod to první řádek: *Sobota 20. května.* Nalevo: *nevím, kolik misek. Odpoledne pouštěl mistr. Ženy na lavicích říkaly: „u mistra je fronta až do nešpor“.* Napravo: *nic. Struha bez čerstvých skvrn, potok čistý. Soudek bednářský, s víkem, dvě obruče, odnesen po setmění. Dán mužem mezkovi v průchodu na horní straně náměstí. Mezek nahoru na horní konec, za haldy.*
 
-Pak se zastavila. Nevěděla, kolik misek. Musí to vědět. Příští sobotu bude sedět v lázni od poledne do nešpor a bude počítat ženy, které jdou za Jobstem do komory, a muže, kteří jdou za ním po nich, a bude to psát nalevo. A napravo bude psát, co se vylilo. A když nalevo bude stát dvacet misek a napravo nic, bude to mít černé na bílém, a nebude to výpověď děvečky, která by mohla přijít o místo, ani výpověď vdovy, která by mohla být cizí ženská. Bude to počet. Počty se nepletou a nepřeslazují.
+Pak se zastavila. Nevěděla, kolik misek. Musí to vědět. Příští sobotu bude sedět v lázni od poledne do nešpor a bude počítat ženy, které jdou za Jobstem do komory, a muže, kteří jdou za ním po nich, a bude to psát nalevo. A napravo bude psát, co se vylilo. A když nalevo bude stát dvacet misek a napravo nic, bude to mít černé na bílém, a nebude to výpověď děvečky, která by mohla přijít o místo, ani výpověď vdovy, kterou by mohli odbýt jako cizí ženskou. Bude to počet. Počty se nepletou a nepřeslazují.
 
 Pak vzala sešit a přepsala do čistého Lenina slova. Celá, jak je řekla. *Teď mi platí víc někdo jinej. A nemusím kvůli tomu chodit do tý páry.* Jako Purgina slova, jako slova Ursuly přes zeď. *Říkals, že jen trochu.*
 
@@ -312,6 +314,6 @@ Vzala list s tabulkou a pod čáru, dole, napsala malým písmem jen to, co věd
 
 A pod to, protože to věděla taky: *Hřebíček a něco jako kadidlo, ale hořčejší.*
 
-Nevěděla, odkud ta vůně je. Měla pocit, že by to vědět měla, že ji někde cítila, nedávno nebo dávno, ve světnici plné lahví a skříněk. Ale nevzpomněla si a nenutila se, protože co si člověk nutí vzpomenout, to si obvykle vymyslí.
+Nevěděla, odkud ta vůně je. Měla pocit, že by to vědět měla, že ji někde cítila, nedávno nebo dávno, ve světnici plné lahví a skříněk. Ale nevzpomněla si a nenutila se, protože na co se člověk nutí vzpomenout, to si obvykle vymyslí.
 
 Za oknem stály hvězdy. Nehledala je. Usušila inkoust pískem a list s tabulkou založila do desek k zápisu o Ursule Kolbové, na vrch, aby ho v pondělí, až půjde nahoru, měla po ruce.

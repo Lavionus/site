@@ -2,7 +2,7 @@
 
 Na Popeleční středu mu převor udělal na čele kříž z popela a Matěj ucítil, jak mu drobty padají na řasy.
 
-*Memento, homo, quia pulvis es.* Pamatuj, člověče, že jsi prach. Převor to říkal každému stejně, tichým, úsporným hlasem, a jeho palec byl suchý a studený. U Matěje se nezdržel ani o dech déle než u ostatních. Matěj se vrátil na své místo v chóru a celou mši cítil popel na kůži. Bylo to jako stopa po prstu na vosku, kterou člověk nevidí, a ví o ní.
+*Memento, homo, quia pulvis es.* Pamatuj, člověče, že jsi prach. Převor to říkal každému stejně, tichým, úsporným hlasem, a jeho palec byl suchý a studený. U Matěje se nezdržel ani o dech déle než u ostatních. Matěj se vrátil na své místo v chóru a celou mši cítil popel na kůži. Bylo to jako stopa po prstu na vosku, kterou člověk nevidí, a přesto o ní ví.
 
 Přijel předchozího večera, za tmy, se zablácenými saněmi a s Udalrichovým konvršem, který celou cestu mluvil se sýrem víc než s ním. Obleva rozmočila cesty a za Chebem se jelo blátem až po osy. Do brány vjeli, když už se zvonilo ke kompletáři. Matěj stihl jen sundat plášť, který si na grangii půjčil od Udalricha, protože svůj nechal tam, kde ho nechal. Pak se postavil do chóru, mokrý až po kolena. Bratři se na něj dívali přes stalla a nikdo nic neřekl, protože se zachovávalo mlčení. Matěj byl tomu mlčení vděčnější, než kdy býval.
 
@@ -12,7 +12,7 @@ O prvním postním pondělí se v kapitule rozdávaly knihy.
 
 Tak to stálo v řeholi a tak se to ve Waldsassenu dělalo od založení: na začátku postu dostane každý bratr z knihovny jednu knihu a má ji přečíst celou, od začátku do konce. Knihy rozdával armarius. Wigand ležel na ošetřovně a toho rána se poprvé nezvedl ani ke stolici. Knihy tedy nosil Matěj. Bral je z vozíku po jedné, četl nahlas jméno bratra a název a vkládal každému svazek do dlaní, jak ho to Wigand naučil: oběma rukama, hřbetem k tomu, kdo ho bere. Bratr Hartmann dostal Cassiana. Bratr Eberhard, který usínal nad vším, dostal Řehořovy dialogy, protože v nich byly zázraky a zázraky ho budily. Novicové dostali žaltáře s glosou.
 
-Když byl vozík prázdný, zbyla v něm jedna kniha. Matěj ji nevybral. Převor ji tam položil sám, ráno, než ho Matěj přivezl do kapituly. Byla to Augustinova kázání o Janově evangeliu a na tkanici byla cedulka s převorovým drobným písmem: *Matthias.*
+Když byl vozík prázdný, zbyla v něm jedna kniha. Matěj ji nevybral. Převor ji tam položil sám, ráno, než Matěj vozík přivezl do kapituly. Byla to Augustinova kázání o Janově evangeliu a na tkanici byla cedulka s převorovým drobným písmem: *Matthias.*
 
 Matěj ji držel v rukou a díval se na převora. Převor se díval jinam.
 
@@ -26,7 +26,7 @@ Kost zvážil ve čtvrtek u celeráře.
 
 Celerář měl ve sklepě pod refektářem dvouramenné váhy, na kterých vážil sůl pro kuchyni a vosk pro sakristii, a závaží k nim. Pustil k nim Matěje rád, protože ho to nic nestálo a protože byl zvědavý. Byl to tlustý, laskavý Frank, který mluvil potichu, jako by se bál, že ho uslyší sudy.
 
-Matěj položil kost na jednu misku. Na druhou dával kameny, které si přinesl ze dvora, dokud se ramena nesrovnala. Pak vyměnil kameny za hovězí holenní kost z kuchyně, stejně dlouhou a skoro stejně silnou, jakou mu kuchař vylovil z hrnce. Miska s dračí kostí klesla, jako by na ni někdo položil ruku. Holenní kost se zvedla. Ani když k ní přidal druhou, váhy se nesrovnaly.
+Matěj položil kost na jednu misku. Na druhou dával kameny, které si přinesl ze dvora, dokud se ramena nesrovnala. Pak vyměnil kameny za hovězí holenní kost, kterou mu kuchař vylovil z hrnce. Byla stejně dlouhá a skoro stejně silná. Miska s dračí kostí klesla, jako by na ni někdo položil ruku. Holenní kost se zvedla. Ani když k ní přidal druhou, váhy se nesrovnaly.
 
 „Kámen,“ řekl celerář.
 
@@ -48,6 +48,8 @@ Ve vedlejším sklepě stály tři kádě a z nich šel pach, kterým byl celý 
 
 Plamen se zmenšil. Zamodral se. Kousek nad pěnou zhasl, tiše, bez kouře, jako by ho někdo sevřel prsty.
 
+![Svíce nad kádí](obrazky/07_svice.webp)
+
 Matěj stál a díval se.
 
 „Proto se drž za mnou,“ řekl celerář a znovu zapálil svíci od lampy u dveří. „Nesklánět se nad kádí. Když pivo pracuje, dýchá, a ten dech člověka porazí. Bratr Ruotger před deseti lety spadl do kádě po hlavě. Vytáhli ho za nohy, ale už bylo pozdě.“ Pokřižoval se. „Svíce to pozná dřív než člověk. Proto ji nosím.“
@@ -62,9 +64,9 @@ Matěj si to nezapsal. Ruce měl plné kosti v plátně a pak už nebyla chvíle
 
 *
 
-S formulí to bylo jinak, než čekal. Nebylo v tom žádné chytré pátrání. Bylo to jako když člověk na trhu uslyší hlas a ví, že ho zná, dřív než ví odkud.
+S formulí to bylo jinak, než čekal. Nebylo v tom žádné chytré pátrání. Bylo to, jako když člověk na trhu uslyší hlas a ví, že ho zná, dřív než ví odkud.
 
-Listina začínala, jak začínají listiny, které chtějí, aby jim někdo věřil. Invokace, jméno Boží, a pak arenga, úvodní věta o tom, proč se věci zapisují: *Quoniam ea quae geruntur in tempore, ne simul labuntur cum tempore, solent litterarum memoriae commendari…* Protože to, co se děje v čase, aby to spolu s časem nepominulo, svěřuje se obvykle paměti písma.
+Listina začínala, jak začínají listiny, které chtějí, aby jim někdo věřil. Invokace, jméno Boží, a pak arenga, úvodní věta o tom, proč se věci zapisují: *Quoniam ea quae geruntur in tempore, ne simul labuntur cum tempore, solent litterarum memoriae commendari…* Protože to, co se děje v čase, se obvykle svěřuje paměti písma, aby to spolu s časem nepominulo.
 
 Matěj ji četl za ty týdny desetkrát. Napoprvé ho uchvátila. Napodruhé ho na ní něco zaškrábalo, jako zrnko písku v oku, ale nechal to být. Teď, se svazkem z Řezna pod hábitem, si ji přečetl pomalu a nahlas, šeptem, protože bylo velké mlčení, a uslyšel to.
 
@@ -130,7 +132,7 @@ Matěj se sklonil a přičichl. Vosk voněl, jak voní vosk v sakristii ve Walds
 
 „Jedna ruka. Žádný křížek. A ani jedno řecké písmeno.“
 
-„Řek, který se umí podepsat, se podepíše řecky,“ řekl Wigand. „To vím jistě. Viděl jsem řecké podpisy. Vypadají jako mravenci, kteří utíkají z mravenčí hromady.“ Odmlčel se, aby se nadechl. „Tak. Máš chybu, kterou tam nedala Lydda, ale Řezno. Máš vosk tam, kde by čekal olovo. Máš svědky, kteří se nepodepsali. Žádná z těch věcí sama o sobě nic nedokazuje. Všechny tři dohromady…“
+„Řek, který se umí podepsat, se podepíše řecky,“ řekl Wigand. „To vím jistě. Viděl jsem řecké podpisy. Vypadají jako mravenci, kteří utíkají z mravenčí hromady.“ Odmlčel se, aby se nadechl. „Tak. Máš chybu, kterou tam nedala Lydda, ale Řezno. Máš vosk tam, kde bys čekal olovo. Máš svědky, kteří se nepodepsali. Žádná z těch věcí sama o sobě nic nedokazuje. Všechny tři dohromady…“
 
 „Listina lže,“ řekl Matěj.
 
@@ -192,7 +194,7 @@ Matěj čekal na pokračování a cítil, jak mu v hrudi stoupá to teplo, kter�
 
 Matěj mlčel.
 
-„Panu Konrádovi? Ten neumí číst. Koupil, co mu Rüdiger přivezl, a Rüdiger koupil, co mu prodali, nebo si to nechal napsat cestou, v Benátkách, v Bari, v Řezně, kdekoli. Když mu řeknu, že listina je podvrh, řeknu mu, že jeho poutník je hlupák nebo podvodník a on sám je hlupák, protože mu věřil. V době, kdy nám dává les.“ Převor mluvil klidně a bez hněvu, jako když převor v kapitule probírá účty. „Konventu? Bratři by se dozvěděli, že nám dobrodinec poslal falešnou listinu, a půl z nich by mělo radost a druhá půlka strach. Panu opatovi, až se uzdraví? Ten si přeje klid. Lidem pod horou?“ Převor se podíval na Matěje. „Těm, kterým máš na svatého Jiří říct, co jsi viděl? Ty nečtou latinu, Matthiasi. Nevědí, co je arenga. Je jim jedno, jestli je ta kost z Lyddy, nebo z Bari. Ptají se jen, jestli je z draka.“
+„Panu Konrádovi? Ten neumí číst. Koupil, co mu Rüdiger přivezl, a Rüdiger koupil, co mu prodali, nebo si to nechal napsat cestou, v Benátkách, v Bari, v Řezně, kdekoli. Když mu řeknu, že listina je podvrh, řeknu mu, že jeho poutník je hlupák nebo podvodník a on sám je hlupák, protože mu věřil. V době, kdy nám dává les.“ Převor mluvil klidně a bez hněvu, jako když v kapitule probírá účty. „Konventu? Bratři by se dozvěděli, že nám dobrodinec poslal falešnou listinu, a půl z nich by mělo radost a druhá půlka strach. Panu opatovi, až se uzdraví? Ten si přeje klid. Lidem pod horou?“ Převor se podíval na Matěje. „Těm, kterým máš na svatého Jiří říct, co jsi viděl? Ty nečtou latinu, Matthiasi. Nevědí, co je arenga. Je jim jedno, jestli je ta kost z Lyddy, nebo z Bari. Ptají se jen, jestli je z draka.“
 
 „A ta otázka…“
 
@@ -244,7 +246,7 @@ Nikomu nic neřekl. Nebylo komu. Wigand většinu dní spal, a když nespal, pta
 
 Merina neviděl, ani ve snu. Viděl ale čísla. Tisíc sto čtyřicet, šest set padesát, čtyřicet dva. V noci, když ho budil zvon k vigiliím, je měl na jazyku dřív než první slovo žalmu. Jednou se přistihl, jak je píše prstem do prachu na pultu, a rychle je setřel rukávem, jako by ho někdo viděl.
 
-Jednou šel ke zpovědi. Zpovídal převor. Matěj klečel, vyznal se z toho, že vzal knihu, kterou mu nepřidělili, ze zbytečné zvědavosti a z netrpělivosti při chórové modlitbě. Pak zmlkl. Převor čekal.
+Jednou šel ke zpovědi. Zpovídal převor. Matěj klečel a vyznal se z toho, že vzal knihu, kterou mu nepřidělili. Vyznal se i ze zbytečné zvědavosti a z netrpělivosti při chórové modlitbě. Pak zmlkl. Převor čekal.
 
 „Ještě něco, bratře?“
 
@@ -288,12 +290,12 @@ Matěj vzal dopis. Podíval se na místo na stole, kde ležel obrácený list o 
 
 *
 
-Odjížděl následujícího rána, s celerářovým čeledínem a s vozem, který vezl na grangii osivo. V mošně měl tabulku, Augustina, kterého mu převor dovolil vzít, šedý cíp hábitu a obyčejný říční kámen, který už dávno nehřál. Na dně mošny, zabalených v plátně, měl ještě šest svící.
+Odjížděl následujícího rána, s celerářovým čeledínem a s vozem, který vezl na grangii osivo. V mošně měl tabulku, Augustina, kterého mu převor dovolil vzít, šedý cíp hábitu a obyčejný říční kámen, který už dávno nehřál. Na dně mošny měl ještě šest svící zabalených v plátně.
 
-Vyprosil si je u sakristiána. Byly to zbytky z Hromnic, svíce, které se v průvodu nesly a pak se ořezaly, protože už nebyly dost dlouhé na oltář, a které se rozdávaly bratřím do cel, aby jim svítily v nemoci a v umírání. Sakristián se ho nezeptal, k čemu je potřebuje. Kdyby se zeptal, Matěj by nevěděl, co odpovědět.
+Vyprosil si je u sakristiána. Byly to zbytky z Hromnic. V průvodu se nesly a pak se ořezaly, protože už nebyly dost dlouhé na oltář. Takové svíce se rozdávaly bratřím do cel, aby jim svítily v nemoci a v umírání. Sakristián se ho nezeptal, k čemu je potřebuje. Kdyby se zeptal, Matěj by nevěděl, co odpovědět.
 
 Ve skutečnosti to věděl. Viděl celeráře, jak spouští svíci nad pěnu, a plamen, jak se zmenšuje, modrá a zhasíná. A viděl prohlubeň mezi borovicemi, holé dno, ptáky a lišku a Sivku. *Ve sklepě to je, kde to je, a drží se to u země.*
 
-Za Chebem se vůz zabořil do bláta až po osy a čeledín kletbami tahal koně. Matěj seslezl a tlačil, a když se vůz konečně pohnul, stál po kotníky v hnědé vodě a díval se na hory. Byly modré a nízké jako tenkrát a nad nimi bylo nebe, ze kterého od rána padal drobný déšť. Tělo si je pamatovalo jako schod u domu.
+Za Chebem se vůz zabořil do bláta až po osy a čeledín kletbami tahal koně. Matěj slezl a tlačil, a když se vůz konečně pohnul, stál po kotníky v hnědé vodě a díval se na hory. Byly modré a nízké jako tenkrát a nad nimi bylo nebe, ze kterého od rána padal drobný déšť. Tělo si je pamatovalo jako schod u domu.
 
 Pomyslel si, že tentokrát jede zjistit něco, co nechce vědět, a že to je poprvé. Nedokázal ale říct, jestli se bojí, že se mýlil v dopise, nebo že se v něm nemýlil.

@@ -20,7 +20,7 @@ Ješek stál kus stranou a držel něco v dlani.
 
 Uviděl Matěje a nehnul se. Jen natáhl ruku a rozevřel prsty, tak jako to dělal, když byl malý a chytil na potoce raka. *Podívej.*
 
-Byl to valoun. Velký jako holubí vejce, nepravidelný, s hladkými hrbolky, jako by ho někdo hnětl v ruce a pak ho nechal ztuhnout. Na jedné straně na něm ulpěla šedá hlína. Kde hlína nebyla, svítil. Ne tak, jak svítí mosaz na kadidelnici, ani jako pozlátko v iniciálách. Svítil zevnitř, tlumeně a teple, a v šeru paseky byl to nejjasnější předmět široko daleko.
+Byl to valoun. Velký jako holubí vejce, nepravidelný, s hladkými hrbolky, jako by ho někdo hnětl v ruce a pak ho nechal ztuhnout. Na jedné straně na něm ulpěla šedá hlína. Kde hlína nebyla, svítil. Ne tak, jak svítí mosaz na kadidelnici, ani jako pozlátko v iniciálách. Svítil zevnitř, tlumeně a teple, a v šeru paseky to byl nejjasnější předmět široko daleko.
 
 „Zlato,“ řekl Ješek.
 
@@ -32,7 +32,7 @@ Matěj se ho nedotkl. Díval se na něj.
 
 „Nevím. Ortlieb nás vyhnal ven, jak jsme to uviděli. Říká, že nikdo nesmí nic vzít, že je to pánovo.“ Ješek sevřel valoun v pěsti. „Tohle mi dal podržet. Ať to pán vidí, říká, kdo to našel.“
 
-Ortlieb se otočil. Uviděl Matěje a jeho tvář se na okamžik změnila, jako se změní tvář člověka, který uslyší za dveřmi kroky. Pak se usmál. Matěj ho nikdy neviděl se usmívat a nebylo to dobré.
+Ortlieb se otočil. Uviděl Matěje a jeho tvář se na okamžik změnila, jako se změní tvář člověka, který uslyší za dveřmi kroky. Pak se usmál. Matěj ho nikdy předtím neviděl usmívat se a nebylo to dobré.
 
 „Mnichu,“ řekl česky. „Dobrý den. Velký den.“ Ukázal kahanem k ústí. „Suchá. Vidíš? Celá díra suchá jako sklep. Kde je voda? Žádná voda.“
 
@@ -48,21 +48,21 @@ Matěj se to dozvěděl od Udalricha, který se vrátil z mlýna s prázdným vo
 
 „Ve Svatém týdnu,“ řekl ještě. „Zlato ve Svatém týdnu.“
 
-Matěj se ohlédl k oratoři. Nad dveřmi tam ještě visely vrbové proutky, které Udalrich nařezal v neděli u potoka místo palem, s šedými chlupatými kočičkami, jaké v Mlýnci trhaly děti na Květnou neděli, když byl Matěj malý. Udalrich je v neděli nesl kolem grangie v průvodu o třech lidech, sám, Matěj a starý konvrš, který kulhal, a zpívali *Gloria, laus*, a ovce na ně koukaly přes ohradu. Teď proutky usychaly a kočičky z nich padaly na práh. V pátek se bude číst o Jidášovi a o třiceti stříbrných. Matěj na to nechtěl myslet, a tak myslel na cestu.
+Matěj se ohlédl k oratoři. Nad dveřmi tam ještě visely vrbové proutky s šedými chlupatými kočičkami. Udalrich je nařezal v neděli u potoka místo palem. Takové trhaly v Mlýnci děti na Květnou neděli, když byl Matěj malý. Udalrich je v neděli nesl kolem grangie v průvodu o třech lidech – on sám, Matěj a starý konvrš, který kulhal. Zpívali *Gloria, laus* a ovce na ně koukaly přes ohradu. Teď proutky usychaly a kočičky z nich padaly na práh. V pátek se bude číst o Jidášovi a o třiceti stříbrných. Matěj na to nechtěl myslet, a tak myslel na cestu.
 
 Šel.
 
-U kostelíka stála celá ves, nebo skoro celá, protože bylo úterý a orat se ještě nedalo. Ženy v šátcích, chlapi s rukama za opaskem, děti, které rodiče drželi za límec. Kojata stál vpředu, široký a rudý, a vedle něj mlynář. Stará Bohuna se opírala o hůl. Matka stála u plotu fary, kterou kněz za kopcem nikdy nepoužíval, a když Matěj přišel, nepodívala se na něj. Dívala se na Ješka.
+U kostelíka stála celá ves, nebo skoro celá, protože bylo úterý a orat se ještě nedalo. Ženy v šátcích, chlapi s rukama za opaskem, děti, které rodiče drželi za límec. Kojata stál vpředu, široký a rudý, a vedle něj mlynář. Stará Bohuna se opírala o hůl. Matka stála u plotu fary, kterou kněz zpoza kopce nikdy nepoužíval, a když Matěj přišel, nepodívala se na něj. Dívala se na Ješka.
 
 Ješek stál vedle Konrádova koně. Byl umytý, měl na sobě čistou košili, a Matěj ho v ní nepoznal hned. Pak pochopil, že je to otcova sváteční košile, kterou matka schovávala v truhle a kterou Ješek nosil na Vánoce a o posvícení. Byla mu těsná přes ramena.
 
-Konrád seděl na koni. Neměl na sobě zbroj, jen tmavý plášť s kožešinou, a na ruce železný prsten. Když uviděl Matěje, usmál se a kývl na něj, jako se kývá na přítele, kterého člověk čekal. Matěj ucítil, jak se k němu obrací hlavy.
+Konrád seděl na koni. Neměl na sobě zbroj, jen tmavý plášť s kožešinou, a na ruce železný prsten. Když uviděl Matěje, usmál se a kývl na něj, jako se kývá na přítele, kterého člověk čekal. Matěj ucítil, jak se k němu obracejí hlavy.
 
 „Matěji,“ řekl Konrád. „Pojď. Pojď blíž.“
 
 Matěj šel blíž. Lidé mu uhýbali a za zády slyšel šepot. *Mnich. Ten, co byl v doupěti.*
 
-Konrád zvedl ruku. V ní ležel Ješkův valoun. Někdo z něj smyl hlínu a teď svítil celý, i ve slabém slunci dubnového dopoledne, a Matěj slyšel, jak ves vydechla, všichni najednou, jako vydechuje kostel, když kněz pozdvihne hostii.
+Konrád zvedl ruku. V ní ležel Ješkův valoun. Někdo z něj smyl hlínu a teď svítil celý, i ve slabém slunci dubnového dopoledne. Matěj slyšel, jak ves vydechla, všichni najednou, jako vydechuje kostel, když kněz pozdvihne hostii.
 
 „Vy tady,“ řekl Konrád česky, pomalu, se slovy postavenými trochu vedle, jak je kdysi slyšel od chůvy, „vy tady vyprávíte o drakovi. Sto let. Dvě stě let. Drak spí v hoře. Drak hlídá zlato.“ Pootočil valounem, aby na něj padlo světlo. „Kněží řeknou: pohádka. Páni řeknou: pohádka pro děti.“ Usmál se. „Já říkám: vaše babičky nelhaly.“
 
@@ -80,7 +80,7 @@ Konrád se k ní otočil. „Jako bob?“
 
 „Tak tvoje babička,“ řekl Konrád, „neviděla nic.“ Zvedl valoun výš. „Tohle je jako vejce. A v hoře jich je víc.“
 
-Teď se smáli všichni. Bohuna taky, bezzubě a trochu uraženě, a Zdena vedle ní, a Kojata se smál nejhlasitěji. Matěj se nesmál. Díval se na valoun a myslel na to, že pověst, kterou si ves dvě stě let vyprávěla, se zvětšovala a zmenšovala podle toho, kdo ji vyprávěl, a že teď, poprvé, byla pravda větší než pověst. Nevěděl, co si s tou myšlenkou počít. Bylo v ní něco, co se mu nelíbilo, a nevěděl co.
+Teď se smáli všichni. Bohuna taky, bezzubě a trochu uraženě, a Zdena vedle ní, a Kojata se smál nejhlasitěji. Matěj se nesmál. Díval se na valoun a myslel na pověst, kterou si ves vyprávěla dvě stě let. Zvětšovala se a zmenšovala podle toho, kdo ji vyprávěl. A teď byla poprvé pravda větší než pověst. Nevěděl, co si s tou myšlenkou počít. Bylo v ní něco, co se mu nelíbilo, a nevěděl co.
 
 Konrád dal valoun Volkmarovi, který ho zabalil do plátna, a sáhl do měšce. Vytáhl minci, velkou, stříbrnou, ne takovou, jaké ležely v matčině hrnci, a podal ji Ješkovi.
 
@@ -98,7 +98,7 @@ Konrád se nepřestal usmívat. Otočil hlavu, pomalu, a podíval se na Matěje.
 
 Matěj stál uprostřed vsi, ve které se narodil, a všichni se na něj dívali. Kojata, mlynář, Bohuna, Zdena, Kojatova žena s rukou na srdci, kluk, kterého matka minule bila u potoka. Ješek v otcově košili. Matka u plotu. Konrád na koni, s rukou opřenou o hrušku sedla, trpělivý a laskavý, jako by se ptal na něco, co oba dávno vědí.
 
-V hrudi ucítil to teplo. To, které znal z čtení listiny a z psaní dopisu převorovi. Stačilo říct *ano*. Ves by vydechla podruhé.
+V hrudi ucítil to teplo. To, které znal ze čtení listiny a z psaní dopisu převorovi. Stačilo říct *ano*. Ves by vydechla podruhé.
 
 „Tu díru jsem neviděl,“ řekl.
 
@@ -120,7 +120,7 @@ Matěj k němu došel.
 
 „Ne.“ Ješek se na něj nepodíval. „Teď ne, Mates.“
 
-Šel k matce. Matka mu vzala minci z ruky, prohlédla si ji, jak si prohlíží vejce proti světlu, a vrátila mu ji. Pak se podívala přes jeho rameno na Matěje. Dlouho. Matěj nevěděl, co se v tom pohledu skrývá, jestli výčitka, nebo něco jiného, a nedozvěděl se to, protože matka se otočila a šla domů.
+Šel k matce. Matka mu vzala minci z ruky, prohlédla si ji, jak si prohlíží vejce proti světlu, a vrátila mu ji. Pak se podívala přes jeho rameno na Matěje. Dlouho. Matěj nevěděl, co se v tom pohledu skrývá, jestli výčitka, nebo něco jiného. Nedozvěděl se to, protože matka se otočila a šla domů.
 
 *
 
@@ -128,7 +128,7 @@ Odpoledne začali Konrádovi lidé dutinu vybírat.
 
 Matěj to viděl z kraje paseky, z místa pod smrkem, kde v únoru seděl s tabulkou. Nikdo ho nevyhnal, ale nikdo ho ani nepozval blíž. Ortlieb zastavil práci na čelbě, protože chodba byla úzká a koše s hlínou se v ní nemohly míjet s koši s hlušinou. Stál u ústí, s rukama zkříženýma na prsou, a Matěj na něm viděl, že ho to zastavení pálí víc než cokoli jiného toho dne. Každý den, kdy se na čelbě nekopalo, byl den, za který se mu neplatilo.
 
-Uvnitř velel Rüdiger. Chlapi z Ortliebovy směny vynášeli ven koše šedé hlíny, a u boudy ji dva Konrádovi pacholci prohazovali lopatou přes síto ze žíní, jaké se používá na obilí. Hlína propadávala, jemná jako mouka, a na sítě zůstávalo, co v ní bylo. Pacholci to probírali prsty a hlavně se dívali, jestli se něco nezaleskne. Co se zalesklo zlatě, šlo do koženého vaku, který držel Volkmar. Volkmar u toho stál s tabulkou a pokaždé něco zapsal. Co se zalesklo jinak, většinou letělo na haldu.
+Uvnitř velel Rüdiger. Chlapi z Ortliebovy směny vynášeli ven koše šedé hlíny a u boudy ji dva Konrádovi pacholci prohazovali lopatou přes síto ze žíní, jaké se používá na obilí. Hlína propadávala, jemná jako mouka, a na sítu zůstávalo, co v ní bylo. Pacholci to probírali prsty a hlavně se dívali, jestli se něco nezaleskne. Co se zalesklo zlatě, šlo do koženého vaku, který držel Volkmar. Volkmar u toho stál s tabulkou a pokaždé něco zapsal. Co se zalesklo jinak, většinou letělo na haldu.
 
 Matěj počítal. Nemohl si pomoct. Do nešpor šlo do vaku jedenáct věcí. Jednou se pacholci pohádali a Volkmar musel jít rozsoudit, jestli je to zlato, nebo mosaz. Byla to mosaz, přezka z něčího opasku, která spadla do síta. Smáli se tomu až dolů na grangii.
 
@@ -150,7 +150,7 @@ Ve tmě za haldou seděl dlouho s tou kostí v jedné ruce a s úlomkem s rýham
 
 Do svatého Jiří zbývalo dvanáct dní. Za dvanáct dní tam Konrád zavede ves. *Uvidíte, kde spal.* Za dvanáct dní tam ale nebude nic. Rüdiger a jeho pacholci prohodí sítem všechno, co se dá vynést v koši, a co se nedá, odsekají krumpáčem. Na haldě budou krystaly a úlomky s rýhami, ve vaku zlato, a v hoře prázdná díra, do které Konrád postaví lidi s pochodněmi a řekne jim, co si mají myslet.
 
-Matěj nevěděl, co v té díře je. *Non vidi.* Řekl to celé vsi nahlas a byla to pravda, a právě proto, že to byla pravda, musel to vidět. Teď. Dokud to tam ještě je.
+Matěj nevěděl, co v té díře je. *Non vidi.* Řekl to celé vsi nahlas a byla to pravda. A právě proto, že to byla pravda, to musel vidět. Teď. Dokud to tam ještě je.
 
 Kost a úlomek si strčil pod hábit, k tabulce. Pak vstal a šel k boudě.
 
@@ -188,7 +188,7 @@ Matěj pochopil, že bez Ješka nepůjde. Hensel ho do štoly samotného nepust�
 
 *
 
-Ješek byl u matky. Seděl u stolu v otcově košili, kterou si ještě nesvlékl, a matka mu u ohně spravovala druhou. Když Matěj vešel, oba zvedli hlavy, a matka se zase sklonila k jehle.
+Ješek byl u matky. Seděl u stolu v otcově košili, kterou si ještě nesvlékl, a matka mu u ohně spravovala druhou. Když Matěj vešel, oba zvedli hlavy a matka se zase sklonila k jehle.
 
 „Hensel tě volá,“ řekl Matěj. „Do hory.“
 
@@ -218,7 +218,7 @@ Ješek mlčel. Potom se naklonil přes stůl a řekl tiše, aby to matka neslyš
 
 „Mně ne.“
 
-Ješek se na něj dlouho díval. Matěj čekal, že řekne *ty a tvoje psaní*, nebo *mnich se bojí vody, ale do drakovy díry se nebojí*, nebo něco ze včerejška a z hrobu pod hrušní. Ješek neřekl nic takového. Díval se na kost na stole, na ten tmavý med, který svítil v ohni, a pak se zeptal, a jeho hlas byl najednou mladší, jako hlas kluka, který kdysi u rybníka ukazoval bratrovi raka:
+Ješek se na něj dlouho díval. Matěj čekal, že řekne *ty a tvoje psaní*, nebo *mnich se bojí vody, ale do drakovy díry se nebojí*, nebo něco ze včerejška a z hrobu pod hrušní. Ješek neřekl nic takového. Díval se na kost na stole, na ten tmavý med, který svítil v ohni. Pak se zeptal a jeho hlas byl najednou mladší, jako hlas kluka, který kdysi u rybníka ukazoval bratrovi raka:
 
 „A přečteš to?“
 
@@ -238,7 +238,7 @@ Ješek se podíval na ni a pak na bratra. Pak si začal svlékat otcovu košili,
 
 *
 
-Když vycházeli ze vsi, svítil měsíc, skoro v úplňku, a pod ním se cesta k hoře leskla blátem. Ješek šel první. Matěj šel za ním a pod hábitem nesl tabulku, kost, úlomek s rýhami a malý sešitek ze čtyř přeložených listů pergamenu, sešitých nití. Ten mu dal převor v den, kdy ho posílal zpátky na grangii, a řekl mu, aby do něj nakreslil, kam štola vede. Matěj do něj zatím nenakreslil nic. Dva týdny čekal, až bude mít co kreslit, a teď nesl tenhle sešitek do hory, kam ho Konrád zakázal pouštět. Kdyby se to převor dozvěděl, nevěděl by, jestli ho za to pokárat, nebo pochválit. Matěj to nevěděl taky.
+Když vycházeli ze vsi, svítil měsíc, skoro v úplňku, a pod ním se cesta k hoře leskla blátem. Ješek šel první. Matěj šel za ním a pod hábitem nesl tabulku, kost, úlomek s rýhami a malý sešitek ze čtyř přeložených listů pergamenu, sešitých nití. Ten mu dal převor v den, kdy ho posílal zpátky na grangii, a řekl mu, aby do něj nakreslil, kam štola vede. Matěj do něj zatím nenakreslil nic. Dva týdny čekal, až bude mít co kreslit, a teď ho nesl do hory, kam Konrád zakázal Matěje pouštět. Kdyby se to převor dozvěděl, nevěděl by, jestli ho za to pokárat, nebo pochválit. Matěj to nevěděl taky.
 
 V kapse měl olůvko, to, kterým se ve skriptoriu linkují listy. Psát se jím nedalo dobře. Kreslit ano.
 

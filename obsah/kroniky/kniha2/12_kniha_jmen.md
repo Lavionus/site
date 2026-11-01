@@ -34,7 +34,7 @@ Dívala se na ně a pomyslela si, že kdyby je položila vedle sebe a věděla v
 
 Florian zaklepal po desáté.
 
-Ne vzadu. Vepředu, do ulice, kde stáli havíři od horního úřadu, a havíři ho zastavili a jeden z nich vešel napřed a řekl: „Paní, je tu lékárníkův. Že prý mistr umírá.“
+Ne vzadu. Vepředu, do ulice, kde stáli havíři od horního úřadu. Havíři ho zastavili, jeden z nich vešel napřed a řekl: „Paní, je tu lékárníkův. Že prý mistr umírá.“
 
 Florian stál na prahu s lucernou a s rukou, na které ještě měl zarůžovělou kůži po páře, a lapal po dechu, jako by běžel celou cestu do kopce.
 
@@ -48,7 +48,7 @@ Ilona stála u stolu. Pod rukou měla tři lázeňské listy.
 
 Ilona vzala brašnu.
 
-V brašně měla nože a lancety, nitě, plátno, pálenku, mák. A na dně, v koženém pouzdře, které Řehoř nechal ušít u sedláře a které sama nikdy neotevřela, kleště. Ne obyčejné, jaké mají kováři. Zahnuté, s jedním ramenem, které se opíralo o dáseň, a s druhým, s háčkem, který se zaklesl za zub, a když se zatlačilo, zub vyjel ven bokem, jako hřebík z prkna. Řehoř jim říkal pelikán, protože vypadaly jako zobák toho ptáka. Lazebníci je měli všichni. Ranhojiči je měli všichni. Ilona je v ruce držela jen dvakrát, když Řehořovi podávala, a jednou, sama, u staré Sternové, a ta jí pak řekla, že to bylo horší než porod.
+V brašně měla nože a lancety, nitě, plátno, pálenku, mák. A na dně, v koženém pouzdře, které Řehoř nechal ušít u sedláře a které sama nikdy neotevřela, kleště. Ne obyčejné, jaké mají kováři. Zahnuté, s jedním ramenem, které se opíralo o dáseň, a s druhým, s háčkem, který se zaklesl za zub. Když se zatlačilo, zub vyjel ven bokem jako hřebík z prkna. Řehoř jim říkal pelikán, protože vypadaly jako zobák toho ptáka. Lazebníci je měli všichni. Ranhojiči je měli všichni. Ilona je v ruce držela jen dvakrát, když je podávala Řehořovi, a jednou sama, u staré Sternové. Ta jí pak řekla, že to bylo horší než porod.
 
 Nad lékárnou visí štít s pelikánem. Ilona na to pomyslela, když utahovala řemen brašny, a nechtěla na to myslet.
 
@@ -60,7 +60,7 @@ Röhrich ležel v posteli v prvním patře, nad officínou, v komoře se dvěma 
 
 Byla to dobrá komora. Postel s nebesy a se závěsy z modrého sukna, stůl, na stole svícen se třemi svíčkami, umyvadlo z cínu, na stěně obraz, Ilona neviděla čeho, protože svíčky svítily jinam. U nohou postele truhla. Menší, dubová, okovaná železem, se zámkem velikosti dlaně.
 
-Röhrich seděl opřený o podušky a levou tvář měl tak oteklou, že mu přivřela oko. Kůže na ní byla napjatá a lesklá a horká, Ilona to cítila, ještě než se dotkla, jen z toho, jak z ní sálalo. Ústa měl pootevřená na šířku prstu a víc je otevřít nemohl. Dýchal krátce, nosem, a z úst mu tekly sliny do plátna, které si držel pod bradou. A páchl. Ne hřebíčkem. Hnilobou.
+Röhrich seděl opřený o podušky a levou tvář měl tak oteklou, že mu přivřela oko. Kůže na ní byla napjatá a lesklá a horká. Ilona to cítila, ještě než se jí dotkla, jen z toho, jak z ní sálalo. Ústa měl pootevřená na šířku prstu a víc je otevřít nemohl. Dýchal krátce, nosem, a z úst mu tekly sliny do plátna, které si držel pod bradou. A páchl. Ne hřebíčkem. Hnilobou.
 
 Podíval se na ni tím jedním okem, které mu zůstalo.
 
@@ -102,7 +102,7 @@ Ilona položila brašnu na stůl a rozbalila ji. Nože. Lancety. Pálenka. Pelik
 
 Řezala nejdřív.
 
-Pravou rukou, protože levou by to nedokázala. Florian držel mistrovu hlavu a Ilona mu do úst, do té mezery, zasunula dřevěný klín, aby se čelist nezavřela, a pak tam zasunula nejtenčí lancetu, tu, kterou Řehoř používal na oči, a nahmatala to žlutobílé místo, a řízla.
+Pravou rukou, protože levou by to nedokázala. Florian držel mistrovu hlavu. Ilona mu do úst, do té mezery, zasunula dřevěný klín, aby se čelist nezavřela. Pak tam zasunula nejtenčí lancetu, tu, kterou Řehoř používal na oči, nahmatala to žlutobílé místo, a řízla.
 
 Röhrich zařval. Bez slov, hrdlem, a Florian ho držel a Ilona cítila, jak se jí pod rukou něco povolilo, a pak vyteklo. Do úst, do plátna, na podušku. Hnědožluté a hnilobné, a tolik, že se Florian odvrátil a zvracel do umyvadla. Ilona to nechala téct. Tlačila prstem zvenku, na tvář, pod úhlem čelisti, a teklo to dál, a Röhrich už nekřičel, jen sténal a těžce dýchal nosem.
 
@@ -114,7 +114,7 @@ Pak čekala. Otok se nezmenšil hned, ale ztratil to napětí, ten lesk. Čelist
 
 Ilona vzala pelikán.
 
-Zub byl ten předposlední dole vlevo, černý, s dírou uprostřed, do které by se vešel hrášek. Ilona zaklesla háček za jeho vnitřní stranu a opěrné rameno opřela o dáseň zvenku, o sousední zuby, a cítila v pravé ruce, jak se jí ozývá kousanec, jako by Matyáš zakousl znovu. Vzala pelikán do obou rukou. Florian držel hlavu. Röhrich se díval do stropu a sevřel prsty do přikrývky, až mu zbělaly klouby a prsten s modrým kamenem se mu zařízl do masa.
+Zub byl ten předposlední dole vlevo, černý, s dírou uprostřed, do které by se vešel hrášek. Ilona zaklesla háček za jeho vnitřní stranu a opěrné rameno opřela o dáseň zvenku, o sousední zuby. V pravé ruce cítila, jak se jí ozývá kousanec, jako by se Matyáš zakousl znovu. Vzala pelikán do obou rukou. Florian držel hlavu. Röhrich se díval do stropu a sevřel prsty do přikrývky, až mu zbělaly klouby a prsten s modrým kamenem se mu zařízl do masa.
 
 Zatlačila.
 
@@ -128,7 +128,7 @@ Röhrich zavřel oči. Po tvářích mu tekly slzy, jen tak, samy, jako tečou l
 
 Dala mu mák.
 
-Z vlastní lahvičky, ne z jeho polic. Ten odvar, který vařila sama z makovic od mlynářky a který dávala rodičkám po těžkých porodech a havířům s rozdrcenou nohou. Odměřila ho do lžíce, pomalu, při svíčce, a podívala se na Röhricha, na jeho velké tělo pod přikrývkou, a odhadla, kolik váží, a odměřila to, co by odměřila každému muži jeho váhy, který prošel tím, čím prošel on.
+Z vlastní lahvičky, ne z jeho polic. Ten odvar, který vařila sama z makovic od mlynářky a který dávala rodičkám po těžkých porodech a havířům s rozdrcenou nohou. Nalévala ho do lžíce pomalu, při svíčce. Podívala se na Röhricha, na jeho velké tělo pod přikrývkou, a odhadla, kolik váží. Pak odměřila to, co by odměřila každému muži jeho váhy, který prošel tím, čím prošel on.
 
 Ani o kapku víc.
 
@@ -156,7 +156,7 @@ A usnul.
 
 „Floriane,“ řekla Ilona. „Teď potřebuju studenou vodu ze studny. Čerstvou, vytaženou, ne z vědra. A hadry, čisté, dva. A octa víc. Budeme chladit tvář do rána.“
 
-Florian vzal vědro a lucernu a šel. Slyšela ho na schodech, pak v officíně dole, pak dveře na dvůr. Rumpál. Studna byla na dvoře, Ilona to věděla, ta studna, kolem které chodil v sobotu muž se soudkem. Hluboká. Kdo tahá vodu ze hluboké studny, slyší jen rumpál.
+Florian vzal vědro a lucernu a šel. Slyšela ho na schodech, pak v officíně dole, pak dveře na dvůr. Rumpál. Studna byla na dvoře, Ilona to věděla, ta studna, kolem které chodil v sobotu muž se soudkem. Hluboká. Kdo tahá vodu z hluboké studny, slyší jen rumpál.
 
 Stála u postele a dívala se na Röhricha.
 
@@ -166,7 +166,7 @@ Ilona se podívala na truhlu u nohou postele.
 
 Ještě ne. Ještě nevěděla. Ještě si to mohla rozmyslet, jako si to rozmyslela v officíně před dvěma týdny, kdy kniha ležela otevřená na pultu a ona ji nevzala. Tehdy neměla důvod krást. To si řekla pod podloubím, se slunečním světlem na kornoutu myrhy. *V té knize nebylo nic, co by byla vražda.*
 
-Teď věděla, co v té knize je. Ještě to neviděla. Ale věděla to. *Starý muž mi řekl, že tam nahoře viděli denní ženu.* Mezkař. Shrbený, se saským hlasem, který chodí ve středu nahoru a ve čtvrtek nosí bedýnku. Řekl to tady, v tomhle domě, a Röhrich to zapsal, nebo nezapsal, ale věděl to. Věděl, že Ilona ví. A za devět dní je soud, a ve chvíli, kdy horní soud předvolá Kašpara Röhricha, lékárníka U Pelikána, aby vysvětlil, kam teklo dvanáct misek z osmnácti, nebude žádná kniha. Bude popel v kamnech a lékárník se zavřenými rty.
+Teď věděla, co v té knize je. Ještě to neviděla. Ale věděla to. *Starý muž mi řekl, že tam nahoře viděli denní ženu.* Mezkař se saským hlasem, shrbený. Chodí ve středu nahoru a ve čtvrtek nosí bedýnku. Řekl to tady, v tomhle domě, a Röhrich to zapsal, nebo nezapsal, ale věděl to. Věděl, že Ilona ví. A za devět dní je soud. Ve chvíli, kdy horní soud předvolá Kašpara Röhricha, lékárníka U Pelikána, aby vysvětlil, kam teklo dvanáct misek z osmnácti, nebude žádná kniha. Bude popel v kamnech a lékárník se zavřenými rty.
 
 A kdyby kniha nebyla popel. Kdyby ji našli, až pro Röhricha přijdou. Kdyby ji našel Stöckel, nebo konšelé, nebo mladší kazatel, a četli ji celou, řádek po řádku. *Z.* U soli, krup a koz.
 
@@ -186,7 +186,7 @@ Truhla se otevřela tiše. Byla dobře namazaná, jako všechno v tomhle domě, 
 
 Uvnitř: měšce. Pět, šest, kožené, těžké. Svazky listin, převázané motouzem. Krabička s prsteny. Lahvička z hnědého skla, teriak, Röhrichův vlastní. A navrchu, jako by ji tam položil naposledy, dnes večer, než mu zatekla tvář, kniha v černé kůži s mosaznou sponou.
 
-Ilona ji vzala. Byla menší a lehčí, než si ji pamatovala. Jako se zmenšují věci, o kterých se člověk dlouho bojí.
+Ilona ji vzala. Byla menší a lehčí, než si ji pamatovala. Jako se zmenšují věci, kterých se člověk dlouho bojí.
 
 Vložila ji do brašny, pod plátno, pod kleště. Zavřela truhlu. Zamkla. Malý mosazný klíček nechala na řetízku, kde byl. Kdyby ho vzala, Röhrich by to ráno poznal, ještě než by otevřel oči.
 
@@ -196,7 +196,7 @@ Pozná to tak jako tak, řekla si. Ale ne dřív, než otevře truhlu.
 
 Zápinka zapadla.
 
-Ilona se narovnala a stála u postele, s mokrým hadrem v ruce, který vzala z umyvadla, a přikládala ho Röhrichovi na tvář, když Florian vešel s vědrem.
+Ilona se narovnala a vzala z umyvadla mokrý hadr. Když Florian vešel s vědrem, stála u postele a přikládala ho Röhrichovi na tvář.
 
 *
 
@@ -240,7 +240,7 @@ Pak se otočil k posteli a namočil hadr do vědra a už se na ni nepodíval.
 
 „Zub.“
 
-Veit kývl, spokojeně, jako by si to zapsal. Ilona šla dál a cítila brašnu na boku, každý krok, jako by v ní nesla kámen.
+Veit kývl, spokojeně, jako by si to zapsal. Ilona šla dál a cítila brašnu na boku při každém kroku, jako by v ní nesla kámen.
 
 Doma zamkla přední i zadní dveře. Havíři před domem spali. Zatáhla okenice. Zapálila svíčku, jednu, a postavila ji na stůl a vedle ní položila knihu.
 
@@ -268,11 +268,11 @@ A pak, poslední řádek se jménem.
 
 Bez krejcarů. Číslo tři. A v posledním sloupci, kde u ostatních řádků byla částka, nic. Prázdné místo.
 
-Ilona položila prst na tu trojku. Tři misky. Ursula Kolbová, vdova po havíři, bílá do žluta, přikrytá po bradu, s umytou paží. Na slamníku méně než miska. Tři misky z té paže nevytekly na slamník. Tři misky odnesl někdo, kdo umí vázat dvojí přetočený uzel, v soudku, nahoru, a nezaplatil za ně, protože nebylo komu.
+Ilona položila prst na tu trojku. Tři misky. Ursula Kolbová, vdova po havíři, bílá do žluta, přikrytá po bradu, s umytou paží. Na slamníku méně než miska. Tři misky z té paže nevytekly na slamník. Tři misky odnesl v soudku nahoru někdo, kdo umí vázat dvojí přetočený uzel, a nezaplatil za ně, protože nebylo komu.
 
 Úterý svatodušní. Tobiášova lanceta pod postelí.
 
-Ilona se nedýchala.
+Ilona nedýchala.
 
 Obrátila list. Pondělí, středa, sobota. *Bad. Oben.* Čísla.
 
@@ -294,13 +294,13 @@ Ilona zavřela oči a otevřela je a ta slova tam pořád stála.
 
 Pak hledala Kunze, a našla ho.
 
-Ne v černé knize, v černé knize Kunz nebyl. Ale mezi listy, vložený, ležel list papíru, vytržený z jiné knihy, z té hnědé, Ilona poznala ten papír a ten inkoust. Celá stránka, přeložená. *Nickel Kunz, Bergschreiber.* Desítky řádků. *Theriaca. Theriaca. Pflaster.* Od Hromnic. Sloupec čísel, který rostl.
+Ne v černé knize, v černé knize Kunz nebyl. Ale mezi listy, vložený, ležel list papíru, vytržený z jiné knihy, z té hnědé. Ilona poznala ten papír a ten inkoust. Celá stránka, přeložená. *Nickel Kunz, Bergschreiber.* Desítky řádků. *Theriaca. Theriaca. Pflaster.* Od Hromnic. Sloupec čísel, který rostl.
 
 A přes celou stránku, šikmo, od horního rohu k dolnímu, jedna čára. A u ní datum.
 
 *Dienst. 23. Mai. Getilgt.*
 
-Smazáno. Úterý. Den po pondělí, kdy Kunz četl Iloniny desky a poznal v *děvečce v lázni* Jobstovu Lene a zamkl je do truhly, listy hranu na hranu.
+Smazáno. Úterý. Den po pondělí, kdy Kunz četl Iloniny desky a poznal v *děvečce v lázni* Jobstovu Lene. Desky pak zamkl do truhly, listy hranu na hranu.
 
 Den před středou.
 
@@ -326,7 +326,7 @@ Pravé stránky. Každá pravá stránka od Hromnic měla jiné sloupce. Ne láz
 
 *W.: XX Gläser. Donn. – 4 fl.*
 
-Ilona četla ten řádek. Pak další, o týden výš. *Merc. 24. Mai.* Totéž. *Oben. Dagegen XX. Z.: Geiß 2. Erlengrund. W.: XX. 4 fl.* A výš. A výš. Každá středa od Hromnic. Každá středa jeden řádek. Ve stejném řádku nahoře soudek a dole lahvičky a vedle sůl a kroupy a kozy pro olšovou rokli, protože to všechno nesl jeden mezek a jeden shrbený muž jednou cestou, a lékárník si to zapisoval, jak to šlo, jako kupec, který chce vědět, co mu kdo dluží.
+Ilona četla ten řádek. Pak další, o týden výš. *Merc. 24. Mai.* Totéž. *Oben. Dagegen XX. Z.: Geiß 2. Erlengrund. W.: XX. 4 fl.* A výš. A výš. Každá středa od Hromnic. Každá středa jeden řádek. Ve stejném řádku nahoru soudek, dolů lahvičky a vedle sůl a kroupy a kozy pro olšovou rokli. Všechno to nesl jeden mezek a jeden shrbený muž jednou cestou a lékárník si to zapisoval, jak to šlo, jako kupec, který chce vědět, co mu kdo dluží.
 
 *Erlengrund, hinter den Halden.* Olšová rokle, za haldami. *40 Mäuler.* Čtyřicet úst.
 
@@ -368,7 +368,7 @@ Teď to věděla. Ne proto, že by jí to někdo řekl. Ne proto, že by to vid�
 
 Když bylo světlo, prošla knihu ještě jednou celou, od svatého Martina ke dnešku, a teprve teď viděla, co je ta kniha.
 
-Odběratelé. Měšťané, kteří kupovali duch krve na padoucnici, na slabost, na mrtvici. Jména, která znala. Mincmistrova žena. Dva havířští předáci. Mladý konšel, který seděl v radě. *Stöckelin – Spiritus, 3 Gläser.* Rychtářova žena. Ilona se na to jméno dívala a pomyslela si, že rychtář, který chce jít na svatého Jana nahoru s pochodněmi, aby vyčistil štoly od těch, kdo pijí krev, má doma ve skříni tři lahvičky.
+Odběratelé. Měšťané, kteří kupovali duch krve na padoucnici, na slabost, na mrtvici. Jména, která znala. Mincmistrova žena. Dva havířští předáci. Mladý konšel, který seděl v radě. *Stöckelin – Spiritus, 3 Gläser.* Rychtářova žena. Ilona se na to jméno dívala a pomyslela si, že rychtář má doma ve skříni tři lahvičky. Rychtář, který chce jít na svatého Jana nahoru s pochodněmi, aby vyčistil štoly od těch, kdo pijí krev.
 
 Dodavatelé. *Bad.* Jobst. *Kolbin.* Ještě tři jiné vdovy z horního konce, každá s krejcary a s miskami, a jedna z nich, *die lange Gret*, přestala v dubnu. Ilona nevěděla proč. Musela by se jít podívat, jestli Gret ještě žije.
 
@@ -386,7 +386,7 @@ A rada by věděla, kde je *Erlengrund*. A kolik je tam úst. A že přes ně jd
 
 Nemohla vytrhnout *W.* a nechat *Z.* Bylo to na stejném řádku. Každý týden. Jeden mezek, jedna cesta, jeden řádek.
 
-Ilona seděla nad otevřenou knihou a poprvé v životě držela v ruce záznam, přesný, pravdivý, psaný úhledně a rovně, ve kterém nebylo jediné slovo navíc, a věděla, že kdyby ho dala těm, kdo čtou, zabil by čtyřicet lidí, kteří nic neudělali, a jednu holku, která zpívá v kostele, který je les.
+Ilona seděla nad otevřenou knihou. Poprvé v životě držela v ruce záznam přesný, pravdivý, psaný úhledně a rovně, ve kterém nebylo jediné slovo navíc. A věděla, že kdyby ho dala těm, kdo čtou, zabil by čtyřicet lidí, kteří nic neudělali, a jednu holku, která zpívá v kostele, který je les.
 
 *Co člověk řekl, patří jemu.*
 
@@ -396,11 +396,11 @@ Röhrich to neřekl. Röhrich to napsal. A teď to měla ona.
 
 Kolébka byla na půdě.
 
-Řehoř ji udělal z třešňového dřeva tu zimu, kdy byla Ilona těhotná, a vyřezal na čelo kolébky ptáka, protože chtěl pelikána a neuměl ho, a vyšel mu z toho čáp. Syn v ní ležel tři dny. Pak ji Řehoř odnesl na půdu, pod krokve, a přikryl ji pytlem, a ani jeden z nich ten pytel od té doby nezvedl.
+Řehoř ji udělal z třešňového dřeva tu zimu, kdy byla Ilona těhotná. Na čelo kolébky vyřezal ptáka. Chtěl pelikána, ale neuměl ho, a vyšel mu z toho čáp. Syn v ní ležel tři dny. Pak ji Řehoř odnesl na půdu, pod krokve, a přikryl ji pytlem, a ani jeden z nich ten pytel od té doby nezvedl.
 
 Ilona ho zvedla.
 
-Kolébka byla zaprášená. Uvnitř ležela ještě slamníková podložka, malá, a na ní nic. Ilona do ní položila knihu. Černou, s prořízlým řemínkem. Pak sešla dolů k truhle a vzala ze dna, zpod Řehořových košil, Markétinu úplnou výpověď, tu s Bárou a se studánkou a s plátnem na čtyřikrát, a vynesla ji nahoru a položila ji na knihu. A přikryla to všechno pytlem.
+Kolébka byla zaprášená. Uvnitř ležela ještě slamníková podložka, malá, a na ní nic. Ilona do ní položila knihu. Černou, s prořízlým řemínkem. Pak sešla dolů k truhle a ze dna, zpod Řehořových košil, vzala Markétinu úplnou výpověď, tu s Bárou a se studánkou a s plátnem na čtyřikrát. Vynesla ji nahoru a položila ji na knihu. A přikryla to všechno pytlem.
 
 Babky v lázni vykládaly, že když vezmou dítě, nechají v kolébce polínko. Aby si matka myslela, že má pořád co houpat.
 
@@ -416,7 +416,7 @@ Mladší kazatel kázal o Jidášovi. O stříbrných, o poli krve. *Haceldama*,
 
 Röhrich přišel pozdě. S levou tváří ovázanou šátkem přes hlavu, jako ženy, když je bolí zuby, a s Florianem za zády. Sedl si dopředu, do lavice, která patřila jeho cechu, a ani jednou se neohlédl.
 
-Po kázání, na náměstí, když se lidé rozcházeli a stáli v hloučcích a mluvili o počasí a o razii a o tom, že rychtář koupil nové psy z Lokte, se otočil.
+Po kázání se lidé na náměstí rozcházeli, stáli v hloučcích a mluvili o počasí, o razii a o tom, že rychtář koupil nové psy z Lokte. Röhrich se otočil.
 
 Přešel náměstí. Pomalu. Lidé mu ustupovali, protože byl lékárník, a protože měl ovázanou tvář. Zastavil se před Ilonou, tak blízko, že cítila hřebíček. Hřebíček a myrhu. A pod tím ještě něco, ten nasládlý pach rány, která se hojí.
 
