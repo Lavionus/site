@@ -41,7 +41,8 @@
   }
   function verzeStranky() {
     const cesta = cestaStranky(), h1 = document.querySelector('h1');
-    if (!cesta || !h1 || h1.querySelector('.verze-stranky')) return;
+    // nadpis s vlastní verzí aplikace (Správce tras v8.0) druhé číslo nedostane
+    if (!cesta || !h1 || h1.querySelector('.verze-stranky') || /\bv\d/.test(h1.textContent)) return;
     const v = VERZE_STRANEK[cesta];   // eslint-disable-line no-undef
     if (!v) return;
     const el = document.createElement('small');
@@ -50,7 +51,32 @@
     el.textContent = 'v' + v[0];
     el.title = v[1];
     el.style.cssText = 'font-size:.5em;font-weight:400;opacity:.65;margin-left:.5em;vertical-align:baseline;align-self:baseline;letter-spacing:0;cursor:help';
-    h1.appendChild(el);
+    // hned za text nadpisu (před podtitulek nebo tlačítko v nadpisu), ne až na konec
+    const prvniText = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT, { acceptNode: n => n.textContent.trim() ? 1 : 3 }).nextNode();
+    let za = prvniText || h1.lastChild;
+    while (za && za.parentNode !== h1) za = za.parentNode;
+    if (za) za.after(el); else h1.appendChild(el);
+    // flex nadpis s dalšími prvky (space-between): verze zůstane u textu, zbytek odsune doprava
+    if (el.nextElementSibling && /flex/.test(getComputedStyle(h1).display)) el.style.marginRight = 'auto';
+    // ve flex/grid nadpisu vertical-align neplatí – spodní linku dorovnat přeměřením
+    // (nulové značky na účaří textu nadpisu a verze), znovu po načtení písem
+    const dorovnej = () => {
+      const pruchod = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT,
+        { acceptNode: n => n.textContent.trim() && !el.contains(n) ? 1 : 3 });
+      const text = pruchod.nextNode();
+      if (!text || !el.isConnected) return;
+      const znacka = () => { const z = document.createElement('span'); z.style.cssText = 'display:inline-block;width:0;height:0'; return z; };
+      const a = znacka(), b = znacka();
+      text.after(a); el.appendChild(b);
+      el.style.top = '0px';
+      const posun = b.getBoundingClientRect().bottom - a.getBoundingClientRect().bottom;
+      a.remove(); b.remove();
+      if (Math.abs(posun) >= 0.5 && Math.abs(posun) < 20) el.style.top = -posun + 'px';   // větší = zalomený řádek
+    };
+    el.style.position = 'relative';
+    dorovnej();
+    if (document.fonts) document.fonts.ready.then(dorovnej);
+    addEventListener('load', dorovnej, { once: true });
     const tisk = document.createElement('style');   // do tisku a PDF z okna verze nepatří
     tisk.textContent = '@media print{.verze-stranky{display:none!important}}';
     document.head.appendChild(tisk);

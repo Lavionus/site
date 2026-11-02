@@ -17,8 +17,14 @@ const ctx = {};
 vm.runInNewContext(readFileSync(KOREN + 'apps.js', 'utf8') + ';this.S=KATALOG_SEKCE', ctx);
 const stranky = [...new Set(ctx.S.flatMap(s => s.polozky.map(p => p.soubor)))];
 
-// soubor (obsah/x.html) i soubory ve složce obsah/x/ patří stránce obsah/x.html
-const stranka = f => /^obsah\/[^/]+\.html$/.test(f) ? f : (f.match(/^obsah\/([^/]+)\//) || [])[1] && `obsah/${f.split('/')[1]}.html`;
+// soubor (obsah/x.html) i soubory ve složce obsah/x/ patří stránce obsah/x.html;
+// stránka přímo ve složce (obsah/cviceni/index.html) dostane celou svou složku
+const veSlozce = new Map(stranky.filter(s => s.split('/').length > 2).map(s => [s.split('/')[1], s]));
+const stranka = f => {
+  if (/^obsah\/[^/]+\.html$/.test(f)) return f;
+  const slozka = (f.match(/^obsah\/([^/]+)\//) || [])[1];
+  return slozka && (veSlozce.get(slozka) || `obsah/${slozka}.html`);
+};
 
 const pocet = {}, datum = {};
 // %x01 odděluje commity; --no-renames: přejmenování = smazání + přidání
