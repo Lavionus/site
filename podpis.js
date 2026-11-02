@@ -28,6 +28,40 @@
   // odkaz zpět do rozcestníku, aniž by se musela počítat hloubka stránky.
   const KOREN = new URL('.', document.currentScript.src);
 
+  // Verze (verze.js generuje tools/verze.mjs): webu do pruhu před ©, stránky vedle jejího <h1>.
+  // Běží i v rámu rozcestníku (tam navíc verzi ukazují drobečky).
+  function verze(hotovo) {
+    let jsou = true;
+    try { VERZE_WEBU; } catch { jsou = false; }   // eslint-disable-line no-undef
+    if (jsou) { hotovo(); return; }
+    const sc = document.createElement('script');
+    sc.src = new URL('verze.js', KOREN).href;
+    sc.onload = hotovo;
+    document.head.appendChild(sc);
+  }
+  function verzeStranky() {
+    const cesta = cestaStranky(), h1 = document.querySelector('h1');
+    if (!cesta || !h1 || h1.querySelector('.verze-stranky')) return;
+    const v = VERZE_STRANEK[cesta];   // eslint-disable-line no-undef
+    if (!v) return;
+    const el = document.createElement('small');
+    el.className = 'verze-stranky';
+    el.dataset.i18n = 'ne';
+    el.textContent = 'v' + v[0];
+    el.title = v[1];
+    el.style.cssText = 'font-size:.5em;font-weight:400;opacity:.65;margin-left:.5em;vertical-align:baseline;align-self:baseline;letter-spacing:0;cursor:help';
+    h1.appendChild(el);
+    const tisk = document.createElement('style');   // do tisku a PDF z okna verze nepatří
+    tisk.textContent = '@media print{.verze-stranky{display:none!important}}';
+    document.head.appendChild(tisk);
+  }
+  const poDom = f => document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', f) : f();
+  poDom(() => verze(() => {
+    verzeStranky();
+    const el = document.querySelector('#' + ID + ' .podpis-verze');
+    if (el) el.textContent = VERZE_WEBU + ' · ';   // eslint-disable-line no-undef
+  }));
+
   if (window.self !== window.top) return;   // v rámu podpis patří nadřazené stránce
 
   // Štítek fáze vývoje (vývoj / beta / stable) vpravo nahoře u stránky
@@ -68,6 +102,7 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', stitekStavu);
   else stitekStavu();
+
   // stránka spuštěná z plochy jako aplikace (PWA) podpis neukazuje – autora uvádí sama v sekci o aplikaci
   if (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) return;
 
@@ -246,7 +281,11 @@
     const dilo = document.createElement('span');
     dilo.className = 'podpis-dilo';
     dilo.textContent = DILO + ' ';
-    text.append(dilo, document.createTextNode('© ' + MAIL));
+    const verzeWebu = document.createElement('span');
+    verzeWebu.className = 'podpis-verze';
+    verzeWebu.dataset.i18n = 'ne';
+    try { verzeWebu.textContent = VERZE_WEBU + ' · '; } catch { /* verze.js se ještě načítá */ }   // eslint-disable-line no-undef
+    text.append(verzeWebu, dilo, document.createTextNode('© ' + MAIL));
     podpis.appendChild(text);
 
     telo.appendChild(podpis);

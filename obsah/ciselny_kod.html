@@ -297,6 +297,10 @@ const KodLogika = (function () {
       ];
       if (x > 0) { const k = nahodne(r, x); moznosti.push(['je větší než ' + k, c => c[i] > k]); }
       if (x < 9) { const k = x + 1 + nahodne(r, 9 - x); moznosti.push(['je menší než ' + k, c => c[i] < k]); }
+      const ctverec = x => x === 0 || x === 1 || x === 4 || x === 9;
+      moznosti.push([ctverec(x) ? 'je druhou mocninou celého čísla (0, 1, 4, 9)' : 'není druhou mocninou celého čísla (0, 1, 4, 9)', c => ctverec(c[i]) === ctverec(x)]);
+      const od = Math.max(0, x - nahodne(r, 3)), po = Math.min(9, od + 2 + nahodne(r, 2));
+      if (po >= x) moznosti.push(['je od ' + od + ' do ' + po, c => c[i] >= od && c[i] <= po]);
       const [t, test] = vyber(r, moznosti);
       return { text: kdo + t + '.', poz: [i], test };
     },
@@ -313,7 +317,13 @@ const KodLogika = (function () {
         moznosti.push([velke(V) + ' číslice je o ' + d + ' větší než ' + M + '.', c => c[v] - c[m] === d]);
         if (Math.min(a, b) > 0 && Math.max(a, b) === 2 * Math.min(a, b))
           moznosti.push([velke(V) + ' číslice je dvojnásobkem ' + poradi2(m, N) + '.', c => c[v] === 2 * c[m]]);
+        moznosti.push([velke(obe) + ' se liší o ' + d + '.', c => Math.abs(c[i] - c[j]) === d]);
       }
+      moznosti.push((a + b) % 2
+        ? [velke(obe) + ' jsou jedna sudá a jedna lichá.', c => (c[i] + c[j]) % 2 === 1]
+        : [velke(obe) + ' jsou obě sudé, nebo obě liché.', c => (c[i] + c[j]) % 2 === 0]);
+      if (a + b > 0) { const k = nahodne(r, a + b); moznosti.push(['Součet ' + dvojice2(i, j, N) + ' je větší než ' + k + '.', c => c[i] + c[j] > k]); }
+      if (a + b < 18) { const k = a + b + 1 + nahodne(r, 18 - a - b); moznosti.push(['Součet ' + dvojice2(i, j, N) + ' je menší než ' + k + '.', c => c[i] + c[j] < k]); }
       moznosti.push(['Součet ' + dvojice2(i, j, N) + ' je ' + (a + b) + '.', c => c[i] + c[j] === a + b]);
       moznosti.push(['Součin ' + dvojice2(i, j, N) + ' je ' + (a * b) + '.', c => c[i] * c[j] === a * b]);
       const [t, test] = vyber(r, moznosti);
@@ -349,6 +359,8 @@ const KodLogika = (function () {
         [x => x % 2 === 1, ['žádná lichá číslice', 'jedna lichá číslice', 'liché číslice', 'lichých číslic'], 'lichých číslic'],
         [jePrvo, ['žádné prvočíslo', 'jedno prvočíslo', 'prvočísla', 'prvočísel'], 'prvočísel'],
         [x => x > 4, ['žádná číslice větší než 4', 'jedna číslice větší než 4', 'číslice větší než 4', 'číslic větších než 4'], 'číslic větších než 4'],
+        [x => x < 3, ['žádná číslice menší než 3', 'jedna číslice menší než 3', 'číslice menší než 3', 'číslic menších než 3'], 'číslic menších než 3'],
+        [x => x % 3 === 0, ['žádná číslice dělitelná třemi', 'jedna číslice dělitelná třemi', 'číslice dělitelné třemi', 'číslic dělitelných třemi'], 'číslic dělitelných třemi (0, 3, 6, 9)'],
       ]);
       const [f, tvary, coKolik] = druh, k = pocet(s, f);
       return { text: pocetTvar(k, tvary) + '.', poz: vse(N), test: c => pocet(c, f) === k,
@@ -363,8 +375,15 @@ const KodLogika = (function () {
       return { text: 'Číslice nejdou ani vzestupně, ani sestupně.', poz: vse(N), test: c => !c.every((x, i) => !i || x > c[i - 1]) && !c.every((x, i) => !i || x < c[i - 1]) };
     },
     extrem(s, N, r) {
-      if (r() < 0.5) { const m = Math.max(...s); return { text: 'Největší číslice kódu je ' + m + '.', poz: vse(N), test: c => Math.max(...c) === m, ukaz: c => 'největší je ' + Math.max(...c) }; }
-      const m = Math.min(...s); return { text: 'Nejmenší číslice kódu je ' + m + '.', poz: vse(N), test: c => Math.min(...c) === m, ukaz: c => 'nejmenší je ' + Math.min(...c) };
+      const nej = r() < 0.5, fm = c => nej ? Math.max(...c) : Math.min(...c), m = fm(s), i = s.indexOf(m);
+      if (i === s.lastIndexOf(m) && r() < 0.4) {
+        const MISTE = ['prvním', 'druhém', 'třetím', 'čtvrtém', 'pátém', 'šestém'];
+        return { text: (nej ? 'Největší' : 'Nejmenší') + ' číslice kódu je jen jedna a stojí na ' + (i === N - 1 ? 'posledním' : MISTE[i]) + ' místě.', poz: vse(N),
+          test: c => { const x = fm(c); return c.indexOf(x) === i && c.lastIndexOf(x) === i; },
+          ukaz: c => (nej ? 'největší' : 'nejmenší') + ' je ' + fm(c) + ' na ' + c.map((x, p) => x === fm(c) ? (p + 1) + '.' : '').filter(Boolean).join(', ') + ' místě' };
+      }
+      if (nej) return { text: 'Největší číslice kódu je ' + m + '.', poz: vse(N), test: c => Math.max(...c) === m, ukaz: c => 'největší je ' + Math.max(...c) };
+      return { text: 'Nejmenší číslice kódu je ' + m + '.', poz: vse(N), test: c => Math.min(...c) === m, ukaz: c => 'nejmenší je ' + Math.min(...c) };
     },
     delitelnost(s, N, r) {
       const v = hodnota(s), delitele = [3, 4, 6, 7, 9, 11].filter(k => v % k === 0);
@@ -372,6 +391,88 @@ const KodLogika = (function () {
       const k = vyber(r, delitele);
       return { text: 'Kód čtený jako číslo je dělitelný ' + k + '.', poz: vse(N), test: c => hodnota(c) % k === 0,
         rada: RADY_DELITELNOST[k], ukaz: c => pomocnyVypocet(c, k) + hodnota(c) + ' : ' + k + ' = ' + Math.floor(hodnota(c) / k) + ', zbytek ' + hodnota(c) % k };
+    },
+    trojice(s, N, r) {
+      const [i, j, k] = vse(N).sort(() => r() - 0.5).slice(0, 3).sort((a, b) => a - b), poz = [i, j, k];
+      const jm = poradi2(i, N) + ', ' + poradi2(j, N) + ' a ' + poradi2(k, N) + ' číslice';
+      const S = s[i] + s[j] + s[k];
+      const moznosti = [['Součet ' + jm + ' je ' + S + '.', c => c[i] + c[j] + c[k] === S, c => c[i] + ' + ' + c[j] + ' + ' + c[k] + ' = ' + (c[i] + c[j] + c[k])]];
+      for (const [x, y, z] of [[i, j, k], [j, i, k], [k, i, j]])
+        if (s[y] && s[z] && s[x] === s[y] + s[z]) moznosti.push([velke(poradi(x, N)) + ' číslice je součtem ' + poradi2(y, N) + ' a ' + poradi2(z, N) + '.', c => c[x] === c[y] + c[z]]);
+      for (const nej of [true, false]) {
+        const x = poz.find(p => poz.every(q => q === p || (nej ? s[p] > s[q] : s[p] < s[q])));
+        if (x !== undefined) moznosti.push([(/^[tčš]/.test(jm) ? 'Ze ' : 'Z ') + jm + ' je ' + (nej ? 'největší' : 'nejmenší') + ' ' + poradi(x, N) + '.',
+          c => poz.every(q => q === x || (nej ? c[x] > c[q] : c[x] < c[q]))]);
+      }
+      const [text, test, ukaz] = vyber(r, moznosti);
+      return { text, poz, test, ukaz };
+    },
+    polovina(s, N, r) {
+      if (N < 4) return null;
+      const SLOVA = ['menší než', 'stejný jako', 'větší než'];
+      if (r() < 0.5) {
+        const h = Math.floor(N / 2), kolik = ['', '', 'dvou', 'tří'][h];
+        const L = c => soucet(c.slice(0, h)), P = c => soucet(c.slice(N - h)), d = Math.sign(L(s) - P(s));
+        return { text: 'Součet prvních ' + kolik + ' číslic je ' + SLOVA[d + 1] + ' součet posledních ' + kolik + '.',
+          poz: vse(N).filter(p => p < h || p >= N - h), test: c => Math.sign(L(c) - P(c)) === d, ukaz: c => 'součty jsou ' + L(c) + ' a ' + P(c) };
+      }
+      const L = c => c.reduce((a, x, p) => a + (p % 2 ? 0 : x), 0), P = c => soucet(c) - L(c), d = Math.sign(L(s) - P(s));
+      return { text: 'Součet číslic na lichých místech (1., 3., …) je ' + SLOVA[d + 1] + ' součet číslic na sudých místech (2., 4., …).',
+        poz: vse(N), test: c => Math.sign(L(c) - P(c)) === d, ukaz: c => 'na lichých místech ' + L(c) + ', na sudých ' + P(c) };
+    },
+    sousede(s, N, r) {
+      const rozdily = c => c.slice(1).map((x, p) => Math.abs(x - c[p]));
+      const stridaji = c => c.every((x, p) => !p || (x + c[p - 1]) % 2 === 1);
+      const R = rozdily(s), m = Math.min(...R), moznosti = [];
+      if (m >= 2) { const k = 2 + nahodne(r, Math.min(m, 4) - 1); moznosti.push(['Každé dvě sousední číslice se liší aspoň o ' + k + '.', c => rozdily(c).every(d => d >= k)]); }
+      moznosti.push(R.includes(1)
+        ? ['Někde vedle sebe stojí dvě číslice, které se liší o 1.', c => rozdily(c).includes(1)]
+        : ['Žádné dvě sousední číslice se neliší o 1.', c => !rozdily(c).includes(1)]);
+      moznosti.push(stridaji(s)
+        ? ['Sudé a liché číslice se pravidelně střídají.', stridaji]
+        : ['Někde vedle sebe stojí dvě sudé, nebo dvě liché číslice.', c => !stridaji(c)]);
+      moznosti.push(m === 0
+        ? ['Někde vedle sebe stojí dvě stejné číslice.', c => rozdily(c).includes(0)]
+        : ['Žádné dvě sousední číslice nejsou stejné.', c => !rozdily(c).includes(0)]);
+      const [text, test] = vyber(r, moznosti);
+      return { text, poz: vse(N), test, ukaz: c => 'rozdíly sousedních číslic jsou ' + rozdily(c).join(', ') };
+    },
+    celek(s, N, r) {
+      const soucin = c => c.reduce((a, b) => a * b, 1), rozpeti = c => Math.max(...c) - Math.min(...c);
+      if (r() < 0.5) { const P = soucin(s); return { text: 'Součin všech číslic je ' + P + '.', poz: vse(N), test: c => soucin(c) === P, ukaz: c => 'součin je ' + soucin(c) }; }
+      const R = rozpeti(s);
+      return { text: 'Největší a nejmenší číslice kódu se liší o ' + R + '.', poz: vse(N), test: c => rozpeti(c) === R, ukaz: c => 'rozdíl je ' + Math.max(...c) + ' − ' + Math.min(...c) + ' = ' + rozpeti(c) };
+    },
+    cislo(s, N, r) {
+      if (r() < 0.4) {
+        const v = hodnota(s), t = (1 + nahodne(r, 99)) * 10 ** (N - 2);
+        if (t === v) return null;
+        return { text: 'Kód čtený jako číslo je ' + (t < v ? 'větší' : 'menší') + ' než ' + t + '.', poz: vse(N),
+          test: t < v ? c => hodnota(c) > t : c => hodnota(c) < t, ukaz: c => 'číslo je ' + hodnota(c) };
+      }
+      const i = nahodne(r, N - 1), v = 10 * s[i] + s[i + 1];
+      if (!s[i]) return null;
+      const prvo = x => x > 1 && PRVOCISLA.every(p => x === p || x % p), ctverec = x => Number.isInteger(Math.sqrt(x));
+      const moznosti = [];
+      if (prvo(v)) moznosti.push(['dvojmístné prvočíslo', prvo]);
+      if (ctverec(v)) moznosti.push(['dvojmístnou druhou mocninu celého čísla', ctverec]);
+      for (const k of [3, 4, 6, 7, 8]) if (v % k === 0) moznosti.push(['dvojmístné číslo dělitelné ' + k, x => x % k === 0]);
+      if (!moznosti.length) return null;
+      const [co, f] = vyber(r, moznosti);
+      return { text: velke(dvojice(i, i + 1, N)) + ' tvoří ' + co + '.', poz: [i, i + 1],
+        test: c => c[i] > 0 && f(10 * c[i] + c[i + 1]), ukaz: c => 'tvoří ' + c[i] + c[i + 1] };
+    },
+    polohy(s, N, r) {
+      const i = nahodne(r, N); let j = nahodne(r, N - 1); if (j >= i) j++;
+      if (s[i] === s[j]) return null;
+      if (Math.abs(i - j) === 1 && r() < 0.6) {
+        const A = s[i], B = s[j];
+        return { text: 'Číslice ' + Math.min(A, B) + ' a ' + Math.max(A, B) + ' stojí v kódu hned vedle sebe.', poz: vse(N),
+          test: c => { for (let p = 1; p < N; p++) if (c[p] + c[p - 1] === A + B && (c[p] === A || c[p] === B)) return true; return false; } };
+      }
+      const [A, B] = i < j ? [s[i], s[j]] : [s[j], s[i]];
+      return { text: 'Číslice ' + A + ' stojí v kódu někde vlevo od číslice ' + B + '.', poz: vse(N),
+        test: c => { const p = c.indexOf(A); return p >= 0 && c.lastIndexOf(B) > p; } };
     },
     tip(s, N, r) {
       const tip = s.map(() => r() < 0.4 ? s[nahodne(r, N)] : nahodne(r, 10));
@@ -381,7 +482,8 @@ const KodLogika = (function () {
         ukaz: c => { const w = porovnej(c, tip); return w.mista + ' na místě, ' + w.jinde + ' jinde (má být ' + v.mista + ' a ' + v.jinde + ')'; } };
     },
   };
-  const VAHY_MIX = { vlastnost: 5, dvojice: 5, soucet: 1, opakovani: 1, obsahuje: 2, pocty: 2, poradi: 1, extrem: 1, delitelnost: 1, tip: 2 };
+  const VAHY_MIX = { vlastnost: 5, dvojice: 5, trojice: 2, soucet: 1, polovina: 1, sousede: 1, celek: 1, opakovani: 1, obsahuje: 2, pocty: 2,
+    poradi: 1, extrem: 1, delitelnost: 1, cislo: 1, polohy: 1, tip: 2 };
 
   function cislice(kod, N, out) {
     for (let i = N - 1; i >= 0; i--) { out[i] = kod % 10; kod = (kod - out[i]) / 10; }

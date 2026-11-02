@@ -369,31 +369,37 @@ do výsledných dokumentů obaly kódu ani kotvy nadpisů nedostanou. Ověřuje 
 `_test/md_dokument.py`; `_test/md_snimky.html` slouží ke snímkování čtečky
 (`?tema=…&rezim=…&osnova=1&hledat=slovo&dolu=px`).
 
-**Poznámky** (panel vpravo, `Alt+P`) se drží **bloku, ke kterému patří**, a
-ukládají se na **úplný konec dokumentu** jako HTML komentář — jsou tedy součástí
-.md souboru, ale v náhledu, na GitHubu ani v jiných prohlížečích Markdownu
-vidět nejsou. Jedním zdrojem pravdy je text v editoru:
+**Poznámky** (panel vpravo, `Alt+P`) leží **přímo v textu**, hned pod blokem,
+ke kterému patří, jako citace se značkou (od 11/2026):
 
 ```
-<!-- md-poznamky
-Poznámky ke čtení (stránka „Markdown → DOCX / ODT“): číslo řádku dokumentu a poznámka.
-7 {"kotva":"Druhý odstavec o hruškách.","text":"text poznámky"}
--->
+Druhý odstavec o hruškách.
+
+> [!poznámka]
+> text poznámky
 ```
 
-Číslo je řádek, kde blok začíná, kotva začátek jeho textu. Řádky bloků se
-počítají z tokenů `marked.lexer()` (nejvyšší úroveň odpovídá dětem `.telo` jedna
-k jedné; nic nevykreslí jen mezery, definice odkazů a HTML komentáře). Po úpravě
-textu se poznámka hledá na svém řádku, pak podle kotvy (nejbližší shoda), takže
-se s odstavcem posune; nenajde-li se, zůstane u nejbližšího bloku s ⚠ a 📌 ji
-připne jinam. `--` v textu poznámky se zapisuje jako JSON `\u002d`, jinak by
-komentář ukončilo. Přepsání bloku uprostřed psaní v editoru by rozbilo jeho
-historii Zpět, proto se přeskupení zapíše až po opuštění editoru. Značky
-poznámek a tlačítko „📝+“ leží ve vlastní vrstvě nad listem (`.pozn-vrstva`,
-pozice podle `offsetTop` bloku, přepočet přes `ResizeObserver`) — do bloků se
-nesahá, hledání, osnova ani sbalování je nevidí. Do .docx/.odt/.doc jdou
-poznámky jen na přání (přepínač v patě panelu) jako příloha na konci;
-`window.MD_PRO_EXPORT` z exportu vždy odebere skrytý blok.
+Cizí prohlížeč Markdownu ji ukáže jako obyčejnou citaci (Obsidian jako rámeček
+callout), takže se mimo stránku neztratí. Tahle stránka citaci se značkou
+(`[!poznámka]`, i bez diakritiky) v náhledu schová (`.pozn-zdroj`) a ukáže ji
+jako značku 📝 u bloku nad ní a kartu v panelu. Jediným zdrojem pravdy je text
+v editoru; řádky bloků se počítají z tokenů `marked.lexer()` (nejvyšší úroveň
+odpovídá dětem `.telo` jedna k jedné). Úprava v panelu přepíše řádky citace,
+nová poznámka se vloží pod blok (za případné další poznámky), smazání ji
+odstraní i s prázdným řádkem. Přepsání textu uprostřed psaní v editoru by
+rozbilo jeho historii Zpět, proto se zápis z panelu odloží do opuštění editoru.
+Starší formát (skrytý komentář `<!-- md-poznamky … -->` na konci, řádek + kotva
+v JSON) se při načtení převede pod příslušné odstavce. Značky poznámek
+a tlačítko „📝+“ leží ve vlastní vrstvě nad listem (`.pozn-vrstva`). Do
+.docx/.odt/.doc jdou poznámky jen na přání (přepínač v patě panelu) jako
+příloha na konci; `window.MD_PRO_EXPORT` je z exportu vždy odebere.
+
+**Rozdělené zobrazení** drží editor a náhled na stejném místě oběma směry:
+poloha řádku v zalamovaném `textarea` se změří na skrytém zrcadle (stejné
+písmo a šířka), mezi bloky se interpoluje lineárně; posun, který stránka
+udělala sama, se 150 ms neodráží zpět. Režim **Dva náhledy** (`Alt+4`) ukáže
+dokument dvakrát: levý jde s osnovou, pravý (`#nahled2`) má vlastní hledání
+a skok na kapitolu — na dohledání odkazu jinde v textu bez ztráty místa.
 
 **Ukládání** (.md, .docx, .odt, .doc; `Ctrl+S` = .md) jde přes dialog „Uložit
 jako“ (`showSaveFilePicker` – Chrome, Edge, Opera). Prohlížeče bez něj (Firefox,

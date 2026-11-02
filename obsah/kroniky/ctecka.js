@@ -627,8 +627,18 @@
   $('ttsZpet').onclick = () => ttsSkok(-1);
   $('ttsVpred').onclick = () => ttsSkok(1);
   addEventListener('pagehide', () => { synt && synt.cancel(); ulozStav(true); });
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') { ulozStav(true); return; }
+  // Karta otevřená celé dny (tablet) by běžela na starém kódu, zatímco kapitoly se stahují nové –
+  // po návratu do karty porovnat skripty se serverem a při změně stránku obnovit (pozice je uložená).
+  const otiskSkriptu = () => Promise.all(['kroniky/jadro.js', 'kroniky/ctecka.js'].map(u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')))
+    .then(t => t.join('\n')).catch(() => '');
+  const puvodniOtisk = otiskSkriptu();
+  let skrytoOd = 0;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'hidden') { skrytoOd = Date.now(); ulozStav(true); return; }
+    if (skrytoOd && Date.now() - skrytoOd > 10 * 60e3 && !tts.aktivni) {
+      const [stary, novy] = await Promise.all([puvodniOtisk, otiskSkriptu()]);
+      if (stary && novy && stary !== novy) { ulozStav(true); location.reload(); return; }
+    }
     aktualizujZamek();   // zámek obrazovky se při skrytí stránky sám uvolní
     // zamčený telefon řeč prohlížeče zastaví – po odemčení pokračovat od přerušené věty
     if (tts.aktivni && !tts.pauza && synt && !synt.speaking) mluv();

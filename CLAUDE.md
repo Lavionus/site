@@ -43,6 +43,7 @@ proměnných i komentáře v duchu okolního kódu – tedy převážně česky.
 | `dialog.js` | Náhrada alert/confirm/prompt: `Dialog.info/chyba`, `await Dialog.potvrd()`, `await Dialog.zeptej()` |
 | `rekord.js` | Osobní rekordy her (`Rekord.sleduj('webapp_hra_…', {...})`) |
 | `tvary.js` | Pojmenované uložené nastavení stránek (generátory trubek, cookieCutter, modelar, kleste, flowchart…) |
+| `verze.js` | **Generovaný** (`node tools/verze.mjs`, spouští ho `upload.sh` před commitem): verze webu = číslo cache ze `sw.js`, verze stránky = počet commitů měnících `obsah/x.html` + `obsah/x/`. Ukazuje ji `podpis.js` (pruh dole, vedle `<h1>`) a drobečky v `index.html`. Ručně neupravovat |
 | `sw.js` | Service worker: `JADRO` (předcache), ostatní stránky se cachují při otevření |
 | `assets/index-icons/` | Ikony menu – web používá jen `web-128/` + `ikony.js` (`KATALOG_IKONY`) |
 | `tools/` | `generate-index-icons.mjs` (+ `index-icons-web.mjs`), skripty k Nahnoji |

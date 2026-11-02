@@ -23,6 +23,7 @@ KNIHY = [
     ("book_03", "kniha3", "III. Paměť kamene", "Yucatán, 2026"),
     ("book_04", "kniha4", "IV. První vyhnanci", "Pod Atlasem, před 68 400 lety"),
     ("book_05", "kniha5", "V. Strážci ticha", "Chebsko, 2030"),
+    ("book_06", "kniha6", "VI. Rozsudek", "Prstenec Halm, devět set let po procesu"),
 ]
 
 KOMENTAR = re.compile(r"\s*<!--.*?-->\s*", re.S)

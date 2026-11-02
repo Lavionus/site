@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v592';
+const CACHE = PREFIX + 'v597';
 const JADRO = [
   './',
   './index.html',
@@ -14,6 +14,7 @@ const JADRO = [
   './common.css',
   './theme.js',
   './podpis.js',
+  './verze.js',
   './rekord.js',
   './dialog.js',
   './tvary.js',
@@ -423,8 +424,26 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // navigace s dotazem (trpaslici.html?seed=…&velikost=…) je pořád táž stránka: hledat bez dotazu a ukládat bez něj
   const navigace = e.request.mode === 'navigate';
+
+  // Kroniky (čtečka + text kapitol): nejdřív ze sítě, cache jen offline. Rukopis se průběžně mění
+  // a SWR míchal verze – nová kapitola s ilustrací ![…](…) + starý jadro.js = obrázek jako text.
+  if (/\/obsah\/kroniky(\.html|\/.+\.(js|json|md))$/.test(url.pathname)) {
+    const klicK = navigace ? url.origin + url.pathname : e.request.url;
+    e.respondWith(caches.open(CACHE).then(cache => {
+      const zeSite = fetch(e.request.url, { cache: 'no-cache', credentials: 'same-origin' })
+        .then(resp => { if (resp.ok) cache.put(klicK, resp.clone()); return resp; });
+      const zCache = () => cache.match(klicK, { ignoreSearch: navigace });
+      // pomalá síť: po 5 s raději uložená verze (pokud je), síť ji mezitím obnoví
+      const limit = new Promise(ok => setTimeout(ok, 5000)).then(zCache);
+      return Promise.race([zeSite.catch(zCache), limit.then(c => c || zeSite)])
+        .then(r => r || zeSite)
+        .catch(() => new Response('', { status: 503 }));
+    }));
+    return;
+  }
+
+  // navigace s dotazem (trpaslici.html?seed=…&velikost=…) je pořád táž stránka: hledat bez dotazu a ukládat bez něj
   const klic = navigace ? url.origin + url.pathname : e.request;
   e.respondWith(
     caches.open(CACHE).then(async cache => {
