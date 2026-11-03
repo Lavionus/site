@@ -22,7 +22,7 @@ Doma vzala nový list.
 
 Pravou rukou. Pomalu, se zaťatými zuby, ale písmo bylo zase její, drobné a rovné, jen se v něm tu a tam něco zachvělo, jako se zachvěje hladina, když po ní přejde vítr. Nahoru napsala: *Lázeň pod mostem. Krev puštěná a vylitá. List třetí.* Pod to svislou čáru. Rovnou.
 
-*Sobota 10. června.* Nalevo: *tři misky, snad čtyři. Pustily si tři ženy z dvaceti, které přišly v posledních týdnech.* Napravo: *všechno, do struhy, viděno. Soudek žádný.*
+*Sobota 10. června.* Nalevo: *tři misky, snad čtyři. Pustily si tři ženy. Před dvěma týdny devatenáct misek.* Napravo: *všechno, do struhy, viděno. Soudek žádný.*
 
 Pod čáru: *Mistr Jobst řekl: Lékárník se ptal, jestli ještě chodíte. Jeho tovaryš. Ve čtvrtek.*
 
@@ -38,7 +38,7 @@ Ne vzadu. Vepředu, do ulice, kde stáli havíři od horního úřadu. Havíři 
 
 Florian stál na prahu s lucernou a s rukou, na které ještě měl zarůžovělou kůži po páře, a lapal po dechu, jako by běžel celou cestu do kopce.
 
-„Mistr,“ řekl. „Má tvář. Takhle.“ Ukázal si dlaní kus od tváře, tak daleko, že to vypadalo jako vtip. „Od středy ho bolí zub. Dneska mu natekla tvář, a teď už nemůže otevřít pusu, a má horečku, a třese se. Byl jsem u Jobsta. Jobst neotevřel. Řekl přes dveře, že ani za zlatý.“ Florian se na ni podíval. „Mistr řekl, ať jdu pro vás. Že vy pouštíte čistě.“
+„Mistr,“ řekl. „Má tvář. Takhle.“ Ukázal si dlaní kus od tváře, tak daleko, že to vypadalo jako vtip. „Od středy ho bolí zub. Dneska mu natekla tvář, a teď už nemůže otevřít pusu, a má horečku, a třese se. Byl jsem u Jobsta. Jobst neotevřel. Řekl přes dveře, že ani za zlatý. Mistr řekl, ať jdu pro vás. Že vy pouštíte čistě.“
 
 Ilona stála u stolu. Pod rukou měla tři lázeňské listy.
 
@@ -48,7 +48,7 @@ Ilona stála u stolu. Pod rukou měla tři lázeňské listy.
 
 Ilona vzala brašnu.
 
-V brašně měla nože a lancety, nitě, plátno, pálenku, mák. A na dně, v koženém pouzdře, které Řehoř nechal ušít u sedláře a které sama nikdy neotevřela, kleště. Ne obyčejné, jaké mají kováři. Zahnuté, s jedním ramenem, které se opíralo o dáseň, a s druhým, s háčkem, který se zaklesl za zub. Když se zatlačilo, zub vyjel ven bokem jako hřebík z prkna. Řehoř jim říkal pelikán, protože vypadaly jako zobák toho ptáka. Lazebníci je měli všichni. Ranhojiči je měli všichni. Ilona je v ruce držela jen dvakrát, když je podávala Řehořovi, a jednou sama, u staré Sternové. Ta jí pak řekla, že to bylo horší než porod.
+V brašně měla nože a lancety, nitě, plátno, pálenku, mák. A na dně, v koženém pouzdře, které Řehoř nechal ušít u sedláře a které od jeho smrti neotevřela, kleště. Ne obyčejné, jaké mají kováři. Zahnuté, s jedním ramenem, které se opíralo o dáseň, a s druhým, s háčkem, který se zaklesl za zub. Když se zatlačilo, zub vyjel ven bokem jako hřebík z prkna. Řehoř jim říkal pelikán, protože vypadaly jako zobák toho ptáka. Lazebníci je měli všichni. Ranhojiči je měli všichni. Ilona je v ruce držela jen dvakrát, když je podávala Řehořovi, a jednou sama, u staré Sternové. Ta jí pak řekla, že to bylo horší než porod.
 
 Nad lékárnou visí štít s pelikánem. Ilona na to pomyslela, když utahovala řemen brašny, a nechtěla na to myslet.
 
@@ -64,7 +64,7 @@ Röhrich seděl opřený o podušky a levou tvář měl tak oteklou, že mu při
 
 Podíval se na ni tím jedním okem, které mu zůstalo.
 
-„Paní Ilona,“ řekl. Zněl, jako by měl v ústech horký brambor. „Děkuji. Že jste přišla.“
+„Paní Ilona,“ řekl. Zněl, jako by měl v ústech horkou kaši. „Děkuji. Že jste přišla.“
 
 „Ukažte.“
 
@@ -132,7 +132,7 @@ Z vlastní lahvičky, ne z jeho polic. Ten odvar, který vařila sama z makovic 
 
 Ani o kapku víc.
 
-Myslela na to celou dobu, co odměřovala. Že by mohla. Že tu není nikdo, kdo by to poznal. Že lékárník usne a spát bude do poledne a nebude cítit nic. Myslela na to tak jasně, jak myslela na otisk žebříku ve vosku a na *Kolbin*, kterou ještě neviděla, a odměřovala dál, a ani o kapku víc.
+Myslela na to celou dobu, co odměřovala. Že by mohla. Že tu není nikdo, kdo by to poznal. Že lékárník usne a spát bude do poledne a nebude cítit nic. Myslela na to tak jasně, jak myslela na otisk žebříku ve vosku a na to, co v té knize ještě nečetla, a odměřovala dál, a ani o kapku víc.
 
 To bylo jediné, co v té komoře věděla jistě. Tahle lžíce byla ona. Co přijde potom, bude někdo jiný.
 
@@ -196,7 +196,7 @@ Pozná to tak jako tak, řekla si. Ale ne dřív, než otevře truhlu.
 
 Zápinka zapadla.
 
-Ilona se narovnala a vzala z umyvadla mokrý hadr. Když Florian vešel s vědrem, stála u postele a přikládala ho Röhrichovi na tvář.
+Ilona se narovnala a vzala z umyvadla mokrý hadr. Když Florian vešel s vědrem, stála u postele a přikládala hadr Röhrichovi na tvář.
 
 *
 
@@ -210,7 +210,7 @@ Florian se na ni podíval.
 
 „Já. A vy. A nikdo jiný.“
 
-Florian kývl. Pak se podíval na brašnu, kterou si přehodila přes rameno. Díval se na ni o chvilku déle, než měl.
+Florian kývl. Pak se podíval na brašnu, kterou si přehodila přes rameno, o chvilku déle, než měl.
 
 Ilona čekala, co řekne.
 
@@ -219,8 +219,6 @@ Ilona čekala, co řekne.
 „Dobře.“
 
 „Mistr by vás nevolal,“ řekl Florian tiše, a nepodíval se na postel. „Kdyby mu nešlo o život. Myslím. Neměla byste sem chodit, paní. Ani kvůli mistrovi.“
-
-Ilona se na něj dívala.
 
 „Proč?“
 
@@ -244,7 +242,7 @@ Veit kývl, spokojeně, jako by si to zapsal. Ilona šla dál a cítila brašnu 
 
 Doma zamkla přední i zadní dveře. Havíři před domem spali. Zatáhla okenice. Zapálila svíčku, jednu, a postavila ji na stůl a vedle ní položila knihu.
 
-Spona byla zamčená. Ilona se na ni dívala. Mosazná, jemná práce, s malou klíčovou dírkou. Pak vzala nejtenčí lancetu, tu, kterou Röhrichovi řezala dáseň, a prořízla kožený řemínek, který sponu držel na zadní desce. Šel snadno. Byl starý.
+Spona byla zamčená. Mosazná, jemná práce, s malou klíčovou dírkou. Pak vzala nejtenčí lancetu, tu, kterou Röhrichovi řezala dáseň, a prořízla kožený řemínek, který sponu držel na zadní desce. Šel snadno. Byl starý.
 
 Otevřela.
 
@@ -252,7 +250,7 @@ Otevřela.
 
 Kniha začínala svatým Martinem roku 1594.
 
-Prvních několik listů znala, nebo tušila. Data, vlevo, sobota, později sobota a středa. *Bad* a číslo. Pak *Oben* a číslo. Čísla rostla od zimy, jako rostla v hnědé knize u Kunzova jména. V prosinci osm misek z lázně, čtyři nahoru. V únoru patnáct, osm nahoru. V dubnu dvacet, dvanáct. Pod tím, menším písmem, peníze. Kolik Jobstovi. Kolik za destilaci. Kolik za prášek. *Leipzig.* *Freiberg.* Těch bylo málo a byly malé.
+Prvních několik listů znala, nebo tušila. Data, vlevo, sobota, později sobota a středa. *Bad* a číslo. Pak *Oben* a číslo. Čísla rostla od zimy, jako rostla v hnědé knize u Kunzova jména. V prosinci osm misek z lázně, čtyři nahoru. V únoru patnáct, osm nahoru. V dubnu dvacet, dvanáct. Pod tím peníze. Kolik Jobstovi. Kolik za destilaci. Kolik za prášek. *Leipzig.* *Freiberg.* Těch bylo málo a byly malé.
 
 Pak jiný sloupec. Od Hromnic.
 
@@ -260,7 +258,7 @@ Pak jiný sloupec. Od Hromnic.
 
 Ilona se na to jméno dívala a slyšela Purgu Sternovou přes zeď. *Už dost. Říkals, že jen trochu.*
 
-*Kolbin – 1 Schüssel – 4 kr.* Hromnice. *Kolbin – 1 Schüssel – 4 kr.* Týden potom. A dál, každý týden, od Hromnic do Velikonoc, misku, čtyři krejcary. Víc, než platil Jobst. *Teď mi platí víc někdo jinej.* Po Velikonocích dvě misky týdně. *Kolbin – 2 Schüssel – 8 kr.* V květnu dvakrát týdně. Ursula měla nové boty, řekla Lene. Smála se.
+*Kolbin – 1 Schüssel – 4 kr.* Hromnice. *Kolbin – 1 Schüssel – 4 kr.* Týden potom. A dál, každý týden, od Hromnic do Velikonoc, misku, čtyři krejcary. Víc, než platil Jobst. *Teď mi platí víc někdo jinej.* Po Velikonocích dvě misky týdně. *Kolbin – 2 Schüssel – 8 kr.* V květnu dvakrát týdně. Ursula měla nové boty, řekla Lene. Smála se. A k Iloně chodila s rudou tváří a s bolestí za očima, a Ilona jí řekla *plnokrevnost*. Ženě, ze které od Hromnic tekla krev každý týden.
 
 A pak, poslední řádek se jménem.
 
@@ -380,7 +378,7 @@ A *W.*, na každé středě, na každém řádku, hned vedle soli a krup a koz.
 
 Byla to kniha jmen. Ne účty. Ne kupcova kniha, jakou si vede každý, aby se neztratilo, kdo komu co dluží. Byla to mapa. Kdo prodával, kdo kupoval, kdo umřel, kdo mlčel za smazaný dluh. A kde bydlí ti, kdo za sůl a kroupy platí kozím sýrem a vlnou lidem, co se neptají.
 
-Kdyby ji dala soudu, Röhrich by visel. Ursula by měla svou trojku a Lene své *frisch*, a Tobiáš by šel domů k otci, který kašle pod kostelem. A Kunz by se zlomil. A *W.* by stál před soudem, kde sám sedí jako přísedící, a musel by vysvětlit čtyři zlaté každý čtvrtek.
+Kdyby ji dala soudu, Röhrich by visel. Ursula by měla svou trojku a Lene své *frisch*, a Tobiáš by šel domů k otci, který kašle pod kostelem. A Kunz by se zlomil. A *W.* by stál před soudem, kde sám předsedá, a musel by vysvětlit čtyři zlaté každý čtvrtek.
 
 A rada by věděla, kde je *Erlengrund*. A kolik je tam úst. A že přes ně jde plátno do lesa.
 
@@ -396,7 +394,7 @@ Röhrich to neřekl. Röhrich to napsal. A teď to měla ona.
 
 Kolébka byla na půdě.
 
-Řehoř ji udělal z třešňového dřeva tu zimu, kdy byla Ilona těhotná. Na čelo kolébky vyřezal ptáka. Chtěl pelikána, ale neuměl ho, a vyšel mu z toho čáp. Syn v ní ležel tři dny. Pak ji Řehoř odnesl na půdu, pod krokve, a přikryl ji pytlem, a ani jeden z nich ten pytel od té doby nezvedl.
+Řehoř ji udělal z třešňového dřeva tu zimu, kdy byla Ilona těhotná. Na čelo kolébky vyřezal ptáka. Chtěl pelikána, ale neuměl ho, a vyšel mu z toho čáp. Syn v ní ležel tři dny. Pak ji Řehoř přikryl pytlem a převezl ji s sebou až sem, a tady ji odnesl na půdu, pod krokve, a ani jeden z nich ten pytel od té doby nezvedl.
 
 Ilona ho zvedla.
 
@@ -404,7 +402,7 @@ Kolébka byla zaprášená. Uvnitř ležela ještě slamníková podložka, mal�
 
 Babky v lázni vykládaly, že když vezmou dítě, nechají v kolébce polínko. Aby si matka myslela, že má pořád co houpat.
 
-Ilona stála pod krokvemi a dívala se na pytel přes kolébku a myslela na to, že v její kolébce teď leží to jediné, co by mohlo ukázat, kde jsou vzaté děti. A že tam to leží proto, aby je nikdo nenašel.
+Ilona stála pod krokvemi nad kolébkou přikrytou pytlem a myslela na to, že v její kolébce teď leží to jediné, co by mohlo ukázat, kde jsou vzaté děti. A že tam to leží proto, aby je nikdo nenašel.
 
 *
 
@@ -420,11 +418,11 @@ Po kázání se lidé na náměstí rozcházeli, stáli v hloučcích a mluvili 
 
 Přešel náměstí. Pomalu. Lidé mu ustupovali, protože byl lékárník, a protože měl ovázanou tvář. Zastavil se před Ilonou, tak blízko, že cítila hřebíček. Hřebíček a myrhu. A pod tím ještě něco, ten nasládlý pach rány, která se hojí.
 
-„Paní Ilono,“ řekl. Mluvil lépe. Pořád zněl jako s bramborem v ústech, ale byl to brambor menší. „Chtěl jsem vám poděkovat. Za zub.“
+„Paní Ilono,“ řekl. Mluvil lépe. Pořád zněl jako s kaší v ústech, ale té kaše už bylo méně. „Chtěl jsem vám poděkovat. Za zub.“
 
 „Hojí se to?“
 
-„Hojí.“ Díval se na ni. Oteklé oko už měl skoro otevřené. „Máte lehkou ruku. Já to říkal Florianovi. Lehčí, než jsem myslel.“
+„Hojí.“ Oteklé oko už měl skoro otevřené. „Máte lehkou ruku. Já to říkal Florianovi. Lehčí, než jsem myslel.“
 
 Ilona mlčela.
 
@@ -442,11 +440,11 @@ V pondělí ráno přinesl Wehrlův sluha psaníčko.
 
 Zapečetěné. Pečeť s kladívkem a želízkem a s malou hvězdou nad nimi, které si Ilona předtím nikdy nevšimla. Písmo úhledné, humanistické, s dlouhými tahy.
 
-*Milá paní Ilono, rád bych s Vámi zítra večer mluvil o hvězdách a o jiných věcech, které čekají. Přijďte, prosím, po klekání. Slyšel jsem, že jste v noci na sobotu zachránila lékárníkovi život. Je to od Vás šlechetné. Ne každý by to udělal. — H. W.*
+*Milá paní Ilono, rád bych s Vámi zítra večer mluvil o hvězdách a o jiných věcech, které čekají. Přijďte, prosím, po klekání. Slyšel jsem, že jste v noci na neděli zachránila lékárníkovi život. Je to od Vás šlechetné. Ne každý by to udělal. — H. W.*
 
 Ilona stála ve dveřích s tím papírem v ruce. Havíři před domem se na ni dívali.
 
-*Slyšel jsem.* Od koho? Od Veita, který sedí pod podloubím a zívá. Od Floriana. Od lékárníka samotného, s ovázanou tváří, ještě v neděli večer, nebo v noci, ještě než ráno otevřel truhlu.
+*Slyšel jsem.* Od koho? Od Veita, který sedí pod podloubím a zívá. Od Floriana. Od lékárníka samotného, s ovázanou tváří, ještě v neděli.
 
 *H. W.*
 

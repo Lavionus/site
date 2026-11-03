@@ -10,7 +10,7 @@ Muž seděl pod jedním z těch stromů, zády ke kmeni. Vedle něj ležela nár
 
 Eren na něj promluvil. Pak se ho dotkl.
 
-Bunda byla rozepnutá. Až dolů, k pasu. Pod ní měl jen tenkou spodní vrstvu a na té ležela jinovatka, jemná jako chmýří, na hrudi, na krku, na řasách. Eren se na to díval a nerozuměl. Kdo by si v takovém mrazu rozepínal bundu? Jako by mu na konci bylo horko.
+Bunda byla rozepnutá. Až dolů, k pasu. Pod ní měl jen tenkou spodní vrstvu a na té ležela jinovatka, jemná jako chmýří, na hrudi, na krku, na řasách. Eren tomu nerozuměl. Kdo by si v takovém mrazu rozepínal bundu? Jako by mu na konci bylo horko.
 
 Muž byl ztuhlý. Ruce v klíně měl sevřené a nedaly se rozevřít.
 
@@ -22,7 +22,7 @@ Sedl si k němu na zmrzlou zem. Až po chvíli si uvědomil, proč to dělá: po
 
 Vzal muže. Dřevo nechal ležet.
 
-Po padesáti krocích se zastavil, položil muže do trávy a vrátil se pro dřevo. Pak nesl kus cesty dřevo, vrátil se pro muže a nesl kus cesty jeho. Trvalo to do rozednění. Nevěděl, proč to dělá. Věděl jen, že ten muž to dřevo nesl a že ho nemůže nechat ležet na svahu, jako by ho nesl zbytečně.
+Po padesáti krocích se zastavil, položil muže do trávy a vrátil se pro dřevo. Nesl kus cesty dřevo, vrátil se pro muže a nesl kus cesty jeho. Trvalo to do rozednění. Věděl jen, že ten muž to dřevo nesl a že ho nemůže nechat ležet na svahu, jako by ho nesl zbytečně.
 
 *
 
@@ -34,7 +34,7 @@ Neřekl nic. Poklekl, sáhl muži na tvář a pak mu zapnul bundu, až ke krku, 
 
 Eren to jméno slyšel poprvé. Bydleli spolu v kotli skoro padesát dní a on ho neznal. Orrin ano. Orrin znal jména všech.
 
-Za Orrinem se pohnula plachta. Vyšla Maela. Podívala se na muže na zemi, pak na dřevo, které Eren složil vedle něj, a pak na Erenovy ruce. Byly odřené od řemínku a od kůry a od mrazu. Dívala se na ně dlouho. Pak se vrátila dovnitř a Eren ji slyšel, jak tam někomu tiše říká, ať spí dál.
+Za Orrinem se pohnula plachta. Vyšla Maela. Podívala se na muže na zemi, pak na dřevo, které Eren složil vedle něj, a pak na Erenovy ruce. Byly odřené od řemínku a od kůry a od mrazu. Dívala se na ně dlouho, než se vrátila dovnitř. Eren ji slyšel, jak tam někomu tiše říká, ať spí dál.
 
 Orrin vzal Lemovo dřevo. Rozvázal řemínek a přiložil první větev do ohně pod skálou. Potom druhou.
 
@@ -46,9 +46,9 @@ Pohřbili ho v poledne, na suti vedle ostatních. Zem byla zmrzlá tak, že by s
 
 Orrin nad ním promluvil. Krátce. Řekl Lemovo jméno a řekl, co dělal. Pak řekl: „Nosil.“ A víc nic.
 
-Ru přišel s rudou hlinkou v dlani a nakreslil na horní kámen čáru. Nikdo se ho nezeptal, proč to dělá. Už to věděli.
+Ru přišel s rudou hlinkou v dlani a nakreslil na horní kámen čáru. Nikdo se ho už neptal, proč to dělá.
 
-Na terase stála Tal, opřená o hůl. Dívala se dolů na hromadu kamenů a na lidi kolem ní. Eren zvedl hlavu a jejich pohledy se potkaly. Tal se nepodívala jinam. Dívala se na něj tak dlouho, až se jinam podíval on.
+Na terase stála Tal, opřená o hůl, a shlížela na hromadu kamenů a na lidi kolem ní. Eren zvedl hlavu a jejich pohledy se potkaly. Tal neuhnula. Dívala se na něj tak dlouho, až se jinam podíval on.
 
 *
 
@@ -62,13 +62,13 @@ Eren byl s Ardem u druhého domu a zápasil s pruty. Byly dlouhé a tenké, nař
 
 Pak uslyšeli hlasy. Z rokle sestupovaly čtyři ženy. Nesly svazky prutů na zádech, převázané řemenem přes čelo. Jedna z nich nesla místo prutů dítě. Za nimi šla pomalu, s holí, Tal.
 
-Nikdo je nezval. Eren nevěděl, proč přišly. Možná kvůli muži pod stromem. Možná proto, že v síni leželo dvanáct cizích nemocných a každý den jich mohlo být víc. Možná proto, že kdo bude bydlet v údolí, nebude chtít do jeskyně. Možná ze všech těch důvodů, nebo z žádného, který by uměl pojmenovat. Nezeptal se.
+Nikdo je nezval. Možná přišly kvůli muži pod stromem. Možná proto, že v síni leželo dvanáct cizích nemocných a každý den jich mohlo být víc. Možná proto, že kdo bude bydlet v údolí, nebude chtít do jeskyně. Možná ze všech těch důvodů, nebo ze žádného, který by uměl pojmenovat. Nezeptal se.
 
-Tal si sedla na kámen u klacku, který tehdy zarazila do hlíny nad první řadou. Ženy složily pruty. Jedna z nich, ta s dítětem, se podívala na zlámané klacky v Ardových rukou a zasmála se. Krátce a bez zlé vůle. Pak vzala Ardovi z ruky jeden kus, ohnula ho a nechala ho prasknout, aby to viděli. Ukázala na mráz kolem. Pak ukázala na potok.
+Tal si sedla na kámen u klacku, který tehdy zarazila do hlíny nad první řadou. Ženy složily pruty. Jedna z nich, ta s dítětem, se podívala na zlámané klacky v Ardových rukou a zasmála se. Krátce a bez zlé vůle. Vzala Ardovi z ruky jeden kus, ohnula ho a nechala ho prasknout, aby to viděli. Ukázala na mráz kolem. Pak ukázala na potok.
 
 Na potok, ze kterého stoupala pára.
 
-Vzala svazek prutů a odnesla ho k vodě. Ponořila ho do proudu, do toho černého a kouřícího uprostřed, kde nebyl led, a zatížila ho kameny. Pak se vrátila, posadila se na zem a čekala. Ostatní ženy taky. Čekaly a mluvily spolu a dítě na zádech té první spalo.
+Vzala svazek prutů a odnesla ho k vodě. Ponořila ho do proudu, do toho černého a kouřícího uprostřed, kde nebyl led, a zatížila ho kameny. Vrátila se, posadila se na zem a čekala. Ostatní ženy taky. Čekaly a mluvily spolu a dítě na zádech té první spalo.
 
 Eren se díval na potok. Teplá voda. Celé ty dny ji pili, myli se v ní, prali, ohřívali si v ní ruce. Na to, že by mohla ohnout dřevo, nepřišel.
 
@@ -82,7 +82,7 @@ Neříkaly nic, čemu by Eren rozuměl, a tak se díval na ruce. Prut se vede me
 
 ![Stavba prvních domů v mrazu](obrazky/13_prvni_mraz.webp)
 
-Eren to zkusil. Žena s dítětem se dívala, jak to dělá. Pak ho plácla přes ruku, ne silně, a prut vytáhla. Ukázala mu to znovu. Prut nesměl být napjatý. Musel jít volně a zapadnout sám, a kde ho Eren táhl silou, tam se zkroutil a nechal mezeru.
+Eren to zkusil. Žena s dítětem ho sledovala a pak ho plácla přes ruku, ne silně, a prut vytáhla. Ukázala mu to znovu. Prut nesměl být napjatý. Musel jít volně a zapadnout sám, a kde ho Eren táhl silou, tam se zkroutil a nechal mezeru.
 
 Zkusil to znovu. Žena kývla.
 
@@ -98,7 +98,7 @@ Odpoledne přišla na řadu hlína.
 
 Ženy ji vybíraly u břehu, šedou a lepkavou, a mísily ji s nasekanou trávou a s vodou z potoka, teplou, aby nezmrzla dřív, než ji nanesou. A s něčím ještě. Jedna z nich přinesla v kůži hromádku tmavého trusu, kulatých bobků, jaké Eren vídal na stezkách po zvířatech, a vmísila ji do hlíny. Hela se odvrátila. Vesa ne. Vesa strčila zdravou ruku do hlíny až po loket a hnětla ji, jak to dělaly ženy, a nepodívala se, co v ní je.
 
-Hlína se nanášela rukama, z obou stran stěny naráz, a vtlačovala se do mezer mezi pruty. Pak se uhladila mokrou dlaní. Uvnitř rozdělaly ženy malý oheň, aby hlína vyschla dřív, než ji v noci chytí mráz. Kouř šel ven stěnou, dokud nebyla hotová. Potom už ne.
+Hlína se nanášela rukama, z obou stran stěny naráz, a vtlačovala se do mezer mezi pruty a uhlazovala se mokrou dlaní. Uvnitř rozdělaly ženy malý oheň, aby hlína vyschla dřív, než ji v noci chytí mráz. Kouř šel ven stěnou, dokud nebyla hotová. Potom už ne.
 
 K večeru stál v údolí dům se stěnami. Bez střechy. Zevnitř byl vidět kruh nebe a v něm první hvězda.
 
@@ -116,9 +116,9 @@ Tio přišla s Ruem třetí den.
 
 Přiběhli dolů roklí a Tio měla na sobě pořád Orrinovu kůži, převázanou šňůrkou. Když uviděla ženy, zastavila se, pak se rozběhla k té s dítětem a něco jí řekla. Žena odpověděla. Tio jí sundala dítě ze zad, jako by to dělala odjakživa, a posadila si ho na bok.
 
-Eren se díval a nevěděl, kdy se to naučila.
+Kdy se to naučila?
 
-„To je Ammu,“ řekla Tio, když k němu přišla. Dítě na jejím boku se dívalo na Erena velkýma tmavýma očima a cumlalo si pěst. „Ikkuova. Je to Ikkuova…“ Zarazila se. Hledala slovo, které česky neznala. Pak řekla to místní a přidala: „Žijou spolu. A tohle je jejich.“ Potřásla dítětem na boku. „Ještě nemá jméno. Dostane ho, až přejde zima.“
+„To je Ammu,“ řekla Tio, když k němu přišla, a kývla k ženě u hlíny. Dítě na jejím boku se dívalo na Erena velkýma tmavýma očima a cumlalo si pěst. „Ikkuova. Je to Ikkuova…“ Zarazila se. Hledala slovo, které v naší řeči neznala. Pak řekla to místní a přidala: „Žijou spolu. A tohle je jejich.“ Potřásla dítětem na boku. „Ještě nemá jméno. Dostane ho, až přejde zima.“
 
 „Proč až potom?“
 
@@ -142,13 +142,13 @@ Eren se na ni podíval. Stála s rukama v hlíně a poslouchala. Za domem si hr�
 
 Eren mlčel.
 
-„Dvanáct let jsem je učila mluvit.“ Hela se nepodívala na něj. Dívala se za dům, kde se děti hádaly. „Psát, číst, správně skloňovat. A ony teď mluví, a já jim nerozumím.“
+„Dvanáct let jsem je učila mluvit.“ Hela se nepodívala na něj, ale za dům, kde se děti hádaly. „Psát, číst, správně skloňovat. A ony teď mluví, a já jim nerozumím.“
 
-Pak zavolala na Tio. Tio přiběhla, s dítětem na boku.
+Zavolala na Tio. Tio přiběhla, s dítětem na boku.
 
 „Jak se řekne dům?“ zeptala se Hela.
 
-Tio jí to řekla. Hela to zopakovala. Tio zavrtěla hlavou a řekla to znovu, pomaleji, s tím zaraženým dechem na konci. Hela to zopakovala znovu. Tio kývla, ale nebyla spokojená.
+Tio jí to řekla. Hela to zopakovala. Tio zavrtěla hlavou a řekla to znovu, pomaleji. Hela to zopakovala znovu. Tio kývla, ale nebyla spokojená.
 
 „Ještě jednou,“ řekla Hela.
 
@@ -170,7 +170,7 @@ Seděla trochu stranou, s rukama kolem kolen. Tio klečela vedle Sefy a Ru na dr
 
 Ru řekl slovo.
 
-„A česky?“
+„A po našem?“
 
 Tio se zamyslela. „Na horko,“ řekla. „Ta, co jsi mi dávala.“
 
@@ -196,7 +196,7 @@ Tio se podívala na Rua. Ru se zamračil, pak udělal pohyb rukou přes břicho 
 
 Ru kývl, vážně, jako dospělý.
 
-Sefa se dívala na ty dva nad plachtou, na holku v cizí kůži a na kluka s rudou hlinkou za nehty. Potom se podívala na Maelu. Pak zase na děti.
+Sefa se dívala na ty dva nad plachtou, na holku v cizí kůži a na kluka s rudou hlinkou za nehty. Potom na Maelu a zase na děti.
 
 „Já zapomínám,“ řekla. Ne jim. Možná sobě. „Dřív jsem to měla v řádku. Teď to mám tady.“ Dotkla se čela. „A tady se to ztrácí.“ Podívala se na Tio. „Vy ne. Vy to ještě nemáte kam ztratit.“
 
@@ -206,13 +206,13 @@ Maela vstala. Uviděla Erena na kraji světla a zastavila se.
 
 Nemluvili spolu od toho rána, kdy přinesl Lema. Maela vypadala hubeněji. Nebo jen unaveněji. Měla na sobě pořád svou bundu a přes ramena kůži, kterou Eren neznal.
 
-„Sefa si o ni řekla,“ řekla Maela. Bez úvodu. „Poslala Rua, ať jí ji pošlu. Že potřebuje ruce, které si to zapamatujou.“ Podívala se na Tio. „Tak ji vodím.“
+„Sefa si o ni řekla,“ řekla Maela. Bez úvodu. „Poslala Rua, ať jí ji pošlu. Že potřebuje ruce, které si to zapamatujou. Tak ji vodím.“
 
 „Dobře.“
 
 „Orrin o tom ví.“
 
-Eren kývl. Nevěděl, proč mu to říká. Pak to pochopil. Říkala mu, že to nebylo Orrinovo rozhodnutí. Že bylo její.
+Eren kývl. Proč mu to říká, pochopil až po chvíli. Říkala mu, že to nebylo Orrinovo rozhodnutí. Že bylo její.
 
 „Kolik domů?“ zeptala se Maela.
 
@@ -222,17 +222,17 @@ Eren kývl. Nevěděl, proč mu to říká. Pak to pochopil. Říkala mu, že to
 
 „Žádná.“
 
-Maela kývla. Spočítala si to, viděl jí to na obličeji. Pak řekla: „Dávky dojdou za tři dny. Možná za čtyři.“ Odmlčela se. „Orrinovy bedny jsou na zimu. Na tu pravou. On to myslí vážně.“
+Maela kývla. Spočítala si to, viděl jí to na obličeji. „Dávky dojdou za tři dny. Možná za čtyři. Orrinovy bedny jsou na zimu. Na tu pravou. On to myslí vážně.“
 
 „Já vím.“
 
-„Já vím, že víš.“ Maela se podívala na Tio. „Půjdeme,“ řekla. Tio vzdychla a vstala a Ru začal skládat rostliny zpátky do plachty, každou zvlášť.
+„Já vím, že víš.“ Maela se obrátila k Tio. „Půjdeme,“ řekla. Tio vzdychla a vstala a Ru začal skládat rostliny zpátky do plachty, každou zvlášť.
 
 Když odešly, sedl si Eren k Sefě. Sefa ležela se zavřenýma očima. Myslel si, že spí.
 
 „Ukaž mi ruku,“ řekla.
 
-Nevěděl, kterou myslí. Pak to věděl. Natáhl pravou.
+Chvíli váhal, kterou. Pak natáhl pravou.
 
 Sefa ji vzala do svých, horkých a suchých, a obrátila ji hřbetem nahoru, k ohni. Rudý pruh byl pořád vidět. Kůže kolem něj se loupala a uprostřed byla lesklá a napjatá.
 
@@ -256,7 +256,7 @@ Dávky byly pořád. Maela je každé ráno četla a každé ráno rozdělovala,
 
 Ženy jim ukázaly, co se dá jíst.
 
-Pod nízkými stromy s tvrdými listy ležely v suché trávě plody. Tvrdé a hnědé, s drsnou čepičkou na jednom konci, velké jako článek prstu. Eren je viděl celé týdny a myslel si, že jsou to šišky jiného druhu. Ammu jich nasbírala plnou kůži, hodila je do popela pod ohněm a nechala je tam, dokud nepraskly. Pak jednu vyloupla a podala ji Erenovi. Byla nasládlá, trochu hořká a moučná. Eren ji snědl a chtěl další.
+Pod nízkými stromy s tvrdými listy ležely v suché trávě plody. Tvrdé a hnědé, s drsnou čepičkou na jednom konci, velké jako článek prstu. Eren je viděl celé týdny a myslel si, že jsou to šišky jiného druhu. Ammu jich nasbírala plnou kůži, hodila je do popela pod ohněm a nechala je tam, dokud nepraskly, a pak jednu vyloupla a podala ji Erenovi. Byla nasládlá, trochu hořká a moučná. Eren ji snědl a chtěl další.
 
 Pak na svahu vyhrabávaly kostěnými bodci ze zmrzlé země hlízy. Bílé, vláknité, se zemitou chutí. Hlízy se pekly v popelu taky.
 
@@ -268,7 +268,7 @@ Vesa jich nasbírala víc než kdokoli jiný. Nosila je v bundě se zavázanými
 
 Čtvrtý den přišel ke stavbě Kaj.
 
-Nikdo ho neposlal. Přišel odpoledne, sám, s rukama v podpaží, a stál na kraji a díval se. Pak se sehnul, vzal svazek namočených prutů a nesl ho k Ardovi, aniž se zeptal, jestli může. Ardo se na něj podíval a podal mu konec prutu. Kaj ho vzal.
+Nikdo ho neposlal. Přišel odpoledne, sám, s rukama v podpaží, a stál na kraji a díval se. Pak se sehnul, vzal svazek namočených prutů a nesl ho k Ardovi, aniž se zeptal, jestli může. Ardo mu mlčky podal konec prutu. Kaj ho vzal.
 
 Pracoval dobře. To Erena překvapilo. Na lovu dělal všechno špatně a tady ne. Měl mladé ruce, které se rychle učily, a když ho Ammu jednou plácla přes prsty, jako Erena první den, nezrudl a nezačal se bránit. Jen to udělal znovu, správně.
 
@@ -288,7 +288,7 @@ Eren nanesl hlínu. Uhladil ji. Pak teprve odpověděl.
 
 „Ano.“
 
-Kaj kývl. Jen jednou, krátce. Pak sklopil oči k prutům a pracoval dál a ani jednou se nepodíval přes stěnu.
+Kaj kývl, jen jednou, krátce. Sklopil oči k prutům, pracoval dál a ani jednou se nepodíval přes stěnu.
 
 Eren nemusel přemýšlet, co tím myslel. V bedně pod plachtou teplo nebylo, to věděl každý v kotli. Teplo bylo pod převisem bílé usazeniny u dolní tůně. Kaj to věděl. A chtěl, aby Eren věděl, že to ví. Nebo nechtěl a ujelo mu to. Eren neuměl poznat, co z toho.
 
@@ -310,11 +310,11 @@ Ammu lezla po tyčích až k vrcholu a Eren jí podával svazky. Tráva mu rozř
 
 Když Ammu slezla, stoupla si před dům a dívala se na něj. Tal přišla od svého kamene, opřená o hůl, a postavila se vedle ní. Obě mlčely. Pak Tal něco řekla a Ammu kývla.
 
-Eren nevěděl, jestli to byla pochvala. Nebo výtka.
+Mohla to být pochvala. Nebo výtka.
 
 Večer u Sefina ohně se rozhodovalo, kdo bude v domě spát.
 
-Bylo jich tam patnáct, dvacet. Hela, Ardo, Bena, Vesa a její lidé, a pár dalších z desítek, které neodešly k Orrinovi. Dům unesl deset lidí, možná dvanáct, když se natlačí. Všichni to věděli.
+Bylo jich tam patnáct, dvacet. Hela, Ardo, Bena, Vesa a její lidé, a pár dalších z desítek, které neodešly k Orrinovi. Dům unesl deset lidí, možná dvanáct, když se natlačí.
 
 Eren seděl a mlčel.
 
@@ -334,7 +334,7 @@ Sefa ležela pod plachtou za nimi. Myslel si, že spí. Nespala.
 
 Nikdo se nepřel.
 
-Vesa chvíli mlčela. Pak řekla: „Já budu spát u dveří. Venku. Ať tam někdo je.“
+Vesa chvíli mlčela. „Já budu spát u dveří. Venku. Ať tam někdo je.“
 
 Tím to bylo. Rozhodli to oni, u ohně, nahlas, kus po kusu. Eren seděl s nimi a nerozhodl nic. Uvědomil si to, až když vstávali. Nebylo to těžké. Ani lehké. Bylo to jen jiné, jako když člověk poprvé jde bez berle a čeká, kdy upadne.
 
@@ -348,7 +348,7 @@ Bylo to ráno jako každé jiné. Šedé, studené, s párou nad tůněmi a s ji
 
 Pak rozdělila to, co bylo v posledních dvou bednách.
 
-Nebylo toho moc. Na každého kousek velký jako dvě spojené dlaně, pro děti stejně. Lidé si ho brali a nikdo nic neřekl. Ani Haro ne. Ani Dorn, který stál vedle Hara a levým okem se díval na prázdné bedny.
+Nebylo toho moc. Na každého kousek velký jako dvě spojené dlaně, pro děti stejně. Lidé si ho brali a nikdo nic neřekl. Ani Haro ne. Ani Dorn, který stál vedle Hara a levým okem hlídal prázdné bedny.
 
 Když bylo rozdáno, Maela zavřela víko poslední bedny. Zůstala nad ní stát.
 
@@ -356,7 +356,7 @@ Když bylo rozdáno, Maela zavřela víko poslední bedny. Zůstala nad ní stá
 
 Neřekla to hlasitěji než zbytek. Řekla to jako číslo.
 
-Orrin stál vedle ní, jako každé ráno. Kývl. Pak se otočil a odešel nahoru, k přístřešku pod teplou skálou, kde pod dvojitou plachtou stály čtyři bedny, které Maela nepočítala.
+Orrin stál vedle ní, jako každé ráno. Kývl, otočil se a odešel nahoru, k přístřešku pod teplou skálou, kde pod dvojitou plachtou stály čtyři bedny, které Maela nepočítala.
 
 Lidé se nerozcházeli. Stáli u prázdných beden a dívali se na ně, jako by se mohly samy naplnit.
 
@@ -380,10 +380,10 @@ Postavili to. Ne on. Ammu, Tal a ženy s pruty na zádech, Ardo s lanem, Vesa s 
 
 Kdyby to stavěl sám, stál by tu kruh kůlů. Rovný. Přesně změřený. A vítr by jím profukoval.
 
-Stál u stěny dlouho. Dlaně ho pálily od trávy a hřbet pravé ruky od Sefina tuku. Nad údolím byly hvězdy. Měsíc vycházel nad horami, skoro kulatý, a sníh na hřebenech pod ním modral.
+Stál u stěny dlouho. Dlaně ho pálily od trávy a hřbet pravé ruky pod Sefiným tukem. Nad údolím byly hvězdy. Měsíc vycházel nad horami, skoro kulatý, a sníh na hřebenech pod ním modral.
 
 Zítra nic, řekla Maela.
 
 Eren si to opakoval cestou zpátky do kotle a nebylo to tak těžké, jak čekal. Zítra nic. Zítra plody v popelu, hlízy ze zmrzlé země, pátý dům. Zítra Ammu na tyčích a Tio s dítětem na boku. Zítra nic z beden, a všechno ostatní ano.
 
-Nevěděl, jestli to stačí. Nevěděl, kolik ještě zbylo do sněhu v kotli. Ru říkal dva úplňky, a měsíc nad horami byl skoro kulatý.
+Nevěděl, jestli to stačí, ani kolik ještě zbylo do sněhu v kotli. Ru říkal dva úplňky, a měsíc nad horami byl skoro kulatý.

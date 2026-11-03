@@ -18,13 +18,13 @@ Je o pět let starší, než když ji Hana viděla naposledy, a je to na ní vid
 
 „Hřbet byl horší, než vypadal.“
 
-Hana kývne. Neřekne nic. Šindelářová se na ni chvíli dívá, jako by čekala, že Hana řekne něco dalšího, a když neřekne, vrátí se k protokolu.
+Hana kývne. Neřekne nic. Šindelářová chvíli čeká, jestli Hana řekne ještě něco, a když neřekne, vrátí se k protokolu.
 
 *
 
 Restaurátorka přijde v devět dvacet.
 
-Hana ji pozná dřív, než promluví. Ne podle tváře. Podle výšky a podle rukou.
+Hana ji pozná dřív, než promluví. Ne podle tváře, ale podle výšky a podle rukou.
 
 Je vysoká. Vyšší než Hana o hlavu, štíhlá, v šedém vlněném svetru a tmavých kalhotách, s bílými vlasy staženými vzadu do uzlu, který drží dřevěná jehlice. Věk se jí nedá hádat. Šedesát? Sedmdesát? Pleť má bledou, skoro bez vrásek kolem úst, ale kolem očí jemné a husté jako krakelura na starém laku. Nese v náručí krabici z nekyselé lepenky a nese ji tak, jak Kalina nesl maják. Jako by v ní bylo něco živého.
 
@@ -36,7 +36,7 @@ A v dubnu 2025, u téhož pultu, Šindelářová řekla, že restaurátorka muse
 
 „Paní Sálová,“ řekne Hana.
 
-Restaurátorka postaví krabici na pult. Pak se na Hanu podívá. Oči má světlé, šedé nebo zelenavé, v tom bílém světle se to nedá říct.
+Restaurátorka postaví krabici na pult a obrátí se k Haně. Oči má světlé, šedé nebo zelenavé, v tom bílém světle se to nedá říct.
 
 „Paní doktorko,“ řekne. Hlas má hlubší, než by Hana čekala, a mluví pomalu, jako by každé slovo nejdřív zvážila v ruce. „Pamatujete si mě.“
 
@@ -62,7 +62,7 @@ Sálová se na ni podívá. Ne dlouho. Asi tak dlouho, jak se Hana dívá na vrs
 
 „Ano,“ řekne.
 
-Nic dalšího. Hana čeká. Sálová taky. Šindelářová se dívá z jedné na druhou a pak řekne, že jde pro kávu, a odejde. Asi proto, aby nemusela poslouchat ticho.
+Nic dalšího. Hana čeká. Sálová taky. Šindelářová chvíli přešlapuje a pak řekne, že jde pro kávu, a odejde. Asi proto, aby nemusela poslouchat ticho.
 
 „Budu otáčet já,“ řekne Sálová. „Vy řekněte kdy.“
 
@@ -76,7 +76,7 @@ Je to těžší, než si myslela. Oko chce hledat. Oko chce vždycky hledat.
 
 Okraje. *Vidi. Non vidi. Audivi.* U každé věci, kterou mnich zapsal, stojí na kraji drobně, rychlou rukou, odkud ji má. Viděl. Neviděl. Slyšel, a od koho. Cítil. Vzal. Řekl. Hana to věděla, ale teprve teď to vidí jako celek, jako mřížku přes celou knihu. Každý řádek má svůj původ. Nic nepluje.
 
-Pak se zastaví na listě, kde je slatina.
+Zastaví se na listě, kde je slatina.
 
 *Canis meus mortuus est.* Můj pes umřel. A na kraji *vidi*.
 
@@ -104,13 +104,13 @@ Hana se zarazí.
 
 „Takže tu mapu kreslil dřív. Než štola došla ke skále.“ Hana se dívá na konec čáry, na místo, kde štola končí kus pod kruhem. „Kreslil, kam štola dojde. Ne kam došla.“
 
-Sálová nic neřekne. Hana se na ni podívá a Sálová se nedívá na mapu. Dívá se na Hanu.
+Sálová nic neřekne. Na mapu se nedívá. Dívá se na Hanu.
 
 Vedle konce štoly čtvereček se znaky. Kroužek, čtvereček, trojúhelník. To je dutina, kterou Hana zná z dvoustrany s mřížkou. Dole pod horou shluk několika malých komůrek, nakreslených tenčeji, a vedle drobně *non certum*. Nejisté. Nad komůrkami a vpravo nepravidelná plocha vyplněná vlnovkami. Voda. A těsně u vody, kus nad koncem štoly, kruh šrafovaný krátkými hustými vlnovkami, jako by z něj šly paprsky.
 
 U kruhu *teplá skála*. Česky, starým pravopisem.
 
-Hana se na ta dvě slova dívá. V lednu 2025 jí přišlo jen zvláštní, že je to česky, když všechno ostatní je latinsky. Pak si zvykla.
+V lednu 2025 jí přišlo jen zvláštní, že ta dvě slova jsou česky, když všechno ostatní je latinsky. Pak si zvykla.
 
 „Smím?“ řekne Sálová.
 
@@ -134,7 +134,7 @@ Hana se dívá na zbytek oblouku pod českým slovem. Napadne ji Ilona. Pět rub
 
 „Ukazujete mi to,“ řekne Hana, „protože jsem se ptala na tři roky.“
 
-„Ukazuju vám to, protože to je v protokolu o stavu,“ řekne Sálová. „Stav pergamenu, strana čtyřicet. Paní doktorka ho má.“ Rozsvítí lampu. Bílé studené světlo spadne na mapu a rasura zmizí, jako by tam nikdy nebyla. „A protože jste se dívala na to slovo jinak než na ostatní.“
+„Ukazuju vám to, protože to je v protokolu o stavu,“ řekne Sálová. „Stav pergamenu, strana čtyřicet. Paní Šindelářová ho má.“ Rozsvítí lampu. Bílé studené světlo spadne na mapu a rasura zmizí, jako by tam nikdy nebyla. „A protože jste se dívala na to slovo jinak než na ostatní.“
 
 *
 
@@ -156,7 +156,7 @@ Sálová se nakloní.
 
 „Mnich to věděl?“
 
-„Napsal *non bene*.“ Hana se dívá na ta dvě slova. „Věděl, že ji neviděl dobře. Nevím, jestli věděl, kde je chyba. Ale napsal, že tam je.“
+„Napsal *non bene*,“ řekne Hana. „Věděl, že ji neviděl dobře. Nevím, jestli věděl, kde je chyba. Ale napsal, že tam je.“
 
 Sálová se narovná.
 
@@ -168,7 +168,7 @@ Sálová se narovná.
 
 „Ano,“ řekne Sálová.
 
-A pak se poprvé za celé dopoledne nepatrně usměje. Ne ústy. Kolem očí, v té jemné krakeluře.
+A pak se poprvé za celé dopoledne nepatrně usměje. Ne ústy, jen kolem očí, v té jemné krakeluře.
 
 *
 
@@ -184,9 +184,9 @@ U slova *Tacui*, které stojí samo vedle *exivimus*, se zastaví.
 
 „Proto se tomu říká mlčet,“ řekne Hana.
 
-Šindelářová se na ni podívá a pak se zasměje. Krátce. Poprvé, co ji Hana zná.
+Šindelářová se zasměje. Krátce. Poprvé, co ji Hana zná.
 
-Sálová se nesměje. Dívá se na to slovo a pak zavře kodex. Pomalu, oběma rukama, desku na desku, a položí na ně dlaň, jako to tenkrát udělala Šindelářová. Kniha je dlaň na dlaň velká. Pod její dlaní zmizí celá.
+Sálová se nesměje. Dívá se na to slovo a pak zavře kodex. Pomalu, oběma rukama, desku na desku, a položí na ně dlaň, jako to tenkrát udělala Šindelářová. Kniha je velká jako dlaň. Pod její dlaní zmizí celá.
 
 *
 
@@ -216,7 +216,7 @@ Hana nakreslí od ústí do hory oblouk. Pak kolem jeho konce kruh. Čtyřicet m
 
 Kruh leží pod hřbetem, pod lesem, osmdesát až sto metrů pod povrchem. Níž a na západ od něj statek.
 
-Hana se na kruh dívá dlouho. Pak ho obtáhne ještě jednou.
+Hana se na kruh dívá dlouho a pak ho obtáhne ještě jednou.
 
 Do sešitu napíše vlevo:
 
@@ -236,7 +236,7 @@ Pak to přeškrtne. Ne celé. Jen to, co je *líp než já*. To je dojem. Dojmy 
 
 Ve středu ráno je devět pod nulou a bezvětří.
 
-Hana vyjede z Chebu v šest čtyřicet, za tmy, a do Mlýnce přijede, když se rozednívá. Silnice vede údolím podél potoka, pak mezi poli zavátými do bíla, pak přes most. Ves je menší, než vypadala v lidaru, a taky starší. Kamenný mlýn u náhonu má na štítě vývěsní štít *Penzion U Mlýna* a pod ním zamrzlou lavičku. Kostel na návsi je barokní, se šindelovou bání, a vedle něj hřbitov se zdí. Ze čtyřiceti komínů se kouří rovně nahoru, jak se kouří jen za mrazu, a kouř je modrý od dřeva.
+Hana vyjede z Chebu v šest čtyřicet, za tmy, a do Mlýnce přijede, když se rozednívá. Silnice vede údolím podél potoka, pak mezi poli zavátými do bíla, pak přes most. Ves je menší, než vypadala v lidaru, a taky starší. Kamenný mlýn u náhonu má nad vchodem vývěsní štít *Penzion U Mlýna* a pod ním zamrzlou lavičku. Kostel na návsi je barokní, se šindelovou bání, a vedle něj hřbitov se zdí. Ze čtyřiceti komínů se kouří rovně nahoru, jak se kouří jen za mrazu, a kouř je modrý od dřeva.
 
 Hana zastaví u autobusové zastávky na kraji vsi a vystoupí. Mráz ji štípne do nosu. Podívá se na horu.
 
@@ -248,7 +248,7 @@ Na zastávce stojí žena v péřové bundě s taškou na kolečkách. Čeká na
 
 „Dobrý den,“ řekne Hana. „Co se to tam kouří?“
 
-Žena se podívá, kam Hana ukazuje. Nezdá se překvapená.
+Žena zvedne oči tam, kam Hana ukazuje. Nezdá se překvapená.
 
 „To je od Ostrých,“ řekne. „Mají tam kotel na dřevo. Komín vedou nahoru po svahu, aby jim to nečadilo do sadu. Odjakživa.“
 
@@ -260,7 +260,7 @@ Přijede autobus. Žena nastoupí a Hana zůstane na zastávce sama a dívá se,
 
 Vytáhne sešit a napíše vlevo čas, místo a co vidí. Svislý sloupec páry z lesa, SV nad statkem a nad haldou, odhad 300–400 m nad statkem, výška nad korunami desítky metrů, bezvětří, –9 °C, 7:38. Pak, pod to, menším písmem: *Místní (žena, zastávka): kotel Ostrých, komín po svahu, „odjakživa“, „letos víc“.*
 
-Hana se na ten řádek dívá. Mnich psal *audivi* a k tomu od koho. Ona píše totéž, jen jinými slovy.
+Mnich psal *audivi* a k tomu od koho. Ona píše totéž, jen jinými slovy.
 
 *
 
@@ -290,11 +290,11 @@ Doprava Hana nenapíše nic. Ještě ne.
 
 *
 
-Halda je pod sněhem, ale pozná se. Kužel mezi mladými buky, s kameny, které vyčuhují ze závějí rezavé a ostrohranné. Hana vyleze nahoru a podívá se do svahu.
+Halda je pod sněhem, ale pozná se. Kužel mezi mladými buky, s kameny, které vyčuhují ze závějí rezavé a ostrohranné. Hana vyleze nahoru a rozhlédne se po svahu.
 
 Žlábek tam je, jak ho ukazoval lidar. Mělká rovná rýha zarostlá ostružiním. A na jejím konci, kde měla být jen stará zasedlá prohlubeň, je díra.
 
-Čerstvá. Hana to pozná na první pohled. Okraje propadu jsou z holé hlíny, ostré, nezarostlé. Z boku visí utržené kořeny, světlé na lomu. Sníh do propadu napadal, ale jen na dno, na sutinu, a kolem okraje je mokrá hlína bez sněhu. Půl metru široký pruh, kde sníh netaje, protože vůbec nenapadal. Nebo napadal a roztál.
+Čerstvá. Hana to pozná na první pohled. Okraje propadu jsou z holé hlíny, ostré, nezarostlé. Z boku visí utržené kořeny, světlé na lomu. Sníh do propadu napadal, ale jen na dno, na sutinu, a kolem okraje je mokrá hlína bez sněhu. Půl metru široký pruh bez sněhu. Buď tam vůbec nenapadal, nebo napadal a roztál.
 
 Hana se zastaví dva metry od okraje. Vytáhne z batohu detektor.
 
@@ -316,7 +316,7 @@ Hana k ní jde pomalu a se sondou detektoru nataženou před sebou jako slepec s
 
 Prohlubeň je hluboká asi po pás. Dno nemá sníh. Leží tam listí, hnědé a mokré, a na listí ptáci.
 
-Kos. Dvě sýkory, koňadry, se žlutými prsy, které jsou jediná barva v celé prohlubni. Strakapoud. Další dva menší, které Hana nepozná. Leží na boku, s nožkami skrčenými, jako by usnuli. Na kraji, s předníma nohama ještě na svahu a se zadníma na dně, liška. Rezavá, s bílou špičkou ohonu. Nehnije. V mrazu nic nehnije.
+Kos. Dvě sýkory, koňadry, se žlutými prsy, které jsou jediná barva v celé prohlubni. Strakapoud. Další dva menší, které Hana nepozná. Leží na boku, s nožkami skrčenými, jako by usnuli. Na kraji, s předními tlapami ještě na svahu a se zadními na dně, liška. Rezavá, s bílou špičkou ohonu. Nehnije. V mrazu nic nehnije.
 
 Hana stojí na kraji a dívá se. Detektor pípá. Na displeji tři celá dvě procenta, u kolen. Sondu do prohlubně nespouští.
 
@@ -334,7 +334,7 @@ Zhasne.
 
 Hana vytáhne větev. Knot doutná a z něj stoupá tenký šedý dým a ten dým nestoupá. Klesá. Plazí se dolů, do prohlubně, jako by ho tam něco táhlo.
 
-Větev si označí nožem. Rýha tam, kde svíčka zhasla. Čtyřicet dva centimetrů nad dnem.
+Větev si označí nožem. Rýha tam, kde svíčka zhasla. Třicet osm centimetrů nad dnem.
 
 *Svíce to pozná dřív než člověk.*
 
@@ -348,13 +348,13 @@ Ale svíčka jí řekla, kde je hladina. Detektor ne.
 
 Hana se otočí.
 
-Na cestě pod haldou stojí muž se psem. Pes je velký, černý, krátkosrstý, na vodítku, a nestojí, ale sedí, a dívá se na ni. Muž je malý. Hana to pozná, i když stojí níž na svahu, protože je to první, co na něm vidí: je malý a široký. Sotva sto čtyřicet, odhadne profesionálně, jako odhaduje výšku sondy. Ramena jako dveře, krátký krk, krátké nohy v těžkých botách. V ruce drží vodítko a sekeru. Na sobě má zelenou mysliveckou bundu a pletenou čepici. Je mladý. Třicet, víc ne.
+Na cestě pod haldou stojí muž se psem. Pes je velký, černý, krátkosrstý, na vodítku, a nestojí, ale sedí, a dívá se na ni. Muž je malý. Hana to pozná, i když sama stojí níž na svahu, protože je to první, co na něm vidí: je malý a široký. Sotva sto čtyřicet, odhadne profesionálně, jako odhaduje výšku sondy. Ramena jako dveře, krátký krk, krátké nohy v těžkých botách. V ruce drží vodítko a sekeru. Na sobě má zelenou mysliveckou bundu a pletenou čepici. Je mladý. Třicet, víc ne.
 
 „Je tu plyn,“ řekne. „Minulý týden tu chcípla liška.“
 
 „Vidím ji.“
 
-Muž se podívá na detektor v její ruce. Pak na větev s rýhou a na svíčku na drátu. Chvíli se na svíčku dívá déle, než by se na svíčku díval kdokoli.
+Muž se podívá na detektor v její ruce, na větev s rýhou a na svíčku na drátu. Na svíčce mu oči zůstanou déle, než by zůstaly komukoli jinému.
 
 „Tak to víte,“ řekne.
 
@@ -408,7 +408,7 @@ Otočí se, aby šla k autu.
 
 Mezi kmeny buků, nahoře na svahu, dvě světla. Malé, bledé body, těsně vedle sebe. Odraz. Hana se zastaví a světlo čelovky na nich zůstane. Dva body ve výšce, kam by sahala hlava stojícího člověka. Možná sto sedmdesát centimetrů. Možná víc.
 
-Pak zhasnou. Ne pohnutím. Prostě nejsou.
+Pak zhasnou, bez pohnutí. Prostě nejsou.
 
 Hana stojí a nedýchá. Srnčí oči se v čelovce lesknou zeleně, liščí žlutě, a obojí nízko u země. Srna by tam musela stát na zadních. Hana posvítí na místo, kde body byly. Kmeny, sníh, tma mezi nimi. Žádný pohyb. Žádný zvuk.
 
@@ -436,9 +436,9 @@ Odpověď přijde za čtyři minuty.
 
 *Uloženo. S kontrolním součtem. Pára není rádio. Ale dobře. T. K.*
 
-Hana se na to *ale dobře* dívá a skoro se usměje.
+Nad tím *ale dobře* se Hana skoro usměje.
 
-Pak se vrátí k sešitu. Na novou stránku napíše nahoru, přes obě půlky, přes svislou čáru, jednu větu. Velkými písmeny, jako se píše nadpis.
+Vrátí se k sešitu. Na novou stránku napíše nahoru, přes obě půlky, přes svislou čáru, jednu větu. Velkými písmeny, jako se píše nadpis.
 
 *CO JSEM ZMĚŘILA JÁ, PÍŠU JÁ. CO MI KDO ŘEKL, PÍŠU S JMÉNEM. NIC MEZI.*
 
@@ -450,7 +450,7 @@ Pod nadpis, do pravé půlky, pak napíše:
 
 *Kdo dnes večer stál na kraji lesa?*
 
-Venku pod oknem šumí náhon. Ani v mrazu nezamrzá. Hana se podívá z okna a vidí, proč. Nad vodou se drží tenká bílá pára, nízko, sotva nad hladinou, a stoupá do tmy.
+Venku pod oknem šumí náhon. Ani v mrazu nezamrzá. Z okna je vidět proč. Nad vodou se drží tenká bílá pára, nízko, sotva nad hladinou, a stoupá do tmy.
 
 I potok, který teče z hory, je teplejší, než má být.
 

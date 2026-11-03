@@ -68,7 +68,7 @@ A pak to šlo.
 
 Psala o Ursule. O dvou řezech, o uzlu, o vlně. O tom, že slyšela vrzat podlahu a nevěděla, kdo to byl. Že Tobiáš vyšel na dvůr a že to zapsala, i když to škodilo, protože tehdy věřila, že úplný zápis chrání.
 
-Psala o lázni a o miskách. O Lene, která ji prosila, aby nebyla jmenována, a o tom, že ji jmenovala, ne jménem, ale tak, že to stačilo. Že Lene umřla devět dní potom. Že neví, kdo Röhrichovi řekl, jak se děvečka z lázně jmenuje. Že ví, kdo mohl.
+Psala o lázni a o miskách. O Lene, která ji prosila, aby nebyla jmenována, a o tom, že ji jmenovala, ne jménem, ale tak, že to stačilo. Že Lene umřela čtyři dny potom. Že neví, kdo Röhrichovi řekl, jak se děvečka z lázně jmenuje. Že ví, kdo mohl.
 
 Kunzovo jméno nenapsala. Napsala *ten, kdo četl můj zápis přede mnou*, a pak to přeškrtla, jednou čarou, tak aby to šlo přečíst, a napsala vedle: *Nevím to. Vím jen, kdo mohl.*
 
@@ -90,7 +90,7 @@ Pak psala o lahvičkách.
 
 *
 
-O dvaceti lahvičkách ve výklenku za pecí. O papírcích *Sang. antiq.* O tom, co jí řekl Wehrl ve sklepě, *nejspíš kozí krev*, a co řekl Röhrich u soudu, tatáž slova. O tom, co jí Wehrl ukázal na střeše, o hvězdě a o knize v zeleném sametu a o roce, který stál v záhlaví. O tom, že jí řekl den a cestu razie. Že tentýž den a tutéž cestu znali Hladoví den předem od mezkaře. A že neví, proč jí to řekl.
+O dvaceti lahvičkách ve výklenku za pecí. O papírcích *Sang. antiq.* O tom, co jí řekl Wehrl ve sklepě, *nejspíš kozí krev*, a co řekl Röhrich u soudu, tatáž slova. O tom, co jí Wehrl ukázal na střeše, o hvězdě a o knize v zeleném sametu a o roce, který stál v záhlaví. O tom, že jí řekl den a cestu razie. Že tentýž den a tutéž cestu znali Hladoví od mezkaře dřív, než se je dozvěděli ode mne. A že neví, proč jí to řekl.
 
 A pak o knize jmen.
 
@@ -114,7 +114,7 @@ O tom, že lhala Hessemu a Wehrlovi. O tom, že na radě vyhrožovala jmény z k
 
 Psala to rovně. Bez *protože*. Otec říkal, že *protože* je slovo, kterým se svědek obhajuje, a že obhajoba patří jinam.
 
-Když skončila, bylo šedé světlo a kohouti. Na stole leželo čtrnáct listů. Nejdřív poslední lipský papír, pak saský, horší. Na saském se jí inkoust trochu rozpíjel, ale nevšímala si toho.
+Když skončila, bylo šedé světlo a kohouti. Na stole leželo čtrnáct listů. Nejdřív zbytek dobrého saského papíru, pak horší, z ostrovského mlýna. Na tom horším se jí inkoust trochu rozpíjel, ale nevšímala si toho.
 
 Pod posledním řádkem nechala místo. Jeden řádek prázdný. Pak napsala, o řádek níž:
 
@@ -124,9 +124,9 @@ A podepsala se.
 
 *
 
-Kunzovi to donesla ve čtvrtek ráno, bočními dveřmi do písárny, ne přes síň.
+Kunzovi to donesla v pátek ráno, bočními dveřmi do písárny, ne přes síň.
 
-Kunz seděl u pultu, kde vždycky seděl, a v písárně bylo horko, protože topil i v červenci. Vzal od ní listy a nasadil si brýle a četl. Ilona stála a čekala. Viděla, jak jde očima po řádcích, rychle, jak čte člověk, který čte celý život, a jak se na prvních listech nezastavuje. Na pátém se zastavil.
+Kunz seděl u pultu, kde vždycky seděl, a v písárně bylo horko, protože topil i na konci června. Vzal od ní listy a nasadil si brýle a četl. Ilona stála a čekala. Viděla, jak jde očima po řádcích, rychle, jak čte člověk, který čte celý život, a jak se na prvních listech nezastavuje. Na pátém se zastavil.
 
 Na tom, kde stálo jeho *nevím to, vím jen, kdo mohl*.
 
@@ -264,7 +264,7 @@ Otevřel pouzdro a podal jí listy. Deset. Ilona je vzala.
 
 Byly v jiném pořadí, než je dala Kunzovi. Osmý byl navrchu. Ten s *W.* Pod ním šestý, pak devátý, pak ty ostatní, jak padly.
 
-Ilona se na ně dívala a vzpomněla si na Kunzovu truhlu. Na listy v jiném pořadí, druhý den ráno, a na Lene u brodu. Před pěti týdny jí jiné pořadí listů sevřelo žaludek, protože znamenalo, že je někdo četl a že to někomu řekl.
+Ilona si vzpomněla na Kunzovu truhlu. Na listy v jiném pořadí, druhý den ráno, a na Lene u brodu. Před šesti týdny jí jiné pořadí listů sevřelo žaludek, protože znamenalo, že je někdo četl a že to někomu řekl.
 
 Teď to znamenalo, že je někdo četl.
 
@@ -308,7 +308,7 @@ Pankrác jel dolů v šest.
 
 Vozka, který před šesti týdny našel Lene u brodu. Vezl prázdné sudy od piva do Ostrova a řekl, že vezme i ji, a nechtěl za to nic. Když mu chtěla dát krejcar, odstrčil jí ruku a podíval se jinam.
 
-Neměla toho moc. Řehořovu brašnu s nástroji, které si směla ponechat jako vdovský majetek. Bylinářskou knihu, kterou nechal Tobiáš. Sešit. Uzel s šaty. Markétin chléb.
+Neměla toho moc. Řehořovu brašnu s nástroji, které si směla ponechat jako vdovský majetek. Bylinářskou knihu, kterou nechal Tobiáš. Sešit. Uzel se šaty. Markétin chléb.
 
 A deset listů, zabalených do plátna, převázaných motouzem, na dně brašny pod nástroji.
 

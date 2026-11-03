@@ -10,7 +10,7 @@
   if (window.top === window) document.body.classList.add('samostatne');
 
   /* ---------- uložená data ---------- */
-  const VYCHOZI_NAST = { motiv: 'web', pismo: 'patkove', velikost: 1, radkovani: 1.7, sirkaPct: 90, blok: true, knizni: false, obrazky: true, nezhasinat: false, wpm: 220, tts: 1, hlas: '' };
+  const VYCHOZI_NAST = { motiv: 'web', pismo: 'patkove', velikost: 1, radkovani: 1.7, sirkaPct: 90, blok: true, knizni: false, obrazky: true, nezhasinat: false, bublina: 'dole', wpm: 220, tts: 1, hlas: '' };
   const cti = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
   let stav = cti(KLIC);
   // starší verze čtečky ukládala jen {kniha, kapitola, velikost}
@@ -72,7 +72,7 @@
     $('rSirka').value = n.sirkaPct; $('oSirka').value = n.sirkaPct + ' %';
     document.querySelectorAll('#nabZobrazeni .prep').forEach(b => {
       const [co, hodnota] = b.dataset.prikaz.split('-');
-      b.setAttribute('aria-pressed', String(co === 'motiv' ? n.motiv === hodnota : co === 'pismo' ? n.pismo === hodnota : !!n[co]));
+      b.setAttribute('aria-pressed', String(co === 'motiv' ? n.motiv === hodnota : co === 'pismo' ? n.pismo === hodnota : co === 'bublina' ? n.bublina === hodnota : !!n[co]));
     });
     if (bloky.length) skocNaBlok(blok, false);
     ulozStav();
@@ -659,16 +659,35 @@
   }
 
   /* ---------- soustředěné čtení ---------- */
+  // Brave/Chrome na iPadu a iPhonu celou obrazovku webu nepovolí (lišta prohlížeče zůstane) –
+  // jednou za návštěvu poradit přidání na plochu, odkud se čtečka spouští bez lišt
+  let radaPlocha = false;
+  function celaObrazovka() {
+    const el = document.documentElement;
+    let pozadavek;
+    try { pozadavek = el.requestFullscreen ? el.requestFullscreen() : el.webkitRequestFullscreen ? el.webkitRequestFullscreen() : Promise.reject(); }
+    catch (e) { pozadavek = Promise.reject(e); }
+    Promise.resolve(pozadavek).catch(() => {
+      const ios = /iP(ad|hone|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const zPlochy = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+      if (!ios || zPlochy || radaPlocha) return;
+      radaPlocha = true;
+      Dialog.info('Prohlížeč na iPadu nedovolí skrýt svou lištu. Pro čtení přes celou obrazovku přidejte čtečku na plochu (v nabídce prohlížeče Sdílet → Přidat na plochu) a spouštějte ji odtud.');
+    });
+  }
   function soustredeni(zapnout = !document.body.classList.contains('soustredeni')) {
     document.body.classList.toggle('soustredeni', zapnout);
     $('ven').hidden = !zapnout;
     $('tlCelaObr').setAttribute('aria-pressed', String(zapnout));
-    if (zapnout) document.documentElement.requestFullscreen?.().catch(() => {});
+    if (zapnout) celaObrazovka();
     else if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    else if (document.webkitFullscreenElement) document.webkitExitFullscreen?.();
     if (bloky.length) { const b = aktualniBlok(); requestAnimationFrame(() => skocNaBlok(b, false)); }
   }
   $('ven').onclick = () => soustredeni(false);
-  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('soustredeni')) soustredeni(false); });
+  const poZmeneCeleObr = () => { if (!document.fullscreenElement && !document.webkitFullscreenElement && document.body.classList.contains('soustredeni')) soustredeni(false); };
+  document.addEventListener('fullscreenchange', poZmeneCeleObr);
+  document.addEventListener('webkitfullscreenchange', poZmeneCeleObr);
 
   /* ---------- čas čtení ---------- */
   let posledniAktivita = Date.now();
@@ -842,6 +861,8 @@
     soustredeni: () => soustredeni(),
     blok: () => nastav({ blok: !nast().blok }),
     knizni: () => nastav({ knizni: !nast().knizni }),
+    obrazky: () => nastav({ obrazky: !nast().obrazky }),
+    nezhasinat: () => nastav({ nezhasinat: !nast().nezhasinat }),
     'vychozi-zobrazeni': () => nastav({ ...VYCHOZI_NAST, wpm: nast().wpm, tts: nast().tts, hlas: nast().hlas }),
     odkaz,
     epub: () => exportKnihy('epub'),
@@ -869,6 +890,7 @@
     if (co === 'kniha') { const k = knihy[+hodnota], p = stav.pozice[k.id], c = p ? Math.max(0, indexKap(k, p.soubor)) : 0; otevri(+hodnota, c, p && c === indexKap(k, p.soubor) ? p.blok : 0); }
     if (co === 'motiv') nastav({ motiv: hodnota });
     if (co === 'pismo') nastav({ pismo: hodnota });
+    if (co === 'bublina') nastav({ bublina: hodnota });
   }
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-prikaz]');
@@ -926,8 +948,12 @@
     jezdec.style.top = (podil * (h - vyska)) + 'px';
     if (!kniha) return;
     const zbyva = (kap().slov - (kum[aktualniBlok()] || 0)) / nast().wpm;
+    // nastavení: u posuvníku (sleduje jezdec), dole v okně (neruší text), nebo vůbec
+    const kde = nast().bublina || 'dole';
+    if (kde === 'ne') return;
     bublina.textContent = `${Math.round(podil * 100)} % kapitoly · zbývá ~${J.formatCas(zbyva)}`;
-    bublina.style.top = (8 + podil * (h - vyska) + vyska / 2) + 'px';
+    bublina.classList.toggle('dole', kde === 'dole');
+    bublina.style.top = kde === 'dole' ? '' : (8 + podil * (h - vyska) + vyska / 2) + 'px';
     bublina.classList.remove('skryt');
     clearTimeout(casBubliny);
     if (!tazeni) casBubliny = setTimeout(() => bublina.classList.add('skryt'), 1200);

@@ -16,11 +16,11 @@ Dolní řada domů stála o kus výš. Tam, kam ji Eren tehdy posunul, když Tal
 
 „Rovně,“ řekl Ardo.
 
-Myslel tím vodu. Hladina u stromů byla rovná jako jeho lano. Eren se díval na ni a pak nahoru, ke kotli, k terase. Tal tam stála. Na tu dálku byla malá a nebylo vidět, kam se dívá. Eren věděl kam.
+Myslel tím vodu. Hladina u stromů byla rovná jako jeho lano. Eren zvedl oči od hladiny nahoru, ke kotli, k terase. Tal tam stála. Na tu dálku byla malá a nebylo vidět, kam se dívá. Eren věděl kam.
 
 *
 
-Hela zapsala ten den rýhu, jako každý den. Pak ho zavolala do prvního domu.
+Hela zapsala ten den rýhu, jako každý den, a zavolala ho do prvního domu.
 
 Ve stěně u dveří, v mazanici, byly rýhy. Po deseti, v řadách, od podlahy až do výšky, kam Hela dosáhla. Celá zima. Vedle některých tečky. Eren je viděl každý den, když šel kolem. Nikdy se u nich nezastavil.
 
@@ -30,7 +30,7 @@ Ve stěně u dveří, v mazanici, byly rýhy. Po deseti, v řadách, od podlahy 
 
 „Ru říká, že slunce je zpátky u velkého kamene.“ Hela pokrčila rameny. „Asi to je totéž.“
 
-Pak ukázala na jiné rýhy. Níž, vedle dveří, kde mazanice byla čerstvější. Dlouhá řada. Dvě stě dvacet. Spočítala je na podzim, ten den, kdy Orrin odešel, každého jménem. Vedle některých tečky.
+Ukázala na jiné rýhy. Níž, vedle dveří, kde mazanice byla čerstvější. Dlouhá řada. Dvě stě dvacet. Spočítala je na podzim, ten den, kdy Orrin odešel, každého jménem. Vedle některých tečky.
 
 Eren je počítal. Nemusel. Hela je spočítala už ráno. Ale počítal je, protože to byli lidé a on je znal. Některé jménem.
 
@@ -38,7 +38,7 @@ Dvacet tři teček.
 
 „Sto devadesát sedm,“ řekla Hela.
 
-Eren se díval na stěnu. Sto devadesát sedm ze dvou set dvaceti. Tři sta dvanáct na svahu první den. Sto tři u velké vody, o kterých nikdo nic nevěděl. Čtyři sta čtyřicet šest pod průsmykem, které Ardo spočítal cestou dolů.
+Sto devadesát sedm ze dvou set dvaceti. Tři sta dvanáct na svahu první den. Sto tři u velké vody, o kterých nikdo nic nevěděl. Čtyři sta čtyřicet šest pod průsmykem, které Ardo spočítal cestou dolů.
 
 „To je hodně,“ řekla Hela.
 
@@ -54,7 +54,7 @@ Jednou ráno, na jaře, se Kaj u Erena zastavil. S měchem přes rameno.
 
 „Sedm,“ řekl.
 
-Eren nevěděl, o čem mluví. Pak to věděl. *Kolik jich tam nahoře je. Jejich.*
+Eren chvíli nechápal. Pak to věděl. *Kolik jich tam nahoře je. Jejich.*
 
 „Ammu mi to řekla,“ řekl Kaj. „Jménem. Všechny.“ Posunul si měch na rameni. „Neumím je zopakovat. Ještě ne.“
 
@@ -64,7 +64,7 @@ Ze skalních lidí umřeli za zimu čtyři. To Erenovi neřekl nikdo. Ukázala m
 
 Eren si vzpomněl na stěnu dole, v hloubce. Na zářezy po šesti a na ty zamazané, které nepočítala.
 
-Kývl. Dabra kývla taky. Pak se otočila a zmizela pod převisem, tam, kde voda odtékala štěrbinou do skály.
+Kývl. Dabra kývla taky, otočila se a zmizela pod převisem, tam, kde voda odtékala štěrbinou do skály.
 
 *
 
@@ -112,7 +112,7 @@ Eren se díval tam, kam ona. Mohl říct ne. Mohl říct ano. Obojí by bylo sna
 
 Tio kývla. Nebyla zklamaná. Přijala to tak, jak přijímala všechno, co se v tomhle kraji nevědělo. Že se slunce zastaví. Že se vrátí. Že dítě dostane jméno, až bude zima pryč.
 
-Ještě chvíli stála. Pak se otočila a běžela k tůním, kde už křičely děti.
+Ještě chvíli stála, než se otočila a běžela k tůním, kde už křičely děti.
 
 Druhý den na kraj rokle nešla. Třetí den ano. Pak už jen někdy.
 
@@ -120,13 +120,13 @@ Druhý den na kraj rokle nešla. Třetí den ano. Pak už jen někdy.
 
 Stavět začali, když vyschla zem.
 
-Ardo napnul lano. Šedé, syntetické, to samé, které na podzim zpívalo mezi dvěma kůly ve zmrzlé zemi. Teď bylo zablácené a na dvou místech zauzlované, kde se přetrhlo a kde ho Ammu svázala uzlem, který nikdo z vyhnanců neuměl. Ardo ho natáhl od posledního domu druhé řady dál, po svahu. Třetí řada.
+Ardo napnul lano. Šedé, syntetické, to samé, které na podzim zpívalo mezi dvěma kůly nad zmrzlou zemí. Teď bylo zablácené a na dvou místech zauzlované, kde se přetrhlo a kde ho Ammu svázala uzlem, který nikdo z vyhnanců neuměl. Ardo ho natáhl od posledního domu druhé řady dál, po svahu. Třetí řada.
 
 Ženy už nechodily každý den. Chodily, když chtěly. Vyhnanci pletli sami. Hela pletla nejrychleji. Bena mazala. Vesa kopala díry, obouruč, protože se jí ruka přes zimu zahojila. Zem se rozmrazovat nemusela. Byla měkká a voněla.
 
 Eren pletl.
 
-Před kůlem, za kůlem. Další naopak. Stlačit dlaní. Neřekl nikomu, kde má stát dům, ani kdo v něm bude spát. Zeptali se ho jednou. Bena, u kruhu kůlů, který právě dokopali. *Kdo sem půjde?* A Eren řekl *nevím* a myslel to tak, a Bena se na něj podívala a pak se otočila k Hele, a Hela řekla jména.
+Před kůlem, za kůlem. Další naopak. Stlačit dlaní. Neřekl nikomu, kde má stát dům, ani kdo v něm bude spát. Zeptali se ho jednou. Bena, u kruhu kůlů, který právě dokopali. *Kdo sem půjde?* A Eren řekl *nevím* a myslel to tak, a Bena se otočila k Hele, a Hela řekla jména.
 
 Domů bylo třináct. Pak čtrnáct. Po svahu nad nimi ležely v trávě kameny, kruh vedle kruhu, tam, kde bude stát další. Třicet jedna kruhů, tak jak je Eren na podzim nakreslil klackem do hlíny. Ženy se pořád smály.
 
@@ -146,11 +146,11 @@ Eren položil dřevo. „Kdo?“
 
 „Ženy. Děti. Všichni.“ Ru ukázal na terasu, na síň, dolů do údolí.
 
-Eren nevěděl. Nenapadlo ho, že by mu nějak říkali. Měl jméno. Říkali mu jménem. Dabra mu tak řekla první, u horní tůně.
+Erena nenapadlo, že by mu nějak říkali. Měl jméno. Říkali mu jménem. Dabra mu tak řekla první, u horní tůně.
 
 Ru řekl slovo. Místní, krátké. Eren ho znal. Slyšel ho stokrát, na svahu pod planinou, u velké vody, v síni. Říkalo se tak tomu, kdo něco nese. Dřevo, vodu, dítě. Kdo nese a jde.
 
-„Ten, co nosí,“ řekl Ru. Česky, pyšně, jako by to sám vymyslel.
+„Ten, co nosí,“ řekl Ru. Po našem, pyšně, jako by to sám vymyslel.
 
 Eren stál nad dřevem a díval se na Tal.
 
@@ -158,7 +158,7 @@ První den na svahu u modulu stál u beden a řekl Orrinovi, že je ten, kdo um�
 
 Nikdo tady nevěděl, co umí. Věděli jen, co dělá.
 
-Tal se na něj dívala. Pak řekla ještě něco. Krátce.
+Tal řekla ještě něco. Krátce.
 
 „Ona říká, že to není moc,“ řekl Ru. „Ale že je to dobré jméno.“
 
@@ -182,7 +182,7 @@ Nebylo poznat, kdo z nich mluví kterou řečí.
 
 Eren stál a díval se. Dlouho. Nepočítal je. Nemusel. Věděl, kolik jich je.
 
-Takhle se kdysi díval na prstenec zvenčí. Ze servisního průlezu na plášti, kam se chodilo jen ve skafandru a jen ve dvou, a odkud bylo vidět všechno. Řady oken. Světla. Všechno rovně, protože jinak by to nedrželo. Eren se tam díval několikrát za život a pokaždé měl pocit, že je to krásné, protože tomu rozuměl. Věděl, co kde nese. Kde je slabé místo.
+Takhle se kdysi díval na prstenec zvenčí. Ze servisního průlezu na plášti, kam se chodilo jen ve skafandru a jen ve dvou, a odkud bylo vidět všechno. Řady oken. Světla. Všechno rovně, protože jinak by to nedrželo. Eren tam byl několikrát za život a pokaždé měl pocit, že je to krásné, protože tomu rozuměl. Věděl, co kde nese. Kde je slabé místo.
 
 Tady tomu nerozuměl. Věděl, kde stojí kůly a kde lano. Nevěděl, co to drží.
 
@@ -192,7 +192,7 @@ Nebylo to slabé místo. Bylo to, že tomu nerozuměl, a stálo to.
 
 Křídlatá přiletěla druhý den v poledne.
 
-Eren ji uslyšel dřív, než ji uviděl. Hvízdání. Vysoké a přerušované, jako když vítr prochází škvírou. Zvedl hlavu od stěny, kterou pletl, a podíval se nahoru.
+Eren ji uslyšel dřív, než ji uviděl. Hvízdání. Vysoké a přerušované, jako když vítr prochází škvírou. Zvedl hlavu od stěny, kterou pletl.
 
 Letěla od soutěsky. Nízko, nad kotlem, pak nad roklí, pak nad údolím. Křídla měla roztažená, široká, šedá a skoro průhledná proti slunci, a na jednom z nich, mezi kostmi, byla trhlina. Zacelená, ale ne docela. Vítr jí v ní hvízdal. Letěla nakřivo, s jedním křídlem níž, a každou chvíli s ním mávla, jako by si ho rovnala.
 
@@ -212,13 +212,13 @@ Křídlatá přeletěla nad domy. Nízko, tak nízko, že její stín přeběhl 
 
 Viděl její hlavu. Úzkou, dlouhou. Natočenou dolů. Na domy. Nebo na něj.
 
-Nevěděl, jestli ho poznala. Nevěděl, jestli křídlatí někoho poznávají. Na podzim jí přes vodu odnesl kýtu na plochý kámen a ráno byl kámen prázdný. Víc o ní nevěděl. Jen to, že má trhlinu v křídle, která hvízdá, a že ji tam má kvůli Dornovi.
+Nevěděl, jestli ho poznala, ani jestli křídlatí vůbec někoho poznávají. Na podzim jí přes vodu odnesl kýtu na plochý kámen a ráno byl kámen prázdný. Víc o ní nevěděl. Jen to, že má trhlinu v křídle, která hvízdá, a že ji tam má kvůli Dornovi.
 
 Sklopil hlavu.
 
 Hvízdání se vzdalovalo. Údolím dolů, k velké vodě, a pak zase nahoru, oblouk, a zpátky k soutěsce. Mládě za ní, pořád o kus pozadu, a pořád dohánělo.
 
-Když Eren zvedl hlavu, byla nad útesem. Pak zmizela pod převisem.
+Když Eren zvedl hlavu, byla nad útesem a vzápětí zmizela pod převisem.
 
 Ženy zvedly pruty. Pletly dál.
 
@@ -230,13 +230,13 @@ Eren chodil k horní tůni každé ráno. Ne pro vodu. Vodu bral z dolní, jako 
 
 Nic v ní nebylo vidět. Nikdy. Ani v noci.
 
-Jednou na podzim, v noci po vydání, se díval celou noc, jestli neuvidí zelené světlo. Neuviděl. Bylo zabalené v kůži od Dabry a v cárech a za hranou skály. Kdyby blikalo, nebylo by to vidět. Kdyby neblikalo, taky ne.
+Několik nocí po vydání chodil na suť a díval se, jestli neuvidí zelené světlo. Neuviděl. Bylo zabalené v kůži od Dabry a v cárech a za hranou skály. Kdyby blikalo, nebylo by to vidět. Kdyby neblikalo, taky ne.
 
 Nevěděl, jestli ještě bliká. Nikdy se to nedozví.
 
 Jednou se zeptal Tal. Přes Rua, u ohně, v polovině zimy. Jestli se tam někdo díval.
 
-Tal se na něj podívala dlouze. Pak řekla něco a Ru to přeložil.
+Tal mu dlouho hleděla do tváře, než něco řekla a Ru to přeložil.
 
 „Ona říká, že neví, co by tam viděla.“
 
@@ -248,7 +248,7 @@ Místního, asi osmiletého, z pátého domu. Klečel na kraji tůně, tam, kde 
 
 Eren se nepohnul. Stál u potoka pod dolní tůní a díval se.
 
-Tio byla rychlejší. Přiběhla od dolní tůně, mokrá do pasu, a zastavila se na kraji. Neřekla nic česky. Řekla *nu* a ukázala dolů, k dolní tůni. Pak cvakla jazykem a ukázala plochou dlaní dolů, ze strany na stranu. *Ne.*
+Tio byla rychlejší. Přiběhla od dolní tůně, mokrá do pasu, a zastavila se na kraji. Neřekla nic po našem. Řekla *nu* a ukázala dolů, k dolní tůni. Cvakla jazykem a plochou dlaní máchla dolů, ze strany na stranu. *Ne.*
 
 Kluk se na ni podíval. Pak na záliv pod převisem, kde nikdo nestál. Pak zase na Tio.
 
@@ -256,9 +256,9 @@ Kluk se na ni podíval. Pak na záliv pod převisem, kde nikdo nestál. Pak zase
 
 Kluk si přetáhl kůži zpátky přes ramena. Sešel k dolní tůni a skočil do ní, až to cáklo, a Tio skočila za ním.
 
-Eren se díval na horní tůň. Hladina se uklidnila. Pára nad ní stoupala rovně a nikdo ji nerušil.
+Hladina horní tůně se uklidnila. Pára nad ní stoupala rovně a nikdo ji nerušil.
 
-To pravidlo neplatilo odjakživa. Ne pro šedé bundy. Platilo od podzimu, od jednoho rána v síni, od víčka položeného na kámen. Tio to věděla. Slyšela to od něj. A přesto to klukovi řekla tím slovem. *Staré.*
+To pravidlo neplatilo odjakživa. Ne pro šedé bundy. Platilo od podzimu, od jednoho rána v síni, od víčka položeného na kámen. Tio to slyšela od něj. A přesto to klukovi řekla tím slovem. *Staré.*
 
 Možná to tak bylo správně. Pravidlo, které je staré, se drží líp než pravidlo, které je nové. Eren to nevěděl. Věděl jen, že za pár let nikdo nebude vědět, které z nich bylo které.
 
@@ -294,9 +294,9 @@ Tio se učila písmo.
 
 Chtěla to sama. Přišla za ním k síni, kde večer seškraboval saze ze stěny a psal jména těch, kdo umřeli od slunovratu, a dívala se. Pak řekla: *Ukaž mi to.*
 
-Učil ji na zemi. U dolní tůně, na bílé usazenině, která byla hladká a měkká, když byla mokrá. Klackem. Jedno písmeno. Pak druhé.
+Učil ji na zemi. U dolní tůně, na mokrém bílém kalu u kraje, který byl hladký a měkký, dokud neztvrdl. Klackem. Jedno písmeno. Pak druhé.
 
-Učila se rychle. Rychleji než slova. Za tři večery uměla napsat své jméno. *Tio.* Tři písmena, kostrbatá, ale čitelná. Dívala se na ně dlouho. Pak pod ně, klackem, udělala čáru. Rovnou, rudou, z okrové hlinky, kterou měla za nehty. Takovou, jakou kreslil Ru na hroby. Takovou, jakou měl Ru přes tvář, když umřel Ikku.
+Učila se rychle. Rychleji než slova. Za tři večery uměla napsat své jméno. *Tio.* Tři písmena, kostrbatá, ale čitelná. Dlouho je zkoumala a pak pod ně, klackem, udělala čáru. Rovnou, rudou, z okrové hlinky, kterou měla za nehty. Takovou, jakou kreslil Ru na hroby. Takovou, jakou měl Ru přes tvář, když umřel Ikku.
 
 „To k tomu nepatří,“ řekl Eren.
 
@@ -310,7 +310,7 @@ Nikdo v habitatu to číst nebude.
 
 Zkusil to. Písmem Konfederace. Nešlo to. To slovo se zapsat nedalo, ani v kotli, ani na kůře, ani na stěně. Ten zaražený dech na konci neměl v písmu žádné znaménko. Napsal, co šlo. Začátek. Zbytek nechal prázdný.
 
-Tio se na to dívala. Pak vzala klacek a do prázdného místa udělala znak. Svůj. Krátkou rýhu s tečkou. Nic takového v písmu nebylo.
+Tio vzala klacek a do prázdného místa udělala znak. Svůj. Krátkou rýhu s tečkou. Nic takového v písmu nebylo.
 
 „Takhle,“ řekla.
 

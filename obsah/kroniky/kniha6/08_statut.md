@@ -4,7 +4,7 @@ V noclehárně u příletové haly nemohla spát, protože ji postel nedržela.
 
 Ležela na zádech a tělo se do matrace nebořilo. Leželo na ní, lehce, jako něco, co tam někdo položil a zapomněl. Když se otočila na bok, otočila se moc a musela se zachytit okraje. Přikrývka jí sjížděla z ramen pomalu, jako by váhala. Na Orse člověk spal přitištěný k podlaze odstředivou silou, celý život, a nikdy si nevšiml, že ho něco drží. Tady si toho všimla, protože to chybělo.
 
-Síť jí nabídla zklidnění na spaní. Nara ho odmítla. Jedno už měla. Nepomáhalo.
+Síť jí nabídla zklidnění na spaní. Nara odmítla. Jedno už měla. Nepomáhalo.
 
 Ležela a v duchu si opakovala, co viděla. Nemohla si to přehrát, protože to neměla kde. Měla jen to, co si odnesla, a bála se, že jí to do rána vyteče, jako vyteče voda z dlaně.
 
@@ -30,13 +30,13 @@ Hals se díval na dveře výtahu, za nimiž ubíhala skála.
 
 Nara kývla. Za těch pár set metrů, než se síť odmlčela, si to ještě stačila zapsat. Pak už jen *Spojení: omezené.*
 
-Dole byl senát a Ardaine. Tann stála u otevřené schránky a mezi prsty držela okraj prvního listu druhé části, opatrně, jako by mohl ublížit. Hals pustil prosvětlovací desku, i když listiny ji nepotřebovaly. Pustil zapisovač úložiště. A v koutku vědomí se objevilo totéž co včera.
+Dole byl senát a Ardaine. Tann stála u otevřené schránky a mezi prsty držela okraj prvního listu druhé části, opatrně, jako by mohl ublížit. Hals pustil prosvětlovací desku, i když listiny ji nepotřebovaly. Pustil zapisovač úložiště. A v síti se objevilo totéž co včera.
 
 *Záznam přerušen: čtení pod pečetí.*
 
 *
 
-Druhá část měla dvanáct listin. Nara je pod lupou četla v originále, staré úřední řeči, kterou uměla, a Tann je četla taky, a nikdo nikomu nemusel nic překládat.
+Druhá část měla dvanáct listin. Nara je pod lupou četla v originále, ve staré úřední řeči, kterou uměla, a Tann je četla taky, a nikdo nikomu nemusel nic překládat.
 
 Prvních sedm listin tvořil statut.
 
@@ -76,7 +76,7 @@ Ardaine četla statut celý, od záhlaví po poslední článek, a když skonči
 
 „Odpůrce upozorňuje,“ řekla, „že statut nepojmenovává žádnou populaci. Jmenuje je značkami, které nikdo nečte. Nelze z něj zjistit, zda skupiny z průzkumu jsou populacemi, které statut chrání.“
 
-Bylo to přesné. Nara to věděla. Statut se neptal, jestli jsou rozumné; Ardaine ten spor včera prohrála a dnes ho nevedla. Ptala se, jestli jsou to *ony*. Jestli plaz v sedmém políčku je populace II, nebo IV, nebo žádná. A na to nikdo v téhle síni odpověď neměl.
+Bylo to přesné. Statut se neptal, jestli jsou rozumné; Ardaine ten spor včera prohrála a dnes ho nevedla. Ptala se, jestli jsou to *ony*. Jestli plaz v sedmém políčku je populace II, nebo IV, nebo žádná. A na to nikdo v téhle síni odpověď neměl.
 
 „Senát to bere na vědomí,“ řekla Tann.
 
@@ -116,7 +116,7 @@ Hals se na ni podíval. Pak se otočil a odešel do tmy mezi regály. Vrátil se
 
 *
 
-Tann vyhlásila přestávku. Ardaine odešla s mladším soudcem k výtahu, kde bylo o něco tepleji. Starší soudce zůstal sedět a díval se na zapisovač, jako by čekal, že ještě něco řekne.
+Tann vyhlásila přestávku. Mladší soudce odešel k výtahu, kde bylo o něco tepleji. Ardaine zůstala stranou u svého stolu. Starší soudce seděl dál a díval se na zapisovač, jako by čekal, že ještě něco řekne.
 
 Nara stála u prázdného regálu a hřála si ruce v podpaží. Tann přišla k ní. Nešla rychle; šla, jako by to bylo po cestě.
 
@@ -282,7 +282,7 @@ Zaváhala nad posledním slovem. Statut říkal *chráněných populací*. Úřa
 
 Hals vypnul zapisovač. Nara seděla a dívala se na tmavou podložku na stole.
 
-„Máte to,“ řekl Hals. Nebyla to otázka.
+„Máte to,“ řekl Hals.
 
 „Mám to.“
 
@@ -300,13 +300,13 @@ Hals kývl. Sundal si jednu rukavici a zase si ji natáhl, pomalu, prst po prstu
 
 *
 
-Výtah jel nahoru jedenáct minut. Kolem dvanácti set metrů se v koutku vědomí rozsvítilo *Záznam obnoven* a po něm hromádka dne. Lumi. Komora. Termín. A vzkaz přes personál Sedmé loděnice, ústní, přepsaný do sítě. Přišel v poledne, když byla dole.
+Cestou nahoru se v koutku vědomí rozsvítilo *Záznam obnoven* a po něm hromádka dne. Lumi. Komora. Termín. A vzkaz přes personál Sedmé loděnice, ústní, přepsaný do sítě. Přišel v poledne, když byla dole.
 
 *Odsouzený Vess vzkazuje: Vyhodil jsem ho, když jsem odcházel. Proč?*
 
 Nara stála v kabině a dívala se na ten vzkaz.
 
-Proč. Jedno slovo. Mohla mu odpovědět zítra, dvaceti slovy, ústně přes personál. Mohla mu napsat, že ho chtěla vidět, protože si nepamatuje, jaké byly barvy. Že tam na tom obraze chyběla bílá. Že kdo ho kreslil, nevěděl o ledu na severu ani o vírech mraků, ani o lidech u ohně, ani o dítěti na zádech. Že jeho obraz byl obraz prázdného světa, a ten svět prázdný nebyl.
+Proč. Jedno slovo. Mohla mu odpovědět zítra, dvaceti slovy, ústně přes personál. Mohla mu napsat, že ho chtěla vidět, protože si nepamatuje, jaké byly barvy. Že tam na tom obraze chyběla bílá. Že kdo ho kreslil, nevěděl o ledu na severu, o vírech mraků, o lidech u ohně ani o dítěti na zádech. Že jeho obraz byl obraz prázdného světa, a ten svět prázdný nebyl.
 
 Nesměla nic z toho.
 

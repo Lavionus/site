@@ -10,19 +10,19 @@ Eren šel s ostatními naproti. Potkali je pod roklí, na rovině, kde ležely T
 
 Bylo jich patnáct. Šli v řadě, jeden za druhým, pomalu, a čtyři z nich nesli plachtu napnutou mezi dvěma tyčemi. Na plachtě ležel muž. Ostatní šli s rukama v podpaží nebo zastrčenýma pod bundou. Šedé bundy, stejné jako jejich. Stejné boty. Jenže bundy byly roztržené a zašpiněné a boty obalené kůží a trávou a převázané provázkem, a obličeje nad nimi byly šedé taky.
 
-Vpředu šla žena. Vysoká, vyhublá, s krátkými vlasy, které jí trčely na všechny strany. Levou ruku měla ovázanou cárem tkaniny až po loket. Zastavila se, když je uviděla. Dívala se na ně dlouho. Na jejich obličeje a bundy. Za ní se zastavili ostatní.
+Vpředu šla žena. Vysoká, vyhublá, s krátkými vlasy, které jí trčely na všechny strany. Levou ruku měla ovázanou cárem tkaniny až po loket. Zastavila se, když je uviděla. Dlouho si je prohlížela. Obličeje, bundy. Za ní se zastavili ostatní.
 
-„Vy jste ze čtvrtého,“ řekla. Nebyla to otázka.
+„Vy jste ze čtvrtého,“ řekla.
 
 „Jo,“ řekl Ardo.
 
-Žena kývla. Pak si sedla. Přímo tam, kde stála, do trávy, a za ní si sedli ostatní, jeden po druhém, jako by jim někdo podtrhl nohy. Ti čtyři s plachtou ji položili na zem a sedli si vedle ní. Muž na plachtě se nepohnul.
+Žena kývla a sedla si. Přímo tam, kde stála, do trávy, a za ní si sedli ostatní, jeden po druhém, jako by jim někdo podtrhl nohy. Ti čtyři s plachtou ji položili na zem a sedli si vedle ní. Muž na plachtě se nepohnul.
 
 „Vesa,“ řekla žena. „Ze druhého.“ Podívala se nahoru, k rokli, kde nad skalami stoupala pára. „Viděli jsme ten kouř. Pět dní. Mysleli jsme, že je to oheň.“
 
 „Je to voda,“ řekl Eren.
 
-Vesa se na něj podívala. Pak se zasmála. Krátce, nakřivo, a pak přestala.
+Vesa se zasmála. Krátce, nakřivo, a pak přestala.
 
 *
 
@@ -32,13 +32,13 @@ Druhý přistál u jezera, tři dny cesty na sever. Bylo jich čtyři sta šedes
 
 „Měli jsme jednoho,“ řekla Vesa. „Jako máte vy toho svého. Mluvil hezky. Hned první den dal všechny vložky a dávky na jedno místo, pod hlídku. Že je to spravedlivé.“ Odmlčela se. „Bylo to spravedlivé.“
 
-Pak přišel první mráz. Lidé místních začali stavět u jezera nové kruhy, větší, s hustšími stěnami. Na zimu. Ten jejich, který mluvil hezky, řekl, že jich je u jezera dvacet a nás čtyři sta šedesát. Že místo pro dvacet je místo i pro čtyři sta šedesát, když se dobře rozdělí.
+Pak přišel první mráz. Místní začali stavět u jezera nové kruhy, větší, s hustšími stěnami. Na zimu. Ten jejich, který mluvil hezky, řekl, že jich je u jezera dvacet a nás čtyři sta šedesát. Že místo pro dvacet je místo i pro čtyři sta šedesát, když se dobře rozdělí.
 
 „Šli jsme tam,“ řekla Vesa. „Šedesát lidí. Se sekerami. Že se jen podíváme. Že jim nic neuděláme.“ Dívala se do ohně. „Utekli. Bez boje. Nechali tam všechno, i ohně. My jsme tam zůstali. Dva dny jsme měli teplo.“
 
 Sefa jí čistila ruku. Kůže na hřbetu byla rudá a lesklá a na okrajích černá, a pod ní něco žlutého. Vesa sebou neškubla.
 
-„Třetí noc se vrátili,“ řekla. „Ne ke kruhům. Ke skladu. Ke kruhům by nás bylo moc. Ale ve skladu spali čtyři.“ Zvedla ovázanou ruku a podívala se na ni, jako by nebyla její. „Zapálili to. Plachty hoří dobře, víte to? Hoří lépe než dřevo. Ty vložky taky. A dávky.“ Položila ruku zpátky do klína. „Vytahovala jsem je. Pak už ne.“
+„Třetí noc se vrátili,“ řekla. „Ne ke kruhům. Ke skladu. Ke kruhům by nás bylo moc. Ale ve skladu spali čtyři.“ Zvedla ovázanou ruku a prohlížela si ji, jako by nebyla její. „Zapálili to. Plachty hoří dobře, víte to? Hoří lépe než dřevo. Ty vložky taky. A dávky.“ Položila ruku zpátky do klína. „Vytahovala jsem je. Pak už ne.“
 
 Nikdo nic neřekl.
 
@@ -46,7 +46,7 @@ Nikdo nic neřekl.
 
 Nespočítala, kolik jich došlo. Eren to udělal za ni.
 
-Pak se díval na muže, kterého přinesli na plachtě. Ležel teď u ohně pod jejich vlastní plachtou. Měl obvázaný bok. Obvaz byl tmavý a Sefa k němu ještě nesáhla, protože nejdřív čistila Vesinu ruku. Eren cítil ten pach i odsud. Sladký a těžký.
+Muž, kterého přinesli na plachtě, ležel teď u ohně pod jejich vlastní plachtou. Měl obvázaný bok. Obvaz byl tmavý a Sefa k němu ještě nesáhla, protože nejdřív čistila Vesinu ruku. Eren cítil ten pach i odsud. Sladký a těžký.
 
 „Oštěp,“ řekla Vesa, když viděla, kam se dívá. „Tu noc. Šel za nimi.“
 
@@ -72,11 +72,11 @@ Odešel. Kolem ohně bylo ticho.
 
 Pak se zvedla Maela.
 
-Nic neřekla. Šla k jejich plachtě, sehnula se pod ni a vrátila se se svou dávkou na zítřek. S tím, co si odkládala. Rozbalila ji a položila na kámen u ohně. Pak se podívala na Erena.
+Nic neřekla. Šla k jejich plachtě, sehnula se pod ni a vrátila se se svou dávkou na zítřek. S tím, co si odkládala. Rozbalila ji, položila na kámen u ohně a zvedla oči k Erenovi.
 
 Eren šel pro svou.
 
-Sefa dala svou. Ardo svou. Bena taky, i když na ni přitom nikdo nečekal. Pak se z tmy za ohněm ozval Helin hlas.
+Sefa dala svou. Ardo svou. Bena taky, i když na ni přitom nikdo nečekal. Pak se ze tmy za ohněm ozval Helin hlas.
 
 „Já mám navíc,“ řekla. Došla k ohni a položila na kámen dávku. Celou, nerozbalenou. „Dřív jsem dávala půlku jemu.“
 
@@ -98,7 +98,7 @@ Eren se otočil na bok.
 
 „Před týdnem jsi říkala osmdesát.“
 
-„Před týdnem pršelo.“ Maela pořád ležela na zádech a mluvila ke střeše plachty. „Dvě bedny stály v prohlubni u skály. Voda do nich natekla, a pak zmrzla, a pak roztála. Dávky nabobtnaly. Teď na nich roste šedé chmýří.“ Odmlčela se. „A tu noc, co jsi byl dole, se k bednám dostala ta zvířata s holými obličeji. Hlídka spala. Jednu bednu roztrhala. Co nesnědla, rozházela po suti, a tam to pak sezobali ptáci.“
+„Před týdnem pršelo.“ Maela pořád ležela na zádech a mluvila ke střeše plachty. „Dvě bedny stály v prohlubni u skály. Voda do nich natekla, a pak zmrzla, a pak roztála. Dávky nabobtnaly. Teď na nich roste šedé chmýří.“ Odmlčela se. „A tu noc, co jsi byl dole, se k bednám dostala ta zvířata s holými obličeji. Hlídka spala. Jednu bednu roztrhala. Co nesnědla, rozházela po suti, a tam to pak sezobali ptáci. A když jsem pak bedny přepočítala po vrstvách, ne jen po víkách, chybělo tolik, co by naplnilo dalších sedm beden. Ze spodních vrstev. Někdo bral po nocích, dlouho, a víka pokaždé zase zavřel.“
 
 „Hlídka spala.“
 
@@ -138,11 +138,11 @@ Eren se díval do tmy nad sebou. Někde v kotli kašlal ten muž s oštěpem v b
 
 „Nevím.“
 
-„Já taky ne,“ řekla Maela. „To je na tom to nejhorší.“
+„Já taky ne,“ řekla Maela.
 
 *
 
-Muž s oštěpem v boku umřel druhý den odpoledne. Vesa u něj seděla, dokud dýchal. Pak vstala a šla nosit kameny na suť, ke Briho hromadě, a lidé ze čtvrtého jí pomáhali. Kamenů nanosili zase víc, než bylo třeba. Ru namaloval na horní kámen čáru. Vesa se dívala, jak to dělá, a nezeptala se proč.
+Muž s oštěpem v boku umřel druhý den odpoledne. Vesa u něj seděla, dokud dýchal. Když dodýchal, vstala a šla nosit kameny na suť, ke Briho hromadě, a lidé ze čtvrtého jí pomáhali. Kamenů nanosili zase víc, než bylo třeba. Ru namaloval na horní kámen čáru. Vesa se dívala, jak to dělá, a nezeptala se proč.
 
 *
 
@@ -164,13 +164,13 @@ Cizí odešli před polednem, stejnou cestou, po hraně. Na terase pak bylo tich
 
 „Neřekli nic,“ řekla. „Nikdo. Ani Tal.“ Položila nůž na kámen u ohně. „Dívala se na mě, jako by mě viděla poprvé.“
 
-Eren se díval na terasu. Na Ikkua, který stál na kraji s oštěpem a díval se do kotle. Ne na jednoho člověka. Na všechny.
+Eren sledoval terasu. Ikkua, který stál na kraji s oštěpem a díval se do kotle. Ne na jednoho člověka. Na všechny.
 
 Lidé od jezera, pomyslel si. Ne ti, kterým shořel sklad. Ti, ke kterým šlo šedesát mužů se sekerami, aby se jen podívali. Vesa šla pět dní, protože hledala ostatní moduly a nevěděla kudy. Ti dva cizí cestu znali. A tady na terase nikdo nevěděl, kdo je ze druhého a kdo ze čtvrtého. Všichni měli šedé bundy.
 
 Večer svolal Orrin všechny k bednám.
 
-Nepostavil se na bednu hned. Nejdřív chodil mezi lidmi, jak to dělal vždycky. Tady položil ruku na rameno, tam se sklonil k dítěti. S Dornem prohodil pár slov. Dorn měl přes pravé oko obvaz a levým se díval na Orrina tak, jak se díval Kaj na řezák. Pak teprve Orrin vylezl nahoru. Kotel ztichl.
+Nepostavil se na bednu hned. Nejdřív chodil mezi lidmi, jak to dělal vždycky. Tady položil ruku na rameno, tam se sklonil k dítěti. S Dornem prohodil pár slov. Dorn měl přes pravé oko obvaz a levým sledoval Orrina tak, jak se Kaj díval na řezák. Pak teprve Orrin vylezl nahoru. Kotel ztichl.
 
 Eren stál vzadu u skály. Maela stála vedle něj, s Tio na ruce. Tio byla pro takové nošení už velká, ale ten den kašlala a Maela ji nepustila.
 
@@ -200,11 +200,11 @@ Maela vedle Erena přikývla. Nepatrně. Možná si toho ani nevšimla. Eren si 
 
 Pár lidí se zasmálo. Krátce, hořce.
 
-„Tak ať loví,“ řekl Orrin. „Pro sebe i pro nás. Dáme jim za to, co chtějí. Nože. Plachty, které nehoří tak snadno jako jejich kůže. Ochranu.“
+„Tak ať loví,“ řekl Orrin. „Pro sebe i pro nás. Dáme jim za to, co chtějí. Nože. Plachty, které nepromoknou. Ochranu.“
 
 „Před čím?“ Byla to Sefa. Stála kus od Erena, s rukama složenýma.
 
-Orrin se na ni podíval a usmál se. „Před zimou, Sefo. Před tím, co přijde od jezera. Před dvěma stovkami lidí, kteří šli na západ a nemají co jíst.“ Odmlčel se. „Viděli jste dnes ráno ty dva nahoře? Přišli od severu. Odkud jinud než od jezera? Co myslíte, že vyprávěli?“ Pak se podíval zase na všechny. „Oni budou lovit pro nás. A my budeme v teple.“
+Orrin se na ni usmál. „Před zimou, Sefo. Před tím, co přijde od jezera. Před dvěma stovkami lidí, kteří šli na západ a nemají co jíst.“ Odmlčel se. „Viděli jste dnes ráno ty dva nahoře? Přišli od severu. Odkud jinud než od jezera? Co myslíte, že vyprávěli?“ Pak přelétl očima celý kotel. „Oni budou lovit pro nás. A my budeme v teple.“
 
 „V jakém teple?“ řekl někdo.
 
@@ -226,13 +226,13 @@ Všichni se teď dívali na Erena.
 
 *
 
-Eren nevěděl, kdy vylezl na bednu.
+Eren si nepamatoval, kdy vylezl na bednu.
 
 Stála vedle Orrinovy, ta s rozbitým rohem, na kterou ho Orrin poslal tehdy poprvé. Vylezl na ni a stál vedle Orrina, na dva kroky, a kotel se díval na dva muže na dvou bednách.
 
 „Ne,“ řekl.
 
-Orrin se na něj otočil. Neusmíval se. Díval se na něj s takovou pozorností, s jakou se Eren díval na desky s obvody.
+Orrin se k němu otočil. Neusmíval se. Zkoumal ho s takovou pozorností, s jakou Eren zkoumal desky s obvody.
 
 „Proč?“ řekl Orrin.
 
@@ -242,7 +242,7 @@ Eren to chtěl říct dobře. Měl to v hlavě celé a ve správném pořadí. A
 
 „Tak si to zařídíme jinak,“ řekl Orrin. „Umíme to. Ty to umíš.“
 
-„A ve vnitřních síních se nezabíjí.“
+„A za řadu kamenů nesmí nikdo. Ani nemocný.“
 
 „Nikdo nemusí…“
 
@@ -250,7 +250,7 @@ Eren to chtěl říct dobře. Měl to v hlavě celé a ve správném pořadí. A
 
 V kotli se někdo pohnul. Eren to nevnímal.
 
-„To pravidlo,“ řekl, „že se dole nezabíjí. Že se do horní tůně nic nehází. Kvůli těm pravidlům tam dnes v noci můžou spát naše nemocné děti. Dvanáct. Je to málo. Já vím, že je to málo.“ Podíval se dolů, na Helu, která stála vpředu. „Ale je to dvanáct víc, než měl včera kdokoli z nás. A dostali jsme je proto, že jsme ta pravidla drželi.“
+„To pravidlo,“ řekl, „že přes kameny nikdo nesmí. Že se do horní tůně nic nehází. Kvůli těm pravidlům tam dnes v noci můžou spát naše nemocné děti. Dvanáct. Je to málo. Já vím, že je to málo.“ Podíval se dolů, na Helu, která stála vpředu. „Ale je to dvanáct víc, než měl včera kdokoli z nás. A dostali jsme je proto, že jsme ta pravidla drželi.“
 
 „Dostali jsme je za dřevo,“ řekl Orrin.
 
@@ -258,13 +258,13 @@ V kotli se někdo pohnul. Eren to nevnímal.
 
 Vesa vpředu zvedla hlavu.
 
-Orrin se na Erena díval dlouho. Pak řekl, ne do kotle, ale k němu, tak, že to slyšeli všichni: „Ty jsi počítal pro ně a pro nás dohromady, Erene. Já počítám jenom pro nás. To je celý rozdíl.“
+Orrin si Erena dlouho měřil. Pak řekl, ne do kotle, ale k němu, tak, že to slyšeli všichni: „Ty jsi počítal pro ně a pro nás dohromady, Erene. Já počítám jenom pro nás. To je celý rozdíl.“
 
 Erenovi se zastavil dech.
 
 „A řezák,“ řekl Orrin. „Řekni jim, proč ne řezák.“
 
-„Protože to nejde.“ Eren se nadechl. „Z vnější síně je to do hloubky dvě stě kroků skály. Řezák by jich neprořízl ani deset. Je v něm málo. Jednou se vybije, a pak už nebude nic. Ani na tomhle světě, ani nikde, kam dojdeme.“
+„Protože to nejde.“ Eren se nadechl. „Z vnější síně je to do hloubky dvě stě kroků skály. Řezák by jich neprořízl ani deset. Je v něm málo. Jednou se vybije, a pak už nebude nic. Na tomhle světě ani nikde, kam dojdeme.“
 
 „Dvě stě kroků,“ řekl Orrin. „A nikde to není blíž?“
 
@@ -274,7 +274,7 @@ Eren cítil pod dlaní hlínu. Uhlazenou, velkou jako dvě dlaně. A ten studen�
 
 Byla to první věc, kterou kdy z bedny řekl a nebyla pravda.
 
-Orrin to slyšel. Eren nevěděl, jestli slyšel i to, že to není pravda. Orrin se na něj chvíli díval, a pak se usmál. Pomalu, vlídně, jako se usmíval vždycky.
+Orrin to slyšel. Eren nevěděl, jestli slyšel i to, že to není pravda. Orrin se po chvíli usmál. Pomalu, vlídně, jako se usmíval vždycky.
 
 „Tak to zjistíme,“ řekl. „Až přijde sníh.“
 
@@ -290,7 +290,7 @@ U Sefina ohně zůstali taky lidé. Sefa. Hela. Ardo. Bena. Méně.
 
 Vesa stála mezi dvěma ohni a nešla k žádnému.
 
-Eren slezl. Maela stála u skály, kde stála předtím, s Tio na ruce. Tio mezitím usnula. Maela se na Erena nepodívala. Dívala se přes kotel na Orrinův oheň a na lidi kolem něj.
+Eren slezl. Maela stála u skály, kde stála předtím, s Tio na ruce. Tio mezitím usnula. Maela se na Erena nepodívala. Sledovala přes kotel Orrinův oheň a lidi kolem něj.
 
 „Řekl to dobře,“ řekla.
 
@@ -322,17 +322,17 @@ Tentokrát to byla pravda. Kaj to nepoznal. Díval se na Erena, jako by ho Eren 
 
 „Sis to nechal pro sebe,“ řekl Kaj. Tiše a vztekle. „Ten nástroj. Jak se pouští. Jako oni tu hloubku. Taky ji mají jen pro sebe.“
 
-Eren se na něj díval přes oheň. Kaj měl devatenáct let a ruce, které nevěděly, co dělat. Seděl tu sám, a ne u Orrinova ohně, kde teď bylo místo pro každého.
+Kaj měl devatenáct let. Seděl tu sám, a ne u Orrinova ohně, kde teď bylo místo pro každého.
 
 „Ano,“ řekl Eren.
 
 Kaj otevřel pusu. Pak ji zavřel. Čekal cokoli jiného.
 
-Pak vstal, pustil kamínek do žáru a odešel. Ne k Orrinovu ohni. Někam do tmy mezi plachty, kam Eren neviděl.
+Vstal, pustil kamínek do žáru a odešel. Ne k Orrinovu ohni. Někam do tmy mezi plachty, kam Eren neviděl.
 
 Eren zůstal sedět.
 
-Nevěděl, jestli Orrin slyšel, že lhal. *Dvě stě kroků. A nikde to není blíž?* Orrin nevěděl o mazanici. Nevěděl o zatáčce sto devadesát kroků od ohně, kde se chodba s vodou přibližuje k soutěsce. Kdyby hledal, hledal by v síni, ve skále pod nohama, a nenašel by nic. Musel by vědět, kde hledat.
+*Dvě stě kroků. A nikde to není blíž?* Orrin neznal mazanici. Nevěděl o zatáčce sto devadesát kroků od řady kamenů, kde se chodba s vodou přibližuje k soutěsce. Kdyby hledal, hledal by v síni, ve skále pod nohama, a nenašel by nic. Musel by vědět, kde hledat.
 
 Věděl to jen Eren.
 

@@ -106,7 +106,7 @@ Ilan kývl. Každou odpověď přijal kývnutím, jako by si ji ukládal. Nara s
 
 „Ano.“
 
-Ilan se opřel. Podíval se ke stropu, kde ventilace střídala své dva tóny. Nara je teď slyšela taky. Nízký a ten druhý, co se střídal.
+Ilan se opřel. Podíval se ke stropu, kde ventilace střídala své dva tóny. Nara je teď slyšela taky. Nízký a ten druhý, co se zvedal.
 
 „To je dost dobrý,“ řekl. „Kdo to vymyslel? Ta z úřadu?“
 
@@ -272,7 +272,7 @@ Ilan se naklonil dopředu.
 
 „Přijdu.“
 
-„A tátovi…“ Zarazil se. Nara viděla, jak v něm něco přeskočilo. „Řekni mu to. Ještě dneska. Má na to právo, podal tu žádost. Jen mu neříkej, co jsem řekl já. To mu řeknu sám.“
+„A tátovi…“ Zarazil se. Nara viděla, jak polkl. „Řekni mu to. Ještě dneska. Má na to právo, podal tu žádost. Jen mu neříkej, co jsem řekl já. To mu řeknu sám.“
 
 „Řeknu mu to.“
 

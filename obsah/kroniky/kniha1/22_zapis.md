@@ -82,7 +82,7 @@ Matka byla doma. Seděla na prahu a čistila hrách a dívala se, jak jde přes 
 
 „Potřebuju husí pero,“ řekl Matěj.
 
-Matka se na něj chvíli dívala. Pak odložila mísu, vešla dovnitř a vrátila se s husím křídlem, tím, kterým smetala popel z pece. Bylo šedé od popela a na konci ohlazené.
+Matka odložila mísu, vešla dovnitř a vrátila se s husím křídlem, tím, kterým smetala popel z pece. Bylo šedé od popela a na konci ohlazené.
 
 „Vem si celý,“ řekla. „Já si udělám jiný.“
 
@@ -93,8 +93,6 @@ Matěj ho vzal.
 „Na poli.“
 
 „Na kterém?“
-
-Matka se na něj podívala.
 
 „Na tátově,“ řekla.
 
@@ -134,15 +132,15 @@ Napsal jsem, co jsem viděl. A co jsem neviděl, zvlášť.
 
 Psal tak, jak se učil psát knihy: pomalu, malým pravidelným písmem, řádek pod řádkem, jak se klade dlažba. A na okraj, vedle každé věci, psal svá slova rychle, tou rukou, kterou psal do vosku pod smrkem a u ohně a na kolenou ve vodě. *Vidi. Non vidi. Audivi, a muliere. Sensi. Tuli. Dixi.*
 
-Napsal o kosti a o listině. O svědcích psaných jednou rukou a o chybě v arenze, kterou písař v Lyddě opsal z řezenské knihy, protože nebyl v Lyddě. O bratru Wigandovi, který četl prsty. *Wigandus frater, caecus, digitis legit: rectum est.* Na okraj *audivi*, a pod to, menším písmem, *et vidi*.
+Napsal o kosti a o listině. O svědcích psaných jednou rukou a o chybě v arenze, kterou písař opsal z řezenské knihy, protože v Lyddě nikdy nebyl. O bratru Wigandovi, který četl prsty. *Wigandus frater, caecus, digitis legit: rectum est.* Na okraj *audivi*, a pod to, menším písmem, *et vidi*.
 
 Napsal o slatině. O mrtvých ptácích a o lišce a o stopách dovnitř, ne ven. O tom, jak svíce zhasíná vždycky ve stejné výšce, a ještě tři kroky za okrajem prohlubně, jako by tam tekla voda, kterou nikdo nevidí. *Candela prius sentit quam homo.* A pak, na samostatný řádek, aby to nikdo nemohl přehlédnout: *Epistola mea ad priorem de dracone falsa erat.* Můj dopis převorovi o drakovi byl mylný. Na okraj *dixi*, protože to řekl nahlas, před vraty grangie, a protože to byla pravda, i když ji nikdo nechtěl.
 
-Psa nenapsal. Chvíli nad tím držel brk. Pak napsal jen *canis meus mortuus est*, bez jména, a na okraj nic, protože k tomu nebylo co dodat.
+Psa nenapsal. Chvíli nad tím držel brk. Pak napsal jen *canis meus mortuus est*, bez jména, a na okraj jen *vidi*, protože k tomu nebylo co dodat.
 
 Napsal o štole. Kroky, kapky, vědra, Otčenáše. Teplá čelba, chvění pod dlaní. Opis Ortliebových tabulek už měl v sešitku a nepřepisoval ho. Na kraji toho listu stálo od Velikonoc *ab Hensel, per Iesek*, které převorovi ukázalo, odkud to ví. Nepřipsal k tomu nic. Bylo to tam. Ať to tam je.
 
-Napsal o hnízdě. O kostech těžkých jako kámen, tmavých jako med, o lebce dlouhé jako předloktí, o drápech, jejichž rozestup se shodoval s rozestupem rýh. O vrstvách hlíny, stovkách vrstev, tenkých jako list. O malé stočené kostře u stěny, kterou Ješek nazval mládětem. Matěj to nevěděl. Napsal *Fuerunt. Non sunt.* A pak, na okraj toho listu, napsal obě slova vedle sebe, *vidi* u kostí a *non vidi* u draka, živého, a mezi ně udělal čáru. Rovnou, svislou, od horního okraje k dolnímu.
+Napsal o hnízdě. O kostech těžkých jako kámen, tmavých jako med, o lebce dlouhé jako předloktí, o drápech, jejichž rozestup se shodoval s rozestupem rýh. O vrstvách hlíny, stovkách vrstev, tenkých jako list. O malé stočené kostře u stěny, kterou Ješek nazval mládětem. Matěj nevěděl, jestli jím byla. Napsal *Fuerunt. Non sunt.* A pak, na okraj toho listu, napsal obě slova vedle sebe, *vidi* u kostí a *non vidi* u draka, živého, a mezi ně udělal čáru. Rovnou, svislou, od horního okraje k dolnímu.
 
 Díval se na ni, když schla. Vypadala jako mez mezi dvěma poli. Jako kolík, který převor zatloukl u Dobroslavina milíře. Tady je jedno a tady druhé, a kdo přejde, ať ví, že přešel.
 
@@ -172,7 +170,7 @@ A pak napsal *exivimus*. Vyšli jsme.
 
 Brk se zastavil.
 
-Kudy vyšli, věděl. Věděl, kdo je vedl a kdo koho nesl, a kdo komu usnul na rameni. Věděl, jak vypadala komora na konci, a jakým světlem svítil les škvírou kolem kamene. Věděl číslo, které mu řekl Ješek, když na sebe zapomněl. Měl to v hlavě celé, každou věc na svém místě, jako dvoustranu s hnízdem.
+Kudy vyšli, věděl. Věděl, kdo je vedl a kdo koho nesl, a kdo komu usnul na rameni. Věděl, jak vypadala komora na konci, a jakým světlem svítil les škvírou kolem kamene. Věděl číslo, které mu Ješek doplnil, když na sebe zapomněl. Měl to v hlavě celé, každou věc na svém místě, jako dvoustranu s hnízdem.
 
 Nic z toho nenapsal. Ani kapitulu. Tu si pamatoval celou, každé slovo, chlad kamene pod tváří a Hartmannův pláč, a právě proto ji nenapsal. Některé věci se píšou, aby se nezapomněly. Tyhle se zapomenout nedaly.
 
@@ -234,7 +232,7 @@ Ješek udělal krok dovnitř. Pak druhý. Postavil se nad stůl a díval se na d
 
 Ješek se na něj podíval. Pak zase na list.
 
-„Orám tátovo pole,“ řekl. „Pro ty z Pleisse. Rüdiger mi dává groš za týden. Do žní.“ Neřekl to jako výčitku. Řekl to, jako se řekne, kolik je hodin. „Je to dobrý pole. Táta věděl, kde je kámen.“
+„Orám tátovo pole,“ řekl. „Pro ty z Pleisse. Rüdiger mi dává denár za týden. Do žní.“ Neřekl to jako výčitku. Řekl to, jako se řekne, kolik je hodin. „Je to dobrý pole. Táta věděl, kde je kámen.“
 
 Matěj mlčel.
 
@@ -278,7 +276,7 @@ Cíp hábitu. Šedý, s roztřepeným okrajem, kde ho v únoru utrhl hák. Posle
 
 Dobroslava se dívala, jak ho tam klade.
 
-„To je ono?“ řekla. „Co jsem ti třikrát vracela?“
+„To je ono?“ řekla. „Co jsem ti dvakrát vracela?“
 
 „Ano.“
 
@@ -356,7 +354,7 @@ Pak se natáhl a vzal knihu. Matěj ho nezastavil. Merin ji otevřel, opatrně, 
 
 „Ne.“
 
-Merin se na něj podíval. Něco se mu pohnulo v koutku úst. Nebyl to úsměv. Byl to začátek úsměvu, který se rozhodl, že nebude.
+Merinovi se něco pohnulo v koutku úst. Nebyl to úsměv. Byl to začátek úsměvu, který se rozhodl, že nebude.
 
 „Dobře,“ řekl.
 
@@ -430,7 +428,7 @@ Kněz skládal ornát do truhly u zdi. Otočil se a poznal ho.
 
 „Převor vám psal.“
 
-„Psal.“ Kněz zavřel víko truhly a opřel se o ni. „Kost, kterou kapitula nechce na oltáři. Že ji přineseš. Že ji nemám vystavovat a nemám ji vyhodit.“ Díval se na plátno pod Matějovou paží. „Tohle je ona?“
+„Psal.“ Kněz zavřel víko truhly a opřel se o ni. „Kost, kterou kapitula nechce na oltáři. Že ji přineseš. Že ji nemám vystavovat a nemám ji vyhodit.“ Ukázal bradou na plátno pod Matějovou paží. „Tohle je ona?“
 
 Matěj mu ji podal. Kněz ji vzal a zapřel se, jak se zapřel každý, kdo nečekal tu tíhu.
 
@@ -456,7 +454,7 @@ Kněz se na něj podíval. Pak na druhé plátno.
 
 „A co jsi neviděl?“
 
-Matěj se na něj podíval. Kněz to neřekl posměšně. Zeptal se, jak se ptá člověk, který slyšel, co mnich řekl na svatého Jiří, a zapamatoval si to líp, než by sám chtěl.
+Kněz to neřekl posměšně. Zeptal se, jak se ptá člověk, který slyšel, co mnich řekl na svatého Jiří, a zapamatoval si to líp, než by sám chtěl.
 
 „To taky,“ řekl Matěj. „Zvlášť.“
 

@@ -2,7 +2,7 @@
 
 O Hromnicích roku 1172 zamrzl ve skriptoriu inkoust.
 
-Matěj to poznal podle pera. Ráno ještě psalo, jen tuze, jako by táhlo po písku. Po primě se vrátil z kostela s rukama zkřehlýma od svíce, kterou nesl v průvodu, a pero zůstalo v kalamáři stát, jako by ho tam někdo zatloukl. Odnesl kalamář k oknu, kde aspoň svítilo slunce, a dýchal na něj. Nepomohlo to. Bratr Wigand seděl u vedlejšího pultu a už půl roku nepsal, protože neviděl. Řekl do ticha, že za jeho mládí zamrzal inkoust každou zimu a nikdo z toho nedělal zázrak.
+Matěj to poznal podle pera. Ráno ještě psalo, jen ztuha, jako by táhlo po písku. Po primě se vrátil z kostela s rukama zkřehlýma od svíce, kterou nesl v průvodu, a pero zůstalo v kalamáři stát, jako by ho tam někdo zatloukl. Odnesl kalamář k oknu, kde aspoň svítilo slunce, a dýchal na něj. Nepomohlo to. Bratr Wigand seděl u vedlejšího pultu a už půl roku nepsal, protože neviděl. Řekl do ticha, že za jeho mládí zamrzal inkoust každou zimu a nikdo z toho nedělal zázrak.
 
 „Nedělám zázrak,“ řekl Matěj. „Dýchám.“
 
@@ -10,7 +10,7 @@ Matěj to poznal podle pera. Ráno ještě psalo, jen tuze, jako by táhlo po p�
 
 V dalších letech si Matěj na tu chvíli vzpomínal častěji, než by člověk čekal od rána, kdy se nic nestalo. Seděl v chladné místnosti nad listem, na kterém měl rozepsaný opis svatého Bernarda, a bylo mu sedmadvacet let. Měl dobrou ruku a dobré oči a věděl o obojím. Věděl také, že bratr Wigand umírá, i když to nikdo neříkal, a že po něm bude někdo muset převzít knihy, klíče od almárií a seznam toho, co klášter půjčil a komu. Armarius. Ve Waldsassenu to nebyl úřad, kvůli kterému by se bratři hádali, a právě proto po něm Matěj toužil tak, že se za to zpovídal. Nechtěl moc. Chtěl, aby ho někdo jednou zavolal jménem, protože ho potřebuje.
 
-Jménem. Bratři mu říkali Matthias. Při obláčce ho tak zapsal opat. Nikdo nevěděl, že doma v Mlýnci pod horami mu matka nikdy neřekla jinak než Matěji. Bratr z toho, když byli malí, dělal Matějka nebo Mates, podle toho, jestli se zrovna prali. Ve Waldsassenu se mluvilo latinsky v kostele a německy všude jinde. Matěj mluvil obojím líp než většina bratří a stejně se mu stávalo, že ho někdo pochválil za to, jak „čistě“ mluví, jako se chválí pes, který se naučil nosit.
+Jménem. Bratři mu říkali Matthias. Při obláčce ho tak zapsal opat. Nikdo nevěděl, že doma v Mlýnci pod horami mu matka nikdy neřekla jinak než Matěji. Mladší bratr Ješek z toho, když byli malí, dělal Matějka nebo Mates, podle toho, jestli se zrovna prali. Ve Waldsassenu se mluvilo latinsky v kostele a německy všude jinde. Matěj mluvil obojím líp než většina bratří a stejně se mu stávalo, že ho někdo pochválil za to, jak „čistě“ mluví, jako se chválí pes, který se naučil nosit.
 
 Kalamář povolil kolem tercie. Matěj stihl napsat jedenáct řádků.
 
@@ -42,13 +42,13 @@ Byla to kost. Asi tak dlouhá jako předloktí od lokte po zápěstí, ale siln�
 
 Listina ležela pod kostí, složená na čtvrtky, s pečetí na proužku. Převor ji rozložil na stole vedle truhly a Matěj se nad ni naklonil s kostí stále v dlaních, protože si ji nikdo nevzal zpátky.
 
-Byla psaná čitelnou latinou a měla formule, jaké Matěj znal z listin k relikviím, které klášter dostával: *notum sit omnibus*, ať je všem známo, že tato kost, uchovávaná po staletí u kostela svatého Jiří v Lyddě, kde svatý mučedník trpěl, je pravá kost onoho draka, kterého svatý Jiří přemohl... Následovala jména svědků, datum, pečeť. Matěj četl a cítil, jak se mu v hrudi rozlévá teplo, které nemělo nic společného s pánví. Bylo to krásné. Bylo to krásně napsané.
+Byla psaná čitelnou latinou a měla formule, jaké Matěj znal z listin k relikviím, které klášter dostával: *notum sit omnibus*, ať je všem známo, že tato kost, uchovávaná po staletí u kostela svatého Jiří v Lyddě, kde svatý mučedník trpěl, je pravá kost onoho draka, kterého svatý Jiří přemohl… Následovala jména svědků, datum, pečeť. Matěj četl a cítil, jak se mu v hrudi rozlévá teplo, které nemělo nic společného s pánví. Bylo to krásné. Bylo to krásně napsané.
 
-„Pan Konrád,“ řekl převor, „by rád tuto kost věnoval našemu kostelu. Ostatní relikvie si ponechá pro svou kapli. Kost chce dát nám, jako znamení přátelství mezi svým domem a naším klášterem. A jako znamení...“ Převor se odmlčel a Matěj zvedl oči, protože převor se odmlčel málokdy. „Jako znamení, že i v našem kraji se kdysi bojovalo s drakem.“
+„Pan Konrád,“ řekl převor, „by rád tuto kost věnoval našemu kostelu. Ostatní relikvie si ponechá pro svou kapli. Kost chce dát nám, jako znamení přátelství mezi svým domem a naším klášterem. A jako znamení…“ Převor se odmlčel a Matěj zvedl oči, protože převor se odmlčel málokdy. „Jako znamení, že i v našem kraji se kdysi bojovalo s drakem.“
 
 „V našem kraji?“
 
-„Pod horami se vypráví,“ řekl Rüdiger. Měl chraplavý hlas a mluvil německy s přízvukem odněkud ze severu. „O drakovi, který spal v hoře. Pán to dobře zná. Pán by rád, aby na svátek svatého Jiří byla kost vystavena a požehnána, a aby se při tom připomnělo, že i u nás...“ Pokrčil rameny, jako by mu došla slova, která mu někdo vložil do úst.
+„Pod horami se vypráví,“ řekl Rüdiger. Měl chraplavý hlas a mluvil německy s přízvukem odněkud ze severu. „O drakovi, který spal v hoře. Pán to dobře zná. Pán by rád, aby na svátek svatého Jiří byla kost vystavena a požehnána, a aby se při tom připomnělo, že i u nás…“ Pokrčil rameny, jako by mu došla slova, která mu někdo vložil do úst.
 
 Převor se na něj podíval tak, že Rüdiger zmlkl.
 
@@ -62,7 +62,7 @@ Matěj držel kost a díval se na listinu a v tu chvíli by slíbil cokoli.
 
 „Mohu vám to říct s jistotou,“ řekl Matěj. Slyšel sám sebe, jak to říká, a znělo to jako pták, který vletí oknem do kostela: jasně a pozdě. „Do svatého Jiří budete vědět, co to je.“
 
-Převor se na něj chvíli díval. Měl šedé oči a ve tváři výraz, který Matěj neuměl přečíst. O mnoho měsíců později, v jiném světle, by ho pojmenoval jako lítost.
+Převor chvíli mlčel. Měl šedé oči a ve tváři výraz, který Matěj neuměl přečíst. O mnoho měsíců později, v jiném světle, by ho pojmenoval jako lítost.
 
 „Dobře,“ řekl převor. „Budeš to mít v knihovně. Bratr Wigand ti dá klíč.“
 
@@ -80,7 +80,7 @@ Matěj zvážil kost v dlaních. Seděli spolu u okna knihovny, protože tam byl
 
 „Tak to není kost,“ řekl Wigand. „To je kámen, který vypadá jako kost.“
 
-„Má dřeň.“ Matěj obrátil kost rozšířeným koncem k sobě. Kloub tam byl odlomený a bylo vidět, co je uvnitř. Ne prázdno, jak by čekal, a ne houbovitá tkáň, kterou viděl v kostech skotu. Uvnitř byl kámen, jemný a tmavší, a v něm drobné otvory jako v chlebu, pravidelně rozmístěné, ale vyplněné něčím průsvitným. „Je to kost. Jen... zkamenělá.“
+„Má dřeň.“ Matěj obrátil kost rozšířeným koncem k sobě. Kloub tam byl odlomený a bylo vidět, co je uvnitř. Ne prázdno, jak by čekal, a ne houbovitá tkáň, kterou viděl v kostech skotu. Uvnitř byl kámen, jemný a tmavší, a v něm drobné otvory jako v chlebu, pravidelně rozmístěné, ale vyplněné něčím průsvitným. „Je to kost. Jen… zkamenělá.“
 
 „V Pasově mají v pokladnici roh jednorožce,“ řekl Wigand. „Taky zkamenělý. Biskup ho ukazuje vyslancům. Jednou jsem ho viděl, když jsem ještě viděl. Byl to zub nějaké ryby. Velké ryby, to připouštím.“
 
@@ -108,7 +108,7 @@ Wigand chvíli mlčel. Pak natáhl ruku a Matěj mu do ní kost opatrně vložil
 
 „Co?“
 
-„Je to rovné.“ Wigand vrátil kost. „Kdo tohle vyryl, ten měl lepší nástroj než rytíř, kterému by ten drak patřil. Zapiš si to. Hned. Než si to začneš vysvětlovat.“
+„Je to rovné.“ Wigand vrátil kost. „Kdo tohle vyryl, ten měl lepší nástroj, než má kterýkoli rytec. Zapiš si to. Hned. Než si to začneš vysvětlovat.“
 
 Matěj si vzal voskovou tabulku a zapsal: *na boku znamení z čar a teček, rovné, hluboké, bez stopy nástroje.* Pak se podíval na to, co napsal, a připsal: *vidi.* Viděl jsem.
 

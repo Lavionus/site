@@ -18,7 +18,7 @@ Tadeáš přijde v osm nula čtyři. Pes jde napřed, čenichá u kamene, kde Ha
 
 Je to kopie jeho tabulky. Tři měsíce délek, ručně, sloupec po sloupci, a vpravo dole Ladiným písmem, velkým a kulatým, jako píšou lidé, kteří psali málokdy: *29./30. 5. Ať to ví.*
 
-Hana se na to dívá dlouho.
+Hana ten list drží dlouho.
 
 „Pan Kalina to má taky,“ řekne Tadeáš. „Vyšlo mu to stejně.“
 
@@ -42,7 +42,7 @@ Pes vstane a jde za ním. Hana se dívá, jak mizí mezi kmeny, malý široký m
 
 V Karlových Varech je ve výtahu pořád cedulka *Pracujeme na tom*.
 
-Klára otevře hned. Jonáš spí v kočárku v předsíni, zabalený do deky s žirafami. Martin stojí v kuchyni u okna a nedívá se ven. Dívá se na ulici tak, jako se člověk dívá, když se nechce dívat.
+Klára otevře hned. Jonáš spí v kočárku v předsíni, zabalený do deky se žirafami. Martin stojí v kuchyni u okna. Dívá se na ulici tak, jako se člověk dívá, když se nechce dívat.
 
 Na stole leží dopis.
 
@@ -76,7 +76,7 @@ Klára kývne. Pomalu. Zvykla si na to, že Hana mluví takhle.
 
 „A?“
 
-„A Klára řekla ne.“ Martin se podívá na Kláru. „Zase.“
+„A Klára řekla ne.“ Martin kývne ke Kláře. „Zase.“
 
 Klára mu ten pohled vrátí. Nic neřekne.
 
@@ -122,7 +122,7 @@ Klára se skoro usměje. „Vy a ta vaše levá strana.“
 
 „Je to jediné, co mám.“
 
-Klára se podívá na Martina. Hana čeká. Martin stojí u okna a mne si palcem kotník druhé ruky, jako by si tam chtěl něco setřít.
+Klára se otočí k Martinovi. Hana čeká. Martin stojí u okna a mne si palcem klouby druhé ruky, jako by si tam chtěl něco setřít.
 
 „Já bych jel,“ řekne Martin. „Řeknu to rovnou, ať to víte. Do Žitavy, kamkoli. Mně je jedno, kdo platí byt. Mně není jedno, kdo stojí naproti našemu vchodu s telefonem.“ Odmlčí se. „Ale ona nepojede. A já bez ní nepojedu. Tak jo. Policie.“
 
@@ -148,7 +148,7 @@ Klára se vrátí s telefonem v ruce.
 
 „Ne.“
 
-Klára se na ni podívá jinak. Jako by čekala, že Hana řekne něco jiného, a teď neví, jestli je zklamaná, nebo jí odlehlo.
+Klára zvedne hlavu. Jako by čekala, že Hana řekne něco jiného, a teď neví, jestli je zklamaná, nebo jí odlehlo.
 
 „Paní Alžběta by ji přemlouvala,“ řekne.
 
@@ -194,7 +194,7 @@ Pak se Kubeš otočí k Haně.
 
 „Hana Vrbová. Geoarcheoložka. Paní Rybová mě požádala, abych šla s nimi.“
 
-„Vrbová.“ Kubeš si to zapíše. Pak zvedne oči. Hana ví, že si to jméno někde přečetl. Je to vidět. „Ta z Mexika.“
+„Vrbová.“ Kubeš si to zapíše a zvedne oči. Hana ví, že si to jméno někde přečetl. Je to vidět. „Ta z Mexika.“
 
 „Ta z Mexika.“
 
@@ -212,7 +212,7 @@ Kubeš se opře.
 
 „To musíte vědět vy.“
 
-„Ne,“ řekne Kubeš. „To vím. Nebudu běhat po lidech podle seznamu z internetu. To by bylo přesně to, co chtěl ten, kdo ho tam dal. Aby na ně zaklepala policie a sousedi viděli, ke komu.“ Odmlčí se. „Kdo z nich dostane dopis, ať přijde. Paní Rybová přišla. Tak se tím zabývám.“
+„To vím,“ řekne Kubeš. „Nebudu běhat po lidech podle seznamu z internetu. To by bylo přesně to, co chtěl ten, kdo ho tam dal. Aby na ně zaklepala policie a sousedi viděli, ke komu.“ Odmlčí se. „Kdo z nich dostane dopis, ať přijde. Paní Rybová přišla. Tak se tím zabývám.“
 
 Hana si to v duchu zapíše. Nečekala to. Nečekala, že tohle řekne policista.
 
@@ -222,7 +222,7 @@ Hana si to v duchu zapíše. Nečekala to. Nečekala, že tohle řekne policista
 
 „Tak mi to neříkejte.“
 
-Hana se na něj podívá.
+Hana mlčí.
 
 „Myslím to vážně,“ řekne Kubeš. „Jestli mi řeknete jméno a nebudete mít nic, zapíšu si ho a budu ho mít v hlavě, a až přijde něco jiného, budu to vidět přes to jméno. Řekněte mi ho, až ho doložíte.“
 
@@ -282,17 +282,17 @@ Na chodbě je lavice, na lavici ten starší muž. Opakuje si pořád tu větu. 
 
 Sedí vedle něj dvacet minut.
 
-Dveře se otevřou. Hronková ji zavolá dovnitř a nechá ji stát, než si sedne.
+Dveře se otevřou. Hronková ji zavolá dovnitř a sama se neposadí, dokud si Hana nesedne.
 
 „Paní Rybová souhlasí,“ řekne. „S tím, co jsem jí řekla, že můžu. Je toho málo. Řekla jsem jí to.“ Narovná jednu propisku, která se nepohnula. „Zeptám se porodnice, jak se informace o výsledku jejího syna dostala mimo nemocnici. Zeptám se laboratoře, kdo všechno má přístup k výsledkům pilotního screeningu. Budu u toho, až bude paní Rybová mluvit s policií příště, jestli o to bude stát. A podívám se, jestli její rodina není vystavena něčemu, čemu se říká diskriminace, i když to dělají lidé, ne úřady. To je moje práce i tam, kde nejde o úřad.“ Odmlčí se. „Nemůžu nikoho zatknout. Nemůžu nikoho schovat. Nemůžu ani zařídit, aby ty stránky zmizely z internetu.“
 
 „Já vím.“
 
-„Řekla mi ještě jednu věc.“ Hronková se na ni podívá přes stůl. „Že jméno svého syna nechce v žádném papíře. Že jste jí řekla, že to vyřídíte. Nevyřídila jste to.“
+„Řekla mi ještě jednu věc. Že jméno svého syna nechce v žádném papíře. Že jste jí řekla, že to vyřídíte. Nevyřídila jste to.“
 
 „Ne. Chtěla jsem, aby to řekla sama.“
 
-„Řekla.“ Hronková kývne. „Jeho jméno v mém spisu nebude. Bude tam *nezletilý syn*. To mi slíbila ona, ne vy. Já jsem to slíbila jí.“
+„Řekla.“ Hronková kývne. „Jeho jméno v mém spisu nebude. Bude tam *nezletilý syn*. To po mně chtěla ona, ne vy. A já jsem jí to slíbila.“
 
 *
 
@@ -306,7 +306,7 @@ Dveře se otevřou. Hronková ji zavolá dovnitř a nechá ji stát, než si sed
 
 „Ne,“ řekne Hronková. „Zatím ne.“
 
-Pak se podívá na Hanu jinak. Zkoumavě, ale ne nevlídně.
+Pak si Hanu prohlédne jinak. Zkoumavě, ale ne nevlídně.
 
 „A vy, paní doktorko? Co z toho máte vy?“
 
@@ -330,7 +330,7 @@ Ve středu ráno to Hana čte v autě na parkovišti u pramene, s termoskou mezi
 
 Poslala jí to Dana z olomoucké firmy. Bez komentáře, jen odkaz a pod ním: *Promiň. Myslela jsem, že bys to měla vidět dřív než šéf.*
 
-Je to německý portál, *rodinná historie, záhady, region*, a pod ním český web, který to převzal do půl hodiny a přidal titulek, jaký by si vymyslel sám.
+Je to německý portál, *rodinná historie, záhady, region*, a pod ním český web, který to převzal do půl hodiny a přidal vlastní titulek.
 
 *ATLANTOLOŽKA LOVÍ „ELFY“ NA CHEBSKU.*
 
@@ -372,7 +372,7 @@ Sokolová volá v osm dvacet. Nepozdraví.
 
 „Odebírala jsem vzorky. V rodinách z regionu. Jen několik týdnů nato.“ Sokolová to čte nahlas, a každé slovo zní jako obžaloba. „Víte, kolik mi dnes ráno přišlo e-mailů? Děkan. Etická komise. Dva novináři. A jeden pán, který chce vědět, jestli umím poznat elfa z krve.“
 
-„Paní docentko —“
+„Paní docentko…“
 
 „Ne, vy mě poslouchejte.“ Sokolová se nadechne. „Moje data jsou zamčená. Podepsaná. Každý souhlas je v šanonu, každý vzorek má kód, ke klíči mám přístup já a jedna technička, a od března nikdo jiný. Nic z toho seznamu ode mě není. To vím. A to dokážu.“
 
@@ -382,7 +382,7 @@ Sokolová volá v osm dvacet. Nepozdraví.
 
 „Rozumím.“
 
-Sokolová chvíli mlčí. Hana slyší v telefonu tramvaj.
+V telefonu je chvíli slyšet jen tramvaj.
 
 „A ta paní Rybová,“ řekne pak Sokolová jiným hlasem. „Je v pořádku?“
 
@@ -476,7 +476,7 @@ Než nastartuje, napíše Sálové.
 
 Je to první zpráva od neděle. Hana ji píše třikrát a třikrát ji smaže, protože pokaždé je v ní něco, co nepatří ke zprávě. Nakonec nechá jen to, co by napsala doleva.
 
-*Byla jsem s Rybovými na policii a u zástupkyně veřejné ochránkyně práv. S jejich souhlasem. Žádné jiné jméno. Nic o hoře. Matka K. odmítla, nikdo ji nepřemlouval. H. V.*
+*Byla jsem s Rybovými na policii a u zástupkyně veřejné ochránkyně práv, JUDr. Hronkové. S jejich souhlasem. Žádné jiné jméno. Nic o hoře. Matka K. odmítla, nikdo ji nepřemlouval. H. V.*
 
 Odešle to.
 

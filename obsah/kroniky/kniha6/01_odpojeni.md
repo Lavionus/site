@@ -32,7 +32,7 @@ Teprve potom, na čtvrtém místě, menším písmem, jak se v síti píše vše
 
 *Rozsudek v hromadném řízení ve věci hnutí Nové otevření. Doručeno. Dotčená osoba: Ilan Vess. Vztah: syn.*
 
-Nara stála na chodbě a dívala se na zeď před sebou. Zeď byla světle šedá. V Orse byly všechny chodby soudu světle šedé, protože kdysi kdosi rozhodl, že tahle barva nikoho nerozruší. Nara četla ten řádek a věděla, co znamená každé slovo zvlášť. Hromadné řízení. Doručeno. Dotčená osoba. Celá ta věta jí přesto chvíli nedávala smysl, jako text v řeči, kterou člověk zná jen z učebnice.
+Nara stála na chodbě a dívala se na zeď před sebou. Zeď byla světle šedá. Na Orse byly všechny chodby soudu světle šedé, protože kdysi kdosi rozhodl, že tahle barva nikoho nerozruší. Nara četla ten řádek a věděla, co znamená každé slovo zvlášť. Hromadné řízení. Doručeno. Dotčená osoba. Celé té větě přesto chvíli nerozuměla, jako textu v řeči, kterou člověk zná jen z učebnice.
 
 Pak si všimla, že má klidné ruce.
 
@@ -48,13 +48,13 @@ Byl to zástupce správy vodního okruhu. Stál kousek od ní, se složkou pod p
 
 „Je mi to líto,“ řekl.
 
-Nejdřív nepochopila, co myslí. Vodu? Pak pochopila. Ten mladý muž seděl tři hodiny v síni bez jednacího filtru, protože filtr mají jen ti, kdo mluví. Celé dopoledne mu v koutku vědomí běžely zprávy. Rozsudek v hromadném řízení vyšel v devět čtyřicet. Veřejně. Čtyři sta jedna jmen, a mezi nimi jedno, které síť umí spojit s její tváří, protože síť umí spojit všechno. Viděl to, zatímco ona mluvila o vodě. Celou dobu, co mu kladla tu poslední otázku, to věděl.
+Nejdřív nepochopila, co myslí. Vodu? Pak pochopila. Ten mladý muž seděl tři hodiny v síni bez jednacího filtru, protože filtr mají jen advokáti a soud. Celé dopoledne mu sítí běžely zprávy. Rozsudek v hromadném řízení vyšel v devět čtyřicet. Veřejně. Čtyři sta jedna jmen, a mezi nimi jedno, které síť umí spojit s její tváří, protože síť umí spojit všechno. Viděl to, zatímco ona mluvila o vodě. Celou dobu, co mu kladla tu poslední otázku, to věděl.
 
 „Děkuji,“ řekla.
 
 Kývl a odešel rychleji, než musel.
 
-Nara došla na konec chodby k oknu. Okno nevedlo ven. V Orse nevedlo ven žádné okno, které stálo za řeč; ven se dívaly jen servisní průzory na plášti a ty sloužily technikům. Tohle okno vedlo dovnitř, přes osu, na druhou stranu habitatu. Orsa se za sklem zvedala do oblouku. Nejdřív střechy sousedních bloků, pak terasy, pak zahrady na opačné straně, které visely vysoko nad ní hlavou dolů, a uprostřed toho všeho světelný pás podél osy, bílý a celý den stejný. Nara se na ten oblouk dívala celý život. Když byla malá, myslela si, že lidé nahoře musí padat. Matka jí tehdy řekla, že nahoře nikdo není, protože nahoře je jen to, kam se člověk zrovna nedívá.
+Nara došla na konec chodby k oknu. Okno nevedlo ven. Na Orse nevedlo ven žádné okno, které stálo za řeč; ven se dívaly jen servisní průzory na plášti a ty sloužily technikům. Tohle okno vedlo dovnitř, přes osu, na druhou stranu habitatu. Orsa se za sklem zvedala do oblouku. Nejdřív střechy sousedních bloků, pak terasy, pak zahrady na opačné straně, které visely vysoko nad ní hlavou dolů, a uprostřed toho všeho světelný pás podél osy, bílý a celý den stejný. Nara se na ten oblouk dívala celý život. Když byla malá, myslela si, že lidé nahoře musí padat. Matka jí tehdy řekla, že nahoře nikdo není, protože nahoře je jen to, kam se člověk zrovna nedívá.
 
 Otevřela rozsudek.
 
@@ -78,7 +78,7 @@ A pod tím, jako pod každým jménem, stejná věta:
 
 *Vůči osobám ve společné domácnosti se v tomto řízení nepostupuje.*
 
-Nara se dívala na ta slova a cítila, jak se v ní něco uvolnilo. Bylo to tak rychlé a tak tělesné, že se za to začala stydět dřív, než to stačila pojmenovat.
+Nara se dívala na ta slova a ramena jí povolila. Bylo to tak rychlé a tak tělesné, že se za to začala stydět dřív, než to stačila pojmenovat.
 
 Ilan s ní nebydlel osm měsíců. Odešel v den, kdy mu bylo šestnáct a půl, protože od té doby to zákon dovoloval. Vzal si jednu tašku. Pokoj ho ještě týden poznával: když do něj vešla ona, rozsvítil se nejdřív na jeho hodnotu, teplejší a nižší, a teprve po vteřině se opravil na ni. Pak zapomněl. Nara tehdy uvažovala, jestli by neměla nastavení pokoje zamknout, aby nezapomněl. Neudělala to. Připadalo jí to sentimentální.
 
@@ -90,7 +90,7 @@ Doručení: *vyvěšením v síti správy, neboť adresát je bez spojení.*
 
 Nara se zasmála. Krátce, nosem, a zástupkyně jiné kanceláře, která šla kolem, se po ní ohlédla.
 
-Ilan to nevěděl. Věděla to síť, věděl to celý soud a věděl to mladý muž od vodního okruhu. Věděla to ona. Ilan seděl někde v Sedmé loděnici, bez řádku v koutku vědomí, a právně mu byl rozsudek doručen v devět čtyřicet. Ve chvíli, kdy ho síť vyvěsila na místo, kam on nedosáhne, protože se od té sítě veřejně odpojil. Fikce doručení. Učila o ní studenty. Byla elegantní a Naru nikdy nenapadlo, že je k smíchu.
+Ilan to nevěděl. Věděla to síť, věděl to celý soud a věděl to mladý muž od vodního okruhu. Věděla to ona. Ilan seděl někde v Sedmé loděnici, bez jediného řádku sítě, a právně mu byl rozsudek doručen v devět čtyřicet. Ve chvíli, kdy ho síť vyvěsila na místo, kam on nedosáhne, protože se od té sítě veřejně odpojil. Fikce doručení. Učila o ní studenty. Byla elegantní a Naru nikdy nenapadlo, že je ke smíchu.
 
 *
 
@@ -112,7 +112,7 @@ Dolní náměstí bylo největší otevřený prostor na Orse. Tři patra galeri
 
 Seděli na zemi. V řadách, ne úplně rovných, asi čtyři sta lidí. Skoro všichni mladí. Neseděli tak, jak sedí demonstranti, kteří čekají, až je někdo odnese. Seděli, jako sedí lidé, kteří někam dorazili. Někteří měli zavřené oči. Někteří se dívali kolem sebe, na galerie, na strop, jako by je viděli poprvé. Nikdo nemluvil. Všichni měli za pravým uchem stejný šedý čtvereček, tenký, velký jako nehet palce. Nara nevěděla, co ten čtvereček dělá. Věděla jen, že je to trestné. A všichni měli na levém zápěstí bílý provázek, uvázaný na uzel.
 
-![Dolní náměstí v Orse: stovky mladých lidí mlčky sedí v řadách, Nara se dívá z galerie](obrazky/01_namesti.webp)
+![Dolní náměstí na Orse: stovky mladých lidí mlčky sedí v řadách, Nara se dívá z galerie](obrazky/01_namesti.webp)
 
 Pořádková služba stála na okrajích a nedělala nic. Nahrávala. Nara to věděla, protože to věděla vždycky: zatýkat se bude později, podle záznamu.
 
@@ -152,7 +152,7 @@ Síť zaznamenávala všechno, co Nara viděla a slyšela, a uchovávala to, dok
 
 Teď to udělala, stojíc u okna nad obloukem Orsy, a hned toho litovala.
 
-Záznam byl přesný. Šedé dlaždice, galerie, ticho. Ilanova ramena. Jeho *Sedni si*. Volné místo na podlaze, které se v záznamu zdálo menší, než si ho pamatovala. Řada lidí v tmavém, jak se blíží. A pak se celý obraz posunul o kus doleva, k sloupu, plynule a bez zaváhání, a lidé v tmavém prošli tam, kde předtím stála.
+Záznam byl přesný. Šedé dlaždice, galerie, ticho. Ilanova ramena. Jeho *Sedni si*. Volné místo na podlaze, které se v záznamu zdálo menší, než si ho pamatovala. Řada lidí v tmavém, jak se blíží. A pak se celý obraz posunul o kus doleva, ke sloupu, plynule a bez zaváhání, a lidé v tmavém prošli tam, kde předtím stála.
 
 Záznam neukazoval její tvář. Neukazoval nic, co by se dalo nazvat rozhodnutím. Ukazoval jen, jak se svět posunul o krok doleva.
 
@@ -166,7 +166,7 @@ Ještě předevčírem si myslela, že má čas. Že písemné řízení se čty
 
 *
 
-Na jejím stole v kanceláři ležely tři věci, které tam ležely vždycky: deska s výtiskem ústavy, kterou nikdo neotvíral, šálek a kámen. Kámen byl šedý, hladký a velký jako vejce. Ilan ho přinesl ze školy, když mu bylo osm. Řekl, že je to kámen ze Země. Učitelka jim přinesla celou krabici a každé dítě si smělo jeden vzít. Nara věděla, že to není pravda. Žádný kámen ze Země na Orse nebyl, protože Zemi nikdo nikdy neviděl. Byla to drť z měsíčního lomu, obroušená v bubnu. Učitelka to dětem řekla jako pohádku, kterou si mají zapamatovat. Nara mu to tehdy nevyvrátila. Zdálo se jí to zbytečné.
+Na jejím stole v kanceláři ležely tři věci, které tam ležely vždycky: deska s výtiskem ústavy, kterou nikdo neotvíral, šálek a kámen. Kámen byl šedý, hladký a velký jako vejce. Ilan ho přinesl ze školy, když mu bylo osm. Řekl, že je to kámen ze Země. Učitelka jim přinesla celou krabici a každé dítě si smělo jeden vzít. Nara věděla, že to není pravda. Žádný kámen ze Země na Orse nebyl, protože se ze Země nikdo nikdy nevrátil. Byla to drť z měsíčního lomu, obroušená v bubnu. Učitelka to dětem řekla jako pohádku, kterou si mají zapamatovat. Nara mu to tehdy nevyvrátila. Zdálo se jí to zbytečné.
 
 Sedla si a vzala ho do ruky. Pak ho položila zpátky.
 
@@ -200,7 +200,7 @@ Pak otevřela záznam o transportu. Byl veřejný a krátký, jak už takové z�
 
 Šest tisíc dvanáct.
 
-O těch ostatních věděla. To byla první věc, kterou si teď musela přiznat, a přiznala si ji rychle, aby to měla za sebou. Hromadná řízení probíhala od jara, po celém prstenci. Nejdřív na Ketě, pak na dvou menších habitatech u vnějšího okraje, pak v Lumě. Nara je četla. Četla je tak, jak se čtou neštěstí cizích lidí, pozorně a s odstupem, kterému říkala profesní. Psala si k nim poznámky. Jednou o nich mluvila s Askem nad večeří a řekla, že precedens Terra je právní zkamenělina a že ho soudy oprašují jen proto, že je pohodlný. Asko se usmál a řekl, že zkameněliny jsou tvrdé. Pak mluvili o něčem jiném.
+O těch ostatních věděla. To byla první věc, kterou si teď musela přiznat, a přiznala si ji rychle, aby to měla za sebou. Hromadná řízení probíhala od jara, po celém prstenci. Nejdřív na Ketě, pak na dvou menších habitatech u vnějšího okraje, pak v Lumě. Nara je četla. Četla je tak, jak se čtou neštěstí cizích lidí, pozorně a s odstupem, kterému říkala profesní. Psala si k nim poznámky. Jednou o nich mluvila s Askem nad večeří a řekla, že precedent Terra je právní zkamenělina a že ho soudy oprašují jen proto, že je pohodlný. Asko se usmál a řekl, že zkameněliny jsou tvrdé. Pak mluvili o něčem jiném.
 
 Čtyři sta jedna z Orsy bylo poslední hromadné řízení. Proto teď. Proto čtyřicet šest dní. Transport čekal jen na ně.
 
@@ -214,7 +214,7 @@ Začala psát. První větu napsala bez přemýšlení, jak se píše věta, kte
 
 U slova *žádá* se zastavila.
 
-Viděla to celé. Viděla to tak, jak viděla jednání před jednáním, se všemi tahy. Žádost bude přijata. Ilan bude vyňat. Šest tisíc jedenáct lidí odletí 46. den ráno a Ilan zůstane. Precedens Terra zůstane, jak je. Za pět let ho nějaký soud vytáhne znovu, protože bude ležet po ruce, oprášený a vyzkoušený, a protože už ho jednou použili a nic se nestalo. Třetí transport. Ilan bude mít dvaadvacet a bude vědět, že ho matka vyňala. Bude to vědět každý den.
+Viděla to celé. Viděla to tak, jak viděla jednání před jednáním, se všemi tahy. Žádost bude přijata. Ilan bude vyňat. Šest tisíc jedenáct lidí odletí 46. den ráno a Ilan zůstane. Precedent Terra zůstane, jak je. Za pět let ho nějaký soud vytáhne znovu, protože bude ležet po ruce, oprášený a vyzkoušený, a protože už ho jednou použili a nic se nestalo. Třetí transport. Ilan bude mít dvaadvacet a bude vědět, že ho matka vyňala. Bude to vědět každý den.
 
 A nepřijme to. Viděla i tohle. Viděla ho, jak sedí na šedých dlaždicích a posouvá se, aby vedle něj vzniklo místo.
 

@@ -2,11 +2,11 @@
 
 Když ta žena odešla, Javor přinesl čaj a postavil ho na kraj stolu, daleko od matriky. Sael na něj nesáhla. Javor věděl, že nesáhne, a přinesl ho stejně, protože tak se to dělá. Pak se vrátil do kuchyně a zavřel za sebou dveře.
 
-Tlustá složka ležela na stole, kam ji ta žena položila. Sael ji neotevřela. Věděla, co v ní je. Bylo v ní všechno, co se o ní nikdo nedozví.
+Tlustá složka ležela na stole, kam ji ta žena položila. Sael ji neotevřela. Věděla, co v ní je. Bylo v ní všechno, co se svět dozví. O ní nic.
 
-Odsunula matriku. Uklidila štětec, misky, sklo. Pak vstala, odemkla trezor a začala vyndávat balíky.
+Odsunula matriku. Uklidila štětec, misky, sklo, vstala, odemkla trezor a začala vyndávat balíky.
 
-Jedenáct. Jeden po druhém, v hnědém papíru, svázané tkanicí, s visačkami jejím písmem. Kladla je na pracovní stůl vedle sebe, od nejstaršího k nejmladšímu, jak ležely v archivu na polici. Pod každý rozprostřela čisté plátno. Pak rozvázala tkanice.
+Jedenáct. Jeden po druhém, v hnědém papíru, svázané tkanicí, s visačkami jejím písmem. Kladla je na pracovní stůl vedle sebe, od nejstaršího k nejmladšímu, jak ležely v archivu na polici. Pod každý rozprostřela čisté plátno a rozvázala tkanice.
 
 Nikdy je neměla venku všechny najednou. V archivu ležely na polici a sundávala je po jednom, když bylo co zapsat nebo co najít. Kniha se nečte celá. Kniha se otvírá na místě, které je potřeba.
 
@@ -22,7 +22,7 @@ Jívina latinka, pomalá, aby ji přečetl i ten, kdo nezná ani jedno písmo. A
 
 *Mater eius: Margaretha, vidua Georgii Haupt, metallici, in valle Sancti Ioachimi.*
 
-A pod tím Svídin znak úřadu, poprvé. Řádek o matce i znak na kraji Jíva připsala až na podzim devadesát pět, když předávala pero, a Svída ho podepsala jako první zápis svého úřadu. Dlouhý tah dolů, v ohybu zdvojený.
+A pod tím Svídin znak úřadu, poprvé. Řádek o matce a znak na kraji připsala Jíva až na podzim devadesát pět, když předávala pero. Svídin znak pod nimi byl prvním zápisem jejího úřadu. Dlouhý tah dolů, v ohybu zdvojený.
 
 Sael otočila čtyřicet listů. Narození. Dorotina dcera, ptačím písmem, protože se narodila pod skálou, ne v lese. Jmenovala se Líska. Otec vysoký, z Javorova rodu, Sael ho znala jen z tohoto řádku. Pak dalších padesát let listů a smrt. *Dorota zemřela v zimě. Bylo jí sedmdesát pět. Denní, ale žila s námi. Pohřbena pod bukem nad roklí.* Jiná ruka, kterou Sael neznala jménem. Ta ruka napsala *denní, ale žila s námi*, a víc nic.
 
@@ -60,13 +60,13 @@ Svída. Zdvojený ohyb, poprvé pod Dorotou. Pak už nikdy. Svída se naučila d
 
 Další ruce, další svazky. Sael je otvírala a zavírala. Jedna ruka dělala znak se skvrnou, protože nikdy neotřela pero. Jedna ho dělala tak malý, že se dal přehlédnout.
 
-Rokyta. Široký, jistý, bez zaváhání. Šedesát let pod každým řádkem stejný.
+Rokyta. Široký, jistý, bez zaváhání. Šedesát let pod každým řádkem stejný. Stejně jistě psala i glosy ve složce mimo knihu, k cizím znakům z listů, které nikdo nečetl. Pod těmi znak úřadu nestál. Patřily archivu, ne Merin.
 
 A pak její. Poprvé v osmdesáti šesti, v ohybu zdvojený, jako u Svídy. Pak šedesát let rovný. Pak čtvrtého března, pod řádkem *Merin otevřela knihu před denní ženou*, rovný taky. Ruka nezaváhala. Sael tehdy nevěděla, jestli ji to má těšit.
 
 Teď to věděla.
 
-Rozložila ty listy vedle sebe, jak to šlo, otevřené svazky na plátnech, a dívala se na ten jeden znak v dvaceti rukou. Stejný tah, jiná ruka. Každá kreslila totéž. Žádná nekreslila totéž.
+Rozložila ty listy vedle sebe, jak to šlo, otevřené svazky na plátnech, a dívala se na ten jeden znak ve dvaceti rukou. Stejný tah, jiná ruka. Každá kreslila totéž. Žádná nekreslila totéž.
 
 ![Svazky rodové knihy rozložené na plátnech v dílně](obrazky/16_svazky.webp)
 
@@ -126,9 +126,9 @@ Rozložila protokol vedle Svídina zdvojeného znaku.
 
 A pak, protože už neměla co rozložit, vzala čistý list papíru a napsala na něj rukou dvě data. *3. 4.* a *12. 4.* Mezi ně devět čárek. Položila ho vedle protokolu.
 
-Dívala se na to všechno do tří do rána. Na dvacet rukou, jedenáct jmen, devět lží a devět dní.
+Dívala se na to všechno do tří hodin ráno. Na dvacet rukou, jedenáct jmen, devět lží a devět dní.
 
-Pak otevřela poslední svazek. Ten, který založila Rokyta v zimě po válce. Na poslední popsané stránce stál Václav, světlo ze čtrnáctého ledna, mnichovo *aliunde* a řádek ze čtvrtého března.
+Nakonec otevřela poslední svazek. Ten, který založila Rokyta v zimě po válce. Na poslední popsané stránce stál Václav, světlo ze čtrnáctého ledna, mnichovo *aliunde* a řádek ze čtvrtého března.
 
 Namočila pero.
 
@@ -164,7 +164,7 @@ Javor seděl v kuchyni, když v šest ráno vyšla z dílny. Neměl na stole nic
 
 „Ano.“
 
-„Ta jména nikdo nečetl nahlas. Ani Rokyta. Já jsem je slyšel poprvé.“ Javor se na ni podíval. Bylo mu sto šedesát let a v šedém ranním světle vypadal na všech sto šedesát. „Věděl jsem, že v knize jsou. Všichni jsme věděli. Neslyšel jsem je.“
+„Ta jména nikdo nečetl nahlas. Ani Rokyta. Já jsem je slyšel poprvé.“ Javor zvedl hlavu. Bylo mu sto šedesát let a v šedém ranním světle vypadal na všech sto šedesát. „Věděl jsem, že v knize jsou. Všichni jsme věděli. Neslyšel jsem je.“
 
 Sael si sedla naproti.
 
@@ -206,7 +206,7 @@ Nebyla tu nikdy ve dne. Chodila sem v noci, za soumraku, kdy se dalo stát za bu
 
 Ta žena klečela u vývěru se sondou v ruce. Vedle ní na kameni ležel batoh a druhý teploměr. Tadeáš stál dva kroky stranou, s rukama v kapsách, a pes ležel v trávě.
 
-Tadeáš ji uviděl první. Podíval se na ni a pak na tu ženu. Pak hvízdl na psa a odešel k lesu, bez slova, a nezastavil se, dokud nebyl mezi kmeny.
+Tadeáš ji uviděl první. Přejel očima z ní na tu ženu, hvízdl na psa a odešel k lesu, bez slova, a nezastavil se, dokud nebyl mezi kmeny.
 
 Vrbová vstala.
 
@@ -218,7 +218,7 @@ Ta žena se nepohnula.
 
 „Wehrle mi v kavárně v Karlových Varech řekl číslo listu. Třicet jedna. Dva řádky dopsané rukou. Ty řádky jsem psala já. To číslo nemohl znát nikdo, kdo ten list neměl v ruce.“ Sael mluvila rovně. Připravovala si to cestou a teď to říkala jinak, než si to připravila. „Večer jsem byla na klinice u lékaře, který má zálohu seznamu. Osmnáctého března tam byl Brandlův člověk. Pohl. S Brandlovým podpisem. Čtyřicet minut sám. Brandl mi pak do telefonu řekl, že vzal zálohu zálohy. Třicet rodin, nejvíc ohrožených. A že ji uložil u pana Wehrleho. Ve třech zemích.“
 
-Poslouchala. Nepsala.
+Ta žena poslouchala. Nepsala.
 
 „Pak jsem seděla v dílně a měla v telefonu čísla třiceti rodin,“ řekla Sael. „A otočila jsem ho displejem dolů. Rozhodla jsem, že nikomu nezavolám. Ani jim. Ani vám. Devět dní.“
 
@@ -230,7 +230,7 @@ Pára nad roklí stoupala rovně. Bylo bezvětří.
 
 *
 
-Ta žena se na ni dívala dlouho. Pak otevřela sešit. Byl nový, Sael si toho všimla, se svislou čarou narýsovanou propiskou podle pravítka. Psala. Sael viděla, kam jde ruka. Doleva.
+Ta žena dlouho nic neříkala, než otevřela sešit. Byl nový, Sael si toho všimla, se svislou čarou narýsovanou propiskou podle pravítka. Psala. Sael viděla, kam jde ruka. Doleva.
 
 Když dopsala, nezavřela ho.
 
@@ -286,9 +286,9 @@ Mlčeli dlouho.
 
 „To jsi věděla taky?“
 
-„Věděla jsem, které rodiny vzal. Ne které pustil.“
+„Věděla jsem, které rodiny vzal Brandl. Ne které z nich pustil Wehrle.“
 
-Lada se na ni dívala přes stůl. Sael si všimla, že nemá brýle na nose. Lada nosila brýle jen když opravdu četla.
+Lada se na ni dívala přes stůl. Sael si všimla, že nemá brýle na nose. Lada nosila brýle, jen když opravdu četla.
 
 „Ty jsi rozhodla za nás,“ řekla Lada. „Zase.“
 
@@ -328,7 +328,7 @@ Sael kývla.
 
 Sael se nadechla.
 
-„Kniha,“ řekla. „Archiv. Nechci ho dál držet sama. Chci udělat kopie a dát je do úschovy. Ne Úmluvě. Ne Wehrlovi. Čtyřem, z nichž žádný ji nesmí otevřít bez ostatních.“ Vyjmenovala je. Kancelář veřejné ochránkyně práv. Chebský archiv. Benediktova komunita za hřebenem. „A vy.“
+„Kniha,“ řekla. „Archiv. Nechci ho dál držet sama. Chci udělat kopie a dát je do úschovy. Ne Úmluvě. Ne Wehrlovi. Čtyřem, z nichž žádný je nesmí otevřít bez ostatních.“ Vyjmenovala je. Kancelář veřejné ochránkyně práv. Chebský archiv. Benediktova komunita za hřebenem. „A vy.“
 
 Ve světnici bylo ticho.
 
@@ -346,7 +346,7 @@ Lada se na ni dívala dlouho.
 
 „Ani já.“
 
-Lada pomalu kývla. Pak se podívala kolem stolu, na jedenáct párů rukou na desce.
+Lada pomalu kývla a přejela očima kolem stolu, po jedenácti párech rukou na desce.
 
 „Hlasujem,“ řekla.
 
@@ -384,9 +384,9 @@ Sael neřekla nic.
 
 Šindelářová vytáhla z regálu krabici a z krabice desky. Originál protokolu o stavu kodexu. Sael ho znala. Psala ho.
 
-„Zpevnění hřbetu,“ řekla Sael. „Dokončila jsem ho v červenci 2027. Pak jsem kodex dva a půl roku držela v trezoru. Kvůli mapě. Kvůli tomu, co je na ní. A každé čtvrtletí jsem vám do protokolu napsala *pokračuje*.“
+„Zpevnění hřbetu,“ řekla Sael. „Dokončila jsem ho v červenci 2027. Pak jsem kodex dva a půl roku držela v trezoru. Kvůli mapě. Kvůli tomu, co originál ukáže v bočním světle. A každé čtvrtletí jsem vám do protokolu napsala *pokračuje*.“
 
-Šindelářová se dívala do desek.
+Šindelářová sklopila oči do desek.
 
 „Devětkrát,“ řekla Sael. „Pod svým jménem.“
 
@@ -430,11 +430,11 @@ Psala dlouho. Rovným písmem, které nezaváhalo, protože jinak psát neuměla
 
 Pak se zastavila.
 
-Nad *A. Sálová* připsala, drobně, ještě jedno slovo. Šindelářová se podívala, co to je, a nezeptala se.
+Nad *A. Sálová* připsala, drobně, ještě jedno slovo. Šindelářová si toho všimla a nezeptala se.
 
 *Sael.*
 
-Šindelářová podepsala pod to svým jménem. Pak zavřela desky a dlouho na ně nic neříkala.
+Šindelářová podepsala pod to svým jménem, zavřela desky a dlouho nad nimi nic neříkala.
 
 „Víte,“ řekla nakonec, „já jsem v roce dvacet šest četla opravu jedné ženy z Brna. Chtěla jsem ji tenkrát dát studentům. Jako vzor. Pak jsem si řekla, že to je moc osobní.“ Cvakla propiskou. „Teď jich mám dvě.“
 
@@ -474,7 +474,7 @@ Pak seděla u stolu sama.
 
 Balíky ležely zase na polici v trezoru, svázané, s visačkami. Na stole jen lampa, čistý list a pero. A sešit s modrými deskami, otevřený na jedenácti jménech.
 
-Kniha se nedala zveřejnit. To věděla. Byli v ní živí, a ta žena měla pravdu, že je nesmí platit nikdo, kdo si to nevybral. Ale to, co udělali mrtví, nebyla kniha. To byly činy. A činy mohla říct jen ona, protože jen ona je četla v jejich ruce.
+Kniha se nedala zveřejnit. To věděla. Byli v ní živí, a ta žena měla pravdu, že to nesmí zaplatit nikdo, kdo si to nevybral. Ale to, co udělali mrtví, nebyla kniha. To byly činy. A činy mohla říct jen ona, protože jen ona je četla v jejich ruce.
 
 Ne ta žena. Ne fórum. Ne pan Wehrle, laskavě, přes šálek čaje.
 
@@ -508,7 +508,7 @@ Věděla, že pro Dorotu. Nevěděla nic dalšího. Stačilo to.
 
 Vzala telefon.
 
-V seznamu stálo *H. Vrbová*. Sael se na to jméno dívala a pak napsala zprávu. Krátkou, jak psala vždycky.
+V seznamu stálo *H. Vrbová*. Sael nad tím jménem chvíli seděla a pak napsala zprávu. Krátkou, jak psala vždycky.
 
 *Hano, vezmete mě k paní Hronkové? Jestli bude chtít ona. S.*
 

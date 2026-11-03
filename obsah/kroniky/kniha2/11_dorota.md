@@ -10,7 +10,7 @@ Ještě ne, řekla si. Ale brzo.
 
 *
 
-Odpoledne šla za Tobiášem. Nesla mu chléb a kus uzeného od řeznice Kunigundy. Dala jí ho zadarmo, protože jí Ilona v zimě zašila syna, a přitom řekla, že by nikomu neříkala, že je to pro toho kluka pod schodištěm.
+Odpoledne šla za Tobiášem. Nesla mu chléb a kus uzeného od řeznice Kunigundy. Kunigunda ho dala zadarmo, protože jí Ilona v zimě zašila syna, a přitom řekla, že by nikomu neříkala, že je to pro toho kluka pod schodištěm.
 
 Tobiáš jedl a díval se na šátek.
 
@@ -44,7 +44,7 @@ Ilona nic neřekla.
 
 „Nevím.“
 
-Tobiáš se na ni díval a v jeho tváři nebyla zlost. To bylo horší. Byla v ní ta pozornost, kterou ho učila a kterou teď obracel proti ní, a ještě něco, co tam dřív nebylo. Smutek, jaký mívají staří lidé, když zjistí, že je nechal stát venku někdo, komu věřili.
+V Tobiášově tváři nebyla zlost. To bylo horší. Byla v ní ta pozornost, kterou ho učila a kterou teď obracel proti ní, a ještě něco, co tam dřív nebylo. Smutek, jaký mívají staří lidé, když zjistí, že je nechal stát venku někdo, komu věřili.
 
 „Já bych to nikomu neřekl,“ řekl. „Nikomu. Kdybyste mi řekla, kdo to byl.“
 
@@ -154,7 +154,7 @@ Máti a máma. Ilona to slyšela, ten rozdíl o jedno písmeno, a věděla, že 
 
 „Postavila jsem ho rovně. Aby se borůvky nevysypaly. Byly pro mámu.“
 
-Ilona mlčela.
+Ilona sevřela ruce v klíně.
 
 „Pak jsem chtěla zpátky,“ řekla Dorota. „Večer. Když se setmělo. Brečela jsem. Celou zimu jsem brečela. Chtěla jsem domů a oni mě nepustili.“ Řekla to obyčejně, bez obvinění, jako se říká, že v zimě byl sníh. „Dva roky mě nepustili ke kraji lesa. Ani sem, ke studánce. Vždycky se mnou někdo byl. Ve dne i v noci. Máti spala vedle mě a držela mě za ruku, abych neodešla, když usnu.“ Podívala se přes rameno na ženu za sebou. „Pak jsem přestala chtít.“
 
@@ -162,7 +162,7 @@ Ilona mlčela.
 
 Dorota se zamyslela. Dlouho. Jako by to sama nikdy nevěděla a teprve teď se to musela naučit říct.
 
-„Protože tady zpívám,“ řekla. „Tady všichni zpívají. A nikdo mi neřekne, že holka nesmí. A protože když jsem měla tu zimu horečku, tu velkou, druhou zimu, máti nespala šest nocí. Šest. Merin to zapsala.“ Podívala se na Merin pod bukem. „A protože…“ Zarazila se. Pak to řekla přece, tišeji: „Protože tady jsem jediná. Takových, jako jsem já, mají málo. Všichni se o mě starají, jako by… jako bych byla něco, co se nesmí rozbít. Doma jsem byla třetí holka a za mnou byli dva kluci, kteří umřeli, a máma neměla čas.“
+„Protože tady zpívám,“ řekla. „Tady všichni zpívají. A nikdo mi neřekne, že holka nesmí. A protože když jsem měla tu zimu horečku, tu velkou, druhou zimu, máti nespala šest nocí. Šest. Merin to zapsala. A protože…“ Zarazila se. Pak to řekla přece, tišeji: „Protože tady jsem jediná. Takových, jako jsem já, mají málo. Všichni se o mě starají, jako by… jako bych byla něco, co se nesmí rozbít. Doma jsem byla třetí holka a za mnou byli dva kluci, kteří umřeli, a máma neměla čas.“
 
 Ilona se podívala na Merin. Merin se nepohnula.
 
@@ -170,7 +170,7 @@ Ilona se podívala na Merin. Merin se nepohnula.
 
 „Až budu mít děti,“ řekla Dorota, jako by Iloně četla myšlenky, „budou v té knize. Celé. I s kroužkem.“ V hlase jí přitom zazněla radost, upřímná, hloupá a krásná, jakou mají holky z horního konce, když mluví o svatbě.
 
-Ilona se na ni dívala a nemohla nic říct.
+Ilona nemohla nic říct.
 
 *
 
@@ -232,7 +232,7 @@ Ilona se dívala do tmy, kam odešly.
 
 „Víc ne.“
 
-Merin se na ni dlouho dívala. Pak kývla, jednou, a odešla za těmi dvěma. Ilona zůstala sama u studánky, kde nebylo plátno ani chléb, a pochopila, proč tam dnes nic není. Dorota je vzala dřív. Ráno nebo v poledne, aby tu Ilona neviděla složené plátno. Aby Ilona nemusela mít tu věc před očima, když se bude rozhodovat.
+Merin nakonec kývla, jednou, a odešla za těmi dvěma. Ilona zůstala sama u studánky, kde nebylo plátno ani chléb, a pochopila, proč tam dnes nic není. Dorota je vzala dřív. Ráno nebo v poledne, aby tu Ilona neviděla složené plátno. Aby Ilona nemusela mít tu věc před očima, když se bude rozhodovat.
 
 Nebo aby ho měla, protože ho vzala ona.
 
@@ -248,7 +248,7 @@ Bolelo to. Pak bolelo míň, protože si ruka zvykla, nebo protože Ilona přest
 
 *Tato slova řekla přede mnou Markéta, vdova po Jörgovi Hauptovi, havíři, bydlící na horním konci za koželuhem, v pátek 26. května léta 1595. Já jsem je zapsala, jak je řekla, a nic jsem k nim nepřidala.*
 
-Opsala to celé, slovo po slově, z levého listu na pravý. Ani se u toho nezastavila. Byla to pravda.
+Opsala to celé, slovo po slově, z levého listu na pravý. Ani se u toho nezastavila.
 
 Pak Jörg a provaz u rumpálu a uzel. *To sem nepatří.* – *Patří.* Opsala to.
 
@@ -290,7 +290,7 @@ Opsala to. Celé. Protože Markéta to řekla a chtěla, aby to stálo velkým. 
 
 Opsala to. Pod to už nic.
 
-Seděla nad tím. Pravá ruka jí tepala. Na levém listu byla výpověď celá. Na pravém, novém, byla výpověď, v níž nebylo nic, co by Markéta neřekla. Ani jedno slovo, ani jedna čárka. *Nic jsem k nim nepřidala.* Byla to pravda. Opsala tu větu na začátku, a byla to pravda.
+Seděla nad tím. Pravá ruka jí tepala. Na levém listu byla výpověď celá. Na pravém, novém, byla výpověď, v níž nebylo nic, co by Markéta neřekla. Ani jedno slovo, ani jedna čárka. *Nic jsem k nim nepřidala.* Opsala tu větu na začátku, a byla to pravda.
 
 Jen to nebyla Markétina výpověď. Byla to Markétina slova, jak by je řekla, kdyby nikdy nebyla u studánky a kdyby Bára Seidlová nic neviděla.
 
@@ -300,7 +300,7 @@ Konec nenapsala. Nechala to stát, s prázdným místem pod posledním řádkem,
 
 Ve čtvrtek odpoledne šla za Markétou.
 
-Markéta bydlela na horním konci za koželuhem v domku, který kdysi stavěli pro havíře s rodinou. Teď v něm bydlela sama, s jednou kozou za domem, se dvěma truhlami a s lavicí u kamen. Byla doma. Přišla z haldy, ruce měla šedé od rudného prachu až po lokty a myla si je ve vědru u dveří, když Ilona vešla.
+Markéta bydlela na horním konci za koželuhem v domku, který kdysi stavěli pro havíře s rodinou. Teď v něm bydlela sama, se dvěma truhlami a s lavicí u kamen. Byla doma. Přišla z haldy, ruce měla šedé od rudného prachu až po lokty a myla si je ve vědru u dveří, když Ilona vešla.
 
 „Paní ranhojičko.“ Podívala se na šátek. „Co jste si udělala?“
 
@@ -314,7 +314,7 @@ Markéta se na ni dívala tím suchým šedomodrým pohledem a neřekla nic. Ut�
 
 Markéta stála s rukama v zástěře.
 
-Nepohnula se. Ani obličejem. Ilona čekala, že se jí něco stane s obličejem, jako se stalo Dorotě, ale nestalo se nic. Markéta jen stála a dívala se na ni, a pak se jí začala třást brada. Jen brada. Jako u malého dítěte, které se rozhoduje, jestli bude plakat.
+Nepohnula se. Ani obličejem. Ilona čekala, že se jí něco stane s obličejem, jako se stalo Dorotě, ale nestalo se nic. Markéta jen stála, a pak se jí začala třást brada. Jen brada. Jako u malého dítěte, které se rozhoduje, jestli bude plakat.
 
 „Viděla jste ji,“ řekla.
 
@@ -344,7 +344,7 @@ Markéta se sesula na lavici u kamen.
 
 Teď plakala. Bez hlasu, s otevřenými ústy, s rukama na kolenou, a slzy jí tekly po tvářích do rudného prachu, který jí zůstal na krku, a dělaly v něm šedé cestičky.
 
-Ilona stála u dveří a nechala ji. Věděla, že by si k ní měla sednout, jako si sedala k rodičkám, a nesedla si. Měla v kapse to, co Dorota řekla. *Že ten chleba jím.* Šest slov. A Markéta by věděla, kde. Hned. Ještě dnes by šla nahoru, v neděli by tam seděla od rána do noci, a v pondělí by tam seděla zas, a jednou by se Dorota nedokázala schovat za buk.
+Ilona stála u dveří a nechala ji. Věděla, že by si k ní měla sednout, jako si sedala k rodičkám, a nesedla si. Měla v kapse to, co Dorota řekla. *Že ten chleba jím.* Čtyři slova. A Markéta by věděla, kde. Hned. Ještě dnes by šla nahoru, v neděli by tam seděla od rána do noci, a v pondělí by tam seděla zas, a jednou by se Dorota nedokázala schovat za buk.
 
 Ilona ta slova nechala v kapse.
 
@@ -416,7 +416,7 @@ Ilona čekala.
 
 „Ne.“
 
-Markéta se na ni dívala. Pak se podívala na list v Ilonině ruce, na rovné řádky, které nedokázala přečíst, a Ilona pochopila, že se Markéta na ten list dívá tak, jako se Matz Lindner díval na pečeť, kterou mu Ilona přinesla od perkmistra. Jako na věc, která rozhoduje o jejím životě a do které nevidí.
+Markéta se na ni dívala. Pak se podívala na list v Ilonině ruce, na rovné řádky, které nedokázala přečíst, a Ilona pochopila, že se Markéta na ten list dívá tak, jako se havíř dívá na listinu s pečetí, kterou mu někdo čte nahlas. Jako na věc, která rozhoduje o jejím životě a do které nevidí.
 
 „To jste mi vzala,“ řekla Markéta.
 
@@ -452,7 +452,7 @@ Položila list na Markétin stůl, na desku drsnou od krájení chleba, a vyndal
 
 Ruka se pohnula. *V.* Ilona ji zastavila.
 
-Zvedla pero. Dívala se na to *V*, osamělé, na začátku řádku. Venku za domem zamečela koza. Markéta seděla na lavici a dívala se na ni a nic neříkala, a Ilona slyšela, jak dýchá.
+Zvedla pero. Dívala se na to *V*, osamělé, na začátku řádku. Venku za domem zamečela sousedova koza. Markéta seděla na lavici a nic neříkala, a Ilona slyšela, jak dýchá.
 
 Markéta řekla víc. Řekla studánku a Báru a paní vysokou jako dveře a chleba v plátně. Řekla to, a Ilona to slyšela, a Ilona to zapsala, a Markéta to dvakrát opravila. Nebyla pravda, že víc neřekla. To byla jediná věta v celé výpovědi, která by nebyla pravda.
 
@@ -478,7 +478,7 @@ Ilona jí to přečetla.
 
 „Protože jste řekla víc. A já to nezapsala. To má být vidět.“
 
-Markéta se na ni dívala dlouho, a pak vstala a přišla ke stolu, a vzala od ní pero, jak se bere od kněze lžíce, a udělala na konec listu křížek. Velký, nakřivo, s inkoustem, který se rozpil.
+Markéta dlouho seděla, a pak vstala a přišla ke stolu, a vzala od ní pero, jak se bere kalich od faráře, a udělala na konec listu křížek. Velký, nakřivo, s inkoustem, který se rozpil.
 
 „Tak ať to tam stojí,“ řekla. „Ať to každý vidí. Že jste mi něco vzala.“
 
@@ -504,11 +504,11 @@ Ilona list zvedla proti svíčce. Odvar stekl z rohu na stůl. Na papíře zůst
 
 Usušila to pískem. Položila to na okno.
 
-Měla by to přepsat. Byl to list pro soud, a list pro soud má být čistý. Měla by vzít další papír, horší, saský, a opsat to znovu, celé, s vynecháním na stejných místech, a pak jít znovu za Markétou a přečíst jí to znovu a znovu jí podat pero.
+Měla by to přepsat. Byl to list pro soud, a list pro soud má být čistý. Měla by vzít další papír, horší, z ostrovského mlýna, a opsat to znovu, celé, s vynecháním na stejných místech, a pak jít znovu za Markétou a přečíst jí to znovu a znovu jí podat pero.
 
 Dívala se na skvrnu. Na řádek o kousek níž. Na velký křížek, rozpitý.
 
-Nechtěla ji psát potřetí. Nechtěla to Markétě číst podruhé. Nechtěla se podruhé dívat, jak Markéta bere pero jako lžíci od kněze.
+Nechtěla ji psát potřetí. Nechtěla to Markétě číst podruhé. Nechtěla se podruhé dívat, jak Markéta bere pero jako kalich od faráře.
 
 Nechala to tak.
 

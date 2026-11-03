@@ -16,7 +16,7 @@ Hana ho otevře.
 
 Žádný pozdrav. Žádné oslovení. Kalina nikdy nezačíná pozdravem, ani v březnu na mýtině, když poprvé otevřel bednu s přístroji a řekl *rušení se nezaklíná, měří se*.
 
-*Zdroj tam pořád je. Od března jsem ho zachytil ještě čtyřikrát, vždycky na hranici šumu. Mezi srpnovým a zářijovým měřením se poloha nepatrně posunula. Posun je menší než chyba jednoho měření, ale u všech čtyř jde stejným směrem. Pravděpodobně systematická chyba. Hledám ji. Sleduju dál.*
+*Zdroj tam pořád je. Od března jsem ho zachytil ještě čtyřikrát, vždycky na hranici šumu. Poloha se od měření k měření nepatrně posouvá. Posun je menší než chyba jednoho měření, ale u všech čtyř jde stejným směrem. Zpětně jsem ho našel i v archivních datech evropské sítě, nejstarší zachycení je z října 2025. Pravděpodobně systematická chyba. Hledám ji. Sleduju dál.*
 
 *T. K.*
 
@@ -34,7 +34,7 @@ Odepíše krátce.
 
 *Díky. Dejte vědět, až ji najdete. Nebo až zjistíte, že tam není. H.*
 
-Pak se podívá na tu poslední větu a nechá ji tam. Ví, co znamená. Kalina to bude vědět taky.
+Podívá se na tu poslední větu a nechá ji tam. Ví, co znamená. Kalina to bude vědět taky.
 
 *
 
@@ -54,7 +54,7 @@ Ze složky vytáhne sken. Ten, který jí Šindelářová poslala v sobotu jedna
 
 Pod kresbou ta věta. *Hoc signum non est naturae.*
 
-Položí je vedle sebe. Fotku vpravo, sken vlevo. Pak je prohodí, protože kost je starší.
+Položí je vedle sebe. Fotku vlevo, sken vpravo. Pak je prohodí: kresba je starší záznam.
 
 Dlouho se dívá.
 
@@ -76,7 +76,7 @@ Svislá čára. Bez pravítka. Na konci se stočí doleva, jako vždycky, když 
 
 Vlevo píše, co je doloženo. Pomalu, každou položku s tím, odkud ji má.
 
-*Předmět (Sak Ts'ono'ot): délka 460 ± 1 mm, Ø 110,0 mm, hmotnost 9,11 kg (H. V., 21. 3.; opakováno M. C. a expertem prokuratury, 28. 3. a 7. 4.).*
+*Předmět (Sak Ts'ono'ot): délka 460 ± 1 mm, Ø 110,0 mm (H. V., 21. 3.; opakováno M. C. a expertem prokuratury, 28. 3. a 7. 4.), hmotnost 9,11 kg (H. V., 21. 3.), 9,10 kg (expert prokuratury, 7. 4.).*
 
 *Materiál: keramicko-kovový kompozit, mikrostruktura nezařazená (3 laboratoře, 8/2026). Izotopy pozemské. Uvnitř periodicky vrstvené jádro (neutronová tomografie, CH). Neotevřen.*
 
@@ -88,11 +88,11 @@ Vlevo píše, co je doloženo. Pomalu, každou položku s tím, odkud ji má.
 
 *Kresby v knize (kap. 7): 9 padajících světel, oblé domy v řadách. „Según los ancianos.“ Bez jmen.*
 
-Přestane psát. Podívá se na tu stránku. Je celá vlevo. Čísla, zdroje, nejistoty. Všechno, co se dá zkontrolovat, kým se dá zkontrolovat a s jakou chybou. Kdyby ji teď někdo otevřel za třicet let v nějaké krabici, mohl by podle ní jet do Méridy a do Chebu a ověřit si každý řádek.
+Přestane psát. Stránka je celá vlevo. Čísla, zdroje, nejistoty. Všechno, co se dá zkontrolovat, kým se dá zkontrolovat a s jakou chybou. Kdyby ji teď někdo otevřel za třicet let v nějaké krabici, mohl by podle ní jet do Méridy a do Chebu a ověřit si každý řádek.
 
 Je to dobrá stránka. Nejlepší, jakou za ten rok napsala.
 
-Pak se podívá doprava.
+Podívá se doprava.
 
 Vpravo je prázdno. Bílý linkovaný papír od čáry k okraji.
 
@@ -100,11 +100,11 @@ Hana vezme Anayovu knihu a otevře ji na sedmé kapitole. Kniha se tam otevře s
 
 *La piedra que cayó del cielo.*
 
-Na pravé stránce kresba tuší. Černé nebe, tečky hvězd. Devět světel padá šikmo v řadě k zakřivenému obzoru, každé se stopou, a poslední je menší a trochu pozadu, jako by se opozdilo. Hana na tu kresbu tenkrát v březnu u Walta koukala a něco se v ní zastavilo. Tvář na ulici v cizím městě. Pak Walt promluvil a tvář se otočila a byla cizí.
+Na pravé stránce kresba tuší. Černé nebe, tečky hvězd. Devět světel padá šikmo v řadě k zakřivenému obzoru, každé se stopou, a poslední je menší a trochu pozadu, jako by se opozdilo. Hana na ni tenkrát v březnu u Walta koukala, pak obrátila list k oblým domům a něco se v ní zachytilo. Tvář na ulici v cizím městě. Pak Walt promluvil a tvář se otočila a byla cizí.
 
-Zastaví se to znovu. Hana tomu nechá chvíli.
+Zachytí se to znovu. Hana tomu nechá chvíli.
 
-Neví, co to je. Neví, odkud to zná, jestli to vůbec zná. Ví jen, že v sedmdesátých letech v Méridě nakreslil amatér bez pramenů devět světel a podepsal je *podle starců*, které nikdo nikdy neviděl. A že Walt, který přečetl všechno, co se o cenotech kdy napsalo, i to špatné, o Anayovi neví nic. Kdo to byl. Kde vzal ty kresby. Proč nebyly osm nebo deset, nebo dvanáct, jak by si to přál každý, kdo vymýšlí legendy.
+Neví, co to je. Neví, odkud to zná, jestli to vůbec zná. Ví jen, že v sedmdesátých letech v Méridě nakreslil amatér bez pramenů devět světel a podepsal je *podle starců*, které nikdo nikdy neviděl. A že Walt, který přečetl všechno, co se o cenotech kdy napsalo, i to špatné, o Anayovi neví nic. Kdo to byl. Kde vzal ty kresby. Proč jich nebylo osm nebo deset nebo dvanáct, jak by si to přál každý, kdo vymýšlí legendy.
 
 Hana nasadí pero. Doprava napíše:
 
@@ -114,7 +114,7 @@ A pod to, po chvíli, druhou otázku. Tu, kterou si v březnu u Walta položila 
 
 *Proč devět?*
 
-Dívá se na obě otázky. Nejsou to hypotézy. Nejsou to dohady. Jsou to otázky, na které se dá najít odpověď v archivech, v Méridě, v matrikách, v tiskárnách sedmdesátých let. Anaya byl skutečný člověk. Kniha byla vytištěná. Někde je účet za tisk, adresa, příbuzný, soused.
+Nejsou to hypotézy. Nejsou to dohady. Jsou to otázky, na které se dá najít odpověď v archivech, v Méridě, v matrikách, v tiskárnách sedmdesátých let. Anaya byl skutečný člověk. Kniha byla vytištěná. Někde je účet za tisk, adresa, příbuzný, soused.
 
 A otázka devíti je stejná jako každá jiná otázka o čísle. Číslo má zdroj. Někdo ho napsal jako první.
 
@@ -122,7 +122,7 @@ Nechá to tam.
 
 *
 
-Pak vezme telefon a otevře e-mail.
+Vezme telefon a otevře e-mail.
 
 Adresu má v kontaktech od loňského ledna. Šindelářová. Archiv v Chebu. Poslední zprávu od ní dostala v březnu, se skenem a s větou o sobotě. Od té doby nic. Šindelářová noviny nečte, nebo je čte a mlčí. Obojí by k ní sedělo.
 
@@ -140,7 +140,7 @@ Hana píše dlouho. Pak to smaže a napíše kratší verzi.
 
 *Hana Vrbová*
 
-Podívá se na podpis. Bez titulu. Šindelářová ví, kdo je.
+Bez titulu. Šindelářová ví, kdo je.
 
 Odešle.
 
@@ -154,7 +154,7 @@ Hana zhasne v kuchyni a chvíli stojí ve tmě.
 
 Venku přestalo pršet. Okno je mokré a proti pouliční lampě po něm stékají poslední kapky a nechávají za sebou stopy jako čáry na mapě. Řeky, které tečou dolů, protože jinam téct nemůžou.
 
-Na stole leží ve tmě dvě kresby, sešit a kniha. A vedle nich, bílý a lehký, kamínek sascabu z výplachu vrtu, šestnáct metrů pod polem pana Chana, kde teď rostou dýně.
+Na stole leží ve tmě dvě kresby, sešit a kniha. A vedle nich, bílý a lehký, kamínek sascabu z výplachu vrtu na poli pana Chana, kde teď rostou dýně.
 
 Radiátor tiká.
 

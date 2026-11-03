@@ -2,21 +2,21 @@
 
 Dvacátého šestého dne od sněhu klepal Haro do skály.
 
-Eren ho slyšel dřív, než ho uviděl. Šel ráno k horní tůni, jako každé ráno, podíval se do vody a k zálivu pod převisem, jestli se pěna pořád stáčí do štěrbiny. Stáčela se. Pak se otočil a ten zvuk tam byl. Kámen o kámen. Ne pravidelně jako u starého muže dole, který dělal misku. Tvrdě a nahodile, tady a pak o kus dál.
+Eren ho slyšel dřív, než ho uviděl. Šel ráno k horní tůni, jako každé ráno, podíval se do vody a k zálivu pod převisem, jestli se pěna pořád stáčí do štěrbiny. Stáčela se. Když se otočil, ten zvuk tam byl. Kámen o kámen. Ne pravidelně jako u starého muže dole, který dělal misku. Tvrdě a nahodile, tady a pak o kus dál.
 
-Haro stál pod terasou, tam, kde se skála kotle zvedala k ústí jeskyně, a v ruce měl kámen velký jako pěst. Uhodil do stěny. Přiložil k ní ucho. Popošel o dva kroky a uhodil znovu. Svit šel za ním a dělal na skálu uhlem čárky. Kus za nimi stál Kaj s rukama v podpaží a díval se do země.
+Haro stál pod terasou, tam, kde se skála kotle zvedala k ústí jeskyně, a v ruce měl kámen velký jako pěst. Uhodil do stěny. Přiložil k ní ucho. Popošel o dva kroky a uhodil znovu. Svit šel za ním a dělal na skálu uhlem čárky. Kus za nimi stál Kaj s rukama v podpaží a očima v zemi.
 
 Na terase stál Ikku s oštěpem. Díval se dolů na ně. Tal seděla u ohně a nedívala se nikam.
 
-Eren šel k nim. Nevěděl, co řekne. Když došel blíž, Haro se otočil a podíval se na něj tak, jak se díval na všechno: zpříma a bez zájmu.
+Eren šel k nim. Když došel blíž, Haro se otočil a změřil si ho tak, jak si měřil všechno: zpříma a bez zájmu.
 
 „Hledáme dřevo,“ řekl Haro.
 
 Svit se zasmál. Kaj ne.
 
-Eren se díval na čárky na skále. Byly všude stejné. Haro klepal všude stejně a skála všude stejně odpovídala, tupě, plně, jako kámen. Takhle se to nehledá, pomyslel si. A hned se lekl, že si to pomyslel.
+Čárky na skále byly všude stejné. Haro klepal všude stejně a skála všude stejně odpovídala, tupě, plně, jako kámen. Takhle se to nehledá, pomyslel si Eren. A hned se lekl, že si to pomyslel.
 
-Haro uhodil do skály ještě jednou, pro něj, a šel dál podél stěny. Kaj šel za nimi. Na kraji kotle se ohlédl. Na okamžik, přes rameno. Pak zmizel za balvany.
+Haro uhodil do skály ještě jednou, pro něj, a šel dál podél stěny. Kaj šel za nimi. Na kraji kotle se ohlédl. Na okamžik, přes rameno, a zmizel za balvany.
 
 *
 
@@ -54,7 +54,7 @@ Jenže to nevěděl jistě. Věděl jen, jak to vypadá zevnitř. Hlínu velkou 
 
 Kdo by věděl, jak se hledá únik.
 
-Ležel a díval se do tmy a viděl chodbu v habitatu, nejzazší úsek čtvrtého prstence, kde stěny nikdo nenatíral, protože tam nikdo nechodil. Únik se tam nehledal klepáním. Hledal se rukou. Na studeném potrubí se srážela voda všude kromě jednoho místa. Tam, kde unikalo teplo, zůstalo potrubí suché. Stačilo jít pomalu a dívat se, kde je jinak.
+Ležel ve tmě a viděl chodbu v habitatu, nejzazší úsek čtvrtého prstence, kde stěny nikdo nenatíral, protože tam nikdo nechodil. Únik se tam nehledal klepáním. Hledal se rukou. Na studeném potrubí se srážela voda všude kromě jednoho místa. Tam, kde unikalo teplo, zůstalo potrubí suché. Stačilo jít pomalu a dívat se, kde je jinak.
 
 Ráno bude mráz. Bude jinovatka.
 
@@ -64,7 +64,7 @@ Vstal ještě za tmy.
 
 Sešel suť pod terasou a šel podél potoka, po jeho proudu, kolem dolní tůně a dál, tam, kde se skála pod jeskyní stáčela až k vodě a kotel se zužoval do soutěsky. Měsíc nebyl. Hvězdy byly ostré a nad pramenem stála pára, šedá ve tmě. Voda v potoce byla jediná věc, která se hýbala. Uprostřed tekla černě a kouřila, u kraje stál led.
 
-Šel pomalu. Počítal kroky. Nevěděl, k čemu by mu tady byly, venku, kde nebylo od čeho počítat. Počítal je stejně.
+Šel pomalu. Počítal kroky, i když tady venku nebylo od čeho počítat.
 
 Pak začalo svítat.
 
@@ -110,7 +110,7 @@ Kdo by stál tady, pod tímhle žebrem, ten by mohl rozhodnout, co z toho. Nemus
 
 *Nikdo nemusí umřít. Uvidí nás a odejdou.*
 
-Eren se díval na tmavou skvrnu a počítal.
+Eren seděl nad tmavou skvrnou a počítal.
 
 Ne vodu. Na vodu neměl čísla a nechtěl je mít. Počítal lidi. Devadesát tři dole, u nádrží. Talini lidé, pětadvacet, třicet, kteří přes zimu spí ve vnější síni jen proto, že s těmi dole mají starou dohodu, a ta dohoda stojí na vodě. Dvanáct na kamenech u ústí. A kotel. Tři sta deset. Patnáct ze druhého, méně jeden. Všichni pili z teplé vody. Všichni se u ní myli, prali, ohřívali si u ní ruce. Na všech těch číslech byla jedna věc stejná.
 
@@ -146,15 +146,15 @@ Do kotle se nevrátil. Šel podél potoka dál dolů, kolem jam pod zatáčkou, 
 
 Řekl si to cestou dvakrát. Byl tu mráz, jaký tu ještě nebyl, a článek ležel pod převisem v hlíně. Články nesnášely mráz. To věděl. To nebyla síť, to věděl z dílny, z výpadků na nevytápěném patře, kde se články vybíjely samy, bez práce, jen tím, že byla zima. Musel se podívat. Musel vědět, kolik v něm zbylo. Bylo to rozumné.
 
-Pod převisem odvalil plochý kámen. Odhrnul suť a hlínu, zmrzlou na povrchu, pod ním sypkou. Vytáhl uzel z plachty a rozbalil ho.
+Pod převisem odvalil plochý kámen. Odhrnul suť a hlínu, zmrzlou na povrchu, pod ním sypkou. Strčil ruku do pukliny až po rameno, nahmatal uzel z plachty, vytáhl ho a rozbalil.
 
-Článek byl studený tak, že ho pálil do dlaní. Eren ho strčil pod bundu, na břicho, a zalapal po dechu, jak ho studil. Držel ho tam, dokud kov nepřestal pálit. Pak ho vytáhl a podíval se.
+Článek byl chladný. Ne zmrzlý, tak hluboko mráz nedosáhl, ale chladnější, než by Eren chtěl. Strčil si ho pod bundu, na břicho, a držel ho tam, dokud kov nezteplal, a teprve potom ho vytáhl a podíval se.
 
 Rysky se rozsvítily. Jedna stála. Druhá blikala, jako blikala od sedmého. Pomalu, slabě.
 
 Pořád tam byl.
 
-Eren se na to díval a cítil úlevu, a ta úleva ho vyděsila víc než mráz. Měl článek zase zabalit a zasypat. Nebo ho vzít někam do tepla. To by bylo rozumné. Místo toho klečel pod převisem a držel ho v obou rukou jako něco živého.
+Eren cítil úlevu, a ta úleva ho vyděsila víc než mráz. Měl článek zase zabalit a zasypat. Nebo ho vzít někam do tepla. To by bylo rozumné. Místo toho klečel pod převisem a držel ho v obou rukou jako něco živého.
 
 Zabalil ho. Nezasypal. Zastrčil ho pod bundu a šel nahoru.
 
@@ -222,15 +222,15 @@ Znal ho.
 
 Tio hlad neměla. Tio spala v teple. A on to udělal stejně.
 
-Tryska vychladla. Pomalu, z rudé do tmavé, z tmavé do šedé. Eren ji položil na kámen, ne do trávy. Vytáhl háček z kontaktů. Zámek bliknul rudě a zhasl. Vysunul článek z pouzdra a podíval se na rysky.
+Tryska vychladla. Pomalu, z rudé do tmavé, z tmavé do šedé. Eren ji položil na kámen, ne do trávy. Vytáhl háček z kontaktů. Zámek bliknul rudě a zhasl. Vysunul článek z pouzdra a zkontroloval rysky.
 
 Jedna stála. Druhá blikala. Rychleji než předtím. Kratčeji.
 
-Kolik to stálo, nevěděl. Na tohle neměl čísla. Věděl jen, že je to pryč a že se to nevrátí, ani tady, ani nikde, kam dojdou. Ten krátký nádech bílého světla byl vzatý z toho mála, co na této planetě zbylo, a za něj ve skále zůstala rýha dlouhá jako prst.
+Kolik to stálo, nevěděl. Na tohle neměl čísla. Věděl jen, že je to pryč a že se to nevrátí. Tady ani nikde, kam dojdou. Ten krátký nádech bílého světla byl vzatý z toho mála, co na této planetě zbylo, a za něj ve skále zůstala rýha dlouhá jako prst.
 
 Zvedl se. Nohy měl ztuhlé.
 
-U kraje potoka, kde tekla teplá voda a led tam nestál, byla hlína měkká. Šedá a lepkavá. Nabral ji do hrsti. Byla teplá od vody. Došel s ní k žebru a vtlačil ji do rýhy. Uhladil ji palcem. Pak nabral další a uhladil ji znovu, dokud rýha nebyla plná a hlína v ní nebyla rovná se skálou.
+U kraje potoka, kde tekla teplá voda a led tam nestál, byla hlína měkká. Šedá a lepkavá. Nabral ji do hrsti. Byla teplá od vody. Došel s ní k žebru a vtlačil ji do rýhy. Uhladil ji palcem, nabral další a uhladil ji znovu, dokud rýha nebyla plná a hlína v ní nebyla rovná se skálou.
 
 Tak to dělali oni, dole. Se zářezy na stěně, které nepočítali. Nevyškrabali je. Zamazali je hlínou a nechali je tam.
 
@@ -250,11 +250,11 @@ Nemohl to vrátit.
 
 Článek nechal pod bundou.
 
-Zpátky pod převis ho dát nemohl. Ne do toho mrazu. A ne tam, odkud ho právě vzal, protože teď by ten balvan pokaždé, když by šel kolem, věděl, kam se dívá. Potřeboval jiné místo. Teplé. Kam nikdo nesahá.
+Zpátky pod převis ho dát nemohl. Ne do toho chladu. A ne tam, odkud ho právě vzal, protože teď by ten balvan pokaždé, když by šel kolem, věděl, kam se dívá. Potřeboval jiné místo. Teplé. Kam nikdo nesahá.
 
 Šel k pramenu.
 
-U dolní tůně, na straně u skalní stěny, kam se lidé nechodili mýt, protože tam bylo kluzko, tvořila bílá usazenina u paty skály převis. Tvrdý okraj, jako lem hrnce, a pod ním tmavá štěrbina. Ze štěrbiny šel teplý vzduch. Ne voda. Jen teplo, které ze skály stoupalo celou noc a celý den, stejně jako pod Orrinovým přístřeškem o kus výš. Eren tam strčil ruku. Bylo tam sucho. A teplo jako pod kůží.
+U dolní tůně, na straně u skalní stěny, kam nikdo nechodil ani pro vodu, protože tam bylo kluzko, tvořila bílá usazenina u paty skály převis. Tvrdý okraj, jako lem misky, a pod ním tmavá štěrbina. Ze štěrbiny šel teplý vzduch. Ne voda. Jen teplo, které ze skály stoupalo celou noc a celý den, stejně jako pod Orrinovým přístřeškem o kus výš. Eren tam strčil ruku. Bylo tam sucho. A teplo jako pod kůží.
 
 Zabalil článek do pruhu plachty dvakrát, jak to dělal pod balvanem. Zasunul ho do štěrbiny až po loket. Před něj nasypal hrst drobných kamínků, aby nebyl vidět. Na okraj položil plochý kámen.
 
@@ -264,7 +264,7 @@ Pára nad pramenem stoupala bílá a hustá, šedá v ranním světle. A v ní, 
 
 Eren ztuhl.
 
-Ta postava se nehýbala. Stála v páře a pára se kolem ní převalovala, takže chvíli byla vidět a chvíli ne. Nedalo se poznat, kam se dívá. Ale stála tak, jak stál jenom jeden člověk v celém kotli. S rukama v podpaží. Jako by nevěděl, co s nimi.
+Ta postava se nehýbala. Stála v páře a pára se kolem ní převalovala, takže chvíli byla vidět a chvíli ne. Nedalo se poznat, kam se dívá. Ale stála tak, jak stál jenom jeden člověk v celém kotli. S rukama v podpaží.
 
 Kaj.
 
@@ -278,7 +278,7 @@ Mohl článek vytáhnout a odnést jinam. Hned teď. Věděl to. Stál tam a vě
 
 Bylo to pravda. A bylo to poprvé v jeho životě, kdy se spolehl na zámek. Na tu pojistku, kterou umí obejít jen on. Na tu, kterou tehdy obešel pro muže, jehož jméno si zakázal.
 
-Nevěděl, jestli to je dost. Nechal to tak.
+Jestli to je dost? Nechal to tak.
 
 *
 
@@ -296,9 +296,9 @@ Dodržel pravidlo. Myl se tam, kde se smělo. Někdo by se tomu zasmál.
 
 Když se zvedl, stála nahoře v zálivu pod převisem Dabra.
 
-Bylo už světlo a ona měla dlaň nad očima. Dívala se dolů. Na něj, nebo na potok, nebo na nic. Eren to nevěděl. Na tu dálku nemohla cítit, čím voní. Nebo mohla. Nevěděl, co skalní lidé cítí.
+Bylo už světlo a ona měla dlaň nad očima. Dívala se dolů. Na něj, nebo na potok, nebo na nic. Na tu dálku nemohla cítit, čím voní. Nebo mohla. Kdo ví, co skalní lidé cítí.
 
-Zvedl ruku. Nevěděl, co chce udělat. Pozdravit. Nebo udělat to gesto, dlaň plochou dolů, ze strany na stranu. *Ne.*
+Zvedl ruku. Možná pozdravit. Nebo udělat to gesto, dlaň plochou dolů, ze strany na stranu. *Ne.*
 
 Nakonec neudělal nic. Ruka mu zůstala viset ve vzduchu, jako tehdy u Maelina zápěstí, a pak ji položil zpátky.
 
@@ -324,17 +324,17 @@ Eren mlčel.
 
 „Ještě pořád.“
 
-Tio se nad tím zamyslela. Pak se na něj podívala zpříma, jak se na něj dívala Maela, když chtěla číslo, a ne odpověď.
+Tio se nad tím zamyslela a pak se na něj podívala zpříma, jako Maela, když chtěla číslo, a ne odpověď.
 
 „Přijdeš zítra?“
 
-Řekla to česky, ale to poslední slovo řekla místně. To krátké, se zaraženým dechem na konci, které ho učila u dolní tůně. Asi ani nevěděla, že to udělala. V její puse ta dvě řeči nestály vedle sebe. Tekly do sebe.
+Řekla to po našem, ale to poslední slovo řekla místně. To krátké, které ho učila u dolní tůně. Asi ani nevěděla, že to udělala. V její puse ty dvě řeči nestály vedle sebe. Tekly do sebe.
 
 Eren to slovo zopakoval.
 
 Tentokrát správně. Poznal to, protože se Tio rozzářila, otočila se a zavolala na Rua: „Už to umí!“ A Ru se zasmál a hodil oblázek a chytil ho.
 
-„Zítra,“ řekl Eren ještě jednou. Česky.
+„Zítra,“ řekl Eren ještě jednou. Po našem.
 
 Tio kývla, jako by jí to stačilo. Objala ho kolem krku, krátce a silně, a utíkala zpátky k Ruovi. Kůže se jí pod šňůrkou houpala.
 
@@ -346,7 +346,7 @@ Neřekl jí, co zítra. Ona se nezeptala. Vzala si to slovo, jak ho řekl, a odn
 
 Dvanáct náručí. Do síně, kolem Talina ohně, a zpátky.
 
-Tal seděla u ohně, jako každý večer, a dívala se, jak chodí. Při třetí náruči nakrčila nos. Neřekla nic. Při šesté se podívala dolů do soutěsky, tam, kde se kotel zužoval a kde pod skalním žebrem ležela ve skále hlína, kterou odsud nemohla vidět. Pak se podívala zpátky na oheň.
+Tal seděla u ohně, jako každý večer, a sledovala, jak chodí. Při třetí náruči nakrčila nos. Neřekla nic. Při šesté se podívala dolů do soutěsky, tam, kde se kotel zužoval a kde pod skalním žebrem ležela ve skále hlína, kterou odsud nemohla vidět. Pak se vrátila očima k ohni.
 
 Eren rovnal dřevo ke stěně. Za řadou plochých kamenů v zadní části síně byla tma a v té tmě, nízko, dvě světlé tečky. Dívaly se na něj, dokud nedorovnal. Pak zmizely.
 
@@ -358,7 +358,7 @@ Věděl teď, kde to místo je. To se nedalo zamazat hlínou. Bude to vědět z�
 
 *Není to moje,* řekl si do tmy. Nahlas a tiše, jako tehdy.
 
-Pak řekl to druhé slovo. To krátké, místní, se zaraženým dechem na konci, které teď uměl.
+Pak řekl to druhé slovo. To krátké, místní, které teď uměl.
 
 Zítra.
 

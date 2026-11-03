@@ -6,7 +6,7 @@ Na Bílou sobotu odjede majitelka penzionu k sestře do Plzně a nechá Haně kl
 
 Hana se roztáhne.
 
-Jídelna má šest stolů s ubrusy v modrou kostku. Hana sundá ubrusy ze dvou, složí je na židli a stoly odtáhne od sebe, až mezi nimi zůstane ulička na šířku jednoho kroku. Pak se na to chvíli dívá. Dva stoly a mezera mezi nimi. Je to její deník, jen nastojato a ze dřeva.
+Jídelna má šest stolů s ubrusy v modrou kostku. Hana sundá ubrusy ze dvou, složí je na židli a stoly odtáhne od sebe, až mezi nimi zůstane ulička na šířku jednoho kroku. Chvíli nad tím stojí. Dva stoly a mezera mezi nimi. Je to její deník, jen nastojato a ze dřeva.
 
 Pramen měl v osm dvacet jedna celá pět. Tadeáš přišel a řekl jen číslo. Na fotku z článku se nezeptal a Hana o ní nemluvila. Druhý teploměr ležel na kameni, kde ho nechala ve čtvrtek. Nikdo na něj nesáhl.
 
@@ -26,7 +26,7 @@ Položí to na levý stůl.
 
 Pak se zarazí. Vezme to zpátky.
 
-Na záznamníku, který stál v záběru, je čas z družic. A pod časem, malým písmem, poloha. Tři desetinná místa. Hana na to tehdy nemyslela. Myslela na to, aby čas byl nezpochybnitelný. Poloha k času patřila, protože čas z družic a poloha jsou jedno a totéž.
+Na záznamníku, který stál v záběru, je čas z družic. A pod časem, malým písmem, poloha. Tři desetinná místa. Družice chytala anténa, kterou Kalina vyvedl kabelem po schodech nahoru, takže poloha ukazuje statek přímo nad síní. Hana na to tehdy nemyslela. Myslela na to, aby čas byl nezpochybnitelný. Poloha k času patřila, protože čas z družic a poloha jsou jedno a totéž.
 
 Kdo pustí ten záznam do světa, pustí do světa i místo.
 
@@ -114,7 +114,7 @@ V opisu stojí *dva druhy*. Ilonina slova. Ti, kdo nesnesou slunce a žijí ve �
 
 Napíše to. *Pramen rozlišuje dvě skupiny. Pisatelka je odlišuje výslovně a opakovaně. Komunita, která opis uchovala, se hlásí k první z nich.*
 
-Přečte si to a škrtne poslední větu. Pak ji napíše znovu. Pak vezme telefon.
+Přečte si to a škrtne poslední větu. Pak ji napíše znovu a vezme telefon.
 
 *
 
@@ -186,7 +186,7 @@ Je to on, kdo seděl v radě Úmluvy s hlasem poradním. On nabízel úschovu se
 
 A je živý.
 
-Hana by mohla dát jeho jméno na levý stůl. Měla by k tomu všechno. Rodovou knihu s mnichovou větou, otce v Méridě, čtyři archivy se stejným písmenem. Kdokoli by si to spojil. Za týden by se o něm psalo stejně, jako se teď píše o ní. Možná hůř. Možná by si to zasloužil.
+Hana by mohla dát jeho jméno na levý stůl. Měla by k tomu všechno. Rodovou knihu s mnichovou větou, Heinricha Wehrleho v Méridě, čtyři archivy se stejným písmenem. Kdokoli by si to spojil. Za týden by se o něm psalo stejně, jako se teď píše o ní. Možná hůř. Možná by si to zasloužil.
 
 Waltův lístek se opírá o cukřenku.
 
@@ -198,7 +198,7 @@ Hana vezme čistý list a napíše na něj nahoru: *Pro kpt. K.* Pod to vypíše
 
 List přeloží napůl a dá ho do bílé obálky. Obálku nepoloží na žádný stůl. Dá si ji do vnitřní kapsy bundy.
 
-Konrad Wehrle v jejím balíku nebude. Bude u policie, až to bude moct doložit. Neudělá mu to, co on udělal Rybovým. Ne kvůli němu. Kvůli tomu, že kdyby to udělala, byla by to jen další stránka na fóru, s jiným jménem.
+Konrad Wehrle v jejím balíku nebude. Jeho jméno dostane policie, až ho Hana bude moct doložit. Neudělá mu to, co on udělal Rybovým. Ne kvůli němu. Kvůli tomu, že kdyby to udělala, byla by to jen další stránka na fóru, s jiným jménem.
 
 *
 
@@ -214,11 +214,11 @@ Výsledky dvanácti dárců. Nemá je. Má Sokolová, v šanonu, pod kódy.
 
 A pak její vlastní deník.
 
-Hana ho vytáhne z batohu a položí na pravý stůl. Pak vedle něj kopii z Méridy, tři svazky s razítky. Ty jsou veřejné od roku 2026. Ten na pravém stole ne.
+Hana ho vytáhne z batohu a položí na pravý stůl. Pak vedle něj kopii z Méridy, tři svazky s razítky. Ty jsou veřejné od roku 2026. Její deník ne.
 
 Otevře ho a listuje.
 
-Od února je v něm všechno. To byl smysl. *Co jsem změřila já, píšu já. Co mi kdo řekl, píšu s jménem. Nic mezi.* A tak jsou tam jména. Lada. Tadeáš. Statek. Mlýnec, čtyřicet dva schodů, sklep s jablky. Kozí ulička čtyři. Agnes. Dřevěný dům za hřebenem u staré haldy s břízami. Benediktovy ruce. Klára, dokud ji Hana nepřestala psát celou. *Sálová. Alžběta.* Občanské jméno ženy, která je Sael.
+Od února je v něm všechno. To byl smysl. *Co jsem změřila já, píšu já. Co mi kdo řekl, píšu se jménem. Nic mezi.* A tak jsou tam jména. Lada. Tadeáš. Statek. Mlýnec, čtyřicet dva schodů, sklep s jablky. Kozí ulička čtyři. Agnes. Dřevěný dům za hřebenem u staré haldy s břízami. Benediktovy ruce. Klára, dokud ji Hana nepřestala psát celou. *Sálová. Alžběta.* Občanské jméno Sálové.
 
 Všechno, co ji mělo chránit před tím, aby někomu sloužila jako zástěrka, je teď mapa. Přesná, s časy na minutu.
 
@@ -262,7 +262,7 @@ Hana se dívá na dva stoly a mezeru mezi nimi.
 
 Na druhé straně je dlouho ticho.
 
-„Dobře,“ řekne Šindelářová. Hana slyší, že to slovo nemyslí jako souhlas. Myslí ho jako číslo, které si někam zapsala.
+„Dobře,“ řekne Šindelářová. Hana slyší, že to slovo nemyslí jako souhlas.
 
 *
 
@@ -278,7 +278,7 @@ Odpověď přijde za dvě hodiny. Jedno slovo.
 
 Dveře v Kozí uličce jí v úterý v sedm otevře muž, kterého Hana nikdy neviděla.
 
-Je vysoký. Vyšší než Sálová, Hana mu sahá sotva po bradu. Velmi starý, a Hana pozná, že velmi starý, i když by mu podle tváře nedala víc než osmdesát. Pozná to podle toho, jak stojí. Jako strom, který přežil hodně zim a ví, že ještě pár přežije. Na sobě pletený svetr, na nohou bačkory. V předsíni je šero, a když se k ní otočí, jeho oči na vteřinu vrátí světlo z ulice. Celou zornicí.
+Je vysoký. Vyšší než Sálová, Hana mu sahá sotva po bradu. Velmi starý. Hana to pozná, i když by mu podle tváře nedala víc než osmdesát. Pozná to podle toho, jak stojí. Jako strom, který přežil hodně zim a ví, že ještě pár přežije. Na sobě pletený svetr, na nohou bačkory. V předsíni je šero, a když se k ní otočí, jeho oči na vteřinu vrátí světlo z ulice. Celou zornicí.
 
 „Paní Vrbová,“ řekne. Česky, s přízvukem, který Hana nezná. Starý přízvuk, jako by mluvil jazykem, který se už nemluví. „Javor.“
 
@@ -298,7 +298,7 @@ Sálová sedí u pracovního stolu. Na stole leží matrika, rozložená pod skl
 
 Hana položí na stůl dvě složky. Jednu tlustou, jednu tenkou. Tenká je seznam toho, co je na pravém stole v jídelně penzionu. Ne věci samé. Jen jejich jména.
 
-„Tohle je to, co zveřejním,“ řekne a položí ruku na tlustou. „Až to bude hotové. Až dám každému, koho se to týká, přečíst jeho část. Video ze skály, bez tváří a bez chodeb. Polohu začerním, dokud v hoře někdo bude, paní Lada o tom ví. Kalinova data, s jeho jménem, až dovolí. Číslovky z mřížek, s Fuchsovou. Opis, s proveniencí, bez místa a bez jmen živých, pan Benedikt to slyšel celé. Model paní docentky, ten zveřejní ona sama, já na něj jen odkážu. Waltovy papíry. Anaya a Mérida.“
+„Tohle je to, co zveřejním,“ řekne a položí ruku na tlustou. „Až to bude hotové. Až dám každému, koho se to týká, přečíst jeho část. Video ze skály, bez tváří a bez chodeb. Polohu začerním, dokud v hoře někdo bude, paní Lada o tom ví. Zpoždění u skály, s Kalinovým jménem, až dovolí. Číslovky z mřížek, s Fuchsovou. Opis, s proveniencí, bez místa a bez jmen živých, pan Benedikt to slyšel celé. Model paní docentky, ten zveřejní ona sama, já na něj jen odkážu. Waltovy papíry. Anaya a Mérida.“
 
 Sálová se dívá na tlustou složku. Nesahá na ni.
 
@@ -316,7 +316,7 @@ Sálová zvedne oči.
 
 *
 
-Sálová dlouho mlčí. Pak se konečně dotkne tlusté složky. Ne aby ji otevřela. Položí na ni dlaň, jako na desky knihy.
+Sálová se po dlouhém tichu konečně dotkne tlusté složky. Neotevře ji. Položí na ni dlaň, jako na desky knihy.
 
 „A podmínka,“ řekne.
 
@@ -340,17 +340,17 @@ Sálová se nehne.
 
 Sálová sklopí oči k matrice pod sklem. Hana vidí, že se na ni nedívá. Dívá se skrz ni.
 
-„Ta věta je stará jako hory,“ řekne Sálová. „Říká se o každém, kdo bydlí v lese. O cikánech, o židech, o uhlířích. O nás. Byla to vždycky pomluva.“
+„Ta věta je stará jako hory,“ řekne Sálová. „Říká se o každém, kdo bydlí v lese. O cikánech, o Židech, o uhlířích. O nás. Byla to vždycky pomluva.“
 
 „Ano.“
 
-„A teď —“
+„A teď…“
 
 „A ve vaší knize je jeden řádek,“ řekne Hana tiše, „kde pomluvou není.“
 
 *
 
-Za dveřmi do kuchyně je ticho. Javor neposlouchá. Nebo poslouchá tak, že ho není slyšet.
+Za dveřmi do kuchyně je ticho.
 
 „Pak nemáte archiv,“ řekne Sálová. „Ani svědectví. Ani skálu.“
 
@@ -358,7 +358,7 @@ Za dveřmi do kuchyně je ticho. Javor neposlouchá. Nebo poslouchá tak, že ho
 
 „Ne?“
 
-„Ne. To, co dokazuju, stojí bez něj.“ Hana se podívá na tlustou složku pod Saelinou dlaní. „Proto jsem to od února dělala takhle. Abych nic nemusela mít od vás.“
+„Ne. To, co dokazuju, stojí bez něj.“ Hana se podívá na tlustou složku pod dlaní Sálové. „Proto jsem to od února dělala takhle. Abych nic nemusela mít od vás.“
 
 Sálová se na ni dlouho dívá.
 
@@ -386,7 +386,7 @@ Sálová zvedne dlaň ze složky.
 
 „To je hodně lidí,“ řekne Hana. „Můžu slíbit, co udělám já. Ne co udělají oni. A ne, co se stane, když se jednoho dne někdo z nich splete.“
 
-Sálová kývne. Pomalu, jednou.
+Sálová kývne.
 
 „Šedesát let jsem to slibovala,“ řekne. „Že to zůstane utajené.“
 
@@ -414,7 +414,7 @@ Sálová se na ni podívá ostře. Hana čeká, že řekne *to vám neřeknu*. N
 
 Sálová čeká.
 
-„Tenkrát jsem vynechala něco, co by změnilo, čemu lidé uvěří,“ řekne Hana. „Teď vynechávám to, co by změnilo, kdo zítra zaklepe na čí dveře. Nic z toho, co tam není, nezmění, čemu se dá věřit. Skála svítí i bez jména paní Lady. Opis je pravý i bez adresy pana Benedikta.“ Podívá se na Sálovou. „A únosy se staly i bez vaší knihy. Proto o nich nebudu lhát. Jen je nebudu dokazovat. To neumím bez toho, aby to zaplatil někdo, kdo si to nevybral.“
+„Tenkrát jsem vynechala něco, co by změnilo, čemu lidé uvěří,“ řekne Hana. „Teď vynechávám to, co by změnilo, kdo zítra zaklepe na čí dveře. Nic z toho, co tam není, nezmění, čemu se dá věřit. Skála svítí i bez jména paní Lady. Opis je pravý i bez adresy pana Benedikta. A únosy se staly i bez vaší knihy. Proto o nich nebudu lhát. Jen je nebudu dokazovat. To neumím bez toho, aby to zaplatil někdo, kdo si to nevybral.“
 
 *
 
@@ -422,11 +422,11 @@ Ticho trvá dlouho. Z kuchyně je slyšet, jak Javor napouští konvici.
 
 „Jděte, prosím,“ řekne Sálová.
 
-Hana se na ni podívá. Je to poprvé, co Sálová řekla *prosím*. Hana si toho všimne, jako si všimne každého čísla, které se změní.
+Je to poprvé, co Sálová řekla *prosím*. Hana si toho všimne.
 
 Vezme tenkou složku. Tlustou nechá ležet.
 
-„Tu si nechte,“ řekne. „Je to kopie. Přečtěte si to, jestli chcete. Je tam všechno, co se o vás nedozví nikdo.“
+„Tu si nechte,“ řekne. „Je to kopie. Přečtěte si to, jestli chcete. Je tam všechno, co zveřejním. O vás se z toho nikdo nic nedozví.“
 
 Sálová se na tlustou složku nepodívá. Hana jde ke dveřím.
 
@@ -446,13 +446,13 @@ Vlevo jsou dva seznamy. Jeden dlouhý, jeden krátký. U každé položky dlouh�
 
 Pod tím:
 
-*23. 4. Kozí 4. Saelinu podmínku jsem odmítla. Jména a genealogii nezveřejním, o únosech nebudu lhát, nebudu je dokazovat. Nemůžu zaručit, že zůstane utajeno všechno. Řekla jsem proč.*
+*23. 4. Kozí 4. Podmínku S. jsem odmítla. Jména a genealogii nezveřejním, o únosech nebudu lhát, nebudu je dokazovat. Nemůžu zaručit, že zůstane utajeno všechno. Řekla jsem proč.*
 
 Vpravo:
 
 *Walt nenapsal „neříkejte“. Napsal „netiskněte“.*
 
-Hana se na to dlouho dívá. Pak to podtrhne. Dvakrát, jako v zápisu z porady z roku 1981, který leží na levém stole.
+Hana nad tím dlouho sedí a pak to podtrhne. Dvakrát, jako v zápisu z porady z roku 1981, který leží na levém stole.
 
 Pak vezme svůj deník, ten od února, a hnědou obálku z papírnictví. Deník do obálky vloží a obálku zalepí. Přes klopu přetáhne lepicí pásku. A přes pásku propiskou podpis. *H. Vrbová.* Jedním tahem, z papíru na pásku a z pásky zase na papír.
 

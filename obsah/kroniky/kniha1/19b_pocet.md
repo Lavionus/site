@@ -6,7 +6,7 @@ Matěj to viděl, když posílal ostatní. Vítka první, protože se třásl ta
 
 Ortlieb lezl předposlední.
 
-V okně se zastavil, jako se zastavil Vítek, jen z docela jiných důvodů. Neohlédl se na Matěje. Díval se do hnízda. Na podlahu pod vodou, kde ve světle Henselova kahanu zářily valouny. Kahan teď držel Matěj. Kalné, matně žluté, když ležely na suchu. Pod vodou se leskly jako v potoce, jako na dně studánky, když do ní za poledne zasvítí slunce, a bylo jich tam víc, než Ortlieb za celý život viděl pohromadě, v míšeňských horách ani nikde jinde. Matěj to viděl v jeho tváři.
+V okně se zastavil, jako se zastavil Vítek, jen z docela jiných důvodů. Neohlédl se na Matěje. Díval se do hnízda. Na podlahu pod vodou, kde ve světle Henselova kahanu, který teď držel Matěj, zářily valouny. Kalné, matně žluté, když ležely na suchu. Pod vodou se leskly jako v potoce, jako na dně studánky, když do ní za poledne zasvítí slunce, a bylo jich tam víc, než Ortlieb za celý život viděl pohromadě, v míšeňských horách ani nikde jinde. Matěj to viděl v jeho tváři.
 
 Ortlieb se díval. Pak se otočil a vlezl do okna a byl pryč.
 
@@ -40,7 +40,7 @@ Byla to opravdová chodba. Vysoká jako dveře, aspoň pro malé, a Matěj se v 
 
 Stáli tam všichni. Matějovi horníci, mokří, zabahnění, s jedním kahanem, který Matěj podal Henselovi. A proti nim, ve žlutém světle čtyř pěti kahanů, oni.
 
-Matěj je spočítal, protože to dělal vždycky. Merin. Ostra, která seděla na zemi u ústí ucha a nevstala. Muž s kopím. Další malý muž s holí. Dvě ženy, jedna s dítětem na zádech v kožešině. Chlapec, snad osmiletý; jak se u malých počítají roky, nevěděl. Sedm.
+Matěj je spočítal, protože to dělal vždycky. Merin. Ostra, která seděla na zemi u ústí ucha a nevstala. Muž s kopím. Další malý muž s holí. Dvě ženy, jedna s dítětem na zádech v kožešině. Chlapec, snad osmiletý; Matěj nevěděl, jak se u malých počítají roky. Sedm.
 
 Kunz držel mlátek. Muž s kopím držel kopí. Mezi nimi byly tři kroky a voda.
 
@@ -56,7 +56,7 @@ Ostra se dívala na Matěje zespodu, malýma tmavýma očima. Pak se podívala n
 
 Nikdo se nepohnul.
 
-Pak se pohnul ten s holí. Udělal dva kroky. Kulhal a holí si přidržoval nohu, kterou mu Ostra v únoru narovnala na kamenné lavici. Zastavil se před Ješkem. Díval se nahoru. Ješek byl o dvě hlavy vyšší a nevěděl, kam s rukama.
+Pak se pohnul ten s holí. Udělal dva kroky. Kulhal a holí si přidržoval nohu, kterou mu Ostra v únoru narovnala na kamenné lavici. Zastavil se před Ješkem. Díval se nahoru. Ješek byl o dvě hlavy vyšší.
 
 „Tebe znám,“ řekl malý muž. Lámaně, se starým přízvukem, každé slovo kladl jako kámen na kámen. „Ty jsi ten vysoký. Z hory. Šel jsi dovnitř s ním, za tmy. Ven za dne.“
 
@@ -72,7 +72,7 @@ Ješek mlčel. Malý muž s holí se otočil a šel. Kulhal dolů starou cestou,
 
 *
 
-Merin první, s kahanem. Za ním žena s dítětem na zádech, chlapec, druhá žena. Pak Hensel, protože Hensel šel, kam šlo světlo, a nikdo mu to neřekl. Za Henselem Gotthard a Kunz a Vítek. Pak ten s holí, a vedle něj Ješek, a Ješek nevěděl, že jde vedle něj. Ortlieb. Muž s kopím. A poslední Matěj, a před ním Ostra.
+Merin první, s kahanem. Za ním žena s dítětem na zádech, chlapec, druhá žena. Pak Hensel, protože Hensel šel, kam šlo světlo, a nikdo mu to neřekl. Za Henselem Gotthard a Kunz a Vítek. Pak ten s holí, a vedle něj Ješek, a Ješek si nevšiml, že jde vedle něj. Ortlieb. Muž s kopím. A poslední Matěj, a před ním Ostra.
 
 Ostra šla pomalu. Byla stará a celou noc seděla u skály, a nohy ji nesly, jako nesou nohy lidi, kteří zapomněli, k čemu jsou. Matěj šel za ní a díval se na její záda a na bílý cop a slyšel za sebou vodu.
 
@@ -102,7 +102,7 @@ Matěj stál na hraně. Za ním voda, už k lýtkům, a jak se tu chodba svažov
 
 Chlapec.
 
-„Jeden,“ řekl Matěj. Nahlas. Nevěděl proč.
+„Jeden,“ řekl Matěj. Nahlas.
 
 Chlapec slezl.
 
@@ -160,7 +160,7 @@ Pod nohama ucítil v podlaze díru. Ne díru. Puklinu, širokou jako ruka, a vod
 
 Stoupala mu k bradě. Ostra mu na zádech stiskla krk.
 
-Myslel na rybník za mlýnem. Na Ješka, jak ho tam jako malého držel za ruce a táhl a on křičel, a otec se smál, a pak se nesmál. *Mnich se bojí vody.* Myslel na to, jak se voda drží v prohlubni. Jako dech země v doupěti. Leží dole, kde je nejníž, a nad ní se dá dýchat, když se člověk nesklání.
+Myslel na rybník za mlýnem. Na otce, jak ho tam jako malého hodil a on řval, a otec se smál, a pak se nesmál. *Mnich se bojí vody.* Myslel na to, jak se voda drží v prohlubni. Jako dech země v doupěti. Leží dole, kde je nejníž, a nad ní se dá dýchat, když se člověk nesklání.
 
 Nesklonil se víc, než musel. Šel.
 
@@ -242,7 +242,7 @@ Chlapec, ten, co se díval na Kunzův mlátek, přišel k Henselovi. Postavil se
 
 Pak se chlapec otočil a zavolal na Ostru, a Ostra zvedla ruku. Malou, širokou, a Matěj poprvé uviděl, že na ní nemá ukazovák. Celý. Jen hladký pahýl u kloubu, starý, zarostlý.
 
-Hensel se díval na její ruku a Ostra na jeho. Neřekli nic. Hensel natáhl dlaň a položil ji na stěnu komory, a Ostra taky, kus od něj. Seděli tak. Matěj nevěděl, co poslouchají. Hora mlčela.
+Hensel se díval na její ruku a Ostra na jeho. Neřekli nic. Hensel natáhl dlaň a položil ji na stěnu komory, a Ostra taky, kus od něj. Seděli tak. Hora mlčela.
 
 Ješek seděl s tím s holí. Ten muž mluvil. Málo, pomalu, a Ješek odpovídal ještě méně. Matěj slyšel jen kus.
 
@@ -258,7 +258,7 @@ Ješek mlčel dlouho.
 
 *
 
-Merin si sedl vedle Matěje u stěny. Ne blízko. Mezi nimi byla dlaň.
+Merin si sedl vedle Matěje u stěny, na dlaň od něj.
 
 Dlouho mlčel. Pak řekl, aniž se na Matěje podíval:
 
@@ -276,11 +276,11 @@ Merin kývl.
 
 „Napsal jsem si to tam,“ řekl Matěj. „*Non bene.*“
 
-Merin se na něj podíval. Pak se skoro usmál, a tentokrát si Matěj byl jistý.
+Merin se skoro usmál, a tentokrát si Matěj byl jistý.
 
 Neřekli už nic. Světlo ve škvírách se pomalu měnilo. A když se Matěj otočil, aby se podíval, kolik zbývá, ucítil na rameni tíhu.
 
-Merin spal. Hlavu měl na jeho rameni, jako ji má unavené dítě, a bledá tvář v šeru byla najednou mladší, tak mladá, že to Matěje vylekalo. Nebo stará. Nevěděl. Nevěděl to tenkrát v únoru a nevěděl to teď.
+Merin spal. Hlavu měl na jeho rameni, jako ji má unavené dítě, a bledá tvář v šeru byla najednou mladší, tak mladá, že to Matěje vylekalo. Nebo stará. Nevěděl to tenkrát v únoru a nevěděl to teď.
 
 Nepohnul se. Seděl tak, dokud se ve škvírách nesetmělo.
 
@@ -364,7 +364,7 @@ Zastavil se u Matěje, jako se zastavil u balvanu v noci, a Matěj čekal, co ř
 
 „Kdy?“
 
-„Až opadne voda. Jednou.“ Merin se na něj podíval. „Pro to, co se nedá nést.“
+„Až opadne voda. Jednou. Pro to, co se nedá nést.“
 
 Matěj se nezeptal, co to je. Věděl, že by mu neodpověděl, a věděl taky, že to už není důležité.
 
@@ -374,7 +374,7 @@ Matěj se nezeptal, co to je. Věděl, že by mu neodpověděl, a věděl taky, 
 
 „Ne,“ řekl Matěj. „Ale budu tady.“
 
-Merin se na něj díval. Oči se mu v šeru nezablýskly. Bylo na to málo světla.
+Merinovy oči se v šeru nezablýskly. Bylo na to málo světla.
 
 Pak se otočil a šel za ostatními, a Bořek s bidlem šel před nimi, a Dobroslava se ohlédla na Matěje, jednou, a šla taky, a les je spolkl, jako spolkl tři údery hákem na balvanu, jako by je nikdy neslyšel.
 
@@ -386,7 +386,7 @@ Kahan dohořel u desky. Ortlieb šel první, protože znal les po kraji štoly a
 
 U kraje lesa nad grangií se zastavili.
 
-Dole ležela luka. Ne luka. Voda. Celá luka grangie, od potoka až k plotu ovčína, se leskla v měsíci jako plech, jako rybník za mlýnem, a v ní stála planá hrušeň, a voda jí sahala ke kmeni. Matěj se na tu hrušeň díval a myslel na hrudu pod ní, na drn, který srostl.
+Dole ležela luka. Ne luka. Voda. Celá luka grangie, od potoka až k plotu ovčína, se leskla pod hvězdami jako plech, jako rybník za mlýnem, a v ní stála planá hrušeň, a voda jí sahala ke kmeni. Matěj se na tu hrušeň díval a myslel na hrudu pod ní, na drn, který srostl.
 
 A výš, na pasece pod horou, pochodně.
 
@@ -462,7 +462,7 @@ Od druhé stěny se ozval Ješkův hlas.
 
 Dlouho nic.
 
-„Ten Sas. Lutz.“ Ješek mluvil do stěny. „Byl první. Kvůli němu jsme se otočili. Kdyby neběžel tak rychle…“
+„Ten Sas. Lutz.“ Ješek mluvil do stěny. „Byl první. Běžel nejrychlejc ze všech. Kdyby neběžel tak rychle…“
 
 Nedořekl to.
 

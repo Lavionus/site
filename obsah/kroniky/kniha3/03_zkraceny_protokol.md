@@ -12,7 +12,7 @@ Hana to ví až večer, když se Luis s Janou vrátí z kontrolního ponoru. Ods
 
 „Osm metrů. Možná deset.“ Jana si vymačká vlasy. „Hrdlo je v pořádku. Za hrdlem je to čisté. Dolů zákal nejde, haloklina ho drží nahoře.“
 
-Hana si to zapíše. Vlevo, protože to viděli oni, a ona uvádí zdroj. *5. 3. 12:04 odstřel. Ponor L. E. + J. M. 16:30: zával za téčkem (~30 m), blok ~1 m³, na šňůře; nová šňůra vedena kolem. Vid. 8–10 m. Hrdlo beze změny.*
+Hana si to zapíše. Vlevo, protože to viděli oni, a ona uvádí zdroj. *5. 3. 12:04 odstřel. Ponor L. E. + J. M. 16:30: zával za téčkem (~30 m), blok ~ velikosti pračky (J. M.), na šňůře; nová šňůra vedena kolem. Vid. 8–10 m. Hrdlo beze změny.*
 
 Vpravo napíše jen: *Příště?*
 
@@ -32,15 +32,15 @@ K tomu potřebují tři věci. *Hero shot* předmětu, ten už mají. Vědkyni n
 
 Do dvacátého března.
 
-A pak, v posledním odstavci, bez vykřičníku: druhá splátka rozpočtu, ta, ze které se platí laboratoř, CT, prodloužení expedice na šest týdnů a druhá část honorářů, je *contingent on the presentation*. Vázaná na prezentaci. Pokud projekt na prezentaci nebude, bude se *rozpočet přehodnocovat*.
+A pak, v posledním odstavci, bez vykřičníku: druhá splátka rozpočtu, ta, ze které se platí laboratoř, CT, druhá polovina těch šesti týdnů, které Viktor slíbil, a druhá část honorářů, je *contingent on the presentation*. Vázaná na prezentaci. Pokud projekt na prezentaci nebude, bude se *rozpočet přehodnocovat*.
 
-Hana dočte a ještě chvíli se dívá na poslední slovo. *Reconsidered.*
+Hana dočte. Poslední slovo zní *Reconsidered.*
 
 „No,“ řekne Viktor.
 
 „Kolik stojí ponorový den?“
 
-Viktor jí to řekne. Plyn, kyslík, poplatek do fondu ejida, Luis, dva pomocníci, Rosa, auta, pronájem kompresoru, pojištění. Řekne to bez zaváhání a bez papíru, jako by to číslo nosil v hlavě celou noc. Pak řekne, na kolik dnů mají peníze bez druhé splátky.
+Viktor jí to řekne. Plyn, kyslík, poplatek do fondu ejida, Luis, dva pomocníci, Rosa, auta, pronájem kompresoru, pojištění. Řekne to bez zaváhání a bez papíru, jako by to číslo nosil v hlavě celou noc. A řekne, na kolik dnů mají peníze bez druhé splátky.
 
 Do osmnáctého. Pak domů.
 
@@ -86,7 +86,7 @@ Kývne k notebooku. K vlnovce v logu.
 
 Jde k cenotu. Je ještě šero, les je šedý a vlhký a voní kouřem z polí, který se v noci snesl k zemi. Na okraji studny si sedne na kámen, kde seděla první noc, a dívá se dolů.
 
-Voda je pořád zakalená. Severní třetina bledá, jako by někdo pod hladinu nalil mléko a zapomněl zamíchat.
+Voda je pořád zakalená. Severní třetina bledá jako zvětralý vápenec.
 
 Hana myslí.
 
@@ -100,7 +100,7 @@ Ví, že vzorek odebraný na kameru je pořád vzorek. Že video, ve kterém je 
 
 Ví, kolik jí zbývá na účtu. Ví, že druhá část jejího honoráře je v druhé splátce. Ví, že na fakultě má smlouvu do srpna příštího roku a že Fiala ji neprodlouží, jestli nebude mít grant, a grant nebude mít, jestli nebude mít výsledek. Ví, že je jí čtyřicet jedna a že takovou věc jí nikdo nikdy nedá do ruky podruhé.
 
-A ví, že Viktor jí v Hranicích dal dýchat ze svého automatu dvanáct minut, když jí ve čtyřiceti metrech praskla hadice a lahev se vyfoukala dřív, než ji stačila zavřít. Na druhé by nedoplavala. Dvanáct minut, než došli k zásobní lahvi. Dýchal pomalu, aby jim to vystačilo, a díval se jí do očí, a ani jednou se nepodíval na manometr. Pak spolu viseli na dekompresi přes hodinu a on jí na tabulku napsal vtip, který byl tak špatný, že se smála do automatu.
+A ví, že Viktor jí v Hranicích dal dýchat ze svého automatu dvanáct minut, když jí ve čtyřiceti metrech praskla hadice a lahev se vyfoukala dřív, než ji stačila zavřít. Na druhé, poloprázdné láhvi by nedoplavala. Dvanáct minut, než došli k zásobní lahvi. Dýchal pomalu, aby jim to vystačilo, a díval se jí do očí, a ani jednou se nepodíval na manometr. Pak spolu viseli na dekompresi přes hodinu a on jí na tabulku napsal vtip, který byl tak špatný, že se smála do automatu.
 
 To je vlevo.
 
@@ -114,7 +114,7 @@ Ví, že tohle je argument. Ví, že argumenty umí stavět stejně dobře jako 
 
 Ale student by nebyl tady. Student by neseděl nad studnou, ze které se každé poledne zvedá mléko.
 
-Vytáhne telefon. Je šest čtyřicet. Najde Marisolino číslo. Dívá se na něj.
+Vytáhne telefon. Je šest čtyřicet. Najde Marisolino číslo a palec jí zůstane viset nad displejem.
 
 Kdyby zavolala teď, Marisol by to zvedla, protože je to žena, která telefon nosí na krku. Vyslechla by ji. A řekla by: počkejte. Řekla by: přijedu v pondělí a probereme to. Řekla by to slušně a měla by pravdu. A v pondělí by bylo pozdě.
 
@@ -136,7 +136,7 @@ Viktor se nadechne a ona vidí, jak se mu uvolní ramena.
 
 „A za třetí: na válec se po dnešku nikdo nesáhne, dokud Ríša neudělá fotogrammetrii. Žádné další vzorky, žádné záběry zblízka, nic. Nejdřív model.“
 
-„Platí.“ Viktor podá ruku přes stůl. Hana se na ni chvíli dívá. Pak ji stiskne. Má ji teplou a suchou.
+„Platí.“ Viktor podá ruku přes stůl. Hana ji po krátkém zaváhání stiskne. Má ji teplou a suchou.
 
 „Díky, Hanko,“ řekne Viktor. „Fakt.“
 
@@ -162,7 +162,7 @@ Nedívá se na ně dlouho. Nepomůže to.
 
 Viktor pluje za ní s kamerou. Je to velká kamera v podvodním pouzdře, s dvěma rameny a se dvěma světly, a Viktor s ní plave jako s nákupním vozíkem v úzké uličce. Je to dobrý potápěč. Ale je větší než Hana a kamera je větší než oni oba a v hrdle to Hana slyší. Slyší jeho dech za sebou ve štěrbině. Rychlý. Rychlejší než její.
 
-Za hrdlem Luis zastaví a ukáže Viktorovi na manometr. Otázka. Viktor ukáže svůj. Luis se na něj podívá a pak napíše na tabulku a ukáže to oběma.
+Za hrdlem Luis zastaví a ukáže Viktorovi na manometr. Otázka. Viktor ukáže svůj. Luis napíše na tabulku a ukáže to oběma.
 
 *15 min sala. No más.*
 
@@ -188,7 +188,7 @@ Poleva metr a dvacet od válce, nad ním, na svahu, mimo žlábek. Kontrolní vz
 
 Pod vodou se tluče špatně. Kladívko nemá švih, voda ho brzdí. Hana nasadí dláto pod okraj terasy, kde je poleva tenká, a tluče krátce a mnohokrát, jako datel. Kousek polevy, velký jako nehet palce, se uvolní. Chytí ho do dlaně dřív, než stačí klesnout. Do sáčku. Zavřít. Foto po odběru. Karta. Snímek.
 
-Podívá se na hodinky. Čtyři minuty.
+Na hodinkách čtyři minuty.
 
 Vzorek dva.
 
@@ -228,7 +228,7 @@ Sáhne po levém. Vytáhne ho. Podívá se na něj vedle kusu v prstech. Lom by 
 
 Za ní se ozve ťuknutí. Viktor ťuká na manometr. Ukazuje palcem nahoru.
 
-Hana se podívá na hodinky. Čtrnáct minut.
+Čtrnáct minut, ukazují hodinky.
 
 Podívá se na svůj manometr. Ještě má. Ale nejde o její plyn. Jde o Viktorův, a obrat je obrat. Kdo první, ten první. Neptá se proč.
 
@@ -248,7 +248,7 @@ Na dekompresi visí ve třech metrech a dívá se na sáčky, připnuté na kara
 
 Viktor visí vedle ní, s kamerou přivázanou k noze, a když na něj pohlédne, ukáže jí oba palce nahoru. Oči za maskou se mu smějí.
 
-Hana se podívá na tabulku na předloktí. *2. ks žlábek?*
+Na tabulce na předloktí stojí: *2. ks žlábek?*
 
 Je to pravda. Je to jediná pravdivá věta, kterou o vzorku tři má.
 
@@ -278,7 +278,7 @@ Hana zastaví video ve chvíli, kdy je kamera zpátky u žlábku. Zvětší obra
 
 „Ve žlábku ležely úlomky už předtím. Viděla jsem je ve středu, fotila jsem je. Kus z mé ruky spadl mezi ně. Sebrala jsem ten, o kterém si myslím, že je můj. Ale nevím to.“
 
-Viktor se na ni dívá. Pak na obrazovku. Pak zase na ni.
+Viktor se na ni dívá. Pak na obrazovku a zase na ni.
 
 „Hanko. Spadl ti kus kůry. Ty ses za ním otočila a do vteřiny jsi tam byla. Kolik tam leželo kusů stejné velikosti, s čerstvým lomem?“
 
@@ -302,7 +302,7 @@ A vstane, protáhne se a jde si pro pivo do chladicího boxu a nechá ji tam sam
 
 Sáček s trojkou leží na stole vedle deníku. Hana ho vysypala na čistý papírový ubrousek, nechala oba kousky oschnout a teď se na ně dívá pod lupou, kterou nosí v pouzdře na krku.
 
-Dva úlomky kůry. Oba velké jako nehet palce. Oba krémové, s laminací, kterou je pod lupou vidět jako jemné proužky. Oba s lomem. Na jednom je tmavší proužek blíž k okraji. Na druhém taky, ale širší. Na jednom je na spodní straně, té, která by se dotýkala válce, hladká plocha, téměř lesklá, jako otisk. Na druhém je spodní strana nerovná. Ten s hladkou plochou je určitě ten z jejích prstů. Ten s nerovnou plochou může být druhá polovina téhož kusu, odlomená podél vrstvy, protože vrstva nahoře nemá žádný otisk, je to prostě vrstva. Nebo to může být úlomek polevy z hrany terasy, který tam ležel tisíc let.
+Dva úlomky kůry. Oba velké jako nehet palce. Oba krémové, s laminací, kterou je pod lupou vidět jako jemné proužky. Oba s lomem. Na jednom je tmavší proužek blíž k okraji. Na druhém taky, ale širší. Na jednom je na spodní straně, té, která by se dotýkala válce, hladká plocha, téměř lesklá, jako otisk. Na druhém je spodní strana nerovná. Ten s hladkou plochou je určitě ten z jejích prstů. Ten s nerovnou plochou může být druhá polovina téhož kusu, odlomená podél vrstvy: na ploše, kde se vrstvy od sebe oddělily, žádný otisk být nemůže. Nebo to může být úlomek polevy z hrany terasy, který tam ležel tisíc let.
 
 Pod lupou to nerozezná. V laboratoři by to možná šlo. Mikroskop, výbrus, srovnání laminace vrstvu po vrstvě. Za peníze, které nejsou, a za čas, který není.
 
@@ -332,7 +332,7 @@ A ví, že fragment s hladkou plochou je z kontaktu. Ten je jistý. A že druhý
 
 Odchylky se dějí. Proto mají jméno.
 
-Hana se dívá na stránku. Na levou půlku, kde je zapsaná jednička a dvojka. Na pravou, kde je zatím jen čára.
+Na levé půlce stránky je zapsaná jednička a dvojka. Na pravé zatím jen čára.
 
 Starý pán s dýmkou jí to tehdy v Krkonoších řekl, když jí bylo devatenáct a ona mu ukazovala svůj první deník. *Vlevo, co vidíš. Vpravo, co si myslíš. A nikdy to nepleť dohromady, děvče, nebo budeš psát romány.*
 
@@ -344,7 +344,7 @@ Napíše ji doleva.
 
 Dopíše to. Ruka se jí přitom nechvěje. To si zapamatuje. Že se jí nechvěla.
 
-Pak se na tu větu podívá. *Navazující vrstva.* Není to lež. Je to nejpravděpodobnější vysvětlení, zapsané jako jisté. Je to věc, kterou si myslí, napsaná do půlky, kam se píše jen to, co člověk viděl.
+*Navazující vrstva.* Není to lež. Je to nejpravděpodobnější vysvětlení, zapsané jako jisté. Je to věc, kterou si myslí, napsaná do půlky, kam se píše jen to, co člověk viděl.
 
 Neviděla to.
 
@@ -360,7 +360,7 @@ Ríša přijde s foťákem ve chvíli, kdy Hana pokládá pero.
 
 „Můžu?“
 
-Hana posune deník k němu. Ríša si ho natočí ke světlu a vyfotí dvoustranu, jednou, dvakrát, pro jistotu potřetí s bleskem. Pak se podívá na displej, kývne a vrátí jí ho.
+Hana posune deník k němu. Ríša si ho natočí ke světlu a vyfotí dvoustranu, jednou, dvakrát, pro jistotu potřetí s bleskem. Podívá se na displej, kývne a vrátí jí ho.
 
 „Máš hezký písmo,“ řekne. „Na vědkyni.“
 
@@ -368,7 +368,7 @@ Hana posune deník k němu. Ríša si ho natočí ke světlu a vyfotí dvoustran
 
 Ríša odejde ke svému notebooku a k hudbě. Viktor sedí na kraji mýtiny na bedně, s pivem v ruce, a dívá se do lesa. Telefon má vedle sebe, displejem dolů.
 
-Hana zavře deník. Pak ho otevře a podívá se na pravou půlku stránky. Je prázdná. Bílá, s jemnými linkami, které se ve světle žárovky nad stolem lesknou.
+Hana zavře deník. Zase ho otevře a podívá se na pravou půlku stránky. Je prázdná. Bílá, s jemnými linkami, které se ve světle žárovky nad stolem lesknou.
 
 Vpravo je víc místa. Vždycky bývá.
 
@@ -376,11 +376,11 @@ Napadne ji, že by ještě mohla něco připsat. Malým písmem, do rohu. Že by
 
 Dívá se na prázdnou půlku dlouho.
 
-Pak deník zavře podruhé a zastrčí ho do batohu pod stolem. Dojde za stan k neoprenu na šňůře, vytáhne z jeho kapsy tabulku z předloktí, na které je tužkou napsaná jediná pravdivá věta o vzorku tři, a zastrčí ji do batohu k deníku. Tabulku neumyje. Ví, že ji neumyje. Neví, jestli je to poctivost, nebo zbabělost, nebo jen únava. Možná všechno tři.
+Deník zavře podruhé a zastrčí ho do batohu pod stolem. Dojde za stan k neoprenu na šňůře, vytáhne z jeho kapsy tabulku z předloktí, na které je tužkou napsaná jediná pravdivá věta o vzorku tři, a zastrčí ji do batohu k deníku. Tabulku neumyje. Ví, že ji neumyje. Neví, jestli je to poctivost, nebo zbabělost, nebo jen únava. Možná všechno troje.
 
 *
 
-Luis přijede z obce v jedenáct, když už generátor brumlá naprázdno a Viktor spí. Přinese dva kanystry vody a postaví je pod plachtu. Pak si všimne Hany, která sedí pořád u stolu, i když na něm nic není.
+Luis přijede z obce v jedenáct, když už generátor brumlá naprázdno a Viktor spí. Přinese dva kanystry vody a postaví je pod plachtu. Všimne si Hany, která sedí pořád u stolu, i když na něm nic není.
 
 „*¿Todo bien, Ana?*“
 

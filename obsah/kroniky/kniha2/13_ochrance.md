@@ -26,7 +26,7 @@ Otevřela stará služka, ta hluchá, a podívala se na Ilonu, jako se dívala v
 
 *
 
-Na střechu se šlo po schodech, které byly čím dál užší, a nakonec po žebříku. Ilona lezla s brašnou přes rameno a s rukou, za kterou se ještě nemohla vytahovat. Nahoře byl poklop a za ním pavlač. Dřevěná, zastřešená jen do půlky, ohrazená zábradlím, mezi dvěma komíny, a nad ní nebe.
+Na střechu se šlo po schodech, které byly čím dál užší, a nakonec po žebříku. Ilona lezla s brašnou přes rameno a s rukou, kterou se ještě nemohla přitahovat. Nahoře byl poklop a za ním pavlač. Dřevěná, zastřešená jen do půlky, ohrazená zábradlím, mezi dvěma komíny, a nad ní nebe.
 
 Takové nebe Ilona v Jáchymově ještě neviděla. Z ulice byl vidět pruh. Odtud bylo vidět všechno: údolí dolů k ústí, kde se ztrácelo v šedé, a nahoru k hřebenům, a haldy, jedna za druhou, šedé a holé, a nad nimi temná čára lesa. Na západě nad Klínovcem ještě světlo, žluté a zelené, jaké má modřina, která se hojí. Na východě už modrá a v ní první hvězda, sama.
 
@@ -100,11 +100,9 @@ Ilona sklopila hůl.
 
 „Ano.“
 
-„Nenašla jste ji.“ Wehrl si vzal hůl zpátky. Nepodíval se přes ni. Díval se jen tak, bez ní, na pět hvězd nad hřebenem. „Já taky ne. Dvaadvacet let ji hledám. Otec ji hledal do smrti. Shasla na jaře čtyřiasedmdesát, pomalu, za půl roku. Zčervenala jako uhlík, který chladne, a pak byla pryč. Otec říkal, že neshasla. Že jen zavřela oči.“
+„Nenašla jste ji.“ Wehrl si vzal hůl zpátky. Nepodíval se přes ni. Díval se jen tak, bez ní, na pět hvězd nad hřebenem. „Já taky ne. Třiadvacet let ji hledám. Otec ji hledal do smrti. Shasla na jaře čtyřiasedmdesát, pomalu, za půl roku. Zčervenala jako uhlík, který chladne, a pak byla pryč. Otec říkal, že neshasla. Že jen zavřela oči.“
 
 „A co si myslíte vy?“
-
-Wehrl se na ni podíval.
 
 „To vám chci říct,“ řekl. „Proto jste tady.“
 
@@ -128,15 +126,13 @@ Ilona otočila list. Latina. Písmo humanistické, úhledné, s dlouhými tahy, 
 
 „Můj děd. Opsal ho z knihy svého děda. A ten ze starší. A ta ze starší.“ Wehrl položil dlaň na okraj listu. „Původní kniha je ztracená. Možná shořela, možná ji někdo prodal, možná leží v nějaké truhle v Chebu nebo v Řezně a nikdo ji neumí číst. Tohle je opis opisu opisu. Čtyři sta let, paní Ilono. Nebo něco přes. Přesně to nikdo neví.“
 
-Ilona listovala. Nadpisy. Některé uměla přečíst.
+Ilona listovala. Nadpisy. Některé uměla přečíst. Pak přišla stránka rozdělená svislou čarou na dvě půlky a každá půlka měla svůj nadpis.
 
-*Quae vidit monachus.*
+Vlevo: *Quae vidit monachus.*
 
 Co viděl mnich.
 
-A o několik listů dál:
-
-*Quae scio ego.*
+Vpravo: *Quae scio ego.*
 
 Co vím já.
 
@@ -148,13 +144,13 @@ Zastavila se.
 
 Wehrl se na ni podíval, a v jeho tváři se něco rozsvítilo, jako se rozsvítí tvář učitele, když žák uvidí to, co měl vidět.
 
-„Ano,“ řekl. „Zvlášť. To je první věc, které jsem v té knize kdy rozuměl. Bylo mi dvanáct a otec mi ji četl a já se zeptal, proč jsou to dvě části a proč jsou oddělené. A otec řekl: protože náš předek chtěl, aby nikdo nespletl, co viděl svědek a co ví ten, kdo poslouchal.“ Usmál se. „To je vaše řemeslo, paní Ilono. *Tato slova řekla přede mnou.* A pak, pod čarou, co víte vy. Proto jsem vám svěřil Ursulu Kolbovou. Protože jste jediná v tomhle městě, kdo dělá totéž, co dělal ten, kdo psal tohle.“
+„Ano,“ řekl. „Zvlášť. To je první věc, které jsem v té knize kdy rozuměl. Bylo mi dvanáct a otec mi ji četl a já se zeptal, proč jsou to dvě půlky a proč je mezi nimi čára. A otec řekl: protože náš předek chtěl, aby nikdo nespletl, co viděl svědek a co ví ten, kdo poslouchal.“ Usmál se. „To je vaše řemeslo, paní Ilono. *Tato slova řekla přede mnou.* A pak, pod čarou, co víte vy. Proto jsem vám svěřil Ursulu Kolbovou. Protože jste jediná v tomhle městě, kdo dělá totéž, co dělal ten, kdo psal tohle.“
 
 Ilona se dívala na stránku.
 
-Pod *Quae vidit monachus* bylo málo. Několik řádků. Krátké věty, jedna jako druhá, a v každé se opakovalo jedno slovo. *Vidi.* Viděl jsem. *Vidi lumen.* *Vidi novem.* Viděl jsem devět. *Vidi locum.* A slovo, které se tam vrátilo několikrát a které znala z kázání o pádu andělů. *Cadebant.* Padala.
+Pod *Quae vidit monachus* bylo málo. Kresba, devět teček v klesající řadě, a pod ní několik řádků. Krátké věty, jedna jako druhá, a v každé se opakovalo jedno slovo. *Vidi.* Viděl jsem. *Vidi lumen.* *Vidi novem.* Viděl jsem devět. *Vidi locum.* A slovo, které se tam vrátilo několikrát a které znala z kázání o pádu andělů. *Cadebant.* Padala.
 
-Pod *Quae scio ego* bylo mnoho. List za listem.
+Pod *Quae scio ego* bylo mnoho. Nahoře kresba oblých domů v řadách, pod ní hustý text, který pokračoval list za listem.
 
 A čím dál, tím víc bylo v hlavním textu slov, která na začátku stála na okraji, hnědším inkoustem, nervóznější rukou. Ilona to viděla, protože byla dcera písaře a protože se tomu za devět let naučila u výpovědí. Na začátku stál kruh s tečkou na okraji, vedle řádku. O pár listů dál stál uvnitř řádku, mezi dvěma slovy, stejným inkoustem jako ta slova. Kdo neviděl, jak to začalo, četl by ho jako část věty.
 
@@ -172,7 +168,7 @@ Před čtyřmi sty lety, v kraji pod Chebem, ve vsi, jejíž jméno se v opisech
 
 „Mnich napsal *cadebant*,“ řekl Wehrl. „Padala. Ale náš předek, ten, kdo tam klečel s ním, věděl, že nepadala. Že šla dolů pomalu, v řadě, jako průvod se svícemi o Hromnicích. *Descendebant.* Sestupovala. A tam dole, kam sestoupila, viděli osadu. Domy v řadách, rovné cesty. A po cestách chodili lidé.“ Odmlčel se. „Lidé, paní Ilono. Jako my. Naši otcové.“
 
-Ilona mlčela.
+Ilona držela lucernu nad listem a nehýbala se.
 
 „Bible neříká, kde byl ráj,“ řekl Wehrl. „Neříká to. Hledali ho u Eufratu, v Indii, v Etiopii. A ten muž, můj předek, který neuměl číst, si to v té tmě pod horou spočítal sám. Že ráj byl nahoře. Mezi těmi světly. A že ti první z něj nepadli. Že sestoupili. A že žili dlouho, jako patriarchové, Metuzalém devět set šedesát devět let, Noe devět set padesát, a teprve když se jejich krev mísila s krví ostatních, s krví hlíny, se život zkrátil. Na sedmdesát let. Na osmdesát, když jsme silní.“
 
@@ -212,7 +208,7 @@ Dívala se na rok. Stál nahoře, v záhlaví, římskými číslicemi, a byl to
 
 Ilona se na ta písmena dívala a cítila, jak jí po zádech, pod šátkem a pod košilí, přebíhá chlad. Takový, jaký přijde, když si člověk v noci uvědomí, že v místnosti není sám.
 
-Ten rok už jednou viděla. Před devíti dny, ve skále pod převisem, kde bzučely včely. Na jiném pergamenu, pod jinou dlaní. Malými římskými číslicemi vedle kresby kopce s kruhem a se čtyřiceti jednou čárkou. A u hřbetu, drobně, jedno slovo latinkou, které Merin zakryla rukávem, ale ne dost rychle.
+Ten rok už jednou viděla. Před devíti dny, ve skále pod převisem, kde bzučely včely. Na jiném pergamenu, pod jinou dlaní. Malými římskými číslicemi vedle kresby kopce s kruhem a se čtyřiceti jednou čárkou. A u hřbetu, drobně, jedno slovo latinkou, které zůstalo na kraji, kam Merinina dlaň nedosáhla.
 
 *Monachus.*
 
@@ -230,17 +226,15 @@ Teď to řekne, pomyslela si Ilona. Teď řekne *lékárník*. Teď řekne *knih
 
 Neřekl.
 
-„Ti první žili dlouho,“ řekl místo toho. „A někde v těch horách, paní Ilono, žijí lidé, kteří žijí dlouho dodnes. Nevím kde. Nevím, kdo jsou. Slýchám o nich od dětství. Od havířů, od bab, od sběračů borůvek. Že v horách je stařec, který pamatuje, když tady nebylo město. Že jsou lidé, kteří nesnesou slunce a dožívají se sta let a víc. Lidé tomu říkají pohádky. Můj děd tomu říkal jinak. Říkal, že je to starší krev. Krev, která se míň mísila. Blíž k těm prvním.“ Odmlčel se. „*Sanguis antiquorum.* Krev starších. Teď víte, proč jsem tomu tak říkal. Teď víte, proč se za to nestydím, i když jsem vám v suterénu řekl, že se stydím.“
+„Ti první žili dlouho,“ řekl místo toho. „A někde v těch horách, paní Ilono, žijí lidé, kteří žijí dlouho dodnes. Nevím kde. Nevím, kdo jsou. Slýchám o nich od dětství. Od havířů, od bab, od sběračů borůvek. Že v horách je stařec, který pamatuje, když tady nebylo město. Že jsou lidé, kteří nesnesou slunce a dožívají se sta let a víc. Lidé tomu říkají pohádky. Můj děd tomu říkal jinak. Říkal, že je to starší krev. Krev, která se míň mísila. Blíž k těm prvním.“ Odmlčel se. „*Sanguis antiquorum.* Krev starších. Teď víte, proč jsem tomu tak říkal. Teď víte, proč se za to nestydím, i když jsem se v suterénu tvářil, že se stydím.“
 
 „Řekl jste mi, že je to kozí krev.“
 
 „Řekl jsem vám, že je to *nejspíš* kozí krev.“ Wehrl se usmál. „A je to pravda. Nejspíš je. Lékárníci lžou. Ale člověk, který se bojí, že umře den předtím, nekupuje to, o čem ví, že to je. Kupuje to, o čem doufá, že by to mohlo být.“
 
-Ilona se na něj dívala.
-
 *Kdo platí každý týden víc, ten ví, za co platí.*
 
-Napsala to sama sobě v noci na neděli, nad černou knihou, při dohořívající svíčce. Teď to slyšela znovu, jeho hlasem, obráceně, a obrácené to znělo stejně pravdivě. Člověk může vědět, za co platí, a přitom nevědět, co dostává. Wehrl věděl, odkud lahvičky jsou. Z hor, od lidí, kteří nesnesou slunce. To věděl. Nevěděla, jestli věděl i to, že ti lidé platí vlastní krví za lidskou. Že tu lidskou jim lékárník nosí nahoru v soudku a že teče z paží vdov na horním konci, a jednou z hrdla holky, která šlehala krev březovými proutky.
+Řekla si to sama v noci na neděli, nad černou knihou, při dohořívající svíčce. Teď to slyšela znovu, jeho hlasem, obráceně, a obrácené to znělo stejně pravdivě. Člověk může vědět, za co platí, a přitom nevědět, co dostává. Wehrl věděl, odkud lahvičky jsou. Z hor, od lidí, kteří nesnesou slunce. To věděl. Nevěděla, jestli věděl i to, že ti lidé platí vlastní krví za lidskou. Že tu lidskou jim lékárník nosí nahoru v soudku a že teče z paží vdov na horním konci, a jednou z hrdla holky, která šlehala krev březovými proutky.
 
 Nevěděla. A nezeptá se ho. Protože kdyby se zeptala, musela by říct, odkud to ví ona.
 
@@ -250,9 +244,7 @@ Nevěděla. A nezeptá se ho. Protože kdyby se zeptala, musela by říct, odkud
 
 Řekl to jinak než všechno předtím. Jako se po dlouhé modlitbě řekne *amen* a vstane se od stolu.
 
-„Röhrich zabil Ursulu Kolbovou,“ řekl. „A zabil tu děvečku z lázně. Vy to víte. Já to vím. Víte to déle než já a nebudu se ptát, odkud, protože byste mi lhala a já bych vám to musel věřit.“ Díval se na ni. „Psi z koželužny, paní Ilono. Ve městě je hodně psů.“
-
-Ilona mlčela.
+„Röhrich zabil Ursulu Kolbovou,“ řekl. „A zabil tu děvečku z lázně. Vy to víte. Já to vím. Víte to déle než já a nebudu se ptát, odkud, protože byste mi lhala a já bych vám to musel věřit. Psi z koželužny, paní Ilono. Ve městě je hodně psů.“
 
 „V pondělí zasedá soud,“ řekl Wehrl. „Přijdete a přinesete, co máte. Listy z lázně. Lancetu. Zápisy. Slova svědků. Toho tovaryše, který nosil soudek, toho přiveďte, bude mluvit, je to dobrý kluk, jen se bojí. Řeknete, co víte o lékárníkovi. Celé. Soud ho odsoudí, protože je to vrah, a Tobiáš půjde domů, protože vrahem není. Tak, jak jste chtěla od prvního dne.“
 
@@ -266,9 +258,9 @@ Ilona mlčela.
 
 Ilona se dívala na jeho ruku na koleni. Třásla se, i když ji tiskl.
 
-Nevyslovil to. Ani jednou. Ani *kniha*, ani *lékárníkova truhla*, ani *noc na sobotu*. Mluvil o lancetě a o listech z lázně a o tovaryšovi a o tom, co řekne lékárník pod šibenicí. A o knize mlčel tak důkladně, že to mlčení stálo mezi nimi na pavlači jako třetí stolička.
+Nevyslovil to. Ani jednou. Ani *kniha*, ani *lékárníkova truhla*, ani *noc na neděli*. Mluvil o lancetě a o listech z lázně a o tovaryšovi a o tom, co řekne lékárník pod šibenicí. A o knize mlčel tak důkladně, že to mlčení stálo mezi nimi na pavlači jako třetí stolička.
 
-Věděl. Musel vědět. *Slyšel jsem, že jste v noci na sobotu zachránila lékárníkovi život.* Röhrich mu to řekl. Ještě v neděli, nebo v noci, s ovázanou tváří. Řekl mu: *Ta ženská má moji knihu.* A Wehrl teď seděl naproti ní a nabízel jí ochranu za to, aby padl jen Röhrich. Nic dalšího říkat nemusel, protože všechno ostatní se řeklo samo. *Nikoho dalšího.*
+Věděl. Musel vědět. *Slyšel jsem, že jste v noci na neděli zachránila lékárníkovi život.* Röhrich mu to řekl. Ještě v neděli, nebo v noci, s ovázanou tváří. Řekl mu: *Ta ženská má moji knihu.* A Wehrl teď seděl naproti ní a nabízel jí ochranu za to, aby padl jen Röhrich. Nic dalšího říkat nemusel, protože všechno ostatní se řeklo samo. *Nikoho dalšího.*
 
 Ani W.
 
@@ -286,7 +278,7 @@ Wehrl se nepohnul.
 
 Slyšela se, jak to říká, a slyšela, jak je to prázdné.
 
-Před pěti dny vybrala. Z Markétiných slov. Vybrala studánku a Báru a chleba v plátně, a Markéta se na ni dívala a řekla *To jste mi vzala*, a Ilona řekla *Ano*. A na půdě v kolébce ležela kniha, ze které bude vybírat taky, protože nic jiného dělat nemůže. Vybere jinak, než chce on, ale stejně vybere.
+Před šesti dny vybrala. Z Markétiných slov. Vybrala studánku a Báru a chleba v plátně, a Markéta se na ni dívala a řekla *To jste mi vzala*, a Ilona řekla *Ano*. A na půdě v kolébce ležela kniha, ze které bude vybírat taky, protože nic jiného dělat nemůže. Vybere jinak, než chce on, ale stejně vybere.
 
 Wehrl to možná slyšel. Možná ne. Díval se na ni dlouho, a pak se opřel zpátky a zavřel oči.
 
@@ -354,9 +346,13 @@ Kilián stál na prahu a dýchal, jako by běžel do kopce. Spálená tvář se 
 
 „Pojď dál.“
 
+Řekla mu *ty*, poprvé, a uslyšela to, až když to dořekla. Nevzala to zpátky.
+
 „Nepůjdu.“ Rozhlédl se po dvoře. „Ptá se na den.“
 
 Ilona mu to řekla. Svatojánská noc. Po klekání. Horní konec u koželuha, šedesát mužů, psi, pochodně. Přes haldy k Horní štole. Pak po hřebeni a starými díly dolů k potoku. Do každé díry. Do rána.
+
+Pak mu řekla i to druhé. Co stojí v lékárníkově knize na pravých stránkách. Sůl, kroupy, kozy. *Erlengrund, hinter den Halden. 40 Mäuler.* Ať to Zikmund ví.
 
 Kilián poslouchal se zavřenýma očima, jak poslouchal Zikmund, a Ilona viděla, že si to ukládá, slovo po slově, protože nic nepíše a nikdy psát nebude.
 
@@ -368,7 +364,7 @@ Kilián poslouchal se zavřenýma očima, jak poslouchal Zikmund, a Ilona viděl
 
 „Perkmistr.“
 
-Kilián otevřel oči. Díval se na ni dlouho. V jeho úzké tváři, šedavé jako klíček brambor ve sklepě, se něco pohnulo, ale Ilona to neuměla přečíst. U nočních lidí to ještě číst neuměla.
+Kilián otevřel oči. V jeho úzké šedavé tváři se něco pohnulo, ale Ilona to neuměla přečíst. U nočních lidí to ještě číst neuměla.
 
 „Proč vám to řekl?“
 

@@ -28,7 +28,7 @@ Nara se dívala na terasy, dokud nezmizely pod okrajem průzoru. Šedý kámen. 
 
 Na měsíci se nic netočilo.
 
-Nara to věděla. Věděla, že na měsících a planetách drží člověka u země něco jiného než rotace. Učila se to ve škole stejně jako každý a pak na to čtyřicet let nepomyslela. Teď vystoupila z linky do příletové haly a udělala první krok. Noha se jí odlepila od podlahy snadno, jako by jí někdo pomáhal, a pak se dlouho vracela dolů.
+Věděla, že na měsících a planetách drží člověka u země něco jiného než rotace. Učila se to ve škole stejně jako každý a pak na to čtyřicet let nepomyslela. Teď vystoupila z linky do příletové haly a udělala první krok. Noha se jí odlepila od podlahy snadno, jako by jí někdo pomáhal, a pak se dlouho vracela dolů.
 
 Byla lehká. To čekala. Nečekala, že *dolů* bude jinde.
 
@@ -42,7 +42,7 @@ Muž u výdeje zavazadel se na ni díval. Neřekl nic. Asi to tu viděl každý 
 
 Vchod do hlubokého úložiště byl nízká budova na okraji haly. Za ní nebylo nic, jen výtah.
 
-Výtah jel dolů jedenáct minut. Nara to věděla přesně, protože se celou dobu dívala na řádek v koutku vědomí, kam síť napsala *Hloubka: 340 m* a potom *Hloubka: 680 m* a pak už jen *Spojení: omezené.* Čísla se obnovovala pomaleji a pomaleji. Kolem dvanácti set metrů se přestala obnovovat úplně. Zůstal jen čas a odpočet. *Do odletu: 41 dní.* Ten se ukládal v ní, ne v síti, a nebylo mu potřeba nic odjinud.
+Výtah jel dolů jedenáct minut. Nara to věděla přesně, protože se celou dobu dívala na řádek, kam síť napsala *Hloubka: 340 m* a potom *Hloubka: 680 m* a pak už jen *Spojení: omezené.* Čísla se obnovovala pomaleji a pomaleji. Kolem dvanácti set metrů se přestala obnovovat úplně. Zůstal jen čas a odpočet. *Do odletu: 41 dní.* Ten se ukládal v ní, ne v síti, a nebylo mu potřeba nic odjinud.
 
 Pak se dveře otevřely a do kabiny vtekla zima.
 
@@ -258,7 +258,7 @@ Hals neodpověděl. Došli k výtahu. Pomohl jí z kabátu a pověsil ho na há�
 
 *
 
-Výtah jel nahoru jedenáct minut. Kolem dvanácti set metrů se v koutku vědomí pohnul první řádek a potom se tam nahrnulo všechno najednou. Nara stála v kabině a nechala to přes sebe přejít. Zprávy od Lumi. Termíny. Dotaz komory, zda vyjádření odeslala, ačkoli ho odeslala včera. Tři Davenovy hovory, odložené, a jeden vzkaz bez textu, jen *Volal jsem.*
+Výtah jel nahoru jedenáct minut. Kolem sedmi set metrů pod povrchem se v koutku vědomí pohnul první řádek a potom se tam nahrnulo všechno najednou. Nara stála v kabině a nechala to přes sebe přejít. Zprávy od Lumi. Termíny. Dotaz komory, zda vyjádření odeslala, ačkoli ho odeslala včera. Tři Davenovy hovory, odložené, a jeden vzkaz bez textu, jen *Volal jsem.*
 
 A připomínka. *Zítra 9:00–9:40: Sedmá loděnice, návštěva. Rezervováno.*
 
@@ -276,7 +276,7 @@ Nechala ji tam. Byl to fakt. Fakty se nemažou.
 
 Podepsala. *Doručeno. Senát předsedkyně O. Tann. Odpůrce vyrozuměn.*
 
-Odpůrce vyrozuměn. Teď to věděla i Sabe Ardaine. Možná to věděla už v době, kdy Nara jela výtahem nahoru, protože podání podle Terry šla automaticky k bezpečnostnímu posouzení a posuzovatel byl stejný jako odpůrce. Nara na to myslela a nic necítila. Zklidnění pracovalo. Bylo to tak dobře.
+Odpůrce vyrozuměn. Teď to věděla i Sabe Ardaine. Možná to věděla už v době, kdy Nara jela výtahem nahoru, protože podání podle Terry šla automaticky k bezpečnostnímu posouzení a posuzovatel byl stejný jako odpůrce. Nara na to myslela a nic necítila. Bylo to tak dobře.
 
 *
 

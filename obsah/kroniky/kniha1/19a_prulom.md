@@ -12,7 +12,7 @@ Ortlieb kývl. Otočil se a šel k Matějovi.
 
 „Was willst du hier, Mönch?“
 
-Co tu chceš, mnichu.
+Co tu chceš, mnichu?
 
 „Jdu s nimi,“ řekl Matěj česky.
 
@@ -20,7 +20,7 @@ Co tu chceš, mnichu.
 
 „Tak mě vezměte jako horníka.“
 
-Ortlieb se na něj díval. Byl nevyspalý jako všichni, oči zarudlé, a ten nový kabátec z Velikonočního pondělí měl zase od hlíny až po ramena. Pak se zasmál. Ne nahlas. Jen tak, nosem, jako se smál Ješek v noci.
+Ortlieb byl nevyspalý jako všichni, oči zarudlé, a ten nový kabátec z Velikonočního pondělí měl zase od hlíny až po ramena. Pak se zasmál. Ne nahlas. Jen tak, nosem, jako se smál Ješek v noci.
 
 „Chceš vodu, mnichu? Celé jaro chodíš k mý vodě s vědrem. Tak dneska ji budeš vypouštět. Za hrázkou.“ Odplivl si. „Zadarmo. Za to ti neplatím.“
 
@@ -28,13 +28,13 @@ Ortlieb se na něj díval. Byl nevyspalý jako všichni, oči zarudlé, a ten no
 
 Bylo jich třináct. Matěj je spočítal u ústí, když stáli v řadě a Ortlieb rozdával kahany.
 
-Ortlieb. Hensel. Starý Gotthard, šedivý, s vousem zastrčeným za košili, který po Henselovi pamatoval v míšeňských horách nejvíc, a druhý starý Sas, Kunz, se zlomeným nosem. Lutz, s vlasy v očích, který se u ústí pokřižoval, a když viděl, že se na něj Matěj dívá, sklopil oči. Další dva Sasové, mladí, kterým Matěj nevěděl jména. Z místních Vítek od mlýna, syn mlynáře, a Mikuláš, Bohunin vnuk, ten, co ji v neděli vytáhl do kopce, a ještě tři ze vsi za potokem. A Ješek.
+Ortlieb. Hensel. Starý Gotthard, šedivý, s vousem zastrčeným za košili, který po Henselovi pamatoval v horách nejvíc let, a druhý starý Sas, Kunz, se zlomeným nosem. Lutz, s vlasy v očích, který se u ústí pokřižoval, a když viděl, že se na něj Matěj dívá, sklopil oči. Další dva Sasové, mladí, kterým Matěj nevěděl jména. Z místních Vítek od mlýna, syn mlynáře, a Mikuláš, Bohunin vnuk, ten, co ji v neděli přivedl na luka, a ještě tři ze vsi za potokem. A Ješek.
 
 Ješek se na Matěje nepodíval ani jednou. Vzal kahan a postavil se do řady, a když Ortlieb řekl *los*, šel první za Henselem.
 
 U ohně u ústí stáli strážní. Ten mladý ze vsi za potokem, se kterým Matěj v noci mluvil, se díval, jak jdou kolem. Díval se na Hensela. Pak na Matěje, na jeho hábit, na tonzuru, kterou teď nezakrývala žádná kápě. Díval se dlouho. Pak si odplivl do ohně a otočil se zády.
 
-Nic neřekl. Matěj to nečekal a nevěděl, jestli je to horší, nebo lepší.
+Nic neřekl. Matěj to nečekal.
 
 Z hřbetu se ozval roh. Psi. Daleko, nad lesem, tam, kde se hřbet zvedal k Wehrbergu, a pak blíž, a pak jinde, jako by se po hřbetu rozlévali. Nikdo se tam neohlédl kromě Matěje.
 
@@ -46,7 +46,7 @@ Pak se Matěj otočil a vešel do hory.
 
 Počítal.
 
-Ješkův křížek na třicátém. Teplo až u sto dvacátého, a to slabé, jako v pokoji, kde se večer přestalo topit. Pod prkny hučel žlab. U sto osmdesátého puklina. Teklo z ní, jak teklo v noci, pramen silný jako palec, ale už nekouřil. Voda pod ním byla jen teplá. Rámy kolem pukliny byly tmavé, nasáklé, a jeden z nich, ten Ortliebův, se značkou, byl prohnutý, jako se prohne trám, na který se léta sype seno. V únoru rovný nebyl. Matěj si toho všiml a nevěděl, jestli si toho všiml někdo jiný.
+Ješkův křížek na třicátém. Teplo až u sto dvacátého, a to slabé, jako v pokoji, kde se večer přestalo topit. Pod prkny hučel žlab. U sto osmdesátého puklina. Teklo z ní, jak teklo v noci, pramen silný jako palec, ale už nekouřil. Voda pod ním byla jen teplá. Rámy kolem pukliny byly tmavé, nasáklé, a jeden z nich, ten Ortliebův, se značkou, byl prohnutý, jako se prohne trám, na který se léta sype seno. V únoru byl rovný. Matěj si toho všiml. Nikdo jiný se nezastavil.
 
 U dvou set patnácti prkna. Matěj se na ně nepodíval. Šel kolem a nepodíval se, a cítil to v zádech, jako se cítí pohled.
 
@@ -68,7 +68,7 @@ Rozdělil je, jak se dělí lidé na poli. Nahoru, k hornímu kraji hladkosti, k
 
 Nebít do toho. Vedle.
 
-Matěje poslal k hrázce. Byla deset kroků pod čelbou, dvě fošny napříč a za nimi voda, hnědá, s ucpávkou z hadrů a jílu dole u dna. Matěj si k ní klekl. Voda za fošnami stála skoro po okraj. Vytáhl ucpávku, jak to viděl dělat Ješka, a voda mu vyrazila přes kolena dolů, k žlabu, teplá, a fošny se pod tím tlakem chvěly. Když přestala téct, zacpal díru zase.
+Matěje poslal k hrázce. Byla deset kroků pod čelbou, dvě fošny napříč a za nimi voda, hnědá, s ucpávkou z hadrů a jílu dole u dna. Matěj si k ní klekl. Voda za fošnami stála skoro po okraj. Vytáhl ucpávku, jak to viděl dělat Ješka, a voda mu vyrazila přes kolena dolů, ke žlabu, teplá, a fošny se pod tím tlakem chvěly. Když přestala téct, zacpal díru zase.
 
 Pak se díval, jak se hrázka plní.
 
@@ -132,7 +132,7 @@ Podíval se na Matěje. Tohle bylo pro něj.
 
 Ortlieb postavil kahan do niky. Sehnul se pro želízko, které tam leželo, a zvedl i mlátek po Henselovi.
 
-„Ich zapf sie an,“ řekl. Navrtám ji. Jako sud. „Klein. Ein Loch, so.“ Ukázal palcem a ukazovákem, kruh velký jako groš. „Lass ich sie raus, langsam, durch die Rinne. Wie in Meißen.“ Vypustím ji pomalu, žlabem. Jako v Míšni. „Zwanzig Jahre mach ich das.“
+„Ich zapf sie an,“ řekl. Navrtám ji. Jako sud. „Klein. Ein Loch, so.“ Ukázal palcem a ukazovákem, kruh velký jako denár. „Lass ich sie raus, langsam, durch die Rinne. Wie in Meißen.“ Vypustím ji pomalu, žlabem. Jako v Míšni. „Zwanzig Jahre mach ich das.“
 
 Dvacet let to dělám.
 
@@ -146,7 +146,7 @@ Ortlieb se otočil zády.
 
 Matěj přešel k Ješkovi.
 
-Ješek stál nahoře na kraji, u hromady vylámané skály, s želízkem v ruce. Neodložil ho. Díval se na Ortlieba a na Hensela a na Matěje, a obličej měl pod hlínou bílý.
+Ješek stál nahoře na kraji, u hromady vylámané skály, se želízkem v ruce. Neodložil ho. Díval se na Ortlieba a na Hensela a na Matěje, a obličej měl pod hlínou bílý.
 
 „Pojď ven,“ řekl Matěj tiše.
 
@@ -204,11 +204,11 @@ A skála se otevřela.
 
 Nebylo to jako v pátek. Žádné světlo. Žádné ticho.
 
-Kus skály nad hladkostí, velký jako dveře, se vyklonil, jako se vyklání otevřené okenice, a za ním byla tma, a z tmy vyrazila voda. Ne proud. Nebyl to proud, kterému by Matěj uměl dát jméno. Bylo to, jako když se otevřou vrata stodoly a vyběhne z nich stádo. Zvuk, který nebyl slyšet ušima, ale celým tělem, v zubech, v žaludku. Hladkost zmizela pod bílou pěnou. Kahan v nice zhasl. Kahan v Ješkově ruce zhasl.
+Kus skály nad hladkostí, velký jako dveře, se vyklonil, jako se vyklání otevřené okenice, a za ním byla tma, a ze tmy vyrazila voda. Ne proud. Nebyl to proud, kterému by Matěj uměl dát jméno. Bylo to, jako když se otevřou vrata stodoly a vyběhne z nich stádo. Zvuk, který nebyl slyšet ušima, ale celým tělem, v zubech, v žaludku. Hladkost zmizela pod bílou pěnou. Kahan v nice zhasl. Kahan v Ješkově ruce zhasl.
 
 „Raus!“
 
-Ortlieb, nebo někdo jiný. Matěj nevěděl. Nějaká ruka ho chytila za rameno a otočila, a on byl ve tmě a ve vodě, po kolena, po stehna, teplé, a ta voda ho tlačila do zad jako dlaň a on běžel.
+Ortlieb, nebo někdo jiný. Nějaká ruka ho chytila za rameno a otočila, a on byl ve tmě a ve vodě, po kolena, po stehna, teplé, a ta voda ho tlačila do zad jako dlaň a on běžel.
 
 *
 
@@ -246,13 +246,13 @@ Ješek. Ortlieb, který neřekl jméno, jen zaklel. Gotthard. Kunz. Vítek od ml
 
 Šest. A on.
 
-Lutz ne. Mikuláš ne. Ti dva mladí Sasové, ti tři ze vsi za potokem. Nevěděl, jestli jsou pod tou hlínou, nebo za ní, jestli doběhli. Nevěděl. Pak, přes hukot, uslyšel z druhé strany závalu hlas. Daleko, slabě. Volal jméno. Gotthardovo. Pak Lutzovo. Pak už nic, jen voda.
+Lutz ne. Mikuláš ne. Ti dva mladí Sasové, ti tři ze vsi za potokem. Nevěděl, jestli jsou pod tou hlínou, nebo za ní, jestli doběhli. Pak, přes hukot, uslyšel z druhé strany závalu hlas. Daleko, slabě. Volal jméno. Gotthardovo. Pak Lutzovo. Pak už nic, jen voda.
 
 Někdo doběhl. Kdo, nevěděl.
 
 Gotthard se začal nahlas modlit německy.
 
-A pak se ve tmě rozsvítilo světlo. Malé, žluté, třesoucí se. Hensel. Stál u rámu, shrbený, a v dlani měl kahan, a druhou dlaň měl nad ním, jako stříšku, jak ho přikryl v boudě tenkrát, když projížděl kůň. Matěj nevěděl jak, ale Hensel ho udržel. Ten jeden.
+A pak se ve tmě rozsvítilo světlo. Malé, žluté, třesoucí se. Hensel. Stál u rámu, shrbený, a v dlani měl kahan, a druhou dlaň měl nad ním, jako stříšku, jak ho přikryl v boudě tenkrát, když projížděl kůň. Hensel ho nějak udržel. Ten jeden.
 
 V tom světle se na sebe dívali. Šest tváří, mokrých, od hlíny, a jedna Matějova. A voda kolem jejich kolen.
 
@@ -314,7 +314,7 @@ Hensel se zastavil. Sundal dlaň ze stěny. Podíval se na Matěje.
 
 „Voll,“ řekl. Plno.
 
-Matěj se díval na rýhu na rámu. Voda byla tři prsty nad ní.
+Voda byla tři prsty nad rýhou na rámu.
 
 Díval se na list.
 
@@ -342,7 +342,7 @@ Merin řekl kolem. Matěj to slyšel a nechal to propadnout, protože chtěl sly
 
 U ucha.
 
-Stál ve vodě po pás a díval se do Henselova kahanu. Plamen se třásl.
+Stál ve vodě nad kolena a díval se do Henselova kahanu. Plamen se třásl.
 
 Kdo slyší každou ránu, musí být blízko. Ne pod štolou, na sáh skály, přes který by nebyl slyšet ani krumpáč. Blízko jako ucho přiložené ke dveřím. Celou zimu. Den po dni, čárku po čárce, jak se štola blížila. Někde tam, za skálou, někdo seděl a poslouchal. A kdo sedí a poslouchá, ten si k tomu místu udělá cestu.
 
@@ -356,7 +356,7 @@ Hensel se na něj díval.
 
 Matěj nevěděl, jak mu to říct. Neměl na to slova, ani česká, ani německá, ani latinská. Tak udělal to jediné, co ho napadlo. Přiložil dlaň na skálu. Jak to dělala Ostra. Jak to dělal Hensel. A sklonil hlavu.
 
-Hensel se na něj chvíli díval. Pak, pomalu, jako by si nebyl jistý, co se po něm chce, položil dlaň na skálu taky.
+Hensel pomalu, jako by si nebyl jistý, co se po něm chce, položil dlaň na skálu taky.
 
 A ztuhl.
 
@@ -412,7 +412,7 @@ Hensel se otočil. Viděl jeho ústa.
 
 „Ich,“ řekl.
 
-Ortlieb se na něj díval. Pak se začal smát. Ve vodě po pás, s kahanem v ruce, se smál, až se mu kahan třásl a světlo poskakovalo po stropu, a Matěj nevěděl, jestli Ortlieb pláče, nebo se směje, a nevěděl to ani potom.
+Ortlieb se začal smát. Ve vodě po pás, s kahanem v ruce, se smál, až se mu kahan třásl a světlo poskakovalo po stropu, a Matěj nevěděl, jestli Ortlieb pláče, nebo se směje, a nevěděl to ani potom.
 
 Hensel odhodil poslední fošnu.
 
@@ -456,7 +456,7 @@ Ozvalo se to. Jako do sklepa. Jako tenkrát, v noci devátého dubna, když pror
 
 Teď tam voda nebyla. Voda byla tady.
 
-Ješek vytáhl želízko. Otvor byl velký jako pěst. A z něj, z tmy na druhé straně, dopadlo na Ješkovu tvář světlo.
+Ješek vytáhl želízko. Otvor byl velký jako pěst. A z něj, ze tmy na druhé straně, dopadlo na Ješkovu tvář světlo.
 
 Žluté. Teplé. Jiné než Henselův kahan. Ne jedno. Několik, a pohybovala se.
 
@@ -478,11 +478,11 @@ A za tím obličejem, dál ve tmě, ve žlutém světle, jiné. Malé. Široké 
 
 Kunz zvedl mlátek výš.
 
-Matěj nevěděl, jak se dostal mezi ně. Byl u Kunze a držel ho za zápěstí, a Kunz byl silnější než on, a Matěj ho držel, a díval se mu do očí a řekl česky, protože jinak to říct neuměl:
+Matěj byl najednou mezi nimi, u Kunze, a držel ho za zápěstí, a Kunz byl silnější než on, a Matěj ho držel dál, a díval se mu do očí a řekl česky, protože jinak to říct neuměl:
 
 „Ne.“
 
-Kunz se na něj díval. Mlátek se mu v ruce třásl.
+Kunzovi se mlátek v ruce třásl.
 
 „Rychle,“ řekl Merin z okna. Česky, tou svou knižní češtinou, slovo po slovu. „Voda jde za vámi.“
 

@@ -136,7 +136,7 @@ A šla dál, k další lavici, a šlehala jinou ženu po zádech a smála se s n
 
 Za lázní byl dvůr, malý, vydlážděný kameny, a od něj se svažovala k potoku dřevěná struha. Tudy se z lázně vylévalo všechno: špinavá voda, popel, a po pouštění krev. Ilona to věděla od Řehoře. V sobotu večer, říkal, teče pod lázní potok načervenalý, a pod mostem si děti hrají, kdo vydrží stát ve vodě nejdéle, a matky na ně křičí.
 
-Ilona stála u struhy a dívala se na ni.
+Ilona stála u struhy.
 
 Struha byla mokrá od vody. Dřevo bylo tmavé, nasáklé, s porostem zelených řas v místech, kam nedosvítilo slunce. Ale na dně, kde by po letech sobot měly být rezavé skvrny od krve, tam, kde se krev zakousne do dřeva a žádná voda ji nevymyje, byly jen skvrny staré, vybledlé do šedi. Čerstvé žádné. Sestoupila po svahu k potoku, k ústí struhy. Kameny pod ním byly zelené a čisté. Voda čirá.
 
@@ -188,7 +188,7 @@ Lene si přitáhla šátek. „Některý ženský sem chodí, i když nejsou nem
 
 Ilona psala.
 
-„Kolbová chodila od Hromnic. Každý týden. Pak už ne, od Velikonoc ne.“ Lene se zamračila, jak se snažila vzpomenout si přesně, a Ilona ji za to měla ráda. „Potkala jsem ji na trhu. Ptala jsem se, proč už nechodí. A ona řekla…“ Odmlčela se.
+„Kolbová chodila od svatého Martina. Každý týden. Pak už ne, od Hromnic ne.“ Lene se zamračila, jak se snažila vzpomenout si přesně, a Ilona ji za to měla ráda. „Potkala jsem ji na trhu. Ptala jsem se, proč už nechodí. A ona řekla…“ Odmlčela se.
 
 „Řekni to, jak to řekla. Ne jak by to mělo být.“
 
@@ -230,7 +230,7 @@ Jobst ho četl dlouho. Pak ho odsunul.
 
 „Kterou tady pouštíte. V sobotu. Co s ní děláte?“
 
-Jobst se na ni podíval. Měl malé oči, modré, a v nich nic, jen únava a rozmrzelost člověka, kterého vyrušili při práci. „Vylévám ji,“ řekl. „Do struhy, do potoka. Jako vždycky. Jako můj otec a jeho otec. Kam bych ji asi dával?“
+Jobst měl malé oči, modré, a v nich nic, jen únava a rozmrzelost člověka, kterého vyrušili při práci. „Vylévám ji,“ řekl. „Do struhy, do potoka. Jako vždycky. Jako můj otec a jeho otec. Kam bych ji asi dával?“
 
 Ilona si ta slova zapamatovala. Nepsala je před ním. Napsala si je na ulici, o deset kroků dál, opřená o zeď domu, s uzlíkem pod paží: *Mistr Jobst, slova jeho: „Vylévám ji. Do struhy, do potoka. Jako vždycky. Jako můj otec a jeho otec. Kam bych ji asi dával?“* A pod to, pod čáru, to, co viděla sama: *Struha bez čerstvých skvrn. Kameny pod ústím čisté. Voda čirá.*
 

@@ -50,13 +50,13 @@ Jobst ji zastavil u mostu. Stál ve dveřích lázně se zástěrou přes břich
 
 „Co?“
 
-„Ta kniha. Ty řeči.“ Jobst si otřel tvář dlaní. „Byl to lékárníkův. Ten s tou zarůžovělou rukou. Florian. V pondělí večer u Zlatého jelena. Ožral se, jak se nežere ani havíř po výplatě, a pak brečel. Hospodský mi to říkal. Brečel a říkal, že paní vzala mistrovi knihu a že se mistr bojí víc než čerta. A že on, Florian, nosil jenom soudek. Jenom soudek, to opakoval pořád dokola.“ Jobst se na ni podíval. „A ponocný tam seděl. Veit. Víte, jaký je Veit.“
+„Ta kniha. Ty řeči.“ Jobst si otřel tvář dlaní. „Byl to lékárníkův. Ten s tou zarůžovělou rukou. Florian. V pondělí večer u Divého muže. Ožral se, jak se nežere ani havíř po výplatě, a pak brečel. Hospodský mi to říkal. Brečel a říkal, že paní vzala mistrovi knihu a že se mistr bojí víc než čerta. A že on, Florian, nosil jenom soudek. Jenom soudek, to opakoval pořád dokola. A ponocný tam seděl. Veit. Víte, jaký je Veit.“
 
 Ilona věděla, jaký je Veit.
 
 „A lékárník?“
 
-„Lékárník nic.“ Jobst pokrčil rameny. „Chodí s ovázanou tváří a usmívá se a ničeho se nebojí. Florian od pondělka nevyšel z officíny. Prý mu mistr nařídil drhnout baňky, a drhne je tři dny.“ Odmlčel se. „Paní. Já vím, že jsem vám lhal. O tom vylévání. Já to vím. Ale teď vám nelžu. Ten člověk se nebojí. A člověk, kterému ukradnou, co se bojí ztratit, a nebojí se, ten už ví, co udělá.“
+„Lékárník nic.“ Jobst pokrčil rameny. „Chodí s ovázanou tváří a usmívá se a ničeho se nebojí. Florian od pondělka nevyšel z officíny. Prý mu mistr nařídil drhnout baňky, a drhne je druhý den.“ Odmlčel se. „Paní. Já vím, že jsem vám lhal. O tom vylévání. Já to vím. Ale teď vám nelžu. Ten člověk se nebojí. A člověk, kterému ukradnou, co se bojí ztratit, a nebojí se, ten už ví, co udělá.“
 
 *
 
@@ -158,7 +158,7 @@ Ilona viděla, jak se dívá na zem mezi svými botami, a věděla, na co myslí
 
 „Dala mi jednou hrušku,“ řekl Tobiáš. „Lene. Když jsme byli malí. U lázně, přes plot.“
 
-Florian řekl totéž. Ilona to neřekla nahlas.
+Říkal to už jednou, u okénka, v den, kdy ji našli. A Florian řekl totéž. Ilona to neřekla nahlas.
 
 *
 
@@ -178,7 +178,7 @@ Tobiáš zvedl hlavu.
 
 „Pan perkmistr by ho svolal zítra. Kdybyste mu to dala.“
 
-Ilona mlčela.
+Ilona stála a nepohnula se.
 
 „Dáte to soudu?“
 
@@ -210,9 +210,7 @@ Tobiáš se nepohnul.
 
 „Vy jste mě to učila.“
 
-Ilona se na něj podívala.
-
-„První den,“ řekl Tobiáš. Hlas se mu nezvedl. Zůstal tichý a rovný, jako řádky, které ho učila psát. „U Ursuly. Zapsala jste všechno. I to, že jsem v noci vyšel na dvůr. I to, že jste slyšela vrzat podlahu. Řekla jste mi to do očí, v kuchyni, než pro mě přišli. *Úplný zápis chrání. Kdo napíše všechno, tomu nikdo nic nepřidá a nic neubere.*“ Polkl. „Sedím tady kvůli tomu čtyři týdny. Kvůli tomu vrzání. A nezlobil jsem se. Opravdu ne. Protože jsem si říkal, že to tak má být. Že vy to víte líp. Že kdo zapíše všechno, ten nakonec vyhraje, i když to nejdřív bolí.“
+„První den,“ řekl Tobiáš. Hlas se mu nezvedl. Zůstal tichý a rovný, jako řádky, které ho učila psát. „U Ursuly. Zapsala jste všechno. I to, že jsem v noci vyšel na dvůr. I to, že jste slyšela vrzat podlahu. Řekla jste mi to do očí, v kuchyni, než pro mě přišli. Že to zapíšete, všechno, a že když to bude pravda, pomůže to. Že úplný zápis chrání.“ Polkl. „Sedím tady kvůli tomu čtyři týdny. Kvůli tomu vrzání. A nezlobil jsem se. Opravdu ne. Protože jsem si říkal, že to tak má být. Že vy to víte líp. Že kdo zapíše všechno, ten nakonec vyhraje, i když to nejdřív bolí.“
 
 „Já vím.“
 
@@ -248,7 +246,7 @@ Tobiáš vstal. Komora byla nízká a on se musel trochu sklonit, aby nenarazil 
 
 Tobiáš se na ni díval. Dlouho.
 
-„To je stejné jako s tím psem,“ řekl potom. „*Abys nemusel mít kam to dát.*“
+„To je stejné jako s tím psem,“ řekl potom. „*Abys neměl kam to dát.*“
 
 „Ano.“
 
@@ -274,13 +272,13 @@ Mlčela.
 
 Ilona mlčela. Tobiáš se krátce zasmál, a nebyl to jeho smích. Byl to smích staršího muže, který zjistil, že se po celou dobu díval na špatnou stranu stolu.
 
-„Vy je znáte,“ řekl. „Ty z hor. Ne jenom toho, co vás kousl. Znáte je. Chodíte k nim. To je to bláto na sukni, tenkrát v sobotu. To je ta myrha, ne, myrha je od lékárníka… To je to, kam chodíte v noci, když vás havíři nevidí, protože spí.“ Díval se na ni. „Stöckel mě obviňuje, že jsem jim otvíral. Pod okénkem na mě řvou, že jsem jim otvíral. A vy jim otvíráte.“
+„Vy je znáte,“ řekl. „Ty z hor. Ne jenom toho, co vás kousl. Znáte je. Chodíte k nim. To je to bláto na sukni, tenkrát v sobotu. To je ta myrha, ne, myrha je od lékárníka… To je to, kam chodíte v noci, když vás havíři nevidí, protože spí. Stöckel mě obviňuje, že jsem jim otvíral. Pod okénkem na mě řvou, že jsem jim otvíral. A vy jim otvíráte.“
 
 „Ano.“
 
 To slovo vyšlo samo. Ilona ho nezastavila. Bylo to první, co mu za celý měsíc řekla celé.
 
-Tobiáš stál nad ní, shrbený pod schodištěm, a díval se na ni, a v jeho tváři nebyla zlost. Ilona čekala zlost. Byla by lepší. Byla tam ta pozornost, kterou ho naučila, obrácená proti ní, a pod tím něco, co znala z tváří lidí, kterým oznamovala, že někdo umřel.
+Tobiáš stál nad ní, shrbený pod schodištěm, a v jeho tváři nebyla zlost. Ilona čekala zlost. Byla by lepší. Byla tam ta pozornost, kterou ho naučila, obrácená proti ní, a pod tím něco, co znala z tváří lidí, kterým oznamovala, že někdo umřel.
 
 „Proč jste mi to neřekla?“
 
@@ -288,7 +286,7 @@ Tobiáš stál nad ní, shrbený pod schodištěm, a díval se na ni, a v jeho t
 
 „Já to nosím tak jako tak!“ Poprvé zvýšil hlas a hned ho stáhl, protože nahoře zavrzalo prkno. „Já to nosím čtyři týdny! Nosím to, že mi nic neříkáte, a nosím to, že nevím proč, a nosím to, že pod okénkem řvou *upírský pacholek*, a já nevím, jestli mají pravdu, protože nevím nic! Myslíte, že je to lehčí? Nevědět?“
 
-Ilona mlčela.
+Ilona sklopila oči.
 
 „Kdybyste mi řekla, kdo jsou,“ řekl Tobiáš tišeji, „mohl bych je hájit. Před soudem. Mohl bych říct: znám je, nikoho nezabili, ručím za ně. Já. Ne vy, cizinka, ženská, kterou nikdo nečte. Já. Syn havíře z horního konce, kterého zná celé město. Mně by uvěřili.“
 
@@ -296,7 +294,7 @@ Ilona mlčela.
 
 „To nevíte.“
 
-„Vím.“ Ilona se nadechla. „Byla jsem u brodu, když tam ležela Lene. Stála jsem nad ní a řekla nahlas, před rychtářem a před kazatelem a před půlkou města, že to nebyly zuby. Že to byl nástroj. Že ji zabil člověk. Řekla jsem to přesně, Tobiáši. Řekla jsem, kde, jak hluboko, jak šikmo. Ukázala jsem jim stéblo, kterým jsem to měřila.“ Dívala se na něj. „Kdo mi uvěřil?“
+„Vím.“ Ilona se nadechla. „Byla jsem u brodu, když tam ležela Lene. Stála jsem nad ní a řekla nahlas, před rychtářem a před kazatelem a před půlkou města, že to nebyly zuby. Že to byl nástroj. Že ji zabil člověk. Řekla jsem to přesně, Tobiáši. Řekla jsem, kde, jak hluboko, jak šikmo. Ukázala jsem jim stéblo, kterým jsem to měřila. Kdo mi uvěřil?“
 
 Tobiáš se na ni díval.
 
@@ -322,7 +320,7 @@ Ilona se nepohnula. Ani obličejem. Naučila se to za ten měsíc. Od Markéty, 
 
 A přesto to Tobiáš uviděl. Ilona nevěděla co. Možná dech. Možná to, jak dlouho jí trvalo, než otevřela ústa, a pak je zase zavřela. Možná nic, jen ticho, které bylo o chvilku delší, než mělo být.
 
-Díval se na ni. Pak se mu něco v tváři zastavilo, jako se zastaví kolo, když se zavře stavidlo.
+Tobiášovi se něco v tváři zastavilo, jako se zastaví kolo, když se zavře stavidlo.
 
 „Aha,“ řekl.
 
@@ -412,7 +410,7 @@ Matz Lindner ležel v posteli u kamen. Kašlal, když vešla, a kašlal, když s
 
 „Pustí ho. V pondělí.“
 
-Matz se na ni díval a nevěřil jí, a Ilona věděla proč. Protože to už jednou slyšel. Od perkmistra. A pak čtyři týdny čekal.
+Matz jí nevěřil, a Ilona věděla proč. Protože to už jednou slyšel. Od perkmistra. A pak čtyři týdny čekal.
 
 „Paní,“ řekl. „Já mám jen jeho. Máti umřela, dvě holky umřely, kozu jsme snědli. Mám jen jeho a tenhle kašel.“ Zvedl ruku z peřiny, kostnatou, šedou. „Dejte jim tu knihu. Celou. Ať se v ní hrabou, ať si v ní čtou, koho chtějí. Mně je jedno, kdo v ní je. Mně je jedno, jestli tam jsou lidi z hor, nebo radní, nebo pánbůh. Já chci kluka domů.“
 
@@ -425,8 +423,6 @@ Matz se na ni díval a nevěřil jí, a Ilona věděla proč. Protože to už je
 Matz zakašlal. Dlouho, do dlaně, a Ilona mu podala hrnek s vodou a on se napil a vrátil jí ho.
 
 „Byl tady včera,“ řekl potom. „Fridrich. Řekl mi, že kluk se ptá, co se povídá.“ Díval se na strop. „Až ho pustí, paní, ať jde domů. Sem. Ne k vám.“
-
-Ilona se na něj podívala.
 
 „Neříkám to zle,“ řekl Matz. „Vy jste ho naučila číst. Za to vám děkuju. Naučila jste ho víc, než jsem já kdy uměl.“ Zavřel oči. „Jen už ho nechci vidět, jak čte to, co mu dáte.“
 

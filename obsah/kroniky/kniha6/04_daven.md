@@ -2,7 +2,7 @@
 
 Dveře ho pustily.
 
-Nara seděla v kuchyni nad Askovou poznámkou k pravomoci, když uslyšela, jak se v předsíni otevírá. Žádné ohlášení, žádný řádek v koutku vědomí, že někdo stojí venku a čeká. Jen tiché cvaknutí zámku a pak kroky, které znala, protože je slýchala jedenáct let. Dveře Davena poznaly. Nara mu přístup nikdy nezrušila. Když před sedmi lety odcházel, nezrušila ho, protože tu bydlel Ilan a Daven si pro něj chodil. Pak to nechala být. Připadalo jí malicherné to rušit.
+Nara seděla v kuchyni nad Askovou poznámkou k pravomoci, když uslyšela, jak se v předsíni otevírá. Žádné ohlášení, žádný řádek sítě, že někdo stojí venku a čeká. Jen tiché cvaknutí zámku a pak kroky, které znala, protože je slýchala jedenáct let. Dveře Davena poznaly. Nara mu přístup nikdy nezrušila. Když před sedmi lety odcházel, nezrušila ho, protože tu bydlel Ilan a Daven si pro něj chodil. Pak to nechala být. Připadalo jí malicherné to rušit.
 
 Teď stál ve dveřích kuchyně a díval se na ni, a Nara pochopila, že ani on nečekal, že ho dveře pustí.
 
@@ -44,7 +44,7 @@ Nara čekala. Daven se díval na desku stolu a jeho prst sledoval škrábanec v 
 
 „Uvěřil ti?“
 
-„Ne.“ Daven zase sklopil oči k škrábanci. „Brečel, Naro. Seděl naproti mně a brečel. Ne dlouho. Pak se zastyděl a řekl, že je to tou rotací, že se mu tam točí hlava.“
+„Ne.“ Daven zase sklopil oči ke škrábanci. „Brečel, Naro. Seděl naproti mně a brečel. Ne dlouho. Pak se zastyděl a řekl, že je to tou rotací, že se mu tam točí hlava.“
 
 Nara mlčela.
 
@@ -56,7 +56,7 @@ Nara mlčela.
 
 *
 
-Pak vytáhl, kvůli čemu přišel. Neměl to v ruce, protože v ruce se nic nenosí. Poslal jí to přes stůl, z jedné sítě do druhé, a Nara ucítila v koutku vědomí ten drobný ťuk, kterým se ohlašuje cizí listina.
+Pak vytáhl, kvůli čemu přišel. Neměl to v ruce, protože v ruce se nic nenosí. Poslal jí to přes stůl, z jedné sítě do druhé, a Nara ucítila ten drobný ťuk, kterým se ohlašuje cizí listina.
 
 *Žádost o individuální výjimku z výkonu trestu — nezletilý. Žadatel: D. Vess, otec. Ve věci: Ilan Vess, 17 let.*
 
@@ -80,7 +80,7 @@ Nenapadlo ji to. Ten odstavec měla v hlavě dvacet let a za ty tři dny ji ani 
 
 „Já vím, že jsi nevěděla. Proto jsem tady.“
 
-Nara se dívala na rozhodnutí v koutku vědomí. Přerušuje se. Předběžná otázka. Navrhovatelka N. Vess.
+Nara se dívala na to rozhodnutí. Přerušuje se. Předběžná otázka. Navrhovatelka N. Vess.
 
 „Stáhni to,“ řekl Daven.
 
@@ -272,11 +272,11 @@ Pokoj se rozsvítil na její hodnotu. Ne na jeho. Zapomněl ho dávno. Byl skoro
 
 Sedla si na postel. Matrace byla tvrdá a studená a pod ní bylo cítit mřížku roštu.
 
-Síť se ozvala, laskavě, menším písmem. *Místnost nevyužita 8 měsíců. Přejete si změnit přidělení?*
+Síť se laskavě ozvala. *Místnost nevyužita 8 měsíců. Přejete si změnit přidělení?*
 
 *Ne,* odpověděla.
 
-Seděla tam a dívala se na světlejší obdélník na stěně. Daven měl pravdu. Měl pravdu ve všem, co řekl, a ona to věděla, a to, že to věděla, jí nepomáhalo vůbec. Zklidnění ten pocit hladilo. Necítila ho celý. Cítila, že by ho měla cítit. Ležel vedle ní na posteli jako věc.
+Seděla tam a dívala se na světlejší obdélník na stěně. Daven měl pravdu. Měl pravdu ve všem, co řekl, a ona to věděla, a to, že to věděla, jí nepomáhalo vůbec. Síť ten pocit hladila. Nara ho necítila celý. Cítila, že by ho měla cítit.
 
 Do třicátého šestého dne. Pak už je to jedno.
 

@@ -22,15 +22,13 @@ Kdo zaplatil vůz, Purga nevěděla. Ilona se nezeptala ani na to.
 
 Ve čtvrtek večer zaklepal Jobst.
 
-Stál na prahu s brašnou pod paží a s červenou tváří, ještě červenější než jindy, a nechtěl jít dál. Bartl se na něj díval ze schodu.
+Stál na prahu s brašnou pod paží a s červenou tváří, ještě červenější než jindy, a nechtěl jít dál.
 
 „Ta ruka,“ řekl Jobst. „Lékárníkova.“
 
 „Otevřel jste ji.“
 
 „Otevřel. V pondělí. Vyteklo to, vyčistil jsem to, dal jsem tam knot, jak se má.“ Jobst se díval na její boty. „Dnes má horečku. Čára jde nad loket. Podpaží má tvrdé jako kámen a horké. Já nevím, co dál. Nechci, aby mi umřel pod rukama dřív, než ho…“ Zarazil se. „Dřív, než přijde z Prahy, co přijít má.“
-
-Ilona se na něj dívala.
 
 Před měsícem jí ten člověk lhal do očí o vylévání krve. Před týdnem ji Röhrich držel za ústa a přikládal jí lancetu ke krku. A teď stál na jejím prahu lazebník, který ji chtěl připravit o řemeslo, a ptal se jí, jak zachránit lékárníka, aby ho mohli pověsit.
 
@@ -60,7 +58,7 @@ Bartl se na ni díval.
 
 „Ano,“ řekla Ilona.
 
-Bartl jí nevěřil. Viděla mu to na tváři. Ale bylo pět minut po třetí a na horním konci u koželuha už troubil roh.
+Bartl jí nevěřil. Viděla mu to na tváři. Ale bylo chvíli po třetí a na horním konci u koželuha už troubil roh.
 
 *
 
@@ -84,7 +82,7 @@ Pak je uviděla.
 
 První zástup vyšel z horního konce, od koželuha, a šel přes haldy nahoru. Šedá řada lidí na šedé hlušině, jako mravenci na popelu. Napočítala jich přes čtyřicet, pak ji to přestalo bavit, protože pořád přicházeli další. Mezi nimi psi, čtyři tečky, a zvuk, který k ní dolétl přes celé údolí až po chvíli, opožděný, jako hrom za bleskem. Štěkot. Louče nesli nezapálené, na rameni. Bylo světlo. Nebylo jich třeba.
 
-Druhý zástup se objevil o něco později. Z dolního konce, od mostu, kudy Ilona přišla. Menší. Dvacet mužů, možná pětadvacet. Šli proti vodě, podél potoka, nahoru. Kde do potoka ústila rokle, tam se zastavili, pár jich odbočilo, šlo se podívat a pak se vrátili. Ilona viděla, jak jeden z nich strčil hůl do díry pod kořeny vrby a pak ji vytáhl a podíval se na její konec.
+Druhý zástup se objevil o něco později. Z dolního konce, od mostu, kudy Ilona přišla. Menší. Dvacet mužů, možná pětadvacet. Šli proti vodě, podél potoka, nahoru. Kde do potoka ústila rokle, tam se zastavili, pár jich odbočilo, šlo se podívat a pak se vrátilo. Ilona viděla, jak jeden z nich strčil hůl do díry pod kořeny vrby a pak ji vytáhl a podíval se na její konec.
 
 *Mezi dvěma ohni,* řekl Stöckel.
 
@@ -106,7 +104,7 @@ Bílý, hustý, valil se z portálu nahoru a do strany, kam ho nesl vítr, a nad
 
 Kouř stoupal a Ilona se dívala a nic necítila. Nebo cítila něco, co nemělo jméno a co si odložila na později, jak se odkládá bolest, když je potřeba ještě chvíli držet ruku pevně.
 
-Kolik jich tam je, napadlo ji. Kilián řekl: Urban se smál. Že mají nahoře přítele. Že znají den a cestu. *Po klekání.* Tak to řekl mezkař a tak to řekl Kilián. Oba to věděli od Wehrla. A Wehrl to řekl ve středu na střeše, kdy ještě nikdo nevěděl, že ve čtvrtek bude Ilona stát v radní síni a říkat Stöckelovi, co je v jeho domě.
+Kolik jich tam je, napadlo ji. Kilián řekl: Urban se smál. Že mají nahoře přítele. Že znají den a cestu. *Po klekání.* Tak to řekl mezkař a tak to řekl Kilián. Oba to věděli od Wehrla. A Wehrl to řekl v úterý na střeše, kdy ještě nikdo nevěděl, že ve čtvrtek bude Ilona stát v radní síni a říkat Stöckelovi, co je v jeho domě.
 
 Kdo věřil příteli nahoře, čekal na klekání. Kdo nevěřil, odešel. Starými díly na saskou stranu, kudy chodí jen ti, kdo nemusí na slunce. Kilián je varoval. Kilián řekl *víc nemůžu.*
 
@@ -140,7 +138,7 @@ Dlouho.
 
 Pak z olší vyšel kouř. Ne tak hustý jako na sedle. Tenký, šedý, jedna nitka, která stoupala rovně, protože v rokli nefoukalo. Zapálili tam něco. Výdřevu v portálu. Nebo jen hromadu chrastí, aby se vědělo, že tu byli.
 
-Uvnitř nic nebylo. Ilona to věděla. Ohniště zasypané hlínou. Kozí bobky. Kolíky u olší, kde byly uvázané kozy. Možná zapomenutá lžíce, střep, kus kůže ze stínítka. Lampy si vzali. Dveře taky, ty dveře ze štoly, na kterých nesli Zikmunda.
+Uvnitř nic nebylo. Ilona to věděla. Ohniště zasypané hlínou. Kozí bobky. Kolíky u olší, kde byly uvázané kozy. Možná zapomenutá lžíce, střep, kus rohoviny ze stínítka. Lampy si vzali. Dveře taky, ty dveře ze štoly, na kterých nesli Zikmunda.
 
 Koza tam nebyla. Kilián ji vzal v sobotu v noci, když hlídka spala.
 
@@ -150,7 +148,7 @@ Nitka kouře stoupala a pak se zlomila a rozplynula. Muži vycházeli z olší z
 
 Markéta přišla, když slunce sedalo na Klínovec.
 
-Ilona ji slyšela dřív, než ji viděla. Kroky v trávě za zídkou, těžké, nepravidelné, jak chodí člověk, který deset let stojí u rudy a nohy už má jen na to stání. Pak Markéta přelezla zídku, neotvírala branku, a šla mezi hroby nahoru, a sedla si do trávy vedle Ilony. Ne blízko. Na délku paže.
+Ilona ji slyšela dřív, než ji viděla. Kroky v trávě za zídkou, těžké, nepravidelné, jak chodí člověk, který tři roky stojí u rudy a nohy už má jen na to stání. Pak Markéta přelezla zídku, neotvírala branku, a šla mezi hroby nahoru, a sedla si do trávy vedle Ilony. Ne blízko. Na délku paže.
 
 Neřekla nic. Dívala se na sedlo.
 
@@ -182,7 +180,7 @@ Na posledních haldách nad horním koncem už bylo slyšet hlasy. Bubnování n
 
 A čtvrtý.
 
-Ten nešel. Nesli ho. Na žebříku, starém fáracím žebříku, který museli najít u štoly, dva muži vpředu, dva vzadu, a on na něm ležel napříč, jako se nese ten, kdo vypadl z šachty. Nehýbal se. Přes něj byl hozený kabát. Ilona nevěděla, jestli je živý.
+Ten nešel. Nesli ho. Na žebříku, starém fáracím žebříku, který museli najít u štoly, dva muži vpředu, dva vzadu, a on na něm ležel napříč, jako se nese ten, kdo vypadl ze šachty. Nehýbal se. Přes něj byl hozený kabát. Ilona nevěděla, jestli je živý.
 
 Žebřík. Dvě dlouhé tyče a příčky mezi nimi.
 
@@ -196,7 +194,7 @@ Tři nebo čtyři.
 
 Slunce zapadlo ve čtvrt na devět a v půl deváté zvonili klekání.
 
-U svatého Jáchyma zvonili jako každý den. Stejně dlouho, stejně pomalu, a Ilona poslouchala a myslela na to, že před týdnem v úterý, na střeše, řekl Wehrl *po klekání*. A že kdo na něj čekal, už nečeká.
+U svatého Jáchyma zvonili jako každý den. Stejně dlouho, stejně pomalu, a Ilona poslouchala a myslela na to, že předminulé úterý, na střeše, řekl Wehrl *po klekání*. A že kdo na něj čekal, už nečeká.
 
 Dole ve městě se zapalovaly louče. Hlouček s pytli přišel na náměstí a Ilona viděla, jak se kolem něj stáhli lidé, víc a víc, celé náměstí, a slyšela zvuk, který znala. Šum kvašení. Pak voda v potoce, když se nad ním utrhne mrak. Pak jedno slovo, opakované, nesrozumitelné odsud, ale Ilona ho znala, protože ho slyšela u brodu a slyšela ho před radnicí a slyšela ho za zády, když jí přeletěl kolem hlavy kámen.
 
@@ -204,7 +202,7 @@ Markéta vedle ní vstala.
 
 „Půjdu dolů,“ řekla. „Mám doma kozu podojit. Sousedovu. Ta se o svatým Janu nestará.“
 
-Stála chvíli a dívala se na Ilonu. Pak se sehnula a položila Iloně ruku na rameno. Šedou ruku, těžkou. Nechala ji tam tak dlouho, jak trvá jeden nádech. Pak ji vzala a šla, mezi hroby, a zídku zase přelezla.
+Chvíli ještě stála. Pak se sehnula a položila Iloně ruku na rameno. Šedou ruku, těžkou. Nechala ji tam tak dlouho, jak trvá jeden nádech. Pak ji vzala a šla, mezi hroby, a zídku zase přelezla.
 
 Ilona za ní neotočila hlavu.
 
@@ -228,13 +226,9 @@ Ilona ho poznala podle lucerny a podle chůze, kolébavé, a podle toho, že si 
 
 Neodpověděla.
 
-„Paní ranhojičko. To jste vy.“ Veit se opřel o zídku. Byl opilý, ne moc, tak jak je opilý ponocný na svatého Jana, kdy ho všichni zvou. „Já jsem byl nahoře. U štoly. S rychtářem.“ Ukázal lucernou nahoru, na sedlo, kde už nic nebylo vidět. „Víte, co tam bylo?“
-
-Ilona se na něj dívala.
+„Paní ranhojičko. To jste vy.“ Veit se opřel o zídku. Byl opilý, ne moc, tak jak je opilý ponocný na svatého Jana, kdy ho všichni zvou. „Já jsem byl nahoře. U štoly. S rychtářem.“ Ukázal lucernou nahoru, na sedlo, kde už nic nebylo vidět. „Víte, co tam bylo?“ Chvíli čekal.
 
 „Nic,“ řekl Veit. „Tedy něco. Ohniště, kosti, smrad. Hadry. Hrnky. A díra. Vzadu ve štole, za závalem, díra do starých děl, kudy prolezeš jen po břiše. Psi tam chtěli a psovod je nepustil. Říkal, že tam za nimi nepůjde. Že to vede na saskou stranu a že tam dole je víc vody než vzduchu.“ Odplivl si. „Utekli. Většina. Ti tři, co jsme chytili, se schovávali v boční chodbě. A ten čtvrtej.“
-
-Ilona mlčela.
 
 „Hořeli,“ řekl Veit. Tišeji. „Když je vytáhli ven. Rychtář je nechal sedět před štolou, než se dohádali, kdo je ponese, a pak je vedli dolů, celou cestu proti slunci. Dvě hodiny, víc. Viděla jste někdy prase, když se opaří? Tak. Puchejře. Křičeli. Jeden ne. Ten nemluví vůbec, je němej, rychtář říkal, že dělá blázna. Zuby mu chybí, tady.“ Ukázal si na horní ret, vlevo. „Kousl psovoda do ruky. Psovod mu je pak vyrazil ještě víc.“
 
@@ -274,7 +268,7 @@ Za svítání sešla ze hřbitova.
 
 Byla ztuhlá a tráva byla mokrá a sukni měla promočenou až ke kolenům. Na mostě potkala dva opilé tovaryše, kteří se opírali jeden o druhého a zpívali. Jeden z nich ji poznal a řekl *upíří* a druhý ho strčil, ať je zticha, a pak se oba smáli.
 
-Doma u dveří čekal Bartl. Seděl na schodě, kde sedával celé tři týdny, s loučí v ruce, ohořelou, a když ji uviděl, vstal.
+Doma u dveří čekal Bartl. Seděl na schodě, kde sedával celý měsíc, s loučí v ruce, ohořelou, a když ji uviděl, vstal.
 
 „Kde jste byla?“
 

@@ -74,8 +74,6 @@ Pak tu chybu použije. Pootočí mapu o pět stupňů a natáhne ji o čtyři pr
 
 „Tam je pole pana Chana,“ řekne Ríša potichu. Ukáže na okraj výtisku, kde končí ortofoto a začíná bílý papír. „Za tou kamennou zdí. Spálil ho v únoru. Fotil jsem ho z výšky, když jsme přijeli. Chtěl jsem záběr kouře z polí za ním.“
 
-Hana se na něj podívá.
-
 „Máš ty fotky?“
 
 „Mám všechno,“ řekne Ríša. „Já nic nemažu.“
@@ -98,7 +96,7 @@ Kalina si elipsu prohlédne. Nic neřekne. Překreslí si ji do svého sešitu, 
 
 Ve tři čtvrtě na deset zhasne mýtina.
 
-Nejdřív reflektory. Bílé světlo, které dva dny viselo nad studnou, zmizí najednou, a stromy přestanou být černé sloupy a jsou zase stromy. Pak se zastaví žlutý generátor. Pak druhý. Hana neví, jak hlasité byly, dokud neztichnou. Ticho po nich je tak velké, že slyší vlastní tep v uších.
+Nejdřív reflektory. Bílé světlo, které dva dny viselo nad studnou, zmizí najednou, a stromy přestanou být černé sloupy a jsou zase stromy. Pak se zastaví žlutý generátor. A druhý. Hana neví, jak hlasité byly, dokud neztichnou. Ticho po nich je tak velké, že slyší vlastní tep v uších.
 
 Pak cvrčci. Žáby u studny. Někde daleko pes.
 
@@ -116,7 +114,7 @@ Dlouho se nehýbe. Pak sundá jedno sluchátko z ucha.
 
 „Nic.“ Kalina se skoro usměje. Hana to vidí ve slabém světle měsíce. „Poprvé za tři týdny nic. Žádný hřeben. Jen ionosféra a blesky někde nad Guatemalou.“
 
-Hana vypne telefon. Úplně, ne letadlový režim. Podívá se ještě jednou na displej, než zhasne. Žádná zpráva. V Méridě se možná podepisuje zatykač. Možná ne. Zjistí to ve čtyři.
+Hana vypne telefon. Úplně, ne letadlový režim. Podívá se ještě jednou na displej, než zhasne. Žádná zpráva. V Méridě se možná podepisuje příkaz k otevření bedny. Možná ne. Zjistí to ve čtyři.
 
 Strčí telefon do batohu vedle panenky bez nohy.
 
@@ -130,13 +128,13 @@ Měsíc je víc než v půlce a stojí na západě nad lesem. Spálená milpa po
 
 V jedenáct nula nula si Kalina nasadí sluchátka.
 
-Hana se dívá na jeho ruce. Smyčka na tyči se pomalu otáčí. Zastaví se. Otočí se zpátky. Zastaví se.
+Smyčka na tyči se Kalinovi v rukou pomalu otáčí. Zastaví se. Otočí se zpátky. Zastaví se.
 
 Kalina zvedne ruku. Jeden prst.
 
 Hana nedýchá.
 
-Kalina otáčí smyčkou dál, pomalu, po stupních. Pak vytáhne z kapsy kompas, přiloží ho k tyči a dlouho na něj svítí červenou čelovkou. Napíše něco do sešitu. Otočí smyčku jinak, nastojato. Napíše další číslo.
+Kalina otáčí smyčkou dál, pomalu, po stupních. Vytáhne z kapsy kompas, přiloží ho k tyči a dlouho na něj svítí červenou čelovkou. Napíše něco do sešitu. Otočí smyčku jinak, nastojato. Napíše další číslo.
 
 V jedenáct deset sundá sluchátka.
 
@@ -160,7 +158,7 @@ Hana to říká v hlavě znovu, protože to musí pochopit celé. Maják ležel 
 
 Někdo ho nesl.
 
-Někdo ho nesl ze síně nahoru. Přes mlhu a haloklinu, po sestupu až pod hrdlo. A tam, kousek před hrdlem, doleva nahoru, za bod čtyřicet osm.
+Někdo ho nesl ze síně nahoru. Přes mlhu a haloklinu, po sestupu až pod hrdlo. A tam, kousek před hrdlem, odbočkou doleva nahoru, za bod čtyřicet osm.
 
 „Pojďme,“ řekne Kalina.
 
@@ -168,7 +166,7 @@ Někdo ho nesl ze síně nahoru. Přes mlhu a haloklinu, po sestupu až pod hrdl
 
 Padesát minut jdou přes milpu.
 
-Mladík s mačetou jde první a sem tam něco usekne, tiše, jedním pohybem. Pak Kalina se smyčkou přes rameno. Pak ostatní. Nikdo nesvítí, jen Hana na mapu a Jana na zem, když je tam kámen. Popel jim práší od bot, a když na něj dopadne měsíc, je bílý jako mouka.
+Mladík s mačetou jde první a sem tam něco usekne, tiše, jedním pohybem. Pak Kalina se smyčkou přes rameno. A ostatní. Nikdo nesvítí, jen Hana na mapu a Jana na zem, když je tam kámen. Popel jim práší od bot, a když na něj dopadne měsíc, je bílý jako mouka.
 
 U kamenné zdi se zastaví. Zeď je po pás, suchá, z kamenů, které někdo kdysi sebral z pole a naskládal na sebe bez malty. Mladík ukáže na místo, kde je nižší. Přelezou.
 
@@ -196,7 +194,7 @@ Je to kus pole jako každý jiný. Pahýl stromu, ohořelý, po kolena. Dvě bí
 
 Kalina sundá smyčku z ramene a postaví se k pahýlu. Ve dvanáct padesát devět si nasadí sluchátka. V jednu nula nula začne.
 
-Teď už nehledá směr. Teď hledá místo, kde pole zmizí. Kde stojí přímo nad cívkou a magnetické pole jde svisle vzhůru, jako dým v bezvětří, a smyčka postavená naležato neslyší nic. Hana to ví z Holštejna. Jeskyňáři si to tehdy vysvětlovali jeden druhému, zatímco on celý večer nepromluvil a ráno měl křížek. Ticho uprostřed hluku. Místo, kde je ten, kdo mluví, přímo pod tebou.
+Teď už nehledá směr. Teď hledá místo, kde pole zmizí. Kde stojí přímo nad cívkou a magnetické pole jde svisle vzhůru, jako dým v bezvětří, a smyčka postavená nastojato neslyší nic, ať ji otočí kamkoli. Hana to ví z Holštejna. Jeskyňáři si to tehdy vysvětlovali jeden druhému, Kalina celý večer nepromluvil a ráno měl křížek. Ticho uprostřed hluku. Místo, kde je ten, kdo mluví, přímo pod tebou.
 
 ![Noc na spálené milpě](obrazky/16_nocni_milpa.webp)
 
@@ -214,7 +212,7 @@ Ríša ho zatluče. Ruce se mu třesou a kladivo dvakrát mine. Pak kolík stoj�
 
 „Ve dvě,“ řekne Kalina. „Teď už mi zbývají čtyři minuty. Potřebuju vědět, jak stojí.“
 
-Obejde kolík. Dokola, ve vzdálenosti, kterou mu odměřuje Jana pásmem. Čtyřikrát se zastaví a poslouchá. Do sešitu napíše čtyři čísla. Pak se podívá na hodinky. Jedna deset. Sundá sluchátka.
+Obejde kolík. Dokola, ve vzdálenosti, kterou mu odměřuje Jana pásmem. Čtyřikrát se zastaví a poslouchá. Do sešitu napíše čtyři čísla a čas. Jedna deset. Sundá sluchátka.
 
 „Stojí rovně,“ řekne.
 
@@ -222,9 +220,7 @@ Obejde kolík. Dokola, ve vzdálenosti, kterou mu odměřuje Jana pásmem. Čty�
 
 „Pole je souměrné. Všude stejně. Kdyby ležel na boku nebo šikmo, bylo by z jedné strany silnější a ticho by nebylo přímo nad ním.“ Kalina si sedne na desku vápence. Poprvé za celou noc si sedne. „Nespadl tam. Někdo ho postavil. Na rovné místo, cívkou nahoru. Bublina na střed, řekl bych. Jako tenkrát s Luisem.“
 
-Hana se dívá na kolík s reflexní páskou.
-
-Devátého března. Terasa u LE 14, metr od převisu. Luis drží svítilnu. Hana pokládá maják na plochou terasu a pod jednu nožičku podkládá olovo, protože terasa se mírně svažuje. Pak se Luis nakloní a ukáže prstem na vodováhu na víčku. Bublina na střed. Luis kývne. *Bien.*
+Devátého března. Terasa u LE 14, metr od převisu. Luis drží svítilnu. Hana pokládá maják na plochou terasu a pod jednu nožičku podkládá olovo, protože terasa se mírně svažuje. Luis se nakloní a ukáže prstem na vodováhu na víčku. Bublina na střed. Luis kývne. *Bien.*
 
 Luis ví, co ten maják dělá. Byl u toho, když ho Kalina přeladil. Slyšel *každou celou hodinu deset minut*. Slyšel *kdo má přijímač a stojí do pár set metrů*.
 
@@ -240,9 +236,9 @@ Zapíše to tak. Vlevo, v červeném světle čelovky. Obě věty.
 
 Ve dvě měří Kalina hloubku.
 
-Hana mu na to drží světlo a Jana pásmo. Kalina chodí od kolíku ven, po přímce, s cívkou postavenou nastojato, a hledá místo, kde se pole stočí do vodorovna. Pak to samé na druhou stranu, na třetí, na čtvrtou. Čtyři čísla. Pak dlouho počítá v sešitě a nikdo na něj nemluví.
+Hana mu na to drží světlo a Jana pásmo. Kalina chodí od kolíku ven, po přímce, s cívkou položenou naležato, a hledá místo, kde tón zmizí, protože pole se tam stočí do vodorovna. To samé na druhou stranu, na třetí, na čtvrtou. Čtyři čísla. Pak dlouho počítá v sešitě a nikdo na něj nemluví.
 
-„Kde je pole vodorovné,“ řekne potom, spíš pro sebe než pro ně, „tam je vzdálenost od středu rovná hloubce krát odmocnina ze dvou. Dvacet čtyři celá jedna. Dvacet tři celá osm. Dvacet čtyři celá čtyři. Dvacet čtyři.“ Podívá se na Hanu. „Sedmnáct metrů. Plus minus jeden.“
+„Kde je pole vodorovné,“ řekne potom, spíš pro sebe než pro ně, „tam je vzdálenost od středu rovná hloubce krát odmocnina ze dvou. Dvacet čtyři celá jedna. Dvacet tři celá osm. Dvacet čtyři celá čtyři. Dvacet čtyři. Sedmnáct metrů. Plus minus jeden.“
 
 „Plus minus jeden?“
 
@@ -268,19 +264,19 @@ Ve čtyři nula dvě se nad lesem na západě rozsvítí oranžová záře. Obec
 
 Hana zapne telefon.
 
-Jedna zpráva. Marisol, dvacet tři čtyřicet. *Zatykač podepsán. Otevíráme zítra v osm. Máme vaše. M.*
+Jedna zpráva. Marisol, dvacet tři čtyřicet. *Příkaz podepsán. Otevíráme zítra v osm. Máme vaše. M.*
 
-Hana se na tu zprávu dívá dlouho. *Máme vaše.* Její metr, její čísla, její jednu stránku. Ve čtyři hodiny osm minut ráno na spáleném poli pana Chana neví, jestli za čtyři hodiny bude v Progresu v bedně válec, nebo vápenec, nebo nic. Neví to a nemůže to vědět. Nemůže tam být.
+*Máme vaše.* Její metr, její čísla, její jednu stránku. Ve čtyři hodiny osm minut ráno na spáleném poli pana Chana neví, jestli za čtyři hodiny bude v Progresu v bedně válec, nebo vápenec, nebo nic. Neví to a nemůže to vědět. Nemůže tam být.
 
 Odepíše jedno slovo. *Díky.*
 
-Pak telefon strčí do batohu.
+Telefon strčí do batohu.
 
 *
 
 Za svítání obejde pole.
 
-Pomalu, ve spirále, od kolíku ven, jako se obchází sonda. Každé dva kroky se zastaví a dívá se pod nohy. Popel, pahýly, desky vápence. Ríša mezitím vzlétne s dronem. Bzučí nad polem jako první den nad mýtinou a fotí, nahoře, kolmo, s překryvem. Pak přistane a Ríša sedne s notebookem na kamennou zeď.
+Pomalu, ve spirále, od kolíku ven, jako se obchází sonda. Každé dva kroky se zastaví a dívá se pod nohy. Popel, pahýly, desky vápence. Ríša mezitím vzlétne s dronem. Bzučí nad polem jako první den nad mýtinou a fotí, nahoře, kolmo, s překryvem. Když dron přistane, Ríša sedne s notebookem na kamennou zeď.
 
 Nejdřív ji Hana najde sama, pak na Ríšově obrazovce.
 
@@ -294,7 +290,7 @@ Ríša na obrazovce přetáhne ortofoto z rána přes svou fotku kouře z druhé
 
 „Kdy?“ zeptá se Ríša.
 
-„Nevím. Po druhém březnu. Odstřelů jsem od té doby zapsala přes dvacet.“ Hana se dívá na bílou čáru na obrazovce. „Nejspíš ten poslední. Nebo devatenáctý.“
+„Nevím. Po druhém březnu. Odstřelů jsem od té doby zapsala přes dvacet. Nejspíš ten poslední. Nebo devatenáctý.“
 
 Patnáct metrů západně od kolíku je v poli mělká prohlubeň. Kruhová, se třemi stromy, které nikdo nespálil, protože rostou z dolíku. Takových je tu v polích hodně. Staré propady, kde kdysi sedl strop nějaké dutiny a nad ní se země prohnula. Tahle prohlubeň leží na puklině.
 
@@ -324,7 +320,7 @@ Vrt musí jít do vzduchu, ne do vody. Kdyby prorazil strop nad místem, kde je 
 
 Inženýr se podívá na Walta.
 
-Walt se dlouho dívá na místo, kam Hana ukázala. Pak na svou mapu. Pak zase na pole.
+Walt se dlouho dívá na místo, kam Hana ukázala, na svou mapu, zase na pole.
 
 „Nad vodou je strop hladký,“ řekne. „Jako vnitřek vajíčka. Nad bloky ne. Nad bloky visí kameny, jako když se loupe omítka.“ Pokrčí rameny. „Před sedmnácti lety. Teď nevím.“
 
@@ -336,9 +332,9 @@ Walt se dlouho dívá na místo, kam Hana ukázala. Pak na svou mapu. Pak zase n
 
 Hana ví, že ta otázka přijde. Celou noc ví, že přijde.
 
-Vrtná korunka, která se otáčí v kameni šestnáct metrů nad hlavou člověka. Vibrace jdou kamenem jako zvuk jde zdí. Pod puklinou, pod prohlubní, nad bloky visí strop, který už jednou spadl. Může spadnout znovu. Může spadnout i tam, kde je hladký jako vnitřek vajíčka. To nikdo neví. Seismometry tu nikdo nemá. Šíření otřesu v krasu nikdo přesně nezná. Řekla to Kalinovi v lomu osmého, a Kalina řekl *to je dobrý důvod*.
+Vrtná korunka, která se otáčí v kameni šestnáct metrů nad hlavou člověka. Vibrace jdou kamenem jako zvuk jde zdí. Pod puklinou, pod prohlubní, nad bloky visí strop, který už jednou spadl. Může spadnout znovu. Může spadnout i tam, kde je hladký jako vnitřek vajíčka. To nikdo neví. Seismometry tu nikdo nemá. Šíření otřesu v krasu nikdo přesně nezná. Řekla to Kalinovi v lomu osmého a Kalina řekl *to je dobrý důvod*. Tehdy důvod zapisovat.
 
-Dobrý důvod nic nedělat. Jenže Luis, jestli tam je, nemá čas na dobré důvody. Má dny.
+Teď by to byl dobrý důvod nic nedělat. Jenže Luis, jestli tam je, nemá čas na dobré důvody. Má dny.
 
 „Pak se to zřítí,“ řekne Hana. „A místo jsem určila já.“
 
@@ -416,7 +412,7 @@ Studnař přijede v deset dvacet.
 
 Je to starý nákladní vůz s rezavou kabinou a na korbě stožár složený naležato, hydraulika, buben s lanem, svazek tyčí a čerpadlo na výplach. Za ním pick-up se dvěma chlapci a s barelem vody. Studnař je malý, šedivý, s rukama černýma od oleje. Nepředstaví se. Don Felipe mu říká don Isidro.
 
-Don Isidro vyleze z kabiny a nejdřív se podívá na pole. Pak na kolík. Pak na Hanu.
+Don Isidro vyleze z kabiny a nejdřív se podívá na pole, pak na kolík a na Hanu.
 
 „¿La doctora?“
 
@@ -436,7 +432,7 @@ Don Isidro kývne. Vypadá, že to všechno ví a že mu Hana jen potvrzuje, co 
 
 „Já vím.“
 
-Don Isidro se na ni dívá. Pak na Rosu u kolíku. Pak na pana Chana s holí.
+Don Isidro se dívá na ni, na Rosu u kolíku, na pana Chana s holí.
 
 „Pomalu,“ řekne. „Dobře.“
 
@@ -444,9 +440,9 @@ Don Isidro se na ni dívá. Pak na Rosu u kolíku. Pak na pana Chana s holí.
 
 V jedenáct stojí stožár.
 
-Zvedne se z korby na hydraulice, pomalu, se skřípěním, a postaví se svisle nad polem. Chlapci ho zajistí lany ke kolíkům. Don Isidro chodí kolem a kontroluje vodováhou. Inženýr kontroluje taky, svou. Pak spolu chvíli mluví a oba kývnou.
+Zvedne se z korby na hydraulice, pomalu, se skřípěním, a postaví se svisle nad polem. Chlapci ho zajistí lany ke kolíkům. Don Isidro chodí kolem a kontroluje vodováhou. Inženýr kontroluje taky, svou. Chvíli spolu mluví a oba kývnou.
 
-Korunka visí na tyči nad zemí. Šest palců. Patnáct centimetrů. Hana se na ni dívá a pomyslí si, kolik se do takové díry vejde. Kamera. Hadice. Láhev s vodou. Nic víc. Člověk ne.
+Korunka visí na tyči nad zemí. Šest palců. Patnáct centimetrů. Hana si pomyslí, kolik se do takové díry vejde. Kamera. Hadice. Láhev s vodou. Nic víc. Člověk ne.
 
 Don Isidro se otočí k ní.
 
@@ -468,7 +464,7 @@ Don Isidro kývne a jde ke kabině.
 
 Hana si sedne na kamennou zeď a otevře Kalinův sešit.
 
-Do pravého horního rohu napíše *6*.
+Vpravo nahoře *6*.
 
 Vlevo:
 
@@ -484,9 +480,9 @@ Vlevo:
 *Vrt rotačně, s výplachem vodou, bez kladiva, poslední 3 m pomalu.*
 *Podepsáno H. V., geoarcheoložka, za sebe, 6:40.*
 *Shromáždění ejida: souhlas s vrtem na poli pana Chana, jen na určeném místě (don Felipe, 7:00).*
-*M. C. 23:40: zatykač podepsán, Progreso zítra v 8.*
+*M. C. 23:40: příkaz k otevření podepsán, Progreso 28. 3. v 8.*
 
-Pak se podívá doprava.
+Podívá se doprava.
 
 Nad polem zavrčí motor. Stožár se zachvěje. Pan Chan se opře o hůl. Rosa se nehne.
 
@@ -494,7 +490,7 @@ Hana nasadí pero a napíše:
 
 *Jestli se klenba zřítí, řekla jsem kde.*
 
-Dívá se na to. Je to pravda a patří to vpravo, protože je to to, co si myslí, ne to, co viděla. Pod to připíše menším písmem, protože don Felipe to řekl a ona to slyšela:
+Je to pravda a patří to vpravo, protože je to to, co si myslí, ne to, co viděla. Pod to připíše, protože don Felipe to řekl a ona to slyšela:
 
 *„Vy jste řekla kde. My jsme řekli ano. To není totéž.“*
 

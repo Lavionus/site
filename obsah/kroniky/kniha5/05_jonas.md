@@ -72,7 +72,7 @@ Náhoda, napíše si vpravo. A pak, protože tohle slovo nemá ráda, připíše
 
 Karlovy Vary jsou v mrazu bílé a kouří se z nich.
 
-Hana jede podél Ohře. Řeka tady nezamrzá, stejně jako v Chebu, a nad městem, nad kolonádami, nad střechami lázeňských domů stojí pára. Ne jako sloup nad roklí u Mlýnce. Jako dech velkého zvířete, které spí pod městem. Vřídlo má sedmdesát tři stupňů. Hana to ví z kterékoli turistické brožury a ví to i z geologické mapy: tatáž propadlina, tentýž hluboký zlom, po kterém sem odněkud zdola stoupá teplo a plyn. Mlýnec je na jejím západním konci. Karlovy Vary skoro uprostřed.
+Hana jede podél Ohře. Řeka tady nezamrzá, stejně jako v Chebu, a nad městem, nad kolonádami, nad střechami lázeňských domů stojí pára. Ne jako sloup nad roklí u Mlýnce, spíš jako dech velkého zvířete, které spí pod městem. Vřídlo má sedmdesát tři stupňů. Hana to ví z kterékoli turistické brožury a ví to i z geologické mapy: tatáž propadlina, tentýž hluboký zlom, po kterém sem odněkud zdola stoupá teplo a plyn. Mlýnec je na jejím západním konci. Karlovy Vary skoro uprostřed.
 
 Tentýž kraj. Napsala si to před pěti lety do deníku, k Jáchymovu. Teď to platí potřetí.
 
@@ -90,7 +90,7 @@ Byt je malý a teplý a voní mlékem a pracím práškem. Na sušáku v obývá
 
 Klára sedí na gauči a na hrudi jí spí dítě.
 
-Je vysoká. Hana to pozná, i když Klára sedí. Má dlouhé nohy pod dekou, dlouhé ruce, dlouhé úzké prsty, kterými drží syna přes záda, jako by ho zakrývala celou dlaní. Vlasy má skoro bílé, krátce střižené. Tvář bledá a unavená, ale ne tak, jak bývá bledá tvář po porodu. Bledá od přírody. Oči světlé, šedé, možná do zelena. V tomhle světle se to nedá říct.
+Je vysoká. Hana to pozná, i když Klára sedí. Má dlouhé nohy pod dekou, dlouhé ruce, dlouhé úzké prsty, kterými drží syna přes záda, jako by ho zakrývala celou dlaní. Vlasy má skoro bílé, krátce střižené. Tvář bledá a unavená, ale ne tak, jak bývá bledá tvář po porodu. Bledá od přírody. Oči světlé, šedé, možná do zelena. Při tomhle světle to Hana nepozná.
 
 Hana na vteřinu ztuhne. Klára si toho všimne.
 
@@ -106,7 +106,7 @@ Martin jde do kuchyně. Hana si sedne do křesla naproti. Mezi nimi je konferen�
 
 „Gratuluju.“
 
-„Děkuju.“ Klára se podívá na dítě a pak na Hanu. „Jste první, kdo to řekl a nemyslel přitom na tohle.“ Kývne ke složce.
+„Děkuju.“ Klára sklopí oči k dítěti a zase je zvedne k Haně. „Jste první, kdo to řekl a nemyslel přitom na tohle.“ Kývne ke složce.
 
 Hana nic neřekne. Nemyslela na tu složku. Myslela na Sálovou.
 
@@ -140,7 +140,7 @@ V kuchyni přestane cinkat lžička.
 
 „Ne. Ať to ví.“ Martin si sedne na opěradlo gauče, vedle ní, ne k ní. „Já o všem vím. O Kláře, o její mámě, o všem. Od začátku. A podepsal jsem to, protože to bylo pro jistotu.“
 
-Hana se dívá na podpis na prvním papíře. Kostrbatý, rychlý, napsaný na koleně.
+Podpis na prvním papíře je kostrbatý, rychlý, napsaný na koleně.
 
 Kdo něco podepíše pro jistotu, ten si většinou nepřečte, co podepisuje. Hana to ví. Podepsala kdysi soupis vzorků na kapotě auta a věděla přesně, co podepisuje. Nebylo to o nic lepší.
 
@@ -158,7 +158,7 @@ Klára se na ni dívá.
 
 *
 
-Dítě se zavrtí. Klára ho chytí oběma rukama a pomalu se narovná. Jonáš otevře oči. Tmavě modré, jako mají všichni novorozenci, jako inkoust. Hledá něco, co nenajde, a pak začne naříkat. Tence, vytrvale.
+Dítě se zavrtí. Klára ho chytí oběma rukama a pomalu se narovná. Jonáš otevře oči. Tmavě modré, jako je mívají novorozenci, jako inkoust. Hledá něco, co nenajde, a pak začne naříkat. Tence, vytrvale.
 
 „Musím ho nakrmit,“ řekne Klára. „Nevadí vám to?“
 
@@ -168,7 +168,7 @@ Dítě se zavrtí. Klára ho chytí oběma rukama a pomalu se narovná. Jonáš 
 
 Martin ho vezme. Neumí to ještě úplně, drží ho jako něco, co se může rozsypat. Pak se otočí k Haně, protože Klára si rovná polštář a sundává svetr, a Hana má najednou ruce plné dítěte.
 
-Je lehčí, než čekala. A teplejší. Váží míň než detektor plynu s náhradní baterií a hřeje víc než cokoli, co kdy držela. Hana neví, co s rukama. Drží ho tak, jak ho držel Martin, a dítě ji chytí za prst. Prsty má dlouhé. Na tak malé dítě nezvykle dlouhé. Sevře jí ukazováček a zatáhne, jako by ji chtěl stáhnout k sobě.
+Je lehčí, než čekala. A teplejší. Váží míň než batoh s přístroji a hřeje víc než cokoli, co kdy držela. Hana neví, co s rukama. Drží ho tak, jak ho držel Martin, a dítě ji chytí za prst. Prsty má dlouhé. Na tak malé dítě nezvykle dlouhé. Sevře jí ukazováček a zatáhne, jako by ji chtěl stáhnout k sobě.
 
 „On to dělá všem,“ řekne Martin.
 
@@ -184,7 +184,7 @@ Hana to vidí. Neřekne nic.
 
 *
 
-„V devatenáctým,“ řekne Klára, když dítě usne, „jsem byla těhotná poprvé. V šestém týdnu jsem šla do poradny. Obyčejně. Odběr krve, test na všechno, co se dneska dělá z krve matky. A po deseti dnech mi zavolali z laboratoře, že je tam něco, co neznají. U dítěte.“
+„V devatenáctým,“ řekne Klára, když dítě usne, „jsem byla těhotná poprvé. V jedenáctém týdnu jsem šla do poradny. Obyčejně. Odběr krve, test na všechno, co se dneska dělá z krve matky. A po deseti dnech mi zavolali z laboratoře, že je tam něco, co neznají. U dítěte.“
 
 Odmlčí se. Martin si znovu sedne na opěradlo. Tentokrát blíž.
 
@@ -192,13 +192,13 @@ Odmlčí se. Martin si znovu sedne na opěradlo. Tentokrát blíž.
 
 „Vy dva?“
 
-„Ano. Martin dal výpověď. Měl dobrou práci, dělal na stavbách, rozpočty. V Liberci tři měsíce nedělal nic.“ Klára se podívá na Martina a on se podívá do stropu. „Odvezla mě tam jedna paní. Ta, co nás všechny má zapsané. Paní Alžběta z Chebu.“
+„Ano. Martin dal výpověď. Měl dobrou práci, dělal na stavbách, rozpočty. V Liberci tři měsíce nedělal nic.“ Klára mrkne po Martinovi a on zvedne oči ke stropu. „Odvezla mě tam jedna paní. Ta, co nás všechny má zapsané. Paní Alžběta z Chebu.“
 
 Hana se nepohne.
 
 Ví, že se nepohne, protože si to hlídá. Tak, jak si to hlídala ve čtvrtek v dílně, když jí Sálová řekla o svíčce. Ramena. Ruce na kolenou.
 
-„Jela s námi sama,“ pokračuje Klára. „Autem, celou cestu. Nic neřekla. Úplně nic, dvě hodiny. Až na konci, před tím novým bytem, se otočila a řekla: *Je mi to líto.* A myslela to vážně. To bylo na tom to nejhorší, že to myslela vážně.“
+„Jela s námi sama,“ pokračuje Klára. „Autem, celou cestu. Nic neřekla. Úplně nic, tři hodiny. Až na konci, před tím novým bytem, se otočila a řekla: *Je mi to líto.* A myslela to vážně. To bylo na tom to nejhorší, že to myslela vážně.“
 
 „A pak?“
 
@@ -276,13 +276,13 @@ Martin se dívá na Kláru. Klára se dívá na Hanu.
 
 „Ne,“ řekne Hana. „Nevím. Máte pravdu.“
 
-Klára se na ni dívá ještě chvíli. Pak se jí něco v obličeji uvolní. Ne úsměv. Spíš jako když člověk položí těžkou tašku, kterou nesl moc dlouho a nevěděl, kam s ní.
+Kláře se v obličeji něco uvolní. Ne úsměv. Je to, jako když člověk položí těžkou tašku, kterou nesl moc dlouho a nevěděl, kam s ní.
 
 „Tak to stačí,“ řekne.
 
 *
 
-Klářin telefon zabzučí na stolku, mezi hrnky. Klára se na displej podívá a Hana vidí, jak jí ztuhne ruka na dítěti.
+Klářin telefon zabzučí na stolku, mezi hrnky. Klára sklopí oči k displeji a Hana vidí, jak jí ztuhne ruka na dítěti.
 
 „Doktor,“ řekne. A pak to vezme. Nepřepne na hlasitý odposlech. Hana slyší jen ji.
 
@@ -304,7 +304,7 @@ Klára zavěsí. Položí telefon displejem dolů.
 
 „Řekla jste pravdu,“ řekne Hana. „Jen větší, než je.“
 
-Martin se zasměje. Krátce a unaveně, poprvé za celé odpoledne. Klára se na něj podívá a skoro se usměje taky.
+Martin se zasměje. Krátce a unaveně, poprvé za celé odpoledne. Klára se skoro usměje taky.
 
 „Nikomu neříkejte, že jsem vám psala,“ řekne pak. „Ani paní Alžbětě. Ona by mě přesvědčila. Ona umí přesvědčit každého.“
 
@@ -346,9 +346,9 @@ Krátké ticho. Hana slyší nádobí a rádio a pak, jak se zavírají dveře.
 
 „Ano.“
 
-„Četla jsem tu vaši opravu. Byla dobrá.“ Další ticho. „Pořád jste udělala tu chybu.“
+„Četla jsem tu vaši opravu. Byla dobrá.“ Další ticho. „Tu chybu jste ale stejně udělala.“
 
-„Pořád.“
+„Stejně.“
 
 „Dobře. Tak co chcete? V neděli?“
 
@@ -370,7 +370,7 @@ Sokolová dlouho nic neříká. Pak se v telefonu ozve škrtnutí zapalovače a 
 
 „A ještě jedna věc. Jeden genom je anekdota. Když mi přinesou jedno dítě a jeden nález, řeknu jim, že je to zajímavé a že nevím. Jestli chtějí vědět víc, budu potřebovat srovnání. Rodiče. Příbuzné. Lidi, kteří nejsou příbuzní, a lidi, kteří jsou. Všichni se souhlasem, každý sám za sebe.“
 
-Hana si to zapíše. *Srovnání. Každý sám za sebe.*
+Do sešitu napíše: *Srovnání. Každý sám za sebe.*
 
 „A řekněte jim,“ pokračuje Sokolová, „že jim řeknu, co data snesou. Ne co chtějí. Ani co chcete vy.“
 
@@ -378,7 +378,7 @@ Hana si to zapíše. *Srovnání. Každý sám za sebe.*
 
 „Ale chcete,“ řekne Sokolová. „Jinak byste mi v neděli nevolala. Jen ještě nevíte co.“
 
-Hana se dívá z okna penzionu na náhon. Pára nad vodou. Majitelka na dvoře sype popel na led.
+Za oknem penzionu náhon. Pára nad vodou. Majitelka na dvoře sype popel na led.
 
 „Proč já?“ zeptá se Sokolová najednou. „Proč vám ta matka napsala? Vy nejste genetička.“
 
@@ -398,7 +398,7 @@ A o minutu později:
 
 *Martin říká, že on by jel. Kvůli Jonášovi. Já říkám, že kvůli Jonášovi nepojedu. Nevím, kdo z nás má pravdu.*
 
-Hana se na to dívá dlouho. Neodpoví hned. Pak napíše:
+Hana neodpoví hned. Pak napíše:
 
 *Já taky ne.*
 
@@ -414,6 +414,8 @@ Hana tu zprávu smaže. Pak si uvědomí, co udělala, a chvíli sedí v autě u
 
 Nikdy nic nemaže. Celý život nic nemaže. Ani tu zprávu by nesmazala, kdyby v ní nebylo to písmeno na konci.
 
+Smaže i Klářin e-mail. Na adrese firmy zůstane a u Dany taky. To ví.
+
 *
 
 Večer otevře sešit.
@@ -422,11 +424,11 @@ Vlevo napíše teploty, časy, Tadeáše, psa. Strouhu od statku: dvacet čtyři
 
 Pak začne psát o sobotě. Napíše datum, Karlovy Vary, sídliště. Napíše *Řekla K.* a zastaví se.
 
-Její vlastní pravidlo. *Co mi kdo řekl, píšu s jménem.* Napsala ho velkými písmeny před pěti dny a pod ním podtrhla *NIC MEZI*. Bylo to dobré pravidlo. Chránilo ji před vlastní hlavou.
+Její vlastní pravidlo. *Co mi kdo řekl, píšu se jménem.* Napsala ho velkými písmeny před pěti dny a pod ním podtrhla *NIC MEZI*. Bylo to dobré pravidlo. Chránilo ji před vlastní hlavou.
 
 Teď by tu rodinu vydalo každému, kdo ten sešit otevře.
 
-Hana se dívá na *K.* Pak ho přeškrtne. Jednou čarou, aby se dalo přečíst, že tam něco bylo. Nad něj napíše:
+Hana *K.* přeškrtne. Jednou čarou, aby se dalo přečíst, že tam něco bylo. Nad něj napíše:
 
 *Řekla matka (rodina, Karlovarsko; jména záměrně nepíšu).*
 

@@ -4,7 +4,7 @@ Dva dny chodila po horním konci s Wehrlovým listem v kapse a nikomu ho nemusel
 
 Ženy s ní mluvily i bez něj. Mluvily ochotně a mnoho a skoro nic z toho nebylo pravda, nebo spíš: všechno to byla pravda o něčem jiném. O tom, že Ursula byla hodná a že byla divná. Že k ní chodil muž, nebo nechodil nikdo. Že jedna z nich viděla v noci nad haldou světélko, a druhá, že to byla svatojánská muška, a třetí, že na svatojánské mušky je ještě brzo. Ilona to psala. Psala to tak, jak to říkaly, a pod každou výpověď *víc neřekla*, a večer to četla a bylo to jako číst déšť.
 
-Jen jedna věc se opakovala. Žádná z žen to neřekla přímo; leželo to pod tím, co říkaly, jako voda pod prkny v dole. *Noční lid.* Nikdo neřekl, že Ursulu vysál. Všechny se ptaly, jestli je to pravda, co se povídá.
+Jen jedna věc se opakovala. Žádná ze žen to neřekla přímo; leželo to pod tím, co říkaly, jako voda pod prkny v dole. *Noční lid.* Nikdo neřekl, že Ursulu vysál. Všechny se ptaly, jestli je to pravda, co se povídá.
 
 Ve čtvrtek večer se Ilona vrátila domů tak unavená, že usnula oblečená na lavici u pece, a probudilo ji klepání.
 
@@ -32,7 +32,7 @@ Dívku položil na lavici, kde Ilona ještě před chvílí spala. Byla malá, m
 
 „Světlo,“ řekl muž. „Prosím. Ne moc.“
 
-Ilona zapálila svíčku a postavila ji za džbán na stole, aby světlo padalo jen bokem, a muž si sundal klobouk. Vlasy měl dlouhé, svázané vzadu, popelavé a jemné jako vlna z odkvetlé pampelišky. Tvář dlouhá, bledá, ne tou bledostí, jaká bývá u nemocných, ale stejnoměrnou, šedavou, jako mají klíčky brambor ve sklepě. Oči přimhouřené, i když svíčka stála za džbánem. Bylo mu možná čtyřicet. Nebo méně. Nebo víc.
+Ilona zapálila svíčku a postavila ji za džbán na stole, aby světlo padalo jen bokem, a muž si sundal klobouk. Vlasy měl dlouhé, svázané vzadu, popelavé a jemné jako vlna z odkvetlé pampelišky. Tvář dlouhá, bledá, ne tou bledostí, jaká bývá u nemocných, ale stejnoměrnou, šedavou, jako mají klíčky cibule ve sklepě. Oči přimhouřené, i když svíčka stála za džbánem. Bylo mu možná čtyřicet. Nebo méně. Nebo víc.
 
 Ilona se podívala na dívku a přestala se dívat na něj.
 
@@ -44,7 +44,7 @@ Vlasy nebyly ožehlé. Obočí taky ne. Ilona se k nim sklonila a čichla: žád
 
 „Na slunci.“
 
-Ilona se na něj podívala. Muž stál u dveří, s kloboukem v ruce, a díval se na dívku, a nevypadal jako někdo, kdo si vymýšlí.
+Muž stál u dveří, s kloboukem v ruce, a díval se na dívku, a nevypadal jako někdo, kdo si vymýšlí.
 
 „Jak dlouho?“
 
@@ -154,7 +154,7 @@ Ilona přikývla. Nevěděla, co jiného udělat.
 
 Muž prošel kolem ní, s pohárkem, a ona se ohlédla a viděla, jak ho nese do výklenku, kam odnesli Johanku, a jak tam žena podepírá dívce hlavu a dívka pije, pomalu, s plátnem stále přes tvář. Vedle ní na kameni ležel kus chleba a miska s polévkou.
 
-Krev a mléko. Ilona to znala z vyprávění. Otec jednou mluvil o pastevcích někde v Uhrách, daleko na jihu, kteří v zimě, když nebylo co jíst, pouštěli dobytku krev z krku a pili ji s mlékem, a dobytek to přežil, a lidé taky. Brala to tehdy jako pohádku o cizích krajích.
+Krev a mléko. Ilona to znala z vyprávění. Otec jednou mluvil o pastevcích někde na Dolní zemi, daleko na jihu, kteří v zimě, když nebylo co jíst, pouštěli dobytku krev z krku a pili ji s mlékem, a dobytek to přežil, a lidé taky. Brala to tehdy jako pohádku o cizích krajích.
 
 Tady to nebylo daleko na jihu. Tady to bylo hodinu cesty od jejího stolu.
 
@@ -162,7 +162,7 @@ Tady to nebylo daleko na jihu. Tady to bylo hodinu cesty od jejího stolu.
 
 „Ranhojičko.“
 
-Hlas přišel odněkud zprava, z tmy za pilířem. Byl starý. Ne slabý, ale starý, jako je starý kámen, a mluvil česky, jen s tvary, které Ilona slyšela naposledy u babičky ve Štiavnici, když ještě žila a mluvila po svém.
+Hlas přišel odněkud zprava, ze tmy za pilířem. Byl starý. Ne slabý, ale starý, jako je starý kámen, a mluvil česky, jen s tvary, které Ilona slyšela naposledy u babičky ve Štiavnici, když ještě žila a mluvila po svém.
 
 „Pojď sem. Ať na tebe nemusím křičet. Už neumím křičet.“
 
@@ -202,7 +202,7 @@ Zikmund mlčel. Pak se natáhl a vzal z kamene vedle sebe hrnek a napil se, poma
 
 „Abys mlčela.“
 
-Ilona se na něj dívala. Dívala se na jeho ruce, na chybějící malíček, na ovčí kůži, na hrnek s vodou.
+Ilona se dívala na jeho ruce, na chybějící malíček, na ovčí kůži, na hrnek s vodou.
 
 „Já píšu,“ řekla. „To je moje práce. Píšu, co vidím a co mi lidé řeknou. Pro horní soud. Pro…“ Zarazila se, protože nevěděla, jak to říct člověku, který ji neznal. „Pro to, aby to bylo napsané.“
 
@@ -240,7 +240,7 @@ Ilona čekala.
 
 „Pijí lidskou krev.“
 
-„Kupují ji,“ řekl Zikmund. „Do města nechodí. Nejsou blázni, nejsou tak blázniví. Někdo jim ji nosí. Ve škopcích, v sudech, já nevím. Za něco, co mají a co chce někdo dole. Nevím co. Nevím kdo.“ Podíval se na ni. „Kdybych to věděl, řekl bych ti to. Ne kvůli té ženě. Kvůli nám. Protože když oni na svatého Jana přijdou s ohněm, nebudou se ptát, kdo pije kozí a kdo lidskou. Budou se ptát jen, kdo je bledý.“
+„Kupují ji,“ řekl Zikmund. „Do města nechodí. Nejsou blázni, nejsou tak blázniví. Někdo jim ji nosí. Ve škopcích, v sudech, já nevím. Za něco, co mají a co chce někdo dole. Nevím co. Nevím kdo. Kdybych to věděl, řekl bych ti to. Ne kvůli té ženě. Kvůli nám. Protože když oni na svatého Jana přijdou s ohněm, nebudou se ptát, kdo pije kozí a kdo lidskou. Budou se ptát jen, kdo je bledý.“
 
 Ilona se dívala na lampu. Ve stínítku z rohoviny se plamen zdvojoval, jako by tam hořely dva.
 

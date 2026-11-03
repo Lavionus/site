@@ -13,7 +13,7 @@ Jen čísla. Ne slova, ne dojmy, ne *měkčí* ani *zploštělý*. Na novou str�
 *délka 464 mm (střed čela – konec obrysu pod polevou)*
 *měřítko +0,8 % (T2–T5: 617 vs. 612)*
 
-Pod to udělá čáru. Pak napíše třetí nadpis a za ním dlouho nic.
+Pod to udělá čáru a napíše třetí nadpis a za ním dlouho nic.
 
 *Předmět, CT, 24. 3.:*
 
@@ -29,9 +29,7 @@ Snímek čtyřicet jedna. Podélný řez. Válec leží na obrazovce na boku a p
 
 Na snímku čtyřicet dva je kruh a přes něj druhá žlutá čára. *110,9 mm.*
 
-Hana se na ta čísla dívá.
-
-Pak vstane, dojde ke dveřím, vrátí se a sedne si. Ruce si položí na stůl vedle notebooku, dlaněmi dolů, jako se kladou na stůl při zkoušce, aby bylo vidět, že pod nimi nic není.
+Vstane, dojde ke dveřím, vrátí se a sedne si. Ruce si položí na stůl vedle notebooku, dlaněmi dolů, jako se kladou na stůl při zkoušce, aby bylo vidět, že pod nimi nic není.
 
 Čtyři sta šedesát čtyři.
 
@@ -67,7 +65,7 @@ Hana si to zapíše pod třetí nadpis, pomalu, aby se nespletla.
 *poměr k předmětu 21. 3.: délka 1,009, průměr 1,008*
 *poměr model / skutečnost: 1,008*
 
-Pak se na to dívá a čte to, jako by to psal někdo jiný. Jako posudek, který dostala na stůl a ke kterému má napsat, jestli z dat plyne závěr.
+Čte to, jako by to psal někdo jiný. Jako posudek, který dostala na stůl a ke kterému má napsat, jestli z dat plyne závěr.
 
 Plyne.
 
@@ -87,21 +85,21 @@ Model měli tři lidé.
 
 Ríša na svém notebooku. Viktor na černém disku s nálepkou firmy, *pro produkci, záloha*. A ona na flešce.
 
-Hana otevře batoh a sáhne do vnitřní kapsy na zip. Fleška je tam, vedle deníku a tabulky. Od středy večer ji nevytáhla. Pak si vzpomene na notebook. Ten ležel v táboře pod plachtou, když byla v pátek a v sobotu pod vodou. Má heslo. Heslo zná jen ona. Nebo si to aspoň myslí, jako si to myslí každý.
+Hana otevře batoh a sáhne do vnitřní kapsy na zip. Fleška je tam, vedle deníku a tabulky. Od středy večer ji nevytáhla. Vzpomene si na notebook. Ten ležel v táboře pod plachtou, když byla v pátek a v sobotu pod vodou. Má heslo. Heslo zná jen ona. Nebo si to aspoň myslí, jako si to myslí každý.
 
 Nemůže to vyloučit. Zapíše to. *H. V.: fleška u sebe od 18. 3. Notebook v táboře během ponorů 20. 3. a 21. 3. (heslo). Nelze vyloučit.*
 
-Pak otevře model na flešce a změří ho znovu, aby to neměla jen z deníku. Střed čela, konec obrysu pod polevou. *464 mm.* Průměr přes viditelnou část, na třech místech. *110,8. 110,9. 110,9.*
+Otevře model na flešce a změří ho znovu, aby to neměla jen z deníku. Střed čela, konec obrysu pod polevou. *464 mm.* Průměr přes viditelnou část, na třech místech. *110,8. 110,9. 110,9.*
 
 Vedle snímku čtyřicet jedna vypadá to číslo jako dvojče.
 
-Do pravého horního rohu napíše *9*, jako na svítání na předchozí stránku. Jinak nechá pravou půlku prázdnou.
+Do pravého horního rohu napíše *9*, stejně jako za svítání na předchozí stránku. Jinak nechá pravou půlku prázdnou.
 
 *
 
 Jana přijede v osm. Auto je staré, zelené, a voní uvnitř kukuřičnou moukou a psem. Na zadním sedadle leží dětská bota.
 
-„Rosin bratr,“ řekne Jana. „Prý se mu to vrátí v neděli. Neptej se, kde je pes.“
+„Rosin bratr,“ řekne Jana. „V neděli mu ho musím vrátit. Neptej se, kde je pes.“
 
 Jedou z města stejnou silnicí, po které Hana v pondělí jela za dodávkou ústavu. Jana řídí rychle a mlčí. Teprve za Méridou, když se krajina srovná a začne les, se zeptá.
 
@@ -111,7 +109,7 @@ Jedou z města stejnou silnicí, po které Hana v pondělí jela za dodávkou ú
 
 „Já taky ne.“ Jana přeřadí. „Salcedo tu nebyl od pondělka. Nebere telefon ani mně. Kompresor stojí. Bez něj nikdo nenaplní láhve, protože klíč od bodegy má on. Teda měl. Teď je tam páska od policie.“
 
-Hana se podívá z okna. Kamenolom je tichý. Na stupních stojí bagr a nehýbe se.
+Za oknem je kamenolom tichý. Na stupních stojí bagr a nehýbe se.
 
 „Víš něco?“ zeptá se Jana. Nedívá se na ni. Dívá se na silnici.
 
@@ -141,7 +139,7 @@ Ríša sedí pod plachtou a balí. Dron do kufru, kufr do bedny, objektivy do p�
 
 „Ríšo. Potřebuju vidět model.“
 
-Ríša se na ni podívá. Pak pokrčí rameny a sedne si k notebooku.
+Ríša pokrčí rameny a sedne si k notebooku.
 
 Za minutu se na obrazovce objeví síň. Šedá, hladká, s terasami a s převisem, s Abuelem a s majákem na LE 14. A pod převisem válec, bledší než všechno kolem.
 
@@ -161,7 +159,7 @@ Ríša poslouchá a nehýbe se.
 
 „Chtěla jsem. Ve čtvrtek ráno. Ve čtvrtek ráno spadla stěna.“ Hana se podívá na své ruce. „A v sobotu večer jsem to chtěla říct znova. A neřekla jsem to.“
 
-Ríša si promne oči. Pak se zasměje. Krátce, nevěřícně.
+Ríša si promne oči a zasměje se. Krátce, nevěřícně.
 
 „To je dobrý,“ řekne. „Já ti dám kontrolu měřítka a ty mi to neřekneš. Bezva.“ Pak zvážní. „Proč to říkáš teď?“
 
@@ -169,7 +167,7 @@ Hana otevře na telefonu snímek čtyřicet jedna. Podélný řez z CT, žlutá 
 
 *464,2 mm.*
 
-Ríša se dívá na telefon. Pak na obrazovku. Pak zase na telefon.
+Ríša se dívá na telefon, na obrazovku, zase na telefon.
 
 Trvá to dlouho. Hana vidí, jak mu to dochází, po kouscích. Nejdřív číslo. Pak co je to za obrázek. Pak co to znamená, že je to číslo stejné.
 
@@ -197,7 +195,7 @@ Hana nic neřekne. Zploštění, které je vzpomínka, právě dostalo vysvětle
 
 Pak se mu to stane. Hana to vidí. Ríša zavře ústa a zase je otevře a nic neřekne.
 
-„Animace se v STL nedělá,“ řekne potom. Pomalu. „STL je pro tiskárnu. Uzavřená síť v STL je to, co pošleš do tiskárny.“
+„STL nemá texturu,“ řekne potom. Pomalu. „Je to holá síť, šedá. Animátor by chtěl OBJ s texturou. Uzavřená síť v STL je to, co pošleš do tiskárny.“
 
 Hana se dívá na obrazovku, kde se v šedé síni bledě leskne válec.
 
@@ -215,13 +213,13 @@ V pátek v sedm padesát dva. Marisol tou dobou vezla půlky do Méridy a Hana n
 
 „Vyfotím si to,“ řekne.
 
-Ríša kývne. Hana vyfotí obrazovku. Odeslanou zprávu, čas, adresu. Potvrzení o stažení. Pak ještě jednou, aby bylo vidět datum v rohu obrazovky.
+Ríša kývne. Hana vyfotí obrazovku. Odeslanou zprávu, čas, adresu. Potvrzení o stažení. A ještě jednou, aby bylo vidět datum v rohu obrazovky.
 
 „Ríšo,“ řekne. „Nic nemaž.“
 
 „Já nic nemažu.“ Ríša se skoro urazí. „Já nikdy nic nemažu. Mám na disku všechno od roku dvacet osmnáct. Nemazal bych ani tohle, i kdybych…“ Nedořekne to.
 
-Pak se na ni podívá. Oči má mokré.
+Odvrátí se k obrazovce.
 
 „Kdybys mi to řekla,“ řekne. „Ve čtvrtek. Přepočítal bych to. A poslal bych mu správnej.“
 
@@ -245,9 +243,9 @@ Sedne si k němu a položí před něj deník, otevřený na ranní stránce.
 
 Je to poprvé, co mu ho ukazuje.
 
-Kalina čte. Pomalu, řádek po řádku, a prstem se papíru nedotkne. Pak si vezme tužku a do svého sešitu, na levou stranu, napíše čísla. Čtyři sta šedesát plus minus jedna. Čtyři sta šedesát čtyři celá dva. Pak se zeptá, s jakou přesností měří radioložčin program. Hana neví. Kalina napíše *± 0,5?* a otazník podtrhne.
+Kalina čte. Pomalu, řádek po řádku, a prstem se papíru nedotkne. Vezme si tužku a do svého sešitu, na levou stranu, napíše čísla. Čtyři sta šedesát plus minus jedna. Čtyři sta šedesát čtyři celá dva. A zeptá se, s jakou přesností měří radioložčin program. Hana neví. Kalina napíše *± 0,5?* a otazník podtrhne.
 
-„Rozdíl čtyři celá dvě plus minus jedna celá jedna,“ řekne. „Na dvou sigmách pořád skoro dva milimetry. A průměr…“ Píše. „Nula celá devět plus minus nula celá šest. To je slabší. Ale jde to stejným směrem a je to stejné procento.“ Podívá se na ni. „Není to šum.“
+„Rozdíl čtyři celá dvě plus minus jedna celá jedna,“ řekne. „Na dvou sigmách pořád skoro dva milimetry. A průměr…“ Píše. „Nula celá devět plus minus nula celá šest. To je slabší. Ale jde to stejným směrem a je to stejné procento. Není to šum.“
 
 „Já vím.“
 
@@ -259,7 +257,7 @@ Kalina čte. Pomalu, řádek po řádku, a prstem se papíru nedotkne. Pak si ve
 
 „Udělala jsem ji.“
 
-Kalina se na ni chvíli dívá. Pak zavře sešit.
+Kalina zavře sešit.
 
 „To je totéž,“ řekne. „Jenom z druhé strany.“
 
@@ -281,15 +279,17 @@ Ráno je špatně. Ranní pásku Marisol v sobotu večer strhla. Hana u toho st�
 
 Přesně tohle by udělal někdo, kdo chce, aby to vyšlo.
 
-Hana zavře ranní fotku. Otevře večerní. Sobota, dvacet jedna nula pět, bodega, bílé světlo panelu ze strany. Nová páska. Zvětší ji na stejnou velikost jako Méridu. Pak dá ty dvě vedle sebe a dlouho se nehýbe.
+Hana zavře ranní fotku. Otevře večerní. Sobota, dvacet jedna nula pět, bodega, bílé světlo panelu ze strany. Nová páska. Zvětší ji na stejnou velikost jako Méridu. Dá ty dvě vedle sebe a dlouho se nehýbe.
 
-Na večerní fotce jde páska přes horní třetinu suku. Skoro jako ráno, o vlas víc vlevo. *H* leží na suku, na jeho horním okraji, tmavé na tmavém. A tah fixy jde z pásky na dřevo bez přerušení, jedním pohybem ruky. Na nejbližším snímku je vidět vlákno dřeva pod inkoustem.
+Na večerní fotce jde páska přes horní třetinu suku. Skoro jako ráno, o vlas víc vlevo. Písmeno *h* leží na suku, na jeho horním okraji, tmavé na tmavém. A tah fixy jde z pásky na dřevo bez přerušení, jedním pohybem ruky. Na nejbližším snímku je vidět vlákno dřeva pod inkoustem.
 
-Na fotce z Méridy jde páska níž. O tři, čtyři milimetry. Přes střed suku. *H* neleží na horním okraji. Leží uprostřed suku, a protože je tmavé na tmavém, skoro v něm zmizí. Hana musí fotku zesvětlit, aby ho vůbec našla.
+Na fotce z Méridy jde páska níž. O tři milimetry. Přes střed suku. Písmeno *h* neleží na horním okraji. Leží uprostřed suku, a protože je tmavé na tmavém, skoro v něm zmizí. Hana musí fotku zesvětlit, aby ho vůbec našla.
 
-A tah fixy. Ten, který na večerní fotce přechází z pásky na dřevo jedním pohybem, je na fotce z Méridy přerušený. Část na dřevě zůstala, kde byla. Část na pásce začíná o kus níž. Mezi nimi je schod. Malý, tři čtyři milimetry. Kdo se nedívá, ten ho nevidí. Ve tmě bodegy, s baterkou, v pondělí v šest padesát, ho nevidí nikdo.
+A tah fixy. Ten, který na večerní fotce přechází z pásky na dřevo jedním pohybem, je na fotce z Méridy přerušený. Část na dřevě zůstala, kde byla. Část na pásce začíná o kus níž. Mezi nimi je schod. Malý, tři milimetry. Kdo se nedívá, ten ho nevidí. Ve tmě bodegy, s baterkou, v pondělí v šest padesát, ho nevidí nikdo.
 
-A nad horním okrajem pásky, na dřevě, je na fotce z Méridy tenký proužek modré. Kousky písmen, rozsekané. Stín pásky. Na večerní fotce tam není nic. Večerní páska ten stín celý přikryla.
+A nad horním okrajem pásky, na dřevě, je na fotce z Méridy tenký proužek modré. Kousky písmen, rozsekané. Ranní stín, ten, který zůstal po strhnuté ranní pásce a který večerní páska přikryla. Teď z něj vykukuje horní okraj. Široký asi tři milimetry, přesně tolik, o kolik páska sjela dolů. Na večerní fotce tam není nic.
+
+Na nehoblovaném prkně, kde se modrá vpíjí do vláken, vypadá ten proužek jako žilka dřeva nebo jako stín pod hranou pásky. V Méridě ho Hana vyfotila. Fotila, jako si člověk zapíná pás.
 
 *Když ji strhnete, roztrhne se a nechá na dřevě nápis. Když ji přelepíte, je to vidět.*
 
@@ -297,19 +297,21 @@ Je to vidět. Jen se nikdo nedíval.
 
 Hana položí telefon na kámen vedle sebe, displejem dolů. Pak ho zase zvedne, protože se bojí, že ho shodí do studny.
 
-Někdo pásku sundal a nalepil zpátky. Ne novou. Tutéž, se stejným podpisem a se stejnými čísly, která Marisol v pondělí ráno přečetla nahlas a odškrtla ve formuláři. Jen o kousek níž. Asi ji lepil podle spáry víka, protože spára je rovná a po ní se lepí dobře. Na suk se nejspíš nedíval.
+Někdo pásku sundal a nalepil zpátky. Ne novou. Tutéž, se stejným podpisem a se stejnými čísly, která Marisol v pondělí ráno přečetla nahlas a odškrtla ve formuláři. Jen o kousek níž. Vcelku ji strhnout nejde, to Hana viděla dvakrát. Ale kdo lepidlo nahřeje, fénem nebo horkým vzduchem, ten ji sloupne celou. Nová stopa po ní skoro nezůstane a co zůstane, schová zase páska. Jen ten starý stín pod ní se posunout nedá. Asi ji lepil podle spáry víka, protože spára je rovná a po ní se lepí dobře. Na suk se nejspíš nedíval.
 
 Na suk se nedívá nikdo.
 
 Mezi sobotou devět třicet večer, kdy don Felipe zacvakl mosazný zámek, a pondělím šest padesát ráno, kdy ho odemkl.
 
+Tak by to řekla, kdyby věřila tomu, co si pamatuje. Záznam je delší. Poslední fotka pásky je ze soboty z devíti nula pět. Další je až z depozitáře. Marisol v pondělí s baterkou četla čísla a podpisy, ne to, kudy páska jde. A Hana v bodeze nefotila. *Páska je páska.* Cestu v dodávce ústavu, se dvěma muži v polokošilích a Hanou v pick-upu za nimi, nikdo nevyloučil. Jen to nedává smysl.
+
 Klíče byly dva.
 
 *
 
-Hana sedí na kameni a čtyři milimetry a tři milimetry se jí v hlavě skládají dohromady, jako se skládají dvě poloviny vzorku, aby v každé byla celá řada vrstev.
+Hana sedí na kameni a čtyři milimetry a tři milimetry se jí v hlavě skládají dohromady.
 
-Replika podle modelu. Model ve Viktorově poště, stažený v pátek ráno. Páska přelepená o víkendu v bodeze. Klíč od bodegy u Salceda. Salcedo nebere telefon od pondělka. Salcedo je Viktorův logistik.
+Replika podle modelu. Model ve Viktorově poště, stažený v pátek ráno. Páska přelepená mezi sobotou večer a Méridou, nejspíš v bodeze. Klíč od bodegy u Salceda. Salcedo nebere telefon od pondělka. Salcedo je Viktorův logistik.
 
 Je to záznam. Všechno to je záznam. Fotky, čísla, čas odeslání, čas stažení.
 
@@ -337,7 +339,7 @@ A v deníku je šestý březen.
 
 A je tu ještě jedna věc, horší, protože je slušná. Patnáct let. Dvanáct minut. Jestli to byl on, má to slyšet od ní. Ne od muže v tmavém obleku s americkou angličtinou. Od ní, do očí, aby mohl říct, že to není pravda. A ona aby slyšela, jak to říká.
 
-Hana se podívá dolů do studny. Voda je čirá až ke kuželi balvanů. Pod ní, za mezerou u bloku, za hrdlem, pod haloklinou a pod mlhou, leží v síni prázdné lůžko. Nikdo ho nezdokumentoval. Kal, který nad ním visel, se už dávno usadil.
+Hana se podívá dolů do studny. Voda je čirá až ke kuželu balvanů. Pod ní, za mezerou u bloku, za hrdlem, pod haloklinou a pod mlhou, leží v síni prázdné lůžko. Nikdo ho nezdokumentoval. Kal, který nad ním visel, se už dávno usadil.
 
 *
 
@@ -345,21 +347,19 @@ Viktor napíše v šestnáct deset.
 
 *Jsem zpátky z Méridy. Večer u studny? Potřebuju s tebou mluvit. V.*
 
-Hana se na tu zprávu dívá dlouho. Pak otevře deník.
+Hana se na tu zprávu dívá dlouho, než otevře deník.
 
-Vlevo zapíše, co je. Snímky čtyřicet jedna a čtyřicet dva, rozměry, poměry. Model na flešce, přeměřený. Ríša: čtvrtek v noci, Viktor, *vyřízni mi ten válec, uzavřenej, kvůli animaci*. Odesláno 20. 3. ve 2:14, staženo v 7:52, adresa, předmět zprávy, foto obrazovky. Animace v prezentaci nebyla. Kalina: *4,2 ± 1,1 mm, není to šum*. Páska: večerní fotka 21. 3. proti fotce z Méridy 23. 3. Posun asi 3–4 mm dolů. *H* uprostřed suku místo na horním okraji. Schod v tahu podpisu. Modrý proužek nad páskou. Klíče: don Felipe, E. S.
+Vlevo zapíše, co je. Snímky čtyřicet jedna a čtyřicet dva, rozměry, poměry. Model na flešce, přeměřený. Ríša: čtvrtek v noci, Viktor, *vyřízni mi ten válec, uzavřenej, kvůli animaci*. Odesláno 20. 3. ve 2:14, staženo v 7:52, adresa, předmět zprávy, foto obrazovky. Animace v prezentaci nebyla. Kalina: *4,2 ± 1,1 mm, není to šum*. Páska: večerní fotka 21. 3. proti fotce z Méridy 23. 3. Posun asi 3 mm dolů. Písmeno *h* uprostřed suku místo na horním okraji. Schod v tahu podpisu. Modrý proužek nad páskou. Klíče: don Felipe, E. S.
 
 Pod to jeden řádek, kterým se zavazuje:
 
-*Replika odpovídá modelu 18. 3. (chybné měřítko H. V.), ne předmětu. Páska na bedně byla mezi 21. 3. 21:30 a 23. 3. 6:50 sejmuta a znovu nalepena.*
+*Replika odpovídá modelu 18. 3. (chybné měřítko H. V.), ne předmětu. Páska na bedně byla mezi 21. 3. 21:05 (poslední foto) a 23. 3. dopoledne (foto v depozitáři) sejmuta a znovu nalepena. Marisol 23. 3. v 6:50 kontrolovala čísla a podpisy, ne polohu. V bodeze jsem nefotila.*
 
 Je to vlevo a patří to tam. Je to změřené.
 
-Pak se podívá na pravou půlku.
-
 Nahoře v rohu stojí *9*. Pod tím je bílý papír.
 
-Hana nasadí pero. Napíše *V* a tečku. Pak se na to dívá. Jedno písmeno, jako iniciála pod citátem. Tak píše Viktorovy věty, když je zapisuje doleva. *(V. B.)* Tady nemá být nic v závorce. Tady má být, co si myslí.
+Hana nasadí pero. Napíše *V* a tečku. Jedno písmeno, jako iniciála pod citátem. Tak píše Viktorovy věty, když je zapisuje doleva. *(V. B.)* Tady nemá být nic v závorce. Tady má být, co si myslí.
 
 Nedopíše to. Písmeno přeškrtne, jednou čarou, tak, aby šlo přečíst, že tam bylo.
 

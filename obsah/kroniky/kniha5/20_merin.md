@@ -10,7 +10,7 @@ Sael vyšla do předsíně. Klára stála na chodníku, kočárek měla před se
 
 Sael vyšla ven.
 
-Ulička byla úzká a slunce do ní svítilo jen kolem poledne, ale teď už sem padalo šikmo přes střechy a dopadalo přímo do kočárku. Jonáš ležel na zádech pod tenkou dekou s žirafami a díval se na světlo, ne na Sael. Měl sevřenou pěst a v ní knoflík od Klářina svetru, který držel tak pevně, že mu zbělely klouby.
+Ulička byla úzká a slunce do ní svítilo jen kolem poledne, ale teď už sem padalo šikmo přes střechy a dopadalo přímo do kočárku. Jonáš ležel na zádech pod tenkou dekou se žirafami a díval se na světlo, ne na Sael. Měl sevřenou pěst a v ní knoflík od Klářina svetru, který držel tak pevně, že mu zbělely klouby.
 
 Bylo mu pět měsíců. Sael ho zapsala v noci z druhého na třetího února, ptačím písmem, s občanským jménem latinkou na kraji. Od té doby ho neviděla.
 
@@ -30,7 +30,7 @@ Sael mlčela.
 
 „Já.“
 
-Klára kývla. Pak se poprvé podívala nahoru, na Sael. V tom šikmém světle byla Sael vidět celá. Vysoká, stará, s bílými vlasy v uzlu, v šedém svetru, ve kterém pracovala.
+Klára kývla a poprvé se podívala nahoru, na Sael. V tom šikmém světle byla Sael vidět celá. Vysoká, stará, s bílými vlasy v uzlu, v šedém svetru, ve kterém pracovala.
 
 „Nechte ho tam,“ řekla Klára. „Nevadí mi to. Ale už ho tam za mě nikdo nebude psát. Až bude něco, co se má zapsat, řeknu to sama. A kdo to zapíše, ať se podepíše.“
 
@@ -70,7 +70,7 @@ Sael ho přečetla dvakrát a položila na stůl vedle matriky. Byl to dobrý do
 
 „Je to správně.“
 
-„Je to správně,“ řekla Šindelářová. „A stejně se mi to nelíbí.“ Cvakla propiskou. „Deponát přijal. Ten druhý. Podepsal to ve čtvrtek. Pravidla jsou taková, jaká jste si domluvili všichni čtyři. Ne jaká byste chtěla vy.“
+„Je to správně,“ řekla Šindelářová. „A stejně se mi to nelíbí.“ Cvakla propiskou. „Deponát přijme. Ten druhý. Smlouvu má připravenou, podepíše ji, až rozhodne rada. Pravidla jsou taková, jaká jste si domluvili všichni čtyři. Ne jaká byste chtěla vy.“
 
 „Ano.“
 
@@ -86,7 +86,7 @@ Ve světnici bylo plno.
 
 Rada Ostrých, jedenáct, kolem dlouhého stolu. Přijeli kvůli té noci ze Saska a z Bavorska a ze dvou bytů v Chebu. Lada v čele, s brýlemi v kapse zástěry. Kryštof u okna. Stará Apolena na konci stolu u kamen, která se netopila, s dlaněmi na desce. Tadeáš na konci stolu, s levou rukou ještě v obvazu a s notebookem, který neotevřel.
 
-Pak ti druzí. Lorenz z Vídně, poprvé ne na obrazovce. Starší, než vypadal v kameře, s holí, o kterou se neopíral. Ines z Lipska, která přijela vlakem a do statku dvě hodiny šla pěšky, protože jí ujel autobus. Žena z Vratislavi. Muž ze saských sídel, který se usmíval na děti z obrazovky a teď neměl na koho. A u dveří, mimo světlo lampy, Benedikt. Agnes vedle něj. Přišli až po desáté, když byla tma úplná. Benedikt seděl na židli, kterou mu Kryštof přinesl z kuchyně a postavil ji tam, kam lampa nedosáhla. Neřekl mu, proč ji staví tam. Věděl to.
+Pak ti druzí. Lorenz z Vídně, poprvé ne na obrazovce. Starší, než vypadal v kameře, s holí, o kterou se neopíral. Ines z Lipska, která přijela vlakem a do statku dvě hodiny šla pěšky, protože jí ujel autobus. Žena z Vratislavi. Muž ze saských sídel, který se na obrazovce usmíval, kdykoli mu do kamery vlezlo dítě, a teď neměl na koho. A u dveří, mimo světlo lampy, Benedikt. Agnes vedle něj. Přišli až po desáté, když byla tma úplná. Benedikt seděl na židli, kterou mu Kryštof přinesl z kuchyně a postavil tam, kam lampa nedosáhla. Proč tam, Kryštof neříkal. Benedikt to věděl.
 
 Javor a Olše stáli vedle Sael. Za Saelinu domácnost. Javor vysoký a starý jako strom. Olše malá na vysokou, s rukama v kapsách svetru. Ta, co Sael k sedmdesátinám dala hodinky.
 
@@ -102,7 +102,7 @@ Lorenz otevřel radu tak, jak ji otevíral dvacet let na obrazovce. Program, po�
 
 „Sael,“ řekla Sael.
 
-Lorenz se na ni podíval přes brýle. Pak kývl. „Sael.“
+Lorenz kývl. „Sael.“
 
 Řekla jim to.
 
@@ -114,13 +114,13 @@ Pak to, co nevěděl nikdo kromě ní.
 
 Ve světnici bylo ticho. Ostří mlčeli, jak mlčí Ostří. Ti druzí mlčeli, protože nevěděli, co mají říct.
 
-„Čtvrtého března,“ řekla Sael, „jsem otevřela knihu před denní ženou. U Dorotina řádku. Věděla jsem, co dělám. Zapsala jsem to do knihy tu noc. Bez jejího jména.“ Podívala se na Ladu. „Nikdo mi to nevyčítal. Nikdo to nevěděl. Říkám vám to, protože jste se mě jinak neměli jak zeptat.“
+„Čtvrtého března,“ řekla Sael, „jsem otevřela knihu před denní ženou. U Dorotina řádku. Věděla jsem, co dělám. Zapsala jsem to do knihy tu noc. Bez jejího jména. Nikdo mi to nevyčítal. Nikdo to nevěděl. Říkám vám to, protože jste se mě jinak neměli jak zeptat.“
 
 *
 
 Mluvila první Ines.
 
-„Jestli tě máme soudit za to, žes tu knihu ukázala denní,“ řekla, „tak tě soudíme za jedinou věc z toho všeho, kterou jsi udělala dobře.“
+„Jestli vás máme soudit za to, že jste tu knihu ukázala denní,“ řekla, „tak vás soudíme za jedinou věc z toho všeho, kterou jste udělala dobře.“
 
 „Neprosím vás, abyste mě soudili,“ řekla Sael. „Prosím vás, abyste vzali knihu.“
 
@@ -144,7 +144,7 @@ Sael se podívala do tmy, kde seděl. Viděla ho tam líp než ostatní. Ruce na
 
 Tohle bylo poprvé, co se ve světnici někdo pohnul. Muž ze saských sídel. Žena z Vratislavi se podívala na Lorenze.
 
-„Kniha bude u rady,“ řekla Sael. „V radě budou tři. Rada rodu, rada Ostrých a Benediktova komunita. Originál bude v chebském archivu, jako deponát, podle pravidel, která podepsali čtyři správci a ředitel. Kopie zůstanou u těch čtyř správců, jak je to už teď. Kdo se v knize narodí nebo zemře, toho zapíše ten, koho si rodina vybere. Ne úřad. A podepíše se jménem.“ Odmlčela se. „Ne znakem.“
+„Kniha bude u rady,“ řekla Sael. „V radě budou tři. Rada rodu, rada Ostrých a Benediktova komunita. Originál bude v chebském archivu, jako deponát, podle pravidel, která podepsali čtyři správci a která ředitel podepíše, až rozhodnete. Kopie zůstanou u těch čtyř správců, jak je to už teď. Kdo se v knize narodí nebo zemře, toho zapíše ten, koho si rodina vybere. Ne úřad. A podepíše se jménem.“ Odmlčela se. „Ne znakem.“
 
 „A jméno Merin?“ zeptal se Javor. Poprvé za celý večer. Stál vedle ní a díval se před sebe, ne na ni.
 
@@ -154,7 +154,7 @@ Tohle bylo poprvé, co se ve světnici někdo pohnul. Muž ze saských sídel. �
 
 Než se hlasovalo, promluvila žena z Vratislavi. Celý večer mlčela a teď mluvila polsky zabarvenou češtinou, pomalu, jako by každé slovo nejdřív zvážila v dlani.
 
-„Moje síť hlasovala v červnu proti,“ řekla. „Ty dvě sítě, co byly proti, jedna z nich je moje. Jsem tady, abych to řekla nahlas, protože to tak teď děláme.“ Podívala se na Sael. „Máme rodiny, které nikdy nechtěly nic říkat. Ani teď nechtějí. Babička, které je sto deset a v občance osmdesát. Kluk, který dělá v bance a nikdo v práci neví, proč nechodí na firemní grilování v poledne. Ti neudělali nic. Nikoho nevzali. Nikomu neublížili. A teď kvůli vašemu dopisu chodí lidi po lesích s baterkami.“
+„Moje síť hlasovala v červnu proti,“ řekla. „Ty dvě sítě, co byly proti, jedna z nich je moje. Jsem tady, abych to řekla nahlas, protože to tak teď děláme. Máme rodiny, které nikdy nechtěly nic říkat. Ani teď nechtějí. Babička, které je sto deset a v občance osmdesát. Kluk, který dělá v bance a nikdo v práci neví, proč nechodí na firemní grilování v poledne. Ti neudělali nic. Nikoho nevzali. Nikomu neublížili. A teď kvůli vašemu dopisu chodí lidi po lesích s baterkami.“
 
 Nikdo jí neodpověděl hned.
 
@@ -190,7 +190,7 @@ Benedikt: „Ano. Ale ne sami.“ Totéž, co řekl v dubnu. Agnes to zopakovala
 
 Pak Ostří.
 
-Lada se podívala kolem stolu, na jedenáct párů rukou na desce.
+Lada přejela očima kolem stolu, po jedenácti párech rukou na desce.
 
 „Hlasujem,“ řekla.
 
@@ -218,7 +218,7 @@ Rada rozhodla to, co Sael navrhla Ladě v červnu v telefonu a co Lada přinesla
 
 „Co s ním uděláš?“
 
-„Spálím ho v kamnech. Tady, ve světnici.“ Lada se podívala na netopená kamna, u kterých seděla Apolena. „Ostří se pamatujou bez papíru. Osm set let se pamatujem. Papír nás málem stál dům.“
+„Spálím ho v kamnech. Tady, ve světnici.“ Lada kývla k netopeným kamnům, u kterých seděla Apolena. „Ostří se pamatujou bez papíru. Osm set let se pamatujem. Papír nás málem stál dům.“
 
 Nikdo jí to nerozmlouval. Byl to její list.
 
@@ -232,9 +232,9 @@ Pak se ozval Tadeáš. Z konce stolu, kde celý večer seděl s neotevřeným no
 
 „A hora?“
 
-Lorenz se na něj podíval přes brýle. „Hora není na programu, mladý muži.“
+Lorenz si ho změřil přes brýle. „Hora není na programu, mladý muži.“
 
-„Měla by být.“ Tadeáš to řekl tiše a rudě, jako by se styděl, že mluví. „Dole teče voda, kterou nikdo nezavírá. Skála svítí každou noc. Úřad tam nikoho nepustí a my tam nesmíme. Za rok tam bude jezero. Za dva možná něco horšího.“ Podíval se na Ladu. „Někdo to bude muset vědět. Ne Úmluva. Ne úřad. Někdo, kdo tomu rozumí.“
+„Měla by být.“ Tadeáš to řekl tiše a zrudl, jako by se styděl, že mluví. „Dole teče voda, kterou nikdo nezavírá. Skála svítí každou noc. Úřad tam nikoho nepustí a my tam nesmíme. Za rok tam bude jezero. Za dva možná něco horšího. Někdo to bude muset vědět. Ne Úmluva. Ne úřad. Někdo, kdo tomu rozumí.“
 
 „Ty tomu rozumíš,“ řekla Lada.
 
@@ -246,7 +246,7 @@ Lorenz si něco zapsal. Hora na program nepřišla. Ale do zápisu ano. Sael to 
 
 Ines se zeptala až na konci, když už se zvedali od stolu.
 
-„A ty?“
+„A vy?“
 
 „Co já?“
 
@@ -260,7 +260,7 @@ Ve světnici se zase ztišilo. Několik hlav se otočilo k Sael.
 
 „Ani potom,“ řekla Sael, „pokud vás nezvolí. Výslovně. Na čas. A s tím, že ho můžete odvolat, když začne rozhodovat sám.“
 
-Ines se na ni dlouho dívala. Pak se usmála, unaveně, jako člověk, který čekal dvacet let na jednu větu a dostal jinou.
+Ines se usmála až po dlouhé chvíli, unaveně, jako člověk, který čekal dvacet let na jednu větu a dostal jinou.
 
 „To jsem chtěla slyšet,“ řekla. „Ne jméno. Tohle.“
 
@@ -276,7 +276,7 @@ Benedikt se zvedl ze židle mimo světlo. Agnes mu podala ruku a on ji nevzal.
 
 Do rána zůstali jen Ostří a Sael.
 
-Lorenz odjel taxíkem, který si objednal z Chebu. Ines s ženou z Vratislavi v jejím autě. Benedikt s Agnes odešli pěšky do lesa ve tři, aby byli za hřebenem před svítáním. Javor s Olší spali v kuchyni na lavicích, protože se jim nechtělo jet.
+Lorenz odjel taxíkem, který si objednal z Chebu. Ines se ženou z Vratislavi v jejím autě. Benedikt s Agnes odešli pěšky do lesa ve tři, aby byli za hřebenem před svítáním. Javor s Olší spali v kuchyni na lavicích, protože se jim nechtělo jet.
 
 Sael stála s Ladou a Tadeášem v sadu nad statkem. Bylo ještě šero, ale na východě už se hřeben odděloval od nebe. Pod nimi, v rokli, stál sloup páry. Rovný, bílý, vyšší než v únoru.
 
@@ -330,7 +330,7 @@ Pára nad roklí v ranním slunci byla zase skoro modrá. Sael ji viděla a vid�
 
 „Rada,“ řekla Hana. Nebyla to otázka.
 
-„Ostří všech jedenáct. Ze sítí všichni kromě jednoho. Ten se zdržel.“ Sael se podívala na vodu. „Kniha je u rady. Jméno Merin dál nikdo nenosí.“
+„Ostří všech jedenáct. Ze sítí všichni kromě jednoho. Ten se zdržel. Kniha je u rady. Jméno Merin dál nikdo nenosí.“
 
 Hana kývla.
 
@@ -338,7 +338,7 @@ Hana kývla.
 
 „Vlevo,“ řekla Sael.
 
-Hana vytáhla sešit a zapsala to. Sael viděla, kam jde ruka. Doleva. Datum, čas, *Řekla S.* Pak Hana sešit zavřela a nedala ho zpátky do batohu. Držela ho v ruce.
+Hana vytáhla sešit a zapsala to. Doleva. Datum, čas, *Řekla S.* Pak Hana sešit zavřela a nedala ho zpátky do batohu. Držela ho v ruce.
 
 „Nejsme přítelkyně,“ řekla Hana.
 
@@ -366,7 +366,7 @@ Pak se zase zvážněla.
 
 Stály u pramene a nic víc si neřekly. Voda šuměla. Teplá, z hory, která byla prázdná. Záznamník na kůlu tiše cvakl, jak zapsal další číslo, a ani jedna se na něj nepodívala.
 
-Sael se otočila k odchodu. Pak se ještě zastavila.
+Sael se otočila k odchodu, ale ještě se zastavila.
 
 „Hano.“
 
@@ -386,11 +386,11 @@ Ve čtvrtek osmnáctého července v sedm večer zazvonila Sael v Ostrově u dve
 
 Věra jí zavolala v pondělí. Poprvé od dubna. Řekla jen: *Ve čtvrtek. V sedm. Přineste to.* A zavěsila.
 
-V tašce měla Sael obálku z nekyselého papíru, kterou ušila sama, a v ní dva listy z kazety. Ne Klářin. Ten dostane Klára, až si o něj řekne. Jen Věřin a jejího muže. Strojopis, poskakující *e*, a pod tím tři řádky modrou propiskou. Svatba, rok osmdesát devět. Narození dcery, devadesát sedm. Adresa v Ostrově, přepsaná dvakrát.
+V tašce měla Sael obálku z nekyselého papíru, kterou ušila sama, a v ní list Lindnerových z kazety. List třicet jedna. Patřil celé rodině, i Kláře, ale Klára si o něj zatím neřekla. Strojopis, poskakující *e*. Svatba, rok osmdesát devět. Narození dcery, devadesát sedm. Adresa v Ostrově, přepsaná na stroji dvakrát. A pod strojopisem dva řádky modrou propiskou, Liberec a návrat do Varů.
 
 Věra otevřela sama. V kuchyni za ní seděl muž, který o všem věděl a na nic se neptal, a díval se na televizi bez zvuku.
 
-Sael podala obálku. Věra ji vzala, otevřela a vytáhla listy. Četla je na prahu, ve světle z chodby, dlouho. Sael viděla, jak jí oči jdou po řádcích, které Sael začala psát před jednačtyřiceti lety, týden po Věřině svatbě.
+Sael podala obálku. Věra ji vzala, otevřela a vytáhla list. Četla ho na prahu, ve světle z chodby, dlouho. Sael viděla, jak jí oči jdou po řádcích, které Sael začala psát před jednačtyřiceti lety, týden po Věřině svatbě.
 
 „Vy jste mě sem zapsala,“ řekla Věra.
 
@@ -400,9 +400,9 @@ Sael podala obálku. Věra ji vzala, otevřela a vytáhla listy. Četla je na pr
 
 „Ne.“
 
-Věra listy složila. Napůl. A ještě jednou napůl. Na čtyřikrát. Četla to v novinách, Sael to věděla, aniž se zeptala. Dívala se na to a nic neřekla.
+Věra list složila. Napůl. A ještě jednou napůl. Na čtyřikrát, jako Dorotino plátno v Saelině dopise. Možná to četla v novinách. Sael se nezeptala. Dívala se na to a nic neřekla.
 
-„Tohle si nechám,“ řekla Věra. „Ne ve skříni. U sebe. Ať je to někde, kde vím, kde to je.“ Zastrčila listy do kapsy zástěry. Pak se podívala na Sael. „Kláře to nedávejte. Ať si pro to přijde sama.“
+„Tohle si nechám,“ řekla Věra. „Ne ve skříni. U sebe. Ať je to někde, kde vím, kde to je.“ Zastrčila list do kapsy zástěry. „Kláře o tom neříkejte. Ať si pro to přijde sama. Ke mně.“
 
 „To jsem nechtěla.“
 
@@ -416,4 +416,4 @@ Sael chvíli stála na prahu. Byla to první otázka, kterou jí kdo položil od
 
 „Ano,“ řekla. „Děkuju.“
 
-Vešla dovnitř, a Věra za ní zavřela dveře.
+Vešla dovnitř a Věra za ní zavřela dveře.

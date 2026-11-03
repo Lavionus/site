@@ -14,7 +14,7 @@ Jdou s Luisem. Jana zůstane ve dvaceti metrech v hlavní chodbě s lahví naví
 
 Vstup do chodby je jiný.
 
-Nový blok leží šikmo přes oblouk pod převisem, bílý, hranatý, tam, kde ještě předevčírem byla tma, do které by vjelo auto. Vlevo mezi blokem a stěnou zbyla mezera. Luis k ní připluje první a dlouho se do ní dívá. Pak se otočí k Haně a ukáže jeden prst. Jeden člověk. A pak si odepne levou láhev z boku a vezme ji do ruky před sebe.
+Nový blok leží šikmo přes oblouk pod převisem, bílý, hranatý, tam, kde ještě předevčírem byla tma, do které by vjelo auto. Vlevo mezi blokem a stěnou zbyla mezera. Luis k ní připluje první a dlouho se do ní dívá, než se otočí k Haně a ukáže jeden prst. Jeden člověk. A pak si odepne levou láhev z boku a vezme ji do ruky před sebe.
 
 Hana udělá totéž. Láhev je ve vodě skoro beztížná a přesto neohrabaná, jako by Hana nesla v náručí spícího psa. Mezera je dost široká. Strop nad ní je nový, čerstvě odlomený, a Hana se na něj nedívá. Dívá se na Luisovy ploutve před sebou a na láhev ve svých rukou a dýchá. Pomalu. *Strach je v pořádku. Jen ho nesmíš dýchat.*
 
@@ -38,7 +38,7 @@ V deset nula nula se na terase u LE 14 rozbliká zelená dioda.
 
 Jednou za vteřinu, pomalu, jako by se nic nestalo. Kalinův maják. Vysílá svých deset minut do skály nad sebou, k milpě, kde nikdo neposlouchá, protože je den a ve dne to nemá smysl. Hana se na něj dívá a počítá bliknutí. Pět. Deset. Pak se obrátí k Luisovi.
 
-Luis visí vedle ní a dívá se na trhlinu. Pak se podívá na válec. Pak na Hanu.
+Luis visí vedle ní a dívá se na trhlinu, na válec, na Hanu.
 
 Ukáže palcem nahoru. Ne *obrat*. Ukáže to pomalu, jako se ukazuje *pojďme odsud*.
 
@@ -46,13 +46,13 @@ Ukáže palcem nahoru. Ne *obrat*. Ukáže to pomalu, jako se ukazuje *pojďme o
 
 Na povrchu je jedenáct dvacet.
 
-Viktor čeká na plošině, která visí na jednom rovném a jednom ohnutém nosníku a při každém kroku se trochu zhoupne. Má v ruce telefon a na uchu sluchátko a mluví anglicky, a když Hana vyleze po žebříku, zvedne prst: chvilku. Prezentace v Los Angeles začíná v jedenáct našeho času. Viktor je u ní. Na telefonu.
+Viktor čeká na plošině, která visí na jednom rovném a jednom ohnutém nosníku a při každém kroku se trochu zhoupne. Má v ruce telefon a na uchu sluchátko a mluví anglicky, a když Hana vyleze po žebříku, zvedne prst: chvilku. Prezentace v Los Angeles začala v jedenáct našeho času. Viktor je u ní. Na telefonu.
 
 Hana si sundá masku a sedne si na okraj plošiny a čeká, až přestane mluvit. Luis vedle ní mlčky odepíná láhve.
 
 „Převis má novou trhlinu,“ řekne Hana, když Viktor sluchátko konečně vytáhne z ucha. „Přímo nad válcem. Od pukliny k hraně. Na terase je prach a kusy ze stropu.“
 
-Viktor se na ni dívá. Pak si sedne vedle ní, těžce, a plošina se zhoupne.
+Viktor si sedne vedle ní, těžce, a plošina se zhoupne.
 
 „Takže to spadne,“ řekne.
 
@@ -64,7 +64,7 @@ Viktor se na ni dívá. Pak si sedne vedle ní, těžce, a plošina se zhoupne.
 
 Viktor se dívá dolů na vodu. Je pořád mléčná u severní stěny, kde do ní včera spadl kus skály velký jako dodávka.
 
-„Za dva týdny to zavřou,“ řekne tiše. „Navždy. A když do té doby ten převis spadne, zasype to. A když nespadne, zůstane to tam dole pod zavřenou jeskyní a za dvacet let to tam někdo najde a vytáhne bez povolení a prodá na internetu. Nebo nikdo, nikdy.“ Podívá se na ni. „Ty víš, že mám pravdu.“
+„Za dva týdny to zavřou,“ řekne tiše. „Navždy. A když do té doby ten převis spadne, zasype to. A když nespadne, zůstane to tam dole pod zavřenou jeskyní a za dvacet let to tam někdo najde a vytáhne bez povolení a prodá na internetu. Nebo nikdo, nikdy. Ty víš, že mám pravdu.“
 
 Hana to ví.
 
@@ -102,7 +102,7 @@ Marisol mlčí dlouho. Motor běží.
 
 Další ticho. Pak Marisol řekne něco španělsky, potichu, spíš k sobě, a Hana tomu nerozumí.
 
-„Pošlete mi fotky,“ řekne. „Všechny. Zavolám do Mexika City. Do večera budete vědět.“ Pauza. „A doktorko. Kdyby to bylo podle pana Brabce, dala bych vám ne. Hned. Do telefonu.“
+„Pošlete mi fotky,“ řekne. „Všechny. Zavolám do Mexico City. Do večera budete vědět.“ Pauza. „A doktorko. Kdyby to bylo podle pana Brabce, dala bych vám ne. Hned. Do telefonu.“
 
 „Já vím.“
 
@@ -168,17 +168,17 @@ V osm jdou dolů.
 
 Luis má na přilbě kameru. Marisol se včera večer do telefonu zeptala, kdo bude točit nezávisle na produkci, a Luis řekl *já*, a Viktor, který stál vedle, řekl po chvíli *dobře*.
 
-Viktor jde s nimi. Zůstane u Abuela s velkou kamerou a se dvěma světly, třetí u vchodu do síně, a Jana visí v haloklině s lahví navíc a s druhým vakem. Hana nese dláta a kartu. Luis nese síťový vak, který Ríša v noci vystlal pěnou, a malý zvedací vak, který se plní vzduchem z automatu.
+Viktor jde s nimi. Zůstane u Abuela s velkou kamerou a se dvěma světly. Třetí světlo postaví u vchodu do síně. Jana čeká u bloku, na vnější straně mezery, s lahví navíc a s druhým vakem. Hana nese dláta a kartu. Luis nese síťový vak, který Ríša v noci vystlal pěnou, a malý zvedací vak, který se plní vzduchem z automatu.
 
 Mezerou u bloku projdou jeden po druhém, s láhvemi v náručí. Chodba je čistší než včera. Šest metrů. Hrdlo. Haloklina. Mlha. Šňůra v dlani. Tma bez hrany.
 
 Sedm kopů doleva. Pod převis.
 
-Trhlina je pořád tam. Hana ji zkontroluje první. Nová není. Nebo není nová, kterou by poznala.
+Trhlina je pořád tam. Hana ji zkontroluje první. Nová nepřibyla. Aspoň žádná, kterou by poznala.
 
 Pak se podívá na válec, jako se dívá chirurg na pacienta, který leží na stole a čeká, až mu někdo řekne, že to nebude bolet.
 
-Fotí. Celý válec, s kartou, ze čtyř stran. Spodní konec, obrys pod polevou. Čelo se značkami. Lem a v něm jizvy po vzorcích, dvojku, trojku, čtyřku a pětku, ještě čerstvě bílé. Pak dá foťák Luisovi, aby ho držel, a vezme dláto.
+Fotí. Celý válec, s kartou, ze čtyř stran. Spodní konec, obrys pod polevou. Čelo se značkami. Lem a v něm jizvy po vzorcích, dvojku, trojku, čtyřku a pětku, ještě čerstvě bílé. Dá foťák Luisovi, aby ho držel, a vezme dláto.
 
 Kůra nad spodním koncem je tenká, tři, čtyři milimetry. Hana nasadí dláto na okraj obrysu, šikmo, aby síla šla do polevy a ne do předmětu, a tluče. Krátce a mnohokrát, jako datel. Luis jí svítí z boku, nízko, aby byl obrys vidět, a nehýbe se. Kousky polevy se odlupují a klesají dolů a Hana je nechává padat. Tohle nejsou vzorky. Tohle je cena.
 
@@ -200,13 +200,13 @@ Najde spáru. Tenkou, tam, kde poleva sedí na povrchu. Nasadí do ní dláto, o
 
 Pod dlaní ucítí cvaknutí. Tiché, spíš jako když praskne kloub, než jako když praskne kámen.
 
-Válec se jí pohne v levé ruce. O milimetr. O dva. Hana pustí dláto na šňůrce, chytí ho i pravou a pomalu, velmi pomalu, ho zvedá. Spodní konec se vysune z polevy jako zub z dásně.
+Válec se jí pohne v levé ruce. O milimetr. O dva. Hana pustí dláto na šňůrce, chytí válec i pravou a pomalu, velmi pomalu, ho zvedá. Spodní konec se vysune z polevy jako zub z dásně.
 
 A ve chvíli, kdy je venku, se ze dna zvedne kal.
 
 Je to jen chvilka. Hana vidí lůžko. Žlab v polevě, kde válec ležel, hladký a oblý, s okraji ostrými jako v sádře, do které někdo otiskl ruku. Vidí tvar spodního konce, zaoblený, vytištěný do kamene. Vidí, že dno lůžka je bledší než poleva kolem. Pak se ze dna lůžka a ze žlábku pod ním vyvalí šedý obláček, jak se voda pohne do místa, kde ještě před vteřinou byl předmět, a lůžko zmizí.
 
-Luis zvedne foťák a cvakne. Pak ještě jednou. Záblesk se v kalu rozprskne do bílé, jako by fotil mlhu.
+Luis zvedne foťák a cvakne. Dvakrát. Záblesk se v kalu rozprskne do bílé, jako by fotil mlhu.
 
 Hana drží válec v náručí jako dítě. Ve vodě váží jen polovinu, a i polovina je víc, než čekala. Viktorova světla u Abuela se k nim stočí, ostře, celou silou, a kal v jejich paprsku září jako sníh ve světlech auta.
 
@@ -232,7 +232,7 @@ Hana to vidí: vzduch ve vaku se s každým metrem, o který stoupají, roztahuj
 
 V hrdle Luis vak postrčí před sebe do štěrbiny a protáhne se za ním. Hana čeká. Slyší za sebou Viktorův dech, rychlý. Pak jde sama. Levá láhev napřed, tělo bokem, hlava, ramena, strop dvě dlaně nad zády. Dýchá. Pomalu. Na druhém konci je Luis a za ním v jeho světle bílý vak.
 
-Na druhé straně mezery u bloku už čeká Jana. Luis jí vak podá a Jana ho převezme, jako se přebírá křehká věc, oběma rukama.
+Na druhé straně mezery u bloku čeká Jana. Luis jí vak podá a Jana ho převezme, jako se přebírá křehká věc, oběma rukama.
 
 Na dekompresi visí ve třech metrech pod plošinou, všichni čtyři. Je jedenáct čtyřicet. Válec visí ve vaku mezi Luisem a Hanou, Luis má ruku na popruhu. Nad nimi je hladina, světlá, a v ní se rýsuje stín plošiny a dvě postavy na jejím kraji. Marisol a pan Chan.
 
@@ -244,7 +244,7 @@ Lom slíbil, že do jedné nestřílí.
 
 Hana se podívá k severní stěně. Nevidí ji, je to dvacet metrů. Vidí jen, jak se tam voda začíná měnit. Mléko. Zvedá se ze dna, z kuželu, pomalu a líně, a valí se k nim.
 
-Do hladiny nad nimi dopadne pár kamínků. Hana vidí jejich stopy, bílé bublinky, které se rozpustí. Jeden klesá kolem ní, malý jako ořech, a zmizí dole.
+Do hladiny nad nimi dopadne pár kamínků. Hana vidí jejich stopy, bílé bublinky, které hned zmizí. Jeden klesá kolem ní, malý jako ořech, a zmizí dole.
 
 Jana se na ni podívá a udělá prsty kroužek. *OK?*
 
@@ -268,11 +268,11 @@ Vak vytáhnou kladkou. Pomalu, Luis ho zespodu vede, Marisol ho nahoře přebír
 
 Válec leží v pěně. Mokrý, na slunci, poprvé za sto tisíc let. Hana se na něj dívá z vody, s rukou na žebříku, a vidí ho jinak než dole. Je bledší. Matně šedobílý, s nádechem do zelena, jako mořská voda nad pískem. Kapky po něm stékají a nezůstávají na něm.
 
-Marisol si ho fotí. Ze všech stran, s kartou, kterou jí Hana podá z vody. Zapíše čas. Pak ho zabalí do pěny, kterou namočí v kbelíku vody z cenotu, a přes pěnu do fólie, vrstvu po vrstvě, s péčí, s jakou se balí dítě do zavinovačky.
+Marisol si ho fotí. Ze všech stran, s kartou, kterou jí Hana podá z vody. Zapíše čas a zabalí ho do pěny, kterou namočí v kbelíku vody z cenotu, a přes pěnu do fólie, vrstvu po vrstvě, s péčí, s jakou se balí dítě do zavinovačky.
 
 „Nesmí vyschnout,“ řekne, aniž by zvedla oči. „Kdyby byl porézní, sůl by krystalizovala v pórech. Nevíme, z čeho je, tak s ním zacházíme jako s nejhorším.“
 
-Bednu snesou na plošinu na laně. Marisol do ní válec uloží, do vystlaného lůžka z pěny, a přes něj další vrstvu. Pak přišroubuje víko. Šest šroubů, akumulátorovým šroubovákem, který jí podá Salcedo.
+Bednu snesou na plošinu na laně. Marisol do ní válec uloží, do vystlaného lůžka z pěny, a přes něj další vrstvu. Nakonec přišroubuje víko. Šest šroubů, akumulátorovým šroubovákem, který jí podá Salcedo.
 
 Pak páska.
 
@@ -280,13 +280,13 @@ Přetáhne ji přes spoj víka a bedny, po celém obvodu, a na každé straně p
 
 Hana vyleze z vody, sundá si láhve a vezme foťák.
 
-Fotí pásku. Každou stranu. S kartou, aby bylo vidět měřítko, a pak bez ní, zblízka. Na čelní straně bedny vede páska přes suk. Tmavý, oválný, velký jako palec, a páska přes něj přechází v jeho horní třetině, šikmo, a poslední písmeno Marisolina podpisu, to *h* na konci *Couoh*, leží přímo na suku, tmavé na tmavém, skoro se v něm ztrácí. Hana to vyfotí. Pak ještě jednou, z boku, aby bylo vidět, jak se páska v místě suku nepatrně zvedá nad dřevem, protože suk je o kousek vyšší než prkno kolem.
+Fotí pásku. Každou stranu. S kartou, aby bylo vidět měřítko, a pak bez ní, zblízka. Na čelní straně bedny vede páska přes suk. Tmavý, oválný, velký jako palec, a páska přes něj přechází v jeho horní třetině, šikmo, a poslední písmeno Marisolina podpisu, to *h* na konci *Couoh*, leží přímo na suku, tmavé na tmavém, skoro se v něm ztrácí. Hana to vyfotí. A ještě jednou, z boku, aby bylo vidět, jak se páska v místě suku nepatrně zvedá nad dřevem, protože suk je o kousek vyšší než prkno kolem.
 
 „Fotíte suky?“ zeptá se Marisol.
 
 „Fotím všechno.“
 
-Marisol se na ni dívá. Pak kývne.
+Marisol kývne.
 
 „Večer ji otevřu,“ řekne. „Jednou. Kvůli dokumentaci, s vámi a se svědkem. Prohlédnete si ho a nafotíte, než bude pryč. Pak ji zapečetím znovu.“ Zaklapne fixu. „V pondělí v sedm ráno ji odvezu.“
 
@@ -294,7 +294,7 @@ Marisol se na ni dívá. Pak kývne.
 
 Bodega je dvacet kroků od plachty. Betonová kostka s kovovými dveřmi a se zamřížovaným okénkem, nad dveřmi nápis *EJIDO X'KANLUM – BODEGA* a pod ním starší, přetřený, který už nejde přečíst. Uvnitř je šero a voní to naftou a cementem. Láhve expedice podél zdi. Kompresorový olej. Pytle cementu, které tam ejido skladuje na novou střechu školy. Pod okénkem prázdné místo.
 
-Luis s Ríšou a s jedním z mladých pomocníků postaví bednu na dvě palety, aby nestála na betonu. Pan Chan stojí ve dveřích a dívá se.
+Luis s Ríšou a s jedním z mladých pomocníků postaví bednu na dvě palety, aby nestála na betonu. Pan Chan stojí ve dveřích.
 
 Don Felipe zamkne dveře visacím zámkem. Velkým, mosazným, starým.
 
@@ -322,7 +322,7 @@ Viktor stojí za nimi s rukama v kapsách.
 
 *
 
-Lom se omluví ve dvě odpoledne. Inženýrovi, do telefonu. Prý nedorozumění. Prý mistr na směně nevěděl. Inženýr to Marisol tlumočí a Marisol neřekne nic, jen se otočí a jde k pick-upu, a Hana ji vidí, jak sedí za volantem se zavřenými dveřmi a dívá se před sebe.
+Lom se omluví ve dvě odpoledne. Inženýrovi, do telefonu. Prý nedorozumění. Prý mistr na směně nevěděl. Inženýr to Marisol vyřídí a Marisol neřekne nic, jen se otočí a jde k pick-upu, a Hana ji vidí, jak sedí za volantem se zavřenými dveřmi a dívá se před sebe.
 
 Hana si sedne na kámen u cenotu, za páskou, kde se smí sedět. Voda je zase bílá. Tam dole, pod mlhou, v síni, visí ve slané vodě kal nad prázdným lůžkem. Bude tam viset do večera. Možná do zítřka. Pak se usadí do lůžka a do žlábku a na terasu, a bude tam ležet, jako všechno tady dole, přesně tam, kam dopadl.
 
@@ -332,7 +332,7 @@ Otevře deník. Vlevo zapíše vyzvednutí. Čas, hloubku, kdo kde byl. Trhlinu,
 
 *Lůžko po předmětu: viděno ~2 s (hladké, oblé, okraje ostré, dno světlejší než poleva), pak kal. Nedokumentováno. 2 snímky bílé.*
 
-Podívá se na to. Je to pravda a je to málo.
+Je to pravda a je to málo.
 
 Pak se podívá na pravou ruku. Konečky prstů jsou zarudlé, jemně, jako po horké vodě. Pamatují si něco, co neumí zapsat. Hladkost, která neklouže ani nedrhne. Spáru. Cvaknutí. Doleva to nepatří, protože to nebylo nic, co by se dalo změřit. Doprava taky ne, protože si o tom nic nemyslí.
 

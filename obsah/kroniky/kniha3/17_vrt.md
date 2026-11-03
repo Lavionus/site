@@ -46,7 +46,7 @@ Ne pomalu. Najednou. Bílá kaše, která tekla z díry od rána, se zastaví, j
 
 Don Isidro zastaví motor.
 
-Rosa vstane. Devět metrů je moc mělko. Buď je špatně Kalinova hloubka, nebo všechno.
+Rosa vstane. Hana ví, co to znamená: devět metrů je moc mělko. Buď je špatně Kalinova hloubka, nebo všechno.
 
 „Dutina,“ řekne don Isidro klidně. „Malá. Korunka nepropadla. Jenom voda.“
 
@@ -136,11 +136,11 @@ Teď. Nebo za metr. Nebo nikdy, protože zvon je dvacet metrů jinde a ona ho op
 
 Výplach přestane téct.
 
-Tentokrát se tyč pohne. Hana to vidí. Pod rukou dona Isidra sjede dolů, deset centimetrů, dvacet, a don Isidro ji chytí pákou. Z díry se ozve ten srkavý zvuk, dlouhý, dutý. A pak, když utichne, něco jiného. Slabé, chladné, jako když se v létě otevřou dveře do sklepa.
+Tentokrát se tyč pohne. Hana to vidí. Pod rukou dona Isidra sjede dolů o pár centimetrů a don Isidro ji chytí pákou. Z díry se ozve ten srkavý zvuk, dlouhý, dutý. A pak, když utichne, něco jiného. Slabé, chladné, jako když se v létě otevřou dveře do sklepa.
 
 Hana si klekne k díře. Přiloží obličej k ústí, ke kovové pažnici, kterou chlapci zapustili do horních metrů.
 
-Z díry jde vzduch. Ne proud, jen dech. Studený. Těžký. Voní kamenem a vodou a ještě něčím, co Hana nezná a co se jí okamžitě nelíbí. Zatuchlým, sladkým, jako starý sklep, kde někdo dlouho dýchal.
+Z díry jde vzduch. Ne proud, jen dech. Studený. Těžký. Voní kamenem a vodou a ještě něčím, co Hana nezná a co se jí okamžitě nelíbí. Zatuchlým, sladkým, jako místnost, kde někdo dlouho dýchal.
 
 „Šestnáct dvacet čtyři,“ přečte don Isidro z tyče a vypne motor.
 
@@ -156,8 +156,6 @@ Nikdo nemluví. Lékař přijde od cesty se svým kufrem. Za ním dva muži neso
 
 „Nejdřív vzduch,“ řekne Hana.
 
-Inženýr se na ni podívá.
-
 „Jestli tam je,“ řekne Hana, „tak v tom vzduchu, který teď cítím, dýchá tři dny. Kamera mu nic nedá. Hadice ano.“
 
 „A jestli tam není?“
@@ -167,8 +165,6 @@ Inženýr se na ni podívá.
 Lékař kývne. Inženýr se podívá na lékaře a pak kývne taky.
 
 Poslední tyč vyjede ve čtvrt na deset. Muži zasunou do pažnice hadici, ohebnou, širokou jako zápěstí, a spouštějí ji ručně, metr za metrem. Šestnáct metrů. Sedmnáct. Pak ještě metr, aby visela do prostoru. Dmychadlo naskočí. Řve.
-
-Kalina se podívá na hodinky a nic neřekne. Maják už nepotřebuje slyšet.
 
 Vedle hadice se do pažnice vejde kamera. Těsně. Don Isidro ji spouští sám. Pomalu. Pokaždé, když kabel o něco drhne, se zastaví.
 
@@ -228,7 +224,7 @@ Nemluv. Poslouchej mě.
 
 Dmychadlo se znovu rozeřve. Lékař si přiloží dlaň k uchu, zakroutí hlavou. Takhle nic neuslyší. Hana se podívá na Kalinu.
 
-Kalina už jde k nákladnímu vozu pro cívku kabelu a dvě krabičky, které pájel ve středu pod plachtou, když šla k Viktorovi ke studni. Jeskynní spojení. Dva telefony na drátě, vodotěsné.
+Kalina už jde k nákladnímu vozu pro cívku kabelu a dvě krabičky, které pájel ve středu pod plachtou, když Hana šla za Viktorem ke studni. Jeskynní spojení. Dva telefony na drátě, vodotěsné.
 
 „Ten dolní plave?“ zeptá se Hana.
 
@@ -272,9 +268,11 @@ Hana se otočí k inženýrovi.
 
 *
 
+Don Isidro vytáhne kameru. Telefon by se vedle ní a vedle hadice do pažnice nevešel.
+
 Kalinův telefon spustí do díry v jedenáct čtyřicet, v nafouknutém igelitovém sáčku, a Kalina za ním povoluje kabel. Pod ním v pytli láhev s vodou, ve které lékař rozmíchal cukr a sůl, termofólie, čokoláda a svítilna s novými bateriemi.
 
-Luis plave pro pytel podruhé. Pomaleji než poprvé. Hana ho počítá v sekundách. Šedesát osm tam. Devadesát dva zpátky. Na břehu leží dlouho, než rozváže sáček s telefonem.
+Luis plave pro pytel podruhé. Pomaleji než poprvé. Hana ho počítá v sekundách, podle kabelu, který Kalina povoluje a zase přitahuje. Šedesát osm tam. Devadesát dva zpátky. Pak se kabel dlouho nehýbe, než Luis rozváže sáček s telefonem.
 
 V dolním telefonu je mikrofon a reproduktor. V horním sluchátko. Kalina ho podá lékaři.
 
@@ -284,9 +282,9 @@ Jak se jmenuješ. Kde jsi. Bolí tě hlava. Kde tě bolí. Bolí tě klouby, lok
 
 Odpovědi nevidí. Vidí jen lékařův obličej. Při jedné otázce se zamračí. Při další kývne. Při poslední, *kolik je dnes*, se dlouho nehýbe a pak řekne *bien, bien, no importa*. To je jedno.
 
-Pak zakryje sluchátko dlaní a otočí se k Haně a k inženýrovi.
+Zakryje sluchátko dlaní a otočí se k Haně a k inženýrovi.
 
-„Hyperkapnie,“ řekne. Anglicky, aby to slyšeli oba. „Těžká, ale ne nejhorší. Třese se. Hlava ho bolí tak, že nevidí. Pletou se mu dny. Myslí si, že je pátek. Mluví pomalu a ztrácí slova.“ Odmlčí se. „Dekompresi dělal, jak mohl. V chodbě nahoru, na zastávkách, s posledním plynem. Bolí ho levý loket. Od prvního dne. Nezhoršuje se to.“
+„Hyperkapnie,“ řekne. Pomalu, aby mu rozuměli oba. „Těžká, ale ne nejhorší. Třese se. Hlava ho bolí tak, že nevidí. Pletou se mu dny. Myslí si, že je pátek. Mluví pomalu a ztrácí slova.“ Odmlčí se. „Dekompresi dělal, jak mohl. V chodbě nahoru, na zastávkách, s posledním plynem. Bolí ho levý loket. Od prvního dne. Nezhoršuje se to.“
 
 „Loket je…“
 
@@ -402,13 +400,13 @@ Pak plaval zpátky. Sestup, mlha, haloklina. Pod hrdlem byl, když přišel odst
 
 Plyn měl na půl cesty ven. Ven nebylo kudy.
 
-Pak si vzpomněl na Walta. Na šestnáct let. Na chodbu, ve které se smál, protože ho to nadnášelo.
+Pak si vzpomněl na Walta. Na to, jak mu bylo šestnáct. Na chodbu, ve které se smál, protože ho to nadnášelo.
 
 „Y el aparato de Tomás,“ řekne. „Cada hora. Diez minutos. Lo puse derecho.“
 
 A Tomásův přístroj. Každou hodinu. Deset minut. Postavil jsem ho rovně.
 
-Hana se podívá ke kolíku. Kalina tam stojí se sluchátky na uších, protože je jedna. Neslyší, co Luis říká. Neví, že teď mluví o něm.
+U kolíku stojí Kalina se sluchátky na uších, protože je jedna. Neslyší, co Luis říká. Neví, že teď mluví o něm.
 
 „Ana.“
 
@@ -440,15 +438,15 @@ Ticho. Dech, dvacet za minutu. Pak něco, co může být *ya*. Nebo *bueno*. Neb
 
 *
 
-Policista, který od čtvrtka hlídá pásku u studny, přijde přes pole ve tři čtvrtě na dvě. Mladý, s puškou přes rameno, kterou si nesundá, a s plastovou krabičkou na formuláře. Přivedl ho inženýr. Hana za ním zašla, protože sama neví, jak se tu taková věc dělá.
+Policista, který od čtvrtka hlídá pásku u studny, přijde přes pole ve tři čtvrtě na dvě. Mladý, s puškou přes rameno, kterou si nesundá, a s plastovou krabičkou na formuláře. Přivedl ho inženýr. Hana za inženýrem zašla, protože sama neví, jak se tu taková věc dělá.
 
-Luis plave potřetí. Pomaleji než předtím. Hana ho počítá. Sto čtyři vteřiny tam, s pytlem na šňůře. Sto osmnáct zpátky. Pak leží na břehu u hadice a nehýbe se. Lékař drží sluchátko a poslouchá jeho dech.
+Luis plave potřetí. Pomaleji než předtím. Hana ho počítá podle šňůry v Kalinových rukou. Sto čtyři vteřiny tam, s pytlem na šňůře. Sto osmnáct zpátky. Pak leží na břehu u hadice a nehýbe se. Lékař drží sluchátko a poslouchá jeho dech.
 
 Pytel vyjede z díry ve dvě hodiny dvě minuty. Mokrý, těžký od vody na povrchu. Uvnitř jiný sáček, zavázaný na dvakrát. Uvnitř malý černý tvar.
 
 Hana stojí krok za policistou. Ruce má v kapsách.
 
-Policista si natáhne rukavice a položí pytel na kapotu nákladního vozu do světla Ríšova reflektoru. Inženýr stojí vedle. Pan Chan, kterého Rosa vzbudila u zdi, kde podřimoval vestoje opřený o hůl, stojí na druhé straně. Policista nechá vnitřní sáček zavázaný a celý ho vloží do svého sáčku s číslem. Zalepí ho. Napíše čas. Podepíše se. Podá pero inženýrovi. Pak panu Chanovi. Pan Chan se podepíše pomalu, tiskacím písmem, celým jménem.
+Policista si natáhne rukavice a položí pytel na kapotu nákladního vozu do světla Ríšova reflektoru. Inženýr stojí vedle. Na druhé straně stojí pan Chan. Rosa ho vzbudila u zdi, kde podřimoval vestoje, opřený o hůl. Policista nechá vnitřní sáček zavázaný a celý ho vloží do svého sáčku s číslem. Zalepí ho. Napíše čas. Podepíše se. Podá pero inženýrovi, potom panu Chanovi. Pan Chan se podepíše pomalu, tiskacím písmem, celým jménem.
 
 Policista se podívá na Hanu. Zvedne pero.
 
@@ -477,8 +475,6 @@ Nikdo nespí. Dmychadlo řve a Haně ten hluk nevadí.
 Ve tři hodiny řekne don Isidro, že by kamera mohla zůstat dole. Ať je vidět, jak Luis leží. Lékař souhlasí. Don Isidro ji spustí znovu, vedle hadice, a otočí hlavu k břehu. Obraz na obrazovce: zelené blikání, každou celou hodinu deset minut, a vedle něj, šedě, tvar, který se zvedá a klesá. Dýchá.
 
 „Strop,“ řekne Hana.
-
-Don Isidro se na ni podívá.
 
 „Strop nad břehem. Nad bloky. Jestli tam něco visí.“
 
@@ -516,13 +512,13 @@ To je výklad. Je dobrý. Je pravděpodobný.
 
 Malé ruce. Široké. S krátkými prsty.
 
-Dětské, řekne si. Dětské otisky. Děti mají široké dlaně a krátké prsty. Nemají. Mají. Nevím. Hana se na ně dívá a cítí, jak se v ní něco zastaví, jako se zastavilo u Waltova stolu nad kresbou oblých domů. Chvilka. Pocit, že viděla tvář, kterou zná, v cizím městě, a pak se tvář otočí a je cizí.
+Dětské, řekne si. Dětské otisky. Děti mají široké dlaně a krátké prsty. Nemají. Mají. Nevím. Hana se na ně dívá a na chvilku zadrží dech, jako tenkrát u Waltova stolu nad kresbou oblých domů. Pocit, že viděla tvář, kterou zná, v cizím městě, a pak se tvář otočí a je cizí.
 
 Ten pocit nepatří nikam. Ani vlevo, ani vpravo.
 
 „Walte,“ řekne.
 
-Walt sedí na židli s nápisem pivovaru. Celou noc tam sedí a nespí. Teď vstane, opře se o hůl a přijde k obrazovce. Dlouho se dívá. Hana čeká, že řekne *ty jsem tehdy neviděl*, nebo *svíčka hořela malá*. Nebo že neřekne nic.
+Walt sedí na židli s nápisem pivovaru. Celou noc tam sedí a nespí. Teď vstane, opře se o hůl a přijde k obrazovce. Hana čeká, že řekne *ty jsem tehdy neviděl*, nebo *svíčka hořela malá*. Nebo že neřekne nic.
 
 Walt se dívá a nehýbe se.
 
@@ -538,7 +534,7 @@ Doleva: *3:20, kamera dona Isidra, svítilna na šňůře. Strop nad Z koncem (b
 
 Doprava: *Dětské otisky? Mayský rituál, vstup shora přes dnes zavalený propad (prohlubeň se 3 stromy). Běžné.*
 
-Pod to, menším písmem: *Walt: „Nekreslete je.“*
+Pod to: *Walt: „Nekreslete je.“*
 
 Pak se podívá na slovo *Běžné*.
 
@@ -560,7 +556,7 @@ Hana už skoro spí. Sedí na zemi zády ke kamenné zdi, se sešitem na kolenou
 
 *M.*
 
-Hana si to přečte jednou. Pak ještě jednou. Pak telefon položí na sešit, displejem nahoru, a dívá se na něj, dokud nezhasne.
+Hana si to přečte dvakrát. Pak telefon položí na sešit, displejem nahoru, a dívá se na něj, dokud nezhasne.
 
 Válec byl v bedně. Má čtyři sta šedesát milimetrů. Marisol to změřila, ne ona. Třikrát. Podle jedné stránky, kterou napsala za čtyřicet minut na notebooku pod plachtou.
 
@@ -570,7 +566,7 @@ A Luis dýchá.
 
 Odepíše jen: *Díky. Luis dýchá. H.*
 
-Pak otevře sešit na nové stránce. Do pravého horního rohu napíše *5*.
+Otevře sešit na nové stránce a nahoru doprava napíše *5*.
 
 Vlevo zapíše den. Čísla, časy, jména. Průraz 20:27, 16,24 m. Luisova slova v uvozovkách. *Kamera L. E. v pytli 2:02, policista, inženýr, pan Chan. H. V. se kamery nedotkla.* Zprávu od Marisol opíše bez jediného slova navíc.
 

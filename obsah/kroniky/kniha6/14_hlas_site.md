@@ -214,7 +214,7 @@ Nara si to přečetla jednou. Pak se začala smát. Nebylo to veselé a nebylo t
 
 „Doklad, že dorazili.“
 
-„A oni z toho udělali doklad, že je to humánní.“ Nara se přestala smát. „Je to dobrá práce. Udělala bych to stejně.“
+„A oni z toho udělali doklad, že je to humánní.“ Nara se přestala smát. „Je to dobrá práce.“
 
 *
 
@@ -264,7 +264,7 @@ Arel chvíli mlčel.
 
 „Já vím, že nemůžeš.“ Arel si povzdechl. Bylo to slyšet i přes síť. „To je na tom to nejhorší. Nemůžeš se bránit tím, co víš. Tak se nebraň. Vyjádření do sedmi dnů. Napiš mi, že jednáš podle svého svědomí. Na to se neptám.“
 
-Zavěsil. Nara seděla nad ztichlou linkou a myslela na to, že lhůta k vyjádření skončí pět dní před jednáním. Arel to věděl. Dal jí sedm dní, protože jí víc dát nemohl. Ani on nebyl zlý.
+Zavěsil. Nara seděla nad ztichlou linkou a myslela na to, že lhůta k vyjádření skončí pět dní před jednáním. Arel s tím počítal. Dal jí sedm dní, protože jí víc dát nemohl. Ani on nebyl zlý.
 
 Nikdo nebyl zlý. V tom to bylo.
 
@@ -272,7 +272,7 @@ Nikdo nebyl zlý. V tom to bylo.
 
 Davenova zpráva přišla v pět. Šla rovnou, bez zpoždění. Daven nebyl rizikový.
 
-*Byl jsem u ní. Pustila mě. Řekl jsem, že žádost je moje a že nabídku přijímám. Řekla, že to není moje nabídka, že je tvoje, a že moje žádost čeká na tebe. Řekla, že je jí to líto. Nevím, jestli to myslela vážně. Měl jsem to zapnuté, tak jsem se nezlobil. D.*
+*Byl jsem u ní. Pustila mě. Řekl jsem, že žádost je moje a že nabídku přijímám. Řekla, že to není moje nabídka, že je tvoje a že moje žádost čeká na tebe. Řekla, že je jí to líto. Nevím, jestli to myslela vážně. Měl jsem to zapnuté, tak jsem se nezlobil. D.*
 
 Nara si to přečetla dvakrát. Ardaine mu řekla pravdu. Celou, přesně a bez laskavosti. Ardaine nic jiného neuměla.
 
@@ -326,7 +326,7 @@ Ventilaci. Ilan říkal, že má dva tóny. Měl pravdu. Jeden nízký, stálý,
 
 Pak vodu. Ve stěně za linkou jí tekla potrubím k sousedům, tiše, s drobným cuknutím pokaždé, když někdo pustil kohoutek. Pak bzučení chladicí skříně. Pak vlastní dech. Pak, ve spáncích, srdce.
 
-Nevěděla, kolik je hodin. To bylo nejdivnější. Neměla kde se podívat. Čas byl vždycky v řádku, přesný na vteřinu, a teď byl pryč a místo něj zbylo jen to, jak dlouho sedí. Nevěděla, jestli minutu, nebo deset. Uvědomila si, že nikdy v životě neodhadovala, kolik uběhlo. Nebylo proč.
+Nevěděla, kolik je hodin. To bylo nejdivnější. Neměla se kde podívat. Čas byl vždycky v řádku, přesný na vteřinu, a teď byl pryč a místo něj zbylo jen to, jak dlouho sedí. Nevěděla, jestli minutu, nebo deset. Uvědomila si, že nikdy v životě neodhadovala, kolik uběhlo. Nebylo proč.
 
 Hodina, řekla si. Rozhodla se pro hodinu. Teď nevěděla, jak dlouho hodina trvá.
 
@@ -380,7 +380,7 @@ Nebylo to rozhodnutí. Nara ho necítila jako rozhodnutí. Bylo to spíš jako d
 
 Světlo pod dveřmi pohaslo.
 
-Pomalu, jak to dělalo vždycky, na čtvrtinu. Nara se na to dívala z podlahy. Chodba za dveřmi zešedla. Celý habitat teď ztlumil světla, Orsa, Luma, Keta, všude stejně, a Ilan v Sedmé loděnici to nepoznal, protože tam se nesvítilo podle hodin.
+Pomalu, jak to dělalo vždycky, na čtvrtinu. Nara se na to dívala z podlahy. Chodba za dveřmi zešedla. Celý prstenec teď ztlumil světla, Orsa, Luma, Keta, všude stejně, a Ilan v Sedmé loděnici to nepoznal, protože tam se nesvítilo podle hodin.
 
 ![Noc v Nařině bytě: Nara sedí na podlaze mezi stolem a zavřenými dveřmi, pod vchodovými dveřmi tenký pruh ztlumeného světla z chodby](obrazky/07_ticho.webp)
 
@@ -402,7 +402,7 @@ Nara se na poslední řádek dívala. Celý život se dívala na řádky, které
 
 *Ne,* odpověděla.
 
-Síť to přijala bez dotazu. Zapsala to. Vedle odpočtu v koutku vědomí ležela dvě čísla, jako ležela předevčírem, velké a malé.
+Síť to přijala bez dotazu. Zapsala to. Vedle odpočtu ležela dvě čísla, jako ležela předevčírem, velké a malé.
 
 *Do odletu: 22 dní.*
 

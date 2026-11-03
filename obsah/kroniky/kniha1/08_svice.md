@@ -12,7 +12,7 @@ Udalrich ho přivítal tak, jak vítal všechny, kývnutím, a vzal mu z vozu mo
 
 „Kolik toho teče?“
 
-Udalrich se na něj podíval. „Mnoho,“ řekl. „Víc než v únoru. Měříš to snad?“
+„Mnoho,“ řekl Udalrich. „Víc než v únoru. Měříš to snad?“
 
 „Ještě ne.“
 
@@ -58,7 +58,7 @@ Matěj držel plášť v rukou a necítil zimu.
 
 „Nepůjdu,“ řekl Matěj. „Půjde svíce.“
 
-Dobroslava se na něj chvíli dívala. Potom odložila síť, vstala a vzala si od dveří tyč s hákem.
+Dobroslava odložila síť, vstala a vzala si od dveří tyč s hákem.
 
 *
 
@@ -66,11 +66,11 @@ Na slatině ležela mlha jako na údolí, jen nižší a těžší. Ze sněhu to
 
 Zastavil se u první kaluže. Byla velká jako stůl, hnědá, a bubliny v ní vystupovaly ve shlucích na jednom místě u kraje.
 
-Rozbalil svíci. Dlouho mu trvalo, než ji zapálil. Troud byl vlhký a jiskry z křesadla padaly do něj a zhasínaly. Dobroslava ho chvíli pozorovala, pak mu vzala křesadlo z ruky, sáhla do svého vaku, vytáhla vlastní troud, suchý a hnědý jako tabák, a škrtla dvakrát. Troud chytil. Matěj na něj foukl a přiložil knot.
+Rozbalil svíci. Dlouho mu trvalo, než ji zapálil. Troud byl vlhký a jiskry z křesadla padaly do něj a zhasínaly. Dobroslava ho chvíli pozorovala, pak mu vzala křesadlo z ruky, sáhla do svého vaku, vytáhla vlastní troud, suchý a hnědý jako sušená houba, a škrtla dvakrát. Troud chytil. Matěj na něj foukl a přiložil knot.
 
 Svíce hořela. Plamen stál v tom bezvětří rovně a klidně, jako svíce v chóru o Hromnicích.
 
-Matěj si klekl na kraj kaluže. Nesklonil se, jen poklekl s rovnými zády, jak klečel při elevaci, a natáhl ruku se svící nad vodu, nad místo, kde bublalo. Pomalu ji spouštěl. Na dlaň nad hladinou. Plamen se zachvěl. Na dva prsty nad hladinou se zmenšil. Pak zmodral, celý, od knotu až po špičku, jako plamen nad kádí ve sklepě pod refektářem.
+Matěj si klekl na kraj kaluže. Nesklonil se, jen poklekl s rovnými zády, jak klečel v chóru, a natáhl ruku se svící nad vodu, nad místo, kde bublalo. Pomalu ji spouštěl. Na dlaň nad hladinou. Plamen se zachvěl. Na dva prsty nad hladinou se zmenšil. Pak zmodral, celý, od knotu až po špičku, jako plamen nad kádí ve sklepě pod refektářem.
 
 A zhasl.
 
@@ -112,11 +112,11 @@ Udělal to devětkrát. Dobroslava mu pokaždé zapálila troud a nic neříkala
 
 „Svíce,“ řekl Matěj. Dobroslava se na něj podívala, jako by se zbláznil. Pak se Matěj usmál, poprvé za ten den, a ona to nechala být.
 
-Matěj spouštěl svíci na různých místech. Z této strany, z protější a od borovic. Šikmo, aby se dostal do středu. Pokaždé svíce zhasla ve stejné výšce. Nebo skoro ve stejné. Ne o dlaň výš nebo níž, nanejvýš o prst. Pokaždé udělal do tyče rýhu. Když skončil, měl na kůře šest rýh těsně vedle sebe a tři o kousek dál, protože se tyč smekla.
+Matěj spouštěl svíci na různých místech. Z této strany, z protější a od borovic. Šikmo, aby se dostal do středu. Pokaždé svíce zhasla ve stejné výšce. Nebo skoro ve stejné. Ne o dlaň výš nebo níž, nanejvýš o prst. Pokaždé udělal do tyče rýhu. Když skončil, měl na kůře šest rýh těsně vedle sebe a tři o kousek dál, protože se tyč smekla. Troud mezitím došel. Jednu svíci od té doby nesl pořád hořící v dlani a od ní zapaloval druhou.
 
 Pak si sedl na mokrou zem na okraji a díval se do prohlubně.
 
-Viděl ji jinak. Ne jako mísu se suchým dnem. Viděl v ní hladinu. Neviditelnou, ale stejně rovnou, jako je rovná voda v rybníce, když nefouká. Pod ní všechno umíralo. Nad ní hořela svíce. Hladina stála asi tak vysoko, jak byl vysoký klečící člověk. Nebylo na ní nic vidět, žádný třpyt, žádný kouř, a přece tam byla. Když tenkrát poklekl, aby zvedl Sivku, ponořil se do ní až po krk. Dobroslava, která šla dolů vzpřímeně, v ní stála po prsa a hlavu měla nad ní.
+Viděl ji jinak. Ne jako mísu se suchým dnem. Viděl v ní hladinu. Neviditelnou, ale stejně rovnou, jako je rovná voda v rybníce, když nefouká. Pod ní všechno umíralo. Nad ní hořela svíce. Hladina stála asi tak vysoko, kam by klečícímu člověku sahala prsa. Nebylo na ní nic vidět, žádný třpyt, žádný kouř, a přece tam byla. Když tenkrát poklekl, aby zvedl Sivku, ponořil se do ní až po krk. Dobroslava, která šla dolů vzpřímeně, v ní stála sotva po pás a hlavu měla vysoko nad ní.
 
 „Je to jako voda,“ řekl.
 
@@ -276,11 +276,11 @@ Cestou zpátky, na kraji lesa, kde stezka zahýbala k její chalupě, se Dobrosl
 
 „A tam dole?“ zeptala se. „U nich?“
 
-Matěj se na ni podíval. Měla tvář, jakou mají lidé, kteří žijí venku, hnědou kolem očí a mladou kolem úst, a čekala.
+Měla tvář, jakou mají lidé, kteří žijí venku, hnědou kolem očí a mladou kolem úst, a čekala.
 
 „Slíbil jsem,“ řekl.
 
-Dobroslava chvíli mlčela. Potom kývla, jednou, jako kývl ten zraněný pod převisem, když se ho ptala na kámen.
+Dobroslava chvíli mlčela. Potom kývla, jednou, jako kývl ten zraněný u břízy, když se ho ptala na kámen.
 
 „Dobře,“ řekla. „Tak to aspoň umíš.“
 
@@ -304,7 +304,7 @@ Díval se na to dlouho. Neuhladil to.
 
 Pak šel za ovčín.
 
-Už byla tma, jen nad horou zbývalo trochu světla, a vítr utichal. Hromada sněhu klesla ještě víc. Tam, kde v ní kdysi holýma rukama vyhrabal díru, vystupoval z šedé, rozbředlé hmoty kus látky. Jeho starý plášť na cestu. Někdo se do něj zakousl, liška nebo pes, Konrádův pes, a látka byla roztržená. Pod ní byla vidět srst. Šedá, slepená ledem, myší barvy, jakou měla, když ji soused chtěl utopit.
+Už byla tma, jen nad horou zbývalo trochu světla, a vítr utichal. Hromada sněhu klesla ještě víc. Tam, kde v ní kdysi holýma rukama vyhrabal díru, vystupoval ze šedé, rozbředlé hmoty kus látky. Jeho starý plášť na cestu. Někdo se do něj zakousl, liška nebo pes, Konrádův pes, a látka byla roztržená. Pod ní byla vidět srst. Šedá, slepená ledem, myší barvy, jakou měla, když ji soused chtěl utopit.
 
 Matěj si klekl do bláta.
 
@@ -314,7 +314,7 @@ Nedotkl se jí. Jen tam klečel a díval se na tu srst, jak se v posledním svě
 
 Nevěděl, komu to říká. Psovi, převorovi, sobě. Pak nanosil z hromady u stodoly smrkové větve a přikryl ji jimi a na větve naskládal kameny z kraje cesty, aby se k ní nic nedostalo. Až přijde Ješek, řekl si, vykopou jí hrob. Ješek umí kopat.
 
-Za ním se ve tmě ozvala Udalrichova lucerna a pak Udalrich.
+Za ním se ve tmě objevilo světlo Udalrichovy lucerny a pak Udalrich.
 
 „Kompletář,“ řekl konvrš.
 

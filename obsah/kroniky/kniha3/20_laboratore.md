@@ -22,7 +22,7 @@ Pak čte.
 
 Pod tím vyšší laminy. Mladší, jak mají být, v pořadí, jak rostly. Poměry thoria, které jsou vysoké, mnohem vyšší než u trojky. Málo nečistot z jílu. Korekce malá. Laboratoř to v závěru píše suše, jak se to píše. *Výsledky jsou ve stratigrafickém pořadí. Bazální laminy obou vzorků se shodují v rámci nejistot.*
 
-Devadesát šest až sto čtyři tisíce let, když vezme obě nejistoty dohromady.
+Zhruba devadesát sedm až sto pět tisíc let, když vezme obě nejistoty dohromady.
 
 A trojka, tenkrát, sto jedna, plus minus tři.
 
@@ -36,7 +36,7 @@ Napíše si to do sešitu. Vlevo čísla. Vpravo:
 
 *3 a 4/II, 5/II se shodují. To o 3 nic neříká.*
 
-Pak otevře notebook znovu a čte zbytek. Na straně devět je poznámka, kterou nečekala.
+Otevře notebook znovu a čte zbytek. Na straně devět je poznámka, kterou nečekala.
 
 *Na kontaktní ploše obou vzorků (strana k předmětu) byly v optickém mikroskopu pozorovány drobné šedobílé částice v nejnižších mikrometrech laminy. Neodpovídají kalcitu ani detritu. Byly předány ke stanovení složení spolu s mikrovzorky předmětu (viz zpráva B).*
 
@@ -82,7 +82,7 @@ Do kopie se nepíše. Napíše to do sešitu.
 
 Doleva.
 
-Pak se dlouho dívá na další stranu zprávy, kterou poslali jen Švýcaři, protože jen oni mají neutronový tomograf.
+Dlouho se dívá na další stranu zprávy, kterou poslali jen Švýcaři, protože jen oni mají neutronový tomograf.
 
 Je to obrázek. Řez předmětem v šedé škále, kde je vnitřek vidět přes stěnu, kterou nikdo neotevřel. Pod stěnou, která je silná jako prst, je jádro. A jádro je vrstvené. Jemně, pravidelně, stovky rovnoběžných vrstev, jedna nad druhou, rovných, jako by někdo složil list papíru tisíckrát a nechal ho ztvrdnout. Ne jako letokruhy. Letokruhy jsou nepravidelné. Tyhle ne.
 
@@ -126,9 +126,9 @@ Ticho. Hana slyší, jak redaktorka něco píše.
 
 „Tak co to je?“
 
-Hana se dívá z okna na dvůr. Soused odspodu věší prádlo na šňůru přes balkon a kolíčky drží v puse.
+Za oknem na dvoře věší soused odspodu prádlo na šňůru přes balkon a kolíčky drží v puse.
 
-„Předmět z pozemského materiálu, jehož výrobu neumíme vysvětlit,“ řekne. „Ležel v sintru, který je nejméně sto tisíc let starý, nebo taky ne, podle toho, čí argumenty jsou lepší. Nikdo neví, kdo ho udělal ani proč. To je všechno, co se ví.“
+„Předmět z pozemského materiálu, jehož výrobu neumíme vysvětlit,“ řekne. „Ležel v sintru, který je zhruba sto tisíc let starý, nebo taky ne, podle toho, čí argumenty jsou lepší. Nikdo neví, kdo ho udělal ani proč. To je všechno, co se ví.“
 
 „To se špatně stříhá,“ řekne redaktorka. Ne zle. Konstatuje to.
 
@@ -142,7 +142,7 @@ Bulvár to má o den později. *ATLANTOLOŽKA MĚLA PRAVDU?* S otazníkem. Je to
 
 *
 
-V červenci přijde rozhodnutí komise.
+V červenci, ještě před zprávou B, přijde rozhodnutí komise.
 
 Hana ho čte u stolu, kam ho položila pošťačka, které musela podepsat doručenku. Čtyři strany. Komise *shledala závažné porušení zásad vědecké integrity spočívající ve vědomě nepravdivém záznamu v primární terénní dokumentaci a v jeho následném použití*. Komise *přihlédla k tomu, že pochybení oznámila sama*, a že její oprava *odpovídá nejlepší praxi*. Komise doporučuje vedení fakulty *zvážit další setrvání jmenované v pracovním poměru*.
 
@@ -156,7 +156,7 @@ Kancelář má ve třetím patře, s výhledem na parkoviště. Na stole hromady
 
 Řekne to rychle, jako když se trhá náplast.
 
-Smlouvu jí do srpna příštího roku vypovědět nemůže a nechce. Ale nemůže ji ani postavit před studenty. Děkan to řekl jasně a Fiala mu nedokázal odporovat, protože nemá argument. Fakulta jí nabízí dohodu o skončení k třicátému září. Plat do konce září. Odstupné podle zákona. A Fiala pak nemůže, a ani by nedokázal, navrhnout prodloužení, o kterém se loni na podzim mluvilo.
+Smlouvu jí do srpna příštího roku vypovědět nemůže a nechce. Ale nemůže ji ani postavit před studenty. Děkan to řekl jasně a Fiala mu nedokázal odporovat, protože nemá argument. Fakulta jí nabízí dohodu o skončení k třicátému září. Plat do konce září. A Fiala pak nemůže, a ani by nedokázal, navrhnout prodloužení, o kterém se loni na podzim mluvilo.
 
 „Kdyby to šlo jinak,“ řekne.
 
@@ -200,7 +200,7 @@ Pod tím druhá fotka. Pole pana Chana. Popel je pryč, zem je hnědá a mokrá 
 
 *Pan Chan říká, že tam rostou nejlíp.*
 
-Hana se na tu fotku dívá dlouho. Na dýňové listy kolem betonu. Pod nimi šestnáct metrů vápence, pak klenba, pak vzduch, pak voda. Maják, který desátého dubna zmlkl. Sáček s telefonem na břehu. Saze. Ruce.
+Na fotce dýňové listy kolem betonu. Pod nimi šestnáct metrů vápence, pak klenba, pak vzduch, pak voda. Maják, který kolem desátého dubna musel zmlknout. Sáček s telefonem na břehu. Saze. Ruce.
 
 Odpoví krátce. *Gracias, Luis. Pozdravuj Rosu.*
 
@@ -208,7 +208,7 @@ Pak, po chvíli, ještě jednu větu. *A pana Chana.*
 
 *
 
-Waltovi napíše dopis. Na papír, do obálky, s mexickou adresou, kterou jí dal Luis. Píše, že má pořád jeho knihu. *El pozo de las estrellas*, s modrou obálkou a žlutými hvězdami. Že si ji vzala s sebou v batohu, když ze dne na den odlétala, a doma zjistila, že ji nevrátila. Že ji pošle zpátky, jestli chce.
+Waltovi napíše dopis. Na papír, do obálky, s mexickou adresou, kterou jí dal Luis. Píše, že má pořád jeho knihu. *El pozo de las estrellas*, s modrou obálkou a žlutými hvězdami. Že si ji vzala s sebou v batohu, když odlétala, a doma zjistila, že ji nevrátila. Že ji pošle zpátky, jestli chce.
 
 Odpověď přijde za pět týdnů. Pohlednice. Na přední straně katedrála v Méridě, vybledlá, z nějaké staré série. Na zadní straně Waltovým úhledným písmem, jakým psal čísla bodů:
 
@@ -246,7 +246,7 @@ Vsunutí do starší dutiny. Na to myslela čtvrtého března v síni, v jedenat
 
 A dláto. Měl pravdu i s dlátem.
 
-Odpoví na článek v říjnovém čísle. Krátce, jednou stranou, jak to dělá teď všechno. Napíše, že námitky jsou oprávněné. Že dvě z nich lze testovat, pokud ústav povolí další mikrovzorky z vyšších lamin, a že třetí, vsunutí, se testovat nedá, dokud je lokalita uzavřená. Že sama ve svém zápisu ze 4. 3. 2026 tutéž možnost uvedla a nevyloučila. A že číslo 96 000 až 104 000 let proto nepovažuje za stáří předmětu, ale za stáří kalcitu, který k němu přiléhá.
+Odpoví na článek v říjnovém čísle. Krátce, jednou stranou, jak to dělá teď všechno. Napíše, že námitky jsou oprávněné. Že dvě z nich lze testovat, pokud ústav povolí další mikrovzorky z vyšších lamin, a že třetí, vsunutí, se testovat nedá, dokud je lokalita uzavřená. Že sama ve svém zápisu ze 4. 3. 2026 tutéž možnost uvedla a nevyloučila. A že číslo 96 500 až 104 700 let proto nepovažuje za stáří předmětu, ale za stáří kalcitu, který k němu přiléhá.
 
 Podepíše se jen jménem. Bez pracoviště. Žádné už nemá.
 
@@ -260,17 +260,17 @@ Pak Marisol řekne:
 
 „Dostala jsem důtku.“
 
-Hana se na ni dívá přes obrazovku.
+„Za co?“
 
-„Za pásku,“ řekne Marisol. „Za to, že jsem v pondělí ráno zkontrolovala podpisy prstem a nedívala se na suk. Interní řízení. Písemně, do spisu. Místo mi nechali.“ Pokrčí rameny. „Vedoucí říkal, že je to formalita. Není. Je to v mém spisu. Bude to tam, až budu žádat o cokoli dalšího.“
+„Za pásku,“ řekne Marisol. „Za to, že jsem v pondělí ráno zkontrolovala podpisy prstem a nedívala se na suk ani na horní hranu pásky. Interní řízení. Písemně, do spisu. Místo mi nechali.“ Pokrčí rameny. „Vedoucí říkal, že je to formalita. Není. Je to v mém spisu. Bude to tam, až budu žádat o cokoli dalšího.“
 
 „To je nespravedlivé.“
 
 „Ne. Je to přesné.“ Marisol se skoro usměje. „Učila jsem se od vás.“
 
-Hana neví, co na to říct. Marisol to vidí a pokračuje, než se ticho stihne usadit.
+Hana zůstane bez odpovědi. Marisol to vidí a pokračuje, než se ticho stihne usadit.
 
-„Ve zprávě ústavu jste,“ řekne. „V závěrečné, té, která jde do archivu. Osoba, která předmět vyzvedla dvacátého prvního března a jako jediná ho změřila před výměnou. Jméno a příjmení. Bez titulu, protože tam nikdo titul nemá.“ Odmlčí se. „A v příloze vaše oprava. Celá. Ve španělštině. Tu jsem tam dala já.“
+„Ve zprávě ústavu jste,“ řekne. „V závěrečné, té, která jde do archivu. Osoba, která předmět vyzvedla dvacátého prvního března a jako jediná ho před výměnou přesně změřila. Jméno a příjmení. Bez titulu, protože tam nikdo titul nemá.“ Odmlčí se. „A v příloze vaše oprava. Celá. Ve španělštině. Tu jsem tam dala já.“
 
 „Proč?“
 
@@ -316,8 +316,8 @@ Otevře sešit na poslední popsané stránce. Pod vlevo napsané věty o labora
 
 Pravou stranu nechá prázdnou.
 
-Pak si uvaří čaj a dívá se z okna, jak se nad dvorem stmívá, a myslí na to, že tam v Méridě je teď dopoledne, a že v depozitáři, v chladné místnosti mezi regály, leží na mokré pěně předmět, o kterém ví přesně, kolik měří, kolik váží, z čeho je a z čeho není. A neví, kolik je mu let, kdo ho udělal, proč, a co je v těch stovkách vrstev uvnitř.
+Uvaří si čaj a dívá se z okna, jak se nad dvorem stmívá, a myslí na to, že tam v Méridě je teď dopoledne, a že v depozitáři, v chladné místnosti mezi regály, leží na mokré pěně předmět, o kterém ví přesně, kolik měří, kolik váží, z čeho je a z čeho není. A neví, kolik je mu let, kdo ho udělal, proč, a co je v těch stovkách vrstev uvnitř.
 
-Vlevo se toho za šest měsíců vešlo hodně.
+Vlevo se toho za půl roku vešlo hodně.
 
 Vpravo je pořád víc místa.

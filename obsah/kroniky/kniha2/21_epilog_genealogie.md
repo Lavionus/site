@@ -38,7 +38,7 @@ Merin se na ni podívala. Holka měla vlasy svázané do copu, světlé, skoro b
 
 Namočila pero.
 
-Řádek s Dorotou byl pět let starý. Merin si pamatovala, jak ho psala. Bylo to na podzim, po tom létě, kdy holka přišla, a ještě pořád utíkala ke kraji lesa, kdykoli ji nikdo nehlídal, a seděla tam a dívala se dolů na haldy. Merin tehdy napsala *Dorothea*, a rok, a pak dvě slova v řeči denních, která jí řekl starý písař, od kterého se kdysi naučila latinku. Tak se to píše, řekl. Když se k rodu přidá dítě odjinud. *Angenommen.* Přijaté.
+Řádek s Dorotou byl pět let starý. Merin si pamatovala, jak ho psala. Bylo to na podzim, po tom létě, kdy holka přišla, a ještě pořád utíkala ke kraji lesa, kdykoli ji nikdo nehlídal, a seděla tam a dívala se dolů na haldy. Merin tehdy napsala *Dorothea*, a rok, a pak tři slova v řeči denních, která jí řekl starý písař, od kterého se kdysi naučila latinku. Tak se to píše, řekl. Když se k rodu přidá dítě odjinud. *Angenommen.* Přijaté.
 
 Pět let se na to slovo nedívala. Teď se na ně dívala a viděla ženu s rukou v obvazu, jak ho čte vzhůru nohama, a jak se jí pohnou rty. Merin tehdy neslyšela, co řekla. Viděla jen, že to bylo jiné slovo, než jaké tam stálo.
 
@@ -104,7 +104,7 @@ Tah byl stejný. Ruka ne. Tenčí, pomalejší, a inkoust se v ohybu trochu zdvo
 
 Merin se na to dívala a vzpomněla si na Aurel. Na ruku staré Aurel, která jí před sedmdesáti lety u tohohle stolu podala pero úplně stejně. A na svůj vlastní první znak, ten s tahem dolů, který se jí zdvojil v ohybu, protože se bála. Aurel se tehdy smála.
 
-Pak Merin řekla tu větu. Tu, kterou Aurel řekl někdo před ní a tomu zase někdo ještě před ním, až k listu, který ležel v knize nejhlouběji, s kresbou kopce a s kruhem a se čtyřiceti jednou čárkou, a pod ním ten znak, tlustý a pomalý, v inkoustu, který už ztratil barvu.
+Pak Merin řekla tu větu. Aurel ji kdysi slyšela od někoho před sebou a ten zase od někoho ještě staršího, a tak dál až k listu, který ležel v knize nejhlouběji: s kresbou kopce, s kruhem a se čtyřiceti jednou čárkou, a pod ním ten znak, tlustý a pomalý, v inkoustu, který už ztratil barvu.
 
 „To jméno nosí ten, kdo pamatuje,“ řekla Merin.
 

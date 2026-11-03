@@ -10,7 +10,7 @@ Pokoj v karlovarské nemocnici má okno do parku. Je pondělí třetího června
 
 „A kamera?“
 
-„Kamera běží. Nahrává na kartu. Do září jí vydrží místo, jestli jsem to spočítal dobře.“ Tadeáš se konečně podívá na Hanu. „Jenže to nikdo neuvidí, dokud ji někdo nevyndá. A dolů nesmí nikdo.“
+„Kamera běží. Nahrává na kartu. Do září jí vydrží místo, jestli jsem to spočítal dobře.“ Tadeáš konečně zvedne oči k Haně. „Jenže to nikdo neuvidí, dokud ji někdo nevyndá. A dolů nesmí nikdo.“
 
 „Co je dole teď?“
 
@@ -22,7 +22,7 @@ Hana si to zapíše. Vlevo, s datem. *Úřad zakázal vstup do podzemí pod stat
 
 „Ano?“
 
-„Až to budete dávat ven. Tu polohu.“ Podívá se na obvazy. „Ať tam nikdo neleze. Napište to tam. Ne kvůli nám. Kvůli nim. Ten chlap s anténou tam málem zůstal.“
+„Až to budete dávat ven. Tu polohu.“ Sklopí oči k obvazům. „Ať tam nikdo neleze. Napište to tam. Ne kvůli nám. Kvůli nim. Ten chlap s anténou tam málem zůstal.“
 
 „Napíšu to.“
 
@@ -38,7 +38,7 @@ Lada to vezme po prvním zazvonění. Je u sestry v Sasku. V pozadí štěká pe
 
 Lada chvíli mlčí.
 
-„Desátýho,“ zopakuje. „Pondělí. V osm.“ Hana slyší, jak si to někam píše. Velkým kulatým písmem, které píše málokdy. „Napsalas to?“
+„Desátýho,“ zopakuje. „Pondělí. V osm.“ Hana slyší, jak si to někam píše. Asi tím velkým kulatým písmem, kterým píše málokdy. „Napsalas to?“
 
 „Napsala.“
 
@@ -104,7 +104,7 @@ Sedí u levého stolu v jídelně a na stole leží všechno, co v dubnu odsouhl
 
 A u Kalinova měření ze skály: *nezávislý radioastronom, jméno bude doplněno*.
 
-Hana si v osm nula nula zapíše čas. Pak čeká.
+Hana si v osm nula nula zapíše čas a čeká.
 
 V osm čtyřicet jedna zavolá novinářka z rozhlasu. Mladý hlas, slušný, rychlý.
 
@@ -124,7 +124,7 @@ V osm čtyřicet jedna zavolá novinářka z rozhlasu. Mladý hlas, slušný, ry
 
 Novinářka chvíli nic neříká. Pak poděkuje, opravdu, a zavěsí.
 
-Hana si to zapíše. Vlevo. *10. 6., 8:41, rozhlas. Otázka na únosy. Odpověď: vím o tom, je to její text, nebudu dokazovat, nepopírám.* Pod to: *41 min.*
+Vlevo zapíše: *10. 6., 8:41, rozhlas. Otázka na únosy. Odpověď: vím o tom, je to její text, nebudu dokazovat, nepopírám.* Pod to: *41 min.*
 
 *
 
@@ -136,7 +136,7 @@ Ve studiu sedí čtyři lidé a moderátor. Hana nikoho z nich nezná.
 
 Poslanec z jednoho kraje na severu. Pečlivě oblečený, mluví klidně a nahlas zároveň, jak mluví lidé, kteří vědí, že je slyší dva miliony. „Já nikoho neobviňuji,“ řekne hned na začátku, a pak to dvacet minut dělá. Ti lidé brali děti. Sami to přiznávají. Kdo nám zaručí, že to dnes nedělají? Stát musí vědět, kde jsou. Kolik jich je. Kde bydlí. „Evidence není pronásledování. Evidence je bezpečnost.“
 
-Historička z Prahy. Šedé vlasy, brýle na šňůrce. Mluví tišeji než on a moderátor jí dvakrát skočí do řeči. „Pane poslanče, tu větu o lidech z lesa, kteří kradou děti, jsem ve svém oboru četla mnohokrát. O židech. O Romech. O uhlířích. Vždycky to byla lež. Tentokrát to lež není, a to je na tom to nejtěžší. Ale vina nepřechází po krvi. To jsme se v minulém století už jednou naučili. Kdo dnes chce evidenci podle krve, ten tu už jednou byl.“
+Historička z Prahy. Šedé vlasy, brýle na šňůrce. Mluví tišeji než on a moderátor jí dvakrát skočí do řeči. „Pane poslanče, tu větu o lidech z lesa, kteří kradou děti, jsem ve svém oboru četla mnohokrát. O Židech. O Romech. O uhlířích. Vždycky to byla lež. Tentokrát to lež není, a to je na tom to nejtěžší. Ale vina nepřechází po krvi. To jsme se v minulém století už jednou naučili. Kdo dnes chce evidenci podle krve, ten tu už jednou byl.“
 
 Poslanec se usměje. „Nikdo neříká podle krve.“
 
@@ -146,7 +146,7 @@ Mladý muž z nějakého spolku, který Hana nezná, ten mluví nejrychleji. Že
 
 A čtvrtá je žena kolem padesáti. Obyčejný svetr, ruce na kolenou. Pod ní nápis: *obyvatelka Jáchymova*.
 
-„Jmenuju se Hauptová,“ řekne, když na ni přijde řada. Hlas se jí třese. „Jmenovala jsem se tak za svobodna. Táta byl Haupt, děda byl Haupt. Nevím nic o šestnáctém století, já jsem prodavačka. Ale když jsem to četla, nemohla jsem spát.“
+„Za svobodna jsem se jmenovala Hauptová,“ řekne, když na ni přijde řada. Hlas se jí třese. „Táta byl Haupt, děda byl Haupt. Nevím nic o šestnáctém století, já jsem prodavačka. Ale když jsem to četla, nemohla jsem spát.“
 
 Moderátor se nakloní. Poslanec taky.
 
@@ -164,7 +164,7 @@ Poslanec se nadechne. Moderátor ho nepustí ke slovu. Pustí reklamu.
 
 Majitelka penzionu položí nůž na kraj hrnce.
 
-„No vidíte,“ řekne. Nic víc. Pak loupe dál.
+„No vidíte,“ řekne. Nic víc. Loupe dál.
 
 Hana jde do jídelny a píše. Vlevo, kdo co řekl, se jmény, protože to řekli veřejně, v televizi, kde je slyšely dva miliony. Vpravo jedna věta, kterou přeškrtne, a pak ji napíše znovu.
 
@@ -202,7 +202,7 @@ Přijde zleva, odkud vede žlab. Pomalu, s čelovkou, kterou vypne, když vidí,
 
 Pak se muž otočí a podívá se do kamery. Nevidí ji. Dívá se, protože něco slyšel.
 
-Ve dvanáct deset se obraz zachvěje. Pára se zvedne od podlahy jako bílá stěna. Muž pustí tu plochou věc, ta sklouzne po skále na lavici. Udělá dva kroky k žlabu. Pak se sehne, jako by chtěl něco zvednout ze země. A zůstane tak. Pak si klekne. Pak lehne.
+Ve dvanáct deset se obraz zachvěje. Pára se zvedne od podlahy a zakryje půl záběru. Muž pustí tu plochou věc, ta sklouzne po skále na lavici. Udělá dva kroky ke žlabu a sehne se, jako by chtěl něco zvednout ze země. A zůstane tak. Pak si klekne. Pak lehne.
 
 Kubeš zastaví obraz.
 
@@ -210,19 +210,19 @@ Kubeš zastaví obraz.
 
 „Vyšetřovaný,“ řekne Hana. „Ne obviněný.“
 
-„Ne obviněný,“ řekne Kubeš. „Zatím. Možná nikdy. Má lepší právníky než já kávovar.“ Podívá se na hrnek se znakem hokejového klubu. Je prázdný. „Ten list z vaší obálky mám v jeho spisu. S razítkem. Kdyby ho jednou soudili, budete svědčit znovu.“
+„Ne obviněný,“ řekne Kubeš. „Zatím. Možná nikdy. Má lepší právníky než já kávovar.“ Zvedne hrnek se znakem hokejového klubu. Je prázdný. „Ten list z vaší obálky mám v jeho spisu. S razítkem. Kdyby ho jednou soudili, budete svědčit znovu.“
 
 „Budu.“
 
 „A ještě něco.“ Kubeš si opře lokty o stůl. „Váš deník. Ten od února. Ten, co jste zalepila.“
 
-Hana se na něj podívá. Neříkala mu o něm. Viděl ho jen Kalina.
+Hana zbystří. Neříkala mu o něm. Viděl ho jen Kalina.
 
 „Pan Kalina mi to řekl,“ řekne Kubeš. „Když jsem se ho ptal, jak jste věděla, kterou noc. Řekl, že všechno, co víte, máte zapsané na minutu. A že jste to zalepila do obálky.“
 
 „Ano.“
 
-„Nechte to zalepené,“ řekne Kubeš. „Já to nepotřebuju. Mám kameru, mám dva muže, kteří kašlali ve sklepě, mám pana Brandla na kameni a jeho podpis na klinice. A vaše jména z toho sešitu bych pak musel vidět přes všechno ostatní.“ Odmlčí se. „Kdyby to někdy chtěl soud, řekne si o to.“
+„Nechte to zalepené,“ řekne Kubeš. „Já to nepotřebuju. Mám kameru, mám dva muže, kteří kašlali ve sklepě, mám pana Brandla na kameni a jeho podpis na klinice. A jména z vašeho sešitu bych pak musel vidět taky, přes všechno ostatní.“ Odmlčí se. „Kdyby to někdy chtěl soud, řekne si o to.“
 
 „Pak to otevřu před ním.“
 
@@ -288,7 +288,7 @@ Ve stejném týdnu jí Dana pošle odkaz na komentář v jednom týdeníku. Titu
 
 *Promiň,* napíše Dana. *Nečti to.*
 
-Hana to přečte. Pak to zapíše. Vlevo, s datem.
+Hana to přečte a zapíše vlevo, s datem.
 
 Vpravo nic. Není co.
 
@@ -320,7 +320,7 @@ Hana to zapíše. Doleva. Slovo od slova.
 
 „Kdo byl proti?“
 
-„To vám neřeknu,“ řekne Sael. A pak, poprvé, když tu větu Haně řekne, je v jejím hlase něco jako úsměv. „Ne proto, že bych to nevěděla. Protože to není moje.“
+„To vám neřeknu,“ řekne Sael. A poprvé, co tu větu Haně říká, je v jejím hlase něco jako úsměv. „Ne proto, že bych to nevěděla. Protože to není moje.“
 
 „To je dobrý důvod.“
 

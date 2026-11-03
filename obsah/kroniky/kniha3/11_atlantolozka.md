@@ -1,6 +1,6 @@
 # 11. Atlantoložka
 
-Klimatizace v místnosti hučí tak, že tlumočnice musí mluvit nahlas.
+V pět odpoledne hučí klimatizace v místnosti tak, že tlumočnice musí mluvit nahlas.
 
 Je to kancelář v prvním patře budovy ústavu, s oknem do dvora a se starým stromem za ním. Na zdi vlajka a fotografie pyramidy v rámu. Na stole láhev vody a tři kelímky, jeden pro Hanu. Hana se z něj nenapije, protože by se jí třásla ruka.
 
@@ -22,11 +22,11 @@ Muž z prokuratury zvedne oči od bloku.
 
 „V pondělí ráno v bodeze. Pak v pondělí v depozitáři. Bedna byla zavřená a zapečetěná. Doktorka Couoh pečeť zkontrolovala.“ Hana se odmlčí. „Viděla jsem, že ji zkontrolovala. Nevím, co přesně viděla ona.“
 
-„A v úterý na klinice?“
+„A dnes ráno na klinice?“
 
-„V úterý jsem viděla předmět, který byl v té bedně.“
+„Dnes ráno jsem viděla předmět, který byl v té bedně.“
 
-Muž z prokuratury se na ni chvíli dívá. Pak to zapíše. Hana vidí, že to píše celé, slovo od slova.
+Muž z prokuratury to po chvíli zapíše. Hana vidí, že to píše celé, slovo od slova.
 
 Tlumočnice to přeloží. Právník kývne.
 
@@ -38,11 +38,11 @@ Tlumočnice to přeloží. Právník kývne.
 
 „Ano.“
 
-Muž z prokuratury něco napíše. Pak se zeptá sám, anglicky, bez tlumočnice. Má dobrou angličtinu, americkou.
+Muž z prokuratury něco napíše a zeptá se sám, anglicky, bez tlumočnice. Má dobrou angličtinu, americkou.
 
 „Mohl předmět vyměnit někdo z obce?“
 
-Hana se na něj podívá. Ví, kam ta otázka vede. Ví to od chvíle, kdy jí Luis v sobotu řekl *a kdyby se něco stalo, tak by to bylo naše*.
+Hana ví, kam ta otázka vede. Ví to od chvíle, kdy jí Luis v sobotu řekl *a kdyby se něco stalo, tak by to bylo naše*.
 
 „Nevím,“ řekne. „Za obec mluvit nemůžu.“
 
@@ -90,7 +90,7 @@ Pak se zeptají na fotky. Chtějí všechny od jednadvacátého do dneška. Hana
 
 Hana kývne.
 
-„A vzorky.“ Právník listuje v deskách. „O vzorcích si promluvíme, až bude zpráva laboratoře. Ústav ji objednal. Mexická laboratoř, nezávislá.“ Podívá se na Hanu přes stůl. „Ty půlky v depozitáři.“
+„A vzorky.“ Právník listuje v deskách. „O vzorcích si promluvíme, až bude zpráva laboratoře. Ústav ji objednal. Mexická laboratoř, nezávislá. Ty půlky v depozitáři.“
 
 „Ano.“
 
@@ -154,7 +154,7 @@ O deset minut později přijde e-mail od producentky. Osobně, *Dear Hana*. Dvě
 
 Hana otevře v telefonu banku. První polovina honoráře tam je, přišla v únoru. Druhá byla v druhé splátce. Druhá splátka byla po prezentaci. Prezentace dopadla dobře. Zpáteční letenku má na patnáctého dubna. Hotel do konce týdne platí Viktor kartou, která možná ještě funguje.
 
-Zavře banku. Myslí na neotevřenou obálku od pronajímatele na stole v Brně, na zálohu na topení. Ta obálka tam pořád leží. Nikdo ji neotevřel ani za ni.
+Zavře banku. Myslí na neotevřenou obálku od pronajímatele na stole v Brně, na zálohu na topení. Ta obálka tam pořád leží. Nikdo ji neotevřel a nikdo za ni nezaplatil.
 
 *
 
@@ -164,13 +164,13 @@ Nese papírový sáček, ze kterého voní smažené tortilly a cibule, a dvě l
 
 „Jez,“ řekne. „Nejedla jsi od rána. Já vím, že ne.“
 
-Hana jí. Je to první jídlo za celý den a chutná jí, a stydí se, že jí chutná.
+Hana se nají. Je to první jídlo za celý den a chutná jí, a stydí se, že jí chutná.
 
 Viktor je unavený. Má červené oči a dvoudenní strniště a mluví tiše, jako se mluví v nemocnici. Ptá se, jak to šlo u právníka. Hana mu to řekne. Krátce. Svědkyně. Fotky. Neodjíždět.
 
 „Mě zítra,“ řekne Viktor. „Ráno v devět.“ Napije se. „Mluvil jsem s advokátem. Kamarád Ernesta, dělá tohle. Prý to bude dlouhý. Měsíce. Prý máme mlčet a nic nepodepisovat.“
 
-Pak vytáhne z kapsy složený papír.
+Vytáhne z kapsy složený papír.
 
 „Kromě tohohle.“
 
@@ -178,7 +178,7 @@ Hana ho rozloží. Je to jedna strana, česky a pod tím anglicky. Nahoře stoj�
 
 Kalina tam není.
 
-Salcedův podpis je rychlý, se smyčkou na konci. Salcedo jí od poledne nebere telefon. Hana se na tu smyčku chvíli dívá a pak čte dál.
+Salcedův podpis je rychlý, se smyčkou na konci. Salcedo jí od poledne nebere telefon.
 
 Hana čte.
 
@@ -224,7 +224,7 @@ Hana se nehne.
 
 Hana mlčí. Na chodbě je slyšet větrák z jejího pokoje.
 
-„O trojce mlč.“ Viktor se na ni podívá. Oči má mokré, jako na mýtině, jako na plošině. „Nedávej jim munici. Oni teď nehledají pravdu, Hanko. Hledají, kdo zaváhal. Kdo zaváhal, ten lhal. Takhle to v novinách funguje a u soudu taky.“ Natáhne ruku a položí ji na její. „Až to vychladne, napíšeš to v článku. Pořádně, s výhradami, s otazníkem. Poznámka pod čarou. Ale teď ne. Teď by tě sežrali. A nás s tebou.“
+„O trojce mlč.“ Oči má Viktor mokré, jako na mýtině, jako na plošině. „Nedávej jim munici. Oni teď nehledají pravdu, Hanko. Hledají, kdo zaváhal. Kdo zaváhal, ten lhal. Takhle to v novinách funguje a u soudu taky.“ Natáhne ruku a položí ji na její. „Až to vychladne, napíšeš to v článku. Pořádně, s výhradami, s otazníkem. Poznámka pod čarou. Ale teď ne. Teď by tě sežrali. A nás s tebou.“
 
 „Mluvím jen za sebe,“ řekne Hana.
 
@@ -292,7 +292,7 @@ Spodní konec. Na její fotce je oblý a souměrný, jako konec vajíčka. Na fo
 
 Nebo je to úhel. Fotka ústavu je shora a trochu šikmo. Její je kolmo. Zploštění může být stín.
 
-Hana zvětší obě fotky. Pak je zmenší. Pak je dá vedle sebe, na stejnou velikost, podle délky válce. Pak si uvědomí, že tím právě srovnala to jediné, co by srovnávat chtěla. Délku. Udělala z ní měřítko.
+Hana zvětší obě fotky. Zmenší je. Dá je vedle sebe, na stejnou velikost, podle délky válce. Pak si uvědomí, že tím právě vyrovnala jedinou věc, kterou chtěla porovnat. Délku. Udělala z ní měřítko.
 
 Na fotce ústavu měřítko není. Bez měřítka je to obrázek. Obrázek se dá zvětšit na cokoli.
 
@@ -310,7 +310,7 @@ V deset zavolá Kalina.
 
 „Co jste jim řekl?“
 
-„Že já. Obě noci, pod plachtou, u svých beden. Že v sobotu jsem spal a v neděli jsem měřil od půlnoci do čtyř a nic jsem neslyšel, protože jsem měl na uších sluchátka.“ Odmlčí se. „To je pravda. Mám to v sešitě. Časy, kmitočty. Neslyšel jsem nic jiného než šedesát hertzů.“
+„Že já. Obě noci, pod plachtou, u svých beden. Že v noci na neděli jsem do půlnoci poslouchal a pak spal. Že v noci na pondělí jsem měřil od půlnoci do čtyř a nic jsem neslyšel, protože jsem měl na uších sluchátka.“ Odmlčí se. „To je pravda. Mám to v sešitě. Časy, kmitočty. Neslyšel jsem nic jiného než šedesát hertzů.“
 
 Hana mlčí.
 
@@ -356,7 +356,7 @@ Přiloží ubrousek k tabulce. K okraji, k číslu tři.
 
 Pak se zarazí.
 
-V seznamu, který psala večer, stojí na levé straně šestnáct řádků. Ke každému připsala *záznam* nebo *vzpomínka*. A rozhodla se, že odteď bude věřit jen záznamům. Tomu, co může zkontrolovat někdo, kdo jí nevěří.
+V seznamu, který psala před hodinou, stojí na levé straně šestnáct řádků. Ke každému připsala *záznam* nebo *vzpomínka*. A rozhodla se, že odteď bude věřit jen záznamům. Tomu, co může zkontrolovat někdo, kdo jí nevěří.
 
 Tabulka je záznam.
 
@@ -364,7 +364,7 @@ Je to jediný záznam, který ji usvědčuje. A taky jediný, který dokazuje, �
 
 Kdyby ji umyla, zůstala by jí jen ta večerní lež. Podepsaná.
 
-Hana sundá ubrousek z tabulky. Na okraji u trojky zůstala vlhká skvrna, malá, jako po kapce. Tužka pod ní je celá. Hana tabulku osuší rohem prostěradla, opatrně, nesetře. Pak ji zastrčí zpátky do kapsy na zip, mezi deník a flešku. Ubrousek hodí do koše.
+Hana sundá ubrousek z tabulky. Na okraji u trojky zůstala vlhká skvrna, malá, jako po kapce. Tužka pod ní je celá. Hana tabulku osuší rohem prostěradla, opatrně, nesetře. Zastrčí ji zpátky do kapsy na zip, mezi deník a flešku. Ubrousek hodí do koše.
 
 Pak dlouho sedí a dívá se na ruce.
 
@@ -384,9 +384,9 @@ Hana jména kolegů nečte. Čte dál.
 
 Podpis proděkana. Pod ním, v kopii, doc. Radek Fiala.
 
-Hana e-mail zavře. Pak ho otevře znovu a uloží do složky, kterou si v notebooku založí, a pojmenuje ji *Sak Ts'ono'ot – korespondence*. Je to záznam.
+Hana e-mail zavře, pak ho otevře znovu a uloží do složky, kterou si v notebooku založí, a pojmenuje ji *Sak Ts'ono'ot – korespondence*. Je to záznam.
 
-Myslí na prváky. Ve čtvrtek měli mít cvičení z vrstev. Ve sklepě fakulty, se zvířecími kostmi a s bruskou. Každý rok jim na začátku nakreslí na tabuli svislou čáru. Letos jim ji nakreslí někdo jiný. Nebo nikdo.
+Myslí na prváky. Cvičení z vrstev jim nechala na duben, po návratu. Ve sklepě fakulty, se zvířecími kostmi a s bruskou. Každý rok jim na začátku nakreslí na tabuli svislou čáru. Letos jim ji nakreslí někdo jiný. Nebo nikdo.
 
 *
 
@@ -430,6 +430,6 @@ Pod to, kam patří, co si myslí, napíše tři slova. Dívá se na ně dlouho,
 
 *Mluvím za sebe.*
 
-A pak, menším písmem, pod to ještě jednou, protože to včera v noci napsala a pořád to platí:
+A pak pod to ještě jednou, protože to včera v noci napsala a pořád to platí:
 
 *Potřebuju číslo.*

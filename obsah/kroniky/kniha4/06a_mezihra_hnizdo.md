@@ -18,13 +18,13 @@ Pach přijde později. Je ostrý a suchý jako vzduch po blesku, a není v něm 
 
 Jedno světlo se láme.
 
-Je vysoko nad horami za soutěskou a nejdřív klesá jako ostatní. Pak se pod ním něco přetrhne. Světlo se zakymácí a stočí podél hor, rychleji, a ona za ním otočí hlavu, protože všechno, co se tak stáčí, je raněné. Pak klesne za hřeben. Za hřebenem se rozsvítí bílo. Na okamžik je vidět každý kámen na hřebeni, ostře, jako ve dne. Potom rudo a potom tma.
+Je vysoko nad horami za soutěskou a nejdřív klesá jako ostatní. Pak se pod ním něco přetrhne. Světlo se zakymácí a stočí podél hor, rychleji, a ona za ním otočí hlavu, protože všechno, co se tak stáčí, je raněné. Klesne za hřeben. Za hřebenem se rozsvítí bílo. Na okamžik je vidět každý kámen na hřebeni, ostře, jako ve dne. Potom rudo a potom tma.
 
 Po dlouhé chvíli, tak dlouhé, že mládě stihne znovu usnout, přijde vzduchem tlak. Dotkne se útesu a útes se ozve. Nízko, v kameni. Jako když se uvnitř hory sesune sníh.
 
 Pak se ještě jednou podívá vzhůru. Vysoko, tam, kde nic nelétá, kde je vzduch tak řídký, že by v něm křídlo nic neuneslo, se táhne napříč nebem tenké světlo. To nepadá. Jde jinam. Jde, jako jde pták, který ví, kam letí, a pak zmizí.
 
-Dívá se do tmy dlouho potom. Pak složí hlavu na kámen vedle mláděte. Nespí.
+Oči má upřené do tmy ještě dlouho potom. Pak složí hlavu na kámen vedle mláděte. Nespí.
 
 *
 
@@ -34,7 +34,7 @@ Dole u teplé vody je nový pach.
 
 Cítí ho, kdykoli vítr jde soutěskou vzhůru. Je to pach mnoha těl. Teplých, potících se, nemocných: je v něm řídký trus a horečka a mléko. To všechno zná. Ale pod tím je ještě něco, co nezná, a to ji drží vzhůru, když by mohla spát. Ta těla nevoní zvířetem. Nevoní tukem ani kouřem ani rudou hlinkou. Voní jako ten vzduch po světlech. Suše. Bez života. Jako by na sobě nesla kůži, která nikdy nebyla kůží.
 
-Je jich mnoho. Víc, než kdy u teplé vody bylo. Slyší je i nahoře. Jejich hlasy jsou vysoké a pořád, ve dne i v noci, a ve tmě dole v soutěsce svítí mnoho malých ohňů, víc ohňů, než tam kdy hořelo.
+Je jich mnoho. Víc, než kdy u teplé vody bylo. Slyší je i nahoře. Jejich hlasy jsou vysoké a ozývají se pořád, ve dne i v noci, a ve tmě dole v soutěsce svítí mnoho malých ohňů, víc ohňů, než tam kdy hořelo.
 
 Ty staré, ty od teplé vody, zná. Zná je, jak zná vítr. Voní kouřem a tukem a rudou hlinkou, kterou si mažou na tváře, a starou kůží. Chodí po své straně vody a nikdy nepřejdou na její. Když ona sletí k vodě, ustoupí a nehledí na ni. Když jsou hladové zimy, nechávají na plochém kameni pod útesem kozu, svázanou nebo mrtvou, a ona si ji vezme. Když ulovila ona a oni jsou blízko, vezmou si kus a nechají jí zbytek. Tak to je. Tak to bylo za její matky.
 
@@ -88,7 +88,7 @@ Projde hnízdem, pomalu, s hlavou nízko. Nosem se dotkne zrna, kamene, rýhy. M
 
 Na kraji hnízda, u stěny, je místo, kde nic neleží.
 
-Skála je tam hladká a prázdná. Ona se nad ním zastaví. Sklopí hlavu a dlouho se na to místo dívá, a pak položí dráp na kámen. Jeden. Nepohne jím.
+Skála je tam hladká a prázdná. Ona se nad ním zastaví. Sklopí k němu hlavu, dlouho tak zůstane, a pak položí dráp na kámen. Jeden. Nepohne jím.
 
 Ví, že sem něco patří. Ještě neví co. Ten pach dole u vody, ty hlasy ve dne v noci, světla, která padala pomalu, a lesk za horami. To všechno je. Ale ještě se to nestalo celé. Ještě to neleží.
 
@@ -98,7 +98,7 @@ Zvedne dráp. Rýha nezůstane.
 
 Ráno je nebe bílé a hory za soutěskou jsou bílé taky. Napadl sníh. Ne tady, výš. Ale vzduch jím voní a voda dole v soutěsce kouří víc než jindy.
 
-Mládě stojí na kraji útesu a roztahuje křídla do větru. Vítr se do nich opře a mládě zavrávorá a stáhne je. Pak je roztáhne znovu. Ona leží za ním a dívá se. Nepomůže mu. Tohle se nedá pomoct.
+Mládě stojí na kraji útesu a roztahuje křídla do větru. Vítr se do nich opře a mládě zavrávorá a stáhne je. A roztáhne je znovu. Ona leží za ním a dívá se. Nepomůže mu. Tohle se nedá pomoct.
 
 Dívá se dolů do soutěsky.
 
@@ -106,13 +106,13 @@ U teplé vody je dnes klid. Ti staří nosí dřevo do skály a pach sušícího
 
 Jednoho z nich zná.
 
-Viděla ho před několika nocemi. Vešel do horní vody, do té, kam nikdo nevstupuje, a vytáhl z ní něco malého, co křičelo. Pak vylezl a celou noc seděl na kameni u vody, mokrý, a nehýbal se. Ani když vítr přinesl mráz. Ti od hloubky kolem něj chodili a nosili vodu, sem a tam, celou noc, a on seděl a díval se. Ona se dívala na něj. Bylo to zvláštní, a co je zvláštní, si pamatuje.
+Viděla ho před několika nocemi. Vešel do horní vody, do té, kam nikdo nevstupuje, a vytáhl z ní něco malého, co křičelo. Vylezl a celou noc seděl na kameni u vody, mokrý, a nehýbal se. Ani když vítr přinesl mráz. Ti od hloubky kolem něj chodili a nosili vodu, sem a tam, celou noc, a on seděl a díval se. Ona se dívala na něj. Bylo to zvláštní, a co je zvláštní, si pamatuje.
 
-Teď stojí dole jako ostatní a dívá se na sníh. Pak se otočí a dívá se jinam. Nahoru. Na útesy.
+Teď stojí dole jako ostatní a dívá se na sníh. Pak otočí hlavu jinam. Nahoru. Na útesy.
 
 Na ni.
 
-Nevidí ji. Je daleko a ona leží ve stínu převisu a nehýbe se. Ale dívá se tím směrem, dlouho, jako se dívá zvíře, které ví, že tam něco je, a neví co.
+Nevidí ji. Je daleko a ona leží ve stínu převisu a nehýbe se. Ale hledí tím směrem, dlouho, jako zvíře, které ví, že tam něco je, a neví co.
 
 Mládě za ní znovu roztáhne křídla. Vítr ho zvedne o kus, jen o kus, a pak ho zase položí na skálu. Mládě vykřikne. Je v tom radost.
 

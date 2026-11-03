@@ -24,7 +24,7 @@ Matěj zčervenal až ke kořínkům vlasů kolem tonzury. Nevěděl, že převo
 
 *
 
-Bratr Wigand ho nevyprovodil, protože ten týden už nevstal. Matěj se u něj zastavil v noviciátu. Bratři ošetřovatelé mu tam ustlali u stěny, kterou zespodu hřál komín kalefaktoria. Stařec mu podal ruku tak, jak se podává předmět.
+Bratr Wigand ho nevyprovodil, protože ten týden už nevstal. Matěj se u něj zastavil na ošetřovně. Wigandovi tam bratři ošetřovatelé ustlali u stěny, kterou zespodu hřál komín kalefaktoria. Stařec mu podal ruku tak, jak se podává předmět.
 
 „Pojedeš k matce,“ řekl Wigand.
 
@@ -170,7 +170,7 @@ Večer, když lidé odešli a matka usnula na peci, vytáhl Matěj voskovou tabu
 
 Pak se zarazil. U kosti psal *vidi* a *non vidi*. Tady nic neviděl. Tady jen slyšel.
 
-Chvíli držel rydlo nad voskem. Pak k řádkům připsal slovo, které Wigand nepoužíval, ale které by mu, jak si Matěj myslel, nevadilo: *audivi*. Slyšel jsem. A za ně, menším písmem, od koho.
+Chvíli držel rydlo nad voskem. Pak k řádkům připsal slovo, které Wigand nepoužíval, ale které by mu, jak si Matěj myslel, nevadilo: *audivi*. Slyšel jsem. A za ně, od koho.
 
 *
 
@@ -180,7 +180,7 @@ Chvíli držel rydlo nad voskem. Pak k řádkům připsal slovo, které Wigand n
 
 „Do štoly.“
 
-Ješek se na něj podíval přes rameno a pak se vrátil k botám. „Nesmíš.“
+Ješek se ohlédl přes rameno a pak se vrátil k botám. „Nesmíš.“
 
 „Kdo to řekl?“
 
@@ -214,15 +214,15 @@ Byl malý, menší než Matěj, a hranatý, s rameny jako z trámů a s krátký
 
 „Ne.“
 
-Matěj čekal, že Ortlieb řekne proč, a Ortlieb nic neřekl. Stál a díval se na něj. Za ním vyšel z ústí štoly muž s košem horniny na zádech, vysypal ho na haldu a zase zmizel. Z hloubky se ozvalo klepání, pravidelné a tlumené, jako by někdo daleko tloukl na dveře.
+Matěj čekal, že Ortlieb řekne proč, a Ortlieb nic neřekl. Jen stál. Za ním vyšel z ústí štoly muž s košem horniny na zádech, vysypal ho na haldu a zase zmizel. Z hloubky se ozvalo klepání, pravidelné a tlumené, jako by někdo daleko tloukl na dveře.
 
-„Pan Konrád,“ začal Matěj, „přivezl do kláštera relikvii a...“
+„Pan Konrád,“ začal Matěj, „přivezl do kláštera relikvii a…“
 
 „Pan Konrád mi platí, abych mu kopal díru,“ řekl Ortlieb. „Ne abych do ní pouštěl mnichy. Když pan Konrád napíše, že tě mám pustit, pustím tě. Pan Konrád nic nenapsal.“ Odmlčel se. „Ty umíš psát.“
 
 „Umím.“
 
-„Tak to víš.“ Ortlieb se otočil k boudě. Pak se ještě zastavil, jako by si na něco vzpomněl. „Ten drak,“ řekl, a Matěj poprvé uslyšel v jeho hlase něco jiného než nudu. „Ten drak, o kterém mluví. Ve štole žádný není. Je tam skála, voda a teplo. Skála je tvrdá, teplo je dobré a voda je moje starost.“ Kývl k žlabu. „Jdi domů, mnichu.“
+„Tak to víš.“ Ortlieb se otočil k boudě. Pak se ještě zastavil, jako by si na něco vzpomněl. „Ten drak,“ řekl, a Matěj poprvé uslyšel v jeho hlase něco jiného než nudu. „Ten drak, o kterém mluví. Ve štole žádný není. Je tam skála, voda a teplo. Skála je tvrdá, teplo je dobré a voda je moje starost.“ Kývl ke žlabu. „Jdi domů, mnichu.“
 
 Odešel do boudy a zavřel za sebou dveře z prken.
 
@@ -256,7 +256,7 @@ Matka přestala být ráda.
 
 „Protože jsem slyšel dvanáct lidí vyprávět o drakovi, a ani jeden z nich tam nebyl.“
 
-Matka se na něj dlouho dívala. Pak se podívala na les za vsí, kde nad stromy stoupal z jediného místa tenký sloupek kouře. Stoupal osaměle, jinak než kouř z chalup.
+Matka dlouho mlčela. Pak se podívala na les za vsí, kde nad stromy stoupal z jediného místa tenký sloupek kouře. Stoupal osaměle, jinak než kouř z chalup.
 
 „Dobroslava,“ řekla. „Uhlířka. Ta tam chodí.“ A hned potom, ostřeji: „A ty k ní nechoď. Ona s lidmi nemluví. A když mluví, tak by bylo lepší, kdyby mlčela.“
 
@@ -266,4 +266,4 @@ Matka se na něj dlouho dívala. Pak se podívala na les za vsí, kde nad stromy
 
 Víc neřekla. Otočila se a šla do chalupy. Matěj zůstal na dvoře se psem a s tabulkou v ruce a díval se na ten osamělý kouř, dokud se nesetmělo a kouř nezmizel v šedi nebe.
 
-Pak se vrátil na grangii, protože tam měl spát, a Sivka šla s ním. Udalrich ji uviděl u brány a řekl něco o psech v oratoři, a Matěj řekl, že pes bude spát venku, a Udalrich řekl, že venku je zima, a nechal ji spát v senníku. Matěj se pomodlil kompletář sám v oratoři, při jedné svíci, a pak ještě dlouho klečel a nemodlil se, a myslel na to, že v hoře je teplo, a že v potoce není zlato, a že ho celá ves vítala jako cizince, a jen pes ne.
+Pak se vrátil na grangii, kde měl celou dobu spát. Dvě noci přespal u matky, a to bude muset převorovi říct. Sivka šla s ním. Udalrich ji uviděl u brány a řekl něco o psech v oratoři, a Matěj řekl, že pes bude spát venku, a Udalrich řekl, že venku je zima, a nechal ji spát v senníku. Matěj se pomodlil kompletář sám v oratoři, při jedné svíci, a pak ještě dlouho klečel a nemodlil se, a myslel na to, že v hoře je teplo, a že v potoce není zlato, a že ho celá ves vítala jako cizince, a jen pes ne.

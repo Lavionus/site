@@ -2,7 +2,7 @@
 
 Dům horního úřadu stál v horní polovině náměstí, které nebylo náměstím, ale širší ulicí s pochybným sklonem. Nad vchodem měl kamenný znak s mlátkem a želízkem, zkříženými jako dva meče, které se nikdy nepřou. Ilona tam chodila s výpověďmi žen léta a pokaždé jí vchod připadal o něco nižší, než si ho pamatovala. Muži z horního úřadu se pod ním skláněli, i když nemuseli. Ona nemusela nikdy.
 
-Ve psárně bylo teplo. Starý pan horní písař Nickel Kunz topil i v květnu, protože měl, jak říkal, v kostech zimu ze čtyřiceti let po štolách a ta už z nich nevyleze. Seděl u pultu s brýlemi na šňůrce a psal, a když Ilona vešla, nepřestal, jen zvedl levou ruku, aby počkala.
+V písárně bylo teplo. Starý pan horní písař Nickel Kunz topil i v květnu, protože měl, jak říkal, v kostech zimu ze čtyřiceti let po štolách a ta už z nich nevyleze. Seděl u pultu s brýlemi na šňůrce a psal, a když Ilona vešla, nepřestal, jen zvedl levou ruku, aby počkala.
 
 Čekala. Za pultem visely na stěně stejné věci jako vždycky: rejstříky děl v kožených deskách, svazky lístků navlečené na motouzu, pečetidla, a mapa údolí. Kdosi ji kreslil před padesáti lety, kdy se tu ještě všechno teprve otevíralo, a štoly na ní vedly do hor jako žíly v ruce. Některé z nich byly přeškrtnuté. U jedné, vysoko nahoře, stálo drobným písmem *verlassen*. Opuštěná.
 
@@ -30,7 +30,7 @@ Hans Wehrl stál ve dveřích a Ilona nevěděla, jak dlouho tam stojí.
 
 Znala ho, jak ho znalo celé město: zdálky, v kostele, na horní slavnosti, na koni u brány, když jel nahoru k dílům. Muž kolem padesáti, vysoký, s plnovousem, který byl kdysi světlý a teď byl barvy popela, a s očima, které se nesnažily vypadat přísně, protože nemusely. Měl na sobě hornický kabát, ne úřednický, a boty až po kolena mokré a umazané žlutou hlínou, a v ruce nesl kožené pouzdro, jaké nosí měřiči na kompas. Byl cítit kouřem a vlhkým kamenem a ještě něčím, co Ilona nepoznala hned. Něčím sladkým a kovovým zároveň.
 
-„Paní ranhojička,“ řekl. Nebyla to otázka. „Kunzi, dejte mi to.“
+„Paní ranhojička,“ řekl. Věděl, kdo je. „Kunzi, dejte mi to.“
 
 Kunz mu podal desky. Wehrl je nečetl u pultu, jak by čekala. Odnesl je k oknu, kde bylo nejvíc světla, opřel se ramenem o rám a četl, a Ilona viděla, že čte celé, slovo za slovem, od data až k poslednímu řádku. Nikdo to nedělal. Rychtáři četli začátek a konec. Faráři hledali hříchy. Kunz četl pozorně, ale četl jako písař, kontroloval, jestli je to napsané, jak se má. Wehrl četl, jako by v tom něco hledal a nevěděl co.
 
@@ -92,8 +92,6 @@ Ilona ten list držela a necítila ho, jako by držela vzduch.
 
 „Horní soud zasedá po svatém Vítu. Do té doby se nic rozhodovat nebude, a jestli Stöckel chce víc, ať si stěžuje do Prahy, a do Prahy to trvá.“ Wehrl si zastrčil kompas pod paži. „To je měsíc, paní Ilono. Trochu víc. Do té doby bude chlapec sedět u nás, ne v šatlavě, a nikdo mu nezkroutí palce. A vy budete mít čas najít mi toho, kdo umí vázat ten uzel a nosí lipské sukno a ví, kde jsou něčí lancety.“
 
-Ilona se na něj podívala.
-
 „To jsem nenapsala,“ řekla. „O lancetách.“
 
 „Ne,“ řekl Wehrl. „Ale myslela jste si to. Je to vidět.“ A pak, docela jiným tónem, jako by si vzpomněl na něco nepříjemného, co musí udělat, než bude moct odejít: „Přijďte ke mně večer. Po nešporách. Je tu ještě jedna věc, a tu vám nechci říkat tady.“
@@ -108,7 +106,7 @@ Pustili ji k němu před nešporami. Seděl na lavici v komoře pod schodištěm
 
 „Patříš soudu.“
 
-„To je totéž.“ Vzal chléb a nejedl. „Stöckel mi v noci říkal, co mi udělají, až mě vezmou na mučidla. Jak se to dělá. Celou noc. Tichým hlasem, jako by mi vyprávěl pohádku.“ Podíval se na ni. „A ráno přišel písař a četl mi z papíru, že já, Tobiáš, syn Matze Lindnera, havíře, jsem v noci vycházel z domu, jak dosvědčuje moje vlastní mistrová.“
+„To je totéž.“ Vzal chléb a nejedl. „Stöckel mi v noci říkal, co mi udělají, až mě vezmou na mučidla. Jak se to dělá. Celou noc. Tichým hlasem, jako by mi vyprávěl pohádku. A ráno přišel písař a četl mi z papíru, že já, Tobiáš, syn Matze Lindnera, havíře, jsem v noci vycházel z domu, jak dosvědčuje moje vlastní mistrová.“
 
 Ilona mlčela.
 
@@ -178,7 +176,7 @@ Ilona mlčela.
 
 „A vy?“
 
-„Já si myslím, že je to hloupost,“ řekl Wehrl. „A že je to nebezpečná hloupost. Opuštěné štoly nejsou bezpečné ani ve dne. Ve spoustě z nich stojí špatný vzduch, v některých voda. Pochodeň v takové štole je jako svíce v sudu s prachem, víte, že u nás někdy bouchne důl? A lidé, kteří vytáhnou v noci se psy a s pivem, nebudou v kopci hledat nikoho. Budou hledat někoho.“ Podíval se na ni. „A když v kopci nikoho nenajdou, vrátí se dolů a vzpomenou si, že tu je jeden chlapec v komoře pod schodištěm a jedna cizí ženská, která mu pomáhá.“
+„Já si myslím, že je to hloupost,“ řekl Wehrl. „A že je to nebezpečná hloupost. Opuštěné štoly nejsou bezpečné ani ve dne. Ve spoustě z nich stojí špatný vzduch, v některých voda. Pochodeň v takové štole je jako svíce v sudu s prachem, víte, že u nás někdy bouchne důl? A lidé, kteří vytáhnou v noci se psy a s pivem, nebudou v kopci hledat nikoho. Budou hledat někoho. A když v kopci nikoho nenajdou, vrátí se dolů a vzpomenou si, že tu je jeden chlapec v komoře pod schodištěm a jedna cizí ženská, která mu pomáhá.“
 
 Ilona položila pohár na stůl.
 

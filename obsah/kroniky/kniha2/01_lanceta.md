@@ -66,9 +66,9 @@ A krev tu nebyla.
 
 *
 
-Lancetu našla Purga. Ležela pod postelí u nohou, kousek od zdi. Purga ji vytáhla dřív, než ji Ilona stihla zarazit, a podržela ji proti oknu, jako se drží věc chyceného zloděje.
+Lancetu našla Purga. Ležela pod postelí u nohou, kousek od zdi. Purga ji vytáhla dřív, než ji Ilona stihla zarazit, a podržela ji proti oknu, jako se drží věc, kterou našli u zloděje.
 
-Ilona ji poznala dřív, než ji vzala do ruky. Rukojeť z kravského rohu, bělavá, v místě, kde se drží palcem, ohlazená do lesku. A na konci rukojeti vryp, malé *T*, nakřivo, které tam Tobiáš vyřezal v zimě nožem, protože se bál, že si lancety s Ilonou splete. Ilona se mu tehdy smála. Ty její měly rukojeti ze dřeva, po Řehořovi, a nikdo by si je nespletl.
+Ilona ji poznala dřív, než ji vzala do ruky. Rukojeť z kravského rohu, bělavá, v místě, kde se drží palcem, ohlazená do lesku. A na konci rukojeti vryp, malé *T*, nakřivo, které tam Tobiáš vyřezal v zimě nožem, protože se bál, že si lancety s Ilonou splete. Ilona se mu tehdy smála. Ty její měly rukojeti z kosti, po Řehořovi, a nikdo by si je nespletl.
 
 ![Pouzdro na tři lancety](obrazky/01_lanceta.webp)
 
@@ -104,7 +104,7 @@ Stöckel přikývl, jako by si to už předtím myslel a jen to chtěl slyšet. 
 
 „Tohle ne.“ Řekla to tišeji, než chtěla, a Stöckel se k ní otočil, protože ženy, které mluví tiše, slyší muži někdy líp. „Jsou tam dva řezy. Jeden je jeho a je zavřený. Druhý je napříč žílou a takový řez bych nikoho neučila. A krev tu není. Je jí tu na slamníku tolik, co by se vešlo do misky, a ona umřela z celého těla. Kam se poděla ta ostatní?“
 
-Stöckel se podíval na slamník. Pak se podíval na ni.
+Stöckel se podíval na slamník. Pak na ni.
 
 „Do slámy. Do prken. Ven oknem, já nevím. Vy jste ranhojička, vy mi to řekněte.“
 
@@ -172,7 +172,7 @@ Neřekla to Purze. Ale věděla, že to bude muset napsat.
 
 *
 
-Stöckel se k ní vrátil, když biřicové odnášeli tělo na lese z větví k márnici u špitálu. Šel vedle ní dolů do města, protože to měli po cestě, a Ilona chápala, že to není zdvořilost.
+Stöckel se k ní vrátil, když biřicové odnášeli tělo na nosítkách z větví k márnici u špitálu. Šel vedle ní dolů do města, protože to měli po cestě, a Ilona chápala, že to není zdvořilost.
 
 „Ten písař mi říkal,“ řekl, „že vy píšete i pro horní úřad.“
 
@@ -294,7 +294,7 @@ Večer, když se setmělo a v údolí znovu začaly tlouct stoupy, sedla si ke s
 
 Psala pomalu.
 
-Nejdřív datum: *v úterý svatodušní léta Páně 1595*, a pak, aby to nikdo nemusel počítat, *šestnáctého dne měsíce května podle nového kalendáře*. Pak jméno mrtvé, její stav, kde bydlela. Pak to, co viděla, ve stejném pořádku, v jakém to viděla, ráno v sešitě, ale celými větami. Nepřidávala slova. Neubírala. Kde byla v sešitě míra odhadem, napsala *odhadem*. Kde něco nevěděla, napsala, že neví.
+Nejdřív datum: *v úterý svatodušní léta Páně 1595*, a pak, aby to nikdo nemusel počítat, *šestnáctého dne měsíce května podle nového kalendáře*. Pak jméno mrtvé, její stav, kde bydlela. Pak to, co viděla, v tom pořadí, v jakém to ráno zapsala do sešitu, jen celými větami. Nepřidávala slova. Neubírala. Kde byla v sešitě míra odhadem, napsala *odhadem*. Kde něco nevěděla, napsala, že neví.
 
 Pak slova Purgy Sternové. Tak jak je Purga řekla, nejdřív německy, pak česky, a pod to: *Myslela, že mluví ze spaní. Druhý hlas neslyšela, nebo neví.* A pak to, co Purga řekla jí a co Stöckelovi neřekla: *Jemu jsem řekla, že tam s ní někdo byl. Řekla jsem, co jsem si myslela.* Ilona nad tou větou dlouho seděla. Patřila do zápisu? Patřila. Byla to Purgina slova a Purga je řekla. Že se nehodila nikomu, nebyl důvod je vynechat.
 

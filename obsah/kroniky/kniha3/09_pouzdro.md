@@ -14,7 +14,7 @@ Pan Chan stojí ve dveřích. Má na sobě tutéž čistou košili jako ráno a 
 
 Marisol vyšroubuje šest šroubů. Hana je počítá. Marisol je skládá na papír vedle palety do řady, jak šly po obvodu.
 
-Pak zvedne víko.
+Zvedne víko.
 
 *
 
@@ -46,7 +46,7 @@ Hana panel posune. Ještě níž, ještě víc do strany, až světlo jde přes 
 
 *
 
-Nejdřív fotí s kartou. Celý válec shora, s kartou podél boku. Pak čelo, s kartou u okraje. Pak každou stranu zvlášť. Marisol mezitím píše. Má na kolenou desky a v nich formulář ústavu a do kolonek píše rukou, drobně a rovně. Datum. Čas. Přítomní. Pan Chan, svědek ejida. Luis Ek. Hana Vrbová.
+Nejdřív fotí s kartou. Celý válec shora, s kartou podél boku. Pak čelo, s kartou u okraje. A každou stranu zvlášť. Marisol mezitím píše. Má na kolenou desky a v nich formulář ústavu a do kolonek píše rukou, drobně a rovně. Datum. Čas. Přítomní. Pan Chan, svědek ejida. Luis Ek. Hana Vrbová.
 
 „Teď délka,“ řekne Hana.
 
@@ -60,15 +60,15 @@ Vrátí se za tři minuty. Za ním jde Kalina. Nese metr i úhelníky a pod paž
 
 „Půjčím vám to sám,“ řekne. Na Marisol. „Pokud smím. A pak bych chtěl o něco požádat.“
 
-Marisol se na něj podívá přes brýle. Pak kývne.
+Marisol si ho změří přes brýle a kývne.
 
-Hana přiloží úhelníky. Jeden k hornímu čelu, kolmo, plochou k oblé hraně. Druhý ke spodnímu konci, k té oblé špičce. Musí se dotýkat. Nesmí ho tlačit. Pak mezi nimi natáhne ocelový metr, hranou k desce stolu, a čte.
+Hana přiloží úhelníky. Jeden k hornímu čelu, kolmo, plochou k oblé hraně. Druhý ke spodnímu konci, k té oblé špičce. Musí se dotýkat. Nesmí ho tlačit. Mezi nimi natáhne ocelový metr, hranou k desce stolu, a čte.
 
 Čtyři sta šedesát.
 
-Přečte to znovu, kolmo shora, bez paralaxy. Čtyři sta šedesát a možná půl milimetru navíc. Pak ještě jednou, z druhé strany, s metrem přiloženým obráceně. Čtyři sta šedesát.
+Přečte to znovu, kolmo shora, bez paralaxy. Čtyři sta šedesát a možná půl milimetru navíc. A ještě jednou, z druhé strany, s metrem přiloženým obráceně. Čtyři sta šedesát.
 
-Vyfotí to. Kolmo shora, oba úhelníky, metr mezi nimi a vedle karta. Pak zblízka každý konec. Úhelník, hrana válce, ryska na metru.
+Vyfotí to. Kolmo shora, oba úhelníky, metr mezi nimi a vedle karta. A zblízka každý konec. Úhelník, hrana válce, ryska na metru.
 
 „Čtyři sta šedesát,“ řekne nahlas. „Plus minus milimetr.“
 
@@ -86,11 +86,11 @@ Posuvné měřítko má Kalina v krabici taky. Hana změří průměr na třech 
 
 Pak váha.
 
-Hana položí síťový vak, ten, ve kterém válec ráno vyjel z vody, na prázdný stůl a zváží ho. Tři sta deset gramů. Pak do něj Marisol válec vloží, opatrně, s rukama v rukavicích, a Hana zvedne vak za ucho na háček váhy. Displej se rozbliká. Ustálí se.
+Hana položí síťový vak, ten, ve kterém válec ráno vyjel z vody, na prázdný stůl a zváží ho. Tři sta deset gramů. Marisol do něj válec vloží, opatrně, s rukama v rukavicích, a Hana zvedne vak za ucho na háček váhy. Displej se rozbliká. Ustálí se.
 
 Devět celých čtyři dvě.
 
-Bez vaku devět celých jedenáct. Mokrý. Hana to řekne nahlas a Marisol píše. *Peso aprox. 9,1 kg.*
+Bez vaku devět celých jedenáct. Mokrý. Hana to řekne nahlas a Marisol píše. *Peso aprox. 9.1 kg.*
 
 „Teď to položte,“ řekne Marisol. „Prosím.“
 
@@ -112,13 +112,13 @@ Sedí zase na pytli s cementem, se střičkou v ruce, a dívá se na válec. Pak
 
 „Na to nikdo z obce nesáhne.“ Pokrčí rameny. „Není to naše.“
 
-Hana se podívá ke dveřím. Pan Chan tam stojí, jak stál. Neřekne nic. Možná rozuměl, možná ne.
+Pan Chan stojí ve dveřích, jak stál. Neřekne nic. Možná rozuměl, možná ne.
 
 „Myslíš, že to patří Mexiku?“ zeptá se Hana. Je to věta dona Felipa. Neví, proč ji říká.
 
 „Ne,“ řekne Luis. „Myslím, že to není naše.“
 
-Pak se odmlčí a chvíli se dívá do kbelíku. Na hladině vody z cenotu se leskne žárovka.
+Odmlčí se a chvíli hledí do kbelíku. Na hladině vody z cenotu se leskne žárovka.
 
 „A kdyby se něco stalo,“ řekne potom, „tak by to bylo naše.“
 
@@ -130,7 +130,7 @@ Konec podrží Marisol. V rukavicích, za pěnu, ne za válec.
 
 „Smím?“ zeptá se Hana a zvedne pravou ruku. Ukazovák, nehet.
 
-Marisol se dívá na válec. Pak na Hanu.
+Marisol se dívá na válec a pak na Hanu.
 
 „Jednou. Zlehka.“
 
@@ -164,9 +164,9 @@ Kalina pracuje pomalu. Přiloží kompas na desku stolu ve vzdálenosti půl met
 
 „Železo to není,“ řekne. „Ani nic, co by se magnetovalo.“
 
-Hana si to zapíše. Doleva. Vpravo jí v deníku od desátého stojí *materiál meteoritický? → izotopy kyslíku*. Železné meteority střelku pohnou. Kamenné někdy taky. Tohle ji nepohne. Neříká to nic jistého, jen škrtá jednu z možností.
+Hana to zapíše doleva. Vpravo jí v deníku od desátého stojí *materiál meteoritický? → izotopy kyslíku*. Železné meteority střelku pohnou. Kamenné někdy taky. Tohle ji nepohne. Neříká to nic jistého, jen škrtá jednu z možností.
 
-Pak Kalina zvedne přístroj s anténou. Pomalu s ním obchází paletu a dívá se na displej. Na displeji je známý hřeben, ten, který Hana viděla první den. Zuby jeden vedle druhého, šedesát hertzů a jejich násobky, z generátoru venku a z vedení u obce. Pak širší šedý pás, levný střídač. Pak nahoře, když Kalina přepne, krátké výkmity, které přijdou a zmizí.
+Kalina zvedne přístroj s anténou. Pomalu s ním obchází paletu a dívá se na displej. Na displeji je známý hřeben, ten, který Hana viděla první den. Zuby jeden vedle druhého, šedesát hertzů a jejich násobky, z generátoru venku a z vedení u obce. Pak širší šedý pás, levný střídač. A nahoře, když Kalina přepne, krátké výkmity, které přijdou a zmizí.
 
 „Telefony,“ řekne Kalina. „Váš, můj, pana Chana.“ Pan Chan ve dveřích se podívá na kapsu košile. „A tady,“ přepne znovu, „vysílač na věži za lomem. Nic dalšího.“
 
@@ -182,11 +182,11 @@ Kalina sundá sluchátka.
 
 „Kámen taky nevysílá.“ Kalina zavře krabici. „Proto je to dobré srovnání. Takže chyba v hloubce je moje. Nebo vody.“ Odmlčí se. „To je dobrá zpráva. Teď vím, kde hledat.“
 
-Marisol zapíše, že si to přeměřil. Zeptá se ho na celé jméno a on ho nadiktuje. Pak dodá, aniž by se ho ptala:
+Marisol zapíše, že si to přeměřil. Zeptá se ho na celé jméno a on ho nadiktuje. A dodá, aniž by se ho ptala:
 
 „Pracuju pro pojišťovnu.“
 
-Marisol se na něj podívá. Poprvé za večer se jí pohne koutek úst.
+Marisol poprvé za večer cukne koutkem úst.
 
 „Já vím,“ řekne.
 
@@ -216,7 +216,7 @@ Viktor přijde, když Marisol balí.
 
 Stoupne si ve dveřích vedle pana Chana a pozdraví ho kývnutím. Pan Chan kývnutí vrátí. Viktor je čerstvě osprchovaný, má mokré vlasy a čisté tričko a v ruce telefon, displejem dolů. Prezentace v Los Angeles dopadla dobře. Hana to ví už od včerejška.
 
-Dívá se, jak Marisol válec obaluje. Pěna namočená v kbelíku. Fólie, vrstva po vrstvě. Zase pěna.
+Viktor sleduje, jak Marisol válec obaluje. Pěna namočená v kbelíku. Fólie, vrstva po vrstvě. Zase pěna.
 
 „Kolik vrstev té fólie?“ zeptá se.
 
@@ -228,7 +228,7 @@ Dívá se, jak Marisol válec obaluje. Pěna namočená v kbelíku. Fólie, vrst
 
 „Jasně.“ Viktor zvedne dlaň. „Jasně.“
 
-Pak se podívá na Hanu. „Dobrý?“
+Pak se obrátí k Haně. „Dobrý?“
 
 „Dobrý.“
 
@@ -238,19 +238,19 @@ Pak se podívá na Hanu. „Dobrý?“
 
 Viktor hvízdne, tiše. „Jako malý dítě.“ Zasměje se. „Jako Matyáš, když se narodil. Ne, ten měl čtyři.“ Zavrtí hlavou. „Jdu spát. Zítra je neděle, zaplaťpánbůh.“
 
-Odejde do tmy. Hana se za ním dívá. Viktorův syn je na univerzitě v Praze a Viktor o něm mluví málokdy. Teď si na něj vzpomněl. Je unavený, pomyslí si. Všichni jsou unavení.
+Odejde do tmy. Viktorův syn je na univerzitě v Praze a Viktor o něm mluví málokdy. Teď si na něj vzpomněl. Je unavený, pomyslí si. Všichni jsou unavení.
 
 Marisol přišroubuje víko. Šest šroubů, tytéž, v témž pořadí, jak je skládala na papír.
 
 Pak novou pásku.
 
-Vytáhne kotouč z tašky, odvine kus a přiloží ho na spoj víka a bedny, přes modrý stín staré pásky. Páska ho zakryje. Marisol ji vede po obvodu kolem celé bedny, hladí ji palcem, aby přilnula k nerovnému dřevu, a na rozích ji přeloží. Pak vezme fixu a na každé straně napíše přes pásku a přes dřevo svůj podpis. *M. Couoh 21-III-26.* Pomalu. Podruhé za den.
+Vytáhne kotouč z tašky, odvine kus a přiloží ho na spoj víka a bedny, přes modrý stín staré pásky. Páska ho zakryje. Marisol ji vede po obvodu kolem celé bedny, hladí ji palcem, aby přilnula k nerovnému dřevu, a na rozích ji přeloží. Vezme fixu a na každé straně napíše přes pásku a přes dřevo svůj podpis. *M. Couoh 21-III-26.* Pomalu. Podruhé za den.
 
 Přečte nahlas číslo na začátku pásky a na konci a zapíše je do formuláře.
 
 Hana fotí.
 
-Každou stranu. S kartou, pak bez ní, pak zblízka. Na čelní straně je suk. Tmavý, oválný, velký jako palec. Páska přes něj přechází šikmo, v jeho horní třetině, skoro stejně jako ráno, jen o vlas víc vlevo. *H* na konci podpisu leží na suku, na jeho horním okraji, tmavé na tmavém. Hana to vyfotí zpříma a pak z boku, aby bylo vidět, jak se páska nad sukem nepatrně zvedá. Pak ještě jednou, nejzblízka, až je na displeji vidět vlákno dřeva pod tahem fixy. Tah jde z pásky na dřevo bez přerušení, jedním pohybem ruky.
+Každou stranu. S kartou, pak bez ní, pak zblízka. Na čelní straně je suk. Tmavý, oválný, velký jako palec. Páska přes něj přechází šikmo, v jeho horní třetině, skoro stejně jako ráno, jen o vlas víc vlevo. Písmeno *h* na konci podpisu leží na suku, na jeho horním okraji, tmavé na tmavém. Hana to vyfotí zpříma a pak z boku, aby bylo vidět, jak se páska nad sukem nepatrně zvedá. A ještě jednou, nejzblízka, až je na displeji vidět vlákno dřeva pod tahem fixy. Tah jde z pásky na dřevo bez přerušení, jedním pohybem ruky.
 
 „Zase suky,“ řekne Marisol.
 
@@ -260,7 +260,7 @@ Každou stranu. S kartou, pak bez ní, pak zblízka. Na čelní straně je suk. 
 
 „Ráno byla jiná páska.“
 
-Marisol se na ni dívá. Pak zaklapne fixu a dá ji do kapsy košile, ke klíčku od černého kufru, který už nemá u sebe.
+Marisol zaklapne fixu a dá ji do kapsy košile, ke klíčku od černého kufru, který už nemá u sebe.
 
 „Klíč je pro dveře,“ řekne. „Páska je pro bednu. A vy jste pro suky.“
 
@@ -278,7 +278,7 @@ Pod to připíše řádek, který jí udělá radost:
 
 *Délka (ocelový metr) 460 ± 1 mm. Souhlasí s opravou modelu (464 × 0,992 = 460). Přepočítat (R. H.) – stále.*
 
-Pak otevře notebook a v něm e-mail.
+Otevře notebook a v něm e-mail.
 
 *Paní doktorko,*
 
@@ -302,7 +302,7 @@ Hana zvětšuje. Čáry jsou rovné a svislé. Dvojí délky, dlouhé a krátké
 
 Každý začíná krátkou čarou.
 
-Hana se opře. Pak se zase nakloní. Ve druhém řádku, uprostřed, je jedna tečka posazená výš než ostatní. Nad čarou. Jako háček nad písmenem.
+Hana se opře a zase se nakloní. Ve druhém řádku, uprostřed, je jedna tečka posazená výš než ostatní. Nad čarou. Jako háček nad písmenem.
 
 Otevře vedle výřezu svůj snímek čela válce, ten se světlem zleva. Sedm řádků. Krátká čára na začátku každého. Ve čtvrtém tečka nad čarou.
 
@@ -322,7 +322,7 @@ Rovná čára a tečka jsou nejjednodušší značky, jaké lidská ruka udělá
 
 A ona chce, aby to bylo totéž. To je na celé věci nejhorší. Ví, že to chce. Od ledna, od té chvíle v kuchyni, kdy zastavila video na jednatřicáté vteřině a vytáhla z poličky modrou složku.
 
-Podobnost je to nejlacinější, co v oboru existuje. Na podobnostech stojí celá oddělení v antikvariátech.
+Podobnost je to nejlacinější, co v oboru existuje. Na podobnostech stojí celé regály esoteriky v knihkupectvích.
 
 Hana zavře oba obrázky. Pak je zase otevře.
 
@@ -332,7 +332,7 @@ Pak by Marisol zavřela desky.
 
 Viktorovi to neukáže. Ten by z toho měl do pondělka story deck.
 
-Hana se podívá na pravou půlku deníku. Ríša ji fotí každý večer. Viktor ji čte. Ví to od dvanáctého a od dvanáctého se tam snaží psát jen to, co by snesla číst nahlas.
+Pravou půlku deníku Ríša fotí každý večer. Viktor ji čte. Ví to od dvanáctého a od dvanáctého se tam snaží psát jen to, co by snesla číst nahlas.
 
 Tohle by nahlas nesnesla.
 
@@ -344,7 +344,7 @@ Pak dlouho sedí a dívá se na ten otazník za čárkou. Za válcem nemá kam n
 
 *
 
-V jedenáct se z Ríšova stanu vyhrabe Ríša. Spal od odpoledne, poprvé za dva dny. Má vlasy na jedné straně přimáčknuté a na tváři otisk rukávu. V ruce telefon.
+V jedenáct se ze stanu vyhrabe Ríša. Spal od odpoledne, poprvé za dva dny. Má vlasy na jedné straně přimáčknuté a na tváři otisk rukávu. V ruce telefon.
 
 „Deník,“ řekne a zívne. „Viktor to chce do archivu. Každej den.“
 

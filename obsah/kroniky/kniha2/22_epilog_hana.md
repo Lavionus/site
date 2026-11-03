@@ -60,7 +60,7 @@ Otevře znovu sken z června. Desátá výpověď, hnědá skvrna přes jméno, 
 
 *Víc jsem nezapsala.*
 
-Tatáž ruka, drobná a rovná. Tatáž žena, která jedenáctkrát dokládá, kde svědkyně přestala mluvit, a dvakrát, kde přestala psát ona. Jednou v cizí výpovědi. Jednou u soudu, nahlas, pod přísahou, o cizí knize, ze které sama vyškrábala pět stran.
+Tatáž ruka, drobná a rovná. Tatáž žena, která desetkrát dokládá, kde svědkyně přestala mluvit, a dvakrát, kde přestala psát ona. Jednou v cizí výpovědi. Jednou u soudu, nahlas, pod přísahou, o cizí knize, ze které sama vyškrábala pět stran.
 
 A soud se nezeptal dál.
 

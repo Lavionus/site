@@ -76,7 +76,7 @@ Nara kývla. Ilan se na ni díval dál, jako by čekal, jestli to kývnutí něc
 
 Těsně před koncem návštěvy řekl ještě jednu věc. Strážná už se pohnula od zdi a Ilan se nedíval na Naru, ale na světlý pruh na stěně, který měl připomínat okno.
 
-„Táta tu byl předevčírem. Po tom, co byl u tebe.“
+„Táta tu byl včera. Po tom, co byl u tebe.“
 
 „Já vím.“
 
@@ -102,7 +102,7 @@ První bylo bezpečnostní posouzení. Krátké, tři řádky a poznámka.
 
 *Bezpečnostní posouzení podání. Výsledek: podání obsahuje odkaz na utajovanou listinu. Doporučení: jednání o žádosti o zpřístupnění vést neveřejně, zápis z jednání uložit pod pečetí. Navrhovatelka: osoba blízká odsouzenému. Riziko: zvýšené.*
 
-Pod tím, menším písmem: *Posouzení není rozhodnutím. Senát s ním naloží podle svého uvážení.*
+Pod tím poznámka: *Posouzení není rozhodnutím. Senát s ním naloží podle svého uvážení.*
 
 Lumi seděla na kraji stolu a četla to s ní.
 
@@ -122,7 +122,7 @@ A pak jedna věta, u které se Nara zastavila.
 
 Lumi se na ni podívala.
 
-„Ona neříká, že je soud ověřil. Říká, že je učinil.“ Nara si tu větu podržela v koutku vědomí. „Je to přesné. To je na tom to horší.“
+„Ona neříká, že je soud ověřil. Říká, že je učinil.“ Nara si tu větu podržela v hlavě. „Je to přesné. To je na tom to horší.“
 
 V poledne přišlo předvolání. Jednání o žádosti o zpřístupnění, devátý den v deset hodin, Spolkový soud, síň čtyři. Neveřejné. Senát doporučení přijal.
 
@@ -382,7 +382,7 @@ Na chodbě ji Ardaine dohonila. Nešla rychle; jen šla stejným směrem a ve sp
 
 Pak kývla, zdvořile, a odešla chodbou s vysokým stropem, malá a šedá, a ani jednou se neohlédla.
 
-Nara stála a dívala se za ní. Zklidnění pracovalo. Cítila to. Cítila, že by měla mít strach, a strach ležel vedle ní, jako věc položená na lavici.
+Nara stála a dívala se za ní. Síť to v ní tlumila. Cítila to. Cítila, že by měla mít strach, a strach k ní nedošel.
 
 *
 

@@ -34,7 +34,7 @@ Pořád mu bylo sedmadvacet.
 
 Fortnýř ho pustil a nic neřekl. Díval se na něj, jak se díval na poutníky, kteří přijdou pozdě a chtějí nocleh.
 
-Bratr Hartmann ho našel v ambitu. Zarudlé oči, jako vždycky, a teď ještě víc. Zastavil se a díval se na Matěje, na hábit, na bláto, na to, jak hubený je, a pak řekl jen:
+Bratr Hartmann ho našel v ambitu. Zarudlé oči, jako vždycky, a teď ještě víc. Zastavil se a změřil si Matěje, hábit, bláto, to, jak je hubený, a pak řekl jen:
 
 „Převor tě chce vidět. Hned.“
 
@@ -72,7 +72,7 @@ Matěj nerozuměl. Pak rozuměl. Pak ne.
 
 „Já vím,“ řekl převor.
 
-Bylo dlouho ticho. Za oknem se stmívalo. Tady nebylo zakryté měchýřem, ale mělo sklo, malé a kalné.
+Bylo dlouho ticho. Za oknem se stmívalo. Okno tady nebylo zakryté měchýřem, ale mělo sklo, malé a kalné.
 
 „Byl jsem dnes u opata,“ řekl převor. „Je na tom hůř. Ale slyší. Řekl jsem mu všechno.“ Odmlčel se. „Souhlasí.“
 
@@ -218,7 +218,7 @@ Převor udělal kříž. Nad ním, ne na čele. Jako se žehná poutníkovi, kte
 
 „Jdi s Bohem,“ řekl. A pak, po chvíli, s tím svým bavorským přízvukem, protože české jméno nikdy nevyslovoval a neuměl ho vyslovit: „Mateji.“
 
-Bylo to špatně. Ta hláska, kterou Němci neumějí, mu zněla jako *s*. Matěj to slyšel a neopravil ho.
+Bylo to špatně. Ta hláska, kterou Němci neumějí, mu zněla tvrdě, jako *t*. Matěj to slyšel a neopravil ho.
 
 Brána se za ním zavřela.
 
@@ -226,7 +226,7 @@ Brána se za ním zavřela.
 
 Domů šel tři dny, protože nevěděl, kam jinam.
 
-Bylo to jiné než cestou tam. Nikdo ho nezdravil *pochválen*. Vozka, který ho dohonil za Waldsassenem, mu nabídl místo na voze, a když si Matěj sundal čepici, protože bylo horko, vozka uviděl tonzuru a dlouho se na ni díval, a pak už nemluvil a v příští vsi řekl, že tady odbočuje. Neodbočil. Matěj ho viděl jet dál po cestě.
+Bylo to jiné než cestou tam. Nikdo ho nezdravil *pochválen*. Vozka, který ho dohonil za Waldsassenem, mu nabídl místo na voze, a když se Matěj vyhoupl nahoru, vozka uviděl tonzuru a dlouho se na ni díval, a pak už nemluvil a v příští vsi řekl, že tady odbočuje. Neodbočil. Matěj ho viděl jet dál po cestě.
 
 V kostele, kde spal cestou tam, ho kostelník vyhodil.
 
@@ -250,7 +250,7 @@ Vítkova matka stála na dvoře. Matěj šel kolem, a ona vyšla k plotu.
 
 Matěj se zastavil.
 
-„Důl zavřeli,“ řekla. „Pán odjel. Trh nebude. Kostel z kamene nebude. Groš navíc nebude. Ten Sas, co tu měl holku, odjel do Míšně a holka brečí.“ Dívala se na něj přes plot. „Můj kluk chodí po vsi a vypráví o skřítcích. Lidi se mu smějou. Kdo si ho teď vezme? Kdo mu dá práci?“
+„Důl zavřeli,“ řekla. „Pán odjel. Trh nebude. Kostel z kamene nebude. Denár navíc nebude. Ten Sas, co tu měl holku, odjel do Míšně a holka brečí.“ Dívala se na něj přes plot. „Můj kluk chodí po vsi a vypráví o skřítcích. Lidi se mu smějou. Kdo si ho teď vezme? Kdo mu dá práci?“
 
 Matěj mlčel.
 
@@ -274,7 +274,7 @@ Vstala. Přišla k němu a vzala jeho loket do dlaní a dívala se na ty stehy, 
 
 „Špatně.“ Pustila jeho loket. „Měla jsem vzít jinou nit.“
 
-Pak se otočila k ohni a přiložila, a Matěj si sedl na lavici u pece, kde spal jako dítě, a kost v plátně položil vedle sebe. Matka se na ni podívala. Nezeptala se, co to je.
+Pak se otočila k ohni a přiložila, a Matěj si sedl na lavici u pece, kde spal jako dítě, a kost v plátně položil vedle sebe. Matka se nezeptala, co to je.
 
 Ješek přišel, když se setmělo.
 
@@ -292,7 +292,7 @@ Ješek vešel. Nesedl si. Stál u stolu, s rukama v podpaží, jako stál u hrob
 
 Matka u ohně přestala příst.
 
-„Rüdiger mu dá za pole dvakrát tolik. Teď, ne na Martina. Pro ty z Pleisse. Kojata by držel slovo, je to poctivej chlap. Do Martina by držel.“ Ješek se díval na Matěje. „Ale do Martina nebudu mít nic. Mám půlku. Ortlieb mi dal tři denáry za týden dvojí mzdy, a odjel. Důl je zasypanej. Pán tu nic nestaví. V lese se kácet nebude, les patří klášteru, a klášter má svý konvrše.“ Odmlčel se. „Tak jsem mu to slovo vrátil. Ať nemusí čekat. Ať to prodá teď, dokud Rüdiger chce.“
+„Rüdiger mu dá za pole dvakrát tolik. Teď, ne na Martina. Pro ty z Pleisse. Kojata by držel slovo, je to poctivej chlap. Do Martina by držel. Ale do Martina nebudu mít nic. Mám půlku. Ortlieb mi dal tři denáry za týden dvojí mzdy, a odjel. Důl je zasypanej. Pán tu nic nestaví. V lese se kácet nebude, les patří klášteru, a klášter má svý konvrše.“ Odmlčel se. „Tak jsem mu to slovo vrátil. Ať nemusí čekat. Ať to prodá teď, dokud Rüdiger chce.“
 
 „Ješku,“ řekla matka.
 
@@ -300,7 +300,7 @@ Ješek se na ni nepodíval.
 
 „Táta to pole oral třicet let,“ řekl. „Já jsem ho chtěl zpátky. Jen to. Nic víc jsem nechtěl. Ne kostel z kamene, ne zlato. Pole.“
 
-Matěj seděl na lavici a díval se na něj.
+Matěj seděl na lavici a mlčel.
 
 „Zachránils mě,“ řekl Ješek. Tiše. „Já vím. Vytáhls mě z tý vody. Hensel taky, a ti… ti druzí. Já vím. Byl jsem tam.“ Ruce mu spadly podél těla. „Zachránils mě, Mates. A teď nemám z čeho žít.“
 
@@ -332,7 +332,7 @@ Matka se k němu otočila.
 
 „Ten měchýř,“ řekl. „Tátův. Mám ho. Chceš ho zpátky?“
 
-Matka se na něj dívala dlouho.
+Matka dlouho mlčela.
 
 „Nech si ho,“ řekla. Jako v neděli na lukách. „Ty víš, k čemu je.“
 
@@ -370,7 +370,7 @@ Cíp hábitu. S roztřepeným okrajem, kde ho v únoru utrhl její hák. Prázdn
 
 Matěj ho vzal. Látka byla měkká a voněla řekou.
 
-Byla to poslední věc z hábitu, kterou měl. Všechno ostatní leželo ve vestiáři ve Waldsassenu, složené, stranou, a jednou to dostane jiný novic, až přijde. Tohle ne. Tohle utrhl hák uhlířky na kraji prohlubně, když ho tahala z dechu země, a uhlířka mu to vrátila potřetí.
+Byla to poslední věc z hábitu, kterou měl. Všechno ostatní leželo ve vestiáři ve Waldsassenu, složené, stranou, a jednou to dostane jiný novic, až přijde. Tohle ne. Tohle utrhl hák uhlířky na kraji prohlubně, když ho tahala z dechu země, a uhlířka mu to vrátila podruhé.
 
 „Spát budeš na lavici,“ řekla Dobroslava. „U ohně. Do mý postele ne.“
 
@@ -380,7 +380,7 @@ Byla to poslední věc z hábitu, kterou měl. Všechno ostatní leželo ve vest
 
 „Já vím.“
 
-Dobroslava se na něj dívala. Pak otevřela dveře chalupy a ustoupila, aby mohl projít. Neřekla *pojď*. Ani *vítej*. Jen stála a držela dveře, jako je držel Udalrich ve vratech grangie každou noc, když se Matěj vracel z hory.
+Dobroslava otevřela dveře chalupy a ustoupila, aby mohl projít. Neřekla *pojď*. Ani *vítej*. Jen stála a držela dveře, jako je držel Udalrich ve vratech grangie každou noc, když se Matěj vracel z hory.
 
 Vešel.
 
@@ -402,7 +402,7 @@ Dobroslava stála u ohně a dívala se na ty věci. Na každou zvlášť, tak ja
 
 Kývla.
 
-Matěj otevřel sešitek. Dvoustrana hnízda, se sedmi křížky, které udělal on, a s těmi dvěma drobnými slovy u posledního. *A me.* Mapa, s přerušovanou čarou, která se na listu křížila se štolou, a v hoře se nekřížila nikdy. Opis Ortliebových tabulek. Volkmarovo čtení.
+Matěj otevřel sešitek. Dvoustrana hnízda, se sedmi křížky, které udělal on, a s dvěma drobnými slovy u každého. *A me.* Mapa, s přerušovanou čarou, která se na listu křížila se štolou, a v hoře se nekřížila nikdy. Opis Ortliebových tabulek. Volkmarovo čtení.
 
 A jeden list prázdný. Ten, který si v březnu nechal pro převora. *Kam štola vede a pod čí zemí končí.*
 

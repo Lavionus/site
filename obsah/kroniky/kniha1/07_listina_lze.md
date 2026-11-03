@@ -38,7 +38,7 @@ Celerář se nad miskou sklonil, podíval se na rytinu, kterou mu Matěj ukázal
 
 „Ale ne ten, kdo psal listinu,“ řekl celerář. A když se na něj Matěj podíval: „Bratře, celý konvent ví, že sedíš nad listinou. Nikdo neví, co v ní je. Ale když člověk čtyři dny sedí nad jedním pergamenem, je to buď moc krásný pergamen, nebo moc ošklivý.“
 
-Matěj neodpověděl. Zapsal si na tabulku: *Kost proti kamenům: rovnováha. Proti volské kosti stejné míry: dvakrát těžší, víc. Vidi.* Pod to připsal menším písmem: *Starší než listina. Starší než kdokoli, kdo by ji mohl napsat.* Tohle už *vidi* nebylo, ale nevěděl, co jiného za to napsat.
+Matěj neodpověděl. Zapsal si na tabulku: *Kost proti kamenům: rovnováha. Proti volské kosti stejné míry: dvakrát těžší, víc. Vidi.* Pod to připsal: *Starší než listina. Starší než kdokoli, kdo by ji mohl napsat.* Tohle už *vidi* nebylo, ale nevěděl, co jiného za to napsat.
 
 Když skládal kost zpátky do plátna, celerář vzal ze stěny svíci a otevřel dveře do vedlejšího sklepa.
 
@@ -78,7 +78,7 @@ Matěj vytáhl tenký svazek a začal listovat. Věděl, kde to je, jako člově
 
 *Quoniam ea quae geruntur in tempore, ne simul labuntur cum tempore…*
 
-Seděl nad tím dlouho. Pak položil svazek vedle listiny z Lyddy a porovnal je slovo po slově, až k místu, kde se rozcházely. Rozcházely se ve dvanáctém slově za chybou. Wigandův vzor pokračoval o hraběti a o lukách, listina z Lyddy o svatém Jiří a o drakovi. Ale těch dvanáct slov bylo stejných, se stejným pořadím, se stejnou zkratkou nad *memoriae* a se stejnou chybou.
+Seděl nad tím dlouho. Pak položil svazek vedle listiny z Lyddy a porovnal je slovo po slově, až k místu, kde se rozcházely. Rozcházely se až dvanáct slov za chybou. Wigandův vzor pokračoval o hraběti a o lukách, listina z Lyddy o svatém Jiří a o drakovi. Ale až do toho místa byla slova stejná, ve stejném pořadí, se stejnou zkratkou nad *memoriae* a se stejnou chybou.
 
 V Lyddě, napsal si na tabulku, by někdo složil arengu sám, nebo by vzal jinou. Řekové a Arméni nečtou řezenské vzory. Pak to přeškrtl rydlem, protože to nevěděl. Napsal místo toho jen: *Arenga totožná se vzorem ve Wigandově knize z Řezna, i s chybou labuntur. Vidi.*
 
@@ -250,7 +250,7 @@ Jednou šel ke zpovědi. Zpovídal převor. Matěj klečel a vyznal se z toho, �
 
 „Ještě něco, bratře?“
 
-Zpovědní tajemství je svaté. Co se řekne knězi, neodnese kněz dál, ani pod mukami. To věděl. A přece klečel a věděl, že slib, který dal pod zemí, se zpovědního tajemství netýká. Netýkal se Boha ani řehole. Byl to slib člověku, který mu řekl *nepřísahej na nic, co tu není*.
+Zpovědní tajemství je svaté. Co se řekne knězi, neodnese kněz dál, ani pod mukami. To věděl. A přece klečel a věděl, že tohle zpověď nevyřeší. Slib, který dal pod zemí, nedal Bohu ani řeholi. Dal ho člověku, který mu řekl *nepřísahej na nic, co tu není*.
 
 „Ne, otče.“
 

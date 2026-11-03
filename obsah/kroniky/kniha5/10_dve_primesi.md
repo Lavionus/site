@@ -12,7 +12,7 @@ Je malá a hubená, v šedém svetru, s krátkými šedivými vlasy, které si s
 
 „Já vím.“
 
-„Já vím, že víte. Říkám to kvůli sobě.“ Sokolová se na ni podívá. „Abych to slyšela nahlas.“
+„Já vím, že víte. Říkám to kvůli sobě. Abych to slyšela nahlas.“
 
 *
 
@@ -38,13 +38,13 @@ Trvá to čtyřicet minut. Hana to ví, protože se podívá na hodinky jen dvak
 
 Pak se dveře otevřou a Martin vyjde ven. Sám. Projde kuchyní na balkon, zavře za sebou a stojí tam, s rukama na zábradlí, zády k bytu.
 
-Klára vyjde za ním. Oči má suché. Dívá se na Jonáše v Hanině náručí.
+Klára vyjde za ním. Oči má suché a upřené na Jonáše v Hanině náručí.
 
 „Pojďte,“ řekne. „Chci, abyste to slyšela. Já tomu nerozumím a vy jo.“
 
 „Martin?“
 
-„Martin to slyšel.“ Klára se podívá k balkonu. „Potřebuje chvilku. Je to člověk.“ Pak se zarazí, jak to slyší. „Myslím… potřebuje chvilku.“
+„Martin to slyšel.“ Klára kývne k balkonu. „Potřebuje chvilku. Je to člověk.“ Pak se zarazí, jak to slyší. „Myslím… potřebuje chvilku.“
 
 *
 
@@ -58,7 +58,7 @@ V pokoji sedí Sokolová u konferenčního stolku a desky má otevřené. Papír
 
 „Řekl, že jo,“ řekne Klára. „Než šel ven.“
 
-Sokolová kývne. Pak se podívá na Hanu. Ne přátelsky. Jako se dívala v roce 2014 na rukavice, které někdo nechal ležet na vzorkovnici.
+Sokolová kývne a obrátí se k Haně. Ne přátelsky. Tím pohledem, jakým v roce 2014 měřila rukavice, které někdo nechal ležet na vzorkovnici.
 
 „Nejdřív to důležité,“ řekne. „To, co jsem řekla jim. Jonáš je zdravý. Co v něm laboratoř viděla, není nemoc. Není to mutace, není to porucha, nic, co by se mělo léčit. Má to po matce. Polovinu. A matka to má po své matce.“ Odmlčí se. „To je ta nejdůležitější věta, co dneska řeknu. Všechno ostatní je jen zajímavé.“
 
@@ -84,7 +84,7 @@ Ukáže na graf. Tečky, tisíce teček, v mracích.
 
 „Duchové,“ řekne Hana.
 
-Sokolová se na ni podívá. Skoro se usměje.
+Sokolová se skoro usměje.
 
 „Tak se tomu u nás říká,“ řekne Kláře. „Duchová populace. Populace, ze které nemáme ani jednoho člověka. Žádnou kost, žádný vzorek. Víme o ní jen proto, že po sobě nechala stopu v lidech, kteří žijí dnes. Jako když vidíte stopy ve sněhu a nevidíte zvíře.“
 
@@ -98,9 +98,9 @@ Sokolová se na ni podívá. Skoro se usměje.
 
 „Kolik?“ zeptá se Hana.
 
-„Plus minus padesát tisíc. Na dobrý den.“ Sokolová pokrčí rameny. „A ty dvě odhady se překrývají. To nic neznamená. Podobné číslo s takovou chybou neznamená nic. Píšu si to, ale nic to neznamená.“
+„Plus minus padesát tisíc. Na dobrý den.“ Sokolová pokrčí rameny. „A ty dva odhady se překrývají. To nic neznamená. Podobné číslo s takovou chybou neznamená nic. Píšu si to, ale nic to neznamená.“
 
-Hana si to zapíše. *Řekla I. S.* I to *nic to neznamená*.
+Hana píše. *Řekla I. S.* I to *nic to neznamená*.
 
 „Dvě stě tisíc let,“ řekne Klára. „To je…“
 
@@ -118,9 +118,9 @@ Na grafu je dvanáct teček. Hana je spočítá. Jedna stojí v mraku mezi ostat
 
 „Martin,“ řekne Klára a ukáže na tečku uprostřed mraku.
 
-Sokolová neodpoví. Klára se podívá na ni a pak kývne, jako by to bylo jasné i tak.
+Sokolová neodpoví. Klára na ni chvíli čeká a pak kývne, jako by to bylo jasné i tak.
 
-„Jeden z těch deseti vypadá jako Martin,“ řekne Sokolová. „Normálně. Stopy jako kdokoli v Evropě.“ Ukáže na tečku kousek vedle. „Devět ostatních a vy, Kláro, vypadáte jinak. Jedna z těch dvou slabých stop, ta druhá, nerovnoměrná, je u vás silnější. Ne o kousek. Mnohonásobně. A k tomu máte úseky…“ Zastaví se. Hledá slovo. Hana vidí, že ho hledá pro Kláru, ne pro sebe. „Úseky, které nesedí na nic. Na nás ne. Na neandertálce ne. Na nic, co je v jakékoli databázi. Ty úseky laboratoř u Jonáše viděla jako *rozsáhlý nález*. Jsou dlouhé a je jich hodně. A u vás deseti jsou stejné. Ne podobné. Stejné úseky, na stejných místech.“
+„Jeden z těch deseti vypadá normálně,“ řekne Sokolová. „Stopy jako kdokoli v Evropě.“ Na tečku neukáže. „Devět ostatních a vy, Kláro, vypadáte jinak. Jedna z těch dvou slabých stop, ta druhá, nerovnoměrná, je u vás silnější. Ne o kousek. Mnohonásobně. A k tomu máte úseky…“ Zastaví se. Hledá slovo. Hana vidí, že ho hledá pro Kláru, ne pro sebe. „Úseky, které nesedí na nic. Na nás ne. Na neandertálce ne. Na nic, co je v jakékoli databázi. Ty úseky laboratoř u Jonáše viděla jako *rozsáhlý nález*. Jsou dlouhé a je jich hodně. A u vás deseti jsou stejné. Ne podobné. Stejné úseky, na stejných místech.“
 
 „Stejné jako u mě,“ řekne Klára.
 
@@ -170,7 +170,7 @@ Sokolová chvíli mlčí.
 
 Sokolová se podívá na Hanu. Jen na vteřinu, ale Hana to vidí. Je to pohled, který říká: *teď ty*.
 
-Klára se podívá taky.
+Klára se otočí taky.
 
 Hana ví, co ví. Ví o očích, které vracejí světlo celou zornicí. O knize s ptačím písmem a o řádku *Ins Geschlecht angenommen*. O lidech pod horou s velkými čtvercovými dlaněmi. O dvou druzích, které napsala Ilona. Nic z toho nejsou data. Nic z toho Sokolová nemá.
 
@@ -184,7 +184,7 @@ Klára se na ni dlouho dívá.
 
 *
 
-Sokolová pak mluví o tom, co bude dál. Hana si to zapíše celé, protože tohle je to, co Klára bude potřebovat vědět za měsíc, až zapomene, co dnes slyšela.
+Sokolová pak mluví o tom, co bude dál. Hana píše všechno, protože tohle je to, co Klára bude potřebovat vědět za měsíc, až zapomene, co dnes slyšela.
 
 Žádná jména. Žádná data jednotlivců, nikde. Výsledky jen za skupinu, a i to až za měsíce, v odborném článku, a předtím ho Klára dostane přečíst. Surová data uložená v úschově, ke které se dostane jen ten, kdo podepíše, že nebude hledat, komu patří. Každý z dvanácti může souhlas odvolat, do chvíle, než článek odejde. Potom už to, co je v něm, vzít zpátky nejde. To Sokolová řekne dvakrát.
 
@@ -194,11 +194,11 @@ Martin se mezitím vrátí z balkonu. Sedne si na opěradlo gauče vedle Kláry.
 
 „Můžete,“ řekne Sokolová. „Kdykoli. Bez důvodu.“
 
-Martin se podívá na Kláru. Klára se dívá na Jonáše.
+Martin se podívá na Kláru. Klára má oči u Jonáše.
 
-„Ne,“ řekne Klára. Ne Sokolové. Martinovi. „Jednou jsem utekla. Teď ať je to někde napsaný.“
+„Ne,“ řekne Klára Martinovi, ne Sokolové. „Jednou jsem utekla. Teď ať je to někde napsaný.“
 
-Martin chvíli mlčí. Pak jí položí ruku na rameno.
+Martin jí po chvíli položí ruku na rameno.
 
 „Tak jo,“ řekne.
 
@@ -240,19 +240,19 @@ Daniela Fuchsová přijde v jedenáct. Je vysoká, hranatá, kolem pětačtyřic
 
 Kalina ji zná z nějaké komise, kde spolu kdysi seděli. Hana z toho, jak se zdraví, pozná, že se navzájem respektují a že se nemají moc rádi.
 
-Na stole leží tři věci. Haniny snímky z videa ze třetího března, vytištěné, každá mřížka zvlášť. Fotky Saelina bloku, devět listů tužkou, které Hana dostala v pondělí e-mailem s jedinou větou: *Jak jste chtěla. S.* A Tadeášovy záznamy.
+Na stole leží tři věci. Haniny snímky z videa z noci na třetího března, vytištěné, každá mřížka zvlášť. Fotky bloku Sálové, devět listů tužkou, které Hana dostala v pondělí e-mailem s jedinou větou: *Jak jste chtěla. S.* A Tadeášovy záznamy.
 
-Ty jsou nové. Po výronu zůstal Hanin stativ v síni dole. Tadeáš na něj se souhlasem rady, osm proti třem, připevnil svou kameru. Od dvanáctého března natáčí každou noc sama, s časem z družic z Kalinova druhého záznamníku. Lidi do síně nechodí. Kabel vede po schodech nahoru a pod vraty do archivu, kde je vzduch dobrý, a Tadeáš si tam ráno záznam stáhne a pošle ho Haně. Lada k tomu řekla jen jednu větu do telefonu: *Skála je skála. Ukaž ji, komu chceš. Nás ne.*
+Ty jsou nové. Po výronu zůstal Hanin stativ v síni dole. Tadeáš na něj se souhlasem rady, osm proti třem, připevnil svou kameru. Od dvanáctého března natáčí každou noc sama, s časem z družic z Kalinova druhého záznamníku, jehož anténa visí na kabelu ve sklepě. Lidi do síně nechodí. Kabel vede po schodech nahoru a pod vraty do archivu, kde je vzduch dobrý, a Tadeáš si tam ráno záznam stáhne a pošle ho Haně. Lada k tomu řekla jen jednu větu do telefonu: *Skála je skála. Ukaž ji, komu chceš. Nás ne.*
 
 „Než začneme,“ řekne Fuchsová. „Kdo kreslil tohle?“
 
-Ukáže na Saelin blok.
+Ukáže na blok Sálové.
 
 „Někdo, kdo tam stál,“ řekne Hana. „Od šestého února.“
 
-Fuchsová položí fotku bloku vedle snímku z videa. Pak další. Pak další. Dlouho nic neříká. Pak sundá brýle a nechá je viset na šňůrce.
+Fuchsová položí fotku bloku vedle snímku z videa. Pak další a další. Dlouho nic neříká. Nakonec sundá brýle a nechá je viset na šňůrce.
 
-„Kdo tohle kreslil,“ řekne, „ten nekreslí. Ten opisuje. Za jedenáct vteřin. Bez chyby.“ Podívá se na Hanu. „Ani jedna tečka navíc. Ani jedna chybí. Kontrolovala jsem dvě stě čtyřicet teček. Tohle umí jen člověk, který to dělá celý život.“
+„Kdo tohle kreslil,“ řekne, „ten nekreslí. Ten opisuje. Za jedenáct vteřin. Bez chyby.“ Zvedne oči k Haně. „Ani jedna tečka navíc. Ani jedna chybí. Kontrolovala jsem dvě stě čtyřicet teček. Tohle umí jen člověk, který to dělá celý život.“
 
 Hana si vzpomene na mozol na pravém prostředníku. Nic neřekne. Zapíše si to doleva, protože je to měření, ne názor. *D. F.: kresby S. = video, 240 teček, bez odchylky.*
 
@@ -302,7 +302,7 @@ Hana to sčítá v hlavě dřív, než to Fuchsová řekne.
 
 Kalina otevře notebook.
 
-„Od osmnáctého,“ řekne, „je sekvence delší. Ne o moc. Třetí opakování. Místo třiceti osmi vteřin má padesát dva. Ta noc, kdy přibyla osmá mřížka. Tu noc taky pulzy trvaly nejdéle od ledna.“ Odmlčí se. „Napsal bych, že spolu souvisí. Nenapíšu to. Mám deset nocí. To je málo.“
+„Od osmnáctého,“ řekne, „je sekvence delší. Ne o moc. Třetí opakování má místo třiceti osmi vteřin padesát dva. Ta noc, kdy přibyla osmá mřížka. Tu noc taky pulzy trvaly nejdéle od ledna.“ Odmlčí se. „Napsal bych, že spolu souvisí. Nenapíšu to. Mám deset nocí. To je málo.“
 
 Pustí záznam.
 
@@ -354,7 +354,7 @@ Padesát dva vteřin.
 
 *
 
-V kuchyni je ticho. Kalina nesahá na notebook. Fuchsová se dívá na svoje tabulky.
+V kuchyni je ticho. Kalina nesahá na notebook. Fuchsová má oči ve svých tabulkách.
 
 Hana si sedne. Otevře sešit. Ruka jí jde doleva a Hana ji nechá.
 
@@ -366,7 +366,7 @@ Hana si sedne. Otevře sešit. Ruka jí jde doleva a Hana ji nechá.
 
 *D. F.: kresby S. = video bez odchylky.*
 
-Pak se podívá na pravou stranu. Je prázdná.
+Pravá strana je prázdná.
 
 Napíše:
 
@@ -392,11 +392,11 @@ Hana zavře sešit. Ne docela. Prst nechá mezi stránkami.
 
 „To je výklad.“
 
-„Ano.“ Kalina si sundá brýle a promne si oči. „Ano, je. Proto ho neříkám nahlas.“
+„Ano,“ řekne Kalina. „Ano, je. Proto ho neříkám nahlas.“
 
 „Právě jste ho řekl nahlas.“
 
-Kalina se na ni podívá. Bez brýlí vypadá starší a bezbrannější, jako člověk, kterého vzbudili.
+Kalina zvedne hlavu. Najednou vypadá starší a bezbrannější, jako člověk, kterého vzbudili.
 
 „Tady,“ řekne. „V kuchyni. Vám dvěma.“
 
@@ -408,7 +408,7 @@ Fuchsová se zasměje. Krátce, nosem.
 
 „Je to účetnictví,“ řekne Fuchsová. „Účetnictví je vždycky výklad. Proto má dvě strany.“
 
-Hana se na ni podívá. Fuchsová se dívá na její sešit, na svislou čáru, kterou vidí přes Haninu ruku.
+Fuchsová se dívá na sešit, na svislou čáru, kterou vidí přes Haninu ruku.
 
 „Vy to máte taky,“ řekne Fuchsová. „Dvě strany.“
 
@@ -470,9 +470,9 @@ A zavěsí.
 
 Večer Hana sedí u stolu sama. Papíry jsou pryč, jen sešit a Anayova kniha, kterou si sundala z poličky, ani neví proč.
 
-Otevře ji. Kniha se otevře sama, na kresbě devíti padajících světel. Tak se otvírá od roku 2026. Devět teček v řadě, deváté menší. Pod tím popisek, španělsky: *Así cayeron, dicen los ancianos.* Tak padaly, říkají starci.
+Otevře ji. Kniha se otevře sama, na kresbě devíti padajících světel. Tak se otvírá od roku 2026. Devět teček v řadě, devátá menší. Pod tím popisek, španělsky: *Así cayeron, dicen los ancianos.* Tak padaly, říkají starci.
 
-Žádní starci nebyli. Walt se ptal třicet let a nikdo legendu neznal. Etnohistorička ji neznala z žádného pramene.
+Žádní starci nebyli. Walt se ptal třicet let a nikdo legendu neznal. Etnohistorička ji neznala ze žádného pramene.
 
 Hana položí knihu vedle snímku z Tadeášovy kamery. Devět světel na kresbě, devět na fotce.
 

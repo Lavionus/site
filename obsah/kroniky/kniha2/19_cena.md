@@ -10,9 +10,9 @@ Bartl odešel v sobotu v poledne. Přesně když zvonili. Postavil se ve dveří
 
 Kuba se usmál a nevěděl proč.
 
-Odešli. Ilona slyšela jejich kroky dolů ulicí a pak se ohlédla na schod, kde tři týdny sedávali, a schod byl jen schod, šedý, vyšlapaný do prohlubně, a na něm ležela slupka od jablka.
+Odešli. Ilona slyšela jejich kroky dolů ulicí a pak se ohlédla na schod, kde měsíc sedávali, a schod byl jen schod, šedý, vyšlapaný do prohlubně, a na něm ležela slupka od jablka.
 
-Dveře zavřela na závoru. Poprvé za tři týdny sama.
+Dveře zavřela na závoru. Poprvé za měsíc sama.
 
 *
 
@@ -26,7 +26,7 @@ Otevřela mu.
 
 „Pojď dál.“
 
-Vešel a nesedl si. Stál uprostřed světnice, tam, kde stál ráno po Ursulině smrti, když mu chyběla lanceta, a rozhlédl se, jako by tu nikdy nebyl. Pec. Stůl. Truhla. Police na hrnce s mastmi. Hrnce už tam nebyly, Ilona je nechala v rokli, zůstaly jen dva prázdné. Lavice, na které ležela v noci s Röhrichovou rukou na ústech.
+Vešel a nesedl si. Stál uprostřed světnice, tam, kde stál ráno po Ursulině smrti, když mu chyběla lanceta, a rozhlédl se, jako by tu nikdy nebyl. Pec. Stůl. Truhla. Police na hrnce s mastmi. Hrnce už tam nebyly, Ilona je nechala v rokli, zůstaly jen dva prázdné. Stůl, o který ji v noci natlačil Röhrich s rukou na jejích ústech.
 
 Podíval se na podlahu u stolu. Byla vydrhnutá. Ilona ji drhla v neděli ráno pískem, celou, a pak si uvědomila, co dělá, a přestala. Tmavá skvrna tam zůstala, protože krev jde do dřeva a z dřeva nejde.
 
@@ -56,7 +56,7 @@ Z police vzal knihu. Řehořův opis bylinářské knihy, německý, s Iloniným
 
 „Ne.“
 
-Svázal věci do uzlu z košile. Ilona stála u stolu a dívala se na něj a čekala, až se otočí. Věděla, že se otočí. Znala ho tři roky a věděla, že nikdy neodejde od ničeho, co nedořekl.
+Svázal věci do uzlu z košile. Ilona stála u stolu a čekala, až se otočí. Věděla, že se otočí. Znala ho tři roky a věděla, že nikdy neodejde od ničeho, co nedořekl.
 
 Otočil se.
 
@@ -72,7 +72,7 @@ Ilona mlčela.
 
 „Ano.“
 
-„Tak to nebyla jména. Nebo ne jenom. Bylo to něco, co se nedalo oddělit od ostatního. Něco na stejném řádku.“ Podíval se na ni. „Kdyby se to dalo oddělit, nechala byste tam aspoň půlku. Vás znám. Vy byste tam tu půlku nechala, i kdyby vás to bolelo.“
+„Tak to nebyla jména. Nebo ne jenom. Bylo to něco, co se nedalo oddělit od ostatního. Něco na stejném řádku. Kdyby se to dalo oddělit, nechala byste tam aspoň půlku. Vás znám. Vy byste tam tu půlku nechala, i kdyby vás to bolelo.“
 
 Ilona cítila, jak se jí sevřelo hrdlo. Nebyla to bolest. Byla to hrůza z toho, jak přesně ji zná.
 
@@ -94,7 +94,7 @@ Mohla říct pravdu. A pak by to věděl a nemohl s tím nic dělat, protože hl
 
 Neřekla nic.
 
-Tobiáš se na ni díval a ona viděla, jak mu to mlčení projde tváří. Celé. Od čela k bradě.
+Ilona viděla, jak to mlčení Tobiášovi projde tváří. Celé. Od čela k bradě.
 
 „Aha,“ řekl.
 
@@ -111,8 +111,6 @@ To mohla říct. To už nebylo nikde napsané a nikdo už nebyl v rokli.
 „Čtyřicet lidí.“
 
 „A Lene byla jedna.“ Hlas se mu nezvýšil. To bylo nejhorší. Že se mu nezvýšil. „A Ursula jedna. A ti čtyři, co je v pátek vytáhli na slunce, ti byli čtyři. Táta říkal, že na náměstí smrděli jako škvarky.“
-
-Ilona mlčela.
 
 „Říká se,“ řekl Tobiáš, „že rychtář posunul razii na čtvrtou kvůli vám. Že jste mu na radě něco řekla. Že potom šli za světla.“
 
@@ -138,9 +136,7 @@ Tobiáš položil uzel na lavici. Ne aby zůstal. Aby měl volné ruce, a pak ne
 
 „A rozhodla jste, že to nikdo vědět nemusí. Soud ne. Já ne.“
 
-Ilona se na něj dívala.
-
-Měla odpověď. Měla jich deset. Že soud by listy zahodil. Že Röhrich by díru zaplnil. Že čtyřicet úst, děti s velkýma očima, Johanka spálená po tváři, Zikmund na dveřích. Že kdyby nechala *W.*, vybírala by z Röhrichových řádků, co se hodí jí, a že to ví, protože to chtěla. Všechno to byla pravda a všechno to bylo už jednou zvážené, v noci, nad britvou, a vyšlo to tak, jak to vyšlo.
+Měla odpověď. Měla jich deset. Že soud by listy zahodil. Že Röhrich by díru zaplnil. Že čtyřicet úst, děti s velkýma očima, Johanka spálená po tváři, Zikmund na dveřích. Že kdyby nechala *W.*, vybírala by z Röhrichových řádků, co se hodí jí, a že to ví, protože to chtěla. Všechno to už jednou zvážila, v noci, nad britvou, a vyšlo to tak, jak to vyšlo.
 
 A ani jedna z těch odpovědí nebyla odpověď na to, co řekl. Protože on neříkal, že se rozhodla špatně. Říkal, že se rozhodla. Ona. Za něj.
 
@@ -150,7 +146,7 @@ Neřekla nic.
 
 Tobiáš zvedl uzel z lavice.
 
-„Půjdu do Freibergu,“ řekl. „Táta chce, abych fáral. Říká, že kdo fárá, ten ví, kde je nahoře a kde dole. Já nechci fárat.“ Podíval se na ni. „Ve Freibergu je ranhojič, co bere učedníky bez přímluvy. Jobst mi to řekl. Že bere každého, kdo umí pustit krev a nebojí se.“
+„Půjdu do Freibergu,“ řekl. „Táta chce, abych fáral. Říká, že kdo fárá, ten ví, kde je nahoře a kde dole. Já nechci fárat. Ve Freibergu je ranhojič, co bere učedníky bez přímluvy. Jobst mi to řekl. Že bere každého, kdo umí pustit krev a nebojí se.“
 
 „Napíšu ti list,“ řekla Ilona. „Že jsi u mě byl tři roky. Že umíš…“
 
@@ -194,7 +190,7 @@ Zavřela knihu a vrátila ji na polici.
 
 V pondělí ráno přišel sluha z horního úřadu.
 
-Ne ten, který jí před pěti týdny nosil pověření s pečetí. Jiný, starší, a nesl papír, a ten papír jí nepodal do ruky. Položil ho na schod, jako se pokládá něco, o čem člověk neví, jestli kouše.
+Starý, se šedivou bradou. Pověření s pečetí jí skoro před šesti týdny podal Kunz přes pult. Tenhle papír jí sluha nepodal do ruky. Položil ho na schod, jako se pokládá něco, o čem člověk neví, jestli kouše.
 
 Kunzova ruka. Wehrlova pečeť. Kladívko, želízko a hvězda.
 
@@ -236,7 +232,7 @@ Zaklepal na přední dveře, jednou, a když otevřela, stál na prahu bez svíc
 
 Nesla s sebou jen sebe. Brašnu nechala na stole. Šli horem, po stinné straně, i když už stín nebyl potřeba, a Hesse šel o krok před ní a ani jednou se neohlédl.
 
-Wehrl ležel v pracovně, v přízemí, na posteli, kterou tam musel někdo snést z patra. Mezi globem a pecí, která nehořela. Okno na sever bylo otevřené a za ním nebe, ještě světlé u obzoru, a nad hřebenem první hvězdy. Na stole knihy, sféry, kostěná krabička. Zelený samet nebyl vidět nikde.
+Wehrl ležel dole, v přízemí, v komoře, kam mu snesli postel z patra, a s ní globus a pár knih. Okno na sever bylo otevřené a za ním nebe, ještě světlé u obzoru, a nad hřebenem první hvězdy. Na stole knihy, sféry, kostěná krabička. Zelený samet nebyl vidět nikde.
 
 Ležel napůl vsedě, podložený polštáři, a dýchal ústy. Ten hvizd na konci každého výdechu byl teď delší než minule. Když vešla, otočil hlavu, a Ilona viděla, že ho to stojí sílu.
 
@@ -251,8 +247,6 @@ Hesse jí přisunul židli k posteli. Pak odešel do kouta a zůstal tam stát.
 „Vím.“
 
 „Rada chtěla víc.“ Díval se na strop. „Stöckel chtěl vaši hlavu. Říká, že jste ho zostudila. Mladší kazatel chtěl vaši duši, ten chce vždycky duše, je mladý. Lazebníci chtěli vaše pacienty.“ Usmál se. „Dal jsem jim vaše řemeslo, aby nechtěli zbytek. Je to obchod. Celý život obchoduju. S hvězdami, se rtutí, s lékárníky. Tohle byl můj poslední.“
-
-Ilona mlčela.
 
 „Nebudete se bránit?“
 
@@ -282,13 +276,13 @@ Wehrl dlouho nic neříkal. Za oknem se nebe stmívalo a hvězd přibývalo.
 
 Ilona mlčela.
 
-„Ne kvůli mně,“ řekl Wehrl. Nebyla to otázka.
+„Ne kvůli mně,“ řekl Wehrl. Neptal se.
 
 „Ne.“
 
 Wehrl se zasmál. Tiše, a pak víc, až se smích zlomil v kašel. Kašel trval tak dlouho, že Hesse vykročil z kouta, a Wehrl na něj mávl, ať zůstane. Když přestal, ležel se zavřenýma očima a po spánku mu tekla slza, z kašle nebo z čehokoli.
 
-„Tři týdny,“ řekl. „Tři týdny jsem se bál té knihy. Od noci, kdy jste ji vzala lékárníkovi. Každou noc jsem si představoval, co v ní stojí, řádek po řádku, a jak to čtete. A pak jste ji spálila, a já jsem zachráněný.“ Otevřel oči. „A ani to nebylo kvůli mně. Ani mě jste nevybrala. Byl jsem jen na špatném řádku.“
+„Dva týdny,“ řekl. „Dva týdny jsem se bál té knihy. Od noci, kdy jste ji vzala lékárníkovi. Každou noc jsem si představoval, co v ní stojí, řádek po řádku, a jak to čtete. A pak jste ji spálila, a já jsem zachráněný.“ Otevřel oči. „A ani to nebylo kvůli mně. Ani mě jste nevybrala. Byl jsem jen na špatném řádku.“
 
 „Na stejném řádku,“ řekla Ilona.
 
@@ -358,7 +352,7 @@ Wehrl držel lahvičku a nehýbal se.
 
 *
 
-V pracovně bylo ticho. Za oknem bylo nebe už černé a nad hřebenem na severu, nízko, stálo pět hvězd, lomených jako písmeno, které Ilona už nikdy nedokázala vidět jinak než s kličkou na prostředním hrotu.
+V komoře bylo ticho. Za oknem bylo nebe už černé a nad hřebenem na severu, nízko, stálo pět hvězd, lomených jako písmeno, které Ilona už nikdy nedokázala vidět jinak než s kličkou na prostředním hrotu.
 
 Wehrl se na ně díval z postele. Okno bylo přesně tak velké, aby se do něj vešly.
 
@@ -386,8 +380,6 @@ Wehrl otevřel oči a podíval se na ni. A Ilona v jeho tváři uviděla něco, 
 
 „Röhrichová dojela do Annabergu,“ řekl. „S dětmi. Má tam bratra. Kdyby se vás někdo ptal.“
 
-Ilona se na něj dívala.
-
 Nevěděla, jestli jí to říká, aby věděla, že slib dodržel. Nebo aby věděla, že někdo slíbil. Nebo jen proto, že je nemocný starý muž a chtěl, aby v tom posledním, co pro ni udělal, bylo i něco dobrého.
 
 Nikdy to nebude vědět. A nikdy to nebude moct napsat.
@@ -396,7 +388,7 @@ Nikdy to nebude vědět. A nikdy to nebude moct napsat.
 
 *
 
-Domů šla sama. Ulice byla prázdná, jen u Zlatého jelena svítili a zevnitř se ozýval smích. Ilona šla po stinné straně, i když byla tma a stín nebyl potřeba, a zjistila, že to dělá, a nepřestala.
+Domů šla sama. Ulice byla prázdná, jen u Divého muže svítili a zevnitř se ozýval smích. Ilona šla po stinné straně, i když byla tma a stín nebyl potřeba, a zjistila, že to dělá, a nepřestala.
 
 U svých dveří se zastavila.
 

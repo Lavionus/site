@@ -4,7 +4,7 @@ Na měsíční lince si Ardaine sedla vedle ní.
 
 Volných míst bylo dost. Senát seděl vepředu, Tann u průzoru a oba soudci za ní, a za nimi byly tři prázdné řady. Ardaine prošla kolem všech a sedla si na sedadlo vedle Nary, jako by to bylo její místo. Připoutala se. Když loď odrazila od Lumy a tělo ztratilo váhu, Ardaine si ruce položila na kolena a držela je tam. Nara viděla, jak se jí prsty lehce zvedají, a jak je pokaždé zase přitiskne dolů.
 
-„Byla jste tam už,“ řekla Ardaine. Nebyla to otázka.
+„Byla jste tam už,“ řekla Ardaine.
 
 „Před šesti dny.“
 
@@ -50,7 +50,7 @@ Hals postavil k nice se schránkou stůl a k němu sedm židlí. Jedna měla op�
 
 Pak vzal nástroj podobný dlátu a začal odlamovat hmotu ze spár schránky.
 
-Šlo to pomalu. Hmota byla tvrdá a křehká zároveň a odlupovala se v šupinách, které padaly na podlahu tak pomalu, že je Nara stačila sledovat celou cestu dolů. Pečeť soudu praskla napříč. Osm oblouků se rozpadlo na tři kusy. Nikdo nic neřekl. Tann stála s rukama za zády a dívala se, jak Hals pracuje. Ardaine seděla. Mladší soudce si olízl rty.
+Šlo to pomalu. Hmota byla tvrdá a křehká zároveň a odlupovala se v šupinách, které padaly na podlahu tak pomalu, že je Nara stačila sledovat celou cestu dolů. Pečeť soudu praskla napříč. Osm oblouků se rozpadlo na tři kusy. Tann stála s rukama za zády a dívala se, jak Hals pracuje. Ardaine seděla. Mladší soudce si olízl rty.
 
 Když byla poslední spára volná, Hals zvedl víko.
 
@@ -192,7 +192,7 @@ Ještě nevěděla, co si o tom myslet. Věděla jen, že to bude muset říct n
 
 Položila na desku list a Nara se nejdřív lekla, protože si myslela, že je to stroj. Něco, co letí. Dlouhé tenké tělo a z něj na obě strany široké plochy, napjaté jako fólie na rámu. Pak uviděla, že plochy jsou z kůže, že mají žíly, že se ohýbají. Že tělo má hlavu a ta hlava je otočená k přístroji.
 
-*Létající plaz. Rozpětí přibližně dvakrát výška člověka. Membránová křídla. Hnízdí jednotlivě, v převisech skal. Loví. Počet v oblasti nízký.*
+*Létající plaz. Rozpětí přibližně dvakrát až třikrát výška člověka. Membránová křídla. Hnízdí jednotlivě, v převisech skal. Loví. Počet v oblasti nízký.*
 
 „To není ještě to,“ řekla Mel. „Dívejte se dál.“
 
@@ -232,7 +232,7 @@ Nara nepoznala, jestli to vidí poprvé.
 
 „Malí podzemní lidé,“ řekla Mel.
 
-Obraz z šera, ze vchodu do skály. Postavy u vody, ze které stoupala pára. Lidského tvaru, ale široké a těžké, s krátkými silnými pažemi a velkými hlavami. Jedna z postav se otáčela k přístroji a oči měla světlé a přimhouřené, jako by ji i to šero bolelo.
+Obraz ze šera, ze vchodu do skály. Postavy u vody, ze které stoupala pára. Lidského tvaru, ale široké a těžké, s krátkými silnými pažemi a velkými hlavami. Jedna z postav se otáčela k přístroji a oči měla světlé a přimhouřené, jako by ji i to šero bolelo.
 
 *Postavy lidského tvaru, malé, široké. Výška přibližně po prsa člověku. Žijí v podzemí, u teplé vody. Na povrch vycházejí za šera. Nástroje z kamene a kosti. V chodbách vytesané stupně. Oheň v podzemí.*
 
@@ -316,7 +316,7 @@ Tann se naklonila dopředu.
 
 *
 
-Na konci dne položila Mel na desku ještě jeden list. Mapu oblasti, kterou průzkum vedl pod číslem čtrnáct a vedle které stálo hrubší čarou připsané *6*.
+Na konci dne položila Mel na desku ještě jeden list. Mapu oblasti, kterou průzkum vedl pod číslem čtrnáct. U čísla stála hrubší čarou připsaná *6*.
 
 Údolí. Svahy, bílé skály, potok. Na jednom místě pára nad vodou. Tři kroužky: u páry, na terase nad ní, na protějším hřebeni. Pod mapou řádek.
 
@@ -340,7 +340,7 @@ Nebyla to domněnka. Domněnka je, když se neví. Tohle se vědělo. Vědělo s
 
 *
 
-Výtah jel nahoru jedenáct minut. Kolem dvanácti set metrů se v koutku vědomí rozsvítilo *Záznam obnoven*, a pak všechno ostatní.
+Cestou nahoru se v koutku vědomí rozsvítilo *Záznam obnoven*, a pak všechno ostatní.
 
 Nara stála v kabině vedle Mel, která spala opřená o Halsovu paži, a zkoušela si vybavit první list. Kouli. Bílou na severu.
 
@@ -354,6 +354,6 @@ Nesměla nic. Nesměla napsat *viděla jsem*. Nesměla napsat *je to tam celé*.
 
 *Kam jsi dal ten obraz Země ze svého pokoje? Chtěla bych ho vidět. Máma.*
 
-Třináct slov. Přečetla si je, a pak ještě jednou, jako by v nich mohlo být něco, co tam nedala. Nebylo. Odeslala je.
+Čtrnáct slov. Přečetla si je, a pak ještě jednou, jako by v nich mohlo být něco, co tam nedala. Nebylo. Odeslala je.
 
 *Do odletu: 35 dní.*

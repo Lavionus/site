@@ -10,9 +10,11 @@ Pak jde podél potoka nahoru, ke mostu, kde se náhon od potoka odděluje, a zm�
 
 Dvacet tři celá čtyři.
 
-Hana se dívá na displej a pak na rouru. Roura je stará, z betonu, porostlá rezavým povlakem jako korýtko u pramene. Voda z ní tryská silně a čistě. Pod ní se led na okraji potoka rozestoupil do oblouku. Tam, kde se teplá voda mísí se studenou, se proud vlní, jako když se do studeného čaje nalije horký.
+Roura je stará, z betonu, porostlá rezavým povlakem jako korýtko u pramene. Voda z ní tryská silně a čistě. Pod ní se led na okraji potoka rozestoupil do oblouku. Tam, kde se teplá voda mísí se studenou, se proud vlní, jako když se do studeného čaje nalije horký.
 
 Vlevo: *Strouha od statku čp. 17 (betonová roura pod cestou, ústí do potoka zprava): 23,4 °C, 7:55. Potok nad ústím 2,8 °C, pod ústím a nad jezem 6,1 °C, náhon u mlýna 7,8 °C. Vzduch –11 °C.*
+
+Vpravo: *Náhon teplejší než potok u jezu, ze kterého teče? Další přítok?*
 
 Vyfotí rouru s měřítkem. Vyfotí teploměr. Vyfotí okraj ledu.
 
@@ -24,7 +26,7 @@ V osm deset jí přijde e-mail od Kaliny.
 
 *Noc 13./14. 2.: pulzy 22:58–3:12. Nejdelší od začátku. Zdroj v téže době aktivní. T. K.*
 
-Hana si ho přečte u snídaně. Majitelka penzionu jí postaví na stůl talíř s vajíčky a chleba z pekárny v Chebu a odejde. Hana se dívá na čísla. Ve 22:58 seděla v pokoji pod střechou se sešitem na kolenou a psala, že náhon nezamrzá.
+Hana si ho přečte u snídaně. Majitelka penzionu jí postaví na stůl talíř s vajíčky a chleba z pekárny v Chebu a odejde. Ve 22:58 seděla v pokoji pod střechou nad sešitem, kam si chvíli předtím zapsala, že náhon nezamrzá.
 
 Nic. Skoro nic.
 
@@ -130,11 +132,11 @@ Hana se nadechne. Vzpomene si na Fialovu kancelář a na kaktus, který nikdy ne
 
 „Vím to od prvního řádku.“ Sálová zvedne hrnek a napije se. Ruka s mozolem na prostředníku se nechvěje. „Proto vám ten protokol dávám celý. Ne jen stranu čtyřicet.“
 
-Hana se na ni dívá. Pak se podívá na protokol, na tabulku, na devět stejných slov. Nikdo by si toho nevšiml. Šindelářová ho založila do spisu a nečetla tabulku postupu, protože tabulky postupu nikdo nečte. Sálová to věděla. A teď jí to dala do ruky.
+Hana sklopí oči k protokolu, k tabulce, k devíti stejným slovům. Nikdo by si toho nevšiml. Šindelářová ho nejspíš založila do spisu a tabulku postupu nečetla, protože tabulky postupu nikdo nečte. Sálová to věděla. A teď jí to dala do ruky.
 
 „Proč mi to říkáte?“
 
-„Protože včera večer,“ řekne Sálová, „jste nad prohlubní pod haldou spouštěla svíčku. Dvakrát. Ráno a večer. Večer vám zhasla o dvacet centimetrů výš než ráno a vy jste si udělala na větvi druhý zářez.“
+„Protože včera večer,“ řekne Sálová, „jste nad prohlubní pod haldou spouštěla svíčku. Dvakrát. Ráno a večer. Večer vám zhasla výš než ráno a vy jste si udělala na větvi druhý zářez.“
 
 Hana se nepohne.
 
@@ -160,7 +162,7 @@ Hana se dívá na její tvář v šeru. Na světlé oči, šedé nebo zelenavé,
 
 Pak vstane, dojde ke dveřím a zhasne malou lampu u lisu. Pak druhou, nad dlouhým stolem. Pak se natáhne a stáhne roletu na okně u Hany až dolů.
 
-Dílna se ponoří do tmy. Ne do úplné. Pod dveřmi do chodby je úzký proužek žlutého světla z žárovky na chodbě. Jinak nic.
+Dílna se ponoří do tmy. Ne do úplné. Pod dveřmi do chodby je úzký proužek žlutého světla ze žárovky na chodbě. Jinak nic.
 
 „Máte telefon,“ řekne Sálová ze tmy. Hlas je blízko, dva metry, možná tři. „Posviťte si na mě.“
 
@@ -214,7 +216,7 @@ Hana se dívá na stůl. Na protokol. Na slovo *pokračuje*, devětkrát.
 
 „Tak co mi řeknete?“
 
-Sálová chvíli mlčí. Pak začne mluvit a Hana pozná, že to má připravené. Ne naučené. Připravené, jako se připravuje výpověď, kterou člověk potřebuje říct celou a nic z ní neztratit.
+Sálová začne mluvit a Hana pozná, že to má připravené. Ne naučené. Připravené, jako se připravuje výpověď, kterou člověk potřebuje říct celou a nic z ní neztratit.
 
 „Uvnitř hory je místo, kterému říkáme teplá skála. Jako mnich. Jiné jméno nemáme. Od té doby, co se sem Ostří po vodě vrátili, hřála. Stejně, v zimě i v létě. Od čtrnáctého ledna hřeje víc. Teplá voda, kterou z ní vedeme, má na vstupu do skleníku přes osmdesát stupňů. Měla mít čtyřicet. V dolní chodbě teče mimo žlab, po kotníky, padesát dva stupňů. Do spodních síní se od ledna čtyřikrát vyvalil plyn. Ten, co vám zhasíná svíčky. Dvě síně jsme zavřeli. V noci, kdy skála víc hřeje, cítíme otřesy. Ne ty pod Novým Kostelem. Jiné.“ Odmlčí se. „A svítí.“
 
@@ -230,7 +232,7 @@ Hana se nehne.
 
 „Jakém fóru?“
 
-„Kde lidi s anténami píšou o pípání.“ Hana se na ni dívá. „Čas tam je. Ve 23:51 čtrnáctého ledna. Kdokoli si ho může přečíst.“
+„Kde lidi s anténami píšou o pípání,“ řekne Hana. „Čas tam je. Ve 23:51 čtrnáctého ledna. Kdokoli si ho může přečíst.“
 
 Sálová se na ni dívá chvíli bez výrazu. Pak kývne. Pomalu, jako by uznávala tah v partii.
 
@@ -244,7 +246,7 @@ Sálová se na ni dívá chvíli bez výrazu. Pak kývne. Pomalu, jako by uznáv
 
 „Tak co mi věříte?“
 
-„Nic,“ řekne Hana. „Zatím nic. Nevím, co jste mi řekla pravdu a co ne. Nemám to jak zjistit.“
+„Nic,“ řekne Hana. „Zatím nic. Nevím, v čem jste mi řekla pravdu a v čem ne. Nemám to jak zjistit.“
 
 *
 
@@ -266,7 +268,7 @@ Sálová se poprvé za celý rozhovor podívá jinam. Na okno, na roletu, za kte
 
 „Archiv.“
 
-Sálová se na ni podívá. Neřekne ano. Neřekne ne.
+Sálová neřekne ano. Neřekne ne.
 
 „Ti, kdo žijí pod horou,“ pokračuje, „odejít nechtějí. Je to jejich hora. Já chci, aby odešli. Ale ne do pěti zemí. Nahoru, do statku a k příbuzným, dokud skála nepřestane hořet. Pak zpátky.“ Odmlčí se. „Úmluva mi neuvěří, protože si myslí, že chci jen udržet, co mám. Ti pod horou mi neuvěří, protože jsem vysoká a mám kam jít. Brandl, ten, kdo to u nich má na starost, věří jen sobě.“
 
@@ -300,7 +302,7 @@ Pak vezme ze stolu protokol, zavře ho a položí na kraj. Daleko od hrnku.
 
 „To Úmluvě nestačí.“
 
-„Mně taky ne.“ Hana se na ni podívá. „Ale je to pravda.“
+„Mně taky ne,“ řekne Hana. „Ale je to pravda.“
 
 Sálová mlčí. Pak se zeptá:
 
@@ -312,11 +314,11 @@ Sálová mlčí. Pak se zeptá:
 
 „To vám neřeknu.“
 
-Sálová se na ni podívá. Pak se kolem očí, v té jemné krakeluře, něco pohne. Možná úsměv. Možná ne.
+Sálové se kolem očí, v té jemné krakeluře, něco pohne. Možná úsměv. Možná ne.
 
 „Dobře,“ řekne.
 
-„A ještě jedna věc.“ Hana si položí dlaně na stůl. „Jestli tam dole budou lidé, kterým jde o život, zavolám hasiče. Ať chce kdo chce co chce.“
+„A ještě jedna věc.“ Hana si položí dlaně na stůl. „Jestli tam dole budou lidé, kterým jde o život, zavolám hasiče. Ať si kdo chce myslí, co chce.“
 
 „Pak se rozprchnou,“ řekne Sálová. Hlas se jí nezmění, ale zrychlí. „Nebo je Brandl odveze dřív, než hasiči přijedou. A pak už je nikdo nenajde. Ani já.“
 
@@ -336,13 +338,13 @@ Venku na uličce se stmívá. Za roletou zezlátne světlo a pak zešedne. Sálo
 
 Sálová chvíli přemýšlí. Ne o tom, co řekne. O tom, kolik toho řekne.
 
-„Protože jste tam došla sama,“ řekne. „Bez mapy, kterou jsem vám tři roky nedala. Za den a půl. S lidarem, se svíčkou a s tím, co jste vyčetla z čísla dvě stě patnáct.“ Odmlčí se. „A protože jste se jednou přiznala. Četla jsem to. Celé, i přílohy.“
+„Protože jste tam došla sama,“ řekne. „Bez originálu, který jsem vám tři roky nedala. Za den a půl. S lidarem, se svíčkou a s tím, co jste vyčetla z čísla dvě stě patnáct.“ Odmlčí se. „A protože jste se jednou přiznala. Četla jsem to. Celé, i přílohy.“
 
 „To neznamená, že mi můžete věřit.“
 
 „Ne.“ Sálová zvedne oči. „Znamená to, že vy nebudete věřit mně. To potřebuju.“
 
-Hana se na ni dívá. Pak se, poprvé za celé odpoledne, krátce a potichu zasměje. Nejde to zastavit, a tak to nechá dojít až do konce.
+Hana se poprvé za celé odpoledne krátce a potichu zasměje. Nejde to zastavit, a tak to nechá dojít až do konce.
 
 „Kolik je vám let?“ zeptá se pak.
 
@@ -378,7 +380,7 @@ Na uličce je mráz a tma. Kostel svatého Mikuláše nad střechami má rozsví
 
 Hana jde k autu pomalu. U auta se nezastaví. Jde dál, přes náměstí, kolem kašny s rytířem, kolem domů s vikýři. Chce jít. Nechce sedět.
 
-U archivu se zastaví. Budova je tmavá, jen v přízemí svítí okno vrátnice. Někde uvnitř, ve třetím patře, v depozitáři, kam Hana nesmí, leží v krabici z nekyselé lepenky kniha velká jako dlaň na dlani. V ní mapa, která je špatně, a slovo *Tacui* na okraji, bez vysvětlení.
+U archivu se zastaví. Budova je tmavá, jen v přízemí svítí okno vrátnice. Někde uvnitř, ve třetím patře, v depozitáři, kam Hana nesmí, leží v krabici z nekyselé lepenky kniha velká jako dlaň. V ní mapa, která je špatně, a slovo *Tacui* na okraji, bez vysvětlení.
 
 Mnich věděl, o čem mlčí. Hana to neví. Teď ví aspoň jedno: o čem mlčela Sálová. Tři roky. A jak to napsala do protokolu, slovo *pokračuje*, devětkrát pod sebou, s vlastním podpisem.
 
@@ -400,7 +402,7 @@ Vlevo:
 
 *Muž se psem od Ostrých = Tadeáš. 13. 2. mi lhal („kotel“). Řekla S.: už nebude.*
 
-*Dohoda: měřím sama, denně, veřejně dostupná místa. Co je dole = „řekla S.“ Pracuju pro nikoho. Kopie dat u T. K. (S. jméno neví). Bez slibu: hasiči, jde-li o život.*
+*Dohoda: měřím sama, denně, veřejně dostupná místa. Co je dole = „řekla S.“ Nepracuju pro nikoho. Kopie dat u T. K. (S. jméno neví). Bez slibu: hasiči, jde-li o život.*
 
 Pak se dlouho dívá na pravou stranu.
 

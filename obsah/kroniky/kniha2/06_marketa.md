@@ -44,7 +44,7 @@ Ilona jí dala napít pálenky, kterou měla na tyhle věci, a žena se napila j
 
 Řízla podél, ne napříč, aby nepřeťala šlachu, kterou palec ohýbá. Žena se ani nepohnula. Jen se jí na krku napjaly svaly a zuby zaskřípaly o sebe.
 
-Hnis vyšel hustý a žlutý, s nitkou krve, a s ním, na konci, když Ilona zmáčkla okraje k sobě, malý černý úlomek. Ostrý, lesklý, s kovovým leskem. Ilona ho vytáhla pinzetou a položila na plátno, a žena se na něj podívala.
+Hnis vyšel hustý a žlutý, s nitkou krve, a s ním, na konci, když Ilona zmáčkla okraje k sobě, malý černý úlomek. Ostrý, lesklý, s kovovým leskem. Ilona ho vytáhla kleštičkami a položila na plátno, a žena se na něj podívala.
 
 „To je ono,“ řekla. „Mrcha.“
 
@@ -92,7 +92,7 @@ Pak napsala to, co psala vždycky. *Tato slova řekla přede mnou Markéta, vdov
 
 „Patří,“ řekla Ilona. „Řekla jste to.“
 
-Markéta se na ni podívala dlouze. Pak kývla.
+Markéta dlouho mlčela. Pak kývla.
 
 *
 
@@ -110,7 +110,7 @@ Ilona psala. *Na svatého Vavřince. S Barborou Seidlovou. Do buků nad údolím
 
 Markéta zavřela oči. „*Byla vysoká jako dveře. Bílá v obličeji jako mouka. Vlasy měla jako len, dlouhý, rozpuštěný, a šaty šedý, jako kůra na buku. A zpívala. Ne slovama. A Dorotka šla za ní, jako když jde k mámě.*“ Otevřela oči. „Tak to řekla. Já jsem si to pamatovala pět let. Každé slovo. Já taky umím pamatovat, paní ranhojičko, nejen vy.“
 
-Ilona to psala. *Vysoká jako dveře. Bílá v obličeji jako mouka.* Ruka se jí u toho na chvíli zastavila. Nechtěla, aby se zastavila. Myslela na Kiliána ve dveřích, který se musel sklonit pod překladem, a na jeho tvář, šedavou, jako klíčky brambor ve sklepě. Na ženu v šátku u lampy. Na dítě s jizvami, které se dívalo z výklenku.
+Ilona to psala. *Vysoká jako dveře. Bílá jako mouka.* Ruka se jí u toho na chvíli zastavila. Nechtěla, aby se zastavila. Myslela na Kiliána ve dveřích, který se musel sklonit pod překladem, a na jeho tvář, šedavou, jako klíčky cibule ve sklepě. Na ženu v šátku u lampy. Na dítě s jizvami, které se dívalo z výklenku.
 
 Dopsala to. Do poslední čárky. *Jako když jde k mámě.*
 
@@ -122,7 +122,7 @@ Dopsala to. Do poslední čárky. *Jako když jde k mámě.*
 
 „A pak?“
 
-„Pak nic. Rychtář řekl, že ji vzaly bažiny. Farář řekl, že ji vzal Bůh, a že to je lepší, než kdyby ji vzal někdo jinej.“ Markéta se poprvé usmála, a nebyl to úsměv. „Babky v lázni říkaly, že mi ji vyměnili. Že mi tam měli nechat polínko. Mně nenechali ani polínko.“
+„Pak nic. Rychtář řekl, že ji vzaly bažiny. Farář řekl, že ji vzal Bůh, a že to je lepší, než kdyby ji vzal někdo jinej.“ Markéta se poprvé usmála, jen ústy. „Babky v lázni říkaly, že mi ji vyměnili. Že mi tam měli nechat polínko. Mně nenechali ani polínko.“
 
 Ilona psala. Ani polínko.
 
@@ -202,7 +202,7 @@ Doma pod první řádek tabulky napsala druhý. *Sobota 27. května.* Nalevo: *a
 
 A pod čáru, sama pro sebe: *Mistr Jobst začal vylévat krev v týdnu, kdy umřela Lene.*
 
-Bylo to, co viděla. Neříkalo to nic o tom, proč. Ale ty dvě věty stály na papíře vedle sebe stejně, jako tam minulý týden stály Jobstova slova a čistá struha. Ilona je tam nechala a dívala se na ně. Měla pocit, že na sebe obě koukají a čekají, která uhne první.
+Bylo to, co viděla. Neříkalo to nic o tom, proč. Ale ty dvě věty stály na papíře vedle sebe stejně, jako tam minulý týden stály Jobstova slova a čistá struha. Ilona je tam nechala. Měla pocit, že na sebe obě koukají a čekají, která uhne první.
 
 *
 
@@ -280,7 +280,7 @@ Kilián zůstal stát na prahu. Nesvlékl rukavice a klobouk nesundal.
 
 „Okna,“ řekl Kilián a skoro se usmál. Pak úsměv zmizel. „Zikmund říká: půjdou nahoru tak jako tak. Po tom, co se stalo, půjdou. Tak ať aspoň víte, kam ukázat, až se vás budou ptát. Ať se netrefíte do nás.“ Odmlčel se. „Ukážu vám Horní štolu. Ve středu v noci. Ve středu tam chodí mezek.“
 
-Ilona se na něj dívala. Ve tmě za ním byla zahrádka a svah a potok a nad tím vším nebe, bez měsíce.
+Ve tmě za ním byla zahrádka a svah a potok a nad tím vším nebe, bez měsíce.
 
 „Kiliáne,“ řekla. „Berete děti?“
 

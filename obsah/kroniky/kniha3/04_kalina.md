@@ -8,7 +8,13 @@ Je sobota, půl osmé ráno. Kapota je už teplá. Salcedo drží krabici s vyst
 
 Podepíše se. Podruhé za dva dny pod touž větu. Slunce svítí na papír tak ostře, že vlastní podpis vidí jako modrou čáru, která se rozpíjí do bílé.
 
-„Laboratoř je zaplacená,“ řekne Salcedo. Zasune formulář do desek a desky pod paži. „Papíry k vývozu vzorků vyřídím v Méridě. V úterý odletí kurýrem. Nebojte se, *doctora*. Takové věci dělám deset let.“
+„Laboratoř je zaplacená,“ řekne Salcedo. Zasune formulář do desek a desky pod paži. „Papíry k vývozu vzorků vyřídím v Méridě. V úterý odletí kurýrem.“
+
+Úterý. Viktor říkal nejpozději v pondělí.
+
+„A ejido?“ zeptá se Hana.
+
+„Pan Brabec to s donem Felipem vyřídil. Nebojte se, *doctora*. Takové věci dělám deset let.“
 
 „Nebojím se,“ řekne Hana.
 
@@ -38,7 +44,7 @@ Kalina se na ni podívá. Poprvé zvedne oči výš než k jejím ramenům.
 
 „Napůl. Byla tam hlína. A pod ní chodba.“ Odmlčí se. „Měla jste pravdu, jen to nebyla celá pravda. To se stává.“
 
-Pak se otočí ke kufru auta a začne vykládat bedny. Tři plastové, šedé, s kovovými přezkami. A dlouhý tubus z novodurové trubky, zalepený na obou koncích lepicí páskou, na které stojí fixou *NEOTVÍRAT VE VĚTRU*.
+Otočí se ke kufru auta a začne vykládat bedny. Tři plastové, šedé, s kovovými přezkami. A dlouhý tubus z novodurové trubky, zalepený na obou koncích lepicí páskou, na které stojí fixou *NEOTVÍRAT VE VĚTRU*.
 
 *
 
@@ -60,7 +66,7 @@ Otevře první bednu. Notebook, přijímač, malá skládací cívka na tyči. D
 
 „Ten maják jsem si postavil s kolegou,“ řekne Kalina, když vidí, že se Hana dívá na černé pouzdro. „Na Holštejn. Krabicím, do kterých nevidím, nevěřím.“
 
-Zapojí přijímač, rozloží cívku a pošle Ríšu s koupeným majákem na druhý konec mýtiny. Pak se posadí k notebooku pod plachtou a nějakou dobu jen kouká.
+Zapojí přijímač, rozloží cívku a pošle Ríšu s koupeným majákem na druhý konec mýtiny. Posadí se k notebooku pod plachtou a nějakou dobu jen kouká.
 
 Hana si sedne vedle něj. Nikdo ji nepozval. Kalina ji nevyhodí.
 
@@ -76,7 +82,7 @@ Hana se dívá na obrazovku. Na zuby hřebenu, na šedý pás, na zrnitou modrou
 
 „Jsou to vrstvy,“ řekne. Napůl sama pro sebe.
 
-Kalina se na ni podívá.
+Kalina zvedne oči od obrazovky.
 
 „Myslím,“ řekne Hana, „že je to jako profil. Musíte nejdřív poznat všechno, co tam je, abyste viděl, co tam být nemá.“
 
@@ -84,7 +90,7 @@ Kalina se na ni podívá.
 
 „To je celá moje práce.“
 
-„To je celá práce kohokoli, kdo měří.“ Kalina se zase podívá na obrazovku. „Jen to většina lidí dělá obráceně.“
+„To je celá práce kohokoli, kdo měří. Jen to většina lidí dělá obráceně.“
 
 *
 
@@ -118,7 +124,7 @@ Kalina se otočí a podívá se na něj zdola, přes okraj brýlí.
 
 Viktor se zasměje a poklepe mu na rameno. „Dobře. Tak to je náš soukromý rozhlas.“ A odejde k ohni, kde Ríša pouští Rose a dětem na telefonu záběry z prvního ponoru.
 
-Kalina se za ním chvíli dívá. Pak sklopí oči k notebooku.
+Kalina za ním chvíli hledí a pak sklopí oči k notebooku.
 
 „Proč ho to zajímá?“ řekne. Ne Haně. Spíš sám sobě.
 
@@ -140,15 +146,15 @@ Vedení začíná u obce, kde odbočuje z hlavní linky, a vede podél silnice n
 
 „Pod zem taky. Nízké frekvence jdou do země dobře. Proto je používáme na majáky.“ Nasadí si sluchátka zpátky. „To je ta nepříjemná symetrie.“
 
-U lomu se zastaví u plotu z vlnitého plechu. Pod jeho spodní hranou je vyhrabaná díra, od zvířete nebo od člověka. Hana se dívá dovnitř.
+U lomu se zastaví u plotu z vlnitého plechu. Pod jeho spodní hranou je vyhrabaná díra, od zvířete nebo od člověka. Hana nahlédne dovnitř.
 
 Bílá díra je zblízka větší, než vypadala ze silnice. Stupně, každý vysoký tak pět metrů, vylámané do vápence jako schodiště pro obry. Na nejvyšším stupni stojí vrtná souprava, malá, na pásech, a dva muži v helmách vrtají do skály řadu otvorů. Jeden vedle druhého, v pravidelných rozestupech, jako stehy.
 
 „Vývrty na nálože,“ řekne Hana. „Na zítra. Nebo na úterý.“
 
-Kalina se na soupravu podívá a nic neřekne.
+Kalina se dívá na soupravu a neřekne nic.
 
-Hana se dívá na stěnu pod ní. Vápenec. Stejný jako ve stěnách studny, jen tady je to čerstvý lom, bílý, ostrý, a v něm je vidět, jak hornina vypadá uvnitř. Vrstvy, téměř vodorovné. A přes ně, šikmo, pukliny. A v puklinách dutiny. Malé jako pěst, velké jako hlava, zarostlé krystaly. A jedna, ve čtvrtém stupni, velká jako dveře, černá, jejíž konec není vidět.
+Stěna pod soupravou je vápenec. Stejný jako ve stěnách studny, jen tady je to čerstvý lom, bílý, ostrý, a v něm je vidět, jak hornina vypadá uvnitř. Vrstvy, téměř vodorovné. A přes ně, šikmo, pukliny. A v puklinách dutiny. Malé jako pěst, velké jako hlava, zarostlé krystaly. A jedna, ve čtvrtém stupni, velká jako dveře, černá, jejíž konec není vidět.
 
 „Jak se šíří otřes v krasu?“ zeptá se Kalina. Pořád se dívá na soupravu.
 
@@ -166,7 +172,7 @@ Kalina kývne. Jednou, krátce.
 
 „To je dobrý důvod,“ řekne.
 
-Cestou zpátky mlčí. U čerpací stanice se pak zastaví a podívá se na ni.
+Cestou zpátky mlčí. U čerpací stanice se zastaví.
 
 „Viktor říkal, že už máte vzorky.“
 
@@ -194,7 +200,7 @@ Přečte si to. Je to pravda, každé slovo. Je to celá pravda o pořadí.
 
 Foto po odběru u vzorku tři nemá. Napsala *před odběrem a po něm*, jako by to platilo pro všechny tři.
 
-Chvíli se na tu větu dívá. Pak za ni připíše do závorky: *(u místa 3 pouze před odběrem; po odběru nebylo z důvodu plynu možné)*. Je to tak malá věc. Je to tak snadné. A pak se na ni podívá a nechápe, proč tohle opravit dokáže a tamto ne.
+Za tu větu nakonec připíše do závorky: *(u místa 3 pouze před odběrem; po odběru nebylo z důvodu plynu možné)*. Je to tak malá věc. Je to tak snadné. A pak se na ni podívá a nechápe, proč tohle opravit dokáže a tamto ne.
 
 Odešle to v sedm čtyřicet.
 
@@ -204,7 +210,7 @@ Do síně jde s Janou a s Luisem.
 
 Kalina jim maják předá na plošině s takovou péčí, jako by podával dítě. Černé pouzdro na třech krátkých nožičkách, s vodováhou na víčku, a kolem něj kruhová cívka, tenká, plochá, v průměru asi jako talíř na pizzu, zalitá do pryskyřice.
 
-„Vodorovně,“ řekne. „Bublina uprostřed. Když bude cívka nakloněná, pole se nakloní s ní a já budu hledat bod nad majákem o pár metrů vedle. A ne blíž než půl metru od předmětu. Chci znát polohu předmětu, ne polohu majáku, který leží na předmětu.“ Podívá se na Hanu. „A změřte, kde přesně leží vůči němu. Pásmem. Vzdálenost a směr.“
+„Vodorovně,“ řekne. „Bublina uprostřed. Když bude cívka nakloněná, pole se nakloní s ní a já budu hledat bod nad majákem o pár metrů vedle. A ne blíž než půl metru od předmětu. Chci znát polohu předmětu, ne polohu majáku, který leží na předmětu. A změřte, kde přesně leží vůči němu. Pásmem. Vzdálenost a směr.“
 
 „Zaměřím.“
 
@@ -222,7 +228,7 @@ Krápník. Pahýl, zlomený kdysi v polovině, s plochým vrškem, metr od přev
 
 Hana položí maják na terasu. Nohy pouzdra se zaboří do tenkého povlaku, jen o milimetr. Bublina ve vodováze uteče doprava. Hana podloží jednu nohu kouskem olova ze své kapsy. Bublina se vrátí. Skoro do středu. Podloží ji ještě o chlup. Střed.
 
-Pak vytáhne pásmo a Luis podrží jeho konec u středu cívky a Hana ho vede k čelu válce. Osmdesát sedm centimetrů. Kompas. Směr. Zapíše to na tabulku, dvakrát, a Luis si to přečte a kývne.
+Vytáhne pásmo a Luis podrží jeho konec u středu cívky a Hana ho vede k čelu válce. Osmdesát sedm centimetrů. Kompas. Směr. Zapíše to na tabulku, dvakrát, a Luis si to přečte a kývne.
 
 Ví, že maják na terase je zásah do síně dřív, než ji Ríša nafotí. Jinak to nejde: Kalina musí měřit teď, v noci, dokud lom mlčí, a fotogrammetrie je odložená. Do modelu ho potom zapíše jako cizí předmět, ne jako součást nálezu, a do příští zprávy pro Marisol taky.
 
@@ -268,7 +274,7 @@ Jana si sundá masku a podívá se na Hanu.
 
 „Modelu není,“ řekne Hana. „Vzorkovali jsme bez něj. Dneska ráno jsem to napsala INAH.“
 
-Jana se na ni ještě chvíli dívá.
+Jana chvíli mlčí.
 
 „Aha,“ řekne.
 
@@ -294,7 +300,7 @@ Tři minuty před jednou se Kalina zastaví a nasadí si sluchátka.
 
 V jednu nula nula zvedne ruku.
 
-Pak sundá sluchátka a podá je Haně.
+Sundá sluchátka a podá je Haně.
 
 Ve sluchátkách je šum. Tichý, praskavý, jako déšť na střeše z dálky. A pod ním, jasně, čistě, tón. Vysoký, rovný, nekonečný. Jako by někdo pod zemí, padesát metrů pod jejíma nohama, pod vápencem, pod vodou a pod bílou mlhou, držel na klavíru jednu klávesu a nepouštěl ji.
 
@@ -302,7 +308,7 @@ Ve sluchátkách je šum. Tichý, praskavý, jako déšť na střeše z dálky. 
 
 Hana mu sluchátka vrátí. Ruce se jí trochu třesou. Neví proč.
 
-Kalina chodí. Pomalu, s cívkou na tyči před sebou, a otáčí s ní, a poslouchá, kdy tón zeslábne a zmizí. Tam, kde zmizí, se zastaví a zapíše si směr. Pak jde jinam a zopakuje to. Hana mu svítí do sešitu a diktuje mu čísla z GPS. Je to pomalé. Je to tak pomalé, že po prvních deseti minutách maják zmlkne a oni musí čekat na druhou hodinu, sedět na pařezu ve spálené milpě a poslouchat les.
+Kalina chodí. Pomalu, s cívkou na tyči před sebou, a otáčí s ní, a poslouchá, kdy tón zeslábne a zmizí. Tam, kde zmizí, se zastaví a zapíše si směr. Jde jinam a zopakuje to. Hana mu svítí do sešitu a diktuje mu čísla z GPS. Je to pomalé. Je to tak pomalé, že po prvních deseti minutách maják zmlkne a oni musí čekat na druhou hodinu, sedět na pařezu ve spálené milpě a poslouchat les.
 
 „Nevadí vám to?“ zeptá se Hana. „To čekání.“
 
@@ -358,7 +364,7 @@ V kroužku je skvrna. Slabá. Tak slabá, že Hana nepozná, jestli je ostřejš
 
 „Proč se na to tedy díváte?“
 
-Kalina se podívá na obrazovku. Dlouho.
+Kalina dlouho mlčí.
 
 „Protože nevím, co to je,“ řekne. „A to mi vadí víc než všechno, co vím.“
 
@@ -408,6 +414,6 @@ Vpravo dlouho nic. Pak:
 
 *Číslo bez chyby je to, co si myslím. (T. K.)*
 
-Podívá se na tu větu. Na to, kde stojí. Je to věta, která patří doprava, a ona ji tam napsala. Je to tak snadné, když jde o cizí větu.
+Je to věta, která patří doprava, a ona ji tam napsala. Je to tak snadné, když jde o cizí větu.
 
-Zavře deník. Nad cenotem se rozednívá a netopýři se vracejí, spirála za spirálou, dolů do bílé studny, a mizí ve tmě nad vodou.
+Zavře deník. Nad lesem šedne nebe. Den, a s ním rušení.

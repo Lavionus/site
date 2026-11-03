@@ -30,7 +30,7 @@ Na čele válce jsou značky. Ryté, drobné, z rovných čar a teček, sestaven
 
 Hana se dívá na černý displej.
 
-Pak si ho pustí znovu.
+Pustí si ho znovu.
 
 *
 
@@ -110,7 +110,7 @@ A nic nedokazuje. Hana to ví tak přesně, že se jí z toho skoro uleví. Rovn
 
 Šindelářová tehdy řekla: *Asi viděl na relikvii rytinu.* A mnich, který ke všemu v knize připsal, jestli to viděl, nebo neviděl, k té kosti nepřipsal nic. Napsal tu větu, jako se píše, kolik je dva a dva.
 
-Hana zavře složku. Pak ji zase otevře, protože náhled chce mít před sebou, až bude psát.
+Hana zavře složku a zase ji otevře, protože náhled chce mít před sebou, až bude psát.
 
 *
 
@@ -140,7 +140,7 @@ Viktorovi napíše ve tři čtvrtě na jedenáct. Jedno slovo.
 
 *Ano.*
 
-Telefon nechá ležet a vrátí se k posudku z Ivančic, protože ten musí být v pátek u Fialy a protože jí to pomáhá myslet na sondy, ve kterých nic není. Napíše dva odstavce. Pak vezme telefon znovu a připíše druhou zprávu.
+Telefon nechá ležet a vrátí se k posudku z Ivančic, protože ten musí být v pátek u Fialy a protože jí to pomáhá myslet na sondy, ve kterých nic není. Napíše dva odstavce. Vezme telefon znovu a připíše druhou zprávu.
 
 *A příště dej do záběru měřítko.*
 

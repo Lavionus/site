@@ -14,7 +14,7 @@ Všechno, co tady napíše, si síť přečte dřív než kdokoli jiný. Posoud�
 
 Ráno napsala Halsovi: *Mohla bych psát dole?*
 
-Odpověď přišla v poledne. *Ano. Přivezu desku. Umíte psát rukou? T. H.*
+Odpověď přišla v poledne. *Ano. Desku připravím. Umíte psát rukou? T. H.*
 
 *Ne.*
 
@@ -40,11 +40,11 @@ Hals se díval a nic neříkal. Když Nara vyhladila desku popáté, položil ve
 
 Večer uměla napsat celý řádek tak, aby se dal přečíst. Hals vzal desku, prohlédl si ji proti světlu a kývl.
 
-„Zítra,“ řekl. „Listy pro spis budou hotové v poledne. Pak je deska volná.“
+„Zítra,“ řekl. „Listy pro spis budou hotové v poledne. Pak je lept volný.“
 
 *
 
-Čtyřicátého pátého dne večer sjela dolů podruhé a už se nevracela.
+Čtyřicátého pátého dne večer sjela znovu dolů a tentokrát zůstala.
 
 Hals jí připravil místo u leptu. Židli s opěradlem, tu, kterou nosil Hadře Mel. Kabát s odřeným límcem. Konvici horké vody na ohřívací desce, která byla jediným teplým místem v celém oddílu. A na stole velkou psací desku, větší než ty dvě, na kterých se učila, vyhlazenou do lesku. Vedle leptu stály v řadě tři úzké schránky. V nich leželo sto devadesát devět listů. Na hraně každého z nich, Nara to věděla, i když to neviděla, stál malý znak správce. *Opis souhlasí. T. Hals.*
 
@@ -84,7 +84,7 @@ Myslela na překladatele, který kdysi přeložil *izoluje* místo *opatruje*. P
 
 Několikrát se zastavila úplně.
 
-Jednou u věty o náměstí. Napsala ji, vyhladila, napsala znovu a nechala ji. Jednou u věty o zklidnění, o tom, co mu zapnula, když mu bylo patnáct. Tu napsala hned napoprvé a pak dlouho seděla a nedívala se na ni.
+Jednou u věty o náměstí. Napsala ji, vyhladila, napsala znovu a nechala ji. Jednou u věty o tom, co mu zapnula, když mu bylo patnáct. Tu napsala hned napoprvé a pak dlouho seděla a nedívala se na ni.
 
 A jednou u té věty. Té, kterou si nesla celou cestu do Sedmé loděnice a pak ji neřekla, protože by po něm něco chtěla. Tady po něm nechtěla nic. Tady nemohl odpovědět, nemohl kývnout, nemohl si ji odnést. Nara ji napsala. Vyhladila ji. Seděla. Pak ji napsala podruhé, pomaleji, a nechala ji stát.
 
@@ -104,13 +104,13 @@ Psala o věcech, které nikdy nikomu neřekla. Některé z nich nevěděla, doku
 
 Nevěděla, kolik je hodin. Neměla se koho zeptat. Hals spal a odpočet ukazoval jen dny.
 
-Pak se Hals pohnul. Otevřel oči, chvíli se díval do tmy a pak se narovnal, bez spěchu, jako člověk, kterého neprobudil zvuk, ale zvyk. Podíval se na víko schránky vedle sebe. Na malém poli, kam schránka zapisovala, kdy byla naposledy otevřena, svítil i čas.
+Pak se Hals pohnul. Otevřel oči, chvíli se díval do tmy a pak se narovnal, bez spěchu, jako člověk, kterého neprobudil zvuk, ale zvyk. Podíval se na víko schránky vedle sebe. Na malém poli, kam schránka zapisovala počet otevření, svítil i čas.
 
 „Šest,“ řekl.
 
 Nara zvedla hlavu.
 
-Řádek v koutku vědomí, jediný, který sem dolů dosáhl, se změnil.
+Jediný řádek sítě, který sem dolů dosáhl, se změnil.
 
 *Druhý transport: odlet proveden.*
 
@@ -156,7 +156,7 @@ Pak seděla a dívala se na to.
 
 Bylo to křivé. Znaky se chvěly, některé víc, jiné méně, podle toho, jak byla zima a jak dlouho už psala. Uprostřed desky, kde vyhlazovala nejčastěji, byl povrch o něco matnější. Kdo to bude číst, pozná, že tady se psalo a mazalo a psalo znovu. Pozná, že to psala ruka.
 
-Pod poslední slovo nepsala nic. Ani jméno, ani titul. Jméno stálo nahoře. Tady stačilo to jedno slovo, kterým podepisovala vzkazy přes personál. Dvacet slov, a na to poslední jí místo vždycky zbylo.
+Pod poslední slovo nepsala jméno ani titul. Jméno stálo nahoře. Tady stačilo to jedno slovo, kterým podepisovala vzkazy přes personál. Dvacet slov, a na to poslední jí místo vždycky zbylo.
 
 Podala desku Halsovi.
 
@@ -166,7 +166,7 @@ Hals ji vzal do rukou v rukavicích a podržel ji proti světlu. Díval se na ni
 
 „Do spisu to nepatří.“
 
-„Ne.“ Hals desku opatrně položil na skleněné víko leptu. „Dám ho za spis. Zvlášť. S vlastním uzávěrem. Kdo bude číst spis, nemusí číst tohle. A kdo bude chtít tohle, pozná, že to není spis.“
+„Ne.“ Hals desku opatrně položil na skleněné víko leptu. „Dám ten list za spis. Zvlášť. S vlastním uzávěrem. Kdo bude číst spis, nemusí číst tohle. A kdo bude chtít tohle, pozná, že to není spis.“
 
 „Bez znaku správce.“
 
@@ -200,7 +200,7 @@ Nara to zavřela a šla na linku.
 
 *
 
-Kesiina matka bydlela na Orse, ve spodním prstenci, kde se chodby nikdy nerozsvěcovaly naplno. Nara jí poslala zprávu z linky. Odpověď přišla za dvě hodiny, jedno slovo: *Přijďte.*
+Kesiina matka bydlela na Orse, v dolních patrech, kde se chodby nikdy nerozsvěcovaly naplno. Nara jí poslala zprávu z linky. Odpověď přišla za dvě hodiny, jedno slovo: *Přijďte.*
 
 Byla mladší, než Nara čekala. Drobná, s vlasy staženými dozadu jako Kesi. Otevřela dveře a nepustila Naru dál. Stály na prahu, každá na jedné straně.
 
@@ -238,7 +238,7 @@ Byla to pravda. Byla to přesná a úplná věta z listiny, kterou dostal Daven 
 
 „Nikomu.“
 
-Žena se dívala na Naru ještě chvíli. Pak řekla *děkuju* a zavřela dveře. Nara stála v šeré chodbě spodního prstence a slyšela za dveřmi dětský hlas, který se na něco ptal, a ženin hlas, který neodpovídal.
+Žena se dívala na Naru ještě chvíli. Pak řekla *děkuju* a zavřela dveře. Nara stála v šeré chodbě dolních pater a slyšela za dveřmi dětský hlas, který se na něco ptal, a ženin hlas, který neodpovídal.
 
 *
 
@@ -260,9 +260,9 @@ Arel se na ni podíval přes stůl. Tak, jak se dívá člověk, který čte ze 
 
 *Nemůžeš se bránit tím, co víš,* řekl jí Arel před třemi týdny. Teď ji nechal mluvit a nic na to neřekl.
 
-Rozhodnutí přišlo odpoledne. Bod první zamítnut s odkazem na výrok rozsudku. K bodům druhému a třetímu pozastavení oprávnění k výkonu advokacie na jeden rok. Nara si to přečetla a podepsala doručení tím drobným kývnutím vzadu za očima, které podepisovalo všechno.
+Rozhodnutí přišlo odpoledne. V bodě prvním se řízení zastavuje s odkazem na výrok rozsudku. K bodům druhému a třetímu pozastavení oprávnění k výkonu advokacie na jeden rok. Nara si to přečetla a podepsala doručení tím drobným kývnutím vzadu za očima, které podepisovalo všechno.
 
-Lumi jí napsala večer. *Rok. Spis s vodním okruhem převezmu, jestli dovolíte. Za rok vám ho vrátím.* Nara odepsala, že do roka bude vyřízený. Lumi odpověděla, že nebude. Měla pravdu. Nara to věděla.
+Lumi jí napsala večer. *Rok. Spis s vodním okruhem převezmu, jestli dovolíte. Za rok vám ho vrátím.* Nara odepsala, že do roka bude vyřízený. Lumi odpověděla, že nebude. Měla pravdu.
 
 *
 
@@ -300,7 +300,7 @@ Seděla dál u stolu a dívala se na řádek, který Nara neviděla. Pak ho zav�
 
 „Dráha je dobrá,“ řekla. „Od teď o ní nevíme nic. Nemá jak nám nic říct.“
 
-Nikdo nic neřekl. Hals sundal jednu rukavici a pak ji zase natáhl, pomalu, prst po prstu.
+Nikdo nic neřekl. Hals sundal jednu rukavici a zase ji natáhl.
 
 Nara stála u průzoru. Čtyři dny. Před čtyřmi dny odletěla loď a nikdo z ní to neviděl. Dnes odletěl kámen a nebylo na co se dívat. Dvě věci odešly tam, kam se nedá jít, a ani jedna z nich nikdy nepošle zprávu, že dorazila.
 
@@ -316,10 +316,10 @@ Nara si to přečetla jednou. Pak ještě jednou, pomaleji, jako se čte věta v
 
 Neodpověděla mu. Věděla, že odpověď nečeká. Věděla, že kdyby mu odpověděla, musel by vědět, na co se neptal.
 
-Vyndala z kapsy provázek a položila si ho na koleno. Sedmdesát jedna uzlíků, šedých, měkkých. Za průzorem se zmenšoval měsíc a terasy lomu splývaly s šedí.
+Vyndala z kapsy provázek a položila si ho na koleno. Sedmdesát jedna uzlíků, šedých, měkkých. Za průzorem se zmenšoval měsíc a terasy lomu splývaly se šedí.
 
-Nevěděla, jestli kámen doletí. Nevěděla, jestli ho někdy někdo najde, ani jestli bude vědět, že je co číst. Nevěděla, jestli ten někdo bude jeho krve, ani jakou řečí bude mluvit, ani co si pomyslí o křivých znacích na posledním listu. Nevěděla, jestli to někomu pomůže.
+Nevěděla, jestli kámen doletí. Nevěděla, jestli ho někdy někdo najde, ani jestli bude vědět, že je co číst. Nevěděla, jestli ten někdo bude jeho krve, jakou řečí bude mluvit a co si pomyslí o křivých znacích na posledním listu. Nevěděla, jestli to někomu pomůže.
 
 Věděla jen, co v kameni je. Řekla to nahlas a bylo to zapsáno. A za tím jeden list, který do spisu nepatří.
 
-Nara sevřela provázek v dlani a dívala se do tmy za průzorem, dokud linka nezačala brzdit.
+Nara mačkala provázek v dlani, uzlík po uzlíku, dokud linka nezačala brzdit.

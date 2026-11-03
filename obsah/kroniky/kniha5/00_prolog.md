@@ -24,7 +24,7 @@ Teplo si Sael všimla až u data.
 
 Nejdřív ne na kůži. Na papíře. List pod její dlaní se nepatrně zvedl na okraji, jako se zvedá list, když se k němu přiblíží lampa. Sael zvedla ruku a podívala se na stránku proti světlu. Papír byl v pořádku. Jen se hýbal.
 
-Podívala se na vlhkoměr na stěně. Šedesát let ukazoval mezi čtyřicítkou a pětačtyřicítkou. Jen v srpnu se ručička někdy pohnula výš, když nahoře v sadu pršelo týden v kuse. Teď stála na padesáti a Sael se na ni dívala tak dlouho, až se posunula na padesát jedna.
+Na stěně visel vlhkoměr. Šedesát let ukazoval mezi čtyřicítkou a pětačtyřicítkou. Jen v srpnu se ručička někdy pohnula výš, když nahoře v sadu pršelo týden v kuse. Teď stála na padesáti a Sael se na ni dívala tak dlouho, až se posunula na padesát jedna.
 
 Za stěnou archivu byla skála. Ne zeď, kterou postavil někdo z nich, ale skála hory, hladce otesaná, ve které stála vrata do spodních síní. Šedesát let byla teplá. Stejně teplá v lednu jako v červenci, teplá jako dlaň člověka, který spí. Když Sael psala dlouho a bolela ji záda, opřela se o ni a nechala si to teplo jít do ramen. Nikdy nad tím nepřemýšlela. Tak bylo dobře. Tak to bylo vždycky.
 
@@ -50,7 +50,7 @@ Lada scházela dolů rychleji, než chodila roky. Byla malá i na jejich míru, 
 
 „Kdy to začalo?“
 
-„Před dvěma hodinami. Kotelna ve skleníku hlásí osmdesát na vstupu. Má tam mít čtyřicet.“ Lada konečně pohlédla na Sael. Měla oči zarudlé od odpoledne a teď v nich bylo ještě něco jiného. Sael to znala. Viděla to v knize, v rukách, které psaly roku 1172, i když to nikdo nenapsal. „Skála se hýbe, Sael. Cítím ji v nohou.“
+„Před dvěma hodinami. Kotelna ve skleníku hlásí osmdesát na vstupu. Má tam mít čtyřicet.“ Lada konečně pohlédla na Sael. Měla oči zarudlé od odpoledne a teď v nich bylo ještě něco jiného. Sael to znala. Viděla to v knize, v čárkách z roku 1172, i když to tam nikdo nenapsal. „Skála se hýbe, Sael. Cítím ji v nohou.“
 
 Sael to necítila. Nohy Ostrých slyšely skálu líp než její uši. Tak to bylo vždycky.
 
@@ -60,7 +60,7 @@ Sael to necítila. Nohy Ostrých slyšely skálu líp než její uši. Tak to by
 
 „Jen nahoře. Škvírou.“
 
-Lada se na ni dívala dlouho. Pak sešla z posledního schodu, postavila se vedle ní a podala jí měřák. Sama vzala za železnou kliku.
+Lada ještě chvíli stála. Pak sešla z posledního schodu, postavila se vedle ní a podala jí měřák. Sama vzala za železnou kliku.
 
 *
 
@@ -86,7 +86,7 @@ Některé se pohnuly.
 
 Počítala je, protože počítat bylo to jediné, co v té chvíli uměla. Devět. Padaly pomalu, v řadě, jedno za druhým, a za každým zůstávala bledá stopa. Deváté bylo slabší než ostatní a padalo pozadu, jako by se opozdilo. Mnich tenkrát napsal *novem*, devět. Sael to věděla, protože tu stránku držela v rukou tolikrát, že ji uměla nazpaměť i s dírou v pergamenu, kterou mnichův text obtékal.
 
-Pod padajícími světly se z tmy zvedlo něco velkého a zakřiveného. Mnich tam viděl zelenou, modrou a bílou. Sael viděla jen to, že je to světlejší než tma, místy víc, místy míň, a že jedna z těch barev mohla být modrá. V šeru barvy nerozeznávala nikdy. Rokyta jí to kdysi vyčítala u inkoustů. Pak se to zakřivené přiblížilo a byl to kraj, viděný shora, jak ho vidí káně nad hřebenem. Hory. Mezi nimi voda, lesknoucí se. Sael ty hory neznala. Nebyly to Krušné hory ani Slavkovský les. Nebyly to žádné hory, které by kdy viděla.
+Pod padajícími světly se ze tmy zvedlo něco velkého a zakřiveného. Mnich tam viděl zelenou, modrou a bílou. Sael viděla jen to, že je to světlejší než tma, místy víc, místy míň, a že jedna z těch barev mohla být modrá. V šeru barvy nerozeznávala nikdy. Rokyta jí to kdysi vyčítala u inkoustů. Pak se to zakřivené přiblížilo a byl to kraj, viděný shora, jak ho vidí káně nad hřebenem. Hory. Mezi nimi voda, lesknoucí se. Sael ty hory neznala. Nebyly to Krušné hory ani Slavkovský les. Nebyly to žádné hory, které by kdy viděla.
 
 Světla do toho kraje padala a zmizela v něm.
 
@@ -98,7 +98,7 @@ A nad nimi, nad oblými střechami, se tma znovu otevřela a v ní bylo jedno sv
 
 Pak zhaslo všechno.
 
-Sael se podívala na hodinky. Nevěděla, proč to udělala, ale udělala to, a pak si uvědomila, že čeká na začátek. Když se světlo uvnitř hladkosti zvedlo podruhé, stiskla tlačítko na boku. Mnich to měřil Otčenášem. Ona měla hodinky s malým displejem, které jí dala Olše k sedmdesátinám v občance, protože prý nikdy neví, kolik je hodin.
+Sael zvedla zápěstí s hodinkami. Nevěděla, proč to udělala, ale udělala to, a pak si uvědomila, že čeká na začátek. Když se světlo uvnitř hladkosti zvedlo podruhé, stiskla tlačítko na boku. Mnich to měřil Otčenášem. Ona měla hodinky s malým displejem, které jí dala Olše k sedmdesátinám v občance, protože prý nikdy neví, kolik je hodin.
 
 Třicet osm vteřin.
 
@@ -110,7 +110,7 @@ Mnich psal, že potom viděl světlo stoupat skrz skálu. Sael na to čekala. Vi
 
 Nestalo se to.
 
-Světlo se stáhlo doprostřed hladkosti, to ano. Zmenšilo se na skvrnu velkou jako dlaň, mdlou, sotva viditelnou. Tam zůstalo. A tam pulzovalo, slabě a pomalu, zesílilo a zesláblo, zesílilo a zesláblo, jako tep na zápěstí, když se člověk dotkne dvěma prsty. Sael počítala. Pak přestala, protože dlouhé počítání bylo k ničemu. Tep nebyl pravidelný. Měl skupiny. Tři a pauza, dva a pauza, čtyři.
+Světlo se stáhlo doprostřed hladkosti, to ano. Zmenšilo se na skvrnu velkou jako dlaň, mdlou, sotva viditelnou. Tam zůstalo. A tam pulzovalo, slabě a pomalu, zesílilo a zesláblo, zesílilo a zesláblo, jako tep na zápěstí, když se člověk dotkne dvěma prsty. Sael počítala, ale brzy přestala, protože dlouhé počítání bylo k ničemu. Tep nebyl pravidelný. Měl skupiny. Tři a pauza, dva a pauza, čtyři.
 
 Pak zhasl i ten.
 
@@ -134,19 +134,19 @@ Shora zarachotily kroky. Tadeáš, ve svetru přes pyžamo, s otevřeným notebo
 
 „Napiš si to rukou.“
 
-Tadeáš se na ni podíval, jako by nerozuměl. Pak sáhl do kapsy svetru pro propisku a napsal si čas na hřbet ruky, protože jiný papír u sebe neměl.
+Tadeáš chvíli nerozuměl. Pak sáhl do kapsy svetru pro propisku a napsal si čas na hřbet ruky, protože jiný papír u sebe neměl.
 
 *
 
 Archiv byl teplý. Vlhkoměr ukazoval padesát čtyři.
 
-Sael zavřela vrata do spodní síně a pod spáru nacpala deku, jak jí Lada poradila. Pak otevřela okno do šachty nad stolem, které se neotvíralo od léta, a do archivu vtekl mráz ze statku. Nadechla se ho. Pak si sedla.
+Sael zavřela vrata do spodní síně a pod spáru nacpala deku, jak jí Lada poradila. Pak otevřela okno do šachty nad stolem, které se neotvíralo od léta, a do archivu vtekl mráz ze statku. Nadechla se ho a sedla si.
 
 Kniha ležela otevřená. Inkoust na Václavově řádku zaschl.
 
 Vzala pero.
 
-Psala pod Václava, protože jiné místo kniha neměla. Kniha byla na lidi, ne na skálu. Ale v nejhlubší vrstvě, na nejstarším listu, stál vedle kresby kopce kruh a čtyřicet jedna čárek, každá za jednoho, kdo tehdy vyšel z hory živý. To taky nebyl jen rodokmen. Kniha zapisovala, co se stalo lidem pod horou. A dnes v noci se lidem pod horou stalo tohle.
+Psala pod Václava, protože jiné místo kniha neměla. Kniha byla na lidi, ne na skálu. Ale v nejhlubší vrstvě, na nejstarším listu, stál v kresbě kopce kruh a vedle ní čtyřicet jedna čárek, každá za jednoho, kdo tehdy vyšel z hory živý. To taky nebyl jen rodokmen. Kniha zapisovala, co se stalo lidem pod horou. A dnes v noci se lidem pod horou stalo tohle.
 
 Psala přesně. Tak, jak to dělali všichni před ní, jak to dělala Rokyta, Svída, Jíva, Aurel a ti, jejichž jména se nezachovala, jen jejich znak. Nevykládala. Nehledala slovo, které by bylo krásné. Hledala slovo, které bylo pravdivé.
 
@@ -162,13 +162,13 @@ Sael seděla nad stránkou s perem ve vzduchu a za zády jí hřála skála. Vlh
 
 Mnich na to slovo měl. Napsal ho latinkou, ve svém jazyce, protože jeho jazyk byl širší a znal víc cest. *Aliunde.* Odjinud. Sael tu stránku viděla stokrát a do dnešní noci se nad tím slovem nezastavila. Bylo to prostě slovo cizího muže v cizí řeči.
 
-Pak namočila pero znovu a napsala na konec řádku latinkou, pečlivě, aby se to dalo přečíst i za čtyři sta let:
+Namočila pero znovu, pomalu, jak ji to kdysi učila Rokyta, aby z hrotu nekáplo, a napsala na konec řádku latinkou, pečlivě, aby se to dalo přečíst i za čtyři sta let:
 
 *aliunde*
 
-Tak se v knize psala jména těch, kdo přišli zvenku. Jejich písmem. Aby se vědělo, odkud přišli, i když se zapomene, kdo byli.
+Tak se v knize psala jména těch, kdo přišli zvenku. Latinkou, písmem jejich světa. Aby se vědělo, odkud přišli, i když se zapomene, kdo byli.
 
-Pak Sael přidala čas, ten z Tadeášovy ruky, a třikrát třicet osm vteřin. Pod to napsala ještě jednu věc, kterou mnich nenapsal, protože se mu nestala.
+Sael přidala čas, ten z Tadeášovy ruky, a dvakrát změřených třicet osm vteřin. Pod to napsala ještě jednu věc, kterou mnich nenapsal, protože se mu nestala.
 
 *Nestoupalo. Zůstalo uprostřed a tlouklo. Pak zhaslo.*
 

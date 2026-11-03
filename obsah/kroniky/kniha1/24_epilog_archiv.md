@@ -2,7 +2,7 @@
 
 Kodex leží na stejném pultu jako v lednu a lampa nad ním pořád nehřeje.
 
-Venku je duben. Hana jela z Brna čtyři hodiny, protože v e-mailu stálo *výsledky jsou zpátky, restaurátorka by se ráda rozhodla* a protože posudek, za který už dostala zaplaceno, není hotový, dokud v něm chybí čísla. Čísla má v desce pod paží. Uhlík a kyslík ze sintru, který z krystalu odebrali skalpelem. Bylo ho tak málo, že restaurátorka ještě teď kroutí hlavou, že to vůbec stačilo.
+Venku je duben. Hana jela z Brna vlakem čtyři hodiny, protože v e-mailu stálo *výsledky jsou zpátky, restaurátorka by se ráda rozhodla* a protože posudek, za který už dostala zaplaceno, není hotový, dokud v něm chybí čísla. Čísla má v desce pod paží. Uhlík a kyslík ze sintru, který z krystalu odebrali skalpelem. Bylo ho tak málo, že restaurátorka ještě teď kroutí hlavou, že to vůbec stačilo.
 
 „Tak?“ řekne doktorka Šindelářová. Brýle má tentokrát jen jedny.
 
@@ -48,7 +48,7 @@ A pod tím, bez vysvětlení: *Viděl jsem tvář pana Konráda.*
 
 „Nevíme,“ řekne Šindelářová. „Ministeriálů toho jména bylo na Chebsku víc, než by člověk chtěl.“
 
-Hana se dívá na stránku v kodexu, kde to stojí. Písmo je tady jiné, menší, jako by se ruka bála.
+Na stránce v kodexu, kde to stojí, je písmo jiné, menší, jako by se ruka bála.
 
 Světelné jevy při zemětřesení jsou popsané. Málo a nespolehlivě; o mechanismu se vede spor – piezoelektřina v křemeni, uvolňování náboje v namáhané hornině. A k tomu nevětraná štola, ve které se drží oxid uhličitý u dna, horko, strach, kahan. Lidé v takovém vzduchu vidí věci. Hana to ví. Ví to tak dobře, že ji to skoro uklidní.
 

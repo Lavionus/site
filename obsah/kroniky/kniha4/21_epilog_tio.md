@@ -66,7 +66,7 @@ Tio ho pořád trochu uměla číst. Otec ji to naučil na bílé usazenině u d
 
 Většinu už nepřečetla. Ne proto, že by zapomněla písmena. Protože to, co bylo na stěně, už nebyla písmena. Byl to vzor. Krásný, rudý a bílý, rovný jako řady domů. Ženy ho malovaly na misky a na kůže, a dívky si ho kreslily okrem na ramena, když se vdávaly.
 
-Sefina slova nahoře u otvoru do hloubky byla nejkrásnější. *Dva prsty na tři víčka.* Ženy je opakovaly na hrncích dokola, pořád dokola, jako lem.
+Sefina slova nahoře u otvoru do hloubky byla nejkrásnější. *Dva prsty na tři víčka.* Ženy je opakovaly na kamenných miskách a na okrajích kůží, pořád dokola, jako lem.
 
 Víčko už nikdo neměl. Poslední láhev se rozpadla, když Tio měla první dítě. Dva prsty na tři víčka. Tio to tak učila, celý život. Dva prsty kůry na tři hrsti vody. Někdo z jejích dcer to pak učil na tři misky. Pak na tři doušky. Tio nevěděla, kdo z nich má pravdu. Sefa by to věděla.
 
@@ -110,7 +110,7 @@ Vyprávěla dál.
 
 O Ikkuovi. Že ho zabili šediví. Že řekl, než umřel, dlouhé slovo. Tio ho řekla. Tak, jak si ho pamatovala, z rokle, z terasy, z toho, jak ho Ru jednou opakoval, když byli malí, a pak už nikdy. Děti ho po ní zopakovaly. Nikdo z nich nevěděl, co znamená.
 
-Ona taky ne. Ru to věděl. Nikdy se ho nezeptala, a Ru umřel předloni v zimě, v jejich domě ve druhé řadě, s hlavou v jejím klíně. Teď už se nezeptá nikoho.
+Ona taky ne. Ru ano. Nikdy se ho nezeptala, a Ru umřel předloni v zimě, v jejich domě ve druhé řadě, s hlavou v jejím klíně. Teď už se nezeptá nikoho.
 
 O Kajovi, který nosil Ammu vodu. Dokud Ammu žila. Ammu nikdy neřekla dost. A Kaj nosil, i když už chodil o holi, a nikdo se ho neptal proč.
 
@@ -120,7 +120,7 @@ O tom, jak otec dal oheň starým matkám. Tal a Dabře. Jak ho rozdělil na dva
 
 „Proč?“ zeptala se nejmenší.
 
-Tio se na ni dívala. Na holku s okrem za nehty, s copem zapleteným po místním způsobu.
+Tio si ji prohlédla. Holku s okrem za nehty, s copem zapleteným po místním způsobu.
 
 „Protože se ho báli,“ řekla Tio.
 
@@ -136,7 +136,7 @@ Děti si zapamatují oheň. Že ho dal. Proč, si nezapamatují.
 
 Když děti odešly spát, zůstala Tio sedět u ohně.
 
-Prostřední oheň. Ten, který se o nejdelší noci nesměl nechat zhasnout. Krmila ho a dívala se na stěnu, na rudé a bílé čáry, které ženy obnovily na jaře.
+Prostřední oheň. Ten, který se o nejdelší noci nesměl nechat zhasnout. Krmila ho a hleděla na stěnu, na rudé a bílé čáry, které ženy obnovily na jaře.
 
 Dole, nejníž, kde stěna přecházela v podlahu, bylo jméno, které ženy neobnovovaly. Nevěděly, že tam je. Saze ho skoro zakryly. Tio ho tam napsala sama, ostrým kamenem, tu zimu, kdy otec umřel. Byla to poslední slova, která písmem napsala.
 
@@ -152,7 +152,7 @@ Patřila.
 
 Tio si to říkala často, když byla sama. Ne proto, že by na to zapomínala. Proto, že to bylo jediné, co věděla jistě, a s věkem jí jisté věci ubývaly.
 
-Mladí berou vodu z horní tůně. V síni stojí u stěny oštěpy, když se lovci vrátí pozdě, a nikdo je nevynese. Kořist se dělí u tří kamenů, ale u kamenů sedí jen muži od třetí řady a dělí ji tak, jak se jim to hodí. Skalních lidí je málo a nikdo je nepočítá. Nika je svatá a nikdo neví proč. Otcovo písmo je vzor na hrncích. A příběh o první zimě se mění, kdykoli ho někdo vypráví, i když ho vypráví ona.
+Mladí berou vodu z horní tůně. V síni stojí u stěny oštěpy, když se lovci vrátí pozdě, a nikdo je nevynese. Kořist se dělí u tří kamenů, ale u kamenů sedí jen muži od třetí řady a dělí ji tak, jak se jim to hodí. Skalních lidí je málo a nikdo je nepočítá. Nika je svatá a nikdo neví proč. Otcovo písmo je vzor na miskách a kůžích. A příběh o první zimě se mění, kdykoli ho někdo vypráví, i když ho vypráví ona.
 
 To všechno bylo pravda.
 
@@ -162,7 +162,7 @@ A bylo pravda, že tu zimu nikdo nikomu nesloužil. Nikdo nelovil pro druhé, pr
 
 Na tom se nic nezmění. Ať si mladí berou vodu, odkud chtějí.
 
-Tio přiložila do ohně. Pak ještě jednou. Pak se zvedla, s bolavými koleny, a zahrnula oheň popelem.
+Tio přiložila do ohně. Ještě jednou. Pak se zvedla, s bolavými koleny, a zahrnula oheň popelem.
 
 „Oheň spí,“ řekla. Místně. Tak, jak se to tu říká.
 

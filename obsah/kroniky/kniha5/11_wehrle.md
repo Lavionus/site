@@ -8,7 +8,7 @@ Sael si e-mail přečetla dvakrát a pak ho nechala otevřený přes noc na obra
 
 Ráno odpověděla jedním slovem.
 
-Nešla tam proto, že by mu chtěla něco říct. Šla tam, aby viděla, co ví. Říkala si to celou cestu autobusem z Chebu, mezi Sokolovem a Loktem, kde silnice běží nad Ohří a řeka je v dubnu kalná a plná. Bylo to tak. A bylo to taky jen tak.
+Nešla tam proto, že by mu chtěla něco říct. Šla tam, aby viděla, co ví. Říkala si to celou cestu autobusem z Chebu, mezi Sokolovem a Loktem, kde silnice běží nad Ohří a řeka je v dubnu kalná a plná. Bylo to tak. A nebylo to všechno.
 
 *
 
@@ -18,7 +18,7 @@ Znala je dřív, než do nich zajel první automobil, který viděla. Jezdila se
 
 Pak sem jezdila sama. Do nemocnice za lidmi ze sítě, do depozitáře, do knihovny. Pamatovala si nádraží na jaře čtyřicet šest, odkud odjížděly vlaky s lidmi, kteří si směli vzít jen to, co unesou. Stála tehdy na lávce a dívala se na ně. Rokyta jí řekla, ať to nezapisuje, protože to nejsou naši. Sael to stejně zapsala. Do svého sešitu, ne do knihy.
 
-Teď šla kolonádou k velkému hotelu na konci údolí. Byl začátek dubna, kterému se ještě nedalo říkat jaro. Teplá tekla mezi kamennými zdmi, zelená a rychlá. U Vřídla stáli hosté s pohárky a fotili páru, která stoupala ze země. Sael se na ni dívala. Teplo zespodu, odjakživa. Nikdo se ho tu nebál.
+Teď šla kolonádou k velkému hotelu na konci údolí. Byl začátek dubna, kterému se ještě nedalo říkat jaro. Teplá tekla mezi kamennými zdmi, zelená a rychlá. U Vřídla stáli hosté s pohárky a fotili páru, která stoupala ze země. Sael se u zábradlí zastavila. Teplo zespodu, odjakživa, a nikdo se ho tu nebál, stejně jako tenkrát, když tu matka kupovala oplatky.
 
 Ve čtyři hodiny bylo světlo dobré. Sael viděla barvy. Až půjde zpátky, bude šero, a v šeru uvidí všechno ostré, šedé a ploché. Byla ráda, že to bude ve čtyři. Chtěla vidět, jakou barvu má jeho tvář, když mluví.
 
@@ -36,7 +36,7 @@ Byl menší, než čekala. Na obrazovce působil vyšší, nebo to dělal hlas. 
 
 „Čaj.“
 
-Objednal ho sám, česky, a číšník mu rozuměl. Pak si sedl a chvíli se na ni jen díval. Ne nepříjemně. Jako se dívá restaurátor na list, který mu přinesli, než na něj sáhne.
+Objednal ho sám, česky, a číšník mu rozuměl. Pak si sedl a chvíli si ji jen prohlížel. Nebylo to nepříjemné, spíš jako když restaurátor obhlíží list, který mu přinesli, dřív, než na něj sáhne.
 
 „Četl jsem váš článek,“ řekl. „O stabilizaci železitoduběnkových inkoustů na pergamenu. Z roku devadesát osm. Měl jsem ho v knihovně nadace dlouho předtím, než jsem věděl, kdo ho napsal.“
 
@@ -96,8 +96,6 @@ Neřekl to nadšeně. Řekl to jako člověk, který tu větu nosil v sobě tak 
 
 „To budeme my.“ V jeho hlase nebyl ani náznak rozpaků. „Můj otec nám říkal *die Erben*. Dědicové. Nemyslel to pyšně. Myslel to jako povinnost. Dědic nedostane jen dům. Dostane i dluhy a ty, kdo v domě bydlí.“
 
-Sael se na něj dívala.
-
 Věřil tomu. To bylo na tom nejhorší. Šedesát let rozhodovala, komu věřit, a uměla poznat, kdo lže. Tenhle muž nelhal. Věřil každému slovu, které říkal, a možná proto byla každá jeho věta tak hladká. Nemusel ji obrušovat.
 
 „Co nabízíte?“ zeptala se.
@@ -128,7 +126,7 @@ Sael se dívala na jeho ruce na ubruse. Úzké, čisté, s dlouhými prsty.
 
 Teď jí tu větu vracel někdo jiný. Jinými slovy, laskavě, přes šálek čaje v kavárně, kde nikdo neposlouchal.
 
-A Sael cítila, jak se v ní něco pohnulo. Ne strach. Něco horšího. Úleva. Krátká, jako když se člověk ve snu nadechne a pak si uvědomí, že je pod vodou.
+Sael ucítila, jak jí ze šíje odešlo napětí. Úleva. Krátká, jako když se člověk ve snu nadechne a pak si uvědomí, že je pod vodou. Byla horší než strach.
 
 Bylo by to tak snadné. Kniha by zůstala celá. Dorota by zůstala v knize, se svým jménem a rokem a s jedním malým znakem, a nikdo by ji nečetl jinak, než byla psaná. Sešit z matrik by zůstal zamčený v trezoru. Jedenáct shod. Nikdo by je neviděl. Ten muž by to neviděl, protože ho to nezajímalo, a ta žena by to neviděla, protože by k tomu nikdy nedostala klíč.
 
@@ -152,9 +150,9 @@ Sael pochopila dřív, než to řekl.
 
 Kniha zapisuje mrtvé a narozené. Kdo kdy přišel a kdy odešel. Kniha je pro paměť. Lidi, kteří žijí dnes, jejich občanská jména, jejich adresy, jejich děti a lékaři, ti nejsou v knize.
 
-Ti jsou v kazetě. Na čtyřiceti dvou listech strojopisu, šedá plechovka pod stolem v archivu pod horou, kterou Ostří nechtěli pustit nahoru.
+Ti jsou v kazetě, v šedé plechovce pod stolem v archivu pod horou, kterou Ostří nechtěli pustit nahoru. Na čtyřiceti dvou listech strojopisu.
 
-A v jedné kopii.
+A v jedné záložní kopii jinde, o které věděli dva lidé.
 
 „Já vám něco řeknu,“ řekla Sael. Nevěděla, že to řekne, dokud to neřekla. „Abyste věděl, s kým mluvíte.“
 
@@ -170,7 +168,7 @@ Ticho. Vedle u stolu se starý pán zasmál něčemu, co řekla jeho žena.
 
 „Hans Wehrl,“ řekla Sael. „Perkmistr. V jáchymovské knize pohřbů je v únoru 1596. Soudil lékárníka, který prodával krev. Sám ji od něj kupoval.“
 
-Wehrle se na ni dlouho díval. Pak sundal brýle a otřel si je ubrouskem, pomalu, jako by se mu zamlžily, i když se nezamlžily.
+Wehrle dlouho nic neříkal. Potom si sundal brýle a otřel si je ubrouskem, pomalu, jako by se mu zamlžily, i když se nezamlžily.
 
 „Vy ho máte zapsaného,“ řekl tiše. „Čtyři sta let.“
 
@@ -244,7 +242,7 @@ Doktor Kříž ji přijal v ordinaci po poslední pacientce. Bylo mu šedesát o
 
 „Kdo u vás byl kvůli tomu, co máte v trezoru?“ zeptala se Sael.
 
-Kříž se na ni podíval. Pak vstal, šel k oknu a stáhl žaluzii, i když venku už bylo šero a nikdo se nedíval.
+Kříž vstal, šel k oknu a stáhl žaluzii, i když venku už bylo šero a nikdo se nedíval.
 
 „Pohl,“ řekl. „Ten mladý od pana Brandla. Osmnáctého března.“ Vrátil se ke stolu. „Měl list od pana Brandla. Podepsaný, s razítkem. *Bezpečnostní kontrola zálohy.* Pan Brandl je přece ten, kdo tu zálohu tenkrát chtěl. Po té povodni.“
 
@@ -264,7 +262,7 @@ Bylo to pravda. A Kříž se přesto díval na své ruce, jako se díval tenkrá
 
 Brandlovi zavolala v devět večer, z dílny v Kozí uličce.
 
-Trezor stál otevřený. Na policích jedenáct balíků v hnědém papíru, svázaných tkanicí. Vlhkoměr na zdi čtyřicet dva. Sael seděla u pracovního stolu a dívala se na ně, zatímco telefon vyzváněl.
+Trezor stál otevřený. Na policích jedenáct balíků v hnědém papíru, svázaných tkanicí. Vlhkoměr na zdi čtyřicet dva. Sael seděla u pracovního stolu a telefon vyzváněl.
 
 Brandl to vzal po šestém zazvonění.
 
@@ -272,7 +270,7 @@ Brandl to vzal po šestém zazvonění.
 
 „Osmnáctého března,“ řekla Sael. „Pohl. Klinika.“
 
-Ticho. Sael slyšela, jak Brandl položí tužku. Dělal to vždycky, když se mu nelíbilo, co slyší.
+Ticho. Sael slyšela, jak Brandl položí tužku.
 
 „Ano,“ řekl.
 
@@ -298,9 +296,9 @@ Brandl mlčel tak dlouho, že to byla odpověď.
 
 „Za to nechce nic,“ řekl Brandl. „Za to nabídl úschovu. Já jsem ji přijal. Rada ji přijala, slyšela jste to.“
 
-„Rada ji přijala pro archivy.“
+„Rada nepřijala nic. Řekla, ať rozhodne sněm.“
 
-„Rada ji přijala,“ řekl Brandl. A pak, tišeji: „Paní Sálová. Já jsem viděl dav. V devadesátém třetím, na sídlišti v Chomutově. Lidi s tyčemi proti jedné rodině, která vypadala jinak. Ani to nebyli vaši. Byli to jen lidi, kteří vypadali jinak. Viděl jsem, co ten dav dělá s dveřmi.“ Odmlčel se. „Vy jste dav jen četla. V knize. Já jsem stál před ním v uniformě a měl jsem štít.“
+„Rozhodne pro ni,“ řekl Brandl. A pak, tišeji: „Paní Sálová. Já jsem viděl dav. V devadesátém třetím, na sídlišti v Chomutově. Lidi s tyčemi proti jedné rodině, která vypadala jinak. Ani to nebyli vaši. Byli to jen lidi, kteří vypadali jinak. Viděl jsem, co ten dav dělá s dveřmi.“ Odmlčel se. „Vy jste dav jen četla. V knize. Já jsem stál před ním v uniformě a měl jsem štít.“
 
 Sael mlčela.
 

@@ -28,13 +28,13 @@ Nepřišel do kanceláře. Přišel k ní domů, poprvé za dvanáct let, a stá
 
 Nara mlčela. Seděla naproti němu v kuchyni a mezi nimi stál čaj, který ani jeden nepil.
 
-Bylo to horší, než čekala. Lumi se neptala, protože jí to zakázala. Daven se neptal, protože ho to nezajímalo. Asko se neptal, protože věděl, že nesmí. A ze všech tří bylo jeho mlčení nejtěžší, protože ona věděla, co by mu chtěla říct. *Měl jsi pravdu. Ty dvě slabiky. Někdo je tam dal schválně.* Čtyřicet let psal o něčem, co nikdo nečetl, a teď to četla ona a nesměla mu to říct.
+Bylo to horší, než čekala. Lumi se neptala, protože jí to Nara zakázala. Daven se neptal, protože ho to nezajímalo. Asko se neptal, protože věděl, že nesmí. A ze všech tří bylo jeho mlčení nejtěžší, protože ona věděla, co by mu chtěla říct. *Měl jsi pravdu. Ty dvě slabiky. Někdo je tam dal schválně.* Čtyřicet let psal o něčem, co nikdo nečetl, a teď to četla ona a nesměla mu to říct.
 
 „Jednu věc ti říct můžu,“ řekla.
 
 Asko čekal.
 
-„Senát hledá čtenáře. Myslím, že žádný není. Budeme číst jen starý překlad.“
+„Senát hledá čtenáře. Myslím, že žádný není. Budeme číst jen to, co se přečíst dá.“
 
 Asko se na ni dlouho díval. Pak kývl, pomalu, jako by si to ukládal na místo, které už pro to měl připravené.
 
@@ -110,11 +110,11 @@ U slova byla poznámka. Číslo jedna, drobné, na okraji.
 
 Podle smyslu. Nara si ta dvě slova zopakovala, a protože je neměla kam zapsat, ohnula pod stolem jeden prst.
 
-Překladatel měl před sebou sloveso, které slovník překládal jako *opatruje*. A protože podmětem byl kontaminant, napsal *izoluje*. Kontaminant se neopatruje. To by nedávalo smysl. Překladatel tedy smysl dodal.
+Překladatel měl před sebou sloveso, které slovník překládal jako *opatruje*. A protože podmětem byl kontaminant, napsal *izoluje*. Kontaminant se neopatruje. To by bylo nesmyslné. Překladatel tedy smysl dodal.
 
 Nara znala ten pohyb. Dělala ho sama, celý život, když četla zákony psané špatně. Když slovo nesedělo k větě, opravila slovo. Věta byla starší a silnější než jedno slovo.
 
-Jenže tady neměla nic, čím by poznala, které z nich je starší.
+Jenže tady stála proti sobě dvě slova a nic jí neřeklo, které z nich opravit.
 
 *
 
@@ -126,7 +126,7 @@ Poznámka tři. *Smysl nejasný. Snad: neničí se mimo vyznačené místo, kde 
 
 Doslova. Tady překladatel smysl nedodal. Napsal, co stálo, a pod tím se omluvil.
 
-Nara se dívala na čtyři slova a cítila, jak se jí pod nimi něco posouvá. Kontaminant, který se nesmí zničit. Který se drží v místě, kde vznikl. Který se hlídá, nebo opatruje, nebo izoluje. Kolem něhož je hranice, kterou nesmí překročit ani ten, kdo ho nese.
+Nara se dívala na tři slova a cítila, jak se jí pod nimi něco posouvá. Kontaminant, který se nesmí zničit. Který se drží v místě, kde vznikl. Který se hlídá, nebo opatruje, nebo izoluje. Kolem něhož je hranice, kterou nesmí překročit ani ten, kdo ho nese.
 
 Nevěděla, co to je. Věděla jen, že ve vodním okruhu by se s kontaminantem takhle nikdo nezacházel.
 
@@ -160,7 +160,7 @@ Mladší soudce se pohnul. Starší ne.
 
 V síni bylo ticho. Zapisovač předl a Nara slyšela, jak zapisuje.
 
-Bylo to dobré. Bylo to lepší, než čekala. Ardaine nezačala tvrdit nic, co v listech nebylo. Vzala slovo, které tam stálo, a dovedla ho tam, kam vedlo. Kdyby Nara ten argument dostala do ruky za koncipientkou, pochválila by ji.
+Bylo to dobré. Bylo to lepší, než čekala. Ardaine nezačala tvrdit nic, co v listech nebylo. Vzala slovo, které tam stálo, a dovedla ho tam, kam vedlo.
 
 „Paní advokátko,“ řekla Tann.
 
@@ -176,7 +176,7 @@ Podle slovníku, který se ztratil? Podle písma, které nikdo nečte? Podle toh
 
 Ardaine se na ni podívala.
 
-„Nemá ani znalce. Senát se o žádného nemohl opřít, protože žádný není.“ Nara mluvila pomalu. Každé slovo musela nejdřív najít, protože neměla v koutku vědomí nic rozepsaného. „Navrhovatelka proto nenabízí vlastní výklad protokolu. Výklad, který by nemohla doložit, by nebyl argument. Byl by to pravý sloupec.“
+„Nemá ani znalce. Senát se o žádného nemohl opřít, protože žádný není.“ Nara mluvila pomalu. Každé slovo musela nejdřív najít, protože neměla nic rozepsaného. „Navrhovatelka proto nenabízí vlastní výklad protokolu. Výklad, který by nemohla doložit, by nebyl argument. Byl by to pravý sloupec.“
 
 Tann zvedla oči. Ardaine ne.
 
@@ -186,7 +186,7 @@ Tann zvedla oči. Ardaine ne.
 
 „Statut je čitelný. Psala ho Konfederace, ve své řeči. Článek druhý chrání populace. Článek čtvrtý zakazuje zásah do nich. Článek třetí zakazuje vysazovat osoby. Ty články nejsou přeložené. Znějí tak, jak je Shromáždění napsalo.“ Nara se nadechla. „Odpůrce chce, aby se jasný text vykládal podle textu nejasného. Navrhovatelka žádá opak.“
 
-Posadila se. Ruce se jí třásly. Tentokrát ji zklidnění nechalo být, nebo to nestihlo. Třes přešel sám.
+Posadila se. Ruce se jí třásly. Tentokrát ji síť nechala být, nebo to nestihla. Třes přešel sám.
 
 Ardaine chvíli mlčela.
 
@@ -232,7 +232,7 @@ Odpoledne nadiktovala do zapisovače poznámku. Krátkou. Napsala ji v hlavě t�
 
 *Klíčový pojem opisu protokolu je v překladu Koloniálního úřadu vyjádřen slovem „kontaminant“. Překlad pořídil úřad podle vlastního slovníku, který je dnes ztracen. Originál nikdo nečte. Překladatel sám označil překlad za pracovní a doporučil ověření podle úplného znění, které není k dispozici.*
 
-*Navrhovatelka nenavrhuje jiný překlad. Upozorňuje, že překlad tohoto slova je nejistý, a že ani jeho výklad, ani výklad protokolu jako celku se proto nesmí stát podkladem rozhodnutí, dokud ho nelze ověřit.*
+*Navrhovatelka nenavrhuje jiný překlad. Upozorňuje, že překlad tohoto slova je nejistý a že ani jeho výklad, ani výklad protokolu jako celku se proto nesmí stát podkladem rozhodnutí, dokud ho nelze ověřit.*
 
 *Navrhovatelka žádá, aby tato poznámka zůstala připojena k části III v každé podobě spisu.*
 
@@ -250,13 +250,11 @@ Neptal se, co tím myslí. Nara by mu to nedokázala říct.
 
 Ve výtahu nahoru stála Ardaine vedle ní. Senát jel napřed.
 
-Kabina stoupala. Skála za dveřmi ubíhala a Nara poslouchala, jak se lano někde vysoko nad nimi napíná.
-
 „Byla jste poctivá,“ řekla Ardaine. Dívala se na dveře.
 
 „Byla jsem bez argumentu.“
 
-„To nebývá totéž.“ Ardaine si zapnula kabát až ke krku. „Většina lidí by si nějaký vymyslela. Vy jste to věděla. Já taky.“
+„To nebývá totéž. Většina lidí by si nějaký vymyslela. Vy jste to věděla. Já taky.“
 
 „Váš výklad stojí na jednom slově.“
 
@@ -264,7 +262,7 @@ Kabina stoupala. Skála za dveřmi ubíhala a Nara poslouchala, jak se lano něk
 
 Nara mlčela. Ardaine měla pravdu, a protože měla pravdu, nebylo na ni co odpovědět.
 
-Kolem dvanácti set metrů se rozsvítilo *Záznam obnoven*. Nara cítila, jak se jí do hlavy vrací den: Lumi, čtyři zprávy; komora, jedna; Daven, dvakrát. A hned pod tím, než si stačila cokoli otevřít, slovo, které hledala celé odpoledne a které jí síť teď sama nabídla, protože si ho Nara v duchu několikrát zopakovala.
+V půli cesty se rozsvítilo *Záznam obnoven*. Nara cítila, jak se jí do hlavy vrací den: Lumi, čtyři zprávy; komora, jedna; Daven, dvakrát. A hned pod tím, než si stačila cokoli otevřít, slovo, které si celé odpoledne opakovala a které jí teď síť sama nabídla.
 
 *Kontaminant: látka nebo organismus, jehož přítomnost v prostředí je nežádoucí. Viz též: izolace, sanace, karanténa.*
 
@@ -285,5 +283,3 @@ Nedořekla to. Nemusela. Nara si pamatovala, co řekla minule. *Až budete mít 
 V příletové hale si Nara sedla na svou lavici u průzoru. Terasy lomu byly osvětlené. Pracovala tam noční směna a z té dálky se lidé u strojů nedali rozeznat od strojů.
 
 Ilanovi nenapsala nic. Jeho *Proč?* leželo v síti třetí den. Dnes by mu mohla napsat ještě méně než předevčírem.
-
-*Do odletu: 32 dní.*

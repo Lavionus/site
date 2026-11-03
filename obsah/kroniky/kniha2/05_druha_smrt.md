@@ -4,7 +4,7 @@ V pondělí ráno nesla desky nahoru a celou cestu je držela oběma rukama, jak
 
 Bylo v nich všechno. Čistý zápis o Ursule Kolbové, ten první, s vrzáním podlahy. Slova Purgy Sternové německy a česky. Slova mistra Jobsta, *kam bych ji asi dával*, a pod čarou struha bez skvrn. A navrchu list s tabulkou, *Puštěno / Vylito*, a pod tabulkou, přepsaná do čistého, slova děvečky v lázni. *Teď mi platí víc někdo jinej.* Ilona je v noci přečetla ještě dvakrát a pokaždé jí připadalo, že je to dobře. Že to drží. Že kdo to bude číst celé, uvidí, kudy krev teče.
 
-Ve psárně bylo horko jako v pekárně. Kunz seděl u pultu v kožichu, s brýlemi na šňůrce, a když vešla, zvedl levou ruku. Čekala. Na pultu vedle kalamáře stála lahvička z hnědého skla, zazátkovaná, s papírkem uvázaným kolem hrdla, a v místnosti to vonělo něčím, co Ilona znala z Řehořovy brašny: anýzem, medem a opiem.
+V písárně bylo horko jako v pekárně. Kunz seděl u pultu v kožichu, s brýlemi na šňůrce, a když vešla, zvedl levou ruku. Čekala. Na pultu vedle kalamáře stála lahvička z hnědého skla, zazátkovaná, s papírkem uvázaným kolem hrdla, a v místnosti to vonělo něčím, co Ilona znala z Řehořovy brašny: anýzem, medem a opiem.
 
 „Teriak,“ řekl Kunz, když si všiml, kam se dívá. Dopsal řádek a posypal ho pískem. „Na kosti. Lékárník mi to píše na křídu už od Hromnic. Za kosti se v tomhle městě platí dráž než za hříchy, paní Ilona, a hříchy si člověk aspoň užije.“ Natáhl ruku. „Pan perkmistr tu není. Jel v sobotu nahoru ke Klínovci, k rodovým dílům, voda jim zatopila chodbu. Vrátí se ve čtvrtek, říkal. Nebo v pátek, když bude pršet.“
 
@@ -36,7 +36,7 @@ V úterý pršelo. Ilona pustila žilou mlynářově ženě, která měla horkou
 
 „Že chodíte v noci.“ Pokrčil rameny. „Strážný to slyšel v hospodě. Já to říkám jen proto, abyste to věděla.“
 
-Večer nemohla spát a nevěděla proč. Ležela a poslouchala déšť na šindelích a mezi deštěm stoupy, jak tlučou, dole a nahoře. V tichu mezi nimi myslela na to, kdy půjde ve středu k lázni, aby viděla, jestli si soudek vyzvedne ten muž, a kde bude stát, aby ji nikdo neviděl. Usnula pozdě. Spala tvrdě, bez snů.
+Večer nemohla spát a nevěděla proč. Ležela a poslouchala déšť na šindelích a mezi deštěm stoupy, jak tlučou, dole a nahoře. V tichu mezi nimi myslela na to, kdy půjde ve středu k lázni, aby viděla, jestli si soudek vyzvedne ten muž, a kde bude stát, aby ji nikdo neviděl. Po půlnoci déšť ustal; slyšela, jak přestal. Usnula pozdě. Spala tvrdě, bez snů.
 
 *
 
@@ -122,8 +122,6 @@ Lidé na mostě zahučeli, souhlasně, jako když v kostele zazní amen.
 
 Stöckel sešel o krok níž, takže stál skoro u ní, a řekl tišeji, jen pro ni a pro kazatele a pro biřice: „Já vám něco řeknu. Ta holka je druhá. Kolbová byla první. Obě bílé, obě bez krve, a krev nikde. Ve městě se mluví o nočním lidu. Rada o tom ví. Za měsíc je svatý Jan.“ Odmlčel se. „Vy jste zapisovatelka horního soudu. Když vy napíšete, že to byla rána od zubů, tak to bude psané rukou horního soudu a ne rukou kožešníka. A pak se nikdo nebude ptát, proč jsme šli nahoru.“
 
-Ilona se na něj dívala.
-
 „A ten váš kluk,“ řekl Stöckel ještě tišeji, „ten v noci chodil na dvůr. Říkal to sám a vy jste to napsala. Komu otvíral, paní? Kdo k němu chodil? Takový kluk, syn havíře, ten zná štoly. Ten ví, kde kdo bydlí.“
 
 „Tobiáš sedí od minulé středy pod schodištěm horního úřadu. Pod zámkem. Hlídají ho dva havíři.“
@@ -134,7 +132,7 @@ Ilona se na něj dívala.
 
 Ilona se podívala na Lene. Na dvě dírky. Na zápěstí. Pak na kazatele, na Stöckela, na lidi na mostě, kteří se nakláněli přes zábradlí, aby lépe viděli, a mezi nimi na ponocného Veita, starého, s rukama na zábradlí a s očima, které na ni byly upřené.
 
-Kdyby řekla *zuby*, rada by šla nahoru dřív než na svatého Jana. A našla by kozy a polévku a dvacet dětí ve výklencích, a dítě s jizvami na lících, které se dívá z tmy s očima dokořán. A Tobiáš by byl ten, kdo jim otvíral.
+Kdyby řekla *zuby*, rada by šla nahoru dřív než na svatého Jana. A našla by kozy a polévku a dvacet dětí ve výklencích, a dítě s jizvami na lících, které se dívá ze tmy s očima dokořán. A Tobiáš by byl ten, kdo jim otvíral.
 
 Kdyby řekla *zuby*, nebyla by to pravda.
 
@@ -144,7 +142,7 @@ Bylo ticho. Jen potok, a pod mostem kůň, který pořád frkal.
 
 „Ona to ví,“ řekl někdo na mostě. Nebylo poznat kdo. „Ona to ví, že to nejsou oni.“
 
-A pak jiný hlas, starý, a Ilona věděla, čí je, dřív než zvedla hlavu: „Chodí v noci nahoru. Viděl jsem ji. V sobotu, za tmy, nad horním koncem. Že jde k Sternům. U Sternů nikdo nebyl.“
+A pak jiný hlas, starý, a Ilona věděla, čí je, dřív než zvedla hlavu: „Chodí v noci nahoru. Viděl jsem ji. V sobotu, za tmy, nad horním koncem. Že jde ke Sternům. U Sternů nikdo nebyl.“
 
 Veit. S rukama na zábradlí. Nedíval se na ni zle. Díval se na ni, jako se dívá ponocný na dveře, které ráno našel otevřené: neví, jestli je otevřel zloděj, nebo jestli je jen zapomněl zavřít hospodář.
 
@@ -152,7 +150,7 @@ Hučení na mostě se změnilo. Bylo to jiné hučení. Ilona ho slyšela jednou
 
 „Paní ranhojička má list od perkmistra,“ řekl Stöckel. Řekl to nahlas, k mostu, a Ilona v tom poprvé za ta léta slyšela něco jako varování, ne pro sebe, ale pro ně. „Kdo na ni sáhne, sahá na horní úřad.“ Pak se k ní otočil a řekl tiše: „Jděte domů. Jinou cestou.“
 
-Biřicové zvedli Lene na lesi z větví. Hlava jí sklouzla stranou a vlasy visely dolů a kapalo z nich.
+Biřicové zvedli Lene na nosítka z větví. Hlava jí sklouzla stranou a vlasy visely dolů a kapalo z nich.
 
 *
 
@@ -184,7 +182,7 @@ Tobiáš se otočil. Viděla, že plakal, a že nechce, aby to viděla, a tak se
 
 Ilona mlčela. Venku pod okénkem někdo zaklepal na mříž, kladivem, třikrát, a pak se zasmál.
 
-„Mluvila s vámi,“ řekl Tobiáš. „V sobotu. Vy jste šla do lázně a večer jste přišla a měla jste v sešitě něco nového. Viděl jsem to na vás.“
+„Mluvila s vámi,“ řekl Tobiáš. „V sobotu. Vy jste šla do lázně a v pondělí jste přišla a měla jste v sešitě něco nového. Viděl jsem to na vás.“
 
 „Ano.“
 
@@ -192,7 +190,7 @@ Ilona mlčela. Venku pod okénkem někdo zaklepal na mříž, kladivem, třikrá
 
 „Ne jménem. Napsala jsem *děvečka v lázni, slova její*.“
 
-Tobiáš se na ni díval. Chvíli nic neříkal, a Ilona viděla, jak mu to jde hlavou, jak to skládá, protože ho to sama učila: kdo věděl, kdo mohl číst, kdo mohl slyšet.
+Tobiáš chvíli nic neříkal, a Ilona viděla, jak mu to jde hlavou, jak to skládá, protože ho to sama učila: kdo věděl, kdo mohl číst, kdo mohl slyšet.
 
 „V lázni je jedna děvečka,“ řekl.
 
@@ -208,7 +206,7 @@ Tobiáš se otočil zpátky k okénku. Stál tam a jeho ramena se nehýbala, a I
 
 *
 
-Kunz byl ve psárně a psal. Když vešla, nezvedl levou ruku. Zvedl hlavu.
+Kunz byl v písárně a psal. Když vešla, nezvedl levou ruku. Zvedl hlavu.
 
 „Paní Ilona,“ řekl. „Slyšel jsem. Bůh jí buď milostiv. Taková mladá.“
 
@@ -246,7 +244,7 @@ Kunz se nepodíval na desky. Podíval se na kamna. „Jsem písař,“ řekl. �
 
 „Mohl to vědět kdokoli,“ řekl Kunz. Díval se pořád do kamen. „Jobst. Jobstova žena. Ta ji v sobotu volala, celá lázeň to slyšela. Kdokoli, kdo vás viděl, jak s ní za lázní mluvíte. Za lázní je dvůr a nad dvorem okna. Vy si myslíte, že v tomhle městě je nějaké místo, kde člověka nikdo nevidí?“
 
-Byla to pravda. Ilona to věděla. Pankrác na seníku. Jobstova žena v okně. Kdokoli na mostě. Mohl to být kdokoli.
+Ilona to věděla. Pankrác, na jehož seníku ležela. Jobstova žena v okně. Kdokoli na mostě. Mohl to být kdokoli.
 
 A taky to mohl být papír, který napsala ona, svou rukou, rovnými řádky jako zoraná pole. *Děvečka v lázni, slova její.* A Lene řekla: *Ale každej ví, že tu jsem jen já.* A Ilona na to neodpověděla, protože to byla pravda.
 
@@ -282,7 +280,7 @@ Ilona se podívala na desky, které ležely na stole. Pak mu řekla i to. Že v�
 
 Wehrl dlouho mlčel.
 
-„Kunz je u horního úřadu čtyřicet let,“ řekl nakonec pomalu. „Byl tu dřív než já. Je starý, je nemocný, dluží každému v tomhle městě, protože je hodný a hloupý na peníze.“ Podíval se na desky. „A četl je jen on.“
+„Kunz je u horního úřadu přes dvacet let,“ řekl nakonec pomalu. „Byl tu dřív než já. Je starý, je nemocný, dluží každému v tomhle městě, protože je hodný a hloupý na peníze.“ Podíval se na desky. „A četl je jen on.“
 
 „Jen on je zamykal.“
 
@@ -310,7 +308,7 @@ Ale to nebylo, co viděla. To bylo, co si myslela. Listy ležely jinak, to vidě
 
 Napsala: *Slova její ležela od pondělí 22. května v zamčené truhle horního úřadu. Ve středu 24. května ležely listy v jiném pořadí, než v jakém byly zamčeny.* Nic víc. Žádné jméno. Ani Kunzovo.
 
-Pak dlouho seděla a dívala se na ten řádek a myslela na to, že to je stejné, jako když napsala *děvečka v lázni*. Že to není jméno, a přesto každý, kdo to bude číst, bude vědět, o kom to je.
+Pak dlouho seděla nad tím řádkem a myslela na to, že to je stejné, jako když napsala *děvečka v lázni*. Že to není jméno, a přesto každý, kdo to bude číst, bude vědět, o kom to je.
 
 Nechala to tam.
 

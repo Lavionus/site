@@ -2,11 +2,11 @@
 
 Ráno se jí třásly ruce.
 
-Nara to zjistila u linky, když nalévala horkou vodu do šálku a pramínek uhnul a stekl po okraji na desku. Zastavila se a podívala se na svou ruku. Nebyl to velký třes. Jen jemné chvění v prstech, jako u Davena včera ve dveřích. Takhle se jí třásly ruce, když jí bylo dvacet a čekala na první jednání. Pak si zvykla. Nebo si myslela, že si zvykla.
+Nara to zjistila u linky, když nalévala horkou vodu do šálku a pramínek uhnul a stekl po okraji na desku. Zastavila se a podívala se na svou ruku. Nebyl to velký třes. Jen jemné chvění v prstech, jako u Davena včera ve dveřích. Takhle se jí třásly ruce, když jí bylo čtyřiadvacet a čekala na první jednání. Pak si zvykla. Nebo si myslela, že si zvykla.
 
 Nalila znovu, oběma rukama.
 
-Spala možná tři hodiny. Bez zklidnění spánek nepřišel sám. Musela ho hledat, a když ho našla, byl mělký a plný věcí. Nic z toho si nepamatovala, jen to, že se jí něco zdálo. Ráno ležela a dívala se do stropu. Pak si vzpomněla na Ilana, jak říká, že se mu zase zdají sny a že jsou jeho.
+Spala možná tři hodiny. Spánek teď nepřicházel sám. Musela ho hledat, a když ho našla, byl mělký a plný věcí. Nic z toho si nepamatovala, jen to, že se jí něco zdálo. Ráno ležela a dívala se do stropu. Pak si vzpomněla na Ilana, jak říká, že se mu zase zdají sny a že jsou jeho.
 
 *Do odletu: 21 dní.*
 
@@ -22,7 +22,7 @@ Nepotřebovala vzor. Věděla, jak se to píše. Zúžení, zpětvzetí a přije
 
 Sedm slov. O tři víc než zpětvzetí.
 
-Nara si je přečetla a nepodepsala je. Nechala je ležet otevřené. Ardaine jí tu nabídku řekla do očí. Odpověď do sítě, do schránky, kterou síť navíc posoudí a doručí se zpožděním, se jí zdála nečistá. Jako podepsat rukou papír, o kterém víte, že ho nikdo nezaloží.
+Nara si je přečetla a nepodepsala je. Nechala je ležet otevřené. Ardaine jí tu nabídku řekla do očí. Poslat odpověď do sítě, kde ji síť posoudí a doručí se zpožděním, se jí zdálo nečisté. Jako podepsat rukou papír, o kterém člověk ví, že ho nikdo nezaloží.
 
 V sedm napsala Lumi: *V devět jdu do úřadu. Pak přijdu.* Vzkaz odešel a zůstal viset s poznámkou *posuzuje se*. Doručen byl za čtyřicet minut. Lumi odpověděla hned: *Ano.* Nic víc. Lumi věděla, kam jde a proč, a nezeptala se na nic.
 
@@ -172,7 +172,7 @@ Ilan zvedl oči.
 
 „Včera večer. A odpojila jsem se. Na hodinu.“
 
-Ilan se nepohnul. Pak, velmi pomalu, se mu něco stalo s obličejem. Nara neuměla říct co. Nebyl to úsměv. Nebyla to ani bolest. Bylo to, jako by se díval na někoho, koho zná, a poprvé ho viděl z boku.
+Ilan se nepohnul. Pak se mu, velmi pomalu, něco stalo s obličejem. Nara neuměla říct co. Nebyl to úsměv. Nebyla to ani bolest. Bylo to, jako by se díval na někoho, koho zná, a poprvé ho viděl z boku.
 
 „Jaký to bylo?“ zeptal se.
 
@@ -260,9 +260,9 @@ Ilan vstal. U dveří se otočil, jako se otáčel vždycky.
 
 Dny potom šly rychle a každé ráno začínalo stejně.
 
-Nara se probudila, bez zklidnění, s rukama, které se třásly víc nebo míň podle toho, jak spala. Vstala a v kuchyni si v duchu řekla čtyři slova. *Navrhovatelka bere návrh zpět.* Neříkala je proto, aby je řekla doopravdy. Říkala je, aby věděla, že je ještě může říct, a aby věděla, že je neřekne. Pak si nalila horkou vodu oběma rukama.
+Nara se probudila s rukama, které se třásly víc nebo míň podle toho, jak spala. Vstala a v kuchyni si v duchu řekla čtyři slova. *Navrhovatelka bere návrh zpět.* Neříkala je proto, aby je řekla doopravdy. Říkala je, aby věděla, že je ještě může říct, a aby věděla, že je neřekne. Pak si nalila horkou vodu oběma rukama.
 
-Dvacátý sedmý den přišlo usnesení pořádkové služby. *Přestupek: přerušení spojení, 62 minut. Pokuta podle sazebníku. Upozornění: opakování se posuzuje přísněji.* Nara ji zaplatila tím drobným kývnutím, kterým podepisovala všechno, a síť jí poděkovala.
+Dvacátý sedmý den přišlo usnesení pořádkové služby. *Přestupek: přerušení spojení, 62 minut. Pokuta podle sazebníku. Upozornění: opakování se posuzuje přísněji.* Nara pokutu zaplatila tím drobným kývnutím, kterým podepisovala všechno, a síť jí poděkovala.
 
 Téhož dne byl Daven u Ilana a Ilan mu to řekl. Nara to věděla, protože jí Daven večer poslal jedinou větu: *Řekl mi to. Obojí. D.* Neodpověděla. Daven nečekal odpověď.
 
@@ -326,7 +326,7 @@ Každé ráno čtyři slova. Každé ráno je neřekla.
 
 *
 
-Třicátého šestého dne večer ho dveře pustily.
+Třicátého šestého dne večer pustily dveře Davena.
 
 Nara seděla v kuchyni. Čekala ho, i když nevěděla, že ho čeká. Uslyšela cvaknutí v předsíni a nevstala.
 
@@ -356,7 +356,7 @@ Ve dvacet tři hodin přešly chodby na noční režim. Daven se podíval pod dv
 
 „Na lodích se tomu říká uzávěrka okna,“ řekl. „Poslední chvíle, kdy se dá zapálit motor, aby loď trefila dráhu. Před ní můžeš všechno. Po ní nic. Celý život mi to připadalo klidné. Že je na světě aspoň jedna věc, se kterou nikdo nic neudělá.“ Odmlčel se. „Tys to kdysi říkala. Že se ti to na tom líbí.“
 
-„Říkala.“
+„Říkala?“
 
 „Já vím, že sis to nepamatovala. Pamatuju si to já.“
 
@@ -386,7 +386,7 @@ Nara se na něj podívala. Na šedivé spánky, na tmavé oblouky pod očima, na
 
 Dívali se na sebe dvě minuty. Nikdo se nepohnul.
 
-O půlnoci se řádek v koutku vědomí změnil, tak jak se měnil každou noc.
+O půlnoci se odpočet změnil, tak jak se měnil každou noc.
 
 *Do odletu: 10 dní.*
 

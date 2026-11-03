@@ -22,7 +22,7 @@ Ardaine vstala, když Nara vešla. Nepodala jí ruku a ukázala na židli.
 
 „Napsala.“ Ardaine si sedla. Položila ruce na stůl, dlaněmi dolů, vedle sebe. „Váš záznam běží. Můj taky. Nevadí mi to. Nic z toho, co řeknu, nebudu chtít vzít zpátky.“
 
-Nara si sedla. Židle byla tvrdá a nízká. Nara si všimla, že sedí o kousek níž než Ardaine, a že to Ardaine nejspíš nezařídila úmyslně. Nebo ano. U Ardaine se to nedalo poznat.
+Nara si sedla. Židle byla tvrdá a nízká. Nara si všimla, že sedí o kousek níž než Ardaine a že to Ardaine nejspíš nezařídila úmyslně. Nebo ano. U Ardaine se to nedalo poznat.
 
 „Máte přečtené všechno,“ řekla Ardaine.
 
@@ -38,7 +38,7 @@ Nara si sedla. Židle byla tvrdá a nízká. Nara si všimla, že sedí o kousek
 
 Nabídku řekla celou najednou. Bez úvodu, bez vysvětlování, jako se čte výrok.
 
-„Koloniální úřad je připraven rozhodnout o žádosti pana Davena Vess o výjimku z výkonu trestu pro nezletilého. Kladně. Jako nezletilý s výjimečnými okolnostmi bude Ilan Vess vyjmut z druhého transportu. Výjimka bude rozhodnuta do dvou dnů od vaší odpovědi a bude konečná.“
+„Koloniální úřad je připraven rozhodnout o žádosti pana Davena Vess o výjimku z výkonu trestu pro nezletilého. Kladně. Jako nezletilý s výjimečnými okolnostmi bude Ilan Vess vyjmut z druhého transportu. O výjimce bude rozhodnuto do dvou dnů od vaší odpovědi a bude konečná.“
 
 Nara neřekla nic.
 
@@ -108,13 +108,13 @@ Ardaine se na ni dívala.
 
 „Tak proč?“
 
-Ardaine chvíli mlčela. Pak dala ruce ze stolu a položila si je do klína. Nara je už neviděla.
+Ardaine chvíli mlčela. Pak sundala ruce ze stolu a položila si je do klína. Nara je už neviděla.
 
 „Protože vyhrát nestačí,“ řekla Ardaine. „Senát transport nezastaví. Ale pokud o přílohu povedete spor až do konce, předsedkyně ji pustí ven. Já ji znám. Tak, ne jinak. Bude to rozhodnutí v mezích pravomoci, přesně jak řekla, a bude to pravda. Pak to bude vědět každý. Že *má se za to* bylo objednané. Že úřad věděl. Že na tom světě jsou ti, kdo tam byli dřív.“
 
 „A to vám vadí.“
 
-„Mně ne.“ Ardaine to řekla tiše. „Já to vím. Vím to od dvanáctého dne. Vím to každé ráno, když se probudím.“ Odmlčela se. „Vadí mi, co se stane potom. Transport odletí tak jako tak. Šest tisíc lidí poletí na svět, o kterém budou všichni vědět, že je obydlený, že na něj nesmí, a že je tam úřad posílá znovu. Kdo příště dostane přiznání k podpisu, bude vědět, co podepisuje. Kdo zůstane, bude vědět, za co. A pak přijde třetí transport. Musí přijít, protože precedens platí, a nikdo ho nezruší, protože ho nemůže zrušit tento soud. Jen Shromáždění. A Shromáždění bude jednat veřejně, jak to stojí ve statutu, o světě, na který úřad už poslal dvacet čtyři tisíc lidí a teď posílá dalších šest tisíc.“
+„Mně ne.“ Ardaine to řekla tiše. „Já to vím. Vím to od dvanáctého dne. Vím to každé ráno, když se probudím.“ Odmlčela se. „Vadí mi, co se stane potom. Transport odletí tak jako tak. Šest tisíc lidí poletí na svět, o kterém budou všichni vědět, že je obydlený, že na něj nesmí a že je tam úřad posílá znovu. Kdo příště dostane přiznání k podpisu, bude vědět, co podepisuje. Kdo zůstane, bude vědět, za co. A pak přijde třetí transport. Musí přijít, protože precedent platí, a nikdo ho nezruší, protože ho nemůže zrušit tento soud. Jen Shromáždění. A Shromáždění bude jednat veřejně, jak to stojí ve statutu, o světě, na který úřad už poslal necelých dvacet čtyři tisíc lidí a teď posílá dalších šest tisíc.“
 
 Nara poslouchala.
 
@@ -136,7 +136,7 @@ Ardaine ji tak oslovila poprvé. Ne *paní advokátko*.
 
 „Nabídla jsem vám to, co jste mohla přijmout.“ Ardaine se nepohnula. „Nenabídla jsem vám, abyste vzala návrh zpět. Nenabídla jsem vám nic, za co byste se musela stydět před komorou. Procesní vady jsou skutečné. Vyhrajete je. Ilan zůstane. Vy budete mít precedent ve vlastním spisu, že hromadné řízení podle Terry bylo vadné. Příští advokát na to může stavět.“ Odmlčela se. „Vybrala jsem nabídku, kterou byste mohla přijmout. To není laskavost. To je řemeslo.“
 
-Nara si vzpomněla na sebe a Lumi před třemi dny v kanceláři. *Dobré řemeslo. Kdybych to dostala na stůl za koncipientkou, řekla bych, že je to elegantní.*
+Nara si vzpomněla na sebe a Lumi před třemi dny v kanceláři. *Dobré řemeslo. Kdybych to dostala na stůl od koncipientky, řekla bych, že je to elegantní.*
 
 „Je to dobré řemeslo,“ řekla.
 
@@ -198,9 +198,9 @@ A tajná příloha by ležela dvanáct set metrů pod povrchem měsíce, v nice,
 
 A Ilan by tady byl.
 
-Nara zjistila, že stojí na náměstí a v duchu počítá. Ne dny. Lidi. Jeden. A čtyři sta. A šest tisíc. A dvacet čtyři tisíc před nimi. A ti, kdo tam byli dřív, které úřad neodhadl. Čísla nešla k sobě. Nedala se sečíst ani porovnat. Byla jako tečky a čárky v průzkumu. Nečtěte to po desítkách, nejde to.
+Nara zjistila, že stojí na náměstí a v duchu počítá. Ne dny. Lidi. Jeden. A čtyři sta. A šest tisíc. A dvacet čtyři tisíc před nimi. A ti, kdo tam byli dřív, které úřad neodhadl. Čísla nešla k sobě. Nedala se sečíst ani porovnat. Byla jako tečky a čárky v průzkumu. *Nečtěte to po desítkách,* říkala Mel.
 
-Řádek v koutku vědomí jí ukázal čas. Pak Davena. Třetí hovor dnes.
+Síť jí ukázala čas. Pak Davena. Třetí hovor dnes.
 
 Nara ho nepřijala.
 
@@ -226,7 +226,7 @@ Lumi kývla. Neptala se dál. Nara ji za to měla ráda víc, než by kdy řekla
 
 „Řeknete mu to?“
 
-Nara se podívala na řádek v koutku vědomí. Daven. Čtyři hovory. Vzkaz: *Volal jsem. Ozvi se. Prosím.*
+Nara se podívala na řádek sítě. Daven. Čtyři hovory. Vzkaz: *Volal jsem. Ozvi se. Prosím.*
 
 „Nejdřív to musím říct Ilanovi,“ řekla.
 
@@ -258,7 +258,7 @@ V koutku vědomí jí běžely dva řádky. Jeden znala od prvního dne.
 
 *Do odletu: 24 dní.*
 
-Druhý tam síť dala sama, odpoledne, když Nara z kanceláře úřadu odcházela. Nara ho nežádala. Síť si ho odvodila ze záznamu, protože v něm byla lhůta, a lhůty síť hlídala ochotně.
+Druhý tam síť dala sama, dopoledne, když Nara z kanceláře úřadu odcházela. Nara ho nežádala. Síť si ho odvodila ze záznamu, protože v něm byla lhůta, a lhůty síť hlídala ochotně.
 
 *Do odpovědi: 3 dny.*
 

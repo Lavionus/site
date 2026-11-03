@@ -2,7 +2,7 @@
 
 Den mezi jednáním a rozsudkem neměl žádný tvar.
 
-Nara se probudila před pátou a nevěděla, kde je. Pak to věděla. Ležela a poslouchala ventilaci. Od té noci v kuchyni ji slyšela pořád, i se sítí. Dva tóny. Nízký a ten, co se zvedá. Síť jí nabídla, že ventilaci v ložnici ztlumí. Nara odmítla.
+Nara se probudila před pátou a nevěděla, kde je. Pak si vzpomněla. Ležela a poslouchala ventilaci. Od té noci v kuchyni ji slyšela pořád, i se sítí. Dva tóny. Nízký a ten, co se zvedá. Síť jí nabídla, že ventilaci v ložnici ztlumí. Nara odmítla.
 
 *Do odletu: 9 dní.*
 
@@ -40,7 +40,7 @@ Ilan měl pravdu, jako obvykle. Nara mu neodpověděla. Na tohle se dvaceti slov
 
 Asko ji pozval k sobě. Ne do bytu. Do pracovny o patro výš, kde začínala před pětadvaceti lety.
 
-Kapradina pořád umírala. Měla o list méně, než si Nara pamatovala, a ten, co zbyl nejvýš, byl hnědý na okraji. Asko ji zaléval z konvičky, když Nara vešla, a nechal si od sítě hlásit vlhkost půdy. Konvičku pak postavil vedle květináče, na místo, kde na desce stolu zůstal kulatý světlejší otisk.
+Kapradina pořád umírala. Měla o list méně, než si Nara pamatovala, a ten, co zbyl nejvýš, byl hnědý na okraji. Asko kapradinu zaléval z konvičky, když Nara vešla, a nechal si od sítě hlásit vlhkost půdy. Konvičku pak postavil vedle květináče, na místo, kde na desce stolu zůstal kulatý světlejší otisk.
 
 „Sedni si,“ řekl.
 
@@ -82,7 +82,7 @@ Ve čtyři vstala a nalila si horkou vodu oběma rukama.
 
 Síň jedna byla plná jako předevčírem. Před budovou stálo víc lidí, síť řekla dva tisíce. Nara šla hlavním vchodem a nikdo ji nechytil za rukáv.
 
-Uvnitř seděli na svých místech, jako by z nich ani neodešli. Pell v první řadě. Mel na své židli s opěradlem, s rukama složenýma v klíně. Hals u stěny, v rukavicích. Asko ve druhé řadě s rukou na stěně. Daven vzadu u dveří. Lumi vedle Nary, s ničím otevřeným.
+Uvnitř seděli na svých místech, jako by z nich ani neodešli. Pell v první řadě. Mel na své židli s opěradlem, s rukama složenýma v klíně. Hals u stěny, v rukavicích. Asko ve druhé řadě s rukou na stěně. Daven vzadu u dveří. Lumi vedle Nary, v síti nic otevřeného.
 
 Ardaine sama u svého stolu.
 
@@ -104,7 +104,7 @@ Tann četla výrok bez důrazu, jak se výroky čtou. Každý bod zvlášť. Mez
 
 *„Za prvé. Navrhovatelka je osobou dotčenou výkonem trestu. Návrh podala osoba k tomu oprávněná.“*
 
-Nara si toho všimla, protože to byla první věc. *Ústava je nezná,* řekla devátého dne. Teď je ústava znala.
+Nara si toho všimla, protože to byla první věc. *Ústava je nezná,* řekla devátého dne o těch dvou možnostech. Teď je ústava znala.
 
 *„Za druhé. Senát připouští k důkazu přílohu k rozsudku Terra v částech první, druhé a čtvrté; rekonstrukci technických záznamů útoku; doložku k přiznání obviněného Erena spolu s opatřením o přidružení k výkonu trestu; a souhrnné hlášení pozorovací sítě. Část třetí přílohy připouští v rozsahu, v jakém je čitelná, spolu s poznámkou navrhovatelky. Výklad pojmu kontaminant senát nepřijímá od žádného z účastníků.“*
 
@@ -134,7 +134,7 @@ Nabídka jim nepřidávala nic. Nabízela jen Ilana. A ticho.
 
 Pauza. Stejně dlouhá.
 
-Nara to věděla. Věděla to od čtvrtého dne, od Askovy poznámky na okraji, od vlastního *vyhráváte* v prázdné kanceláři úřadu. Věděla to včera v pracovně s umírající kapradinou. Přesto se v ní něco propadlo. Bylo to jako v Sedmé loděnici, když se otočila moc rychle a svět se otočil s ní, jen o kousek dál a o kousek později. Nara se nechytila zábradlí, protože tu žádné nebylo. Chytila se hrany stolu.
+Nara to věděla. Věděla to od čtvrtého dne, od Askovy poznámky na okraji, od vlastního *vyhráváte* v prázdné kanceláři úřadu. Věděla to včera v pracovně s umírající kapradinou. Přesto se jí zhoupl žaludek. Bylo to jako v Sedmé loděnici, když se otočila moc rychle a svět se otočil s ní, jen o kousek dál a o kousek později. Nara se nechytila zábradlí, protože u stolu navrhovatelky žádné nebylo. Chytila se hrany stolu.
 
 Nikdo ji nedržel. Síť jí nic nevzala. Cítila to celé.
 
@@ -148,7 +148,7 @@ Pak Tann četla odůvodnění.
 
 Ne celé. Celé mělo přes šedesát stran a bylo ve spisu. Četla jen to, co se týkalo výroků, a k šestému bodu četla nejdéle.
 
-K prvnímu bodu krátce. „Odpůrce namítl, že navrhovatelka nesdílí s odsouzeným domácnost, a výkon trestu proto do jejích práv nezasahuje. Zákon, podle něhož by navrhovatelka s odsouzeným letěla, kdyby s ním bydlela, ji nemůže z řízení vyloučit proto, že s ním nebydlí. Rodinný život chrání ústava, ne společná adresa.“
+K prvnímu bodu krátce. „Odpůrce namítl, že navrhovatelka nesdílí s odsouzeným domácnost, a výkon trestu proto do jejích práv nezasahuje. Pravidlo, podle něhož by navrhovatelka s odsouzeným letěla, kdyby s ním bydlela, ji nemůže z řízení vyloučit proto, že s ním nebydlí. Rodinný život chrání ústava, ne společná adresa.“
 
 Nara to slyšela a nic necítila. Věděla, že tohle si jednou někdo přečte a bude na tom stavět. Jiná matka, jiný syn, jiný soud. Teď to nebylo nic.
 
@@ -274,13 +274,13 @@ Nevěděla, proč to řekl. Zapamatovala si to.
 
 Pak v síni zůstala sama.
 
-Lumi šla napřed, aby Naře na chodbě udělala cestu. Nara jí řekla, že přijde za chvíli, a Lumi se nezeptala proč. Síň byla prázdná a vysoká a světlo z ní přicházelo z velké dálky, jako předtím. Lavice stály v řadách až ke stěně. Na jedné ležel zapomenutý šátek.
+Lumi šla napřed, aby Naře na chodbě udělala cestu. Nara jí řekla, že přijde za chvíli, a Lumi se nezeptala proč. Síň byla prázdná a vysoká a světlo ze stropu přicházelo z velké dálky, jako předtím. Lavice stály v řadách až ke stěně. Na jedné ležel zapomenutý šátek.
 
 Nara se dívala na stůl senátu. Tmavý, prázdný, pod kruhem s váhami. Před devíti sty lety u takového stolu, možná u tohohle, seděl někdo a vzal do ruky zalitou schránku, kterou mu podal úřad. Neotevřel ji. Zapsal, že ji přijímá. A pak napsal odstavec tři sta devadesát jedna, i s těmi dvěma slabikami, a nikdo se ho nezeptal, odkud ví, co v příloze je.
 
 Dnes se zeptal. Ten soud se zeptal sám sebe a odpověděl, že ani to, co ví, mu nedovoluje zastavit loď.
 
-*Rozsudek: pravomocný,* stálo v koutku vědomí. A pod tím, menším písmem, jak to síť dělala ráda: *Věc skončena. Přejete si archivovat pracovní složku?*
+*Rozsudek: pravomocný,* stálo v koutku vědomí. A pod tím: *Věc skončena. Přejete si archivovat pracovní složku?*
 
 Nepřála. Zavřela to.
 
@@ -344,7 +344,7 @@ Odpověď přišla večer. Přes personál, přepsaná do sítě, slovo od slova
 
 *Odsouzený Vess vzkazuje: Strážná říkala, že je rozhodnuto. Vím. Přijď. Řekni mi to celé. Já to řeknu Kesi.*
 
-Nara si to přečetla jednou. *Strážná říkala, že je rozhodnuto.* Tak to začalo, druhého dne, přes stůl v Sedmé loděnici. Strážný říkal, že je rozhodnuto. Že si to může přečíst.
+Nara si to přečetla jednou. *Strážná říkala, že je rozhodnuto.* Tak to začalo, druhého dne, přes stůl v Sedmé loděnici. Tenkrát to byl strážný. Strážný říkal, že je rozhodnuto. Že si to může přečíst.
 
 Tenkrát mu rozsudek musela říct ona. Teď mu ho nemusel říkat nikdo.
 

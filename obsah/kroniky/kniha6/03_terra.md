@@ -36,7 +36,7 @@ Nara se u ní zastavila. Ve vlastní praxi ji viděla málokdy: u dětí pod vě
 
 *Nevyžadováno.* Gramatika kolektivní viny. Jedno slovo, a Nara ho dvacet let četla jako laskavost.
 
-Lumi vešla do pracovny s šálkem a postavila ho na stůl vedle kamene. Nara si toho nevšimla, dokud šálek nevychladl.
+Lumi, její koncipientka, vešla do pracovny se šálkem a postavila ho na stůl vedle kamene. Nara si toho nevšimla, dokud šálek nevychladl.
 
 *
 
@@ -90,7 +90,7 @@ Zeptala se, kdy byla zpřístupněna vůbec.
 
 *Údaj není k dispozici.*
 
-Nara se opřela v židli. Za oknem pracovny, které vedlo do vnitřního dvora, svítil světelný pás osy, stejně bílý jako ráno a jako včera a jako každý den jejího života. V koutku vědomí stál řádek. *Do odletu: 45 dní.*
+Nara se opřela v židli. Za oknem pracovny, které vedlo do vnitřního dvora, svítil světelný pás osy, stejně bílý jako ráno a jako včera a jako každý den jejího života. Řádek sítě ukazoval: *Do odletu: 45 dní.*
 
 Trest je ústavní, jen když je přiměřený. To věděla. Na tom stála celá Terra: vyhnanství není trest smrti, protože Země člověka uživí. Vyhnanství nikomu dalšímu neublíží, protože Země je prázdná. Bez toho by to nebyla humanitární alternativa. Byla by to jen jiná poprava, pomalejší, s delší cestou.
 
@@ -216,7 +216,7 @@ Bylo jí dvacet šest a byla u Nary druhý rok. Pracovala rychle a bez chyb a m�
 
 „To řekl Asko.“
 
-„Já vím. Byla jsem u toho.“ Lumi pokrčila rameny. „Měl pravdu. Když tam procesní vady nedáte, soud vás zamítne celou. Když tam budou, může vám dát aspoň něco. A něco je víc než nic.“
+„Já vím. Říkala jste mi to.“ Lumi pokrčila rameny. „Měl pravdu. Když tam procesní vady nedáte, soud vás zamítne celou. Když tam budou, může vám dát aspoň něco. A něco je víc než nic.“
 
 Nara se dívala na vrstvy. Ústava. Domněnka. Příloha. Procesní vady.
 
@@ -266,7 +266,7 @@ Kolem třetí v noci si v archivu sborníků našla Askův článek. Dvanáct st
 
 *Domněnka, kterou nikdo nevyvrací, se po čase stane faktem; ne proto, že je pravdivá, ale proto, že je stará.*
 
-Nara si ji zkopírovala do návrhu. Pak ji zase smazala, protože senát Orvely Tann nebyl místo pro věty, které nejsou odborné. Pak ji vložila do poznámek, aby ji měla.
+Nara si ji zkopírovala do návrhu. Pak ji zase smazala, protože Spolkový soud nebyl místo pro věty, které nejsou odborné. Pak ji vložila do poznámek, aby ji měla.
 
 Na konci měl návrh čtyřicet jedna stran a jednu větu, kterou nenapsala ona. Byla to věta z originálu Terry, ze starého textu, a Nara ji citovala celou, i s poznámkou, i se dvěma slabikami, které síť nepřekládala. Pod ni připsala:
 
@@ -298,7 +298,7 @@ Podpis byl drobný pohyb. Nara ho udělala tisíckrát, a přesto ho tentokrát 
 
 Nara si to přečetla a pak si přečetla jméno předsedkyně. Orvela Tann. Znala ji z jednání, dvakrát před ní stála. Tann byla přesná a pomalá a nikdy nedovolila, aby se v její síni mluvilo o něčem, o čem senát nerozhodoval. Jednou Naru přerušila uprostřed věty a řekla jí, že soud není místo pro to, co by mělo být, jen pro to, co je. Nara tehdy prohrála. Odešla ze síně s pocitem, že prohrála s někým, kdo má pravdu.
 
-Pak přišel další řádek. Menším písmem, jak se v síti píše všechno, co nevyžaduje odpověď.
+Pak přišel další řádek, z těch, které nevyžadují odpověď.
 
 *Podání ve věcech výkonu trestu podle precedentu Terra se automaticky postupuje k bezpečnostnímu posouzení. Posuzovatel: Koloniální úřad.*
 
@@ -306,7 +306,7 @@ Nara se na ten řádek dívala.
 
 Lumi ho viděla taky. Nic neřekla.
 
-Venku, za oknem do vnitřního dvora, svítil pás osy. Bílý, rovný, beze změny. O půlnoci, za dvacet minut, přeskočí řádek v koutku vědomí ze čtyřiceti tří na čtyřicet dva. Nara věděla, že se na to nebude dívat. Věděla taky, že se podívá.
+Venku, za oknem do vnitřního dvora, svítil pás osy. Bílý, rovný, beze změny. O půlnoci, za dvacet minut, přeskočí řádek o odletu ze čtyřiceti tří na čtyřicet dva. Nara věděla, že se na to nebude dívat. Věděla taky, že se podívá.
 
 „Asko říkal, že úřad domů nepůjde,“ řekla Lumi.
 

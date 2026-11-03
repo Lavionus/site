@@ -52,7 +52,8 @@
     el.title = v[1];
     el.style.cssText = 'font-size:.5em;font-weight:400;opacity:.65;margin-left:.5em;vertical-align:baseline;align-self:baseline;letter-spacing:0;cursor:help';
     // hned za text nadpisu (před podtitulek nebo tlačítko v nadpisu), ne až na konec
-    const prvniText = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT, { acceptNode: n => n.textContent.trim() ? 1 : 3 }).nextNode();
+    // (první text s písmeny – samotné emoji před názvem bývá zvlášť)
+    const prvniText = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT, { acceptNode: n => /\p{L}/u.test(n.textContent) ? 1 : 3 }).nextNode();
     let za = prvniText || h1.lastChild;
     while (za && za.parentNode !== h1) za = za.parentNode;
     if (za) za.after(el); else h1.appendChild(el);

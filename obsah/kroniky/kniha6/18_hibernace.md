@@ -30,9 +30,9 @@ Za oknem visela loď. Celá, uzavřená, šedobílý plášť bez jediného otvo
 
 *Transportní loď, druhý transport. Fáze 5 z 5: ukládání.*
 
-Nara se zastavila. Tentokrát popis nezavřela. Přečetla ho celý a pod ním i to, co síť přidala menším písmem: *Uloženo: 2 140 z 6 012.*
+Nara se zastavila. Tentokrát popis nezavřela. Přečetla ho celý, i s tím, co pod něj síť přidala: *Uloženo: 2 140 z 6 012.*
 
-Zítra jich bude víc. Pozítří ještě víc. Ilan bude mezi nimi až poslední den, nebo předposlední, podle pořadí, které někdo sestavil a které Nara neznala. Nevěděla ani to, jestli bude ležet vedle Kesi. Nikdy se nezeptala, jak se lůžka řadí.
+Zítra jich bude víc. Pozítří ještě víc. Ilan bude mezi nimi za tři dny, podle pořadí, které někdo sestavil a které Nara neznala. Nevěděla ani to, jestli bude ležet vedle Kesi. Nikdy se nezeptala, jak se lůžka řadí.
 
 Šla dál a dívala se doleva celou dobu, dokud okno neskončilo.
 
@@ -64,7 +64,7 @@ Nara se skoro usmála. Daven taky. Ani jeden to nedotáhl.
 
 „Asi má.“
 
-„Ptal se, jestli přijdeš. Řekl jsem, že jo.“ Daven vstal. Pomalu, celým tělem, a hlavu otočil až potom. Taky se to tu naučil. „Nebudu tu čekat, až vyjdeš.“
+„Ptal se, jestli přijdeš. Řekl jsem, že jo.“ Daven vstal. „Nebudu tu čekat, až vyjdeš.“
 
 „Nemusíš.“
 
@@ -110,7 +110,7 @@ A pustila ji dál.
 
 Návštěvní místnost byla stejná jako všechny předtím. Stůl, dvě židle, světlý pruh na stěně. Nara si sedla. Žádný řádek jí neoznámil, že záznam probíhá. Neprobíhal.
 
-Šoupavý krok šel ke dveřím na druhé straně. Strážná je otevřela.
+Strážná šoupavým krokem přešla ke dveřím na druhé straně a otevřela je.
 
 Ilan vešel a zastavil se.
 
@@ -200,7 +200,7 @@ Ventilace střídala své dva tóny. Strážná u dveří přešlápla. Nara sly
 
 „A my? Kde přistaneme my?“
 
-„Nevím. Místa určuje úřad. Nikde to nestojí.“
+„Nevím. Svět určil rozsudek. Kam přesně, určuje úřad. Nikde to nestojí.“
 
 „A těch osm? Kde jsou?“
 
@@ -216,7 +216,7 @@ Ilan to slyšel. Nara čekala, co řekne. Čekala na *pořád něco nesmíš* ne
 
 „Dobře?“
 
-„Kdybys mi to řekla, nevěděl bych, co s tím. Zítra mi vezmou vlasy a za pět dní mě uloží. Nemám kam to napsat.“ Podíval se jí do očí. „A ty bys to pak věděla. Že jsi to řekla. Celý život bys to věděla.“
+„Kdybys mi to řekla, nevěděl bych, co s tím. Zítra mi vezmou vlasy a za tři dny mě uloží. Nemám kam to napsat.“ Podíval se jí do očí. „A ty bys to pak věděla. Že jsi to řekla. Celý život bys to věděla.“
 
 Nara mlčela.
 
@@ -396,13 +396,13 @@ Ve vstupní hale se připojila.
 
 Svět se vrátil celý najednou, s tlakem vzadu za očima, s řádky, se vším. Nejdřív čas: 12:47. Pak odpočet: *Do odletu: 6 dní.* Pak, menším písmem, oznámení: *Přerušení spojení: 52 minut. Opakovaný přestupek. Oznámeno pořádkové službě. Oznámeno profesní komoře.*
 
-A pod tím, jak to síť dělala ráda, ochotně a předem:
+A pod tím:
 
 *Záznam návštěvy: není k dispozici.*
 
 Nara se na ten řádek dívala dlouho. Pak ho zavřela.
 
-Neměla nic. Měla vlasy přes uši, které zítra nebudou. Měla *Já mám taky jenom pravej*. Měla *Dobře*. Měla zápěstí, tenké, v dlaních, a bledou kůži s řadou důlků. Měla to všechno jen v sobě a věděla, že si to nezapamatuje celé. Že za rok si to bude pamatovat jinak. Za deset let ještě jinak. A že to bude pořád její.
+Neměla nic. Měla jeho vlasy přes uši, které zítra nebudou. Měla *Já mám taky jenom pravej*. Měla *Dobře*. Měla zápěstí, tenké, v dlaních, a bledou kůži s řadou důlků. Měla to všechno jen v sobě a věděla, že si to nezapamatuje celé. Že za rok si to bude pamatovat jinak. Za deset let ještě jinak. A že to bude pořád její.
 
 Otevřela dlaň. Provázek byl šedý a měkký a ležel jí v ruce stočený do klubíčka. Sedmdesát jedna uzlíků. Nepočítala je. Věděla to.
 
@@ -422,4 +422,4 @@ Odpověď přišla za hodinu. Hals nebyl v síti rychlý. Psal tak, jak mluvil, 
 
 Nara si zprávu přečetla dvakrát. Pak se podívala na provázek v dlani a uložila ho do kapsy, k sobě, kde ho cítila.
 
-*Do odletu: 6 dní,* stálo v koutku vědomí. O půlnoci se to změní. Nara poprvé od prvního dne nevěděla, jestli chce, aby se to změnilo, nebo ne.
+*Do odletu: 6 dní,* stálo v řádku sítě. O půlnoci se to změní. Nara poprvé od prvního dne nevěděla, jestli chce, aby se to změnilo, nebo ne.

@@ -16,7 +16,7 @@ Dolů to bylo horší než nahoru. Nahoře bolely plíce a stehna, dole kolena. 
 
 Háček nahmatal v límci palcem. Byl tam.
 
-Šli stejnou cestou, kterou přišli, a cesta byla jiná. Kameny, které nahoře poznával, se zdola nepodobaly ničemu. Dvakrát zabloudili. Jednou je zastavil sráz, který tam předtím nebyl, a Eren pochopil, že je to tentýž sráz, jen z druhé strany. Bena šla vpředu a neohlížela se. Haro nesl dvě bedny dávek, jednu na druhé, a nestěžoval si. Kaj nesl plachty a celou dobu se díval na Erenova záda. Na bednu.
+Šli stejnou cestou, kterou přišli, a cesta byla jiná. Kameny, které nahoře poznával, se zdola nepodobaly ničemu. Dvakrát zabloudili. Jednou je zastavil sráz, který tam předtím nebyl, a Eren pochopil, že je to tentýž sráz, jen z druhé strany. Bena šla vpředu a neohlížela se. Haro nesl dvě bedny dávek, jednu na druhé, a nestěžoval si. Kaj nesl plachty a celou dobu nespouštěl oči z Erenových zad. Z bedny.
 
 V poledne se les rozevřel do svahu s vysokou trávou a pěšina se rozšířila tak, že vedle sebe mohli jít dva. Eren zpomalil. Nechal Benu a Arda odejít napřed, pak Kaje a Hara. Orrin šel poslední. Šel vždycky poslední, když se šlo z kopce. Říkal, že odtamtud je vidět, kdo padá.
 
@@ -48,7 +48,7 @@ V noci se rozhodl, že se zeptá. Ležel na kraji plachty, za Kajovými zády, a
 
 Orrin se zastavil.
 
-Stáli uprostřed svahu, v trávě po pás. Vítr ji česal proti nim. Vpředu, kus pod nimi, šli ostatní a nikdo se neotočil. Orrin se díval na Erena dlouho a pozorně. Nebyl to pohled, jakým se člověk dívá na nepřítele. Spíš pohled, jakým se technik dívá na přístroj, který vydal nečekaný zvuk.
+Stáli uprostřed svahu, v trávě po pás. Vítr ji česal proti nim. Vpředu, kus pod nimi, šli ostatní a nikdo se neotočil. Orrin si Erena dlouho a pozorně prohlížel. Nebyl to pohled, jakým se měří nepřítel. Spíš pohled, jakým technik zkoumá přístroj, který vydal nečekaný zvuk.
 
 „Šest lidí na úbočí,“ řekl. „Tři sta dvanáct v kotli. Všichni, kdo tady jsou.“ Odmlčel se. „Koho jsi tam chtěl slyšet?“
 
@@ -64,13 +64,13 @@ Tráva šuměla. Eren cítil, jak mu pot pod bednou chladne na zádech.
 
 „Ne.“
 
-„Neměl jsem koho chránit.“ Orrin se otočil a podíval se dolů, kde v trávě mizela Benina hlava. „Ty jsi měl.“
+„Neměl jsem koho chránit.“ Orrin se otočil k místu, kde dole v trávě mizela Benina hlava. „Ty jsi měl.“
 
 Nebyla to otázka. Eren tu větu poslouchal ještě dlouho potom, co dozněla. Zkoumal ji ze všech stran, jak se zkoumá díl, u kterého se neví, ke kterému stroji patří. *Ty jsi měl.* Mohlo to znamenat, že Orrin ví, proč podepsal. Mohlo to znamenat, že Orrin ví, co podepsal. Mohlo to znamenat jen to, že Orrin viděl Maelu a Tio a umí sčítat.
 
 „Podepsal jsem, že jsem věděl, k čemu to je,“ řekl Eren.
 
-Takhle to ještě neřekl. V procesu to četl z listu, větu, kterou napsal někdo jiný. Svými slovy nikdy, ani v cele, ani v hale, ani Maele. A stejně mu ta slova vyšla z pusy suchá a cizí, jako by je zase četl z listu.
+Takhle to ještě neřekl. V procesu to četl z listu, větu, kterou napsal někdo jiný. Svými slovy nikdy. Ani Maele. A stejně mu ta slova vyšla z pusy suchá a cizí, jako by je zase četl z listu.
 
 „Já vím,“ řekl Orrin.
 
@@ -94,7 +94,7 @@ Spali na kraji lesa, na tomtéž místě jako cestou tam. Popel jejich prvního 
 
 Eren ležel na kraji plachty a díval se do tmy mezi kmeny. Tentokrát myšlenku nezastavil.
 
-Nevěděl, proč zrovna teď. Možná kvůli tomu *já vím*, které nešlo vrátit. Možná proto, že byl unavený a už neměl sílu ji držet. Došla k místu, kde se zastavovala vždycky, a šla dál, a on ji nechal.
+Proč zrovna teď? Možná kvůli tomu *já vím*, které nešlo vrátit. Možná proto, že byl unavený a už neměl sílu ji držet. Došla k místu, kde se zastavovala vždycky, a šla dál, a on ji nechal.
 
 Dílna na opravárenském patře čtvrtého prstence. Byla jeho, napůl. Druhou polovinu měla noční směna. Dlouhý stůl s deskami, stojany s nástroji, zásuvky s díly, které už nikdo nevyráběl. Bílé světlo, které nevrhalo stíny. A ventilátory nad stropem, ty hučely tak, jak hučí, když je všechno v pořádku. Eren je za ta léta přestal slyšet. Slyšel je teprve teď, šest set let a půl světa daleko, na kraji lesa, kde žádné nebyly.
 
@@ -120,7 +120,7 @@ Věděl to hned, jak je uviděl. Nemusel nic přepisovat. Nemusel nic lámat. St
 
 Ohnul háček z drátu a přiložil ho.
 
-V koutku mysli mu naskočil řádek. Síť ho viděla, jak sahá na nástroj, a slušně mu oznámila, co tím způsobil: *auditní ochrana: vypnuto.* Pod tím začal běžet seznam. Oprávnění, která terminál v tomhle režimu má. Nejdřív to, co čekal: implantát, jeden, místní. Pak implantáty v dosahu. Pak uzel. Pak segment sítě, k němuž uzel patří. Potlačení hlášení o poruchách. Zápis do provozního deníku a výmaz z něj. Řízení. Seznam běžel a Eren ho četl a seznam neměl konec. Zkušební režim nezná rozsah. Ve výrobě se zkouší všechno.
+V koutku mysli mu naskočil řádek. Síť ho viděla, jak sahá na nástroj, a slušně mu oznámila, co tím způsobil: *auditní ochrana: vypnuto.* Pod tím začal běžet seznam. Oprávnění, která terminál v tomhle režimu má. Nejdřív to, co čekal: implantát, jeden, místní. Pak implantáty v dosahu. Uzel. Segment sítě, k němuž uzel patří. Potlačení hlášení o poruchách. Zápis do provozního deníku a výmaz z něj. Řízení. Seznam běžel a Eren ho četl a seznam neměl konec. Zkušební režim nezná rozsah. Ve výrobě se zkouší všechno.
 
 „Tohle je moc,“ řekl.
 
@@ -146,7 +146,7 @@ Eren si tu otázku pamatoval. Pamatoval si ji líp než cokoli jiného z toho ve
 
 „Aby to centrála nepoznala,“ řekl ten muž. „Kvůli hlášení. Když se implantát odpojí, uzel to nahlásí. Musí to vypadat, že se nic neděje.“
 
-Bylo to pravda. Eren to věděl. Uzel by to nahlásil. Bylo to přesně tak, jak ten muž řekl. A protože to byla pravda, nemusel se ptát dál.
+Bylo to pravda. Uzel by to nahlásil. Bylo to přesně tak, jak ten muž řekl. A protože to byla pravda, nemusel se ptát dál.
 
 Neptal se dál.
 
@@ -164,15 +164,15 @@ Tady se myšlenka zastavila. Tentokrát ji nezastavil on. Zastavila se sama, jak
 
 Co se stalo devatenáctý den, to Eren věděl. Věděla to celá Konfederace. Kolik lidí, ve kterých habitatech, jak dlouho to trvalo. Nevěděl, jestli to udělal terminál ze sáčku od náhradních dílů. Nevěděl, jestli ho ten muž vůbec někomu dal. Nevěděl, jestli ten dobrovolník na jednu hodinu existoval. Nevěděl, jestli někdo v tu chvíli jen tak stál v nějaké místnosti, sám ve své hlavě, a těšil se z ticha. V procesu se ho na to ptali a on to nevěděl. Pak podepsal, že to ví.
 
-Ležel na kraji plachty a třásl se. Nevěděl, jestli zimou. Kaj se ve spánku obrátil a opřel se mu o záda, teplý a těžký. Eren se neodtáhl.
+Ležel na kraji plachty a třásl se. Možná zimou. Kaj se ve spánku obrátil a opřel se mu o záda, teplý a těžký. Eren se neodtáhl.
 
 *
 
 Do kotle došli druhý den k večeru.
 
-Uslyšel to dřív, než to uviděl. Pod roklí, kde se svahy sbíhaly, se ozvaly hlasy, mnoho hlasů, a cinkání kovu o kámen. Pak šum vody. Pak ucítil kouř a uviděl páru, která v tom chladnějším vzduchu stoupala hustěji, než si ji pamatoval. Někdo na suti vykřikl jeho jméno. Ne jeho, Orrinovo. Pak Kajovo. Pak, tenkým hlasem, který přeskočil, jeho.
+Uslyšel to dřív, než to uviděl. Pod roklí, kde se svahy sbíhaly, se ozvaly hlasy, mnoho hlasů, a cinkání kovu o kámen, šum vody. Pak ucítil kouř a uviděl páru, která v tom chladnějším vzduchu stoupala hustěji, než si ji pamatoval. Někdo na suti vykřikl jeho jméno. Ne jeho, Orrinovo. Pak Kajovo. Pak, tenkým hlasem, který přeskočil, jeho.
 
-Tio běžela po suti dolů a dvakrát upadla. Podruhé se nezvedla hned. Seděla na kamenech a dívala se na odřené dlaně a pak se rozbrečela, ne bolestí, ale vztekem, že upadla, když běží za ním. Eren shodil bednu z ramen a doběhl k ní. Klekl si. Tio mu skočila na krk a on ji držel a nemohl ji pustit a nemohl se zvednout, protože kolena nechtěla.
+Tio běžela po suti dolů a dvakrát upadla. Podruhé se nezvedla hned. Seděla na kamenech nad odřenými dlaněmi a pak se rozbrečela, ne bolestí, ale vztekem, že upadla, když běží za ním. Eren shodil bednu z ramen a doběhl k ní. Klekl si. Tio mu skočila na krk a on ji držel a nemohl ji pustit a nemohl se zvednout, protože kolena nechtěla.
 
 Maela stála kus nad nimi na suti. Nešla blíž. Dívala se na něj, a pak na bednu, kterou nechal ležet na kamenech, a pak zase na něj.
 
@@ -182,7 +182,7 @@ Eren zavrtěl hlavou.
 
 Maela přikývla. Neptala se kolik. Ještě ne.
 
-Sefa přišla z druhé strany, od potoka, s mokrýma rukama. Chytila Erena za bradu a otočila mu tvář do světla, pak se podívala na jeho ruce, pak dolů na boty. „Sundej to,“ řekla. „Hned.“ Na levé patě měl místo puchýře mokrou rudou díru. Sefa se na ni podívala a nic neřekla. Nemusela.
+Sefa přišla z druhé strany, od potoka, s mokrýma rukama. Chytila Erena za bradu a otočila mu tvář do světla, pak mu prohlédla ruce a nakonec boty. „Sundej to,“ řekla. „Hned.“ Na levé patě měl místo puchýře mokrou rudou díru. Sefa se na ni podívala a nic neřekla. Nemusela.
 
 Večer Orrin vylezl na bednu.
 
@@ -198,7 +198,7 @@ Pak Orrin řekl, co přinesli. Dávky, plachty, lana, nože. Padesát dvě vlož
 
 „Vložky si vezmou mluvčí desítek,“ řekl Orrin. „Rozdělí je podle potřeby.“
 
-Bena stála vedle bedny a pořád tu krabici tiskla k sobě. Orrin se na ni podíval a usmál se. Po chvíli mu ji podala.
+Bena stála vedle bedny a pořád tu krabici tiskla k sobě. Orrin se na ni usmál. Po chvíli mu ji podala.
 
 Maela stála vedle Erena. Neřekla nic. Ale Eren cítil, jak se napjala.
 
@@ -236,7 +236,7 @@ Eren to viděl. Viděl to pokaždé, když zavřel oči, a proto je zavíral má
 
 Otevřel pusu a zavřel ji.
 
-Viděl to. Četl to. Byl to jeden řádek pod těmi ostatními, menším písmem, a on ho četl třikrát, než podepsal. *Partnerka a nezletilá dcera budou vyňaty…* Nebo *posouzeny zvlášť*? Nebo… Text byl v síti. Četl ho v síti, v koutku mysli, kde ho síť podržela, dokud ho potřeboval. Pak ho síť zase vzala zpátky. A teď ležel v cizím kotli pod plachtou a pokoušel se ten řádek vidět, a viděl jen slova, která do něj sám dosazoval. *Vyňaty.* *Zvlášť.* *Přidruženy.* Nevěděl, které tam stálo. Nevěděl to.
+Viděl to. Četl to. Byl to jeden řádek pod těmi ostatními, menším písmem, a on ho četl třikrát, než podepsal. *Partnerka a nezletilá dcera budou vyňaty…* Nebo *posouzeny zvlášť*? Nebo… Text byl v síti. Četl ho v síti, v koutku mysli, kde ho síť podržela, dokud ho potřeboval, a pak si ho zase vzala zpátky. A teď ležel v cizím kotli pod plachtou a pokoušel se ten řádek vidět, a viděl jen slova, která do něj sám dosazoval. *Vyňaty.* *Zvlášť.* *Přidruženy.* Nevěděl, které tam stálo. Nevěděl to.
 
 „Nevím,“ řekl.
 
@@ -286,7 +286,7 @@ Vstal ještě za tmy.
 
 Nevzbudil je. Vylezl zpod plachty pomalu, po kouscích, jak se to naučil v modulu. Patu měl ztuhlou a první krok byl tak bolestivý, že se musel zastavit a opřít o skálu. Pak to šlo.
 
-Kotel spal. Ohně dohořívaly do žhavých kruhů. Na terase seděl u ohně jeden z místních, zabalený v kůžích, a Eren nevěděl, jestli spí, nebo se dívá. Šel dolů podél potoka, ne nahoru. Pryč od terasy, pryč od tůní, kde by někdo hledal nejdřív.
+Kotel spal. Ohně dohořívaly do žhavých kruhů. Na terase seděl u ohně jeden z místních, zabalený v kůžích, a možná spal, možná se díval. Šel dolů podél potoka, ne nahoru. Pryč od terasy, pryč od tůní, kde by někdo hledal nejdřív.
 
 Celou noc to počítal. Bedna s řezákem leží pod plachtou a ví o ní celý kotel. Kdo by ji chtěl, ví, kde je. Článek pod bundou je jistější, dokud je on vzhůru. Ale on nebude vzhůru pořád. Bude spát, bude nemocný, bude pryč. Bude se mýt, bude nosit dřevo, bude mrtvý. A když to vezme někdo naráz, řezák i článek, chybí mu už jen háček a postup. Háček je drát. Postup se dá vymyslet. Trvalo by to dlouho, ale dá se to vymyslet.
 
@@ -296,7 +296,7 @@ Pod kotlem, kde se rokle zase zužovala, ležel ve svahu velký balvan, rozští
 
 Uvnitř bylo sucho. A tepleji než venku. Ne o moc. Ale hluboko ve skále je teplota stálá, to věděl. Žádný mráz se tam nedostane.
 
-Zabalil článek do pruhu plachty, který si večer uřízl z okraje, a omotal ho dvakrát. Pak ho ještě obalil hlínou z převisu, aby se neleskl, kdyby do pukliny někdy dopadlo světlo. Zasunul ho dovnitř, tak hluboko, jak dosáhl. Pak tam nahrnul suť, a na suť plochý kámen.
+Zabalil článek do pruhu plachty, který si večer uřízl z okraje, a omotal ho dvakrát. Navrch ho ještě obalil hlínou z převisu, aby se neleskl, kdyby do pukliny někdy dopadlo světlo. Zasunul ho dovnitř, tak hluboko, jak dosáhl. Nahrnul na něj suť, a na suť plochý kámen.
 
 Klečel pod převisem a dýchal. Venku začínalo šednout. Ptáci, které neznal, začínali někde v korunách stromů svůj krátký, opakovaný zpěv, tři tóny a pak dva.
 

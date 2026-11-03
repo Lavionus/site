@@ -42,7 +42,7 @@ A každá výpověď začíná stejně.
 
 A každá končí stejně. *Víc neřekla.*
 
-Hana čte ty konce jeden po druhém, jak jdou ve skenu za sebou. Jedenáctkrát *víc neřekla*. Jako refrén. Jako by ta žena, ať byla kdokoli, chtěla mít na papíře doloženo, kde svědkyně přestala mluvit a kde by začala ona sama, kdyby začala.
+Hana čte ty konce jeden po druhém, jak jdou ve skenu za sebou. Desetkrát *víc neřekla*. Jako refrén. Jako by ta žena, ať byla kdokoli, chtěla mít na papíře doloženo, kde svědkyně přestala mluvit a kde by začala ona sama, kdyby začala.
 
 Desátá výpověď končí jinak.
 
@@ -88,7 +88,7 @@ Odpověď přijde ráno v sedm dvanáct, jako by Šindelářová na e-mail čeka
 
 *Vdova Ilona: nic. Kolega prošel matriky, co jsou digitalizované, a nic. Cizinka, nejspíš. „Ilona“ tam nikdo nejmenuje dítě. UV: zkusím se zeptat, ale originál není u nás. Perkmistr Wehrl je v jiných fondech, horní úředník, nic zvláštního, jeden z mnoha. Proč vás zajímá desátá výpověď?*
 
-Hana na to neodpoví. Neví, jak by to napsala, aby to neznělo jako něco, co by se ve slušném e-mailu nemělo psát. Že ji zajímá, proč žena, která jedenáctkrát dokládá, kde svědkyně přestala mluvit, jednou doloží, kde přestala psát ona. A proč to nechala ve spisu, ke kterému byla připojena jako cizí ruka. Jako by někomu, kdo to bude číst po ní, chtěla říct: tady něco chybí, a chybí to, protože jsem to tak chtěla.
+Hana na to neodpoví. Neví, jak by to napsala, aby to neznělo jako něco, co by se ve slušném e-mailu nemělo psát. Že ji zajímá, proč žena, která desetkrát dokládá, kde svědkyně přestala mluvit, jednou doloží, kde přestala psát ona. A proč to nechala ve spisu, ke kterému byla připojena jako cizí ruka. Jako by někomu, kdo to bude číst po ní, chtěla říct: tady něco chybí, a chybí to, protože jsem to tak chtěla.
 
 Sken si uloží do složky, kterou si v dubnu založila a pojmenovala jen *Mlýnec*, protože tehdy nevěděla, jak jinak. Teď tam leží dva soubory. Kodex a spis. Pár desítek kilometrů a čtyři sta let od sebe, napadne ji, a pak si uvědomí, že tu vzdálenost jen odhaduje. Otevře mapu. Odhadla ji dobře.
 

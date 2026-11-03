@@ -10,11 +10,11 @@ Ernesto Salcedo řídí jednou rukou a druhou drží telefon. Ne u ucha, na steh
 
 Hana nespí. Dívá se.
 
-Za Méridou se krajina srovná a už se nezvedne. Žádný kopec, žádné údolí, žádná řeka, jen nízký les, šedozelený, suchý, s keři, které ztratily listí, a se stromy, které ho ještě drží, jako by čekaly, kdo vydrží déle. Podél silnice vedou zídky z volně skládaných kamenů, bílých a šedých, místy rozvalené. Za nimi zase les. Pak spálené pole, černé, s pahýly kukuřice a s jedním stromem uprostřed, který nechali stát. Pak další les. Nad obzorem leží kouř, ne jeden sloup, ale tenká hnědá vrstva, jako by někdo nad celým krajem zapomněl zhasnout.
+Za Méridou se krajina srovná a už se nezvedne. Žádný kopec, žádné údolí, žádná řeka, jen nízký les, šedozelený, suchý, s keři, které ztratily listí, a se stromy, které ho ještě drží, jako by čekaly, kdo vydrží déle. Podél silnice vedou zídky z volně skládaných kamenů, bílých a šedých, místy rozvalené. Za nimi zase les. Pak spálené pole, černé, s pahýly kukuřice a s jedním stromem uprostřed, který nechali stát. A zase les. Nad obzorem leží kouř, ne jeden sloup, ale tenká hnědá vrstva, jako by někdo nad celým krajem zapomněl zhasnout.
 
 „Pálí,“ řekne Salcedo, když vidí, kam se dívá. „Březen. Připravují pole na déšť.“
 
-Půda mezi stromy je tak tenká, že místy vůbec není. Kámen vystupuje na povrch v plochých deskách, rozpraskaných, šedých, pokrytých lišejníkem. Hana se na ty desky dívá s profesní nedůvěrou. Vápenec, mladý, porézní, plochý jako stůl. Pod ním nic, co by se dalo nazvat řekou, protože všechna voda je dole. Celý poloostrov je houba nasáklá deštěm, a kde se strop houby propadne, vznikne studna.
+Půda mezi stromy je tak tenká, že místy vůbec není. Kámen vystupuje na povrch v plochých deskách, rozpraskaných, šedých, pokrytých lišejníkem. Hana ty desky zkoumá s profesní nedůvěrou. Vápenec, mladý, porézní, plochý jako stůl. Pod ním nic, co by se dalo nazvat řekou, protože všechna voda je dole. Celý poloostrov je houba nasáklá deštěm, a kde se strop houby propadne, vznikne studna.
 
 Ts'ono'ot. Cenote. To slovo zná z knih.
 
@@ -22,7 +22,7 @@ Ts'ono'ot. Cenote. To slovo zná z knih.
 
 Kamenolom uvidí dřív, než ho Salcedo ohlásí.
 
-Nejdřív stromy podél silnice, které nejsou šedozelené, ale bílé. Prach na listech, na kmenech, na drátech elektrického vedení, které tu z ničeho nic začne běžet vedle silnice na betonových sloupech. Pak náklaďák. Pak druhý, s korbou plnou bílé drti, ze které se při každém výmolu zvedne obláček. A pak, vlevo za plotem z vlnitého plechu, díra.
+Nejdřív stromy podél silnice, které nejsou šedozelené, ale bílé. Prach na listech, na kmenech, na drátech elektrického vedení, které tu z ničeho nic začne běžet vedle silnice na betonových sloupech. Pak náklaďák. A druhý, s korbou plnou bílé drti, ze které se při každém výmolu zvedne obláček. A pak, vlevo za plotem z vlnitého plechu, díra.
 
 Široká, mělká, oslnivě bílá. Stupně vylámané do vápence, na nich bagr a drtič, jehož zvuk je slyšet i přes zavřená okna. Nad tím vším se tetelí vzduch.
 
@@ -106,7 +106,7 @@ Luis se podívá tam, kam ukazuje. Dlouho mlčí.
 
 „Po odstřelu?“
 
-Luis pokrčí rameny. Pomalé gesto, ve kterém je víc než „nevím“. „Když se střílí, kámen padá. Když se nestřílí, kámen taky padá. Walt říká, že studna je jako starý člověk. Nikdo neví, který den.“
+Luis pokrčí rameny. Pomalé gesto, ve kterém je víc než „nevím“. „Když se střílí, kámen padá. Když se nestřílí, kámen taky padá. Walt, ten starý Američan, co tyhle chodby mapuje, říká, že studna je jako starý člověk. Nikdo neví, který den.“
 
 Viktor stojí za nimi a mlčí. Hana se otočí a vidí, že se nedívá do studny, ale na ni. Usmívá se. Je to úsměv člověka, který něco přinesl a čeká, jestli se to bude líbit.
 
@@ -136,7 +136,7 @@ Jana si k ní přisedne s vlastním talířem, ještě mokrá, s kapkami ve vlas
 
 „Viktor to ví.“ Jana se krátce podívá přes rameno k hlavní plachtě, kde Viktor telefonuje, zády k nim, s rukou na zátylku. „Viktor to vzal. Říká, že ty a Luis jste nejlepší kombinace, protože jeden zná cestu a druhá ví, na co se dívá.“
 
-Viktor u hlavní plachty zvýší hlas. Hana ho slyší přes celou mýtinu, i když slova ne. Pak ztiší. Pak řekne zřetelně, jako by chtěl, aby to druhá strana slyšela dvakrát: „Ne v pátek. Řekl jsem v dubnu.“ Ukončí hovor a ještě chvíli stojí, s telefonem v ruce, dívá se do lesa.
+Viktor u hlavní plachty zvýší hlas. Hana ho slyší přes celou mýtinu, i když slova ne. Pak ztiší a řekne zřetelně, jako by chtěl, aby to druhá strana slyšela dvakrát: „Ne v pátek. Řekl jsem v dubnu.“ Ukončí hovor a ještě chvíli stojí, s telefonem v ruce, dívá se do lesa.
 
 Když se otočí, usmívá se.
 
@@ -162,13 +162,13 @@ Don Felipe se odmlčí. Podívá se na Viktora, pak na Hanu, pak zpátky.
 
 „Samozřejmě,“ řekne Viktor. „Z cenotu nic neodejde vůbec. Máme povolení jen na dokumentaci. Doktorka Couoh z INAH přijede zítra, to vám potvrdí.“
 
-Don Felipe poslouchá překlad. Pak se zeptá na něco, co Salcedo přeloží s malým zaváháním.
+Don Felipe poslouchá překlad a zeptá se na něco, co Salcedo přeloží s malým zaváháním.
 
 „Pan komisař se ptá, co když tam něco najdete.“
 
 „Pak to bude patřit Mexiku,“ řekne Viktor. „Zákon je jasný.“
 
-Don Felipe si to vyslechne. Kývne. A pak řekne pomalu, česky by to bylo pět slov, španělsky jich je o něco víc, a Salcedo je nepřekládá hned.
+Don Felipe si to vyslechne. Kývne. A pak řekne pomalu, česky by to bylo pár slov, španělsky jich je o něco víc, a Salcedo je nepřekládá hned.
 
 „Vždycky to patří Mexiku,“ přeloží nakonec. „Ne nám. Vždycky Mexiku.“
 
@@ -182,7 +182,7 @@ Don Felipe se na ni podívá. Poprvé přímo.
 
 „*Sí.*“
 
-Ještě chvíli se dívá. Pak řekne něco Luisovi tím druhým jazykem a Luis se poprvé za celý večer krátce usměje.
+Ještě chvíli si ji měří. Pak řekne něco Luisovi tím druhým jazykem a Luis se poprvé za celý večer krátce usměje.
 
 „Co říkal?“ zeptá se Hana Luise venku, když už jdou k dodávce.
 
@@ -250,11 +250,11 @@ Nejdřív to Hana necítí. Slyší to. Daleko, nízko, jako by se za obzorem za
 
 Z kořenů na protější stěně vyletí toh a za ním další dva. Někde v lese se ozve pes.
 
-„Sascabera,“ řekne Marisol. Podívá se na hodinky. „Poledne. Střílí v poledne. Někdy znovu odpoledne.“
+„Sascabera,“ řekne Marisol. „Poledne. Střílí v poledne. Někdy znovu odpoledne.“
 
-Hana se podívá na hodinky taky. Dvanáct nula sedm.
+Na Haniných hodinkách je dvanáct nula sedm.
 
-Pak se podívá dolů.
+Hana sklopí oči k vodě.
 
 Voda se nehne. Hladina zůstane hladká, tyrkysová, klidná. Uplyne minuta. Hana už chce říct, že nic, když si všimne, že se u severní stěny, tam, kde pod hladinou vidí kužel balvanů, něco mění. Barva. Tyrkysová zbledne, jako by do vody někdo nalil kapku mléka. Pak další. Bílý mrak se zvedá ze hloubky pomalu, líně, valí se po svahu balvanů nahoru, rozlévá se pod hladinou do stran. Za čtyři minuty je severní třetina studny bledá. Za deset minut se mrak rozplyne do šedavého závoje, přes který kužel balvanů už není vidět.
 
@@ -286,7 +286,7 @@ Vpravo píše:
 
 *Odkud se zvedá zákal? S stěna – pukliny SZ–JV? Přes kterou chodbu se otřes šíří? Kolik odstřelů snese strop nad kuželem?*
 
-Podívá se na poslední otázku. Je to špatně položená otázka, ví to. Strop nesnese určitý počet odstřelů. Strop drží, dokud drží, a pak spadne, a nikdo předem neví, který den. Luis to řekl přesněji než ona. Přeškrtne to jednou čarou, aby to bylo pořád čitelné, a napíše pod to:
+Poslední je špatně položená otázka, ví to. Strop nesnese určitý počet odstřelů. Strop drží, dokud drží, a pak spadne, a nikdo předem neví, který den. Luis to řekl přesněji než ona. Přeškrtne to jednou čarou, aby to bylo pořád čitelné, a napíše pod to:
 
 *Zapisovat každý odstřel. Čas, síla (subj.), zákal, kde a jak dlouho.*
 
@@ -316,7 +316,7 @@ Večer při jídle, nad tortillami a nad černými fazolemi, které zbyly z pond
 
 Hana ukáže na hodinky, pak dolů, k zemi, a pak udělá rukou malé zatřesení.
 
-Kluk kývne, vážně, jako by to dávalo smysl. Pak řekne něco své matce. Rosa odpoví, aniž by se otočila.
+Kluk kývne, vážně, jako by tomu rozuměl, a řekne něco své matce. Rosa odpoví, aniž by se otočila.
 
 „Rosa říká,“ přeloží Luis od vedlejšího stolu, „že to taky zapisuje. Do kalendáře. Když spadne talíř z poličky.“
 

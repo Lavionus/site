@@ -12,7 +12,7 @@ Den nevěděl.
 
 Večer se zeptal Maely.
 
-Podívala se na něj přes oheň. Dlouho a bez úsměvu. Pak řekla datum. Den, období, rok. Řekla ho rychle a jistě, jako číslo, které se nikdy nemusí hledat.
+Maela zvedla oči přes oheň. Dlouho a bez úsměvu. Pak řekla datum. Den, období, rok. Řekla ho rychle a jistě, jako číslo, které se nikdy nemusí hledat.
 
 „Ty si to pamatuješ,“ řekl.
 
@@ -34,7 +34,7 @@ Nikdo neodpověděl hned. Pak se zasmála učitelka, Hela. Krátce a hořce.
 
 „Já vím, jak se nakládá modul,“ řekl Ardo. „K čemu mi to je.“
 
-Bena chvíli mlčela. Pak řekla: „Já nevím, jak vypadala moje máma.“
+Bena chvíli mlčela, než řekla: „Já nevím, jak vypadala moje máma.“
 
 Všichni se na ni podívali.
 
@@ -64,25 +64,25 @@ Bri onemocněl šestého dne od sněhu, odpoledne.
 
 Eren to slyšel od Hely. Přiběhla k jejich ohni a hledala Sefu a Sefa byla nahoře na terase, a tak Hela chytila za rukáv Erena, protože tam zrovna seděl. Nebylo v tom nic víc. Táhla ho k ohni pod skálou, kde bydlela se synem, a celou cestu mluvila, rychle a přes sebe. Že Bri byl s dětmi u potoka. Že děti tam chodí každý den, protože ženy z terasy tam sbírají plody a děti se dívají. Že Bri je hladový. Že jsou všichni hladoví.
 
-Bri ležel pod plachtou. Byl rudý v obličeji. Ne jako od horka u ohně. Jinak, suše, a když mu Eren sáhl na čelo, bylo horké a suché jako kámen na slunci. Bri se díval na Erena a neviděl ho. Zorničky měl obrovské, černé, skoro přes celou duhovku. Díval se skrz Erena někam za něj a prsty pravé ruky přitom pořád něco sbíral ze vzduchu. Něco drobného. Sbíral to a nebylo to tam.
+Bri ležel pod plachtou. Byl rudý v obličeji. Ne jako od horka u ohně. Jinak, suše, a když mu Eren sáhl na čelo, bylo horké a suché jako kámen na slunci. Bri hleděl na Erena a neviděl ho. Zorničky měl obrovské, černé, skoro přes celou duhovku. Díval se skrz Erena někam za něj a prsty pravé ruky přitom pořád něco sbíral ze vzduchu. Něco drobného. Sbíral to a nebylo to tam.
 
 „Bri,“ řekla Hela. „Bri, slyšíš mě?“
 
-Bri se zasmál. Nebyl to jeho smích. Pak řekl něco, co nedávalo smysl, slova za sebou bez pořádku, a sbíral dál.
+Bri se zasmál. Nebyl to jeho smích. Řekl něco nesrozumitelného, slova za sebou bez pořádku, a sbíral dál.
 
 Eren mu sáhl na krk. Puls byl rychlý. Tak rychlý, že ho Eren nedokázal počítat, splýval mu pod prsty.
 
 „Co jedl?“
 
-Hela nevěděla. Pak zašmátrala Brimu v kapse bundy a vytáhla to.
+Hela nevěděla. Zašmátrala Brimu v kapse bundy a vytáhla to.
 
 Bobule. Tři, zmačkané. Černé a lesklé, velké jako konec malíčku, a každá seděla v malém zeleném kalichu, rozevřeném do pěti cípů jako hvězda. Na Helině dlani vypadaly jako oči.
 
 *
 
-Sefa přišla za chvíli. Někdo pro ni doběhl nahoru. Klekla si k Brimu a podívala se mu do očí a sáhla mu na krk a na čelo a na suché rty. Pak se podívala na bobule na Helině dlani.
+Sefa přišla za chvíli. Někdo pro ni doběhl nahoru. Klekla si k Brimu a podívala se mu do očí a sáhla mu na krk a na čelo a na suché rty. Potom si všimla bobulí na Helině dlani.
 
-Eren viděl její tvář. Viděl, jak se v ní něco rozsvítilo. Krátce, jako když se v tmavé místnosti rozsvítí kontrolka. Poznala to. A pak to zhaslo.
+Eren viděl její tvář. Viděl, jak jí oči zjasněly. Krátce, jako když se v tmavé místnosti rozsvítí kontrolka. Poznala to. A pak jí oči zase pohasly.
 
 „Já to znám,“ řekla Sefa. Tiše. Nemluvila k nikomu. „Tohle znám. Ty oči. To sbírání. Suchá kůže.“ Zavřela oči. „Je na to… je na to něco. Je na to lék.“
 
@@ -90,7 +90,7 @@ Eren viděl její tvář. Viděl, jak se v ní něco rozsvítilo. Krátce, jako 
 
 Sefa otevřela lékárničku.
 
-Eren se díval přes její rameno. Krabičky a ampule a sáčky, v řadách, v pěnových lůžkách. Na každé kód. Písmena a čísla, malá a úhledná. Sefa po nich přejížděla prstem, jednu řadu, druhou. Zastavila se. Pohnula se dál. Zastavila se znovu.
+Eren jí nahlížel přes rameno. Krabičky a ampule a sáčky, v řadách, v pěnových lůžkách. Na každé kód. Písmena a čísla, malá a úhledná. Sefa po nich přejížděla prstem, jednu řadu, druhou. Zastavila se. Pohnula se dál. Zastavila se znovu.
 
 „Je to tady,“ řekla. „Vím, že to tady je. Protijed. Musí tu být, je to základní věc, je to v každé…“ Vzala do ruky ampuli. Otočila ji. Kód. Položila ji zpátky. Vzala jinou. „Nevím, která. Nevím, kolik. Když dám špatnou, zastavím mu srdce. Když dám správnou a moc, zastavím mu srdce taky.“ Hlas se jí nezlomil. Byl jen čím dál tišší. „Možná ho držím v ruce. Možná ho právě držím.“
 
@@ -98,21 +98,21 @@ Položila ampuli zpátky do lůžka.
 
 „Sůl,“ řekla pak. „Teplá voda a sůl. Musí to vyzvracet.“
 
-Neměli sůl. Měli tu bílou usazeninu z kamenů, hořkou a trochu slanou. Eren ji seškrábal nožem z kamenů u potoka, celou hrst, a Sefa ji rozmíchala v teplé vodě z dolní tůně. Lili to Brimu do pusy. Bri se bránil a kopal a polykal a vyzvracel to, a v tom bylo několik černých slupek. Pak to do něj lili znovu.
+Neměli sůl. Měli tu bílou usazeninu z kamenů, hořkou a trochu slanou. Eren ji seškrábal nožem z kamenů u potoka, celou hrst, a Sefa ji rozmíchala v teplé vodě z dolní tůně. Lili to Brimu do pusy. Bri se bránil a kopal a polykal a vyzvracel to, a v tom bylo několik černých slupek. Lili to do něj znovu.
 
-Pomohlo to jen trochu. Nebo vůbec. Eren to nevěděl. Byly to hodiny od chvíle, kdy Bri u potoka jedl. Co snědl, už dávno nebylo v žaludku. Bylo v krvi.
+Pomohlo to jen trochu. Nebo vůbec. Byly to hodiny od chvíle, kdy Bri u potoka jedl. Co snědl, už dávno nebylo v žaludku. Bylo v krvi.
 
 V noci sešla dolů stará žena.
 
-Eren ji uviděl, jak sestupuje po suti ve tmě, s pochodní, kterou držel Ru. Šla pomalu a dva muži jí pomáhali přes kameny. Došla k plachtě pod skálou. Ru jí ukázal na Briho a ona se sklonila. Podívala se na jeho oči. Pak se podívala na Helu. Hela nevěděla, kdo to je, a bylo jí to jedno. Podala jí ty tři zmačkané bobule.
+Eren ji uviděl, jak sestupuje po suti ve tmě, s pochodní, kterou držel Ru. Šla pomalu a dva muži jí pomáhali přes kameny. Došla k plachtě pod skálou. Ru jí ukázal na Briho a ona se sklonila. Prohlédla mu oči a obrátila se k Hele. Hela nevěděla, kdo to je, a bylo jí to jedno. Podala jí ty tři zmačkané bobule.
 
-Stará žena se na ně podívala. Ani se jich nedotkla. Cvakla jazykem. Pomalu, a pak ještě jednou. Plochá dlaň se pohnula ze strany na stranu, tak pomalu, že to bylo spíš něco jiného než *ne*. Eren nevěděl co.
+Stará žena se na ně podívala. Ani se jich nedotkla. Cvakla jazykem. Pomalu, a pak ještě jednou. Plochá dlaň se pohnula ze strany na stranu, tak pomalu, že to bylo spíš něco jiného než *ne*.
 
-Pak si klekla vedle Sefy, na kameny, ztěžka. Namočila kůži ve studené vodě z potoka a dala ji Brimu na čelo. Na krk. Na zápěstí. Sefa se na ni podívala, a pak udělala totéž, z druhé strany. Chladily ho celou noc, obě, střídavě, a ani jedna nemluvila. Ru seděl u pochodně a díval se.
+Pak si klekla vedle Sefy, na kameny, ztěžka. Namočila kůži v chladnější vodě z potoka pod tůněmi a dala ji Brimu na čelo. Na krk. Na zápěstí. Sefa udělala totéž, z druhé strany. Chladily ho celou noc, obě, střídavě, a ani jedna nemluvila. Ru seděl u pochodně a díval se.
 
 Bri se třásl. Pak se přestal třást a začal sebou házet, a stará žena mu dala ruku pod hlavu, aby si ji nerozbil o kámen. Pak sebou přestal házet.
 
-Umřel před svítáním. Eren nevěděl přesně kdy. Pozdě v noci si uvědomil, že už nepočítá jeho dech, protože už není co počítat.
+Umřel před svítáním. Eren si pozdě v noci uvědomil, že už nepočítá jeho dech, protože už není co počítat.
 
 Hela nekřičela. Seděla u syna a držela ho za ruku, za tu pořezanou dlaň, kterou mu Sefa první den obvazovala. Jizva se už zahojila. Byla růžová a čistá.
 
@@ -134,9 +134,9 @@ Neukázal nahoru. Nemusel. Celý kotel zvedl oči k terase, kde stáli místní 
 
 „Vědí to od narození,“ řekl Orrin. Klidně, bez hněvu, jako by jen počítal. „Dívají se na naše děti každý den. Viděli je u potoka. Viděli, co trhají.“ Odmlčel se. „Nevím, proč nic neřekli. Možná nemohli. Neumíme jejich řeč. Možná…“ Nechal to viset. „Nevím. Ale vím, že už žádné naše dítě nezemře proto, že mu někdo neřekl, co ví.“
 
-Lidé kolem Erena přikyvovali. Hela stála u kamenů a nedívala se na nikoho. Eren chtěl něco říct a nevěděl co. Nevěděl, jestli Orrin nemá pravdu. Nevěděl, co místní viděli. Neviděl to. Stál a mlčel, a Orrin slezl z balvanu a položil Hele ruku na rameno a odešel.
+Lidé kolem Erena přikyvovali. Hela stála u kamenů a nedívala se na nikoho. Eren chtěl něco říct a nevěděl co. Možná měl Orrin pravdu. Co místní viděli, Eren neviděl. Stál a mlčel, a Orrin slezl z balvanu a položil Hele ruku na rameno a odešel.
 
-Pak sešel po suti Ru. Nesl v dlaních něco rudého. Zastavil se u Hely a podíval se na ni a pak se podíval na Tio, která stála vedle Erena. Tio něco řekla. Ru odpověděl. Tio se otočila k Hele.
+Pak sešel po suti Ru. Nesl v dlaních něco rudého. Zastavil se u Hely a pak se otočil k Tio, která stála vedle Erena. Tio něco řekla. Ru odpověděl. Tio se otočila k Hele.
 
 „Chce mu dát čáru,“ řekla. „Jako má on. Na čelo.“ Zaváhala. „Na kámen. Na ten kámen, kde má hlavu.“
 
@@ -150,7 +150,7 @@ Ru si klekl ke kamenům. Na horní kámen, ten nad Briho hlavou, namaloval prste
 
 Tu noc začal Eren psát.
 
-Nevěděl, že to udělá. Seděl u ohně a nemohl spát, a ruce chtěly něco dělat. Vstal a šel k potoku, kde rostly stromy se světlou kůrou. Ne ty s patry větví, jiné, nižší, s kmeny, ze kterých se kůra loupala v tenkých plátech, sama, jako by byla stromu velká. Odloupl jeden plát. Byl velký jako dlaň, světlý na vnitřní straně, hladký, trochu vlhký. Odloupl další.
+Neplánoval to. Seděl u ohně a nemohl spát, a ruce chtěly něco dělat. Vstal a šel k potoku, kde rostly stromy se světlou kůrou. Ne ty s patry větví, jiné, nižší, s kmeny, ze kterých se kůra loupala v tenkých plátech, sama, jako by byla stromu velká. Odloupl jeden plát. Byl velký jako dlaň, světlý na vnitřní straně, hladký, trochu vlhký. Odloupl další.
 
 U ohně vytáhl ze žhavého okraje ohořelý klacek a odklepal z něj žár. Konec byl černý a měkký.
 
@@ -158,7 +158,7 @@ Napsal: *Černé lesklé bobule v zeleném kalichu s pěti cípy. Jed.*
 
 Písmena se roztřásla, protože klacek byl tupý a kůra se pod ním prohýbala. Napsal to znovu, níž, pomaleji. Pak pod to: *Nejíst. Ani jednu.*
 
-Díval se na to. Bylo to písmo Konfederace, úhledné, jaké se učí děti. Doma ho skoro nepoužíval. Psalo se jen tam, kde síť nestačila: na štítky na nástrojích, na nápisy na stěnách chodeb pro případ výpadku. *Nouzový východ. Ventil ruční. Nezavírat.* Nápisy pro dobu, kdy síť mlčí.
+Bylo to písmo Konfederace, úhledné, jaké se učí děti. Doma ho skoro nepoužíval. Psalo se jen tam, kde síť nestačila: na štítky na nástrojích, na nápisy na stěnách chodeb pro případ výpadku. *Nouzový východ. Ventil ruční. Nezavírat.* Nápisy pro dobu, kdy síť mlčí.
 
 Teď síť mlčela.
 
@@ -168,13 +168,13 @@ Pak psal, co věděl sám. Kolik vydrží vložka. Jak se pozná suché dřevo. 
 
 Někdy v noci si všiml, že u ohně sedí Hela.
 
-Nevěděl, jak dlouho tam sedí. Seděla s koleny pod bradou a dívala se na pláty kůry, které ležely kolem něj na kamenech, jeden vedle druhého, popsané. Pak natáhla ruku a jeden vzala. Četla ho. Rty se jí přitom pohybovaly, jak se pohybují dětem, které teprve čtou.
+Seděla s koleny pod bradou a dívala se na pláty kůry, které ležely kolem něj na kamenech, jeden vedle druhého, popsané. Natáhla ruku a jeden vzala. Četla ho. Rty se jí přitom pohybovaly, jak se pohybují dětem, které teprve čtou.
 
 „Ten první,“ řekla. „S tím jedem.“
 
 Eren jí ho podal.
 
-Hela ho dlouho držela. Pak ho otočila na druhou stranu, na tu hrubou, tmavou, a podala mu ho zpátky.
+Hela ho dlouho držela, než ho otočila na druhou stranu, na tu hrubou, tmavou, a podala mu ho zpátky.
 
 „Napiš tam jeho jméno,“ řekla.
 
@@ -194,7 +194,7 @@ Ráno byly pláty zkroucené.
 
 Kůra v noci vyschla u ohně a stočila se do ruliček, a když je Eren rozvinul, praskaly. Písmo na nich bylo rozmazané. Uhlíkový prach se setřel, kde se kůra dotýkala kamene, a z celých slov zbyly jen kusy. *Černé lesklé…* a pak šmouha. *Dospělý dva…*
 
-Díval se na to a cítil, jak se v něm něco zavírá.
+Držel zkroucenou kůru v prstech a chvíli nedokázal polknout.
 
 Zkusil to jinak. Vzal nůž a hrotem vyryl písmena do čerstvého plátu, do světlé vnitřní strany. Šlo to pomalu. Každé písmeno potřebovalo několik tahů, a kůra se pod hrotem trhala, když přitlačil. Ale písmena zůstala. Byla to rýha, ne šmouha. Rýha se nesetře.
 
@@ -210,9 +210,7 @@ Sefa se zastavila a dlouho se dívala.
 
 „Já ti ty věci říkala tak, jak jsem si je pamatovala. Možná jsem si je pamatovala špatně. Možná ta stará žena ukazovala jeden prst a já viděla dva.“ Klekla si a vzala jeden plát. „A ty to vyryješ, a ono to tu zůstane. Napsané. A každý, kdo to přečte, bude věřit, že je to pravda, protože je to napsané.“
 
-Eren se na ni díval.
-
-„Tak mi řekni, co je špatně,“ řekl.
+„Tak mi řekni, co je špatně,“ řekl Eren.
 
 Sefa četla. Dlouho. Pak ukázala na jedno slovo. „Tady,“ řekla. „Ne *nevařit*. *Vařit dlouho.*“ Zamračila se. „Myslím.“
 
@@ -222,9 +220,9 @@ Eren ten plát odložil stranou. Ostatní nechal. Nevěděl, co jiného udělat.
 
 Ten den Maela zkrátila dávky.
 
-Neřekla to hned. Nejdřív odpoledne obešla mluvčí desítek, jednoho po druhém, s rukou zastrčenou v kapse, kde měla kamínky. Eren to viděl, ale nevěděl, co dělá. Večer to pochopil. Kamínky byly dávky. Každý kamínek jedna. Maela měla v kapse celý kotel.
+Neřekla to hned. Nejdřív odpoledne obešla mluvčí desítek, jednoho po druhém, s rukou zastrčenou v kapse, kde měla kamínky. Eren to viděl. Pochopil to až večer. Kamínky byly dávky. Každý kamínek jedna. Maela měla v kapse celý kotel.
 
-Sedla si k ohni a vysypala je na plochý kámen. Rozdělila je na hromádky. Erenovi se zdálo, že je to dětská hra. Pak se podíval pozorně a viděl, že každá hromádka je desítka, a že hromádky nejsou stejné.
+Sedla si k ohni a vysypala je na plochý kámen. Rozdělila je na hromádky. Erenovi se zdálo, že je to dětská hra. Když se podíval pozorně, viděl, že každá hromádka je desítka, a že hromádky nejsou stejné.
 
 „Harova desítka,“ řekla Maela a ukázala na jednu. „Deset lidí. Bere čtrnáct dávek denně. Od včerejška.“ Ukázala na druhou. „Tahle taky. Dvanáct na deset. A tahle.“
 
@@ -242,11 +240,7 @@ Eren čekal. Maela posouvala kamínky prstem z hromádky na hromádku.
 
 „A ty?“
 
-Maela dlouho mlčela. Pak řekla: „Má pravdu.“
-
-Eren se na ni podíval.
-
-„Spočítala jsem to,“ řekla Maela. „Kolik dřeva potřebujeme na noc. Kolik ho unese jeden člověk. Jak daleko se pro něj teď chodí.“ Pokrčila rameny. „Má pravdu. Kdo nosí, musí jíst víc. To je pravda.“
+Maela dlouho mlčela. Pak řekla: „Má pravdu.“ Srovnala kamínky do řady. „Spočítala jsem to. Kolik dřeva potřebujeme na noc. Kolik ho unese jeden člověk. Jak daleko se pro něj teď chodí.“ Pokrčila rameny. „Má pravdu. Kdo nosí, musí jíst víc. To je pravda.“
 
 „A Bri?“
 
@@ -282,7 +276,7 @@ Bylo to slovo místní řeči, krátké, s tím zaraženým dechem na konci, kte
 
 „Co je to?“
 
-„Tak tomu říká Ru. Těm bobulím.“ Tio se dívala na kůru v jeho ruce. „Ru mi je ukazoval. Hned na začátku, když jsme spolu chodili k vodě. Ukázal mi je a řekl tohle a udělal…“ Zavřela oči a nechala hlavu padnout na stranu. Pak je zase otevřela. „Řekl to všem dětem. Všem, co tam s námi chodily.“
+„Tak tomu říká Ru. Těm bobulím. Ru mi je ukazoval. Hned na začátku, když jsme spolu chodili k vodě. Ukázal mi je a řekl tohle a udělal…“ Zavřela oči a nechala hlavu padnout na stranu. Pak je zase otevřela. „Řekl to všem dětem. Všem, co tam s námi chodily.“
 
 Eren seděl s plátem v ruce.
 

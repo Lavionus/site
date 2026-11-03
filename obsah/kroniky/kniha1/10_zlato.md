@@ -4,7 +4,7 @@ V pondělí Svatého týdne byla voda ve vědru šedá.
 
 Matěj to neviděl hned. Bylo ještě tma, nad haldou se teprve rozednívalo a voda padala z konce žlabu do vědra jako vždycky, černá a s leskem. Modlil se. *Pater noster, qui es in caelis.* Za ty dva týdny se naučil modlit se u žlabu tak, aby každé slovo trvalo stejně dlouho jako včera, a přistihl se, že stejně pomalu se modlí i v oratoři, při kompletáři. Udalrich si toho všiml a nic neřekl. Vědro se plnilo. U prvního *amen* bylo plné do půli. Ve druhém Otčenáši, u *et dimitte nobis debita nostra*, se voda přelila přes okraj.
 
-Před čtrnácti dny se přelila až u *sed libera nos*. Mezi tím ležely tři prosby. Matěj je měl napsané v tabulce den po dni, každé ráno o kousek dřív, tak málo, že kdyby si to nepsal, nevěděl by o tom.
+Před čtrnácti dny se přelila až u *sed libera nos*. O dvě prosby dřív. Matěj to měl napsané v tabulce den po dni, každé ráno o kousek dřív, tak málo, že kdyby si to nepsal, nevěděl by o tom.
 
 Vylil vědro do strouhy a nabral znovu. Teprve když ho zvedl, aby ho vylil podruhé, uviděl v prvním šedém světle, že voda není černá. Byla kalná, šedožlutá, jako voda, ve které si hrnčíř myje ruce. Na dně vědra, když ho naklonil, zůstala vrstvička jemného bahna, hladká a mazlavá. Promnul ji mezi prsty. Nebyla rezavá. Nebyla to ta rezavá kůra, kterou znal ze žlabu a ze slatiny, ale něco jemnějšího, jako mouka smíchaná s hlínou.
 
@@ -48,7 +48,7 @@ Matěj se to dozvěděl od Udalricha, který se vrátil z mlýna s prázdným vo
 
 „Ve Svatém týdnu,“ řekl ještě. „Zlato ve Svatém týdnu.“
 
-Matěj se ohlédl k oratoři. Nad dveřmi tam ještě visely vrbové proutky s šedými chlupatými kočičkami. Udalrich je nařezal v neděli u potoka místo palem. Takové trhaly v Mlýnci děti na Květnou neděli, když byl Matěj malý. Udalrich je v neděli nesl kolem grangie v průvodu o třech lidech – on sám, Matěj a starý konvrš, který kulhal. Zpívali *Gloria, laus* a ovce na ně koukaly přes ohradu. Teď proutky usychaly a kočičky z nich padaly na práh. V pátek se bude číst o Jidášovi a o třiceti stříbrných. Matěj na to nechtěl myslet, a tak myslel na cestu.
+Matěj se ohlédl k oratoři. Nad dveřmi tam ještě visely vrbové proutky se šedými chlupatými kočičkami. Udalrich je nařezal v neděli u potoka místo palem. Takové trhaly v Mlýnci děti na Květnou neděli, když byl Matěj malý. Udalrich je v neděli nesl kolem grangie v průvodu o třech lidech – on sám, Matěj a starý konvrš, který kulhal. Zpívali *Gloria, laus* a ovce na ně koukaly přes ohradu. Teď proutky usychaly a kočičky z nich padaly na práh. V pátek se bude číst o Jidášovi a o třiceti stříbrných. Matěj na to nechtěl myslet, a tak myslel na cestu.
 
 Šel.
 
@@ -62,7 +62,7 @@ Konrád seděl na koni. Neměl na sobě zbroj, jen tmavý plášť s kožešinou
 
 Matěj šel blíž. Lidé mu uhýbali a za zády slyšel šepot. *Mnich. Ten, co byl v doupěti.*
 
-Konrád zvedl ruku. V ní ležel Ješkův valoun. Někdo z něj smyl hlínu a teď svítil celý, i ve slabém slunci dubnového dopoledne. Matěj slyšel, jak ves vydechla, všichni najednou, jako vydechuje kostel, když kněz pozdvihne hostii.
+Konrád zvedl ruku. V ní ležel Ješkův valoun. Někdo z něj smyl hlínu a teď svítil celý, i ve slabém slunci dubnového dopoledne. Matěj slyšel, jak ves vydechla, všichni najednou, jako vydechuje kostel, když se o svátku odhalí ostatek.
 
 „Vy tady,“ řekl Konrád česky, pomalu, se slovy postavenými trochu vedle, jak je kdysi slyšel od chůvy, „vy tady vyprávíte o drakovi. Sto let. Dvě stě let. Drak spí v hoře. Drak hlídá zlato.“ Pootočil valounem, aby na něj padlo světlo. „Kněží řeknou: pohádka. Páni řeknou: pohádka pro děti.“ Usmál se. „Já říkám: vaše babičky nelhaly.“
 
@@ -84,7 +84,7 @@ Teď se smáli všichni. Bohuna taky, bezzubě a trochu uraženě, a Zdena vedle
 
 Konrád dal valoun Volkmarovi, který ho zabalil do plátna, a sáhl do měšce. Vytáhl minci, velkou, stříbrnou, ne takovou, jaké ležely v matčině hrnci, a podal ji Ješkovi.
 
-„Za nález,“ řekl. „A každý, kdo bude kopat do svatého Jiří, dostane k mzdě groš navíc za týden. Mistr Ortlieb potřebuje ruce.“ Rozhlédl se po chlapech. „Silné ruce. Hora je bohatá. Mlýnec bude bohatý. Bude tu trh. Bude tu kostel z kamene.“
+„Za nález,“ řekl. „A každý, kdo bude kopat do svatého Jiří, dostane k mzdě denár navíc za týden. Mistr Ortlieb potřebuje ruce.“ Rozhlédl se po chlapech. „Silné ruce. Hora je bohatá. Mlýnec bude bohatý. Bude tu trh. Bude tu kostel z kamene.“
 
 Ves zašuměla. Matěj viděl, jak se dva mladí chlapi ze zadní řady na sebe podívali a jak jeden z nich kývl.
 
@@ -136,7 +136,7 @@ Na haldu letělo mnohem víc.
 
 Když se setmělo a pacholci odešli k ohni, slezl Matěj z kraje paseky dolů a obešel haldu z druhé strany, kam od boudy nebylo vidět. Hlušina ze štoly byla rezavá a šedá, ostré úlomky skály, jak je odlupoval oheň. Dnešní nánosy ležely navrchu jako mouka nasypaná na kamení, světlejší a jemnější. Matěj si do nich klekl.
 
-Krystaly. To uviděl jako první, protože odrážely poslední světlo z nebe. Byly velké jako prst, některé jako palec, šestiboké, s hroty jako pečlivě ořezané tužky. Některé byly průhledné jako led na okně, jiné kalné jako mléčné sklo a v jiných byly rezavé jehličky jako zamrzlé chloupky. Několik jich mělo na sobě bílý povlak, drsný, jaký Matěj znal z vnitřku hrnců, ve kterých se dlouho vařila voda. Pacholci je zahodili, protože to nebylo zlato.
+Krystaly. To uviděl jako první, protože odrážely poslední světlo z nebe. Byly velké jako prst, některé jako palec, šestiboké, s hroty jako pečlivě ořezaná brka. Některé byly průhledné jako led na okně, jiné kalné jako mléčné sklo a v jiných byly rezavé jehličky jako zamrzlé chloupky. Několik jich mělo na sobě bílý povlak, drsný, jaký Matěj znal z vnitřku hrnců, ve kterých se dlouho vařila voda. Pacholci je zahodili, protože to nebylo zlato.
 
 Pak kámen. Plochý úlomek, velký jako dlaň, světlejší než hlušina, s hranou čerstvě odštípnutou. Na jedné straně byl hladký. Na hladké straně byly rýhy.
 
@@ -160,11 +160,11 @@ U ohně seděl jen Hensel.
 
 Ostatní odešli, Konrádovi lidé na Wehrberg nebo do vsi, kde jim Kojata nabídl seník, a chlapi ze směny domů. Ortlieb spal ve své chalupě pod pasekou, kde svítilo malé okénko. Hensel tu zůstal, protože mu Ortlieb nechal hlídat štolu. Matěj to věděl od Ješka. Prý mu to svěřil, protože Hensel neslyší, a kdo neslyší, toho se nedá podplatit. Ješek se tomu smál, když to vyprávěl, a teď to Matějovi do smíchu nebylo.
 
-Hensel ho uviděl přicházet. Nepohnul se. Jen sledoval, jak si Matěj přisedá k ohni na druhou stranu, a pak se zase díval do plamenů.
+Hensel ho uviděl přicházet. Nepohnul se. Jen sledoval, jak si Matěj přisedá k ohni na druhou stranu, a pak se zase obrátil k plamenům.
 
 Matěj nevěděl, jak začít. Německy uměl lépe než většina bratří ve Waldsassenu, ale Henselova němčina byla jiná, ta protahovaná, žvýkaná řeč, které rozuměl jen napůl. A Hensel neslyšel. Matěj nakonec sáhl pod hábit a vytáhl úlomek s rýhami. Položil ho mezi ně na kámen u ohně, rýhami nahoru.
 
-Hensel se na něj podíval. Pak natáhl ruku, tu bez dvou prstů, vzal úlomek a obrátil ho k ohni. Přejel po rýhách palcem. Dlouho mlčel.
+Hensel natáhl ruku, tu bez dvou prstů, vzal úlomek a obrátil ho k ohni. Přejel po rýhách palcem. Dlouho mlčel.
 
 Pak řekl něco, co Matěj nepochopil. Matěj zavrtěl hlavou. Hensel to řekl znovu, pomaleji a hlasitěji, jak mluví lidé, kteří neslyší, a Matěj zachytil dvě slova. *Alt.* Staré. A *weg*. Pryč.
 
@@ -192,7 +192,7 @@ Ješek byl u matky. Seděl u stolu v otcově košili, kterou si ještě nesvlék
 
 „Hensel tě volá,“ řekl Matěj. „Do hory.“
 
-Ješek se na něj díval. „Teď? V noci?“
+„Teď?“ řekl Ješek. „V noci?“
 
 „Teď.“
 
@@ -218,7 +218,7 @@ Ješek mlčel. Potom se naklonil přes stůl a řekl tiše, aby to matka neslyš
 
 „Mně ne.“
 
-Ješek se na něj dlouho díval. Matěj čekal, že řekne *ty a tvoje psaní*, nebo *mnich se bojí vody, ale do drakovy díry se nebojí*, nebo něco ze včerejška a z hrobu pod hrušní. Ješek neřekl nic takového. Díval se na kost na stole, na ten tmavý med, který svítil v ohni. Pak se zeptal a jeho hlas byl najednou mladší, jako hlas kluka, který kdysi u rybníka ukazoval bratrovi raka:
+Ješek se na něj dlouho díval. Matěj čekal, že řekne *ty a tvoje psaní*, nebo *mnich se bojí vody, ale do drakovy díry se nebojí*, nebo něco z dnešního rána a z hrobu pod hrušní. Ješek neřekl nic takového. Hleděl na kost na stole, na ten tmavý med, který svítil v ohni. Pak se zeptal a jeho hlas byl najednou mladší, jako hlas kluka, který kdysi u rybníka ukazoval bratrovi raka:
 
 „A přečteš to?“
 

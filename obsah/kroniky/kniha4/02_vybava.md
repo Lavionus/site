@@ -2,7 +2,7 @@
 
 Ráno bylo bílé.
 
-Eren otevřel oči a nejdřív si myslel, že je to porucha zraku, další věc, která se po probuzení nevrátila, jak měla. Tráva kolem něj byla bílá. Bílé byly kameny, bílé byly šedé rukávy lidí, kteří spali kolem modulu na zemi, a bílé bylo i strniště na hlavě muže vedle něj. Pak se pohnul a bílá vrstva na jeho vlastním rameni se rozsypala na drobné ostré krystalky. Jinovatka. Ta, kterou v noci viděl na žebrech stropu, vylezla ven a lehla si na všechno.
+Eren otevřel oči a nejdřív si myslel, že je to porucha zraku, další věc, která se po probuzení nevrátila, jak měla. Tráva kolem něj byla bílá. Bílé byly kameny, bílé byly šedé rukávy lidí, kteří spali kolem modulu na zemi, a bílé bylo i strniště na hlavě muže vedle něj. Když se pohnul, bílá vrstva na jeho vlastním rameni se rozsypala na drobné ostré krystalky. Jinovatka. Ta, kterou v noci viděl na žebrech stropu, vylezla ven a lehla si na všechno.
 
 Tio spala. Měla ji ve vlasech, na řasách, na hřbetu ruky, kterou mu vytáhla z bundy. Eren tu ruku vzal do své. Byla studená, ale ne ledová. Dech pravidelný. Řekl si to znovu, tím svým hlasem, a pak se rozhlédl.
 
@@ -18,7 +18,7 @@ Modul se otevřel s tónem.
 
 Byl to dlouhý, stoupavý tón, jaký se v habitatech ozývá před změnou tlaku. Polovina lidí kolem modulu se při něm vymrštila ze země dřív, než se probudila. Eren viděl muže, který stál, rozhlížel se a hledal v prázdném vzduchu stěnu, ke které by se přitiskl. Pak si uvědomil, kde je, a sedl si zpátky.
 
-Na boku modulu se odsunuly tři široké poklopy. Z každého vyjela rampa a po rampách se pomalu sesunuly bedny. Šedé, hranaté, popsané kódy. Jedna za druhou, ve stejných odstupech, jako ve skladu. Sesouvaly se dlouho. Lidé se zvedali a scházeli se kolem. Nikdo se jich nedotkl. Stáli a dívali se, jako by čekali, že někdo přijde s listem a začne volat jména.
+Na boku modulu se odsunuly tři široké poklopy. Z každého vyjela rampa a po rampách se pomalu sesunuly bedny. Šedé, hranaté, popsané kódy. Jedna za druhou, ve stejných odstupech, jako ve skladu. Sesouvaly se dlouho. Lidé se zvedali a scházeli se kolem. Nikdo se jich nedotkl. Stáli kolem, jako by čekali, že někdo přijde s listem a začne volat jména.
 
 Nikdo nepřišel. Tón utichl. Rampy zůstaly vysunuté.
 
@@ -54,7 +54,7 @@ Pak Orrin pohlédl na něj.
 
 „Distribučních sítí,“ řekl Orrin. „Já vím.“
 
-Eren nevěděl, co odpovědět. Orrin se na něj díval klidně a přátelsky a v jeho tváři nebylo nic, co by se dalo uchopit. *Já vím.* Proces byl veřejný. Záznam viděly miliony lidí. Každý, kdo tehdy sledoval síť, mohl znát jeho jméno, jeho tvář, jeho zařazení. Nebylo na tom nic divného.
+Eren mlčel. Orrin se na něj díval klidně a přátelsky a v jeho tváři nebylo nic, co by se dalo uchopit. *Já vím.* Proces byl veřejný. Záznam viděly miliony lidí. Každý, kdo tehdy sledoval síť, mohl znát jeho jméno, jeho tvář, jeho zařazení. Nebylo na tom nic divného.
 
 Erenovi přesto přeběhl po zádech chlad, který neměl nic společného s jinovatkou.
 
@@ -68,7 +68,7 @@ Bylo to správné. Byla to přesně ta otázka, kterou by položil sám. Eren se
 
 „Tím líp,“ řekl Orrin. „Bude mít práci.“
 
-A šel dál. Eren se díval za ním a cítil, jak mu v hrudi něco pomalu sedá na místo. Bylo to dobré a bylo to nepříjemné zároveň. Řekl to sám. Nikdo ho k tomu nepřinutil. *Umím věci.* Za hodinu to věděla celá desítka, za dvě celý svah, a odpoledne už k němu chodili lidé, které nikdy neviděl, a říkali: ty jsi ten, co umí věci.
+A šel dál. Eren za ním hleděl a cítil, jak mu v hrudi něco pomalu sedá na místo. Bylo to dobré a bylo to nepříjemné zároveň. Řekl to sám. Nikdo ho k tomu nepřinutil. *Umím věci.* Za hodinu to věděl celý svah a odpoledne už k němu chodili lidé, které nikdy neviděl, a říkali: ty jsi ten, co umí věci.
 
 *
 
@@ -102,7 +102,7 @@ Kdo to psal, nikdy tady nebyl. Psal to pro nějakou Zemi, kterou si představova
 
 „Že máme pít vodu,“ řekl Eren. „A sdílet teplo.“
 
-Žena se na něj dívala a čekala, jestli to myslí jako vtip. Pak pochopila, že ne, a odvrátila se.
+Žena čekala, jestli to myslí jako vtip. Když pochopila, že ne, odvrátila se.
 
 *
 
@@ -112,13 +112,13 @@ Orrin ji k bednám s jídlem poslal hned a dal jí dva lidi, kteří měli nosit
 
 Dávky byly zatavené v plochých balíčcích, šedých a hladkých. Na každém kód a pod ním malý obrázek: jeden den. Maela jeden vzala, zvážila v dlani a položila zpátky. Pak začala počítat.
 
-Eren ji nikdy neviděl počítat. To mu došlo, až když se na ni díval. Byli spolu jedenáct let a on ji nikdy neviděl počítat, protože doma se nepočítalo. Doma se díval do čísel, která už někdo spočítal, a rozhodoval. Maela teď stála nad bednou a hýbala rty. Prsty pravé ruky ťukala o palec, jeden po druhém. Klacíkem vyryla do hlíny čárku, pak druhou a pod ně číslo. Odpočítala vrstvy v bedně, pak balíky ve vrstvě. Jeden balík rozřízla nožem a dávky vysypala na plachtu a spočítala i ty, nahlas, šeptem, jako dítě.
+Eren ji nikdy neviděl počítat. To mu došlo, až když se na ni díval. Byli spolu jedenáct let a on ji nikdy neviděl počítat, protože doma se nepočítalo. Doma se dívala do čísel, která už někdo spočítal, a rozhodovala. Maela teď stála nad bednou a hýbala rty. Prsty pravé ruky ťukala o palec, jeden po druhém. Klacíkem vyryla do hlíny čárku, pak druhou a pod ně číslo. Odpočítala vrstvy v bedně, pak balíky ve vrstvě. Jeden balík rozřízla nožem a dávky vysypala na plachtu a spočítala i ty, nahlas, šeptem, jako dítě.
 
 „Pět,“ řekla. „V balíku pět. Ve vrstvě dvanáct balíků. Vrstev pět.“
 
 Eren to v hlavě vynásobil a nic neřekl. Věděl, že ona to musí vynásobit sama.
 
-„Tři sta,“ řekla po chvíli. „V bedně.“ Podívala se na dlouhou řadu beden, které muži od modulu vytahali na trávu. „Kolik jich je?“
+„Tři sta,“ řekla po chvíli. „V bedně.“ Přejela očima dlouhou řadu beden, které muži od modulu vytahali na trávu. „Kolik jich je?“
 
 „Čtyřiašedesát,“ řekl jeden z nich.
 
@@ -144,7 +144,7 @@ Maela neodpověděla. Eren taky ne.
 
 Sefa otevřela lékárničku před polednem a zavřela ji krátce poté.
 
-Eren to viděl, protože seděl kousek od ní a zkoušel křesadlo. Lékárnička byla plochá krabice s víkem na pantech, a když ji Sefa otevřela, vypadala uvnitř spořádaně: řady trubiček, plochých proužků, malých zatavených sáčků, každý na svém místě v tvarovaném lůžku. Sefa se nad ni naklonila a dlouho se dívala. Pak vytáhla jeden proužek a otočila ho ke světlu.
+Eren to viděl, protože seděl kousek od ní a zkoušel křesadlo. Lékárnička byla plochá krabice s víkem na pantech, a když ji Sefa otevřela, vypadala uvnitř spořádaně: řady trubiček, plochých proužků, malých zatavených sáčků, každý na svém místě v tvarovaném lůžku. Sefa se nad ni dlouho skláněla, než vytáhla jeden proužek a otočila ho ke světlu.
 
 „Erene,“ řekla. „Vy jste technik. Umíte číst kódy?“
 
@@ -194,9 +194,9 @@ Stoupal. Zmenšoval se. Hučení sláblo a měnilo se v tenké zpívání a nako
 
 Nikdo nemluvil.
 
-Muž, jeden z těch dvou, kteří nikam nepatřili, vyběhl po svahu za modulem. Běžel nahoru a mával rukama a křičel něco, čemu nebylo rozumět. Klopýtl a upadl a zase vstal a běžel dál. Pak se zastavil, protože už nebylo, za čím běžet. Stál tam, kde ještě před chvílí stála rampa, v kruhu spálené trávy, a díval se vzhůru s rukama spuštěnýma podél těla.
+Muž, jeden z těch dvou, kteří nikam nepatřili, vyběhl po svahu za modulem. Běžel nahoru a mával rukama a křičel něco, čemu nebylo rozumět. Klopýtl a upadl a zase vstal a běžel dál. Zastavil se, až když už nebylo, za čím běžet. Stál tam, kde ještě před chvílí stála rampa, v kruhu spálené trávy, a díval se vzhůru s rukama spuštěnýma podél těla.
 
-Modul byl jen tečka. Ve slunci se zaleskl, jednou, jako by se ohlédl. Pak už ho Eren nenašel.
+Modul byl jen tečka. Ve slunci se zaleskl, jednou, jako by se ohlédl. Víc už ho Eren nenašel.
 
 „Pa,“ řekla Tio. Mávala.
 
@@ -210,7 +210,7 @@ Ne ticho v hlavě. To tam bylo pořád a Eren si na něj začínal zvykat, jako 
 
 Poslední stroj byl pryč. Kromě nožů, sekyr, lan a křesadla s vyraženým číslem nezůstalo nic, co by bylo složitější než ruka.
 
-Eren se díval na kruh spálené trávy. Uprostřed se ještě kouřilo. Na kraji kruhu stál ten muž a díval se do nebe a Eren ho chápal tak dokonale, že se musel odvrátit.
+Uprostřed kruhu spálené trávy se ještě kouřilo. Na kraji stál ten muž a díval se do nebe a Eren ho chápal tak dokonale, že se musel odvrátit.
 
 *
 
@@ -244,7 +244,7 @@ Bosé nohy. Lidské.
 
 Eren zůstal klečet. Nemyslel na nic. Díval se na ten otisk, na vodu na jeho dně, a slyšel v hlavě hlas ze záznamu: *neobydlená divočina vhodná k přežití*. Klidně, s tečkou na konci.
 
-„Tati.“ Tio stála vedle něj a dívala se taky. Pak ukázala. „Ten je malý.“
+„Tati.“ Tio stála vedle něj. Ukázala prstem. „Ten je malý.“
 
 Měla pravdu. Kus stranou, u kamene, byl otisk menší než ostatní. Užší, kratší, s prsty jako hrášky. Dětský.
 
@@ -258,7 +258,7 @@ Eren se díval na ty dva otisky. Pak vzal Tio do náruče, otřel jí nohu cípe
 
 Když se narovnal, uviděl kouř.
 
-Stoupal nad hřebenem na druhé straně údolí, nad bílými skalami. Tenký a šedý, skoro průsvitný. Neválel se a nerozléval jako kouř z požáru, který Eren znal ze záznamů a ze dvou nehod v potravinových modulech. Stoupal rovně, jako nit. Nahoře se ve větru zlomil a rozplynul. Pod tím zlomem byl ale pořád, stejně tenký, stejně rovný. Eren se na něj díval dlouho. Nesílil ani neslábl.
+Stoupal nad hřebenem na druhé straně údolí, nad bílými skalami. Tenký a šedý, skoro průsvitný. Neválel se a nerozléval jako kouř z požáru, který Eren znal ze záznamů a ze dvou nehod v potravinových modulech. Stoupal rovně, jako nit. Nahoře se ve větru zlomil a rozplynul. Pod tím zlomem byl ale pořád, stejně tenký, stejně rovný. Eren ho dlouho sledoval. Nesílil ani neslábl.
 
 Někdo ten oheň krmil.
 
@@ -266,7 +266,7 @@ Někdo ten oheň krmil.
 
 Orrinovi to řekl, když se vrátil. Nikomu jinému.
 
-Nevěděl, proč zrovna jemu. Možná proto, že Orrin stál na bedně. Možná proto, že to bylo jednodušší než to říct všem. Orrin šel s ním dolů k potoku. Šli spolu mlčky mezi stromy a Orrin si cestou ulomil kus suché větve a zkusil, jak se láme. Pak stál nad otisky v blátě. Díval se na ně dlouho a pozorně, a na ten malý taky, a na Tiin vedle něj.
+Proč zrovna jemu? Možná proto, že Orrin stál na bedně. Možná proto, že to bylo jednodušší než to říct všem. Orrin šel s ním dolů k potoku. Šli spolu mlčky mezi stromy a Orrin si cestou ulomil kus suché větve a zkusil, jak se láme. U otisků v blátě se zastavil. Díval se na ně dlouho a pozorně, a na ten malý taky, a na Tiin vedle něj.
 
 Pak postavil vlastní botu vedle největšího otisku a zatlačil.
 
@@ -292,7 +292,7 @@ Orrin mu položil ruku na rameno, krátce a pevně, a šel nahoru.
 
 Oheň rozdělávali, když se setmělo.
 
-Šlo to špatně. Eren věděl, co je hoření; věděl, kolik kyslíku je potřeba a jaká je zápalná teplota některých plastů a izolací. Nevěděl, které dřevo hoří. Nasbírali to, co leželo pod stromy, a nanosili na hromadu, a Eren škrtal křesadlem. Jiskry padaly, žluté a krátké, a zhasínaly na dřevě, jako by padaly do vody. Napočítal dvacet škrtnutí. Čtyřicet. Ze tří tisíc. Mladý chlapík z Orrinovy desítky, kterému Orrin říkal Kaji, mu přišel pomoct a pak to zkusil sám a nešlo mu to o nic líp.
+Šlo to špatně. Eren věděl, co je hoření; věděl, kolik kyslíku je potřeba a jaká je zápalná teplota některých plastů a izolací. Nevěděl, které dřevo hoří. Nasbírali to, co leželo pod stromy, a nanosili na hromadu, a Eren škrtal křesadlem. Jiskry padaly, žluté a krátké, a zhasínaly na dřevě, jako by padaly do vody. Napočítal dvacet škrtnutí. Čtyřicet. Ze tří tisíc. Mladý chlapík z Orrinovy desítky, kterého Orrin oslovoval Kaji, mu přišel pomoct a pak to zkusil sám a nešlo mu to o nic líp.
 
 Nakonec to vyšlo náhodou. Sefa přinesla hrst něčeho suchého, jemného, co rostlo mezi kameny, bledou trávu nebo vlákna, a jiskra se v tom chytila. Zčernala, zčervenala a pak se z ní vyvalil štiplavý dým. Eren na to dýchal, jak to viděl kdysi v nějakém záznamu, a ono to vzplálo. Malý plamínek, žlutý. Přiložili jehličí a jehličí zapraskalo a rozhořelo se jasně a vonně. Přiložili větve. Některé chytly, jiné jen syčely a kouřily, až se lidé rozkašlali a ustoupili.
 
@@ -300,7 +300,7 @@ Nakonec to vyšlo náhodou. Sefa přinesla hrst něčeho suchého, jemného, co 
 
 Pak seděli kolem ohně, všichni, kteří se k němu vešli, a ostatní kolem dalších ohňů, které se od toho prvního rozhořely po svahu. Bylo jich osm, deset. Lidé natahovali ruce k plamenům a obraceli k nim tváře. Eren si uvědomil, že nikdy předtím neviděl skutečný oheň. Jen záznamy, a jednou malý plamen v laboratoři za sklem. Tenhle byl živý. Hýbal se, praskal a hřál jen z jedné strany, takže člověka vpředu pálil a vzadu ho nechával mrznout. Byl to špatný stroj. Byl to nejlepší stroj, jaký teď měli.
 
-Tio usnula s tou šiškou v ruce. Maela seděla vedle ní a dívala se do plamenů a v jejím obličeji bylo to samé, co odpoledne nad čárkami v hlíně. Počítala. Eren nevěděl co.
+Tio usnula s tou šiškou v ruce. Maela seděla vedle ní a dívala se do plamenů a v jejím obličeji bylo to samé, co odpoledne nad čárkami v hlíně. Počítala.
 
 Vstal a poodešel kousek od ohně, kde bylo vidět přes údolí.
 
@@ -308,12 +308,12 @@ Na druhé straně, nad bílými skalami, kde ve dne stoupal ten tenký rovný ko
 
 Někdo tam nahoře taky seděl u ohně. Někdo, kdo věděl, které dřevo hoří.
 
-Eren se obrátil k síti. Ten malý pohyb, ani o něm nevěděl. *Kdo to je?*
+Eren se obrátil k síti. Ten malý pohyb, sám od sebe. *Kdo to je?*
 
 Nic.
 
 Stál ve tmě a díval se na cizí oheň. Za zády slyšel praskat ten jejich, mnohem větší, mnohem hlučnější, a hlasy lidí, kteří se u něj začínali tiše smát, poprvé od probuzení. Pomyslel si, že ten bod na druhé straně údolí je vidí taky. Musí. Deset ohňů na holém svahu. Nikdo je nemohl přehlédnout.
 
-Vrátil se k ohni. Orrin seděl na druhé straně, mezi svými lidmi, a když Eren usedal, zvedl k němu oči. Jen krátce. Pak se zase díval do plamenů.
+Vrátil se k ohni. Orrin seděl na druhé straně, mezi svými lidmi, a když Eren usedal, zvedl k němu oči. Jen krátce, a oči mu zase sklouzly do plamenů.
 
 Nikomu to neřekli.

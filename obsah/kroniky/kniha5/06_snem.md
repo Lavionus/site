@@ -56,7 +56,7 @@ Na stole ležely dva papíry. List té ženy, propsaný přes uhlový papír, s 
 
 „Zavřel jsem dva…“
 
-„Vím, co jsi zavřel.“ Lada si sundala brýle a podívala se na něj. „Ona píše, kdy to měřila. Na minutu. Ty píšeš, kdy sis vzpomněl.“
+„Vím, co jsi zavřel.“ Lada si sundala brýle. „Ona píše, kdy to měřila. Na minutu. Ty píšeš, kdy sis vzpomněl.“
 
 Tadeáš zčervenal až ke kořínkům vlasů. Nic neřekl.
 
@@ -68,7 +68,7 @@ Sael stála ve dveřích. Lada se na ni nepodívala.
 
 „Ne,“ řekla Lada. „To vidím.“
 
-Sael chvíli stála a čekala, jestli Lada řekne ještě něco. Lada četla. Pak vzala tužku a do rohu toho listu, kde zbyl volný kousek, napsala drobně svým kostrbatým písmem: *17 = řekni mi.*
+Sael chvíli stála a čekala, jestli Lada řekne ještě něco. Lada četla, a když dočetla, vzala tužku a do rohu toho listu, kde zbyl volný kousek, napsala drobně svým kostrbatým písmem: *17 = řekni mi.*
 
 „Až bude pramen sedmnáct,“ řekla Tadeášovi. „Řekni mi to hned. Nečekej na večer.“ Podala mu list. „A dej jí to zítra zpátky. Ať ví, že to čtu.“
 
@@ -102,7 +102,7 @@ Knihovna. Tmavé dřevo, police až ke stropu, kožené hřbety. Lampa se zelen�
 
 „Děkuji.“ Wehrle mluvil německy čistě a měkce, bavorsky jen trochu, tam, kde to znělo přívětivě. „Je to pro mě čest. Jsem přítel Úmluvy dvacet let. Dnes poprvé u stolu.“
 
-Sael se dívala na police za ním. Hřbety knih. Na několika z nich četla zlatý tisk i přes obrazovku. Matriky. Erbovníky. Rodopisy.
+Za ním stály police, hřbety knih, a na několika z nich četla Sael zlatý tisk i přes obrazovku. Matriky. Erbovníky. Rodopisy.
 
 „Řeknu o sobě jen to,“ pokračoval Wehrle, „že rodinná historie je můj obor a moje vášeň. A že k té krajině, o které dnes mluvíme, mám osobní vztah. Moje rodina pochází z Čech. Z Jáchymova, ze Sankt Joachimsthal. Ještě můj praděd psal naše jméno bez koncového *e*.“ Usmál se. „Stará horní rodina. Čtyři sta let to s těmi horami máme.“
 
@@ -120,19 +120,19 @@ Brandl mluvil dvacet minut.
 
 Mluvil jako policista, který podává hlášení. Body, čísla, data. Fórum: přijímačů je dnes jedenáct, ne šest, elipsa se zúžila na sedm kilometrů. Regionální web napsal druhý článek. Na obecní úřad v Mlýnci volala televize a ptala se na *záhadný signál*; starosta řekl, že o ničem neví, a měl pravdu. Mrtvá zvířata v jámě pod haldou: viděl je jeden výletník a napsal o nich do místní skupiny na sociální síti. Zatím se mu smáli. Teplá voda v chodbách sídla, plyn ve spodních síních, otřesy. Odkud to ví, neřekl. Sael mu to řekla sama, před týdnem, do telefonu.
 
-„A to není všechno,“ řekl Brandl. „Máme druhý případ. Karlovy Vary. Rodina s novorozencem, laboratoř u dítěte dvakrát potvrdila nález. Byt v Sasku je připravený od pátku. V pondělí ráno nás rodina nepustila dovnitř.“ Podíval se do papíru. „Matka řekla našemu lékaři, že nikam nepojede. A že má *vědkyni*, která jí řekne, co to je.“
+„A to není všechno,“ řekl Brandl. „Máme druhý případ. Karlovy Vary. Rodina s novorozencem, laboratoř u dítěte dvakrát potvrdila nález. Byt v Sasku je připravený od pátku. V pondělí ráno nás rodina nepustila dovnitř.“ Nahlédl do papíru. „Matka řekla našemu lékaři, že nikam nepojede. A že má *vědkyni*, která jí řekne, co to je.“
 
 V oknech se něco pohnulo. Žena z Vratislavi si sundala brýle. Muž ze saských sídel zvedl ruku a zase ji položil.
 
 Sael seděla rovně.
 
-Klára. Klára Rybová, rozená Lindnerová, matka z rodiny, kterou Sael znala od dědečka, holka, kterou v roce devatenáct vezla dvě hodiny do Liberce a celou cestu nevěděla, co jí říct. Kláru znala. Kláru měla v kazetě pod stolem, na listu třicet jedna, se jménem, adresou a dvěma řádky připsanými rukou. Jeden v roce devatenáct. Druhý v roce dvacet.
+Klára. Klára Rybová, rozená Lindnerová. Rodinu Sael znala od Klářina dědečka. V roce devatenáct ji vezla tři hodiny do Liberce a celou cestu nevěděla, co jí říct. Kláru znala. Kláru měla v kazetě pod stolem, na listu třicet jedna, se jménem, adresou a dvěma řádky připsanými rukou. Jeden v roce devatenáct. Druhý v roce dvacet.
 
 *Vědkyni.*
 
-Mohl to být kdokoli. Kterákoli doktorka z kteréhokoli ústavu, které Klára někde našla jméno. Sael si to řekla a skoro tomu věřila.
+Mohl to být kdokoli. Kterákoli doktorka z kteréhokoli ústavu, jejíž jméno Klára někde našla. Sael si to řekla a skoro tomu věřila.
 
-Pak si vzpomněla, jak ta žena ve čtvrtek v dílně řekla *Kopii mých dat má ještě jeden člověk. To vám neřeknu.* Jak se dívala na protokol a na slovo *pokračuje*. A jak Sael sama v roce 2026 přečetla tu opravu na obrazovce, celou, i s přílohami, a pomyslela si: *tohle si přečte každý, kdo jednou bude potřebovat někoho, kdo nelže.*
+Pak si vzpomněla, jak ta žena minulý čtvrtek v dílně řekla *Kopii mých dat má ještě jeden člověk. To vám neřeknu.* Jak se dívala na protokol a na slovo *pokračuje*. A jak Sael sama v roce 2026 přečetla tu opravu na obrazovce, celou, i s přílohami, a pomyslela si: *tohle si přečte každý, kdo jednou bude potřebovat někoho, kdo nelže.*
 
 Klára četla všechno. Odmalička.
 
@@ -178,7 +178,7 @@ Nejdřív poděkoval Brandlovi za jasnost. Pak poděkoval Sael za *odvahu a věr
 
 „Dovolte mi jen jednu praktickou poznámku,“ řekl. „Z mého oboru. Rodinné archivy hynou třemi způsoby. Ohněm, vodou a zapomněním.“ Usmál se, omluvně, jako by citoval něco příliš známého. „Slyšel jsem o teplé vodě v chodbách. O vlhkosti. Paní Sálová je restaurátorka, ví to líp než já. Papír a pergamen to nesnesou dlouho.“
 
-Sael se podívala na vlhkoměr na zdi. Padesát pět.
+Vlhkoměr na zdi ukazoval padesát pět.
 
 „Naše nadace,“ pokračoval Wehrle, „spravuje od devadesátých let digitální úložiště pro rodinné archivy. Šifrované, rozdělené do tří zemí, s klíči, které nemá jediný člověk. Nabízím ho Úmluvě. Zdarma. Pro všechno, co je ohrožené. Pro archivy. A hlavně pro seznamy. Seznamy rodin se dnes vedou na papíře a v jedné kopii, jestli mám správné informace. Jeden požár, jedna voda…“ Rozhodil rukama. „Nikdo by pak nevěděl, kdo kde žije a kdo koho potřebuje. Ani vy ne.“
 
@@ -212,9 +212,9 @@ Brandl ho navrhl hned potom, věcně, jako by to měl v papíru od začátku, a 
 
 „V dubnu jsou Velikonoce,“ řekl muž ze saských sídel a zvedl ruku. „Naši lidé jsou o Velikonocích doma. Kdo by odjel, toho by hledali.“
 
-Lorenz chvíli listoval v kalendáři. Pak řekl datum.
+Lorenz chvíli listoval v kalendáři, než řekl datum.
 
-„Pátek třicátého prvního května. Den po Nanebevstoupení. V Německu a v Rakousku je svátek, lidé jezdí na prodloužený víkend. Nikdo se nebude divit, že jedeme na výlet.“ Podíval se do kamery přes brýle. „Do té doby má pan Brandl pověření připravit byty a dopravu. Nic víc. Nikoho nikam neveze, kdo nechce. A paní Sálová předloží sněmu měření své geoložky.“
+„Pátek třicátého prvního května. Den po Nanebevstoupení. V Německu a v Rakousku je svátek, lidé jezdí na prodloužený víkend. Nikdo se nebude divit, že jedeme na výlet. Do té doby má pan Brandl pověření připravit byty a dopravu. Nic víc. Nikoho nikam neveze, kdo nechce. A paní Sálová předloží sněmu měření své geoložky.“
 
 „To je za tři měsíce,“ řekl Brandl.
 
@@ -232,7 +232,7 @@ Lorenz pro.
 
 Ines proti. Sael proti.
 
-Benedikt mlčel tak dlouho, že si Lorenz myslel, že vypadlo spojení.
+Benedikt mlčel tak dlouho, že se Lorenz zeptal, jestli nevypadlo spojení.
 
 „Pane Benedikte?“
 
@@ -242,7 +242,7 @@ Benedikt mlčel tak dlouho, že si Lorenz myslel, že vypadlo spojení.
 
 Osm proti třem.
 
-Lada vedle ní zatahala Sael za rukáv. Sael jí to přeložila. Lada se zamračila, natáhla se a přitáhla si počítač k sobě, do záběru, poprvé. Na obrazovce se objevila široká vrásčitá tvář s hustým obočím, zdola, jako se Ostří dívají na vysoké.
+Lada zatahala Sael za rukáv. Sael jí to přeložila. Lada se zamračila, natáhla se a přitáhla si počítač k sobě, do záběru, poprvé. Na obrazovce se objevila široká vrásčitá tvář s hustým obočím, zdola, jako se Ostří dívají na vysoké.
 
 „Pod horou,“ řekla česky, nahlas a pomalu, aby to Sael stačila přeložit, „rozhodujou Ostří. Ne sněm. Ne vy. Ostří.“
 
@@ -290,7 +290,7 @@ Jména těch, kdo přišli zvenku, se v knize píšou celá, latinkou, aby se v�
 
 *Krev starších.* Tak tenkrát dole říkali všem, kdo nebyli denní. Nám i jim. Hladovým, Zikmundovým, lesním. Kdo věděl, co ten muž kupoval a čí krev to doopravdy byla? Jíva to nevěděla. Napsala jen, co věděla. Že ten muž chtěl žít dlouho a že platil zlatem.
 
-O dva listy dál, už Svídinou rukou, tenčí a pomalejší, pod zimou na přelomu let:
+O dva listy dál, už Svídinou rukou, tenčí a pomalejší, pod zápisem ze zimy na přelomu let:
 
 *W. zemřel. Dole se říká: rtuť.*
 
@@ -322,13 +322,13 @@ Ale Sael nikdo nic nepřinesl. Měla to v knize. A kniha neslouží k důkazům.
 
 Seděla v archivu do tří ráno.
 
-Nepsala nic. Do knihy se zapisuje, co se stalo. Co se rozhodlo, se do ní nezapisuje, dokud se to nestane. A rozhodnout to, co teď rozhodovala, by Rokyta neschválila. Svída taky ne. Jíva možná. Jíva jednou nechala knihu otevřenou před denní ženou, protože ta žena četla vzhůru nohama a nic s tím neudělala.
+Nepsala nic. Do knihy se zapisuje, co se stalo. Co se rozhodlo, se do ní nezapisuje, dokud se to nestane. To, o čem teď rozhodovala, by Rokyta neschválila. Svída taky ne. Jíva možná. Jíva jednou nechala knihu otevřenou před denní ženou, protože ta žena četla vzhůru nohama a nic s tím neudělala.
 
 Brandl chtěl archiv zapečetit. Wehrle ho chtěl uložit. Jeden ze strachu, druhý z lásky, nebo z něčeho, co si za lásku pletl. Každý z nich by ho držel jinak a ani jeden by ho nečetl.
 
-A mezi nimi stála žena, která nepracovala pro nikoho. Která napsala, kolik měl pramen, na minutu přesně, a nechala to číst Ladu. Která dala rodině z Karlových Varů číslo na někoho, kdo nelže, jestli to byla ona. A která jí řekla do očí *nebudu vám věřit*.
+A mezi nimi stála žena, která nepracovala pro nikoho. Která napsala, kolik měl pramen, na minutu přesně, a nechala to číst Ladu. Která byla možná tou vědkyní z Karlových Varů. A která jí řekla do očí *nebudu vám věřit*.
 
-Sael ji potřebovala proti oběma. Proti Brandlovi, protože Brandl věří jen číslům, a ta žena měla čísla. Proti Wehrlovi, protože Wehrle věří jen sám sobě, a ta žena nevěřila nikomu.
+Sael ji potřebovala proti oběma. Proti Brandlovi, protože Brandl věřil jen číslům, a ta žena měla čísla. Proti Wehrlovi, protože Wehrle věřil jen sám sobě, a ta žena nevěřila nikomu.
 
 Věděla, že ji tím použije. Věděla, že jí to neřekne celé. Bylo to stejné rozhodnutí jako před týdnem a před třemi lety. Rozhodovala za ni. Teď to jen věděla hned.
 
@@ -338,7 +338,7 @@ Devadesát devět.
 
 *
 
-V pátek v osm nula dvě jí zavolala sama. Věděla, kde Vrbová v tu chvíli stojí. U pramene, nad korýtkem, se sondou v ruce, a Tadeáš o čtyři metry výš mezi smrky.
+V pátek v osm nula dvě zavolala Vrbové Sael sama. Věděla, kde Vrbová v tu chvíli stojí. U pramene, nad korýtkem, se sondou v ruce, a Tadeáš o čtyři metry výš mezi smrky.
 
 „Vrbová.“
 
@@ -346,7 +346,7 @@ V pátek v osm nula dvě jí zavolala sama. Věděla, kde Vrbová v tu chvíli s
 
 Krátké ticho. Sael slyšela v telefonu les. Vítr ve smrcích, pípnutí přístroje, a pak psa, jak se otřásl.
 
-„Patnáct celá osm,“ řekla ta žena. Ne Sael. Tadeášovi. Pak do telefonu: „Poslouchám.“
+„Patnáct celá osm,“ řekla ta žena Tadeášovi, ne Sael. Pak do telefonu: „Poslouchám.“
 
 „Ten člověk,“ řekla Sael, „co má kopii vašich dat. Ať je to kdokoli. Můžete mu to říct.“
 
@@ -384,7 +384,7 @@ Sael na to nic neřekla. V telefonu bylo slyšet, jak se nadechla, jako by chtě
 
 „Lada.“
 
-V telefonu bylo chvíli ticho. Pak se ta žena zasmála. Krátce, potichu, jako tehdy v dílně, když to nešlo zastavit.
+Po chvíli ticha se ta žena v telefonu zasmála. Krátce, potichu, jako tehdy v dílně, když to nešlo zastavit.
 
 „Dobře,“ řekla. A zavěsila.
 

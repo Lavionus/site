@@ -70,7 +70,7 @@ Maela počítala maso.
 
 Ne dávky. Ty došly dvanáctý den po Orrinově odchodu, o tři dny dřív, než řekla, protože dvě matky vzaly víc a Maela jim to nevyčítala. Teď počítala sušené maso v boční síni. Pruhy na šňůrách pod stropem, kůže s tukem, koše s plody s čepičkou. Tal ji tam pustila. Nejdřív jen se ženou, která tu zásobu držela, starou a hubenou, s prsty pokřivenými jako kořeny. Pak samotnou.
 
-Eren ji tam jednou viděl. Stála mezi šňůrami a ta stará žena vedle ní, a obě počítaly. Maela rty, česky, potichu. Stará žena na prstech, a když jí prsty došly, udělala uzel na řemínku a začala znovu. Došly ke stejnému číslu. Eren to poznal podle toho, jak se na sebe podívaly.
+Eren ji tam jednou viděl. Stála mezi šňůrami a ta stará žena vedle ní, a obě počítaly. Maela rty, po našem, potichu. Stará žena na prstech, a když jí prsty došly, udělala uzel na řemínku a začala znovu. Došly ke stejnému číslu. Eren to poznal podle toho, jak se na sebe podívaly.
 
 „Do jara to nevydrží,“ řekla mu Maela ten večer. „Když se nebude lovit.“
 
@@ -78,17 +78,17 @@ Eren ji tam jednou viděl. Stála mezi šňůrami a ta stará žena vedle ní, a
 
 „Já vím.“ Přebírala uzly na řemínku, který jí dala ta stará žena. „Tak to nevydrží o něco míň.“
 
-Bylo to skoro jako úsměv. Pak se vrátila do boční síně, k té staré ženě, a Eren slyšel, jak se tam spolu potichu přou, každá ve své řeči, o jeden uzel.
+Bylo to skoro jako úsměv. Vrátila se do boční síně, k té staré ženě, a Eren slyšel, jak se tam spolu potichu přou, každá ve své řeči, o jeden uzel.
 
 *
 
 Lidé od severu přišli jednou, v nejhorším mrazu.
 
-Dva, ti s peřím a s více lasturami. Přišli po hřebeni, ve sněhu po pás, a Tal jim dala oheň a maso. Mluvili s ní dlouho. Eren seděl u stěny a čekal, až skončí. Pak poprosil Rua, ať se zeptá.
+Dva, ti s peřím a s více lasturami. Přišli po hřebeni, ve sněhu po pás, a Tal jim dala oheň a maso. Mluvili s ní dlouho. Eren seděl u stěny, a když skončili, poprosil Rua, ať se zeptá.
 
 Na šedé lidi, kteří šli dolů. Kolem velké vody. Sto tři, s dětmi, s bednami.
 
-Ru se zeptal. Cizí muži se na Erena podívali, oba najednou. Pak jeden z nich něco řekl a druhý zavrtěl hlavou.
+Ru se zeptal. Cizí muži se na Erena podívali, oba najednou, a jeden z nich něco řekl a druhý zavrtěl hlavou.
 
 „Neviděli,“ řekl Ru. „Ani kouř. Říkají, že dole u jezera je teď sníh jako tady. Že tam nikdo nechodí.“ Poslouchal ještě. „A říkají, že šedé lidi neviděli celou zimu. Žádné. Ani ty od jezera.“
 
@@ -100,11 +100,11 @@ Cizí muž řekl ještě něco a Ru to nepřeložil. Eren se nezeptal co.
 
 Na stěnu vnější síně začal psát v polovině zimy.
 
-Sefa ho o to požádala. Tehdy ještě mluvila celými větami. Ležela na Talině lůžku, nejblíž u otvoru do hloubky, a dívala se na stěnu nad sebou. Byla černá. Saze mnoha zim, vrstva na vrstvě, hladké a tvrdé jako kůže na boku hrnce.
+Sefa ho o to požádala. Tehdy ještě mluvila celými větami. Ležela na Talině lůžku, nejblíž u otvoru do hloubky, a nad sebou měla stěnu. Byla černá. Saze mnoha zim, vrstva na vrstvě, hladké a tvrdé jako kůže vyschlá na slunci.
 
 „Kůra se kroutí,“ řekla. „Uhel se maže. Tohle ne.“
 
-Eren se podíval na Tal. Tal seděla u ohně a dívala se na něj. Pak se podívala na stěnu. Pak na Sefu. Kývla.
+Eren se podíval na Tal. Tal seděla u ohně a dívala se na něj, pak na stěnu, pak na Sefu. Kývla.
 
 Psal ostrým kamenem. Seškraboval saze tam, kde měla být čára, a pod nimi se objevovala skála, světlá, skoro bílá. Písmena vystupovala ze stěny, jako by tam byla vždycky a on je jen odkrýval. Šlo to pomalu. Za večer pět, šest řádků. Ruka ho bolela od zápěstí do ramene.
 
@@ -112,7 +112,7 @@ Sefa diktovala.
 
 Ne tak, jak by diktovala dřív, kdyby měla řádek a kódy a dávky na desetinu přesně. Jinak. *Světlá kůra na horko. Dva prsty na tři víčka. Ne, když má žena dítě v břiše.* *Tmavá kůra, vláknitá, ze stromu u potoka, na průjem. Žvýkat. Polknout šťávu.* *Černé lesklé bobule v kalichu s pěti cípy. Nejíst. Ani jednu.* To poslední Eren napsal větším písmem. Pod to místní slovo, které písmo neumí zapsat celé.
 
-Když Sefa nevěděla, ptala se Tio a Rua. Tio řekla, Ru ukázal. Sefa to opakovala česky, Eren to psal. Tal se dívala. Někdy řekla něco a Ru to přeložil a Sefa řekla *ano, to taky* a Eren napsal i to.
+Když Sefa nevěděla, ptala se Tio a Rua. Tio řekla, Ru ukázal. Sefa to opakovala po našem, Eren to psal. Tal se dívala. Někdy řekla něco a Ru to přeložil a Sefa řekla *ano, to taky* a Eren napsal i to.
 
 Pod rostliny napsal čtyři věci. Víčko. Pas bez zbraně. Poleno. Tři kameny. Ne obrázky. Slova. *Voda jen z dolní tůně, pro všechny.* A tak dál.
 
@@ -120,11 +120,11 @@ Pod to jména. Briho. Staré ženy z Heliny desítky, jejíž jméno mu řekla H
 
 Nikdo v síni to neuměl přečíst. Jen on. A Hela, když sem přišla. A trochu Tio.
 
-Tal jednou vstala od ohně a přišla ke stěně. Dívala se na světlá písmena v černé vrstvě. Pak natáhla ruku a přejela prstem po jednom z nich. Po prvním písmenu Ikkuova jména.
+Tal jednou vstala od ohně a přišla ke stěně. Dlouho stála nad světlými písmeny v černé vrstvě, pak natáhla ruku a přejela prstem po jednom z nich. Po prvním písmenu Ikkuova jména.
 
 Eren jí ho přečetl.
 
-Tal kývla. Pak si otřela saze z prstu o kůži a vrátila se k ohni.
+Tal kývla, otřela si saze z prstu o kůži a vrátila se k ohni.
 
 *
 
@@ -146,7 +146,7 @@ Eren seděl u Sefy.
 
 „Kolik?“ zeptala se Sefa.
 
-Tal klečela vedle ní s miskou v rukou. Tmavý odvar, ještě teplý. Sefa ležela na boku a dívala se na misku a pak na Tal.
+Tal klečela vedle ní s miskou v rukou. Tmavý odvar, ještě teplý. Sefa ležela na boku a přejížděla očima od misky k Tal.
 
 Ru tam nebyl. Byl u Tio, u stěny, kde ležely děti. Eren se rozhlédl, jestli ho zavolat.
 
@@ -156,13 +156,13 @@ Dívala se na Tal. Tal na ni. Pak Tal ukázala na misku a na Sefina ústa. Jedno
 
 Sefa se dívala dlouho.
 
-Celý život dávkovala. Eren to věděl. Viděl to na ní první den u lékárničky, když nemohla přečíst kódy. Strach z čísla, které neví. Ze sedmi kapek, které měly být tři. Z ampule bez jména v ruce, když Bri umíral. *Zabila bych někoho omylem. S tou nejlepší vůlí.* Řekla mu to v kotli, pod plachtou, a myslela to vážně.
+Celý život dávkovala. Viděl to na ní první den u lékárničky, když nemohla přečíst kódy. Strach z čísla, které neví. Ze sedmi kapek, které měly být tři. Z ampule bez jména v ruce, když Bri umíral. *Zabila bych někoho omylem. S tou nejlepší vůlí.* Řekla mu to v kotli, pod plachtou, a myslela to vážně.
 
 Teď ležela před miskou, o které nevěděla nic. Ani kolik. Ani z čeho. Ani na co.
 
 „Tal ví,“ řekla.
 
-Nebyla to otázka. Řekla to Erenovi, ale dívala se na Tal.
+Řekla to Erenovi, ale oči měla na Tal.
 
 „Ano,“ řekl Eren.
 
@@ -180,17 +180,17 @@ Tio přišla. Ru s ní. Sedli si k Sefě, jeden z každé strany, tak jak sedáv
 
 „Řekni mi to,“ řekla Sefa. „Všechno. Od začátku.“
 
-Tio se podívala na Erena. Pak začala.
+Tio se podívala na Erena a začala.
 
-„Světlá kůra na horko. Dva prsty na tři víčka –“
+„Světlá kůra na horko. Dva prsty na tři víčka…“
 
-„Ne,“ řekla Sefa. „Ne česky.“
+„Ne,“ řekla Sefa. „Ne po našem.“
 
 Tio se zarazila.
 
 „Řekni to, jak to budeš říkat ty,“ řekla Sefa. „Svým dětem. Až budou mít horko.“
 
-Tio se dívala na ni. Pak se podívala na Rua. Ru kývl.
+Tio zaváhala a podívala se na Rua. Ru kývl.
 
 A Tio to řekla. Místně. Rychle a měkce, s cvaknutími a se zaraženým dechem, celé věty, jako tehdy v horečce, když blouznila a rodiče jí nerozuměli. Ru jí do toho občas skočil a něco opravil, a Tio kývla a řekla to znovu. Dlouho. Rostlina za rostlinou. Eren poznal jen ruce: dva prsty položené vedle sebe, víčko zvednuté třikrát, dlaň na břiše.
 
@@ -204,15 +204,15 @@ Když Tio skončila, bylo ticho. Jen vánice venku a praskání ohně.
 
 Pak chtěla vidět Ammu.
 
-Eren nevěděl proč. Zavolal ji. Ammu přišla od prostředního ohně a klekla si k Sefě a Sefa jí neříkala nic. Jen sáhla vedle sebe, do kapsy bundy, a vytáhla průhledný sáček. Jehlu. Zahnutou, tenkou, s bílou nití, která se nikdy nepřetrhne. Tu, kterou Eren šil límec.
+Zavolal ji. Ammu přišla od prostředního ohně a klekla si k Sefě a Sefa jí neříkala nic. Jen sáhla vedle sebe, do kapsy bundy, a vytáhla průhledný sáček. Jehlu. Zahnutou, tenkou, s bílou nití, která se nikdy nepřetrhne. Tu, kterou Eren šil límec.
 
 Dala ji Ammu do dlaně.
 
-Ammu se na ni dívala. Pak zvedla sáček proti ohni a dívala se, jak se v něm lesklo. Neotevřela ho. Neuměla to. Podívala se na Sefu.
+Ammu zvedla sáček proti ohni a dívala se, jak se v něm lesklo. Neotevřela ho. Neuměla to. Podívala se na Sefu.
 
 Sefa udělala prsty pohyb. Steh. Jako když se šije kůže.
 
-Ammu se dívala ještě chvíli. Pak sáček sevřela v dlani a přitiskla si ho k prsům. Dlaní na srdce. Jak se to tu dělalo.
+Ammu ještě váhala. Pak sáček sevřela v dlani a přitiskla si ho k prsům. Dlaní na srdce. Jak se to tu dělalo.
 
 *
 
@@ -220,7 +220,7 @@ Sefa umřela, když vánice byla nejhorší.
 
 Eren u ní seděl a držel ji za ruku. Byla teplá. Pak byla pořád teplá, ale jinak. Dech se zpomaloval, dlouhé přestávky, a pak zase nádech, krátký, jako by si vzpomněla. Eren počítal přestávky. Nedokázal nepočítat. Pak přestal, protože nebylo co.
 
-Maela seděla na druhé straně. Kdy přišla, nevěděl.
+Maela seděla na druhé straně. Nevšiml si, kdy přišla.
 
 Tal klečela u hlavy. Neplakala. Položila Sefě dlaň na čelo a nechala ji tam. Pak řekla slovo. Tiše, jedno, a Eren ho nikdy předtím neslyšel. Ru ho nepřeložil. Ru seděl u Tio a Tio plakala, potichu, do jeho ramene.
 
@@ -234,11 +234,11 @@ Maela se na něj podívala přes Sefino tělo.
 
 „Já vím.“
 
-„Počítám to pořád. Každého. Jako dávky.“ Dívala se na Sefinu ruku v jeho dlani. „Řekla mi, ať jí vodím Tio. Kvůli rukám, které si to zapamatujou. Neřekla, že kvůli mně.“ Odmlčela se. „Ale bylo to i kvůli mně. Abych měla kam chodit, když jsem byla tam nahoře.“
+„Počítám to pořád. Každého. Jako dávky. Řekla mi, ať jí vodím Tio. Kvůli rukám, které si to zapamatujou. Neřekla, že kvůli mně.“ Odmlčela se. „Ale bylo to i kvůli mně. Abych měla kam chodit, když jsem byla tam nahoře.“
 
 Eren mlčel.
 
-Maela natáhla ruku a zavřela Sefě oči. Pak si položila dlaň na srdce, jak to dělaly Tal a Dabra. Rychle a nejistě, jako by se bála, že to dělá špatně.
+Maela natáhla ruku, zavřela Sefě oči a položila si dlaň na srdce, jak to dělaly Tal a Dabra. Rychle a nejistě, jako by se bála, že to dělá špatně.
 
 *
 
@@ -278,7 +278,7 @@ A řekla to místně. Krátké, se zaraženým dechem uprostřed. Eren to slovo 
 
 „Tak to se říká,“ řekla Tio. „Na spaní.“
 
-Eren se díval do ohně. Ammu do něj přiložila. Klacík, pak další. Oheň nespal. Ten oheň tu noc spát nesměl.
+Ammu přiložila do ohně. Klacík, pak další. Oheň nespal. Ten oheň tu noc spát nesměl.
 
 Mohl by se zeptat Maely. Seděla u Sefy, na druhé straně síně, s rukama v klíně. Možná by to věděla. Maela si pamatovala věci, které on měl v řádku. Den Tiina narození. Číslo jejich bytu.
 
@@ -290,7 +290,7 @@ Nezeptal se. Ne teď.
 
 Usnul.
 
-Nevěděl kdy. Seděl u ohně s Tio opřenou o rameno, a Tio usnula první, to věděl, protože se jí zpomalil dech. Slyšel ho. Pravidelný. Chtěl to říct, tím svým hlasem, jako tu první noc u modulu. *Tio spí. Dech pravidelný.* Chtěl to říct a neřekl to. Někdo jiný seděl u ohně a díval se. Ammu. Tal. Nebo Kaj, když se probudil. Někdo, kdo počítal, kolik klacíků oheň potřebuje, aby nezhasl.
+Seděl u ohně s Tio opřenou o rameno, a Tio usnula první, to věděl, protože se jí zpomalil dech. Slyšel ho. Pravidelný. Chtěl to říct, tím svým hlasem, jako tu první noc u modulu. *Tio spí. Dech pravidelný.* Chtěl to říct a neřekl to. Někdo jiný seděl u ohně a díval se. Ammu. Tal. Nebo Kaj, když se probudil. Někdo, kdo počítal, kolik klacíků oheň potřebuje, aby nezhasl.
 
 Eren to nepočítal.
 
@@ -300,7 +300,7 @@ Od probuzení v modulu hlídal sám. Tio, oheň, řezák, článek, dávky, lidi
 
 Probudil se do světla.
 
-Šedého, ranního, z ústí. Vánice skončila. Sníh ležel na terase až po kolena a ústí bylo napůl zaváté. Tio spala, schoulená u něj, s hlavou v jeho klíně. Někdo je přikryl kůží. Eren nevěděl kdo.
+Šedého, ranního, z ústí. Vánice skončila. Sníh ležel na terase až po kolena a ústí bylo napůl zaváté. Tio spala, schoulená u něj, s hlavou v jeho klíně. Někdo je přikryl kůží.
 
 Oheň hořel.
 
@@ -314,13 +314,13 @@ Na terase stál Ru.
 
 Stál u řady kamenů na kraji skály a díval se přes velký kámen u ohně na hřeben. Slunce vycházelo. Ze zářezu mezi dvěma vrcholy. Bledé a studené a malé.
 
-Ru se díval dlouho. Pak se otočil k Tal a řekl něco. Krátce.
+Ru čekal, dokud se slunce celé nezvedlo nad zářez. Pak se otočil k Tal a řekl něco. Krátce.
 
 Tal kývla.
 
 Ru se sehnul, vzal ze sněhu kámen a položil ho do řady. Na stejné místo jako včera. Šestý kámen na jedné hromádce.
 
-„Zítra,“ řekl Erenovi. Česky. Tiinou češtinou. A pak to slovo řekl místně, krátké, se zaraženým dechem na konci. „Zítra jde zpátky.“
+„Zítra,“ řekl Erenovi. Po našem, Tiinými slovy. A pak to slovo řekl místně. „Zítra jde zpátky.“
 
 Eren se díval na slunce v zářezu.
 

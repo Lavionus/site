@@ -48,6 +48,8 @@ Konrád přemýšlel.
 
 „*Quae vidit monachus,*“ řekl. Co viděl mnich. Ta slova uměl. Naučil se je, když mu Volkmar četl mnichovy řádky podesáté. „A pak: *quae scio ego.*“
 
+Volkmar přiložil k listu pravítko a vedl perem svislou čáru shora dolů, přes celou stránku. Vlevo napsal první nadpis, vpravo druhý.
+
 *
 
 Co věděl, říkal pomalu, protože to věděl celé, ale slova pro to neměl, a slova, která měl, byla moc malá.
@@ -172,7 +174,7 @@ Až se vrátí, budeme ti, kdo je přivítají.
 
 Konrád zavřel oči.
 
-Rok mu bylo líto stříbra. Rok si v noci počítal, kolik zaplatil klášteru za luka a za ovce a kolik za toho Sasa. Jeho matku nakonec nenašli, a tak to dostal kostel v Mlýnci. Rok slyšel toho muže z Chebu, jak mu řekl, co je. *Dienstmann.* Služebník. Narodil se jako něčí. Jeho syn, který teď spal nahoře u kojné, patřil pánovi dřív než jemu. Tak to bylo a tak to bude, a žádné stříbro to nezmění, protože žádné stříbro nebylo.
+Rok mu bylo líto stříbra. Rok si v noci počítal, kolik zaplatil klášteru za luka a za ovce a kolik měla dostat matka toho Sasa. Tu nakonec nenašli, a tak to dostal kostel v Mlýnci. Rok slyšel toho muže z Chebu, jak mu řekl, co je. *Dienstmann.* Služebník. Narodil se jako něčí. Jeho syn, který teď spal nahoře u kojné, patřil pánovi dřív než jemu. Tak to bylo a tak to bude, a žádné stříbro to nezmění, protože žádné stříbro nebylo.
 
 Ale tohle mu nikdo nevezme.
 

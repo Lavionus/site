@@ -18,7 +18,7 @@ Neznala to číslo. Pevná linka, karlovarská předvolba. Odložila štětec na
 
 „Je tam naše jméno,“ řekla Věra Lindnerová. „Paní Alžběto, je tam naše jméno. I Klářino. I Martinovo. Syn mi to poslal, viděl to na nějakém fóru, já ani nevím, co to je fórum.“ Nadechla se. „Je tam i ta ulice. Naše ulice v Ostrově.“
 
-Sael se dívala na matriku. Na mokrý list pod sklem, na jméno *Barbara*, které se v rohu rozpíjelo, protože ho voda zasáhla před měsícem a nikdo to tenkrát nevěděl.
+Sael se dívala na matriku. Na list pod sklem, na jméno *Barbara*, které se v rohu rozpilo, protože ho voda zasáhla před měsícem a nikdo to tenkrát nevěděl.
 
 „Pošlete mi to,“ řekla.
 
@@ -54,9 +54,9 @@ Sael seděla a dívala se na to.
 
 Čtyřicet let ten papír ležel v kazetě pod stolem, v hoře, za dubovými vraty, čtyřicet dva schodů pod sklepem s jablky. Teď ležel tady, na obrazovce v Chebu, v Ostrově, v Lipsku, kdekoli. Kdokoli si ho mohl zvětšit a podívat se, jak se jí v roce devatenáct třásla ruka.
 
-Spočítala jména. Udělala to dvakrát, protože to tak dělala vždycky. Třicet. Z devíti rodin. Rybovi. Lindnerovi. Rodina z Annabergu, matka, otec, dvě dcery a babička, která nevycházela před setměním už padesát let. Javorova dcera v Sokolově. Javorův vnuk s ženou a dvěma dětmi za hranicí v Bavorsku. A další čtyři rodiny, které Sael znala a za které ručila.
+Spočítala jména. Udělala to dvakrát, protože to tak dělala vždycky. Třicet. Z devíti rodin. Rybovi. Lindnerovi. Rodina z Annabergu, matka, otec, dvě dcery a babička, která nevycházela před setměním už padesát let. Javorova dcera v Sokolově. Javorův vnuk se ženou a dvěma dětmi za hranicí v Bavorsku. A další čtyři rodiny, které Sael znala a za které ručila.
 
-Ne všech třicet rodin, které měl Wehrle. Jen devět. Tolik, aby to stačilo.
+Ne všechny rodiny, které měl Wehrle. Těch bylo kolem třiceti. Jen devět. Tolik, aby to stačilo.
 
 Pod obrázky byly komentáře.
 
@@ -88,7 +88,7 @@ Sael nevěděla. Šedesát let věděla vždycky a teď nevěděla, a Věra Lind
 
 „Že jí to ta paní z Brna říkala. Ve středu. Ta vědkyně.“ Věra mluvila pomalu, jako by si nebyla jistá, jestli to smí říct nahlas. „Že nějaký člověk chce seznamy, kde jsme i my. Že neví, jestli je má. Že kdyby je měl, neví, co s nimi udělá.“ Odmlčela se. „Klára mi to řekla ve čtvrtek. Já jsem jí řekla, ať nemluví hlouposti, že paní Alžběta by nám to řekla.“
 
-Sael držela telefon a dívala se na matriku pod sklem.
+Sael držela telefon a nespouštěla oči z matriky pod sklem.
 
 „Paní Alžběto,“ řekla Věra tiše. „Vy jste to věděla?“
 
@@ -112,7 +112,7 @@ Sael mlčela.
 
 „Já vím,“ řekla Sael.
 
-„Tak co myslíte —“ Zarazil se. „Teď je musíme odvézt. Hned. Zítra. Byty v Žitavě jsou připravené, dva v Bavorsku, auta můžu mít v poledne. Annaberg pojede v noci, kvůli slunci. Jestli mi dáte čísla —“
+„Tak co myslíte…“ Zarazil se. „Teď je musíme odvézt. Hned. Zítra. Byty v Žitavě jsou připravené, dva v Bavorsku, auta můžu mít v poledne. Annaberg pojede v noci, kvůli slunci. Jestli mi dáte čísla…“
 
 „Kdo ty byty platí, pane Brandle?“
 
@@ -120,7 +120,7 @@ Ticho.
 
 „To je teď jedno.“
 
-„Kdo je pustil?“
+„Kdo ta jména pustil ven?“
 
 „Nevím.“
 
@@ -172,7 +172,7 @@ Do knihy se zapisuje, co se stalo. Co se málem stalo, ne. Tak to stálo v knize
 
 V sobotu večer sešla do hory.
 
-Statek byl skoro prázdný. Ladiny vnučky odvezly děti k příbuzným do Saska minulý týden, když Lada usoudila, že ani statek není dost daleko, a ve světnici svítila jen lampa nad stolem. Na dvoře stál Tadeášův pes a díval se na ni. Nezaštěkal. Znal ji.
+Statek byl skoro prázdný. Ladiny vnučky odvezli k příbuzným do Saska minulý týden, když Lada usoudila, že ani statek není dost daleko, a ve světnici svítila jen lampa nad stolem. Na dvoře stál Tadeášův pes a díval se na ni. Nezaštěkal. Znal ji.
 
 Sklep, jablka, čtyřicet dva schodů. V archivu bylo prázdno. Police bez svazků, stůl bez knihy, jen odvlhčovač hučel a vlhkoměr ukazoval šedesát jedna. Pod stolem stála šedá plechová kazeta. Sael se na ni nepodívala. Ne proto, že by nechtěla. Protože se bála, že by ji vzala do ruky a nesla nahoru, a rada řekla ne.
 
@@ -180,7 +180,7 @@ Lada a Tadeáš byli ve strojovně pod opuštěným skleníkem. Lada seděla na 
 
 „Víš to?“ zeptala se Sael.
 
-Lada kývla. „Kosovi volali z Bavorska. Mají tam někoho od Javoru za souseda.“ Podívala se na Sael přes brýle. „Kazeta je dole. Já vím, co chceš říct.“
+Lada kývla. „Kosovi volali z Bavorska. Mají tam někoho od Javora za souseda.“ Podívala se na Sael přes brýle. „Kazeta je dole. Já vím, co chceš říct.“
 
 „Neřeknu to.“
 
@@ -192,7 +192,7 @@ Sael to nechala být. Lada měla pravdu a Sael to věděla, a stejně ji to pál
 
 Tadeáš otočil notebook.
 
-Na obrazovce byly křivky. Sael v nich neuměla číst, ne tak jako on, ale viděla tvar. Od ledna stoupaly. Ne rovně. Ve vlnách. Každá vlna vyšší než ta předchozí a každá kratší.
+Na obrazovce byly křivky. Sael v nich neuměla číst, ne tak jako on, ale viděla tvar. Od ledna stoupaly, ve vlnách. Každá vlna vyšší než ta předchozí a každá kratší.
 
 „To je délka,“ řekl Tadeáš. „Jak dlouho svítí. A tohle tlukot, jak dlouho tluče. A tohle ten pán z Prahy, to, co slyší on nahoře. Paní Vrbová mi to posílá každý den.“ Ukázal prstem. „Jdou spolu. Pořád. Na desetinu vteřiny.“
 
@@ -204,7 +204,7 @@ Na obrazovce byly křivky. Sael v nich neuměla číst, ne tak jako on, ale vid�
 
 „Noc z devětadvacátého na třicátého května.“ Tadeáš to řekl tiše, jako by to bylo něco, za co se má omluvit. „Plus minus jedna noc. Spíš ne minus.“
 
-Sael se podívala na Ladu.
+Sael se otočila k Ladě.
 
 „Noc před svátkem,“ řekla Lada. „Ve čtvrtek je Nanebevstoupení. V pátek ten jejich sněm.“
 
@@ -258,7 +258,7 @@ Přišla v sedm. Měla na sobě tu bundu, ve které chodila k prameni, a v ruce 
 
 „Věra mně v deset padesát.“
 
-Ta žena se na ni podívala. Sael věděla, že si to číslo zapamatovala. Deset padesát. Zapamatovala si každé číslo.
+Sael věděla, že si ta žena to číslo zapamatovala. Deset padesát. Zapamatovala si každé číslo.
 
 „Potřebuju vaši pomoc,“ řekla Sael.
 
@@ -276,11 +276,9 @@ Vrbová mlčela.
 
 „Ne. Celý ne.“ Položila ruce na sešit. Neotevřela ho. „Pomůžu vám. Odvezu, koho budete chtít, jestli bude chtít jet. Napíšu, co jsem změřila. Ale s policií. S hasiči. A s veřejnou ochránkyní práv.“
 
-Sael se na ni dívala.
+„Ne,“ řekla Sael.
 
-„Ne,“ řekla.
-
-„Tak vám nepomůžu,“ řekla ta žena. Ne tvrdě. Jako by četla číslo z teploměru. „Ne takhle.“
+„Tak vám nepomůžu,“ řekla ta žena. Ne tvrdě. „Ne takhle.“
 
 *
 
@@ -310,7 +308,7 @@ Ta žena se nepohnula.
 
 „Co vidím?“
 
-„Že seznam není zlý,“ řekla. „Ani úřad. Záleží na tom, kdo ho drží a jestli se ho na to někdo zeptal.“ Ruce měla pořád na sešitu. „Paní Sálová. Ten seznam teď drží fórum. A ten, kdo ho tam dal. A sestra z porodnice. A kdokoli, kdo si ho uložil. Úřad je jediný, kdo ho nemá. A jediný, kdo může ty lidi chránit veřejně, protože jsou veřejně.“
+„Že seznam není zlý,“ řekla ta žena. „Ani úřad. Záleží na tom, kdo ho drží a jestli se ho na to někdo zeptal.“ Ruce měla pořád na sešitu. „Paní Sálová. Ten seznam teď drží fórum. A ten, kdo ho tam dal. A sestra z porodnice. A kdokoli, kdo si ho uložil. Úřad je jediný, kdo ho nemá. A jediný, kdo může ty lidi chránit veřejně, protože jsou veřejně.“
 
 „Policie, která přijde ke Kláře domů a zeptá se, odkud má to dítě v krvi to, co má.“
 
@@ -356,7 +354,7 @@ Sael dlouho nepromluvila.
 
 Řekla to stejně jako devátého. Stejným hlasem, stejnými slovy. A slyšela, že to není totéž.
 
-Devátého tou větou chránila ty, kdo byli v kazetě. Dnes chránila jen sebe. Třetí duben, telefon displejem dolů, devět dní. Ta žena to nevěděla, ale něco slyšela, protože se na Sael podívala jinak. Ne tvrdě. Jako se dívala na teploměr, který ukazuje číslo, jaké nečekala.
+Devátého tou větou chránila ty, kdo byli v kazetě. Dnes chránila jen sebe. Třetí duben, telefon displejem dolů, devět dní. Ta žena to nevěděla, ale něco slyšela. Změřila si Sael jinak než předtím, ne tvrdě, spíš jako teploměr, který ukazuje číslo, jaké nečekala.
 
 „Dobře,“ řekla ta žena.
 
@@ -364,9 +362,9 @@ Vzala sešit a vstala.
 
 „Kláře zavolám já,“ řekla. „Řeknu jí, co můžu udělat a co ne. Co udělá ona, je její věc. Půjdu jen s tím, s čím mě pošle.“
 
-„Jestli půjdete na policii s jejím jménem —“
+„Jestli půjdete na policii s jejím jménem…“
 
-„Půjdu s jejím jménem, jestli mi ho dá,“ řekla. „S žádným jiným.“
+„Půjdu s jejím jménem, jestli mi ho dá,“ řekla. „Se žádným jiným.“
 
 Sael stála u trezoru. Klíč měla v kapse a cítila ho přes látku.
 
@@ -382,7 +380,7 @@ Odešla. Dveře za ní zapadly tiše, protože je nikdy nepřibouchla.
 
 Sael stála v dílně dlouho.
 
-Pak šla ke zdi, kde visel kalendář. Ne Tadeášův, s horami, ten zůstal v archivu pod horou. Obyčejný, z papírnictví, jeden měsíc na listu. Duben. Vzala tužku.
+Nakonec šla ke zdi, kde visel kalendář. Ne Tadeášův, s horami, ten zůstal v archivu pod horou. Obyčejný, z papírnictví, jeden měsíc na listu. Duben. Vzala tužku.
 
 Od dneška do noci na třicátého května. Počítala čárky na okraji, jak to dělala od února, jak to dělal mnich, když počítal ty, které nesl. Čtyřicet pět. Čárky dopředu se počítaly samy. Den přijde, den odejde, čárka přibude. Na to nebylo třeba nic rozhodovat.
 
@@ -392,6 +390,6 @@ Nakreslila ke každému dni od čtvrtého do dvanáctého jednu čárku. Malou, 
 
 Ty dozadu se nepočítaly samy. Ty musela spočítat ona.
 
-Pověsila kalendář zpátky, otočený na duben, aby je viděla. Pak se vrátila ke stolu, rozsvítila lampu se zeleným sklem a podívala se na matriku. Jméno *Barbara* se v rohu rozpilo dál, zatímco telefonovala. Papír tam zesvětlal a inkoust zhnědl do okraje.
+Pověsila kalendář zpátky, otočený na duben, aby je viděla, vrátila se ke stolu a rozsvítila nad matrikou lampu se zeleným sklem. Jméno *Barbara* v rohu bylo bledší, než si ho pamatovala. Papír tam zesvětlal a inkoust zhnědl do okraje.
 
 Sael vzala štětec a pracovala do rána. List po listu. Nečetla jména. Dívala se, kde je papír slabý.

@@ -70,7 +70,7 @@ Prohlubeň byla mezi borovicemi, a kdyby Dobroslava nešla přímo k ní, Matěj
 
 A ptáci.
 
-Matěj je napočítal, až když se zastavil na okraji, protože zprvu viděl jen jejich tvary a nerozuměl jim. Sýkora. Další sýkora. Strnad se žlutou hrudí, zářivou, jako by ji někdo právě namaloval. Kos. Dva vrabci, ležící vedle sebe, jako by usnuli. Vrána, velká a černá, s křídlem napůl rozevřeným. Všichni leželi na dně, kde se tráva nehýbala, a žádný z nich nebyl rozdrásaný, žádný nebyl ohlodaný. Leželi tak, jak padli. Pár peříček se pohnulo, když se Matěj nadechl, a pak zase znehybněla, protože nefoukalo.
+Matěj je napočítal, až když se zastavil na okraji, protože zprvu viděl jen jejich tvary a nerozuměl jim. Sýkora. Další sýkora. Strnad se žlutou hrudí, zářivou, jako by ji někdo právě namaloval. Kos. Dva vrabci, ležící vedle sebe, jako by usnuli. Vrána, velká a černá, s křídlem napůl rozevřeným. Všichni leželi na dně, kde se nic nehýbalo, a žádný z nich nebyl rozdrásaný, žádný nebyl ohlodaný. Leželi tak, jak padli. Pár peříček se pohnulo, když se Matěj nadechl, a pak zase znehybnělo, protože nefoukalo.
 
 A uprostřed, s čenichem na vráně, ležela liška.
 
@@ -80,9 +80,9 @@ Matěj stál a necítil zimu.
 
 „Přišla pro ptáky,“ řekla Dobroslava vedle něj tiše. „Ptáci sem padají. Nevím proč. Možná tu hledají vodu, když je jinde zamrzlá, nebo semínka. Spadnou dolů a už nevzlétnou. A liška je ucítí a přijde si pro ně.“ Pohnula tyčí. „A pak já přijdu pro lišku.“
 
-„Vy...“
+„Vy…“
 
-„Kožešina je kožešina.“ Řekla to tvrdě. Matěj pochopil, že tohle neměl slyšet a že to slyší právě proto, že je mnich a ne pacholek pana Konráda. Zvěř v lese patřila pánovi. Lišky taky. „Za lišku z oka by mě pan Konrád pověsil. Lišku z doupěte si vzal drak, a co si vezme drak, to nikomu nechybí.“ Podívala se na něj. „Takhle to tady chodí. Vidíš, mnichu.“
+„Kožešina je kožešina.“ Řekla to tvrdě. Matěj pochopil, že tohle neměl slyšet a že to slyší právě proto, že je mnich a ne pacholek pana Konráda. Zvěř v lese patřila pánovi. Lišky taky. „Za lišku z oka by mě pan Konrád pověsil. Lišku z doupěte si vzal drak, a co si vezme drak, to nikomu nechybí. Takhle to tady chodí. Vidíš, mnichu.“
 
 „Vidím,“ řekl Matěj.
 
@@ -98,7 +98,7 @@ Udělal krok po svahu dolů, aby lépe viděl na lišku, a Dobroslava ho chytila
 
 „Díváš se zblízka.“
 
-Matěj zůstal stát. Na svahu, o krok níž než okraj, sníh pod nohama, a kolem kotníků... nic. Necítil nic. Dýchal a vzduch byl obyčejný, studený. Vytáhl tabulku a začal psát, ve stoje, s rukavicí v zubech, protože prsty mu ztuhly a rydlo v nich nesedělo. *Ptáci: sýkory dvě, strnad, kos, vrabci dva, vrána. Liška jedna. Stopy dovnitř, ne ven. Žádné rány. Žádný pach. Žádný kouř. Na dně holá zem, sníh netaje, nebo nepadá.* Zarazil se. Netaje, nebo nepadá? Nevěděl. Napsal obojí.
+Matěj zůstal stát. Na svahu, o krok níž než okraj, sníh pod nohama, a kolem kotníků… nic. Necítil nic. Dýchal a vzduch byl obyčejný, studený. Vytáhl tabulku a začal psát, ve stoje, s rukavicí v zubech, protože prsty mu ztuhly a rydlo v nich nesedělo. *Ptáci: sýkory dvě, strnad, kos, vrabci dva, vrána. Liška jedna. Stopy dovnitř, ne ven. Žádné rány. Žádný pach. Žádný kouř. Na dně holá zem, sníh netaje, nebo nepadá.* Zarazil se. Netaje, nebo nepadá? Nevěděl. Napsal obojí.
 
 Sivka zakňučela.
 
@@ -140,7 +140,7 @@ Matěj se pokusil něco říct a zase zvracel. Pak už nebylo co.
 
 „Pes,“ řekl potom.
 
-Dobroslava se na něj chvíli dívala. Pak kývla hlavou stranou.
+Dobroslava kývla hlavou stranou.
 
 Sivka ležela kousek od něj, ve sněhu na okraji prohlubně, kam ji někdo vytáhl, protože by se tam sama nedostala. Na srsti na krku měla stopu po háku, rozhrnutou, jako když se psa pohladí proti srsti. Ležela na boku, natažená, s nohama, jako by ještě běžela. Oči měla otevřené.
 
@@ -224,7 +224,7 @@ Sivka.
 
 Myslel na ni a věděl, že když teď přestane psát, bude na ni myslet celou noc. Nepřestal. Psal dál, protože psaní dávalo té smrti tvar. Bez dopisu by to byla jen stará fena, která utekla hloupému mnichovi z provazu za liščím pachem. S dopisem to bylo svědectví. *Canis meus testis.* Můj pes je svědek. Napsal to a měl slzy v očích a nestyděl se za ně, protože byly upřímné.
 
-*Z toho soudím, otče, že pověst lidu o drakovi, který spí pod horou, není pouhá báchorka, jak bych se byl domníval, když jsem odjížděl. Lid neví, co vypráví, a vypráví to špatně, s babičkami a valouny zlata. Ale v jádru vypráví pravdu: v této zemi je něco, co dýchá ze země a co zabíjí. Pan Konrád tedy neřekl nepravdu, když řekl, že i u nás kdysi byl drak. Snad spí dosud. Do průvodní listiny se stále pohroužím, jak jsem slíbil, a o ní vám podám zprávu zvlášť, až ji prozkoumám se vší péčí. Ale tuto věc, otče, jsem viděl a mohu ji dosvědčit, a vy můžete s čistým svědomím připustit, že kost, kterou nám pan Konrád věnuje, je z tvora, jehož dech jsem sám okusil.*
+*Z toho soudím, otče, že pověst lidu o drakovi, který spí pod horou, není pouhá báchorka, jak bych se byl domníval, když jsem odjížděl. Lid neví, co vypráví, a vypráví to špatně, s babičkami a valouny zlata. Ale v jádru vypráví pravdu: v této zemi je něco, co dýchá ze země a co zabíjí. Pan Konrád tedy neřekl nepravdu, když řekl, že i u nás kdysi byl drak. Snad spí dosud. K průvodní listině se ještě vrátím, jak jsem slíbil, a o ní vám podám zprávu zvlášť, až ji prozkoumám se vší péčí. Ale tuto věc, otče, jsem viděl a mohu ji dosvědčit, a vy můžete s čistým svědomím připustit, že kost, kterou nám pan Konrád věnuje, je z tvora, jehož dech jsem sám okusil.*
 
 Podepsal se: *Matthias*. Chvíli se na to jméno díval, jako vždycky. Pak dopis složil, přeložil ještě jednou a zapečetil ho kouskem vosku ze svíce, do kterého otiskl palec, protože vlastní pečeť neměl.
 

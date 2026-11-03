@@ -22,13 +22,13 @@ Sálová teď vzhlédne. Ví, na co se Hana ptá. V sobotu ji Hana viděla pod s
 
 „Já jsem byla proti.“ Sálová položí skalpel na podložku, rovnoběžně s okrajem. „To nestačí. Pod horou rozhodujou Ostří.“
 
-Hana si to zapíše. *Řekla S.* Pak zavře sešit a čeká, protože Sálová jí nevolala kvůli trezoru.
+Hana napíše jen *Řekla S.*, zavře sešit a čeká, protože Sálová jí nevolala kvůli trezoru.
 
 Sálová vytáhne ze zástěry lístek. Obyčejný, vytržený z bloku. Na něm jméno, *Agnes*, telefonní číslo s německou předvolbou a pod tím: *sobota, po desáté večer*.
 
 „Opis,“ řekne Sálová.
 
-Hana lístek nevezme. Dívá se na něj na stole.
+Hana lístek nevezme. Nechá ho ležet na stole.
 
 „Neodpověděla jsem vám.“
 
@@ -74,7 +74,7 @@ Za Božím Darem je sníh ještě všude. Hranice je jen cedule a změna barvy a
 
 U autobusové zastávky na kraji vesnice, jejíž jméno si Hana nestačí přečíst, blikají výstražná světla. Malé auto, staré, se zamlženými skly. Vedle stojí žena v tmavém kabátě s kapucí.
 
-Hana zastaví za ní. Žena přijde k okénku.
+Hana zastaví za tím autem. Žena přijde k okénku.
 
 „Hana?“
 
@@ -88,7 +88,7 @@ Jedou deset minut. Lesní cestou, pak kolem hromady kamení, ve které Hana pozn
 
 „Zhasněte,“ řekne Agnes.
 
-Hana zhasne. Chvíli nevidí nic. Agnes vidí. Vezme Hanu za loket a vede ji po kamenech k dveřím, jako se vede slepý člověk, bez řečí a bez rozpaků.
+Hana zhasne. Chvíli nevidí nic. Agnes vidí. Vezme Hanu za loket a vede ji po kamenech ke dveřím, jako se vede slepý člověk, bez řečí a bez rozpaků.
 
 „Já jsem sestra,“ řekne u dveří, jako by to vysvětlovalo všechno. „Na noční. V nemocnici dole ve městě. Dvacet let.“
 
@@ -106,7 +106,7 @@ Ve tmě sedí člověk. Hana ho nevidí. Vidí jen ruce na opěradle křesla, na
 
 „Pan Benedikt,“ řekne Agnes. A pak německy, něco, čemu Hana nerozumí.
 
-Z tmy přijde hlas. Suchý, tichý, a každé slovo stojí samo, jako kámen v potoce, po kterém se jde.
+Ze tmy přijde hlas. Suchý, tichý, a každé slovo stojí samo, jako kámen v potoce, po kterém se jde.
 
 „Říká, ať si sednete,“ překládá Agnes. „U lampy. Tam, kde je vidět.“
 
@@ -116,7 +116,7 @@ Hana si sedne. Kruh světla jí padá do klína a na ruce.
 
 „Napsala jsem, že jsem zapsala něco, co nebyla pravda,“ řekne Hana. „To je jiná věta.“
 
-Agnes to přeloží. Z tmy se ozve zvuk. Hana chvíli neví, co to je. Pak pochopí, že se starý muž směje. Krátce, suše, jako když se zlomí větvička.
+Agnes to přeloží. Ze tmy se ozve zvuk. Hana chvíli neví, co to je. Pak pochopí, že se starý muž směje. Krátce, suše, jako když se zlomí větvička.
 
 „Říká, že je to jiná věta,“ řekne Agnes. „Ano.“
 
@@ -156,11 +156,11 @@ Agnes se otočí do tmy a zeptá se. Odpověď je dlouhá. Hana slyší jméno, 
 
 „Věděla to?“
 
-Agnes se zeptá. Z tmy přijde jedno slovo.
+Agnes se zeptá. Ze tmy přijde jedno slovo.
 
 „Neví,“ řekne Agnes. „Nikdo to neví. Jeremiáš psal pro radu ještě pět let. Pak přišel za námi přes hřeben. Je u nás v kronice.“
 
-Hana si to zapíše. Do sešitu na kolenou, mimo světlo, naslepo. *Opsal Jeremiáš, písař rady, 1595, v noci, při opisu spisu do Prahy. Pak ještě 5 let ve službě rady. Řekl B. (přes A.).*
+Hana zapisuje do sešitu na kolenou, mimo světlo, naslepo. *Opsal Jeremiáš, písař rady, 1595, v noci, při opisu spisu do Prahy. Pak ještě 5 let ve službě rady. Řekl B. (přes A.).*
 
 *
 
@@ -172,7 +172,7 @@ Pět let čeká, co bylo na rubu. Možná to leží tady, metr od ní.
 
 „Ne,“ řekne. „Ještě ne.“
 
-Agnes se na ni podívá. Pak to přeloží do tmy.
+Agnes to přeloží do tmy.
 
 Chvíli je ticho.
 
@@ -182,7 +182,7 @@ Chvíli je ticho.
 
 Agnes překládá. Pomaleji než předtím.
 
-Z tmy se ozve ten suchý zvuk. Smích.
+Ze tmy se ozve ten suchý zvuk. Smích.
 
 „Říká,“ řekne Agnes, „že čtyři sta let nikdo nechtěl vědět, jestli je to pravé. Všichni chtěli vědět jen, co tam stojí.“
 
@@ -204,7 +204,7 @@ Hana zvedne hlavu.
 
 „Ve spisu ne,“ řekne Agnes za Benedikta. „Soud to nevzal. Proto to máme my.“
 
-Pak řekne Benedikt něco krátkého a Agnes chvíli mlčí, než to přeloží.
+Benedikt řekne ještě něco krátkého. Agnes s tím chvíli otálí, než to přeloží.
 
 „Hladoví hořeli,“ řekne. „Na svatého Jana. My jsme utekli. Ale v pověsti hoříme všichni.“
 
@@ -226,7 +226,7 @@ Dlouhé ticho.
 
 „Je to všechno, co mám.“
 
-Agnes to přeloží. Z tmy přijde odpověď, krátká, a Agnes se poprvé za celý večer usměje. Jen koutkem.
+Agnes to přeloží. Ze tmy přijde odpověď, krátká, a Agnes se poprvé za celý večer usměje. Jen koutkem.
 
 „Říká: ona taky měla málo.“
 
@@ -236,9 +236,7 @@ Fotí papír.
 
 Benedikt to dovolí s jednou větou, kterou Agnes přeloží doslova: *Fotografujte papír. Papír je náš doklad, ne naše adresa.*
 
-Hana položí vedle každého listu kartu s měřítkem. Fotí kolmo shora, každý list dvakrát, v pořadí. Na displeji vidí, jak se jí trochu třesou ruce. Srovná je.
-
-Pak se zeptá na druhou věc.
+Hana položí vedle každého listu kartu s měřítkem. Fotí kolmo shora, každý list dvakrát, v pořadí. Na displeji vidí, jak se jí trochu třesou ruce. Srovná je a zeptá se na druhou věc.
 
 „Potřebuju, aby to viděl ještě jeden člověk,“ řekne. „Ne já. Ne paní Sálová.“
 
@@ -246,7 +244,7 @@ Pak se zeptá na druhou věc.
 
 „Archivářka. Z Chebu. Čte ruce. Pozná papír a inkoust. Já to neumím. Umím jen srovnat, co je na fotce.“
 
-Agnes překládá. Z tmy přijde otázka.
+Agnes překládá. Ze tmy přijde otázka.
 
 „Bude se ptát?“
 
@@ -306,7 +304,7 @@ Hana to napíše doleva. Pak to škrtne a napíše to znovu, přesněji. *3. lis
 
 Ve čtvrt na osm zavře notebook. V osm nula dva stojí u pramene. Sedmnáct celá šest.
 
-Tadeáš se na ni podívá.
+Tadeáš zvedne hlavu od sondy.
 
 „Vy jste nespala.“
 
@@ -314,7 +312,7 @@ Tadeáš se na ni podívá.
 
 *
 
-V pondělí volá Šindelářové z parkoviště nad vsí.
+V pondělí píše Šindelářové z parkoviště nad vsí.
 
 Pošle jí čtyři fotky. Jen papír, jen ruku. Žádnou místnost, žádné ruce na opěradle, žádný stůl. Do e-mailu napíše dvě otázky a nic jiného.
 
@@ -358,7 +356,7 @@ Hana sedí v autě u pramene a čeká na osmou. Pes leží u odbočky. Tadeáš 
 
 Ticho na lince je delší.
 
-„Kolega se díval včera večer,“ řekne Šindelářová. „Nechtěl. Pak se díval hodinu. Na hraně lomu jsou konce tahů. Na druhém řádku spodní smyčka od *g*. Na třetím kus *h* a za ním oblouk, který může být *t*. Sedí to na vaše *gieng* a *sagt*. Na prvním řádku nic, tam to vzala myš celé.“
+„Kolega se díval včera večer,“ řekne Šindelářová. „Nechtěl. Pak se díval hodinu. Na hraně lomu jsou konce tahů. Na prvním řádku spodní smyčka od *g*. Na druhém kus *s* a za ním oblouk, který může být *t*. Sedí to na vaše *gieng* a *sagt*. Na třetím nic, tam to vzala myš celé.“
 
 Hana nic neřekne.
 
@@ -386,11 +384,11 @@ Agnes čeká u zastávky. Vede je obě po kamenech, každou za jeden loket.
 
 V zadní místnosti svítí lampa. Kruh světla na stole. Mimo kruh tma a ruce na opěradle.
 
-Šindelářová se zastaví na prahu. Hana vidí, jak se podívá do tmy. Jen jednou, krátce. Pak se podívá na stůl.
+Šindelářová se zastaví na prahu. Hana vidí, jak střelí očima do tmy. Jen jednou, krátce. Potom ke stolu.
 
 „Dobrý večer,“ řekne do tmy, česky.
 
-Z tmy přijde odpověď, německy.
+Ze tmy přijde odpověď, německy.
 
 „Říká dobrý večer,“ přeloží Agnes. „A že rukavice ne. Papír je zvyklý na ruce.“
 
@@ -414,7 +412,7 @@ Pak inkoust. Šindelářová ho nepoužije na nic. Jen se dívá. Lupou, šikmo,
 
 „Vidíte tohle?“ řekne. Poprvé za celou dobu se otočí k Haně. Ukáže na osmý list, na dlouhý tah písmene. Kolem tahu je papír hnědší. Na jednom místě je tah prasklý a papír pod ním prosvítá, jako by ho inkoust prožral. „Inkoust se do papíru zakousl. Za staletí. Takhle to dělá jen železitoduběnkový. Žádný dnešní inkoust tohle za pět let neudělá. Ani za padesát.“
 
-Hana si to zapíše. *Řekla L. Š.*
+Do sešitu přibude: *Řekla L. Š.*
 
 Šindelářová vrátí poslední list na místo. Sundá si brýle. Chvíli sedí a dívá se na čtrnáct listů ve světle lampy.
 
@@ -428,13 +426,11 @@ Pak řekne tu druhou věc. Pět let ji nosí a teď ji řekne jednoduše, jako s
 
 „Teď mi to přečtěte.“
 
-Šindelářová se na ni podívá.
-
-„Celé?“
+„Celé?“ zeptá se Šindelářová.
 
 „Osmý list.“
 
-Šindelářová se otočí do tmy, k rukám na opěradle. Neřekne nic. Jen se dívá. Agnes něco tiše řekne německy a z tmy přijde jedno slovo.
+Šindelářová se otočí do tmy, k rukám na opěradle. Neřekne nic. Jen se dívá. Agnes něco tiše řekne německy a ze tmy přijde jedno slovo.
 
 „Ano,“ přeloží Agnes.
 
@@ -462,9 +458,9 @@ Pak čte dál. Pomaleji.
 
 V místnosti je ticho.
 
-Hana slyší lampu. Tiché bzučení vlákna, které člověk neslyší, dokud je kolem jiný zvuk. Slyší, jak Agnes u dveří přešlápne. Z tmy neslyší nic.
+Hana slyší lampu. Tiché bzučení vlákna, které člověk neslyší, dokud je kolem jiný zvuk. Slyší, jak Agnes u dveří přešlápne. Ze tmy neslyší nic.
 
-Pět rubů. Rýhy jako od hřebenu, uhlazené okraje, na pátém listu místo tak tenké, že přes něj prosvítal líc. Srpen 2025, otevřené okno, píseň z auta, která odjela a vrátila se. Dvoustrana v deníku, svislá čára a vpravo *Co bylo na rubu?*
+Pět rubů. Rýhy jako od hřebenu, uhlazené okraje, na pátém listu místo tak tenké, že přes něj prosvítal líc. Srpen 2025, otevřené okno, píseň z auta, které odjelo a vrátilo se. Dvoustrana v deníku, svislá čára a vpravo *Co bylo na rubu?*
 
 Na rubu byl perkmistr. Každou středu od Hromnic. Dvacet sklenic za čtyři zlaté. A na stejném řádku ti, kdo kupovali sůl a kroupy a kozy, a kde žijí.
 
@@ -480,7 +476,7 @@ Hana čeká, jestli něco ucítí. Úlevu. Triumf. Něco, co by člověk měl c�
 
 *
 
-Z tmy přijde hlas. Agnes poslouchá a pak se skloní k Šindelářové.
+Ze tmy přijde hlas. Agnes poslouchá a pak se skloní k Šindelářové.
 
 „Pan Benedikt prosí,“ řekne, „jestli byste přečetla ještě šestý. Prostředek.“
 
@@ -510,7 +506,7 @@ Hana čeká na jméno. Na *Dorothea*, na *Haupt*, na *svatý Vavřinec*. Šindel
 
 Ilona věděla, kde Dorota je. Hana o tom od večera v archivu nepochybuje. A nenapsala to. Ani soudu, ani tady, ani sama sobě na čtrnáctém listu, kde psala o vlastních lžích. *Víc jsem nezapsala.*
 
-Hana si vzpomene na plátno složené na čtyřikrát pod Saelinou dlaní.
+Hana si vzpomene na plátno složené na čtyřikrát pod dlaní Sálové.
 
 Nic neřekne. Ani do sešitu, zatím.
 
@@ -536,7 +532,7 @@ Hana mlčí.
 
 „Až budu moct.“
 
-Šindelářová kývne. Pak se podívá z okna. Pod nimi v údolí leží Jáchymov, pár světel, věž. Radnice odsud vidět není.
+Šindelářová kývne a otočí se k oknu. Pod nimi v údolí leží Jáchymov, pár světel, věž. Radnice odsud vidět není.
 
 „Víte, co mě na tom štve?“ řekne po chvíli. „Že jsem to napsala. V tom e-mailu, v srpnu. *Taky mě to napadlo.* Napadlo mě to a pak jsem pět let dělala jinou práci.“
 
@@ -567,7 +563,7 @@ A pod to, po vynechaném řádku:
 
 *Můj dohad z 8/2025 o nejtenčím místě na 5. rubu: neověřitelné. Otazník zůstává.*
 
-Pak se dlouho dívá na tu stránku. Je to nejdelší zápis vlevo za celý měsíc. Nepřipadá jí dlouhý.
+Hana nad tou stránkou dlouho sedí. Je to nejdelší zápis vlevo za celý měsíc. Nepřipadá jí dlouhý.
 
 Vpravo napíše:
 
@@ -579,11 +575,11 @@ A pod to, menším písmem:
 
 A ještě níž, poslední řádek, který si slíbila nenapsat, a stejně ho napíše, protože vpravo se píše, co člověk ví a nemůže doložit:
 
-*Opis Dorotu nejmenuje. Saelinu podmínku neporušuje. Já ji znám.*
+*Opis Dorotu nejmenuje. Podmínku S. neporušuje. Já ji znám.*
 
 V osm nula jedna má Pramen pod Hřbetem osmnáct celá nula.
 
-Tadeáš to zapíše do své tabulky dřív než ona. Pak se na ni podívá, na sešit na kapotě, na její ruce.
+Tadeáš to zapíše do své tabulky dřív než ona. Pak přejede očima po ní, po sešitu na kapotě, po jejích rukou.
 
 „Zase jste spala rychle,“ řekne.
 

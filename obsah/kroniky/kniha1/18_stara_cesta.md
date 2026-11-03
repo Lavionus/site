@@ -114,7 +114,7 @@ Neotočila se k němu. Mluvila ke stěně.
 
 „Můj bratr do ní dvakrát udeřil,“ řekl. „Pán mu to přikázal. Po druhém úderu se hora pohnula a ve skále se rozsvítilo světlo. Pak to světlo odešlo. Nahoru. Skrz skálu.“ Polkl. „Pak byla teplá jako ruka.“
 
-Ostra se na něj dívala dlouho. Pak kývla, jako se kývá na zprávu o smrti, kterou člověk už slyšel od jiného a potřeboval ji slyšet ještě jednou.
+Ostra kývla, jako se kývá na zprávu o smrti, kterou člověk už slyšel od jiného a potřeboval ji slyšet ještě jednou.
 
 *
 
@@ -154,7 +154,7 @@ Bylo ticho. Kahany hořely rovně. Někde u dveří zakašlalo dítě a matka mu
 
 „O vás ne.“
 
-„Řekls *to vám neřeknu*. Před celou vsí, když se tě pán ptal na nůž.“ Merin se poprvé pohnul. Udělal krok od stěny, do světla, a Matěj viděl jeho tvář zblízka, bledou a klidnou, a v ní únavu, stejnou, jakou viděl u muže s kopím. „I mlčení je věta, písaři. Ves ji slyšela. Ves teď ví, že mnich něco ví, a ví, s kým chodí do lesa. A kam jde mnich, tam půjdou psi.“
+„Řekls *na to vám neodpovím*. Před celou vsí, když se tě pán ptal na nůž.“ Merin se poprvé pohnul. Udělal krok od stěny, do světla, a Matěj viděl jeho tvář zblízka, bledou a klidnou, a v ní únavu, stejnou, jakou viděl u muže s kopím. „I mlčení je věta, písaři. Ves ji slyšela. Ves teď ví, že mnich něco ví, a ví, s kým chodí do lesa. A kam jde mnich, tam půjdou psi.“
 
 „Šel jsem sem s plstí na očích.“
 
@@ -194,7 +194,7 @@ Matěj seděl na lavici u studené stěny a poslouchal. Většině nerozuměl, p
 
 „A zítra ho projdou psi.“
 
-„Proto půjdeme za svítání,“ řekl Merin, „a ven vyjdeme za tmy. Cesta je dlouhá. U konce počkáme, dokud psi neprojdou. Za šera k řece.“ Podíval se na Matěje. „Ostra říká, že Dobroslava zná převozníka.“
+„Proto půjdeme za svítání,“ řekl Merin, „a ven vyjdeme za tmy. Cesta je dlouhá. U konce počkáme, dokud psi neprojdou. Za šera k řece. Ostra říká, že Dobroslava zná převozníka.“
 
 „Zná. Bratra svého muže.“ Matěj zaváhal. „Chce kov. Dobroslava říká, že váš kov nevezme. Že každý váš kus je vidět na sto kroků.“
 
@@ -208,7 +208,7 @@ Merin mlčel. Mlčeli všichni, kdo rozuměli.
 
 *Zlato je v potoce.*
 
-Matěj si vzpomněl na Bohunu u kostelíka, jak drží v dlani valoun jako bob a říká, že ho našla její babička v potoce za mlýnem. Na Konráda, jak zvedá nad hlavou holubí vejce. *Tak tvoje babička neviděla nic.* Na to, jak se lidé křižovali.
+Matěj si vzpomněl na Bohunu u kostelíka, jak říká, že její babička viděla na potoce valoun jako bob. Na Konráda, jak zvedá nad hlavou holubí vejce. *Tak tvoje babička neviděla nic.* Na to, jak se lidé křižovali.
 
 Valoun z potoka nemá znamení. Nikdo se nezeptá, kdo ho udělal. Každý ví, odkud je zlato: z potoka, z hory, od draka, od Boha. Valoun nese babička v dlani a nikdo ji nepověsí.
 
@@ -216,7 +216,7 @@ Valoun z potoka nemá znamení. Nikdo se nezeptá, kdo ho udělal. Každý ví, 
 
 Merin se na něj podíval.
 
-Byl to ten pohled z Velkého pátku, pod převisem u kahanu. Ne zlý. Ne překvapený. Pohled, jakým se starý písař dívá na novice, který právě řekl něco, co si měl nechat pro sebe.
+Byl to ten pohled ze Zeleného čtvrtka, pod převisem u kahanu. Ne zlý. Ne překvapený. Pohled, jakým se starý písař dívá na novice, který právě řekl něco, co si měl nechat pro sebe.
 
 „Není to poklad,“ řekl Merin. „Řekl jsem ti to.“
 
@@ -250,7 +250,7 @@ Než odešel, zeptal se na to, na co se zeptat musel.
 
 „Kudy jde ta cesta? Pod horou. Kudy přesně?“
 
-Merin se na něj podíval a Matěj věděl, co přijde, ještě než to Merin řekl.
+Matěj věděl, co přijde, ještě než to Merin řekl.
 
 „To ti nepovím.“
 
@@ -276,7 +276,7 @@ Ostra u stěny zvedla hlavu.
 
 „Já budu u ucha,“ řekla. „Až do konce. Chci slyšet, co udělá.“
 
-Matěj se na ni podíval. Nerozuměl. U ucha? U čího ucha? Chtěl se zeptat, a Merin řekl Ostře něco příkře, tím jazykem, a Ostra mu odpověděla jedním slovem a zase sklonila hlavu, a Matěj věděl, že se už nic nedozví.
+Matěj nerozuměl. U ucha? U čího ucha? Chtěl se zeptat, a Merin řekl Ostře něco příkře, tím jazykem, a Ostra mu odpověděla jedním slovem a zase sklonila hlavu, a Matěj věděl, že se už nic nedozví.
 
 Zapamatoval si to. *U ucha.* Uložil si to vedle tisíce sto čtyřiceti kroků a čtyřiceti dvou schodů, mezi věci, které má a nerozumí jim.
 
@@ -312,13 +312,13 @@ Matěj ho viděl z kraje lesa, z místa, kde se svah zvedal k haldě, tak jako h
 
 Matěj šel k boudě.
 
-Hensel seděl na svém kameni a vedle něj, na zemi, ležel uzel. Převázaný provazem, s mlátkem zastrčeným pod provazem, s kožešinou smotanou navrch. Všechno, co Hensel měl. Matěj se na ten uzel díval a věděl, co znamená, ještě než mu to Hensel ukázal.
+Hensel seděl na svém kameni a vedle něj, na zemi, ležel uzel. Převázaný provazem, s mlátkem zastrčeným za provaz, s kožešinou smotanou navrch. Všechno, co Hensel měl. Matěj se na ten uzel díval a věděl, co znamená, ještě než mu to Hensel ukázal.
 
 Hensel ukázal palcem přes rameno. K Ortliebově chalupě pod pasekou, kde nesvítilo okno. Pak udělal rukou pohyb, jako když se odhání pes.
 
 *Geh.*
 
-Matěj si sedl k ohni na druhou stranu. Tak jako tenkrát s úlomkem s rýhami. Hensel se na něj díval.
+Matěj si sedl k ohni na druhou stranu. Tak jako tenkrát s úlomkem s rýhami.
 
 Ze tmy u boudy se někdo pohnul a Matěj sebou trhl. Byl to mladý Sas, jeden z Ortliebových, kterého znal od vidění: světlé vlasy, které mu padaly do očí, a ruce ještě dětské, s mozoly, které se teprve dělaly. Lutz, říkali mu ostatní. Ten, co si v pátek v noci klekl do bláta a modlil se nahlas. Seděl na prahu boudy s koleny u brady a měl otevřené oči.
 
@@ -338,7 +338,7 @@ Lutz kývl, jako by čekal tuhle odpověď a ulevilo se mu, že ji dostal, a ne 
 
 „Ich auch nicht,“ řekl Matěj.
 
-Lutz se na něj podíval a skoro se usmál. Pak si opřel hlavu o zárubeň a zavřel oči, a Matěj nevěděl, jestli usnul.
+Lutz se skoro usmál. Pak si opřel hlavu o zárubeň a zavřel oči, a Matěj nevěděl, jestli usnul.
 
 *
 
@@ -364,7 +364,7 @@ Vstal. Sáhl do boudy, kolem spícího Lutze, a vytáhl dva kahany, kápi z hrub
 
 „Rinne,“ řekl Hensel. A ukázal k ústí.
 
-Hrázka. Každou noc, i když se nekopalo, ji někdo musel jít vypustit, jinak by voda stála na čelbě po kolena. Každou noc to dělal Hensel. Strážní u ústí ho viděli včera, viděli ho předevčírem. Nevěděli, že mu Ortlieb včera večer ukázal palcem přes rameno.
+Žlab, a nad ním hrázka. Každou noc, i když se nekopalo, ji někdo musel jít vypustit, jinak by voda stála na čelbě po kolena. Každou noc to dělal Hensel. Strážní ho viděli jít k hrázce už večer. Nevěděli, že ho Ortlieb mezitím vyhnal.
 
 *
 
@@ -394,7 +394,7 @@ Na Velký pátek to četl nahlas, latinsky a česky a německy, a zarazil se. Pe
 
 Pacholek se zasmál.
 
-„To ne,“ řekl. „Mnich by tam nevlezl ani za zlato.“ Mávl rukou. „Jdi. Ať ten hluchej neutopí.“
+„To ne,“ řekl. „Mnich by tam nevlezl ani za zlato.“ Mávl rukou. „Jdi. Ať se ten hluchej neutopí.“
 
 Matěj šel.
 
@@ -406,7 +406,7 @@ Hučela pod prkny, kde vedl žlab, stejně jako v pátek, hnědá a rychlá. U s
 
 Nepočítal nahlas. Ale počítal. Tady, v téhle hoře, počítat směl. Tahle hora nebyla jejich.
 
-U dvousetého patnáctého se Hensel zastavil.
+U dvoustého patnáctého se Hensel zastavil.
 
 Prkna. Šest silných fošen křížem přes otvor, hřeby s hlavičkami ohnutými zpátky do dřeva. Matěj na ně v pátek položil dlaň. Byla horká. Teď byla jen vlažná.
 
@@ -430,15 +430,15 @@ Díval se z listu na podlahu a z podlahy na list, a bylo to stejné. Skoro stejn
 
 Pak začal počítat, co potřebuje.
 
-Nevěděl, kolik bere Bořek. Nevěděl, kolik se platí mýtnému, aby spal. Věděl, kolik je lidí v té studené místnosti, napůl, protože je nepočítal. Věděl, kolik je zlata na podlaze, protože ho počítal celou noc jedenáctého dubna, a měl to tady na listu. Věděl, kolik dal Konrád Ješkovi za valoun jako holubí vejce: stříbrnou minci. A že Bohuna by si za svůj valoun jako bob mohla koupit krávu, kdyby ho prodala, a že ho nikdy neprodala, protože byl od babičky.
+Nevěděl, kolik bere Bořek. Nevěděl, kolik se platí mýtnému, aby spal. Kolik je lidí v té studené místnosti, věděl jen zhruba, protože je nepočítal. Věděl, kolik je zlata na podlaze, protože ho počítal celou noc jedenáctého dubna, a měl to tady na listu. Věděl, kolik dal Konrád Ješkovi za valoun jako holubí vejce: stříbrnou minci.
 
 Hensel stál v otvoru, shrbený, a svítil mu. Pak natáhl ruku, tu bez dvou prstů, a ukázal přes dutinu k velkému valounu u svahu. K tomu, ze kterého Matěj jedenáctého dubna odloupnul šupinu.
 
 Jeden velký. Místo mnoha malých. Jedno místo na podlaze místo mnoha.
 
-Matěj se na ten valoun díval. Ležel sám, větší než ostatní, stranou řad, kde se hlína svažovala, a tam, kde chyběla šupina, se leskl jasněji.
+Valoun ležel sám, větší než ostatní, stranou řad, kde se hlína svažovala, a tam, kde chyběla šupina, se leskl jasněji.
 
-Zavrtěl hlavou.
+Matěj zavrtěl hlavou.
 
 „Zu groß,“ řekl. Moc velký.
 
@@ -480,7 +480,7 @@ Sedl si zpátky ke vchodu. Vzal olůvko, a na dvoustraně, do každého kroužku
 
 Sedm křížků. Ruka se mu netřásla. Na to si pak vzpomínal nejčastěji, že se mu netřásla.
 
-Vedle posledního napsal dvě slova, tak malá, že je skoro nebylo vidět.
+Ke každému připsal dvě slova, tak malá, že je skoro nebylo vidět.
 
 *a me.*
 
@@ -532,7 +532,7 @@ Ješek se zasmál. Krátce, nosem, a v tom smíchu nebylo nic veselého.
 
 „Mně.“ Ješek se na něj díval. „Jim ne.“
 
-Matěj neodpověděl. Měl to na jazyku: že Kojata by se ptal, i kdyby nechtěl. Valoun v Ješkově hrsti týden poté, co pán zatloukl hnízdo, by nebyl valoun z potoka, ale ruka na špalku. Že ves by to věděla do večera. Že Rüdiger by to věděl do rána. Že nedat bratrovi zlato je jediný způsob, jak mu nechat ruku. Měl to všechno na jazyku a neřekl to, protože věděl, jak by to znělo. Jako mnich, který ví, odkud voda teče, a neřekne.
+Matěj neodpověděl. Měl to na jazyku: že Kojata by se ptal, i kdyby nechtěl. Valoun v Ješkově hrsti necelé dva týdny poté, co pán zatloukl hnízdo, by nebyl valoun z potoka, ale ruka na špalku. Že ves by to věděla do večera. Že Rüdiger by to věděl do rána. Že nedat bratrovi zlato je jediný způsob, jak mu nechat ruku. Měl to všechno na jazyku a neřekl to, protože věděl, jak by to znělo. Jako mnich, který ví, odkud voda teče, a neřekne.
 
 Sevřel pěst.
 
@@ -558,7 +558,7 @@ Dobroslava ho zvážila v dlani. Rozvázala ho, podívala se dovnitř, a zase ho
 
 „Za tmy,“ řekl Matěj. „Pod strmým koncem hory. Merin říká, že vyjdou až za tmy.“
 
-„Já vím, kde vycházejí.“ Dobroslava vstala. „Dvacet let vím, kde vycházejí. Jenom jsem tam nikdy nešla.“ Opřela se o tyč a podívala se na něj. „A ty?“
+„Já vím, kde vycházejí.“ Dobroslava vstala. „Dvacet let vím, kde vycházejí. Jenom jsem tam nikdy nešla.“ Opřela se o tyč. „A ty?“
 
 „Já jdu do hory.“
 

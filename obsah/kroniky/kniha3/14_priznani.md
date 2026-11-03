@@ -8,18 +8,18 @@ Deník. Tabulku z předloktí, v čistém sáčku od vzorků. Flešku. Notebook 
 
 Tentokrát to obrátí.
 
-Vytrhne z konce deníku list. Pak ho zase vloží zpátky, protože vytržený list z deníku je přesně to, co se nedělá. Vezme papír z Kalinovy tiskárny a píše na něj rukou, rovně, jako Marisol do formulářů.
+Vytrhne z konce deníku list. A zase ho vloží zpátky, protože vytržený list z deníku je přesně to, co se nedělá. Vezme papír z Kalinovy tiskárny a píše na něj rukou, rovně, jako Marisol do formulářů.
 
 *Předávám (H. V., 26. 3. 2026):*
 
-*1. Terénní deník (od srpna 2025; expedice 2. 3. – 26. 3. 2026), originál. Zápis 6. 3. (vzorek 3) je vědomě nepřesný; viz bod 2.*
+*1. Terénní deník (od dubna 2025; expedice 2. 3. – 26. 3. 2026), originál. Zápis 6. 3. (vzorek 3) je vědomě nepřesný; viz bod 2.*
 *2. Tabulka z předloktí, ponor 6. 3., neumytá. Text „3 – 2 ks. 2. ks žlábek?“.*
 *3. Fleška: fotogrammetrický model síně z 18. 3. (R. H.), chybné měřítko +0,8 % (H. V.).*
 *4. Fotky originálu 21. 3. (měření), fotky obrazovky CT 24. 3. (snímky 41, 42).*
 *5. Fotky pošty R. H. (20. 3., 2:14 a 7:52).*
 *6. Fotky pásky na bedně: 21. 3. ráno, 21. 3. večer, 23. 3. Mérida.*
 
-Dívá se na to. Je to šest řádků. Na prvním je její chyba. Na šestém je chyba někoho jiného. Mezi nimi čísla.
+Je to šest řádků. Na prvním je její chyba. Na šestém je chyba někoho jiného. Mezi nimi čísla.
 
 Takhle to nechá.
 
@@ -43,7 +43,7 @@ Hana otevře deník. Ten, který za hodinu nebude mít. Na stránku s *V.*, pod 
 
 *6:12 odstřel (silný, ~4 s, stůl se zachvěl). Lom nemá střílet od 23. 3. „do odvolání“ (inženýr CO přes J. M.). Porušení.*
 
-Pak jde s Janou ke studni.
+S Janou jde ke studni.
 
 Les je ještě tmavý, pěšina světlejší než stromy kolem. U pásky se zastaví. Voda dole je bílá. Ne mléko u severní stěny. Celá, od stěny ke stěně, jako tehdy devatenáctého. Z jižní stěny, kde roste strom s kořeny, se ještě sype drobné kamení. Slyší ho, jak dopadá do vody, jako když někdo hází do studny hrášek.
 
@@ -55,7 +55,7 @@ Plošina je dole pod nimi, šedá, v šeru. Hana vidí jen její obrys a bílou 
 
 Marisol přijede v sedm bez dvou minut.
 
-Bílé auto ústavu, za ním pick-up civilní ochrany. Z pick-upu vystoupí inženýr a už když bouchne dveřmi, telefonuje. Mluví nahlas, rychle, jako člověk, kterému někdo lhal do očí, a Hana z toho rozumí slovům *dnes ráno*, *zákaz* a jednomu jménu, které neopakuje.
+Bílé auto ústavu, za ním pick-up civilní ochrany. Z pick-upu vystoupí inženýr a už když bouchne dveřmi, telefonuje. Mluví nahlas, rychle, jako člověk, kterému někdo lhal do očí, a Hana z toho rozumí slovům *dnes ráno*, *zákaz* a jednomu jménu, které zazní jen jednou.
 
 Marisol vystoupí pomalu. Má na sobě béžovou košili a v ruce desky. Klobouk nechá v autě. Podívá se na inženýra, pak na Hanu, pak na stůl, na kterém leží pět věcí a jeden papír.
 
@@ -67,7 +67,7 @@ Marisol vystoupí pomalu. Má na sobě béžovou košili a v ruce desky. Klobouk
 
 „Ano.“
 
-Marisol kývne, jako by nic jiného nečekala. Pak se otočí k inženýrovi a řekne mu něco španělsky. Inženýr kývne, aniž by přestal telefonovat, a ukáže Janě bradou k pěšině. Jdou se podívat na vstup. Jana se ohlédne a Hana jí kývne.
+Marisol kývne, jako by nic jiného nečekala, otočí se k inženýrovi a řekne mu něco španělsky. Inženýr kývne, aniž by přestal telefonovat, a ukáže Janě bradou k pěšině. Jdou se podívat na vstup. Jana se ohlédne a Hana jí kývne.
 
 Marisol si sedne naproti Haně. Mezi nimi je stůl a na stole pět věcí. Marisol se jich nedotkne. Vezme papír a přečte ho. Hana vidí, jak se jí oči zastaví na prvním řádku a na druhém. Pak jdou dál a dolů, rychleji, a na šestém se zastaví znovu.
 
@@ -99,7 +99,7 @@ To poslední se jí říká nejhůř. Řekne to stejně rovně jako ostatní.
 
 „A sedmnáctého,“ řekne nakonec, „jsem si napsala doprava *tři pomlčka jedna rovná se A, otazník*. Ríša tu stránku vyfotil do archivu produkce. Viktor ji četl. Stránku ze šestého taky. Viktor ví o devadesáti procentech od šestého večera. Řekla jsem mu to sama.“
 
-Marisol vezme deník. Poprvé se dotkne něčeho na stole. Otevře ho, ne na začátku, ale tam, kde se otevře sám, protože ho Hana tolikrát otvírala. Šestý březen. Čte pomalu, prstem nad řádky, nedotýká se jich. Pak otevře sáček, vytáhne tabulku za okraj, dvěma prsty, jako se bere sklíčko, a podívá se na ni proti světlu. Na otazník, napsaný dvakrát.
+Marisol vezme deník. Poprvé se dotkne něčeho na stole. Otevře ho, ne na začátku, ale tam, kde se otevře sám, protože ho Hana tolikrát otvírala. Šestý březen. Čte pomalu, prstem nad řádky, nedotýká se jich. Otevře sáček, vytáhne tabulku za okraj, dvěma prsty, jako se bere sklíčko, a podívá se na ni proti světlu. Na otazník, napsaný dvakrát.
 
 Dlouho mlčí.
 
@@ -127,7 +127,7 @@ Hana čeká.
 
 *
 
-Marisol se na ni dívá ještě chvíli. Pak otevře své desky.
+Marisol otevře své desky.
 
 „Ukažte.“
 
@@ -141,13 +141,13 @@ Hana otevře deník na sobotu jednadvacátého, na večerní stránku. Tu, ktero
 
 Hana otevře na notebooku snímek čtyřicet jedna. Podélný řez z úterka, žlutá čára, číslo v rámečku. *464,2 mm.* A čtyřicet dva, *110,9 mm*.
 
-Marisol se nakloní. Pak sáhne do desek a vytáhne dva listy sešité sponkou. Protokol z kliniky. Hana ho ještě neviděla. Marisol jede prstem po řádcích a zastaví se.
+Marisol se nakloní a sáhne do desek a vytáhne dva listy sešité sponkou. Protokol z kliniky. Hana ho ještě neviděla. Marisol jede prstem po řádcích a zastaví se.
 
 „Čtyři sta šedesát čtyři celá dva,“ přečte. „Sto deset celá devět.“
 
 „Tohle je replika. Originál měl čtyři sta šedesát a sto deset.“
 
-„Čtyři milimetry.“ Marisol se na ni podívá. „Doktorko. Čtyři milimetry na půl metru. Pryskyřice se při tuhnutí smršťuje i roztahuje, forma se deformuje, kdo ví, co ten člověk…“
+„Čtyři milimetry,“ řekne Marisol. „Doktorko. Čtyři milimetry na půl metru. Pryskyřice se při tuhnutí smršťuje i roztahuje, forma se deformuje, kdo ví, co ten člověk…“
 
 „Ve všech směrech o stejné procento,“ řekne Hana. „Délka i průměr. Jedna celá nula nula osm.“
 
@@ -157,11 +157,11 @@ Model na flešce. Síň, šedá, s terasami, s Abuelem, s majákem. Válec pod p
 
 „Tu chybu jsem udělala já,“ řekne Hana. „Osmnáctého večer. Ríšovi jsem ji neřekla, chtěla jsem ráno, a ráno spadla stěna. Model nikdo nepřepočítal. Kopie měli tři lidé. Ríša, Viktor a já.“
 
-Marisol se dívá na model. Pak na snímek z CT. Pak na svůj protokol.
+Marisol se dívá na model, na snímek z CT, na svůj protokol.
 
 „Kdo by odléval podle předmětu,“ řekne Hana, „odlil by ho v jeho velikosti. Tohle je odlité podle modelu. Podle mé chyby.“
 
-A pak, protože už to začala, ukáže i zbytek. Ríšovu poštu. *Valec – closed – STL.* Odesláno ve dvě čtrnáct, staženo v sedm padesát dva. Ríšovo *STL je pro tiskárnu*. Zploštělý konec, který Ríša dopočítal, protože ho nikdo neviděl.
+A pak, protože už to začala, ukáže i zbytek. Ríšovu poštu. *Valec – closed – STL.* Odesláno ve dvě čtrnáct, staženo v sedm padesát dva. Ríšovo *STL nemá texturu*. Zploštělý konec, který Ríša dopočítal, protože ho nikdo neviděl.
 
 Marisol neřekne nic. Píše. Do bloku, ne do formuláře. Rychle a drobně, a Hana vidí, že si píše čísla a časy, ne slova.
 
@@ -177,17 +177,17 @@ Hana jí nic neukazuje prstem. Nechá ji dívat se. Ví, že Marisol uvidí tot�
 
 „To je můj podpis,“ řekne Marisol.
 
-Řekne to tiše, jako by mluvila sama se sebou. Pak se nakloní blíž k obrazovce. Ke schodu v tahu fixy. K *h*, které na sobotní fotce leží na horním okraji suku a na pondělní zmizelo v jeho středu. K tenkému modrému proužku nad páskou, kde na dřevě zůstaly kousky písmen.
+Řekne to tiše, jako by mluvila sama se sebou. A nakloní se blíž k obrazovce. Ke schodu v tahu fixy. K *h*, které na sobotní fotce leží na horním okraji suku a na pondělní zmizelo v jeho středu. K tenkému modrému proužku nad páskou, kde na dřevě zůstaly kousky písmen.
 
 „Kontrolovala jsem ji,“ řekne Marisol. „V pondělí ráno. Prstem. Každý podpis.“ Zvedne ruku a podívá se na svůj ukazováček, jako by na něm mělo něco zůstat. „S baterkou. Čísla jsem četla nahlas. Byla tatáž.“
 
 „Byla tatáž. Je to tatáž páska.“
 
-„Jen o tři milimetry níž.“
+„Jen o kousek níž.“
 
-„O tři, čtyři.“
+„O tři milimetry. Proto ten proužek.“
 
-Marisol zavře oči. Na vteřinu. Pak je otevře a Hana pozná, že se v ní něco přesunulo. Ne k ní, k Haně. Někam jinam. K té ruce s baterkou v bodeze, v šest padesát ráno, která přejela prstem po podpisu a nic necítila.
+Marisol zavře oči. Na vteřinu. Pak je otevře, ale dívá se kolem Hany. Někam jinam. K té ruce s baterkou v bodeze, v šest padesát ráno, která přejela prstem po podpisu a nic necítila. V kuželu baterky, na nehoblovaném prkně, vypadá takový proužek jako žilka ve dřevě.
 
 „Nedívala jsem se na suk,“ řekne Marisol.
 
@@ -197,7 +197,7 @@ Marisol zavře oči. Na vteřinu. Pak je otevře a Hana pozná, že se v ní ně
 
 „Já fotím všechno,“ řekne Hana. „To není zásluha. To je zvyk.“
 
-Marisol se na ni podívá. Dlouho. Pak se poprvé za celé ráno opře o lokty a promne si spánky.
+Marisol dlouho mlčí. Pak se poprvé za celé ráno opře o lokty a promne si spánky.
 
 „Viktor Brabec,“ řekne.
 
@@ -249,7 +249,7 @@ Marisol se podívá směrem k obci. Přes mýtinu, přes stromy. Nic tam není v
 
 „Bez původní polohy,“ řekne, „bez kontextu, se originál od podvrhu odliší hůř. Ne nemožně. Hůř. Každý den, kdy se ta síň nezdokumentuje, je horší. A za osm dní se zavře.“
 
-Hana se podívá na deník. V pravém horním rohu stojí *9*. Dnešní číslo ještě nenapsala.
+V pravém horním rohu deníku stojí *9*. Dnešní číslo ještě nenapsala.
 
 „Osm,“ řekne.
 
@@ -259,7 +259,7 @@ Předání trvá dvacet minut.
 
 Marisol vytáhne z auta formulář, jiný než ten na vzorky, delší. *Protokol o převzetí.* Píše do něj každou věc zvlášť. Deník, terénní, obal ohlazený, jeden roh rozmočený od hrnku, starší zápisy (mj. z dubna a srpna 2025), expedice od 2. 3. do 26. 3. 2026. Tabulka, plastová, bílá, s gumovými pásky, s nápisem tužkou, v sáčku. Fleška, černá. Notebook nechá Haně. Fotky si zkopíruje na svůj disk, Hana u toho sedí a čte názvy souborů nahlas, a Marisol je odškrtává.
 
-Pak Marisol vezme deník a otočí ho k Haně.
+Marisol vezme deník a otočí ho k Haně.
 
 „Podepište první stránku expedice. Tady, dole. A poslední.“
 
@@ -267,7 +267,7 @@ Hana podepíše. Na první stránce expedice je *Sak Ts'ono'ot, Yucatán, 2. 3. 
 
 Podepíše se pod to. Ruka se jí netřese. Diví se tomu.
 
-Marisol vloží deník do velkého sáčku, zalepí ho a přes lepení napíše datum, čas a podpis. Pak to samé s tabulkou. Pak s fleškou. Tři sáčky. Hana se dívá na Marisolino *h* na lepicí pásce a uvědomí si, že se dívá, jestli jde přes nějaký suk.
+Marisol vloží deník do velkého sáčku, zalepí ho a přes lepení napíše datum, čas a podpis. To samé s tabulkou a s fleškou. Tři sáčky. Hana se dívá na Marisolino *h* na lepicí pásce a uvědomí si, že se dívá, jestli jde přes nějaký suk.
 
 Žádný suk tam není. Je to plast.
 
@@ -283,7 +283,7 @@ Marisol vloží deník do velkého sáčku, zalepí ho a přes lepení napíše 
 
 „Já vím. Proto jsem to řekla.“
 
-Marisol kývne. Pak řekne, tišeji, a Hana nepozná, jestli je to otázka:
+Marisol kývne a řekne, tišeji, a Hana nepozná, jestli je to otázka:
 
 „Šestého jste mohla prostě umýt tu tabulku.“
 
@@ -299,7 +299,7 @@ Hana o tom přemýšlí. Myslí na vlhčený ubrousek s umělou levandulí v hot
 
 Jana přijde od studny rychle.
 
-Neběží. Jana nikdy neběží. Ale jde tak, jak se jde, když by se běželo, a Hana to pozná dřív, než jí uvidí do obličeje.
+Neběží. Jana nikdy neběží. Ale jde tak, jak chodí člověk, který by nejradši běžel, a Hana to pozná dřív, než jí uvidí do obličeje.
 
 „Haničko.“
 
@@ -317,7 +317,7 @@ Hana vstane. Neví, kdy vstala.
 
 Marisol se zvedne. Řekne něco španělsky. Jana jí odpoví, anglicky, totéž, kratší. Marisol vytáhne telefon.
 
-Hana stojí u stolu a dívá se na pěšinu ke studni.
+Hana stojí u stolu.
 
 V šest dvanáct se zachvěl stůl. V šest dvanáct poskočil hrnek s odloupnutým uchem a cinkl o lžičku. Pár minut nato stála s Janou u pásky a dívala se na bílou vodu a na šedou plošinu pod sebou a Jana řekla *díky bohu, dneska tam nikdo není*.
 
@@ -329,7 +329,7 @@ Rosa přijde v devět.
 
 Přijde po cestě od obce, ne od brány. S ní jsou obě děti, kluk drží holčičku za ruku a holčička si nese plastovou panenku bez jedné nohy. Rosa jde rychle a nedívá se na nikoho. Má na sobě zástěru, jako by odešla od plotny. Možná odešla.
 
-Zastaví se u pásky. Inženýr k ní jde a něco jí řekne. Rosa ho nechá domluvit a pak mluví sama, maysky, tiše a dlouho, a inženýr kývá. Hana stojí deset metrů od nich a nerozumí ani slovu. Rozumí rukám. Rosa jednou ukáže směrem k obci, k domu. Pak na hodinky, které nemá. Pak dolů, do studny.
+Zastaví se u pásky. Inženýr k ní jde a něco jí řekne. Rosa ho nechá domluvit a pak mluví sama, maysky, tiše a dlouho, a inženýr kývá. Hana stojí deset metrů od nich a nerozumí ani slovu. Rozumí rukám. Rosa jednou ukáže směrem k obci, k domu. Pak na hodinky, které nemá. A dolů, do studny.
 
 Don Felipe přijede na kole. Opře kolo o strom, sundá klobouk a postaví se vedle Rosy. Nic neříká. Jen stojí.
 
@@ -347,11 +347,11 @@ Kluk se dívá na Hanu taky. Má Luisovu širokou tvář.
 
 Hana otevře ústa.
 
-Ví, co by měla říct. Ví, co by řekla Jana, co by řekl Viktor, co se říká na břehu. *Určitě. Je to nejlepší potápěč, jakého znám. Bude v pořádku.* Prostřední věta je pravda. Ty dvě kolem ní nikdo neví, a právě na ně se Rosa ptá.
+Ví, co by měla říct. Ví, co by řekla Jana, co by řekl Viktor, co se říká na břehu. *Určitě. Je to nejlepší potápěč, jakého znám. Bude v pořádku.* Prostřední věta je pravda. Jestli platí ty dvě kolem ní, nikdo neví, a právě na ně se Rosa ptá.
 
 „No sé,“ řekne. „Nevím.“
 
-Rosa se na ni dívá. Pak kývne. Jednou. Jako člověk, kterému někdo poprvé za celé ráno neřekl nic, co by si musel odečíst.
+Rosa kývne. Jednou. Jako člověk, kterému někdo poprvé za celé ráno neřekl nic, co by si musel odečíst.
 
 Holčička natáhne ruku s panenkou a podá ji Haně. Hana ji vezme dřív, než si uvědomí, co dělá. Panenka je teplá od dlaně.
 
@@ -369,19 +369,19 @@ Hana si ho vezme.
 
 „Děkuju.“
 
-„Za co,“ řekne Kalina. Pak se podívá dolů, do bílé vody, kde od plošiny vede do hloubky tenká čára šňůry. Dlouho se dívá. „Můj maják je pořád tam dole. Na LE 14.“
+„Za co,“ řekne Kalina a podívá se dolů, do bílé vody, kde od plošiny vede do hloubky tenká čára šňůry. „Můj maják je pořád tam dole. Na LE 14.“
 
 „Já vím.“
 
 „Vysílá každou celou hodinu. Deset minut.“ Kalina se odmlčí. „Do desátého dubna.“
 
-Hana se na něj podívá. Kalina se nedívá na ni. Dívá se do studny a rty se mu hýbou, jako když počítá.
+Kalina se nedívá na Hanu. Dívá se do studny a rty se mu hýbou, jako když počítá.
 
-Pak odejde zpátky k plachtě.
+Odejde zpátky k plachtě.
 
 Hana otevře sešit. Na první stránce udělá propiskou svislou čáru, od horního okraje dolů, bez pravítka. V lednu v Brně ji vedla pravítkem, protože ta čára měla být rovná. Tahle se jí na konci trochu stočí doleva. Nechá to tak.
 
-Do pravého horního rohu napíše *8*.
+Vpravo nahoru napíše *8*.
 
 Vlevo pod sebe:
 
@@ -392,6 +392,6 @@ Vlevo pod sebe:
 *Na plošině: sandály, tričko, telefon v sáčku, žlutá baterka. Šňůra uvázaná na nosníku, vede pod vodu. Z římsy v suché chodbě chybí 2 jeho láhve.*
 *Nevynořil se.*
 
-Vpravo nenapíše nic.
+Vpravo nic.
 
 Vedle sešitu, na kameni, leží plastová panenka bez jedné nohy. Hana ji nevrátila. Holčička si ji nevzala zpátky.

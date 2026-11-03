@@ -2,7 +2,7 @@
 
 Síň jedna měla lavice pro veřejnost a všechny byly plné.
 
-Nara to věděla, ještě než vešla. Síť jí to řekla na chodbě, ochotně a předem, jak to dělala se vším: *Síň 1: kapacita 240 osob. Obsazeno: 240. Před budovou: odhadem 1 100 osob.* Pod tím menším písmem: *Doporučení: vstup bočním vchodem.* Nara šla hlavním.
+Nara to věděla, ještě než vešla. Síť jí to řekla na chodbě: *Síň 1: kapacita 240 osob. Obsazeno: 240. Před budovou: odhadem 1 100 osob.* Pod tím: *Doporučení: vstup bočním vchodem.* Nara šla hlavním.
 
 Před budovou stáli lidé v řadách, které nikdo neurčil. Nemluvili. Stáli tak, jak stojí lidé, kteří nevědí, jestli smějí stát, a tak stojí co nejtišeji. Pořádková služba stála podél stěny a také mlčela. Když Nara vystoupila z chodby od kyvadla, otočilo se k ní tolik obličejů najednou, že se na okamžik zastavila.
 
@@ -22,7 +22,7 @@ Nara si vzpomněla. Jeden řádek ze čtyř tisíc dvou set. *Jmenuje se Rel. Je
 
 Žena kývla a ustoupila do řady. Nara šla dál. Síť jí k té ženě nabídla jméno, totožnost a hodnocení rizika. Nara to zavřela, než to stihla přečíst.
 
-Chodba byla vysoká jako všechny chodby Spolkového soudu, zbytečně vysoká, s tím okázalým plýtváním vzduchem, kterým se budova kdysi chlubila. Lidé u stěn ustupovali, když šla kolem. Nikdo nic neřekl. Někteří se dívali přímo, jak se dívají odpojení, i když odpojení nebyli. Jedna žena měla na zápěstí bílý provázek. Pořádková služba u dveří síně ho viděla a nic neudělala.
+Chodba byla vysoká jako všechny chodby Spolkového soudu, zbytečně vysoká, s tím okázalým plýtváním vzduchem, kterým se budova kdysi chlubila. Lidé u stěn mlčky ustupovali, když šla kolem. Někteří se dívali přímo, jak se dívají odpojení, i když odpojení nebyli. Jedna žena měla na zápěstí bílý provázek. Pořádková služba u dveří síně ho viděla a nic neudělala.
 
 *Do odletu: 10 dní.*
 
@@ -72,11 +72,11 @@ Pell vstala. Ruce nechala v kapsách.
 
 Sedla si.
 
-„Individuální pochybení neospravedlňuje kolektivní trest,“ řekla Nara. „Rozsudek nad čtyřmi sty jedním členem hnutí Nové otevření se opírá o tentýž odstavec.“ Odmlčela se. „Tím končí, co navrhovatelka může říct, aniž by mluvila o příloze.“
+„Individuální pochybení neospravedlňuje kolektivní trest,“ řekla Nara. „Rozsudek nad čtyřmi sty jedním členem hnutí Nové otevření se opírá o tentýž odstavec dvě stě osmnáct.“ Odmlčela se. „Tím končí, co navrhovatelka může říct, aniž by mluvila o příloze.“
 
 *
 
-V síni bylo ticho. Za zdmi se do záznamu dívaly tisíce lidí. Nara je necítila. Jen to věděla.
+V síni bylo ticho. Za zdmi se do záznamu dívaly tisíce lidí. Nara je necítila, jen o nich věděla.
 
 „Navrhovatelka má k příloze návrh,“ řekla.
 
@@ -94,7 +94,7 @@ Tann nic neřekla. Mladší soudce si něco zapsal.
 
 „Za třetí?“
 
-„Za třetí.“ Nara se na okamžik zastavila. Tohle si opakovala nejčastěji. „Senát o návrhu rozhodne. Ať rozhodne jakkoli, musí rozhodnutí odůvodnit. Pokud ho odůvodní přílohou a zápis zapečetí, bude to rozhodnutí, jehož důvody nikdo nesmí číst. Šest tisíc dvanáct lidí, kterých se týká, nebude vědět proč. Čtyři sta jeden člověk, jehož rozsudek se opírá o Terru, nebude vědět proč.“ Odmlčela se. „Před devíti sty lety soud přijal listinu neotevřenou a zapsal, co v ní je. Soud neviděl. Soud zapsal. Pokud senát dnes zápis zapečetí, rozhodne o téže listině podruhé tak, že ji uvidí jen on.“
+„Za třetí.“ Nara se na okamžik zastavila. Tohle si opakovala nejdéle. „Senát o návrhu rozhodne. Ať rozhodne jakkoli, musí rozhodnutí odůvodnit. Pokud ho odůvodní přílohou a zápis zapečetí, bude to rozhodnutí, jehož důvody nikdo nesmí číst. Šest tisíc dvanáct lidí, kterých se týká, nebude vědět proč. Čtyři sta jeden člověk, jehož rozsudek se opírá o Terru, nebude vědět proč.“ Odmlčela se. „Před devíti sty lety soud přijal listinu neotevřenou a zapsal, co v ní je. Soud neviděl. Soud zapsal. Pokud senát dnes zápis zapečetí, rozhodne o téže listině podruhé tak, že ji uvidí jen on.“
 
 V lavicích se někdo pohnul. Nara se neotočila.
 
@@ -144,7 +144,7 @@ Nara seděla u stolu a nehýbala se. Lumi vedle ní dýchala rychle a mělce. Za
 
 Asko se k ní naklonil přes zábradlí. Ruku měl pořád na stěně.
 
-„Slyšelas, co udělala?“ řekl tiše. „Neřekla, co v té listině stojí. Řekla jen, že je jedna. A Ardaine řekla, že druhou uvést nemůže.“
+„Slyšelas, co udělala Tann?“ řekl tiše. „Neřekla, co v té listině stojí. Řekla jen, že je jedna. A Ardaine řekla, že jiný důvod uvést nemůže.“
 
 „Já vím.“
 
@@ -202,7 +202,7 @@ Položila ruce na stůl. Třásly se. Podívala se na ně a pak na senát.
 
 „Příloha má čtyři části,“ řekla.
 
-Hlas jí zněl cize. Zněl hlasitěji, než chtěla, a odrážel se od stropu. Bez zklidnění neměl nic, co by ho drželo rovně. Nara se nadechla a mluvila dál.
+Hlas jí zněl cize. Zněl hlasitěji, než chtěla, a odrážel se od stropu. Síť ho už netlumila a nic ho nedrželo rovně. Nara se nadechla a mluvila dál.
 
 „Část první. Průzkumné listy. Tři sta čtyřicet. Koloniální úřad je pořídil při průzkumu Země. Průzkum je starší než první proces, o kolik, to se neví. Listy jsou psány tak, jak se psaly průzkumy. Vlevo sloupec *viděno*. Vpravo *usouzeno*. Pravému sloupci se podle pravidel úřadu nevěří. Navrhovatelka bude uvádět jen levý.“
 
@@ -300,7 +300,7 @@ Pak řekla poznámku. Celou, slovo od slova, jak ji patnáctého dne nadiktovala
 
 „*Klíčový pojem opisu protokolu je v překladu Koloniálního úřadu vyjádřen slovem kontaminant. Překlad pořídil úřad podle vlastního slovníku, který je dnes ztracen. Originál nikdo nečte. Překladatel sám označil překlad za pracovní a doporučil ověření podle úplného znění, které není k dispozici.*“
 
-„*Navrhovatelka nenavrhuje jiný překlad. Upozorňuje, že překlad tohoto slova je nejistý, a že ani jeho výklad, ani výklad protokolu jako celku se proto nesmí stát podkladem rozhodnutí, dokud ho nelze ověřit.*“
+„*Navrhovatelka nenavrhuje jiný překlad. Upozorňuje, že překlad tohoto slova je nejistý a že ani jeho výklad, ani výklad protokolu jako celku se proto nesmí stát podkladem rozhodnutí, dokud ho nelze ověřit.*“
 
 „*Navrhovatelka žádá, aby tato poznámka zůstala připojena k části III v každé podobě spisu.*“
 
@@ -346,7 +346,7 @@ Nara stála a čekala, až se jí vrátí hlas. Vracel se pomalu. Ruce měla na 
 
 „Domněnka v odstavci tři sta devadesát jedna je vyvrácena. Vyvrátily ji listiny, které soud před devíti sty lety přijal neotevřené. Koloniální úřad v době rozsudku věděl, že Země obydlená je. Věděl, že je chráněná. Věděl, že výjimku může dát jen Shromáždění veřejně. Nepožádal o ni. Místo toho zařídil, aby rozsudek mlčel.“
 
-„Výkon trestu podle rozsudku Terra se neděje před devíti sty lety. Děje se teď. Za deset dní má vysadit šest tisíc dvanáct osob na svět, na který statut, platný dodnes, zakazuje vysazovat osoby. Je to vědomé porušení ochrany chráněného světa. Bylo vědomé tehdy a dnes je vědomé znovu, protože ode dneška to ví každý.“
+„Výkon trestu podle rozsudku Terra se neděje před devíti sty lety. Děje se teď. Za deset dní má loď odvézt šest tisíc dvanáct osob na svět, na který statut, platný dodnes, zakazuje vysazovat osoby. Je to vědomé porušení ochrany chráněného světa. Bylo vědomé tehdy a dnes je vědomé znovu, protože ode dneška to ví každý.“
 
 „Navrhovatelka žádá, aby senát výkon trestu vyhnanství, druhý transport, zastavil.“
 

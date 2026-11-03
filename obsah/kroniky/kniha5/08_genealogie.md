@@ -4,7 +4,7 @@ V pondělí večer ukazoval vlhkoměr v archivu padesát osm a Sael věděla, ž
 
 Odvlhčovač v koutě hučel celý den. Tadeáš ho přinesl v únoru a vyprazdňoval nádobku dvakrát denně. Voda z ní byla teplá. Sael ji jednou ochutnala, protože chtěla vědět, jestli je to voda ze vzduchu, nebo ze skály. Chutnala po železe. Bylo to obojí.
 
-V neděli zasedala rada Ostrých podruhé za dva dny. Vrbová tam stála znovu a znovu řekla čísla, a pak řekla, co neví. Rada hlasovala šest proti pěti. Spodní síně se zavřou. Nikdo nebude spát níž než archiv. Děti a staří zůstanou nahoře ve statku a u příbuzných v síti. Skleník se opustí. Ostatní zůstanou dole, dokud skála nepřestane hořet, nebo dokud nepřijde další výron.
+V neděli zasedala rada Ostrých podruhé za dva dny. Vrbová tam stála podruhé a zopakovala čísla, a pak řekla, co neví. Rada hlasovala šest proti pěti. Spodní síně se zavřou. Nikdo nebude spát níž než archiv. Děti a staří zůstanou nahoře ve statku a u příbuzných v síti. Skleník se opustí. Ostatní zůstanou dole, dokud skála nepřestane hořet, nebo dokud nepřijde další výron.
 
 Lada hlasovala s menšinou. Pro to, aby šli nahoru všichni.
 
@@ -16,7 +16,7 @@ Truhlu otevřela v osm.
 
 Nejstarší list vyndala jako první, v obalu z nekyselého papíru, a položila ho na stůl na čisté plátno. Pak svazek ze šestnáctého století. Ten se otevřel sám, u Doroty, jako vždycky. Sael ho zavřela a položila vedle listu.
 
-Pak se dlouho dívala na obojí.
+Dlouho stála nad obojím.
 
 Kdo nechá knihu otevřenou před denním, předá jméno. Rokyta jí to řekla v zimě po válce, když Sael bylo něco přes šedesát a poprvé směla sedět u stolu, zatímco se psalo. Rokyta to věděla od své předchůdkyně a ta od starších, až k Aurel a dál. *Kdo jednou ukázal, ukáže znovu.* Kniha nesmí mít strážce, jehož ruka si pamatuje, jak se otvírá.
 
@@ -24,7 +24,7 @@ Jíva to udělala jednou. Pro jednu denní ženu, která četla vzhůru nohama. 
 
 Sael to věděla. Věděla to celou neděli a celé pondělí. A přesto vyndala list a svazek a položila je na stůl.
 
-Ta žena měla spis. Měla ho pět let. Měla desátou výpověď a skvrnu přes jméno a řádek *Víc jsem nezapsala*. A četla podle toho, co nehledá. Dřív nebo později by přišla na Dorotu sama. Z druhé strany, bez Sael, a četla by ji, jak by chtěla.
+Ta žena měla spis. Měla ho pět let. Měla desátou výpověď a skvrnu přes jméno a řádek *Víc jsem nezapsala*. A četla i to, co nehledala. Dřív nebo později by přišla na Dorotu sama. Z druhé strany, bez Sael, a četla by ji, jak by chtěla.
 
 Kdo ukáže sám, ten určuje, jak se to čte. Sael si to řekla. Byla to pravda. Byla to taky jen polovina pravdy, a Sael to věděla stejně dobře jako tu první polovinu.
 
@@ -32,11 +32,11 @@ Kdo ukáže sám, ten určuje, jak se to čte. Sael si to řekla. Byla to pravda
 
 Ta žena přišla v devět, s Tadeášem, po schodech ze sklepa statku.
 
-Tadeáš zůstal ve dveřích s čepicí v ruce. Sael mu kývla a on odešel nahoru. Slyšela, jak počítá schody, potichu, nahlas, jako to dělal odmalička.
+Tadeáš zůstal ve dveřích s čepicí v ruce. Sael mu kývla a on odešel nahoru. Slyšela, jak počítá schody, polohlasem, jako to dělal odmalička.
 
-Na prahu archivu se zastavila. Sael rozsvítila lampu na stole. Kvůli ní. Žluté světlo dopadlo na stůl, na plátno, na list v obalu a na svazek v tmavé kůži.
+Ta žena se na prahu archivu zastavila. Sael rozsvítila lampu na stole. Kvůli ní. Žluté světlo dopadlo na stůl, na plátno, na list v obalu a na svazek v tmavé kůži.
 
-Ta žena se nepodívala na knihu. Podívala se na vlhkoměr.
+Ta žena se nepodívala na knihu. Oči jí padly na vlhkoměr.
 
 „Padesát osm,“ řekla.
 
@@ -50,7 +50,7 @@ Ta žena se nepodívala na knihu. Podívala se na vlhkoměr.
 
 „Já vím,“ řekla Sael. „Proto ji odsud odnesu.“
 
-Ta žena se na ni podívala. Pak, poprvé, na stůl.
+Ta žena pohlédla na Sael a potom, poprvé, na stůl.
 
 „Pan Kalina vám vzkazuje,“ řekla, „že čtyři celá dvě platí i dole. Porovnal to v Praze. Tlukot na skále přichází čtyři celé dvě vteřiny po každé skupině signálu zdroje. Stejně jako to, co chytají ti lidé s anténami.“
 
@@ -72,7 +72,7 @@ Vrbová si sundala bundu a pověsila ji na opěradlo židle. Nesedla si. Stála 
 
 „Víc, než stojí v občance.“
 
-Skoro se usmála. Pak přestala.
+Ta žena se skoro usmála. Pak přestala.
 
 „Nesmím fotit,“ řekla. „Předpokládám.“
 
@@ -88,13 +88,13 @@ Nejdřív list.
 
 Sael ho vyndala z obalu a položila na plátno. Neřekla nic. Ta žena se sklonila, ruce za zády, jak se to dělá v depozitáři, aby se člověk ničeho nedotkl.
 
-Pergamen tmavý jako kůra. Kresba kopce, jedna čára, hřbet se strmějším koncem. Pod ním kruh. Vedle kruhu čárky ve dvou řadách. Pod čárkami znak s dlouhým tahem dolů. A v rohu jediné slovo.
+Pergamen tmavý jako kůra. Kresba kopce, jeden oblouk se strmějším koncem. Uvnitř kruh s vlnovkami, pod kopcem šipka ven. Vedle kresby řada čárek. Pod čárkami znak s dlouhým tahem dolů. A u hřbetu jediné slovo.
 
 Přečetla ho nahlas, pomalu.
 
 „*Monachus.*“
 
-Pak začala počítat. Sael to viděla na jejích rtech. Ne čárky najednou. Po jedné, prstem ve vzduchu, centimetr nad pergamenem, aby se ho nedotkla. Horní řada, pak dolní.
+Pak začala počítat. Sael to viděla na jejích rtech. Ne čárky najednou. Po jedné, prstem ve vzduchu, centimetr nad pergamenem, aby se ho nedotkla. Zleva doprava, celou řadu.
 
 „Čtyřicet jedna,“ řekla.
 
@@ -102,7 +102,7 @@ Pak začala počítat. Sael to viděla na jejích rtech. Ne čárky najednou. Po
 
 Narovnala se.
 
-„*Exivimus,*“ řekla. Tiše. „Vyšli jsme. A na okraji *tacui*.“ Podívala se na Sael. „V kodexu žádné číslo není. Žádný počet. Napsal, že vyšli, a že o tom mlčel.“
+„*Exivimus,*“ řekla. Tiše. „Vyšli jsme. A na okraji *tacui*.“ Podívala se na Sael. „V kodexu žádné číslo není. Žádný počet. Napsal, že vyšli a že o tom mlčel.“
 
 „Ostří říkají,“ řekla Sael, „že v komoře s kamennou deskou spočítal všechny, malé i velké. A to číslo nikam nenapsal.“
 
@@ -156,7 +156,7 @@ Sael viděla, jak jí ztuhla ramena. Jako tehdy v dílně, když jí Sael řekla
 
 *
 
-Pod Dorotiným řádkem stál další. Jívinou rukou, latinkou, pomalými písmeny, aby to bylo čitelné i pro toho, kdo nebude znát ani jedno písmo.
+Pod Dorotiným řádkem stál další. Jívinou rukou, ale jiným inkoustem, připsaný až po letech. Latinkou, pomalými písmeny, aby to bylo čitelné i pro toho, kdo nebude znát ani jedno písmo.
 
 Vrbová ho četla sama. Sael ji nechala.
 
@@ -178,7 +178,7 @@ Na obrazovce se objevil sken. Hnědý list, drobné rovné písmo bez smyček, �
 
 *Wittib.* Vdova.
 
-„Desátá výpověď,“ řekla ta žena. „Spis horního soudu, Jáchymov, 1595. Jméno je pod skvrnou. Paní doktorka mi přepsala jen začátek a konec. Začátek je pod skvrnou a konec je *Víc jsem nezapsala*.“ Podívala se na Sael. „Já to neumím přečíst. Tu ruku jo, ale tu němčinu ne. Ne celou.“
+„Desátá výpověď,“ řekla ta žena. „Spis horního soudu, Jáchymov, 1595. Jméno je pod skvrnou. Paní doktorka mi přepsala, co šlo. Začátek je pod skvrnou a konec je *Víc jsem nezapsala*.“ Podívala se na Sael. „Já to neumím přečíst. Tu ruku jo, ale tu němčinu ne. Ne celou.“
 
 „Já ano,“ řekla Sael.
 
@@ -200,13 +200,13 @@ Přestala psát.
 
 „*Farář říkal, že Bůh dal a Bůh vzal. Babky říkaly, že ji vzali ti z hory a nechali místo ní polínko. Mně nenechali ani polínko.*“
 
-Sael četla dál a hlas měla stejný. Hlídala si ho. Ne ramena. Hlas.
+Sael četla dál a hlas měla stejný. Hlídala si ho víc než ramena.
 
 „*Ať jim vypálí všechny štoly. Ať je vykouří ven. Ať mi ji přivedou na světlo.*“
 
 V archivu bylo ticho. Odvlhčovač hučel. Za zády hřála skála.
 
-Sael ta slova znala. Četla je na jaře 2025 proti oknu v depozitáři a pak doma, v noci, ještě dvakrát. Matka chtěla oheň. Do štol, kde tenkrát žili jiní, ne vysocí, a kde potom na svatého Jana opravdu hořelo. Benedikt to na radě řekl jednou větou. *Pečetili je ohněm.* A ta žena, Markéta, to chtěla. Kvůli dceři, která v té době seděla v lese pod buky a zpívala. V lese se zpívalo vždycky. Sael to věděla od matky.
+Sael ta slova znala. Četla je na jaře 2025 proti oknu v depozitáři a pak doma, v noci, ještě dvakrát. Matka chtěla oheň. Do štol, kde tenkrát žili jiní, ne vysocí, a kde potom na svatého Jana opravdu hořelo. Benedikt to na radě řekl jednou větou. *Pečetili je ohněm.* A Markéta to chtěla. Kvůli dceři, která v té době seděla v lese pod buky a zpívala. V lese se zpívalo vždycky. Sael to věděla od matky.
 
 Sael četla dál.
 
@@ -218,7 +218,7 @@ Pod tím mezera. Kudrlinka na konci, jako by pero začalo psát jiné písmeno a
 
 *
 
-Ta žena seděla a dívala se na sken. Pak na svazek. Pak zase na sken.
+Ta žena seděla a očima přecházela ze skenu na svazek a ze svazku zpátky na sken.
 
 „Bylo jí deset a teď by jí bylo patnáct,“ řekla. „V květnu devadesát pět. Takže před pěti lety. Devadesát. *MDXC.*“
 
@@ -231,8 +231,6 @@ Ta žena seděla a dívala se na sken. Pak na svazek. Pak zase na sken.
 „Ta žena, co to psala, Ilona, věděla, kde Dorota je.“ Neptala se. „Vynechala to. Napsala *Víc jsem nezapsala*, aby bylo vidět, že něco vynechala. A pak ten list polila něčím přes jméno.“
 
 „To nevím,“ řekla Sael. „Jestli schválně. To v knize není.“
-
-Vrbová se na ni podívala.
 
 „A jméno pod skvrnou?“
 
@@ -270,7 +268,7 @@ Ta žena se opřela v židli. Dívala se na Sael přes stůl, přes lampu, přes
 
 „To je totéž,“ řekla. „Jenom z druhé strany.“
 
-Sael na to nic neřekla. Ta věta zněla, jako by ji odněkud znala. Jako by ji neříkala poprvé.
+Sael na to nic neřekla. Ta věta zněla, jako by ji ta žena odněkud znala. Jako by ji neříkala poprvé.
 
 „Proč?“ zeptala se.
 
@@ -314,13 +312,13 @@ Vrbová si sedla. Pomalu. Nepsala.
 
 „Byla tu šťastná?“ zeptala se.
 
-Sael se na ni podívala. Takovou otázku od ní nečekala. Od ženy, která píše, kdy co změřila, na minutu.
+Takovou otázku od ní Sael nečekala. Od ženy, která píše, kdy co změřila, na minutu.
 
 „Kniha to nezapisuje,“ řekla.
 
 „A co víte vy?“
 
-„Že žila. Že měla dceru. Že umřela tady, mezi námi, ne dole ve městě.“ Sael se odmlčela. „A že skládala plátno.“
+„Že žila. Že měla dceru. Že umřela u nás, mezi námi, ne dole ve městě.“ Sael se odmlčela. „A že skládala plátno.“
 
 Ta žena čekala.
 
@@ -346,7 +344,7 @@ Ta žena se dívala na Saelinu dlaň na plátně.
 
 Ta žena kývla. Nezapsala to. Nebo to napsala tak rychle, že to Sael neviděla.
 
-„A W.?“ zeptala se pak. „Ta žena, Ilona, u soudu řekla, že seškrábala rub lékárníkovy knihy. *Byly tam jiné věci než vraždy. Ty jsem nezapsala.* Vy jste ty ruby držela proti oknu. Co tam bylo?“
+„A co bylo na rubu?“ zeptala se pak. „Ta žena, Ilona, u soudu řekla, že seškrábala rub lékárníkovy knihy. *Byly tam jiné věci než vraždy. Ty jsem nezapsala.* Vy jste ty ruby držela proti oknu. Co tam bylo?“
 
 „Nevím,“ řekla Sael. „Neviděla jsem to. Proti oknu je vidět jen to, co zbylo.“
 
@@ -362,7 +360,7 @@ Vrbová zvedla hlavu.
 
 „Kdo?“
 
-Sael se na ni podívala. Teď. Teď to řekne.
+Sael položila dlaně na plátno. Teď. Teď to řekne.
 
 „To vám řeknu,“ řekla Sael, „až mi odpovíte.“
 
@@ -370,9 +368,7 @@ Sael se na ni podívala. Teď. Teď to řekne.
 
 „Na co?“
 
-Sael položila ruce na stůl, po obou stranách svazku. Ne na něj. Vedle.
-
-„Potřebujete důkazy,“ řekla. „Takové, které neověříte jen u mě. Já je mám, nebo vím, kde jsou. Tenhle archiv. Osm set let zápisů o tom, kdo žil pod touhle horou. Ten list s čárkami vedle vašeho kodexu. Svědectví té ženy z roku 1595, celé, v ruce, kterou můžete srovnat s jinými rukami. A skálu. Přístup, kdy budete chtít, s panem Kalinou, s přístroji, s kýmkoli, koho Ostří pustí.“ Odmlčela se. „Všechno to dostanete. Pro posudek, pro sněm, pro cokoli, co pak budete chtít říct.“
+„Potřebujete důkazy,“ řekla. „Takové, které neověříte jen u mě. Já je mám, nebo vím, kde jsou. Tenhle archiv. Osm set let zápisů o tom, kdo žil pod horami. Ten list s čárkami vedle vašeho kodexu. Svědectví té ženy z roku 1595, celé, v ruce, kterou můžete srovnat s jinými rukami. A skálu. Přístup, kdy budete chtít, s panem Kalinou, s přístroji, s kýmkoli, koho Ostří pustí.“ Odmlčela se. „Všechno to dostanete. Pro posudek, pro sněm, pro cokoli, co pak budete chtít říct.“
 
 „A za to?“
 
@@ -404,11 +400,11 @@ Sael čekala, že řekne ne. Nebo že řekne ano. Nebo že začne mluvit o pravd
 
 *
 
-Pak se Sael zeptala na tu druhou věc. Chtěla to nechat být. Nenechala.
+Zbývala ještě ta druhá věc. Sael ji chtěla nechat být. Nenechala.
 
 „Klára Rybová,“ řekla Sael. „Rozená Lindnerová. Karlovy Vary.“
 
-Ta žena se na ni podívala.
+Ta žena zvedla hlavu od sešitu.
 
 „Rada slyšela, že matka má vědkyni,“ řekla Sael. „Ptám se vás.“
 
@@ -416,7 +412,7 @@ Ta žena se na ni podívala.
 
 „Tím jste mi to řekla.“
 
-„Ne,“ řekla. „Řekla jsem vám, že vám to neřeknu. To je rozdíl.“ Zavřela sešit. „Vy byste ho měla znát nejlíp.“
+„Ne,“ řekla. „Řekla jsem vám, že vám to neřeknu. To je rozdíl.“ Zavřela sešit. „Vy byste ten rozdíl měla znát nejlíp.“
 
 Sael na to neměla odpověď. Ta žena na ni ani nečekala.
 
@@ -460,7 +456,7 @@ Zavřela poslední svazek. Svazek ze šestnáctého století zavřela taky, list
 
 Uhladila ho dlaní.
 
-Proč to dělá, nevěděla. Nikdy to nevěděla. Ruka to dělala sama, jako to dělala babiččina ruka a ruka její matky a ruka té, o které stálo v knize jen jméno, rok a jeden malý znak.
+Proč to dělá, nevěděla. Nikdy to nevěděla. Ruka to dělala sama, jako to dělala ruka její matky, babiččina ruka, ruka babiččiny matky a ruka té, o které stálo v knize jen jméno, rok a jeden malý znak.
 
 Sael položila složené plátno na svazek a zhasla lampu. Potmě viděla stejně dobře. Seděla a dívala se na plátno, na čtyři vrstvy látky a na ohyb uprostřed, a čekala, jestli si vzpomene.
 

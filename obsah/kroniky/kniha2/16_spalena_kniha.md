@@ -2,7 +2,7 @@
 
 V sobotu spala do odpoledne a probudila se s pocitem, že na něco zapomněla.
 
-Ruka ji pálila. Pravá, na hřbetu, kde se jí rudý pruh od plechu svítilny v noci nalil do puchýře velkého jako fazole. Propíchla ho jehlou, nechala vytéct a kůži nechala ležet, jak ji to učil Řehoř, protože vlastní kůže je nejlepší obvaz. Vedle puchýře oblouk zubů. Dva půlměsíce s mezerou nahoře vlevo, růžové, zatažené, už ne rána, ještě ne jizva.
+Ruka ji pálila. Pravá, na hřbetu, kde se jí rudý pruh od plechu svítilny v noci nalil do puchýře velkého jako fazole. Propíchla ho jehlou, nechala vytéct a kůži nechala ležet, jak ji to učil Řehoř, protože vlastní kůže je nejlepší obvaz. Výš, na předloktí pod loktem, oblouk zubů. Dva půlměsíce s mezerou nahoře vlevo, růžové, zatažené, už ne rána, ještě ne jizva.
 
 Dvě rány na jedné ruce, pomyslela si. Jednu mi udělal on. Druhou já sobě. Obě kvůli týmž lidem.
 
@@ -40,7 +40,7 @@ Hřebíček. Myrha. A pod tím, blízko, v dechu, který jí foukal do tváře, 
 
 Znala ten pach. Udělala ho.
 
-„Tiše,“ řekl Röhrich. Mluvil skoro bez bramboru v ústech. Rána se mu zahojila dobře. Měla lehkou ruku. „Tiše, paní Ilono. Havíři před domem spí. Já to vím, protože jsem je slyšel chrápat. Kdybyste křičela, probudí se, a já budu muset spěchat. A spěch je špatný pro obě strany.“
+„Tiše,“ řekl Röhrich. Mluvil skoro bez kaše v ústech. Rána se mu zahojila dobře. Měla lehkou ruku. „Tiše, paní Ilono. Havíři před domem spí. Já to vím, protože jsem je slyšel chrápat. Kdybyste křičela, probudí se, a já budu muset spěchat. A spěch je špatný pro obě strany.“
 
 Pustil jí zápěstí. Ilona slyšela, jak něco položil na stůl za její záda. Něco těžkého, co cinklo.
 
@@ -142,8 +142,6 @@ Bartl se vrátil za šedi, mokrý po kolena, bez dechu.
 
 „Neviděla. Byla tma.“ Ilona se dívala na lancetu v dlani. „Cítila jsem ho. Hřebíček a myrhu. A ránu v ústech, vlevo dole, po zubu, který jsem mu vytrhla před týdnem. Slyšela jsem ho. Mluvil se mnou.“ Zvedla oči. „A kousla jsem ho. Do pravé ruky, mezi palec a ukazovák. Až na kost. Bude tam mít oblouk zubů. Horních i dolních. Můj.“
 
-Bartl se na ni díval.
-
 „Jděte pro pana perkmistra,“ řekla Ilona. „Teď. A řekněte mu, ať pošle lidi k Pelikánu, dřív než se lékárník stihne vymluvit, že ho kousl pes.“
 
 *
@@ -170,7 +168,7 @@ Ilona odhrnula plátno. Wehrl se naklonil, a Hesse za ním zvedl svíčku, a Weh
 
 „Já ne.“
 
-„Vy ne.“ Wehrl se na ni podíval. „Bartl vás slyšel. Moje stráž.“
+„Vy ne,“ řekl Wehrl. „Bartl vás slyšel. Moje stráž.“
 
 „Ano.“
 
@@ -206,7 +204,7 @@ Ilona se dívala na Floriana. Na jeho ruku, zarůžovělou po páře, kterou mu 
 
 Florian se na ni díval. Pak se podíval na Wehrla, a pak zpátky na ni.
 
-„Řeknu,“ řekl. „Všechno. Soudek. Středy. Mezka.“ Hlas se mu zlomil a on ho nechal zlomený. „A ten škopek. Ten bednářský, malý, na dvoře. Ten ve čtvrtek ráno po té středě, po Lene, drhnul mistr sám. Pískem. Celé ráno. Mně to nedovolil. Nikdy předtím nic nedrhnul sám.“
+„Řeknu,“ řekl. „Všechno. Soudek. Středy. Mezka.“ Hlas se mu zlomil a on ho nechal zlomený. „A ten škopek. Ten bednářský, malý, na dvoře. Ten ve středu ráno, po té noci, po Lene, drhnul mistr sám. Pískem. Celé ráno. Mně to nedovolil. Nikdy předtím nic nedrhnul sám.“
 
 *
 
@@ -322,7 +320,7 @@ Každou středu. Na stejném řádku.
 
 Pak vybírala.
 
-Šest listů. Věděla to od pondělí, kdy si to poprvé spočítala nad prázdnou kolébkou, a od středy, kdy držela mezi prsty list s *frisch* a obrátila ho.
+Šest listů. Věděla to od pondělí, kdy si to poprvé spočítala nad kolébkou, a od středy, kdy držela mezi prsty list s *frisch* a obrátila ho.
 
 První list: lázeň od svatého Martina do Hromnic. *Bad* a *Oben*, kolik přišlo, kolik šlo nahoru. A peníze Jobstovi, dva krejcary za misku, a za destilaci, a za prášek, a malé částky do Lipska, které se nedaly srovnat s tím, co šlo nahoru. Kdo by to položil vedle jejích lázeňských listů, viděl by, že z lékárny vyjde jen desetina krve, která do ní vteče.
 
@@ -378,7 +376,7 @@ A když odpoví, bude to jako v síni u rady. Zase bude držet cizí papír a d�
 
 A Röhrich, ve sklepě horního úřadu, s rukou, na které má její zuby. Až se ho zeptají, co bylo v té díře, a on uvidí, že *W.* sedí u stolu a nehne pro něj prstem, řekne to. Ne kvůli pravdě. Kvůli odkladu o den. *Z. je starý z olšové rokle. Čtyřicet úst. A les.* A díra se zaplní. Jeho hlasem. A díra se stane tím, čím by byla kniha, jen horší, protože to přijde z úst odsouzeného, kterému bude soud najednou chtít věřit.
 
-Díra se čte víc než cokoli jiného. Věděla to od pátého dne, od Kunzovy truhly, kde ležela přeškrtnutá, ale čitelná věta. Věděla to od Markétina stolu, kde vynechávala bez mezery, aby nebylo vidět, že tam něco bývalo. Kde je díra, tam se lidé dívají. A díra tvaru *Erlengrund* uprostřed řádku, který začíná soudkem a končí perkmistrem, by byla nejčtenějším místem v celém spisu.
+Díra se čte víc než cokoli jiného. Věděla to od zápisu o Lene, kde nechala přeškrtnutou, ale čitelnou větu. Věděla to od Markétina stolu, kde vynechávala bez mezery, aby nebylo vidět, že tam něco bývalo. Kde je díra, tam se lidé dívají. A díra tvaru *Erlengrund* uprostřed řádku, který začíná soudkem a končí perkmistrem, by byla nejčtenějším místem v celém spisu.
 
 A ještě něco. To poslední, co si přiznala, a přiznala si to až s britvou v ruce.
 
@@ -412,7 +410,7 @@ Dvě čáry dolů a dvě nahoru. S kličkou na prostředním hrotu, jak to Röhr
 
 Britva se zastavila nad tou kličkou.
 
-Ilona seděla a dívala se na ni. Věděla, co dělá. Věděla to celou dobu, ale teď to věděla rukou, prsty, jak ví ranhojička, kde je pod kůží tepna. *Tohle je jediné místo na světě, kde stojí, že on věděl, co kupuje.* Ne v jejím sešitu. Tam stálo *Ví*, jejím písmem, a to nic nedokazovalo, protože to bylo její. Tady to stálo Röhrichovou rukou. Jeho číslem. Jeho čtvrtkem. A za chvilku to nebude stát nikde.
+Ilona seděla bez hnutí. Věděla, co dělá. Věděla to celou dobu, ale teď to věděla rukou, prsty, jak ví ranhojička, kde je pod kůží tepna. *Tohle je jediné místo na světě, kde stojí, že on věděl, co kupuje.* Ne v jejím sešitu. Tam stálo *Ví*, jejím písmem, a to nic nedokazovalo, protože to bylo její. Tady to stálo Röhrichovou rukou. Jeho číslem. Jeho čtvrtkem. A za chvilku to nebude stát nikde.
 
 Zítra bude Wehrl sedět u soudu a číst šest listů, ve kterých není. Protože ho z nich vyškrábala ona. Svou rukou. Tou, kterou ji otec naučil škrábat chyby. A ústy, kterými mu v úterý na střeše řekla, že nevybírá.
 
@@ -478,9 +476,9 @@ Slyšela, jak žbluňkla. Víc ne.
 
 Markétinu výpověď nechala nakonec.
 
-Seděla s ní u otevřené pece a držela ji v rukou. Saský papír, horší, přeložený dvakrát, se zažloutlým okrajem tam, kde ho tehdy v pátek držela Markéta mokrou rukou. Ilonino písmo. Ještě to staré, pravé, z doby, kdy pravá ruka nebolela. A dole velký křížek, Markétin, a vedle něj *znamení Markéty Hauptové, vlastní rukou*.
+Seděla s ní u otevřené pece a držela ji v rukou. Saský papír, dobrý, přeložený dvakrát, se zažloutlým okrajem tam, kde ho tehdy v pátek držela Markéta mokrou rukou. Ilonino písmo. Ještě to staré, pravé, z doby, kdy pravá ruka nebolela. A dole velký křížek, Markétin, a vedle něj *znamení Markéty Hauptové, vlastní rukou*.
 
-Přečetla si ji. Ne potichu. Nahlas, šeptem, jak by ji četla Markétě, kdyby tu seděla.
+Přečetla si ji nahlas, šeptem, jak by ji četla Markétě, kdyby tu seděla.
 
 *Tato slova řekla přede mnou Markéta, vdova po Jörgovi Hauptovi…*
 
@@ -508,7 +506,7 @@ Po téhle noci bude pravda jen ta první. *Víc jsem nezapsala.* A nikdo nebude 
 
 *Byla to Markétina slova, celá, a někde na světě musela zůstat celá, i kdyby je nikdy nikdo nečetl.*
 
-To si řekla před deseti dny, když ji zastrčila pod Řehořovy košile. A byla to pravda. Pořád to byla pravda.
+To si řekla před deseti dny, když ji zastrčila pod Řehořovy košile. Pořád to byla pravda.
 
 Někde na světě musela zůstat celá. A to někde byl tenhle dům, ve kterém se v noci otvírají dveře na tři rány bez pauzy.
 

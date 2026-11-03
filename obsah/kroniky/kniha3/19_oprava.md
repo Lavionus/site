@@ -10,7 +10,7 @@ Hana se na něj dívá a nesahá na něj.
 
 Hana podepíše převzetí.
 
-Pak vezme první svazek a otevře ho tam, kde ví, že ho otevře. Šestý březen. Její písmo, nafocené a vytištěné, trochu šedší než ve skutečnosti. Svislá čára pravítkem. Vlevo věta o vzorku 3, kterou zná nazpaměť. *Rozlomeno podél laminy na 2 fragmenty (A – s kontaktní plochou, B – navazující vrstva).* Pod tím podpis. Vpravo nic.
+Vezme první svazek a otevře ho tam, kde ví, že ho otevře. Šestý březen. Její písmo, nafocené a vytištěné, trochu šedší než ve skutečnosti. Svislá čára pravítkem. Vlevo věta o vzorku 3, kterou zná nazpaměť. *Rozlomeno podél laminy na 2 fragmenty (A – s kontaktní plochou, B – navazující vrstva).* Pod tím podpis. Vpravo nic.
 
 V kopii vypadá ještě klidněji než v originále. Na kopii není vidět, jak silně tlačila na pero.
 
@@ -28,7 +28,7 @@ Marisol si sedne naproti ní. Na stole mezi nimi stojí konzervátorčin hrnek s
 
 „Tak se zeptám předem,“ řekne Hana.
 
-Marisol se na ni dlouho dívá. Pak se poprvé za ten den usměje, unaveně, koutkem.
+Marisol se poprvé za ten den usměje, unaveně, koutkem.
 
 „Předem, ne potom,“ řekne. „Konečně.“
 
@@ -58,7 +58,7 @@ Expert, mladý muž s brýlemi, jí podá protokol. Délka 460 mm. Průměr 110,
 
 A pod tím ještě jeden bod. Hana ho čte dvakrát.
 
-*Půlky vzorků 4/II a 5/II (úschova ústavu od 20. 3. 2026, řetězec úschovy nepřerušen) přiloženy k jizvám 4 a 5 v lemu předmětu. Lom, tvar a laminace navazují. Viz fot. 31–44.*
+*Půlky vzorků 4/II a 5/II (úschova ústavu od 18. 3. 2026, řetězec úschovy nepřerušen) přiloženy k jizvám 4 a 5 v lemu předmětu. Lom, tvar a laminace navazují. Viz fot. 31–44.*
 
 Fotky. Bílá půlka vzorku, přiložená do jizvy v lemu jako dílek skládačky. Laminy, tenké proužky krémové a bělejší, které běží z jizvy přes řez do vzorku a pokračují, aniž by se zlomily. Řez bruskou, kolmý, ten, který Hana dělala osmnáctého pod plachtou s Marisol za zády.
 
@@ -72,9 +72,9 @@ Na téhle fotce není nic, co by bylo Hanino. Vzorky odebrala ona, ale od chvíl
 
 „A ještě lůžko. Na Luisově záznamu. Expert říká, že spodní konec v lůžku je souměrný. Že na repliku to nesedí.“ Marisol se dívá na válec, ne na Hanu. „Tak teď máte dvě věci, které nejsou vaše. Ty čtyři milimetry už nikdo nepotřebuje.“
 
-Hana se podívá na válec. Na kapky vody na pěně kolem něj. Na něm samém žádné nezůstávají.
+Na pěně kolem válce jsou kapky vody. Na něm samém žádné nezůstávají.
 
-„Čtyři milimetry jste potřebovali v pátek,“ řekne.
+„Čtyři milimetry jste potřebovali v pátek,“ řekne Hana.
 
 „V pátek ano.“
 
@@ -100,7 +100,7 @@ Chvíli nikdo nic neříká. Na plechovou stříšku dopadne mango ze sousedovy 
 
 „Budete?“
 
-„Uvidíme.“ Pokrčí jedním ramenem. „Marisol říká, že ano. Marisol je jedna.“
+„Uvidíme.“ Pokrčí jedním ramenem. „Marisol říká, že ano. Ale Marisol je jen jedna.“
 
 Hana kývne. Pak mu to řekne. Co napíše, a kdy. Že tam bude šestý březen, tabulka a podpis. Že to bude číst i obec.
 
@@ -114,7 +114,7 @@ Luis poslouchá. Když domluví, dlouho se dívá na mango ve žlábku.
 
 „Jednou stačí.“
 
-Luis se na ni podívá. Pak se poprvé usměje, pomalu, jako by si ten úsměv musel půjčit.
+Luis se poprvé usměje, pomalu, jako by si ten úsměv musel půjčit.
 
 „Viktor mi říkal,“ řekne, „že kdo tam dole má jméno, ten to udělal.“
 
@@ -122,7 +122,7 @@ Luis se na ni podívá. Pak se poprvé usměje, pomalu, jako by si ten úsměv m
 
 „Tak teď tam máš jméno ty.“
 
-Hana neví, co na to říct. Luis to ví taky a nic dalšího neřekne. Dopijí horchatu. Když odchází, Rosa stojí ve dveřích a podá jí ruku. Pak ji neočekávaně obejme, krátce, a hned pustí.
+Hana na to nemá odpověď. Luis to ví a nic dalšího neřekne. Dopijí horchatu. Když odchází, Rosa stojí ve dveřích a podá jí ruku. Pak ji neočekávaně obejme, krátce, a hned pustí.
 
 *
 
@@ -134,9 +134,9 @@ Otevře ji.
 
 Záloha na topení na příští rok. O čtyřicet procent víc než loni. Pod tím vyúčtování za letošní zimu, nedoplatek. Splatný do konce března. Je desátého dubna.
 
-Hana si sedne a čte to celé, i drobným písmem. Pak to položí na stůl, číslem nahoru, jako protokol. Je to záznam. Nic víc.
+Hana si sedne a čte to celé, i drobným písmem, a položí to na stůl, číslem nahoru, jako protokol. Je to záznam. Nic víc.
 
-Honorář z produkce nepřišel a nepřijde. Produkce se distancovala od *vědeckých poradců*. Na účtu má peníze na dva měsíce, když nebude topit. Plat z fakulty jí chodí dál, poloviční, za výuku, kterou nesmí učit. Děkanát to tak napsal. *Do vyjasnění.*
+Honorář z produkce nepřišel a nepřijde. Produkce se distancovala od *vědeckých poradců*. Na účtu má peníze na dva měsíce, když nebude topit. Plat za poloviční úvazek jí chodí dál, i za výuku, kterou nesmí učit. Děkanát to tak napsal. *Do vyjasnění.*
 
 Ona to vyjasní.
 
@@ -168,13 +168,13 @@ Pak napíše tohle:
 
 Přečte si to. Nechá to tam.
 
-*5. Řádně dokumentované vzorky 4 a 5 byly odebrány 18. 3. 2026 podle povolení a rozděleny na místě. Půlky 4/II a 5/II jsou od 20. 3. v úschově ústavu a nezávisle na mně se datují. Do zveřejnění jejich výsledků neuvádím pro kůru na předmětu žádné stáří.*
+*5. Řádně dokumentované vzorky 4 a 5 byly odebrány 18. 3. 2026 podle povolení a rozděleny na místě. Půlky 4/II a 5/II jsou od 18. 3. v úschově ústavu a nezávisle na mně se datují. Do zveřejnění jejich výsledků neuvádím pro kůru na předmětu žádné stáří.*
 
 *6. Ostatní mé údaje (rozměry, fotografie, popis polohy) jsou k dispozici ústavu i každému, kdo je chce ověřit. Po tom, co jsem uvedla v bodě 3, mají jen takovou váhu, jakou jim dají ti, kdo je zopakují.*
 
 Na konec dá jméno.
 
-Dlouho se na to místo dívá. Fakulta jí pozastavila zastupování navenek. Expedice neexistuje. Mohla by napsat jen *Hana Vrbová*. Bez titulů, bez ničeho, jako soukromá osoba. Bylo by to skromné a správné.
+Dlouho váhá. Fakulta jí pozastavila zastupování navenek. Expedice neexistuje. Mohla by napsat jen *Hana Vrbová*. Bez titulů, bez ničeho, jako soukromá osoba. Bylo by to skromné a správné.
 
 Napíše to jinak.
 
@@ -212,11 +212,11 @@ Zavěsí dřív, než Hana stačí odpovědět.
 
 Zveřejní to ve čtvrtek šestnáctého dubna v devět ráno. Na otevřeném repozitáři preprintů, kde to má číslo a datum a kde to nikdo nemůže tiše změnit. Odkaz pošle Marisol, ústavu, laboratoři, producentce v Los Angeles, mexickému portálu, který první napsal *sto tisíc let*, a dvěma českým redakcím. Donu Felipovi pošle španělskou verzi vytištěnou, poštou, protože e-mail nemá.
 
-Pak zavře notebook a jde se projít.
+Zavře notebook a jde se projít.
 
 Je to zvláštní pocit. Ne úleva. Spíš jako po odebrání vzorku. Něco, co bylo součástí celku, je teď venku, zvlášť, v sáčku s číslem. Nedá se to vrátit zpátky. A to místo, odkud se to odebralo, je vidět.
 
-Jde k Svratce a po nábřeží proti proudu, kolem kluků s rybářskými pruty a kolem lavičky, na které spí bezdomovec pod igelitem. Řeka je kalná od jarní vody. Na hladině se točí pěna.
+Jde ke Svratce a po nábřeží proti proudu, kolem kluků s rybářskými pruty a kolem lavičky, na které spí bezdomovec pod igelitem. Řeka je kalná od jarní vody. Na hladině se točí pěna.
 
 Vrátí se v jednu. Telefon nechala doma.
 
@@ -240,7 +240,7 @@ Odpoví večer. Jednou větou, e-mailem, protože datovou schránku neumí.
 
 *Napsala jsem jen to, co je zapsáno v mém deníku a co se týká mé práce; za každé slovo odpovídám a nic stahovat nebudu.*
 
-Pak se podívá na tu větu a připíše druhou, protože je pravdivá a protože by ji Viktor poznal.
+Podívá se na tu větu a připíše druhou, protože je pravdivá a protože by ji Viktor poznal.
 
 *Kámen je kámen.*
 

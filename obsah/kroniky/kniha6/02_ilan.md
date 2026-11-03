@@ -120,7 +120,7 @@ Chvíli přemýšlel. Nedíval se při tom kousek vedle, jak se dívají lidé, 
 
 „A pak?“
 
-„Pak začneš slyšet věci.“ Ukázal bradou ke stropu. „Ventilaci. Celý život jsem ji neslyšel. Tady ji slyším pořád. Má dva tóny, jeden nízký a jeden, co se střídá. Strážné poznám podle kroků. Ta, co tu stojí, šoupe levou nohou.“
+„Pak začneš slyšet věci.“ Ukázal bradou ke stropu. „Ventilaci. Celý život jsem ji neslyšel. Tady ji slyším pořád. Má dva tóny, jeden nízký a jeden, co se zvedá. Strážné poznám podle kroků. Ta, co tu stojí, šoupe levou nohou.“
 
 Strážná u dveří se nepohnula. Nara by přísahala, že se pohnout chtěla.
 
@@ -132,7 +132,7 @@ Strážná u dveří se nepohnula. Nara by přísahala, že se pohnout chtěla.
 
 „Normální. Blbé. Že jdu po chodbě a ona nikde nekončí.“ Odmlčel se. „Ale jsou moje, víš? Ráno se probudím a vím, že se mi něco zdálo, a nikdo mi to nevzal.“
 
-Nara mlčela. Ilan ji nechal mlčet. Nepřidal k tomu nic, ani výčitku, ani vysvětlení. Nemusel.
+Nara mlčela. Ilan ji nechal mlčet. Nepřidal k tomu výčitku ani vysvětlení. Nemusel.
 
 „Ví to táta?“ zeptal se potom.
 
@@ -160,7 +160,7 @@ Nara mlčela. Ilan ji nechal mlčet. Nepřidal k tomu nic, ani výčitku, ani vy
 
 Ilan zvedl hlavu. Poprvé se na ni podíval, jako by nečekal, že to řekne.
 
-„Rozsudek, podle kterého tě odsoudili, nestojí sám,“ řekla. „Stojí na jiném rozsudku. Na Teře. Bez Terry by nebylo členství ani kolektivní trest, ani transport. Kdo chce zastavit transport, musí jít po Teře. Kolektivní trest odporuje ústavě. Každý odpovídá za vlastní čin. Nikdo za čin jiného. To stojí v ústavě od začátku a Terra je s tím v rozporu od začátku. Jen se na to devět set let nikdo nedíval, protože nebylo proč.“
+„Rozsudek, podle kterého tě odsoudili, nestojí sám,“ řekla. „Stojí na jiném rozsudku. Na Teře. Bez Terry by nebylo členství, kolektivní trest ani transport. Kdo chce zastavit transport, musí jít po Teře. Kolektivní trest odporuje ústavě. Každý odpovídá za vlastní čin. Nikdo za čin jiného. To stojí v ústavě od začátku a Terra je s tím v rozporu od začátku. Jen se na to devět set let nikdo nedíval, protože nebylo proč.“
 
 „A teď se podívají.“
 

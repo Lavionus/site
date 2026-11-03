@@ -4,7 +4,7 @@ V sedm ráno má Hana v telefonu krátkou zprávu.
 
 *Jméno doplněno. T. K.*
 
-Otevře server, kde od desátého června leží její balík, a najde tu položku. Zpoždění čtyři celá dvě sekundy po každé skupině zdroje, změřené u skály třetího března. Pod tím, kde stálo *nezávislý radioastronom, jméno bude doplněno*, teď stojí *Tomáš Kalina* a odkaz. Odkaz vede na preprint, který byl zveřejněn o půlnoci.
+Otevře server, kde od desátého června leží její balík, a najde tu položku. Zpoždění čtyři celá dvě sekundy po každé skupině zdroje, změřené u skály v noci na třetího března. Pod tím, kde stálo *nezávislý radioastronom, jméno bude doplněno*, teď stojí *Tomáš Kalina* a odkaz. Odkaz vede na preprint, který byl zveřejněn o půlnoci.
 
 Hana ho nečte. Ještě ne. Zavře telefon a jde se osprchovat, protože ví, že kdyby ho začala číst teď, nepřestala by a přijela by pozdě.
 
@@ -20,7 +20,7 @@ Hana stojí vzadu, u zdi vedle dveří. Nikdo ji nepozná. Nebo pozná a nic ne�
 
 Kalina přijde ve dvanáct nula nula. Ve stejné bundě jako v Brně v únoru, jako na nádraží v Chebu, jako v jídelně penzionu. Pod bundou košile, kterou zjevně koupil včera. Za ním žena z ústavu, která má na starosti tisk, a dva lidé, které Hana nezná. Muž a žena. Spoluautoři. Jeden přiletěl z jižní polokoule, druhá z observatoře v Evropě, a oba vypadají stejně nevyspale jako Kalina.
 
-Kalina si sedne. Upraví si mikrofon. Podívá se do sálu.
+Kalina si sedne. Upraví si mikrofon a přelétne očima sál.
 
 Hanu najde za tři vteřiny. Nekývne. Jen se na ni podívá, krátce, a pak se dívá jinam.
 
@@ -50,7 +50,7 @@ Ptají se dlouho.
 
 Jestli jsou to mimozemšťané. *Nevím, kdo to řídí. Vím, že se to řídí.* Jestli jsou nebezpeční. *Nevím. Nic, co jsem změřil, neříká ani ano, ani ne.* Jestli s nimi někdo mluvil. *Ne. Pokud vím, ne.* Jestli jsou signály zpráva. *Jsou strukturované. To je všechno, co o nich můžu říct. Co znamenají, neumím přečíst a nebudu předstírat, že umím.* Jak dlouho to věděl. *Že je to objekt, od dubna. Že je to řízené, od května, kdy to změřily obě observatoře. Neřekl jsem to dřív, protože jsem si nebyl jistý. Teď jsem si jistý tím, co tady stojí. Ničím víc.*
 
-Pak se zvedne ruka uprostřed sálu. Mladý muž s mikrofonem s logem jednoho zpravodajského kanálu.
+Zvedne se ruka uprostřed sálu. Mladý muž s mikrofonem s logem jednoho zpravodajského kanálu.
 
 „Pane doktore. Ve vašem článku je jedna věc, která není z vesmíru. Pulzy ze země. Z Chebska. Souvisí to?“
 
@@ -70,7 +70,7 @@ V sále to zašumí. Několik hlav se otočí. Hana stojí u zdi a nehne se. Je 
 
 „Je to stejná technologie?“
 
-„Nevím. Vím, že to zařízení poslouchá stejný zdroj jako já. A že na něj reaguje rychleji, než bych to uměl já.“ Kalina se odmlčí. „Paní doktorka Vrbová měřila u toho místa teplotu pramene. Od února do června. Každý den v osm ráno. Měřila dobře. Víc vám k tomu neřeknu, protože víc nevím, a co vím o tom místě, není moje.“
+„Nevím. Vím, že to zařízení poslouchá stejný zdroj jako já. A že na něj reaguje rychleji, než bych to uměl já.“ Kalina se odmlčí. „Paní doktorka Vrbová měřila u toho místa teplotu pramene. Od února do června. Skoro každé ráno v osm. Měřila dobře. Víc vám k tomu neřeknu, protože víc nevím, a co vím o tom místě, není moje.“
 
 Pak ukáže na jinou ruku.
 
@@ -84,13 +84,13 @@ Na chodbě ji dožene žena s visačkou a diktafonem. Středních let, unavená,
 
 Hana se zastaví.
 
-Ví, co by mohla říct. Že ten válec v roce dvacet šest nebyl její podvrh. Že ho odhalila ona. Že oprava byla její. Že od února do června měřila každý den v osm ráno, že její balík zopakovali tři cizí lidé a vyšlo jim to, že o ní dnes mluvil radioastronom se dvěma observatořemi za zády.
+Ví, co by mohla říct. Že ten válec v roce dvacet šest nebyl její podvrh. Že ho odhalila ona. Že oprava byla její. Že od února do června měřila skoro každé ráno v osm, že čtení mřížek z jejího balíku zopakovali tři cizí lidé a vyšlo jim to, že o ní dnes mluvil radioastronom se dvěma observatořemi za zády.
 
 Nic z toho nezmění, co je v titulcích.
 
 „Ano,“ řekne. „Jsem ta, co měřila pramen.“
 
-Žena s diktafonem se na ni podívá. Pak ho vypne.
+Žena s diktafonem ho po chvíli vypne.
 
 „Moje máma bydlí v Chebu,“ řekne. „Říká, že ta pára nad Mlýncem je vidět až od přehrady.“
 
@@ -114,7 +114,7 @@ Chvíli mlčí.
 
 „Viděla jsem to.“
 
-„Udělají z toho něco,“ řekne Kalina. „Ke každému číslu tři falešná. Tohle je číslo, na které budou čekat s deseti.“
+„Udělají z toho něco,“ řekne Kalina. „Ke každému číslu tři falešná. Na tohle budou mít připravených deset.“
 
 „Já vím.“
 
@@ -170,7 +170,7 @@ Vpravo napíše tři otázky. Pod sebe, s mezerou mezi každou, aby bylo kam př
 
 Pak dlouho drží tužku nad papírem. Za oknem na zdi domu naproti zhasne poslední světlo a dvůr je modrý. Někde dole někdo zavře okno, dřevěný úder rámu o rám.
 
-Hana myslí na teplou skálu. Na bledé světlo jako list papíru proti oknu, na devět padajících, z nichž deváté nepřistane. Na kraj shora s horami, které nikdo nezná. Na osm protáhlých strojů a řady lidí s prázdnýma rukama. Na mřížky, které počítají a nikomu neříkají co. A na to, co Sael viděla v lednu poprvé za svůj život a co mnich viděl roku 1172: jedno světlo, které nepadá. Které přichází. Odjinud.
+Hana myslí na teplou skálu. Na bledé světlo ve skále, na devět padajících, z nichž deváté nepřistane. Na kraj shora s horami, které nikdo nezná. Na osm protáhlých strojů a řady lidí s prázdnýma rukama. Na mřížky, které počítají a nikomu neříkají co. A na to, co Sael viděla v lednu poprvé za svůj život a co mnich viděl roku 1172: jedno světlo, které nepadá. Které přichází. Odjinud.
 
 Skála to ukázala před osmi sty lety a nikdo nevěděl komu. Teď to ukazuje každou noc prázdné hoře a jedné kameře, které zbývá místo do září.
 

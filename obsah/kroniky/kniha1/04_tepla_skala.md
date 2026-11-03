@@ -1,6 +1,6 @@
 # 4. Teplá skála
 
-Ješek přišel na grangii v pátek před svítáním a hodil Matějovi do okna komory hroudu sněhu.
+Ješek přišel na grangii v pátek před svítáním a hodil po Matějovi hroudu sněhu.
 
 Matěj se právě vracel z oratoře, kde se sám pomodlil vigilie, a hrouda ho trefila do ramene, když otevíral dveře. Venku byla tma, jen nad horou začínalo šednout. Ješek stál pod oknem, v kápi z pytloviny, s nerozsvíceným kahanem zavěšeným na krku, a dýchal do dlaní.
 
@@ -10,7 +10,7 @@ Matěj se právě vracel z oratoře, kde se sám pomodlil vigilie, a hrouda ho t
 
 „Uvidíš.“ Ješek se rozhlédl po dvoře grangie, kde se v ovčíně ozvala ovce a zase ztichla. „Když chceš do hory, tak teď. Jindy tě tam nedostanu.“
 
-Matěj na něj chvíli hleděl. Od středy se neviděli. Ješek přišel v sobotu domů a matka mu řekla o Sivce a o slatině. Pak přišel na grangii, ale Udalrich ho nepustil dál než k bráně, protože bylo po kompletáři, a Matěj se o tom dozvěděl až ráno. V neděli si u kostela jen kývli. Matěj tehdy ještě nemohl moc mluvit; bolest hlavy se mu vracela, kdykoli se sklonil, jako by si ten pohyb zapamatovala.
+Matěj na něj chvíli hleděl. Od středy se neviděli. O Sivce a o slatině se Ješek dozvěděl v boudě od chlapů ze vsi. Matěj od slatiny moc nemluvil; bolest hlavy se mu vracela, kdykoli se sklonil, jako by si ten pohyb zapamatovala.
 
 „Proč?“ zeptal se.
 
@@ -90,7 +90,7 @@ Teplo z ní šlo jako ze zdi pece druhý den po pečení: ne tak, že by pálilo
 
 „Tady už nepálíme,“ řekl Ješek. „Tři týdny ne. Skála je rozpukaná, jde to želízkem. Oheň se pálil támhle.“ Ukázal dozadu do tmy. „U stého kroku. Tam ti bylo teplo?“
 
-Matěj si vzpomněl na výklenek s koši. Bylo tam teplo, ale méně než tady.
+Matěj si vzpomněl na místo za ohybem, kde si rozepjal plášť. Bylo tam teplo, ale méně než tady.
 
 „Ne tolik.“
 
@@ -116,7 +116,7 @@ Otevřel oči. Nikdo kolem nekopal; Hensel rozvěšoval kahany, ostatní se svl�
 
 „Hm?“
 
-„Ono se to... třese?“
+„Ono se to… třese?“
 
 Ješek, který si právě zavazoval kalhoty provázkem, ztuhl. Pak dokončil uzel.
 
@@ -140,7 +140,7 @@ Matěj se toho dotkl. Voda byla vlažná. Ne teplá jako skála, ale ani studen�
 
 „Neolizuj to,“ řekl Ješek. „Prosím tě.“
 
-Hensel nabral vědro z louže, a když ho zvedl, Matěj viděl, že je plné. Hensel ho odnesl za první rám a vylil do žlabu a vrátil se a nabral další. Pak se podíval na Ješka a něco řekl. Matěj nerozuměl; bylo to německé nářečí, jaké neslyšel ani v klášteře, plné samohlásek, které se protahovaly jako žvýkaná kůže.
+Hensel nabral vědro z louže, a když ho zvedl, Matěj viděl, že je plné. Hensel ho odnesl za první rám a vylil do žlabu a vrátil se a nabral další. Pak něco řekl Ješkovi. Matěj nerozuměl; bylo to německé nářečí, jaké neslyšel ani v klášteře, plné samohlásek, které se protahovaly jako žvýkaná kůže.
 
 „Co říká?“
 
@@ -158,7 +158,7 @@ Hensel zase něco řekl, tentokrát krátce. Matěj to slovo slyšel jasně, pro
 
 „Říká Ortlieb.“
 
-Ješek se na něj prudce podíval.
+Ješek prudce zvedl hlavu.
 
 „Ano,“ řekl. „Říká Ortlieb. A Ortlieb kopal v hoře dvacet let, a ty jsi v hoře půl hodiny. Tak drž kahan a nepleť se mi pod ruce.“
 
@@ -174,7 +174,7 @@ Matěj počítal.
 
 Nemohl si pomoct. Stál s kahanem u levé stěny, kde stékala voda, a ve světle kahanu viděl kapky padat z pukliny ve stropu. Začal je počítat na Otčenáš, jak to dělával jako novic, když se měl modlit a myšlenky mu utíkaly. *Pater noster qui es in caelis.* Jedna, dvě, tři. *Sanctificetur nomen tuum.* Čtyři, pět. Do *amen* jich napočítal dvaadvacet. Pomodlil se znovu, pomaleji, aby si byl jistý. Dvaadvacet. A potřetí, a do třetice jich bylo třiadvacet. Matěj nevěděl, jestli je to tím, že je jich víc, nebo tím, že se modlil pomaleji.
 
-Puklinu si zapamatoval: na levé straně, mezi posledním a předposledním rámem před čelbou. Na posledním rámu byla do sloupku vyřezaná dvě písmena, která Matěj neznal, nějaká Ortliebova značka. Na předposledním křížek, stejný jako u třicátého kroku.
+Puklinu si zapamatoval: na levé straně, mezi posledním a předposledním rámem před čelbou. Na posledním rámu byla do sloupku vyřezaná dvě znamení podobná písmenům, nějaká Ortliebova značka. Na předposledním křížek, stejný jako u třicátého kroku.
 
 „To je tvůj?“ zeptal se a ukázal kahanem na křížek.
 
@@ -192,7 +192,7 @@ Ortlieb nic neřekl. Prošel kolem posledního rámu, kolem Ješka, kolem mladí
 
 „Mnich,“ řekl Ortlieb.
 
-„Mistře Ortliebe, já...“
+„Mistře Ortliebe, já…“
 
 „Ticho.“ Ortlieb to neřekl nahlas. Ani zle. Řekl to tak, jak se říká psovi, který začne štěkat ve špatnou chvíli. Pak se otočil k Henselovi, který stál s plným vědrem u levé stěny, a řekl mu něco v tom protahovaném nářečí. Hensel odpověděl. Ortlieb se zeptal na něco dalšího, ostře, a Hensel zvedl tři prsty zdravé ruky a pak ještě dva, a pak řekl to slovo znovu, s rukou na mokré stěně. *Drückt.*
 
@@ -200,7 +200,7 @@ Ortlieb se díval na stěnu. Na puklinu ve stropu. Na stužku vody. Dlouho. Pak 
 
 Pak se Ortlieb otočil k ostatním. Ke všem: k Henselovi, k Ješkovi, k mladíkovi, a ke dvěma dalším, kteří stáli vzadu u rámu. Mluvil teď česky. Mluvil špatně, s tvrdými souhláskami a se slovy postavenými nesprávně, ale tak, aby mu rozuměl každý.
 
-„Voda je v každé hoře,“ řekl. „V každé. V Míšni byla voda. Voda se vynese, voda odteče. Voda je moje starost. Ne vaše.“ Odmlčel se. „Kdo bude mluvit o vodě, venku, ve vsi, v hospodě, u ženské v posteli, na grangii, komukoli. Kdo bude o vodě mluvit, nedostane mzdu. Ani tuhle sobotu, ani žádnou. Jde pryč a nevrátí se.“ Podíval se na mladíka z vedlejší vsi, který stál nejblíž. „Rozumíš?“
+„Voda je v každé hoře,“ řekl. „V každé. V Míšni byla voda. Voda se vynese, voda odteče. Voda je moje starost. Ne vaše.“ Odmlčel se. „Kdo bude mluvit o vodě, venku, ve vsi, v hospodě, u ženské v posteli, na grangii, komukoli. Kdo bude o vodě mluvit, nedostane mzdu. Ani tuhle sobotu, ani žádnou. Jde pryč a nevrátí se.“ Otočil se k mladíkovi z vedlejší vsi, který stál nejblíž. „Rozumíš?“
 
 Mladík přikývl.
 
@@ -216,11 +216,11 @@ Matěj čekal.
 
 Matěj otevřel ústa a pak je zase zavřel.
 
-Kdyby řekl ano, lhal by. Kdyby řekl ne, Ješek by přišel o mzdu. Viděl to v Ortliebově tváři tak jasně, jako by to bylo napsané: Ortlieb nebude vyhazovat mnicha z kláštera, na jehož půdě stojí grangie, protože na to nemá moc. Vyhodí Ješka.
+Kdyby řekl ano, lhal by. Kdyby řekl ne, Ješek by přišel o mzdu. Viděl to v Ortliebově tváři tak jasně, jako by to bylo napsané: na mnicha z kláštera Ortlieb moc nemá. Vyhodí Ješka.
 
 „Odejdu,“ řekl Matěj. „Hned.“
 
-Ortlieb se na něj ještě chvíli díval. Pak kývl, jako by mu to stačilo, i když Matěj na otázku neodpověděl. Možná to věděl. Možná mu to bylo jedno.
+Ortlieb nakonec kývl, jako by mu to stačilo, i když Matěj na otázku neodpověděl. Možná to věděl. Možná mu to bylo jedno.
 
 „Jeschku,“ řekl. „Doveď ho ven. Pak se vrať. Celou směnu dnes děláš sám na levé straně, u vody.“
 
@@ -240,9 +240,9 @@ Ješek se zastavil u ústí. Byl bez košile, jen s pláštěm hozeným přes ra
 
 „Žádný drak,“ řekl Matěj.
 
-Ješek se na něj podíval a Matěj nevěděl, co v té tváři vidí. Takovou tvář u něj nikdy neviděl. Ješek už nebyl dítě a nebyl ani muž, kterého by Matěj znal.
+Ješek se otočil a Matěj nevěděl, co v jeho tváři vidí. Takovou tvář u něj nikdy neviděl. Ješek už nebyl dítě a nebyl ani muž, kterého by Matěj znal.
 
-„Neřekneš to nikomu,“ řekl Ješek. „O vodě. Slyšíš? Nikomu. Ani převorovi, ani matce, ani tomu svýmu Udalrichovi. Já mám tu mzdu, Mates. Matka má tu mzdu. Kdybys to řekl a Ortlieb se to dozvěděl, a on se to dozví, protože tady se všechno dozví každej...“
+„Neřekneš to nikomu,“ řekl Ješek. „O vodě. Slyšíš? Nikomu. Ani převorovi, ani matce, ani tomu svýmu Udalrichovi. Já mám tu mzdu, Mates. Matka má tu mzdu. Kdybys to řekl a Ortlieb se to dozvěděl, a on se to dozví, protože tady se všechno dozví každej…“
 
 „Neřeknu to nikomu,“ řekl Matěj.
 

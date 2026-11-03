@@ -4,7 +4,7 @@ Vzorky odletí v úterý v devět dvacet.
 
 Hana to ví z fotky, kterou jí Salcedo pošle z Méridy. Pult kurýrní firmy, na něm krabice obalená páskou, vedle ní lístek s čárovým kódem a Salcedův palec, zvednutý do záběru. Pod tím jedno slovo: *Listo.*
 
-Zapíše si to vlevo. *10. 3. 9:20 vzorky 1–3 odeslány kurýrem (E. S., Mérida). Doklad foto.* Pak se podívá na čas na telefonu a zjistí, že spala tři hodiny. Kalina spí ještě teď, pod plachtou na lehátku, s kloboukem přes obličej a se sešitem v kroužkové vazbě na hrudi.
+Zapíše si to vlevo. *10. 3. 9:20 vzorky 1–3 odeslány kurýrem (E. S., Mérida). Doklad foto.* Podle času na telefonu spala tři hodiny. Kalina spí ještě teď, pod plachtou na lehátku, s kloboukem přes obličej a se sešitem v kroužkové vazbě na hrudi.
 
 *
 
@@ -52,13 +52,13 @@ A pod to, po chvíli:
 
 *Kdyby přece – materiál meteoritický? → izotopy kyslíku. Dá se změřit.*
 
-Podívá se na to. Je to druhá věta, která ji znepokojuje víc než ta první. Protože ji napadla sama a protože se jí líbí. Válec bez švu, bez stopy nástroje, z materiálu, který na fotkách vypadá jako keramika a na dotek možná jako kov. Dotek si zatím jen představuje. Kdyby byl z něčeho, co spadlo, z meteoritického železa nebo kamene, bylo by to divné, ale bylo by to vysvětlení. Meteority se dají poznat. Mají v izotopech kyslíku podpis, který na Zemi nevzniká. To je laboratoř, ne legenda. To se dá zjistit.
+Je to druhá věta, která ji znepokojuje víc než ta první. Protože ji napadla sama a protože se jí líbí. Válec bez švu, bez stopy nástroje, z materiálu, který na fotkách vypadá jako keramika a na dotek možná jako kov. Dotek si zatím jen představuje. Kdyby byl z něčeho, co spadlo, z meteoritického železa nebo kamene, bylo by to divné, ale bylo by to vysvětlení. Meteority se dají poznat. Mají v izotopech kyslíku podpis, který na Zemi nevzniká. To je laboratoř, ne legenda. To se dá zjistit.
 
 A přesně proto si to nesmí plést dohromady.
 
 *
 
-Ve čtyři Hana zavolá Marisol. Předtím dvakrát začala psát zprávu, krátkou, jestli by si mohly zavolat, až bude mít Marisol chvíli, a dvakrát ji smazala. V té první stálo *omlouvám se, že ruším*. Pak vytočí číslo rovnou. Nečeká, že to Marisol zvedne.
+Ve čtyři Hana zavolá Marisol. Předtím dvakrát začala psát zprávu, krátkou, jestli by si mohly zavolat, až bude mít Marisol chvíli, a dvakrát ji smazala. V té první stálo *omlouvám se, že ruším*. Nakonec vytočí číslo rovnou. Nečeká, že to Marisol zvedne.
 
 „Volám předem,“ řekne Hana, když to Marisol zvedne. „Ne potom.“
 
@@ -86,7 +86,7 @@ Hana jí to řekne. Story deck, legenda, web z roku 2011, závorka. Přečte jí
 
 „Řekněte jim to.“ A pak, než zavěsí: „Dobře, že jste volala.“
 
-Hana drží telefon ještě chvíli u ucha, i když v něm už nic není. Pak si to zapíše. Vlevo, protože to slyšela. *M. C.: legendu nezná; ověří u etnohistorie. Doporučuje W. A.*
+Hana drží telefon ještě chvíli u ucha, i když v něm už nic není. Zapíše si to. Vlevo, protože to slyšela. *M. C.: legendu nezná; ověří u etnohistorie. Doporučuje W. A.*
 
 *
 
@@ -114,13 +114,13 @@ Do Waltova domu je to čtyřicet minut Luisovým pick-upem. Luis řídí jednou 
 
 Městečko je jen o málo větší než X'Kanlum: dvě ulice místo jedné, benzinová pumpa, škola s nástěnnou malbou jaguára. Walt bydlí na jeho okraji, v nízkém domě s plechovou střechou a se zahradou, ve které kvete mango a pod ním leží na zemi stará kompresorová hlava, zarostlá svlačcem jako pomník.
 
-Walt Ames je vysoký a tak vyhublý, že se zdá, jako by ho drželo pohromadě jen tričko. Kůži má hnědou a zvrásněnou jako starou kůži sedla, vlasy bílé a krátké, v pravém uchu naslouchátko a na rukou jizvy, malé a bílé, jakých má Luis jednu. Oči má světlé, skoro bezbarvé. Podá Haně ruku a nechá ji v ní o vteřinu déle, než je potřeba, jako by ji vážil.
+Walt Ames je vysoký a tak vyhublý, že se zdá, jako by ho drželo pohromadě jen tričko. Kůži má hnědou a zvrásněnou jako staré sedlo, vlasy bílé a krátké, v pravém uchu naslouchátko a na rukou jizvy, malé a bílé, jakých má Luis jednu. Oči má světlé, skoro bezbarvé. Podá Haně ruku a nechá ji v ní o vteřinu déle, než je potřeba, jako by ji vážil.
 
 „Ana,“ řekne. Luis mu o ní zřejmě vyprávěl. „Pojďte dál. Je tam chládek.“
 
 Uvnitř chládek není, jen stín. Jedna velká místnost, na stěně police s knihami až ke stropu, anglické, španělské, několik německých, a mezi nimi cívky šňůry, staré masky a lahvičky s něčím, co vypadá jako vzorky vody. Uprostřed stojí plechová skříň se širokými plochými šuplíky, jakou mívají geodeti a archivy map. Na ní ventilátor, který se otáčí a nikoho neochladí.
 
-Walt jim nalije vodu ze džbánu a sedne si. Pak se na Hanu podívá a čeká.
+Walt jim nalije vodu ze džbánu, sedne si a čeká.
 
 „Luis vám asi řekl, proč jsem tady,“ řekne Hana.
 
@@ -136,11 +136,11 @@ Hana vytáhne notebook. Ukáže mu fotky z minulé středy, ty s kartou, a Walt 
 
 „Tým. Produkce v Los Angeles. INAH.“
 
-„A za týden svět.“ Walt sundá brýle a položí je na stůl. Pak natáhne ruku a sklopí víko notebooku, pomalu, tak opatrně, jako by zavíral oči mrtvému. „Stačí. Děkuju.“
+„A za týden svět.“ Walt sundá brýle, položí je na stůl a natáhne ruku a sklopí víko notebooku, pomalu, tak opatrně, jako by zavíral oči mrtvému. „Stačí. Děkuju.“
 
-Hana neví, co na to říct. Luis se dívá do sklenice.
+Hana mlčí. Luis se dívá do sklenice.
 
-„Měla bych se zeptat ještě na něco jiného,“ řekne nakonec. „Produkce chce do oznámení legendu. O kameni, který spadl z nebe do studny. Když padalo devět světel.“
+„Měla bych se zeptat ještě na něco jiného,“ řekne Hana nakonec. „Produkce chce do oznámení legendu. O kameni, který spadl z nebe do studny. Když padalo devět světel.“
 
 Walt se poprvé zasměje. Krátce, suše, jako když se zlomí suchá větvička.
 
@@ -176,7 +176,7 @@ Kapitola sedm se jmenuje *La piedra que cayó del cielo*.
 
 Vyprávějí starci, že když padalo devět světel, spadl do studny kámen a voda ho uchovala.
 
-Pak dvě strany o tom, co by to mohlo znamenat. Meteority, komety, Venuše. Kosmičtí návštěvníci, s otazníkem. A pak dvě kresby, každá přes celou stranu.
+A dvě strany o tom, co by to mohlo znamenat. Meteority, komety, Venuše. Kosmičtí návštěvníci, s otazníkem. A pak dvě kresby, každá přes celou stranu.
 
 Hana se u první zastaví.
 
@@ -188,7 +188,7 @@ Druhá kresba: krajina shora a v ní osada. Domy nízké a oblé, jako bochníky
 
 Pod oběma stojí stejný popisek. *Según los ancianos.* Podle starců.
 
-Hana se dívá na tu druhou kresbu. Na řady oblých střech.
+Druhá kresba. Řady oblých střech.
 
 Něco se v ní zachytí. Nic určitého. Pocit, jako když na ulici v cizím městě zahlédne tvář a ví, že ji zná, a neví odkud, a než si vzpomene, tvář zmizí za rohem. Jako slovo na jazyku. Je to tak blízko, že se jí na vteřinu zastaví dech, a tak daleko, že neví, kam sáhnout.
 
@@ -210,9 +210,9 @@ Zavře knihu. Na zadní straně obálky opravdu nic. Jen cena, přeškrtnutá tu
 
 *
 
-Pak otevře skříň s mapami.
+Otevře skříň s mapami.
 
-Šuplíky jdou ztuha. Walt vytahuje jeden po druhém a v každém leží listy průsvitné kreslicí fólie, tuhé, zažloutlé na okrajích, každý s rohem popsaným tužkou: jméno cenotu, rok, iniciály. *WA 1984. WA + LE 2009.* Na listech chodby, kreslené tuší a tužkou, s čísly měřických bodů, s hloubkami, s šipkami proudu. Kužely balvanů jako drobné kroužky. Zúžení jako dvě čárky těsně u sebe. Haně se z toho tají dech. Ne proto, co na nich je. Proto, jak to je nakreslené. Čtyřicet let práce v rukopisu jednoho člověka, každá čára vedená tak, jako by se jí za chybu platilo.
+Šuplíky jdou ztuha. Walt vytahuje jeden po druhém a v každém leží listy průsvitné kreslicí fólie, tuhé, zažloutlé na okrajích, každý s rohem popsaným tužkou: jméno cenotu, rok, iniciály. *WA 1984. WA + LE 2009.* Na listech chodby, kreslené tuší a tužkou, s čísly měřických bodů, s hloubkami, se šipkami proudu. Kužely balvanů jako drobné kroužky. Zúžení jako dvě čárky těsně u sebe. Haně se z toho tají dech. Ne proto, co na nich je. Proto, jak to je nakreslené. Čtyřicet let práce v rukopisu jednoho člověka, každá čára vedená tak, jako by se jí za chybu platilo.
 
 Sak Ts'ono'ot má vlastní šuplík. Walt z něj vytáhne čtyři listy a rozloží je přes sebe na stole, aby navazovaly.
 
@@ -224,11 +224,11 @@ Nejdřív jen jednoho. Za hrdlem, kousek před sestupem, odbočuje z chodby čá
 
 Čtyřicet devět až šedesát chybí.
 
-Podívá se na ostatní listy. Na jiné cenoty, z jiných šuplíků, které Walt nechal otevřené. Tady chodba končí uprostřed, jako by ji někdo utnul nůžkami, a přitom čísla bodů za ní pokračují. Tady je síň nakreslená jen obrysem, bez jediné hloubky, jako dům bez oken. Tady chybí celý kus listu, prázdný obdélník, kolem kterého se všechno ostatní kreslí s velkou péčí.
+Projde i ostatní listy. Jiné cenoty, z jiných šuplíků, které Walt nechal otevřené. Tady chodba končí uprostřed, jako by ji někdo utnul nůžkami, a přitom čísla bodů za ní pokračují. Tady je síň nakreslená jen obrysem, bez jediné hloubky, jako dům bez oken. Tady chybí celý kus listu, prázdný obdélník, kolem kterého se všechno ostatní kreslí s velkou péčí.
 
 „Tady jste nemapoval?“ zeptá se a ukáže na odbočku za hrdlem.
 
-Walt se podívá, kam ukazuje. Pak na ni.
+Walt se podívá, kam ukazuje, a pak na ni.
 
 „Co nenakreslíte, to vám nikdo nevykrade,“ řekne.
 
@@ -238,7 +238,7 @@ Je to rozumné. Je to přesně to, co by na jeho místě dělala sama.
 
 Luis se na prázdné místo nedívá. Dívá se na Walta.
 
-„Půjčím vám kopie,“ řekne Walt. „Na pauzáku, z devadesátých let. Originály ne. Originály tady zůstanou.“ Vytáhne z rohu kartonový tubus, otevře ho a vysype na stůl srolované listy, šedé, s modrými čarami světlotisku. „Luis je zná. Kdybyste se v té jeskyni ztratila, Luis vás najde líp než papír.“
+„Půjčím vám kopie,“ řekne Walt. „Světlotisky, z devadesátých let. Originály ne. Originály tady zůstanou.“ Vytáhne z rohu kartonový tubus, otevře ho a vysype na stůl srolované listy, šedé, s modrými čarami. „Luis je zná. Kdybyste se v té jeskyni ztratila, Luis vás najde líp než papír.“
 
 „Doufám, že se neztratím.“
 
@@ -254,7 +254,7 @@ Cestou zpátky Luis mlčí, dokud nepřejedou koleje staré úzkokolejky, která
 
 „A ty?“
 
-Luis se na ni podívá přes rameno. Dlouze, jako tehdy ráno u šňůry.
+Luis se na ni podívá od volantu. Dlouze, jako tehdy ráno u šňůry.
 
 „Já se potápím, protože je to naše studna,“ řekne. „To je něco jiného.“
 
@@ -276,7 +276,7 @@ Ve čtvrtek ráno přijde e-mail od Marisol. Dva řádky, a pod nimi přeposlan�
 
 *Neznám ji ze žádného koloniálního ani etnografického pramene, který bych měla v ruce. Pokud existuje, je mladší než kniha, kterou zmiňuješ, nebo z ní vychází.*
 
-Hana si to přeloží dvakrát, aby měla jistotu. Pak to vytiskne na Salcedově malé tiskárně, která tiskne šedě a ze strany, a přidá k tomu fotku sedmé kapitoly a obě kresby.
+Hana si to přeloží dvakrát, aby měla jistotu. Vytiskne to na Salcedově malé tiskárně, která tiskne šedě a ze strany, a přidá k tomu fotku sedmé kapitoly a obě kresby.
 
 Videohovor je v jedenáct. Producentka sedí v Los Angeles v kanceláři s bílou stěnou a s rostlinou v rohu, která je možná umělá, a je u ní deset dopoledne, a je usměvavá a čerstvá a v ruce drží kelímek s kávou, na kterém je napsané její jméno. Viktor sedí vedle Hany pod plachtou, s notebookem na bedně, a kolem jejich hlav krouží jedna moucha, kterou nikdo z nich neodežene.
 
@@ -288,7 +288,7 @@ Producentka kývá. Celou dobu kývá, s vlídným a pozorným výrazem, a Hana 
 
 „This is so valuable, Hana,“ řekne, když Hana domluví. „Really. Thank you.“
 
-Pak vysvětlí, že nikdo neříká, že je legenda pravdivá. Že legenda je *framing*. Rámec. Že lidé nechtějí slyšet o uran-thoriové metodě, dokud nevědí, proč by o ní měli chtít slyšet. Že legenda je dveře. A že už je stejně na internetu, takže ji tam nedávají oni, jen ji *acknowledge*. Berou na vědomí.
+Vysvětlí, že nikdo neříká, že je legenda pravdivá. Že legenda je *framing*. Rámec. Že lidé nechtějí slyšet o uran-thoriové metodě, dokud nevědí, proč by o ní měli chtít slyšet. Že legenda je dveře. A že už je stejně na internetu, takže ji tam nedávají oni, jen ji *acknowledge*. Berou na vědomí.
 
 „Řekněme tedy, že pochází z knihy z roku 1978,“ řekne Hana.
 
@@ -328,7 +328,7 @@ Viktor se na ni podívá s úsměvem, který se snaží být nevinný.
 
 „Ríša mi ukazoval tvůj deník. Fotky. Kvůli archivu.“ Pokrčí rameny. „Psala jsi tam izotopy. Líbilo se mi to. Řekl jsem to v LA a líbilo se to i jim.“
 
-Hana chvíli nemluví. Pravá půlka stránky. Myslela si, že ji Ríša fotí kvůli pojišťovně.
+Hana chvíli nemluví. Pravá půlka stránky. Myslela si, že deník Ríša fotí kvůli pojišťovně.
 
 „To byla otázka,“ řekne. „Ne tvrzení.“
 
@@ -338,9 +338,9 @@ Odejde telefonovat. Hana se dívá na tubus s Waltovými mapami, opřený o nohu
 
 *
 
-V jedenáct padesát osm a v šestnáct čtyřicet střílí lom. Dvakrát. Poprvé silně. Hana stojí u cenotu, když přijde, a dívá se, jak se ze severu zvedá mléko. Rosa vyjde z kuchyně pod plachtou s utěrkou přes rameno, podívá se na hodinky a zase zajde dovnitř. Večer Hana zjistí, že si Rosa v kalendáři u čtvrtka nakreslila malý křížek. Pátý talíř.
+V jedenáct padesát osm a v šestnáct čtyřicet střílí lom. Dvakrát. Poprvé silně. Hana stojí u cenotu, když přijde první, a dívá se, jak se ze severu zvedá mléko. Rosa vyjde z kuchyně pod plachtou s utěrkou přes rameno, podívá se na hodinky a zase zajde dovnitř. Večer Hana zjistí, že si Rosa v kalendáři u čtvrtka nakreslila malý křížek. Pátý talíř.
 
-Kalina přijde k jejímu stolu v jedenáct večer, po další noci měření, se sešitem v ruce. Sedne si naproti a otevře ho na stránce, kde jsou tři sloupce čísel, tužkou, úhledně, a pod nimi čtvrtý.
+Kalina přijde k jejímu stolu v jedenáct večer se sešitem v ruce. Celý den v něm přepočítával čísla z další noci měření. Sedne si naproti a otevře ho na stránce, kde jsou tři sloupce čísel, tužkou, úhledně, a pod nimi čtvrtý.
 
 „Pořád šest,“ řekne.
 
@@ -352,7 +352,7 @@ Kalina přijde k jejímu stolu v jedenáct večer, po další noci měření, se
 
 „Tak ji napíšete. Plus minus šest.“
 
-Hana se na něj dívá. Kalina se dívá na sešit.
+Kalina se dívá na sešit.
 
 „Viktor mluvil o meteoritu,“ řekne potom, jako by to s tím souviselo. Možná souvisí. „U večeře. Ptal se, jestli se meteority dají najít přijímačem.“
 
@@ -362,7 +362,7 @@ Hana se na něj dívá. Kalina se dívá na sešit.
 
 Odejde ke svým bednám. Hana zůstane u stolu. Otevře deník na čisté straně, udělá svislou čáru a vlevo zapíše dva odstřely. Časy, síla, zákal. Rosin pátý talíř. Pak Kalinovu větu, protože ji slyšela: *Systematickou chybu nezprůměrujete. Musíte ji najít. (T. K.)*
 
-Vpravo nenapíše nic. Pravá půlka teď patří Ríšovi a Los Angeles, napadne ji, a hned se za tu myšlenku zastydí. Deník je pořád její. Jen ví, kdo ho čte.
+Vpravo nic. Pravá půlka teď patří Ríšovi a Los Angeles, napadne ji, a hned se za tu myšlenku zastydí. Deník je pořád její. Jen ví, kdo ho čte.
 
 Než ho zavře, sáhne do batohu pro pero a nahmatá místo něj tvrdý hřbet Anayovy knihy. Vytáhne ji. Otevře se sama na sedmé kapitole, protože ji tam včera u Walta nechala otevřenou příliš dlouho.
 
@@ -370,4 +370,4 @@ Oblé domy. Řady.
 
 Dívá se na ně, ale tentokrát se nic nezachytí. Jsou to jen čáry tuší na zažloutlém papíře, který voní jako všechny staré knihy na všech trzích světa. Zavře ji a zastrčí zpátky do batohu, mezi deník a tabulku z předloktí, ke dvěma věcem, které zatím nikomu nedala do ruky.
 
-Generátor o půlnoci zhasne. Z cenotu stoupají netopýři.
+Generátor o půlnoci zhasne. Batoh si Hana vezme s sebou do stanu.

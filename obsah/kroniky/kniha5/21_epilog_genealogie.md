@@ -2,7 +2,7 @@
 
 Poslední noc, kdy kniha ležela v Kozí uličce, nepršelo.
 
-Sael otevřela okno do dvora. Srpen byl suchý a teplý a do dílny šla vůně z pekárny o dva domy dál, kde se začínalo péct ve dvě. Nikdy si jí nevšimla. Dvacet dva let tu pracovala s okny zavřenými kvůli prachu a vlhku a kvůli papíru. Dnes papíru už nic nehrozilo. Zítra v devět si pro něj přijdou.
+Sael otevřela okno do dvora. Srpen byl suchý a teplý a do dílny šla vůně z pekárny o dva domy dál, kde se začínalo péct ve dvě. Nikdy si jí nevšimla. Dvaadvacet let tu pracovala s okny zavřenými kvůli prachu a vlhku a kvůli papíru. Dnes papíru už nic nehrozilo. Zítra v devět si pro něj přijdou.
 
 Jedenáct balíků stálo u dveří, v krabicích z nekyselé lepenky, které sama nařezala a slepila podle míry každého svazku. Na každé visačka jejím písmem a pod ní druhá, archivní, s číslem deponátu, kterou tam ve čtvrtek nalepila Šindelářová. Dvě písma na jedné krabici. Sael si toho všimla až potom, co Šindelářová odešla, a chvíli se na to dívala.
 
@@ -42,17 +42,17 @@ Na stole ležela kopie ze záznamu rady sítí, který jí poslal Lorenz. Dvě s
 
 Vedle záznamu dopis od Kláry. Ne dopis. Lístek z bloku, poslaný poštou, v obálce s Klářiným písmem. Na něm jediná věta a podpis. *Narodil se 2. 2. 2030. Podruhé jsem neutekla. Klára Rybová.*
 
-Sael ten lístek dostala ve středu. Rozuměla mu hned. Klára jí neposílala nic k zapsání. Klára jí posílala, co se má zapsat, a podepsala se.
+Sael ten lístek dostala ve středu. Rozuměla mu hned. Klára ji neprosila, aby něco zapsala. Sdělovala jí, co v knize má stát, a podepsala se.
 
 Sael ten řádek napsala. K Jonášovi, kterého zapsala v únoru o pár řádků výš, na kraj, drobně, ptačím písmem. *Matka řekla: Podruhé jsem neutekla.* A vedle latinkou, jak se v knize píšou ti, kdo mluví zvenku: *Klára Rybová, sama.*
 
-Pak se vrátila na poslední stránku.
+Vrátila se na poslední stránku.
 
 Chvíli se dívala na lednový řádek. Na světlo ze čtrnáctého ledna, zapsané pod Václavovým úmrtím, protože jiné místo kniha neměla. Tehdy, tu noc, když položila pero, pomyslela si, že kniha zapisuje, co se stalo, a co to znamená, má vědět ten, kdo ji bude číst. A že tentokrát neví, kdo to bude.
 
 Teď to věděla.
 
-Šindelářová, která bude krabice otvírat jen s někým dalším u stolu a každé otevření zapíše do sešitu s číslem deponátu. Úřednice z Brna, která bude psát, co se kdy předalo. Lada, která číst neumí a chce u toho být. Agnes, která přečte Benediktovi po telefonu, co bude chtít slyšet. Klára, která si jednou přijde pro svůj list a možná se zeptá i na Jonášův řádek. A ruce, které Sael nezná a které jednou zapíšou narození pod horou, až se tam někdo vrátí, nebo nahoře, kde se teď lidé rodí poprvé.
+Šindelářová, která bude krabice otvírat jen s někým dalším u stolu a každé otevření zapíše do sešitu s číslem deponátu. Úřednice z Brna, která bude psát, co se kdy předalo. Lada, která tu knihu číst neumí a chce u toho být. Agnes, která přečte Benediktovi po telefonu, co bude chtít slyšet. Klára, která se jednou možná přijde zeptat na Jonášův řádek. A ruce, které Sael nezná a které jednou zapíšou narození pod horou, až se tam někdo vrátí, nebo nahoře, kde se teď lidé rodí poprvé.
 
 Nebude to jeden čtenář. Bude jich víc, než kdy kniha měla. A žádný z nich nebude sám.
 
@@ -71,7 +71,7 @@ Sael namočila pero.
 
 *Merin předala knihu radě. Jméno Merin se nepředává.*
 
-Podívala se na to. Ptačí stopy, rovné, pomalé. Nic se nezachvělo.
+Ptačí stopy, rovné, pomalé. Nic se nezachvělo.
 
 Pak ruka udělala, co dělala šedesát let.
 
@@ -79,7 +79,7 @@ Pak ruka udělala, co dělala šedesát let.
 
 Sael tah zastavila v polovině.
 
-Pero zůstalo na papíře. Inkoust se pod hrotem rozpíjel do malé kulaté tečky. Sael se na ni dívala a cítila, jak jí srdce bije pomalu a těžce, jako tlukot ve skále, který k nim tu noc nesla voda.
+Pero zůstalo na papíře. Inkoust se pod hrotem rozpíjel do malé kulaté tečky. Sael nad ní seděla a cítila, jak jí srdce bije pomalu a těžce, jako tlukot ve skále, který k nim tu noc nesla voda.
 
 Pak z toho tahu udělala něco jiného.
 
@@ -89,7 +89,7 @@ Ruka ohnula tah doleva. Pak druhá stopa. Pak třetí.
 
 *Sael.*
 
-Pod znakem úřadu tam nestálo nic. Znak úřadu tam nestál vůbec. Jen jméno, napsané rukou, která šedesát let psala něco jiného. Jiný tah. Stejná ruka.
+Znak úřadu tam nestál vůbec. Jen jméno, napsané rukou, která šedesát let psala něco jiného. Jiný tah. Stejná ruka.
 
 Sael položila pero.
 
@@ -113,7 +113,7 @@ Když inkoust zaschl, vzala z police čisté plátno. Složila ho napůl. Ješt�
 
 Položila ho na stránku. Na řádky z té noci, na *nepředává*, na tři stopy a na latinku na kraji. Jako se pokládá plátno na svazek, aby se nezaprášil.
 
-Nevěděla, proč se to tak dělá. Nevěděla to ani teď. Věděla, pro koho to dělá poprvé, v dubnu. Pro Dorotu.
+Nevěděla, proč se to tak dělá. Nevěděla to ani teď. Věděla jen, pro koho to dělá. Poprvé to věděla v dubnu: pro Dorotu.
 
 Dnes to dělala pro ty, kdo tu knihu otevřou po ní. Pro ruce, které neznala. Pro ty, kdo se podepíší jménem.
 
@@ -121,7 +121,7 @@ Zavřela desky.
 
 *
 
-Ve čtyři ráno se za oknem začalo rozednívat. Pekárna voněla nejvíc. Někde nad střechami přeletělo letadlo, vysoko, s blikajícím světlem, a Sael ho sledovala, dokud nezmizelo za komínem.
+V pět ráno se za oknem začalo rozednívat. Pekárna voněla nejvíc. Někde nad střechami přeletělo letadlo, vysoko, s blikajícím světlem, a Sael ho sledovala, dokud nezmizelo za komínem.
 
 Myslela na Kalinu. Za tři dny bude mluvit. Tadeáš jí to řekl a Hana to potvrdila jednou větou, víc nemohla. *Řekne, co změřil. Nic víc.* Sael nevěděla, co změřil. Věděla jen to, co stálo v knize pod Václavovým úmrtím. *Jedno světlo přichází.* A vedle latinkou slovo, pro které jejich písmo nemělo znak.
 
@@ -143,6 +143,6 @@ Sael si sedla naproti.
 
 „Jménem,“ řekla.
 
-Javor chvíli mlčel. Pak kývl, pomalu, jako starý strom ve větru, který už není silný.
+Javor kývl až po chvíli, pomalu, jako starý strom ve větru, který už není silný.
 
 „Tak to ti zůstane,“ řekl.

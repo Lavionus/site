@@ -12,7 +12,7 @@ Sníh ležel na střeše prvního domu, na plachtách nad druhým a třetím, na
 
 „Sám?“ zeptala se Hela.
 
-„Sám.“ Eren se díval do ohně. Pak se podíval na ně. Na každého zvlášť. „Budu tam mluvit. Za vás. Jestli mi to dovolíte.“
+„Sám.“ Eren zvedl oči od ohně. Prohlédl si je, každého zvlášť. „Budu tam mluvit. Za vás. Jestli mi to dovolíte.“
 
 Ticho. Venku spadl ze střechy kus sněhu.
 
@@ -46,7 +46,7 @@ Eren prošel kotlem, kolem beden, kolem Sefina prázdného ohniště, až na kra
 
 „Jdu nahoru,“ řekl Eren. „Mluvit s Tal.“
 
-Orrin se na něj díval. „Za koho?“
+Orrin si ho změřil. „Za koho?“
 
 „Za ty, kdo mi to dovolili.“
 
@@ -84,7 +84,7 @@ Tio pokrčila rameny. „On to bude vědět,“ řekla.
 
 *
 
-Pod terasou, na kraji suti, ležel plochý kámen. Ten, na který tehdy první den položil nůž.
+Pod terasou, na kraji suti, ležel plochý kámen. Ten, na který tehdy první den v kotli položil nůž.
 
 Eren vytáhl nůž zpoza pasu a položil ho na něj. Narovnal ho, čepelí od sebe.
 
@@ -98,11 +98,11 @@ Stál. Mráz mu lezl přes boty do prstů a z prstů do kotníků. Po čase pře
 
 Za sebou slyšel kroky. Ohlédl se.
 
-Kaj. Šel po sněhu od rokle, sám, s rukama v podpaží. Zastavil se dole pod sutí, kus za Erenem, a podíval se nahoru na oštěpy. Pak si sedl taky. Do sněhu. Nic neřekl.
+Kaj. Šel po sněhu od rokle, sám, s rukama v podpaží. Zastavil se dole pod sutí, kus za Erenem, zvedl oči k oštěpům a sedl si taky. Do sněhu. Nic neřekl.
 
 Eren se otočil zpátky k terase.
 
-Seděli tak oba. Eren na kraji suti, Kaj pod ním. Nevěděl, jak dlouho. Dost dlouho na to, aby přestal počítat. To se mu nestalo od přistání.
+Seděli tak oba. Eren na kraji suti, Kaj pod ním. Dost dlouho na to, aby přestal počítat. To se mu nestalo od přistání.
 
 Pak se v ústí jeskyně pohnul stín a vyšel Ru.
 
@@ -114,13 +114,13 @@ Eren to viděl, už když chlapec scházel po suti. Šel pomalu, ne poskakoval j
 
 Eren řekl Ikkuovo jméno.
 
-Ru kývl. Pak ukázal nahoru. Na terasu. Na ústí.
+Ru kývl a ukázal nahoru. Na terasu. Na ústí.
 
 „Tal,“ řekl.
 
 Eren vstal. Nohy ho nechtěly nést a první krok do suti udělal na kolena. Ru počkal. Nepomohl mu. Počkal, až se zvedne sám.
 
-Muži na kraji terasy ustoupili. Mladý lovec poslední. Když Eren šel kolem, mladý lovec se na něj díval a hrot jeho oštěpu ho sledoval, celou cestu přes terasu, až k ústí.
+Muži na kraji terasy ustoupili. Mladý lovec poslední. Když Eren šel kolem, mladý lovec ho nespouštěl z očí a hrot jeho oštěpu ho sledoval, celou cestu přes terasu, až k ústí.
 
 *
 
@@ -134,7 +134,7 @@ V zadní části síně, kde se strop snižoval, byla řada plochých kamenů. Z
 
 Před zdí, na vnitřní straně kamenů, stála Dabra.
 
-Musela projít dolem, kudy jí odvalili kámen a zase ho přivalili. Eren to poznal podle čerstvé rýhy v prachu. Stála tam s dlaní nad očima, i když tu světlo bylo jen od ohně, a dívala se na něj.
+Musela projít otvorem dole, kudy jí odvalili kámen a zase ho přivalili. Eren to poznal podle čerstvé rýhy v prachu. Stála tam s dlaní nad očima, i když tu světlo bylo jen od ohně, a dívala se na něj.
 
 Ru ukázal na místo u ohně. Naproti Tal. Na vnější straně kamenů.
 
@@ -144,9 +144,9 @@ Pár kroků od něj, u stěny, stály opřené oštěpy. Deset, dvanáct. Ve vn�
 
 *
 
-Nevěděl, jak začít. Měl to v hlavě, celé, ve správném pořadí, jako tehdy na bedně. A jako tehdy z něj nejdřív vyšlo něco jiného.
+Měl to v hlavě, celé, ve správném pořadí, jako tehdy na bedně. A jako tehdy z něj nejdřív vyšlo něco jiného.
 
-Podíval se na Ikkua. Pak natáhl ruce k ohni. Dlaněmi nahoru. Byly čisté. Myl je v potoce tak dlouho, že kůže na prstech zbělela. A přesto se na ně Tal dívala tak, jako by čisté nebyly.
+Oči mu sklouzly k Ikkuovi. Natáhl ruce k ohni. Dlaněmi nahoru. Byly čisté. Myl je v potoce tak dlouho, že kůže na prstech zbělela. A přesto se na ně Tal dívala tak, jako by čisté nebyly.
 
 „Dorn,“ řekl Eren.
 
@@ -156,11 +156,11 @@ Ru to nepřekládal. Jméno se nepřekládá. Tal kývla. Věděla.
 
 Ru přeložil. Pomalu, po kouscích. Tal poslouchala a nedívala se na Rua. Dívala se na Erena.
 
-Pak řekla něco. Krátce.
+Řekla něco. Krátce.
 
-„Ona říká, že to ví,“ řekl Ru. Jeho čeština byla Tiina: slova, která se naučil od šestileté holky, a mezi nimi místní, kde mu česká slova chyběla. „Že to věděla včera. Že ty jsi byl dole u domů. Že Ammu běžela s tebou.“
+„Ona říká, že to ví,“ řekl Ru. Naši řeč měl od Tio: slova, která se naučil od šestileté holky, a mezi nimi místní, kde mu naše slova chyběla. „Že to věděla včera. Že ty jsi byl dole u domů. Že Ammu běžela s tebou.“
 
-„A přesto –“
+„A přesto…“
 
 „A přesto,“ řekl Ru. Nevěděl, co to slovo znamená, a zopakoval ho po něm jen tak. Pak přeložil, co dodala Tal. „Ona říká: Ikku je mrtvý. Ty ne. Dorn ne.“
 
@@ -182,17 +182,17 @@ Ru přeložil. Tal se podívala na víčko. Řekla něco a skoro se usmála.
 
 Tal se přestala usmívat. Kývla.
 
-Pak Eren ukázal ke stěně. Na oštěpy, opřené u stěny vnější síně. Pak na sebe. Na svůj prázdný pas, kde nebyl nůž. Ven, k plochému kameni pod sutí, kde nůž ležel.
+Eren ukázal ke stěně. Na oštěpy, opřené u stěny vnější síně. Pak na sebe. Na svůj prázdný pas, kde nebyl nůž. Ven, k plochému kameni pod sutí, kde nůž ležel.
 
 „V jeskyni ne,“ řekl. „Žádné. Ani naše. Ani vaše.“
 
-Ru zaváhal. Podíval se na Tal, pak na oštěpy. Pak přeložil, a hlas mu přitom ztichl.
+Ru zaváhal. Očima přeběhl od Tal k oštěpům. Pak přeložil, a hlas mu přitom ztichl.
 
-Tal se dlouho dívala na stěnu s oštěpy. Pak se podívala na Ikkua. Na Ammu, která držela jeho ruku. Pak zase na oštěpy.
+Tal se dlouho dívala na stěnu s oštěpy. Pak na Ikkua. Na Ammu, která držela jeho ruku. Pak zase na oštěpy.
 
 Řekla jedno slovo, tiše. Ne Ruovi. Do síně.
 
-Dva muži, kteří stáli u ústí, se pohnuli. Šli ke stěně, vzali oštěpy, po dvou, po třech, a vynesli je ven, na terasu. Poslední vzal ten mladý lovec. Svůj. Držel ho dlouho v ruce. Díval se na Erena. Pak ho vynesl taky a postavil ho venku ke skále, hrotem nahoru.
+Dva muži, kteří stáli u ústí, se pohnuli. Šli ke stěně, vzali oštěpy, po dvou, po třech, a vynesli je ven, na terasu. Poslední vzal ten mladý lovec. Svůj. Držel ho dlouho v ruce, oči na Erenovi, a pak ho vynesl taky a postavil ho venku ke skále, hrotem nahoru.
 
 Eren věděl, co to Tal stálo. Byla to jejich síň. Jejich oheň. Jejich mrtvý. A ona právě nechala vynést zbraně ze síně kvůli pravidlu, které navrhl cizinec s čistýma rukama.
 
@@ -200,7 +200,7 @@ Eren věděl, co to Tal stálo. Byla to jejich síň. Jejich oheň. Jejich mrtv�
 
 Třetí věc ukázal na dřevě.
 
-U stěny ležela hromada polen, srovnaná, aby se nesesula. Jeho dřevo. Dvanáct náručí denně. Vzal jedno poleno a položil ho vedle víčka. Pak ukázal na sebe a na hromadu. Pak na ženy u druhého ohně, na stěny, které nebyly vidět, ale které stály v údolí, a udělal rukama pohyb pletení. Před, za, před. Pak ukázal ven, k horám, a zvedl ruku, jako by hodil oštěp. A pak, pomalu, na jídlo. Na pruhy sušeného masa, které visely na šňůrách pod stropem.
+U stěny ležela hromada polen, srovnaná, aby se nesesula. Jeho dřevo. Dvanáct náručí denně. Vzal jedno poleno, položil ho vedle víčka a ukázal na sebe a na hromadu. Pak na ženy u druhého ohně, na stěny, které nebyly vidět, ale které stály v údolí, a udělal rukama pohyb pletení. Před, za, před. Ukázal ven, k horám, a zvedl ruku, jako by hodil oštěp. A pak, pomalu, na jídlo. Na pruhy sušeného masa, které visely na šňůrách pod stropem.
 
 „Podle práce,“ řekl. „Kdo loví. Kdo nosí. Kdo staví. Podle toho.“ Zarazil se. „Spolu. Ne jeden. Ne já, ne Orrin, ne Haro. Spolu se řekne, kolik.“
 
@@ -242,7 +242,7 @@ Ru chvíli stál. Pak se mu rozjasnil obličej. Obrátil se k Tal a řekl něco 
 
 „Ano.“
 
-Tal se dívala na tři kameny. Pak se podívala na Erena a řekla něco, pomalu, každé slovo zvlášť.
+Tal se dívala na tři kameny. Pak zvedla oči k Erenovi a řekla něco, pomalu, každé slovo zvlášť.
 
 Ru to přeložil a hlas se mu přitom třásl.
 
@@ -252,13 +252,13 @@ Ru to přeložil a hlas se mu přitom třásl.
 
 „Kdy?“
 
-Eren se díval do ohně. Dorn byl dole, u ohně pod teplou skálou, s nožem za pasem. S Haroem, který mu včera položil ruku na rameno. S Orrinem, který řekl *proto nikdo*.
+Eren se díval do ohně. Dorn byl dole, u ohně pod teplou skálou, s nožem za pasem. S Harem, který mu včera položil ruku na rameno. S Orrinem, který řekl *proto nikdo*.
 
 „Nevím,“ řekl. „Až ho přivedu. Nevím, jestli to dokážu.“
 
 Ru to přeložil přesně. Eren to poznal podle toho, jak se Tal napřímila.
 
-Pak Tal ukázala ven. Na terasu, kde u skály stál oštěp mladého lovce, hrotem nahoru. A řekla něco.
+Tal ukázala ven. Na terasu, kde u skály stál oštěp mladého lovce, hrotem nahoru. A řekla něco.
 
 „Ona se ptá,“ řekl Ru, „jestli on taky.“
 
@@ -284,7 +284,7 @@ Přistoupila k řadě kamenů, až těsně, tak, že stála na samé hranici, a 
 
 Eren se naklonil. Dabra mu vzala pravou ruku do své, tvrdé a teplé, tak jak ji tehdy držela v chodbě u mazanice. Obrátila ji hřbetem nahoru, k ohni. K rudému pruhu, který se loupal.
 
-Dívala se na něj. Pak pustila jeho ruku a udělala pohyb.
+Pustila jeho ruku a udělala pohyb.
 
 Prsty sevřené, a pak je prudce rozevřela. Ne jako ti cizí od severu, s dlaněmi proti sobě. Jednou rukou, rychle, jako záblesk. A pak ukázala dolů. Pod zem, pod síň, pod chodbu. Tam, kde se soutěska zužovala a kde pod skalním žebrem ležela ve skále hlína.
 
@@ -326,7 +326,7 @@ Tuhle pojistku nikdy neobcházel. Nikdy ho to ani nenapadlo.
 
 Natáhl ruku. Vzal dva kameny z kruhu. Ten Talin a ten Dabřin. Kámen pro sebe nechal ležet.
 
-Talin kámen položil Tal do dlaně. Pak ukázal na sebe, na dlouhý tvar, delší než předloktí. Tubus. Řezák. A ukázal na Tal.
+Talin kámen položil Tal do dlaně. Pak ukázal na sebe a rukama naznačil dlouhý tvar, delší než předloktí. Tubus. Řezák. A ukázal na Tal.
 
 Dabřin kámen podal přes řadu kamenů Dabře. Ta ho vzala. Pak Eren udělal rukama malý tvar, hranatý, velký jako dlaň. Článek. To, co dává ohni život. A ukázal na Dabru.
 
@@ -342,7 +342,7 @@ Spojil dlaně. Tal a Dabra. Obě ruce naráz. Pak je rozdělil a jednu dlaň zve
 
 Ru překládal dlouho. Musel to říct dvakrát a pak to Tal sama zopakovala Dabře tou starou řečí, s rukama, a Dabra poslouchala s kamenem v dlani.
 
-Pak se Tal podívala na Erena a řekla něco, co Ru nepřekládal hned.
+Tal se obrátila k Erenovi a řekla něco, co Ru nepřekládal hned.
 
 „Ona se ptá,“ řekl nakonec, „kde je ten druhý kus. Ten malý. Ten pro ni.“ Kývl k Dabře.
 
@@ -356,9 +356,9 @@ Ru to přeložil. Tal se nepohnula. Dabra ano. O krok zpátky, od řady kamenů.
 
 „Ano.“
 
-Ru se na něj díval. Nevěděl, jestli to *ano* má přeložit. Tal mu řekla jedno slovo, ostře, a Ru přeložil.
+Ru mlčel. Nevěděl, jestli to *ano* má přeložit. Tal mu řekla jedno slovo, ostře, a Ru přeložil.
 
-Eren seděl u ohně, ve kterém praskalo jeho dřevo, a cítil v puse slovo, které ho naučila Tio. Krátké, místní, se zaraženým dechem na konci. Řekl ho jí, když nevěděl, co slibuje. Řekl ho do tmy pod plachtou a řekl ho Maele, a nebyl to slib, jen slovo.
+Eren seděl u ohně, ve kterém praskalo jeho dřevo, a cítil v puse slovo, které ho naučila Tio. To krátké, místní. Řekl ho jí, když nevěděl, co slibuje. Řekl ho do tmy pod plachtou a řekl ho Maele, a nebyl to slib, jen slovo.
 
 Řekl ho teď.
 
@@ -366,7 +366,7 @@ Tal se na něj dívala. Ammu u Ikkua taky. Dabra za řadou kamenů zvedla ruku k
 
 „Ale nejdřív se zeptám svých,“ řekl Eren. „Všech. Dole. Řezák není jen můj.“
 
-Ru to přeložil. Tal se na něj dlouho dívala a pak řekla něco, co mohlo být skoro úsměv.
+Ru to přeložil. Tal dlouho mlčela a pak řekla něco, co mohlo být skoro úsměv.
 
 „Ona říká, že ona se taky ptala,“ řekl Ru. „Než tě pustila nahoru. Celé dopoledne.“ Ukázal do šera u stěn, na místní, kteří tam seděli. „Proto jsi čekal.“
 
@@ -381,8 +381,6 @@ Eren se podíval do šera. Na obličeje, které se na něj dívaly. Celé dopole
 Tal mluvila. Ne k Erenovi. K mužům u ústí. Pak k Erenovi.
 
 „Děti můžou zpátky,“ řekl Ru. „Na kameny. Dnes večer. Ty, co včera vynesli.“ Zarazil se a poslouchal, co Tal dodala. „Ona říká, že děti nezabily. Že to věděla včera taky.“
-
-Eren se na Tal díval.
 
 Věděla to včera. Stála nad Ikkuem v rokli a věděla to a řekla jedno slovo a muži vynesli dvanáct do mrazu. A teď to věděla zase a řekla jiné slovo.
 
@@ -426,7 +424,7 @@ Zarazil se. Nadechl se. Eren viděl, jak se mu třese brada, a jak ji Kaj drží
 
 „Ikku nezvedl oštěp,“ řekl Kaj. „Držel tyč. Svit ho chytil za tyč a tahal, a Ikku ji nepustil. Oštěp měl na zádech. Nezvedl ho. Pak k němu šel Dorn.“ Kaj se díval na Ammu. „Já jsem stál u kamene. Nic jsem neudělal. Nic jsem neřekl. Ani včera, když se Eren ptal.“
 
-Ru přestal překládat. Díval se na Kaje s otevřenou pusou. Pak se otočil k Tal a řekl to. Celé. Eren to poznal podle toho, jak dlouho to trvalo.
+Ru přestal překládat. Zíral na Kaje s otevřenou pusou, pak se otočil k Tal a řekl to. Celé. Eren to poznal podle toho, jak dlouho to trvalo.
 
 Ammu se nepohnula.
 
@@ -444,7 +442,7 @@ Ikku byl mrtvý jeden den. A někdo z jeho lidí právě sklopil oštěp kvůli 
 
 Ru přeložil.
 
-Tal se na Kaje dlouho dívala. Pak ukázala holí na kámen u ohně na terase. Ten, na kterém sedávala ona. Kaj se podíval na kámen, nerozuměl. Ru mu ukázal, ať si sedne.
+Tal se na Kaje dlouho dívala. Pak ukázala holí na kámen u ohně na terase. Ten, na kterém sedávala ona. Kaj nerozuměl. Ru mu ukázal, ať si sedne.
 
 Kaj si sedl. Na Talin kámen, u ohně, na terase, mezi muži s oštěpy. A zůstal tam.
 
@@ -454,7 +452,7 @@ Eren sešel po suti sám.
 
 Dole u plochého kamene se sehnul pro svůj nůž. Byl studený a ležel na sněhu tak, jak ho ráno položil, čepelí od sebe. Vzal ho a zastrčil za pas.
 
-Pak se podíval nahoru. Kaj seděl u ohně na terase, malý a shrbený, a vedle něj stál mladý lovec s oštěpem hrotem k zemi. Tal stála v ústí. Ru na kraji terasy. Eren si vzpomněl na Tiinu větu se dvěma cvaknutími. Zapomněl ji Ruovi vyřídit.
+Nahoře u ohně na terase seděl Kaj, malý a shrbený, a vedle něj stál mladý lovec s oštěpem hrotem k zemi. Tal stála v ústí. Ru na kraji terasy. Eren si vzpomněl na Tiinu větu se dvěma cvaknutími. Zapomněl ji Ruovi vyřídit.
 
 Zítra, pomyslel si. To mu můžu vyřídit zítra.
 
@@ -464,6 +462,6 @@ Tam byl článek. Tam byly Maela, Tio a Sefa pod kůží s rukou šedou a tenkou
 
 Eren stál pod sutí a díval se na to.
 
-V puse měl to slovo. Krátké, místní, se zaraženým dechem na konci. Řekl ho dnes jednou, u ohně, před Tal a Dabrou a Ammu, a nevzal ho zpátky.
+V puse měl to slovo. Řekl ho dnes jednou, u ohně, před Tal a Dabrou a Ammu, a nevzal ho zpátky.
 
 Tentokrát věděl, co slíbil.

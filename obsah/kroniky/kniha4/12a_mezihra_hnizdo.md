@@ -42,7 +42,7 @@ Nebe je čisté, bez měsíce, a mráz je tak silný, že voda v soutěsce kouř
 
 Neletí. Padá.
 
-Roztáhne obě křídla, to zdravé i to roztržené, a nechá se z útesu spadnout do tmy. Vzduch se do blán opře. Zdravé křídlo drží. Roztržené hvízdá a táhne ji na stranu, a ona se proti tomu točí celým tělem, krkem, ocasem, a bolest v kloubu je bílá a ostrá. Soutěska jde kolem ní nahoru. Pak se otevře, a pod ní je údolí a velká voda, šedá ve tmě, a ona dopadne na kamenitý břeh tak, že jí bolest vyrazí dech.
+Roztáhne obě křídla, to zdravé i to roztržené, a nechá se z útesu spadnout do tmy. Vzduch se do blán opře. Zdravé křídlo drží. Roztržené hvízdá a táhne ji na stranu, a ona se proti tomu točí celým tělem, krkem, ocasem, a bolest v kloubu je bílá a ostrá. Soutěska jde kolem ní nahoru, až se otevře, a pod ní je údolí a velká voda, šedá ve tmě, a ona dopadne na kamenitý břeh tak, že jí bolest vyrazí dech.
 
 Leží. Pak se zvedne na zadní nohy a na kolena křídel a jde.
 
@@ -52,7 +52,7 @@ A v tom je to.
 
 Visí to na kořeni. Zachycené, napůl ve vodě, napůl venku, pokryté bahnem. Ale i pod bahnem, i ve tmě, se to leskne. Když se k tomu nakloní, pohne se to. Zašustí. Ten zvuk nemá nic jiného. Ani list, ani kůže, ani blána.
 
-Vezme to do čelistí. Opatrně, jako bere mládě. Je to lehké, lehčí než pírko, a studené, a nemá to chuť. Jen ten pach po blesku pod pachem řeky. Je to stejné jako na svahu za horami. Kus toho jiskření. Voda to vzala z hor a přinesla až sem, k ní, protože ona už nemůže letět tam.
+Vezme to do čelistí. Opatrně, jako bere mládě. Je to lehké, lehčí než pírko, a studené, a nemá to chuť. Jen ten pach po blesku pod pachem řeky. Je to stejné jako na svahu za horami. Kus toho jiskření. Vítr to kdysi přenesl přes hřeben, voda to vzala ze svahů a přinesla až sem, k ní, protože ona už nemůže letět tam.
 
 Lesk volá. Teď ho drží v tlamě, a volá pořád.
 
@@ -102,9 +102,9 @@ Když se dostane na útes, slunce je těsně za horami.
 
 Mládě jí vyběhne naproti a piští.
 
-Ona položí lesk na kraj hnízda a mládě do něj strčí nosem. Lesk zašustí a mládě uskočí. Pak se k němu vrátí a strčí do něj znovu. Ona ho nechá.
+Ona položí lesk na kraj hnízda a mládě do něj strčí nosem. Lesk zašustí a mládě uskočí, ale vrátí se k němu a strčí do něj znovu. Ona ho nechá.
 
-Pak jde k vodě, která se drží v prohlubni na kraji útesu, a nabere ji do tlamy. Vrátí se a pustí ji na lesk. Pomalu. Bahno steče. Vezme lesk znovu do čelistí, opatrně, a otřese ho. Bahno odstříká na skálu.
+Jde k vodě, která se drží v prohlubni na kraji útesu, a nabere ji do tlamy. Vrátí se a pustí ji na lesk. Pomalu. Bahno steče. Vezme lesk znovu do čelistí, opatrně, a otřese ho. Bahno odstříká na skálu.
 
 Lesk je čistý. Svítí. Když na něj padne první světlo zpoza hor, rozsvítí se celé hnízdo. Stěna, podlaha, žlutá zrna, průhledné kameny. Všechno se v něm odráží a zase z něj odlétá, jako když vítr přeběhne po vodě.
 
@@ -132,7 +132,7 @@ Protože jsou tam teď spolu. U teplé vody. Ti staří a ti noví. A ti od hlou
 
 Ten zvláštní tam nemá žádnou rýhu. Ještě ne.
 
-Mládě se dívá. Pak přijde a položí dráp vedle jejího, do čerstvé rýhy, a táhne. Neudělá nic. Na skále nezůstane ani stopa. Ona mu dráp odsune.
+Mládě se dívá, a pak přijde a položí dráp vedle jejího, do čerstvé rýhy, a táhne. Neudělá nic. Na skále nezůstane ani stopa. Ona mu dráp odsune.
 
 Ještě ne.
 
@@ -140,9 +140,9 @@ Ještě ne.
 
 Slunce vystoupí výš a vnikne pod převis, nízko, jako vniká jen v zimě. Hnízdo se rozsvítí.
 
-Ona leží u stěny s hlavou na kameni, s bolavým křídlem složeným pod sebou, a dívá se na to, co leží. Na staré rýhy, které jsou jen stínem. Na rýhy matky. Na své. Na lesk, který se v nízkém světle hýbe, i když leží. Na rýhu, která se láme, a na krátkou, hlubokou. Na čtyři vedle nich.
+Ona leží u stěny s hlavou na kameni, s bolavým křídlem složeným pod sebou, a hledí na to, co leží. Na staré rýhy, které jsou jen stínem. Na rýhy matky. Na své. Na lesk, který se v nízkém světle hýbe, i když leží. Na rýhu, která se láme, a na krátkou, hlubokou. Na čtyři vedle nich.
 
-Dřív tu bylo prázdné místo. Ještě se to nestalo celé.
+Dřív tu bylo prázdné místo, protože se to ještě nestalo celé.
 
 Teď to leží.
 

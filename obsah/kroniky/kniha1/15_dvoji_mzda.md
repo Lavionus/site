@@ -96,7 +96,7 @@ Kojata ho chvíli pozoroval, jako by si nebyl jistý, jestli to byla výčitka. 
 
 Matka je zavřela.
 
-„Ješek to ví,“ řekla. „Kojatova žena to řekla Zdeně a Zdena mně. V úterý. Hned druhý den se upsal do obou.“ Vrátila se k peci. „Spí tři hodiny. Domů nechodí. Jídlo mu nosí ten malej Kojatův, za groš týdně. Ten groš, co pán slíbil.“
+„Ješek to ví,“ řekla. „Kojatova žena to řekla Zdeně a Zdena mně. V úterý. Hned druhý den se upsal do obou.“ Vrátila se k peci. „Spí tři hodiny. Domů nechodí. Jídlo mu nosí ten malej Kojatův, za denár týdně. Ten denár, co pán slíbil.“
 
 Matěj si sedl na lavici, kde seděl Kojata. Byla ještě teplá.
 
@@ -108,7 +108,7 @@ Nevěděl, co chtěl říct. Že štola půjde do vody. Řekl jí to už jednou,
 
 „Vy máte ještě ten měchýř?“ zeptal se. „Z prasete. Co z něj Ješek dělal míč.“
 
-Matka se otočila. Dívala se na něj, jako by se zbláznil.
+Matka se otočila a změřila si ho, jako by se zbláznil.
 
 „Na co ti je?“
 
@@ -126,7 +126,7 @@ Do Dobroslaviny chalupy došel po půlnoci a ona už byla vzhůru. Seděla venku
 
 „Je ticho,“ řekla jen.
 
-Bylo. Vítr, který od neděle hnal přes hřbet mraky, se večer utišil a les stál černý a nehybný, a nad ním hvězdy, ostré, jaké bývají jen po dešti. Matěj se na ně podíval a zamrazilo ho. Ticho na slatině znamenalo hladinu v doupěti. Neviditelnou, rovnou, po krk klečícímu.
+Bylo. Vítr, který od neděle hnal přes hřbet mraky, se večer utišil a les stál černý a nehybný, a nad ním hvězdy, ostré, jaké bývají jen po dešti. Matěj se na ně podíval a zamrazilo ho. Ticho na slatině znamenalo hladinu v doupěti. Neviditelnou, rovnou, po prsa klečícímu.
 
 „Co neseš?“
 
@@ -206,7 +206,7 @@ Dobroslava si odfrkla. Pak natáhla ruku, vzala mu měchýř a přičichla k tru
 
 „Kněz tam bude,“ řekl Matěj. „A uvidí to.“
 
-Dobroslava se na něj dlouho dívala. Nezeptala se, co tím myslí. Nezeptala se, jestli se rozhodl. Možná to věděla líp než on. Matěj to nevěděl. Klečel na okraji doupěte se zhaslou svíčkou a s prasečím měchýřem, který Ješek kdysi kopal po dvoře jako míč, a věděl jen, že to jde. Že se to dá ukázat. Že to, co ho v únoru srazilo k zemi a co mu zabilo psa, se dá nalít na svíci před očima celé vsi, a svíce zhasne, a nikdo nebude muset věřit ani jemu, ani převorovi, ani drakovi.
+Dobroslava se nezeptala, co tím myslí. Nezeptala se, jestli se rozhodl. Možná to věděla líp než on. Matěj to nevěděl. Klečel na okraji doupěte se zhaslou svíčkou a s prasečím měchýřem, který Ješek kdysi kopal po dvoře jako míč, a věděl jen, že to jde. Že se to dá ukázat. Že to, co ho v únoru srazilo k zemi a co mu zabilo psa, se dá nalít na svíci před očima celé vsi, a svíce zhasne, a nikdo nebude muset věřit ani jemu, ani převorovi, ani drakovi.
 
 Co s tím udělá, to nevěděl.
 
@@ -220,7 +220,7 @@ Matěj se podíval. Svah nad nimi byl porostlý buky a mezi nimi, výš, se táh
 
 „Tam dýchají,“ řekla Dobroslava.
 
-Matěj stál a díval se. Vzpomněl si na teplo, které na něj v únoru dýchlo, když ho vedli se zavázanýma očima. Náhlé, jako když se otevřou dveře do pece. Na teplou stěnu, ke které Ostra přikládala dlaň. Na děti. Na smích v chodbě.
+Matěj mlčel. Vzpomněl si na teplo, které na něj v únoru dýchlo, když ho vedli se zavázanýma očima. Náhlé, jako když se otevřou dveře do pece. Na teplou stěnu, ke které Ostra přikládala dlaň. Na děti. Na smích v chodbě.
 
 „Každé studené ráno,“ řekla Dobroslava. „Dvacet let. V zimě, když mrzne, je to vidět až od mé chalupy. Lidi ze vsi si myslí, že tam pálí uhlí. Nebo že tam drak dýchá.“ Pokrčila rameny. „Já jsem nikdy nechodila blíž.“
 
@@ -238,7 +238,7 @@ Nebylo to rozhodnutí. Nespal a nemohl se modlit a vědro by se do rána nepřel
 
 V boudě to páchlo mokrými kápěmi, potem a kouřem. Pod stropem visel jeden kahan a pod ním na zemi, na pytlích a na senu, leželi muži denní party a spali tak tvrdě, jako by je někdo pobil. Hensel seděl venku u ohně. Když Matěj přišel, ukázal palcem do boudy, dovnitř, do kouta.
 
-Ješek ležel u stěny, na boku, s koleny u brady, jako spávají děti. Ještě v mokrých šatech. Matěj si k němu sedl na zem a díval se na něj. Nechtěl ho budit. Seděl tam a díval se, jak spí. Slyšel, jak mu v hrudi chrčí ten kašel, který měl už v únoru a který mu nepřešel. Myslel na to, že za dvě hodiny ho Hensel vzbudí a on vstane a půjde zase dovnitř.
+Ješek ležel u stěny, na boku, s koleny u brady, jako spávají děti. Ještě v mokrých šatech. Matěj si k němu sedl na zem. Nechtěl ho budit. Seděl tam a díval se, jak spí. Slyšel, jak mu v hrudi chrčí ten kašel, který měl už v únoru a který mu nepřešel. Myslel na to, že za dvě hodiny ho Hensel vzbudí a on vstane a půjde zase dovnitř.
 
 Ješek otevřel oči. Nehýbal se. Jen se díval.
 
@@ -294,7 +294,7 @@ Venku Hensel přikládal na oheň. Když Matěj vyšel z boudy, podíval se na n
 
 Seděli tak dlouho. Pak Hensel položil dlaň na zem, plochou, a nechal ji tam, a Matěj to udělal po něm. Země byla studená, vlhká. Nic se nechvělo. Jen to bušení, ze kterého člověk necítil nic než vlastní srdce.
 
-Matěj zvedl ruku. Ukázal na sebe. Pak na ústí štoly. Pak udělal rukou to, co dělal Hensel tenkrát, když mu ukazoval, kolik vody teče z pukliny: rozevřel dlaň a sevřel ji, rozevřel a sevřel. Pak ukázal dolů, k zemi, na to místo, kde ležela Henselova dlaň.
+Matěj zvedl ruku. Ukázal na sebe. Pak na ústí štoly. Pak udělal rukou to, co dělal Hensel tenkrát u čelby, když Ortliebovi ukazoval, kolik vody teče z pukliny: zvedl tři prsty a pak ještě dva. Pak ukázal dolů, k zemi, na to místo, kde ležela Henselova dlaň.
 
 Hensel se na něj díval dlouho. Neřekl nic. Nemusel.
 
@@ -306,7 +306,7 @@ Hensel kývl. Jednou, krátce, jako se kývá na cenu, kterou člověk nechce za
 
 V pátek ráno se vědro přelilo u *fiat voluntas tua*.
 
-Matěj nad ním stál a voda mu tekla přes prsty. Od pondělí o prosbu dřív. Od Zvěstování o celou polovinu Otčenáše. Bylo to málo. Bylo to tak málo, že kdyby to řekl Ortliebovi, Ortlieb by se zasmál a řekl, že je jaro a v horách taje sníh, a měl by pravdu. Na hřbetě nad lesem ležely ještě jazyky sněhu ve stínu. Za týden nebudou.
+Matěj nad ním stál a voda mu tekla přes prsty. Od pondělí o prosbu dřív. Od Laetare o celou polovinu Otčenáše. Bylo to málo. Bylo to tak málo, že kdyby to řekl Ortliebovi, Ortlieb by se zasmál a řekl, že je jaro a v horách taje sníh, a měl by pravdu. Na hřbetě nad lesem ležely ještě jazyky sněhu ve stínu. Za týden nebudou.
 
 *Fiat voluntas tua.* Buď vůle tvá.
 
@@ -362,7 +362,7 @@ Matěj se na ně nedíval.
 
 Večer, když se stmívalo a Udalrich zapaloval u vrat lucernu, zaslechl Matěj na cestě od paseky běh. Někdo běžel bosky, rychle, po kamení a po blátě, a pak se u vrat zastavil a lapal po dechu. Ovčácký pes se rozštěkal a zase zmlkl.
 
-Byl to malý Kojatův, ten, co nosil Ješkovi jídlo za groš týdně. Bylo mu tak osm, deset let, a stál ve vratech s rukama na kolenou a nemohl promluvit.
+Byl to malý Kojatův, ten, co nosil Ješkovi jídlo za denár týdně. Bylo mu tak osm, deset let, a stál ve vratech s rukama na kolenou a nemohl promluvit.
 
 „Ješek,“ řekl konečně. „Ješek vzkazuje.“
 
@@ -374,6 +374,6 @@ Matěj už stál vedle něj.
 
 Udalrich za Matějovými zády postavil lucernu na zem.
 
-Matěj se ohlédl ke komoře, kde spal převor. Okno bylo tmavé. Pak se podíval na Udalricha. Udalrich se na něj díval a ve tváři měl to, co v ní měl vždycky, když Matěj odcházel v noci z vrat, a co Matěj nikdy nedokázal pojmenovat. Možná to bylo jen to, že starý konvrš věděl, že ho nezastaví.
+Matěj se ohlédl ke komoře, kde spal převor. Okno bylo tmavé. Pak se podíval na Udalricha. Udalrich měl ve tváři to, co v ní měl vždycky, když Matěj odcházel v noci z vrat, a co Matěj nikdy nedokázal pojmenovat. Možná to bylo jen to, že starý konvrš věděl, že ho nezastaví.
 
 Udalrich zvedl lucernu ze země a podal mu ji.

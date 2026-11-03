@@ -70,7 +70,7 @@ Matěj neodpověděl. Zpíval. Převor tehdy na kapitule oznámil, že bratru Ma
 
 „Já vím,“ řekl Ješek. „Proto ti to neříkám, že jsi nepřijel. Říkám ti, že jsem to kopal sám.“
 
-Vzal rýč a začal házet hlínu do jámy, na šedou srst a na plášť. Matěj stál a díval se. Pak vzal krumpáč a začal shrnovat hroudy, protože jinak by tam jen stál.
+Vzal rýč a začal házet hlínu do jámy, na šedou srst a na plášť. Matěj chvíli stál. Pak vzal krumpáč a začal shrnovat hroudy, protože jinak by tam jen stál.
 
 *
 
@@ -118,7 +118,7 @@ Matěj mlčel.
 
 Ješek se zasmál. Krátce a ostře a vůbec ne vesele. Ten smích Matěj neznal. Neznal ho ani od dětství.
 
-„Ty mi to nemůžeš říct,“ řekl Ješek. „Ty. Kterej mi pod smrkem slíbil, že o vodě nikomu nic neřekne. A teď mi chodíš kázat o vodě. A když se zeptám, od koho to máš, tak to mi říct nemůžeš.“ Pohodil krumpáčem. „Víš, jak tomu říkají ve vsi? Pohádka. Babka vypráví pohádku a nesmí říct, od koho ji slyšela, protože pak by to nebyla pohádka.“
+„Ty mi to nemůžeš říct,“ řekl Ješek. „Ty. Kterej mi u štoly slíbil, že o vodě nikomu nic neřekne. A teď mi chodíš kázat o vodě. A když se zeptám, od koho to máš, tak to mi říct nemůžeš.“ Pohodil krumpáčem. „Víš, jak tomu říkají ve vsi? Pohádka. Babka vypráví pohádku a nesmí říct, od koho ji slyšela, protože pak by to nebyla pohádka.“
 
 „Ješku, poslouchej…“
 
@@ -188,7 +188,7 @@ Kojatova žena chvíli mlčela.
 
 „To jsou řeči,“ řekla matka od ohně.
 
-Řekla to tak ostře, že ženy zmlkly. Matěj se na ni podíval. Matka se dívala do ohně a míchala v hrnci a záda měla rovná.
+Řekla to tak ostře, že ženy zmlkly. Matka se dívala do ohně a míchala v hrnci a záda měla rovná.
 
 „Řeči,“ opakovala Kojatova žena uraženě. „Lovčí to viděl.“
 
@@ -204,7 +204,7 @@ Matěj seděl s lžící v ruce. Mohl to říct. Mohl vstát, dojít ke dveřím
 
 Nevstal.
 
-Matka zavřela dveře. Sedla si naproti němu na lavici, kde předtím seděla Bohuna, a dívala se na něj.
+Matka zavřela dveře. Sedla si naproti němu na lavici, kde předtím seděla Bohuna.
 
 „Ty o tom něco víš,“ řekla.
 
@@ -242,7 +242,7 @@ Matka zakryla hrnec víkem a nechala na něm ruku.
 
 Matěj otevřel ústa.
 
-*Neřekneš to nikomu. O vodě. Ani matce.* Slíbil to pod smrkem a Ješek mu věřil. *Nebudeš o nás mluvit. Ani své matce.* Slíbil to pod zemí a Merin mu věřil, nebo nevěřil, ale vzal si ten slib. A teď seděl u stolu v otcově chalupě, matka měla ruku na hrnci s penězi na otcova pole a ptala se ho na jedinou věc, kterou chtěla vědět. On byl jediný, kdo jí mohl odpovědět, a nemohl jí říct ani to, proč nemůže.
+*Neřekneš to nikomu. O vodě. Ani matce.* Slíbil to u štoly a Ješek mu věřil. *Nebudeš o nás mluvit. Ani své matce.* Slíbil to pod zemí a Merin mu věřil, nebo nevěřil, ale vzal si ten slib. A teď seděl u stolu v otcově chalupě, matka měla ruku na hrnci s penězi na otcova pole a ptala se ho na jedinou věc, kterou chtěla vědět. On byl jediný, kdo jí mohl odpovědět, a nemohl jí říct ani to, proč nemůže.
 
 „Nevím, mami,“ řekl.
 
@@ -258,7 +258,7 @@ Matka sundala ruku z hrnce. Vstala a vrátila hrnec za pec, na jeho místo, a pa
 
 „Tak ať dělá,“ řekla. „Když nevíš.“
 
-Ješek vstal. Natáhl na sebe kápi a vzal ze dveří krumpáč, protože ráno šel na první směnu. U dveří se zastavil. Matěj čekal, že něco řekne. Ješek dlouho mlčel a díval se na něj, a v té tváři nebyl hněv. Byla v ní únava a ještě něco, co Matěj poznal teprve potom, cestou zpátky na grangii: zklamání člověka, který čekal, že mu bratr dá důvod, a bratr mu dal jen strach.
+Ješek vstal. Natáhl na sebe kápi a vzal ze dveří krumpáč, protože ráno šel na první směnu. U dveří se zastavil. Matěj čekal, že něco řekne. Ješek dlouho mlčel, a v jeho tváři nebyl hněv. Byla v ní únava a ještě něco, co Matěj poznal teprve potom, cestou zpátky na grangii: zklamání člověka, který čekal, že mu bratr dá důvod, a bratr mu dal jen strach.
 
 „Neodejdu, Mates,“ řekl Ješek. „Ani kvůli tobě, ani kvůli drakovi, ani kvůli tomu, kdo ti to nakukal. Jestli tam jednou bude moc vody, řekne to Hensel. Hensel to pozná. A pak odejdeme všichni.“
 

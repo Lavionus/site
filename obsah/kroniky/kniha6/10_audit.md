@@ -22,7 +22,7 @@ Pak už nemluvila. Nara si všimla, že Pell během letu nezavřela oči a že s
 
 *
 
-Hals je čekal u výtahu. S Pell se znali. Nara to poznala podle toho, že si nepodali ruce a že Hals nic nevysvětloval.
+Hals na ně čekal u výtahu. S Pell se znali. Nara to poznala podle toho, že si nepodali ruce a že Hals nic nevysvětloval.
 
 „Čtyřicet dva,“ řekla Pell.
 
@@ -100,7 +100,7 @@ Neřekla jak. Nara se nezeptala. Nepotřebovala to vědět a cítila, že Pell b
 
 *Auditní ochrana: vypnuto.*
 
-Dvě slova a znak. Nara se na ně dívala.
+Tři slova a znak. Nara se na ně dívala.
 
 „Po tomhle se terminál do servisní vrstvy nezapisuje,“ řekla Pell. „Nikam. Je to, jako by přestal existovat. Síť ho přestala vidět, protože on přestal mluvit.“
 
@@ -122,7 +122,7 @@ Pell to slovo řekla bez důrazu. Jako údaj. Nara ho slyšela, jako by spadlo n
 
 Nara si sedla.
 
-Celou cestu sem si myslela, že najde něco jiného. Uvědomila si to až teď, když seděla na studené židli a Pell se vrátila ke svým řadám. Myslela si, že najde podvrh. Šablonu. Jméno, které někdo podepsal pod cizí čin, protože ho potřeboval. Erenovo přiznání byla šablona slovo od slova. Ani jedno slovo nebylo jeho. Tak si myslela, že ani čin nebyl jeho.
+Celou cestu sem si myslela, že najde něco jiného. Uvědomila si to až teď, když seděla na studené židli a Pell se vrátila ke svým řadám. Myslela si, že najde podvrh. Šablonu. Jméno, které někdo podepsal pod cizí čin, protože ho potřeboval. Erenovo přiznání bylo šablonou slovo od slova. Ani jedno slovo nebylo jeho. Tak si myslela, že ani čin nebyl jeho.
 
 Byl.
 
@@ -158,7 +158,7 @@ Nara se dívala na dvě čísla. Jedno na listu z opravárenského patra, jedno 
 
 „Pak už je deník uzlu jen tohle,“ řekla Pell a posunula prst dolů. *Potlačeno.* „Hlášení o poruchách. Potlačeno. Hlášení o stavu. Potlačeno. Uzel to všechno zapsal, protože to zapisovat musí, ale nikam to neodeslal.“ Odmlčela se. „Centrála nevěděla nic. Habitaty nevěděly nic. Lidé v nich nevěděli nic, dokud…“
 
-Nedořekla. Nemusela. Nara to znala ze školy. Kolik lidí. Ve kterých habitatech. Za jak dlouho. Čísla s přesností na jednotky.
+Nedořekla. Nara to znala ze školy. Kolik lidí. Ve kterých habitatech. Za jak dlouho. Čísla s přesností na jednotky.
 
 Dívala se na sloupec slov, která se opakovala, a v duchu slyšela svědkyni ze správy vodního okruhu, jak volá do bytu a byt neodpovídá. *Svědkyně požádala o přestávku.*
 
@@ -184,7 +184,7 @@ Erenův.
 
 Nara se dívala na dvě slova. *Bydliště. Ložnice.* Muž, který před devatenácti dny vyrobil nástroj, spal ve chvíli, kdy ho někdo použil. Vedle něho žena a v pokoji vedle šestiletá dcera, jejíž dech měl v koutku vědomí.
 
-To poslední v záznamu nebylo. To si Nara domyslela. Odnesla si to ze stejného místa, kam ukládala věci, které nesměla vyslovit. Vlevo, co tam stojí. Vpravo, co si o tom myslíte. Pravý sloupec. Nechala ho tam.
+To poslední v záznamu nebylo. To si Nara domyslela. Uložila to tam, kam ukládala věci, které nesměla vyslovit. Vlevo, co tam stojí. Vpravo, co si o tom myslíte. Pravý sloupec. Nechala ho tam.
 
 „A tohle,“ řekla Pell.
 
@@ -315,5 +315,3 @@ Odeslala to. Pak si pustila závěr Juno Pell potřetí, a když došel k větě
 Zobrazen. Muž stojí po směně u stolu a v koutku vědomí mu běží seznam. Řádek za řádkem. Čte ho a seznam nekončí. A on ho dočte, nebo nedočte, a pak zavře kryt.
 
 Co si tehdy myslel, v záznamu nebylo. Nara to chtěla vědět víc než cokoli jiného v těch čtyřiceti dvou schránkách. A věděla, že to nebude vědět nikdy.
-
-*Do odletu: 28 dní.*

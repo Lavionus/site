@@ -10,7 +10,7 @@ Viktor telefonuje. V sobotu dvakrát s Los Angeles, jednou s někým, s kým mlu
 
 „Do středy,“ řekne. „Plyn do středy. Pak buď splátka, nebo domů.“
 
-„Laboratoř říkala sedm až deset dní.“
+„Laboratoř říkala pět až deset dní.“
 
 „Laboratoř dostala vzorky ve středu. Za dvojnásobek pracují i v sobotu.“ Viktor se dívá do ohně. „Kdyby to nevyšlo do čtvrtka, Hanko, tak to prostě nevyšlo.“
 
@@ -26,7 +26,7 @@ Přišel na dvě adresy, její a Viktorovu. Předmět je krátký: *Preliminary 
 
 *Poměr aktivit ²³⁰Th/²³²Th: 41. Korekce na detritické thorium provedena s obvyklým předpokládaným poměrem; nejistota korekce je zahrnuta v uvedené chybě.*
 
-A pod tím, menším písmem, odstavec, který Hana čte potřetí.
+A pod tím odstavec, který Hana čte potřetí.
 
 *Vzorek 3 byl doručen jako dva fragmenty, které jsme podle hmotnosti označili 3-1 (1,8 g) a 3-2 (1,3 g). Fragment 3-1 byl navrtán mikrovrtákem v nejnižší souvislé lamině (0–1,5 mm od bazální plochy). Fragment 3-2 je uložen nezpracovaný. Vzorky 1 a 2 jsou ve standardní frontě; výsledky budou součástí závěrečné zprávy přibližně za šest až osm týdnů.*
 
@@ -38,7 +38,7 @@ Laboratoř změřila jeden kus. Ne směs. Ne průměr dvou vrstev, číslo bez v
 
 Jenže větší z čeho?
 
-Zavře oči a vidí ubrousek pod lupou. Dva kusy, oba velké jako nehet palce. Fragment A s hladkou plochou, téměř lesklou, jako otisk. Fragment B s nerovnou spodní stranou. Byl A tlustší? Vypadal tlustší. Ale ležel na hladké straně a ta ho mohla zvedat ke světlu. B ležel nakřivo. Neměla váhu. Do soupisu zapsala hmotnost celého sáčku. *3,1 g.* Jedna osm a jedna tři. Sedí to.
+Zavře oči a vidí ubrousek pod lupou. Dva kusy, oba velké jako nehet palce. Fragment A s hladkou plochou, téměř lesklou, jako otisk. Fragment B s nerovnou spodní stranou. Byl A tlustší? Vypadal tlustší. Ale ležel na hladké straně a ta ho mohla zvedat ke světlu. B ležel nakřivo. Váhu v táboře neměla, kusy zvlášť nevážila. Do soupisu zapsala odhad za celý sáček. *Cca 3 g.* Jedna osm a jedna tři. Sedí to.
 
 Laboratoř o jejích písmenech neví. Laboratoř má svá čísla.
 
@@ -50,7 +50,7 @@ V pátek šestého měla nejistotu bez tvaru, jako mlhu. Teď má dvě možnosti
 
 *
 
-Z Viktorova stanu se ozve zvuk, který Hana nikdy předtím neslyšela. Něco mezi smíchem a výkřikem, jako když se dítě pod vodou nadechne moc brzy.
+Z Viktorova stanu se ozve zvuk, který Hana nikdy předtím neslyšela. Něco mezi smíchem a výkřikem, jako když dítě poprvé skočí do vody zvysoka.
 
 Když Hana vyleze ven, stojí Viktor uprostřed mýtiny bosý, v trenýrkách, s telefonem nad hlavou jako s trofejí.
 
@@ -142,7 +142,7 @@ Přečte si bod čtyři. Je pravdivý, slovo od slova. Vzorek se odebral před f
 
 Neříká, proč.
 
-Napíše pod to svoje jméno. Ne titul. Jen jméno. Pak to odešle producentce a Viktorovi a v kopii Marisol, jak slíbila, a jde se projít k cenotu, aby nemusela vidět, jak to Viktor čte.
+Napíše pod to svoje jméno. Ne titul. Jen jméno. Odešle to producentce a Viktorovi a v kopii Marisol, jak slíbila, a jde se projít k cenotu, aby nemusela vidět, jak to Viktor čte.
 
 *
 
@@ -190,7 +190,7 @@ Hana zavře kohoutek. Voda z kanystru ještě chvíli kape do lavoru.
 
 „Ten větší,“ řekne.
 
-Viktor se na ni dívá. Dlouho. Pak se usměje, ne vesele.
+Viktor dlouho mlčí. Pak se usměje, ne vesele.
 
 „Devadesát procent, Hanko,“ řekne tiše. „Řeklas devadesát. Možná víc. Já si to pamatuju.“
 
@@ -204,7 +204,7 @@ Viktor si sundá kšiltovku, promne si čelo a zase si ji nasadí. Chvíli to vy
 
 „Dobře,“ řekne. „Je to tvoje zpráva.“
 
-A odejde. Hana stojí u lavoru s mokrýma rukama a teprve po chvíli si uvědomí, že čekala hádku a že by jí bylo líp, kdyby přišla. Takhle neví, co si Viktor odnesl. Jestli to, že bod čtyři zůstane, nebo to, že ho nemusí vyhrát.
+A odejde. Hana stojí u lavoru s mokrýma rukama a teprve po chvíli si uvědomí, že čekala hádku a že by jí bylo líp, kdyby přišla. Takhle neví, co si Viktor odnesl. Jestli to, že bod čtyři zůstane, nebo to, že tenhle spor vyhrávat nemusí.
 
 *
 
@@ -214,7 +214,7 @@ V úterý ráno odpoví laboratoř.
 
 Rovná. Místy s povlakem.
 
-Hana si to přečte a čeká, že ucítí úlevu nebo strach. Neucítí nic. Rovná může být hladká a zanesená sedimentem. Rovná může být lom podél vrstvy, na kterém sediment ulpěl, protože ležel tisíc let ve žlábku. Rovná je slovo technika, který nevěděl, na co se ho ptá. Nemohl to vědět. Neřekla mu to.
+Hana si to přečte a čeká, že ucítí úlevu nebo strach. Neucítí nic. Rovná může být hladká a zanesená sedimentem. Rovná může být lom podél vrstvy, na kterém sediment ulpěl, protože ležel bůhvíjak dlouho ve žlábku. Rovná je slovo technika, který nevěděl, na co se ho ptá. Nemohl to vědět. Neřekla mu to.
 
 Fotografie budou součástí závěrečné zprávy. Za šest až osm týdnů.
 
@@ -274,7 +274,7 @@ Jana pokrčí rameny. Dívá se na Hanu tak, jak se díval Luis v pátek šesté
 
 Marisol zavolá ve čtvrt na devět. Hana to zvedne po prvním zazvonění.
 
-„Dozvěděla jsem se to z novin,“ řekne Marisol. Mluví anglicky, ale každé třetí slovo je španělsky, a mluví tiše, což je horší, než kdyby křičela. „Můj ředitel se to dozvěděl z novin. V Mexiku City se to dozvěděli z novin. Jméno obce je v novinách. Kámen z nebe je v novinách. Instituto Nacional de Antropología e Historia v novinách není. Ani jednou.“
+„Dozvěděla jsem se to z novin,“ řekne Marisol. Mluví anglicky, ale každé třetí slovo je španělsky, a mluví tiše, což je horší, než kdyby křičela. „Můj ředitel se to dozvěděl z novin. V Mexico City se to dozvěděli z novin. Jméno obce je v novinách. Kámen z nebe je v novinách. Instituto Nacional de Antropología e Historia v novinách není. Ani jednou.“
 
 „Já vím.“
 
@@ -364,7 +364,7 @@ To ho zastaví. Hana to vidí. Vidí, jak počítá. Ne peníze. Něco jiného, 
 
 „To je pořadí.“
 
-Chvíli se na sebe dívají přes oheň. Pak Viktor sklopí oči k pivu a dlouho se na plechovku dívá, jako by na ní bylo něco napsané.
+Chvíli se na sebe dívají přes oheň. Viktor pak sklopí oči k pivu a dlouho zírá na plechovku, jako by na ní bylo něco napsané.
 
 „Dobře,“ řekne. „Ve středu. Plyn zaplatím. Z čeho, to je moje věc.“
 
@@ -382,13 +382,13 @@ Don Felipe je položí na stůl vedle sebe.
 
 „V novinách je víc, než je pravda.“
 
-„Možná.“ Don Felipe se na ni dívá. Nezlobí se. Hana by byla radši, kdyby se zlobil. „Ve vašem zápisu je, co děláte. V novinách je, kde jsme.“
+„Možná.“ Don Felipe se nezlobí. Hana by byla radši, kdyby se zlobil. „Ve vašem zápisu je, co děláte. V novinách je, kde jsme.“
 
 Ukáže prstem na kroužek na mapě. Na jméno.
 
 „Zítra sem přijedou,“ řekne. „Ne vy. Ti druzí.“
 
-Pak papíry nechá na stole a odejde, a Hana slyší jeho kroky ještě dlouho, na pěšině k bráně, pomalé, rovnoměrné, jako by počítal.
+Papíry nechá na stole a odejde, a Hana slyší jeho kroky ještě dlouho, na pěšině k bráně, pomalé, rovnoměrné, jako by počítal.
 
 *
 
@@ -398,9 +398,9 @@ Je pořád neumytá. Tužka se trochu rozmazala, jak se o ni třela kniha, ale p
 
 Položí ji na stůl vedle telefonu, na kterém pořád svítí titulek. *Mexický artefakt starý sto tisíc let.* Dvě věty o vzorku tři. Jedna má otazník a nikdo ji nečetl. Druhá má její jméno a čte ji celý svět.
 
-Otevře deník. Vlevo zapíše výsledek, číslo, chybu, poměr thoria. Zapíše, co laboratoř napsala o fragmentech. *Vzorek 3 doručen jako 2 fragmenty, laboratoř je označila podle hmotnosti: 3-1 (1,8 g, navrtán, bazální lamina 0–1,5 mm), 3-2 (1,3 g, nezpracován). Bazální plocha 3-1 „rovná, místy s povlakem sedimentu“, nefotografována.* Zapíše zprávu, výhrady, odeslání v kopii M. C. Zapíše únik, čas, portály, jméno obce. Dona Felipa. *„Ve vašem zápisu je, co děláte. V novinách je, kde jsme.“*
+Otevře deník. Výsledek, číslo, chybu a poměr thoria zapsala vlevo už v pondělí. Teď zapíše, co laboratoř napsala o fragmentech. *Vzorek 3 doručen jako 2 fragmenty, laboratoř je označila podle hmotnosti: 3-1 (1,8 g, navrtán, bazální lamina 0–1,5 mm), 3-2 (1,3 g, nezpracován). Bazální plocha 3-1 „rovná, místy s povlakem sedimentu“, nefotografována.* Zapíše zprávu, výhrady, odeslání v kopii M. C. Zapíše únik, čas, portály, jméno obce. Dona Felipa. *„Ve vašem zápisu je, co děláte. V novinách je, kde jsme.“*
 
-Pak se podívá na pravou půlku. Na prázdné místo s jemnými linkami.
+Vpravo je prázdné místo s jemnými linkami.
 
 Napíše tam tři znaky a otazník.
 
@@ -414,7 +414,7 @@ Hana se dívá na tu pravou půlku. Na tři znaky. Mohla by stránku otočit. Mo
 
 Posune deník k němu.
 
-Ríša ho vyfotí, jednou, dvakrát, potřetí s bleskem. Podívá se na displej a kývne, jako každý večer, a vrátí ho. Na pravou půlku se nepodívá. Nebo podívá, jen tak, jak se člověk dívá na cizí rukopis, kterému nerozumí a nechce.
+Ríša ho vyfotí, jednou, dvakrát, potřetí s bleskem. Podívá se na displej a kývne, jako každý večer, a vrátí ho. Na pravou půlku se nepodívá. Nebo se podívá, ale jen tak, jak se člověk dívá na cizí rukopis, kterému nerozumí a nechce.
 
 „Dobrou,“ řekne.
 

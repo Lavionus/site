@@ -6,7 +6,7 @@ Ne daleko. K suché kamenné zdi na kraji pole, kde se ve stínu dá sedět. Odt
 
 Nemusí to slyšet. Odešla proto, aby to neslyšela.
 
-Za hodinu za ní přijde žena z ústavu, mladá, kterou nikdy neviděla, s Marisoliným lístkem. *Jdu spát. Poprvé od čtvrtka. Posílám kolegyni pro stránky. M.* Žena si sedne vedle Hany na zeď a nafotí telefonem šest stránek Kalinova sešitu. Luisova slova v uvozovkách, *(přibližně)*, čas, podpis pod každou stránkou. Pak sešit Haně vrátí a poděkuje.
+Za hodinu za ní přijde žena z ústavu, mladá, kterou nikdy neviděla, s Marisoliným lístkem. *Jdu spát. Poprvé od čtvrtka. Posílám kolegyni pro stránky. M.* Žena si sedne vedle Hany na zeď a nafotí telefonem šest stránek Kalinova sešitu. Luisova slova v uvozovkách, *(přibližně)*, čas, podpis pod každou stránkou. Sešit Haně vrátí a poděkuje.
 
 „Vy jste ta z Brna,“ řekne. Ne jako otázku.
 
@@ -28,15 +28,13 @@ Hrdlo se prokopat nedá. Strop sedl na dva, tři bloky a drť pod nimi drží v�
 
 „Tak vylezeme a začneme znovu.“ Vedoucí se nepodívá nahoru. „Nebo nevylezeme.“
 
-Pak se otočí k Haně a k Janě.
+Otočí se k Haně a k Janě.
 
 „Potřebuju podporu. Láhve do chodby, každý ponor. Stage na téčko, stage na první komoru. A někoho, kdo bude v první komoře, až pojedeme ven. S lahví navíc, s kyslíkem na zastávky, se světlem. Kdo nás uvidí a spočítá.“ Podívá se na Janu. „Ty na téčko.“ Pak na Hanu. „Ty?“
 
-Hana ví, co je první komora. Hned za mezerou u nového bloku se chodba na dvacet metrů rozšíří do prostoru velkého jako dvě kuchyně, s krápníky u stropu, ve dvanácti metrech. Odtud je to ke vstupu kousek. Ke dnu studny, k plošině, ke světlu. Všechno, co je dál, je dál.
+Hana ví, co je první komora. Dvacet metrů za mezerou u nového bloku se chodba rozšíří do prostoru velkého jako dvě kuchyně, s krápníky u stropu, ve dvanácti metrech. Odtud je to ke vstupu kousek. Ke dnu studny, k plošině, ke světlu. Všechno, co je dál, je dál.
 
 „Do první komory ano,“ řekne. „Dál ne.“
-
-Vedoucí se na ni dívá.
 
 „Za téčko jsem byla šestkrát,“ řekne Hana. „Vždycky s Luisem za zády. Teď za mnou nikdo nebude, a kdybych se zasekla v obchvatu, budete tahat dva místo jednoho. Do první komory umím. Láhve unesu. Počítat umím.“ Nadechne se. „Víc ne.“
 
@@ -62,7 +60,7 @@ Ticho. Dech, pomalejší než včera. Pak:
 
 „Ana. Ten strop nad tebou. Když jsi vrtala. Já jsem to slyšel celý den. Jako když někdo škrábe na dveře.“ Odmlčí se. „Nebál jsem se. Myslel jsem, že je to Tomás.“
 
-Hana neví, co na to říct. Vrátí sluchátko lékaři.
+Hana jen vrátí sluchátko lékaři.
 
 *
 
@@ -98,13 +96,13 @@ Na druhé straně chvíli visí ve vodě a nedýchá, pak dýchá moc rychle, a 
 
 *
 
-První komora je v pondělí ráno ještě stejná jako na Haniných náčrtech. Krápníky u stropu, bílé, s kapkami vody na špičkách, které už deset tisíc let nekapou. Na dně kal, ve kterém jsou vidět stopy ploutví od pátku, od čtvrtka, od soboty, kdy tudy pluli záchranáři. Šňůra vede středem dál, do tmy, k téčku.
+První komora je v pondělí ráno ještě stejná jako na Haniných náčrtech. Krápníky u stropu, bílé, každý se zkamenělou kapkou na špičce. Nekapou deset tisíc let. Na dně kal, ve kterém jsou vidět stopy ploutví od pátku, od čtvrtka, od soboty, kdy tudy pluli záchranáři. Šňůra vede středem dál, do tmy, k téčku.
 
 Hana uváže stage láhev na šňůru. Karabina, smyčka, zkouška tahem. Vedle ní visí dvě láhve, které tu nechali záchranáři v neděli večer. Hana přečte štítky na nich, protože to je její práce. Jméno, plyn, tlak. Zapíše je na tabulku na předloktí.
 
 Pak se podívá dál do chodby.
 
-Jana visí na kraji světla, dvacet metrů od ní, s vlastní stage lahví pro téčko. Otočí se k Haně a dá jí znamení. *Ok?*
+Jana visí na kraji světla, dvacet metrů od ní, s vlastní stage lahví pro téčko. Otočí se k Haně a dá jí znamení. *OK?*
 
 *Ok.*
 
@@ -120,7 +118,7 @@ Hana si to představí. Bílou zeď. Bez šňůry, bez plynu, sama.
 
 Přestane si to představovat.
 
-Podívá se na manometr. Podívá se na hodinky. Zapíše čas na tabulku. Podívá se na láhve na šňůře. Spočítá je. Tři. Zapíše to. Je to jediná práce, kterou tu má, a tak ji dělá pořádně, a tím, že ji dělá pořádně, se drží.
+Manometr. Hodinky. Zapíše čas na tabulku. Láhve na šňůře: spočítá je. Tři. Zapíše to. Je to jediná práce, kterou tu má, a tak ji dělá pořádně, a tím, že ji dělá pořádně, se drží.
 
 Za devatenáct minut se v chodbě objeví světlo.
 
@@ -136,9 +134,9 @@ Večer sedí vedoucí na plošině s kapucí staženou do týla a mluví k inže
 
 „Až se dostaneme na druhou stranu. Ne dřív.“
 
-Luis dostane večer telefonem stejnou zprávu. Lékař mu ji řekne pomalu. Pak mu řekne, co bude zítra dělat. Kdy se má najíst. Kdy se má přestat hýbat. Že mu záchranáři přinesou celoobličejovou masku, láhve, oblek a teplou vestu, a že nemá dělat nic, dokud mu to neřeknou. Že pojedou pomalu. Že se nesmí bát.
+Luis dostane večer telefonem stejnou zprávu. Lékař mu ji řekne pomalu, a potom i to, co bude zítra dělat. Kdy se má najíst. Kdy se má přestat hýbat. Že mu záchranáři přinesou celoobličejovou masku, láhve, oblek a teplou vestu, a že nemá dělat nic, dokud mu to neřeknou. Že pojedou pomalu. Že se nesmí bát.
 
-Hana to poslouchá z dálky a myslí si, že poslední věta je jediná, kterou Luis nesplní. A že to nevadí.
+Hana to poslouchá z dálky a myslí si, že poslední věta je jediná, kterou Luis nesplní.
 
 *
 
@@ -228,7 +226,7 @@ A pod tím menším:
 
 *Maják ve 3:00 vysílal.*
 
-Hana se na ten papírek dívá a směje se. Potichu, aby nikoho nevzbudila. Pak přestane a dlouho sedí a nic nedělá.
+Hana se nad tím papírkem směje. Potichu, aby nikoho nevzbudila. Pak přestane a dlouho sedí a nic nedělá.
 
 Do pravého horního rohu sešitu napíše *2*. Je středa, prvního dubna.
 
@@ -262,7 +260,7 @@ Marisol se na ni podívá.
 
 Hana kývne. Neptá se, co je na záznamu dál.
 
-„A doktorko.“ Marisol se zvedne. „Odpoledne přijede prokurátor. Kvůli vaší výpovědi. Ústně, jak jste slíbila. Tady, protože vy jste neopustila Yucatán.“ Skoro se usměje. „A pak vám budu muset něco říct o deníku.“
+„A doktorko.“ Marisol se zvedne. „Odpoledne přijede prokurátor. Kvůli vaší výpovědi. Ústně, jak jste slíbila. Tady, ať nemusíte do Méridy.“ Skoro se usměje. „A pak vám budu muset něco říct o deníku.“
 
 „O deníku?“
 
@@ -312,17 +310,17 @@ Dřevěná prkna, dva nosníky, jeden rovný a jeden ohnutý, žebřík, kladka.
 
 V pátek se systém uzavírá.
 
-Velký pátek. Z obce je od rána slyšet zvon, ne jako v noci na svolání, ale pomalu, jednou za dlouho. Po poledni projde po cestě k bráně ejida průvod. Muži nesou dřevěný kříž, ženy jdou za nimi a zpívají. Rosa mezi nimi není. Je v Méridě.
+Velký pátek. Zvony v obci od včerejška mlčí. Od rána je slyšet jen dřevěnou řehtačku, matracu, jednou za dlouho. Po poledni projde po cestě k bráně ejida průvod. Muži nesou dřevěný kříž, ženy jdou za nimi a zpívají. Rosa mezi nimi není. Je v Méridě.
 
 U brány ejida stojí inženýr a muž z ústavu. Mají formulář. Hana ho podepíše jako svědkyně, *geoarcheoložka*, bez fakulty, pod donem Felipem a pod inženýrem.
 
 Pak zamknou bránu. Visací zámek ústavu a vedle něj zámek ejida, starý, mosazný, ten od bodegy. Klíče mají dva lidé. Don Felipe a muž z ústavu. Nikdo z expedice.
 
-Na pletivo přivážou ceduli. Bílou, s logem civilní ochrany a s jiným logem, které Hana zná z Marisolina auta. *Zona de riesgo. Acceso prohibido.* A pod tím menším písmem další věty, které Hana nečte, protože je zná.
+Na pletivo přivážou ceduli. Bílou, s logem civilní ochrany a s jiným logem, které Hana zná z Marisolina auta. *Zona de riesgo. Acceso prohibido.* A pod tím další věty, které Hana nečte, protože je zná.
 
 Průvod zatím zajde za zatáčku. Zpěv slábne a pak není slyšet.
 
-Hana stojí u brány a dívá se přes pletivo na cestu k mýtině. Na místo, kde stál tábor. Na plachtu, kterou už sundali, a na čtverec ušlapané trávy, kde stála. Na stromy, za kterými je studna. Bílá voda, pod ní hlavní chodba, téčko, hrdlo s blokem, sestup, haloklina, mlha a síň. Lůžko ve slané vodě, kde už se usadil kal. Štítky *LE* na svých místech. A za bodem čtyřicet osm, nahoru, zvon. Sáček s telefonem na břehu, maják, cívkou nahoru, rovně. Saze. Ruce.
+Hana stojí u brány a dívá se přes pletivo k mýtině. Na místo, kde stál tábor. Na plachtu, kterou už sundali, a na čtverec ušlapané trávy, kde stála. Na stromy, za kterými je studna. Bílá voda, pod ní hlavní chodba, téčko, hrdlo s blokem, sestup, haloklina, mlha a síň. Lůžko ve slané vodě, kde už se usadil kal. Štítky *LE* na svých místech. A za bodem čtyřicet osm, nahoru, zvon. Sáček s telefonem na břehu, maják, cívkou nahoru, rovně. Saze. Ruce.
 
 Pod tím vším, ještě hlouběji, sintr, který rostl na suchu, když tam nikdo nebyl.
 
@@ -334,13 +332,13 @@ Hana kývne.
 
 Večer otevře sešit. Do pravého horního rohu napíše *0*.
 
-Dívá se na tu nulu dlouho. Pak pod ni napíše datum a čas, *3. 4. 2026, 18:10*, a vlevo jen pár řádků. Brána zamčena. Klíče: F. E., ústav. Plošina pryč, šňůry pryč, vrt zabetonován. Podpis H. V. jako svědkyně.
+Dlouho se dívá na tu nulu, než pod ni napíše datum a čas, *3. 4. 2026, 18:10*, a vlevo jen pár řádků. Brána zamčena. Klíče: F. E., ústav. Plošina pryč, šňůry pryč, vrt zabetonován. Podpis H. V. jako svědkyně.
 
 Pod to, jako poslední řádek, protože je to změřené a patří to tam:
 
 *Maják T. K. ve zvonu na břehu, vysílá do 10. 4. (T. K.)*
 
-Vpravo nenapíše nic.
+Pravá půlka zůstane prázdná.
 
 Zavře sešit a dívá se přes pletivo na tmavnoucí les. Tam dole pod polem pana Chana, kde zaseje dýně, bude ještě týden něco každou celou hodinu deset minut říkat *tady*.
 

@@ -32,7 +32,7 @@ Stůl postavili venku před vraty, na lukách u potoka, kde začínala cesta ke 
 
 ![Stůl před vraty grangie](obrazky/17_svaty_jiri.webp)
 
-Lidé přišli už dopoledne. Z Mlýnce, ze vsi za potokem i z dalších, které Matěj neznal. Rozneslo se totiž, že o svátku svatého Jiří pán z Wehrbergu ukáže dračí kost a že v hoře hořelo světlo. Ženy v čistých šátcích, muži v nedělních kabátcích, děti, které se honily po lukách a kterým to matky nezakazovaly. Kojata s ženou. Mlynář. Bohuna na holi mezi dvěma vnuky. Matka. Stála vzadu, jako vždycky, a dívala se na Ješka.
+Lidé přišli už dopoledne. Z Mlýnce, ze vsi za potokem i z dalších, které Matěj neznal. Rozneslo se totiž, že o svátku svatého Jiří pán z Wehrbergu ukáže dračí kost a že v hoře hořelo světlo. Ženy v čistých šátcích, muži v nedělních kabátcích, děti, které se honily po lukách a kterým to matky nezakazovaly. Kojata se ženou. Mlynář. Bohuna na holi mezi dvěma vnuky. Matka. Stála vzadu, jako vždycky, a dívala se na Ješka.
 
 Horníci stáli pohromadě po levé straně. Sasové zvlášť, místní zvlášť, Ortlieb před nimi v kabátci, který si dal vyprat. Hensel mezi nimi, s bílými vousy zažloutlými od kouře, a vedle něj Ješek. Vyspalý. Poprvé od pondělí měl v obličeji barvu.
 
@@ -40,7 +40,7 @@ Na kraji lesa za potokem, pod bukem, kde se louka zvedala ke svahu, stála Dobro
 
 Konrád přijel v poledne.
 
-Nejel v čele. Jel mezi Volkmarem a Rüdigerem, a za nimi lovčí s rozštípnutým uchem a dva psovodi se psy. Neměl na sobě modrý plášť s kunou. Měl šedý, prostý, jaký nosí pacholci na cestu. Matěj si vzpomněl, že ten modrý zůstal ležet v teplé vodě za hrázkou, nasáklý. Když Konrád sesedl, lidé se k němu nahrnuli, jako se hrnuli v pondělí po Velikonocích, a on je nechal. Ale nesmál se. Díval se přes ně. Hledal někoho, a když našel Matěje, kývl, jen jednou, a to kývnutí nebylo jako dřív.
+Nejel v čele. Jel mezi Volkmarem a Rüdigerem, a za nimi lovčí s rozštípnutým uchem a dva psovodi se psy. Neměl na sobě modrý plášť s kunou. Měl šedý, prostý, jaký nosí pacholci na cestu. Matěj si vzpomněl, jak ten modrý nasákl teplou vodou za hrázkou. Když Konrád sesedl, lidé se k němu nahrnuli, jako se hrnuli v pondělí po Velikonocích, a on je nechal. Ale nesmál se. Díval se přes ně. Hledal někoho, a když našel Matěje, kývl, jen jednou, a to kývnutí nebylo jako dřív.
 
 *
 
@@ -100,7 +100,7 @@ Podíval se na kost na podušce. Na rytinu na jejím boku, kterou odtud nemohl v
 
 „A slatina.“
 
-Teď se lidé pohnuli. Tohle chtěli slyšet. Kvůli tomu přišli, kvůli tomu se Bohuna nechala vytáhnout vnuky do kopce. Matěj to viděl v jejich tvářích a viděl, že to ví i převor za ním, a Konrád, a že to věděl celou dobu i on sám.
+Teď se lidé pohnuli. Tohle chtěli slyšet. Kvůli tomu přišli, kvůli tomu se Bohuna nechala přivést vnuky až na luka. Matěj to viděl v jejich tvářích a viděl, že to ví i převor za ním, a Konrád, a že to věděl celou dobu i on sám.
 
 „Napsal jsem převorovi dopis,“ řekl. „V únoru. Že jsem na slatině našel doupě draka. Že jeho dech je jed, ne oheň. Že můj pes umřel v tom dechu a já taky skoro. Že kost, kterou dal pan Konrád klášteru, je z tvora, jehož dech jsem sám okusil.“ Nadechl se. „Ten dopis jsem psal já. A nebyla to pravda.“
 
@@ -122,7 +122,7 @@ Odvinul plátno. Matka v zadních řadách zvedla ruku k ústům. Poznala ho. Je
 
 „Je v něm dech země. Nic není vidět. Nic není cítit.“ Rozvázal provázek na hrdle, pomalu, uzel po uzlu. „Je těžší než vzduch. Leží v prohlubních jako voda v rybníku, když nefouká. Kde leží, tam umírají ptáci a lišky a psi. Když fouká, vítr ho rozfouká, a pak se tam dá stát. Já jsem tam stál, za větru, na dně, kde jsem v únoru padl, a dýchal jsem.“ Vytáhl špunt. „Drak by dýchal i za větru.“
 
-Poklekl ke svíci. S rovnými zády, jak klečel při elevaci. Obrátil měchýř trubičkou dolů nad plamen. Nezmáčkl ho. Jen ho obrátil, jako se obrací džbán, a čekal.
+Poklekl ke svíci. S rovnými zády, jak klečel v chóru. Obrátil měchýř trubičkou dolů nad plamen. Nezmáčkl ho. Jen ho obrátil, jako se obrací džbán, a čekal.
 
 Plamen stál.
 
@@ -204,7 +204,7 @@ Nic.
 
 „Tabulky se hladí, pane,“ řekl Ortlieb. Řekl to klidně. „Každý měsíc. Kdo by nosil staré čárky.“
 
-Matěj se díval na hladký vosk. *Vosk se dá uhladit, paměť ne.* Napsal to v únoru pod smrkem. Teď to tu leželo před ním, pět hladkých tabulek, a vedle nich jeho sešitek, pergamen, na kterém se nedá nic uhladit, jen seškrábat, a i to je vidět. A nebylo to nic. Proti jeho slovu stálo slovo mistra. Proti opisu hladký vosk.
+Matěj se díval na hladký vosk. *Vosk se dá uhladit, paměť ne.* Řekl si to v únoru pod smrkem. Teď to tu leželo před ním, pět hladkých tabulek, a vedle nich jeho sešitek, pergamen, na kterém se nedá nic uhladit, jen seškrábat, a i to je vidět. A nebylo to nic. Proti jeho slovu stálo slovo mistra. Proti opisu hladký vosk.
 
 Volkmar vzal smlouvu. Rozložil ji, přečetl ji polohlasem, a pak se naklonil ke Konrádovi a řekl mu něco do ucha. Konrád poslouchal. Kývl.
 
@@ -268,7 +268,7 @@ Ortlieb se narovnal. „Pane, nejdřív odbočka. Voda…“
 
 Ortlieb otevřel ústa. Pak je zavřel a sklonil hlavu.
 
-„A do hory dnes nepůjde nikdo.“ Konrád se obrátil k lidem v předních řadách, kteří čekali, že je povede k dračí díře, k zlatu, ke kostem. „Slíbil jsem vám, že vás zavedu do dračí díry. Nezavedu. Co je v hoře, není pro jarmark.“ Kývl na Rüdigera. „Postav k ústí dva muže. Do hory jen horníci. A kdo sáhne na prkna, tomu usekneš ruku. Ne pro žert.“
+„A do hory dnes nepůjde nikdo.“ Konrád se obrátil k lidem v předních řadách, kteří čekali, že je povede k dračí díře, ke zlatu, ke kostem. „Slíbil jsem vám, že vás zavedu do dračí díry. Nezavedu. Co je v hoře, není pro jarmark.“ Kývl na Rüdigera. „Postav k ústí dva muže. Do hory jen horníci. A kdo sáhne na prkna, tomu usekneš ruku. Ne pro žert.“
 
 „A zlato?“ zeptal se někdo zezadu.
 
@@ -340,7 +340,7 @@ Matěj se díval na hrudu pod hrušní. Na drn, který srostl.
 
 „Zítra jdeš?“ zeptal se.
 
-„Zítra jdu.“ Ješek se nehnul. „Dvojí mzda. Do neděle mi chybí jeden den. Jeden, Mates.“
+„Zítra jdu.“ Ješek se nehnul. „Dvojí mzda. Na pole mi chybí jeden den. Jeden, Mates.“
 
 „Tak já taky.“
 

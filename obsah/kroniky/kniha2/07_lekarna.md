@@ -4,7 +4,7 @@ V pondělí ráno našla na předních dveřích dvě tečky.
 
 Byly udělané křídou, ve výšce očí, prst od sebe, a kdo nevěděl, co znamenají, ten by si jich nevšiml. Havíři od horního úřadu, kteří přes noc stáli před domem, je neviděli, nebo říkali, že je neviděli. V noci prý šli kolem jen opilci a kočky. Ilona se na ty dvě tečky dívala dlouho, s vědrem v ruce, a pak je smyla. Křída šla dolů snadno. Dřevo pod ní zůstalo o odstín světlejší, takže tečky tam zůstaly dál, jen už nebyly bílé, ale čisté.
 
-Dopoledne nepřišel nikdo. Mlynářova žena, které ve středu pouštěla, měla přijít na převaz, a nepřišla. Kluk od bednáře s třískou v dlani nepřišel. Purga Sternová šla kolem s košíkem a přešla na druhou stranu ulice, a když ji Ilona pozdravila z okna, kývla a nepodívala se.
+Dopoledne nepřišel nikdo. Mlynářova žena, které v úterý pouštěla, měla přijít na převaz, a nepřišla. Kluk od bednáře s třískou v dlani nepřišel. Purga Sternová šla kolem s košíkem a přešla na druhou stranu ulice, a když ji Ilona pozdravila z okna, kývla a nepodívala se.
 
 Ilona uklidila nástroje, které nebylo třeba uklízet. Nařezala obvazy, kterých měla dost. Pak si sedla ke stolu a vytáhla desky a nečetla je.
 
@@ -100,7 +100,7 @@ Röhrich víko zavřel.
 
 „Odkud máte krev?“ zeptala se Ilona. „Na ten duch.“
 
-Röhrich se na ni podíval. Klidně, s tím úsměvem.
+Röhrich se klidně usmál, tím svým úsměvem.
 
 „Od lazebníka,“ řekl. „Odkud jinud? Mistr Jobst pouští každou sobotu půl města a krev by tekla do potoka. Je hřích vylévat lék. Kupuju ji od něj od zimy.“ Pokrčil rameny. „Vy to víte, paní Ilono, nebo byste se neptala. Celé město ví, že jste sledovala Jobstův soudek. Lene to řekla na trhu půlce horního konce, chudinka.“
 
@@ -114,7 +114,7 @@ Ilona mlčela. Röhrich se opřel o pult.
 
 „A kolik lahviček prodáte za týden?“
 
-Röhrich se na ni podíval o chvilku déle. „Ve dvou, ve třech. V zimě víc.“
+Röhrich chvilku váhal. „Ve dvou, ve třech. V zimě víc.“
 
 Ilona si to počítala, jak to počítala na lavici v lázni, čárkami po pěti. Dvě lahvičky, tři. Šest misek, nejvýš. A Jobst pouštěl dvacet misek každou sobotu, a nově i ve středu. A soudek nesli do průchodu, a z průchodu vyšel mezek se dvěma koši a šel nahoru k haldám. Ne do Lipska. Lipsko je na druhou stranu.
 
@@ -194,11 +194,11 @@ Na chvíli se nehýbal. Pak přešel k pultu, klidně, bez spěchu, a knihu zav�
 
 „Ano,“ řekla Ilona.
 
-„To je dobře.“ Röhrich se díval na ni, a vrásky kolem očí se mu nesmály. „Je dobře, když si lidé píšou. Pak se neztratí, kdo komu co dluží.“ Odmlčel se. „Florian vám zabalí, co budete chtít. Inkoust? Kafr?“
+„To je dobře.“ Röhrichovi se vrásky kolem očí nesmály. „Je dobře, když si lidé píšou. Pak se neztratí, kdo komu co dluží.“ Odmlčel se. „Florian vám zabalí, co budete chtít. Inkoust? Kafr?“
 
 „Myrhu,“ řekla Ilona. „Lot. Na dásně, pro starou paní.“
 
-Röhrich se na ni díval ještě chvíli. Pak kývl na Floriana, který vyšel zezadu s rukou ovázanou v mokrém plátně. Sám odešel s černou knihou pod paží zpátky do zadní místnosti.
+Röhrich kývl na Floriana, který vyšel zezadu s rukou ovázanou v mokrém plátně. Sám odešel s černou knihou pod paží zpátky do zadní místnosti.
 
 Dveře za sebou nechal pootevřené. Ilona viděla kus místnosti za nimi: stůl, na něm skleněné baňky, mísy, písečnou lázeň na trojnožce, a na polici u stěny dřevěnou bedýnku s přihrádkami, a v každé přihrádce prázdnou lahvičku z nazelenalého skla. Malé, menší než ta s duchem krve. Desítky. A vedle bedýnky svazek tyčinek červeného pečetního vosku, jako svíčky.
 
@@ -269,6 +269,10 @@ Ilona si to řekla v duchu, slovo po slově, a pak si řekla, co si vždycky ř�
 Ale ve středu ráno ležela Lene na kamenech pod mostem, bílá jako vymetená mouka. A v týdnu, kdy Lene řekla, co věděla, a Ilona to zapsala, odnesla nahoru a zamkla do truhly, Jobst přestal prodávat a lékárník přestal kupovat. A lékárník věděl, že Ilona sledovala soudek. *Lene to řekla na trhu půlce horního konce, chudinka.*
 
 Možná. Možná to Lene řekla na trhu. Markétě to řekla. Mohla to říct i jiným.
+
+Jenže Lene nevěděla, že Ilona šla za soudkem. To bylo až po setmění, když už Lene odnesla lucernu zpátky do lázně. Že soudek dostal v průchodu mezek, stálo jen na jednom místě. V tabulce. V Kunzově truhle.
+
+I tohle byl výklad. Ale byl to výklad, který se dal položit vedle papíru.
 
 Ilona se opřela čelem o studené sklo.
 

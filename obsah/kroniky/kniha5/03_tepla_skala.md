@@ -20,7 +20,7 @@ Padesát dva stupňů.
 
 „Ty víš, protože jsem ti to řekla.“ Lada se narovnala. Byla Sael po prsa a dívala se na ni zdola, rovně, bez zaklonění hlavy. Ostří se nikdy nezakláněli, když mluvili s vysokými. Dívali se jim do hrudi a čekali, až se vysocí skloní. „Rajčata jsou uvařená. Saláty taky. Houby přežily, ty přežijou všechno. Zavřela jsem dva ventily ze tří. Kdybych zavřela třetí, praskne to u skály a pak tam nikdo nedojde.“
 
-Sael se dívala na páru nad spoji. V knize nebylo nic o teplé vodě v chodbách. Paměť pod horou znala jen chlad. Rok 1172, kdy skála zhasla a sídlo vychladlo tak, že lidé odešli. Nikdo si nepamatoval, co dělat, když skála hřeje víc.
+Nad spoji stála pára. V knize nebylo nic o teplé vodě v chodbách. Paměť pod horou znala jen chlad. Rok 1172, kdy skála zhasla a sídlo vychladlo tak, že lidé odešli. Nikdo si nepamatoval, co dělat, když skála hřeje víc.
 
 „Kolik vás je dole?“ zeptala se.
 
@@ -42,7 +42,7 @@ Tadeáš seděl u vstupního ventilu na převráceném kbelíku, s notebookem na
 
 Ukázal jim obrazovku. Křivky, které Sael neuměla číst, a Lada je číst nechtěla. Tadeáš ukazoval prstem. Teplota vody na vstupu. Teplota vzduchu u skály. Tlak v okruhu. A ještě něco, čemu říkal *kmitání*, malé zuby na spodní čáře, které se objevovaly a mizely.
 
-„Chodí to v noci,“ řekl. „Vždycky v noci. Někdy dvě hodiny, někdy pět. Když to chodí, skála víc hřeje.“ Podíval se na Sael. „A když skála víc hřeje, ukazuje.“
+„Chodí to v noci,“ řekl. „Vždycky v noci. Někdy dvě hodiny, někdy pět. Když to chodí, skála víc hřeje. A když skála víc hřeje, ukazuje.“
 
 „Já vím.“
 
@@ -54,7 +54,7 @@ Ukázal jim obrazovku. Křivky, které Sael neuměla číst, a Lada je číst ne
 
 „Tak co.“
 
-Tadeáš se na ni podíval a pak zase na obrazovku. Bylo mu třicet. Narodil se pod horou a skálu znal od tří let. Ladina matka ho tehdy vzala na kolena a položila mu dlaň na hladkost a řekla *poslouchej*. Od té doby poslouchal. Ve dvaceti si koupil první přístroj, v pětadvaceti pátý. Lada mu to vyčítala. Říkala, že skálu poslouchá dlaní a přístroje mu řeknou jen to, co si myslí ti, kdo je vyrobili.
+Tadeáš zvedl oči a zase je sklopil k obrazovce. Bylo mu třicet. Narodil se pod horou a skálu znal od tří let. Ladina matka ho tehdy vzala na kolena a položila mu dlaň na hladkost a řekla *poslouchej*. Od té doby poslouchal. Ve dvaceti si koupil první přístroj, v pětadvaceti pátý. Lada mu to vyčítala. Říkala, že skálu poslouchá dlaní a přístroje mu řeknou jen to, co si myslí ti, kdo je vyrobili.
 
 Teď mu to nevyčítala. Teď stála za ním a dívala se na tu obrazovku, jako by z ní mohla něco vyčíst.
 
@@ -74,13 +74,13 @@ Ve 23:16 se skála rozsvítila.
 
 Sael už neměřila čas hodinkami. Věděla, kolik to trvá. Třicet osm vteřin, třikrát. Tečky světla. Devět padá. Kraj shora, hory, voda. Domy v řadách, postavy. Jedno světlo přichází odjinud.
 
-Dívala se na to potřiadvacáté. Zapisovala si to. Každou noc stejně: čas, počet opakování, a co bylo jinak. Většinou nebylo jinak nic. Někdy se obraz zachvěl, jako se chvěje obraz na staré televizi, když jede za domem traktor. Někdy byl slabší. Jednou, sedmadvacátého ledna, se zastavil uprostřed domů a začal znovu od teček. Sael to zapsala. Nevěděla, co to znamená. Věděla, že se to stalo.
+Viděla to potřiadvacáté. Zapisovala si to. Každou noc stejně: čas, počet opakování, a co bylo jinak. Většinou nebylo jinak nic. Někdy se obraz zachvěl, jako se chvěje obraz na staré televizi, když jede za domem traktor. Někdy byl slabší. Jednou, sedmadvacátého ledna, se zastavil uprostřed domů a začal znovu od teček. Sael to zapsala. Nevěděla, co to znamená. Věděla, že se to stalo.
 
 Ve středu šestého února se stalo něco nového.
 
 Když potřetí zhaslo světlo, které přichází, nestáhlo se světlo doprostřed a netlouklo. Místo toho se na hladkosti ukázaly řádky.
 
-Sael to viděla i dnes. Stála na schodech a dívala se, jak se po třetím opakování tma v hladkosti rozjasnila jinak. Rovnoměrně, jako papír pod lampou. A na tom papíře čáry. Svislé, krátké a dlouhé. Tečky, ve skupinách. Jedna, dvě, tři, čtyři tečky, víc ne. Řádky. Každý řádek začínal krátkou čarou. Celé to bylo uspořádané do mřížky, řádek pod řádkem, sloupec vedle sloupce. Tečky ve sloupcích nestály v jedné výšce.
+Teď to Sael viděla znovu. Stála na schodech a dívala se, jak se po třetím opakování tma v hladkosti rozjasnila jinak. Rovnoměrně, jako papír pod lampou. A na tom papíře čáry. Svislé, krátké a dlouhé. Tečky, ve skupinách. Jedna, dvě, tři, čtyři tečky, víc ne. Řádky. Každý řádek začínal krátkou čarou. Celé to bylo uspořádané do mřížky, řádek pod řádkem, sloupec vedle sloupce. Tečky ve sloupcích nestály v jedné výšce.
 
 Stálo to tam jedenáct vteřin. Pak se to změnilo v jinou mřížku. Jiné čáry, jiné skupiny teček. Jedenáct vteřin. Další.
 
@@ -94,7 +94,9 @@ Sael stála na schodech s blokem v ruce. Měla pokreslené tři listy. Ruka ji b
 
 V knize nic takového nebylo. Prošla ji celou, od středy do soboty, každou noc od jedné do čtyř. Prošla i staré listy, ty nejhlubší, kde se ptačí stopy teprve hledaly a vypadaly jako opravdové ptačí stopy ve sněhu. Nic. Mnich také nic takového nepsal. V roce 1172 skála ukázala obrazy a pak poslala světlo vzhůru skrz horu. Řádky neukázala.
 
-Jen jednou v životě viděla Sael takové čáry a tečky. Na posledním listu mnichovy knihy. Pod kresbou úlomku kosti, pod větou, ke které mnich nenapsal na okraj nic. Tenkrát, v lednu 2025, když ten list poprvé držela v rukou, si myslela, že je to ozdoba. Jako je ozdobou řetízek kolem iniciály.
+Jen jednou v životě viděla Sael takové čáry a tečky složené do mřížky. Na posledním listu mnichovy knihy. Pod kresbou úlomku kosti, pod větou, ke které mnich nenapsal na okraj nic. Tenkrát, v lednu 2025, když ten list poprvé držela v rukou, si myslela, že je to ozdoba. Jako je ozdobou řetízek kolem iniciály.
+
+Cizí znaky měl i archiv. Ne v knize, ve složce, která ležela zvlášť, za nejstaršími svazky. Rokyta je opisovala z listů, které nikdo nečetl. Nikdo je ani neuměl číst. Ke každému znaku připsala ptačím písmem glosu, co se o něm ví. Sael ty opisy znala, držela je v ruce mnohokrát. Vzpomněla si na ně až teď, nad blokem. U skály ne. Stály po jednom, každý na svém řádku, a Rokytiny tečky vypadaly jako drobná kolečka. Mřížku z nich nikdo neskládal a nikdo je s ničím nesrovnával. A nikdo o nich nemluvil, ani Rokyta, ani Sael. Co leží v archivu, se před denními neotvírá.
 
 Teď se dívala na své tři listy a nevěděla, co si myslí.
 
@@ -118,7 +120,7 @@ Pak zazvonil telefon.
 
 „Tak víte, proč volám.“
 
-Sael seděla v archivu u stolu, s knihou zavřenou před sebou. Z šachty nad stolem táhl mráz a za zády jí hřála skála.
+Sael seděla v archivu u stolu, s knihou zavřenou před sebou. Ze šachty nad stolem táhl mráz a za zády jí hřála skála.
 
 „Kolik lidí máte dole?“ zeptal se Brandl.
 
@@ -156,7 +158,7 @@ Sael mlčela.
 
 „Tak mi pomozte.“
 
-Sael se dívala na zavřenou knihu. Na desky z tmavé kůže, které tak dlouho držela v rukou, že znala každou jizvu.
+Sael položila dlaň na zavřenou knihu, na desky z tmavé kůže, které držela v rukou tak dlouho, že znala každou jizvu, jako kdysi její matka znala každý vryp na prkénku od chleba.
 
 „A archiv?“ zeptala se.
 
@@ -186,7 +188,7 @@ Ne do aplikace. Na její pracovní adresu, tu, kterou měla na webu dílny. Čes
 
 Podepsáno *Konrad Wehrle*.
 
-Sael si to přečetla dvakrát. Pak se zarazila u jména a přečetla si ho potřetí.
+Sael si to přečetla dvakrát, u jména se zarazila a přečetla si ho potřetí.
 
 Konrad.
 
@@ -200,9 +202,9 @@ V úterý byla v Chebu, u mnichovy knihy, s tou ženou.
 
 Sael tam šla, protože to sama chtěla. Šindelářová jí ve čtvrtek odpoledne zavolala, že Vrbová chce kodex vidět, a zeptala se, jestli se smí po zpevnění listovat celý. Sael řekla ano a že u toho chce být. Kodex byl v depozitáři od prosince. Byl hotový, popravdě, už v létě 2027. Hřbet nebyl horší, než vypadal. Byl přesně tak špatný, jak vypadal, a Sael ho od října do července stabilizovala a zpevnila, jak to stojí v protokolu. Pak knihu dva a půl roku držela v dílně v trezoru a do protokolu psala každý čtvrtrok *pokračuje*.
 
-Tenkrát, v říjnu 2026, jí Šindelářová přeposlala e-mail té ženy. *Teď bych ho chtěla číst podle toho, co nehledám.* Sael si tu větu přečetla a v tu chvíli se rozhodla. Za Vrbovou, za Šindelářovou, za každého, kdo by kdy chtěl tu knihu otevřít na dvoustraně s mapou. Rozhodla, protože na mapě byla hora. Komůrky pod horou s *non certum*. Voda nad nimi. Stará cesta ven. Kdo tu mapu bude číst podle toho, co nehledá, najde i to, co hledat neměl.
+Tenkrát, v říjnu 2026, jí Šindelářová přeposlala e-mail té ženy. *Teď bych ho chtěla číst podle toho, co nehledám.* Sael si tu větu přečetla a v tu chvíli se rozhodla. Za Vrbovou, za Šindelářovou, za každého, kdo by kdy chtěl tu knihu otevřít na dvoustraně s mapou. Rozhodla, protože na mapě byla hora. Komůrky pod horou s *non certum*. Voda nad nimi. Stará cesta ven. Sken té mapy ta žena už měla. Sken ukazoval jen čáry. Originál pod bočním světlem ukázal i to, co bylo pod nimi. Kdo tu mapu bude číst podle toho, co nehledá, najde i to, co hledat neměl.
 
-Mapa je špatně. Ale ne dost.
+Mapa byla špatně. Ale ne dost.
 
 Pak se v lednu rozsvítila skála a lidé z fóra nakreslili kolem hory elipsu. Hora se prozradila sama. Žádný trezor v dílně už nic nechránil. Když Šindelářová zavolala, Sael řekla ano dřív, než si to rozmyslela. Chtěla vidět, co ta žena udělá.
 
@@ -214,7 +216,7 @@ A předtím, ještě u slatiny, řekla *Nemá jméno*. O psovi.
 
 Sael tu knihu měla u sebe tři roky. Viděla každou díru v pergamenu, každé místo, kde inkoust prorazil. Že mnich nedal svému psovi jméno, si nevšimla.
 
-Nikdy nikomu neřekla, jak se jí to dotklo. Ani teď to nikomu neřekla.
+Nikomu neřekla, jak se jí to dotklo.
 
 Když Vrbová řekla *Píše to sám* o *non bene*, Sael se usmála. Vrbová to viděla. Sael to věděla, protože to byla jedna z mála chvil toho dopoledne, kdy se Vrbová podívala jinam než na pergamen.
 
@@ -222,15 +224,15 @@ Když Vrbová řekla *Píše to sám* o *non bene*, Sael se usmála. Vrbová to 
 
 V noci na středu seděla v archivu nad knihou.
 
-Neotevřela ji na posledním svazku. Otevřela truhlu pod stolem a vzala do rukou ten nejstarší list. Ležel na dně, v obalu z nekyselého papíru, který mu Sael ušila v sedmdesátých letech, když se naučila, co je nekyselý papír.
+Neotevřela ji na posledním svazku. Otevřela truhlu pod stolem a vzala do rukou ten nejstarší list. Ležel na dně, v obalu z nekyselého papíru, který mu Sael ušila v sedmdesátých letech, když se naučila, co je nekyselý papír. Kdysi býval svázaný na samém začátku knihy. Vazba se na něm rozpadla ještě za Rokyty a Sael ho vyňala, aby se nedrolil dál.
 
-Pergamen tmavý a tuhý jako kůra. Na něm kresba kopce, jedna čára, hřbet se strmějším koncem. Pod ním kruh. Vedle kruhu čtyřicet jedna čárek, ve dvou řadách, nakreslených tlustě a pomalu, inkoustem, který ztratil barvu. Pod čárkami znak úřadu, ten první, s dlouhým tahem dolů, ještě nejistým, jako když se písmo teprve rozhoduje, jaké bude. A v rohu jediné slovo latinkou, malými písmeny, cizí rukou, nebo rukou, která latinku kreslila poprvé.
+Pergamen tmavý a tuhý jako kůra. Na okraji kresba kopce, jeden oblouk se strmějším koncem. Uvnitř kopce kruh a z něj vlnovky, jako když se na vodu hodí kámen. Pod kopcem šipka ven. Vedle kresby čtyřicet jedna čárek v jedné řadě, nakreslených tlustě a pomalu, inkoustem, který ztratil barvu. Pod čárkami znak úřadu, ten první, s dlouhým tahem dolů, ještě nejistým, jako když se písmo teprve rozhoduje, jaké bude. A u hřbetu, natěsnané na samém kraji, jediné slovo latinkou, malými písmeny, cizí rukou, nebo rukou, která latinku kreslila poprvé.
 
 *monachus*
 
-Nic víc. Žádné jméno, žádný rok. Rok tam připsal až někdo pozdější, drobně, s otazníkem. Ti, kdo psali, věděli, kdo byl mnich. Nepotřebovali to psát. Čtyřicet jedna čárek za čtyřicet jedna lidí, kteří vyšli z hory, a jedno cizí slovo za toho, kdo šel s nimi.
+Žádné jméno. Rok tam připsal až někdo pozdější, jiným inkoustem, černějším: *MCLXXII*. Ti, kdo psali, věděli, kdo byl mnich. Nepotřebovali to psát. Čtyřicet jedna čárek za čtyřicet jedna lidí, kteří vyšli z hory, a jedno cizí slovo za toho, kdo šel s nimi.
 
-Ostří o něm vyprávěli dodnes. Že nesl starou Ostru na zádech korytem, kde voda šla po bradu. Že v komoře s kamennou deskou spočítal všechny, malé i velké, a pak to číslo nikam nenapsal. Že potom napsal knihu, ve které o nich nebylo ani slovo.
+Ostří o něm vyprávěli dodnes. Že nesl starou Ostru korytem. Že v komoře s kamennou deskou spočítal všechny, malé i velké, a pak to číslo nikam nenapsal. Že potom napsal knihu, ve které o nich nebylo ani slovo.
 
 *Tacui.*
 
@@ -244,7 +246,7 @@ Pod tím Jívinou rukou, o pět let později: *Mater eius: Margaretha, vidua Geo
 
 A pod tím znak úřadu, Svídinou rukou, poprvé. Inkoust se v ohybu zdvojil.
 
-Dorota byla její praprababička. Matka matky její babičky. Sael ji nepamatovala, nikdo z živých ji nepamatoval. Znala ji jen z tohoto řádku a z jednoho dalšího, o čtyřicet listů dál, kde se Dorotě narodila dcera, a z řádku o padesát let později, kde Dorota zemřela. Mezi tím nic. Kniha zapisuje, co se stalo, ne jak to bylo.
+Dorota byla její praprababička. Matka matky její babičky. Sael ji nepamatovala, nikdo ze živých ji nepamatoval. Znala ji jen z tohoto řádku a z jednoho dalšího, o čtyřicet listů dál, kde se Dorotě narodila dcera, a z řádku o padesát let později, kde Dorota zemřela. Mezi tím nic. Kniha zapisuje, co se stalo, ne jak to bylo.
 
 V celé knize stálo latinkou dvaadvacet takových jmen. Od třináctého do sedmnáctého století, s *angenommen* nebo *aufgenommen* nebo *in familiam receptus*, podle toho, kdo držel pero a od koho se naučil psát. Znak *vzatá* měla jen Dorota. U ostatních nebylo nic.
 
@@ -288,11 +290,11 @@ Sael kývla.
 
 Šla nahoru v pět.
 
-Přes statek, kde v kuchyni seděly Ladiny vnučky nad úkoly a dívaly se na ni, jak prochází, protože vysoká v kuchyni byla pořád událost. Přes sad, kde stály jabloně v závějích a pod nimi stopy srn. Pak lesem, mimo cestu, po svahu, kudy chodila od dětství a kudy by došla i se zavřenýma očima. V zimě, za soumraku, viděla les tak, jak ho denní vidí za poledne v zamračeném dni. Šedé kmeny, šedý sníh, šedá tma mezi nimi. Barvy ne. Barvy nikdy. Ale každou větev.
+Přes statek, kde v kuchyni seděly Ladiny vnučky nad úkoly a zvedly hlavy, když procházela, protože vysoká v kuchyni byla pořád událost. Přes sad, kde stály jabloně v závějích a pod nimi stopy srn. Pak lesem, mimo cestu, po svahu, kudy chodila od dětství a kudy by došla i se zavřenýma očima. V zimě, za soumraku, viděla les tak, jak ho denní vidí za poledne v zamračeném dni. Šedé kmeny, šedý sníh, šedá tma mezi nimi. Barvy ne. Barvy nikdy. Ale každou větev.
 
 Na kraji lesa nad haldou se zastavila. Za kmenem buku, který tu stál, když byla dívka.
 
-Žena byla dole u prohlubně. Svítila si čelovkou a v tom kuželu světla dělala přesně to, co Tadeáš řekl. Svíčka na drátu, na větvi. Spouštěla ji pomalu přes kraj jámy. Sael viděla plamen, malý a žlutý, jak sestupuje, a pak se zakymácel a zhasl. Žena vytáhla větev. Chvíli se na ni dívala. Pak vytáhla nůž a udělala zářez.
+Žena byla dole u prohlubně. Svítila si čelovkou a v tom kuželu světla dělala přesně to, co Tadeáš řekl. Svíčka na drátu, na větvi. Spouštěla ji pomalu přes kraj jámy. Sael viděla plamen, malý a žlutý, jak sestupuje, a pak se zakymácel a zhasl. Žena vytáhla větev, chvíli ji držela před sebou a pak vytáhla nůž a udělala zářez.
 
 Sael ten pohyb znala. Neviděla ho nikdy, ale znala ho. Ze stránky, kterou držela v rukou tolikrát. Na slatině, napsal mnich. Svíce zhasíná vždycky ve stejné výšce. Klečel tam a měřil. A pak napsal, že jeho dopis převorovi byl mylný.
 
@@ -306,7 +308,7 @@ Zavřela oči a ustoupila za kmen.
 
 Stála tam a poslouchala. Čekala, že žena vykřikne. Že se rozběhne, k autu, ke vsi, pryč. Že bude svítit do lesa a volat, jak volají denní, když se bojí, *haló, kdo je tam*.
 
-Žena nevykřikla. Stála tam. Sael slyšela, jak dýchá. Pak slyšela, jak čelovka cvakla, jak ji žena posunula na čele. Pak kroky. Pomalé. K autu. Nespěchala.
+Žena nevykřikla. Stála tam. Sael slyšela, jak dýchá, a potom, jak cvakla čelovka, když si ji žena posunula na čele. Pak kroky. Pomalé. K autu. Nespěchala.
 
 Sael otevřela oči až ve chvíli, kdy dole na cestě zabouchly dveře auta.
 
@@ -328,7 +330,7 @@ Sael mlčela.
 
 „Já vím.“
 
-„Ty víš všechno, co je v knize.“ Lada se na ni podívala. „Já vím, jak se tady dýchá.“
+„Ty víš všechno, co je v knize,“ řekla Lada. „Já vím, jak se tady dýchá.“
 
 Tadeáš seděl na kbelíku a díval se na tabulku na zdi a dělal, že tam není.
 
@@ -362,10 +364,10 @@ Vlhkoměr ukazoval padesát dva. Skála za zády hřála. Kniha ležela na stole
 
 Seděla a dívala se na své ruce na kožených deskách.
 
-Rozhodla se. Osloví tu ženu. Řekne jí tolik, kolik bude třeba, a ani o slovo víc. Žena změří, co je třeba změřit, a napíše to tak, aby to Lada přečetla a rada uvěřila. Sídlo se vyklidí, dokud skála nepřestane hořet. Brandl dostane odpověď, kterou nečeká. Archiv zůstane, kde je. Seznam zůstane v kazetě. Těch dvaadvacet jmen zůstane tam, kde stála osm set let, v knize, kterou nikdo nečte.
+Rozhodla se. Osloví tu ženu. Řekne jí tolik, kolik bude třeba, a ani o slovo víc. Žena změří, co je třeba změřit, a napíše to tak, aby to Lada přečetla a rada uvěřila. Sídlo se vyklidí a zůstane prázdné, dokud skála nepřestane hořet. Brandl dostane odpověď, kterou nečeká. Archiv zůstane, kde je. Seznam zůstane v kazetě. Těch dvaadvacet jmen zůstane tam, kde stála osm set let, v knize, kterou nikdo nečte.
 
 Bylo to dobré rozhodnutí. Sael to věděla. Věděla to tak, jak to věděla Rokyta, Svída, Jíva a Aurel, a všichni před nimi, kteří rozhodovali, kdo co smí vědět, a vždycky věděli proč.
 
 Taky věděla, že se rozhodla za tu ženu. Že ta žena o tom zatím nic neví.
 
-Sael si to přiznala a nechala to být. Pak zhasla lampu a seděla v archivu potmě, kde viděla stejně dobře. Skála jí hřála do zad jako dlaň někoho, kdo neví, že jeho dlaň pálí.
+Sael si to přiznala a nechala to být. Zhasla lampu a seděla v archivu potmě, kde viděla stejně dobře. Skála jí hřála do zad jako dlaň někoho, kdo neví, že jeho dlaň pálí.

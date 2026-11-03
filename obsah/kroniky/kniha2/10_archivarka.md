@@ -36,7 +36,7 @@ Ilona přestala natírat.
 
 „Kde jsou děti teď?“
 
-Kilián se na ni podíval a dlouho neodpovídal. Pak řekl, pomalu, jako by to slovo bylo cizí a těžké: „V lese.“
+Kilián dlouho neodpovídal. Pak řekl, pomalu, jako by to slovo bylo cizí a těžké: „V lese.“
 
 „Les není váš.“
 
@@ -76,7 +76,7 @@ Otočila se.
 
 Stála na druhé straně studánky, na kraji měsíčního světla, a byla vysoká.
 
-Vysoká jako dveře, napadlo Ilonu dřív, než stihla myslet. Kiliána, který se musel sklánět pod překladem, by převyšovala o půl hlavy. Štíhlá, v šedém hladkém plášti, šedém do zelena jako kůra buků kolem. Takový Ilona nikdy neviděla, ani v Lipsku na trhu. Kápi měla staženou. Vlasy světlé, dlouhé, spletené do jednoho copu přes rameno, a v tom světle nebylo poznat, jestli jsou světlé jako len, nebo bílé stářím. Obličej bledý. Ne šedavý jako Kiliánův, jako klíčky brambor ve sklepě. Bílý. Hladký. Jako mouka, jako vápno na stěně kostela.
+Vysoká jako dveře, napadlo Ilonu dřív, než stihla myslet. Kiliána, který se musel sklánět pod překladem, by převyšovala o půl hlavy. Štíhlá, v šedém hladkém plášti, šedém do zelena jako kůra buků kolem. Takový Ilona nikdy neviděla, ani v Lipsku na trhu. Kápi měla staženou. Vlasy světlé, dlouhé, spletené do jednoho copu přes rameno, a v tom světle nebylo poznat, jestli jsou světlé jako len, nebo bílé stářím. Obličej bledý. Ne šedavý jako Kiliánův. Bílý. Hladký. Jako mouka, jako vápno na stěně kostela.
 
 A oči. Když pohnula hlavou, zachytily měsíc a vrátily ho, zelenavě, jako oči kočky ve tmě stodoly.
 
@@ -92,7 +92,7 @@ Ilona stála a nehýbala se. Myslela na Báru Seidlovou, kterou nikdy neviděla.
 
 *
 
-Šly do kopce asi hodinu. Merin šla napřed a Ilona za ní. Všimla si, že Merin jde pomalu, kvůli ní. Nikdy se jí nepodívala na nohy, a přesto se pokaždé, když Ilona zakopla o kořen, zastavila dřív, než Ilona zakopla podruhé. Les byl starý. Buky jako sloupy, hladké, šedé, a mezi nimi skoro nic, jen loňské listí, které šustilo pod Iloninýma nohama a pod Merininýma ne.
+Šly do kopce asi hodinu. Merin šla napřed a Ilona za ní. Všimla si, že Merin jde pomalu, kvůli ní. Merin se jí nikdy nepodívala na nohy, a přesto se pokaždé, když Ilona zakopla o kořen, zastavila dřív, než Ilona zakopla podruhé. Les byl starý. Buky jako sloupy, hladké, šedé, a mezi nimi skoro nic, jen loňské listí, které šustilo pod Iloninýma nohama a pod Merininýma ne.
 
 Došly ke skále. Vyčnívala ze svahu jako příď lodi, porostlá mechem a borůvčím, a pod ní, pod převisem, byla tma tmavší než les. Před tou tmou stály na kamenech tři nebo čtyři kmeny, vyhloubené a přikryté prkénky, a z nich se ozývalo tiché bzučení, jako když spí včely.
 
@@ -131,8 +131,6 @@ Merin chvíli mlčela. „Ten, co nemluví.“
 „Kilián ho udeřil.“
 
 „Já vím.“ Merin vstala, šla k polici a vrátila se s hliněnou nádobkou. Med. Tmavý, lesní, s kouskem plástu. „Řehoř tím mazal,“ řekla. „Říkal, že med je lepší než všechny lékárníkovy masti.“
-
-Ilona se na ni podívala.
 
 „Znala jste Řehoře.“
 
@@ -240,7 +238,7 @@ Merin se nepodívala na knihu. Nebo se podívala, a Ilona to neviděla.
 
 „Řekněte mi,“ řekla Ilona, když dopila, „proč bych vám měla věřit, že je převedete. Čtyřicet lidí. Dvacet dětí, které nikdy nebyly v lese. Přes hřeben, v noci.“
 
-Merin se na ni podívala a pak, poprvé, se trochu usmála. Nebyl to úsměv. Byl to jen pohyb v koutku úst, který se rozhodl, že úsměvem nebude.
+Merin se na ni podívala a pak se jí poprvé pohnul koutek úst. Jen pohyb, který se rozhodl, že úsměvem nebude.
 
 „Protože jsme to už dělali,“ řekla.
 
@@ -282,7 +280,7 @@ Podívala se znovu na ten znak na starém pergamenu. Byla to písařka, dcera p�
 
 Ruka stárne, řekla si Ilona. Za čtyři sta let se ruka změní. Za čtyři sta let by se změnilo všechno.
 
-Nevěřila tomu. A nevěřila ani tomu druhému. Seděla v místnosti vysekané do skály s ženou, které bylo čtyři sta let, nebo nebylo, a která měla na prostředníku mozol od pera. Nevěděla, čemu z toho věří, a tak nevěřila ničemu a dívala se.
+Nevěřila tomu. A nevěřila ani tomu druhému. Seděla v místnosti vysekané do skály se ženou, které bylo čtyři sta let, nebo nebylo, a která měla na prostředníku mozol od pera. Nevěděla, čemu z toho věří, a tak nevěřila ničemu a dívala se.
 
 Merin obrátila těch několik set listů zpátky přes starý pergamen a pak, jako by si toho všimla teprve teď, se podívala na otevřenou stránku s lesklým inkoustem a s řádkem *Dorothea*. Dlouze. A pak zavřela i ji. Desky dopadly na sebe s tupým zvukem, jako když se zavře truhla.
 
@@ -304,7 +302,7 @@ Merin kývla.
 
 „Ano.“
 
-„Nic vám neslíbím.“ Ilona se na ni podívala. „Dokud neuvidím tu dívku.“
+„Nic vám neslíbím. Dokud neuvidím tu dívku.“
 
 Merin se nepohnula. Ani o vlas. Ilona viděla takové ztuhnutí u pacientů, kterým řekla, co mají, a oni to věděli už předtím a doufali, že jim to nikdo neřekne.
 
@@ -326,7 +324,7 @@ Ilona nic neřekla. Nebylo co.
 
 „Vzali jste ji,“ řekla po chvíli.
 
-„Vzali.“ Merin se na ni podívala, a Ilona v jejích světlých očích uviděla něco, co nečekala. Ne vinu. Ne vzdor. Únavu. Takovou, jakou má havíř, který přišel z šichty a ví, že za šest hodin půjde zpátky. „Já ne. Ale my. My, kteří píšeme do té knihy, kdo se narodil a kdo umřel a kdo byl přijat. Moje pramáti přišla do lesa taky od studánky. Od jiné. Stojí tam napsaná, o hodně listů zpátky, stejným slovem.“ Odmlčela se. „Jsem z těch, kdo vzali, a z té, která byla vzatá. Obojí najednou. Tak to je.“
+„Vzali.“ Merin se na ni podívala, a Ilona v jejích světlých očích uviděla něco, co nečekala. Ne vinu. Ne vzdor. Únavu. Takovou, jakou má havíř, který přišel ze šichty a ví, že za šest hodin půjde zpátky. „Já ne. Ale my. My, kteří píšeme do té knihy, kdo se narodil a kdo umřel a kdo byl přijat. Moje pramáti přišla do lesa taky od studánky. Od jiné. Stojí tam napsaná, o hodně listů zpátky, stejným slovem.“ Odmlčela se. „Jsem z těch, kdo vzali, a z té, která byla vzatá. Obojí najednou. Tak to je.“
 
 „Markéta to neví.“
 

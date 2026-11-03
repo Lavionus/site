@@ -12,7 +12,7 @@ Stará žena z Heliny desítky umřela dvaadvacátého dne od sněhu, v noci. V 
 
 Její kámen dostala Vesina holka.
 
-Ta s botami převázanými trávou. Byla nejmladší z patnácti a nejlehčí. Druhý den po příchodu přestala jíst a třetí den přestala mluvit. Sefa ji vzala do síně sama, na rukou, a Vesa šla za nimi a zůstala stát u ústí, protože dovnitř nesměla. Pak se vrátila dolů a už tam nechodila. Jen se každý večer dívala nahoru.
+Ta s botami převázanými trávou. Byla nejmladší z patnácti a nejlehčí. Druhý den po příchodu přestala jíst a třetí den přestala mluvit. Sefa ji vzala do síně sama, na rukou, a Vesa šla za nimi a zůstala stát u ústí, protože dovnitř nesměla. Vrátila se dolů a už tam nechodila. Jen se každý večer dívala nahoru.
 
 *
 
@@ -20,7 +20,7 @@ Ten den, dvaadvacátý od sněhu, začali v údolí stavět.
 
 Bylo jich osm. Eren, Ardo, Bena, Hela, Vesa a tři z jejích lidí, ti, kteří ještě mohli zvednout sekeru. Nikdo je neposlal. Orrin o tom věděl a nic neřekl. Ardo ráno vzal z beden lano, to syntetické, šedé, které se netrhalo a nehnilo, a nikdo se ho nezeptal, kam ho nese.
 
-Na rovině pod roklí ležela jinovatka. Klacek, který Tal tehdy zarazila do hlíny nad Erenovou dolní řadou, tam pořád trčel. Eren od něj odměřil kroky do svahu, k první řadě. Ardo zarazil kůl na jednom konci a Bena na druhém, padesát kroků dál, a mezi ně natáhli lano. Napnuli ho tak, že zpívalo, když do něj foukl vítr. Ardo si klekl na jednom konci a díval se podél něj, s jedním okem zavřeným, jako se díval, když nakládal modul a hledal, jestli bedny stojí v ose.
+Na rovině pod roklí ležela jinovatka. Klacek, který Tal tehdy zarazila do hlíny nad Erenovou dolní řadou, tam pořád trčel. Eren od něj odměřil kroky do svahu, k první řadě. Ardo zapřel kůl kameny na jednom konci a Bena na druhém, padesát kroků dál, a mezi ně natáhli lano. Napnuli ho tak, že zpívalo, když do něj foukl vítr. Ardo si klekl na jednom konci a s jedním okem přimhouřeným zaměřil podél lana, jako když nakládal modul a hledal, jestli bedny stojí v ose.
 
 „Rovně,“ řekl.
 
@@ -44,7 +44,7 @@ K večeru stál v zemi kruh kůlů. Čtrnáct. Nakřivo, každý jinak vysoký, 
 
 Než se setmělo, přišla dolů Maela.
 
-Nesla dávky pro ty, kdo pracovali. Rozdělila je a pak stála a dívala se na kruh kůlů a na ohně mezi nimi a na šedé lano nad svahem. Dlouho. Pak se podívala na Erena.
+Nesla dávky pro ty, kdo pracovali. Rozdělila je a pak stála a dívala se na kruh kůlů a na ohně mezi nimi a na šedé lano nad svahem. Dlouho. Nakonec se obrátila k Erenovi.
 
 „Kolik dní na jeden?“
 
@@ -62,7 +62,7 @@ Maela kývla. Nic neřekla. Vzala prázdný sáček od dávek a šla zpátky nah
 
 Tio se rozkašlala dvacátého třetího dne od sněhu.
 
-Kašlala už předtím. Krátce, suše, ve spánku, a ráno přestala. Tentokrát nepřestala. Kašlala celé odpoledne, a večer se jí kašel zlomil do něčeho hlubšího, mokrého. Pak si lehla vedle ohně a nechtěla jíst. Maela jí podala kousek dávky a Tio se na něj podívala a odstrčila ho.
+Kašlala už předtím. Krátce, suše, ve spánku, a ráno přestala. Tentokrát nepřestala. Kašlala celé odpoledne, a večer se jí kašel zlomil do něčeho hlubšího, mokrého. Lehla si vedle ohně a nechtěla jíst. Maela jí podala kousek dávky a Tio ho odstrčila.
 
 Eren jí sáhl na čelo. Bylo horké.
 
@@ -108,7 +108,7 @@ Eren se ohlédl. Ikku stál v ústí, na kraji světla, a díval se na ně. Nic 
 
 „Ano,“ řekla Maela.
 
-Eren se na ni díval. V šeru síně jí neviděl do očí. Jen obrys a dech, který se jí srážel u úst.
+V šeru síně jí Eren neviděl do očí. Jen obrys a dech, který se jí srážel u úst.
 
 „Mluvíš jako on,“ řekla Maela. „Víš to? *A za týden by vás bylo padesát.*“
 
@@ -120,7 +120,7 @@ Ale zeptal by se on. On, který tu dohodu uzavřel, s rukou nad dvanácti kamín
 
 Otočil se. Vyšel ven, kolem Ikkua, do mrazu.
 
-Maela šla za ním. Neřekla nic. Ikku se díval, jak sestupují po suti, a pak se vrátil k ohni a přiložil.
+Maela šla za ním. Neřekla nic. Ikku počkal, až sestoupí po suti, a pak se vrátil k ohni a přiložil.
 
 *
 
@@ -146,7 +146,7 @@ Byla to místní řeč. Celé věty, ne jednotlivá slova. Ten zaražený dech n
 
 „Nevím.“
 
-Maela se na něj podívala přes Tio. Pak se podívala na Tio. Dívala se na dceru, jako by ji viděla z velké dálky.
+Maela se na něj podívala přes Tio a pak sklopila oči k dceři, jako by ji viděla z velké dálky.
 
 Tio zmlkla. Oči se jí zavřely. Spala.
 
@@ -156,7 +156,7 @@ Eren seděl u ohně a vyměňoval kameny.
 
 Orrin přišel s prvním světlem.
 
-Nesl kůži. Velkou, tmavou, se srstí dlouhou na prst, ne vydělanou do měkka jako ty na terase, ale tuhou a těžkou. Eren nevěděl, odkud ji má. Orrin měl nože. Nože se daly vyměnit.
+Nesl kůži. Velkou, tmavou, se srstí dlouhou na prst, ne vydělanou do měkka jako ty na terase, ale tuhou a těžkou. Odkud ji má? Orrin měl nože. Nože se daly vyměnit.
 
 A v druhé ruce nesl misku. Kamennou, jednu z těch, které místní dávali za nože. Bylo v ní něco, z čeho stoupala pára.
 
@@ -176,7 +176,7 @@ Tio pila. Nejdřív nechtěla, pak se napila, pak se napila znovu. Maela jí pod
 
 „U mého ohně je místo,“ řekl Orrin, když Tio dopila. Mluvil k Maele. „Pod skálou u pramene. Kámen je tam teplý celou noc, zevnitř. Udělali jsme si tam přístřešek z plachet, na dvakrát, a kůže na zem. Je tam tepleji než tady.“ Vstal. „Na jak dlouho chceš. Na noc. Na týden.“
 
-Pak se podíval na Erena. Krátce. Bez úsměvu, a přesto vlídně.
+Na Erena pohlédl jen krátce. Bez úsměvu, a přesto vlídně.
 
 „Nechci za to nic,“ řekl. „Ani od tebe, Erene.“
 
@@ -186,7 +186,7 @@ Odešel.
 
 Maela to řekla v poledne.
 
-Tio spala pod Orrinovou kůží, s obličejem rudým a mokrým, ale spala klidně. Kotel byl skoro prázdný. Kdo mohl chodit, šel pro dřevo nebo k Talinu kruhům v údolí, kde Ardo s Benou zatloukali do zmrzlé země kůly druhého domu. Pod plachtami zůstali jen nemocní a ti, kdo u nich seděli.
+Tio spala pod Orrinovou kůží, s obličejem rudým a mokrým, ale spala klidně. Kotel byl skoro prázdný. Kdo mohl chodit, šel pro dřevo nebo k Talinu kruhům v údolí, kde Ardo s Benou vypalovali ve zmrzlé zemi díry pro kůly druhého domu. Pod plachtami zůstali jen nemocní a ti, kdo u nich seděli.
 
 Maela seděla u ohně a přebírala kamínky. Ty, kterými počítala dávky. Nepočítala je. Jen je přesýpala z dlaně do dlaně.
 
@@ -194,11 +194,11 @@ Maela seděla u ohně a přebírala kamínky. Ty, kterými počítala dávky. Ne
 
 Eren se díval do ohně.
 
-„Na noc,“ řekl. „Dokud –“
+„Na noc,“ řekl. „Dokud…“
 
 „Ne na noc.“ Maela přesypala kamínky. „Půjdu k Orrinovi. S Tio. Jeho lidé budou mít jeskyni, Erene. Ne dvanáct kamenů u vchodu, kde táhne. Jeskyni.“
 
-„Nebudou. Neunese to. Řekl jsem to –“
+„Nebudou. Neunese to. Řekl jsem to…“
 
 „Já vím, co jsi řekl. Slyšela jsem to.“ Maela se na něj konečně podívala. „Tak budou mít to, co z ní zbude. Až se tam vejdou a začnou se dusit kouřem. Pořád to bude víc, než budeme mít my, tady, pod plachtou, s kameny z ohně.“
 
@@ -210,9 +210,9 @@ Eren mlčel.
 
 „Ty to neumíš vidět,“ řekla. „Já to vidím. Vidím to, protože počítám a ty jen děláš, že počítáš. On má čtyři bedny. Ty máš řezák, který nepustíš. On má kůži a teplý kámen. Ty máš pravidlo.“ Hlas se jí nezlomil. Byl jen tišší. „Včera v noci jsi tam stál s ní na rukou. Ikku tam stál. Stačilo ukázat. A ty ses otočil.“
 
-„Kdybych to udělal pro ni –“
+„Kdybych to udělal pro ni…“
 
-„Tak bys to udělal pro ni.“ Maela položila kamínky na zem. Všechny, do jedné hromádky. „Tehdy jsi rozhodl, že nás zachráníš. Podepsal jsi to, protože jsi rozhodl, že tak to bude dobře. Nezeptal ses mě. A včera jsi rozhodl, že ji nezachráníš, protože tak to bude spravedlivé. Taky ses mě nezeptal.“ Dívala se na něj. „Pokaždé je to něco jiného, Erene. A pokaždé jsi to ty.“
+„Tak bys to udělal pro ni.“ Maela položila kamínky na zem. Všechny, do jedné hromádky. „Tehdy jsi rozhodl, že nás zachráníš. Podepsal jsi to, protože jsi rozhodl, že tak to bude dobře. Nezeptal ses mě. A včera jsi rozhodl, že ji nezachráníš, protože tak to bude spravedlivé. Taky ses mě nezeptal. Pokaždé je to něco jiného, Erene. A pokaždé jsi to ty.“
 
 Eren otevřel pusu.
 
@@ -230,9 +230,9 @@ Maela se na něj dívala dlouho.
 
 Balili se odpoledne.
 
-Nebylo toho moc. Maelina plachta. Tiina bunda, která jí byla velká, a boty, které převazovala trávou. Láhev. Maelin nůž. Kamínky v plátěném sáčku. A šiška. Ta, kterou Tio nesla první den, ze svahu u modulu, a ukazovala ji Ruovi. Nosila ji od té doby v kapse a Eren nevěděl, že ji pořád má, dokud ji Maela nevytáhla z kapsy Tiiny bundy a nepoložila na hromádku k ostatním.
+Nebylo toho moc. Maelina plachta. Tiina bunda, která jí byla velká, a boty, které převazovala trávou. Láhev. Maelin nůž. Kamínky v plátěném sáčku. A šiška. Ta, kterou Tio nesla první den, ze svahu u modulu, a ukazovala ji Ruovi. Nosila ji od té doby v kapse a Eren si myslel, že ji dávno ztratila, dokud ji Maela nevytáhla z kapsy Tiiny bundy a nepoložila na hromádku k ostatním.
 
-Maela vzala Tio. Zabalenou do Orrinovy kůže, s hlavou na rameni. Tio se probudila a dívala se kolem sebe skelnýma očima.
+Maela vzala Tio. Zabalenou do Orrinovy kůže, s hlavou na rameni. Tio se probudila a rozhlížela se skelnýma očima.
 
 „Kam jdeme?“
 
@@ -242,13 +242,13 @@ Maela vzala Tio. Zabalenou do Orrinovy kůže, s hlavou na rameni. Tio se probud
 
 Maela neodpověděla hned. „Táta přijde,“ řekla pak.
 
-Eren vzal ranec. Maela se na něj podívala, jako by se chtěla zeptat, a nezeptala se. Šli přes kotel. Mezi plachtami, kolem ohňů, kolem Sefina ohně, kde seděla Sefa a dívala se na ně a nic neřekla. Lidé se otáčeli. Nikdo nic neřekl.
+Eren vzal ranec. Maela se na něj podívala, jako by se chtěla zeptat, a nezeptala se. Šli přes kotel. Mezi plachtami, kolem ohňů, kolem Sefina ohně, kde seděla Sefa, sledovala je a nic neřekla. Lidé se otáčeli a mlčeli.
 
 Orrinův přístřešek stál pod skálou na horním kraji kotle, kousek stranou od pramene, tam, kde ze skály ve dne v noci stoupala pára. Skála tam byla teplá. Eren to cítil, už když se k ní blížil: vzduch se tam měnil, jako když se v habitatu přiblížíš k výměníku. Plachty byly napjaté na dvakrát, s mezerou mezi nimi, a pod nimi ležely na zemi kůže. Kdo tohle postavil, věděl, co dělá. Nebo měl štěstí.
 
 U vchodu stál Kaj.
 
-Podíval se na Erena, na ranec v jeho rukou. Natáhl ruce, aby si ho vzal. Eren mu ho podal. Kaj se nepodíval do očí. Otočil se a zanesl ranec dovnitř.
+Pohled mu sklouzl z Erena na ranec v jeho rukou. Natáhl ruce, aby si ho vzal. Eren mu ho podal. Kaj se nepodíval do očí. Otočil se a zanesl ranec dovnitř.
 
 Orrin vyšel ven. Podíval se na Tio, pak na Maelu. Ustoupil a pustil je dovnitř. Maela se sehnula pod plachtu a byla pryč.
 
@@ -256,7 +256,7 @@ Pak se Orrin podíval na Erena.
 
 „Děkuju, Erene,“ řekl.
 
-Nic víc. Jen to. Eren stál před přístřeškem a slyšel ve vzduchu zbytek té věty, tak, jak ji Orrin řekl tehdy u ohně pod sedmým. Nebyla tam. Slyšel ji stejně.
+Nic víc. Jen to. Eren stál před přístřeškem a slyšel ve vzduchu zbytek té věty, tak, jak ji Orrin řekl tehdy u ohně nad vrakem sedmého. Nebyla tam. Slyšel ji stejně.
 
 Otočil se a šel zpátky.
 
@@ -300,7 +300,7 @@ Maelin. Četla, kdo včera co bral. Desítku po desítce, nahlas, jako každé r
 
 Vedle ní stál Orrin. Neříkal nic. Jen stál, s rukama za zády, a když Maela dočetla poslední desítku, kývl. Lidé se rozešli.
 
-Eren se díval, jak se Maela otáčí a jde zpátky nahoru, k přístřešku pod teplou skálou. Ani jednou se nepodívala dolů.
+Maela se otočila a šla zpátky nahoru, k přístřešku pod teplou skálou. Ani jednou se nepodívala dolů.
 
 Tio přišla krátce potom.
 
@@ -318,13 +318,13 @@ Eren nevěděl, co jí říct.
 
 „Jakou?“
 
-Ru se na něj díval. Čekal taky, jako by rozuměl. Možná rozuměl.
+Ru čekal taky, jako by rozuměl. Možná rozuměl.
 
 Eren se rozhlédl. Po plachtě, pod kterou bylo víc místa, než kdy bylo. Po ohni. Po hromadě dřeva, které tu leželo na zítřek, pro síň. Dvanáct náručí.
 
 „Nosím dřevo,“ řekl.
 
-Tio se nad tím zamyslela. Pak kývla, jako by to bylo dobrá odpověď. Ru ji zatahal za ruku a ona se nechala odvést, k dolní tůni, kde se děti každé ráno honily v páře. Kůže se za ní vlekla.
+Tio se nad tím zamyslela a kývla, jako by to bylo dobrá odpověď. Ru ji zatahal za ruku a ona se nechala odvést, k dolní tůni, kde se děti každé ráno honily v páře. Kůže se za ní vlekla.
 
 Pak se zastavila a otočila.
 
@@ -346,8 +346,8 @@ Na dvanáctém kameni seděla Vesina holka. Seděla. Měla přes ramena kůži a
 
 Eren položil dřevo ke stěně, k ostatním. Narovnal ho, aby se nesesulo.
 
-Pak vyšel ven. Na terase seděla Tal u ohně. Dívala se na něj, a pak se podívala dolů, přes kotel, na horní kraj, kde pod plachtami Orrinova přístřešku prosvítal oheň.
+Vyšel ven. Na terase seděla Tal u ohně. Dívala se na něj, a pak dolů, přes kotel, na horní kraj, kde pod plachtami Orrinova přístřešku prosvítal oheň.
 
 Pak zase na něj.
 
-Eren nevěděl, co v tom pohledu je. Kývl. Tal nekývla. Ale nepřestala se dívat, dokud nesešel po suti dolů a nezmizel mezi plachtami.
+Co v tom pohledu je, nepoznal. Kývl. Tal nekývla. Ale nepřestala se dívat, dokud nesešel po suti dolů a nezmizel mezi plachtami.

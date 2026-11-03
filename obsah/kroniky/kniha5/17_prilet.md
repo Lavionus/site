@@ -36,7 +36,7 @@ Hana drží tužku nad papírem a nepíše.
 
 „Kdy?“
 
-„Až to najdou.“ A pak, než zavěsí: „Nikomu. Ani jí.“
+„Až to najdou.“ A pak, než zavěsí: „Nikomu. Ani paní Sálové.“
 
 „Ani jí,“ řekne Hana.
 
@@ -78,7 +78,7 @@ Na stole leží tři propisky v řadě. Hronková nesedne, dokud si nesednou ony
 
 Hana otevře sešit.
 
-„Kancelář ochránkyně není úkryt,“ řekne Hronková. „Co k nám přijde, je zapsané. Kdo to dal, kdy a za jakých podmínek. Nikdy nebudu tvrdit, že to nemám. Kdyby se zeptal soud, řeknu, že to mám, a řeknu, za jakých podmínek, a o tom, jestli to otevřu, bude rozhodovat soud, ne já. Neotevřu to sama, ani když budu chtít. A když mi někdo z těch, kdo jsou v té knize, řekne, že nechce, aby to u nás leželo, budu to brát vážně.“ Podívá se na Sael. „Řekla jste mi, že všechny se zeptat nemůžete, protože některé neznáte a některé jsou mrtví čtyři sta let.“
+„Kancelář ochránkyně není úkryt,“ řekne Hronková. „Co k nám přijde, je zapsané. Kdo to dal, kdy a za jakých podmínek. Nikdy nebudu tvrdit, že to nemám. Kdyby se zeptal soud, řeknu, že to mám, a řeknu, za jakých podmínek, a o tom, jestli to otevřu, bude rozhodovat soud, ne já. Neotevřu to sama, ani když budu chtít. A když mi někdo z těch, kdo jsou v té knize, řekne, že nechce, aby to u nás leželo, budu to brát vážně.“ Podívá se na Sael. „Řekla jste mi, že se všech zeptat nemůžete, protože některé neznáte a jiní jsou mrtví čtyři sta let.“
 
 „Ano.“
 
@@ -104,7 +104,7 @@ V autě, za Jihlavou, se Sael ozve podruhé.
 
 Velitel hasičů v Chebu má ruce jako Lada. Ne tvarem. Tím, jak drží papír. Rovně, za oba rohy, jako něco, co by mohlo spadnout a rozbít se.
 
-Hana mu přinese všechno, co může ukázat bez Mlýnce v hlavě. Pramen od ledna, den po dni. Strouhu od statku. Propad u haldy, CO₂ u kolen. Mrtvé ptáky na fotkách s datem. Svíčku na drátu, dvě rýhy na větvi. Roj u Nového Kostela, přírodní, nesouvisí. A Tadeášovu tabulku s předpovědí.
+Hana mu přinese všechno, co může ukázat, aniž by řekla, kdo pod Mlýncem žije. Pramen od února, den po dni. Strouhu od statku. Propad u haldy, CO₂ u kolen. Mrtvé ptáky na fotkách s datem. Svíčku na drátu, dvě rýhy na větvi. Roj u Nového Kostela, přírodní, nesouvisí. A Tadeášovu tabulku s předpovědí.
 
 Velitel čte pomalu. Je mu kolem padesáti, má krátké vlasy a na stole hrnek s kávou, která vystydla, protože na ni zapomněl.
 
@@ -112,13 +112,7 @@ Velitel čte pomalu. Je mu kolem padesáti, má krátké vlasy a na stole hrnek 
 
 „Nevím,“ řekne Hana. „Dva lidé to spočítali každý jinak, z jiných dat, a vyšlo jim to stejně. Kdybych to věděla jistě, řekla bych vám to jistě. Říkám vám to s tím, co mám.“
 
-Velitel se na ni podívá. Pak na tabulku. Pak zase na ni.
-
-„Vy jste ta z Mexika,“ řekne.
-
-„Ano.“
-
-„Moje žena to četla. Tu opravu.“ Nic víc k tomu neřekne. Odloží tabulku. „Pojedu se tam podívat sám. S detektorem. Kdo mě pustí dovnitř?“
+Velitel přejede pohledem z ní na tabulku a zpátky. Odloží tabulku. „Pojedu se tam podívat sám. S detektorem. Kdo mě pustí dovnitř?“
 
 „Majitelka. Paní Ostrá.“
 
@@ -138,7 +132,7 @@ Velitel podrží detektor u prahu. Pak u kolen. Pak nad hlavou. Čísla se měn�
 
 „Dole je plyn,“ řekne Lada. „Na ten se dívejte. Na nic jiného tam není co dívat.“
 
-Velitel se na ni podívá shora. Lada mu sahá k prsům. Nezaklání hlavu. Ostří ji nezaklánějí.
+Velitel na ni hledí shora. Lada mu sahá k prsům. Nezaklání hlavu. Ostří ji nezaklánějí.
 
 Hana stojí u schodů nahoru a vidí, jak se ti dva měří. Ne očima. Tím, jak oba drží svůj přístroj. Lada žlutou krabičku od Tadeáše, velitel svůj šedý. Dva lidé, kteří celý život vědí, kolik je stupňů a kolik procent a kde se to láme.
 
@@ -156,7 +150,7 @@ Velitel chvíli mlčí. Hana čeká, že se zeptá znovu. Nezeptá.
 
 *
 
-Třináctého večer, v pondělí, jde Hana k prameni podruhé toho dne. Nikdy tam nechodí večer. Měří v osm ráno, protože tak to bylo domluvené a protože ranní čísla jsou srovnatelná. Večer se tam chodí jen dívat.
+Třináctého večer, v pondělí, jde Hana k prameni podruhé toho dne. Večer tam nikdy nechodí. Měří v osm ráno, protože tak to bylo domluvené a protože ranní čísla jsou srovnatelná. Dnes jde, protože ráno stála pára výš než kdy dřív.
 
 Pramen má dvacet čtyři celá jedna. Ráno měl dvacet tři celá osm. Pára nad roklí je v soumraku šedá.
 
@@ -164,11 +158,11 @@ Muž stojí nad pramenem, výš na svahu, mezi buky. Hana by ho neviděla, kdyby
 
 Stejný, jaký nosí Kalina.
 
-Hana nevzhlédne. Klekne si k vývěru, jako by měřila, a telefon položí na kámen vedle druhého teploměru, displejem dolů a objektivem nahoru, k svahu. Udělá tři fotky. Na dvou je jen les. Na třetí je muž s kruhem nad hlavou, z boku, rozmazaný, ale celý.
+Hana nevzhlédne. Klekne si k vývěru, jako by měřila, a telefon opře o kámen vedle druhého teploměru, objektivem ke svahu. Udělá tři fotky. Na dvou je jen les. Na třetí je muž s kruhem nad hlavou, z boku, rozmazaný, ale celý.
 
 Když vstane, je pryč.
 
-Ráno to řekne Tadeášovi. Ukáže mu fotku. Tadeáš se na ni dívá dlouho, s rukama v kapsách, a pes čenichá u kamene.
+Ráno to řekne Tadeášovi. Ukáže mu fotku. Tadeáš drží telefon dlouho, s rukama v kapsách, a pes čenichá u kamene.
 
 „To je on,“ řekne Tadeáš.
 
@@ -178,7 +172,7 @@ Ráno to řekne Tadeášovi. Ukáže mu fotku. Tadeáš se na ni dívá dlouho, 
 
 „Proč jste mi to neřekl?“
 
-Tadeáš pokrčí rameny. „Lada říkala, ať se do toho nemíchám. Že to je vaše.“ Pak se na ni podívá. „On viděl mě. Já vím, že viděl.“
+Tadeáš pokrčí rameny. „Lada říkala, ať se do toho nemíchám. Že to je vaše.“ Pak zvedne oči. „On viděl mě. Já vím, že viděl.“
 
 Hana pošle fotku Kubešovi ještě v autě, s časem a místem. Kubeš odpoví za čtyři minuty. *Mám. Děkuji.* Nic víc. Kubeš píše zprávy jako protokol.
 
@@ -191,8 +185,6 @@ Kalina na levý stůl rozloží tři listy. Vlastní měření z dubnové noci. 
 „Jih,“ řekne a položí prst na jeden. „Evropa.“ Na druhý. „Nedal jsem jim nic než souřadnice a čas. Zlom našli obě. Ve stejné minutě. Posun mezi nimi je přesně takový, jaký má být, když stojí každá jinde na Zemi.“
 
 Hana se dívá na tři čáry. Tři různé ruce, tři různé přístroje. Každá čára je rovná až do jednoho místa a tam se láme. Stejně.
-
-Stejný tah, jiná ruka.
 
 „Takže,“ řekne.
 
@@ -218,7 +210,7 @@ Pak se podívá na pravý stůl. Leží na něm hnědá obálka s podpisem přes
 
 „Je v něm adresa,“ řekne Hana. „Hodně adres.“
 
-Kalina kývne. Chvíli mlčí. Pak řekne větu, kterou si zjevně připravoval ve vlaku.
+Kalina kývne a řekne větu, kterou si zjevně připravoval ve vlaku.
 
 „Ta noc. Devětadvacátého. Tlukot se prodlužuje, jak říkal ten mladý muž. Moje pulzy taky. Budu tady, s přijímačem, v pokoji nad jídelnou, jestli mi ho paní pronajme.“ Odmlčí se. „Nejdu dolů. Já tam dolů nepatřím. Ale kdyby se tam dělo něco, co se dá změřit nahoře, chci, aby to změřil někdo, kdo to umí.“
 
@@ -237,7 +229,7 @@ Tři týdny po obálce sedí Hana na stejné židli znovu.
 
 „Tak.“
 
-Hana položí na stůl Tadeášovu tabulku. Kopii, ne originál. Kubeš se na ni podívá a neříká nic, protože čísla v sloupcích mu nic neříkají a ví to.
+Hana položí na stůl Tadeášovu tabulku. Kopii, ne originál. Kubeš ji přejede očima a neříká nic, protože čísla ve sloupcích mu nic neříkají a ví to.
 
 „Pod statkem nad Mlýncem jsou stará podzemní díla,“ řekne Hana. „Sklepy, chodby, kus středověké štoly. Od ledna se tam hromadí oxid uhličitý a teplá voda. Měřím to od února u pramene, u štoly a u strouhy od statku. Majitelé statku se do neděle odstěhují. Hasiči budou v noci z devětadvacátého na třicátého na dvoře, protože tu noc se čeká nejvíc plynu. Domluvila jsem to s nimi.“
 
@@ -245,7 +237,7 @@ Hana položí na stůl Tadeášovu tabulku. Kopii, ne originál. Kubeš se na ni
 
 „Ano. Teď ta vaše.“ Hana se nadechne. „Ve statku je papír, který chtějí lidé, o kterých jsem vám psala v té obálce. Seznam. Originál toho, z čeho jsou ty tři listy na fóru. Oni vědí, že tu noc bude dům prázdný. Vědí to stejně přesně jako já, protože mají vlastního technika, který poslouchá tutéž věc.“
 
-Kubeš se opře. Neříká nic. Pak vezme propisku a napíše si na kraj stolní podložky číslo. *29./30.*
+Kubeš se opře. Neříká nic. Vezme propisku a napíše si na kraj stolní podložky číslo. *29./30.*
 
 „Jak to víte?“
 
@@ -257,7 +249,7 @@ Kubeš se opře. Neříká nic. Pak vezme propisku a napíše si na kraj stolní
 
 „A kdo tam bydlel předtím?“
 
-Hana se na něj podívá. Kubeš se dívá zpátky. Není to past. Je to otázka, kterou si potom položí sám, jestli se ji teď nezeptá.
+Hana zvedne oči. Kubeš jí pohled vrátí. Není to past. Je to otázka, kterou si potom položí sám, jestli se ji teď nezeptá.
 
 „Majitelé,“ řekne Hana. „Rodina. Stará rodina, statek drží přes dvě stě let. Nejsou na tom seznamu z fóra a nikdo z nich nechce, abych o nich mluvila. Tak o nich nemluvím.“
 
@@ -271,7 +263,7 @@ Hana chvíli váhá. Pak vytáhne z batohu fotokopii, kterou má od února. Mapu
 
 „Tohle je mapa z dvanáctého století,“ řekne. „Kreslil ji mnich, který v té hoře byl. Je veřejná, kodex leží v chebském archivu. Ukazuje druhou cestu ven. Na východním konci hřbetu, tam, kde je svah nejstrmější.“ Položí prst na konec čáry. „Napsal k tomu, že ji viděl jednou a ne dobře. Nevím, jestli ještě existuje. Kdybych chtěla do toho podzemí a věděla, že na dvoře stojí hasiči, hledala bych tuhle.“
 
-Kubeš si mapu vezme. Podívá se na latinu u konce čáry.
+Kubeš si mapu vezme a najde latinu u konce čáry.
 
 „Co tam stojí?“
 
@@ -289,7 +281,7 @@ Hana nefotí. Nepíše. Stojí u silnice a je tam, protože ji Lada v pátek po�
 
 „Ať vidí, že se nikdo nebojí,“ řekla Lada. „Děcka.“
 
-Děti jsou čtyři, pak šest, pak Hana přestane počítat. Holčička z okna jde poslední, za ruku s ženou s copem, kterou Hana viděla v březnu na radě. U silnice se zastaví a podá Haně složený papír. Pak se nechá odvést k autu a nastoupí, aniž se ohlédne.
+Děti z ostatních rodin jsou čtyři, pak šest, pak Hana přestane počítat. Holčička z okna jde poslední, za ruku se ženou s copem, kterou Hana viděla v březnu na radě. U silnice se zastaví a podá Haně složený papír. Pak se nechá odvést k autu a nastoupí, aniž se ohlédne.
 
 Na papíře je kopec. Nahoře dům se sadem. Uvnitř kopce, nakreslený žlutou pastelkou, obdélník. Kolem obdélníku malé postavy, každá s rukama nahoře, jako když děti kreslí radost. Pod tím tiskacím písmem, s jedním písmenem obráceně: *PRO PANÍ CO MĚŘÍ.*
 
@@ -349,7 +341,7 @@ Velitel to večer slyší po telefonu a dlouho mlčí.
 
 „Ano.“
 
-„Na vlastní odpovědnost, ať to zní jakkoli blbě.“ Je slyšet, jak si něco zapisuje. „Dostanou od nás vysílačku a každý vlastní detektor. Ve dvanáct jdeme dolů pro ně, i kdyby tam bylo čisto jako v kostele. Řekněte jim to.“
+„Na vlastní odpovědnost, ať to zní jakkoli blbě. Dokud se nic neděje, nemám právo je odtamtud vytáhnout proti jejich vůli.“ Je slyšet, jak si něco zapisuje. „Dostanou od nás vysílačku a každý vlastní detektor. Ve dvanáct jdeme dolů pro ně, i kdyby tam bylo čisto jako v kostele. Řekněte jim to.“
 
 „Řeknu.“
 
@@ -373,7 +365,7 @@ Kalina volá v devět deset z pokoje nad jídelnou.
 
 „Kolik?“
 
-„Hodně.“ Pauza. „Paní Vrbová. To, co jste si spočítala, už teď nesedí. Je to delší.“
+„Hodně.“ Pauza. „Paní Vrbová. To, co jsme spočítali, už teď nesedí. Je to delší.“
 
 V devět dvacet vyjde ze sadu Sael.
 
@@ -385,7 +377,7 @@ U vrat se zastaví vedle Hany.
 
 „Všichni tři. V kuchyni. Lada čeká na vás.“
 
-Sael kývne. Podívá se na hasičská auta, na lahve, na muže na schůdcích, kteří zvedli hlavy a dívají se na ni, protože je vysoká a protože je noc.
+Sael kývne. Přejede očima hasičská auta, lahve, muže na schůdcích, kteří zvedli hlavy a dívají se na ni, protože je vysoká a protože je noc.
 
 „Ten pán je velitel?“
 
@@ -399,7 +391,7 @@ Pak se vrátí k Haně.
 
 „Ve dvanáct.“
 
-Sael se podívá na tašku přes rameno. Pak na Hanu.
+Sael si sáhne na tašku přes rameno a otočí se k Haně.
 
 „Kdybych nevyšla schody,“ řekne, „nevolejte nikomu. Ani Šindelářové. Počkejte na ráno.“
 
@@ -415,7 +407,7 @@ V deset čtyřicet jedna volá Kalina znovu.
 
 „Nejdelší skupina, jakou jsem kdy měl,“ řekne. „Čtyři minuty. Ne vteřiny. Minuty.“
 
-Vysílačka na kapotě zachrčí. Ladin hlas, hluboký a drsný, jako by mluvila do kamna.
+Vysílačka na kapotě zachrčí. Ladin hlas, hluboký a drsný, jako by mluvila do kamen.
 
 „Dole dobrý. Svítí. Hřeje.“
 

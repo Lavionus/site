@@ -56,7 +56,7 @@ Hana přikývne a otočí zpátky na řez horou. Teplá skála. Vlnovky. Puklina
 
 „Na Chebsku. Pod horami, směrem na Karlovy Vary. Proč?“
 
-„Protože tam teplá skála dává smysl,“ řekne Hana a cítí úlevu, že má vysvětlení. „Celá ta oblast je geologicky aktivní. Termální prameny, výrony oxidu uhličitého, zemětřesné roje. Ve středověku tam museli narážet na teplou vodu, kdykoli kopali studnu.“
+„Protože tam teplá skála nikoho nepřekvapí,“ řekne Hana a cítí úlevu, že má vysvětlení. „Celá ta oblast je geologicky aktivní. Termální prameny, výrony oxidu uhličitého, zemětřesné roje. Ve středověku tam museli narážet na teplou vodu, kdykoli kopali studnu.“
 
 „Takže žádný drak.“
 

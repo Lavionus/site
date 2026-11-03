@@ -4,7 +4,7 @@ Do jedenácti se z mýtiny stane jiné místo.
 
 Pick-up civilní ochrany, pak druhý, pak sanitka bez sirény, která zastaví u plachty a už tam zůstane. Muži v oranžových vestách natahují novou pásku dál od okraje studny, než byla ta stará, a ke stromům přivazují cedule. Někdo přiveze generátor na vozíku, velký, žlutý, a někdo jiný stožár s reflektory, které zatím nesvítí, protože je den. U brány ejida stojí čtyři muži z obce s mačetami u pasu a nikoho cizího nepustí. Za nimi, na cestě, parkuje auto s logem televize.
 
-Don Felipe to zařídil za dvacet minut. Hana neslyšela, co komu řekl. Jen viděla, jak muži odešli k bráně, a pak se televize zastavila.
+Don Felipe to zařídil za dvacet minut. Hana neslyšela, co komu řekl. Jen viděla, jak muži odešli k bráně, a štáb televize zůstal stát venku na cestě.
 
 Jana chce do vody hned.
 
@@ -20,13 +20,13 @@ Jana se otočí a jde pryč. Hana ji najde za Rosinou kuchyní, jak sedí na pr�
 
 Hana si sedne vedle ní na druhý kanystr.
 
-„Protože by měl nepravdu, kdyby to bylo naopak.“
+„Protože kdyby neměl pravdu, mohla bys do vody.“
 
 Jana se na ni podívá, pak se krátce zasměje a otře si nos hřbetem ruky.
 
 „Ty jsi dneska nějaká moudrá.“
 
-„Nejsem. Nemám deník. Musím si to pamatovat.“
+„Nejsem. Nemám svůj deník. Musím si to pamatovat.“
 
 *
 
@@ -36,7 +36,7 @@ Než nastoupí, Hana ji zastaví.
 
 „V tom deníku je chodba,“ řekne. „Moje náčrty. Hloubky, časy, kde je mezera u bloku, kde se zužuje hrdlo, kudy jde šňůra. Potřebuju to pro záchranáře.“
 
-Marisol se na ni podívá. Pak otevře dveře spolujezdce, vytáhne sáček s deníkem a položí ho na kapotu. Nerozlepí ho. Sáček je průhledný a deník se v něm dá listovat přes fólii, pomalu, za rohy.
+Marisol otevře dveře spolujezdce, vytáhne sáček s deníkem a položí ho na kapotu. Nerozlepí ho. Sáček je průhledný a deník se v něm dá listovat přes fólii, pomalu, za rohy.
 
 „Řekněte, které stránky.“
 
@@ -44,7 +44,7 @@ Hana řekne. Čtvrtý březen. Devátý. Osmnáctý. Dvacátý. Jednadvacátý. 
 
 „Tohle není důkaz,“ řekne Marisol, když sáček zase připoutá. „To je mapa. Na mapu se smí.“
 
-Pak nastoupí a odjede. Hana stojí na mýtině s telefonem, ve kterém má svůj vlastní rukopis jako cizí fotky, a cítí se zvláštně lehká. Jako by jí vzali něco, co nosila na zádech tři týdny, a ona teprve teď zjistila, kolik to vážilo.
+Nastoupí a odjede. Hana stojí na mýtině s telefonem, ve kterém má svůj vlastní rukopis jako cizí fotky, a cítí se zvláštně lehká. Jako by jí vzali něco, co nosila na zádech tři týdny, a ona teprve teď zjistila, kolik to vážilo.
 
 Pak se lehkosti zastydí.
 
@@ -60,7 +60,7 @@ Luis ji zná. Walt ji zná. Hana a Jana ji znají ze šesti ponorů.
 
 Hana jí podá telefon s Marisolinými fotkami a tubus s Waltovými kopiemi. Jana jí to řekne. Vstup pod převisem, nový blok, mezera na jednoho, láhve se nesou v ruce. Hlavní chodba ve dvaceti metrech, sto čtyřicet metrů k téčku. Doprava k hrdlu. Hrdlo devět metrů, štěrbina na dvě dlaně, sidemount, levá láhev dopředu. Za ním sestup, haloklina, mlha, síň.
 
-Vedoucí poslouchá a dívá se na Waltovu mapu. Kreslí si do ní tužkou, opatrně, jako by to byl cizí rukopis, a ona to ví.
+Vedoucí poslouchá nad Waltovou mapou. Kreslí si do ní tužkou, opatrně, jako by to byl cizí rukopis, a ona to ví.
 
 „Jaký měl plyn?“
 
@@ -84,7 +84,7 @@ Vedoucí na ni zvedne oči.
 
 „Venku nebyl.“
 
-Vedoucí kývne. Pak se podívá na hodinky. Je půl druhé. Ať vlezl do vody kdykoli po jedné ráno, teď už plyn nemá. To nemusí nikdo říkat. Lékař si to zapíše do bloku a podtrhne to.
+Vedoucí kývne a podívá se na hodinky. Je půl druhé. Ať vlezl do vody kdykoli po jedné ráno, teď už plyn nemá. To nemusí nikdo říkat. Lékař si to zapíše do bloku a podtrhne to.
 
 *
 
@@ -116,7 +116,7 @@ Sedí na plošině s kapucí staženou do týla a voda jí kape z vlasů. Hana s
 
 „Před hrdlem není. Prošli jsme chodbu od vstupu po hrdlo. Každý výklenek.“ Odmlčí se. „U téčka je na šňůře jeho kolíček. Na větvi k hrdlu. Šipka ven.“
 
-Kolíček s šipkou. Plastová destička, kterou si jeskynní potápěč připne na šňůru, když odbočuje, a šipka na ní míří k východu, aby věděl, kudy zpátky. Luis má své s vyrytým *LE*. Hana je viděla na jeho výstroji, navlečené na karabině jako klíče.
+Kolíček se šipkou. Plastová destička, kterou si jeskynní potápěč připne na šňůru, když odbočuje, a šipka na ní míří k východu, aby věděl, kudy zpátky. Luis má své s vyrytým *LE*. Hana je viděla na jeho výstroji, navlečené na karabině jako klíče.
 
 Takže odbočil k hrdlu a prošel jím. Před šestou dvanáct. A zpátky ne.
 
@@ -136,15 +136,15 @@ Hana sedí pod plachtou nad Waltovou kopií a jede prstem po chodbě. Hlavní ch
 
 A za hrdlem, než chodba začne klesat, odbočka.
 
-Doleva nahoru. Kreslená stejně pečlivě jako všechno ostatní, s čísly bodů na okrajích. Bod čtyřicet osm. Šipka do prázdna. A pak nic. Bílé místo na světlotisku, prázdné jako dům bez oken. Další bod, který Walt nakreslil, je šedesát jedna, zpátky v hlavní chodbě, za sestupem.
+Doleva nahoru. Kreslená stejně pečlivě jako všechno ostatní, s čísly bodů na okrajích. Bod čtyřicet osm. Šipka do prázdna. A pak nic. Bílé místo na světlotisku, prázdné jako dům bez oken. Další bod, který Walt nakreslil, je šedesát jedna, zpátky v chodbě k síni, za sestupem.
 
 Čtyřicet devět až šedesát chybí.
 
 *Co nenakreslíte, to vám nikdo nevykrade.*
 
-Hana se na tu šipku dívá dlouho. Dvanáct bodů. Walt měří body po třiceti, po čtyřiceti metrech, to viděla na jiných listech. Dvanáct bodů je tři sta, možná čtyři sta metrů chodby, která jde nahoru. Ze dvaceti metrů hloubky nahoru. Kam až?
+Hana nad tou šipkou dlouho přemýšlí. Dvanáct bodů. Walt měří body po třiceti, po čtyřiceti metrech, to viděla na jiných listech. Dvanáct bodů je tři sta, možná čtyři sta metrů chodby, která jde nahoru. Ze dvaceti metrů hloubky nahoru. Kam až?
 
-Hladina je dvacet metrů pod terénem. Chodba, která jde tři sta metrů nahoru, může dojít až k ní. A nad hladinou může být strop, a mezi hladinou a stropem vzduch.
+Hladina je dvacet metrů pod terénem. Chodba, která tři sta metrů stoupá, může dojít až k ní. A nad hladinou může být strop, a mezi hladinou a stropem vzduch.
 
 Nebo ne. Nebo je to slepá chodba, která končí ve čtrnácti metrech a Walt ji nenakreslil, protože v ní nic není.
 
@@ -154,7 +154,7 @@ Hana vytáhne telefon a zavolá Waltovi.
 
 Walt přijede v sedm, za tmy, starým pick-upem s jedním světlem. Řídí ho chlapec z jeho městečka, sám by prý v noci nedojel. Vystoupí pomalu a rovnou jde k Rose, která sedí u plachty s dětmi. Nic jí neřekne. Položí jí ruku na rameno a nechá ji tam. Rosa se nehne. Pak si přitiskne jeho ruku tváří.
 
-Pak jde Walt ke stolu. V podpaží má tubus. Ne ten šedý kartonový, který půjčil Haně. Jiný, starší, z umělé hmoty, s víčkem přelepeným páskou.
+Walt jde ke stolu. V podpaží má tubus. Ne ten šedý kartonový, který půjčil Haně. Jiný, starší, z umělé hmoty, s víčkem přelepeným páskou.
 
 „Kdo to uvidí?“ zeptá se.
 
@@ -164,7 +164,7 @@ Vedoucí záchranářů se podívá na Hanu, pak na inženýra, pak na Walta.
 
 „Já,“ řekne. „On. Ona. Ona.“ Ukáže na Hanu a na Janu. „Nikdo jiný.“
 
-Walt kývne. Pak se otočí k ostatním pod plachtou, k lékaři, k záchranářům, ke Kalinovi, a nic neřekne. Ani nemusí. Odejdou na druhý konec plachty. Kalina jako první.
+Walt kývne a otočí se k ostatním pod plachtou, k lékaři, k záchranářům, ke Kalinovi, a nic neřekne. Ani nemusí. Odejdou na druhý konec plachty. Kalina jako první.
 
 Walt strhne pásku z víčka. Vytáhne jediný list, tuhý, zažloutlý. Ostatní nechá v tubusu a víčko zase nasadí. Rozloží list na stole a zatíží ho čtyřmi kameny, které mu Jana podá.
 
@@ -206,7 +206,7 @@ Walt jí je řekne zpaměti, jako by tam byl včera. Zvon je dlouhý asi dvanác
 
 Hana si to píše do Kalinova sešitu. Lékař se mezitím vrátil ke stolu, protože vedoucí na něj kývla, a dívá se jí přes rameno.
 
-Dvanáct krát čtyři. Průměrná výška nad vodou, řekněme metr, protože klenba a ke stěnám se snižuje. Kus břehu, bloky. Kolem čtyřiceti krychlových metrů vzduchu. Možná třiceti. Možná padesáti. Hana napíše všechna tři čísla.
+Dvanáct krát čtyři. Průměrná výška nad vodou, řekněme metr. Strop je klenutý a ke stěnám klesá, a s horším se počítá radši. Kus břehu, bloky. Kolem čtyřiceti krychlových metrů vzduchu. Možná třiceti. Možná padesáti. Hana napíše všechna tři čísla.
 
 „Kolik vydýchá člověk oxidu uhličitého?“ zeptá se lékaře. „V klidu. Za den.“
 
@@ -236,7 +236,7 @@ Napíše to doleva. Je to výpočet a patří tam, i když ho nikdo neviděl. Po
 
 „Kde to je?“ zeptá se vedoucí.
 
-Ukáže na Waltovu mapu, na zvon. Pak ven, na tmu za plachtou.
+Ukáže na Waltovu mapu, na zvon. A ven, na tmu za plachtou.
 
 „Tady,“ řekne Walt a položí prst na tužkový obrys. „Ale kde je *tady* nahoře, to vám neřeknu. Měřil jsem kompasem a pásmem. Pod vodou, ve dvaceti metrech, v kalu. Na šest set metrů je to deset metrů chyba. Dvacet. Možná víc.“ Pokrčí rameny. „Mapa je pro jeskyni. Ne pro les.“
 
@@ -270,7 +270,7 @@ V jedenáct deset sundá sluchátka.
 
 „Nemůžete to rozlišit?“
 
-„Ne tady. Ne s tímhle.“ Podívá se na ni ve světle čelovky. „Když něco neslyším, může to být tím, že to tam není. Nebo tím, že je moc hluku. Z ničeho se nedá poznat, které nic to je.“
+„Ne tady. Ne s tímhle. Když něco neslyším, může to být tím, že to tam není. Nebo tím, že je moc hluku. Z ničeho se nedá poznat, které nic to je.“
 
 Ve dvanáct to zkusí znovu. Vedoucí na vysílačku na deset minut vypne generátor a reflektory. Mýtina za nimi zhasne. Les se přiblíží, cvrčci jsou najednou hlasitější, a nad milpou je vidět měsíc, víc než půlka, a pod ním hvězdy.
 
@@ -292,9 +292,9 @@ Druhý den ráno, v pátek, zjistí, že Viktora odvezli.
 
 Ví to od Jany. Jana to ví od Ríši. Ríša to viděl. V šest ráno, u brány, dva muži v civilu a jedno auto. Viktor šel s nimi sám, s taškou přes rameno. Prý jen výslech. Prý jako svědek.
 
-Včera odpoledne tu byl. Hana s ním mluvila jednou. Nejdřív stál u nové pásky, bez kšiltovky, a mluvil s vedoucí záchranářů. Pak za vedoucí šel podruhé a Hana viděla, jak vrtí hlavou. Viktor chtěl jít do vody. Nebyl v týmu, nebyl na seznamu, byl svědek v trestním řízení. Vedoucí mu to řekla jednou větou a otočila se k němu zády.
+Včera odpoledne tu byl. Stál u nové pásky, bez kšiltovky, a mluvil s vedoucí záchranářů. Za vedoucí šel dvakrát. Podruhé Hana viděla, jak vedoucí vrtí hlavou. Viktor chtěl jít do vody. Nebyl v týmu, nebyl na seznamu, byl svědek v trestním řízení. Vedoucí mu to řekla jednou větou a otočila se k němu zády.
 
-Pak se Viktor otočil a viděl Hanu. Přišel k ní. Měl úplně šedý obličej a ruce v kapsách, aby nebylo vidět, co s nimi dělá.
+Pak se Viktor otočil a viděl Hanu. Přišel k ní, jedinkrát za celé odpoledne. Měl úplně šedý obličej a ruce v kapsách, aby nebylo vidět, co s nimi dělá.
 
 „Šel do síně?“ zeptal se.
 
@@ -316,9 +316,9 @@ Rosina kuchyň je otevřená. Hana neví, kdy ji Rosa otevřela. Ráno tam stál
 
 Kalina spí. Prvních šest hodin za dvě noci. Pod plachtou na lehátku, se sešitem na prsou.
 
-Hana sedí nad Waltovou mapou. Walt ji tu nechal. Řekl *hlídejte ji*, a pak *ne, nehlídejte, jenom ji nikomu nedávejte*. Odvezl se domů pro léky a slíbil, že se vrátí.
+Hana sedí nad Waltovou mapou. Walt ji tu nechal. Řekl *hlídejte ji*, a pak *ne, nehlídejte, jenom ji nikomu nedávejte*. Nechal se odvézt domů pro léky a slíbil, že se vrátí.
 
-Hana se dívá na tužkový obrys zvonu a počítá. Sobota. Neděle. Pondělí. V pondělí ráno to budou čtyři dny, co dýchá ten vzduch. Pokud tam Luis je. Pokud dorazil.
+Hana počítá nad tužkovým obrysem zvonu. Sobota. Neděle. Pondělí. V pondělí ráno to budou čtyři dny, co dýchá ten vzduch. Pokud tam Luis je. Pokud dorazil.
 
 Ve tři čtvrtě na dvě zazvoní telefon.
 
@@ -332,7 +332,7 @@ Ve tři čtvrtě na dvě zazvoní telefon.
 
 Hana mlčí. Venku pod plachtou slyší cinkání nožů.
 
-„Potřebují zatykač na otevření bedny a na zadržení,“ řekne Marisol. „A potřebují k tomu výpověď člověka, který ten předmět držel a změřil. Dneska večer. Tady v Méridě. A zítra v Progresu u otevření. Někoho, kdo řekne *to je on*, nebo *to není on*.“ Pauza. „To jste vy. Nikdo jiný ho neměřil. Já jsem zaokrouhlila.“
+„Potřebují soudní příkaz k otevření bedny a zatykač na odesílatele,“ řekne Marisol. „A potřebují k tomu výpověď člověka, který ten předmět držel a změřil. Dneska večer. Tady v Méridě. A zítra v Progresu u otevření. Někoho, kdo řekne *to je on*, nebo *to není on*.“ Pauza. „To jste vy. Nikdo jiný ho neměřil. Já jsem zaokrouhlila.“
 
 „Ano.“
 
@@ -424,7 +424,7 @@ A dole, malým písmem, ještě jednu větu, protože ji tam dlužila:
 
 *Údaje jsou moje (H. V.). K mé věrohodnosti viz protokol o převzetí z 26. 3., bod 1 a 2.*
 
-Pak napíše výpověď. Krátkou, suchou, s daty. Podepíše ji na papíře, který jí Kalina vytiskne, a vyfotí ji. Pak všechno zabalí do jedné zprávy, fotky, čísla, soubory, a dlouho se dívá na tlačítko.
+Pak napíše výpověď. Krátkou, suchou, s daty. Podepíše ji na papíře, který jí Kalina vytiskne, a vyfotí ji. Všechno zabalí do jedné zprávy, fotky, čísla, soubory, a dlouho se dívá na tlačítko.
 
 Tohle je ono. Zítra se v Progresu otevře bedna, nebo se neotevře. Někdo cizí položí metr na válec, který vyzvedla ona, a přečte číslo, které změřila ona. A ona u toho nebude. Nikdo si nebude pamatovat, kdo ten metr položil poprvé. Bude se psát *prokuratura*, *ústav*, *celní správa*. Je to správně. Ví, že je to správně.
 
@@ -444,19 +444,17 @@ Do večera se nic nestane. Záchranáři čekají na rozpěry. Kalina se probud�
 
 „Bez všeho, co má proud.“
 
-Hana se na něj podívá. Nad mýtinou se rozsvěcejí reflektory a žlutý generátor na vozíku duní.
+Nad mýtinou se rozsvěcejí reflektory a žlutý generátor na vozíku duní.
 
 „Řekněte jim to,“ řekne Kalina. „Mně nebudou věřit. Já jsem chlap, co poslouchá rádio.“
 
 V sedm Hana sedí na kameni u pásky a otevře Kalinův sešit. Kluk tam pořád stojí. Hana mu podá láhev s vodou a on ji vezme a napije se a vrátí jí ji, a celou dobu se nepřestane dívat do studny.
 
-Do pravého horního rohu napíše *7*.
+Do rohu napíše *7*.
 
 Vlevo zapíše den. Hrdlo zřícené, šňůra pod blokem, Luisův kolíček u téčka na větvi k hrdlu. Walt a originál. Zvon, *CAMPANA, aire*, rozměry zpaměti, kolem čtyřiceti krychlí. Výpočet s lékařem. *Dny, ne týdny.* Kalina u kolíku, nic, dvakrát. Viktor odvezen k výslechu. Blok v hrdle se pohnul o dva centimetry. Marisol, Progreso, neděle v poledne. Moje odpověď: *Nepojedu.* Odesláno 14:52.
 
-Pak se podívá na pravou půlku.
-
-Neví, co tam napsat. Že má pravdu? To neví. Že je to statečné? To si nemyslí. Myslí si, že je to jediné, co tady umí.
+Neví, co napsat doprava. Že má pravdu? To neví. Že je to statečné? To si nemyslí. Myslí si, že je to jediné, co tady umí.
 
 Nakonec tam napíše slovo, které jí čtvrtého března napsal Luis na dekompresní tabulku ve třech metrech pod hladinou, když se jí třásly ruce a ona chtěla nahoru.
 

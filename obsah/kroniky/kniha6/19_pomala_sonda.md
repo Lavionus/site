@@ -62,7 +62,7 @@ Program pomalých průzkumných sond skončil před šesti lety. Nikdo ho nezru�
 
 „A tahle?“
 
-„Tahle je třetí z těch, co zbyly. Dvě rozebrali. Tahle je odepsaná a má se rozebrat taky.“ Riv položila dlaň na hrbolatý povrch kamene, jako se pokládá ruka na rameno někomu, koho člověk zná dlouho. „Rozebrat je dražší než vyhodit. Odepsané nosiče se proto vyhazují ven. Pryč ze soustavy, kde nikomu nepřekážejí. Dráhu schvaluje dopravní správa a nikdo se na ni nedívá, protože ven nikdo nelétá.“
+„Tahle je poslední z těch, co zbyly. Ostatní rozebrali. Tahle je odepsaná a má se rozebrat taky.“ Riv položila dlaň na hrbolatý povrch kamene, jako se pokládá ruka na rameno někomu, koho člověk zná dlouho. „Rozebrat je dražší než vyhodit. Odepsané nosiče se proto vyhazují ven. Pryč ze soustavy, kde nikomu nepřekážejí. Dráhu schvaluje dopravní správa a nikdo se na ni nedívá, protože ven nikdo nelétá.“
 
 Nara se podívala na Halse. Hals se díval na kámen.
 
@@ -128,7 +128,7 @@ Pak se zastavila a podívala se na ně oba.
 
 „Tvrdila bych to. Tvrdila bych, že pasivní archiv, který se nedá přečíst bez energie zvenku, není přístup k technologii. Že odsouzení ho nemohou použít, protože nemají čím. A že doletí za desítky tisíc let, kdy už žádný odsouzený naživu nebude a trest nebude mít komu trvat.“ Odmlčela se. „Tvrdila bych to dobře. A prohrála bych.“
 
-Nikdo nic neřekl.
+Nikdo neodpověděl.
 
 „Kdyby se na to přišlo před startem,“ řekla Nara, „bylo by to řízení pro zásah do výkonu trestu. Ne přestupek. Trestní řízení. U vás, paní Riv, k tomu použití odepsaného majetku státu. U vás, pane Halsi, vynesení majetku archivu z úložiště.“ Podívala se na Halse. „A přijdete o místo. Tím začnou.“
 
@@ -160,11 +160,11 @@ Hals pořád mlčel.
 
 *
 
-Výtah jel jedenáct minut. Síť slábla s každou stovkou metrů, jako tehdy. Řádky v koutku vědomí bledly a mizely. Nejdéle vydržel odpočet. *Do odletu: 5 dní.* Šedý, čím dál menší. Pak i on zůstal stát, nehybný, jako by někdo zapomněl zhasnout.
+Cestou dolů síť slábla jako tehdy a nejdéle vydržel odpočet, *Do odletu: 5 dní.*
 
 Dole byla zima. Hals rozsvítil světlo od podlahy a vedl ji mezi regály k oddílu historických spisů. Ne k nice se zalitou schránkou. K jinému stolu, v zadní části, kde Nara nikdy nebyla. Stál na něm přístroj, dlouhý a nízký, se skleněným víkem. Pod víkem ležel list. Průsvitná destička, stejná jako ty, které Nara četla lupou.
 
-„Lept,“ řekl Hals. „Na něm se dělají listy. Jen tady. Nikde jinde v prstenci. Všechno, co je v tomhle úložišti, prošlo touhle deskou.“ Dotkl se skleněného víka prsty v rukavici. „Riv mi poslala, kolik se vejde. Dvě stě listů, když se leptá nahusto. Tak nahusto, že se to lupou číst nedá. Bude to potřebovat přístroj.“
+„Lept,“ řekl Hals. „Na něm se dělají listy. Jen tady. Nikde jinde v prstenci. Všechno, co je v tomhle úložišti, prošlo tímhle leptem.“ Dotkl se skleněného víka prsty v rukavici. „Riv mi poslala, kolik se vejde. Dvě stě listů, když se leptá nahusto. Tak nahusto, že se to lupou číst nedá. Bude to potřebovat přístroj.“
 
 „A spis?“
 
@@ -190,7 +190,7 @@ Nara ho nikdy neviděla sedět. Za všechny ty návštěvy stál, šel, dotýkal
 
 Nara čekala.
 
-„Mám klíč,“ řekl Hals. „Ke schránce. Pečeť je pořád pečeť, ale správce smí otevřít, když to nařídí soud. A soud to nařídil. Usnesení devátého dne. Čtení se smí, kolikrát účastník chce, za přítomnosti správce.“ Odmlčel se. „Opisy ne. To vím. Ale kdo by se díval, co dělám s listem, když ho mám vytažený? Na desce se dá udělat opis čehokoli. Za hodinu.“
+„Mám klíč,“ řekl Hals. „Ke schránce. Pečeť je pořád pečeť, ale správce smí otevřít, když to nařídí soud. A soud to nařídil. Usnesení devátého dne, nikdo ho nezrušil. Čtení se smí, kolikrát účastník chce, za přítomnosti správce.“ Odmlčel se. „Opisy ne. To vím. Ale kdo by se díval, co dělám s listem, když ho mám vytažený? Na desce se dá udělat opis čehokoli. Za hodinu.“
 
 „Pane Halsi.“
 
@@ -230,7 +230,7 @@ Hals se díval na své ruce.
 
 „A co s tou otázkou?“ zeptala se Nara po chvíli. „Ze síně.“
 
-Hals se na ni podíval, jako by nevěděl, o čem mluví. Pak to věděl.
+Hals se na ni podíval, jako by nevěděl, o čem mluví. Pak si vzpomněl.
 
 „Který z těch dvou je originál,“ řekl.
 
@@ -282,7 +282,7 @@ V příletové hale se vrátila k Riv. Nevěděla proč. Linka jí odjížděla 
 
 Riv seděla na podlaze vedle podstavce a měla v ruce desku s nákresem. Když Nara vešla, nevstala.
 
-„Tomen to udělá,“ řekla. Nebyla to otázka.
+„Tomen to udělá,“ řekla.
 
 „Ano.“
 
@@ -308,7 +308,7 @@ Riv se na ni podívala a pak na kámen.
 
 V lince zpátky seděla u průzoru a dívala se, jak se měsíc zmenšuje.
 
-Terasy lomu splynuly s šedí. Pak i světlejší skvrna, pod níž leželo úložiště. Někde tam dole sedí Hals bez rukavic u leptu a dívá se na první list. Někde vedle, v hale s velkým průzorem, stojí kámen menší než lůžko a čeká, až se do něj vloží všechno, co Nara udělala.
+Terasy lomu splynuly se šedí. Pak i světlejší skvrna, pod níž leželo úložiště. Někde tam dole sedí Hals bez rukavic u leptu a dívá se na první list. Někde vedle, v hale s velkým průzorem, stojí kámen menší než lůžko a čeká, až se do něj vloží všechno, co Nara udělala.
 
 Vyndala z kapsy provázek a položila ho na koleno. Sedmdesát jedna uzlíků.
 
@@ -316,12 +316,12 @@ Jeden list, oboustranně.
 
 Nara nevěděla, co na něj napíše. Věděla jen, komu. A věděla, že to nebude ten, komu to napíše.
 
-Za šest set let se Ilan probudí. Za desítky tisíc let doletí kámen. Mezi tím bude Ilan mrtvý tak dlouho, že na tom už nebude záležet. Jeho děti taky. A jejich děti. Kdo kámen najde, pokud ho vůbec někdo najde, bude někdo, koho Nara nezná a nemůže znát. Bude mluvit řečí, kterou neslyšela. Bude to číst podle slovníku, který si udělá sám. A bude se mýlit u slov, která pro ni budou nejdůležitější.
+Za šest set let se Ilan probudí. Za desítky tisíc let doletí kámen. Mezitím bude Ilan mrtvý tak dlouho, že na tom už nebude záležet. Jeho děti taky. A jejich děti. Kdo kámen najde, pokud ho vůbec někdo najde, bude někdo, koho Nara nezná a nemůže znát. Bude mluvit řečí, kterou neslyšela. Bude to číst podle slovníku, který si udělá sám. A bude se mýlit u slov, která pro ni budou nejdůležitější.
 
 Možná to bude někdo z jeho krve. Možná ne. Možná to bude Konfederace sama, za dlouho, až se tam vrátí a nebude vědět, proč tam kdysi poslala lidi. Nara nevěděla, které z toho je horší.
 
 *Do odletu: 5 dní.*
 
-Pod tím, menším písmem: *Přejete si připomenout termín jednání komory?*
+Pod tím: *Přejete si připomenout termín jednání komory?*
 
 Nepřála. Zavřela to. Sevřela provázek v dlani a dívala se do tmy za průzorem, kde nebylo nic, kam by se dalo jít, a kam za osm dní poletí kámen.

@@ -78,7 +78,7 @@ Matěj neříkal nic. Cítil, jak mu hoří tváře, a doufal, že to Konrád p�
 
 Matěj zvedl oči.
 
-„Ortlieb mi to řekl,“ pokračoval Konrád klidně. „V pátek odpoledne se vrátil, a v sobotu ráno mi poslal posla, protože si myslel, že bych to měl vědět. Nezlob se na něj. Ortlieb se zlobí za nás oba. On má rád svou díru a nemá rád, když mu do ní lezou lidé, kteří nevědí, co dělají. Zlobil se taky na tvého bratra.“ Konrád se lehce pousmál. „Toho jsem mu zakázal potrestat. Tvůj bratr je dobrý horník, Ortlieb to sám říká, i když ne nahlas. A je to tvůj bratr.“
+„Ortlieb mi to řekl,“ pokračoval Konrád klidně. „V pátek se vrátil dřív, než čekal, a v sobotu ráno mi poslal posla, protože si myslel, že bych to měl vědět. Nezlob se na něj. Ortlieb se zlobí za nás oba. On má rád svou díru a nemá rád, když mu do ní lezou lidé, kteří nevědí, co dělají. Zlobil se taky na tvého bratra.“ Konrád se lehce pousmál. „Toho jsem mu zakázal potrestat. Tvůj bratr je dobrý horník, Ortlieb to sám říká, i když ne nahlas. A je to tvůj bratr.“
 
 „Děkuji,“ řekl Matěj. Nevěděl, co jiného říct.
 
@@ -100,7 +100,7 @@ Matěj ucítil, jak se mu sevřel žaludek, tak jako v prohlubni na slatině, je
 
 „Voda je v každé hoře,“ řekl.
 
-Konrád se na něj ještě chvíli díval. Pak se usmál, tím malým úsměvem očí, a kývl.
+Konrád se usmál, tím malým úsměvem očí, a kývl.
 
 „To říká Ortlieb taky,“ řekl. „Slovo od slova.“ A obrátil se k ohni, jako by tím bylo vše řečeno. Matěj nevěděl, jestli prošel zkouškou, nebo jestli žádná zkouška nebyla. Nevěděl, jestli Konrád ví, nebo neví, a jestli mu na tom vůbec záleží.
 
@@ -128,17 +128,17 @@ Matěj na něj pohlédl.
 
 „Služebník.“
 
-„Služebník.“ Konrád si to slovo přeložil do češtiny a ochutnal ho. „Ano. Tak se tomu říká. Rytíř, který je služebník. Mám meč a koně a hrad, totiž věž, a lidi, kteří mě poslouchají. A jsem nesvobodný jako tvůj Udalrich, jako sedlák, který mi platí desátek.“ Díval se na les. „Můj děd byl ministeriál. Můj otec byl ministeriál. Já jsem se narodil jako něčí. Když se budu chtít oženit, musím se zeptat svého pána. Když se mi narodí syn, bude patřit mému pánovi dřív než mně. Kdyby mě císař zítra daroval biskupovi v Bambergu, s koněm a s mečem, jako se daruje vinice, budu biskupův.“ Odmlčel se. „Měl jsem bratra. Staršího. Toho daroval otcův pán jinému pánovi, ještě jako chlapce, za kus lesa u Norimberka. Nikdy jsem ho už neviděl.“
+„Služebník.“ Konrád si to slovo přeložil do češtiny a ochutnal ho. „Ano. Tak se tomu říká. Rytíř, který je služebník. Mám meč a koně a hrad, totiž věž, a lidi, kteří mě poslouchají. A jsem nesvobodný jako tvůj Udalrich, jako sedlák, který mi platí desátek.“ Díval se na les. „Můj děd byl ministeriál. Můj otec byl ministeriál. Já jsem se narodil jako něčí. Když jsem se chtěl oženit, musel jsem se zeptat svého pána. Když se mi narodí syn, bude patřit mému pánovi dřív než mně. Kdyby mě císař zítra daroval biskupovi v Bambergu, s koněm a s mečem, jako se daruje vinice, budu biskupův.“ Odmlčel se. „Měl jsem bratra. Staršího. Toho daroval otcův pán jinému pánovi, ještě jako chlapce, za kus lesa u Norimberka. Nikdy jsem ho už neviděl.“
 
 Vítr hvízdal přes hřbet a hnal sníh v tenkých proudech. Volkmar stál kousek za nimi a díval se do země.
 
 „To je mi líto,“ řekl Matěj.
 
-„To nemusí. Takový je svět.“ Konrád se otočil a podíval se na Matěje. „Ale svět se dá koupit. Kousek po kousku. Svoboda se dá koupit, Matěji, víš to? Ne lacino. Pán musí chtít, a pán chce, když se mu zaplatí. Stříbrem. Pak už člověk není něčí. Pak je svůj, a jeho synové jsou jeho.“ Ukázal bradou dolů, k haldě. „Proto ta díra. V Míšni našli stříbro tak blízko u povrchu, že ho sedláci vyorávali. Tady je stejný kámen. Ortlieb to říká a já mu věřím, protože musím. A kdyby tam nebylo stříbro,“ zaváhal, „pak je tam něco jiného.“
+„To nemusí. Takový je svět.“ Konrád se otočil k Matějovi. „Ale svět se dá koupit. Kousek po kousku. Svoboda se dá koupit, Matěji, víš to? Ne lacino. Pán musí chtít, a pán chce, když se mu zaplatí. Stříbrem. Pak už člověk není něčí. Pak je svůj, a jeho synové jsou jeho.“ Ukázal bradou dolů, k haldě. „Proto ta díra. V Míšni našli stříbro tak blízko u povrchu, že ho sedláci vyorávali. Tady je stejný kámen. Ortlieb to říká a já mu věřím, protože musím. A kdyby tam nebylo stříbro,“ zaváhal, „pak je tam něco jiného.“
 
 „Drak.“
 
-„Dračí poklad,“ řekl Konrád. „Zlato. Ty jsi slyšel tu pověst. Tvoje matka ji vyprávěla, jako ji vyprávěla moje chůva, jen s jiným drakem. V potoce pod horou se našlo zlato, to se ví. Ještě za mého děda tu prý někdo prodával valoun v Chebu. Odkud se vzalo? Z hory. A proč je hora teplá?“ Díval se na Matěje. „Ty jsi viděl, jak dýchá, Matěji. Ty mi to řekni.“
+„Dračí poklad,“ řekl Konrád. „Zlato. Ty jsi slyšel tu pověst. Tvoje matka ji vyprávěla, jako ji vyprávěla moje chůva, jen s jiným drakem. V potoce pod horou se našlo zlato, to se ví. Ještě za mého děda tu prý někdo prodával valoun v Chebu. Odkud se vzalo? Z hory. A proč je hora teplá? Ty jsi viděl, jak dýchá, Matěji. Ty mi to řekni.“
 
 Matěj neodpověděl. Díval se na les.
 
@@ -150,7 +150,7 @@ Matěj neodpověděl. Díval se na les.
 
 „Vykácet. Pálit uhlí, stavět. Ortlieb potřebuje dřevo na rámy a na oheň, víc, než mu dá les u vsi. A až bude stříbro, budu potřebovat lidi, a lidé potřebují pole. Na Pleisse a u Norimberka je lidí dost, co by šli, kdyby tu byla půda. Za deset let tu budou tři vsi. Za dvacet pět.“ Konrád to říkal, jako by to už viděl. „Váš převor chce kus toho lesa pro grangii, na pastvu. Dostane ho. Tamhle,“ ukázal, „od toho potoka až k hřbetu. Řekl jsem mu to v pondělí. Proto byl rád, mimochodem, ne kvůli tvému dopisu. Ale tvůj dopis mu ten les osladil.“
 
-Matěj se na něj podíval a Konrád se zasmál.
+Matěj zvedl oči a Konrád se zasmál.
 
 „Nedívej se tak, Matěji. Řekl jsem ti to proto, abys věděl, jak to je. Ty máš rád, když víš, jak to je, viď? Já taky.“
 
@@ -160,11 +160,11 @@ Matěj se zeptal a nevěděl, proč se ptá. V tom lese nežil nikdo. Uhlíři, 
 
 „Myslíš ty druhé?“
 
-„Matka...“ Matěj zaváhal. „Matka o nich vyprávěla. Pohádky.“
+„Matka…“ Matěj zaváhal. „Matka o nich vyprávěla. Pohádky.“
 
 „Pohádky.“ Konrád přikývl. „Moje chůva taky. O lidech v lese, kteří nejsou lidé. Kteří si chodí pro děti. Kteří slouží drakovi.“ Odmlčel se a díval se na les. Pak řekl tiše, už ne tím věcným hlasem: „Loni na podzim se ve vsi za potokem ztratilo dítě. Holčička. Šla na houby a nevrátila se. Hledali ji tři dny. Nenašli nic, ani šátek.“
 
-„To se stává,“ řekl Matěj. „Les je velký. Vlci...“
+„To se stává,“ řekl Matěj. „Les je velký. Vlci…“
 
 „Vlci nechávají kosti,“ řekl Konrád. „Šátek. Botu. Tady nebylo nic. A ve vsi za potokem ti řeknou, kdo si ji vzal, a nebudou mluvit o vlcích.“ Otočil se k Matějovi. „Já nevím, jestli v tom lese někdo je. Možná ne. Možná jsou to jen pytláci, kteří se schovávají před mými lidmi a kradou, co se dá. Ale vím, že lidé ve vsích se bojí. Vím, že když budu kácet, budou moji uhlíři muset jít do lesa, a nepůjdou, dokud se bojí. A vím, že pověst, kterou vypráví celý kraj, nevzniká z ničeho. Ty jsi to poznal na slatině. Vyprávěli o drakovi a ty sis myslel, že je to báchorka, a pak jsi tam šel a ono to tam bylo.“
 
@@ -192,13 +192,13 @@ Matěj se díval do ohně.
 
 „Proč to chcete?“
 
-Konrád se na něj chvíli díval. Pak se zasmál, krátce, ne zle.
+Konrád se zasmál, krátce, ne zle.
 
 „Ty to víš,“ řekl. „Řekl jsem ti to na hřbetě. Chci, aby lidé věděli, že v hoře je poklad a v lese strach. Chci, aby šli do hory a do lesa se mnou, a ne proti mně. Chci, aby vaše grangie dostala pastvu a váš převor pokoj, a já stříbro.“ Napil se. „A chci, aby o tom, co je pravda, rozhodl někdo, kdo to viděl. Ne já. Mně nikdo nevěří, Matěji. Já jsem pán. Pánovi se věří jen tolik, kolik je nutné. Ale tobě uvěří. Ty jsi jejich.“
 
 *Ty jsi jejich.* Matěj to slyšel a cítil, jak se mu v hrudi něco stáhlo, sladce a bolestně najednou. Šest let byl ve Waldsassenu cizí. A teď tady seděl v domě konvršů pod horou, kde ho celá ves v neděli vítala jako cizince, a ministeriál s chůvou z Pleisse mu říkal, že je jejich.
 
-„Listina,“ řekl Matěj. „Ještě jsem ji neprověřil. Jsou v ní věci, které...“ Zaváhal. „Které nevím.“
+„Listina,“ řekl Matěj. „Ještě jsem ji neprověřil. Jsou v ní věci, které…“ Zaváhal. „Které nevím.“
 
 „Za kterou listinu z Jeruzaléma bys dal ruku do ohně?“ řekl Konrád klidně. „Já žádnou. Rüdiger mi vyprávěl, jak se tam kupují. Na tržišti, vedle datlí.“ Pokrčil rameny. „Já nevím, jestli je ta listina pravá, Matěji. Nikdy jsem ji neviděl, než ji Rüdiger přivezl, a přečíst si ji neumím. Ale kost jsi viděl. Držels ji v rukou. Je to kost?“
 
@@ -234,7 +234,7 @@ Konrád odjel ráno, za šera, se psy a s jezdci a s mlčenlivým Volkmarem na m
 
 Pak, když dusot koní utichl za lesem, šel do komory a vytáhl tabulku.
 
-Na horním okraji, nad vším, co od Hromnic napsal, tam, kde byl vosk nejstarší a nejtvrdší, stál pořád ten řádek. Psal ho v noci v knihovně, menším písmem, aby ho to nezahanbilo.
+Mezi prvními řádky, hned pod tím, co o Hromnicích napsal o kosti, tam, kde byl vosk nejstarší a nejtvrdší, stál pořád ten řádek. Psal ho v noci v knihovně, menším písmem, aby ho to nezahanbilo.
 
 *Pan Konrád chce draka v našem kraji. Proč?*
 
@@ -242,6 +242,6 @@ Matěj se na něj dlouho díval. Teď to věděl. Konrád mu to řekl sám, otev
 
 Přiložil k řádku palec a pomalu ho uhladil. Vosk byl studený a tvrdý a nešlo to snadno. Matěj musel přitlačit, až ho palec zabolel. Pak tam bylo hladké místo, jako by tam nikdy nic nebylo.
 
-Do hladkého místa napsal datum. Středa po svátku svatého Petra na stolci, léta Páně tisícího stého sedmdesátého druhého. A pod to: *usque ad festum sancti Georgii*. Do svátku svatého Jiří. Spočítal to na prstech, dvakrát, protože ten rok měl únor o den delší. Šedesát dní.
+Do hladkého místa napsal datum včerejšího slibu. Středa po svátku svatého Petra na stolci, léta Páně tisícího stého sedmdesátého druhého. A pod to: *usque ad festum sancti Georgii*. Do svátku svatého Jiří. Spočítal to na prstech, dvakrát, protože ten rok měl únor o den delší. Šedesát dní.
 
 Za oknem komory se rozednívalo. Na hromadě sněhu za ovčínem byla díra, kterou vyhrabal Konrádův pes. Matěj se k ní musel jít podívat. Díval se do ní dlouho a pak ji zase zahrabal, holýma rukama, jako tehdy, a sníh byl ještě tvrdší než tehdy a studil víc.

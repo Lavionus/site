@@ -6,9 +6,9 @@ Lidé přišli k bednám stejně. Desítka po desítce, z plachet, s rukama v po
 
 Maela nepřišla. Orrin taky ne.
 
-Chvíli to trvalo, než to lidé pochopili. Pak se začali rozcházet. Pomalu, bez řeči, každý ke svému ohni. Někdo kopl do bedny, ne silně, jen aby to udělal. Ozvalo se to v kotli dutě.
+Když to lidé po chvíli pochopili, začali se rozcházet. Pomalu, bez řeči, každý ke svému ohni. Někdo kopl do bedny, ne silně, jen aby to udělal. Ozvalo se to v kotli dutě.
 
-Hlad měl ten den jiný pach. Eren si toho všiml, když šel mezi plachtami. Nebyl to pach jídla, protože jídlo nebylo. Byl to pach popela, ve kterém se pekly plody s čepičkou, a pach hlíz, které někdo vyhrabal příliš brzy a upekl napůl. A pod tím pach lidí, kteří jedí málo, nakyslý a cizí, jako by tělo začalo pálit samo sebe. U jednoho ohně seděla matka a žvýkala jádro. Pak ho vyndala z úst a dala ho dítěti. Dítě ho polklo a otevřelo pusu znovu.
+Hlad měl ten den jiný pach. Eren si toho všiml, když šel mezi plachtami. Nebyl to pach jídla, protože jídlo nebylo. Byl to pach popela, ve kterém se pekly plody s čepičkou, a pach hlíz, které někdo vyhrabal příliš brzy a upekl napůl. A pod tím pach lidí, kteří jedí málo, nakyslý a cizí, jako by tělo začalo pálit samo sebe. U jednoho ohně seděla matka a žvýkala jádro, pak ho vyndala z úst a dala ho dítěti. Dítě ho polklo a otevřelo pusu znovu.
 
 Eren šel k dolní tůni.
 
@@ -54,7 +54,7 @@ Protože teď měl Orrin jednu půlku a on druhou. A chybělo jen to, co měl Er
 
 Orrin přišel dřív, než se Eren zvedl ze země.
 
-Sešel od přístřešku pod teplou skálou, sám, a zastavil se kus od bedny. Díval se na otevřené víko, na řezák v cárech, na Erena, který seděl vedle na zmrzlé zemi. Pak si přidřepl, aby měli oči ve stejné výšce.
+Sešel od přístřešku pod teplou skálou, sám, a zastavil se kus od bedny. Prohlédl si otevřené víko, řezák v cárech a Erena, který seděl vedle na zmrzlé zemi. Pak si přidřepl, aby měli oči ve stejné výšce.
 
 „Je u mě,“ řekl.
 
@@ -74,7 +74,7 @@ Vstal. Podíval se ještě jednou do bedny na řezák. Nesáhl na něj. Ani se k
 
 „Nikdo ti ho nevezme,“ řekl. „Řekl jsem to tehdy a platí to.“
 
-Odešel nahoru. Eren se díval za ním. Pak zavřel víko bedny a přetáhl přes ni plachtu, i když to už nemělo smysl.
+Odešel nahoru. Eren počkal, až zmizí, a zavřel víko bedny a přetáhl přes ni plachtu, i když to už nemělo smysl.
 
 *
 
@@ -120,9 +120,9 @@ Teď se otočili všichni.
 
 „Nechci ho pro sebe,“ řekl Orrin. „Chci, aby to bylo jasné. Nechci, abys mi ho dal, Erene. Nechci, abys ho pouštěl pro mě. Chci, abys ho odemkl. Natrvalo. Tak, aby ho mohl pustit kdokoli z nás, kdo ho vezme do ruky.“ Rozhlédl se po kotli. „Ať leží tady. U beden. Kde ho vidí všichni. Ať o něm rozhoduje kotel, a ne jeden člověk.“
 
-Mlčel. Kotel taky. Pak Orrin řekl ještě něco, tišeji, a bylo to to nejhorší, co ten den řekl, protože to byla pravda.
+Mlčel. Kotel taky. Pak Orrin řekl ještě něco, tišeji, a bylo to horší než všechno předtím, protože to byla pravda.
 
-„Celý život jsme žili pod zámky, které držel někdo jiný. Kdo smí co vědět. Kdo smí být sám ve vlastní hlavě. Kdo smí kam jít. Proto jsme tady, všichni. Protože jsme se jim nelíbili.“ Odmlčel se. „A teď jsme tady, kde žádné zámky nejsou, a máme jeden. A drží ho jeden člověk.“
+„Celý život jsme žili pod zámky, které držel někdo jiný. Kdo smí co vědět. Kdo smí být sám ve vlastní hlavě. Kdo smí kam jít. Proto jsme tady, všichni. Protože jsme se jim nelíbili. A teď jsme tady, kde žádné zámky nejsou, a máme jeden. A drží ho jeden člověk.“
 
 *
 
@@ -146,7 +146,7 @@ Byla to žena. Ta mladá matka s tříletým dítětem, které teď spalo na jej
 
 „Nenakrmí ho to.“
 
-Eren se slyšel, jak to říká. Nahlas, přes celý kotel. Nevěděl, kdy se rozhodl promluvit.
+Eren se slyšel, jak to říká. Nahlas, přes celý kotel.
 
 „Neumí nic, co by nakrmilo dítě,“ řekl. „Umí řezat. Kov. Kámen. Na chvíli. V článku je skoro nic. Deset minut, když to dobře dopadne. Možná míň. Pak je prázdný a nikdo na tomhle světě ho znovu nenabije.“
 
@@ -154,7 +154,7 @@ Eren se slyšel, jak to říká. Nahlas, přes celý kotel. Nevěděl, kdy se ro
 
 „Na deset minut.“
 
-„Deset minut je deset minut.“ Orrin se na něj díval. „Tak proč ho držíš, Erene? Když v něm skoro nic není. Proč ho držíš tak pevně?“
+„Deset minut je deset minut,“ řekl Orrin. „Tak proč ho držíš, Erene? Když v něm skoro nic není. Proč ho držíš tak pevně?“
 
 Eren otevřel pusu. Nic z ní nevyšlo.
 
@@ -182,7 +182,7 @@ Erenovi se sevřela hruď. Nemohl se nadechnout. Orrin to řekl znovu. Jako prvn
 
 Orrin kývl. Jako by čekal přesně tohle.
 
-„Tak ho drž,“ řekl. „Sám.“ Rozhlédl se po kotli. „Nikdo mu ho nevezme. Slyšeli jste mě. Řezák je Erenův.“ Odmlčel se. „Článek zůstane u mě. V teple, kde se nevybije. Až si to Eren rozmyslí, dá se to dohromady. Do té doby nic.“
+„Tak ho drž,“ řekl. „Sám.“ Rozhlédl se po kotli. „Nikdo mu ho nevezme. Slyšeli jste mě. Řezák je Erenův. Článek zůstane u mě. V teple, kde se nevybije. Až si to Eren rozmyslí, dá se to dohromady. Do té doby nic.“
 
 „Článek jsi vzal,“ řekl Eren.
 
@@ -190,7 +190,7 @@ Orrin kývl. Jako by čekal přesně tohle.
 
 V kotli se někdo zasmál. Ne zle. Spíš úlevně. Pak další. Hlavy kývaly.
 
-Bylo to pravda. To bylo na tom nejhorší. Orrin nikdy nic nevrátil jinak, než řekl. Řekl Maele o bednách předem. Dal Tio vývar, když řekl, že ho dá. Dnes otevřel bednu pro celý kotel. Byl poctivý. Poctivě držel všechno, co se dalo držet.
+Bylo to pravda. Orrin nikdy nic nevrátil jinak, než řekl. Řekl Maele o bednách předem. Dal Tio vývar, když řekl, že ho dá. Dnes otevřel bednu pro celý kotel. Byl poctivý. Poctivě držel všechno, co se dalo držet.
 
 Orrin slezl z bedny. Haro a Svit ji vzali za uši a odnesli zpátky nahoru, prázdnou.
 
@@ -206,11 +206,11 @@ Eren se zastavil.
 
 Kaj byl bledý. Rty měl rozpraskané a pod očima tmavé stíny. Devatenáct let. U Orrinova ohně se jedlo víc než jinde, a přesto byl Kaj hubenější než před měsícem.
 
-„Já –“ řekl Kaj.
+„Já…“ řekl Kaj.
 
 „Vím.“
 
-Kaj se na něj podíval. Čekal něco dalšího. Křik. Ránu. Otázku. Eren mlčel. Jen se na něj díval, a to ticho bylo horší než rána. Viděl to na Kajovi. Viděl, jak se v něm něco láme a jak to Kaj drží, aby se to nezlomilo celé.
+Kaj zvedl oči. Čekal něco dalšího. Křik. Ránu. Otázku. Eren mlčel. Jen se na něj díval, a to ticho bylo horší než rána. Viděl to na Kajovi. Brada se mu chvěla a Kaj zatínal zuby, aby se nesesypal celý.
 
 „Je ti zima?“ zeptal se Eren.
 
@@ -240,13 +240,13 @@ Sefa ležela za ní pod plachtou. Eren myslel, že spí. Za chvíli se ozval jej
 
 „Slyšela jsem to.“
 
-Eren si k ní klekl. Sefa měla oči otevřené a dívala se na střechu plachty. Tváře měla propadlé a rty suché.
+Eren si k ní klekl. Sefa měla oči otevřené a upřené na střechu plachty. Tváře měla propadlé a rty suché.
 
-„V lékárničce jsou věci, které se otevřou jen kódem,“ řekla. „Ty silné. Proti bolesti. Na spaní. Ty, se kterými se dá zabít.“ Odmlčela se. Nadechla se. „Nenávidím je. Každý den. Leží tam a já se k nim nedostanu, a někdo by je potřeboval.“
+„V lékárničce jsou věci, které se otevřou jen kódem,“ řekla. „Ty silné. Proti bolesti. Na spaní. Ty, se kterými se dá zabít.“ Nadechla se. „Nenávidím je. Každý den. Leží tam a já se k nim nedostanu, a někdo by je potřeboval.“
 
 „Já vím.“
 
-„Nevíš.“ Sefa otočila hlavu a podívala se na něj. „Nenávidím je. A jsem ráda, že tam jsou. Protože nepamatuju dávky, Erene. Kdybych se k nim dostala, dávala bych je. Z dobroty. Tolik, kolik by se mi zdálo.“
+„Nevíš.“ Sefa k němu otočila hlavu. „Nenávidím je. A jsem ráda, že tam jsou. Protože nepamatuju dávky, Erene. Kdybych se k nim dostala, dávala bych je. Z dobroty. Tolik, kolik by se mi zdálo.“
 
 Zavřela oči.
 
@@ -258,17 +258,17 @@ Pak už nemluvila. Eren u ní klečel, dokud se jí dech nezpomalil. Vesa za ní
 
 Odpoledne nosil Eren dřevo do síně.
 
-Dvanáct náručí, jako každý den. Na terase seděla u ohně Tal a dívala se, jak chodí. Ikku stál u tyčí s kůžemi a nedíval se na něj vůbec. Díval se dolů, do kotle, na horní kraj, kde pod dvojitou plachtou Orrinova přístřešku stoupala pára.
+Dvanáct náručí, jako každý den. Na terase seděla u ohně Tal a dívala se, jak chodí. Ikku stál u tyčí s kůžemi a nedíval se na něj vůbec, jen dolů, do kotle, na horní kraj, kde pod dvojitou plachtou Orrinova přístřešku stoupala pára.
 
-Ammu tam nebyla. Ženy dnes k domům nepřišly. Eren nevěděl, jestli kvůli zimě, nebo kvůli tomu, co se v kotli dělo v poledne. Musely to vidět z terasy. Bednu, lidi kolem ní, muže na bedně, který mluvil, a toho druhého u skály.
+Ammu tam nebyla. Ženy dnes k domům nepřišly. Možná kvůli zimě, možná kvůli tomu, co se v kotli dělo v poledne. Musely to vidět z terasy. Bednu, lidi kolem ní, muže na bedně, který mluvil, a toho druhého u skály.
 
 Při poslední náruči ho Tal zastavila. Zvedla ruku, jen o kus, a Eren se zastavil.
 
-Dívala se na něj. Pak se podívala na jeho pravou ruku. Na hřbet. Na rudý pruh, který se loupal. Dívala se na něj dlouho, a pak se podívala dolů, do soutěsky. Tam, kde se kotel zužoval a kde pod skalním žebrem ležela ve skále hlína.
+Dívala se na něj a pak na jeho pravou ruku. Na hřbet. Na rudý pruh, který se loupal. Hleděla na něj dlouho a potom stočila oči dolů, do soutěsky. Tam, kde se kotel zužoval a kde pod skalním žebrem ležela ve skále hlína.
 
 Pak zase na něj.
 
-Eren nevěděl, co ví. Nevěděl, jestli něco ví. Stál před ní s dřevem v náruči a nedokázal se pohnout.
+Eren nevěděl, co ví, ani jestli vůbec něco ví. Stál před ní s dřevem v náruči a nedokázal se pohnout.
 
 Tal sklopila ruku. Otočila se k ohni a přiložila.
 
@@ -322,7 +322,7 @@ Maela mlčela. Přesypala kamínky z dlaně do dlaně.
 
 Venku praskl oheň. Maela se nepohnula. Dívala se na něj a on jí neviděl do očí, jen na lesk v nich od žáru.
 
-Pak natáhla ruku a vzala jeho pravou. Obrátila ji hřbetem k ohni. Dívala se na rudý pruh, tak jak se na něj dívala Sefa a jak se na něj dívala Tal.
+Natáhla ruku a vzala jeho pravou. Obrátila ji hřbetem k ohni. Dívala se na rudý pruh, tak jak se na něj dívala Sefa a jak se na něj dívala Tal.
 
 „Co to je?“
 
@@ -344,13 +344,13 @@ Pustila jeho ruku. Položila mu ji zpátky na koleno, opatrně, jako se poklád�
 
 „Tio se ptá, kdy přijdeš,“ řekla.
 
-Eren řekl to slovo. Místní, krátké, se zaraženým dechem na konci.
+Eren řekl to slovo. Místní, krátké.
 
 Maela se zamračila. „Co to je?“
 
 „Zítra.“
 
-„Tio by věděla, jestli jsi to řekl dobře,“ řekla Maela. Bylo to skoro jako úsměv, ale nebyl to úsměv. Pak vylezla ven a Eren slyšel, jak odchází přes kotel nahoru, k přístřešku pod teplou skálou, a jak se tam za ní zavírá plachta.
+„Tio by věděla, jestli jsi to řekl dobře,“ řekla Maela. Bylo to skoro jako úsměv, ale nebyl to úsměv. Vylezla ven a Eren slyšel, jak odchází přes kotel nahoru, k přístřešku pod teplou skálou, a jak se tam za ní zavírá plachta.
 
 *
 
@@ -364,13 +364,13 @@ Eren seděl u ohně a šil.
 
 Rozpáraný šev límce, kde ležel háček. Steh za stehem, pomalu, s prsty ztuhlými od mrazu. Nit byla bílá a tenká jako vlas a šev se pod ní zavíral. Háček zůstal uvnitř. Cítil ho pod látkou, když přejel prstem. Malý ohyb drátu.
 
-Kdyby ho vyhodil do ohně, drát by se roztavil a zámek by zůstal zamčený navždy. Napadlo ho to. Nikdo by pak už nemusel nic. Ani on.
+Kdyby ho vyhodil do ohně, nikdo kromě něj by už nevěděl, co se ztratilo. A on by si mohl říkat, že to bez háčku nejde. Napadlo ho to. Nikdo by pak už nemusel nic. Ani on.
 
 Byla to ta samá úleva. Jen převrácená.
 
 Šil dál.
 
-Pak si lehl, s límcem zašitým, s bundou zapnutou až ke krku. Ležel na boku, tváří tam, kde dřív spávala Tio, a díval se škvírou ve vchodu na měsíc. Byl kulatý. Ru říkal dva úplňky. Byl to druhý.
+Lehl si, s límcem zašitým, s bundou zapnutou až ke krku. Ležel na boku, tváří tam, kde dřív spávala Tio, a díval se škvírou ve vchodu na měsíc. Byl kulatý. Ru říkal dva úplňky. Byl to druhý.
 
 Jednou pojistku vypnul. Pro dobrou věc, pro všechny, pro ticho v hlavě, které měl dostat každý. Neptal se dál.
 

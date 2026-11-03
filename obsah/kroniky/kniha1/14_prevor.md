@@ -2,7 +2,7 @@
 
 V úterý po Velikonocích se vědro přelilo zase u *panem nostrum*.
 
-Matěj to zapsal a chvíli stál nad strouhou a poslouchal horu. Od včerejšího poledne zněla jinak. Ne hlasitěji, jen častěji. Dřív se z paseky ozývalo bušení želízka v dlouhých řadách a pak dlouho nic, jak se jedna směna vytrácela a druhá teprve přicházela. Teď to nepřestávalo. Dvě party na čelbě, dvojí mzda, a hora se ozývala jako kovárna o jarmarku, kde se nečeká, až vychladne železo.
+Matěj to zapsal a chvíli stál nad strouhou a poslouchal horu. Od noci zněla jinak. Ne hlasitěji, jen častěji. Dřív se z paseky ozývalo bušení želízka v dlouhých řadách a pak dlouho nic, jak se jedna směna vytrácela a druhá teprve přicházela. Teď to nepřestávalo. Dvě party na čelbě, dvojí mzda, a hora se ozývala jako kovárna o jarmarku, kde se nečeká, až vychladne železo.
 
 Ješek nesešel. Ani s noční směnou, ani potom.
 
@@ -38,9 +38,9 @@ Matěj mu pomáhal. Úlomek kamene, váček s hlínou, trn, každý se svou cedu
 
 Matěj ztuhl.
 
-„Převor ji vzal z almárie,“ řekl Hartmann. Mluvil potichu, jak se mluví v kostele i tehdy, když v něm nikdo není. „Pan Konrád si přeje, aby ji kaplan přečetl lidu. Česky. Že kost je z Lyddy, kde svatý Jiří trpěl.“ Podíval se na Matěje. „Převor nechtěl. Pak řekl, že přečíst se může, co je napsáno. Že to nikomu neublíží.“
+„Převor ji vzal z almárie,“ řekl Hartmann. Mluvil potichu, jak se mluví v kostele i tehdy, když v něm nikdo není. „Pan Konrád si přeje, aby ji kaplan přečetl lidu. Česky. Že kost je z Lyddy, kde svatý Jiří trpěl. Převor nechtěl. Pak řekl, že přečíst se může, co je napsáno. Že to nikomu neublíží.“
 
-Položil listinu na oltář vedle kosti. Pečeť ležela na proužku obrácená k zemi. Jezdec s kopím a zvíře pod kopyty.
+Položil listinu na oltář vedle kosti. Pečeť visela na proužku přes hranu oltáře. Jezdec s kopím a zvíře pod kopyty.
 
 „Ve skriptoriu je zima,“ řekl Hartmann po chvíli, jako by to s tím souviselo. „Wigandův pult stojí prázdný. Nikdo si k němu nesedne. Bratr Eberhard říká, že na něj čeká.“ Zaváhal. „Na tebe. Všichni to říkají.“
 
@@ -82,7 +82,7 @@ Matěj zvedl oči.
 
 Matěj věděl, co tím Wigand myslel. Jednou, co jsi viděl. A podruhé, co sis myslel. A nikdy to nepleť dohromady. Chtěl to převorovi říct, a neřekl, protože by to musel vysvětlit a vysvětlení by z toho udělalo něco jiného. Bylo to jen mezi ním a Wigandem. Teď už jen v něm.
 
-„Dal mi je,“ řekl převor a dotkl se klíčů prstem. „V neděli, když ještě viděl na ruce. Řekl, komu.“
+„Dal mi je,“ řekl převor a dotkl se klíčů prstem. „V neděli, když ještě udržel klíče v ruce. Řekl, komu.“
 
 Neřekl komu. Nemusel.
 
@@ -112,7 +112,7 @@ Armarius. Kdo má klíče, toho zavolají jménem, protože ho potřebují.
 
 Převor se na něj podíval. Ty šedé oči, ve kterých Matěj nikdy nic nepřečetl, byly unavené, a byla v nich trpělivost, jakou má člověk s dítětem, které se ptá podruhé na totéž.
 
-„Byl jsem na slatině,“ řekl Matěj. „Třikrát. Se svíčí. Za bezvětří zhasne v prohlubni vždycky ve stejné výšce, jako by tam stála voda. Za větru hoří až u dna. Stál jsem na dně a dýchal. Drak by dýchal i za větru, otče. Tohle ne. Je to něco, co vychází ze země. Jako nad kádí u celeráře. Je to dech země, ne šelmy.“
+„Byl jsem na slatině,“ řekl Matěj. „Třikrát. Dvakrát se svíčí. Za bezvětří zhasne v prohlubni vždycky ve stejné výšce, jako by tam stála voda. Za větru hoří až u dna. Stál jsem na dně a dýchal. Drak by dýchal i za větru, otče. Tohle ne. Je to něco, co vychází ze země. Jako nad kádí u celeráře. Je to dech země, ne šelmy.“
 
 „A zabíjí?“
 
@@ -144,7 +144,7 @@ Neudělal to rozhodnutě. Ruka tam šla sama, jako tenkrát v Ortliebově truhle
 
 „A nakreslil jsi to?“
 
-„Ne.“ Matěj otevřel sešitek na předposledním listu. „Ale tohle.“
+„Ne tak, abych vám to mohl ukázat.“ Matěj otevřel sešitek na předposledním listu. „Ale tohle.“
 
 Převor si list přitáhl ke svíci. Matěj ho pozoroval. Převor četl, jak četl všechno, pomalu a bez pohybu rtů, a Matěj viděl, jak se jeho oči zastavují u znaků, kterým nerozuměl, a pak sjíždějí k latinským glosám, které k nim Matěj připsal. Vědro. Puklina. Hrázka. Neděle. *Drückt.* Postavička s kápí.
 
@@ -210,13 +210,13 @@ Převor čekal. Nebyl netrpělivý. Čekal tak, jak se čeká na odpověď, o kt
 
 „Pod čí zemí končí?“ zeptal se převor.
 
-Matěj se na něj podíval.
+Matěj zvedl hlavu.
 
-„Ptal jsem se tě v březnu,“ řekl převor. „Pod čí zemí končí štola. Teď ti řeknu, proč na tom už nezáleží.“ Vzal ruku ze sešitku a ukázal oknem ven, k hoře, kterou nebylo vidět. Okno byl jen otvor ve zdi zakrytý měchýřem. „Zítra s panem Konrádem obejdu les od potoka k hřbetu. Jeho lovčí ho zná. Postavíme kameny. Na svatého Jiří přitiskne pan Konrád pečeť na listinu, kterou mu napsal Volkmar a kterou jsem opravil já, a v té listině stojí, že klášter ve Waldsassenu dostává ten les k pastvě a k dřevu, navěky, za modlitby za duši jeho otce. Stojí v ní taky,“ převor se odmlčel, ne pro účinek, ale jako by si tu větu přečetl znovu v hlavě, „že co je pod drnem, zůstává pánovi.“
+„Ptal jsem se tě v březnu,“ řekl převor. „Pod čí zemí končí štola. Teď ti řeknu, proč na tom už nezáleží.“ Vzal ruku ze sešitku a ukázal oknem ven, k hoře, kterou nebylo vidět. Okno bylo jen otvor ve zdi zakrytý měchýřem. „Zítra s panem Konrádem obejdu les od potoka k hřbetu. Jeho lovčí ho zná. Postavíme kameny. Na svatého Jiří přitiskne pan Konrád pečeť na listinu, kterou mu napsal Volkmar a kterou jsem opravil já, a v té listině stojí, že klášter ve Waldsassenu dostává ten les k pastvě a k dřevu, navěky, za modlitby za duši jeho otce. Stojí v ní taky,“ převor se odmlčel, ne pro účinek, ale jako by si tu větu přečetl znovu v hlavě, „že co je pod drnem, zůstává pánovi.“
 
 „Vy jste mu dal horu.“
 
-„Já jsem mu nedal nic. Hora nikdy nebyla naše. Les taky ne, dokud nám ho nedá.“ Převor se díval na Matěje klidně. „Grangie má sto dvacet ovcí a pastvu, která je nestačí uživit. Udalrich každé jaro kupuje seno. Tvoje ves pod horou má dvacet chalup a kostelík ze dřeva a od žní má mzdu, jakou nikdy neměla. A pan Konrád je ministeriál císaře, Matthiasi. Ne náš soused. Za ním stojí Štaufové, a Štaufové tu nejsou dlouho a nevědí ještě, komu mají věřit. Teď to zjišťují. Opat je nemocen. Kdo ví, kdo bude opatem po něm. Chceš, abych přišel na jejich falc s opisem z cizí truhly a řekl jim, že jejich muž kope do vody? Na slovo hluchého Sasa? A když se zeptají, kde je ta voda, řeknu *mnich to ví, ale neřekne odkud*?“
+„Já jsem mu nedal nic. Hora nikdy nebyla naše. Les taky ne, dokud nám ho nedá.“ Převor mluvil klidně. „Grangie má sto dvacet ovcí a pastvu, která je nestačí uživit. Udalrich každé jaro kupuje seno. Tvoje ves pod horou má dvacet chalup a kostelík ze dřeva a od žní má mzdu, jakou nikdy neměla. A pan Konrád je ministeriál císaře, Matthiasi. Ne náš soused. Za ním stojí Štaufové, a Štaufové tu nejsou dlouho a nevědí ještě, komu mají věřit. Teď to zjišťují. Opat je nemocen. Kdo ví, kdo bude opatem po něm. Chceš, abych přišel na jejich falc s opisem z cizí truhly a řekl jim, že jejich muž kope do vody? Na slovo hluchého Sasa? A když se zeptají, kde je ta voda, řeknu *mnich to ví, ale neřekne odkud*?“
 
 Matěj mlčel.
 
@@ -254,9 +254,9 @@ Matěj na to neměl odpověď. Nebo měl, a nedokázal ji říct tak, aby to zn�
 
 „Wigand říkal, že většina lidí, co píšou kroniky, plete dohromady, co viděli a co si mysleli. A že my pak čteme o drakovi.“
 
-Převor se na něj díval dlouho.
+Převor dlouho mlčel.
 
-„Bratr Wigand,“ řekl potom, „opsal chybu, kterou viděl, a seděl za to šest dní o chlebu a vodě. Dvakrát. Tehdejší převor to zapsal. Mám ten zápis v almárii.“ Natáhl ruku a vzal klíče ze stolu. Kruh zacinkal. „Wigand měl pravdu. A pak čtyřicet let opisoval, co mu přidělili, a nikdy už nikomu neřekl, co si myslí o arengách. Proto umřel jako armarius. Ne o chlebu a vodě.“ Zavěsil si klíče za pás. Cinkly o přezku, jak cinkaly o Wigandův. „Rozmysli si to do neděle.“
+„Bratr Wigand,“ řekl potom, „opsal chybu, kterou viděl, a seděl za to o chlebu a vodě. Dvakrát po třech dnech. Tehdejší převor to zapsal. Mám ten zápis v almárii.“ Natáhl ruku a vzal klíče ze stolu. Kruh zacinkal. „Wigand měl pravdu. A pak čtyřicet let opisoval, co mu přidělili, a nikdy už nikomu neřekl, co si myslí o arengách. Proto umřel jako armarius. Ne o chlebu a vodě.“ Zavěsil si klíče za pás. Cinkly o přezku, jak cinkaly o Wigandův. „Rozmysli si to do neděle.“
 
 Matěj vstal.
 
@@ -280,7 +280,7 @@ Nebrečel. Myslel si, že by měl. Seděl na kořeni a cítil jen to, že je zim
 
 Klíče. Tři na železném kruhu, ten prostřední s ohnutým zubem.
 
-Kdyby v neděli řekl, co napsal, nebyla by to lež. Převor měl pravdu. Nevěděl, co je ten dech. Řekl by: na slatině je dech, který zabíjí, sám jsem ho okusil, můj pes je svědek. Všechno by to byla pravda. Ves by vydechla, jako vydechla, když Konrád ukazoval valoun. Převor by požehnal kost. Konrád by přitiskl pečeť. A Matěj by se vrátil do Waldsassenu a v kapitule by mu převor podal klíče a řekl *bratr Matthias*. Šel by do knihovny a otevřel Wigandovu almárii. Uvnitř by ležela listina z Lyddy a jeho zpráva, která říká, že je podvrh, a jeho dopis ze slatiny, podle kterého drak není, ačkoli je. A mezi tím vším by seděl a byl armarius.
+Kdyby v neděli řekl, co napsal, nebyla by to lež. Převor měl pravdu. Nevěděl, co je ten dech. Řekl by: na slatině je dech, který zabíjí, sám jsem ho okusil, můj pes je svědek. Všechno by to byla pravda. Ves by vydechla, jako vydechla, když Konrád ukazoval valoun. Převor by požehnal kost. Konrád by přitiskl pečeť. A Matěj by se vrátil do Waldsassenu a v kapitule by mu převor podal klíče a řekl *bratr Matthias*. Šel by do knihovny a otevřel Wigandovu almárii. Uvnitř by ležela listina z Lyddy a jeho zpráva, která říká, že je podvrh, a jeho dopis ze slatiny, podle kterého drak je, ačkoli není. A mezi tím vším by seděl a byl armarius.
 
 A štola by šla do vody.
 
@@ -296,7 +296,7 @@ Ráno se převor s Udalrichem vydali k hranici. Za vraty na ně čekal Rüdiger 
 
 Matěj stál u oratoře a díval se, jak odjíždějí po cestě podél potoka, k lesu. Převor se neohlédl.
 
-Pak vzal vědro a šel k žlabu. Naplnil ho, postavil a modlil se. *Pater noster.* Pomalu. První Otčenáš, celý. Druhý. *Panem nostrum.* Vědro se přelilo.
+Pak vzal vědro a šel ke žlabu. Naplnil ho, postavil a modlil se. *Pater noster.* Pomalu. První Otčenáš, celý. Druhý. *Panem nostrum.* Vědro se přelilo.
 
 Zapsal to. Pak držel rydlo nad voskem a pod to, co napsal, připsal ještě jeden řádek. Pomalu, jak se píše věta, o které člověk neví, jak ji dopsat.
 

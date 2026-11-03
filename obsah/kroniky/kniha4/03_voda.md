@@ -12,23 +12,23 @@ Seděl na kameni u potoka a počítal dál. Křivka nebyla rovná. Zpomalovala s
 
 Do podzimu. Pokud se tady pozná, kdy je podzim.
 
-Sundal víčko a podíval se na vložku zespodu. Byla zahnědlá, slizká. Dala by se propláchnout. Proti proudu, čistou vodou. Jenže čistou vodu by musel mít, aby jí proplachoval, a tu neměl. Měl jen tu, kterou se snažil vyčistit.
+Sundal víčko a obrátil vložku. Zespodu byla zahnědlá, slizká. Dala by se propláchnout. Proti proudu, čistou vodou. Jenže čistou vodu by musel mít, aby jí proplachoval, a tu neměl. Měl jen tu, kterou se snažil vyčistit.
 
 Vrátil víčko a zůstal sedět.
 
-Za ním se ozval kašel. Byl to ten chlapec, devítiletý, s ovázanou dlaní. Stál kus nad ním na svahu, ohnutý v pase, a kašlal, a pak ho popadla křeč a utíkal mezi stromy. Eren se díval jinam. Dva dny dělala totéž polovina dětí a třetina dospělých. Ti, kteří se první den napili rovnou z potoka, protože filtr byl pomalý a měli žízeň. Sefa jim dávala pít převařenou vodu, když se podařilo udržet oheň, a říkala, že to přejde. Pak dodala, že to aspoň u lidí doma přecházelo.
+Za ním se ozval kašel. Byl to ten chlapec, devítiletý, s ovázanou dlaní. Stál kus nad ním na svahu, ohnutý v pase, a kašlal, a pak ho popadla křeč a utíkal mezi stromy. Eren se díval jinam. Dva dny dělala totéž polovina dětí a třetina dospělých. Ti, kteří se první den napili rovnou z potoka, protože filtr byl pomalý a měli žízeň. Sefa jim dávala pít vodu převařenou v láhvích postavených do žáru, s vyšroubovanou vložkou, když se podařilo udržet oheň, a říkala, že to přejde. Pak dodala, že to aspoň u lidí doma přecházelo.
 
 *
 
 Pára stoupala z rokle, když se Eren vrátil nahoru.
 
-Viděl ji už ráno předtím a nevěděl, co to je. Byla to bílá vrstva nad stromy na pravé straně údolí, tam, kde se svahy sbíhaly k sobě a kde z nich vystupovaly bílé skály. Potok tekl odtamtud. Eren si myslel, že je to mlha. Mlha ležela ráno všude.
+Viděl ji už ráno předtím. Byla to bílá vrstva nad stromy na pravé straně údolí, tam, kde se svahy sbíhaly k sobě a kde z nich vystupovaly bílé skály. Potok tekl odtamtud. Eren si myslel, že je to mlha. Mlha ležela ráno všude.
 
 Jenže dnes ráno byla mlha v údolí řídká a nad tou roklí zůstala hustá. A nestála. Stoupala. Pomalu, v chomáčích, které se nahoře trhaly a rozpouštěly ve světle. Pod nimi ale přibývaly nové, ze stejného místa, pořád.
 
-Eren stál na svahu s láhví v ruce a díval se. V habitatech něco takového viděl jen u chladicích věží, když studený vzduch z rozvodu narazil na teplou vodu z reaktorového okruhu. Teplá voda pod studeným vzduchem. Pára. Musí tam být teplá voda. A teplá voda musí mít zdroj tepla.
+Eren stál na svahu s láhví v ruce a zíral. V habitatech něco takového viděl jen u chladicích věží, když studený vzduch z rozvodu narazil na teplou vodu z reaktorového okruhu. Teplá voda pod studeným vzduchem. Pára. Musí tam být teplá voda. A teplá voda musí mít zdroj tepla.
 
-Dlouho stál a díval se. Tváří mu prošel studený ranní vítr a pára v rokli se přitom ani nepohnula.
+Stál tam dlouho. Tváří mu prošel studený ranní vítr a pára v rokli se přitom ani nepohnula.
 
 Pak si všiml, že nad roklí, výš, nad bílými skalami, stoupá i ten tenký rovný kouř. Tentýž, který viděl první den od potoka. Pára a kouř. Na jednom místě.
 
@@ -40,7 +40,7 @@ Ráno po první noci pod plachtou jim to řekli, jak Orrin slíbil. Spolu. Orrin
 
 Někdo se zeptal, proč jim úřady řekly, že je to tu neobydlené. Na to Orrin neodpověděl. Jen se usmál, jako by ta otázka byla odpověď sama.
 
-Teď stál u svého ohně a díval se na páru, kterou mu Eren ukázal.
+Teď stál u svého ohně a hleděl na páru, kterou mu Eren ukázal.
 
 „Teplá voda,“ řekl.
 
@@ -64,7 +64,7 @@ Eren se na něj podíval.
 
 „Když tam přijde čtyřicet mužů se sekerami,“ řekl Orrin, „víš, co uvidí? Čtyřicet mužů se sekerami. Když přijdou ženy a děti, uvidí lidi, kteří hledají, kde bydlet.“ Usmál se. „Což je pravda.“
 
-Bylo to rozumné. Eren to věděl a stejně se mu to nelíbilo. Nevěděl, co přesně. Možná to, že by na to přišel sám a nepřišel. Možná to, že Orrin řekl *s rodinami* stejně, jako řekl *ozbrojených*: jako slovo, které se dá položit na stůl a vzít zpátky.
+Bylo to rozumné. Eren to věděl a stejně se mu to nelíbilo. Možná to, že by na to přišel sám a nepřišel. Možná to, že Orrin řekl *s rodinami* stejně, jako řekl *ozbrojených*: jako slovo, které se dá položit na stůl a vzít zpátky.
 
 „Sekery si vezmou taky,“ řekl Eren.
 
@@ -102,7 +102,7 @@ Muž kus před Erenem se sehnul pro kámen.
 
 „Nech to,“ řekl Orrin. Ani se neotočil. „Nevíš, čí jsou.“
 
-Muž kámen pustil. Zvířata na skále se ještě chvíli dívala. Pak se jedno po druhém otočila a odešla po hraně skály nahoru, pomalu, beze spěchu. To malé se ohlédlo přes matčino rameno.
+Muž kámen pustil. Zvířata na skále ještě postála a jedno po druhém se otočila a odešla po hraně skály nahoru, pomalu, beze spěchu. To malé se ohlédlo přes matčino rameno.
 
 Tio se smála. Smála se ještě dlouho potom, co zvířata zmizela, a Eren si uvědomil, že ji neslyšel smát se od probuzení.
 
@@ -142,7 +142,7 @@ Bylo to slovo, krátké a ostré. Pak znovu. A znovu. Nemířil na nikoho. Míř
 
 Muž na terase zakřičel znovu. Teď to bylo jiné slovo, delší. Další dva muži vedle něj sklonili oštěpy. Vzadu na terase se rozplakalo dítě a nějaká žena ho umlčela. Rozplakalo se i dítě mezi vyhnanci, pak druhé. Učitelka si přitiskla chlapce k sobě. Eren cítil, jak se Tio na jeho ramenou napnula. Sundal ji dolů a postavil ji za sebe. Držela ho za bundu oběma rukama.
 
-Bylo ticho. Ne úplné: potok šuměl, pára syčela kdesi nad vodou, a od ohně na terase bylo slyšet praskání. Ale lidé byli zticha. Obě řady. Stáli proti sobě a dívali se a nikdo nevěděl, co dál.
+Bylo ticho. Ne úplné: potok šuměl, pára syčela kdesi nad vodou, a od ohně na terase bylo slyšet praskání. Ale lidé byli zticha. Obě řady. Stáli proti sobě a nikdo nevěděl, co dál.
 
 Eren to viděl jako schéma. Neuměl to jinak. Dva systémy, oba pod tlakem, oba s pojistkou nastavenou na první pohyb druhého. Muž na terase čekal, až někdo z vyhnanců udělá krok. Kaj čekal, až muž na terase hodí oštěp. Takový systém se neuklidní sám. Takový systém čeká, až někde povolí těsnění, a pak to povolí všude naráz.
 
@@ -160,7 +160,7 @@ Zastavil se pět kroků od Erena. Díval se za něj. Na Tio.
 
 Tio vykoukla zpoza Erenovy bundy.
 
-Chlapec se na ni díval a ona na něj. Pak se jeho pohled svezl níž, k jejím botám. Šedým, vysokým, o dva prsty větším. Podíval se na ně dlouze a nedůvěřivě, a pak na své bosé nohy na kamení, a zase na její boty. Udělal obličej. Nebyl zlý. Byl to obličej, jaký dělají děti, když vidí něco, co nedává smysl.
+Chlapec se na ni díval a ona na něj, dokud jeho pohled nesklouzl níž, k jejím botám. Šedým, vysokým, o dva prsty větším. Prohlížel si je dlouze a nedůvěřivě, pak své bosé nohy na kamení a zase její boty. Udělal obličej. Nebyl zlý. Byl to obličej, jaký dělají děti, když vidí něco, čemu nerozumějí.
 
 Tio se rozesmála.
 
@@ -168,11 +168,11 @@ Nahlas, krátce, jako předtím pod skálou se zvířaty. Pustila Erenovu bundu.
 
 Eren ji chtěl zadržet. Neudělal to. Ruku měl ve vzduchu a nechal ji tam.
 
-Chlapec přišel o tři kroky blíž. Pak o další. Opatrně, jako by zkoušel, jestli ho země unese. Vzal šišku z Tiiny dlaně a obrátil ji v prstech. Přičichl k ní. A pak se rozesmál taky. Smál se, až se mu ramena třásla, a ukázal šiškou za sebe, na svah, na ty ploché stromy, které rostly všude, kam se člověk podíval. Bylo jasné, co tím myslí. Tohle je přece všude. Tohle mi dáváš?
+Chlapec přišel o tři kroky blíž. Pak o další. Opatrně, jako by zkoušel, jestli ho země unese. Vzal šišku z Tiiny dlaně a obrátil ji v prstech. Přičichl k ní. A pak se rozesmál taky. Smál se, až se mu ramena třásla, a ukázal šiškou za sebe, na svah, na ty ploché stromy, které rostly všude, kam člověk dohlédl. Bylo jasné, co tím myslí. Tohle je přece všude. Tohle mi dáváš?
 
 Tio se smála s ním a nevěděla čemu.
 
-Chlapec jí šišku vrátil. Pak si poklepal prstem na prsa a řekl slovo. Krátké, jednoslabičné. Eren ho slyšel jako *Ru*, nebo něco hodně podobného, s hrdelním zvukem na začátku, který neuměl napodobit.
+Chlapec jí šišku vrátil, poklepal si prstem na prsa a řekl slovo. Krátké, jednoslabičné. Eren ho slyšel jako *Ru*, nebo něco hodně podobného, s hrdelním zvukem na začátku, který neuměl napodobit.
 
 Tio se na něj dívala. Pak si poklepala na prsa taky.
 
@@ -196,7 +196,7 @@ Bylo jich pět. Nebo šest; šestý zůstal ve stínu tak hluboko, že ho Eren v
 
 A oči. Eren se na ně podíval a zachvěl se.
 
-Byly světlé. Tak světlé, že se v nich skoro nedala poznat barva, jako voda v nádrži, když se na ni člověk dívá shora. A byly přimhouřené proti světlu, které na ně padalo z kotle. Ten vpředu, žena, zvedla ruku a podržela si dlaň nad očima jako stříšku. Jako člověk, který vyšel z tmavé místnosti do příliš ostrého světla. Pod tou stříškou se dívala dolů na vyhnance.
+Byly světlé. Tak světlé, že se v nich skoro nedala poznat barva, jako voda v nádrži, když se na ni člověk dívá shora. A byly přimhouřené proti světlu, které na ně padalo z kotle. Ta vpředu byla žena. Zvedla ruku a podržela si dlaň nad očima jako stříšku. Jako člověk, který vyšel z tmavé místnosti do příliš ostrého světla. Pod tou stříškou se dívala dolů na vyhnance.
 
 Nikdo z nich nepromluvil.
 
@@ -210,7 +210,7 @@ Eren se díval. Ta žena vpředu, ta s dlaní nad očima. Nehýbala se. Stála n
 
 Pod terasou, mezi kamením, tekla teplá voda. Vycházela ze skály kdesi pod ústím jeskyně, neviděl přesně odkud, a plnila tůň, mělkou a čistou, ohraničenou bílým okrajem té tvrdé usazeniny. Z tůně přetékala přes bílý práh do druhé tůně níž, větší, a teprve z té tekla do potoka. Nad oběma visela pára. Horní tůň ležela blíž jeskyni. Ta malá žena stála tak, že mezi ní a vyhnanci ležela právě horní tůň.
 
-Eren si toho všiml a nevěděl, co to znamená.
+Eren si toho všiml a nerozuměl tomu.
 
 *Neobydlená divočina,* řekl v jeho hlavě hlas. *Oblast přistání byla prověřena.*
 
@@ -222,7 +222,7 @@ A Kajova sekera zůstala ve výšce prsou.
 
 *
 
-Eren nevěděl, kdy se rozhodl. Možná se nerozhodl vůbec. Ruka sáhla k pasu dřív, než o tom stačil přemýšlet.
+Kdy se Eren rozhodl, nepoznal. Možná se nerozhodl vůbec. Ruka sáhla k pasu dřív, než o tom stačil přemýšlet.
 
 Vytáhl nůž. Slyšel, jak se lidé kolem něj napjali, i to, jak se muž na terase přikrčil. Eren nůž nezvedl. Držel ho za čepel, rukojetí od sebe. Pomalu si klekl, levé koleno na suť, a ucítil, jak se mu pod ním posunul kámen a puchýř na patě se otřel o botu. Položil nůž na plochý kámen před sebou, tak, aby ležel na očích obou řad. Pak ho od sebe kousek odsunul. Prsty od něj dal pryč. Vstal.
 
@@ -230,7 +230,7 @@ Ruce měl prázdné. Nechal je viset podél těla, dlaněmi dopředu.
 
 „Erene,“ řekl Orrin. Tiše. Ne přísně. Varovně.
 
-Eren se neotočil. Díval se na muže s pevnýma rukama a ten se díval na něj. Pak se podíval na nůž na kameni a zase zpátky na Erena, a Eren v jeho tváři uviděl něco, co znal: člověka, který se snaží spočítat, co to znamená, a nemá dost údajů.
+Eren se neotočil. Díval se na muže s pevnýma rukama a ten na něj. Muž sklopil oči k noži na kameni a zase je zvedl k Erenovi, a Eren v jeho tváři uviděl něco, co znal: člověka, který se snaží spočítat, co to znamená, a nemá dost údajů.
 
 „Co děláš?“ To byla Maela, za ním. Šeptem, prudce.
 
@@ -246,10 +246,10 @@ Pak řekla jedno slovo.
 
 Nebylo hlasité. Eren si nebyl jistý, jestli ho vůbec slyšeli všichni. Ale muž s pevnýma rukama zvedl hrot oštěpu. Ne celý. O dlaň. Pak ještě o kus, aby nemířil na nikoho, a postavil oštěp tupým koncem na zem.
 
-Za Erenovými zády, po dlouhé chvíli, cinkl kov o kámen. Eren se ohlédl. Sefa položila svůj nůž vedle jeho. Pak učitelka. Pak ještě někdo, koho neznal. A ještě jeden.
+Za Erenovými zády, po dlouhé chvíli, cinkl kov o kámen. Eren se ohlédl. Sefa položila svůj nůž vedle jeho. Pak učitelka a ještě někdo, koho neznal. A ještě jeden.
 
 Orrin svou sekeru nepoložil. Ani Kaj. Stáli vpředu, oba, a drželi je.
 
-Stará žena na terase se na ně dívala. Pak se podívala na dva nože na kameni, pak na tři, čtyři, pět. Pak na Erena.
+Stará žena na terase si je prohlížela. Potom nože na kameni, dva, pak tři, čtyři, pět. Nakonec Erena.
 
 Dlouho. Než se zase posadila k ohni a přiložila.

@@ -2,7 +2,7 @@
 
 Za čtyři nože se mělo dostat maso.
 
-Tak to řekl Haro, když se třicátého devátého dne od sněhu ráno vrátil z terasy. Orrin ho tam poslal se čtyřmi noži ze svazku, zabalenými v kusu plachty, a Haro šel nahoru po suti s rukama nataženýma před sebou, aby bylo vidět, co nese. Nahoře stál Ikku. Dlouho se díval na nože. Pak je vzal. Ukázal na údolí, na hory za ním a na slunce, jak půjde. Pak na zem před terasou.
+Tak to řekl Haro, když se třicátého devátého dne od sněhu ráno vrátil z terasy. Orrin ho tam poslal se čtyřmi noži ze svazku, zabalenými v kusu plachty, a Haro šel nahoru po suti s rukama nataženýma před sebou, aby bylo vidět, co nese. Nahoře stál Ikku. Dlouho si nože prohlížel, než je vzal. Ukázal na údolí, na hory za ním a na slunce, jak půjde. Pak na zem před terasou.
 
 „Až se vrátí z lovu,“ řekl Haro u beden. „Dnes. Ukázal to.“
 
@@ -18,7 +18,7 @@ Ikku s lovci odešel za svítání. Pět mužů, mezi nimi ten mladý, kterému 
 
 Ženy přišly k domům v poledne.
 
-Ne všechny. Ammu a jedna starší, kterou Eren neznal jménem, a s nimi Tio a Ru, kteří se k nim přidali v rokli. Ammu se podívala na čtvrtý dům, na čtyři řady prutů, které Eren včera za soumraku upletl sám. Přejela po nich dlaní. Pak na dvou místech prut vytáhla, tam, kde zůstala mezera, a upletla ho znovu. Nic neřekla.
+Ne všechny. Ammu a jedna starší, kterou Eren neznal jménem, a s nimi Tio a Ru, kteří se k nim přidali v rokli. Ammu došla ke čtvrtému domu, ke čtyřem řadám prutů, které Eren včera za soumraku upletl sám. Přejela po nich dlaní. Na dvou místech, tam, kde zůstala mezera, prut vytáhla a upletla ho znovu. Nic neřekla.
 
 Pracovali do odpoledne. Tio seděla na kameni u Talina klacku s Ammuiným dítětem v klíně a krmila ho rozžvýkaným jádrem, tak jak to viděla dělat matky. Ru nosil pruty od potoka. Kouřily se mu v rukou.
 
@@ -26,7 +26,7 @@ Při jedné cestě se zastavil u Tio a něco jí řekl. Dlouze, s rukama roztaž
 
 „Ru říká, že Ikku ráno řekl, že přinese velké,“ přeložila Tio Erenovi. Dítě v jejím klíně chytilo pramen jejích vlasů a táhlo. „Ne malé. Velké. Protože cizí zaplatili a on to vzal.“ Zamračila se. „Říká, že když se něco vezme, tak se dá. Že tak se to dělá.“
 
-Ru kývl, jako by rozuměl, co přeložila. Pak odnesl pruty k Ammu.
+Ru kývl, jako by rozuměl, co přeložila, a odnesl pruty k Ammu.
 
 Slunce se už klonilo k horám, když se lovci vrátili.
 
@@ -34,9 +34,9 @@ Eren je uviděl první. Šli údolím od velké vody, pomalu, v řadě, a dva z 
 
 Vpředu šel Ikku.
 
-Když došli k domům, zpomalil. Podíval se na čtvrtý dům a na Ammu u něj. Na Tio s dítětem v klíně. Pak na Erena. Nekývl. Jen zvedl bradu, o kus, a Eren nevěděl, jestli to bylo kývnutí, nebo jen pohled přes stěnu.
+Když došli k domům, zpomalil. Podíval se na čtvrtý dům a na Ammu u něj. Na Tio s dítětem v klíně. Pak na Erena. Nekývl. Jen zvedl bradu, o kus. Mohlo to být kývnutí, nebo jen pohled přes stěnu.
 
-Pak šli dál, ke rokli, a stezka je odnesla nahoru mezi skály.
+Šli dál, k rokli, a stezka je odnesla nahoru mezi skály.
 
 Eren se otočil ke stěně. Ammu mu podala prut.
 
@@ -66,19 +66,19 @@ Seděl zády ke kameni, s nohama nataženýma, jako ten muž na svahu pod strome
 
 Eren k němu poklekl.
 
-Nevěděl, co dělá. Ruce to věděly samy. Přiložil dlaně na Ikkuovu ruku a tlačil. Tak se to dělá. Tlačit. Zastavit únik. Pod dlaněmi to bylo teplé a mokré a pořád to teklo, pomalu, ven mezi jeho prsty.
+Ruce věděly samy, co dělat. Přiložil dlaně na Ikkuovu ruku a tlačil. Tak se to dělá. Tlačit. Zastavit únik. Pod dlaněmi to bylo teplé a mokré a pořád to teklo, pomalu, ven mezi jeho prsty.
 
 Ikku se na něj podíval.
 
-Oči měl otevřené a jasné. Díval se na Erena, jak se díval tehdy na lovu, když mu podával játra. Ne vztek. Únava tak velká, že se do ní vztek nevešel.
+Oči měl otevřené a jasné. Stejné jako tehdy na planině, když Kaj vstal a stádo uteklo. Ne vztek. Únava tak velká, že se do ní vztek nevešel.
 
 Pak něco řekl.
 
 Tiše. Dlouhé slovo. To, které křičel z terasy, když vyhnanci poprvé přišli do kotle. To, které řekl tiše na pěšině nad soutěskou. Eren mu nerozuměl. Nerozuměl mu nikdy.
 
-„Já nevím, co to znamená,“ řekl Eren. Česky. „Promiň. Já nevím.“
+„Já nevím, co to znamená,“ řekl Eren. Svou řečí. „Promiň. Já nevím.“
 
-Za ním se ozval zvuk. Ammu. Klekla si vedle něj, odstrčila jeho ruce a přitiskla svoje. Mluvila. Rychle a tiše, s tím zaraženým dechem, a Ikku se díval na ni. Už ne na Erena.
+Za ním se ozval zvuk. Ammu. Klekla si vedle něj, odstrčila jeho ruce a přitiskla svoje. Mluvila. Rychle a tiše, místně, a Ikku se díval na ni. Už ne na Erena.
 
 Eren se odsunul. Klečel na zmrzlé zemi s rukama, které byly až po zápěstí rudé.
 
@@ -102,19 +102,19 @@ Dorn stál, kde stál, s nožem v ruce. Díval se na Erena tím jedním okem, kt
 
 Haro neřekl nic.
 
-Eren se podíval na Kaje.
+Eren hledal očima Kaje.
 
 Kaj stál u balvanu. Díval se na Ikkua. Na Ammu. Na Erenovy ruce. Otevřel pusu. Zavřel ji. Neřekl nic.
 
 „Kaji,“ řekl Eren.
 
-Kaj se na něj podíval. A pak se podíval jinam.
+Kaj zvedl oči. A hned uhnul.
 
 Haro se sehnul a vzal tyč na rameno. Zvíře se nadzvedlo ze země a zhouplo se. Svit odhodil oštěp, jako by ho pálil, a chytil druhý konec tyče.
 
 „Nechte to tady,“ řekl Eren.
 
-Haro se na něj podíval. Zpříma a bez zájmu, jak se díval na všechno.
+Haro se k němu otočil. Zpříma a bez zájmu, jak se díval na všechno.
 
 „Zaplatili jsme,“ řekl. „Je to naše.“
 
@@ -126,7 +126,7 @@ Kaj zůstal stát u balvanu.
 
 Místní přišli shora, roklí z kotle. Tolik jich Eren ještě nikdy neviděl pohromadě. Muži s oštěpy, ženy, starší děti. Prošli kolem Hara a Svita, kteří s tyčí ustoupili ke skále a nechali je projít, a nikdo z místních se na ně nepodíval. Doběhli k balvanu.
 
-Pak se zastavili.
+Tam se zastavili.
 
 Mladý lovec vstal ze země. Krev mu stékala po spánku. Ukazoval roklí nahoru, za Dornem, a mluvil, a pak už nemluvil, jen ukazoval.
 
@@ -134,7 +134,7 @@ Nikdo se nepohnul za Dornem. Dívali se na Ikkua. Na Ammu u něj.
 
 A na Erena, který klečel vedle s rudýma rukama.
 
-Tal přišla poslední. Pomalu, opřená o hůl, po namrzlých kamenech. Ostatní jí ustoupili. Zastavila se nad Ikkuem a dlouho se dívala dolů. Nesklonila se. Nevydala ani hlásku. Jen stála.
+Tal přišla poslední. Pomalu, opřená o hůl, po namrzlých kamenech. Ostatní jí ustoupili. Zastavila se nad Ikkuem. Nesklonila se. Nevydala ani hlásku. Dlouho jen stála.
 
 Pak se podívala na Erena. Na jeho ruce.
 
@@ -144,9 +144,9 @@ Tal se otočila a řekla jedno slovo.
 
 Dva muži položili vedle sebe na zem oštěpy a přes ně kůži, tak jak se nosí kořist. Ikkua na ni opatrně uložili a zvedli ho. Ammu šla vedle. Držela ho za ruku.
 
-Odnesli ho nahoru, roklí, přes kotel a po suti na terasu. Eren šel kus za nimi. Lidé v kotli vylezli zpod plachet a dívali se. Nikdo nic neříkal. Haro a Svit už byli nahoře, u Orrinova přístřešku pod teplou skálou. Složili tam tyč se zvířetem. Dorn stál před Orrinem. Orrin se díval na nůž v jeho ruce a pak se podíval dolů, přes kotel, na muže, kteří nesli Ikkua. Něco Dornovi řekl. Krátce. Eren to na tu dálku neslyšel. Dorn se sehnul a otřel čepel o trávu u skály, dvakrát, z obou stran, a zastrčil nůž za pas.
+Odnesli ho nahoru, roklí, přes kotel a po suti na terasu. Eren šel kus za nimi. Lidé v kotli vylezli zpod plachet a dívali se. Nikdo nic neříkal. Haro a Svit už byli nahoře, u Orrinova přístřešku pod teplou skálou. Složili tam tyč se zvířetem. Dorn stál před Orrinem. Orrin měl oči na noži v jeho ruce, pak je stočil dolů, přes kotel, na muže, kteří nesli Ikkua. Něco Dornovi řekl. Krátce. Eren to na tu dálku neslyšel. Dorn se sehnul a otřel čepel o trávu u skály, dvakrát, z obou stran, a zastrčil nůž za pas.
 
-Pak Orrin stál u přístřešku, s rukama za zády, a díval se taky.
+Orrin zůstal stát u přístřešku, s rukama za zády, a díval se taky.
 
 Na suti pod terasou se Eren zastavil. Muži s oštěpy stáli nahoře na kraji, v řadě. Mířili dolů.
 
@@ -164,7 +164,7 @@ Eren si klekl k potoku a myl si ruce. Voda tu byla teplá. Krev šla z prstů do
 
 „Ikku,“ řekl. Víc nedokázal.
 
-Tio se dívala na něj. Pak na dítě v klíně. Víc říkat nemusel. Viděl, jak se jí to rozlévá po obličeji. Nerozplakala se. Jen přitiskla dítě k sobě, víc, až se zavrtělo.
+Tio zvedla oči k němu a pak je sklopila k dítěti v klíně. Víc říkat nemusel. Viděl, jak se jí to rozlévá po obličeji. Nerozplakala se. Jen přitiskla dítě k sobě, víc, až se zavrtělo.
 
 Pro dítě přišla ta starší žena, ta bez jména. Sešla roklí sama, rychle. Došla k Tio, vzala jí dítě z rukou a otočila se.
 
@@ -204,7 +204,7 @@ Eren tu otázku znal. Z haly pro ukládání, kde stál v jedné řadě a o dvac
 
 „Nic,“ řekl.
 
-Holka se na něj dívala. Čekala, co bude dál. Nic dál nebylo. Pustila jeho rukáv a lehla si zpátky.
+Holka čekala, co bude dál. Nic dál nebylo. Pustila jeho rukáv a lehla si zpátky.
 
 Pak se ozvalo klepání.
 
@@ -228,7 +228,7 @@ Orrin stál na bedně.
 
 Pak počkal, až kotel ztichne.
 
-„Nikoho jsem neposlal zabíjet,“ řekl. „Poslal jsem je pro maso, za které jsme zaplatili. Čtyři nože. Viděli jste to ráno všichni.“ Odmlčel se. „Dorn říká, že Ikku zvedl oštěp. Svit to viděl taky. Byli tam. Já ne. Vy ne.“
+„Nikoho jsem neposlal zabíjet,“ řekl. „Poslal jsem je pro maso, za které jsme zaplatili. Čtyři nože. Viděli jste to ráno všichni. Dorn říká, že Ikku zvedl oštěp. Svit to viděl taky. Byli tam. Já ne. Vy ne.“
 
 Dorn stál u ohně, s obvazem přes pravé oko. Nůž už neměl v ruce. Měl ho za pasem.
 
@@ -262,13 +262,13 @@ Byla to pravda. Orrin to slyšel a kývl, pomalu, jako by mu Eren dal za pravdu.
 
 „Já taky ne,“ řekl. „Proto nikdo.“ Pak se otočil ke kotli. „Jezte. Kdo chce, ať přijde k ohni.“
 
-Lidé šli. Ne všichni, ale skoro všichni. Ke kusům masa nad ohněm pod teplou skálou. Eren se díval, jak jdou. Mladá matka s tříletým dítětem. Desítky, které po radě zůstaly u Sefina ohně. Bena. Ardo stál a nešel, a pak šel taky.
+Lidé šli. Ne všichni, ale skoro všichni. Ke kusům masa nad ohněm pod teplou skálou. Eren viděl, jak jdou. Mladá matka s tříletým dítětem. Desítky, které po radě zůstaly u Sefina ohně. Bena. Ardo stál a nešel, a pak šel taky.
 
-Hela přinesla maso dolů, ke kraji kotle, k plachtám pod terasou. Rozdělila ho dětem, které místní vynesli ze síně. Krmila je po kouscích. Pak se podívala na Erena, který stál u skály. Nic neřekla. Neomlouvala se.
+Hela přinesla maso dolů, ke kraji kotle, k plachtám pod terasou. Rozdělila ho dětem, které místní vynesli ze síně. Krmila je po kouscích. Jednou zvedla oči k Erenovi, který stál u skály. Nic neřekla. Neomlouvala se.
 
 Eren nešel k ohni. Nikdo ho nevolal.
 
-Nevěděl, jestli je to správně. Věděl jen, že to maso nemůže sníst. Ne proto, že by byl lepší. Viděl Helu, jak krmí cizí děti, které ráno ležely nahoře na kamenech, a nedokázal si myslet nic jiného než to, že dělá dobře. Ty děti měly hlad. Ikku byl mrtvý. Obojí bylo pravda a nedalo se to od sebe oddělit.
+Věděl jen, že to maso nemůže sníst. Ne proto, že by byl lepší. Viděl Helu, jak krmí cizí děti, které ráno ležely nahoře na kamenech, a nedokázal si myslet nic jiného než to, že dělá dobře. Ty děti měly hlad. Ikku byl mrtvý. Obojí bylo pravda a nedalo se to od sebe oddělit.
 
 Jen on to maso sníst nemohl. Měl ho ještě na rukou.
 
@@ -310,7 +310,7 @@ Eren se zastavil.
 
 Eren čekal.
 
-„Kdybych řekl, co jsem viděl –“ Kaj zmlkl. Zavrtěl hlavou. Pak ještě jednou, prudčeji, jako by si chtěl z hlavy něco vytřást.
+„Kdybych řekl, co jsem viděl…“ Kaj zmlkl. Zavrtěl hlavou. Pak ještě jednou, prudčeji, jako by si chtěl z hlavy něco vytřást.
 
 „Tak to řekni.“
 
@@ -350,11 +350,11 @@ Eren seděl a díval se do toho a myslel na halu.
 
 Dlouhou a světlou, pro ukládání. Strojek na stříhání, ten zvuk. On v jedné řadě, Maela s Tio v náručí v sousední, o dvacet lidí dál. Stály tam za něco, co udělal on. Nebo co podepsal, že udělal. Na tom tehdy nezáleželo. Stály tam, protože patřily k němu.
 
-Teď tu seděl on. Mezi dvanácti, kteří patřili k Dornovi.
+Teď tu seděl on. Mezi dvanácti, kteří zaplatili za Dorna.
 
 Nebyl to stejný trest. Nebyla to stejná vina. Ale poznal to. Poznal to, jak se pozná hlas za stěnou. Ten pohled, který Tio minul, když jí žena brala dítě z rukou. Ne nenávist. Horší. Pohled, který se nedívá na tebe, ale na to, k čemu patříš.
 
-A rozuměl tomu. To bylo na tom nejtěžší.
+A rozuměl tomu.
 
 Tal je od sebe nerozezná. Šedé bundy, stejné boty, stejná cizí řeč. Lidé od severu jí vyprávěli o šedesáti se sekerami, a teď jí ten nejbližší ležel mrtvý v síni, a kdo z nich to udělal, viděla jen tak, jak to viděla: muž v šedé bundě s rukama od krve. Měla strach a měla žal, a jiné oči neměla.
 

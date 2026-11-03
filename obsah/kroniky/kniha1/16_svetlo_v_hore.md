@@ -52,7 +52,7 @@ Byla přes otvor do dutiny přitlučená křížem, šest silných fošen, a hř
 
 Za dutinou se štola stáčela doprava a nahoru, jak to řekl Merin. Byl to nový kus, Matěj ho nikdy neviděl: rámy světlé, ještě vonící pryskyřicí, strop nižší, takže se musel shýbat. Dvě stě dvacet. Dvě stě pětadvacet. Na zemi stála voda po kotníky a byla teplá jako krev.
 
-Hrázka. Dvě fošny napříč štolou a za nimi voda, hnědá, s parou nad hladinou. Ješek si k ní klekl, vytáhl ucpávku, a voda vyrazila přes jejich nohy dolů, k žlabu, a Matěj ucítil, jak mu tlačí na lýtka.
+Hrázka. Dvě fošny napříč štolou a za nimi voda, hnědá, s parou nad hladinou. Ješek si k ní klekl, vytáhl ucpávku, a voda vyrazila přes jejich nohy dolů, ke žlabu, a Matěj ucítil, jak mu tlačí na lýtka.
 
 Dvě stě třicet jedna.
 
@@ -66,7 +66,7 @@ Pak Ortlieb zvedl svůj kahan a podržel ho vpravo, kde se čelba stáčela, a M
 
 Skála tam nekončila skálou.
 
-Skála tam byla odloupnutá v místě velkém asi jako dvoje vrata u stodoly, možná menším, protože pravý kraj ještě zakrývala rozpukaná hornina. A pod ní, kde měla být zase skála, jen jiná, bylo něco hladkého. Tmavého. Ne černého, Matěj neuměl říct, jakou to mělo barvu. Jako voda v hluboké studni, když se do ní člověk podívá za poledne. Bylo to mírně vypouklé, jako bok velikého džbánu, který leží v zemi, a nebyla na tom žádná spára, žádná vrstva, žádná rýha. Po povrchu stékala voda tenkou blánou a kouřila, a tam, kde stekla, zůstávala na té hladkosti suchá místa, která se během dechu zase zamžila.
+Skála tam byla odloupnutá v místě velkém asi jako dveře, možná menším, protože pravý kraj ještě zakrývala rozpukaná hornina. A pod ní, kde měla být zase skála, jen jiná, bylo něco hladkého. Tmavého. Ne černého, Matěj neuměl říct, jakou to mělo barvu. Jako voda v hluboké studni, když se do ní člověk podívá za poledne. Bylo to mírně vypouklé, jako bok velikého džbánu, který leží v zemi, a nebyla na tom žádná spára, žádná vrstva, žádná rýha. Po povrchu stékala voda tenkou blánou a kouřila, a tam, kde stekla, zůstávala na té hladkosti suchá místa, která se během dechu zase zamžila.
 
 ![Hladká skála](obrazky/16_svetlo_v_hore.webp)
 
@@ -102,7 +102,7 @@ Ješek se sehnul pro mlátek a želízko. Nikdo mu to nepřikázal. Přistoupil 
 
 Udeřil.
 
-Želízko zazvonilo. Ne jako o kámen. Jako o zvon, malý, tlumený, jeden úder a pak dlouhý dozvuk, který nepřestával a které Matěj necítil v uších, ale v zubech. Kus rozpukané skály se odlomil a spadl do vody. Pod ním zase ta hladkost. Ani škrábnutí.
+Želízko zazvonilo. Ne jako o kámen. Jako o zvon, malý, tlumený, jeden úder a pak dlouhý dozvuk, který nepřestával a který Matěj necítil v uších, ale v zubech. Kus rozpukané skály se odlomil a spadl do vody. Pod ním zase ta hladkost. Ani škrábnutí.
 
 Ješek nasadil želízko znovu.
 
@@ -130,7 +130,7 @@ Ne tma štoly. Jiná. Hluboká a čistá, a v ní světla. Mnoho, nespočetně, 
 
 Pak se některá z nich pohnula.
 
-Ne všechna. Několik. Matěj by je nespočítal, protože nemohl odtrhnout oči, ale bylo jich víc než prstů na jedné ruce a míň než na dvou. Pohnula se a padala. Pomalu. Ne jako hvězdy, které padají v srpnu a které člověk zahlédne koutkem oka a už nejsou. Tahle padala tak pomalu, jako padají listy za bezvětří, a za každým zůstávala slabá stopa, bledá, jako za prstem v mouce. Padala v řadě, jedno za druhým. Pod nimi se z tmy vynořilo něco velikého a zakřiveného, zelené a modré a bílé. Matěj nevěděl, co to je, a pak to pochopil, protože to bylo, jako když se člověk dívá z hřbetu dolů do kraje.
+Ne všechna. Několik. Matěj by je nespočítal, protože nemohl odtrhnout oči, ale bylo jich víc než prstů na jedné ruce a míň než na dvou. Pohnula se a padala. Pomalu. Ne jako hvězdy, které padají v srpnu a které člověk zahlédne koutkem oka a už nejsou. Tahle padala tak pomalu, jako padají listy za bezvětří, a za každým zůstávala slabá stopa, bledá, jako za prstem v mouce. Padala v řadě, jedno za druhým. Pod nimi se ze tmy vynořilo něco velikého a zakřiveného, zelené a modré a bílé. Matěj nevěděl, co to je, a pak to pochopil, protože to bylo, jako když se člověk dívá z hřbetu dolů do kraje.
 
 Země. Kraj. Hory a mezi nimi voda, lesknoucí se. Viděl to shora, jako to vidí pták, nebo Bůh.
 
@@ -248,7 +248,7 @@ Pak se hora pohnula ještě jednou, krátce, slaběji než předtím, jako se ot
 
 *
 
-Rüdiger přišel zvenku, protože se nikdo nevracel. Konrád se zvedl, až když ho chytil pod paží. Plášť z něj crčel. Volkmar klečel dál a nepřestával mluvit, a Rüdiger se na něj podíval a nechal ho být.
+Rüdiger přišel zvenku, protože se nikdo nevracel. Konrád se zvedl, až když ho Rüdiger chytil pod paží. Plášť z něj crčel. Volkmar klečel dál a nepřestával mluvit, a Rüdiger se na něj podíval a nechal ho být.
 
 „Nikdo,“ řekl Konrád. Hlas měl chraplavý a tichý a Matěj ho skoro nepoznal. „Nikdo na to nesáhne. Mistře. Slyšíš? Nikdo.“
 
@@ -317,7 +317,7 @@ Ješek dlouho mlčel.
 
 „Tentokrát ti věřím,“ řekl.
 
-Matěj na to neřekl nic. Ješek vstal, zvedl mlátek, zvážil ho v ruce, jako by nevěděl, co s ním, a pak ho položil na Henselův kámen a šel do boudy spát. Poprvé za tři dny mohl spát celou noc.
+Matěj na to neřekl nic. Ješek vstal, zvedl mlátek, zvážil ho v ruce, jako by nevěděl, co s ním, a pak ho položil na Henselův kámen a šel do boudy spát. Poprvé za dva dny mohl spát celou noc.
 
 *
 
@@ -341,7 +341,7 @@ Dívali se dlouho. Matěj čekal, že se to objeví. Že to jen není vidět v t
 
 Matěj neodpověděl.
 
-„Za dvacet let ani jednou,“ řekla. „Ani v létě, když bylo chladno. Vždycky.“ Opřela se o tyč a dívala se nahoru, a Matěj poprvé viděl v její tváři strach. Ne o sebe. Dobroslava se o sebe nikdy nebála, ani na okraji prohlubně, ani když u jejích dveří stál lovčí. „Co jste tam nahoře dělali?“
+„Za dvacet let se to nestalo ani jednou,“ řekla. „Ani v létě, když bylo chladno. Vždycky.“ Opřela se o tyč a dívala se nahoru, a Matěj poprvé viděl v její tváři strach. Ne o sebe. Dobroslava se o sebe nikdy nebála, ani na okraji prohlubně, ani když u jejích dveří stál lovčí. „Co jste tam nahoře dělali?“
 
 „Nic,“ řekl Matěj. „Dívali jsme se.“
 
@@ -369,7 +369,7 @@ Na kraji lesa nad grangií se zastavila.
 
 „Řekneš jim, co je v tom měchýři.“
 
-Nebyla to otázka. Matěj se na ni podíval a ona se dívala na něj, tím pohledem, kterým se dívala ten první den, když se jí ptal, jestli je tam drak.
+Matěj se na ni podíval a ona se dívala na něj, tím pohledem, kterým se dívala ten první den, když se jí ptal, jestli je tam drak.
 
 „Řeknu jim, co dělá,“ řekl.
 
@@ -381,7 +381,7 @@ Na grangii zvonil zvonek k sextě. Udalrich stál ve vratech. Neměl lucernu, by
 
 „Co jste mu řekl?“
 
-„Že jsi byl v hoře.“ Udalrich se díval na horu, nad grangií, na hřbet, který byl zase obyčejný, zelený a šedý v poledním světle. „Celá ves o tom mluví. Že v hoře hořelo světlo. Že pan Konrád klečel ve vodě.“ Podíval se na Matěje. „Je to pravda?“
+„Že jsi byl v hoře.“ Udalrich se díval na horu, nad grangií, na hřbet, který byl zase obyčejný, zelený a šedý v poledním světle. „Celá ves o tom mluví. Že v hoře hořelo světlo. Že pan Konrád klečel ve vodě. Je to pravda?“
 
 „Viděl jsem to,“ řekl Matěj.
 

@@ -6,7 +6,7 @@ Ilona rozvázala obvaz u okna, kde bylo nejvíc světla, a dívala se. Půlměs�
 
 Přičichla. Krev, myrha, pálenka. Nic sladkého, nic zkaženého. Zatím.
 
-Vytáhla knot pinzetou, levou rukou, a šlo to špatně, protože levá ruka nevěděla, jak pinzetu držet. Cukla a Ilona se kousla do rtu, aby nevydala hlásku. Vypláchla ránu znovu. Vložila nový knot, namočený v tinktuře. Ovázala. Zavěsila ruku zpátky do šátku a chvíli seděla se zavřenýma očima a čekala, až přestane tepat. Nepřestalo.
+Vytáhla knot kleštičkami, levou rukou, a šlo to špatně, protože levá ruka nevěděla, jak kleštičky držet. Cukla a Ilona se kousla do rtu, aby nevydala hlásku. Vypláchla ránu znovu. Vložila nový knot, namočený v tinktuře. Ovázala. Zavěsila ruku zpátky do šátku a chvíli seděla se zavřenýma očima a čekala, až přestane tepat. Nepřestalo.
 
 Řehoř by řekl: *Tři dny. Za tři dny se ukáže, jestli se to bude hojit, nebo jestli to bude hnít.* Řekl to tolikrát, že Ilona slyšela i tón, unavený, trochu posměšný, jako by ty tři dny byly nějaký úředník, se kterým se nedá hádat.
 
@@ -58,7 +58,7 @@ Sešla dolů.
 
 *
 
-Suterén byl delší než dům nad ním, jako by se do svahu zakousl hlouběji, než bylo vidět z ulice. Klenba z lomového kamene, začouzená. Pec, kterou Ilona viděla před dvěma týdny jen ze schodů, byla zblízka větší, z cihel, s několika dvířky a s komínem, který mizel ve stropě. Kolem ní stály na policích a na zemi věci, kterým Ilona většinou nerozuměla. Baňky s dlouhými zahnutými krky. Hliněné kelímky, černé od ohně. Měchy. Kleště. Měděná pánev s pískem. Mísa, ve které ležela kulička něčeho stříbrného, co se pohnulo, když Ilona sestoupila z posledního schodu a podlaha se pod ní zachvěla. Rtuť. Vzduch byl teplý a kovový a štípal v nose.
+Suterén byl delší než dům nad ním, jako by se do svahu zakousl hlouběji, než bylo vidět z ulice. Klenba z lomového kamene, začouzená. Pec, kterou Ilona před dvěma týdny jen cítila ze schodů, byla zblízka velká, z cihel, s několika dvířky a s komínem, který mizel ve stropě. Kolem ní stály na policích a na zemi věci, kterým Ilona většinou nerozuměla. Baňky s dlouhými zahnutými krky. Hliněné kelímky, černé od ohně. Měchy. Kleště. Měděná pánev s pískem. Mísa, ve které ležela kulička něčeho stříbrného, co se pohnulo, když Ilona sestoupila z posledního schodu a podlaha se pod ní zachvěla. Rtuť. Vzduch byl teplý a kovový a štípal v nose.
 
 U stolu pod jediným okénkem, ve výšce dlažby na dvoře, seděl Valentin Hesse a držel si levou ruku v pravé, jako se drží zraněný pták.
 
@@ -78,7 +78,7 @@ Ilona ji vzala svou zdravou, levou, a Hesse se podíval na šátek a na její dr
 
 Rozmotala obvaz. Šlo to pomalu, jednou rukou a zuby, a Hesse jí nakonec pomohl a sám si odmotal poslední kus, ten přischlý, a sykl.
 
-Ukazovák a prostředník levé ruky. Spálenina na bříškách, stará dva týdny, která se měla dávno zatáhnout, a nezatáhla. Puchýře byly strhané, pod nimi maso růžové a mokré, a na prostředníku, kolem nehtu, se kůže nadzvedla a pod ní se lesklo žluté. Nehet byl uvolněný. Když na něj Ilona lehce zatlačila, vyšla zpod něj kapka hnisu.
+Ukazovák a prostředník levé ruky. Spálenina na bříškách, stará tři týdny, která se měla dávno zatáhnout, a nezatáhla. Puchýře byly strhané, pod nimi maso růžové a mokré, a na prostředníku, kolem nehtu, se kůže nadzvedla a pod ní se lesklo žluté. Nehet byl uvolněný. Když na něj Ilona lehce zatlačila, vyšla zpod něj kapka hnisu.
 
 „Kolikrát jste to strhl?“
 
@@ -96,7 +96,7 @@ Ilona nařízla kůži podél nehtu levou rukou, mělce, pomalu, mnohem pomaleji
 
 „Kdy jste spal?“
 
-Hesse se zasmál, a nebyl to smích. „Pán pracuje v noci. Já pracuju, když pracuje pán.“
+Hesse se krátce, suše zasmál. „Pán pracuje v noci. Já pracuju, když pracuje pán.“
 
 „A ve dne?“
 
@@ -124,7 +124,7 @@ Bylo to první, co ji napadlo. A teprve když to řekla, uvědomila si, že to j
 
 Hesse jí šel pro čisté plátno nahoru, protože to dole bylo všechno od sazí, a Ilona zůstala v suterénu sama.
 
-Neměla v úmyslu nic prohlížet. Seděla u stolu s rukou v šátku a čekala, až přestane tepat, a dívala se, protože jinam se dívat nedalo. Na pec. Na baňky. Na kuličku rtuti v míse. Na zeď za pecí, ve které byla vysekaná hluboká nika. V ní stál džbán s vodou a pod džbánem, na kameni mokrém od vody, která ze džbánu prosakovala, dřevěná bedýnka.
+Neměla v úmyslu nic prohlížet. Seděla u stolu s rukou v šátku a čekala, až přestane tepat, a dívala se, protože jinam se dívat nedalo. Na pec. Na baňky. Na kuličku rtuti v míse. Na zeď za pecí. Ve zdi byla vysekaná hluboká nika. V ní stál džbán s vodou a pod džbánem, na kameni mokrém od vody, která ze džbánu prosakovala, dřevěná bedýnka.
 
 Ilona se na tu bedýnku dívala dlouho, než ji poznala.
 
@@ -224,7 +224,7 @@ Pak se podíval do niky. Na bedýnku s odklopeným víkem. Ilona viděla, že se
 
 „A přesto ji piju.“ Wehrl se otočil a opřel se zády o zeď vedle niky. V šeru suterénu vypadal najednou starší, s popelavým plnovousem a s rukama, které se mu třásly, i když je měl založené. „Člověk, který se bojí, že umře den předtím, paní Ilono, pije i kozí krev. Myslel jsem, že to víte. Vy jste přece viděla matky pod popravištěm s hrnky v ruce.“
 
-Ilona se na něj podívala. Tohle mu nikdy neřekla. Tady to neřekla nikomu. Jen jednou, první zimu v Jáchymově, Řehořovi, v noci, když nemohla spát a on se zeptal, proč se bojí kata, který jim prodával psí sádlo.
+Ilona ztuhla. Tohle mu nikdy neřekla. Tady to neřekla nikomu. Jen jednou, první zimu v Jáchymově, Řehořovi, v noci, když nemohla spát a on se zeptal, proč se bojí kata, který jim prodával psí sádlo.
 
 „Kdo vám to řekl?“ zeptala se.
 
@@ -256,7 +256,7 @@ Ilona mlčela.
 
 Podíval se na ni tak, jak se dívá lékař, který je sám nemocný. Ilona v tom pohledu viděla starost a viděla v něm i něco dalšího, co nedokázala pojmenovat, a proto to nechala stát.
 
-Řekla mu, že napíše. A neřekla mu, kdo nosí lékárníkovi jeho měšec. Ani on to neřekl jí.
+Řekla mu, že napíše. A neřekla mu o čtvrtečním měšci. Ani on se o něm nezmínil.
 
 *
 
@@ -318,7 +318,7 @@ Pod čáru napsala, co věděla jistě: *Mistr Jobst vylévá třetí týden. L�
 
 Pak vzala svůj sešit s koženou chlopní, otevřela ho a dlouho se dívala na prázdné místo pod pátečním zápisem.
 
-Napsala: *V pátek. Valentin Hesse, laborant pana perkmistra. Spálenina na dvou prstech levé ruky, stará dva týdny, zanícená, hnis pod nehtem prostředníku. Naříznuto, vymyto, ovázáno. Rtuť v dásních, třes rukou.*
+Napsala: *V pátek. Valentin Hesse, laborant pana perkmistra. Spálenina na dvou prstech levé ruky, stará tři týdny, zanícená, hnis pod nehtem prostředníku. Naříznuto, vymyto, ovázáno. Rtuť v dásních, třes rukou.*
 
 To byl nemocný. To patřilo do zápisu.
 
@@ -332,7 +332,7 @@ Pak připsala:
 
 *Pan perkmistr kupuje od lékárníka. Nevím, zda ví, co kupuje.*
 
-Přečetla si tu větu. Byla to pravda. Nevěděla to. Nikdo jí neřekl, že to ví, a ona to neviděla. Tak to stálo v zápisu a tak to bylo správně.
+Přečetla si tu větu. Nevěděla to. Nikdo jí neřekl, že to ví, a ona to neviděla. Tak to stálo v zápisu a tak to bylo správně.
 
 Seděla nad tím a ruka jí tepala a v očích ji pálila horečka, a ta věta byla pravdivá a přesná a stála na papíře rovně, jak stojí věty, které nic nepřidávají.
 

@@ -1,6 +1,6 @@
 # 20. Voda
 
-Ráno šel Matěj k žlabu s vědrem, protože tam chodil každé ráno celé jaro a nohy to věděly dřív než on.
+Ráno šel Matěj ke žlabu s vědrem, protože tam chodil každé ráno celé jaro a nohy to věděly dřív než on.
 
 Žlab tam nebyl. Ani jeden z obou. Voda je v noci vytrhla z podpěr a odnesla dolů k potoku a dál, a Matěj viděl jejich kusy na lukách grangie, kde je nechala ležet, když opadla: prkna, trámky, a jeden celý žlab, dlouhý jako vůz, zaklíněný mezi dvěma olšemi u potoka, jako by ho tam někdo položil schválně. Pod haldou, kde se oba žlaby sbíhaly, byla jen vymletá rýha v hlíně, a v ní tekla voda.
 
@@ -20,7 +20,7 @@ Na rezavé kůře, která se celou zimu dělala na kamenech pod žlabem, stál H
 
 Matěj kývl.
 
-Pak se oba podívali nahoru, přes paseku, přes les, k rokli pod hřbetem. Nebylo tam nic. Bylo jasné ráno, s jinovatkou na trávě, a bezvětří. Za dvacet let ani jednou, řekla Dobroslava v sobotu. Matěj se tam díval, dokud slunce nevylezlo přes hřbet, a pak ještě.
+Pak se oba podívali nahoru, přes paseku, přes les, k rokli pod hřbetem. Nebylo tam nic. Bylo jasné ráno, s jinovatkou na trávě, a bezvětří. Za dvacet let se to nestalo ani jednou, řekla Dobroslava v sobotu. Matěj se tam díval, dokud slunce nevylezlo přes hřbet, a pak ještě.
 
 Nevěděl, proč se dívá. Věděl, že tam nic nebude. Ti, kdo tam dýchali, byli za vodou. A to, co dýchalo pod nimi, mlčelo.
 
@@ -54,7 +54,7 @@ O tom, co se v hoře stalo, se v Mlýnci mluvilo celý týden. Matěj to slyšel
 
 Gotthard říkal *Bergmännlein*. Říkal to v krčmě u Kojaty, kde Sasové pili, protože neměli kde jinde, a říkal to nahlas, a pak se křižoval. Malí lidé s lampami, děti v kožešinách, stará žena s bílým copem. Vyprávěl to tak, jak se vyprávějí věci, které se staly, a Kojata mu dolil a smál se, protože každý ví, že Sasové mají v horách své skřítky a že je vidí, kdykoli je hora pustí ven živé.
 
-„V míšeňských horách je viděl taky,“ řekl Kojata u studny. „Sám mi to řekl. Před dvaceti lety, když ho zasypalo.“
+„V Harzu je viděl taky,“ řekl Kojata u studny. „Sám mi to řekl. Před dvaceti lety, když ho zasypalo.“
 
 Kunz neříkal nic. Seděl v krčmě s mlátkem za pasem a pil a díval se do stolu.
 
@@ -68,7 +68,7 @@ A Ortlieb, když se ho v krčmě zeptali, odložil korbel a řekl česky, pomalu
 
 „Starý důl. Pohanský. Někdo tam kopal dřív než my, před sto lety, před tisícem. My jsme prorazili do jeho chodby a po ní šli ven.“ Napil se. „Gotthard je starý a byla tma. Já jsem neviděl nic.“
 
-Lidé kývali. To dávalo smysl. Starý důl, pohanský, každý slyšel, že v horách bývaly. A Gotthard je starý, a v dole se lidem zdají věci, a když člověk tři hodiny stojí ve vodě po krk, uvidí v kahanu i svatou Barboru.
+Lidé kývali. To dávalo rozum. Starý důl, pohanský, každý slyšel, že v horách bývaly. A Gotthard je starý, a v dole se lidem zdají věci, a když člověk tři hodiny stojí ve vodě po krk, uvidí v kahanu i svatou Barboru.
 
 Matěj stál ve dveřích krčmy a díval se na Ortlieba. Ortlieb se na něj nepodíval. Pil.
 
@@ -128,7 +128,7 @@ Muž z Chebu přijel ve čtvrtek.
 
 Udalrich pro něj poslal v pondělí v noci, když voda dosáhla k plotu ovčína a ovce se tlačily v rohu a bečely, a Udalrich je s pacholkem do rána vyháněl do kopce. Poslal i do Waldsassenu. Grangie měla luka pod vodou, potok plný bahna a prken, dva beránky utopené. A v hoře umřel člověk.
 
-Přijel na koni, s písařem na mezkovi a se čtyřmi ozbrojenými. Byl starší, s šedou bradkou a s tváří, která se nesmála, a mluvil německy s lidmi, kteří mu rozuměli, a přes písaře s ostatními. Lidé v Mlýnci mu říkali rychtář. Matěj nevěděl, jestli to byl jeho úřad. Nevěděl, jestli je purkrabí, nebo císařův soudce, nebo jen člověk, kterého pán chebského hradu poslal, protože měl zrovna čas. Věděl jen, že když sesedl u vrat grangie, Konrád, který tam čekal, sklonil hlavu dřív než on.
+Přijel na koni, s písařem na mezkovi a se čtyřmi ozbrojenými. Byl starší, se šedou bradkou a s tváří, která se nesmála, a mluvil německy s lidmi, kteří mu rozuměli, a přes písaře s ostatními. Lidé v Mlýnci mu říkali rychtář. Matěj nevěděl, jestli to byl jeho úřad. Nevěděl, jestli je purkrabí, nebo císařův soudce, nebo jen člověk, kterého pán chebského hradu poslal, protože měl zrovna čas. Věděl jen, že když sesedl u vrat grangie, Konrád, který tam čekal, sklonil hlavu dřív než on.
 
 Seděli venku. U stolu před vraty, u Udalrichova stolu, na kterém krájel chleba a na kterém v neděli ležela kost. Tentokrát bez plátna. Muž z Chebu za ním, písař vedle něj s voskovými deskami, a před stolem lidé. Míň než na svatého Jiří. Horníci. Ves, ti, kdo museli, a ti, kdo chtěli. Udalrich. Konrád s Volkmarem a Rüdigerem, stranou.
 
@@ -170,7 +170,7 @@ Muž z Chebu ho nevzal hned. Podíval se na Matěje, na jeho hábit, a pak na Ko
 
 „Ne proti pánovi,“ řekl Matěj. „O listině.“
 
-Muž z Chebu se na něj díval. Pak vzal sešitek. Díval se na znaky, na žebříky a hadí jazyky a kroužky, na římské číslice a na hranatá německá slova, a pak ho podal písaři. Písař se díval taky. Pak zavrtěl hlavou.
+Muž z Chebu vzal sešitek. Díval se na znaky, na žebříky a hadí jazyky a kroužky, na římské číslice a na hranatá německá slova, a pak ho podal písaři. Písař se díval taky. Pak zavrtěl hlavou.
 
 „Přečti to,“ řekl muž z Chebu.
 
@@ -218,7 +218,7 @@ Gotthard otevřel ústa. Ortlieb ho předešel.
 
 Gotthard zrudl. Ortlieb mlčel. Kunz se díval do země.
 
-„Horníci vidí v hoře, co chtějí,“ řekl muž z Chebu. Nebylo to nevlídné. Řekl to, jako se řekne, že v dubnu prší. „Byl jsem v Goslaru. Tam je vidí každý druhý.“ Podíval se na Matěje. „A ty, mnichu? Ty jsi je vedl. Tak se to aspoň říká.“
+„Horníci vidí v hoře, co chtějí,“ řekl muž z Chebu. Nebylo to nevlídné. Řekl to, jako se řekne, že v dubnu prší. „Byl jsem v Goslaru. Tam je vidí každý druhý.“ Obrátil se k Matějovi. „A ty, mnichu? Ty jsi je vedl. Tak se to aspoň říká.“
 
 „Vedl jsem je ven.“
 
@@ -240,7 +240,7 @@ Muž z Chebu zvedl obočí.
 
 „O tom ano.“
 
-Muž z Chebu se na něj díval dlouho. Pak pokrčil rameny a otočil se k písaři.
+Muž z Chebu nakonec pokrčil rameny a otočil se k písaři.
 
 „Mnicha nesoudím,“ řekl. „Na to má svého opata.“ A pak, jako by to byla poznámka na okraj listu: „A skřítky taky ne.“
 
@@ -292,7 +292,7 @@ Hensel dostal taky. Vzal to a schoval do košile a ukázal Ortliebovi tři prsty
 
 V pondělí za svítání. Do míšeňských hor, kde je stříbro a kde ho Ortlieb pořád ještě uměl najít. Hensel se díval na Ortliebova ústa dlouho. Pak kývl.
 
-K ústí štoly přivezli Rüdigerovi lidé hlínu na dvou vozech. Hensel vzal lopatu a hodil první do vody, která z ústí pořád tekla, studená a čistá. Pak druhou. Pak lopatu položil a šel k Matějovi.
+K ústí štoly přivezli Rüdigerovi lidé hlínu na dvou vozech. Hensel nabral hlínu a hodil první lopatu do vody, která z ústí pořád tekla, studená a čistá. Pak druhou. Pak lopatu položil a šel k Matějovi.
 
 Postavil se před něj. Ukázal na jeho prsa, na místo pod hábitem, kde Matěj nosil tabulku a sešitek. Udělal rukou ten pohyb, jako když se píše. Pak ukázal na svoje oči.
 

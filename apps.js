@@ -3878,7 +3878,7 @@ const KATALOG_SEKCE = [
         "nazev": "🐉 Kroniky vyhnanství",
         "stav": "vyvoj",
         "jen_cs": true,
-        "tagy": ["kniha", "román", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sága", "fantasy", "Poslední drak", "Krev starších", "Paměť kamene", "První vyhnanci", "Strážci ticha", "Rozsudek", "Chebsko", "Jáchymov", "Yucatán", "středověk", "pravěk", "sci-fi", "drak"]
+        "tagy": ["kniha", "román", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sága", "fantasy", "Poslední drak", "Krev starších", "Paměť kamene", "První vyhnanci", "Strážci ticha", "Rozsudek", "Druhý soud", "Chebsko", "Jáchymov", "Yucatán", "středověk", "pravěk", "sci-fi", "drak"]
       }
     ]
   },

@@ -2,7 +2,7 @@
 
 Malá žena na něj čekala u horní tůně.
 
-Bylo to čtrnáctého dne od sněhu, za šera, ještě před svítáním. Eren tam chodil každé ráno, od té noci, kdy seděl mokrý na kameni. Nikdo ho o to nežádal. Došel k bílému okraji, podíval se do vody, jestli v ní nic neplave, a podíval se k zálivu pod převisem, jestli se pěna na hladině pořád stáčí do štěrbiny. Pak šel zpátky. Trvalo to chvíli. Bylo to jako obchůzka po šachtách na začátku směny: nic se nedělo, a proto se to dělalo.
+Bylo to čtrnáctého dne od sněhu, za šera, ještě před svítáním. Eren tam chodil každé ráno, od té noci, kdy seděl mokrý na kameni. Nikdo ho o to nežádal. Došel k bílému okraji, nahlédl do vody, jestli v ní nic neplave, a podíval se k zálivu pod převisem, jestli se pěna na hladině pořád stáčí do štěrbiny. Pak šel zpátky. Trvalo to chvíli. Bylo to jako obchůzka po šachtách na začátku směny: nic se nedělo, a proto se to dělalo.
 
 Tentokrát stála v zálivu, ve stínu převisu, a nehýbala se. Viděl ji, až když byl blízko.
 
@@ -12,15 +12,15 @@ Položila si ruku na prsa. Plochou dlaň, celou, pod krk.
 
 „Dabra,“ řekla.
 
-Hlas jí šel z hloubky, z hrudi, a to *r* v něm se převalilo jako kámen ve vodě. Eren to slovo slyšel a nevěděl, co to je. Pak pochopil. Tio to dělala úplně stejně, první den pod terasou, když se s Ruem neznali. Ruka na prsa, slovo.
+Hlas jí šel z hloubky, z hrudi, a to *r* v něm se převalilo jako kámen ve vodě. Eren to slovo slyšel a chvíli mu nerozuměl. Pak pochopil. Tio to dělala úplně stejně, první den pod terasou, když se s Ruem neznali. Ruka na prsa, slovo.
 
 Položil si ruku na prsa.
 
 „Eren.“
 
-Dabra se na něj chvíli dívala. Pak to zopakovala. Řekla to jinak než on, hlouběji a pomaleji, a z obou samohlásek udělala jednu dlouhou. Ale bylo to jeho jméno. Za šestatřicet dní na této planetě ho nikdo z místních neřekl. Říkali mu *hlas ze stropu*.
+Dabra to po chvíli zopakovala. Řekla to jinak než on, hlouběji a pomaleji, a z obou samohlásek udělala jednu dlouhou. Ale bylo to jeho jméno. Za šestatřicet dní na této planetě ho nikdo z místních neřekl. Říkali mu *hlas ze stropu*.
 
-Pak ukázala na ústí jeskyně. Pak na nebe na východě, kde se nad hřebenem začínalo bělat. Pak pomalu sjela dlaní k obzoru na druhé straně, na západ, kam slunce zapadá, a dlaň tam nechala ležet, plochou, jako víko.
+Ukázala na ústí jeskyně. Pak na nebe na východě, kde se nad hřebenem začínalo bělat. Pak pomalu sjela dlaní k obzoru na druhé straně, na západ, kam slunce zapadá, a dlaň tam nechala ležet, plochou, jako víko.
 
 Až se setmí.
 
@@ -40,7 +40,7 @@ Krájela dávky. Od toho večera s kýtou s ním mluvila jen o dávkách, o dře
 
 „Tak se dívej,“ řekla Maela. „Spočítej to.“
 
-Orrin to slyšel od někoho jiného. Před polednem přišel k jejich ohni, sedl si na bobek a natáhl ruce k žáru, jako každý, kdo kolem šel. Mluvil o dřevu. Mluvil o tom, že se Dornovi zlepšuje levé oko a pravé zatím ne. Pak se zvedl a položil Erenovi ruku na rameno.
+Orrin to slyšel od někoho jiného. Před polednem přišel k jejich ohni, sedl si na bobek a natáhl ruce k žáru, jako každý, kdo kolem šel. Mluvil o dřevu. Mluvil o tom, že se Dornovi zlepšuje levé oko a pravé zatím ne. Když se zvedal, položil Erenovi ruku na rameno.
 
 „Dívej se dobře, Erene,“ řekl. „Jsi první z nás, kdo tam vejde.“
 
@@ -62,7 +62,7 @@ Na konci síně se strop snižoval a zem stoupala a v zadní stěně byl otvor. 
 
 Ru se u nich zastavil.
 
-Nepřekročil je. Stál špičkami těsně u nich a pak se podíval na Erena a zavrtěl hlavou. Ne cvaknutím jazyka. Hlavou, jako to dělala Tio, když se jí něco nechtělo. Pak ukázal na kameny, na sebe, a dlaní, plochou, dolů, ze strany na stranu.
+Nepřekročil je. Stál špičkami těsně u nich, otočil se k Erenovi a zavrtěl hlavou. Ne cvaknutím jazyka. Hlavou, jako to dělala Tio, když se jí něco nechtělo. Pak ukázal na kameny, na sebe, a dlaní, plochou, dolů, ze strany na stranu.
 
 Ani on ne.
 
@@ -104,9 +104,9 @@ Ne. Tady ne. Na tohle se nesahá.
 
 Eren se díval na tu hlínu. Byla to oprava. Viděl jich v životě tisíce a tohle byla oprava, stejně jasná jako záplata na potrubí. Skála tu byla tenká. Chodba s vodou se tu přiblížila k vnější stěně soutěsky tak blízko, že mezi nimi zbyl jen kus kamene a ten kus někde praskl. Oni tu prasklinu našli a zalepili, a hlídali ji. Kdyby povolila, šla by jejich voda ven.
 
-Kývl. Dabra se na něj podívala, jestli to myslí vážně, a pak šla dál.
+Kývl. Dabra si ho změřila, jako by zkoušela, jestli to myslí vážně, a šla dál.
 
-Počítal kroky až k té zatáčce. Nevěděl proč. Bylo to sto devadesát od kamenů u ohně.
+Počítal kroky až k té zatáčce. Bylo to sto devadesát od řady kamenů.
 
 *
 
@@ -128,7 +128,7 @@ V síni bylo teplo. Ne teplo ohně. Teplo, které šlo ze skály a z vody, rovno
 
 Ve tmě kolem něj se rozsvítily oči. Desítky. Světlé tečky ve výklencích, u nádrží, nízko u země. Nikdo nevykřikl. Nikdo se nepohnul. Jen se na něj dívali, a on stál s plamínkem v misce a byl jediné světlo v celé síni.
 
-Pak se ozval zvuk. Kámen o kámen. Pravidelný, tichý, jako tep. Eren otočil hlavu.
+Ozval se zvuk. Kámen o kámen. Pravidelný, tichý, jako tep. Eren otočil hlavu.
 
 Kus od něj, na kraji světla, seděl na zemi starý muž. Malý, široký, s bílými vousy na hrudi. Měl mezi koleny kámen a druhým kamenem do něj klepal. Neviděl na to. Nepotřeboval. Klepal a pak přejel po kameni palcem, pomalu, a zase klepal. Pod jeho rukama vznikala miska. Napůl hotová, už teď tak hladká uvnitř, že se v ní plamínek odrážel.
 
@@ -146,7 +146,7 @@ Stěna tam byla ohlazená do roviny a celá pokrytá zářezy. Krátké svislé 
 
 ![Stěna zářezů v síni skalních lidí](obrazky/09_skalni_lid.webp)
 
-Dabra položila prst na první zářez v nejnižší řadě. Pak na druhý. Pak se otočila a položila ruku na hlavu dítěte, které stálo u ní a dívalo se na Erena svítícíma očima. Pak zase na zářez.
+Dabra položila prst na první zářez v nejnižší řadě. Pak na druhý. Otočila se a položila ruku na hlavu dítěte, které stálo u ní a upíralo na Erena svítící oči. Pak zase na zářez.
 
 Eren pochopil. Počítala.
 
@@ -154,9 +154,9 @@ Vzal ji za slovo. Prošel řady, jednu po druhé, s prstem na kameni, jako ona. 
 
 Devadesát tři lidí. V celé hloubce.
 
-Pak se podíval na zamazané. Bylo jich hodně. Víc než těch otevřených. Mrtví, pomyslel si. Nebo ti, kdo odešli. Nevěděl to. Ale nikdo je nevyškrábal. Zamazali je hlínou, a nechali je na stěně.
+Zbývaly zamazané. Bylo jich hodně. Víc než těch otevřených. Mrtví, pomyslel si. Nebo ti, kdo odešli. Ale nikdo je nevyškrábal. Zamazali je hlínou, a nechali je na stěně.
 
-Dabra počkala, až dočítá. Pak udělala dlaní pohyb, který znal od Rua. Kolik? Ukázala na stěnu, na Erena, a pak rukou ven, nahoru, k chodbě. Ke kotli.
+Dabra počkala, až dočítá, a udělala dlaní pohyb, který znal od Rua. Kolik? Ukázala na stěnu, na Erena, a pak rukou ven, nahoru, k chodbě. Ke kotli.
 
 Kolik vás je?
 
@@ -166,7 +166,7 @@ Rýhy po deseti. Ne po šesti, jak to dělali oni. Po deseti, jak se to naučil 
 
 Skalní lidé se kolem něj shromáždili. Slyšel je. Slyšel jejich dech a tiché kroky a cítil, jak se tma kolem něj zahušťuje těly. Nikdo nemluvil. Starý muž přestal klepat.
 
-Třicet jedna desítek. A dvě rýhy navíc. Pak se zarazil a odečetl v duchu Briho. Nechal tam jeho rýhu stejně. Nevěděl, jak se škrtá.
+Třicet jedna desítek. A dvě rýhy navíc. Zarazil se a v duchu odečetl Briho. Nechal tam jeho rýhu stejně. Nevěděl, jak se škrtá.
 
 Když se zvedl, kolena ho bolela. Podíval se na to, co udělal.
 
@@ -178,19 +178,19 @@ Pak se Eren rozhlédl po síni, protože se nechtěl dívat na její tvář. A z
 
 Strop. Nízký, pod ním se dalo stát jen uprostřed. Výklenky, devadesát, možná sto. Vzduch. Cítil, jak se v síni pohybuje, slabě, od chodby k zadní stěně a pryč někam do skály. Tah tu byl, ale malý, tak akorát pro lidi, kteří nepotřebují oheň, protože vidí ve tmě. Kolik ohňů by tu potřebovalo tři sta lidí, kteří ve tmě nevidí? Třicet? A kam by šel kouř? Za jednu noc by tu bylo nedýchatelno. Za dvě by tu ti, kdo tu teď žijí, umírali. A voda. Tři nádrže, jedna po druhé, a tři sta lidí, kteří ještě před měsícem nevěděli, že se do sání nic nehází. Za týden by z první nádrže byla druhá.
 
-Neunese to. Ne tři sta dvanáct. Ani polovinu. Ani čtvrtinu, pokud mají zůstat ti, kdo tu jsou.
+Neunese to. Ne tři sta jedenáct. Ani polovinu. Ani čtvrtinu, pokud mají zůstat ti, kdo tu jsou.
 
 Eren to věděl stejně jistě, jako věděl, kolik vydrží vložka. A bylo to poprvé od přistání, kdy se jeho počty dotkly něčeho skutečného, a on byl rád, že je umí. A zároveň si přál, aby je neuměl.
 
-Podíval se na Dabru. Pak pomalu zvedl ruku, plochou dlaní dolů, a pohnul jí ze strany na stranu.
+Obrátil se k Dabře a pomalu zvedl ruku, plochou dlaní dolů, a pohnul jí ze strany na stranu.
 
 Ne.
 
-Dabra se na něj dívala. Světlé oči bez barvy, nízko, ve výšce jeho prsou. Pak se jí něco v obličeji pohnulo. Eren nevěděl co. Ale kývla. Jednou a pomalu.
+Dabra se na něj dívala. Světlé oči bez barvy, nízko, ve výšce jeho prsou. Pak jí cukl koutek úst. Kývla. Jednou a pomalu.
 
 *
 
-Na cestě zpátky šel první. Dabra šla za ním a jeho plamínek ji neoslepoval. Počítal kroky. Sto devadesát od zatáčky s mazanicí k ohni. Šel kolem hlíny ve stěně a položil na ni dlaň a cítil ten tah. Pak šel dál.
+Na cestě zpátky šel první. Dabra šla za ním a jeho plamínek ji neoslepoval. Počítal kroky. Sto devadesát od zatáčky s mazanicí k řadě kamenů. Šel kolem hlíny ve stěně, položil na ni dlaň, ucítil ten tah a šel dál.
 
 Celou cestu nahoru myslel na tu síň.
 
@@ -212,7 +212,7 @@ U ohně na terase seděla Tal a čekala.
 
 Byli tam i Ru a Tio. Tio se tam nějak dostala. Seděla vedle Rua na kůži a Tal jí dala do ruky kus sušeného masa a Tio ho žvýkala a dívala se na Erena, jako by se vrátil z velké dálky.
 
-Dabra vyšla za ním. Zůstala stát v šeru u zadní stěny síně, daleko od ohně, s dlaní nad očima. Tal na ni promluvila. Dabra odpověděla. Mluvily spolu krátce, hlubokým hlasem a místním, a Eren nerozuměl ani slovu. Ale viděl, že spolu takhle mluvily už mnohokrát. Bez spěchu. Jako dvě, které vědí, co ta druhá řekne.
+Dabra vyšla za ním. Zůstala stát v šeru u zadní stěny síně, daleko od ohně, s dlaní nad očima. Tal na ni promluvila. Dabra odpověděla. Mluvily spolu krátce, starou řečí, napůl rukama: Dabra hlubokým hlasem z hrudi, Tal tišeji. Eren nerozuměl ani slovu. Ale viděl, že spolu takhle mluvily už mnohokrát. Bez spěchu. Jako dvě, které vědí, co ta druhá řekne.
 
 Pak Tal sáhla vedle sebe do hromádky kamínků u ohně a začala je klást na zem. Jeden vedle druhého. Do řady.
 
@@ -236,7 +236,7 @@ Dvanáct míst. Dvanáct ze tří set. Eren se díval na kamínky na zemi a vid�
 
 A bylo to víc, než měli včera.
 
-Natáhl ruku a položil ji nad kamínky. Nedotkl se jich. Pak se podíval na Tal a kývl.
+Natáhl ruku a položil ji nad kamínky. Nedotkl se jich. Kývl na Tal.
 
 Tal se na něj dívala těma tmavýma očima, které nebyly staré. Pak řekla ještě něco a Ru se zasmál.
 
@@ -248,7 +248,7 @@ Tal se na něj dívala těma tmavýma očima, které nebyly staré. Pak řekla j
 
 Druhý den šli dolů.
 
-Tal šla s nimi, pomalu, s holí, a Ru ji podpíral, ačkoli to nepotřebovala. Eren, Sefa, Ardo a Tio. Šli kotlem kolem tůní a pak podél potoka dolů, kudy přišli první den. Rokle se zúžila, kolem rozštípnutého balvanu, a Eren se na balvan nepodíval. Pak se rokle zase rozevřela a pod ní leželo údolí.
+Tal šla s nimi, pomalu, s holí, a Ru ji podpíral, ačkoli to nepotřebovala. Eren, Sefa, Ardo a Tio. Šli kotlem kolem tůní a pak podél potoka dolů, kudy přišli poprvé. Rokle se zúžila, kolem rozštípnutého balvanu, a Eren se na balvan nepodíval. Pak se rokle zase rozevřela a pod ní leželo údolí.
 
 Tal je vedla stranou, na mírný svah nad potokem, kde se mezi stromy otevírala rovina. Tam to bylo.
 
@@ -262,19 +262,19 @@ Kruhů bylo sedm, osm. Rozházených po rovině, jak kdo chtěl. Jeden tady, dva
 
 Ardo chodil od kruhu ke kruhu a měřil je kroky. Byl to jeho zvyk. Dřív měřil nákladový prostor.
 
-„Na deset lidí jeden,“ řekl. „Když se lehne hustě.“ Podíval se na Erena. „Kolik nás je? Tři sta deset?“
+„Na deset lidí jeden,“ řekl. „Když se lehne hustě. Kolik nás je? Tři sta deset?“
 
 „Tři sta jedenáct.“
 
 „Tak třicet jedna.“ Ardo se rozhlédl po rovině. „Třicet jedna kruhů. Sem se nevejde ani polovina, jak to mají oni.“
 
-Eren se díval na kruhy. Na to, jak leží rozházené, každý jinde. Jak ten nejníž leží u potoka. Pak se díval na svah. Byl mírný, ale byl to svah. Když prší, voda poteče dolů. A na jaře, až roztaje sníh, který ještě nenapadl, poteče dolů hodně vody.
+Eren se díval na kruhy. Na to, jak leží rozházené, každý jinde. Jak ten nejníž leží u potoka. A na svah. Byl mírný, ale byl to svah. Když prší, voda poteče dolů. A na jaře, až roztaje sníh, který ještě nenapadl, poteče dolů hodně vody.
 
 Vzal klacek. Sedl si na bobek do trávy na kraji roviny, kde byla holá hlína, a začal kreslit.
 
 Kruh. Vedle něj kruh. Vedle něj další. Do řady, podél svahu, ne dolů. Nad tou řadou druhá řada, posunutá o půl, aby kruhy nestály přímo nad sebou. Mezi řadami čára. Rýha v zemi. Kudy poteče voda, když prší, aby netekla dveřmi dovnitř, ale pod nimi, kolem, pryč.
 
-Ohně uprostřed každého kruhu. Tečka v každém. Řady tak daleko od sebe, aby jiskra z jedné střechy nedolétla na druhou. Eren nevěděl, jak daleko doletí jiskra. Odhadl to. Přidal krok.
+Ohně uprostřed každého kruhu. Tečka v každém. Řady tak daleko od sebe, aby jiskra z jedné střechy nedolétla na druhou. Jak daleko doletí jiskra, mohl jen odhadnout. Přidal krok.
 
 A mezi řadami cesta. Rovná. Aby se dalo projít od prvního domu k poslednímu, i v noci, i ve sněhu, a vědělo se, kde co je. Kde je který dům. Kde je která desítka. Třicet jedna kruhů v pěti řadách, a v šesté jeden.
 
@@ -306,7 +306,7 @@ Tal zvedla klacek a zarazila ho do hlíny. Nad Erenovu dolní řadu. O kus výš
 
 Eren se díval na ten pás na stromech. Pak na klacek v hlíně. Pak smazal dlaní dolní řadu, celou, a nakreslil ji znovu, výš, nad klackem. Ostatní řady posunul taky. Teď končily těsně pod stromy na horním okraji roviny.
 
-Tal se dívala, jak to dělá. Pak cvakla jazykem. Ne jako *ne*. Krátce, jednou, a kývla.
+Tal ho nechala dokreslit. Pak cvakla jazykem. Ne jako *ne*. Krátce, jednou, a kývla.
 
 „Říká, že mravenci aspoň nebydlí ve vodě,“ řekla Tio.
 
@@ -320,7 +320,7 @@ Večer stál na bedně. Vylezl tam, aniž ho někdo poslal, a uvědomil si to, t
 
 Pak se ho začali ptát.
 
-Hela chtěla vědět, kdo rozhodne, kdo je nemocný. Eren řekl, že Sefa. Sefa řekla, že ano. Mladá matka s tříletým dítětem chtěla vědět, jestli může jít s dítětem. Eren řekl, že nemocné dítě ano a ona ne. Ona řekla, že tříleté dítě samo nespí. Eren nevěděl, co odpovědět, a Sefa řekla, že to vyřeší s Tal. Eren nevěděl, jestli to Sefa vyřešit dokáže. Ale řekla to tak, že se matka uklidnila.
+Hela chtěla vědět, kdo rozhodne, kdo je nemocný. Eren řekl, že Sefa. Sefa řekla, že ano. Mladá matka s tříletým dítětem chtěla vědět, jestli může jít s dítětem. Eren řekl, že nemocné dítě ano a ona ne. Ona řekla, že tříleté dítě samo nespí. Eren nevěděl, co odpovědět, a Sefa řekla, že to vyřeší s Tal. Jestli to dokáže, nebylo jisté. Ale řekla to tak, že se matka uklidnila.
 
 Pak se ptal Orrin.
 
@@ -354,7 +354,7 @@ Maela seděla u ohně a čekala na něj.
 
 „Tio je zdravá.“
 
-Maela se na něj dívala přes oheň. Pak se podívala na Tio, která spala pod plachtou, stočená, s pěstí u pusy. Dívala se dlouho.
+Maela se na něj dívala přes oheň. Pak se zadívala na Tio, která spala pod plachtou, stočená, s pěstí u pusy. Dlouho.
 
 „Zatím,“ řekla Maela.
 

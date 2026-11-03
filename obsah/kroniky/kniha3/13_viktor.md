@@ -10,7 +10,7 @@ Kalina sedí u svých beden pod plachtou a pájí. Na stole má rozebranou krabi
 
 „Do rána.“
 
-Kalina dopájí spoj a odloží pájku do stojánku. Pak se podívá na batoh, který Hana od včerejška nesundala ze zad.
+Kalina dopájí spoj a odloží pájku do stojánku. Podívá se na batoh, který Hana od včerejška nesundala ze zad.
 
 „Co v něm je?“
 
@@ -82,7 +82,7 @@ Odmlčí se. Hana čeká.
 
 „Nevím. Nebere telefon.“
 
-Viktor se znovu napije a dlouho se dívá na lahev, jako by na ní bylo něco napsáno.
+Viktor se znovu napije a dlouho drží lahev v ruce.
 
 „Chudák,“ řekne. „To si nezasloužil.“
 
@@ -106,7 +106,7 @@ Viktor se na displej podívá. Nevezme si ho. Jen se podívá.
 
 Viktor řekne jméno. Anglické, rychle, bez zaváhání. Hana si ho zapamatuje. Ví, že ho za hodinu nenajde nikde, ale zapamatuje si ho.
 
-„Animace se v STL nedělá,“ řekne. „STL je pro tiskárnu.“
+„STL nemá texturu,“ řekne. „Je to holá síť. Pro tiskárnu.“
 
 „Ty se v tom najednou vyznáš.“
 
@@ -118,13 +118,13 @@ Viktor mlčí.
 
 „Fotka ústavu je focená šikmo.“
 
-„Ano. Ale na klinice jsem to viděla rovně a zblízka, když konzervátorka sundala fólii.“ Hana přejede na další dvě fotky a položí telefon na kámen mezi ně, aby je viděl obě vedle sebe. „A páska. Vlevo sobota večer, bodega, po přepečetění. Vpravo pondělí, depozitář v Méridě. Tatáž páska. Stejná čísla, stejný podpis. Jenže v Méridě jde o tři, čtyři milimetry níž. Přes střed suku. Tah podpisu má schod mezi páskou a dřevem. Nad páskou je modrý proužek po stínu.“
+„Ano. Ale na klinice jsem to viděla rovně a zblízka, když konzervátorka sundala fólii.“ Hana přejede na další dvě fotky a položí telefon na kámen mezi ně, aby je viděl obě vedle sebe. „A páska. Vlevo sobota večer, bodega, po přepečetění. Vpravo pondělí, depozitář v Méridě. Tatáž páska. Stejná čísla, stejný podpis. Jenže v Méridě sedí o tři milimetry níž. Přes střed suku. Tah podpisu má schod mezi páskou a dřevem. Nad páskou je tenký modrý proužek. Zbytek ranního nápisu, který večerní páska kryla.“
 
 Viktor se dívá na dvě fotky suku. Dlouho. Pak se zasměje. Krátce, nosem, bez veselí.
 
 „Ty a tvoje suky.“
 
-„Někdo ji sundal a nalepil zpátky. O víkendu. V bodeze, ke které měl klíč Ernesto.“
+„Někdo ji sundal a nalepil zpátky. Mezi sobotou večer a Méridou. Nejspíš v bodeze, ke které měl klíč Ernesto.“
 
 „Vidíš,“ řekne Viktor. „Ernesto.“
 
@@ -132,7 +132,7 @@ Viktor se dívá na dvě fotky suku. Dlouho. Pak se zasměje. Krátce, nosem, be
 
 Tma mezitím zhoustla. Viktorův obličej je šedý ovál o kus níž než její. Hana nevidí jeho oči, vidí jen, že se nehýbe.
 
-Nad studnou přeletí netopýr. Pak druhý. Odněkud z lesa se ozve pták, dvě noty, pořád dokola, jako když někdo zkouší, jestli funguje zvonek.
+Nad studnou přeletí netopýr a za ním druhý. Odněkud z lesa se ozve pták, dvě noty, pořád dokola, jako když někdo zkouší, jestli funguje zvonek.
 
 „Dobře,“ řekne Viktor.
 
@@ -140,7 +140,7 @@ Nad studnou přeletí netopýr. Pak druhý. Odněkud z lesa se ozve pták, dvě 
 
 Neřekne to jako přiznání. Řekne to, jako když člověk po dlouhém dni sundá boty.
 
-Pak si sundá i kšiltovku a promne si obličej oběma dlaněmi, od čela po bradu, a ještě jednou. Když ruce spustí, je to jiný obličej. Ne horší. Starší.
+Sundá si i kšiltovku a promne si obličej oběma dlaněmi, od čela po bradu, a ještě jednou. Když ruce spustí, je to jiný obličej. Ne horší. Starší.
 
 „Chceš to slyšet celý, nebo jen to, co si zapíšeš?“
 
@@ -172,7 +172,7 @@ Spustí ruku.
 
 „Četl tu tvou předběžnou zprávu. Tu se čtyřmi výhradami, kterou jsem dal do přílohy.“ Krátce se zasměje. „Já ji zastrčil do přílohy a on ji četl jako první. Napsal mi: *tahle*. Jedno slovo. Chce studii. Pořádnou, s tvými laminami a s tvými otazníky. První autorka Vrbová. Já jsem tam jako ten, kdo to natočil, a to je všechno, co chci.“
 
-Hana se dívá do studny. Na hladině už nevidí ani list.
+Na hladině studny už Hana nevidí ani list.
 
 „A válec?“
 
@@ -242,11 +242,11 @@ Pak řekne tiše: „Jo. Taky.“
 
 „Na měsíc.“
 
-Hana vstane z kamene. Nohy má ztuhlé. Udělá dva kroky k pásce a zase se vrátí. Tma nad studnou je teď úplná a vlevo nad lesem stojí půlměsíc, ostrý, bílý.
+Hana vstane z kamene. Nohy má ztuhlé. Udělá dva kroky k pásce a zase se vrátí. Nad studnou je skoro tma a vlevo nad lesem stojí půlměsíc, ostrý, bílý.
 
 „A já?“ zeptá se. „Co jsem měla dělat já? V tom plánu.“
 
-Viktor se na ni podívá zdola. Teď vidí jeho oči. Jsou mokré, jako na mýtině, jako na plošině.
+Viktor se na ni podívá zdola. V měsíčním světle teď vidí jeho oči. Jsou mokré, jako na mýtině, jako na plošině.
 
 „Ty ses měla vrátit domů,“ řekne. „Půl roku bys byla atlantoložka. Bulvár by se vyřádil, fakulta by tě schovala do kabinetu a pak by se na to zapomnělo. Pak bys psala posudky, jako předtím. A za dva roky by vyšla studie. Ty bys byla ta, co měla celou dobu pravdu. Ta, co jako jediná napsala čtyři výhrady.“
 
@@ -300,9 +300,9 @@ Hana zavře oči.
 
 Čtyřicet metrů. Voda v ústech. A jeho ruka, která jí podá automat, a pak dvanáct minut, kdy dýchali z jedné láhve, on pomalu, aby jí zbylo. Na hladině ji držel za límec obleku a neříkal nic.
 
-„Já vím,“ řekne. „Proto ti to říkám do očí. A ne jí.“
-
 Otevře oči.
+
+„Já vím,“ řekne. „Proto ti to říkám do očí. A ne jí.“
 
 „V Hranicích jsem ti slíbila jednu věc. Že ti řeknu, že je to kámen, když je to kámen.“
 
@@ -310,9 +310,9 @@ Otevře oči.
 
 „Tohle je kámen, Viktore.“
 
-Viktor se na ni dívá. Nic neříká.
+Viktor nic neříká.
 
-„Replika je odlitá podle modelu. Model ti poslal Ríša, stáhl sis ho v pátek ráno. Páska byla přelepená o víkendu v bodeze. Originál je někde, kde to víš ty a já ne. To je kámen. Všechno ostatní je to, co si myslíš.“ Nadechne se. „A šestýho března jsem napsala doleva něco, co jsem neviděla. Podepsala jsem to. To je taky kámen.“
+„Replika je odlitá podle modelu. Model ti poslal Ríša, stáhl sis ho v pátek ráno. Páska byla přelepená mezi sobotou večer a Méridou. Originál je někde, kde to víš ty a já ne. To je kámen. Všechno ostatní je to, co si myslíš.“ Nadechne se. „A šestýho března jsem napsala doleva něco, co jsem neviděla. Podepsala jsem to. To je taky kámen.“
 
 „Tak ho tam nech ležet.“
 
@@ -328,7 +328,7 @@ Hana o tom přemýšlí. Upřímně, protože si to zaslouží. Ne kvůli jménu
 
 „Protože originál se od podvrhu dá odlišit jen tehdy, když se ví, kde jsem udělala chybu,“ řekne. „Když ji zamlčím, bude vypadat jako jejich důkaz. Když ji řeknu, bude to jen moje chyba.“
 
-Viktor na to chvíli nic neříká. Pak kývne, pomalu, jako by uznával cizí tah v partii, kterou sám prohrává.
+Viktor na to chvíli nic neříká. Nakonec kývne, pomalu, jako by uznával cizí tah v partii, kterou sám prohrává.
 
 „Ty a tvoje levá strana,“ řekne. Včera to řekl s úsměvem. Dneska bez.
 
@@ -342,7 +342,7 @@ Zvedne se z listí ztěžka, nejdřív na koleno, pak na nohy. Kšiltovku si nas
 
 Je to pravda. Ríša ví o poště. Kalina zná čísla. O pásce ví jen ona. Hana slyší, jak to zní, když se to řekne nahlas ve tmě u studny dvacet metrů hluboké, a vůbec se jí to nelíbí. Ale je to pravda a nic jiného nemá.
 
-Viktor se na ni dívá. Pak se zasměje, krátce a unaveně, jako včera.
+Viktor se zasměje, krátce a unaveně, jako včera.
 
 „Neboj se,“ řekne. „Já nejsem z filmu. Já ty filmy jenom točím.“
 
@@ -368,7 +368,7 @@ Hana se pokusí vzpomenout, jak se na ni díval šestého, u monitoru, když ře
 
 Kalina je pořád u stolu. Pájku má vypnutou, krabička spojení je složená a vedle ní leží na sešitě sluchátka. Batoh stojí pod stolem tam, kam ho postavil.
 
-Hana si ho vezme. Kalina se na ni podívá. Pak se podívá na její ruce.
+Hana si ho vezme. Kalina se podívá na její ruce.
 
 „Čaj?“ zeptá se.
 
@@ -376,7 +376,7 @@ Hana si ho vezme. Kalina se na ni podívá. Pak se podívá na její ruce.
 
 „Rosin vařič,“ řekne Kalina. „Rosa tu není. Nikdo mi nevynadá.“
 
-Hana se málem zasměje. Pak si sedne na bednu vedle něj a nechá ho uvařit čaj. Kalina ho dělá pomalu, jako všechno, a mezitím nic neříká. Postaví před ni hrnek. Je to ten s odloupnutým uchem, ze kterého pije on.
+Hana se málem zasměje. Sedne si na bednu vedle něj a nechá ho uvařit čaj. Kalina ho dělá pomalu, jako všechno, a mezitím nic neříká. Postaví před ni hrnek. Je to ten s odloupnutým uchem, ze kterého pije on.
 
 „Viktor,“ řekne Hana.
 
@@ -386,7 +386,7 @@ Kalina kývne. Na nic se nezeptá.
 
 „Nevěděl. Měl jsem možnost.“ Kalina se podívá do svého sešitu. „To je rozdíl.“
 
-Hana se na něj podívá. Kalina to neřekl schválně. Nemohl to slyšet, seděl sto metrů od studny. Je to jen věta, ke které dojdou dva lidé, kteří celý život oddělují, co vědí, od toho, co si myslí.
+Je to jen věta, ke které dojdou dva lidé, kteří celý život oddělují, co vědí, od toho, co si myslí.
 
 Napije se čaje. Je silný a hořký a pálí.
 

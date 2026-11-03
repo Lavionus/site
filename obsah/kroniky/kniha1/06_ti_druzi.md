@@ -68,7 +68,7 @@ Dobroslava stála nad ním. Na muže se dívala jinak než na Matěje: krátce, 
 
 „Je,“ řekla. „Zatím.“
 
-„Kdo...“ Matěj se nadechl. „Kdo je to?“
+„Kdo…“ Matěj se nadechl. „Kdo je to?“
 
 „Jeden z nich,“ řekla Dobroslava. Řekla to tak, jako by řekla *jeden z Kojatových*. Potom vzala sekerku, kterou měla za pasem, a dvěma ranami přetnula břízu u kořene.
 
@@ -80,7 +80,7 @@ Matěj ho držel. Dobroslava se snažila oko rozevřít prsty, pak nožem, a ne�
 
 Muž otevřel oči.
 
-Byly šedé a obyčejné, jen velmi unavené. Chvíli se díval na Matěje, na tonzuru, kterou mu shrnutá kápě odkryla, na bílý hábit. Řekl jedno slovo, kterému Matěj nerozuměl. Pak řekl česky, pomalu a s divným přízvukem, jako stará Bohuna, když vyprávěla o babičce:
+Byly šedé a obyčejné, jen velmi unavené. Chvíli se díval na Matěje, na tonzuru, kterou mu shrnutá kápě odkryla, na bílý hábit. Řekl jedno slovo, kterému Matěj nerozuměl. Pak řekl česky, pomalu a s divným přízvukem, jako by každé slovo zkoušel:
 
 „Pusť.“
 
@@ -234,7 +234,7 @@ Ve dveřích stál muž, kterého nikdo z nich neohlásil.
 
 *
 
-Byl vysoký. To bylo první, co Matěj viděl, protože se musel podívat nahoru, jako se díval nahoru na Ješka. Byl o hlavu vyšší než on a hubený. Ve dveřích, kterými ostatní procházeli zpříma, musel sklonit hlavu. Byl bledý. Ne jako nemocný, ale jako plátno, které přes zimu leželo ve sklepě a nevidělo slunce. Vlasy měl stažené dozadu a v kahanech nešlo poznat, jestli jsou světlé, nebo šedivé. Neměl vousy. Mohlo mu být třicet. Mohlo mu být šedesát. Matěj by nevsadil ani na jedno.
+Byl vysoký. To bylo první, co Matěj viděl, protože se musel podívat nahoru, jako se díval nahoru na Ješka. Ten muž byl o hlavu vyšší než on a hubený. Ve dveřích, kterými ostatní procházeli zpříma, musel sklonit hlavu. Byl bledý. Ne jako nemocný, ale jako plátno, které přes zimu leželo ve sklepě a nevidělo slunce. Vlasy měl stažené dozadu a v kahanech nešlo poznat, jestli jsou světlé, nebo šedivé. Neměl vousy. Mohlo mu být třicet. Mohlo mu být šedesát. Matěj by nevsadil ani na jedno.
 
 Pak vstoupil do místnosti, otočil se od kahanu k Matějovi a Matěj uviděl jeho oči.
 
@@ -242,7 +242,7 @@ Zorničky měl rozšířené tak, že z duhovky zbyl jen úzký proužek. Když 
 
 Matěj si uvědomil, že se pokřižoval. Neudělal to úmyslně. Ruka to udělala za něj.
 
-Vysoký muž to viděl. Nic neřekl. Přešel k lavici, podíval se na zraněného a na ovázanou nohu. Stará žena mu něco řekla tím cizím jazykem. Odpověděl. Měl tichý hlas, který se v nízké místnosti nerozléhal. Pak se otočil k Matějovi.
+Vysoký muž to viděl. Nic neřekl. Přešel k lavici a sklonil se nad zraněným a nad ovázanou nohou. Stará žena mu něco řekla tím cizím jazykem. Odpověděl. Měl tichý hlas, který se v nízké místnosti nerozléhal. Pak se otočil k Matějovi.
 
 „Sedni si,“ řekl česky.
 
@@ -258,7 +258,7 @@ Mluvil česky jinak než zraněný. Ne s přízvukem, spíš příliš přesně,
 
 „Já nejsem pán z Wehrbergu.“
 
-„Ne.“ Vysoký se na něj díval. „Ty jsi písař. Píšeš pod smrkem, když vyjdeš z hory.“
+„Ne,“ řekl vysoký. „Ty jsi písař. Píšeš pod smrkem, když vyjdeš z hory.“
 
 Matěj neodpověděl. Nebylo co.
 
@@ -296,7 +296,7 @@ Matěj zaváhal. „Jako koňská kůže. Když se na koně položí ruka v zim�
 
 „Víc než minule?“
 
-„Minule jsem tam nebyl.“
+„Byl jsem tam jen jednou.“
 
 „Ale oni tam jsou,“ řekla Ostra. „Ti, co kopou. Co říkají?“
 
@@ -340,7 +340,7 @@ Merin chvíli mlčel. Potom řekl, tiše, stejným hlasem, jakým mluvil celou d
 
 Matěj na něj zíral.
 
-„Do jaké vody? Jak se probudí? Co to...“
+„Do jaké vody? Jak se probudí? Co to…“
 
 „Řekl jsem ti to,“ řekl Merin, „protože jsi ho nesl. Víc ti neřeknu.“ Odmlčel se. „Můžeš to říct tomu, kdo tě vedl do hory. Ale neříkej mu, od koho to máš.“
 

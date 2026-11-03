@@ -44,7 +44,7 @@ Víc o tom nemluvili.
 
 *
 
-Ve čtvrtek ráno uklidí kuchyňský stůl. Posudek na kraj, hrnek do dřezu. Přinese z pokoje skládací stůl, na kterém kdysi u studentů na exkurzích třídila vzorky, a postaví ho vedle kuchyňského, aby byl stůl opravdu velký. Pak se dívá, jak ty dva stoly stojí vedle sebe, jeden o dva centimetry nižší, a připadá si směšně. Jako by čekala návštěvu, kvůli které se uklízí.
+Ve čtvrtek ráno uklidí kuchyňský stůl. Posudek na kraj, hrnek do dřezu. Přinese z pokoje skládací stůl, na kterém kdysi u studentů na exkurzích třídila vzorky, a postaví ho vedle kuchyňského, aby byl stůl opravdu velký. Ty dva stoly stojí vedle sebe, jeden o dva centimetry nižší, a Hana si připadá směšně. Jako by čekala návštěvu, kvůli které se uklízí.
 
 Kalina zazvoní v 11:20.
 
@@ -96,15 +96,13 @@ Pátý list není graf. Je to obrázek, který Hana pozná, protože ho viděla 
 
 „Družice znám. Jsou v katalogu. Tohle se hýbe po obloze jinak než družice, pomaleji než planeta a jinak než hvězdy. Tohle se hýbe tak, jak se to hýbalo celé čtyři roky.“ Kalina ukáže na čárky. „A je to strukturované. Skupiny se opakují. Ne náhodně. Mají vnitřní stavbu, kterou umím popsat, a nerozumím jí. To je rozdíl, na kterém mi záleží.“
 
-Hana nalije čaj do dvou hrnků. Jeden mu postaví na kraj stolu, daleko od papírů. Kalina se na hrnek podívá, jako by kontroloval, jestli stojí dost daleko, a pak se vrátí k listům.
+Hana nalije čaj do dvou hrnků. Jeden mu postaví na kraj stolu, daleko od papírů. Kalina zkontroluje, jestli hrnek stojí dost daleko, a vrátí se k listům.
 
 „Šestý,“ řekne.
 
 Šestý list je obyčejný graf. Na vodorovné ose měsíce, září, říjen, listopad, prosinec, leden. Na svislé ose frekvence těch čárek, ale ne celá, jen poslední číslice, s přesností, jaké Hana nerozumí. Body leží na čáře, která pomalu klesá. Rovnoměrně. Skoro.
 
-Kalina chvíli mlčí.
-
-„Frekvence klesá,“ řekne potom. „Dopplerův posuv. Když se zdroj k nám blíží, frekvence je vyšší, než jakou vysílá. Když se blíží pomaleji, je vyšší míň.“ Odmlčí se. „Kdyby to byl objekt, který se k nám blíží a zpomaluje, klesala by takhle. Kdyby to byla chyba, neklesala by takhle. Nevím, jakou chybu jsem nevyloučil.“
+„Frekvence klesá,“ řekne Kalina po chvíli. „Dopplerův posuv. Když se zdroj k nám blíží, frekvence je vyšší, než jakou vysílá. Když se blíží pomaleji, je vyšší míň.“ Odmlčí se. „Kdyby to byl objekt, který se k nám blíží a zpomaluje, klesala by takhle. Kdyby to byla chyba, neklesala by takhle. Nevím, jakou chybu jsem nevyloučil.“
 
 Hana se dívá na čáru.
 
@@ -122,7 +120,7 @@ Jako na vrstvu v profilu. Nejdřív na tvar a teprve pak na to, co znamená.
 
 „Pak to nebudu jen já.“
 
-Hana se na něj dívá. Kalina se dívá na čáru.
+Kalina se dívá na čáru.
 
 „Co to je?“ zeptá se Hana.
 
@@ -180,7 +178,7 @@ Hana ji pozná dřív, než si přečte jména. Pozná to podle tvaru řeky. Oh�
 
 „Já beru vážně čas.“ Kalina vytáhne devátý list. Dva spektrogramy nad sebou. Nahoře ten z vesmíru, se svislými čárkami ve skupinách. Dole ten ze země, s tečkami. Mezi nimi svislé čáry tužkou, které spojují každou skupinu nahoře se skupinou dole. „Pulzy přicházejí čtyři celé dvě desetiny sekundy po každé skupině signálu od zdroje. Pokaždé. Na tisícinu stejně. Když zdroj mlčí, mlčí i země. Když zdroj vysílá, země po čtyřech celých dvou desetinách odpoví.“
 
-Hana se dívá na čáry tužkou. Jsou rovné. Kalina je kreslil podle pravítka.
+Čáry tužkou jsou rovné. Kalina je kreslil podle pravítka.
 
 „Odpoví,“ řekne.
 
@@ -188,7 +186,7 @@ Hana se dívá na čáry tužkou. Jsou rovné. Kalina je kreslil podle pravítka
 
 „Proč by to dělal?“
 
-„Abych tam jel.“ Kalina se na ni podívá. „Nebo abyste tam jela vy.“
+„Abych tam jel.“ Kalina zvedne oči. „Nebo abyste tam jela vy.“
 
 *
 
@@ -264,7 +262,7 @@ Teď napíše:
 
 *Potřetí tady.*
 
-Bez otazníku. Pak se na to podívá a otazník připíše. Má tam být. Tři body v jednom kraji nic nedokazují. Kraj je velký, lidé v něm žijí tisíc let a tisíc let tam něco zapisují.
+Bez otazníku. Za chvíli otazník připíše. Má tam být. Tři body v jednom kraji nic nedokazují. Kraj je velký, lidé v něm žijí tisíc let a tisíc let tam něco zapisují.
 
 Kalina se dívá na otazník.
 
@@ -282,7 +280,7 @@ Ve čtvrt na dvě se podívá na hodinky a řekne, že má vlak ve 14:18. Ješt�
 
 „Jeďte se tam podívat,“ řekne Hana dřív, než to stihne říct on.
 
-Kalina se na ni podívá. Poprvé, co ho zná, se mu něco pohne v koutku úst.
+Kalinovi se poprvé, co ho zná, pohne koutek úst.
 
 „Ne na světlo,“ řekne. „Na to, co tam je. Já nevím, co tam dělá země sama od sebe. Vy ano. Termální prameny, oxid uhličitý, otřesy. Já potřebuju vědět, co všechno to není. Vy to tam poznáte.“ Odmlčí se. „A já tam nemůžu. Ještě ne. Musím být u dat. Každou noc. Kdybych jednu noc vynechal, nevím, co mi uteče.“
 
@@ -296,7 +294,7 @@ Kalina chvíli mlčí.
 
 „Pak tam něco vysílá z podzemí,“ řekne. „Na nízké frekvenci, která prochází skálou. Časované na něco, co je daleko a blíží se. A já nevím, co to je. Ani to, co je daleko, ani to, co je v zemi.“ Vstane, sbírá listy, jeden po druhém, v obráceném pořadí, než je vykládal. „Za týden tam budou lidi z toho fóra s přijímači v autech. Za měsíc tam bude někdo s kamerou. Chtěl bych, aby tam někdo byl dřív. Někdo, kdo zapíše, co viděl. A co neviděl, zvlášť.“
 
-Hana se na něj dívá. Kalina neví, že cituje. Nebo ví. U něj se to nedá poznat.
+Kalina neví, že cituje. Nebo ví. U něj se to nedá poznat.
 
 „Ten překlad,“ řekne Kalina u dveří, s botami už na nohou a s čepicí v ruce. „Je tam napsané, kolik kroků bylo ke skále?“
 
@@ -320,7 +318,7 @@ Roj. Od devátého ledna, pod Novým Kostelem, jako vždycky. Stovky otřesů, s
 
 Hana to zapíše doleva. *Roj u N. Kostela od 9. 1. 2030, max 1,4 (16. 1.). Přírodní.*
 
-Pak se zastaví u čísla.
+U čísla se zastaví.
 
 Devátého ledna roj. Čtrnáctého ledna pulzy. Pět dní.
 
@@ -332,7 +330,7 @@ Otevře e-mail.
 
 *Vážená paní doktorko,*
 
-*vím, že jsem se ptala už dvakrát. Ptám se potřetí, protože mám důvod, který Vám zatím nemohu říct a který nesouvisí s žádnou institucí. Je kodex zpátky z dílny? Pokud ano, mohla bych ho vidět příští týden? Kdykoli. I v sobotu.*
+*vím, že jsem se ptala už dvakrát. Ptám se potřetí, protože mám důvod, který Vám zatím nemohu říct a který nesouvisí se žádnou institucí. Je kodex zpátky z dílny? Pokud ano, mohla bych ho vidět příští týden? Kdykoli. I v sobotu.*
 
 *H. V.*
 

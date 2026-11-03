@@ -14,7 +14,7 @@ Luis nepíše. Luis volá.
 
 „Ano.“
 
-Luis chvíli mlčí. Pak řekne něco, co Hana nečeká.
+Luis po chvíli řekne něco, co Hana nečeká.
 
 „Walt nechal krabici. Pro tebe.“
 
@@ -22,7 +22,7 @@ Hana sedí na posteli v penzionu U Mlýna a dívá se na zeď. Na tapetě jsou d
 
 „Kdy?“
 
-„V říjnu, když umřel. Byla u postele. Na ní napsané *Para Ana Vrbová*.“ Luis se odmlčí. „A pod tím: *Až se zeptá na Anayu podruhé.*“
+„V říjnu, když umřel. Stála u postele. Na víku napsané *Para Ana Vrbová*.“ Luis se odmlčí. „A pod tím: *Až se zeptá na Anayu podruhé.*“
 
 „Podruhé?“
 
@@ -60,9 +60,9 @@ Nahoře leží dopis.
 
 Jeden list linkovaného papíru z bloku, popsaný tužkou, tiskacím písmem, anglicky. Walt nepsal psacím. Hana si to pamatuje z map: čísla bodů, šipky, *CAMPANA. Aire.* Všechno tiskacím, aby to přečetl každý.
 
-*Ano,*
+*Paní Vrbová,*
 
-*Luis vám tohle dá, až se zeptáte na Anayu podruhé. Poprvé jste se ptala v roce 2026 a já mlčel, protože jsem pořád patřil k nim. Teď už nepatřím k nikomu. Jsem mrtvý.*
+*Luis vám tohle dá, až se zeptáte na Anayu podruhé. Poprvé jste se ptala v roce 2026 a já vám řekl, že nevím. Lhal jsem, protože jsem pořád patřil k nim. Teď už nepatřím k nikomu. Jsem mrtvý.*
 
 *Většina toho, co je v té krabici, jsou lži, které jsme zaplatili. Chci, aby někdo věděl, které to byly.*
 
@@ -72,7 +72,7 @@ Jeden list linkovaného papíru z bloku, popsaný tužkou, tiskacím písmem, an
 
 *W. A.*
 
-Hana čte dopis třikrát. Pak ho položí na stůl, vedle krabice, a dlouho se na něj dívá.
+Hana čte dopis třikrát. Pak ho položí na stůl, vedle krabice, a dlouho nad ním sedí.
 
 *Jména živých netiskněte.*
 
@@ -96,13 +96,13 @@ Rok 1974. *Rozpočet na šum*, tak tomu říkají. Šum. Tři články pro páns
 
 Rok 1976. Svědectví kapitána rybářské lodi z Keys o „jasném světle pod hladinou“. Přepis, podpis, dvě stě padesát dolarů. Poznámka: *Použít. On tomu věří.*
 
-Rok 1978. Fotografie. Černobílé, zvětšené, s průsvitkou nalepenou přes ně a s pokyny tužkou. *Přidat záři. Vodu ztmavit. Ne moc.* Hana se na tu fotku dívá dlouho. Moře, loď, nic. Pak, na další, totéž moře se zářícím kruhem pod hladinou. Pod tím razítko laboratoře, která už dávno neexistuje.
+Rok 1978. Fotografie. Černobílé, zvětšené, s průsvitkou nalepenou přes ně a s pokyny tužkou. *Přidat záři. Vodu ztmavit. Ne moc.* Hana tu fotku drží dlouho. Moře, loď, nic. Na další totéž moře se zářícím kruhem pod hladinou. Pod tím razítko laboratoře, která už dávno neexistuje.
 
 Rok 1981. Zápis z porady, jedna věta podtržená dvakrát:
 
 *Ke každému skutečnému nálezu v oblasti potřebujeme tři falešné.*
 
-Hana si to zapíše. Doleva. S datem a číslem složky.
+Hana to přepíše doleva. S datem a číslem složky.
 
 Rok 1983. *Atlantida je levnější než mlčení.*
 
@@ -154,7 +154,7 @@ A na okraji, tužkou, tiskacím písmem, pozdější:
 
 *Totéž ve zvonu, 2009. WA.*
 
-Hana se na to dívá a ruka se jí na stole sevře.
+Haně se ruka na stole sevře.
 
 Komín nad blokovým koncem zvonu. Svítilna na šňůře ve tři ráno, saze a v nich nejméně šest otisků. Malé široké dlaně s krátkými prsty. Vysvětlila si je tehdy jako dětské ruce z mayského obřadu. Walt jen řekl *Nekreslete je*.
 
@@ -170,7 +170,7 @@ Teď to chytila. Neví, co s tím.
 
 Pak otevře zelenou složku.
 
-Na deskách je přilepený žlutý lístek. Waltovo tiskací písmo, propiska, a podle toho, jak lístek nezežloutl, je mnohem mladší než složka.
+Na deskách je přilepený žlutý lístek. Waltovo tiskací písmo, propiska. Lístek nezežloutl, takže je mnohem mladší než složka.
 
 *Tohle si přečte jen Vrbová.*
 
@@ -188,7 +188,7 @@ Vedle fixou, tiskacím písmem:
 
 *Má vnuky v Méridě. Jméno nepotřebujete.*
 
-Hana se na to začerněné místo dívá dlouho. Neprosvítá. Walt věděl, jak se to dělá.
+Hana podrží začerněné místo proti lampě. Neprosvítá. Walt věděl, jak se to dělá.
 
 Rodrigo Anaya Cervera tedy nebyl nikdo. Byl to pseudonym učitele v penzi, který tiskl knížky vlastním nákladem a prodával je v knihkupectví u katedrály. Proto *No consta*. Archiv v Méridě odpověděl pravdivě. Takový člověk se nenarodil.
 
@@ -200,7 +200,7 @@ Starci nebyli. *Los ancianos* si učitel vymyslel, protože kniha bez starců by
 
 Kresby nevymyslel. Ty měl od někoho.
 
-Pak je tam věta, kterou R. M. podtrhl. Hana ji přečte nahlas, potichu, aby slyšela, jak zní.
+Pak je tam věta, kterou R. M. podtrhl. Hana ji přečte polohlasem, aby slyšela, jak zní.
 
 „*Un señor alemán. H. Wehrle. Mérida, 1976.*“
 
@@ -280,7 +280,7 @@ Sálová nezvedne oči od fotokopie.
 
 „Konrad Wehrle sedí v radě Úmluvy,“ řekne. „S hlasem poradním. Od února. Je to dlouholetý dárce. Platí byty, do kterých nás chce pan Brandl přestěhovat.“ Odmlčí se. „Na radě nabídl, že uloží naše seznamy. Na server. Ve třech zemích.“
 
-Hana si to zapíše. *Řekla S.*
+Hana zapisuje. *Řekla S.*
 
 „Dědicové,“ řekne Sálová. „Tak si říkají. Řekl mi to minulý týden. Osobně. Nad čajem.“
 
@@ -342,9 +342,7 @@ Hana se na ni dívá. Na ruce položené na desce svazku, na mozol na pravém pr
 
 „Má je?“ zeptá se Hana.
 
-Sálová se na ni podívá.
-
-„To vám neřeknu,“ řekne.
+„To vám neřeknu,“ řekne Sálová.
 
 Ticho. Za roletou projede auto a světlo jeho reflektorů přejede po stropu dílny zleva doprava.
 
@@ -384,7 +382,7 @@ Sálová se nepohne.
 
 „Ano,“ řekne.
 
-Neřekne nic dalšího. Neobhajuje se. Hana čeká na *protože* a žádné nepřijde. Sálová prostě sedí s dlaní na knize a dívá se na ni, a v její tváři je něco, co Hana viděla jen jednou, v archivu, když vyslovila slovo *únosy*. Jako by se ta žena o tolik let starší než ona něčeho bála a nevěděla, kam s tím.
+Neřekne nic dalšího. Neobhajuje se. Hana čeká na *protože* a žádné nepřijde. Sálová prostě sedí s dlaní na knize a dívá se na Hanu, a v její tváři je něco, co Hana viděla jen jednou, v archivu, když sama vyslovila slovo *únosy*. Jako by se ta žena o tolik let starší než ona něčeho bála a nevěděla, kam s tím.
 
 „Neříkám vám,“ řekne Hana, „co máte udělat.“
 
@@ -444,7 +442,7 @@ Na sedadle spolujezdce leží Anayova kniha. Vzala si ji s sebou z penzionu, ani
 
 Učitel z Méridy psal o studni, do které padaly hvězdy, a myslel si, že píše o Yucatánu. Pán z Německa hledal tu studnu po vesnicích a nikdo mu nic neřekl, protože tam žádná nebyla.
 
-Byla tady. Čtyřicet dva schodů pod sklepem s jablky. Pod horou, kde teď v noci svítí skála, kde za každou z osmi mřížek stojí číslo, a kde v lednu spaly děti.
+Byla tady. Čtyřicet dva schodů pod sklepem s jablky. Pod horou, kde teď v noci svítí skála, kde za každou z osmi mřížek stojí číslo a kde v lednu spaly děti.
 
 Hana nastartuje. Nad Chebem je jasno. Nad kostelem svatého Mikuláše se objevují první hvězdy, pomalu, jedna po druhé. Žádná nepadá.
 

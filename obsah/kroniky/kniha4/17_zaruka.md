@@ -2,7 +2,7 @@
 
 Dvanáct se vrátilo za tmy.
 
-Eren je nesl nahoru sám, s Ardem a s Vesou, jednoho po druhém, po suti, kterou v noci zmrzlý sníh udělal kluzkou jako sklo. Muži na kraji terasy ustoupili. Nikdo nemířil. Ve vnější síni čekala řada kamenů a na každém ležela kůže, srovnaná, jako by je někdo ráno vytřepal a čekal, kdy se vrátí. Vesina holka šla zase sama. Na dvanáctém kameni si sedla, přitáhla si kůži přes ramena a dívala se do ohně.
+Eren je nesl nahoru s Ardem a s Vesou, jednoho po druhém, po suti, kterou v noci zmrzlý sníh udělal kluzkou jako sklo. Muži na kraji terasy ustoupili. Nikdo nemířil. Ve vnější síni čekala řada kamenů a na každém ležela kůže, srovnaná, jako by je někdo ráno vytřepal a čekal, kdy se vrátí. Vesina holka šla zase sama. Na dvanáctém kameni si sedla, přitáhla si kůži přes ramena a dívala se do ohně.
 
 Starší z dvou sester z Ardovy desítky se na Erena podívala, když ji pokládal.
 
@@ -28,7 +28,7 @@ Maela stála s nimi. Tio ne. Tio zůstala v přístřešku u Sefy.
 
 Hlas mu zněl jinak, když nestál na bedně. Nesl se hůř. Lidé vzadu se nakláněli, aby slyšeli, a ti vpředu se neohlíželi, aby jim to řekli. Nechal to tak.
 
-Řekl jim všechno. Ne tak, jak by podával hlášení. Pomaleji. Víčko, voda jen z dolní tůně, pro všechny. Žádné zbraně v jeskyni, ani jejich, ani naše, a že Tal nechala vynést oštěpy ze síně dřív, než to slíbil kdokoli z nich. Kořist podle práce, a kolik, to se řekne spolu. Tři kameny. Kdo zabije, bude souzen. Všemi. I Dorn.
+Řekl jim všechno. Ne tak, jak by podával hlášení. Pomaleji. Víčko, voda jen z dolní tůně, pro všechny. Žádné zbraně v jeskyni, jejich ani naše, a že Tal nechala vynést oštěpy ze síně dřív, než to slíbil kdokoli z nich. Kořist podle práce, a kolik, to se řekne spolu. Tři kameny. Kdo zabije, bude souzen. Všemi. I Dorn.
 
 Na Dornovo jméno se nikdo neotočil. Všichni věděli, kde stojí.
 
@@ -74,7 +74,7 @@ Orrin se pohnul. Neudělal krok dopředu. Jen zvedl hlavu, a lidé, kteří stá
 
 „Pak budu čekat dál.“
 
-Orrin se na něj díval. Pak se usmál, tak jak se usmíval vždycky, vlídně a trochu smutně.
+Orrin se usmál, tak jak se usmíval vždycky, vlídně a trochu smutně.
 
 „Tohle umíš, Erene,“ řekl. „Čekat. To ti nikdo nevezme.“
 
@@ -84,17 +84,17 @@ Kotel to slyšel. Někdo se zasmál, ale nikdo se nepřidal.
 
 „Kdo chce, ať položí kámen,“ řekl Eren. „Sem. Na bednu. Kdo nechce, ať ho nechá ležet.“
 
-Nevěděl, kde to vzal. Nemělo to žádný řád, žádný záznam, nikdo to nemohl ověřit ani spočítat znovu. Kameny se daly přidat i ubrat. Ale ležely tu všude, pod sněhem, kolem ohnišť, na suti, a každý je měl po ruce.
+Nemělo to žádný řád, žádný záznam, nikdo to nemohl ověřit ani spočítat znovu. Kameny se daly přidat i ubrat. Ale ležely tu všude, pod sněhem, kolem ohnišť, na suti, a každý je měl po ruce.
 
 „A když jich bude málo?“ zeptal se Ardo.
 
 „Pak jim to nahoře řeknu. A řezák zůstane v bedně.“
 
-Ardo se na něj chvíli díval. Pak kývl, jako by to bylo to jediné, na co se chtěl zeptat.
+Ardo si ho chvíli měřil a pak kývl, jako by to bylo to jediné, na co se chtěl zeptat.
 
 Hela šla první. Sehnula se u ohniště, vyhrabala ze sněhu kámen velký jako vejce a položila ho na víko vedle řezáku. Nepodívala se na Erena. Vrátila se na své místo.
 
-Pak Ardo. Pak Vesa, s rukou pořád ovázanou, a za ní její lidé, jeden po druhém. Pak Bena, kulhavě, s nohama zabalenýma v kůži. Pak lidé, jejichž jména Eren neznal. Šli k bedně, pokládali kameny a vraceli se, a nikdo nic neříkal. Bylo slyšet jen sníh pod botami a cvaknutí kamene o kámen.
+Pak Ardo. Vesa, s rukou pořád ovázanou, a za ní její lidé, jeden po druhém. Bena, kulhavě, s nohama zabalenýma v kůži. A pak lidé, jejichž jména Eren neznal. Šli k bedně, pokládali kameny a vraceli se, a nikdo nic neříkal. Bylo slyšet jen sníh pod botami a cvaknutí kamene o kámen.
 
 Mladá matka stála dlouho.
 
@@ -102,11 +102,11 @@ Mladá matka stála dlouho.
 
 „Pak se sejdou tři kameny,“ řekl Eren. „A budeme se ptát. Všichni.“
 
-Dívala se na něj. Dítě na jejím boku se zavrtělo a vystrčilo ruku z plachty. Mladá matka se sehnula, vzala ze země kámen a dala ho dítěti do dlaně. Pak ho s ním odnesla k bedně a nechala dítě, aby ho pustilo samo.
+Dítě na jejím boku se zavrtělo a vystrčilo ruku z plachty. Mladá matka se sehnula, vzala ze země kámen a dala ho dítěti do dlaně. Odnesla ho s ním k bedně a nechala dítě, aby ho pustilo samo.
 
 Kámen se skutálel po hromadě a zůstal ležet na kraji.
 
-Od kamenů pod teplou skálou nepřišel nikdo. Haro stál se založenýma rukama. Svit se díval jinam. Dorn se díval na Erena, tím jedním okem, a v obličeji neměl nic. Lidé z Orrinových desítek stáli za nimi a někteří z nich se dívali na bednu. Dva z nich přišli. Muž a žena. Položili kameny a vrátili se zpátky ke svým, a nikdo z Orrinových jim nic neřekl.
+Od kamenů pod teplou skálou nepřišel nikdo. Haro stál se založenýma rukama. Svit hleděl jinam. Dorn se díval na Erena, tím jedním okem, a v obličeji neměl nic. Lidé z Orrinových desítek stáli za nimi a někteří z nich pokukovali po bedně. Dva z nich přišli. Muž a žena. Položili kameny a vrátili se zpátky ke svým, a nikdo z Orrinových jim nic neřekl.
 
 Maela stála vedle Orrina a nehýbala se.
 
@@ -120,7 +120,7 @@ Eren mlčel. Věděl, kdo by to udělal nejlíp. Stála u teplé skály a nehýb
 
 „Já,“ řekla Hela.
 
-Počítala nahlas. Brala kameny z hromady jeden po druhém a skládala je vedle bedny do sněhu, po deseti, do řad. Lidé se dívali. Někteří počítali s ní, polohlasem, a když se spletla, nikdo ji neopravil, protože se pletli taky. Trvalo to dlouho. Kotel byl tak tichý, že bylo slyšet, jak v tůních bublá voda.
+Počítala nahlas. Brala kameny z hromady jeden po druhém a skládala je vedle bedny do sněhu, po deseti, do řad. Někteří z přihlížejících počítali s ní, polohlasem, a když se spletla, nikdo ji neopravil, protože se pletli taky. Trvalo to dlouho. Kotel byl tak tichý, že bylo slyšet, jak v tůních bublá voda.
 
 „Sto šedesát sedm,“ řekla Hela.
 
@@ -136,7 +136,7 @@ Narovnala se. Na víku zůstal ležet řezák v cárech, prázdný a šedý, a v
 
 Orrin chvíli mlčel. Pak kývl. Ne Erenovi. Kotli.
 
-„Tak jim ho dej,“ řekl. „Řezák je tvůj. Řekl jsem to od začátku.“ Odmlčel se. „Článek je můj. Uschoval jsem ho pro všechny, kdo tu jsou. A tady dnes stojí jen ti, kdo položili kámen.“
+„Tak jim ho dej,“ řekl. „Řezák je tvůj. Řekl jsem to od začátku. Článek je můj. Uschoval jsem ho pro všechny, kdo tu jsou. A tady dnes stojí jen ti, kdo položili kámen.“
 
 Otočil se a šel nahoru, k přístřešku. Haro za ním, Svit, Dorn. Maela šla taky. U teplé skály se jednou ohlédla. Ne na Erena. Na řady kamenů ve sněhu.
 
@@ -152,7 +152,7 @@ Celou cestu přes kotel si tu větu opakoval. Krátkou, místní, se dvěma cvak
 
 „Tio,“ řekl a ukázal nahoru, k přístřešku. Pak to řekl. Tak, jak to měl v puse.
 
-Ru se na něj díval. Pak se mu roztáhla pusa a začal se smát. Nahlas, s rukama na kolenou, tak, až se mu pára před obličejem roztrhala. Řekl to po Erenovi. Jeho slovy, Erenovou výslovností, s cvaknutími na špatných místech, a smál se ještě víc.
+Ru zamrkal. Pak se mu roztáhla pusa a začal se smát. Nahlas, s rukama na kolenou, tak, až se mu pára před obličejem roztrhala. Řekl to po Erenovi. Jeho slovy, Erenovou výslovností, s cvaknutími na špatných místech, a smál se ještě víc.
 
 Pak to řekl správně. Úplně jinak. Delší a měkčí, a obě cvaknutí byla tam, kde je měla Tio.
 
@@ -176,7 +176,7 @@ Eren se díval.
 
 Ten den předtím. Lidé, kteří balí, než se rozhodnou, kam jdou. Nebo už se rozhodli a nikomu to neřekli. Orrin stál uprostřed toho všeho, s rukama za zády, a mluvil s každým, kdo k němu přišel. Krátce. Pak ten člověk odešel a balil dál.
 
-Eren dopletl řadu. Pak odložil pruty a šel nahoru.
+Eren dopletl řadu, odložil pruty a šel nahoru.
 
 *
 
@@ -200,13 +200,13 @@ Maela zvedla hlavu.
 
 „Kam?“ zeptal se Eren.
 
-„Dolů. Kolem velké vody a dál.“ Orrin pokrčil rameny. „Vesa říkala, že u jezera bylo víc trávy. Že tam sníh tolik nedrží. Že tam byly stopy zvěře až k vodě.“ Podíval se na Erena. „Tady budeme hosté. Pod oštěpy. Pod pravidly, která jsi jim nahoře vyměnil za náš poslední nástroj. Já nechci být host.“
+„Dolů. Kolem velké vody a dál.“ Orrin pokrčil rameny. „Vesa říkala, že u jezera bylo víc trávy. Že tam sníh tolik nedrží. Že tam byly stopy zvěře až k vodě. Tady budeme hosté. Pod oštěpy. Pod pravidly, která jsi jim nahoře vyměnil za náš poslední nástroj. Já nechci být host.“
 
 „Bylo tam šedesát mužů se sekerami,“ řekl Eren. „U jezera. Tak to Vesa říkala taky.“
 
 „Ano.“ Orrin kývl. „Řekla to. A já to slyšel.“
 
-Nechal to ležet. Eren nevěděl, jestli to bylo varování, nebo slib, nebo nic.
+Nechal to ležet. Bylo to varování, nebo slib, nebo nic.
 
 „Článek ti nedám,“ řekl Orrin. „Ne proto, že bych ho potřeboval. Bez tebe je to kus kovu. Ale je to jediný kus kovu, který z té lodi zbyl a o kterém jsi nerozhodl ty.“ Usmál se. „Nech mi aspoň tohle.“
 
@@ -240,7 +240,7 @@ Hlas měla tichý a hrubý. Dívala se na Orrina. Ne vyčítavě. Skoro vlídně
 
 „Já nikam nepůjdu,“ řekla. „Na cestu ji potřebujou. Ty, co půjdou.“ Nadechla se a v hrudi jí zachrastilo. „Spočítal to dobře.“
 
-Orrin se na ni díval a mlčel. Pak se podíval na Maelu, jako by čekal, že to potvrdí. Jako vždycky, když něco řekl a pak se podíval dolů, k bedně, a řekl *Maela to spočítala*.
+Orrin mlčel. Pak se podíval na Maelu, jako by čekal, že to potvrdí. Jako vždycky, když něco řekl a pak se podíval dolů, k bedně, a řekl *Maela to spočítala*.
 
 „Ta kůže udrží na cestě naživu dítě,“ řekl tiše. „Možná dvě. Spočítej to, Maelo.“
 
@@ -266,15 +266,15 @@ Haro pustil kůži na zem a udělal krok.
 
 „Nech ji,“ řekl Orrin.
 
-Haro se zastavil. Orrin se nepohnul. Seděl na srolované kůži a díval se na Maelu, jak stojí u skály s balíčkem v rukou, a v obličeji měl něco, co Eren u něj ještě neviděl. Nebyl to vztek. Bylo to spíš překvapení. Jako když se člověk spolehne na zámek, který sám postavil, a zámek se otevře někomu jinému.
+Haro se zastavil. Orrin se nepohnul. Seděl na srolované kůži a sledoval Maelu, jak stojí u skály s balíčkem v rukou, a v obličeji měl něco, co Eren u něj ještě neviděl. Nebyl to vztek. Bylo to spíš překvapení. Jako když se člověk spolehne na zámek, který sám postavil, a zámek se otevře někomu jinému.
 
 „Řekl jsi mi, kde je,“ řekla Maela. „Ten první den. Než jsi šel za ním.“ Kývla k Erenovi, aniž se na něj podívala. „Vždycky mi to řekneš první.“
 
 „Ano.“
 
-„Myslela jsem, že je to poctivost.“ Maela držela balíček oběma rukama u prsou. „Možná je. Já jsem počítala s tebou, Orrine. Celou dobu. Proto jsem sem šla.“ Podívala se na Sefu pod svou kůží. „Ty počítáš jenom ty, kdo půjdou.“
+„Myslela jsem, že je to poctivost.“ Maela držela balíček oběma rukama u prsou. „Možná je. Já jsem počítala s tebou, Orrine. Celou dobu. Proto jsem sem šla.“ Očima ukázala na Sefu pod svou kůží. „Ty počítáš jenom ty, kdo půjdou.“
 
-Orrin mlčel. Pak pomalu kývl, jako by mu dala za pravdu.
+Orrin dlouho mlčel, než pomalu kývl, jako by mu dala za pravdu.
 
 „Ano,“ řekl. „To je pravda.“
 
@@ -332,21 +332,21 @@ Stáli na něm čtyři. Eren, Maela, Tal a Dabra. A Ru, který se přitiskl ke s
 
 Eren rozbalil řezák.
 
-Cáry spadly na kámen. Tubus ležel v jeho rukou, šedý a studený, delší než předloktí, s rukojetí, kterou naposledy svíral tu noc u žebra. Nesvítil. Nic na něm nesvítilo. Kotel pod nimi ztichl. Skoro nikdo z nich ho neviděl pracovat. Jen o něm slyšeli.
+Cáry spadly na kámen. Tubus ležel v jeho rukou, šedý a studený, delší než předloktí, s rukojetí, kterou naposledy svíral to ráno u žebra. Nesvítil. Nic na něm nesvítilo. Kotel pod nimi ztichl. Skoro nikdo z nich ho neviděl pracovat. Jen o něm slyšeli.
 
 Tal se na něj dívala. Nevztáhla ruku.
 
 Eren sáhl k límci.
 
-Vytáhl zpoza pasu nůž a přiložil ho k švu. Prsty se mu třásly zimou a musel to udělat dvakrát. Bílá nit, tenká jako vlas, ta, která se nikdy nepřetrhne, se pod čepelí přece jen rozešla. Steh za stehem. Pak sáhl do švu a vytáhl háček.
+Vytáhl zpoza pasu nůž a přiložil ho ke švu. Prsty se mu třásly zimou a musel to udělat dvakrát. Bílá nit, tenká jako vlas, ta, která se nikdy nepřetrhne, se pod čepelí přece jen rozešla. Steh za stehem. Sáhl do švu a vytáhl háček.
 
 Malý ohyb drátu. Na dlani vypadal jako nic. Jako kus, který upadne z rukávu a nikdo se pro něj nesehne.
 
-Ten, kdo by věděl, co to je, by ho nepotřeboval. Ten, kdo by to nevěděl, by ho nepoznal. Eren ho držel na dlani a díval se na něj a cítil, jak se v něm zvedá něco, co neumí pojmenovat. Ne úleva. To by poznal. Úlevu znal. Tohle bylo těžší a pomalejší, jako když si člověk po dlouhé směně sedne a teprve tehdy ucítí, jak ho bolí nohy.
+Ten, kdo by věděl, co to je, by ho nepotřeboval. Ten, kdo by to nevěděl, by ho nepoznal. Eren ho držel na dlani a cítil, jak se v něm zvedá něco, co neumí pojmenovat. Ne úleva. To by poznal. Úlevu znal. Tohle bylo těžší a pomalejší, jako když si člověk po dlouhé směně sedne a teprve tehdy ucítí, jak ho bolí nohy.
 
 Vložil háček do cárů. Pak řezák. Zabalil to dohromady, jak to bylo předtím, a podal to Tal.
 
-Tal to vzala oběma rukama. Byla to těžká věc a ona byla stará. Ru jí podržel loket. Tal se podívala na balík v rukou, pak na Erena, a pak řekla něco, krátce, Ruovi.
+Tal to vzala oběma rukama. Byla to těžká věc a ona byla stará. Ru jí podržel loket. Tal sklopila oči k balíku, zvedla je k Erenovi a pak řekla něco, krátce, Ruovi.
 
 „Ona se ptá, co je to malé,“ řekl Ru.
 
@@ -360,15 +360,15 @@ Maela stála vedle něj s balíčkem u prsou.
 
 Eren se na ni otočil. Nenatáhl ruku. Jen se na ni podíval a čekal.
 
-Maela se dívala na Dabru. Dlouho. Na malou ženu se světloplachýma očima a s rukama, které byly širší než její. Pak se podívala dolů, pod stupeň, na kotel. Na lidi ve sněhu. Na Tio, která stála dole s Helou a se Sefou a dívala se nahoru.
+Maela se dívala na Dabru. Dlouho. Na malou ženu se světloplachýma očima a s rukama, které byly širší než její. Pak stočila pohled dolů, pod stupeň, na kotel. Na lidi ve sněhu. Na Tio, která stála dole s Helou a se Sefou a dívala se nahoru.
 
-Pak rozbalila plachtu.
+Rozbalila plachtu.
 
 Článek ležel v její dlani, malý a hranatý. Na jedné straně dvě rysky. Jedna stála, slabě, zeleně. Druhá blikala. Rychle a krátce, jako tep zvířete, které se bojí.
 
 Dabra ucukla.
 
-Nebylo to moc. Jen se jí stáhla víčka a hlava se trochu odvrátila, jako když člověk vejde ze tmy do světla. Za ní, pod převisem, se skalní lidé pohnuli. Pak zase zůstali stát.
+Nebylo to moc. Jen se jí stáhla víčka a hlava se trochu odvrátila, jako když člověk vejde ze tmy do světla. Za ní, pod převisem, se skalní lidé pohnuli a zase zůstali stát.
 
 „Tys to slíbil,“ řekla Maela.
 
@@ -384,9 +384,9 @@ Blikání zmizelo. Zůstala jen ruka na ruce a mezi nimi něco malého a tepléh
 
 Na niku nevylezl Eren.
 
-Vylezl na ni mladý lovec. Tal ho zavolala jedním slovem a on sešel z terasy, vzal od ní balík a stál s ním chvíli na stupni. Díval se na Erena. Pak se otočil ke skále, chytil se, zapřel se nohou a vylezl, jednou rukou, s balíkem pod paží. Uložil ho do niky. Na levou stranu.
+Vylezl na ni mladý lovec. Tal ho zavolala jedním slovem a on sešel z terasy, vzal od ní balík a stál s ním chvíli na stupni, obrácený k Erenovi. Pak se otočil ke skále, chytil se, zapřel se nohou a vylezl, jednou rukou, s balíkem pod paží. Uložil ho do niky. Na levou stranu.
 
-Pak slezl a odstoupil.
+Slezl a odstoupil.
 
 Od zálivu vylezl na stupeň skalní člověk. Mladý, menší než Dabra, s rukama, které byly samé šlachy. Dabra vytáhla zpoza pasu kus kůže, zabalila do něj článek a dala mu ho. Mladý skalní člověk vylezl na niku tak, jak skalní lidé lezou, bez zaváhání, jako by stěna byla schody. Uložil článek na pravou stranu. Mezi oběma kusy zůstala mezera na dlaň.
 
@@ -398,7 +398,7 @@ Nika byla zase jen tmavší skvrna ve skále. Nic se v ní nehýbalo. Nic nesví
 
 Tal se podívala na Dabru. Dabra na Tal. Neřekly nic, ani tou starou řečí, a Eren viděl, jak se jejich ruce pohnuly. Ne k sobě. Každá k sobě, k prsům, dlaní na srdce. Tak jako se Dabra představila u horní tůně, když řekla svoje jméno.
 
-Pak Dabra slezla k vodě a skalní lidé zmizeli pod převisem. Tal se otočila a Ru ji vedl zpátky po skále na terasu. Na stupni zůstali Eren a Maela.
+Dabra slezla k vodě a skalní lidé zmizeli pod převisem. Tal se otočila a Ru ji vedl zpátky po skále na terasu. Na stupni zůstali Eren a Maela.
 
 *
 
@@ -412,7 +412,7 @@ Nevylezl.
 
 „Teď už nemáme nic,“ řekla Maela.
 
-Nebyla to otázka. Stála vedle něj, bez kůže, jen v šedé bundě, a třásla se zimou. Eren si sundal svou plachtu z ramen a podal jí ji. Vzala si ji.
+Stála vedle něj, bez kůže, jen v šedé bundě, a třásla se zimou. Eren si sundal svou plachtu z ramen a podal jí ji. Vzala si ji.
 
 „Ne,“ řekl.
 
@@ -422,7 +422,7 @@ Teď ji držela Tal. Napůl. A Dabra napůl. A žádná z nich nevěděla, za co
 
 „Dobře,“ řekla Maela.
 
-Eren se na ni podíval. Řekla to stejně jako tehdy, ve tmě pod plachtou, když jí poprvé řekl o terminálu. *Dobře.* Neznamenalo to, že je to dobře. Znamenalo to, že slyšela.
+Řekla to stejně jako tehdy, ve tmě pod plachtou, když jí poprvé řekl o terminálu. *Dobře.* Neznamenalo to, že je to dobře. Znamenalo to, že slyšela.
 
 „Kde budeme spát?“ zavolala zdola Tio.
 
@@ -434,7 +434,7 @@ Ukázala na Sefu. Pak na své lůžko u stěny, kůže na plochém kameni, na kt
 
 „Tady,“ řekla Maela.
 
-Pak se podívala na Erena.
+Obrátila se k Erenovi.
 
 „Rozhodla jsem já,“ řekla.
 
@@ -446,7 +446,7 @@ Pak se podívala na Erena.
 
 „A ne proti tobě.“
 
-Eren mlčel. Nevěděl, co by na to řekl. Maela to věděla. Sestoupila ze stupně na suť, opatrně, po kluzkém sněhu, a šla k Tio a k Sefě.
+Eren mlčel. Maela na odpověď nečekala. Sestoupila ze stupně na suť, opatrně, po kluzkém sněhu, a šla k Tio a k Sefě.
 
 *
 

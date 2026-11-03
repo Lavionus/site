@@ -10,7 +10,7 @@ Dole, v kotli, se řadili lidé z Orrinových desítek.
 
 Nesli všechno, co měli. Srolované plachty na zádech, svázané lanem. Kůže. Sekery. Láhve. Dva muži nesli bednu za uši, další dva druhou, Haro se Svitem třetí. Děti šly mezi dospělými, zabalené tak, že jim nebylo vidět obličej. Řada stála na dolním kraji kotle, kde začínala rokle, a čekala. Nikdo si nesedl. Sníh byl na sezení moc studený.
 
-Eren se díval nahoru, za Ikkuem, dokud nezmizel mezi skalami. Pak se podíval dolů.
+Eren se díval nahoru, za Ikkuem, dokud nezmizel mezi skalami, a teprve potom dolů.
 
 Orrin stál v čele řady. Díval se nahoru taky.
 
@@ -42,7 +42,7 @@ Haro udělal půl kroku. Nezvedl ruce. Jen se postavil tak, že stál mezi Erene
 
 „Jde s námi,“ řekl Haro.
 
-Eren se na něj díval. Byl o hlavu menší než Haro a v ramenou užší o dlaň. Za pasem měl nůž. Haro taky. Dorn taky. Svit taky. Kdyby teď Eren natáhl ruku a chytil Dorna za rukáv, nestalo by se nic. Nebo by se stalo všechno.
+Eren byl o hlavu menší než Haro a v ramenou užší o dlaň. Za pasem měl nůž. Haro taky. Dorn taky. Svit taky. Kdyby teď Eren natáhl ruku a chytil Dorna za rukáv, nestalo by se nic. Nebo by se stalo všechno.
 
 Nenatáhl ruku.
 
@@ -80,11 +80,11 @@ Haro a Svit ji snesli z řady, každý za jedno ucho, a postavili ji doprostřed
 
 Orrin k ní přišel a položil na víko ruku.
 
-„Pro děti,“ řekl. Nahlas, ke kotli. Lidé vylézali zpod plachet a stavěli se do sněhu, aby viděli. „Ne pro mě a ne pro Erena. Pro děti. Na tu pravou zimu.“ Odmlčel se. „Ta ještě nepřišla. Tohle je jen začátek.“
+„Pro děti,“ řekl. Nahlas, ke kotli. Lidé vylézali zpod plachet a stavěli se do sněhu, aby viděli. „Ne pro mě a ne pro Erena. Pro děti. Na tu pravou zimu. Ta ještě nepřišla. Tohle je jen začátek.“
 
 Pak sundal ruku z víka.
 
-Kotel mlčel. Eren se díval na bednu a věděl, kolik v ní je. Tři sta dávek. Pro dvě stě lidí den a kousek. Pro děti týden, dva, když se bude dávat jen dětem a napůl. Bylo to málo a bylo to víc, než kdokoli čekal.
+Kotel mlčel. Eren věděl, kolik v bedně je. Tři sta dávek. Pro dvě stě lidí den a kousek. Pro děti týden, dva, když se bude dávat jen dětem a napůl. Bylo to málo a bylo to víc, než kdokoli čekal.
 
 A bylo to Orrinovo. Tak jako všechno, co kdy Orrin dal. Bedna stála uprostřed kotle a každý, kdo z ní kdy vezme, bude vědět, kdo ji tam postavil.
 
@@ -98,7 +98,7 @@ Maela sešla ze síně se slunkem.
 
 Orrin ji uviděl. Vystoupil z řady a šel k ní, přes kotel, mezi plachtami a ohništi, až k suti. Eren to viděl z dálky. Nešel blíž. Bylo to jejich.
 
-Orrin něco řekl. Maela zavrtěla hlavou. Orrin řekl ještě něco, kratšího. Maela mlčela. Pak se Orrin sehnul k Tio, přidřepl si, aby měli oči ve stejné výšce, a řekl něco jí. Tio se na něj dívala. Pak kývla. Orrin jí položil ruku na hlavu, krátce, a vstal.
+Orrin něco řekl. Maela zavrtěla hlavou. Orrin řekl ještě něco, kratšího. Maela mlčela. Orrin se sehnul k Tio, přidřepl si, aby měli oči ve stejné výšce, a řekl něco jí. Tio kývla. Orrin jí položil ruku na hlavu, krátce, a vstal.
 
 Vrátil se k řadě. Maela zůstala pod sutí.
 
@@ -124,9 +124,9 @@ Orrin chvíli čekal. Pak kývl. Ne Kajovi. Sám sobě. Jako člověk, který si
 
 *
 
-Pak už jen chodil podél řady.
+Zbytek rána chodil podél řady.
 
-Od jednoho k druhému, krátce, jako včera u přístřešku. Někomu položil ruku na rameno. Někomu upravil řemen na zádech. Dětem se podíval do obličeje. Dvě rodiny z kotle, které tam ráno ještě nebyly, se přidaly na konec, s ranci na zádech a s dětmi v náručí, a Orrin k nim došel a řekl jim něco a oni se postavili do řady. Muž a žena, kteří včera položili kámen na bednu, z řady vystoupili. Orrin se na ně podíval. Nic jim neřekl. Odešli k domům.
+Od jednoho k druhému, krátce, jako včera u přístřešku. Někomu položil ruku na rameno. Někomu upravil řemen na zádech. Dětem se podíval do obličeje. Dvě rodiny z kotle, které tam ráno ještě nebyly, se přidaly na konec, s ranci na zádech a s dětmi v náručí, a Orrin k nim došel a řekl jim něco a oni se postavili do řady. Muž a žena, kteří včera položili kámen na bednu, z řady vystoupili. Orrin jim nic neřekl. Odešli k domům.
 
 Maela stála pod sutí a pohybovala rty.
 
@@ -138,7 +138,7 @@ Eren to poznal i na tu dálku. Počítala. Ne prsty. Rty, jak počítala dávky,
 
 „Sto tři,“ řekla Maela. Nepodívala se na něj. „S dětmi.“
 
-Sto tři. Tři sta dvanáct v kotli první den. Teď odcházela třetina.
+Sto tři. Tři sta dvanáct na svahu první den. Teď odcházela třetina.
 
 Eren si to v hlavě rozložil, jak by si to rozložila ona. Tři sta devět živých ze čtvrtého. Sto tři odchází. Zbývá dvě stě šest. Čtrnáct Vesiných. Dvě stě dvacet. Jedna bedna. Dvanáct kamenů v síni. Čtyři domy, jeden se střechou.
 
@@ -148,7 +148,7 @@ Eren si to v hlavě rozložil, jak by si to rozložila ona. Tři sta devět živ
 
 „A oni?“ Kývla nahoru, k síni, k terase, k hloubce. „Kolik jich je?“
 
-Eren nevěděl. Talini nikdy nestáli všichni pohromadě. Skalní lidé byli dole za zdí, devadesát tři, když je počítal. Nevěděl, kolik jich je teď.
+Eren nevěděl. Talini nikdy nestáli všichni pohromadě. Skalní lidé byli dole za zdí, devadesát tři, když je počítal. Kolik jich je teď, netušil.
 
 „Nevím,“ řekl.
 
@@ -162,7 +162,7 @@ Orrin přišel naposledy, když řada už stála celá.
 
 Díval se na Erena chvíli, mlčky. Pak natáhl ruku.
 
-Eren ji vzal. Nevěděl proč. Ruka byla studená a suchá a pevná.
+Eren ji vzal. Ruka byla studená a suchá a pevná.
 
 „Děkuju, Erene,“ řekl Orrin. „Za to, co jsi pro nás udělal.“
 
@@ -170,7 +170,7 @@ Pustil jeho ruku.
 
 Eren stál.
 
-Ta věta mu ležela v hrudi jako kámen, který spolkl. Zněla stejně jako u ohně pod sedmým. Stejný hlas, stejná slova, stejný úsměv. Za řezák, pomyslel si tehdy. Za to, že rozchodil řezák. Pak na svahu cestou dolů dotlačil Orrina k otázce a dostal *koho jsi tam chtěl slyšet* a *já vím*. Od té doby si tu větu nesl. Ležel s ní pod plachtou a otáčel ji, ze všech stran, jako se otáčí díl, u kterého nevíš, kam patří.
+Ta věta mu ležela v hrudi jako kámen, který spolkl. Zněla stejně jako u ohně nad vrakem sedmého. Stejný hlas, stejná slova, stejný úsměv. Za řezák, pomyslel si tehdy. Za to, že rozchodil řezák. Pak na svahu cestou dolů dotlačil Orrina k otázce a dostal *koho jsi tam chtěl slyšet* a *já vím*. Od té doby si tu větu nesl. Ležel s ní pod plachtou a otáčel ji, ze všech stran, jako se otáčí díl, u kterého nevíš, kam patří.
 
 Za řezák. Za vodu. Za pravidla. Za to, že je dnes nechal odejít. Za terminál v sáčku od náhradních dílů. Za devatenáct dní, kdy se nesháněl.
 
@@ -184,7 +184,7 @@ Nebyla to odvaha ani pokora. Bylo to jako s mazanicí v chodbě. Za tou stěnou 
 
 „Ať dojdete,“ řekl.
 
-Orrin se na něj díval. Pak kývl. Možná čekal něco jiného. Nebo ne.
+Orrin kývl. Možná čekal něco jiného. Nebo ne.
 
 Otočil se a šel do čela řady.
 
@@ -192,7 +192,7 @@ Otočil se a šel do čela řady.
 
 Řada se pohnula.
 
-Pomalu, jako se hýbe něco velkého a těžkého. Nejdřív čelo, pak střed, pak konec, a mezi nimi se natahovaly mezery a zase stahovaly. Šli roklí dolů, kolem rozštípnutého balvanu, kde na sněhu už nebylo vidět nic, a pak dolů do údolí, kolem domů, kolem čtvrtého domu s kruhem kůlů a s osmi řadami prutů. Vesa stála u dveří prvního domu a dívala se na ně. Nic neřekla.
+Pomalu, jako se hýbe něco velkého a těžkého. Nejdřív čelo, pak střed, pak konec, a mezi nimi se natahovaly mezery a zase stahovaly. Šli roklí dolů, kolem rozštípnutého balvanu, kde na sněhu už nebylo vidět nic, a pak dolů do údolí, kolem domů, kolem čtvrtého domu s kruhem kůlů a s osmi řadami prutů. Vesa stála u dveří prvního domu. Nic neřekla.
 
 Pak údolím dolů, k velké vodě. Ve sněhu za nimi zůstávala stopa. Tmavá, rozšlapaná, široká jako cesta.
 
@@ -200,9 +200,9 @@ Tio vytrhla Maele ruku a vyběhla na kraj suti.
 
 Zvedla ruku a mávala. Celou rukou, jak mávala tehdy modulu, když odletěl. Nikdo z řady se neotočil. Nebo se někdo otočil, ale na tu dálku to nebylo vidět. Tio mávala dál.
 
-Eren se díval na ni. Nikdo jí neřekl, co to znamená. Mávala, protože se to dělá, když něco odjíždí.
+Nikdo jí neřekl, co to znamená. Mávala, protože se to dělá, když něco odjíždí.
 
-Pak přestala. Nechala ruku klesnout a dívala se.
+Pak přestala. Nechala ruku klesnout a zůstala stát.
 
 „Co ti řekl?“ zeptal se Eren. Než si to stihl rozmyslet.
 
@@ -224,7 +224,7 @@ Ve vnější síni, u prostředního ohně, kde předtím ležel Ikku. Teď tam 
 
 Třetí místo bylo prázdné.
 
-Kotel se na to ptal ráno, když Orrinova řada zmizela u velké vody. Eren se zeptal u bedny s rozbitým rohem, kdo bude sedět. Nikdo neodpověděl hned. Pak Bena řekla *Hela*, a Ardo, a pak další, a Hela přišla od domů s rukama v hlíně, protože zrovna mazala stěnu, a dívala se na ně.
+Kotel se na to ptal ráno, když Orrinova řada zmizela u velké vody. Eren se zeptal u bedny s rozbitým rohem, kdo bude sedět. Nikdo neodpověděl hned. Pak Bena řekla *Hela*, a Ardo, a pak další, a Hela přišla od domů s rukama v hlíně, protože zrovna mazala stěnu.
 
 „Jedla jsem to maso,“ řekla.
 
@@ -252,7 +252,7 @@ Stál u ústí. Mluvil rychle a ukazoval rukama. Na sebe, na hlavu, na Kaje. Ru 
 
 Kaj stál a nehýbal se.
 
-Pak se Tal podívala na Erena.
+Tal obrátila oči k Erenovi.
 
 Eren řekl, co viděl. Nic víc. Že přiběhl potom. Že tlačil na ránu. Že viděl Dornův nůž a Hara s masem a Svita s oštěpem. Že Kaj stál u balvanu bílý a že se ho Eren zeptal a Kaj neřekl nic.
 
@@ -264,11 +264,11 @@ Ru to přeložil. Tal mlčela.
 
 Ammu mluvila poslední.
 
-Seděla u ohně, kde předtím seděla u Ikkua. V klíně měla dítě. Mluvila dlouho a tiše a nedívala se na nikoho. Ani na Kaje. Ru to nepřekládal hned. Poslouchal a díval se do země.
+Seděla u ohně, kde předtím seděla u Ikkua. V klíně měla dítě. Mluvila dlouho a tiše a nedívala se na nikoho. Ani na Kaje. Ru to nepřekládal hned. Poslouchal se skloněnou hlavou.
 
 „Ona říká,“ řekl nakonec, „že Ikku nosil. Dřevo. Maso. Vodu. Kůže. Že to nosil každý den.“ Odmlčel se. „Že teď to nebude nosit nikdo.“
 
-Pak řekla Ammu ještě něco. Kratšího.
+Ammu řekla ještě něco. Kratšího.
 
 Ru se na Erena nepodíval. Podíval se na Kaje.
 
@@ -280,9 +280,9 @@ Kaj zavřel oči.
 
 Staří mluvili dlouho.
 
-Tal a Dabra tou starou řečí, s rukama, a Hela česky, a Ru mezi nimi, z jedné strany na druhou, až mu ochraptěl hlas. Eren stál u stěny a nerozuměl skoro ničemu. Slyšel, jak Hela říká *maso* a *všichni* a *já taky*. Slyšel, jak Tal říká slovo, které Ru přeložil jako *dítě*, a pak to slovo zopakovala ještě dvakrát. Slyšel, jak Dabra říká něco o vodě, a Tal kývá.
+Tal a Dabra tou starou řečí, s rukama, a Hela naší řečí, a Ru mezi nimi, z jedné strany na druhou, až mu ochraptěl hlas. Eren stál u stěny a nerozuměl skoro ničemu. Slyšel, jak Hela říká *maso* a *všichni* a *já taky*. Slyšel, jak Tal říká slovo, které Ru přeložil jako *dítě*, a pak to slovo zopakovala ještě dvakrát. Slyšel, jak Dabra říká něco o vodě, a Tal kývá.
 
-Jednou se Hela otočila a podívala se na Erena. Jako by se chtěla zeptat. Eren se nepohnul. Hela se otočila zpátky a řekla něco sama.
+Jednou se Hela otočila k Erenovi. Jako by se chtěla zeptat. Eren se nepohnul. Hela se otočila zpátky a řekla něco sama.
 
 Pak to bylo.
 
@@ -298,7 +298,7 @@ Kaj sáhl k pasu. Nůž tam neměl. Neměl ho od chvíle, kdy si sedl na Talin k
 
 „Ano,“ řekl.
 
-Pak mluvila Hela. Česky, přímo ke Kajovi, a Ru to překládal Tal a Dabře, ne Kajovi.
+Pak mluvila Hela. Naší řečí, přímo ke Kajovi, a Ru to překládal Tal a Dabře, ne Kajovi.
 
 „A my, co jsme to maso jedli,“ řekla Hela, „dáme Ammu první kus. Z každého lovu, ze svého. Do jara.“ Podívala se na Erena. „Kdo chce. Nikdo za nikoho.“
 
@@ -310,7 +310,7 @@ Pak řekla Tal Dornovo jméno.
 
 Jednou. Nahlas. Do síně, ne nikomu. Ru to nepřeložil. Jméno se nepřekládá.
 
-Pak řekla Svitovo jméno. A Harovo.
+Svitovo jméno. A Harovo.
 
 A pak řekla jedno slovo, které Ru přeložil pomalu a nejistě, jako by ho nikdy nepotřeboval.
 
@@ -318,11 +318,11 @@ A pak řekla jedno slovo, které Ru přeložil pomalu a nejistě, jako by ho nik
 
 Dabra zvedla dlaň. Na srdce.
 
-Hela se dívala do ohně. Pak zvedla dlaň taky. Pomalu, jako by si nebyla jistá, jestli se to tak dělá.
+Hela zaváhala a zvedla dlaň taky. Pomalu, jako by si nebyla jistá, jestli se to tak dělá.
 
 Eren stál u stěny a myslel na rejstřík.
 
-Někde za hvězdami, v úřadech, kde ho soudili, byl každý řádek uložený. Každé jméno, každý podpis, každý podpis i každé odmítnutí. Nic se tam neztrácelo. Kdo jednou byl v záznamu, byl v něm navždy, a s ním jeho žena a dítě, přidružené.
+Někde za hvězdami, v úřadech, kde ho soudili, byl každý řádek uložený. Každé jméno, každý podpis i každé odmítnutí. Nic se tam neztrácelo. Kdo jednou byl v záznamu, byl v něm navždy, a s ním jeho žena a dítě, přidružené.
 
 Tady trestali tím, že jméno zapomenou.
 
@@ -342,7 +342,7 @@ Eren na ni počkal na terase. Stála chvíli v ústí a mhouřila oči do bílé
 
 Eren mlčel.
 
-„Ru to dětem ukázal první den,“ řekla Hela. „Řekls to u beden. Že Bri u toho nebyl.“ Pořád se dívala na ruce. „Nikdo za to nemohl. Ani Ru, ani Tal, ani ty bobule. Bri prostě nebyl u toho, když to Ru ukazoval.“
+„Ru to dětem ukázal první den,“ řekla Hela. „Řekls to u beden. Že Bri u toho nebyl. Nikdo za to nemohl. Ani Ru, ani Tal, ani ty bobule. Bri prostě nebyl u toho, když to Ru ukazoval.“
 
 „Ano.“
 
@@ -366,7 +366,7 @@ Vrátil se za soumraku a vzal další. Na suti ležela hromada, kterou místní 
 
 Při posledním kameni se zastavil u Erena.
 
-Neřekl nic. Jen stál a dýchal, s kamenem na zádech, a pot mu v mrazu tuhl na čele. Pak se podíval na suť, na čtyři hromady kamenů nad Erenovými mrtvými. Na Briho. Na starou ženu z Heliny desítky. Na muže ze druhého. Na Lema.
+Neřekl nic. Jen stál a dýchal, s kamenem na zádech, a pot mu v mrazu tuhl na čele. Oči mu sjely na suť, na čtyři hromady kamenů nad Erenovými mrtvými. Na Briho. Na starou ženu z Heliny desítky. Na muže ze druhého. Na Lema.
 
 „Kolik jich tam nahoře je?“ zeptal se. „Jejich.“
 
@@ -374,7 +374,7 @@ Eren nevěděl. Nikdy se nezeptal.
 
 „Zeptej se Ammu,“ řekl.
 
-Kaj kývl. Pak se otočil a šel nahoru, s posledním kamenem, a Ammu šla za ním.
+Kaj kývl, otočil se a šel nahoru s posledním kamenem, a Ammu šla za ním.
 
 *
 
@@ -384,7 +384,7 @@ Stála u ní s Helou a s Vesou a kolem stály matky a děti, které Ardo svolal 
 
 „Děti,“ řekla. „Do dvanácti let. Polovina dávky na den.“ Podívala se na Helu. „Kolik jich je?“
 
-Hela to věděla. Znala je jménem. „Třicet osm,“ řekla. „S Vesinými.“
+Hela je znala jménem. „Třicet osm,“ řekla. „S Vesinými.“
 
 „Patnáct dní,“ řekla Maela. „Když se nikdo nesplete.“
 

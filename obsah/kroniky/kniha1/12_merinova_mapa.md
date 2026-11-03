@@ -30,17 +30,17 @@ Matěj ji v tom šeru skoro nepoznal. Stála u strouhy pod haldou, kde se sbíha
 
 „Jak víte, že sem chodím?“
 
-„Celá hora ví, že sem chodíš.“ Podívala se na vědro. „Ortliebovi pacholci se tomu smějou. Mnich chodí k žlabu se modlit k vodě.“
+„Celá hora ví, že sem chodíš.“ Podívala se na vědro. „Ortliebovi pacholci se tomu smějou. Mnich chodí ke žlabu se modlit k vodě.“
 
 Matěj ucítil, jak mu horko stoupá do tváří. Nic neřekl.
 
-Dobroslava sáhla do vaku a podala mu něco v pěsti. Byl to pruh plsti, tmavý a měkký, a voněl kouřem a sklepem s jablky. Matěj ho poznal, ještě než si ho přitiskl k obličeji. Ten pruh mu před šesti týdny uvázali přes oči.
+Dobroslava sáhla do vaku a podala mu něco v pěsti. Byl to pruh plsti, tmavý a měkký, a voněl kouřem a sklepem s jablky. Matěj ho poznal, ještě než si ho přitiskl k obličeji. Ten pruh mu před sedmi týdny uvázali přes oči.
 
 „Ležel na kameni,“ řekla Dobroslava. „Včera za šera, když jsem tam nesla kůže. Nic jiného tam nebylo. Ani nůž, ani sůl.“ Pokrčila rameny. „Za dvacet let tam nikdy nenechali nic, co by nebylo pro mě.“
 
 „Chtějí mě.“
 
-„Chtějí tebe.“ Podívala se na něj. „Dnes. Za šera. Jestli půjdeš.“
+„Chtějí tebe. Dnes. Za šera. Jestli půjdeš.“
 
 Dnes byl Zelený čtvrtek. Večer se v oratoři obnaží oltář, až do velikonoční noci zmlknou zvony a Udalrich bude svolávat dřevěnou klapačkou. Matěj si to všechno vybavil, jako se člověk dívá na cestu, po které by měl jít, a ví, že po ní nepůjde.
 
@@ -74,7 +74,7 @@ U balvanu se posadila na kraj převisu, kde seděla tenkrát, s tyčí přes kol
 
 „Já tady hlídám,“ řekla. „Ty čekej.“
 
-Matěj si sedl pod převis. Bylo tu sucho a cítil pod sebou zem, kde tenkrát seděl s tím zraněným v náručí a balil ho do pláště. Otočil se. Na kamenném kraji, kde tenkrát ležel muž s nohou v drátě, nebylo nic. Jen měsíc.
+Matěj si sedl pod převis. Bylo tu sucho a cítil pod sebou zem, kde tenkrát seděl vedle zraněného a balil ho do pláště. Otočil se. Na místě, kde tenkrát seděl ten muž se zlomeným kotníkem, nebylo nic. Jen měsíc.
 
 Nečekal dlouho.
 
@@ -92,7 +92,7 @@ Nebyl to pozdrav ani otázka.
 
 „Kdo spala?“
 
-Merin se na něj podíval. Neodpověděl. Matěj se opravil sám.
+Merin neodpověděl. Matěj se opravil sám.
 
 „Stěna,“ řekl. „Ta teplá. Jako u nás na čelbě.“
 
@@ -166,9 +166,9 @@ Merin neodpověděl.
 
 Merin mlčel.
 
-„Kolik loktů,“ opakoval Matěj. „Ortlieb kope loket denně. Teď, když nemůže kopat dva dny, bude chtít kopat dva. Ješek to říkal. Chce dát na čelbu dvě party a platit dvojnásob. Kolik jim zbývá?“
+„Kolik loktů,“ opakoval Matěj. „Ortlieb kope loket denně. Teď, když dva dny nemohl kopat, bude chtít kopat dva. Ješek to říkal. Chce dát na čelbu dvě party a platit dvojnásob. Kolik jim zbývá?“
 
-Merin se na něj díval dlouho. Pak se otočil k malému muži a něco mu řekl. Malý muž odpověděl, déle, a v jeho hlase bylo něco, co Matěj poznal i bez slov: nesouhlas. Merin mu odpověděl jedním slovem. Malý muž se díval do země. Potom sáhl pod kazajku a vytáhl kožený tubus, dlouhý jako předloktí, převázaný řemínkem, a podal ho Merinovi, a nepodíval se přitom na Matěje.
+Merin dlouho mlčel. Pak se otočil k malému muži a něco mu řekl. Malý muž odpověděl, déle, a v jeho hlase bylo něco, co Matěj poznal i bez slov: nesouhlas. Merin mu odpověděl jedním slovem. Malý muž se díval do země. Potom sáhl pod kazajku a vytáhl kožený tubus, dlouhý jako předloktí, převázaný řemínkem, a podal ho Merinovi, a nepodíval se přitom na Matěje.
 
 *
 
@@ -220,7 +220,7 @@ Merin zastrčil svitek do tubusu a začal ho převazovat řemínkem. Nepodíval 
 
 „Já bych jim tu cestu neukázal.“
 
-„Ty bys ji neukázal.“ Merin se na něj podíval. „A kdo z těch ostatních by ji neukázal, až bude mít kůži v ruce?“
+„Ty bys ji neukázal,“ řekl Merin. „A kdo z těch ostatních by ji neukázal, až bude mít kůži v ruce?“
 
 Matěj neodpověděl.
 
@@ -230,7 +230,7 @@ Matěj neodpověděl.
 
 „Chci.“
 
-„Tak jak?“ Matěj slyšel, že zvyšuje hlas, a ztišil se, protože Dobroslava na kraji převisu otočila hlavu. „Jak ji mám zastavit? Mám kapky. Mám vědra. Mám vodu, která teče o tři prosby rychleji než před dvěma týdny. Ortlieb řekne, že je jaro a taje sníh, a bude mít pravdu. Pan Konrád mu uvěří, protože Ortlieb mu kope stříbro, a já mu nekopu nic. A ten šum, co jsem slyšel, cestou k vám, za stěnou. Ten mám jen od vás.“
+„Tak jak?“ Matěj slyšel, že zvyšuje hlas, a ztišil se, protože Dobroslava na kraji převisu otočila hlavu. „Jak ji mám zastavit? Mám kapky. Mám vědra. Mám vodu, která teče o dvě prosby rychleji než před dvěma týdny. Ortlieb řekne, že je jaro a taje sníh, a bude mít pravdu. Pan Konrád mu uvěří, protože Ortlieb mu kope stříbro, a já mu nekopu nic. A ten šum, co jsem slyšel, cestou k vám, za stěnou. Ten mám jen od vás.“
 
 „Ano,“ řekl Merin.
 
@@ -310,7 +310,7 @@ Nešlo to.
 
 Nakreslil hřbet. Ten byl snadný, viděl ho každý den z vrat grangie, dlouhý, s jedním koncem strmějším. Nakreslil vrstvy, šikmé čáry pod povrchem, jak je viděl v řezu hlíny v dutině a jak je kreslil Merinův neznámý písař. Nakreslil puklinu. Nakreslil štolu.
 
-Štolu znal. Tu měl v nohách. Dvě stě patnáct kroků, šikmo dovnitř a mírně nahoru, aby voda tekla ven sama. Ješkův křížek na třicátém kroku. Teplo od sedmdesátého. Puklina u sto osmdesátého, kde byla v únoru čelba. Výklenek se sítem. Hrázka. Vpravo u čelby díra do dutiny. Nakreslil ji jako malý čtverec stranou štoly a do něj kroužek, čtvereček a trojúhelník, jako znamení pro celou dvoustranu, kterou nakreslil o noc dřív. Na Merinově kůži dutina nebyla. Tam, kde ležela, nebylo nic. Ani čárka.
+Štolu znal. Tu měl v nohách. Dvě stě patnáct kroků, šikmo dovnitř a mírně nahoru, aby voda tekla ven sama. Ješkův křížek na třicátém kroku. Teplo od sedmdesátého. Puklina u sto osmdesátého, kde byla v únoru čelba. Výklenek se sítem. Hrázka. Vpravo u čelby díra do dutiny. Nakreslil ji jako malý čtverec stranou štoly a do něj kroužek, čtvereček a trojúhelník, jako znamení pro celou dvoustranu, kterou nakreslil před třemi dny. Na Merinově kůži dutina nebyla. Tam, kde ležela, nebylo nic. Ani čárka.
 
 Matěj se nad tím zastavil. Merin ji nenakreslil, protože o ní nevěděl. Zavřená hora, zasypaná hlínou, tisíce vrstev, a nikdo, kdo by do ní zvenku viděl. Ani oni.
 
@@ -330,17 +330,17 @@ Nakreslil sídlo tam, kde bylo na kůži, pod horou, jako shluk několika komůr
 
 Ke kruhu chtěl napsat jméno. Napsal *petra calida*. Podíval se na to. Znělo to jako z kázání, jako podobenství: skála, na které stojí církev, horký kámen pekelný. Uhladil by to, kdyby to bylo ve vosku. Na pergamenu to uhladit nešlo. Seškrábal to nožem, opatrně, jak se škrábe chyba v opisu, až zbyla jen zdrsnělá skvrna.
 
-Napsal tam česky, starým písmem, jak to psal jen na okraje, když nikdo neviděl:
+Napsal tam česky, jak to psal jen na okraje, když nikdo neviděl:
 
 *teplá skála*
 
 Tak tomu říkali chlapi ve štole. Tak tomu říkala Ostra, když se ptala, jak je teplá. Tak to znělo jako místo, kam se dá dojít. A kdyby jednou někdo s touhle mapou v ruce šel do hory, nebude to kněz. Bude to někdo, kdo umí česky.
 
-Pak nakreslil ještě tu starou čáru. Od sídla doleva a dolů, dlouhým obloukem pod hřbetem, až ven na druhém konci hory. Nevěděl, kde přesně vychází. Pamatoval si jen, že u strmějšího konce a že tam bylo znamení jako špička šípu. Nakreslil ji přerušovaně, čárkami s mezerami, jak se v Ortliebově provazu střídají uzly a provaz. Ke konci napsal *exitus?* s otazníkem. A pod to, menším písmem, *vidi semel, non bene*. Viděl jsem jednou, ne dobře.
+Pak nakreslil ještě tu starou čáru. Od sídla doleva a dolů, dlouhým obloukem pod hřbetem, až ven na druhém konci hory. Nevěděl, kde přesně vychází. Pamatoval si jen, že u strmějšího konce a že tam bylo znamení jako špička šípu. Nakreslil ji přerušovaně, čárkami s mezerami, jak se v Ortliebově provazu střídají uzly a provaz. Ke konci napsal *exitus?* s otazníkem. A pod to *vidi semel, non bene*. Viděl jsem jednou, ne dobře.
 
 *
 
-Když skončil, venku se stmívalo. Seděl nad mapou a díval se na ni.
+Když skončil, venku se stmívalo. Seděl nad mapou.
 
 Bylo to špatné. Věděl to. Štola byla dobrá, tu měl v nohách, dutina taky, tu měl na dvoustraně o dva listy dřív. Všechno ostatní byl jeden Otčenáš a tisíc sto čtyřicet kroků, ze kterých šest set padesát byla lež. Kdyby to viděl Wigand, ohmatal by to prsty, které nevidí, a řekl by: *tohle sis nevymyslel, ale taky jsi to neviděl.*
 
@@ -350,7 +350,7 @@ Matěj se na tu vodu díval, na vlnovky nad sídlem, a myslel na to, co s tou ma
 
 *Kde je voda, mnichu?* Tady. *Jak to víš?*
 
-Na tu otázku měl jen jednu odpověď. Všechno ostatní na mapě uměl obhájit kroky, provazem, vědrem, Otčenášem. Kdokoli mohl jít do štoly a přepočítat to. Vodu nad sídlem ale viděli jen ti, o kterých mluvit nesměl. Kdo chce dokázat, že ta voda tam je, musí říct, odkud o ní ví. A kdo řekne, odkud o ní ví, ukáže na sídlo. Na komůrky pod horou, na Ostru s dlaní na stěně, na dětský smích v chodbě. Na cestu ven se špičkou šípu. Konrádovi by stačilo, aby mu ji Volkmar jednou přečetl, a věděl by, kam pustit psy.
+Na tu otázku měl jen jednu odpověď. Všechno ostatní na mapě uměl obhájit kroky, provazem, vědrem, Otčenášem. Kdokoli mohl jít do štoly a přepočítat to. Vodu nad sídlem ale viděli jen ti, o kterých mluvit nesměl. Kdo chce dokázat, že ta voda tam je, musí říct, odkud o ní ví. A kdo řekne, odkud o ní ví, ukáže na sídlo. Na komůrky pod horou, na Ostru s dlaní na stěně, na dětský smích v chodbě. Na cestu ven se špičkou šípu. Konrádovi by stačilo, aby mu tu mapu Volkmar jednou přečetl, a věděl by, kam pustit psy.
 
 A kdyby mlčel?
 

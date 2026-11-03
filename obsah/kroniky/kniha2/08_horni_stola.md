@@ -18,7 +18,7 @@ Tobiáš přestal žvýkat. Pak polkl a odložil chleba. „Byla jste u lékárn
 
 „Kvůli chlapci s padoucnicí.“
 
-„A kvůli krvi.“ Neptal se. „Lene mi jednou říkala, že ten muž, co chodí pro soudek, má ruce jako kořenářský krám.“ Díval se na ni. „Vy mi nic neřeknete.“
+„A kvůli krvi.“ Neptal se. „Lene mi jednou říkala, že ten muž, co chodí pro soudek, má ruce jako kořenářský krám. Vy mi nic neřeknete.“
 
 „Řeknu ti, až to budu vědět.“
 
@@ -54,7 +54,7 @@ Kilián měl na sobě totéž co vždycky, klobouk a plášť a rukavice, a pře
 
 *
 
-Nešli olšovou roklí. Šli přímo nahoru, mezi haldami, po cestě, kterou Ilona v sobotu před deseti dny viděla bílou v hvězdném světle a slyšela na ní kopyta. Teď byla tmavá. Kilián šel kus vedle cesty, po kamení, kde nezůstávají stopy, a Ilona šla za ním a počítala. Sto. Tři sta. Šest set. Haldy skončily a začal les, nízký, pokroucený, smrky ohnuté od větru. Mezi nimi byly staré propadliny, kde se kdysi kopalo a pak se to zavalilo. Z jedné z nich, když šli kolem, vanul studený vzduch, jako dech ze sklepa.
+Nešli olšovou roklí. Šli přímo nahoru, mezi haldami, po cestě, kterou Ilona v sobotu před jedenácti dny viděla bílou v hvězdném světle a slyšela na ní kopyta. Teď byla tmavá. Kilián šel kus vedle cesty, po kamení, kde nezůstávají stopy, a Ilona šla za ním a počítala. Sto. Tři sta. Šest set. Haldy skončily a začal les, nízký, pokroucený, smrky ohnuté od větru. Mezi nimi byly staré propadliny, kde se kdysi kopalo a pak se to zavalilo. Z jedné z nich, když šli kolem, vanul studený vzduch, jako dech ze sklepa.
 
 ![Cesta k Horní štole](obrazky/08_horni_stola.webp)
 
@@ -90,7 +90,7 @@ Shrbený muž sundal z mezka hranatý koš a odkryl pytlovinu. Byl v něm soudek
 
 Ilona ztuhla.
 
-Minule. Minule byla sobota. Ne. Minule byla středa. Středa před týdnem, kdy Lene ráno našli pod mostem bílá jako vymetená mouka, a krev, která z ní vytekla, nebyla nikde.
+Minule. Minule byla sobota. Ne. Minule byla středa. Středa před týdnem, kdy se Lene ráno našla pod mostem bílá jako vymetená mouka, a krev, která z ní vytekla, nebyla nikde.
 
 *Minule to bylo dobrý.*
 
@@ -204,9 +204,9 @@ Kilián ji popadl za kabát a vytáhl na nohy jedním trhnutím. Utíkali. Zpát
 
 Ilona lezla. Deset příček, patnáct, a pod ní se žebřík zachvěl, jak na něj někdo skočil. Ne Kilián. Kilián byl ještě dole, slyšela ho, slyšela náraz těla o tělo a zasténání. Pak se jí kolem kotníku sevřela ruka. Silná, kostnatá, studená. Trhla. Ilona se zachytila příčky oběma rukama a ta příčka praskla.
 
-Visela na jedné ruce. Pod ní tma a ta ruka na kotníku, která táhla dolů. Ilona kopla. Druhou nohou, naslepo, do tmy, a trefila něco měkkého, a ruka na kotníku povolila a zase se chytila, výš, za lýtko, za kabát. Ilona se pustila žebříku levou rukou, aby se chytila jiné příčky. V tu chvíli se ten dole vytáhl nahoru k ní a ona ucítila jeho dech, horký a páchnoucí kovem, u svého krku.
+Visela na jedné ruce. Pod ní tma a ta ruka na kotníku, která táhla dolů. Ilona kopla. Druhou nohou, naslepo, do tmy, a trefila něco měkkého, a ruka na kotníku povolila a zase se chytila, výš, za lýtko, za kabát. Levou rukou nahmatala jinou příčku, pevnou, a pravá, která svírala tu prasklou, se uvolnila. V tu chvíli se ten dole vytáhl nahoru k ní a ona ucítila jeho dech, horký a páchnoucí kovem, u svého krku.
 
-Zvedla ruku. Instinktivně, jak zvedá ruku každý, kdo chrání krk.
+Zvedla ji. Pravou, volnou. Instinktivně, jak zvedá ruku každý, kdo chrání krk.
 
 Zakousl se jí do předloktí.
 
@@ -218,7 +218,7 @@ Ten, co se jí zakousl, povolil. Ne úplně. Zuby se rozevřely a Ilona cítila,
 
 „Lezte!“
 
-Lezla. S jednou rukou, která nefungovala, s druhou, která se třásla. Kilián byl hned pod ní, cítila ho, cítila jeho rameno pod svou nohou, jak ji tlačí nahoru. Nahoře byl pařez a provaz. Vytáhla se přes okraj a ležela na jehličí a lapala po dechu, a Kilián vylezl za ní a vytáhl provaz nahoru a hodil ho zpátky do díry, aby po něm nikdo nemohl lézt. Ze šachtice bylo slyšet křik a šplouchání vody.
+Lezla. S jednou rukou, která nefungovala, s druhou, která se třásla. Kilián byl hned pod ní, cítila ho, cítila jeho rameno pod svou nohou, jak ji tlačí nahoru. Nahoře byl pařez a provaz. Vytáhla se přes okraj a ležela na jehličí a lapala po dechu, a Kilián vylezl za ní, odvázal provaz od pařezu a shodil ho do díry. Ze šachtice bylo slyšet křik a šplouchání vody.
 
 „Dolů,“ řekl Kilián. „Ne po cestě. Za mnou.“
 
@@ -254,7 +254,7 @@ Pak rozstřihla rukáv kabátu a rukáv košile a podívala se.
 
 Na vnější straně předloktí, kousek pod loktem, byl kousanec. Oblouk. Horní zuby a dolní zuby, dva půlměsíce proti sobě, každý zub jako tmavá tečka, kde prošel kůží, a mezi nimi kůže rozdrcená a modrá, už teď, a krev, která pořád tekla, pomalu. V horním oblouku chyběl jeden zub, vpředu vlevo, mezera, kde nic nebylo. Na kraji oblouku, kde se zuby zavřely nejsilněji, byla kůže roztržená do hloubky a Ilona tam viděla bílou blánu nad svalem.
 
-Byl to lidský kousanec. Takový, jaký Řehoř šil každou zimu po masopustu opilým havířům. Takový, jaký by měla Lene na krku, kdyby ji kousl člověk.
+Byl to lidský kousanec. Takový, jaký Řehoř ošetřoval každou zimu po masopustu opilým havířům. Takový, jaký by měla Lene na krku, kdyby ji kousl člověk.
 
 Ilona se dívala na ten oblouk, na mezeru po zubu, na modrou kůži mezi půlměsíci, a myslela na dvě dírky pod Lenininou čelistí, kulaté, hladké, prst od sebe, bez oblouku, bez modřiny.
 

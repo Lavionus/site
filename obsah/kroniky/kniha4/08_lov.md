@@ -2,7 +2,7 @@
 
 Řekl jim to ráno u beden.
 
-Orrin předtím z bedny oznámil, že od dnešního dne se jí tři čtvrtě dávky, všichni. Řekl to dobře a krátce a na konci dodal: „Maela to spočítala.“ Maela stála u beden a dívala se do země. Pak přečetla, kdo co včera bral, nahlas, desítku po desítce, a lidé se začínali rozcházet. Eren vylezl na bednu, a protože na ní nikdy nestál, když nemusel, lidé se zastavili. Řekl to krátce. Že Ru ukázal ty bobule dětem hned první den. Že jim řekl slovo a ukázal, co se stane. Že děti, které s ním chodily, to věděly.
+Orrin předtím z bedny oznámil, že od dnešního dne se jí tři čtvrtě dávky, všichni. Řekl to dobře a krátce a na konci dodal: „Maela to spočítala.“ Maela stála u beden, dívala se do země a pak přečetla, kdo co včera bral, nahlas, desítku po desítce, a lidé se začínali rozcházet. Eren vylezl na bednu, a protože na ní nikdy nestál, když nemusel, lidé se zastavili. Řekl to krátce. Že Ru ukázal ty bobule dětem hned první den. Že jim řekl slovo a ukázal, co se stane. Že děti, které s ním chodily, to věděly.
 
 Orrin stál dole u beden a poslouchal. Když Eren skončil, přikývl.
 
@@ -42,13 +42,13 @@ Orrin poslal šest lidí. Haro šel. Dva muži z Harovy desítky, ti, kteří te
 
 Orrin nešel.
 
-„Někdo tu musí zůstat,“ řekl. Pak se podíval na Hara. „Přineste maso.“
+„Někdo tu musí zůstat,“ řekl a obrátil se k Harovi. „Přineste maso.“
 
 Vyšli za svítání. Ikku šel první a jeho čtyři muži za ním, a teprve potom vyhnanci. Ikku se ani jednou neohlédl. Eren pochopil proč, až když slyšel, jak jdou oni. Za Ikkuem nebylo slyšet nic. Jeho muži našlapovali bosí nebo v měkkých obalech z kůže, a kámen pod nimi nezacvakal, větev nepraskla. Za nimi šlo šest lidí v botách. Kameny se pod nimi kutálely. Kaj zakopl. Haro dýchal nahlas. Dorn si něco brumlal.
 
 Po hodině se jeden z Ikkuových mužů otočil. Byl to ten mladý, ten, kterému se tehdy na terase chvěl hrot oštěpu. Podíval se na vyhnance a přiložil si prst ke rtům.
 
-Kaj se zasmál. Nahlas. Mladý muž se díval, jak se směje, a pak se otočil a šel dál.
+Kaj se zasmál. Nahlas. Mladý muž ho nechal dosmát, otočil se a šel dál.
 
 *
 
@@ -56,7 +56,7 @@ Kaj se zasmál. Nahlas. Mladý muž se díval, jak se směje, a pak se otočil a
 
 Ikku se zastavil pod okrajem planiny a lehl si.
 
-Ostatní místní taky. Ru tu nebyl; zůstal dole. Eren si lehl a za ním si lehli ostatní vyhnanci, nemotorně, s cinkáním, a Haro si lehl jako poslední, protože nepochopil, proč se ostatní lehají. Ikku se přisunul k okraji a vyhlédl. Pak se otočil a ukázal na planinu.
+Ostatní místní taky. Ru tu nebyl; zůstal dole. Eren si lehl a za ním si lehli ostatní vyhnanci, nemotorně, s cinkáním, a Haro si lehl jako poslední, protože nepochopil, proč se ostatní lehají. Ikku se přisunul k okraji, vyhlédl, otočil se a ukázal na planinu.
 
 Eren vyhlédl také.
 
@@ -64,21 +64,21 @@ Byla tam zvířata. Daleko, na druhém konci planiny, malá a světlá, skoro ba
 
 „To je moc daleko,“ zašeptal Kaj.
 
-Ikku se na něj podíval. Nerozuměl slovům. Rozuměl hlasu.
+Ikku otočil hlavu. Nerozuměl slovům. Rozuměl hlasu.
 
-Pak to začalo. Eren rozuměl jen málu. Ikku mluvil ke svým mužům tiše, posunky, a dva z nich se odplazili doleva, podél okraje, a zmizeli. Další dva doprava. Ikku zůstal. Ukázal na vyhnance, na všechny, a pak na místo pod okrajem, kus dál. Pak udělal pohyb rukama, jako když se mává. A ukázal na planinu. A na zvířata. A dal si ruku k uchu.
+Pak to začalo. Eren rozuměl jen málu. Ikku mluvil ke svým mužům tiše, posunky, a dva z nich se odplazili doleva, podél okraje, a zmizeli. Další dva doprava. Ikku zůstal. Ukázal na vyhnance, na všechny, a pak na místo pod okrajem, kus dál. Udělal pohyb rukama, jako když se mává. A ukázal na planinu. A na zvířata. A dal si ruku k uchu.
 
 „Máme dělat hluk,“ řekl Eren. „Až dá znamení. Vyplašit je.“
 
 „To je všechno?“ řekl Dorn. „Na to nás potřebuje?“
 
-Eren se na něj podíval a neřekl, co si myslí. Že na nic jiného je potřebovat nemůže.
+Eren neřekl, co si myslí. Že na nic jiného je potřebovat nemůže.
 
 Čekali. Dlouho. Slunce stoupalo a tráva přestala kouřit a začala vonět, sladce a suše. Eren ležel na kamení a cítil, jak mu mráz ze země leze do břicha. Haro se pořád převracel. Kaj se zvedal na loktech, aby lépe viděl, a Ikku na něj jednou cvakl jazykem, ostře, a Kaj si lehl.
 
 Pak se Kaj zvedl znovu.
 
-Eren nevěděl proč. Možná zahlédl, že se zvířata pohnula. Možná už nevydržel ležet. Postavil se, celý, na okraji planiny, ve své šedé bundě proti obloze, a díval se.
+Možná zahlédl, že se zvířata pohnula. Možná už nevydržel ležet. Postavil se, celý, na okraji planiny, ve své šedé bundě proti obloze, a díval se.
 
 Zvířata zvedla hlavy. Všechna naráz.
 
@@ -86,7 +86,7 @@ A pak už nebyla. Eren nikdy neviděl nic tak rychlého. V jednu chvíli stála 
 
 Bylo ticho.
 
-Ikku se pomalu zvedl. Díval se na Kaje. Kaj stál a díval se tam, kde zvířata zmizela, a pak se otočil a viděl Ikkuovu tvář.
+Ikku se pomalu zvedl. Kaj stál a hleděl tam, kde zvířata zmizela, a pak se otočil a viděl Ikkuovu tvář.
 
 Ikku nic neřekl. Nezvedl oštěp. Jen se díval. A Eren v tom obličeji viděl něco, co znal z vlastní dílny, když mu učeň zkratoval okruh, na kterém Eren pracoval tři dny. Ne vztek. Únava tak velká, že se do ní vztek nevešel.
 
@@ -106,11 +106,11 @@ Eren seděl za svým kamenem a díval se do žlebu. Až do večera seděl s prst
 
 Pak, k večeru, se ozval zvuk. Dlouhý, vysoký, jako když fouká vítr do pukliny. Hned na to Eren uviděl, jak se nahoře na planině zvedl prach.
 
-Vyskočil. Mával rukama. Křičel, nevěděl co, jen aby to bylo nahlas. Kolem něj vyskočili ostatní a křičeli taky. Haro řval, hlubokým hlasem, který se rozléhal žlebem.
+Vyskočil. Mával rukama. Křičel cokoli, jen aby to bylo nahlas. Kolem něj vyskočili ostatní a křičeli taky. Haro řval, hlubokým hlasem, který se rozléhal žlebem.
 
 Zvířata se valila dolů. Utíkala od křiku, od nich, dolů žlebem, ke skalnímu sedlu. Rychle, tak rychle, že jejich nohy nebyly vidět, jen šmouha, jen prach a klapání kopyt o kámen. A ve skalním sedle, kde se žleb zužoval, vstali ze země Ikkuovi muži.
 
-Eren to viděl jen napůl. Oštěp. Druhý. Zvíře, které se převrátilo přes hlavu a zůstalo ležet. Další, které klopýtlo a zvedlo se a zase klopýtlo, s oštěpem v boku. Ikku k němu doběhl. Sehnul se. Pak se narovnal a zvíře se už nehýbalo.
+Eren to viděl jen napůl. Oštěp. Druhý. Zvíře, které se převrátilo přes hlavu a zůstalo ležet. Další, které klopýtlo a zvedlo se a zase klopýtlo, s oštěpem v boku. Ikku k němu doběhl. Sehnul se, a když se narovnal, zvíře se už nehýbalo.
 
 Ostatní zvířata proběhla sedlem a byla pryč.
 
@@ -128,7 +128,7 @@ Eren se díval na tu ruku. Na kus jater v ní, teplý, ještě s párou. Na krev
 
 Vzal to. Dal si to do pusy.
 
-Bylo to teplé. Měkké. Chutnalo to kovem a solí a něčím, co neznal, a polknout to šlo jen napodruhé. Ale polkl to. Ikku se díval, jak polyká, a pak přikývl. Jen jednou. Pak se otočil k druhému zvířeti.
+Bylo to teplé. Měkké. Chutnalo to kovem a solí a něčím, co neznal, a polknout to šlo jen napodruhé. Ale polkl to. Ikku počkal, až polkne, a přikývl. Jen jednou. Pak se otočil k druhému zvířeti.
 
 *
 
@@ -160,7 +160,7 @@ Cítil to. Pach, ostrý a pižmový, ze kterého ho štípalo v nose.
 
 Ikku položil tyč na zem.
 
-Pomalu, a jeho muži s ním. Zvíře na tyči leželo na skále mezi nimi a tím na výčnělku. Pak Ikku ustoupil. Dva kroky, tři. Sklopil hlavu. Nedíval se na to. A jeho muži taky ne. Stáli se skloněnými hlavami a s prázdnýma rukama, a Ikku něco řekl, tiše a vlídně, jako se mluví k dítěti, které se bojí.
+Pomalu, a jeho muži s ním. Zvíře na tyči leželo na skále mezi nimi a tím na výčnělku. Ikku ustoupil. Dva kroky, tři. Sklopil hlavu. Nedíval se na to. A jeho muži taky ne. Stáli se skloněnými hlavami a s prázdnýma rukama, a Ikku něco řekl, tiše a vlídně, jako se mluví k dítěti, které se bojí.
 
 Pak řekl něco k vyhnancům. Ostře. A ukázal na zem.
 
@@ -180,11 +180,11 @@ Ikku na Hara křičel. Jedno slovo, znovu a znovu, a ukazoval na zem. Haro se ne
 
 Haro to shodil.
 
-Shodil kořist z ramen tak prudce, že dopadla na skálu s tupým úderem. Pak couvl a zakopl a málem upadl. Tvor se odrazil z výčnělku. Dvakrát máchl křídly, krátce, a dosedl na pěšinu, přímo na mrtvé zvíře, které Haro shodil. Zaťal do něj drápy.
+Shodil kořist z ramen tak prudce, že dopadla na skálu s tupým úderem. Couvl, zakopl a málem upadl. Tvor se odrazil z výčnělku. Dvakrát máchl křídly, krátce, a dosedl na pěšinu, přímo na mrtvé zvíře, které Haro shodil. Zaťal do něj drápy.
 
 Ikkuovu kořist na tyči nechal ležet.
 
-Eren to viděl a nerozuměl. Možná si vzal to, které mu nikdo nedal, protože to dané by mu zůstalo tak jako tak. Možná si jen vybral toho, kdo se nepohnul. Nevěděl to.
+Eren to viděl a nerozuměl. Možná si vzal to, které mu nikdo nedal, protože to dané by mu zůstalo tak jako tak. Možná si jen vybral toho, kdo se nepohnul.
 
 Tvor táhl kořist k hraně pěšiny. Nesl ji v drápech zadních nohou a odrážel se předními, na kloubech křídel, a bylo vidět, že je těžká. Moc těžká. Doskočil na hranu. Roztáhl křídla. Ta se do vzduchu opřela s tím zvukem plachty a tvor se nadzvedl, jen o kus, a zase klesl na hranu, a znovu se nadzvedl.
 
@@ -210,13 +210,13 @@ Pak se to zdravé křídlo opřelo do vzduchu nad potokem a tvor se zvedl. Těž
 
 Dorn ležel na zemi a řval.
 
-Eren k němu klekl. Dorn měl obličej rudý a oteklý a oči zavřené, a když se je pokusil otevřít, vytékalo z nich něco čirého a on řval ještě víc. Eren mu nalil vodu z láhve do obličeje. Celou láhev. Pak vzal Ardovu.
+Eren k němu klekl. Dorn měl obličej rudý a oteklý a oči zavřené, a když se je pokusil otevřít, vytékalo z nich něco čirého a on řval ještě víc. Eren mu nalil vodu z láhve do obličeje. Celou láhev, a potom i Ardovu.
 
 Ikku stál na pěšině.
 
 Díval se na Dorna. Pak se díval na Hara. Pak se díval přes soutěsku na útes, kde zmizel ten tvor. Jeho muži za ním stáli a nikdo z nich se nehýbal. Ten mladý plakal. Bez zvuku, s obličejem otočeným k útesu.
 
-Pak Ikku něco řekl. Dlouhé slovo, to, které křičel tehdy z terasy, když vyhnanci přišli poprvé. Ale teď ho nekřičel. Řekl ho tiše.
+Ikku něco řekl. Dlouhé slovo, to, které křičel tehdy z terasy, když vyhnanci přišli poprvé. Ale teď ho nekřičel. Řekl ho tiše.
 
 Sehnul se, vzal tyč s kořistí a dal znamení. Jeho muži ji zvedli. A šli. Dolů po pěšině, ke kotli, rychle a bez ohlédnutí. Za chvíli byli pryč mezi skalami.
 
@@ -232,7 +232,7 @@ Pak se z temné díry pod převisem vysunula ta velká hlava. Pomalu. A položil
 
 Mládě, pomyslel si Eren. To slovo znal jen z obrázků zvířat, které síť ukazovala Tio, když byla malá. Zvířat, která nikdo z nich nikdy neviděl. Jiné slovo neměl.
 
-Kaj stál vedle něj a díval se taky.
+Kaj stál vedle něj a viděl to taky.
 
 „Netvor,“ řekl Kaj. Tiše.
 
@@ -246,7 +246,7 @@ Na terase hořel oheň. U něj stála Tal. Ne seděla. Stála, opřená o hůl, 
 
 Orrin přišel naproti.
 
-Vyslechl Hara. Vyslechl ho celého, s rukou na jeho rameni, a přikyvoval. Pak se podíval na Dorna, kterého už odváděla Sefa, a pak nahoru, na terasu.
+Vyslechl Hara. Vyslechl ho celého, s rukou na jeho rameni, a přikyvoval. Pak se ohlédl za Dornem, kterého už odváděla Sefa, a zvedl oči k terase.
 
 „Nikdo nám nebude brát jídlo,“ řekl. Nahlas. Ne křikem, ale tak, aby to slyšel celý kotel. „Nikdo. Ani zvíře.“
 
@@ -266,7 +266,7 @@ Neměl slova. Měl jich desítky, od Tio, a žádné se nehodilo. *Ta*. *Nu*. *N
 
 Tak to udělal rukama.
 
-Ukázal na sebe. Pak dolů, do kotle, kde stál Haro. Pak na Dorna, kterého Sefa vedla k ohni. Pak, pomalu, roztáhl paže do stran, jak to tehdy dělal Ru. Co nejdál, až se mu zatřásly. A jednu paži pak sklopil, nakřivo, a nechal ji viset. Jako křídlo, které se nesloží.
+Ukázal na sebe. Pak dolů, do kotle, kde stál Haro, a na Dorna, kterého Sefa vedla k ohni. Pak, pomalu, roztáhl paže do stran, jak to tehdy dělal Ru. Co nejdál, až se mu zatřásly. A jednu paži pak sklopil, nakřivo, a nechal ji viset. Jako křídlo, které se nesloží.
 
 Pak dal obě ruce na prsa. Na sebe. A sklonil hlavu.
 
@@ -276,11 +276,11 @@ Na terase bylo dlouho ticho. Pak Eren uslyšel dupot bosých nohou na suti a ved
 
 Tal na terase promluvila. Krátce. K Ruovi.
 
-Ru se podíval na Erena. Pak se otočil a ukázal přes kotel. Přes potok. Na druhou stranu, na levou, kam se nesmí. Na úpatí útesu, kde se ze suti zvedal velký plochý kámen, světlejší než okolí.
+Ru se otočil a ukázal přes kotel. Přes potok. Na druhou stranu, na levou, kam se nesmí. Na úpatí útesu, kde se ze suti zvedal velký plochý kámen, světlejší než okolí.
 
 „Kámen,“ řekla Tio. „Ona říká *kámen*. Že tam.“
 
-Eren se díval na ten kámen. Tma byla skoro úplná a kámen svítil jen proto, že byl světlý.
+Tma byla skoro úplná a kámen svítil jen proto, že byl světlý.
 
 Tal řekla ještě něco. Tio se na Erena podívala.
 
@@ -296,19 +296,19 @@ Maela se dívala, jak ji bere.
 
 „Já vím.“
 
-Čekal, co řekne. Kotel stál kolem a díval se. Orrin taky. Orrin mohl říct ne. Nikdo by se mu nevzepřel. Ale Orrin se díval na Erena a na kýtu a na terasu nad nimi a Eren skoro viděl, jak počítá.
+Čekal, co řekne. Kotel stál kolem a díval se. Orrin taky. Orrin mohl říct ne. Nikdo by se mu nevzepřel. Ale Orrin mlčel, oči na Erenovi, na kýtě, na terase nad nimi, a Eren skoro viděl, jak počítá.
 
 „Nech ho,“ řekl Orrin.
 
 Maela se otočila a šla k ohni.
 
-Eren přešel potok. Voda byla studená a sahala mu nad kolena a proud ho tlačil. Na druhém břehu byla tma. Šel po suti nahoru, ke světlému kameni, a kýta na rameni ho tlačila a byla těžká a voněla krví.
+Eren přešel potok. Voda byla vlažná, ale sahala mu nad kolena a proud ho tlačil. Na druhém břehu byla tma. Šel po suti nahoru, ke světlému kameni, a kýta na rameni ho tlačila a byla těžká a voněla krví.
 
 Kámen byl veliký. Plochý, jako stůl. Eren na něj nahmatal rukou a ucítil pod prsty něco tvrdého a hladkého. Kosti. Staré, vybělené. Spousta. Mezi nimi tmavé skvrny, které se nedaly smýt, a pach. Ten pižmový pach. Tady byl všude.
 
 Položil kýtu doprostřed kamene.
 
-Pak stál a díval se nahoru. Útes nad ním byl černý, a nad útesem hvězdy. Neviděl nic. Ale slyšel. Někde vysoko, pod převisem, se ozval ten tenký hlas. Jednou. Pak ještě jednou, tišeji. A pak nic.
+Stál a díval se nahoru. Útes nad ním byl černý, a nad útesem hvězdy. Neviděl nic. Ale slyšel. Někde vysoko, pod převisem, se ozval ten tenký hlas. Jednou. Pak ještě jednou, tišeji. A pak nic.
 
 Vracel se pomalu. Přes suť, přes potok. Na druhém břehu stál Ru a čekal na něj. A za Ruem, na kraji kotle, Tio a Maela. Maela držela Tio za ruku a nedívala se na něj.
 
@@ -318,11 +318,11 @@ Na terase seděla Tal u ohně. Seděla, jako vždycky.
 
 Ráno byl kámen prázdný.
 
-Eren to viděl z kotle, když vylezl zpod plachty. Kámen na druhé straně potoka ležel světlý v ranním šeru a nebylo na něm nic. Nevěděl, co si kýtu vzalo. Mohlo to být cokoli. Ti ptáci, kteří kroužili nad sedmým. Něco, co chodí v noci. Cokoli.
+Eren to viděl z kotle, když vylezl zpod plachty. Kámen na druhé straně potoka ležel světlý v ranním šeru a nebylo na něm nic. Kýtu si mohlo vzít cokoli. Ti ptáci, kteří kroužili nad sedmým. Něco, co chodí v noci. Cokoli.
 
 Díval se na kámen dlouho.
 
-Pak se díval nahoru, na útes, na převis, kde večer zmizela křídlatá. Nikde nic. Jen pára z tůní stoupala k útesu a rozpouštěla se v ranním světle.
+Pak zvedl oči k útesu, k převisu, kde večer zmizela křídlatá. Nikde nic. Jen pára z tůní stoupala k útesu a rozpouštěla se v ranním světle.
 
 Na terase stál Ikku. Taky se díval na kámen. Pak se díval na Erena. Dlouho, přes celý kotel. Nekývl. Neudělal nic.
 
