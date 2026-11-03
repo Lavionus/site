@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kroniky vyhnanství – sazba knihy k tisku</title>
+<link rel="stylesheet" href="../../common.css">
+<script src="../../theme.js"></script>
+<script src="../../dialog.js"></script>
+<script src="sazba.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font:14px system-ui,sans-serif}
+.lista{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border)}
+.lista h1{font-size:1rem;margin:0 10px 0 0;white-space:nowrap}
+.lista .vpravo{margin-left:auto;display:flex;gap:6px;align-items:center}
+button,select,input{font:inherit;color:var(--text);background:var(--bg-control);border:1px solid var(--border);border-radius:6px;padding:5px 9px}
+button{cursor:pointer}
+button:hover{background:var(--bg-hover)}
+button.hlavni{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff);font-weight:600}
+button.hlavni:hover{background:var(--accent-hover)}
+input[type=number]{width:5.2em}
+input[type=checkbox]{accent-color:var(--accent)}
+.telo{flex:1;display:flex;min-height:0}
+aside{width:320px;flex:none;overflow-y:auto;border-right:1px solid var(--border);background:var(--bg-panel);padding:8px 12px 30px}
+fieldset{border:1px solid var(--border);border-radius:8px;margin:10px 0;padding:6px 10px 10px}
+legend{font-weight:600;padding:0 4px;color:var(--text-muted)}
+.r{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:5px 0}
+.r>span{color:var(--text-muted)}
+.r select{max-width:190px}
+.mrizka{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
+.mrizka label{display:flex;flex-direction:column;font-size:.85rem;color:var(--text-muted)}
+.mrizka input{width:100%}
+label.zas{display:flex;gap:7px;align-items:flex-start;margin:4px 0;cursor:pointer}
+.rada{font-size:.82rem;color:var(--text-faint);margin:4px 0 0;line-height:1.35}
+main{flex:1;position:relative;min-width:0;background:#5d5d5b}
+iframe{border:0;width:100%;height:100%;display:block}
+#stav{font-size:.85rem;color:var(--text-muted);white-space:nowrap}
+#stav.chyba{color:var(--danger)}
+#prepinac{display:none}
+@media (max-width:760px){
+  #prepinac{display:inline-block}
+  aside{position:absolute;z-index:20;top:0;bottom:0;left:0;width:min(340px,92vw);box-shadow:var(--shadow);display:none}
+  body.panel aside{display:block}
+  .telo{position:relative}
+  .lista h1 .dlouhe{display:none}
+}
+</style>
+</head>
+<body>
+<div class="lista">
+  <button id="prepinac" title="Nastavení sazby">☰</button>
+  <h1>🖨 Sazba knihy<span class="dlouhe"> k tisku</span></h1>
+  <select id="predvolba" title="Předvolby sazby"><option value="">Předvolby…</option></select>
+  <button id="vysazet" title="Znovu vysázet náhled">↻ Vysázet</button>
+  <span id="stav"></span>
+  <span class="vpravo">
+    <select id="meritko" title="Zvětšení náhledu">
+      <option value="0.4">40 %</option><option value="0.55">55 %</option><option value="0.7" selected>70 %</option><option value="1">100 %</option><option value="1.4">140 %</option>
+    </select>
+    <button id="okno" title="Otevřít vysázenou knihu v nové kartě">↗</button>
+    <button id="tisk" class="hlavni" title="Vytisknout nebo uložit jako PDF">🖨 Tisk / PDF</button>
+  </span>
+</div>
+<div class="telo">
+<aside id="panel" data-i18n="ne">
+  <fieldset><legend>Kniha</legend>
+    <div class="r"><span>Kniha</span><select id="kniha"></select></div>
+    <div class="r"><span>Od kapitoly</span><select id="od"></select></div>
+    <div class="r"><span>Do kapitoly</span><select id="do"></select></div>
+    <div class="r"><span>Autor</span><input id="autor" placeholder="na titul a do tiráže" style="width:180px"></div>
+  </fieldset>
+
+  <fieldset><legend>Formát a okraje</legend>
+    <div class="r"><span>Formát</span><select id="format"></select></div>
+    <div class="mrizka" id="vlastniRozmer">
+      <label>Šířka (mm)<input type="number" id="sirka" min="80" max="300" step="0.1"></label>
+      <label>Výška (mm)<input type="number" id="vyska" min="100" max="420" step="0.1"></label>
+    </div>
+    <div class="mrizka">
+      <label>Horní (mm)<input type="number" id="okrajNahore" min="3" max="60" step="0.5"></label>
+      <label>Dolní (mm)<input type="number" id="okrajDole" min="3" max="60" step="0.5"></label>
+      <label>U hřbetu (mm)<input type="number" id="okrajVnitrni" min="3" max="60" step="0.5"></label>
+      <label>Vnější (mm)<input type="number" id="okrajVnejsi" min="3" max="60" step="0.5"></label>
+    </div>
+    <label class="zas"><input type="checkbox" id="zrcadlit"> Zrcadlit okraje (oboustranný tisk – větší okraj vždy u hřbetu)</label>
+    <div class="r"><span>Spadávka</span><select id="spadavka"><option value="0">žádná</option><option value="3">3 mm</option><option value="5">5 mm</option></select></div>
+    <label class="zas"><input type="checkbox" id="znacky"> Ořezové značky</label>
+    <p class="rada">Spadávku a značky chce tiskárna; pro domácí tisk je nechte vypnuté.</p>
+  </fieldset>
+
+  <fieldset><legend>Písmo a sazba</legend>
+    <div class="r"><span>Písmo</span><select id="pismo"></select></div>
+    <div class="mrizka">
+      <label>Velikost (pt)<input type="number" id="velikost" min="7" max="16" step="0.5"></label>
+      <label>Řádkování (×)<input type="number" id="radkovani" min="1" max="2.2" step="0.05"></label>
+      <label>Odsazení odst. (em)<input type="number" id="odsazeni" min="0" max="4" step="0.1"></label>
+    </div>
+    <label class="zas"><input type="checkbox" id="doBloku"> Do bloku (zarovnání na obě strany)</label>
+    <label class="zas"><input type="checkbox" id="deleni"> Dělení slov</label>
+    <label class="zas"><input type="checkbox" id="predlozky"> Předložky v, s, z, k, o, u, a, i nenechávat na konci řádku</label>
+    <label class="zas"><input type="checkbox" id="inicialy"> Iniciála na začátku kapitoly</label>
+    <div class="r"><span>Předěl scén</span><select id="predel">
+      <option value="hvezdy3">⁂</option><option value="hvezdicky">* * *</option><option value="list">❦</option><option value="mezera">volný řádek</option>
+    </select></div>
+  </fieldset>
+
+  <fieldset><legend>Části knihy</legend>
+    <label class="zas"><input type="checkbox" id="obalka"> Obálka (ilustrace přes celou stranu)</label>
+    <label class="zas"><input type="checkbox" id="titul"> Titulní list</label>
+    <label class="zas"><input type="checkbox" id="tiraz"> Tiráž</label>
+    <label class="zas"><input type="checkbox" id="obsah"> Obsah s čísly stran</label>
+    <label class="zas"><input type="checkbox" id="nalicho"> Kapitola vždy na liché (pravé) straně</label>
+  </fieldset>
+
+  <fieldset><legend>Záhlaví a čísla stran</legend>
+    <label class="zas"><input type="checkbox" id="zahlavi"> Živé záhlaví (vlevo kniha, vpravo kapitola)</label>
+    <div class="r"><span>Číslo strany</span><select id="cisla">
+      <option value="dole-vne">dole, vnější roh</option><option value="dole-stred">dole uprostřed</option><option value="nahore-vne">nahoře, vnější roh</option><option value="ne">bez čísel</option>
+    </select></div>
+    <p class="rada">Číslování začíná první kapitolou; titul, tiráž a obsah čísla nemají.</p>
+  </fieldset>
+
+  <fieldset><legend>Ilustrace</legend>
+    <div class="r"><span>Umístění</span><select id="ilustrace">
+      <option value="text">v textu</option><option value="strana">samostatná strana</option><option value="ne">bez ilustrací</option>
+    </select></div>
+    <label class="zas"><input type="checkbox" id="popisky"> Popisky pod ilustracemi</label>
+    <label class="zas"><input type="checkbox" id="cernobile"> Černobíle (levnější tisk)</label>
+  </fieldset>
+
+  <fieldset><legend>Náhled</legend>
+    <div class="r"><span>Zobrazení</span><select id="nahled"><option value="dvoustrany">dvoustrany</option><option value="jednotlive">jednotlivé strany</option></select></div>
+    <label class="zas"><input type="checkbox" id="voditka"> Ukázat sazební obrazec (jen v náhledu)</label>
+  </fieldset>
+
+  <p class="rada"><b>Tisk do PDF:</b> v dialogu tisku zvolte cíl „Uložit jako PDF“, okraje „Výchozí“ nebo „Žádné“ a měřítko 100 %. Velikost papíru převezme z formátu knihy.
+  Pro domácí tisk formátu A5 na A4 použijte v tiskárně „brožuru“ nebo „2 stránky na list“.</p>
+</aside>
+<main><iframe id="ram" title="Náhled vysázené knihy"></iframe></main>
+</div>
+<script>
+(function () {
+  'use strict';
+  const S = window.KRONIKY_SAZBA, $ = id => document.getElementById(id);
+  const KLIC = 'webapp_kroniky_sazba';
+  let nast, knihy = [], cisloSazby = 0, casovac = 0;
+  try { nast = S.doplnNastaveni(JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { nast = S.doplnNastaveni({}); }
+  const q = new URLSearchParams(location.search);
+  if (q.get('kniha')) { nast.kniha = q.get('kniha'); nast.od = 0; nast.do = -1; }
+  if (q.has('kapitola')) { nast.od = nast.do = +q.get('kapitola') || 0; }
+
+  const pole = Object.keys(S.VYCHOZI).filter(k => $(k) && !['kniha', 'od', 'do'].includes(k));
+  for (const [k, f] of Object.entries(S.FORMATY)) $('format').add(new Option(f.nazev, k));
+  for (const [k, p] of Object.entries(S.PISMA)) $('pismo').add(new Option(p.nazev, k));
+  for (const [k, p] of Object.entries(S.PREDVOLBY)) $('predvolba').add(new Option(p.nazev, k));
+
+  function doFormulare() {
+    for (const k of pole) { const el = $(k); if (el.type === 'checkbox') el.checked = !!nast[k]; else el.value = nast[k]; }
+    $('vlastniRozmer').style.display = nast.format === 'vlastni' ? '' : 'none';
+    $('kniha').value = nast.kniha;
+    naplnKapitoly();
+  }
+  function naplnKapitoly() {
+    const k = knihy.find(x => x.id === nast.kniha);
+    if (!k) return;
+    for (const id of ['od', 'do']) {
+      $(id).innerHTML = '';
+      k.kapitoly.forEach((c, i) => $(id).add(new Option(c.nazev, i)));
+    }
+    $('od').value = Math.min(nast.od, k.kapitoly.length - 1);
+    $('do').value = nast.do < 0 ? k.kapitoly.length - 1 : Math.min(nast.do, k.kapitoly.length - 1);
+  }
+  function zFormulare() {
+    const n = {};
+    for (const k of pole) { const el = $(k); n[k] = el.type === 'checkbox' ? el.checked : el.type === 'number' ? +el.value : el.value; }
+    n.spadavka = +n.spadavka;
+    n.kniha = $('kniha').value;
+    const k = knihy.find(x => x.id === n.kniha);
+    n.od = +$('od').value || 0;
+    n.do = +$('do').value;
+    if (n.do < n.od) n.do = n.od;
+    if (k && n.do === k.kapitoly.length - 1) n.do = -1;   // „do konce“ – i když přibudou kapitoly
+    nast = S.doplnNastaveni(n);
+    localStorage.setItem(KLIC, JSON.stringify(nast));
+  }
+
+  function vysazej() {
+    clearTimeout(casovac);
+    cisloSazby++;
+    $('stav').className = '';
+    $('stav').textContent = 'Sázím…';
+    $('tisk').disabled = true;
+    $('ram').src = `sazba_kniha.html?s=${cisloSazby}#` + encodeURIComponent(JSON.stringify(nast));
+  }
+  const pozdeji = () => { clearTimeout(casovac); casovac = setTimeout(vysazej, 900); };
+  const meritko = () => { try { $('ram').contentDocument.documentElement.style.setProperty('--meritko', $('meritko').value); } catch (e) {} };
+
+  addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data || !e.data.sazba || e.source !== $('ram').contentWindow) return;
+    const d = e.data;
+    if (d.stav === 'strana') $('stav').textContent = `Sázím… ${d.stran} stran`;
+    else if (d.stav === 'nacitam') $('stav').textContent = `Načítám ${d.celkem} kapitol…`;
+    else if (d.stav === 'chyba') { $('stav').className = 'chyba'; $('stav').textContent = d.text; }
+    else if (d.stav === 'hotovo') {
+      $('stav').textContent = `${d.stran} stran · ${(d.ms / 1000).toFixed(1).replace('.', ',')} s`;
+      $('tisk').disabled = false;
+    }
+  });
+  $('ram').addEventListener('load', meritko);
+
+  $('panel').addEventListener('change', e => {
+    if (e.target.id === 'kniha') { nast.kniha = e.target.value; nast.od = 0; nast.do = -1; naplnKapitoly(); }
+    if (e.target.id === 'format') $('vlastniRozmer').style.display = e.target.value === 'vlastni' ? '' : 'none';
+    if (e.target.id === 'format' && e.target.value === 'vlastni') { $('sirka').value = nast.sirka; $('vyska').value = nast.vyska; }
+    zFormulare();
+    if (e.target.id === 'format') doFormulare();
+    if (['nahled', 'voditka'].includes(e.target.id)) {   // jen vzhled náhledu – bez nové sazby
+      const d = $('ram').contentDocument;
+      if (d && d.body) { d.body.classList.toggle('jednotlive', nast.nahled === 'jednotlive'); d.body.classList.toggle('voditka', nast.voditka); }
+      return;
+    }
+    pozdeji();
+  });
+  $('predvolba').addEventListener('change', e => {
+    const p = S.PREDVOLBY[e.target.value];
+    e.target.value = '';
+    if (!p) return;
+    nast = S.doplnNastaveni(Object.assign({}, S.VYCHOZI, p.nast, { kniha: nast.kniha, od: nast.od, do: nast.do, autor: nast.autor, nahled: nast.nahled }));
+    localStorage.setItem(KLIC, JSON.stringify(nast));
+    doFormulare();
+    vysazej();
+  });
+  $('vysazet').onclick = vysazej;
+  $('meritko').onchange = meritko;
+  $('prepinac').onclick = () => document.body.classList.toggle('panel');
+  $('tisk').onclick = () => $('ram').contentWindow.print();
+  $('okno').onclick = () => window.open($('ram').src, '_blank');
+
+  fetch('knihy.json', { cache: 'no-cache' }).then(r => r.json()).then(k => {
+    knihy = k;
+    k.forEach(x => $('kniha').add(new Option(x.nazev, x.id)));
+    if (!k.some(x => x.id === nast.kniha)) nast.kniha = k[0].id;
+    doFormulare();
+    vysazej();
+  }).catch(() => { $('stav').className = 'chyba'; $('stav').textContent = 'Seznam knih se nepodařilo načíst.'; });
+})();
+</script>
+</body>
+</html>

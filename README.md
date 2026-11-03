@@ -802,8 +802,24 @@ Co čtečka umí:
 - export EPUB a MOBI s ilustracemi, Markdown, poznámky, tisk, offline, statistiky,
   záloha JSON, odkaz `?kniha=2&kap=05_druha_smrt&blok=12`.
 
-Klíče úložiště: `webapp_kroniky` (nastavení, pozice, pokrok, čas) a
-`webapp_kroniky_poznamky`.
+Sazba k tisku (Nástroje → Sazba celé knihy / Vysázet tuto kapitolu) je samostatná
+stránka `kroniky/sazba.html`: vlevo nastavení, vpravo náhled dvoustran v rámu
+`kroniky/sazba_kniha.html`, který stránkuje Paged.js (`obsah/lib/pagedjs`, MIT).
+Sazbu (HTML + CSS `@page`) skládá `kroniky/sazba.js` (`KRONIKY_SAZBA`, bez DOM).
+Umí formáty A5/kapesní/Royal/6×9″/B5/A4/vlastní, okraje v mm zrcadlené u hřbetu,
+spadávku a ořezové značky, obálku přes celou stranu, titul, tiráž, obsah s čísly
+stran (`target-counter`), živá záhlaví, číslování od první kapitoly, kapitoly
+na liché straně, iniciálu, předěly ⁂/❦, ilustrace v textu nebo na celou stranu,
+černobílé ilustrace a nezlomitelné mezery za jednopísmennými předložkami.
+Písma EB Garamond a Literata (OFL) jsou v `kroniky/pisma/`. Tisk/PDF jde přes
+dialog prohlížeče (velikost papíru převezme z `@page`). Pasti: Paged.js
+`counter-reset: page` platí v Chromiu jen pro jednu stranu – čísla se po sazbě
+nastaví každé straně (`counter-set`); `zoom` náhledu během sazby rozhodí měření,
+proto až po třídě `hotovo`; Paged.js značí rozdělenou kapitolu
+`text-align-last: justify` a to se dědí do odstavců – v CSS přebito.
+
+Klíče úložiště: `webapp_kroniky` (nastavení, pozice, pokrok, čas),
+`webapp_kroniky_poznamky` a `webapp_kroniky_sazba` (nastavení sazby).
 
 Testy:
 - `node _test/kroniky_test.js` kontroluje jádro, všechna data a platnost EPUB
@@ -811,3 +827,6 @@ Testy:
   přes KindleUnpack.
 - `python3 _test/kroniky_ui.py` je proklik včetně tažení posuvníku. Podstrkuje
   falešnou řečovou syntézu, protože headless nemá hlasy.
+- `python3 _test/kroniky_sazba_test.py` vysází knihy do skutečného PDF a ověří
+  rozměr stran (i se spadávkou), souvislé číslování, obsah proti stranám kapitol,
+  ovládací stránku a rychlý tisk kapitoly.

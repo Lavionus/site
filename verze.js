@@ -1,5 +1,5 @@
 /* Vygenerováno: node tools/verze.mjs – neupravovat ručně. Stránka: [verze, datum poslední změny] */
-var VERZE_WEBU = 'v601';
+var VERZE_WEBU = 'v602';
 var VERZE_STRANEK = {"obsah/AI_prednaska.html":[7,"2026-10-29"],
 "obsah/Circle_generator.html":[6,"2026-10-13"],
 "obsah/Heritage.html":[13,"2026-10-30"],
@@ -188,7 +188,7 @@ var VERZE_STRANEK = {"obsah/AI_prednaska.html":[7,"2026-10-29"],
 "obsah/krabicka_pant.html":[1,"2026-10-23"],
 "obsah/krabicky.html":[2,"2026-10-29"],
 "obsah/krajky.html":[1,"2026-10-26"],
-"obsah/kroniky.html":[7,"2026-11-03"],
+"obsah/kroniky.html":[8,"2026-11-03"],
 "obsah/krumpac.html":[2,"2026-10-29"],
 "obsah/kuchynske_miry.html":[1,"2026-09-25"],
 "obsah/kulturni_akce.html":[2,"2026-10-13"],

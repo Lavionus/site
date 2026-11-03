@@ -784,17 +784,8 @@
     });
     stahni('Kroniky_vyhnanstvi_poznamky.md', md, 'text/markdown;charset=utf-8');
   }
-  async function tiskKnihy() {
-    try {
-      const obsahy = await nactiKnihu(kniha);
-      $('tisk').innerHTML = `<section><h1>Kroniky vyhnanství</h1><h1>${J.esc(kniha.nazev)}</h1><p style="text-align:center">${J.esc(kniha.podtitul)}</p></section>` +
-        obsahy.map(o => `<section>${o.bloky.map((b, i) => b.typ === 'img' && !nast().obrazky ? '' : htmlBloku(b, i).replace(' loading="lazy"', '')).join('')}</section>`).join('');
-      await Promise.all([...$('tisk').querySelectorAll('img')].map(i => i.decode().catch(() => {})));
-      document.body.classList.add('tisk-knihy');
-      addEventListener('afterprint', () => { document.body.classList.remove('tisk-knihy'); $('tisk').innerHTML = ''; }, { once: true });
-      print();
-    } catch (e) { Dialog.chyba('Knihu se nepodařilo načíst celou.'); }
-  }
+  // tisk celé knihy dělá sazárna (Paged.js): obálka, titul, obsah s čísly stran, záhlaví, okraje v mm
+  const sazba = (kapitola) => window.open(`kroniky/sazba.html?kniha=${encodeURIComponent(kniha.id)}` + (kapitola == null ? '' : `&kapitola=${kapitola}`), '_blank');
   async function offline() {
     Dialog.info('Ukládám kapitoly…');
     try {
@@ -870,7 +861,8 @@
     mobi: () => exportKnihy('mobi'),
     'exp-poznamky': exportPoznamek,
     'tisk-kapitoly': () => print(),
-    'tisk-knihy': tiskKnihy,
+    'tisk-knihy': () => sazba(),
+    'sazba-kapitoly': () => sazba(kapIdx),
     offline,
     statistiky: ukazStatistiky,
     napoveda: () => otevriModal('napoveda'),
