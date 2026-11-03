@@ -1,6 +1,6 @@
 /* Kroniky vyhnanství – čtečka (UI nad KRONIKY_JADRO).
    localStorage: webapp_kroniky (nastavení, pozice, pokrok, čas čtení),
-                 webapp_kroniky_poznamky (záložky a zvýraznění). */
+                 webapp_kroniky_poznamky (záložky, zvýraznění, cizi = načtené poznámky betačtenářů). */
 (async () => {
   'use strict';
   const J = window.KRONIKY_JADRO;
@@ -17,7 +17,7 @@
   if (typeof stav.kapitola === 'number') stav = { kniha: stav.kniha, staraKapitola: stav.kapitola, nast: { velikost: stav.velikost } };
   stav = { kniha: 0, pozice: {}, precteno: {}, cas: 0, dny: {}, panel: null, ...stav };
   stav.nast = { ...VYCHOZI_NAST, ...stav.nast };
-  let data = { zalozky: [], zvyrazneni: [], ...cti(KLIC_P) };
+  let data = { zalozky: [], zvyrazneni: [], cizi: [], ...cti(KLIC_P) };
   const nast = () => stav.nast;
   let casUlozeni = 0;
   function ulozStav(hned) {
@@ -257,6 +257,13 @@
         if (z.poznamka) m.title = z.poznamka;
         return m;
       }));
+    data.cizi.filter(c => !c.skryta).forEach(c => c.zvyrazneni
+      .filter(z => z.kniha === kniha.id && z.soubor === soubor && ukotvi(z) && z.blok === i)
+      .forEach(z => obal(el, z.od, z.do, () => {
+        const m = Object.assign(document.createElement('mark'), { className: 'zv cizi', title: `👤 ${c.jmeno || 'čtenář'}` + (z.poznamka ? ': ' + z.poznamka : '') });
+        m.dataset.cizi = c.id; m.dataset.id = z.id;
+        return m;
+      })));
     data.zalozky
       .filter(z => z.kniha === kniha.id && z.soubor === soubor && ukotviZalozku(z) && z.blok === i)
       .forEach(z => {
@@ -358,6 +365,8 @@
   text.addEventListener('click', e => {
     const zal = e.target.closest('mark.zal-slovo');
     if (zal && getSelection().isCollapsed) { odeberZalozku(zal.dataset.zal); return; }
+    const ciz = e.target.closest('mark.cizi');
+    if (ciz && getSelection().isCollapsed) { ukazCizi(ciz.dataset.cizi, ciz.dataset.id); return; }
     const m = e.target.closest('mark.zv');
     if (!m || !getSelection().isCollapsed) return;
     vyber = { rezim: 'uprava', id: m.dataset.id };
@@ -456,7 +465,7 @@
       });
     } else if (stav.panel === 'poznamky') {
       const z = [...data.zvyrazneni].sort(podlePoradi);
-      h = `<div class="panel-akce"><button class="tl" data-prikaz="exp-poznamky">⬇ Export (Markdown)</button></div>`;
+      h = `<div class="panel-akce"><button class="tl" data-prikaz="odeslat-poznamky">📤 Odeslat autorovi</button><button class="tl" data-prikaz="exp-poznamky">⬇ Markdown</button><button class="tl" data-prikaz="nacist-poznamky">📂 Načíst od čtenáře</button></div>`;
       if (!z.length) h += '<p class="prazdne">Zatím žádné poznámky. Označte v textu pár slov a vyberte barvu nebo 📝.</p>';
       let skupina = '';
       z.forEach(x => {
@@ -464,6 +473,16 @@
         if (s !== skupina) { skupina = s; h += `<h3>${e(knihaPodleId(x.kniha)?.nazev || '')} – ${e(nazevKap(x))}</h3>`; }
         h += `<div class="polozka pozn" role="button" tabindex="0" ${skokAttr(x)} style="border-left:4px solid var(--zv-${x.barva})"><q>${e(x.text)}</q>${x.poznamka ? `<span class="text-pozn">📝 ${e(x.poznamka)}</span>` : ''}
           <span class="panel-akce"><button class="tl" data-uprav-p="${x.id}">📝 Poznámka</button><button class="tl" data-smaz-p="${x.id}">✕ Smazat</button></span></div>`;
+      });
+      data.cizi.forEach(c => {
+        h += `<h3 class="cizi-hlava">👤 ${e(c.jmeno || 'Čtenář bez jména')} · ${c.zvyrazneni.length} pozn. · ${datum(c.cas)}</h3>
+          <div class="panel-akce"><button class="tl" data-cizi-skryj="${c.id}">${c.skryta ? '👁 Zobrazit v textu' : '🙈 Skrýt v textu'}</button><button class="tl" data-cizi-smaz="${c.id}">✕ Odebrat</button></div>`;
+        [...c.zvyrazneni].sort(podlePoradi).forEach(x => {
+          h += `<div class="polozka pozn cizi" role="button" tabindex="0" data-pozn="${x.id}" ${skokAttr(x)}><small>${e(knihaPodleId(x.kniha)?.nazev || '')} · ${e(nazevKap(x))}</small><q>${e(x.text)}</q>${x.poznamka ? `<span class="text-pozn">📝 ${e(x.poznamka)}</span>` : ''}</div>`;
+        });
+        [...c.zalozky].sort(podlePoradi).forEach(x => {
+          h += `<div class="polozka pozn cizi" role="button" tabindex="0" ${skokAttr(x)}><small>🔖 ${e(knihaPodleId(x.kniha)?.nazev || '')} · ${e(nazevKap(x))}</small><span class="veta-zal">${vetaZalozky(x)}</span></div>`;
+        });
       });
     }
     panelObsah.innerHTML = h;
@@ -473,8 +492,17 @@
   document.body.style.cssText += ';--zv-zluta:#ffd54f;--zv-zelena:#81c784;--zv-modra:#64b5f6;--zv-ruzova:#f06292';
 
   panelObsah.addEventListener('click', async e => {
-    const t = e.target.closest('[data-kap],[data-skok],[data-smaz-z],[data-smaz-p],[data-uprav-p]');
+    const t = e.target.closest('[data-kap],[data-skok],[data-smaz-z],[data-smaz-p],[data-uprav-p],[data-cizi-skryj],[data-cizi-smaz]');
     if (!t) return;
+    if (t.dataset.ciziSkryj || t.dataset.ciziSmaz) {
+      const c = data.cizi.find(x => x.id === (t.dataset.ciziSkryj || t.dataset.ciziSmaz));
+      if (!c) return;
+      if (t.dataset.ciziSkryj) c.skryta = !c.skryta;
+      else if (await Dialog.potvrd(`Odebrat poznámky čtenáře ${c.jmeno || 'bez jména'}?`)) data.cizi = data.cizi.filter(x => x !== c);
+      else return;
+      ulozData(); vykresliPanel(); prekresliText();
+      return;
+    }
     if (t.dataset.smazZ) {
       data.zalozky = data.zalozky.filter(z => z.id !== t.dataset.smazZ);
       ulozData(); vykresliPanel(); if (kniha) { new Set([...text.querySelectorAll('mark.zal-slovo')].map(m => +m.closest('[data-i]').dataset.i)).forEach(vyznacBlok); poScrollu(); }
@@ -767,25 +795,65 @@
     }
     return vysl;
   }
-  function exportPoznamek() {
-    let md = '# Kroniky vyhnanství – moje poznámky\n';
-    knihy.forEach(k => {
-      const z = data.zalozky.filter(x => x.kniha === k.id), v = data.zvyrazneni.filter(x => x.kniha === k.id);
-      if (!z.length && !v.length) return;
-      md += `\n## ${k.nazev}\n`;
-      k.kapitoly.forEach(c => {
-        const zz = z.filter(x => x.soubor === c.soubor).sort(podlePoradi), vv = v.filter(x => x.soubor === c.soubor).sort(podlePoradi);
-        if (!zz.length && !vv.length) return;
-        md += `\n### ${c.nazev}\n\n`;
-        zz.forEach(x => { md += `- 🔖 ${vetaZalozky(x, (pred, slovo, po) => pred + (slovo ? `**${slovo}**` : '') + po)}\n`; });
-        if (zz.length) md += '\n';
-        vv.forEach(x => { md += `> ${x.text}\n\n` + (x.poznamka ? `${x.poznamka}\n\n` : ''); });
-      });
-    });
-    stahni('Kroniky_vyhnanstvi_poznamky.md', md, 'text/markdown;charset=utf-8');
+  const mojeBalik = () => J.balikPoznamek(stav.jmeno, data);
+  const jmenoSouboru = (pripona) => `Kroniky_poznamky${stav.jmeno ? '_' + J.normalizuj(stav.jmeno).replace(/[^a-z0-9]+/gi, '_') : ''}_${dnes()}.${pripona}`;
+  const exportPoznamek = () => stahni(jmenoSouboru('md'), J.poznamkyMd(mojeBalik(), knihy), 'text/markdown;charset=utf-8');
+  const exportPoznamekJson = () => stahni(jmenoSouboru('json'), JSON.stringify(mojeBalik(), null, 1), 'application/json');
+  // čtenář pošle poznámky autorovi: telefon → sdílení souboru (e-mail, zprávy…), jinak stažení + předvyplněný e-mail
+  async function odeslatPoznamky() {
+    if (!data.zvyrazneni.length && !data.zalozky.length) { Dialog.info('Zatím nemáte žádné poznámky ani záložky.'); return; }
+    const jm = await Dialog.zeptej('Vaše jméno – podle něj autor pozná, od koho poznámky jsou:', stav.jmeno || '', { ok: 'Pokračovat' });
+    if (jm === null) return;
+    stav.jmeno = jm.trim(); ulozStav(true);
+    const nazev = jmenoSouboru('md'), md = J.poznamkyMd(mojeBalik(), knihy);
+    const predmet = `Kroniky vyhnanství – poznámky${stav.jmeno ? ' od ' + stav.jmeno : ''}`;
+    const soubor = new File([md], nazev, { type: 'text/markdown' });
+    if (navigator.canShare && navigator.canShare({ files: [soubor] })) {
+      try { await navigator.share({ files: [soubor], title: predmet, text: predmet }); return; }
+      catch (e) { if (e.name === 'AbortError') return; }
+    }
+    stahni(nazev, md, 'text/markdown;charset=utf-8');
+    const telo = `Dobrý den,\n\nposílám poznámky ke Kronikám vyhnanství. Soubor ${nazev} je v příloze (najdete ho ve Stažených souborech).\n\n${stav.jmeno}`;
+    if (await Dialog.potvrd(`Soubor ${nazev} je stažený ve Stažených souborech. Otevřít e-mail${stav.prijemce ? ' pro ' + stav.prijemce : ''}? Soubor do něj přiložte (přetáhněte).`, { ok: '✉ Otevřít e-mail', zrus: 'Ne, pošlu sám' }))
+      location.href = `mailto:${encodeURIComponent(stav.prijemce || '')}?subject=${encodeURIComponent(predmet)}&body=${encodeURIComponent(telo)}`;
   }
-  // tisk celé knihy dělá sazárna (Paged.js): obálka, titul, obsah s čísly stran, záhlaví, okraje v mm
-  const sazba = (kapitola) => window.open(`kroniky/sazba.html?kniha=${encodeURIComponent(kniha.id)}` + (kapitola == null ? '' : `&kapitola=${kapitola}`), '_blank');
+  // autor načte poznámky od betačtenářů (MD i JSON, víc souborů); stejné jméno = novější verze nahradí starší
+  async function nactiPoznamky(soubory) {
+    let nacteno = 0;
+    for (const f of soubory) {
+      const b = J.prectiPoznamky(await f.text());
+      if (!b) { Dialog.chyba(`${f.name}: soubor neobsahuje poznámky z čtečky Kronik.`); continue; }
+      const jmeno = b.jmeno || f.name.replace(/\.[a-z]+$/i, '');
+      const stara = data.cizi.find(c => c.jmeno === jmeno);
+      const sada = { id: stara ? stara.id : noveId(), jmeno, cas: b.cas || Date.now(), skryta: false, zvyrazneni: b.zvyrazneni, zalozky: b.zalozky };
+      data.cizi = stara ? data.cizi.map(c => c === stara ? sada : c) : [...data.cizi, sada];
+      nacteno++;
+      Dialog.info(`${stara ? 'Aktualizováno' : 'Načteno'}: ${jmeno} – ${b.zvyrazneni.length} poznámek, ${b.zalozky.length} záložek`);
+    }
+    if (!nacteno) return;
+    ulozData(); prekresliText(); otevriPanel('poznamky');
+  }
+  $('souborPoznamky').onchange = e => { if (e.target.files.length) nactiPoznamky([...e.target.files]); e.target.value = ''; };
+  function prekresliText() { if (kniha) bloky.forEach((b, i) => { if (b.typ === 'p' || b.typ === 'h') vyznacBlok(i); }); }
+  async function ukazCizi(sadaId, id) {
+    const c = data.cizi.find(x => x.id === sadaId), z = c && c.zvyrazneni.find(x => x.id === id);
+    if (!z) return;
+    if (await Dialog.potvrd(`👤 ${c.jmeno || 'Čtenář'}\n\n„${z.text}“${z.poznamka ? '\n\n📝 ' + z.poznamka : ''}`, { ok: 'Zavřít', zrus: 'Seznam poznámek' })) return;
+    otevriPanel('poznamky');
+    const el = panelObsah.querySelector(`[data-pozn="${CSS.escape(id)}"]`);
+    if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('blik'); setTimeout(() => el.classList.remove('blik'), 1600); }
+  }
+  const adresaCtecky = () => { try { if (window.top !== window) return top.location.origin + top.location.pathname + '#obsah/kroniky.html'; } catch (e) {} return location.origin + location.pathname; };
+  async function odkazBeta() {
+    const em = await Dialog.zeptej('Odkaz pro betačtenáře. Na jaký e-mail mají poslat poznámky?', stav.prijemce || '', { ok: 'Kopírovat odkaz' });
+    if (em === null) return;
+    stav.prijemce = em.trim(); ulozStav(true);
+    const p = 'beta=1' + (stav.prijemce ? '&email=' + encodeURIComponent(stav.prijemce) : '');
+    const url = adresaCtecky();
+    kopiruj(url + '?' + p, '🔗 Odkaz pro betačtenáře zkopírován');
+  }
+  // tisk celé knihy dělá samostatná stránka Sazba knihy (obsah/sazba.html): obálka, obsah s čísly stran, záhlaví, okraje v mm
+  const sazba = (kapitola) => window.open(`sazba.html?kroniky=${encodeURIComponent(kniha.id)}` + (kapitola == null ? '' : `&kapitola=${kapitola}`), '_blank');
   async function offline() {
     Dialog.info('Ukládám kapitoly…');
     try {
@@ -807,7 +875,7 @@
       if (z.format !== 'kroniky-zaloha') throw new Error();
       if (!(await Dialog.potvrd('Nahradit současné poznámky, záložky a pokrok obsahem zálohy?'))) return;
       stav = { ...stav, ...z.stav, nast: { ...VYCHOZI_NAST, ...z.stav.nast } };
-      data = { zalozky: [], zvyrazneni: [], ...z.data };
+      data = { zalozky: [], zvyrazneni: [], cizi: [], ...z.data };
       ulozStav(true); ulozData(); pouzijNastaveni(); obnovPozici();
       Dialog.info('Záloha obnovena');
     } catch (e) { Dialog.chyba('Soubor není záloha čtečky Kronik.'); }
@@ -860,6 +928,10 @@
     markdown: () => exportKnihy('md'),
     mobi: () => exportKnihy('mobi'),
     'exp-poznamky': exportPoznamek,
+    'exp-poznamky-json': exportPoznamekJson,
+    'odeslat-poznamky': odeslatPoznamky,
+    'nacist-poznamky': () => $('souborPoznamky').click(),
+    'odkaz-beta': odkazBeta,
     'tisk-kapitoly': () => print(),
     'tisk-knihy': () => sazba(),
     'sazba-kapitoly': () => sazba(kapIdx),
@@ -870,8 +942,8 @@
     obnova: () => $('souborObnova').click(),
     'smazat-data': async () => {
       if (!(await Dialog.potvrd('Smazat všechny záložky, zvýraznění, poznámky, pokrok a statistiky čtení? Vzhled čtečky zůstane.'))) return;
-      stav = { kniha: stav.kniha, pozice: {}, precteno: {}, cas: 0, dny: {}, panel: stav.panel, nast: stav.nast };
-      data = { zalozky: [], zvyrazneni: [] };
+      stav = { kniha: stav.kniha, pozice: {}, precteno: {}, cas: 0, dny: {}, panel: stav.panel, nast: stav.nast, jmeno: stav.jmeno, prijemce: stav.prijemce };
+      data = { zalozky: [], zvyrazneni: [], cizi: data.cizi };
       ulozStav(true); ulozData(); otevri(stav.kniha, 0);
     },
   };
@@ -1005,6 +1077,15 @@
     return otevri(k, c, b);
   }
   pouzijNastaveni();
+  const dotazUrl = new URLSearchParams(location.search);
+  if (dotazUrl.has('beta')) {
+    if (dotazUrl.get('email')) stav.prijemce = dotazUrl.get('email');
+    if (!stav.betaNavod) {
+      stav.betaNavod = true;
+      Dialog.potvrd('Vítejte u betačtení Kronik vyhnanství.\n\nKdyž vás něco zarazí, označte v textu pár slov a vyberte barvu nebo 📝 a napište poznámku. Poznámky se ukládají jen ve vašem prohlížeči.\n\nAž budete chtít poslat poznámky autorovi, otevřete panel 📝 Poznámky (klávesa N) a klepněte na 📤 Odeslat autorovi.', { ok: 'Rozumím', zrus: 'Zavřít' });
+    }
+    ulozStav(true);
+  }
   if (stav.panel && matchMedia('(max-width:760px)').matches) stav.panel = null;
   await obnovPozici();
   if (stav.panel) otevriPanel(stav.panel);

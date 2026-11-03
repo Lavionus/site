@@ -6,6 +6,7 @@ const KATALOG_IKONY = {
  "stranky": {
   "obsah/editor.html": "pages/page-editor",
   "obsah/skriptorium.html": "pages/page-skriptorium",
+  "obsah/sazba.html": "pages/page-sazba",
   "obsah/print_editor.html": "pages/page-print_editor",
   "obsah/md_html.html": "pages/page-md_html",
   "obsah/md_dokument.html": "pages/page-md_dokument",

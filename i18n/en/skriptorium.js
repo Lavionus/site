@@ -287,4 +287,7 @@ I18N.pridej('en', {
   'Úložiště prohlížeče je téměř plné — zálohujte knihovnu (Export → Záloha JSON).': 'Browser storage is almost full — back up the library (Export → JSON backup).',
   'Uloženo do {name} ({cas})': 'Saved to {name} ({cas})',
   'ISBN: {isbn}': 'ISBN: {isbn}',
+  'Profesionální sazba (PDF)': 'Professional typesetting (PDF)',
+  'Kniha jako z nakladatelství: formát A5 či 6×9″, okraje u hřbetu, obsah s čísly stran, živá záhlaví, spadávka pro tiskárnu.': 'A book like from a publisher: A5 or 6×9″ format, gutter margins, contents with page numbers, running heads, bleed for the print shop.',
+  'Otevřít sazbu': 'Open typesetting',
 });

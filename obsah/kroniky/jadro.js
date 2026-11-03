@@ -255,7 +255,51 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
     return out.map(s => s.trim()).filter(Boolean);
   }
 
-  const API = { slovoKolem, vetaKolem, rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, esc };
+  /* ---------- poznámky pro betačtení: balík {format, verze, jmeno, cas, zalozky, zvyrazneni} ---------- */
+  const FORMAT_P = 'kroniky-poznamky';
+  const ZNACKA_P = '<!-- kroniky-poznamky ';
+  const balikPoznamek = (jmeno, data, cas = Date.now()) =>
+    ({ format: FORMAT_P, verze: 1, jmeno: jmeno || '', cas, zalozky: data.zalozky || [], zvyrazneni: data.zvyrazneni || [] });
+
+  // Markdown pro člověka; na konci v komentáři celý balík, aby šel soubor zase načíst
+  function poznamkyMd(balik, knihy) {
+    const poradi = x => { const k = knihy.findIndex(b => b.id === x.kniha), c = k < 0 ? -1 : knihy[k].kapitoly.findIndex(c => c.soubor === x.soubor); return [k, c, x.blok, x.od || 0]; };
+    const srovnej = (a, b) => { const pa = poradi(a), pb = poradi(b); for (let i = 0; i < 4; i++) if (pa[i] !== pb[i]) return pa[i] - pb[i]; return 0; };
+    let md = '# Kroniky vyhnanství – poznámky' + (balik.jmeno ? ` čtenáře ${balik.jmeno}` : '') + '\n\n'
+      + `_${new Date(balik.cas).toLocaleString('cs-CZ')} · ${balik.zvyrazneni.length} zvýraznění, ${balik.zalozky.length} záložek_\n`;
+    knihy.forEach(k => {
+      const z = balik.zalozky.filter(x => x.kniha === k.id), v = balik.zvyrazneni.filter(x => x.kniha === k.id);
+      if (!z.length && !v.length) return;
+      md += `\n## ${k.nazev}\n`;
+      k.kapitoly.forEach(c => {
+        const zz = z.filter(x => x.soubor === c.soubor).sort(srovnej), vv = v.filter(x => x.soubor === c.soubor).sort(srovnej);
+        if (!zz.length && !vv.length) return;
+        md += `\n### ${c.nazev}\n\n`;
+        zz.forEach(x => { md += `- 🔖 ${x.veta ? x.veta.slice(0, x.vOd) + `**${x.slovo}**` + x.veta.slice(x.vOd + x.slovo.length) : x.slovo || ''}\n`; });
+        if (zz.length) md += '\n';
+        vv.forEach(x => { md += `> ${x.text}\n\n` + (x.poznamka ? `${x.poznamka}\n\n` : ''); });
+      });
+    });
+    // „-->“ by komentář ukončil – v JSON stačí zapsat > jako >
+    return md + '\n' + ZNACKA_P + JSON.stringify(balik).replace(/>/g, '\\u003e') + ' -->\n';
+  }
+
+  // balík z textu souboru (JSON balíku, záloha čtečky, nebo Markdown s komentářem); null = neznámý formát
+  function prectiPoznamky(txt) {
+    let o = null;
+    try {
+      const t = txt.trim(), i = t.lastIndexOf(ZNACKA_P);
+      if (t[0] === '{') o = JSON.parse(t);
+      else if (i >= 0) o = JSON.parse(t.slice(i + ZNACKA_P.length, t.indexOf('-->', i)));
+    } catch (e) { return null; }
+    if (o && o.format === 'kroniky-zaloha' && o.data) o = balikPoznamek(o.stav && o.stav.nast && o.stav.nast.jmeno, o.data, o.cas || Date.now());
+    if (!o || o.format !== FORMAT_P || !Array.isArray(o.zvyrazneni) || !Array.isArray(o.zalozky)) return null;
+    const textova = x => x && typeof x.kniha === 'string' && typeof x.soubor === 'string' && Number.isInteger(x.blok);
+    return { ...o, zvyrazneni: o.zvyrazneni.filter(x => textova(x) && typeof x.text === 'string' && x.text),
+      zalozky: o.zalozky.filter(x => textova(x) && typeof x.slovo === 'string') };
+  }
+
+  const API = { slovoKolem, vetaKolem, rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, esc, balikPoznamek, poznamkyMd, prectiPoznamky };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else koren.KRONIKY_JADRO = API;
 })(this);

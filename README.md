@@ -802,24 +802,12 @@ Co čtečka umí:
 - export EPUB a MOBI s ilustracemi, Markdown, poznámky, tisk, offline, statistiky,
   záloha JSON, odkaz `?kniha=2&kap=05_druha_smrt&blok=12`.
 
-Sazba k tisku (Nástroje → Sazba celé knihy / Vysázet tuto kapitolu) je samostatná
-stránka `kroniky/sazba.html`: vlevo nastavení, vpravo náhled dvoustran v rámu
-`kroniky/sazba_kniha.html`, který stránkuje Paged.js (`obsah/lib/pagedjs`, MIT).
-Sazbu (HTML + CSS `@page`) skládá `kroniky/sazba.js` (`KRONIKY_SAZBA`, bez DOM).
-Umí formáty A5/kapesní/Royal/6×9″/B5/A4/vlastní, okraje v mm zrcadlené u hřbetu,
-spadávku a ořezové značky, obálku přes celou stranu, titul, tiráž, obsah s čísly
-stran (`target-counter`), živá záhlaví, číslování od první kapitoly, kapitoly
-na liché straně, iniciálu, předěly ⁂/❦, ilustrace v textu nebo na celou stranu,
-černobílé ilustrace a nezlomitelné mezery za jednopísmennými předložkami.
-Písma EB Garamond a Literata (OFL) jsou v `kroniky/pisma/`. Tisk/PDF jde přes
-dialog prohlížeče (velikost papíru převezme z `@page`). Pasti: Paged.js
-`counter-reset: page` platí v Chromiu jen pro jednu stranu – čísla se po sazbě
-nastaví každé straně (`counter-set`); `zoom` náhledu během sazby rozhodí měření,
-proto až po třídě `hotovo`; Paged.js značí rozdělenou kapitolu
-`text-align-last: justify` a to se dědí do odstavců – v CSS přebito.
+Tisk celé knihy (Nástroje → Sazba celé knihy / Vysázet tuto kapitolu) otevírá
+samostatnou stránku Sazba knihy (`obsah/sazba.html?kroniky=kniha1[&kapitola=N]`),
+popsanou níže.
 
-Klíče úložiště: `webapp_kroniky` (nastavení, pozice, pokrok, čas),
-`webapp_kroniky_poznamky` a `webapp_kroniky_sazba` (nastavení sazby).
+Klíče úložiště: `webapp_kroniky` (nastavení, pozice, pokrok, čas) a
+`webapp_kroniky_poznamky`.
 
 Testy:
 - `node _test/kroniky_test.js` kontroluje jádro, všechna data a platnost EPUB
@@ -827,6 +815,30 @@ Testy:
   přes KindleUnpack.
 - `python3 _test/kroniky_ui.py` je proklik včetně tažení posuvníku. Podstrkuje
   falešnou řečovou syntézu, protože headless nemá hlasy.
-- `python3 _test/kroniky_sazba_test.py` vysází knihy do skutečného PDF a ověří
-  rozměr stran (i se spadávkou), souvislé číslování, obsah proti stranám kapitol,
-  ovládací stránku a rychlý tisk kapitoly.
+- tisk kapitoly a volání sazby ze čtečky kontroluje `_test/sazba_test.py`.
+
+**Sazba knihy** (`obsah/sazba.html`, sekce Psaní & text) vysází knihu do PDF k tisku
+jako z nakladatelství. Stránkování dělá Paged.js 0.4.3 (`obsah/lib/pagedjs`, MIT,
+CSS Paged Media).
+- `sazba/jadro.js` (`SAZBA_JADRO`, bez DOM): Markdown → kapitoly a bloky, HTML a CSS
+  `@page` (formáty, zrcadlené okraje, spadávka, ořezové značky, záhlaví přes
+  `string-set`, obsah přes `target-counter`), předvolby a popisky v jazyce knihy
+  (cs/sk/en/de).
+- `sazba/zdroje.js` (`SAZBA_ZDROJE`): vlastní kniha (texty .md/.txt/.html a obrázky
+  v IndexedDB `webapp_sazba`, párování obrázků podle jména), knihy Skriptoria (čte
+  jeho IndexedDB `skriptoriumDB`, HTML kapitol → bloky) a Kroniky.
+- `sazba/kniha.html` je rám s vysázenou knihou; knihu si bere z
+  `(parent|opener).SAZBA_DATA()`, takže jde otevřít i v nové kartě (↗).
+- Písma EB Garamond a Literata (OFL) jsou v `sazba/pisma/`.
+- Volání zvenku: `sazba.html?kroniky=<id>[&kapitola=N]` (čtečka Kronik) a
+  `sazba.html?skriptorium=<id>` (Skriptorium → Export → Profesionální sazba).
+- Klíče: `webapp_sazba` (nastavení), `webapp_sazba_zdroj`, `webapp_sazba_meta`
+  (úpravy názvu, autora, obálky podle zdroje).
+- Pasti: Paged.js dá `counter-reset: page` jen jedné straně a Chromium ho dál
+  nepřenese, proto se po sazbě nastaví číslo každé straně (`counter-set`). `zoom`
+  náhledu během sazby rozhodí měření, proto se zapíná až po třídě `hotovo`.
+  Paged.js značí rozdělenou sekci `text-align-last: justify` a to se dědí do
+  odstavců, proto je to v CSS přebité.
+- Test `python3 _test/sazba_test.py`: jádro v node a skutečná PDF (rozměr i se
+  spadávkou, souvislé číslování, obsah proti stranám kapitol). Dál zkouší vlastní
+  knihu přetažením, knihu ze Skriptoria a volání ze čtečky.

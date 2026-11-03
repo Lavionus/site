@@ -2,12 +2,11 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>Kroniky vyhnanství – sazba</title>
-<!-- Sazba knihy pro tisk / PDF. Běží v rámu sazba.html, jde ale otevřít i samostatně:
-     sazba_kniha.html#{"kniha":"kniha1",...}  (nastavení jako JSON v kotvě, chybějící = výchozí).
+<title>Sazba knihy</title>
+<!-- Vysázená kniha pro tisk / PDF. Běží v rámu stránky sazba.html (nebo v kartě, kterou otevřela);
+     knihu a nastavení si bere z ní: (parent|opener).SAZBA_DATA() → {kniha, nast}.
      Stránkování dělá Paged.js (MIT, ../lib/pagedjs) – CSS Paged Media: @page, záhlaví, target-counter. -->
 <script src="jadro.js"></script>
-<script src="sazba.js"></script>
 <script src="../lib/pagedjs/paged.min.js"></script>
 <style>
 @font-face{font-family:"EB Garamond";font-weight:400;font-style:normal;src:url(pisma/eb-garamond-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -48,31 +47,23 @@
 <div class="hlaska" id="hlaska">Sázím knihu…</div>
 <script>
 (async function () {
-  const J = window.KRONIKY_JADRO, S = window.KRONIKY_SAZBA;
-  let nast;
-  try { nast = S.doplnNastaveni(JSON.parse(decodeURIComponent(location.hash.slice(1) || '{}'))); }
-  catch (e) { nast = S.doplnNastaveni({}); }
-  const rodic = window.parent !== window ? window.parent : null;
-  const hlas = zprava => { if (rodic) rodic.postMessage(Object.assign({ sazba: true }, zprava), location.origin); };
+  const S = window.SAZBA_JADRO;
+  const pan = window.parent !== window ? window.parent : window.opener;
+  const hlas = zprava => { if (pan) try { pan.postMessage(Object.assign({ sazba: true }, zprava), location.origin); } catch (e) {} };
   const chyba = t => { document.getElementById('hlaska').textContent = t; hlas({ stav: 'chyba', text: t }); };
-  if (nast.nahled === 'jednotlive') document.body.classList.add('jednotlive');
-  if (nast.voditka) document.body.classList.add('voditka');
 
   try {
-    const knihy = await (await fetch('knihy.json', { cache: 'no-cache' })).json();
-    const kniha = knihy.find(k => k.id === nast.kniha) || knihy[0];
-    const od = Math.max(0, Math.min(nast.od, kniha.kapitoly.length - 1));
-    const az = Math.max(od, Math.min(nast.do < 0 ? kniha.kapitoly.length - 1 : nast.do, kniha.kapitoly.length - 1));
-    const vybrane = kniha.kapitoly.slice(od, az + 1);
-    hlas({ stav: 'nacitam', celkem: vybrane.length });
-    const texty = await Promise.all(vybrane.map(c => fetch(`${kniha.id}/${c.soubor}`).then(r => {
-      if (!r.ok) throw new Error('Kapitolu ' + c.nazev + ' se nepodařilo načíst');
-      return r.text();
-    })));
-    const kapitoly = vybrane.map((c, i) => ({ nazev: c.nazev, bloky: J.rozeber(texty[i]) }));
+    let data = null;
+    try { data = pan && pan.SAZBA_DATA && pan.SAZBA_DATA(); } catch (e) {}
+    if (!data || !data.kniha) throw new Error('Tuto stránku otevírá stránka Sazba knihy (sazba.html).');
+    const kniha = data.kniha, nast = S.doplnNastaveni(data.nast);
+    if (nast.nahled === 'jednotlive') document.body.classList.add('jednotlive');
+    if (nast.voditka) document.body.classList.add('voditka');
+    if (!(kniha.kapitoly || []).length) throw new Error('Kniha nemá žádný text.');
+    document.documentElement.lang = S.JAZYKY[kniha.jazyk] ? kniha.jazyk : 'cs';   // dělení slov podle jazyka knihy
 
-    const html = S.htmlKnihy(kniha, kapitoly, nast, { datum: new Date() });
-    const css = S.cssKnihy(nast, kniha.nazev);
+    const html = S.htmlKnihy(kniha, nast, { datum: new Date() });
+    const css = S.cssKnihy(nast, kniha);
 
     // písma a ilustrace musí být načtené dřív, než Paged.js začne měřit
     const rodina = S.PISMA[nast.pismo].rodina;
@@ -103,7 +94,7 @@
     P.registerHandlers(Hlidac);
     document.getElementById('hlaska').remove();
     const t0 = performance.now();
-    const tok = await new P.Previewer().preview(obsah, [{ [location.href.split('#')[0] + '#sazba']: css }], document.body);
+    const tok = await new P.Previewer().preview(obsah, [{ [location.href.split('#')[0].split('?')[0] + '#sazba']: css }], document.body);
     // prázdné strany (vložené kvůli začátku kapitoly na liché) – bez záhlaví i čísla
     document.querySelectorAll('.pagedjs_blank_page').forEach(p => p.classList.add('bez-zahlavi', 'bez-cisla'));
     // číslování od první kapitoly: Paged.js dá „counter-reset: page 1“ jen jedné straně a Chromium ho
@@ -114,8 +105,8 @@
     strany.forEach((p, i) => { p.style.counterIncrement = 'none'; p.style.counterSet = 'page ' + (prvni > 0 ? i - prvni + 1 : i + 1); });
     document.body.classList.add('hotovo');
     window.__sazba = { stran: tok.total, ms: Math.round(performance.now() - t0) };
-    document.title = `${kniha.nazev} – ${tok.total} stran`;
-    hlas({ stav: 'hotovo', stran: tok.total, ms: window.__sazba.ms, kniha: kniha.nazev });
+    document.title = kniha.nazev || 'Sazba knihy';
+    hlas({ stav: 'hotovo', stran: tok.total, ms: window.__sazba.ms });
   } catch (e) {
     console.error(e);
     window.__sazba = { chyba: String(e && e.message || e) };

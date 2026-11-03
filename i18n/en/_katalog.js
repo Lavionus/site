@@ -21,6 +21,7 @@ I18N.pridej('en', {
   "Psaní & text": "Writing & text",
   "Editor": "Editor",
   "Skriptorium (tvůrce knih)": "Scriptorium (book creator)",
+  "Sazba knihy (PDF k tisku)": "Book Typesetting (print-ready PDF)",
   "Editor pro tisk a export": "Print and export editor",
   "Markdown ↔ HTML": "Markdown ↔ HTML",
   "Markdown → DOCX / ODT": "Markdown → DOCX / ODT",
@@ -543,6 +544,7 @@ I18N.pridej('en', {
 I18N.pridejTagy('en', {
   "obsah/editor.html": ["notes","text","writing","text editor","notepad"],
   "obsah/skriptorium.html": ["book","epub","publishing","book creator","ebook","writing","novel"],
+  "obsah/sazba.html": ["typesetting","book","pdf","print","typography","layout","cover","table of contents","page numbers","running head","bleed","markdown","self-publishing","paperback","print-ready"],
   "obsah/print_editor.html": ["print","markdown","export","html editor","wysiwyg","formatting","document"],
   "obsah/md_html.html": ["markdown","html","convert","conversion","readme","converter"],
   "obsah/md_dokument.html": ["markdown","word","docx","odt","odf","doc","libreoffice","convert","conversion","document"],

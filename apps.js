@@ -55,6 +55,12 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/sazba.html",
+        "nazev": "📐 Sazba knihy (PDF k tisku)",
+        "stav": "vyvoj",
+        "tagy": ["sazba", "kniha", "pdf", "tisk", "typografie", "a5", "obálka", "obsah", "čísla stran", "záhlaví", "spadávka", "markdown", "paged media", "self-publishing", "brožura", "skriptorium"]
+      },
+      {
         "soubor": "obsah/print_editor.html",
         "nazev": "🖨️ Editor pro tisk a export",
         "stav": "beta",

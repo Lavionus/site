@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v602';
+const CACHE = PREFIX + 'v604';
 const JADRO = [
   './',
   './index.html',
@@ -428,7 +428,7 @@ self.addEventListener('fetch', e => {
 
   // Kroniky (čtečka + text kapitol): nejdřív ze sítě, cache jen offline. Rukopis se průběžně mění
   // a SWR míchal verze – nová kapitola s ilustrací ![…](…) + starý jadro.js = obrázek jako text.
-  if (/\/obsah\/kroniky(\.html|\/.+\.(js|json|md|html))$/.test(url.pathname)) {
+  if (/\/obsah\/kroniky(\.html|\/.+\.(js|json|md))$/.test(url.pathname)) {
     const klicK = navigace ? url.origin + url.pathname : e.request.url;
     e.respondWith(caches.open(CACHE).then(cache => {
       const zeSite = fetch(e.request.url, { cache: 'no-cache', credentials: 'same-origin' })

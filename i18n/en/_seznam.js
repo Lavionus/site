@@ -317,6 +317,7 @@ I18N.seznam('en', [
   's_hak',
   'sablony_frezka',
   'savings_calc',
+  'sazba',
   'scene_sketch',
   'scrabble',
   'scrabble_en',
