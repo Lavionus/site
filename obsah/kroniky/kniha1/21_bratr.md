@@ -190,6 +190,8 @@ Převor čekal u brány.
 
 Sám. Fortnýř stál opodál, u své komůrky, a díval se jinam, jako se díval bratr vestiář. Převor držel v jedné ruce mošnu a v druhé něco dlouhého, zabaleného v plátně.
 
+![U brány](obrazky/21_bratr.webp)
+
 Podal mu mošnu. Matěj ji vzal a podle tíhy poznal, co v ní je, tak jako se podle tíhy pozná kost. Tabulka. Kámen. Váček. Měchýř. Svíce. Augustin ne. Augustin patřil klášteru.
 
 A sešitek.

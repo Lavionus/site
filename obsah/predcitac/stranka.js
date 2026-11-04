@@ -71,12 +71,21 @@
   /* ---------- hlasy: katalog, stažení, uložení ---------- */
   let katalog = [];               // položky voices.json
   const stazene = new Set();      // klíče stažených hlasů
+  // hlasy mimo oficiální voices.json (stejný formát Piper, stahují se z repozitáře autora)
+  const CESTINA = { code: 'cs_CZ', family: 'cs', region: 'CZ', name_native: 'Čeština', name_english: 'Czech', country_english: 'Czech Republic' };
+  const KOMUNITNI = ['medium', 'high'].map(q => ({
+    key: 'cs_CZ-honza-' + q, name: 'honza', language: CESTINA, quality: q, num_speakers: 1, komunitni: true,
+    zaklad: 'https://huggingface.co/Thomcles/Piper-TTS-Czech/resolve/main/',
+    karta: 'https://huggingface.co/Thomcles/Piper-TTS-Czech',
+    files: { [q + '/model.onnx']: { size_bytes: q === 'high' ? 84909623 : 63516050 }, [q + '/model.onnx.json']: { size_bytes: 4855 } },
+  }));
+  // plné adresy souborů hlasu (zároveň klíče v Cache Storage)
   const soubory = h => {
-    const k = Object.keys(h.files);
-    return { onnx: k.find(f => f.endsWith('.onnx')), json: k.find(f => f.endsWith('.onnx.json')), karta: k.find(f => f.endsWith('MODEL_CARD')) };
+    const k = Object.keys(h.files), z = h.zaklad || HF, cesta = f => f && z + f;
+    return { onnx: cesta(k.find(f => f.endsWith('.onnx'))), json: cesta(k.find(f => f.endsWith('.onnx.json'))), karta: h.karta || cesta(k.find(f => f.endsWith('MODEL_CARD'))) };
   };
   const velikostMB = h => Math.round(Object.values(h.files).reduce((s, f) => s + f.size_bytes, 0) / 1e6);
-  const popisHlasu = h => `${h.language.name_native} (${h.language.code}) · ${h.name} · ${h.quality}`;
+  const popisHlasu = h => `${h.language.name_native} (${h.language.code}) · ${h.name} · ${h.quality}` + (h.komunitni ? ' · komunitní' : '');
 
   async function nactiKatalog() {
     const cache = await caches.open(CACHE_HLASU);
@@ -91,15 +100,16 @@
       katalog = Object.values(await ulozeny.json());
       zapis('Seznam hlasů offline z mezipaměti (' + e.message + ')');
     }
+    katalog.push(...KOMUNITNI);
     katalog.sort((a, b) => a.key.localeCompare(b.key));
-    for (const h of katalog) if (await cache.match(HF + soubory(h).onnx)) stazene.add(h.key);
+    for (const h of katalog) if (await cache.match(soubory(h).onnx)) stazene.add(h.key);
   }
 
   async function stahniHlas(h, prubeh) {
     const cache = await caches.open(CACHE_HLASU);
     const f = soubory(h);
-    const celkem = h.files[f.onnx].size_bytes;
-    const r = await fetch(HF + f.onnx);
+    const celkem = Object.values(h.files).find(x => x.size_bytes > 1e6).size_bytes;
+    const r = await fetch(f.onnx);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const ctecka = r.body.getReader(), casti = [];
     let n = 0;
@@ -109,9 +119,9 @@
       casti.push(value); n += value.length;
       prubeh(n / celkem);
     }
-    const konfig = await fetch(HF + f.json).then(x => { if (!x.ok) throw new Error('HTTP ' + x.status); return x.blob(); });
-    await cache.put(HF + f.json, new Response(konfig, { headers: { 'Content-Type': 'application/json' } }));
-    await cache.put(HF + f.onnx, new Response(new Blob(casti), { headers: { 'Content-Type': 'application/octet-stream' } }));
+    const konfig = await fetch(f.json).then(x => { if (!x.ok) throw new Error('HTTP ' + x.status); return x.blob(); });
+    await cache.put(f.json, new Response(konfig, { headers: { 'Content-Type': 'application/json' } }));
+    await cache.put(f.onnx, new Response(new Blob(casti), { headers: { 'Content-Type': 'application/octet-stream' } }));
     stazene.add(h.key);
     navigator.storage?.persist?.().then(ok => zapis('Trvalé úložiště: ' + (ok ? 'ano' : 'ne')));
     zapis('Staženo: ' + h.key + ' (' + velikostMB(h) + ' MB)');
@@ -119,7 +129,7 @@
 
   async function smazHlas(h) {
     const cache = await caches.open(CACHE_HLASU), f = soubory(h);
-    await cache.delete(HF + f.onnx); await cache.delete(HF + f.json);
+    await cache.delete(f.onnx); await cache.delete(f.json);
     stazene.delete(h.key);
     if (nast.hlas === h.key) { nast.hlas = ''; ulozNast(); nactenyHlas = null; }
   }
@@ -150,8 +160,8 @@
     const p = (async () => {
       stav('Načítám hlas…');
       const cache = await caches.open(CACHE_HLASU), f = soubory(h);
-      const konfig = await (await cache.match(HF + f.json)).json();
-      const model = await (await cache.match(HF + f.onnx)).arrayBuffer();
+      const konfig = await (await cache.match(f.json)).json();
+      const model = await (await cache.match(f.onnx)).arrayBuffer();
       const t0 = performance.now();
       await zadej({ typ: 'hlas', model, konfig }, [model]);
       zapis('Hlas načten: ' + klic + ' za ' + Math.round(performance.now() - t0) + ' ms');
@@ -371,7 +381,7 @@
       const f = soubory(h), ma = stazene.has(h.key);
       const r = document.createElement('div');
       r.className = 'hlas' + (nast.hlas === h.key ? ' vybrany' : '');
-      r.innerHTML = `<div><div class="jm">${popisHlasu(h)}</div><div class="info">${velikostMB(h)} MB · mluvčích: ${h.num_speakers}${f.karta ? ` · <a href="${HF + f.karta}" target="_blank" rel="noopener">karta</a>` : ''}${ma ? ' · <span class="ok">✓ staženo</span>' : ''}</div></div><div class="akce"></div>`;
+      r.innerHTML = `<div><div class="jm">${popisHlasu(h)}</div><div class="info">${velikostMB(h)} MB · mluvčích: ${h.num_speakers}${f.karta ? ` · <a href="${f.karta}" target="_blank" rel="noopener">karta</a>` : ''}${h.komunitni ? ' · licence neuvedena' : ''}${ma ? ' · <span class="ok">✓ staženo</span>' : ''}</div></div><div class="akce"></div>`;
       const akce = r.querySelector('.akce');
       const tl = (text, fn, cls) => { const b = document.createElement('button'); b.className = 'tl' + (cls ? ' ' + cls : ''); b.textContent = text; b.onclick = fn; akce.appendChild(b); return b; };
       if (ma) {

@@ -96,6 +96,8 @@ Všichni seděli k jedné stěně. K té, která byla tenkrát teplá.
 
 Ostra u ní stála. Dlaň na skále, hlavu skloněnou, bílý cop přes rameno. Nepohnula se, když Matěj vešel. Nepohnula se, ani když se otočil Merin, který stál vedle ní, a uviděl ho.
 
+![Ostra u stěny](obrazky/18_stara_cesta.webp)
+
 Matěj přešel ke stěně. Nikdo ho nezastavil. Položil na ni dlaň, kus od Ostřiny.
 
 Byla studená.

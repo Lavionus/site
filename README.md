@@ -873,7 +873,7 @@ na iOS po zamčení obrazovky ztichne, skutečný zvuk v `<audio>` hraje dál.
   iniciály, řadové číslovky), kusy pro syntézu, WAV.
 - `predcitac/worker.js`: espeak-ng ve WASM (`lib/piper/`, GPL-3.0, viz README.txt) →
   ID fonémů → model ONNX (`lib/onnx`, jedno vlákno – GitHub Pages nemá COOP/COEP).
-- `predcitac/stranka.js`: hlasy z `huggingface.co/rhasspy/piper-voices` (voices.json,
+- `predcitac/stranka.js`: hlasy z `huggingface.co/rhasspy/piper-voices` (voices.json; navíc komunitní hlas Honza z `Thomcles/Piper-TTS-Czech` v poli KOMUNITNI,
   CORS povolený) do Cache Storage `piper-hlasy` (ne `webapp-…`, ty maže sw.js).
   Režim průběžně: adaptivní kusy (při zásobě pod 10 s se kus uzavře hned, pak až
   ~700 znaků), zásoba 150 s. Režim předem: celý text do jednoho WAV (export).

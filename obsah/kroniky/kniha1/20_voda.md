@@ -308,6 +308,8 @@ Konrád za ním přišel, když muž z Chebu odjel.
 
 Matěj stál u plané hrušně na kraji luk. Voda opadla a na lukách zůstalo bahno, šedé, s vrstvou, která se na slunci leskla, a na kmeni hrušně byla ve výšce kolen čára, kam voda sahala. Hruda pod hrušní byla celá. Drn srostl a voda ho jen umyla. Pupeny se rozvíraly, bílé.
 
+![Planá hrušeň](obrazky/20_voda.webp)
+
 Konrád se postavil vedle něj. Bez Volkmara, bez Rüdigera. Sám, v šedém plášti.
 
 Dlouho mlčel.

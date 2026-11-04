@@ -118,4 +118,6 @@ Všechno je to pravda. Všechno to umí vysvětlit.
 
 Vpravo napíše jen: *Proč si byl jistý?*
 
+![Proč si byl jistý?](obrazky/24_epilog_archiv.webp)
+
 Dívá se na to, zatímco za oknem ubíhají kopce, a pak deník zavře a dlouho se nedívá nikam.

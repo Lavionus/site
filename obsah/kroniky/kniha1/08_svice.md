@@ -204,6 +204,8 @@ Sešel dolů.
 
 Šel s lucernou v ruce, vzpřímeně, krok po kroku, a počítal je, protože jinak nemohl. Tři kroky. Na dně se zastavil. Lucerna hořela. Dýchal. Nadechl se poprvé opatrně, jen trochu, jako když se člověk dotýká horkého hrnce. Pak zhluboka. Vzduch byl studený a voněl mokrým jehličím, kyselkou a slabě i liškou.
 
+![Na dně doupěte](obrazky/08_svice.webp)
+
 Stál tam, kde tenkrát padl, a nic se nestalo.
 
 Pak si klekl. Pomalu, se zády rovně, a pak se sklonil, až byl s hlavou u lišky a s lucernou na zemi vedle sebe. Dobroslava nahoře řekla jeho jméno, poprvé, *Matěji*, a on zvedl ruku, že je to dobré. Bylo to dobré. Dýchal. Srdce mu tlouklo, ale jen proto, že se bál.

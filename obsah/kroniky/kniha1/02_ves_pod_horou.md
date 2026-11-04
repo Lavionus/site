@@ -76,6 +76,8 @@ Matka bydlela na horním konci vsi, kde začínal svah, v domě, který postavil
 
 Psa uslyšel dřív, než došel k plotu. Ze dvora se ozval hlas, jaký mají staří psi, kteří už neštěkají na každého. Pak to přestalo být štěkání a bylo to něco jiného, vysoké a zlomené. Přes plot se přehoupla šedivá fena s bílým čenichem, uklouzla na náledí, zvedla se a vrhla se na něj.
 
+![Sivka](obrazky/02_ves.webp)
+
 „Sivko,“ řekl Matěj. „Sivko, ty hloupá.“
 
 Fena mu stála předníma nohama na hrudi a olizovala mu bradu, ruce, rukáv hábitu, a celá se třásla. Když odcházel, byly jí dva roky. Vychoval ji ze štěněte, které chtěl soused utopit, protože bylo nejmenší a šedé jako myš. Nosil ji v košili. Šest let. Pes si ho pamatoval, a Matěj si najednou nebyl jistý, jestli si on pamatuje sám sebe.

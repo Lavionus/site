@@ -160,6 +160,8 @@ Pod nohama ucítil v podlaze díru. Ne díru. Puklinu, širokou jako ruka, a vod
 
 Stoupala mu k bradě. Ostra mu na zádech stiskla krk.
 
+![Korytem](obrazky/19b_pocet.webp)
+
 Myslel na rybník za mlýnem. Na otce, jak ho tam jako malého hodil a on řval, a otec se smál, a pak se nesmál. *Mnich se bojí vody.* Myslel na to, jak se voda drží v prohlubni. Jako dech země v doupěti. Leží dole, kde je nejníž, a nad ní se dá dýchat, když se člověk nesklání.
 
 Nesklonil se víc, než musel. Šel.

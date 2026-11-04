@@ -54,6 +54,8 @@ Matěj se ohlédl k oratoři. Nad dveřmi tam ještě visely vrbové proutky se 
 
 U kostelíka stála celá ves, nebo skoro celá, protože bylo úterý a orat se ještě nedalo. Ženy v šátcích, chlapi s rukama za opaskem, děti, které rodiče drželi za límec. Kojata stál vpředu, široký a rudý, a vedle něj mlynář. Stará Bohuna se opírala o hůl. Matka stála u plotu fary, kterou kněz zpoza kopce nikdy nepoužíval, a když Matěj přišel, nepodívala se na něj. Dívala se na Ješka.
 
+![Valoun u kostelíka](obrazky/10_zlato.webp)
+
 Ješek stál vedle Konrádova koně. Byl umytý, měl na sobě čistou košili, a Matěj ho v ní nepoznal hned. Pak pochopil, že je to otcova sváteční košile, kterou matka schovávala v truhle a kterou Ješek nosil na Vánoce a o posvícení. Byla mu těsná přes ramena.
 
 Konrád seděl na koni. Neměl na sobě zbroj, jen tmavý plášť s kožešinou, a na ruce železný prsten. Když uviděl Matěje, usmál se a kývl na něj, jako se kývá na přítele, kterého člověk čekal. Matěj ucítil, jak se k němu obracejí hlavy.

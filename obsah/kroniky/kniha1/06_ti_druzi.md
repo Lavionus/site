@@ -128,6 +128,8 @@ Matěj posadil muže pod převis a sám si sedl vedle něj, protože už nemohl 
 
 Dobroslava vystoupila na kořen a třikrát udeřila hákem do kamene. Železo o kámen. Tři suché údery, které les spolkl, jako by je nikdy neslyšel. Pak slezla a sedla si na bobek kus od nich, na kraj převisu, s tyčí přes kolena.
 
+![Balvan v lese](obrazky/06_ti_druzi.webp)
+
 „A teď?“ zeptal se Matěj.
 
 „Teď čekáme.“

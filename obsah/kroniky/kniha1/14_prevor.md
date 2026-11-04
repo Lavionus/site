@@ -60,6 +60,8 @@ Komora byla malá a převor v ní vypadal ještě menší, než byl. Udalrich mu
 
 Byly to klíče. Tři, na železném kruhu, jeden větší a dva menší, a ten prostřední měl ohnutý zub, protože ho někdo kdysi zkoušel strčit do zámku, do kterého nepatřil. Matěj ho znal. Znal ho podle zvuku, jakým cinkal o Wigandův pás, když Wigand ještě chodil.
 
+![Wigandovy klíče](obrazky/14_prevor.webp)
+
 „Bratr Wigand zemřel,“ řekl převor.
 
 Matěj stál u dveří. Neposadil se, protože ho převor nevyzval.

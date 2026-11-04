@@ -26,6 +26,8 @@ Ješek se rozhlédl. Ukázal krumpáčem na kraj luk, kde stála stará planá h
 
 Udalrich jim půjčil rýč a nic neřekl. Kopali pod hrušní. Ješek prosekával krumpáčem zmrzlou zem a Matěj vyhazoval rýčem hroudy, tak jak to dělali jako kluci, když otec kopal jámu na řepu: jeden rozbíjí, druhý hází. Ješek pracoval tak, jak ho Matěj viděl na čelbě, bez námahy a s rytmem, který měl v sobě cosi jako zpěv. Krumpáč dopadal pořád do stejného místa a odlupoval zem po kusech velkých jako dlaň. Matěj se po chvíli zpotil a Ješek ne.
 
+![Hrob pod hrušní](obrazky/09_bratri.webp)
+
 „Kolik už?“ zeptal se Matěj, když se zastavili, aby se Ješek vydýchal. Kašlal. Ten suchý, hluboký kašel, který nosil v sobě, se mu vracel pokaždé, když se narovnal.
 
 „Čeho kolik?“

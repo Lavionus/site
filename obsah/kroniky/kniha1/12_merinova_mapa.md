@@ -174,6 +174,8 @@ Merin dlouho mlčel. Pak se otočil k malému muži a něco mu řekl. Malý muž
 
 Merin tubus rozvázal a vytáhl z něj svitek. Neroztáhl ho celý. Rozvinul ho jen do půlky, na kameni pod převisem u kahanu, a držel ho oběma rukama za okraje, aby se nesvinul.
 
+![Merinův svitek](obrazky/12_merinova_mapa.webp)
+
 Nebyl to pergamen. Byla to kůže, tenčí, než Matěj kdy viděl, tmavší a měkčí, a na lomech zrnitá. Byla na ní hora.
 
 Matěj to poznal až po chvíli. Nejdřív viděl jen čáry, v různých barvách, hnědé a černé a jedny vybledlé do rezava, tak staré, že je skoro nebylo vidět. Pak pochopil, že se dívá na horu z boku, jako by ji někdo rozřízl nožem jako bochník a díval se na řez. Nahoře hřbet, ten dlouhý, strmější na jednom konci, jak ho Matěj znal z grangie. Pod hřbetem chodby. Hodně chodeb, tenkých, kreslených jedním tahem, a v nich malé komůrky jako buňky v plástvi.

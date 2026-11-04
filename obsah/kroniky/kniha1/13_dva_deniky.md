@@ -86,6 +86,8 @@ Nebylo to písmo. Nebo ne celé.
 
 Matěj rozvázal řemínek a u kahanu otevřel první tabulku. Chvíli si myslel, že je to k ničemu. Vosk byl popsaný hustě, drobně, ale nebyly to řádky slov. Byly to znaky. Křížek. Svislá čárka s příčkami jako žebřík. Kroužek. Malý čtverec s čárou přes. Šikmá rýha s rozdvojeným koncem jako hadí jazyk. A mezi tím čárky, po pěti přeškrtnuté, jak se počítají ovce v ohradě, a římské číslice, kostrbaté, a sem tam slovo. Německé, napsané hranatými písmeny, jako by je někdo vyřezával do dřeva. *Warm.* *Trüb.* *Drückt.*
 
+![Ortliebova truhla](obrazky/13_dva_deniky.webp)
+
 Hensel si přisedl. Vzal tabulku z Matějových rukou do své, tu bez dvou prstů, a dlouho se na ni díval. Pak položil zdravý ukazovák na křížek.
 
 „Sonntag,“ řekl.

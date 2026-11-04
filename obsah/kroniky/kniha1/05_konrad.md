@@ -112,6 +112,8 @@ Konrád to navrhl a Matěj neodmítl. Převor napsal *vyhov mu*, a odmítnout by
 
 Odtud bylo vidět všechno. Grangie dole v údolí, malá jako hračka, se zvonicí a vyšlapanými cestičkami. Mlýnec pod ní, s kouři z dvaceti komínů. Halda na úbočí, štola, bouda. A na druhé straně hřbetu les. Jako dítě sem Matěj nikdy nedohlédl, protože se sem děti nesměly chodit dívat.
 
+![Na hřbetu nad starým lesem](obrazky/05_konrad.webp)
+
 Byl to jiný les než ten u vsi. Byl tmavší, hustší a starší a táhl se, kam oko dohlédlo, přes pahorky a údolí, bez jediné paseky, bez jediného kouře. Smrky a jedle a mezi nimi šedé koruny buků. Pod nimi, jak Matěj věděl, ležely mechem porostlé kameny velké jako chalupy, a skály a rokle a potoky, které nikdo nepojmenoval. Matka o tom lese mluvila jen tehdy, když chtěla, aby děti přestaly zlobit.
 
 „Můj,“ řekl Konrád.

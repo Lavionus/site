@@ -184,6 +184,8 @@ Nic se nestalo. Plamen stál.
 
 A potom, jako by na něj někdo položil ruku, se zmenšil, zmodral a zhasl.
 
+![Dech v měchýři](obrazky/15_dvoji_mzda.webp)
+
 Z knotu stoupal tenký pramínek dýmu. Šel nahoru, ne dolů, a v tom tichu se ani nezavlnil.
 
 Matěj klečel nad zhaslou svíčkou s měchýřem v ruce a nevěděl, jestli se má smát. Dobroslava se nesmála. Dívala se na měchýř.

@@ -103,4 +103,7 @@ I18N.pridej('en', {
   'Seznam hlasů: {message}': 'Voice list: {message}',
   'Seznam hlasů se nepodařilo načíst (jste online?).': 'Could not load the voice list (are you online?).',
   'Seznam hlasů nedostupný': 'Voice list unavailable',
+  'Čeština': 'Čeština',
+  'komunitní': 'community',
+  'licence neuvedena': 'licence not stated',
 });

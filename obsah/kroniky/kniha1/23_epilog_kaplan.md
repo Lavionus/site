@@ -4,6 +4,8 @@ O Hromnicích roku 1173 držel Konrád z Wehrbergu svíci tak dlouho, až mu vos
 
 Nepálilo to. Nebo pálilo a on to necítil. Stál v kapli pod věží, kde bylo místo pro dvanáct lidí a stálo jich tam pět: on, jeho žena se synem v náručí, Rüdiger a stará kuchařka, která chodila na každou mši, protože to slíbila své matce. Volkmar svíce požehnal, rozdal je a pak zpíval *Lumen ad revelationem gentium*, světlo k osvícení národů, a hlas se mu v té malé klenbě vracel ze všech stran. Konrád se díval do plamene a myslel na to, že je to rok.
 
+![Svíce v kapli](obrazky/23_epilog_kaplan.webp)
+
 Rok od chvíle, kdy mu Rüdiger poslal z Waldsassenu vzkaz, že kost dojela a že převor váhá. Rok od chvíle, kdy si poprvé řekl, že drak se mu hodí.
 
 Když mše skončila, žena odnesla syna nahoru a Rüdiger šel ke koním. Konrád zůstal. Svíci nezhasil. Postavil ji na lavici vedle sebe a čekal, až Volkmar složí ornát do truhly, a pak řekl:
