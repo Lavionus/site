@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📄 Markdown → DOCX / ODT</title>
 <script src="lib/marked.min.js"></script>
+<script src="md_dokument/jadro.js"></script>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script>
@@ -17,6 +18,7 @@
   } catch { /* file:// nebo zakázané úložiště */ }
 })();
 </script>
+<script src="../dialog.js"></script>
 <script src="../podpis.js" defer></script>
 <style>
 /* ============================================================
@@ -315,17 +317,44 @@ textarea:focus{outline:none}
 .pozn-pata label{display:flex;gap:6px;align-items:center;color:var(--text-muted);margin-bottom:5px;cursor:pointer}
 .pozn-pata input{accent-color:var(--accent)}
 
-/* poznámky v listu – vlastní vrstva, bloky dokumentu zůstanou nedotčené */
-.pozn-vrstva{position:absolute;inset:0;pointer-events:none}
-.pozn-vrstva button{pointer-events:auto;position:absolute}
-/* značka i „📝+“ se musí vejít do okraje listu (--okraj), jinak by zakryly text */
-.pozn-znacka{right:2px;max-width:calc(var(--okraj) - 4px);overflow:hidden;background:var(--accent);color:var(--accent-text);border:none;border-radius:9px;padding:0 4px;font-size:.64rem;line-height:1.6;white-space:nowrap;cursor:pointer;box-shadow:var(--shadow);font-family:var(--font)}
-.pozn-pridat{left:2px;max-width:calc(var(--okraj) - 4px);overflow:hidden;white-space:nowrap;background:var(--bg-panel);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:1px 3px;font-size:.68rem;cursor:pointer;opacity:.75;font-family:var(--font)}
-.pozn-pridat:hover{opacity:1;color:var(--accent);border-color:var(--accent)}
-/* poznámka zapsaná v textu (> [!poznámka]) – v náhledu ji zastupuje značka */
-.preview .pozn-zdroj{display:none}
-/* proužek vpravo u odstavce s poznámkou */
-.telo > .s-poznamkou{box-shadow:6px 0 0 -4px var(--accent)}
+/* zvýraznění s poznámkou – stejné barvy jako čtečka Kronik */
+:root{--zv-zluta:#ffd54f;--zv-zelena:#81c784;--zv-modra:#64b5f6;--zv-ruzova:#f06292}
+mark.zv{color:inherit;border-radius:2px;padding:0 1px;cursor:pointer}
+mark.zv[data-barva="zluta"]{background:rgba(255,213,79,.45)}
+mark.zv[data-barva="zelena"]{background:rgba(129,199,132,.45)}
+mark.zv[data-barva="modra"]{background:rgba(100,181,246,.42)}
+mark.zv[data-barva="ruzova"]{background:rgba(240,98,146,.38)}
+mark.zv.ma-pozn{text-decoration:underline dotted;text-underline-offset:3px}
+mark.zv.cizi{background:none;text-decoration:underline wavy var(--accent);text-decoration-thickness:1.5px;text-underline-offset:4px}
+/* plovoucí lišta nad vybraným textem */
+#vyber{position:fixed;z-index:70;display:flex;gap:2px;padding:4px;background:var(--bg-panel);border:1px solid var(--border-strong);border-radius:8px;box-shadow:var(--shadow)}
+#vyber button{background:none;border:1px solid transparent;color:var(--text);border-radius:6px;cursor:pointer;padding:4px 7px;font-size:.85rem}
+#vyber button:hover{background:var(--bg-hover)}
+#vyber .barva{width:24px;height:24px;border-radius:50%;padding:0;border:2px solid var(--bg-panel)}
+#vyber .barva[data-barva="zluta"]{background:var(--zv-zluta)}#vyber .barva[data-barva="zelena"]{background:var(--zv-zelena)}
+#vyber .barva[data-barva="modra"]{background:var(--zv-modra)}#vyber .barva[data-barva="ruzova"]{background:var(--zv-ruzova)}
+.pozn-text{margin:0;padding:6px 8px;font-size:.83rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.pozn-hlava q{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic}
+.cizi-hlava{font-size:.74rem;color:var(--text-muted);display:flex;gap:4px;align-items:center;margin-top:4px}
+.cizi-hlava b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cizi-hlava button{background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:5px;cursor:pointer;font-size:.7rem;padding:1px 5px}
+.pozn.cizi{border-style:dashed}
+.pozn.nenalezeno{opacity:.55}
+/* změny proti zkontrolovanému textu */
+.telo > .zmeneno{box-shadow:-8px 0 0 -4px var(--warn)}
+.zm{margin:0;font-family:'SF Mono',Consolas,monospace;font-size:.74rem;line-height:1.45;max-height:220px;overflow:auto;padding:4px 0}
+.zm span{display:block;padding:0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.zm .pryc{background:color-mix(in srgb,var(--danger) 16%,transparent);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--danger) 60%,transparent)}
+.zm .nove{background:color-mix(in srgb,var(--ok) 18%,transparent)}
+.zm .vic{color:var(--text-faint);font-style:italic}
+.pozn-hlava .prijmi{color:var(--ok);font-weight:700}
+/* pravý panel: zdrojový kód k úpravě */
+.rezimy.male button{padding:3px 8px;font-size:.74rem}
+.kod2{flex:1;display:flex;flex-direction:column;min-height:0}
+.kod2-lista{flex:none;display:flex;gap:6px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--border);font-size:.76rem;color:var(--text-faint)}
+.kod2-lista .btn{padding:4px 9px;font-size:.76rem}
+.kod2-lista .neulozeno{color:var(--warn);font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
 @keyframes blik{0%,45%{background-color:var(--accent-soft)}100%{background-color:transparent}}
 .blik{animation:blik 1.6s ease-out}
 
@@ -361,13 +390,14 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   /* tmavé téma má color-scheme dark – plátno by i okraje stránky natřelo tmavě */
   :root{color-scheme:light !important;background:#fff !important}
   body{height:auto;overflow:visible;background:#fff !important;color:#000;display:block}
-  .hlavicka,.stav,.osnova,.poznamky,.panel-editor,.panel-nahled2,.prubeh,.nahoru,.kod-hlava,.preview .sbal,.pozn-vrstva,.sbaleno-znacka{display:none !important}
+  .hlavicka,.stav,.osnova,.poznamky,.panel-editor,.panel-nahled2,.prubeh,.nahoru,.kod-hlava,.preview .sbal,.sbaleno-znacka,#vyber{display:none !important}
+  mark.zv{background:none !important;text-decoration:none !important}
   .panel-nahled{display:block !important}
   .plocha{display:block;padding:0}
   .panel{border:none;background:#fff;display:block}
   .preview,.panel,body,.telo{background-image:none !important}
   .telo{background-color:#fff;border:none;box-shadow:none;padding:0 !important;color:#000;max-width:none !important;margin:0 !important}
-  .telo > .s-poznamkou{box-shadow:none}
+  .telo > .zmeneno{box-shadow:none}
   .preview{overflow:visible;background:#fff;color:#000;padding:0 !important;height:auto}
   .preview .skryto{display:revert !important}
   .kod-blok.sbaleno pre{display:block !important}
@@ -407,7 +437,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
       <button data-rezim="dva" title="Dvakrát týž dokument: levý jde s obsahem, pravý se posouvá a hledá nezávisle (Alt+4)">⧉ Dva náhledy</button>
     </div>
     <span class="mezera"></span>
-    <button class="btn btn-sec" id="otevriBtn">📂<span class="dlouhy"> Načíst .md</span></button>
+    <button class="btn btn-sec" id="otevriBtn" title="Otevřít jiný soubor .md jako nový dokument">📂<span class="dlouhy"> Načíst .md</span></button>
+    <button class="btn btn-sec" id="znovuBtn" title="Znovu načíst týž soubor z disku – rozdíly proti zkontrolovanému textu se ukážou jako změny">⟳<span class="dlouhy"> Znovu načíst</span></button>
     <input type="file" id="soubor" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
     <input type="text" class="nazev" id="nazevSouboru" value="dokument" title="Název výsledného souboru (bez přípony)">
     <button class="btn btn-sec" id="mdBtn" title="Uložit Markdown i s poznámkami (Ctrl+S)">💾 .md</button>
@@ -432,6 +463,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     <span class="mezera"></span>
     <button class="ikona" id="vzhledBtn" aria-pressed="false" title="Téma, písmo, šířka sloupce">🎨<span class="dlouhy"> Vzhled</span></button>
     <button class="ikona" id="poznBtn" aria-pressed="false" title="Poznámky k řádkům dokumentu (Alt+P)">📝<span class="dlouhy"> Poznámky</span><span class="pocitadlo" id="poznPocet"></span></button>
+    <button class="ikona" id="zmenyBtn" aria-pressed="false" title="Změny proti zkontrolovanému textu (Alt+Z)">Δ<span class="dlouhy"> Změny</span><span class="pocitadlo" id="zmenyPocet"></span></button>
     <button class="ikona" id="tiskBtn" aria-pressed="false" title="Nastavení tisku a PDF (Ctrl+P tiskne rovnou)">🖨️<span class="dlouhy"> Tisk</span></button>
     <button class="ikona" id="celaBtn" title="Celá obrazovka (F)" aria-label="Celá obrazovka"><svg class="svg-ikona" viewBox="0 0 24 24" aria-hidden="true"><path id="celaIkona" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span class="dlouhy" id="celaPopis"> Celá obrazovka</span></button>
   </div>
@@ -545,7 +577,11 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   </section>
   <section class="panel panel-nahled2">
     <div class="hlava2">
-      <span>Nezávislý náhled</span>
+      <div class="rezimy male" role="group" aria-label="Zobrazení vpravo">
+        <button data-pohled2="nahled" title="Náhled dokumentu">📖 Náhled</button>
+        <button data-pohled2="kod" title="Zdrojový Markdown – lze upravit a uložit">&lt;/&gt; Kód</button>
+      </div>
+      <button class="ikona mala" id="vazat2" aria-pressed="false" title="Vázat na levý náhled – oba ukazují totéž místo">🔗<span class="dlouhy"> Vázat</span></button>
       <select id="skok2" title="Přejít na kapitolu jen v tomto náhledu"><option value="">Přejít na kapitolu…</option></select>
       <input type="search" id="dotaz2" placeholder="Hledat zde…" autocomplete="off" title="Hledá jen v tomto náhledu (Enter další, Shift+Enter předchozí)">
       <span class="pocet" id="pocet2">0/0</span>
@@ -553,18 +589,47 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
       <button class="ikona mala" id="dalsi2" title="Další nález">▼</button>
     </div>
     <div class="preview" id="nahled2"></div>
+    <div class="kod2" id="kod2Obal" hidden>
+      <div class="kod2-lista">
+        <span id="kod2Stav">Beze změn</span><span class="mezera"></span>
+        <button class="btn btn-sec" id="kod2Zahod" disabled title="Zahodit neuložené úpravy kódu">↺ Zahodit</button>
+        <button class="btn" id="kod2Uloz" disabled title="Uložit úpravy do dokumentu (Ctrl+S) – objeví se v Δ Změny ke kontrole">💾 Uložit změny</button>
+      </div>
+      <textarea id="kod2" spellcheck="false" aria-label="Zdrojový Markdown"></textarea>
+    </div>
   </section>
   <aside class="poznamky" id="poznPanel" hidden>
-    <div class="osnova-hlava"><span>Poznámky</span><span class="mezera"></span><button class="ikona mala" id="poznPridatBtn" title="Přidat poznámku k místu, kde právě čteš (nebo k řádku s kurzorem v editoru)">+ Přidat</button></div>
+    <div class="osnova-hlava"><span>Poznámky</span><span class="mezera"></span>
+      <button class="ikona mala" id="poznUlozBtn" title="Uložit poznámky do souboru (.md ve formátu čtečky Kronik)">⬇ Uložit</button>
+      <button class="ikona mala" id="poznNactiBtn" title="Načíst poznámky od čtenáře (.md / .json z této stránky nebo ze čtečky Kronik)">📂 Načíst</button>
+      <input type="file" id="poznSoubor" accept=".md,.markdown,.json,.txt" multiple hidden>
+    </div>
     <div class="pozn-seznam" id="poznSeznam"></div>
     <div class="pozn-pata">
+      <label><input type="checkbox" id="poznDoMd"> Ukládat poznámky i do .md dokumentu</label>
       <label><input type="checkbox" id="poznExport"> Přidat poznámky do .docx/.odt/.doc</label>
-      <p>Poznámka se zapíše přímo do textu pod svůj odstavec jako citace <code data-i18n="ne">&gt; [!poznámka]</code>. Jiné prohlížeče Markdownu ji ukážou jako citaci, tady se ukáže jen tu v panelu a jako značka 📝.</p>
+      <p>Označ v náhledu pár slov a vyber barvu nebo 📝. Poznámky se drží v prohlížeči, soubor poznámek má stejný formát jako čtečka Kronik – obě stránky si ho navzájem přečtou.</p>
     </div>
+  </aside>
+  <aside class="poznamky" id="zmenyPanel" hidden>
+    <div class="osnova-hlava"><span>Změny</span><span class="mezera"></span>
+      <button class="ikona mala" id="zmenyVseBtn" title="Uznat všechny změny za zkontrolované – stanou se součástí dokumentu">✓ Vše zkontrolováno</button>
+    </div>
+    <div class="pozn-seznam" id="zmenySeznam"></div>
+    <div class="pozn-pata"><p>Rozdíly proti zkontrolovanému textu – z editoru, z kódu vpravo i po „⟳ Znovu načíst“. ✓ = zkontrolováno (změna se stane součástí dokumentu a přestane se hlásit), ↶ = vrátit původní text.</p></div>
   </aside>
 </main>
 
 <button class="nahoru" id="nahoruBtn" hidden title="Zpět nahoru">↑</button>
+
+<div id="vyber" hidden>
+  <button class="barva" data-barva="zluta" title="Zvýraznit žlutě" aria-label="Zvýraznit žlutě"></button>
+  <button class="barva" data-barva="zelena" title="Zvýraznit zeleně" aria-label="Zvýraznit zeleně"></button>
+  <button class="barva" data-barva="modra" title="Zvýraznit modře" aria-label="Zvýraznit modře"></button>
+  <button class="barva" data-barva="ruzova" title="Zvýraznit růžově" aria-label="Zvýraznit růžově"></button>
+  <button data-vyber="poznamka" title="Poznámka">📝</button>
+  <button data-vyber="smazat" title="Odstranit zvýraznění" hidden>🗑</button>
+</div>
 
 <script>
 (function () {
@@ -1072,8 +1137,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
      stažení; dialog se tam ukáže jen se zapnutým „Vždy se ptát, kam uložit“.
      Dialog potřebuje aktivaci uživatelem, proto se volá hned z kliknutí –
      předtím smí běžet jen synchronní práce (převod dokumentu). */
-  async function stahni(blob, pripona) {
-    const zaklad = ($('nazevSouboru').value || 'dokument').replace(/[\\/:*?"<>|]/g, '_').replace(/\.[^.]*$/, '');
+  async function stahni(blob, pripona, nazev) {
+    const zaklad = (nazev || $('nazevSouboru').value || 'dokument').replace(/[\\/:*?"<>|]/g, '_').replace(/\.[^.]*$/, '');
     const jmeno = zaklad + '.' + pripona;
     if (typeof window.showSaveFilePicker === 'function') {
       try {
@@ -1117,25 +1182,10 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     }
   }
 
-  function nactiSoubor(f) {
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => {
-      $('vstup').value = r.result;
-      $('nazevSouboru').value = f.name.replace(/\.[^.]*$/, '') || 'dokument';
-      prevod();
-      stav('Načteno: ' + f.name);
-    };
-    r.readAsText(f, 'UTF-8');
-  }
-
   $('vstup').addEventListener('input', prevod);
-  $('otevriBtn').onclick = () => $('soubor').click();
-  $('soubor').onchange = e => { nactiSoubor(e.target.files[0]); e.target.value = ''; };
   $('docxBtn').onclick = () => exportuj('docx');
   $('odtBtn').onclick = () => exportuj('odt');
   $('docBtn').onclick = () => exportuj('doc');
-  $('vycistiBtn').onclick = () => { $('vstup').value = ''; prevod(); stav('Vyčištěno.'); };
 
   ['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => {
     e.preventDefault(); document.body.classList.add('tahnu');
@@ -1144,13 +1194,12 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     e.preventDefault();
     if (ev === 'drop' || !e.relatedTarget) document.body.classList.remove('tahnu');
   }));
-  document.addEventListener('drop', e => nactiSoubor(e.dataTransfer.files[0]));
 
   $('vstup').value = UKAZKA;
   prevod();
 
   /* Zpřístupněno pro automatické testy (_test/md_dokument.py). */
-  window.MD_DOKUMENT = { bloky: bloky, docx: docx, odt: odt, doc: doc, marked: marked, stahni: stahni };
+  window.MD_DOKUMENT = { bloky: bloky, docx: docx, odt: odt, doc: doc, marked: marked, stahni: stahni, stav: stav };
 })();
 </script>
 
@@ -1177,7 +1226,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
 
   const VYCHOZI = { tema: 'auto', rezim: 'split', vel: 16, radek: 16, sirka: 74,
                     pismo: 'system', blok: false, sbalKod: false, osnova: false,
-                    poznamky: false, osnovaSleduje: true, poznExport: false };
+                    poznamky: false, osnovaSleduje: true, poznExport: false, poznDoMd: true, jmeno: '',
+                    zmeny: false, pohled2: 'nahled', vazat2: false };
 
   const PISMA = {
     system: 'var(--font)',
@@ -1229,7 +1279,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   function pouzijRezim(rezim) {
     nast.rezim = rezim;
     document.body.dataset.rezim = rezim;
-    document.querySelectorAll('.rezimy button').forEach(b =>
+    document.querySelectorAll('.rezimy [data-rezim]').forEach(b =>
       b.classList.toggle('zap', b.dataset.rezim === rezim));
     uloz();
     aktualizujPrubeh();
@@ -1328,9 +1378,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     let pocet = 0;
     for (let el = h.nextElementSibling; el; el = el.nextElementSibling) {
       if (/^H[1-6]$/.test(el.tagName) && +el.tagName[1] <= uroven) break;
-      if (el.classList.contains('pozn-vrstva')) continue;
       el.classList.toggle('skryto', sbalit);
-      if (!el.classList.contains('jen-tisk') && !el.classList.contains('pozn-zdroj')) pocet++;
+      if (!el.classList.contains('jen-tisk')) pocet++;
     }
     b.setAttribute('aria-expanded', String(!sbalit));
     b.textContent = sbalit ? '▸' : '▾';
@@ -1342,7 +1391,6 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
       z.textContent = '(' + pocet + ' skrytých bloků)';
       h.appendChild(z);
     }
-    rozmistiZnacky();
   }
 
   function rozbalVse() { nahled.querySelectorAll(NADPISY).forEach(h => prepniOddil(h, false)); }
@@ -1407,7 +1455,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
 
   function zrusZvyrazneni(kde) {
     kde = kde || nahled;
-    kde.querySelectorAll('mark.nalez').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
+    kde.querySelectorAll('mark.nalez').forEach(m => m.replaceWith(...m.childNodes));
     kde.normalize();
     if (kde === nahled) { nalezy = []; kdeJsem = -1; }
   }
@@ -1424,7 +1472,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     if (dotaz.length < 2) return nalezy;
     const jehla = dotaz.toLowerCase();
     const chodec = document.createTreeWalker(kde, NodeFilter.SHOW_TEXT, {
-      acceptNode: n => (n.nodeValue.toLowerCase().includes(jehla) && !n.parentElement.closest('.kod-hlava, .sbaleno-znacka, .skryto, .pozn-vrstva, .pozn-zdroj, .jen-tisk'))
+      acceptNode: n => (n.nodeValue.toLowerCase().includes(jehla) && !n.parentElement.closest('.kod-hlava, .sbaleno-znacka, .skryto, .jen-tisk'))
         ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
     });
     const uzly = [];
@@ -1461,7 +1509,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
 
   /* ---------- statistika a postup ---------- */
   function statistika() {
-    const text = bezPoznamek($('vstup').value).replace(/\s+$/, '');
+    const text = $('vstup').value.replace(/\s+$/, '');
     const slova = (text.match(/[^\s]+/g) || []).length;
     const minuty = Math.max(1, Math.round(slova / 200));
     const poctuNadpisu = nahled.querySelectorAll(NADPISY).length;
@@ -1493,14 +1541,14 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   function ulozPozici() {
     clearTimeout(casovacPozice);
     casovacPozice = setTimeout(() => {
-      zapis(KLIC_POZICE, JSON.stringify({ otisk: otisk(bezPoznamek($('vstup').value)), y: Math.round(nahled.scrollTop) }));
+      zapis(KLIC_POZICE, JSON.stringify({ otisk: otisk($('vstup').value), y: Math.round(nahled.scrollTop) }));
     }, 400);
   }
 
   function obnovPozici() {
     let ulozeno;
     try { ulozeno = JSON.parse(precti(KLIC_POZICE) || 'null'); } catch { return; }
-    if (!ulozeno || ulozeno.otisk !== otisk(bezPoznamek($('vstup').value)) || !ulozeno.y) return;
+    if (!ulozeno || ulozeno.otisk !== otisk($('vstup').value) || !ulozeno.y) return;
     // scroll-behavior:smooth by skok animoval přes celý dokument
     const puvodni = nahled.style.scrollBehavior;
     nahled.style.scrollBehavior = 'auto';
@@ -1510,73 +1558,23 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   }
 
   /* ============================================================
-     Poznámky k blokům dokumentu.
-
-     Jediným zdrojem pravdy je text v #vstup. Poznámka leží přímo v textu,
-     hned pod blokem, ke kterému patří, jako citace se značkou:
-
-       Odstavec, ke kterému poznámka patří.
-
-       > [!poznámka]
-       > text poznámky
-
-     Cizí prohlížeč Markdownu ji ukáže jako obyčejnou citaci (Obsidian jako
-     rámeček), takže se nikde neztratí. Tahle stránka ji z textu vyjme,
-     schová a ukáže jako značku u bloku nad ní a kartu v panelu.
-     Starší formát (skrytý komentář <!-- md-poznamky … --> na konci) se při
-     načtení převede.
+     Bloky náhledu = děti .telo (bez prvků jen pro tisk). Pořadí bloku
+     je adresa zvýraznění; řádky zdroje (data-radek/-konec) slouží
+     synchronizaci s editorem a vyznačení změn.
      ============================================================ */
-  const ZNACKA_POZN = '[!poznámka]';
-  const RE_ZNACKA = /^ {0,3}>[ \t]?\[!pozn[aá]mka\]/i;
-  const RE_POZN_V_TEXTU = /^ {0,3}>[ \t]?\[!pozn[aá]mka\][^\n]*(?:\n {0,3}>[^\n]*)*\n?/gim;
-  const RE_STARE = /\n*<!-- md-poznamky\n([\s\S]*?)\n?-->[ \t]*\n?/;
-  let poznamky = [];            // {id, radek, konec, text, zapsano, cil, el, novy, cilRadek}
-  let citacPoznamek = 0;
-  let bloky = [];               // {el, radek, konec, text} – bloky náhledu s řádky zdroje (bez poznámek)
-  let zdrojPozn = [];           // poznámky nalezené v textu při posledním vykreslení
-  let cekaNaZapis = false;      // zápis čeká, až uživatel opustí editor
-  let posledniZdroj = 'nahled'; // kde uživatel naposledy byl – k tomu se přidá poznámka
-
-  const bezPoznamek = md => md.replace(RE_STARE, '\n').replace(RE_POZN_V_TEXTU, '');
+  const J = window.MD_JADRO;
+  let bloky = [];               // {el, radek, konec}
   const normuj = s => s.replace(/\s+/g, ' ').trim();
-  const shodaKotvy = (text, kotva) => !!kotva && (text.startsWith(kotva) || (text.length >= 12 && kotva.startsWith(text)));
-  const kotvaPoznamky = p => p.cil ? p.cil.text.slice(0, 60) : '';
-  const radekPoznamky = p => p.cil ? p.cil.radek : (p.novy ? p.cilRadek : p.radek);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const blokyV = kont => { const t = kont.querySelector('.telo'); return t ? Array.from(t.children).filter(el => !el.classList.contains('jen-tisk')) : []; };
 
-  function textPoznamky(raw) {
-    const r = raw.replace(/\n+$/, '').split('\n').map(x => x.replace(/^ {0,3}>[ \t]?/, ''));
-    r[0] = r[0].replace(/^\[!pozn[aá]mka\][ \t]*/i, '');
-    if (!r[0]) r.shift();
-    return r.join('\n');
-  }
-  const radkyPoznamky = text => ['> ' + ZNACKA_POZN].concat(text.replace(/\s+$/, '').split('\n').map(x => x ? '> ' + x : '>'));
-
-  /* Starý formát: číslo řádku + JSON s kotvou a textem v komentáři na konci. */
-  function rozeberStare(md) {
-    const m = md.match(RE_STARE);
-    if (!m) return null;
-    const out = [];
-    m[1].split('\n').forEach(r => {
-      const x = r.match(/^(\d+) (\{.*\})\s*$/);
-      if (!x) return;
-      try {
-        const o = JSON.parse(x[2]);
-        out.push({ radek: +x[1], kotva: String(o.kotva || ''), text: String(o.text || '') });
-      } catch { /* poškozený řádek se přeskočí */ }
-    });
-    return out;
-  }
-
-  /* Každému bloku náhledu přiřadí řádky zdroje. Nejvyšší úroveň tokenů
-     z marked odpovídá dětem .telo jedna k jedné; nic nevykreslí jen mezery,
-     definice odkazů a HTML komentáře. Citace se značkou poznámky se schovají. */
   function oznacBloky() {
-    bloky = []; zdrojPozn = [];
+    bloky = [];
     const telo = nahled.querySelector('.telo');
     if (!telo) return;
     let tokeny;
     try { tokeny = marked.lexer($('vstup').value); } catch { return; }
-    const deti = Array.from(telo.children);
+    const deti = blokyV(nahled);
     let radek = 1, i = 0;
     tokeny.forEach(tok => {
       let pocet = 1;
@@ -1587,161 +1585,263 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
         pocet = sablona.content.children.length;
       }
       const konec = radek + (tok.raw.replace(/\n+$/, '').match(/\n/g) || []).length;
-      const jePozn = tok.type === 'blockquote' && RE_ZNACKA.test(tok.raw);
       for (let k = 0; k < pocet && i < deti.length; k++, i++) {
-        const el = deti[i];
-        if (jePozn) {
-          el.classList.add('pozn-zdroj');
-          zdrojPozn.push({ radek: radek, konec: konec, text: textPoznamky(tok.raw), cil: bloky[bloky.length - 1] || null });
-          continue;
-        }
-        el.dataset.radek = radek;
-        const text = el.dataset.text || (el.classList.contains('kod-blok') ? el.querySelector('pre').textContent : el.textContent);
-        bloky.push({ el: el, radek: radek, konec: konec, text: normuj(text) });
+        deti[i].dataset.radek = radek;
+        deti[i].dataset.konec = konec;
+        bloky.push({ el: deti[i], radek: radek, konec: konec });
       }
       radek += (tok.raw.match(/\n/g) || []).length;
     });
   }
 
-  /* Znovu přečtené poznámky převezmou objekty (a tím i karty v panelu) těch,
-     které se nezměnily nebo které jsme sami právě zapsali – jinak by psaní
-     panel pořád přestavovalo a rozepsaná poznámka by ztratila kurzor. */
-  function prevezmiPoznamky(nove) {
-    const volne = poznamky.slice();
-    poznamky = nove.map(n => {
-      const i = volne.findIndex(p => !(p.novy && p.zapsano === undefined) && (p.zapsano === n.text || p.text === n.text));
-      const p = i >= 0 ? volne.splice(i, 1)[0] : { id: ++citacPoznamek, text: n.text };
-      if (p.zapsano !== n.text) p.text = n.text;   // změna v editoru vyhrává
-      Object.assign(p, { radek: n.radek, konec: n.konec, cil: n.cil, zapsano: n.text, novy: false });
-      return p;
-    });
-    // nová poznámka v textu ještě není – nesmí zmizet
-    volne.filter(p => p.novy && p.zapsano === undefined).forEach(p => {
-      p.cil = bloky.find(b => b.radek === p.cilRadek) || bloky.filter(b => b.radek <= p.cilRadek).pop() || bloky[0] || null;
-      if (p.cil) p.cilRadek = p.cil.radek;
-      poznamky.push(p);
-    });
-    poznamky.forEach(p => { p.el = p.cil ? p.cil.el : (bloky[0] ? bloky[0].el : null); });
-  }
-
-  /* Poznámky ze starého skrytého bloku se přidají jako nové k bloku podle
-     řádku a kotvy; blok samotný se při zápisu z textu odstraní. */
-  function prevedStare(stare) {
-    stare.forEach(s => {
-      let cil = bloky.find(b => b.radek === s.radek && shodaKotvy(b.text, s.kotva));
-      if (!cil) {
-        const shody = bloky.filter(b => shodaKotvy(b.text, s.kotva));
-        if (shody.length) cil = shody.reduce((a, b) => Math.abs(b.radek - s.radek) < Math.abs(a.radek - s.radek) ? b : a);
-      }
-      cil = cil || bloky.filter(b => b.radek <= s.radek).pop() || bloky[0];
-      if (cil && s.text.trim()) poznamky.push({ id: ++citacPoznamek, novy: true, cil: cil, cilRadek: cil.radek, el: cil.el, text: s.text });
-    });
-  }
-
-  const maFokus = p => { const k = $('poznSeznam').querySelector('.pozn[data-id="' + p.id + '"] textarea'); return !!k && document.activeElement === k; };
-  const zmenena = p => p.novy ? !!p.text.trim() : p.text !== p.zapsano;
-
-  /* Promítne změněné poznámky do textu v #vstup (od konce, ať čísla řádků platí). */
-  function zapisPoznamky() {
-    cekaNaZapis = false;
-    clearTimeout(casovacPoznamek);
-    const v = $('vstup');
-    const stary = RE_STARE.test(v.value);
-    const radky = (stary ? v.value.replace(RE_STARE, '\n').replace(/\s+$/, '\n') : v.value).split('\n');
-    const zmeny = [];
-    poznamky.forEach(p => {
-      if (!zmenena(p) && !(p.smazat && !p.novy)) return;
-      if (p.novy) {
-        // pod blok, případně pod poznámky, které už u něj jsou
-        const kde = poznamky.filter(x => !x.novy && x.cil === p.cil).reduce((m, x) => Math.max(m, x.konec), p.cil.konec);
-        const vloz = [''].concat(radkyPoznamky(p.text));
-        if (radky[kde] !== undefined && radky[kde].trim()) vloz.push('');
-        zmeny.push({ od: kde, pocet: 0, vloz: vloz, p: p });
-      } else if (p.smazat || !p.text.trim()) {
-        if (maFokus(p) && !p.smazat) return;            // rozepsaná – smazání počká na opuštění pole
-        const od = p.radek - 1, prazdny = od > 0 && !radky[od - 1].trim();
-        zmeny.push({ od: prazdny ? od - 1 : od, pocet: p.konec - p.radek + 1 + (prazdny ? 1 : 0), vloz: [], p: p });
-      } else {
-        zmeny.push({ od: p.radek - 1, pocet: p.konec - p.radek + 1, vloz: radkyPoznamky(p.text), p: p });
-      }
-    });
-    if (!zmeny.length && !stary) return;
-    zmeny.sort((a, b) => b.od - a.od).forEach(z => {
-      radky.splice(z.od, z.pocet, ...z.vloz);
-      z.p.zapsano = z.p.text;
-      if (!z.vloz.length) poznamky = poznamky.filter(x => x !== z.p);
-    });
-    const novy = radky.join('\n');
-    if (novy === v.value) return;
-    const a = v.selectionStart, b = v.selectionEnd, s = v.scrollTop;
-    v.value = novy;
-    v.setSelectionRange(Math.min(a, novy.length), Math.min(b, novy.length));
-    v.scrollTop = s;
-    v.dispatchEvent(new Event('input'));
-    if (stary) $('stav').textContent = 'Poznámky ze staršího skrytého bloku jsou teď přímo v textu pod svými odstavci (> [!poznámka]).';
-  }
-
-  let casovacPoznamek = 0;
-  function naplanujZapis(hned) {
-    clearTimeout(casovacPoznamek);
-    // Přepsání textu uprostřed psaní by v editoru rozbilo historii Zpět – počká se na opuštění editoru.
-    if (document.activeElement === $('vstup')) { cekaNaZapis = true; return; }
-    casovacPoznamek = setTimeout(zapisPoznamky, hned ? 0 : 500);
-  }
-
-  /* Značky poznámek a tlačítko „přidat“ leží ve vlastní vrstvě nad listem –
-     do bloků dokumentu se nesahá (hledání, osnova i sbalování zůstanou čisté). */
-  let vrstva = null, pridatBtn = null, sledovacListu = null;
-  function postavVrstvu() {
-    const telo = nahled.querySelector('.telo');
+  /* Zalomení řádku uvnitř odstavce je v náhledu jen mezera – v textu bloku
+     ať je mezerou i doopravdy, jinak by citace z čtečky Kronik (ta řádky
+     odstavce spojuje mezerou) nešly dohledat. */
+  function srovnejMezery(kont) {
+    const telo = kont.querySelector('.telo');
     if (!telo) return;
-    vrstva = document.createElement('div');
-    vrstva.className = 'pozn-vrstva';
-    pridatBtn = document.createElement('button');
-    pridatBtn.type = 'button';
-    pridatBtn.className = 'pozn-pridat';
-    pridatBtn.textContent = '📝+';
-    pridatBtn.title = 'Přidat poznámku k tomuto odstavci';
-    pridatBtn.hidden = true;
-    pridatBtn.onclick = () => { const b = bloky.find(x => x.el === pridatBtn._blok); if (b) pridejPoznamku(b); };
-    vrstva.appendChild(pridatBtn);
-    telo.appendChild(vrstva);
-    if (sledovacListu) sledovacListu.disconnect();
-    // změna písma, šířky nebo sbalení oddílu posune bloky – značky jdou s nimi
-    if (window.ResizeObserver) { sledovacListu = new ResizeObserver(rozmistiZnacky); sledovacListu.observe(telo); }
+    const tw = document.createTreeWalker(telo, NodeFilter.SHOW_TEXT);
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+      if (n.nodeValue.includes('\n') && !n.parentElement.closest('pre')) n.nodeValue = n.nodeValue.replace(/[ \t]*\n[ \t]*/g, ' ');
+    }
   }
 
-  function vlozZnacky() {
-    if (!vrstva) return;
-    vrstva.querySelectorAll('.pozn-znacka').forEach(z => z.remove());
-    nahled.querySelectorAll('.s-poznamkou').forEach(el => el.classList.remove('s-poznamkou'));
-    const podleBloku = new Map();
-    poznamky.filter(p => p.el && p.text.trim()).forEach(p => {
-      if (!podleBloku.has(p.el)) podleBloku.set(p.el, []);
-      podleBloku.get(p.el).push(p);
+  /* Text bloku bez ovládacích prvků (šipka sbalení, hlavička kódu). */
+  const VYNECH = '.sbal, .sbaleno-znacka, .kod-hlava, .jen-tisk';
+  function textoveUzly(el) {
+    const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => n.parentElement.closest(VYNECH) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
     });
-    podleBloku.forEach((seznam, el) => {
-      el.classList.add('s-poznamkou');
-      const z = document.createElement('button');
-      z.type = 'button';
-      z.className = 'pozn-znacka';
-      z.textContent = '📝' + (seznam.length > 1 ? seznam.length : '');
-      z.title = seznam.map(p => p.text).join('\n—\n');
-      z._blok = el;
-      z.onclick = () => { pouzijPoznamky(true); zvyrazniPoznamku(seznam[0], true); };
-      vrstva.appendChild(z);
+    const u = [];
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) u.push(n);
+    return u;
+  }
+  const textBloku = el => textoveUzly(el).map(n => n.nodeValue).join('');
+  // poloha (uzel, posun) jako počet znaků od začátku textu bloku
+  function poziceV(el, uzel, posun) {
+    const r = document.createRange();
+    r.setStart(el, 0); r.setEnd(uzel, posun);
+    let n = 0;
+    for (const t of textoveUzly(el)) {
+      if (t === uzel) return n + posun;
+      if (!r.intersectsNode(t)) break;
+      n += t.length;
+    }
+    return n;
+  }
+  // obalí znaky od–do textu bloku prvky z vytvor() (po textových uzlech)
+  function obal(el, od, do_, vytvor) {
+    let pos = 0;
+    textoveUzly(el).map(n => { const x = [n, pos]; pos += n.length; return x; }).forEach(([uzel0, start]) => {
+      const a = Math.max(od, start), b = Math.min(do_, start + uzel0.length);
+      if (a >= b) return;
+      let uzel = uzel0;
+      if (b - start < uzel.length) uzel.splitText(b - start);
+      if (a - start > 0) uzel = uzel.splitText(a - start);
+      const m = vytvor();
+      uzel.parentNode.insertBefore(m, uzel);
+      m.appendChild(uzel);
     });
-    rozmistiZnacky();
   }
 
-  function rozmistiZnacky() {
-    if (!vrstva) return;
-    vrstva.querySelectorAll('.pozn-znacka').forEach(z => {
-      const el = z._blok;
-      z.hidden = !el.offsetParent;          // blok ve sbaleném oddílu
-      if (!z.hidden) z.style.top = el.offsetTop + 'px';
+  /* ============================================================
+     Soubor dokumentu: název (k němu patří poznámky), přístup k souboru
+     na disku pro „⟳ Znovu načíst“ a otisk naposledy načteného textu
+     (pozná neuložené úpravy, které by znovunačtení přepsalo).
+     ============================================================ */
+  const KLIC_META = 'webapp_md_dokument_soubor';
+  let meta = { dokument: 'dokument.md', otisk: '' };
+  try { Object.assign(meta, JSON.parse(precti(KLIC_META) || '{}')); } catch { /* poškozený záznam */ }
+  const ulozMeta = () => zapis(KLIC_META, JSON.stringify(meta));
+  let souborHandle = null;      // FileSystemFileHandle (Chrome, Edge) – drží se v IndexedDB i přes obnovení stránky
+  let znovuPresVyber = false;   // výběr souboru otevřený tlačítkem „Znovu načíst“
+
+  function idb(rezim, prace) {
+    return new Promise((hotovo, chyba) => {
+      const r = indexedDB.open('webapp_md_dokument', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('soubor');
+      r.onerror = () => chyba(r.error);
+      r.onsuccess = () => {
+        const db = r.result, tx = db.transaction('soubor', rezim), q = prace(tx.objectStore('soubor'));
+        tx.oncomplete = () => { db.close(); hotovo(q.result); };
+        tx.onerror = () => { db.close(); chyba(tx.error); };
+      };
     });
-    if (pridatBtn && pridatBtn._blok) pridatBtn.style.top = pridatBtn._blok.offsetTop + 'px';
+  }
+  const ulozHandle = h => idb('readwrite', s => h ? s.put(h, 'posledni') : s.delete('posledni')).catch(() => {});
+  const nactiHandle = () => idb('readonly', s => s.get('posledni')).catch(() => null);
+
+  const prostyText = md => { const t = document.createElement('template'); t.innerHTML = marked.parse(md); return t.content.textContent; };
+  /* Text ze souboru nebo z úložiště: balík poznámek z konce pryč, poznámky
+     starší verze stránky (> [!poznámka], <!-- md-poznamky -->) taky. */
+  function pripravText(t) {
+    const o = J.oddelBalik(t.replace(/\r\n?/g, '\n'));
+    const s = J.vyjmiStare(o.md, marked, prostyText);
+    return { md: s.md, stare: s.poznamky, balik: o.balik };
+  }
+
+  async function vyberSoubor() {
+    if (typeof window.showOpenFilePicker === 'function') {
+      try {
+        const [h] = await window.showOpenFilePicker({ types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md', '.markdown'], 'text/plain': ['.txt'] } }] });
+        await nactiSoubor(await h.getFile(), h, false);
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+        console.warn('showOpenFilePicker selhal, otevírám klasický výběr:', e);
+      }
+    }
+    znovuPresVyber = false;
+    $('soubor').click();
+  }
+
+  async function znovuNacist() {
+    if (!souborHandle) souborHandle = await nactiHandle();
+    if (souborHandle) {
+      try {
+        if (souborHandle.queryPermission && (await souborHandle.queryPermission({ mode: 'read' })) !== 'granted' &&
+            (await souborHandle.requestPermission({ mode: 'read' })) !== 'granted') throw new Error('přístup nepovolen');
+        await nactiSoubor(await souborHandle.getFile(), souborHandle, true);
+        return;
+      } catch (e) { console.warn('Znovunačtení přes uložený přístup selhalo:', e); }
+    }
+    $('stav').textContent = 'Vyber znovu týž soubor – prohlížeč si k němu přístup nepamatuje.';
+    znovuPresVyber = true;
+    $('soubor').click();
+  }
+
+  /* znovu = týž dokument: zkontrolovaný text i poznámky zůstanou, rozdíly
+     proti souboru se ukážou jako změny. Jinak nový dokument. */
+  async function nactiSoubor(f, h, znovu) {
+    let surovy;
+    try { surovy = await f.text(); } catch (e) { Dialog.chyba('Soubor nejde přečíst: ' + e.message); return; }
+    const p = pripravText(surovy);
+    const v = $('vstup');
+    if (znovu) {
+      if (v.value !== p.md && meta.otisk && otisk(v.value) !== meta.otisk &&
+          !(await Dialog.potvrd('Text tady má úpravy, které v souboru nejsou. Znovunačtení je přepíše. Pokračovat?', { ok: 'Přepsat' }))) return;
+    } else if (useky.length && !(await Dialog.potvrd('Dokument má nezkontrolované změny (' + useky.length + '). Jiný soubor je zahodí. Pokračovat?', { ok: 'Načíst' }))) return;
+    souborHandle = h;
+    ulozHandle(h);
+    if (!znovu) {
+      meta.dokument = f.name;
+      nastavZaklad(p.md);
+    }
+    meta.otisk = otisk(p.md);
+    ulozMeta();
+    $('nazevSouboru').value = f.name.replace(/\.[^.]*$/, '') || 'dokument';
+    if (p.balik) prevezmiBalik(p.balik);
+    cekajiciStare = p.stare.length ? p.stare : null;
+    v.value = p.md;
+    v.dispatchEvent(new Event('input'));
+    if (znovu) {
+      $('stav').textContent = 'Znovu načteno: ' + f.name + (useky.length
+        ? ' – ' + useky.length + ' změn proti zkontrolovanému textu (Δ Změny).' : ' – beze změn proti zkontrolovanému textu.');
+      if (useky.length) pouzijZmeny(true);
+    } else {
+      $('stav').textContent = 'Načteno: ' + f.name;
+      pouzijRezim('cteni');
+      pouzijOsnovu(nast.osnova);
+    }
+  }
+
+  /* ============================================================
+     Poznámky – zvýraznění vybraného textu s barvou a poznámkou, stejně
+     jako ve čtečce Kronik (obsah/kroniky). Drží se mimo text dokumentu
+     (localStorage); zvýraznění zná pořadí bloku, rozsah znaků v jeho
+     textu a citaci, podle které se po úpravě textu znovu dohledá.
+     Soubor poznámek je ve formátu „kroniky-poznamky“ (MD_JADRO).
+     ============================================================ */
+  const KLIC_POZN = 'webapp_md_dokument_poznamky';
+  let data = { zvyrazneni: [], cizi: [] };   // stejné části jako webapp_kroniky_poznamky
+  try { Object.assign(data, JSON.parse(precti(KLIC_POZN) || '{}')); } catch { /* poškozený záznam */ }
+  const ulozData = () => zapis(KLIC_POZN, JSON.stringify(data));
+  const noveId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const moje = () => data.zvyrazneni.filter(z => z.soubor === meta.dokument);
+  let cekajiciStare = null;     // poznámky starší verze stránky, čekají na vykreslení bloků
+
+  // dokument uložený i s poznámkami: vlastní → k mým, od jiného čtenáře → mezi cizí
+  function prevezmiBalik(b) {
+    if (b.jmeno && nast.jmeno && b.jmeno !== nast.jmeno) { pridejCizi(b); return; }
+    b.zvyrazneni.forEach(z => {
+      const n = Object.assign({}, z, { kniha: z.kniha || J.KNIHA, soubor: meta.dokument });
+      const i = data.zvyrazneni.findIndex(x => x.id === n.id);
+      if (i >= 0) data.zvyrazneni[i] = n; else data.zvyrazneni.push(n);
+    });
+    ulozData();
+  }
+  // poznámky čtenáře; stejné jméno = novější verze nahradí starší
+  function pridejCizi(b) {
+    const k = b.zvyrazneni.filter(z => z.soubor === meta.dokument);
+    const zv = k.length ? k : b.zvyrazneni;   // soubor z čtečky Kronik má poznámky ke všem kapitolám
+    const stara = data.cizi.find(c => (c.jmeno || '') === (b.jmeno || ''));
+    const c = { id: stara ? stara.id : noveId(), jmeno: b.jmeno || '', cas: b.cas, skryta: false, zvyrazneni: zv, zalozky: b.zalozky || [] };
+    if (stara) data.cizi[data.cizi.indexOf(stara)] = c; else data.cizi.push(c);
+    ulozData();
+    return c;
+  }
+
+  function ukotvi(z, texty) {
+    if (!texty.length) return false;
+    if (texty[z.blok] !== undefined && texty[z.blok].slice(z.od, z.do) === z.text) return true;
+    for (let i = 0; i < texty.length; i++) {
+      const b = (Math.max(0, z.blok) + i) % texty.length, p = texty[b].indexOf(z.text);
+      if (p >= 0) { Object.assign(z, { blok: b, od: p, do: p + z.text.length }); return true; }
+    }
+    return false;
+  }
+
+  function vyznac(kont) {
+    kont.querySelectorAll('mark.zv').forEach(m => m.replaceWith(...m.childNodes));
+    const telo = kont.querySelector('.telo');
+    if (telo) telo.normalize();
+    const el = blokyV(kont);
+    if (!el.length) return;
+    const texty = el.map(textBloku);
+    let posun = false;
+    const kresli = (z, vytvor) => {
+      const b = z.blok, o = z.od;
+      if (!ukotvi(z, texty)) { z.nenalezeno = true; return; }
+      z.nenalezeno = false;
+      if (z.blok !== b || z.od !== o) posun = true;
+      obal(el[z.blok], z.od, z.do, vytvor);
+    };
+    moje().forEach(z => kresli(z, () => {
+      const m = document.createElement('mark');
+      m.className = 'zv' + (z.poznamka ? ' ma-pozn' : '');
+      m.dataset.id = z.id;
+      m.dataset.barva = z.barva;
+      if (z.poznamka) m.title = z.poznamka;
+      return m;
+    }));
+    data.cizi.forEach(c => c.zvyrazneni.forEach(z => {
+      if (c.skryta) return;
+      kresli(z, () => {
+        const m = document.createElement('mark');
+        m.className = 'zv cizi';
+        m.title = '👤 ' + (c.jmeno || 'čtenář') + (z.poznamka ? ': ' + z.poznamka : '');
+        m.dataset.cizi = c.id;
+        m.dataset.id = z.id;
+        return m;
+      });
+    }));
+    if (posun && kont === nahled) ulozData();
+  }
+
+  /* Poznámky starší verze stránky: zvýrazní se první věta odstavce, ke kterému patřily. */
+  function prevedStare() {
+    const el = blokyV(nahled), texty = el.map(textBloku), normy = texty.map(normuj);
+    cekajiciStare.forEach(s => {
+      let i = s.kotva ? normy.findIndex(t => t.startsWith(s.kotva) || (t.length >= 12 && s.kotva.startsWith(t))) : 0;
+      if (i < 0) i = 0;
+      const t = texty[i] || '', od = t.length - t.trimStart().length, k = J.prvniVeta(t.slice(od));
+      if (!k) return;
+      data.zvyrazneni.push({ id: noveId(), kniha: J.KNIHA, soubor: meta.dokument, blok: i, od: od, do: od + k,
+        text: t.slice(od, od + k), barva: 'zluta', poznamka: s.poznamka, cas: Date.now() });
+    });
+    cekajiciStare = null;
+    ulozData();
+    $('stav').textContent = 'Poznámky ze starší verze stránky jsou teď zvýraznění s poznámkou (panel 📝), text dokumentu je bez nich.';
   }
 
   /* ---------- panel poznámek ---------- */
@@ -1750,93 +1850,36 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     $('poznPanel').hidden = !zapnuto;
     $('poznBtn').setAttribute('aria-pressed', String(zapnuto));
     uloz();
-    rozmistiZnacky();
   }
 
   function vykresliPanel() {
-    const seznam = $('poznSeznam');
-    const serazene = poznamky.slice().sort((a, b) => radekPoznamky(a) - radekPoznamky(b) || a.id - b.id);
-    const pocet = poznamky.filter(p => p.text.trim()).length;
-    $('poznPocet').textContent = pocet ? String(pocet) : '';
-    // existující karty se jen přeskládají – rozepsaná poznámka nepřijde o kurzor
-    const karty = new Map(Array.from(seznam.querySelectorAll('.pozn')).map(k => [+k.dataset.id, k]));
-    seznam.querySelectorAll('.pozn-prazdno').forEach(x => x.remove());
-    karty.forEach((k, id) => { if (!poznamky.some(p => p.id === id)) k.remove(); });
-    serazene.forEach((p, i) => {
-      const k = karty.get(p.id) || novaKarta(p);
-      k.querySelector('.radek-c').textContent = 'ř. ' + radekPoznamky(p);
-      k.querySelector('.kotva').textContent = kotvaPoznamky(p) || '(začátek dokumentu)';
-      const pole = k.querySelector('textarea');
-      if (document.activeElement !== pole && pole.value !== p.text) pole.value = p.text;
-      // přesouvá se jen karta, která není na svém místě – přesun by jí vzal fokus
-      if (seznam.children[i] !== k) seznam.insertBefore(k, seznam.children[i] || null);
+    const m = moje().sort((a, b) => a.blok - b.blok || a.od - b.od);
+    $('poznPocet').textContent = m.length ? String(m.length) : '';
+    if ($('poznPanel').hidden) return;
+    const karta = (z, cizi) => '<div class="pozn' + (cizi ? ' cizi' : '') + (z.nenalezeno ? ' nenalezeno' : '') + '" data-id="' + esc(z.id) + '"' +
+      (cizi ? ' data-cizi="' + esc(cizi.id) + '"' : ' style="border-left:4px solid var(--zv-' + esc(z.barva) + ')"') + '>' +
+      '<div class="pozn-hlava" title="' + (z.nenalezeno ? 'Citace v dokumentu není' : 'Přejít na místo v dokumentu') + '"><q>' + esc(z.text) + '</q>' +
+      (cizi ? '' : '<button type="button" data-uprav="' + esc(z.id) + '" title="Upravit poznámku">📝</button><button type="button" data-smaz="' + esc(z.id) + '" title="Smazat">✕</button>') +
+      '</div>' + (z.poznamka ? '<p class="pozn-text">' + esc(z.poznamka) + '</p>' : '') + '</div>';
+    let h = m.length ? m.map(z => karta(z)).join('')
+      : '<p class="pozn-prazdno">Zatím žádné poznámky. Označ v náhledu pár slov a vyber barvu nebo 📝.</p>';
+    data.cizi.forEach(c => {
+      const nalez = c.zvyrazneni.filter(z => !z.nenalezeno).length;
+      h += '<div class="cizi-hlava"><b title="' + esc(new Date(c.cas).toLocaleString('cs-CZ')) + '">👤 ' + esc(c.jmeno || 'Čtenář bez jména') + ' · ' +
+        nalez + '/' + c.zvyrazneni.length + '</b>' +
+        '<button type="button" data-ukaz="' + esc(c.id) + '" title="Ukázat/skrýt v textu">' + (c.skryta ? '👁 Ukázat' : '🙈 Skrýt') + '</button>' +
+        '<button type="button" data-prevezmi="' + esc(c.id) + '" title="Převzít nalezené poznámky mezi svoje">⤵</button>' +
+        '<button type="button" data-odeber="' + esc(c.id) + '" title="Odebrat poznámky čtenáře">✕</button></div>';
+      if (!c.skryta) h += c.zvyrazneni.slice().sort((a, b) => !!a.nenalezeno - !!b.nenalezeno || a.blok - b.blok || a.od - b.od).map(z => karta(z, c)).join('');
     });
-    if (!serazene.length) {
-      const x = document.createElement('p');
-      x.className = 'pozn-prazdno';
-      x.textContent = 'Zatím žádné poznámky. Najeď myší na odstavec v náhledu a klikni na „📝+“ vlevo od něj, ' +
-        'nebo použij „+ Přidat“ – poznámka se přidá k místu, kde právě čteš, případně k řádku s kurzorem v editoru.';
-      seznam.appendChild(x);
-    }
+    $('poznSeznam').innerHTML = h;
   }
 
-  function novaKarta(p) {
-    const k = document.createElement('div');
-    k.className = 'pozn';
-    k.dataset.id = p.id;
-    k.innerHTML = '<div class="pozn-hlava" title="Přejít na místo v dokumentu"><span class="radek-c"></span>' +
-      '<span class="kotva"></span>' +
-      '<button type="button" class="smazat" title="Smazat poznámku">✕</button></div>' +
-      '<textarea placeholder="Text poznámky…" spellcheck="true"></textarea>';
-    const pole = k.querySelector('textarea');
-    pole.value = p.text;
-    pole.oninput = () => { p.text = pole.value; vlozZnacky(); naplanujZapis(); $('poznPocet').textContent = poznamky.filter(x => x.text.trim()).length || ''; };
-    pole.onblur = () => {
-      if (!p.text.trim()) {
-        if (p.novy) { poznamky = poznamky.filter(x => x !== p); vykresliPanel(); }
-        else p.smazat = true;
-      }
-      naplanujZapis(true);
-    };
-    k.querySelector('.pozn-hlava').onclick = e => { if (!e.target.closest('button')) prejdiNaPoznamku(p); };
-    k.querySelector('.smazat').onclick = () => {
-      if (p.novy) poznamky = poznamky.filter(x => x !== p);
-      else p.smazat = true;
-      vykresliPanel(); vlozZnacky(); postavTiskovePrvky(); naplanujZapis(true);
-    };
-    return k;
-  }
-
-  /* Blok, ke kterému se má poznámka přidat: řádek s kurzorem v editoru,
-     jinak první blok viditelný v náhledu. */
-  function aktualniBlok() {
-    if (!bloky.length) return null;
-    const editorVidet = nast.rezim === 'split' || nast.rezim === 'editor';
-    if ((posledniZdroj === 'editor' && editorVidet) || nast.rezim === 'editor') {
-      const v = $('vstup');
-      const radek = v.value.slice(0, v.selectionStart).split('\n').length;
-      return bloky.filter(b => b.radek <= radek).pop() || bloky[0];
-    }
-    const hranice = nahled.getBoundingClientRect().top + 30;
-    return bloky.find(b => b.el.offsetParent && b.el.getBoundingClientRect().bottom > hranice) || bloky[0];
-  }
-
-  function pridejPoznamku(b) {
-    if (!b) { $('stav').textContent = 'Dokument je prázdný – není k čemu poznámku připnout.'; return; }
-    const p = { id: ++citacPoznamek, novy: true, cil: b, cilRadek: b.radek, text: '', el: b.el };
-    poznamky.push(p);
-    pouzijPoznamky(true);
+  function prekresliPoznamky() {
+    vyznac(nahled);
+    if (nast.rezim === 'dva') vyznac(nahled2);
     vykresliPanel();
-    zvyrazniPoznamku(p, true);
-  }
-
-  function zvyrazniPoznamku(p, zamerit) {
-    const k = $('poznSeznam').querySelector('.pozn[data-id="' + p.id + '"]');
-    if (!k) return;
-    $('poznSeznam').querySelectorAll('.pozn.aktivni').forEach(x => x.classList.remove('aktivni'));
-    k.classList.add('aktivni');
-    k.scrollIntoView({ block: 'nearest' });
-    if (zamerit) k.querySelector('textarea').focus();
+    postavTiskovePrvky();
   }
 
   function blikni(el) {
@@ -1845,14 +1888,16 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     el.classList.add('blik');
   }
 
-  function prejdiNaPoznamku(p) {
-    zvyrazniPoznamku(p, false);
-    if (nast.rezim === 'editor') { skocVEditoru(radekPoznamky(p)); return; }
-    if (!p.el) return;
-    if (!p.el.offsetParent) rozbalVse();
-    p.el.scrollIntoView({ block: 'center' });
-    blikni(p.el);
-    if (nast.rezim === 'split') skocVEditoru(radekPoznamky(p), true);
+  function prejdiNaPoznamku(id, cizi) {
+    const sel = 'mark.zv[data-id="' + CSS.escape(id) + '"]' + (cizi ? '[data-cizi="' + CSS.escape(cizi) + '"]' : ':not(.cizi)');
+    let m = nahled.querySelector(sel);
+    if (!m) return;
+    const el = m.closest('.telo > *');
+    if (nast.rezim === 'editor') { skocVEditoru(+el.dataset.radek || 1); return; }
+    if (!m.offsetParent) { rozbalVse(); m = nahled.querySelector(sel); }
+    m.scrollIntoView({ block: 'center' });
+    blikni(m);
+    if (nast.rezim === 'split') skocVEditoru(+el.dataset.radek || 1, true);
   }
 
   /* Označí řádek v editoru; Chrome posune pole ke kurzoru až při získání fokusu.
@@ -1870,40 +1915,254 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     v.setSelectionRange(pozice, konec);
   }
 
-  function poznamkyPoVykresleni() {
-    oznacBloky();
-    prevezmiPoznamky(zdrojPozn);
-    const stare = rozeberStare($('vstup').value);
-    if (stare) prevedStare(stare);
-    postavVrstvu();
-    vlozZnacky();
-    vykresliPanel();
-    if (stare || poznamky.some(zmenena)) naplanujZapis();
+  async function ulozPoznamky() {
+    const m = moje();
+    if (!m.length) { Dialog.info('Zatím žádné poznámky.'); return; }
+    const jm = await Dialog.zeptej('Tvoje jméno – podle něj autor pozná, od koho poznámky jsou (smí zůstat prázdné):', nast.jmeno || '', { ok: 'Uložit' });
+    if (jm === null) return;
+    nast.jmeno = jm.trim();
+    uloz();
+    const zaklad = ($('nazevSouboru').value || 'dokument') + '_poznamky' + (nast.jmeno ? '_' + nast.jmeno.replace(/[^\p{L}\p{N}]+/gu, '_') : '');
+    window.MD_DOKUMENT.stahni(new Blob([J.poznamkyMd(J.balik(nast.jmeno, m), meta.dokument)], { type: 'text/markdown;charset=utf-8' }), 'md', zaklad)
+      .catch(e => Dialog.chyba('Uložení selhalo: ' + e.message));
   }
 
-  /* Export: poznámky z textu pryč, na přání jako příloha na konci. */
-  function prilohaPoznamek(nadpis) {
-    const platne = poznamky.filter(p => p.text.trim()).sort((a, b) => radekPoznamky(a) - radekPoznamky(b));
-    if (!platne.length) return '';
-    const unik = s => s.replace(/([\\`*_[\]<>])/g, '\\$1');
-    return '\n\n---\n\n## ' + nadpis + '\n\n' + platne.map(p =>
-      '- **ř. ' + (p.cil ? p.cil.radek : radekPoznamky(p)) + '** – *„' + unik(kotvaPoznamky(p)) + '“*  \n  ' + unik(p.text).split('\n').join('  \n  ')).join('\n') + '\n';
+  async function nactiPoznamky(soubory) {
+    for (const f of soubory) {
+      const b = J.prectiPoznamky(await f.text());
+      if (!b) { Dialog.chyba(f.name + ': soubor neobsahuje poznámky (formát čtečky Kronik).'); continue; }
+      const c = pridejCizi(b);
+      vyznac(nahled);
+      const nalez = c.zvyrazneni.filter(z => !z.nenalezeno).length;
+      Dialog.info('Načteno: ' + (c.jmeno || 'čtenář bez jména') + ' – ' + c.zvyrazneni.length + ' poznámek, v dokumentu nalezeno ' + nalez + '.');
+    }
+    pouzijPoznamky(true);
+    prekresliPoznamky();
   }
-  window.MD_PRO_EXPORT = md => bezPoznamek(md).replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '\n') + (nast.poznExport ? prilohaPoznamek('Poznámky') : '');
+
+  /* Export: na přání poznámky jako příloha na konci dokumentu. */
+  function prilohaPoznamek(nadpis) {
+    const m = moje().filter(z => !z.nenalezeno).sort((a, b) => a.blok - b.blok || a.od - b.od);
+    if (!m.length) return '';
+    const unik = s => s.replace(/([\\`*_[\]<>])/g, '\\$1');
+    return '\n\n---\n\n## ' + nadpis + '\n\n' + m.map(z =>
+      '- *„' + unik(z.text) + '“*' + (z.poznamka ? '  \n  ' + unik(z.poznamka).split('\n').join('  \n  ') : '')).join('\n') + '\n';
+  }
+  window.MD_PRO_EXPORT = md => md.replace(/\s+$/, '\n') + (nast.poznExport ? prilohaPoznamek('Poznámky') : '');
+
+  /* ---------- výběr textu → plovoucí lišta (jako ve čtečce Kronik) ---------- */
+  const lista = $('vyber');
+  let vyber = null;   // {rezim:'novy', blok, od, do, text} | {rezim:'uprava', id}
+  function ukazListu(rect) {
+    lista.hidden = false;
+    const dolu = matchMedia('(pointer:coarse)').matches || rect.top < 70;
+    const top = dolu ? rect.bottom + 10 : rect.top - lista.offsetHeight - 8;
+    lista.style.top = Math.max(6, Math.min(innerHeight - lista.offsetHeight - 6, top)) + 'px';
+    lista.style.left = Math.max(6, Math.min(innerWidth - lista.offsetWidth - 6, rect.left + rect.width / 2 - lista.offsetWidth / 2)) + 'px';
+    lista.querySelector('[data-vyber="smazat"]').hidden = vyber.rezim !== 'uprava';
+  }
+  function zavriVyber() { lista.hidden = true; vyber = null; }
+  const blokZUzlu = u => { const e = u.nodeType === 3 ? u.parentElement : u; return e && e.closest('#nahled .telo > *, #nahled2 .telo > *'); };
+
+  let casVyberu = 0;
+  document.addEventListener('selectionchange', () => {
+    clearTimeout(casVyberu);
+    casVyberu = setTimeout(() => {
+      const sel = getSelection();
+      const pryc = () => { if (vyber && vyber.rezim === 'novy') zavriVyber(); };
+      if (!sel.rangeCount || sel.isCollapsed) { pryc(); return; }
+      const r = sel.getRangeAt(0), el = blokZUzlu(r.startContainer);
+      if (!el || el !== blokZUzlu(r.endContainer)) { pryc(); return; }
+      const od = poziceV(el, r.startContainer, r.startOffset), do_ = poziceV(el, r.endContainer, r.endOffset);
+      const text = textBloku(el).slice(od, do_);
+      if (!text.trim()) return;
+      vyber = { rezim: 'novy', blok: blokyV(el.closest('.preview')).indexOf(el), od: od, do: do_, text: text };
+      ukazListu(r.getBoundingClientRect());
+    }, 180);
+  });
+  [nahled, $('nahled2')].forEach(kont => kont.addEventListener('click', async e => {
+    const m = e.target.closest('mark.zv');
+    if (!m || !getSelection().isCollapsed) return;
+    if (m.dataset.cizi) {
+      const c = data.cizi.find(x => x.id === m.dataset.cizi), z = c && c.zvyrazneni.find(x => x.id === m.dataset.id);
+      if (!z) return;
+      if (!(await Dialog.potvrd('👤 ' + (c.jmeno || 'Čtenář') + '\n\n„' + z.text + '“' + (z.poznamka ? '\n\n📝 ' + z.poznamka : ''), { ok: 'Zavřít', zrus: 'Seznam poznámek' }))) {
+        pouzijPoznamky(true); vykresliPanel();
+      }
+      return;
+    }
+    vyber = { rezim: 'uprava', id: m.dataset.id };
+    ukazListu(m.getBoundingClientRect());
+  }));
+  lista.addEventListener('pointerdown', e => e.preventDefault());   // výběr nezmizí kliknutím do lišty
+  lista.addEventListener('click', async e => {
+    const tl = e.target.closest('button');
+    if (!tl || !vyber) return;
+    const v = vyber;
+    let z = v.rezim === 'uprava' ? data.zvyrazneni.find(x => x.id === v.id) : null;
+    const nove = barva => {
+      z = { id: noveId(), kniha: J.KNIHA, soubor: meta.dokument, blok: v.blok, od: v.od, do: v.do, text: v.text, barva: barva, poznamka: '', cas: Date.now() };
+      data.zvyrazneni.push(z);
+    };
+    zavriVyber();
+    getSelection().removeAllRanges();
+    if (tl.dataset.barva) {
+      if (z) z.barva = tl.dataset.barva; else nove(tl.dataset.barva);
+    } else if (tl.dataset.vyber === 'poznamka') {
+      const p = await Dialog.zeptej('Poznámka k vybranému textu', z ? z.poznamka : '', { ok: 'Uložit' });
+      if (p === null) return;
+      if (!z) nove('zluta');
+      z.poznamka = p.trim();
+    } else if (tl.dataset.vyber === 'smazat' && z) {
+      data.zvyrazneni = data.zvyrazneni.filter(x => x !== z);
+    }
+    ulozData();
+    prekresliPoznamky();
+  });
+
+  $('poznSeznam').addEventListener('click', async e => {
+    const b = e.target.closest('button');
+    const d = b && b.dataset;
+    const cizi = id => data.cizi.find(c => c.id === id);
+    if (d && d.uprav) {
+      const z = data.zvyrazneni.find(x => x.id === d.uprav);
+      const p = z && await Dialog.zeptej('Poznámka', z.poznamka, { ok: 'Uložit' });
+      if (p === null || !z) return;
+      z.poznamka = p.trim();
+    } else if (d && d.smaz) {
+      const z = data.zvyrazneni.find(x => x.id === d.smaz);
+      if (z && z.poznamka && !(await Dialog.potvrd('Smazat zvýraznění i s poznámkou?'))) return;
+      data.zvyrazneni = data.zvyrazneni.filter(x => x !== z);
+    } else if (d && d.ukaz) {
+      const c = cizi(d.ukaz); c.skryta = !c.skryta;
+    } else if (d && d.odeber) {
+      const c = cizi(d.odeber);
+      if (!(await Dialog.potvrd('Odebrat poznámky čtenáře ' + (c.jmeno || 'bez jména') + '?'))) return;
+      data.cizi = data.cizi.filter(x => x !== c);
+    } else if (d && d.prevezmi) {
+      const c = cizi(d.prevezmi);
+      const n = c.zvyrazneni.filter(z => !z.nenalezeno && !data.zvyrazneni.some(x => x.id === z.id && x.soubor === meta.dokument));
+      n.forEach(z => data.zvyrazneni.push(Object.assign({}, z, { kniha: J.KNIHA, soubor: meta.dokument,
+        poznamka: (c.jmeno ? c.jmeno + ': ' : '') + (z.poznamka || '') })));
+      Dialog.info('Převzato ' + n.length + ' poznámek.');
+    } else {
+      const k = e.target.closest('.pozn');
+      if (k && !k.classList.contains('nenalezeno')) prejdiNaPoznamku(k.dataset.id, k.dataset.cizi);
+      return;
+    }
+    ulozData();
+    prekresliPoznamky();
+  });
 
   /* ============================================================
-     Rozdělené zobrazení: editor a náhled drží stejné místo.
-     Každý blok náhledu zná svůj řádek zdroje (oznacBloky). Poloha řádku
-     v zalamovaném textarea se změří na skrytém zrcadle se stejným písmem
-     a šířkou; mezi dvěma bloky se poloha dopočítá lineárně.
+     Změny proti zkontrolovanému textu. Zkontrolovaný text (základ) je
+     uložený zvlášť; každá odlišnost od něj je změna – z editoru, z kódu
+     vpravo i z „⟳ Znovu načíst“. ✓ přenese úsek do základu (změna se
+     přestane hlásit), ↶ vrátí v dokumentu text základu.
      ============================================================ */
-  let polohy = null;                    // {sirka, y[], pad} – horní hrana každého řádku v px
+  const KLIC_ZAKLAD = 'webapp_md_dokument_zaklad';
+  let zaklad = precti(KLIC_ZAKLAD);            // null = ještě nebyl – nastaví se při startu
+  let useky = [];
+  function nastavZaklad(t) {
+    zaklad = t;
+    zapis(KLIC_ZAKLAD, t);
+  }
+
+  function pouzijZmeny(zapnuto) {
+    nast.zmeny = zapnuto;
+    $('zmenyPanel').hidden = !zapnuto;
+    $('zmenyBtn').setAttribute('aria-pressed', String(zapnuto));
+    uloz();
+    vykresliZmeny();
+  }
+
+  function prepocitejZmeny() {
+    useky = J.rozdil(zaklad === null ? $('vstup').value : zaklad, $('vstup').value);
+    $('zmenyPocet').textContent = useky.length ? String(useky.length) : '';
+    oznacZmeny(nahled);
+    if (nast.rezim === 'dva') oznacZmeny(nahled2);
+    vykresliZmeny();
+  }
+
+  // řádky nového textu (od 1), kterých se úsek týká; smazání = řádky kolem
+  const rozsahUseku = u => u.b1 > u.b0 ? [u.b0 + 1, u.b1] : [u.b0, u.b0 + 1];
+  function oznacZmeny(kont) {
+    blokyV(kont).forEach(el => {
+      const r = +el.dataset.radek, k = +el.dataset.konec;
+      el.classList.toggle('zmeneno', !!r && useky.some(u => { const [a, b] = rozsahUseku(u); return r <= b && k >= a; }));
+    });
+  }
+
+  function vykresliZmeny() {
+    if ($('zmenyPanel').hidden) return;
+    const stare = (zaklad || '').split('\n'), nove = $('vstup').value.split('\n');
+    const radky = (pole, od, do_, trida, znak) => {
+      const r = pole.slice(od, do_), max = 10;
+      return r.slice(0, max).map(x => '<span class="' + trida + '">' + znak + ' ' + esc(x) + '</span>').join('') +
+        (r.length > max ? '<span class="vic">… a dalších ' + (r.length - max) + ' řádků</span>' : '');
+    };
+    $('zmenySeznam').innerHTML = useky.length ? useky.map((u, i) => {
+      const typ = u.a1 === u.a0 ? 'přidáno' : u.b1 === u.b0 ? 'smazáno' : 'upraveno';
+      const [a, b] = rozsahUseku(u);
+      const kde = u.b1 > u.b0 ? (a === b ? 'ř. ' + a : 'ř. ' + a + '–' + b) : 'za ř. ' + u.b0;
+      return '<div class="pozn" data-i="' + i + '"><div class="pozn-hlava" title="Přejít na místo v dokumentu">' +
+        '<span class="radek-c">' + kde + '</span><span class="kotva">' + typ + '</span>' +
+        '<button type="button" class="prijmi" data-prijmi="' + i + '" title="Zkontrolováno – změna se stane součástí dokumentu">✓</button>' +
+        '<button type="button" data-vrat="' + i + '" title="Vrátit původní text">↶</button></div>' +
+        '<pre class="zm">' + radky(stare, u.a0, u.a1, 'pryc', '−') + radky(nove, u.b0, u.b1, 'nove', '+') + '</pre></div>';
+    }).join('') : '<p class="pozn-prazdno">Žádné změny – dokument odpovídá zkontrolovanému textu.</p>';
+  }
+
+  function prejdiNaZmenu(u) {
+    const [a, b] = rozsahUseku(u);
+    if (nast.rezim === 'editor') { skocVEditoru(a); return; }
+    if (nast.rezim === 'dva' && nast.pohled2 === 'kod') ukazRadekVKodu(a);
+    let el = blokyV(nahled).find(x => +x.dataset.radek <= b && +x.dataset.konec >= a);
+    if (!el) return;
+    if (!el.offsetParent) rozbalVse();
+    el.scrollIntoView({ block: 'center' });
+    blikni(el);
+    if (nast.rezim === 'split') skocVEditoru(a, true);
+  }
+
+  $('zmenySeznam').addEventListener('click', async e => {
+    const b = e.target.closest('button');
+    const text = $('vstup').value;
+    if (b && b.dataset.prijmi) {
+      nastavZaklad(J.prijmi(zaklad, text, useky[+b.dataset.prijmi]));
+      prepocitejZmeny();
+    } else if (b && b.dataset.vrat) {
+      const u = useky[+b.dataset.vrat];
+      if (!(await Dialog.potvrd('Vrátit v dokumentu původní text tohoto úseku?', { ok: 'Vrátit' }))) return;
+      $('vstup').value = J.vrat(zaklad, $('vstup').value, u);
+      $('vstup').dispatchEvent(new Event('input'));
+    } else {
+      const k = e.target.closest('.pozn');
+      if (k) prejdiNaZmenu(useky[+k.dataset.i]);
+    }
+  });
+  $('zmenyVseBtn').onclick = async () => {
+    if (!useky.length) return;
+    if (!(await Dialog.potvrd('Uznat všech ' + useky.length + ' změn za zkontrolované? Stanou se součástí dokumentu.', { ok: 'Zkontrolováno' }))) return;
+    nastavZaklad($('vstup').value);
+    prepocitejZmeny();
+  };
+
+  /* ============================================================
+     Posouvání v páru. Levý náhled drží stejné místo s editorem
+     (rozdělené zobrazení), nebo s pravým panelem (dva náhledy
+     s vazbou 🔗 – náhled i kód). Každý blok náhledu zná svůj řádek
+     zdroje (oznacBloky). Poloha řádku v zalamovaném textarea se změří
+     na skrytém zrcadle se stejným písmem a šířkou; mezi dvěma bloky
+     se poloha dopočítá lineárně.
+     ============================================================ */
+  const POLOHY = new WeakMap();         // textarea → {sirka, y[], pad}; při změně textu se maže
   let tichoEditor = 0, tichoNahled = 0; // do té doby jde o posun, který jsme udělali sami
   let snimekSync = 0, odkudSync = 'nahled';
 
-  function polohyRadku() {
-    const v = $('vstup');
-    if (polohy && polohy.sirka === v.clientWidth) return polohy;
+  function polohyRadku(v) {
+    const ulozene = POLOHY.get(v);
+    if (ulozene && ulozene.sirka === v.clientWidth) return ulozene;
     const cs = getComputedStyle(v);
     const z = document.createElement('div');
     z.style.cssText = 'position:absolute;visibility:hidden;left:-99999px;top:0;white-space:pre-wrap;overflow-wrap:break-word;box-sizing:border-box';
@@ -1915,18 +2174,31 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     const y = Array.from(z.children, d => d.offsetTop);
     y.push(z.offsetHeight);
     z.remove();
-    return (polohy = { sirka: v.clientWidth, y: y, pad: parseFloat(cs.paddingTop) || 0 });
+    const p = { sirka: v.clientWidth, y: y, pad: parseFloat(cs.paddingTop) || 0 };
+    POLOHY.set(v, p);
+    return p;
   }
 
-  /* Dvojice „poloha v náhledu ↔ poloha v editoru“ pro viditelné bloky. */
-  function bodySync() {
-    const p = polohyRadku();
+  /* Dvojice „poloha v náhledu ↔ poloha v textarea“ pro viditelné bloky. */
+  function bodySync(v) {
+    const p = polohyRadku(v);
     const nula = nahled.getBoundingClientRect().top - nahled.scrollTop;
     const body = [{ n: 0, e: 0 }];
     bloky.forEach(b => {
       if (b.el.offsetParent) body.push({ n: b.el.getBoundingClientRect().top - nula, e: Math.max(0, p.y[b.radek - 1] - p.pad) });
     });
     body.push({ n: nahled.scrollHeight, e: p.y[p.y.length - 1] });
+    return body;
+  }
+
+  /* Totéž pro dva náhledy – bloky si odpovídají pořadím. */
+  function bodyNahledu() {
+    const n0 = nahled.getBoundingClientRect().top - nahled.scrollTop, d0 = nahled2.getBoundingClientRect().top - nahled2.scrollTop;
+    const l = blokyV(nahled), r = blokyV(nahled2), body = [{ n: 0, e: 0 }];
+    l.forEach((el, i) => {
+      if (el.offsetParent && r[i]) body.push({ n: el.getBoundingClientRect().top - n0, e: r[i].getBoundingClientRect().top - d0 });
+    });
+    body.push({ n: nahled.scrollHeight, e: nahled2.scrollHeight });
     return body;
   }
 
@@ -1937,22 +2209,35 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     return a[na] + (d > 0 ? Math.min(1, Math.max(0, (x - a[z]) / d)) : 0) * (b[na] - a[na]);
   }
 
+  // posun bez plynulé animace (scroll-behavior:smooth by zaostával za tahem)
+  function posunNa(el, y) {
+    const plynule = el.style.scrollBehavior;
+    el.style.scrollBehavior = 'auto';
+    el.scrollTop = y;
+    el.style.scrollBehavior = plynule;
+  }
+
+  // kdo se posouvá s levým náhledem
+  function protejsek() {
+    if (nast.rezim === 'split') return { el: $('vstup'), body: () => bodySync($('vstup')) };
+    if (nast.rezim !== 'dva' || !nast.vazat2) return null;
+    return nast.pohled2 === 'kod' ? { el: $('kod2'), body: () => bodySync($('kod2')) } : { el: nahled2, body: bodyNahledu };
+  }
+
   function synchronizuj(odkud) {
-    if (nast.rezim !== 'split' || !bloky.length) return;
-    const v = $('vstup'), t = performance.now();
+    const p = protejsek();
+    if (!p || !bloky.length) return;
+    const v = p.el, t = performance.now();
     if (odkud === 'nahled') {
       if (t < tichoNahled) return;
       const dole = nahled.scrollTop >= nahled.scrollHeight - nahled.clientHeight - 2;
       tichoEditor = t + 150;
-      v.scrollTop = dole ? v.scrollHeight : interpoluj(bodySync(), 'n', 'e', nahled.scrollTop);
+      posunNa(v, dole ? v.scrollHeight : interpoluj(p.body(), 'n', 'e', nahled.scrollTop));
     } else {
       if (t < tichoEditor) return;
       const dole = v.scrollTop >= v.scrollHeight - v.clientHeight - 2;
       tichoNahled = t + 150;
-      const plynule = nahled.style.scrollBehavior;
-      nahled.style.scrollBehavior = 'auto';
-      nahled.scrollTop = dole ? nahled.scrollHeight : interpoluj(bodySync(), 'e', 'n', v.scrollTop);
-      nahled.style.scrollBehavior = plynule;
+      posunNa(nahled, dole ? nahled.scrollHeight : interpoluj(p.body(), 'e', 'n', v.scrollTop));
     }
   }
 
@@ -1962,47 +2247,122 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   }
 
   /* ============================================================
-     Druhý, nezávislý náhled (režim „Dva náhledy“). Levý náhled jde
-     s obsahem dokumentu, pravý se posouvá i hledá sám – na dohledání
-     odkazu jinde v dokumentu bez ztráty rozečteného místa.
+     Pravý panel (režim „Dva náhledy“): náhled, nebo zdrojový kód.
+     Bez vazby se posouvá i hledá sám – na dohledání odkazu jinde
+     v dokumentu bez ztráty rozečteného místa; s vazbou 🔗 ukazuje totéž
+     místo jako levý. Kód jde upravit, „Uložit změny“ ho přepíše do
+     dokumentu a úpravy se objeví v Δ Změny.
      ============================================================ */
   const nahled2 = $('nahled2');
-  let posledni2 = null, nalezy2 = [], kde2 = -1;
+  let posledni2 = null, nalezy2 = [], kde2 = -1, kod2Spinavy = false;
 
   function vykresliDruhy() {
     if (nast.rezim !== 'dva') return;
-    const md = bezPoznamek($('vstup').value);
-    if (md === posledni2) return;
-    posledni2 = md;
-    const telo = document.createElement('div');
-    telo.className = 'telo';
-    telo.innerHTML = marked.parse(md);
-    nahled2.textContent = '';
-    nahled2.appendChild(telo);
-    const skok = $('skok2');
-    skok.length = 1;
-    telo.querySelectorAll(NADPISY).forEach((h, i) => {
-      h.id = 'druhy-' + i;
-      const o = document.createElement('option');
-      o.value = h.id;
-      o.textContent = ' '.repeat((+h.tagName[1] - 1) * 3) + h.textContent;
-      skok.appendChild(o);
-    });
+    if (nast.pohled2 === 'kod') obnovKod2();
+    const md = $('vstup').value;
+    if (md !== posledni2) {
+      posledni2 = md;
+      const telo = document.createElement('div');
+      telo.className = 'telo';
+      telo.innerHTML = marked.parse(md);
+      nahled2.textContent = '';
+      nahled2.appendChild(telo);
+      srovnejMezery(nahled2);
+      const leve = blokyV(nahled);
+      blokyV(nahled2).forEach((el, i) => {
+        if (leve[i] && leve[i].dataset.radek) { el.dataset.radek = leve[i].dataset.radek; el.dataset.konec = leve[i].dataset.konec; }
+      });
+      const skok = $('skok2');
+      skok.length = 1;
+      telo.querySelectorAll(NADPISY).forEach((h, i) => {
+        h.id = 'druhy-' + i;
+        const o = document.createElement('option');
+        o.value = h.id;
+        if (h.dataset.radek) o.dataset.radek = h.dataset.radek;
+        o.textContent = ' '.repeat((+h.tagName[1] - 1) * 3) + h.textContent;
+        skok.appendChild(o);
+      });
+      if ($('dotaz2').value) hledej2();
+    }
+    vyznac(nahled2);
+    oznacZmeny(nahled2);
+  }
+
+  function pouzijPohled2(pohled) {
+    nast.pohled2 = pohled === 'kod' ? 'kod' : 'nahled';
+    uloz();
+    const kod = nast.pohled2 === 'kod';
+    nahled2.hidden = kod;
+    $('kod2Obal').hidden = !kod;
+    document.querySelectorAll('[data-pohled2]').forEach(b => b.classList.toggle('zap', b.dataset.pohled2 === nast.pohled2));
+    vykresliDruhy();
     if ($('dotaz2').value) hledej2();
+    naplanujSync('nahled');
+  }
+
+  function pouzijVazbu(zapnuto) {
+    nast.vazat2 = zapnuto;
+    uloz();
+    $('vazat2').setAttribute('aria-pressed', String(zapnuto));
+    $('vazat2').title = zapnuto ? 'Vázáno – pravý panel ukazuje totéž místo jako levý (klik uvolní)'
+      : 'Vázat na levý náhled – oba ukazují totéž místo';
+    if (zapnuto) naplanujSync('nahled');
+  }
+
+  function stavKod2() {
+    $('kod2Uloz').disabled = $('kod2Zahod').disabled = !kod2Spinavy;
+    $('kod2Stav').textContent = kod2Spinavy ? '● Neuložené úpravy' : 'Beze změn';
+    $('kod2Stav').className = kod2Spinavy ? 'neulozeno' : '';
+  }
+  // kód vpravo jde s dokumentem, dokud v něm nejsou neuložené úpravy
+  function obnovKod2() {
+    const k = $('kod2');
+    if (!kod2Spinavy && k.value !== $('vstup').value) {
+      const s = k.scrollTop;
+      k.value = $('vstup').value;
+      k.scrollTop = s;
+      POLOHY.delete(k);
+    }
+    stavKod2();
+  }
+  function ulozKod2() {
+    if (!kod2Spinavy) return;
+    kod2Spinavy = false;
+    $('vstup').value = $('kod2').value;
+    $('vstup').dispatchEvent(new Event('input'));
+    $('stav').textContent = 'Úpravy kódu jsou v dokumentu – ke kontrole v Δ Změny.';
+  }
+
+  function ukazRadekVKodu(radek) {
+    const k = $('kod2');
+    if (!k.offsetParent) return;
+    const p = polohyRadku(k);
+    posunNa(k, Math.max(0, (p.y[radek - 1] || 0) - k.clientHeight / 3));
   }
 
   function hledej2() {
     zrusZvyrazneni(nahled2);
-    nalezy2 = oznacNalezy(nahled2, $('dotaz2').value);
     kde2 = -1;
+    nalezy2 = [];
+    if (nast.pohled2 === 'kod') {
+      const t = $('kod2').value.toLowerCase(), q = $('dotaz2').value.toLowerCase();
+      if (q.length >= 2) for (let i = t.indexOf(q); i >= 0; i = t.indexOf(q, i + q.length)) nalezy2.push({ od: i, do: i + q.length });
+    } else nalezy2 = oznacNalezy(nahled2, $('dotaz2').value);
     if (nalezy2.length) skoc2(0); else $('pocet2').textContent = '0/0';
   }
 
   function skoc2(kam) {
     if (!nalezy2.length) return;
     kde2 = (kam + nalezy2.length) % nalezy2.length;
-    nalezy2.forEach((m, i) => m.classList.toggle('aktivni', i === kde2));
-    nalezy2[kde2].scrollIntoView({ block: 'center' });
+    const n = nalezy2[kde2];
+    if (n.od !== undefined) {
+      const k = $('kod2');
+      k.setSelectionRange(n.od, n.do);
+      ukazRadekVKodu(k.value.slice(0, n.od).split('\n').length);
+    } else {
+      nalezy2.forEach((m, i) => m.classList.toggle('aktivni', i === kde2));
+      n.scrollIntoView({ block: 'center' });
+    }
     $('pocet2').textContent = (kde2 + 1) + '/' + nalezy2.length;
   }
 
@@ -2084,27 +2444,28 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
       telo.insertBefore(obsah, telo.firstChild);
     }
 
-    const platne = poznamky.filter(p => p.text.trim() && p.el).sort((a, b) => a.radek - b.radek);
+    const el = blokyV(nahled);
+    const platne = moje().filter(z => z.poznamka && !z.nenalezeno && el[z.blok]).sort((a, b) => a.blok - b.blok || a.od - b.od);
     if (s.pozn === 'u') {
       const podleBloku = new Map();
-      platne.forEach(p => { if (!podleBloku.has(p.el)) podleBloku.set(p.el, []); podleBloku.get(p.el).push(p); });
-      podleBloku.forEach((seznam, el) => {
+      platne.forEach(z => { const b = el[z.blok]; if (!podleBloku.has(b)) podleBloku.set(b, []); podleBloku.get(b).push(z); });
+      podleBloku.forEach((seznam, b) => {
         const box = prvek('aside', 'jen-tisk tisk-pozn');
-        seznam.forEach(p => box.appendChild(prvek('p', '', 'Poznámka: ' + p.text)));
-        el.after(box);
+        seznam.forEach(z => box.appendChild(prvek('p', '', 'Poznámka k „' + z.text + '“: ' + z.poznamka)));
+        b.after(box);
       });
     } else if (s.pozn === 'konec' && platne.length) {
       const priloha = prvek('section', 'jen-tisk tisk-priloha');
       priloha.appendChild(prvek('div', 'tisk-nadpis', 'Poznámky'));
       const ol = prvek('ol', '');
-      platne.forEach(p => {
+      platne.forEach(z => {
         const li = prvek('li', '');
-        li.appendChild(prvek('span', 'tisk-kotva', 'ř. ' + p.radek + ' – „' + p.kotva + '“: '));
-        li.appendChild(document.createTextNode(p.text));
+        li.appendChild(prvek('span', 'tisk-kotva', '„' + z.text + '“: '));
+        li.appendChild(document.createTextNode(z.poznamka));
         ol.appendChild(li);
       });
       priloha.appendChild(ol);
-      if (vrstva) telo.insertBefore(priloha, vrstva); else telo.appendChild(priloha);
+      telo.appendChild(priloha);
     }
   }
 
@@ -2124,7 +2485,6 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     $('celaPopis').textContent = cela ? ' Ukončit celou obrazovku' : ' Celá obrazovka';
     $('celaBtn').title = (cela ? 'Ukončit celou obrazovku' : 'Celá obrazovka') + ' (F)';
     $('celaBtn').setAttribute('aria-label', cela ? 'Ukončit celou obrazovku' : 'Celá obrazovka');
-    rozmistiZnacky();
   }
 
   /* ---------- osnova sleduje místo v textu ---------- */
@@ -2150,9 +2510,14 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   document.addEventListener('md-vykresleno', () => {
     zrusZvyrazneni();
     obalTelo();
+    srovnejMezery(nahled);
     obalKod();
     pridejSbalovani();
-    poznamkyPoVykresleni();
+    oznacBloky();
+    if (cekajiciStare) prevedStare();
+    vyznac(nahled);
+    prepocitejZmeny();
+    vykresliPanel();
     postavOsnovu();
     pouzijTisk();
     postavTiskovePrvky();
@@ -2165,7 +2530,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   });
 
   /* ---------- ovládání ---------- */
-  document.querySelectorAll('.rezimy button').forEach(b =>
+  document.querySelectorAll('.rezimy [data-rezim]').forEach(b =>
     b.onclick = () => { pouzijRezim(b.dataset.rezim); pouzijOsnovu(nast.osnova); });
 
   $('osnovaBtn').onclick = () => pouzijOsnovu(!nast.osnova);
@@ -2193,7 +2558,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     $('panelTisk').hidden = !otevrit;
     $('tiskBtn').setAttribute('aria-pressed', String(otevrit));
   };
-  $('tisknoutBtn').onclick = () => { zapisPoznamky(); window.print(); };
+  $('tisknoutBtn').onclick = () => window.print();
   $('tiskVychoziBtn').onclick = () => { nast.tisk = Object.assign({}, TISK_VYCHOZI); uloz(); pouzijTisk(); postavTiskovePrvky(); };
   [['tiskFormat', 'format'], ['tiskOrientace', 'orientace'], ['tiskPismo', 'pismo'],
    ['tiskKapitoly', 'kapitoly'], ['tiskPoznamky', 'pozn']].forEach(([id, klic]) =>
@@ -2222,33 +2587,58 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     posledniAktivni = -1; zvyrazniVOsnove();
   };
 
-  $('poznBtn').onclick = () => pouzijPoznamky(!nast.poznamky);
-  $('poznPridatBtn').onclick = () => pridejPoznamku(aktualniBlok());
+  $('poznBtn').onclick = () => { pouzijPoznamky(!nast.poznamky); vykresliPanel(); };
   $('poznExport').checked = !!nast.poznExport;
   $('poznExport').onchange = e => { nast.poznExport = e.target.checked; uloz(); };
-  $('vstup').addEventListener('blur', () => { if (cekaNaZapis) zapisPoznamky(); });
-  ['focus', 'click', 'keyup'].forEach(ev => $('vstup').addEventListener(ev, () => { posledniZdroj = 'editor'; }));
-  ['click', 'wheel'].forEach(ev => nahled.addEventListener(ev, () => { posledniZdroj = 'nahled'; }, { passive: true }));
+  $('poznDoMd').checked = nast.poznDoMd !== false;
+  $('poznDoMd').onchange = e => { nast.poznDoMd = e.target.checked; uloz(); };
+  $('poznUlozBtn').onclick = ulozPoznamky;
+  $('poznNactiBtn').onclick = () => $('poznSoubor').click();
+  $('poznSoubor').onchange = e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) nactiPoznamky(f); };
+  $('zmenyBtn').onclick = () => pouzijZmeny(!nast.zmeny);
 
-  // tlačítko „📝+“ jezdí u odstavce pod myší
-  nahled.addEventListener('mousemove', e => {
-    if (!pridatBtn || e.target === pridatBtn) return;
-    if (!e.target.closest('.telo')) { pridatBtn.hidden = true; return; }
-    const blok = e.target.closest('.telo > [data-radek]');
-    if (!blok) return;
-    pridatBtn._blok = blok;
-    pridatBtn.hidden = false;
-    pridatBtn.style.top = blok.offsetTop + 'px';
-  });
-  nahled.addEventListener('mouseleave', () => { if (pridatBtn) pridatBtn.hidden = true; });
-
+  // .md i s poznámkami: balík na konci v HTML komentáři – jiné prohlížeče ho neukážou,
+  // tahle stránka ho při načtení vyjme a čtečka Kronik soubor přečte jako poznámky
   $('mdBtn').onclick = () => {
-    zapisPoznamky();                           // rozepsané poznámky ať jsou v souboru
     const text = $('vstup').value;
     if (!text.trim()) { $('stav').textContent = 'Nejdřív vlož nebo načti nějaký Markdown.'; return; }
-    window.MD_DOKUMENT.stahni(new Blob([text], { type: 'text/markdown;charset=utf-8' }), 'md')
+    const m = moje();
+    const obsah = nast.poznDoMd !== false && m.length ? text.replace(/\s+$/, '\n') + '\n' + J.komentar(J.balik(nast.jmeno, m)) : text;
+    meta.otisk = otisk(text);
+    ulozMeta();
+    window.MD_DOKUMENT.stahni(new Blob([obsah], { type: 'text/markdown;charset=utf-8' }), 'md')
       .catch(e => { $('stav').textContent = 'Uložení selhalo: ' + e.message; });
   };
+
+  $('otevriBtn').onclick = vyberSoubor;
+  $('znovuBtn').onclick = znovuNacist;
+  $('soubor').onchange = e => {
+    const f = e.target.files[0], znovu = znovuPresVyber;
+    e.target.value = '';
+    znovuPresVyber = false;
+    if (f) nactiSoubor(f, null, znovu);
+  };
+  // přetažený soubor; Chrome k němu dá i trvalý přístup pro „Znovu načíst“
+  document.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    const pol = e.dataTransfer.items && e.dataTransfer.items[0];
+    let h = null;
+    try { h = pol && pol.getAsFileSystemHandle ? pol.getAsFileSystemHandle() : null; } catch { h = null; }
+    Promise.resolve(h).catch(() => null).then(x => nactiSoubor(f, x && x.kind === 'file' ? x : null, false));
+  });
+  $('vycistiBtn').onclick = async () => {
+    if (useky.length && !(await Dialog.potvrd('Dokument má nezkontrolované změny (' + useky.length + '). Vyprázdnit ho?', { ok: 'Vyprázdnit' }))) return;
+    meta = { dokument: 'dokument.md', otisk: '' };
+    ulozMeta();
+    souborHandle = null;
+    ulozHandle(null);
+    nastavZaklad('');
+    $('vstup').value = '';
+    $('vstup').dispatchEvent(new Event('input'));
+    $('stav').textContent = 'Vyčištěno.';
+  };
+
   $('nahoruBtn').onclick = () => nahled.scrollTo({ top: 0 });
 
   $('temaVyber').onchange = e => { nast.tema = e.target.value; pouzijTema(); uloz(); };
@@ -2266,10 +2656,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     });
   };
   $('vychoziBtn').onclick = () => {
-    const tema = nast.tema;                       // téma je volba, ne typografie – zůstává
-    // mimo typografii zůstává i rozložení panelů a nastavení tisku
-    nast = Object.assign({}, VYCHOZI, { tema: tema, rezim: nast.rezim, osnova: nast.osnova,
-      poznamky: nast.poznamky, osnovaSleduje: nast.osnovaSleduje, poznExport: nast.poznExport, tisk: nast.tisk });
+    // jen typografie – téma, rozložení panelů a nastavení tisku zůstávají
+    ['vel', 'radek', 'sirka', 'pismo', 'blok', 'sbalKod'].forEach(k => { nast[k] = VYCHOZI[k]; });
     pouzijVzhled(); uloz();
     nahled.querySelectorAll('.kod-blok.sbaleno').forEach(o => {
       o.classList.remove('sbaleno');
@@ -2279,11 +2667,23 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
 
   nahled.addEventListener('scroll', () => { aktualizujPrubeh(); zvyrazniVOsnove(); ulozPozici(); naplanujSync('nahled'); }, { passive: true });
   $('vstup').addEventListener('scroll', () => naplanujSync('editor'), { passive: true });
-  $('vstup').addEventListener('input', () => { polohy = null; statistika(); });
+  $('vstup').addEventListener('input', () => { POLOHY.delete($('vstup')); statistika(); });
+  nahled2.addEventListener('scroll', () => naplanujSync('editor'), { passive: true });
+  $('kod2').addEventListener('scroll', () => naplanujSync('editor'), { passive: true });
+  $('kod2').addEventListener('input', () => {
+    kod2Spinavy = $('kod2').value !== $('vstup').value;
+    POLOHY.delete($('kod2'));
+    stavKod2();
+  });
+  $('kod2Uloz').onclick = ulozKod2;
+  $('kod2Zahod').onclick = () => { kod2Spinavy = false; obnovKod2(); };
+  document.querySelectorAll('[data-pohled2]').forEach(b => { b.onclick = () => pouzijPohled2(b.dataset.pohled2); });
+  $('vazat2').onclick = () => pouzijVazbu(!nast.vazat2);
 
   $('skok2').onchange = e => {
-    const h = e.target.value && $(e.target.value);
-    if (h) h.scrollIntoView({ block: 'start' });
+    const o = e.target.selectedOptions[0];
+    if (nast.pohled2 === 'kod') { if (o && o.dataset.radek) ukazRadekVKodu(+o.dataset.radek); }
+    else { const h = e.target.value && $(e.target.value); if (h) h.scrollIntoView({ block: 'start' }); }
     e.target.value = '';
   };
   $('dotaz2').oninput = hledej2;
@@ -2294,47 +2694,60 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   $('dalsi2').onclick = () => skoc2(kde2 + 1);
   $('predchozi2').onclick = () => skoc2(kde2 - 1);
 
-  // načtení souboru přepne do čtení – proto ho uživatel nejčastěji otevírá
-  $('soubor').addEventListener('change', e => {
-    if (e.target.files && e.target.files.length) pouzijRezim('cteni');
-  });
-  document.addEventListener('drop', () => pouzijRezim('cteni'));
 
   /* ---------- klávesové zkratky ---------- */
   document.addEventListener('keydown', e => {
     const vePoli = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); otevriHledani(true); return; }
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); $('mdBtn').click(); return; }
-    if (e.key === 'Escape') { if (!$('hledani').hidden) otevriHledani(false); return; }
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (e.target === $('kod2')) ulozKod2(); else $('mdBtn').click();
+      return;
+    }
+    if (e.key === 'Escape') { if (!lista.hidden) zavriVyber(); else if (!$('hledani').hidden) otevriHledani(false); return; }
     if (e.altKey && !e.ctrlKey && !e.metaKey) {
       const rezimy = { '1': 'editor', '2': 'split', '3': 'cteni', '4': 'dva' };
       if (rezimy[e.key]) { e.preventDefault(); pouzijRezim(rezimy[e.key]); pouzijOsnovu(nast.osnova); return; }
       if (e.key.toLowerCase() === 'o') { e.preventDefault(); pouzijOsnovu(!nast.osnova); return; }
-      if (e.key.toLowerCase() === 'p') { e.preventDefault(); pouzijPoznamky(!nast.poznamky); return; }
+      if (e.key.toLowerCase() === 'p') { e.preventDefault(); pouzijPoznamky(!nast.poznamky); vykresliPanel(); return; }
+      if (e.key.toLowerCase() === 'z') { e.preventDefault(); pouzijZmeny(!nast.zmeny); return; }
     }
     if (vePoli || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'f') { e.preventDefault(); $('celaBtn').click(); }
   });
 
   /* ---------- start ---------- */
+  if (window.SAMOSTATNA_STRANKA) $('temaVyber').options[0].textContent = 'Podle systému';
   pouzijTema();
   pouzijVzhled();
   pouzijRezim(nast.rezim);
   pouzijOsnovu(nast.osnova);
   pouzijPoznamky(!!nast.poznamky);
+  pouzijZmeny(!!nast.zmeny);
+  pouzijPohled2(nast.pohled2);
+  pouzijVazbu(!!nast.vazat2);
   pouzijZamek();
   pouzijTisk();
 
-  // Rozečtený text z minule. Převodník výš vložil ukázku; vlastní text ji
-  // nahradí a `input` donutí převodník překreslit náhled.
+  // Rozečtený text z minule (jinak ukázka, kterou vložil převodník výš).
+  // Poznámky starší verze stránky se z něj vyjmou; zkontrolovaný text
+  // se napoprvé rovná dokumentu – změny se počítají až od teď.
   const ulozenyText = precti(KLIC_TEXT);
-  if (ulozenyText && ulozenyText.trim() && ulozenyText !== $('vstup').value) {
-    $('vstup').value = ulozenyText;
+  const obnoveno = !!(ulozenyText && ulozenyText.trim());
+  const start = pripravText(obnoveno ? ulozenyText : $('vstup').value);
+  if (start.balik) prevezmiBalik(start.balik);
+  if (start.stare.length) cekajiciStare = start.stare;
+  if (zaklad === null) nastavZaklad(start.md);
+  else if (start.stare.length) nastavZaklad(pripravText(zaklad).md);
+  if (start.md !== $('vstup').value) {
+    $('vstup').value = start.md;
     $('vstup').dispatchEvent(new Event('input'));
-    $('stav').textContent = 'Obnoven text z minula. „🗑️“ ho smaže, „📂 Načíst .md“ nahradí souborem.';
-    obnovPozici();
   } else {
     document.dispatchEvent(new CustomEvent('md-vykresleno'));
+  }
+  if (obnoveno) {
+    if (!cekajiciStare) $('stav').textContent = 'Obnoven text z minula. „🗑️“ ho smaže, „📂 Načíst .md“ nahradí souborem.';
+    obnovPozici();
   }
 })();
 </script>

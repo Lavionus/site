@@ -365,41 +365,51 @@ až za `common.css` a každé definuje **celou** paletu, ne jen odchylky; usadit
 musí ještě před vykreslením, o to se stará krátký skript v `<head>`. Nadstavba
 sahá jen do DOM náhledu, export do DOCX/ODT pracuje s HTML od `marked`, takže se
 do výsledných dokumentů obaly kódu ani kotvy nadpisů nedostanou. Ověřuje to
-`_test/md_ctecka.py` (100 kontrol v headless Chromiu) vedle původního
+`_test/md_ctecka.py` (přes 130 kontrol v headless Chromiu) vedle původního
 `_test/md_dokument.py`; `_test/md_snimky.html` slouží ke snímkování čtečky
 (`?tema=…&rezim=…&osnova=1&hledat=slovo&dolu=px`).
 
-**Poznámky** (panel vpravo, `Alt+P`) leží **přímo v textu**, hned pod blokem,
-ke kterému patří, jako citace se značkou (od 11/2026):
+**Poznámky** (panel vpravo, `Alt+P`) jsou od 4. 11. 2026 **stejné jako ve čtečce
+Kronik**: označ v náhledu pár slov → lišta s barvou / 📝 poznámkou / 🗑. Drží se
+mimo text dokumentu (`webapp_md_dokument_poznamky`, pole `zvyrazneni` a `cizi`
+jako `webapp_kroniky_poznamky`); zvýraznění zná pořadí bloku (dítě `.telo`),
+rozsah znaků v jeho textu a citaci, podle které se po úpravě textu dohledá.
+Patří k dokumentu podle jména načteného souboru. Soubor poznámek (⬇ Uložit /
+📂 Načíst) je formát `kroniky-poznamky` – Markdown pro člověka a balík JSON
+v HTML komentáři na konci; obě stránky si ho přečtou navzájem (test
+`_test/md_dokument_jadro_test.js` to ověřuje proti `kroniky/jadro.js`).
+Načtené poznámky čtenáře se ukážou vlnovkou a jdou převzít mezi svoje; ze
+souboru z Kronik se ukážou ty, jejichž citace v dokumentu je. „💾 .md“ přidá
+balík na konec dokumentu (vypínatelné), při načtení se z textu zase vyjme.
+Staré poznámky (`> [!poznámka]` pod odstavcem, skrytý `<!-- md-poznamky -->`)
+se při načtení převedou na zvýraznění první věty odstavce a z textu zmizí. Do
+.docx/.odt/.doc jdou poznámky jen na přání jako příloha (`window.MD_PRO_EXPORT`).
 
-```
-Druhý odstavec o hruškách.
-
-> [!poznámka]
-> text poznámky
-```
-
-Cizí prohlížeč Markdownu ji ukáže jako obyčejnou citaci (Obsidian jako rámeček
-callout), takže se mimo stránku neztratí. Tahle stránka citaci se značkou
-(`[!poznámka]`, i bez diakritiky) v náhledu schová (`.pozn-zdroj`) a ukáže ji
-jako značku 📝 u bloku nad ní a kartu v panelu. Jediným zdrojem pravdy je text
-v editoru; řádky bloků se počítají z tokenů `marked.lexer()` (nejvyšší úroveň
-odpovídá dětem `.telo` jedna k jedné). Úprava v panelu přepíše řádky citace,
-nová poznámka se vloží pod blok (za případné další poznámky), smazání ji
-odstraní i s prázdným řádkem. Přepsání textu uprostřed psaní v editoru by
-rozbilo jeho historii Zpět, proto se zápis z panelu odloží do opuštění editoru.
-Starší formát (skrytý komentář `<!-- md-poznamky … -->` na konci, řádek + kotva
-v JSON) se při načtení převede pod příslušné odstavce. Značky poznámek
-a tlačítko „📝+“ leží ve vlastní vrstvě nad listem (`.pozn-vrstva`). Do
-.docx/.odt/.doc jdou poznámky jen na přání (přepínač v patě panelu) jako
-příloha na konci; `window.MD_PRO_EXPORT` je z exportu vždy odebere.
+**Změny** (Δ, `Alt+Z`): stránka si pamatuje *zkontrolovaný text*
+(`webapp_md_dokument_zaklad`) a každý rozdíl proti němu je změna – z editoru,
+z kódu vpravo i po **⟳ Znovu načíst** (týž soubor z disku; rozdíly proti
+zkontrolovanému textu se ukážou jako změny, místní neuložené úpravy se před
+přepsáním ohlásí). Rozdíl po řádcích počítá `MD_JADRO.rozdil` (Myers, nad 1500
+úprav jeden velký úsek). Panel ukáže úseky s původním a novým textem, ✓ úsek
+přenese do zkontrolovaného textu, ↶ vrátí původní; změněné bloky mají v náhledu
+proužek vlevo. Přístup k souboru pro znovunačtení drží `FileSystemFileHandle`
+v IndexedDB `webapp_md_dokument` (Chrome/Edge; jinak se soubor vybere znovu).
+**📂 Načíst** = nový dokument (zkontrolovaný text = soubor).
 
 **Rozdělené zobrazení** drží editor a náhled na stejném místě oběma směry:
 poloha řádku v zalamovaném `textarea` se změří na skrytém zrcadle (stejné
 písmo a šířka), mezi bloky se interpoluje lineárně; posun, který stránka
 udělala sama, se 150 ms neodráží zpět. Režim **Dva náhledy** (`Alt+4`) ukáže
 dokument dvakrát: levý jde s osnovou, pravý (`#nahled2`) má vlastní hledání
-a skok na kapitolu — na dohledání odkazu jinde v textu bez ztráty místa.
+a skok na kapitolu. Pravý jde přepnout **Náhled / Kód**; kód se dá upravit
+a „💾 Uložit změny“ (`Ctrl+S` v kódu) ho přepíše do dokumentu (→ Δ Změny).
+**🔗 Vázat** spojí posouvání obou panelů (náhled i kód) stejným mechanismem
+jako rozdělené zobrazení.
+
+**Samostatná verze** (bez vazby na web, jeden soubor) se generuje příkazem
+`node tools/samostatne.mjs` do `../Samostatne_stranky/md_dokument.html` – po
+změně stránky přegenerovat. `podpis.js` vynechá, `theme.js` nahradí tématem
+podle systému, stránka to pozná podle `window.SAMOSTATNA_STRANKA`.
 
 **Ukládání** (.md, .docx, .odt, .doc; `Ctrl+S` = .md) jde přes dialog „Uložit
 jako“ (`showSaveFilePicker` – Chrome, Edge, Opera). Prohlížeče bez něj (Firefox,
