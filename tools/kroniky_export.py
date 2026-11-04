@@ -7,6 +7,7 @@ v books/book_NN/obrazky/ (na ně odkazuje Markdown) → na web jen ty, na které
 odkazují, a obálka (obrazky/obalka.webp).
 Po přepsání knih stačí spustit znovu: python3 tools/kroniky_export.py
 """
+import hashlib
 import json
 import re
 import shutil
@@ -39,6 +40,10 @@ def webp_z_originalu(slozka):
             subprocess.run(["magick", str(png), "-resize", "1400x1400>", "-quality", "80", str(webp)], check=True)
 
 
+def otisk(data):
+    return hashlib.sha1(data).hexdigest()[:10]
+
+
 seznam = []
 for slozka, id_knihy, nazev, podtitul in KNIHY:
     kniha_zdroj = ZDROJ / slozka
@@ -55,7 +60,10 @@ for slozka, id_knihy, nazev, podtitul in KNIHY:
         pouzite.update(OBRAZEK.findall(text))
         titulek = text.splitlines()[0].lstrip("# ").strip()
         bez_obrazku = OBRAZEK.sub("", text)
-        kapitoly.append({"soubor": md.name, "nazev": titulek, "slov": len(bez_obrazku.split())})
+        # otisk obsahu: čtečka ho připojí k adrese (?h=…) – změněný soubor = nová adresa, kterou
+        # neobslouží ani CDN GitHub Pages (max-age 600), ani stará kopie v cache prohlížeče
+        kapitoly.append({"soubor": md.name, "nazev": titulek, "slov": len(bez_obrazku.split()),
+                         "h": otisk(text.encode("utf-8"))})
     obalka = "obrazky/obalka.webp" if (kniha_zdroj / "obrazky" / "obalka.webp").exists() else None
     if obalka:
         pouzite.add(obalka)
@@ -65,7 +73,8 @@ for slozka, id_knihy, nazev, podtitul in KNIHY:
             raise SystemExit(f"{md.name}: chybí obrázek {puvodni}")
         (cil / src).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(puvodni, cil / src)
-    zaznam = {"id": id_knihy, "nazev": nazev, "podtitul": podtitul, "kapitoly": kapitoly}
+    zaznam = {"id": id_knihy, "nazev": nazev, "podtitul": podtitul, "kapitoly": kapitoly,
+              "otisky": {src: otisk((cil / src).read_bytes()) for src in sorted(pouzite)}}
     if obalka:
         zaznam["obalka"] = obalka
     seznam.append(zaznam)

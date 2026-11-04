@@ -29,11 +29,14 @@
   const noveId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
   /* ---------- knihy a kapitoly ---------- */
-  const knihy = await (await fetch('kroniky/knihy.json')).json();
+  // knihy.json vždy čerstvý (?t – obejde i CDN GitHub Pages); kapitoly a obrázky s otiskem obsahu (?h)
+  const knihy = await (await fetch('kroniky/knihy.json?t=' + Date.now())).json();
+  const sOtiskem = (k, src) => { const h = k.otisky && k.otisky[src]; return `kroniky/${k.id}/${src}` + (h ? '?h=' + h : ''); };
   knihy.forEach(k => { k.slov = k.kapitoly.reduce((s, c) => s + c.slov, 0); });
   const mezipamet = new Map();
   function nactiKapitolu(kniha, soubor) {
-    const klic = kniha.id + '/' + soubor;
+    const c = kniha.kapitoly.find(x => x.soubor === soubor), h = c && c.h ? '?h=' + c.h : '';
+    const klic = kniha.id + '/' + soubor + h;
     if (!mezipamet.has(klic)) {
       mezipamet.set(klic, fetch(`kroniky/${klic}`).then(r => {
         if (!r.ok) throw new Error('Kapitolu se nepodařilo načíst');
@@ -83,7 +86,7 @@
 
   /* ---------- vykreslení kapitoly ---------- */
   const htmlBloku = (b, i, knihaId = kniha.id) => b.typ === 'hr' ? `<hr data-i="${i}">`
-    : b.typ === 'img' ? `<figure data-i="${i}"><img src="kroniky/${knihaId}/${J.esc(b.src)}" alt="${J.esc(b.popis)}" loading="lazy" decoding="async">${b.popis ? `<figcaption>${J.esc(b.popis)}</figcaption>` : ''}</figure>`
+    : b.typ === 'img' ? `<figure data-i="${i}"><img src="${J.esc(sOtiskem(knihaPodleId(knihaId) || kniha, b.src))}" alt="${J.esc(b.popis)}" loading="lazy" decoding="async">${b.popis ? `<figcaption>${J.esc(b.popis)}</figcaption>` : ''}</figure>`
     : b.typ === 'h' ? `<h1 data-i="${i}">${J.inline(b.md)}</h1>` : `<p data-i="${i}">${J.inline(b.md)}</p>`;
   const prvekBloku = i => text.querySelector(`[data-i="${i}"]`);
 
@@ -436,7 +439,7 @@
     let h = '';
     if (stav.panel === 'obsah') {
       knihy.forEach((k, ki) => {
-        h += `<h3>${k.obalka ? `<img class="obalka-mini" src="kroniky/${k.id}/${e(k.obalka)}" alt="">` : ''}${e(k.nazev)} · ${Math.floor(pokrokKnihy(k) * 100)} %</h3>`;
+        h += `<h3>${k.obalka ? `<img class="obalka-mini" src="${e(sOtiskem(k, k.obalka))}" alt="">` : ''}${e(k.nazev)} · ${Math.floor(pokrokKnihy(k) * 100)} %</h3>`;
         k.kapitoly.forEach((c, ci) => {
           const precteno = stav.precteno[k.id] && stav.precteno[k.id][c.soubor];
           const akt = kniha && k.id === kniha.id && ci === kapIdx;
@@ -657,7 +660,7 @@
   addEventListener('pagehide', () => { synt && synt.cancel(); ulozStav(true); });
   // Karta otevřená celé dny (tablet) by běžela na starém kódu, zatímco kapitoly se stahují nové –
   // po návratu do karty porovnat skripty se serverem a při změně stránku obnovit (pozice je uložená).
-  const otiskSkriptu = () => Promise.all(['kroniky/jadro.js', 'kroniky/ctecka.js'].map(u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')))
+  const otiskSkriptu = () => Promise.all(['kroniky/jadro.js', 'kroniky/ctecka.js', 'kroniky/knihy.json?t=' + Date.now()].map(u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')))
     .then(t => t.join('\n')).catch(() => '');
   const puvodniOtisk = otiskSkriptu();
   let skrytoOd = 0;
@@ -779,7 +782,7 @@
     const vysl = {};
     for (const src of srcs) {
       try {
-        const bmp = await createImageBitmap(await (await fetch(`kroniky/${k.id}/${src}`)).blob());
+        const bmp = await createImageBitmap(await (await fetch(sOtiskem(k, src))).blob());
         let sirka = Math.min(bmp.width, 1000), kvalita = 0.82, data;
         do {
           const c = document.createElement('canvas');

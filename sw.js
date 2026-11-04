@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v613';
+const CACHE = PREFIX + 'v614';
 const JADRO = [
   './',
   './index.html',
@@ -429,11 +429,12 @@ self.addEventListener('fetch', e => {
   // Kroniky (čtečka + text kapitol): nejdřív ze sítě, cache jen offline. Rukopis se průběžně mění
   // a SWR míchal verze – nová kapitola s ilustrací ![…](…) + starý jadro.js = obrázek jako text.
   if (/\/obsah\/kroniky(\.html|\/.+\.(js|json|md))$/.test(url.pathname)) {
-    const klicK = navigace ? url.origin + url.pathname : e.request.url;
+    // klíč bez dotazu: čtečka přidává ?h=<otisk> / ?t=<čas>, cache drží jen poslední verzi souboru (i pro offline)
+    const klicK = url.origin + url.pathname;
     e.respondWith(caches.open(CACHE).then(cache => {
       const zeSite = fetch(e.request.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then(resp => { if (resp.ok) cache.put(klicK, resp.clone()); return resp; });
-      const zCache = () => cache.match(klicK, { ignoreSearch: navigace });
+      const zCache = () => cache.match(klicK, { ignoreSearch: true });
       // pomalá síť: po 5 s raději uložená verze (pokud je), síť ji mezitím obnoví
       const limit = new Promise(ok => setTimeout(ok, 5000)).then(zCache);
       return Promise.race([zeSite.catch(zCache), limit.then(c => c || zeSite)])
