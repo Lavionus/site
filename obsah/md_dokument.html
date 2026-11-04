@@ -445,7 +445,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     <button class="btn" id="docxBtn">💾 .docx</button>
     <button class="btn" id="odtBtn">💾 .odt</button>
     <button class="btn btn-sec" id="docBtn">💾 .doc</button>
-    <button class="btn btn-sec" id="vycistiBtn" title="Vyprázdnit dokument">🗑️</button>
+    <button class="btn btn-sec" id="novyBtn" title="Založit nový prázdný dokument .md">📄<span class="dlouhy"> Nový</span></button>
   </div>
   <div class="radek">
     <button class="ikona" id="osnovaBtn" aria-pressed="false" title="Obsah dokumentu (Alt+O)">▤<span class="dlouhy"> Obsah</span></button>
@@ -1147,9 +1147,9 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
         await zapis.write(blob);
         await zapis.close();
         stav('Uloženo jako ' + soubor.name + ' (' + velikost(blob) + ').');
-        return;
+        return soubor;
       } catch (e) {
-        if (e && e.name === 'AbortError') { stav('Ukládání zrušeno.'); return; }
+        if (e && e.name === 'AbortError') { stav('Ukládání zrušeno.'); return undefined; }
         // SecurityError apod. (rám z cizího originu, zakázané API) → klasické stažení
         console.warn('showSaveFilePicker selhal, stahuji klasicky:', e);
       }
@@ -1163,6 +1163,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
     stav('Staženo jako ' + jmeno + ' (' + velikost(blob) + '). Tento prohlížeč neumí dialog „Uložit jako“ – ' +
          'aby se ptal, kam uložit, zapni v jeho nastavení „Vždy se ptát, kam soubory ukládat“.');
+    return null;
   }
   function exportuj(typ) {
     if (!$('vstup').value.trim()) { stav('Nejdřív vlož nebo načti nějaký Markdown.'); return; }
@@ -2604,10 +2605,19 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     if (!text.trim()) { $('stav').textContent = 'Nejdřív vlož nebo načti nějaký Markdown.'; return; }
     const m = moje();
     const obsah = nast.poznDoMd !== false && m.length ? text.replace(/\s+$/, '\n') + '\n' + J.komentar(J.balik(nast.jmeno, m)) : text;
-    meta.otisk = otisk(text);
-    ulozMeta();
-    window.MD_DOKUMENT.stahni(new Blob([obsah], { type: 'text/markdown;charset=utf-8' }), 'md')
-      .catch(e => { $('stav').textContent = 'Uložení selhalo: ' + e.message; });
+    window.MD_DOKUMENT.stahni(new Blob([obsah], { type: 'text/markdown;charset=utf-8' }), 'md').then(h => {
+      if (h === undefined) return;                 // zrušeno
+      meta.otisk = otisk(text);
+      // uloženo přes dialog: tenhle soubor je teď dokument („⟳ Znovu načíst“ ho přečte),
+      // poznámky jdou s ním pod nové jméno
+      if (h && h.name !== meta.dokument) {
+        data.zvyrazneni.forEach(z => { if (z.soubor === meta.dokument) z.soubor = h.name; });
+        ulozData();
+        meta.dokument = h.name;
+      }
+      if (h) { souborHandle = h; ulozHandle(h); }
+      ulozMeta();
+    }).catch(e => { $('stav').textContent = 'Uložení selhalo: ' + e.message; });
   };
 
   $('otevriBtn').onclick = vyberSoubor;
@@ -2627,16 +2637,23 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     try { h = pol && pol.getAsFileSystemHandle ? pol.getAsFileSystemHandle() : null; } catch { h = null; }
     Promise.resolve(h).catch(() => null).then(x => nactiSoubor(f, x && x.kind === 'file' ? x : null, false));
   });
-  $('vycistiBtn').onclick = async () => {
-    if (useky.length && !(await Dialog.potvrd('Dokument má nezkontrolované změny (' + useky.length + '). Vyprázdnit ho?', { ok: 'Vyprázdnit' }))) return;
-    meta = { dokument: 'dokument.md', otisk: '' };
+  // nový prázdný dokument: vlastní jméno (k němu patří poznámky), bez souboru na disku
+  $('novyBtn').onclick = async () => {
+    if (useky.length && !(await Dialog.potvrd('Dokument má nezkontrolované změny (' + useky.length + '). Založit nový a tyhle zahodit?', { ok: 'Založit nový' }))) return;
+    const jm = await Dialog.zeptej('Název nového dokumentu:', 'dokument', { ok: 'Založit' });
+    if (jm === null) return;
+    const nazev = jm.trim().replace(/\.(md|markdown|txt)$/i, '').replace(/[\\/:*?"<>|]/g, '_') || 'dokument';
+    meta = { dokument: nazev + '.md', otisk: '' };
     ulozMeta();
     souborHandle = null;
     ulozHandle(null);
     nastavZaklad('');
+    $('nazevSouboru').value = nazev;
     $('vstup').value = '';
     $('vstup').dispatchEvent(new Event('input'));
-    $('stav').textContent = 'Vyčištěno.';
+    if (nast.rezim === 'cteni' || nast.rezim === 'dva') { pouzijRezim('split'); pouzijOsnovu(nast.osnova); }
+    $('vstup').focus();
+    $('stav').textContent = 'Nový dokument ' + nazev + '.md – piš vlevo, uložíš ho tlačítkem „💾 .md“ (Ctrl+S).';
   };
 
   $('nahoruBtn').onclick = () => nahled.scrollTo({ top: 0 });
@@ -2733,10 +2750,12 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   // Poznámky starší verze stránky se z něj vyjmou; zkontrolovaný text
   // se napoprvé rovná dokumentu – změny se počítají až od teď.
   const ulozenyText = precti(KLIC_TEXT);
-  const obnoveno = !!(ulozenyText && ulozenyText.trim());
+  const bezOdkazu = t => t.replace(/\]\([^)\s]*\)/g, ']()');
+  const obnoveno = !!(ulozenyText && ulozenyText.trim()) && bezOdkazu(ulozenyText) !== bezOdkazu($('vstup').value);
   const start = pripravText(obnoveno ? ulozenyText : $('vstup').value);
   if (start.balik) prevezmiBalik(start.balik);
   if (start.stare.length) cekajiciStare = start.stare;
+  if (zaklad !== null && !obnoveno && bezOdkazu(zaklad) === bezOdkazu(start.md)) nastavZaklad(start.md);   // stará ukázka
   if (zaklad === null) nastavZaklad(start.md);
   else if (start.stare.length) nastavZaklad(pripravText(zaklad).md);
   if (start.md !== $('vstup').value) {

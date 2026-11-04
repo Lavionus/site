@@ -258,4 +258,11 @@ I18N.pridej('en', {
   'poznámky': 'notes',
   'čtenáře {jmeno}': 'of reader {jmeno}',
   '{n} zvýraznění, {n2} záložek_': '{n} highlights, {n2} bookmarks_',
+  'Založit nový prázdný dokument .md': 'Create a new empty .md document',
+  'Nový': 'New',
+  'Dokument má nezkontrolované změny ({n}). Založit nový a tyhle zahodit?': 'The document has unreviewed changes ({n}). Create a new one and discard them?',
+  'Založit nový': 'Create new',
+  'Název nového dokumentu': 'Name of the new document',
+  'Založit': 'Create',
+  'Nový dokument {nazev}.md – piš vlevo, uložíš ho tlačítkem „💾 .md“ (Ctrl+S).': 'New document {nazev}.md – write on the left, save it with “💾 .md” (Ctrl+S).',
 });

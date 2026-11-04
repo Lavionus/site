@@ -1,5 +1,5 @@
 /* Vygenerováno: node tools/verze.mjs – neupravovat ručně. Stránka: [verze, datum poslední změny] */
-var VERZE_WEBU = 'v605';
+var VERZE_WEBU = 'v606';
 var VERZE_STRANEK = {"obsah/AI_prednaska.html":[7,"2026-10-29"],
 "obsah/Circle_generator.html":[6,"2026-10-13"],
 "obsah/Heritage.html":[13,"2026-10-30"],
@@ -211,7 +211,7 @@ var VERZE_STRANEK = {"obsah/AI_prednaska.html":[7,"2026-10-29"],
 "obsah/margin_calculator.html":[5,"2026-10-13"],
 "obsah/mastermind.html":[2,"2026-10-13"],
 "obsah/material_weight.html":[4,"2026-08-28"],
-"obsah/md_dokument.html":[5,"2026-11-04"],
+"obsah/md_dokument.html":[6,"2026-11-04"],
 "obsah/md_html.html":[5,"2026-10-13"],
 "obsah/md_table.html":[5,"2026-10-13"],
 "obsah/meal_planner.html":[5,"2026-10-13"],

@@ -394,7 +394,9 @@ přepsáním ohlásí). Rozdíl po řádcích počítá `MD_JADRO.rozdil` (Myers
 přenese do zkontrolovaného textu, ↶ vrátí původní; změněné bloky mají v náhledu
 proužek vlevo. Přístup k souboru pro znovunačtení drží `FileSystemFileHandle`
 v IndexedDB `webapp_md_dokument` (Chrome/Edge; jinak se soubor vybere znovu).
-**📂 Načíst** = nový dokument (zkontrolovaný text = soubor).
+**📂 Načíst** = nový dokument (zkontrolovaný text = soubor). **📄 Nový** založí prázdný dokument
+(zeptá se na název; nahradil dřívější 🗑️). Uložení .md přes dialog „Uložit jako“
+udělá z uloženého souboru dokument – ⟳ ho pak čte a poznámky jdou s ním.
 
 **Rozdělené zobrazení** drží editor a náhled na stejném místě oběma směry:
 poloha řádku v zalamovaném `textarea` se změří na skrytém zrcadle (stejné
@@ -409,7 +411,15 @@ jako rozdělené zobrazení.
 **Samostatná verze** (bez vazby na web, jeden soubor) se generuje příkazem
 `node tools/samostatne.mjs` do `../Samostatne_stranky/md_dokument.html` – po
 změně stránky přegenerovat. `podpis.js` vynechá, `theme.js` nahradí tématem
-podle systému, stránka to pozná podle `window.SAMOSTATNA_STRANKA`.
+podle systému, stránka to pozná podle `window.SAMOSTATNA_STRANKA`. Bez jakéhokoli
+odkazu na web (přání autora): komentáře pryč (esbuild), náhrady textů u stránky,
+kontrola zakázaných výrazů, vpravo dole jen `vN · © 2026 hdm@seznam.cz` (verze
+stránky z gitu jako `tools/verze.mjs`). Uložená nezměněná ukázka ze starší verze
+(jiný odkaz) se při startu nahradí aktuální ukázkou. Nová viditelná
+zmínka o webu/Kronikách v md_dokument → doplnit náhradu, jinak sestavení selže.
+Test samostatné verze: zkopírovat do `_test/md_samostatna.html` a
+`MD_STRANKA=md_samostatna.html python3 _test/md_ctecka.py` (2 kontroly rozcestníku
+a podpisu tam selžou záměrně).
 
 **Ukládání** (.md, .docx, .odt, .doc; `Ctrl+S` = .md) jde přes dialog „Uložit
 jako“ (`showSaveFilePicker` – Chrome, Edge, Opera). Prohlížeče bez něj (Firefox,
