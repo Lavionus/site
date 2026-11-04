@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro Chobotnice</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js"></script>
+<link rel="stylesheet" href="lcd_hry.css">
+<script src="lcd_hry.js"></script>
+<style>
+  .pristroj { --kryt1: #2f6fb3; --kryt2: #1f4f86; }
+  .tl.siroke { width: 72px; border-radius: 30px; font-size: 18px; }
+</style>
+</head>
+<body>
+<h1>🐙 Retro Chobotnice</h1>
+
+<div class="pristroj">
+  <div class="stran">
+    <button class="tl siroke" data-smer="-1" title="Potápěč doleva (A nebo Y)">◀</button>
+  </div>
+  <div class="ram"><canvas id="lcd" width="1200" height="900"></canvas></div>
+  <div class="stran">
+    <button class="tl siroke" data-smer="1" title="Potápěč doprava (K nebo M)">▶</button>
+  </div>
+  <div class="panel">
+    <span class="napis">Hlubina</span>
+    <button id="hraA">Hra A</button>
+    <button id="hraB">Hra B</button>
+    <button id="pauza">Pauza</button>
+    <button id="zvuk">🔊 Zvuk</button>
+  </div>
+</div>
+<div id="rekordBox"></div>
+
+<div class="info">
+  Potápěč seskočí z loďky a jde po dně k truhle s pokladem. Chobotnice natahuje chapadla –
+  když se špička chapadla dotkne potápěče, je chycen. Každé sáhnutí do truhly přidá do pytle
+  jeden kus zlata (počet je vidět vedle skóre). Body se připíšou, až potápěč s pytlem doleze do loďky –
+  když ho chobotnice chytí, pytel se ztratí. Pohyb: <kbd>A</kbd> nebo <kbd>Y</kbd> doleva,
+  <kbd>K</kbd> nebo <kbd>M</kbd> doprava (také šipky nebo tlačítka na přístroji).
+  Tři chycení potápěči = konec hry. Při 200 a 500 bodech se ztracení potápěči vrátí.
+  <b>Hra A</b> začíná pomalu, <b>Hra B</b> je rychlejší. Mezerník = pauza, <kbd>Enter</kbd> = nová hra.
+</div>
+
+<script>
+/* ===== Logika hry bez DOM (testuje _test/chobotnice_test.js) ===== */
+const CHOB = (function () {
+  const POZIC = 6;                  // 0 = loďka, 1–4 dno, 5 = u truhly
+  const DELKY = [5, 5, 4, 4, 3];    // počet článků chapadla nad pozicí 1–5; plná délka = dotek
+  const MAX_ZTRAT = 3;
+  const ZAJETI = 6;                 // délka animace chycení (takty)
+
+  function nova(rezim, nahoda) {
+    return {
+      rezim, nahoda: nahoda || Math.random,
+      poz: 0, pytel: 0, body: 0, ztraty: 0, konec: false,   // pytel = kusy zlata nesené do loďky
+      chapadla: DELKY.map(() => ({ d: 0, smer: 0 })),
+      chycen: null,                 // {snimek} – hra stojí
+    };
+  }
+
+  function takt(s) {
+    const zaklad = s.rezim === 'B' ? 480 : 660;
+    return Math.max(220, zaklad - (s.body % 1000) * 0.9);
+  }
+
+  function pridejBody(s, n, ud) {
+    const pred = s.body;
+    s.body = (s.body + n) % 1000;
+    if ((pred < 200 && s.body >= 200) || (pred < 500 && s.body >= 500)) { s.ztraty = 0; ud.push('vraceno'); }
+  }
+
+  function zkusChytit(s, ud) {
+    if (s.poz > 0 && s.chapadla[s.poz - 1].d === DELKY[s.poz - 1]) {
+      s.chycen = { snimek: 0, poz: s.poz }; s.pytel = 0; ud.push('chycen');
+    }
+  }
+
+  /* Pohyb potápěče: smer -1 doleva, +1 doprava (u truhly = sebrat zlato). */
+  function pohyb(s, smer) {
+    const ud = [];
+    if (s.konec || s.chycen) return ud;
+    if (smer > 0) {
+      if (s.poz === POZIC - 1) { s.pytel = Math.min(99, s.pytel + 1); ud.push('sebral'); }
+      else { s.poz++; ud.push('krok'); }
+    } else if (s.poz > 0) {
+      s.poz--; ud.push('krok');
+      if (s.poz === 0 && s.pytel) { pridejBody(s, s.pytel, ud); s.pytel = 0; ud.push('ulozil'); }
+    }
+    zkusChytit(s, ud);
+    return ud;
+  }
+
+  /* Jeden takt: chapadla se natahují/stahují o jeden článek. */
+  function krok(s) {
+    const ud = [];
+    if (s.konec) return ud;
+    if (s.chycen) {
+      s.chycen.snimek++; ud.push('zapas');
+      if (s.chycen.snimek >= ZAJETI) {
+        s.chycen = null; s.ztraty++; s.poz = 0;
+        s.chapadla.forEach(c => { c.d = 0; c.smer = 0; });
+        if (s.ztraty >= MAX_ZTRAT) { s.konec = true; ud.push('konec'); }
+      }
+      return ud;
+    }
+    for (const [i, c] of s.chapadla.entries()) {
+      if (c.smer === 0) continue;
+      if (c.d === DELKY[i] && c.smer > 0) { c.smer = -1; continue; }   // na plné délce chvíli vydrží
+      // férovost: dvě sousední chapadla nikdy nejsou zároveň na dosah (plná délka nebo o článek
+      // kratší) → ohrožený potápěč má vždy bezpečný sousední krok a vidí, odkud hrozba jde
+      const dosah = j => j >= 0 && j < DELKY.length && s.chapadla[j].d >= DELKY[j] - 1;
+      if (c.smer > 0 && c.d + 1 >= DELKY[i] - 1 && (dosah(i - 1) || dosah(i + 1))) continue;
+      c.d += c.smer;
+      if (c.d === 0) c.smer = 0;
+    }
+    // nové chapadlo se rozjede podle hustoty; počet naráz pohyblivých roste s body
+    const aktivni = s.chapadla.filter(c => c.smer !== 0).length;
+    const limit = Math.min(4, (s.rezim === 'B' ? 3 : 2) + Math.floor(s.body / 150));
+    const hustota = Math.min(0.85, (s.rezim === 'B' ? 0.45 : 0.35) + s.body / 600);
+    if (aktivni < limit && s.nahoda() < hustota) {
+      const volna = s.chapadla.map((c, i) => i).filter(i => s.chapadla[i].smer === 0);
+      if (volna.length) { const c = s.chapadla[volna[Math.floor(s.nahoda() * volna.length)]]; c.smer = 1; c.d = 1; }
+    }
+    ud.push('tik');
+    zkusChytit(s, ud);
+    return ud;
+  }
+
+  return { nova, krok, pohyb, takt, POZIC, DELKY, MAX_ZTRAT, ZAJETI };
+})();
+if (typeof module !== 'undefined') module.exports = CHOB;
+
+/* ===== Vykreslení LCD ===== */
+(function () {
+  if (typeof document === 'undefined') return;
+  const cv = document.getElementById('lcd');
+  // Sprity z archu (Codex) – obdélníky v chobotnice/sprity.png
+  const L = LCD.plocha(cv, 'chobotnice/sprity.png', {
+    jde: [0, 0, 168, 230], saha: [172, 0, 173, 201], chyceny: [349, 0, 176, 232],
+    chobotnice: [529, 0, 149, 168], truhla: [682, 0, 207, 187], lodka: [893, 0, 217, 90],
+  }, () => kresli());
+  const { g, sprite, cislice, text } = L;
+
+  // Potápěč: levý horní roh a výška v každé pozici (0 = v loďce)
+  const POTAPEC = [[22, 14, 40], [30, 92, 56], [62, 160, 56], [120, 214, 56], [180, 222, 56], [240, 222, 56]];
+  const KOTVY = [[214, 116], [222, 130], [240, 138], [258, 140], [280, 134]];   // úpon chapadla na těle
+  const SPICKY = [[78, 104], [104, 172], [160, 224], [220, 230], [278, 232]];   // špička u hlavy potápěče
+
+  function chapadlo(i, d) {
+    const [x0, y0] = KOTVY[i], [x1, y1] = SPICKY[i], n = CHOB.DELKY[i];
+    // chapadlo se prohýbá dolů (visí ve vodě)
+    const cx = (x0 + x1) / 2 + 12, cy = (y0 + y1) / 2 + 26;
+    for (let k = 0; k < n; k++) {
+      const t = (k + 0.5) / n;
+      const x = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * cx + t * t * x1;
+      const y = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * cy + t * t * y1;
+      const tx = 2 * (1 - t) * (cx - x0) + 2 * t * (x1 - cx), ty = 2 * (1 - t) * (cy - y0) + 2 * t * (y1 - cy);
+      const delka = Math.hypot(x1 - x0, y1 - y0) / n * 0.48, tl = 7.5 - 4.5 * t;
+      L.tvar(d > k, g => {
+        g.beginPath(); g.ellipse(x, y, delka, tl, Math.atan2(ty, tx), 0, Math.PI * 2); g.fill();
+        if (k === n - 1) {   // stočená špička
+          g.lineWidth = 3; g.lineCap = 'round';
+          g.beginPath(); g.arc(x1, y1 - 3, 5, 0, Math.PI * 1.5); g.stroke();
+        }
+      });
+    }
+  }
+
+  function pytel(x, y, on) {
+    L.tvar(on, g => {
+      g.beginPath(); g.ellipse(x, y, 8, 9, 0, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.moveTo(x - 4, y - 8); g.lineTo(x, y - 14); g.lineTo(x + 4, y - 8); g.fill();
+    });
+  }
+
+  let s = null, blik = true, sahnuti = 0;
+
+  function kresli() {
+    L.smaz();
+    // potištěné pozadí: hladina, dno
+    g.strokeStyle = 'rgba(29,36,25,.5)'; g.lineWidth = 2; g.lineCap = 'round';
+    g.beginPath();
+    for (let x = 130; x <= 395; x += 4) g.lineTo(x, 42 + Math.sin(x / 9) * 2.5);
+    g.stroke();
+    g.beginPath(); g.moveTo(8, 288); g.quadraticCurveTo(200, 278, 392, 288); g.stroke();
+    sprite('lodka', 4, 28, 40, false, true);
+    sprite('truhla', 318, 246, 40, false, true);
+    sprite('chobotnice', 198, 50, 96, false, true);
+
+    for (let i = 0; i < CHOB.DELKY.length; i++) chapadlo(i, s ? s.chapadla[i].d : 0);
+
+    // potápěč ve všech pozicích (+ pytel se zlatem)
+    POTAPEC.forEach(([x, y, v], p) => {
+      const tady = !!s && !s.konec && s.poz === p;
+      const chyceny = tady && s.chycen;
+      if (chyceny) sprite('chyceny', x - 4, y - 4, v + 4, false, blik ? 0.9 : 0.35);
+      else if (p === CHOB.POZIC - 1) {
+        sprite('jde', x, y, v, false, tady && !sahnuti);
+        sprite('saha', x + 6, y, v, false, tady && !!sahnuti);
+      } else sprite('jde', x, y, v, false, p === 0 ? (tady || !s) : tady);
+      if (p > 0) pytel(x + 4, y + v * 0.62, tady && s.pytel > 0 && !chyceny);
+    });
+    // náhradní potápěči v loďce
+    for (let i = 0; i < CHOB.MAX_ZTRAT - 1; i++) {
+      const zbyva = s ? CHOB.MAX_ZTRAT - 1 - s.ztraty : CHOB.MAX_ZTRAT - 1;
+      sprite('jde', 70 + i * 20, 18, 30, false, i < zbyva && !(s && s.chycen && i === zbyva - 1 && !blik));
+    }
+
+    cislice(String(s ? s.body : 0).padStart(3, ' '), 318, 8, 30);
+    // obsah pytle bokem u skóre: ikonka + dvě číslice
+    const vPytli = s && !s.konec ? s.pytel : 0;
+    pytel(266, 24, vPytli > 0);
+    cislice(vPytli ? String(vPytli).padStart(2, ' ') : '  ', 278, 14, 20);
+    const hraje = s && !s.konec;
+    text('HRA A', 140, 16, !!s && s.rezim === 'A');
+    text('HRA B', 140, 30, !!s && s.rezim === 'B');
+    text('KONEC', 205, 16, s && s.konec ? (blik ? 0.9 : 0.3) : false);
+    text('PAUZA', 205, 30, pauza && hraje);
+  }
+
+  /* ===== Řízení ===== */
+  const pip = LCD.zvuk('webapp_hra_chobotnice_zvuk', document.getElementById('zvuk'));
+  const rek = Rekord.sleduj('webapp_hra_chobotnice', { popisek: 'Nejvíc bodů' });
+  rek.prvek(document.getElementById('rekordBox'));
+  let casovac = null, pauza = false;
+
+  function start(rezim) {
+    s = CHOB.nova(rezim); pauza = false;
+    document.getElementById('hraA').classList.toggle('vyber', rezim === 'A');
+    document.getElementById('hraB').classList.toggle('vyber', rezim === 'B');
+    clearTimeout(casovac); kresli(); casovac = setTimeout(smycka, CHOB.takt(s));
+  }
+
+  function udalosti(ud) {
+    if (ud.includes('chycen')) pip(140, 0.45, 'sawtooth');
+    else if (ud.includes('sebral')) pip(1250, 0.07);
+    else if (ud.includes('ulozil')) { pip(990, 0.08); setTimeout(() => pip(1320, 0.12), 90); }
+    else if (ud.includes('krok')) pip(520, 0.03);
+    else if (ud.includes('zapas')) pip(blik ? 300 : 220, 0.08);
+    else if (ud.includes('tik')) pip(380, 0.02, 'triangle');
+    if (ud.includes('vraceno')) pip(1500, 0.2, 'triangle');
+    if (ud.includes('konec')) { pip(110, 0.8, 'sawtooth'); rek.zapis(s.body); }
+  }
+
+  function smycka() {
+    if (!s || s.konec) return;
+    if (!pauza) udalosti(CHOB.krok(s));
+    blik = !blik; kresli();
+    if (!s.konec) casovac = setTimeout(smycka, s.chycen ? 280 : CHOB.takt(s));
+    else blikej();
+  }
+  function blikej() { if (s && s.konec) { blik = !blik; kresli(); casovac = setTimeout(blikej, 500); } }
+
+  function pohni(smer) {
+    if (!s || s.konec) { start('A'); return; }
+    if (pauza) return;
+    const ud = CHOB.pohyb(s, smer);
+    if (ud.includes('sebral')) { sahnuti++; setTimeout(() => { sahnuti--; kresli(); }, 180); }
+    udalosti(ud); kresli();
+  }
+
+  // A/Y doleva, K/M doprava (Z jako Y pro anglickou klávesnici), i šipky
+  const KLAV = { a: -1, y: -1, z: -1, arrowleft: -1, k: 1, m: 1, arrowright: 1 };
+  addEventListener('keydown', e => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    const k = e.key.toLowerCase();
+    if (k in KLAV) {
+      e.preventDefault(); if (e.repeat) return;
+      pohni(KLAV[k]); LCD.stiskni(document.querySelector(`.tl[data-smer="${KLAV[k]}"]`));
+    }
+    else if (k === ' ') { prepniPauzu(); e.preventDefault(); }
+    else if (k === 'enter') { start(s ? s.rezim : 'A'); e.preventDefault(); }
+  });
+  document.querySelectorAll('.tl').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); pohni(+b.dataset.smer); }));
+  function prepniPauzu() {
+    if (!s || s.konec) return;
+    pauza = !pauza; kresli();
+  }
+  document.getElementById('hraA').onclick = () => start('A');
+  document.getElementById('hraB').onclick = () => start('B');
+  document.getElementById('pauza').onclick = prepniPauzu;
+  addEventListener('blur', () => { if (s && !s.konec && !pauza) prepniPauzu(); });
+  window.CHOB_UI = { start, pohni, stav: () => s, kresli };
+  kresli();
+})();
+</script>
+</body>
+</html>

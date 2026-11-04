@@ -19,6 +19,7 @@
 })();
 </script>
 <script src="../dialog.js"></script>
+<script src="trubky_gui.js"></script>
 <script src="../podpis.js" defer></script>
 <style>
 /* ============================================================
@@ -162,6 +163,32 @@ h1{font-size:1rem;font-weight:600;white-space:nowrap}
 .ikona:hover{background:var(--bg-hover);color:var(--text)}
 .ikona[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 
+/* horní lišta s nabídkami – jako generátory (trubky_gui.css), ovládání trubky_gui.js */
+.hlavicka{padding:0;gap:0}
+.hlavicka > .vzhled{margin:6px 12px}
+.lista{display:flex;align-items:center;gap:10px;padding:5px 64px 5px 12px;position:relative;z-index:20}
+.lista-menu{display:flex;align-items:center;gap:4px;flex:1 1 auto;min-width:0;flex-wrap:wrap}
+.menu{position:relative}
+.tl{padding:5px 10px;border-radius:6px;border:1px solid transparent;background:none;color:var(--text);font:inherit;font-size:.84rem;cursor:pointer;white-space:nowrap}
+.tl:hover,.tl[aria-expanded="true"],.tl[aria-pressed="true"]{background:var(--bg-hover);border-color:var(--border)}
+.tl:focus-visible,.pol:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.nabidka{position:absolute;top:calc(100% + 4px);left:0;z-index:30;min-width:250px;display:flex;flex-direction:column;gap:1px;padding:6px;
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
+.nabidka[hidden]{display:none}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:5px 0}
+.pol{display:flex;align-items:center;gap:6px;width:100%;text-align:left;padding:6px 9px;border:0;border-radius:5px;background:none;color:var(--text);font:inherit;font-size:.84rem;cursor:pointer;white-space:nowrap}
+.pol:hover{background:var(--accent-soft)}
+.pol[aria-pressed="true"]{color:var(--accent);font-weight:600}
+.pol[aria-pressed="true"]::before{content:"✓";margin-right:-2px}
+.pol .zkr{margin-left:auto;padding-left:12px;font-size:.72rem;color:var(--text-faint);font-weight:400}
+.nab-nadpis{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);padding:2px 2px 4px}
+.nab-pole{padding:4px 9px 4px}
+.nab-popis{display:flex;font-size:.74rem;color:var(--text-muted);margin-bottom:3px}
+.nab-popis .zkr{margin-left:auto;color:var(--text-faint)}
+.nab-pole .nazev{width:100%}
+.nab-tip{font-size:.72rem;color:var(--text-faint);padding:4px 9px 2px;line-height:1.4;max-width:280px;white-space:normal}
+.lista .rezimy{margin-left:6px}
+.lista .statistika{flex:none}
 /* přepínač režimu zobrazení */
 .rezimy{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;flex:none}
 .rezimy button{background:transparent;border:none;border-right:1px solid var(--border);color:var(--text-muted);padding:6px 10px;cursor:pointer;font-size:.8rem}
@@ -374,7 +401,10 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   h1{font-size:.92rem}
   .nazev{width:110px}
 }
+@media(max-width:1100px){ .lista .jmeno,.lista .statistika{display:none} }
 @media(max-width:640px){
+  .tl .sipka{display:none}
+  .lista{padding-right:12px}
   .dlouhy{display:none}
   .statistika{display:none}
   .btn,.ikona,.rezimy button{padding:6px 8px}
@@ -428,45 +458,74 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
 <div class="prubeh"><i id="prubeh"></i></div>
 
 <header class="hlavicka">
-  <div class="radek">
-    <h1 id="titulek">📄<span class="dlouhy"> Markdown → DOCX / ODT</span></h1>
-    <div class="rezimy" role="group" aria-label="Režim zobrazení">
-      <button data-rezim="editor" title="Jen zdrojový Markdown (Alt+1)">✏️ Editor</button>
-      <button data-rezim="split" title="Zdroj i náhled vedle sebe (Alt+2)">◫ Rozdělené</button>
-      <button data-rezim="cteni" title="Jen dokument, zdrojový kód skrytý (Alt+3)">📖 Čtení</button>
-      <button data-rezim="dva" title="Dvakrát týž dokument: levý jde s obsahem, pravý se posouvá a hledá nezávisle (Alt+4)">⧉ Dva náhledy</button>
+  <div class="lista" role="menubar" aria-label="Hlavní nabídka">
+    <h1 id="titulek" title="Markdown → DOCX / ODT">📄<span class="jmeno"> Markdown → DOCX / ODT</span></h1>
+    <div class="lista-menu">
+      <div class="menu">
+        <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+        <div class="nabidka" id="nabSoubor" role="menu" hidden>
+          <button class="pol" id="novyBtn" role="menuitem" title="Založit nový prázdný dokument .md">📄 Nový dokument…</button>
+          <button class="pol" id="otevriBtn" role="menuitem" title="Otevřít jiný soubor .md jako nový dokument">📂 Otevřít .md… <span class="zkr">i přetažením</span></button>
+          <button class="pol" id="znovuBtn" role="menuitem" title="Znovu načíst týž soubor z disku – rozdíly proti zkontrolovanému textu se ukážou jako změny">⟳ Znovu načíst ze souboru</button>
+          <hr>
+          <div class="nab-pole"><label class="nab-popis" for="nazevSouboru">Název souboru <span class="zkr">bez přípony</span></label>
+            <input type="text" class="nazev" id="nazevSouboru" value="dokument" title="Název výsledného souboru (bez přípony)"></div>
+          <button class="pol" id="mdBtn" role="menuitem" title="Uložit Markdown i s poznámkami">💾 Uložit .md <span class="zkr">Ctrl+S</span></button>
+          <hr>
+          <div class="nab-nadpis">Převést a uložit</div>
+          <button class="pol" id="docxBtn" role="menuitem">⬇ .docx <span class="zkr">Word</span></button>
+          <button class="pol" id="odtBtn" role="menuitem">⬇ .odt <span class="zkr">LibreOffice</span></button>
+          <button class="pol" id="docBtn" role="menuitem">⬇ .doc <span class="zkr">Word 97–2003</span></button>
+          <hr>
+          <button class="pol" id="tiskBtn" role="menuitemcheckbox" aria-pressed="false" title="Nastavení tisku a PDF">🖨️ Tisk a PDF… <span class="zkr">Ctrl+P tiskne hned</span></button>
+        </div>
+      </div>
+      <div class="menu">
+        <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+        <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+          <button class="pol" id="osnovaBtn" role="menuitemcheckbox" aria-pressed="false" title="Obsah dokumentu">▤ Obsah dokumentu <span class="zkr">Alt+O</span></button>
+          <button class="pol" id="sbalVseBtn" role="menuitem" title="Sbalit/rozbalit všechny oddíly">⇕ Sbalit / rozbalit oddíly</button>
+          <button class="pol" id="vzhledBtn" role="menuitemcheckbox" aria-pressed="false" title="Téma, písmo, šířka sloupce">🎨 Vzhled… <span class="zkr">téma, písmo</span></button>
+          <hr>
+          <button class="pol" id="celaBtn" role="menuitem" title="Celá obrazovka (F)" aria-label="Celá obrazovka"><svg class="svg-ikona" viewBox="0 0 24 24" aria-hidden="true"><path id="celaIkona" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span id="celaPopis"> Celá obrazovka</span> <span class="zkr">F</span></button>
+        </div>
+      </div>
+      <div class="menu">
+        <button class="tl" data-nabidka="nabPoznamky" aria-haspopup="true" aria-expanded="false">📝 Poznámky<span class="pocitadlo" id="poznPocet"></span><span class="sipka"> ▾</span></button>
+        <div class="nabidka" id="nabPoznamky" role="menu" hidden>
+          <button class="pol" id="poznBtn" role="menuitemcheckbox" aria-pressed="false" title="Panel poznámek">📝 Panel poznámek <span class="zkr">Alt+P</span></button>
+          <hr>
+          <button class="pol" data-klik="poznUlozBtn" role="menuitem">⬇ Uložit poznámky do souboru…</button>
+          <button class="pol" data-klik="poznNactiBtn" role="menuitem">📂 Načíst poznámky od čtenáře…</button>
+          <div class="nab-tip">Poznámku přidáš označením pár slov v náhledu – nabídne se barva a 📝.</div>
+        </div>
+      </div>
+      <div class="menu">
+        <button class="tl" data-nabidka="nabZmeny" aria-haspopup="true" aria-expanded="false">Δ Změny<span class="pocitadlo" id="zmenyPocet"></span><span class="sipka"> ▾</span></button>
+        <div class="nabidka" id="nabZmeny" role="menu" hidden>
+          <button class="pol" id="zmenyBtn" role="menuitemcheckbox" aria-pressed="false" title="Změny proti zkontrolovanému textu">Δ Panel změn <span class="zkr">Alt+Z</span></button>
+          <button class="pol" data-klik="zmenyVseBtn" role="menuitem">✓ Vše zkontrolováno</button>
+          <div class="nab-tip">Změna = rozdíl proti zkontrolovanému textu: z editoru, z kódu vpravo i po „⟳ Znovu načíst“.</div>
+        </div>
+      </div>
+      <div class="rezimy" role="group" aria-label="Režim zobrazení">
+        <button data-rezim="editor" title="Jen zdrojový Markdown (Alt+1)">✏️<span class="jmeno"> Editor</span></button>
+        <button data-rezim="split" title="Zdroj i náhled vedle sebe (Alt+2)">◫<span class="jmeno"> Rozdělené</span></button>
+        <button data-rezim="cteni" title="Jen dokument, zdrojový kód skrytý (Alt+3)">📖<span class="jmeno"> Čtení</span></button>
+        <button data-rezim="dva" title="Dvakrát týž dokument: levý jde s obsahem, pravý se posouvá a hledá nezávisle (Alt+4)">⧉<span class="jmeno"> Dva náhledy</span></button>
+      </div>
+      <button class="tl" id="hledatBtn" title="Hledat v dokumentu (Ctrl+F)">🔍</button>
+      <div class="hledani" id="hledani" hidden>
+        <input type="search" id="dotaz" placeholder="Hledat v dokumentu…" autocomplete="off">
+        <span class="pocet" id="pocetNalezu">0/0</span>
+        <button class="ikona" id="predchoziBtn" title="Předchozí nález (Shift+Enter)">▲</button>
+        <button class="ikona" id="dalsiBtn" title="Další nález (Enter)">▼</button>
+        <button class="ikona" id="zavriHledaniBtn" title="Zavřít hledání (Esc)">✕</button>
+      </div>
     </div>
-    <span class="mezera"></span>
-    <button class="btn btn-sec" id="otevriBtn" title="Otevřít jiný soubor .md jako nový dokument">📂<span class="dlouhy"> Načíst .md</span></button>
-    <button class="btn btn-sec" id="znovuBtn" title="Znovu načíst týž soubor z disku – rozdíly proti zkontrolovanému textu se ukážou jako změny">⟳<span class="dlouhy"> Znovu načíst</span></button>
-    <input type="file" id="soubor" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
-    <input type="text" class="nazev" id="nazevSouboru" value="dokument" title="Název výsledného souboru (bez přípony)">
-    <button class="btn btn-sec" id="mdBtn" title="Uložit Markdown i s poznámkami (Ctrl+S)">💾 .md</button>
-    <button class="btn" id="docxBtn">💾 .docx</button>
-    <button class="btn" id="odtBtn">💾 .odt</button>
-    <button class="btn btn-sec" id="docBtn">💾 .doc</button>
-    <button class="btn btn-sec" id="novyBtn" title="Založit nový prázdný dokument .md">📄<span class="dlouhy"> Nový</span></button>
-  </div>
-  <div class="radek">
-    <button class="ikona" id="osnovaBtn" aria-pressed="false" title="Obsah dokumentu (Alt+O)">▤<span class="dlouhy"> Obsah</span></button>
-    <button class="ikona" id="hledatBtn" title="Hledat v dokumentu (Ctrl+F)">🔍<span class="dlouhy"> Hledat</span></button>
-    <div class="hledani" id="hledani" hidden>
-      <input type="search" id="dotaz" placeholder="Hledat v dokumentu…" autocomplete="off">
-      <span class="pocet" id="pocetNalezu">0/0</span>
-      <button class="ikona" id="predchoziBtn" title="Předchozí nález (Shift+Enter)">▲</button>
-      <button class="ikona" id="dalsiBtn" title="Další nález (Enter)">▼</button>
-      <button class="ikona" id="zavriHledaniBtn" title="Zavřít hledání (Esc)">✕</button>
-    </div>
-    <button class="ikona" id="sbalVseBtn" title="Sbalit/rozbalit všechny oddíly">⇕<span class="dlouhy"> Oddíly</span></button>
-    <span class="mezera"></span>
     <span class="statistika" id="statistika"></span>
-    <span class="mezera"></span>
-    <button class="ikona" id="vzhledBtn" aria-pressed="false" title="Téma, písmo, šířka sloupce">🎨<span class="dlouhy"> Vzhled</span></button>
-    <button class="ikona" id="poznBtn" aria-pressed="false" title="Poznámky k řádkům dokumentu (Alt+P)">📝<span class="dlouhy"> Poznámky</span><span class="pocitadlo" id="poznPocet"></span></button>
-    <button class="ikona" id="zmenyBtn" aria-pressed="false" title="Změny proti zkontrolovanému textu (Alt+Z)">Δ<span class="dlouhy"> Změny</span><span class="pocitadlo" id="zmenyPocet"></span></button>
-    <button class="ikona" id="tiskBtn" aria-pressed="false" title="Nastavení tisku a PDF (Ctrl+P tiskne rovnou)">🖨️<span class="dlouhy"> Tisk</span></button>
-    <button class="ikona" id="celaBtn" title="Celá obrazovka (F)" aria-label="Celá obrazovka"><svg class="svg-ikona" viewBox="0 0 24 24" aria-hidden="true"><path id="celaIkona" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span class="dlouhy" id="celaPopis"> Celá obrazovka</span></button>
   </div>
+  <input type="file" id="soubor" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
   <div class="vzhled" id="panelVzhled" hidden>
     <label>🎨 Téma
       <select id="temaVyber">
@@ -2732,6 +2791,11 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     if (vePoli || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'f') { e.preventDefault(); $('celaBtn').click(); }
   });
+
+  /* ---------- horní nabídka (sdílené ovládání generátorů, trubky_gui.js) ---------- */
+  window.TrubkyGui.pripoj({});
+  // položka nabídky, která dělá totéž co tlačítko v panelu
+  document.querySelectorAll('.pol[data-klik]').forEach(p => { p.onclick = () => $(p.dataset.klik).click(); });
 
   /* ---------- start ---------- */
   if (window.SAMOSTATNA_STRANKA) $('temaVyber').options[0].textContent = 'Podle systému';

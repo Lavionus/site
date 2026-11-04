@@ -61,6 +61,12 @@ const KATALOG_SEKCE = [
         "tagy": ["sazba", "kniha", "pdf", "tisk", "typografie", "a5", "obálka", "obsah", "čísla stran", "záhlaví", "spadávka", "markdown", "paged media", "self-publishing", "brožura", "skriptorium"]
       },
       {
+        "soubor": "obsah/predcitac.html",
+        "nazev": "🔊 Předčítač (neuronové hlasy)",
+        "stav": "vyvoj",
+        "tagy": ["předčítání", "čtení nahlas", "tts", "text na řeč", "hlas", "piper", "audiokniha", "markdown", "zamčená obrazovka", "ipad", "offline", "wav"]
+      },
+      {
         "soubor": "obsah/print_editor.html",
         "nazev": "🖨️ Editor pro tisk a export",
         "stav": "beta",
@@ -2862,6 +2868,18 @@ const KATALOG_SEKCE = [
         "nazev": "👾 Retro Invaders",
         "stav": "beta",
         "tagy": ["space invaders", "střílečka", "retro", "arkáda"]
+      },
+      {
+        "soubor": "obsah/vajicka.html",
+        "nazev": "🥚 Retro Vajíčka",
+        "stav": "vyvoj",
+        "tagy": ["vajíčka", "vejce", "chytání", "lcd", "elektronika", "kapesní hra", "retro", "slepice", "košík"]
+      },
+      {
+        "soubor": "obsah/chobotnice.html",
+        "nazev": "🐙 Retro Chobotnice",
+        "stav": "vyvoj",
+        "tagy": ["chobotnice", "potápěč", "poklad", "lcd", "elektronika", "kapesní hra", "retro", "moře"]
       },
       {
         "soubor": "obsah/tank1990.html",

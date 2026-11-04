@@ -329,7 +329,10 @@ a automat by se zasekl v půli. Celé dokončení je v historii jeden krok, tak�
 Zpět vrátí najednou. Ze sloupce se smí brát jen sestupná řada střídavých barev
 (`jeSekvence`) a na prázdný sloupec smí jen král – jako v pravidlech.
 
-**Markdown → DOCX / ODT** (`obsah/md_dokument.html`) je vedle převodníku taky
+**Markdown → DOCX / ODT** (`obsah/md_dokument.html`) má od 4. 11. 2026 horní lištu
+s nabídkami jako generátory (Soubor / Zobrazení / Poznámky / Změny; ovládání sdílené
+`trubky_gui.js`, CSS lišty zkopírované – celé `trubky_gui.css` by přepsalo `.plocha`),
+režimy a hledání zůstávají přímo na liště. Je vedle převodníku taky
 **čtečka dlouhých .md souborů**. Tři režimy (Editor / Rozdělené / Čtení, `Alt+1`
 až `Alt+3`) — ve **Čtení** zdrojový Markdown zmizí a zůstane jen sázený text
 v jednom sloupci; k němu **osnova** z nadpisů se scroll-spy a filtrem (`Alt+O`),
@@ -862,3 +865,20 @@ CSS Paged Media).
 - Test `python3 _test/sazba_test.py`: jádro v node a skutečná PDF (rozměr i se
   spadávkou, souvislé číslování, obsah proti stranám kapitol). Dál zkouší vlastní
   knihu přetažením, knihu ze Skriptoria a volání ze čtečky.
+
+**Předčítač** (`obsah/predcitac.html`, sekce Psaní & text) čte text nahlas neuronovými
+hlasy Piper přímo v prohlížeči. Vznikl jako pokus pro čtečku Kronik: `speechSynthesis`
+na iOS po zamčení obrazovky ztichne, skutečný zvuk v `<audio>` hraje dál.
+- `predcitac/jadro.js` (`PREDC_JADRO`, bez DOM): Markdown → odstavce → věty (zkratky,
+  iniciály, řadové číslovky), kusy pro syntézu, WAV.
+- `predcitac/worker.js`: espeak-ng ve WASM (`lib/piper/`, GPL-3.0, viz README.txt) →
+  ID fonémů → model ONNX (`lib/onnx`, jedno vlákno – GitHub Pages nemá COOP/COEP).
+- `predcitac/stranka.js`: hlasy z `huggingface.co/rhasspy/piper-voices` (voices.json,
+  CORS povolený) do Cache Storage `piper-hlasy` (ne `webapp-…`, ty maže sw.js).
+  Režim průběžně: adaptivní kusy (při zásobě pod 10 s se kus uzavře hned, pak až
+  ~700 znaků), zásoba 150 s. Režim předem: celý text do jednoho WAV (export).
+  Media Session, deník událostí ke kopírování (zkoušky na iPadu).
+- Klíče: `webapp_predcitac` (nastavení, pozice), `webapp_predcitac_text` (text do 300 000 znaků).
+- Testy: `node _test/predcitac_test.js` (jádro), `python3 _test/predcitac_ui.py`
+  (skutečné stažení hlasu ~63 MB, syntéza, oba režimy, MD přetažením). V headless
+  desktopu syntéza jirka-medium ~5× rychleji než čtení.

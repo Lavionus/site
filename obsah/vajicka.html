@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro Vajíčka</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js"></script>
+<link rel="stylesheet" href="lcd_hry.css">
+<script src="lcd_hry.js"></script>
+</head>
+<body>
+<h1>🥚 Retro Vajíčka</h1>
+
+<div class="pristroj">
+  <div class="stran">
+    <button class="tl" data-kos="0" title="Košík vlevo nahoru (A)">A</button>
+    <button class="tl" data-kos="1" title="Košík vlevo dolů (Y)">Y</button>
+  </div>
+  <div class="ram"><canvas id="lcd" width="1200" height="900"></canvas></div>
+  <div class="stran">
+    <button class="tl" data-kos="2" title="Košík vpravo nahoru (K)">K</button>
+    <button class="tl" data-kos="3" title="Košík vpravo dolů (M)">M</button>
+  </div>
+  <div class="panel">
+    <span class="napis">Kurník</span>
+    <button id="hraA">Hra A</button>
+    <button id="hraB">Hra B</button>
+    <button id="pauza">Pauza</button>
+    <button id="zvuk">🔊 Zvuk</button>
+  </div>
+</div>
+<div id="rekordBox"></div>
+
+<div class="info">
+  Slepice snášejí vejce a ta se kutálejí po čtyřech žlábcích. Medvěd musí nastavit košík
+  pod žlábek dřív, než vejce spadne. Košík přesouváš klávesami
+  <kbd>A</kbd> vlevo nahoru, <kbd>Y</kbd> vlevo dolů, <kbd>K</kbd> vpravo nahoru, <kbd>M</kbd> vpravo dolů
+  (nebo tlačítky na přístroji). Tři rozbitá vejce = konec hry. Při 200 a 500 bodech se chyby smažou.
+  <b>Hra A</b> začíná pomalu, <b>Hra B</b> je rychlejší. Mezerník = pauza, <kbd>Enter</kbd> = nová hra.
+</div>
+
+<script>
+/* ===== Logika hry bez DOM (testuje _test/vajicka_test.js) ===== */
+const VAJ = (function () {
+  const KROKU = 5;          // viditelné polohy vejce na žlábku (0–4), krok 5 = pád
+  const MAX_CHYB = 3;
+  const BEH = 5;            // délka běhu kuřátka (snímky) po rozbití
+
+  function nova(rezim, nahoda) {
+    return {
+      rezim, nahoda: nahoda || Math.random,
+      vejce: [],            // {zlab, poz}
+      kos: 0, body: 0, chyby: 0, konec: false,
+      rozbite: null,        // {strana, snimek} – běží kuřátko, hra stojí
+      odBodu: 0,            // kolik taktů od posledního snesení
+    };
+  }
+
+  /* Délka taktu v ms – zrychluje s body, B je od začátku svižnější. */
+  function takt(s) {
+    const zaklad = s.rezim === 'B' ? 430 : 620;
+    return Math.max(170, zaklad - Math.floor(s.body % 1000 / 2) * 1.6);
+  }
+
+  /* Jeden takt hry. Vrací seznam událostí pro zvuk a test. */
+  function krok(s) {
+    const ud = [];
+    if (s.konec) return ud;
+    if (s.rozbite) {
+      s.rozbite.snimek++;
+      ud.push('beh');
+      if (s.rozbite.snimek >= BEH) {
+        s.rozbite = null;
+        if (s.chyby >= MAX_CHYB) { s.konec = true; ud.push('konec'); }
+      }
+      return ud;
+    }
+    // posun vajec, nejvýš jedno spadne (snáší se nejvýš jedno za takt)
+    for (const v of s.vejce) v.poz++;
+    const dole = s.vejce.find(v => v.poz >= KROKU);
+    s.vejce = s.vejce.filter(v => v.poz < KROKU);
+    if (dole) {
+      if (dole.zlab === s.kos) {
+        const pred = s.body;
+        s.body = (s.body + 1) % 1000;
+        ud.push('chyceno');
+        if ((pred < 200 && s.body >= 200) || (pred < 500 && s.body >= 500)) { s.chyby = 0; ud.push('smazano'); }
+      } else {
+        s.chyby++;
+        s.rozbite = { strana: dole.zlab < 2 ? 0 : 1, snimek: 0 };
+        s.vejce = [];           // po rozbití se začíná nanovo, jako na LCD hrách
+        ud.push('rozbito');
+        return ud;
+      }
+    }
+    // snesení: v hustotě podle bodů, max. 1 za takt → padají v různých taktech, vždy chytitelné
+    s.odBodu++;
+    const hustota = Math.min(0.75, (s.rezim === 'B' ? 0.4 : 0.3) + s.body / 800);
+    const volne = [0, 1, 2, 3].filter(z => !s.vejce.some(v => v.zlab === z && v.poz === 0));
+    if (s.vejce.length === 0 || (s.odBodu >= 2 && s.nahoda() < hustota)) {
+      const z = volne[Math.floor(s.nahoda() * volne.length)];
+      s.vejce.push({ zlab: z, poz: 0 });
+      s.odBodu = 0;
+      ud.push('sneseno');
+    }
+    ud.push('tik');
+    return ud;
+  }
+
+  return { nova, krok, takt, KROKU, MAX_CHYB, BEH };
+})();
+if (typeof module !== 'undefined') module.exports = VAJ;
+
+/* ===== Vykreslení LCD ===== */
+(function () {
+  if (typeof document === 'undefined') return;
+  const cv = document.getElementById('lcd');
+  // Žlábky: začátek u slepice → konec nad košíkem
+  const ZLABY = [
+    { x0: 46, y0: 78, x1: 128, y1: 116 },     // vlevo nahoře
+    { x0: 46, y0: 168, x1: 128, y1: 206 },    // vlevo dole
+    { x0: 354, y0: 78, x1: 272, y1: 116 },    // vpravo nahoře
+    { x0: 354, y0: 168, x1: 272, y1: 206 },   // vpravo dole
+  ];
+
+  // Sprity z archu (Codex) – obdélníky v sprity.png
+  const L = LCD.plocha(cv, 'vajicka/sprity.png', {
+    nahoru: [0, 0, 306, 332], dolu: [310, 0, 295, 332], slepice: [609, 0, 292, 291], kure: [905, 0, 191, 189],
+  }, () => kresli());
+  const { g, sprite, cislice, text } = L;
+
+  function vejce(x, y, uhel, on) {
+    L.tvar(on, g => { g.beginPath(); g.ellipse(x, y, 7, 9.5, uhel, 0, Math.PI * 2); g.fill(); });
+  }
+
+  function rozbiteVejce(x, y, on) {
+    L.tvar(on, g => {
+    g.beginPath(); g.ellipse(x, y, 16, 5, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath();   // zubaté skořápky
+    g.moveTo(x - 14, y - 2); g.lineTo(x - 10, y - 11); g.lineTo(x - 6, y - 4); g.lineTo(x - 2, y - 12);
+    g.lineTo(x + 3, y - 3); g.lineTo(x + 8, y - 10); g.lineTo(x + 13, y - 2); g.closePath(); g.fill();
+    });
+  }
+
+  function polohaVejce(z, poz) {
+    const Z = ZLABY[z], t = (poz + 0.5) / VAJ.KROKU;
+    return [Z.x0 + (Z.x1 - Z.x0) * t, Z.y0 + (Z.y1 - Z.y0) * t - 10];
+  }
+
+  // Medvěd ve 4 pozicích [sprite, x, zrcadlit] – košík pod koncem žlábku (změřeno na archu)
+  const MEDVED = [['nahoru', 113, false], ['dolu', 117, false], ['nahoru', 166, true], ['dolu', 166, true]];
+  const MEDVED_Y = 118, MEDVED_V = 132;
+
+  let s = null;      // stav hry
+  let blik = true;
+
+  function kresli() {
+    L.smaz();
+    // potištěné pozadí (vždy vidět): žlábky, hnízda, podlaha
+    g.strokeStyle = 'rgba(29,36,25,.55)'; g.lineWidth = 3; g.lineCap = 'round';
+    for (const Z of ZLABY) { g.beginPath(); g.moveTo(Z.x0, Z.y0); g.lineTo(Z.x1, Z.y1); g.stroke(); }
+    g.lineWidth = 2; g.beginPath(); g.moveTo(10, 282); g.lineTo(390, 282); g.stroke();
+    // slepice u žlábků
+    for (const [i, Z] of ZLABY.entries()) sprite('slepice', i < 2 ? 2 : 354, Z.y0 - 42, 44, i >= 2, true);
+
+    const hraje = s && !s.konec;
+    // vejce: všechny polohy jako duchové, aktivní tmavě
+    for (let z = 0; z < 4; z++) for (let p = 0; p < VAJ.KROKU; p++) {
+      const [x, y] = polohaVejce(z, p);
+      const on = s && s.vejce.some(v => v.zlab === z && v.poz === p);
+      vejce(x, y, (z < 2 ? 1 : -1) * p * 1.2, on);
+    }
+    // medvěd ve 4 pozicích
+    MEDVED.forEach(([jm, x, zr], i) => {
+      const on = s ? s.kos === i : i === 0;
+      sprite(jm, x, MEDVED_Y, MEDVED_V, zr, on);
+    });
+    // rozbité vejce a běžící kuřátko
+    for (let strana = 0; strana < 2; strana++) {
+      const r = s && s.rozbite && s.rozbite.strana === strana;
+      rozbiteVejce(strana ? 300 : 100, 270, !!r);
+      for (let k = 0; k < VAJ.BEH; k++) {
+        const x = strana ? 318 + k * 15 : 82 - k * 15 - 20;
+        sprite('kure', x, 250, 20, strana === 1, !!r && s.rozbite.snimek === k);
+      }
+    }
+    // body a chyby
+    cislice(String(s ? s.body : 0).padStart(3, ' '), 238, 10, 30);
+    for (let i = 0; i < VAJ.MAX_CHYB; i++) sprite('kure', 70 + i * 24, 14, 20, false, !!s && s.chyby > i && (blik || !s.rozbite));
+    // nápisy režimu
+    text('HRA A', 160, 22, !!s && s.rezim === 'A');
+    text('HRA B', 160, 36, !!s && s.rezim === 'B');
+    text('KONEC', 160, 56, s && s.konec ? (blik ? 0.9 : 0.3) : false);
+    text('PAUZA', 160, 70, pauza && hraje);
+  }
+
+  const pip = LCD.zvuk('webapp_hra_vajicka_zvuk', document.getElementById('zvuk'));
+
+  /* ===== Řízení ===== */
+  const rek = Rekord.sleduj('webapp_hra_vajicka', { popisek: 'Nejvíc vajec' });
+  rek.prvek(document.getElementById('rekordBox'));
+  let casovac = null, pauza = false;
+
+  function start(rezim) {
+    s = VAJ.nova(rezim); pauza = false;
+    document.getElementById('hraA').classList.toggle('vyber', rezim === 'A');
+    document.getElementById('hraB').classList.toggle('vyber', rezim === 'B');
+    clearTimeout(casovac); smycka();
+  }
+
+  function smycka() {
+    if (!s || s.konec) return;
+    if (!pauza) {
+      const ud = VAJ.krok(s);
+      if (ud.includes('chyceno')) pip(1180, 0.06);
+      else if (ud.includes('rozbito')) pip(160, 0.35, 'sawtooth');
+      else if (ud.includes('beh')) pip(blik ? 700 : 520, 0.05);
+      else if (ud.includes('tik') && s.vejce.length) pip([620, 560, 660, 600][s.vejce[s.vejce.length - 1].zlab], 0.03);
+      if (ud.includes('smazano')) pip(1500, 0.2, 'triangle');
+      if (ud.includes('konec')) { pip(110, 0.8, 'sawtooth'); rek.zapis(s.body); }
+    }
+    blik = !blik; kresli();
+    if (!s.konec) casovac = setTimeout(smycka, s.rozbite ? 260 : VAJ.takt(s));
+    else blikej();
+  }
+  function blikej() { if (s && s.konec) { blik = !blik; kresli(); casovac = setTimeout(blikej, 500); } }
+
+  function kos(i) {
+    if (!s || s.konec) { start('A'); }
+    if (pauza) return;
+    s.kos = i; kresli();
+  }
+
+  // AYKM; Z jako Y pro anglickou klávesnici (Y a Z jsou tam prohozené)
+  const KLAV = { a: 0, y: 1, z: 1, k: 2, m: 3 };
+  addEventListener('keydown', e => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    const k = e.key.toLowerCase();
+    if (k in KLAV) { kos(KLAV[k]); e.preventDefault(); LCD.stiskni(document.querySelector(`.tl[data-kos="${KLAV[k]}"]`)); }
+    else if (k === ' ') { prepniPauzu(); e.preventDefault(); }
+    else if (k === 'enter') { start(s ? s.rezim : 'A'); e.preventDefault(); }
+  });
+  document.querySelectorAll('.tl').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); kos(+b.dataset.kos); }));
+  function prepniPauzu() {
+    if (!s || s.konec) return;
+    pauza = !pauza; kresli();
+  }
+  document.getElementById('hraA').onclick = () => start('A');
+  document.getElementById('hraB').onclick = () => start('B');
+  document.getElementById('pauza').onclick = prepniPauzu;
+  addEventListener('blur', () => { if (s && !s.konec && !pauza) prepniPauzu(); });
+  window.VAJ_UI = { start, kos, stav: () => s, kresli };
+  kresli();
+})();
+</script>
+</body>
+</html>

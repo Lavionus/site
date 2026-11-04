@@ -1,0 +1,22 @@
+// chobotnice – en. Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Retro Chobotnice': 'Retro Octopus',
+  'Potápěč doleva (A nebo Y)': 'Diver left (A or Y)',
+  'Potápěč doprava (K nebo M)': 'Diver right (K or M)',
+  'Hlubina': 'The Deep',
+  'Hra A': 'Game A',
+  'Hra B': 'Game B',
+  'Pauza': 'Pause',
+  'Zvuk': 'Sound',
+  'doprava (také šipky nebo tlačítka na přístroji). Tři chycení potápěči = konec hry. Při 200 a 500 bodech se ztracení potápěči vrátí.': 'right (also arrow keys or the buttons on the device). Three caught divers = game over. At 200 and 500 points the lost divers come back.',
+  'začíná pomalu,': 'starts slowly,',
+  'je rychlejší. Mezerník = pauza,': 'is faster. Space = pause,',
+  'nová hra.': 'new game.',
+  'Nejvíc bodů': 'Most points',
+  'Ticho': 'Muted',
+  'HRA A': 'GAME A',
+  'HRA B': 'GAME B',
+  'KONEC': 'OVER',
+  'PAUZA': 'PAUSE',
+  'Potápěč seskočí z loďky a jde po dně k truhle s pokladem. Chobotnice natahuje chapadla – když se špička chapadla dotkne potápěče, je chycen. Každé sáhnutí do truhly přidá do pytle jeden kus zlata (počet je vidět vedle skóre). Body se připíšou, až potápěč s pytlem doleze do loďky – když ho chobotnice chytí, pytel se ztratí. Pohyb': 'The diver jumps off the boat and walks along the seabed to the treasure chest. The octopus stretches its tentacles – when a tentacle tip touches the diver, he is caught. Each grab into the chest adds one piece of gold to the bag (the count is shown next to the score). Points are only credited once the diver climbs back into the boat with the bag – if the octopus catches him, the bag is lost. Movement',
+});
