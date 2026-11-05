@@ -1,11 +1,15 @@
-/* Kroniky vyhnanství – čtečka (UI nad KRONIKY_JADRO).
-   localStorage: webapp_kroniky (nastavení, pozice, pokrok, čas čtení),
-                 webapp_kroniky_poznamky (záložky, zvýraznění, cizi = načtené poznámky betačtenářů). */
+/* Společná čtečka knih (UI nad KRONIKY_JADRO) – jedna pro všechna díla (Kroniky vyhnanství, povídky…).
+   Dílo popisuje window.CTECKA_DILO, které nastaví stránka díla (vygenerovaná tools/knihy_export.py):
+   {id, nazev, ikona, data (složka s knihy.json, relativně k obsah/), stranka, klic, serie?, soubor?}.
+   localStorage: <klic> (nastavení, pozice, pokrok, čas čtení), <klic>_poznamky (záložky, zvýraznění,
+   cizi = načtené poznámky betačtenářů). Kroniky mají kvůli starším uloženým datům klic webapp_kroniky. */
 (async () => {
   'use strict';
   const J = window.KRONIKY_JADRO;
   const $ = id => document.getElementById(id);
-  const KLIC = 'webapp_kroniky', KLIC_P = 'webapp_kroniky_poznamky';
+  const DILO = window.CTECKA_DILO;   // nastavení díla ze stránky díla (tools/knihy_export.py)
+  const KLIC = DILO.klic, KLIC_P = DILO.klic + '_poznamky';
+  const SOUBOR = DILO.soubor || J.normalizuj(DILO.nazev).replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '');
   const plocha = $('plocha'), text = $('text');
   if (window.top === window) document.body.classList.add('samostatne');
 
@@ -30,15 +34,15 @@
 
   /* ---------- knihy a kapitoly ---------- */
   // knihy.json vždy čerstvý (?t – obejde i CDN GitHub Pages); kapitoly a obrázky s otiskem obsahu (?h)
-  const knihy = await (await fetch('kroniky/knihy.json?t=' + Date.now())).json();
-  const sOtiskem = (k, src) => { const h = k.otisky && k.otisky[src]; return `kroniky/${k.id}/${src}` + (h ? '?h=' + h : ''); };
+  const knihy = await (await fetch(DILO.data + 'knihy.json?t=' + Date.now())).json();
+  const sOtiskem = (k, src) => { const h = k.otisky && k.otisky[src]; return `${DILO.data}${k.id}/${src}` + (h ? '?h=' + h : ''); };
   knihy.forEach(k => { k.slov = k.kapitoly.reduce((s, c) => s + c.slov, 0); });
   const mezipamet = new Map();
   function nactiKapitolu(kniha, soubor) {
     const c = kniha.kapitoly.find(x => x.soubor === soubor), h = c && c.h ? '?h=' + c.h : '';
     const klic = kniha.id + '/' + soubor + h;
     if (!mezipamet.has(klic)) {
-      mezipamet.set(klic, fetch(`kroniky/${klic}`).then(r => {
+      mezipamet.set(klic, fetch(DILO.data + klic).then(r => {
         if (!r.ok) throw new Error('Kapitolu se nepodařilo načíst');
         return r.text();
       }).then(md => ({ md, bloky: J.rozeber(md) })).catch(e => { mezipamet.delete(klic); throw e; }));
@@ -111,7 +115,7 @@
     ['tlPred', 'dolePred'].forEach(id => { $(id).disabled = prvni; });
     ['tlDalsi', 'doleDalsi'].forEach(id => { $(id).disabled = posledni; });
     $('doleDalsi').textContent = cIdx === kniha.kapitoly.length - 1 && !posledni ? `${knihy[kIdx + 1].nazev} ▶` : 'Další ▶';
-    document.title = `${kap().nazev} – ${kniha.nazev} – Kroniky vyhnanství`;
+    document.title = `${kap().nazev} – ${kniha.nazev} – ${DILO.nazev}`;
     skocNaBlok(blok, false);
     poScrollu();
     if (stav.panel) vykresliPanel();
@@ -346,7 +350,11 @@
     lista.querySelector('[data-vyber="smazat"]').hidden = vyber.rezim !== 'uprava';
     lista.querySelector('[data-vyber="zalozka"]').hidden = vyber.rezim !== 'novy';
   }
-  function zavriVyber() { lista.hidden = true; vyber = null; }
+  function zavriVyber() {
+    const docasny = vyber && vyber.dotyk ? vyber.blok : null;
+    lista.hidden = true; vyber = null;
+    if (docasny !== null && text.querySelector('mark.vyb')) vyznacBlok(docasny);
+  }
   const blokZUzlu = u => { const el = (u.nodeType === 3 ? u.parentElement : u).closest('#text [data-i]'); return el; };
   const offsetV = (el, uzel, off) => { const r = document.createRange(); r.setStart(el, 0); r.setEnd(uzel, off); return r.toString().length; };
 
@@ -355,9 +363,9 @@
     clearTimeout(casVyberu);
     casVyberu = setTimeout(() => {
       const sel = getSelection();
-      if (!sel.rangeCount || sel.isCollapsed) { if (vyber && vyber.rezim === 'novy') zavriVyber(); return; }
+      if (!sel.rangeCount || sel.isCollapsed) { if (vyber && vyber.rezim === 'novy' && !vyber.dotyk) zavriVyber(); return; }
       const r = sel.getRangeAt(0), el = blokZUzlu(r.startContainer);
-      if (!el || el !== blokZUzlu(r.endContainer) || !/^(P|H1)$/.test(el.tagName)) { if (vyber && vyber.rezim === 'novy') zavriVyber(); return; }
+      if (!el || el !== blokZUzlu(r.endContainer) || !/^(P|H1)$/.test(el.tagName)) { if (vyber && vyber.rezim === 'novy' && !vyber.dotyk) zavriVyber(); return; }
       const od = offsetV(el, r.startContainer, r.startOffset), do_ = offsetV(el, r.endContainer, r.endOffset);
       const i = +el.dataset.i, t = bloky[i].text.slice(od, do_);
       if (!t.trim()) return;
@@ -366,6 +374,7 @@
     }, 180);
   });
   text.addEventListener('click', e => {
+    if (Date.now() - dotyk.konec < 700) return;   // „klepnutí“, které prohlížeč pošle po dotykovém výběru
     const zal = e.target.closest('mark.zal-slovo');
     if (zal && getSelection().isCollapsed) { odeberZalozku(zal.dataset.zal); return; }
     const ciz = e.target.closest('mark.cizi');
@@ -376,6 +385,72 @@
     ukazListu(m.getBoundingClientRect());
   });
   lista.addEventListener('pointerdown', e => e.preventDefault());   // výběr nezmizí kliknutím do lišty
+
+  /* ---------- výběr prstem (iPad, telefon) ----------
+     Nativní výběr textu ukáže na iPadOS systémovou nabídku (Kopírovat, Sdílet…) a stránka ji nemůže skrýt.
+     Při dotyku je proto nativní výběr v textu vypnutý (body.dotyk) a výběr dělá čtečka:
+     podržet prst = slovo, táhnout bez zvednutí = rozšířit po slovech, zvednout = lišta čtečky. */
+  const pozicePodBodem = (x, y) => {
+    let uzel, off;
+    if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(x, y); if (r) { uzel = r.startContainer; off = r.startOffset; } }
+    else if (document.caretPositionFromPoint) { const r = document.caretPositionFromPoint(x, y); if (r) { uzel = r.offsetNode; off = r.offset; } }
+    const el = uzel && blokZUzlu(uzel);
+    return el && /^(P|H1)$/.test(el.tagName) ? { blok: +el.dataset.i, off: offsetV(el, uzel, off) } : null;
+  };
+  const dotyk = { cas: 0, start: null, kotva: null, rozsah: null, konec: 0 };
+  function ukazDotykovyVyber() {
+    const { blok, od, do: do_ } = dotyk.rozsah;
+    vyznacBlok(blok);
+    obal(prvekBloku(blok), od, do_, () => Object.assign(document.createElement('mark'), { className: 'vyb' }));
+  }
+  addEventListener('pointerdown', e => document.body.classList.toggle('dotyk', e.pointerType === 'touch'), true);
+  text.addEventListener('touchstart', e => {
+    clearTimeout(dotyk.cas);
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    dotyk.start = { x: t.clientX, y: t.clientY }; dotyk.kotva = null;
+    const zv = e.target.closest && e.target.closest('mark.zv:not(.cizi)');
+    dotyk.cas = setTimeout(() => {
+      if (zv) {   // podržení na zvýraznění = jeho úprava (barva, poznámka, smazání)
+        dotyk.konec = Date.now();
+        vyber = { rezim: 'uprava', id: zv.dataset.id };
+        ukazListu(zv.getBoundingClientRect());
+        return;
+      }
+      const p = pozicePodBodem(dotyk.start.x, dotyk.start.y), w = p && J.slovoKolem(bloky[p.blok].text, p.off);
+      if (!w) return;
+      zavriVyber();
+      dotyk.kotva = { blok: p.blok, ...w }; dotyk.rozsah = { ...dotyk.kotva };
+      ukazDotykovyVyber();
+    }, 450);
+  }, { passive: true });
+  text.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (!dotyk.kotva) {   // prst se pohnul dřív, než vypršelo podržení → posouvání stránky
+      if (dotyk.start && Math.hypot(t.clientX - dotyk.start.x, t.clientY - dotyk.start.y) > 10) clearTimeout(dotyk.cas);
+      return;
+    }
+    e.preventDefault();   // během výběru se stránka neposouvá
+    const p = pozicePodBodem(t.clientX, t.clientY), k = dotyk.kotva;
+    const w = p && p.blok === k.blok && J.slovoKolem(bloky[k.blok].text, p.off);
+    if (!w) return;
+    const novy = { blok: k.blok, od: Math.min(k.od, w.od), do: Math.max(k.do, w.do) };
+    if (novy.od !== dotyk.rozsah.od || novy.do !== dotyk.rozsah.do) { dotyk.rozsah = novy; ukazDotykovyVyber(); }
+  }, { passive: false });
+  const konecDotyku = e => {
+    clearTimeout(dotyk.cas);
+    if (!dotyk.kotva) { if (Date.now() - dotyk.konec < 700 && e.cancelable) e.preventDefault(); return; }
+    if (e.cancelable) e.preventDefault();   // bez následného „kliknutí“, které by lištu hned zavřelo
+    const { blok, od, do: do_ } = dotyk.rozsah;
+    dotyk.kotva = null; dotyk.konec = Date.now();
+    vyber = { rezim: 'novy', blok, od, do: do_, text: bloky[blok].text.slice(od, do_), dotyk: true };
+    const znacky = [...text.querySelectorAll('mark.vyb')];
+    const r = znacky[0].getBoundingClientRect(), r2 = znacky[znacky.length - 1].getBoundingClientRect();
+    ukazListu({ top: r.top, bottom: r2.bottom, left: Math.min(r.left, r2.left), width: Math.max(r.right, r2.right) - Math.min(r.left, r2.left) });
+  };
+  text.addEventListener('touchend', konecDotyku);
+  text.addEventListener('touchcancel', () => { clearTimeout(dotyk.cas); if (dotyk.kotva) { dotyk.kotva = null; vyznacBlok(dotyk.rozsah.blok); } });
+  text.addEventListener('contextmenu', e => { if (document.body.classList.contains('dotyk')) e.preventDefault(); });
   lista.addEventListener('click', async e => {
     const tl = e.target.closest('button');
     if (!tl || !vyber) return;
@@ -404,7 +479,7 @@
     vyznacBlok(z ? z.blok : v.blok);
     if (stav.panel === 'poznamky') vykresliPanel();
   });
-  const citace = t => `„${t.trim()}“\n— Kroniky vyhnanství, ${kniha.nazev}, ${kap().nazev}`;
+  const citace = t => `„${t.trim()}“\n— ${DILO.nazev}, ${kniha.nazev}, ${kap().nazev}`;
   async function kopiruj(t, hlaska) {
     try { await navigator.clipboard.writeText(t); Dialog.info(hlaska); }
     catch (e) { await Dialog.zeptej('Zkopírujte si text:', t, { ok: 'Hotovo' }); }
@@ -660,7 +735,7 @@
   addEventListener('pagehide', () => { synt && synt.cancel(); ulozStav(true); });
   // Karta otevřená celé dny (tablet) by běžela na starém kódu, zatímco kapitoly se stahují nové –
   // po návratu do karty porovnat skripty se serverem a při změně stránku obnovit (pozice je uložená).
-  const otiskSkriptu = () => Promise.all(['kroniky/jadro.js', 'kroniky/ctecka.js', 'kroniky/knihy.json?t=' + Date.now()].map(u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')))
+  const otiskSkriptu = () => Promise.all(['ctecka/jadro.js', 'ctecka/ctecka.js', 'ctecka/sablona.js', 'ctecka/ctecka.css', DILO.data + 'knihy.json?t=' + Date.now()].map(u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')))
     .then(t => t.join('\n')).catch(() => '');
   const puvodniOtisk = otiskSkriptu();
   let skrytoOd = 0;
@@ -752,7 +827,7 @@
   $('wpm').addEventListener('change', e => { const v = Math.round(+e.target.value); if (v >= 80 && v <= 600) { nast().wpm = v; ulozStav(); poScrollu(); ukazStatistiky(); } });
 
   /* ---------- export, tisk, offline, záloha ---------- */
-  const souborNazev = k => 'Kroniky_vyhnanstvi_' + J.normalizuj(k.nazev).replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '');
+  const souborNazev = k => SOUBOR + '_' + J.normalizuj(k.nazev).replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '');
   function stahni(jmeno, obsah, typ) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
@@ -767,10 +842,10 @@
         Dialog.info('Připravuji e-knihu s ilustracemi…');
         const kapitoly = kniha.kapitoly.map((c, i) => ({ nazev: c.nazev, bloky: obsahy[i].bloky }));
         const obrazky = await jpegyKnihy(kniha, kapitoly, format === 'mobi' ? 120000 : 400000);
-        if (format === 'epub') stahni(souborNazev(kniha) + '.epub', J.epub(kniha, kapitoly, obrazky), 'application/epub+zip');
-        else stahni(souborNazev(kniha) + '.mobi', J.mobi(kniha, kapitoly, obrazky), 'application/x-mobipocket-ebook');
+        if (format === 'epub') stahni(souborNazev(kniha) + '.epub', J.epub(kniha, kapitoly, obrazky, DILO.autor, DILO.nazev), 'application/epub+zip');
+        else stahni(souborNazev(kniha) + '.mobi', J.mobi(kniha, kapitoly, obrazky, DILO.autor, DILO.nazev), 'application/x-mobipocket-ebook');
       } else {
-        const md = `# Kroniky vyhnanství – ${kniha.nazev}\n\n_${kniha.podtitul}_\n\n` + obsahy.map(o => o.md.replace(/^# /, '## ')).join('\n\n');
+        const md = `# ${DILO.nazev} – ${kniha.nazev}\n\n_${kniha.podtitul}_\n\n` + obsahy.map(o => o.md.replace(/^# /, '## ')).join('\n\n');
         stahni(souborNazev(kniha) + '.md', md, 'text/markdown;charset=utf-8');
       }
     } catch (e) { Dialog.chyba('Knihu se nepodařilo načíst celou. Jste offline?'); }
@@ -799,8 +874,8 @@
     return vysl;
   }
   const mojeBalik = () => J.balikPoznamek(stav.jmeno, data);
-  const jmenoSouboru = (pripona) => `Kroniky_poznamky${stav.jmeno ? '_' + J.normalizuj(stav.jmeno).replace(/[^a-z0-9]+/gi, '_') : ''}_${dnes()}.${pripona}`;
-  const exportPoznamek = () => stahni(jmenoSouboru('md'), J.poznamkyMd(mojeBalik(), knihy), 'text/markdown;charset=utf-8');
+  const jmenoSouboru = (pripona) => `${SOUBOR}_poznamky${stav.jmeno ? '_' + J.normalizuj(stav.jmeno).replace(/[^a-z0-9]+/gi, '_') : ''}_${dnes()}.${pripona}`;
+  const exportPoznamek = () => stahni(jmenoSouboru('md'), J.poznamkyMd(mojeBalik(), knihy, DILO.nazev), 'text/markdown;charset=utf-8');
   const exportPoznamekJson = () => stahni(jmenoSouboru('json'), JSON.stringify(mojeBalik(), null, 1), 'application/json');
   // čtenář pošle poznámky autorovi: telefon → sdílení souboru (e-mail, zprávy…), jinak stažení + předvyplněný e-mail
   async function odeslatPoznamky() {
@@ -808,15 +883,15 @@
     const jm = await Dialog.zeptej('Vaše jméno – podle něj autor pozná, od koho poznámky jsou:', stav.jmeno || '', { ok: 'Pokračovat' });
     if (jm === null) return;
     stav.jmeno = jm.trim(); ulozStav(true);
-    const nazev = jmenoSouboru('md'), md = J.poznamkyMd(mojeBalik(), knihy);
-    const predmet = `Kroniky vyhnanství – poznámky${stav.jmeno ? ' od ' + stav.jmeno : ''}`;
+    const nazev = jmenoSouboru('md'), md = J.poznamkyMd(mojeBalik(), knihy, DILO.nazev);
+    const predmet = `${DILO.nazev} – poznámky${stav.jmeno ? ' od ' + stav.jmeno : ''}`;
     const soubor = new File([md], nazev, { type: 'text/markdown' });
     if (navigator.canShare && navigator.canShare({ files: [soubor] })) {
       try { await navigator.share({ files: [soubor], title: predmet, text: predmet }); return; }
       catch (e) { if (e.name === 'AbortError') return; }
     }
     stahni(nazev, md, 'text/markdown;charset=utf-8');
-    const telo = `Dobrý den,\n\nposílám poznámky ke Kronikám vyhnanství. Soubor ${nazev} je v příloze (najdete ho ve Stažených souborech).\n\n${stav.jmeno}`;
+    const telo = `Dobrý den,\n\nposílám poznámky ke knize ${DILO.nazev}. Soubor ${nazev} je v příloze (najdete ho ve Stažených souborech).\n\n${stav.jmeno}`;
     if (await Dialog.potvrd(`Soubor ${nazev} je stažený ve Stažených souborech. Otevřít e-mail${stav.prijemce ? ' pro ' + stav.prijemce : ''}? Soubor do něj přiložte (přetáhněte).`, { ok: '✉ Otevřít e-mail', zrus: 'Ne, pošlu sám' }))
       location.href = `mailto:${encodeURIComponent(stav.prijemce || '')}?subject=${encodeURIComponent(predmet)}&body=${encodeURIComponent(telo)}`;
   }
@@ -825,7 +900,7 @@
     let nacteno = 0;
     for (const f of soubory) {
       const b = J.prectiPoznamky(await f.text());
-      if (!b) { Dialog.chyba(`${f.name}: soubor neobsahuje poznámky z čtečky Kronik.`); continue; }
+      if (!b) { Dialog.chyba(`${f.name}: soubor neobsahuje poznámky z čtečky.`); continue; }
       const jmeno = b.jmeno || f.name.replace(/\.[a-z]+$/i, '');
       const stara = data.cizi.find(c => c.jmeno === jmeno);
       const sada = { id: stara ? stara.id : noveId(), jmeno, cas: b.cas || Date.now(), skryta: false, zvyrazneni: b.zvyrazneni, zalozky: b.zalozky };
@@ -846,7 +921,7 @@
     const el = panelObsah.querySelector(`[data-pozn="${CSS.escape(id)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('blik'); setTimeout(() => el.classList.remove('blik'), 1600); }
   }
-  const adresaCtecky = () => { try { if (window.top !== window) return top.location.origin + top.location.pathname + '#obsah/kroniky.html'; } catch (e) {} return location.origin + location.pathname; };
+  const adresaCtecky = () => { try { if (window.top !== window) return top.location.origin + top.location.pathname + '#obsah/' + DILO.stranka; } catch (e) {} return location.origin + location.pathname; };
   async function odkazBeta() {
     const em = await Dialog.zeptej('Odkaz pro betačtenáře. Na jaký e-mail mají poslat poznámky?', stav.prijemce || '', { ok: 'Kopírovat odkaz' });
     if (em === null) return;
@@ -856,7 +931,7 @@
     kopiruj(url + '?' + p, '🔗 Odkaz pro betačtenáře zkopírován');
   }
   // tisk celé knihy dělá samostatná stránka Sazba knihy (obsah/sazba.html): obálka, obsah s čísly stran, záhlaví, okraje v mm
-  const sazba = (kapitola) => window.open(`sazba.html?kroniky=${encodeURIComponent(kniha.id)}` + (kapitola == null ? '' : `&kapitola=${kapitola}`), '_blank');
+  const sazba = (kapitola) => window.open(`sazba.html?dilo=${encodeURIComponent(DILO.id)}&kniha=${encodeURIComponent(kniha.id)}` + (kapitola == null ? '' : `&kapitola=${kapitola}`), '_blank');
   async function offline() {
     Dialog.info('Ukládám kapitoly…');
     try {
@@ -869,19 +944,19 @@
   function odkaz() {
     const p = `kniha=${stav.kniha + 1}&kap=${encodeURIComponent(kap().soubor.replace(/\.md$/, ''))}&blok=${aktualniBlok()}`;
     let url;
-    try { url = window.top !== window ? top.location.origin + top.location.pathname + '#obsah/kroniky.html?' + p : null; } catch (e) { url = null; }
+    try { url = window.top !== window ? top.location.origin + top.location.pathname + '#obsah/' + DILO.stranka + '?' + p : null; } catch (e) { url = null; }
     kopiruj(url || location.origin + location.pathname + '?' + p, '🔗 Odkaz zkopírován');
   }
   async function obnova(soubor) {
     try {
       const z = JSON.parse(await soubor.text());
-      if (z.format !== 'kroniky-zaloha') throw new Error();
+      if (z.format !== 'kroniky-zaloha' || (z.dilo || 'kroniky') !== (DILO.id || 'kroniky')) throw new Error();
       if (!(await Dialog.potvrd('Nahradit současné poznámky, záložky a pokrok obsahem zálohy?'))) return;
       stav = { ...stav, ...z.stav, nast: { ...VYCHOZI_NAST, ...z.stav.nast } };
       data = { zalozky: [], zvyrazneni: [], cizi: [], ...z.data };
       ulozStav(true); ulozData(); pouzijNastaveni(); obnovPozici();
       Dialog.info('Záloha obnovena');
-    } catch (e) { Dialog.chyba('Soubor není záloha čtečky Kronik.'); }
+    } catch (e) { Dialog.chyba(`Soubor není záloha čtečky tohoto díla (${DILO.nazev}).`); }
   }
   $('souborObnova').onchange = e => { if (e.target.files[0]) obnova(e.target.files[0]); e.target.value = ''; };
 
@@ -941,7 +1016,7 @@
     offline,
     statistiky: ukazStatistiky,
     napoveda: () => otevriModal('napoveda'),
-    zaloha: () => stahni(`Kroniky_vyhnanstvi_zaloha_${dnes()}.json`, JSON.stringify({ format: 'kroniky-zaloha', verze: 1, stav, data }, null, 1), 'application/json'),
+    zaloha: () => stahni(`${SOUBOR}_zaloha_${dnes()}.json`, JSON.stringify({ format: 'kroniky-zaloha', verze: 1, dilo: DILO.id, stav, data }, null, 1), 'application/json'),
     obnova: () => $('souborObnova').click(),
     'smazat-data': async () => {
       if (!(await Dialog.potvrd('Smazat všechny záložky, zvýraznění, poznámky, pokrok a statistiky čtení? Vzhled čtečky zůstane.'))) return;
@@ -1085,7 +1160,7 @@
     if (dotazUrl.get('email')) stav.prijemce = dotazUrl.get('email');
     if (!stav.betaNavod) {
       stav.betaNavod = true;
-      Dialog.potvrd('Vítejte u betačtení Kronik vyhnanství.\n\nKdyž vás něco zarazí, označte v textu pár slov a vyberte barvu nebo 📝 a napište poznámku. Poznámky se ukládají jen ve vašem prohlížeči.\n\nAž budete chtít poslat poznámky autorovi, otevřete panel 📝 Poznámky (klávesa N) a klepněte na 📤 Odeslat autorovi.', { ok: 'Rozumím', zrus: 'Zavřít' });
+      Dialog.potvrd(`Vítejte u betačtení – ${DILO.nazev}.\n\nKdyž vás něco zarazí, označte v textu pár slov a vyberte barvu nebo 📝 a napište poznámku. Poznámky se ukládají jen ve vašem prohlížeči.\n\nAž budete chtít poslat poznámky autorovi, otevřete panel 📝 Poznámky (klávesa N) a klepněte na 📤 Odeslat autorovi.`, { ok: 'Rozumím', zrus: 'Zavřít' });
     }
     ulozStav(true);
   }
@@ -1094,5 +1169,5 @@
   if (stav.panel) otevriPanel(stav.panel);
   // písmo a rozložení se můžou dopočítat až po prvním vykreslení – znovu dojet na uložené místo
   addEventListener('load', () => { const p = kniha && stav.pozice[kniha.id]; if (p && p.soubor === kap().soubor && p.blok) skocNaBlok(p.blok, false); });
-  window.KRONIKY_CTECKA = { otevri, skok, hledej, stav: () => stav, data: () => data, aktualniBlok, tts };
+  window.CTECKA = window.KRONIKY_CTECKA = { otevri, skok, hledej, stav: () => stav, data: () => data, aktualniBlok, tts };
 })();

@@ -1,5 +1,5 @@
 /* Markdown → DOCX / ODT – jádro bez DOM: rozdíl řádků (evidence změn)
-   a poznámky ve formátu čtečky Kronik (obsah/kroniky/jadro.js).
+   a poznámky ve formátu čtečky Kronik (obsah/ctecka/jadro.js).
    V prohlížeči window.MD_JADRO, v node require(). */
 (function (koren) {
   'use strict';
@@ -71,7 +71,7 @@
      Balík {format:'kroniky-poznamky', verze, jmeno, cas, zalozky, zvyrazneni};
      zvýraznění {id, kniha, soubor, blok, od, do, text, barva, poznamka, cas}.
      Soubor = Markdown pro člověka a na konci celý balík v HTML komentáři –
-     totéž čte i píše obsah/kroniky/jadro.js (poznamkyMd / prectiPoznamky). */
+     totéž čte i píše obsah/ctecka/jadro.js (poznamkyMd / prectiPoznamky). */
   const FORMAT_P = 'kroniky-poznamky';
   const ZNACKA_P = '<!-- kroniky-poznamky ';
   const KNIHA = 'md_dokument';

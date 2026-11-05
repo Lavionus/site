@@ -24,7 +24,7 @@ I18N.pridej('en', {
   'Moje vlastní kniha': 'My own book',
   'Začít novou (smazat texty)': 'Start a new one (delete texts)',
   'Ze Skriptoria': 'From Scriptorium',
-  'Ukázka – Kroniky vyhnanství': 'Sample – Chronicles of Exile (Czech)',
+  'Knihy ze čtečky': 'Books from the reader (Czech)',
   'Podtitul': 'Subtitle',
   'Řada / edice': 'Series',
   'Díl': 'Volume',

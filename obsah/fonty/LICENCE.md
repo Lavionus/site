@@ -33,6 +33,9 @@ z disku (file://) a nesmí soubor fontu načíst přes fetch().
 | `BowlbyOneSC-Regular.ttf` | Bowlby One SC | Copyright (c) 2011, vernon adams (vern@newtypography.co.uk), with Reserved Font Names "Bowlby" | SIL Open Font License 1.1 |
 | `AlfaSlabOne-Regular.ttf` | Alfa Slab One | Copyright 2016 The Alfa Slab One Project Authors (http://www.jmsole.cl / info@jmsole.cl), with Reserved Font Name "Alfa Slab". | SIL Open Font License 1.1 |
 | `LiberationSerif-Bold.ttf` | Liberation Serif | Digitized data copyright (c) 2010 Google Corporation. Copyright (c) 2012 Red Hat, Inc. | SIL Open Font License 1.1 |
+| `LiberationSerif-Regular.ttf` | Liberation Serif | Digitized data copyright (c) 2010 Google Corporation. Copyright (c) 2012 Red Hat, Inc. | SIL Open Font License 1.1 |
+| `LiberationSerif-Italic.ttf` | Liberation Serif Italic | Digitized data copyright (c) 2010 Google Corporation. Copyright (c) 2012 Red Hat, Inc. | SIL Open Font License 1.1 |
+| `LiberationSans-Italic.ttf` | Liberation Sans Italic | Digitized data copyright (c) 2010 Google Corporation. Copyright (c) 2012 Red Hat, Inc. | SIL Open Font License 1.1 |
 | `AbrilFatface-Regular.ttf` | Abril Fatface | Copyright (c) 2011, Copyright (c) 2011, TypeTogether (www.type-together.com), with Reserved Font Names "Abril" and "Abril Fatface" | SIL Open Font License 1.1 |
 | `Ultra-Regular.ttf` | Ultra | Copyright (c) 2010 by Brian J. Bonislawsky DBA Astigmatic (AOETI). All rights reserved. Available under the Apache 2.0 licence.
 http://www.apache.org/licenses/LICENSE-2.0.html | Apache 2.0 |

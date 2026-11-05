@@ -111,6 +111,7 @@ I18N.seznam('en', [
   'font_preview',
   'forecast',
   'formy',
+  'fotokniha',
   'fps_arena',
   'function_plot',
   'fve_kalk',
@@ -468,4 +469,5 @@ I18N.seznam('en', [
   'nozicky/nahled': ['nozicky', 'odmerky'],
   'klicenky/jadro': ['klicenky', 'odmerky'],
   lcd_hry: ['chobotnice', 'vajicka'],
+  'pdf_dilna/jadro': ['fotokniha', 'pdf_dilna'],
 });

@@ -40,6 +40,8 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 .snap button{background:var(--border);color:var(--text);border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:.8rem;font-weight:600}
 .snap button:hover{background:#4d4d4d}
 .snap .del:hover{background:#7a3030}
+.board.paused{filter:blur(8px);pointer-events:none}
+#pauseBtn{padding:4px 9px;margin-left:4px}
 .snaps .empty{color:var(--text-faint);font-size:.85rem}
 
 /* světlý režim: dorovnání kontrastu textu */
@@ -55,7 +57,7 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
   <button class="btn btn-sec" id="notesBtn">✏️ Poznámky</button>
   <button class="btn btn-sec" id="checkBtn">✓ Zkontrolovat</button>
   <button class="btn btn-sec" id="snapBtn">📸 Uložit snímek</button>
-  <div style="color:var(--text-faint)">⏱️ <span id="time">0:00</span></div>
+  <div style="color:var(--text-faint)">⏱️ <span id="time">0:00</span><button class="btn btn-sec" id="pauseBtn" title="Pozastavit čas (P)">⏸️</button></div>
 </div>
 <div class="board" id="board"></div>
 <div class="pad" id="pad"></div>
@@ -66,7 +68,7 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 </div>
 <script>
 const $=id=>document.getElementById(id);
-let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false,history=[];
+let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false,history=[],paused=false,solved=false;
 function genSolved(){
   const g=Array.from({length:9},()=>Array(9).fill(0));
   function valid(r,c,n){for(let i=0;i<9;i++)if(g[r][i]===n||g[i][c]===n)return false;
@@ -110,8 +112,17 @@ function newGame(clearSnaps){
   if(clearSnaps){snapshots=[];persistSnaps();renderSnaps();}
   $('msg').textContent='';render();
 }
-function startTimer(){clearInterval(timer);$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
-  timer=setInterval(()=>{seconds++;$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');},1000);}
+function showTime(){$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');}
+function startTimer(){clearInterval(timer);solved=false;setPaused(false);showTime();}
+// Pauza: zastaví čas, rozmaže desku (aby se nedalo přemýšlet zadarmo) a blokuje zadávání.
+function setPaused(p){
+  if(solved)p=false;paused=p;clearInterval(timer);
+  if(!p&&!solved)timer=setInterval(()=>{seconds++;showTime();},1000);
+  $('board').classList.toggle('paused',p);
+  $('pauseBtn').textContent=p?'▶️':'⏸️';$('pauseBtn').title=p?'Pokračovat (P)':'Pozastavit čas (P)';
+  $('pauseBtn').disabled=solved;
+  if(p)$('msg').textContent='⏸️ Pozastaveno';else if($('msg').textContent==='⏸️ Pozastaveno')$('msg').textContent='';
+}
 function render(){
   const b=$('board');b.innerHTML='';
   for(let i=0;i<81;i++){const r=Math.floor(i/9),c=i%9;const v=puzzle[r][c];
@@ -130,13 +141,13 @@ function pushHistory(){
   if(history.length>300)history.shift();
 }
 function undo(){
-  const s=history.pop();if(!s)return;
+  if(paused)return;const s=history.pop();if(!s)return;
   puzzle=s.puzzle.map(r=>[...r]);
   notes=s.notes.map(a=>new Set(a));
   render();
 }
 function place(n){
-  if(selected<0)return;const r=Math.floor(selected/9),c=selected%9;
+  if(paused||selected<0)return;const r=Math.floor(selected/9),c=selected%9;
   if(given[r][c])return;
   if(n===0){pushHistory();puzzle[r][c]=0;notes[selected].clear();render();return;}
   if(notesMode){
@@ -155,7 +166,7 @@ function place(n){
 // Podržení čísla v režimu poznámek: zapíše ho do všech volných polí bloku 3×3 s vybraným polem,
 // kde nekoliduje s číslem už vyplněným v řádku, sloupci nebo bloku. Když ho tam už všechna mají, smaže ho.
 function placeNoteInBlock(n){
-  if(selected<0||!n)return;const r0=Math.floor(selected/9),c0=selected%9;
+  if(paused||selected<0||!n)return;const r0=Math.floor(selected/9),c0=selected%9;
   const br=r0-r0%3,bc=c0-c0%3,cells=[];
   for(let r=br;r<br+3;r++)for(let c=bc;c<bc+3;c++){
     if(puzzle[r][c])continue;let ok=true;
@@ -203,9 +214,10 @@ function findWrong(){
 }
 function checkWin(){
   if(findConflicts().size||findWrong().size)return; // plné, ale chybné – ještě není vyřešeno
-  clearInterval(timer);$('msg').textContent='🎉 Vyřešeno za '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'!';
+  clearInterval(timer);solved=true;$('pauseBtn').disabled=true;$('msg').textContent='🎉 Vyřešeno za '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'!';
 }
 $('checkBtn').onclick=()=>{
+  if(paused)return;
   const bad=new Set([...findConflicts(),...findWrong()]);
   bad.forEach(i=>document.querySelector('.cell[data-i="'+i+'"]').classList.add('conflict'));
   const full=puzzle.flat().every(v=>v!==0);
@@ -226,7 +238,10 @@ $('pad').addEventListener('selectstart',e=>e.preventDefault());
 function toggleNotes(){notesMode=!notesMode;$('notesBtn').classList.toggle('active',notesMode);}
 $('notesBtn').onclick=toggleNotes;
 $('undoBtn').onclick=undo;
+$('pauseBtn').onclick=()=>setPaused(!paused);
 document.addEventListener('keydown',e=>{
+  if((e.key==='p'||e.key==='P')&&!e.ctrlKey&&!e.metaKey){setPaused(!paused);return;}
+  if(paused)return;
   if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')){e.preventDefault();undo();return;}
   if(e.key>='1'&&e.key<='9'){if(!e.repeat)pressStart(+e.key);}else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')place(0);
   else if(e.key==='n'||e.key==='N')toggleNotes();

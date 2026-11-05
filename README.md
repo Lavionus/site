@@ -380,7 +380,7 @@ rozsah znaků v jeho textu a citaci, podle které se po úpravě textu dohledá.
 Patří k dokumentu podle jména načteného souboru. Soubor poznámek (⬇ Uložit /
 📂 Načíst) je formát `kroniky-poznamky` – Markdown pro člověka a balík JSON
 v HTML komentáři na konci; obě stránky si ho přečtou navzájem (test
-`_test/md_dokument_jadro_test.js` to ověřuje proti `kroniky/jadro.js`).
+`_test/md_dokument_jadro_test.js` to ověřuje proti `ctecka/jadro.js`).
 Načtené poznámky čtenáře se ukážou vlnovkou a jdou převzít mezi svoje; ze
 souboru z Kronik se ukážou ty, jejichž citace v dokumentu je. „💾 .md“ přidá
 balík na konec dokumentu (vypínatelné), při načtení se z textu zase vyjme.
@@ -784,26 +784,38 @@ myší, prstem a klávesami vč. přehrávání, EQ, prolínání, skinu a obnov
 Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`) – jinak návštěvník uvidí
 novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/sw.js`.
 
-**Kroniky vyhnanství** (`obsah/kroniky.html`) je čtečka knih ságy (I. Poslední
-drak, II. Krev starších).
+**Společná čtečka knih** (sekce 📚 Knihy) slouží všem dílům: **Kroniky vyhnanství**
+(`obsah/kroniky.html`, sága v sedmi knihách) a **Povídky ze světa Kronik**
+(`obsah/kniha_povidky_kronik.html`). Další dílo = další krátká stránka, kód se nemění.
 
-Kapitoly jsou Markdown v `obsah/kroniky/kniha<N>/`, ilustrace v `kniha<N>/obrazky/`
-(WebP) a seznam knih včetně obálky v `obsah/kroniky/knihy.json`. Vše vzniká
-z rukopisu v `../KronikaLidstva` skriptem `python3 tools/kroniky_export.py`:
+- `obsah/ctecka/` – kód pro všechna díla: `sablona.js` (HTML těla), `ctecka.css`,
+  `jadro.js`, `ctecka.js`. Stránka díla jen nastaví `window.CTECKA_DILO`
+  (`id`, `nazev`, `ikona`, `data`, `stranka`, `klic`, `soubor`) a skripty vloží.
+- `obsah/knihy/<dílo>/` – data: `knihy.json` (knihy, kapitoly, počty slov, otisky),
+  kapitoly v `<kniha>/*.md`, ilustrace v `<kniha>/obrazky/` (WebP);
+  `obsah/knihy/dila.json` = seznam děl (čte ho Sazba knihy).
+
+Vše vzniká z rukopisů v `../KronikaLidstva` (knihy `books/book_NN/chapters/`, povídky
+`povidky/NN_*.md`) skriptem `python3 tools/knihy_export.py [id_díla…]`, který vygeneruje
+i stránky děl (ručně neupravovat):
 - vynechá redakční bloky `<!-- KONTINUITA -->`;
-- PNG originály z `books/book_NN/obrazky/zdroj/` převede na WebP (1400 px);
+- PNG originály z `obrazky/zdroj/` převede na WebP (1400 px);
 - na web zkopíruje jen použité obrázky a obálku.
+
+Nové dílo: položka v `DILA` v `tools/knihy_export.py` → spustit skript → záznam v `apps.js`
+(sekce 📚 Knihy, `"stav": "vyvoj"`), `i18n/en/_katalog.js`, ikony, `python3 _test/nastaveni_klice.py`,
+verze v `sw.js`. U existujícího díla neměnit `klic` (uložené pozice a poznámky) ani `stranka` (odkazy).
 
 Ilustrace se do kapitoly píší jako samostatný odstavec
 `![popis](obrazky/soubor.webp)`. Po přepsání knih stačí skript spustit znovu
 a zvednout `sw.js`.
 
 Kód je rozdělený na dvě části:
-- `kroniky/jadro.js` (`KRONIKY_JADRO`, bez DOM) obsahuje rozbor Markdownu,
+- `ctecka/jadro.js` (`KRONIKY_JADRO`, bez DOM) obsahuje rozbor Markdownu,
   hledání bez diakritiky a věty pro předčítání. Dále sestavuje EPUB 3 (ZIP bez
   komprese, obálka `cover-image`) a MOBI 6: PalmDB, nekomprimovaný UTF-8 text
   po 4096 B, JPEG záznamy, EXTH s obálkou, `filepos` měřené v bajtech, FLIS/FCIS/EOF.
-- `kroniky/ctecka.js` je uživatelské rozhraní. Pro e-knihy převádí WebP na JPEG
+- `ctecka/ctecka.js` je uživatelské rozhraní. Pro e-knihy převádí WebP na JPEG
   přes plátno; pro MOBI jde nejvýš na 120 kB, kvůli limitu záznamu ~127 kB.
 
 Co čtečka umí:
@@ -826,11 +838,12 @@ Co čtečka umí:
   záloha JSON, odkaz `?kniha=2&kap=05_druha_smrt&blok=12`.
 
 Tisk celé knihy (Nástroje → Sazba celé knihy / Vysázet tuto kapitolu) otevírá
-samostatnou stránku Sazba knihy (`obsah/sazba.html?kroniky=kniha1[&kapitola=N]`),
+samostatnou stránku Sazba knihy (`obsah/sazba.html?dilo=kroniky&kniha=kniha1[&kapitola=N]`),
 popsanou níže.
 
-Klíče úložiště: `webapp_kroniky` (nastavení, pozice, pokrok, čas) a
-`webapp_kroniky_poznamky`.
+Klíče úložiště: `<klic>` (nastavení, pozice, pokrok, čas) a `<klic>_poznamky`;
+Kroniky `webapp_kroniky`, povídky `webapp_kniha_povidky_kronik`. Záloha nese `dilo`
+a do jiného díla nejde obnovit.
 
 Testy:
 - `node _test/kroniky_test.js` kontroluje jádro, všechna data a platnost EPUB
@@ -853,7 +866,8 @@ CSS Paged Media).
 - `sazba/kniha.html` je rám s vysázenou knihou; knihu si bere z
   `(parent|opener).SAZBA_DATA()`, takže jde otevřít i v nové kartě (↗).
 - Písma EB Garamond a Literata (OFL) jsou v `sazba/pisma/`.
-- Volání zvenku: `sazba.html?kroniky=<id>[&kapitola=N]` (čtečka Kronik) a
+- Volání zvenku: `sazba.html?dilo=<dílo>&kniha=<id>[&kapitola=N]` ze čtečky (starší
+  `?kroniky=<id>` = dílo Kroniky) a
   `sazba.html?skriptorium=<id>` (Skriptorium → Export → Profesionální sazba).
 - Klíče: `webapp_sazba` (nastavení), `webapp_sazba_zdroj`, `webapp_sazba_meta`
   (úpravy názvu, autora, obálky podle zdroje).
@@ -865,6 +879,27 @@ CSS Paged Media).
 - Test `python3 _test/sazba_test.py`: jádro v node a skutečná PDF (rozměr i se
   spadávkou, souvislé číslování, obsah proti stranám kapitol). Dál zkouší vlastní
   knihu přetažením, knihu ze Skriptoria a volání ze čtečky.
+
+**Fotokniha – návrhář** (`obsah/fotokniha.html`, sekce Obrázky & foto) skládá fotoknihu
+po dvoustranách a exportuje tisková data. Plán po etapách je ve `Fotokniha_PLAN.md`.
+- `fotokniha/jadro.js` (`FOTOKNIHA`, bez DOM): model v mm (n dvoustran = 2n − 2 stran,
+  krajní půlky = desky), výřez fotky (cover × zoom, střed cx/cy) a účinné DPI, předlohy
+  rozvržení, přichytávání, kontrola před tiskem, archy tisku, export PDF (pdf-lib:
+  originální JPEG bez přepočtu, výřez = ořezová cesta, EXIF orientace = matice,
+  TrimBox/BleedBox, volitelně ořezové značky), kreslení archu na plátno (JPEG 300 DPI).
+- Verze 2 (profi): plocha je dvoustrana nebo obálka (`geom(k, di)`, `di = 'obalka'`, hřbet z počtu stran),
+  textová pole se 16 písmy TTF (`PISMA`, metriky přes fontkit, `rozlozText` – stejné zalomení v náhledu SVG,
+  PDF i JPEG), čísla stran, lem fotky, `scena(k, arch)` = společné kreslicí operace pro PDF i plátno,
+  automatické rozvržení, EXIF datum, záloha projektu do ZIPu (`rozbalZip`), paleta Ctrl+K, náhled knihy.
+  Písma Liberation Serif/Sans (regular, kurzíva) přidána do `obsah/fonty` (OFL, viz LICENCE.md).
+- `fotokniha/uloziste.js` (`FK_ULOZ`): IndexedDB `webapp_fotokniha` (knihy, fotky jako
+  originál + náhled 1600 px). `fotokniha/editor.js` je UI. Z `pdf_dilna/jadro.js` bere
+  `exifOrientace` a `zip`.
+- Past: po `setPointerCapture` míří `dblclick` na `#platno`, ne na rámeček. Rámeček se proto
+  hledá přes `elementFromPoint`.
+- Testy: `node _test/fotokniha_test.js` (jádro, PDF všech 8 EXIF orientací přes pdftoppm, text a obálka
+  přes pdftotext) a `python3 _test/fotokniha_ui.py [dpi]` (myš, ukládání, export z prohlížeče, text v SVG
+  = šířka fontkitu, obálka, automatika, prohození, záloha a obnova).
 
 **Předčítač** (`obsah/predcitac.html`, sekce Psaní & text) čte text nahlas neuronovými
 hlasy Piper přímo v prohlížeči. Vznikl jako pokus pro čtečku Kronik: `speechSynthesis`
@@ -882,3 +917,16 @@ na iOS po zamčení obrazovky ztichne, skutečný zvuk v `<audio>` hraje dál.
 - Testy: `node _test/predcitac_test.js` (jádro), `python3 _test/predcitac_ui.py`
   (skutečné stažení hlasu ~63 MB, syntéza, oba režimy, MD přetažením). V headless
   desktopu syntéza jirka-medium ~5× rychleji než čtení.
+
+**Volná místa** (`obsah/prace.html`, sekce Finance) – prohlížeč volných pracovních míst
+z otevřených dat MPSV / Úřadu práce ČR (≈40 tis. inzerátů). Plán a etapy `Prace_PLAN.md`.
+- Data: `python3 tools/prace_data.py` (před uploadem; `--offline` = z cache `~/.cache/prace_data`)
+  stáhne `volna-mista.json` (186 MB) + číselníky z `data.mpsv.cz/od/soubory/ciselniky/` + adresní
+  místa RÚIAN (ČÚZK CSV, S-JTSK → WGS84 v `tools/prace_krovak.py`) a zapíše `obsah/prace/data/`
+  (`meta.json`, `obce.json`, `mista.json` ≈ 7,6 MB / 2,3 MB gzip, `detail/00–63.json`).
+  Minimální mzda je v `MINIMALNI_MZDA` (ručně, každý leden).
+- `prace/jadro.js` (`PRACE_JADRO`, bez DOM): příprava řádků, hodinová → měsíční mzda, filtry,
+  řazení, vzdálenost od domova, filtr ⇄ URL. `prace/stranka.js`: lišta, filtry, seznam, detail,
+  mapa (Leaflet + vlastní shlukování v mřížce 56 px), odkaz na Čistou mzdu (`net_salary.html?hruba=`).
+- Klíče: `webapp_prace_filtr`, `webapp_prace_domov`.
+- Testy: `node _test/prace_test.js` (jádro nad skutečnými daty), `python3 _test/prace_ui.py`.

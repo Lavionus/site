@@ -343,6 +343,13 @@ const KATALOG_SEKCE = [
         "tagy": ["údržba", "revize", "kominík", "kotel", "STK", "filtry", "detektor kouře", "připomínky", "kalendář", "servis"]
       },
       {
+        "soubor": "obsah/terminy.html",
+        "nazev": "📅 Hlídač termínů – záruky, prohlídky, očkování",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["záruka", "záruky", "preventivní prohlídka", "zubař", "gynekolog", "očkování", "přeočkování", "tetanus", "klíšťata", "kontrola u lékaře", "doklady", "platnost", "občanský průkaz", "pas", "pes", "vzteklina", "připomínky", "kalendář", "rodina"]
+      },
+      {
         "soubor": "obsah/odecty.html",
         "nazev": "🔌 Domácí odečty",
         "stav": "beta",
@@ -432,6 +439,13 @@ const KATALOG_SEKCE = [
           "daň",
           "superhrubá"
         ]
+      },
+      {
+        "soubor": "obsah/prace.html",
+        "nazev": "💼 Volná místa",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["práce", "volná místa", "nabídka práce", "zaměstnání", "úřad práce", "brigáda", "hledám práci", "mzda", "plat", "DPP", "DPČ", "inzeráty", "mapa", "dojíždění", "MPSV"]
       },
       {
         "soubor": "obsah/invoice_gen.html",
@@ -1701,6 +1715,12 @@ const KATALOG_SEKCE = [
     "nazev": "🖼️ Obrázky & foto",
     "skupina": "tvorba",
     "polozky": [
+      {
+        "soubor": "obsah/fotokniha.html",
+        "nazev": "📔 Fotokniha – návrhář",
+        "stav": "vyvoj",
+        "tagy": ["fotokniha", "fotoalbum", "album", "kniha z fotek", "rozvržení", "dvoustrana", "spadávka", "ořez", "dpi", "pdf k tisku", "tisk", "fotolab", "lay-flat", "koláž"]
+      },
       {
         "soubor": "obsah/IMG_print.html",
         "nazev": "🖼️ Tisk obrázků na A4",
@@ -3903,6 +3923,13 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["kniha", "román", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sága", "fantasy", "Poslední drak", "Krev starších", "Paměť kamene", "První vyhnanci", "Strážci ticha", "Rozsudek", "Druhý soud", "Chebsko", "Jáchymov", "Yucatán", "středověk", "pravěk", "sci-fi", "drak"]
+      },
+      {
+        "soubor": "obsah/kniha_povidky_kronik.html",
+        "nazev": "📜 Povídky ze světa Kronik",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["kniha", "povídky", "povídka", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "Kroniky vyhnanství", "Von Wölfen geholt", "Odnesli je vlci", "Poslední zima obrů", "Vejce na útesu", "vlkodlak", "obři", "harpyje", "elfové", "Krušnohoří", "třicetiletá válka", "pravěk", "mezolit", "fantasy"]
       }
     ]
   },

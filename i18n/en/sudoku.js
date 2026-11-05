@@ -19,4 +19,7 @@ I18N.pridej('en', {
   'Žádné uložené snímky.': 'No saved snapshots.',
   'vyplněno {filled}/81 · ⏱️ {t}': 'filled {filled}/81 · ⏱️ {t}',
   'Vyřešeno za {t}!': 'Solved in {t}!',
+  'Pozastavit čas (P)': 'Pause timer (P)',
+  'Pokračovat (P)': 'Resume (P)',
+  'Pozastaveno': 'Paused',
 });

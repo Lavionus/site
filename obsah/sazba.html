@@ -109,7 +109,7 @@ dialog pre{padding:8px;overflow:auto;font-size:.85rem}
   <div class="titulek">Ze Skriptoria</div>
   <div id="nabSkriptorium"></div>
   <hr>
-  <div class="titulek">Ukázka – Kroniky vyhnanství</div>
+  <div class="titulek">Knihy ze čtečky</div>
   <div id="nabKroniky" data-i18n="ne"></div>
 </div>
 <div class="nabidka" id="nabPredvolby" hidden></div>
@@ -279,9 +279,11 @@ Předěl scén: samostatná *, *** nebo ---.
   let obalkaUrl = null, cisloSazby = 0, casovac = 0;
 
   const q = new URLSearchParams(location.search);
-  if (q.get('kroniky')) zdroj = { typ: 'kroniky', id: q.get('kroniky') };
+  // ?dilo=<dílo>&kniha=<kniha> ze společné čtečky; starší odkazy ?kroniky=<kniha> = dílo Kroniky vyhnanství
+  if (q.get('kroniky')) zdroj = { typ: 'kroniky', dilo: 'kroniky', id: q.get('kroniky') };
+  if (q.get('dilo')) zdroj = { typ: 'kroniky', dilo: q.get('dilo'), id: q.get('kniha') };
   if (q.get('skriptorium')) zdroj = { typ: 'skriptorium', id: q.get('skriptorium') };
-  if (q.get('kroniky') || q.get('skriptorium')) { nast.od = 0; nast.do = -1; }
+  if (q.get('kroniky') || q.get('dilo') || q.get('skriptorium')) { nast.od = 0; nast.do = -1; }
   if (q.has('kapitola')) nast.od = nast.do = Math.max(0, +q.get('kapitola') || 0);
   const klicZdroje = () => zdroj.typ === 'vlastni' ? 'vlastni' : `${zdroj.typ}:${zdroj.id}`;
   const meta = () => metaVse[klicZdroje()] || (metaVse[klicZdroje()] = {});
@@ -353,7 +355,7 @@ Předěl scén: samostatná *, *** nebo ---.
     localStorage.setItem(KLIC_ZDROJ, JSON.stringify(zdroj));
     let chybi = [];
     try {
-      if (zdroj.typ === 'kroniky') { zaklad = await Z.kroniky.nacti(zdroj.id); $('zdrojPopis').textContent = '🐉 Kroniky vyhnanství – ' + (zaklad.dil ? zaklad.dil + '. ' : '') + zaklad.nazev; }
+      if (zdroj.typ === 'kroniky') { zaklad = await Z.kroniky.nacti(zdroj.id, zdroj.dilo); $('zdrojPopis').textContent = `${zaklad.ikona} ${zaklad.serie} – ` + (zaklad.dil ? zaklad.dil + '. ' : '') + zaklad.nazev; }
       else if (zdroj.typ === 'skriptorium') { zaklad = await Z.skriptorium.nacti(zdroj.id); $('zdrojPopis').textContent = '📖 Skriptorium – ' + zaklad.nazev; }
       else {
         projekt = await Z.vlastni.nacti();
@@ -475,7 +477,7 @@ Předěl scén: samostatná *, *** nebo ---.
     sk.forEach(b => { const t = document.createElement('button'); t.dataset.skriptorium = b.id; t.dataset.i18n = 'ne'; t.textContent = '📖 ' + b.nazev; $('nabSkriptorium').appendChild(t); });
     if (!$('nabKroniky').children.length) {
       const kr = await Z.kroniky.seznam().catch(() => []);
-      kr.forEach(b => { const t = document.createElement('button'); t.dataset.kroniky = b.id; t.textContent = '🐉 ' + b.nazev; $('nabKroniky').appendChild(t); });
+      kr.forEach(b => { const t = document.createElement('button'); t.dataset.kroniky = b.id; t.dataset.dilo = b.dilo; t.textContent = `${b.ikona} ${b.nazev}`; t.title = b.dilNazev; $('nabKroniky').appendChild(t); });
     }
   }
   document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', async e => {
@@ -495,7 +497,7 @@ Předěl scén: samostatná *, *** nebo ---.
     if (!b) return;
     if (b.closest('.nabidka')) zavriNabidky();
     const akce = b.dataset.akce;
-    if (b.dataset.kroniky || akce === 'ukazka') { zdroj = { typ: 'kroniky', id: b.dataset.kroniky || 'kniha1' }; nast.od = 0; nast.do = -1; nactiZdroj(); }
+    if (b.dataset.kroniky || akce === 'ukazka') { zdroj = { typ: 'kroniky', dilo: b.dataset.dilo || 'kroniky', id: b.dataset.kroniky || 'kniha1' }; nast.od = 0; nast.do = -1; nactiZdroj(); }
     else if (b.dataset.skriptorium) { zdroj = { typ: 'skriptorium', id: b.dataset.skriptorium }; nast.od = 0; nast.do = -1; nactiZdroj(); }
     else if (b.dataset.predvolba) {
       const p = S.PREDVOLBY[b.dataset.predvolba];

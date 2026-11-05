@@ -74,29 +74,37 @@
     return kap.filter(k => k.bloky.some(b => b.typ !== 'h') || k.nazev);
   }
 
-  /* ---------- Kroniky vyhnanství (ukázka i volání ze čtečky) ---------- */
+  /* ---------- knihy společné čtečky (Kroniky vyhnanství, povídky…; ukázka i volání ze čtečky) ----------
+     Seznam děl je v knihy/dila.json (generuje tools/knihy_export.py), knihy díla v knihy/<dilo>/knihy.json. */
+  const dilaJson = () => fetch('knihy/dila.json', { cache: 'no-cache' }).then(r => r.json());
+  const knihyDila = d => fetch(d.data + 'knihy.json', { cache: 'no-cache' }).then(r => r.json());
   const kroniky = {
     async seznam() {
-      const k = await (await fetch('kroniky/knihy.json', { cache: 'no-cache' })).json();
-      return k.map(x => ({ id: x.id, nazev: x.nazev }));
+      const dila = await dilaJson();
+      const vysl = [];
+      for (const d of dila) (await knihyDila(d)).forEach(x => vysl.push({ dilo: d.id, ikona: d.ikona, dilNazev: d.nazev, id: x.id, nazev: x.nazev }));
+      return vysl;
     },
-    async nacti(id) {
-      const knihy = await (await fetch('kroniky/knihy.json', { cache: 'no-cache' })).json();
+    async nacti(id, diloId = 'kroniky') {
+      const d = (await dilaJson()).find(x => x.id === diloId);
+      if (!d) throw new Error('Neznámé dílo ' + diloId);
+      const knihy = await knihyDila(d);
       const k = knihy.find(x => x.id === id) || knihy[0];
-      const texty = await Promise.all(k.kapitoly.map(c => fetch(`kroniky/${k.id}/${c.soubor}`).then(r => {
+      const cesta = src => `${d.data}${k.id}/${src}`;
+      const texty = await Promise.all(k.kapitoly.map(c => fetch(cesta(c.soubor)).then(r => {
         if (!r.ok) throw new Error('Kapitolu ' + c.nazev + ' se nepodařilo načíst');
         return r.text();
       })));
       const kapitoly = texty.map((t, i) => {
         const c = J.rozeberMarkdown(t, k.kapitoly[i].nazev)[0] || { bloky: [] };
         c.nazev = k.kapitoly[i].nazev;
-        c.bloky.forEach(b => { if (b.typ === 'img') b.src = absolutni(`kroniky/${k.id}/${b.src}`); });
+        c.bloky.forEach(b => { if (b.typ === 'img') b.src = absolutni(cesta(b.src)); });
         return c;
       });
       const r = J.rozdelNazev(k.nazev);
       return {
-        nazev: r.nazev, dil: r.znak, podtitul: k.podtitul, serie: 'Kroniky vyhnanství', autor: '', jazyk: 'cs',
-        obalka: k.obalka ? absolutni(`kroniky/${k.id}/${k.obalka}`) : null, obalkaBarva: '#3b3026', zadniText: '', kapitoly
+        nazev: r.nazev, dil: r.znak, podtitul: k.podtitul, serie: d.nazev, ikona: d.ikona, autor: '', jazyk: 'cs',
+        obalka: k.obalka ? absolutni(cesta(k.obalka)) : null, obalkaBarva: '#3b3026', zadniText: '', kapitoly
       };
     }
   };

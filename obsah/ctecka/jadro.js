@@ -1,5 +1,6 @@
-/* Kroniky vyhnanství – jádro čtečky bez DOM (rozbor kapitol, hledání, časy, EPUB).
-   V prohlížeči window.KRONIKY_JADRO, v node require(). */
+/* Společná čtečka knih – jádro bez DOM (rozbor kapitol, hledání, časy, EPUB/MOBI, poznámky).
+   V prohlížeči window.KRONIKY_JADRO (název z doby, kdy čtečka sloužila jen Kronikám vyhnanství), v node require().
+   Název díla (série) se předává parametrem serie; výchozí jsou Kroniky vyhnanství. */
 (function (koren) {
   'use strict';
 
@@ -91,8 +92,11 @@
 
   /* kniha: {id, nazev, podtitul, obalka?}, kapitoly: [{nazev, bloky}],
      obrazky: {src: Uint8Array JPEG} (včetně obálky) → Uint8Array (EPUB 3) */
-  function epub(kniha, kapitoly, obrazky = {}, autor = 'Kroniky vyhnanství') {
-    const titul = 'Kroniky vyhnanství – ' + kniha.nazev;
+  const SERIE = 'Kroniky vyhnanství';
+  const slugSerie = serie => normalizuj(serie).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  function epub(kniha, kapitoly, obrazky = {}, autor, serie = SERIE) {
+    serie = serie || SERIE; autor = autor || serie;
+    const titul = serie + ' – ' + kniha.nazev;
     const xhtml = (nazev, telo) => `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="cs" xml:lang="cs">
 <head><meta charset="UTF-8"/><title>${esc(nazev)}</title><link rel="stylesheet" href="styl.css"/></head><body>${telo}</body></html>`;
@@ -101,7 +105,7 @@
       : b.typ === 'h' ? `<h1>${inline(b.md)}</h1>` : `<p>${inline(b.md)}</p>`).join('\n');
     const kap = kapitoly.map((k, i) => ({ id: 'k' + String(i + 1).padStart(2, '0'), nazev: k.nazev, html: xhtml(k.nazev, telo(k.bloky)) }));
     const obr = Object.keys(obrazky).map(src => ({ src, jmeno: jmenoObr(src), data: obrazky[src], obalka: src === kniha.obalka }));
-    const id = 'urn:kroniky-vyhnanstvi:' + kniha.id;
+    const id = 'urn:' + slugSerie(serie) + ':' + kniha.id;
     const obalka = obr.find(o => o.obalka);
     const opf = `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid" xml:lang="cs">
@@ -117,7 +121,7 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
 </package>`;
     const nav = xhtml('Obsah', `<nav epub:type="toc"><h1>Obsah</h1><ol>${kap.map(k => `<li><a href="${k.id}.xhtml">${esc(k.nazev)}</a></li>`).join('')}</ol></nav>`);
     const titulStr = xhtml(titul, (obalka ? `<div class="obalka"><img src="img/${obalka.jmeno}" alt="Obálka"/></div>` : '') +
-      `<div class="titul"><p class="saga">Kroniky vyhnanství</p><h1>${esc(kniha.nazev)}</h1><p>${esc(kniha.podtitul)}</p></div>`);
+      `<div class="titul"><p class="saga">${esc(serie)}</p><h1>${esc(kniha.nazev)}</h1><p>${esc(kniha.podtitul)}</p></div>`);
     const styl = 'body{font-family:serif;line-height:1.5}h1{text-align:center;margin:1em 0 1.5em}p{margin:0;text-indent:1.3em;text-align:justify}h1+p,.predel+p,figure+p{text-indent:0}.predel{text-align:center;text-indent:0;margin:1em 0}figure{margin:1em 0;text-align:center;page-break-inside:avoid}figure img{max-width:100%;max-height:90vh}figcaption{font-size:.85em;font-style:italic}.obalka{text-align:center;page-break-after:always}.obalka img{max-width:100%;max-height:100vh}.titul{text-align:center;margin-top:30%}.titul p{text-indent:0;text-align:center}';
     return zip([
       { name: 'mimetype', data: 'application/epub+zip' },
@@ -133,8 +137,9 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
 
   /* MOBI 6 (PalmDB, nekomprimovaný text v UTF-8) pro starší Kindle.
      Stejné vstupy jako epub(); obrázky musí být JPEG do ~127 kB (limit záznamu). */
-  function mobi(kniha, kapitoly, obrazky = {}, autor = 'Kroniky vyhnanství') {
-    const titul = 'Kroniky vyhnanství – ' + kniha.nazev;
+  function mobi(kniha, kapitoly, obrazky = {}, autor, serie = SERIE) {
+    serie = serie || SERIE; autor = autor || serie;
+    const titul = serie + ' – ' + kniha.nazev;
     // obálka jako první obrázek (EXTH 201 = 0), ostatní v pořadí výskytu
     const poradi = [];
     if (kniha.obalka && obrazky[kniha.obalka]) poradi.push(kniha.obalka);
@@ -145,7 +150,7 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
     const kusy = [];            // [html, kotva?]
     kusy.push([`<html><head><guide><reference type="toc" title="Obsah" filepos=${POZ} /></guide></head><body>`, 'guide']);
     if (kniha.obalka && obrazky[kniha.obalka]) kusy.push([`<p align="center"><img recindex="${recindex(kniha.obalka)}" /></p><mbp:pagebreak/>`]);
-    kusy.push([`<h2 align="center">Kroniky vyhnanství</h2><h1 align="center">${esc(kniha.nazev)}</h1><p align="center">${esc(kniha.podtitul)}</p><mbp:pagebreak/>`]);
+    kusy.push([`<h2 align="center">${esc(serie)}</h2><h1 align="center">${esc(kniha.nazev)}</h1><p align="center">${esc(kniha.podtitul)}</p><mbp:pagebreak/>`]);
     kusy.push(['', 'toc'], ['<h2>Obsah</h2>']);
     kapitoly.forEach((k, i) => kusy.push([`<p><a filepos=${POZ}>${esc(k.nazev)}</a></p>`, 'odkaz' + i]));
     kusy.push(['<mbp:pagebreak/>']);
@@ -262,10 +267,10 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
     ({ format: FORMAT_P, verze: 1, jmeno: jmeno || '', cas, zalozky: data.zalozky || [], zvyrazneni: data.zvyrazneni || [] });
 
   // Markdown pro člověka; na konci v komentáři celý balík, aby šel soubor zase načíst
-  function poznamkyMd(balik, knihy) {
+  function poznamkyMd(balik, knihy, serie = SERIE) {
     const poradi = x => { const k = knihy.findIndex(b => b.id === x.kniha), c = k < 0 ? -1 : knihy[k].kapitoly.findIndex(c => c.soubor === x.soubor); return [k, c, x.blok, x.od || 0]; };
     const srovnej = (a, b) => { const pa = poradi(a), pb = poradi(b); for (let i = 0; i < 4; i++) if (pa[i] !== pb[i]) return pa[i] - pb[i]; return 0; };
-    let md = '# Kroniky vyhnanství – poznámky' + (balik.jmeno ? ` čtenáře ${balik.jmeno}` : '') + '\n\n'
+    let md = '# ' + (serie || SERIE) + ' – poznámky' + (balik.jmeno ? ` čtenáře ${balik.jmeno}` : '') + '\n\n'
       + `_${new Date(balik.cas).toLocaleString('cs-CZ')} · ${balik.zvyrazneni.length} zvýraznění, ${balik.zalozky.length} záložek_\n`;
     knihy.forEach(k => {
       const z = balik.zalozky.filter(x => x.kniha === k.id), v = balik.zvyrazneni.filter(x => x.kniha === k.id);
