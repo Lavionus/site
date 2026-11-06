@@ -156,4 +156,6 @@ I18N.pridej('en', {
   'Smazat hlas z prohlížeče?': 'Delete the voice from the browser?',
   'Výslovnost': 'Pronunciation',
   'Hlasy nelze načíst: {message}': 'Voices cannot be loaded: {message}',
+  'Autor webu na to má lokální nástroj': 'The site author has a local tool for this,',
+  'XTTS-v2 + piper1-gpl, není součástí webu). Postup v příkazech': 'XTTS-v2 + piper1-gpl, not part of the website). The steps as commands',
 });

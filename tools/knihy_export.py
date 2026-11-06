@@ -26,7 +26,7 @@ from pathlib import Path
 
 WEB = Path(__file__).resolve().parent.parent
 OBSAH = WEB / "obsah"
-KRONIKA = WEB.parent / "KronikaLidstva"
+KRONIKA = WEB.parent / "KNIHY" / "KronikaLidstva"
 
 
 def kniha_kronik(cislo, nazev, podtitul):

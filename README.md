@@ -795,7 +795,7 @@ novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/
   kapitoly v `<kniha>/*.md`, ilustrace v `<kniha>/obrazky/` (WebP);
   `obsah/knihy/dila.json` = seznam děl (čte ho Sazba knihy).
 
-Vše vzniká z rukopisů v `../KronikaLidstva` (knihy `books/book_NN/chapters/`, povídky
+Vše vzniká z rukopisů v `../KNIHY/KronikaLidstva` (knihy `books/book_NN/chapters/`, povídky
 `povidky/NN_*.md`) skriptem `python3 tools/knihy_export.py [id_díla…]`, který vygeneruje
 i stránky děl (ručně neupravovat):
 - vynechá redakční bloky `<!-- KONTINUITA -->`;

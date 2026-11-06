@@ -1,5 +1,5 @@
 /* Vygenerováno: node tools/verze.mjs – neupravovat ručně. Stránka: [verze, datum poslední změny] */
-var VERZE_WEBU = 'v628';
+var VERZE_WEBU = 'v629';
 var VERZE_STRANEK = {"obsah/AI_prednaska.html":[7,"2026-10-29"],
 "obsah/Circle_generator.html":[6,"2026-10-13"],
 "obsah/Heritage.html":[13,"2026-10-30"],
@@ -150,7 +150,7 @@ var VERZE_STRANEK = {"obsah/AI_prednaska.html":[7,"2026-10-29"],
 "obsah/heart_zones.html":[4,"2026-08-28"],
 "obsah/hieroglyfy.html":[1,"2026-10-19"],
 "obsah/historicalWeather.html":[7,"2026-10-19"],
-"obsah/hlasy.html":[1,"2026-11-06"],
+"obsah/hlasy.html":[2,"2026-11-06"],
 "obsah/household_docs.html":[4,"2026-10-13"],
 "obsah/http_status.html":[5,"2026-10-13"],
 "obsah/hypo_podil.html":[2,"2026-10-19"],

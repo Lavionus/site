@@ -24,10 +24,11 @@
     ts: { t: 'a', F: [250, 1700, 2700], d: 105, sum: [5600, 1800, 0.5] }, dz: { t: 'a', F: [250, 1700, 2700], d: 95, zn: 1, sum: [5600, 1800, 0.35] },
     tS: { t: 'a', F: [250, 1900, 2500], d: 110, sum: [2800, 1100, 0.6] }, dZ: { t: 'a', F: [250, 1900, 2500], d: 100, zn: 1, sum: [2800, 1100, 0.4] },
     f: { t: 'f', F: [250, 900, 2300], d: 90, sum: [5000, 5000, 0.18] }, v: { t: 'f', F: [250, 900, 2300], d: 60, zn: 1, sum: [5000, 5000, 0.06] },
-    s: { t: 'f', F: [250, 1700, 2700], d: 100, sum: [5800, 1800, 0.55] }, z: { t: 'f', F: [250, 1700, 2700], d: 85, zn: 1, sum: [5800, 1800, 0.3] },
-    S: { t: 'f', F: [250, 1900, 2500], d: 100, sum: [2800, 1100, 0.6] }, Z: { t: 'f', F: [250, 1900, 2500], d: 85, zn: 1, sum: [2800, 1100, 0.35] },
-    x: { t: 'f', F: [300, 1500, 2200], d: 90, sum: [1500, 900, 0.35] }, h: { t: 'f', F: [500, 1400, 2500], d: 65, zn: 1, sum: [0, 0, 0], dech: 0.7 },
-    m: { t: 'n', F: [270, 1000, 2200], d: 65, zn: 1 }, n: { t: 'n', F: [270, 1600, 2600], d: 60, zn: 1 }, N: { t: 'n', F: [270, 2100, 2900], d: 70, zn: 1 },
+    s: { t: 'f', F: [250, 1700, 2700], d: 100, sum: [5800, 1800, 0.55] }, z: { t: 'f', F: [250, 1700, 2700], d: 90, zn: 1, sum: [5800, 1800, 0.45] },
+    S: { t: 'f', F: [250, 1900, 2500], d: 100, sum: [2800, 1100, 0.6] }, Z: { t: 'f', F: [250, 1900, 2500], d: 90, zn: 1, sum: [2800, 1100, 0.5] },
+    x: { t: 'f', F: [300, 1500, 2200], d: 90, sum: [1500, 900, 0.35] }, h: { t: 'f', F: [500, 1400, 2500], d: 80, zn: 1, sum: [1300, 1600, 0.12], dech: 2.2 },
+    // nul = nosová antirezonance (zářez ve spektru, podle místa závěru)
+    m: { t: 'n', F: [270, 1000, 2200], d: 65, zn: 1, nul: 1000 }, n: { t: 'n', F: [270, 1600, 2600], d: 60, zn: 1, nul: 1700 }, N: { t: 'n', F: [270, 2100, 2900], d: 70, zn: 1, nul: 2200 },
     l: { t: 'l', F: [360, 1150, 2700], d: 55, zn: 1 }, j: { t: 'l', F: [290, 2200, 3000], d: 50, zn: 1 },
     r: { t: 'r', F: [450, 1350, 2100], d: 45, zn: 1 }, R: { t: 'r', F: [350, 1800, 2400], d: 75, zn: 1, sum: [3200, 1400, 0.25] },
     Rn: { t: 'r', F: [350, 1800, 2400], d: 75, sum: [3200, 1400, 0.4] },
@@ -203,7 +204,11 @@
         const zav = Object.assign({}, zaklad, { F1: 200, AV: h.zn ? 0.12 : 0, AH: 0, AF: 0 });
         bod(t + 3, zav); bod(t + zaver, zav);
         if (h.t === 'p') {
-          const [fv, bv, av] = h.vyb;
+          let [fv, bv, av] = h.vyb;
+          if (s.h === 'k' || s.h === 'g') {   // velární výbuch leží těsně nad F2 následující samohlásky
+            const dal = segs.slice(i + 1, i + 3).find(x => H[x.h] && H[x.h].t === 'v');
+            if (dal) { fv = H[dal.h].F[1] * 1.08; av *= 1.4; }
+          }
           bod(t + zaver + 1, Object.assign({}, zaklad, { AV: 0, AH: 0, AF: av * 2.2, FF: fv, BF: bv }));
           bod(t + zaver + 9, Object.assign({}, zaklad, { AV: 0, AH: h.zn ? 0 : 0.25, AF: av * 0.5, FF: fv, BF: bv }));
           bod(t + d, Object.assign({}, zaklad, { AV: h.zn ? 0.6 : 0, AH: h.zn ? 0 : 0.15, AF: 0, FF: fv, BF: bv }));
@@ -213,13 +218,14 @@
           bod(t + d - 8, Object.assign({}, zaklad, { AV: h.zn ? 0.35 : 0, AH: 0, AF: sila * 0.8 }));
         }
       } else if (h.t === 'f') {
-        const sila = h.sum[2] * 2, av = h.zn ? (s.h === 'h' ? 0.45 : 0.4) : 0, ah = h.dech || 0;
+        const sila = h.sum[2] * 2, av = h.zn ? (s.h === 'h' ? 0.3 : 0.4) : 0, ah = h.dech || 0;
         bod(t + Math.min(15, d * 0.2), Object.assign({}, zaklad, { AV: av, AH: ah, AF: sila }));
         bod(t + d - Math.min(15, d * 0.2), Object.assign({}, zaklad, { AV: av, AH: ah, AF: sila }));
       } else if (h.t === 'n' || h.t === 'l') {
         const av = h.t === 'n' ? 0.5 : 0.75;
-        bod(t + prech * 0.6, Object.assign({}, zaklad, { AV: av, AH: 0, AF: 0 }));
-        bod(t + d - prech * 0.6, Object.assign({}, zaklad, { AV: av, AH: 0, AF: 0 }));
+        const nos = h.nul ? { NZ: 1, FNZ: h.nul } : {};
+        bod(t + prech * 0.6, Object.assign({}, zaklad, { AV: av, AH: 0, AF: 0 }, nos));
+        bod(t + d - prech * 0.6, Object.assign({}, zaklad, { AV: av, AH: 0, AF: 0 }, nos));
       } else if (h.t === 'r') {
         // kmit: krátké přerušení uprostřed (r), u ř navíc šum
         const av = s.h === 'Rn' ? 0 : 0.75, af = h.sum ? h.sum[2] * 2 : 0;
@@ -261,6 +267,7 @@
     if (body.length < 2) return y;
     const rnd = nahoda(seed), fs = p.formant;
     const kas = [rezonator(), rezonator(), rezonator(), rezonator(), rezonator()];
+    const nul = { A: 1, B: 0, C: 0, x1: 0, x2: 0 };   // antirezonátor nosovek
     const rezSum = rezonator(), rezSum2 = rezonator(), dolni = { v: 0 };
     let bi = 0, faze = 1, perioda = sr / p.f0, predZdroj = 0, predSum = 0, ziskPulzu = 1;
     const BLOK = 32;
@@ -274,7 +281,10 @@
         const L = (x, y2) => x + (y2 - x) * u;
         cur = { F1: L(a.F1, b.F1) * fs, F2: L(a.F2, b.F2) * fs, F3: L(a.F3, b.F3) * fs, AV: L(a.AV, b.AV), AH: L(a.AH, b.AH), AF: L(a.AF, b.AF), FF: L(a.FF, b.FF) * Math.sqrt(fs), BF: L(a.BF, b.BF), ton: L(a.ton, b.ton) };
         if (tms > body[body.length - 1].t) cur.AV = cur.AH = cur.AF = 0;
-        nastavRez(kas[0], cur.F1, 90, sr); nastavRez(kas[1], cur.F2, 110, sr); nastavRez(kas[2], cur.F3, 170, sr);
+        cur.NZ = L(a.NZ || 0, b.NZ || 0);
+        const fnz = (a.NZ ? a.FNZ : b.NZ ? b.FNZ : 1500) * fs;
+        nastavRez(kas[0], cur.F1, 90 + 60 * cur.NZ, sr); nastavRez(kas[1], cur.F2, 110 + 250 * cur.NZ, sr); nastavRez(kas[2], cur.F3, 170 + 300 * cur.NZ, sr);
+        nastavRez(nul, fnz, 150, sr);
         nastavRez(kas[3], 3500 * fs, 250, sr); nastavRez(kas[4], Math.min(4500 * fs, sr * 0.45), 300, sr);
         nastavRez(rezSum, Math.min(cur.FF, sr * 0.45), Math.max(200, cur.BF), sr);
         nastavRez(rezSum2, Math.min(cur.FF * 1.6, sr * 0.45), Math.max(300, cur.BF * 1.3), sr);
@@ -308,8 +318,13 @@
       const av = p.zdroj === 'sum' ? 0 : cur.AV;
       const ah = cur.AH + (p.zdroj === 'sum' ? cur.AV * 0.9 : p.dech * cur.AV) ;
       let v = zdroj * av * ziskPulzu + sumBily * ah * 0.35 * (p.zdroj === 'sum' ? 1 : otevreno);
+      if (cur.NZ > 0) {   // antirezonátor = převrácený rezonátor (Klatt)
+        const z = (v - nul.B * nul.x1 - nul.C * nul.x2) / nul.A;
+        nul.x2 = nul.x1; nul.x1 = v;
+        v = v * (1 - cur.NZ) + z * cur.NZ;
+      } else { nul.x2 = nul.x1; nul.x1 = v; }
       for (const r of kas) v = krok(r, v);
-      const fr = cur.AF > 0 ? (krok(rezSum, sumBily) + 0.4 * krok(rezSum2, sumBily)) * cur.AF * 0.35 : (krok(rezSum, 0), krok(rezSum2, 0), 0);
+      const fr = cur.AF > 0 ? (krok(rezSum, sumBily) + 0.4 * krok(rezSum2, sumBily)) * cur.AF * 0.08 : (krok(rezSum, 0), krok(rezSum2, 0), 0);
       y[i] = v * 0.5 + fr;
     }
     // odstranit stejnosměrnou složku, normalizovat
