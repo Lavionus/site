@@ -869,12 +869,13 @@ e-knihy uživatele ve stejné společné čtečce jako Kroniky:
   Sazba, odkazy, betačtení a „offline“ jsou u vlastních knih skryté.
   Ruční „dočteno/nedočteno“ (✔ na kartě, `meta.docteno`, jinak dočteno = přečteno do konce) a filtr
   Rozečtené / Nepřečtené / Dočtené v nabídce Řadit a filtr.
-- **Moje knihy z webu** (rukopisy autora): `obsah/knihy/vlastni/` – kniha = soubor `.md` nebo složka
-  s kapitolami `*.md` (pořadí podle jména), obrázky a `obalka.*`; údaje z YAML hlavičky (`title`, `author`,
-  `description`, `series`, `series_index`). `python3 tools/vlastni_knihy.py [ZDROJ…]` zdroje zkopíruje
-  a vygeneruje `seznam.json` s otiskem obsahu; `--smazat ID` knihu odebere. Pak zvednout `sw.js`.
-  V knihovně ➕ Přidat → 🌐 Moje knihy z webu; přidaná kniha je napojená (`meta.web`) a knihovna
-  i čtečka ji při změně otisku samy stáhnou znovu. Kapitoly mají jména souborů podle názvu
+- **Moje knihy z webu**: složka **`moje_knihy/` v kořeni webu** – co se do ní nakopíruje (`.md`, `.txt`,
+  `.epub`, `.mobi` nebo složka s kapitolami `*.md`, obrázky a `obalka.*`), to po nahrání nabídne čtečka
+  v ➕ Přidat → 🌐 Moje knihy z webu. `moje_knihy/seznam.json` generuje `tools/vlastni_knihy.py`
+  a spouští ho sám `upload.sh` i `test_local.sh` (seznam se přepíše jen při změně). U Markdownu údaje
+  z YAML hlavičky (`title`, `author`, `description`, `series`, `series_index`), u EPUB z metadat.
+  Přidaná kniha je napojená (`meta.web`) a knihovna i čtečka ji při změně otisku samy stáhnou znovu;
+  EPUB/MOBI/TXT se převádějí stejně jako soubor ze zařízení. Kapitoly mají jména souborů podle názvu
   (`kapitolySeJmeny`), takže pozice a záložky přežijí vložení kapitoly.
 - Data knihovny jsou v `ctecka/knihovna_data.js` (`KNIH_DATA`): IndexedDB, `ulozKnihu` (z převodníku,
   i aktualizace – `meta.rucne` chrání ruční úpravy), pokrok, série (`calibre:series` z EPUB, jinak
@@ -900,6 +901,23 @@ e-knihy uživatele ve stejné společné čtečce jako Kroniky:
   `python3 _test/ctecka_knih_ui2.py` (web, napojení, hromadné přidání, záloha, série, úpravy, deník),
   `python3 _test/ctecka_knih_ui3.py` (slovníček, stránkování, Piper – `PIPER=0` bez stahování 63 MB).
   Plán: `CteckaKnih_PLAN.md`.
+
+**Knižní nástroje (6. 11. 2026, roj Mr. Smithů)** – každá stránka má jádro bez DOM `obsah/<jméno>/jadro.js`
+a test `node _test/<jméno>_test.js`:
+- `redakce.html` – Redakční lupa rukopisu (opakování slov, dlouhé věty, vata, trpný rod, přímá řeč, rytmus,
+  postavy, čtivost; nálezy podtržené v editoru; jen česky).
+- `nastenka_scen.html` – Nástěnka scén (kartičky ve sloupcích, osnova, časová osa, pruhy postav, graf napětí,
+  šablony struktury, import/export kostry v Markdownu, počty slov z rukopisu).
+- `gamebook_editor.html` – Editor gamebooků ve formátu `obsah/gamebook/pribeh*.js` (graf scén, formuláře,
+  kontroly dosažitelnosti a slepých uliček, hraní na zkoušku enginem, export `.js` do webu).
+- `vypisky.html` – Výpisky a citáty (jen ČTE poznámky Čtečky knih, Kronik a Povídek; vlastní citáty a štítky
+  v `webapp_vypisky`; kartičky citátů do PDF).
+- `brozura.html` – Tisk knížky doma (vyřazení PDF do archů: sešitek, složky, lepená vazba, 4 na list; creep,
+  značky, otočení rubu; návod na vazbu).
+- `obalka_knihy.html` – Obálka knihy k tisku (hřbet podle stran a papíru, KDP/tiskárna/pevná vazba,
+  ISBN EAN-13 + EAN-5, texty jako křivky přes opentype.js, PDF a PNG 300 DPI).
+- `zalozky_exlibris.html` – Záložky a ex libris (šablony, generativní vzory, monogramy, arch s ořezovými
+  značkami a oboustranným tiskem, export pro 3D Razítko).
 
 **Sazba knihy** (`obsah/sazba.html`, sekce Psaní & text) vysází knihu do PDF k tisku
 jako z nakladatelství. Stránkování dělá Paged.js 0.4.3 (`obsah/lib/pagedjs`, MIT,

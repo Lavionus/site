@@ -166,6 +166,19 @@ const KATALOG_SEKCE = [
         "nazev": "🔡 Počítadlo slov",
         "stav": "beta",
         "tagy": ["počet slov", "znaky", "délka textu", "statistika textu"]
+      },
+      {
+        "soubor": "obsah/redakce.html",
+        "nazev": "🔎 Redakční lupa rukopisu",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["redakce", "rukopis", "korektura", "styl", "opakování slov", "dlouhé věty", "vata", "trpný rod", "přímá řeč", "čtivost", "doba čtení", "postavy", "román", "povídka", "markdown", "psaní", "kniha"]
+      },
+      {
+        "soubor": "obsah/nastenka_scen.html",
+        "nazev": "🗂️ Nástěnka scén (plánovač zápletky)",
+        "stav": "vyvoj",
+        "tagy": ["scény", "zápletka", "osnova", "román", "kniha", "psaní", "plánování", "korková tabule", "kartičky", "kapitoly", "dějství", "tři dějství", "hrdinova cesta", "save the cat", "sedm bodů", "časová osa", "postavy", "pov", "napětí", "gradace", "markdown", "rukopis", "počet slov"]
       }
     ]
   },
@@ -3115,6 +3128,12 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "pověsti", "jezinky", "vodník", "Krakonoš", "kapradí"]
+      },
+      {
+        "soubor": "obsah/gamebook_editor.html",
+        "nazev": "🧭 Editor gamebooků",
+        "stav": "vyvoj",
+        "tagy": ["gamebook", "gamebooky", "editor", "příběh", "interaktivní kniha", "hra knihou", "scény", "volby", "graf", "větvení", "hrdina", "dobrodružství", "psaní", "kontrola příběhu", "export"]
       }
     ]
   },
@@ -3942,6 +3961,30 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["kniha", "povídky", "povídka", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "Kroniky vyhnanství", "Von Wölfen geholt", "Odnesli je vlci", "Poslední zima obrů", "Vejce na útesu", "vlkodlak", "obři", "harpyje", "elfové", "Krušnohoří", "třicetiletá válka", "pravěk", "mezolit", "fantasy"]
+      },
+      {
+        "soubor": "obsah/vypisky.html",
+        "nazev": "📌 Výpisky a citáty",
+        "stav": "vyvoj",
+        "tagy": ["výpisky", "citáty", "citát dne", "zvýraznění", "poznámky", "záložky", "čtečka knih", "kroniky", "štítky", "kartičky", "tisk citátů", "export markdown", "csv", "knihy"]
+      },
+      {
+        "soubor": "obsah/brozura.html",
+        "nazev": "🖨️ Tisk knížky doma",
+        "stav": "vyvoj",
+        "tagy": ["vyřazení", "brožura", "sešitek", "knižní vazba", "složky", "signatury", "lepená vazba", "sedlová vazba", "tisk knihy", "archy", "creep", "ořezové značky", "oboustranný tisk", "PDF", "A5 na A4", "knihařství"]
+      },
+      {
+        "soubor": "obsah/obalka_knihy.html",
+        "nazev": "📕 Obálka knihy k tisku",
+        "stav": "vyvoj",
+        "tagy": ["obálka", "obalka", "kniha", "hřbet", "šířka hřbetu", "spadávka", "ISBN", "EAN-13", "EAN-5", "čárový kód", "KDP", "Amazon", "brožura", "pevná vazba", "tisk", "PDF", "self-publishing", "anotace", "nakladatel"]
+      },
+      {
+        "soubor": "obsah/zalozky_exlibris.html",
+        "nazev": "🔖 Záložky do knih a ex libris",
+        "stav": "vyvoj",
+        "tagy": ["záložka", "záložky do knih", "ex libris", "exlibris", "knižní štítek", "citát", "monogram", "iniciály", "střapec", "tisk", "arch A4", "ořezové značky", "spadávka", "PDF", "SVG", "art deco", "keltský vzor", "razítko", "kniha", "knihovna"]
       }
     ]
   },

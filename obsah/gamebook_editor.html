@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🧭 Editor gamebooků</title>
+<meta name="description" content="Vizuální editor gamebooků: graf scén, formuláře voleb, zkoušek a soubojů, kontrola příběhu, hraní na zkoušku a export do formátu webových gamebooků.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="gamebook/jadro.js"></script>
+<script src="gamebook_editor/jadro.js"></script>
+<script src="gamebook_editor/editor.js" defer></script>
+<style>
+[hidden]{display:none !important}
+html,body{height:100%}
+body{margin:0;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.ik{min-width:32px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl,.btn.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover,.btn.hlavni:hover{background:var(--accent-hover)}
+.tl:disabled,.btn:disabled{opacity:.45;cursor:default}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:.84rem;font-family:inherit;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--bg-hover)}
+.btn.mini{padding:2px 7px;font-size:.78rem}
+.btn.nebezpecne{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 50%,var(--border))}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:column;align-items:flex-start;gap:0;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .projekt{font-size:.76rem;color:var(--text-muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 180px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.vstup{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font:inherit;font-size:.86rem;width:100%;box-sizing:border-box}
+.vstup:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.vstup.vadne{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,var(--bg-input))}
+.znacka{display:inline-block;min-width:16px;padding:0 5px;border-radius:9px;font-size:.7rem;font-weight:700;line-height:16px;text-align:center;background:var(--danger);color:var(--on-accent,#fff);margin-left:3px}
+.znacka.ok{background:var(--ok)}
+.znacka.var{background:var(--warn)}
+@media (max-width:1250px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0;width:100%}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+/* rozložení: graf | panel */
+.rozlozeni{flex:1;display:grid;grid-template-columns:1fr var(--panel-sirka,440px);min-height:0}
+.platno{position:relative;overflow:hidden;background:var(--bg);min-width:0;touch-action:none}
+.platno svg{width:100%;height:100%;display:block;user-select:none;cursor:grab}
+.platno svg.tazeni{cursor:grabbing}
+.platno .napoveda-prazdna{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);pointer-events:none}
+.panel{border-left:1px solid var(--border);background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;min-width:0}
+.zalozky{display:flex;border-bottom:1px solid var(--border);background:var(--bg-elevated);flex-shrink:0}
+.zalozky button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-muted);padding:8px 4px;cursor:pointer;font:inherit;font-size:.86rem}
+.zalozky button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.zalozky button:hover{background:var(--bg-hover)}
+.telo-panelu{flex:1;overflow-y:auto;padding:12px 14px 60px}
+
+/* graf */
+.uzel rect.tvar{fill:var(--bg-elevated);stroke:var(--border-strong);stroke-width:1.5}
+.uzel{cursor:pointer}
+.uzel text{fill:var(--text);font-size:12px;pointer-events:none}
+.uzel .uid{font-weight:700;font-size:12.5px}
+.uzel .utext{fill:var(--text-muted);font-size:11px}
+.uzel.t-start rect.tvar{stroke:var(--accent);stroke-width:3;fill:color-mix(in srgb,var(--accent) 16%,var(--bg-elevated))}
+.uzel.t-vyhra rect.tvar{stroke:var(--ok);stroke-width:2;fill:color-mix(in srgb,var(--ok) 22%,var(--bg-elevated))}
+.uzel.t-prohra rect.tvar{stroke:var(--danger);stroke-width:2;fill:color-mix(in srgb,var(--danger) 18%,var(--bg-elevated))}
+.uzel.t-neutral rect.tvar{stroke:var(--text-muted);stroke-width:2;fill:color-mix(in srgb,var(--text-muted) 16%,var(--bg-elevated))}
+.uzel.t-boj rect.tvar{stroke:var(--warn);stroke-width:2.2}
+.uzel.t-zkouska rect.tvar{stroke:var(--accent);stroke-width:2;stroke-dasharray:6 3}
+.uzel .pruh{fill:transparent}
+.uzel.t-boj .pruh{fill:var(--warn)}
+.uzel.t-zkouska .pruh{fill:var(--accent)}
+.uzel.vybrany rect.tvar{stroke:var(--accent);stroke-width:4;stroke-dasharray:none}
+.uzel.nalez rect.tvar{fill:color-mix(in srgb,var(--warn) 35%,var(--bg-elevated))}
+.uzel .chyba-znak{fill:var(--danger);font-size:14px}
+.chybi-cil{fill:var(--danger);font-size:12px;font-weight:700}
+.uzel.soused rect.tvar{stroke-width:2.5}
+.uzel .var-znak{fill:var(--warn);font-size:14px}
+.uzel.tlumeny{opacity:.35}
+.daleko .uzel .utext{display:none}
+.daleko .uzel .uid{font-size:22px}
+.uzel .uchyt{fill:var(--bg-panel);stroke:var(--accent);stroke-width:1.5;cursor:crosshair;opacity:0}
+.uzel:hover .uchyt,.uzel.vybrany .uchyt{opacity:1}
+.uzel .uchyt-plus{fill:var(--accent);font-size:12px;font-weight:700;pointer-events:none;opacity:0}
+.uzel:hover .uchyt-plus,.uzel.vybrany .uchyt-plus{opacity:1}
+.hrana{fill:none;stroke:var(--text-faint);stroke-width:1.5}
+.hrana.podm{stroke-dasharray:5 4}
+.hrana.d-uspech,.hrana.d-vyhra{stroke:var(--ok)}
+.hrana.d-neuspech,.hrana.d-prohra{stroke:var(--danger)}
+.hrana.d-utek{stroke:var(--warn)}
+.hrana.aktivni{stroke-width:3;stroke:var(--accent)}
+.hrana.nova{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.sipka-z{fill:var(--text-faint)} .sipka-ok{fill:var(--ok)} .sipka-ne{fill:var(--danger)} .sipka-var{fill:var(--warn)} .sipka-akt{fill:var(--accent)}
+.vyber-ramec{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:var(--accent);stroke-dasharray:4 3}
+
+.legenda{position:absolute;left:8px;bottom:8px;background:color-mix(in srgb,var(--bg-panel) 92%,transparent);border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:.74rem;display:flex;flex-wrap:wrap;gap:4px 10px;max-width:calc(100% - 220px);color:var(--text-muted)}
+.legenda span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.legenda i{display:inline-block;width:14px;height:10px;border-radius:3px;border:2px solid var(--border-strong);background:var(--bg-elevated)}
+.legenda .l-start{border-color:var(--accent);background:var(--accent-soft)}
+.legenda .l-vyhra{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 22%,var(--bg-elevated))}
+.legenda .l-prohra{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 18%,var(--bg-elevated))}
+.legenda .l-neutral{border-color:var(--text-muted)}
+.legenda .l-boj{border-color:var(--warn)}
+.legenda .l-zkouska{border-color:var(--accent);border-style:dashed}
+.minimapa{position:absolute;right:8px;bottom:8px;width:190px;height:130px;background:color-mix(in srgb,var(--bg-panel) 94%,transparent);border:1px solid var(--border);border-radius:8px;cursor:pointer;touch-action:none}
+.zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:3px}
+.zoom .tl{width:32px;padding:4px 0;text-align:center;box-shadow:var(--shadow)}
+.zoom .meritko{font-size:.7rem;color:var(--text-faint);text-align:center}
+
+/* formuláře panelu */
+.h-sceny{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.h-sceny h2{margin:0;font-size:1.1rem}
+.stitek{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:9px;border:1px solid var(--border);color:var(--text-muted);background:var(--bg-control)}
+.stitek.s-start{border-color:var(--accent);color:var(--accent)}
+.stitek.s-vyhra{border-color:var(--ok);color:var(--ok)}
+.stitek.s-prohra{border-color:var(--danger);color:var(--danger)}
+.stitek.s-boj{border-color:var(--warn)}
+.pole{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;min-width:0}
+.pole > span,.popis-pole{font-size:.76rem;color:var(--text-muted)}
+.radek{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.radek-5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.radek-5 .pole > span{font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+textarea.vstup{resize:vertical;min-height:140px;line-height:1.5;font-size:.9rem}
+textarea.surovy{font-family:ui-monospace,monospace;font-size:.78rem;min-height:260px;white-space:pre;tab-size:2}
+.cil-radek{display:flex;gap:4px;align-items:center}
+.cil-radek .vstup{flex:1;min-width:0}
+.volba{border:1px solid var(--border);border-radius:8px;padding:8px 9px;margin-bottom:9px;background:var(--bg-elevated)}
+.volba.vybrana{border-color:var(--accent)}
+.volba-hlava{display:flex;gap:5px;align-items:center;margin-bottom:6px}
+.volba-hlava .cislo{font-weight:700;color:var(--text-muted);min-width:1.4em}
+.volba-hlava .vstup{flex:1}
+.volba-akce{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;margin-top:4px}
+details.blok{border-top:1px dashed var(--border);padding-top:4px;margin-top:6px}
+details.blok > summary{cursor:pointer;font-size:.8rem;color:var(--text-muted);padding:2px 0}
+details.blok[open] > summary{margin-bottom:5px}
+.sekce{margin:16px 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);display:flex;align-items:center;gap:8px}
+.sekce::after{content:'';flex:1;border-top:1px solid var(--border)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:3px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);min-height:30px;box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;gap:3px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 40%,var(--border));border-radius:12px;padding:0 3px 0 8px;font-size:.8rem;max-width:100%}
+.chip.nezname{background:color-mix(in srgb,var(--danger) 15%,var(--bg-input));border-color:var(--danger)}
+.chip button{background:none;border:0;color:var(--text-muted);cursor:pointer;padding:0 3px;font-size:.9rem;line-height:1}
+.chips input{flex:1;min-width:70px;border:0;background:none;color:var(--text);font:inherit;font-size:.82rem;padding:3px 4px;outline:none}
+.nahled-obr{max-width:100%;max-height:150px;border-radius:6px;display:block;margin-top:4px;border:1px solid var(--border)}
+.odkazy{font-size:.82rem;color:var(--text-muted);line-height:1.7}
+.odkaz{color:var(--accent);cursor:pointer;text-decoration:underline;background:none;border:0;padding:0;font:inherit}
+.prazdne{color:var(--text-faint);font-size:.88rem;padding:20px 0;text-align:center}
+.pocet-slov{font-size:.72rem;color:var(--text-faint);text-align:right}
+
+/* kontrola */
+.statistiky{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px;margin-bottom:10px}
+.stat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:6px 8px}
+.stat b{display:block;font-size:1.15rem}
+.stat span{font-size:.72rem;color:var(--text-muted)}
+.nalezy{list-style:none;margin:0;padding:0}
+.nalezy li{display:flex;gap:7px;align-items:flex-start;padding:6px 6px;border-bottom:1px solid var(--border);font-size:.85rem;cursor:pointer;border-radius:5px}
+.nalezy li:hover{background:var(--bg-hover)}
+.nalezy .ik{flex-shrink:0;width:1.3em;text-align:center}
+.nalezy .sc{flex-shrink:0;font-weight:700;color:var(--accent);min-width:2.2em}
+.u-chyba .ik{color:var(--danger)} .u-varovani .ik{color:var(--warn)} .u-info .ik{color:var(--text-faint)}
+.filtr-nalezu{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.sloupce{display:flex;flex-direction:column;gap:3px}
+.sloupec{display:grid;grid-template-columns:minmax(80px,40%) 1fr 3.5em;gap:6px;align-items:center;font-size:.8rem}
+.sloupec .bar{height:10px;border-radius:4px;background:var(--accent)}
+.sloupec .bar.vyhra{background:var(--ok)} .sloupec .bar.prohra{background:var(--danger)} .sloupec .bar.neutral{background:var(--text-muted)}
+.cesta{font-size:.8rem;line-height:1.8;word-break:break-word}
+
+/* hraní */
+.hra-stav{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.82rem;padding:6px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.hra-text p{margin:0 0 .8em;line-height:1.55}
+.hra-volby{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.hra-volby .btn{white-space:normal;text-align:left}
+.hra-volby .btn .pozn{display:block;font-size:.72rem;color:var(--text-faint)}
+.hra-hod{font-size:.84rem;padding:5px 8px;border-radius:6px;margin-bottom:6px;border-left:3px solid var(--accent);background:var(--bg-elevated)}
+.hra-hod.ok{border-left-color:var(--ok)} .hra-hod.ne{border-left-color:var(--danger)}
+.hra-konec{font-weight:700;padding:6px 8px;border-radius:6px;margin-bottom:8px;background:var(--bg-elevated);border:1px solid var(--border)}
+.hra-konec.vyhra{border-color:var(--ok)} .hra-konec.prohra{border-color:var(--danger)}
+.hra-obr{max-width:100%;border-radius:8px;margin-bottom:8px;display:block}
+.hra-predmety{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 8px}
+.hra-denik{font-size:.76rem;color:var(--text-faint);margin-top:12px;word-break:break-word}
+
+/* tabulky předmětů/konců */
+.polozka{border:1px solid var(--border);border-radius:8px;padding:7px 8px;margin-bottom:7px;background:var(--bg-elevated)}
+.polozka-hlava{display:flex;gap:5px;align-items:center;margin-bottom:5px;flex-wrap:wrap}
+.polozka-hlava code{font-size:.8rem;background:var(--bg-control);padding:1px 6px;border-radius:4px}
+.polozka-hlava .pocet{font-size:.74rem;color:var(--text-faint);margin-left:auto}
+.zatrzitko{display:flex;gap:6px;align-items:center;font-size:.84rem;cursor:pointer}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(640px,94vw);max-height:86vh;box-shadow:var(--shadow)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+dialog.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+dialog.okno .telo{padding:12px 16px;overflow-y:auto;max-height:62vh;font-size:.9rem;line-height:1.5}
+dialog.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:6px}
+.projekty{list-style:none;margin:0;padding:0}
+.projekty li{display:flex;align-items:center;gap:6px;padding:7px 6px;border-bottom:1px solid var(--border)}
+.projekty li.aktualni{background:var(--accent-soft);border-radius:6px}
+.projekty .nazev{flex:1;min-width:0;cursor:pointer}
+.projekty .nazev small{display:block;color:var(--text-faint);font-size:.74rem}
+.pomoc h3{font-size:.95rem;margin:12px 0 4px}
+.pomoc table{border-collapse:collapse;width:100%;font-size:.85rem}
+.pomoc td{padding:3px 4px;border-bottom:1px solid var(--border)}
+.pomoc code{background:var(--bg-control);border:1px solid var(--border);border-radius:4px;padding:0 4px;font-size:.8rem}
+.drop{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 70%,transparent);color:var(--text);font-size:1.3rem;border:4px dashed var(--accent);pointer-events:none}
+.drop.zobraz{display:flex}
+
+@media (max-width:860px){
+  body{height:auto;min-height:100vh;overflow:visible;display:block}
+  .lista{flex-wrap:wrap;overflow:visible}
+  .lista .skup-hledat{flex-basis:100%;order:10}
+  .rozlozeni{display:block}
+  .platno{height:440px}
+  .panel{border-left:0;border-top:1px solid var(--border)}
+  .telo-panelu{overflow:visible}
+  .legenda{max-width:calc(100% - 16px);bottom:auto;top:8px;right:48px;left:8px}
+  .minimapa{width:120px;height:84px}
+}
+@media (max-width:420px){
+  .radek-5{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .legenda{display:none}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <div class="skup skup-projekt">
+    <h1>🧭 Editor gamebooků</h1>
+    <span class="projekt" id="nazevProjektu" data-i18n="ne"></span>
+  </div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Projekty, import a export">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="novaScena" title="Nová scéna (N)">✚<span class="txt"> Scéna</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Upravit"><span class="skup-nazev" aria-hidden="true">Upravit</span><div class="skup-tl">
+    <button class="tl ik" data-prikaz="zpet" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl ik" data-prikaz="znovu" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷</button>
+    <button class="tl" data-nabidka="nabUpravy" aria-expanded="false" title="Úpravy scény">🛠<span class="txt"> Úpravy</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl ik" data-prikaz="prizpusob" title="Celý graf (F)" aria-label="Celý graf">⤢</button>
+    <button class="tl" data-nabidka="nabZobrazit" aria-expanded="false" title="Rozložení a zobrazení grafu">🗺<span class="txt"> Graf</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Příběh"><span class="skup-nazev" aria-hidden="true">Příběh</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPribeh" aria-expanded="false" title="Vlastnosti příběhu, předměty, konce">📖<span class="txt"> Příběh</span> ▾</button>
+    <button class="tl" data-prikaz="kontrola" title="Kontrola příběhu a statistiky">✔<span class="txt"> Kontrola</span><span id="znackaKontrola"></span></button>
+    <button class="tl" data-prikaz="hratOdVybrane" title="Hrát od vybrané scény (P)">▶<span class="txt"> Hrát</span></button>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat scénu (číslo nebo text)…" aria-label="Hledat scénu" title="Hledat (/), Enter = další výsledek">
+  </div>
+  <span class="vpravo">
+    <button class="tl ik" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevritProjekt">📂 Moje projekty…</button>
+  <button class="tl" data-prikaz="novyProjekt">🗋 Nový prázdný příběh</button>
+  <button class="tl" data-prikaz="prejmenovatProjekt">✎ Přejmenovat projekt</button>
+  <button class="tl" data-prikaz="duplikovatProjekt">⧉ Duplikovat projekt</button>
+  <hr>
+  <div class="titulek">Import</div>
+  <button class="tl" data-vestaveny="pribeh">⛏️ Hlubina pod Černou horou</button>
+  <button class="tl" data-vestaveny="pribeh_praha">⚗️ Stín nad Zlatou uličkou</button>
+  <button class="tl" data-vestaveny="pribeh_jan">🌿 Svatojánská noc</button>
+  <button class="tl" data-prikaz="nacistSoubor">📄 Načíst soubor pribeh*.js / JSON…</button>
+  <hr>
+  <div class="titulek">Export</div>
+  <button class="tl" data-prikaz="exportJs">⬇ Stáhnout .js pro web</button>
+  <button class="tl" data-prikaz="exportJson">⬇ Stáhnout JSON</button>
+  <button class="tl" data-prikaz="kopirovatJs">📋 Kopírovat .js do schránky</button>
+  <hr>
+  <button class="tl" data-prikaz="smazatProjekt">🗑 Smazat projekt</button>
+</div>
+<div id="nabUpravy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novaScena">✚ Nová scéna <kbd>N</kbd></button>
+  <button class="tl" data-prikaz="novaVolba">↳ Přidat volbu do vybrané</button>
+  <button class="tl" data-prikaz="duplikovatScenu">⧉ Duplikovat scénu <kbd>Ctrl+D</kbd></button>
+  <button class="tl" data-prikaz="prejmenovatScenu">✎ Přejmenovat scénu <kbd>F2</kbd></button>
+  <button class="tl" data-prikaz="smazatScenu">🗑 Smazat scénu <kbd>Del</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="nastavitStart">▶ Nastavit jako start</button>
+  <button class="tl" data-prikaz="precislovat">🔢 Přečíslovat scény podle grafu…</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl" data-prikaz="rozlozit">🪄 Automaticky rozložit <kbd>L</kbd></button>
+  <button class="tl" data-prikaz="prizpusob">⤢ Celý graf <kbd>F</kbd></button>
+  <button class="tl" data-prikaz="naVybranou">◎ Na vybranou scénu <kbd>C</kbd></button>
+  <hr>
+  <div class="titulek">Směr rozložení</div>
+  <button class="tl prep" data-prikaz="smerDolu" id="prepDolu">Shora dolů</button>
+  <button class="tl prep" data-prikaz="smerVpravo" id="prepVpravo">Zleva doprava</button>
+  <hr>
+  <button class="tl prep" data-prikaz="prepMinimapa" id="prepMinimapa">Minimapa</button>
+  <button class="tl prep" data-prikaz="prepLegenda" id="prepLegenda">Legenda</button>
+  <button class="tl prep" data-prikaz="prepSousede" id="prepSousede">Zvýraznit sousedy vybrané scény</button>
+</div>
+<div id="nabPribeh" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pribehVlastnosti">📝 Název, start, začátek hry</button>
+  <button class="tl" data-prikaz="pribehPredmety">🎒 Předměty</button>
+  <button class="tl" data-prikaz="pribehKonce">🏁 Typy konců</button>
+  <button class="tl" data-prikaz="pribehSurovy">{ } Celý příběh jako JSON (pokročilé)</button>
+  <hr>
+  <button class="tl" data-prikaz="kontrola">✔ Kontrola a statistiky</button>
+  <button class="tl" data-prikaz="hratOdStartu">▶ Hrát od startu</button>
+  <button class="tl" data-prikaz="hratOdVybrane">▶ Hrát od vybrané scény <kbd>P</kbd></button>
+</div>
+
+<div class="rozlozeni">
+  <section class="platno" id="platno" aria-label="Graf scén">
+    <svg id="graf" data-i18n="ne" aria-label="Graf scén">
+      <defs>
+        <marker id="sZ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="sipka-z" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="sOk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="sipka-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="sNe" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="sipka-ne" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="sVar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="sipka-var" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="sAkt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="sipka-akt" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <g id="svet"><g id="gHrany"></g><g id="gUzly"></g><g id="gNova"></g></g>
+    </svg>
+    <div class="zoom">
+      <button class="tl" data-prikaz="priblizit" title="Přiblížit (+)" aria-label="Přiblížit">+</button>
+      <button class="tl" data-prikaz="oddalit" title="Oddálit (−)" aria-label="Oddálit">−</button>
+      <button class="tl" data-prikaz="prizpusob" title="Celý graf (F)" aria-label="Celý graf">⤢</button>
+      <span class="meritko" id="meritko">100 %</span>
+    </div>
+    <div class="legenda" id="legenda">
+      <span><i class="l-start"></i>start</span>
+      <span><i class="l-zkouska"></i>zkouška</span>
+      <span><i class="l-boj"></i>souboj</span>
+      <span><i class="l-vyhra"></i>dobrý konec</span>
+      <span><i class="l-neutral"></i>neutrální konec</span>
+      <span><i class="l-prohra"></i>zlý konec</span>
+      <span>┄ podmíněná volba</span>
+    </div>
+    <canvas class="minimapa" id="minimapa" width="190" height="130" aria-label="Minimapa"></canvas>
+  </section>
+  <aside class="panel" aria-label="Panel úprav">
+    <nav class="zalozky" role="tablist">
+      <button role="tab" data-zalozka="scena" aria-selected="true">✎ Scéna</button>
+      <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola</button>
+      <button role="tab" data-zalozka="hra" aria-selected="false">▶ Hrát</button>
+      <button role="tab" data-zalozka="pribeh" aria-selected="false">📖 Příběh</button>
+    </nav>
+    <div class="telo-panelu" id="teloPanelu"></div>
+  </aside>
+</div>
+
+<datalist id="dlSceny" data-i18n="ne"></datalist>
+<datalist id="dlPredmety" data-i18n="ne"></datalist>
+<datalist id="dlPriznaky" data-i18n="ne"></datalist>
+<datalist id="dlObr" data-i18n="ne"></datalist>
+<input type="file" id="soubor" accept=".js,.json,application/json,text/javascript" hidden>
+<div class="drop" id="drop">Pusť soubor pribeh*.js nebo JSON</div>
+
+<dialog class="okno" id="dlgProjekty"><form method="dialog">
+  <header>📂 Moje projekty</header>
+  <div class="telo"><ul class="projekty" id="seznamProjektu" data-i18n="ne"></ul></div>
+  <footer><button class="btn" value="zrus">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgPomoc"><form method="dialog">
+  <header>❓ Editor gamebooků – nápověda</header>
+  <div class="telo pomoc">
+    <p>Editor příběhů ve stejném formátu, jaký hrají gamebooky na webu (<i>Hlubina pod Černou horou</i>, <i>Stín nad Zlatou uličkou</i>, <i>Svatojánská noc</i>). Export <b>.js</b> jde rovnou uložit jako <code>obsah/gamebook/pribeh_xxx.js</code> a připojit stránkou se stejnou obálkou jako <code>gamebook.html</code>.</p>
+    <h3>Graf</h3>
+    <p>Každý obdélník je scéna, šipky jsou volby. Zelená šipka = úspěch zkoušky nebo výhra v souboji, červená = neúspěch nebo prohra, oranžová = útěk, přerušovaná = volba s podmínkou. Uzly jde přetahovat, kolečkem myši se přibližuje, tažením prázdného místa posouvá. Táhnutím z kroužku <b>+</b> pod scénou na jinou scénu vznikne nová volba, puštěním do prázdna i nová scéna. Dvojklik do prázdna = nová scéna na tom místě.</p>
+    <h3>Formát scény</h3>
+    <p><b>Text</b> (odstavce oddělte prázdným řádkem), <b>obrázek</b> (název souboru .webp ve složce příběhu), <b>efekty</b> při první návštěvě, <b>souboj</b> hned při vstupu, nebo <b>konec</b> (typ konce z „Příběh → Typy konců“). Volba vede buď na <b>cíl</b>, nebo spustí <b>zkoušku</b> (2 kostky ≤ vlastnost → úspěch), nebo <b>souboj</b> (výhra / prohra / útěk). <b>Podmínka</b> volbu ukáže jen tomu, kdo má (nemá) předmět, příznak nebo dost zlata. <b>Efekty</b> volby se provedou při jejím zvolení.</p>
+    <h3>Kontrola</h3>
+    <p>Kromě kontroly enginu (<code>validuj</code>) hledá nedosažitelné scény, slepé uličky, odkazy na neexistující scény, smyčky bez východu, scény bez cesty ke konci, předměty a příznaky, které jsou potřeba, ale nikde se nezískají, a scény, kde můžou zmizet všechny volby. Simulace odehraje stovky náhodných her přímo enginem.</p>
+    <h3>Klávesové zkratky</h3>
+    <table>
+      <tr><td><kbd>N</kbd></td><td>nová scéna</td></tr>
+      <tr><td><kbd>Del</kbd></td><td>smazat vybranou scénu</td></tr>
+      <tr><td><kbd>F2</kbd></td><td>přejmenovat scénu</td></tr>
+      <tr><td><kbd>Ctrl+D</kbd></td><td>duplikovat scénu</td></tr>
+      <tr><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>zpět / znovu</td></tr>
+      <tr><td><kbd>Ctrl+S</kbd></td><td>uložit hned (jinak se ukládá samo)</td></tr>
+      <tr><td><kbd>F</kbd> / <kbd>C</kbd> / <kbd>L</kbd></td><td>celý graf / na vybranou / automaticky rozložit</td></tr>
+      <tr><td><kbd>P</kbd></td><td>hrát od vybrané scény</td></tr>
+      <tr><td><kbd>/</kbd></td><td>hledat</td></tr>
+      <tr><td><kbd>+</kbd> / <kbd>−</kbd></td><td>přiblížit / oddálit</td></tr>
+    </table>
+    <h3>Ukládání</h3>
+    <p>Projekty se ukládají samy v tomto prohlížeči (IndexedDB). Pro zálohu a přenos použijte export JSON nebo .js.</p>
+  </div>
+  <footer><button class="btn hlavni" value="ok">Zavřít</button></footer>
+</form></dialog>
+</body>
+</html>

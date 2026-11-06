@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔎 Redakční lupa rukopisu</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="redakce/jadro.js"></script>
+<style>
+body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--text)}
+[hidden]{display:none !important}
+
+/* horní lišta – skupiny s nadpisem (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl:disabled{opacity:.5;cursor:default}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl.mini{padding:1px 6px;font-size:.76rem}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+
+/* plocha: editor | panel */
+.plocha{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 400px}
+.editor-sl{display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--border)}
+.ed-hlava{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ed-hlava input{flex:1 1 160px;min-width:0;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font:inherit;font-weight:600}
+.stav{font-size:.78rem;color:var(--text-muted);white-space:nowrap}
+.stav.zast{color:var(--warn)}
+.ed{position:relative;flex:1;min-height:0}
+#podklad,#text{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:18px 22px 40vh;box-sizing:border-box;border:0;
+  font:17px/1.75 Georgia,'Times New Roman',serif;letter-spacing:normal;word-spacing:normal;tab-size:4;
+  white-space:pre-wrap;overflow-wrap:break-word;word-break:normal;overflow-y:scroll;overflow-x:hidden}
+#podklad{color:transparent;background:var(--bg-input);pointer-events:none;overflow-y:hidden}
+#text{background:transparent;color:var(--text);resize:none;outline:none;caret-color:var(--accent)}
+#text::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+#podklad.zastarale span,#podklad.bez span{background:none !important;text-decoration:none !important;outline:none !important}
+/* typy nálezů – podtržení a podbarvení (barvy jen z common.css) */
+#podklad span{text-decoration-skip-ink:none;text-underline-offset:4px;text-decoration-thickness:2px;border-radius:2px}
+.t-dlouha{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.t-opakovani{text-decoration:underline wavy var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+.t-opakovani.pred{background:none;text-decoration-style:dotted}
+.t-vata{text-decoration:underline solid var(--danger);background:color-mix(in srgb,var(--danger) 14%,transparent)}
+.t-zacal{text-decoration:underline dashed var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.t-slabe{text-decoration:underline dotted var(--text-muted)}
+.t-rec{text-decoration:underline double var(--accent)}
+.t-trpny{text-decoration:underline dashed var(--accent);background:var(--accent-soft)}
+.t-retez{text-decoration:underline solid var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.t-ign{opacity:.45;text-decoration-style:dotted !important}
+.akt{outline:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent) !important}
+.vzor{display:inline-block;min-width:1.6em;text-align:center;color:var(--text);line-height:1.2}
+
+/* panel */
+.panel{display:flex;flex-direction:column;min-height:0;background:var(--bg-panel)}
+.karty{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.karty button{background:none;border:1px solid transparent;border-bottom:0;color:var(--text-muted);padding:6px 10px;border-radius:7px 7px 0 0;cursor:pointer;font:inherit;font-size:.86rem;white-space:nowrap}
+.karty button[aria-selected="true"]{background:var(--bg-elevated);border-color:var(--border);color:var(--text);font-weight:600;margin-bottom:-1px}
+.obsah-karty{flex:1;min-height:0;overflow-y:auto;padding:10px 12px 60px;background:var(--bg-elevated)}
+.obsah-karty h3{font-size:.9rem;margin:14px 0 6px;color:var(--text-muted);font-weight:600}
+.obsah-karty h3:first-child{margin-top:0}
+.muted{color:var(--text-muted);font-size:.82rem}
+.cipy{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.cip{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;border:1px solid var(--border);border-radius:14px;padding:2px 9px;cursor:pointer;background:var(--bg-control);color:var(--text);font-family:inherit}
+.cip[aria-pressed="false"]{opacity:.5;background:none;text-decoration:line-through}
+.cip b{font-weight:600;color:var(--text-muted)}
+.radek-filtr{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:.82rem}
+select.tl{padding:3px 6px}
+.detail{border:1px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:.86rem}
+.detail .nal + .nal{border-top:1px solid var(--border);margin-top:6px;padding-top:6px}
+.seznam{display:flex;flex-direction:column;gap:3px}
+.polozka{display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;align-items:start;padding:6px 8px;border-radius:7px;cursor:pointer;border:1px solid transparent;font-size:.84rem}
+.polozka:hover{background:var(--bg-hover)}
+.polozka.akt-pol{border-color:var(--accent);background:var(--accent-soft)}
+.polozka.ign{opacity:.5}
+.polozka .co{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.polozka .zpr{grid-column:2/4;color:var(--text-muted);font-size:.78rem}
+.polozka .kde{color:var(--text-faint);font-size:.74rem;white-space:nowrap}
+.dlazdice{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px}
+.dl{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:7px 9px}
+.dl .h{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
+.dl .p{font-size:.72rem;color:var(--text-muted)}
+.tabulka-obal{overflow-x:auto;max-width:100%}
+table.tab{border-collapse:collapse;font-size:.8rem;width:100%;font-variant-numeric:tabular-nums}
+table.tab th,table.tab td{padding:3px 6px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+table.tab th:first-child,table.tab td:first-child{text-align:left;white-space:normal}
+table.tab th{color:var(--text-muted);font-weight:600;position:sticky;top:0;background:var(--bg-elevated)}
+table.tab tr.klik{cursor:pointer}
+table.tab tr.klik:hover td{background:var(--bg-hover)}
+.pruh{display:inline-block;height:7px;border-radius:0 4px 4px 0;background:var(--accent);vertical-align:middle;margin-right:5px}
+.graf{position:relative}
+.graf svg{display:block;width:100%;height:auto}
+.graf .osa{stroke:var(--border);stroke-width:1}
+.graf text{fill:var(--text-muted);font-size:10px}
+.graf rect.b{fill:var(--accent);cursor:pointer}
+.graf rect.b.nad{fill:var(--danger)}
+.graf rect.b:hover{opacity:.7}
+.graf .prah{stroke:var(--danger);stroke-dasharray:4 3;stroke-width:1}
+.bublina{position:fixed;z-index:70;pointer-events:none;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:6px;padding:5px 8px;font-size:.78rem;max-width:280px}
+.legenda{display:flex;gap:12px;font-size:.76rem;color:var(--text-muted);margin:4px 0 8px;flex-wrap:wrap}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.slova{display:grid;grid-template-columns:1fr auto;gap:1px 8px;font-size:.84rem}
+.slova > div{padding:2px 4px;border-radius:4px;cursor:pointer}
+.slova > div:hover{background:var(--bg-hover)}
+.slova .n{text-align:right;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.bunka{border-radius:3px}
+
+/* dialogy */
+dialog{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:0;width:min(640px,calc(100vw - 20px));max-height:calc(100vh - 30px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog .dl-hlava{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-panel);z-index:1}
+dialog .dl-hlava h2{font-size:1.02rem;margin:0}
+dialog .dl-telo{padding:12px 14px;overflow-y:auto}
+dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--border);flex-wrap:wrap}
+.form{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;font-size:.86rem}
+.form input[type=number]{width:80px;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px 6px;font:inherit}
+.form .cela{grid-column:1/3}
+.seznamy{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.seznamy label{font-size:.82rem;font-weight:600;display:block;margin-bottom:3px}
+.seznamy textarea{width:100%;box-sizing:border-box;height:170px;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px;font:13px/1.4 ui-monospace,monospace}
+.vyber-zdroj{display:flex;flex-direction:column;gap:4px}
+.vyber-zdroj .kn{border:1px solid var(--border);border-radius:8px;padding:6px 10px}
+.vyber-zdroj .kn summary{cursor:pointer;font-weight:600;padding:3px 0}
+.vyber-zdroj .kaps{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 4px}
+.pomoc{font-size:.88rem;line-height:1.55}
+.pomoc h3{font-size:.95rem;margin:12px 0 4px}
+.pomoc table{border-collapse:collapse;font-size:.84rem}
+.pomoc td{padding:2px 8px 2px 0;vertical-align:top}
+.prazdne{color:var(--text-muted);font-size:.86rem;padding:20px 6px;text-align:center}
+
+@media (max-width:900px){
+  body{height:auto;min-height:100vh;overflow:auto}
+  .plocha{grid-template-columns:1fr;display:flex;flex-direction:column}
+  .editor-sl{border-right:0;height:70vh}
+  .panel{min-height:60vh}
+  .obsah-karty{overflow:visible}
+  .lista .txt{display:none}
+  .seznamy{grid-template-columns:1fr}
+  #podklad,#text{font-size:16px;padding:12px 12px 30vh}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <div class="skup skup-projekt"><h1>🔎 Redakční lupa</h1></div>
+  <div class="skup" role="group" aria-label="Rukopis"><span class="skup-nazev" aria-hidden="true">Rukopis</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Nový, otevřít, moje knihy, Kroniky, uložené rukopisy">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="zdroj" title="Vybrat knihu z Mých knih nebo kapitolu Kronik">📚<span class="txt"> Knihy</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Rozbor"><span class="skup-nazev" aria-hidden="true">Rozbor</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="rozebrat" title="Rozebrat text znovu (Ctrl+Enter)">▶ Rozebrat</button>
+    <button class="tl" data-prikaz="predchozi" title="Předchozí nález (Shift+F8)" aria-label="Předchozí nález">◀</button>
+    <button class="tl" data-prikaz="dalsi" title="Další nález (F8)" aria-label="Další nález">▶</button>
+    <button class="tl" data-nabidka="nabRozbor" title="Nastavení rozboru a seznamy slov">⚙<span class="txt"> Nastavení</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" id="btnPodtrzeni" data-prikaz="podtrzeni" aria-pressed="true" title="Podtržení nálezů v textu (Alt+P)">〰<span class="txt"> Podtržení</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabExport" title="Zpráva do Markdownu, nálezy do CSV, text">⬇<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">✚ Nový prázdný rukopis</button>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít soubor .md / .txt… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="vlozit">📋 Vložit text ze schránky</button>
+  <hr>
+  <button class="tl" data-prikaz="zdroj">📚 Moje knihy a Kroniky…</button>
+  <button class="tl" data-prikaz="ulozene">🗂 Uložené rukopisy…</button>
+  <hr>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit hned <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="ukazka">✨ Ukázkový text</button>
+</div>
+<div id="nabRozbor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nastaveni">⚙ Nastavení rozboru…</button>
+  <button class="tl" data-prikaz="seznamy">📝 Seznamy slov (vata, slabá slovesa…)</button>
+  <hr>
+  <button class="tl" data-prikaz="zrusitIgnor">↩️ Zrušit všechna ignorování v rukopisu</button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="exportMd">📄 Redakční zpráva (Markdown)</button>
+  <button class="tl" data-prikaz="exportCsv">📊 Seznam nálezů (CSV)</button>
+  <hr>
+  <button class="tl" data-prikaz="exportText">💾 Upravený text (.md)</button>
+</div>
+<input type="file" id="soubor" accept=".md,.txt,.markdown,text/plain,text/markdown" multiple hidden>
+
+<main class="plocha">
+  <section class="editor-sl" aria-label="Text rukopisu">
+    <div class="ed-hlava">
+      <input id="nazev" aria-label="Název rukopisu" data-i18n="ne" placeholder="Název rukopisu">
+      <span class="stav" id="stav"></span>
+    </div>
+    <div class="ed">
+      <div id="podklad" aria-hidden="true" data-i18n="ne"></div>
+      <textarea id="text" spellcheck="false" data-i18n="ne" aria-label="Text rukopisu (Markdown)" placeholder="Sem vložte nebo pište text (Markdown: # nadpis kapitoly, prázdný řádek mezi odstavci)…"></textarea>
+    </div>
+  </section>
+  <section class="panel" aria-label="Rozbor">
+    <div class="karty" role="tablist">
+      <button role="tab" data-karta="nalezy" aria-selected="true">Nálezy</button>
+      <button role="tab" data-karta="prehled" aria-selected="false">Přehled</button>
+      <button role="tab" data-karta="rytmus" aria-selected="false">Rytmus</button>
+      <button role="tab" data-karta="slova" aria-selected="false">Slova</button>
+      <button role="tab" data-karta="postavy" aria-selected="false">Postavy</button>
+    </div>
+    <div class="obsah-karty" id="obsahKarty"></div>
+  </section>
+</main>
+
+<dialog id="dlgZdroj">
+  <div class="dl-hlava"><h2>📚 Vybrat knihu</h2><button class="tl" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="dl-telo"><div id="zdrojObsah" class="vyber-zdroj">Načítám…</div></div>
+</dialog>
+
+<dialog id="dlgUlozene">
+  <div class="dl-hlava"><h2>🗂 Uložené rukopisy</h2><button class="tl" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="dl-telo"><div id="ulozeneObsah"></div></div>
+</dialog>
+
+<dialog id="dlgNastaveni">
+  <div class="dl-hlava"><h2>⚙ Nastavení rozboru</h2><button class="tl" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="dl-telo">
+    <div class="form">
+      <label for="nOkno">Opakování: hledat stejný kmen v okně (slov)</label><input type="number" id="nOkno" min="3" max="500">
+      <label for="nMin">Opakování: nejkratší sledované slovo (písmen)</label><input type="number" id="nMin" min="2" max="12">
+      <label class="cela"><input type="checkbox" id="nJmena"> Jména postav do opakování nepočítat</label>
+      <label for="nPrah">Dlouhá věta: víc slov než</label><input type="number" id="nPrah" min="5" max="200">
+      <label for="nRetez">Řetězec podstatných jmen: aspoň (slov)</label><input type="number" id="nRetez" min="2" max="10">
+      <label class="cela"><input type="checkbox" id="nRec"> Vatu a slabá slovesa v přímé řeči nehlásit (mluva postav)</label>
+      <label for="nRychl">Tiché čtení (slov za minutu)</label><input type="number" id="nRychl" min="50" max="800">
+      <label for="nNahlas">Čtení nahlas (slov za minutu)</label><input type="number" id="nNahlas" min="50" max="400">
+    </div>
+  </div>
+  <div class="dl-pata">
+    <button class="tl" id="nVychozi">Výchozí hodnoty</button>
+    <button class="tl" data-zavrit>Zrušit</button>
+    <button class="tl hlavni-tl" id="nUlozit">Uložit</button>
+  </div>
+</dialog>
+
+<dialog id="dlgSeznamy">
+  <div class="dl-hlava"><h2>📝 Seznamy slov</h2><button class="tl" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="dl-telo">
+    <p class="muted">Jedna položka na řádek. Hvězdička na konci = všechny tvary začínající takto (<code>dělal*</code>). Víc slov na řádku = slovní spojení (<code>v podstatě</code>). Řádek začínající # je poznámka.</p>
+    <div class="seznamy">
+      <div><label for="sVata">Vata a vycpávky</label><textarea id="sVata" spellcheck="false" data-i18n="ne"></textarea></div>
+      <div><label for="sSlaba">Slabá slovesa</label><textarea id="sSlaba" spellcheck="false" data-i18n="ne"></textarea></div>
+      <div><label for="sReci">Slovesa řeči (pro příslovce)</label><textarea id="sReci" spellcheck="false" data-i18n="ne"></textarea></div>
+      <div><label for="sNepocitat">Nehlásit jako opakování a nepočítat do četnosti</label><textarea id="sNepocitat" spellcheck="false" data-i18n="ne"></textarea></div>
+    </div>
+  </div>
+  <div class="dl-pata">
+    <button class="tl" id="sVychozi">Výchozí seznamy</button>
+    <button class="tl" data-zavrit>Zrušit</button>
+    <button class="tl hlavni-tl" id="sUlozit">Uložit</button>
+  </div>
+</dialog>
+
+<dialog id="dlgNapoveda">
+  <div class="dl-hlava"><h2>❓ Redakční lupa – nápověda</h2><button class="tl" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="dl-telo pomoc">
+    <p>Lupa rozebere český rukopis (Markdown nebo prostý text) a ukáže místa k redakci <b>přímo v textu</b>. Text v editoru jde upravovat; rozbor se po chvíli nečinnosti obnoví sám (u velmi dlouhých textů tlačítkem ▶ Rozebrat). Práce se průběžně ukládá v prohlížeči.</p>
+    <h3>Co se hledá</h3>
+    <table>
+      <tr><td><span data-i18n="ne" class="vzor t-opakovani">slovo</span></td><td><b>Opakované slovo</b> – stejný kmen (člun, člunu) blíž než okno slov; tečkovaně předchozí výskyt. Funkční slova, krátká slova a jména se nepočítají.</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-dlouha">věta</span></td><td><b>Dlouhá věta</b> nad prahem; rytmus délek vět je v kartě Rytmus.</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-vata">vlastně</span></td><td><b>Vata a vycpávky</b> podle upravitelného seznamu.</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-zacal">začal běžet</span></td><td><b>Začal + infinitiv</b> – většinou stačí samotné sloveso.</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-slabe">byl</span></td><td><b>Slabé sloveso</b> (byl, měl, dělal…) – najde se konkrétnější?</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-rec">řekl tiše</span></td><td><b>Příslovce u slovesa řeči</b> – ukázat raději jednáním.</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-trpny">byl zbořen</span></td><td><b>Trpný rod</b> – kdo to dělá?</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-retez">zlepšení kvality řízení</span></td><td><b>Řetězec podstatných jmen</b> – úřední styl, rozepsat slovesem.</td></tr>
+    </table>
+    <p>Jde o heuristiky bez slovníku – rozhoduje autor. Nález, se kterým nesouhlasíte, označte <b>Ignorovat</b> (pamatuje se k rukopisu i po úpravách jinde v textu). U opakování jde slovo vyřadit natrvalo.</p>
+    <h3>Ovládání</h3>
+    <table>
+      <tr><td><kbd>F8</kbd> / <kbd>Shift+F8</kbd></td><td>další / předchozí nález od kurzoru</td></tr>
+      <tr><td><kbd>Alt+I</kbd></td><td>ignorovat vybraný nález</td></tr>
+      <tr><td><kbd>Ctrl+Enter</kbd></td><td>rozebrat znovu</td></tr>
+      <tr><td><kbd>Ctrl+S</kbd></td><td>uložit hned</td></tr>
+      <tr><td><kbd>Ctrl+O</kbd></td><td>otevřít soubor</td></tr>
+      <tr><td><kbd>Alt+P</kbd></td><td>podtržení zapnout / vypnout</td></tr>
+      <tr><td><kbd>F1</kbd></td><td>nápověda</td></tr>
+    </table>
+    <p>Kliknutím do textu se v kartě Nálezy ukáže, co je na místě kurzoru. Kapitoly se poznají podle nadpisů <code>#</code> (nebo <code>##</code>, je-li jich víc). Čtivost: průměr slov ve větě do 10 velmi svižné, do 15 svižné, do 20 běžné, do 25 náročnější, nad 25 náročné. Doba čtení vychází z nastavené rychlosti (výchozí 220 slov/min potichu, 150 nahlas).</p>
+  </div>
+</dialog>
+
+<div class="bublina" id="bublina" hidden></div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const R = window.REDAKCE;
+const KL_NAST = 'webapp_redakce_nastaveni', KL_UI = 'webapp_redakce_ui', KL_POSL = 'webapp_redakce_posledni';
+const VELKY_TEXT = 150000;   // nad tolik znaků se po psaní nerozebírá automaticky
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = (x, d = 1) => x.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = x => Math.round(x * 100) + ' %';
+
+// ---------- nastavení a stav UI ----------
+function nactiJson(k, vych) { try { return Object.assign(vych, JSON.parse(localStorage.getItem(k)) || {}); } catch (e) { return vych; } }
+let nast = nactiJson(KL_NAST, JSON.parse(JSON.stringify(R.VYCHOZI)));
+nast.typy = Object.assign({}, R.VYCHOZI.typy);   // rozbor hledá vždy vše, filtr je jen v zobrazení
+const ui = nactiJson(KL_UI, { karta: 'nalezy', skryte: {}, ignorZobrazit: false, podtrzeni: true, kapFiltr: -1, rytmusKap: 0 });
+const ulozNast = () => localStorage.setItem(KL_NAST, JSON.stringify(nast));
+const ulozUi = () => localStorage.setItem(KL_UI, JSON.stringify(ui));
+
+// ---------- IndexedDB: rukopisy ----------
+let dbP = null;
+function db() {
+  if (!dbP) dbP = new Promise((ok, chyba) => {
+    const r = indexedDB.open('webapp_redakce', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('dokumenty', { keyPath: 'id' });
+    r.onsuccess = () => ok(r.result); r.onerror = () => chyba(r.error);
+  });
+  return dbP;
+}
+async function dbOp(mod, fn) {
+  const d = await db();
+  return new Promise((ok, chyba) => {
+    const tx = d.transaction('dokumenty', mod), r = fn(tx.objectStore('dokumenty'));
+    tx.oncomplete = () => ok(r && r.result); tx.onerror = () => chyba(tx.error);
+  });
+}
+const dbVsechny = () => dbOp('readonly', s => s.getAll());
+const dbUloz = doc => dbOp('readwrite', s => s.put(doc));
+const dbSmaz = id => dbOp('readwrite', s => s.delete(id));
+const dbNacti = id => dbOp('readonly', s => s.get(id));
+
+// ---------- dokument ----------
+let doc = null, rozbor = null, ignSet = new Set(), aktivni = -1, naKurzoru = [];
+let casRozboru = null, casUkladani = null, zastarale = false;
+
+function novyDoc(nazev, text, zdroj) {
+  return { id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nazev: nazev || 'Nový rukopis', text: text || '', zdroj: zdroj || '', ignorovane: [], ignorTexty: [], upraveno: Date.now() };
+}
+function otevriDoc(d) {
+  doc = d; doc.ignorTexty = doc.ignorTexty || [];
+  ignSet = new Set(doc.ignorovane || []);
+  $('nazev').value = doc.nazev;
+  $('text').value = doc.text;
+  $('text').scrollTop = 0;
+  localStorage.setItem(KL_POSL, doc.id);
+  aktivni = -1; naKurzoru = []; ui.kapFiltr = -1; ui.rytmusKap = 0; limitSeznamu = 300;
+  rozebrat();
+}
+async function ulozDoc(hlasit) {
+  if (!doc) return;
+  clearTimeout(casUkladani);
+  doc.text = $('text').value; doc.nazev = $('nazev').value.trim() || 'Bez názvu';
+  doc.ignorovane = [...ignSet]; doc.upraveno = Date.now();
+  try { await dbUloz(doc); nastavStav(); if (hlasit) Dialog.info('Uloženo'); }
+  catch (e) { Dialog.chyba('Uložení se nepovedlo: ' + e.message); }
+}
+const planujUlozeni = () => { clearTimeout(casUkladani); casUkladani = setTimeout(() => ulozDoc(false), 1000); };
+
+// ---------- ignorování ----------
+const jeIgn = n => ignSet.has(R.klic(n, doc.text)) || doc.ignorTexty.includes(n.typ + '|' + n.text.toLowerCase());
+
+// ---------- rozbor a vykreslení ----------
+function rozebrat() {
+  clearTimeout(casRozboru);
+  doc.text = $('text').value;
+  const t0 = performance.now();
+  rozbor = R.rozeber(doc.text, nast);
+  rozbor.ms = performance.now() - t0;
+  zastarale = false;
+  if (aktivni >= rozbor.nalezy.length) aktivni = -1;
+  vykresliPodklad();
+  aktualizujKurzor();
+  vykresliPanel();
+  nastavStav();
+}
+function nastavStav() {
+  const S = rozbor ? rozbor.souhrn : null, st = $('stav');
+  st.classList.toggle('zast', zastarale);
+  if (zastarale) st.textContent = $('text').value.length > VELKY_TEXT ? '✎ Upraveno – rozbor obnovíte ▶ Rozebrat' : '✎ Rozbírám…';
+  else if (S) st.textContent = `${S.slov.toLocaleString('cs-CZ')} slov · ${viditelne().length} nálezů · uloženo`;
+}
+
+// nálezy po filtru typů (zobrazené)
+function viditelne(sIgnor) {
+  if (!rozbor) return [];
+  return rozbor.nalezy.filter(n => !ui.skryte[n.typ] && (sIgnor || ui.ignorZobrazit || !jeIgn(n)));
+}
+
+function vykresliPodklad() {
+  const text = doc.text, P = $('podklad');
+  const udalosti = [];   // [pozice, +1/-1, třída]
+  const nal = viditelne();
+  for (const n of nal) {
+    const ign = jeIgn(n);
+    const tr = 't-' + n.typ + (ign ? ' t-ign' : '') + (n.id === aktivni ? ' akt' : '');
+    if (n.do > n.od) udalosti.push([n.od, 1, tr], [n.do, -1, tr]);
+    for (const d of n.dalsi || []) { const t2 = 't-' + n.typ + ' pred' + (n.id === aktivni ? ' akt' : ''); udalosti.push([d.od, 1, t2], [d.do, -1, t2]); }
+  }
+  udalosti.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const aktivniTr = new Map(); let pos = 0, h = '';
+  const tridy = () => { const s = new Set(); for (const [k, v] of aktivniTr) if (v > 0) k.split(' ').forEach(x => s.add(x)); return [...s].join(' '); };
+  for (const [p, d, tr] of udalosti) {
+    if (p > pos) {
+      const kus = esc(text.slice(pos, p)), cls = tridy();
+      h += cls ? `<span class="${cls}">${kus}</span>` : kus;
+      pos = p;
+    }
+    aktivniTr.set(tr, (aktivniTr.get(tr) || 0) + d);
+  }
+  h += esc(text.slice(pos)) + '\n ';
+  P.innerHTML = h;
+  P.classList.remove('zastarale');
+  P.classList.toggle('bez', !ui.podtrzeni);
+  srovnejPodklad();
+}
+
+// y souřadnice znaku v podkladu (pro posun k nálezu)
+function yNaPozici(pos) {
+  const P = $('podklad'), w = document.createTreeWalker(P, NodeFilter.SHOW_TEXT);
+  let n, zbyva = pos;
+  while ((n = w.nextNode())) {
+    if (zbyva <= n.length) {
+      const r = document.createRange(); r.setStart(n, Math.min(zbyva, n.length)); r.setEnd(n, Math.min(zbyva + 1, n.length));
+      const b = r.getBoundingClientRect(), pb = P.getBoundingClientRect();
+      return b.top - pb.top + P.scrollTop;
+    }
+    zbyva -= n.length;
+  }
+  return 0;
+}
+function skocNa(od, doo, id) {
+  const T = $('text');
+  if (id !== undefined) { aktivni = id; vykresliPodklad(); }
+  const y = yNaPozici(od);
+  T.focus({ preventScroll: true });
+  T.setSelectionRange(od, doo);
+  T.scrollTop = Math.max(0, y - T.clientHeight / 3);
+  $('podklad').scrollTop = T.scrollTop;
+  aktualizujKurzor();
+  oznacAktivniVSeznamu();
+}
+function skocNaNalez(n) { skocNa(n.od, n.do, n.id); }
+
+// nálezy pod kurzorem → detail v kartě Nálezy
+function aktualizujKurzor() {
+  if (!rozbor || zastarale) return;
+  const p = $('text').selectionStart;
+  naKurzoru = viditelne().filter(n => (p >= n.od && p <= n.do) || (n.dalsi || []).some(d => p >= d.od && p <= d.do));
+  if (naKurzoru.length && !naKurzoru.some(n => n.id === aktivni)) { aktivni = naKurzoru[naKurzoru.length - 1].id; vykresliPodklad(); }
+  if (ui.karta === 'nalezy') vykresliDetail();
+}
+
+// ---------- panel ----------
+function vykresliPanel() {
+  document.querySelectorAll('[data-karta]').forEach(b => b.setAttribute('aria-selected', b.dataset.karta === ui.karta));
+  const O = $('obsahKarty');
+  if (!rozbor || !rozbor.souhrn.slov) { O.innerHTML = '<p class="prazdne">Vložte nebo napište text, otevřete soubor nebo vyberte knihu (📚). Rozbor se ukáže tady.</p>'; return; }
+  ({ nalezy: kartaNalezy, prehled: kartaPrehled, rytmus: kartaRytmus, slova: kartaSlova, postavy: kartaPostavy })[ui.karta](O);
+}
+
+let limitSeznamu = 300;
+function kartaNalezy(O) {
+  const vse = rozbor.nalezy, poc = {};
+  vse.forEach(n => { if (!jeIgn(n)) poc[n.typ] = (poc[n.typ] || 0) + 1; });
+  const ignPoc = vse.filter(jeIgn).length;
+  let h = '<div id="detail"></div><div class="cipy" role="group" aria-label="Typy nálezů">';
+  for (const [t, d] of Object.entries(R.TYPY))
+    h += `<button class="cip" data-typ="${t}" aria-pressed="${!ui.skryte[t]}" title="Zobrazit / skrýt"><span class="vzor t-${t}">${d.ikona}</span>${d.nazev} <b>${poc[t] || 0}</b></button>`;
+  h += '</div><div class="radek-filtr"><select class="tl" id="kapFiltr" aria-label="Kapitola"><option value="-1">Všechny kapitoly</option>' +
+    rozbor.kapitoly.map((K, i) => `<option value="${i}" ${ui.kapFiltr === i ? 'selected' : ''} data-i18n="ne">${esc(K.nazev)}</option>`).join('') + '</select>' +
+    `<label><input type="checkbox" id="ignZobr" ${ui.ignorZobrazit ? 'checked' : ''}> ignorované (${ignPoc})</label></div>`;
+  const list = viditelne().filter(n => ui.kapFiltr < 0 || n.kap === ui.kapFiltr);
+  if (!list.length) h += '<p class="prazdne">Žádné nálezy pro zvolený filtr.</p>';
+  h += '<div class="seznam" id="seznam">' + list.slice(0, limitSeznamu).map(polozkaHtml).join('') + '</div>';
+  if (list.length > limitSeznamu) h += `<p><button class="tl" id="vicePol">Zobrazit další (${list.length - limitSeznamu})</button></p>`;
+  O.innerHTML = h;
+  vykresliDetail();
+  O.querySelectorAll('.cip').forEach(b => b.onclick = () => { ui.skryte[b.dataset.typ] = !ui.skryte[b.dataset.typ]; ulozUi(); vykresliPodklad(); vykresliPanel(); nastavStav(); });
+  $('kapFiltr').onchange = e => { ui.kapFiltr = +e.target.value; ulozUi(); limitSeznamu = 300; vykresliPanel(); };
+  $('ignZobr').onchange = e => { ui.ignorZobrazit = e.target.checked; ulozUi(); vykresliPodklad(); vykresliPanel(); };
+  if ($('vicePol')) $('vicePol').onclick = () => { limitSeznamu += 500; vykresliPanel(); };
+  $('seznam').onclick = e => {
+    const b = e.target.closest('[data-ign]'); if (b) { e.stopPropagation(); return prepniIgnor(rozbor.nalezy[+b.dataset.ign]); }
+    const p = e.target.closest('.polozka'); if (p) skocNaNalez(rozbor.nalezy[+p.dataset.id]);
+  };
+}
+function polozkaHtml(n) {
+  const ign = jeIgn(n), K = rozbor.kapitoly[n.kap];
+  const co = n.typ === 'dlouha' ? n.text.slice(0, 60) + (n.text.length > 60 ? '…' : '') : n.text;
+  return `<div class="polozka${ign ? ' ign' : ''}${n.id === aktivni ? ' akt-pol' : ''}" data-id="${n.id}" tabindex="0">` +
+    `<span class="vzor t-${n.typ}" title="${esc(R.TYPY[n.typ].nazev)}">${R.TYPY[n.typ].ikona}</span><span class="co" data-i18n="ne">${esc(co.replace(/\s+/g, ' '))}</span>` +
+    `<button class="tl mini" data-ign="${n.id}" title="${ign ? 'Zrušit ignorování' : 'Ignorovat (Alt+I)'}">${ign ? '↩' : '🙈'}</button>` +
+    `<span class="zpr">${esc(n.zprava)}${K && rozbor.kapitoly.length > 1 ? ` · <span class="kde">${esc(K.nazev)}</span>` : ''}</span></div>`;
+}
+function oznacAktivniVSeznamu() {
+  document.querySelectorAll('.polozka.akt-pol').forEach(p => p.classList.remove('akt-pol'));
+  const p = document.querySelector(`.polozka[data-id="${aktivni}"]`);
+  if (p) { p.classList.add('akt-pol'); p.scrollIntoView({ block: 'nearest' }); }
+}
+function vykresliDetail() {
+  const D = $('detail'); if (!D) return;
+  if (!naKurzoru.length) { D.innerHTML = ''; D.className = ''; return; }
+  D.className = 'detail';
+  D.innerHTML = '<div class="muted">Na místě kurzoru:</div>' + naKurzoru.map(n => {
+    const ign = jeIgn(n), slovo = ['opakovani'].includes(n.typ), vse = ['vata', 'slabe', 'zacal', 'rec'].includes(n.typ);
+    return `<div class="nal"><b>${R.TYPY[n.typ].ikona} ${R.TYPY[n.typ].nazev}</b><div>${esc(n.zprava)}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+      <button class="tl mini" data-d-ign="${n.id}">${ign ? '↩ Zrušit ignorování' : '🙈 Ignorovat'}</button>
+      ${vse && !ign ? `<button class="tl mini" data-d-vse="${n.id}">🙈 Ignorovat všechny „${esc(n.text.toLowerCase())}“</button>` : ''}
+      ${slovo ? `<button class="tl mini" data-d-slovo="${n.id}">🚫 Nikdy nehlásit „${esc(n.text.toLowerCase())}“</button>` : ''}</div></div>`;
+  }).join('');
+  D.onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.dIgn) prepniIgnor(rozbor.nalezy[+b.dataset.dIgn]);
+    else if (b.dataset.dVse) { const n = rozbor.nalezy[+b.dataset.dVse]; doc.ignorTexty.push(n.typ + '|' + n.text.toLowerCase()); po_ignoru(); }
+    else if (b.dataset.dSlovo) {
+      const n = rozbor.nalezy[+b.dataset.dSlovo], w = n.text.toLowerCase();
+      if (await Dialog.potvrd(`Slovo „${w}“ (i jiné tvary se stejným kmenem) už nikdy nehlásit jako opakování? Jde vrátit v Seznamech slov.`, { ok: 'Nehlásit' })) {
+        nast.nepocitat = [...(nast.nepocitat || []), w]; ulozNast(); rozebrat();
+      }
+    }
+  };
+}
+function prepniIgnor(n) {
+  if (!n) return;
+  const k = R.klic(n, doc.text), tx = n.typ + '|' + n.text.toLowerCase();
+  if (jeIgn(n)) { ignSet.delete(k); doc.ignorTexty = doc.ignorTexty.filter(x => x !== tx); }
+  else ignSet.add(k);
+  po_ignoru();
+}
+function po_ignoru() { planujUlozeni(); vykresliPodklad(); aktualizujKurzor(); vykresliPanel(); nastavStav(); }
+
+function kartaPrehled(O) {
+  const S = rozbor.souhrn;
+  const dl = (h, p, t) => `<div class="dl"${t ? ` title="${esc(t)}"` : ''}><div class="h">${h}</div><div class="p">${p}</div></div>`;
+  let h = '<h3>Souhrn</h3><div class="dlazdice">' +
+    dl(S.slov.toLocaleString('cs-CZ'), 'slov') + dl(S.vet.toLocaleString('cs-CZ'), 'vět') + dl(fmt(S.normostran), 'normostran', '1 800 znaků vč. mezer') +
+    dl(fmt(S.slovNaVetu), 'slov ve větě') + dl(fmt(S.slabikNaSlovo, 2), 'slabik ve slově') + dl(S.ctivost, 'čtivost') +
+    dl(pct(S.podilDlouhychSlov), 'dlouhá slova (4+ slabik)') + dl(S.nejdelsiVeta, 'nejdelší věta (slov)') + dl(pct(S.podilReci), 'přímá řeč') +
+    dl(R.doba(S.minut), 'čtení potichu', nast.rychlost + ' slov/min') + dl(R.doba(S.minutNahlas), 'čtení nahlas', nast.rychlostNahlas + ' slov/min') +
+    dl(viditelne().length, 'nálezů') + '</div>';
+  const maxV = Math.max(...rozbor.kapitoly.map(K => K.slovNaVetu), 1);
+  h += '<h3>Kapitoly</h3><p class="muted">Klik na řádek = skok na kapitolu. Pruhy: průměrná délka věty a podíl přímé řeči.</p><div class="tabulka-obal"><table class="tab"><thead><tr><th>Kapitola</th><th>Slov</th><th>Slov/věta</th><th>Přímá řeč</th><th>Čtení</th><th>Nálezů</th></tr></thead><tbody>';
+  rozbor.kapitoly.forEach((K, i) => {
+    h += `<tr class="klik" data-kap="${i}"><td data-i18n="ne">${esc(K.nazev)}</td><td>${K.slov.toLocaleString('cs-CZ')}</td>` +
+      `<td><span class="pruh" style="width:${Math.round(K.slovNaVetu / maxV * 40)}px"></span>${fmt(K.slovNaVetu)}</td>` +
+      `<td><span class="pruh" style="width:${Math.round(K.podilReci * 40)}px"></span>${pct(K.podilReci)}</td>` +
+      `<td>${R.doba(K.minut)}</td><td>${viditelne().filter(n => n.kap === i && !jeIgn(n)).length}</td></tr>`;
+  });
+  h += '</tbody></table></div>';
+  O.innerHTML = h;
+  O.querySelectorAll('tr[data-kap]').forEach(tr => tr.onclick = () => { const K = rozbor.kapitoly[+tr.dataset.kap]; skocNa(K.od, K.od); });
+}
+
+function kartaRytmus(O) {
+  const kap = rozbor.kapitoly, ki = Math.min(ui.rytmusKap, kap.length - 1), K = kap[ki];
+  let h = `<div class="radek-filtr"><select class="tl" id="rytKap" aria-label="Kapitola">${kap.map((k, i) => `<option value="${i}" ${i === ki ? 'selected' : ''} data-i18n="ne">${esc(k.nazev)}</option>`).join('')}</select>` +
+    `<span class="muted">${K.vet} vět, průměr ${fmt(K.slovNaVetu)} slov</span></div>`;
+  h += '<h3>Délky vět v pořadí</h3><div class="legenda"><span><i style="background:var(--accent)"></i>věta</span><span><i style="background:var(--danger)"></i>nad prahem ' + nast.prahVety + ' slov</span></div>';
+  h += '<div class="graf" id="grafVety"></div><p class="muted">Monotónní řada stejně dlouhých vět unaví; střídání krátkých a dlouhých dává rytmus. Klik na sloupec = skok na větu.</p>';
+  if (kap.length > 1) {
+    h += '<h3>Průměrná délka věty po kapitolách</h3><div class="graf" id="grafKap"></div>';
+    h += '<h3>Přímá řeč po kapitolách</h3><div class="graf" id="grafRec"></div>';
+  }
+  O.innerHTML = h;
+  $('rytKap').onchange = e => { ui.rytmusKap = +e.target.value; ulozUi(); vykresliPanel(); };
+  const sirka = Math.max(260, O.clientWidth - 30);
+  sloupce($('grafVety'), K.delkyVet.map((v, i) => ({ h: v.slov, nad: v.slov > nast.prahVety, tip: `Věta ${i + 1}: ${v.slov} slov`, klik: () => skocNa(v.od, v.do) })), sirka, 150, nast.prahVety);
+  if (kap.length > 1) {
+    sloupce($('grafKap'), kap.map((k, i) => ({ h: k.slovNaVetu, tip: `${k.nazev}: ${fmt(k.slovNaVetu)} slov ve větě`, klik: () => skocNa(k.od, k.od), popis: i + 1 })), sirka, 110);
+    sloupce($('grafRec'), kap.map((k, i) => ({ h: k.podilReci * 100, tip: `${k.nazev}: přímá řeč ${pct(k.podilReci)}`, klik: () => skocNa(k.od, k.od), popis: i + 1 })), sirka, 110, null, ' %');
+  }
+}
+// jednoduchý sloupcový graf v SVG (jedna řada, osa od nuly, bublina při najetí)
+function sloupce(el, data, W, H, prah, jednotka) {
+  const L = 30, B = 16, max = Math.max(1, prah || 0, ...data.map(d => d.h)) * 1.05, n = data.length;
+  const kw = Math.min(40, (W - L) / Math.max(n, 1)), mezera = kw > 4 ? 1 : 0, y = v => (H - B) - v / max * (H - B - 4);
+  const krok = max > 60 ? 20 : max > 25 ? 10 : 5;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Graf">`;
+  for (let v = 0; v <= max; v += krok) s += `<line class="osa" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" opacity="${v ? .5 : 1}"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end">${v}</text>`;
+  data.forEach((d, i) => {
+    const x = L + i * kw, hh = Math.max(0, (H - B) - y(d.h));
+    s += `<rect class="b${d.nad ? ' nad' : ''}" data-i="${i}" x="${x + mezera / 2}" y="${y(d.h)}" width="${Math.max(1, kw - mezera)}" height="${hh}" rx="${kw > 8 ? 2 : 0}"/>`;
+    if (d.popis !== undefined && (n <= 30 || i % Math.ceil(n / 30) === 0)) s += `<text x="${x + kw / 2}" y="${H - 3}" text-anchor="middle">${d.popis}</text>`;
+  });
+  if (prah) s += `<line class="prah" x1="${L}" x2="${W}" y1="${y(prah)}" y2="${y(prah)}"/>`;
+  el.innerHTML = s + '</svg>';
+  const bub = $('bublina'), svg = el.firstChild;
+  svg.onmousemove = e => {
+    const r = e.target.closest('rect.b'); if (!r) { bub.hidden = true; return; }
+    bub.textContent = data[+r.dataset.i].tip + (jednotka ? '' : ''); bub.hidden = false;
+    bub.style.left = Math.min(e.clientX + 12, innerWidth - 290) + 'px'; bub.style.top = (e.clientY + 14) + 'px';
+  };
+  svg.onmouseleave = () => { bub.hidden = true; };
+  svg.onclick = e => { const r = e.target.closest('rect.b'); if (r) data[+r.dataset.i].klik(); };
+}
+
+// hledání výskytů slova / spojení (podle kmene nebo přesného textu), cyklicky od kurzoru
+function dalsiVyskyt(test) {
+  const T = rozbor.tokeny, p = $('text').selectionEnd;
+  const shody = [];
+  for (let i = 0; i < T.length; i++) { const d = test(i); if (d) shody.push(d); }
+  if (!shody.length) return;
+  const s = shody.find(x => x[0] >= p) || shody[0];
+  aktivni = -1; vykresliPodklad();
+  skocNa(s[0], s[1]);
+  Dialog.info(`Výskyt ${shody.indexOf(s) + 1} z ${shody.length}`);
+}
+function kartaSlova(O) {
+  const F = rozbor.frekvence.slice(0, 50), S = rozbor.spojeni;
+  const max = F.length ? F[0].pocet : 1;
+  let h = '<h3>Nejčastější slova</h3><p class="muted">Bez funkčních slov a jmen, tvary sloučené podle kmene. Klik = další výskyt.</p><div class="slova" id="slFrek">';
+  h += F.map((f, i) => `<div data-f="${i}" title="${esc(f.tvary.slice(0, 12).join(', '))}" data-i18n="ne"><span class="pruh" style="width:${Math.round(f.pocet / max * 50)}px"></span>${esc(f.slovo)}</div><div class="n">${f.pocet}</div>`).join('');
+  h += '</div><h3>Opakovaná slovní spojení</h3><p class="muted">Spojení 2–4 slov, která se v textu vracejí – často autorské tiky.</p><div class="slova" id="slSpoj">';
+  h += S.length ? S.slice(0, 40).map((f, i) => `<div data-s="${i}" data-i18n="ne">${esc(f.text)}</div><div class="n">${f.pocet}</div>`).join('') : '<div class="muted">žádná</div><div></div>';
+  O.innerHTML = h + '</div>';
+  $('slFrek').onclick = e => { const d = e.target.closest('[data-f]'); if (!d) return; const f = F[+d.dataset.f], T = rozbor.tokeny;
+    dalsiVyskyt(i => !T[i].cislo && R.kmen(T[i].l) === f.kmen ? [T[i].od, T[i].do] : null); };
+  $('slSpoj').onclick = e => { const d = e.target.closest('[data-s]'); if (!d) return; const sl = S[+d.dataset.s].text.split(' '), T = rozbor.tokeny;
+    dalsiVyskyt(i => sl.every((w, k) => T[i + k] && T[i + k].l === w && (k === 0 || /^\s+$/.test(doc.text.slice(T[i + k - 1].do, T[i + k].od)))) ? [T[i].od, T[i + sl.length - 1].do] : null); };
+}
+
+function kartaPostavy(O) {
+  const P = rozbor.postavy, kap = rozbor.kapitoly;
+  if (!P.length) { O.innerHTML = '<p class="prazdne">Žádná jména (slova s velkým písmenem uprostřed věty, aspoň 3×).</p>'; return; }
+  const max = Math.max(...P.flatMap(p => p.poKap), 1);
+  let h = '<h3>Výskyty jmen po kapitolách</h3><p class="muted">Jméno = slovo s velkým písmenem uvnitř věty (postavy, ale i místa); tvary (Petr, Petra, Petrovi) sloučené. Sytost buňky = počet. Klik = další výskyt.</p>';
+  h += '<div class="tabulka-obal"><table class="tab"><thead><tr><th>Jméno</th><th>Celkem</th>' + kap.map((K, i) => `<th title="${esc(K.nazev)}">${i + 1}</th>`).join('') + '</tr></thead><tbody>';
+  P.forEach((p, i) => {
+    h += `<tr class="klik" data-p="${i}"><td data-i18n="ne" title="${esc(p.tvary.join(', '))}">${esc(p.jmeno)}</td><td><b>${p.celkem}</b></td>` +
+      p.poKap.map(c => `<td class="bunka" style="background:color-mix(in srgb,var(--accent) ${c ? Math.round(10 + c / max * 60) : 0}%,transparent)">${c || '·'}</td>`).join('') + '</tr>';
+  });
+  O.innerHTML = h + '</tbody></table></div>';
+  O.querySelectorAll('tr[data-p]').forEach(tr => tr.onclick = () => {
+    const p = P[+tr.dataset.p], T = rozbor.tokeny;
+    dalsiVyskyt(i => T[i].velke && R.kmen(T[i].s) === p.kmen ? [T[i].od, T[i].do] : null);
+  });
+}
+
+// ---------- navigace nálezy ----------
+function dalsiNalez(smer) {
+  const list = viditelne().filter(n => !jeIgn(n));
+  if (!list.length) return Dialog.info('Žádné nálezy');
+  const p = $('text').selectionStart;
+  let n;
+  if (smer > 0) n = list.find(x => x.od > p || (x.od === p && x.id > aktivni)) || list[0];
+  else n = [...list].reverse().find(x => x.od < p) || list[list.length - 1];
+  if (ui.karta !== 'nalezy') { ui.karta = 'nalezy'; vykresliPanel(); }
+  skocNaNalez(n);
+}
+
+// ---------- zdroje: soubor, moje knihy, Kroniky ----------
+async function nactiText(nazev, text, zdroj) {
+  if (zdroj) {
+    const ex = (await dbVsechny()).find(d => d.zdroj === zdroj);
+    if (ex) {
+      const stejne = ex.text === text;
+      if (stejne || await Dialog.potvrd(`„${ex.nazev}“ už máte uložený (upravený ${new Date(ex.upraveno).toLocaleString('cs-CZ')}). Otevřít uloženou verzi?`, { ok: 'Otevřít uloženou', zrus: 'Načíst znovu' })) {
+        return otevriDoc(ex);
+      }
+      ex.text = text; ex.upraveno = Date.now(); await dbUloz(ex); return otevriDoc(ex);
+    }
+  }
+  const d = novyDoc(nazev, text, zdroj);
+  await dbUloz(d);
+  otevriDoc(d);
+}
+async function otevritSoubory(files) {
+  files = [...files].sort((a, b) => a.name.localeCompare(b.name, 'cs', { numeric: true }));
+  if (!files.length) return;
+  const texty = await Promise.all(files.map(f => f.text()));
+  const nazev = files.length === 1 ? files[0].name.replace(/\.[^.]+$/, '') : `${files[0].name.replace(/\.[^.]+$/, '')} (+${files.length - 1})`;
+  await nactiText(nazev, texty.map(t => t.replace(/\r\n?/g, '\n')).join('\n\n'), '');
+}
+const fetchText = u => fetch(u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.text(); });
+const fetchJson = u => fetch(u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
+
+async function dialogZdroj() {
+  const D = $('dlgZdroj'), O = $('zdrojObsah');
+  D.showModal();
+  O.innerHTML = '<p class="muted">Načítám…</p>';
+  let h = '';
+  try {
+    const sez = await fetchJson('../moje_knihy/seznam.json');
+    h += '<h3>Moje knihy</h3>' + (sez.knihy || []).map((k, i) => `<div class="kn"><button class="tl" data-mk="${i}">📖 <span data-i18n="ne">${esc(k.nazev)}</span></button> <span class="muted">${(k.slov || 0).toLocaleString('cs-CZ')} slov</span></div>`).join('');
+    O._moje = sez.knihy || [];
+  } catch (e) { h += '<p class="muted">Moje knihy se nepodařilo načíst.</p>'; }
+  try {
+    const dila = await fetchJson('knihy/dila.json');
+    O._dila = [];
+    for (const d of dila) {
+      const knihy = await fetchJson(d.data + 'knihy.json');
+      O._dila.push({ d, knihy });
+      h += `<h3>${esc(d.ikona || '📚')} <span data-i18n="ne">${esc(d.nazev)}</span></h3>`;
+      knihy.forEach((k, ki) => {
+        h += `<details class="kn"><summary data-i18n="ne">${esc(k.nazev)}</summary><div class="kaps">` +
+          `<button class="tl hlavni-tl mini" data-kr="${O._dila.length - 1}|${ki}|-1">Celá kniha</button>` +
+          k.kapitoly.map((c, ci) => `<button class="tl mini" data-kr="${O._dila.length - 1}|${ki}|${ci}" data-i18n="ne">${esc(c.nazev)}</button>`).join('') + '</div></details>';
+      });
+    }
+  } catch (e) { h += '<p class="muted">Kroniky se nepodařilo načíst.</p>'; }
+  O.innerHTML = h;
+  O.onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    try {
+      if (b.dataset.mk !== undefined) {
+        const k = O._moje[+b.dataset.mk];
+        const texty = await Promise.all(k.soubory.map(s => fetchText('../moje_knihy/' + s)));
+        D.close(); await nactiText(k.nazev, texty.join('\n\n'), 'moje:' + k.id);
+      } else if (b.dataset.kr) {
+        const [di, ki, ci] = b.dataset.kr.split('|').map(Number), { d, knihy } = O._dila[di], k = knihy[ki];
+        const kaps = ci < 0 ? k.kapitoly : [k.kapitoly[ci]];
+        b.disabled = true;
+        const texty = await Promise.all(kaps.map(c => fetchText(d.data + k.id + '/' + c.soubor)));
+        D.close();
+        await nactiText(ci < 0 ? k.nazev : `${k.nazev} – ${kaps[0].nazev}`, texty.join('\n\n'), `kroniky:${d.id}/${k.id}/${ci < 0 ? '*' : kaps[0].soubor}`);
+      }
+    } catch (err) { Dialog.chyba('Načtení se nepovedlo: ' + err.message); }
+  };
+}
+
+async function dialogUlozene() {
+  const D = $('dlgUlozene'), O = $('ulozeneObsah');
+  const vse = (await dbVsechny()).sort((a, b) => b.upraveno - a.upraveno);
+  O.innerHTML = vse.length ? '<div class="tabulka-obal"><table class="tab"><thead><tr><th>Název</th><th>Slov</th><th>Upraveno</th><th></th></tr></thead><tbody>' + vse.map(d =>
+    `<tr><td data-i18n="ne">${d.id === doc.id ? '▶ ' : ''}${esc(d.nazev)}</td><td>${(d.text.match(/[\p{L}\d]+/gu) || []).length.toLocaleString('cs-CZ')}</td><td>${new Date(d.upraveno).toLocaleDateString('cs-CZ')}</td>` +
+    `<td><button class="tl mini" data-o="${d.id}">Otevřít</button> <button class="tl mini" data-s="${d.id}" title="Smazat" aria-label="Smazat">🗑</button></td></tr>`).join('') + '</tbody></table></div>'
+    : '<p class="prazdne">Zatím nic uloženého.</p>';
+  if (!D.open) D.showModal();
+  O.onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.o) { await ulozDoc(false); otevriDoc(await dbNacti(b.dataset.o)); D.close(); }
+    else if (b.dataset.s) {
+      const d = vse.find(x => x.id === b.dataset.s);
+      if (!await Dialog.potvrd(`Smazat rukopis „${d.nazev}“ i s ignorovanými nálezy?`, { ok: 'Smazat' })) return;
+      await dbSmaz(d.id);
+      if (d.id === doc.id) { const zbytek = (await dbVsechny()); otevriDoc(zbytek[0] || novyDoc('Nový rukopis', '')); if (!zbytek.length) await dbUloz(doc); }
+      dialogUlozene();
+    }
+  };
+}
+
+// ---------- nastavení ----------
+const POLE = [['nOkno', 'okno'], ['nMin', 'minDelka'], ['nPrah', 'prahVety'], ['nRetez', 'retezMin'], ['nRychl', 'rychlost'], ['nNahlas', 'rychlostNahlas']];
+function naplnNastaveni(z) {
+  POLE.forEach(([id, k]) => { $(id).value = z[k]; });
+  $('nJmena').checked = z.ignorovatJmena; $('nRec').checked = z.recNehlasit;
+}
+$('nVychozi').onclick = () => naplnNastaveni(R.VYCHOZI);
+$('nUlozit').onclick = () => {
+  for (const [id, k] of POLE) { const v = parseInt($(id).value, 10); if (v > 0) nast[k] = Math.min(+$(id).max, Math.max(+$(id).min, v)); }
+  nast.ignorovatJmena = $('nJmena').checked; nast.recNehlasit = $('nRec').checked;
+  ulozNast(); $('dlgNastaveni').close(); rozebrat();
+};
+const SEZ = [['sVata', 'vata'], ['sSlaba', 'slaba'], ['sReci', 'slovesaReci'], ['sNepocitat', 'nepocitat']];
+function naplnSeznamy(z) { SEZ.forEach(([id, k]) => { $(id).value = (z[k] || []).join('\n'); }); }
+$('sVychozi').onclick = () => naplnSeznamy(R.VYCHOZI);
+$('sUlozit').onclick = () => {
+  SEZ.forEach(([id, k]) => { nast[k] = $(id).value.split('\n').map(s => s.trim()).filter(Boolean); });
+  ulozNast(); $('dlgSeznamy').close(); rozebrat(); Dialog.info('Seznamy uloženy');
+};
+
+// ---------- export ----------
+function stahni(obsah, jmeno, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+const jmenoSouboru = () => (doc.nazev || 'rukopis').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'rukopis';
+
+// ---------- ukázka ----------
+const UKAZKA = `# Kapitola první
+
+Když Věra vlastně poprvé uviděla starý člun, bylo už docela pozdě. Člun ležel na břehu a byl napůl zasypán pískem.
+
+„Kdo ho sem dal?“ zeptala se tiše.
+
+„Nevím,“ odpověděl Petr. „Asi to byl nějak táta, nebo možná ten soused, co tu dřív bydlel a co pořád chodil k vodě, když se začalo stmívat a všichni ostatní už seděli v hospodě a povídali si o počasí a o úrodě a o tom, kdo komu co dluží.“
+
+Věra se začala smát. Byl to trochu zvláštní pocit, stát na břehu a dívat se na člun, který tu byl celé roky.
+
+# Kapitola druhá
+
+Ráno bylo chladno. Cílem bylo zlepšení stavu zabezpečení organizace přívozu. Petr byl unavený a Věra měla strach.
+
+Najednou se ozval výkřik. Věra se otočila a uviděla Petra, jak stojí u vody.
+
+„Pojď sem!“ zavolal Petr nervózně.
+`;
+
+// ---------- příkazy ----------
+async function prikaz(p) {
+  zavriNabidky();
+  switch (p) {
+    case 'novy': await ulozDoc(false); { const d = novyDoc('Nový rukopis', ''); await dbUloz(d); otevriDoc(d); $('text').focus(); } break;
+    case 'otevrit': $('soubor').click(); break;
+    case 'vlozit':
+      try { const t = await navigator.clipboard.readText(); if (!t.trim()) return Dialog.info('Schránka je prázdná'); await ulozDoc(false); await nactiText('Vložený text', t.replace(/\r\n?/g, '\n'), ''); }
+      catch (e) { Dialog.info('Prohlížeč nepovolil čtení schránky – vložte text do editoru přes Ctrl+V.'); $('text').focus(); }
+      break;
+    case 'zdroj': await ulozDoc(false); dialogZdroj(); break;
+    case 'ulozene': await ulozDoc(false); dialogUlozene(); break;
+    case 'ulozit': ulozDoc(true); break;
+    case 'ukazka': await ulozDoc(false); await nactiText('Ukázka', UKAZKA, 'ukazka'); break;
+    case 'rozebrat': rozebrat(); break;
+    case 'dalsi': dalsiNalez(1); break;
+    case 'predchozi': dalsiNalez(-1); break;
+    case 'nastaveni': naplnNastaveni(nast); $('dlgNastaveni').showModal(); break;
+    case 'seznamy': naplnSeznamy(nast); $('dlgSeznamy').showModal(); break;
+    case 'zrusitIgnor':
+      if (await Dialog.potvrd('Zrušit všechna ignorování nálezů v tomto rukopisu?', { ok: 'Zrušit ignorování' })) { ignSet.clear(); doc.ignorTexty = []; po_ignoru(); }
+      break;
+    case 'podtrzeni': ui.podtrzeni = !ui.podtrzeni; ulozUi(); $('btnPodtrzeni').setAttribute('aria-pressed', ui.podtrzeni); $('podklad').classList.toggle('bez', !ui.podtrzeni); break;
+    case 'exportMd': if (zastarale) rozebrat(); stahni(R.zpravaMd(rozbor, doc.text, doc.nazev, jeIgn), jmenoSouboru() + '_redakce.md', 'text/markdown;charset=utf-8'); break;
+    case 'exportCsv': if (zastarale) rozebrat(); stahni(R.csv(rozbor, doc.text, jeIgn), jmenoSouboru() + '_nalezy.csv', 'text/csv;charset=utf-8'); break;
+    case 'exportText': stahni($('text').value, jmenoSouboru() + '.md', 'text/markdown;charset=utf-8'); break;
+    case 'napoveda': $('dlgNapoveda').showModal(); break;
+  }
+}
+
+// nabídky lišty
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-prikaz]');
+  if (b && !b.disabled) { e.stopPropagation(); return prikaz(b.dataset.prikaz); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+addEventListener('resize', () => { zavriNabidky(); if (ui.karta === 'rytmus' && rozbor) vykresliPanel(); });
+document.querySelectorAll('dialog [data-zavrit]').forEach(b => b.onclick = () => b.closest('dialog').close());
+document.querySelectorAll('[data-karta]').forEach(b => b.onclick = () => { ui.karta = b.dataset.karta; ulozUi(); vykresliPanel(); });
+$('soubor').onchange = async e => { await ulozDoc(false); await otevritSoubory(e.target.files); e.target.value = ''; };
+
+// editor
+const T = $('text');
+T.addEventListener('input', () => {
+  zastarale = true;
+  $('podklad').classList.add('zastarale');
+  naKurzoru = []; vykresliDetail();
+  nastavStav();
+  planujUlozeni();
+  clearTimeout(casRozboru);
+  if (T.value.length <= VELKY_TEXT) casRozboru = setTimeout(rozebrat, T.value.length > 40000 ? 1200 : 600);
+});
+T.addEventListener('scroll', () => { $('podklad').scrollTop = T.scrollTop; });
+T.addEventListener('click', aktualizujKurzor);
+T.addEventListener('keyup', e => { if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End' || e.key.startsWith('Page')) aktualizujKurzor(); });
+$('nazev').addEventListener('input', planujUlozeni);
+// přetažení souboru do editoru
+T.addEventListener('dragover', e => { if ([...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+T.addEventListener('drop', async e => { if (e.dataTransfer.files.length) { e.preventDefault(); await ulozDoc(false); otevritSoubory(e.dataTransfer.files); } });
+// podklad bez posuvníku: šířku posuvníku textarey mu přidáme do pravého odsazení, ať se řádky lámou stejně
+function srovnejPodklad() {
+  const P = $('podklad'), sb = T.offsetWidth - T.clientWidth;
+  P.style.paddingRight = (parseFloat(getComputedStyle(T).paddingRight) + sb) + 'px';
+  P.scrollTop = T.scrollTop;
+}
+new ResizeObserver(srovnejPodklad).observe(T);
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  if (k === 'F1') { e.preventDefault(); prikaz('napoveda'); }
+  else if (k === 'F8') { e.preventDefault(); dalsiNalez(e.shiftKey ? -1 : 1); }
+  else if ((e.ctrlKey || e.metaKey) && k === 'Enter') { e.preventDefault(); rozebrat(); }
+  else if ((e.ctrlKey || e.metaKey) && (k === 's' || k === 'S')) { e.preventDefault(); ulozDoc(true); }
+  else if ((e.ctrlKey || e.metaKey) && (k === 'o' || k === 'O')) { e.preventDefault(); prikaz('otevrit'); }
+  else if (e.altKey && (e.code === 'KeyI')) { e.preventDefault(); if (aktivni >= 0 && rozbor && !zastarale) prepniIgnor(rozbor.nalezy[aktivni]); }
+  else if (e.altKey && (e.code === 'KeyP')) { e.preventDefault(); prikaz('podtrzeni'); }
+  else if (k === 'Escape' && document.querySelector('.nabidka:not([hidden])')) zavriNabidky();
+});
+addEventListener('beforeunload', () => { if (doc) { doc.text = T.value; ulozDoc(false); } });
+addEventListener('pagehide', () => { if (doc) ulozDoc(false); });
+
+// ---------- start ----------
+(async function start() {
+  if (window.self === window.top) document.body.classList.add('samostatne');
+  $('btnPodtrzeni').setAttribute('aria-pressed', ui.podtrzeni);
+  let d = null;
+  try {
+    const id = localStorage.getItem(KL_POSL);
+    if (id) d = await dbNacti(id);
+    if (!d) { const vse = await dbVsechny(); d = vse.sort((a, b) => b.upraveno - a.upraveno)[0]; }
+    if (!d) { d = novyDoc('Ukázka', UKAZKA, 'ukazka'); await dbUloz(d); }
+  } catch (e) { d = novyDoc('Ukázka', UKAZKA, 'ukazka'); Dialog.chyba('Úložiště prohlížeče není dostupné – práce se neuloží.'); }
+  otevriDoc(d);
+})();
+</script>
+</body>
+</html>

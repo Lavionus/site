@@ -17,4 +17,7 @@ echo "načti stránku podruhé, nebo použij Ctrl+Shift+R."
 echo "Ukončení: Ctrl+C"
 echo
 
+# seznam knih pro Čtečku knih (moje_knihy/) – ať jsou nově nakopírované knihy vidět i lokálně
+python3 tools/vlastni_knihy.py >/dev/null || echo "⚠ seznam moje_knihy/ se nepodařilo vygenerovat"
+
 python -m http.server "$PORT" --bind 127.0.0.1

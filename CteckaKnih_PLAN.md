@@ -11,8 +11,8 @@ Testy: `node _test/ctecka_knih_test.js`, `python3 _test/ctecka_knih_ui.py`, regr
 `node _test/kroniky_test.js`, `python3 _test/kroniky_ui.py`, `python3 _test/kniha_povidky_ui.py`.
 
 ## Etapy
-- [x] 1. **Knihy z webu**: složka `obsah/knihy/vlastni/` (soubor `.md` nebo složka s kapitolami
-      `*.md` a obrázky), `python3 tools/vlastni_knihy.py [zdroj…]` zkopíruje zdroje a vygeneruje
+- [x] 1. **Knihy z webu**: složka `moje_knihy/` v kořeni webu (od 6. 11. odpoledne; soubor `.md/.txt/.epub/.mobi`
+      nebo složka s kapitolami `*.md` a obrázky; seznam generuje sám upload.sh i test_local.sh), `python3 tools/vlastni_knihy.py [zdroj…]` zkopíruje zdroje a vygeneruje
       `seznam.json` (název, autor, soubory, obrázky, slova, otisk). Dialog „Přidat knihu“: ze zařízení,
       celá složka, knihy z webu. Napojená kniha (`meta.web`) se při otevření knihovny i čtečky
       aktualizuje podle otisku; pozice drží stabilní jména kapitol (podle názvu, ne pořadí).

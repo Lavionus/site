@@ -1,12 +1,12 @@
 /* Čtečka knih – data knihovny bez UI (window.KNIH_DATA): IndexedDB, uložení převedené knihy, pokrok,
-   série, knihy z webu (obsah/knihy/vlastni/seznam.json), záloha celé knihovny do ZIP, čtenářský deník.
+   série, knihy z webu (moje_knihy/seznam.json v kořeni webu, generuje tools/vlastni_knihy.py), záloha celé knihovny do ZIP, čtenářský deník.
    IndexedDB webapp_ctecka_knih: „meta“ = údaje o knize (+ obalkaBlob), „obsah“ = {id, md: {soubor: text}, obrazky: {jméno: Blob}}.
    localStorage: webapp_ctecka_knih (nastavení knihovny), webapp_ctecka_knih_<id> (+ _poznamky) = stav čtečky. */
 (function (koren) {
   'use strict';
   const J = koren.KRONIKY_JADRO, P = koren.CTECKA_PREVOD;
   const KLIC = 'webapp_ctecka_knih', klicKnihy = id => KLIC + '_' + id;
-  const WEB = 'knihy/vlastni/';
+  const WEB = '../moje_knihy/';   // složka v kořeni webu – co se do ní nakopíruje, to po nahrání nabídne čtečka
   const cti = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
 
   /* ---------- IndexedDB ---------- */
@@ -107,6 +107,11 @@
       if (!r.ok) throw new Error(`Soubor ${f} na webu chybí (HTTP ${r.status}).`);
       return typ === 'blob' ? r.blob() : r.text();
     };
+    // EPUB, MOBI, TXT: stáhnout jako soubor a převést stejně jako soubor ze zařízení
+    if (pol.format) {
+      const f = pol.soubory[0], k = await P.nactiSoubor(new File([await nacti(f, 'blob')], f.split('/').pop()));
+      return { ...k, nazev: k.nazev || pol.nazev, autor: k.autor || pol.autor || '', soubor: pol.id, velikost: k.velikost };
+    }
     const texty = await Promise.all(pol.soubory.map(f => nacti(f)));
     const obr = {};
     await Promise.all([...(pol.obrazky || []), ...(pol.obalka ? [pol.obalka] : [])].map(async f => {

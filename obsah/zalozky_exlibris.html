@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔖 Záložky do knih a ex libris</title>
+<meta name="description" content="Generátor záložek do knih a ex libris k tisku: citáty, názvy knih, ornamentální rámečky, generativní vzory, monogramy a kreslené symboly, arch A4 s ořezovými značkami, PDF, SVG, PNG a export pro 3D razítko.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/opentype.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/clipper.min.js"></script>
+<script src="modelar/jadro/soubory/svg.js"></script>
+<script src="zalozky_exlibris/jadro.js"></script>
+<script src="zalozky_exlibris/razitko3d.js"></script>
+<script src="zalozky_exlibris/vystup.js"></script>
+<style>
+body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--text);font-family:var(--font)}
+[hidden]{display:none !important}
+button,input,select,textarea{font-family:inherit}
+
+/* horní lišta – skupiny s rozbalovacími nabídkami (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.pole input:focus-visible,.pole select:focus-visible,.pole textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+.tl.mini{padding:2px 7px;font-size:.78rem}
+a.tl{text-decoration:none;display:inline-block}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+/* rozložení */
+main{flex:1;display:grid;grid-template-columns:minmax(300px,360px) 1fr;min-height:0}
+.panel{overflow-y:auto;border-right:1px solid var(--border);background:var(--bg-panel);padding:8px 10px 60px}
+.plocha{overflow:auto;position:relative;display:flex;flex-direction:column;align-items:center;padding:18px 14px 50px;gap:10px}
+details.oddil{border:1px solid var(--border);border-radius:8px;margin:0 0 8px;background:var(--bg-elevated)}
+details.oddil > summary{cursor:pointer;padding:7px 10px;font-weight:600;font-size:.9rem;list-style:none;display:flex;align-items:center;gap:6px}
+details.oddil > summary::-webkit-details-marker{display:none}
+details.oddil > summary::before{content:'▸';color:var(--text-muted);transition:transform .15s}
+details.oddil[open] > summary::before{transform:rotate(90deg)}
+details.oddil > summary .souhrn{margin-left:auto;font-weight:400;font-size:.75rem;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%}
+.telo{padding:2px 10px 10px;display:flex;flex-direction:column;gap:8px}
+.mrizka{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pole{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pole > label,.pole > .popis{font-size:.76rem;color:var(--text-muted)}
+.pole input[type=text],.pole input[type=number],.pole select,.pole textarea{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:.86rem;width:100%;box-sizing:border-box;min-width:0}
+.pole textarea{resize:vertical;min-height:70px;line-height:1.35}
+.pole input[type=range]{width:100%;accent-color:var(--accent)}
+.pole input[type=color]{width:100%;height:30px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);padding:2px;box-sizing:border-box;cursor:pointer}
+.zaskrt{display:flex;align-items:center;gap:7px;font-size:.84rem;cursor:pointer}
+.zaskrt input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.radek-tl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.segment{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.segment button{flex:1;background:var(--bg-control);color:var(--text);border:0;border-right:1px solid var(--border);padding:5px 6px;font-size:.82rem;cursor:pointer}
+.segment button:last-child{border-right:0}
+.segment button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent,#fff);font-weight:600}
+.pozn{font-size:.76rem;color:var(--text-faint);line-height:1.35;margin:0}
+.palety{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.paleta{border:1px solid var(--border);border-radius:6px;padding:3px;cursor:pointer;background:var(--bg-control);display:flex;height:26px;overflow:hidden}
+.paleta span{flex:1}
+.paleta[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.vybery{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px}
+.vyber{border:1px solid var(--border);border-radius:7px;background:var(--bg-control);padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.68rem;color:var(--text-muted)}
+.vyber svg{width:100%;height:auto;max-height:60px;background:#fbf7ee;border-radius:4px}
+.vyber[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.tiskbarvy{display:flex;gap:4px;flex-wrap:wrap}
+.tiskbarvy button{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:0}
+.tiskbarvy button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+/* náhled */
+.zalozky{display:flex;gap:28px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.kus{display:flex;flex-direction:column;align-items:center;gap:6px}
+.kus .stitek{font-size:.78rem;color:var(--text-muted)}
+.kus .obal{filter:drop-shadow(0 3px 10px rgba(0,0,0,.28));cursor:pointer;line-height:0}
+.kus .obal.aktivni{outline:2px solid var(--accent);outline-offset:6px;border-radius:4px}
+.kus svg{display:block}
+.info{font-size:.8rem;color:var(--text-muted);text-align:center}
+.varovani{font-size:.8rem;color:var(--warn);text-align:center;max-width:520px}
+.arch{background:#fff;box-shadow:var(--shadow);line-height:0}
+.arch svg{display:block;width:100%;height:auto}
+.archinfo{font-size:.82rem;color:var(--text-muted);text-align:center;max-width:620px}
+
+/* dialogy */
+dialog.okno{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:0;max-width:min(680px,94vw);width:100%}
+dialog.okno::backdrop{background:rgba(0,0,0,.45)}
+.okno-hlava{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.okno-hlava h2{font-size:1rem;margin:0;flex:1}
+.okno-telo{padding:12px 14px;max-height:70vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;font-size:.88rem;line-height:1.45}
+.okno-telo h3{font-size:.9rem;margin:8px 0 2px}
+.okno-telo ol,.okno-telo ul{margin:0;padding-left:20px}
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.karta{border:1px solid var(--border);border-radius:8px;background:var(--bg-elevated);padding:6px;display:flex;flex-direction:column;gap:4px}
+.karta img{width:100%;height:130px;object-fit:contain;background:var(--bg-deep,var(--bg));border-radius:5px;cursor:pointer}
+.karta .jm{font-size:.8rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.karta .dt{font-size:.7rem;color:var(--text-faint)}
+.karta .radek-tl{gap:3px}
+.prazdne{color:var(--text-faint);text-align:center;padding:20px}
+.vety{display:flex;flex-direction:column;gap:4px}
+.vety button{text-align:left;white-space:normal;line-height:1.35}
+.knihy{display:flex;flex-direction:column;gap:4px}
+.knihy .kn{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pomoc kbd{margin-left:0}
+
+@media (max-width:760px){
+  body{height:auto;min-height:100vh;overflow:auto}
+  main{grid-template-columns:1fr}
+  .panel{border-right:0;border-bottom:1px solid var(--border);padding-bottom:12px;overflow:visible}
+  .plocha{overflow:visible;padding:14px 8px 30px;order:-1;border-bottom:1px solid var(--border)}
+  .lista{flex-wrap:wrap;overflow:visible}
+  .mrizka{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <div class="skup skup-projekt"><h1>🔖 Záložky a ex libris</h1></div>
+  <div class="skup" role="group" aria-label="Druh"><span class="skup-nazev" aria-hidden="true">Druh</span><div class="skup-tl">
+    <button class="tl" data-druh="zalozka" aria-pressed="true" title="Záložka do knihy (1)">🔖<span class="txt"> Záložka</span></button>
+    <button class="tl" data-druh="exlibris" aria-pressed="false" title="Ex libris (2)">🏷<span class="txt"> Ex libris</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false" title="Nový, galerie, uložení">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="galerie" title="Galerie uložených návrhů (G)">🖼<span class="txt"> Galerie</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="pdf" title="PDF s archem k tisku (Ctrl+P)">🖨<span class="txt"> Tisk PDF</span></button>
+    <button class="tl" data-nabidka="nabExport" aria-haspopup="true" aria-expanded="false" title="SVG, PNG, 3D razítko">⬇<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="kus" aria-pressed="true" title="Náhled kusu (N)">👁<span class="txt"> Náhled</span></button>
+    <button class="tl" data-pohled="arch" aria-pressed="false" title="Rozvržení na arch (A)">▦<span class="txt"> Arch</span></button>
+    <button class="tl" data-nabidka="nabZobrazit" aria-haspopup="true" aria-expanded="false" title="Kóty, velikost náhledu">⚙<span class="txt"> Možnosti</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">✚ Nový návrh</button>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit do galerie <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="ulozitJako">💾 Uložit jako nový…</button>
+  <button class="tl" data-prikaz="galerie">🖼 Galerie uložených <kbd>G</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="zalohaVen">📤 Záloha galerie (JSON)</button>
+  <button class="tl" data-prikaz="zalohaDovnitr">📥 Obnovit ze zálohy…</button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pdf">🖨 PDF – arch k tisku <kbd>Ctrl+P</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="svg">🖋 SVG jednoho kusu <kbd>Ctrl+E</kbd></button>
+  <button class="tl" data-prikaz="png">🖼 PNG jednoho kusu (podle DPI)</button>
+  <hr>
+  <button class="tl" data-prikaz="razitko" id="mnRazitko">🧊 Vyrobit 3D razítko…</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl prep" data-prep="kota" aria-pressed="true">Kóta otvoru na střapec</button>
+  <button class="tl prep" data-prep="spadavka" aria-pressed="false">Ukázat spadávku</button>
+  <button class="tl prep" data-prep="rezy" aria-pressed="true">Čáry řezu na archu</button>
+  <hr>
+  <button class="tl" data-prikaz="zvetsit">➕ Zvětšit náhled <kbd>+</kbd></button>
+  <button class="tl" data-prikaz="zmensit">➖ Zmenšit náhled <kbd>−</kbd></button>
+  <button class="tl" data-prikaz="prizpusobit">⤢ Přizpůsobit <kbd>0</kbd></button>
+</div>
+
+<main>
+  <aside class="panel" id="panel">
+    <!-- ================= ZÁLOŽKA ================= -->
+    <div id="formZalozka">
+      <details class="oddil" open>
+        <summary>Rozměr a otvor <span class="souhrn" id="sRozmer"></span></summary>
+        <div class="telo">
+          <div class="pole"><label for="z_rozmer">Rozměr</label><select id="z_rozmer" data-p="z.rozmer"></select></div>
+          <div class="mrizka" id="zVlastni">
+            <div class="pole"><label for="z_sirka">Šířka (mm)</label><input type="number" id="z_sirka" data-p="z.sirka" min="25" max="120" step="1"></div>
+            <div class="pole"><label for="z_vyska">Výška (mm)</label><input type="number" id="z_vyska" data-p="z.vyska" min="60" max="290" step="1"></div>
+          </div>
+          <div class="pole"><label for="z_zaobleni">Zaoblení rohů (mm) – jen náhled, rohy zakulatíte vykrajovačkou</label><input type="range" id="z_zaobleni" data-p="z.zaobleni" min="0" max="10" step="0.5"></div>
+          <label class="zaskrt"><input type="checkbox" data-p="z.otvor.pouzit"> Otvor na střapec</label>
+          <div class="mrizka" id="zOtvor">
+            <div class="pole"><label for="z_prumer">Průměr ⌀ (mm)</label><input type="number" id="z_prumer" data-p="z.otvor.prumer" min="2" max="15" step="0.5"></div>
+            <div class="pole"><label for="z_odsaz">Střed od horní hrany (mm)</label><input type="number" id="z_odsaz" data-p="z.otvor.odsazeni" min="3" max="40" step="0.5"></div>
+          </div>
+        </div>
+      </details>
+      <details class="oddil" open>
+        <summary>Barvy <span class="souhrn" id="sBarvy"></span></summary>
+        <div class="telo">
+          <div class="palety" id="palety"></div>
+          <div class="mrizka" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="pole"><label for="z_papir">Pozadí</label><input type="color" id="z_papir" data-p="z.barvy.papir"></div>
+            <div class="pole"><label for="z_inkoust">Text</label><input type="color" id="z_inkoust" data-p="z.barvy.inkoust"></div>
+            <div class="pole"><label for="z_akcent">Akcent</label><input type="color" id="z_akcent" data-p="z.barvy.akcent"></div>
+          </div>
+        </div>
+      </details>
+      <details class="oddil" open>
+        <summary>Strana <span class="souhrn" id="sStrana"></span></summary>
+        <div class="telo">
+          <div class="segment" role="group" aria-label="Strana">
+            <button type="button" data-strana="lic" aria-pressed="true">Líc</button>
+            <button type="button" data-strana="rub" aria-pressed="false">Rub</button>
+          </div>
+          <div class="radek-tl"><button class="tl mini" type="button" data-prikaz="kopirovatStranu" id="btnKopie">⧉ Zkopírovat na druhou stranu</button><button class="tl mini" type="button" data-prikaz="prohoditStrany">⇄ Prohodit líc a rub</button></div>
+          <div class="pole"><label for="s_sablona">Šablona</label><select id="s_sablona" data-p="s.sablona"></select></div>
+          <div class="pole" data-pro="citat kniha minimal ramecek vzor">
+            <label for="s_text" id="lText">Text</label>
+            <textarea id="s_text" data-p="s.text" data-i18n="ne" maxlength="600"></textarea>
+            <div class="radek-tl">
+              <select id="vzorCitat" class="tl mini" aria-label="Vybrat citát" data-pro="citat ramecek"><option value="">💬 Vybrat citát…</option></select>
+              <button class="tl mini" type="button" data-prikaz="otevritText" title="Otevřít text ze souboru .md nebo .txt">📂 Ze souboru</button>
+              <button class="tl mini" type="button" data-prikaz="zKnih" title="Citát nebo název z Moje knihy / Kroniky">📚 Z mých knih</button>
+            </div>
+          </div>
+          <div class="mrizka" data-pro="citat kniha minimal ramecek vzor">
+            <div class="pole"><label for="s_autor" id="lAutor">Autor</label><input type="text" id="s_autor" data-p="s.autor" data-i18n="ne" maxlength="120"></div>
+            <div class="pole" data-pro="citat kniha"><label for="s_zdroj" id="lZdroj">Dílo</label><input type="text" id="s_zdroj" data-p="s.zdroj" data-i18n="ne" maxlength="120"></div>
+          </div>
+          <div class="mrizka">
+            <div class="pole"><label for="s_pismo">Písmo textu</label><select id="s_pismo" data-p="s.pismo"></select></div>
+            <div class="pole"><label for="s_pismo2">Písmo autora</label><select id="s_pismo2" data-p="s.pismo2"></select></div>
+          </div>
+          <div class="mrizka">
+            <div class="pole" data-pro="citat kniha minimal ramecek"><label for="s_ramecek">Rámeček</label><select id="s_ramecek" data-p="s.ramecek"></select></div>
+            <div class="pole" data-pro="citat kniha ramecek"><label for="s_ozdoba">Ozdoba</label><select id="s_ozdoba" data-p="s.ozdoba"></select></div>
+            <div class="pole" data-pro="citat"><label for="s_zar">Zarovnání</label><select id="s_zar" data-p="s.zarovnani"><option value="stred">na střed</option><option value="vlevo">vlevo</option></select></div>
+          </div>
+          <div data-pro="vzor" class="telo" style="padding:0">
+            <div class="pole"><label for="s_vzor">Vzor</label><select id="s_vzor" data-p="s.vzor"></select></div>
+            <div class="mrizka">
+              <div class="pole"><label for="s_hustota">Hustota</label><input type="range" id="s_hustota" data-p="s.hustota" min="1" max="5" step="1"></div>
+              <div class="pole"><span class="popis">Varianta</span><div class="radek-tl"><button class="tl mini" type="button" data-prikaz="nahoda" title="Jiná varianta vzoru (R)">🎲 Jiná</button><span class="pozn" id="seedInfo"></span></div></div>
+            </div>
+            <label class="zaskrt"><input type="checkbox" data-p="s.stitek"> Štítek s textem přes vzor</label>
+          </div>
+          <label class="zaskrt" data-pro="citat"><input type="checkbox" data-p="s.uvozovky"> Velké uvozovky nad citátem</label>
+          <label class="zaskrt" data-pro="kniha"><input type="checkbox" data-p="s.svisle"> Název svisle (jako hřbet knihy)</label>
+          <label class="zaskrt" data-pro="minimal"><input type="checkbox" data-p="s.poleStrana"> Kolonka „str. ____“ na zapsání stránky</label>
+          <label class="zaskrt"><input type="checkbox" data-p="s.invert"> Tmavá strana (prohodit pozadí a text)</label>
+          <div class="pole">
+            <label for="s_obr">Vlastní obrázek</label>
+            <div class="radek-tl">
+              <select id="s_obr" data-p="s.obrazek.umisteni" style="flex:1;min-width:120px"><option value="zadne">bez obrázku</option><option value="pozadi">celé pozadí</option><option value="nahore">pás nahoře</option><option value="dole">pás dole</option><option value="okno">okénko s rámečkem</option></select>
+              <button class="tl mini" type="button" data-prikaz="obrazek">📷 Nahrát…</button>
+            </div>
+            <div class="pole" id="zKryti"><label for="s_kryti">Krytí obrázku v pozadí</label><input type="range" id="s_kryti" data-p="s.obrazek.kryti" min="0.05" max="1" step="0.05"></div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ================= EX LIBRIS ================= -->
+    <div id="formExlibris" hidden>
+      <details class="oddil" open>
+        <summary>Nápis a jméno <span class="souhrn" id="sNapis" data-i18n="ne"></span></summary>
+        <div class="telo">
+          <div class="pole"><label for="e_napis">Nápis</label><select id="e_napis" data-p="e.napis"></select></div>
+          <div class="pole" id="eVlastniNapis"><label for="e_napisV">Vlastní nápis</label><input type="text" id="e_napisV" data-p="e.napisVlastni" data-i18n="ne" maxlength="40"></div>
+          <div class="pole"><label for="e_jmeno">Jméno majitele</label><input type="text" id="e_jmeno" data-p="e.jmeno" data-i18n="ne" maxlength="60"></div>
+          <div class="pole" id="eGenitiv"><label for="e_jmeno2">Jméno po „Z knih“ (2. pád)</label><input type="text" id="e_jmeno2" data-p="e.jmeno2" data-i18n="ne" maxlength="60"><p class="pozn">Prázdné = návrh automaticky (<span id="genNavrh" data-i18n="ne"></span>). Zkontrolujte ho.</p></div>
+          <div class="pole"><label for="e_motto">Motto (nepovinné)</label><input type="text" id="e_motto" data-p="e.motto" data-i18n="ne" maxlength="80"></div>
+        </div>
+      </details>
+      <details class="oddil" open>
+        <summary>Kompozice <span class="souhrn" id="sKomp"></span></summary>
+        <div class="telo">
+          <div class="vybery" id="kompozice"></div>
+          <div class="mrizka">
+            <div class="pole"><label for="e_rozmer">Rozměr</label><select id="e_rozmer" data-p="e.rozmer"></select></div>
+            <div class="pole" id="eRamecek"><label for="e_ramecek">Rámeček</label><select id="e_ramecek" data-p="e.ramecek"></select></div>
+          </div>
+          <div class="mrizka" id="eVlastni">
+            <div class="pole"><label for="e_sirka">Šířka (mm)</label><input type="number" id="e_sirka" data-p="e.sirka" min="30" max="190"></div>
+            <div class="pole"><label for="e_vyska">Výška (mm)</label><input type="number" id="e_vyska" data-p="e.vyska" min="30" max="270"></div>
+          </div>
+        </div>
+      </details>
+      <details class="oddil" open>
+        <summary>Motiv uprostřed <span class="souhrn" id="sStred"></span></summary>
+        <div class="telo">
+          <div class="segment" role="group" aria-label="Motiv">
+            <button type="button" data-stred="monogram">Monogram</button>
+            <button type="button" data-stred="symbol">Symbol</button>
+            <button type="button" data-stred="obrazek">Obrázek</button>
+            <button type="button" data-stred="nic">Nic</button>
+          </div>
+          <div id="eMonogram" class="telo" style="padding:0">
+            <div class="mrizka">
+              <div class="pole"><label for="e_inic">Iniciály</label><input type="text" id="e_inic" data-p="e.inicialy" data-i18n="ne" maxlength="3"></div>
+              <div class="pole"><label for="e_pismoM">Písmo monogramu</label><select id="e_pismoM" data-p="e.pismoMonogram"></select></div>
+            </div>
+            <div class="vybery" id="monogramy"></div>
+          </div>
+          <div id="eSymbol" class="vybery"></div>
+          <div id="eObrazek" class="radek-tl"><button class="tl mini" type="button" data-prikaz="obrazek">📷 Nahrát obrázek…</button><span class="pozn">Do 3D razítka se obrázek nepřevádí.</span></div>
+        </div>
+      </details>
+      <details class="oddil" open>
+        <summary>Písma a barvy <span class="souhrn" id="sEBarvy"></span></summary>
+        <div class="telo">
+          <div class="mrizka">
+            <div class="pole"><label for="e_pismoN">Písmo nápisu</label><select id="e_pismoN" data-p="e.pismoNapis"></select></div>
+            <div class="pole"><label for="e_pismoJ">Písmo jména</label><select id="e_pismoJ" data-p="e.pismoJmeno"></select></div>
+          </div>
+          <label class="zaskrt"><input type="checkbox" data-p="e.dvoubarevne"> Dvoubarevný tisk (inkoust + akcent)</label>
+          <div class="pole"><span class="popis">Barva tisku (inkoust)</span><div class="tiskbarvy" id="tiskBarvy"></div></div>
+          <div class="mrizka" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="pole"><label for="e_inkoust">Inkoust</label><input type="color" id="e_inkoust" data-p="e.barvy.inkoust"></div>
+            <div class="pole" id="eAkcent"><label for="e_akcent">Akcent</label><input type="color" id="e_akcent" data-p="e.barvy.akcent"></div>
+            <div class="pole"><label for="e_papir">Papír</label><input type="color" id="e_papir" data-p="e.barvy.papir"></div>
+          </div>
+          <label class="zaskrt"><input type="checkbox" data-p="e.tiskPozadi"> Tisknout i barvu papíru (jinak je jen pro náhled)</label>
+        </div>
+      </details>
+    </div>
+
+    <!-- ================= TISK ================= -->
+    <details class="oddil">
+      <summary>Tisk na arch <span class="souhrn" id="sTisk"></span></summary>
+      <div class="telo">
+        <div class="mrizka">
+          <div class="pole"><label for="t_papir">Papír</label><select id="t_papir" data-p="t.papir"><option value="A4">A4 (210 × 297)</option><option value="A3">A3 (297 × 420)</option><option value="A5">A5 (148 × 210)</option><option value="Letter">Letter (216 × 279)</option><option value="SRA3">SRA3 (320 × 450)</option></select></div>
+          <div class="pole"><label for="t_otaceni">Otáčení kusů</label><select id="t_otaceni" data-p="t.otaceni"><option value="auto">podle počtu</option><option value="ne">neotáčet</option><option value="ano">otočit o 90°</option></select></div>
+          <div class="pole"><label for="t_spad">Spadávka (mm)</label><input type="number" id="t_spad" data-p="t.spadavka" min="0" max="3" step="0.5"></div>
+          <div class="pole"><label for="t_mezera">Mezera mezi kusy (mm)</label><input type="number" id="t_mezera" data-p="t.mezera" min="0" max="30" step="0.5"></div>
+          <div class="pole"><label for="t_okraj">Okraj tiskárny (mm)</label><input type="number" id="t_okraj" data-p="t.okraj" min="0" max="25" step="0.5"></div>
+          <div class="pole"><label for="t_dpi">Rozlišení</label><select id="t_dpi" data-p="t.dpi"><option value="300">300 DPI</option><option value="450">450 DPI</option><option value="600">600 DPI</option></select></div>
+          <div class="pole"><label for="t_format">Obrázky v PDF</label><select id="t_format" data-p="t.format"><option value="PNG">PNG bezeztrátově</option><option value="JPEG">JPEG (menší soubor)</option></select></div>
+        </div>
+        <label class="zaskrt"><input type="checkbox" data-p="t.znacky"> Ořezové značky</label>
+        <label class="zaskrt"><input type="checkbox" data-p="t.obrys"> Tenký obrys řezu (pro stříhání nůžkami)</label>
+        <div id="tOboustranne" class="telo" style="padding:0">
+          <label class="zaskrt"><input type="checkbox" data-p="t.oboustranne"> Oboustranně (2. strana PDF = rub)</label>
+          <div class="mrizka">
+            <div class="pole"><label for="t_px">Posun rubu → (mm)</label><input type="number" id="t_px" data-p="t.posunX" min="-10" max="10" step="0.1"></div>
+            <div class="pole"><label for="t_py">Posun rubu ↓ (mm)</label><input type="number" id="t_py" data-p="t.posunY" min="-10" max="10" step="0.1"></div>
+          </div>
+          <p class="pozn">Tiskněte oboustranně s otáčením přes dlouhou hranu. Když rub „ujíždí“, změřte posun na zkušebním archu a zadejte ho sem.</p>
+        </div>
+        <p class="pozn" id="tiskSouhrn"></p>
+      </div>
+    </details>
+  </aside>
+
+  <section class="plocha" id="plocha" aria-live="polite">
+    <div id="pohledKus"></div>
+    <div id="pohledArch" hidden></div>
+  </section>
+</main>
+
+<input type="file" id="souborObr" accept="image/*" hidden>
+<input type="file" id="souborText" accept=".md,.txt,text/plain,text/markdown" hidden>
+<input type="file" id="souborZaloha" accept=".json,application/json" hidden>
+
+<dialog class="okno" id="dlgGalerie">
+  <div class="okno-hlava"><h2>🖼 Galerie uložených návrhů</h2><button class="tl" data-zavrit>✕</button></div>
+  <div class="okno-telo"><div id="galerie" class="galerie"></div></div>
+</dialog>
+
+<dialog class="okno" id="dlgKnihy">
+  <div class="okno-hlava"><h2>📚 Z mých knih</h2><button class="tl" data-zavrit>✕</button></div>
+  <div class="okno-telo" id="knihyObsah"></div>
+</dialog>
+
+<dialog class="okno" id="dlgRazitko">
+  <div class="okno-hlava"><h2>🧊 Vyrobit 3D razítko</h2><button class="tl" data-zavrit>✕</button></div>
+  <div class="okno-telo">
+    <p>Ex libris se převede na jednobarevný obrys (text, rámeček, monogram i symbol jako plochy) a připraví se projekt pro stránku <b>Razítko</b> (3D tisk razítka).</p>
+    <div class="mrizka">
+      <div class="pole"><label for="r_sirka">Šířka razítka (mm)</label><input type="number" id="r_sirka" min="15" max="150" step="1" value="40"></div>
+      <div class="pole"><span class="popis">Výsledek</span><span id="r_info" class="pozn"></span></div>
+    </div>
+    <label class="zaskrt"><input type="checkbox" id="r_zrcadlit"> Zrcadlově (jen pro laser, CNC nebo linoryt)</label>
+    <p class="pozn"><b>Zrcadlení:</b> razítko otiskuje stranově obráceně, proto musí mít motiv na desce zrcadlově. Stránka Razítko to dělá <b>sama</b> – nahrajte do ní <b>nezrcadlený</b> návrh. Zrcadlený export použijte jen tam, kde se deska kreslí přímo (laserové gravírování, frézka, ruční řezba).</p>
+    <div class="radek-tl">
+      <button class="tl hlavni-tl" type="button" id="r_projekt">⬇ Projekt pro Razítko (.json)</button>
+      <button class="tl" type="button" id="r_svg">⬇ Jen SVG</button>
+      <a class="tl" href="razitko.html" target="_blank" rel="noopener">↗ Otevřít Razítko</a>
+    </div>
+    <h3>Postup</h3>
+    <ol>
+      <li>Stáhněte <b>projekt pro Razítko</b>.</li>
+      <li>Otevřete stránku <b>Razítko</b> a zvolte <b>📁 Soubor → Načíst projekt…</b> (případně Střed → Obrázek SVG → Nahrát SVG, režim „plochy“).</li>
+      <li>Zkontrolujte hlášení o <b>nejtenčí čáře</b> – tenké linky a drobné písmo pod průměrem trysky (0,4 mm) se nevytisknou. Pomůže větší razítko, tučnější písmo nebo „Zesílení tahu“.</li>
+      <li>Vyberte rukojeť a exportujte STL / 3MF k tisku.</li>
+    </ol>
+    <p class="pozn" id="r_varovani"></p>
+  </div>
+</dialog>
+
+<dialog class="okno pomoc" id="dlgNapoveda">
+  <div class="okno-hlava"><h2>❓ Nápověda</h2><button class="tl" data-zavrit>✕</button></div>
+  <div class="okno-telo">
+    <p><b>Záložka</b> má líc a rub. Vyberte stranu, šablonu (citát, název knihy, minimalistická, ornamentální rámeček, vzor) a texty. Velikost citátu se volí sama tak, aby text vyplnil plochu; zalamování je vyvážené a jednopísmenné předložky nezůstávají na konci řádku.</p>
+    <p><b>Ex libris</b> je štítek vlepovaný do knihy. Zvolte nápis (Ex libris, Z knih …), kompozici, monogram nebo symbol a barvy. U „Z knih“ se jméno skloní do 2. pádu – návrh je automatický, ale zkontrolujte ho.</p>
+    <h3>Tisk</h3>
+    <ul>
+      <li><b>Tisk PDF</b> rozvrhne co nejvíc kusů na arch, s ořezovými značkami v okrajích. Tiskněte <b>bez přizpůsobení velikosti (100 %)</b>.</li>
+      <li><b>Spadávka</b> (1–3 mm) – barevné pozadí a vzory přesahují za řez, takže po oříznutí nezůstane bílý proužek.</li>
+      <li><b>Oboustranně:</b> druhá strana PDF je rub, kusy jsou na ní zrcadlově rozmístěné pro otáčení přes dlouhou hranu.</li>
+      <li><b>Otvor na střapec</b> je na archu vyznačený tenkým kroužkem s křížkem – prorazte ho děrovačkou daného průměru.</li>
+      <li>Ex libris se tiskne bez pozadí (barva papíru je jen náhled), pokud nezapnete „Tisknout i barvu papíru“.</li>
+    </ul>
+    <h3>Export</h3>
+    <ul>
+      <li><b>SVG</b> – vektor jednoho kusu, písmo převedené na křivky (otevře se kdekoli).</li>
+      <li><b>PNG</b> – rastr jednoho kusu v rozlišení podle nastavení tisku.</li>
+      <li><b>Vyrobit 3D razítko</b> – jednobarevný obrys ex libris a projekt pro stránku Razítko. Razítko zrcadlí motiv samo.</li>
+    </ul>
+    <h3>Klávesové zkratky</h3>
+    <ul>
+      <li><kbd>1</kbd> / <kbd>2</kbd> záložka / ex libris, <kbd>L</kbd> přepnout líc a rub</li>
+      <li><kbd>N</kbd> náhled, <kbd>A</kbd> arch, <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> velikost náhledu</li>
+      <li><kbd>R</kbd> jiná varianta vzoru, <kbd>G</kbd> galerie</li>
+      <li><kbd>Ctrl+S</kbd> uložit do galerie, <kbd>Ctrl+P</kbd> PDF, <kbd>Ctrl+E</kbd> SVG, <kbd>F1</kbd> nápověda</li>
+    </ul>
+    <p class="pozn">Návrhy i obrázky zůstávají jen ve vašem prohlížeči (IndexedDB). Písma jsou volně šiřitelná (SIL OFL), viz složka fonty.</p>
+  </div>
+</dialog>
+
+<script src="zalozky_exlibris/ui.js"></script>
+</body>
+</html>
