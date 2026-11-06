@@ -4,7 +4,7 @@ Od pondělí do pátku se město chystalo na dvě věci a nikdo je od sebe neodd
 
 Kluci tahali na haldy dříví. Suché větve, staré šindele, prkna z rozbitých necek, smůlu z pařezů. Stavěli z toho hranice na každé haldě, která byla vidět z náměstí, jak se to dělávalo každý rok na svatého Jana. Ilona to znala ze Štiavnice. Oheň na nejdelší den, aby slunce vědělo, že se má vrátit, i když už se otáčí k zimě. Mladší kazatel v pátek ráno kázal, že ohně jsou papežská pověra a že pravý luterán je nechá vyhasnout, a kluci tahali dříví dál, a jejich otcové jim pomáhali.
 
-A muži čistili pochodně. Na dvoře za radnicí se smolily louče a koželuh na horním konci půjčoval kožené kazajky. V pátek v poledne přijel z Lokte vůz se psy. Čtyři, velcí, šedí, s ušima jako hadry, a s nimi psovod, který mluvil jen se psy. Děti za vozem běžely až k radnici.
+A muži čistili pochodně. Na dvoře za radnicí se smolily louče a koželuh na horním konci půjčoval kožené kazajky. V pátek v poledne přijel z Lokte vůz se psy. Čtyři, velcí, šedí, s ušima jako hadry, a s nimi psář, který mluvil jen se psy. Děti za vozem běžely až k radnici.
 
 Ilona to všechno viděla z okna.
 
@@ -34,7 +34,7 @@ Před měsícem jí ten člověk lhal do očí o vylévání krve. Před týdnem
 
 „Otevřete i podpaží,“ řekla. „Tam, kde je nejměkčí. Ne hluboko, na palec. Pak vymývat vínem, třikrát denně, přikládat horké obklady z odvaru heřmánku a ruku mít výš než srdce. Na horečku vrbovou kůru. Kdyby začal blouznit, je pozdě.“
 
-Jobst kývl. Opakoval to po ní, potichu, polohlasem, jak to dělával Tobiáš.
+Jobst kývl. Opakoval to po ní polohlasem, jak to dělával Tobiáš.
 
 „Paní,“ řekl pak. „Proč mi to říkáte?“
 
@@ -104,7 +104,7 @@ Bílý, hustý, valil se z portálu nahoru a do strany, kam ho nesl vítr, a nad
 
 Kouř stoupal a Ilona se dívala a nic necítila. Nebo cítila něco, co nemělo jméno a co si odložila na později, jak se odkládá bolest, když je potřeba ještě chvíli držet ruku pevně.
 
-Kolik jich tam je, napadlo ji. Kilián řekl: Urban se smál. Že mají nahoře přítele. Že znají den a cestu. *Po klekání.* Tak to řekl mezkař a tak to řekl Kilián. Oba to věděli od Wehrla. A Wehrl to řekl v úterý na střeše, kdy ještě nikdo nevěděl, že ve čtvrtek bude Ilona stát v radní síni a říkat Stöckelovi, co je v jeho domě.
+Kolik jich tam je, napadlo ji. Zikmund řekl: Urban se smál. Kilián řekl: mají nahoře přítele. Že znají den a cestu. *Po klekání.* Tak to řekl mezkař a tak to řekl Kilián. Oba to věděli od Wehrla. A Wehrl to řekl v úterý na střeše, kdy ještě nikdo nevěděl, že ve čtvrtek bude Ilona stát v radní síni a říkat Stöckelovi, co je v jeho domě.
 
 Kdo věřil příteli nahoře, čekal na klekání. Kdo nevěřil, odešel. Starými díly na saskou stranu, kudy chodí jen ti, kdo nemusí na slunce. Kilián je varoval. Kilián řekl *víc nemůžu.*
 
@@ -194,7 +194,7 @@ Tři nebo čtyři.
 
 Slunce zapadlo ve čtvrt na devět a v půl deváté zvonili klekání.
 
-U svatého Jáchyma zvonili jako každý den. Stejně dlouho, stejně pomalu, a Ilona poslouchala a myslela na to, že předminulé úterý, na střeše, řekl Wehrl *po klekání*. A že kdo na něj čekal, už nečeká.
+U svatého Jáchyma zvonili jako každý den. Stejně dlouho, stejně pomalu, a Ilona poslouchala a myslela na to, že předminulé úterý, na střeše, řekl Wehrl *po klekání*. A že kdo na klekání čekal, už nečeká.
 
 Dole ve městě se zapalovaly louče. Hlouček s pytli přišel na náměstí a Ilona viděla, jak se kolem něj stáhli lidé, víc a víc, celé náměstí, a slyšela zvuk, který znala. Šum kvašení. Pak voda v potoce, když se nad ním utrhne mrak. Pak jedno slovo, opakované, nesrozumitelné odsud, ale Ilona ho znala, protože ho slyšela u brodu a slyšela ho před radnicí a slyšela ho za zády, když jí přeletěl kolem hlavy kámen.
 
@@ -202,7 +202,7 @@ Markéta vedle ní vstala.
 
 „Půjdu dolů,“ řekla. „Mám doma kozu podojit. Sousedovu. Ta se o svatým Janu nestará.“
 
-Chvíli ještě stála. Pak se sehnula a položila Iloně ruku na rameno. Šedou ruku, těžkou. Nechala ji tam tak dlouho, jak trvá jeden nádech. Pak ji vzala a šla, mezi hroby, a zídku zase přelezla.
+Chvíli ještě stála. Pak se sehnula a položila Iloně ruku na rameno. Šedou ruku, těžkou. Nechala ji tam tak dlouho, jak trvá jeden nádech. Pak ji stáhla a šla, mezi hroby, a zídku zase přelezla.
 
 Ilona za ní neotočila hlavu.
 
@@ -228,9 +228,9 @@ Neodpověděla.
 
 „Paní ranhojičko. To jste vy.“ Veit se opřel o zídku. Byl opilý, ne moc, tak jak je opilý ponocný na svatého Jana, kdy ho všichni zvou. „Já jsem byl nahoře. U štoly. S rychtářem.“ Ukázal lucernou nahoru, na sedlo, kde už nic nebylo vidět. „Víte, co tam bylo?“ Chvíli čekal.
 
-„Nic,“ řekl Veit. „Tedy něco. Ohniště, kosti, smrad. Hadry. Hrnky. A díra. Vzadu ve štole, za závalem, díra do starých děl, kudy prolezeš jen po břiše. Psi tam chtěli a psovod je nepustil. Říkal, že tam za nimi nepůjde. Že to vede na saskou stranu a že tam dole je víc vody než vzduchu.“ Odplivl si. „Utekli. Většina. Ti tři, co jsme chytili, se schovávali v boční chodbě. A ten čtvrtej.“
+„Nic,“ řekl Veit. „Tedy něco. Ohniště, kosti, smrad. Hadry. Hrnky. A díra. Vzadu ve štole, za závalem, díra do starých děl, kudy prolezeš jen po břiše. Psi tam chtěli a psář je nepustil. Říkal, že tam za nimi nepůjde. Že to vede na saskou stranu a že tam dole je víc vody než vzduchu.“ Odplivl si. „Utekli. Většina. Ti tři, co jsme chytili, se schovávali v boční chodbě. A ten čtvrtej.“
 
-„Hořeli,“ řekl Veit. Tišeji. „Když je vytáhli ven. Rychtář je nechal sedět před štolou, než se dohádali, kdo je ponese, a pak je vedli dolů, celou cestu proti slunci. Dvě hodiny, víc. Viděla jste někdy prase, když se opaří? Tak. Puchejře. Křičeli. Jeden ne. Ten nemluví vůbec, je němej, rychtář říkal, že dělá blázna. Zuby mu chybí, tady.“ Ukázal si na horní ret, vlevo. „Kousl psovoda do ruky. Psovod mu je pak vyrazil ještě víc.“
+„Hořeli,“ řekl Veit. Tišeji. „Když je vytáhli ven. Rychtář je nechal sedět před štolou, než se dohádali, kdo je ponese, a pak je vedli dolů, celou cestu proti slunci. Dvě hodiny, víc. Viděla jste někdy prase, když se opaří? Tak. Puchejře. Křičeli. Jeden ne. Ten nemluví vůbec, je němej, rychtář říkal, že dělá blázna. Zuby mu chybí, tady.“ Ukázal si na horní ret, vlevo. „Kousl psáře do ruky. Psář mu je pak vyrazil ještě víc.“
 
 Matyáš.
 

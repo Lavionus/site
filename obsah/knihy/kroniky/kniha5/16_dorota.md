@@ -18,7 +18,7 @@ Začala u Doroty, protože tam se kniha otvírala sama.
 
 *Dorothea. MDXC. Ins Geschlecht angenommen.*
 
-Jívina latinka, pomalá, aby ji přečetl i ten, kdo nezná ani jedno písmo. A vedle, na kraji, malý uzavřený znak. Ptačí stopa, která neznamenala *přijatá*. Kořist. Voda svedená z cizího potoka. Úl vyříznutý ze stromu, když včely nejsou doma.
+Jívina latinka, pomalá, aby ji přečetl i ten, kdo ptačí písmo nezná. A vedle, na kraji, malý uzavřený znak. Ptačí stopa, která neznamenala *přijatá*. Kořist. Voda svedená z cizího potoka. Úl vyříznutý ze stromu, když včely nejsou doma.
 
 *Mater eius: Margaretha, vidua Georgii Haupt, metallici, in valle Sancti Ioachimi.*
 
@@ -36,7 +36,7 @@ Pětašedesát let žila Dorota pod převisem nad Jáchymovem mezi vysokými. De
 
 *Aby se vědělo, že to nebyla liška.*
 
-Sael se na tu větu nikdy neptala. Babička ji řekla, když jí bylo šest, a Sael ji přijala, jako děti přijímají věty, které se jim říkají u práce. Teď ji v sobě obrátila a podívala se na ni z druhé strany.
+Sael se na tu větu nikdy neptala. Matka ji řekla, když jí bylo šest, a Sael ji přijala, jako děti přijímají věty, které se jim říkají u práce. Teď ji v sobě obrátila a podívala se na ni z druhé strany.
 
 Nevěděla, co znamená. Nevěděla to ani teď.
 
@@ -84,7 +84,7 @@ Sešit z matrik ležel v balíku pod nejstarším listem, jako ležel v truhle o
 
 Obyčejný sešit s modrými deskami, linkovaný. Její písmo z doby, kdy psala ještě úzce a opatrně. Signatury, roky, farnosti. A jména.
 
-Nikdy je nečetla nahlas. Ani když je opisovala v sakristiích, nad matrikami denních, v zimě, s rukama v rukavicích bez prstů. Opisovala je potichu, jak se opisuje.
+Nikdy je nečetla nahlas. Ani když je opisovala v archivních badatelnách, nad matrikami denních, v zimě, s rukama v rukavicích bez prstů. Opisovala je potichu, jak se opisuje.
 
 Teď je přečetla nahlas.
 
@@ -128,7 +128,7 @@ A pak, protože už neměla co rozložit, vzala čistý list papíru a napsala n
 
 Dívala se na to všechno do tří hodin ráno. Na dvacet rukou, jedenáct jmen, devět lží a devět dní.
 
-Nakonec otevřela poslední svazek. Ten, který založila Rokyta v zimě po válce. Na poslední popsané stránce stál Václav, světlo ze čtrnáctého ledna, mnichovo *aliunde* a řádek ze čtvrtého března.
+Nakonec otevřela poslední svazek. Ten, který založila Rokyta v zimě po válce. Na poslední popsané stránce stál Václav, světlo ze čtrnáctého ledna, mnichovo *aliunde*, Jonáš z února, řádek ze čtvrtého března a pod ním kratší, z devátého dubna.
 
 Namočila pero.
 
@@ -434,7 +434,7 @@ Nad *A. Sálová* připsala, drobně, ještě jedno slovo. Šindelářová si to
 
 *Sael.*
 
-Šindelářová podepsala pod to svým jménem, zavřela desky a dlouho nad nimi nic neříkala.
+Šindelářová se pod to podepsala svým jménem, zavřela desky a dlouho nad nimi nic neříkala.
 
 „Víte,“ řekla nakonec, „já jsem v roce dvacet šest četla opravu jedné ženy z Brna. Chtěla jsem ji tenkrát dát studentům. Jako vzor. Pak jsem si řekla, že to je moc osobní.“ Cvakla propiskou. „Teď jich mám dvě.“
 

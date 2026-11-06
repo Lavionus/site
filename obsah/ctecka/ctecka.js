@@ -14,7 +14,7 @@
   if (window.top === window) document.body.classList.add('samostatne');
 
   /* ---------- uložená data ---------- */
-  const VYCHOZI_NAST = { motiv: 'web', pismo: 'patkove', velikost: 1, radkovani: 1.7, sirkaPct: 90, blok: true, knizni: false, obrazky: true, nezhasinat: false, bublina: 'dole', wpm: 220, tts: 1, hlas: '' };
+  const VYCHOZI_NAST = { motiv: 'web', pismo: 'patkove', velikost: 1, radkovani: 1.7, sirkaPct: 90, blok: true, knizni: false, obrazky: true, nezhasinat: false, strankovani: false, bublina: 'dole', wpm: 220, tts: 1, hlas: '' };
   const cti = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
   let stav = cti(KLIC);
   // starší verze čtečky ukládala jen {kniha, kapitola, velikost}
@@ -33,19 +33,21 @@
   const noveId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
   /* ---------- knihy a kapitoly ---------- */
-  // knihy.json vždy čerstvý (?t – obejde i CDN GitHub Pages); kapitoly a obrázky s otiskem obsahu (?h)
-  const knihy = await (await fetch(DILO.data + 'knihy.json?t=' + Date.now())).json();
-  const sOtiskem = (k, src) => { const h = k.otisky && k.otisky[src]; return `${DILO.data}${k.id}/${src}` + (h ? '?h=' + h : ''); };
+  // knihy.json vždy čerstvý (?t – obejde i CDN GitHub Pages); kapitoly a obrázky s otiskem obsahu (?h).
+  // DILO.zdroj = knihy nahrané uživatelem (ctecka_knih.html): {knihy(), kapitola(kniha, soubor), obrazek(kniha, src)}
+  const ZDROJ = DILO.zdroj;
+  const knihy = ZDROJ ? await ZDROJ.knihy() : await (await fetch(DILO.data + 'knihy.json?t=' + Date.now())).json();
+  const sOtiskem = (k, src) => { if (ZDROJ) return ZDROJ.obrazek(k, src); const h = k.otisky && k.otisky[src]; return `${DILO.data}${k.id}/${src}` + (h ? '?h=' + h : ''); };
   knihy.forEach(k => { k.slov = k.kapitoly.reduce((s, c) => s + c.slov, 0); });
   const mezipamet = new Map();
   function nactiKapitolu(kniha, soubor) {
     const c = kniha.kapitoly.find(x => x.soubor === soubor), h = c && c.h ? '?h=' + c.h : '';
     const klic = kniha.id + '/' + soubor + h;
     if (!mezipamet.has(klic)) {
-      mezipamet.set(klic, fetch(DILO.data + klic).then(r => {
+      mezipamet.set(klic, (ZDROJ ? Promise.resolve(ZDROJ.kapitola(kniha, soubor)) : fetch(DILO.data + klic).then(r => {
         if (!r.ok) throw new Error('Kapitolu se nepodařilo načíst');
         return r.text();
-      }).then(md => ({ md, bloky: J.rozeber(md) })).catch(e => { mezipamet.delete(klic); throw e; }));
+      })).then(md => ({ md, bloky: J.rozeber(md) })).catch(e => { mezipamet.delete(klic); throw e; }));
     }
     return mezipamet.get(klic);
   }
@@ -62,10 +64,20 @@
     bezpatkove: 'system-ui, "Segoe UI", Roboto, sans-serif',
     sirsi: 'Verdana, "DejaVu Sans", sans-serif',
   };
+  // barevné motivy „rodina-stupeň“ (sepie-2…) se dopočítávají v jádru; pevné motivy (papir, sepie, noc) jsou v CSS
+  const PROMENNE_MOTIVU = Object.keys(J.barvyMotivu('seda', 1).promenne);
+  const rozlozMotiv = m => { const x = /^([a-z]+)-([1-5])$/.exec(m || ''); return x && J.barvyMotivu(x[1], +x[2]); };
+  $('motivyBarvy').innerHTML = J.RODINY_MOTIVU.map(r => `<div class="motiv-radek"><span class="motiv-nazev">${r.nazev}</span>${J.STUPNE_MOTIVU.map((st, i) => {
+    const m = J.barvyMotivu(r.id, i + 1).promenne;
+    return `<button class="vzorek" data-prikaz="motiv-${r.id}-${i + 1}" title="${r.nazev} – ${st.nazev}" aria-label="${r.nazev} – ${st.nazev}" style="background:${m['--bg']};color:${m['--text']};border-color:${m['--border-strong']}">Aa</button>`;
+  }).join('')}</div>`).join('');
   function pouzijNastaveni() {
     const n = nast(), s = document.body.style;
     const blok = aktualniBlok();
-    document.body.dataset.motiv = n.motiv;
+    const barvy = rozlozMotiv(n.motiv);
+    document.body.dataset.motiv = barvy ? 'barevny' : n.motiv;
+    document.body.classList.toggle('motiv-tmavy', !!(barvy && barvy.tmavy));
+    PROMENNE_MOTIVU.forEach(v => barvy ? s.setProperty(v, barvy.promenne[v]) : s.removeProperty(v));
     s.setProperty('--velikost', n.velikost);
     s.setProperty('--radkovani', n.radkovani);
     s.setProperty('--sirka', n.sirkaPct + '%');
@@ -73,10 +85,12 @@
     text.classList.toggle('blok', n.blok);
     text.classList.toggle('knizni', n.knizni);
     text.classList.toggle('bez-obrazku', !n.obrazky);
+    document.body.classList.toggle('strankovani', !!n.strankovani);
     aktualizujZamek();
     $('rVelikost').value = n.velikost; $('oVelikost').value = Math.round(n.velikost * 100) + ' %';
     $('rRadkovani').value = n.radkovani; $('oRadkovani').value = n.radkovani.toFixed(1);
     $('rSirka').value = n.sirkaPct; $('oSirka').value = n.sirkaPct + ' %';
+    document.querySelectorAll('#nabZobrazeni .vzorek').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.prikaz === 'motiv-' + n.motiv)));
     document.querySelectorAll('#nabZobrazeni .prep').forEach(b => {
       const [co, hodnota] = b.dataset.prikaz.split('-');
       b.setAttribute('aria-pressed', String(co === 'motiv' ? n.motiv === hodnota : co === 'pismo' ? n.pismo === hodnota : co === 'bublina' ? n.bublina === hodnota : !!n[co]));
@@ -146,23 +160,31 @@
     return c < 0 ? 0 : (slovPred(k, c) + (p.slov || 0)) / k.slov;
   };
 
+  // Přečteno = slova před blokem nahoře na obrazovce. Na konci kapitoly je přečtená i poslední
+  // obrazovka – jinak by po dočtení zůstávalo „zbývá ~2 min“ / 97 %.
+  const naKonciKapitoly = () => plocha.scrollTop + plocha.clientHeight >= plocha.scrollHeight - 40;
+  const prectenoSlov = () => naKonciKapitoly() ? kap().slov : (kum[aktualniBlok()] || 0);
+  const zbyvaText = slov => slov <= 0 ? 'dočteno' : `zbývá ~${J.formatCas(slov / nast().wpm)}`;
+
   let ramec = 0;
   function poScrollu() {
     ramec = 0;
     if (!kniha) return;
-    const i = aktualniBlok(), slovZde = kum[i] || 0;
+    const i = aktualniBlok(), slovZde = prectenoSlov();
     stav.pozice[kniha.id] = { soubor: kap().soubor, blok: i, slov: slovZde };
-    if (plocha.scrollTop + plocha.clientHeight >= plocha.scrollHeight - 40) {
+    if (naKonciKapitoly()) {
       (stav.precteno[kniha.id] = stav.precteno[kniha.id] || {})[kap().soubor] = true;
     }
     const podil = (slovPred(kniha, kapIdx) + slovZde) / kniha.slov;
     $('prubeh').style.width = (podil * 100).toFixed(2) + '%';
-    const wpm = nast().wpm, zbyvaKap = (kap().slov - slovZde) / wpm, zbyvaKniha = kniha.slov * (1 - podil) / wpm;
-    $('stavCteni').textContent = `Kapitola ${kapIdx + 1} z ${kniha.kapitoly.length} · do konce kapitoly ~${J.formatCas(zbyvaKap)} · kniha ${Math.floor(podil * 100)} %, zbývá ~${J.formatCas(zbyvaKniha)}`;
+    const zbyvaKap = kap().slov - slovZde, zbyvaKniha = kniha.slov - slovPred(kniha, kapIdx) - slovZde;
+    // každý kus ve vlastním <span> – překlad (i18n) pak přeloží každý zvlášť
+    $('stavCteni').innerHTML = `<span>Kapitola ${kapIdx + 1} z ${kniha.kapitoly.length}</span> · <span>${zbyvaKap <= 0 ? 'kapitola dočtena' : `do konce kapitoly ~${J.formatCas(zbyvaKap / nast().wpm)}`}</span> · <span>kniha ${Math.floor(podil * 100)} %</span>, <span>${zbyvaText(zbyvaKniha)}</span>`;
     const okno = plocha.getBoundingClientRect();
     const maZalozku = [...text.querySelectorAll('mark.zal-slovo')].some(m => { const r = m.getBoundingClientRect(); return r.bottom > okno.top && r.top < okno.bottom; });
     $('tlZalozka').setAttribute('aria-pressed', String(maZalozku));
     kresliPosuvnik();
+    aktualizujMasku();
     ulozStav();
   }
   plocha.addEventListener('scroll', () => { aktivita(); if (!ramec) ramec = requestAnimationFrame(poScrollu); }, { passive: true });
@@ -171,7 +193,7 @@
     let k = stav.kniha, c = kapIdx + smer;
     if (c < 0) { k--; if (k < 0) return; c = knihy[k].kapitoly.length - 1; }
     if (c >= knihy[k].kapitoly.length) { k++; if (k >= knihy.length) return; c = 0; }
-    otevri(k, c);
+    return otevri(k, c);
   };
 
   async function skok(knihaId, soubor, blok, hledany, zalozkaId) {
@@ -471,6 +493,10 @@
       z.poznamka = p.trim();
     } else if (tl.dataset.vyber === 'citace') {
       kopiruj(citace(z ? z.text : v.text), 'Citace zkopírována');
+    } else if (tl.dataset.vyber === 'slovnik') {
+      zavriVyber(); getSelection().removeAllRanges();
+      if (v.dotyk) vyznacBlok(v.blok);
+      return vyznam(z ? z.text : v.text);
     } else if (tl.dataset.vyber === 'smazat' && z) {
       data.zvyrazneni = data.zvyrazneni.filter(x => x !== z);
     }
@@ -480,6 +506,54 @@
     if (stav.panel === 'poznamky') vykresliPanel();
   });
   const citace = t => `„${t.trim()}“\n— ${DILO.nazev}, ${kniha.nazev}, ${kap().nazev}`;
+
+  /* ---------- význam slova a překlad (Wikislovník přes jeho API, ostatní odkazem) ---------- */
+  // z textu stránky Wikislovníku vytáhnout první oddíl „význam“ (u slov z jiných jazyků jsou významy česky)
+  // ohýbaný tvar („genitiv singuláru substantiva hrad“) → zaklad = hrad; ukázkové věty (delší, s tečkou) se vynechají
+  function vyznamyZWikislovniku(extract) {
+    // oddíly jsou oddělené prázdnými řádky, nadpis oddílu je první řádek („význam\nopevněné sídlo\n…“)
+    const oddil = extract.split(/\n{2,}/).map(c => c.trim()).find(c => /^význam\n/i.test(c));
+    if (!oddil) return { vyznamy: [], zaklad: '' };
+    const radky = oddil.split('\n').slice(1).map(x => x.trim()).filter(Boolean)
+      .filter(x => !(/([.…!?“"]|\(…\))$/.test(x) && x.split(/\s+/).length > 2));   // definice tečkou nekončí, ukázkové věty ano
+    const tvar = radky.map(x => x.match(/(?:substantiva|adjektiva|slovesa|zájmena|číslovky|příslovce)\s+(\S+)$/)).find(Boolean);
+    return { vyznamy: radky.slice(0, 6), zaklad: tvar ? tvar[1] : '' };
+  }
+  async function hledejWikislovnik(slovo) {
+    const url = 'https://cs.wiktionary.org/w/api.php?action=query&prop=extracts&explaintext=1&exsectionformat=plain&redirects=1&format=json&origin=*&titles=' + encodeURIComponent(slovo);
+    const strana = Object.values((await (await fetch(url)).json()).query.pages)[0];
+    return strana && strana.extract ? vyznamyZWikislovniku(strana.extract) : null;
+  }
+  async function vyznam(vybrany) {
+    const t = vybrany.replace(/\s+/g, ' ').trim().replace(/^[„“"'(]+|[.,;:!?…“"')]+$/g, '');
+    if (!t) return;
+    const jednoSlovo = !/\s/.test(t) && t.length <= 40;
+    const q = encodeURIComponent(t);
+    $('slovnikSlovo').textContent = t.length > 60 ? t.slice(0, 60) + '…' : t;
+    $('slovnikOdkazy').innerHTML = [
+      jednoSlovo && [`https://cs.wiktionary.org/wiki/${encodeURIComponent(t.toLowerCase())}`, '📘 Wikislovník'],
+      jednoSlovo && [`https://prirucka.ujc.cas.cz/?slovo=${q}`, '📗 Jazyková příručka'],
+      [`https://translate.google.com/?sl=auto&tl=cs&op=translate&text=${q}`, '🌐 Přeložit do češtiny'],
+      [`https://translate.google.com/?sl=auto&tl=en&op=translate&text=${q}`, '🌐 Do angličtiny'],
+      [`https://cs.wikipedia.org/w/index.php?search=${q}`, '🔎 Wikipedie'],
+    ].filter(Boolean).map(([u, n]) => `<a class="tl" href="${J.esc(u)}" target="_blank" rel="noopener">${n}</a>`).join('');
+    const vyznamEl = $('slovnikVyznam');
+    vyznamEl.innerHTML = jednoSlovo ? '<p class="napoveda">Hledám ve Wikislovníku…</p>' : '';
+    otevriModal('slovnik');
+    if (!jednoSlovo) return;
+    try {
+      let v = await hledejWikislovnik(t.toLowerCase()), tvar = '';
+      if ((!v || !v.vyznamy.length) && t !== t.toLowerCase()) v = await hledejWikislovnik(t);   // vlastní jména
+      if (v && v.zaklad) {   // ohýbaný tvar → význam základního slova
+        tvar = `<p class="napoveda">${J.esc(v.vyznamy[0])}</p>`;
+        const z = await hledejWikislovnik(v.zaklad);
+        if (z && z.vyznamy.length) v = z;
+      }
+      vyznamEl.innerHTML = v && v.vyznamy.length
+        ? tvar + '<ol>' + v.vyznamy.map(x => `<li>${J.esc(x)}</li>`).join('') + '</ol><p class="napoveda">Zdroj: Wikislovník (CC BY-SA)</p>'
+        : '<p class="napoveda">Slovo jsem ve Wikislovníku nenašel – zkuste odkazy níže (u ohýbaných tvarů pomůže Jazyková příručka).</p>';
+    } catch (e) { vyznamEl.innerHTML = '<p class="napoveda">Wikislovník je teď nedostupný (offline?).</p>'; }
+  }
   async function kopiruj(t, hlaska) {
     try { await navigator.clipboard.writeText(t); Dialog.info(hlaska); }
     catch (e) { await Dialog.zeptej('Zkopírujte si text:', t, { ok: 'Hotovo' }); }
@@ -642,7 +716,19 @@
   /* ---------- předčítání ---------- */
   const tts = { aktivni: false, pauza: false, blok: 0, vety: [], vi: 0, gen: 0 };
   const synt = window.speechSynthesis;
+  // Piper (ctecka/piper.js, načte se až tady): hlas „piper:<klíč>“, přehrává <audio> – hraje i při zamčené obrazovce
+  const zvuk = new Audio();
+  let PIPER = null;
+  const piperSlib = new Promise(ok => {
+    const sk = document.createElement('script');
+    sk.src = 'ctecka/piper.js';
+    sk.onload = () => { PIPER = window.CTECKA_PIPER; PIPER.lze ? PIPER.zjistiStazene().then(() => ok(PIPER)) : ok(null); };
+    sk.onerror = () => ok(null);
+    document.head.appendChild(sk);
+  });
+  const jePiper = () => /^piper:/.test(nast().hlas || '') && PIPER;
   if (!synt) $('tlPredcitat').disabled = true;
+  piperSlib.then(p => { if (p) { $('tlPredcitat').disabled = false; naplnHlasy(); } });
   function hlasy() {
     if (!synt) return [];
     const v = synt.getVoices(), cs = v.filter(x => /^cs/i.test(x.lang));
@@ -650,13 +736,84 @@
   }
   function naplnHlasy() {
     const v = hlasy();
-    $('ttsHlas').innerHTML = '<option value="">Výchozí hlas</option>' + v.map(x => `<option value="${J.esc(x.name)}">${J.esc(x.name)} (${x.lang})</option>`).join('');
-    $('ttsHlas').value = v.some(x => x.name === nast().hlas) ? nast().hlas : '';
+    let h = '<option value="">Výchozí hlas</option>' + v.map(x => `<option value="${J.esc(x.name)}">${J.esc(x.name)} (${x.lang})</option>`).join('');
+    if (PIPER && PIPER.lze) h += '<optgroup label="Lepší hlasy – Piper (stáhnou se jednou)">' + PIPER.HLASY.map(x =>
+      `<option value="piper:${x.klic}">${x.nazev}${PIPER.stazene.has(x.klic) ? ' ✓' : ` (stáhnout ~${x.mb} MB)`}</option>`).join('') + '</optgroup>';
+    $('ttsHlas').innerHTML = h;
+    const hodnota = nast().hlas || '';
+    $('ttsHlas').value = [...$('ttsHlas').options].some(o => o.value === hodnota) ? hodnota : '';
   }
   if (synt) { naplnHlasy(); synt.addEventListener?.('voiceschanged', naplnHlasy); }
   $('ttsRychlost').value = String(nast().tts);
-  $('ttsRychlost').onchange = e => { nast().tts = +e.target.value; ulozStav(); if (tts.aktivni && !tts.pauza) mluv(); };
-  $('ttsHlas').onchange = e => { nast().hlas = e.target.value; ulozStav(); if (tts.aktivni && !tts.pauza) mluv(); };
+  $('ttsRychlost').onchange = e => { nast().tts = +e.target.value; ulozStav(); predpripraveno.clear(); if (tts.aktivni && !tts.pauza) mluv(); };
+  // stažení hlasu Piper se souhlasem; uvod = proč se nabízí (např. prohlížeč nemá žádný hlas)
+  async function stahniPiper(klic, uvod = '') {
+    const h = PIPER.hlas(klic);
+    if (!(await Dialog.potvrd(`${uvod}Hlas ${h.nazev} (Piper) se jednou stáhne (asi ${h.mb} MB) a pak funguje i bez internetu. Předčítá přirozeněji než hlas prohlížeče a hraje i při zamčené obrazovce. Stáhnout?`, { ok: 'Stáhnout', zrus: 'Zrušit' }))) return false;
+    let posledni = -1;
+    try {
+      await PIPER.stahni(klic, x => { const p = Math.floor(x * 10); if (p !== posledni) { posledni = p; Dialog.info(`Stahuji hlas ${h.nazev}: ${p * 10} %`); } });
+      Dialog.info(`Hlas ${h.nazev} je připravený`);
+      return true;
+    } catch (err) { Dialog.chyba('Hlas se nepodařilo stáhnout: ' + (err.message || err)); return false; }
+  }
+  $('ttsHlas').onchange = async e => {
+    const v = e.target.value, klic = v.replace(/^piper:/, '');
+    if (/^piper:/.test(v) && !PIPER.stazene.has(klic) && !(await stahniPiper(klic))) { naplnHlasy(); return; }
+    nast().hlas = v; ulozStav(); predpripraveno.clear(); naplnHlasy();
+    if (tts.aktivni && !tts.pauza) mluv();
+  };
+
+  // Piper: věty se syntetizují dopředu (aktuální + 2 další), ať mezi nimi není ticho
+  const predpripraveno = new Map();
+  const klicVety = (blok, vi) => `${kniha.id}|${kap().soubor}|${blok}|${vi}|${nast().hlas}|${nast().tts}`;
+  function vetyBloku(i) { return bloky[i] && bloky[i].text ? J.vety(bloky[i].text) : []; }
+  function zvukVety(blok, vi) {
+    const k = klicVety(blok, vi);
+    if (!predpripraveno.has(k)) {
+      const v = vetyBloku(blok);
+      const p = PIPER.veta(nast().hlas.slice(6), v[vi] || '', nast().tts, vi === v.length - 1 ? 0.55 : 0.25);
+      p.catch(() => predpripraveno.delete(k));
+      predpripraveno.set(k, p);
+      if (predpripraveno.size > 12) predpripraveno.delete(predpripraveno.keys().next().value);
+    }
+    return predpripraveno.get(k);
+  }
+  function dalsiVety(blok, vi, n) {
+    const out = [];
+    while (out.length < n && blok < bloky.length) {
+      const v = vetyBloku(blok);
+      if (vi + 1 < v.length) { vi++; out.push([blok, vi]); } else { blok++; vi = -1; }
+    }
+    return out;
+  }
+  async function mluvPiper(gen) {
+    let blob;
+    try { blob = await zvukVety(tts.blok, tts.vi); }
+    catch (e) { if (gen === tts.gen) { Dialog.chyba('Předčítání hlasem Piper selhalo: ' + (e.message || e)); zastavTts(); } return; }
+    if (gen !== tts.gen) return;
+    dalsiVety(tts.blok, tts.vi, 2).forEach(([b, v]) => zvukVety(b, v));
+    URL.revokeObjectURL(zvuk.src);
+    zvuk.src = URL.createObjectURL(blob);
+    zvuk.onended = () => {
+      if (gen !== tts.gen) return;
+      aktivita();
+      if (++tts.vi >= tts.vety.length) { tts.blok++; tts.vi = 0; tts.vety = []; }
+      mluv();
+    };
+    zvuk.play().catch(e => { if (gen === tts.gen && e.name !== 'AbortError') { Dialog.chyba('Prohlížeč nedovolil přehrát zvuk: ' + e.message); zastavTts(); } });
+    if ('mediaSession' in navigator) {
+      try { navigator.mediaSession.metadata = new MediaMetadata({ title: kap().nazev, artist: DILO.nazev, album: kniha.nazev }); } catch (e) {}
+    }
+  }
+  if ('mediaSession' in navigator) {
+    try {
+      navigator.mediaSession.setActionHandler('play', () => { if (tts.aktivni && tts.pauza) pauzaTts(); });
+      navigator.mediaSession.setActionHandler('pause', () => { if (tts.aktivni && !tts.pauza) pauzaTts(); });
+      navigator.mediaSession.setActionHandler('nexttrack', () => tts.aktivni && ttsSkok(1));
+      navigator.mediaSession.setActionHandler('previoustrack', () => tts.aktivni && ttsSkok(-1));
+    } catch (e) { /* starší prohlížeč */ }
+  }
 
   function oznacCteny() {
     text.querySelectorAll('.cte').forEach(el => el.classList.remove('cte'));
@@ -664,11 +821,15 @@
     if (!el) return;
     el.classList.add('cte');
     const r = el.getBoundingClientRect(), p = plocha.getBoundingClientRect();
-    if (r.top < p.top + 10 || r.top > p.bottom - 80) plocha.scrollTo({ top: el.offsetTop - plocha.clientHeight / 3, behavior: 'smooth' });
+    if (r.top < p.top + 10 || r.top > p.bottom - 80) {
+      if (nast().strankovani) { plocha.scrollTop = el.offsetTop - 14; zarovnejStranu(); }   // při listování se nejede plynule
+      else plocha.scrollTo({ top: el.offsetTop - plocha.clientHeight / 3, behavior: 'smooth' });
+    }
   }
   async function mluv() {
     const gen = ++tts.gen;
-    synt.cancel();
+    synt && synt.cancel();
+    zvuk.pause();
     while (tts.blok < bloky.length && !bloky[tts.blok].text) tts.blok++;
     if (tts.blok >= bloky.length) {
       const k = stav.kniha, posledniKap = kapIdx === kniha.kapitoly.length - 1;
@@ -680,6 +841,7 @@
     }
     if (!tts.vety.length) tts.vety = J.vety(bloky[tts.blok].text);
     oznacCteny();
+    if (jePiper()) return mluvPiper(gen);
     const u = new SpeechSynthesisUtterance(tts.vety[tts.vi] || '');
     u.lang = 'cs-CZ'; u.rate = nast().tts;
     const hlas = hlasy().find(x => x.name === nast().hlas);
@@ -696,27 +858,42 @@
     };
     synt.speak(u);
   }
-  function spustTts() {
-    if (!synt || !kniha) return;
+  async function spustTts() {
+    if (!kniha) return;
     if (tts.aktivni) return pauzaTts();
-    if (!synt.getVoices().length) { Dialog.chyba('Prohlížeč nemá žádný hlas pro předčítání (v systému chybí řečový modul).'); return; }
+    // Chrome načítá systémové hlasy až po chvíli
+    if (synt && !synt.getVoices().length) await new Promise(ok => { const t = setTimeout(ok, 800); synt.addEventListener?.('voiceschanged', () => { clearTimeout(t); ok(); }); });
+    await piperSlib;
+    // bez systémového hlasu (Chrome na Linuxu ho obvykle nemá) rovnou nabídnout hlas Piper
+    if (!jePiper() && !(synt && synt.getVoices().length)) {
+      if (!(PIPER && PIPER.lze)) {
+        Dialog.chyba(location.protocol === 'file:'
+          ? 'Prohlížeč nemá žádný hlas pro předčítání a u stránky otevřené jako soubor (file://) nejdou použít ani hlasy Piper. Otevřete čtečku přes web nebo místní server (./test_local.sh → http://localhost:8000).'
+          : 'Prohlížeč nemá žádný hlas pro předčítání (v systému chybí řečový modul).');
+        return;
+      }
+      const h = PIPER.HLASY[0];
+      if (!PIPER.stazene.has(h.klic) && !(await stahniPiper(h.klic, 'Prohlížeč nemá žádný systémový hlas pro předčítání. '))) return;
+      nast().hlas = 'piper:' + h.klic; ulozStav(); naplnHlasy();
+    }
     Object.assign(tts, { aktivni: true, pauza: false, blok: aktualniBlok(), vi: 0, vety: [] });
     $('tts').hidden = false; $('ttsPauza').textContent = '⏸';
     $('tlPredcitat').setAttribute('aria-pressed', 'true');
     aktualizujZamek();
-    if (!hlasy().some(x => /^cs/i.test(x.lang))) Dialog.info('Prohlížeč nemá český hlas – čte se výchozím hlasem.');
+    if (!jePiper() && !hlasy().some(x => /^cs/i.test(x.lang))) Dialog.info('Prohlížeč nemá český hlas – čte se výchozím hlasem. Lepší český hlas (Piper) vyberete v liště předčítání.');
     mluv();
   }
   function pauzaTts() {
     tts.pauza = !tts.pauza;
     $('ttsPauza').textContent = tts.pauza ? '▶' : '⏸';
-    if (tts.pauza) { tts.gen++; synt.cancel(); } else mluv();
+    if (tts.pauza) { tts.gen++; synt && synt.cancel(); zvuk.pause(); } else mluv();
     aktualizujZamek();
   }
   function zastavTts() {
     if (!tts.aktivni) return;
     tts.aktivni = false; tts.gen++;
     synt && synt.cancel();
+    zvuk.pause();
     $('tts').hidden = true;
     $('tlPredcitat').setAttribute('aria-pressed', 'false');
     aktualizujZamek();
@@ -732,10 +909,10 @@
   $('ttsStop').onclick = zastavTts;
   $('ttsZpet').onclick = () => ttsSkok(-1);
   $('ttsVpred').onclick = () => ttsSkok(1);
-  addEventListener('pagehide', () => { synt && synt.cancel(); ulozStav(true); });
+  addEventListener('pagehide', () => { synt && synt.cancel(); zvuk.pause(); ulozStav(true); });
   // Karta otevřená celé dny (tablet) by běžela na starém kódu, zatímco kapitoly se stahují nové –
   // po návratu do karty porovnat skripty se serverem a při změně stránku obnovit (pozice je uložená).
-  const otiskSkriptu = () => Promise.all(['ctecka/jadro.js', 'ctecka/ctecka.js', 'ctecka/sablona.js', 'ctecka/ctecka.css', DILO.data + 'knihy.json?t=' + Date.now()].map(u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')))
+  const otiskSkriptu = () => Promise.all(['ctecka/jadro.js', 'ctecka/ctecka.js', 'ctecka/sablona.js', 'ctecka/ctecka.css', ...(ZDROJ ? [] : [DILO.data + 'knihy.json?t=' + Date.now()])].map(u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')))
     .then(t => t.join('\n')).catch(() => '');
   const puvodniOtisk = otiskSkriptu();
   let skrytoOd = 0;
@@ -747,7 +924,8 @@
     }
     aktualizujZamek();   // zámek obrazovky se při skrytí stránky sám uvolní
     // zamčený telefon řeč prohlížeče zastaví – po odemčení pokračovat od přerušené věty
-    if (tts.aktivni && !tts.pauza && synt && !synt.speaking) mluv();
+    // (Piper hraje přes <audio> dál i při zamčení – ten se nerestartuje)
+    if (tts.aktivni && !tts.pauza && !jePiper() && synt && !synt.speaking) mluv();
   });
 
   /* ---------- obrazovka nezhasne během předčítání (nebo vždy, je-li zapnuto) ---------- */
@@ -817,7 +995,7 @@
       <tr><td>Posledních 7 dní</td><td>${t(tyden)}</td></tr><tr><td>Dní se čtením</td><td>${Object.keys(stav.dny).length}</td></tr>`;
     knihy.forEach(k => {
       const prec = Object.keys(stav.precteno[k.id] || {}).length, p = pokrokKnihy(k);
-      h += `<tr><td><strong>${J.esc(k.nazev)}</strong></td><td>${Math.floor(p * 100)} % · ${prec}/${k.kapitoly.length} kapitol · zbývá ~${J.formatCas(k.slov * (1 - p) / nast().wpm)}</td></tr>`;
+      h += `<tr><td><strong>${J.esc(k.nazev)}</strong></td><td>${Math.floor(p * 100)} % · ${prec}/${k.kapitoly.length} kapitol · ${zbyvaText(Math.round(k.slov * (1 - p)))}</td></tr>`;
     });
     h += `<tr><td>Záložky</td><td>${data.zalozky.length}</td></tr><tr><td>Zvýraznění / s poznámkou</td><td>${data.zvyrazneni.length} / ${data.zvyrazneni.filter(z => z.poznamka).length}</td></tr></table>`;
     $('statObsah').innerHTML = h;
@@ -1000,6 +1178,7 @@
     knizni: () => nastav({ knizni: !nast().knizni }),
     obrazky: () => nastav({ obrazky: !nast().obrazky }),
     nezhasinat: () => nastav({ nezhasinat: !nast().nezhasinat }),
+    strankovani: () => { nastav({ strankovani: !nast().strankovani }); requestAnimationFrame(() => zarovnejStranu()); },
     'vychozi-zobrazeni': () => nastav({ ...VYCHOZI_NAST, wpm: nast().wpm, tts: nast().tts, hlas: nast().hlas }),
     odkaz,
     epub: () => exportKnihy('epub'),
@@ -1030,7 +1209,7 @@
     if (PRIKAZY[id]) return PRIKAZY[id]();
     const [co, hodnota] = id.split('-');
     if (co === 'kniha') { const k = knihy[+hodnota], p = stav.pozice[k.id], c = p ? Math.max(0, indexKap(k, p.soubor)) : 0; otevri(+hodnota, c, p && c === indexKap(k, p.soubor) ? p.blok : 0); }
-    if (co === 'motiv') nastav({ motiv: hodnota });
+    if (co === 'motiv') nastav({ motiv: id.slice(6) });   // i „motiv-sepie-2“
     if (co === 'pismo') nastav({ pismo: hodnota });
     if (co === 'bublina') nastav({ bublina: hodnota });
   }
@@ -1062,6 +1241,11 @@
     if (cil.closest('input, textarea, select, [contenteditable]')) return;
     if ((e.key === ' ' || e.key === 'Enter') && cil.closest('button, [role=button]')) return;
     const vyska = plocha.clientHeight * 0.9;
+    // stránkování: šipky, mezerník a PgUp/PgDn listují po stránkách (kapitoly dál tlačítky ◀ ▶)
+    const listovani = nast().strankovani ? {
+      ArrowLeft: () => strana(-1), ArrowRight: () => strana(1), ArrowUp: () => strana(-1), ArrowDown: () => strana(1),
+      PageUp: () => strana(-1), PageDown: () => strana(1), ' ': () => strana(e.shiftKey ? -1 : 1),
+    } : {};
     const akce = {
       ArrowLeft: () => posun(-1), ArrowRight: () => posun(1),
       ArrowDown: () => plocha.scrollBy({ top: 60 }), ArrowUp: () => plocha.scrollBy({ top: -60 }),
@@ -1075,6 +1259,7 @@
       '=': () => nastav({ velikost: Math.min(1.8, +(nast().velikost + 0.05).toFixed(2)) }),
       '-': () => nastav({ velikost: Math.max(0.8, +(nast().velikost - 0.05).toFixed(2)) }),
       '?': () => otevriModal('napoveda'), F1: () => otevriModal('napoveda'),
+      ...listovani,
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
     if (akce) { e.preventDefault(); akce(); }
   });
@@ -1089,11 +1274,12 @@
     jezdec.style.height = vyska + 'px';
     jezdec.style.top = (podil * (h - vyska)) + 'px';
     if (!kniha) return;
-    const zbyva = (kap().slov - (kum[aktualniBlok()] || 0)) / nast().wpm;
+    const zbyva = kap().slov - prectenoSlov();
     // nastavení: u posuvníku (sleduje jezdec), dole v okně (neruší text), nebo vůbec
     const kde = nast().bublina || 'dole';
     if (kde === 'ne') return;
-    bublina.textContent = `${Math.round(podil * 100)} % kapitoly · zbývá ~${J.formatCas(zbyva)}`;
+    const str = nast().strankovani ? cisloStrany() : null;
+    bublina.innerHTML = (str ? `<span>strana ${str.akt} z ${str.z}</span> · ` : '') + `<span>${Math.round(podil * 100)} % kapitoly</span> · <span>${zbyvaText(zbyva)}</span>`;
     bublina.classList.toggle('dole', kde === 'dole');
     bublina.style.top = kde === 'dole' ? '' : (8 + podil * (h - vyska) + vyska / 2) + 'px';
     bublina.classList.remove('skryt');
@@ -1126,6 +1312,90 @@
   posuvnik.addEventListener('pointerup', konecTazeni);
   posuvnik.addEventListener('pointercancel', konecTazeni);
   new ResizeObserver(planujZnacky).observe(text);   // dorazily obrázky, změna písma, šířky…
+
+  /* ---------- stránkování: listování po obrazovkách jako na čtečce e-knih ----------
+     Plocha se neposouvá prstem ani kolečkem; stránka končí posledním celým řádkem –
+     useknutý řádek dole zakryje maska a na další stránce je nahoře celý. */
+  const maska = document.createElement('div');
+  maska.id = 'maskaStrany'; maska.hidden = true;
+  plocha.parentElement.insertBefore(maska, posuvnik);
+  // obdélník řádku textu, který protíná výšku y (souřadnice okna); null = mezera mezi odstavci, obrázek
+  function radekNa(y) {
+    const t = text.getBoundingClientRect();
+    for (const x of [t.left + 24, t.left + t.width / 2]) {
+      let uzel, off;
+      if (document.caretRangeFromPoint) { const g = document.caretRangeFromPoint(x, y); if (g) { uzel = g.startContainer; off = g.startOffset; } }
+      else if (document.caretPositionFromPoint) { const g = document.caretPositionFromPoint(x, y); if (g) { uzel = g.offsetNode; off = g.offset; } }
+      if (!uzel || uzel.nodeType !== 3 || !text.contains(uzel) || !uzel.length) continue;
+      const g = document.createRange(), o = Math.min(off, uzel.length - 1);
+      g.setStart(uzel, o); g.setEnd(uzel, o + 1);
+      const rect = [...g.getClientRects()].find(q => q.top <= y + 0.5 && q.bottom >= y - 0.5);
+      if (rect && rect.height) return rect;
+    }
+    return null;
+  }
+  function aktualizujMasku() {
+    if (!nast().strankovani) { maska.hidden = true; return; }
+    const p = plocha.getBoundingClientRect(), r = radekNa(p.bottom - 1);
+    const vyska = r && r.bottom > p.bottom + 0.5 && r.top > p.top + 20 ? p.bottom - r.top : 0;
+    maska.hidden = !vyska;
+    maska.style.height = vyska + 'px';
+    maska.style.right = posuvnik.offsetWidth + 'px';
+  }
+  // horní řádek nesmí být useknutý – raději ukázat celý
+  function zarovnejStranu() {
+    if (!nast().strankovani) return aktualizujMasku();
+    const p = plocha.getBoundingClientRect(), r = radekNa(p.top + 1);
+    if (r && r.top < p.top - 0.5) plocha.scrollTop -= p.top - r.top;
+    aktualizujMasku();
+  }
+  const cisloStrany = () => {
+    const v = Math.max(1, plocha.clientHeight - 20), z = Math.max(1, Math.ceil((plocha.scrollHeight - 20) / v));
+    return { akt: Math.min(z, plocha.scrollTop >= plocha.scrollHeight - plocha.clientHeight - 2 ? z : Math.floor(plocha.scrollTop / v) + 1), z };
+  };
+  async function strana(smer) {
+    const p = plocha.getBoundingClientRect(), max = plocha.scrollHeight - plocha.clientHeight;
+    if (smer > 0) {
+      if (plocha.scrollTop >= max - 2) { if (!$('tlDalsi').disabled) await posun(1); return; }
+      const r = radekNa(p.bottom - 1);
+      // další stránka začíná useknutým řádkem; když dole žádný není, celá výška bez malé rezervy
+      const o = r && r.top > p.top + 20 ? (r.bottom > p.bottom + 0.5 ? r.top : r.bottom) - p.top : plocha.clientHeight - 24;
+      plocha.scrollTop = Math.min(max, plocha.scrollTop + o);
+    } else {
+      if (plocha.scrollTop <= 2) {
+        if ($('tlPred').disabled) return;
+        await posun(-1);
+        plocha.scrollTop = plocha.scrollHeight;   // předchozí kapitola od konce
+      } else plocha.scrollTop = Math.max(0, plocha.scrollTop - plocha.clientHeight + 24);
+    }
+    zarovnejStranu();
+  }
+  // klepnutí: levá třetina zpět, jinak dál (s prodlevou – dvojklik vybírá slovo, ne list)
+  let casKlepnuti = 0, prejeti = null, posledniKolecko = 0;
+  plocha.addEventListener('click', e => {
+    if (!nast().strankovani || e.defaultPrevented) return;
+    if (e.target.closest('a, button, input, mark, figure, .dole') || !getSelection().isCollapsed || Date.now() - dotyk.konec < 700) return;
+    const x = e.clientX - plocha.getBoundingClientRect().left;
+    clearTimeout(casKlepnuti);
+    casKlepnuti = setTimeout(() => { if (getSelection().isCollapsed && lista.hidden) strana(x < plocha.clientWidth / 3 ? -1 : 1); }, 260);
+  });
+  plocha.addEventListener('dblclick', () => clearTimeout(casKlepnuti));
+  plocha.addEventListener('touchstart', e => { prejeti = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });
+  plocha.addEventListener('touchend', e => {
+    if (!nast().strankovani || !prejeti || dotyk.kotva) return;
+    const t = e.changedTouches[0], dx = t.clientX - prejeti.x, dy = t.clientY - prejeti.y;
+    prejeti = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { clearTimeout(casKlepnuti); dotyk.konec = Date.now(); strana(dx < 0 ? 1 : -1); }
+    else if (Math.abs(dy) > 60 && Math.abs(dy) > Math.abs(dx) * 1.5) { dotyk.konec = Date.now(); strana(dy < 0 ? 1 : -1); }
+  }, { passive: true });
+  plocha.addEventListener('wheel', e => {
+    if (!nast().strankovani) return;
+    e.preventDefault();
+    if (Date.now() - posledniKolecko < 350 || Math.abs(e.deltaY) < 4) return;
+    posledniKolecko = Date.now();
+    strana(e.deltaY > 0 ? 1 : -1);
+  }, { passive: false });
+  addEventListener('resize', () => requestAnimationFrame(zarovnejStranu));
 
   /* ---------- lupa na ilustrace ---------- */
   text.addEventListener('click', e => {
@@ -1169,5 +1439,5 @@
   if (stav.panel) otevriPanel(stav.panel);
   // písmo a rozložení se můžou dopočítat až po prvním vykreslení – znovu dojet na uložené místo
   addEventListener('load', () => { const p = kniha && stav.pozice[kniha.id]; if (p && p.soubor === kap().soubor && p.blok) skocNaBlok(p.blok, false); });
-  window.CTECKA = window.KRONIKY_CTECKA = { otevri, skok, hledej, stav: () => stav, data: () => data, aktualniBlok, tts };
+  window.CTECKA = window.KRONIKY_CTECKA = { otevri, skok, hledej, stav: () => stav, data: () => data, aktualniBlok, tts, zvuk, strana, vyznam, radekNa };
 })();

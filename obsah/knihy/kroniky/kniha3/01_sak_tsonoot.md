@@ -14,7 +14,7 @@ Za Méridou se krajina srovná a už se nezvedne. Žádný kopec, žádné údol
 
 „Pálí,“ řekne Salcedo, když vidí, kam se dívá. „Březen. Připravují pole na déšť.“
 
-Půda mezi stromy je tak tenká, že místy vůbec není. Kámen vystupuje na povrch v plochých deskách, rozpraskaných, šedých, pokrytých lišejníkem. Hana ty desky zkoumá s profesní nedůvěrou. Vápenec, mladý, porézní, plochý jako stůl. Pod ním nic, co by se dalo nazvat řekou, protože všechna voda je dole. Celý poloostrov je houba nasáklá deštěm, a kde se strop houby propadne, vznikne studna.
+Půda mezi stromy je tak tenká, že místy vůbec není. Kámen vystupuje na povrch v plochých deskách, rozpraskaných, šedých, pokrytých lišejníkem. Hana ty desky zkoumá s profesní nedůvěrou. Vápenec, mladý, porézní, plochý jako stůl. Na něm nic, co by se dalo nazvat řekou, protože všechna voda je dole. Celý poloostrov je houba nasáklá deštěm, a kde se strop houby propadne, vznikne studna.
 
 Ts'ono'ot. Cenote. To slovo zná z knih.
 
@@ -22,7 +22,7 @@ Ts'ono'ot. Cenote. To slovo zná z knih.
 
 Kamenolom uvidí dřív, než ho Salcedo ohlásí.
 
-Nejdřív stromy podél silnice, které nejsou šedozelené, ale bílé. Prach na listech, na kmenech, na drátech elektrického vedení, které tu z ničeho nic začne běžet vedle silnice na betonových sloupech. Pak náklaďák. A druhý, s korbou plnou bílé drti, ze které se při každém výmolu zvedne obláček. A pak, vlevo za plotem z vlnitého plechu, díra.
+Nejdřív stromy podél silnice, které nejsou šedozelené, ale bílé. Prach na listech, na kmenech, na drátech elektrického vedení, které se tu z ničeho nic objeví podél silnice na betonových sloupech. Pak náklaďák. A druhý, s korbou plnou bílé drti, ze které se při každém výmolu zvedne obláček. A pak, vlevo za plotem z vlnitého plechu, díra.
 
 Široká, mělká, oslnivě bílá. Stupně vylámané do vápence, na nich bagr a drtič, jehož zvuk je slyšet i přes zavřená okna. Nad tím vším se tetelí vzduch.
 
@@ -40,7 +40,7 @@ Hana se otočí a dívá se zadním oknem, dokud bílá díra nezmizí za stromy
 
 *
 
-X'Kanlum je kostel, náměstí a dvě ulice, které se kříží v pravém úhlu a pak se ztrácejí v lese. Kostel je žlutý, starý, s hladkým štítem a se zvonicí, ve které visí jeden zvon a jedna žárovka. Před ním basketbalové hřiště s plechovou střechou, pod střechou stín a ve stínu tři muži na plastových židlích. Obchod s nápisem limonády na zdi. Domky z betonových tvárnic, natřené na růžovo, na zeleno a na modro, a vedle nich, na týchž dvorcích, staré oválné domy z kamene a s doškovou střechou, ve kterých se už nebydlí, nebo bydlí. Na dvorcích hamaky, slepice, prádlo a krocan, který se na dodávku dívá jako úředník.
+X'Kanlum je kostel, náměstí a dvě ulice, které se kříží v pravém úhlu a pak se ztrácejí v lese. Kostel je žlutý, starý, s hladkým štítem a se zvonicí, ve které visí jeden zvon a jedna žárovka. Před ním basketbalové hřiště s plechovou střechou, pod střechou stín a ve stínu tři muži na plastových židlích. Obchod s reklamou na limonádu na zdi. Domky z betonových tvárnic, natřené narůžovo, nazeleno a namodro, a vedle nich, na týchž dvorcích, staré oválné domy z kamene a s doškovou střechou, ve kterých se už nebydlí, nebo bydlí. Na dvorcích hamaky, slepice, prádlo a krocan, který se na dodávku dívá jako úředník.
 
 Salcedo projede náměstím, zamává mužům pod střechou a ti mu kývnou. Za obcí silnice zbělá, pak se zúží, pak skončí u brány z ocelových trubek, zamčené na řetěz.
 
@@ -60,7 +60,7 @@ Je spálený od slunce na nose a na lících, vlasy má kratší, než si je pam
 
 „Dlouho.“
 
-„Tady je všechno dlouhý. Zvykneš si.“ Pustí ji a podívá se na ni, jako by kontroloval, jestli přijela celá. „Jana je dole, Ríša lítá. Luis je u vody. Najíst se dáš? Rosa vaří.“
+„Tady je všechno dlouhý. Zvykneš si.“ Pustí ji a podívá se na ni, jako by kontroloval, jestli přijela celá. „Jana je dole, Ríša lítá. Luis je u vody. Najíst se dáš? Rosa vaří, Luisova žena.“
 
 Nad mýtinou opravdu něco lítá. Dron, malý, šedý, s bzučením obtížného hmyzu. Krouží nad místem, kde v lese chybí koruny stromů, a pod ním, na okraji mýtiny, stojí mladý muž s ovladačem a s kšiltovkou otočenou dozadu. Ríša. Hana ho zná z fotek ve Viktorových e-mailech a z jednoho večera v Brně, kdy celou dobu mluvil o objektivech.
 
@@ -96,7 +96,7 @@ Pod nimi, z díry ve stěně těsně nad vodou, vyletí pták. Zelenomodrý, s d
 
 „Toh,“ řekne Luis. „Hnízdí ve stěnách. Kde je toh, je voda.“
 
-Hana se dívá na stěnu pod ptákem. Pukliny. Jdou šikmo, jedna vedle druhé, rovnoběžně, a pak se kříží s jinými, svislejšími. Na dně studny, pod hladinou, vidí ve světle, které proniká skrz vodu, kužel balvanů. Strop, který kdysi spadl. A na kraji kuželu, blíž ke stěně, než by se jí líbilo, několik kamenů s ostrými hranami, světlejšími než ostatní. Ještě nezarostly.
+Hana se dívá na stěnu pod ptákem. Pukliny. Jdou šikmo, jedna vedle druhé, rovnoběžně, a pak se kříží s jinými, svislejšími. Na dně studny, pod hladinou, vidí ve světle, které proniká skrz vodu, kužel balvanů. Strop, který kdysi spadl. A na kraji kuželu, blíž ke stěně, než by se jí líbilo, několik kamenů, světlejších než ostatní, s ostrými hranami. Ještě nezarostly.
 
 „Ty kameny vpravo dole,“ řekne. „Kdy spadly?“
 
@@ -136,7 +136,7 @@ Jana si k ní přisedne s vlastním talířem, ještě mokrá, s kapkami ve vlas
 
 „Viktor to ví.“ Jana se krátce podívá přes rameno k hlavní plachtě, kde Viktor telefonuje, zády k nim, s rukou na zátylku. „Viktor to vzal. Říká, že ty a Luis jste nejlepší kombinace, protože jeden zná cestu a druhá ví, na co se dívá.“
 
-Viktor u hlavní plachty zvýší hlas. Hana ho slyší přes celou mýtinu, i když slova ne. Pak ztiší a řekne zřetelně, jako by chtěl, aby to druhá strana slyšela dvakrát: „Ne v pátek. Řekl jsem v dubnu.“ Ukončí hovor a ještě chvíli stojí, s telefonem v ruce, dívá se do lesa.
+Viktor u hlavní plachty zvýší hlas. Hana ho slyší přes celou mýtinu, i když slova ne. Pak se ztiší a řekne zřetelně, jako by chtěl, aby to druhá strana slyšela dvakrát: „Ne v pátek. Řekl jsem v dubnu.“ Ukončí hovor a ještě chvíli stojí, s telefonem v ruce, dívá se do lesa.
 
 Když se otočí, usmívá se.
 
@@ -146,7 +146,7 @@ Don Felipe Ek přijímá v komisariátu, v místnosti s jedním stolem, šesti �
 
 Je mu přes šedesát. Je štíhlý a vysoký na zdejší poměry, v bílé košili s kapsami a s kloboukem, který si sundá, až když všichni sedí. Luis sedí vedle něj. Hana pochopí, že ne jako potápěč, ale jako synovec. Viktor sedí naproti, Salcedo vedle Viktora, Hana na kraji. Jana zůstala v táboře s lahvemi.
 
-Don Felipe mluví španělsky. Pomalu, s pauzami mezi větami, jako by každou kontroloval, než ji pustí. Salcedo překládá do angličtiny. Občas don Felipe řekne něco jiným jazykem, krátce, k Luisovi, a Luis odpoví stejně krátce. To Salcedo nepřekládá. Hana nerozumí ani slovo. Melodie je jiná, hrdelnější, s rázy uprostřed slov, jako by se jazyk na chvíli zastavil a pak pokračoval.
+Don Felipe mluví španělsky. Pomalu, s pauzami mezi větami, jako by každou kontroloval, než ji pustí. Salcedo překládá do angličtiny. Občas don Felipe řekne něco jiným jazykem, krátce, k Luisovi, a Luis odpoví stejně krátce. To Salcedo nepřekládá. Hana nerozumí ani slovu. Melodie je jiná, hrdelnější, s rázy uprostřed slov, jako by se jazyk na chvíli zastavil a pak pokračoval.
 
 Podmínky jsou tři. Hana si je zapisuje, protože si všechno zapisuje.
 
@@ -161,6 +161,8 @@ Don Felipe se odmlčí. Podívá se na Viktora, pak na Hanu, pak zpátky.
 „Z cenotu nic neodejde,“ přeloží Salcedo, „aniž by o tom vědělo shromáždění ejida.“
 
 „Samozřejmě,“ řekne Viktor. „Z cenotu nic neodejde vůbec. Máme povolení jen na dokumentaci. Doktorka Couoh z INAH přijede zítra, to vám potvrdí.“
+
+*Sintr odejde*, napadne Hanu. Tři vzorky, podle metodiky, kterou psala sama. Viktor to ví.
 
 Don Felipe poslouchá překlad a zeptá se na něco, co Salcedo přeloží s malým zaváháním.
 
@@ -200,11 +202,11 @@ Pak myslí na válec. Na to, jak leží ve tmě pod vodou, pod mlhou, kterou je�
 
 *
 
-Doktorka Marisol Couoh přijede v úterý v půl jedenácté v bílém pick-upu s logem ústavu na dveřích. Je sama. Vystoupí, nasadí si klobouk a nejdřív obejde tábor. Nikoho nepozdraví, dokud ho neobejde celý. Podívá se na kompresor, na láhve, na bednu s nářadím, kterou si nechá otevřít, na suché obleky pod plachtou, a teprve potom podá ruku Viktorovi.
+Doktorka Marisol Couoh přijede v úterý v půl jedenácté v bílém pick-upu s logem ústavu na dveřích. Je sama. Vystoupí, nasadí si klobouk a nejdřív obejde tábor. Nikoho nepozdraví, dokud tábor neobejde celý. Podívá se na kompresor, na láhve, na bednu s nářadím, kterou si nechá otevřít, na suché obleky pod plachtou, a teprve potom podá ruku Viktorovi.
 
 Je jí kolem pětačtyřiceti, možná víc. Je drobná, s krátkými prošedivělými vlasy a s brýlemi na šňůrce. Na krku má zavěšený telefon v nepromokavém pouzdře, jako ho nosí lidé, kteří čas od času spadnou do vody. Anglicky mluví přesně a bez přízvuku, tak, jak se mluví na konferencích, a když chce něco zdůraznit, přejde na španělštinu.
 
-„Doktorka Vrbová,“ řekne a podá Haně ruku. Krátce, pevně. „Metodiku k žádosti psala vy?“
+„Doktorka Vrbová,“ řekne a podá Haně ruku. Krátce, pevně. „Metodiku k žádosti jste psala vy?“
 
 „Ano.“
 
@@ -212,7 +214,7 @@ Je jí kolem pětačtyřiceti, možná víc. Je drobná, s krátkými prošediv�
 
 „To jsem napsala já.“
 
-„Tak to dodržujte.“ Zavře desky. „A ještě jednou, abychom si rozuměli, *señor* Brabec.“ Obrátí se k Viktorovi. „Povolení zní na dokumentaci. Natáčet, měřit, fotit. Vzorky sintru podle metodiky. Předmět se nevyzvedává. Nehýbe se s ním. Nesahá se na něj, pokud to není nutné pro bezpečnost. Kdyby se něco změnilo, kdyby hrozilo zřícení, kdyby cokoli, zavoláte mi. Mně. Ne do Mexika City, ne vašemu sponzorovi, ne novinám. Mně.“
+„Tak to dodržujte.“ Zavře desky. „A ještě jednou, abychom si rozuměli, *señor* Brabec.“ Obrátí se k Viktorovi. „Povolení zní na dokumentaci. Natáčet, měřit, fotit. Vzorky sintru podle metodiky. Předmět se nevyzvedává. Nehýbe se s ním. Nesahá se na něj, pokud to není nutné pro bezpečnost. Kdyby se něco změnilo, kdyby hrozilo zřícení, kdyby cokoli, zavoláte mi. Mně. Ne do Mexico City, ne vašemu sponzorovi, ne novinám. Mně.“
 
 „Jasně,“ řekne Viktor. Usměje se na ni tím úsměvem, který funguje na fakultní komise i na policisty v Hranicích. „Jsme tu přesně proto, abychom to udělali pořádně.“
 
@@ -228,7 +230,7 @@ Marisol stojí tam, kde včera stála ona, a dívá se dolů. Klobouk drží v r
 
 „Byla jste tu už?“ zeptá se Hana.
 
-„Před osmi lety. S Waltem Amesem. Tehdy se tu nikdo nepotápěl kromě něj a kromě Luise, kterému bylo pětadvacet a myslel si, že je nesmrtelný.“ Marisol se nepodívá na Hanu. „Walt mapuje tenhle systém od osmdesátých let. Na svých mapách má víc, než kdy ukázal. Luis taky. To je jejich věc.“
+„Před osmi lety. S Waltem Amesem. Tehdy se tu nikdo nepotápěl kromě něj a kromě Luise, kterému bylo pětadvacet a myslel si, že je nesmrtelný.“ Marisol se nepodívá na Hanu. „Walt mapuje tenhle systém od osmdesátých let. Ví víc, než kdy nakreslil. Luis taky. To je jejich věc.“
 
 „Ukázal Luis tu síň vám?“
 
@@ -280,7 +282,7 @@ Svislá čára je na stránce už od rána. Vlevo zatím jen datum a počasí, j
 
 *12:07 odstřel (sascabera, směr JZ?, ~2,5–3 km podle E. S.). Slyšet jeden úder + otřes v chodidlech. Toh vyletěli. 12:08 hladina beze změny. 12:09 zákal u S stěny, nad kuželem balvanů, stoupá ze hloubky. 12:11 S třetina zakalená. 12:17 závoj, kužel nevidět.*
 
-Pak se zarazí. Nad směrem udělala otazník, protože směr neví. Slyšela to odněkud zprava. Ale zvuk se v lese láme a ona tu není ani dva dny.
+Pak se zarazí. Ke směru dala otazník, protože směr neví. Slyšela to odněkud zprava. Ale zvuk se v lese láme a ona tu není ani dva dny.
 
 Vpravo píše:
 
@@ -314,7 +316,7 @@ Večer při jídle, nad tortillami a nad černými fazolemi, které zbyly z pond
 
 „*¿Qué escribe?*“ zeptá se.
 
-Hana ukáže na hodinky, pak dolů, k zemi, a pak udělá rukou malé zatřesení.
+Hana ukáže na hodinky, pak dolů, k zemi, a pak rukou naznačí otřes.
 
 Kluk kývne, vážně, jako by tomu rozuměl, a řekne něco své matce. Rosa odpoví, aniž by se otočila.
 

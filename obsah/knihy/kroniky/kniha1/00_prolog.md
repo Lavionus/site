@@ -2,7 +2,7 @@
 
 Kodex leží na pultu pod lampou, která nehřeje.
 
-Hana Vrbová si ho prohlíží dřív, než si sundá bundu. Je menší, než čekala, sotva větší než dlaň položená na dlaň, a desky z bukového dřeva jsou potažené kůží, ze které zbyly jen ostrůvky. Na hřbetu, v místě, kde se vazba rozestoupila, prosvítá něco, co do knihy nepatří: hrana krystalu, kalně průsvitná, a vedle ní zlatý lesk tenký jako nehet.
+Hana Vrbová si ho prohlíží dřív, než si sundá bundu. Je menší, než čekala: zavřený sotva větší než dlaň, otevřený jako dvě dlaně vedle sebe, a desky z bukového dřeva jsou potažené kůží, ze které zbyly jen ostrůvky. Na hřbetu, v místě, kde se vazba rozestoupila, prosvítá něco, co do knihy nepatří: hrana krystalu, kalně průsvitná, a vedle ní zlatý lesk tenký jako nehet.
 
 „Nesahejte,“ řekne kodikoložka, aniž by zvedla hlavu od protokolu. „Tedy, sahejte, ale v rukavicích. A na ten kámen vůbec.“
 
@@ -10,7 +10,7 @@ Hana Vrbová si ho prohlíží dřív, než si sundá bundu. Je menší, než č
 
 Doktorka Šindelářová konečně vzhlédne. Je o deset let starší, má brýle posunuté do vlasů a druhé na nose a dívá se na Hanu tak, jak se v archivech dívají na lidi zvenčí: zdvořile a s pevným odhodláním nedovolit jim na nic sáhnout.
 
-„Přišel s fondem fary v Mlýnci,“ řekne. „Tedy s tím, co z něj zbylo. Farář ho v osmnáctém století popsal jako *liber de dracone*, knihu o drakovi, a od té doby ho nikdo neotevřel. Písmo je dvanácté století, spíš konec. Latina, místy něco jako staročeské glosy, to ještě nevíme. Kresby,“ zaváhá, „uvidíte sama. A ve vazbě je tohle. Někdo to tam všil úmyslně. Ne do desek, do hřbetu, mezi svazky. Restaurátorka by ráda věděla, co to je, než se rozhodne, jestli to vyjme.“
+„Přišel s fondem fary v Mlýnci,“ řekne. „Tedy s tím, co z něj zbylo. Fara je tam až od novověku, kodex je o hodně starší. Farář ho v osmnáctém století popsal jako *liber de dracone*, knihu o drakovi, a od té doby ho skoro nikdo nečetl. V sedmdesátých letech ho nafotili na mikrofilm a uložili zpátky do krabice. Písmo je dvanácté století, spíš konec. Latina, místy něco jako staročeské glosy, to ještě nevíme. Kresby,“ zaváhá, „uvidíte sama. A ve vazbě je tohle. Někdo to tam všil úmyslně. Ne do desek, do hřbetu, mezi sešity. Restaurátorka by ráda věděla, co to je, než se rozhodne, jestli to vyjme.“
 
 „A proč ne mineralog z muzea?“
 
@@ -28,7 +28,7 @@ Natáhne rukavice. Lupa, světlo zboku, mikroskop s kamerou, který si přivezla
 
 Doktorka Šindelářová si to zapíše a Hana mezitím, protože čeká a protože ji nikdo nezastaví, otočí první list.
 
-Písmo je drobné a pravidelné, inkoust zhnědlý, okraje plné poznámek jinou, rychlejší rukou, ale stejného člověka. Latinu Hana čte špatně, jen to, co zná z geologických traktátů raného novověku. *Vidi. Non vidi.* Viděl jsem. Neviděl jsem. Na okraji jednoho listu stojí obojí vedle sebe a mezi tím je čára.
+Písmo je drobné a pravidelné, inkoust zhnědlý, okraje plné poznámek jiným, rychlejším písmem, ale zjevně téhož člověka. Latinu Hana čte špatně, jen to, co zná z geologických traktátů raného novověku. *Vidi. Non vidi.* Viděl jsem. Neviděl jsem. Na okraji jednoho listu stojí obojí vedle sebe a mezi tím je čára.
 
 Pak kresby.
 
@@ -36,7 +36,7 @@ První je hora v řezu, jako ji kreslí geolog: vrstvy, puklina, chodba vedená 
 
 ![Řez horou z kodexu](obrazky/00_rez_horou.webp)
 
-Druhá kresba zabírá celou dvoustranu. Dutina ve skále, nakreslená jako místnost, a v ní uspořádání předmětů. Kroužky, malé čtverce, trojúhelníky, každý tvar pečlivě označený: *aurum, crystallus, lapis*. Mezi nimi rýhy, krátké a dlouhé, ve skupinách. Nevypadá to jako ornament ani jako mapa. Vypadá to, jako by někdo hodinu za hodinou zapisoval, co leží kde, a bál se, že udělá chybu.
+Druhá kresba zabírá celou dvoustranu. Dutina ve skále, nakreslená jako místnost, a v ní rozmístěné předměty. Kroužky, malé čtverce, trojúhelníky, každý tvar pečlivě označený: *aurum, crystallus, lapis*. Mezi nimi rýhy, krátké a dlouhé, ve skupinách. Nevypadá to jako ornament ani jako mapa. Vypadá to, jako by někdo hodinu za hodinou zapisoval, co leží kde, a bál se, že udělá chybu.
 
 „Co to je?“ zeptá se Hana.
 

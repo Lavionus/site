@@ -68,7 +68,7 @@ Viktor se dívá dolů na vodu. Je pořád mléčná u severní stěny, kde do n
 
 Hana to ví.
 
-Ví, že tři týdny říká, že se na válec nesmí sáhnout. Že si to sama vymohla, u stolu, s jeho dlaní v ruce. Že kontext je všechno a že předmět vytržený ze svého místa je jen předmět. Ví to tak dobře, že by to mohla odpřednášet.
+Ví, že od prvního dne říká, že se předmět nevyzvedává. Že je to v její metodice i v povolení. Že kontext je všechno a že předmět vytržený ze svého místa je jen předmět. Ví to tak dobře, že by to mohla odpřednášet.
 
 A ví, co viděla. Trhlinu jako vlas. Prach jako mouku. Ví, jak se láme převis v krasu, když mu zespodu ubude opora a shora se otřese. Učí to každý rok.
 
@@ -84,7 +84,7 @@ Viktorovi zazvoní telefon. Podívá se na displej a vstane.
 
 *
 
-Marisol to zvedne po druhém zazvonění. Je v autě, Hana slyší motor a rádio, které Marisol rychle ztlumí.
+Marisol to zvedne po druhém zazvonění. Je v autě, vrací se z ředitelství ústavu, Hana slyší motor a rádio, které Marisol rychle ztlumí.
 
 „Volám, než se rozhodneme,“ řekne Hana.
 
@@ -102,7 +102,7 @@ Marisol mlčí dlouho. Motor běží.
 
 Další ticho. Pak Marisol řekne něco španělsky, potichu, spíš k sobě, a Hana tomu nerozumí.
 
-„Pošlete mi fotky,“ řekne. „Všechny. Zavolám do Mexico City. Do večera budete vědět.“ Pauza. „A doktorko. Kdyby to bylo podle pana Brabce, dala bych vám ne. Hned. Do telefonu.“
+„Pošlete mi fotky,“ řekne. „Všechny. Zavolám do Mexico City. Do večera budete vědět.“ Pauza. „A doktorko. Kdyby to bylo podle pana Brabce, řekla bych vám ne. Hned. Do telefonu.“
 
 „Já vím.“
 
@@ -130,7 +130,7 @@ Odpoví don Felipe. Večer v osm, na krytém hřišti v obci, pod plechovou stř
 
 Hana nečekala, že jich přijde tolik. Šedesát, možná sedmdesát lidí. Muži sedí v řadách na plastových židlích, ženy stojí vzadu a u stěn, děti běhají mezi nimi, a pod střechou svítí zářivky, kolem kterých krouží brouci. Na jedné straně hřiště basketbalový koš bez síťky.
 
-Slíbila jim to. První večer, u stolu v komisariátu. *Nic neodejde bez vědomí shromáždění.*
+Slíbil jim to Viktor, za všechny, první večer, u stolu v komisariátu. Ale ona tam seděla. *Nic neodejde bez vědomí shromáždění.*
 
 Mluví španělsky, pomalu a špatně, a Luis to po ní opakuje maysky. Řekne, co viděla. Trhlinu. Prach. Řekne, co chce udělat. Řekne, kam to půjde: do Méridy, do ústavu, do úschovy, a že to bude patřit Mexiku. Neřekne *nám*. Neřekne *vám*. Řekne *Mexiku*, jako to tehdy řekl don Felipe, a na tváři dona Felipa v první řadě se něco pohne.
 
@@ -160,7 +160,7 @@ Hana kývne. Neřekne, že je ráda.
 
 Ze shromáždění přijde jako svědek jeden ze dvou starších mužů, kteří ve čtvrtek seděli vedle dona Felipa. Hubený, v čisté košili, s holí, o kterou se neopírá. Představí se jen *Chan* a stoupne si na kraj plošiny, odkud je vidět dolů, a už se odtamtud nehne.
 
-Lom slíbil, že dnes do jedné nestřílí. Slíbil to inženýrovi a inženýr to v sedm ráno zopakoval do telefonu tónem, kterým se opakuje počasí.
+Lom slíbil, že dnes do jedné nestřílí. Slíbil to inženýrovi a inženýr to v sedm ráno zopakoval do telefonu tónem, jakým se opakuje předpověď počasí.
 
 V osm jdou dolů.
 
@@ -304,7 +304,7 @@ Don Felipe zamkne dveře visacím zámkem. Velkým, mosazným, starým.
 
 Marisol se podívá na Salceda. Salcedo pokrčí rameny, omluvně, jako by za to nemohl.
 
-„Kompresor jede každý den,“ řekne. „Láhve se plní. Bez klíče nemáme vzduch.“
+„Kompresor jede každý den,“ řekne. „Láhve se plní. Kyslík a zásobní láhve jsou tady, venku by je někdo ukradl. Bez klíče nemáme vzduch.“
 
 Marisol se chvíli dívá na dveře. Pak na bednu přes zamřížované okénko, bledou v šeru, se dvěma pruhy bílé pásky.
 

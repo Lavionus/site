@@ -12,7 +12,7 @@ Ilona se za ní dívala, dokud nezmizela za koželuhem. Pak se podívala na svou
 
 *
 
-Kilián zaklepal krátce před půlnocí. Tři rány, pauza, tři rány.
+Kilián zaklepal krátce před půlnocí. Tři rány, odmlka, tři rány.
 
 Když otevřela, nepoznala ho. Přes obličej měl uvázaný šátek jako zloději na obrázcích v kalendáři, a když ho v kuchyni stáhl, viděla proč. Čelo, nos a horní polovina tváře byly pokryté strupy. Tenkými, žlutohnědými, jako kůra na pečeném chlebu, a mezi nimi kůže, která se loupala. Odřenina na lícní kosti, kterou měl už ve čtvrtek ráno na kraji lesa, se zanítila a otekla.
 
@@ -50,7 +50,7 @@ Kilián vstal.
 
 *
 
-Šli horním koncem a pak nahoru, ne k haldám, ale napravo, cestou, po které Ilona v neděli před týdnem šla s Markétou. Měsíc byl za horami, nízko, ještě nezapadl, a les pod ním byl černý a stříbrný. Kilián šel rychle a Ilona za ním s rukou v šátku pod pláštěm, a nepočítala, protože tuhle cestu znala.
+Šli horním koncem a pak nahoru, ne k haldám, ale napravo, cestou, po které Ilona v neděli před týdnem šla s Markétou. Měsíc ještě nevyšel, svítily jen hvězdy, a les pod nimi byl černý. Kilián šel rychle a Ilona za ním s rukou v šátku pod pláštěm, a nepočítala, protože tuhle cestu znala.
 
 U kamenné studánky se Kilián zastavil.
 
@@ -74,13 +74,13 @@ Otočila se.
 
 *
 
-Stála na druhé straně studánky, na kraji měsíčního světla, a byla vysoká.
+Stála na druhé straně studánky, na kraji toho mála světla, co padalo do mýtiny, a byla vysoká.
 
 Vysoká jako dveře, napadlo Ilonu dřív, než stihla myslet. Kiliána, který se musel sklánět pod překladem, by převyšovala o půl hlavy. Štíhlá, v šedém hladkém plášti, šedém do zelena jako kůra buků kolem. Takový Ilona nikdy neviděla, ani v Lipsku na trhu. Kápi měla staženou. Vlasy světlé, dlouhé, spletené do jednoho copu přes rameno, a v tom světle nebylo poznat, jestli jsou světlé jako len, nebo bílé stářím. Obličej bledý. Ne šedavý jako Kiliánův. Bílý. Hladký. Jako mouka, jako vápno na stěně kostela.
 
-A oči. Když pohnula hlavou, zachytily měsíc a vrátily ho, zelenavě, jako oči kočky ve tmě stodoly.
+A oči. Když pohnula hlavou, zachytily hvězdy a vrátily je, zelenavě, jako oči kočky ve tmě stodoly.
 
-Ilona stála a nehýbala se. Myslela na Báru Seidlovou, kterou nikdy neviděla. Myslela na slova, která zapsala do posledního slova a která Markéta dvakrát opravila. *Bílá v obličeji jako mouka.*
+Ilona stála a nehýbala se. Myslela na Báru Seidlovou, kterou nikdy neviděla. Myslela na slova, která zapsala do písmene a která Markéta dvakrát opravila. *Bílá v obličeji jako mouka.*
 
 „Neutíkejte,“ řekla ta žena. Česky. Ale divnou češtinou, opatrnou, se slovy, jaká Ilona slýchala jen od starého faráře, když četl z bible po otcích. „Jste ranhojička Ilona. Vdova po Řehořovi. Která píše.“
 
@@ -130,7 +130,7 @@ Merin chvíli mlčela. „Ten, co nemluví.“
 
 „Kilián ho udeřil.“
 
-„Já vím.“ Merin vstala, šla k polici a vrátila se s hliněnou nádobkou. Med. Tmavý, lesní, s kouskem plástu. „Řehoř tím mazal,“ řekla. „Říkal, že med je lepší než všechny lékárníkovy masti.“
+„Já vím.“ Merin vstala, šla k polici a vrátila se s hliněnou nádobkou. Med. Tmavý, lesní, s kouskem plástu. „Řehoř tím mazal,“ řekla. „Říkal Zikmundovi, že med je lepší než všechny lékárníkovy masti. Orta nám to řekla.“
 
 „Znala jste Řehoře.“
 
@@ -138,7 +138,7 @@ Merin chvíli mlčela. „Ten, co nemluví.“
 
 „A o mně?“
 
-„O vás víme od soboty.“
+„Viděli jsme vás u studánky s tou, co nosí chleba. Kdo jste, víme od soboty.“
 
 *
 
@@ -258,7 +258,7 @@ A ještě jedno slovo, malé, na samém kraji, kde se pergamen drolil, natěsnan
 
 Mnich.
 
-„Tehdy jsme odešli všichni,“ řekla Merin. „S jinými. Ne s nočními. S těmi, se kterými jsme bydleli. Před vodou. V jedné noci.“ Posunula dlaň, kousek, a pod ní se objevil konec řádku. Jeden znak. Větší než ostatní, s dlouhým tahem dolů, jako se v podpisu dělá ocas za posledním písmenem. „Tady to podepsala Merin.“
+„Tehdy jsme odešli všichni,“ řekla Merin. „S jinými. Ne s nočními. S těmi, se kterými jsme bydleli. Před vodou. V jedné noci.“ Posunula dlaň, kousek, a pod ní se objevil konec řádku. Jeden znak. Větší než ostatní, s dlouhým tahem dolů, jako se v podpisu dělá ocas za posledním písmenem. „Tady to podepsal ten, kdo byl tehdy Merin.“
 
 Ilona se na ten znak podívala. Pak zpátky na stránku, kde se ještě leskl inkoust, k řádku, který skončil dnešním křížkem. Na jeho konci byl tentýž znak. S tímtéž tahem dolů.
 
@@ -282,7 +282,7 @@ Ruka stárne, řekla si Ilona. Za čtyři sta let se ruka změní. Za čtyři st
 
 Nevěřila tomu. A nevěřila ani tomu druhému. Seděla v místnosti vysekané do skály se ženou, které bylo čtyři sta let, nebo nebylo, a která měla na prostředníku mozol od pera. Nevěděla, čemu z toho věří, a tak nevěřila ničemu a dívala se.
 
-Merin obrátila těch několik set listů zpátky přes starý pergamen a pak, jako by si toho všimla teprve teď, se podívala na otevřenou stránku s lesklým inkoustem a s řádkem *Dorothea*. Dlouze. A pak zavřela i ji. Desky dopadly na sebe s tupým zvukem, jako když se zavře truhla.
+Merin obrátila těch několik set listů zpátky přes starý pergamen a pak, jako by si toho všimla teprve teď, se podívala na otevřenou stránku s lesklým inkoustem a s řádkem *Dorothea*. Dlouze. A pak knihu zavřela. Desky dopadly na sebe s tupým zvukem, jako když se zavře truhla.
 
 „Den,“ řekla. „Mast. A papír.“
 
@@ -356,7 +356,7 @@ Byla to otázka, kterou Ilona položila tolikrát. Kunzovi. Wehrlovi. Sobě, nad
 
 Ilona se podívala dolů, na město, na střechu horního úřadu, na rohový dům s podloubím na horní straně náměstí.
 
-„To je, co vím teď,“ řekla. „Slib vám řeknu ve středu.“
+„To je, co vím teď,“ řekla. „Slib vám dám ve středu.“
 
 Merin kývla, jako by jiná odpověď nebyla. Pak se otočila, a mezi buky bylo chvíli vidět šedé na šedém, a pak už jen šedé.
 

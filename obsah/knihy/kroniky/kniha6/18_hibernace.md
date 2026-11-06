@@ -2,7 +2,7 @@
 
 V osm ráno seděla Nara v kuchyni a věděla, že Daven teď sedí u stolu naproti Ilanovi.
 
-Nedívala se na to. Nemohla. Návštěva se zaznamenávala jen tomu, kdo na ní byl, a Daven nebyl člověk, který by jí záznam poslal. Přesto to věděla tak přesně, jako by to měla v koutku vědomí: malá místnost, světlý pruh na stěně, strážná u dveří. Daven si sedne a položí ruce na stůl, protože neví, kam s nimi. Ilan se na něj podívá tím dlouhým pohledem, kterým si lidi čte.
+Nedívala se na to. Nemohla. Návštěva se zaznamenávala jen tomu, kdo na ní byl, a Daven nebyl člověk, který by jí záznam poslal. Přesto to věděla tak přesně, jako by to měla v koutku vědomí: malá místnost, světlý pruh na stěně, strážná u dveří. Daven si sedne a položí ruce na stůl, protože neví, kam s nimi. Ilan se na něj podívá tím dlouhým pohledem, kterým lidi prokoukne.
 
 *Do odletu: 6 dní.*
 
@@ -86,7 +86,7 @@ Návštěva se zaznamenávala. Bude to mít celé, čtyřicet minut, s přepisem
 
 Pět minut před polednem vstala, šla ke dveřím návštěvních místností a tam, pod světlou tabulí s jejím jménem, přerušila spojení.
 
-Nebylo to jako poprvé. Poprvé to bylo jako skok do vody, o které nevěděla, jak je hluboká. Teď věděla. Řádek v koutku vědomí zhasl. Odpočet zhasl. Tlak vzadu za očima, který ani neznala, dokud nezmizel, se rozplynul. Zůstala hala, dveře, vlastní dech a ventilace se svými dvěma tóny. Tady zněla výš než na Orse. Nara nevěděla proč. Neměla se koho zeptat.
+Nebylo to jako poprvé. Poprvé to bylo jako skok do vody, o které nevěděla, jak je hluboká. Teď věděla. Řádek v koutku vědomí zhasl. Odpočet zhasl. Tlak vzadu za očima, o kterém do prvního odpojení ani nevěděla, se rozplynul. Zůstala hala, dveře, vlastní dech a ventilace se svými dvěma tóny. Tady zněla výš než na Orse. Nara nevěděla proč. Neměla se koho zeptat.
 
 Dveře se neotevřely. Neznaly ji.
 
@@ -118,9 +118,9 @@ Byl stejně hubený jako minule. Vlasy měl pořád dlouhé, přes uši, nestř�
 
 Díval se na ni ode dveří. Na oči, na ústa, na ruce na stole, a pak na místo za jejím uchem.
 
-„Říkala, že jsi bez spojení,“ řekl. „Myslel jsem, že se přeslechla.“
+„Říkala, že jsi bez spojení,“ řekl. „Myslel jsem, že se spletla.“
 
-„Nepřeslechla.“
+„Nespletla.“
 
 Ilan přešel ke stolu a sedl si. Pomalu. Pořád se na ni díval, jako by v jejím obličeji hledal něco, co tam dřív nebylo.
 
@@ -298,7 +298,7 @@ Nara se dívala na provázek. Na dvě řady uzlíků, šedé od praní a od palc
 
 Začal ho rozvazovat.
 
-Nešlo to. Uzel, který si uvázal na náměstí, byl utažený sedmdesát jedna dní mytí a spaní. Ilan do něj zarýval nehet a uzel nepovolil. Zkusil to zuby. Strážná u dveří se pohnula a zase zůstala stát.
+Nešlo to. Uzel, který si uvázal na náměstí, byl utažený sedmdesáti jedna dny mytí a spaní. Ilan do něj zarýval nehet a uzel nepovolil. Zkusil to zuby. Strážná u dveří se pohnula a zase zůstala stát.
 
 „Ukaž,“ řekla Nara.
 
@@ -336,7 +336,7 @@ Neřekla ji.
 
 Pochopila to, až když ji v sobě měla hotovou a připravenou: každá věta, kterou by teď řekla, by po něm něco chtěla. Odpověď. Kývnutí. Aspoň to, aby si ji odnesl s sebou do haly a tam si ji opakoval. Neměla právo mu nic dávat s sebou. Bral si jen to, co je tělo.
 
-A tak seděla a dívala se na něj. Na vlasy přes uši, které zítra nebude mít. Na ramena, která měl po Davenovi. Na zápěstí s bledým proužkem. Dívala se tak, jak se díval on, dlouho, jako by si ho musela přečíst, protože nic jiného, než co si teď přečte, mít nebude.
+A tak seděla a dívala se na něj. Na vlasy přes uši, které zítra nebude mít. Na ramena, která měl po Davenovi. Na zápěstí s bledým proužkem. Dívala se tak, jak se díval on, dlouho, jako by si ho musela vrýt do paměti, protože nic jiného, než co si teď zapamatuje, mít nebude.
 
 Ilan to snášel. Díval se taky.
 

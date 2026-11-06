@@ -12,7 +12,7 @@ Ortlieb se díval. Pak se otočil a vlezl do okna a byl pryč.
 
 Matěj zůstal v hnízdě sám.
 
-Voda mu byla po stehna. Stál u zadní stěny, s kahanem nad hlavou, a hnízdo bylo pod ním, celé, jak ho kreslil. Ne celé. Bez sedmi. Ale celé tak, jak bylo teď, a nikdo už ho takové neuvidí. Lebka dlouhá jako předloktí, pod hladinou. Kroužky. Rýhy, které už nebyly vidět, jen tušit, jak voda nad nimi nepatrně měnila barvu.
+Voda mu byla po stehna. Stál u zadní stěny, s kahanem nad hlavou, a hnízdo bylo pod ním, celé, jak ho kreslil. Ne celé. Bez sedmi. Ale celé tak, jak bylo teď, a nikdo už ho takové neuvidí. Lebka dlouhá jako předloktí, pod hladinou. Kroužky. Rýhy, které už nebyly vidět, dalo se je jen tušit podle toho, jak voda nad nimi nepatrně měnila barvu.
 
 Udělal rukou kříž. Nad hnízdem, jako nad hrobem. Nevěděl, jestli to smí.
 
@@ -36,7 +36,7 @@ Pak lezl dál, protože za ním přitékala voda.
 
 Stará cesta byla jiná, než ji kreslil.
 
-Byla to opravdová chodba. Vysoká jako dveře, aspoň pro malé, a Matěj se v ní musel shýbat, ale ne moc. Široká tak, aby dva prošli vedle sebe. Na zemi kroky, vyšlapané do kamene, jako se vyšlape práh kostela, a ve stěnách niky na kahany, prázdné, se začazenými stropy. Klesala doleva, mírně a pořád, a voda z ucha po ní už tekla, tenkou vrstvou, a předbíhala je.
+Byla to opravdová chodba. Vysoká jako dveře, aspoň pro malé, a Matěj se v ní musel shýbat, ale ne moc. Široká tak, aby dva prošli vedle sebe. Na zemi stupně, vyšlapané do kamene, jako se vyšlape práh kostela, a ve stěnách niky na kahany, prázdné, se začazenými stropy. Klesala doleva, mírně a pořád, a voda z ucha po ní už tekla, tenkou vrstvou, a předbíhala je.
 
 Stáli tam všichni. Matějovi horníci, mokří, zabahnění, s jedním kahanem, který Matěj podal Henselovi. A proti nim, ve žlutém světle čtyř pěti kahanů, oni.
 
@@ -56,7 +56,7 @@ Ostra se dívala na Matěje zespodu, malýma tmavýma očima. Pak se podívala n
 
 Nikdo se nepohnul.
 
-Pak se pohnul ten s holí. Udělal dva kroky. Kulhal a holí si přidržoval nohu, kterou mu Ostra v únoru narovnala na kamenné lavici. Zastavil se před Ješkem. Díval se nahoru. Ješek byl o dvě hlavy vyšší.
+Pak se pohnul ten s holí. Udělal dva kroky. Kulhal na nohu, kterou mu Ostra v únoru narovnala na kamenné lavici, a opíral se o hůl. Zastavil se před Ješkem. Díval se nahoru. Ješek byl o dvě hlavy vyšší.
 
 „Tebe znám,“ řekl malý muž. Lámaně, se starým přízvukem, každé slovo kladl jako kámen na kámen. „Ty jsi ten vysoký. Z hory. Šel jsi dovnitř s ním, za tmy. Ven za dne.“
 
@@ -76,7 +76,7 @@ Merin první, s kahanem. Za ním žena s dítětem na zádech, chlapec, druhá �
 
 Ostra šla pomalu. Byla stará a celou noc seděla u skály, a nohy ji nesly, jako nesou nohy lidi, kteří zapomněli, k čemu jsou. Matěj šel za ní a díval se na její záda a na bílý cop a slyšel za sebou vodu.
 
-Nestoupala tu. Tekla. Po kamenných krocích, po žlábku, který tu někdo vytesal při stěně a který byl staletí suchý, a teď v něm šuměla. Byla rychlejší než oni. Matěj ji cítil kolem kotníků, pak kolem lýtek, a věděl, že kdyby šli rychleji, byla by jim pořád u nohou, protože ona měla času víc než oni.
+Nestoupala tu. Tekla. Po kamenných stupních, po žlábku, který tu někdo vytesal při stěně a který byl staletí suchý, a teď v něm šuměla. Byla rychlejší než oni. Matěj ji cítil kolem kotníků, pak kolem lýtek, a věděl, že kdyby šli rychleji, byla by jim pořád u nohou, protože ona měla času víc než oni.
 
 Na jednom místě se chodba zúžila a strop klesl. Kunz šel s mlátkem v ruce, nesehnul se dost a uhodil do stropu mlátkem. Chlapec před ním se otočil. Malý. Podíval se na mlátek. Pak na Kunzovu tvář, zlomený nos, zarostlou bradu.
 
@@ -122,7 +122,7 @@ Matěj se k němu sklonil.
 
 A Ješek ho odstrčil.
 
-Nijak zle. Jen ramenem, jak se odstrčí bratr od stolu, když chce sedět na tom místě sám. Sklonil se, otočil se k malému muži zády a natáhl ruce dozadu.
+Nijak zle. Jen ramenem, jak bratr odstrčí bratra od stolu, když chce sedět na tom místě sám. Sklonil se, otočil se k malému muži zády a natáhl ruce dozadu.
 
 „Na,“ řekl. „Lez.“
 
@@ -138,7 +138,7 @@ Voda mu tekla kolem kolen a přes hranu.
 
 Zůstala Ostra.
 
-Stála na hraně a dívala se dolů. Pak se otočila a podívala se zpátky, do tmy chodby, odkud přišli a kde tekla voda. Někde nahoře, za uchem, za hnízdem, za štolou, ležela ta skála, kterou celý život poslouchala. Dlouho. Matěj počítal ten dlouho Otčenášem a nedošel do *adveniat*.
+Stála na hraně a dívala se dolů. Pak se otočila a podívala se zpátky, do tmy chodby, odkud přišli a kde tekla voda. Někde nahoře, za uchem, za hnízdem, za štolou, ležela ta skála, kterou celý život poslouchala. Dlouho. Matěj tu chvíli odměřoval Otčenášem a došel až k *sed libera nos*.
 
 Pak se otočila k němu.
 
@@ -156,7 +156,7 @@ Na druhé straně, nahoře, kde chodba zase stoupala, svítil Hensel. Kahan jako
 
 Šel k němu.
 
-Pod nohama ucítil v podlaze díru. Ne díru. Puklinu, širokou jako ruka, a voda do ní tekla, se zvukem, jaký dělá voda, když teče do hrnce s úzkým hrdlem. Hora pila. Ale pila pomaleji, než voda přitékala.
+Pod nohama ucítil v podlaze díru. Ne díru. Puklinu, širokou jako ruka, a voda do ní tekla, se zvukem, jaký dělá voda, když teče do džbánu s úzkým hrdlem. Hora pila. Ale pila pomaleji, než voda přitékala.
 
 Stoupala mu k bradě. Ostra mu na zádech stiskla krk.
 
@@ -168,7 +168,7 @@ Nesklonil se víc, než musel. Šel.
 
 Pak pod nohama ucítil kámen, který stoupal, a pak schod, a pak další, a voda klesla k prsům, k pasu, a Hensel natáhl ruku, tu bez dvou prstů, a chytil ho za hábit, a vytáhl ho.
 
-Matěj klekl na suchém kameni a Ostra mu slezla ze zad.
+Matěj klekl na suchý kámen a Ostra mu slezla ze zad.
 
 Otočil se.
 
@@ -184,7 +184,7 @@ Matěj nepočítal. Uvědomil si to až po dlouhé době, jako v noci, a znovu s
 
 Pak se chodba rozšířila a byli tam ostatní.
 
-Matěj je uviděl napřed jako světla. Mnoho světel, kahany na zemi a ve výklencích, a mezi nimi lidé, sedící na vacích, se zády ke stěnám. Ti z té studené místnosti. Malí, s dětmi v kožešinách. Vysocí, ta žena a dívka jako vrbový proutek, a stařec, který seděl rovně. Když vešli, všechno se zvedlo. Muži vstali. Kopí. Matka strhla dítě za sebe. A malá dívka, která stála nejblíž, se podívala na Kunze a na jeho vousy a zlomený nos a začala křičet.
+Matěj je uviděl napřed jako světla. Mnoho světel, kahany na zemi a ve výklencích, a mezi nimi lidé, sedící na vacích, se zády ke stěnám. Ti z té studené místnosti. Malí, s dětmi v kožešinách. Vysocí, ten od dveří, ta žena a dívka jako vrbový proutek, a stařec, který seděl rovně. Když vešli, všechno se zvedlo. Muži vstali. Kopí. Matka strhla dítě za sebe. A malá dívka, která stála nejblíž, se podívala na Kunze a na jeho vousy a zlomený nos a začala křičet.
 
 Kunz se zastavil.
 
@@ -198,7 +198,7 @@ Gotthard se podíval na Hensela. Pak si sedl taky.
 
 *
 
-Konec staré cesty byla komora s kamennou deskou místo dveří.
+Na konci staré cesty byla komora s kamennou deskou místo dveří.
 
 Matěj to viděl, když se rozednilo. Ne rozednilo, poledne už dávno minulo, ale v komoře se rozsvítilo: škvírami kolem desky, úzkými jako nůž, šlo dovnitř šedé světlo, a když se k jedné z nich přiložilo oko, byl tam les. Kmeny, mech, kapradí. Kus nebe.
 
@@ -268,7 +268,7 @@ Dlouho mlčel. Pak řekl, aniž se na Matěje podíval:
 
 „Ano.“
 
-„Tam není nic. Cesta jde hlouběji. O mnoho sáhů. Tam se nikdy nepotkáme.“
+„Tam není nic. Cesta jde hlouběji do hory. O mnoho sáhů. Tam se nikdy nepotkáme.“
 
 „Teď to vím.“
 
@@ -310,7 +310,7 @@ Matěj se na něj díval.
 
 Za tmy odvalili desku.
 
-Venku byl les. Strmý svah, buky, kameny, a pod nimi tma, a nad nimi nebe, ještě šedé na západě. Vzduch byl studený a voněl mechem a dýmem odněkud z daleka. Psi nebyli slyšet.
+Venku byl les. Strmý svah, buky, kameny, a pod nimi tma, a nad nimi nebe, ještě šedé na západě. Vzduch byl studený a voněl mechem a dýmem odněkud zdaleka. Psi nebyli slyšet.
 
 Pod bukem stála Dobroslava.
 
@@ -324,7 +324,7 @@ Došel k ní.
 
 „Jsou tam všichni,“ řekl. „Ty naši taky.“
 
-„Vidím.“ Dobroslava se nedívala na něj. Dívala se přes něj, na ty dvě skupiny lidí na svahu pod strmým koncem hory, které stály každá zvlášť a přece pohromadě. „Dvacet let,“ řekla tiše. „A horníci z Mlýnce je uvidí dřív než já.“
+„Vidím.“ Dobroslava se nedívala na něj. Dívala se přes něj, na ty dvě skupiny lidí na svahu pod strmým koncem hory, které stály každá zvlášť a přece pohromadě. „Dvacet let,“ řekla tiše. „A horníci z Mlýnce je viděli dřív než já.“
 
 Sáhla pod kožich. Vytáhla uzlík, šedý cíp hábitu, a podala ho Bořkovi. Bořek ho zvážil v dlani, jako ho vážila ona. Rozvázal ho a podíval se dovnitř, a v šeru se tam něco slabě zalesklo. Zavázal ho a strčil za košili. Neřekl nic. Kývl.
 
@@ -378,7 +378,7 @@ Matěj se nezeptal, co to je. Věděl, že by mu neodpověděl, a věděl taky, 
 
 Merinovy oči se v šeru nezablýskly. Bylo na to málo světla.
 
-Pak se otočil a šel za ostatními, a Bořek s bidlem šel před nimi, a Dobroslava se ohlédla na Matěje, jednou, a šla taky, a les je spolkl, jako spolkl tři údery hákem na balvanu, jako by je nikdy neslyšel.
+Pak se otočil a šel za ostatními, a Bořek s bidlem šel před nimi, a Dobroslava se ohlédla na Matěje, jednou, a šla taky, a les je spolkl, jako spolkl tři údery hákem na balvanu, jako by tu nikdy nebyli.
 
 *
 
@@ -392,13 +392,13 @@ Dole ležela luka. Ne luka. Voda. Celá luka grangie, od potoka až k plotu ovč
 
 A výš, na pasece pod horou, pochodně.
 
-Mnoho. Tolik jako v pátek, a mezi nimi lidé, a ústí štoly, ze kterého pořád tekla voda. Bylo ji slyšet až sem. A ze vsi, z Mlýnce, kde svítilo v každé chalupě, slyšel ještě něco jiného. Ženský hlas. Nebyl to zpěv. Bylo to to, co ženy v Mlýnci dělají, když přinesou mrtvého.
+Mnoho. Tolik jako v pátek, a mezi nimi lidé, a ústí štoly, ze kterého pořád tekla voda. Bylo ji slyšet až sem. A ze vsi, z Mlýnce, kde svítilo v každé chalupě, slyšel ještě něco jiného. Ženský hlas. Nebyl to zpěv. Byl to nářek, jaký ženy v Mlýnci spouštějí, když přinesou mrtvého.
 
 Ješek se rozběhl.
 
 *
 
-Na pasece se lidé otáčeli, jak vycházeli z lesa. Pochodně se k nim natáčely. Někdo vykřikl. Někdo upustil lopatu. Ženy, které stály u ústí v hloučku a dívaly se do vody, se otočily, a jedna z nich se pustila do běhu, a Matěj ji poznal, ještě než jí uviděl tvář. Podle toho, jak běžela. Jako běhala tenkrát za nimi oběma, když utekli k rybníku.
+Lidé na pasece se otáčeli, jak se z lesa vynořovali jeden za druhým. Pochodně se k nim natáčely. Někdo vykřikl. Někdo upustil lopatu. Ženy, které stály u ústí v hloučku a dívaly se do vody, se otočily, a jedna z nich se pustila do běhu, a Matěj ji poznal, ještě než jí uviděl tvář. Podle toho, jak běžela. Jako běhala tenkrát za nimi oběma, když utekli k rybníku.
 
 Matka.
 
@@ -446,7 +446,7 @@ Pak se otočil a šel k ohni, k tomu pod pláštěm, a klekl si u něj, a Matěj
 
 *
 
-Tu noc spal Matěj v Mlýnci, u matky, na lavici u pece, kde spal jako dítě. Ješek ležel na slámě u druhé stěny. Ani jeden nespal.
+Tu noc zůstal Matěj v Mlýnci, u matky, na lavici u pece, kde spal jako dítě. Ješek ležel na slámě u druhé stěny. Ani jeden nespal.
 
 Matěj vytáhl tabulku. Vosk byl mokrý, rozměklý, a písmo v něm rozteklé, jak se rozteče vosk, když leží celý den u těla ve vodě. *Aurum sustuli. VII.* Ještě se to dalo přečíst. *Non sum.* To taky.
 

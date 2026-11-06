@@ -52,7 +52,7 @@ Nara se u té věty zastavila. *Kolébkou lidského druhu.* Stejná slova, jaká
 
 „Paní Mel by to přečetla?“ zeptala se Tann.
 
-„Včera, než jsme jeli nahoru, se na to dívala,“ řekl Hals. „Na seznam ve statutu, ne na text. Říkala, že to není průzkumné značení. Že je to podobné a není to ono. Víc nevěděla.“
+„Paní Mel tu není,“ řekl Hals. „Ale říkala mi jednou, že patroni psali podobně jako průzkum, a přitom jinak. Víc nevěděla.“
 
 Článek třetí. Na chráněném světě se nezakládají sídla. Nepřistává se. Nevysazují se osoby ani organismy. Výjimkou je průzkum, který do světa nezasahuje.
 
@@ -76,7 +76,7 @@ Ardaine četla statut celý, od záhlaví po poslední článek, a když skonči
 
 „Odpůrce upozorňuje,“ řekla, „že statut nepojmenovává žádnou populaci. Jmenuje je značkami, které nikdo nečte. Nelze z něj zjistit, zda skupiny z průzkumu jsou populacemi, které statut chrání.“
 
-Bylo to přesné. Statut se neptal, jestli jsou rozumné; Ardaine ten spor včera prohrála a dnes ho nevedla. Ptala se, jestli jsou to *ony*. Jestli plaz v sedmém políčku je populace II, nebo IV, nebo žádná. A na to nikdo v téhle síni odpověď neměl.
+Bylo to přesné. Tentokrát se neptala, jestli jsou rozumné; Ardaine ten spor včera prohrála a dnes ho nevedla. Ptala se, jestli jsou to *ony*. Jestli plaz v sedmém políčku je populace II, nebo IV, nebo žádná. A na to nikdo v téhle síni odpověď neměl.
 
 „Senát to bere na vědomí,“ řekla Tann.
 
@@ -124,7 +124,7 @@ Nara stála u prázdného regálu a hřála si ruce v podpaží. Tann přišla k
 
 „Čtyřicet devět.“
 
-„Mně šedesát osm. Sedím v tomto soudu třicet jedna let.“ Tann se dívala do tmy mezi regály, ne na Naru. „Za celou tu dobu jsem si myslela, že vím, co je pod pečetí soudu. Že to soud viděl. Že to tak je, protože tak to být má.“
+„Mně šedesát osm. Sedím u tohoto soudu třicet jedna let.“ Tann se dívala do tmy mezi regály, ne na Naru. „Celou tu dobu jsem si myslela, že vím, co je pod pečetí soudu. Že to soud viděl. Že to tak je, protože tak to být má.“
 
 Nara mlčela.
 
@@ -306,7 +306,7 @@ Cestou nahoru se v koutku vědomí rozsvítilo *Záznam obnoven* a po něm hrom�
 
 Nara stála v kabině a dívala se na ten vzkaz.
 
-Proč. Jedno slovo. Mohla mu odpovědět zítra, dvaceti slovy, ústně přes personál. Mohla mu napsat, že ho chtěla vidět, protože si nepamatuje, jaké byly barvy. Že tam na tom obraze chyběla bílá. Že kdo ho kreslil, nevěděl o ledu na severu, o vírech mraků, o lidech u ohně ani o dítěti na zádech. Že jeho obraz byl obraz prázdného světa, a ten svět prázdný nebyl.
+Proč. Jedno slovo. Mohla mu odpovědět ještě dnes, dvaceti slovy, ústně přes personál. Mohla mu napsat, že ho chtěla vidět, protože si nepamatuje, jaké byly barvy. Že tam na tom obraze chyběla bílá. Že kdo ho kreslil, nevěděl o ledu na severu, o vírech mraků, o lidech u ohně ani o dítěti na zádech. Že jeho obraz byl obraz prázdného světa, a ten svět prázdný nebyl.
 
 Nesměla nic z toho.
 

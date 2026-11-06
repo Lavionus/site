@@ -92,7 +92,7 @@ Wehrle vstal. Měl na sobě týž oblek jako v červnu, jen mu byl větší. Bra
 
 „Pane Wehrle.“
 
-Mluvili německy. Sende německy rozuměl a mluvil špatně. Wehrle to věděl a mluvil pomalu.
+Mluvili německy. Sende německy rozuměl, ale mluvil špatně. Wehrle to věděl a mluvil pomalu.
 
 „Nepřijali to,“ řekl Wehrle.
 
@@ -346,7 +346,7 @@ Síť to zapsala. Nezeptala se na kategorii.
 
 *
 
-Před spaním šel k oknu jednací místnosti. Bylo prázdné. Kerr tam nebyla a světla byla ztlumená.
+Před spaním šel k oknu jednací místnosti. Byla prázdná. Kerr tam nebyla a světla byla ztlumená.
 
 Terra se do okna nevešla. Byla tam noční strana, a na ní světla měst, rozsypaná a nahloučená do skvrn a nití. Sende hledal Evropu. Našel ji bez kroužku. Chebsko bylo těžší, protože Chebsko je malé a světla tam jsou slabá. Našel Cheb. Tečku. Vedle ní tmu.
 

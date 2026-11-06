@@ -48,7 +48,7 @@ Klára vyjde za ním. Oči má suché a upřené na Jonáše v Hanině náručí
 
 *
 
-V pokoji sedí Sokolová u konferenčního stolku a desky má otevřené. Papíry jsou vytištěné na obyčejné tiskárně, grafy černobílé, některé popsané tužkou. Na okraji jednoho stojí velkým písmem *NE!* a dvakrát podtrženo.
+V pokoji sedí Sokolová u konferenčního stolku a desky má otevřené. Papíry jsou vytištěné na obyčejné tiskárně, grafy černobílé, některé popsané tužkou. Na okraji jednoho stojí velkým písmem *NE!*, dvakrát podtržené.
 
 „Kláro,“ řekne Sokolová, „ještě jednou. Souhlasíte, aby to slyšela?“
 
@@ -90,7 +90,7 @@ Sokolová se skoro usměje.
 
 „A je tam?“ zeptá se Klára.
 
-„Jsou tam dvě.“ Sokolová ukáže tužkou na dva mraky teček, které se na grafu trochu oddělují od ostatních. „Dvě slabé stopy. Každá je v běžném člověku nepatrná. Méně než procento. Méně než neandertálec, a ten je taky malý. Jedna je rozprostřená skoro rovnoměrně, v Evropě, na Blízkém východě, kousek i v severní Africe. Druhá je slabší a nerovnoměrná, tu najdete jen někde.“
+„Jsou tam dvě.“ Sokolová ukáže tužkou na dva mraky teček, které se na grafu trochu oddělují od ostatních. „Dvě slabé stopy. Každá je v běžném člověku nepatrná. Méně než procento. Méně než neandertálský podíl, a ten je taky malý. Jedna je rozprostřená skoro rovnoměrně, v Evropě, na Blízkém východě, kousek i v severní Africe. Druhá je slabší a nerovnoměrná, tu najdete jen někde.“
 
 „A odkud jsou?“
 
@@ -146,7 +146,7 @@ Klára kývne.
 
 „Tři,“ řekne Hana.
 
-„Tři. Chyba referencí. Referenční genom, na který se všechno porovnává, je poskládaný z malého počtu lidí. Má díry a má místa, kde je špatně. Některé úseky, které *nesedí na nic*, nesedí jen proto, že reference je tam slepá. Zkusila jsem to proti dvěma referencím. Většina zůstala. Ne všechno.“
+„Tři. Chyba referencí. Referenční genom, na který se všechno porovnává, je poskládaný z malého počtu lidí. Má díry a má místa, kde je špatně. Některé úseky, které *nesedí na nic*, nesedí jen proto, že reference je tam slepá. Zkusila jsem to proti dvěma referencím. Většina zůstala. Ne všechny.“
 
 Odloží tužku.
 
@@ -164,7 +164,7 @@ Sokolová se na ni podívá přes desky.
 
 Sokolová chvíli mlčí.
 
-„Snesou tohle,“ řekne pak. „V běžných lidech jsou dvě slabé stopy po populacích, které neznáme. U vás a u devíti dalších lidí je jedna z nich silná, a k ní úseky, které nemá nikdo jiný. Vaše skupina je stará, dlouho žila stranou a s ostatními se mísila. Ten nález u Jonáše je dědictví po ní. Ne nemoc.“ Odmlčí se. „To je všechno. Víc ne.“
+„Snesou tohle,“ řekne pak. „V běžných lidech jsou dvě slabé stopy po populacích, které neznáme. U vás a u devíti dalších lidí je jedna z nich silná, a k ní úseky, které nemá nikdo jiný. Vaše skupina je stará, dlouho žila stranou a s ostatními se mísila málo. Ten nález u Jonáše je dědictví po ní. Ne nemoc.“ Odmlčí se. „To je všechno. Víc ne.“
 
 „Odkud jsme?“
 
@@ -228,7 +228,7 @@ Ve čtvrtek v deset ráno stojí Kalina na nádraží v Brně s taškou přes ra
 
 „Pořád ten samý.“
 
-U Hany v bytě odsune z kuchyňského stolu talíř a hrnek a rozloží na něj papíry. Hana mezitím připraví druhý stůl, ten od psacího, a přistrčí ho. Jako v únoru. Jen papírů je víc.
+U Hany v bytě odsune z kuchyňského stolu talíř a hrnek a rozloží na něj papíry. Hana mezitím připraví druhý stůl, psací, a přistrčí ho. Jako v únoru. Jen papírů je víc.
 
 Daniela Fuchsová přijde v jedenáct. Je vysoká, hranatá, kolem pětačtyřiceti, s brýlemi na šňůrce a se svazkem papírů v igelitové tašce z drogerie. Podá Haně ruku a nepustí ji hned.
 
@@ -252,7 +252,7 @@ Ukáže na blok Sálové.
 
 Fuchsová položí fotku bloku vedle snímku z videa. Pak další a další. Dlouho nic neříká. Nakonec sundá brýle a nechá je viset na šňůrce.
 
-„Kdo tohle kreslil,“ řekne, „ten nekreslí. Ten opisuje. Za jedenáct vteřin. Bez chyby.“ Zvedne oči k Haně. „Ani jedna tečka navíc. Ani jedna chybí. Kontrolovala jsem dvě stě čtyřicet teček. Tohle umí jen člověk, který to dělá celý život.“
+„Kdo tohle kreslil,“ řekne, „ten nekreslí. Ten opisuje. Za jedenáct vteřin. Bez chyby.“ Zvedne oči k Haně. „Ani jedna tečka navíc. Ani jedna nechybí. Kontrolovala jsem dvě stě čtyřicet teček. Tohle umí jen člověk, který to dělá celý život.“
 
 Hana si vzpomene na mozol na pravém prostředníku. Nic neřekne. Zapíše si to doleva, protože je to měření, ne názor. *D. F.: kresby S. = video, 240 teček, bez odchylky.*
 
@@ -324,7 +324,7 @@ Kroužků je hodně. Rozházených po kraji, daleko od sebe.
 
 Kalina zastaví.
 
-Hana se dívá na zastavený obraz dlouho. Kraj shora a v něm kroužky. Jako mapa, na které někdo vyznačil, kde kdo žije. Jako mapa, kterou kreslí geolog před vrtem, aby věděl, kudy vede vedení.
+Hana se dívá na zastavený obraz dlouho. Kraj shora a v něm kroužky. Jako mapa, na které někdo vyznačil, kde kdo žije. Jako mapa, kterou kreslí geolog před vrtem, aby věděl, kudy vedou sítě.
 
 „Pusťte to,“ řekne.
 
@@ -434,7 +434,7 @@ Hana zavře dveře a dlouho stojí v předsíni.
 
 V šest jí zavolá Sálová.
 
-„Pan Kalina mi napsal, že jste byli spolu,“ řekne. „Co jste viděla?“
+„Pan Kalina mi napsal, že jste byli spolu. S nějakou paní Fuchsovou,“ řekne. „Co jste viděla?“
 
 „Obraz,“ řekne Hana. „A čísla.“
 
@@ -470,7 +470,7 @@ A zavěsí.
 
 Večer Hana sedí u stolu sama. Papíry jsou pryč, jen sešit a Anayova kniha, kterou si sundala z poličky, ani neví proč.
 
-Otevře ji. Kniha se otevře sama, na kresbě devíti padajících světel. Tak se otvírá od roku 2026. Devět teček v řadě, devátá menší. Pod tím popisek, španělsky: *Así cayeron, dicen los ancianos.* Tak padaly, říkají starci.
+Otevře ji. Kniha se otevře sama, na kresbě devíti padajících světel. Tak se otvírá od roku 2026. Devět teček v řadě, devátá menší. Pod tím popisek, španělsky: *Según los ancianos.* Podle starců.
 
 Žádní starci nebyli. Walt se ptal třicet let a nikdo legendu neznal. Etnohistorička ji neznala ze žádného pramene.
 

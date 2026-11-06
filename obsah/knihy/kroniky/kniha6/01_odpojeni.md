@@ -64,7 +64,7 @@ Měl dvě stě šestnáct stran. Síť jí nabídla shrnutí, tři řádky, a Na
 
 Trestní soud prstence Halm. Řízení písemné, bez jednání. Návrh podal Koloniální úřad, za něj státní zástupkyně S. Ardaine. Obhájce ustanovený soudem, jeden, pro všechny obviněné. Ustanoven šest dní před rozhodnutím.
 
-Nara si to přečetla dvakrát. Pak to nechala být a četla dál, protože kdyby se zastavila u každé vady, nedošla by nikam. Vady si poznamenávala. Bez vůle, sama od sebe, jak ji to naučili před pětadvaceti lety: v koutku vědomí se jí skládal druhý seznam, tichý a úhledný, vedle textu. *Jeden obhájce na 401 osob. Ustanoven 6 dní předem. Bez jednání. Žádný individuální skutek.*
+Nara si to přečetla dvakrát. Pak to nechala být a četla dál, protože kdyby se zastavila u každé vady, nedošla by nikam. Vady si poznamenávala. Bezděky, sama od sebe, jak ji to naučili před pětadvaceti lety: v koutku vědomí se jí skládal druhý seznam, tichý a úhledný, vedle textu. *Jeden obhájce na 401 osob. Ustanoven 6 dní předem. Bez jednání. Žádný individuální skutek.*
 
 Skutková zjištění byla krátká. Dne toho a toho se na Dolním náměstí Orsy shromáždilo čtyři sta jedna osob. Veřejně se odpojily od sítě správy. Hlásí se k odkazu hnutí Otevřená mysl. Hnutí Nové otevření je pokračovatelem hnutí odsouzeného rozsudkem Terra, jak navrhl Koloniální úřad a jak soud v usnesení ze dne toho a toho přijal. Účast na veřejném odpojení je projevem členství.
 
@@ -80,7 +80,7 @@ A pod tím, jako pod každým jménem, stejná věta:
 
 Nara se dívala na ta slova a ramena jí povolila. Bylo to tak rychlé a tak tělesné, že se za to začala stydět dřív, než to stačila pojmenovat.
 
-Ilan s ní nebydlel osm měsíců. Odešel v den, kdy mu bylo šestnáct a půl, protože od té doby to zákon dovoloval. Vzal si jednu tašku. Pokoj ho ještě týden poznával: když do něj vešla ona, rozsvítil se nejdřív na jeho hodnotu, teplejší a nižší, a teprve po vteřině se opravil na ni. Pak zapomněl. Nara tehdy uvažovala, jestli by neměla nastavení pokoje zamknout, aby nezapomněl. Neudělala to. Připadalo jí to sentimentální.
+Ilan s ní nebydlel osm měsíců. Odešel v den, kdy mu bylo šestnáct a půl, protože od té doby to zákon dovoloval. Kdo v šestnácti a půl opustí společnou domácnost, jedná v řízeních sám; rodiči zůstane jen řádek polohy a postavení osoby blízké. Vzal si jednu tašku. Pokoj ho ještě týden poznával: když do něj vešla ona, rozsvítil se nejdřív na jeho hodnotu, teplejší a nižší, a teprve po vteřině se opravil na ni. Pak zapomněl. Nara tehdy uvažovala, jestli by neměla nastavení pokoje zamknout, aby nezapomněl. Neudělala to. Připadalo jí to sentimentální.
 
 Teď tam stála v šedé chodbě a věděla, že ji jeho odchod právě vyňal z rozsudku. Kdyby zůstal, byla by osobou ve společné domácnosti. A věta pod jeho jménem by mluvila o ní.
 
@@ -116,7 +116,7 @@ Seděli na zemi. V řadách, ne úplně rovných, asi čtyři sta lidí. Skoro v
 
 Pořádková služba stála na okrajích a nedělala nic. Nahrávala. Nara to věděla, protože to věděla vždycky: zatýkat se bude později, podle záznamu.
 
-Ilan seděl ve třetí řadě od kraje. Poznala ho podle ramen. Měl je po Davenovi, úzká a trochu nahrbená, a ve své šedé bundě vypadal mladší než na podzim, kdy odcházel. Když k němu došla, zvedl hlavu. Nepřekvapilo ho to. Věděl, že ten řádek existuje. A asi věděl i to, že se do něj dnes podívá.
+Ilan seděl ve třetí řadě od kraje. Poznala ho podle ramen. Měl je po Davenovi, úzká a trochu nahrbená, a ve své šedé bundě vypadal mladší než na podzim, kdy odcházel. Když k němu došla, zvedl hlavu. Nepřekvapilo ho to. Věděl, že ten řádek existuje. A asi věděl i to, že se do něj Nara dnes podívá.
 
 „Ilane,“ řekla. „Vstaň.“
 
@@ -148,7 +148,7 @@ Ilan to viděl. Neřekl nic. Díval se na ni a pak na volné místo vedle sebe, 
 
 Ten krok měla v záznamu.
 
-Síť zaznamenávala všechno, co Nara viděla a slyšela, a uchovávala to, dokud o to Nara stála. Bylo to užitečné. Při práci nepostradatelné. Nikdo nepamatoval doslovně, co svědek řekl před třemi měsíci; záznam ano. Naře to dávno splynulo s pamětí, tak jako každému. Když si na něco vzpomínala, většinou si to přehrávala.
+Síť zaznamenávala všechno, co Nara viděla a slyšela, a uchovávala to, dokud o to Nara stála. Bylo to užitečné. Při práci nepostradatelné. Nikdo si nepamatoval doslova, co svědek řekl před třemi měsíci; záznam ano. Naře to dávno splynulo s pamětí, tak jako každému. Když si na něco vzpomínala, většinou si to přehrávala.
 
 Teď to udělala, stojíc u okna nad obloukem Orsy, a hned toho litovala.
 
@@ -158,7 +158,7 @@ Záznam neukazoval její tvář. Neukazoval nic, co by se dalo nazvat rozhodnut�
 
 Zavřela ho.
 
-Odpojení byl přestupek. Řekla mu to tam na dlaždicích a měla pravdu, toho dne a ještě devatenáct dní potom. Pak Koloniální úřad navrhl trestnímu soudu prstence, aby Nové otevření prohlásil za pokračovatele hnutí odsouzeného rozsudkem Terra. Soud to přijal usnesením na dvou stranách. Od té chvíle už nikdo na náměstí nespáchal přestupek. Všichni byli členové.
+Odpojení byl přestupek. Řekla mu to tam na dlaždicích a měla pravdu, toho dne a ještě devatenáct dní potom. Jenže všech čtyři sta jedna odmítlo povinné připojení, a tak je ještě ten večer zajistili do vyřízení, v Sedmé loděnici. Nara to zajištění napadala celé ty dny, bez výsledku. Pak Koloniální úřad navrhl trestnímu soudu prstence, aby Nové otevření prohlásil za pokračovatele hnutí odsouzeného rozsudkem Terra. Soud to přijal usnesením na dvou stranách. Od té chvíle už nikdo na náměstí nespáchal přestupek. Všichni byli členové.
 
 Nara psala. Za jedenáct dní sedm podání, jako osoba blízká, jako matka nezletilého, jako advokátka pro ústavní věci, která má právo upozornit soud na vadu. Všechna přišla zpátky se stejnou větou. *Osoba blízká není účastníkem řízení; podání se nepřipouští.* Nara tu větu znala. Sama ji kdysi napsala do jednoho vyjádření, za správu jednoho habitatu, proti jedné rodině, která chtěla mluvit za svého otce. Vyhrála.
 
@@ -210,7 +210,7 @@ Nabídla ho nenápadně, jak nabízí všechno, co předvídá: v koutku vědom�
 
 Nara ho otevřela. Byl dobře napsaný. Kdo ho psal, uměl to. Nezletilost, rodinné poměry, žádný individuální skutek, žádné předchozí přestupky. Žádost se podávala Koloniálnímu úřadu, ne soudu. Úřad mohl vyjmout jednotlivce z výkonu ze závažných důvodů. Nezletilost byla závažný důvod. Nara si spočítala, jak dlouho by to trvalo. Deset dní, možná dvanáct. Měla by odpověď v polovině lhůty.
 
-Začala psát. První větu napsala bez přemýšlení, jak se píše věta, kterou člověk napsal stokrát. *Žadatelka, matka nezletilého Ilana Vess, žádá…*
+Začala psát. První větu napsala bez přemýšlení, jak se píše věta, kterou člověk napsal stokrát. *Žadatelka, matka nezletilého Ilana Vesse, žádá…*
 
 U slova *žádá* se zastavila.
 
@@ -218,7 +218,7 @@ Viděla to celé. Viděla to tak, jak viděla jednání před jednáním, se vš
 
 A nepřijme to. Viděla i tohle. Viděla ho, jak sedí na šedých dlaždicích a posouvá se, aby vedle něj vzniklo místo.
 
-Ale to nebyl hlavní důvod. Nara si to řekla zřetelně, protože nechtěla, aby se jí to později pletlo. Hlavní důvod byl jiný a byl právní. Rozsudek, který právě četla, stál celý na jediném starém rozsudku. Sto devatenáct citací. Bez Terry by nebylo pokračovatelské hnutí, nebylo by členství, nebyl by kolektivní trest a nebyl by transport. Kdo chtěl zastavit transport, musel jít po Teře. Všechno ostatní byla jen žádost.
+Ale to nebyl hlavní důvod. Nara si to řekla zřetelně, protože nechtěla, aby se jí to později pletlo. Hlavní důvod byl jiný a byl právní. Rozsudek, který právě četla, stál celý na jediném starém rozsudku. Sto devatenáct citací. Bez Terry by nebylo pokračovatelské hnutí, nebylo by členství, nebyl by kolektivní trest a nebyl by transport. Kdo chtěl zastavit transport, musel jít po Terře. Všechno ostatní byla jen žádost.
 
 Rozsudek Terra ležel devět set let v učebnicích jako věc, která se stala jednou. Nikdo ho nikdy nenapadl. Nebylo proč. Do letošního jara.
 
@@ -244,7 +244,7 @@ V bytě se rozsvítilo na její hodnotu. Prošla kolem dveří Ilanova pokoje. B
 
 Daven volal ještě dvakrát. Napsala mu, že s ním promluví, až bude vědět, co říct. Odpověděl jediným slovem: *Kdy?* Nenapsala nic.
 
-Pracovala do noci. Ne na návrhu. Na tom ještě nebyla. Pracovala na tom, co přijde před návrhem: četla rozsudek ještě jednou, celý, a pak ještě jednou jen jména. Čtyři sta jedna. U každého věk. Nejmladší patnáct. Nejstarší třiadvacet. Dívka s vlasy staženými dozadu tam nejspíš byla taky, jen nevěděla, pod kterým jménem. Nara se přistihla, že jména čte, jak se čtou svědci: hledá, kdo se dá použít. Kdo je nezletilý, kdo nemocný, kdo má matku v úřadě. Zastavila se.
+Pracovala do noci. Ne na návrhu. Na tom ještě nebyla. Pracovala na tom, co přijde před návrhem: četla rozsudek ještě jednou, celý, a pak ještě jednou jen jména. Čtyři sta jedna. U každého věk. Nejmladší patnáct. Nejstarší třiadvacet. Dívka s vlasy staženými dozadu tam nejspíš byla taky, jen nebylo poznat, pod kterým jménem. Nara se přistihla, že jména čte, jak se čtou svědci: hledá, kdo se dá použít. Kdo je nezletilý, kdo nemocný, kdo má matku v úřadě. Zastavila se.
 
 V koutku vědomí stál řádek, který tam síť přidala ráno, aniž se jí kdo ptal. *Do odletu: 46 dní.* Neuměla ho schovat. Nebo uměla, ale nechtěla. Řádek byl malý a šedý, stejný jako ostatní, a stál v jedné řadě s časem, teplotou a stavem sítě. Kde dřív stálo *Ilan: poloha, stav*, teď nestálo nic. To místo síť po jednatřiceti dnech zrušila. Nara si toho všimla až teď. Řádek o odletu se posunul nahoru a zaplnil ho.
 

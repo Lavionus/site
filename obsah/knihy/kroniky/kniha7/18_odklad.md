@@ -24,7 +24,7 @@ Kerr se dívala před sebe. Nebo na ně. Přes stěnu se to nedalo poznat.
 
 Síť to zapisovala. Sende to cítil. Řádek po řádku, do záznamu, který se nemění.
 
-„Odklad neukončuji,“ řekla Kerr. „Zhoršení je. Náhlé není. Skupina je zadržená. Stanoviště se zhoršuje tak, jak se zhoršovalo v dubnu, jen rychleji. Pro to jsem odklad nevyhlásila a pro to ho neukončím.“
+„Odklad neukončuji,“ řekla Kerr. „Zhoršení je. Náhlé není. Skupina je zadržená. Stanoviště se zhoršuje tak, jak se zhoršovalo v dubnu, jen rychleji. Kvůli tomu jsem odklad nevyhlásila a kvůli tomu ho neukončím.“
 
 Hesk se nepohnula.
 
@@ -46,7 +46,7 @@ Sende se na ni podíval.
 
 „A?“
 
-„Vaše zpráva říká, že zával nezastaví ohřev.“ Hesk se na Marna podívala a v jejím pohledu nebylo nic nepřátelského. „Já nechci zastavit ohřev, techniku. Chci, aby se k němu nikdo nedostal. Ani ti s mapou. Ani lidé, kteří by tam šli zavírat okruhy dva týdny pod klenbou, která se hýbe. A ohřev bude dva kilometry od lidí.“
+„Ve vaší zprávě stojí, že zával nezastaví ohřev.“ Hesk se na Marna podívala a v jejím pohledu nebylo nic nepřátelského. „Já nechci zastavit ohřev, techniku. Chci, aby se k němu nikdo nedostal. Ani ti s mapou. Ani lidé, kteří by tam šli zavírat okruhy dva týdny pod klenbou, která se hýbe. A ohřev bude dva kilometry od lidí.“
 
 Marn mlčel a sklopil oči k tabletu.
 
@@ -268,11 +268,11 @@ V 6:00 to poslal.
 
 Vedoucí výpravy. Velitelce bezpečnostní složky. A všem stranám jednání z prvního června, současně. Vládě, Němcům, Rakušanům, Mexičanům. Radě sítí. Ostrým, na adresu, kterou v červnu Tadeáš nadiktoval Lis Aven ve dvoře u studny.
 
-Ve stejné vteřině, ve stejném znění. Česky, německy, anglicky, španělsky, v řeči řádu. Lis Aven to přeložila v noci, ve vedlejší kajutě, a nespala taky.
+Ve stejné vteřině, ve stejném znění. Česky, německy, anglicky, španělsky, v řeči řádu. Lis Aven to přeložila v noci, ve vedlejší kajutě, a taky nespala.
 
 Nebylo to v předpisu. Stanoviska delegáta dostává vedoucí. Ne pozemské vlády. Ne lidé, kteří v právu řádu nemají postavení účastníka.
 
-Sende to poslal všem. Naučil se to od ženy, která v červnu stála na pátém schodu pod horou, v masce, a řekla Marnovi: *Ne loď a pak ostatní.* Marn to měl v záznamu. Sende si ho přečetl v červnu dvakrát.
+Sende to poslal všem. Naučil se to od ženy, která v červnu stála pod horou na schodu nad Marnem, v masce, a řekla mu: *Ne loď a pak ostatní.* Marn to měl v záznamu. Sende si ho přečetl v červnu dvakrát.
 
 *
 

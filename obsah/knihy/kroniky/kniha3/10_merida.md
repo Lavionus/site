@@ -6,7 +6,7 @@ Don Felipe už stojí u bodegy s klíčem. Vedle něj pan Chan. Hana neví, jest
 
 Marisol odemkne pick-up, vezme si desky a baterku a jde ke dveřím. Don Felipe sundá řetěz. Uvnitř je ještě šero a bedna stojí na paletách pod okénkem, bledá, s bílou páskou po obvodu víka, přesně tam, kde ji v sobotu večer postavili.
 
-Marisol si k ní klekne. Posvítí si na pásku a jde s ní po obvodu, pomalu, jako se jde podél plotu. Prstem přejede po každém podpisu. Přečte nahlas číslo na začátku pásky a pak na konci a podívá se do formuláře.
+Marisol si k ní klekne. Posvítí si na pásku a sleduje ji po obvodu, pomalu, jako se jde podél plotu. Prstem přejede po každém podpisu. Přečte nahlas číslo na začátku pásky a pak na konci a podívá se do formuláře.
 
 Kývne.
 
@@ -38,7 +38,7 @@ Hana mlčí.
 
 „Napůl,“ souhlasí Marisol. „Druhá půlka je moje.“
 
-Jedou dál. Rádio má Marisol vypnuté. Za hodinu se objeví první čtvrti Méridy, nízké, nové, z betonových tvárnic. Hana si uvědomí, že ty domy stojí na bílé drti z té díry u silnice.
+Jedou dál. Rádio má Marisol vypnuté. Za hodinu a půl se objeví první čtvrti Méridy, nízké, nové, z betonových tvárnic. Hana si uvědomí, že ty domy stojí na bílé drti z té díry u silnice.
 
 „Zítra ráno CT,“ řekne Marisol. „Soukromá klinika na severu. Radioložka je kamarádka naší konzervátorky. Pustí nás v půl sedmé, než přijdou pacienti. Stroj je jejich, peníze jsou produkce.“ Odmlčí se. „Řádek o CT ze smlouvy s produkcí mám vytištěný. Pro jistotu.“
 
@@ -64,7 +64,7 @@ Konzervátorka zvedne víko a sáhne do pěny. Nadzvedne roh, nahmatá fólii, p
 
 Bedna jde do chladné místnosti. Marisol píše formulář. Převzato, datum, čas, kdo, od koho. Hana se podepíše jako ta, která předmět vyzvedla. Marisol se podepíše jako ta, která ho převzala. Konzervátorka jako svědek.
 
-Viktor a Ríša čekají na dvoře pod stromem. Viktor telefonuje. Když Hana vyjde, schová telefon do kapsy.
+Viktor a Ríša čekají venku před bránou, pod stromem na ulici. Viktor telefonuje. Když Hana vyjde, schová telefon do kapsy.
 
 „Kdy?“ zeptá se.
 
@@ -76,9 +76,9 @@ Viktor a Ríša čekají na dvoře pod stromem. Viktor telefonuje. Když Hana vy
 
 *
 
-Hotel je u trhu, tři ulice od náměstí. Pokoj má větrák pod stropem a okno do světlíku a za tři sta pesos za noc ho platí produkce. Viktor ho zaplatil v recepci kartou dřív, než Hana stačila otevřít peněženku.
+Hotel je u trhu, tři ulice od náměstí. Pokoj má větrák pod stropem a okno do světlíku a tři sta pesos za noc za něj platí produkce. Viktor ho zaplatil v recepci kartou dřív, než Hana stačila otevřít peněženku.
 
-V noci nespí. Je vedro a větrák točí horký vzduch dokola a ze světlíku je slyšet cizí televize. Hana leží na posteli a v telefonu prochází fotky. Sobotní večer, bodega, šikmé světlo. Sedm řádků. Krátká čára na začátku každého. Tečka nad čarou.
+V noci Hana nespí. Je vedro a větrák točí horký vzduch dokola a ze světlíku je slyšet cizí televize. Hana leží na posteli a v telefonu prochází fotky. Sobotní večer, bodega, šikmé světlo. Sedm řádků. Krátká čára na začátku každého. Tečka nad čarou.
 
 Zavře fotky a otevře sken od Šindelářové, a pak ho zase zavře.
 
@@ -122,7 +122,7 @@ Radioložka posouvá řezy. Kruh za kruhem, od čela ke spodnímu konci. Pořád
 
 Posune obraz k okraji. Zvětší ho.
 
-„A tohle nahoře, ta tenká vrstva, je hustá. Minerální. Mohl by to být kalcit. Ale není srostlý s povrchem. Pod ním je tahle tmavá čára.“ Přejede po ní prstem po obrazovce. „Lepidlo. Nebo pryskyřice, do které to někdo nasypal.“
+„A tohle nahoře, ta tenká vrstva, je hustá. Minerální. Mohl by to být kalcit. Ale není srostlý s povrchem. Pod ním je tahle tmavá čára.“ Přejede po ní prstem na obrazovce. „Lepidlo. Nebo pryskyřice, do které to někdo nasypal.“
 
 Přepne na podélný řez.
 
@@ -136,9 +136,9 @@ Hana ho v sobotu večer hledala s lupou deset minut.
 
 Marisol se nehne. Stojí s deskami v ruce a dívá se na obrazovku. Pak jí ruka s deskami klesne, pomalu, až k boku, a zůstane tam.
 
-Radioložka udělá rozměry. Do protokolu, řekne. Klikne na čelo a na spodní konec, pak na okraj a okraj kruhu, a na obrazovce se objeví čísla. Hana zvedne foťák a vyfotí obrazovku. Dvakrát. Pak podélný řez, pak kruh s hvězdou, pak bubliny, pak spoj formy. Nečte, co fotí. Fotí, protože ruce potřebují něco dělat.
+Radioložka změří rozměry. Do protokolu, řekne. Klikne na čelo a na spodní konec, pak na okraj a okraj kruhu, a na obrazovce se objeví čísla. Hana zvedne foťák a vyfotí obrazovku. Dvakrát. Pak podélný řez, pak kruh s hvězdou, pak bubliny, pak spoj formy. Nečte, co fotí. Fotí, protože ruce potřebují něco dělat.
 
-Pak foťák spustí.
+Pak foťák nechá klesnout.
 
 Tohle jsem nevytáhla.
 
@@ -192,7 +192,7 @@ Marisol dlouho mlčí. Pak se otočí, vytáhne telefon a jde ke dveřím.
 
 *
 
-V čekárně se Viktor zvedne z křesla dřív, než k němu Hana dojde. Pozná to na ní. Patnáct let pozná všechno na ní.
+V čekárně se Viktor zvedne z křesla dřív, než k němu Hana dojde. Pozná to na ní. Už patnáct let na ní pozná všechno.
 
 „Co?“
 
@@ -224,7 +224,7 @@ Marisol se vrátí z chodby s telefonem v ruce. Postaví se před ně, před vš
 
 *
 
-Kus cesty jdou pěšky, protože nikdo nechce sedět v autě. Pak je u obchodního centra nabere taxík a vysadí je u trhu. Ulice jsou plné. Školní děti v uniformách, prodavač kokosů s mačetou, autobus, který na rohu stojí a troubí, protože mu v cestě stojí jiný autobus. Fasády domů jsou natřené na žluto, na růžovo, na okrovo, a omítka z nich na rozích opadává a pod ní je vidět vápenec. Všechno tady stojí na vápenci.
+Kus cesty jdou pěšky, protože nikdo nechce sedět v autě. Pak je u obchodního centra nabere taxík a vysadí je u trhu. Ulice jsou plné. Školní děti v uniformách, prodavač kokosů s mačetou, autobus, který na rohu troubí, protože mu v cestě stojí jiný autobus. Fasády domů jsou natřené na žluto, na růžovo, na okrovo, a omítka z nich na rozích opadává a pod ní je vidět vápenec. Všechno tady stojí na vápenci.
 
 Hana jde a nic z toho nevidí. Vidí bílou hvězdu.
 
@@ -318,7 +318,7 @@ Ve tři odpoledne jí Jana pošle odkaz bez jediného slova.
 
 Pod tím: *Brněnská vědkyně tvrdila, že mexický „kámen z nebe“ je starý sto tisíc let. Je z plastu!*
 
-A fotka. Hana na ní stojí v neoprenu na okraji Hranické propasti, mokré vlasy, úsměv, v ruce vzorkovnici. Je jí na ní o deset let méně. Pochází z Viktorova dokumentu, z té scény, pod kterou tehdy běžel titulek *naše paní Země*. Hana se tři dny nemohla podívat do zrcadla. Teď se na ten úsměv nemůže podívat vůbec.
+A fotka. Hana na ní stojí v neoprenu na okraji Hranické propasti, mokré vlasy, úsměv, v ruce vzorkovnici. Je jí na ní o pár let méně. Pochází z Viktorova dokumentu, z té scény, pod kterou tehdy běžel titulek *naše paní Země*. Hana se tři dny nemohla podívat do zrcadla. Teď se na ten úsměv nemůže podívat vůbec.
 
 Článek je krátký. Kámen z nebe, který nikdy neřekla. Sto tisíc let, které řekla, s *nejméně*, které tu chybí. Video, CT, pryskyřice. Fakulta, jejíž jméno tam je, i když ho tam nikdo nedával. Pod článkem tři sta komentářů. Hana přečte první dva a zavře to.
 
@@ -366,7 +366,7 @@ Zavěsí dřív, než Hana stačí odpovědět. Za dvanáct let ji křestním jm
 
 Pozdě večer sedí na posteli s deníkem na kolenou a dívá se na levou půlku.
 
-Celý život jí v ní stálo, co viděla. Vrstvy, barvy, hloubky, čísla. To, co by viděl každý, kdo by stál na jejím místě. Doprava patřilo, co si myslí, a čára mezi tím byla rovná, od horního okraje k dolnímu. Starý pán s dýmkou jí ji tenkrát udělal tužkou na první straně prvního deníku. *Vlevo, co vidíš. Vpravo, co si myslíš. A nepleť si to.*
+Celý život jí v ní stálo, co viděla. Vrstvy, barvy, hloubky, čísla. To, co by viděl každý, kdo by stál na jejím místě. Doprava patřilo, co si myslí, a čára mezi tím byla rovná, od horního okraje k dolnímu. Starý pán s dýmkou jí ji tenkrát v Krkonoších ukázal na jejím prvním deníku. *Vlevo, co vidíš. Vpravo, co si myslíš. A nikdy to nepleť dohromady.*
 
 Teď neví, co viděla.
 
@@ -388,7 +388,7 @@ Vezme pero a na novou stránku napíše seznam. Všechno, co o válci ví. Ke ka
 *Poklep. Slova. Vzpomínka.*
 *Páska, suk, h. Foto ráno, foto večer. Záznam.*
 
-Vzpomínek je míň, než čekala. A jsou to všechny ty, kterým věřila nejvíc.
+Vzpomínek je míň, než čekala. A jsou to právě ty, kterým věřila nejvíc.
 
 Tohle je rozhodnutí, uvědomí si. Ne myšlenka, rozhodnutí. Odteď bude věřit jen tomu, co je napsané, vyfocené a změřené. Tomu, co by mohl zkontrolovat někdo, kdo jí nevěří. Hladkost, zvuk, cvaknutí pod dlaní, nic z toho se do soudní síně ani do recenzního řízení nedá odnést. Je to její, a protože je to její, nemá to cenu.
 

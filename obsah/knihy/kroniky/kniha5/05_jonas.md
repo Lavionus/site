@@ -2,7 +2,7 @@
 
 V sobotu v osm nula dvě je u Pramene pod Hřbetem pes dřív než člověk.
 
-Černý, velký, s bílou skvrnou na hrudi, kterou Hana minule ve tmě neviděla. Sedí na lesní cestě u odbočky k haldě a dívá se na ni, jak vystupuje z auta. Neštěkne. Nevstane. Jen se dívá, jako by si ji pamatoval a čekal, jestli si ona pamatuje jeho.
+Černý, velký, s bílou skvrnou na hrudi, kterou Hana minule přehlédla. Sedí na lesní cestě u odbočky k haldě a dívá se na ni, jak vystupuje z auta. Neštěkne. Nevstane. Jen se dívá, jako by si ji pamatoval a čekal, jestli si ona pamatuje jeho.
 
 Tadeáš stojí o kus výš, mezi smrky, s rukama v kapsách zelené bundy. Sekeru dnes nemá.
 
@@ -14,7 +14,7 @@ To je všechno, co si řekli i včera. Včera stál o dva metry dál. Dnes stoj�
 
 Hana si klekne ke korýtku. Rezavý povlak na kamenech, na hladině tenká blána, ze které stoupá pára. V mrazu je vidět, že voda dýchá. Před měsícem tu nedýchala. Spolek Prameny Chebska ji měřil pět let a pět let měla osm stupňů a něco, ať byl leden, nebo srpen. Na kartě, kterou si Hana vyfotila pod stříškou, je to napsané úhledným důchodcovským písmem.
 
-Sonda klesne do vody. Hana čeká, až se číslo ustálí. Počítá do třiceti, jak to dělá vždycky, i když přístroj by stačil za deset vteřin.
+Sonda klesne do vody. Hana čeká, až se číslo ustálí. Počítá do třiceti, jak to dělá vždycky, i když přístroji by stačilo deset vteřin.
 
 Patnáct celá nula.
 
@@ -90,7 +90,7 @@ Byt je malý a teplý a voní mlékem a pracím práškem. Na sušáku v obývá
 
 Klára sedí na gauči a na hrudi jí spí dítě.
 
-Je vysoká. Hana to pozná, i když Klára sedí. Má dlouhé nohy pod dekou, dlouhé ruce, dlouhé úzké prsty, kterými drží syna přes záda, jako by ho zakrývala celou dlaní. Vlasy má skoro bílé, krátce střižené. Tvář bledá a unavená, ale ne tak, jak bývá bledá tvář po porodu. Bledá od přírody. Oči světlé, šedé, možná do zelena. Při tomhle světle to Hana nepozná.
+Je vysoká. Hana to pozná, i když Klára sedí. Má dlouhé nohy pod dekou, dlouhé ruce, dlouhé úzké prsty, kterými drží syna přes záda, jako by ho zakrývala celou dlaní. Vlasy má skoro bílé, krátce střižené. Tvář bledá a unavená, ale ne tak, jak bývá bledá tvář po porodu. Bledá od přírody. Oči světlé, šedé, možná dozelena. Při tomhle světle to Hana nepozná.
 
 Hana na vteřinu ztuhne. Klára si toho všimne.
 
@@ -154,7 +154,7 @@ Martin se skloní. Klára ne. Klára to zjevně četla už dávno.
 
 Klára se na ni dívá.
 
-„Tohle je první věc,“ řekne, „kterou mi někdo řekl, že můžu udělat.“
+„Tohle je první věc,“ řekne, „o které mi někdo řekl, že ji můžu udělat.“
 
 *
 
@@ -242,7 +242,7 @@ Klára se na ni dívá dlouho.
 
 V pokoji je ticho. Na sušáku se jedno bodýčko pomalu stočí, jak schne.
 
-Hana se dívá na ten papír s razítkem laboratoře. Na drobné písmo. Na podpis na koleně. Myslí na Fialovu kancelář, na komisi, na slovo *vědomě*. Na Viktora u studny, který jí slíbil spoluautorství za dva tři roky. Na lidi, kteří jí kdy co slíbili, a na ty, kterým slíbila ona.
+Hana se dívá na ten papír s razítkem laboratoře. Na drobné písmo. Na podpis na koleně. Myslí na Fialovu kancelář, na komisi, na slovo *vědomě*. Na Viktora u studny, který jí slíbil spoluautorství za dva roky. Na lidi, kteří jí kdy co slíbili, a na ty, kterým slíbila ona.
 
 „To vám slíbit nemůžu,“ řekne.
 
@@ -288,7 +288,7 @@ Klářin telefon zabzučí na stolku, mezi hrnky. Klára sklopí oči k displeji
 
 „Dobrý večer. … Ano. … Ne.“
 
-Pauza. Mužský hlas v telefonu je klidný a dlouhý. Hana nerozumí slovům, jen tónu. Takový tón mají lékaři, když vysvětlují pacientovi, proč je dobré, aby se ještě nerozhodoval.
+Pauza. Mužský hlas v telefonu mluví klidně a dlouho. Hana nerozumí slovům, jen tónu. Takový tón mají lékaři, když vysvětlují pacientovi, proč je dobré, aby se ještě nerozhodoval.
 
 „Ne,“ řekne Klára. „V pondělí nikam nepojedeme. … Já vím, že je to domluvené. … Já vím, že se snaží.“
 
@@ -322,7 +322,7 @@ Klára se na ni dívá.
 
 Z pátého patra jde po schodech, protože výtah pořád nejede. Ve třetím patře se zastaví a opře se o zábradlí. Venku je tma a nad řekou pára, oranžová od lamp.
 
-Sálová vozí rodiny autem. Dvě hodiny mlčí a na konci se omluví a myslí to vážně. Tu rodinu má zapsanou. Má zapsané *všechny*. A ve čtvrtek o tom neřekla ani slovo.
+*A. Sálová.* A jako Alžběta. Nemusí. Ale Cheb, auto, *ta, co nás všechny má zapsané*… Sálová vozí rodiny autem. Tři hodiny mlčí a na konci se omluví a myslí to vážně. Tu rodinu má zapsanou. Má zapsané *všechny*. A ve čtvrtek o tom neřekla ani slovo.
 
 A Hana jí to nemůže vyčítat, protože to ví od někoho, komu právě slíbila, že nic neřekne.
 
@@ -428,7 +428,7 @@ Její vlastní pravidlo. *Co mi kdo řekl, píšu se jménem.* Napsala ho velký
 
 Teď by tu rodinu vydalo každému, kdo ten sešit otevře.
 
-Hana *K.* přeškrtne. Jednou čarou, aby se dalo přečíst, že tam něco bylo. Nad něj napíše:
+Hana *K.* začerní. Ne jednou čarou, jak škrtá vždycky. Tak, aby se dalo poznat, že tam něco bylo, ale ne co. Nad něj napíše:
 
 *Řekla matka (rodina, Karlovarsko; jména záměrně nepíšu).*
 
@@ -448,6 +448,6 @@ A pod to, menším písmem:
 
 A úplně dole, po dlouhé chvíli, jednu větu, kterou si nemůže zapsat doleva, protože ji neví, jen ji cítí, a kterou nemůže nenapsat:
 
-*Ví S., že to vím? – Nesmí se to dozvědět ode mě.*
+*Je paní Alžběta S.? Ví S., že to vím? – Nesmí se to dozvědět ode mě.*
 
 Zavře sešit. Za oknem se nad náhonem drží pára, rovná a bílá, a nad lesem nad vsí, kde je rokle, stojí ve tmě druhá. Tu nevidí. Ví, že tam je.

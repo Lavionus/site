@@ -14,7 +14,7 @@ Vlevo za čtyři roky přibylo málo. Odpověď z archivu v Méridě, dvakrát, 
 
 Vpravo stojí pořád tytéž dvě otázky z října 2026. *Kdo byl Rodrigo Anaya? Proč devět?*
 
-A pod nimi třetí, novější, menší písmem. *Proč kodex tři roky v dílně?*
+A pod nimi třetí, novější, menším písmem. *Proč kodex tři roky v dílně?*
 
 Šindelářová jí tehdy odpověděla za šest dní, v sobotu. *Kodex je od září v restaurátorské dílně. Vazba povolila ve hřbetu. Až se vrátí, ozvu se. Vaši prosbu jsem předala restaurátorce. L. Š.* V roce 2028 Hana napsala znovu. Odpověď přišla do hodiny: *Ještě ne.* Pak už se neptala. Archivy mají svůj čas. Hana ho zná. Měla by ho respektovat a respektuje ho, jen si to vpravo zapsala, protože tři roky na zpevnění hřbetu malé knihy je dlouho i na archiv.
 
@@ -44,7 +44,7 @@ Víc o tom nemluvili.
 
 *
 
-Ve čtvrtek ráno uklidí kuchyňský stůl. Posudek na kraj, hrnek do dřezu. Přinese z pokoje skládací stůl, na kterém kdysi u studentů na exkurzích třídila vzorky, a postaví ho vedle kuchyňského, aby byl stůl opravdu velký. Ty dva stoly stojí vedle sebe, jeden o dva centimetry nižší, a Hana si připadá směšně. Jako by čekala návštěvu, kvůli které se uklízí.
+Ve čtvrtek ráno uklidí kuchyňský stůl. Posudek na kraj, hrnek do dřezu. Přinese z pokoje skládací stůl, na kterém kdysi se studenty na exkurzích třídila vzorky, a postaví ho vedle kuchyňského, aby byl stůl opravdu velký. Ty dva stoly stojí vedle sebe, jeden o dva centimetry nižší, a Hana si připadá směšně. Jako by čekala návštěvu, kvůli které se uklízí.
 
 Kalina zazvoní v 11:20.
 
@@ -114,7 +114,7 @@ Jako na vrstvu v profilu. Nejdřív na tvar a teprve pak na to, co znamená.
 
 „Vy jste to řekl taky. Jen s kdyby.“
 
-„S kdyby je to věta, kterou můžu podepsat.“ Kalina si poprvé vezme hrnek, napije se, a pak ho postaví na totéž místo, na kterém stál. „Požádal jsem o čas na dvou velkých dalekohledech, aby to změřil někdo jiný. Jeden mi odmítli. Prý nemám dost předběžných dat a nejsem v žádném jejich projektu. Druhý mi dal noc v dubnu. Pokud bude počasí. Pokud nebude, v červnu.“
+„S kdyby je to věta, kterou můžu podepsat.“ Kalina si poprvé vezme hrnek, napije se, a pak ho postaví na totéž místo, na kterém stál. „Požádal jsem o čas na dvou velkých dalekohledech, aby to změřil někdo jiný. Na jednom mě odmítli. Prý nemám dost předběžných dat a nejsem v žádném jejich projektu. Druhý mi dal noc v dubnu. Pokud bude počasí. Pokud nebude, v červnu.“
 
 „A pokud to změří?“
 
@@ -172,7 +172,7 @@ Hana ji pozná dřív, než si přečte jména. Pozná to podle tvaru řeky. Oh�
 
 „Kdy to začalo?“
 
-„V pondělí čtrnáctého ledna, ve 23:51 našeho času. Před tím nic. Mají nahrávky z celého ledna a z prosince. Nic.“ Kalina poklepe prstem na okraj listu, poprvé se papíru dotkne. „Ve 23:51 začaly pulzy. Od té doby chodí každou noc, někdy dvě hodiny, někdy pět, a mezi tím mlčí. Na fóru tomu říkají *chebské pípátko*. Píšou tam, že je to vojenský vysílač, nebo pašeráci, nebo že někdo pod Krušnýma horama hledá uran. Jeden tam píše, že jsou to mimozemšťani. Toho nikdo nebere vážně.“
+„V pondělí čtrnáctého ledna, ve 23:51 našeho času. Předtím nic. Mají nahrávky z celého ledna a z prosince. Nic.“ Kalina poklepe prstem na okraj listu, poprvé se papíru dotkne. „Ve 23:51 začaly pulzy. Od té doby chodí skoro každou noc, někdy dvě hodiny, někdy skoro čtyři, a mezitím mlčí. Na fóru tomu říkají *chebské pípátko*. Píšou tam, že je to vojenský vysílač, nebo pašeráci, nebo že někdo pod Krušnýma horama hledá uran. Jeden tam píše, že jsou to mimozemšťani. Toho nikdo nebere vážně.“
 
 „Vy ano?“
 
@@ -180,7 +180,7 @@ Hana ji pozná dřív, než si přečte jména. Pozná to podle tvaru řeky. Oh�
 
 Čáry tužkou jsou rovné. Kalina je kreslil podle pravítka.
 
-„Odpoví,“ řekne.
+„Odpoví,“ řekne Hana.
 
 „Nebo to něco tady dole poslouchá, co dělá zdroj, a pak vysílá. Nebo,“ Kalina sundá prst z papíru, „si to někdo vymyslel. Někdo, kdo ví, co sleduju, a chce, abych si myslel, že je to spojené. Pak by to musel být někdo, kdo umí přijímat zdroj stejně dobře jako já. Takových lidí moc není. Ale nejsou nula.“
 
@@ -206,7 +206,7 @@ Hana zvedne hlavu.
 
 Hana vstane.
 
-Sundá z poličky nad lednicí modrou složku. Gumička je stará a vytahaná a sklouzne sama. Uvnitř všechno, jak to tam bylo: posudek ke krystalu, doplněk z dubna 2025, regest jáchymovského spisu. Pracovní překlad kodexu, výtisk, se sponkou a s lístkem *Nic necitujte. Ani mně.* Hana listuje. Svíce. Štola. Hnízdo. Pak to.
+Sundá z poličky nad lednicí modrou složku. Gumička je stará a vytahaná a sklouzne sama. Uvnitř všechno, jak to tam bylo: posudek ke krystalu, doplněk z dubna 2025, regest jáchymovského spisu. Pracovní překlad kodexu, výtisk, se sponkou a s lístkem *Nic necitujte. L. Š.* Hana listuje. Svíce. Štola. Hnízdo. Pak to.
 
 Položí to na stůl vedle jeho grafů, ale ne mezi ně. Kalina by to neunesl.
 

@@ -24,17 +24,17 @@ Matěj sklonil hlavu.
 
 Kdo přijel s převorem, poznal Matěj, až když se rozvázaly provazy. Bratr Hartmann, mladý mnich se zarudlýma očima, který v klášteře zpíval v chóru nejvýš a nejfalešněji, a jeden ze sklepních konvršů, kterého Matěj znal jen od vidění. Pěší byli dva čeledíni od celeráře. Truhlu snesli z vozu čtyři a nesli ji do oratoře, jako se nese rakev.
 
-„Brzy,“ řekl Udalrich, když převor sesedl. Byla to výčitka, první, kterou kdy Matěj slyšel Udalricha říct převorovi.
+„Tak brzy?“ řekl Udalrich, když převor sesedl. Byla to výčitka, první výčitka převorovi, jakou kdy Matěj od Udalricha slyšel.
 
-„Brzy,“ přisvědčil převor. „Cesty jsou rozbahněné. A pan Konrád chce, abych s ním obešel hranici lesa, dřív než na svatého Jiří přitiskneme pečeť. Zítra a pozítří.“ Rozhlédl se po dvoře, po ovčíně, po haldě nad potokem, ze které se táhl kouř. „Kde budu spát?“
+„Brzy,“ přisvědčil převor. „Cesty jsou rozbahněné. A pan Konrád chce, abych s jeho lidmi obešel hranici lesa, dřív než na svatého Jiří přitiskneme pečeť. Zítra, pozítří, a co nestihneme, v pátek.“ Rozhlédl se po dvoře, po ovčíně, po haldě nad potokem, ze které se táhl kouř. „Kde budu spát?“
 
 Udalrich mu dal svou komoru. Sám šel spát k ovcím.
 
 *
 
-V oratoři Hartmann rozbaloval truhlu, jako by v ní byla vejce.
+V oratoři Hartmann vybaloval truhlu, jako by v ní byla vejce.
 
-Matěj mu pomáhal. Úlomek kamene, váček s hlínou, trn, každý se svou cedulkou, a vespod, v plátně převázaném několikrát, kost. Hartmann se jí nedotkl. Nechal ji ležet v plátně a jen ho kolem ní narovnal. Pak sáhl ještě jednou do truhly, pod vlnu, a vytáhl něco plochého, složeného na čtvrtky, s pečetí na proužku.
+Matěj mu pomáhal. Úlomek kamene, váček s hlínou, trn, každý se svou cedulkou, a vespod, v plátně převázaném několikrát, kost. Hartmann se jí nedotkl. Nechal ji ležet v plátně a jen ho kolem ní narovnal. Pak sáhl ještě jednou do truhly, pod vlnu, a vytáhl něco plochého, složeného načtvrto, s pečetí na proužku.
 
 Matěj ztuhl.
 
@@ -46,7 +46,7 @@ Položil listinu na oltář vedle kosti. Pečeť visela na proužku přes hranu 
 
 „Co říkají?“
 
-„Že budeš armarius. Že převor to řekl opatovi.“ Hartmann se usmál, nejistě, jako se usmívají novicové, když nevědí, jestli říkají dobrou zprávu. „Já bych chtěl, abys byl. Wigand na mě vždycky křičel, když jsem zpíval falešně. Ty bys nekřičel.“
+„Že budeš armarius. Že převor to řekl opatovi.“ Hartmann se usmál, nejistě, jako se usmívají novicové, když nevědí, jestli nesou dobrou zprávu. „Já bych chtěl, abys byl. Wigand na mě vždycky křičel, když jsem zpíval falešně. Ty bys nekřičel.“
 
 Matěj se díval na listinu na oltáři.
 
@@ -68,7 +68,7 @@ Matěj stál u dveří. Neposadil se, protože ho převor nevyzval.
 
 „Ve Svatém týdnu,“ řekl převor. „Ve středu večer, po kompletáři. Ráno ho našel infirmář. Měl ruce na přikrývce, takhle.“ Převor položil dlaně na stůl vedle klíčů, plochou, prsty trochu od sebe. „Jako by něco četl.“
 
-Matěj si všiml, že dýchá. Slyšel to. Jako tehdy ve skriptoriu, když na zamrzlý inkoust dýchal tak nahlas, že to bylo skoro totéž co zázrak.
+Matěj si všiml, že dýchá. Slyšel to. Jako tehdy ve skriptoriu, když dýchal na zamrzlý inkoust a tvrdil Wigandovi, že nedělá zázrak.
 
 Ve středu večer. Ve středu ráno se vrátil z hnízda, s hlínou ve vlasech, a Udalrich mu podal koště. Odpoledne spal s tváří na sešitku. Večer se modlil kompletář s konvrši a nic necítil. Myslel si, že by měl něco cítit. Necítil nic.
 
@@ -182,7 +182,7 @@ Matěj to viděl dřív, než to převor řekl nahlas. Viděl to, jako by to psa
 
 Matěj neodpověděl. Nemusel.
 
-Převor zavřel sešitek. Nepodal ho zpátky. Položil na něj dlaň, jako tenkrát ve Waldsassenu na obrácený list s listinou, a nechal ji tam.
+Převor zavřel sešitek. Nepodal ho zpátky. Položil na něj dlaň, jako tenkrát ve Waldsassenu na obrácený list o listině, a nechal ji tam.
 
 *
 
@@ -190,11 +190,11 @@ Převor zavřel sešitek. Nepodal ho zpátky. Položil na něj dlaň, jako tenkr
 
 Mluvil pomalu, jako v kapitule, když probíral účty, a Matěj poznal ten hlas a věděl, že teď už nebude nic, čeho by se mohl chytit.
 
-„Mám tu opis, který udělal mnich, kterého jsem poslal dívat se na hranici, a ne do cizích truhel. Mám v něm znaky, kterým nerozumím a kterým nerozumíš ani ty, protože ti je vykládal hluchý Sas přes kluka, který potřebuje mzdu. Mám jméno toho kluka. Je to tvůj bratr.“ Převor se díval na svou ruku na sešitku. „Když tohle dám panu Konrádovi, pan Konrád to dá přečíst Volkmarovi. Volkmar přečte i to jméno. A pak bude mít pan Konrád v jedné ruce mistra, který mu kope stříbro, a v druhé hluchého starce a tvého bratra, kteří mu otevřeli truhlu. Komu myslíš, že uvěří?“
+„Mám tu opis, který udělal mnich, kterého jsem poslal dívat se na hranici, a ne do cizích truhel. Mám v něm znaky, kterým nerozumím a kterým nerozumíš ani ty, protože ti je vykládal hluchý Sas přes kluka, který potřebuje mzdu. Mám jméno toho kluka. Je to tvůj bratr.“ Převor se díval na svou ruku na sešitku. „Když tohle dám panu Konrádovi, pan Konrád to dá přečíst Volkmarovi. Volkmar přečte i to jméno. A pak bude mít pan Konrád v jedné ruce mistra, který mu kope stříbro, a v druhé hluchého starce a tvého bratra, kteří mu otevřeli truhlu. Co myslíš, komu uvěří?“
 
 „Číslům.“
 
-„Pan Konrád neumí číst čísla. Umí číst lidi.“ Převor zvedl oči. „A mistr Ortlieb řekne, že je jaro a že taje sníh. Řekl to už v pondělí, ne? Celá ves to slyšela.“
+„Pan Konrád neumí číst čísla. Umí číst v lidech.“ Převor zvedl oči. „A mistr Ortlieb řekne, že je jaro a že taje sníh. Řekl to už v pondělí, ne? Celá ves to slyšela.“
 
 Matěj neřekl nic. Převor to věděl. Udalrich mu to musel napsat, nebo mu to řekl někdo ze vsi, nebo to slyšel cestou v Chebu, kde se o pánovi z Wehrbergu a jeho štole mluvilo v každé krčmě.
 
@@ -214,7 +214,7 @@ Převor čekal. Nebyl netrpělivý. Čekal tak, jak se čeká na odpověď, o kt
 
 Matěj zvedl hlavu.
 
-„Ptal jsem se tě v březnu,“ řekl převor. „Pod čí zemí končí štola. Teď ti řeknu, proč na tom už nezáleží.“ Vzal ruku ze sešitku a ukázal oknem ven, k hoře, kterou nebylo vidět. Okno bylo jen otvor ve zdi zakrytý měchýřem. „Zítra s panem Konrádem obejdu les od potoka k hřbetu. Jeho lovčí ho zná. Postavíme kameny. Na svatého Jiří přitiskne pan Konrád pečeť na listinu, kterou mu napsal Volkmar a kterou jsem opravil já, a v té listině stojí, že klášter ve Waldsassenu dostává ten les k pastvě a k dřevu, navěky, za modlitby za duši jeho otce. Stojí v ní taky,“ převor se odmlčel, ne pro účinek, ale jako by si tu větu přečetl znovu v hlavě, „že co je pod drnem, zůstává pánovi.“
+„Ptal jsem se tě v březnu,“ řekl převor. „Pod čí zemí končí štola. Teď ti řeknu, proč na tom už nezáleží.“ Vzal ruku ze sešitku a ukázal oknem ven, k hoře, kterou nebylo vidět. Okno bylo jen otvor ve zdi zakrytý měchýřem. „Zítra s panem Konrádem obejdu les od potoka k hřbetu. Jeho lovčí ho zná. Postavíme kameny. Na svatého Jiří přitiskne pan Konrád pečeť na listinu, kterou mu napsal Volkmar a kterou jsem opravil já, a v té listině stojí, že klášter ve Waldsassenu dostává ten les k pastvě a k dřevu, navěky, za modlitby za duši jeho otce. Stojí v ní taky,“ převor se odmlčel, ne aby napínal, ale jako by si tu větu přečetl znovu v hlavě, „že co je pod drnem, zůstává pánovi.“
 
 „Vy jste mu dal horu.“
 
@@ -238,7 +238,7 @@ Venku na dvoře zabečela ovce a jiná jí odpověděla. Svíce na stole čadila
 
 Matěj si sešitek vzal. Byl teplý od převorovy dlaně.
 
-„Řeknu ti, co udělám,“ řekl převor. „Nebudu se ptát, kdo ti otevřel truhlu. Nikomu neřeknu, co je v tom sešitku. Kdyby se ptal pan Konrád, ani jsem ho neviděl. Až dokopou k té skále a nic se nestane, budeš rád, že jsem to neudělal. A až se něco stane,“ odmlčel se, „Ortlieb za to bude odpovídat svému pánovi. Ne ty. A ne klášter.“
+„Řeknu ti, co udělám,“ řekl převor. „Nebudu se ptát, kdo ti otevřel truhlu. Nikomu neřeknu, co je v tom sešitku. Kdyby se ptal pan Konrád, ani jsem ho neviděl. Až dokopou k té skále a nic se nestane, budeš rád, že jsem to neudělal. A jestli se něco stane,“ odmlčel se, „Ortlieb za to bude odpovídat svému pánovi. Ne ty. A ne klášter.“
 
 „A já mám na svatého Jiří říct, že je na slatině drak.“
 

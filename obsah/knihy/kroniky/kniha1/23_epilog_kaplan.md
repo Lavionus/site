@@ -36,7 +36,7 @@ Volkmar namočil pero.
 
 „Pane?“
 
-„Mnich.“ Konrád se díval do svíce. „Na svatého Jiří. Pamatuješ? Řeknu vám, co jsem viděl, a řeknu vám, co jsem neviděl. Zvlášť.“ Zopakoval to česky, tou chůvinou češtinou, protože mnich to řekl česky, a Volkmar česky rozuměl jen napůl. „Měl pravdu o listině. Měl pravdu o dechu na slatině. Měl pravdu o vodě, a Ortlieb lhal, a já jsem tomu nechtěl věřit. Ten mnich má vždycky pravdu o věcech, Volkmare. Jenom neví, co znamenají.“
+„Mnich.“ Konrád se díval do svíce. „Na svatého Jiří. Pamatuješ? Řeknu vám, co jsem viděl, a řeknu vám, co jsem neviděl. Zvlášť.“ Zopakoval to česky, tou chůvinou češtinou, protože mnich to řekl česky, a Volkmar česky rozuměl jen napůl. „S listinou měl pravdu. S dechem na slatině taky. S vodou taky, a Ortlieb lhal, a já jsem tomu nechtěl věřit. Ten mnich se ve věcech nemýlí, Volkmare. Jenom neví, co znamenají.“
 
 „Ano, pane.“
 
@@ -78,7 +78,7 @@ Volkmar přestal psát.
 
 Volkmar mlčel.
 
-„Nikdo neví, kde byl,“ řekl Konrád. „Řekls mi to sám, loni v zimě, když jsme se bavili o tom, kam teče Eufrat. Nikdo neví. Tak proč by nemohl být tam? Tam nahoře, mezi těmi světly? A proč by z něj nemohli sestoupit?“ Natáhl ruku a položil ji Volkmarovi na rukáv, jako se klade ruka na koně, který se plaší. „Tys to řekl první. Tam, ve vodě. Klečel jsi vedle mě a říkal: *Caeli enarrant gloriam Dei*. Nebesa vypravují slávu Boží. Tak vypravovala. Já jsem jen poslouchal.“
+„Nikdo neví, kde byl,“ řekl Konrád. „Řekls mi to sám, loni v zimě, když jsme mluvili o tom, kam teče Eufrat. Nikdo neví. Tak proč by nemohl být tam? Tam nahoře, mezi těmi světly? A proč by z něj nemohli sestoupit?“ Natáhl ruku a položil ji Volkmarovi na rukáv, jako se klade ruka na koně, který se plaší. „Tys to řekl první. Tam, ve vodě. Klečel jsi vedle mě a říkal: *Caeli enarrant gloriam Dei*. Nebesa vypravují slávu Boží. Tak vypravovala. Já jsem jen poslouchal.“
 
 Volkmar se díval na jeho ruku na svém rukávu. Pak namočil pero.
 
@@ -88,7 +88,7 @@ Volkmar se díval na jeho ruku na svém rukávu. Pak namočil pero.
 
 Svíce na lavici dohořívala a on si toho nevšiml.
 
-„To jedno, co nepadalo. Co přicházelo odjinud. Mnich napsal *desuper, aliunde*, shora, odjinud. Ptal jsem se ho dvakrát. Pokaždé řekl totéž.“ Konrád se díval do tmy za svící, jako by tam pořád něco viděl. „Celé léto jsem nad tím přemýšlel. Proč by ti, kteří sestoupili, ukazovali někoho, kdo teprve přichází? A pak jsem to pochopil, Volkmare. U plané hrušně, když mi to mnich četl podruhé.“
+„To jedno, co nepadalo. Co přicházelo odjinud. Mnich napsal *desuper, aliunde*, shora, odjinud. Slyšel jsem to od něj dvakrát. Pokaždé totéž.“ Konrád se díval do tmy za svící, jako by tam pořád něco viděl. „Celé léto jsem nad tím přemýšlel. Proč by ti, kteří sestoupili, ukazovali někoho, kdo teprve přichází? A pak jsem to pochopil, Volkmare. U plané hrušně, když mi to mnich četl podruhé.“
 
 „Co, pane?“
 
@@ -130,7 +130,7 @@ Volkmar mlčel.
 
 „Mnich neřekne nic,“ řekl Konrád. „Ten mnich nikdy neřekne víc, než viděl. Proto mu věřím.“
 
-Stál nad Volkmarem a díval se na list, na kterém v tom šeru nemohl nic přečíst, a stejně se díval.
+Stál nad Volkmarem a díval se na list, ze kterého by nic nepřečetl ani za dne, a stejně se díval.
 
 „Měl tam ještě jeden řádek,“ řekl potom. Tišeji. „Na konci. U hrušně ho nepřečetl. Viděl jsem, jak se na něj dívá, a pak tabulku zavřel.“
 
@@ -144,7 +144,7 @@ Pak mluvili o tom, co bude dál, a to Konrád Volkmarovi nediktoval. To jen řek
 
 Nikomu. Žádnému biskupovi, žádnému opatovi, žádnému pánovi. Jen těm, kdo to viděli, a těm, komu to oni řeknou. Synovi, až bude umět poslouchat. A on svému synovi. Kniha zůstane tady, ve věži, v truhle, a bude ji číst ten, kdo umí číst, a předčítat ten, kdo neumí, tak, jak ji Volkmar předčítá jemu.
 
-A hora se nesmí otevřít. Rychtář z Chebu ji dal zasypat a dobře udělal, i když to nevěděl. Kdo by tu horu otevřel kvůli stříbru, otevřel by ji proti nim. Ať spí. Ať mlčí. Až přijde čas, ozve se sama. A kdo bude poslouchat, uslyší.
+A hora se nesmí otevřít. Správce z Chebu ji dal zasypat a dobře udělal, i když to nevěděl. Kdo by tu horu otevřel kvůli stříbru, otevřel by ji proti nim. Ať spí. Ať mlčí. Až přijde čas, ozve se sama. A kdo bude poslouchat, uslyší.
 
 „A ti z lesa?“ zeptal se Volkmar.
 

@@ -38,7 +38,7 @@ Nara si sedla. Židle byla tvrdá a nízká. Nara si všimla, že sedí o kousek
 
 Nabídku řekla celou najednou. Bez úvodu, bez vysvětlování, jako se čte výrok.
 
-„Koloniální úřad je připraven rozhodnout o žádosti pana Davena Vess o výjimku z výkonu trestu pro nezletilého. Kladně. Jako nezletilý s výjimečnými okolnostmi bude Ilan Vess vyjmut z druhého transportu. O výjimce bude rozhodnuto do dvou dnů od vaší odpovědi a bude konečná.“
+„Koloniální úřad je připraven rozhodnout o žádosti pana Davena Vesse o výjimku z výkonu trestu pro nezletilého. Kladně. Jako nezletilý s výjimečnými okolnostmi bude Ilan Vess vyjmut z druhého transportu. O výjimce bude rozhodnuto do dvou dnů od vaší odpovědi a bude konečná.“
 
 Nara neřekla nic.
 
@@ -92,7 +92,7 @@ Pak Nara přestala myslet jako advokátka. Nepoznala, kdy přesně. Zjistila to 
 
 Ilan.
 
-Ne jako žadatel. Ne jako jedna ze čtyř set jedné osob. Ilan v Sedmé loděnici, hubený, s provázkem na zápěstí. Ilan, který se ptal, jestli se při hibernaci něco zdá. Který se zasmál, když se ho zeptala, jaké to je, když se nic netočí. Který chtěl, aby se podívala, jestli je odtamtud vidět planeta. Celá.
+Ne jako žadatel. Ne jako jedna ze čtyř set jedné osoby. Ilan v Sedmé loděnici, hubený, s provázkem na zápěstí. Ilan, který se ptal, jestli se při hibernaci něco zdá. Který se zasmál, když se ho zeptala, jaké to je, když se nic netočí. Který chtěl, aby se podívala, jestli je odtamtud vidět planeta. Celá.
 
 Ilan, který by zůstal. Který by vyšel ze Sedmé loděnice v šedém a ona by stála za dveřmi. Nevěděla, jestli by se na ni podíval. Nevěděla, jestli by s ní mluvil. Ale byl by tady. Každý den by mohla vědět, že je tady.
 
@@ -114,7 +114,7 @@ Ardaine chvíli mlčela. Pak sundala ruce ze stolu a položila si je do klína. 
 
 „A to vám vadí.“
 
-„Mně ne.“ Ardaine to řekla tiše. „Já to vím. Vím to od dvanáctého dne. Vím to každé ráno, když se probudím.“ Odmlčela se. „Vadí mi, co se stane potom. Transport odletí tak jako tak. Šest tisíc lidí poletí na svět, o kterém budou všichni vědět, že je obydlený, že na něj nesmí a že je tam úřad posílá znovu. Kdo příště dostane přiznání k podpisu, bude vědět, co podepisuje. Kdo zůstane, bude vědět, za co. A pak přijde třetí transport. Musí přijít, protože precedent platí, a nikdo ho nezruší, protože ho nemůže zrušit tento soud. Jen Shromáždění. A Shromáždění bude jednat veřejně, jak to stojí ve statutu, o světě, na který úřad už poslal necelých dvacet čtyři tisíc lidí a teď posílá dalších šest tisíc.“
+„Mně ne.“ Ardaine to řekla tiše. „Já to vím. Vím to od třináctého dne. Vím to každé ráno, když se probudím.“ Odmlčela se. „Vadí mi, co se stane potom. Transport odletí tak jako tak. Šest tisíc lidí poletí na svět, o kterém budou všichni vědět, že je obydlený, že na něj nesmí a že je tam úřad posílá znovu. Kdo příště dostane přiznání k podpisu, bude vědět, co podepisuje. Kdo zůstane, bude vědět, za co. A pak přijde třetí transport. Musí přijít, protože precedent platí, a nikdo ho nezruší, protože ho nemůže zrušit tento soud. Jen Shromáždění. A Shromáždění bude jednat veřejně, jak to stojí ve statutu, o světě, na který úřad už poslal necelých dvacet čtyři tisíc lidí a teď posílá dalších šest tisíc.“
 
 Nara poslouchala.
 

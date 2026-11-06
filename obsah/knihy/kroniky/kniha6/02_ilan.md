@@ -12,7 +12,7 @@ Sedmá loděnice ležela na vnějším okraji, tam, kde už nebylo nic jiného n
 
 „Nebudu tu den.“
 
-Strážný pokrčil rameny. Síť ho Naře představila: jméno, služební číslo, oddělení. Jeho síť jí zároveň představila jeho: totožnost ověřena, účel návštěvy, vztah k odsouzenému. Strážný krátce kývl, jako by si odškrtl řádek, který viděl jen on, a pustil ji dál.
+Strážný pokrčil rameny. Síť ho Naře představila: jméno, služební číslo, oddělení. Jeho síť zase představila jemu ji: totožnost ověřena, účel návštěvy, vztah k odsouzenému. Strážný krátce kývl, jako by si odškrtl řádek, který viděl jen on, a pustil ji dál.
 
 *
 
@@ -40,7 +40,7 @@ Pak otevřeli dveře na druhé straně a přivedli Ilana.
 
 *Osoba bez spojení. Totožnost potvrzena personálem.*
 
-Byl hubenější. To bylo první. Za ten měsíc mu zmizely tváře, a pod nimi se ukázaly kosti, které Nara neznala, protože je měl po někom jiném, po Davenově matce nebo po někom, koho nikdy neviděla. Vlasy měl delší a nikdo mu je nestříhal. Šedý čtvereček za uchem byl pryč. Na jeho místě měl drobnou zarudlou skvrnu, jako po náplasti, která se strhla příliš rychle. Na levém zápěstí měl pořád bílý provázek. Už nebyl bílý. Byl šedý od praní a byl na něm řádek drobných uzlíků, těsně vedle sebe, jako korálky.
+Byl hubenější. To bylo první. Za ten měsíc se mu propadly tváře a pod nimi se ukázaly kosti, které Nara neznala, protože je měl po někom jiném, po Davenově matce nebo po někom, koho nikdy neviděla. Vlasy měl delší a nikdo mu je nestříhal. Šedý čtvereček za uchem byl pryč. Na jeho místě měl drobnou zarudlou skvrnu, jako po náplasti, která se strhla příliš rychle. Na levém zápěstí měl pořád bílý provázek. Už nebyl bílý. Byl šedý od praní a byl na něm řádek drobných uzlíků, těsně vedle sebe, jako korálky.
 
 Sedl si. Nedíval se na ni tak, jak se dívají lidé. Lidé se na sebe dívají krátce, protože to ostatní jim řekne síť. Ilan se díval dlouho. Na její oči, na ústa, na ruce na stole. Jako by si ji musel přečíst.
 
@@ -60,7 +60,7 @@ Nara se dívala na ty uzlíky. Třicet dva. Spočítala si to sama, protože si 
 
 „Já vím. Strážný říkal, že je rozhodnuto.“
 
-„Řekl ti co?“
+„Řekl ti, jak to dopadlo?“
 
 „Ne. Řekl, že je to v síti.“ Ilan se pousmál, jen jedním koutkem. „Že si to můžu přečíst.“
 
@@ -160,7 +160,7 @@ Nara mlčela. Ilan ji nechal mlčet. Nepřidal k tomu výčitku ani vysvětlení
 
 Ilan zvedl hlavu. Poprvé se na ni podíval, jako by nečekal, že to řekne.
 
-„Rozsudek, podle kterého tě odsoudili, nestojí sám,“ řekla. „Stojí na jiném rozsudku. Na Teře. Bez Terry by nebylo členství, kolektivní trest ani transport. Kdo chce zastavit transport, musí jít po Teře. Kolektivní trest odporuje ústavě. Každý odpovídá za vlastní čin. Nikdo za čin jiného. To stojí v ústavě od začátku a Terra je s tím v rozporu od začátku. Jen se na to devět set let nikdo nedíval, protože nebylo proč.“
+„Rozsudek, podle kterého tě odsoudili, nestojí sám,“ řekla. „Stojí na jiném rozsudku. Na Terře. Bez Terry by nebylo členství, kolektivní trest ani transport. Kdo chce zastavit transport, musí jít po Terře. Kolektivní trest odporuje ústavě. Každý odpovídá za vlastní čin. Nikdo za čin jiného. To stojí v ústavě od začátku a Terra je s tím v rozporu od začátku. Jen se na to devět set let nikdo nedíval, protože nebylo proč.“
 
 „A teď se podívají.“
 
@@ -278,7 +278,7 @@ Ilan se na ni podíval tak, že Nara pochopila, že řekla něco špatně.
 
 „Ilane.“
 
-„Ne, fakt. Já se neptal, co bych přijal. Ptal jsem se, proč to neuděláš ty.“ Naklonil se dopředu. „Protože kdybys mě vyňala, nemohla bys vyhrát Terru. Že jo? Výjimku dostane jeden kluk, o tom nikdo psát nebude. Terra je devět set let stará. Tu by si pamatovali.“
+„Ne, vážně. Já se neptal, co bych přijal. Ptal jsem se, proč to neuděláš ty.“ Naklonil se dopředu. „Protože kdybys mě vyňala, nemohla bys vyhrát Terru. Že jo? Výjimku dostane jeden kluk, o tom nikdo psát nebude. Terra je devět set let stará. Tu by si pamatovali.“
 
 „To není pravda.“
 
@@ -390,7 +390,7 @@ V chodbě podél doku šla Nara rychleji než předtím a dívala se doleva, na 
 
 Ve vstupní hale se otočila moc rychle a svět se zase posunul o kousek dál a o kousek později. Tentokrát se nechytila zábradlí. Stála, dokud se podlaha nevrátila na místo.
 
-Síť jí nabídla záznam návštěvy. Celý, čtyřicet minut, s přepisem. Nara ho mohla otevřít v kyvadle a pustit si znovu každé slovo, každou pauzu, Ilanovo *ne*, Ilanovo *nechci být tvůj případ*, Ilanův palec na uzlících. Mohla ho zpomalit. Mohla se podívat, jak se tvářil, když řekla *nezletilost*, protože to si nepamatovala.
+Síť jí nabídla záznam návštěvy. Celý, čtyřicet minut, s přepisem. Nara ho mohla otevřít v kyvadle a pustit si znovu každé slovo, každou odmlku, Ilanovo *ne*, Ilanovo *nechci být tvůj případ*, Ilanův palec na uzlících. Mohla ho zpomalit. Mohla se podívat, jak se tvářil, když řekla *nezletilost*, protože to si nepamatovala.
 
 Nechala záznam zavřený. Celou cestu zpátky.
 

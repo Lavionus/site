@@ -42,11 +42,11 @@ Muž u výdeje zavazadel se na ni díval. Neřekl nic. Asi to tu viděl každý 
 
 Vchod do hlubokého úložiště byl nízká budova na okraji haly. Za ní nebylo nic, jen výtah.
 
-Výtah jel dolů jedenáct minut. Nara to věděla přesně, protože se celou dobu dívala na řádek, kam síť napsala *Hloubka: 340 m* a potom *Hloubka: 680 m* a pak už jen *Spojení: omezené.* Čísla se obnovovala pomaleji a pomaleji. Kolem dvanácti set metrů se přestala obnovovat úplně. Zůstal jen čas a odpočet. *Do odletu: 41 dní.* Ten se ukládal v ní, ne v síti, a nebylo mu potřeba nic odjinud.
+Výtah jel dolů jedenáct minut. Nara to věděla přesně, protože se celou dobu dívala na řádek, kam síť napsala *Hloubka: 340 m* a potom *Hloubka: 680 m* a pak už jen *Spojení: omezené.* Čísla se obnovovala čím dál pomaleji. Kolem dvanácti set metrů se přestala obnovovat úplně. Zůstal jen čas a odpočet. *Do odletu: 41 dní.* Ten se ukládal v ní, ne v síti, a nepotřeboval nic odjinud.
 
 Pak se dveře otevřely a do kabiny vtekla zima.
 
-Byla to zima, jakou Nara neznala. Nebyla to studená místnost ani studená voda. Byla to zima, která neodcházela. Vešla jí do rukávů, pod obě košile, a usadila se jí na kůži, a když Nara vydechla, viděla vlastní dech. Zastavila se a dívala se na něj. Bílý obláček, který se rozplynul.
+Byla to zima, jakou Nara neznala. Nebyla to studená místnost ani studená voda. Byla to zima, která neodcházela. Vlezla jí do rukávů, pod obě košile, a usadila se jí na kůži, a když Nara vydechla, viděla vlastní dech. Zastavila se a dívala se na něj. Bílý obláček, který se rozplynul.
 
 „Vy jste si teplé oblečení nevzala,“ řekl někdo.
 
@@ -70,11 +70,11 @@ Chodba byla vylámaná ve skále. Nebyla obložená ani natřená, jen ohlazená
 
 „Takový den nebude.“
 
-„To se mi říká taky.“ Hals se pousmál, poprvé, a jen koutkem. „Archiv nepočítá s tím, co bude. Počítá s tím, co se může stát.“
+„To mi říkají taky.“ Hals se pousmál, poprvé, a jen koutkem. „Archiv nepočítá s tím, co bude. Počítá s tím, co se může stát.“
 
 *
 
-Oddíl historických spisů byla dlouhá síň s nízkým stropem a regály až ke stropu. V regálech stály schránky, šedé, hranaté, všechny stejné. Na každé byl štítek. Světlo bylo slabé a teplé a přicházelo odněkud zespodu, od podlahy, takže stíny šly nahoru.
+Oddíl historických spisů byl dlouhá síň s nízkým stropem a regály až ke stropu. V regálech stály schránky, šedé, hranaté, všechny stejné. Na každé byl štítek. Světlo bylo slabé a teplé a přicházelo odněkud zespodu, od podlahy, takže stíny šly nahoru.
 
 ![Hluboké úložiště pod povrchem měsíce: regály se šedými schránkami, světlo od podlahy, Hals a Nara malí v dálce](obrazky/03_archiv.webp)
 
@@ -264,7 +264,7 @@ A připomínka. *Zítra 9:00–9:40: Sedmá loděnice, návštěva. Rezervováno
 
 Nara ji nechala svítit.
 
-V příletové hale si sedla na lavici u průzoru, ze kterého byly vidět terasy lomu, a otevřela prázdné podání. Psala rychle, protože to měla v hlavě celou cestu nahoru, a nechtěla, aby se jí to cestou rozpadlo. Ruce jí pořád byly studené. V hale bylo teplo, ale nepomáhalo to.
+V příletové hale si sedla na lavici u průzoru, ze kterého byly vidět terasy lomu, a otevřela prázdné podání. Psala rychle, protože to měla v hlavě celou cestu nahoru, a nechtěla, aby se jí to mezitím rozpadlo. Ruce jí pořád byly studené. V hale bylo teplo, ale nepomáhalo to.
 
 *Žádost navrhovatelky o zpřístupnění spisu prvního procesu ve věci Terra v celém rozsahu, včetně přílohy k rozsudku zapečetěné z bezpečnostních důvodů.*
 
@@ -282,7 +282,7 @@ Odpůrce vyrozuměn. Teď to věděla i Sabe Ardaine. Možná to věděla už v 
 
 Na zpáteční lince už měla oči otevřené.
 
-Když loď odrazila od měsíce a tělo zase ztratilo váhu, Nara udělala něco, na co dole neměla síť. Otevřela veřejnou přílohu Terry, seznam odsouzených po oblastech, a zadala jméno.
+Když loď odrazila od měsíce a tělo zase ztratilo váhu, Nara udělala něco, na co dole neměla síť. Otevřela veřejnou přílohu Terry, výkonový seznam odsouzených po oblastech a modulech, a zadala jméno.
 
 Síť jich našla jedenáct. Eren bylo obyčejné jméno. Nara zúžila hledání na zařazení a zůstal jeden řádek.
 
@@ -290,13 +290,13 @@ Síť jich našla jedenáct. Eren bylo obyčejné jméno. Nara zúžila hledán�
 
 Oblast šest. Nara se podívala do záhlaví oblasti. Sedm modulů. Přes tři tisíce lidí. Čtvrtý byl nejmenší, tři sta dvanáct. Pak se podívala zpátky na řádek.
 
-Doprovod. Tak to tehdy psali. Kdo letěl s odsouzeným, aniž byl sám odsouzen jako člen nebo podporovatel. Osoby ve společné domácnosti, usoudila. Přiznání nevyžadováno. Dcera, šest let.
+Doprovod. Tak to tehdy psali. Kdo letěl s odsouzeným, aniž byl sám odsouzen jako člen nebo podporovatel. Osoby ve společné domácnosti, usoudila. Přiznání nevyžadováno. Jenže ty Terra soudila a měly vlastní řádek. Tyhle ne. Dcera, šest let.
 
 Když bylo Ilanovi šest, sedával jí při čtení na klíně. Pamatovala si to bez záznamu. Pamatovala si, jak těžký byl a jak se jí opíral hlavou o bradu, a že měl vlasy, které voněly mýdlem z dětské koupelny.
 
 Zavřela seznam.
 
-Průzorem byl vidět měsíc, jak se zmenšuje. Terasy lomu už nebyly poznat. Jen šedý kotouč a na něm světlejší skvrna. Někde pod ní, dvanáct set metrů v kameni, stála v nice úzká tmavá schránka, kterou za devět set let nikdo neotevřel, a vedle ní Tomen Hals zhasínal světlo od podlahy, aby se zbytečně nesvítilo.
+Průzorem byl vidět měsíc, jak se zmenšuje. Terasy lomu už nebyly poznat. Jen šedý kotouč a na něm světlejší skvrna. Někde pod ní, dvanáct set metrů v kameni, stála v nice úzká tmavá schránka, kterou za devět set let nikdo neotevřel, a vedle ní, představovala si, Tomen Hals zhasínal světlo od podlahy, aby se zbytečně nesvítilo.
 
 *Do odletu: 41 dní.*
 

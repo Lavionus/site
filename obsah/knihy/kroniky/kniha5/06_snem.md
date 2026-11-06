@@ -20,7 +20,7 @@ Brandl dlouho mlčel.
 
 „Vy jste pustila cizího člověka k lokalitě,“ řekl potom. Ne jako otázku.
 
-„Lokalita se pustila sama,“ řekla Sael. „Je na fóru. S elipsou. Ten člověk ji našel za den a půl, bez mapy a beze mě. Jestli ho to dokázalo, dokáže to každý další. Ten aspoň umí měřit.“
+„Lokalita se pustila sama,“ řekla Sael. „Je na fóru. S elipsou. Ten člověk ji našel za den a půl, bez mapy a beze mě. Jestli to dokázal on, dokáže to každý další. Ten aspoň umí měřit.“
 
 „A až to napíše? Komu to napíše?“
 
@@ -96,7 +96,7 @@ A Benedikt. Okno bez světla. Jen slabá šedá tvář hluboko v pokoji, daleko 
 
 Poslední okno se otevřelo pozdě, až když Lorenz začal.
 
-Knihovna. Tmavé dřevo, police až ke stropu, kožené hřbety. Lampa se zeleným stínítkem. A v ní muž kolem šedesáti, štíhlý, s prošedivělými vlasy učesanými dozadu a s brýlemi bez obrouček. Usmál se do kamery, jako by ji znal.
+Knihovna. Tmavé dřevo, police až ke stropu, kožené hřbety. Lampa se zeleným stínítkem. A v té knihovně muž kolem šedesáti, štíhlý, s prošedivělými vlasy učesanými dozadu a s brýlemi bez obrouček. Usmál se do kamery, jako by ji znal.
 
 „Pan Wehrle je s námi poprvé,“ řekl Lorenz. „S hlasem poradním. Jak jsme se dohodli.“
 
@@ -162,7 +162,7 @@ Sael se nadechla. Měla to připravené, jako to měla připravené v dílně.
 
 V okně z Lipska se Ines poprvé zasmála. Nahlas a krátce, jako by tomu nemohla zabránit.
 
-„Ona chrání zdroj,“ řekla Ines. „Jako novinářka. Pane bože. My tu dvě stě let chráníme zdroje a teď to dělá i paní Sálová.“
+„Ona chrání zdroj,“ řekla Ines. „Jako novinářka. Pane bože. My tu odjakživa chráníme zdroje a teď to dělá i paní Sálová.“
 
 „Ines,“ řekl Lorenz.
 
@@ -184,7 +184,7 @@ Vlhkoměr na zdi ukazoval padesát pět.
 
 „Nikdo jiný by to taky nevěděl,“ řekla Sael.
 
-Wehrle se na ni podíval přes obrazovku. Přímo do kamery, takže měla pocit, že se dívá přímo na ni.
+Wehrle se na ni podíval přes obrazovku. Do kamery, takže měla pocit, že se dívá přímo na ni.
 
 „To je pravda,“ řekl laskavě. „Ale to je strategie, paní Sálová, kterou známe ze starých časů. Spálit, aby to nikdo nenašel. Já věřím, že dnes máme lepší nástroje.“
 
@@ -246,7 +246,7 @@ Lada zatahala Sael za rukáv. Sael jí to přeložila. Lada se zamračila, natá
 
 „Pod horou,“ řekla česky, nahlas a pomalu, aby to Sael stačila přeložit, „rozhodujou Ostří. Ne sněm. Ne vy. Ostří.“
 
-Pak počítač odstrčila zpátky, mimo sebe, a dívala se na zeď.
+Pak počítač odstrčila zpátky od sebe, a dívala se na zeď.
 
 Sael to přeložila. Slovo za slovem.
 
@@ -270,11 +270,11 @@ Lada se na ni dívala. Pak odešla. Sael slyšela její kroky na schodech, krát
 
 *
 
-Otevřela truhlu.
+Sundala z police balík.
 
-Nevzala nejstarší list. Vzala svazek, který začínal v šestnáctém století, ten se Svídinou, Jívinou a Aurelinou rukou. Neotevřela ho tam, kde se otevíral sám, u Doroty. Otočila o pět listů dál.
+Ne ten s nejstarším listem, ten ležel v truhle. Svazek, který začínal v šestnáctém století, ten se Svídinou, Jívinou a Aurelinou rukou. Otevřel se tam, kde se otevíral sám, u Doroty. Na Dorotu se nedívala. Dívala se o pět řádků níž.
 
-Léto 1595. Aurelina smrt, Jívinou rukou. Pod ní dvě narození. A pak, na kraji, něco, co nebylo narození ani smrt.
+Léto 1595. Aurelina smrt, Jívinou rukou. Pod ní už nic. Jen na kraji, vedle ní, něco, co nebylo narození ani smrt.
 
 Ptačí písmo, drobné, rychlé. Jíva psala rychle, když se bála, to Sael věděla z celého svazku. A uprostřed řádku jediné písmeno latinkou. Velké, se dvěma hroty dolů a dvěma nahoru.
 
@@ -296,7 +296,7 @@ O dva listy dál, už Svídinou rukou, tenčí a pomalejší, pod zápisem ze zi
 
 Rok 1596. Únor.
 
-V roce sedmdesát jedna Sael jezdila po farních archivech kolem hor, když hledala svých dvaadvacet jmen v matrikách denních. V Jáchymově, v knize pohřbů horního města, našla mezi únorovými řádky jedno jméno, které nehledala. *Hans Wehrl, Bergmeister.* Opsala si ho do sešitu, protože opisovala všechno. Pak ho podtrhla.
+V roce sedmdesát jedna Sael jezdila po archivech a národních výborech kolem hor, když hledala svých dvaadvacet jmen v matrikách denních. V Jáchymově, v knize pohřbů horního města, našla mezi únorovými řádky jedno jméno, které nehledala. *Hans Wehrl, Bergmeister.* Opsala si ho do sešitu, protože opisovala všechno. Pak ho podtrhla.
 
 A na jaře 2025 měla na stole spis horního soudu z roku 1595. Kontrola stavu, než ho kolegové v karlovarském depozitáři pustí do skeneru. Četla jeho první list. *Soudu předsedal perkmistr Hans Wehrl.* Muž, který kupoval krev, soudil lékárníka, který ji prodával.
 
@@ -368,7 +368,7 @@ Ta žena chvíli mlčela.
 
 „A Ostří?“
 
-Sael se zarazila. To jméno jí nikdy neřekla. Pak si vzpomněla. Statek. *Od Ostrých. Dělám jim les.* Ta žena četla i to, co jí nikdo nenapsal.
+Sael se zarazila. Pak si vzpomněla, že to slovo v dílně řekla sama. Jednou, mimochodem. Ta žena si pamatovala i to.
 
 „Ostří rozhodnou sami,“ řekla. „Rada se sejde. Jestli vás pustí dolů, uvidíte skálu. Jestli ne, neuvidíte. Já za ně rozhodovat nebudu.“
 

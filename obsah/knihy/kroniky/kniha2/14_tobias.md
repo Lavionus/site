@@ -56,7 +56,7 @@ Ilona věděla, jaký je Veit.
 
 „A lékárník?“
 
-„Lékárník nic.“ Jobst pokrčil rameny. „Chodí s ovázanou tváří a usmívá se a ničeho se nebojí. Florian od pondělka nevyšel z officíny. Prý mu mistr nařídil drhnout baňky, a drhne je druhý den.“ Odmlčel se. „Paní. Já vím, že jsem vám lhal. O tom vylévání. Já to vím. Ale teď vám nelžu. Ten člověk se nebojí. A člověk, kterému ukradnou, co se bojí ztratit, a nebojí se, ten už ví, co udělá.“
+„Lékárník nic.“ Jobst pokrčil rameny. „Chodí s ovázanou tváří a usmívá se a ničeho se nebojí. Florian od pondělka nevyšel z officíny. Prý mu mistr nařídil drhnout baňky, a drhne je už druhý den.“ Odmlčel se. „Paní. Já vím, že jsem vám lhal. O tom vylévání. Já to vím. Ale teď vám nelžu. Ten člověk se nebojí. A člověk, kterému ukradnou, co se bojí ztratit, a nebojí se, ten už ví, co udělá.“
 
 *
 
@@ -116,7 +116,7 @@ Neotočil se, když vešla.
 
 „Slyšela.“
 
-„Od rána.“ Pořád se díval z okna, nahoru, na kus ulice, kde nebylo nic než nohy. „*Ať ukáže knihu.* Nejdřív jsem nevěděl, kdo. Pak jsem se zeptal Fridricha.“
+„Od rána.“ Pořád se díval z okna, nahoru, na kus ulice, kde nebylo nic než nohy. „*Ať ukáže knihu.* Nejdřív jsem nevěděl, koho tím myslí. Pak jsem se zeptal Fridricha.“
 
 Ilona položila chleba na pryčnu. Byl ještě trochu teplý.
 
@@ -210,13 +210,13 @@ Tobiáš se nepohnul.
 
 „Vy jste mě to učila.“
 
-„První den,“ řekl Tobiáš. Hlas se mu nezvedl. Zůstal tichý a rovný, jako řádky, které ho učila psát. „U Ursuly. Zapsala jste všechno. I to, že jsem v noci vyšel na dvůr. I to, že jste slyšela vrzat podlahu. Řekla jste mi to do očí, v kuchyni, než pro mě přišli. Že to zapíšete, všechno, a že když to bude pravda, pomůže to. Že úplný zápis chrání.“ Polkl. „Sedím tady kvůli tomu čtyři týdny. Kvůli tomu vrzání. A nezlobil jsem se. Opravdu ne. Protože jsem si říkal, že to tak má být. Že vy to víte líp. Že kdo zapíše všechno, ten nakonec vyhraje, i když to nejdřív bolí.“
+„První den,“ řekl Tobiáš. Hlas se mu nezvedl. Zůstal tichý a rovný, jako řádky, které ho učila psát. „U Ursuly. Zapsala jste všechno. I to, že jsem v noci vyšel na dvůr. I to, že jste slyšela vrzat podlahu. Řekla jste mi ve světnici, než pro mě přišli, že to zapíšete. Všechno. Ten řez, ten uzel. A když jsem se zeptal, jestli i to vrzání, neřekla jste nic. Nemusela jste. Myslel jsem, že věříte, že úplný zápis chrání.“ Polkl. „Sedím tady kvůli tomu čtyři týdny. Kvůli tomu vrzání. A nezlobil jsem se. Opravdu ne. Protože jsem si říkal, že to tak má být. Že vy to víte líp. Že kdo zapíše všechno, ten nakonec vyhraje, i když to nejdřív bolí.“
 
 „Já vím.“
 
 „Tak co se změnilo?“
 
-Ilona se dívala na jeho ruce. Velké, ještě klukovské, s prsty, které uměly držet lancetu líp než její, když se roztřásly její. Na jednom prstu stará jizva od nože, kterou mu zašívala před třemi lety.
+Ilona se dívala na jeho ruce. Velké, ještě klukovské, s prsty, které uměly držet lancetu líp než její, když se jí roztřásly. Na jednom prstu stará jizva od nože, kterou mu zašívala před třemi lety.
 
 „Mýlila jsem se,“ řekla.
 
@@ -312,11 +312,11 @@ Ticho. Nahoře nad schodištěm někdo přešel, pomalu, s holí. Kunz. Kroky š
 
 „Ty to nevíš. Já jsem to četla.“
 
-Tobiáš sevřel ruce v pěst a zase je povolil.
+Tobiáš sevřel ruce v pěsti a zase je povolil.
 
-„Tak to dejte panu perkmistrovi,“ řekl. „Celé. On to přečte, jak čte všechno, celé, se skloněnou hlavou. On ví, co je pravda a co pověra. Řekl o razii, že je to hloupost. Chrání vás. Chrání mě. Dejte mu to a ať rozhodne on, co se bude číst před soudem. Ne vy sama.“
+„Tak to dejte panu perkmistrovi,“ řekl. „Celé. On to přečte, jak čte všechno, celé, se skloněnou hlavou. On ví, co je pravda a co pověra. Řekl o honbě, že je to hloupost. Chrání vás. Chrání mě. Dejte mu to a ať rozhodne on, co se bude číst před soudem. Ne vy sama.“
 
-Ilona se nepohnula. Ani obličejem. Naučila se to za ten měsíc. Od Markéty, která stála s rukama v zástěře. Od Merin, která neztuhla ani o vlas.
+Ilona se nepohnula. Ani obličejem. Naučila se to za ten měsíc. Od Markéty, která stála s rukama v zástěře. Od Merin, která ani neztuhla.
 
 A přesto to Tobiáš uviděl. Ilona nevěděla co. Možná dech. Možná to, jak dlouho jí trvalo, než otevřela ústa, a pak je zase zavřela. Možná nic, jen ticho, které bylo o chvilku delší, než mělo být.
 
@@ -326,7 +326,7 @@ Tobiášovi se něco v tváři zastavilo, jako se zastaví kolo, když se zavře
 
 Jen to. Tiše, a ani to nebyla otázka.
 
-Ilona to slovo znala. Slyšela ho před čtyřmi týdny v domě pod kostelem. Řekl ho Matz Lindner z postele, ve které kašlal, když mu řekla, že jeho synovi slíbil ochranu perkmistr. Tentýž tón. Tatáž krátká slabika, kterou havíři říkají, když ve štole uslyší, jak nad nimi zapraská strop, a ještě nevědí kde.
+Ilona to slovo znala. Slyšela ho před čtyřmi týdny v domě pod kostelem. Řekl ho Matz Lindner z postele, ve které kašlal, když mu řekla, že jeho synovi slíbil ochranu perkmistr. Tentýž tón. Totéž krátké slovo, které havíři říkají, když ve štole uslyší, jak nad nimi zapraská strop, a ještě nevědí kde.
 
 *
 
@@ -346,7 +346,7 @@ Tobiáš se zasmál, krátce, nosem.
 
 Ilona neodpověděla. Neměla co. Byla to dobrá otázka, a ona ho naučila klást dobré otázky, a teď stála v komoře pod schodištěm a nevěděla na ni odpověď, a on to viděl.
 
-„Řehoř vám říkal, že máte lehkou ruku,“ řekl Tobiáš. „Mně to říkal taky. Že máte lehkou ruku a těžkou hlavu. Že nikdy neřízne víc, než musí.“ Pořád se díval na zeď, na pruh světla, který se po ní od jejího příchodu posunul o kus níž. „Teď řežete. Já vidím, že řežete. Nevidím kde.“
+„Řehoř vám říkal, že máte lehkou ruku,“ řekl Tobiáš. „Mně to říkal taky. Že máte lehkou ruku a těžkou hlavu. Že nikdy neříznete víc, než musíte.“ Pořád se díval na zeď, na pruh světla, který se po ní od jejího příchodu posunul o kus níž. „Teď řežete. Já vidím, že řežete. Nevidím kde.“
 
 *
 
@@ -367,6 +367,8 @@ Tobiáš poslouchal.
 Ilona mlčela.
 
 Tobiáš kývl. Pak se sklonil k pryčně a vzal chleba, který tam položila. Podíval se na něj. Ještě byl trochu teplý, Ilona to viděla podle toho, jak ho držel v dlani. A podal jí ho zpátky.
+
+![Chleba](obrazky/14_tobias.webp)
 
 „Vezměte si ho,“ řekl.
 
@@ -446,7 +448,7 @@ Na druhé straně toho listu byla pravá stránka. O dvoustranu dřív. Středa,
 
 Ilona se na to dívala.
 
-List měl dvě strany. To ví každé dítě, které kdy drželo v ruce papír. Ona to věděla od devíti let, z otcovy písárny, kde se kvůli úspornosti psalo z obou stran. Otec tam jednou nadával písaři, který vytrhl list kvůli chybě na líci a zapomněl, že na rubu je smlouva o prodeji štoly. Věděla to. A přesto na to až doteď nemyslela. Celé tři dny myslela na knihu jako na řádky. Na *Kolbin* a na *frisch* a na *Erlengrund*, každé zvlášť, jako na výpovědi, z nichž si lze vybrat, kterou přečíst a kterou ne.
+List měl dvě strany. To ví každé dítě, které kdy drželo v ruce papír. Ona to věděla od devíti let, z otcovy písárny, kde se z úspornosti psalo z obou stran. Otec tam jednou nadával písaři, který vytrhl list kvůli chybě na líci a zapomněl, že na rubu je smlouva o prodeji štoly. Věděla to. A přesto na to až doteď nemyslela. Celé tři dny myslela na knihu jako na řádky. Na *Kolbin* a na *frisch* a na *Erlengrund*, každé zvlášť, jako na výpovědi, z nichž si lze vybrat, kterou přečíst a kterou ne.
 
 Ale Röhrich nepsal výpovědi. Psal knihu. A kniha se nevybírá po řádcích. Kniha se trhá po listech.
 

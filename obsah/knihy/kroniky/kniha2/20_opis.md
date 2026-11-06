@@ -14,7 +14,7 @@ Vešel. Sedl si na lavici u pece, na kraj, a desky položil na kolena, jak je dr
 
 „Jsou hotové.“
 
-Podala mu je. Jedenáct listů, na soudním papíře, který jí poslal, každý se stejným začátkem a stejným koncem, kromě desátého. Kunz je vzal a nepřečetl. Jen přejel palcem po hranách, jestli jsou srovnané.
+Podala mu je. Jedenáct listů. Deset na soudním papíře, který jí poslal, každý se stejným začátkem a stejným koncem. Desátý ne. Ten nechala, jak byl, se skvrnou přes jméno a s Markétiným křížkem, a končil jinak. Kunz je vzal a nepřečetl. Jen přejel palcem po hranách, jestli jsou srovnané.
 
 „A ještě něco,“ řekl. „Soud chce vaše vlastní svědectví. Sepsané. Vaší rukou.“
 
@@ -82,7 +82,7 @@ Nevěděla, jak je pojmenovat. Ve městě se jim říkalo noční lid a ti z hor
 
 Napsala: *Ve starých dílech nad městem žijí lidé, kteří nesnesou slunce. Kůže jim na něm za tři hodiny naběhne puchýři jako po opaření a moč mají potom barvy vína. Viděla jsem to na dítěti, které jsem léčila. Jsou bledí a vyšší než my. Jedí kroupy, maso a polévku jako my, a krev jen tehdy, když jsou nemocní nebo slabí, a tu berou kozám. Kousnutí od nich je rána jako od člověka. Měla jsem ji na ruce. Nic jiného se mnou neudělala.*
 
-*Jsou mezi nimi dva druhy, jako mezi námi. Jedni s nikým neobchodovali a nikomu neublížili. Druzí kupovali od lékárníka lidskou krev a platili za ni vlastní krví, kterou si pouštěli z rukou. Ty jsem viděla v Horní štole, jednou v noci. Měli na předloktí jizvy jako příčky žebříku. Byli chudokrevní a slabí a jejich děti kašlaly. Ursulu ani Lene nezabili oni. Zabil je člověk z města, protože potřeboval krev, kterou by jim prodal.*
+*Jsou mezi nimi dva druhy, jako mezi námi. Jedni s nikým neobchodovali a nikomu neublížili. Druzí kupovali od lékárníka lidskou krev a platili za ni vlastní krví, kterou si pouštěli z rukou. Ty jsem viděla v Horní štole, jednou v noci. Měli na předloktí jizvy jako příčky žebříku. Byli vysílení a slabí a jejich děti kašlaly. Ursulu ani Lene nezabili oni. Zabil je člověk z města, protože potřeboval krev, kterou by jim prodal.*
 
 *Kde žijí ti první a kam odešli, nezapíšu. Jména jejich dětí nezapíšu.*
 
@@ -90,7 +90,7 @@ Pak psala o lahvičkách.
 
 *
 
-O dvaceti lahvičkách ve výklenku za pecí. O papírcích *Sang. antiq.* O tom, co jí řekl Wehrl ve sklepě, *nejspíš kozí krev*, a co řekl Röhrich u soudu, tatáž slova. O tom, co jí Wehrl ukázal na střeše, o hvězdě a o knize v zeleném sametu a o roce, který stál v záhlaví. O tom, že jí řekl den a cestu razie. Že tentýž den a tutéž cestu znali Hladoví od mezkaře dřív, než se je dozvěděli ode mne. A že neví, proč jí to řekl.
+O dvaceti lahvičkách ve výklenku za pecí. O papírcích *Sang. antiq.* O tom, co jí řekl Wehrl ve sklepě, *nejspíš kozí krev*, a co řekl Röhrich u soudu, tatáž slova. O tom, co jí Wehrl ukázal na střeše, o hvězdě a o knize v zeleném sametu a o roce, který stál v záhlaví. O tom, že jí řekl den a cestu razie. Že tentýž den a tutéž cestu znali Hladoví od mezkaře dřív, než se je dozvěděli od ní. A že neví, proč jí to řekl.
 
 A pak o knize jmen.
 
@@ -110,7 +110,7 @@ Psala pomalu. Ruka se jí třásla, a ona čekala, až se přestane třást, a p
 
 Třetí noc psala o sobě.
 
-O tom, že lhala Hessemu a Wehrlovi. O tom, že na radě vyhrožovala jmény z knihy a že to udělala vědomě a že rychtář potom přesunul razii na čtvrtou hodinu za světla. Že kvůli tomu jedni utekli a druzí byli chyceni. O tom, že si o svítilnu úmyslně popálila ruku, aby se hlídka nedívala do rokle. O tom, že nevyřídila jedné matce vzkaz od dcery.
+O tom, že lhala Hessemu a Wehrlovi. O tom, že na radě vyhrožovala jmény z knihy a že to udělala vědomě a že rychtář potom přesunul honbu na čtvrtou hodinu za světla. Že kvůli tomu jedni utekli a druzí byli chyceni. O tom, že si o svítilnu úmyslně popálila ruku, aby se hlídka nedívala do rokle. O tom, že nevyřídila jedné matce vzkaz od dcery.
 
 Psala to rovně. Bez *protože*. Otec říkal, že *protože* je slovo, kterým se svědek obhajuje, a že obhajoba patří jinam.
 
@@ -126,7 +126,7 @@ A podepsala se.
 
 Kunzovi to donesla v pátek ráno, bočními dveřmi do písárny, ne přes síň.
 
-Kunz seděl u pultu, kde vždycky seděl, a v písárně bylo horko, protože topil i na konci června. Vzal od ní listy a nasadil si brýle a četl. Ilona stála a čekala. Viděla, jak jde očima po řádcích, rychle, jak čte člověk, který čte celý život, a jak se na prvních listech nezastavuje. Na pátém se zastavil.
+Kunz seděl u pultu, kde vždycky seděl, a v písárně bylo horko, protože topil i na konci června. Vzal od ní listy a nasadil si brýle a četl. Ilona stála a čekala. Viděla, jak jde očima po řádcích, rychle, jak čte člověk, který čte celý život, a jak se na prvních listech nezastavuje. Na třetím se zastavil.
 
 Na tom, kde stálo jeho *nevím to, vím jen, kdo mohl*.
 
@@ -154,11 +154,11 @@ V sobotu přišel znovu. K ní, večer, a tentokrát nestál na prahu dlouho.
 
 „A?“
 
-„Do spisu jde jedenáct výpovědí. Tři listy z lázně. Šest listů. Soupis.“ Kunz mluvil jako písař, který čte z rejstříku, a Ilona slyšela, jak se drží toho tónu, aby neslyšela svůj vlastní. „Z vašeho svědectví první čtyři listy. Ursula, lázeň, Lene, lékárna. Co se týká mrtvých a lékárníka.“
+„Do spisu jde jedenáct výpovědí. Tři listy z lázně. Šest listů. Soupis.“ Kunz mluvil jako písař, který čte z rejstříku, a Ilona slyšela, jak se drží toho tónu, aby neslyšel svůj vlastní. „Z vašeho svědectví první čtyři listy. Ursula, lázeň, Lene, lékárna. Co se týká mrtvých a lékárníka.“
 
 „A zbytek?“
 
-„O nočním lidu je obecná pověst a o té soud už rozhodl. O panu perkmistrovi soud slyšel u soudu a pan perkmistr se vysvětlil.“ Kunz se odmlčel. „O tom, co bylo na rubu listů, soud řekl, že to nesoudí. Řekl to v pondělí. Zapsal jsem to.“
+„O nočním lidu je obecná pověst a o té soud už rozhodl. O panu perkmistrovi soud už slyšel a pan perkmistr se vysvětlil.“ Kunz se odmlčel. „O tom, co bylo na rubu listů, soud řekl, že to nesoudí. Řekl to v pondělí. Zapsal jsem to.“
 
 „A moje vlastní činy?“
 
@@ -220,7 +220,7 @@ Ilona se dívala na kozu. Koza se dívala na ni, žlutýma očima s čárkou mí
 
 „Protože to nebyla moje slova,“ řekla. „Byla vaše. Jen jsem je nesla.“
 
-Markéta pustila vemeno. Utřela si ruce do zástěry. Pak vstala, pomalu, jak vstávají lidé, kterým bolí kolena, vzala hrnec s mlékem a šla dovnitř. Ilona slyšela, jak chodí po světnici. Jak otvírá truhlu. Jak něco trhá.
+Markéta pustila vemeno. Utřela si ruce do zástěry. Pak vstala, pomalu, jak vstávají lidé, které bolí kolena, vzala hrnec s mlékem a šla dovnitř. Ilona slyšela, jak chodí po světnici. Jak otvírá truhlu. Jak něco trhá.
 
 Vrátila se s uzlíčkem. Chléb v plátně. Půl bochníku, ten, který měla na zítřek. Plátno bílé, lněné, složené na čtyřikrát, a Markéta ho ještě uhladila dlaní, než ho Iloně podala.
 
@@ -340,7 +340,7 @@ Pankrác kývl a pobídl koně.
 
 Za Ostrovem, kde cesta vyšla z lesa do polí, rozbalila Markétin chléb.
 
-Byl čerstvý, z pátku, s kůrkou, která praskala. Ulomila si a jedla a dívala se na pole po obou stranách cesty. Obilí ještě zelené, a mezi ním úhor, zoraný na léto, hnědý, v rovných řádcích, jeden vedle druhého, jak je táhne pluh, který se nikdy neohlédne.
+Byl z pátku, ale ještě vláčný. Ulomila si a jedla a dívala se na pole po obou stranách cesty. Obilí ještě zelené, a mezi ním úhor, zoraný na léto, hnědý, v rovných řádcích, jeden vedle druhého, jak je táhne pluh, který se nikdy neohlédne.
 
 Snědla půlku. Druhou nechala na večer.
 

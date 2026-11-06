@@ -8,7 +8,7 @@ Neseděl. Stál u oltáře, kde ještě visely suché vrbové proutky. Když Mat
 
 „Já vím.“
 
-„Dvakrát,“ řekl Udalrich. „V únoru jednou, teď podruhé.“ Podíval se na Matějovy ruce, šedé od hlíny až po zápěstí, a na olůvko, které mu trčelo z kapsy. „Převor se zeptá. Ne tebe, mě. A já mu budu muset něco říct.“
+„Dvakrát,“ řekl Udalrich. „V únoru jednou, teď podruhé.“ Podíval se na Matějovy ruce, šedé od hlíny až po zápěstí, a na olůvko, které mu trčelo zpoza pasu. „Převor se zeptá. Ne tebe, mě. A já mu budu muset něco říct.“
 
 „Řekněte mu pravdu.“
 
@@ -42,13 +42,13 @@ Dobroslava sáhla do vaku a podala mu něco v pěsti. Byl to pruh plsti, tmavý 
 
 „Chtějí tebe. Dnes. Za šera. Jestli půjdeš.“
 
-Dnes byl Zelený čtvrtek. Večer se v oratoři obnaží oltář, až do velikonoční noci zmlknou zvony a Udalrich bude svolávat dřevěnou klapačkou. Matěj si to všechno vybavil, jako se člověk dívá na cestu, po které by měl jít, a ví, že po ní nepůjde.
+Dnes byl Zelený čtvrtek. Večer se v oratoři obnaží oltář, až do velikonoční noci zmlknou zvony a Udalrich bude svolávat dřevěnou klapačkou. Matěj si to všechno vybavil a díval se na to, jako se člověk dívá na cestu, po které by měl jít, a ví, že po ní nepůjde.
 
 „Půjdu,“ řekl.
 
 Dobroslava kývla. Pak se otočila a šla, a za pár kroků se zastavila.
 
-„Psi pana Konráda byli v úterý u potoka,“ řekla, aniž by se ohlédla. „Lovčí je vodil po kraji lesa. Až k mé chalupě a pak zpátky.“ Odmlčela se. „Půjdeš za mnou. Ne vedle mě. A kudy půjdu já.“
+„Psi pana Konráda byli v úterý u potoka,“ řekla, aniž by se ohlédla. „Lovčí je vodil po kraji lesa. Až k mé chalupě a pak zpátky.“ Odmlčela se. „Půjdeš za mnou. Ne vedle mě. A jen tudy, kudy půjdu já.“
 
 *
 
@@ -58,7 +58,7 @@ Udalrich to dělal každý rok a Matěj o tom nevěděl. Po sextě postavil u vr
 
 *Mandatum novum do vobis.* Přikázání nové vám dávám.
 
-Matěj se díval na žebrákovy nohy, šedé, popraskané, s nehty jako rohovina, a na Udalrichovy ruce, a myslel na Hensela, který mu v noci vložil do náruče provaz a kahany, a na Ješka, který mu svítil, dokud neusnul. Nikdo z nich nevěděl, proč to dělá. Možná to nevěděl ani on.
+Matěj se díval na žebrákovy nohy, šedé, popraskané, s nehty jako rohovina, a na Udalrichovy ruce, a myslel na Hensela, který mu v noci vložil do náruče provaz a kahany, a na Ješka, který mu svítil, dokud neusnul. Žádný z nich by neuměl říct, proč to dělá. Možná to nevěděl ani Udalrich.
 
 Večer Udalrich v oratoři sundal z oltáře plátno a odnesl svíce. Oltář zůstal holý, jen kámen. Pak zmlkl zvonek nad dveřmi a Udalrich vzal do ruky dřevěnou desku s kladívkem, a když s ní klapl, znělo to v tichu jako kost o kost.
 
@@ -88,9 +88,9 @@ Nebyl to pozdrav ani otázka.
 
 „Ne já,“ řekl Matěj. „Ale ano.“
 
-„V pondělí v noci.“ Merin si sedl na kámen naproti němu, ne pod převis, ale na kraj světla, kde ho Matěj viděl celého. Malý muž s kopím zůstal stát. „Ostra to cítila. Stěna se pohnula. Jednou. Nikdy předtím se nepohnula, když spala.“
+„V noci na pondělí.“ Merin si sedl na kámen naproti němu, ne pod převis, ale na kraj světla, kde ho Matěj viděl celého. Malý muž s kopím zůstal stát. „Ostra to cítila. Stěna se pohnula. Jednou. Nikdy předtím se nepohnula, když spala.“
 
-„Kdo spala?“
+„Kdo spal?“
 
 Merin neodpověděl. Matěj se opravil sám.
 
@@ -116,7 +116,7 @@ Pak se Merinův prst zastavil na okraji listu. Na tečkách.
 
 „Co se opakuje,“ řekl Matěj. „Ta skupina. Čtyři rýhy, prostřední kratší, a u nich zlato a krystal. Je tam čtyřikrát.“
 
-Merin zvedl hlavu a podíval se na něj. Byl to jiný pohled než všechny předtím. Matěj nevěděl, jak ho nazvat. Kdyby to byl Wigand, řekl by, že je to pohled, jakým se starý písař podívá na novice, který si jako jediný všiml chyby ve vzoru. Ale Merin nebyl Wigand a Matěj nevěděl, co v tom pohledu je.
+Merin zvedl hlavu a podíval se na něj. Byl to jiný pohled než všechny předtím. Matěj nevěděl, jak ho nazvat. Kdyby se tak díval Wigand, Matěj by řekl, že je to pohled, jakým se starý písař podívá na novice, který si jako jediný všiml chyby ve vzoru. Ale Merin nebyl Wigand a Matěj nevěděl, co v tom pohledu je.
 
 „Nakreslil jsi všechno?“
 
@@ -166,7 +166,7 @@ Merin neodpověděl.
 
 Merin mlčel.
 
-„Kolik loktů,“ opakoval Matěj. „Ortlieb kope loket denně. Teď, když dva dny nemohl kopat, bude chtít kopat dva. Ješek to říkal. Chce dát na čelbu dvě party a platit dvojnásob. Kolik jim zbývá?“
+„Kolik loktů,“ opakoval Matěj. „Ortlieb kope loket denně. Teď, když dva dny nemohl kopat, bude chtít kopat dva. Ješek říkal, že ztratil dva dny. Bude je chtít dohnat. Kolik jim zbývá?“
 
 Merin dlouho mlčel. Pak se otočil k malému muži a něco mu řekl. Malý muž odpověděl, déle, a v jeho hlase bylo něco, co Matěj poznal i bez slov: nesouhlas. Merin mu odpověděl jedním slovem. Malý muž se díval do země. Potom sáhl pod kazajku a vytáhl kožený tubus, dlouhý jako předloktí, převázaný řemínkem, a podal ho Merinovi, a nepodíval se přitom na Matěje.
 
@@ -176,7 +176,7 @@ Merin tubus rozvázal a vytáhl z něj svitek. Neroztáhl ho celý. Rozvinul ho 
 
 ![Merinův svitek](obrazky/12_merinova_mapa.webp)
 
-Nebyl to pergamen. Byla to kůže, tenčí, než Matěj kdy viděl, tmavší a měkčí, a na lomech zrnitá. Byla na ní hora.
+Nebyl to pergamen. Byla to kůže, tenčí než všechny, jaké kdy Matěj viděl, tmavší a měkčí, a na lomech zrnitá. Byla na ní hora.
 
 Matěj to poznal až po chvíli. Nejdřív viděl jen čáry, v různých barvách, hnědé a černé a jedny vybledlé do rezava, tak staré, že je skoro nebylo vidět. Pak pochopil, že se dívá na horu z boku, jako by ji někdo rozřízl nožem jako bochník a díval se na řez. Nahoře hřbet, ten dlouhý, strmější na jednom konci, jak ho Matěj znal z grangie. Pod hřbetem chodby. Hodně chodeb, tenkých, kreslených jedním tahem, a v nich malé komůrky jako buňky v plástvi.
 
@@ -192,7 +192,7 @@ Matěj zíral na tu čáru.
 
 Byla to štola. Jeho štola. Ješkova štola, Ortliebova, Konrádova. Nakreslená cizí rukou na cizí kůži, a ty čárky… Napočítal jich do konce desítky a pak se mu to rozmazalo. Den po dni. Někdo tady každý den přidal čárku. Celou zimu. Slyšeli, jak se kope, a zapisovali to.
 
-Začal se modlit. Neúmyslně. *Pater noster, qui es in caelis.* Pomalu, stejně pomalu jako u žlabu, protože to bylo jediné měřidlo, které měl, a díval se. Konec štoly. Kruh. Voda. Vzdálenost mezi koncem štoly a kruhem byla krátká. Kratší než kus štoly mezi posledními dvaceti čárkami. Vzdálenost k vodě byla o něco delší. *Sanctificetur nomen tuum.* Štola na kůži měla od ústí ke konci, odhadem, deset palců. Dvě stě patnáct kroků. Zbytek ke kruhu: necelý palec. *Adveniat regnum tuum.* Dvacet kroků? Méně? Nevěděl, jestli kreslili přesně. Nevěděl, jestli čáry na kůži znamenají totéž co kroky.
+Začal se modlit. Bezděčně. *Pater noster, qui es in caelis.* Pomalu, stejně pomalu jako u žlabu, protože to bylo jediné měřidlo, které měl, a díval se. Konec štoly. Kruh. Voda. Vzdálenost mezi koncem štoly a kruhem byla krátká. Kratší než kus štoly mezi posledními dvaceti čárkami. Vzdálenost k vodě byla o něco delší. *Sanctificetur nomen tuum.* Štola na kůži měla od ústí ke konci, odhadem, deset palců. Dvě stě patnáct kroků. Zbytek ke kruhu: necelý palec. *Adveniat regnum tuum.* Dvacet kroků? Méně? Nevěděl, jestli kreslili přesně. Nevěděl, jestli čáry na kůži znamenají totéž co kroky.
 
 *Fiat voluntas tua.*
 
@@ -226,9 +226,9 @@ Merin zastrčil svitek do tubusu a začal ho převazovat řemínkem. Nepodíval 
 
 Matěj neodpověděl.
 
-„Tu kůži kreslili lidé, kteří už nejsou,“ řekl Merin. Neřekl to smutně, ani slavnostně. Řekl to jako fakt, jako by řekl, že kůže je stará. „Každý přidal, co viděl. Já jsem přidal tu čáru. Nedám ji pánovi z Wehrbergu. Ani tvému převorovi. Ani tobě.“
+„Tu kůži kreslili lidé, kteří už nejsou,“ řekl Merin. Neřekl to smutně, ani slavnostně. Řekl to jako samozřejmost, jako by řekl, že kůže je stará. „Každý přidal, co viděl. Já jsem přidal tu čáru. Nedám ji pánovi z Wehrbergu. Ani tvému převorovi. Ani tobě.“
 
-„Ale vy chcete, aby štola přestala.“
+„Ale vy chcete, aby přestali kopat.“
 
 „Chci.“
 
@@ -238,7 +238,7 @@ Matěj neodpověděl.
 
 „Tak co mám dělat?“
 
-Merin se díval do kahanu. Plamínek stál rovně, v převisu nefoukalo.
+Merin se díval do kahanu. Plamínek stál rovně, pod převisem nefoukalo.
 
 „Řekni jim, co víš sám,“ řekl.
 
@@ -246,7 +246,7 @@ Merin se díval do kahanu. Plamínek stál rovně, v převisu nefoukalo.
 
 Merin mlčel.
 
-Matěj seděl pod převisem a pochopil, že tohle je odpověď. Nedal mu ji Merin, dal si ji sám. Merin nic neřešil. Merin mu ukázal horu na jeden nedomodlený Otčenáš a pak ji svinul. Zbytek byl na něm.
+Matěj seděl pod převisem a pochopil, že tohle je odpověď. Nedal mu ji Merin, dal si ji sám. Merin za něj nic nerozhodl. Merin mu ukázal horu na jeden nedomodlený Otčenáš a pak ji svinul. Zbytek byl na něm.
 
 „A ten zraněný?“ zeptal se, protože se potřeboval zeptat na něco, na co existuje odpověď.
 
@@ -256,7 +256,7 @@ Matěj seděl pod převisem a pochopil, že tohle je odpověď. Nedal mu ji Meri
 
 Merin vstal. Malý muž sfoukl kahan a najednou byl zase jen měsíc a pruhy světla mezi buky.
 
-„Ostra říká,“ řekl Merin, „že skála je teplejší každý den, co kopou blíž. Ne o moc. Ale každý den.“ Podíval se nahoru, k hoře, kterou mezi korunami nebylo vidět. „Říká, že to nikdy neslyšela takhle.“
+„Ostra říká,“ řekl Merin, „že skála je teplejší každý den, co kopou blíž. Ne o moc. Ale každý den.“ Podíval se nahoru, k hoře, kterou mezi korunami nebylo vidět. „Říká, že ji takhle nikdy neslyšela.“
 
 „Co se stane, až k ní dokopou?“
 
@@ -296,7 +296,7 @@ Udalrich stál ve vratech grangie s lucernou. Bylo po půlnoci. Neřekl nic, jen
 
 Na Velký pátek četl Matěj konvršům pašije.
 
-Kněz nepřišel, nepřicházel nikdy, a Udalrich chtěl, aby se četlo, tak četl Matěj. Latinsky a pak česky a německy, větu po větě, protože konvršové byli tři a každý rozuměl něčemu jinému. Podle Jana. Oltář byl holý, ve výklenku stál dřevěný kříž zahalený plátnem. Když Matěj došel k místu, kde Petr stojí u ohně na nádvoří velekněze a služka se ho ptá, jestli není jedním z jeho učedníků, zarazil se.
+Kněz nepřišel, nepřicházel nikdy, a Udalrich chtěl, aby se četlo, tak četl Matěj. Latinsky a pak česky a německy, větu po větě, protože konvršové byli tři a každý rozuměl něčemu jinému. Podle Jana. Oltář byl holý, ve výklenku stál dřevěný kříž zahalený plátnem. Když Matěj došel k místu, kde se služka u dveří Petra ptá, jestli není jedním z jeho učedníků, zarazil se.
 
 *Non sum.* Nejsem.
 
@@ -304,7 +304,7 @@ Konvršové čekali. Udalrich zvedl hlavu.
 
 Matěj četl dál. Podruhé: *Non sum.* Potřetí, a kohout zakokrhal. Dočetl to do konce, až k hrobu v zahradě, a pak Udalrich odhalil kříž, a jeden po druhém k němu přistoupili bosí, poklekli a políbili ho. Matěj šel poslední. Kříž byl dřevěný, starý a studený. Na nohou byl ohlazený od rtů.
 
-Odpoledne, kdy se v klášteře nejí a nemluví, si sedl v komoře u oratoře s převorovým sešitkem a začal kreslit horu.
+Odpoledne, kdy se v klášteře nejí a nemluví, si sedl v komoře u oratoře. Kost a úlomek z haldy zabalil do hadru a strčil pod lůžko; s sebou je už nosit nechtěl. Pak vzal převorův sešitek a začal kreslit horu.
 
 *
 

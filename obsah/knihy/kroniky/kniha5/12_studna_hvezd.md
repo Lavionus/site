@@ -76,7 +76,7 @@ Hana čte dopis třikrát. Pak ho položí na stůl, vedle krabice, a dlouho nad
 
 *Jména živých netiskněte.*
 
-Napsal to před dvěma lety, v houpací síti, a nevěděl, co bude dělat ona. Nevěděl nic o hoře a o kazetě pod stolem v archivu. Napsal to, protože to věděl odjinud.
+Napsal to před víc než rokem a půl, v houpací síti, a nevěděl, co bude dělat ona. Nevěděl nic o hoře a o kazetě pod stolem v archivu. Napsal to, protože to věděl odjinud.
 
 *
 
@@ -88,7 +88,7 @@ Sedm je šedých. Jedna zelená.
 
 Hana začne šedými. Zelenou si nechá na konec, i když ji to stojí víc sil, než by si přiznala. Nejdřív to, co může porovnat.
 
-V šedých jsou papíry na hlavičce nadace pro výzkum podmořských jeskyní, s adresou v Miami. Strojopis, průklepy, pak fotokopie, pak počítačové výtisky na děrovaném papíře. Od roku 1972 do roku 1995. Memoranda, zápisy z porad, rozpočty. Jména jsou jen iniciály. Někde ani to ne. *Přítomni: čtyři.*
+V šedých jsou papíry s hlavičkou nadace pro výzkum podmořských jeskyní, s adresou v Miami. Strojopis, průklepy, pak fotokopie, pak počítačové výtisky na děrovaném papíře. Od roku 1972 do roku 1995. Memoranda, zápisy z porad, rozpočty. Jména jsou jen iniciály. Někde ani to ne. *Přítomni: čtyři.*
 
 Hana čte pomalu. Angličtina je úřední, suchá, se zkratkami, které se musí domýšlet. Po hodině jim rozumí.
 
@@ -120,9 +120,9 @@ Hana se opře v židli.
 
 Za oknem je odpoledne, slunce na mokré střeše mlýna, náhon pod oknem. Na stole sedm šedých složek a v nich dvacet tři let šumu.
 
-Kalina měří šum dvacet let. Odfiltruje ho, aby slyšel, co je pod ním. Tady někdo šum vyráběl. Platil za něj, šest set dolarů za tři články, dvě stě padesát za kapitána, který věřil. Aby to, co je pod ním, neslyšel nikdo.
+Kalina už dvacet let měří šum. Odfiltruje ho, aby slyšel, co je pod ním. Tady někdo šum vyráběl. Platil za něj, šest set dolarů za tři články, dvě stě padesát za kapitána, který věřil. Aby to, co je pod ním, neslyšel nikdo.
 
-A fungovalo to. Hana to ví z vlastní kůže. V březnu 2026 jí producentka z Los Angeles poslala *story deck* s mayskou legendou o kameni, který spadl z nebe do studny. Hana tehdy řekla, že nechce mít jméno vedle legendy. Prohrála. Pak přišel podvrh a bulvár a *ATLANTOLOŽKA Z BRNA*. Bulvár nevěděl nic o válci. Věděl jen, že kde je Karibik, tam je Atlantida. To věděl každý. Někdo se o to postaral.
+A fungovalo to. Hana to zažila na vlastní kůži. V březnu 2026 jí producentka z Los Angeles poslala *story deck* s mayskou legendou o kameni, který spadl z nebe do studny. Hana tehdy řekla, že nechce mít jméno vedle legendy. Prohrála. Pak přišel podvrh a bulvár a *ATLANTOLOŽKA Z BRNA*. Bulvár nevěděl nic o válci. Věděl jen, že kde je Karibik, tam je Atlantida. To věděl každý. Někdo se o to postaral.
 
 Zavolá Kalinovi. Ne proto, aby mu to vysvětlila. Proto, aby to slyšel někdo, kdo šum měří.
 
@@ -170,15 +170,15 @@ Teď to chytila. Neví, co s tím.
 
 Pak otevře zelenou složku.
 
-Na deskách je přilepený žlutý lístek. Waltovo tiskací písmo, propiska. Lístek nezežloutl, takže je mnohem mladší než složka.
+Na deskách je přilepený žlutý lístek. Waltovo tiskací písmo, propiska. Lístek nevybledl, takže je mnohem mladší než složka.
 
 *Tohle si přečte jen Vrbová.*
 
-Uvnitř je dvanáct listů. Zpráva na hlavičce nadace z Miami, rok 1986, psaná na stroji anglicky, s přílohami ve španělštině. Nahoře: *Věc: R. Anaya Cervera, El pozo de las estrellas (Mérida 1978). Zdroj kreseb.* Podepsáno *R. M.* Pod tím tužkou, menším písmem: *řídil jsem auto – WA.*
+Uvnitř je dvanáct listů. Zpráva s hlavičkou nadace z Miami, rok 1986, psaná na stroji anglicky, s přílohami ve španělštině. Nahoře: *Věc: R. Anaya Cervera, El pozo de las estrellas (Mérida 1978). Zdroj kreseb.* Podepsáno *R. M.* Pod tím tužkou, menším písmem: *řídil jsem auto – WA.*
 
 Hana čte.
 
-Kniha se v roce 1985 dostala do rukou „lidem v oblasti“. Kapitola sedm, devět padajících světel, oblé domy v řadách, a hlavně studna. *Studna, do které padaly hvězdy.* Moc blízko skutečných míst, píše R. M. Moc blízko, aby to byla náhoda. Je třeba zjistit, odkud to autor má.
+Kniha se v roce 1985 dostala na stůl porady. Kapitola sedm, devět padajících světel, oblé domy v řadách, a hlavně studna. *Studna, do které padaly hvězdy.* Moc blízko skutečných míst, píše R. M. Moc blízko, aby to byla náhoda. Je třeba zjistit, odkud to autor má.
 
 Autor nebyl k nalezení. Rodrigo Anaya Cervera se nikde nevede. *No consta.* Hana se skoro usměje. Nakonec ho našli přes bývalého majitele zaniklé tiskárny, podle starého účtu za papír.
 
@@ -196,7 +196,7 @@ Rodrigo Anaya Cervera tedy nebyl nikdo. Byl to pseudonym učitele v penzi, kter�
 
 Přílohou je přepis rozhovoru. Španělsky, strojem, s ručními opravami. R. M. se ptá, učitel odpovídá. Hana ho čte se slovníkem v telefonu, větu po větě.
 
-Starci nebyli. *Los ancianos* si učitel vymyslel, protože kniha bez starců by se neprodala. Legendu nikdo neznal. Walt se třicet let ptal v obcích a nikdo ji neznal, protože žádná nebyla.
+Žádní starci nebyli. *Los ancianos* si učitel vymyslel, protože kniha bez starců by se neprodala. Legendu nikdo neznal. Walt se třicet let ptal v obcích a nikdo ji neznal, protože žádná nebyla.
 
 Kresby nevymyslel. Ty měl od někoho.
 
@@ -230,7 +230,7 @@ Pod levým nadpisem kresba. Devět teček v řadě, klesajících, deváté men�
 
 Slovo od slova. Z kodexu z Mlýnce. Mnichova věta.
 
-Pod pravým nadpisem jiná ruka, pozdější, hustá, a kresba oblých domů v řadách. A slova, která Hana zná jen napůl: *patres nostri*. Naši otcové. A dole, velkými písmeny, jedno slovo samo na řádku: *Revertentur.*
+Pod pravým nadpisem táž ruka, jen hustší, jako by tu psala rychleji, a kresba oblých domů v řadách. A slova, která Hana zná jen napůl: *patres nostri*. Naši otcové. A dole, velkými písmeny, jedno slovo samo na řádku: *Revertentur.*
 
 Vrátí se.
 
@@ -242,9 +242,9 @@ Pod oknem šumí náhon. Nezamrzá ani v lednu, protože je v něm teplá voda z
 
 Má to celé. Poprvé má celou řadu, od začátku do konce, a každý článek doložený.
 
-Mnich v roce 1172 viděl světlo v hoře a zapsal ho. *Vidi.* Viděl tam i tvář pana Konráda a zapsal i ji. Někdo z Konrádova rodu pak ten zápis opsal a připsal k němu vpravo, co si o tom myslí. Že to jsou jejich otcové a že se vrátí. Čtyři sta let potom perkmistr Hans Wehrl kupoval krev a na rubu lékárníkovy knihy stálo *W.* s kličkou. Ilona ho seškrábala. V roce 1976 přijel do Méridy pán jménem H. Wehrle a ukazoval po vesnicích kresby z kláštera. Učitel z nich udělal knihu se starci. Z knihy si kapitolu opsala kniha o záhadách z devadesátých let, *tradición oral, Yucatán*, a z ní v roce 2011 anonymní web. Tak vznikla mayská legenda. V roce 2026 ji producentka z Los Angeles dala do oznámení, *according to local legend*, a Hana prohrála.
+Mnich v roce 1172 viděl světlo v hoře a zapsal ho. *Vidi.* Viděl tam i tvář pana Konráda a zapsal i ji. Někdo z Konrádova okolí pak ten zápis opsal a připsal k němu vpravo, co si o tom myslí. Že to jsou jejich otcové a že se vrátí. Čtyři sta let potom perkmistr Hans Wehrl kupoval krev a na rubu lékárníkovy knihy stálo *W.* s kličkou. Ilona ho seškrábala. V roce 1976 přijel do Méridy pán jménem H. Wehrle a ukazoval po vesnicích kresby z kláštera. Učitel z nich udělal knihu se starci. Z knihy si kapitolu opsala kniha o záhadách z devadesátých let, *tradición oral, Yucatán*, a z ní v roce 2011 anonymní web. Tak vznikla mayská legenda. V roce 2026 ji producentka z Los Angeles dala do oznámení, *according to local legend*, a Hana prohrála.
 
-Legenda, kvůli které jí v roce 2026 nedali jméno vedle válce, vyšla z teplé skály čtyřicet dva schodů pod statkem Ostrých.
+Legenda, kvůli které jí v roce 2026 nedali jméno vedle válce, vyšla z teplé skály padesát dva schodů pod statkem Ostrých.
 
 Hana se dívá na páru.
 
@@ -296,7 +296,7 @@ Pak Sálová udělá něco, co Hana nečeká.
 
 Vstane, odemkne trezor a vyndá jeden z balíků. Ten s visačkou *XVI–XVII*. Rozváže tkanici. Rozbalí papír. Na stůl položí plátno a na plátno svazek v tmavé kůži.
 
-Kniha se otevře sama, u Doroty. Sálová otočí pět listů.
+Kniha se otevře sama, u Doroty. Sálová neobrací. Odhrne cíp plátna z dolního kraje stránky, o pět řádků níž.
 
 „*Kdo jednou ukázal, ukáže znovu*,“ řekne. Hana neví, komu to říká. „Tohle říkala moje předchůdkyně. Měla pravdu.“
 
@@ -400,7 +400,7 @@ Sálová kývne. Pomalu, jednou.
 
 *
 
-Píše v autě na parkovišti u kostela svatého Mikuláše, s vypnutým motorem, protože nemá kam spěchat.
+Hana píše v autě na parkovišti u kostela svatého Mikuláše, s vypnutým motorem, protože nemá kam spěchat.
 
 Vlevo:
 
@@ -442,7 +442,7 @@ Na sedadle spolujezdce leží Anayova kniha. Vzala si ji s sebou z penzionu, ani
 
 Učitel z Méridy psal o studni, do které padaly hvězdy, a myslel si, že píše o Yucatánu. Pán z Německa hledal tu studnu po vesnicích a nikdo mu nic neřekl, protože tam žádná nebyla.
 
-Byla tady. Čtyřicet dva schodů pod sklepem s jablky. Pod horou, kde teď v noci svítí skála, kde za každou z osmi mřížek stojí číslo a kde v lednu spaly děti.
+Byla tady. Padesát dva schodů pod sklepem s jablky. Pod horou, kde teď v noci svítí skála, kde za každou z osmi mřížek stojí číslo a kde v lednu spaly děti.
 
 Hana nastartuje. Nad Chebem je jasno. Nad kostelem svatého Mikuláše se objevují první hvězdy, pomalu, jedna po druhé. Žádná nepadá.
 

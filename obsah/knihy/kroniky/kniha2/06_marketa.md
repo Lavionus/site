@@ -6,7 +6,7 @@ Ilona stála u zdi a dívala se. Stávala tam vždycky, když pohřbívali něko
 
 Když hrobník začal házet hlínu, Lenin otec se otočil a podíval se přes hroby přímo na Ilonu. Nic neřekl. Díval se na ni tak dlouho, až žena vedle něj přestala plakat a zatahala ho za rukáv.
 
-Ilona se dívala zpátky. To mu byla dlužná.
+Ilona neuhnula pohledem. To mu byla dlužná.
 
 Pak odešla první, aby nemusel jít kolem ní.
 
@@ -44,7 +44,7 @@ Ilona jí dala napít pálenky, kterou měla na tyhle věci, a žena se napila j
 
 Řízla podél, ne napříč, aby nepřeťala šlachu, kterou palec ohýbá. Žena se ani nepohnula. Jen se jí na krku napjaly svaly a zuby zaskřípaly o sebe.
 
-Hnis vyšel hustý a žlutý, s nitkou krve, a s ním, na konci, když Ilona zmáčkla okraje k sobě, malý černý úlomek. Ostrý, lesklý, s kovovým leskem. Ilona ho vytáhla kleštičkami a položila na plátno, a žena se na něj podívala.
+Hnis vyšel hustý a žlutý, s nitkou krve, a s ním, na konci, když Ilona zmáčkla okraje k sobě, malý černý úlomek. Ostrý, s kovovým leskem. Ilona ho vytáhla kleštičkami a položila na plátno, a žena se na něj podívala.
 
 „To je ono,“ řekla. „Mrcha.“
 
@@ -88,7 +88,7 @@ Ilona namočila pero a na chvíli ho držela nad papírem, a kapka inkoustu se n
 
 Pak napsala to, co psala vždycky. *Tato slova řekla přede mnou Markéta, vdova po Jörgovi Hauptovi, havíři, bydlící na horním konci za koželuhem, v pátek 26. května léta 1595. Já jsem je zapsala, jak je řekla, a nic jsem k nim nepřidala.*
 
-„Vdova,“ řekla Markéta, když jí to Ilona přečetla. „Ano. To taky. Jörg spadl do šachty dva roky po ní. Přetrhl se provaz u rumpálu.“ Odmlčela se. „Říkali, že byl uzel špatně uvázaný. On vázal uzly dobře. Ale to už nepiště, to sem nepatří.“
+„Vdova,“ řekla Markéta, když jí to Ilona přečetla. „Ano. To taky. Jörg spadl do šachty dva roky po ní. Přetrhl se provaz u rumpálu.“ Odmlčela se. „Říkali, že byl uzel špatně uvázaný. On vázal uzly dobře. Ale to už nepište, to sem nepatří.“
 
 „Patří,“ řekla Ilona. „Řekla jste to.“
 
@@ -98,7 +98,7 @@ Markéta dlouho mlčela. Pak kývla.
 
 Mluvila dlouho. Ilona psala.
 
-Psala, jak se Dorota narodila: v únoru, na svatou Dorotu, v roce, kdy byla dlouhá zima a vlci chodili až k haldám, a proto Dorota. Jak byla malá a hubená a nikdy nebyla nemocná. Jak uměla zpívat, víc než ostatní děti, vysoko, čistě, a jak ji kantor chtěl do kostela, ale holky do kostela zpívat nesmějí. Jak měla vlasy světlé, skoro bílé, *jako len, po nikom z nás*. Jak se bála tmy a nebála se lesa.
+Psala, jak se Dorota narodila: v únoru, na svatou Dorotu, a proto Dorota, v roce, kdy byla dlouhá zima a vlci chodili až k haldám. Jak byla malá a hubená a nikdy nebyla nemocná. Jak uměla zpívat, líp než ostatní děti, vysoko, čistě, a jak ji kantor chtěl do kostela, ale holky do kostela zpívat nesmějí. Jak měla vlasy světlé, skoro bílé, *jako len, po nikom z nás*. Jak se bála tmy a nebála se lesa.
 
 „V srpnu,“ řekla Markéta. „Na svatého Vavřince. Šla s Bárou od Seidlů na borůvky, nahoru, do buků nad údolím, kde se cesta dělí a jedna jde k Božímu Daru. Chodily tam každé léto. Bylo jí deset. Bára byla o rok starší.“
 
@@ -198,7 +198,7 @@ Děvečka se vrátila pro další vědra. Vylila je taky. Pak třetí pár.
 
 Žádný soudek. Žádné šlehání. Muž v plášti nepřišel. Ilona stála u struhy, dokud nebyla úplná tma, a poslouchala, jestli neuslyší kroky v uličce, a slyšela jen potok.
 
-Doma pod první řádek tabulky napsala druhý. *Sobota 27. května.* Nalevo: *asi devatenáct misek, ± 2.* Napravo: *všechno, do struhy, viděno. Krev sražená, nešlehaná. Potok pod mostem červený. Soudek žádný, nikdo nepřišel.*
+Doma pod první řádek tabulky napsala druhý. *Sobota 27. května.* Nalevo: *asi devatenáct misek, o dvě víc nebo míň.* Napravo: *všechno, do struhy, viděno. Krev sražená, nešlehaná. Potok pod mostem červený. Soudek žádný, nikdo nepřišel.*
 
 A pod čáru, sama pro sebe: *Mistr Jobst začal vylévat krev v týdnu, kdy umřela Lene.*
 
@@ -212,7 +212,9 @@ Markéta to nenabízela. Ilona se zeptala, a Markéta chvíli mlčela a pak řek
 
 Šly dlouho. Údolím nahoru, kolem posledních hald, kolem šachet, kde se v neděli nepracovalo a kde rumpály stály jako šibenice bez oběšenců. Pak lesem. Nejdřív smrky, temné, s kořeny přes cestu, pak buky, a v bučině bylo světlo zelené a teplé a ticho tak hluboké, že Ilona slyšela svůj dech. Markéta šla rychle a nemluvila. Jen jednou se zastavila, na místě, kde se cesta dělila a jedna stezka uhýbala doleva, k hřebenům a k Božímu Daru, a řekla: „Tady šly doprava.“
 
-Studánka byla v mělkém dolíku pod bukem tak starým, že měl kůru jako slonovinu a kořeny jako prsty, které svírají kámen. Voda vyvěrala zpod plochého kamene, čirá a studená, a stékala do malé nádržky, kterou kdosi před dávnými lety vyzdil z plochých kamenů. Z nádržky odtékala potůčkem do kapradí. Nad studánkou, na kmeni, byl vyřezaný křížek, starý, tak zarostlý kůrou, že byl sotva vidět.
+Studánka byla v mělkém dolíku pod bukem tak starým, že měl kůru jako slonovinu a kořeny jako prsty, které svírají kámen. Voda vyvěrala zpod plochého kamene, čirá a studená, a stékala do malé nádržky, kterou kdosi před dávnými lety vyzdil z kamenů. Z nádržky odtékala potůčkem do kapradí. Nad studánkou, na kmeni, byl vyřezaný křížek, starý, tak zarostlý kůrou, že byl sotva vidět.
+
+![Studánka v bučině](obrazky/06_marketa.webp)
 
 Vedle nádržky ležel větší kámen, plochý a suchý, s mechem po okrajích. Na něm leželo plátno.
 
@@ -268,7 +270,7 @@ A otočila se a šla dolů, rychle, jak přišla, a Ilona šla za ní a neohléd
 
 *
 
-V noci klepal Kilián. Tři rány a pauza a tři rány. Ilona ho slyšela, protože nespala, a protože ho čekala, i když nevěděla, že ho čeká.
+V noci klepal Kilián. Tři rány a odmlka a tři rány. Ilona ho slyšela, protože nespala, a protože ho čekala, i když nevěděla, že ho čeká.
 
 Havíři od horního úřadu stáli před předními dveřmi do ulice. Zadní dveře do zahrádky nehlídal nikdo.
 
@@ -298,7 +300,7 @@ Kilián dlouho mlčel. Pak sundal klobouk, poprvé, co stál na prahu, a Ilona v
 
 Kilián si nasadil klobouk.
 
-„Ve středu,“ řekl. „Až zajde měsíc. Oblečte si něco tmavého a boty, ve kterých se dá chodit po vodě. A nic si s sebou neberte. Ani sešit.“
+„Ve středu,“ řekl. „Než vyjde měsíc. Oblečte si něco tmavého a boty, ve kterých se dá chodit po vodě. A nic si s sebou neberte. Ani sešit.“
 
 A byl pryč, dřív než mohla říct, že sešit nosí vždycky.
 

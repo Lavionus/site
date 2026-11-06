@@ -38,7 +38,7 @@ Prostor byl dlouhý a nízký. Po obou stranách stála lůžka ve třech patrec
 
 Tio ležela naproti, v dolním patře, v lůžku kratším než ostatní. Řemeny měla pořád zapnuté. Plakala se zavřenýma očima a volala mámu.
 
-Eren se k ní doplazil po kolenou. Přezka byla jednoduchá, palcem dolů a od sebe; zapínal ji sám, v hale, a Tio se přitom smála, protože ji to lechtalo. Teď ji nemohl rozepnout. Prsty nedržely. Opřel o přezku celou dlaň a tlačil, až kov povolil. Pak druhou. Vytáhl Tio z lůžka a přitiskl si ji k hrudi. Byla studená a lehká. Lehčí, než si ji pamatoval.
+Eren se k ní doplazil po kolenou. Přezka byla jednoduchá, palcem dolů a od sebe; zapínal ji sám, v hale, a Tio se přitom smála, protože ji to lechtalo. Teď ji nemohl rozepnout. Prsty nedržely. Opřel o přezku celou dlaň a tlačil, až kov povolil. Pak druhou přezku. Vytáhl Tio z lůžka a přitiskl si ji k hrudi. Byla studená a lehká. Lehčí, než si ji pamatoval.
 
 „Mami,“ řekla mu do krku. „Mami.“
 
@@ -50,7 +50,7 @@ Maela ležela nad Tio, v prostředním patře, a zvracela přes okraj. Nad ní s
 
 Eren přikývl. Žena přikývla taky, jako by si sama potvrzovala, že tohle aspoň ví. Rozhlédla se po lidech, kteří padali z lůžek, a Eren v její tváři uviděl něco, co znal ze směn, kdy nebylo dost rukou. Kde začít.
 
-Maela se přestala dávit a otočila hlavu. Oči měla zarudlé a pod nimi tmavé kruhy. Bez vlasů vypadala mladší, ostřejší, jako náčrt sebe sama. Podívala se na Tio v jeho náručí. Teprve potom na něj.
+Maela se přestala dávit a otočila hlavu. Oči měla zarudlé a pod nimi tmavé kruhy. S hlavou ostříhanou na strniště vypadala mladší, ostřejší, jako náčrt sebe sama. Podívala se na Tio v jeho náručí. Teprve potom na něj.
 
 „Dýchá?“ zeptala se.
 
@@ -86,7 +86,7 @@ Ticho, a pak, stejným hlasem a stejně klidně: „Modul čtyři. Oblast šest.
 
 Začalo to znovu od začátku.
 
-Někdo začal počítat nahlas: jedna, dvě, tři. Eren nepochopil, co počítá, dokud nedošel ke dvanácti a nezačal znovu. Lidé po sobě pokukovali. Tři sta dvanáct. Kolik jich je tady, v téhle dlouhé rudé místnosti? Nikdo to nevěděl. Doma by to věděl každý, aniž by se díval.
+Někdo začal počítat nahlas: jedna, dvě, tři. Eren nepochopil, co počítá, dokud ten člověk nedošel ke dvanácti a nezačal znovu. Lidé po sobě pokukovali. Tři sta dvanáct. Kolik jich je tady, v téhle dlouhé rudé místnosti? Nikdo to nevěděl. Doma by to věděl každý, aniž by se díval.
 
 Tio přestala plakat. Poslouchala hlas se staženými rameny a pak se zeptala, co je kolébka.
 
@@ -148,7 +148,7 @@ Klesala tak pomalu, že se zdálo, že stojí, dokud je člověk nesrovnal s hv�
 
 Eren je počítal. Udělal to dřív, než si uvědomil, že to dělá; počítal všechno, co svítilo. Tři. Hlas říkal modul čtyři. Jeden, dva, tři už musely být dole, někde ve tmě, kterou neviděl. Čtyři byli oni. Tihle tři ještě ne.
 
-Sedm, pomyslel si. Je nás sedm.
+Sedm, pomyslel si. Nejmíň sedm.
 
 „Lodě,“ řekla Maela. Stála vedle něj a pořád se opírala o tu ženu. Hlas měla chraplavý od zvracení. „To jsou lodě jako naše.“
 
@@ -156,7 +156,7 @@ Sedm, pomyslel si. Je nás sedm.
 
 „Kolik lidí je v jednom?“
 
-Maela se ptala, protože se ptala vždycky. Počítala zásoby pro habitat o osmnácti tisících lidech a nikdy se nespokojila s číslem, které nebylo celé. Eren řekl, že tři sta, čtyři sta, a cítil, jak si to v hlavě násobí.
+Maela se ptala, protože se ptala vždycky. Počítala zásoby pro habitat o osmnácti tisících lidí a nikdy se nespokojila s číslem, které nebylo přesné. Eren řekl, že tři sta, čtyři sta, a cítil, jak si to v hlavě násobí.
 
 To světlo nad nimi kleslo za hřbet, který se černě rýsoval proti hvězdám, a zmizelo. Nebylo slyšet nic. Druhé, vpravo, kleslo až k zemi a krátce ozářilo kus kraje: svah, něco tmavého a zubatého na něm, něco, co se zalesklo jako voda. Pak zhaslo i to. Šla dolů tak, jak šli dolů oni, a Eren si vzpomněl, že sestup necítil. Spal. Stroj ho položil na zem jako balík a on se probudil, až když bylo hotovo.
 
@@ -180,7 +180,7 @@ Nejdřív bíle, krátce a ostře, takže hřeben na okamžik vystoupil z noci c
 
 Eren začal počítat.
 
-Nepočítal nahlas. Počítal v duchu, tak jak ho to kdysi naučili, ještě v učení, než měl implantát s hodinami: jedna, a dvě, a tři, každé číslo s tou malou výplní mezi sebou, aby trvalo vteřinu. Zvuk jde vzduchem, který se dá dýchat, asi tři sta čtyřicet metrů za vteřinu. To věděl. Tohle si nepamatovala síť. Tohle si pamatoval on.
+Nepočítal nahlas. Počítal v duchu, tak jak ho to kdysi naučili, ještě v učení, než měl implantát s hodinami: jedna, a dvě, a tři, s tou malou výplní mezi čísly, aby každé trvalo vteřinu. Zvuk jde vzduchem, který se dá dýchat, asi tři sta čtyřicet metrů za vteřinu. To věděl. Tohle si nepamatovala síť. Tohle si pamatoval on.
 
 Okolo něj se lidé hýbali a mluvili. Někdo plakal. Maela něco říkala té ženě. Eren počítal.
 
@@ -194,7 +194,7 @@ Pak si zapamatoval zářez.
 
 Stál na místě a hleděl na hřeben, dokud ten tvar neměl v očích. Dva vrcholy, levý vyšší a zaoblený, pravý užší. Mezi nimi zářez, hluboký a pravoúhlý. Vypadal jako mezera v ozubeném kole, kterému někdo vylomil zub. Ozubená kola viděl v muzeu techniky, když byl malý. Celé dopoledne tam stál u jednoho stroje, který nedělal nic jiného, než že točil koly za sklem, a otec ho odtamtud nemohl odtáhnout.
 
-Pod nohama nahmatal kámen, velký jako pěst. Položil ho na zem špičkou boty. Druhý o dva kroky dál, tak, aby oba ležely v jedné čáře se zářezem. Musel se při tom předklonit s Tio v náručí a Tio si stěžovala, že ji mačká. Narovnal se a zaměřil to znovu. Kameny ležely v čáře. Záře za horami pořád dýchala.
+Pod nohama nahmatal kámen, velký jako pěst. Položil ho na zem přímo před špičku boty. Druhý o dva kroky dál, tak, aby oba ležely v jedné čáře se zářezem. Musel se při tom předklonit s Tio v náručí a Tio si stěžovala, že ji mačká. Narovnal se a zaměřil to znovu. Kameny ležely v čáře. Záře za horami pořád dýchala.
 
 Když zvedl hlavu, uviděl ještě jedno světlo. Vysoko, mnohem výš, než klesaly moduly, slabé jako hvězda, kterou člověk zahlédne jen koutkem oka. Nepadalo. Táhlo se mezi hvězdami napříč, pomalu a rovně, někam, kam nevedlo nic z toho, co tu znal. Eren ho sledoval, dokud ho neztratil. Pak si nebyl jistý, jestli ho viděl.
 
@@ -264,7 +264,7 @@ Byl to drobný zvuk, nepravidelný: tik, a za chvíli tik, a pak dvakrát rychle
 
 Ale ostatní zvuky přicházely stejně.
 
-Vítr. Ten znal jen jako slovo a jako proud z vyústky. Tenhle nefoukal odnikud. Přicházel ze tmy, na chvíli zesílil a utichl, a zase se vrátil, a nesl s sebou suchý šelest, jako když se dvě fólie třou o sebe. Pak jiný zvuk, z dálky, z místa, kde ležely ty zubaté tmavé věci na svahu. Krátký a vysoký, skoro jako smích, a hned znovu, a pak ho opakovaly dva, tři hlasy, které nebyly lidské. Někdo vedle něj zatajil dech. Hlasy utichly. Za chvíli se ozvaly dál, pak už vůbec.
+Vítr. Ten znal jen jako slovo a jako proud z vyústky. Tenhle nefoukal odnikud. Přicházel ze tmy, na chvíli zesílil a utichl, a zase se vrátil, a nesl s sebou suchý šelest, jako když se dvě fólie třou o sebe. Pak jiný zvuk, z dálky, z místa, kde ležely ty zubaté tmavé věci na svahu. Krátký a vysoký, skoro jako smích, a hned znovu, a pak ho opakovaly dva, tři hlasy, které nebyly lidské. Někdo vedle něj zatajil dech. Hlasy utichly. Za chvíli se ozvaly dál, pak už vůbec ne.
 
 Eren se k síti obrátil, aniž chtěl. *Co to je?* Nic. Pak se obrátil znovu, protože mu byla zima a chtěl vědět, kolik stupňů. Nic. Pak se obrátil, protože se Tio zachvěla a on chtěl vědět, jestli má horečku. Nic, nic, nic. Do rána to udělal snad stokrát. Pokaždé ten malý pohyb v hlavě a pokaždé ruka, která projde vzduchem. Nedokázal s tím přestat. Ten pohyb byl starší než rozhodnutí.
 

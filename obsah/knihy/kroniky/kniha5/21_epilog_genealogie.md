@@ -2,7 +2,7 @@
 
 Poslední noc, kdy kniha ležela v Kozí uličce, nepršelo.
 
-Sael otevřela okno do dvora. Srpen byl suchý a teplý a do dílny šla vůně z pekárny o dva domy dál, kde se začínalo péct ve dvě. Nikdy si jí nevšimla. Dvaadvacet let tu pracovala s okny zavřenými kvůli prachu a vlhku a kvůli papíru. Dnes papíru už nic nehrozilo. Zítra v devět si pro něj přijdou.
+Sael otevřela okno do dvora. Srpen byl suchý a teplý a do dílny šla vůně z pekárny o dva domy dál, kde se začínalo péct ve dvě. Nikdy si jí nevšimla. Dvaadvacet let tu pracovala s okny zavřenými kvůli prachu a vlhku a kvůli papíru. Dnes papíru už nic nehrozilo. Zítra v devět ho odnesou do archivu.
 
 Jedenáct balíků stálo u dveří, v krabicích z nekyselé lepenky, které sama nařezala a slepila podle míry každého svazku. Na každé visačka jejím písmem a pod ní druhá, archivní, s číslem deponátu, kterou tam ve čtvrtek nalepila Šindelářová. Dvě písma na jedné krabici. Sael si toho všimla až potom, co Šindelářová odešla, a chvíli se na to dívala.
 
@@ -12,7 +12,7 @@ Na stole ležel jen poslední svazek. Ten, který založila Rokyta v zimě po v�
 
 Otevřela ho na poslední popsané stránce.
 
-Václav. Světlo ze čtrnáctého ledna, *aliunde* latinkou. Řádek ze čtvrtého března, kdy otevřela knihu před denní ženou. Řádek ze čtyřiadvacátého dubna, s *W.* a znakem lovce a se zdvojeným ohybem. Pod tím ještě narození. Dvě, v květnu, obě v Sasku, u Ladiny sestry, kam Ostří odešli. Sael je zapsala v noci, jak se má, ze zpráv, které jí poslala Lada. Holčička a chlapec. Lada jí do telefonu nadiktovala jména a pak řekla: *A napiš, že se narodili nahoře. Poprvé.*
+Václav. Světlo ze čtrnáctého ledna, *aliunde* latinkou. Jonáš z února. Řádek ze čtvrtého března, kdy otevřela knihu před denní ženou, a kratší z devátého dubna, kdy ji před ní otevřela podruhé. Řádek ze čtyřiadvacátého dubna, s *W.* a znakem lovce a se zdvojeným ohybem. Pod tím ještě narození. Dvě, v květnu, obě v Sasku, u Ladiny sestry, kam Ostří odešli. Sael je zapsala v noci, jak se má, ze zpráv, které jí poslala Lada. Holčička a chlapec. Lada jí do telefonu nadiktovala jména a pak řekla: *A napiš, že se narodili nahoře. Poprvé.*
 
 Sael to napsala.
 
@@ -65,7 +65,7 @@ Zbýval jeden řádek.
 
 Na ten myslela od července. Od noci ve světnici statku, kdy Benedikt zpoza lampy řekl *Komu ho předáš ty?* a ona řekla *nikomu*. Na papíře to bylo jiné. Na papíře se to nedalo vzít zpátky.
 
-Před čtyřmi sty pětatřiceti lety to bylo jinak. Sael ten list znala. Jívina ruka tam končí a začíná Svídina. Svída podepsala znakem Merin, stejný tah, jiná ruka, a inkoust se jí v ohybu zdvojil, protože se bála. *To jméno nosí ten, kdo pamatuje*, říkalo se od Aurel, a možná ještě dřív. A Jíva se pak vrátila ke svému jménu, ke keři u potoka, a v knize už ji psali jen tak.
+Před čtyřmi sty pětatřiceti lety to bylo jinak. Sael ten list znala. Jívina ruka tam končí a začíná Svídina. Svída podepsala znakem Merin, stejný tah, jiná ruka, a inkoust se jí v ohybu zdvojil, jako by pero zaváhalo, jestli smí. *To jméno nosí ten, kdo pamatuje*, říkalo se od Aurel, a možná ještě dřív. A Jíva se pak vrátila ke svému jménu, ke keři u potoka, a v knize už ji psali jen tak.
 
 Sael namočila pero.
 
@@ -107,7 +107,7 @@ Inkoust schnul dlouho. Sael nefoukala. Nikdy nefoukala, foukat se nesmí, papír
 
 Za dveřmi do kuchyně bylo ticho. Javor spal, nebo nespal a neposlouchal. Ráno půjde s ní do archivu nést krabice, protože to chtěl. *Sem ji nesl Tadeáš*, řekl, *odsud ji ponesu já.* Olše přijede autobusem v sedm. Lada nepřijede. Lada je v Sasku a řekla do telefonu: *Já tu knihu číst neumím. Ale až ji budete otvírat, chci tam být.* Agnes přinese Benediktův vzkaz, protože Benedikt ve dne nepřijde. Hronková pošle úřednici a ta sepíše, co se předává a komu.
 
-A ta žena tam nebude. Hana. Řekla to v telefonu sama, když jí Sael den předala. *To není moje. Já bych tam jen stála.* A Sael tehdy pomyslela, že ještě v lednu by si přála přesně tohle. Aby tam ta denní žena nestála. Teď by chtěla, aby stála. Vzadu.
+A ta žena tam nebude. Hana. Řekla to v telefonu sama, když jí Sael řekla den předání. *To není moje. Já bych tam jen stála.* A Sael tehdy pomyslela, že ještě v lednu by si přála přesně tohle. Aby tam ta denní žena nestála. Teď by chtěla, aby stála. Vzadu.
 
 Když inkoust zaschl, vzala z police čisté plátno. Složila ho napůl. Ještě jednou napůl. Na čtyřikrát.
 
@@ -143,6 +143,6 @@ Sael si sedla naproti.
 
 „Jménem,“ řekla.
 
-Javor kývl až po chvíli, pomalu, jako starý strom ve větru, který už není silný.
+Javor kývl až po chvíli, pomalu, jako ve větru starý strom, který už není silný.
 
 „Tak to ti zůstane,“ řekl.

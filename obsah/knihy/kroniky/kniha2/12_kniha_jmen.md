@@ -2,7 +2,7 @@
 
 V sobotu v poledne bylo v lázni sedm žen, a čtyři z nich přišly jen se umýt.
 
-Ilona seděla na lavici v rohu s nohama ve vědru a počítala. Jobst pustil třem. Jedné staré, která chodila každou sobotu, dokud si pamatovala, a dvěma mladým, které přišly spolu a držely se za ruce. Misky stály na polici u kotle. Tři. Možná čtyři, jedna byla menší a Ilona neviděla, jestli je plná.
+Ilona seděla na lavici v rohu s nohama ve vědru a počítala. Jobst pustil krev třem. Jedné staré, která chodila každou sobotu, co si pamatovala, a dvěma mladým, které přišly spolu a držely se za ruce. Misky stály na polici u kotle. Tři. Možná čtyři, jedna byla menší a Ilona neviděla, jestli je plná.
 
 Jobst se na ni celou dobu nepodíval. Až když odcházela, když už stála ve dveřích s mokrými vlasy pod šátkem, zastoupil jí cestu. Byl o hlavu menší než ona a díval se nahoru, malýma modrýma očima, a v červené tváři měl něco, co tam Ilona nikdy neviděla. Strach.
 
@@ -38,7 +38,7 @@ Ne vzadu. Vepředu, do ulice, kde stáli havíři od horního úřadu. Havíři 
 
 Florian stál na prahu s lucernou a s rukou, na které ještě měl zarůžovělou kůži po páře, a lapal po dechu, jako by běžel celou cestu do kopce.
 
-„Mistr,“ řekl. „Má tvář. Takhle.“ Ukázal si dlaní kus od tváře, tak daleko, že to vypadalo jako vtip. „Od středy ho bolí zub. Dneska mu natekla tvář, a teď už nemůže otevřít pusu, a má horečku, a třese se. Byl jsem u Jobsta. Jobst neotevřel. Řekl přes dveře, že ani za zlatý. Mistr řekl, ať jdu pro vás. Že vy pouštíte čistě.“
+„Mistr,“ řekl. „Má tvář. Takhle.“ Ukázal si dlaní kus od tváře, tak daleko, že to vypadalo jako žert. „Od středy ho bolí zub. Dneska mu natekla tvář, a teď už nemůže otevřít pusu, a má horečku, a třese se. Byl jsem u Jobsta. Jobst neotevřel. Řekl přes dveře, že ani za zlatý. Mistr řekl, ať jdu pro vás. Že vy pouštíte čistě.“
 
 Ilona stála u stolu. Pod rukou měla tři lázeňské listy.
 
@@ -224,7 +224,7 @@ Ilona čekala, co řekne.
 
 Florian sklopil oči ke své ruce, k růžové kůži.
 
-„Já nosil soudek,“ řekl. „Jenom soudek. Z lázně na dvůr. Nic jiného.“ Polkl. „Lene mi dala jednou hrušku.“
+„Já nosil soudek,“ řekl. „Jenom soudek. Z lázně na dvůr, když mistr nemohl. V sobotu večer chodil mistr sám. Nic jiného.“ Polkl. „Lene mi dala jednou hrušku. Ve středu, za světla.“
 
 Pak se otočil k posteli a namočil hadr do vědra a už se na ni nepodíval.
 
@@ -242,7 +242,7 @@ Veit kývl, spokojeně, jako by si to zapsal. Ilona šla dál a cítila brašnu 
 
 Doma zamkla přední i zadní dveře. Havíři před domem spali. Zatáhla okenice. Zapálila svíčku, jednu, a postavila ji na stůl a vedle ní položila knihu.
 
-Spona byla zamčená. Mosazná, jemná práce, s malou klíčovou dírkou. Pak vzala nejtenčí lancetu, tu, kterou Röhrichovi řezala dáseň, a prořízla kožený řemínek, který sponu držel na zadní desce. Šel snadno. Byl starý.
+Spona byla zamčená. Mosazná, jemná práce, s malou klíčovou dírkou. Vzala tedy nejtenčí lancetu, tu, kterou Röhrichovi řezala dáseň, a prořízla kožený řemínek, který sponu držel na zadní desce. Šel snadno. Byl starý.
 
 Otevřela.
 
@@ -396,13 +396,15 @@ Kolébka byla na půdě.
 
 Řehoř ji udělal z třešňového dřeva tu zimu, kdy byla Ilona těhotná. Na čelo kolébky vyřezal ptáka. Chtěl pelikána, ale neuměl ho, a vyšel mu z toho čáp. Syn v ní ležel tři dny. Pak ji Řehoř přikryl pytlem a převezl ji s sebou až sem, a tady ji odnesl na půdu, pod krokve, a ani jeden z nich ten pytel od té doby nezvedl.
 
+![Kolébka na půdě](obrazky/12_kniha_jmen.webp)
+
 Ilona ho zvedla.
 
 Kolébka byla zaprášená. Uvnitř ležela ještě slamníková podložka, malá, a na ní nic. Ilona do ní položila knihu. Černou, s prořízlým řemínkem. Pak sešla dolů k truhle a ze dna, zpod Řehořových košil, vzala Markétinu úplnou výpověď, tu s Bárou a se studánkou a s plátnem na čtyřikrát. Vynesla ji nahoru a položila ji na knihu. A přikryla to všechno pytlem.
 
 Babky v lázni vykládaly, že když vezmou dítě, nechají v kolébce polínko. Aby si matka myslela, že má pořád co houpat.
 
-Ilona stála pod krokvemi nad kolébkou přikrytou pytlem a myslela na to, že v její kolébce teď leží to jediné, co by mohlo ukázat, kde jsou vzaté děti. A že tam to leží proto, aby je nikdo nenašel.
+Ilona stála pod krokvemi nad kolébkou přikrytou pytlem a myslela na to, že v její kolébce teď leží to jediné, co by mohlo ukázat, kde jsou vzaté děti. A že to tam leží proto, aby je nikdo nenašel.
 
 *
 
@@ -414,7 +416,7 @@ Mladší kazatel kázal o Jidášovi. O stříbrných, o poli krve. *Haceldama*,
 
 Röhrich přišel pozdě. S levou tváří ovázanou šátkem přes hlavu, jako ženy, když je bolí zuby, a s Florianem za zády. Sedl si dopředu, do lavice, která patřila jeho cechu, a ani jednou se neohlédl.
 
-Po kázání se lidé na náměstí rozcházeli, stáli v hloučcích a mluvili o počasí, o razii a o tom, že rychtář koupil nové psy z Lokte. Röhrich se otočil.
+Po kázání se lidé na náměstí rozcházeli, stáli v hloučcích a mluvili o počasí, o honbě a o tom, že rychtář koupil nové psy z Lokte. Röhrich se otočil.
 
 Přešel náměstí. Pomalu. Lidé mu ustupovali, protože byl lékárník, a protože měl ovázanou tvář. Zastavil se před Ilonou, tak blízko, že cítila hřebíček. Hřebíček a myrhu. A pod tím ještě něco, ten nasládlý pach rány, která se hojí.
 
@@ -438,13 +440,13 @@ Pak se uklonil, lehce, jako měšťan měšťance, a šel zpátky přes náměst
 
 V pondělí ráno přinesl Wehrlův sluha psaníčko.
 
-Zapečetěné. Pečeť s kladívkem a želízkem a s malou hvězdou nad nimi, které si Ilona předtím nikdy nevšimla. Písmo úhledné, humanistické, s dlouhými tahy.
+Zapečetěné. Pečeť s kladívkem a želízkem a s malou hvězdou nad nimi, které si Ilona předtím nikdy nevšimla. Písmo úhledné, latinské, s dlouhými tahy.
 
 *Milá paní Ilono, rád bych s Vámi zítra večer mluvil o hvězdách a o jiných věcech, které čekají. Přijďte, prosím, po klekání. Slyšel jsem, že jste v noci na neděli zachránila lékárníkovi život. Je to od Vás šlechetné. Ne každý by to udělal. — H. W.*
 
 Ilona stála ve dveřích s tím papírem v ruce. Havíři před domem se na ni dívali.
 
-*Slyšel jsem.* Od koho? Od Veita, který sedí pod podloubím a zívá. Od Floriana. Od lékárníka samotného, s ovázanou tváří, ještě v neděli.
+*Slyšel jsem.* Od koho? Od havířů před domem, samozřejmě. Ale havíři nevědí, že jsem mu zachránila život. Vědí jen, že jsem šla. Od Veita, který sedí pod podloubím a zívá. Od Floriana. Od lékárníka samotného, s ovázanou tváří, ještě v neděli.
 
 *H. W.*
 

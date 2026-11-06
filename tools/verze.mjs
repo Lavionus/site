@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /* Vygeneruje verze.js: verzi webu (číslo cache ze sw.js) a verzi každé stránky z katalogu
    = počet commitů, které změnily obsah/<x>.html nebo složku obsah/<x>/ (+1, je-li změna
-   ještě necommitovaná). Spouští ho upload.sh před commitem, ručně: node tools/verze.mjs */
+   ještě necommitovaná). Spouští ho upload.sh před commitem, ručně: node tools/verze.mjs
+
+   Úklid historie (GitHubCleaning.sh) sloučí commity – počty by spadly na 1. Proto si předtím
+   nechá uložit tools/verze_zaklad.json (node tools/verze.mjs --zaklad) a k němu se pak přičítají
+   jen commity po úklidu; commity úklidu (zpráva začíná „[uklid]“) se nepočítají. */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -26,14 +30,32 @@ const stranka = f => {
   return slozka && (veSlozce.get(slozka) || `obsah/${slozka}.html`);
 };
 
+const ZAKLAD = KOREN + 'tools/verze_zaklad.json';
+let zaklad = {};
+try { zaklad = JSON.parse(readFileSync(ZAKLAD, 'utf8')); } catch { /* bez úklidu žádný základ */ }
+
 const pocet = {}, datum = {};
 // %x01 odděluje commity; --no-renames: přejmenování = smazání + přidání
-for (const c of git('log', '--no-renames', '--name-only', '--format=%x01%ad', '--date=short', '--', 'obsah').split('\x01').slice(1)) {
-  const [d, ...soubory] = c.trim().split('\n');
+for (const c of git('log', '--no-renames', '--name-only', '--format=%x01%ad%x02%s', '--date=short', '--', 'obsah').split('\x01').slice(1)) {
+  const [hlava, ...soubory] = c.trim().split('\n');
+  const [d, zprava] = hlava.split('\x02');
+  if (zprava.startsWith('[uklid]')) continue;
   for (const s of new Set(soubory.map(stranka).filter(Boolean))) {
     pocet[s] = (pocet[s] || 0) + 1;
     if (!datum[s]) datum[s] = d;   // log jde od nejnovějšího
   }
+}
+for (const [s, [n, d]] of Object.entries(zaklad)) {
+  pocet[s] = (pocet[s] || 0) + n;
+  if (!datum[s]) datum[s] = d;
+}
+if (process.argv.includes('--zaklad')) {
+  // jen commitnutý stav – necommitované změny do základu nepatří
+  const z = {};
+  for (const s of Object.keys(pocet).sort()) z[s] = [pocet[s], datum[s]];
+  writeFileSync(ZAKLAD, JSON.stringify(z, null, 0).replace(/\],"/g, '],\n"') + '\n');
+  console.log(`verze_zaklad.json: ${Object.keys(z).length} stránek`);
+  process.exit(0);
 }
 const dnes = new Date().toISOString().slice(0, 10);
 const zmenene = new Set(git('status', '--porcelain', '-z', '--untracked-files=all', '--', 'obsah').split('\0')

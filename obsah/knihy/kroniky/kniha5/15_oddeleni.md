@@ -20,13 +20,13 @@ Pak začne vykládat.
 
 Všechno, co má. Nejdřív na hromadu na třetí stůl, bez pořádku, tak jak to vytahuje z batohu, z krabice od potápěčských bot a z obálek. Pak kus po kusu.
 
-Video z noci na třetího března. Čtyřicet sedm minut, čas z družic v záběru. A Tadeášovy noci od dvanáctého března, každá jedna složka, každá s datem. Na žádném záznamu není tvář. Na žádném není chodba. Jen skála, světlo, tečky, mřížky a tlukot. To byla podmínka rady a Hana ji dodržela, i když ji to stálo dva lepší záběry.
+Video z noci na třetího března. Čtyřicet sedm minut, čas z družic v záběru. A Tadeášovy noci od dvanáctého března, každá ve své složce, každá s datem. Na žádném záznamu není tvář. Na žádném není chodba. Jen skála, světlo, tečky, mřížky a tlukot. To byla podmínka rady a Hana ji dodržela, i když ji to stálo dva lepší záběry.
 
 Položí to na levý stůl.
 
 Pak se zarazí. Vezme to zpátky.
 
-Na záznamníku, který stál v záběru, je čas z družic. A pod časem, malým písmem, poloha. Tři desetinná místa. Družice chytala anténa, kterou Kalina vyvedl kabelem po schodech nahoru, takže poloha ukazuje statek přímo nad síní. Hana na to tehdy nemyslela. Myslela na to, aby čas byl nezpochybnitelný. Poloha k času patřila, protože čas z družic a poloha jsou jedno a totéž.
+Na záznamníku, který stál v záběru, je čas z družic. A pod časem, malým písmem, poloha. Tři desetinná místa. Družice chytala anténa, kterou Kalina vyvedl kabelem po schodech nahoru, takže poloha ukazuje statek, pod kterým je vchod. Hana na to tehdy nemyslela. Myslela na to, aby čas byl nezpochybnitelný. Poloha k času patřila, protože čas z družic a poloha jsou jedno a totéž.
 
 Kdo pustí ten záznam do světa, pustí do světa i místo.
 
@@ -68,7 +68,7 @@ Lada mlčí dlouho. V pozadí hučí čerpadlo.
 
 *
 
-Kalinova data. Hana je má všechna. Od února si je s ním každý večer posílají, jeho k ní a její k němu. Rádiový šum, posuv frekvence, pulzy, zpoždění čtyři celá dvě sekundy po každé skupině zdroje. To poslední změřili spolu, u skály, s jeho smyčkou a jejím časem.
+Kalinova data. Hana je má všechna. Od února si je každý večer posílají, jeho k ní a její k němu. Rádiový šum, posuv frekvence, pulzy, zpoždění čtyři celá dvě sekundy po každé skupině zdroje. To poslední změřili spolu, u skály, s jeho smyčkou a jejím časem.
 
 Zbytek je jeho. Hana ho nedá na žádný stůl. Dá ho do krabice pod stolem a na krabici napíše *T. K. – jeho*.
 
@@ -94,7 +94,7 @@ Daniela Fuchsová to vyřídí za dvě minuty. Mřížky, číslovky, osm skupin
 
 Opis.
 
-Hana má fotky. Ne textu. Papíru. Vodoznak medvěd v průsvitu lampy. Řetězové čáry. Koroze inkoustu v tazích, hnědé svatozáře kolem písmen, které se pomalu propalují papírem. A roh. Třetí list, dolní pravý roh, celý, s konci tří řádků, které ve spisu v Karlových Varech chybějí, protože tam je roh utržený a ohlodaný. A vedle fotka hrany lomu na originálu, se zbytky tahů, které na opis sedí.
+Hana má fotky. Ne textu. Papíru. Vodoznak s medvědem v průsvitu lampy. Řetězové čáry. Koroze inkoustu v tazích, hnědé svatozáře kolem písmen, které se pomalu propalují papírem. A roh. Třetí list, dolní pravý roh, celý, s konci tří řádků, které ve spisu v Karlových Varech chybějí, protože tam je roh utržený a ohlodaný. A vedle fotka hrany lomu na originálu, se zbytky tahů, které na opis sedí.
 
 *Papír je náš doklad, ne naše adresa.*
 
@@ -110,7 +110,7 @@ Musí se jí zeptat.
 
 A pak je tu věta, kvůli které provenienci přepisuje potřetí.
 
-V opisu stojí *dva druhy*. Ilonina slova. Ti, kdo nesnesou slunce a žijí ve štolách, a ti, kdo kupují krev a pak hoří. Hladoví. Hana to v březnu Benediktovi slíbila jedinou větou: *Napíšu, co stojí v prameni.* Nic víc.
+V opisu stojí *dva druhy*. Ilonina slova. Ti, kdo nesnesou slunce a žijí ve štolách, a ti, kdo kupují krev a pak hoří. Hladoví. Hana to v březnu Benediktovi slíbila jedinou větou: *Napíšu, co stojí v opisu.* Nic víc.
 
 Napíše to. *Pramen rozlišuje dvě skupiny. Pisatelka je odlišuje výslovně a opakovaně. Komunita, která opis uchovala, se hlásí k první z nich.*
 
@@ -152,7 +152,7 @@ Není to otázka. Hana na ni přesto odpoví.
 
 Model Sokolové patří Sokolové. Hana ho nedá na žádný stůl, stejně jako Kalinova data. Sokolová ho zveřejní sama, svým jménem, se souhlasem dvanácti dárců, s alternativami a s větou *data nesnesou víc*. Hana na něj bude jen odkazovat.
 
-Klára jí v březnu řekla: *Teď ať je to někde napsaný.* Bude to napsané. Ne u Hany. U té, kdo to spočítala.
+Klára jí v březnu řekla: *Teď ať je to někde napsaný.* Bude to napsané. Ne u Hany. U té, která to spočítala.
 
 *
 
@@ -192,7 +192,7 @@ Waltův lístek se opírá o cukřenku.
 
 *Jména živých netiskněte.*
 
-Walt to nenapsal kvůli Rybovým. Napsal to dva roky předtím, než o nich Hana věděla. Napsal to o všech. I o těch, kdo si to nezaslouží.
+Walt to nenapsal kvůli Rybovým. Napsal to víc než rok předtím, než o nich Hana věděla. Napsal to o všech. I o těch, kdo si to nezaslouží.
 
 Hana vezme čistý list a napíše na něj nahoru: *Pro kpt. K.* Pod to vypíše všechno, co o Konradu Wehrlovi ví. Ne to, co tuší. To, co může doložit, a odkud. A na konec: *Kdo seznam na fórum pustil, nevím. Vím, kdo o něj stál. Doložit to neumím.*
 
@@ -214,7 +214,7 @@ Výsledky dvanácti dárců. Nemá je. Má Sokolová, v šanonu, pod kódy.
 
 A pak její vlastní deník.
 
-Hana ho vytáhne z batohu a položí na pravý stůl. Pak vedle něj kopii z Méridy, tři svazky s razítky. Ty jsou veřejné od roku 2026. Její deník ne.
+Hana ho vytáhne z batohu a položí na pravý stůl. Pak vedle něj kopii z Méridy, tři svazky s razítky. Z nich jsou od roku 2026 veřejné jen dvě stránky a tabulka. Zbytek je její. Její deník není veřejný vůbec.
 
 Otevře ho a listuje.
 
@@ -246,7 +246,7 @@ V neděli večer volá Šindelářové.
 
 Šindelářová chvíli mlčí.
 
-„Paní doktorko,“ řekne pak. „Já jsem v březnu seděla v jednom dřevěném domě u lampy. Viděla jsem tam ruce, které jsem v životě neviděla. Neptala jsem se.“
+„Paní doktorko,“ řekne pak. „Já jsem v březnu seděla v jednom dřevěném domě u lampy. Viděla jsem tam ruce, jaké jsem v životě neviděla. Neptala jsem se.“
 
 „Já vím.“
 
@@ -280,7 +280,7 @@ Dveře v Kozí uličce jí v úterý v sedm otevře muž, kterého Hana nikdy ne
 
 Je vysoký. Vyšší než Sálová, Hana mu sahá sotva po bradu. Velmi starý. Hana to pozná, i když by mu podle tváře nedala víc než osmdesát. Pozná to podle toho, jak stojí. Jako strom, který přežil hodně zim a ví, že ještě pár přežije. Na sobě pletený svetr, na nohou bačkory. V předsíni je šero, a když se k ní otočí, jeho oči na vteřinu vrátí světlo z ulice. Celou zornicí.
 
-„Paní Vrbová,“ řekne. Česky, s přízvukem, který Hana nezná. Starý přízvuk, jako by mluvil jazykem, který se už nemluví. „Javor.“
+„Paní Vrbová,“ řekne. Česky, s přízvukem, který Hana nezná. Starý přízvuk, jako by mluvil jazykem, kterým se už nemluví. „Javor.“
 
 „Dobrý večer.“
 
@@ -432,7 +432,7 @@ Sálová se na tlustou složku nepodívá. Hana jde ke dveřím.
 
 U dveří se zastaví.
 
-„Paní doktorka Šindelářová čeká na vysvětlení,“ řekne. „Od března, od té noci u lampy. Volala mi v neděli. Řekla jsem jí, že to není moje.“
+„Paní doktorka Šindelářová čeká na vysvětlení,“ řekne. „Od března, od té noci u lampy. Mluvila jsem s ní v neděli. Řekla jsem jí, že to není moje.“
 
 „Já vím, čí je,“ řekne Sálová.
 

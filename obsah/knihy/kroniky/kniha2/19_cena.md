@@ -26,7 +26,7 @@ Otevřela mu.
 
 „Pojď dál.“
 
-Vešel a nesedl si. Stál uprostřed světnice, tam, kde stál ráno po Ursulině smrti, když mu chyběla lanceta, a rozhlédl se, jako by tu nikdy nebyl. Pec. Stůl. Truhla. Police na hrnce s mastmi. Hrnce už tam nebyly, Ilona je nechala v rokli, zůstaly jen dva prázdné. Stůl, o který ji v noci natlačil Röhrich s rukou na jejích ústech.
+Vešel a nesedl si. Stál uprostřed světnice, tam, kde stál ráno po Ursulině smrti, když mu chyběla lanceta, a rozhlédl se, jako by tu nikdy nebyl. Pec. Stůl. Truhla. Police na hrnce s mastmi. Hrnce už tam nebyly, Ilona je nechala v rokli, zůstaly jen dva prázdné. Stůl, ke kterému ji v noci přitlačil Röhrich s rukou na jejích ústech.
 
 Podíval se na podlahu u stolu. Byla vydrhnutá. Ilona ji drhla v neděli ráno pískem, celou, a pak si uvědomila, co dělá, a přestala. Tmavá skvrna tam zůstala, protože krev jde do dřeva a z dřeva nejde.
 
@@ -36,7 +36,7 @@ Tobiáš se na tu skvrnu díval.
 
 „Ano.“
 
-„Na šířku nehtu, říkal Jobst.“
+„Na šířku nehtu, říká se po městě.“
 
 „Ano.“
 
@@ -80,7 +80,7 @@ Ilona cítila, jak se jí sevřelo hrdlo. Nebyla to bolest. Byla to hrůza z toh
 
 „Ano.“
 
-„Nikdo se ho neptal kolik. Přísežný se ptal, co bylo v lahvičkách. Ne kolik platil. A on to řekl sám. Čtyři zlaté. Jako by to číslo chtěl říct dřív, než ho řekne někdo jiný.“ Tobiáš se odmlčel. „Nebo jako by věděl, že to číslo už nikde nestojí. Že ho může říct, a nikdo ho nebude moct s ničím srovnat.“
+„Nikdo se ho neptal kolik. Na lahvičky se ptal až potom, a ptal se sám. Ne kolik platil. To řekl sám. Čtyři zlaté. Jako by to číslo chtěl říct dřív, než ho řekne někdo jiný.“ Tobiáš se odmlčel. „Nebo jako by věděl, že to číslo už nikde nestojí. Že ho může říct, a nikdo ho nebude moct s ničím srovnat.“
 
 Ticho.
 
@@ -110,9 +110,9 @@ To mohla říct. To už nebylo nikde napsané a nikdo už nebyl v rokli.
 
 „Čtyřicet lidí.“
 
-„A Lene byla jedna.“ Hlas se mu nezvýšil. To bylo nejhorší. Že se mu nezvýšil. „A Ursula jedna. A ti čtyři, co je v pátek vytáhli na slunce, ti byli čtyři. Táta říkal, že na náměstí smrděli jako škvarky.“
+„A Lene byla jedna.“ Hlas se mu nezvýšil. To bylo nejhorší. Že se mu nezvýšil. „A Ursula jedna. A ti čtyři, co je v pátek vytáhli na slunce, ti byli čtyři. Soused tátovi říkal, že na náměstí smrděli jako škvarky.“
 
-„Říká se,“ řekl Tobiáš, „že rychtář posunul razii na čtvrtou kvůli vám. Že jste mu na radě něco řekla. Že potom šli za světla.“
+„Říká se,“ řekl Tobiáš, „že rychtář posunul honbu na čtvrtou kvůli vám. Že jste mu na radě něco řekla. Že potom šli za světla.“
 
 „Ano.“
 
@@ -234,6 +234,8 @@ Nesla s sebou jen sebe. Brašnu nechala na stole. Šli horem, po stinné straně
 
 Wehrl ležel dole, v přízemí, v komoře, kam mu snesli postel z patra, a s ní globus a pár knih. Okno na sever bylo otevřené a za ním nebe, ještě světlé u obzoru, a nad hřebenem první hvězdy. Na stole knihy, sféry, kostěná krabička. Zelený samet nebyl vidět nikde.
 
+![U perkmistrova lůžka](obrazky/19_cena.webp)
+
 Ležel napůl vsedě, podložený polštáři, a dýchal ústy. Ten hvizd na konci každého výdechu byl teď delší než minule. Když vešla, otočil hlavu, a Ilona viděla, že ho to stojí sílu.
 
 „Paní Ilono,“ řekl. „Posaďte se. Valentine, židli.“
@@ -250,7 +252,7 @@ Hesse jí přisunul židli k posteli. Pak odešel do kouta a zůstal tam stát.
 
 „Nebudete se bránit?“
 
-„Ne.“
+„Ne,“ řekla Ilona.
 
 Wehrl se na ni podíval. Dlouho, tím pohledem, kterým četl zápisy, celé, od prvního řádku.
 
@@ -282,7 +284,7 @@ Ilona mlčela.
 
 Wehrl se zasmál. Tiše, a pak víc, až se smích zlomil v kašel. Kašel trval tak dlouho, že Hesse vykročil z kouta, a Wehrl na něj mávl, ať zůstane. Když přestal, ležel se zavřenýma očima a po spánku mu tekla slza, z kašle nebo z čehokoli.
 
-„Dva týdny,“ řekl. „Dva týdny jsem se bál té knihy. Od noci, kdy jste ji vzala lékárníkovi. Každou noc jsem si představoval, co v ní stojí, řádek po řádku, a jak to čtete. A pak jste ji spálila, a já jsem zachráněný.“ Otevřel oči. „A ani to nebylo kvůli mně. Ani mě jste nevybrala. Byl jsem jen na špatném řádku.“
+„Osm dní,“ řekl. „Osm dní jsem se bál té knihy. Od noci, kdy jste ji vzala lékárníkovi. Každou noc jsem si představoval, co v ní stojí, řádek po řádku, a jak to čtete. A pak jste ji spálila, a já jsem zachráněný.“ Otevřel oči. „A ani to nebylo kvůli mně. Ani mě jste nevybrala. Byl jsem jen na špatném řádku.“
 
 „Na stejném řádku,“ řekla Ilona.
 
@@ -300,7 +302,7 @@ Neodpověděla. Wehrl kývl, pomalu, jako by mu to stačilo.
 
 „Nesmím.“
 
-„Nikdo se to nedozví. Valentin nic neřekne a já tu nebudu dlouho, abych to vyprávěl.“ Odhrnul pokrývku z nohou. „Řekněte mi, kolik.“
+„Nikdo se to nedozví. Valentin nic neřekne a já tu nebudu tak dlouho, abych to stihl vyprávět.“ Odhrnul pokrývku z nohou. „Řekněte mi, kolik.“
 
 Ilona se na jeho nohy dívala.
 
@@ -308,7 +310,7 @@ Byly oteklé od kotníků ke kolenům, lesklé, napjaté, a kůže na nich měla
 
 Zikmund, pomyslela si. Na nosítkách ze dveří, v portálu štoly, s nohama stejnýma. Starý muž, který pamatoval, kdy tu nebylo město. A tady druhý, který nemá ani šedesát a čeká na hvězdy.
 
-Stejný důlek. Stejné srdce, které už nestačí tlačit krev nahoru.
+Stejný důlek. Stejné staré srdce, které už nemá sílu, a voda se sesedá do nohou.
 
 Položila mu ruku na hruď. Pod dlaní cítila srdce, rychlé, nepravidelné, jako krok člověka, který se bojí, že zakopne. Přiložila ucho. Dech chrčel dole v plicích, na obou stranách, jako voda ve štole.
 
@@ -324,7 +326,7 @@ Wehrl se díval na strop.
 
 „Valentine,“ řekl. „Přines bedýnku.“
 
-Hesse se nepohnul hned. Pak odešel a Ilona slyšela jeho kroky na schodech do suterénu a zase nahoru. Vrátil se s bedýnkou v náručí, tou, kterou viděla ve výklenku za pecí. Postavil ji Wehrlovi na pokrývku.
+Hesse se nepohnul hned. Pak odešel a Ilona slyšela jeho kroky na schodech do sklepa a zase nahoru. Vrátil se s bedýnkou v náručí, tou, kterou viděla ve výklenku za pecí. Postavil ji Wehrlovi na pokrývku.
 
 Ve dvaceti přihrádkách byly tři lahvičky. Nazelenalé sklo. Červený vosk. Otisk.
 
@@ -342,7 +344,7 @@ Ilona se na něj dívala. Na lahvičku v jeho ruce. Na prsty se žlutohnědými 
 
 „Co tedy?“
 
-„Jejich,“ řekla Ilona. „Pouštějí si ji z předloktí. Lancetou, do lahviček. Každý týden. Mají na rukou jizvy jako příčky žebříku, jednu vedle druhé, od zápěstí k lokti. Viděla jsem to. Za každou lahvičku dostali kus lidské krve, protože svou si pouštějí tolik, že jim nestačí. Jsou bledí a slabí a jejich děti kašlou.“ Odmlčela se. „Krev starších.“
+„Jejich,“ řekla Ilona. „Pouštějí si ji z předloktí. Lancetou, do lahviček. Každý týden. Mají na rukou jizvy jako příčky žebříku, jednu vedle druhé, od zápěstí k lokti. Viděla jsem to. Za každou lahvičku dostali díl lidské krve, protože svou si pouštějí tolik, že jim nestačí. Jsou bledí a slabí a jejich děti kašlou.“ Odmlčela se. „Krev starších.“
 
 Wehrl držel lahvičku a nehýbal se.
 

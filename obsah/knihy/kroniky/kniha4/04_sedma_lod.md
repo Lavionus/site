@@ -84,7 +84,7 @@ Došli ke dvěma kamenům na svahu nad starým tábořištěm. Ležely v trávě
 
 Bylo to horší, než si myslel. Čára vedla rovně, ale země ne. Šli dolů do údolí a přes potok a zase nahoru. Svah se zvedal tak prudce, že se museli chytat kořenů. Pak je zastavila skalní stěna a museli ji obejít. Jakmile ji obešli, ztratil Eren zářez z očí a dlouho ho nemohl najít. Les byl hustý. Stromy s vodorovnými větvemi stály tak těsně, že pod nimi bylo šero i v poledne. Zem pod nimi pokrývalo jehličí, staré a měkké, do kterého se nohy bořily. Pryskyřičná vůně tu byla tak silná, že ji Eren cítil v puse.
 
-Kaj šel hned za Orrinem. Celý den. Když se Orrin zastavil, zastavil se i Kaj, a když Orrin pil, Kaj čekal, až dopije, a pak pil sám. Bylo mu devatenáct. Eren to věděl, protože to Kaj řekl první večer u beden. Řekl to Orrinovi, jako by předkládal něco, za co se stydí.
+Kaj šel hned za Orrinem. Celý den. Když se Orrin zastavil, zastavil se i Kaj, a když Orrin pil, Kaj čekal, až dopije, a pak pil sám. Bylo mu devatenáct. Eren to věděl, protože to Kaj řekl první večer u beden. Řekl to Orrinovi, jako by předkládal něco, za co se stydí. *Devatenáct. A rodina, kterou soudili.*
 
 V poledne Eren cítil v patě každý krok. Odpoledne ho bolela kolena, obě, z výstupu, a večer ho bolelo všechno. Nejen jeho. Ardo kulhal. Kajovi se rozedřely obě paty a večer si je ovazoval pruhy ze spodní vrstvy a nic neříkal. Jen Bena šla, jako by ji nic nebolelo. Když se jí Eren zeptal, ukázala mu chodidla. Byla celá ve strupech.
 
@@ -100,7 +100,7 @@ Orrin rozdělil plachty. Dvě na zem, dvě přes ně, a všech šest pod ně tě
 
 „Protože jsi nejlehčí,“ řekl Orrin. „Lehcí mrznou první.“
 
-Kaj chtěl něco namítnout a pak si lehl doprostřed. Eren ležel na kraji a cítil, jak mu zima leze po zádech. Za zády cítil Benino tělo, kostnaté a horké. Vpředu oheň. Nad ním nebe, ještě větší než dole v kotli, a hvězdy, které se chvěly.
+Kaj chtěl něco namítnout a pak si lehl doprostřed. Eren ležel na kraji a cítil, jak mu zima leze pod plachtu. Za zády cítil Benino tělo, kostnaté a horké. Vpředu oheň. Nad ním nebe, ještě větší než dole v kotli, a hvězdy, které se chvěly.
 
 „Vždycky mě zajímalo,“ řekl Orrin do tmy, „kdo ty sítě drží.“
 
@@ -190,7 +190,7 @@ Pod ním byl obličej. Žena. Oči měla zavřené a tvář klidnou, jako by spa
 
 Eren šel k dalšímu lůžku. A k dalšímu. Setřel prach z deseti průzorů, z dvaceti. Pod každým obličej. Muži, ženy, starý muž s jizvou přes bradu. Dítě. Všichni se zavřenýma očima. Všichni klidní.
 
-Probouzecí sled se nespustil. Eren to věděl, aniž by to musel kontrolovat. U jejich modulu začal ještě nad zemí a dveře se otevřely, až když bylo hotovo. Tady modul dopadl dřív, než to stihl. Napájení vypadlo při nárazu nebo hned potom. A bez napájení oběh v lůžkách stojí a tělo, které v něm spí, se už nevzbudí. Nevěděli o tom. Spali, a potom už nebyli.
+Probouzecí sled se nespustil. Eren to věděl, aniž by to musel kontrolovat. U jejich modulu musel začít ještě nad zemí, ohřev a oběh, aby se probudili až dole; tak se to dělá. Tady modul dopadl dřív, než to stihl. Napájení vypadlo při nárazu nebo hned potom. A bez napájení oběh v lůžku stojí a tělo, které v něm spí, se už nevzbudí. Nevěděli o tom. Spali, a potom už nebyli.
 
 Jen ten muž venku. U něj se lůžko otevřelo. Možná nárazem. Možná pojistkou, která ještě stačila sepnout. Eren nevěděl, co je lepší. Spát, nebo se vzbudit sám do té noci.
 
@@ -290,7 +290,7 @@ Venku už se začínalo smrákat. Ostatní na něj čekali u trhliny. Ardo a Ben
 
 „Funguje?“ zeptal se Orrin.
 
-Eren mu neodpověděl. Došel k přídi, kde přepážka mezi servisním oddílem a skladem výbavy zůstala zaseknutá. Dveře se při nárazu zkroutily do rámu a nešly otevřít ani páčit; Haro to předtím zkoušel celou svou vahou. Eren si stoupl, nohy od sebe, a namířil trysku na okraj dveří. Stiskl spoušť.
+Eren mu neodpověděl. Došel k přídi, kde dveře v přepážce mezi servisním oddílem a skladem výbavy zůstaly zaseknuté. Při nárazu se zkroutily do rámu a nešly otevřít ani páčit; Haro to předtím zkoušel celou svou vahou. Eren si stoupl, nohy od sebe, a namířil trysku na okraj dveří. Stiskl spoušť.
 
 Řezák zahučel. Nejdřív hluboko, pak výš, a z trysky vyšel jazyk světla. Bílý a modrý, tenký jako prst a tak jasný, že Eren musel přimhouřit oči a stejně ho viděl skrz víčka. Syčel. Kov na okraji dveří zrudl, pak zbělal, a pak tekl. Tekl jako voda, v drobných jasných kapkách, které padaly na zem a syčely a hasly. Do obličeje Erenovi udeřilo horko. Ucítil pach, ostrý a suchý, jako by se vzduch sám pálil. Řezák mu v rukou vibroval a hřál, a Eren ho vedl podél okraje dveří, pomalu, rovnoměrně, jak se to dělá. Za tryskou zůstávala zářící čára, a když vychladla, byla to mezera.
 
@@ -360,13 +360,13 @@ Víc nic. Přiložil do ohně a díval se, jak se větev chytá. Když chytila, 
 
 Eren seděl dál.
 
-*Za to, co jsi pro nás udělal.* Pro nás. Pro šest lidí na úbočí nad vrakem. Pro tři sta dvanáct lidí v kotli pod jeskyní. Pro… Myšlenka se pohnula dál, k tomu místu, kde se zastavovala vždycky, a Eren ji tam zastavil. Uměl to. *Je to jen test, Erene.* Nemyslel na to. Ten hlas tu nebyl. Byl šest set let daleko a byl mrtvý jako všichni, kdo tehdy hučeli s ventilátory.
+*Za to, co jsi pro nás udělal.* Pro nás. Pro šest lidí na úbočí nad vrakem. Pro tři sta dvanáct lidí v kotli pod jeskyní. Pro… Myšlenka se pohnula dál, k tomu místu, kde se zastavovala vždycky, a Eren ji tam zastavil. Uměl to. *Je to jen test, Erene.* Nemyslel na to. Ten hlas tu nebyl. Byl šest set let daleko a byl mrtvý jako všichni, kdo tehdy žili pod hučícími ventilátory.
 
 Orrin myslel řezák. Samozřejmě, že myslel řezák.
 
 Fólie na keřích šustila. Dole ve tmě ležel modul na boku a v něm čtyři sta lidí, kteří se nevzbudili, a jeden, který se vzbudil a sedí pod hromadou kamenů s rukama v podpaží. Eren se na to místo díval, i když tam nic neviděl.
 
-Pak bednu přece jen sundal. Otevřel víko a ve světle ohně povolil nabroušenou špičkou nože kryt rukojeti. Háček z drátu seděl na kontaktech, kam ho zajistil. Vyndal ho. Na okamžik ho držel mezi prsty, malý, ohnutý, lehčí než cokoli, co ten den nesl. Kryt přiklapl a háček zastrčil do švu na límci bundy, kde ho nahmatal palcem.
+Pak bednu přece jen sundal. Otevřel víko a ve světle ohně povolil nabroušenou špičkou nože kryt rukojeti. Háček z drátu seděl na kontaktech, kam ho zajistil. Vyndal ho. Na okamžik ho držel mezi prsty, malý, ohnutý, lehčí než cokoli, co ten den nesl. Kryt přiklapl. Pak nožem nařízl šev na límci bundy, kousek, na šířku nehtu, a háček zasunul dovnitř, kde ho nahmatal palcem.
 
 Až řezák příště někdo sevře, světýlko na rukojeti zase zabliká rudě a bude se ptát. Řezák v bedně, článek pod bundou, háček v límci. Tři kusy. Žádný z nich sám nic neuměl.
 

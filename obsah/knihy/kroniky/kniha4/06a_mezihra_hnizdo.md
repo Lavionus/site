@@ -12,7 +12,7 @@ Ne hvězdy. Hvězdy se hýbou pomalu a všechny spolu, a to ona zná. Tohle je j
 
 Zvedne hlavu. Mládě pod křídlem se probudí a zapiští a ona ho přitiskne k sobě.
 
-Další světlo. A další. Každé jinde, každé pomalu, a pod každým se nebe rozzáří a zhasne a zase rozzáří, a ozve se zvuk. Je hluboký a trvá a nepodobá se hromu, protože hrom přijde a odejde. Tenhle zůstává. Skála pod ní ho cítí dřív než ona.
+Další světlo. A další. Každé jinde, každé pomalu, a pod každým se nebe rozzáří a zhasne a zase rozzáří, a ozve se zvuk, který člověk neslyší. Je hluboký a trvá a nepodobá se hromu, protože hrom přijde a odejde. Tenhle zůstává. Skála pod ní ho cítí dřív než ona.
 
 Pach přijde později. Je ostrý a suchý jako vzduch po blesku, a není v něm nic, co roste, a nic, co hnije.
 
@@ -20,7 +20,7 @@ Jedno světlo se láme.
 
 Je vysoko nad horami za soutěskou a nejdřív klesá jako ostatní. Pak se pod ním něco přetrhne. Světlo se zakymácí a stočí podél hor, rychleji, a ona za ním otočí hlavu, protože všechno, co se tak stáčí, je raněné. Klesne za hřeben. Za hřebenem se rozsvítí bílo. Na okamžik je vidět každý kámen na hřebeni, ostře, jako ve dne. Potom rudo a potom tma.
 
-Po dlouhé chvíli, tak dlouhé, že mládě stihne znovu usnout, přijde vzduchem tlak. Dotkne se útesu a útes se ozve. Nízko, v kameni. Jako když se uvnitř hory sesune sníh.
+Po dlouhé chvíli, tak dlouhé, že mládě stihne znovu usnout, přijde vzduchem tlak. Dotkne se útesu a útes se ozve. Nízko, v kameni. Jako když se uvnitř hory sesune kámen.
 
 Pak se ještě jednou podívá vzhůru. Vysoko, tam, kde nic nelétá, kde je vzduch tak řídký, že by v něm křídlo nic neuneslo, se táhne napříč nebem tenké světlo. To nepadá. Jde jinam. Jde, jako jde pták, který ví, kam letí, a pak zmizí.
 
@@ -36,7 +36,7 @@ Cítí ho, kdykoli vítr jde soutěskou vzhůru. Je to pach mnoha těl. Teplých
 
 Je jich mnoho. Víc, než kdy u teplé vody bylo. Slyší je i nahoře. Jejich hlasy jsou vysoké a ozývají se pořád, ve dne i v noci, a ve tmě dole v soutěsce svítí mnoho malých ohňů, víc ohňů, než tam kdy hořelo.
 
-Ty staré, ty od teplé vody, zná. Zná je, jak zná vítr. Voní kouřem a tukem a rudou hlinkou, kterou si mažou na tváře, a starou kůží. Chodí po své straně vody a nikdy nepřejdou na její. Když ona sletí k vodě, ustoupí a nehledí na ni. Když jsou hladové zimy, nechávají na plochém kameni pod útesem kozu, svázanou nebo mrtvou, a ona si ji vezme. Když ulovila ona a oni jsou blízko, vezmou si kus a nechají jí zbytek. Tak to je. Tak to bylo za její matky.
+Ty staré, ty od teplé vody, zná. Zná je, jak zná vítr. Voní kouřem a tukem a rudou hlinkou, kterou si mažou na tváře, a starou kůží. Chodí po své straně vody a nikdy nepřejdou na její. Když ona sletí k vodě, ustoupí a nehledí na ni. Když jsou hladové zimy, nechávají na plochém kameni pod útesem divokou kozu, svázanou nebo mrtvou, a ona si ji vezme. Když uloví ona a oni jsou blízko, vezmou si kus a nechají jí zbytek. Tak to je. Tak to bylo za její matky.
 
 Ty od hloubky zná taky. Ti voní kamenem a tmou a vodou, která nikdy neviděla slunce. Ven chodí za šera. Ona je ráda nemá na očích, protože jejich oči ve tmě svítí jako její.
 
@@ -58,7 +58,7 @@ Je to tak silné, že musí přivřít oči. Celý svah jiskří, keře a kameny
 
 Krouží nad tím a cítí, jak se jí v hrudi něco stahuje. Ten lesk volá. Volá stejně, jako volá žluté zrno v řece a průhledný kámen v puklině. To, co se leskne a nemění se, patří do hnízda. Na místo, kde leží, co se stalo.
 
-Sníží let. Dole, uprostřed jiskření, leží něco velkého a mrtvého. Nevoní jako mrtvé zvíře. Voní jako ta světla. Kus od toho je šest malých postav. Jsou to ti noví. Nosí kameny, jeden po druhém, a kladou je na jedno místo pod balvanem, pořád na totéž, dokud z kamenů není hromada. Nic nežerou. Nic si neodnášejí. Jen nosí a kladou.
+Krouží vysoko, výš než mrchožrouti. Dole, uprostřed jiskření, leží něco velkého a mrtvého. Nevoní jako mrtvé zvíře. Voní jako ta světla. Kus od toho je šest malých postav. Jsou to ti noví. Nosí kameny, jeden po druhém, a kladou je na jedno místo pod balvanem, pořád na totéž, dokud z kamenů není hromada. Nic nežerou. Nic si neodnášejí. Jen nosí a kladou.
 
 Ona krouží.
 
@@ -98,7 +98,7 @@ Zvedne dráp. Rýha nezůstane.
 
 Ráno je nebe bílé a hory za soutěskou jsou bílé taky. Napadl sníh. Ne tady, výš. Ale vzduch jím voní a voda dole v soutěsce kouří víc než jindy.
 
-Mládě stojí na kraji útesu a roztahuje křídla do větru. Vítr se do nich opře a mládě zavrávorá a stáhne je. A roztáhne je znovu. Ona leží za ním a dívá se. Nepomůže mu. Tohle se nedá pomoct.
+Mládě stojí na kraji útesu a roztahuje křídla do větru. Vítr se do nich opře a mládě zavrávorá a stáhne je. A roztáhne je znovu. Ona leží za ním a dívá se. Nepomůže mu. S tímhle se pomoct nedá.
 
 Dívá se dolů do soutěsky.
 

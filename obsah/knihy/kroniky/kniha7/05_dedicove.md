@@ -52,7 +52,7 @@ Hesk byla v předním prostoru sama. Stála u stěny, kde člun neměl okno, jen
 
 Hesk rozložila fólii na stůl. Byla to místní mapa, nakreslená rukou a vyfocená. Les, rokle, potok. Přerušovaná čára, která vedla od východního konce hřbetu dovnitř. A na kraji, zvlášť, rukou, tři číslice s pomlčkami. Síť je přečetla v řeči řádu: *Tři. Dva. Čtyři.*
 
-„Zná rytmus stanoviště,“ řekla Hesk. „Ten rytmus, který dělá skála, když jdeme nad Chebskem. Ve výtahu z vysílání ho nemáme. A napsal, že zná přístup ke stanovišti, který nevede přes dům.“
+„Zná rytmus stanoviště,“ řekla Hesk. „Ten rytmus, který dělá skála, když přelétáme nad Chebskem. Ten je veřejný. Ale napsal, že zná přístup ke stanovišti, který nevede přes dům. Ten v žádném zveřejněném souboru není.“
 
 Sende se na mapu díval dlouho.
 
@@ -86,7 +86,7 @@ Sende ten pohled znal. Takhle se lidé na Iretu dívali průzorem doku na výpra
 
 Pak muž vyšel po rampě. Pomalu, ne proto, že by byl unavený. Na horním konci se zastavil znovu a položil dlaň na stěnu člunu, na hladký šedý povrch vedle vstupu. Nechal ji tam. Heskin člověk u vstupu se na tu ruku díval a nevěděl, jestli má něco udělat.
 
-Muž ruku sundal.
+Muž ruku odtáhl.
 
 „Promiňte,“ řekl anglicky. Měl ten přízvuk, který síť značila jako jihoněmecký. „Chtěl jsem vědět, jestli je teplá.“
 
@@ -110,7 +110,7 @@ Lis Aven to přeložila. Síť k letopočtu přidala řádek, jak to dělala u v
 
 Otevřel brašnu.
 
-Vyndal z ní knihu. Nebyl to tisk. Kvart, vázaný v kůži, která na hřbetě zčernala, s kovovými rohy. Síť k vazbě přidala řádek: *Vazba mladší než knižní blok. Převázáno, odhad 19. století.* Wehrle knihu položil na stůl a otevřel, opatrně, oběma rukama, na místě, kde v ní ležela tenká bílá páska.
+Vyndal z ní knihu. Nebyl to tisk. Svazek vázaný v kůži, která na hřbetě zčernala, s kovovými rohy. Síť k vazbě přidala řádek: *Vazba mladší než knižní blok. Převázáno, odhad 19. století. Písmo bloku mladší než letopočet v záhlaví.* Wehrle knihu položil na stůl a otevřel, opatrně, oběma rukama, na místě, kde v ní ležela tenká bílá páska.
 
 Na stránce byla svislá čára. Vlevo řádky drobného písma a pod nimi kresba. Devět světel, jedno nad druhým, v šikmé řadě. Vpravo jiné písmo, jiný inkoust a jiná ruka.
 
@@ -120,7 +120,7 @@ Síť nad stránkou chvíli hledala, než nabídla: *Latina. Ve vysílání vzá
 
 „*Ex eis novem cadebant, lente, ordine.* Z nich devět padalo, pomalu, v řadě. *Patres nostri.* Naši otcové. *Revertentur.* Vrátí se.“
 
-Pak otočil několik listů zpátky, až skoro na začátek knihy, a ukázal na jedinou větu, napsanou velkými písmeny přes celou šířku stránky.
+Pak otočil několik listů zpátky, až skoro na začátek knihy, a ukázal na větu v textu, dvakrát podtrženou.
 
 „*Cum redierint, nos erimus, qui eos excipiant.*“ Řekl to, jako se říká modlitba, kterou člověk zná od dětství a už ji nevnímá, a přesto ji nevynechá. „Až se vrátí, budeme to my, kdo je přijme.“
 
@@ -188,7 +188,7 @@ Wehrle zvedl hlavu. Něco se v jeho obličeji změnilo. Nebylo to, že by se vzp
 
 Uměl mluvit. To Sende musel uznat a uznal to nerad.
 
-Mluvil krátce a věcně, bez knihy, s rukama na zavřené brašně. Mluvil o dvou cestách do hory. První vede z lesa na východním konci hřbetu, starou chodbou a korytem, kudy odtéká teplá voda. Ostří ji kdysi prosekali a v roce třicet jí Ostří utekli, když z hory vyšel plyn. Jeho technik jí tehdy šel dovnitř. Wehrle to řekl, jako se říká, že tudy jednou někdo šel, a neřekl, jak to dopadlo. Síť to Sendemu řekla za něj.
+Mluvil krátce a věcně, bez knihy, s rukama na zavřené brašně. Mluvil o dvou cestách do hory. První vede z lesa na východním konci hřbetu, starou chodbou a korytem, kudy odtéká teplá voda. Ostří ji kdysi prosekali a v roce třicet jí utekli, když z hory vyšel plyn. Jeho technik jí tehdy šel dovnitř. Wehrle to řekl, jako se říká, že tudy jednou někdo šel, a neřekl, jak to dopadlo. Síť to Sendemu řekla za něj.
 
 Druhá cesta vede štolou, kterou kopali jeho předkové. Jedinou, zasypanou a pod vodou. V knize je prý její plán. Nikdo jí nešel víc než osm set let. Jestli se dá otevřít, neví. Síť k tomu přidala řádek: *Plán nepředložen. Tvrzení nedoloženo.*
 
@@ -234,7 +234,7 @@ Wehrle se k němu otočil.
 
 „Vy.“
 
-„My,“ řekl Wehrle. „Nadace. Moje rodina. Ti, kdo věděli, že přijdete.“ Položil dlaň na brašnu s knihou. „Výprava uzná nadaci jako jediného prostředníka ve věcech chráněných populací a stanoviště. Ve všem, co se jich týká, bude jednat přes nás. My vám dáme cesty a seznam a postaráme se, aby se nikomu nic nestalo. Nikomu z nich. Tomu rozumíme líp než vy.“
+„My,“ řekl Wehrle. „Nadace. Moje rodina. Ti, kdo věděli, že přijdete.“ Položil dlaň na brašnu s knihou. „Výprava uzná nadaci za jediného prostředníka ve věcech chráněných populací a stanoviště. Ve všem, co se jich týká, bude jednat přes nás. My vám dáme cesty a seznam a postaráme se, aby se nikomu nic nestalo. Nikomu z nich. Tomu rozumíme líp než vy.“
 
 *
 
@@ -282,7 +282,7 @@ Sende se na obálku díval. Síť ji už viděla. Měla ji zaznamenanou, každý
 
 Řekl to Hesk, ne Wehrlemu. Hesk se na něj podívala.
 
-„Jsou v tom jména,“ řekl Sende. „Lidí, kteří o tom nevědí. Kdyby to kdokoli z nás otevřel, síť to bude mít navždy. Nikdo z nich nám to nedal.“
+„Jsou v tom jména,“ řekl Sende. „Lidí, kteří o tom nevědí. Kdyby to kdokoli z nás otevřel, síť by to měla navždy. Nikdo z nich nám to nedal.“
 
 Hesk se dívala na obálku. Dlouho. Teprve potom na Sendeho.
 
@@ -352,7 +352,7 @@ Napsal:
 
 *Podle práva řádu se chráněných osob na ochranu ptát nemusíme. Podle téhož práva nesmíme o chráněných osobách rozhodovat s někým, kdo nemá větší oprávnění než ony. Místní osoba žádné nemá.*
 
-*Seznam vznikl bez vědomí osob, které obsahuje. Část seznamu je předmětem místního vyšetřování. Kdyby ho výprava přijala, převzala by jeho původ.*
+*Seznam vznikl bez vědomí osob, které obsahuje. Část seznamu je předmětem místního vyšetřování (únik jmen 2030, záloha kliniky). Kdyby ho výprava přijala, převzala by jeho původ.*
 
 Zastavil se. Pak připsal poslední řádek. Váhal nad ním stejně dlouho jako na lodi nad šestým bodem.
 
@@ -372,7 +372,7 @@ Kerr odpověděla do hodiny. Z lodi, s tím krátkým zpožděním, které dráh
 
 *Nabídka se nepřijímá. Výprava trvá na přístupu ke stanovišti podle dohody s místními orgány. Další kontakt s osobou K. Wehrle jen s vědomím vedoucí. Odlišná stanoviska připojena.*
 
-Dvě odlišná stanoviska. Jeho a Heskino. Kerr je připojila obě a nerozhodla mezi nimi. Rozhodla o nabídce a o kontaktu. O tom, jestli se v právu řádu chráněných osob ptát musí, nebo nemusí, nerozhodla nic.
+Dvě odlišná stanoviska. Jeho a Heskino. Kerr je připojila obě a nerozhodla mezi nimi. Rozhodla o nabídce a o kontaktu. O tom, jestli se podle práva řádu chráněných osob ptát musí, nebo nemusí, nerozhodla nic.
 
 Sende se vrátil k její první větě. *Nabídka se nepřijímá.* Ne *odmítá se*. Nepřijímá. Jako když se v rejstříku napíše *znění nepřevzato*.
 
@@ -386,7 +386,7 @@ O pomoc sítě nestál. Ležel na lůžku v kajutě člunu a díval se do stropu
 
 Myslel na knihu.
 
-Na svislou čáru uprostřed stránky. Vlevo, co viděl mnich. Vpravo, co ví on. Wehrleho předek tu čáru udělal sám, rukou, před stovkami let. Oddělil to, co viděl jiný člověk, od toho, co si o tom myslel on. Byla to dobrá čára. Na fakultě na Iretu by ji stará žena s holí pochválila.
+Na svislou čáru uprostřed stránky. Vlevo, co viděl mnich. Vpravo, co ví on. Kdosi z Wehrleho předků tu čáru udělal, rukou, před stovkami let. Oddělil to, co viděl jiný člověk, od toho, co si o tom myslel on. Byla to dobrá čára. Na fakultě na Iretu by ji stará žena s holí pochválila.
 
 A pak osm set let psali všichni vpravo. Ani jeden z nich se nevrátil na levou stranu a nezeptal se, jestli těch devět světel opravdu znamená *naši otcové*.
 

@@ -4,7 +4,7 @@ V srpnu je v bytě takové horko, že Hana pracuje v noci s otevřeným oknem a 
 
 E-mail přijde ve středu odpoledne. Bez pozdravu, jako všechny.
 
-*Kolega z toho druhého archivu dostal od restaurátorky výjimku. Šest listů z lékárníkovy knihy nafotili znovu, obě strany, v bočním světle, protože si restaurátorka při kontrole stavu všimla něčeho na rubu. Posílám. Nic necitujte. UV nedovolí, originál je křehký. — L. Š.*
+*Kolega z toho druhého archivu dostal od restaurátorky výjimku. Šest listů z lékárníkovy knihy (šestý je menší, jiný papír, přeložený) nafotili znovu, obě strany, v bočním světle, protože si restaurátorka při kontrole stavu všimla něčeho na rubu. Posílám. Nic necitujte. UV nedovolí, originál je křehký. — L. Š.*
 
 *P. S. Wehrl. Kolega na něj narazil v jiném fondu, jen tak, při něčem jiném. Zemřel v únoru 1596. Víc nic.*
 
@@ -16,7 +16,7 @@ Dvanáct snímků. Šest listů, každý dvakrát.
 
 Líce zná ze skenu, který má od června ve složce *Mlýnec*. Hustá kupecká ruka, sloupce čísel, německé zkratky, které Šindelářová v regestu přeložila jen zčásti. *Bad. Oben.* Lázeň, nahoře. Jména žen, u nich krejcary. Na jednom listu řádek, který Šindelářová v přepisu podtrhla a připsala k němu tři otazníky: *Merc. 24. Mai. … frisch.* Středa, čtyřiadvacátého května. Čerstvá.
 
-Ruby nezná. V prvním skenu nebyly, nebo byly a nikdo je nenafotil, protože na nich nic není.
+Ruby nezná. V prvním skenu nebyly. Nikdo je nenafotil, protože na nich nic není.
 
 Teď je otevře jeden po druhém.
 
@@ -29,6 +29,8 @@ Prvních pět je jiných.
 Hana zvětší první.
 
 V bočním světle vypadá papír jako krajina z letadla. Šedý, zdrsnělý, a přes celou plochu jdou rovnoběžné rýhy, husté, jemné, všechny stejným směrem, šikmo, jako by po papíře někdo táhl hřeben. Na okrajích se rýhy zastavují čistě, kousek od hrany, tam, kde by končily řádky. Uprostřed je papír tenčí. Na jednom místě, na pátém listu, tak tenký, že přes něj v bočním světle prosvítá líc, obráceně, zrcadlově, jako písmo viděné ze zadní strany okna.
+
+![Terénní deník](obrazky/22_epilog_hana.webp)
 
 Rasura. Ví, co to je, i když není kodikoložka. Viděla to ve vitrínách a na přednáškách, na pergamenu, ze kterého někdo seškrábal starý text, aby mohl psát nový. Na papíře je to vzácnější, protože papír to nesnese: ztenčí se a roztřepí. Kdo to dělá, musí vědět jak. Tady to někdo věděl. Ostrou čepelí, naplocho, tahem a ne řezem, a pak to ještě něčím uhladil, protože okraje rýh nejsou roztřepené.
 
@@ -78,7 +80,7 @@ Ten, který tam leží od dubna. Od vlaku z Chebu, kdy si na čistou stranu udě
 
 Otevře ho na dvoustraně z dubna. *Proč si byl jistý?*
 
-Otočí list. Udělá novou čáru.
+Neotočí list. Novou čáru udělá na protější straně té dubnové dvoustrany, která zůstala volná.
 
 *
 

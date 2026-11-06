@@ -58,7 +58,7 @@ Haro stál nad ním. Svit stál kus od něj a držel v obou rukou oštěp. Cizí
 
 Dorn stál uprostřed. Levým okem se díval dolů. V pravé ruce držel nůž. Nůž z výbavy čtvrtého, s rovnou šedou čepelí, jakou tu nikdo nikdy znovu neudělá.
 
-Kaj stál vzadu, u rozštípnutého balvanu. U toho, pod kterým kdysi ležel článek. Stál s rukama podél těla, ne v podpaží, a byl bílý.
+Kaj stál vzadu, u rozštípnutého balvanu. U toho, u kterého kdysi ležel článek. Stál s rukama podél těla, ne v podpaží, a byl bílý.
 
 A pod balvanem seděl Ikku.
 
@@ -98,7 +98,7 @@ Dorn stál, kde stál, s nožem v ruce. Díval se na Erena tím jedním okem, kt
 
 „Dal nám nohu,“ řekl Dorn. „Jednu nohu. Za čtyři nože. Pak to zvedl a chtěl jít.“ Kývl bradou ke zvířeti. „Svit to chytil za tyč. A on zvedl oštěp.“
 
-„Zvedl ho,“ řekl Svit. Pořád držel ten cizí oštěp v obou rukou, jako by ho nevěděl položit.
+„Zvedl ho,“ řekl Svit. Pořád držel ten cizí oštěp v obou rukou, jako by ho neuměl položit.
 
 Haro neřekl nic.
 
@@ -220,7 +220,7 @@ Ru nepřišel.
 
 Večer pekl Orrin maso.
 
-Zvíře viselo nad ohněm pod teplou skálou, rozdělené na kusy, a pach šel přes celý kotel. Tučný, těžký, kouřový. Lidé zvedali hlavy, když ho ucítili. Lidé, kteří dva měsíce jedli dávky a pak dva dny plody z popela.
+Zvíře viselo nad ohněm pod teplou skálou, rozdělené na kusy, a pach šel přes celý kotel. Tučný, těžký, kouřový. Lidé zvedali hlavy, když ho ucítili. Lidé, kteří dva měsíce jedli dávky a pak dva dny skoro nic.
 
 Orrin stál na bedně.
 
@@ -262,7 +262,7 @@ Byla to pravda. Orrin to slyšel a kývl, pomalu, jako by mu Eren dal za pravdu.
 
 „Já taky ne,“ řekl. „Proto nikdo.“ Pak se otočil ke kotli. „Jezte. Kdo chce, ať přijde k ohni.“
 
-Lidé šli. Ne všichni, ale skoro všichni. Ke kusům masa nad ohněm pod teplou skálou. Eren viděl, jak jdou. Mladá matka s tříletým dítětem. Desítky, které po radě zůstaly u Sefina ohně. Bena. Ardo stál a nešel, a pak šel taky.
+Lidé šli. Ne všichni, ale skoro všichni. Ke kusům masa nad ohněm pod teplou skálou. Eren viděl, jak jdou. Mladá matka s tříletým dítětem. Desítky, které po radě zůstaly u Sefina ohně. Bena. Ardo stál a nešel, a pak šel taky. Na kraji kotle stál Kaj. K ohni nešel.
 
 Hela přinesla maso dolů, ke kraji kotle, k plachtám pod terasou. Rozdělila ho dětem, které místní vynesli ze síně. Krmila je po kouscích. Jednou zvedla oči k Erenovi, který stál u skály. Nic neřekla. Neomlouvala se.
 
@@ -290,7 +290,7 @@ Eren, Hela, Ardo, Vesa, dva Vesini a pak i Bena, která přišla od Orrinova ohn
 
 V prvním domě bylo jedenáct a víc se tam nevešlo. Druhý a třetí dům měly stěny a neměly střechu. Ardo přinesl plachty. Natáhli je přes horní okraj stěn, svázali je lanem ke kůlům a zatížili kameny. Pod plachtou rozdělali oheň. Kouř šel škvírou u kraje. Nebyla to střecha. Bylo to víc než nic.
 
-Dvanáct lidí, které místní vynesli ze síně, leželo v domech, které místní ženy naučily vyhnance stavět.
+Lidé z dvanácti kamenů, které místní vyprázdnili, leželi v domech, které místní ženy naučily vyhnance stavět.
 
 Eren si toho všiml. Nikomu to neřekl.
 
@@ -298,7 +298,7 @@ Eren si toho všiml. Nikomu to neřekl.
 
 Kaj seděl u rozštípnutého balvanu.
 
-Eren ho uviděl, když se vracel roklí nahoru, sám, s prázdnýma rukama. Kaj seděl na zemi, kde předtím stál, zády ke kameni, a před ním na jinovatce byla ta černá skvrna. Neměl oheň. Neměl plachtu. Seděl s koleny u brady a třásl se.
+Eren ho uviděl, když se vracel roklí nahoru, sám, s prázdnýma rukama. Kaj seděl na zemi u balvanu, kam se zase vrátil, zády ke kameni, a před ním na jinovatce byla ta černá skvrna. Neměl oheň. Neměl plachtu. Seděl s koleny u brady a třásl se.
 
 Eren se zastavil.
 
@@ -326,7 +326,7 @@ Kaj nevstal. Díval se zase na skvrnu. Eren chvíli stál a pak šel dál, nahor
 
 Maela přišla, když už kotel spal.
 
-Ne k němu. K Sefině plachtě. Eren to viděl od rokle, kde se vracel z údolí. Maela se sehnula pod plachtu a dlouho byla uvnitř. Pak vylezla a za ní Sefa. Nemohla jít sama. Maela ji držela kolem pasu a Sefa se o ni opírala celou vahou a kašlala, a šly spolu přes kotel nahoru, krok za krokem, k přístřešku pod teplou skálou.
+Ne k němu. K Sefině plachtě. Eren to viděl od rokle, kudy se vracel z údolí. Maela se sehnula pod plachtu a dlouho byla uvnitř. Pak vylezla a za ní Sefa. Nemohla jít sama. Maela ji držela kolem pasu a Sefa se o ni opírala celou vahou a kašlala, a šly spolu přes kotel nahoru, krok za krokem, k přístřešku pod teplou skálou.
 
 Orrin stál u vchodu. Díval se na ně.
 

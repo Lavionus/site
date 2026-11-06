@@ -6,7 +6,7 @@ Bylo to čtrnáctého dne od sněhu, za šera, ještě před svítáním. Eren t
 
 Tentokrát stála v zálivu, ve stínu převisu, a nehýbala se. Viděl ji, až když byl blízko.
 
-Neměla dlaň nad očima. Šero bylo její světlo. Dívala se na něj a on se zastavil na tři kroky od ní, protože dál nevěděl, jestli smí.
+Neměla dlaň nad očima. Šero bylo její světlo. Dívala se na něj a on se zastavil na tři kroky od ní, protože nevěděl, jestli smí dál.
 
 Položila si ruku na prsa. Plochou dlaň, celou, pod krk.
 
@@ -18,7 +18,7 @@ Položil si ruku na prsa.
 
 „Eren.“
 
-Dabra to po chvíli zopakovala. Řekla to jinak než on, hlouběji a pomaleji, a z obou samohlásek udělala jednu dlouhou. Ale bylo to jeho jméno. Za šestatřicet dní na této planetě ho nikdo z místních neřekl. Říkali mu *hlas ze stropu*.
+Dabra to po chvíli zopakovala. Řekla to jinak než on, hlouběji a pomaleji, a z obou samohlásek udělala jednu dlouhou. Ale bylo to jeho jméno. Za šestatřicet dní na této planetě ho nikdo z místních neřekl. Říkali mu nějak, co Tio překládala jako *hlas ze stropu*.
 
 Ukázala na ústí jeskyně. Pak na nebe na východě, kde se nad hřebenem začínalo bělat. Pak pomalu sjela dlaní k obzoru na druhé straně, na západ, kam slunce zapadá, a dlaň tam nechala ležet, plochou, jako víko.
 
@@ -30,7 +30,7 @@ A ukázala na něj.
 
 „Proč ty?“ řekla Maela.
 
-Krájela dávky. Od toho večera s kýtou s ním mluvila jen o dávkách, o dřevě a o Tio, a to krátce. Eren to nesl. Nevěděl, jak jinak.
+Krájela dávky. Od toho večera s kýtou s ním mluvila jen o dávkách, o dřevě a o Tio, a to krátce. Eren to snášel. Nevěděl, jak jinak.
 
 „Nevím.“
 
@@ -68,7 +68,7 @@ Ani on ne.
 
 Za kameny, ve tmě otvoru, stála Dabra. Eren ji viděl jen proto, že jí oči v odrazu ohně svítily. Dvě světlé tečky, nízko, ve výšce jeho prsou.
 
-Ru mu dal do ruky něco teplého. Mělkou kamennou misku, vybroušenou do hladka, a v ní tuk. Z tuku trčel knot ze stočeného mechu a na knotu se držel malý žlutý plamínek. Ru ho zapálil o oheň, zatímco Eren stál u kamenů. Eren si toho ani nevšiml.
+Ru mu dal do ruky něco teplého. Mělkou kamennou misku, vybroušenou do hladka, a v ní tuk. Z tuku trčel knot ze stočeného mechu a na knotu se držel malý žlutý plamínek. Ru ho zapálil od ohně, zatímco Eren stál u kamenů. Eren si toho ani nevšiml.
 
 Překročil kameny.
 
@@ -76,7 +76,7 @@ Překročil kameny.
 
 Šel za ní dlouho. Nevěděl jak dlouho, a tak počítal kroky. Nic jiného neměl.
 
-Chodba klesala. V místech, kde byla příliš strmá, byly ve skále vytesané stupně, nízké a široké, každý stejný. Eren je cítil pod botami dřív, než je viděl. Plamínek v misce osvětlil jen kus stěny vedle něj a vlastní ruku. Dabra šla vpředu, mimo kruh světla. Eren ji slyšel. Šla tiše, ale ne neslyšně, a když na chvíli zastavila, aby počkala, slyšel její dech.
+Chodba klesala. V místech, kde byla příliš strmá, byly ve skále vytesané stupně, nízké a široké, každý stejný. Eren je cítil pod botami dřív, než je viděl. Plamínek v misce osvětloval jen kus stěny vedle něj a jeho ruku. Dabra šla vpředu, mimo kruh světla. Eren ji slyšel. Šla tiše, ale ne neslyšně, a když na chvíli zastavila, aby počkala, slyšel její dech.
 
 Strop klesal taky. Po šedesáti krocích se musel shrbit. Po stovce šel s hlavou mezi rameny a jednou rukou se opíral o stěnu. Stěna byla hladká. Ne jako ohlazená vodou. Jako ohlazená rukama, stovkami let rukou, které se o ni opíraly na tomtéž místě.
 
@@ -92,7 +92,7 @@ Ze štěrbiny, pomyslel si. Ze zálivu horní tůně. Tohle je ta voda, co mizí
 
 U další zatáčky se Dabra zastavila. Počkala, až dojde k ní, a pak udělala něco, co nečekal. Vzala ho za zápěstí. Ruku měla tvrdou a teplou a sevřela ho tak, že by se nevyprostil, ani kdyby chtěl. Položila jeho dlaň na stěnu.
 
-Stěna tam nebyla kámen. Byla to hlína. Mazanice, uhlazená do roviny, velká jako dvě dlaně, vtlačená do skály tak pečlivě, že ji Eren ve slabém světle od kamene nerozeznal. Pod prsty byla chladnější než skála kolem. A když držel ruku klidně, ucítil, jak kolem okraje mazanice tahne vzduch. Studený. Venkovní.
+Stěna tam nebyla kámen. Byla to hlína. Mazanice, uhlazená do roviny, velká jako dvě dlaně, vtlačená do skály tak pečlivě, že ji Eren ve slabém světle nerozeznal od kamene. Pod prsty byla chladnější než skála kolem. A když držel ruku klidně, ucítil, jak kolem okraje mazanice tahne vzduch ven, do skály, vlhký a teplý. Hlína sama studila, jako by za ní byl mráz.
 
 Přiložil k hlíně ucho.
 
@@ -122,7 +122,7 @@ Eren to viděl a věděl, co vidí, dřív, než si to řekl.
 
 Pití. Pak mytí. Pak pryč.
 
-Bylo to jako ve čtvrtém prstenci. Nádrž pitné vody, okruh užitkové, odpad. Stejné pořadí. Stejná logika. Voda jde jedním směrem a nikdy se nevrací, a nikdo nesmí zaměnit první nádrž s druhou, protože pak je po všem. Tohle někdo postavil. Ne vymyslel včera. Postavil a udržoval a předal dalším, kteří to udržovali dál.
+Bylo to jako ve čtvrtém prstenci. Nádrž pitné vody, okruh užitkové, odpad. Stejné pořadí. Stejná logika. Voda jde jedním směrem a nikdy se nevrací, a nikdo nesmí zaměnit první nádrž s druhou, protože pak je po všem. Tohle někdo postavil. Nevymyslel to včera. Postavil a udržoval a předal dalším, kteří to udržovali dál.
 
 V síni bylo teplo. Ne teplo ohně. Teplo, které šlo ze skály a z vody, rovnoměrně, odevšad. Eren cítil, jak mu po tváři stéká pot. Poprvé od přistání se potil a nebyla to horečka.
 
@@ -150,13 +150,13 @@ Dabra položila prst na první zářez v nejnižší řadě. Pak na druhý. Oto�
 
 Eren pochopil. Počítala.
 
-Vzal ji za slovo. Prošel řady, jednu po druhé, s prstem na kameni, jako ona. Rýhy byly seskupené po šesti, každá šestice oddělená od další mezerou. Zamazané nepočítal. Napočítal patnáct šestic a ještě tři. Devadesát tři.
+Zkusil to po ní. Prošel řady, jednu po druhé, s prstem na kameni, jako ona. Rýhy byly seskupené po šesti, každá šestice oddělená od další mezerou. Zamazané nepočítal. Napočítal patnáct šestic a ještě tři. Devadesát tři.
 
 Devadesát tři lidí. V celé hloubce.
 
 Zbývaly zamazané. Bylo jich hodně. Víc než těch otevřených. Mrtví, pomyslel si. Nebo ti, kdo odešli. Ale nikdo je nevyškrábal. Zamazali je hlínou, a nechali je na stěně.
 
-Dabra počkala, až dočítá, a udělala dlaní pohyb, který znal od Rua. Kolik? Ukázala na stěnu, na Erena, a pak rukou ven, nahoru, k chodbě. Ke kotli.
+Dabra počkala, až dopočítá, a udělala dlaní pohyb, který znal od Rua. Kolik? Ukázala na stěnu, na Erena, a pak rukou ven, nahoru, k chodbě. Ke kotli.
 
 Kolik vás je?
 
@@ -212,7 +212,7 @@ U ohně na terase seděla Tal a čekala.
 
 Byli tam i Ru a Tio. Tio se tam nějak dostala. Seděla vedle Rua na kůži a Tal jí dala do ruky kus sušeného masa a Tio ho žvýkala a dívala se na Erena, jako by se vrátil z velké dálky.
 
-Dabra vyšla za ním. Zůstala stát v šeru u zadní stěny síně, daleko od ohně, s dlaní nad očima. Tal na ni promluvila. Dabra odpověděla. Mluvily spolu krátce, starou řečí, napůl rukama: Dabra hlubokým hlasem z hrudi, Tal tišeji. Eren nerozuměl ani slovu. Ale viděl, že spolu takhle mluvily už mnohokrát. Bez spěchu. Jako dvě, které vědí, co ta druhá řekne.
+Dabra vyšla za ním. Zůstala stát v šeru u zadní stěny síně, daleko od ohně, s dlaní nad očima. Tal na ni promluvila. Dabra odpověděla. Mluvily spolu krátce, řečí, která zněla starší než ta Ruova, napůl rukama: Dabra hlubokým hlasem z hrudi, Tal tišeji. Eren nerozuměl ani slovu. Ale viděl, že spolu takhle mluvily už mnohokrát. Bez spěchu. Jako dvě, z nichž každá ví, co ta druhá řekne.
 
 Pak Tal sáhla vedle sebe do hromádky kamínků u ohně a začala je klást na zem. Jeden vedle druhého. Do řady.
 
@@ -278,7 +278,7 @@ Ohně uprostřed každého kruhu. Tečka v každém. Řady tak daleko od sebe, a
 
 A mezi řadami cesta. Rovná. Aby se dalo projít od prvního domu k poslednímu, i v noci, i ve sněhu, a vědělo se, kde co je. Kde je který dům. Kde je která desítka. Třicet jedna kruhů v pěti řadách, a v šesté jeden.
 
-Díval se na to. Bylo to správně. Bylo to správně tak, jak byly správně chodby čtvrtého prstence, číslované, každá vedle každé.
+Díval se na to. Bylo to správně. Bylo to správně tak, jak byly správně chodby čtvrtého prstence, číslované, jedna vedle druhé.
 
 Tio se nad tím sklonila. „To jsou chodby,“ řekla. „Jako doma.“
 
@@ -330,7 +330,7 @@ Stál dole u beden a ptal se klidně a věcně. Nikdo se tak neptal. Jak je ta s
 
 „Odkud teče?“
 
-Eren otevřel pusu. Viděl koryto s ostrými hranami a zatáčku a hlínu ve stěně, velkou jako dvě dlaně, a pod prsty cítil ten studený tah.
+Eren otevřel pusu. Viděl koryto s ostrými hranami a zatáčku a hlínu ve stěně, velkou jako dvě dlaně, a pod prsty cítil ten tah ven.
 
 „Shora,“ řekl. „Z tůně. A pak dolů.“
 
@@ -340,7 +340,7 @@ Orrin čekal, jestli řekne víc. Eren neřekl. Orrin kývl.
 
 Teprve když Eren slezl z bedny, uvědomil si, co udělal. Odpovídal tak, jak se odpovídá při hlášení: přesně, celé, bez vynechání. Kolik, kde, jak široké, jak teplé. Jako by stál před stěnou s mapou a někdo se ho ptal na stav okruhů. Řekl to všechno. Všechno kromě jedné věci.
 
-A tu jednu věc nevynechal z rozumu. Pusa se mu zastavila sama, dřív, než věděl proč.
+A tu jednu věc nevynechal úmyslně. Pusa se mu zastavila sama, dřív, než věděl proč.
 
 *
 

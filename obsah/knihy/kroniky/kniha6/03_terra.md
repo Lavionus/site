@@ -16,7 +16,7 @@ A pak odstavec dvě stě osmnáct.
 
 *Odpovědnost hnutí je odpovědností společenství. Kdo se k hnutí hlásí, je jím. Kdo je podporuje, nese jeho čin. Kdo s ním sdílí domácnost, sdílí jeho následek.*
 
-Nara se o odstavci dvě stě osmnáct učila v prvním ročníku. Všichni se o něm učili. Byl to nejslavnější odstavec konfederačního práva, protože byl jediný svého druhu. Učitel ho tehdy přečetl nahlas a pak řekl, že je to výjimka, která potvrzuje pravidlo, a že právo si výjimky pamatuje, aby je nemuselo opakovat. Nara si to zapsala. Nikdo se nezeptal, proč se tedy výjimka neruší.
+Nara se o odstavci dvě stě osmnáct učila v prvním ročníku. Všichni se o něm učili. Byl to nejslavnější odstavec konfederačního práva, protože byl jediný svého druhu. Učitel ho tehdy přečetl nahlas a pak řekl, že je to výjimka a že právo si výjimky pamatuje, aby je nemuselo opakovat. Nara si to zapsala. Nikdo se nezeptal, proč se tedy výjimka neruší.
 
 Teď ho četla v originále a síť ho pod ním tiše překládala, slovo po slově. Překlad byl přesný. Originál byl kratší. Ve staré řeči se ten odstavec dal říct na jeden dech.
 
@@ -26,13 +26,13 @@ Kategorie byly tři: členové, podporovatelé, osoby ve společné domácnosti.
 
 Nara je znala z praxe. Soudy je používaly dodnes, v každém trestním řízení, kde šlo o víc než o pokutu. Teprve teď si uvědomila, že je zavedla Terra.
 
-*Přiznání podepsáno.* Obviněný dostal text přiznání a potvrdil ho. *Přiznání nepodepsáno.* Obviněný text dostal a nepotvrdil ho; mlčel, nebo nestihl, nebo nevěděl jak. *Přiznání odmítnuto.* Obviněný text dostal a do záznamu nahlas prohlásil, že ho odmítá. Rozdíl mezi mlčením a odmítnutím soud v Teře pečlivě vedl. Kdo mlčel, mohl se ještě rozmyslet. Kdo odmítl, ten se rozhodl.
+*Přiznání podepsáno.* Obviněný dostal text přiznání a potvrdil ho. *Přiznání nepodepsáno.* Obviněný text dostal a nepotvrdil ho; mlčel, nebo nestihl, nebo nevěděl jak. *Přiznání odmítnuto.* Obviněný text dostal a do záznamu nahlas prohlásil, že ho odmítá. Mlčení a odmítnutí soud v Terře pečlivě rozlišoval. Kdo mlčel, mohl se ještě rozmyslet. Kdo odmítl, ten se rozhodl.
 
 Kesi nepodepsala. Ilan odmítl.
 
 A čtvrtá formule. *Přiznání nevyžadováno.*
 
-Nara se u ní zastavila. Ve vlastní praxi ji viděla málokdy: u dětí pod věkovou hranicí, u lidí, kteří nebyli schopni jednat. Myslela si o ní, že je ohleduplná. V Teře stála u třetí kategorie. U osob ve společné domácnosti. Přiznání se od nich nevyžadovalo, protože nebylo k čemu. Neměly co přiznat. Nic neudělaly. Jejich vina nebyla v činu, byla v postavení, a postavení se nepřiznává. Postavení se zapisuje.
+Nara se u ní zastavila. Ve vlastní praxi ji viděla málokdy: u dětí pod věkovou hranicí, u lidí, kteří nebyli schopni jednat. Myslela si o ní, že je ohleduplná. V Terře stála u třetí kategorie. U osob ve společné domácnosti. Přiznání se od nich nevyžadovalo, protože nebylo k čemu. Neměly co přiznat. Nic neudělaly. Jejich vina nebyla v činu, byla v postavení, a postavení se nepřiznává. Postavení se zapisuje.
 
 *Nevyžadováno.* Gramatika kolektivní viny. Jedno slovo, a Nara ho dvacet let četla jako laskavost.
 
@@ -42,7 +42,7 @@ Lumi, její koncipientka, vešla do pracovny se šálkem a postavila ho na stůl
 
 Odstavce o odsouzených byly nejdelší a nejsušší. Nara je přesto četla všechny.
 
-Soud viděl a zapsal: odsouzených celkem necelých dvacet čtyři tisíc. Jména byla ve veřejné příloze, rozdělená po oblastech. Oblastí výkonu osm. Každá oblast měla vlastní seznam, vlastní počet modulů a vlastní číslo, a Nara se na ten seznam podívala jen zběžně, protože tisíce jmen se nedají číst. Síť jí nabídla, že v nich vyhledá cokoli, co bude chtít. Nechtěla nic. Neznala tam nikoho. Všichni, kdo tam byli, byli dávno mrtví. Nebo spali. Nikdo to nevěděl.
+Soud viděl a zapsal: odsouzených celkem necelých dvacet čtyři tisíc. Jména byla ve veřejné příloze, v seznamu po oblastech, který k veřejné části později připojil úřad při výkonu. Oblastí výkonu osm. Každá oblast měla vlastní seznam, vlastní počet modulů a vlastní číslo, a Nara se na ten seznam podívala jen zběžně, protože tisíce jmen se nedají číst. Síť jí nabídla, že v nich vyhledá cokoli, co bude chtít. Nechtěla nic. Neznala tam nikoho. Všichni, kdo tam byli, byli dávno mrtví. Nebo žili někde, kam žádná zpráva nedošla. Nikdo to nevěděl.
 
 Pod seznamem oblastí stála značka. Nara ji znala, jen ji nikdy neviděla na tak starém textu. Osm oblouků, které vycházely z jednoho bodu a rozbíhaly se, každý trochu jinak zakřivený. Byla na pečeti Koloniálního úřadu. Na každém jeho rozhodnutí, na každé listině, kterou Nara za dvacet let od úřadu dostala. Na vstupu do Sedmé loděnice, nad dveřmi, kudy dnes ráno prošla. Myslela si, že je to ozdoba. Tady pochopila, že je to seznam. Jeden oblouk za každou oblast výkonu.
 
@@ -104,7 +104,7 @@ Nara si to napsala do poznámek. Jedinou větou, aby ji měla, až ji bude potř
 
 Druhý den ráno šla za Askem. Asko Venn měl pracovnu o patro výš a měl v ní rostlinu.
 
-Na Orse měl rostliny málokdo. Kdo chtěl zelenou, šel do zahrad na protější straně habitatu, kde rostly v řádcích pod světlem a kde se o ně staral někdo, kdo to uměl. Asko měl jednu kapradinu v kameninovém květináči a staral se o ni sám. Zaléval ji z konvičky, kterou mu kdosi kdysi daroval, a nechával si od sítě hlásit vlhkost půdy. Kapradina vypadala, jako by umírala už dvacet let a pořád se nemohla rozhodnout.
+Na Orse měl rostliny málokdo. Kdo chtěl zeleň, šel do zahrad na protější straně habitatu, kde rostly v řádcích pod světlem a kde se o ně staral někdo, kdo to uměl. Asko měl jednu kapradinu v kameninovém květináči a staral se o ni sám. Zaléval ji z konvičky, kterou mu kdosi kdysi daroval, a nechával si od sítě hlásit vlhkost půdy. Kapradina vypadala, jako by umírala už dvacet let a pořád se nemohla rozhodnout.
 
 Bylo mu sedmdesát čtyři. Do soudu už nechodil. Psal posudky, učil a jednou týdně vedl seminář o dějinách práva, na který chodili tři lidé. Nara k nim kdysi patřila.
 
@@ -118,7 +118,7 @@ Asko chvíli mlčel.
 
 „Ptal jsem se, jak se má,“ řekl potom. „Ne co jsi zjistila.“
 
-Nara se na něj podívala. Otevřela ústa a zase je zavřela. Pak se napila vody, protože to bylo jednodušší, a začala mu vyprávět o Teře.
+Nara se na něj podívala. Otevřela ústa a zase je zavřela. Pak se napila vody, protože to bylo jednodušší, a začala mu vyprávět o Terře.
 
 Poslouchal ji, aniž ji přerušil. Seděl za stolem, ruce složené na břiše, a díval se na ni přes okraj brýlí, které nosil jen proto, že je nosil vždycky. Oči měl v pořádku. Brýle zdědil po otci a tvrdil, že s nimi lépe přemýšlí.
 
@@ -152,7 +152,7 @@ Asko kývl. Pak si znovu nasadil brýle.
 
 Řekl jí to, co věděla, že řekne, a řekl to dobře.
 
-Hromadné řízení bylo plné vad. Jeden obhájce na čtyři sta jedna lidí. Ustanoven šest dní předem, nemohl s nikým z nich mluvit déle než minutu. Řízení bez jednání, přestože šlo o nejtěžší trest, jaký konfederační právo zná. Mezi odsouzenými nezletilí, a u nezletilých se písemné řízení nesmí vést bez zákonného zástupce. Žádný individuální skutek. Žádné individuální posouzení.
+Hromadné řízení bylo plné vad. Jeden obhájce na čtyři sta jedna lidí. Ustanoven šest dní předem, nemohl s nikým z nich mluvit déle než minutu. Řízení bez jednání, přestože šlo o nejtěžší trest, jaký konfederační právo zná. Mezi odsouzenými nezletilí, a u nezletilých se písemné řízení nesmí vést bez zákonného zástupce, a kdo z nich jedná sám, bez ustanoveného opatrovníka. Soud žádného neustanovil. Žádný individuální skutek. Žádné individuální posouzení.
 
 „To vyhraješ,“ řekl Asko. „Návrh na zrušení pro procesní vady. Spolkový soud nemá rád, když trestní soud prstence šetří čas na nejtěžších věcech. Zruší to a vrátí k novému projednání. Do deseti dnů, možná do dvanácti.“
 
@@ -176,7 +176,7 @@ Hromadné řízení bylo plné vad. Jeden obhájce na čtyři sta jedna lidí. U
 
 Asko se na ni podíval.
 
-„Žádám, aby podle něj nevykonával,“ řekla Nara. „To je rozdíl. Terra je pravomocná. Ať je. Ale výkon trestu podle ní je dnešní čin, ne čin před devíti sty lety. A dnešní čin musí odpovídat dnešní ústavě. Kolektivní trest neodpovídá. Trest, jehož přiměřenost nejde přezkoumat, neodpovídá. Soud nemusí sáhnout na Terru. Stačí, když řekne, že se podle ní dnes nesmí vykonávat.“
+„Žádám, aby se podle něj trest nevykonával,“ řekla Nara. „To je rozdíl. Terra je pravomocná. Ať je. Ale výkon trestu podle ní je dnešní čin, ne čin před devíti sty lety. A dnešní čin musí odpovídat dnešní ústavě. Kolektivní trest neodpovídá. Trest, jehož přiměřenost nejde přezkoumat, neodpovídá. Soud nemusí sáhnout na Terru. Stačí, když řekne, že se podle ní dnes nesmí vykonávat.“
 
 Asko mlčel. Díval se na ni dlouho, s brýlemi na nose, a Nara v jeho tváři viděla něco, co neviděla roky. Bylo to něco mezi pýchou a strachem. Pak se mu to z tváře ztratilo a byl to zase starý muž za stolem.
 
@@ -242,7 +242,7 @@ Lumi se na ni podívala, a pak se podívala jinam, jak se lidé dívají jinam, 
 
 „Já vím.“
 
-„Nechce mě,“ řekla Nara. „Nepodepsal plnou moc. Podávám návrh jako osoba dotčená, svým jménem. Nemůžu za něj žádat nic. Můžu jen proti precedentu. Žádný střet. Komora to uvidí ve spisu.“
+„Nechce mě,“ řekla Nara. „Nepodepsal plnou moc. Podávám návrh jako osoba dotčená, svým jménem. Nemůžu za něj nic žádat v jeho řízení. Můžu jen proti precedentu. Žádný střet. Komora to uvidí ve spisu.“
 
 Lumi kývla. Pak řekla, pomalu, jako by tu větu zkoušela:
 
@@ -254,7 +254,7 @@ Nara se na ni podívala.
 
 „Ne. Máš pravdu.“
 
-Nara to myslela vážně. Lumi to řekla líp, než by to dokázala říct ona. Ilan odmítl plnou moc, a tím jí vzal všechno, co by mohla udělat pro něj. Zbylo jen to, co mohla udělat proti Teře. Kdyby podepsal, stála by teď nad vzorem žádosti o výjimku a přesvědčovala by sama sebe, že ho nepodá. Nepodepsal. Nemusela se přesvědčovat.
+Nara to myslela vážně. Lumi to řekla líp, než by to dokázala říct ona. Ilan odmítl plnou moc, a tím jí vzal všechno, co by mohla udělat v jeho řízení. Zbylo jen to, co mohla udělat proti Terře. Výjimku mohla podat i bez něj. Jenže tu by nepřijal, a ona by ji podala stejně. Kdyby podepsal, stála by teď nad vzorem žádosti jako jeho advokátka a přesvědčovala by sama sebe, že ho nepodá. Nepodepsal. Nemusela se přesvědčovat.
 
 Nevěděla, jestli mu za to má být vděčná. Nevěděla, jestli to věděl.
 

@@ -54,7 +54,7 @@ Vpravo napíše jen:
 
 *Terra = ?*
 
-Očima se vrátí do levé půlky, na slovo *chráněným*, a dlouho ho nechá být.
+Očima se vrátí do levé půlky, na slovo *chráněným*, a dlouho u něj zůstane.
 
 *
 
@@ -64,7 +64,7 @@ V osm dvacet volá někdo z ministerstva zahraničí. Mladá žena, zdvořilá, 
 
 „Vlak v deset dvanáct,“ řekne mladá žena. „Máte místenku.“
 
-Sníh za oknem pořád padá. Na zdi domu naproti, kam se dívá pět let, je pod okapem ztmavlý pruh od vody.
+Sníh za oknem pořád padá. Na zdi domu naproti, kam se dívá už pět let, je pod okapem ztmavlý pruh od vody.
 
 „Řekněte panu zmocněnci,“ řekne, „že můžu mluvit jen o tom, co jsem změřila.“
 
@@ -78,11 +78,11 @@ Kalina v srpnu třicet řekl, že se k nám něco blíží a brzdí. Za rok to �
 
 Hana se v září třicet jedna vrátila na fakultu. Na projekt, ne na místo. Tři roky a pak znovu. Monitoring termálních vývěrů Chebska, spolu s hydrogeologem ze státního ústavu, který dal v roce třicet na kůl u pramene první záznamník. V létě roku třicet měl pramen pod Hřbetem dvacet šest celá osm. Dnes má dvacet devět celá šest. Zpomalil. Neklesl.
 
-Irena Sokolová zveřejnila v roce třicet dva svůj model. Dvě slabé duchové příměsi ve veřejných datech, dvanáct dobrovolných dárců, alternativy vypsané na dvou stranách, a na konci věta, kterou jí recenzenti třikrát vrátili a ona ji třikrát nechala: *Data jsou slučitelná s několika výklady. Žádný z nich neprokazuje, odkud ta druhá populace přišla.* Novináři z toho udělali *Česká vědkyně: elfové mezi námi*. Sokolová přestala dávat rozhovory.
+Irena Sokolová dala svůj model ven v červnu třicet, svým jménem, s větou *data nesnesou víc*. V roce třicet dva vyšel recenzovaný článek. Dvě slabé duchové příměsi ve veřejných datech, dvanáct dobrovolných dárců, alternativy vypsané na dvou stranách, a na konci věta, kterou jí recenzenti třikrát vrátili a ona ji třikrát nechala: *Data jsou slučitelná s několika výklady. Žádný z nich neprokazuje, odkud ta druhá populace přišla.* Novináři z toho udělali *Česká vědkyně: elfové mezi námi*. Sokolová přestala dávat rozhovory.
 
 Brandl dostal tři roky podmíněně a odstěhoval se do Žitavy. Vyšetřování pana Wehrleho skončilo v roce třicet jedna podmíněným zastavením. Kubeš jí to slovo vysvětlil dvakrát, ve dvou různých letech, a Hana mu pokaždé rozuměla jen do půlky. Wehrleho nadace dál vydávala prohlášení o jedné větě. Lidé, kteří je četli, začali v létě jezdit do Mlýnce a stavět stany na louce pod roklí, odkud je vidět pára. Ves jim nedala vodu. Obecní úřad nechal postavit ceduli, že louka je soukromá. Stany se přesunuly o dvě stě metrů do lesa.
 
-Hora je pod zákazem. Spodní patra, aspoň. Úřad pro stará důlní díla v roce třicet dva povolil Ostrým sklep a archiv nahoře, s čidly a s povinností hlásit každé zvýšení. Níž ne. Co je níž, ví Hana od Tadeáše, a to, co ví od Tadeáše, píše s jeho jménem.
+Hora je pod zákazem. Spodní patra, aspoň. Úřad pro stará důlní díla v roce třicet dva povolil Ostrým sklep a archiv nahoře a schody pod ním k hladině, jednou týdně, kvůli měření, s čidly a s povinností hlásit každé zvýšení. Níž ne. Co je níž, ví Hana od Tadeáše, a to, co ví od Tadeáše, píše s jeho jménem.
 
 To je všechno. Pět let. Na jednu stranu sešitu.
 
@@ -108,7 +108,7 @@ Zmocněnec se na ni podívá. Poprvé přímo.
 
 „Zatím,“ připustí. „Ptám se na to zařízení. Na teplo. Na plyn. Na ten pramen. Váš soubor z roku třicet četlo ministerstvo vnitra, ministerstvo životního prostředí a dvě zpravodajské služby. Všichni říkají totéž. Že je to nejlepší, co o tom místě existuje.“ Odmlčí se. „A že jste si v roce dvacet šest vymyslela datum.“
 
-„Nevymyslela,“ řekne Hana. „Nedoložila jsem ho. To je horší. A opravila jsem ho sama.“
+„Nevymyslela,“ řekne Hana. „Zapsala jsem vědomě nepravdu a z ní to datum vyšlo. To je horší. A opravila jsem ho sama.“
 
 „To vím. Proto jsem vás pozval.“
 
@@ -282,9 +282,9 @@ Zmocněnec se nadechne, že odpoví. Hana ho předejde. Ví, že nemá. Ví, že
 
 Lis Aven se dívá z obrazovky. Pak udělá věc, kterou Hana od ní ještě neviděla. Sáhne si dvěma prsty za pravé ucho, na tu jizvu, a chvíli je tam drží, jako by poslouchala.
 
-„Dobře,“ řekne. „Řádek zůstane prázdný. Napíšu do stínu, že jsme se ptali a že odpověď nedostali od těch, koho se to týká. U nás se tohle nedělá. Kdo je chráněný, toho se ke slovníku neptáme. Ale vy nemáte síť.“
+„Dobře,“ řekne. „Řádek zůstane prázdný. Napíšu do stínu, že jsme se ptali a že odpověď nemáme od těch, koho se to týká. U nás se tohle nedělá. Kdo je chráněný, toho se ke slovníku neptáme. Ale vy nemáte síť.“
 
-Řekne to podruhé. *Vy nemáte síť.* Jako by to vysvětlovalo všechno, co u nich nejde.
+Řekne to podruhé. *Vy nemáte síť.* Jako by to vysvětlovalo všechno, co u nás nejde.
 
 *
 
@@ -342,7 +342,7 @@ Zmocněnec se skoro usměje. Pozná vlastní slovo.
 
 „To je přesně tolik, kolik vím.“
 
-Zmocněnec si nasadí brýle. Chvíli mlčí a dívá se na stůl, kde leží vytištěný slovník, sto dvanáct řádků, z toho sto osm podepsaných. Čtyři prázdné. *Chráněný svět. Sanace. Správa.* A ten, pro který chybí i slovo.
+Zmocněnec si nasadí brýle. Chvíli mlčí a dívá se na stůl, kde leží vytištěný slovník, sto dvanáct řádků, z toho sto osm podepsaných. Čtyři nepodepsané. *Chráněný svět. Sanace. Správa.* A ten, pro který chybí i slovo.
 
 „Dobře,“ řekne. „Svědkyně. Napíšu to tak.“
 

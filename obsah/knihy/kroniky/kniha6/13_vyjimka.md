@@ -66,7 +66,7 @@ Ilan zvedl oči.
 
 „Protože je to tvůj život.“
 
-Ilan se na ni díval dlouho, tím pohledem, kterým si ji četl. Pak se krátce zasmál nosem, bez veselí.
+Ilan se na ni díval dlouho, tím pohledem, kterým ji odjakživa odhadoval. Pak se krátce zasmál nosem, bez veselí.
 
 „To je nový,“ řekl.
 
@@ -202,7 +202,7 @@ Nara mlčela. Ilan se na ni díval a ona viděla, že čeká, jestli mu to vyvr�
 
 *
 
-„Ti z prvního,“ řekl potom. „Ti, co podepsali. Říkala jsi, že jich bylo jedenáct tisíc.“
+„Ti z prvního,“ řekl potom. „Ti, co podepsali. Kolik jich bylo?“
 
 „Jedenáct tisíc tři sta.“
 

@@ -34,7 +34,7 @@ Bylo to horší, než čekala. Lumi se neptala, protože jí to Nara zakázala. 
 
 Asko čekal.
 
-„Senát hledá čtenáře. Myslím, že žádný není. Budeme číst jen to, co se přečíst dá.“
+„Senát se ptá univerzit po čtenáři. To je ve veřejném rejstříku. Víc ti neřeknu.“
 
 Asko se na ni dlouho díval. Pak kývl, pomalu, jako by si to ukládal na místo, které už pro to měl připravené.
 
@@ -48,7 +48,7 @@ U dveří se otočil.
 
 „A Naro. Tady tě nechytí. Pravomoc je jinde. Tady tě může chytit jen to, že budeš chtít víc, než máš.“
 
-Odešel. Nara stála ve dveřích a dívala se, jak jde chodbou, pomalu, s rukou u stěny, kde ji měl i jako mladý, protože se tak naučil chodit, když se rotace na Orse ještě seřizovala.
+Odešel. Nara stála ve dveřích a dívala se, jak jde chodbou, pomalu, s rukou u stěny, kde ji měl vždycky. Prý se tak naučil chodit jako kluk, když se na Orse po opravě seřizovala rotace.
 
 *
 
@@ -72,7 +72,7 @@ Horní polovina nebyla řeč. Byly to znaky, jaké Nara viděla ve statutu u sez
 
 Dolní polovina byla psaná starou úřední řečí Konfederace, stejnou, jakou Nara četla předevčírem. Hals řekl, co to je, dřív, než se zeptala.
 
-„Překlad. Pořídil ho překladatelský odbor úřadu, když opis přejímali.“ Ukázal na záhlaví dolní poloviny, kde stál znak, který Nara neznala. „Ten znak je odboru. Jméno překladatele tam není.“
+„Překlad. Pořídil ho překladatelský odbor úřadu, když opis přejímali.“ Ukázal na záhlaví dolní poloviny, kde stál znak, který Nara neznala. „To je znak odboru. Jméno překladatele tam není.“
 
 „Podle čeho překládal?“
 
@@ -128,7 +128,7 @@ Doslova. Tady překladatel smysl nedodal. Napsal, co stálo, a pod tím se omluv
 
 Nara se dívala na tři slova a cítila, jak se jí pod nimi něco posouvá. Kontaminant, který se nesmí zničit. Který se drží v místě, kde vznikl. Který se hlídá, nebo opatruje, nebo izoluje. Kolem něhož je hranice, kterou nesmí překročit ani ten, kdo ho nese.
 
-Nevěděla, co to je. Věděla jen, že ve vodním okruhu by se s kontaminantem takhle nikdo nezacházel.
+Nevěděla, co to je. Věděla jen, že ve vodním okruhu by s kontaminantem takhle nikdo nezacházel.
 
 Pátý list byl skoro prázdný. *Chybí. Chybí.* Jeden řádek uprostřed. *Kdo na světě zůstává, odpovídá za…* a pak tečkovaná čára.
 
@@ -236,7 +236,7 @@ Odpoledne nadiktovala do zapisovače poznámku. Krátkou. Napsala ji v hlavě t�
 
 *Navrhovatelka žádá, aby tato poznámka zůstala připojena k části III v každé podobě spisu.*
 
-Zastavila se u poslední věty. *V každé podobě spisu.* Nevěděla, proč ji tam dala. Spis měl jednu podobu, zapečetěnou, dvanáct set metrů pod povrchem. Ale archiv počítal s tím, co se může stát. Tak to řekl Hals, šestý den, u výtahu. A ona si to zapamatovala tehdy ještě se záznamem.
+Zastavila se u poslední věty. *V každé podobě spisu.* Nevěděla, proč ji tam dala. Spis měl jednu podobu, zapečetěnou, dvanáct set metrů pod povrchem. Ale archiv počítal s tím, co se může stát. Tak to řekl Hals, šestý den, cestou od výtahu. A ona si to zapamatovala tehdy ještě se záznamem.
 
 Hals vypnul zapisovač.
 
@@ -260,7 +260,7 @@ Ve výtahu nahoru stála Ardaine vedle ní. Senát jel napřed.
 
 „Ano.“ Ardaine to řekla klidně. „Ale to slovo tam je. Vaše tam není.“
 
-Nara mlčela. Ardaine měla pravdu, a protože měla pravdu, nebylo na ni co odpovědět.
+Nara mlčela. Ardaine měla pravdu, a protože měla pravdu, nebylo na to co odpovědět.
 
 V půli cesty se rozsvítilo *Záznam obnoven*. Nara cítila, jak se jí do hlavy vrací den: Lumi, čtyři zprávy; komora, jedna; Daven, dvakrát. A hned pod tím, než si stačila cokoli otevřít, slovo, které si celé odpoledne opakovala a které jí teď síť sama nabídla.
 

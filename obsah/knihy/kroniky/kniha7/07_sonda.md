@@ -14,7 +14,7 @@ Kalina volá v 17:19.
 
 „Ano.“
 
-„Ty souřadnice,“ řekne Kalina. Nemluví pomalu jako obvykle. Mluví rychle, jako člověk, který jde po chodbě a nemá kde sednout. „Na Měsíc se přes pětadvacet let dívá americká sonda z oběžné dráhy. Fotí ho po kouscích. Všechno je veřejné, v archivu, kdokoli si to stáhne.“ Odmlčí se. „Jestli tam něco leží, je to na snímcích. Z doby, kdy o nich nikdo nevěděl.“
+„Ty souřadnice,“ řekne Kalina. Nemluví pomalu jako obvykle. Mluví rychle, jako člověk, který jde po chodbě a nemá si kam sednout. „Na Měsíc se přes pětadvacet let dívá americká sonda z oběžné dráhy. Fotí ho po kouscích. Všechno je veřejné, v archivu, kdokoli si to stáhne.“ Odmlčí se. „Jestli tam něco leží, je to na snímcích. Z doby, kdy o tom nikdo nevěděl.“
 
 Hana chvíli mlčí a řekne to jediné, co ji v tu chvíli napadne.
 
@@ -58,7 +58,7 @@ Vyzvednout to umí jen výprava. To je jediná věc, na které se shodnou všich
 
 Zbytek je spor.
 
-Vysoká žena se jmenuje Hesk Varo. Hana to ví od druhého dne. Krausová jí to napíše na lísteček a pod jméno připíše: *velí ozbrojené složce. Neví se, jak velké.* Hesk mluví krátce a navrhuje jednoduchou věc. Objekt cizího technologického původu se vyzvedne a převeze na loď. Tam se prozkoumá v podmínkách, které výprava zná. Výsledek se oznámí.
+Vysoká žena se jmenuje Hesk Varo. Že je to ta „H. Varo“ ze zprávy z 16. 6., ví Hana od druhého dne. Krausová jí to napíše na lísteček a pod jméno připíše: *velí ozbrojené složce. Neví se, jak velké.* Hesk mluví krátce a navrhuje jednoduchou věc. Objekt cizího technologického původu se vyzvedne a převeze na loď. Tam se prozkoumá v podmínkách, které výprava zná. Výsledek se oznámí.
 
 „Oznámí,“ řekne Hronková.
 
@@ -94,7 +94,7 @@ Hesk připojí odlišné stanovisko. Hana už ví, že to dělá vždycky. Nemys
 
 Šestadvacátého června dopoledne podepíše Hana pečeť.
 
-Je to obyčejný list papíru. Pět institucí ve čtyřech zemích, každá s vlastní kopií a vlastním razítkem. Pod tím tabulka: co se zapečetilo, kdy a s jakým kontrolním součtem. Tomografie válce z roku dvacet šest z ústavu v Méridě i z kliniky. Hanina měření od roku třicet. Kalinovy záznamy. Snímky kodexu z chebského archivu, s podpisem Šindelářové. Data Sokolové. A na posledním řádku, zvlášť, s vlastní poznámkou:
+Je to obyčejný list papíru. Pět institucí ve čtyřech zemích, každá s vlastní kopií a vlastním razítkem. Pod tím tabulka: co se zapečetilo, kdy a s jakým kontrolním součtem. Tomografie válce z roku dvacet šest: švýcarská neutronová a CT z kliniky. Hanina měření od roku třicet. Kalinovy záznamy. Snímky kodexu z chebského archivu, s podpisem Šindelářové. Data Sokolové. A na posledním řádku, zvlášť, s vlastní poznámkou:
 
 *Glosy a varianty znaků z archivu rady sítí (opisy). Zapečetěno se souhlasem rady sítí ze dne 23. 6. 2035. Bez jmen a bez míst.*
 
@@ -294,9 +294,9 @@ Je jich pět. Sende, Lis Aven, Marn, Hesk a někdo, koho Hana nezná, mladý mu�
 
 Hesk mlčí. Pak kývne, krátce, jako se kývá na údaj.
 
-Marn otevře krabici. Uvnitř je ten plochý šedý předmět, velký jako kniha, a k němu kabel. Marn ukáže na zásuvku ve zdi a obrátí se k technikovi z univerzity. Mluví přes Lis Aven.
+Marn otevře krabici. Uvnitř je plochý šedý předmět, velký jako kniha, a k němu kabel. Marn ukáže na zásuvku ve zdi a obrátí se k technikovi z univerzity. Mluví přes Lis Aven.
 
-„Potřebuje napájení,“ řekne Lis Aven. „Zvenku. Sám nic nemá.“
+„Potřebuje napájení,“ řekne Lis Aven. „Zvenku. Sám nic nemá. Pod horou mu dávalo proud stanoviště. Tady nic takového není.“
 
 Technik přinese měnič. Marn ho dlouho zkoumá a pak ho zapojí. Hana se dívá na kabel, který vede ze zdi brněnské haly do přístroje z lodi, a myslí si, že tohle je ta chvíle. První přístroj výpravy. Listy katalogu dostal tým klíče před dvěma týdny, slovník a popis kódování výprava ještě nepředala. Pečeť je tři týdny stará. Všechno, co měli bez nich, je u pěti lidí, kteří se neznají.
 
@@ -350,7 +350,7 @@ Zmocněnec, který stojí u dveří, se pohne. Hana vidí, že ho to láká. Ne 
 
 Všichni se na ni podívají. Teď.
 
-„Ten obraz přečtete jen vy,“ řekne Hana. Dívá se na Hesk. Pak na Sendeho. „Nikdo z nás to písmo neumí. Kdybyste nám za den dali překlad, nemáme ho s čím porovnat. Jen s vámi. Proto musí být ten obraz venku dřív, než ho přečtete. Každá destička, jak se rozsvítí, se vyfotí a hned se zveřejní. S kontrolním součtem. A pak čtěte. Za rok, až budeme mít váš slovník, zjistíme, jestli jste četli poctivě.“
+„Ten obraz přečtete jen vy,“ řekne Hana. Dívá se na Hesk. Pak na Sendeho. „Nikdo z nás to písmo neumí. Kdybyste nám za den dali překlad, neměli bychom ho s čím porovnat. Jen s vámi. Proto musí být ten obraz venku dřív, než ho přečtete. Každá destička, jak se rozsvítí, se vyfotí a hned se zveřejní. S kontrolním součtem. A pak čtěte. Za rok, až budeme mít váš slovník, zjistíme, jestli jste četli poctivě.“
 
 „Nevěříte nám,“ řekne Hesk. Ne jako otázku.
 
@@ -460,7 +460,7 @@ Doma si Hana sedne ke stolu a otevře sešit. Nahoru, na okraj stránky, kde psa
 
 Vlevo:
 
-*16. 7. Balvan otevřen (zátka, 4 hodiny, restaurátorka). Uvnitř 200 destiček: 199 v jednom svazku, 1 zvlášť. Na hraně každé znak: „Opis souhlasí. T. Hals.“ (L. A.)*
+*16. 7. Balvan otevřen (zátka, 4 hodiny, restaurátorka). Uvnitř 200 destiček: 199 v jednom svazku, 1 zvlášť. Na hraně každé ze 199 znak: „Opis souhlasí. T. Hals.“ (L. A.) Na té zvláštní znak není.*
 
 *Čteno přístrojem výpravy s vnějším napájením (230 V přes měnič). Bez proudu nic. Každá destička vyfocena a zveřejněna před čtením. 5 institucí, 4 země.*
 

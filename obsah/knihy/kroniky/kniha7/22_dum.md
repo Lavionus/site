@@ -44,7 +44,7 @@ Tadeáš pokrčil rameny.
 
 Rada se sešla v osm večer. Na obrazovce, jako vždycky.
 
-Sael seděla v kuchyni v Kozí čtyři, u stolu, kde Javor kdysi loupal jablka a kde je teď loupal pomaleji. Javor seděl u okna. Bylo mu sto šedesát pět a k oknu chodil každý den, ráno a večer, a díval se do dvora. Co tam viděl, neříkal. Kamna byla zapálená. Byla to kachlová kamna, stará, a Sael do nich přikládala dřevo, které si musela koupit, protože v Kozí uličce nic nehřálo zespodu.
+Sael seděla v kuchyni v Kozí čtyři, u stolu, kde Javor kdysi loupal jablka a kde je teď loupal pomaleji. Javor seděl u okna. Bylo mu sto šedesát pět a k oknu chodil každý den, ráno a večer, a díval se do dvora. Co tam viděl, neříkal. Kamna byla zatopená. Byla to kachlová kamna, stará, a Sael do nich přikládala dřevo, které si musela koupit, protože v Kozí uličce nic nehřálo zespodu.
 
 Ines vedla radu. Lorenz byl na obrazovce z Vídně, s novou kamerou, kterou mu někdo nastavil tak, že mu bylo vidět jen čelo a oči. Muž ze saských sídel, se svou dcerou za zády. Za Bavorsko mladá žena, ta, která v srpnu chtěla všechno písemně.
 
@@ -64,7 +64,7 @@ Muž ze saských sídel řekl, že přistupují. Že se ptali i Kláry Rybové, 
 
 Lorenzův obraz chvíli stál, jako by se zasekl.
 
-„Vídeň přistupuje,“ řekl pak. „Moje matka by to nepodepsala. Řekla by, že každý papír se jednou dostane do špatné ruky.“ Odmlčel se. „Má pravdu. Ale tenhle papír je na stole v pěti zemích. Ten se do jedné ruky už nevejde.“
+„Vídeň přistupuje,“ řekl pak. „Moje matka by to nepodepsala. Řekla by, že každý papír se jednou dostane do špatné ruky.“ Odmlčel se. „Měla by pravdu. Ale tenhle papír je na stole v pěti zemích. Ten se do jedné ruky už nevejde.“
 
 Bavorsko přistoupilo. Mladá žena řekla, že obě rodiny, které bydlí v sídle a nikoho venku nemají, se rozhodly samy, a že řekly ano. Pak řekla ještě, že se jedna z nich v listopadu odstěhuje do Řezna. Do bytu. Poprvé.
 
@@ -138,7 +138,7 @@ V dokladu měla jméno, které kdysi někdo vybral podle kalendáře, protože v
 
 Hronková jí podala pero ze svého pouzdra, na konci okousané.
 
-Napsala:
+Sael napsala:
 
 *Sael.*
 
@@ -244,7 +244,7 @@ Podal jí ten papír. Sael ho vzala. Byl teplý od jeho ruky a od koberce.
 
 „Jo,“ řekl Jonáš. „Já si ho pamatuju.“
 
-Sael papír složila. Na polovinu a pak ještě jednou, na čtvrtinu. Pak ho uhladila dlaní, pomalu, od středu ke krajům, jak to dělávala její matka s každým plátnem. A matka její matky. A tak dál, až k Dorotě, která to dělala jako první, a nikdo už nevěděl proč.
+Sael papír složila. Na polovinu a pak ještě jednou, na čtvrtinu. Pak ho uhladila dlaní, pomalu, od středu ke krajům, jak to dělávala její matka s každým plátnem. A matka její matky. A tak dál, až k Dorotě, která to převzala od své lidské mámy, a nikdo už nevěděl proč.
 
 Klára se na to dívala ze dveří.
 
@@ -270,7 +270,7 @@ Kniha ležela na pultu v krabici z nekyselé lepenky, kterou pro ni Sael kdysi u
 
 Pod tím nic. Za rok tu nepřibylo nic.
 
-Sael se dívala na tu prázdnou část stránky. Bylo jí sto padesát dva let a šedesát z nich psala do téhle knihy, a před ní Rokyta, a před Rokytou jiné ruce. Teď do ní psal, kdo chtěl, a chtěl málokdo. Jonáš si jméno napíše sám. Johana své děti zapíše na matrice v Chebu. Ostří, kteří se narodí, se narodí v nemocnici v Chebu, ve světle, pod jménem, které jim dají rodiče. Kdo bude chtít, přijde sem a připíše se.
+Sael se dívala na tu prázdnou část stránky. Bylo jí sto padesát dva let a šedesát z nich psala do téhle knihy, a před ní Rokyta, a před Rokytou jiné ruce. Teď do ní psal, kdo chtěl, a chtěl málokdo. Jonáš si jméno napíše sám. Johana své děti zapíše na matrice v Chebu. Noví Ostří se narodí v nemocnici v Chebu, ve světle, pod jménem, které jim dají rodiče. Kdo bude chtít, přijde sem a připíše se.
 
 Kniha nekončila. Jen už nebyla jediná.
 
@@ -318,9 +318,9 @@ Sedly si na lavici. Sael na kraj, Hana vedle ní. Dřevo bylo studené. Sad za d
 
 Sael se na to dívala.
 
-Celý život tam byla. Za bezvětří rovná, za větru rozfoukaná, v zimě vysoká jako strom. Bílá. Věděla podle ní, jaké bude počasí, a jak se má hora. Ostří podle ní věděli, jestli Lada nespí. Teď tam byla jen tma a smrčí a nad ním nebe. Šedé, čisté, s prvními hvězdami.
+Pára tam byla celý její život. Za bezvětří rovná, za větru rozfoukaná, v zimě vysoká jako strom. Bílá. Věděla podle ní, jaké bude počasí, a jak se má hora. Ostří podle ní věděli, jestli Lada nespí. Teď tam byla jen tma a smrčí a nad ním nebe. Šedé, čisté, s prvními hvězdami.
 
-„Mnich to taky viděl,“ řekla Hana. „Ráno potom. Že nekouří. Je to v kodexu.“
+„Mnich to taky viděl,“ řekla Hana. „Ráno potom. Že nekouří. Tak to Ostří vyprávějí, ne?“
 
 „Ano.“
 
@@ -392,7 +392,7 @@ Javor ještě nespal. Seděl u okna v kuchyni a díval se do dvora, kde nic neby
 
 Javor kývl. Věděl to. Ptal se na něco jiného a ona to věděla.
 
-Sundala si kabát. Sedla si ke stolu. Na stole ležel její sešit, ten, který si v září začala vést, s čárou uprostřed, a vedle něj nůž a tři jablka, která Javor nedoloupal.
+Sundala si kabát. Sedla si ke stolu. Na stole ležel její sešit, ten, do kterého od září píše i vpravo, s čárou uprostřed, a vedle něj nůž a tři jablka, která Javor nedoloupal.
 
 Vzala nůž a loupala dál. Slupku v jednom kuse, jak ji to kdysi učila matka. Javor se díval.
 

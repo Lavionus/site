@@ -28,7 +28,7 @@ Matěj sklonil hlavu a převor si to vyložil, jak chtěl.
 
 *
 
-Stůl postavili venku před vraty, na lukách u potoka, kde začínala cesta ke vsi. Udalrichův stůl, ten, na kterém krájel chleba, přikrytý oltářním plátnem. Na něm truhla s rozšířeným křížem, dvě svíce a na podušce z červené vlny kost. Vedle kosti, složená na čtvrtky, listina z Lyddy. Vedle listiny jiná, nová, ještě bez pečeti, a u ní miska s voskem, který Hartmann držel nad pánví, aby nevychladl.
+Stůl postavili venku před vraty, na lukách u potoka, kde začínala cesta ke vsi. Udalrichův stůl, ten, na kterém krájel chleba, přikrytý oltářním plátnem. Na něm truhla s tlapatým křížem, dvě svíce a na podušce z červené vlny kost. Vedle kosti, složená načtvrto, listina z Lyddy. Vedle listiny jiná, nová, ještě bez pečeti, a u ní miska s voskem, který Hartmann držel nad pánví, aby nevychladl.
 
 ![Stůl před vraty grangie](obrazky/17_svaty_jiri.webp)
 
@@ -94,7 +94,7 @@ Někdo v davu se zasmál, nejistě. Rüdiger u koní zrudl až po krk. Konrád s
 
 *
 
-„Kost,“ řekl Matěj, „je pravá. Je to kost. Je stará, starší než listina, starší než kdokoli tu může říct. Je z kamene a je těžká jako kámen. Z jakého zvířete je, nevím. To zvíře jsem neviděl.“
+„Kost,“ řekl Matěj, „je pravá. Je to kost. Je stará, starší než listina, starší než paměť kohokoli z vás. Je z kamene a je těžká jako kámen. Z jakého zvířete je, nevím. To zvíře jsem neviděl.“
 
 Podíval se na kost na podušce. Na rytinu na jejím boku, kterou odtud nemohl vidět a kterou cítil v prstech, jako tenkrát ve tmě knihovny.
 
@@ -110,7 +110,7 @@ Ticho bylo jiné než předtím. Těžší.
 
 *
 
-Udalrich mu podal měchýř. Matěj ho o to požádal ráno a Udalrich se nezeptal proč. Teď stál vedle stolu s tím prasečím měchýřem v mokrém plátně v obou rukou, jako by držel monstranci.
+Udalrich mu podal měchýř. Matěj ho o to požádal ráno a Udalrich se nezeptal proč. Teď stál vedle stolu s tím prasečím měchýřem v mokrém plátně v obou rukou, jako by držel relikviář s ostatky.
 
 Matěj vytáhl z mošny svíci.
 
@@ -142,7 +142,7 @@ Kojata se na něj díval, jako by mu podával hada.
 
 „Nafoukni ho. Svým dechem.“
 
-Kojata se podíval na převora. Převor stál za stolem a nehýbal se. Kojata se podíval na Konráda. Konrád kývl. Kojata vzal měchýř do svých velkých rukou, přiložil trubičku k ústům a foukl, jednou, dvakrát, až mu zrudl obličej, a měchýř se zakulatil. Matěj mu ho vzal, obrátil nad svíci a zmáčkl. Kojatův dech syčel z trubičky. Plamen se ohnul, jako se ohýbá ve větru. A hořel.
+Kojata se podíval na převora. Převor stál za stolem a nehýbal se. Kojata se podíval na Konráda. Konrád kývl. Kojata vzal měchýř do velkých dlaní, přiložil trubičku k ústům a foukl, jednou, dvakrát, až mu zrudl obličej, a měchýř se zakulatil. Matěj mu ho vzal, obrátil nad svíci a zmáčkl. Kojatův dech syčel z trubičky. Plamen se ohnul, jako se ohýbá ve větru. A hořel.
 
 „Kojatův dech,“ řekl Matěj. „Člověka. Ten svíci nezhasí. Dech země ano.“ Položil měchýř na stůl. „Svíce to pozná dřív než člověk. Kdo jde na slatinu, ať si vezme svíci. Kde zhasne, tam ať nechodí. Za bezvětří do prohlubní nechoďte nikdy. Nesklánějte se. To ví každý, kdo tam chodí. Teď víte proč. Nebo ne proč. Ale víte, co to dělá.“
 
@@ -158,7 +158,7 @@ Ves šuměla. Matěj počkal, až utichne. Neutichla úplně, ale ztišila se, k
 
 Ortlieb mezi horníky se narovnal.
 
-„V pondělí po Velikonocích vám tady kaplan pana Konráda četl, co mu mistr Ortlieb hlásí. Že od Hromnic teče z pukliny ve štole tři vědra za směnu. Někdy čtyři. Jako v každé hoře. Že vody ubývá.“ Matěj otevřel sešitek na předposledním listu. „Mistr Ortlieb si ale píše ještě jiné tabulky. Pro sebe. Svými znaky, kterým rozumí jen jeho lidi. Tady je opis.“ Ukázal list, i když na tu dálku nikdo nemohl nic vidět. „Na Hromnice tři vědra za směnu. Pak čtyři. Pět. Osm. Deset. V sobotu před Květnou nedělí patnáct. Na čelbě se od Zvěstování staví hrázka, protože ze dna teče teplá voda, a v sobotu před Květnou nedělí se musela za jednu směnu vypouštět devětkrát. U druhé neděle po Zvěstování si mistr napsal *Bad*, lázeň, a *Berg zittert*. Hora se třese.“ Zvedl hlavu. „Obojí psal mistr Ortlieb. Jedno pro sebe a druhé pro pána.“
+„V pondělí po Velikonocích vám tady kaplan pana Konráda četl, co mu mistr Ortlieb hlásí. Že od Hromnic teče z pukliny ve štole tři vědra za směnu. Někdy čtyři. Jako v každé hoře. Že vody ubývá.“ Matěj otevřel sešitek na předposledním listu. „Mistr Ortlieb si ale píše ještě jiné tabulky. Pro sebe. Svými znaky, kterým rozumí jen jeho lidi. Tady je opis.“ Ukázal list, i když na tu dálku nikdo nemohl nic vidět. „Na Hromnice tři vědra za směnu. Pak čtyři. Pět. Osm. Deset. V sobotu před Květnou nedělí patnáct. Na čelbě se od Zvěstování staví hrázka, protože ze dna teče teplá voda, a v sobotu před Květnou nedělí se musela za jednu směnu vypouštět devětkrát. K druhé neděli po Zvěstování si mistr napsal *Bad*, lázeň, a *Berg zittert*. Hora se třese.“ Zvedl hlavu. „Obojí je od mistra Ortlieba. Jedno si píše sám, druhé hlásí pánovi.“
 
 Horníci se na sebe dívali. Místní na Sasy, Sasové na Ortlieba.
 
@@ -178,11 +178,11 @@ Konrád se neptal zle. Ptal se, jako se ptal tenkrát v hoře, *co jsi viděl ty
 
 Matěj mlčel.
 
-Ortlieb se díval na něj, a pak se otočil, pomalu, a podíval se na horníky za sebou. Na Sasy. Na místní. Na Ješka. Matěj viděl, kam se jeho oči podívaly, a viděl, že tam zůstaly o dech déle. Ješek pod tím pohledem nesklopil oči, ale zbledl.
+Ortlieb se díval na něj, a pak se otočil, pomalu, a podíval se na horníky za sebou. Na Sasy. Na místní. Na Ješka. Matěj viděl, kam se Ortlieb podíval, a viděl, že tam jeho pohled zůstal o dech déle. Ješek pod tím pohledem nesklopil oči, ale zbledl.
 
 A pak se mezi horníky pohnul Hensel.
 
-Neslyšel nic z toho, co se říkalo. Matěj to věděl. Ale celou dobu se díval na Ortliebova ústa a na Matějova, a na Ortliebovy oči, a viděl, kam se podívaly. Vystoupil. Pomalu, kulhavě, prošel mezi lidmi ke stolu, a lidé před ním ustupovali. U stolu se zastavil. Sáhl si pod košili, vytáhl řemínek, a na řemínku klíč. Přetáhl si řemínek přes hlavu a položil klíč na oltářní plátno. Vedle kosti.
+Neslyšel nic z toho, co se říkalo. Matěj to věděl. Ale celou dobu se díval na Ortliebova ústa a na Matějova, a sledoval Ortliebův pohled. Vystoupil. Pomalu, kulhavě, prošel mezi lidmi ke stolu, a lidé před ním ustupovali. U stolu se zastavil. Sáhl si pod košili, vytáhl řemínek, a na řemínku klíč. Přetáhl si řemínek přes hlavu a položil klíč na oltářní plátno. Vedle kosti.
 
 „Ich,“ řekl.
 
@@ -194,7 +194,7 @@ Jen to. Pak se otočil a šel zpátky mezi horníky, na své místo, a postavil 
 
 Rüdiger nasedl a odjel nahoru, k pasece. Nikdo nemluvil. Matěj stál u stolu a počítal, ne Otčenáše, jen tak, tlukoty, a ztratil počet, a začal znovu. Lidé přešlapovali. Děti, které se předtím honily, stály u matek. Ortlieb stál se zkříženýma rukama a nedíval se na nikoho.
 
-Rüdiger se vrátil s truhlou přes sedlo. Postavil ji na zem před stůl. Hensel k ní přišel, i když klíč už neměl, ukázal na zámek a Rüdiger mu podal klíč ze stolu. Hensel odemkl. Nářadí v kůži. Váhy. Uzlový provaz. Prázdný vak. Smlouva, složená na čtvrtky, navrchu. A pod tím tabulky, svázané řemínkem.
+Rüdiger se vrátil s truhlou přes sedlo. Postavil ji na zem před stůl. Hensel k ní přišel, i když klíč už neměl, ukázal na zámek a Rüdiger mu podal klíč ze stolu. Hensel odemkl. Nářadí v kůži. Váhy. Uzlový provaz. Prázdný vak. Smlouva, složená načtvrto, navrchu. A pod tím tabulky, svázané řemínkem.
 
 Volkmar je rozvázal. Otevřel první.
 
@@ -208,7 +208,7 @@ Matěj se díval na hladký vosk. *Vosk se dá uhladit, paměť ne.* Řekl si to
 
 Volkmar vzal smlouvu. Rozložil ji, přečetl ji polohlasem, a pak se naklonil ke Konrádovi a řekl mu něco do ucha. Konrád poslouchal. Kývl.
 
-„Tak to stojí ve smlouvě,“ řekl Konrád nahlas. „*Sive per aquam.* To je pravda.“ Podíval se na Ortlieba, a pak na Matěje. „A ostatní máme tvoje slovo, Matěji, a slovo mistra. A klíč starého Sasa, který neslyší, co se kolem něj mluví.“
+„Tak to stojí ve smlouvě,“ řekl Konrád nahlas. „*Sive per aquam.* To je pravda.“ Podíval se na Ortlieba, a pak na Matěje. „A na to ostatní máme jen tvoje slovo, Matěji, a slovo mistra. A klíč starého Sasa, který neslyší, co se kolem něj mluví.“
 
 *
 
@@ -268,7 +268,7 @@ Ortlieb se narovnal. „Pane, nejdřív odbočka. Voda…“
 
 Ortlieb otevřel ústa. Pak je zavřel a sklonil hlavu.
 
-„A do hory dnes nepůjde nikdo.“ Konrád se obrátil k lidem v předních řadách, kteří čekali, že je povede k dračí díře, ke zlatu, ke kostem. „Slíbil jsem vám, že vás zavedu do dračí díry. Nezavedu. Co je v hoře, není pro jarmark.“ Kývl na Rüdigera. „Postav k ústí dva muže. Do hory jen horníci. A kdo sáhne na prkna, tomu usekneš ruku. Ne pro žert.“
+„A do hory dnes nepůjde nikdo.“ Konrád se obrátil k lidem v předních řadách, kteří čekali, že je povede k dračí díře, ke zlatu, ke kostem. „Slíbil jsem vám, že vás zavedu do dračí díry. Nezavedu. Co je v hoře, není pro jarmark.“ Kývl na Rüdigera. „Postav k ústí dva muže. Do hory jen horníci. A kdo sáhne na prkna, tomu usekneš ruku. Myslím to vážně.“
 
 „A zlato?“ zeptal se někdo zezadu.
 
@@ -326,7 +326,7 @@ Matěj seděl pod planou hrušní na kraji luk. Pupeny byly zase o kus větší 
 
 „Viděl.“
 
-„A Hensel mu dal klíč. Před celou vsí.“ Ješek mlčel. „Je mu šedesát. Kde najde práci? Kdo ho vezme, hluchýho, se dvěma prstama?“
+„A Hensel mu dal klíč. Před celou vsí.“ Ješek mlčel. „Je mu šedesát. Kde najde práci? Kdo ho vezme, hluchýho, bez dvou prstů?“
 
 Matěj neodpověděl.
 

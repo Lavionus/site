@@ -2,11 +2,11 @@
 
 Kodex leží na stejném pultu jako v lednu a lampa nad ním pořád nehřeje.
 
-Venku je duben. Hana jela z Brna vlakem čtyři hodiny, protože v e-mailu stálo *výsledky jsou zpátky, restaurátorka by se ráda rozhodla* a protože posudek, za který už dostala zaplaceno, není hotový, dokud v něm chybí čísla. Čísla má v desce pod paží. Uhlík a kyslík ze sintru, který z krystalu odebrali skalpelem. Bylo ho tak málo, že restaurátorka ještě teď kroutí hlavou, že to vůbec stačilo.
+Venku je duben. Hana jela z Brna vlakem skoro šest hodin, s přestupem v Praze, protože v e-mailu stálo *výsledky přišly, restaurátorka by ráda rozhodla, co dál* a protože posudek, za který už dostala zaplaceno, není hotový, dokud v něm chybí čísla. Čísla má v deskách pod paží. Izotopy uhlíku a kyslíku ze sintru, který z krystalu odebrali skalpelem. Bylo ho tak málo, že restaurátorka ještě teď kroutí hlavou, že to vůbec stačilo.
 
 „Tak?“ řekne doktorka Šindelářová. Brýle má tentokrát jen jedny.
 
-„Hluboký uhlík,“ řekne Hana. „Ten povlak se vysrážel z vody, která nesla oxid uhličitý z velké hloubky. Z pláště. Stejný podpis mají mofety kolem Chebu, Soos, Hartoušov. A ty jehličky v křemeni jsou oxidy železa, jaké rostou v hydrotermálních žilách.“ Položí desku na kraj pultu, daleko od kodexu. „Ten kámen je odsud. Z Oháreckého riftu. Z místa, kde z hloubky stoupá teplá voda a plyn. Jinak to neumím říct přesněji.“
+„Hluboký uhlík,“ řekne Hana. „Ten povlak se vysrážel z vody, která nesla oxid uhličitý z velké hloubky. Z pláště. Stejnou izotopovou signaturu mají mofety kolem Chebu, Soos, Hartoušov. A ty jehličky v křemeni jsou oxidy železa, jaké rostou v hydrotermálních žilách.“ Položí desky na kraj pultu, daleko od kodexu. „Ten kámen je odsud. Z Oháreckého riftu. Z místa, kde z hloubky stoupá teplá voda a plyn. Přesněji to říct neumím.“
 
 „A kde přesně?“
 
@@ -24,15 +24,15 @@ První věta je oslovení.
 
 *Tobě, kdo přijdeš po mně a budeš to číst. Napsal jsem, co jsem viděl. A co jsem neviděl, zvlášť.*
 
-„To je topos,“ řekne Šindelářová přes rameno. „Písaři se tak obraceli na čtenáře. *Lector*, ty, kdo čteš.“
+„To je topos,“ řekne Šindelářová přes rameno. „Písaři se tak obraceli na čtenáře. *Lector*, ty, kdo čteš. A datuje se sám, sedmdesátý druhý.“
 
 Hana nic neřekne. Čte dál.
 
-Listina o relikvii, kterou autor prohlásil za podvrh, protože svědkové jsou psaní jednou rukou. Slepý knihovník, který četl prsty. Mrtvá zvířata v prohlubni na slatině a svíčka, která zhasíná vždycky ve stejné výšce a ještě tři kroky za okrajem, jako by tam tekla voda, kterou nikdo nevidí. *Svíce to pozná dřív než člověk.* Hana se nad tou větou zastaví a cítí, jak se jí něco stáhne v hrdle, protože je to pravda, a protože to v roce 1172 někdo zjistil tak, že tam klečel. Hned pod tím, na samostatném řádku: *Můj dopis převorovi o drakovi byl mylný.*
+Listina o relikvii, kterou autor prohlásil za podvrh, protože svědky psala jedna ruka a úvod je opsaný i s chybou z řezenského formuláře. Slepý knihovník, který četl prsty. Mrtvá zvířata v prohlubni na slatině a svíčka, která zhasíná vždycky ve stejné výšce a ještě tři kroky za okrajem, jako by tam tekla voda, kterou nikdo nevidí. *Svíce to pozná dřív než člověk.* Hana se nad tou větou zastaví a cítí, jak se jí něco stáhne v hrdle, protože je to pravda, a protože to v roce 1172 někdo zjistil tak, že tam klečel. Hned pod tím, na samostatném řádku: *Můj dopis převorovi o drakovi byl mylný.*
 
 Hana si nevzpomíná, kdy naposledy četla v odborném textu větu, ve které autor bez okolků píše, že se mýlil.
 
-Pak štola. Kroky, kapky, vědra, měřená modlitbou. Skála, která je teplá, ačkoli se v ní nepálí. Chvění pod dlaní. Voda, která přibývá.
+Pak štola. Kroky, kapky, vědra, měřené modlitbou. Skála, která je teplá, ačkoli se v ní nepálí. Chvění pod dlaní. Voda, která přibývá.
 
 Hana to všechno zná. Hydrotermální fluida, která stoupají po zlomech a ohřívají horninu kolem sebe. Zemětřesné roje, které tu v západních Čechách přicházejí co pár let, tisíce otřesů tak slabých, že je člověk ucítí jen dlaní na skále. Štola, která se zakousne do nasyceného kolektoru, a voda pod tlakem, která si najde cestu. Tohle se stávalo všude, kde se kopalo. Tady to jen někdo zapsal.
 
@@ -54,7 +54,7 @@ Světelné jevy při zemětřesení jsou popsané. Málo a nespolehlivě; o mech
 
 Je to pravda. Všechno, co si teď myslí, je pravda.
 
-Jen ten člověk, který tam klečel a měl na to sto důvodů víc než ona, napsal *nevím*.
+Jen ten člověk, který tam klečel a měl na to o sto důvodů víc než ona, napsal *nevím*.
 
 *
 
@@ -62,7 +62,7 @@ Dvoustranu s dutinou otevře teprve teď, s překladem vedle.
 
 Kosti těžké jako kámen. Lebka dlouhá jako předloktí. Vrstvy hlíny, stovky vrstev, tenkých jako list. Bílá krusta na krystalech. *Byli. Nejsou.* U toho odstavce stojí na okraji *vidi* a *non vidi* a mezi nimi ta čára, kterou viděla v lednu. Kosti viděl. Draka neviděl. Čára mezi tím, co je v zemi, a tím, co si o tom vypráví ves.
 
-Fosilní lokalita, pomyslí si Hana. Chebská pánev je plná třetihorních jílů a v jílech leží kdeco. A zároveň už nemá sílu tu druhou myšlenku odsouvat, tu z ledna. Tohle je zápis z výkopu. Mřížka natažená provazem, osm na pět loktů. Značky pro typy nálezů. *Sic* u rozdvojené rýhy, aby si nikdo nemyslel, že se přepsal. Ona sama píše *sic* do terénního deníku. Učil ji to její první vedoucí na exkurzi v Krkonoších, starý pán, který kouřil dýmku a měl deník rozdělený svislou čarou na dvě půlky: vlevo, co vidíš, vpravo, co si myslíš. *A nikdy to nepleť dohromady, děvče, nebo budeš psát romány.*
+Fosilní lokalita, pomyslí si Hana. Chebská pánev je plná třetihorních jílů a v jílech leží kdeco. A zároveň už nemá sílu tu druhou myšlenku odsouvat, tu z ledna. Tohle je zápis z výkopu. Mřížka natažená provazem, osm na pět loktů. Značky pro typy nálezů. *Sic* u rozdvojené rýhy, aby si nikdo nemyslel, že se přepsal. Ona sama píše *sic* do terénního deníku. Naučil ji to první vedoucí na exkurzi v Krkonoších, starý pán, který kouřil dýmku a měl deník rozdělený svislou čarou na dvě půlky: vlevo, co vidíš, vpravo, co si myslíš. *A nikdy to nepleť dohromady, děvče, nebo budeš psát romány.*
 
 A pak ty křížky.
 
@@ -80,7 +80,7 @@ Pod mřížkou, malým písmem: *Tuto dutinu prorazil Ješek, můj bratr.*
 
 *
 
-„Pergamen,“ řekne Šindelářová, když Hana dočte, a otočí kodex hřbetem k lampě. „Restaurátorka vám to chtěla říct sama, ale musela odjet. Je špatný. Tlustý, nerovný, jehněčí, nedorobený. Jeden list má díru a text ji obtéká. Tohle nedělal klášter. Tohle si udělal sám.“ Ukáže tužkou, aniž by se dotkla, do rozestouplého hřbetu. „A pod tím krystalem je látka. Hrubé vlněné sukno, šedé. Z oděvu, nejspíš. Někdo to tam přilepil, aby se kůže nedřela o kámen.“
+„Pergamen,“ řekne Šindelářová, když Hana dočte, a otočí kodex hřbetem k lampě. „Restaurátorka vám to chtěla říct sama, ale musela odjet. Je špatný. Tlustý, nerovný, jehněčí, nedorobený. Jeden list má díru a text ji obtéká. Tohle nedělal klášter. Kromě jednoho sešitu uprostřed, ten je klášterní, lepší, s kresbami. Zbytek si udělal sám.“ Ukáže tužkou, aniž by se dotkla, do rozestouplého hřbetu. „A pod tím krystalem je látka. Hrubé vlněné sukno, šedé. Z oděvu, nejspíš. Někdo to tam přilepil, aby se kůže nedřela o kámen.“
 
 Hana se dívá na tu šedou nitku vedle hrany krystalu. Neví, čí to byl oděv. Neví, proč by ho kdo stříhal kvůli knize.
 

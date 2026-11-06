@@ -4,7 +4,7 @@
 
 Počítal od chvíle, kdy zašrouboval víčko, do chvíle, kdy láhev přetekla. První den to bylo čtyřicet dva vteřin. Druhý den padesát. Včera šedesát osm. Dnes napočítal devadesát jedna a pak ještě chvíli čekal, protože nevěřil, že to číslo je správné.
 
-Bylo správné. Voda vytékala z vložky pomaleji, tenčím pramínkem, a když ho Eren podržel proti světlu, byl pořád čirý. Vložka nepouštěla špínu. Jenom ji v sobě držela. Každá kapka hlíny, kterou potok nesl, v ní zůstala a ucpávala cestu kapce, která přišla po ní.
+Bylo správné. Voda vytékala z vložky pomaleji, tenčím pramínkem, a když ho Eren podržel proti světlu, byl pořád čirý. Vložka nepouštěla špínu. Jenom ji v sobě držela. Každé zrnko hlíny, které potok nesl, v ní zůstala a ucpávala cestu kapce, která přišla po ní.
 
 Na obalu náhradní vložky stálo úředním písmem: *Kapacita 400 litrů.* A pod tím menšími znaky: *při běžné kvalitě vody.* Eren se nad tím slovem zastavil už první den a pak na něj zapomněl. Teď si na něj vzpomněl. *Běžné.* Kdo to psal, myslel vodu z rozvodu nebo vodu z nádrže. Ne tuhle, žlutohnědou, plnou jemné hlíny, která se neusadí, ani když se nechá stát přes noc.
 
@@ -34,7 +34,7 @@ Pak si všiml, že nad roklí, výš, nad bílými skalami, stoupá i ten tenký
 
 *
 
-Orrin to rozhodl ještě to dopoledne.
+Orrin to rozhodl ještě téhož dopoledne.
 
 Ráno po první noci pod plachtou jim to řekli, jak Orrin slíbil. Spolu. Orrin stál na bedně a Eren vedle něj a Orrin mluvil. Řekl to dobře; Eren to musel uznat. Klidně a bez strachu. Že tady nejsou sami. Že tu žijí lidé, možná celé skupiny, a že je to dobrá zpráva, protože kde žijí lidé, tam je jídlo a voda a ten, kdo ví, jak se tady přežije. Pak se ozvali ti, kdo měli strach. Orrin je nechal mluvit a odpověděl každému zvlášť.
 
@@ -64,7 +64,7 @@ Eren se na něj podíval.
 
 „Když tam přijde čtyřicet mužů se sekerami,“ řekl Orrin, „víš, co uvidí? Čtyřicet mužů se sekerami. Když přijdou ženy a děti, uvidí lidi, kteří hledají, kde bydlet.“ Usmál se. „Což je pravda.“
 
-Bylo to rozumné. Eren to věděl a stejně se mu to nelíbilo. Možná to, že by na to přišel sám a nepřišel. Možná to, že Orrin řekl *s rodinami* stejně, jako řekl *ozbrojených*: jako slovo, které se dá položit na stůl a vzít zpátky.
+Bylo to rozumné. Eren to věděl a stejně se mu to nelíbilo. Možná to, že na to mohl přijít sám a nepřišel. Možná to, že Orrin řekl *s rodinami* stejně, jako řekl *ozbrojených*: jako slovo, které se dá položit na stůl a vzít zpátky.
 
 „Sekery si vezmou taky,“ řekl Eren.
 
@@ -224,7 +224,7 @@ A Kajova sekera zůstala ve výšce prsou.
 
 Kdy se Eren rozhodl, nepoznal. Možná se nerozhodl vůbec. Ruka sáhla k pasu dřív, než o tom stačil přemýšlet.
 
-Vytáhl nůž. Slyšel, jak se lidé kolem něj napjali, i to, jak se muž na terase přikrčil. Eren nůž nezvedl. Držel ho za čepel, rukojetí od sebe. Pomalu si klekl, levé koleno na suť, a ucítil, jak se mu pod ním posunul kámen a puchýř na patě se otřel o botu. Položil nůž na plochý kámen před sebou, tak, aby ležel na očích obou řad. Pak ho od sebe kousek odsunul. Prsty od něj dal pryč. Vstal.
+Vytáhl nůž. Slyšel, jak se lidé kolem něj napjali, i to, jak se muž na terase přikrčil. Eren nůž nezvedl. Držel ho za čepel, rukojetí od sebe. Pomalu si klekl, levé koleno na suť, a ucítil, jak se mu pod ním posunul kámen a puchýř na patě se otřel o botu. Položil nůž na plochý kámen před sebou, tak, aby ležel na očích obou řad. Pak ho od sebe kousek odsunul. Odtáhl od něj prsty. Vstal.
 
 Ruce měl prázdné. Nechal je viset podél těla, dlaněmi dopředu.
 

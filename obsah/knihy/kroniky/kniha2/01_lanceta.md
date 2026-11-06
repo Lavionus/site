@@ -2,7 +2,7 @@
 
 Klepání přišlo v hodině, kdy už ztichly stoupy a kosi ještě nezačali.
 
-Ilona ho slyšela ve spánku dřív, než se probudila, a ve spánku věděla, kdo klepe a proč: Řehoř vstává, bere brašnu, ve dveřích říká *spi*. Pak otevřela oči do tmy a Řehoř ležel dva roky na hřbitově u špitálu a klepání pokračovalo, rychlé, dětskou pěstí.
+Ilona ho slyšela ve spánku dřív, než se probudila, a ve spánku věděla, kdo klepe a proč: Řehoř vstává, bere brašnu, ve dveřích říká *spi*. Pak otevřela oči do tmy a Řehoř ležel už dva roky na hřbitově u špitálu a klepání pokračovalo, rychlé, dětskou pěstí.
 
 Natáhla na košili sukni a přes ni mužův kabát, protože visel nejblíž. Ve světnici, kde přes den ošetřovala, bylo cítit vychladlý popel a heřmánek. Dveře do komůrky za pecí byly pootevřené. Tobiáš spal na boku, s rukou pod tváří, jako spí děti a lidé, kteří celý den nosili vodu. Jedna bota u slamníku, druhá u dveří. Ilona si toho všimla a nevěděla proč.
 
@@ -102,7 +102,7 @@ Stöckel přikývl, jako by si to už předtím myslel a jen to chtěl slyšet. 
 
 „Viděl jsem mrtvé.“
 
-„Tohle ne.“ Řekla to tišeji, než chtěla, a Stöckel se k ní otočil, protože ženy, které mluví tiše, slyší muži někdy líp. „Jsou tam dva řezy. Jeden je jeho a je zavřený. Druhý je napříč žílou a takový řez bych nikoho neučila. A krev tu není. Je jí tu na slamníku tolik, co by se vešlo do misky, a ona umřela z celého těla. Kam se poděla ta ostatní?“
+„Tohle ne.“ Řekla to tišeji, než chtěla, a Stöckel se k ní otočil, protože ženy, které mluví tiše, slyší muži někdy líp. „Jsou tam dva řezy. Jeden je jeho a je zavřený. Druhý je napříč žílou a takový řez bych nikoho neučila. A krev tu není. Je jí tu na slamníku tolik, co by se vešlo do misky, a ona vykrvácela celá. Kam se poděla ta ostatní?“
 
 Stöckel se podíval na slamník. Pak na ni.
 
@@ -128,7 +128,7 @@ Psala. Tělo na zádech, přikryté po bradu. Kůže bílá do žluta, rty jako 
 
 Pak si klekla k posteli a zvedla Ursulinu levou ruku, tu, které se nikdo nedotkl, a otevřela jí prsty. Byly pevně sevřené, zatuhlé, a Ilona je otvírala jeden po druhém, jak se otvírají prsty dítěti, které nechce něco dát. Dlaň byla prázdná. Ale pod nehtem prostředníčku bylo něco tmavého, a Ilona to vyškrábla špičkou nožíku na list sešitu. Nebyla to krev. Byla to vlna, tmavá, skoro černá, pár vláken, jemnějších než vlna z pláště, jaký nosí havíři.
 
-Ursula nosila přadeno šedé, z ovcí, které pásli na stráních nad Abertamy. Ilona jí to přadeno sama kupovala, když Ursula neměla na zaplacení a platila přízí.
+Ursula předla přízi šedou, z ovcí, které pásli na stráních nad Abertamy. Ilona od ní tu přízi sama brala, když Ursula neměla na zaplacení a platila přízí.
 
 Přeložila list, aby se vlákna nevysypala. Připsala: *pod nehtem prostředníčku levé ruky tmavá vlna, jemná.*
 
@@ -142,7 +142,7 @@ Purga Sternová stála před domem s Jockelem u sukně a čekala, až se Stöcke
 
 „Abych to měla.“
 
-Purga se na ni dívala a Ilona viděla, jak si v duchu skládá, co by měla říct, aby to bylo správně. Věděla, že tohle je okamžik, kdy se z toho, co člověk slyšel, stává to, co si myslí, že slyšel. Otec to nazýval *přeslazování*. Svědek chce dát dobrou výpověď, a tak ji vylepší, jako hospodyně, která pro hosta přisype cukru.
+Purga se na ni dívala a Ilona viděla, jak si v duchu skládá, co by měla říct, aby to bylo správně. Věděla, že tohle je okamžik, kdy se z toho, co člověk slyšel, stává to, co si myslí, že slyšel. Otec to nazýval *přeslazováním*. Svědek chce dát dobrou výpověď, a tak ji vylepší, jako hospodyně, která pro hosta přidá medu.
 
 „Řekněte to tak, jak to bylo,“ řekla Ilona. „Ne tak, jak by to mělo být.“
 
@@ -182,7 +182,7 @@ Stöckel se k ní vrátil, když biřicové odnášeli tělo na nosítkách z v�
 
 „Protože ženy mluví jinak, když jim do úst nekouká chlap s pečetí,“ řekla Ilona, a pak, aby to nevyznělo zle: „A protože to umím. Starý pan horní písař mi to svěřil ještě za muže.“
 
-Stöckel si to přebral. „Ursula Kolbová byla vdova po havíři,“ řekl. „Ten pán nahoře bude chtít říct, že je to jeho věc. Havíři a jejich ženy a jejich děti a jejich psi, všechno patří pod horní soud, když se to hodí panu perkmistrovi.“ Odplivl si na stranu. „Ale tohle je vražda nebo nedbalost s mrtvým, a to je moje. Toho kluka si vezmu do šatlavy. Ať si to pak páni rozeberou.“
+Stöckel si to přebral. „Ursula Kolbová byla vdova po havíři,“ řekl. „Ten pán nahoře bude chtít říct, že je to jeho věc. Havíři a jejich ženy a jejich děti a jejich psi, všechno patří pod horní soud, když se to hodí panu perkmistrovi.“ Odplivl si na stranu. „Ale tohle je vražda nebo smrt z nedbalosti, a to je moje. Toho kluka si vezmu do šatlavy. Ať si to pak páni rozeberou.“
 
 „Nic neudělal.“
 
@@ -194,7 +194,7 @@ Stöckel na ni chvíli hleděl. Pak řekl, docela klidně, jako by jí radil, kd
 
 *
 
-Tobiáš byl vzhůru. Seděl u pece na stoličce a rozdmýchával oheň a na plotně už stála voda na heřmánek, protože tak to dělal každé ráno, když ho nikdo nebudil. Když vešla, vstal. Byl o hlavu vyšší než ona a pořád ještě vstával, když vešla, jako by byla jeho matka nebo farářka.
+Tobiáš byl vzhůru. Seděl u pece na stoličce a rozdmýchával oheň a u ohně už stála voda na heřmánek, protože tak to dělal každé ráno, když ho nikdo nebudil. Když vešla, vstal. Byl o hlavu vyšší než ona a pořád ještě vstával, když vešla, jako by byla jeho matka nebo farářka.
 
 „Kde jste byla?“
 
@@ -300,7 +300,7 @@ Pak slova Purgy Sternové. Tak jak je Purga řekla, nejdřív německy, pak čes
 
 Pak lanceta. Pak vlna pod nehtem. Přeložený list ze sešitu, ve kterém ležela vlákna, přiložila k zápisu a přišila nití do rohu, aby se neztratil.
 
-Pak Tobiášova slova o lancetách. *Doma jsem je myl v octě se všemi. Nepočítám je. Nevím.*
+Pak Tobiášova slova o lancetách. *Doma jsem ji myl v octě se všemi. Nepočítám je. Nevím.*
 
 A nakonec, na samostatný řádek, to, co slyšela sama.
 

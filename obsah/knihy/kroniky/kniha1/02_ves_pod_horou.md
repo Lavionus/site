@@ -1,6 +1,6 @@
 # 2. Ves pod horou
 
-Převor mu dal čtrnáct dní a bratra Udalricha.
+Převor mu dal tři týdny a bratra Udalricha.
 
 „Bratr Udalrich se vrací na grangii v Lukách,“ řekl, když Matěj po kapitule poklekl a přednesl prosbu, kterou si celou noc skládal a ráno stejně řekl jinak. „Pojedeš s ním. Budeš spát na grangii, v komoře u oratoře, a budeš se modlit hodinky v oratoři, ne v hospodě a ne u ohně. Maso nejíš, víno piješ jen to, které ti nalije Udalrich, a ten ho nalévá málo. Svou matku navštívíš.“ Odmlčel se. „Ale spát budeš na grangii.“
 
@@ -16,7 +16,7 @@ Převor se na něj díval svýma šedýma očima a Matěj nedokázal říct, jes
 
 „Otče?“
 
-„Vždycky je druhý důvod. Tvůj mě nezajímá, ten si odneseš ke zpovědi. Řeknu ti svůj.“ Převor si přitáhl voskovou tabulku, která ležela na stole jako jediná věc, a otočil ji, aby na ni Matěj neviděl. „Pan Konrád razí pod horou štolu. Na své půdě, říká, a já nemám důvod mu nevěřit, protože hranici mezi jeho lesem a našimi lukami nikdo nikdy neobešel. Udalrich si stěžuje na dým, na vozy a na lidi, kteří chodí přes naše pastviny. Udalrich si stěžuje na všechno, ale tentokrát nosí stížnosti lidí ze vsi, a ti mluví česky a Udalrich jim rozumí napůl. Já jim nerozumím vůbec.“ Převor se skoro usmál. „Ty mluvíš jazykem těch lidí. Dívej se. Poslouchej. Nic neslibuj a s nikým se nepři. A až se vrátíš, napíšeš mi, co jsi viděl. Ne co sis myslel.“
+„Vždycky je druhý důvod. Tvůj mě nezajímá, ten si odneseš ke zpovědi. Řeknu ti svůj.“ Převor si přitáhl voskovou tabulku, jedinou věc na stole, a otočil ji, aby na ni Matěj neviděl. „Pan Konrád razí pod horou štolu. Na své půdě, říká, a já nemám důvod mu nevěřit, protože hranici mezi jeho lesem a našimi lukami nikdo nikdy neobešel. Udalrich si stěžuje na dým, na vozy a na lidi, kteří chodí přes naše pastviny. Udalrich si stěžuje na všechno, ale tentokrát nosí stížnosti lidí ze vsi, a ti mluví česky a Udalrich jim rozumí napůl. Já jim nerozumím vůbec.“ Převor se skoro usmál. „Ty mluvíš jazykem těch lidí. Dívej se. Poslouchej. Nic neslibuj a s nikým se nepři. A až se vrátíš, napíšeš mi, co jsi viděl. Ne co sis myslel.“
 
 Matěj zčervenal až ke kořínkům vlasů kolem tonzury. Nevěděl, že převor zná Wigandova slova. Nevěděl, že převor zná vůbec něco, co se řekne v knihovně.
 
@@ -38,7 +38,7 @@ Bratr Wigand ho nevyprovodil, protože ten týden už nevstal. Matěj se u něj 
 
 *
 
-Jeli tři dny, protože Udalrich vezl na saních sůl, dvě železné radlice a sud slanečků a nechtěl jet rychleji než jeho kůň. Byl to široký Bavor s vousem, jaký nosili konvršové, a s rukama jako lopaty. Za tři dny promluvil s Matějem méně než se svým koněm. Kůň se jmenoval Bernard. Matěj se zeptal, jestli po svatém Bernardovi, a Udalrich se na něj podíval tak, jako by se ptal, jestli je sníh po svatém Mikuláši.
+Jeli tři dny, protože Udalrich vezl na saních sůl, dvě železné radlice a sud slanečků a nechtěl jet rychleji než jeho kůň. Byl to široký Bavor s vousem, jaký nosili konvršové, a s rukama jako lopaty. Za tři dny promluvil s Matějem méně než se svým koněm. Kůň se jmenoval Bernard. Matěj se zeptal, jestli po opatu Bernardovi z Clairvaux, a Udalrich se na něj podíval tak, jako by se ptal, jestli je sníh po svatém Mikuláši.
 
 „Po mém bratrovi,“ řekl. „Taky byl tvrdohlavý.“
 
@@ -72,7 +72,7 @@ Nad grangií stála hora. Ve vsi jí nikdo neříkal jinak než hora, jako by ji
 
 *
 
-Matka bydlela na horním konci vsi, kde začínal svah, v domě, který postavil otec, když se vzali, a který od té doby nikdo nepřistavěl. Mlýnec měl dvacet chalup, mlýn na potoce, který dal vsi jméno, a dřevěný kostelík, kam jednou za měsíc přicházel kněz z fary za kopcem. Matěj šel vsí v hábitu a lidé vycházeli ze dveří, aby se podívali. Nikdo nepozdravil první. Pak jedna žena, kterou si pamatoval jako dívku, řekla: „Pochválen buď Ježíš Kristus,“ a ostatní to zopakovali, a Matěj odpovídal a nemohl si vzpomenout, jak se ta žena jmenuje.
+Matka bydlela na horním konci vsi, kde začínal svah, v domě, který postavil otec, když se vzali, a který od té doby nikdo nepřistavěl. Mlýnec měl dvacet chalup, mlýn na potoce, který dal vsi jméno, a dřevěný kostelík, kam jednou za měsíc přicházel kněz z fary za kopcem. Matěj šel vsí v hábitu a lidé vycházeli ze dveří, aby se podívali. Nikdo nepozdravil první. Pak jedna žena, kterou si pamatoval jako dívku, řekla: „Pomáhej Pánbůh,“ a ostatní to zopakovali, a Matěj odpovídal a nemohl si vzpomenout, jak se ta žena jmenuje.
 
 Psa uslyšel dřív, než došel k plotu. Ze dvora se ozval hlas, jaký mají staří psi, kteří už neštěkají na každého. Pak to přestalo být štěkání a bylo to něco jiného, vysoké a zlomené. Přes plot se přehoupla šedivá fena s bílým čenichem, uklouzla na náledí, zvedla se a vrhla se na něj.
 
@@ -88,7 +88,7 @@ Matka byla menší, než si ji pamatoval. Měla šátek uvázaný pod bradou a r
 
 Matka to rozhodla za něj. Natáhla ruku a dotkla se jeho tváře, tam, kde mu za šest let zhrubla kůže od holení a od zimy, a pak mu přejela palcem po tonzuře, jako by kontrolovala, jestli tam opravdu nejsou vlasy.
 
-„Matěji,“ řekla. „Pojď dál. Je tam zima.“
+„Matěji,“ řekla. „Pojď dál. Je tu zima.“
 
 *
 
@@ -122,7 +122,7 @@ Chvíli stáli. Matěj vstal z lavice, protože nevěděl, co jiného dělat, a 
 
 „Ješku.“
 
-„Ty jsi přijel.“ Ješek ho obešel pohledem, od sandálů v onucích přes bílý hábit po tonzuru, a Matěj čekal, co řekne. „Matka říkala, že přijedeš kvůli drakovi. Já říkal, to je blbost, kvůli drakovi nikdo nejezdí. Ty jsi přijel kvůli drakovi?“
+„Ty jsi přijel.“ Ješek ho přejel pohledem, od sandálů v onucích přes bílý hábit po tonzuru, a Matěj čekal, co řekne. „Matka říkala, že přijedeš kvůli drakovi. Já říkal, to je hloupost, kvůli drakovi nikdo nejezdí. Ty jsi přijel kvůli drakovi?“
 
 „Mimo jiné.“
 
@@ -136,7 +136,7 @@ Pak ho objal, protože Ješek žádné pravidlo o hábitu neznal, a Matěj ucít
 
 „Já taky. Celý týden.“ Ješek se posadil ke stolu, matka mu postavila misku a on jedl rychle, s hlavou nad kaší, a mluvil mezi sousty. Mluvil o hoře. Matěj ho poslouchal a přistihl se, že poslouchá jako písař, který neví, co bude potřebovat, a tak si pamatuje všechno.
 
-Štolu začali razit loni po žních. Mistr se jmenuje Ortlieb a je od Míšně, z hor, kde před čtyřmi lety našli stříbro tak blízko pod drnem, že ho sedláci vyorávali pluhem. Přivedl s sebou tři své lidi a ostatní nabral tady: chlapy z Mlýnce a ze sousedních vsí, kteří neměli pole nebo jich měli málo. Pracují ve dvou směnách. Skála je tvrdá, místy taková, že ji želízko jen škrábe. Pak se na ni založí oheň, nechá se přes noc hořet a ráno se skála poleje vodou a puká. Tímhle se postupuje. Den na loket, někdy na dva.
+Štolu začali razit loni po žních. Mistr se jmenuje Ortlieb a je od Míšně, z hor, kde před čtyřmi lety našli stříbro tak blízko pod drnem, že ho sedláci vyorávali pluhem. Přivedl s sebou tři své lidi a ostatní nabral tady: chlapy z Mlýnce a ze sousedních vsí, kteří neměli pole nebo jich měli málo. Pracují ve dvou směnách. Skála je tvrdá, místy taková, že ji želízko jen škrábe. Pak se na ni založí oheň, nechá se přes noc hořet a ráno se skála poleje vodou a puká. Tak se postupuje dál. Za den o loket, někdy o dva.
 
 „A stříbro?“
 
@@ -164,11 +164,11 @@ Starý Kojata, ten, co měl teď otcova pole, začal jako první, a tak, jak to 
 
 Matěj seděl a poslouchal a cítil, jak se v něm něco mění.
 
-Ve Waldsassenu by tohle nazval pověrou. Celé to tlachání, babičky a valouny a drak na zlatě jako slepice, by vyprávěl bratřím u kalefaktoria a smáli by se. A přece tu sedělo dvanáct lidí a každý vyprávěl jinak, a v tom, *jak* vyprávěli jinak, bylo něco, co se dalo číst. Všichni se shodli, že hora je teplá. Všichni se shodli, že pod horou se našlo zlato, i když se neshodli, kolik a kdo ho našel. Nikdo z nich nikdy neviděl draka, a nikdo to netvrdil. Matěj čekal, že někdo řekne, že drak chrlí oheň, protože tak se drak maloval na zdech v Řezně. Nikdo to neřekl. Drak z hory nedýchal oheň. Drak z hory spal.
+Ve Waldsassenu by tohle nazval pověrou. Celé to tlachání, babičky a valouny a drak na zlatě jako slepice, by vyprávěl bratřím u kalefaktoria a smáli by se. A přece tu sedělo dvanáct lidí a každý vyprávěl jinak, a v tom, *jak* vyprávěli jinak, bylo něco, co se dalo číst. Všichni se shodli, že hora je teplá. Všichni se shodli, že pod horou se našlo zlato, i když se neshodli, kolik a kdo ho našel. Nikdo z nich nikdy neviděl draka, a nikdo to netvrdil. Matěj čekal, že někdo řekne, že drak chrlí oheň, protože tak se drak maloval na zdech v Řezně. Nikdo to neřekl. Drak z hory nechrlil oheň. Drak z hory spal.
 
 Byl to pramen. Špatný pramen, kalný, ve kterém plavaly babičky a hrachy a boby, ale pramen. A pramen se dá číst, když člověk ví, co v něm hledá a od koho to pochází.
 
-Večer, když lidé odešli a matka usnula na peci, vytáhl Matěj voskovou tabulku a pod to, co napsal o kosti, začal psát. Psal malým písmem, protože vosku bylo málo. *Hora teplá: všichni. Zlato pod horou: všichni, valoun na potoce, velikost nejistá, babička Bohuny nebo babička Zdeny. Drak spí: všichni. Drak oheň: nikdo.*
+Večer, když lidé odešli a matka usnula u ohniště, vytáhl Matěj voskovou tabulku a pod to, co napsal o kosti, začal psát. Psal malým písmem, protože vosku bylo málo. *Hora teplá: všichni. Zlato pod horou: všichni, valoun na potoce, velikost nejistá, babička Bohuny nebo babička Zdeny. Drak spí: všichni. Drak oheň: nikdo.*
 
 Pak se zarazil. U kosti psal *vidi* a *non vidi*. Tady nic neviděl. Tady jen slyšel.
 
@@ -252,7 +252,7 @@ Matka přikývla, jako by jí to udělalo radost. Pustila Sivku a fena k němu d
 
 „Mami,“ řekl Matěj. „Kdo tady zná ta místa? Ta, o kterých říkají, že tam drak dýchá. Kde zvířata umírají.“
 
-Matka přestala být ráda.
+Matka zvážněla.
 
 „Proč?“
 

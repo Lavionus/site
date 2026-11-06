@@ -35,9 +35,9 @@ Modul 7 — 446 osob — spojení ztraceno.
 *Poznámky k překladu:*
 
 1. Znak překládaný jako „doprovod“ je jistý. Tentýž znak se v jiných úředních řádcích téže kopie objevuje ve spojení, které čteme jako „přidružení k opatření“. V řádcích 209 a 210 stojí v kolonce postavení, nikoli v kolonce doprovodu; čtení „přidružena“ je proto pravděpodobné, ale ne jisté. Nevíme, zda šlo o právní kategorii, nebo o zkratku písaře.
-2. „Přiznání podepsáno / nepodepsáno / odmítnuto / nevyžadováno“: čtyři ustálené formule. Rozlišení „nepodepsáno“ a „odmítnuto“ je v kopii zřetelné; jeho právní význam neznáme.
+2. „Přiznání podepsáno / nepodepsáno / odmítnuto / nevyžadováno“: čtyři ustálené formule. Rozlišení „nepodepsáno“ a „odmítnuto“ je v kopii zřetelné; jeho právní význam neznáme. U řádku 204 je čtení „nevyžadováno“ nejisté. Znak, který v řádcích 204 a 205 čteme jako „svědkyně“, může znamenat i „podporovatelka“ (doslova „ta, která přisvědčila“).
 3. Profese jsou přeloženy podle nejbližší dnešní obdoby. U řádku 208 je přívlastek „distribučních“ nejistý; jiné čtení dává „rozvodných“.
 4. Věk se uvádí jen u osob mladších dvaceti let. Číslovka u řádku 210 je čitelná bez pochyb.
 5. Řádek modulu 7 tvoří dva znaky. První („spojení“) je jistý. Druhý čteme jako „ztraceno“; možné je i „ukončeno“. Kolonka odletu u modulu 7 chybí. Nevíme, zda ji písař vynechal, nebo zda v ní nebylo co zapsat.
-6. Součet osob v záhlaví nesouhlasí se součtem čitelných řádků. Rozdíl může být v nečitelných číslicích, nebo v samotném rejstříku.
+6. Součet osob v záhlaví nesouhlasí se součtem čitelných řádků. Rozdíl může být v nečitelných číslicích, nebo v samotném rejstříku. U řádku 204 je dítě vepsáno jen do kolonky doprovodu a vlastní řádek pro něj chybí, ačkoli dítě u řádku 210 ho má. Příčinu neznáme.
 7. Za řádkem 211 kopie končí v polovině znaku.

@@ -14,7 +14,7 @@ Za oknem je Vysočina, mokrá a žlutá. Na poli u Havlíčkova Brodu stojí srn
 
 *
 
-Sál je tentýž jako prvního června. Druhé patro, štuky, okna do zahrady, stoly do podkovy. Jen stolů je víc.
+Sál je tentýž jako prvního června. Druhé patro, malovaný strop, okna do nádvoří, stoly do podkovy. Jen stolů je víc.
 
 Česká vlajka, německá, rakouská, mexická. Nově polská, protože jedna ze sítí, se kterými se má jednat, žije ve Vratislavi. Polský zástupce je mladý a nervózní a v červnu tu nebyl. Za podkovou, u zdi, sedí pozorovatelé tří dalších států. Nemají před sebou nic, ani vlajky, jen sklenice s vodou. Hana ví, odkud jsou. Jeden z nich je z ostrovů, pod kterými jsou zatopené jeskyně ze seznamu z dubna. Kerr sanaci v srpnu stáhla i tam. Na papíře.
 
@@ -22,7 +22,7 @@ Malý stůl bez vlajky je teď delší. Sael, Agnes, Tadeáš. A Luis Ek, za eji
 
 Pro Vratislav tam židle není. Hana to vidí a zapíše si to. Ne proto, že by na tom něco záviselo. Proto, že se na to někdo zeptá.
 
-Výprava sedí tam, kde v červnu. Sende, Lis Aven, Marn. Hesk stojí za nimi, ruce za zády, tak jako tenkrát, jen tentokrát má na hrudi malý štítek se jménem latinkou. *H. VARO.* Někdo jí ho udělal, nebo si ho udělala sama. Kerr je na obrazovce na stěně. Za ní okno a v něm Terra, noční strana, se světly měst.
+Výprava sedí tam, kde v červnu. Sende, Lis Aven, Marn. Hesk stojí za nimi jako tenkrát, jen ruce už nedrží stůl, má je za zády, a tentokrát má na hrudi malý štítek se jménem latinkou. *H. VARO.* Někdo jí ho udělal, nebo si ho udělala sama. Kerr je na obrazovce na stěně. Za ní okno a v něm Terra, noční strana, se světly měst.
 
 Předsedající je týž starý diplomat jako v srpnu. Hronková sedí u konce stolu se svým blokem.
 
@@ -52,7 +52,7 @@ Dopis. „Ten nedokládá nic,“ řekne Hana. „Proto ho uvádím. Aby se nepl
 
 Válec. Čten bez dotyku, se souhlasem ústavu a obce. Čtyři týmy, každý zvlášť. Pozemské kopie zveřejněné dřív, než výprava dodala slovník. Celé znění protokolu je od třináctého srpna veřejné. Hana ho necituje. Kdo ho chce, má ho.
 
-Klíč dračí kroniky. Tři předpovědi ze čtyř obstály na kresbě z dvanáctého století. Tytéž tři obstály v září na podlaze hnízda v hoře, a čtvrtá se rozhodnout nedá. Kresba je přesná. Kdo kresbu kreslil, věděl, co dělá.
+Klíč dračí kroniky. Tři předpovědi ze čtyř obstály na kresbě z dvanáctého století. Tytéž tři obstály v září na podlaze hnízda v hoře, a čtvrtá se nepotvrdila ani tam. Kresba je přesná. Kdo ji kreslil, věděl, co dělá.
 
 Genetika. Předpověď výpravy a dvě laboratoře. Shoda silná, ne absolutní. Neprokazuje let. Neprokazuje nic o žádném jednotlivém člověku. Prokazuje, že ti nahoře a my dole jsme příbuzní. Vzdáleně.
 
@@ -74,11 +74,11 @@ Předsedající se na ni podívá přes brýle. Zmocněnec zvedne hlavu.
 
 „Všechno, co jsem teď řekla, ověřoval vždycky někdo další,“ řekne Hana. „Ne já sama. Chci, abyste věděli proč.“
 
-V sále je ticho. Venku v zahradě zakráká vrána.
+V sále je ticho. Z nádvoří je slyšet vránu.
 
-„V březnu 2026 jsem v Mexiku odebrala vzorek sintru z povrchu válce. Při odběru se rozlomil. Jeden kus mi spadl do žlábku mezi jiné úlomky a já jsem vzala ten, o kterém jsem si myslela, že je to on. Na devadesát procent.“ Odmlčí se. „Večer jsem do deníku napsala, že jsem vzorek odebrala jako jeden kus. To nebyla pravda. Podepsala jsem to.“
+„V březnu 2026 jsem v Mexiku odebrala vzorek sintru z povrchu válce. Při odběru se rozlomil. Jeden kus mi spadl do žlábku mezi jiné úlomky a já jsem vzala ten, o kterém jsem si myslela, že je to on. Na devadesát procent.“ Odmlčí se. „Večer jsem do deníku napsala, že oba kusy pocházejí z kontaktní plochy. U druhého jsem to neviděla. Podepsala jsem to.“
 
-Luis Ek se na ni dívá. Ví to. Byl u toho. Tlumočník nepřekládá. Luis to nepotřebuje.
+Luis Ek se na ni dívá. Ví to. Řekla mu to tenkrát v Méridě. Tlumočník nepřekládá. Luis to nepotřebuje.
 
 „Z toho vzorku vyšlo stáří, které pak bylo v novinách po celém světě,“ řekne Hana. „Bez mé výhrady. Výhradu jsem napsala do přílohy. Pak jsem měřila znovu, s někým, kdo mě hlídal. Výsledek se potvrdil. Ale to, že se potvrdil, neznamená, že jsem měla pravdu. Znamená to, že jsem měla štěstí. O místo jsem přišla kvůli tomu zápisu. Právem.“
 
@@ -92,7 +92,7 @@ Hronková přestane psát. Pak zase začne.
 
 „Protože ta dohoda bude stát na tom, co jsem vám teď přečetla,“ řekne Hana. „A za deset let se někdo zeptá, kdo to tvrdil a jestli se tomu dá věřit. Ať to najde tady. Ne jinde.“
 
-Ta poslední věta není její. Je Saelina, z července, od kodexu. Šindelářová ji Haně potom řekla u kávy. Hana to ví, až když ji vysloví.
+Ta poslední věta není její. Je Saelina, z července, od kodexu. Šindelářová ji Haně potom řekla u kávy. Hana si to uvědomí, až když ji vysloví.
 
 Sael u malého stolu skloní hlavu. Ví to taky.
 
@@ -276,9 +276,9 @@ Lis Aven do toho řádku nic neudělá. Ani tečku, ani křížek. Hana se dív�
 
 *
 
-V 18:40 předsedající oznámí, že text je dohodnutý. Podpis v pátek dvanáctého, v tomto sále. Komunity podepíšou samy, každá po rozhodnutí své rady. Kdo nepodepíše, nepodepíše.
+V 18:40 předsedající oznámí, že text je dohodnutý. Podpis v pátek dvanáctého, v tomto sále. Komunity podepíšou samy, každá po rozhodnutí své rady. Kdo nechce, nepodepíše.
 
-Lidé vstávají. Mluví se nahlas. Zmocněnec si podává ruku s německou právničkou a pak s Rakušanem a pak s Mexičanem, a pak se otočí a podá ruku Haně, ačkoli jí tu ruku nikdo jiný nepodal.
+Lidé vstávají. Mluví se nahlas. Zmocněnec si podává ruku s německou právničkou a pak s Rakušanem a pak s Mexičanem, a pak se otočí a podá ruku Haně, ačkoli jí nikdo jiný ruku nepodal.
 
 „Řekla jste toho dneska víc, než bylo potřeba,“ řekne.
 

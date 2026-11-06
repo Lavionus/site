@@ -2,7 +2,7 @@
 
 Měsíční linka z Lumy se netočila a Naře bylo zle hned od startu.
 
-Nebylo to horší než poprvé. Bylo to stejné, jen to teď znala. Žaludek se jí zvedl, když se ztratila váha, a hlava hledala dolů tam, kde žádné nebylo. Nara zavřela oči a držela se opěradel. Za průzorem rostl šedý kotouč.
+Nebylo to horší než poprvé. Bylo to stejné, jen to teď znala. Žaludek se jí zvedl, když se ztratila váha, a hlava hledala, kde je dole, a žádné dole nebylo. Nara zavřela oči a držela se opěradel. Za průzorem rostl šedý kotouč.
 
 *Do odletu: 5 dní.*
 
@@ -30,7 +30,7 @@ Dveře se otevřely.
 
 *
 
-Za nimi byla hala. Nízká, široká, vylámaná přímo do svahu, a na protější stěně měla průzor, velký, jaký Nara na měsíci ještě neviděla. Za ním byl lom. Terasy, jedna pod druhou, šedé a rovné, a nad nimi černo s ostrými hvězdami. Stroje na nejnižší terase stály stejně nehybně jako tehdy z linky.
+Za nimi byla hala. Nízká, široká, vylámaná přímo do svahu, a na protější stěně měla průzor, tak velký, jaký Nara na měsíci ještě neviděla. Za ním byl lom. Terasy, jedna pod druhou, šedé a rovné, a nad nimi černo s ostrými hvězdami. Stroje na nejnižší terase stály stejně nehybně jako tehdy z linky.
 
 Uprostřed haly stál na podstavci kámen.
 
@@ -38,7 +38,7 @@ Nara se na něj dívala a chvíli nevěděla, proč se dívá zrovna na něj. By
 
 „To je ona,“ řekl Hals.
 
-Za podstavcem se něco pohnulo. Vstala odtud žena, která tam klečela s rukou v otvoru na spodní straně kamene. Byla malá a široká v ramenou, s tmavými vlasy staženými pod čepicí, v pracovní kombinéze s rukávy vyhrnutými nad lokty. Ruce měla velké. Utřela si je do stehen a podívala se Naře na ruce, ne do obličeje. Teprve potom do obličeje.
+Za podstavcem se něco pohnulo. Vstala odtamtud žena, která tam klečela s rukou v otvoru na spodní straně kamene. Byla malá a široká v ramenou, s tmavými vlasy staženými pod čepicí, v pracovní kombinéze s rukávy vyhrnutými nad lokty. Ruce měla velké. Utřela si je do stehen a podívala se Naře na ruce, ne do obličeje. Teprve potom do obličeje.
 
 ![Montážní hala u lomu: na podstavci šedý kámen ze slisované drti, u něj klečí Riv, Nara a Hals stojí opodál, za průzorem terasy lomu](obrazky/09_sonda.webp)
 
@@ -74,7 +74,7 @@ Riv se na ni podívala, jako by se Nara zeptala, proč voda vytéká ze sklenice
 
 „Protože nevydrží,“ řekla. „Nic, co potřebuje proud, nevydrží tak dlouho. Záření, prach, zima. Za tisíc let je vysílač kus kovu. Za deset tisíc let je kus kovu, který překáží. Kámen vydrží. Listy vydrží, když jsou v kameni.“ Poklepala na povrch. „Tohle je drť z lomu. Slisovaná. Nic lepšího na stínění nemáme, a nic to nestojí. Tamhle se jí vyrábí tolik, že ji prodávají dětem jako suvenýr.“
 
-Nara se na kámen dívala. Šedý. Ten odstín znala. Ležel jí na stole v kanceláři, velký jako vejce, obroušený v bubnu. Ilan ho přinesl ze školy, když mu bylo osm, a řekl, že je ze Země.
+Nara se na kámen dívala. Šedý. Ten odstín znala. Takový kámen jí ležel na stole v kanceláři, velký jako vejce, obroušený v bubnu. Ilan ho přinesl ze školy, když mu bylo osm, a řekl, že je ze Země.
 
 Nebyl. Byl odtud, z lomu za průzorem.
 
@@ -92,7 +92,7 @@ Nebyl. Byl odtud, z lomu za průzorem.
 
 Riv se na ni chvíli dívala. Pak si sedla na okraj podstavce, takže měla hlavu níž než Nara, a dívala se na ni zespodu.
 
-„Desítky tisíc let,“ řekla. „Kdo vám řekne přesně, lže. Nebo počítá s věcmi, které neví. Dostane jeden tah na začátku a pak už letí sama. Nic ji nezrychlí. Nic ji nepřibrzdí, dokud nedorazí.“
+„Desítky tisíc let,“ řekla. „Kdo vám řekne přesně, lže. Nebo počítá s věcmi, o kterých nic neví. Dostane jeden tah na začátku a pak už letí sama. Nic ji nezrychlí. Nic ji nepřibrzdí, dokud nedorazí.“
 
 „A když dorazí?“
 
@@ -100,7 +100,7 @@ Riv se na ni chvíli dívala. Pak si sedla na okraj podstavce, takže měla hlav
 
 „Věřím.“
 
-„To je rychlé.“
+„To šlo rychle.“
 
 „Vy jste řekla, že nevíte přesně, kolik to trvá,“ řekla Nara. „To mi stačí.“
 
@@ -126,7 +126,7 @@ Pak se zastavila a podívala se na ně oba.
 
 „Je to kámen,“ řekla Riv.
 
-„Tvrdila bych to. Tvrdila bych, že pasivní archiv, který se nedá přečíst bez energie zvenku, není přístup k technologii. Že odsouzení ho nemohou použít, protože nemají čím. A že doletí za desítky tisíc let, kdy už žádný odsouzený naživu nebude a trest nebude mít komu trvat.“ Odmlčela se. „Tvrdila bych to dobře. A prohrála bych.“
+„Tvrdila bych to. Tvrdila bych, že pasivní archiv, který se nedá přečíst bez energie zvenku, není přístup k technologii. Že odsouzení ho nemohou použít, protože nemají čím. A že doletí za desítky tisíc let, kdy už žádný odsouzený naživu nebude a nebude na kom trest vykonávat.“ Odmlčela se. „Tvrdila bych to dobře. A prohrála bych.“
 
 Nikdo neodpověděl.
 
@@ -168,7 +168,7 @@ Dole byla zima. Hals rozsvítil světlo od podlahy a vedl ji mezi regály k odd�
 
 „A spis?“
 
-„Spočítal jsem to v noci.“ Hals vytáhl ze zásuvky stolu tabulku, popsanou drobným písmem. Rukou. Nara se na to písmo dívala a chvíli jí trvalo, než pochopila, co vidí. „Všech čtrnáct položek. Návrh, výpis, veřejná Terra celá, i se seznamem. Vyjádření odpůrce. Žádost o zpřístupnění. Usnesení. Výpověď paní Mel. Rekonstrukce paní Pell. Přiznání s doložkou a opatřením. Hlášení sítě. Doplnění, obě. Zápis z jednání, celý, veřejný, s vaší poznámkou u dvanáctky. Rozsudek.“ Prst v rukavici sjel po řádcích. „Sto devadesát devět listů.“
+„Spočítal jsem to v noci.“ Hals vytáhl ze zásuvky stolu tabulku, popsanou drobným písmem. Rukou. Nara se na to písmo dívala a chvíli jí trvalo, než pochopila, co vidí. „Všech čtrnáct položek. Návrh, výpis, veřejná Terra celá, i se seznamem. Vyjádření odpůrce. Žádost o zpřístupnění. Usnesení. Výpověď paní Mel. Rekonstrukce paní Pell. Přiznání s doložkou a opatřením. Hlášení sítě. Doplnění, obě. Dvanáctka: obsah přílohy, jak jste ho přednesla, s vaší poznámkou. Zápis z jednání, celý. Rozsudek.“ Prst v rukavici sjel po řádcích. „Sto devadesát devět listů.“
 
 „Zbývá jeden.“
 
@@ -184,7 +184,7 @@ Nara se dívala na jeho tabulku. Na řádky psané rukou, nerovné, s tečkami.
 
 Pak si sedl.
 
-Nara ho nikdy neviděla sedět. Za všechny ty návštěvy stál, šel, dotýkal se štítků. Teď si sedl na židli u leptu, s rukama v rukavicích na kolenou, a díval se na ni.
+Nara ho nikdy neviděla sedět. Při všech těch návštěvách stál, šel, dotýkal se štítků. Teď si sedl na židli u leptu, s rukama v rukavicích na kolenou, a díval se na ni.
 
 „Slíbil jsem vám odpověď,“ řekl. „Napřed vám ale něco nabídnu.“
 
@@ -200,7 +200,7 @@ Nara mlčela.
 
 Myslela na to. V noci, v kuchyni, s horkou vodou, kterou nepila. Myslela na to od chvíle, kdy Hals v prázdné síni řekl *Kdybyste něco potřebovala z úložiště, víte, kde jsem.* Věděla, že to nabídne. Věděla to, ještě než to věděl on.
 
-„Ne,“ řekla.
+„Ne,“ řekla. „A to usnesení skončilo s řízením. Vy to víte.“
 
 Hals se nepohnul.
 
@@ -270,7 +270,7 @@ Hals se na ni podíval.
 
 Nahoru jela sama. Hals zůstal dole, u leptu. Když se výtah zavíral, viděla ho, jak si sedá na židli a sundává rukavice. Obě. Poprvé.
 
-Síť se vracela po řádcích, jak výtah stoupal. Nejdřív čas. Pak stav kyvadel na Orse. Pak zprávy. Pokuta pořádkové služby za včerejšek, s upozorněním. Zpráva od Lumi: *Komora má vaše včerejší odpojení. Arel to přidal jako třetí bod. Mám to připravit?* A zpráva od Davena. Jedna věta.
+Síť se vracela po řádcích, jak výtah stoupal. Nejdřív čas. Pak stav kyvadel na Orse. Pak zprávy. Pokuta pořádkové služby za včerejšek, s upozorněním. Zpráva od Lumi: *Komora ví o vašem včerejším odpojení. Arel to přidal jako třetí bod. Mám to připravit?* A zpráva od Davena. Jedna věta.
 
 *Byl jsem tam ještě jednou, v hale. Už ho ostříhali. Prý mu to sluší. D.*
 
@@ -314,7 +314,7 @@ Vyndala z kapsy provázek a položila ho na koleno. Sedmdesát jedna uzlíků.
 
 Jeden list, oboustranně.
 
-Nara nevěděla, co na něj napíše. Věděla jen, komu. A věděla, že to nebude ten, komu to napíše.
+Nara nevěděla, co na něj napíše. Věděla jen, komu. A věděla, že to nebude číst ten, komu to napíše.
 
 Za šest set let se Ilan probudí. Za desítky tisíc let doletí kámen. Mezitím bude Ilan mrtvý tak dlouho, že na tom už nebude záležet. Jeho děti taky. A jejich děti. Kdo kámen najde, pokud ho vůbec někdo najde, bude někdo, koho Nara nezná a nemůže znát. Bude mluvit řečí, kterou neslyšela. Bude to číst podle slovníku, který si udělá sám. A bude se mýlit u slov, která pro ni budou nejdůležitější.
 

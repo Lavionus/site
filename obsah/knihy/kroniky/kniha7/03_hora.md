@@ -26,7 +26,7 @@ Nahoře v archivu bylo ticho, jaké tam za Saelina života nebylo nikdy.
 
 Police stály holé. Na prknech zůstaly světlejší obdélníky, kde ležely svazky, a ty obdélníky za pět let neztmavly, protože tu nebyl nikdo, kdo by zvířil prach. Truhla pod stolem byla prázdná. Kazeta pryč, rozdělená na listy rodin a rozvezená. Sael ty listy rozvážela celé léto a podzim třicet a pak ještě dvě zimy, protože některé rodiny nebyly k nalezení, a když se našly, nechtěly otevřít dveře. Poslední list předala v únoru třicet dva staré ženě v Annabergu. Žena ho vzala, aniž se na něj podívala, a řekla, že na to čekala čtyřicet let. Sael se jí nezeptala, jestli na list, nebo na to, až ho někdo přinese.
 
-Kniha byla v Chebu, v deponátu, v archivu, kde Sael už nepracovala. Kdo se v ní narodil nebo zemřel, toho zapsal ten, koho si rodina vybrala, a podepsal se jménem. Sael ty zápisy četla jednou za rok, v den, který jí určila Šindelářová, ve studovně, s rukavicemi, jako každý jiný badatel. Poslední, co tam viděla, byla Klářina ruka. Latinkou, propiskou, s jedním písmenem obráceně. *Jonáš umí napsat svoje jméno. Taky obráceně. K. R.*
+Kniha byla v Chebu, v deponátu, v archivu, kde Sael už nepracovala. Kdo se narodil nebo zemřel, toho do ní zapsal ten, koho si rodina vybrala, a podepsal se jménem. Sael ty zápisy četla jednou za rok, v den, který jí určila Šindelářová, ve studovně, s rukavicemi, jako každý jiný badatel. Poslední, co tam viděla, byla Klářina ruka. Latinkou, propiskou, s jedním písmenem obráceně. *Jonáš umí napsat svoje jméno. Taky obráceně. K. R.*
 
 Vlhkoměr na stěně ukazoval sedmdesát jedna.
 
@@ -38,9 +38,9 @@ Hřála. Víc než v roce třicet. Víc než kdy za těch sto čtyřicet let, co
 
 *
 
-Kamera byla u dubových vrat, nahoře na deseti schodech do spodní síně. Úřad ji tam dovolil dát před dvěma lety, s podmínkou, že se za vrata nesmí. Tadeáš za ně nechodil. Sael by to poznala. Ostří slyší skálu chodidly a lež je na nich vidět podle rukou. Na Tadeášovi odjakživa.
+Kamera byla u dubových vrat, nahoře nad deseti schody do spodní síně. Úřad ji tam dovolil dát před dvěma lety, s podmínkou, že se za vrata nesmí. Tadeáš za ně nechodil. Sael by to poznala. Ostří slyší skálu chodidly a lež je na lidech vidět podle rukou. Na Tadeášovi odjakživa.
 
-Na displeji notebooku byla spodní síň tak, jak ji kamera viděla. Šedá, rozostřená párou. Pára v ní teď stála pořád, ve dne i v noci. Vzadu teplá skála, hladká plocha velká jako vrata stodoly, a pod ní kamenná lavice. Na lavici už nikdo nesedal. Na zemi u lavice ležely dva stativy a smyčka, které tam Hana nechala v březnu třicet. Pět let je nikdo nezvedl.
+Na displeji notebooku byla spodní síň tak, jak ji kamera viděla. Šedá, rozostřená párou. Pára v ní teď stála pořád, ve dne i v noci. Vzadu teplá skála, hladká plocha velká jako vrata stodoly, a pod ní kamenná lavice. Na lavici už nikdo nesedal. U schodů ležel na boku Hanin stativ, pořád s Tadeášovou kamerou, a u lavice Kalinův stativ a smyčka. Zůstaly tam od roku třicet. Pět let je nikdo nezvedl.
 
 „Dívejte se,“ řekl Tadeáš. „Za čtyři minuty.“
 
@@ -118,7 +118,7 @@ Sešli se v sobotu devatenáctého května, po setmění.
 
 Bylo jich méně než tehdy. Lorenz už nepřijel. Bylo mu přes osmdesát a od zimy třicet dva nechodil z bytu ve Vídni. Mluvil na obrazovce, kterou Tadeáš postavil na kraj stolu, a obrazovka mu dělala obličej menší, než byl. Radu sítí teď vedla Ines. Nechtěla to. Odhlasovali ji, když nebyla v místnosti, a když se vrátila, řekla jim, že to byla nejhorší věc, jakou jí kdy udělali, a ať to zapíšou. Ten večer přišla za Sael a řekla jí *ty*. Vést radu a vykat té, o které rada rozhoduje, jí prý připadalo jako lež. Sael to přijala dřív, než čekala.
 
-Žena z Vratislavi přijela. Muž ze saských sídel přijel, šedivější, a tentokrát přivezl dceru, která mu řídila auto a celou dobu mlčela. Ostří seděli kolem stolu, devět, protože dva byli v Sasku u nemocné sestry. Lada v čele. Kryštof u okna. Tadeáš na konci stolu, s notebookem, který tentokrát otevřel.
+Žena z Vratislavi přijela. Muž ze saských sídel přijel, šedivější, a tentokrát přivezl dceru, která mu řídila auto a celou dobu mlčela. Ostří seděli kolem stolu, devět, protože dva byli v Sasku u nemocné sestry. Po Apoleně si rada vzala někoho mladšího, aby jich bylo pořád jedenáct. Lada v čele. Kryštof u okna. Tadeáš na konci stolu, s notebookem, který tentokrát otevřel.
 
 Benedikt přišel po desáté, s Agnes. Bylo mu sto dvacet tři let a šel pomaleji, ale židli mimo světlo lampy si postavil sám. Kryštof se zvedl, že mu pomůže, a Benedikt ho zastavil rukou. Neřekl nic. Kryštof si zase sedl.
 
@@ -240,7 +240,7 @@ Muž ze saských sídel zvedl ruku. Pak žena z Vratislavi. Pak, po chvíli, Agn
 
 Hlasovali jednou. Jen sítě. Ostří nehlasovali, protože to nebyla jejich věc, a Lada to řekla dřív, než se kdo stačil zeptat.
 
-Ines pro. Muž ze saských sídel pro. Řekl, že by chtěl, aby v mandátu stálo i to, kdo smí číst, co Sael zapíše. Ines mu odpověděla, že Sael nezapisuje nic, a on řekl, že tím spíš. Lorenz pro. Síť z Bavorska, jejíž zástupce nepřijel a poslal hlas písemně Ines, pro. Síť z Vratislavi se nepřipojila a chtěla, aby bylo zapsané proč. Ines to zapsala.
+Ines pro. Muž ze saských sídel pro. Řekl, že by chtěl, aby v mandátu stálo i to, kdo smí číst, co Sael zapíše. Ines mu odpověděla, že Sael nezapisuje nic, a on řekl, že tím spíš. Lorenz pro. Síť z Bavorska, nejmladší v radě, pro. Zvolily si ji v zimě třicet tři rodiny, které se po roce třicet usadily v Bavorsku, a její zástupkyně nepřijela a poslala hlas písemně Ines. Síť z Vratislavi se nepřipojila a chtěla, aby bylo zapsané proč. Ines to zapsala.
 
 Benediktova komunita mandát nedala. Poslala Agnes. To také Ines zapsala.
 
@@ -250,7 +250,7 @@ Sael nestála na světle. Stála tam, kde světlo lampy končilo a začínala tm
 
 Před pěti lety tady řekla *ne teď*. A *ani potom, pokud vás nezvolí. Výslovně. Na čas.* Teď ji zvolili. Výslovně. Na čas. S listem papíru, který Ines napsala podle jejích slov, a ty věty teď ležely na stole a byly jejich.
 
-Myslela na Rokytu. Na tu zimu na konci šedesátých let, kdy jí Rokyta podala pero a řekla: *Piš, já už nevidím.* Nikdo to nehlasoval. Nikdo se nikoho nezeptal. Rokyta jí to dala, protože byla po ruce a měla dobré oči. A Sael pak šedesát let psala jménem, které jí nikdo nedal kromě jedné staré ženy, a rozhodovala za lidi, kteří nevěděli, že za ně někdo rozhoduje.
+Myslela na Rokytu. Na tu zimu na konci šedesátých let, kdy jí Rokyta podala pero a řekla: *Piš, já už nevidím.* Nikdo o tom nehlasoval. Nikdo se nikoho nezeptal. Rokyta jí to dala, protože byla po ruce a měla dobré oči. A Sael pak šedesát let psala jménem, které jí nikdo nedal kromě jedné staré ženy, a rozhodovala za lidi, kteří nevěděli, že za ně někdo rozhoduje.
 
 Tohle bylo jiné. Tohle měla od nich. A mohli jí to vzít.
 
@@ -328,7 +328,7 @@ Nevěděla, co ti nahoře s horou udělají, když tam přijdou. Nevěděla, jes
 
 „Já tam s nimi půjdu. Ale nic neudělám bez vás. Nic. Ani ten ventil.“
 
-„To vím,“ řekla Lada. „To jsi řekla Haně u pramene. Že už nebudeš rozhodovat za nikoho.“
+„To vím,“ řekla Lada. „To jsi mi vyprávěla, cos řekla Haně u pramene. Že už nebudeš rozhodovat za nikoho.“
 
 „To jsem neřekla já. To řekla ona. Že mi to řekne nahlas.“
 

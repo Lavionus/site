@@ -74,13 +74,13 @@ Tadeáš si měřítko vzal a obrátil ho v ruce.
 
 „Tohle je to, co se v roce dvacet šest posunulo?“
 
-„To je jiné,“ řekla Hana. „To první mi zabavili.“
+„To je jiné,“ řekla Hana. „To bylo v počítači, ne na tyči. Tohle je moje.“
 
 Tadeáš se poprvé za ten týden zasmál.
 
 *
 
-Ucho začínalo za starou cestou, tam, kde se koryto odtoku stáčelo do skály. V roce třicet tudy Lada vedla Apolenu a Sael proti průvanu. Sael si pamatovala průvan a pamatovala si Apoleninu ruku, malou a tvrdou, kterou ji Apolena táhla za sebou, i když tehdy už sotva chodila.
+Ucho odbočovalo ze staré cesty kus před krkem. V roce třicet ho míjeli. Lada se tu tehdy zastavila jen na chvíli a položila dlaň na ohlazené místo na konci, kde Ostra poslouchala. Dál se nechodilo, za ním byla voda. Sael si pamatovala průvan a pamatovala si Apoleniny ruce kolem svého krku, malé a tvrdé, když ji pak nesla korytem.
 
 Teď tu byl průvan zase. Teplý, vlhký, vycházel z hory jako dech. Za nimi hučela čerpadla, slabší a slabší, jak šli dál. Tadeáš šel první, s čelovkou, s měřítkem přes rameno a s fotoaparátem na prsou, a nemusel se shýbat. Sael se shýbat musela. Ucho bylo dělané pro lidi o hlavu menší. Skála se jí otírala o záda a o ramena a místy musela jít bokem. Na stěnách byly žlábky po rukou. Ostří se tu přidržovali tisíce let a skála si to pamatovala líp než oni.
 
@@ -98,7 +98,7 @@ Sael stála a dívala se. Tadeáš sklonil čelovku a světlo na podlahu dopadlo
 
 „Jo,“ řekl tiše. Víc neřekl.
 
-Znala je. Znala je ze dvoustrany kodexu, kterou kdysi celé měsíce skoro denně držela v rukavicích pod lampou. Znala mnichovy olověné tahy, opatrné a stejné, a jeho tečky na okraji. Teď stála před tím, co mnich obkresloval. Před originálem. Rýhy byly větší, než si je představovala. A byly hlubší. Mnich kreslil, co viděl, a neměl jak nakreslit hloubku.
+Znala je. Znala je ze dvoustrany kodexu, kterou kdysi celé měsíce skoro denně držela v rukavicích pod lampou. Znala mnichovy tahy, olovo pod inkoustem, opatrné a stejné, a jeho tečky na okraji. Teď stála před tím, co mnich obkresloval. Před originálem. Rýhy byly větší, než si je představovala. A byly hlubší. Mnich kreslil, co viděl, a neměl jak nakreslit hloubku.
 
 „Kde začneme?“ zeptal se Tadeáš.
 
@@ -142,7 +142,7 @@ Tadeáš se podíval na rýhy a potom na ni.
 
 „Opravovala jsem ten list,“ řekla Sael. „Pod lupou je vidět, kde začíná druhý hrot.“
 
-Tadeáš kývl a fotil. Dvakrát. Pak potřetí, i když to Hana nechtěla.
+Tadeáš kývl a fotil. Dvakrát. Pak potřetí, i když to Hana nežádala.
 
 *
 
@@ -168,7 +168,7 @@ Nebylo to špatně, pomyslela si. Bylo to jen tak.
 
 *
 
-Ve čtyřicáté minutě druhé hodiny zavolal velitel hasičů do vysílačky, že mají dvacet minut. Tadeáš dofotil poslední řadu u svahu hlíny, tu nejvíc zarostlou sintrem, kde rýhy byly jen tušit. Pak sklapl fotoaparát, zastrčil měřítko pod paži a ještě jednou posvítil na celou podlahu.
+Ve čtyřicáté minutě druhé hodiny zavolal velitel hasičů do vysílačky, že mají dvacet minut. Tadeáš dofotil poslední řadu u svahu hlíny, tu nejvíc zarostlou sintrem, kde se rýhy daly jen tušit. Pak sklapl fotoaparát, zastrčil měřítko pod paži a ještě jednou posvítil na celou podlahu.
 
 Stáli tam spolu.
 
@@ -180,7 +180,7 @@ Stáli tam spolu.
 
 „Ani kamínek.“
 
-Tadeáš se otočil a šel první, a Sael za ním, shýbnutá, s rukama na stěnách, v žlábcích, které vyšlapali a vyhladili Ostří.
+Tadeáš se otočil a šel první, a Sael za ním, shýbnutá, s rukama na stěnách, v žlábcích, které vyhladili Ostří.
 
 Venku bylo jedenáct dopoledne a slunce. Sael přimhouřila oči a dlouho nic neviděla. Slyšela čerpadla a Hanin hlas. Hana se ptala, jestli jsou v pořádku, a Tadeáš odpověděl, že jo, a pak řekl, ať mu nikdo nesahá na foťák.
 
@@ -226,7 +226,7 @@ Tadeáš to poslal ve 14:00. Všem stranám jednání, současně, s fotkami, s 
 
 Zpráva týmu přišla v pátek. Fuchsová ji podepsala jako první, etoložka z Vídně druhá, Lis Aven třetí. Sael ji četla u vrat, na Apolenině lavici, kterou mezitím někdo přisunul ke zdi.
 
-*Podlaha hnízda se s kresbou shoduje ve všech řadách, které lze na snímcích přečíst (11 z 12; dvanáctá u svahu hlíny je zakrytá sintrem). Skupina se čtyřmi rýhami, prostřední kratší, je na podlaze čtyřikrát, vždy u prohlubně po okrouhlém předmětu a u prohlubně hranaté. Předpovědi 1–3 obstály na podlaze tam, kde obstály na kresbě. Předpověď 4 zůstává nerozhodnutelná: na konci čtyř řad jsou hranaté prohlubně bez předmětu. Skupina „sic“ je na podlaze tak, jak ji zakreslil autor kodexu; nečtena. Vrstva sintru přibývá od řad u stěny k řadám u svahu hlíny. To připouští, že řady u stěny jsou mladší. Nedokazuje to.*
+*Podlaha hnízda se s kresbou shoduje ve všech řadách, které lze na snímcích přečíst (11 z 12; dvanáctá u svahu hlíny je zakrytá sintrem). Skupina se čtyřmi rýhami, prostřední kratší, je na podlaze čtyřikrát, vždy u prohlubně po okrouhlém předmětu a u prohlubně hranaté. Předpovědi 1–3 obstály na podlaze tam, kde obstály na kresbě. Předpověď 4 se na podlaze nepotvrdila stejně jako na kresbě; na konci čtyř řad jsou hranaté prohlubně bez předmětu, tam nerozhodnutelná. Skupina „sic“ je na podlaze tak, jak ji zakreslil autor kodexu; nečtena. Vrstva sintru přibývá od řad u stěny k řadám u svahu hlíny. To připouští, že řady u stěny jsou mladší. Nedokazuje to.*
 
 A pod tím věta, kterou Sael od Fuchsové nečekala.
 
@@ -356,7 +356,7 @@ Pak tma. A znovu hvězdy.
 
 Sael věděla, co vidí. Četla to. V kodexu to stálo osm set let latinsky, písmem, které se na tom místě zmenšilo, jako by se ruka bála. *Vidi lumina multa, sicut stellas. Ex eis novem cadebant.* Mnich to viděl tady. Tři kroky od místa, kde teď stála ona. A zapsal, že neví, co to je.
 
-Ona to nevěděla taky.
+Ani ona to nevěděla.
 
 Podruhé. Stejné. Sael se dívala na postavy mezi oblými domy a snažila se je spočítat, a nešlo to.
 
@@ -418,7 +418,7 @@ Kamera u dubových vrat svítila zeleně a nezachytila nic. Kalina to napsal Han
 
 *Nic.*
 
-Ráno nad roklí stoupala pára. Slabší než jindy. Ne rovně, jako po staletí za bezvětří. Rozplývala se nízko nad smrčím a vítr ji bral k lesu. Hasiči z Waldsassenu balili čerpadla. Starý muž s tváří jako z kůry přišel k Sael, podal jí ruku a řekl německy, že jeho praděd byl v klášteře zahradníkem a že tam o téhle hoře nikdy nikdo nic nevyprávěl. Pak dodal, že teď už bude.
+Ráno nad roklí stoupala pára. Slabší než jindy. Ne rovně, jako po staletí za bezvětří. Rozplývala se nízko nad smrčím a vítr ji bral k lesu. Hasiči z Waldsassenu balili čerpadla. Stála od večera a voda se přes noc vrátila do dolní chodby. Zastavila se na pětatřicátém schodu. Výš nešla. Starý muž s tváří jako z kůry přišel k Sael, podal jí ruku a řekl německy, že jeho praděd byl v klášteře zahradníkem a že tam o téhle hoře nikdy nikdo nic nevyprávěl. Pak dodal, že teď už bude.
 
 *
 
@@ -434,7 +434,7 @@ Dívala se na tu stránku. Sael stála za ní a dívala se taky.
 
 *61. 34.*
 
-*61. 35.*
+*61. 41.*
 
 *60. 35.*
 

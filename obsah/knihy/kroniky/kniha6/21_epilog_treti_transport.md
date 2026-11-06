@@ -20,7 +20,7 @@ To bylo první, čeho si všimla. Řízení nebylo písemné. Proběhlo jednán�
 
 Soud se naučil podpis rukou. Trvalo mu to třicet jedna let.
 
-V odůvodnění, v oddílu o vadách řízení, stálo, že soud postupoval podle standardů vyslovených Spolkovým soudem ve věci Vess, výrok pátý. Nara se na to dívala dlouho. Všechno, co tehdy chybělo čtyřem stům jednomu, tihle dostali. Obhájce, jednání, čas. A rozsudek stál pevněji než ten nad Ilanem. Nebylo na něm nic, co by se dalo vrátit pro vady.
+V odůvodnění, v oddílu o vadách řízení, stálo, že soud postupoval podle standardů, které Spolkový soud mezitím stanovil. Nara se na to dívala dlouho. Všechno, co tehdy chybělo čtyřem stům jednomu, tihle dostali. Obhájce, jednání, čas. A rozsudek stál pevněji než ten nad Ilanem. Nebylo na něm nic, co by se dalo vrátit pro vady. Ten nad Ilanem se vrátit dal a vrátil se. Nové projednání věci čtyř set jednoho soud v prvním roce přerušil, protože obžalovaní jsou mimo dosah soudu, a už ho neobnovil.
 
 Pak našla odstavec, který hledala.
 
@@ -42,7 +42,7 @@ Všichni to věděli. Nara se podívala na číslo pod rozsudkem. *Zobrazeno: 41
 
 Pod rozsudkem se jí síť zeptala na jedinou věc, na kterou se ptát směla. *Přejete si sledovat odpočet do odletu?*
 
-Nara se na tu otázku dívala. Třicet jedna let ho neměla. Za ten čas se naučila žít bez čísla v koutku vědomí, které každou noc o jedno ubude.
+Nara se na tu otázku dívala. Třicet jedna let ho neměla. Za ten čas se naučila žít bez čísla v koutku vědomí, které se každou noc o jedno zmenší.
 
 Kývla.
 
@@ -54,13 +54,13 @@ Stejná lhůta. Nikdo ji nezměnil, protože ji nikdo nepotřeboval měnit.
 
 Asko zemřel před dvaceti lety. Kapradina umřela dřív než on, a on pak nechal květináč stát na stole s hlínou, kterou zaléval dál. Říkal, že ze zvyku.
 
-Hals odešel z úložiště v osmdesáti a zemřel o dva roky později ve svém bytě o dvě patra nad úložištěm. O místo nepřišel nikdy. Nikdo se ho nikdy nezeptal, kam zmizelo sto devadesát devět archivních listů, protože nikdo nevěděl, že zmizely. Síť to nevěděla, protože se jí na to nikdo nezeptal.
+Hals odešel z úložiště v osmdesáti a zemřel o dva roky později ve svém bytě o dvě patra nad úložištěm. O místo nepřišel nikdy. Nikdo se ho nikdy nezeptal, kam zmizelo dvě stě archivních listů, protože nikdo nevěděl, že zmizely. Síť to nevěděla, protože se jí na to nikdo nezeptal.
 
 Ardaine odešla z úřadu před dvanácti lety. Den po odchodu poslala Naře jednu větu, bez oslovení a bez podpisu, ale Nara poznala, kdo ji psal. Jedna myšlenka, tečka. *Pořád je větší.*
 
-Daven zemřel před čtyřmi lety. Se zapnutým zklidněním, v klidu, jak chtěl. Posledních dvacet let se vídali jednou ročně, v den, kdy loď odletěla, v kuchyni, kde mu Nara nalila horkou vodu a on ji pil. Mluvili o drahách a o zpožděných ventilech. O Ilanovi nemluvili. Jednou, poslední rok, se jí Daven zeptal, jestli si myslí, že letí přesně. Nara řekla, že ano. Daven řekl, že on to ví. Že to viděl.
+Daven zemřel před čtyřmi lety. Se zapnutým zklidněním, v klidu, jak chtěl. Posledních dvacet let se vídali jednou ročně, v den, kdy loď odletěla, v kuchyni, kde mu Nara nalévala horkou vodu a on ji pil. Mluvili o drahách a o zpožděných ventilech. O Ilanovi nemluvili. Jednou, poslední rok, se jí Daven zeptal, jestli si myslí, že letí přesně. Nara řekla, že ano. Daven řekl, že on to ví. Že to viděl.
 
-Shromáždění Konfederace dostalo rozsudek ve věci Vess doručen, jak určoval výrok sedmý. Za třicet jedna let dalo statut chráněného světa třikrát na pořad jednání. Ani jednou o něm nejednalo. Pokaždé se přesunul na příště, mezi věci, které nikdo nepotřeboval rozhodnout hned.
+Shromáždění Konfederace byl rozsudek ve věci Vess doručen, jak určoval výrok sedmý. Za třicet jedna let dalo statut chráněného světa třikrát na pořad jednání. Ani jednou o něm nejednalo. Pokaždé se ten bod přesunul na příště, mezi věci, které nikdo nepotřeboval rozhodnout hned.
 
 *
 
@@ -86,9 +86,9 @@ Pak, za dalších dvě stě čtyřicet let, sem možná dojde zpráva. Souhrnná
 
 Nara to spočítala jednou, první rok po odletu. Víckrát ne.
 
-*Neodpustím ti to teď,* řekl jí. *Možná nikdy. A možná jednou jo. A ty se to nedozvíš.*
+*Neodpustím ti to teď,* řekl jí Ilan. *Možná nikdy. A možná jednou jo. … A ty se to nedozvíš.*
 
-Z celé té návštěvy, z celých těch čtyřiceti šesti dní, to byla jediná věta, o které Nara věděla jistě, že se splní. Nedozví se to. Jestli jí odpustil, nebo ne. Ani jestli se mu v hibernaci něco zdálo. Ani jestli se naučil rozdělat oheň. Ani jestli on nebo někdo po něm kdy stál na místě, kde jednou dosedne kámen.
+Z celých těch čtyřiceti šesti dní to byla jediná věta, o které Nara věděla jistě, že se splní. Nedozví se to. Jestli jí odpustil, nebo ne. Ani jestli se mu v hibernaci něco zdálo. Ani jestli se naučil rozdělat oheň. Ani jestli on nebo někdo po něm kdy stál na místě, kde jednou dosedne kámen.
 
 Na stole v kanceláři ležely pořád tři věci. Deska s výtiskem ústavy, kterou nikdo neotvíral. Kámen velký jako vejce, šedý a obroušený v bubnu, *kámen ze Země*, který nebyl ze Země. A provázek. Šedý, měkký, se dvěma řadami uzlíků. Sedmdesát jedna. Nikdy k nim žádný nepřidala.
 

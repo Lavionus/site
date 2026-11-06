@@ -4,7 +4,7 @@ V říjnu prší v Brně tak, že okapy nestačí. Voda stéká po skle kuchyňs
 
 Hana sedí u stolu ve svetru a píše posudek pro firmu z Olomouce. Archeologický dohled u kanalizace v jedné obci na Hané. Dvě sondy, obě negativní. Stavebník zavezl rýhu dřív, než přijel archeolog, a archeolog to vyfotil. Fotka je dobrá. Rýha je na ní zavezená.
 
-Píše to slušně. Firma zaplatí za stranu. Posudek bude mít dvě strany a půl, protože víc se o dvou negativních sondách napsat nedá, i když by se to hodilo.
+Píše to slušně. Firma zaplatí za stranu. Posudek bude mít dvě a půl strany, protože víc se o dvou negativních sondách napsat nedá, i když by se to hodilo.
 
 Radiátor pod oknem tiká. Od minulého týdne se topí. Záloha je o čtyřicet procent vyšší a zaplacená do prosince.
 
@@ -14,9 +14,9 @@ E-mail. Odesílatel *T. Kalina*. Předmět jedno slovo: *zdroj*.
 
 Hana ho otevře.
 
-Žádný pozdrav. Žádné oslovení. Kalina nikdy nezačíná pozdravem, ani v březnu na mýtině, když poprvé otevřel bednu s přístroji a řekl *rušení se nezaklíná, měří se*.
+Žádný pozdrav. Žádné oslovení. Kalina nikdy nezačíná pozdravem, ani v březnu na mýtině, když poprvé vystoupil z auta a řekl *rušení se nezaklíná, měří se*.
 
-*Zdroj tam pořád je. Od března jsem ho zachytil ještě čtyřikrát, vždycky na hranici šumu. Poloha se od měření k měření nepatrně posouvá. Posun je menší než chyba jednoho měření, ale u všech čtyř jde stejným směrem. Zpětně jsem ho našel i v archivních datech evropské sítě, nejstarší zachycení je z října 2025. Pravděpodobně systematická chyba. Hledám ji. Sleduju dál.*
+*Zdroj tam pořád je. Od března jsem ho zachytil ještě čtyřikrát, vždycky na hranici šumu. Poloha se od měření k měření nepatrně posouvá. Posun je menší než chyba jednoho měření, ale u všech čtyř jde stejným směrem. Pravděpodobně systematická chyba. Hledám ji. Sleduju dál.*
 
 *T. K.*
 
@@ -26,7 +26,7 @@ Hana si to přečte podruhé.
 
 *Pravděpodobně systematická chyba.*
 
-Vzpomene si na tu noc v březnu, ve tři ráno pod plachtou, na zelené světlo notebooku a na čáru, která se na grafu sotva zvedla nad šum. *Nejspíš nic.* Vzpomene si na pole za kamenolomem a na Kalinovo *systematickou chybu nezprůměrujete, tu musíte najít*. Na maják ve zvonu, který stál rovně, cívkou nahoru, protože ho tam postavil člověk, který věděl, že ho někdo poslouchá.
+Vzpomene si na tu noc v březnu, ve tři ráno pod plachtou, na zelené světlo notebooku a na čáru, která se na grafu sotva zvedla nad šum. *Nejspíš nic.* Vzpomene si na Kalinovo *systematickou chybu nezprůměrujete, tu musíte najít*. Na maják ve zvonu, který stál rovně, cívkou nahoru, protože ho tam postavil člověk, který věděl, že ho někdo poslouchá.
 
 Kalina hledá chybu. To je všechno, co ten e-mail říká. Napsal jí to, protože ví, že ona tomu rozumí. Že nebude chtít vědět, co to je. Bude chtít vědět, s jakou chybou to ví.
 
@@ -46,7 +46,7 @@ Vstane a sundá z poličky nad lednicí modrou složku *Mlýnec*. Vedle ní stoj
 
 Na stole pak udělá místo. Posudek odsune na kraj. Hrnek na zem.
 
-Z notebooku si vytiskne fotku. Jednu z těch, které pořídila v sobotu jednadvacátého března večer v bodeze, kolmo shora, se šikmým světlem čelovky. Horní čelo válce. Pole značek, sedm řádků. Svislé čáry dvojí délky, tečky ve skupinách po jedné až čtyřech. Každý řádek začíná krátkou čarou. Ve čtvrtém řádku jedna tečka nad čarou. Vedle karta s měřítkem, centimetry, milimetry.
+Z notebooku si vytiskne fotku. Jednu z těch, které pořídila v sobotu jednadvacátého března večer v bodeze, kolmo shora, se šikmým světlem Kalinova panelu. Horní čelo válce. Pole značek, sedm řádků. Svislé čáry dvojí délky, tečky ve skupinách po jedné až čtyřech. Každý řádek začíná krátkou čarou. Ve čtvrtém řádku jedna tečka nad čarou. Vedle karta s měřítkem, centimetry, milimetry.
 
 Fotku má. Notebook jí nikdo nevzal. Originál deníku leží v Méridě v trezoru a válec v depozitáři na mokré pěně, a ona má fotku na kancelářském papíře z tiskárny, která pruhuje.
 
@@ -58,7 +58,7 @@ Položí je vedle sebe. Fotku vlevo, sken vpravo. Pak je prohodí: kresba je sta
 
 Dlouho se dívá.
 
-V březnu v noci, v bodeze, se jí z toho podlomila kolena. Teď ne. Teď vidí, co tam je, a vidí, co tam není. Žádný řádek z kosti se neopakuje na válci. Žádná skupina teček není na stejném místě. Nejsou to stejná slova. Jsou to stejná pravidla. *Jiná slova, stejná abeceda*, napsala si tehdy, a hned to vyvracela, protože člověk, který chce vidět abecedu, ji uvidí i v rýhách po ledovci.
+V březnu v noci, pod plachtou, se jí z toho podlomila kolena. Teď ne. Teď vidí, co tam je, a vidí, co tam není. Žádný řádek z kosti se neopakuje na válci. Žádná skupina teček není na stejném místě. Nejsou to stejná slova. Jsou to stejná pravidla. *Jiná slova, stejná abeceda*, napsala si tehdy, a hned to vyvracela, protože člověk, který chce vidět abecedu, ji uvidí i v rýhách po ledovci.
 
 To platí pořád. Rovná čára a tečka jsou nejjednodušší znamení, jaká lidská ruka udělá.
 
@@ -88,7 +88,7 @@ Vlevo píše, co je doloženo. Pomalu, každou položku s tím, odkud ji má.
 
 *Kresby v knize (kap. 7): 9 padajících světel, oblé domy v řadách. „Según los ancianos.“ Bez jmen.*
 
-Přestane psát. Stránka je celá vlevo. Čísla, zdroje, nejistoty. Všechno, co se dá zkontrolovat, kým se dá zkontrolovat a s jakou chybou. Kdyby ji teď někdo otevřel za třicet let v nějaké krabici, mohl by podle ní jet do Méridy a do Chebu a ověřit si každý řádek.
+Přestane psát. Stránka je celá vlevo. Čísla, zdroje, nejistoty. Všechno, co se dá zkontrolovat, kým se dá zkontrolovat a s jakou chybou. Kdyby ji někdo za třicet let našel v nějaké krabici, mohl by podle ní jet do Méridy a do Chebu a ověřit si každý řádek.
 
 Je to dobrá stránka. Nejlepší, jakou za ten rok napsala.
 
@@ -100,11 +100,11 @@ Hana vezme Anayovu knihu a otevře ji na sedmé kapitole. Kniha se tam otevře s
 
 *La piedra que cayó del cielo.*
 
-Na pravé stránce kresba tuší. Černé nebe, tečky hvězd. Devět světel padá šikmo v řadě k zakřivenému obzoru, každé se stopou, a poslední je menší a trochu pozadu, jako by se opozdilo. Hana na ni tenkrát v březnu u Walta koukala, pak obrátila list k oblým domům a něco se v ní zachytilo. Tvář na ulici v cizím městě. Pak Walt promluvil a tvář se otočila a byla cizí.
+Na pravé stránce kresba tuší. Černé nebe, tečky hvězd. Devět světel padá šikmo v řadě k zakřivenému obzoru, každé se stopou, a poslední je menší a trochu pozadu, jako by se opozdilo. Hana na ni tenkrát v březnu u Walta koukala, pak obrátila list k oblým domům a něco se v ní zachytilo. Tvář na ulici v cizím městě. Pak si vzpomněla na řádek z Mlýnce, sama si ho odbyla jako folklorní číslo, Walt promluvil a tvář se otočila a byla cizí.
 
-Zachytí se to znovu. Hana tomu nechá chvíli.
+Zachytí se to znovu. Hana to chvíli nechá.
 
-Neví, co to je. Neví, odkud to zná, jestli to vůbec zná. Ví jen, že v sedmdesátých letech v Méridě nakreslil amatér bez pramenů devět světel a podepsal je *podle starců*, které nikdo nikdy neviděl. A že Walt, který přečetl všechno, co se o cenotech kdy napsalo, i to špatné, o Anayovi neví nic. Kdo to byl. Kde vzal ty kresby. Proč jich nebylo osm nebo deset nebo dvanáct, jak by si to přál každý, kdo vymýšlí legendy.
+Odkud to zná, ví. Z modré složky na poličce nad lednicí, ze stránky, kterou v březnu u Walta odbyla devíti patry podsvětí a chýšemi z palmového listí. Neví, jestli ji tenkrát odbyla správně. Ví jen, že v sedmdesátých letech v Méridě nakreslil amatér bez pramenů devět světel a podepsal je *podle starců*, které nikdo nikdy neviděl. A že Walt, který přečetl všechno, co se o cenotech kdy napsalo, i to špatné, o Anayovi neví nic. Kdo to byl. Kde vzal ty kresby. Proč jich nebylo osm nebo deset nebo dvanáct, jak by si to přál každý, kdo vymýšlí legendy.
 
 Hana nasadí pero. Doprava napíše:
 

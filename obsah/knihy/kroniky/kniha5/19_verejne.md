@@ -14,7 +14,7 @@ Pokoj v karlovarské nemocnici má okno do parku. Je pondělí třetího června
 
 „Co je dole teď?“
 
-„Nevím.“ Řekne to tak, jak to Hana nikdy neslyšela říkat. Ne jako fakt. Jako ztrátu. „Třetí ventil je otevřený. Lada ho nechala, protože by praskl. Voda teče do skleníku, ze skleníku do strojovny. Nikdo to nepouští, nikdo nezavírá. Čidla mám do pátku, pak přestala. Kabel.“ Pohne obvázanou rukou a ucukne. „Pan Kalina říká, že pulzy jdou dál. Kratší. Ale jdou.“
+„Nevím.“ Řekne to tak, jak to Hana nikdy neslyšela říkat. Ne jako fakt. Jako ztrátu. „Třetí ventil je otevřený. Lada ho nechala, protože by praskl. Voda teče do skleníku, ze skleníku do strojovny. Nikdo to nepouští, nikdo nezavírá. Čidla šla do pátku, pak přestala. Kabel.“ Pohne obvázanou rukou a ucukne. „Pan Kalina říká, že pulzy jdou dál. Kratší. Ale jdou.“
 
 Hana si to zapíše. Vlevo, s datem. *Úřad zakázal vstup do podzemí pod statkem (pá 31. 5.). Kabel přerušen. Kamera ve spodní síni nahrává na kartu, do září (T.). Třetí ventil otevřen. Okruh bez obsluhy.*
 
@@ -66,7 +66,7 @@ Pak dál. Hana čte pomalu, jako čte spis.
 
 *Poslední takový zápis je z roku 1641. Od té doby v knize žádné vzaté dítě není. Vím to, protože jsem ji četla celou. Nežádám, abyste mi věřili. Žádám, abyste věděli, že to říkám já, svým jménem, a že kdybych lhala, je to moje lež.*
 
-*Nikdo z těch, kdo dnes žijí, to neudělal. Ale všichni z nás žijeme v knize, kde to stojí. Psala jsem do ní šedesát let. Tu stránku jsem až letos ukázala jediné ženě a nahlas o ní nikdy nemluvila. To je moje vina. Ne jejich.*
+*Nikdo z těch, kdo dnes žijí, to neudělal. Ale všichni žijeme v knize, kde to stojí. Psala jsem do ní šedesát let. Tu stránku jsem až letos ukázala jediné ženě a nahlas o ní nikdy nemluvila. To je moje vina. Ne jejich.*
 
 *Nepíšu to proto, aby se nám odpustilo. Píšu to proto, že je to pravda a že ji nikdo jiný nemá říkat místo nás. Ani ti, kdo nás chtějí chránit mlčením. Ani ti, kdo by z toho chtěli udělat důvod k pronásledování.*
 
@@ -116,7 +116,7 @@ V osm čtyřicet jedna zavolá novinářka z rozhlasu. Mladý hlas, slušný, ry
 
 „Je to pravda?“
 
-„Je to její text. Napsala ho svým jménem a za svou rukou. Já jsem ho nepsala a nebudu ho dokazovat, protože k tomu nemám co jiného než její knihu, a tu nezveřejním.“ Hana se nadechne. „Ale netvrdím, že to není pravda. A nic z toho, co jsem dnes zveřejnila, neříká, že to pravda není.“
+„Je to její text. Napsala ho svým jménem a vlastní rukou. Já jsem ho nepsala a nebudu ho dokazovat, protože k tomu nemám co jiného než její knihu, a tu nezveřejním.“ Hana se nadechne. „Ale netvrdím, že to není pravda. A nic z toho, co jsem dnes zveřejnila, neříká, že to pravda není.“
 
 „Takže to víte a mlčíte.“
 
@@ -174,7 +174,7 @@ Hana jde do jídelny a píše. Vlevo, kdo co řekl, se jmény, protože to řekl
 
 Ve čtvrtek vystoupí Wehrle sám, pod svým jménem.
 
-Hana to neví od policie. Ví to z německé televize, kterou jí v noci pošle Kalina, bez komentáře, jen odkaz a čas, ve kterém má začít.
+Hana to neví od policie. Ví to z pořadu německé televize, který jí v noci pošle Kalina, bez komentáře, jen odkaz a čas, ve kterém má začít.
 
 Konrad Wehrle sedí v knihovně s regály až ke stropu. Za ním na zdi rodokmen v rámu. Je menší, než si ho Hana představovala, a laskavější. Mluví pomalu, německy, s jižním přízvukem.
 
@@ -182,7 +182,7 @@ Konrad Wehrle sedí v knihovně s regály až ke stropu. Za ním na zdi rodokmen
 
 Hana to pustí podruhé. Pak potřetí, jen tu poslední větu.
 
-Do sešitu napíše: *13. 6. K. W. se jmenoval sám, v televizi, svým hlasem. Vyšetřován (DE i CZ). Neobviněn.* A pod to, menším písmem: *„Brzy se to změní.“ – Co ví?*
+Do sešitu napíše: *13. 6. K. W. se jmenoval sám, v televizi, svým hlasem. Vyšetřován? (DE i CZ)* A pod to, menším písmem: *„Brzy se to změní.“ – Co ví?*
 
 To druhé je vpravo.
 

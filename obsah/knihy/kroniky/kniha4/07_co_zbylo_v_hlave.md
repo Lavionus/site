@@ -2,7 +2,7 @@
 
 Třetí den od sněhu si Eren nemohl vzpomenout, kdy se Tio narodila.
 
-Nebylo to důležité. Věděl to, když se nad tím zamýšlel, a stejně se nad tím zamýšlel celé dopoledne. Seděl na kameni u potoka a štípal dřevo sekerou s krátkým topůrkem, a mezi dvěma ranami mu to přišlo na mysl: Tio má šest let. Od kdy? Od jakého dne?
+Nebylo to důležité. Věděl, že není, a stejně se nad tím zamýšlel celé dopoledne. Seděl na kameni u potoka a štípal dřevo sekerou s krátkým topůrkem, a mezi dvěma ranami mu to přišlo na mysl: Tio má šest let. Od kdy? Od jakého dne?
 
 Ten den měl v řádku. Každý rok ráno, v koutku mysli, ještě než otevřel oči: *Tio, pět let. Tio, šest let.* Nikdy si to nemusel pamatovat. Síť to věděla a v ten den mu to připomněla, a on šel do jídelny pro sladký chléb, protože Tio měla ráda sladký chléb. Pamatoval si ten chléb. Pamatoval si Tiin obličej nad ním, ulepený. Den si nepamatoval.
 
@@ -52,7 +52,7 @@ Pak se podívali na Erena.
 
 Eren věděl hodně. Věděl, jak se drží síť pohromadě, když je přetížená. Jak se hledá vadný uzel podle zpoždění. Jak se přepíná napájení z jednoho okruhu na druhý, aby nevypadla ventilace. Věděl, kde je v každém nástroji ověřovací obvod a kde jsou jeho dva kontakty. Věděl to všechno sám, v hlavě, ne v síti. Byla to práce, kterou dělal rukama.
 
-Tady to bylo k ničemu. Na celé té planetě nebyla jediná síť, jediný uzel, jediný okruh. Byl to člověk, který věděl všechno o věci, která neexistovala.
+Tady to bylo k ničemu. Na celé té planetě nebyla jediná síť, jediný uzel, jediný okruh. Byl člověkem, který věděl všechno o věci, která neexistovala.
 
 „Vím, kolik vydrží vložka,“ řekl nakonec.
 
@@ -100,7 +100,7 @@ Položila ampuli zpátky do lůžka.
 
 Neměli sůl. Měli tu bílou usazeninu z kamenů, hořkou a trochu slanou. Eren ji seškrábal nožem z kamenů u potoka, celou hrst, a Sefa ji rozmíchala v teplé vodě z dolní tůně. Lili to Brimu do pusy. Bri se bránil a kopal a polykal a vyzvracel to, a v tom bylo několik černých slupek. Lili to do něj znovu.
 
-Pomohlo to jen trochu. Nebo vůbec. Byly to hodiny od chvíle, kdy Bri u potoka jedl. Co snědl, už dávno nebylo v žaludku. Bylo v krvi.
+Pomohlo to jen trochu. Nebo vůbec. Od chvíle, kdy Bri u potoka jedl, uběhly hodiny. Co snědl, už dávno nebylo v žaludku. Bylo v krvi.
 
 V noci sešla dolů stará žena.
 
@@ -158,7 +158,7 @@ Napsal: *Černé lesklé bobule v zeleném kalichu s pěti cípy. Jed.*
 
 Písmena se roztřásla, protože klacek byl tupý a kůra se pod ním prohýbala. Napsal to znovu, níž, pomaleji. Pak pod to: *Nejíst. Ani jednu.*
 
-Bylo to písmo Konfederace, úhledné, jaké se učí děti. Doma ho skoro nepoužíval. Psalo se jen tam, kde síť nestačila: na štítky na nástrojích, na nápisy na stěnách chodeb pro případ výpadku. *Nouzový východ. Ventil ruční. Nezavírat.* Nápisy pro dobu, kdy síť mlčí.
+Bylo to písmo Konfederace, úhledné, jakému se učí děti. Doma ho skoro nepoužíval. Psalo se jen tam, kde síť nestačila: na štítky na nástrojích, na nápisy na stěnách chodeb pro případ výpadku. *Nouzový východ. Ventil ruční. Nezavírat.* Nápisy pro dobu, kdy síť mlčí.
 
 Teď síť mlčela.
 
@@ -192,7 +192,7 @@ Seděla tak do rána.
 
 Ráno byly pláty zkroucené.
 
-Kůra v noci vyschla u ohně a stočila se do ruliček, a když je Eren rozvinul, praskaly. Písmo na nich bylo rozmazané. Uhlíkový prach se setřel, kde se kůra dotýkala kamene, a z celých slov zbyly jen kusy. *Černé lesklé…* a pak šmouha. *Dospělý dva…*
+Kůra v noci vyschla u ohně a stočila se do ruliček, a když je Eren rozvinul, praskaly. Písmo na nich bylo rozmazané. Uhel se setřel, kde se kůra dotýkala kamene, a z celých slov zbyly jen kusy. *Černé lesklé…* a pak šmouha. *Dospělý dva…*
 
 Držel zkroucenou kůru v prstech a chvíli nedokázal polknout.
 

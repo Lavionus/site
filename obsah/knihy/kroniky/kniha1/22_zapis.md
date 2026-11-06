@@ -14,7 +14,7 @@ Potřeboval inkoust. Potřeboval pergamen, brk a desky. Neměl nic z toho. Měl 
 
 Inkoust udělal z duběnek a z vody ze slatiny.
 
-Duběnky sbíral pod starými duby na kraji lesa, který už nebyl Konrádův. Byly loňské, suché, s dírkou, kudy z nich na podzim vylezlo, co v nich bydlelo, a ležely ve starém listí jako hnědé kuličky. Ve skriptoriu se k nim přidávala zelená skalice, kterou klášter kupoval od kupců, a ta tady nebyla. Byla tu rezavá voda. Matěj si pamatoval kůru na kamenech pod žlabem a okraje kaluží na slatině, rezavé jako stará podkova. Jednou ráno, za větru, vzal džbán a šel tam.
+Duběnky sbíral pod starými duby na kraji lesa, který už nebyl Konrádův. Byly loňské, suché, s dírkou, kudy z nich na podzim vylezlo, co v nich bydlelo, a ležely ve starém listí jako hnědé kuličky. Ve skriptoriu se k nim přidávala zelená skalice, kterou klášter bral od kupců, a ta tady nebyla. Byla tu rezavá voda. Matěj si pamatoval kůru na kamenech pod žlabem a okraje kaluží na slatině, rezavé jako stará podkova. Jednou ráno, za větru, vzal džbán a šel tam.
 
 K prohlubni nešel. Nabral vodu na rovině, kde bublala, a chvíli tam stál a díval se na bubliny, jak se zvedají a praskají, každá zvlášť, a na zemi kolem, kde ještě v únoru ležel sníh a kde teď rostla jen řídká tvrdá tráva.
 
@@ -28,7 +28,7 @@ Dobroslava se mu podívala přes rameno.
 
 „Tak aspoň k něčemu je,“ řekla a šla k milíři.
 
-Matěj vytáhl tabulku a napsal pod poslední řádek: *Aqua rubra pro vitriolo. Nigrescit. Vidi.* Pak přilil do džbánu klovatinu, kterou seškrábal z kůry divoké třešně u cesty, a džbán postavil do stínu.
+Matěj vytáhl tabulku a napsal pod poslední řádek: *Aqua rubra pro vitriolo. Nigrescit. Vidi.* Pak přidal do džbánu klovatinu, kterou seškrábal z kůry divoké třešně u cesty, a džbán postavil do stínu.
 
 *
 
@@ -62,7 +62,7 @@ Kůže namočili v potoce, aby z nich vyšla sůl. Pak je dali do kádě s louhe
 
 „Koželuzi na to mají kozlík,“ řekla. „Já mám koleno.“
 
-Napnuli je na její rámy, na kterých jindy schly lišky. Provázky prostrčili dírkami po okrajích a utahovali je den po dni, jak kůže schla, a Matěj ji škrábal nožem, opatrně, tenčeji a tenčeji, a hladil ji kamenem z potoka, a ona bělala a tvrdla a byla to pořád kůže a už ne kůže.
+Napnuli je na její rámy, na kterých jindy schly lišky. Provázky prostrčili dírkami po okrajích a utahovali je den po dni, jak kůže schla, a Matěj ji škrábal nožem, opatrně, tenčeji a tenčeji, a hladil ji kamenem z potoka, a ona bělela a tvrdla a byla to pořád kůže a už ne kůže.
 
 Na jedné, uprostřed, se při schnutí otevřela díra. Malá, kulatá, s tenkým okrajem. Jehně tam mělo starou jizvu, která nevydržela napnutí.
 
@@ -70,7 +70,7 @@ Na jedné, uprostřed, se při schnutí otevřela díra. Malá, kulatá, s tenk�
 
 „Ne. Bylo to tam.“
 
-Díru nechal. Ve skriptoriu by takový list zahodili. Matěj ho nařezal stejně jako ostatní a díru si zapamatoval, aby kolem ní psal.
+Díru nechal. Ve skriptoriu by takový list zahodili. Matěj ho přidal k ostatním a díru si zapamatoval, aby kolem ní psal.
 
 Pergamen byl špatný. Tlustý, nažloutlý, na některých místech tvrdý jako podrážka a jinde tenký, až skrz něj prosvítalo světlo ode dveří. Vedle waldsassenských listů by vypadal jako sedlácký chléb vedle chleba z refektáře. Nařezal ho na velikost sešitku, dlaň na dlaň, a z obou kůží mu vyšlo jedenáct dvojlistů. Spočítal je dvakrát. Víc nebude.
 
@@ -112,7 +112,7 @@ Ve dne u stolu, u otevřených dveří, kudy šlo světlo, a v noci, když doho�
 
 Nejdřív se dlouho díval na první list a nevěděl, komu píše.
 
-Každý list, který kdy napsal, někomu patřil. Opis svatého Bernarda patřil klášteru. Zpráva o listině převorovi. Dopis ze slatiny převorovi, a z jeho stolu Konrádovi. Tabulku mu četl Volkmar a slyšel ji Konrád a před vraty grangie ji slyšela ves. Vždycky byl někdo, kdo to vezme do ruky a podívá se nahoru a řekne *bratr Matthias*.
+Každý list, který kdy napsal, někomu patřil. Opis otce Bernarda patřil klášteru. Zpráva o listině převorovi. Dopis ze slatiny převorovi, a z jeho stolu Konrádovi. Tabulku četl Volkmar Konrádovi a před vraty grangie ji slyšela ves. Vždycky byl někdo, kdo to vezme do ruky a podívá se nahoru a řekne *bratr Matthias*.
 
 Tenhle list nebude číst nikdo, kdo by ho znal. Nikdo mu za něj nedá klíče. Nikdo ho nepozve, aby to přečetl nahlas.
 
@@ -128,6 +128,8 @@ Nevěděl, kdo to bude. Nevěděl, jestli vůbec někdo. Napsal to stejně, prot
 
 Napsal jsem, co jsem viděl. A co jsem neviděl, zvlášť.
 
+Pod to připsal rok, jak ho písaři kladou do listin: *Anno ab incarnatione Domini MCLXXII.* Den nepřipsal. Nevěděl, kolik dní mu to psaní vezme.
+
 *
 
 Psal tak, jak se učil psát knihy: pomalu, malým pravidelným písmem, řádek pod řádkem, jak se klade dlažba. A na okraj, vedle každé věci, psal svá slova rychle, tou rukou, kterou psal do vosku pod smrkem a u ohně a na kolenou ve vodě. *Vidi. Non vidi. Audivi, a muliere. Sensi. Tuli. Dixi.*
@@ -136,9 +138,9 @@ Napsal o kosti a o listině. O svědcích psaných jednou rukou a o chybě v are
 
 Napsal o slatině. O mrtvých ptácích a o lišce a o stopách dovnitř, ne ven. O tom, jak svíce zhasíná vždycky ve stejné výšce, a ještě tři kroky za okrajem prohlubně, jako by tam tekla voda, kterou nikdo nevidí. *Candela prius sentit quam homo.* A pak, na samostatný řádek, aby to nikdo nemohl přehlédnout: *Epistola mea ad priorem de dracone falsa erat.* Můj dopis převorovi o drakovi byl mylný. Na okraj *dixi*, protože to řekl nahlas, před vraty grangie, a protože to byla pravda, i když ji nikdo nechtěl.
 
-Psa nenapsal. Chvíli nad tím držel brk. Pak napsal jen *canis meus mortuus est*, bez jména, a na okraj jen *vidi*, protože k tomu nebylo co dodat.
+Jméno psa nenapsal. Chvíli nad tím držel brk. Pak napsal jen *canis meus mortuus est*, bez jména, a na okraj jen *vidi*, protože k tomu nebylo co dodat.
 
-Napsal o štole. Kroky, kapky, vědra, Otčenáše. Teplá čelba, chvění pod dlaní. Opis Ortliebových tabulek už měl v sešitku a nepřepisoval ho. Na kraji toho listu stálo od Velikonoc *ab Hensel, per Iesek*, které převorovi ukázalo, odkud to ví. Nepřipsal k tomu nic. Bylo to tam. Ať to tam je.
+Napsal o štole. Kroky, kapky, vědra, Otčenáše. Teplá čelba, chvění pod dlaní. Opis Ortliebových tabulek už měl v sešitku a nepřepisoval ho. Na kraji toho listu stálo od Velikonoc *ab Hensel, per Iesek* a právě to převorovi ukázalo, odkud to ví. Nepřipsal k tomu nic. Bylo to tam. Ať to tam je.
 
 Napsal o hnízdě. O kostech těžkých jako kámen, tmavých jako med, o lebce dlouhé jako předloktí, o drápech, jejichž rozestup se shodoval s rozestupem rýh. O vrstvách hlíny, stovkách vrstev, tenkých jako list. O malé stočené kostře u stěny, kterou Ješek nazval mládětem. Matěj nevěděl, jestli jím byla. Napsal *Fuerunt. Non sunt.* A pak, na okraj toho listu, napsal obě slova vedle sebe, *vidi* u kostí a *non vidi* u draka, živého, a mezi ně udělal čáru. Rovnou, svislou, od horního okraje k dolnímu.
 
@@ -148,7 +150,7 @@ Díval se na ni, když schla. Vypadala jako mez mezi dvěma poli. Jako kolík, k
 
 O světle psal jednu noc.
 
-Opsal to z tabulky, kde to po vodě bylo rozteklé, ale čitelné, protože to psal on a pamatoval si to. Slovo po slově, tak, jak to četl Konrádovi u plané hrušně a jak to Volkmar psal do svých desek. *Vidi lumen in petra, intus, non extra.* Devět světel, která padala. Kraj shora, hory a voda. Domy, oblé, v rovných řadách. Postavy. Jedno světlo, které přicházelo shora, odjinud. Třikrát totéž. Světlo, které stoupalo skrz skálu.
+Opsal to z tabulky, kde to po vodě bylo rozteklé, ale čitelné, protože to psal on a pamatoval si to. Slovo po slově, tak, jak to četl Konrádovi u plané hrušně a jak to Volkmar psal do svých desek. Písmo se mu na té stránce zmenšilo. *Vidi lumen in petra, intus, non extra.* Devět světel, která padala. Kraj shora, hory a voda. Domy, oblé, v rovných řadách. Postavy. Jedno světlo, které přicházelo shora, odjinud. Třikrát totéž. Světlo, které stoupalo skrz skálu.
 
 *Quid sit, nescio.*
 
@@ -232,7 +234,7 @@ Ješek udělal krok dovnitř. Pak druhý. Postavil se nad stůl a díval se na d
 
 Ješek se na něj podíval. Pak zase na list.
 
-„Orám tátovo pole,“ řekl. „Pro ty z Pleisse. Rüdiger mi dává denár za týden. Do žní.“ Neřekl to jako výčitku. Řekl to, jako se řekne, kolik je hodin. „Je to dobrý pole. Táta věděl, kde je kámen.“
+„Orám tátovo pole,“ řekl. „Pro ty z Pleisse. Rüdiger mi dává denár za týden. Do žní.“ Neřekl to jako výčitku. Řekl to, jako se řekne, že prší. „Je to dobrý pole. Táta věděl, kde je kámen.“
 
 Matěj mlčel.
 
@@ -250,7 +252,7 @@ Ješek natáhl ruku.
 
 „Nesahej,“ řekl Matěj. „Je to mokrý.“
 
-Ješek ruku stáhl. Díval se na to slovo, na svoje jméno, které nepoznal, ještě chvíli. Pak se otočil a šel ke dveřím, a na prahu se zastavil, ale neotočil se.
+Ješek ruku stáhl. Díval se na to slovo, na svoje jméno, které nepoznal, ještě chvíli. Pak se otočil a šel ke dveřím, a na prahu se zastavil, ale neohlédl se.
 
 „Mámě řeknu, že jíš,“ řekl. A šel.
 
@@ -354,7 +356,7 @@ Pak se natáhl a vzal knihu. Matěj ho nezastavil. Merin ji otevřel, opatrně, 
 
 „Ne.“
 
-Merinovi se něco pohnulo v koutku úst. Nebyl to úsměv. Byl to začátek úsměvu, který se rozhodl, že nebude.
+Merinovi se něco pohnulo v koutku úst. Nebyl to úsměv. Byl to začátek úsměvu, který se dál nedostal.
 
 „Dobře,“ řekl.
 
@@ -394,7 +396,7 @@ Merin se díval na horu.
 
 „To, co tam zůstalo,“ řekl.
 
-Matěj si vzpomněl na teplou stěnu v nízké místnosti. Na ohlazené místo velké jako dvě dlaně v uchu, kde Ostra celou zimu poslouchala. Na rýhy pod vodou. Na tu hladkou věc na konci štoly, která už nehřála. Nevěděl, co z toho Merin myslí. Možná nic z toho.
+Matěj si vzpomněl na teplou stěnu v nízké místnosti. Na ohlazené místo v uchu, velké jako dvě dlaně, kde Ostra celou zimu poslouchala. Na rýhy pod vodou. Na tu hladkou věc na konci štoly, která už nehřála. Nevěděl, co z toho Merin myslí. Možná nic z toho.
 
 „A až opadne,“ řekl, „přijdeš ty?“
 
@@ -458,7 +460,7 @@ Kněz to neřekl posměšně. Zeptal se, jak se ptá člověk, který slyšel, c
 
 „To taky,“ řekl Matěj. „Zvlášť.“
 
-Kněz vzal knihu a rozbalil ji. Otevřel ji uprostřed, na mapě. Díval se na horu v řezu, na štolu, na kruh, a Matěj viděl, jak se mu pohnuly rty u českého slova, které tam stálo.
+Kněz vzal knihu a rozbalil ji. Otevřel ji uprostřed, na mapě. Díval se na horu v řezu, na štolu, na kruh, a Matěj viděl, jak se mu pohnuly rty u českých slov, která tam stála.
 
 „Teplá skála,“ řekl kněz. Skoro se usmál. „Tu znám. Babička říkala, že tam spí drak.“
 

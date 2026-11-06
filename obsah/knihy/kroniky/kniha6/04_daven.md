@@ -2,7 +2,7 @@
 
 Dveře ho pustily.
 
-Nara seděla v kuchyni nad Askovou poznámkou k pravomoci, když uslyšela, jak se v předsíni otevírá. Žádné ohlášení, žádný řádek sítě, že někdo stojí venku a čeká. Jen tiché cvaknutí zámku a pak kroky, které znala, protože je slýchala jedenáct let. Dveře Davena poznaly. Nara mu přístup nikdy nezrušila. Když před sedmi lety odcházel, nezrušila ho, protože tu bydlel Ilan a Daven si pro něj chodil. Pak to nechala být. Připadalo jí malicherné to rušit.
+Nara seděla v kuchyni nad Askovou poznámkou k pravomoci, když uslyšela, jak se v předsíni otevírají dveře. Žádné ohlášení, žádný řádek sítě, že někdo stojí venku a čeká. Jen tiché cvaknutí zámku a pak kroky, které znala, protože je slýchala jedenáct let. Dveře Davena poznaly. Nara mu přístup nikdy nezrušila. Když před sedmi lety odcházel, nezrušila ho, protože tu bydlel Ilan a Daven si pro něj chodil. Pak to nechala být. Připadalo jí malicherné to rušit.
 
 Teď stál ve dveřích kuchyně a díval se na ni, a Nara pochopila, že ani on nečekal, že ho dveře pustí.
 
@@ -56,7 +56,7 @@ Nara mlčela.
 
 *
 
-Pak vytáhl, kvůli čemu přišel. Neměl to v ruce, protože v ruce se nic nenosí. Poslal jí to přes stůl, z jedné sítě do druhé, a Nara ucítila ten drobný ťuk, kterým se ohlašuje cizí listina.
+Pak vytáhl to, kvůli čemu přišel. Neměl to v ruce, protože v ruce se nic nenosí. Poslal jí to přes stůl, z jedné sítě do druhé, a Nara ucítila ten drobný ťuk, kterým se ohlašuje cizí listina.
 
 *Žádost o individuální výjimku z výkonu trestu — nezletilý. Žadatel: D. Vess, otec. Ve věci: Ilan Vess, 17 let.*
 
@@ -92,11 +92,11 @@ Nara se dívala na to rozhodnutí. Přerušuje se. Předběžná otázka. Navrho
 
 „Davene.“
 
-„Mám tady ještě něco.“ Poslal přes stůl další listinu. Tentokrát to byla tabulka, úhledná, s čísly v řádcích. Nara jí rozuměla jen napůl. „Okno. Transport letí po dráze, která je otevřená devatenáct hodin. Čtyřicátý šestý den, od tří ráno do deseti večer. Úřad si vybral šest hodin, protože to je nejbezpečnější. Kdyby se odlet posunul, další okno je za dvě stě dvacet dní.“
+„Mám tady ještě něco.“ Poslal přes stůl další listinu. Tentokrát to byla tabulka, úhledná, s čísly v řádcích. Nara jí rozuměla jen napůl. „Okno. Transport letí po dráze, která je otevřená devatenáct hodin. Čtyřicátý šestý den, od tří ráno do deseti večer. Úřad si vybral šestou ráno, protože to je nejbezpečnější. Kdyby se odlet posunul, další okno je za dvě stě dvacet dní.“
 
 „To vím.“
 
-„Nevíš. Myslíš si, že víš. Myslíš si, že kdyby soud nestihl rozhodnout, úřad počká.“ Daven zavrtěl hlavou. „Nepočká. Šest tisíc lůžek naplněných, posádka objednaná, zásoby naložené. Dvě stě dvacet dní by stálo víc, než celá dopravní správa utratí za rok. Nikdo to neposune. Ani soud, ani úřad, ani bůh.“ Při slově *bůh* se pousmál, protože to bylo slovo, které nikdo nepoužíval, a on ho kdysi používal, když chtěl Naru rozesmát. Teď nikoho nerozesmál. „Čtyřicátý šestý den v šest ráno ta loď odletí. Buď v ní bude, nebo nebude. Nic mezi.“
+„Nevíš. Myslíš si, že víš. Myslíš si, že kdyby soud nestihl rozhodnout, úřad počká.“ Daven zavrtěl hlavou. „Nepočká. Šest tisíc lůžek přidělených, posádka objednaná, zásoby naložené. Dvě stě dvacet dní by stálo víc, než celá dopravní správa utratí za rok. Nikdo to neposune. Ani soud, ani úřad, ani bůh.“ Při slově *bůh* se pousmál, protože to bylo slovo, které nikdo nepoužíval, a on ho kdysi používal, když chtěl Naru rozesmát. Teď nikoho nerozesmál. „Čtyřicátý šestý den v šest ráno ta loď odletí. Buď v ní bude, nebo nebude. Nic mezi.“
 
 „Já vím, Davene.“
 
@@ -130,7 +130,7 @@ Nara neodpověděla. Daven to řekl lépe než Asko, protože to neřekl jako pr
 
 „Poslouchám tě dvacet let.“
 
-„Tak ještě jednou.“ Nara se narovnala. Cítila, jak jí krev stoupá do tváře, a byla za to ráda, protože to znamenalo, že ještě něco cítí. „Kdybych to stáhla, tvoje žádost by prošla. Máš pravdu, skoro vždycky projdou. Ilan by zůstal. A šest tisíc jedenáct lidí by odletělo. Kesi Amar by odletěla, ta holka, co ho na náměstí držela za ruku. Je jí šestnáct. Nemá otce v dopravní správě a matku v advokacii. Nemá nikoho, kdo by za ni podal vzor ze sítě.“
+„Tak ještě jednou.“ Nara se narovnala. Cítila, jak jí krev stoupá do tváře, a byla za to ráda, protože to znamenalo, že ještě něco cítí. „Kdybych to stáhla, tvoje žádost by prošla. Máš pravdu, skoro vždycky projdou. Ilan by zůstal. A šest tisíc jedenáct lidí by odletělo. Kesi Amar by odletěla, ta holka, co ho na náměstí držela za ruku. Je jí šestnáct. Nemá nikoho v úřadě ani v advokacii. Nevím, jestli má vůbec někoho, kdo by za ni podal vzor ze sítě.“
 
 „To není tvoje vina.“
 
@@ -150,7 +150,7 @@ Nara zmlkla.
 
 „Tak ať s námi nemluví,“ řekl Daven.
 
-Řekl to stejně, jak říkal všechno. Bez důrazu, jako hlášení o oknu. A Nara pochopila, že to myslí vážně, a že je to nejvážnější věc, jakou od něj kdy slyšela.
+Řekl to stejně, jako říkal všechno. Bez důrazu, jako hlášení o oknu. A Nara pochopila, že to myslí vážně, a že je to nejvážnější věc, jakou od něj kdy slyšela.
 
 „Ať s námi nemluví,“ opakoval Daven. „Ať mě nenávidí. Ať nenávidí tebe. Ať odejde na Ketu a nikdy se neozve. Bude tady, Naro. Bude žít. Bude se moct rozhodnout, jestli nás bude nenávidět. Tam se nebude moct rozhodnout o ničem. Bude spát a pak se probudí na místě, které nikdo z nás nikdy neviděl, a ani nebude vědět, jestli jsme se o něco pokusili.“
 
@@ -174,7 +174,7 @@ Obrátila se k síti a podívala se do nastavení.
 
 *Zklidnění: automatické. Zapnuto: 1. den, 9:41. Důvod: rodinná krize. Platnost: do odletu.*
 
-Devět čtyřicet jedna. Minutu po tom, co vyšel rozsudek. Dvě hodiny předtím, než ho přečetla. Síť zapnula zklidnění dřív, než Naře řekla proč. Klidné ruce na chodbě soudu. Pomalý dech. Byla na to pyšná. Myslela si, že je to praxe.
+Devět čtyřicet jedna. Minutu po tom, co vyšel rozsudek. Skoro dvě hodiny předtím, než ho přečetla. Síť zapnula zklidnění dřív, než Naře řekla proč. Klidné ruce na chodbě soudu. Pomalý dech. Byla na to pyšná. Myslela si, že je to praxe.
 
 Pod nastavením byla volba. Drobná, světlejší než ostatní řádky. *Vypnout.* A pod ní, menším písmem: *Vypnutí zklidnění v době rodinné krize bude zaznamenáno.*
 
@@ -244,7 +244,7 @@ Pak se zvedl.
 
 Udělal to pomalu, jako se zvedal vždycky, nejdřív se opřel rukama o stůl a pak se narovnal. Stál nad ní a díval se dolů, a Nara si všimla, že je hubenější, než si ho pamatovala, ne jako Ilan, ale trochu.
 
-„Nebudu tě přemlouvat,“ řekl. „Řekl jsem ti, co jsem chtěl. Úřad mi napsal, že řízení o žádosti se přerušuje. Přerušuje, ne zamítá. Kdybys to stáhla zítra nebo za týden, obnoví se. Kdybys to stáhla den před odletem, bude pozdě. Deset dní na posouzení, Naro. Odpočítej si to.“
+„Nebudu tě přemlouvat,“ řekl. „Řekl jsem ti, co jsem chtěl. Úřad mi napsal, že řízení o žádosti se přerušuje. Přerušuje, ne zamítá. Kdybys to stáhla zítra nebo za týden, obnoví se. Kdybys to stáhla den před odletem, bude pozdě. O vyjmutí se musí rozhodnout nejpozději deset dní před výkonem, Naro. Odpočítej si to.“
 
 „Já vím, kolik je deset dní.“
 
@@ -280,7 +280,7 @@ Seděla tam a dívala se na světlejší obdélník na stěně. Daven měl pravd
 
 Do třicátého šestého dne. Pak už je to jedno.
 
-Do třicátého šestého dne mohla návrh stáhnout. Daven by podal žádost znovu. Ilan by byl venku. Každé ráno do třicátého šestého dne se bude moct rozhodnout znovu. Nara si to uvědomila zřetelně a uvědomila si i to, že to tak bude: že se každé ráno bude rozhodovat znovu, a že každé ráno to bude těžší, protože každé ráno bude o den méně.
+Do třicátého šestého dne mohla návrh stáhnout. Daven by podal žádost znovu, a úřad, který ji už jednou uznal za úplnou, by rozhodl do hodin. Ilan by byl venku. Každé ráno do třicátého šestého dne se bude moct rozhodnout znovu. Nara si to uvědomila zřetelně a uvědomila si i to, že to tak bude: že se každé ráno bude rozhodovat znovu, a že každé ráno to bude těžší, protože každé ráno bude o den méně.
 
 Zkusila si to říct. Ne nahlas, jen v duchu, tak jak by to stálo v podání.
 

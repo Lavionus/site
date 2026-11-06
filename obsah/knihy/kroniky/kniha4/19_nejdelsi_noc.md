@@ -26,7 +26,7 @@ Po Orrinově odchodu padal sníh šest dní bez přestávky. Pak bylo jasno a mr
 
 Lovili spolu.
 
-Ne hned. Prvních pět dní po soudu chodili lovci místních sami a vyhnanci se dívali, jak odcházejí. Šestého dne přišel mladý lovec k domům a ukázal na Arda a na Kaje. Jen na ty dva. Ardo šel. Kaj se podíval na Ammu a Ammu kývla.
+Ne hned. Prvních pět dní po soudu chodili místní lovci sami a vyhnanci se dívali, jak odcházejí. Šestého dne přišel mladý lovec k domům a ukázal na Arda a na Kaje. Jen na ty dva. Ardo šel. Kaj se podíval na Ammu a Ammu kývla.
 
 Vrátili se se zvířetem s dozadu zahnutými rohy. Večer u Talina ohně seděli staří a dělili. Tal, Dabra za řadou kamenů a Hela. Ru mezi nimi. Dělili dlouho a Eren to poslouchal od stěny a rozuměl jen tomu, co se ukazovalo rukama. Kdo hnal. Kdo nesl. Kdo stál u sedla. Kaj dostal kus a podal ho Ammu, dřív než ho pustil z ruky.
 
@@ -44,7 +44,7 @@ Ne najednou. Jeden za čas. Nejdřív chlapec se zhnisaným palcem, kterému ruk
 
 Zem byla zmrzlá. Kopat se nedalo. Nosili je na suť a kladli na ně kameny, a hromad na suti přibývalo. Eren je přestal počítat podle hromad. Počítal je podle jmen. Některá znal. Některá se dozvěděl teprve u hromady, když je řekla Hela.
 
-U místních umírali taky. Stará žena, která sedávala u druhého ohně a plela košíky. Dítě. Muž, kterého Eren nikdy neviděl, protože ležel celou zimu v zadní části síně. Místní je nosili po stezce nad soutěskou, kam nosili Ikkua. Eren tam nechodil.
+U místních umírali taky. Stará žena, která sedávala u druhého ohně a plela košíky. Dítě. Muž, kterého Eren nikdy neviděl, protože ležel celou zimu v zadní části síně. Místní je nosili po stezce nad soutěskou, kudy odnesli Ikkua. Eren tam nechodil.
 
 Hela vedla počty. Na stěnu prvního domu, do mazanice, rýhami. Po deseti. Kdo umřel, tomu rýhu nepřeškrtla ani nezamazala. Udělala vedle ní tečku. Řekla, že by jinak nevěděla, kde byli.
 
@@ -60,7 +60,7 @@ Domy stály ve dvou řadách. Kruh vedle kruhu, kouřový otvor vedle kouřovéh
 
 V pátém domě bydlela místní rodina. Muž, žena a tři děti. Přišli dolů ze síně jednoho dne bez vysvětlování, protože v síni bylo těsno, a nastěhovali se do domu, který postavili spolu s Vesou. Vesa bydlela s nimi. Ráno se z kouřového otvoru pátého domu kouřilo stejně jako z ostatních. V pátém domě se mluvilo dvěma řečmi a nikdo nevěděl, kterou víc.
 
-Ve vnější síni leželi nemocní. Ne už jen na dvanácti kamenech. Za řadou plochých kamenů, kde stála zeď do hloubky, už zeď nestála celá. Ze dvou horních řad vyndali skalní lidé kameny, jeden po druhém, v průběhu zimy, a teď tam byl otvor, kterým člověk nevylezl, ale kterým šel vzduch. Teplý, vlhký, s pachem vody a kamene. Šel z hloubky do síně a nemocní leželi tak, aby na ně dýchal.
+Ve vnější síni leželi nemocní. Ne už jen na dvanácti kamenech. Za řadou plochých kamenů, kde stála zeď do hloubky, už zeď nestála celá. Ze dvou horních řad vyndali skalní lidé kameny, jeden po druhém, v průběhu zimy, a teď tam byl otvor, kterým by člověk neprolezl, ale kterým šel vzduch. Teplý, vlhký, s pachem vody a kamene. Šel z hloubky do síně a nemocní leželi tak, aby na ně dýchal.
 
 Eren tím otvorem nikdy neprošel. Nikdo ho nepozval. Nepožádal o to.
 
@@ -118,7 +118,7 @@ Pod rostliny napsal čtyři věci. Víčko. Pas bez zbraně. Poleno. Tři kameny
 
 Pod to jména. Briho. Staré ženy z Heliny desítky, jejíž jméno mu řekla Hela. Muže ze druhého, jehož jméno mu řekla Vesa. Lema, jehož jméno mu řekl Orrin. Ikkua. A pak dalších, jak přibývali.
 
-Nikdo v síni to neuměl přečíst. Jen on. A Hela, když sem přišla. A trochu Tio.
+Nikdo v síni to neuměl přečíst. Jen on. A Hela, když sem přišla. A Tio pár písmen, ze štítků doma.
 
 Tal jednou vstala od ohně a přišla ke stěně. Dlouho stála nad světlými písmeny v černé vrstvě, pak natáhla ruku a přejela prstem po jednom z nich. Po prvním písmenu Ikkuova jména.
 
@@ -156,7 +156,7 @@ Dívala se na Tal. Tal na ni. Pak Tal ukázala na misku a na Sefina ústa. Jedno
 
 Sefa se dívala dlouho.
 
-Celý život dávkovala. Viděl to na ní první den u lékárničky, když nemohla přečíst kódy. Strach z čísla, které neví. Ze sedmi kapek, které měly být tři. Z ampule bez jména v ruce, když Bri umíral. *Zabila bych někoho omylem. S tou nejlepší vůlí.* Řekla mu to v kotli, pod plachtou, a myslela to vážně.
+Celý život dávkovala. Viděl to na ní první den u lékárničky, když nemohla přečíst kódy. Strach z čísla, které neví. Z dvojnásobku, který zabíjí, a z poloviny, která nepomůže. Z ampule bez jména v ruce, když Bri umíral. *Zabila bych někoho omylem. S tou nejlepší vůlí.* Řekla mu to v kotli, pod plachtou, a myslela to vážně.
 
 Teď ležela před miskou, o které nevěděla nic. Ani kolik. Ani z čeho. Ani na co.
 
@@ -308,7 +308,7 @@ Malý, nízký, ale hořel. Ammu u něj spala vsedě, s jehlou v sáčku sevřen
 
 Tal stála v ústí.
 
-Eren k ní šel přes spící lidi, opatrně, aby nikoho nevzbudil. Mezi místními a vyhnanci, mezi dětmi obou řečí, které spaly jedno přes druhé, pod kůžemi a plachtami, a nebylo poznat, kde končí jedni a začínají druzí. Někdo tu noc umřel. Sefa. A nikdo jiný. Eren to věděl, aniž by počítal, protože by to slyšel.
+Eren k ní šel přes spící lidi, opatrně, aby nikoho nevzbudil. Mezi místními a vyhnanci, mezi dětmi obou řečí, které spaly jedno přes druhé, pod kůžemi a plachtami, a nebylo poznat, kde končí jedni a začínají druzí. Někdo tu noc umřel. Sefa. A nikdo jiný. Kdyby ano, vzbudili by ho.
 
 Na terase stál Ru.
 

@@ -28,7 +28,7 @@ Sende četl.
 
 *[Čtyři ze čtyř. Shoda znaků s opisem ve výtahu řádu úplná.]*
 
-Totéž, co vlevo. Slovo od slova. Sende to věděl dřív, než síť obě věty podbarvila stejnou barvou. Lis Aven to viděla v laboratoři v Méridě, znak po znaku, a řekla to do záznamu. Ve výtahu to byl jediný řádek, který měl celý.
+Totéž, co vlevo. Slovo od slova. Sende to věděl dřív, než síť obě věty podbarvila stejnou barvou. Lis Aven to viděla v laboratoři v Méridě, znak po znaku, a řekla to do záznamu. Ve výtahu to byl jediný řádek, který se přeložil celý a beze slova *kontaminant*.
 
 Pod ním ve výtahu stálo *chybí*.
 
@@ -140,7 +140,7 @@ Pod tím už nic.
 
 *
 
-Sende si udělal seznam. Ne v síti. Do vlastní poznámky, kterou síť ukládala pod jeho jménem a nikomu ji neukazovala. Tak jako v dubnu.
+Sende si udělal seznam. Ne v síti. Do vlastní poznámky, kterou síť ukládala pod jeho jménem a nikomu neukazovala. Tak jako v dubnu.
 
 *1. „Kontaminant“ = chybné čtení znaku. Úplné znění: „svěřenec“ (4/4). Předpis řádu o obnově karanténní správy nemá v části III oporu.*
 
@@ -224,7 +224,7 @@ Sende to nečekal. Nedal to na sobě znát. Myslel si, že to nedal.
 
 Hesk se na něj chvíli dívala a udělala krok ke stolu. Ruce zůstaly volně.
 
-„Pak se shodneme i na tom ostatním,“ řekla. „Protože je to týž text, delegáte. Vy jste ho tak četl. Bod čtyři. Viděla jsem, jak se na něj díváte.“ Odmlčela se. „Nechcete, abychom ničili. Dobře. Nebudeme ničit. Budeme opatrovat. Přesně tak, jak to stojí. Místo, které se vyznačí. Počet. Záznam o narození. Zvolím nejmírnější čtení. *Záznam*, ne *svolení*. Nevymyslela jsem si to. Je to tam. Na tom, co vy jste celý život chtěl. Text, ne výklad.“
+„Pak se shodneme i na tom ostatním,“ řekla. „Protože je to týž text, delegáte. Vy jste ho tak četl. Bod čtyři. Viděla jsem, jak se na něj díváte.“ Odmlčela se. „Nechcete, abychom ničili. Dobře. Nebudeme ničit. Budeme opatrovat. Přesně tak, jak to stojí. Místo, které se vyznačí. Počet. Záznam o narození. Zvolím nejmírnější čtení. *Záznam*, ne *svolení*. Nevymyslela jsem si to. Je to tam. Stavím na tom, co vy jste celý život chtěl. Text, ne výklad.“
 
 Sende mlčel.
 
@@ -248,7 +248,7 @@ Sende věděl, že je to dobrý argument. Věděl to už v noci, když nenapsal 
 
 Sende nevěděl, že to Hesk zná. Vzápětí si vzpomněl, že četla spis taky.
 
-„Tam, kam ti lidé podle protokolu patří,“ řekl Sende, „je oblast, kterou jsme v průzkumu viděli s přerušovanou čarou. *Nepřistávat.* Na druhém konci světa. Linie odtamtud odešly. Před desítkami tisíc let. Žijí teď ve městech, mezi lidmi, mají s nimi děti. Doktorka Sokolová zveřejnila model. Slabá stopa jedné z těch linií je podle ní i u lidí, kteří o žádné linii nevědí.“ Odmlčel se. „*Nemísí se ani s lidským druhem.* Už se smísily. Dávno. Celý ten svět je překročená hranice.“
+„Tam, kam ti lidé podle protokolu patří,“ řekl Sende, „je oblast, kterou průzkum ohraničil přerušovanou čarou. *Nepřistávat.* Kde leží, spis neříká. Ale ať leží kdekoli, linie z ní odešly. Před desítkami tisíc let. Žijí teď ve městech, mezi lidmi, mají s nimi děti. Doktorka Sokolová zveřejnila model. Slabá stopa jedné z těch linií je podle ní i u lidí, kteří o žádné linii nevědí.“ Odmlčel se. „*Nemísí se ani s lidským druhem.* Už se smísily. Dávno. Celý ten svět je překročená hranice.“
 
 „Proto ta druhá věta,“ řekla Hesk. „*Co se vrátit nedá, opatruje se tam, kde je.* Nikoho nebudu stěhovat přes moře. Vyznačím místa tam, kde jsou. Sídla jejich sítí. Ta hora, dokud stojí.“
 
@@ -272,7 +272,7 @@ Kerr otevřela oči.
 
 Sende se nadechl. Věděl, že na to přijde.
 
-„Dva týmy čtou *dokud*,“ řekl. „Kdyby to tak bylo, protokol platil, dokud na světě zůstával ten, kdo za svěřence odpovídal. To byli ti, kdo ten text napsali. Ti, kdo linie vytvořili, nebo jejich… nevím, jak to říct. Pozemská komunita. Odešli. Nevíme kdy, nevíme proč. Pak by protokol dávno neplatil.“
+„Dva týmy čtou *dokud*,“ řekl. „Kdyby to tak bylo, protokol by platil, dokud na světě zůstával ten, kdo za svěřence odpovídal. To byli ti, kdo ten text napsali. Ti, kdo linie vytvořili, nebo jejich… nevím, jak to říct. Pozemská komunita. Odešli. Nevíme kdy, nevíme proč. Pak by protokol dávno neplatil.“
 
 „A?“
 
@@ -306,7 +306,7 @@ Kerr kývla. Pomalu, jako stará soudkyně, která slyšela odpověď, kterou č
 
 Hesk se ozvala ještě jednou, ve dveřích.
 
-„Připravím návrh,“ řekla. „Správa podle protokolu. Bez sanace populací. Vyznačená místa, počet, záznam. Stanoviště zvlášť. A zjistím, jestli je dole někdo, kdo by s tím souhlasil. Než to předložím. Aby to nebyl jen náš papír.“
+„Připravím návrh,“ řekla. „Správa podle protokolu. Bez sanace populací. Vyznačená místa, počet, záznam. Stanoviště zvlášť. A zjistím, jestli je dole někdo, kdo by s tím souhlasil. Než to předložím. Aby to nebylo jen naše slovo.“
 
 „S kým?“ zeptal se Sende.
 
@@ -340,7 +340,7 @@ Síť se ho zeptala, jestli si přeje návrh stanoviska. Na základě úplného 
 
 Odmítl.
 
-Síť se ho zeptala, jestli si přeje převažující výklad. Žádný neexistoval. Úplné znění bylo dva dny staré. Síť mu to sama řekla a nabídla mu, že ho sestaví.
+Síť se ho zeptala, jestli si přeje převažující výklad. Žádný neexistoval. Úplné znění bylo od včerejška. Síť mu to sama řekla a nabídla mu, že ho sestaví.
 
 Odmítl.
 
@@ -348,7 +348,7 @@ Pak si otevřel dopis. Ne ten, který mu nahrála matka. Ten, který ležel v ar
 
 *Když mu bylo patnáct, zapnula jsem mu zklidnění. Nezeptala jsem se ho. Rok si myslel, že je klidný člověk. Ten klid nebyl jeho. Byl můj. Byla to první věc, kterou jsem rozhodla za něj. Nebyla poslední.*
 
-Přečetl to jednou a vrátil se k protokolu, k řádku ve třetím sloupci.
+Přečetl to jednou a vrátil se k protokolu, k řádku v prostředním sloupci.
 
 *Svěřenec se opatruje.*
 
@@ -388,7 +388,7 @@ Nenapsal šestý bod. Napsal něco jiného. Vrátil se k bodu čtyři a připsal
 
 Díval se na to dlouho. Na Iretu by to byla otázka do prvního ročníku. Kdo je adresátem normy. Každý student to umí. Text to řekne.
 
-Tady to text neříkal. Říkal jen *kdo zůstává*. Ti, kdo to napsali, odešli. Řád přiletěl. A dole, pod tím kusem denní strany, který se mezitím zase pootočil do tmy, žili lidé, kteří nikam neodletěli. Ostří, kteří tři sta let chladili horu, a stroj je zapisoval jako poruchu. Žena, která opsala jeden znak dvakrát. Archivářka, která pečetila kopie. Geoložka, která nevěřila ani sobě.
+Tady to text neříkal. Říkal jen *kdo zůstává*. Ti, kdo to napsali, odešli. Řád přiletěl. A dole, pod tím kusem denní strany, který se mezitím zase pootočil do tmy, žili lidé, kteří nikam neodletěli. Ostří, kteří horu chladili déle, než sahá deník, a stroj je zapisoval jako poruchu. Žena, která opsala jeden znak dvakrát. Archivářka, která pečetila kopie. Geoložka, která nevěřila ani sobě.
 
 Ti zůstali.
 

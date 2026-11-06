@@ -94,7 +94,7 @@ Kalina se probudí v pět a nejdřív se zeptá, jestli byl odstřel. Hana mu uk
 
 V noci na středu měří znovu. Hana s ním nejde. Spí jako zabitá, poprvé od příjezdu, a ráno ho najde u stolu nad sešitem, stejně jako ho tam nechala, jen s jiným hrnkem.
 
-„Padesát dva,“ řekne, než se stačí zeptat.
+„Padesát dva,“ řekne, než se Hana stačí zeptat.
 
 „Plus minus?“
 
@@ -142,7 +142,7 @@ Hana mlčí. Luis se dívá do sklenice.
 
 „Měla bych se zeptat ještě na něco jiného,“ řekne Hana nakonec. „Produkce chce do oznámení legendu. O kameni, který spadl z nebe do studny. Když padalo devět světel.“
 
-Walt se poprvé zasměje. Krátce, suše, jako když se zlomí suchá větvička.
+Walt se poprvé zasměje. Krátce, suše, jako když se zlomí větvička.
 
 „Anaya,“ řekne. „Rodrigo Anaya Cervera. Ten se Studnou hvězd.“
 
@@ -162,11 +162,11 @@ Vlastním nákladem.
 
 „Kdo byl Anaya?“
 
-„Nevím. Nikdy jsem ho nepotkal. Na zadní straně se nepíše nic.“ Walt kývne ke knize. „Podívejte se sama. Ale je to nebezpečná kniha, Ana. Má hezké obrázky.“
+„Nevím. Nikdy jsem ho nepotkal. Na zadní straně není nic.“ Walt kývne ke knize. „Podívejte se sama. Ale je to nebezpečná kniha, Ana. Má hezké obrázky.“
 
 *
 
-Hana čte pomalu. Španělsky čte líp, než mluví, ale ne tak dobře, aby to stačilo, a dvakrát si musí vzít na pomoc telefon. Luis s Waltem mezitím mluví španělsky o šňůrách a o tom, čí kompresor v obci dělá olej do vzduchu. Ventilátor se otáčí.
+Hana čte pomalu. Španělsky čte líp, než mluví, ale ne tak dobře, aby to stačilo, a dvakrát si musí vzít na pomoc telefon. Luis s Waltem mezitím mluví španělsky o šňůrách a o tom, čí kompresor v obci pouští do vzduchu olej. Ventilátor se otáčí.
 
 Kniha má devadesát šest stran. Je psaná tak, jak se v sedmdesátých letech psaly knihy o tajemstvích: dlouhé věty, hodně otazníků, hodně slova *quizás*. Možná. Kapitoly o pyramidách, o hvězdách, o kalendáři, o tom, že mayští kněží znali věci, které moderní věda teprve objevuje. Žádné poznámky. Žádný seznam literatury. Na konci poděkování matce.
 
@@ -180,9 +180,9 @@ A dvě strany o tom, co by to mohlo znamenat. Meteority, komety, Venuše. Kosmi�
 
 Hana se u první zastaví.
 
-Je to kresba tuší, amatérská, ale přesná. Kreslil ji někdo, kdo neuměl kreslit lidi a uměl kreslit čáry. Černé nebe, husté tečky hvězd. A přes něj, šikmo shora dolů, řada světel. Devět. Spočítá je. Každé má za sebou tenkou stopu, jako ocas, a padají v řadě, jedno za druhým, k zakřivenému obzoru dole na okraji strany. Poslední je menší než ostatní a trochu pozadu.
+Je to kresba tuší, amatérská, ale přesná. Kreslil ji někdo, kdo neuměl kreslit lidi a uměl kreslit čáry. Černé nebe, husté tečky hvězd. A přes ně, šikmo shora dolů, řada světel. Devět. Spočítá je. Každé má za sebou tenkou stopu, jako ocas, a padají v řadě, jedno za druhým, k zakřivenému obzoru dole na okraji strany. Poslední je menší než ostatní a trochu pozadu.
 
-Druhá kresba: krajina shora a v ní osada. Domy nízké a oblé, jako bochníky položené na prkno, a stojí v řadách. Rovně. Tak rovně, jak se v krajině nestaví nic, co roste, jen věci, které někdo narýsoval. Mezi nimi cesty a na cestách malé postavy, sotva čárky s hlavičkou.
+Druhá kresba: krajina shora a v ní osada. Domy nízké a oblé, jako bochníky položené na prkno, a stojí v řadách. Rovně. Tak rovně, jak v krajině nic neroste. Tak stojí jen věci, které někdo narýsoval. Mezi nimi cesty a na cestách malé postavy, sotva čárky s hlavičkou.
 
 ![Dvě kresby z knihy El pozo de las estrellas](obrazky/05_devet_svetel.webp)
 
@@ -194,13 +194,19 @@ Něco se v ní zachytí. Nic určitého. Pocit, jako když na ulici v cizím mě
 
 Devět. Proč zrovna devět?
 
+A pak to přijde. Ne tvář, řádek. Modrá složka nad lednicí, pracovní překlad kodexu, stránka, kterou loni v dubnu v Chebu četla dvakrát. *Devět jich pomalu padá. Kraj shora, hory a voda. Oblé domy v rovných řadách.* U anglických vět ze story decku jí to nedošlo. Došlo jí to až u obrázku.
+
+Na vteřinu se jí to zdá jako něco. Pak udělá, co by udělala se studentem. Devítka je nejobyčejnější číslo, jaké legendy mají. Mayové mají devět pater podsvětí a devět pánů noci, mnich ve dvanáctém století měl devět kůrů andělských, a když starci nebo mniši nepočítají, řeknou devět, jako se řekne hodně. A oblé domy stojí v každé obci tady kolem, z kůlů a palmového listí, s oblými konci. Jedno číslo a jeden tvar. Z takových shod se plní ty police v antikvariátech, kam nechodí.
+
+Nezapíše to. Ani doprava.
+
 „Hezké, že?“ řekne Walt.
 
 Hana zvedne hlavu. Walt se na ni dívá přes stůl. Luis taky.
 
 „Ano,“ řekne. „Hezké.“
 
-Podívá se zpátky na kresbu a pocit je pryč. Zbudou domy jako bochníky a tečky hvězd. Sedmdesátá léta, napadne ji. Každá kniha tohohle druhu tehdy měla nějaké kupole, nějaká světla na nebi, nějaké řady. Ty knihy se podobají jedna druhé, tak jako se lidem podobají sny. Proto je člověk pozná, i když je nikdy neviděl.
+Podívá se zpátky na kresbu a pocit je pryč. Zbudou domy jako bochníky a tečky hvězd. Sedmdesátá léta, napadne ji. Každá kniha tohohle druhu tehdy měla nějaké kupole, nějaká světla na nebi, nějaké řady. Ty knihy se podobají jedna druhé, tak jako se navzájem podobají lidské sny. Proto je člověk pozná, i když je nikdy neviděl.
 
 Zavře knihu. Na zadní straně obálky opravdu nic. Jen cena, přeškrtnutá tužkou, a pod ní jiná, nižší.
 
@@ -210,9 +216,9 @@ Zavře knihu. Na zadní straně obálky opravdu nic. Jen cena, přeškrtnutá tu
 
 *
 
-Otevře skříň s mapami.
+Walt otevře skříň s mapami.
 
-Šuplíky jdou ztuha. Walt vytahuje jeden po druhém a v každém leží listy průsvitné kreslicí fólie, tuhé, zažloutlé na okrajích, každý s rohem popsaným tužkou: jméno cenotu, rok, iniciály. *WA 1984. WA + LE 2009.* Na listech chodby, kreslené tuší a tužkou, s čísly měřických bodů, s hloubkami, se šipkami proudu. Kužely balvanů jako drobné kroužky. Zúžení jako dvě čárky těsně u sebe. Haně se z toho tají dech. Ne proto, co na nich je. Proto, jak to je nakreslené. Čtyřicet let práce v rukopisu jednoho člověka, každá čára vedená tak, jako by se jí za chybu platilo.
+Šuplíky jdou ztuha. Vytahuje jeden po druhém a v každém leží listy průsvitné kreslicí fólie, tuhé, zažloutlé na okrajích, každý s rohem popsaným tužkou: jméno cenotu, rok, iniciály. *WA 1984. WA + LE 2009.* Na listech chodby, kreslené tuší a tužkou, s čísly měřických bodů, s hloubkami, se šipkami proudu. Kužely balvanů jako drobné kroužky. Zúžení jako dvě čárky těsně u sebe. Haně se z toho tají dech. Ne kvůli tomu, co na nich je. Kvůli tomu, jak je to nakreslené. Čtyřicet let práce v rukopisu jednoho člověka, každá čára vedená tak, jako by se za každou chybu platilo.
 
 Sak Ts'ono'ot má vlastní šuplík. Walt z něj vytáhne čtyři listy a rozloží je přes sebe na stole, aby navazovaly.
 
@@ -224,7 +230,7 @@ Nejdřív jen jednoho. Za hrdlem, kousek před sestupem, odbočuje z chodby čá
 
 Čtyřicet devět až šedesát chybí.
 
-Projde i ostatní listy. Jiné cenoty, z jiných šuplíků, které Walt nechal otevřené. Tady chodba končí uprostřed, jako by ji někdo utnul nůžkami, a přitom čísla bodů za ní pokračují. Tady je síň nakreslená jen obrysem, bez jediné hloubky, jako dům bez oken. Tady chybí celý kus listu, prázdný obdélník, kolem kterého se všechno ostatní kreslí s velkou péčí.
+Projde i ostatní listy. Jiné cenoty, z jiných šuplíků, které Walt nechal otevřené. Tady chodba končí uprostřed, jako by ji někdo utnul nůžkami, a přitom čísla bodů za ní pokračují. Tady je síň nakreslená jen obrysem, bez jediné hloubky, jako dům bez oken. Tady chybí celý kus listu, prázdný obdélník, kolem kterého je všechno ostatní nakreslené s velkou péčí.
 
 „Tady jste nemapoval?“ zeptá se a ukáže na odbočku za hrdlem.
 
@@ -264,11 +270,13 @@ Večer zapíše do deníku Anayu.
 
 Vlevo: *Anaya Cervera, R.: El pozo de las estrellas. Mérida 1978, vlastním nákladem, 96 s., bez poznámek a literatury. Kap. 7 „La piedra que cayó del cielo“: „cuando cayeron las nueve luces, una piedra cayó al pozo“. Zdroj uveden jen „los ancianos“ – bez jmen, míst, dat. 2 kresby (tuš): 9 padajících světel; osada oblých domů v řadách; obě „según los ancianos“. W. A.: kniha z trhu 1983, v obcích ji nikdy od nikoho neslyšel („třicet let jsem se ptal“). Pramen starší než 1978: zatím žádný.*
 
-Pak se zastaví. Chtěla by napsat ještě něco o té kresbě, o tom zachycení. Ale nemá co. Nic neviděla. Nic si nemyslí. Byl to pocit, a pocit nepatří ani doleva, ani doprava.
+Pak se zastaví. Chtěla by napsat ještě něco o té kresbě, o Mlýnci. Ale co. Devět světel v Méridě, devět světel v kodexu. Shoda jednoho čísla nepatří doleva. A doprava ji nepustí, protože by to byla přesně ta věta, za kterou by studenta poslala přepsat seminárku.
 
-Vpravo napíše jen: *Waltovy mapy: prázdná místa i tam, kde čísla bodů pokračují (Sak Ts'ono'ot b. 49–60, odbočka za hrdlem). Ochrana lokalit?*
+Vpravo napíše: *Kniha o záhadách (199?) cituje „tradición oral“. Odkud ji měla, když Anaya byl na internetu až kolem 2011 a předtím ho podle W. A. nikdo nečetl?*
 
-Otazník tam nechá.
+A pod to: *Waltovy mapy: prázdná místa i tam, kde čísla bodů pokračují (Sak Ts'ono'ot b. 49–60, odbočka za hrdlem). Ochrana lokalit?*
+
+Oba otazníky tam nechá.
 
 *
 
@@ -276,7 +284,7 @@ Ve čtvrtek ráno přijde e-mail od Marisol. Dva řádky, a pod nimi přeposlan�
 
 *Neznám ji ze žádného koloniálního ani etnografického pramene, který bych měla v ruce. Pokud existuje, je mladší než kniha, kterou zmiňuješ, nebo z ní vychází.*
 
-Hana si to přeloží dvakrát, aby měla jistotu. Vytiskne to na Salcedově malé tiskárně, která tiskne šedě a ze strany, a přidá k tomu fotku sedmé kapitoly a obě kresby.
+Hana si to přeloží dvakrát, aby měla jistotu. Vytiskne to na Salcedově malé tiskárně, která tiskne šedě a nakřivo, a přidá k tomu fotku sedmé kapitoly a obě kresby.
 
 Videohovor je v jedenáct. Producentka sedí v Los Angeles v kanceláři s bílou stěnou a s rostlinou v rohu, která je možná umělá, a je u ní deset dopoledne, a je usměvavá a čerstvá a v ruce drží kelímek s kávou, na kterém je napsané její jméno. Viktor sedí vedle Hany pod plachtou, s notebookem na bedně, a kolem jejich hlav krouží jedna moucha, kterou nikdo z nich neodežene.
 
@@ -328,7 +336,7 @@ Viktor se na ni podívá s úsměvem, který se snaží být nevinný.
 
 „Ríša mi ukazoval tvůj deník. Fotky. Kvůli archivu.“ Pokrčí rameny. „Psala jsi tam izotopy. Líbilo se mi to. Řekl jsem to v LA a líbilo se to i jim.“
 
-Hana chvíli nemluví. Pravá půlka stránky. Myslela si, že deník Ríša fotí kvůli pojišťovně.
+Hana chvíli nemluví. Pravá půlka stránky. Věděla, že fotky jdou do archivu. Nemyslela si, že je někdo čte.
 
 „To byla otázka,“ řekne. „Ne tvrzení.“
 
@@ -368,6 +376,6 @@ Než ho zavře, sáhne do batohu pro pero a nahmatá místo něj tvrdý hřbet A
 
 Oblé domy. Řady.
 
-Dívá se na ně, ale tentokrát se nic nezachytí. Jsou to jen čáry tuší na zažloutlém papíře, který voní jako všechny staré knihy na všech trzích světa. Zavře ji a zastrčí zpátky do batohu, mezi deník a tabulku z předloktí, ke dvěma věcem, které zatím nikomu nedala do ruky.
+Dívá se na ně, ale tentokrát se nic nezachytí. Jsou to jen čáry tuší na zažloutlém papíře, který voní jako všechny staré knihy na všech trzích světa. Zavře ji a zastrčí zpátky do batohu, mezi deník a tabulku z předloktí, ke dvěma věcem, které zatím z rukou nepustila víc než na fotku.
 
 Generátor o půlnoci zhasne. Batoh si Hana vezme s sebou do stanu.

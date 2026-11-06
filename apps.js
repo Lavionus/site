@@ -67,6 +67,12 @@ const KATALOG_SEKCE = [
         "tagy": ["předčítání", "čtení nahlas", "tts", "text na řeč", "hlas", "piper", "audiokniha", "markdown", "zamčená obrazovka", "ipad", "offline", "wav"]
       },
       {
+        "soubor": "obsah/hlasy.html",
+        "nazev": "🧬 Dílna hlasů (syntetické hlasy)",
+        "stav": "vyvoj",
+        "tagy": ["hlas", "tts", "text na řeč", "syntéza řeči", "piper", "úprava hlasu", "změna hlasu", "výška", "formanty", "šepot", "robot", "formantová syntéza", "klonování hlasu", "xtts", "wav"]
+      },
+      {
         "soubor": "obsah/print_editor.html",
         "nazev": "🖨️ Editor pro tisk a export",
         "stav": "beta",
@@ -3917,6 +3923,12 @@ const KATALOG_SEKCE = [
     "nazev": "📚 Knihy",
     "skupina": "ostatni",
     "polozky": [
+      {
+        "soubor": "obsah/ctecka_knih.html",
+        "nazev": "📖 Čtečka knih",
+        "stav": "vyvoj",
+        "tagy": ["čtečka", "e-kniha", "ebook", "kniha", "knihovna", "čtení", "epub", "mobi", "kindle", "markdown", "md", "txt", "záložky", "poznámky", "zvýraznění", "předčítání", "offline", "reader"]
+      },
       {
         "soubor": "obsah/kroniky.html",
         "nazev": "🐉 Kroniky vyhnanství",

@@ -42,7 +42,7 @@ Tadeáš seděl u vstupního ventilu na převráceném kbelíku, s notebookem na
 
 Ukázal jim obrazovku. Křivky, které Sael neuměla číst, a Lada je číst nechtěla. Tadeáš ukazoval prstem. Teplota vody na vstupu. Teplota vzduchu u skály. Tlak v okruhu. A ještě něco, čemu říkal *kmitání*, malé zuby na spodní čáře, které se objevovaly a mizely.
 
-„Chodí to v noci,“ řekl. „Vždycky v noci. Někdy dvě hodiny, někdy pět. Když to chodí, skála víc hřeje. A když skála víc hřeje, ukazuje.“
+„Chodí to v noci,“ řekl. „Vždycky v noci. Někdy dvě hodiny, někdy skoro čtyři. Když to chodí, skála víc hřeje. A když skála víc hřeje, ukazuje.“
 
 „Já vím.“
 
@@ -54,7 +54,7 @@ Ukázal jim obrazovku. Křivky, které Sael neuměla číst, a Lada je číst ne
 
 „Tak co.“
 
-Tadeáš zvedl oči a zase je sklopil k obrazovce. Bylo mu třicet. Narodil se pod horou a skálu znal od tří let. Ladina matka ho tehdy vzala na kolena a položila mu dlaň na hladkost a řekla *poslouchej*. Od té doby poslouchal. Ve dvaceti si koupil první přístroj, v pětadvaceti pátý. Lada mu to vyčítala. Říkala, že skálu poslouchá dlaní a přístroje mu řeknou jen to, co si myslí ti, kdo je vyrobili.
+Tadeáš zvedl oči a zase je sklopil k obrazovce. Bylo mu třicet. Narodil se pod horou a skálu znal od tří let. Ladina matka ho tehdy vzala na kolena a položila mu dlaň na hladkost a řekla *poslouchej*. Od té doby poslouchal. Ve dvaceti si koupil první přístroj, v pětadvaceti pátý. Lada mu to vyčítala. Říkala, že se skála poslouchá dlaní a přístroje mu řeknou jen to, co si myslí ti, kdo je vyrobili.
 
 Teď mu to nevyčítala. Teď stála za ním a dívala se na tu obrazovku, jako by z ní mohla něco vyčíst.
 
@@ -66,7 +66,7 @@ Sael položila Ladě ruku na rameno. Lada ji nesetřásla. To bylo horší, než
 
 V noci šla Sael ke skále sama.
 
-Od čtrnáctého ledna tam chodila každou noc, kdy Tadeáš řekl, že *to chodí*, a kdy nespala v Chebu. Lada tam nechodila. Lada řekla, že se na hořící skálu dívat nebude. Ostatní Ostří chodili ve dvojicích, v prvních týdnech skoro všichni. Teď už jen někdo. Na všechno se dá zvyknout, i na zázrak, a to Sael věděla z knihy líp, než by si přála.
+Od čtrnáctého ledna tam chodila každou noc, kdy Tadeáš řekl, že *to chodí*, a kdy nespala v Chebu. Lada tam nechodila. Lada řekla, že se na hořící skálu dívat nebude. Ostatní Ostří chodili ve dvojicích, v prvních týdnech skoro všichni. Teď už jen někteří. Na všechno se dá zvyknout, i na zázrak, a to Sael věděla z knihy líp, než by si přála.
 
 Tadeáš nechal ve spodní síni puštěný ventilátor. Plyn se v noci hromadil u podlahy jako studená voda v jámě a ventilátor ho tlačil k šachtě. Sael přesto zůstala na schodech, na čtvrtém shora, s Ladiným měřákem na zábradlí. Ukazoval jedna celá sedm. Dalo se tu stát.
 
@@ -78,7 +78,7 @@ Viděla to potřiadvacáté. Zapisovala si to. Každou noc stejně: čas, počet
 
 Ve středu šestého února se stalo něco nového.
 
-Když potřetí zhaslo světlo, které přichází, nestáhlo se světlo doprostřed a netlouklo. Místo toho se na hladkosti ukázaly řádky.
+Když potřetí zhaslo světlo, které přichází, nestáhlo se světlo hned doprostřed a netlouklo. Místo toho se na hladkosti ukázaly řádky.
 
 Teď to Sael viděla znovu. Stála na schodech a dívala se, jak se po třetím opakování tma v hladkosti rozjasnila jinak. Rovnoměrně, jako papír pod lampou. A na tom papíře čáry. Svislé, krátké a dlouhé. Tečky, ve skupinách. Jedna, dvě, tři, čtyři tečky, víc ne. Řádky. Každý řádek začínal krátkou čarou. Celé to bylo uspořádané do mřížky, řádek pod řádkem, sloupec vedle sloupce. Tečky ve sloupcích nestály v jedné výšce.
 
@@ -138,9 +138,9 @@ Na druhém konci bylo ticho. Sael slyšela, jak Brandl něco píše. Měl ve zvy
 
 „Musíme je dostat pryč, Alžběto.“
 
-Řekl jí křestním jménem. Občanským. Dělal to, když chtěl, aby poslouchala.
+Oslovil ji křestním jménem. Občanským. Dělal to, když chtěl, aby poslouchala.
 
-„Mám byty,“ pokračoval. „V Lužici tři, v Bavorsku dva, jeden dům v Rakousku. Do Velikonoc je můžu rozvézt. Doklady máme. Kdo potřebuje nové, dostane nové. Rozdělíme je, aby nebyli pohromadě. Malé skupiny, různé země.“
+„Mám byty,“ pokračoval. „V Lužici tři, v Bavorsku dva, dům v Rakousku, byty v Polsku a ve Švýcarsku. Dvanáct míst, pět zemí. Do Velikonoc je můžu rozvézt. Doklady máme. Kdo potřebuje nové, dostane nové. Rozdělíme je, aby nebyli pohromadě. Malé skupiny, různé země.“
 
 „Ostří tu žijí osm set let.“
 
@@ -174,7 +174,7 @@ Brandl chvíli mlčel. Pak řekl to, o čem Sael věděla, že to řekne, proto�
 
 „Dárce. Dvacet let. Mnichov. Má nadaci pro rodinnou historii.“ Brandl se odmlčel, jako by čekal, jestli se Sael zeptá na víc. Nezeptala se. „Pomáhá nám s doklady. Genealogie je jeho obor. Je to slušný člověk. Napíše vám.“
 
-„Rodinnou historii,“ řekla Sael.
+„Rodinnou historii,“ řekla Sael. *Wehrle.* Ten jáchymovský Wehrl se psal bez *e*. Wehrleů je v Bavorsku plno, řekla si.
 
 „Rozmyslete si to, paní Sálová,“ řekl Brandl, zase úředně. „Ve čtvrtek budu chtít odpověď. A kdyby se tam něco stalo dřív, volejte mi. Kdykoli. I v noci. Já nespím.“
 
@@ -232,7 +232,7 @@ Pergamen tmavý a tuhý jako kůra. Na okraji kresba kopce, jeden oblouk se strm
 
 Žádné jméno. Rok tam připsal až někdo pozdější, jiným inkoustem, černějším: *MCLXXII*. Ti, kdo psali, věděli, kdo byl mnich. Nepotřebovali to psát. Čtyřicet jedna čárek za čtyřicet jedna lidí, kteří vyšli z hory, a jedno cizí slovo za toho, kdo šel s nimi.
 
-Ostří o něm vyprávěli dodnes. Že nesl starou Ostru korytem. Že v komoře s kamennou deskou spočítal všechny, malé i velké, a pak to číslo nikam nenapsal. Že potom napsal knihu, ve které o nich nebylo ani slovo.
+Ostří o něm vyprávěli dodnes. Že nesl starou Ostru korytem. Že v komoře s kamennou deskou spočítal všechny, malé i velké, a pak to číslo nikam nenapsal. Že slíbil, že o nich nenapíše ani slovo. Že to dodržel, věděla jen Sael, od té doby, co knihu měla v rukou.
 
 *Tacui.*
 
@@ -256,7 +256,7 @@ Jedenáct shod.
 
 U Doroty to Jíva napsala. U ostatních to všichni věděli a nikdo to nenapsal. *Angenommen* stálo u jejich jmen jako omluva, kterou nikdo nevyslovil.
 
-Pod stolem, vedle truhly s knihou, stála plechová kazeta. Šedá, se zámkem, jakou si kupují živnostníci na tržby. V ní hlavní seznam. Papír, dvaačtyřicet listů, strojem psaných v osmdesátých letech a od té doby doplňovaných rukou. Rodiny sítě, které Sael znala a za které ručila. Jména, občanská i vlastní, adresy, kdo s kým, kdo komu dítě, kdo potřebuje kterého lékaře. Jedna kopie, šifrovaná, ležela na klinice v Karlových Varech u lékaře, který věděl. Jinde nic.
+Pod stolem, vedle truhly s nejstarším listem, stála plechová kazeta. Šedá, se zámkem, jakou si kupují živnostníci na tržby. V ní hlavní seznam. Papír, dvaačtyřicet listů, strojem psaných v osmdesátých letech a od té doby doplňovaných rukou. Rodiny sítě, které Sael znala a za které ručila. Jména, občanská i vlastní, adresy, kdo s kým, kdo komu dítě, kdo potřebuje kterého lékaře. Jedna kopie, šifrovaná, ležela na klinice v Karlových Varech u lékaře, který věděl. Jinde nic.
 
 *Archiv se musí zapečetit.* *Bezpečné uložení čehokoli, co máte v péči.*
 
@@ -264,7 +264,7 @@ Sael se dívala na kazetu a pak na řádek s Dorotou.
 
 Bála se dvou věcí, a nevěděla, které víc. Že se jednou někdo dozví, kde ti lidé ze seznamu bydlí, a půjde za nimi s tím, co Brandl viděl v devadesátých letech. A že se jednou někdo dozví o těch dvaadvaceti jménech, a pak už o nich nebude vědět nic jiného. Osm set let knihy, čtyřicet jedna čárek, mnich, který nesl Ostru, skleník, Václav se svým křikem, a nic z toho nebude. Bude jen jedno slovo. Tím slovem je budou jmenovat na náměstích.
 
-Zavřela svazek. Položila ho do truhly, na nejstarší list, a truhlu zamkla.
+Zavřela svazek, zabalila ho do papíru a vrátila na polici. Truhlu zamkla.
 
 *
 
@@ -276,7 +276,7 @@ Sael zvedla hlavu od stolu.
 
 „Svíčku,“ zopakovala.
 
-„Na větvi. Na drátě. Zhasla jí a ona si na větvi udělala zářez. Jako…“ Tadeáš se zarazil. Ostří znali mnichovu knihu z vyprávění, ne z textu. Ale tohle znali. *Svíce to pozná dřív než člověk.* To se pod horou říkalo dětem, když je poprvé brali do spodních síní. „Ptala se mě na páru. Řekl jsem kotel. Nevěřila mi.“
+„Na větvi. Na drátě. Zhasla jí a ona si na větvi udělala zářez. Jako…“ Tadeáš se zarazil. Ostří znali mnicha z vyprávění, ne z textu. Ale tohle znali. *Svíce to pozná dřív než člověk.* To se pod horou říkalo dětem, když je poprvé brali do spodních síní. „Ptala se mě na páru. Řekl jsem kotel. Nevěřila mi.“
 
 „Jak vypadala?“
 

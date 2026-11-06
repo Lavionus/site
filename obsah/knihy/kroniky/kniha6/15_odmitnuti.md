@@ -22,7 +22,7 @@ Nepotřebovala vzor. Věděla, jak se to píše. Zúžení, zpětvzetí a přije
 
 Sedm slov. O tři víc než zpětvzetí.
 
-Nara si je přečetla a nepodepsala je. Nechala je ležet otevřené. Ardaine jí tu nabídku řekla do očí. Poslat odpověď do sítě, kde ji síť posoudí a doručí se zpožděním, se jí zdálo nečisté. Jako podepsat rukou papír, o kterém člověk ví, že ho nikdo nezaloží.
+Nara si je přečetla a nepodepsala je. Nechala je ležet otevřené. Ardaine jí tu nabídku řekla do očí. Poslat odpověď do sítě, kde ji síť posoudí a se zpožděním doručí, se jí zdálo nečisté. Jako podepsat rukou papír, o kterém člověk ví, že ho nikdo nezaloží.
 
 V sedm napsala Lumi: *V devět jdu do úřadu. Pak přijdu.* Vzkaz odešel a zůstal viset s poznámkou *posuzuje se*. Doručen byl za čtyřicet minut. Lumi odpověděla hned: *Ano.* Nic víc. Lumi věděla, kam jde a proč, a nezeptala se na nic.
 
@@ -30,7 +30,7 @@ V sedm napsala Lumi: *V devět jdu do úřadu. Pak přijdu.* Vzkaz odešel a zů
 
 Dveře úřadu ji pustily stejně jako před třemi dny.
 
-Ardaine seděla za prázdným stolem a nevstala hned. Dívala se na Naru, jak vchází, a Nara poznala, že ten pohled něco čte. Ruce, chůzi, obličej.
+Ardaine seděla za prázdným stolem a nevstala hned. Dívala se na Naru, jak vchází, a Nara poznala, že ten pohled něco zkoumá. Ruce, chůzi, obličej.
 
 „Vypnula jste to,“ řekla Ardaine.
 
@@ -40,7 +40,7 @@ Nara se zastavila.
 
 „Ano.“
 
-„Já bych to nevydržela.“ Ardaine to řekla věcně. „Hodinu. Zkoušela jsem to jednou, na zkoušku, v nemocnici, se svolením. Po deseti minutách jsem požádala, ať mě vrátí.“
+„Já bych to nevydržela.“ Ardaine to řekla věcně. „Hodinu. Udělala jsem to jednou, na zkoušku, v nemocnici, se svolením. Po deseti minutách jsem požádala, ať mě vrátí.“
 
 Ukázala na židli. Nara si nesedla.
 
@@ -64,7 +64,7 @@ Ardaine kývla. Nevypadala překvapeně. Nevypadala ani tak, jako by vyhrála, n
 
 „Napsal.“
 
-„Bylo,“ řekla Ardaine. „Je.“ A pak, stejným hlasem: „Od dnešního dne budu dělat svou práci celou, paní Vess. Úřad podá osvědčení bezpečnostní nezbytnosti výkonu. Říkám vám to předem, protože byste to stejně poznala. Na jednání budu proti tomu, aby byl zápis veřejný. Budu proti všemu, co navrhnete, co se týká přílohy.“
+„Bylo,“ řekla Ardaine. „Je.“ A pak, stejným hlasem: „Od dnešního dne budu dělat svou práci celou, paní Vess. Úřad podá osvědčení bezpečnostní nezbytnosti výkonu. Říkám vám to předem, protože byste to stejně poznala. Na jednání budu proti tomu, aby byl zápis veřejný. Budu proti všemu, co navrhnete ohledně přílohy.“
 
 „Já vím.“
 
@@ -124,7 +124,7 @@ Kyvadlo k Sedmé loděnici jelo večer skoro prázdné. Za průzorem se točila 
 
 Okno do doku bylo osvětlené. Lidé v oranžovém byli pryč. Loď za oknem visela v kotvišti, šedobílá a celá připravená. *Fáze 4 z 5: zkoušky dokončeny.*
 
-Ilan seděl u stolu, jako minule. Měl padesát šest uzlíků. Ve druhé řadě jich bylo už sedm.
+Ilan seděl u stolu, jako minule. Měl padesát šest uzlíků. Ve druhé řadě jich bylo už pět.
 
 Neptal se, co se stalo. Díval se na ni, když si sedala, a Nara viděla, že to ví. Možná to poznal na rukou. Možná na tom, jak se posadila. Možná na tom, že přišla podruhé za tři dny.
 
@@ -164,7 +164,7 @@ Ilan zvedl oči.
 
 „Asi ano.“
 
-„Ne asi. Poprvé.“ Díval se na ni dlouho, tím pohledem, kterým si ji četl. „Třeseš se.“
+„Ne asi. Poprvé.“ Díval se na ni dlouho, tím pohledem, kterým ji prokoukával. „Třeseš se.“
 
 „Vypnula jsem zklidnění.“
 
@@ -286,7 +286,7 @@ Lumi se na ni podívala. Nesměla vědět, co je v příloze. Věděla jen, že 
 
 „Jsou tam?“ zeptala se. „Bezpečnostní důvody?“
 
-Nara chvíli mlčela. V části IV, v interním stanovisku odboru míst výkonu, stála jediná věta o bezpečnosti. *Statut neodpovídá bezpečnostní potřebě Konfederace.* Jiný bezpečnostní důvod v příloze nebyl. Úřad osvědčoval, že výkon je nezbytný z bezpečnostních důvodů, a jediným bezpečnostním důvodem, který k tomu měl, bylo rozhodnutí statut obejít.
+Nara chvíli mlčela. V části IV, v interním stanovisku odboru míst výkonu, stály dva bezpečnostní důvody a oba vedly k témuž. *Statut neodpovídá bezpečnostní potřebě Konfederace v nynější situaci.* A ponechat odsouzené v habitatech je trvalé riziko. Ani jeden netvrdil, že by místo výkonu bylo bezpečné. Úřad osvědčoval, že výkon je nezbytný z bezpečnostních důvodů, a bezpečnostním důvodem, který k tomu měl, bylo rozhodnutí statut obejít.
 
 „To ti nesmím říct,“ řekla Nara. „Ještě sedm dní ne.“
 
@@ -294,7 +294,7 @@ Nara chvíli mlčela. V části IV, v interním stanovisku odboru míst výkonu,
 
 Třicátý první den jela znovu na měsíc.
 
-Usnesení devátého dne jí to dovolovalo. Číst se smí v úložišti za přítomnosti správce, kolikrát účastník chce. Opisy ne. Poznámky ne. Jen paměť.
+Usnesení devátého dne jí to dovolovalo. Číst se smí v úložišti za přítomnosti správce, kolikrát účastník chce. Opisy ne. Vlastní poznámky ne. Jen paměť.
 
 Hals ji čekal u výtahu, v rukavicích, se dvěma kabáty přes ruku.
 
@@ -358,7 +358,7 @@ Ve dvacet tři hodin přešly chodby na noční režim. Daven se podíval pod dv
 
 „Říkala?“
 
-„Já vím, že sis to nepamatovala. Pamatuju si to já.“
+„Já vím, že si to nepamatuješ. Pamatuju si to já.“
 
 Pak se zeptal, jestli může vidět Ilanův pokoj. Nara ho tam zavedla. Pokoj se rozsvítil na její hodnotu. Daven stál ve dveřích a díval se na prázdný obdélník po obrazu.
 
@@ -408,6 +408,6 @@ U dveří se zastavil. Stál k ní zády, jako minule.
 
 Odešel. Dveře za ním cvakly.
 
-Nara seděla v kuchyni. Ruce měla na stole a třásly se. Za deset dní v šest ráno odletí loď. Za devět hodin bude stát v síni jedna a mluvit o něčem, co nikdy nikomu neřekla.
+Nara seděla v kuchyni. Ruce měla na stole a třásly se. Za devět dní v šest ráno odletí loď. Za devět hodin bude stát v síni jedna a mluvit o něčem, co nikdy nikomu neřekla.
 
-Nic už nebylo k vzetí zpět. Nara si to opakovala a čekala, jestli se jí uleví. Neulevilo. Bylo to jen jiné ticho.
+Nic už nešlo vzít zpět. Nara si to opakovala a čekala, jestli se jí uleví. Neulevilo. Bylo to jen jiné ticho.

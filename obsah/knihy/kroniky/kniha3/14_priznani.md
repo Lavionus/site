@@ -27,7 +27,7 @@ Takhle to nechá.
 
 V šest dvanáct se zachvěje stůl.
 
-Nejdřív stůl. Hrnek s odloupnutým uchem poskočí a cinkne o lžičku. Pak to přijde zespodu, z nohou, z kamene pod mýtinou, dlouhé, tupé, jako když se v domě pod vámi zavřou těžké dveře. Plachta se nad hlavou nadme a splaskne. V lese vzlétnou ptáci, všichni najednou, s křikem, který se nehodí k ránu.
+Nejdřív stůl. Hrnek s otlučeným uchem poskočí a cinkne o lžičku. Pak to přijde zespodu, z nohou, z kamene pod mýtinou, dlouhé, tupé, jako když se v domě pod vámi zavřou těžké dveře. Plachta se nad hlavou nadme a splaskne. V lese vzlétnou ptáci, všichni najednou, s křikem, který se nehodí k ránu.
 
 Hana se nehne. Počítá. Jedna, dvě, tři. U čtyř je po všem.
 
@@ -153,9 +153,9 @@ Marisol se nakloní a sáhne do desek a vytáhne dva listy sešité sponkou. Pro
 
 Pak jí ukáže proč.
 
-Model na flešce. Síň, šedá, s terasami, s Abuelem, s majákem. Válec pod převisem a v modelu čtyři sta šedesát čtyři milimetry. A deník, středa osmnáctého, dvacet tři třicet, menším písmem pod stránkou, kterou Ríša vyfotil už ve čtvrt na jedenáct. *23:30 Model 18. 3. (R. H.), kontrola měřítka: T2–T5 pásmo 612 mm, model 617 mm (+0,8 %). (…) Příčina: ručně umístěná značka na zaneseném terči tyče B (H. V.) (…). Předmět: model 464 mm (vč. obrysu konce pod polevou) → opr. ~460 mm. Přepočítat (R. H.).*
+Model na flešce. Síň, šedá, s terasami, s Abuelem, s majákem. Válec pod převisem a v modelu čtyři sta šedesát čtyři milimetry. A deník, středa osmnáctého, dvacet tři třicet, menším písmem na spodku stránky, kterou Ríša vyfotil už ve čtvrt na jedenáct. *23:30 Model 18. 3. (R. H.), kontrola měřítka: T2–T5 pásmo 612 mm, model 617 mm (+0,8 %). (…) Příčina: ručně umístěná značka na zaneseném terči tyče B (H. V.) (…). Předmět: model 464 mm (vč. obrysu konce pod polevou) → opr. ~460 mm. Přepočítat (R. H.).*
 
-„Tu chybu jsem udělala já,“ řekne Hana. „Osmnáctého večer. Ríšovi jsem ji neřekla, chtěla jsem ráno, a ráno spadla stěna. Model nikdo nepřepočítal. Kopie měli tři lidé. Ríša, Viktor a já.“
+„Tu chybu jsem udělala já,“ řekne Hana. „Osmnáctého večer. Ríšovi jsem o ní neřekla, chtěla jsem ráno, a ráno spadla stěna. Model nikdo nepřepočítal. Kopie měli tři lidé. Ríša, Viktor a já.“
 
 Marisol se dívá na model, na snímek z CT, na svůj protokol.
 
@@ -239,11 +239,11 @@ Viktor měl pravdu. Stačí, že to někdo přečte vedle sebe.
 
 „Luisova kamera?“
 
-„Luis měl kameru čtvrtého, při prvním ponoru. Předmět je na ní v poloze, před vzorkováním, se vším kolem. A jednadvacátého při vyzvednutí. Nevím, co na ní je. Mohl to být jen kal.“
+„Luis měl kameru čtvrtého, při prvním ponoru. Předmět je na ní v původní poloze, před vzorkováním, se vším kolem. A jednadvacátého při vyzvednutí. Nevím, co na ní je. Mohl to být jen kal.“
 
 „A kde je Luis?“
 
-„Nebere telefon. Od úterka.“
+„Nebere telefon. Od včerejška.“
 
 Marisol se podívá směrem k obci. Přes mýtinu, přes stromy. Nic tam není vidět.
 
@@ -309,17 +309,17 @@ Jana jí tak neříká. Nikdy.
 
 Hana vstane. Neví, kdy vstala.
 
-„Inženýr slezl po žebříku dolů, podívat se, jestli nosník vydržel,“ řekne Jana. Mluví česky a rychle a Marisol se dívá z jedné na druhou. „Na plošině jsou jeho sandály. Tričko, složené. Telefon v sáčku. Baterka, ta stará žlutá. Na nosníku je uvázaná jeho šňůra, ta s cívkou. Vede pod vodu. Do bílý.“ Nadechne se. „Z římsy nahoře v suchý chodbě zmizely jeho dvě zásobní láhve. Kompresor stojí od pondělka. Má je plné od minulého týdne, plnil si je u Walta.“
+„Inženýr slezl po žebříku dolů, podívat se, jestli nosník vydržel,“ řekne Jana. Mluví česky a rychle a Marisol se dívá z jedné na druhou. „Na plošině jsou Luisovy sandály. Tričko, složené. Telefon v sáčku. Baterka, ta stará žlutá. Na nosníku je uvázaná jeho šňůra, ta s cívkou. Vede pod vodu. Do bílý.“ Nadechne se. „Z římsy nahoře v suchý chodbě zmizely jeho dvě zásobní láhve. Kompresor stojí od pondělka. Má je plné od minulého týdne, plnil si je u Walta.“
 
 „Kdy?“
 
 „Nevím. V noci. Nikdo ho neviděl.“
 
-Marisol se zvedne. Řekne něco španělsky. Jana jí odpoví, anglicky, totéž, kratší. Marisol vytáhne telefon.
+Marisol se zvedne. Řekne něco španělsky. Jana jí odpoví, anglicky, totéž, jen stručněji. Marisol vytáhne telefon.
 
 Hana stojí u stolu.
 
-V šest dvanáct se zachvěl stůl. V šest dvanáct poskočil hrnek s odloupnutým uchem a cinkl o lžičku. Pár minut nato stála s Janou u pásky a dívala se na bílou vodu a na šedou plošinu pod sebou a Jana řekla *díky bohu, dneska tam nikdo není*.
+V šest dvanáct se zachvěl stůl. V šest dvanáct poskočil hrnek s otlučeným uchem a cinkl o lžičku. Pár minut nato stála s Janou u pásky a dívala se na bílou vodu a na šedou plošinu pod sebou a Jana řekla *díky bohu, dneska tam nikdo není*.
 
 Plošinu viděla. Na plošině věci neviděla. Bylo šero a ona se dívala na vodu.
 

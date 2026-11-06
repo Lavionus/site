@@ -1,6 +1,6 @@
 # 4. Krev v lázni
 
-V pátek v noci pro ni Kilián přišel, jak řekl, a ona šla, jak řekla. Johanka spala na vřesu s rukama na přikrývce a otok na tváři opadl tak, že jí byly vidět oči. Puchýře, které Ilona nechala celé, se svraštily a ztmavly. Moč byla světlejší, jako čaj. Ilona vyměnila obvazy, nanesla mast, nechala ženě v šátku hrnek s mastí a ukázala jí, jak tence se nanáší. Žena se na ni dívala, jako se dívají ženy, které celý život dělají věci samy a teď jim někdo ukazuje, jak se to dělá. Pak řekla: „Řehoř to dával tlustě.“ A Ilona řekla: „Řehoř to dělal špatně,“ a žena se poprvé usmála.
+V pátek v noci pro ni Kilián přišel, jak řekl, a ona šla, jak řekla. Johanka spala na vřesu s rukama na přikrývce a otok na tváři opadl tak, že jí byly vidět oči. Puchýře, které Ilona nechala celé, se svraštily a ztmavly. Moč byla světlejší, jako slabé pivo. Ilona vyměnila obvazy, nanesla mast, nechala ženě v šátku hrnek s mastí a ukázala jí, jak tence se nanáší. Žena se na ni dívala, jako se dívají ženy, které celý život dělají věci samy a teď jim někdo ukazuje, jak se to dělá. Pak řekla: „Řehoř to dával tlustě.“ A Ilona řekla: „Řehoř to dělal špatně,“ a žena se poprvé usmála.
 
 Zikmunda neviděla. Spal, řekl Kilián. Starý spí víc než děti.
 
@@ -84,7 +84,7 @@ Ilona seděla a poslouchala a ruce jí ležely na kolenou a chtěly psát. Nepsa
 
 Lázeňská děvečka chodila mezi lavicemi s vědrem a s věníkem z březových proutků a šlehala ženy po zádech, když chtěly. Byla mladá, mohlo jí být šestnáct, s rukama červenýma od horké vody a s vlasy pod šátkem, a na čele jí stály kapky potu. Ilona ji znala od vidění. Lene. Magdalena, ale všichni jí říkali Lene.
 
-Ilona si sedla na lavici v koutě, kde bylo nejvíc páry a nejmíň žen, a když Lene šla kolem, kývla na ni.
+Ilona si přesedla na lavici v koutě, kde bylo nejvíc páry a nejmíň žen, a když Lene šla kolem, kývla na ni.
 
 Lene přišla s věníkem. „Šlehat?“
 
@@ -242,7 +242,7 @@ Večer se usadila na seníku nad stájí starého vozky Pankráce, souseda Jobst
 
 Potok šuměl. Na mostě se zastavili dva havíři a hádali se, opilí, a pak šli dál. Lázeň utichla, poslední ženy odešly, kouř z komína zeslábl a jen se líně táhl. V okně Jobstovy komory se rozsvítilo.
 
-Pak, když už bylo tak tma, že struhu neviděla, jen tušila, se otevřely zadní dveře a vyšla Lene s lucernou a za ní mistr Jobst a mezi sebou nesli soudek. Nebyl velký. Takový, do jakého se dává máslo nebo zelí, se dvěma obručemi a víkem, a nesli ho opatrně, jako se nese něco, co se nesmí vylít.
+Pak, když už byla taková tma, že struhu neviděla, jen tušila, se otevřely zadní dveře a vyšla Lene s lucernou a za ní mistr Jobst a mezi sebou nesli soudek. Nebyl velký. Takový, do jakého se dává máslo nebo zelí, se dvěma obručemi a víkem, a nesli ho opatrně, jako se nese něco, co se nesmí vylít.
 
 Postavili ho u branky do uličky. Lene odešla zpátky s lucernou. Jobst zůstal stát.
 
@@ -258,11 +258,11 @@ Ilona sjela po žebříku ze seníku tak rychle, že si odřela dlaně, a vyběh
 
 Na náměstí se muž zastavil.
 
-Ilona se přitiskla ke zdi pod podloubím. Muž se rozhlédl, krátce, a pak zahnul do průchodu mezi dvěma domy na horní straně náměstí. Průchod byl úzký, klenutý, a Ilona věděla, kam vede: na zadní dvorek, na který ústily zadní vchody tří domů. Dům se zlatým jelenem nad portálem, kde měl obchod kupec s plátnem. Dům vedle, kde byla pekárna. A třetí, rohový, jehož dvůr nebyl z náměstí vidět, protože se do něj chodilo zezadu přes ten průchod.
+Ilona se přitiskla ke zdi pod podloubím. Muž se rozhlédl, krátce, a pak zahnul do průchodu mezi dvěma domy na horní straně náměstí. Průchod byl úzký, klenutý, a Ilona věděla, kam vede: na zadní dvorek, na který ústily zadní vchody tří domů. Dům se zlatým jelenem nad portálem, kde měl krám kupec s plátnem. Dům vedle, kde byla pekárna. A třetí, rohový, jehož dvůr nebyl z náměstí vidět, protože se do něj chodilo zezadu přes ten průchod.
 
 Ilona čekala. Počítala, jak počítala v noci kroky. Do sta. Do dvou set. Nic. Muž nevyšel.
 
-Pak, když už se rozhodla, že půjde blíž, se z průchodu ozvalo klapání kopyt a vyšel mezek. Malý, šedý, se dvěma koši přes hřbet, a koše byly přikryté pytlovinou. Vedl ho jiný muž, menší, shrbený, v kápi. Ilona viděla, jak se mezek vlní pod nákladem, a viděla, že jeden z košů je hranatý, jako by v něm byl soudek.
+Pak, když už se rozhodla, že půjde blíž, se z průchodu ozvalo klapání kopyt a vyšel mezek. Malý, šedý, se dvěma koši přes hřbet, a koše byly přikryté pytlovinou. Vedl ho jiný muž, menší, shrbený, v kápi. Ilona viděla, jak se mezek prohýbá pod nákladem, a viděla, že jeden z košů je hranatý, jako by v něm byl soudek.
 
 Mezek prošel náměstím a zamířil nahoru, ulicí, která vedla na horní konec a pak dál, mezi haldy, ke starým dílům.
 
@@ -280,7 +280,7 @@ Na horním konci, kde končila dlažba, ji zastavil ponocný.
 
 „Ten kašle pořád.“ Ponocný ji neochotně pustil, ale ještě chvíli stál a díval se za ní, a když se ohlédla, stál tam pořád, s lucernou zvednutou.
 
-Mezek byl pryč. Ilona došla k poslednímu domu, k Ursulinu domku, který měl teď okenice zavřené a zatlučené, a zastavila se. Nad ní stoupala k horám cesta mezi haldami, bílá v tom slabém světle hvězd, a na ní nebylo nic. Jen ticho, a v tom tichu, vysoko a daleko, kopyta. Klap, klap. Pomalu, stoupavě, slábnoucí.
+Mezek byl pryč. Ilona došla k poslednímu domu, k Ursulinu domku, který měl teď okenice zavřené a zatlučené, a zastavila se. Nad ní stoupala k horám cesta mezi haldami, bílá v měsíčním světle, a na ní nebylo nic. Jen ticho, a v tom tichu, vysoko a daleko, kopyta. Klap, klap. Pomalu, stoupavě, slábnoucí.
 
 Tam nahoře, kde se cesta ztrácela ve tmě, byla na Kunzově mapě nakreslená štola a u ní drobným písmem *verlassen*.
 
@@ -294,7 +294,7 @@ Nahoru napsala: *Lázeň pod mostem. Krev puštěná a vylitá.*
 
 Pod to udělala svislou čáru, od horního okraje k dolnímu, a nalevo napsala *Puštěno*, a napravo *Vylito*.
 
-A pod to první řádek: *Sobota 20. května.* Nalevo: *nevím, kolik misek. Odpoledne pouštěl mistr. Ženy na lavicích říkaly: „u mistra je fronta až do nešpor“.* Napravo: *nic. Struha bez čerstvých skvrn, potok čistý. Soudek bednářský, s víkem, dvě obruče, odnesen po setmění. Dán mužem mezkovi v průchodu na horní straně náměstí. Mezek nahoru na horní konec, za haldy.*
+A pod to první řádek: *Sobota 20. května.* Nalevo: *nevím, kolik misek. Odpoledne pouštěl mistr. Ženy na lavicích říkaly: „u mistra se čeká až do nešpor“.* Napravo: *nic. Struha bez čerstvých skvrn, potok čistý. Soudek bednářský, s víkem, dvě obruče, odnesen po setmění. Dán mužem mezkovi v průchodu na horní straně náměstí. Mezek nahoru na horní konec, za haldy.*
 
 Pak se zastavila. Nevěděla, kolik misek. Musí to vědět. Příští sobotu bude sedět v lázni od poledne do nešpor a bude počítat ženy, které jdou za Jobstem do komory, a muže, kteří jdou za ním po nich, a bude to psát nalevo. A napravo bude psát, co se vylilo. A když nalevo bude stát dvacet misek a napravo nic, bude to mít černé na bílém, a nebude to výpověď děvečky, která by mohla přijít o místo, ani výpověď vdovy, kterou by mohli odbýt jako cizí ženskou. Bude to počet. Počty se nepletou a nepřeslazují.
 
@@ -308,7 +308,7 @@ A krev šla tam, kam šly soudky z lázně. Nahoru. Ke starým dílům. Do Horn�
 
 Ilona položila pero.
 
-Tohle byl výklad. Tohle bylo to, co si myslela, ne to, co viděla. Otec by to nazval *džbán, který si slepuješ z vlastních střepů*. Ona neviděla, kam mezek šel. Neviděla, kdo ho vedl. Neviděla, co je v rohovém domě na horní straně náměstí. Viděla soudek a slyšela kopyta.
+Tohle byl výklad. Tohle bylo to, co si myslela, ne to, co viděla. Otec by tomu říkal *džbán, který si slepuješ z vlastních střepů*. Ona neviděla, kam mezek šel. Neviděla, kdo ho vedl. Neviděla, co je v rohovém domě na horní straně náměstí. Viděla soudek a slyšela kopyta.
 
 Vzala list s tabulkou a pod čáru, dole, napsala malým písmem jen to, co věděla jistě: *Krev z lázně se nevylévá. Někdo ji kupuje.*
 

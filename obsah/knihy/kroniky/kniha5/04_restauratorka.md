@@ -68,7 +68,7 @@ Sálová má na sobě šedou zástěru přes svetr a bavlněné rukavice si prá
 
 Na stole leží šedé desky. Sálová je otevře a obrátí k Haně.
 
-*Protokol o stavu a restaurátorském zásahu. Kodex z fondu fary Mlýnec, sign.* Pod tím čísla. Čtyřicet osm stran. Fotky, popisy, schémata vazby. Hana listuje. Strana čtyřicet: mapa v bočním světle. Rasura pod slovy *teplá skála*, zvětšená, s měřítkem v milimetrech. Zbytky dolních tahů. Popisek: *Mechanické odstranění textu (rasura) původní rukou, týž inkoust i nástroj jako opravy na f. 6v a 9r. Pravděp. 2 slova. Čtení „petra calida“ nejisté.*
+*Protokol o stavu a restaurátorském zásahu. Kodex z fondu fary Mlýnec, sign.* Pod tím čísla. Čtyřicet osm stran. Fotky, popisy, schémata vazby. Hana listuje. Strana čtyřicet: mapa v bočním světle. Rasura pod slovy *teplá skála*, zvětšená, s měřítkem v milimetrech. Zbytky dolních tahů. Popisek: *Mechanické odstranění textu (rasura) původní rukou, týž nástroj jako opravy na f. 6v a 9r. Odstraněna stopa olůvka, pod pozdějším inkoustovým obtahem. Pravděp. 2 slova. Čtení „petra calida“ nejisté.*
 
 Je to dobrý protokol. Hana to ví, protože čte dobré protokoly ráda a špatných přečetla tisíce.
 
@@ -136,7 +136,7 @@ Hana sklopí oči k protokolu, k tabulce, k devíti stejným slovům. Nikdo by s
 
 „Proč mi to říkáte?“
 
-„Protože včera večer,“ řekne Sálová, „jste nad prohlubní pod haldou spouštěla svíčku. Dvakrát. Ráno a večer. Večer vám zhasla výš než ráno a vy jste si udělala na větvi druhý zářez.“
+„Protože včera,“ řekne Sálová, „jste nad prohlubní pod haldou spouštěla svíčku. Dvakrát. Ráno a večer. Ráno vás viděl jeden z našich, večer já. Večer vám zhasla výš než ráno a vy jste si udělala na větvi druhý zářez.“
 
 Hana se nepohne.
 
@@ -162,7 +162,7 @@ Hana se dívá na její tvář v šeru. Na světlé oči, šedé nebo zelenavé,
 
 Pak vstane, dojde ke dveřím a zhasne malou lampu u lisu. Pak druhou, nad dlouhým stolem. Pak se natáhne a stáhne roletu na okně u Hany až dolů.
 
-Dílna se ponoří do tmy. Ne do úplné. Pod dveřmi do chodby je úzký proužek žlutého světla ze žárovky na chodbě. Jinak nic.
+Dílna se ponoří do tmy. Ne do úplné. Pod dveřmi do chodby je úzký proužek žlutého světla ze žárovky za nimi. Jinak nic.
 
 „Máte telefon,“ řekne Sálová ze tmy. Hlas je blízko, dva metry, možná tři. „Posviťte si na mě.“
 
@@ -258,9 +258,9 @@ Hana čeká.
 
 Hana si to v duchu napíše doleva. *Řekla S.* Pak doprava. *Tluče = pulzy?* Kalinův osmý list, tmavé tečky ve spodní části spektrogramu, ve skupinách.
 
-Nic neřekne. Kalina jí řekl, ať nic neříká, dokud to neuvidí. A ona to neviděla. Jen to slyšela. *Audivi.*
+Nic neřekne. Kalina by řekl, ať nic neříká, dokud to neuvidí. A ona to neviděla. Jen to slyšela. *Audivi.*
 
-„Proč mi to všechno říkáte?“ zeptá se. „Mně. Ne hasičům, ne geologům z ústavu, ne nikomu.“
+„Proč mi to všechno říkáte?“ zeptá se. „Mně. Ne hasičům, ne geologům z ústavu, nikomu jinému.“
 
 Sálová se poprvé za celý rozhovor podívá jinam. Na okno, na roletu, za kterou je bílé odpoledne.
 
@@ -320,7 +320,7 @@ Sálové se kolem očí, v té jemné krakeluře, něco pohne. Možná úsměv. 
 
 „A ještě jedna věc.“ Hana si položí dlaně na stůl. „Jestli tam dole budou lidé, kterým jde o život, zavolám hasiče. Ať si kdo chce myslí, co chce.“
 
-„Pak se rozprchnou,“ řekne Sálová. Hlas se jí nezmění, ale zrychlí. „Nebo je Brandl odveze dřív, než hasiči přijedou. A pak už je nikdo nenajde. Ani já.“
+„Pak se rozprchnou,“ řekne Sálová. Hlas nezvýší, jen zrychlí. „Nebo je Brandl odveze dřív, než hasiči přijedou. A pak už je nikdo nenajde. Ani já.“
 
 „Tak mi pomozte, ať to udělat nemusím.“
 

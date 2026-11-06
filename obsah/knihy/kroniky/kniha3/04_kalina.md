@@ -50,7 +50,7 @@ Otočí se ke kufru auta a začne vykládat bedny. Tři plastové, šedé, s kov
 
 Problém je jednoduchý, nebo aspoň Viktor si myslí, že je jednoduchý.
 
-Expedice má radiolokační maják. Koupil ho Viktor v zimě od firmy, která je dodává záchranným týmům a jeskyňářům. Maják je cívka v pouzdře. Potápěč ho položí v jeskyni na dno, vodorovně, a maják začne vysílat nízkofrekvenční magnetické pole. Pole projde skálou, vodou, hlínou, vším. Nahoře nad tím chodí člověk s přijímací cívkou a hledá místo, kde pole míří kolmo vzhůru. To místo je přímo nad majákem. Z tvaru pole kolem něj se pak dá spočítat hloubka. Tak se v jeskyních zjišťuje, kde přesně pod povrchem jsou. Tak se vrtá k uvězněným.
+Expedice má radiolokační maják. Koupil ho Viktor v zimě od firmy, která je dodává záchranným týmům a jeskyňářům. Maják je cívka v pouzdře. Potápěč ho položí v jeskyni na dno, vodorovně, a maják začne vysílat nízkofrekvenční magnetické pole. Pole projde skálou, vodou, hlínou, vším. Nahoře nad tím chodí člověk s přijímací cívkou a hledá místo, kde pole míří kolmo vzhůru. To místo je přímo nad majákem. Z tvaru pole kolem něj se pak dá spočítat hloubka. Tak se zjišťuje, kde přesně pod povrchem jeskyně vedou. Tak se vrtá k uvězněným.
 
 Expedice má taky jeskynní spojení, dvě krabičky, které si posílají krátké textové zprávy skrz skálu na stejném principu. Jedna je na povrchu, druhá na skalní římse v horní suché chodbě nad cenotem, kde Luis drží zásobní láhve. Pojišťovna to chtěla. Civilní ochrana taky.
 
@@ -110,7 +110,7 @@ Pak píše dál.
 
 „Maják bude dole sám. Deset minut každou celou hodinu. Pak padesát minut ticho, aby šetřil baterii. Kdykoli se v noci rozhodnu měřit, počkám na celou hodinu a on se ozve.“ Kalina zapíše poslední řádek a stiskne klávesu. Dioda pod víčkem pouzdra blikne dvakrát rychle a pak zhasne. „Na tenhle režim vydrží baterie zhruba měsíc.“
 
-Viktor stojí za ním s pivem a dívá se mu přes rameno. Hana si ho nevšimla přijít.
+Viktor stojí za ním s pivem a dívá se mu přes rameno. Hana si nevšimla, kdy přišel.
 
 „Jak dlouho to tam bude pípat?“ zeptá se Viktor.
 
@@ -162,7 +162,7 @@ Stěna pod soupravou je vápenec. Stejný jako ve stěnách studny, jen tady je 
 
 Otočí se k ní.
 
-„Nikdo to neví přesně,“ řekne Hana. „Závisí to na puklinách, na dutinách, na vodě. Vlna se láme na každém rozhraní. Někde se utlumí, někde se zesílí. Dalo by se to měřit. Seismometry kolem lomu a v jeskyni, a pak porovnávat. Nikdo to tady nedělá.“
+„Nikdo to neví přesně,“ řekne Hana. „Závisí to na puklinách, na dutinách, na vodě. Vlna se láme na každém rozhraní. Někde se utlumí, někde zesílí. Dalo by se to měřit. Seismometry kolem lomu a v jeskyni, a pak porovnávat. Nikdo to tady nedělá.“
 
 „Proto si zapisujete odstřely.“
 
@@ -224,13 +224,13 @@ Hrdlo. Haloklina. Mlha. Tma bez hrany.
 
 V síni Luis tentokrát nezůstane u Abuela. Dva v sale, třetí u vchodu, a u vchodu zůstane Jana. Luis vede Hanu sedm kopů doleva, pod převis, a pak ještě kus dál, k místu, které Hana ve středu neviděla, protože se dívala jen na válec.
 
-Krápník. Pahýl, zlomený kdysi v polovině, s plochým vrškem, metr od převisu. Na jeho patě je přivázaná destička. *LE 14*. Luisův měřicí bod. Odsud vede jeho měření síně, odsud se vztahuje všechno, co ví o tom, kde co leží. Vedle pahýlu je terasa, plochá, téměř vodorovná, hladká jako stůl.
+Krápník. Pahýl, zlomený kdysi v polovině, s plochým vrškem, metr od převisu. Na jeho patě je přivázaná destička. *LE 14*. Luisův měřicí bod. Odsud vede jeho měření síně, k němu se vztahuje všechno, co ví o tom, kde co leží. Vedle pahýlu je terasa, plochá, téměř vodorovná, hladká jako stůl.
 
 Hana položí maják na terasu. Nohy pouzdra se zaboří do tenkého povlaku, jen o milimetr. Bublina ve vodováze uteče doprava. Hana podloží jednu nohu kouskem olova ze své kapsy. Bublina se vrátí. Skoro do středu. Podloží ji ještě o chlup. Střed.
 
-Vytáhne pásmo a Luis podrží jeho konec u středu cívky a Hana ho vede k čelu válce. Osmdesát sedm centimetrů. Kompas. Směr. Zapíše to na tabulku, dvakrát, a Luis si to přečte a kývne.
+Vytáhne pásmo a Luis podrží jeho konec u středu cívky a Hana ho vede k hraně lemu, k bodu na polevě těsně pod čelem válce. Válce samého se nedotkne. Osmdesát sedm centimetrů. Kompas. Směr. Zapíše to na tabulku, dvakrát, a Luis si to přečte a kývne.
 
-Ví, že maják na terase je zásah do síně dřív, než ji Ríša nafotí. Jinak to nejde: Kalina musí měřit teď, v noci, dokud lom mlčí, a fotogrammetrie je odložená. Do modelu ho potom zapíše jako cizí předmět, ne jako součást nálezu, a do příští zprávy pro Marisol taky.
+Ví, že maják na terase je zásah do síně dřív, než ji Ríša nafotí. Jinak to nejde: Kalina musí měřit teď, v noci, dokud lom mlčí, a fotogrammetrie je odložená. Do modelu ho potom zapíše jako cizí předmět, ne jako součást nálezu. Ví taky, že ráno v sedm čtyřicet napsala *před jakýmkoli dalším zásahem*. Proto před ponorem poslala Marisol ještě dva řádky: *Dnes v síni položíme cizí předmět, maják, necelý metr od předmětu. Předmětu se nedotkneme.* Odpověď nepřišla, než se zanořila. Je to další malá odchylka a Hana ji tak i zapíše.
 
 Teď teprve se podívá na válec.
 
@@ -246,7 +246,7 @@ Neví. Ví jen, že teď, v klidu, bez Viktorova manometru za zády, ten pravý 
 
 Natáhne ruku. Zastaví se.
 
-Třetí podmínka. Na válec ani na nic kolem se nikdo nesáhne, dokud Ríša neudělá model. Sama si ji vymohla. Sama ji vyslovila u stolu, s Viktorovou teplou suchou dlaní v ruce.
+Třetí podmínka. Na válec se nikdo nesáhne, dokud Ríša neudělá model. A žlábek je *kolem*, řekne si, ačkoli tohle slovo u stolu neřekla. Sama si ji vymohla. Sama ji vyslovila u stolu, s Viktorovou teplou suchou dlaní v ruce.
 
 Stáhne ruku zpátky.
 
@@ -264,13 +264,13 @@ Jana u vchodu ťukne na manometr.
 
 *
 
-Nahoře na povrchu Kalina maják zachytí, ale jen slabě. Vzduch je plný šedesáti hertzů z lomu. Ve sluchátkách se tón objevuje a mizí, jako když člověk poslouchá hlas v sousední místnosti, kde hraje rádio. Najde směr. Najde přibližně oblast, v lese, čtyři sta metrů od cenotu severovýchodním směrem. Víc ne.
+Když se Hana vynoří z dekomprese, Kalina klečí na plošině s přijímačem v klíně a se sluchátky kolem krku.
 
-„V noci,“ řekne, když se Hana vynoří z dekomprese. Klečí na plošině s přijímačem v klíně a se sluchátky kolem krku. „Ve dne to tady nemá smysl. Tma, ticho, a pak to bude.“
+„Zachytil jsem ho, ale jen slabě,“ řekne. „Vzduch je plný šedesáti hertzů z lomu. Tón se objevuje a mizí, jako když posloucháte hlas v sousední místnosti, kde hraje rádio. Směr mám. Oblast přibližně, v lese, čtyři sta metrů od cenotu na severovýchod. Víc ne.“ Sundá sluchátka. „V noci. Ve dne to tady nemá smysl. Tma, ticho, a pak to bude.“
 
 Jana si sundá masku a podívá se na Hanu.
 
-„Kde je Ríšův model?“ zeptá se. Tiše, aby to neslyšel nikdo jiný. „Viděla jsem jizvy. Říkal Viktor, že se vzorkovalo podle tvé metodiky.“
+„Kde je Ríšův model?“ zeptá se. Tiše, aby to neslyšel nikdo jiný. „Viděla jsem jizvy. Viktor říkal, že model se udělá z tvých fotek a z jeho videa a že to tvoje metodika připouští.“
 
 „Modelu není,“ řekne Hana. „Vzorkovali jsme bez něj. Dneska ráno jsem to napsala INAH.“
 

@@ -2,7 +2,7 @@
 
 Mráz teď nepovoloval ani přes den.
 
-Ráno byly kameny u potoka obalené ledem, tenkým a průhledným, a v tom ledu stály bublinky jako ve skle. U okrajů se voda nehýbala. Jen uprostřed, kde byl proud, tekla dál, černá a rychlá, a kouřila se z ní pára, protože byla teplejší než vzduch. Tráva na suti byla bílá a křupala. Kdo šel pro dřevo, vracel se s rukama, které nemohl sevřít.
+Ráno byly kameny u potoka obalené ledem, tenkým a průhledným, a v tom ledu stály bublinky jako ve skle. U okrajů se voda nehýbala. Jen uprostřed, kde byl proud, tekla dál, černá a rychlá, a stoupala z ní pára, protože byla teplejší než vzduch. Tráva na suti byla bílá a křupala. Kdo šel pro dřevo, vracel se s rukama, které nemohl sevřít.
 
 Eren nosil dřevo do vnější síně. Každý den, tak jak to slíbil u Talina ohně. Za každého, kdo tam spí, jednu náruč. Dvanáct náručí. Nosili je ti, kdo zůstali u Sefina ohně, protože Orrinovi lidé nosili dřevo jen Orrinovi. Bylo to daleko. Pro dřevo se teď chodilo až na svah pod planinou a každá cesta trvala půl dopoledne.
 
@@ -32,7 +32,7 @@ Kůl nešel dovnitř. Bena do něj tloukla kamenem a kůl odskakoval. Ardo zkusi
 
 Eren stál nad tím a díval se.
 
-Pak rozdělal oheň. Malý, přímo na místě, kde měla být první díra. Nechal ho hořet, dokud nedohořel, a pak odhrnul popel a zkusil zemi nožem. Povolila. Na tři prsty. Vyhrabali ji rukama, horkou a mokrou, a pod ní byla zase zmrzlá. Rozdělal oheň znovu.
+Pak rozdělal oheň. Malý, přímo na místě, kde měla být první díra. Nechal ho dohořet, a pak odhrnul popel a zkusil zemi nožem. Povolila. Na tři prsty. Vyhrabali ji rukama, horkou a mokrou, a pod ní byla zase zmrzlá. Rozdělal oheň znovu.
 
 „Na jednu díru tři ohně,“ řekl Ardo, když to spočítal. „Na jeden dům čtrnáct děr.“
 
@@ -62,7 +62,7 @@ Maela kývla. Nic neřekla. Vzala prázdný sáček od dávek a šla zpátky nah
 
 Tio se rozkašlala dvacátého třetího dne od sněhu.
 
-Kašlala už předtím. Krátce, suše, ve spánku, a ráno přestala. Tentokrát nepřestala. Kašlala celé odpoledne, a večer se jí kašel zlomil do něčeho hlubšího, mokrého. Lehla si vedle ohně a nechtěla jíst. Maela jí podala kousek dávky a Tio ho odstrčila.
+Kašlala už předtím. Krátce, suše, ve spánku, a ráno přestala. Tentokrát nepřestala. Kašlala celé odpoledne, a večer se jí kašel zlomil v něco hlubšího, mokrého. Lehla si vedle ohně a nechtěla jíst. Maela jí podala kousek dávky a Tio ho odstrčila.
 
 Eren jí sáhl na čelo. Bylo horké.
 
@@ -88,7 +88,7 @@ Maela vstala.
 
 Eren došel k ústí. Shrbil se a vešel.
 
-V síni bylo teplo. Ne jako dole. Ale bylo tu závětří a kouř a dech mnoha lidí, a to stačilo, aby se mráz zastavil u vchodu. U stěny, kde táhlo, ležela řada dvanácti kamenů. Na každém někdo. Pod kůžemi, pod plachtami, schoulení. Eren je spočítal. Pak je spočítal znovu, protože to nebylo k ničemu, a stejně to udělal.
+V síni bylo teplo. Ne jako dole. Ale bylo tu závětří a kouř a dech mnoha lidí, a to stačilo, aby se mráz zastavil u vchodu. U stěny, kde táhlo, ležela řada dvanácti kamenů. Na každém někdo. Pod kůžemi, pod plachtami, schoulení. Eren je spočítal. Pak je spočítal znovu. Nebylo to k ničemu, a stejně to udělal.
 
 Dvanáct.
 
@@ -186,7 +186,7 @@ Odešel.
 
 Maela to řekla v poledne.
 
-Tio spala pod Orrinovou kůží, s obličejem rudým a mokrým, ale spala klidně. Kotel byl skoro prázdný. Kdo mohl chodit, šel pro dřevo nebo k Talinu kruhům v údolí, kde Ardo s Benou vypalovali ve zmrzlé zemi díry pro kůly druhého domu. Pod plachtami zůstali jen nemocní a ti, kdo u nich seděli.
+Tio spala pod Orrinovou kůží, s obličejem rudým a mokrým, ale spala klidně. Kotel byl skoro prázdný. Kdo mohl chodit, šel pro dřevo nebo k Taliným kruhům v údolí, kde Ardo s Benou vypalovali ve zmrzlé zemi díry pro kůly druhého domu. Pod plachtami zůstali jen nemocní a ti, kdo u nich seděli.
 
 Maela seděla u ohně a přebírala kamínky. Ty, kterými počítala dávky. Nepočítala je. Jen je přesýpala z dlaně do dlaně.
 
@@ -242,13 +242,13 @@ Maela vzala Tio. Zabalenou do Orrinovy kůže, s hlavou na rameni. Tio se probud
 
 Maela neodpověděla hned. „Táta přijde,“ řekla pak.
 
-Eren vzal ranec. Maela se na něj podívala, jako by se chtěla zeptat, a nezeptala se. Šli přes kotel. Mezi plachtami, kolem ohňů, kolem Sefina ohně, kde seděla Sefa, sledovala je a nic neřekla. Lidé se otáčeli a mlčeli.
+Eren vzal ranec. Maela se na něj podívala, jako by se chtěla zeptat, a nezeptala se. Šli kolem Sefina ohně, kde seděla Sefa, sledovala je a nic neřekla, a pak mezi plachtami a kolem ohňů přes kotel. Lidé se otáčeli a mlčeli.
 
 Orrinův přístřešek stál pod skálou na horním kraji kotle, kousek stranou od pramene, tam, kde ze skály ve dne v noci stoupala pára. Skála tam byla teplá. Eren to cítil, už když se k ní blížil: vzduch se tam měnil, jako když se v habitatu přiblížíš k výměníku. Plachty byly napjaté na dvakrát, s mezerou mezi nimi, a pod nimi ležely na zemi kůže. Kdo tohle postavil, věděl, co dělá. Nebo měl štěstí.
 
 U vchodu stál Kaj.
 
-Pohled mu sklouzl z Erena na ranec v jeho rukou. Natáhl ruce, aby si ho vzal. Eren mu ho podal. Kaj se nepodíval do očí. Otočil se a zanesl ranec dovnitř.
+Pohled mu sklouzl z Erena na ranec v jeho rukou. Natáhl ruce, aby si ho vzal. Eren mu ho podal. Kaj se mu nepodíval do očí. Otočil se a zanesl ranec dovnitř.
 
 Orrin vyšel ven. Podíval se na Tio, pak na Maelu. Ustoupil a pustil je dovnitř. Maela se sehnula pod plachtu a byla pryč.
 
@@ -324,7 +324,7 @@ Eren se rozhlédl. Po plachtě, pod kterou bylo víc místa, než kdy bylo. Po o
 
 „Nosím dřevo,“ řekl.
 
-Tio se nad tím zamyslela a kývla, jako by to bylo dobrá odpověď. Ru ji zatahal za ruku a ona se nechala odvést, k dolní tůni, kde se děti každé ráno honily v páře. Kůže se za ní vlekla.
+Tio se nad tím zamyslela a kývla, jako by to byla dobrá odpověď. Ru ji zatahal za ruku a ona se nechala odvést, k dolní tůni, kde se děti každé ráno honily v páře. Kůže se za ní vlekla.
 
 Pak se zastavila a otočila.
 
@@ -350,4 +350,4 @@ Vyšel ven. Na terase seděla Tal u ohně. Dívala se na něj, a pak dolů, pře
 
 Pak zase na něj.
 
-Co v tom pohledu je, nepoznal. Kývl. Tal nekývla. Ale nepřestala se dívat, dokud nesešel po suti dolů a nezmizel mezi plachtami.
+Co v tom pohledu bylo, nepoznal. Kývl. Tal nekývla. Ale nepřestala se dívat, dokud nesešel po suti dolů a nezmizel mezi plachtami.

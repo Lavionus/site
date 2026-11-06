@@ -10,11 +10,11 @@ Dobroslava seděla na špalku před dveřmi a stahovala kůži z veverky. Nevsta
 
 „Matěj.“
 
-„Já vím, jak se jmenuješ. Celá ves to ví, od neděle.“ Odložila veverku na sníh. Sivka k ní natáhla čenich. Dobroslava jí dala kousek něčeho, co měla v kapse, a fena si to vzala a lehla si jí k nohám, jako by ji znala odjakživa. Matěj si pomyslel, že pes je zrádce, a nebyl si jistý, jestli to myslí jako vtip. „Chceš vidět doupě.“
+„Já vím, jak se jmenuješ. Celá ves to ví, od neděle.“ Odložila veverku na sníh. Sivka k ní natáhla čenich. Dobroslava jí dala kousek něčeho, co měla v měšci, a fena si to vzala a lehla si jí k nohám, jako by ji znala odjakživa. Matěj si pomyslel, že pes je zrádce, a nebyl si jistý, jestli to myslí jako vtip. „Chceš vidět doupě.“
 
 „Jak to víte?“
 
-„Protože jsi byl u hory a nepustili tě. A protože se tvoje matka v neděli u kostela ptala Kojatovy ženy, jestli neví něco, co by tě ode mě odradilo.“ Dobroslava se nepousmála. „Kojatova žena neví nic. Tak jsi tady.“
+„Protože jsi byl u hory a nepustili tě. A protože se tvoje matka včera u studny ptala Kojatovy ženy, jestli neví něco, co by tě ode mě odradilo.“ Dobroslava se nepousmála. „Kojatova žena neví nic. Tak jsi tady.“
 
 Matěj nevěděl, co na to říct, a tak řekl pravdu. „Chci vidět místo, o kterém se říká, že tam dýchá drak. Ve vsi o něm všichni mluví a nikdo tam nebyl.“
 
@@ -52,7 +52,7 @@ Matěj se zastavil a díval se.
 
 „Někde.“ Dobroslava šla dál. „Tady ne. Tady je to jen kyselka.“
 
-Zastavila se u jedné z bublajících kaluží a Matěj si k ní dřepl a strčil do vody prst. Byla studená. Bubliny mu stoupaly kolem prstu a štípaly, jako by měl ruku v mravenčí hromadě. Olízl si prst. Kyselá, kovová chuť, ostřejší než u kyselky, kterou mu dal Udalrich, a za ní ještě něco hořkého, jako když člověk olízne železný klíč.
+Zastavila se u jedné z bublajících kaluží a Matěj si k ní dřepl a strčil do vody prst. Byla studená. Bubliny mu stoupaly kolem prstu a štípaly, jako by měl ruku v mraveništi. Olízl si prst. Kyselá, kovová chuť, ostřejší než u kyselky, kterou mu dal Udalrich, a za ní ještě něco hořkého, jako když člověk olízne železný klíč.
 
 „Tohle se dá pít?“
 
@@ -120,7 +120,7 @@ Sivka byla teplá. Dýchala. Rychle, mělce, jako štěně.
 
 „Ty hloupá,“ řekl Matěj, „ty hloupá,“ a chtěl se zvednout a zjistil, že nemůže.
 
-Nebylo to tak, že by neměl sílu. Sílu měl. Bylo to tak, že vzduch, který dýchal, nebyl vzduch. Nadechl se a nic nepřišlo. Nadechl se znovu, rychleji, hlouběji, a v nose ho to štíplo, ostře, kysele, jako když olízl prst od bublinek, jen to bylo uvnitř hlavy, za očima. Srdce mu tlouklo do žeber, ne v hrudi, ale všude, v krku, ve spáncích, v prstech, kterými držel psa. Dýchal a dýchal a čím víc dýchal, tím méně měl dechu. Svět kolem něj se začal zužovat. Ne potemnět, ale zužovat, jako když se člověk dívá trubkou: viděl ještě lišku, a vránu s rozevřeným křídlem, a jasnou žlutou hruď strnada, a pak jen tu žlutou, a pak už nic.
+Nebylo to tak, že by neměl sílu. Sílu měl. Bylo to tak, že vzduch, který dýchal, nebyl vzduch. Nadechl se a nic nepřišlo. Nadechl se znovu, rychleji, hlouběji, a v nose ho to štíplo, ostře, kysele, jako když olízl prst od bublinek, jen to bylo uvnitř hlavy, za očima. Srdce mu tlouklo, už ne jen v hrudi, ale všude, v krku, ve spáncích, v prstech, kterými držel psa. Dýchal a dýchal a čím víc dýchal, tím méně měl dechu. Svět kolem něj se začal zužovat. Ne potemnět, ale zužovat, jako když se člověk dívá trubkou: viděl ještě lišku, a vránu s rozevřeným křídlem, a jasnou žlutou hruď strnada, a pak jen tu žlutou, a pak už nic.
 
 Ještě si stihl pomyslet, že mu drak dýchá do tváře a on ho necítí.
 
@@ -134,7 +134,7 @@ Ležel na boku ve sněhu a zvracel, a nevěděl, kde je, a pak to věděl, proto
 
 Klečela vedle něj ve sněhu a těžce oddychovala. Kožich měla rozepnutý. Tyč s hákem ležela vedle nich a na háku visel kus bílé látky. Matěj pochopil, že je to cíp jeho hábitu, utržený u pasu, a že přetržené je i cingulum, provaz, který nosil kolem pasu.
 
-„Táhla jsem tě za pás,“ řekla Dobroslava. „Pás praskl. Tak za hábit. Hábit praskl. Tak jsem tě chytila za nohu.“ Odmlčela se, aby se nadechla. „Neměla jsem tam sahat. Nesklonila jsem se. Nadechla jsem se nahoře a šla dolů jako do vody. Ty jsi těžkej. Na mnicha.“
+„Táhla jsem tě za pás,“ řekla Dobroslava. „Pás praskl. Tak za hábit. Hábit praskl. Tak jsem tě chytila za nohu.“ Odmlčela se, aby se nadechla. „Neměla jsem tam lézt. Nesklonila jsem se. Nadechla jsem se nahoře a šla dolů jako do vody. Ty jsi těžkej. Na mnicha.“
 
 Matěj se pokusil něco říct a zase zvracel. Pak už nebylo co.
 
@@ -144,7 +144,7 @@ Dobroslava kývla hlavou stranou.
 
 Sivka ležela kousek od něj, ve sněhu na okraji prohlubně, kam ji někdo vytáhl, protože by se tam sama nedostala. Na srsti na krku měla stopu po háku, rozhrnutou, jako když se psa pohladí proti srsti. Ležela na boku, natažená, s nohama, jako by ještě běžela. Oči měla otevřené.
 
-Matěj se k ní připlazil po kolenou. Byla ještě teplá. Teplejší než sníh, teplejší než jeho ruce. Položil jí dlaň na hruď, tam, kde jí měl tlouct srdce, a dlouho tam ruku nechal, jako by mohl to srdce slyšet, kdyby čekal dost dlouho.
+Matěj se k ní připlazil po kolenou. Byla ještě teplá. Teplejší než sníh, teplejší než jeho ruce. Položil jí dlaň na hruď, tam, kde jí měl tlouct srdce, a dlouho tam ruku nechal, jako by mohl to srdce ucítit, kdyby čekal dost dlouho.
 
 „Měla jsem pro ni jít dřív než pro tebe,“ řekla Dobroslava za ním. „Ale tys byl blíž.“
 
@@ -210,11 +210,11 @@ Pak odložil tabulku, vzal kus pergamenu, který si přivezl z kláštera na dop
 
 *Ctihodnému otci Gerungovi, převorovi ve Waldsassenu, bratr Matthias, nehodný služebník, s poslušností a v Kristu pozdrav.*
 
-Psal latinou a psal rychle, protože věty mu přicházely samy, celé, jako by na ně čekaly. Psal o grangii, krátce, protože to převor chtěl: že pan Konrád razí štolu na úbočí hory, že jeho vozy jezdí přes luka, že bratr Udalrich má pravdu, když si stěžuje na dým. O tom, co viděl u ústí štoly, napsal dvě věty. Pak napsal *Nunc autem*, a teď, a zastavil se. Nechal ta slova stát na řádku samotná a chvíli se na ně díval, protože věděl, co přijde, a chtěl si to užít.
+Psal latinou a psal rychle, protože věty mu přicházely samy, celé, jako by na ně čekaly. Psal o grangii, krátce, protože to převor chtěl: že pan Konrád razí štolu na úbočí hory, že jeho vozy jezdí přes luka, že bratr Udalrich má pravdu, když si stěžuje na dým. O tom, co viděl u ústí štoly, napsal dvě věty. Pak napsal *Nunc autem*, a teď, a zastavil se. Nechal ta slova stát na řádku samotná a chvíli se na ně díval, protože věděl, co přijde, a chtěl si to vychutnat.
 
 *A teď, otče, vám píši o věci, kvůli které jste mě sem poslal, a píši vám ji jako svědek, ne jako ten, kdo slyšel.*
 
-Popsal slatinu. Kaluže, které bublají, jako by pod nimi něco dýchalo. Rezavé okraje, jako krev. Prohlubeň mezi borovicemi, kterou lid nazývá dračím doupětem. Ptáky, které tam padají z nebe; lišku, která šla dolů a nevrátila se. Psal přesně. Počet ptáků, druhy. Psal, že nebylo cítit nic, ani síru, ani kouř. To je prý ze všeho nejpodivuhodnější, protože to dokazuje, že malíři se mýlí a že dračí dech není oheň, nýbrž jed, neviditelný, jaký nemá žádné zvíře stvořené na zemi.
+Popsal slatinu. Kaluže, které bublají, jako by pod nimi něco dýchalo. Rezavé okraje, jako krev. Prohlubeň mezi borovicemi, kterou lid nazývá dračím doupětem. Ptáky, které tam padají z nebe; lišku, která šla dolů a nevrátila se. Psal přesně. Počet ptáků, druhy. Psal, že nebylo cítit nic, ani síru, ani kouř. To je, psal, ze všeho nejpodivuhodnější, protože to dokazuje, že malíři se mýlí a že dračí dech není oheň, nýbrž jed, neviditelný, jaký nemá žádné zvíře stvořené na zemi.
 
 *A abyste, otče, nepochyboval, že to, co píši, je pravda, a ne pověst: šel jsem dolů. Můj pes, kterého jsem vychoval, šel přede mnou a padl a zemřel. Sklonil jsem se k němu a padl jsem i já, jako mrtvý, a byl bych zemřel, kdyby mě Boží milostí nevytáhla žena, která ta místa zná. Byl jsem tedy sám, otče, v dechu té šelmy, a vrátil jsem se, abych vám to napsal.*
 
@@ -234,7 +234,7 @@ Ráno odjížděl jeden z Udalrichových konvršů do Waldsassenu se sýrem a s 
 
 Pak šel Matěj do senníku.
 
-Sivka ležela v seně, kam ji položil Udalrich, a byla ztuhlá a studená a seno kolem ní bylo zmrzlé. Země venku byla tvrdá jako kámen; kopat se v ní nedalo, ani motykou, ani krumpáčem, a Udalrich řekl, že do jara nebude. Matěj ji tedy zabalil do svého starého pláště, který měl na cestu, a odnesl ji za ovčín. Konvršové tam celou zimu házeli lopatou sníh. Matěj v té hromadě vyhrabal holýma rukama díru a Sivku do ní položil. Pak ji zahrabal. Bylo to špatné hrobové místo a Matěj to věděl. Ale bylo to místo, kde ji najde, až roztaje sníh.
+Sivka ležela v seně, kam ji položil Udalrich, a byla ztuhlá a studená a seno kolem ní bylo zmrzlé. Země venku byla tvrdá jako kámen; kopat se v ní nedalo, ani motykou, ani krumpáčem, a Udalrich řekl, že do jara to nepůjde. Matěj ji tedy zabalil do svého starého pláště, který měl na cestu, a odnesl ji za ovčín. Konvršové tam celou zimu házeli lopatou sníh. Matěj v té hromadě vyhrabal holýma rukama díru a Sivku do ní položil. Pak ji zahrabal. Byl to špatný hrob a Matěj to věděl. Ale bylo to místo, kde ji najde, až roztaje sníh.
 
 Nad ovčínem se zvedala hora. Svítilo slunce a od ústí štoly na úbočí stoupal tenký sloupek dýmu, jako každé ráno, a Matěj nevěděl, jestli kouří bouda, nebo hora.
 

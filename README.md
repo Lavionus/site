@@ -853,6 +853,54 @@ Testy:
   falešnou řečovou syntézu, protože headless nemá hlasy.
 - tisk kapitoly a volání sazby ze čtečky kontroluje `_test/sazba_test.py`.
 
+**Čtečka knih** (`obsah/ctecka_knih.html`, sekce 📚 Knihy) je univerzální čtečka pro vlastní
+e-knihy uživatele ve stejné společné čtečce jako Kroniky:
+- `ctecka_knih.html` = knihovna (mřížka obálek, pokrok, hledání, řazení, úprava názvu/autora,
+  odebrání, přetažení souborů do okna), `ctecka_knih.html?id=<kniha>` = čtení;
+- `ctecka/prevod.js` (`CTECKA_PREVOD`) převádí EPUB (vlastní čtení ZIP + `DecompressionStream`,
+  názvy kapitol z nav/NCX, obálka, ilustrace), MOBI/PRC/AZW (PalmDOC nebo bez komprese, EXTH,
+  `recindex` obrázky; HUFF/CDIC a DRM ne), Markdown (YAML hlavička, úroveň kapitol, přiložené
+  obrázky) a TXT (UTF-8, jinak windows-1250) na kapitoly v Markdownu čtečky. Nadpisy v prostém
+  textu („KAPITOLA 1.“, „Část druhá“, VERZÁLKY) pozná `jeNadpis`; EPUB dělené po stránkách
+  (z PDF/Wordu) slučuje, čísla stránek za nadpisy nebere;
+- `ctecka/knihovna.js` drží knihy v IndexedDB `webapp_ctecka_knih` (store `meta` + `obsah`)
+  a čtečce předá `CTECKA_DILO.zdroj` = `{knihy(), kapitola(), obrazek()}` místo souborů na webu.
+  Stav knihy `webapp_ctecka_knih_<id>` (+`_poznamky`), nová kniha převezme vzhled z naposledy čtené.
+  Sazba, odkazy, betačtení a „offline“ jsou u vlastních knih skryté.
+  Ruční „dočteno/nedočteno“ (✔ na kartě, `meta.docteno`, jinak dočteno = přečteno do konce) a filtr
+  Rozečtené / Nepřečtené / Dočtené v nabídce Řadit a filtr.
+- **Moje knihy z webu** (rukopisy autora): `obsah/knihy/vlastni/` – kniha = soubor `.md` nebo složka
+  s kapitolami `*.md` (pořadí podle jména), obrázky a `obalka.*`; údaje z YAML hlavičky (`title`, `author`,
+  `description`, `series`, `series_index`). `python3 tools/vlastni_knihy.py [ZDROJ…]` zdroje zkopíruje
+  a vygeneruje `seznam.json` s otiskem obsahu; `--smazat ID` knihu odebere. Pak zvednout `sw.js`.
+  V knihovně ➕ Přidat → 🌐 Moje knihy z webu; přidaná kniha je napojená (`meta.web`) a knihovna
+  i čtečka ji při změně otisku samy stáhnou znovu. Kapitoly mají jména souborů podle názvu
+  (`kapitolySeJmeny`), takže pozice a záložky přežijí vložení kapitoly.
+- Data knihovny jsou v `ctecka/knihovna_data.js` (`KNIH_DATA`): IndexedDB, `ulozKnihu` (z převodníku,
+  i aktualizace – `meta.rucne` chrání ruční úpravy), pokrok, série (`calibre:series` z EPUB, jinak
+  `serieZNazvu`), záloha celé knihovny do ZIP (`knihovna.json` + `knihy/<id>/…` + stavy z localStorage)
+  a čtenářský deník (`zacato`, `dokonceno`, `hodnoceni`, `poznamka`, roční cíl v nastavení).
+- Knihovna (`ctecka/knihovna.js`): pruh Pokračovat ve čtení, řazení i po sériích (police), filtr,
+  hromadné přidání složky (`webkitdirectory` i přetažení složky, po jedné knize, průběh se zrušením,
+  duplicity se přeskočí), okno úprav (údaje, obálka z obrázku, hvězdičky, data, úprava kapitol:
+  přejmenovat / spojit / odebrat), deník s grafem po měsících.
+- Ve společné čtečce (platí i pro Kroniky): 🔤 význam slova (Wikislovník přes API s `origin=*`,
+  ohýbaný tvar → základní slovo) a odkazy na Jazykovou příručku a překlad; **Listovat po stránkách**
+  (Zobrazení) – plocha `overflow:hidden`, `strana(±1)`, maska useknutého řádku `#maskaStrany`,
+  klepnutí/přejetí/kolečko/klávesy; hlasy **Piper** v předčítání (`ctecka/piper.js`, worker
+  a mezipaměť `piper-hlasy` sdílené s Předčítačem, přehrávání přes `<audio>`, Media Session).
+- Barevné motivy čtení (i Kroniky): 7 barev × 5 stupňů (tmavé … světlé), motiv `rodina-stupeň`
+  (`sepie-2`). Barvy počítá `J.barvyMotivu` v `ctecka/jadro.js` a hlídá kontrast WCAG (text ≥ 7 : 1,
+  u středního ≥ 6, tlumený ≥ 4,5, slabý a akcent ≥ 3); `ctecka.js` je nastaví jako proměnné na `body`.
+- Angličtina: slovník stránky `i18n/en/ctecka_knih.js` a sdílené `i18n/en/ctecka/{sablona,ctecka,jadro}.js`.
+  Čtečka se načítá za běhu, proto jsou ve stránce nespouštěné `<script type="text/plain" src>`
+  (jen pro nástroje i18n). Složené texty jsou v kódu po `<span>`, aby šly přeložit po kusech.
+- testy: `node _test/ctecka_knih_test.js`, `python3 _test/ctecka_knih_ui.py` (vlastní EPUB/MOBI
+  z exportu čtečky + vzorek skutečných e-knih z `~/Dokumenty`, `KNIH=`, `SEMINKO=`, `JEN=`),
+  `python3 _test/ctecka_knih_ui2.py` (web, napojení, hromadné přidání, záloha, série, úpravy, deník),
+  `python3 _test/ctecka_knih_ui3.py` (slovníček, stránkování, Piper – `PIPER=0` bez stahování 63 MB).
+  Plán: `CteckaKnih_PLAN.md`.
+
 **Sazba knihy** (`obsah/sazba.html`, sekce Psaní & text) vysází knihu do PDF k tisku
 jako z nakladatelství. Stránkování dělá Paged.js 0.4.3 (`obsah/lib/pagedjs`, MIT,
 CSS Paged Media).
@@ -917,6 +965,27 @@ na iOS po zamčení obrazovky ztichne, skutečný zvuk v `<audio>` hraje dál.
 - Testy: `node _test/predcitac_test.js` (jádro), `python3 _test/predcitac_ui.py`
   (skutečné stažení hlasu ~63 MB, syntéza, oba režimy, MD přetažením). V headless
   desktopu syntéza jirka-medium ~5× rychleji než čtení.
+- Od 6. 11. 2026 výběr **úpravy hlasu** (předvolby a uložené úpravy z Dílny hlasů, aplikují se
+  na každou větu přes `hlasy/efekty.js`) a **vlastní hlasy** importované v Dílně (klíč
+  `vlastni-<id>`, soubory v Cache Storage pod `https://vlastni-hlas.local/<id>/model.onnx[.json]`).
+
+**Dílna hlasů** (`obsah/hlasy.html`, sekce Psaní & text) – syntetické hlasy ve třech režimech:
+- 🎚️ *Úprava hlasu*: Piper hlas (sdílí Cache Storage i worker s Předčítačem) → `hlasy/efekty.js`
+  (`HLASY_EFEKTY`, bez DOM): YIN základní tón, TD-PSOLA (výška a formanty nezávisle, rozsah
+  intonace, vibrato, chvění), LPC šepot/dech, efekty (telefon, rádio, robot, ozvěna, hala,
+  jeskyně – Schroederův dozvuk), 15 předvoleb. Základní zvuk textu se drží v paměti, posuvník
+  přepočítá jen úpravy.
+- 🤖 *Umělý hlas*: `hlasy/formant.js` (`HLASY_FORMANT`) – vlastní formantová syntéza češtiny:
+  pravidla výslovnosti (ď/ť/ň, bě/mě, spodoba znělosti, ř neznělé, čísla slovy), prozódie
+  (přízvuk, deklinace, otázka stoupá), Rosenbergův puls / pila / obdélník / šum → kaskáda
+  rezonátorů F1–F5 + šumová větev. Jen čeština.
+- 🧬 *Nové hlasy*: import vlastního Piper hlasu (.onnx + .onnx.json, kontrola konfigurace) a návod
+  k lokálnímu řetězu XTTS-v2 → dataset → dotrénování Piperu (`/mnt/sata/HOME/AI_Hlasy/`, mimo web).
+- Klíče: `webapp_hlasy` (nastavení), `webapp_hlasy_upravy` (uložené úpravy), `webapp_hlasy_vlastni`
+  (rejstřík importovaných hlasů) – poslední dva čte i Předčítač.
+- Testy: `node _test/hlasy_test.js` (13: posun f0/formantů měřený YIN a DFT, šepot, předvolby,
+  výslovnost, přízvuk, otázka) a `python3 _test/hlasy_ui.py` (skutečný hlas jirka: Žena = f0 ×1,50
+  změřeno na řeči, import hlasu, Předčítač s úpravou).
 
 **Volná místa** (`obsah/prace.html`, sekce Finance) – prohlížeč volných pracovních míst
 z otevřených dat MPSV / Úřadu práce ČR (≈40 tis. inzerátů). Plán a etapy `Prace_PLAN.md`.

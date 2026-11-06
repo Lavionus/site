@@ -24,7 +24,7 @@ Tobiáš přestal žvýkat. Pak polkl a odložil chleba. „Byla jste u lékárn
 
 „Mně, nebo soudu?“
 
-Ilona neodpověděla hned. Tobiáš si toho všiml, jako si všímal všeho, co ho naučila.
+Ilona neodpověděla hned. Tobiáš si toho všiml, jako si všímal všeho, jak ho to naučila.
 
 „Tobiáši,“ řekla. „Kdyby se mi něco stalo. Desky jsou doma v truhle, pod lněným plátnem, pod Řehořovými košilemi. Všechno. Ať je přečte pan perkmistr. Celé.“
 
@@ -42,7 +42,7 @@ U dveří ji zastavil jeho hlas, tichý, bez vzdoru. „Pan perkmistr je smí č
 
 *
 
-Kilián přišel, když zašel měsíc. Ilona byla oblečená v Řehořově starém tmavém kabátě, který jí byl dlouhý a v pase převázaný provazem. Na nohou měla jeho boty, vycpané hadry, protože ty její by ve vodě rozmokly. Sešit nechala na stole. Ležel tam se zavřenou koženou chlopní, a ona se na něj ode dveří ohlédla, jako se člověk ohlédne na dítě, které nechává doma samo.
+Kilián přišel, když se úplně setmělo, dlouho předtím, než měl vyjít měsíc. Ilona byla oblečená v Řehořově starém tmavém kabátě, který jí byl dlouhý a v pase převázaný provazem. Na nohou měla jeho boty, vycpané hadry, protože ty její by ve vodě rozmokly. Sešit nechala na stole. Ležel tam se zavřenou koženou chlopní, a ona se na něj ode dveří ohlédla, jako se člověk ohlédne na dítě, které nechává doma samo.
 
 Kilián měl na sobě totéž co vždycky, klobouk a plášť a rukavice, a přes rameno smotaný provaz.
 
@@ -54,7 +54,7 @@ Kilián měl na sobě totéž co vždycky, klobouk a plášť a rukavice, a pře
 
 *
 
-Nešli olšovou roklí. Šli přímo nahoru, mezi haldami, po cestě, kterou Ilona v sobotu před jedenácti dny viděla bílou v hvězdném světle a slyšela na ní kopyta. Teď byla tmavá. Kilián šel kus vedle cesty, po kamení, kde nezůstávají stopy, a Ilona šla za ním a počítala. Sto. Tři sta. Šest set. Haldy skončily a začal les, nízký, pokroucený, smrky ohnuté od větru. Mezi nimi byly staré propadliny, kde se kdysi kopalo a pak se to zavalilo. Z jedné z nich, když šli kolem, vanul studený vzduch, jako dech ze sklepa.
+Nešli olšovou roklí. Šli přímo nahoru, mezi haldami, po cestě, kterou Ilona v sobotu před jedenácti dny viděla bílou v měsíčním světle a slyšela na ní kopyta. Teď byla tmavá. Kilián šel kus vedle cesty, po kamení, kde nezůstávají stopy, a Ilona šla za ním a počítala. Sto. Tři sta. Šest set. Haldy skončily a začal les, nízký, pokroucený, smrky ohnuté od větru. Mezi nimi byly staré propadliny, kde se kdysi kopalo a pak se to zavalilo. Z jedné z nich, když šli kolem, vanul studený vzduch, jako dech ze sklepa.
 
 ![Cesta k Horní štole](obrazky/08_horni_stola.webp)
 
@@ -90,17 +90,17 @@ Shrbený muž sundal z mezka hranatý koš a odkryl pytlovinu. Byl v něm soudek
 
 Ilona ztuhla.
 
-Minule. Minule byla sobota. Ne. Minule byla středa. Středa před týdnem, kdy se Lene ráno našla pod mostem bílá jako vymetená mouka, a krev, která z ní vytekla, nebyla nikde.
+Minule. Minule byla sobota. Ne. Minule byla středa. Středa před týdnem, kdy Lene ráno našli pod mostem bílá jako vymetená mouka, a krev, která z ní vytekla, nebyla nikde.
 
 *Minule to bylo dobrý.*
 
-Cítila, jak se jí sevřely prsty do jehličí, až ji to zabolelo. Kilián vedle ní se nepohnul. Ale jeho ruka v rukavici se jí položila na zápěstí, lehce, a zůstala tam.
+Cítila, jak se jí prsty zaryly do jehličí, až ji to zabolelo. Kilián vedle ní se nepohnul. Jen jí položil ruku v rukavici na zápěstí, lehce, a nechal ji tam.
 
 „Tak ať pustí víc někomu jinýmu,“ řekl ten menší s nožem a zasmál se.
 
 Shrbený neodpověděl. Natáhl ruku a čekal. Vyhublý sáhl pod plášť a vytáhl něco, co Ilona ve tmě neviděla, jen slyšela: tiché zacinkání skla o sklo, jako když se pohnou lahvičky v přihrádkách. Dřevěná bedýnka. Podal ji shrbenému.
 
-Shrbený bedýnku otevřel. Přejel prstem po hrdlech lahviček, jedné po druhé, jako by je počítal hmatem. Pak palcem přejel po každé zátce. Ilona viděla jen jeho ruku, jak se pohybuje sem a tam, pečlivě, jako ruka písaře, který kontroluje, jestli jsou pečetě celé.
+Shrbený bedýnku otevřel. Přejel prstem po hrdlech lahviček, jedné po druhé, jako by je počítal hmatem. Pak palcem přejel po každé zátce. Ilona viděla jen jeho ruku, jak se pohybuje sem a tam, pečlivě, jako ruka písaře, který zkouší, jestli jsou pečetě celé.
 
 „Dvacet,“ řekl.
 
@@ -134,7 +134,7 @@ Uprostřed hořel oheň, ne z dřevěného uhlí, ale z polen. Kouř se válel p
 
 Jedli, tedy. Jako všichni. Maso a kořeny a kroupy.
 
-Dětí bylo málo. Ilona viděla tři, čtyři. Hubené, s velkýma očima, s jizvami na tvářích jako u dětí v olšové rokli. Jedno z nich, malé, mohlo mu být šest, sedělo u ženy, která ho držela v klíně a kolébala. Dítě kašlalo. Mokře, dlouze. Ilona ten kašel slyšela a ruce jí samy od sebe sjely k pasu, kde nosívala brašnu. Brašnu neměla.
+Dětí bylo málo. Ilona viděla tři, čtyři. Hubené, s velkýma očima, s jizvami na tvářích jako u dětí v olšové rokli. Jedno z nich, malé, mohlo mu být šest, sedělo ženě v klíně a ona ho kolébala. Dítě kašlalo. Mokře, dlouze. Ilona ten kašel slyšela a ruce jí samy od sebe sjely k pasu, kde nosívala brašnu. Brašnu neměla.
 
 Soudek stál u ohně. Otevřel ho ten vyhublý z ústí štoly a odstoupil. Ilona ho teď viděla v plném světle a viděla, že je mladší, než si myslela, mohlo mu být třicet. K soudku se přišoural muž. Starý, ne tak starý jako Zikmund, ale starý, s holí a s nohou, kterou táhl za sebou, a s tváří tak rozpraskanou od jizev, že vypadala jako kůra borovice. V ruce držel naběračku.
 
@@ -158,13 +158,13 @@ Velký muž s holými pažemi měl na vnitřní straně levého předloktí jizv
 
 „Tak to máš minulý týden.“ Urban nabral naběračku a nalil ji do pohárku muži, který stál za ní. „Dej mu kozí, jestli nějakou najdeš.“
 
-Někdo se zasmál. Žena se otočila a šla zpátky k ohni, s prázdným pohárkem, a dítě v jejím klíně kašlalo.
+Někdo se zasmál. Žena se otočila a šla zpátky k ohni, s prázdným pohárkem, a dítě v jejím náručí kašlalo.
 
 *
 
 U stěny, kde bylo víc světla od ohně, seděl na kameni mladík s obnaženou paží. Paži měl staženou nad loktem kusem řemene, aby se žíla nalila. Před ním klečela žena a v ruce měla lancetu.
 
-Ilona to viděla tak jasně, jako by klečela vedle ní. Lanceta. Ranhojičská, s krátkou dvojbřitou čepelí, ne nůž. Žena nahmatala žílu dvěma prsty a řízla. Ne bodla, jako muž v olšové rokli bodl kozu. Řízla, napříč, mělce, přesně, a krev vytekla do malé lahvičky, kterou držela pod paží. Malá lahvička z nazelenalého skla. Když byla plná, žena ji podala dál a nastavila další.
+Ilona to viděla tak jasně, jako by klečela vedle ní. Lanceta. Ranhojičská, s krátkou dvojbřitou čepelí, ne nůž. Žena nahmatala žílu dvěma prsty a řízla. Ne bodla, jako muž v olšové rokli bodl kozu. Řízla, napříč, mělce, přesně, a krev vytekla do malé lahvičky, kterou držela pod ránou. Malá lahvička z nazelenalého skla. Když byla plná, žena ji podala dál a nastavila další.
 
 Pět. Šest. Mladík zbledl ještě víc, než byl, a rty měl šedé a opřel se hlavou o skálu.
 
@@ -206,7 +206,7 @@ Ilona lezla. Deset příček, patnáct, a pod ní se žebřík zachvěl, jak na 
 
 Visela na jedné ruce. Pod ní tma a ta ruka na kotníku, která táhla dolů. Ilona kopla. Druhou nohou, naslepo, do tmy, a trefila něco měkkého, a ruka na kotníku povolila a zase se chytila, výš, za lýtko, za kabát. Levou rukou nahmatala jinou příčku, pevnou, a pravá, která svírala tu prasklou, se uvolnila. V tu chvíli se ten dole vytáhl nahoru k ní a ona ucítila jeho dech, horký a páchnoucí kovem, u svého krku.
 
-Zvedla ji. Pravou, volnou. Instinktivně, jak zvedá ruku každý, kdo chrání krk.
+Zvedla ji. Pravou, volnou. Bezděky, jak zvedá ruku každý, kdo chrání krk.
 
 Zakousl se jí do předloktí.
 
@@ -218,7 +218,7 @@ Ten, co se jí zakousl, povolil. Ne úplně. Zuby se rozevřely a Ilona cítila,
 
 „Lezte!“
 
-Lezla. S jednou rukou, která nefungovala, s druhou, která se třásla. Kilián byl hned pod ní, cítila ho, cítila jeho rameno pod svou nohou, jak ji tlačí nahoru. Nahoře byl pařez a provaz. Vytáhla se přes okraj a ležela na jehličí a lapala po dechu, a Kilián vylezl za ní, odvázal provaz od pařezu a shodil ho do díry. Ze šachtice bylo slyšet křik a šplouchání vody.
+Lezla. S jednou rukou, která ji neposlouchala, s druhou, která se třásla. Kilián byl hned pod ní, cítila ho, cítila jeho rameno pod svou nohou, jak ji tlačí nahoru. Nahoře byl pařez a provaz. Vytáhla se přes okraj a ležela na jehličí a lapala po dechu, a Kilián vylezl za ní, odvázal provaz od pařezu a shodil ho do díry. Ze šachtice bylo slyšet křik a šplouchání vody.
 
 „Dolů,“ řekl Kilián. „Ne po cestě. Za mnou.“
 
@@ -228,9 +228,9 @@ Utíkali lesem, z kopce, přes kořeny a propadliny a kamení, a Ilona dvakrát 
 
 Nad horami se začalo šedit.
 
-Kilián se zastavil na kraji lesa nad haldami a podíval se na východ. Byl bez klobouku, ztratil ho někde v šachtici, a Ilona v tom šedém světle viděla jeho tvář. Byla od krve, ne jeho, a na lícní kosti měl odřeninu. Kůže na čele a na nose mu už teď, v té šedi, ještě bez slunce, růžověla.
+Kilián se zastavil na kraji lesa nad haldami a podíval se na východ. Byl bez klobouku, ztratil ho někde v šachtici, a Ilona v tom šedém světle viděla jeho tvář. Byla od krve, ne jeho, a na lícní kosti měl odřeninu. Čelo a nos měl po námaze rudé.
 
-„Musím dovnitř,“ řekl. „Do hodiny bude slunce. Dojdete sama?“
+„Musím dovnitř,“ řekl. „Brzy bude slunce, a k rokli je to daleko. Dojdete sama?“
 
 „Ano.“
 
@@ -244,7 +244,7 @@ Kilián se díval na haldy pod nimi, na město v údolí, kde ještě nebyla vid
 
 „Já vím.“
 
-„Já vím, že víte.“ Pak se otočil a šel, rychle, po kraji lesa k olšové rokli, s hlavou skloněnou, s rukama v rukavicích zastrčenýma pod paží. Ilona viděla, jak se na kraji rokle ohlédl na východ, kde se nebe barvilo do žluta, a pak zmizel mezi olšemi.
+„Já vím, že víte.“ Pak se otočil a šel, rychle, po kraji lesa k olšové rokli, s hlavou skloněnou, s rukama v rukavicích zastrčenýma v podpaží. Ilona viděla, jak se na kraji rokle ohlédl na východ, kde nad hřebenem už stálo slunce, a pak zmizel mezi olšemi.
 
 *
 

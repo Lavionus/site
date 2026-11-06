@@ -304,7 +304,65 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
       zalozky: o.zalozky.filter(x => textova(x) && typeof x.slovo === 'string') };
   }
 
-  const API = { slovoKolem, vetaKolem, rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, esc, balikPoznamek, poznamkyMd, prectiPoznamky };
+  /* ---------- barevné motivy čtení: rodina × stupeň (1 tmavý … 5 světlý) → proměnné CSS ----------
+     Barvy se dopočítávají a hlídá se kontrast (WCAG): text ≥ 7 : 1 (u středního ≥ 6), tlumený ≥ 4,5, slabý ≥ 3, zvýraznění ≥ 3. */
+  const RODINY_MOTIVU = [
+    { id: 'seda', nazev: 'Šedá', h: 220, s: 6 },
+    { id: 'sepie', nazev: 'Sépie', h: 36, s: 42 },
+    { id: 'salvej', nazev: 'Šalvěj', h: 110, s: 20 },
+    { id: 'tyrkys', nazev: 'Tyrkys', h: 178, s: 30 },
+    { id: 'modra', nazev: 'Modrá', h: 214, s: 38 },
+    { id: 'levandule', nazev: 'Levandule', h: 262, s: 28 },
+    { id: 'ruzova', nazev: 'Růžová', h: 340, s: 34 },
+  ];
+  const STUPNE_MOTIVU = [
+    { nazev: 'tmavé', l: 8 }, { nazev: 'mírně tmavé', l: 20 }, { nazev: 'střední', l: 64 },
+    { nazev: 'mírně světlé', l: 82 }, { nazev: 'světlé', l: 95 },
+  ];
+  function hslRgb(h, s, l) {
+    s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+    return [0, 8, 4].map(n => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)))));
+  }
+  const svitivost = ([r, g, b]) => [r, g, b].map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; })
+    .reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const kontrast = (a, b) => { const x = svitivost(a), y = svitivost(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const hex = rgb => '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
+  // od výchozí světlosti krokovat ke kraji, dokud barva nemá vůči pozadí žádaný kontrast
+  function sKontrastem(h, s, l, pozadi, cil, smer) {
+    let rgb = hslRgb(h, s, l);
+    while (kontrast(rgb, pozadi) < cil && l > 0 && l < 100) { l += smer; rgb = hslRgb(h, s, l); }
+    return { rgb, l };
+  }
+  function barvyMotivu(rodinaId, stupen) {
+    const r = RODINY_MOTIVU.find(x => x.id === rodinaId), st = STUPNE_MOTIVU[stupen - 1];
+    if (!r || !st) return null;
+    const L = st.l, tmavy = L < 50, smer = tmavy ? 1 : -1, sm = tmavy ? -1 : 1;   // smer = k textu, sm = k pozadí
+    const pl = (d, s = r.s) => hex(hslRgb(r.h, s, Math.max(0, Math.min(100, L + d))));
+    const bg = hslRgb(r.h, r.s, L);
+    const sT = Math.min(r.s, 25);
+    // text tmavých motivů nesvítí naplno (méně oslňuje), světlé mají sytě tmavý
+    const text = sKontrastem(r.h, sT, tmavy ? L + 55 : 22, bg, stupen === 3 ? 6 : 7, smer);
+    const muted = sKontrastem(r.h, sT, tmavy ? L + 40 : L - 40, bg, 4.5, smer);
+    const faint = sKontrastem(r.h, sT, tmavy ? L + 30 : L - 30, bg, 3, smer);
+    const hA = r.id === 'seda' ? 214 : r.h, sA = 55;
+    const accent = sKontrastem(hA, sA, tmavy ? 55 : 42, bg, 3, smer);
+    const naAkcent = kontrast([255, 255, 255], accent.rgb) >= kontrast([20, 20, 20], accent.rgb) ? '#fff' : '#141414';
+    return {
+      tmavy,
+      promenne: {
+        '--bg': hex(bg), '--bg-elevated': pl(sm * -4 * (tmavy ? -1 : 1)), '--bg-panel': pl(tmavy ? 5 : Math.min(3, 99 - L)),
+        '--bg-control': pl(tmavy ? 9 : -8), '--bg-hover': pl(tmavy ? 13 : -12), '--bg-input': pl(tmavy ? -2 : Math.min(4, 99 - L)),
+        '--text': hex(text.rgb), '--text-muted': hex(muted.rgb), '--text-faint': hex(faint.rgb),
+        '--border': pl(tmavy ? 13 : -15, r.s * 0.7), '--border-strong': pl(tmavy ? 22 : -25, r.s * 0.7),
+        '--accent': hex(accent.rgb), '--accent-hover': hex(hslRgb(hA, sA, accent.l + smer * 6)),
+        '--accent-soft': `hsla(${hA},${sA}%,${accent.l}%,.18)`, '--on-accent': naAkcent,
+        '--shadow': tmavy ? '0 6px 24px rgba(0,0,0,.6)' : '0 6px 22px rgba(0,0,0,.18)',
+      },
+    };
+  }
+
+  const API = { RODINY_MOTIVU, STUPNE_MOTIVU, barvyMotivu, kontrast, slovoKolem, vetaKolem, rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, esc, balikPoznamek, poznamkyMd, prectiPoznamky };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else koren.KRONIKY_JADRO = API;
 })(this);

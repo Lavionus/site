@@ -10,13 +10,13 @@ Matěj se právě vracel z oratoře, kde se sám pomodlil vigilie, a hrouda ho t
 
 „Uvidíš.“ Ješek se rozhlédl po dvoře grangie, kde se v ovčíně ozvala ovce a zase ztichla. „Když chceš do hory, tak teď. Jindy tě tam nedostanu.“
 
-Matěj na něj chvíli hleděl. Od středy se neviděli. O Sivce a o slatině se Ješek dozvěděl v boudě od chlapů ze vsi. Matěj od slatiny moc nemluvil; bolest hlavy se mu vracela, kdykoli se sklonil, jako by si ten pohyb zapamatovala.
+Matěj na něj chvíli hleděl. Od pondělka se neviděli. O Sivce a o slatině se Ješek dozvěděl v boudě od chlapů ze vsi. Matěj od návratu ze slatiny moc nemluvil; bolest hlavy se mu vracela, kdykoli se sklonil, jako by si ten pohyb zapamatovala.
 
 „Proč?“ zeptal se.
 
 „Co proč?“
 
-„Proč mě tam teď vezmeš. Minule jsi říkal, že ti tam dělám ostudu.“
+„Proč mě tam chceš vzít teď? Minule jsi říkal, že ti tam dělám ostudu.“
 
 Ješek se podíval jinam, k hoře.
 
@@ -84,17 +84,17 @@ U sta dvaceti kroků se chodba trochu rozšířila. Stály tu dva koše, vědro 
 
 Ale nebyla to jen zeď. Matěj to věděl, ještě než na ni sáhl.
 
-Teplo z ní šlo jako ze zdi pece druhý den po pečení: ne tak, že by pálilo, ale tak, že se k ní člověk chtěl přitisknout, jako se v zimě tiskne ke kamnům. Vzduch tu byl teplý a těžký a vlhký. Hensel tu zapálil druhý kahan a zavěsil ho na hák ve skále. V jeho světle Matěj viděl, že Ješek i dva další chlapi, kteří s nimi přišli, si odkládají kápě a košile a zůstávají v kalhotách. Po těle měli pruhy potu, i když ještě nezačali pracovat.
+Teplo z ní šlo jako ze zdi pece druhý den po pečení: ne tak, že by pálilo, ale tak, že se k ní člověk chtěl přitisknout, jako se v zimě tiskne k peci. Vzduch tu byl teplý a těžký a vlhký. Hensel tu zapálil druhý kahan a zavěsil ho na hák ve skále. V jeho světle Matěj viděl, že Ješek i tři další chlapi, kteří s nimi přišli, si odkládají kápě a košile a zůstávají v gatích. Po těle měli pruhy potu, i když ještě nezačali pracovat.
 
 „Tady se pálí oheň?“ zeptal se Matěj. „Proto je to teplé?“
 
-„Tady už nepálíme,“ řekl Ješek. „Tři týdny ne. Skála je rozpukaná, jde to želízkem. Oheň se pálil támhle.“ Ukázal dozadu do tmy. „U stého kroku. Tam ti bylo teplo?“
+„Tady už nepálíme,“ řekl Ješek. „Od svatého Martina ne. Skála je rozpukaná, jde to želízkem. Oheň se pálil támhle.“ Ukázal dozadu do tmy. „U stého kroku. Tam ti bylo teplo?“
 
 Matěj si vzpomněl na místo za ohybem, kde si rozepjal plášť. Bylo tam teplo, ale méně než tady.
 
 „Ne tolik.“
 
-„No vidíš,“ řekl Ješek. „Kdyby to bylo od ohně, bylo by to tam. Tady jsme nepálili tři týdny a je to čím dál teplejší.“ Pokrčil rameny, jako by mu to bylo jedno, ale Matěj viděl, že mu to jedno není. „Ortlieb říká, že je to dobře. Že hora, která hřeje, je hora s kovem. V Míšni to tak bylo.“
+„No vidíš,“ řekl Ješek. „Kdyby to bylo od ohně, bylo by to tam. Tady jsme nepálili od Martina a je to čím dál teplejší.“ Pokrčil rameny, jako by mu to bylo jedno, ale Matěj viděl, že mu to jedno není. „Ortlieb říká, že je to dobře. Že hora, která hřeje, je hora s kovem. V Míšni to tak bylo.“
 
 „Bylo?“
 
@@ -118,7 +118,7 @@ Otevřel oči. Nikdo kolem nekopal; Hensel rozvěšoval kahany, ostatní se svl�
 
 „Ono se to… třese?“
 
-Ješek, který si právě zavazoval kalhoty provázkem, ztuhl. Pak dokončil uzel.
+Ješek, který si právě zavazoval gatě provázkem, ztuhl. Pak dokončil uzel.
 
 „Někdy,“ řekl. „Někdy to dělá.“
 
@@ -126,7 +126,7 @@ Ješek, který si právě zavazoval kalhoty provázkem, ztuhl. Pak dokončil uze
 
 „Já nevím, Mates.“ Ješek se narovnal a jeho hlava se málem dotkla stropu. „Staří říkají, že se drak obrací ze strany na stranu. Ve spaní. Ortlieb říká, že hora pracuje. Že každá hora pracuje, jen to člověk neslyší, když v ní není.“ Odmlčel se. „Hensel neříká nic. Hensel to neslyší.“
 
-Matěj sundal dlaň ze skály a podíval se na ni, jako by na ní mělo něco zůstat. Bylo na ní jen vlhko a trocha šedého prachu.
+Matěj odtáhl dlaň od skály a podíval se na ni, jako by na ní mělo něco zůstat. Bylo na ní jen vlhko a trocha šedého prachu.
 
 *
 
@@ -160,7 +160,7 @@ Hensel zase něco řekl, tentokrát krátce. Matěj to slovo slyšel jasně, pro
 
 Ješek prudce zvedl hlavu.
 
-„Ano,“ řekl. „Říká Ortlieb. A Ortlieb kopal v hoře dvacet let, a ty jsi v hoře půl hodiny. Tak drž kahan a nepleť se mi pod ruce.“
+„Ano,“ řekl. „Říká Ortlieb. A Ortlieb kopal v hoře dvacet let, a ty jsi v hoře chvilku. Tak drž kahan a nepleť se mi pod ruce.“
 
 *
 
@@ -226,9 +226,9 @@ Ortlieb nakonec kývl, jako by mu to stačilo, i když Matěj na otázku neodpov
 
 *
 
-Ven šli mlčky. Matěj počítal kroky zpátky, protože nemohl jinak. U sto dvacátého si znovu natáhl plášť, protože mu byla zima, a u sedmdesátého si všiml, že se třese. Ne od zimy. U třicátého kroku, u Ješkova křížku na stropním trámu, uviděl před sebou šedé světlo, a pak už to bylo světlo, bílé a ostré, a bolelo do očí.
+Ven šli mlčky. Matěj počítal kroky zpátky, protože nemohl jinak. U sto dvacátého si znovu zapjal plášť, protože mu byla zima, a u sedmdesátého si všiml, že se třese. Ne od zimy. U třicátého kroku minul Ješkův křížek na stropním trámu, za ohybem uviděl před sebou šedé světlo, a pak už to bylo světlo, bílé a ostré, a bolelo do očí.
 
-Venku byl den. Slunce stálo nad lesem a sníh na pasece se leskl. Vzduch byl tak studený a tak řídký, že se Matěj zakuckal, když se nadechl. U boudy stál uvázaný Ortliebův kůň a funěl páru.
+Venku byl den. Slunce stálo nad lesem a sníh na pasece se leskl. Vzduch byl tak studený a tak řídký, že se Matěj zakuckal, když se nadechl. U boudy stál uvázaný Ortliebův kůň, funěl a z nozder mu šla pára.
 
 Ješek se zastavil u ústí. Byl bez košile, jen s pláštěm hozeným přes ramena, a na mrazu se z něj kouřilo, jako by hořel.
 
@@ -258,7 +258,7 @@ Nešel rovnou dolů. Šel lesem, kolem paseky, dokud nebyl z dohledu boudy, a ta
 
 Ruce se mu třásly ještě pořád. Rydlo sklouzlo a udělalo do vosku rýhu, kterou musel uhladit palcem. Pak psal.
 
-*Štola: od ústí k čelbě 180 kroků mých. Na 30. kroku křížek na stropním trámu (Ješkův). Teplo od 70. kroku, roste k čelbě. Oheň se nepálí na čelbě tři týdny, pálil se u 100. kroku; u 100. tepleji než venku, u čelby nejtepleji. Vidi.*
+*Štola: od ústí k čelbě 180 kroků mých. Na 30. kroku křížek na stropním trámu (Ješkův). Teplo od 70. kroku, roste k čelbě. Oheň se nepálí od Martina, pálil se u 100. kroku; u 100. tepleji než venku, u čelby nejtepleji. Vidi.*
 
 *Čelba teplá jako koňská kůže. Chvění pod dlaní, jednou, krátce. Vidi? –*
 
@@ -276,6 +276,6 @@ Pak dlouho seděl a díval se na to, co napsal.
 
 Slíbil Ješkovi, že to nikomu neřekne. A neřekne. Tohle nebylo říkání. Tohle byla tabulka, vosk, který zná jen on a který se dá jedním tahem palce uhladit, jako by tam nikdy nic nebylo. Tak to bylo. Matěj si to řekl dvakrát, a podruhé už to znělo skoro stejně přesvědčivě jako poprvé.
 
-Pak vzal tabulku a ještě jednou si přečetl řádek o puklině, aby si ho zapamatoval i bez vosku, slovo od slova, protože vosk se dá uhladit, a paměť ne. A pak tabulku zavřel a zastrčil si ji pod hábit, na prsa, tam, kde ji nosil vždycky, a šel z kopce dolů ke grangii. Bylo poledne a z oratoře v údolí se ozýval zvon velký jako vědro. Matěj si uvědomil, že zmeškal tercii i sextu, že to bude muset Udalrichovi vysvětlit a že mu nebude moct říct proč.
+Pak vzal tabulku a ještě jednou si přečetl řádek o puklině, aby si ho zapamatoval i bez vosku, slovo od slova, protože vosk se dá uhladit, a paměť ne. A pak tabulku zavřel a zastrčil si ji pod hábit, na prsa, tam, kde ji nosil vždycky, a šel z kopce dolů ke grangii. Bylo poledne a z oratoře v údolí se ozýval zvon velký jako vědro. Matěj si uvědomil, že zmeškal laudy, primu, tercii i sextu, že to bude muset Udalrichovi vysvětlit a že mu nebude moct říct proč.
 
 Za ním, nad pasekou, stoupal od boudy tenký dým. Na sněhu u žlabu, kde voda vytékala ze štoly, rostla rezavá ledová kůra, a dnes, když šel kolem, se Matějovi zdálo, že je o kus delší než minule. Ale minule ji neměřil, a tak to nevěděl.

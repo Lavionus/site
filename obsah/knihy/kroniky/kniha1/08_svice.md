@@ -6,9 +6,9 @@ Matěj to viděl hned, když vůz ve středu před svátkem Zvěstování zajel 
 
 Nešel tam. Řekl si, že je pozdě, že je půst, že se musí pomodlit nešpory, a všechno to byla pravda.
 
-Udalrich ho přivítal tak, jak vítal všechny, kývnutím, a vzal mu z vozu mošnu, aniž by se ptal. Potok za grangií byl rozvodněný a hnědý. Pod lávkou, kde se v únoru dalo projít suchou nohou po kamenech, se valila voda s hrudkami ledu. A při kraji, kde se voda točila v tůňce, byla rezavá pěna, jako by do potoka někdo vylil krev a nechal ji zaschnout.
+Udalrich ho přivítal tak, jak vítal všechny, kývnutím, a vzal mu z vozu mošnu, aniž by se ptal. Potok za grangií byl rozvodněný a hnědý. Pod lávkou, kde se v únoru dalo projít suchou nohou po kamenech, se valila voda s hrudkami ledu. A při kraji, kde se voda točila v tůňce, byla rezavá pěna, jako by do potoka někdo vylil krev a ta se srazila.
 
-„Ze štoly,“ řekl Udalrich, když viděl, kam se Matěj dívá. „Od svatého Řehoře. Dřív to teklo pod haldou a vsakovalo se. Teď postavil druhý žlab a vede to rovnou sem.“ Plivl do vody. „Ovce z toho nepijí. Ovce mají rozum.“
+„Ze štoly,“ řekl Udalrich, když viděl, kam se Matěj dívá. „Od svatého Řehoře. Dřív to teklo pod haldou a vsakovalo se. Teď tam Ortlieb postavil druhý žlab a vede to rovnou sem.“ Plivl do vody. „Ovce z toho nepijí. Ovce mají rozum.“
 
 „Kolik toho teče?“
 
@@ -22,11 +22,11 @@ Udalrich ho přivítal tak, jak vítal všechny, kývnutím, a vzal mu z vozu mo
 
 Ve čtvrtek ráno ležela na údolí mlha.
 
-Byla bílá a hustá a nehýbala se. Matěj vyšel po laudách na dvůr a nedohlédl ani k ovčínu. Dým z komína domu konvršů stoupal rovně vzhůru, tenký jako provázek, a ve výšce stromů se rozplýval do bílého. Kapalo ze střech a ze smrků a každou kapku bylo slyšet zvlášť. Bylo tak ticho, že Matěj slyšel vlastní dech.
+Byla bílá a hustá a nehýbala se. Matěj vyšel po laudách na dvůr a nedohlédl ani k ovčínu. Dým z komína domu konvršů stoupal rovně vzhůru, tenký jako provázek, a ve výšce stromů se rozplýval v bělobě. Kapalo ze střech a ze smrků a každou kapku bylo slyšet zvlášť. Bylo tak ticho, že Matěj slyšel vlastní dech.
 
 Za bezvětří nesestupovat.
 
-Vyndal z mošny dvě svíce a zabalil je, aby nezvlhly, do cípu hábitu, který mu vrátila Dobroslava. Pak si vypůjčil od Udalricha křesadlo a troud. Udalrich mu je dal a jen řekl, že do nešpor má být zpátky, protože ve čtvrtek je čtvrtek a v postu se nikdo nepotuluje lesem.
+Vyndal z mošny tři svíce a zabalil je, aby nezvlhly, do cípu hábitu, který mu vrátila Dobroslava. Pak si vypůjčil od Udalricha křesadlo a troud. Udalrich mu je dal a jen řekl, že do nešpor má být zpátky, protože v postu se nikdo nepotuluje lesem.
 
 *
 
@@ -100,7 +100,7 @@ Plamen klesal. Na úrovni okraje hořel. Pod okrajem hořel dál, klidně a rovn
 
 Zhasl.
 
-Matěj vytáhl tyč. Na místě, kde se tyč opírala o okraj, udělal nehtem do kůry rýhu. Pak ji zapálili znovu.
+Matěj vytáhl tyč. Na místě, kde se tyč opírala o okraj, udělal nehtem do kůry rýhu. Pak svíci zapálili znovu.
 
 Udělal to devětkrát. Dobroslava mu pokaždé zapálila troud a nic neříkala. Jen jednou, po čtvrté, mu podala kus chleba, protože viděla, jak se mu třesou ruce. On ho nevzal, protože byl půst, a ona si ho snědla sama. Po šesté se podívala do vaku.
 
@@ -112,7 +112,7 @@ Udělal to devětkrát. Dobroslava mu pokaždé zapálila troud a nic neříkala
 
 „Svíce,“ řekl Matěj. Dobroslava se na něj podívala, jako by se zbláznil. Pak se Matěj usmál, poprvé za ten den, a ona to nechala být.
 
-Matěj spouštěl svíci na různých místech. Z této strany, z protější a od borovic. Šikmo, aby se dostal do středu. Pokaždé svíce zhasla ve stejné výšce. Nebo skoro ve stejné. Ne o dlaň výš nebo níž, nanejvýš o prst. Pokaždé udělal do tyče rýhu. Když skončil, měl na kůře šest rýh těsně vedle sebe a tři o kousek dál, protože se tyč smekla. Troud mezitím došel. Jednu svíci od té doby nesl pořád hořící v dlani a od ní zapaloval druhou.
+Matěj spouštěl svíci na různých místech. Z této strany, z protější a od borovic. Šikmo, aby se dostal do středu. Pokaždé svíce zhasla ve stejné výšce. Nebo skoro ve stejné. Ne o dlaň výš nebo níž, nanejvýš o prst. Pokaždé udělal do tyče rýhu. Když skončil, měl na kůře šest rýh těsně vedle sebe a tři o kousek dál, protože se tyč smekla. Troud mezitím došel. Jednu svíci od té doby nesl pořád hořící v dlani a od ní zapaloval druhou. Když první dohořela, zapálil od druhé třetí.
 
 Pak si sedl na mokrou zem na okraji a díval se do prohlubně.
 
@@ -144,7 +144,7 @@ Dobroslava stála nad ním a dívala se na zem, kam ukazoval, na hnědou trávu,
 
 Na rovině nezhasla nikde. Ani u kaluží, pokud nebyl plamen těsně nad bublinami.
 
-„Na rovině jste našla někdy mrtvé zvíře?“ zeptal se.
+„Našla jste někdy na rovině mrtvé zvíře?“ zeptal se.
 
 „Ne.“ Dobroslava se zamyslela. „Jen toho zajíce. A ten byl pod dírou.“
 
@@ -160,7 +160,7 @@ Ten večer v komoře u oratoře nepsal. Seděl na lůžku s tabulkou na kolenou 
 
 *draco – spiritus.*
 
-Vedle něj stálo všechno ostatní. Ptáci, liška, stopy. *Vidi.* A *spiritus*, dech. Ten dech byl skutečný. Viděl dnes devětkrát, jak zhasíná svíce, a dýchl ho tenkrát, když padl. Jenže dech, o kterém psal převorovi, byl dech šelmy. Dech něčeho, co spí pod horou a dýchá. *Jehož dech jsem sám okusil.*
+Vedle něj stálo všechno ostatní. Ptáci, liška, stopy. *Vidi.* A *spiritus*, dech. Ten dech byl skutečný. Viděl dnes devětkrát, jak zhasíná svíce, a nadechl se ho tenkrát, když padl. Jenže dech, o kterém psal převorovi, byl dech šelmy. Dech něčeho, co spí pod horou a dýchá. *Jehož dech jsem sám okusil.*
 
 Ve sklepě pod refektářem pivo dýchalo stejně. Kyselka u osamělé břízy taky. Celerář nosil svíci, protože věděl, že ten dech se drží u země. Dobroslava neměla svíci, a věděla to taky. Nikdo z nich neřekl drak.
 
@@ -180,7 +180,7 @@ Udalrich mu půjčil lucernu. Byla stará, s plechovým rámem a s okénky z roh
 
 „Abych viděl, jestli hoří.“
 
-Udalrich se na něj podíval tak, jako se díval, když se ho Matěj ptal, jestli je kůň Bernard po svatém Bernardovi. Pak mávl rukou a šel k ovcím.
+Udalrich se na něj podíval tak, jako se díval, když se ho Matěj ptal, jestli je kůň Bernard po opatu Bernardovi z Clairvaux. Pak mávl rukou a šel k ovcím.
 
 Dobroslava na něj čekala před chalupou s tyčí. Nic neřekla. Šli.
 
@@ -220,7 +220,7 @@ Když vylezl, sedl si na okraj a dlouho nemluvil. Dobroslava si sedla vedle něj
 
 Dobroslava neodpověděla.
 
-„Ten večer, co Sivka umřela. Napsal jsem mu, že je tady doupě jedovatého draka a že jeho dech je jed, ne oheň. Že jsem ho okusil sám. Že můj pes je svědek.“ Hlas měl klidný, a to ho překvapovalo. „Napsal jsem, že kost, kterou dostal klášter, je z tvora, jehož dech jsem cítil. Převor mi to minulý týden přečetl. Zpaměti.“
+„Ten večer, co Sivka umřela. Napsal jsem mu, že je tady doupě jedovatého draka a že jeho dech je jed, ne oheň. Že jsem ho okusil sám. Že můj pes je svědek.“ Hlas měl klidný, a to ho překvapovalo. „Napsal jsem, že kost, kterou dostal klášter, je z tvora, jehož dech jsem cítil. Převor mi to před čtrnácti dny přečetl. Zpaměti.“
 
 „A tys tomu věřil.“
 
@@ -238,7 +238,7 @@ Matěj se díval do prohlubně. Na lišku, které vítr čechral srst.
 
 „Tak proč jsi to psal?“
 
-Matěj se nad tím zamyslel. Chtěl odpovědět poctivě, a nebylo to snadné, protože poctivá odpověď neměla jedno slovo.
+Matěj se nad tím zamyslel. Chtěl odpovědět poctivě, a nebylo to snadné, protože poctivá odpověď se nedala říct jedním slovem.
 
 „Protože jsem to chtěl,“ řekl nakonec. „Viděl jsem mrtvé ptáky a Sivku a sám sebe na dně a chtěl jsem, aby to něco znamenalo. Drak něco znamená. Mrtvé místo neznamená nic. Je to jen díra, do které se nemá chodit.“ Podíval se na své ruce. „A chtěl jsem, aby převor zvedl hlavu od toho dopisu.“
 
@@ -310,7 +310,7 @@ Už byla tma, jen nad horou zbývalo trochu světla, a vítr utichal. Hromada sn
 
 Matěj si klekl do bláta.
 
-Nedotkl se jí. Jen tam klečel a díval se na tu srst, jak se v posledním světle leskne vodou. Myslel na to, jak jí tenkrát v prohlubni položil dlaň na hruď a čekal, jestli uslyší srdce. Myslel na to, že z její smrti udělal svědectví, *canis meus testis*. A teď, když věděl, co ji zabilo, už nesvědčila o ničem. Byla to jen stará fena, která utekla hloupému mnichovi z provazu za liščím pachem. Tak to bylo. Byla to pravda a ta pravda byla menší, než co o ní napsal. A přesto mu ta menší pravda ležela na hrudi tíž než ta velká.
+Nedotkl se jí. Jen tam klečel a díval se na tu srst, jak se v posledním světle leskne vodou. Myslel na to, jak jí tenkrát v prohlubni položil dlaň na hruď a čekal, jestli uslyší srdce. Myslel na to, že z její smrti udělal svědectví, *canis meus testis*. A teď, když věděl, co ji zabilo, už nesvědčila o ničem. Byla to jen stará fena, která utekla hloupému mnichovi z provazu za liščím pachem. Tak to bylo. Byla to pravda a ta pravda byla menší než to, co o ní napsal. A přesto mu ta menší pravda ležela na hrudi tíž než ta velká.
 
 „Promiň,“ řekl.
 

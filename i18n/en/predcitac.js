@@ -106,4 +106,11 @@ I18N.pridej('en', {
   'Čeština': 'Čeština',
   'komunitní': 'community',
   'licence neuvedena': 'licence not stated',
+  'Úprava hlasu': 'Voice effect',
+  'Úprava hlasu z Dílny hlasů': 'Voice effect from the Voice Workshop',
+  'vlastní': 'custom',
+  'Úprava hlasu: {uprava}': 'Voice effect: {uprava}',
+  'bez úpravy': 'no effect',
+  'Předvolby': 'Presets',
+  'Moje hlasy': 'My voices',
 });

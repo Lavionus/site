@@ -26,7 +26,7 @@ Ilona kývla.
 
 *
 
-Síň byla v prvním patře, dlouhá, s trámovým stropem a se dvěma okny na náměstí. Obě okna byla otevřená, protože bylo teplo, a protože, jak řekl Zikmund, rada má okna otevřená vždycky. Pod okny šumělo náměstí. Jako když v kádi začíná kvasit.
+Síň byla v prvním patře, dlouhá, s trámovým stropem a se dvěma okny na náměstí a s jedním vzadu, do zahrady za radnicí. Všechna byla otevřená, protože bylo teplo. Pod okny šumělo náměstí. Jako když v kádi začíná kvasit.
 
 Za dlouhým stolem seděli. Uprostřed starý purkmistr, kterého Ilona znala jen od vidění, s bílou bradkou a s rukama složenýma na holi. Vypadal, jako by spal. Po jeho pravici Stöckel, rychtář, kožešník, s tváří rudou od horka nebo od něčeho jiného. Pak konšelé, pět, šest, Ilona je nepočítala. Jeden z nich byl mladý, s pečlivě zastřiženým vousem a s prstenem na malíčku, a Ilona ho znala z kostela, kde sedával v první lavici se ženou, která měla padoucnici. Na kraji stolu městský písař. A úplně na konci, na lavici u zdi, ne u stolu, mladší kazatel od svatého Jáchyma v černém taláru, s rukama v klíně.
 
@@ -100,7 +100,7 @@ Ticho. Nikdo se nepohnul.
 
 Stöckel stál a díval se na ni.
 
-Ilona viděla, jak mu z tváře mizí ta rudost. Ne najednou. Odspodu, od krku, jako když se z nádoby vylévá víno a hladina klesá. A pak tam zůstalo jen něco šedého a ztuhlého, a Ilona věděla, že ví. Že ví, co jeho žena kupovala. Možná to věděl vždycky. Možná se to dozvěděl teď, z jejího hlasu.
+Ilona viděla, jak mu z tváře mizí ta rudost. Ne najednou. Shora, od čela, jako když se z nádoby vylévá víno a hladina klesá. A pak tam zůstalo jen něco šedého a ztuhlého, a Ilona věděla, že ví. Že ví, co jeho žena kupovala. Možná to věděl vždycky. Možná se to dozvěděl teď, z jejího hlasu.
 
 Mladý konšel s prstenem na malíčku sklopil oči ke stolu. Jeho ruce na desce se nepohnuly, jen se mu prsten zaleskl, protože se mu třásl malíček.
 
@@ -130,7 +130,7 @@ Stöckel se posadil. Pomalu, jako se sedá člověk, který dlouho stál.
 
 Purkmistr kývl a chtěl něco říct, a Stöckel zvedl ruku.
 
-„Ale razie je věc města,“ řekl. „Ne horního úřadu. Pan perkmistr nám dal slovo, že smíme do štol. Dal ho v pátek, tady, u tohohle stolu. A já ho vezmu za slovo.“ Neobrátil se k Iloně. Mluvil k radě, ale mluvil tak, aby to slyšela ona. „Když nemáme cestu, budeme hledat všude. Nepůjdeme po klekání. Půjdeme v pátek odpoledne, za světla, o čtvrté hodině, ať jsou ve štolách, když přijdeme, a ať je slunce vyžene ven, jestli z nich budou chtít utéct. A nepůjdeme jedním zástupem. Půjdeme dvěma. Jeden přes haldy k Horní štole, jak jsme řekli. A druhý od dolního konce proti vodě, každou roklí za haldami, každou dírou, kde teče potok a kde se dá skrýt dobytek. Ať je máme mezi dvěma ohni.“
+„Ale honba je věc města,“ řekl. „Ne horního úřadu. Pan perkmistr nám dal slovo, že smíme do štol. Dal ho v pátek, tady, u tohohle stolu. A já ho vezmu za slovo.“ Neobrátil se k Iloně. Mluvil k radě, ale mluvil tak, aby to slyšela ona. „Když nemáme cestu, budeme hledat všude. Nepůjdeme po klekání. Půjdeme v pátek odpoledne, za světla, o čtvrté hodině, ať jsou ve štolách, když přijdeme, a ať na ně venku čeká slunce, jestli z nich budou chtít utéct. A nepůjdeme jedním zástupem. Půjdeme dvěma. Jeden přes haldy k Horní štole, jak jsme řekli. A druhý od dolního konce proti vodě, každou roklí za haldami, každou dírou, kde teče potok a kde se dá skrýt dobytek. Ať je máme mezi dvěma ohni.“
 
 Konšelé kývali. Mladý konšel s prstenem kýval nejvíc.
 
@@ -196,7 +196,7 @@ Pak vzala sešit. Otevřela ho a namočila pero a pod včerejší den napsala da
 
 A pak nic. Seděla s perem nad papírem, dokud kapka na hrotu neuschla.
 
-Jak by to napsala? *Řekla jsem radě, že v knize jsou jména lidí z jejich domů.* To byla pravda. *Rychtář pak posunul razii.* To byla pravda taky. A mezi těmi dvěma větami bylo to, co se psát nedá, protože to nebylo slovo nikoho. Ani její, ani Stöckelovo. Bylo to to, co se stalo mezi slovy.
+Jak by to napsala? *Řekla jsem radě, že v knize jsou jména lidí z jejich domů.* To byla pravda. *Rychtář pak posunul honbu.* To byla pravda taky. A mezi těmi dvěma větami bylo to, co se psát nedá, protože to nebylo slovo nikoho. Ani její, ani Stöckelovo. Bylo to, co se stalo mezi slovy.
 
 Zavřela sešit.
 
@@ -216,7 +216,7 @@ Kilián přišel krátce po půlnoci.
 
 „Ty to víš.“
 
-„Slyšíme.“ Neohlédl se. „Rada má okna otevřená.“
+„Slyšíme.“ Neohlédl se. „Rada má okna do zahrady.“
 
 *
 
@@ -238,17 +238,17 @@ Ilona si klekla vedle nosítek.
 
 „Vydržíte.“
 
-„Lžeš špatně.“ Zikmund otevřel oči víc. „Řehoř lhal líp. Ale Řehoř nikdy nic nepsal.“
+„Lžeš špatně.“ Zikmund otevřel oči víc. „Řehoř lhal líp. Ale Řehoř o nás nikdy nic nepsal.“
 
 *
 
 Mlčeli. Za závěsem z kůže někdo zvedal ranec a těžce oddychoval.
 
-„Slyšeli jsme radu,“ řekl Zikmund. „Dnes v poledne. Okna.“
+„Slyšeli jsme radu,“ řekl Zikmund. „Dnes v poledne. Okno do zahrady. Jeden z nás stál ve stínu pod zdí, pod kápí.“
 
 Ilona sklopila oči.
 
-„Za světla,“ řekl Zikmund. „O čtvrté. A dvěma zástupy. Jeden rovnou sem. Řekl to rychtář, potom co ty jsi řekla něco jiného. Něco tichého. Okna to nepřinesla celé. Jenom to, že potom bylo dlouho ticho.“
+„Za světla,“ řekl Zikmund. „O čtvrté. A dvěma zástupy. Jeden rovnou sem. Řekl to rychtář, potom co ty jsi řekla něco jiného. Něco tichého. Okno to nepřineslo celé. Jenom to, že potom bylo dlouho ticho.“
 
 „Ano.“
 
@@ -332,7 +332,7 @@ Ilona se dívala na Zikmunda. Zikmund se díval na ni.
 
 Než odešla, ošetřila Zikmundovi nohy.
 
-Byly oteklé, kůže na kotnících napjatá a lesklá, a když do ní zatlačila prstem, zůstal v ní důlek, který se dlouho nevyrovnával. Srdce, pomyslela si. Staré srdce, které už nestačí tlačit krev nahoru z nohou. Nedalo se s tím dělat nic. Řekla, ať mu podloží nohy, ať leží s nohama výš než hlava, i na nosítkách, i v lese. Ať pije. Ať nejí sůl, a pak si uvědomila, co řekla, a Zikmund se zasmál.
+Byly oteklé, kůže na kotnících napjatá a lesklá, a když do ní zatlačila prstem, zůstal v ní důlek, který se dlouho nevyrovnával. Vodnatelnost, pomyslela si. Staré srdce, které už nemá sílu, a voda se v těle sesedá dolů do nohou. Nedalo se s tím dělat nic. Řekla, ať mu podloží nohy, ať leží s nohama výš než hlava, i na nosítkách, i v lese. Ať pije. Ať nejí sůl, a pak si uvědomila, co řekla, a Zikmund se zasmál.
 
 „Sůl,“ řekl. „Z té knihy.“
 
@@ -358,7 +358,7 @@ Od mezkaře, kterého posílá Röhrich. Nebo kterého posílá někdo, kdo má 
 
 Tak to nebylo pro ně, pomyslela si. Ten den a ta cesta. Hladoví to věděli dřív než já. To, co mi Wehrl řekl, nebylo pro Hladové.
 
-A pak, hned, jako se zavře rána, když se pustí: nebo to bylo pro ně dvakrát. Jednou mezkem, podruhé mnou. Pro jistotu. Jak kupec posílá jedno zboží dvěma cestami, aby aspoň jedno došlo.
+A pak, hned, jako se rozevře rána, když se pustí: nebo to bylo pro ně dvakrát. Jednou mezkem, podruhé mnou. Pro jistotu. Jak kupec posílá jedno zboží dvěma cestami, aby aspoň jedno došlo.
 
 Nevěděla to. Nevěděla to a nedozví se to, a odnesla to s sebou dolů, po vodě, po kolena ve studeném proudu, kolem ohně na haldě.
 
@@ -408,6 +408,8 @@ Sedla si čelem k rokli.
 
 Ne náhodou. Myslela na to celou cestu nahoru. Oheň hořel na kraji haldy a odtud bylo vidět dolů, na sever, kde se za haldami otevírala olšová rokle, a na druhou stranu, na jih, dolů na město, na střechy horního konce a na věž svatého Jáchyma. Kdo seděl u ohně na straně k městu, díval se přes plameny do rokle. Kdo seděl na straně k rokli, měl ji za zády a díval se na město.
 
+![Oheň na haldě](obrazky/15_rada.webp)
+
 Sedla si tak, aby se museli otočit zády k rokli, když se chtěli dívat na ni.
 
 A dívali se na ni. Celou noc. Protože to byla nejzajímavější věc, která se na haldě za poslední dva dny stala. Ženská, o které mluví celé město, s knihou, kterou nikdo neviděl, sedí u jejich ohně a vytahuje z brašny lancetu a plátno.
@@ -430,7 +432,7 @@ Veit se na ni díval a zívl, ale tentokrát to nebylo zívnutí ze spánku. Byl
 
 Měsíc zašel po druhé hodině.
 
-Ilona to věděla, protože se celou noc dívala, jak klesá nad hřebenem za zády tovaryšů, a když se ho dotkl, přestala mluvit.
+Ilona to věděla, protože se celou noc dívala, jak klesá nad hřebenem na západě, po levé ruce, a když se ho dotkl, přestala mluvit.
 
 Pak to slyšela.
 
@@ -460,7 +462,7 @@ Tovaryš u okraje se otočil. Všichni se otočili. K ní.
 
 „Paní!“
 
-„Nic,“ řekla Ilona. Držela si ruku a nedýchala, protože ji to doopravdy pálilo. Na hřbetu ruky, hluboko pod starými stopami zubů na předloktí, rudý pruh od rozpáleného plechu. „Nic. Jsem nešikovná. Dejte mi vodu. Vodu, rychle.“
+„Nic,“ řekla Ilona. Držela si ruku a nedýchala, protože ji to doopravdy pálilo. Na hřbetu ruky, kus pod starými stopami zubů na předloktí, rudý pruh od rozpáleného plechu. „Nic. Jsem nešikovná. Dejte mi vodu. Vodu, rychle.“
 
 Veit jí podal vědro. Ilona do něj strčila ruku a sykla a tovaryši stáli kolem a dívali se na ni a jeden řekl, že tohle se stane, když ženská sedí v noci u ohně, a druhý se zasmál, a třetí, ten nejmladší, se ještě jednou otočil k rokli.
 

@@ -2,7 +2,7 @@
 
 Šindelářová rozložila na stůl osm listů a ani jeden z nich nebyl kresba.
 
-Studovna chebského archivu byla v úterý zavřená pro veřejnost. Rolety stažené do půli, světlo nad stolem ztlumené na tolik, kolik snese pergamen. Ostatní v tom světle mhouřili oči. Sael ne. Viděla v něm všechno: zrnitost papíru, razítka, i drobné písmo Šindelářové, které se za sedmadvacet let nezměnilo. Šindelářová psala tužkou, protože do studovny se inkoust nenosí. Ani archivářka si v tom nedělala výjimku.
+Studovna chebského archivu byla v úterý zavřená pro veřejnost. Rolety stažené do půli, světlo nad stolem ztlumené na tolik, kolik snese pergamen. Ostatní v tom světle mhouřili oči. Sael ne. Viděla v něm všechno: zrnitost papíru, razítka, i drobné písmo Šindelářové, které se za pětadvacet let nezměnilo. Šindelářová psala tužkou, protože do studovny se inkoust nenosí. Ani archivářka si v tom nedělala výjimku.
 
 „Tohle je historie,“ řekla. „Ne toho, co na tom listu je. Toho, kdo ho kdy viděl.“
 
@@ -16,11 +16,11 @@ Třetí list. Snímky z roku 2025, pořízené pro posudek, který tehdy psala H
 
 „Nic necitujte,“ řekla Šindelářová. „Ani mně. Tak to tenkrát stálo v průvodním dopise. Platí to pořád.“
 
-Čtvrtý list. Výpůjční kniha studovny za posledních čtyřicet let, výpis všech, kdo kodex měli v ruce. Bylo jich jedenáct. Sael znala všechna jména. Pět z nich bylo mrtvých. Jedno bylo Hanino, třikrát: dvakrát v roce 2025, v lednu a v dubnu, a jednou v roce 2030. Jedno bylo její vlastní.
+Čtvrtý list. Výpůjční kniha studovny za posledních čtyřicet let, výpis všech, kdo kodex měli v ruce. Bylo jich pět, většinou archiváři při revizích fondu. Sael znala všechna jména. Dva z nich byli mrtví. Jedno bylo Hanino, čtyřikrát: dvakrát v lednu 2025, jednou v dubnu a jednou v roce 2030. Jedno bylo její vlastní.
 
 Pátý list ležel stranou. Šindelářová na něj nesáhla.
 
-Sael ho znala. Byl to opis jejího vlastního zápisu z protokolu o restaurování, s jejím podpisem a s podpisem Šindelářové jako svědkyně. *Oprava. Záznamy „pokračuje“ z X/2027 až X/2029 jsou nepravdivé. Restaurátorské práce byly dokončeny v VII/2027. Kodex jsem úmyslně zadržela v trezoru dílny z důvodů, které nesouvisely s jeho stavem…* Dva a půl roku tehdy psala do protokolu jedno slovo, které nebyla pravda. Kvůli mapě. Kvůli tomu, aby k mapě nikdo nepřišel dřív, než bude kam jít.
+Sael ho znala. Byl to opis jejího vlastního zápisu z protokolu o restaurování, s jejím podpisem a s podpisem Šindelářové jako svědkyně. *Oprava. Záznamy „pokračuje“ z X/2027 až X/2029 jsou nepravdivé. Restaurátorské práce byly dokončeny v VII/2027. Kodex jsem úmyslně zadržela v trezoru dílny z důvodů, které nesouvisely s jeho stavem…* Dva roky tehdy psala do protokolu jedno slovo, které nebylo pravdivé. Kvůli mapě. Kvůli tomu, aby k mapě nikdo nepřišel dřív, než bude kam jít.
 
 „Ten tam patří,“ řekla Sael.
 
@@ -52,7 +52,7 @@ Daniela Fuchsová vešla první. Byla vysoká a hranatá, jak ji kdysi popisoval
 
 Za nimi přišla Lis Aven a za ní Tadeáš.
 
-Tadeáš se zastavil ve dveřích. Do archivu chodil poprvé. Rozhlédl se po regálech, po krabicích s čísly, po stropě, a Sael věděla, na co myslí. Na archiv pod horou, prázdný, s holými výklenky, ze kterého knihu vynesli před pěti lety.
+Tadeáš se zastavil ve dveřích. Do archivu chodil poprvé. Rozhlédl se po regálech, po krabicích s čísly, po stropu, a Sael věděla, na co myslí. Na archiv pod horou, prázdný, s holými výklenky, ze kterého knihu vynesli před pěti lety.
 
 „Tady je zima,“ řekl.
 
@@ -68,15 +68,15 @@ Poslední přišla Hronková. Nesla obálku.
 
 Klíč vznikl ze čtrnácti listů, které na lodi nikdo nehledal, protože nikdo nevěděl, že je hledat má.
 
-Lis Aven je našla v červnu, v noci po prvním jednání o kodexu. O hoře se na Terře vyprávělo, že v ní kdysi byl drak, a v pozemských zprávách to stálo v každém druhém článku. Zadala do archivu řádu slova, která by takový drak musel mít, bez jména světa. Létající plazi. Hnízda v převisech. Membránová křídla. A síť jí po dlouhém hledání vrátila sbírku, o které nikdo z výpravy nevěděl: katalog signalizace zvířat z mnoha světů, kdysi pořízený jednou z univerzit prstence Halm. Zoologové si do něj vypisovali z průzkumných listů všechno, co se dalo počítat. Tance, barvy, hnízda.
+Lis Aven je našla v červnu, v noci po prvním jednání o kodexu. O hoře se na Terře vyprávělo, že v ní kdysi byl drak, a v pozemských zprávách to stálo v každém druhém článku. Zadala do archivu řádu slova, která by takový drak musel mít, bez jména světa. Létající plazi. Hnízda v převisech. Membránová křídla. A síť jí po dlouhém hledání našla sbírku, o které nikdo z výpravy nevěděl: katalog signalizace zvířat z mnoha světů, kdysi pořízený jednou z univerzit prstence Halm. Zoologové si do něj vypisovali z průzkumných listů všechno, co se dalo počítat. Tance, barvy, hnízda.
 
 U čtrnácti listů stálo místo jména světa jen katalogové číslo. Lis Aven ho porovnala s katalogem průzkumů, který řád převzal po Koloniálním úřadu. Pod tím číslem stál jediný řádek. *Listy: uloženo u soudu.*
 
-Výpis byl starší než proces. Zoolog ho pořídil, když listy přišly domů, a pak už je nikdo neviděl. Úřad zapečetil průzkum. Na plazy v katalogu univerzity se zapomnělo, protože to byli jen plazi. Když pak v červenci přišel spis, stála ve veřejném zápisu, v levém sloupci průzkumu, podobná věta: *Létající plazi s hnízdy v převisech a s řadami zlatých zrn a krystalů. Po přeletu člunu o řadu víc.* Řady. Rýhy po třech. Tentýž průzkum.
+Výpis byl starší než proces. Zoolog ho pořídil, když listy přišly domů, a pak už je nikdo neviděl. Úřad zapečetil průzkum. Na plazy v katalogu univerzity se zapomnělo, protože to byli jen plazi. Když pak v červenci přišel spis, stála v něm, ve veřejném zápisu, v levém sloupci průzkumu, podobná věta. Lis Aven jí ji přečetla: *Létající plazi s hnízdy v převisech a s řadami žlutých zrn kovu a krystalů. Po přeletu člunu o řadu víc.* Řady. Rýhy po třech. Tentýž průzkum.
 
 Kerr souhlasila, aby výprava listy předala. Předala je třetího července, po pečeti, veřejně, s kontrolním součtem, a dostali je všichni. Kresbu z kodexu neviděl nikdo z týmu. Fuchsová to podepsala. Etoložka taky. Lis Aven podepsala, že kodex ani jeho snímky nikdy neviděla, a připsala k tomu větu, kterou si Sael zapamatovala: *Podpis není důkaz. Je to jen slib, za který se dá ručit.*
 
-Tři týdny pracovali v Brně, v místnosti bez oken, kterou jim půjčila fakulta. Sael tam nebyla ani jednou. Nesměla. Znala tu dvoustranu líp než kdokoli živý. Tři roky ji měla u sebe, z toho dva a půl roku v trezoru, a kdyby jen prošla kolem dveří, mohl by si někdo říct, že něco řekla.
+Tři týdny pracovali v Brně, v místnosti bez oken, kterou jim půjčila fakulta. Lis Aven jezdila mezi Brnem a Prahou; poslední tři dny pracovaly Fuchsová s etoložkou samy. Sael tam nebyla ani jednou. Nesměla. Znala tu dvoustranu líp než kdokoli živý. Tři roky ji měla u sebe, z toho přes dva roky v trezoru, a kdyby jen prošla kolem dveří, mohl by si někdo myslet, že něco řekla.
 
 Dvacátého července odpoledne uložila Fuchsová předpovědi u Hronkové, v zapečetěné obálce. Kontrolní součet poslala všem stranám ve stejnou minutu.
 
@@ -90,9 +90,9 @@ Fuchsová četla předpovědi nahlas. Nepodívala se přitom na kodex, který le
 
 „Nejdřív to, co víme,“ řekla Fuchsová. „Ve výpisu je devět hnízd v šesti oblastech. Tři z nich průzkumníci navštívili dvakrát. Jeden list je pohyblivý záznam, políčka za sebou. V každém hnízdě leží věci v řadách, s mezerami, a nad nimi nebo mezi nimi jsou rýhy ve skupinách. Rýhy jsou po drápech. To víme od průzkumníků, ne od nás.“
 
-Rozložila první list předpovědí. Byl psaný na stroji, krátce.
+Rozložila první list předpovědí. Byl vytištěný, krátce.
 
-„Předpověď jedna. Na pohyblivém záznamu plaz přinese zrno, položí ho na začátek nové řady a pak vyryje tři čáry. Nic jiného. Ve výpisu jí začíná většina řad. Myslíme si, že skupina tří rýh patří tomu, kdo píše. Jako podpis. Nebo jako *já*. Nevíme. Pokud je hnízdo v hoře záznam stejného druhu, budou řady začínat skupinou tří rýh. Častěji než kteroukoli jinou.“
+„Předpověď jedna. Na pohyblivém záznamu plaz přinese zrno, položí ho na začátek nové řady a pak vyryje tři čáry. Nic jiného. Ve výpisu takovou skupinou začíná většina řad. Myslíme si, že skupina tří rýh patří tomu, kdo píše. Jako podpis. Nebo jako *já*. Nevíme. Pokud je hnízdo v hoře záznam stejného druhu, budou řady začínat skupinou tří rýh. Častěji než kteroukoli jinou.“
 
 Sael se nepohnula.
 
@@ -128,7 +128,7 @@ Kodex ležel v ní na boku, v obalu z nekyselé lepenky, který mu Sael zhotovil
 
 Dvoustrana hnízda.
 
-Fuchsová se k ní poprvé podívala.
+Fuchsová se na ni poprvé podívala.
 
 Sael se nedívala na kresbu. Kresbu znala. Dívala se na Fuchsovou. Na to, jak se jí v tom slabém světle rozšířily oči a jak ruka na šňůrce od brýlí zůstala stát. Fuchsová si nasadila brýle a naklonila se. Nos měla kousek nad pergamenem, jako by kreslila sama, a Sael si pomyslela, že přesně takhle nad tím listem kdysi klečel ten mnich, v hoře, s kahanem a s provazem.
 
@@ -152,7 +152,7 @@ Fuchsová se narovnala.
 
 Pak počítali.
 
-Fuchsová diktovala, Šindelářová psala, etoložka kontrolovala proti vlastním poznámkám a Lis Aven tiše přeložila každé číslo do své řeči a poslala ho na loď. Sael stála u okna s rukama za zády. Nepomáhala. Kdyby ukázala prstem na jedinou rýhu, nikdo by už nevěděl, co našli oni a co jim ukázala ona.
+Fuchsová diktovala, Šindelářová psala, etoložka kontrolovala proti vlastním poznámkám a Lis Aven tiše překládala každé číslo do své řeči a posílala ho na loď. Sael stála u okna s rukama za zády. Nepomáhala. Kdyby ukázala prstem na jedinou rýhu, nikdo by už nevěděl, co našli oni a co jim ukázala ona.
 
 *Předpověď jedna.* Řady začínaly u stěny. Mnich to zakreslil tak, jak to šlo, od díry ke svahu hlíny, a řady se na konci stáčely jako řádky. U jedenácti řad šel začátek přečíst. U devíti z nich stála na začátku skupina tří rýh. V prvním čtverci, hned u díry, *tři, pak mezera, pak dvě*.
 
@@ -282,7 +282,7 @@ Ptala se Fuchsová, ale Sael poznala, že otázku mají připravenou všichni t�
 
 Tadeáš odpověděl dřív než Sael.
 
-„Za starou štolou,“ řekl. „Štola je pod vodou od dvanáctého století. Ale k zadní stěně vede ucho. Úzká chodba. Naše.“ Odmlčel se. „Taky je pod vodou. Od roku třicet.“
+„Za starou štolou,“ řekl. „Štola je pod vodou od dvanáctého století. Ale k zadní stěně vede ucho. Úzká chodba. Naše. Za tím místem, kde Ostra poslouchala, jde dál průlez.“ Odmlčel se. „Taky je pod vodou. Od roku třicet.“
 
 „Takže se tam nedá.“
 

@@ -88,7 +88,7 @@ Nejdřív lahvičku, malou, z nazelenalého skla, se zátkou zalitou červeným 
 
 Pak sundal z police majolikový hrnec s modrým nápisem *Mumia* a sejmul víko. Uvnitř ležely kusy něčeho tmavého, hnědočerného, lesklého na lomu jako smola. Vonělo to tím sladkým zatuchlým pachem, který Ilona cítila ve dveřích, a pod ním ještě něčím, pryskyřicí, kořením.
 
-„Mumie,“ řekl Röhrich. „Pravá. Z Egypta, přes Benátky a Norimberk. Balzamovaná těla starých pohanů, kteří se nechávali nakládat do koření a pryskyřic, aby jim tělo vydrželo do soudného dne. Nevydrželo, jak vidíte.“ Zasmál se, opatrně, se zavřenými rty. „Prášek z toho do vína proti modřinám a vnitřnímu krvácení. Padlí havíři, rozdrcení pod závalem. Kupuje to i horní úřad.“
+„Mumie,“ řekl Röhrich. „Pravá. Z Egypta, přes Benátky a Norimberk. Balzamovaná těla starých pohanů, kteří se nechávali nakládat do koření a pryskyřic, aby jim tělo vydrželo do soudného dne. Nevydrželo, jak vidíte.“ Zasmál se, opatrně, se zavřenými rty. „Prášek z toho do vína proti modřinám a vnitřnímu krvácení. Potlučení havíři, přimáčknutí závalem. Kupuje to i horní úřad.“
 
 Ilona se dívala do hrnce. Mezi kusy ležel jeden, který byl jiný. Světlejší, a na jedné straně měl tvar, který neměla smola. Zakřivení. Jako kloub prstu.
 
@@ -106,7 +106,7 @@ Röhrich se klidně usmál, tím svým úsměvem.
 
 Ilona mlčela. Röhrich se opřel o pult.
 
-„Pošlu pro něj Floriana, Florian ho přinese sem, na dvůr, a tady se to dál zpracovává. Ne všechno na duch. Část se suší na prášek, krevní prášek, do mastí. Část se prodá dál, do Lipska, do Freibergu, kde je víc doktorů a míň krve.“ Odmlčel se a usmál se. „Nebo se prodávala. Tento týden mi Jobst nedodal ani kapku. Vylévá to do potoka, prý. Lidi jsou pověrčiví. Upíři.“ To slovo řekl s pobavením, jako se říká o permonících. „Kdyby mi to přišlo do domu, tak bych se taky bál.“
+„Pošlu pro soudek Floriana, Florian ho přinese sem, na dvůr, a tady se to dál zpracovává. Ne všechno na duch. Část se suší na prášek, krevní prášek, do mastí. Část se prodá dál, do Lipska, do Freibergu, kde je víc doktorů a míň krve.“ Odmlčel se a usmál se. „Nebo se prodávala. Tento týden mi Jobst nedodal ani kapku. Vylévá to do potoka, prý. Lidi jsou pověrčiví. Upíři.“ To slovo řekl s pobavením, jako se říká o permonících. „Kdyby mi to přišlo do domu, tak bych se taky bál.“
 
 „Kolik potřebujete na jednu lahvičku?“
 
@@ -114,7 +114,7 @@ Ilona mlčela. Röhrich se opřel o pult.
 
 „A kolik lahviček prodáte za týden?“
 
-Röhrich chvilku váhal. „Ve dvou, ve třech. V zimě víc.“
+Röhrich chvilku váhal. „Dvě, tři. V zimě víc.“
 
 Ilona si to počítala, jak to počítala na lavici v lázni, čárkami po pěti. Dvě lahvičky, tři. Šest misek, nejvýš. A Jobst pouštěl dvacet misek každou sobotu, a nově i ve středu. A soudek nesli do průchodu, a z průchodu vyšel mezek se dvěma koši a šel nahoru k haldám. Ne do Lipska. Lipsko je na druhou stranu.
 
@@ -122,7 +122,7 @@ Neřekla nic. Röhrich se díval na ni a ona se dívala na lahvičku.
 
 „Víte co, paní Ilono,“ řekl Röhrich mile, „vy přece taky pouštíte. Kolik misek týdně? Pět? Deset? A co s nimi děláte? Vyléváte to do zahrádky.“ Naklonil se přes pult. „Platím tři krejcary za misku. Víc než Jobst platil těm babám. A vám bych platil čtyři, protože vy pouštíte čistě a vaše krev nebude smíchaná s lázeňskou vodou.“
 
-Ve chvíli, kdy se naklonil, ji ucítila.
+Ve chvíli, kdy se naklonil, ucítila tu vůni.
 
 Ne z officíny. Z něj. Z jeho dechu, z jeho rukou opřených o pult. Hřebíček, silně, jako když se rozkousne celý. A pod tím něco hořkého, pryskyřičného, ostrého, něco, co znala z Řehořovy brašny, protože Řehoř tím potíral dásně starým lidem, když jim krvácely. Myrha. Tinktura z myrhy. Hořčejší než kadidlo.
 
@@ -166,15 +166,15 @@ Röhrich zaklel, poprvé ne opatrně, a rychle odešel dozadu. Florian za ním.
 
 Ilona zůstala v officíně sama.
 
-Na kraji pultu, vedle hnědé knihy, ležela jiná. Ilona si jí předtím nevšimla, protože ležela pod archem čistého papíru, jako se zakrývá něco, co má zrovna člověk rozepsané. Když teď Röhrich odcházel, zachytil papír rukávem a ten se posunul. A pod ním byla kniha v černé kůži, menší než ta hnědá, s rozepnutou mosaznou sponou, otevřená uprostřed.
+Na kraji pultu, vedle hnědé knihy, ležela jiná. Ilona si jí předtím nevšimla, protože ležela pod archem čistého papíru, jako se zakrývá něco, co má zrovna člověk rozepsané. Když Röhrich odbíhal, zachytil papír rukávem a ten se posunul. A pod ním byla kniha v černé kůži, menší než ta hnědá, s rozepnutou mosaznou sponou, otevřená uprostřed. Arch se posunul jen o kus: pravý kraj obou stránek pod ním zůstal.
 
 Ilona se nepohnula z místa. Jen sklonila hlavu. Četla vzhůru nohama.
 
-Řádky. Úhledné, drobné, jiným inkoustem než v hnědé knize, černějším. Vlevo data. *Sab. 13. Mai. Merc. 17. Mai. Sab. 20. Mai.* Sobota, středa, sobota. Vedle dat slovo *Bad*, lázeň, a číslo. *Bad – 18.* *Bad – 9.* *Bad – 21.* Pak další sloupec, a nad ním jedno slovo: *Oben.* Nahoře. A pod ním čísla. *12. 6. 14.*
+Řádky. Úhledné, drobné, jiným inkoustem než v hnědé knize, černějším. Na levé stránce data. *Sab. 13. Mai. Merc. 17. Mai. Sab. 20. Mai.* Sobota, středa, sobota. Vedle dat slovo *Bad*, lázeň, a číslo. *Bad – 18.* *Bad – 9.* *Bad – 21.* Pak další sloupec, a nad ním jedno slovo: *Oben.* Nahoře. A pod ním čísla. *12. 6. 14.* Co bylo dál vpravo, zakrýval papír.
 
 Dvanáct, šest, čtrnáct. Ilona to četla a počítala a nechtěla počítat. Z lázně osmnáct, nahoru dvanáct. Z lázně devět, nahoru šest. Dvě třetiny. Do Lipska nic.
 
-Pod tím, níž na stránce, byl jiný seznam. Jména, nebo co vypadalo jako jména. Některá celá, německá, Ilona je neznala. Některá jen písmena. A vedle nich věci. *Salz, 1 Scheffel.* Sůl, korec. *Graupen.* Kroupy. *Geiß, 2.* Kozy, dvě. A u těch řádků, u soli a krup a koz, v posledním sloupci, jedno písmeno. *Z.*
+Na pravé stránce byl jiný seznam. Jména, nebo co vypadalo jako jména. Některá celá, německá, Ilona je neznala. Některá jen písmena. A vedle nich věci. *Salz, 1 Scheffel.* Sůl, korec. *Graupen.* Kroupy. *Geiß.* Kozy. A u těch řádků, u soli a krup a koz, ještě než je zakryl papír, jedno písmeno. *Z.*
 
 *Z.*
 
@@ -186,7 +186,7 @@ Narovnala se. Udělala dva kroky stranou, k polici s majolikovými hrnci, a dív
 
 *
 
-Röhrich vešel a otíral si ruce do plátna. Viděl ji u police. Pak se podíval na pult, na černou knihu, odkrytou, a na arch papíru, který ležel vedle.
+Röhrich vešel a otíral si ruce do plátna. Viděl ji u police. Pak se podíval na pult, na černou knihu, zpola odkrytou, a na arch papíru, který z ní sjel.
 
 Na chvíli se nehýbal. Pak přešel k pultu, klidně, bez spěchu, a knihu zavřel. Zapnul mosaznou sponu. Z kapsy kabátu vytáhl malý klíček na řetízku a zamkl ji. Pak ji vzal pod paži.
 
@@ -220,7 +220,7 @@ Kniha byla tam. Na dosah ruky. Ležela otevřená na pultu a Ilona ji četla, a 
 
 Protože to nebylo její. Protože by to byla krádež, a ženu, která ukradne měšťanovi knihu, horní soud neposlouchá, ani když má list s pečetí. Wehrlův list jí dával právo prohlížet těla a vyslýchat svědkyně. Nedával jí právo vejít do lékárny a odnést kupcovy účty.
 
-Protože v té knize nebylo nic, co by bylo vražda. Lékárník kupuje krev od lazebníka. Řekl to sám, nahlas, s úsměvem, a doktoři v Lipsku by mu přitakali. Lékárník posílá krev nahoru. To nebylo v knize, to bylo jen slovo *Oben* a čísla. Nahoře bydlí kdekdo. Ursula Kolbová, Lene, dvě dírky prst od sebe, tohle v té knize nebylo. Nebo to tam Ilona neviděla. Viděla jednu stránku.
+Protože v té knize nebylo nic, co by bylo vražda. Lékárník kupuje krev od lazebníka. Řekl to sám, nahlas, s úsměvem, a doktoři v Lipsku by mu přitakali. Lékárník posílá krev nahoru. To nebylo v knize, to bylo jen slovo *Oben* a čísla. Nahoře bydlí kdekdo. Ursula Kolbová, Lene, dvě dírky prst od sebe, tohle v té knize nebylo. Nebo to tam Ilona neviděla. Viděla jednu dvoustranu, a tu jen zpola.
 
 A protože na té stránce bylo *Z.* U soli, krup a koz.
 
@@ -234,9 +234,9 @@ Za devět let si ničeho nevšimla. Ani dvora, ani výšky, ani zubů. Teď vid�
 
 Večer napsala zápis.
 
-Napsala slova Anny Rieglové, protože to byla výpověď, a Anna souhlasila. *Krev z mladýho zdravýho člověka. Kapky, lahvička za půl zlatého.* Napsala, co viděla na Michelově temeni a na rtu, protože to byl nemocný.
+Napsala slova Anny Rieglové, protože to byla výpověď, a Anna souhlasila. *Krev z mladýho zdravýho člověka. Kapky, lahvička za půl zlatého.* Napsala, co viděla na Michelově temeni a na rtu, protože šlo o nemocného.
 
-Pak napsala slova Kašpara Röhricha, lékárníka U Pelikána. Ne jako výpověď, nebyl svědek, byl kupec, který mluvil o svém zboží. Ale napsala je slovo po slově, protože je řekl a patřila mu. *Kupuju ji od něj od zimy. Je hřích vylévat lék. Část se prodá dál, do Lipska, do Freibergu.* A *Misku. Dvě. Při destilaci zbude z misky sotva prst. Ve dvou, ve třech. V zimě víc.* A *Platím tři krejcary za misku. Vám bych platil čtyři.*
+Pak napsala slova Kašpara Röhricha, lékárníka U Pelikána. Ne jako výpověď, nebyl svědek, byl kupec, který mluvil o svém zboží. Ale napsala je slovo po slově, protože je řekl a patřila mu. *Kupuju ji od něj od zimy. Je hřích vylévat lék. Část se prodá dál, do Lipska, do Freibergu.* A *Misku. Dvě. Při destilaci zbude z misky sotva prst. Dvě, tři. V zimě víc.* A *Platím tři krejcary za misku. Vám bych platil čtyři.*
 
 Pod čáru napsala, co viděla sama. *Ruce a dech lékárníka voní hřebíčkem a tinkturou z myrhy. Má špatné zuby. Je vysoký. Nosí černé sukno.* Pak dlouho seděla a pak dopsala: *Hřebíček a myrhu používá každý, kdo má špatné zuby. Myrhu prodává tato lékárna. Florian, tovaryš, nosí soudek.* Protože to byla taky pravda, a ta pravda šla proti té první, a Ilona ji tam nechala stát.
 
@@ -264,7 +264,7 @@ A myslela na Kunze, jak jde přes náměstí s holí, rychleji, než kdy chodil,
 
 Na Kunzově pultu ve středu stála plná lahvička. Na Röhrichově stránce u Kunzova jména žádný škrt. Kunz nezaplatil. Kunz jen dostal další.
 
-Ilona si to řekla v duchu, slovo po slově, a pak si řekla, co si vždycky říkala, když se jí v hlavě začal skládat džbán: *tohle je výklad*. Neviděla, že by Kunz Röhrichovi něco řekl. Neviděla, že by Röhrich něco věděl o Lene. Viděla dvě lahvičky a jednu stránku, a vůni, kterou má každý, kdo má zkažené zuby.
+Ilona si to řekla v duchu, slovo po slově, a pak si řekla, co si vždycky říkala, když se jí v hlavě začal skládat džbán: *tohle je výklad*. Neviděla, že by Kunz Röhrichovi něco řekl. Neviděla, že by Röhrich něco věděl o Lene. Viděla dvě lahvičky a půl dvoustrany, a vůni, kterou má každý, kdo má zkažené zuby.
 
 Ale ve středu ráno ležela Lene na kamenech pod mostem, bílá jako vymetená mouka. A v týdnu, kdy Lene řekla, co věděla, a Ilona to zapsala, odnesla nahoru a zamkla do truhly, Jobst přestal prodávat a lékárník přestal kupovat. A lékárník věděl, že Ilona sledovala soudek. *Lene to řekla na trhu půlce horního konce, chudinka.*
 
@@ -276,6 +276,6 @@ I tohle byl výklad. Ale byl to výklad, který se dal položit vedle papíru.
 
 Ilona se opřela čelem o studené sklo.
 
-Ve středu v noci, až zajde měsíc, pro ni přijde Kilián. A ona půjde nahoru, kam chodí mezek, a uvidí, kam teče dvanáct misek z osmnácti. A až to uvidí, bude to vědět. Ne vykládat. Vědět.
+Ve středu v noci, než vyjde měsíc, pro ni přijde Kilián. A ona půjde nahoru, kam chodí mezek, a uvidí, kam teče dvanáct misek z osmnácti. A až to uvidí, bude to vědět. Ne vykládat. Vědět.
 
 A pak bude muset rozhodnout, co z toho napíše.

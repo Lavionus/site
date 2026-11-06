@@ -12,19 +12,19 @@ Na zálivu pod převisem stála stará žena skalních lidí.
 
 Sama. S dlaní nad očima, i když slunce bylo za hřebenem a v kotli bylo šero. Dívala se na ty tři u vody. Nic neudělala. Nevyběhla, neodstrčila je, nezačala vynášet vodu kamennými mísami, jak to tehdy celou noc dělali, když v horní tůni stála ta matka s dítětem.
 
-Bylo jich málo. Tio si pamatovala, kolik jich bývalo. Otec je počítal na stěně dole v hloubce, kam ho kdysi pustili, a pak to řekl u ohně: devadesát tři. Teď by jich nenapočítala ani polovinu. Odcházeli dolů, hlouběji, a nevraceli se nahoru. Nebo umírali a nikdo se to nedozvěděl, protože zářezy na jejich stěně neviděl nikdo z velkých lidí už dlouho.
+Bylo jich málo. Tio si pamatovala, kolik jich bývalo. Otec je počítal na stěně dole v hloubce, kam ho kdysi pustili, a pak to řekl u beden: devadesát tři. Teď by jich nenapočítala ani polovinu. Odcházeli dolů, hlouběji, a nevraceli se nahoru. Nebo umírali a nikdo se to nedozvěděl, protože zářezy na jejich stěně neviděl nikdo z velkých lidí už dlouho.
 
 Jeden z těch tří u horní tůně si všiml, že se Tio dívá. Zvedl ruku a zamával.
 
 „Babičko!“
 
-Byl to Ruův vnuk. Tio ho poznala podle ramen. Ru měl taková.
+Byl to její vnuk. Ramena měl po Ruovi.
 
 „To pravidlo je staré,“ zavolal na ni. Vesele, bez zlého úmyslu. „Voda je tu stejná.“
 
 *Staré.*
 
-Tio to slovo slyšela a ucítila ho v puse, jako se cítí zub, který viklá.
+Tio to slovo slyšela a ucítila ho v puse, jako se cítí zub, který se viklá.
 
 Když jí bylo šest, nebo sedm, první jaro, stála na kraji téhle tůně a kluk z pátého domu se v ní chtěl koupat. Řekla mu *nu* a *ne* a pak mu řekla, že to pravidlo je staré. Aby ho poslechl. A on ho poslechl. Staré se drželo.
 
@@ -36,7 +36,7 @@ Neodpověděla. Mladí naplnili měchy a vylezli po stupni nahoru, kolem niky, a
 
 Na stupni pod nikou leželo tolik věcí, že na něm skoro nebylo místo.
 
-Lastury, provrtané, na šňůrách i jednotlivě. Kamínky natřené okrem, některé dávno vybledlé, jiné rudé ze včerejška. Misky skalních lidí, hladké a tenké, plné jader nebo prázdné. Pera. Zuby zvěře. Kousek šedé tkaniny, vybledlý a roztřepený, a Tio věděla, z čeho je. Z bundy. Z jedné z těch šedých bund, ve kterých přišli. Někdo ji tam položil dávno a nikdo ji nevzal.
+Lastury, provrtané, na šňůrách i jednotlivě. Kamínky natřené okrem, některé dávno vybledlé, jiné rudé ze včerejška. Misky skalních lidí, hladké a tenké, plné jader nebo prázdné. Pera. Zuby zvěře. Kousek šedé tkaniny, vybledlý a roztřepený, a Tio věděla, z čeho je. Z bundy. Z jedné z těch šedých bund, ve kterých přišli. Někdo ho tam položil dávno a nikdo ho nevzal.
 
 Na niku nelezl nikdo. To bylo pravidlo, které drželo.
 
@@ -56,11 +56,11 @@ Mladí měli jiná slova. Že je tam oheň, který spadl z nebe. Že ho tam při
 
 Večer ji zavolaly děti, ať vypráví.
 
-Seděli ve vnější síni. Tolik dětí, že se nevešly k jednomu ohni, a tak seděly u všech tří, a ty u zadních se natahovaly, aby slyšely. Vnoučata. Pravnoučata. Děti od třetí řady, od sedmé, z domů nad starou povodňovou čárou, které se stavěly pořád, kruh vedle kruhu, protože tak se staví. Lano už dávno nebylo. Šedé lano, které natahoval Ardo, se přetrhlo potřetí a počtvrté a pak už ho nikdo nesvazoval. Teď natahovali řemen. Ale natahovali ho.
+Seděly ve vnější síni. Tolik dětí, že se nevešly k jednomu ohni, a tak seděly u všech tří, a ty u zadních se natahovaly, aby slyšely. Vnoučata. Pravnoučata. Děti od třetí řady, od sedmé, z domů nad starou povodňovou čárou, které se stavěly pořád, kruh vedle kruhu, protože tak se staví. Lano už dávno nebylo. Šedé lano, které natahoval Ardo, se přetrhlo potřetí a počtvrté a pak už ho nikdo nesvazoval. Teď natahovali řemen. Ale natahovali ho.
 
 Nad nimi, na černé stěně síně, svítily bílé a rudé čáry.
 
-Otcovo písmo. Tak tomu říkali. Ženy ho obnovovaly každé jaro. Seškrábaly nové saze, které přes zimu ztmavily čáry, a pak je přetáhly okrem, aby byly vidět i ve tmě. Dělaly to pečlivě. Jedna se to učila od druhé, matka od matky. Ale každé jaro se čáry trochu posunuly. Někde se jedna prodloužila. Někde se dvě spojily. Někde se k písmenu přidala rudá čára dole, protože tak to ženy viděly pod Tiiným jménem, a myslely si, že k písmu patří.
+Otcovo písmo. Tak tomu říkali. Ženy ho obnovovaly každé jaro. Seškrábaly nové saze, které přes zimu ztmavily čáry, a pak je přetáhly okrem, aby byly vidět i ve tmě. Dělaly to pečlivě. Jedna se to učila od druhé, matka od matky. Ale každé jaro se čáry trochu posunuly. Někde se jedna prodloužila. Někde se dvě spojily. Někde se k písmenu přidala rudá čára dole, protože tak to ženy viděly pod Tiiným jménem, které tam sama napsala ještě jako holka, a myslely si, že k písmu patří.
 
 Tio ho pořád trochu uměla číst. Otec ji to naučil na bílé usazenině u dolní tůně, klackem. Některá místa na stěně přečetla i teď. Svoje jméno. *Bri.* *Ikku.* A nad tím, větší než ostatní: *Nejíst. Ani jednu.*
 
@@ -68,7 +68,7 @@ Většinu už nepřečetla. Ne proto, že by zapomněla písmena. Protože to, c
 
 Sefina slova nahoře u otvoru do hloubky byla nejkrásnější. *Dva prsty na tři víčka.* Ženy je opakovaly na kamenných miskách a na okrajích kůží, pořád dokola, jako lem.
 
-Víčko už nikdo neměl. Poslední láhev se rozpadla, když Tio měla první dítě. Dva prsty na tři víčka. Tio to tak učila, celý život. Dva prsty kůry na tři hrsti vody. Někdo z jejích dcer to pak učil na tři misky. Pak na tři doušky. Tio nevěděla, kdo z nich má pravdu. Sefa by to věděla.
+Víčko už nikdo neměl. Poslední láhev se rozpadla, když Tio měla první dítě. Dva prsty na tři víčka. Tio to tak učila, celý život. Dva prsty kůry na tři hrsti vody. Některá z jejích dcer to pak učila na tři misky. Pak na tři doušky. Tio nevěděla, kdo z nich má pravdu. Sefa by to věděla.
 
 Ne, pomyslela si. Sefa by to nevěděla taky. Proto jí to dala.
 
@@ -84,7 +84,7 @@ Vyprávěla to, jak to vyprávěla vždycky. Že přišli z nebe, v noci, v sedm
 
 Tio se zarazila.
 
-Orrin. To jméno se tu neříkalo. Ani jeho, ani těch tří, které Tal řekla nahlas a které se pak už neřekly nikdy. Tio je znala. Byla poslední, kdo je znal.
+Orrin. To jméno nikdo nezakázal. Přestalo se tu říkat samo, tak jako jména těch tří, které Tal řekla nahlas a které se pak už neřekly nikdy. Tio je znala. Byla poslední, kdo je znal.
 
 „Ten odešel,“ řekla.
 
@@ -108,7 +108,7 @@ Tak se to dělá. Příběh se mění, ještě když ho člověk má v puse.
 
 Vyprávěla dál.
 
-O Ikkuovi. Že ho zabili šediví. Že řekl, než umřel, dlouhé slovo. Tio ho řekla. Tak, jak si ho pamatovala, z rokle, z terasy, z toho, jak ho Ru jednou opakoval, když byli malí, a pak už nikdy. Děti ho po ní zopakovaly. Nikdo z nich nevěděl, co znamená.
+O Ikkuovi. Že ho zabili šediví. Že řekl, než umřel, dlouhé slovo. Tio ho řekla. Tak, jak si ho pamatovala z terasy a z toho, jak ho Ru jednou opakoval, když byli malí, a pak už nikdy. Děti ho po ní zopakovaly. Nikdo z nich nevěděl, co znamená.
 
 Ona taky ne. Ru ano. Nikdy se ho nezeptala, a Ru umřel předloni v zimě, v jejich domě ve druhé řadě, s hlavou v jejím klíně. Teď už se nezeptá nikoho.
 
@@ -158,7 +158,7 @@ To všechno bylo pravda.
 
 A taky bylo pravda, že tu první zimu přežili. Sto devadesát sedm ze dvou set dvaceti. Hela je měla na stěně prvního domu, rýhu za rýhou, a stěna stojí dodnes. Tio ji viděla včera. Nikdo už neví, co ty rýhy znamenají. Ona ano.
 
-A bylo pravda, že tu zimu nikdo nikomu nesloužil. Nikdo nelovil pro druhé, protože musel. Nikdo nemusel spát venku, aby jiný spal v teple. Kaj nosil Ammu vodu, ale nosil ji za to, co udělal, ne za to, čím byl. Šediví se nevzali do síně násilím a místní je nevyhnali do sněhu na smrt, i když jednou to málem udělali, a pak to Tal udělala jinak. Seděli u ohňů spolu, jedno přes druhé, děti obou řečí. Ta noc, kdy umřela Sefa, byla nejdelší noc v roce a nikdo z nich tu noc nebyl ničí.
+A bylo pravda, že tu zimu nikdo nikomu nesloužil. Nikdo nelovil pro druhé, protože musel. Nikdo nemusel spát venku, aby jiný spal v teple. Kaj nosil Ammu vodu, ale nosil ji za to, co udělal, ne za to, čím byl. Šediví nevtrhli do síně násilím a místní je nevyhnali do sněhu na smrt, i když jednou to málem udělali, a pak to Tal udělala jinak. Seděli u ohňů spolu, jedno přes druhé, děti obou řečí. Ta noc, kdy umřela Sefa, byla nejdelší noc v roce a nikdo z nich tu noc nebyl ničí.
 
 Na tom se nic nezmění. Ať si mladí berou vodu, odkud chtějí.
 

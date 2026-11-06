@@ -36,7 +36,7 @@ Hana ví, co je první komora. Dvacet metrů za mezerou u nového bloku se chodb
 
 „Do první komory ano,“ řekne. „Dál ne.“
 
-„Za téčko jsem byla šestkrát,“ řekne Hana. „Vždycky s Luisem za zády. Teď za mnou nikdo nebude, a kdybych se zasekla v obchvatu, budete tahat dva místo jednoho. Do první komory umím. Láhve unesu. Počítat umím.“ Nadechne se. „Víc ne.“
+„Za téčko jsem byla sedmkrát,“ řekne Hana. „Vždycky s Luisem za zády. Teď za mnou nikdo nebude, a kdybych se zasekla v obchvatu, budete tahat dva místo jednoho. Do první komory umím. Láhve unesu. Počítat umím.“ Nadechne se. „Víc ne.“
 
 Vedoucí kývne, jako by dostala odpověď, kterou chtěla.
 
@@ -46,7 +46,7 @@ Vedoucí kývne, jako by dostala odpověď, kterou chtěla.
 
 Večer mluví Hana s Luisem dvě minuty.
 
-Lékař jí podá sluchátko a Hana slyší, že je mu líp. Mluví pořád pomalu, ale v celých větách. Ví, že je neděle. Ví, že pro něj přijdou. Ví, že to bude trvat.
+Lékař jí podá sluchátko a Hana slyší, že je Luisovi líp. Mluví pořád pomalu, ale v celých větách. Ví, že je neděle. Ví, že pro něj přijdou. Ví, že to bude trvat.
 
 „Rosa říká, že jsi vrtala na poli pana Chana,“ řekne.
 
@@ -88,7 +88,7 @@ Vydechne.
 
 Stage láhev dá před sebe, na délku paže. Otočí se na bok. Levá ruka na kameni, pravá na láhvi. Strčí ji do mezery jako klíč do zámku, a pak sebe za ní.
 
-Strop jí přejede po láhvi na zádech. Kovové cvaknutí, tlumené vodou. Hana se zastaví. Pod sebou vidí Janino světlo, klidné, nehybné. Jana nekývne, nemávne. Jen svítí. Je tam.
+Strop jí přejede po láhvi na boku. Kovové cvaknutí, tlumené vodou. Hana se zastaví. Pod sebou vidí Janino světlo, klidné, nehybné. Jana nekývne, nemávne. Jen svítí. Je tam.
 
 Hana se odstrčí. Projede.
 
@@ -96,7 +96,7 @@ Na druhé straně chvíli visí ve vodě a nedýchá, pak dýchá moc rychle, a 
 
 *
 
-První komora je v pondělí ráno ještě stejná jako na Haniných náčrtech. Krápníky u stropu, bílé, každý se zkamenělou kapkou na špičce. Nekapou deset tisíc let. Na dně kal, ve kterém jsou vidět stopy ploutví od pátku, od čtvrtka, od soboty, kdy tudy pluli záchranáři. Šňůra vede středem dál, do tmy, k téčku.
+První komora je v pondělí ráno ještě stejná jako na Haniných náčrtech. Krápníky u stropu, bílé, každý se zkamenělou kapkou na špičce. Nekapou už deset tisíc let. Na dně kal, ve kterém jsou vidět stopy ploutví od pátku, od čtvrtka, od soboty, kdy tudy pluli záchranáři. Šňůra vede středem dál, do tmy, k téčku.
 
 Hana uváže stage láhev na šňůru. Karabina, smyčka, zkouška tahem. Vedle ní visí dvě láhve, které tu nechali záchranáři v neděli večer. Hana přečte štítky na nich, protože to je její práce. Jméno, plyn, tlak. Zapíše je na tabulku na předloktí.
 
@@ -200,7 +200,7 @@ Rosa klečí na prknech plošiny a drží Luisovu hlavu v klíně. Obě ruce na 
 
 Hana stojí na žebříku pod plošinou, po pás ve vodě, s láhvemi na bocích, a nemůže vylézt.
 
-Ne protože nechce. Nohy ji nenesou. Ruce na příčkách se jí třesou a stage láhev, kterou si vzala zpátky z komory, jí visí z karabiny a táhne ji dolů. Chce udělat další krok a neudělá ho.
+Ne že by nechtěla. Nohy ji nenesou. Ruce na příčkách se jí třesou a stage láhev, kterou si vzala zpátky z komory, jí visí z karabiny a táhne ji dolů. Chce udělat další krok a neudělá ho.
 
 Jana ji vezme za popruh na zádech a vytáhne ji nahoru jako tašku.
 
@@ -240,7 +240,7 @@ Vpravo nenapíše nic. Dívá se na tu prázdnou půlku dlouho a pak ji nechá p
 
 Marisol přijede ve středu v devět.
 
-Vystoupí z bílého auta ústavu a Hana ji skoro nepozná. Marisol je šedá v obličeji, oči má zapadlé a vlasy stažené gumičkou, ne sponou. Jde rovnou k Haně, k plachtě, a zastaví se.
+Vystoupí z bílého auta ústavu a Hana ji skoro nepozná. Marisol je šedá v obličeji, oči má zapadlé a vlasy neučesané. Jde rovnou k Haně, k plachtě, a zastaví se.
 
 Chvíli na sebe koukají.
 
@@ -260,7 +260,7 @@ Marisol se na ni podívá.
 
 Hana kývne. Neptá se, co je na záznamu dál.
 
-„A doktorko.“ Marisol se zvedne. „Odpoledne přijede prokurátor. Kvůli vaší výpovědi. Ústně, jak jste slíbila. Tady, ať nemusíte do Méridy.“ Skoro se usměje. „A pak vám budu muset něco říct o deníku.“
+„Ještě něco, doktorko.“ Marisol se zvedne. „Odpoledne přijede prokurátor. Kvůli vaší výpovědi. Ústně, jak jste slíbila. Tady, ať nemusíte do Méridy.“ Skoro se usměje. „A pak vám budu muset něco říct o deníku.“
 
 „O deníku?“
 
@@ -320,7 +320,7 @@ Na pletivo přivážou ceduli. Bílou, s logem civilní ochrany a s jiným logem
 
 Průvod zatím zajde za zatáčku. Zpěv slábne a pak není slyšet.
 
-Hana stojí u brány a dívá se přes pletivo k mýtině. Na místo, kde stál tábor. Na plachtu, kterou už sundali, a na čtverec ušlapané trávy, kde stála. Na stromy, za kterými je studna. Bílá voda, pod ní hlavní chodba, téčko, hrdlo s blokem, sestup, haloklina, mlha a síň. Lůžko ve slané vodě, kde už se usadil kal. Štítky *LE* na svých místech. A za bodem čtyřicet osm, nahoru, zvon. Sáček s telefonem na břehu, maják, cívkou nahoru, rovně. Saze. Ruce.
+Hana stojí u brány a dívá se přes pletivo k mýtině. Na místo, kde stál tábor. Na čtverec ušlapané trávy, kde stála plachta, kterou už sundali. Na stromy, za kterými je studna. Bílá voda, pod ní hlavní chodba, téčko, hrdlo s blokem, sestup, haloklina, mlha a síň. Lůžko ve slané vodě, kde už se usadil kal. Štítky *LE* na svých místech. A za bodem čtyřicet osm, nahoru, zvon. Sáček s telefonem na břehu, maják, cívkou nahoru, rovně. Saze. Ruce.
 
 Pod tím vším, ještě hlouběji, sintr, který rostl na suchu, když tam nikdo nebyl.
 

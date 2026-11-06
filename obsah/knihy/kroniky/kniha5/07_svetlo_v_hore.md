@@ -38,7 +38,7 @@ Pak řekl, že přijede, až ho pustí. A že přiveze přijímač s časování
 
 *
 
-V úterý šestadvacátého vezla do Karlových Varů Rybovy, do genetické ambulance. Dvě hodiny čekala v autě na parkovišti před nemocnicí, s vypnutým motorem a se sešitem na kolenou, do kterého nic nenapsala. Klára vyšla první, s Jonášem v nosítku. Sedla si dozadu a řekla jen: „Chtěli krev nás obou. Dali jsme ji.“
+V úterý šestadvacátého vezla Rybovy do genetické ambulance v Karlových Varech. Dvě hodiny čekala v autě na parkovišti před nemocnicí, s vypnutým motorem a se sešitem na kolenou, do kterého nic nenapsala. Klára vyšla první, s Jonášem v nosítku. Sedla si dozadu a řekla jen: „Chtěli krev nás obou. Dali jsme ji.“
 
 Martin celou cestu mlčel. U domu se Klára naklonila dopředu, mezi sedadla.
 
@@ -96,7 +96,7 @@ Hana otevře sešit.
 
 Mluví stejně, jako by mluvila před komisí na stavebním úřadě nebo před starostou obce, které píše posudek. Pomalu, od začátku. Datum, místo, čím měřila a jak. Pramen pod Hřbetem: pět let osm stupňů a něco, dvanáctého ledna osm celá čtyři, třináctého února čtrnáct celá šest, dnes ráno sedmnáct celá jedna. Strouha od statku: dvacet tři celá čtyři čtrnáctého února, včera dvacet šest. Propad u ústí štoly: teplý, s oxidem uhličitým, každý týden víc. Prohlubeň pod haldou: plyn u kolen tři až čtyři procenta, večer víc než ráno. Od třináctého února tam přibyli čtyři mrtví ptáci a kuna. Otřesy u Nového Kostela: roj trvá, je přírodní, s tím, co se děje tady, nemusí mít nic společného.
 
-„To je všechno, co jsem změřila,“ řekne. „Měřila jsem jen místa, kam může kdokoli. Kdyby přišel kdokoli jiný a změřil to po mně, musí mu vyjít totéž.“
+„To je všechno, co jsem změřila,“ řekne. „Měřila jsem jen místa, kam může kdokoli. Kdyby přišel kdokoli jiný a změřil to po mně, muselo by mu vyjít totéž.“
 
 U stolu je ticho.
 
@@ -178,7 +178,7 @@ Sálová stojí za dveřmi, na prvním schodu dolů. Bez lampy. V šedém kabát
 
 „Dobrý večer.“
 
-Sálová se podívá na Kalinu. Dlouze, celou tvář. Kalina se na ni podívá taky a Hana vidí, jak se mu sevřou prsty na popruhu pouzdra.
+Sálová se podívá na Kalinu. Dlouze, po celé tváři. Kalina se na ni podívá taky a Hana vidí, jak se mu sevřou prsty na popruhu pouzdra.
 
 „Tomáš Kalina,“ řekne Hana.
 
@@ -214,7 +214,7 @@ Schody do ní vedou podél stěny, deset stupňů, a končí na podlaze z udusan
 
 A na konci síně skála.
 
-Hana ji zná. Zná ji z mnichova zápisu, zná ji ze Sálové, zná ji z vlastních odhadů v lidaru: sto čtyřicet až sto šedesát metrů od ústí, osmdesát až sto pod povrchem. Teď ji vidí poprvé.
+Hana ji zná. Zná ji z mnichova zápisu, zná ji z vyprávění Sálové, zná ji z vlastních odhadů v lidaru: sto čtyřicet až sto šedesát metrů od ústí, osmdesát až sto pod povrchem. Teď ji vidí poprvé.
 
 Je to plocha. Hladká, skoro rovná, velká asi jako vrata do stodoly. Tmavší než skála kolem. Kolem ní je hornina rezavá, rozpraskaná, s bělavými krustami. Plocha ne. Plocha je čistá, jako by ji někdo každý den otíral. Pod ní je kamenná lavice, dlouhá, hladká od sezení.
 
@@ -222,7 +222,7 @@ Hana se na ni dívá a cítí, jak se jí zrychlí dech, a zpomalí ho, protože
 
 „Tři celá osm,“ řekne Tadeáš. „U lavice. Tady na schodech jedna celá šest. Ten pán tam může šest minut. Pak všichni sem.“
 
-Kalina jde k lavici. Rychle a přesně, jako by to měl nacvičené, a možná to nacvičil v hotelu v Praze. Rozloží stativ. Nasadí na něj smyčku, černý kruh velký jako kolo od dětského kola. Zapojí kabel. Druhý konec kabelu natáhne ke schodům, k záznamníku, který položí na čtvrtý schod zespodu. Od záznamníku vede tenký kabel po schodech nahoru, přes archiv až do sklepa, kde končí malou anténou na trámku. Na záznamníku svítí zelené číslo. Čas z družic. Na desetiny vteřiny.
+Kalina jde k lavici. Rychle a přesně, jako by to měl nacvičené, a možná to nacvičil v hotelu v Praze. Rozloží stativ. Nasadí na něj smyčku, černý kruh velký jako kolo dětského bicyklu. Zapojí kabel. Druhý konec kabelu natáhne ke schodům, k záznamníku, který položí na čtvrtý schod zespodu. Od záznamníku vede tenký kabel po schodech nahoru, přes archiv až do sklepa, kde končí malou anténou na trámku. Na záznamníku svítí zelené číslo. Čas z družic. Na desetiny vteřiny.
 
 Vrátí se ke smyčce. Natočí ji. Podívá se do přijímače. Natočí ji jinak. Pak ji zvedne na prodlouženém rameni výš, ke stropu, nad plochu skály, a zůstane tak stát s rukou nahoře.
 
@@ -276,7 +276,7 @@ Třicet osm vteřin. Zelená čísla: třicet osm celá dvě.
 
 Pak znovu. Tečky, devět, kraj, domy, světlo. A potřetí.
 
-Hana natáčí. Ruce má studené, i když je tu horko jako v létě. Říká nahlas časy, tiše, pro zvuk na záznamu. *Druhé opakování, dvacet tři čtyřicet osm a třicet.* Hlas se jí nechvěje. Diví se tomu.
+Hana natáčí. Ruce má studené, i když je tu horko jako v létě. Říká polohlasem časy, pro zvuk na záznamu. *Druhé opakování, dvacet tři čtyřicet osm a třicet.* Hlas se jí nechvěje. Diví se tomu.
 
 *
 
@@ -290,7 +290,7 @@ Svislé. Dvojí délky, krátké a dlouhé. Mezi nimi tečky, ve skupinách. Jed
 
 Hana přestane dýchat.
 
-Ví to. Ví to dřív, než to stačí pojmenovat, jako se pozná rukopis někoho blízkého na obálce, ještě než se přečte jméno. Bodega v ejidu, sobota večer, šikmé světlo čelovky na horním čele válce. Sedm řádků. Svislé čáry dvojí délky. Tečky ve skupinách po jedné až čtyřech. Každý řádek začíná krátkou čarou. A sken z Chebu, poslední list kodexu, kost a na ní pět řádků. Stejná pravidla.
+Ví to. Ví to dřív, než to stačí pojmenovat, jako se pozná rukopis někoho blízkého na obálce, ještě než se přečte jméno. Bodega v ejidu, sobota večer, šikmé světlo Kalinova panelu na horním čele válce. Sedm řádků. Svislé čáry dvojí délky. Tečky ve skupinách po jedné až čtyřech. Každý řádek začíná krátkou čarou. A sken z Chebu, poslední list kodexu, kost a na ní pět řádků. Stejná pravidla.
 
 Spočítá řádky na skále. Sedm.
 
@@ -358,7 +358,7 @@ Jdou nahoru. Tadeáš je pouští před sebe. Deset schodů do horní části s�
 
 „Jděte.“
 
-Za vraty je archiv a v archivu je vzduch chladnější, ale ne dobrý. Hana cítí ve spáncích tlak, jako když se potápěla bez dostatečného vydechnutí. Kalina se opře o stůl. Zbledne. Sálová je najednou u něj. Hana neviděla, jak tam došla. Vezme mu tašku z ramene, jako by nic nevážila, a položí mu dlaň mezi lopatky.
+Za vraty je archiv a v archivu je vzduch chladnější, ale ne dobrý. Hana cítí ve spáncích tlak, jako když se potápěla a zadržela dech moc dlouho. Kalina se opře o stůl. Zbledne. Sálová je najednou u něj. Hana neviděla, jak tam došla. Vezme mu tašku z ramene, jako by nic nevážila, a položí mu dlaň mezi lopatky.
 
 „Sedněte si,“ řekne. „Na zem. Hlavu dolů. Ne. Tady.“
 
@@ -384,7 +384,7 @@ Nespala. Je oblečená. Na plotně má hrnec s mlékem a vedle čtyři hrnky. Kd
 
 „Devět čtyři u lavice,“ řekne Tadeáš.
 
-Lada nalije mléko do hrnků. Kalinovi první. Ten ho vezme oběma rukama a třese se mu.
+Lada nalije mléko do hrnků. Kalinovi první. Ten ho vezme oběma rukama a ruce se mu třesou.
 
 Hana si sedne ke stolu. Pastelky tam ještě leží. Holčiččin obrázek, dům s komínem, z komína kouř a pod domem kopec a v kopci žlutý obdélník.
 
@@ -430,7 +430,7 @@ Sálová se zastaví. Neotočí se hned.
 
 „Proč?“
 
-Sálová se otočí. V chodbě svítí jen žárovka nad schody a Sálová stojí mimo její světlo, ve stínu. Hana jí nevidí do tváře. Sálová vidí Haně do tváře celé.
+Sálová se otočí. V chodbě svítí jen žárovka nad schody a Sálová stojí mimo její světlo, ve stínu. Hana jí nevidí do tváře. Sálová vidí Haninu tvář celou.
 
 „Protože tlukot jsem znala,“ řekne. „Věděla jsem, co dělá. Tohle nevím, co je. A co nevím…“
 

@@ -40,7 +40,7 @@ Eren se ho nedotkl. Sáhl si na límec. Šev byl pořád rozpáraný a háček v
 
 Sedl si na zem vedle bedny.
 
-Vzali článek. Řezák nechali. Háček nenašli, protože ho nehledali. Nevěděli, že nějaký je. Kaj viděl štěrbinu u dolní tůně. Neviděl, co Eren dělá prsty, když řezák probouzí. To neviděl nikdo, ani u sedmého, kde stáli tak blízko, že mu Kaj dýchal na rameno.
+Vzali článek. Řezák nechali. Háček nenašli, protože ho nehledali. Nevěděli, že nějaký je. Kaj viděl štěrbinu u dolní tůně. Neviděl, co Eren dělá prsty, když řezák probouzí. To neviděl nikdo, ani u sedmého, kde Kaj stál ve vstupu do oddílu a díval se.
 
 Zámek vydržel.
 
@@ -134,7 +134,7 @@ A pak ten večer v dílně. Terminál v sáčku od náhradních dílů. Muž, kt
 
 Byla to úleva. Že už to není jeho.
 
-Teď ji cítil znovu. Stál u skály a cítil, jak by to šlo. Odemknout ho jednou, natrvalo, a položit k bednám. Pak už by nikdy nemusel nic rozhodnout. Nikdo by mu nemohl říct, že rozhodl za ně. Řezák by byl všech, a co by s ním kdo udělal, by bylo na tom, kdo by ho vzal do ruky. Ne na něm.
+Teď ji cítil znovu. Stál u skály a cítil, jak by to šlo. Odemknout řezák jednou, natrvalo, a položit k bednám. Pak už by nikdy nemusel nic rozhodnout. Nikdo by mu nemohl říct, že rozhodl za ně. Řezák by byl všech, a co by s ním kdo udělal, by bylo na tom, kdo by ho vzal do ruky. Ne na něm.
 
 Chtěl to. Tak moc, až se za to styděl.
 
@@ -186,11 +186,11 @@ Orrin kývl. Jako by čekal přesně tohle.
 
 „Článek jsi vzal,“ řekl Eren.
 
-„Článek jsem uschoval,“ řekl Orrin. „Jako vložky. Jako bedny. Řekl jsem, kde jsou, a dal jsem z nich, když bylo třeba.“ Podíval se dolů na prázdnou bednu pod svýma nohama. „Vrátil jsem někdy něco jinak, než jsem řekl?“
+„Článek jsem uschoval,“ řekl Orrin. „Jako vložky. Jako bedny. Řekl jsem, kde jsou, a dal jsem z nich, když bylo třeba.“ Podíval se dolů na prázdnou bednu pod svýma nohama. „Udělal jsem někdy něco jinak, než jsem řekl?“
 
 V kotli se někdo zasmál. Ne zle. Spíš úlevně. Pak další. Hlavy kývaly.
 
-Bylo to pravda. Orrin nikdy nic nevrátil jinak, než řekl. Řekl Maele o bednách předem. Dal Tio vývar, když řekl, že ho dá. Dnes otevřel bednu pro celý kotel. Byl poctivý. Poctivě držel všechno, co se dalo držet.
+Bylo to pravda. Orrin nikdy nic neudělal jinak, než řekl. Řekl Maele o bednách předem. Dal Tio vývar, když řekl, že ho dá. Dnes otevřel bednu pro celý kotel. Byl poctivý. Poctivě držel všechno, co se dalo držet.
 
 Orrin slezl z bedny. Haro a Svit ji vzali za uši a odnesli zpátky nahoru, prázdnou.
 
@@ -296,7 +296,7 @@ Sedla si u vchodu. Ne vedle něj.
 
 Eren se posadil. Venku za plachtou dohoříval jeho oheň a pod ní bylo šero, oranžové od žáru. Viděl Maelin obrys a její ruce v klíně. Přebírala kamínky. Nepočítala je.
 
-„Kaj to řekl Orrinovi před třemi dny,“ řekla. „Já jsem to věděla až ráno. Orrin mi to řekl, než šel za tebou.“ Odmlčela se. „Vždycky mi to řekne první. Myslela jsem, že je to poctivost.“
+„Kaj to řekl Orrinovi před třemi dny,“ řekla. „Já jsem se to dozvěděla až ráno. Orrin mi to řekl, než šel za tebou.“ Odmlčela se. „Vždycky mi to řekne první. Myslela jsem, že je to poctivost.“
 
 Nedořekla to. Eren čekal. Nedořekla.
 

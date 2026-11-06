@@ -2,7 +2,7 @@
 
 Ješka našel na pasece ve středu odpoledne, při výměně směn.
 
-Z ústí štoly vycházeli muži jeden za druhým, shrbení, s kahany v rukou, a na denním světle mžourali jako krtci. Byli mokří. Všichni. Ne od potu, nebo ne jen od potu: voda jim tekla z nohavic a z rukávů a za každým zůstávala na prknech u ústí tmavá stopa. Druhá parta už stála u boudy, natažená z kápí, a čekala, až ti první projdou, aby mohla vejít. Nikdo nemluvil. Ortlieb stál u ústí s tabulkou na pase a počítal je očima.
+Z ústí štoly vycházeli muži jeden za druhým, shrbení, s kahany v rukou, a na denním světle mžourali jako krtci. Byli mokří. Všichni. Ne od potu, nebo ne jen od potu: voda jim tekla z nohavic a z rukávů a za každým zůstávala na prknech u ústí tmavá stopa. Druhá parta už stála u boudy, zachumlaná v kápích, a čekala, až ti první projdou, aby mohla vejít. Nikdo nemluvil. Ortlieb stál u ústí s tabulkou na pase a počítal je očima.
 
 Ješek vyšel poslední. A nešel k boudě, kde ležely kápě a kde se dalo spát. Zastavil se u ústí, opřel se o rám, chvíli tak stál se zavřenýma očima, a pak se otočil a šel zpátky dovnitř. S druhou partou.
 
@@ -26,7 +26,7 @@ Matěj si sedl vedle něj na kámen u strouhy. Ruce měl studené. Ješkovy ruce
 
 „Převor přijel,“ řekl Matěj.
 
-„Vím. Celá ves ví. Vůl na voze, truhla s křížem.“ Ješek se ušklíbl. „Jako by vezli svatého.“
+„Vím. Celá ves ví. Vůz s volem, truhla s křížem.“ Ješek se ušklíbl. „Jako by vezli svatého.“
 
 „Ukázal jsem mu to.“
 
@@ -38,7 +38,7 @@ Ješek se pohnul. Ne moc. Jen ruce na kameni se mu sevřely, jako by kámen cht�
 
 Dlouho bylo ticho. Ze štoly se neslo bušení želízek, tlumené, a z boudy chrápání. Někde nad pasekou křičela sojka.
 
-„Neslíbil jsem ti to,“ řekl Matěj. „Řekl jsem ti to. Tak ti říkám, že jsem to udělal.“
+„Neslíbil jsem ti to,“ řekl Matěj. „Jen jsem ti řekl, že to udělám. Tak ti teď říkám, že jsem to udělal.“
 
 „A?“
 
@@ -64,7 +64,7 @@ Matěj si na to nevzpomínal. Teď si vzpomněl. Uhel z ohniště a bílá stěn
 
 Šel k boudě. U dveří se zastavil, ale neotočil se.
 
-„Je tak teplá, že se na ni nedá sáhnout,“ řekl do dveří. „Skála. Na čelbě. Ortlieb tam nechává kýbl s vodou, abychom si chladili ruce. Voda v kýblu je teplá za Otčenáš.“
+„Je tak horká, že se na ni nedá sáhnout,“ řekl do dveří. „Skála. Na čelbě. Ortlieb tam nechává kýbl s vodou, abychom si chladili ruce. Voda v kýblu je teplá za Otčenáš.“
 
 Pak vešel dovnitř.
 
@@ -104,7 +104,7 @@ Matěj si sedl na lavici, kde seděl Kojata. Byla ještě teplá.
 
 „Co?“
 
-Nevěděl, co chtěl říct. Že štola půjde do vody. Řekl jí to už jednou, a ona se zeptala, jestli je to tak zlé, a on řekl *nevím*. Teď věděl víc. Věděl, kolik vody teče z pukliny. Věděl, kolikrát za směnu se vypouští hrázka. Věděl, že na kůži, kterou mu Merin ukázal na jeden Otčenáš, zbývá mezi koncem štoly a vlnovkami necelých dvacet kroků. A nevěděl nic, co by mohl říct nahlas.
+Nevěděl, co chtěl říct. Že štola půjde do vody. Neřekl jí to tenkrát, a ona se zeptala, jestli je to tak zlé, a on řekl *nevím*. Teď věděl víc. Věděl, kolik vody teče z pukliny. Věděl, kolikrát za směnu se vypouští hrázka. Věděl, že na kůži, kterou mu Merin ukázal na jeden Otčenáš, zbývá mezi koncem štoly a kruhem necelých dvacet kroků a k vlnovkám jen o málo víc. A nevěděl nic, co by mohl říct nahlas.
 
 „Vy máte ještě ten měchýř?“ zeptal se. „Z prasete. Co z něj Ješek dělal míč.“
 
@@ -116,13 +116,13 @@ Matka se otočila a změřila si ho, jako by se zbláznil.
 
 Chvíli stála. Pak bez slova přistavila ke stěně stoličku, vylezla na ni a sáhla do tmy pod střechou, mezi trámy, kde visela kýta, svazky česneku a pytlík se semenem. Vytáhla odtud něco šedého a vrásčitého, velkého jako dvě pěsti. Ztvrdlý prasečí měchýř, nafouknutý a zavázaný provázkem, jak ho dělávali pro děti po zabijačce. Byl prašný a voněl kouřem.
 
-„Ještě z táty,“ řekla. „Ze zabijačky, poslední, co dělal. Ješek ho nechtěl vyhodit.“
+„Ještě po tátovi,“ řekla. „Ze zabijačky, poslední, co dělal. Ješek ho nechtěl vyhodit.“
 
 Podala mu ho. Byl lehký jako nic.
 
 *
 
-Do Dobroslaviny chalupy došel po půlnoci a ona už byla vzhůru. Seděla venku na špalku, zabalená v kožichu, s tyčí přes kolena, jako by na někoho čekala, a když vyšel z lesa, ani se nepodivila.
+K Dobroslavině chalupě došel po půlnoci a ona už byla vzhůru. Seděla venku na špalku, zabalená v kožichu, s tyčí přes kolena, jako by na někoho čekala, a když vyšel z lesa, ani se nepodivila.
 
 „Je ticho,“ řekla jen.
 
@@ -146,7 +146,7 @@ Dobroslava si měchýř vzala, obrátila ho v rukou, zatřásla jím a podívala
 
 *
 
-Došli na slatinu za šedi, kdy ještě nebylo vidět barvy, jen tvary. Rákosí, zakrslé borovice, kaluže jako olověné desky, a nad nimi nízká bílá mlha, která se ani nepohnula. Bublalo to. Všude, v té tichosti, bylo slyšet bublání, drobné, pravidelné, jako by se pod zemí vařila polévka.
+Došli na slatinu za šedi, kdy ještě nebylo vidět barvy, jen tvary. Rákosí, zakrslé borovice, kaluže jako olověné desky, a nad nimi nízká bílá mlha, která se ani nepohnula. Bublalo to. Všude, v tom tichu, bylo slyšet bublání, drobné, pravidelné, jako by se pod zemí vařila polévka.
 
 U doupěte Matěj přivázal měchýř k háku za hrdlo, trubičkou nahoru, vyndal špunt a zastrčil ho za pás. Pak se postavil na okraj a začal tyč spouštět dolů. Pomalu. Šikmo. K rýhám na kůře, které tam udělal v březnu.
 
@@ -170,7 +170,7 @@ Dobroslava neřekla nic. Nemusela.
 
 Druhý pokus trval déle.
 
-Matěj měchýř nafoukl. Nejdřív to nešlo. Byl ztvrdlý a nechtěl se roztáhnout, a Matěj do něj foukal tak dlouho, až se mu zatmělo před očima, a pak to povolilo a měchýř se zakulatil. Pomyslel si, že teď je v něm jeho vlastní dech. Ten dech, který mu tenkrát na dně doupěte ani nestačil. Pak měchýř obrátil a zmáčkl. Nad svíčkou. Plamen se ohnul a hořel. Jeho vlastní dech svíci neuhasil.
+Matěj měchýř nafoukl. Nejdřív to nešlo. Byl ztvrdlý a nechtěl se roztáhnout, a Matěj do něj foukal tak dlouho, až se mu zatmělo před očima, a pak to povolilo a měchýř se zakulatil. Pomyslel si, že teď je v něm jeho vlastní dech. Ten dech, který mu tenkrát na dně doupěte došel. Pak měchýř obrátil a zmáčkl. Nad svíčkou. Plamen se ohnul a hořel. Jeho vlastní dech svíci neuhasil.
 
 Potom ho zase spustil dolů. Tentokrát ho nechal dole déle. Deset Otčenášů. Dvanáct. Slunce už bylo nad hřbetem a mlha začala řídnout. Matěj se modlil a myslel na to, že se za chvíli zvedne vítr, hladina se rozlije a všechno bude zbytečné.
 
@@ -236,7 +236,7 @@ Dobroslava neodpověděla hned. Šla dál po pasece a teprve za několik kroků,
 
 Ve čtvrtek v noci šel Matěj do boudy.
 
-Nebylo to rozhodnutí. Nespal a nemohl se modlit a vědro by se do rána nepřelilo jinak, ať by se modlil sebevíc. Udalrich ho viděl vycházet. Tentokrát s lucernou do vrat nestál. Převor spal v jeho komoře a lucerna zůstala viset na háku.
+Nebylo to rozhodnutí. Nespal a nemohl se modlit a vědro by se do rána nepřelilo jinak, ať by se modlil sebevíc. Udalrich ho viděl vycházet. Tentokrát s lucernou ve vratech nestál. Převor spal v jeho komoře a lucerna zůstala viset na háku.
 
 V boudě to páchlo mokrými kápěmi, potem a kouřem. Pod stropem visel jeden kahan a pod ním na zemi, na pytlích a na senu, leželi muži denní party a spali tak tvrdě, jako by je někdo pobil. Hensel seděl venku u ohně. Když Matěj přišel, ukázal palcem do boudy, dovnitř, do kouta.
 
@@ -294,7 +294,7 @@ Matěj čekal.
 
 Venku Hensel přikládal na oheň. Když Matěj vyšel z boudy, podíval se na něj a nic se neptal. Matěj si k němu sedl na zem. Oheň praskal. Z ústí štoly se táhla pára, bílá v té tmě, a neslo se z ní bušení, tlumené, pravidelné, jako tep.
 
-Seděli tak dlouho. Pak Hensel položil dlaň na zem, plochou, a nechal ji tam, a Matěj to udělal po něm. Země byla studená, vlhká. Nic se nechvělo. Jen to bušení, ze kterého člověk necítil nic než vlastní srdce.
+Seděli tak dlouho. Pak Hensel položil dlaň na zem, plochou, a nechal ji tam, a Matěj to udělal po něm. Země byla studená, vlhká. Nic se nechvělo. Jen to bušení zdola, a v dlani necítil nic než tep vlastního srdce.
 
 Matěj zvedl ruku. Ukázal na sebe. Pak na ústí štoly. Pak udělal rukou to, co dělal Hensel tenkrát u čelby, když Ortliebovi ukazoval, kolik vody teče z pukliny: zvedl tři prsty a pak ještě dva. Pak ukázal dolů, k zemi, na to místo, kde ležela Henselova dlaň.
 
@@ -322,13 +322,13 @@ V ten den budu v hoře.
 
 Nenapsal *vidi*. Nebylo co. Nenapsal ani, který den to bude, protože to nevěděl. Na svatého Jiří se nekope. Konrád chtěl dračí srdce do svatého Jiří, a k teplé skále zbývalo málo, a za ní byla voda, a Merin nevěděl, co se stane. Nikdo to nevěděl. Ani Ortlieb, který to věděl nejlíp.
 
-Bylo to první rozhodnutí, které za celé jaro udělal a které nikomu neslíbil. Ani převorovi, ani Konrádovi, ani Ješkovi. Jen vosku.
+Bylo to první rozhodnutí, ke kterému se za celé jaro odhodlal sám a které nikomu neslíbil. Ani převorovi, ani Konrádovi, ani Ješkovi. Jen vosku.
 
 *
 
 Když se zvedl od strouhy, stál nad ním na haldě Ortlieb.
 
-Matěj ho neslyšel přijít. Stál tam s rukama za zády, v tom novém kabátci z Velikonočního pondělí, který už měl na loktech hlínu, a díval se dolů, na vědro a na tabulku v Matějově ruce. Nesmál se. Bylo to poprvé, co ho Matěj viděl bez úsměvu.
+Matěj ho neslyšel přijít. Stál tam s rukama za zády, v tom novém kabátci z velikonočního pondělí, který už měl na loktech hlínu, a díval se dolů, na vědro a na tabulku v Matějově ruce. Nesmál se. Bylo to poprvé, co ho Matěj viděl bez úsměvu.
 
 „Kolik?“ zeptal se česky.
 
@@ -354,7 +354,7 @@ Pak se otočil a šel zpátky na haldu, bokem, opatrně, a nahoře se ještě je
 
 A šel k ústí.
 
-Matěj stál u strouhy s tabulkou v ruce a nevěděl, jestli to byla hrozba, nebo prosba. Možná to Ortlieb nevěděl taky.
+Matěj stál u strouhy s tabulkou v ruce a nevěděl, jestli to byla hrozba, nebo prosba. Možná to nevěděl ani Ortlieb.
 
 *
 

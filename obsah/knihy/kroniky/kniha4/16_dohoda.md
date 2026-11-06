@@ -38,9 +38,9 @@ Orrin stál u přístřešku, když Eren šel kolem.
 
 Nebylo to cestou. Eren tam šel schválně.
 
-Kotel byl pod sněhem. Ležel na plachtách, na bednách, na hromadách kamenů nad mrtvými. Plachty se pod ním prohýbaly a lidé zpod nich lezli ven pomalu, ztuhlí, a dívali se kolem sebe, jako by se probudili na jiném místě. Kolem tůní sníh roztál a země tam byla černá a mokrá. Pod plachtami, kde nebyl oheň, ležely děti schoulené u dospělých a dospělí se nehýbali, aby neztratili teplo. Jedna žena seděla u vyhaslého ohniště a foukala do popela a nic se nedělo. Pak foukala znovu. Nahoře na kraji terasy stáli muži s oštěpy, ve sněhu, v kůžích. V noci se střídali. Ráno stáli pořád.
+Kotel byl pod sněhem. Sníh ležel na plachtách, na bednách, na hromadách kamenů nad mrtvými. Plachty se pod ním prohýbaly a lidé zpod nich lezli ven pomalu, ztuhlí, a dívali se kolem sebe, jako by se probudili na jiném místě. Kolem tůní sníh roztál a země tam byla černá a mokrá. Pod plachtami, kde nebyl oheň, ležely děti schoulené u dospělých a dospělí se nehýbali, aby neztratili teplo. Jedna žena seděla u vyhaslého ohniště a foukala do popela a nic se nedělo. Pak foukala znovu. Nahoře na kraji terasy stáli muži s oštěpy, ve sněhu, v kůžích. V noci se střídali. Ráno stáli pořád.
 
-Jen pod teplou skálou na horním kraji kotle sníh roztál. Kolem Orrinova přístřešku byla země černá a z plachet stoupala pára.
+I pod teplou skálou na horním kraji kotle sníh roztál. Kolem Orrinova přístřešku byla země černá a z plachet stoupala pára.
 
 Eren prošel kotlem, kolem beden, kolem Sefina prázdného ohniště, až na kraj té černé země. Tam se zastavil. Orrin vyšel ven, jako by na něj čekal.
 
@@ -102,7 +102,7 @@ Kaj. Šel po sněhu od rokle, sám, s rukama v podpaží. Zastavil se dole pod s
 
 Eren se otočil zpátky k terase.
 
-Seděli tak oba. Eren na kraji suti, Kaj pod ním. Dost dlouho na to, aby přestal počítat. To se mu nestalo od přistání.
+Seděli tak oba. Eren na kraji suti, Kaj pod ním. Dost dlouho na to, aby Eren přestal počítat. To se mu nestalo od přistání.
 
 Pak se v ústí jeskyně pohnul stín a vyšel Ru.
 
@@ -110,7 +110,7 @@ Pak se v ústí jeskyně pohnul stín a vyšel Ru.
 
 Ru se změnil.
 
-Eren to viděl, už když chlapec scházel po suti. Šel pomalu, ne poskakoval jako jindy. Na tváři měl od čela k bradě rudou čáru, okrovou, stejnou, jakou kreslil na hroby. Zastavil se dva kroky od Erena a díval se na něj. Nedíval se skrz něj, jako ta žena, která brala Tio dítě. Díval se na něj jako Ru.
+Eren to viděl, už když chlapec scházel po suti. Šel pomalu, neposkakoval jako jindy. Na tváři měl od čela k bradě rudou čáru, okrovou, stejnou, jakou kreslil na hroby. Zastavil se dva kroky od Erena a díval se na něj. Nedíval se skrz něj, jako ta žena, která brala Tio dítě. Díval se na něj jako Ru.
 
 Eren řekl Ikkuovo jméno.
 
@@ -118,7 +118,7 @@ Ru kývl a ukázal nahoru. Na terasu. Na ústí.
 
 „Tal,“ řekl.
 
-Eren vstal. Nohy ho nechtěly nést a první krok do suti udělal na kolena. Ru počkal. Nepomohl mu. Počkal, až se zvedne sám.
+Eren vstal. Nohy ho nechtěly nést a při prvním kroku do suti klesl na kolena. Ru počkal. Nepomohl mu. Počkal, až se zvedne sám.
 
 Muži na kraji terasy ustoupili. Mladý lovec poslední. Když Eren šel kolem, mladý lovec ho nespouštěl z očí a hrot jeho oštěpu ho sledoval, celou cestu přes terasu, až k ústí.
 
@@ -150,7 +150,7 @@ Oči mu sklouzly k Ikkuovi. Natáhl ruce k ohni. Dlaněmi nahoru. Byly čisté. 
 
 „Dorn,“ řekl Eren.
 
-Ru to nepřekládal. Jméno se nepřekládá. Tal kývla. Věděla.
+Ru to nepřekládal. Jméno se nepřekládá. Tal kývla, jako by věděla, o kom mluví.
 
 „Ne já,“ řekl Eren. Ukázal na sebe. Pak dolů, ven, směrem ke kotli. „Ne oni. Ne Hela. Ne děti. Dorn.“
 
@@ -282,7 +282,7 @@ Dabra se pohnula až potom.
 
 Přistoupila k řadě kamenů, až těsně, tak, že stála na samé hranici, a natáhla ruku přes ni. Ne k Tal. K Erenovi.
 
-Eren se naklonil. Dabra mu vzala pravou ruku do své, tvrdé a teplé, tak jak ji tehdy držela v chodbě u mazanice. Obrátila ji hřbetem nahoru, k ohni. K rudému pruhu, který se loupal.
+Eren se naklonil. Dabra mu vzala pravou ruku za zápěstí, rukou tvrdou a teplou, tak jako tehdy v chodbě u mazanice. Obrátila ji hřbetem nahoru, k ohni. K rudému pruhu, který se loupal.
 
 Pustila jeho ruku a udělala pohyb.
 
@@ -296,7 +296,7 @@ Ru to nemusel překládat. Tal to pochopila. Viděl, jak se jí v obličeji něc
 
 Dabra pak promluvila. Hluboko, s tím převaleným *r*, dlouze. Ne Erenovi. Tal. A Tal jí odpovídala, stejně pomalu, a byla to jiná řeč než ta, kterou mluvila s Ruem. Méně slov, víc rukou. Stará řeč, pomyslel si Eren. Ta, kterou se tu dvě skupiny domlouvaly dávno předtím, než sem někdo spadl z nebe.
 
-Ru poslouchal. Pak přeložil, co z toho rozuměl.
+Ru poslouchal. Pak přeložil, čemu z toho rozuměl.
 
 „Ona říká, že voda nespí,“ řekl. „Že tam dole, kde jsi byl, je skála tenká jako… jako kůže. Že ona to cítila. Ten oheň. Celá hloubka to cítila. Děti plakaly.“ Ru se zarazil. „Že víš, kde to je. A že máš ten oheň, co dělá tohle.“ Zopakoval Dabřin pohyb, prsty sevřené a rozevřené.
 
@@ -346,7 +346,7 @@ Tal se obrátila k Erenovi a řekla něco, co Ru nepřekládal hned.
 
 „Ona se ptá,“ řekl nakonec, „kde je ten druhý kus. Ten malý. Ten pro ni.“ Kývl k Dabře.
 
-Eren věděl, že se to zeptá. Celou dobu to věděl.
+Eren věděl, že se na to zeptá. Celou dobu to věděl.
 
 „U Orrina,“ řekl.
 
@@ -410,7 +410,7 @@ Eren mu kývl. Kaj vstal.
 
 Kaj se zastavil na kraji terasy. Podíval se na Tal. Na Ammu. Na mladého lovce s ovázanou hlavou. Pak na Erena.
 
-„Přelož mu to,“ řekl Kaj. Ne Erenovi. Ruovi. „Přelož mu přesně, co řeknu.“
+„Přelož jim to,“ řekl Kaj. Ne Erenovi. Ruovi. „Přelož jim přesně, co řeknu.“
 
 Ru kývl.
 

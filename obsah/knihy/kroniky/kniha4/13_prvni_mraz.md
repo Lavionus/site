@@ -96,7 +96,7 @@ Zasmál se. Nahlas, sám, s mokrým prutem v ruce. Žena s dítětem se na něj 
 
 Odpoledne přišla na řadu hlína.
 
-Ženy ji vybíraly u břehu, šedou a lepkavou, a mísily ji s nasekanou trávou a s vodou z potoka, teplou, aby nezmrzla dřív, než ji nanesou. A s něčím ještě. Jedna z nich přinesla v kůži hromádku tmavého trusu, kulatých bobků, jaké Eren vídal na stezkách po zvířatech, a vmísila ji do hlíny. Hela se odvrátila. Vesa ne. Vesa strčila zdravou ruku do hlíny až po loket a hnětla ji, jak to dělaly ženy, a nepodívala se, co v ní je.
+Ženy ji vybíraly u břehu, šedou a lepkavou, a mísily ji s nasekanou trávou a s vodou z potoka, teplou, aby nezmrzla dřív, než ji nanesou. A s něčím ještě. Jedna z nich přinesla v kůži hromádku tmavého trusu, kulatých bobků, jaké po zvířatech vídal na stezkách, a vmísila ji do hlíny. Hela se odvrátila. Vesa ne. Vesa strčila zdravou ruku do hlíny až po loket a hnětla ji, jak to dělaly ženy, a nepodívala se, co v ní je.
 
 Hlína se nanášela rukama, z obou stran stěny naráz, a vtlačovala se do mezer mezi pruty a uhlazovala se mokrou dlaní. Uvnitř rozdělaly ženy malý oheň, aby hlína vyschla dřív, než ji v noci chytí mráz. Kouř šel ven stěnou, dokud nebyla hotová. Potom už ne.
 
@@ -112,7 +112,7 @@ Eren se smál s nimi. Řady nechal, jak byly.
 
 *
 
-Tio přišla s Ruem třetí den.
+Tio přišla s Ruem třetí den stavby.
 
 Přiběhli dolů roklí a Tio měla na sobě pořád Orrinovu kůži, převázanou šňůrkou. Když uviděla ženy, zastavila se, pak se rozběhla k té s dítětem a něco jí řekla. Žena odpověděla. Tio jí sundala dítě ze zad, jako by to dělala odjakživa, a posadila si ho na bok.
 
@@ -204,7 +204,7 @@ Tio nevěděla, co na to říct, a tak sáhla po dalším kořenu a zvedla ho. �
 
 Maela vstala. Uviděla Erena na kraji světla a zastavila se.
 
-Nemluvili spolu od toho rána, kdy přinesl Lema. Maela vypadala hubeněji. Nebo jen unaveněji. Měla na sobě pořád svou bundu a přes ramena kůži, kterou Eren neznal.
+Nepromluvili spolu toho rána, kdy přinesl Lema, ani potom. Maela vypadala hubeněji. Nebo jen unaveněji. Měla na sobě pořád svou bundu a přes ramena kůži, kterou Eren neznal.
 
 „Sefa si o ni řekla,“ řekla Maela. Bez úvodu. „Poslala Rua, ať jí ji pošlu. Že potřebuje ruce, které si to zapamatujou. Tak ji vodím.“
 
@@ -228,7 +228,7 @@ Maela kývla. Spočítala si to, viděl jí to na obličeji. „Dávky dojdou za
 
 „Já vím, že víš.“ Maela se obrátila k Tio. „Půjdeme,“ řekla. Tio vzdychla a vstala a Ru začal skládat rostliny zpátky do plachty, každou zvlášť.
 
-Když odešly, sedl si Eren k Sefě. Sefa ležela se zavřenýma očima. Myslel si, že spí.
+Když odešli, sedl si Eren k Sefě. Sefa ležela se zavřenýma očima. Myslel si, že spí.
 
 „Ukaž mi ruku,“ řekla.
 
@@ -266,7 +266,7 @@ Vesa jich nasbírala víc než kdokoli jiný. Nosila je v bundě se zavázanými
 
 *
 
-Čtvrtý den přišel ke stavbě Kaj.
+Čtvrtý den stavby přišel ke stavbě Kaj.
 
 Nikdo ho neposlal. Přišel odpoledne, sám, s rukama v podpaží, a stál na kraji a díval se. Pak se sehnul, vzal svazek namočených prutů a nesl ho k Ardovi, aniž se zeptal, jestli může. Ardo mu mlčky podal konec prutu. Kaj ho vzal.
 
@@ -314,7 +314,7 @@ Mohla to být pochvala. Nebo výtka.
 
 Večer u Sefina ohně se rozhodovalo, kdo bude v domě spát.
 
-Bylo jich tam patnáct, dvacet. Hela, Ardo, Bena, Vesa a její lidé, a pár dalších z desítek, které neodešly k Orrinovi. Dům unesl deset lidí, možná dvanáct, když se natlačí.
+Bylo jich tam patnáct, dvacet. Hela, Ardo, Bena, Vesa a její lidé, a pár dalších z desítek, které neodešly k Orrinovi. Dům pojal deset lidí, možná dvanáct, když se natlačí.
 
 Eren seděl a mlčel.
 

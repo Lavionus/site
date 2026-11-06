@@ -38,7 +38,7 @@ Pod tím krátký text. Sael ho četla pomalu, jako čte cizí rukopis, slovo po
 
 A pod textem obrázky.
 
-Tři listy. Strojopis, šedý, jak bývají šedé kopie kopií, s okraji ztmavlými od skeneru. Sael je poznala dřív, než přečetla první řádek. Poznala je podle mezer. Psací stroj, na kterém to v osmdesátých letech psala, měl vadné *e*, které skákalo trochu nad řádek, a ona to *e* viděla teď na obrazovce, na každém řádku, jako by skákalo jí.
+Tři listy. Strojopis, šedý, jak bývají šedé kopie kopií, s okraji ztmavlými od skeneru. Sael je poznala dřív, než přečetla první řádek. Poznala je podle mezer. Psací stroj, na kterém to od osmdesátých let psala, měl vadné *e*, které skákalo trochu nad řádek, a ona to *e* viděla teď na obrazovce, na každém řádku, jako by skákalo jí.
 
 List dvacet devět. List třicet. List třicet jedna.
 
@@ -48,11 +48,11 @@ Na posledním dole, pod strojopisem, dva řádky rukou. Modrou propiskou. V tepl
 
 *zpět KV, VI/2020, s M. R.*
 
-Její ruka. Její zkratka. Její písmeno *S* s malým háčkem nahoře, které nikdy neuměla odnaučit.
+Její ruka. Její zkratka. Její písmeno *S* s malým háčkem nahoře, kterého se nikdy neuměla odnaučit.
 
 Sael seděla a dívala se na to.
 
-Čtyřicet let ten papír ležel v kazetě pod stolem, v hoře, za dubovými vraty, čtyřicet dva schodů pod sklepem s jablky. Teď ležel tady, na obrazovce v Chebu, v Ostrově, v Lipsku, kdekoli. Kdokoli si ho mohl zvětšit a podívat se, jak se jí v roce devatenáct třásla ruka.
+Desítky let ten papír ležel v kazetě pod stolem, v hoře, u dubových vrat, čtyřicet dva schodů pod sklepem s jablky. Teď ležel tady, na obrazovce v Chebu, v Ostrově, v Lipsku, kdekoli. Kdokoli si ho mohl zvětšit a podívat se, jak se jí v roce devatenáct třásla ruka.
 
 Spočítala jména. Udělala to dvakrát, protože to tak dělala vždycky. Třicet. Z devíti rodin. Rybovi. Lindnerovi. Rodina z Annabergu, matka, otec, dvě dcery a babička, která nevycházela před setměním už padesát let. Javorova dcera v Sokolově. Javorův vnuk se ženou a dvěma dětmi za hranicí v Bavorsku. A další čtyři rodiny, které Sael znala a za které ručila.
 
@@ -130,7 +130,7 @@ Slyšela, jak položil tužku. Pomalu, aby to necvaklo.
 
 „On by to neudělal,“ řekl Brandl. „Proč by to dělal? Chce je chránit. Sama jste mi řekla, co vám řekl. Že má o ně starost.“
 
-„Ano,“ řekla Sael. „Má o ně starost. A ony se teď bojí. Zítra se budou bát tak, že nastoupí do každého auta, které jim přijede. Do vašich aut, pane Brandle. Do bytů, které platí on. A on bude vědět, kde jsou. Všichni, na jednom místě, s klíči od něj.“
+„Ano,“ řekla Sael. „Má o ně starost. A ony se teď bojí. Zítra se budou bát tak, že nastoupí do každého auta, které pro ně přijede. Do vašich aut, pane Brandle. Do bytů, které platí on. A on bude vědět, kde jsou. Všichni, na jednom místě, s klíči od něj.“
 
 Brandl dlouho nic neříkal.
 
@@ -184,7 +184,7 @@ Lada kývla. „Kosovi volali z Bavorska. Mají tam někoho od Javora za souseda
 
 „Neřeknu to.“
 
-„Řekneš. Za týden.“ Lada si sundala brýle a složila je do kapsy zástěry. „Co je venku, už nevezmeš. Co je tady, je tady. Hora to ohlídá.“
+„Řekneš. Za týden.“ Lada si sundala brýle a složila je do kapsy zástěry. „Co je venku, už zpátky nevezmeš. Co je tady, je tady. Hora to ohlídá.“
 
 Sael to nechala být. Lada měla pravdu a Sael to věděla, a stejně ji to pálilo. Hora ohlídala kazetu. Kopii neohlídal nikdo.
 
@@ -262,7 +262,7 @@ Sael věděla, že si ta žena to číslo zapamatovala. Deset padesát. Zapamato
 
 „Potřebuju vaši pomoc,“ řekla Sael.
 
-Řekla to rovnou, protože jinak by to neřekla vůbec. Šedesát let nežádala nikoho. Rozhodovala, kdo pomůže komu, a pomoc rozdělovala, jak se rozděluje voda v suchém roce. Teď neměla co rozdělovat.
+Řekla to rovnou, protože jinak by to neřekla vůbec. Šedesát let nikoho o nic nežádala. Rozhodovala, kdo pomůže komu, a pomoc rozdělovala, jak se rozděluje voda v suchém roce. Teď neměla co rozdělovat.
 
 „Devět rodin,“ řekla. „Třicet lidí. Někteří odjedou k Brandlovi, protože nemají kam jinam. Nechci, aby odjeli k němu. Potřebuju je odvézt jinam. Tam, kde je nikdo nebude hledat. Mám místa. Nemám auta, nemám lidi, kteří by je vezli, a nemám nikoho, komu by Klára Rybová věřila.“ Odmlčela se. „Vám věří.“
 
@@ -308,7 +308,7 @@ Ta žena se nepohnula.
 
 „Co vidím?“
 
-„Že seznam není zlý,“ řekla ta žena. „Ani úřad. Záleží na tom, kdo ho drží a jestli se ho na to někdo zeptal.“ Ruce měla pořád na sešitu. „Paní Sálová. Ten seznam teď drží fórum. A ten, kdo ho tam dal. A sestra z porodnice. A kdokoli, kdo si ho uložil. Úřad je jediný, kdo ho nemá. A jediný, kdo může ty lidi chránit veřejně, protože jsou veřejně.“
+„Že seznam není zlý,“ řekla ta žena. „Ani úřad. Záleží na tom, kdo ho drží a jestli se lidí, kteří v něm jsou, někdo zeptal.“ Ruce měla pořád na sešitu. „Paní Sálová. Ten seznam teď drží fórum. A ten, kdo ho tam dal. A sestra z porodnice. A kdokoli, kdo si ho uložil. Úřad je jediný, kdo ho nemá. A jediný, kdo může ty lidi chránit veřejně, protože už jsou na veřejnosti.“
 
 „Policie, která přijde ke Kláře domů a zeptá se, odkud má to dítě v krvi to, co má.“
 
@@ -354,7 +354,7 @@ Sael dlouho nepromluvila.
 
 Řekla to stejně jako devátého. Stejným hlasem, stejnými slovy. A slyšela, že to není totéž.
 
-Devátého tou větou chránila ty, kdo byli v kazetě. Dnes chránila jen sebe. Třetí duben, telefon displejem dolů, devět dní. Ta žena to nevěděla, ale něco slyšela. Změřila si Sael jinak než předtím, ne tvrdě, spíš jako teploměr, který ukazuje číslo, jaké nečekala.
+Devátého tou větou chránila ty, kdo byli v kazetě. Dnes chránila jen sebe. Třetí duben, telefon displejem dolů, devět dní. Ta žena to nevěděla, ale něco slyšela. Změřila si Sael jinak než předtím, ne tvrdě, spíš jako by na teploměru četla číslo, jaké nečekala.
 
 „Dobře,“ řekla ta žena.
 

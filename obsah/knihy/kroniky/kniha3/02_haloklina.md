@@ -20,7 +20,7 @@ Za hrdlem nakreslí čáru, která jde dolů. Přes ni tři vodorovné vlnovky.
 
 „Haloklina šestadvacet. Mlha od sedmadvaceti do devětadvaceti, podle dne. Sala jednatřicet, nejhlubší místo třicet čtyři. Nechoď tam. Tam nic není.“
 
-„Pravidlo třetin,“ řekne Luis. „Otáčíme na sto třiceti. Kdo první dojde na sto třicet, ten otáčí. Jestli dáš signál, jdeme. Neptám se proč.“
+„Pravidlo třetin,“ řekne Luis. „Otáčíme na sto třiceti. Kdo první dojde na sto třicet, ten otáčí. Jestli dáš signál, otáčíme. Neptám se proč.“
 
 „A ty?“
 
@@ -44,7 +44,7 @@ Po žebříku sestoupí ke dřevěné plošině, kterou si Luis s pomocníky z o
 
 Voda má čtyřiadvacet stupňů. První minutu je teplá. Pak je jen voda.
 
-Zapne si láhve po stranách, každou na dvě karabiny, jednu na hrudi a jednu na bocích. Automaty si pověsí na krk. Hlavní světlo na pravou ruku, záložní dvě na hrudní popruhy. Tabulku na psaní a sešit do kapsy na stehně. Nůž. Druhý nůž. Cívka. Šipky. Foťák v pouzdře na krátké šňůře. Každou věc si osahá dvakrát, nejdřív od hlavy dolů a pak odspodu nahoru, jak ji to učila Jana. Ruce to znají. Hlava se mezitím dívá na hladinu.
+Zapne si láhve po stranách, každou na dvě karabiny, jednu na hrudi a jednu na boku. Automaty si pověsí na krk. Hlavní světlo na pravou ruku, záložní dvě na hrudní popruhy. Tabulku na psaní a sešit do kapsy na stehně. Nůž. Druhý nůž. Cívka. Šipky. Foťák v pouzdře na krátké šňůře. Každou věc si osahá dvakrát, nejdřív od hlavy dolů a pak odspodu nahoru, jak ji to učila Jana. Ruce to znají. Hlava se mezitím dívá na hladinu.
 
 Luis je hotový dřív. Vznáší se u plošiny, kolena pokrčená, ploutve nahoře, nehybně, jako by ho voda držela v dlani. Na přilbě mu svítí zelená dioda kamery.
 
@@ -76,7 +76,7 @@ Ze stropu visí krápníky, tisíce, od tenkých brček, průsvitných jako skle
 
 Všechno je to pod vodou.
 
-A nic z toho pod vodou nevzniklo. Krápník je kapka, která stékala po kapce, odkapávala na vzduchu a zanechávala za sebou tenoučký film kalcitu, rok po roce, tisíciletí po tisíciletí. Pod vodou se kapka neutrhne. Pod vodou krápníky nerostou, jen leží a čekají, až je voda zase pustí.
+A nic z toho pod vodou nevzniklo. Krápník je kapka za kapkou, které stékaly, odkapávaly na vzduchu a zanechávaly za sebou tenoučký film kalcitu, rok po roce, tisíciletí po tisíciletí. Pod vodou se kapka neutrhne. Pod vodou krápníky nerostou, jen leží a čekají, až je voda zase pustí.
 
 Hana pluje lesem, který vyrostl, když tu ještě nebyla voda. Když bylo moře o sto metrů níž a celý tenhle kraj byl suchý a tyhle chodby byly jeskyně, kterými se dalo projít pěšky. A pak led na severu roztál, moře stouplo, podzemní voda stoupla s ním a les se ponořil.
 
@@ -90,9 +90,9 @@ Téčko. Šipky na šňůře, plastové trojúhelníčky, ukazují ven, ke studn
 
 Zkontroluje tlak. Sto devadesát a sto osmdesát pět. Dobře. Dýchá víc, než by měla. Ví proč.
 
-Hrdlo vypadá, jako by chodba došla a pak si to rozmyslela.
+Hrdlo vypadá, jako by chodba skončila a pak si to rozmyslela.
 
-Strop sjede dolů a dno se zvedne a mezi nimi zůstane štěrbina, vysoká sotva na loket, široká na rozpětí paží. Luis zastaví před ní, ohlédne se a posvítí Haně do hrudi, ne do očí. Otázka. Hana zvedne ruku s palcem a ukazovákem do kroužku a ruka se jí přitom zachvěje, takže kroužek vypadá spíš jako otazník.
+Strop sjede dolů a dno se zvedne a mezi nimi zůstane štěrbina, vysoká sotva na dvě dlaně, široká na rozpětí paží. Luis zastaví před ní, ohlédne se a posvítí Haně do hrudi, ne do očí. Otázka. Hana zvedne ruku s palcem a ukazovákem do kroužku a ruka se jí přitom zachvěje, takže kroužek vypadá spíš jako otazník.
 
 Luis odepne levou láhev od boční karabiny, nechá ji viset jen na hrudní a postrčí ji před sebe. Položí se na bok. A zmizí.
 
@@ -126,9 +126,9 @@ Ve dvaceti pěti metrech se voda začne chvět.
 
 Nejdřív si myslí, že je to něco s maskou. Že se jí orosilo sklo, nebo že má v očích slzy. Luisovo světlo před ní se zvlní, rozpadne se, složí se a znovu rozpadne, jako když se člověk dívá přes rozpálený asfalt v létě. Hana zamrká. Nepomůže to.
 
-Pak to pochopí. Haloklina. Hranice. Nad ní sladká voda, která sem přitekla z deště po celém poloostrově, pod ní slaná, která sem natekla zespodu z moře, kilometry daleko, skrz vápenec, jako voda do houby. Sladká je lehčí a pluje na slané. Jen tady, kde se dotýkají, se míchají do tenké vrstvy, ve které se světlo láme jinak každý milimetr. Svět se v ní rozteče.
+Pak to pochopí. Haloklina. Hranice. Nad ní sladká voda, která sem přitekla z deště po celém poloostrově, pod ní slaná, která sem natekla zespodu z moře, kilometry daleko, skrz vápenec, jako voda do houby. Sladká je lehčí a pluje na slané. Jen tady, kde se dotýkají, se míchají do tenké vrstvy, ve které se světlo láme na každém milimetru jinak. Svět se v ní rozteče.
 
-Luis pluje těsně nad hranicí, opatrně, aby ji nerozvířil víc, než musí. Pak se nadechne a klesne skrz.
+Luis pluje těsně nad hranicí, opatrně, aby ji nerozvířil víc, než musí. Pak vydechne a klesne skrz.
 
 Hana jde za ním.
 
@@ -148,7 +148,7 @@ Sirovodík. Ví to. Bakterie, které na hranici sladké a slané vody rozkládaj
 
 Vplave do ní.
 
-Najednou nevidí nic. Ani ruku před maskou. Jen bílou, osvětlenou zevnitř, rovnoměrnou, bez hloubky a bez směru. Nahoře, dole, vpravo, vlevo, všechno je stejné. Na chvíli ani neví, jestli stoupá, nebo klesá. Hloubkoměr říká dvacet osm. Pak dvacet osm a půl. Šňůra. Kde je šňůra. Levá ruka ji najde, dřív než se stihne vyděsit, protože ji celou dobu držela tři centimetry nad ní, přesně jak ji to učili, a teď ji drží v dlani, tenkou, napjatou, jedinou věc v celém tom bílém světě, která má směr.
+Najednou nevidí nic. Ani ruku před maskou. Jen bílou, osvětlenou zevnitř, rovnoměrnou, bez hloubky a bez směru. Nahoře, dole, vpravo, vlevo, všechno je stejné. Na chvíli ani neví, jestli stoupá, nebo klesá. Hloubkoměr říká dvacet osm. Pak dvacet osm a půl. Šňůra. Kde je šňůra. Levá ruka ji najde, dřív než se stihne vyděsit, protože se celou dobu držela tři centimetry nad ní, přesně jak ji to učili, a teď ji drží v dlani, tenkou, napjatou, jedinou věc v celém tom bílém světě, která má směr.
 
 Dvacet devět.
 
@@ -194,7 +194,7 @@ Hana se zastaví dva metry od něj a nehýbe se. Neví, jak dlouho. Neopovažuje
 
 Válec.
 
-Je delší, než vypadal na videu, nebo kratší, to se pod vodou nedá říct. Bledý. Šedobílý, a v jejím světle, teplejším než Viktorovo, víc do zelena, ale jen na horní straně, kde ho poleva nepokryla. Leží šikmo, podélně se svahem. Spodní konec mizí v sintru. Horní konec, ten se značkami, trčí ven. Sintr kolem něj tvoří lem, jako když se kolem kořene stromu v kamenitém svahu nahrne hlína. Na spodní straně je lem silný, na boku slabší, a nahoře se ztenčuje do průsvitného povlaku, přes který povrch válce prosvítá jako tvář přes závoj.
+Je delší, než vypadal na videu, nebo kratší, to se pod vodou nedá říct. Bledý. Šedobílý, a v jejím světle, teplejším než Viktorovo, víc dozelena, ale jen na horní straně, kde ho poleva nepokryla. Leží šikmo, podél svahu. Spodní konec mizí v sintru. Horní konec, ten se značkami, trčí ven. Sintr kolem něj tvoří lem, jako když se kolem kořene stromu v kamenitém svahu nahrne hlína. Na spodní straně je lem silný, na boku slabší, a nahoře se ztenčuje do průsvitného povlaku, přes který povrch válce prosvítá jako tvář přes závoj.
 
 Hana k němu připlave na metr. Opatrně. Ploutve nahoru, kolena pokrčená, ruce u těla. Dýchá pomalu, aby se nezvedla. Visí nad ním.
 
@@ -232,7 +232,7 @@ Na hraně terasy pod válcem, kde polevu kdysi rozbil kámen ze stropu, je vidě
 
 Každá z nich byla jednou povrch. Každá někdy byla dno, na kterém ležel válec a na které kapala voda.
 
-Pod hranou, ve žlábku, leží úlomky. Kousky polevy velké jako nehet, jako dlaň, které se odlomily, když dopadl ten kámen ze stropu, a teď leží v prohlubni, napůl zarostlé. Některé jsou krémové. Některé o něco tmavší. Hana je vyfotí taky, s kartou, protože je to kontext a kontext se fotí. Pak se k nim už nevrátí.
+Pod hranou, ve žlábku, leží úlomky. Kousky polevy velké jako nehet, jako dlaň, které se odlomily, když dopadl ten kámen ze stropu, a teď leží v prohlubni, napůl zarostlé. Některé jsou krémové. Některé o něco tmavší. Hana je vyfotí taky, s kartou, protože je to kontext a kontext se fotí. Jen dvakrát, přehledově, z hrany terasy. Pak se k nim už nevrátí.
 
 *
 
@@ -290,7 +290,7 @@ Luis si tabulku vezme zpátky, připíše jedno slovo a podá jí ji znovu.
 
 Pomalu.
 
-Hana neví, jestli to myslí na výstup, na dech, nebo na něco jiného. Luis se dívá nahoru, k hladině, a jeho tvář za maskou je stejně klidná jako v táboře, když namotával šňůru.
+Hana neví, jestli tím myslí výstup, dech, nebo něco jiného. Luis se dívá nahoru, k hladině, a jeho tvář za maskou je stejně klidná jako v táboře, když namotával šňůru.
 
 Na třech metrech, s plícemi plnými plynu, který jí chutná po kovu, s bradou, která se třese, a se třemi sty fotkami v pouzdře na šňůře, si Hana něco slíbí.
 

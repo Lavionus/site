@@ -2,15 +2,15 @@
 
 O Hromnicích roku 1172 zamrzl ve skriptoriu inkoust.
 
-Matěj to poznal podle pera. Ráno ještě psalo, jen ztuha, jako by táhlo po písku. Po primě se vrátil z kostela s rukama zkřehlýma od svíce, kterou nesl v průvodu, a pero zůstalo v kalamáři stát, jako by ho tam někdo zatloukl. Odnesl kalamář k oknu, kde aspoň svítilo slunce, a dýchal na něj. Nepomohlo to. Bratr Wigand seděl u vedlejšího pultu a už půl roku nepsal, protože neviděl. Řekl do ticha, že za jeho mládí zamrzal inkoust každou zimu a nikdo z toho nedělal zázrak.
+Matěj to poznal podle pera. Ráno ještě psalo, jen ztuha, jako by táhlo po písku. Po primě se vrátil z kostela s rukama zkřehlýma, jak v průvodu nesl svíci, a pero zůstalo v kalamáři stát, jako by ho tam někdo zatloukl. Odnesl kalamář k oknu, kde aspoň svítilo slunce, a dýchal na něj. Nepomohlo to. Bratr Wigand seděl u vedlejšího pultu a už půl roku nepsal, protože neviděl. Řekl do ticha, že za jeho mládí zamrzal inkoust každou zimu a nikdo z toho nedělal zázrak.
 
 „Nedělám zázrak,“ řekl Matěj. „Dýchám.“
 
 „Dýcháš nahlas,“ řekl Wigand. „To je skoro totéž.“
 
-V dalších letech si Matěj na tu chvíli vzpomínal častěji, než by člověk čekal od rána, kdy se nic nestalo. Seděl v chladné místnosti nad listem, na kterém měl rozepsaný opis svatého Bernarda, a bylo mu sedmadvacet let. Měl dobrou ruku a dobré oči a věděl o obojím. Věděl také, že bratr Wigand umírá, i když to nikdo neříkal, a že po něm bude někdo muset převzít knihy, klíče od almárií a seznam toho, co klášter půjčil a komu. Armarius. Ve Waldsassenu to nebyl úřad, kvůli kterému by se bratři hádali, a právě proto po něm Matěj toužil tak, že se za to zpovídal. Nechtěl moc. Chtěl, aby ho někdo jednou zavolal jménem, protože ho potřebuje.
+V dalších letech si Matěj na tu chvíli vzpomínal častěji, než by člověk čekal od rána, kdy se nic nestalo. Seděl v chladné místnosti nad listem, na kterém měl rozepsaný opis otce Bernarda z Clairvaux, a bylo mu sedmadvacet let. Měl dobrou ruku a dobré oči a věděl o obojím. Věděl také, že bratr Wigand umírá, i když to nikdo neříkal, a že po něm bude někdo muset převzít knihy, klíče od almárií a seznam toho, co klášter půjčil a komu. Armarius. Ve Waldsassenu to nebyl úřad, kvůli kterému by se bratři hádali, a právě proto po něm Matěj toužil tak, že se z toho zpovídal. Nechtěl moc. Chtěl, aby ho někdo jednou zavolal jménem, protože ho potřebuje.
 
-Jménem. Bratři mu říkali Matthias. Při obláčce ho tak zapsal opat. Nikdo nevěděl, že doma v Mlýnci pod horami mu matka nikdy neřekla jinak než Matěji. Mladší bratr Ješek z toho, když byli malí, dělal Matějka nebo Mates, podle toho, jestli se zrovna prali. Ve Waldsassenu se mluvilo latinsky v kostele a německy všude jinde. Matěj mluvil obojím líp než většina bratří a stejně se mu stávalo, že ho někdo pochválil za to, jak „čistě“ mluví, jako se chválí pes, který se naučil nosit.
+Jménem. Bratři mu říkali Matthias. Při obláčce ho tak zapsal opat. Nikdo nevěděl, že doma v Mlýnci pod horami mu matka nikdy neřekla jinak než Matěji. Mladší bratr Ješek mu, když byli malí, říkal Matějku nebo Matesi, podle toho, jestli se zrovna prali. Ve Waldsassenu se mluvilo latinsky v kostele a německy všude jinde. Matěj mluvil obojím líp než většina bratří a stejně se mu stávalo, že ho někdo pochválil za to, jak „čistě“ mluví, jako se chválí pes, který se naučil nosit.
 
 Kalamář povolil kolem tercie. Matěj stihl napsat jedenáct řádků.
 
@@ -30,9 +30,9 @@ Rüdiger kývl. Byl mladší, než vypadal, obličej měl spálený od slunce, k
 
 „Pan Konrád,“ pokračoval převor, „poslal Rüdigera vykonat pouť za sebe a za svůj dům. A Rüdiger se vrací s dary.“ Otevřel truhlu.
 
-Uvnitř, na vrstvě vlny, ležely zabalené předměty a každý měl přivázanou cedulku. Úlomek kamene z Božího hrobu. Hrstka hlíny z Getsemanské zahrady v koženém váčku. Trn, o kterém cedulka tvrdila, že pochází z koruny, a Matěj, který věděl, kolik takových trnů je v Evropě, se na něj nepodíval podruhé. A úplně dole, ve vlastním obalu z plátna, který byl několikrát převázaný, něco delšího a těžšího.
+Uvnitř, na vrstvě vlny, ležely zabalené předměty a každý měl přivázanou cedulku. Úlomek kamene z Božího hrobu. Hrstka hlíny z Getsemanské zahrady v koženém váčku. Trn, o kterém cedulka tvrdila, že pochází z koruny, a Matěj, který věděl, kolik takových trnů je v křesťanstvu, se na něj nepodíval podruhé. A úplně dole, ve vlastním obalu z plátna, který byl několikrát převázaný, něco delšího a těžšího.
 
-Převor obal rozvázal sám, pomalu, jak se rozvazuje rána.
+Převor obal rozvázal sám, pomalu, jak se rozvazuje obvaz na ráně.
 
 Byla to kost. Asi tak dlouhá jako předloktí od lokte po zápěstí, ale silnější, na jednom konci rozšířená do kloubu, který Matěj nedokázal přirovnat k ničemu, co znal z kuchyně nebo z jatek. Nebyla bílá. Měla barvu tmavého medu, místy až hnědočernou, a lesk, jaký mívají kameny v potoce. Převor ji Matějovi vložil do obou dlaní a Matěj se musel zapřít, protože takovou tíhu nečekal. Kost vážila jako kámen. Byla studená jako kámen.
 
@@ -40,7 +40,7 @@ Byla to kost. Asi tak dlouhá jako předloktí od lokte po zápěstí, ale siln�
 
 „Os draconis,“ řekl převor. „Kost draka, kterého zabil svatý Jiří. Je k ní listina.“
 
-Listina ležela pod kostí, složená na čtvrtky, s pečetí na proužku. Převor ji rozložil na stole vedle truhly a Matěj se nad ni naklonil s kostí stále v dlaních, protože si ji nikdo nevzal zpátky.
+Listina ležela pod kostí, složená načtvrto, s pečetí na proužku. Převor ji rozložil na stole vedle truhly a Matěj se nad ni naklonil s kostí stále v dlaních, protože si ji nikdo nevzal zpátky.
 
 Byla psaná čitelnou latinou a měla formule, jaké Matěj znal z listin k relikviím, které klášter dostával: *notum sit omnibus*, ať je všem známo, že tato kost, uchovávaná po staletí u kostela svatého Jiří v Lyddě, kde svatý mučedník trpěl, je pravá kost onoho draka, kterého svatý Jiří přemohl… Následovala jména svědků, datum, pečeť. Matěj četl a cítil, jak se mu v hrudi rozlévá teplo, které nemělo nic společného s pánví. Bylo to krásné. Bylo to krásně napsané.
 
@@ -58,17 +58,17 @@ Matěj držel kost a díval se na listinu a v tu chvíli by slíbil cokoli.
 
 „Mohu, otče.“
 
-„Mohu co?“
+„Co můžeš?“
 
 „Mohu vám to říct s jistotou,“ řekl Matěj. Slyšel sám sebe, jak to říká, a znělo to jako pták, který vletí oknem do kostela: jasně a pozdě. „Do svatého Jiří budete vědět, co to je.“
 
-Převor chvíli mlčel. Měl šedé oči a ve tváři výraz, který Matěj neuměl přečíst. O mnoho měsíců později, v jiném světle, by ho pojmenoval jako lítost.
+Převor chvíli mlčel. Měl šedé oči a ve tváři výraz, který Matěj neuměl přečíst. O mnoho měsíců později, v jiném světle, by ho nazval lítostí.
 
 „Dobře,“ řekl převor. „Budeš to mít v knihovně. Bratr Wigand ti dá klíč.“
 
 *
 
-Bratr Wigand mu klíč nedal. Dal mu jen pokyn, kde ho najde, a zbytek odpoledne strávil tím, že se ptal na kost.
+Bratr Wigand mu klíč nedal. Řekl mu jen, kde ho najde, a zbytek odpoledne strávil tím, že se ptal na kost.
 
 „Jak je těžká?“
 
@@ -130,7 +130,7 @@ Napsal si na tabulku: *svědkové jednou rukou.* A vedle toho: *non vidi.* Nevid
 
 Pak dlouho seděl a díval se na kost.
 
-V hlavě si přehrával to, co řekl převorovi. *Mohu vám to říct s jistotou.* Do svatého Jiří zbývalo jedenáct týdnů. Viděl sám sebe, jak stojí v kostele, svátečně, s kostí na podušce, a jak převor kývne a před celým konventem řekne: bratr Matthias ji prozkoumal. Viděl starého Wiganda, jak mu v posledních dnech dává klíče. Viděl to tak jasně, že se mu z toho udělalo nevolno, a tak vstal a šel k oknu.
+V duchu si opakoval to, co řekl převorovi. *Mohu vám to říct s jistotou.* Do svatého Jiří zbývalo jedenáct týdnů. Viděl sám sebe, jak stojí v kostele, svátečně, s kostí na podušce, a jak převor kývne a před celým konventem řekne: bratr Matthias ji prozkoumal. Viděl starého Wiganda, jak mu v posledních dnech dává klíče. Viděl to tak jasně, že se mu z toho udělalo nevolno, a tak vstal a šel k oknu.
 
 Venku na dvoře ležel sníh a na sněhu svítilo měsíční světlo. U brány stál Rüdigerův mezek, přivázaný ke kruhu ve zdi. Funěl a z nozder mu stoupala pára. Dál, za zdí, se zvedala tmavá linie lesa a za ní, daleko, nebe nad horami, kde ležel Mlýnec. Matěj tam nebyl šest let. Matka žila. Ješek, jeho bratr, už musel být muž; když ho viděl naposledy, bylo mu čtrnáct a sliboval, že půjde dělat do dolu, až tam nějaký bude.
 

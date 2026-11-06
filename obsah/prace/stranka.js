@@ -3,7 +3,12 @@
   'use strict';
   const J = window.PRACE_JADRO;
   const $ = id => document.getElementById(id);
+  const U = window.PRACE_ULOZISTE;
   const DATA = 'prace/data/';
+  // Inzeráty stahuje prohlížeč přímo z MPSV (v gitu jsou jen stálé podklady). Na localhostu jde zdroj
+  // přesměrovat (test: localStorage webapp_prace_zdroj = cesta k místní kopii).
+  const ZDROJ = (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && localStorage.getItem('webapp_prace_zdroj')) ||
+    'https://data.mpsv.cz/od/soubory/volna-mista/volna-mista.json';
   const KLIC_FILTR = 'webapp_prace_filtr';
   const KLIC_DOMOV = 'webapp_prace_domov';
   const NA_STRANKU = 50;
@@ -34,17 +39,102 @@
   const bity = (maska, nazvy) => nazvy.filter((_, i) => maska & (1 << i));
 
   /* ---------- načtení ---------- */
-  async function nacti() {
-    const [m, r, o] = await Promise.all(['meta', 'mista', 'obce'].map(n =>
-      fetch(DATA + n + '.json').then(x => { if (!x.ok) throw new Error(n + '.json: ' + x.status); return x.json(); })));
-    meta = m; obce = o;
-    obce.forEach(x => obecPodleKodu.set(x[0], x));
+  const dnesMistni = () => new Date().toLocaleDateString('sv');   // RRRR-MM-DD podle místního času
+
+  function pouzij(m, r) {
+    meta = m;
     M = J.priprav(meta, r);
+    detaily.clear();
+  }
+
+  /* Uložená data hned; první návštěva dne → na pozadí kontrola a případně stažení nových. */
+  async function nacti() {
+    const o = await fetch(DATA + 'obce.json').then(x => { if (!x.ok) throw new Error('obce.json: ' + x.status); return x.json(); });
+    obce = o;
+    obce.forEach(x => obecPodleKodu.set(x[0], x));
+    const [m, r, stav] = await Promise.all(['meta', 'mista', 'stav'].map(k => U.cti(k))).catch(() => []);
+    if (m && r) {
+      pouzij(m, r);
+      if (!stav || stav.den !== dnesMistni()) obnov(false, false);
+    } else {
+      await obnov(true, false);
+    }
+  }
+
+  /* Stažení z MPSV ve Workeru. prvni = zatím nic uloženo (čeká se), vynutit = bez kontroly verze.
+     Zámek: víc otevřených oken nestahuje totéž dvakrát – druhé počká a vezme hotová data. */
+  let obnovaBezi = false;
+  async function obnov(prvni, vynutit) {
+    if (obnovaBezi) return;
+    obnovaBezi = true;
+    const prace = async () => {
+      let stav = await U.cti('stav').catch(() => null);
+      if (!vynutit && stav && stav.den === dnesMistni()) {   // mezitím stáhlo jiné okno
+        if (prvni || stav.verze !== (meta && meta.verze)) {
+          const [m, r] = await Promise.all([U.cti('meta'), U.cti('mista')]);
+          if (m && r) return { meta: m, radky: r };
+        }
+        return null;
+      }
+      if (!vynutit && stav && meta) {   // stejná verze na serveru → jen poznamenat dnešní kontrolu
+        const h = await fetch(ZDROJ, { method: 'HEAD', cache: 'no-store' });
+        if (h.ok && h.headers.get('last-modified') + '|' + h.headers.get('content-length') === stav.verze) {
+          await U.zapis({ stav: Object.assign(stav, { den: dnesMistni() }) });
+          return null;
+        }
+      }
+      return stahni(prvni);
+    };
+    try {
+      const nova = navigator.locks ? await navigator.locks.request('webapp_prace_stahovani', prace) : await prace();
+      if (nova) {
+        pouzij(nova.meta, nova.radky);
+        if (!prvni) {
+          $('stari').innerHTML = `<div class="obnova">✓ Načtena aktuální data k ${datum(J.dnesDny(meta.datum))}.</div>`;
+          prepocti();
+        }
+      } else if (!prvni) $('stari').innerHTML = upozorneniStari();
+    } catch (e) {
+      if (prvni) throw e;
+      $('stari').innerHTML = upozorneniStari() + `<div class="obnova">Nová data se nepodařilo stáhnout (${esc(e.message)}), zobrazuji uložená.</div>`;
+    } finally {
+      obnovaBezi = false;
+    }
+  }
+
+  function stahni(prvni) {
+    const hlaseni = t => {
+      if (prvni) $('nacitani').innerHTML = t;
+      else $('stari').innerHTML = `<div class="obnova">${t}</div>`;
+    };
+    hlaseni('Stahuji aktuální nabídky z MPSV…' + (prvni ? '<div class="prubeh"><i id="prubeh"></i></div><small>Jednou denně, asi 190 MB – další návštěvy dne jsou hned.</small>' : ''));
+    return new Promise((hotovo, chyba) => {
+      const w = new Worker('prace/stahovani.js');
+      w.onmessage = ({ data: d }) => {
+        if (d.nacteno) {
+          const pr = d.celkem ? Math.min(99, Math.round(d.nacteno / d.celkem * 100)) : 0;
+          const mb = Math.round(d.nacteno / 1e6) + (d.celkem ? ' z ' + Math.round(d.celkem / 1e6) : '') + ' MB';
+          if (prvni) { $('prubeh').style.width = pr + '%'; $('prubeh').parentNode.title = mb; }
+          else hlaseni(`Stahuji aktuální nabídky z MPSV… ${pr ? pr + ' %' : mb}`);
+          return;
+        }
+        w.terminate();
+        if (d.chyba) chyba(new Error(d.chyba));
+        else hotovo({ meta: d.meta, radky: d.radky });
+      };
+      w.onerror = e => { w.terminate(); chyba(new Error(e.message || 'chyba Workeru')); };
+      w.postMessage({ zdroj: new URL(ZDROJ, location.href).href, den: dnesMistni() });
+    });
+  }
+
+  function upozorneniStari() {
+    const stari = dnes - J.dnesDny(meta.datum);
+    return stari > 3 ? `<div class="varovani">⚠ Data jsou z ${datum(J.dnesDny(meta.datum))} (${predDny(J.dnesDny(meta.datum))}). Některá místa už mohou být obsazená.</div>` : '';
   }
 
   function detail(id) {
     const d = J.davkaDetailu(id, meta);
-    if (!detaily.has(d)) detaily.set(d, fetch(DATA + 'detail/' + d + '.json').then(x => x.json()).catch(e => { detaily.delete(d); throw e; }));
+    if (!detaily.has(d)) detaily.set(d, U.cti('detail/' + d).then(x => x || {}).catch(e => { detaily.delete(d); throw e; }));
     return detaily.get(d).then(x => x[id] || {});
   }
 
@@ -519,6 +609,7 @@
     $('btnMapa').onclick = () => zobrazMapu(true);
     $('btnDalsi').onclick = () => { zobrazeno += NA_STRANKU; vykresliSeznam(); };
     $('btnSdilet').onclick = () => kopiruj(odkazNaHledani(), 'Odkaz na hledání zkopírován.');
+    $('btnObnovit').onclick = () => { zavriNabidky(); obnov(false, true); };
     $('seznam').addEventListener('click', e => { const k = e.target.closest('.karta'); if (k) otevriDetail(+k.dataset.id); });
     $('domovHledat').addEventListener('input', navrhniObce);
     $('btnDomovPryc').onclick = () => nastavDomov(null);
@@ -562,8 +653,7 @@
     navazUdalosti();
     $('nacitani').hidden = true;
     $('seznamObal').hidden = false;
-    const stari = dnes - J.dnesDny(meta.datum);
-    if (stari > 3) $('stari').innerHTML = `<div class="varovani">⚠ Data jsou z ${datum(J.dnesDny(meta.datum))} (${predDny(J.dnesDny(meta.datum))}). Některá místa už mohou být obsazená.</div>`;
+    if (!obnovaBezi) $('stari').innerHTML = upozorneniStari();
     prepocti();
     if (par.get('id')) otevriDetail(+par.get('id'));
   }

@@ -10,7 +10,7 @@ V jedenáct čtyřicet je korunka v metru a půl. Laja skončí najednou. Tyč p
 
 „Sascab,“ řekne. Ani se neotočí.
 
-Výplach zbělá ještě víc. Teď je to hustá kaše jako vápno na zeď. Chlapci ji odhrnují lopatou do strany, aby netekla k zemi pod stožárem.
+Výplach zbělá ještě víc. Teď je to hustá kaše jako vápno na zeď. Chlapci ji odhrnují lopatou do strany, aby netekla pod stožár.
 
 *
 
@@ -30,7 +30,7 @@ Kalina sedí na kamenné zdi a v jednu hodinu si nasadí sluchátka. Smyčku dr�
 
 „Vysílá.“
 
-Maják bude vysílat do desátého dubna, ať u něj někdo sedí, nebo ne. Kalina to ví. Ona taky. Ve dvě to udělá znovu. Ve tři taky.
+Maják bude vysílat do desátého dubna, ať u něj někdo sedí, nebo ne. Kalina to ví. Ona taky. Ve dvě to Kalina udělá znovu. Ve tři taky.
 
 *
 
@@ -54,7 +54,7 @@ Rosa vstane. Hana ví, co to znamená: devět metrů je moc mělko. Buď je špa
 
 Vytahování tyčí trvá čtyřicet minut. Hana stojí u díry a počítá je. Rosa stojí za ní.
 
-Kamera dona Isidra je černý válec velký jako svítilna, na kabelu navinutém na cívce, s kroužkem bílých diod kolem čočky. Obraz jde do malé obrazovky v kufříku, kterou don Isidro postaví na kapotu nákladního vozu. Takhle se dívá do studní, když se ucpou.
+Kamera dona Isidra je černý válec velký jako svítilna, na kabelu navinutém na cívce, s kroužkem bílých diod kolem čočky. Obraz jde na malou obrazovku v kufříku, kterou don Isidro postaví na kapotu nákladního vozu. Takhle se dívá do studní, když se ucpou.
 
 Kamera klesá. Bílé stěny vrtu, rýhované od korunky. Pět metrů. Sedm. Osm.
 
@@ -202,7 +202,7 @@ Rosa vykřikne. Jediné slovo, maysky. Hana mu nerozumí a rozumí mu úplně.
 
 *
 
-Hlas přijde z díry o minutu později. Přes řev dmychadla, který inženýr zastaví máchnutím ruky, a přes šestnáct metrů pažnice a skály. Slabý, rozbitý, jako z rádia, které nemá chytit stanici.
+Hlas přijde z díry o minutu později. Přes řev dmychadla, který inženýr zastaví máchnutím ruky, a přes šestnáct metrů pažnice a skály. Slabý, rozbitý, jako z rádia, které nemůže chytit stanici.
 
 „¿Quién?“
 
@@ -280,7 +280,7 @@ Lékař poslouchá a ptá se, krátce a španělsky. Hana slyší jen jeho otáz
 
 Jak se jmenuješ. Kde jsi. Bolí tě hlava. Kde tě bolí. Bolí tě klouby, lokty, ramena. Brní tě něco. Dělal jsi zastávky. Kolik je dnes.
 
-Odpovědi nevidí. Vidí jen lékařův obličej. Při jedné otázce se zamračí. Při další kývne. Při poslední, *kolik je dnes*, se dlouho nehýbe a pak řekne *bien, bien, no importa*. To je jedno.
+Odpovědi neslyší. Vidí jen lékařův obličej. Při jedné otázce se zamračí. Při další kývne. Při poslední, *kolik je dnes*, se dlouho nehýbe a pak řekne *bien, bien, no importa*. To je jedno.
 
 Zakryje sluchátko dlaní a otočí se k Haně a k inženýrovi.
 
@@ -366,7 +366,7 @@ Viktor chtěl, aby sjel dolů a přinesl štítky a maják. Dokud se to dá. Dok
 
 Okraj. Té díry.
 
-Aby ten okraj srovnal. Lůžko, ze kterého Hana válec vyzvedla. Aby se dláty prošel jeho okrajem, ať *to nevypadá, že se tam páčilo*. Ať tam není otisk, podle kterého by někdo mohl říct, že tam něco leželo a někdo to vzal.
+Aby ten okraj srovnal. Lůžko, ze kterého Hana válec vyzvedla. Aby jeho okraj přejel dláty, ať *to nevypadá, že se tam páčilo*. Ať tam není otisk, podle kterého by někdo mohl říct, že tam něco leželo a někdo to vzal.
 
 Hana píše a ruka se jí nezastaví. Neví, jak to dokáže. Píše přesně to, co Luis říká, a ne to, co ví. Ví, co je lůžko. Ví, že je to jediný otisk originálu, který zůstal v jeskyni. Že má tvar spodního konce, souměrného a oblého, a že replika má konec zploštělý, jako by ho někdo zmáčkl palcem. Ví, že se jí Viktor u studny ptal, jestli lůžko fotila, a ona mu odpověděla, že snímky jsou bílé.
 
@@ -406,7 +406,7 @@ Pak si vzpomněl na Walta. Na to, jak mu bylo šestnáct. Na chodbu, ve které s
 
 A Tomásův přístroj. Každou hodinu. Deset minut. Postavil jsem ho rovně.
 
-U kolíku stojí Kalina se sluchátky na uších, protože je jedna. Neslyší, co Luis říká. Neví, že teď mluví o něm.
+U kolíku čeká Kalina na jednu hodinu. Neslyší, co Luis říká. Neví, že teď mluví o majáku.
 
 „Ana.“
 
@@ -506,7 +506,7 @@ Otisky dlaní. Hana jich napočítá pět, šest, pak se světlo pohne a ona př
 
 Ví, co to je. Zná to z literatury, z fotek z jeskyní na celém Yucatánu a dál, z Belize, z Guatemaly. Jeskyně byly pro Maye vstupy do podsvětí. Chodilo se do nich s pochodněmi, obětovalo se v nich, malovalo se na stěny. Otisky rukou jsou v mayských jeskyních běžné. Často dětské. Četla o tom kdysi na fakultě článek v časopise, který už nevychází.
 
-A strop nad bloky je kus stropu, který kdysi spadl. Prohlubeň se třemi stromy nahoře na poli je starý propad, a nad propadem mohla být kdysi díra. Vchod. Suchý, ze země, ne z vody. Tudy mohl kdysi někdo slézt dolů s pochodní. A potom se vchod zavalil.
+A bloky jsou kus stropu, který kdysi spadl. Prohlubeň se třemi stromy nahoře na poli je starý propad, a nad propadem mohla být kdysi díra. Vchod. Suchý, ze země, ne z vody. Tudy mohl někdo slézt dolů s pochodní. A potom se vchod zavalil.
 
 To je výklad. Je dobrý. Je pravděpodobný.
 

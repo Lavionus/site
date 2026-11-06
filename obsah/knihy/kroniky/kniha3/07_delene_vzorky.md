@@ -10,7 +10,7 @@ Změna povolení má jednu stranu. Dvě místa odběru navíc, kontaktní kůra,
 
 „Jsme rádi,“ řekne Viktor.
 
-V šest dvacet zastaví u brány na pozemek ejida auto. Pak druhé. Hana je vidí, protože jde zrovna s kanystrem k umyvadlu a od umyvadla je přes keře vidět kus cesty. Tři mladí muži, jeden s batohem, ze kterého trčí tyč s kruhem na konci, jako když se hledá kov. Druhé auto je bílé, s logem televize, kterou Hana nezná. Mladík z obce, ten, co má klíč od řetězu, stojí u brány a nemluví s nimi.
+V šest dvacet zastaví u brány na pozemek ejida auto. Pak druhé. Hana je vidí, protože jde zrovna s kanystrem k umyvadlu a od umyvadla je přes keře vidět kus cesty. Tři mladí muži, jeden s batohem, ze kterého trčí tyč s kruhem na konci, jakou se hledá kov. Druhé auto je bílé, s logem televize, kterou Hana nezná. Mladík z obce, ten, co má klíč od řetězu, stojí u brány a nemluví s nimi.
 
 Za deset minut nad lesem přeletí dron. Ne Ríšův. Ríšův leží v bedně. Zastaví se nad cenotem, chvíli visí, bzučí jako vosa v zavařenině, a pak odletí k silnici.
 
@@ -102,7 +102,7 @@ Jenom o nich ví všechno.
 
 Dělí je pod plachtou v půl páté.
 
-Stůl je vytřený do sucha a pokrytý čistým papírem. Na něm digitální váha s přesností na setiny gramu, která se v horku trochu chvěje a Hana ji musí dvakrát vynulovat. Malá bateriová bruska s diamantovým kotoučem, tenkým jako nehet. Střička s destilovanou vodou. Lupa. Karta s měřítkem. Sáčky ústavu s natištěnými kolonkami a s pečetními páskami, každá s vlastním číslem.
+Stůl je vytřený do sucha a pokrytý čistým papírem. Na něm digitální váha s přesností na setiny gramu z Marisolina černého kufru, která se v horku trochu chvěje a Hana ji musí dvakrát vynulovat. Malá bateriová bruska s diamantovým kotoučem, tenkým jako nehet. Střička s destilovanou vodou. Lupa. Karta s měřítkem. Sáčky ústavu s natištěnými kolonkami a s pečetními páskami, každá s vlastním číslem.
 
 Marisol sedí naproti. Ríša stojí za Haninými zády s kamerou. Viktor stojí kousek dál, s rukama zkříženýma na prsou, a nic neříká. Salcedo přijel ve čtyři kvůli polovinám pro laboratoř a sedí na bedně s deskami na kolenou.
 
@@ -240,7 +240,7 @@ Přichází zespodu. Ze studny.
 
 Praskne to. Suše a ostře, jako když se láme led na rybníce, jenže stokrát hlasitěji, a odráží se to od stěn, takže Hana nepozná odkud. Pak to pozná. Na severní straně, naproti nim, se od stěny odlupuje kus skály. Pomalu. Nejdřív jen čára, tmavá, šikmá, přes bílý vápenec. Pak se čára rozšíří a kus stěny velký jako dodávka se odkloní, chvíli visí, jako by se rozmýšlel, a padá.
 
-Dopadne do vody na kraj kuželu. Voda vyletí vzhůru, bílá, do výšky, a s ní hukot, který se ve studni nemá kam podít. Z kořenů stromu na protější stěně vyletí všichni tohové najednou. Z hloubky vylétnou netopýři, kteří se tam za svítání vrátili, celé hejno, jako černý dým.
+Dopadne do vody na kraj kuželu. Voda vystříkne vzhůru, bílá, do výšky, a s ní hukot, který se ve studni nemá kam podít. Z kořenů stromu na protější stěně vyletí všichni tohové najednou. Z hloubky vylétnou netopýři, kteří se tam za svítání vrátili, celé hejno, jako černý dým.
 
 Marisol chytí Hanu za paži a táhne ji dozadu. Hana se nebrání. Couvají od okraje, tři kroky, pět, a mezitím se ze studny ozve druhý, menší pád, a třetí, jen sypání, jako když se do kbelíku sype štěrk.
 
@@ -294,7 +294,7 @@ Inženýr mluví španělsky, věcně, v krátkých větách. Marisol tlumočí 
 
 S lomem se jedná. Lom má povolení.
 
-„Civilní ochrana by zavřela hned,“ řekne Marisol a obrátí se k Viktorovi, pak k Haně. „Dneska. Já jsem vyjednala dva týdny. Do Velkého pátku se smí dovnitř jen kvůli zajištění, s mým dohledem a s jeho souhlasem, každý den znovu.“ Kývne k inženýrovi. „O Velikonocích tu nebude nikdo, kdo by cokoli podepsal. Od pátku třetího dubna se systém uzavírá. Vstup se zahradí a dovnitř nesmí nikdo. My ne, vy ne, Luis ne.“
+„Civilní ochrana by zavřela hned,“ řekne Marisol a obrátí se k Viktorovi, pak k Haně. „Dneska. Já jsem vyjednala dva týdny. Do Velkého pátku se smí dovnitř jen kvůli zajištění, pod mým dohledem a s jeho souhlasem, každý den znovu.“ Kývne k inženýrovi. „O Velikonocích tu nebude nikdo, kdo by cokoli podepsal. Od pátku třetího dubna se systém uzavírá. Vstup se zahradí a dovnitř nesmí nikdo. My ne, vy ne, Luis ne.“
 
 „Patnáct dní,“ řekne don Felipe. Neřekne to nikomu. Jen to řekne nahlas.
 
@@ -312,7 +312,7 @@ V noci Ríša pořád stříhá. Producentka chce delší verzi a pak kratší a
 
 Hana sedí u svého stolu. Otevře deník na nové straně a udělá svislou čáru.
 
-Vlevo zapíše odstřel. *19. 3. 7:46, nejsilnější od 3. 3.* Zřícení části severní stěny, kus velký jako dodávka, dva menší pády. Voda bílá celá. Vstup do chodby zčásti zavalený. Plošina: jeden nosník ohnutý. Nikdo ve vodě. Civilní ochrana, páska pět metrů od okraje, inženýr si vyfotil zápisy odstřelů. Lom: *v rámci povolení, nová stěna, větší nálož*. Uzavření systému od pátku 3. 4. Do té doby vstup jen kvůli zajištění, s dohledem INAH a se souhlasem civilní ochrany, každý den znovu. Předmět zůstává na místě. *(M. C.)*
+Vlevo zapíše odstřel. *19. 3. 7:46, nejsilnější od 3. 3.* Zřícení části severní stěny, kus velký jako dodávka, dva menší pády. Voda bílá celá. Vstup do chodby zčásti zavalený. Plošina: jeden nosník ohnutý. Nikdo ve vodě. Civilní ochrana, páska pět metrů od okraje, inženýr si vyfotil zápisy odstřelů. Lom: *v rámci povolení, nová stěna, větší nálož*. Uzavření systému od pátku 3. 4. Do té doby vstup jen kvůli zajištění, pod dohledem INAH a se souhlasem civilní ochrany, každý den znovu. Předmět zůstává na místě. *(M. C.)*
 
 Vpravo napíše jedno číslo.
 

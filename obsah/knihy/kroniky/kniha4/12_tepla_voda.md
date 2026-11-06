@@ -68,13 +68,13 @@ Sešel suť pod terasou a šel podél potoka, po jeho proudu, kolem dolní tůn�
 
 Pak začalo svítat.
 
-Nejdřív zešedla skála, pak tráva na suti, a pak bylo vidět, že je všechno bílé. Jinovatka ležela na kamenech, na trsech trávy, na suchých stoncích u vody, na každém výstupku stěny. Jemná, chlupatá, jako chmýří na dávkách v té bedně, která nabobtnala. Na stěně soutěsky nad ním se držela v každé spáře a dělala z ní bílou čáru. Celá stěna byla nakreslená bíle.
+Nejdřív zešedla skála, pak tráva na suti, a pak bylo vidět, že je všechno bílé. Jinovatka ležela na kamenech, na trsech trávy, na suchých stoncích u vody, na každém výstupku stěny. Jemná, chlupatá, jako chmýří na dávkách, které nabobtnaly v té bedně. Na stěně soutěsky nad ním se držela v každé spáře a dělala z ní bílou čáru. Celá stěna byla nakreslená bíle.
 
-Eren šel podél ní a díval se.
+Stezka do rokle tu uhýbala od stěny přes suť a pod stěnou nikdo nechodil. Eren šel podél ní a díval se.
 
 Bílá. Bílá. Bílá.
 
-Nad hlavou se mu ze stěny vysunulo skalní žebro. Dlouhé a úzké, šikmo dolů, jako výztuha na trupu modulu. Pod ním byl kout, kam ještě nedosáhlo světlo. Eren se do toho kouta podíval a zastavil se.
+Nad hlavou mu ze stěny vystupovalo skalní žebro. Dlouhé a úzké, šikmo dolů, jako výztuha na trupu modulu. Pod ním byl kout, kam ještě nedosáhlo světlo a kam od stezky nebylo vidět. Eren se do toho kouta podíval a zastavil se.
 
 V koutě pod žebrem byla skála tmavá.
 
@@ -148,7 +148,7 @@ Do kotle se nevrátil. Šel podél potoka dál dolů, kolem jam pod zatáčkou, 
 
 Pod převisem odvalil plochý kámen. Odhrnul suť a hlínu, zmrzlou na povrchu, pod ním sypkou. Strčil ruku do pukliny až po rameno, nahmatal uzel z plachty, vytáhl ho a rozbalil.
 
-Článek byl chladný. Ne zmrzlý, tak hluboko mráz nedosáhl, ale chladnější, než by Eren chtěl. Strčil si ho pod bundu, na břicho, a držel ho tam, dokud kov nezteplal, a teprve potom ho vytáhl a podíval se.
+Článek byl chladný. Ne zmrzlý, tak hluboko mráz nedosáhl, ale chladnější, než by Eren chtěl. Strčil si ho pod bundu, na břicho, a držel ho tam, dokud se kov nezahřál, a teprve potom ho vytáhl a podíval se.
 
 Rysky se rozsvítily. Jedna stála. Druhá blikala, jako blikala od sedmého. Pomalu, slabě.
 
@@ -168,7 +168,7 @@ Nesáhl na něj hned.
 
 Slyšel tu větu ve své hlavě a poznal ji. Měla jiná slova. Ale poznal ji, tak jako poznáš hlas za stěnou dřív, než rozumíš, co říká. *Je to jen test, Erene. Neškodný test.* Byl to tentýž hlas. Přátelský, trochu netrpělivý, a nikdo mu nepatřil. Teď patřil jemu.
 
-Vytáhl řezák z bedny. Rozpáral šev límce, kde měl háček, a vytáhl ho. Drát byl studený a malý a lehký. Nic nevážil.
+Vytáhl řezák z bedny. Rozšířil nářez v límci, kde měl háček, a vytáhl ho. Drát byl studený a malý a lehký. Nic nevážil.
 
 Zavřel bednu. Přetáhl přes ni plachtu. Šel.
 
@@ -250,7 +250,7 @@ Nemohl to vrátit.
 
 Článek nechal pod bundou.
 
-Zpátky pod převis ho dát nemohl. Ne do toho chladu. A ne tam, odkud ho právě vzal, protože teď by ten balvan pokaždé, když by šel kolem, věděl, kam se dívá. Potřeboval jiné místo. Teplé. Kam nikdo nesahá.
+Zpátky pod převis ho dát nemohl. Ne do toho chladu. A ne tam, odkud ho právě vzal, protože teď by se pokaždé, když by šel kolem toho balvanu, prozradil pohledem. Potřeboval jiné místo. Teplé. Kam nikdo nesahá.
 
 Šel k pramenu.
 
@@ -264,7 +264,7 @@ Pára nad pramenem stoupala bílá a hustá, šedá v ranním světle. A v ní, 
 
 Eren ztuhl.
 
-Ta postava se nehýbala. Stála v páře a pára se kolem ní převalovala, takže chvíli byla vidět a chvíli ne. Nedalo se poznat, kam se dívá. Ale stála tak, jak stál jenom jeden člověk v celém kotli. S rukama v podpaží.
+Ta postava se nehýbala. Stála v páře a pára se kolem ní převalovala, takže chvíli byla vidět a chvíli ne. Nedalo se poznat, kam se dívá. Ale stála tak, jak stál jenom jeden člověk v celém kotli. S rukama v podpaží a s hlavou skloněnou na stranu.
 
 Kaj.
 
@@ -296,7 +296,7 @@ Dodržel pravidlo. Myl se tam, kde se smělo. Někdo by se tomu zasmál.
 
 Když se zvedl, stála nahoře v zálivu pod převisem Dabra.
 
-Bylo už světlo a ona měla dlaň nad očima. Dívala se dolů. Na něj, nebo na potok, nebo na nic. Na tu dálku nemohla cítit, čím voní. Nebo mohla. Kdo ví, co skalní lidé cítí.
+Bylo už světlo a ona měla dlaň nad očima. Dívala se dolů. Na něj, nebo na potok, nebo na nic. Na tu dálku nemohla cítit, čím páchne. Nebo mohla. Kdo ví, co skalní lidé cítí.
 
 Zvedl ruku. Možná pozdravit. Nebo udělat to gesto, dlaň plochou dolů, ze strany na stranu. *Ne.*
 

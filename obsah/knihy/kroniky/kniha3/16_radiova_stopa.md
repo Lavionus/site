@@ -56,13 +56,13 @@ Walt kreslil kompasem a pásmem. Pod vodou, v kalu, ze šňůry, po třiceti, po
 
 Hana potřebuje dva body, které zná na mapě i v lese.
 
-První je studna. Ta je na ortofotu i na mapě a nemůže se splést.
+První je studna. Ta je na ortofotu i na mapě a nedá se splést.
 
 Druhý je síň. Na Waltově mapě síň není. Ale na Waltově mapě je hrdlo a za ním sestup a Hana má ve svých náčrtech, co bylo za hrdlem dál. Na Marisoliných fotkách, stránka ze čtvrtého března: *za Gargantou sestup, šňůra, značky po 10 m: 6 značek do síně. Směr podle kompasu na zápěstí ~50°, pak ~70°.* Šedesát metrů od hrdla k síni. Ten zápis napsala vlevo, protože to viděla. Na kompasu, na šňůře, na vlastní ruce.
 
 A nad síní je Kalinův kolík s reflexní páskou. Na okraji spálené milpy, čtyři sta metrů severovýchodně od studny. Kalina ho tam zatloukl devátého, podle majáku, s chybou ve hloubce, ale ne ve směru. Ve směru měl chybu pod metr.
 
-Hana položí Waltovu mapu na ortofoto. Přeměří ji na stejné měřítko. Od hrdla přidá svých šedesát metrů na padesát a sedmdesát stupňů. Kde by podle Waltovy mapy a podle jejích poznámek měla být síň?
+Hana položí Waltovu mapu na ortofoto. Převede ji na stejné měřítko. Od hrdla přidá svých šedesát metrů na padesát a sedmdesát stupňů. Kde by podle Waltovy mapy a podle jejích poznámek měla být síň?
 
 Ne u kolíku. Třicet osm metrů vedle. Jižněji a blíž ke studni.
 
@@ -122,7 +122,7 @@ Strčí telefon do batohu vedle panenky bez nohy.
 
 V jedenáct stojí u kolíku nad síní.
 
-Je jich pět. Kalina s přijímačem. Hana s mapou, s čelovkou přelepenou červenou fólií z Ríšových filtrů, aby měla na papír, ale nesvítila do lesa. Jana s druhou čelovkou a s pásmem. Ríša s kolíky a s reflexní páskou. A Luisův bratranec z obce, mladík od brány, s mačetou, protože zná cesty přes milpy potmě a protože to tak don Felipe chtěl.
+Je jich pět. Kalina s přijímačem. Hana s mapou, s čelovkou přelepenou červenou fólií z Ríšových filtrů, aby viděla na papír, ale nesvítila do lesa. Jana s druhou čelovkou a s pásmem. Ríša s kolíky a s reflexní páskou. A Luisův bratranec z obce, mladík od brány, s mačetou, protože zná cesty přes milpy potmě a protože to tak don Felipe chtěl.
 
 Měsíc je víc než v půlce a stojí na západě nad lesem. Spálená milpa pod ním je šedá, popel a pahýly, a mezi nimi bílé desky vápence, které vystupují z půdy jako hřbety zvířat.
 
@@ -140,7 +140,7 @@ V jedenáct deset sundá sluchátka.
 
 „Je tam,“ řekne.
 
-Jana něco řekne česky, sprostého. Mladík s mačetou se na ni podívá a nerozumí.
+Jana řekne česky něco sprostého. Mladík s mačetou se na ni podívá a nerozumí.
 
 „Slabý,“ řekne Kalina. „Mnohem slabší, než má být. Tady by měl řvát. Stojím nad ním.“ Podívá se do sešitu. „Nestojím nad ním. Pole tady není svislé. Jde šikmo. Odsud…“ Ukáže rukou. Na východ. Trochu k jihu. „Tam.“
 
@@ -154,7 +154,7 @@ Za tou zdí je pole pana Chana. A elipsa.
 
 Maják není v síni.
 
-Hana to říká v hlavě znovu, protože to musí pochopit celé. Maják ležel na terase u LE 14, jedenatřicet metrů pod hladinou, v síni za hrdlem. Teď je někde na východě. Maják nemá nohy. Maják neplave. Maják je černá trubka s cívkou velkou jako talíř a s olůvkem pod jednou nohou.
+Hana to říká v hlavě znovu, protože to musí pochopit celé. Maják ležel na terase u LE 14, jedenatřicet metrů pod hladinou, v síni za hrdlem. Teď je někde na východě. Maják nechodí. Maják neplave. Maják je černá trubka s cívkou velkou jako talíř a s olůvkem pod jednou nohou.
 
 Někdo ho nesl.
 
@@ -220,9 +220,9 @@ Obejde kolík. Dokola, ve vzdálenosti, kterou mu odměřuje Jana pásmem. Čty�
 
 „Pole je souměrné. Všude stejně. Kdyby ležel na boku nebo šikmo, bylo by z jedné strany silnější a ticho by nebylo přímo nad ním.“ Kalina si sedne na desku vápence. Poprvé za celou noc si sedne. „Nespadl tam. Někdo ho postavil. Na rovné místo, cívkou nahoru. Bublina na střed, řekl bych. Jako tenkrát s Luisem.“
 
-Devátého března. Terasa u LE 14, metr od převisu. Luis drží svítilnu. Hana pokládá maják na plochou terasu a pod jednu nožičku podkládá olovo, protože terasa se mírně svažuje. Luis se nakloní a ukáže prstem na vodováhu na víčku. Bublina na střed. Luis kývne. *Bien.*
+Devátého března. Terasa u LE 14, metr od převisu. Luis drží svítilnu. Hana pokládá maják na plochou terasu a pod jednu nožičku podkládá olovo, protože terasa se mírně svažuje. Luis jí svítí na vodováhu na víčku. Bublina na střed. Luis kývne. *Bien.*
 
-Luis ví, co ten maják dělá. Byl u toho, když ho Kalina přeladil. Slyšel *každou celou hodinu deset minut*. Slyšel *kdo má přijímač a stojí do pár set metrů*.
+Luis ví, co ten maják dělá. Byl na plošině, když Kalina vysvětloval, jak má stát a kdy se poprvé zapne. Zbytek mu Hana napsala v síni na tabulku. *Každou celou hodinu deset minut.* *Kdo má přijímač a stojí do pár set metrů.*
 
 Nesl ho nahoru ze síně, za bod čtyřicet osm, do tmy. A pak ho postavil rovně, cívkou nahoru, na jediné místo, odkud by ho někdo nahoře mohl slyšet.
 
@@ -286,11 +286,11 @@ Pan Chan to pole spálil v únoru. Kdyby puklina byla starší, byl by popel i n
 
 „Odstřel,“ řekne Hana.
 
-Ríša na obrazovce přetáhne ortofoto z rána přes svou fotku kouře z druhého března, z výšky. Puklina na druhém březnu není. Na dnešním je.
+Ríša na obrazovce přetáhne ortofoto z rána přes svou fotku kouře z druhého března, z výšky. Na snímku z druhého března puklina není. Na dnešním je.
 
 „Kdy?“ zeptá se Ríša.
 
-„Nevím. Po druhém březnu. Odstřelů jsem od té doby zapsala přes dvacet. Nejspíš ten poslední. Nebo devatenáctý.“
+„Nevím. Po druhém březnu. Odstřelů jsem od té doby zapsala přes dvacet. Nejspíš ten poslední. Nebo ten devatenáctého.“
 
 Patnáct metrů západně od kolíku je v poli mělká prohlubeň. Kruhová, se třemi stromy, které nikdo nespálil, protože rostou z dolíku. Takových je tu v polích hodně. Staré propady, kde kdysi sedl strop nějaké dutiny a nad ní se země prohnula. Tahle prohlubeň leží na puklině.
 
@@ -346,7 +346,7 @@ Inženýr se na ni dívá.
 
 „Za koho?“
 
-Hana se nadechne. Fakulta jí pozastavila zastupování navenek. Expedice neexistuje. Produkce se distancovala od *vědeckých poradců*. Viktor je ve výslechu. Je to jen ona, na spáleném poli, v triku propoceném od noci, s cizí mapou a s cizím sešitem.
+Hana se nadechne. Fakulta jí pozastavila zastupování navenek. Expedice neexistuje. Produkce se distancovala od *vědeckých poradců*. Viktor je u výslechu. Je to jen ona, na spáleném poli, v triku propoceném od noci, s cizí mapou a s cizím sešitem.
 
 „Za sebe,“ řekne.
 
@@ -372,7 +372,7 @@ Pan Chan něco řekne maysky. Don Felipe kývne.
 
 „Ano,“ řekne Hana.
 
-Jeden z mužů za donem Felipem promluví. Španělsky, nahlas, aby to slyšeli všichni. Hana rozumí. *A když se to zřítí? Kdo za to bude?* Pár lidí kývne. Jiní se dívají do země.
+Jeden z mužů za donem Felipem promluví. Španělsky, nahlas, aby to slyšeli všichni. Hana rozumí. *A když se to zřítí? Kdo za to bude odpovídat?* Pár lidí kývne. Jiní se dívají do země.
 
 Don Felipe se k němu otočí. Odpoví maysky. Krátce. Pak to řekne ještě jednou španělsky, pro Hanu, nebo pro všechny.
 
@@ -452,7 +452,7 @@ Hana se podívá na kolík pod korunkou, který ráno zatloukla sama. Na šest m
 
 Na Rosu, která stojí u kolíku nad majákem a nehýbe se.
 
-Ještě jednou si to projde. Jeden bod. Jedna oprava. Hloubka změřená, strop ne. Šest metrů od břehu. Osmnáct od pukliny. Nad vodou, nad klenbou. *Hladký jako vnitřek vajíčka. Před sedmnácti lety.*
+Ještě jednou si to probere. Jeden bod. Jedna oprava. Hloubka změřená, strop ne. Šest metrů od břehu. Osmnáct od pukliny. Nad vodou, nad klenbou. *Hladký jako vnitřek vajíčka. Před sedmnácti lety.*
 
 Neví, jestli má pravdu. Ví, že nic lepšího nemá.
 
@@ -490,7 +490,7 @@ Hana nasadí pero a napíše:
 
 *Jestli se klenba zřítí, řekla jsem kde.*
 
-Je to pravda a patří to vpravo, protože je to to, co si myslí, ne to, co viděla. Pod to připíše, protože don Felipe to řekl a ona to slyšela:
+Je to pravda a patří to vpravo, protože je to, co si myslí, ne to, co viděla. Pod to připíše, protože don Felipe to řekl a ona to slyšela:
 
 *„Vy jste řekla kde. My jsme řekli ano. To není totéž.“*
 

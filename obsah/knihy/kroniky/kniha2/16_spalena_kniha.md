@@ -26,7 +26,7 @@ Tři rány.
 
 Ilona vstala tak rychle, že si narazila koleno o lavici. Kilián. Za hřebenem. Zikmund to vydržel. Šla potmě kolem stolu a kolem truhly a ruka sama nahmatala závoru a odsunula ji. Teprve když se dveře začaly otvírat, uslyšela v hlavě to, co neuslyšela ušima.
 
-Pauzu. A druhé tři rány.
+Odmlku. A druhé tři rány.
 
 Nebyly tam.
 
@@ -34,11 +34,11 @@ Nebyly tam.
 
 Dveře se otevřely dovnitř, rychleji, než je otvírala ona, a do nich vešla tma, velká, a voněla hřebíčkem.
 
-Ilona couvla. Nestihla vykřiknout. Ruka, velká a teplá, jí přitiskla ústa i nos, a druhá ruka ji chytila za zápěstí, tu levou, a obě ruce ji natlačily zpátky, přes světnici, až narazila kříži na hranu stolu. Lázeňské listy pod ní zašustily a sjely na zem.
+Ilona couvla. Nestihla vykřiknout. Ruka, velká a teplá, jí přitiskla ústa i nos, a druhá ruka ji chytila za zápěstí, tu levou, a obě ruce ji natlačily zpátky, přes světnici, až narazila kříži na hranu stolu. Stočil ji bokem a stál jí po levici, těsně u ní. Lázeňské listy pod ní zašustily a sjely na zem.
 
 Hřebíček. Myrha. A pod tím, blízko, v dechu, který jí foukal do tváře, ještě něco. Nasládlý pach rány, která se hojí. Rány v ústech, vlevo dole vzadu, kde chybí předposlední zub.
 
-Znala ten pach. Udělala ho.
+Znala ten pach. Tu ránu udělala ona.
 
 „Tiše,“ řekl Röhrich. Mluvil skoro bez kaše v ústech. Rána se mu zahojila dobře. Měla lehkou ruku. „Tiše, paní Ilono. Havíři před domem spí. Já to vím, protože jsem je slyšel chrápat. Kdybyste křičela, probudí se, a já budu muset spěchat. A spěch je špatný pro obě strany.“
 
@@ -124,7 +124,7 @@ Dvojí přetočený, zjistila, když dotáhla nit. Ten, který Tobiáš neumí. 
 
 Pak si všimla věcí na podlaze.
 
-Lanceta. Ležela u nohy stolu, kam spadla, když se mu ruka vytrhla z jejích zubů. Úzká, s čepelí na obě strany, s rukojetí z černého dřeva, okovanou na konci stříbrem. Ilona ji zvedla. Na čepeli těsně u rukojeti, tam, kde ranhojiči rýpou svoje písmeno, jak Tobiáš rýpl *T*, byl vyrytý malý pták. Se sklopenou hlavou, s křídly napůl roztaženými. Jak krmí mláďata.
+Lanceta. Ležela u nohy stolu, kam spadla, když sebou škubl. Úzká, s čepelí na obě strany, s rukojetí z černého dřeva, okovanou na konci stříbrem. Ilona ji zvedla. Na čepeli těsně u rukojeti, tam, kde ranhojiči rýpou svoje písmeno, jak Tobiáš rýpl *T*, byl vyrytý malý pták. Se sklopenou hlavou, s křídly napůl roztaženými. Jak krmí mláďata.
 
 Pelikán.
 
@@ -164,7 +164,7 @@ Ilona odhrnula plátno. Wehrl se naklonil, a Hesse za ním zvedl svíčku, a Weh
 
 „Ano.“
 
-„Viděl jsem takovou ránu jednou. U Klínovce. U štajgra, kterého tovaryš chytil za krk nožem kvůli děvčeti. Na šířku nehtu.“ Narovnal se. „Ten štajgr umřel.“
+„Viděl jsem takovou ránu jednou. U Klínovce. U štajgra, kterého tovaryš řízl nožem do krku kvůli děvčeti. Na šířku nehtu.“ Narovnal se. „Ten štajgr umřel.“
 
 „Já ne.“
 
@@ -198,7 +198,7 @@ Florian stál u dveří a třásl se.
 
 „Nevím, pane. Spal jsem. Ale lancetu…“ Florian zvedl oči a podíval se na Ilonu, na lancetu, kterou pořád držela v dlani. „Tu s pelikánem. Tu si bral z officíny večer. Viděl jsem ho. Bral si ji do kapsy a já myslel, že jde k nemocnému.“
 
-Ilona se dívala na Floriana. Na jeho ruku, zarůžovělou po páře, kterou mu před měsícem ošetřila sádlem.
+Ilona se dívala na Floriana. Na jeho ruku, zarůžovělou po páře, kterou mu před třemi týdny ošetřila sádlem.
 
 „Floriane,“ řekla. „Řekneš to v pondělí soudu?“
 
@@ -214,7 +214,7 @@ Díval se na stůl. Na kožený pytlík. Na tři lázeňské listy, které Hesse
 
 „Máte lancetu,“ řekl Wehrl. „S jeho znamením. Máte jeho ruku s vašimi zuby, kterou změří každý ranhojič v kraji. Máte měšec, kterým vás chtěl koupit. Máte tovaryše, který bude mluvit. Máte škopek. Máte listy z lázně, kolik se pouštělo a kolik vylévalo.“ Odmlčel se. „Na lékárníka víc nepotřebujete, paní Ilono. Soud víc nepotřebuje.“
 
-Neřekl *kniha*. Ani teď. Ani se slovem nezavadil.
+Neřekl *kniha*. Ani teď. Ani slovem o ni nezavadil.
 
 Ilona se na něj dívala, na popelavý plnovous, na šedou linku na dásních, na ruce, které se mu třásly na holi. Na muže, jehož stráž ji v noci zachránila. Na muže, který teď seděl v její světnici a říkal jí, co soud nepotřebuje, a měl pravdu.
 
@@ -232,7 +232,7 @@ Spala do odpoledne. Pak seděla.
 
 Večer, když se setmělo, klepání. Ze dvora.
 
-Tři rány. Pauza.
+Tři rány. Odmlka.
 
 Ilona seděla u pece a nehýbala se, a srdce jí bušilo pod stehy na krku, až to bolelo.
 
@@ -320,9 +320,9 @@ Každou středu. Na stejném řádku.
 
 Pak vybírala.
 
-Šest listů. Věděla to od pondělí, kdy si to poprvé spočítala nad kolébkou, a od středy, kdy držela mezi prsty list s *frisch* a obrátila ho.
+Šest listů. Věděla to od středy, kdy držela mezi prsty list s *frisch* a obrátila ho, a od čtvrtka si to počítala.
 
-První list: lázeň od svatého Martina do Hromnic. *Bad* a *Oben*, kolik přišlo, kolik šlo nahoru. A peníze Jobstovi, dva krejcary za misku, a za destilaci, a za prášek, a malé částky do Lipska, které se nedaly srovnat s tím, co šlo nahoru. Kdo by to položil vedle jejích lázeňských listů, viděl by, že z lékárny vyjde jen desetina krve, která do ní vteče.
+První list: lázeň od svatého Martina do Hromnic. *Bad* a *Oben*, kolik přišlo, kolik šlo nahoru. A peníze Jobstovi, tři krejcary za misku, a za destilaci, a za prášek, a malé částky do Lipska, které se nedaly srovnat s tím, co šlo nahoru. Kdo by to položil vedle jejích lázeňských listů, viděl by, že z lékárny vyjde jen desetina krve, která do ní vteče.
 
 Druhý list: lázeň od Hromnic do Velikonoc. Totéž, víc.
 
@@ -350,7 +350,7 @@ Položila ho k ostatním.
 
 Pak obrátila prvních pět listů.
 
-Na každém, na druhé straně, byla pravá stránka. Středy. Řádek za řádkem. Na prvním listu ty z prosince, které ještě neměly *Z.*, jen *Oben* a soudek, a pak, od ledna, sůl. Na druhém listu od Hromnic, *W.*, poprvé, a pak každý týden. Na třetím, čtvrtém, pátém. *Erlengrund. 40 Mäuler. Wald, durch Z. W.: XX Gläser. Donn.*
+Na každém, na druhé straně, byla pravá stránka. Středy. Řádek za řádkem. Ne všechny, jen ty, které padly na rub těch pěti listů. Na prvním listu ty od Hromnic, *W.*, poprvé, a pak každý týden. Na dalších středy z února, z března, z dubna, a na pátém z první půlky května. *Erlengrund. 40 Mäuler. Wald, durch Z. W.: XX Gläser. Donn.*
 
 Věděla to. Věděla to od středy. A přesto seděla nad těmi pěti listy obrácenými rubem vzhůru a dívala se na ně, jako by je viděla poprvé.
 
@@ -390,9 +390,9 @@ Tady by vybrala z Röhrichových řádků to, co se hodí jí. Polovinu řádku.
 
 Vzala britvu.
 
-Začala odspodu. Od poslední středy na pátém listu, od *Merc. 7. Jun.*, protože odspodu se škrábe líp a ruka nezavadí o to, co už je hotové. Britvu držela šikmo, skoro naplocho, jak ji otec učil škrábat chyby ze smluv, když jí bylo deset a on ještě věřil, že se z ní stane písař. Ne řezat. Hladit. Odebírat papír po vlásku, inkoust s ním.
+Začala odspodu. Od poslední středy na pátém listu, od *Merc. 17. Mai.*, protože odspodu se škrábe líp a ruka nezavadí o to, co už je hotové. Britvu držela šikmo, skoro naplocho, jak ji otec učil škrábat chyby ze smluv, když jí bylo deset a on ještě věřil, že se z ní stane písař. Ne řezat. Hladit. Odebírat papír po vlásku, inkoust s ním.
 
-*Merc. 7. Jun.* Zmizelo.
+*Merc. 17. Mai.* Zmizelo.
 
 *Oben: 1 Fass, klein.*
 
@@ -420,7 +420,7 @@ Pak britvu přitlačila.
 
 Klička zmizela první. Pak obě čáry nahoru. Pak obě dolů. Pak *XX*, pak *Gläser*, pak *Donn.*, pak *4 fl.* A tam, kde byl řádek, zůstal šedý pruh, drsný pod prsty, jako pole po bráně.
 
-Pak další řádek. *Merc. 31. Mai.*
+Pak další řádek. *Merc. 10. Mai.*
 
 *
 
@@ -449,6 +449,8 @@ Vytrhla těch pět listů, kde ještě drželo vlákno, opatrně, aby se neroztr
 Otevřela dvířka pece.
 
 Oheň hořel dobře. Plátno v hrnci nahoře na plotně vřelo a hrnec poskakoval. Ilona vytrhla první list ze zbytku knihy, svatého Martina, *Bad* a *Oben*, a strčila ho do plamene.
+
+![Pec](obrazky/16_spalena_kniha.webp)
 
 Chytil od rohu. Zhnědl, zkroutil se, a písmena na něm na okamžik zčernala víc než inkoust, jako by se probudila. Pak zbělela. Pak nic.
 
@@ -508,7 +510,7 @@ Po téhle noci bude pravda jen ta první. *Víc jsem nezapsala.* A nikdo nebude 
 
 To si řekla před deseti dny, když ji zastrčila pod Řehořovy košile. Pořád to byla pravda.
 
-Někde na světě musela zůstat celá. A to někde byl tenhle dům, ve kterém se v noci otvírají dveře na tři rány bez pauzy.
+Někde na světě musela zůstat celá. A to někde byl tenhle dům, ve kterém se v noci otvírají dveře na tři rány bez odmlky.
 
 Složila list. Na čtyřikrát. Jak skládá Markéta plátno, když ho vyndá z truhly, a jak ho skládá Dorota na kameni u studánky, aby máma věděla, že to nebyla liška. Na čtyřikrát a pak ještě uhladit dlaní.
 

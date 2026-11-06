@@ -14,7 +14,7 @@ Sael to slyšela od Tadeáše. Lada jí to neřekla. Lada s ní od soboty mluvil
 
 Truhlu otevřela v osm.
 
-Nejstarší list vyndala jako první, v obalu z nekyselého papíru, a položila ho na stůl na čisté plátno. Pak svazek ze šestnáctého století. Ten se otevřel sám, u Doroty, jako vždycky. Sael ho zavřela a položila vedle listu.
+Nejstarší list vyndala jako první, v obalu z nekyselého papíru, a položila ho na stůl na čisté plátno. Pak sundala z police balík se svazkem ze šestnáctého století. Ten se otevřel sám, u Doroty, jako vždycky. Sael ho zavřela a položila vedle listu.
 
 Dlouho stála nad obojím.
 
@@ -36,7 +36,7 @@ Tadeáš zůstal ve dveřích s čepicí v ruce. Sael mu kývla a on odešel nah
 
 Ta žena se na prahu archivu zastavila. Sael rozsvítila lampu na stole. Kvůli ní. Žluté světlo dopadlo na stůl, na plátno, na list v obalu a na svazek v tmavé kůži.
 
-Ta žena se nepodívala na knihu. Oči jí padly na vlhkoměr.
+Ta žena se nepodívala na knihu. Pohled jí padl na vlhkoměr.
 
 „Padesát osm,“ řekla.
 
@@ -70,7 +70,7 @@ Vrbová si sundala bundu a pověsila ji na opěradlo židle. Nesedla si. Stála 
 
 „Kdy?“
 
-„Víc, než stojí v občance.“
+„Dřív, než stojí v občance.“
 
 Ta žena se skoro usmála. Pak přestala.
 
@@ -280,7 +280,7 @@ Sael na to nic neřekla. Ta věta zněla, jako by ji ta žena odněkud znala. Ja
 
 „Všimla jsem si.“
 
-„Já vím,“ řekla Sael. „Paní doktorka mi to řekla. V září, u kávy. Že jste se ptala na desátou výpověď dřív, než jste dočetla soupis důkazů.“
+„Já vím,“ řekla Sael. „Paní doktorka mi to řekla. V září, u kávy. Že jste se v prvním e-mailu ptala na desátou výpověď.“
 
 *
 
@@ -294,7 +294,7 @@ Vrbová vstala. Došla k polici s balíky, k odvlhčovači, k vlhkoměru. Zase p
 
 „Protokol není kniha.“
 
-„Pro paní doktorku je,“ řekla ta žena. Nezlobila se. Řekla to jako rozdíl ve dvou číslech.
+„Pro paní doktorku je,“ řekla ta žena. Nezlobila se. Řekla to jako rozdíl mezi dvěma čísly.
 
 Sael se dívala na svazek. Na Dorotin řádek.
 
@@ -348,7 +348,7 @@ Ta žena kývla. Nezapsala to. Nebo to napsala tak rychle, že to Sael neviděla
 
 „Nevím,“ řekla Sael. „Neviděla jsem to. Proti oknu je vidět jen to, co zbylo.“
 
-Byla to pravda. Sael to věděla a věděla taky, že o pět listů dál, ve stejném svazku, leží řádek Jívinou rukou s jedním písmenem latinkou. Ten list neotevřela. Ruka ho pod prsty cítila, tu tloušťku listů mezi Dorotou a létem 1595, a nechala ho zavřený.
+Byla to pravda. Sael to věděla a věděla taky, že o pět řádků níž, na kraji téže stránky, leží řádek Jívinou rukou s jedním písmenem latinkou. Ten kraj měla od začátku přikrytý přeloženým cípem plátna, jako by jen chránil pergamen. Ruka ho pod plátnem cítila, těch pár řádků mezi Dorotou a létem 1595, a nechala ho přikrytý.
 
 „Ale ta žena,“ řekla Sael, „napsala soudu víc, než soud vzal. Celé svědectví. Čtrnáct listů. Soud vzal čtyři.“
 
@@ -384,7 +384,7 @@ Sto čtyřicet sedm let to slovo v archivu nikdo nevyslovil. Rokyta ne. Sael ne.
 
 „Ano,“ řekla Sael. „To slovo.“
 
-V prvních deseti letech úřadu jezdila Sael po farních archivech kolem hor. Měla v kabelce sešit a v sešitu dvaadvacet jmen latinkou. Seděla v sakristiích a na obecních půdách nad matrikami denních a hledala děti, které se ztratily ve stejném roce, kdy se v knize objevilo jméno s *angenommen*. *In silva perditi.* Ztracené v lese. *Von Wölfen geholt.* Odnesené vlky. Jedenáct shod. Sael si je opsala, pečlivě, se signaturami, a pak ten sešit zamkla do truhly pod list s čárkami. Přes padesát let ho nikomu neukázala. Celou tu dobu si říkala, že ho zamkla, aby se to nikdo nedozvěděl.
+V prvních deseti letech úřadu jezdila Sael po archivech a národních výborech kolem hor. Měla v kabelce sešit a v sešitu dvaadvacet jmen latinkou. Seděla v archivních badatelnách a na obecních půdách nad matrikami denních a hledala děti, které se ztratily ve stejném roce, kdy se v knize objevilo jméno s *angenommen*. *In silva perditi.* Ztracené v lese. *Von Wölfen geholt.* Odnesené vlky. Jedenáct shod. Sael si je opsala, pečlivě, se signaturami, a pak ten sešit zamkla do truhly pod list s čárkami. Přes padesát let ho nikomu neukázala. Celou tu dobu si říkala, že ho zamkla, aby se to nikdo nedozvěděl.
 
 Teď to slovo leželo na stole a Sael věděla, že ho zamkla, aby ho nemusela slyšet.
 
@@ -426,19 +426,19 @@ Nepodívala se.
 
 „Dobrou noc.“
 
-Tadeáš na ni čekal na schodech. Sael slyšela jejich kroky nahoru, Tadeášovo potichu počítání a pak jeden jiný hlas, který počítal s ním. Ta žena počítala taky. Čtyřicet dva. Nahoře se zavřely dveře.
+Tadeáš na ni čekal na schodech. Sael slyšela jejich kroky nahoru, Tadeášovo tiché počítání a pak jeden jiný hlas, který počítal s ním. Ta žena počítala taky. Čtyřicet dva. Nahoře se zavřely dveře.
 
 *
 
 Sael seděla u stolu dlouho.
 
-Vlhkoměr ukazoval padesát osm. Odvlhčovač hučel. Skála hřála a lampa svítila na prázdnou židli naproti, na které visela ta bunda ještě před chvílí.
+Vlhkoměr ukazoval padesát osm. Odvlhčovač hučel. Skála hřála a lampa svítila na prázdnou židli naproti, na které ještě před chvílí visela ta bunda.
 
 Do knihy se zapisuje, co se stalo.
 
-Ukázala knihu denní. To se stalo.
+Ukázala knihu denní ženě. To se stalo.
 
-Sael otevřela poslední svazek. Ten, který založila Rokyta v zimě po válce. Na poslední popsané stránce stál Václav, jeho úmrtí ptačím písmem a občanské jméno latinkou na kraji. Pod tím světlo ze čtrnáctého ledna a mnichovo *aliunde*.
+Sael otevřela poslední svazek. Ten, který založila Rokyta v zimě po válce. Na poslední popsané stránce stál Václav, jeho úmrtí ptačím písmem a občanské jméno latinkou na kraji. Pod tím světlo ze čtrnáctého ledna, mnichovo *aliunde* a únorový řádek o Jonášovi.
 
 Namočila pero.
 

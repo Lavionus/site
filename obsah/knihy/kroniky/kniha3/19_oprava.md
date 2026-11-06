@@ -104,7 +104,7 @@ Chvíli nikdo nic neříká. Na plechovou stříšku dopadne mango ze sousedovy 
 
 Hana kývne. Pak mu to řekne. Co napíše, a kdy. Že tam bude šestý březen, tabulka a podpis. Že to bude číst i obec.
 
-Luis poslouchá. Když domluví, dlouho se dívá na mango ve žlábku.
+Luis poslouchá. Když Hana domluví, dlouho se dívá na mango ve žlábku.
 
 „V novinách napíšou, že jsi lhala,“ řekne.
 
@@ -134,9 +134,9 @@ Otevře ji.
 
 Záloha na topení na příští rok. O čtyřicet procent víc než loni. Pod tím vyúčtování za letošní zimu, nedoplatek. Splatný do konce března. Je desátého dubna.
 
-Hana si sedne a čte to celé, i drobným písmem, a položí to na stůl, číslem nahoru, jako protokol. Je to záznam. Nic víc.
+Hana si sedne a čte to celé, i drobné písmo, a položí to na stůl, číslem nahoru, jako protokol. Je to záznam. Nic víc.
 
-Honorář z produkce nepřišel a nepřijde. Produkce se distancovala od *vědeckých poradců*. Na účtu má peníze na dva měsíce, když nebude topit. Plat za poloviční úvazek jí chodí dál, i za výuku, kterou nesmí učit. Děkanát to tak napsal. *Do vyjasnění.*
+Honorář z produkce nepřišel a nepřijde. Produkce se distancovala od *vědeckých poradců*. Na účtu má peníze na dva měsíce, když nebude topit. Plat za poloviční úvazek jí chodí dál, i za výuku, kterou nesmí vést. Děkanát to tak napsal. *Do vyjasnění.*
 
 Ona to vyjasní.
 
@@ -186,7 +186,7 @@ Celým jménem, s titulem, stejně jako šestého března pod tou větou. Proto�
 
 Fialovi pošle text ve středu ráno, den předem.
 
-Volá jí za hodinu. Poprvé od Méridy.
+Zavolá jí za hodinu. Poprvé od Méridy.
 
 „Hano.“ Zase křestním jménem. „Víte, co to udělá?“
 
@@ -282,7 +282,7 @@ Geochronoložka z britské laboratoře, kterou Hana zná jen z článků, napí�
 
 Docent z jedné pražské fakulty napíše do odborného zpravodaje sloupek. Krátký, ostrý, a Hana ho čte třikrát, protože má pravdu.
 
-Kdo vědomě zapíše do terénního deníku nepravdu, píše, nemá nárok na to, aby se mu věřilo v ostatním. Proč bychom měli věřit jejímu měření 460 milimetrů? Fotce pásky? Celému tomu dojemnému příběhu o čtyřech milimetrech? Autorka to sama připouští v bodě šest. Jenže pak má ze sebe vyvodit důsledky a ne psát na repozitáři. *Oprava není ctnost. Oprava je minimum.* A to, že ji teď odborná veřejnost oslavuje, je podle něj nebezpečné. Učí to studenty, že se vyplatí nejdřív zalhat a pak se kajícně přiznat.
+Kdo vědomě zapíše do terénního deníku nepravdu, píše, nemá nárok na to, aby se mu věřilo v ostatním. Proč bychom měli věřit jejímu měření 460 milimetrů? Jejím fotkám? Autorka to sama připouští v bodě šest. Jenže pak z toho má vyvodit důsledky a ne psát na repozitáři. *Oprava není ctnost. Oprava je minimum.* A to, že ji teď odborná veřejnost oslavuje, je podle něj nebezpečné. Učí to studenty, že se vyplatí nejdřív zalhat a pak se kajícně přiznat.
 
 Hana sedí nad tím sloupkem dlouho.
 
@@ -330,7 +330,7 @@ Mohla by říct o Hranicích. O dvanácti minutách. O tom, že jí bylo čtyři
 
 „Ne,“ řekne.
 
-Předsedkyně kývne. Komise jí oznámí, že rozhodnutí obdrží písemně. Hana vstane, poděkuje a jde ke dveřím. Fiala se u zdi nepohne. Když ho míjí, zvedne oči. Nic neřekne. Ani ona.
+Předsedkyně kývne. Komise jí oznámí, že rozhodnutí obdrží písemně. Hana vstane, poděkuje a jde ke dveřím. Fiala se u zdi nepohne. Když ho míjí, Fiala zvedne oči. Nic neřekne. Ani ona.
 
 *
 

@@ -22,7 +22,7 @@ Sedne si a otevře sešit. Nahoru na okraj stránky napíše:
 
 Vlevo zapíše slovník, kódování, výtah a čas. A pod to ještě jednu věc, kterou nosí v hlavě od června a kterou nikomu neřekla, protože nikdo se neptal.
 
-*V pečeti z 26. 6. je „tomografie válce z kliniky (2026)“. Na klinice ale tenkrát snímali repliku. Olovo, pryskyřice, nalepená drť. Originál snímali v létě 2026 Švýcaři, neutrony. Zapečetěno je obojí. Správně, replika patří k historii. Ale ať nikdo neporovnává čtení s CT z kliniky.*
+*V pečeti z 26. 6. stojí „CT z kliniky (2026)“, bez poznámky. V Praze jsem řekla, že na klinice tenkrát snímali repliku, ale do tabulky to nikdo nepřipsal. Olovo, pryskyřice, nalepená drť. Originál snímali v létě 2026 Švýcaři, neutrony. Zapečetěno je obojí, odděleně. Správně, replika patří k historii. Ale ať nikdo neporovnává čtení s CT z kliniky.*
 
 Vpravo: *Měla jsem to říct v červnu.*
 
@@ -34,7 +34,7 @@ Teď jde heslo po hesle. Ve slovníku je skupina devatenácti hesel nadepsaná *
 
 Vlevo zapíše: *Kost (kresba v kodexu, 1172), ř. 1–3: stavba odpovídá heslům „označení vzorku ve sbírce“. Ř. 4–5 bez shody. Kresba není kost, mnich mohl tah přidat i vynechat. Jistota nízká až střední.*
 
-Vpravo: *Matěj ji držel za relikvii. Možná je to štítek.*
+Vpravo: *Mnich ji měl za znamení, ne za přírodu. Možná je to štítek.*
 
 *
 
@@ -86,13 +86,13 @@ Nová bedna má na víku list. Ústav ho vydal v září dvacet šest, po trojí
 
 *
 
-V neděli v šest ráno se sejde shromáždění ejida X'Kanlum. Ve stejném domě jako tenkrát, se stejnými lavicemi a se stejným ventilátorem pod stropem, který se točí tak pomalu, že ho Hana počítá. Jedna otáčka, dvě, tři.
+V neděli v šest ráno se sejde shromáždění ejida X'Kanlum. Na krytém hřišti jako tenkrát, pod plechovou střechou, se stejnými plastovými židlemi a s ventilátorem pod stropem, který se točí tak pomalu, že Hana počítá jeho otáčky. Jedna otáčka, dvě, tři.
 
 Luis Ek stojí u dveří. Je mu přes čtyřicet, ztloustl, a když vidí Hanu, usměje se, ale nepřijde k ní. Až po shromáždění, řekne jí očima. Teď je to věc obce.
 
-Don Felipe sedí vepředu. Je mu přes devadesát. Hůl má opřenou o kolena a obě ruce položené na ní. Když mluví, mluví maysky, a mladý muž vedle něj to překládá do španělštiny a Marisol šeptem Haně do angličtiny.
+Don Felipe sedí vepředu. Je mu přes sedmdesát. Hůl má opřenou o kolena a obě ruce položené na ní. Když mluví, mluví maysky, a mladý muž vedle něj to překládá do španělštiny a Marisol šeptem Haně do angličtiny.
 
-Hana sedí vzadu. Lis Aven a Marn sedí vedle ní, protože je tam posadil Luis. Marn je v košili mokrý až na záda. Lis Aven má ruce v klíně a nedotkne se ucha ani jednou. Hana si toho všimne.
+Hana sedí vzadu. Lis Aven a Marn sedí vedle ní, protože je tam posadil Luis. Marn má košili na zádech propocenou. Lis Aven má ruce v klíně a nedotkne se ucha ani jednou. Hana si toho všimne.
 
 Shromáždění vyslechne, co výprava chce. Číst, ne otvírat. Číst v ústavu, ne jinde. Pět dní. Obrazy každé vrstvy zveřejnit dřív, než je kdo přeloží.
 
@@ -106,7 +106,7 @@ Ventilátor se točí. Jedna otáčka. Dvě.
 
 „V dubnu to stálo v plánu,“ řekne Lis Aven. „Převzít a zneškodnit. Pořád to tam stojí. Je to odložené. Do třicátého srpna.“
 
-Don Felipe se na ni dívá dlouho. Pak řekne něco krátkého a pár lidí na lavicích se zasměje. Ne zle.
+Don Felipe se na ni dívá dlouho. Pak řekne něco krátkého a pár lidí na židlích se zasměje. Ne zle.
 
 „Říká, že je dobře, že jste to řekla vy,“ přeloží Marisol. „Protože kdyby nám to řekl někdo jiný, nevěřili bychom, že to víte vy.“
 
@@ -122,7 +122,7 @@ Don Felipe ještě něco řekne. Marisol to přeloží až venku, na prahu, kde 
 
 „Voda ho držela sto tisíc let. Ať ho vaše ruce drží pět dní.“
 
-Luis k nim přijde, až když se lavice vyprázdní. Podá Haně ruku a pak ji obejme, krátce, po mexicku, a Hana se tomu ani nebrání.
+Luis k nim přijde, až když se židle vyprázdní. Podá Haně ruku a pak ji obejme, krátce, po mexicku, a Hana se tomu ani nebrání.
 
 „Tenkrát jsem řekl, že to není naše,“ řekne.
 
@@ -164,7 +164,7 @@ Marn něco řekne do vzduchu, pro sebe, a chvíli čeká. Pak řekne číslo. Li
 
 „Šest set čtyřicet osm.“
 
-Marisol to zapíše. Hana otevře v telefonu soubor, který si v červnu vyžádala od Švýcarů a který je v pečeti od 26. 6. Neutronová tomografie originálu z léta dvacet šest. Tenkrát napsali *stovky vrstev, neinterpretováno*. V červnu jí na její prosbu napsali i počet. Zveřejnili ho dřív, než výprava o válci cokoli řekla.
+Marisol to zapíše. Hana otevře v telefonu soubor, který si v červnu vyžádala od Švýcarů a který je v pečeti od 26. 6. Neutronová tomografie originálu z léta dvacet šest. Tenkrát napsali *stovky vrstev, neinterpretováno*. V červnu jí na její prosbu napsali i počet. Zveřejnili ho dřív, než výprava řekla, kolik vrstev vidí její přístroj.
 
 *Šest set třicet osm až šest set padesát pět, podle toho, jak počítat nejtenčí vrstvy u osy. Přesnější odhad naše rozlišení nedovoluje.*
 
@@ -180,7 +180,7 @@ Hana to přečte nahlas. Marisol to zapíše pod Marnovo číslo.
 
 Přístroj nevydá žádný zvuk. Válec se nerozsvítí. Na obrazovce, kterou Marn postaví na vedlejší stůl, se po dvaceti minutách objeví první obraz. Řádky znaků, hustých a drobných, šedých na černém. Pak další. Asi jedna vrstva za pět minut.
 
-Každý obraz jde nejdřív na web. S kontrolním součtem, k pěti institucím. Teprve potom ho Lis Aven otevře. Nečte nahlas. Nečte vůbec, jen se dívá, jestli je obraz celý, a když je, kývne a Marn pustí další. Tak se dohodli. Číst budou čtyři týmy, každý zvlášť, z toho, co je na webu. Výprava. Ústav s epigrafiky z univerzity v Mexiku. Krausová s lingvistkou z Prahy a s Fuchsovou, která rozumí kódování napůl. A tým z Lipska, který si vyžádala Ines. Nesmějí se radit, dokud neodevzdají. Pak se porovná, kde se shodli a kde ne.
+Každý obraz jde nejdřív na web. S kontrolním součtem, k pěti institucím. Teprve potom ho Lis Aven otevře. Nečte nahlas. Nečte vůbec, jen se dívá, jestli je obraz celý, a když je, kývne a Marn pustí další. Tak se dohodli. Číst budou čtyři týmy, každý zvlášť, z toho, co je na webu. Výprava. Ústav s epigrafiky z univerzity v Mexiku. Krausová s lingvistkou z Prahy a s Fuchsovou, která rozumí kódování napůl. A tým z Lipska, který si vyžádala Ines. Nesmějí se radit, dokud neodevzdají. Pak se porovná, kde se shodly a kde ne.
 
 Každou hodinu změří konzervátorka teplotu povrchu. Za hodinu čtení vzroste o osm desetin stupně. Konzervátorka řekne, že při dvou stupních se končí. Po dvou hodinách se čtení přeruší a čeká se, až válec vychladne.
 
@@ -274,7 +274,7 @@ Lis Aven to přeloží. Za chvíli přijde odpověď.
 
 Hana vstane. Neví proč. Řekne to vestoje.
 
-„Vím, co dělá klenba,“ řekne. „Měřím ji pět let. Každý pátek měřím pramen pod Hřbetem a vidím, jak stoupá. Vím, že je to nebezpečné. Nevymýšlím si to.“ Odmlčí se. „Ale tohle je jediná věc, která nám může říct, co se s lidmi v té hoře smí a nesmí dělat. Ne se zařízením. S lidmi. Jestli ji spálíme, abychom to věděli o den dřív, nebudeme to vědět nikdy.“
+„Vím, co dělá hora,“ řekne. „Měřím ji pět let. Klenbu ne, tu měří jen to stanoviště. Ale každý pátek měřím pramen pod Hřbetem a vidím, jak stoupá. Vím, že je to nebezpečné. Nevymýšlím si to.“ Odmlčí se. „Ale tohle je jediná věc, která nám může říct, co se s lidmi v té hoře smí a nesmí dělat. Ne se zařízením. S lidmi. Jestli ji spálíme, abychom to věděli o den dřív, nebudeme to vědět nikdy.“
 
 Lis Aven překládá. Hana čeká.
 
@@ -338,7 +338,7 @@ Je bledá. Jizva za uchem je v tom světle vidět víc než jindy. Hana ví, že
 
 Lis Aven se zarazí.
 
-„Neřeknu,“ řekne pak. „Jen procesní věc. Ta smím.“
+„Neřeknu,“ řekne pak. „Jen procesní věc. Tu smím.“
 
 „Dobře.“
 
@@ -354,7 +354,7 @@ Lis Aven kývne. Pak udělá něco, co Hana nečeká. Sáhne si za ucho, na jizv
 
 „Odpojila jsem se,“ řekne. „Na celý týden. Aby mi to síť nepřečetla sama. Kdybych se připojila, přeložila by mi každý obraz, který jsem viděla. Nechtěla jsem to.“ Pokrčí rameny. „Je to divné. Takové ticho.“
 
-Hana si vzpomene na náměstí. Na čtyři sta lidí, kteří si sedli na zem a mlčeli. *Bylo tam takové ticho, že jsem slyšela ventilaci.*
+Hana si vzpomene na náměstí. Na čtyři sta lidí, kteří si sedli na zem a mlčeli. *Bylo tam takové ticho, že jsem nic neslyšela. Ventilaci jsem uslyšela až doma, když jsem se odpojila.*
 
 „Slyšíte klimatizaci?“ zeptá se Hana.
 
@@ -368,7 +368,7 @@ Večer ji Luis odveze do X'Kanlum. Luis nejdřív nechce, aby jela. Pak chce. Ř
 
 Cesta trvá necelé dvě hodiny. Prach, pak les, pak brána ejida, kterou Luis odemkne svým klíčem. Pak pole pana Chana.
 
-Na poli rostou dýně. Velké, oranžové, mezi širokými listy. Uprostřed pole, kde byl tenkrát vrt, stojí betonový křížek, malý, po kolena, a dýně kolem něj rostou tak hustě, že ho skoro nevidět.
+Na poli rostou dýně. Velké, oranžové, mezi širokými listy. Uprostřed pole, kde byl tenkrát vrt, stojí betonový křížek, malý, po kolena, a dýně kolem něj rostou tak hustě, že ho skoro není vidět.
 
 Pan Chan stojí na kraji pole. Zvedne ruku. Hana mu zamává.
 

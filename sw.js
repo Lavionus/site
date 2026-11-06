@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v620';
+const CACHE = PREFIX + 'v628';
 const JADRO = [
   './',
   './index.html',
@@ -426,10 +426,10 @@ self.addEventListener('fetch', e => {
 
   const navigace = e.request.mode === 'navigate';
 
-  // Společná čtečka knih (stránky děl kroniky.html / kniha_*.html, obsah/ctecka/, texty v obsah/knihy/):
+  // Společná čtečka knih (stránky děl kroniky.html / kniha_*.html, Čtečka knih ctecka_knih.html, obsah/ctecka/, texty v obsah/knihy/):
   // nejdřív ze sítě, cache jen offline. Rukopis se průběžně mění a SWR míchal verze –
   // nová kapitola s ilustrací ![…](…) + starý jadro.js = obrázek jako text.
-  if (/\/obsah\/((kroniky|kniha_[^/]+)\.html|ctecka\/.+\.(js|css)|knihy\/.+\.(json|md))$/.test(url.pathname)) {
+  if (/\/obsah\/((kroniky|kniha_[^/]+|ctecka_knih)\.html|ctecka\/.+\.(js|css)|knihy\/.+\.(json|md))$/.test(url.pathname)) {
     // klíč bez dotazu: čtečka přidává ?h=<otisk> / ?t=<čas>, cache drží jen poslední verzi souboru (i pro offline)
     const klicK = url.origin + url.pathname;
     e.respondWith(caches.open(CACHE).then(cache => {

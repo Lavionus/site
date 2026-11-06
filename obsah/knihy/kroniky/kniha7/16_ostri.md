@@ -100,7 +100,7 @@ Nikdo neodpověděl.
 
 „Klenba drží čtyřicet tisíc let.“
 
-„Šedesát osm tisíc,“ řekl Tadeáš. „Ne čtyřicet. Čtyřicet je ten kámen na Měsíci. Stojí to ve spisu. A stejně se hejbe. Pět let. Každej rok rychlejc. Tohle neříkaj oni. Tohle říká ona sama. A měří to Hana. A já. Každej tejden.“
+„Šedesát osm tisíc,“ řekl Tadeáš. „Ne čtyřicet. Čtyřicet je ten kámen na Měsíci. To je v deníku. Ona je starší. A stejně se hejbe. Pět let. Každej rok rychlejc. Tohle neříkaj oni. Tohle říká ona sama. A měří to Hana. A já. Každej tejden.“
 
 Vojtěch se díval na něj, a když se nedočkal ničeho dalšího, obrátil oči k Ladě.
 
@@ -202,7 +202,7 @@ Tadeáš to zapsal. Jménem.
 
 Pak ucho.
 
-Ucho bylo Ostrých. Úzká chodbička od staré cesty k zadní stěně, tam, kde v roce třicet Lada vedla Apolenu a Sael proti průvanu. Kde podle Ostrých kdysi poslouchala Ostra. Za chodbičkou, za vodou a za starou štolou, ležela zadní stěna hnízda. Rýhy, které nikdo neviděl osm set šedesát tři let. Které mnich obkreslil olůvkem; jedno olůvko mu přitom prasklo.
+Ucho bylo Ostrých. Úzká chodbička, která odbočovala ze staré cesty kus před krkem a vedla k zadní stěně. U ní se v roce třicet Lada zastavila, když šla s lampou poslední za Sael a za Kryštofem s Apolenou na zádech proti průvanu. Na jejím konci bylo ohlazené místo, kde podle Ostrých kdysi poslouchala Ostra. Dál se tehdy nešlo. Za chodbičkou, za vodou a za starou štolou, ležela zadní stěna hnízda. Rýhy, které nikdo neviděl osm set šedesát tři let. Které mnich obkreslil olůvkem; olůvko se mu přitom zlomilo.
 
 Sael promluvila jen tady. Lada jí dala slovo a ona se nepohnula ode dveří.
 
@@ -260,7 +260,7 @@ Hlasovali. Všech třicet čtyři.
 
 Pak podmínky. Ty trvaly nejdéle.
 
-Tadeáš je psal na notebook a Kryštof je diktoval, protože se ukázalo, že Kryštof umí smlouvat a Tadeáš ne. Johana do toho mluvila, kdykoli šlo o děti. Lada mlčela a jen občas zavrtěla hlavou, a když zavrtěla, Kryštof bod škrtl.
+Tadeáš je psal na notebooku a Kryštof je diktoval, protože se ukázalo, že Kryštof umí smlouvat a Tadeáš ne. Johana do toho mluvila, kdykoli šlo o děti. Lada mlčela a jen občas zavrtěla hlavou, a když zavrtěla, Kryštof bod škrtl.
 
 V jedenáct zavolal Kryštof starostce do Mlýnce. Dal telefon doprostřed stolu, na hlasitý odposlech, a všichni ztichli.
 
@@ -394,7 +394,7 @@ Lada natáhla ruku a položila dlaň na prkno lavice vedle sebe. Na to místo, k
 
 V noci stála Sael v sadu.
 
-Pára nad roklí byla bílá, rovná, vyšší než kdy předtím. Sael ji viděla proti tmavému lesu jako sloup. V lese na druhé straně svítil oheň čekatelů. Méně ohňů než v červnu. Někteří odjeli, když se ukázalo, že výprava nejsou žádní otcové. Někteří zůstali a zpívali dál, jen tišeji.
+Pára nad roklí byla bílá, rovná, vyšší než kdy předtím. Sael ji viděla proti tmavému lesu jako sloup. V lese na druhé straně svítily ohně čekatelů. Méně než v červnu. Někteří odjeli, když se ukázalo, že ti z výpravy nejsou žádní otcové. Někteří zůstali a zpívali dál, jen tišeji.
 
 Nad hřebenem na západě se pohybovalo světlo. Pomalu, rovně. Dole v hoře se teď rozsvítila skála, bledě, celou plochou, a pak skvrna, tři, dva, čtyři. Sael to neviděla. Věděla to. Za měsíc, za dva, až se zavře poslední okruh, se rozsvítí naposledy. A pak už ne. Loď půjde nad hřebenem a hora jí neodpoví.
 
@@ -408,7 +408,7 @@ Myslela na Vojtěcha, jak řekl *zapište, že jsem byl proti*. Na Johanu, kter�
 
 Nic z toho Sael nerozhodla. Stála u dveří a dívala se.
 
-Šedesát let by to rozhodla sama. Řekla by Ladě, co je správné, a Lada by se na ni podívala zespodu a řekla, že zase rozhodla za ně. A měla by pravdu.
+Dřív, celých šedesát let, by to rozhodla sama. Řekla by Ladě, co je správné, a Lada by se na ni podívala zespodu a řekla, že zase rozhodla za ně. A měla by pravdu.
 
 Tentokrát nerozhodla nic. Jen se zeptala na ucho.
 

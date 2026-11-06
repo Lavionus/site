@@ -14,7 +14,7 @@ Tlumočnice je mladá žena s náušnicemi ve tvaru kolibříků. Tlumočí do a
 
 „Kdy jste předmět viděla naposledy?“
 
-„V sobotu jednadvacátého března, mezi sedmou čtyřicet a půl desátou večer. V bodeze ejida, v přítomnosti doktorky Couoh a svědka z ejida. Pak už jsem viděla jen bednu.“
+„V sobotu jednadvacátého března, od sedmi čtyřiceti večer do zabalení, asi do půl deváté. V bodeze ejida, v přítomnosti doktorky Couoh a svědka z ejida. Pak už jsem viděla jen bednu. V půl desáté don Felipe bodegu zamkl.“
 
 Muž z prokuratury zvedne oči od bloku.
 
@@ -98,7 +98,7 @@ Hana kývne.
 
 „Ano.“
 
-Hana cítí úlevu. Je to krátký, teplý pocit pod hrudní kostí, jako když se po dlouhém ponoru poprvé nadechne vzduchu bez automatu. Pak si uvědomí, čemu se ulevilo. Deník si vyžádají později. O vzorcích se bude mluvit potom.
+Hana cítí úlevu. Je to krátký, teplý pocit pod hrudní kostí, jako když se po dlouhém ponoru poprvé nadechne vzduchu bez automatu. Pak si uvědomí, proč se jí ulevilo. Deník si vyžádají později. O vzorcích se bude mluvit potom.
 
 Úleva odejde. Zůstane po ní něco studeného.
 
@@ -106,13 +106,13 @@ Muž z prokuratury zavře blok.
 
 „Neopouštějte Yucatán,“ řekne. „Pas si nechte. Ale neodjíždějte, dokud vám to neřekneme.“
 
-Na chodbě potká Marisol. Jde proti ní s deskami pod paží, s kloboukem v ruce. Na vteřinu se jejich oči potkají. Marisol se nezastaví.
+Na chodbě Hana potká Marisol. Jde proti ní s deskami pod paží, s kloboukem v ruce. Na vteřinu se jejich oči potkají. Marisol se nezastaví.
 
 *
 
 Na ulici před budovou jí zazvoní telefon. Číslo nezná. Mexická předvolba.
 
-Hana stojí na chodníku v horku, které po klimatizaci bije do obličeje jako dveře pece, a zvedne to, protože ji nenapadne to nezvednout.
+Hana stojí na chodníku v horku, které po klimatizaci bije do obličeje jako z otevřené pece, a zvedne to, protože ji nenapadne to nezvednout.
 
 „Doktorka Vrbová?“ Mužský hlas, mladý, rychlý, angličtina s přízvukem. Řekne jméno a jméno rádia. Hana ani jedno nezná. „Máte minutu? Jen jednu otázku.“
 
@@ -138,7 +138,7 @@ Stojí na chodníku a dívá se na telefon. Kolem ní projde žena s dítětem a
 
 Uvědomí si, že řekla víc, než chtěla. Řekla *zvážila a změřila*. Za hodinu to bude v rádiu, které nezná, a bude to znít, jako by něco věděla. Nebo jako by se vymlouvala.
 
-Zapíše si to. Vlevo, v chodníkovém stínu, opřená o zeď. Čas, rádio bez jména, otázka, odpověď. Doslova, i to, co neměla říkat.
+Zapíše si to. Vlevo, ve stínu na chodníku, opřená o zeď. Čas, rádio bez jména, otázka, odpověď. Doslova, i to, co neměla říkat.
 
 *
 
@@ -152,9 +152,9 @@ Jejími vědeckými poradci. Množné číslo. Hana je jediná.
 
 O deset minut později přijde e-mail od producentky. Osobně, *Dear Hana*. Dvě věty. S okamžitou platností. Prosí, aby se zdržela veřejných vyjádření, která by se týkala produkce.
 
-Hana otevře v telefonu banku. První polovina honoráře tam je, přišla v únoru. Druhá byla v druhé splátce. Druhá splátka byla po prezentaci. Prezentace dopadla dobře. Zpáteční letenku má na patnáctého dubna. Hotel do konce týdne platí Viktor kartou, která možná ještě funguje.
+Hana otevře v telefonu banku. První polovina honoráře tam je, přišla v únoru. Druhá měla přijít s druhou splátkou. Druhá splátka měla přijít po prezentaci. Prezentace dopadla dobře. Zpáteční letenku má na patnáctého dubna. Hotel do konce týdne platí Viktor kartou, která možná ještě funguje.
 
-Zavře banku. Myslí na neotevřenou obálku od pronajímatele na stole v Brně, na zálohu na topení. Ta obálka tam pořád leží. Nikdo ji neotevřel a nikdo za ni nezaplatil.
+Zavře banku. Myslí na neotevřenou obálku od pronajímatele na stole v Brně, na zálohu na topení. Ta obálka tam pořád leží. Nikdo ji neotevřel a nikdo nic nezaplatil.
 
 *
 
@@ -220,7 +220,7 @@ Hana čeká.
 
 Hana se nehne.
 
-„Já vím, že sis nebyla jistá. Řekla jsi mi devadesát procent. Pamatuju si to, stála jsi u umyvadla.“ Mluví ještě tišeji. „A viděl jsem ten tvůj otazník. *Tři pomlčka jedna rovná se A.* Na Ríšově fotce.“
+„Já vím, že sis nebyla jistá. Řekla jsi mi devadesát procent. Pamatuju si to, seděla jsi u monitoru.“ Mluví ještě tišeji. „A viděl jsem ten tvůj otazník. *Tři pomlčka jedna rovná se A.* Na Ríšově fotce.“
 
 Hana mlčí. Na chodbě je slyšet větrák z jejího pokoje.
 
@@ -310,7 +310,7 @@ V deset zavolá Kalina.
 
 „Co jste jim řekl?“
 
-„Že já. Obě noci, pod plachtou, u svých beden. Že v noci na neděli jsem do půlnoci poslouchal a pak spal. Že v noci na pondělí jsem měřil od půlnoci do čtyř a nic jsem neslyšel, protože jsem měl na uších sluchátka.“ Odmlčí se. „To je pravda. Mám to v sešitě. Časy, kmitočty. Neslyšel jsem nic jiného než šedesát hertzů.“
+„Že já. Obě noci, pod plachtou, u svých beden. Že v noci na neděli jsem do půlnoci poslouchal a pak spal. Že v noci na pondělí jsem měřil od půlnoci do čtyř a nic jsem neslyšel, protože jsem měl na uších sluchátka.“ Odmlčí se. „To je pravda. Mám to v sešitě. Časy, kmitočty. Neslyšel jsem nic jiného než šedesát hertzů a svůj maják.“
 
 Hana mlčí.
 
@@ -336,7 +336,7 @@ Tahle umytá není. Od šestého března.
 
 *3 – 2 ks. 2. ks žlábek?*
 
-Písmo je kostrbaté. Psala to v jednatřiceti metrech, v rukavici, s Viktorovým světlem v očích a s plynem, který docházel. Otazník je větší než ostatní znaky. Udělala ho dvakrát, protože poprvé ho tužka na mokrém plastu skoro nenapsala.
+Písmo je kostrbaté. Psala to v jednatřiceti metrech, v rukavici, s Viktorovým světlem na čele válce a s Viktorovým obratem. Otazník je větší než ostatní znaky. Udělala ho dvakrát, protože poprvé ho tužka na mokrém plastu skoro nenapsala.
 
 Je to jediné místo na světě, kde je napsaná pravda o vzorku tři. V deníku je *A – s kontaktní plochou, B – navazující vrstva* a pod tím podpis. V soupisu je *2 fragmenty jednoho odběru* a pod tím podpis. Na videu, které má do večera dvě stě tisíc zhlédnutí, je ten podpis přes celou obrazovku.
 
@@ -364,7 +364,7 @@ Je to jediný záznam, který ji usvědčuje. A taky jediný, který dokazuje, �
 
 Kdyby ji umyla, zůstala by jí jen ta večerní lež. Podepsaná.
 
-Hana sundá ubrousek z tabulky. Na okraji u trojky zůstala vlhká skvrna, malá, jako po kapce. Tužka pod ní je celá. Hana tabulku osuší rohem prostěradla, opatrně, nesetře. Zastrčí ji zpátky do kapsy na zip, mezi deník a flešku. Ubrousek hodí do koše.
+Hana odtáhne ubrousek od tabulky. Na okraji u trojky zůstala vlhká skvrna, malá, jako po kapce. Tužka pod ní je celá. Hana tabulku osuší rohem prostěradla, opatrně, nesetře. Zastrčí ji zpátky do kapsy na zip, mezi deník a flešku. Ubrousek hodí do koše.
 
 Pak dlouho sedí a dívá se na ruce.
 

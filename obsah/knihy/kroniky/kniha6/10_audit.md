@@ -4,7 +4,7 @@ Juno Pell nepodávala ruku.
 
 Nara to zjistila šestnáctého dne v sedm ráno, v příletové hale na Lumě, když k ní natáhla dlaň a Pell se na ni podívala, jako by jí někdo podával nástroj, o který nežádala. Pak kývla. To bylo všechno.
 
-Byla vysoká, skoro jako Hals, ale nehrbila se. Kolem pětapadesáti. Krátké tmavé vlasy, šedivé jen na spáncích, a obličej, který se nepohnul ani tehdy, když mluvila. Na sobě měla soudní šedou bez odznaku. Přes rameno brašnu, ze které jí vyčuhoval okraj teplé bundy. Byla jediná, kdo na měsíc přijel oblečený.
+Byla vysoká, skoro jako Hals, ale nehrbila se. Kolem pětapadesáti. Krátké tmavé vlasy, šedivé jen na spáncích, a obličej, který se nepohnul ani tehdy, když mluvila. Na sobě měla soudní šedou bez odznaku. Přes rameno brašnu, ze které jí vyčuhoval okraj teplé bundy. Byla jediná, kdo na měsíc přijel teple oblečený.
 
 „Byla jsem tam,“ řekla, když si Nara bundy všimla. „Před jedenácti lety. Jiný spis.“
 
@@ -52,7 +52,7 @@ Nara se zarazila.
 
 *
 
-Nara jí to neříkala. Seděla u vedlejšího konce stolu a četla zápis z hlavního jednání, oddíl *Provedení činu*, který znala skoro nazpaměť. A dívala se, jak Pell čte.
+Nara jí to neříkala. Seděla na druhém konci stolu a četla zápis z hlavního jednání, oddíl *Provedení činu*, který znala skoro nazpaměť. A dívala se, jak Pell čte.
 
 Pell četla jinak než Mel. Mel četla list. Pell četla řady. Brala listy po desítkách a kladla je vedle sebe, tak aby řádek na jednom navazoval na řádek na druhém. Pak se posunula o kus dál podél stolu a položila další desítku. Za dvě hodiny měla stůl pokrytý listy a sama mezi nimi chodila s lupou, sem a tam, a občas se zastavila a položila prst na řádek. Ne aby ho četla. Aby si zapamatovala, kde je.
 
@@ -134,7 +134,7 @@ Bylo by to jednodušší, kdyby byl nevinný. Nara to věděla a styděla se za 
 
 Třetí den Pell našla mezeru.
 
-Nara to poznala dřív, než promluvila. Pell stála u konce stolu a nehýbala se. Pak odložila lupu a začala počítat. Nahlas, potichu, po dnech.
+Nara to poznala dřív, než promluvila. Pell stála u konce stolu a nehýbala se. Pak odložila lupu a začala počítat. Polohlasem, po dnech.
 
 „Devatenáct,“ řekla.
 
@@ -164,7 +164,7 @@ Dívala se na sloupec slov, která se opakovala, a v duchu slyšela svědkyni ze
 
 Pell už mluvila dál, stejně klidně.
 
-„Kolik trvalo, než si někdo všiml, to je v jiných schránkách. To soud znal. To jsem nečetla znovu.“
+„Jak dlouho trvalo, než si někdo všiml, to je v jiných schránkách. To soud znal. To jsem nečetla znovu.“
 
 *
 
@@ -180,7 +180,7 @@ Erenův.
 
 *Bydliště. Ložnice.*
 
-„Ve chvíli, kdy se terminál připojil k uzlu,“ řekla Pell, „byl Eren doma. Dvě hodiny cesty od uzlu.“ Položila list na stůl vedle ostatních, opatrně, aby se nedotýkal. „Vyšetřovatelé to věděli. Vyžádali si to sami.“
+„Ve chvíli, kdy se terminál připojil k uzlu,“ řekla Pell, „byl Eren doma. Na druhém konci habitatu, daleko od uzlu.“ Položila list na stůl vedle ostatních, opatrně, aby se jich nedotýkal. „Vyšetřovatelé to věděli. Vyžádali si to sami.“
 
 Nara se dívala na dvě slova. *Bydliště. Ložnice.* Muž, který před devatenácti dny vyrobil nástroj, spal ve chvíli, kdy ho někdo použil. Vedle něho žena a v pokoji vedle šestiletá dcera, jejíž dech měl v koutku vědomí.
 
@@ -248,9 +248,9 @@ Chtěla, aby byl nevinný. Teď to věděla jistě, a věděla taky, že nebyl. 
 
 A to bylo všechno, co se o něm dalo doložit.
 
-Všechno ostatní, co o něm stálo ve spisu, stálo v přiznání. *Hlásil jsem se k hnutí. Věděl jsem o jeho záměrech.* Čtyři věty, stejné pro jedenáct tisíc lidí. A soud se v oddílu *Provedení činu* opřel o technické záznamy, o znalce a o tohle přiznání, jako by to byly tři věci stejného druhu.
+Všechno ostatní, co o něm stálo ve spisu, stálo v přiznání. *Hlásil jsem se k hnutí. Věděl jsem o jeho záměrech.* Čtyři věty, stejné pro každého, kdo podepsal jako člen. A soud se v oddílu *Provedení činu* opřel o technické záznamy, o znalce a o tohle přiznání, jako by to byly tři věci stejného druhu.
 
-Nebyly. Technické záznamy říkaly, co udělal. Přiznání říkalo, co věděl. A to druhé nikdo nikdy neověřil, protože to první stačilo, aby se mu to druhé dalo uvěřit.
+Nebyly. Technické záznamy říkaly, co udělal. Přiznání říkalo, co věděl. A to druhé nikdo nikdy neověřil, protože to první stačilo, aby se tomu druhému dalo uvěřit.
 
 *
 

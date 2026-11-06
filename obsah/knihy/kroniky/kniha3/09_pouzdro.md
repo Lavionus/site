@@ -58,7 +58,7 @@ Luis se zvedne z pytle a vyjde do tmy.
 
 Vrátí se za tři minuty. Za ním jde Kalina. Nese metr i úhelníky a pod paží šedou krabici s držadlem.
 
-„Půjčím vám to sám,“ řekne. Na Marisol. „Pokud smím. A pak bych chtěl o něco požádat.“
+„Půjčím vám to sám,“ řekne a podívá se na Marisol. „Pokud smím. A pak bych chtěl o něco požádat.“
 
 Marisol si ho změří přes brýle a kývne.
 
@@ -78,7 +78,7 @@ V hlavě má jiné číslo. Čtyři sta šedesát čtyři v modelu. Krát nula c
 
 Sedí to.
 
-Zarazí se, jak moc se jí ulevilo. Ve středu v noci si opravu spočítala a zapsala, a od té doby jí někde vzadu v hlavě sedělo, že je to jen výpočet. Že mohla udělat druhou chybu na první. Teď je oprava změřená. Předmět jí ji potvrdil sám.
+Zarazí ji, jak moc se jí ulevilo. Ve středu v noci si opravu spočítala a zapsala, a od té doby jí někde vzadu v hlavě sedělo, že je to jen výpočet. Že mohla k první chybě přidat druhou. Teď je oprava změřená. Předmět jí ji potvrdil sám.
 
 Ríšovi to musí říct. Model se musí přepočítat. Chtěla to říct ve čtvrtek ráno a ve čtvrtek ráno se zřítila stěna.
 
@@ -86,7 +86,7 @@ Posuvné měřítko má Kalina v krabici taky. Hana změří průměr na třech 
 
 Pak váha.
 
-Hana položí síťový vak, ten, ve kterém válec ráno vyjel z vody, na prázdný stůl a zváží ho. Tři sta deset gramů. Marisol do něj válec vloží, opatrně, s rukama v rukavicích, a Hana zvedne vak za ucho na háček váhy. Displej se rozbliká. Ustálí se.
+Hana položí síťový vak, ten, ve kterém válec ráno vyjel z vody, na prázdný stůl a zváží ho. Tři sta deset gramů. Marisol do něj válec vloží, opatrně, s rukama v rukavicích, a Hana zavěsí vak za ucho na háček váhy a zvedne ho. Displej se rozbliká. Ustálí se.
 
 Devět celých čtyři dvě.
 
@@ -164,7 +164,7 @@ Kalina pracuje pomalu. Přiloží kompas na desku stolu ve vzdálenosti půl met
 
 „Železo to není,“ řekne. „Ani nic, co by se magnetovalo.“
 
-Hana to zapíše doleva. Vpravo jí v deníku od desátého stojí *materiál meteoritický? → izotopy kyslíku*. Železné meteority střelku pohnou. Kamenné někdy taky. Tohle ji nepohne. Neříká to nic jistého, jen škrtá jednu z možností.
+Hana to zapíše doleva. Vpravo jí v deníku od desátého stojí *materiál meteoritický? → izotopy kyslíku*. Železné meteority střelkou pohnou. Kamenné někdy taky. Tohle jí nepohne. Neříká to nic jistého, jen škrtá jednu z možností.
 
 Kalina zvedne přístroj s anténou. Pomalu s ním obchází paletu a dívá se na displej. Na displeji je známý hřeben, ten, který Hana viděla první den. Zuby jeden vedle druhého, šedesát hertzů a jejich násobky, z generátoru venku a z vedení u obce. Pak širší šedý pás, levný střídač. A nahoře, když Kalina přepne, krátké výkmity, které přijdou a zmizí.
 
@@ -204,7 +204,7 @@ Hana se narovná. Bolí ji záda od toho, jak se skláněla.
 
 Na telefonu má od tří odpoledne e-mail. Stáhla si ho na plošině, kde je signál, a přílohu otevřela jen na vteřinu, na malé obrazovce, se sluncem v displeji. Pak ho zavřela, protože se blížila Marisol s deskami, a už ho neotevřela.
 
-Teď ho neotevře taky. Je tu Marisol, Luis, pan Chan, Kalina. Je tu válec, který za pět minut zmizí v pěně.
+Ani teď ho neotevře. Je tu Marisol, Luis, pan Chan, Kalina. Je tu válec, který za pět minut zmizí v pěně.
 
 „Hotovo?“ zeptá se Marisol.
 
@@ -214,7 +214,7 @@ Teď ho neotevře taky. Je tu Marisol, Luis, pan Chan, Kalina. Je tu válec, kte
 
 Viktor přijde, když Marisol balí.
 
-Stoupne si ve dveřích vedle pana Chana a pozdraví ho kývnutím. Pan Chan kývnutí vrátí. Viktor je čerstvě osprchovaný, má mokré vlasy a čisté tričko a v ruce telefon, displejem dolů. Prezentace v Los Angeles dopadla dobře. Hana to ví už od včerejška.
+Stoupne si do dveří vedle pana Chana a pozdraví ho kývnutím. Pan Chan kývnutí vrátí. Viktor je čerstvě osprchovaný, má mokré vlasy a čisté tričko a v ruce telefon, displejem dolů. Prezentace v Los Angeles dopadla dobře. Hana to ví už od včerejška.
 
 Viktor sleduje, jak Marisol válec obaluje. Pěna namočená v kbelíku. Fólie, vrstva po vrstvě. Zase pěna.
 
@@ -308,7 +308,7 @@ Otevře vedle výřezu svůj snímek čela válce, ten se světlem zleva. Sedm �
 
 ![Značky na čele válce a kresba kosti z kodexu](obrazky/09_znaky.webp)
 
-Není to totéž. Tohle si řekne nahlas, potichu, do brumlání generátoru. Není to totéž. Na kosti je pět řádků, na válci sedm. Skupiny teček jdou v jiném pořadí. Žádný řádek z kosti se nedá najít na válci. Žádný.
+Není to totéž. Tohle si řekne polohlasně, do brumlání generátoru. Není to totéž. Na kosti je pět řádků, na válci sedm. Skupiny teček jdou v jiném pořadí. Žádný řádek z kosti se nedá najít na válci. Žádný.
 
 Jenže pravidla jsou stejná.
 
@@ -326,7 +326,7 @@ Podobnost je to nejlacinější, co v oboru existuje. Na podobnostech stojí cel
 
 Hana zavře oba obrázky. Pak je zase otevře.
 
-Napadne ji, že by to měla někomu ukázat. Kalinovi. Ten by se díval dlouho a pak by řekl, co všechno to není. Marisol. Ta by se zeptala, co je to za kodex. A Hana by musela říct: kniha, kterou ve dvanáctém století napsal mnich, který psal o dracích. Kodex s drakem. Tak mu jednou v e-mailu řekla sama Šindelářová a myslela to jako vtip.
+Napadne ji, že by to měla někomu ukázat. Kalinovi. Ten by se díval dlouho a pak by řekl, co všechno to není. Marisol. Ta by se zeptala, co je to za kodex. A Hana by musela říct: kniha, kterou ve dvanáctém století napsal mnich, který psal o dracích. Kodex s drakem. Tak ho jednou v e-mailu nazvala sama Šindelářová a myslela to jako vtip.
 
 Pak by Marisol zavřela desky.
 
@@ -374,7 +374,7 @@ Jenže Ríša stojí rozespalý a ona má dlaň na stránce, pod kterou leží k
 
 Ríša zmizí ve stanu. Zip zavrčí nahoru a dolů.
 
-Hana sundá dlaň ze stránky. Pod ní je pravá půlka. Odpočet v rohu, třináct, napsaný odpoledne. Pod ním otázka, kterou nikdo nevyfotil.
+Hana zvedne dlaň ze stránky. Pod ní je pravá půlka. Odpočet v rohu, třináct, napsaný odpoledne. Pod ním otázka, kterou nikdo nevyfotil.
 
 Zavře deník a zasune ho do batohu, do vnitřní kapsy na zip, ke flešce s modelem.
 

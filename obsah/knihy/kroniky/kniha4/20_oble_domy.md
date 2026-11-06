@@ -22,7 +22,7 @@ Myslel tím vodu. Hladina u stromů byla rovná jako jeho lano. Eren zvedl oči 
 
 Hela zapsala ten den rýhu, jako každý den, a zavolala ho do prvního domu.
 
-Ve stěně u dveří, v mazanici, byly rýhy. Po deseti, v řadách, od podlahy až do výšky, kam Hela dosáhla. Celá zima. Vedle některých tečky. Eren je viděl každý den, když šel kolem. Nikdy se u nich nezastavil.
+Ve stěně u dveří, v mazanici, byly rýhy. Po deseti, v řadách, od podlahy až do výšky, kam Hela dosáhla. Celá zima. Dny začala rýt, když stál první dům; ty předtím jí řekl Eren. Eren je viděl každý den, když šel kolem. Nikdy se u nich nezastavil.
 
 „Sto šedesát od sněhu,“ řekla Hela. „Podle mě.“
 
@@ -52,7 +52,7 @@ Každé ráno, od dolní tůně po suti nahoru do síně, v měchu přes rameno.
 
 Jednou ráno, na jaře, se Kaj u Erena zastavil. S měchem přes rameno.
 
-„Sedm,“ řekl.
+„Sedm,“ řekl. „Od podzimu. S Ikkuem.“
 
 Eren chvíli nechápal. Pak to věděl. *Kolik jich tam nahoře je. Jejich.*
 
@@ -112,7 +112,7 @@ Eren se díval tam, kam ona. Mohl říct ne. Mohl říct ano. Obojí by bylo sna
 
 Tio kývla. Nebyla zklamaná. Přijala to tak, jak přijímala všechno, co se v tomhle kraji nevědělo. Že se slunce zastaví. Že se vrátí. Že dítě dostane jméno, až bude zima pryč.
 
-Ještě chvíli stála, než se otočila a běžela k tůním, kde už křičely děti.
+Ještě chvíli stála, než se otočila a běžela k potoku pod tůněmi, kde už křičely děti.
 
 Druhý den na kraj rokle nešla. Třetí den ano. Pak už jen někdy.
 
@@ -128,7 +128,7 @@ Eren pletl.
 
 Před kůlem, za kůlem. Další naopak. Stlačit dlaní. Neřekl nikomu, kde má stát dům, ani kdo v něm bude spát. Zeptali se ho jednou. Bena, u kruhu kůlů, který právě dokopali. *Kdo sem půjde?* A Eren řekl *nevím* a myslel to tak, a Bena se otočila k Hele, a Hela řekla jména.
 
-Domů bylo třináct. Pak čtrnáct. Po svahu nad nimi ležely v trávě kameny, kruh vedle kruhu, tam, kde bude stát další. Třicet jedna kruhů, tak jak je Eren na podzim nakreslil klackem do hlíny. Ženy se pořád smály.
+Domů bylo třináct. Pak čtrnáct. Po svahu nad nimi ležely v trávě kameny, kruh vedle kruhu, tam, kde budou stát další. Třicet jedna kruhů, tak jak je Eren na podzim nakreslil klackem do hlíny. Ženy se pořád smály.
 
 *
 
@@ -154,7 +154,7 @@ Ru řekl slovo. Místní, krátké. Eren ho znal. Slyšel ho stokrát, na svahu 
 
 Eren stál nad dřevem a díval se na Tal.
 
-První den na svahu u modulu stál u beden a řekl Orrinovi, že je ten, kdo umí věci. Řekl to sám. Nikdo se ho neptal. Celý podzim byl ten, kdo umí věci. Kdo rozchodil řezák. Kdo vyjednal dvanáct kamenů. Kdo spočítal, kolik síň unese.
+První den na svahu u modulu stál u beden a řekl Orrinovi, že je ten, kdo umí věci. Řekl to sám. Nikdo ho k tomu nenutil. Celý podzim byl ten, kdo umí věci. Kdo rozchodil řezák. Kdo vyjednal dvanáct kamenů. Kdo spočítal, kolik síň unese.
 
 Nikdo tady nevěděl, co umí. Věděli jen, co dělá.
 
@@ -206,7 +206,7 @@ Vyhnanci se dívali. Pak, jeden po druhém, sklopili hlavy taky. Ardo. Bena. Ves
 
 Eren se díval.
 
-Křídlatá přeletěla nad domy. Nízko, tak nízko, že její stín přeběhl přes střechy, jednu po druhé, v řadě. Přes první dům, přes druhý, přes pátý, kde bydlela Vesa s místní rodinou. Na okamžik zakryl slunce nad Erenem. Byl studený.
+Křídlatá přeletěla nad domy. Nízko, tak nízko, že její stín přeběhl přes střechy, jednu po druhé, v řadě. Přes první dům, přes druhý, přes pátý, kde bydlela Vesa s místní rodinou. Na okamžik padl na Erena. Byl studený.
 
 ![Křídlatá nad oblými domy](obrazky/20_oble_domy.webp)
 
@@ -226,11 +226,11 @@ Když Eren zvedl hlavu, byla nad útesem a vzápětí zmizela pod převisem.
 
 Nika byla pořád tam, kde byla.
 
-Eren chodil k horní tůni každé ráno. Ne pro vodu. Vodu bral z dolní, jako všichni. Chodil se tam umýt tam, kde se smělo, a cestou zpátky se podíval nahoru. Na skalní stupeň pod terasou. Na stěnu nad ním. Na tmavší skvrnu ve výšce dvou mužů.
+Eren chodil k horní tůni každé ráno. Ne pro vodu. Vodu bral z dolní, jako všichni. Chodil se umýt tam, kde se smělo, a cestou zpátky se podíval nahoru. Na skalní stupeň pod terasou. Na stěnu nad ním. Na tmavší skvrnu ve výšce dvou mužů.
 
 Nic v ní nebylo vidět. Nikdy. Ani v noci.
 
-Několik nocí po vydání chodil na suť a díval se, jestli neuvidí zelené světlo. Neuviděl. Bylo zabalené v kůži od Dabry a v cárech a za hranou skály. Kdyby blikalo, nebylo by to vidět. Kdyby neblikalo, taky ne.
+Několik nocí po vydání chodil na suť a díval se, jestli neuvidí zelené světlo. Neuviděl. Článek byl zabalený v kůži od Dabry a ležel za hranou skály. Kdyby blikalo, nebylo by to vidět. Kdyby neblikalo, taky ne.
 
 Nevěděl, jestli ještě bliká. Nikdy se to nedozví.
 
@@ -248,13 +248,13 @@ Místního, asi osmiletého, z pátého domu. Klečel na kraji tůně, tam, kde 
 
 Eren se nepohnul. Stál u potoka pod dolní tůní a díval se.
 
-Tio byla rychlejší. Přiběhla od dolní tůně, mokrá do pasu, a zastavila se na kraji. Neřekla nic po našem. Řekla *nu* a ukázala dolů, k dolní tůni. Cvakla jazykem a plochou dlaní máchla dolů, ze strany na stranu. *Ne.*
+Tio byla rychlejší. Přiběhla od potoka pod dolní tůní, mokrá do pasu, a zastavila se na kraji. Neřekla nic po našem. Řekla *nu* a ukázala dolů, k dolní tůni. Cvakla jazykem a plochou dlaní máchla dolů, ze strany na stranu. *Ne.*
 
 Kluk se na ni podíval. Pak na záliv pod převisem, kde nikdo nestál. Pak zase na Tio.
 
 Řekl něco, vzdorně. Tio mu odpověděla. Dlouze, rychle, s rukama. Eren poznal jen jedno slovo. To, kterým se říká *staré*. Když Tal ukázala na víčko a řekla, že to platí odjakživa.
 
-Kluk si přetáhl kůži zpátky přes ramena. Sešel k dolní tůni a skočil do ní, až to cáklo, a Tio skočila za ním.
+Kluk si přetáhl kůži zpátky přes ramena. Sešel pod dolní tůň, k potoku, a skočil do vody, až to cáklo, a Tio skočila za ním.
 
 Hladina horní tůně se uklidnila. Pára nad ní stoupala rovně a nikdo ji nerušil.
 
@@ -274,7 +274,7 @@ Eren se na ty věci díval a nechal je ležet.
 
 Maela spala ve druhém domě.
 
-S Tio, u ohně, na kůži, kterou dostala od staré ženy z boční síně. Eren spal na druhé straně ohně. Od Sefiny smrti. Nebylo to rozhodnutí. Nebo bylo, ale nikdo z nich ho neřekl nahlas.
+S Tio, u ohně, na kůži, kterou dostala od staré ženy z boční síně. Eren spal na druhé straně ohně. Od Sefiny smrti. Nebylo to rozhodnutí. Nebo bylo, ale nikdo z nich ho nevyslovil.
 
 Jednou v noci, na jaře, se probudil.
 
@@ -330,7 +330,7 @@ Tio napsala své jméno. A čáru pod něj.
 
 Večer bylo v údolí bezvětří.
 
-Eren seděl u dveří druhého domu, venku, na kameni. Uličkou mezi řadami šly děti od tůní, mokré a hlučné, a mezi nimi Ru a Tio. Ru něco vyprávěl a mával rukama a Tio se smála. Za nimi šel Kaj s měchem vody. Před pátým domem seděla Vesa a místní žena a loupaly kořeny, každá do jiného koše, a mluvily, každá svou řečí, a rozuměly si, nebo dělaly, že si rozumějí. Ardo napínal lano pro zítřek. Hela u prvního domu vyrývala do stěny dnešní rýhu.
+Eren seděl u dveří druhého domu, venku, na kameni. Uličkou mezi řadami šly děti od potoka pod tůněmi, mokré a hlučné, a mezi nimi Ru a Tio. Ru něco vyprávěl a mával rukama a Tio se smála. Za nimi šel Kaj s měchem vody. Před pátým domem seděla Vesa a místní žena a loupaly kořeny, každá do jiného koše, a mluvily, každá svou řečí, a rozuměly si, nebo dělaly, že si rozumějí. Ardo napínal lano pro zítřek. Hela u prvního domu vyrývala do stěny dnešní rýhu.
 
 Nad soutěskou se nic nehýbalo. Útes byl tmavý.
 

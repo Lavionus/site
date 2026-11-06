@@ -30,11 +30,11 @@ Na kámen u cenotu si sedne v sedm. Slunce je za lesem a nebe nad studnou má ba
 
 Voda dole už nemá barvu. Je to tmavý kruh, ve kterém se zrcadlí kruh nebe. Na hladině plave list.
 
-Hana si v duchu projde, co řekne. Ríšova pošta. Čas odeslání, čas stažení. STL. Zploštělý konec. Páska. Má to v telefonu, v jedné složce, seřazené podle času, jako přílohy k posudku.
+Hana si v duchu probere, co řekne. Ríšova pošta. Čas odeslání, čas stažení. STL. Zploštělý konec. Páska. Má to v telefonu, v jedné složce, seřazené podle času, jako přílohy k posudku.
 
-A pak si projde, co neřekne.
+A pak si probere, co neřekne.
 
-Čtyři milimetry. Snímek čtyřicet jedna, snímek čtyřicet dva. Poměr jedna celá nula nula osm. To, že replika zopakovala její chybu do desetiny procenta. To je jediná věc, kterou Viktor nemůže zamluvit, protože o ní neví. O chybě měřítka neví nic. Nikdy mu ji neřekla. Ríšovi ji řekla až dnes. Kdyby mu ji řekla teď, měl by celou noc na to, aby vymyslel, proč je model větší a proč je to jedno.
+Čtyři milimetry. Snímek čtyřicet jedna, snímek čtyřicet dva. Poměr jedna celá nula nula osm. To, že replika zopakovala její chybu do desetiny procenta. To je jediná věc, kterou Viktor nemůže zamluvit, protože o ní neví. O chybě měřítka neví nic. Nikdy mu o ní neřekla. Ríšovi o ní řekla až dnes. Kdyby mu o ní řekla teď, měl by celou noc na to, aby vymyslel, proč je model větší a proč je to jedno.
 
 Tohle si nechá. Není to lest, říká si. Je to pořadí. Nejdřív ten, kdo to bude zkoumat. Potom ten, koho se to týká.
 
@@ -60,7 +60,7 @@ Hana ji vezme a postaví si ji k noze.
 
 „Proč?“
 
-„Měl klíč. Měl dluhy, hraje karty, to jsem věděl, jen jsem nevěděl kolik. A zná tady každého. Dělal logistiku pro filmy, pro telenovely, pro reklamy na hotely. Zná lidi, co dělají rekvizity. Sochy z pryskyřice do hotelových lobby, mayské hlavy pro turisty. To umějí za dva dny.“ Viktor se zadívá do studny. „Dostal fotky. Všechny máme fotky, celý internet má fotky. A od pondělka nebere telefon. Mně ne, tobě ne, policii ne.“
+„Měl klíč. Měl dluhy, hraje karty, to jsem věděl, jen jsem nevěděl kolik. A zná tady každého. Dělal logistiku pro filmy, pro telenovely, pro reklamy na hotely. Zná lidi, co dělají rekvizity. Sochy z pryskyřice do hotelových lobby, mayské hlavy pro turisty. To umějí za dva dny.“ Viktor se zadívá do studny. „Dostal fotky. Všichni máme fotky, celý internet má fotky. A od pondělka nebere telefon. Mně ne, tobě ne, policii ne.“
 
 Je to dobrý příběh. Hana to slyší. Má začátek, má motiv, má klíč a má zmizení. Každá jeho věta je pravdivá, nebo se dá ověřit, a dohromady ukazují jedním směrem, pryč od studny a pryč od plachty. Jako to prohlášení včera večer.
 
@@ -114,11 +114,11 @@ Viktor řekne jméno. Anglické, rychle, bez zaváhání. Hana si ho zapamatuje.
 
 Viktor mlčí.
 
-„Ríša spodek válce dopočítal,“ řekne Hana. „V modelu nebyl vidět, ležel v polevě. Byla tam jen boule. Ríša ji nechal, jak byla, a zbytek sítě uzavřel, jak to program udělal sám. Proto má replika jeden konec z boku zploštělý. Na fotce ústavu je to vidět. Na mých fotkách originálu je spodní konec souměrný. Jako konec vajíčka.“
+„Ríša spodek válce dopočítal,“ řekne Hana. „V modelu nebyl vidět, ležel v polevě. Byla tam jen boule. Ríša ji nechal, jak byla, a zbytek sítě pak program uzavřel sám. Proto má replika jeden konec z boku zploštělý. Na fotce ústavu je to vidět. Na mých fotkách originálu je spodní konec souměrný. Jako konec vajíčka.“
 
-„Fotka ústavu je focená šikmo.“
+„Fotka ústavu je dělaná šikmo.“
 
-„Ano. Ale na klinice jsem to viděla rovně a zblízka, když konzervátorka sundala fólii.“ Hana přejede na další dvě fotky a položí telefon na kámen mezi ně, aby je viděl obě vedle sebe. „A páska. Vlevo sobota večer, bodega, po přepečetění. Vpravo pondělí, depozitář v Méridě. Tatáž páska. Stejná čísla, stejný podpis. Jenže v Méridě sedí o tři milimetry níž. Přes střed suku. Tah podpisu má schod mezi páskou a dřevem. Nad páskou je tenký modrý proužek. Zbytek ranního nápisu, který večerní páska kryla.“
+„Ano. Ale na klinice jsem to viděla zpříma a zblízka, když konzervátorka sundala fólii.“ Hana přejede na další dvě fotky a položí telefon na kámen mezi ně, aby je viděl obě vedle sebe. „A páska. Vlevo sobota večer, bodega, po přepečetění. Vpravo pondělí, depozitář v Méridě. Tatáž páska. Stejná čísla, stejný podpis. Jenže v Méridě sedí o tři milimetry níž. Přes střed suku. Tah podpisu má schod mezi páskou a dřevem. Nad páskou je tenký modrý proužek. Zbytek ranního nápisu, který večerní páska kryla.“
 
 Viktor se dívá na dvě fotky suku. Dlouho. Pak se zasměje. Krátce, nosem, bez veselí.
 
@@ -150,11 +150,11 @@ Sundá si i kšiltovku a promne si obličej oběma dlaněmi, od čela po bradu, 
 
 Dlouho mlčí. Hana si myslí, že nezačne. Pak začne.
 
-„Dvanáct milionů,“ řekne. „Korun. Banka, leasing na techniku, dva kluci, kterým jsem nezaplatil za střih. Platforma, která koupila Hranice, zkrachovala v létě čtyřiadvacet. Dva díly vysílali, třetí ne a nezaplatili ani jeden. Já jsem na to měl úvěr. Na ten úvěr jsem ručil bytem.“ Mluví klidně, věcně, jako by četl rozpočet. „Matyáš studuje v Praze a myslí si, že táta točí filmy. Táta od Vánoc neplatí nájem kanceláře. Pronajímatel je hodnej, ještě nežaluje.“
+„Dvanáct milionů,“ řekne. „Korun. Banka, leasing na techniku, dva kluci, kterým jsem nezaplatil za střih. Platforma, která koupila moji poslední sérii, zkrachovala v létě čtyřiadvacet. Dva díly vysílali, třetí ne a nezaplatili ani jeden. Já jsem na to měl úvěr. Na ten úvěr jsem ručil bytem.“ Mluví klidně, věcně, jako by četl rozpočet. „Matyáš studuje v Praze a myslí si, že táta točí filmy. Táta od Vánoc neplatí nájem kanceláře. Pronajímatel je hodnej, ještě nežaluje.“
 
 Hana mlčí. Myslí na obálku na kuchyňském stole v Brně. Neotevřenou.
 
-„V lednu mi Luis poslal tu fotku z boční síně. Já jsem se na ni díval celou noc a ráno jsem věděl dvě věci. Že je to nejdůležitější věc, kterou jsem kdy viděl. A že mi to nikdo nezaplatí.“ Viktor se otočí k ní. „Víš, kolik vydělá dokument o mexickém nálezu, který leží v depozitáři? Nic. Jeden díl, festival, potlesk. A ten nález se mezitím ztratí v regálu.“
+„V lednu mi Luis poslal to video z boční síně. Já jsem se na něj díval celou noc a ráno jsem věděl dvě věci. Že je to nejdůležitější věc, kterou jsem kdy viděl. A že mi to nikdo nezaplatí.“ Viktor se otočí k ní. „Víš, kolik vydělá dokument o mexickém nálezu, který leží v depozitáři? Nic. Jeden díl, festival, potlesk. A ten nález se mezitím ztratí v regálu.“
 
 „Neztratí.“
 
@@ -190,7 +190,7 @@ Hana kývne. Ví, že to neřekne. Musela se zeptat, aby to věděla jistě.
 
 „A replika,“ řekne.
 
-„Rekvizitář v Méridě. Dělá sochy do hotelů a hlavy bohů pro telenovely. Měl jsem ho domluvenýho od začátku března. Řekl jsem mu, že možná budu potřebovat rychle kopii, do filmu, kdyby nám originál nedovolili vynést na světlo. To se dělá vždycky. Ve filmu nikdy nedržíš originál.“ Viktor se na ni nepodívá. „Čekal jen na data. Pak tiskli a odlévali nonstop. Dva dny a dvě noci.“
+„Rekvizitář v Méridě. Dělá sochy do hotelů a hlavy bohů pro telenovely. Měl jsem ho domluvenýho od začátku března. Řekl jsem mu, že možná budu potřebovat rychle kopii, do filmu, kdyby nám originál nedovolili vynést ven. To se dělá vždycky. Ve filmu nikdy nedržíš originál.“ Viktor se na ni nepodívá. „Čekal jen na data. Pak tiskli a odlévali nonstop. Dva dny a dvě noci.“
 
 „Od začátku března.“
 
@@ -230,7 +230,7 @@ Pak řekne tiše: „Jo. Taky.“
 
 „Luisovi nic neudělají. Nemají co. Nic neudělal.“
 
-„V novinách je *údajně*. A fotka bodegy. A tvoje prohlášení. *Nalezen místním průvodcem. V zařízení ejida.*“
+„V novinách je *údajně*. A fotka bodegy. A tvůj návrh prohlášení. *Nalezen místním průvodcem. V zařízení ejida.*“
 
 „Noviny zapomenou.“
 
@@ -266,7 +266,7 @@ Hana si znovu sedne. Tentokrát ne na kámen. Na zem, naproti němu, aby mu vid�
 
 „Proč mi to všechno říkáš?“
 
-„Protože se ptáš. A protože ti nelžu líp, než ty měříš.“ Krátký úsměv. „To jsem se naučil v Býčí skále.“
+„Protože se ptáš. A protože neumím lhát líp, než ty měříš.“ Krátký úsměv. „To jsem se naučil v Býčí skále.“
 
 Pak úsměv zmizí.
 
@@ -290,7 +290,7 @@ Haně se sevře hrdlo. Ne strachem. Něčím horším. Tím, že má pravdu.
 
 „A když budu mlčet?“
 
-„Když budeš mlčet, Ernesto zůstane Ernesto. Policie bude hledat Ernesta. Já budu svědek. Ty budeš svědkyně a oběť.“ Viktor se k ní nakloní. „A za dva roky studie. Tvoje laminy, tvoje U-Th, tvoje kontaktní plocha. Na originálu, s laboratořemi, které ti nikdo nikdy nezaplatí. Spoluautorství, Hanko. Já ti ho nabízím. Ne jako úplatek. Jako jediný způsob, jak to celý nepřijde nazmar.“
+„Když budeš mlčet, Ernesto zůstane Ernesto. Policie bude hledat Ernesta. Já budu svědek. Ty budeš svědkyně a oběť.“ Viktor se k ní nakloní. „A za dva roky studie. Tvoje laminy, tvoje U-Th, tvoje kontaktní plocha. Na originálu, s laboratořemi, které ti nikdo nikdy nezaplatí. Spoluautorství, Hanko. Já ti ho nabízím. Ne jako úplatek. Jako jediný způsob, aby to celý nepřišlo nazmar.“
 
 Mlčí. Hana slyší, jak dýchá. Rychle a mělce, jako na dekompresi, když se něco pokazilo.
 
@@ -312,7 +312,7 @@ Otevře oči.
 
 Viktor nic neříká.
 
-„Replika je odlitá podle modelu. Model ti poslal Ríša, stáhl sis ho v pátek ráno. Páska byla přelepená mezi sobotou večer a Méridou. Originál je někde, kde to víš ty a já ne. To je kámen. Všechno ostatní je to, co si myslíš.“ Nadechne se. „A šestýho března jsem napsala doleva něco, co jsem neviděla. Podepsala jsem to. To je taky kámen.“
+„Replika je odlitá podle modelu. Model ti poslal Ríša, stáhl sis ho v pátek ráno. Páska byla přelepená mezi sobotou večer a Méridou. Originál je někde, ty víš kde a já ne. To je kámen. Všechno ostatní je to, co si myslíš.“ Nadechne se. „A šestýho března jsem napsala doleva něco, co jsem neviděla. Podepsala jsem to. To je taky kámen.“
 
 „Tak ho tam nech ležet.“
 
@@ -376,7 +376,7 @@ Hana si ho vezme. Kalina se podívá na její ruce.
 
 „Rosin vařič,“ řekne Kalina. „Rosa tu není. Nikdo mi nevynadá.“
 
-Hana se málem zasměje. Sedne si na bednu vedle něj a nechá ho uvařit čaj. Kalina ho dělá pomalu, jako všechno, a mezitím nic neříká. Postaví před ni hrnek. Je to ten s odloupnutým uchem, ze kterého pije on.
+Hana se málem zasměje. Sedne si na bednu vedle něj a nechá ho uvařit čaj. Kalina ho dělá pomalu, jako všechno, a mezitím nic neříká. Postaví před ni hrnek. Je to ten s otlučeným uchem, ze kterého pije on.
 
 „Viktor,“ řekne Hana.
 
@@ -386,7 +386,7 @@ Kalina kývne. Na nic se nezeptá.
 
 „Nevěděl. Měl jsem možnost.“ Kalina se podívá do svého sešitu. „To je rozdíl.“
 
-Je to jen věta, ke které dojdou dva lidé, kteří celý život oddělují, co vědí, od toho, co si myslí.
+Viktor to řekl stejnými slovy. Kalina u toho nebyl. Je to jen věta, ke které dojdou dva lidé, kteří celý život oddělují, co vědí, od toho, co si myslí.
 
 Napije se čaje. Je silný a hořký a pálí.
 
@@ -406,7 +406,7 @@ Hana se nadechne. Tohle si cestou od studny připravovala a teď to všechno zap
 
 „Mám něco, co musíte vidět. O replice a o bedně. Myslím, že vím, jak vznikla a kdy se vyměnila. Mám to změřené a vyfocené.“ Pauza. „A musím vám říct něco o sobě. O svých vzorcích. O vzorku tři.“
 
-Na druhé straně je ticho. Televize se ztiší. Dětský hlas se na něco zeptá španělsky a Marisol odpoví, zakrytým telefonem, *ya voy, mi amor*.
+Na druhé straně je ticho. Televize se ztiší. Dětský hlas se na něco zeptá španělsky a Marisol odpoví přes zakrytý telefon, *ya voy, mi amor*.
 
 „O vzorku tři,“ zopakuje pak.
 

@@ -4,7 +4,7 @@ V sedm ráno má Hana v telefonu krátkou zprávu.
 
 *Jméno doplněno. T. K.*
 
-Otevře server, kde od desátého června leží její balík, a najde tu položku. Zpoždění čtyři celá dvě sekundy po každé skupině zdroje, změřené u skály v noci na třetího března. Pod tím, kde stálo *nezávislý radioastronom, jméno bude doplněno*, teď stojí *Tomáš Kalina* a odkaz. Odkaz vede na preprint, který byl zveřejněn o půlnoci.
+Otevře server, kde od desátého června leží její balík, a najde tu položku. Zpoždění čtyři celá dvě sekundy po každé skupině signálů zdroje, změřené u skály v noci na třetího března. Pod tím, kde stálo *nezávislý radioastronom, jméno bude doplněno*, teď stojí *Tomáš Kalina* a odkaz. Odkaz vede na preprint, který byl zveřejněn o půlnoci.
 
 Hana ho nečte. Ještě ne. Zavře telefon a jde se osprchovat, protože ví, že kdyby ho začala číst teď, nepřestala by a přijela by pozdě.
 
@@ -162,7 +162,7 @@ Otazník tam zůstal. Nikdo ho nevymazal. Nikdo neměl čím. Nic z toho, co dne
 
 Hana se vrátí na čistou dvojstranu.
 
-Vpravo napíše tři otázky. Pod sebe, s mezerou mezi každou, aby bylo kam připsat, až bude co.
+Vpravo napíše tři otázky. Pod sebe, s mezerou za každou, aby bylo kam připsat, až bude co.
 
 *Kdo jsou?*
 

@@ -1,0 +1,22 @@
+// hlasy/efekty – en (sdílený modul obsah/hlasy/efekty.js). Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'žádný': 'none',
+  'staré rádio': 'old radio',
+  'ozvěna': 'echo',
+  'jeskyně': 'cave',
+  'Původní': 'Original',
+  'Žena': 'Woman',
+  'Dítě': 'Child',
+  'Hluboký muž': 'Deep male',
+  'Obr': 'Giant',
+  'Babička': 'Grandma',
+  'Dědeček': 'Grandpa',
+  'Skřítek': 'Elf',
+  'Čarodějnice': 'Witch',
+  'Vypravěč': 'Narrator',
+  'Šepot': 'Whisper',
+  'Duch': 'Ghost',
+  'Robot': 'Robot',
+  'Telefon': 'Telephone',
+  'Staré rádio': 'Old radio',
+});

@@ -56,7 +56,7 @@ Vstal a udělal dva kroky ke dveřím a dva zpátky. Kajuta člunu byla menší 
 
 Pak se vrátil a četl dál.
 
-Výpis rozsudku v hromadném řízení. Čtyři sta jedna osob, mladých, z hnutí Nové otevření, o kterém nikdy neslyšel. Odsouzeni podle precedentu Terra. Mezi nimi jméno, které stálo i v návrhu: *Vess, Ilan, 17.*
+Výpis rozsudku v hromadném řízení. Čtyři sta jedna osob, mladých, z hnutí Nové otevření, o kterém nic nevěděl. Jméno znal jen z řádku v rejstříku, který nikdy neotevřel. Odsouzeni podle precedentu Terra. Mezi nimi jméno, které stálo i v návrhu: *Vess, Ilan, 17.*
 
 Syn.
 
@@ -92,7 +92,7 @@ Sende znal odstavec dvě stě osmnáct rozsudku Terra. Znal ho každý. Na Iretu
 
 Dostal za ni nejvyšší hodnocení.
 
-Teď seděl v kajutě člunu na první planetě, na které kdy stál, a četl tři odstavce, které proti dvěma stům osmnácti postavila advokátka, jejíž jméno v archivu řádu stálo jen u slova *zamítnut*. A byly lepší než jeho práce. Nebyl to dojem. Byla to věc řemesla. Sende to viděl stejně jasně, jako se vidí špatně vedený šev na plášti lodi.
+Teď seděl v kajutě člunu na první planetě, na které kdy stál, a četl tři odstavce, které proti odstavci dvě stě osmnáct postavila advokátka, jejíž jméno v archivu řádu stálo jen u slova *zamítnut*. A byly lepší než jeho práce. Nebyl to dojem. Byla to věc řemesla. Sende to viděl stejně jasně, jako se vidí špatně vedený šev na plášti lodi.
 
 *
 
@@ -104,7 +104,7 @@ Nebyla to příloha samotná. Byl to zápis z jednání, při kterém navrhovate
 
 Pak obsah.
 
-Průzkum. Starší než proces. Lidé, dvacet až čtyřicet ve skupině, s ohněm, s kamenem, s kůžemi. Žena s dítětem na zádech. Ve všech oblastech. Létající plazi s hnízdy v převisech a s řadami zlatých zrn a krystalů. Po přeletu člunu o řadu víc. Malí pod zemí u teplé vody. Vysocí, světloplaší, kteří sledovali člun, a jeden zvedl ruku. Noční. Tvar neurčen.
+Průzkum. Starší než proces. Lidé, dvacet až čtyřicet ve skupině, s ohněm, s kamenem, s kůžemi. Jeden nese na zádech dítě. Ve všech oblastech. Létající plazi s hnízdy v převisech a s řadami žlutých zrn kovu a krystalů. Po přeletu člunu o řadu víc. Malí pod zemí u teplé vody. Vysocí, světloplaší, kteří sledovali člun, a jeden zvedl ruku. Noční. Tvar neurčen.
 
 Navrhovatelka uvedla jen to, co se vidělo. Archivářka to potvrdila do zápisu. *Uvedla jen levý sloupec. Pravý vynechala. Tak se to má dělat.*
 
@@ -128,7 +128,7 @@ Pod tím jméno. *U. Sarr, správce míst výkonu.*
 
 *
 
-Sende seděl a neměl na co se dívat. Kajuta neměla okno.
+Sende seděl a neměl se na co dívat. Kajuta neměla okno.
 
 *Má se za to.* Ty dvě slabiky, které přečetl dvacetkrát a nevšiml si jich. Nebyly to slabiky opatrného soudu. Byly to slabiky, které někdo objednal. Úřad soudu napsal, jak má větu postavit, aby nelhala. A soud ji postavil. A pak ji tisíce generací dětí odříkávaly jako báseň bez nich.
 
@@ -166,7 +166,7 @@ Výrok III. Znění nepřevzato. Tohle bylo to znění. Šest set let ho vezl v 
 
 *Za sedmé. Rozsudek se doručuje též Shromáždění Konfederace.*
 
-Sende si porovnal šestý výrok se zněním v rejstříku řádu. Slovo od slova. Seděl. Každý znak.
+Sende si porovnal šestý výrok se zněním v rejstříku řádu. Slovo od slova. Seděl každý znak.
 
 Ten jediný výrok, který řád převzal, seděl přesně. Ostatních šest neměl s čím porovnat. Jen s tímhle kamenem.
 
@@ -176,7 +176,7 @@ Pak četl odůvodnění.
 
 Šedesát stran. Sende je četl celé, protože tak se rozsudky čtou. A ke třetímu výroku našel odstavec, u kterého přestal dýchat. Ne doopravdy. Síť by ho upozornila. Ale na okamžik zapomněl, že dýchá.
 
-*Odpůrce namítl, že senát, který nesmí rozsudek Terra změnit, nesmí o jeho skutkovém základu nic zjišťovat. Senát to nesdílí. Senát nemění, co rozsudek uložil. Zapisuje, co zjistil o listinách, které jsou součástí rozsudku a které mu byly předloženy. Kdyby senát listiny četl a nic o nich nezapsal, bylo by i jeho mlčení zjištěním. Zjištěním, že v nich nic není.*
+*Odpůrce namítl, že senát, který nesmí rozsudek Terra změnit, nesmí o jeho skutkovém základu nic zjišťovat. Senát tento názor nesdílí. Senát nemění, co rozsudek uložil. Zapisuje, co zjistil o listinách, které jsou součástí rozsudku a které mu byly předloženy. Kdyby senát listiny četl a nic o nich nezapsal, bylo by i jeho mlčení zjištěním. Zjištěním, že v nich nic není.*
 
 *Takové zjištění by bylo nepravdivé. Senát ho neučiní.*
 
@@ -230,7 +230,7 @@ Pod rejstříkem k rozsudku Terra visely větve. Každý další transport se za
 
 Sende otevřel jeho odůvodnění. Řád ho převzal celé, protože to byl precedent.
 
-*Výkon trestu podle rozsudku Terra byl přezkoumán Spolkovým soudem ve věci Vess. Návrh na zastavení výkonu byl zamítnut. Spolkový soud potvrdil, že místo výkonu je věcí trestu.*
+*Výkon trestu podle rozsudku Terra byl přezkoumán Spolkovým soudem ve věci Vess. Návrh na zastavení výkonu byl zamítnut. Spolkový soud shledal, že místo výkonu je věcí trestu, nikoli výkonu, a že trest uložený pravomocným rozsudkem nepřezkoumá. Soud prvního stupně z tohoto závěru vychází.*
 
 Výrok šestý. Jen ten.
 
@@ -378,7 +378,7 @@ Před spaním šel ven.
 
 Na letišti byla noc a vzduch voněl trávou, kterou někdo odpoledne posekal u plotu. Sende stál na rampě člunu. Za plotem na druhé straně plochy svítil oheň. Lidé s prostěradly tam stáli i v noci. Někdo z nich zpíval.
 
-Nad lesem visel měsíc. Sende se na něj díval. Byl to první měsíc, který viděl bez okna. Velký a žlutý a byl na něm vidět den i noc, hranice mezi nimi ostrá jako řez.
+Nad lesem visel měsíc. Sende se na něj díval. Byl to první, na který se bez okna podíval. Velký a žlutý, skoro kulatý, a tmavé plochy na něm byly ostré jako řez.
 
 Odtamtud. Někde tam to leželo, kámen mezi kameny. Čtyřicet tisíc let. A on šest set let spal v lodi, která letěla sem s rejstříkem, ve kterém stálo *znění nepřevzato*. A tady, celou tu dobu, na měsíci, kterému místní zpívají, leželo to znění a čekalo.
 
@@ -386,9 +386,9 @@ Sende si vzpomněl na dvoustou destičku.
 
 Nečetl ji. Překlad od sítě nechtěl, ani první noc. Viděl ji jen jako obraz, když se rozsvítila na přístroji v brněnské hale. Znaky na ní nebyly jako na ostatních. Byly větší a nebyly rovné. Chvěly se. Některé víc, některé méně, jako by je psal někdo, komu je zima. A uprostřed destičky byl povrch matnější, jako by tam někdo něco vymazal a napsal znovu.
 
-Psaný rukou. Sende viděl rukou psané znaky jen v muzeu na Iretu, za sklem.
+Psaná rukou. Sende viděl rukou psané znaky jen v muzeu na Iretu, za sklem.
 
-Lis Aven ji taky nečetla. Řekla mu to v hale, ve tři ráno. *Ten poslední ne. Ten je pro někoho jiného.* Sende kývl a druhý den požádal Kerr, aby ho síť výpravy nepřekládala sama. Aby ho přeložil společný tým, dole, v místnosti, kde dělali slovník, nahlas a se zápisem. Kerr souhlasila bez ptaní.
+Lis Aven ji taky nečetla. Řekla mu to v hale, ve tři ráno. *Ten poslední ne. Ten je pro někoho jiného.* Sende kývl a druhý den požádal Kerr, aby ji síť výpravy nepřekládala sama. Aby ji přeložil společný tým, dole, v místnosti, kde dělali slovník, nahlas a se zápisem. Kerr souhlasila bez ptaní.
 
 *Mému synovi a jeho potomkům.*
 

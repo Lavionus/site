@@ -66,7 +66,7 @@ Ve středu za soumraku čekala u studánky.
 
 Přišla dřív. Seděla na kraji dolíku pod velkým bukem, na kořeni, který se vinul kolem kamene jako prsty, a dívala se na plochý kámen vedle nádržky. Plátno na něm nebylo. V neděli ho Markéta vzala a nechala nový chléb a nové plátno, a to tam teď také nebylo. Ani chléb, ani plátno. Jen kámen, suchý, s mechem po okrajích.
 
-To ji znepokojilo víc, než by měla.
+To ji znepokojilo víc, než by mělo.
 
 Slunce zapadlo za hřeben a v bučině se setmělo najednou, jako by někdo zhasl. Kmeny zšedly a pak zčernaly. Ptáci zmlkli. Někde dole, v údolí, zvonili klekání, a ke studánce to doléhalo slabě, jako zvonění z jiné vesnice.
 
@@ -86,7 +86,7 @@ Tvář měla opálenou. To Ilonu zarazilo, a pak pochopila proč. Ostatní byli 
 
 Holka sebou trhla. Pak se usmála, rychle, plaše, a Ilona v tom úsměvu poznala Markétu. Ne v ústech. V tom, jak se úsměv rozhodl, že nebude, a stejně byl.
 
-„Tak mi už dlouho nikdo neřekl,“ řekla Dorota. Česky. Horním koncem, tím, jak mluví holky od koželuha a od haldy, a přitom jinak, s některými slovy, která se do toho nehodila, starými, opatrnými, jako mluvila Merin. „Tady mi říkají jinak. Ale vy mi tak říkejte.“
+„Tak mi už dlouho nikdo neřekl,“ řekla Dorota. Česky. Řečí horního konce, tou, jak mluví holky od koželuha a od haldy, a přitom jinak, s některými slovy, která se do toho nehodila, starými, opatrnými, jako mluvila Merin. „Tady mi říkají jinak. Ale vy mi tak říkejte.“
 
 *
 
@@ -108,7 +108,7 @@ Dorota kývla. Pak se podívala do vody v nádržce, kde už nebylo nic vidět, 
 
 Ilona se nadechla.
 
-„Měla na ruce absces. Od třísky rudy. Přebírá rudu na haldě nad horním koncem. Otevřela jsem jí ho. Zahojilo se to.“
+„Měla na ruce vřed. Od třísky rudy. Přebírá rudu na haldě nad horním koncem. Otevřela jsem jí ho. Zahojilo se to.“
 
 „Přebírá rudu.“ Dorota to zopakovala, jako by to vážila. „Dřív nepřebírala.“
 
@@ -116,7 +116,7 @@ Ilona se nadechla.
 
 Dorota zvedla oči.
 
-Ilona to věděla, už když to říkala. Že to neví. Že to nemohla vědět. Že v den, kdy Jörg Haupt spadl do šachty, protože se přetrhl provaz u rumpálu, byla Dorota už dva roky v lese. Nikdo z lesa jí to neřekl, nebo jí to řekl a ona tomu nerozuměla, protože v lese se o havířích a rumpálech nemluví.
+Ilona to věděla, už když to říkala. Že to Dorota neví. Že to nemohla vědět. Že v den, kdy Jörg Haupt spadl do šachty, protože se přetrhl provaz u rumpálu, byla Dorota už dva roky v lese. Nikdo z lesa jí to neřekl, nebo jí to řekl a ona tomu nerozuměla, protože v lese se o havířích a rumpálech nemluví.
 
 „Táta,“ řekla Dorota.
 
@@ -144,7 +144,7 @@ Trvalo dlouho, než Dorota zase mluvila. Žena za ní neodešla. Zůstala kleče
 
 „To je máti,“ řekla nakonec Dorota a utřela si nos rukávem pláště. „Tady. Máma je dole.“
 
-Máti a máma. Ilona to slyšela, ten rozdíl o jedno písmeno, a věděla, že ho Dorota slyší taky a že ho tak řekla schválně, aby měla obě.
+Máti a máma. Ilona to slyšela, ten rozdíl v jedné slabice, a věděla, že ho Dorota slyší taky a že ho tak řekla schválně, aby měla obě.
 
 „Pamatuješ si ten den?“ zeptala se Ilona.
 
@@ -240,7 +240,7 @@ Nebo aby ho měla, protože ho vzala ona.
 
 V noci seděla nad Markétinou výpovědí.
 
-Měla ji před sebou celou, ten saský papír z pátku před dvanácti dny, s Markétiným křížkem a s jejím *znamení Markéty Hauptové, vlastní rukou*. Vedle ní čistý list. Ten nejlepší, co měla, poslední z balíku, který kdysi koupil Řehoř v Lipsku a který šetřila na věci pro soud.
+Měla ji před sebou celou, ten saský papír z pátku před dvanácti dny, s Markétiným křížkem a s jejím *znamení Markéty Hauptové, vlastní rukou*. Vedle ní čistý list. Ten nejlepší, co měla, jeden z posledních z balíku, který kdysi koupil Řehoř v Lipsku a který šetřila na věci pro soud.
 
 Soud bude chtít výpovědi. Wehrl to řekl: *celé, všechno, co víte*. Všechno, co před ní řekly ženy: Purga Sternová, Lene, Anna Rieglová, ženy z lázně a z horního konce, Markéta. Chtěla je opsat do čistého už od pondělí, ale levou rukou to nešlo, tak čekala. Dnes vzala pero do pravé.
 
@@ -253,6 +253,8 @@ Opsala to celé, slovo po slově, z levého listu na pravý. Ani se u toho nezas
 Pak Jörg a provaz u rumpálu a uzel. *To sem nepatří.* – *Patří.* Opsala to.
 
 Dorota a svatá Dorota a vlci u hald. Zpívala, vlasy jako len. Opsala to. Na svatého Vavřince s Barborou Seidlovou na borůvky. Opsala to.
+
+U toho jména se zastavila dřív než u studánky. Báru si může zavolat kdokoli, kdo ten list přečte, a Bára mu řekne paní vysokou jako dveře znovu, sama, svými slovy. Jenže s Bárou na borůvky šla Dorota před celým horním koncem a horní konec to ví pět let. Jméno, které zná každá sousedka, se z výpovědi vynechat nedá, ta díra by se četla nejvíc. *Báru jí vzít nemůžu.* Nechala ji tam a věděla, co tím nechává.
 
 *Do buků nad tím údolím, kde se cesta dělí.*
 
@@ -300,7 +302,7 @@ Konec nenapsala. Nechala to stát, s prázdným místem pod posledním řádkem,
 
 Ve čtvrtek odpoledne šla za Markétou.
 
-Markéta bydlela na horním konci za koželuhem v domku, který kdysi stavěli pro havíře s rodinou. Teď v něm bydlela sama, se dvěma truhlami a s lavicí u kamen. Byla doma. Přišla z haldy, ruce měla šedé od rudného prachu až po lokty a myla si je ve vědru u dveří, když Ilona vešla.
+Markéta bydlela na horním konci za koželuhem v domku, který kdysi stavěli pro havíře s rodinou. Teď v něm bydlela sama, se dvěma truhlami a s lavicí u kamen. Starší dcery se dávno provdaly, jedna do Ostrova, druhá za hranice do Annabergu. Byla doma. Přišla z haldy, ruce měla šedé od rudného prachu až po lokty a myla si je ve vědru u dveří, když Ilona vešla.
 
 „Paní ranhojičko.“ Podívala se na šátek. „Co jste si udělala?“
 
@@ -501,6 +503,8 @@ Když se trhla potřetí, zavadila loktem o kraj mísy.
 Odvar vyšplíchl. Ne všechen. Vlna, hnědá, přes okraj, po desce stolu, k listu. Ilona po něm skočila zdravou rukou a strhla ho stranou, ale pozdě. Hnědá voda vjela do horního rohu listu, do první věty, do *Tato slova řekla přede mnou Markéta, vdova po Jörgovi Hauptovi*, a vsákla se do papíru a rozlila se po něm, jako se rozlévá krev v obvazu.
 
 Ilona list zvedla proti svíčce. Odvar stekl z rohu na stůl. Na papíře zůstala skvrna, velká jako dlaň, světle hnědá, s tmavším okrajem. Inkoust pod ní nezmizel. Jen zešedl a rozplynul se na krajích, a když se Ilona dívala proti světlu, četla *Markéta*, a *Haupt*, a *havíři*. Když se nedívala proti světlu, četla jen *vdova*. To slovo leželo kousek pod skvrnou a zůstalo černé.
+
+![Skvrna](obrazky/11_dorota.webp)
 
 Usušila to pískem. Položila to na okno.
 

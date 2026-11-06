@@ -8,9 +8,9 @@ Sael kývla. Víc nebylo třeba říkat. Znaly se celý Ladin život.
 
 *
 
-Kniha ležela na stole, kde ležela vždycky, otevřená na posledním svazku. Ten založila Rokyta v zimě po válce, když se starý svazek zaplnil až k deskám. Rokytina ruka byla na prvních stránkách široká a jistá. Pak přišel řádek, pod nímž stál znak úřadu v jiné ruce, s dlouhým tahem dolů, který se v ohybu trochu zdvojil. Sael ho nakreslila v osmdesáti šesti letech a bála se. Od té doby psala ona.
+Kniha ležela na stole, kde ležela vždycky, otevřená na posledním svazku. Ten založila Rokyta v zimě po válce, když se starý svazek zaplnil až k deskám. Rokytina ruka byla na prvních stránkách široká a jistá. Pak přišel řádek, pod nímž stál znak úřadu, psaný jinou rukou, s dlouhým tahem dolů, který se v ohybu trochu zdvojil. Sael ho nakreslila v osmdesáti šesti letech a bála se. Od té doby psala ona.
 
-Václavovo narození bylo o čtyřicet listů dřív. Zima roku 1926, Rokytinou rukou. Sael si pamatovala, jak tehdy držela lampu, protože Rokytě se třásla ruka zimou, a jak se novorozenec ve vedlejší síni rozkřičel tak, že Rokyta zvedla pero a čekala, až přestane. Nepřestal. Rokyta se zasmála a napsala to s tím křikem v uších.
+Václavovo narození bylo v předchozím svazku. Zima roku 1926, Rokytinou rukou. Sael si pamatovala, jak tehdy držela lampu, protože Rokytě se třásla ruka zimou, a jak se novorozenec ve vedlejší síni rozkřičel tak, že Rokyta zvedla pero a čekala, až přestane. Nepřestal. Rokyta se zasmála a napsala to s tím křikem v uších.
 
 Teď Sael napsala jeho konec.
 
@@ -26,7 +26,7 @@ Nejdřív ne na kůži. Na papíře. List pod její dlaní se nepatrně zvedl na
 
 Na stěně visel vlhkoměr. Šedesát let ukazoval mezi čtyřicítkou a pětačtyřicítkou. Jen v srpnu se ručička někdy pohnula výš, když nahoře v sadu pršelo týden v kuse. Teď stála na padesáti a Sael se na ni dívala tak dlouho, až se posunula na padesát jedna.
 
-Za stěnou archivu byla skála. Ne zeď, kterou postavil někdo z nich, ale skála hory, hladce otesaná, ve které stála vrata do spodních síní. Šedesát let byla teplá. Stejně teplá v lednu jako v červenci, teplá jako dlaň člověka, který spí. Když Sael psala dlouho a bolela ji záda, opřela se o ni a nechala si to teplo jít do ramen. Nikdy nad tím nepřemýšlela. Tak bylo dobře. Tak to bylo vždycky.
+Za stěnou archivu byla skála. Ne zeď, kterou postavil někdo z nich, ale skála hory, hladce otesaná, ve které stála vrata do spodních síní. Šedesát let, co sedí u toho stolu, byla teplá. Stejně teplá v lednu jako v červenci, teplá jako dlaň člověka, který spí. Když Sael psala dlouho a bolela ji záda, opřela se o ni a nechala si to teplo jít do ramen. Nikdy nad tím nepřemýšlela. Tak bylo dobře. Tak to bylo vždycky.
 
 Teď se o ni opřela znovu, protože chtěla vědět.
 
@@ -34,7 +34,7 @@ Skála hřála jako kamna, do kterých se právě přiložilo.
 
 Sael vstala. Kniha zůstala ležet otevřená a inkoust na Václavově řádku ještě nezaschl. Na tohle myslela jako první, později se za to styděla. Pak teprve na lidi.
 
-Vrata do spodní síně byla dřevěná, z dubových fošen, stará přes sto let. Sael pamatovala, jak je stavěli. Přes noc se na nich zevnitř srazila voda. Ne kapky. Jemná šedá mlha, jako dech na skle, a když Sael přejela prstem po dřevě, zůstala za ním tmavá čára.
+Vrata do spodní síně byla dřevěná, z dubových fošen, stará přes sto let. Sael pamatovala, jak je stavěli. Za ten večer se na nich zevnitř srazila voda. Ne kapky. Jemná šedá mlha, jako dech na skle, a když Sael přejela prstem po dřevě, zůstala za ním tmavá čára.
 
 ![Archiv pod horou a orosená vrata do spodní síně](obrazky/00_archiv.webp)
 
@@ -80,13 +80,13 @@ Světlo nepřicházelo zvenku. Kahany v síni nehořely. Od Vánoc tam nikdo nes
 
 Pak světlo sílilo a za ním se otevřela tma.
 
-Hluboká, čistá, a v ní světla. Tolik, kolik jich Sael neviděla ani za nejjasnějších nocí nad hřebenem, kam za mládí chodila sama. Hustá jako zrní, které se vysype na tmavé sukno. Hvězdy, řekla by kdokoli. Sael řekla jen to, co viděla: tečky světla, nespočet.
+Hluboká, čistá, a v ní světla. Tolik, kolik jich Sael neviděla ani za nejjasnějších nocí nad hřebenem, kam za mládí chodila sama. Hustá jako zrní, které se vysype na tmavé sukno. Hvězdy, řekl by kdokoli. Sael řekla jen to, co viděla: tečky světla, nespočet.
 
 Některé se pohnuly.
 
 Počítala je, protože počítat bylo to jediné, co v té chvíli uměla. Devět. Padaly pomalu, v řadě, jedno za druhým, a za každým zůstávala bledá stopa. Deváté bylo slabší než ostatní a padalo pozadu, jako by se opozdilo. Mnich tenkrát napsal *novem*, devět. Sael to věděla, protože tu stránku držela v rukou tolikrát, že ji uměla nazpaměť i s dírou v pergamenu, kterou mnichův text obtékal.
 
-Pod padajícími světly se ze tmy zvedlo něco velkého a zakřiveného. Mnich tam viděl zelenou, modrou a bílou. Sael viděla jen to, že je to světlejší než tma, místy víc, místy míň, a že jedna z těch barev mohla být modrá. V šeru barvy nerozeznávala nikdy. Rokyta jí to kdysi vyčítala u inkoustů. Pak se to zakřivené přiblížilo a byl to kraj, viděný shora, jak ho vidí káně nad hřebenem. Hory. Mezi nimi voda, lesknoucí se. Sael ty hory neznala. Nebyly to Krušné hory ani Slavkovský les. Nebyly to žádné hory, které by kdy viděla.
+Pod padajícími světly se ze tmy zvedlo něco velkého a zakřiveného. Mnich napsal jen *terram*, zemi. Sael viděla jen to, že je to světlejší než tma, místy víc, místy míň, a že jedna z těch barev mohla být modrá. V šeru barvy nerozeznávala nikdy. Rokyta jí to kdysi vyčítala u inkoustů. Pak se to zakřivené přiblížilo a byl to kraj, viděný shora, jak ho vidí káně nad hřebenem. Hory. Mezi nimi voda, lesknoucí se. Sael ty hory neznala. Nebyly to Krušné hory ani Slavkovský les. Nebyly to žádné hory, které by kdy viděla.
 
 Světla do toho kraje padala a zmizela v něm.
 

@@ -4,7 +4,7 @@ V červnu se v Brně otevírají okna a do bytu konečně přijde teplo, které 
 
 Hana sedí u kuchyňského stolu s notebookem a čeká na e-mail, o kterém ví, že dnes přijde, protože jí to Marisol včera napsala. *Zítra výsledky čtyřky a pětky. Laboratoř je pošle současně mně, prokuratuře a vám. Neotevírejte to sama. Nebo otevírejte. Nevím, co se v takové chvíli dělá. M.*
 
-Hana neví taky.
+Hana to taky neví.
 
 E-mail přijde v jedenáct dvacet. Brno, šestnáctého června. V Méridě je po třetí ráno a Hana si představí laboratorní počítač, který odesílá zprávy podle rozvrhu, v prázdné budově, kde svítí jen zelená dioda na routeru.
 
@@ -48,9 +48,9 @@ Na čem rostly. Na něčem šedobílém.
 
 *
 
-Zpráva B přijde za šest týdnů a je ve skutečnosti trojí.
+Zpráva B přijde za sedm týdnů a je ve skutečnosti trojí.
 
-Ústav povolil z předmětu odebrat tři mikrovzorky, každý menší než zrnko rýže, z jednoho místa, z lemu pod jizvou dvojky, kde už povrch jednou obnažila Hana. Tři laboratoře. Mexická, ta univerzitní. Evropská, ve Švýcarsku. Americká, na jedné státní univerzitě na západě. Každá dostala svůj vzorek s řetězcem úschovy a nikdo z nich neví, co našli ostatní, dokud to všichni neodešlou.
+Ústav povolil z předmětu odebrat tři mikrovzorky, každý menší než zrnko rýže, z jednoho místa, z lemu pod jizvou dvojky, kde už povrch jednou obnažila Hana. Tři laboratoře. Mexická, ta univerzitní. Evropská, ve Švýcarsku. Americká, na jedné státní univerzitě na západě. Každá dostala svůj vzorek s řetězcem úschovy a žádná z nich neví, co našly ostatní, dokud to všechny neodešlou.
 
 Hana není v seznamu adresátů. Není to její výzkum. Výsledky jí přepošle Marisol, se souhlasem ústavu, v pátek sedmého srpna večer. Bez komentáře. Jen *Tady.*
 
@@ -148,11 +148,11 @@ Hana ho čte u stolu, kam ho položila pošťačka, které musela podepsat doru�
 
 Zvážit.
 
-Fiala jí volá druhý den.
+Fiala jí zavolá druhý den.
 
 „Přijďte,“ řekne. „Ne kvůli tomu. Kvůli papírům.“
 
-Kancelář má ve třetím patře, s výhledem na parkoviště. Na stole hromady posudků, na parapetu kaktus, který Hana zná dvanáct let a který nikdy nekvetl. Fiala vstane, když vejde, a pak si zase sedne. Neví, co s rukama.
+Kancelář má ve třetím patře, s výhledem na parkoviště. Na stole hromady posudků, na parapetu kaktus, který Hana zná dvanáct let a který nikdy nekvetl. Fiala vstane, když Hana vejde, a pak si zase sedne. Neví, co s rukama.
 
 Řekne to rychle, jako když se trhá náplast.
 
@@ -282,7 +282,7 @@ Válec zůstane v Méridě.
 
 V září to stojí v jedné větě rozsudku, kterým soud schválil dohodu se Salcedem. Předmět je památka v péči ústavu. Nikam nepojede, nikomu se neprodá, nikdo ho neotevře. Replika zůstane v jiné místnosti, jako doličný předmět, dokud se neuzavře trestní řízení. Pak ji prý ústav vystaví. Vedle fotky lůžka.
 
-Viktor čeká na soud. Pas mu vzali v dubnu. Bydlí v Méridě v pronajatém bytě, který mu platí bratr. Hana to ví od Ríši, který jí napíše jednou v srpnu, poprvé od dubna. Ríša svědčil. Přišel o práci, protože firma, pro kterou dělal, už neexistuje, a teď stříhá svatby v Pardubicích.
+Viktor čeká na soud. Pas mu vzali v dubnu. Bydlí v Méridě v pronajatém bytě, který mu platí bratr. Hana to ví od Ríši, který jí jednou v srpnu napsal, poprvé od dubna. Ríša svědčil. Přišel o práci, protože firma, pro kterou dělal, už neexistuje, a teď stříhá svatby v Pardubicích.
 
 *Matyáš za ním letěl,* píše Ríša. *Na týden. Prý spolu skoro nemluvili. Prý spolu chodili po městě a koukali do výloh.*
 

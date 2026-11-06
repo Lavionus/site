@@ -52,7 +52,7 @@ Hana se na to dívá dlouho. Fixou, velkými tiskacími písmeny, dětskou rukou
 
 Hana vytáhne z batohu svůj starý deník.
 
-Ne ten pravý. Originál je v Méridě, s jejím přiznáním na první stránce. Od března dvacet šest ho měla prokuratura a po skončení řízení ho vrátila ústavu do archivu. Ona má ověřenou kopii, tři svazky s razítkem ústavu. První z nich vozí s sebou, i když ho roky neotevřela.
+Ne ten pravý. Originál je v Méridě, s jejím podpisem na první a poslední stránce. Od března dvacet šest ho měla prokuratura a po skončení řízení ho vrátila ústavu do archivu. Ona má ověřenou kopii, tři svazky s razítkem ústavu. První z nich vozí s sebou, i když ho roky neotevřela.
 
 Otevře ho na straně z dubna dvacet pět, kde je ta čára. Od horního okraje k dolnímu, bez pravítka.
 
@@ -88,7 +88,7 @@ Vlevo píše, co se za deset let doložilo. Krátce. Kdo bude chtít víc, ví, 
 
 *2025: Sintr z krystalu v kodexu se vysrážel z vody s hlubokým uhlíkem. Ohárecký rift.*
 
-*2026: Válec z cenotu u X'Kanlumu. Kompozit, neznámá mikrostruktura. Izotopy pozemské: vyroben tady. Stáří kalcitu kolem něj 96–104 tisíc let; stáří předmětu ne. Moje chyba: vzorek 3. Opraveno, zveřejněno.*
+*2026: Válec z cenotu u X'Kanlumu. Kompozit, neznámá mikrostruktura. Izotopy pozemské: vyroben tady. Stáří kalcitu kolem něj asi 97–105 tisíc let; stáří předmětu ne. Moje chyba: vzorek 3. Opraveno, zveřejněno.*
 
 *2030: Pod horou nad Mlýncem zařízení, které nikdo z nás nepostavil. Teplo, světlo, tlukot 3–2–4. Pod horou lidé, kteří ho drželi.*
 

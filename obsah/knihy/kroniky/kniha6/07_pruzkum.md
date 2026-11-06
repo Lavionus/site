@@ -50,7 +50,7 @@ Hals postavil k nice se schránkou stůl a k němu sedm židlí. Jedna měla op�
 
 Pak vzal nástroj podobný dlátu a začal odlamovat hmotu ze spár schránky.
 
-Šlo to pomalu. Hmota byla tvrdá a křehká zároveň a odlupovala se v šupinách, které padaly na podlahu tak pomalu, že je Nara stačila sledovat celou cestu dolů. Pečeť soudu praskla napříč. Osm oblouků se rozpadlo na tři kusy. Tann stála s rukama za zády a dívala se, jak Hals pracuje. Ardaine seděla. Mladší soudce si olízl rty.
+Šlo to pomalu. Hmota byla tvrdá a křehká zároveň a odlupovala se v šupinách, které padaly na podlahu tak pomalu, že je Nara stačila sledovat celou cestu dolů. Pečeť soudu, váhy v kruhu, praskla napříč. Vedle ní se osm oblouků úřadu rozpadlo na tři kusy. Tann stála s rukama za zády a dívala se, jak Hals pracuje. Ardaine seděla. Mladší soudce si olízl rty.
 
 Když byla poslední spára volná, Hals zvedl víko.
 
@@ -192,11 +192,11 @@ Ještě nevěděla, co si o tom myslet. Věděla jen, že to bude muset říct n
 
 Položila na desku list a Nara se nejdřív lekla, protože si myslela, že je to stroj. Něco, co letí. Dlouhé tenké tělo a z něj na obě strany široké plochy, napjaté jako fólie na rámu. Pak uviděla, že plochy jsou z kůže, že mají žíly, že se ohýbají. Že tělo má hlavu a ta hlava je otočená k přístroji.
 
-*Létající plaz. Rozpětí přibližně dvakrát až třikrát výška člověka. Membránová křídla. Hnízdí jednotlivě, v převisech skal. Loví. Počet v oblasti nízký.*
+*Létající plaz. Rozpětí přibližně dvě až tři výšky člověka. Membránová křídla. Hnízdí jednotlivě, v převisech skal. Loví. Počet v oblasti nízký.*
 
 „To není ještě to,“ řekla Mel. „Dívejte se dál.“
 
-Další list byl hnízdo. Obraz zevnitř převisu, z boku, s ostrým světlem přístroje, které vrhalo stíny. Hladká podlaha. A na ní předměty. Lesklé. Žlutá zrna, malá jako nehet. Průhledné kameny, některé jako sklo, jiné s bílým povlakem. Tmavé oblé valouny. Ležely v řadách. Ne na hromadě, ne tam, kam spadly. V řadách, s mezerami, a řady měly různou délku. A nad nimi, ve skále, rýhy. Tři vedle sebe, rovnoběžné, jako po prstech. Skupiny rýh, některé hlubší, jiné mělké, skoro setřené.
+Další list byl hnízdo. Obraz zevnitř převisu, z boku, s ostrým světlem přístroje, které vrhalo stíny. Hladká podlaha. A na ní předměty. Lesklé. Žlutá zrna, malá jako nehet. Průhledné kameny, některé jako sklo, jiné s bílým povlakem. Tmavé oblé valouny. Ležely v řadách. Ne na hromadě, ne tam, kam spadly. V řadách, s mezerami, a řady měly různou délku. A vedle nich, ve skále podlahy i na stěně nad nimi, rýhy. Tři vedle sebe, rovnoběžné, jako po prstech. Skupiny rýh, některé hlubší, jiné mělké, skoro setřené.
 
 Levý sloupec: *V hnízdě lesklé předměty v řadách. Kov, krystaly, valouny. Rýhy ve skále, tři rovnoběžné, opakované ve skupinách. Uspořádání pravidelné.*
 
@@ -220,7 +220,7 @@ V osmém přejíždí drápem po skále a za drápem zůstávají tři světlé 
 
 Nara se narovnala. Lupu držela v ruce a ruka se jí třásla. Nevěděla, jestli zimou.
 
-Pak se třes zastavil. Ne proto, že by přestala cítit to, co cítila. Proto, že to někdo ztlumil. Nara poznala ten plynulý pokles, jako když ventilace přejde na noční režim, a poprvé za dvanáct dní ho nenáviděla. Záznam byl přerušený. Zklidnění ne. Síť si nesměla pamatovat, co tu viděla, ale vzít tomu hranu směla.
+Pak se třes zastavil. Ne proto, že by přestala cítit to, co cítila. Proto, že to někdo ztlumil. Nara poznala ten plynulý pokles, jako když ventilace přejde na noční režim, a poprvé za dvanáct dní ho nenáviděla. Záznam byl přerušený. Zklidnění ne. Síť si nesměla pamatovat, co tu viděla, ale otupit to směla.
 
 Plaz v sedmém políčku se díval nahoru a ona se na něj dívala klidně. Tak klidně, jak se na to nikdo dívat neměl.
 

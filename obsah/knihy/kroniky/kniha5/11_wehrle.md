@@ -8,7 +8,7 @@ Sael si e-mail přečetla dvakrát a pak ho nechala otevřený přes noc na obra
 
 Ráno odpověděla jedním slovem.
 
-Nešla tam proto, že by mu chtěla něco říct. Šla tam, aby viděla, co ví. Říkala si to celou cestu autobusem z Chebu, mezi Sokolovem a Loktem, kde silnice běží nad Ohří a řeka je v dubnu kalná a plná. Bylo to tak. A nebylo to všechno.
+Nešla tam proto, že by mu chtěla něco říct. Šla tam, aby viděla, co ví. Říkala si to celou cestu autobusem z Chebu, mezi Sokolovem a Loktem, kde silnice vede nad Ohří a řeka je v dubnu kalná a plná. Bylo to tak. A nebylo to všechno.
 
 *
 
@@ -64,7 +64,7 @@ Sael čekala.
 
 „Vy jste v tom kraji déle než já, paní Sálová,“ řekl. „Mnohem déle. Nevím o kolik a nebudu se ptát. Ale vy víte, co je pod tou horou nad Mlýncem. A já to vím taky.“
 
-Řekl to tiše. Kolem nich sedělo pár hostů, starší pár u vedlejšího stolu, žena s psíkem na klíně. Nikdo se nedíval.
+Řekl to tiše. Kolem nich sedělo několik hostů, starší pár u vedlejšího stolu, žena s psíkem na klíně. Nikdo se nedíval.
 
 „Svítí,“ řekl Wehrle. „Od čtrnáctého ledna. Poprvé za vašeho života. A v noci, když svítí, vysílá. Můj technik ho slyší stejně jako ti amatéři na fóru, jen lépe. A na nebi je něco, co zpomaluje. Ten pán z Prahy, s kterým se vídá paní doktorka Vrbová, to ví. Ještě to neřekl. Je opatrný. Dobře dělá.“
 
@@ -72,7 +72,7 @@ Sael položila šálek na podšálek. Nezacinkal.
 
 „Paní doktorka Vrbová,“ řekla.
 
-„Atlantoložka,“ řekl Wehrle. Bez posměchu, skoro něžně. „Tak jí píšou noviny. Je to nespravedlivé. Je to poctivá žena. Udělala chybu a přiznala ji, což neumí skoro nikdo.“ Odmlčel se. „A myslím, že je pro vás velmi nebezpečná.“
+„Atlantoložka,“ řekl Wehrle. Bez posměchu, skoro něžně. „Tak jí říkají noviny. Je to nespravedlivé. Je to poctivá žena. Udělala chybu a přiznala ji, což neumí skoro nikdo.“ Odmlčel se. „A myslím, že je pro vás velmi nebezpečná.“
 
 „Proč?“
 
@@ -152,7 +152,7 @@ Kniha zapisuje mrtvé a narozené. Kdo kdy přišel a kdy odešel. Kniha je pro 
 
 Ti jsou v kazetě, v šedé plechovce pod stolem v archivu pod horou, kterou Ostří nechtěli pustit nahoru. Na čtyřiceti dvou listech strojopisu.
 
-A v jedné záložní kopii jinde, o které věděli dva lidé.
+A v jedné záložní kopii jinde, ke které měli klíč dva lidé.
 
 „Já vám něco řeknu,“ řekla Sael. Nevěděla, že to řekne, dokud to neřekla. „Abyste věděl, s kým mluvíte.“
 
@@ -276,7 +276,7 @@ Ticho. Sael slyšela, jak Brandl položí tužku.
 
 „Co si odnesl?“
 
-„Zálohu zálohy.“ Brandl mluvil pomalu, stejně jako vždycky. Jako policista, který ví, že to, co říká, se bude jednou číst nahlas. „Ne celou. Lokality, které jsou prozrazené. Lidi, kteří jsou nejvíc ohrožení. Kdyby se něco stalo vám, nebo kazetě, nebo té klinice, aby někdo věděl, kde je hledat.“
+„Zálohu zálohy.“ Brandl mluvil pomalu, stejně jako vždycky. Jako policista, který ví, že to, co říká, se bude jednou číst nahlas. „Ne celou. Lokality, které jsou prozrazené. Lidi, kteří jsou nejvíc ohrožení. Asi třicet rodin. Ty, co jsou na seznamu prozrazených lokalit. Kdyby se něco stalo vám, nebo kazetě, nebo té klinice, aby někdo věděl, kde je hledat.“
 
 „A ta záloha je kde?“
 
@@ -330,7 +330,7 @@ Jeden se bál, druhý věřil. Jeden chtěl archiv zapečetit, druhý uložit. P
 
 Stáli vedle sebe. Jen ona to nevěděla.
 
-Vzala telefon. V seznamu měla Ladino číslo a číslo té ženy a čísla třiceti rodin, které Brandl nazval nejvíc ohroženými. Věděla, které to jsou. Mohla je spočítat zpaměti.
+Vzala telefon. V seznamu měla Ladino číslo a číslo té ženy a čísla třiceti rodin, které Brandl nazval nejvíc ohroženými. Věděla, které to jsou. Mohla je vyjmenovat zpaměti.
 
 Rybovi. Lindnerovi v Ostrově. Rodina z Annabergu, kde se po večerech nesvítí. Dvě rodiny od Javoru. Mohla zavolat každé. *Někdo má vaše jméno. Nevím, co s ním udělá.*
 
@@ -350,7 +350,7 @@ Rozhodla to. Seděla u stolu, ruce na desce, a rozhodla to, a věděla přesně,
 
 *Co se stalo v lese, je rodinná věc.*
 
-Sael se dívala na trezor. Na jedenáct balíků. Na ten s visačkou *XVI–XVII*, kde se kniha otvírala sama u Doroty a o pět listů dál ležel řádek s písmenem, které se nemá volat.
+Sael se dívala na trezor. Na jedenáct balíků. Na ten s visačkou *XVI–XVII*, kde se kniha otvírala sama u Doroty a o pět řádků níž, na kraji, ležel řádek s písmenem, které se nemá volat.
 
 Wehrle jí dnes nabídl její vlastní podmínku. Jinými slovy a laskavěji, ale byla to ona. A ona chvíli, jednu krátkou chvíli nad šálkem čaje, chtěla říct ano.
 

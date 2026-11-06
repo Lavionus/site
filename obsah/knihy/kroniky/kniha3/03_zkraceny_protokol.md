@@ -1,8 +1,8 @@
 # 3. Zkrácený protokol
 
-Ve čtvrtek ve dvanáct nula čtyři spadne v hlavní chodbě kus stropu.
+Ve čtvrtek ve dvanáct nula čtyři střílí lom. Večer se ukáže, že v hlavní chodbě spadl kus stropu.
 
-Hana to ví až večer, když se Luis s Janou vrátí z kontrolního ponoru. Odstřel zapsala v poledne jako obvykle: jeden úder, silnější než v úterý, otřes v chodidlech, zákal u severní stěny za dvě minuty, celá studna bledá za šest. Do večera se voda nevyčistila. Jana vyleze na plošinu a sundá si masku a chvíli nic neříká, což u Jany znamená hodně.
+Hana se to dozví až večer, když se Luis s Janou vrátí z kontrolního ponoru. Odstřel zapsala v poledne jako obvykle: jeden úder, silnější než v úterý, otřes v chodidlech, zákal u severní stěny za dvě minuty, celá studna bledá za šest. Do večera se voda nevyčistila. Jana vyleze na plošinu a sundá si masku a chvíli nic neříká, což u Jany znamená hodně.
 
 „Za téčkem,“ řekne pak. „Asi třicet metrů. Kus stropu, velký jako pračka. Přímo na šňůře.“
 
@@ -26,13 +26,13 @@ Neusmívá se. To je první, čeho si všimne. Druhá věc je, že notebook nese
 
 E-mail přišel ve tři ráno místního času. Z Los Angeles. Od producentky, kterou Hana zná jen z podpisu: dvě jména, titul *Executive Producer* a pod tím logo s vlnovkou. Je psaný anglicky a má sedm vykřičníků. Hana je spočítá, protože je unavená a protože jí to pomůže číst dál.
 
-Píše, že videa z prvního ponoru jsou *absolutely stunning*. Že je viděl šéf obsahu na platformě a že je *blown away*. Že dvacátého března je v Los Angeles prezentace nových projektů pro platformu, kde se rozhoduje o rozpočtech na další rok. Že tam tenhle projekt chtějí mít. Ne jako nápad. Jako oznámení.
+Píše, že videa z prvního ponoru jsou *absolutely stunning*. Z prvního ponoru točila jen Luisova kamera. *Pro Walta. Pro mapu.* Hana si to poznamená a čte dál. Že je viděl šéf obsahu na platformě a že je *blown away*. Že dvacátého března je v Los Angeles prezentace nových projektů pro platformu, kde se rozhoduje o rozpočtech na další rok. Že tam tenhle projekt chtějí mít. Ne jako nápad. Jako oznámení.
 
-K tomu potřebují tři věci. *Hero shot* předmětu, ten už mají. Vědkyni na kameře, která řekne, co to je. A datum. *Even preliminary!* Číslo, které se dá napsat do titulku.
+K tomu potřebují tři věci. *Hero shot* předmětu, ten už mají, ale chtějí lepší, ve 4K. Vědkyni před kamerou, která řekne, co to je. A datum. *Even preliminary!* Číslo, které se dá napsat do titulku.
 
 Do dvacátého března.
 
-A pak, v posledním odstavci, bez vykřičníku: druhá splátka rozpočtu, ta, ze které se platí laboratoř, CT, druhá polovina těch šesti týdnů, které Viktor slíbil, a druhá část honorářů, je *contingent on the presentation*. Vázaná na prezentaci. Pokud projekt na prezentaci nebude, bude se *rozpočet přehodnocovat*.
+A pak, v posledním odstavci, bez vykřičníku: druhá splátka rozpočtu, ta, ze které se platí další datování, CT, druhá polovina těch šesti týdnů, které Viktor slíbil, a druhá část honorářů, je *contingent on the presentation*. Vázaná na prezentaci. Pokud projekt na prezentaci nebude, bude se *rozpočet přehodnocovat*.
 
 Hana dočte. Poslední slovo zní *Reconsidered.*
 
@@ -44,9 +44,9 @@ Viktor jí to řekne. Plyn, kyslík, poplatek do fondu ejida, Luis, dva pomocní
 
 Do osmnáctého. Pak domů.
 
-„Laboratoř potřebuje od příjezdu vzorku pět až deset dní,“ řekne Viktor. „Rychlá zakázka, platí se za ni dvojnásobek, už jsem to s nimi probíral. Vzorky musí odjet nejpozději v pondělí, jinak to do dvacátého nestihnou. A když budeme dělat tvůj plán…“
+„Laboratoř potřebuje od příjezdu vzorku pět až deset dní,“ řekne Viktor. „Rychlá zakázka, platí se za ni dvojnásobek, už jsem to s nimi probíral. Tu jednu zaplatím z první splátky, víc z ní nevytáhnu. Vzorky musí odjet nejpozději v pondělí, jinak to do dvacátého nestihnou. A když budeme dělat tvůj plán…“
 
-Nemusí to dopovídat. Hana ten plán psala. Fotogrammetrie celé síně: čtyři ponory, protože v jednatřiceti metrech je na práci dvacet minut a Ríša potřebuje terče, měřítka, překryv snímků, kontrolu. Teprve potom vzorky. Kdyby všechno šlo dobře, vzorky by vyjely z tábora v úterý sedmnáctého. Výsledek by byl po dvacátém.
+Nemusí to dopovídat. Hana ten plán psala. Fotogrammetrie celé síně: čtyři ponory, protože v jednatřiceti metrech je na práci dvacet minut a Ríša potřebuje terče, měřítka, překryv snímků, kontrolu. Ponor obden, protože mezi nimi Ríša model zpracuje a zjistí, co chybí. Teprve potom vzorky, pátým ponorem. Kdyby všechno šlo dobře, vzorky by vyjely z tábora v úterý sedmnáctého. Výsledek by byl po dvacátém.
 
 A všechno nepůjde dobře. Včera spadla pračka.
 
@@ -94,13 +94,13 @@ Myslí jako vždycky, když se rozhoduje. Svislá čára. Vlevo, co ví. Vpravo,
 
 Ví, že v chodbě včera spadl strop a že nikdo neví, kdy spadne další. Že lom bude střílet dál, protože v Méridě se staví a sascab je levný. Že každý den čekání je den, kdy může spadnout hrdlo, a pak se do síně nikdo nedostane, ani s fotogrammetrií, ani bez ní.
 
-Ví, že bez druhé splátky nebude laboratoř. Že Marisolin ústav nemá peníze na uran-thorium pro předmět, o kterém se neví, co je zač. Že by se válec stal pověstí. Videem na internetu, jedním z tisíců, s titulkem o mimozemšťanech, a za deset let by ho v síni někdo našel a vyvezl nebo zničil a nikdo by nikdy nezjistil, jak dlouho ležel pod polevou.
+Ví, že bez druhé splátky nebude nic dalšího než jedno rychlé číslo. Že Marisolin ústav nemá peníze na uran-thorium pro předmět, o kterém se neví, co je zač. Že by se válec stal pověstí. Videem na internetu, jedním z tisíců, s titulkem o mimozemšťanech, a za deset let by ho v síni někdo našel a vyvezl nebo zničil a nikdo by nikdy nezjistil, jak dlouho ležel pod polevou.
 
 Ví, že vzorek odebraný na kameru je pořád vzorek. Že video, ve kterém je vidět její ruka, dláto a kůra, je záznam. Horší než fotogrammetrie. Lepší než nic.
 
 Ví, kolik jí zbývá na účtu. Ví, že druhá část jejího honoráře je v druhé splátce. Ví, že na fakultě má smlouvu do srpna příštího roku a že Fiala ji neprodlouží, jestli nebude mít grant, a grant nebude mít, jestli nebude mít výsledek. Ví, že je jí čtyřicet jedna a že takovou věc jí nikdo nikdy nedá do ruky podruhé.
 
-A ví, že Viktor jí v Hranicích dal dýchat ze svého automatu dvanáct minut, když jí ve čtyřiceti metrech praskla hadice a lahev se vyfoukala dřív, než ji stačila zavřít. Na druhé, poloprázdné láhvi by nedoplavala. Dvanáct minut, než došli k zásobní lahvi. Dýchal pomalu, aby jim to vystačilo, a díval se jí do očí, a ani jednou se nepodíval na manometr. Pak spolu viseli na dekompresi přes hodinu a on jí na tabulku napsal vtip, který byl tak špatný, že se smála do automatu.
+A ví, že Viktor jí v Hranicích dal dýchat ze svého automatu dvanáct minut, když jí ve čtyřiceti metrech praskla hadice a lahev se vyfoukala dřív, než ji stačila zavřít. Na druhé, poloprázdné láhvi by nedoplavala. Dvanáct minut, než doplavali k zásobní lahvi. Dýchal pomalu, aby jim to vystačilo, a díval se jí do očí, a ani jednou se nepodíval na manometr. Pak spolu viseli na dekompresi přes hodinu a on jí na tabulku napsal vtip, který byl tak špatný, že se smála do automatu.
 
 To je vlevo.
 
@@ -178,13 +178,13 @@ V síni Luis zůstane u Abuela. Ukáže dva prsty a pak na Hanu a na Viktora. Dv
 
 Sedm kopů doleva. Pod převis.
 
-Válec leží, kde ležel. Samozřejmě, že ano. Hana se na něj podívá jen jednou a pak už se dívá na sintr, protože dnes je to sintr, co ji zajímá.
+Válec leží, kde ležel. Samozřejmě, že ano. Hana se na něj podívá jen jednou a pak už se dívá na sintr, protože dnes ji zajímá sintr.
 
-Viktor zaujme pozici nad ní, trochu vpravo, a rozsvítí obě světla. Síň vybuchne do bílé. Stíny zmizí, terasy se srovnají do plochého krému, a Hana na okamžik nevidí lem kolem válce, protože ho světlo vymaže. Ukáže Viktorovi rukou: méně, z boku. Viktor jedno světlo stočí. Lem se vrátí.
+Viktor zaujme pozici nad ní, trochu vpravo, a rozsvítí obě světla. Síň vybuchne bílým světlem. Stíny zmizí, terasy se srovnají do plochého krému, a Hana na okamžik nevidí lem kolem válce, protože ho světlo vymaže. Ukáže Viktorovi rukou: méně, z boku. Viktor jedno světlo stočí. Lem se vrátí.
 
 Vzorek jedna.
 
-Poleva metr a dvacet od válce, nad ním, na svahu, mimo žlábek. Kontrolní vzorek: táž poleva, ale bez předmětu. Kdyby vyšla stejně stará jako kůra na válci, bude to znamenat jedno. Kdyby vyšla jinak, bude to znamenat něco jiného. Hana položí kartu vedle místa. Fotí. Zkontroluje snímek na displeji. Vytáhne z kapsy dláto a malé kladívko, obojí na šňůrce, a sáček s fixou napsanou jedničkou, připnutý na karabině u hrudi.
+Poleva metr a dvacet od válce, nad ním, na svahu, mimo žlábek. Kontrolní vzorek: táž poleva, ale bez předmětu. Jestli vyjde stejně stará jako kůra na válci, bude to znamenat jedno. Jestli vyjde jinak, bude to znamenat něco jiného. Hana položí kartu vedle místa. Fotí. Zkontroluje snímek na displeji. Vytáhne z kapsy dláto a malé kladívko, obojí na šňůrce, a sáček s fixou napsanou jedničkou, připnutý na karabině u hrudi.
 
 Pod vodou se tluče špatně. Kladívko nemá švih, voda ho brzdí. Hana nasadí dláto pod okraj terasy, kde je poleva tenká, a tluče krátce a mnohokrát, jako datel. Kousek polevy, velký jako nehet palce, se uvolní. Chytí ho do dlaně dřív, než stačí klesnout. Do sáčku. Zavřít. Foto po odběru. Karta. Snímek.
 
@@ -216,7 +216,7 @@ Do žlábku.
 
 Hana se za ním otočí. Viktorovo světlo je v tu chvíli jinde. Viktor ho stočil na čelo válce, na pole značek, protože tam viděl záběr: značky a ruka vědkyně vedle nich. Hana má jen svoje světlo. Posvítí do žlábku.
 
-Úlomky. Ty, které tu ležely ve středu, napůl zarostlé, krémové a o něco tmavší. A mezi nimi něco, co se pohnulo, nebo se jí to zdálo. Posvítí blíž. Dva kousky, oba velké jako nehet palce, oba krémové, oba s lomem, který se v jejím světle jeví bělejší než okolí. Jeden vlevo, jeden kousek vpravo.
+Úlomky. Ty, které tu ležely ve středu, napůl zarostlé, krémové a o něco tmavší. A mezi nimi něco, co se pohnulo, nebo se jí to zdálo. Posvítí blíž. Dva kousky, oba velké jako nehet palce, oba krémové, oba s lomem, který se v jejím světle jeví bělejší než okolí. Jeden vlevo, druhý o kus vpravo.
 
 Jeden z nich je její.
 
@@ -238,7 +238,7 @@ Mohla by vzít i pravý kousek. Všechny tři. A rozhodnout se večer.
 
 Dá oba kusy, ten z prstů a ten levý ze žlábku, do sáčku s trojkou. Zavře ho.
 
-Na tabulku na předloktí, tužkou, rychle, napíše: *3 – 2 ks. 2. ks žlábek?* Otazník je křivý, protože Viktor už odplouvá a ona se otáčí za ním.
+Na tabulku na předloktí, tužkou, rychle, napíše: *3 – 2 ks. 2. ks žlábek?* Otazník je křivý, protože Viktor už odplouvá a ona se otáčí za ním. Tužka na mokrém plastu nechytí, otazník obtáhne podruhé.
 
 Foto po odběru nestihne.
 
@@ -264,13 +264,13 @@ Vzorek dva je na videu celý.
 
 Vzorek tři.
 
-Karta. Foto. Dláto, údery. Ruka. Kus kůry mezi prsty, zřetelně, ostře, v plném světle obou lamp. Pak se světlo stočí doprava, k čelu válce, a na obrazovce jsou značky. Krásné, ostré, v bočním světle. Mřížka. Čáry a tečky. Okraj Haniny rukavice v rohu obrazu. Sedm vteřin. Pak se světlo stočí zpátky a Hana je u žlábku, nakloněná, s rukou dole, a vytahuje ruku s něčím mezi prsty.
+Karta. Foto. Dláto, údery. Ruka. Kus kůry mezi prsty, zřetelně, ostře, v plném světle obou lamp. Pak se světlo stočí doprava, k čelu válce, a na obrazovce jsou značky. Krásné, ostré, v bočním světle. Mřížka. Čáry a tečky. Okraj Haniny rukavice v rohu obrazu. Sedm vteřin. Pak se světlo stočí zpátky a Hana je u žlábku, nakloněná, s rukou dole, a vytahuje ji s něčím mezi prsty.
 
 Sedm vteřin, kdy kamera dělala hero shot.
 
 „Vidíš?“ řekne Viktor. „Spadlo ti to a tys to sebrala. Je to tam celé.“
 
-Hana zastaví video ve chvíli, kdy je kamera zpátky u žlábku. Zvětší obraz. Ve žlábku je vidět několik úlomků. Rozmazaně. Světlo kamery je dělá všechny stejně bílé. Kterého se dotýká její ruka, se nedá poznat.
+Hana zastaví video ve chvíli, kdy je kamera zpátky u žlábku. Zvětší obraz. Ve žlábku je vidět několik úlomků. Rozmazaně. Ve světle kamery jsou všechny stejně bílé. Kterého se dotýká její ruka, se nedá poznat.
 
 „Ten druhý kus,“ řekne. „Nevím, jestli je můj.“
 
@@ -305,6 +305,8 @@ Sáček s trojkou leží na stole vedle deníku. Hana ho vysypala na čistý pap
 Dva úlomky kůry. Oba velké jako nehet palce. Oba krémové, s laminací, kterou je pod lupou vidět jako jemné proužky. Oba s lomem. Na jednom je tmavší proužek blíž k okraji. Na druhém taky, ale širší. Na jednom je na spodní straně, té, která by se dotýkala válce, hladká plocha, téměř lesklá, jako otisk. Na druhém je spodní strana nerovná. Ten s hladkou plochou je určitě ten z jejích prstů. Ten s nerovnou plochou může být druhá polovina téhož kusu, odlomená podél vrstvy: na ploše, kde se vrstvy od sebe oddělily, žádný otisk být nemůže. Nebo to může být úlomek polevy z hrany terasy, který tam ležel tisíc let.
 
 Pod lupou to nerozezná. V laboratoři by to možná šlo. Mikroskop, výbrus, srovnání laminace vrstvu po vrstvě. Za peníze, které nejsou, a za čas, který není.
+
+Pak si vzpomene na středu. Otevře v notebooku snímky žlábku. Jsou dva, oba z hrany terasy, šikmo dolů, karta leží na polevě nad žlábkem, ne v něm. Dno je ve stínu a přes půlku záběru visí zákal, který tam zvedla vlastními ploutvemi, když se otáčela. V rozmazané hromádce napočítá pět, možná šest úlomků. Dva z nich by mohly být tyhle dva. Nebo žádný. Zvětší je, až se z nich stanou čtverečky, a zavře je.
 
 Laboratoř si stejně vezme jen kousek. Pár desetin gramu. Navrtá ho, rozpustí, oddělí uran a thorium a změří je. A ten kousek bude z toho fragmentu, který laboratoř vybere. Nebo z obou. Nebo z jejich směsi.
 

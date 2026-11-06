@@ -4,7 +4,7 @@ Víkend je nejdelší za celý pobyt.
 
 V pátek třináctého v poledne lom vystřelí jednou, ve dvanáct dvacet, a pak už nic. V sobotu nic. V neděli nic. Hana zapisuje do deníku nuly a připadá si u toho hloupě, jako by počítala vlaky na trati, kde se nejezdí. V neděli odpoledne si uvědomí, že poslouchá. Že celé dopoledne poslouchala, jestli se od silnice ozve úder, a že ticho je horší.
 
-Ríša zkouší v otevřené vodě pod plošinou své terče. Čtverečky z bílého plastu s černými kroužky a čárkovým kódem po obvodu, každý zatížený olůvkem, a dvě hliníkové tyče, na koncích s terči v přesně změřené vzdálenosti. *Pět set nula nula*, stojí na nich vyraženo, a pod tím číslo kalibračního listu. Ríša je drží jako housle. Na plošině je pak rozkládá na ručník a fotí, jak zbytek týmu jí.
+Ríša zkouší v otevřené vodě pod plošinou své terče. Čtverečky z bílého plastu s černými kroužky a čárkovým kódem po obvodu, každý zatížený olůvkem, a dvě hliníkové tyče, na koncích s terči v přesně změřené vzdálenosti. *Pět set nula nula*, stojí na nich vyraženo, a pod tím číslo kalibračního listu. Ríša je drží jako housle. Na plošině je pak rozkládá na ručník a fotí, zatímco zbytek týmu jí.
 
 Viktor telefonuje. V sobotu dvakrát s Los Angeles, jednou s někým, s kým mluví potichu a chodí u toho po okraji mýtiny. V neděli večer sedí u ohně a počítá na telefonu, a když se Hana posadí vedle něj, telefon zhasne.
 
@@ -17,6 +17,8 @@ Viktor telefonuje. V sobotu dvakrát s Los Angeles, jednou s někým, s kým mlu
 *
 
 V pondělí šestnáctého ve čtyři minuty po šesté ráno má Hana v telefonu e-mail z laboratoře.
+
+Šestnáctého. Čtyři dny před dvacátým. Vzorky odletěly v úterý, ne v pondělí, a stačilo to s rezervou. *Nejpozději v pondělí*, řekl tehdy Viktor. Nebylo to datum. Byl to nátlak. Hana si to spočítá jednou a dál to nepočítá.
 
 Přišel na dvě adresy, její a Viktorovu. Předmět je krátký: *Preliminary result – Sample 3*. Hana sedí na kraji karimatky ve stanu, ještě v tričku, ve kterém spala, a čte ho jednou celý a podruhé po řádcích.
 
@@ -84,13 +86,13 @@ Není to otázka a Hana na ni neodpoví.
 
 V sedm zavolá Hana Marisol.
 
-Jde s telefonem k cenotu, na kámen, kde sedává. Je to zvyk, který si tu udělala, a ví, že je hloupý, protože ji tu všichni vidí. Voda dole je čirá. Tři dny bez odstřelu. Kužel balvanů je vidět až k patě.
+Jde s telefonem k cenotu, na kámen, kde sedává. Je to zvyk, který si tu osvojila, a ví, že je hloupý, protože ji tu všichni vidí. Voda dole je čirá. Tři dny bez odstřelu. Kužel balvanů je vidět až k patě.
 
 „Volám předem,“ řekne, když se Marisol ozve.
 
 „Zase?“
 
-„Zase.“ Hana jí přečte e-mail. Číslo, chybu, poměr thoria. Řekne jí, co to znamená a co ne. Minimální stáří uložení. Jedno měření jednoho vzorku. Korekce, o které se dá hádat. Marisol ji nechá domluvit. O fragmentech, o číslech 3-1 a 3-2 a o tom, že laboratoř má jiná písmena než ona, Hana nemluví. Uvědomí si to až po hovoru, s telefonem v klíně. Že se ani nezarazila.
+„Zase.“ Hana jí přečte e-mail. Číslo, chybu, poměr thoria. Řekne jí, co to znamená a co ne. Minimální stáří uložení. Jedno měření jednoho vzorku. Korekce, o které se dá hádat. Marisol ji nechá domluvit. O fragmentech, o číslech 3-1 a 3-2 a o tom, že laboratoř má jiné označení než ona, Hana nemluví. Uvědomí si to až po hovoru, s telefonem v klíně. Že se ani nezarazila.
 
 „Kdo to ještě ví?“ zeptá se Marisol.
 
@@ -100,7 +102,7 @@ Jde s telefonem k cenotu, na kámen, kde sedává. Je to zvyk, který si tu udě
 
 „Prezentace je v pátek. Viktor říká, že do té doby nic nevyjde.“
 
-Ticho na druhé straně má zvláštní kvalitu. Jako když učitel čeká, jestli si student všimne, co právě řekl.
+Ticho na druhé straně je zvláštní. Jako když učitel čeká, jestli si student všimne, co právě řekl.
 
 „Pošlete mi to písemně,“ řekne Marisol. „Dnes. Celé, i s tím, co to neznamená.“
 
@@ -176,7 +178,7 @@ Neřekne nic dalšího a ona taky ne. Ale ví, že tohle je ta otázka, kterou p
 
 Viktor ji najde až večer, u umyvadla za kuchyní, kde si myje ruce od kalafuny. Odpoledne Kalinovi podržela desku, když pájel.
 
-„Bod čtyři,“ řekne. Má zprávu vytištěnou, přeloženou napůl, v zadní kapse. „Proč to tam píšeš?“
+„Bod čtyři,“ řekne. Má zprávu vytištěnou, složenou napůl, v zadní kapse. „Proč to tam píšeš?“
 
 „Protože je to pravda.“
 
@@ -224,7 +226,7 @@ Sedí u svého notebooku na bedně u kompresoru, se sluchátky na uších, a ob�
 
 „Můžu to vidět?“
 
-„Až to bude hotové.“ Viktor si sundá jedno sluchátko. „Je to embargo do pátku, Hanko. Pošle se to pár novinářům, aby měli čas se na to připravit, a vyjde to po prezentaci. Tak se to dělá.“
+„Až to bude hotové.“ Viktor si sundá jedno sluchátko. „Platí embargo do pátku, Hanko. Pošle se to pár novinářům, aby měli čas se na to připravit, a vyjde to po prezentaci. Tak se to dělá.“
 
 „Jsou tam ty výhrady?“
 
@@ -248,7 +250,7 @@ Odejde to v jedenáct čtyřicet. Hana to ví, protože se jí to Viktor v jeden
 
 V sedm večer to čte celý svět.
 
-Hana se to dozví od Jany. Jana sedí na plošině nad cenotem, kde je jediné místo s pořádným signálem, a dívá se do telefonu, a pak vstane a jde k ní přes mýtinu a podá jí ho, aniž by cokoli řekla.
+Hana se to dozví od Jany. Jana sedí na plošině nad cenotem, na jediném místě s pořádným signálem, a dívá se do telefonu, a pak vstane a jde k ní přes mýtinu a podá jí ho, aniž by cokoli řekla.
 
 Český zpravodajský web. V Brně jsou dvě ráno a v redakci někdo nespí. Rubrika Věda. Fotka válce, ta ze středy, s vyretušovanou kartou.
 
@@ -296,7 +298,7 @@ Marisol mlčí.
 
 Hana se dívá dolů na vodu.
 
-Protože vzorek tři je možná kus polevy z hrany terasy. Protože laboratoř má svá písmena. Protože v batohu má tabulku, kterou neumyla. Protože když budou nové vzorky čisté a vyjdou stejně, nebude už na vzorku tři záležet, a když vyjdou jinak, opraví se to samo, bez přiznání, jako se opravují předběžné výsledky.
+Protože vzorek tři je možná kus polevy z hrany terasy. Protože laboratoř má svá čísla. Protože v batohu má tabulku, kterou neumyla. Protože když budou nové vzorky čisté a vyjdou stejně, nebude už na vzorku tři záležet, a když vyjdou jinak, opraví se to samo, bez přiznání, jako se opravují předběžné výsledky.
 
 Ví, že ta poslední věta je ta nejhorší. A že je to ta, kterou si myslí nejvíc.
 

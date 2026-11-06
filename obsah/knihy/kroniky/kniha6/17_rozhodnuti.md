@@ -12,7 +12,7 @@ Pod tím už nebyl žádný menší řádek. Nic, na co by se dalo odpovědět.
 
 Zápis se za noc rozšířil po celém prstenci.
 
-Nara to věděla, i když se nedívala. Síť jí ráno sama ukázala souhrn, protože se týkal věci, kterou vedla, a protože ho nesměla filtrovat. Zápis z jednání ve věci, veřejný. Zobrazen víc než třemi miliony lidí. Citován. Opisován. Na Ketě ho někdo přečetl nahlas na náměstí u nádrží, celou část první, jen levý sloupec, a lidé stáli a poslouchali. Síť to zaznamenala jako shromáždění bez ohlášení a poslala hlášení pořádkové službě. Pořádková služba nepřišla.
+Nara to věděla, i když se nedívala. Síť jí ráno sama ukázala souhrn, protože se týkal věci, kterou vedla, a protože ho nesměla filtrovat. Zápis z jednání ve věci, veřejný. Zhlédlo ho víc než tři miliony lidí. Citován. Opisován. Na Ketě ho někdo přečetl nahlas na náměstí u nádrží, celou část první, jen levý sloupec, a lidé stáli a poslouchali. Síť to zaznamenala jako shromáždění bez ohlášení a poslala hlášení pořádkové službě. Pořádková služba nepřišla.
 
 Koloniální úřad vydal prohlášení. Krátké. *Koloniální úřad respektuje nezávislost Spolkového soudu a vyčká jeho rozhodnutí. Úřad nepopírá obsah listin, které byly zapsány do veřejného záznamu.*
 
@@ -50,7 +50,7 @@ Sedla si. Asko si sedl naproti a sundal brýle.
 
 „Já vím.“
 
-„Já vím, že víš. Přepsala jsi ten odstavec čtyřikrát. Viděl jsem všechny čtyři verze.“ Asko si promnul kořen nosu. „Byly čím dál lepší. Poslední je nejlepší věc o pravomoci, kterou jsem za posledních dvacet let četl. A pořád je tam.“
+„Já vím, že víš. Přepsala jsi ten odstavec čtyřikrát. Viděl jsem všechny čtyři verze.“ Asko si promnul kořen nosu. „Byly čím dál lepší. Poslední je nejlepší text o pravomoci, kterou jsem za posledních dvacet let četl. A pořád je tam.“
 
 „Co je tam?“
 
@@ -154,7 +154,7 @@ Nara to slyšela a nic necítila. Věděla, že tohle si jednou někdo přečte 
 
 Ke třetímu bodu četla Tann pomaleji.
 
-„Odpůrce namítl, že senát, který nesmí rozsudek Terra změnit, nesmí o jeho skutkovém základu nic zjišťovat. Senát to nesdílí. Senát nemění, co rozsudek uložil. Zapisuje, co zjistil o listinách, které jsou součástí rozsudku a které mu byly předloženy. Kdyby senát listiny četl a nic o nich nezapsal, bylo by i jeho mlčení zjištěním. Zjištěním, že v nich nic není.“
+„Odpůrce namítl, že senát, který nesmí rozsudek Terra změnit, nesmí o jeho skutkovém základu nic zjišťovat. Senát tento názor nesdílí. Senát nemění, co rozsudek uložil. Zapisuje, co zjistil o listinách, které jsou součástí rozsudku a které mu byly předloženy. Kdyby senát listiny četl a nic o nich nezapsal, bylo by i jeho mlčení zjištěním. Zjištěním, že v nich nic není.“
 
 Odmlčela se.
 
@@ -168,7 +168,7 @@ Pak Tann přešla k šestému bodu. Nara poslouchala a poznávala vlastní věty
 
 Tady, pomyslela si Nara. Tady.
 
-„Místo výkonu neurčil Koloniální úřad ani výkon. Určil ho rozsudek Terra v odstavci tři sta devadesát jedna. Navrhovatelka tvrdí, že výkon na tomto místě je protiprávní. Tím netvrdí nic o lodi, o lůžkách, o posádce ani o dráze. Tvrdí to o trestu. Spolkový soud smí zastavit výkon jen z důvodů, které se týkají výkonu. Trest uložený pravomocným rozsudkem tento senát přezkoumat nesmí. Ani když ví, že rozsudek stojí na domněnce, kterou listiny vyvracejí. Ani když to ví každý.“
+„Místo výkonu neurčil Koloniální úřad ani výkon. Určil ho rozsudek Terra v odstavci tři sta devadesát jedna. Volba oblasti uvnitř světa je věcí výkonu. Navrhovatelka však nenapadá oblast, napadá svět. Žádná oblast na chráněném světě by rozporu s článkem třetím statutu neunikla. Navrhovatelka tvrdí, že výkon na tomto místě je protiprávní. Tím netvrdí nic o lodi, o lůžkách, o posádce ani o dráze. Tvrdí to o trestu. Spolkový soud smí zastavit výkon jen z důvodů, které se týkají výkonu. Trest uložený pravomocným rozsudkem tento senát přezkoumat nesmí. Ani když ví, že rozsudek stojí na domněnce, kterou listiny vyvracejí. Ani když to ví každý.“
 
 Odmlčela se. Nebyla to pauza mezi body. Byla delší.
 
@@ -178,7 +178,7 @@ Nara se neotočila k Askovi. Věděla, že se na ni dívá. Věděla, že jeho r
 
 *
 
-„K bezpečnostní výjimce,“ četla Tann dál. „Odpůrce třicátého dne osvědčil bezpečnostní nezbytnost výkonu. Zákon o výkonu trestu dovoluje senátu přezkoumat jen to, zda osvědčení vydal příslušný orgán v předepsané formě. Vydal ho příslušný orgán. Forma je předepsaná. Senát zaznamenává, že se osvědčení opírá o důvody uvedené ve čtvrté části přílohy. Jejich obsah je ve veřejném zápisu. Posoudit je senátu nepřísluší.“
+„K bezpečnostní výjimce,“ četla Tann dál. „Odpůrce třicátého dne osvědčil bezpečnostní nezbytnost výkonu. Zákon o výkonu trestu dovoluje senátu přezkoumat jen to, zda osvědčení vydal příslušný orgán v předepsané formě. Vydal ho příslušný orgán. Forma odpovídá předpisu. Senát zaznamenává, že se osvědčení opírá o důvody uvedené ve čtvrté části přílohy. Jejich obsah je ve veřejném zápisu. Posoudit je senátu nepřísluší.“
 
 Ardaine u svého stolu nepohnula ani rukou.
 
@@ -200,7 +200,7 @@ Senát vstal. Síň vstala také, pomalu, jako by si nebyla jistá, že se to m�
 
 Nara si to nepletla.
 
-Síň se nezvedala k odchodu. Lidé stáli mezi lavicemi a nevěděli kam. Někdo vzadu začal plakat, tiše, a nikdo ho neutišoval. Žena s bílým provázkem na zápěstí ho rozvázala, podívala se na něj a zase si ho uvázala, pevněji. Nara to viděla přes zábradlí. Pořádková služba u dveří to viděla také.
+Nikdo se neměl k odchodu. Lidé stáli mezi lavicemi a nevěděli kam. Někdo vzadu začal plakat, tiše, a nikdo ho neutišoval. Žena s bílým provázkem na zápěstí ho rozvázala, podívala se na něj a zase si ho uvázala, pevněji. Nara to viděla přes zábradlí. Pořádková služba u dveří to viděla také.
 
 Lumi vedle ní seděla s rukama v klíně a plakala. Nedělala nic, aby to zastavila. Nara jí položila ruku na rameno. Byla to první věc, kterou udělala po vyhlášení, a byla to ta správná, protože Lumi kývla.
 
@@ -292,7 +292,7 @@ Pak vstala a šla.
 
 Daven na ni čekal na chodbě.
 
-Nestál u dveří. Stál dál, u okna do dvora, se zahradou v řádcích. Měl ruce za zády a díval se ven. Když Nara vyšla ze síně, otočil se.
+Nestál u dveří. Stál dál, u okna do dvora se zahradou v řádcích. Měl ruce za zády a díval se ven. Když Nara vyšla ze síně, otočil se.
 
 Nic neřekl. Ona taky ne.
 

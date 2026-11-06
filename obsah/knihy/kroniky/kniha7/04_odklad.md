@@ -82,7 +82,7 @@ Sedne si rychle, jako by se bála, že si to rozmyslí.
 
 A pak Tadeáš.
 
-Vstane, a židle za ním zaskřípe po parketách, a on zrudne až ke kořínkům vlasů. Je malý. Široký, nižší než Hana, s rukama, které neumí stát klidně. Sál se na něj dívá. Sto lidí, kamery, galerie. Hana by mu chtěla říct, ať si sedne, že nemusí.
+Vstane, a židle za ním zaskřípe po parketách, a on zrudne až ke kořínkům vlasů. Je malý. Široký, nižší než Hana, s rukama, které neumí zůstat v klidu. Sál se na něj dívá. Sto lidí, kamery, galerie. Hana by mu chtěla říct, ať si sedne, že nemusí.
 
 „Tadeáš,“ řekne Tadeáš. „Od Ostrých.“ Polkne. „Ptali jste se, kdo odpovídá za to zařízení. Nikdo. Ale bydlíme nad ním.“
 
@@ -104,7 +104,7 @@ Sende čte. Ve své řeči, ze záznamu, který má jen v hlavě, protože před
 
 Nejdřív stanoviště. Čísla. Režim nouzový. Tepelná bilance mimo rozsah. Teplota jádra stoupá. Klenba nad jádrem se hýbe, o několik milimetrů za rok, se zrychlením. Odhad výpravy: do dvou let selže chlazení. Pak se buď jádro samo odstaví, nebo dřív povolí klenba.
 
-„Nad klenbou je dům,“ řekne Sende. „Asi kilometr od ní je vesnice.“
+„Nad klenbou je dům,“ řekne Sende. „Pár set metrů od ní je vesnice.“
 
 Tadeáš se nepohne. Sael taky ne.
 
@@ -142,13 +142,13 @@ Vysoká žena vedle něj se nepohne. Ale Hana vidí, jak jí bělají klouby na 
 
 Pak se ozve žena z Mexika. Španělsky, a tlumočnice za ní to překládá do angličtiny. Ten předmět v Méridě patří mexickému národu. Je uložen v ústavu na základě povolení. Bez souhlasu ústavu a obce, na jejímž pozemku byl nalezen, s ním nikdo nic dělat nebude. Ani číst, ani převzít. Ani odstranit.
 
-„Rozumím,“ řekne Sende. „Proto se nic nebude dít, dokud se o tom nejedná.“
+„Rozumím,“ řekne Sende. „Proto se nic nebude dít, dokud se o tom nedojedná.“
 
 *
 
 Hronková se ozve dřív, než stačí kdokoli jiný. Zmocněnec zvedne ruku, ale pozdě.
 
-„Pane delegáte,“ řekne. Česky, pomalu, do mikrofonu, a Krausová to tlumočí. „Slovo *sanace* ve slovníku není podepsané. Podle pravidel, která jsme přijali obě strany, nemá při tomto jednání váhu.“
+„Pane delegáte,“ řekne. Česky, pomalu, do mikrofonu, a Krausová to tlumočí. „Slovo *sanace* ve slovníku není podepsané. Podle pravidel, která přijaly obě strany, nemá při tomto jednání váhu.“
 
 V sále se několik lidí pootočí. Na galerii začne někdo psát rychleji. Krausová má tužku pořád nad křížkem.
 
@@ -190,7 +190,7 @@ Lis Aven tlumočí. Sende kývne, jako by to věděl.
 
 „Co přesně?“ zeptá se Sende. Nikdo ho nevyzval. Zeptá se rovnou, přes Lis Aven, a Hana si všimne, že se zeptal dřív, než zmocněnec stačil cokoli říct.
 
-„Všechno, co vzniklo bez vás,“ řekne Hana. „Data z tomografu, který ten předmět v Méridě snímal v roce dvacet šest. Leží v ústavu a na jedné klinice. Moje měření u zařízení z roku třicet a celý monitoring od roku třicet jedna. Záznamy doktora Kaliny. Snímky kodexu v chebském archivu. Data doktorky Sokolové, která jsou veřejná od roku třicet dva.“ Odmlčí se. „Všechno se zapečetí. U několika institucí, v několika zemích, které na sobě nezávisí. Spočítají se kontrolní součty, takové otisky dat. A všechno se zveřejní. Dřív, než dostaneme od vás první řádek slovníku.“
+„Všechno, co vzniklo bez vás,“ řekne Hana. „Data z obou tomografií z roku dvacet šest. Ze Švýcarska, kde snímali ten předmět, a z kliniky v Méridě, kde snímali repliku. Moje měření u zařízení z roku třicet a celý monitoring od roku třicet jedna. Záznamy doktora Kaliny. Snímky kodexu v chebském archivu. Data doktorky Sokolové, která jsou v úplné podobě veřejná od roku třicet dva.“ Odmlčí se. „Všechno se zapečetí. U několika institucí, v několika zemích, které na sobě nezávisí. Spočítají se kontrolní součty, takové otisky dat. A všechno se zveřejní. Dřív, než dostaneme od vás první řádek slovníku.“
 
 „Proč?“
 
@@ -210,7 +210,7 @@ Vysoká žena vedle Sendeho promluví. Nahlas, tentokrát do mikrofonu, a Lis Av
 
 Na galerii se někdo zasměje. Hana se tím směrem nepodívá.
 
-„V roce dvacet šest,“ řekne, „jsem měla data jen u sebe. Dělala jsem model jeskyně, kde ten předmět ležel. Měřítko na jedné tyči bylo zanesené a já jsem značku na něm posunula rukou. Kousek dovnitř. Model vyšel o osm desetin procenta větší. Nikdo to nemohl zkontrolovat, protože data měl jen ten, kdo tu značku posunul.“ Odmlčí se. „Zjistila jsem to sama a opravila jsem to sama. To je jediný důvod, proč to vím. Kdybych to nezjistila, nevěděl by to nikdo dodnes.“
+„V roce dvacet šest,“ řekne, „jsem měřila sama. Dělala jsem model jeskyně, kde ten předmět ležel. Měřítko na jedné tyči bylo zanesené a já jsem značku na něm posunula rukou. Kousek dovnitř. Model vyšel o osm desetin procenta větší. Nikdo to nezkontroloval, protože nikdo jiný ten model proti pásmu neměřil.“ Odmlčí se. „Zjistila jsem to sama a opravila jsem to sama. To je jediný důvod, proč to vím. Kdybych to nezjistila, nevěděl by to nikdo dodnes.“
 
 V sále je ticho. Hana slyší, jak na nádvoří pod okny někdo zavírá dveře auta.
 
@@ -310,7 +310,7 @@ Vlevo:
 
 *Výprava: „chráněné osoby nemají postavení účastníka“. I. S.: „…může zapsat, že tu jsou. A že mluvili.“*
 
-*Stanoviště: chlazení selže do 2 let (odhad výpravy). Klenba se hýbe. Nad ní dům, 1 km vesnice.*
+*Stanoviště: chlazení selže do 2 let (odhad výpravy). Klenba se hýbe. Nad ní dům, pár set m vesnice.*
 
 *„Sanace“ – Chebsko, jeskyně Yucatán a Bahamy, předmět v Méridě. Slovo nepodepsané. M. H. to řekla nahlas. I. S.: „Říkám to slovo bez váhy.“*
 
@@ -330,7 +330,7 @@ Vpravo:
 
 *Sael: glosy ke znakům válce v jejím archivu. Zapečetit taky.*
 
-Pak se dlouho dívá na čistý okraj stránky nahoře. Ví, co by tam mělo stát. Lidé, kterým něco počítá dny, píšou to nahoru, aby to viděli jako první. V roce dvacet šest jí někdo takhle počítal dny do prezentace v Los Angeles, a ona pod tím číslem udělala svou nejhorší chybu.
+Pak se dlouho dívá na čistý okraj stránky nahoře. Ví, co by tam mělo stát. Lidé, kterým něco počítá dny, píšou to nahoru, aby to viděli jako první. V roce dvacet šest si takhle sama počítala dny, do uzavření jeskyně, a pod tlakem jiného data, prezentace v Los Angeles, udělala svou nejhorší chybu.
 
 Nechce to tam napsat. Napíše to.
 

@@ -10,9 +10,13 @@ Pak šla dovnitř a rozsvítila.
 
 Kniha ležela na stole, kde ležela vždycky, a Merin ji otevřela na poslední popsané stránce.
 
+![Kniha pod převisem](obrazky/21_epilog_genealogie.webp)
+
 Poslední řádek patřil staré Aurel. Křížek a datum, které Merin zapsala v noci, kdy u ní seděla denní žena s rukou v obvazu a dívala se na knihu vzhůru nohama. Merin to tehdy věděla. Slyšela, jak se denní žena zvedla z lavice, slyšela dva kroky a pak nic. Nechala knihu ležet otevřenou ještě chvíli, protože chtěla vědět, co ta žena udělá, až uvidí, co uvidí.
 
 Žena neudělala nic. Jen četla.
+
+Na kraji vedle Aurelina řádku stálo ještě něco, co nebylo narození ani smrt. Merin to připsala v létě, když se z města doneslo, kdo kupoval to, co šlo nahoru. Jedno písmeno latinkou, se dvěma hroty dolů a dvěma nahoru, a vedle něj znak, kterým se píšou lovci.
 
 Čtyři sta let tahle kniha neležela otevřená před denním. Merin to řekla nahlas, tu noc, a nikdo z nich dvou nevěděl, jestli to řekla jako výčitku sobě, nebo jako omluvu. Teď to věděla. Nebylo to ani jedno. Bylo to oznámení.
 
@@ -24,9 +28,9 @@ Dobře, pomyslela si. Aurel by se smála. Aurel se smála všemu, co se dalo spo
 
 Svída přišla, když se setmělo, a za ní Dorota s kalamářem.
 
-Svída byla o šedesát let mladší než Merin a psala už tři zimy. Ptačí stopy jí ze začátku šly do kopce a teď už ne. Na prostředníku pravé ruky měla mozol, ještě měkký, růžový, jak bývá mozol, který se teprve rozhoduje, jestli zůstane. Merin ho ráda viděla. Ten její byl tvrdý a žlutý jako roh a dávno ji nebolel.
+Svída byla o šedesát let mladší než Merin a psala už tři zimy. Ptačí stopy jí ze začátku šly do kopce a teď už ne. Na prostředníku pravé ruky měla mozol, ještě měkký, růžový, jak bývá mozol, který se teprve rozhoduje, jestli zůstane. Merin ho ráda viděla. Její vlastní byl tvrdý a žlutý jako roh a dávno ji nebolel.
 
-Dorota postavila kalamář na stůl a nalila do něj z hliněné láhve. Inkoust z duběnek a rezavé vody, z vývěru pod skálou, kde voda teče do červena. Celé léto se ho učila dělat. Teď ho dělala líp než Svída, a Svída to věděla a nevadilo jí to.
+Dorota postavila kalamář na stůl a nalila do něj z hliněné láhve. Inkoust z duběnek a rezavé vody, z vývěru pod skálou, kde pramen teče do červena. Celé léto se ho učila dělat. Teď ho dělala líp než Svída, a Svída to věděla a nevadilo jí to.
 
 „Co budeš psát?“ zeptala se Dorota.
 
@@ -38,7 +42,7 @@ Merin se na ni podívala. Holka měla vlasy svázané do copu, světlé, skoro b
 
 Namočila pero.
 
-Řádek s Dorotou byl pět let starý. Merin si pamatovala, jak ho psala. Bylo to na podzim, po tom létě, kdy holka přišla, a ještě pořád utíkala ke kraji lesa, kdykoli ji nikdo nehlídal, a seděla tam a dívala se dolů na haldy. Merin tehdy napsala *Dorothea*, a rok, a pak tři slova v řeči denních, která jí řekl starý písař, od kterého se kdysi naučila latinku. Tak se to píše, řekl. Když se k rodu přidá dítě odjinud. *Angenommen.* Přijaté.
+Řádek s Dorotou byl pět let starý. Merin si pamatovala, jak ho psala. Bylo to na podzim, po tom létě, kdy holka přišla, a ještě pořád chtěla ke kraji lesa, kdykoli ji nikdo nehlídal, a vždycky ji někdo došel dřív, než tam doběhla. Merin tehdy napsala *Dorothea*, a rok, a pak tři slova v řeči denních, která jí řekl starý písař, od kterého se kdysi naučila latinku. Tak se to píše, řekl. Když se k rodu přidá dítě odjinud. *Angenommen.* Přijaté.
 
 Pět let se na to slovo nedívala. Teď se na ně dívala a viděla ženu s rukou v obvazu, jak ho čte vzhůru nohama, a jak se jí pohnou rty. Merin tehdy neslyšela, co řekla. Viděla jen, že to bylo jiné slovo, než jaké tam stálo.
 
@@ -60,7 +64,7 @@ V celé knize ten znak u jména nestál nikde. Merin to věděla. Prošla knihu 
 
 Svída za jejími zády nic neřekla. Svída uměla číst ptačí stopy líp než latinku. Merin slyšela, jak se nadechla a pak nevydechla.
 
-Dorota neuměla číst ani jedno. Dívala se na ten malý znak vedle svého jména a pak na Merin.
+Ptačí stopy číst neuměla. Dívala se na ten malý znak vedle svého jména a pak na Merin.
 
 „Co to je?“
 
@@ -78,13 +82,13 @@ Dorota se dívala na znak. Dlouho. Pak se podívala na *Margaretha*. Pak zase na
 
 Byla tu ještě jedna věc, kterou mohla napsat. Merin na ni myslela celé léto, i cestou přes hřeben s dětmi a se starým Zikmundem na dveřích, i cestou zpátky, sama, když se v bučinách začalo barvit listí.
 
-Ilona. Vdova po ranhojiči, který sedm let chodil k těm v olšové rokli a nikdy nic nenapsal. Žena, která četla vzhůru nohama, slíbila papír a dodržela ho, a potom odešla dolů z hor a nikdo nevěděl kam. Na kraji knihy, kde se někdy zapisuje, kdo pomohl, by pro ni bylo místo.
+Ilona. Vdova po ranhojiči, který sedm let chodil k těm v olšové rokli a nikdy nic nenapsal. Žena, která četla vzhůru nohama, slíbila, že les nebude na papíře, a dodržela to, a potom odešla dolů z hor a nikdo nevěděl kam. Na kraji knihy, kde se někdy zapisuje, kdo pomohl, by pro ni bylo místo.
 
 Merin to místo našla. Podržela nad ním pero.
 
 Pak ho odložila.
 
-Les na papíře nechceme, řekla tehdy té ženě u studánky. A ta žena pak spálila knihu, ve které byl les. Podle toho, co se doneslo z města, seškrábala i listy, na kterých byla olšová rokle. A nikam nenapsala, kde je Dorota.
+Les na papíře nechceme, řekla tehdy té ženě pod převisem. A ta žena pak spálila knihu, ve které byl les. Podle toho, co se doneslo z města, seškrábala i listy, na kterých byla olšová rokle. A nikam nenapsala, kde je Dorota.
 
 Nezapsat ji bylo to jediné, čím jí to Merin mohla oplatit.
 
@@ -120,7 +124,7 @@ Znělo to divně. Sedmdesát let to nikdo neřekl. Jíva. Jako keř u potoka, kt
 
 Svída zůstala u stolu. Dorota u ní, s kalamářem.
 
-Jíva vyšla ven, pod převis, k úlům. Bylo chladno. Nad bučinami stály hvězdy, ostré, jak bývají po mrazíku, a na severu, nad hřebenem, pět z nich v lomené řadě, jak je denní nazývají jménem ženy na trůnu. Jíva se na ně nedívala dlouho. Hvězdy jsou hvězdy.
+Jíva vyšla ven, pod převis, k úlům. Bylo chladno. Nad bučinami stály hvězdy, ostré, jak bývají po mrazíku, a vysoko nad hřebenem pět z nich v lomené řadě, jak je denní nazývají jménem ženy na trůnu. Jíva se na ně nedívala dlouho. Hvězdy jsou hvězdy.
 
 Přiložila ucho k prvnímu úlu.
 

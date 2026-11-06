@@ -12,9 +12,9 @@ Všechno, co tady napíše, si síť přečte dřív než kdokoli jiný. Posoud�
 
 *Do odletu: 4 dny.*
 
-Ráno napsala Halsovi: *Mohla bych psát dole?*
+Ještě v noci napsala Halsovi: *Mohla bych psát dole?*
 
-Odpověď přišla v poledne. *Ano. Desku připravím. Umíte psát rukou? T. H.*
+Odpověď přišla ráno. *Ano. Desku připravím. Umíte psát rukou? T. H.*
 
 *Ne.*
 
@@ -24,11 +24,11 @@ Odpověď přišla v poledne. *Ano. Desku připravím. Umíte psát rukou? T. H.
 
 Čtyřicátého čtvrtého dne ji to Hals učil.
 
-Seděli u stolu s leptem, v zadní části úložiště, kde světlo svítilo od podlahy a pára stoupala od úst. Hals přinesl dvě psací desky, tmavé a hladké, velké jako dvě dlaně, a k nim tenké rydlo. Ukázal jí, jak se drží. Ukázal jí, jak se deska vyhladí, když se splete: přejede se po ní hranou dlaně a písmo zmizí.
+Seděli u stolu s leptem, v zadní části úložiště, kde světlo svítilo od podlahy a pára stoupala od úst. Hals přinesl dvě psací desky, tmavé a hladké, velké jako dvě dlaně, a k nim tenké rydlo. Ukázal jí, jak se drží. Ukázal jí, jak se deska vyhladí, když se člověk splete: přejede se po ní hranou dlaně a písmo zmizí.
 
 „Mizí to,“ řekla Nara.
 
-„Dokud to nedám na lept. Pak už ne.“
+„Skoro. Proti světlu je to vidět. A mizí to, jen dokud to nedám na lept. Pak už ne.“
 
 Znaky znala. Četla je celý život, každý den, v síti i na listech. Psát je bylo něco jiného. Ruka nevěděla, kde začít, a když začala, nevěděla, kam jít. Rydlo jí ujíždělo. Čáry, které měly být rovné, se vlnily, a ty, které se měly zahnout, se zahnuly pozdě. A ruce se jí třásly. Na desce to bylo vidět víc než kde jindy. Každý znak měl v sobě chvění, jako by ho psal někdo na lince při startu.
 
@@ -70,7 +70,7 @@ Nara napsala první řádek.
 
 *Nevím, kdo jste. Nevím, jakou řečí mluvíte. Kdo to bude překládat, ať píše slova, jaká tu stojí. Ne to, co si o nich myslí. Píšu krátce, aby se v tom dalo méně splést.*
 
-*Jmenuji se Nara Vess. Jsem advokátka. Jsem matka Ilana Vess, který odletěl druhým transportem. Snažila jsem se, aby neodletěl. Nepovedlo se to.*
+*Jmenuji se Nara Vess. Jsem advokátka. Jsem matka Ilana Vesse, který odletěl druhým transportem. Snažila jsem se, aby neodletěl. Nepovedlo se to.*
 
 *Všechno ostatní v tomhle kameni je spis. Spis je pravdivý. Tenhle list do spisu nepatří.*
 
@@ -80,7 +80,7 @@ Dál to šlo pomalu.
 
 Psala větu a pak se na ni dívala. Pak ji vyhladila hranou dlaně a psala znovu. Bez sítě nevěděla, jestli je věta dobrá. Neměla nic, co by jí nabídlo lepší slovo. Měla jen tu větu, chvějící se, na tmavé desce, a musela se rozhodnout sama, jestli tam zůstane.
 
-Myslela na překladatele, který kdysi přeložil *izoluje* místo *opatruje*. Podle smyslu. Měl slovník, který se ztratil, a doporučil ověření, které nikdy nikdo neudělal. Kdo bude číst tenhle list, nebude mít ani ten slovník. Bude mít jen její znaky a vlastní odhad, co znamenají. Psala proto tak, jak psala Ardaine. Jedna myšlenka, tečka. Slova, která jdou přeložit jen jedním způsobem. Kde to nešlo, vyhladila desku a hledala jinak.
+Myslela na překladatele, který kdysi přeložil *izoluje* místo *opatruje*. Podle smyslu. Měl slovník, který se ztratil, a doporučil ověření, které nikdy nikdo neudělal. Kdo bude číst tenhle list, nebude mít ani ten slovník. Bude mít jen její znaky a vlastní odhad, co znamenají. Psala proto tak, jak psala Ardaine. Jedna myšlenka, tečka. Slova, která se dají přeložit jen jedním způsobem. Kde to nešlo, vyhladila desku a hledala jinak.
 
 Několikrát se zastavila úplně.
 
@@ -162,7 +162,7 @@ Podala desku Halsovi.
 
 Hals ji vzal do rukou v rukavicích a podržel ji proti světlu. Díval se na ni dlouho. Nara viděla, že nečte. Jen se díval, jak je to napsané.
 
-„Na lept to dám zítra,“ řekl. „Oboustranně se to vejde.“
+„Na lept to dám zítra,“ řekl. „Lept vezme desku celou, jak je, i s tím, co jste smazala. Oboustranně se to vejde.“
 
 „Do spisu to nepatří.“
 
@@ -270,7 +270,7 @@ Lumi jí napsala večer. *Rok. Spis s vodním okruhem převezmu, jestli dovolít
 
 Nara u toho byla. Hals přivezl schránky z úložiště a Riv vložila listy do otvoru ve spodní straně kamene jeden po druhém, rukama v tenkých rukavicích, které jí půjčil Hals. Sto devadesát devět. Pak poslední, ten s vlastním uzávěrem, zvlášť, za ostatní. Nara se na něj dívala. Byl stejně průsvitný jako ostatní a z dálky se od nich nelišil ničím.
 
-Riv otvor uzavřela. Šedou hmotou, stejnou drtí z lomu, kterou rozetřela stěrkou a uhladila dlaní. Za hodinu ztvrdla. Kámen byl celý, hrbolatý, šedý, bez otvoru, bez spáry. Nedalo se poznat, kde byl.
+Riv otvor uzavřela. Šedou hmotou, stejnou drtí z lomu, kterou rozetřela stěrkou a uhladila dlaní. Za hodinu ztvrdla. Kámen byl celý, hrbolatý, šedý, bez otvoru, bez spáry. Nedalo se poznat, kde býval otvor.
 
 „Hotovo,“ řekla Riv.
 
@@ -284,7 +284,7 @@ Riv se na něj podívala a nepochopila. Nara ano.
 
 Padesátého dne ve čtyři ráno stála Nara v hale s velkým průzorem.
 
-Riv seděla u řídicího stolu pod průzorem a nemluvila. Hals stál vedle Nary. Za průzorem ležel lom, terasy jedna pod druhou, šedé ve světle, které nepřicházelo odnikud, a nad nimi černo. Na nejnižší terase, mezi nehybnými stroji, stála dlouhá rovná dráha, kterou Nara dřív nikdy neviděla, protože nevěděla, že se na ni má dívat. Na jejím konci ležel kámen. Z té dálky byl menší než nehet.
+Riv seděla u řídicího stolu pod průzorem a nemluvila. Hals stál vedle Nary. Za průzorem ležel lom, terasy jedna pod druhou, šedé ve světle, které nepřicházelo odnikud, a nad nimi černo. Na nejnižší terase, mezi nehybnými stroji, vedla dlouhá rovná dráha, kterou Nara dřív nikdy neviděla, protože nevěděla, že se na ni má dívat. Na jejím konci ležel kámen. Z té dálky byl menší než nehet.
 
 „Nic neuvidíte,“ řekla Riv, aniž se otočila. „Jen to, že tam nebude.“
 
@@ -298,7 +298,7 @@ Nara se dívala. Kámen ležel na konci dráhy a nehýbal se. Pak se pohnul. Neb
 
 Seděla dál u stolu a dívala se na řádek, který Nara neviděla. Pak ho zavřela.
 
-„Dráha je dobrá,“ řekla. „Od teď o ní nevíme nic. Nemá jak nám nic říct.“
+„Dráha je dobrá,“ řekla. „Odteď o ní nevíme nic. Nemá jak nám nic říct.“
 
 Nikdo nic neřekl. Hals sundal jednu rukavici a zase ji natáhl.
 

@@ -12,7 +12,7 @@ Zavřela sešit a položila na něj dlaň.
 
 *
 
-Rada Ostrých seděla ve světnici celá. Jedenáct, i ti dva, kteří se vrátili ze Saska od nemocné sestry. Sestra umřela minulý týden a oni přijeli rovnou z pohřbu. Seděli na konci stolu v černém a nesundali si to.
+Rada Ostrých seděla ve světnici celá. Jedenáct, i ti dva, kteří se vrátili ze Saska od nemocné sestry. Sestra umřela minulý týden a oni přijeli rovnou z pohřbu. Seděli na konci stolu v černém a nepřevlékli se.
 
 Edo Marn stál u dveří. Sael ho viděla poprvé zblízka. Byl mladší, než čekala, kulatý v obličeji a měkký, jako lidé, kteří nikdy nedělali těžkou práci venku. Stál opatrně, nohy trochu od sebe, a jednou rukou se držel futer. V plné gravitaci byl třetí týden a pořád se jí bál. Za pravým uchem měl světlejší jizvu, jakou v Praze měli všichni tři.
 
@@ -38,7 +38,7 @@ Lis Aven tlumočila.
 
 „Co skála řekne, řeknete nahlas. Všechno. Tadeáš to zapíše. Ne do vašeho…“ Lada ukázala na své ucho, za ně, kde Marn měl jizvu. „Do sešitu. Aby to bylo i u nás.“
 
-Marn kývl. Sael viděla, že tomu nerozuměl celé. Ale kývl.
+Marn kývl. Sael viděla, že tomu nerozuměl celému. Ale kývl.
 
 „A co skála řekne o Ostřích,“ řekla Lada, „to je Ostrých. To ven nepůjde, dokud to neuslyšíme a neřekneme.“
 
@@ -62,7 +62,7 @@ Hlasovali rukama. Jedenáct pro. Ti dva v černém zvedli ruce jako poslední, p
 
 Hasiči přijeli ve tři odpoledne. Dvě auta a šest lidí. Jejich velitel byl ten samý, který před pěti lety stál ve dvoře statku, když se vynášelo poslední z archivu. Sael si ho pamatovala. Zestárl. On si pamatoval ji. Nezestárla, a Sael viděla, že si toho všiml a nic neřekl.
 
-Ve dvoře rozložili na celtu všechno, co dolů ponesou. Dýchací přístroje se zády a maskami. Měřidla plynu. Lano. Lékárnu. Velitel jim vysvětloval, jak se maska nasazuje a co dělat, když měřidlo začne pípat. Mluvil k Tadeášovi, protože Tadeáš to znal. Pak k Sael. Marnovi to opakoval pomaleji.
+Ve dvoře rozložili na celtu všechno, co dolů ponesou. Dýchací přístroje s lahvemi a maskami. Měřidla plynu. Lano. Lékárnu. Velitel jim vysvětloval, jak se maska nasazuje a co dělat, když měřidlo začne pípat. Mluvil k Tadeášovi, protože Tadeáš to znal. Pak k Sael. Marnovi to opakoval pomaleji.
 
 „Čtyřicet minut,“ řekl. „Od vrat a zpátky k vratům. Úřad dal čtyřicet minut a ani o minutu víc. U vrat budu já a dva moji. Když řeknu ven, jde se ven.“
 
@@ -98,7 +98,7 @@ Spodní síň byla plná páry.
 
 Ne bílé. Šedé, protože tu svítilo málo. Jen čelovky, tři kužely světla, které se v páře rozlévaly a nesahaly daleko. Pro Tadeáše a Marna to byla stěna. Pro Sael ne. Viděla přes páru víc než oni. Viděla klenbu nad sebou, mokrou a lesklou, a vodu, která po ní stékala v pramíncích. Viděla podlahu, kámen, ve kterém byly vyšlapané žlábky po tisících let chození. A vzadu, kde síň končila, viděla teplou skálu.
 
-Hladká plocha velká jako vrata stodoly. Pod ní kamenná lavice. U lavice ležely na zemi dva stativy a smyčka. Hanina měřidla z března třicet, rezavá, s vlhkem na trubkách.
+Hladká plocha velká jako vrata stodoly. Pod ní kamenná lavice. U lavice ležel na zemi Kalinův stativ a smyčka, u schodů na boku Hanin, i s Tadeášovou kamerou. Měřidla z roku třicet, rezavá, s vlhkem na trubkách.
 
 Sael se k nim sklonila. Nesáhla na ně. Jen se na ně podívala zblízka.
 
@@ -316,7 +316,7 @@ Marn mlčel.
 
 „Nevím,“ řekl pak. „Opravdu nevím. Něco malého. Něco, co nevysílá. Kdo pošle něco na chráněný svět a nechá to mlčet?“
 
-Sael na to neodpověděla. Měla odpověď, ale patřila do pravé strany, kam Hana píše, co si o věci myslí. A Hana by řekla, že vpravo se nevěří.
+Sael na to neodpověděla. Měla odpověď, ale patřila na pravou stranu, kam Hana píše, co si o věci myslí. A Hana by řekla, že vpravo se nevěří.
 
 „Deset minut,“ řekl nahoře velitel. „Začněte se vracet.“
 
@@ -348,7 +348,7 @@ Sael se na něj dívala ze schodu nad ním. Přes masku viděla jeho oči a vid�
 
 Marn mlčel. Tadeáš stál pod nimi, se sešitem pod paží, a díval se nahoru.
 
-„Tohle je archiv,“ řekla Sael. „Mám mandát od rady pro archiv. Ten zápis není váš. Není náš. Je to zápis skály, která stojí v hoře Ostrých, na území, za které tu jedná vláda, o věci, která leží na měsíci, který není nikoho.“ Odmlčela se. Čekala, než Marn pochopí anglická slova. „Ať to dostanou všichni. Naráz. Vy, vláda, Němci, Mexičané, rada sítí, Ostří. Ve stejnou chvíli. Ne loď a pak ostatní. Ne loď a pak ti, komu loď usoudí, že to dá.“
+„Tohle je archiv,“ řekla Sael. „Mám mandát od rady pro archiv. Ten zápis není váš. Není náš. Je to zápis skály, která stojí v hoře Ostrých, na území, za které tu jedná vláda, o věci, která leží na měsíci, který není nikoho.“ Odmlčela se. Čekala, než Marn pochopí anglická slova. „Ať to dostanou všichni. Naráz. Vy, vláda, Němci, Mexičané, rada sítí, Ostří. Ve stejnou chvíli. Ne loď a pak ostatní. Ne loď a pak ti, komu to loď uzná za vhodné dát.“
 
 „To nerozhoduju já.“
 
@@ -424,7 +424,7 @@ Lada četla dlouho. Rty se jí přitom hýbaly. Pak se odvrátila od obrazovky.
 
 „Všichni,“ řekla Sael.
 
-„A já jsem byla první, kdo se zeptá.“ Lada se podívala na Marna. „Ten kámen na měsíci. Co to je?“
+„A já jsem první, kdo se zeptá.“ Lada se podívala na Marna. „Ten kámen na měsíci. Co to je?“
 
 Lis Aven tlumočila. Marn zavrtěl hlavou.
 

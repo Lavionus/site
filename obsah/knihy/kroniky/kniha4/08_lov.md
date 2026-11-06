@@ -2,7 +2,7 @@
 
 Řekl jim to ráno u beden.
 
-Orrin předtím z bedny oznámil, že od dnešního dne se jí tři čtvrtě dávky, všichni. Řekl to dobře a krátce a na konci dodal: „Maela to spočítala.“ Maela stála u beden, dívala se do země a pak přečetla, kdo co včera bral, nahlas, desítku po desítce, a lidé se začínali rozcházet. Eren vylezl na bednu, a protože na ní nikdy nestál, když nemusel, lidé se zastavili. Řekl to krátce. Že Ru ukázal ty bobule dětem hned první den. Že jim řekl slovo a ukázal, co se stane. Že děti, které s ním chodily, to věděly.
+Orrin předtím z bedny oznámil, že od dnešního dne jedí všichni tři čtvrtě dávky. Řekl to dobře a krátce a na konci dodal: „Maela to spočítala.“ Maela stála u beden, dívala se do země a pak přečetla, kdo co včera bral, nahlas, desítku po desítce, a lidé se začínali rozcházet. Eren vylezl na bednu, a protože na ní nikdy nestál, když nemusel, lidé se zastavili. Řekl to krátce. Že Ru ukázal ty bobule dětem hned první den. Že jim řekl slovo a ukázal, co se stane. Že děti, které s ním chodily, to věděly.
 
 Orrin stál dole u beden a poslouchal. Když Eren skončil, přikývl.
 
@@ -34,7 +34,7 @@ Ikku. Eren to jméno zopakoval. Ikku se na něj podíval, když ho slyšel, a n�
 
 „Co říká?“
 
-„Že to říkáš jako ten hlas ze stropu,“ řekla Tio.
+„Že to říkáš jako…“ Tio zase hledala slovo. „Jako ten hlas ze stropu.“
 
 *
 
@@ -98,13 +98,13 @@ Ikku se otočil a šel pro své muže.
 
 Odpoledne to zkusili znovu, jinde.
 
-Ikku je vedl přes planinu k místu, kde se rozpadala do žlebu. Kamenitý svah, úzký a strmý, a na jeho konci skalní sedlo, kudy se dalo projít dolů do dalšího údolí. Zvířata tu chodila. Eren to viděl na trusu, na stopách v hlíně, na chomáčích světlé srsti zachycených na trnitých keřích. Byla to cesta. Ikku ji znal.
+Ikku je vedl přes planinu k místu, kde přecházela do žlebu. Kamenitý svah, úzký a strmý, a na jeho konci skalní sedlo, kudy se dalo projít dolů do dalšího údolí. Zvířata tu chodila. Eren to viděl na trusu, na stopách v hlíně, na chomáčích světlé srsti zachycených na trnitých keřích. Byla to cesta. Ikku ji znal.
 
 Tentokrát Ikku vyhnance rozestavil sám. Jednoho po druhém, každého na jiné místo, a každému položil ruku na rameno a zatlačil ho dolů, za kámen, aby věděl, že tam má zůstat. Kajovi dvakrát. Pak odešel.
 
 Eren seděl za svým kamenem a díval se do žlebu. Až do večera seděl s prsty v podpaží. Nevěděl, kde je Ikku. Nevěděl, kde jsou zvířata. Věděl jen, kde je on, a to bylo všechno, co mu Ikku dovolil vědět.
 
-Pak, k večeru, se ozval zvuk. Dlouhý, vysoký, jako když fouká vítr do pukliny. Hned na to Eren uviděl, jak se nahoře na planině zvedl prach.
+Pak, k večeru, se ozval zvuk. Dlouhý, vysoký, jako když fouká vítr do pukliny. Hned nato Eren uviděl, jak se nahoře na planině zvedl prach.
 
 Vyskočil. Mával rukama. Křičel cokoli, jen aby to bylo nahlas. Kolem něj vyskočili ostatní a křičeli taky. Haro řval, hlubokým hlasem, který se rozléhal žlebem.
 
@@ -240,7 +240,7 @@ Eren nic neřekl. V duchu tomu tvorovi říkal *křídlatá*. Nevěděl, proč �
 
 *
 
-Do kotle sešli za tmy. Dorna vedli Haro a Svit, každý za jednu ruku. Dorn už neřval, jen sténal, a z očí mu pořád teklo.
+Do kotle sešli za tmy. Dorna vedli Haro a Svit, každý za jednu ruku. Dornův nůž nesl Svit; sebral ho ze skály na hraně. Dorn už neřval, jen sténal, a z očí mu pořád teklo.
 
 Na terase hořel oheň. U něj stála Tal. Ne seděla. Stála, opřená o hůl, a vedle ní stál Ikku a mluvil. Na terase bylo plno lidí a nikdo z nich nemluvil, jen Ikku. Když Eren došel na suť pod terasou, Ikku zmlkl. Všichni se otočili dolů.
 
@@ -304,7 +304,7 @@ Maela se otočila a šla k ohni.
 
 Eren přešel potok. Voda byla vlažná, ale sahala mu nad kolena a proud ho tlačil. Na druhém břehu byla tma. Šel po suti nahoru, ke světlému kameni, a kýta na rameni ho tlačila a byla těžká a voněla krví.
 
-Kámen byl veliký. Plochý, jako stůl. Eren na něj nahmatal rukou a ucítil pod prsty něco tvrdého a hladkého. Kosti. Staré, vybělené. Spousta. Mezi nimi tmavé skvrny, které se nedaly smýt, a pach. Ten pižmový pach. Tady byl všude.
+Kámen byl veliký. Plochý, jako stůl. Eren na něj sáhl a ucítil pod prsty něco tvrdého a hladkého. Kosti. Staré, vybělené. Spousta. Mezi nimi tmavé skvrny, které se nedaly smýt, a pach. Ten pižmový pach. Tady byl všude.
 
 Položil kýtu doprostřed kamene.
 

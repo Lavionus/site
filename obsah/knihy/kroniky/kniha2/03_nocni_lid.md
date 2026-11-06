@@ -8,7 +8,7 @@ Jen jedna věc se opakovala. Žádná ze žen to neřekla přímo; leželo to po
 
 Ve čtvrtek večer se Ilona vrátila domů tak unavená, že usnula oblečená na lavici u pece, a probudilo ji klepání.
 
-Tentokrát ne ze dveří do ulice. Z druhé strany, ze dvora, kde byla branka do zahrádky a za zahrádkou svah a potok. Tři rány a pauza. A pak ještě jednou tři.
+Tentokrát ne ze dveří do ulice. Z druhé strany, ze dvora, kde byla branka do zahrádky a za zahrádkou svah a potok. Tři rány a odmlka. A pak ještě jednou tři.
 
 *
 
@@ -32,7 +32,7 @@ Dívku položil na lavici, kde Ilona ještě před chvílí spala. Byla malá, m
 
 „Světlo,“ řekl muž. „Prosím. Ne moc.“
 
-Ilona zapálila svíčku a postavila ji za džbán na stole, aby světlo padalo jen bokem, a muž si sundal klobouk. Vlasy měl dlouhé, svázané vzadu, popelavé a jemné jako vlna z odkvetlé pampelišky. Tvář dlouhá, bledá, ne tou bledostí, jaká bývá u nemocných, ale stejnoměrnou, šedavou, jako mají klíčky cibule ve sklepě. Oči přimhouřené, i když svíčka stála za džbánem. Bylo mu možná čtyřicet. Nebo méně. Nebo víc.
+Ilona zapálila svíčku a postavila ji za džbán na stole, aby světlo padalo jen bokem, a muž si sundal klobouk. Vlasy měl dlouhé, svázané vzadu, popelavé a jemné jako chmýří odkvetlé pampelišky. Tvář dlouhá, bledá, ne tou bledostí, jaká bývá u nemocných, ale stejnoměrnou, šedavou, jako mají klíčky cibule ve sklepě. Oči přimhouřené, i když svíčka stála za džbánem. Bylo mu možná čtyřicet. Nebo méně. Nebo víc.
 
 Ilona se podívala na dívku a přestala se dívat na něj.
 
@@ -48,7 +48,7 @@ Muž stál u dveří, s kloboukem v ruce, a díval se na dívku, a nevypadal jak
 
 „Jak dlouho?“
 
-„Od rána do poledne. Utekla jí koza, šla za ní na haldu a tam usnula ve vřesu. Našli jsme ji až večer.“ Odmlčel se. „Myslím, že to byly tři hodiny. Možná čtyři.“
+„Od dopoledne. Utekla jí koza, šla za ní na haldu a tam usnula ve vřesu. Po poledni na ni padl stín od haldy. Našli jsme ji až večer.“ Odmlčel se. „Myslím, že to byly tři hodiny. Možná čtyři.“
 
 Ilona to znala od sekáčů na lukách, od dívek, které v létě hrabaly seno s odkrytými pažemi: slunce pálí, kůže zrudne, svědí, za dva dny se loupe. Viděla jednou žence, který usnul v poledne na strništi a měl pak záda samý puchýř. Ale to bylo v srpnu, v rovině, celý den. Tohle byl květen v horách, kde ještě před týdnem padal v noci mráz, a čtyři hodiny.
 
@@ -96,9 +96,9 @@ Ilona seděla na stoličce u lavice a dlouho nic neříkala.
 
 „Přišel poprvé tu první zimu, co jste sem přišli. Chodil, když jsme potřebovali. Porody. Zlomeniny. Horečky. Spáleniny.“ Kývl k dívce. „Tohle znal.“
 
-Sedm let. Ilona počítala a věděla to i bez počítání. Sedm let Řehoř vstával v noci, bral brašnu a ve dveřích říkal *spi*. K havíři, který si rozbil nohu. K rodičce na horním konci. K dítěti s krupem. A ona spala. Věřila mu, protože mu věřila ve všem, a protože všechno, co říkal, se dalo ověřit, kdyby to někdo ověřoval, a ona nikdy neověřovala.
+Sedm let. Ilona počítala a věděla to i bez počítání. Sedm let Řehoř vstával v noci, bral brašnu a ve dveřích říkal *spi*. K havíři, který si rozbil nohu. K rodičce na horním konci. K dítěti, které se dusilo kašlem. A ona spala. Věřila mu, protože mu věřila ve všem, a protože všechno, co říkal, se dalo ověřit, kdyby to někdo ověřoval, a ona nikdy neověřovala.
 
-Nebylo to vztek. Na vztek byla příliš unavená. Bylo to něco jako studený vítr ze štoly, který člověka ofoukne, když jde kolem ústí: ne silný, ale jde zevnitř a nepřestává.
+Nebyl to vztek. Na vztek byla příliš unavená. Bylo to něco jako studený vítr ze štoly, který člověka ofoukne, když jde kolem ústí: ne silný, ale jde zevnitř a nepřestává.
 
 „Proč mi to neřekl?“
 
@@ -108,7 +108,7 @@ Kilián zaváhal.
 
 *
 
-Šli před třetí hodinou, kdy nejhlouběji spí i ponocný. Ilona nesla brašnu s mastí a plátnem a Kilián nesl Johanku, zabalenou do Ilonina starého pláště, protože v mokrém plátně by nastydla. Nesl ji lehce, jako by nevážila nic, a šel rychle a tiše a Ilona za ním nestačila.
+Šli kolem jedné, kdy už spí i ponocný. Ilona nesla brašnu s mastí a plátnem a Kilián nesl Johanku, zabalenou do Ilonina starého pláště, protože v mokrém plátně by nastydla. Nesl ji lehce, jako by nevážila nic, a šel rychle a tiše a Ilona za ním nestačila.
 
 Nevedl ji ulicemi. Vedl ji zahradami a za stodolami, po pěšinách, o kterých nevěděla, že existují, přes potok po kameni, který tam ležel, jako by ho tam někdo položil, a pak do svahu, mezi haldy. Měsíc byl za horami, ale nebe bylo jasné a haldy ve tmě bledly, šedé a holé, a Ilona viděla, jak se Kilián vyhýbá jejich vrcholům a drží se v údolíčkách mezi nimi, kde byla tma hustší. Pod nohama jí cvakal štěrk a on, o hlavu vyšší a s dítětem v náručí, nevydal ani zvuk.
 
@@ -182,7 +182,7 @@ Byl nejstarší člověk, jakého Ilona kdy viděla. Vlasy měl bílé a řídk�
 
 Sedla si.
 
-„Kolik vám je let?“ zeptala se, protože to byla první věc, kterou se zeptala každého nemocného, a protože se nemohla zdržet.
+„Kolik vám je let?“ zeptala se, protože to byla první věc, na kterou se ptala každého nemocného, a protože se nemohla zdržet.
 
 Zikmund se na ni podíval těma očima, které se ztrácely ve vráskách. „Pamatuju,“ řekl, „když tady nebylo město. Byla tu ves. Konradsgrün, tak se jmenovala, pár chalup u potoka a les. Pak našli stříbro a les vykáceli a přišlo deset tisíc lidí za deset let.“ Pokrčil rameny. „Já byl tehdy mladý. Kopal jsem s nimi. Nikdo se moc neptal, kdo jsi, když jsi kopal dobře. Pracoval jsem v noci, to chtěl málokdo.“
 
@@ -260,7 +260,7 @@ U její branky se zastavil. Bylo už tolik světla, že mu viděla do tváře po
 
 „Přijdu zítra v noci,“ řekla. „Vyměnit obvazy.“
 
-„Kilián pro vás přijde. Nechoďte sama. Cestu neznáte.“
+„Přijdu pro vás. Nechoďte sama. Cestu neznáte.“
 
 „Počítala jsem kroky.“
 

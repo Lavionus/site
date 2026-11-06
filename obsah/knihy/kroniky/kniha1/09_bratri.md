@@ -12,13 +12,13 @@ Matěj ho viděl z oratoře, kde se po sextě modlil za Sivku žalm, který se z
 
 „Tam.“
 
-Ješek tam šel a Matěj šel za ním. Ješek odhrnul větve krumpáčem, opatrně, jako odhrnuje závěs, a díval se na šedou srst v roztrhaném plášti. Dlouho mlčel.
+Ješek tam šel a Matěj šel za ním. Ješek odhrnul větve krumpáčem, opatrně, jako se odhrnuje závěs, a díval se na šedou srst v roztrhaném plášti. Dlouho mlčel.
 
 „Ne tady,“ řekl potom. „Za ovčínem ne. Tady konvršové házejí hnůj.“
 
 „Kam tedy?“
 
-Ješek se rozhlédl. Ukázal krumpáčem na kraj luk, kde stála stará planá hrušeň a kde se luka svažovala k potoku a ke vsi. Z toho místa bylo vidět na Mlýnec, na střechy a na kouře z dvaceti komínů a na horní konec vsi, kde stála matčina chalupa.
+Ješek se rozhlédl. Ukázal krumpáčem na kraj luk, kde stála stará planá hrušeň a kde se luka svažovala k potoku a ke vsi. Z toho místa bylo vidět na Mlýnec, na střechy a na kouře nad dvaceti střechami a na horní konec vsi, kde stála matčina chalupa.
 
 „Tam,“ řekl. „Ať vidí domů.“
 
@@ -34,7 +34,7 @@ Udalrich jim půjčil rýč a nic neřekl. Kopali pod hrušní. Ješek prosekáv
 
 „Štoly. Od té doby, co jsem tam byl.“
 
-Ješek se na něj podíval přes jámu. Pak odplivl stranou a otřel si ústa hřbetem ruky.
+Ješek se na něj podíval přes jámu. Pak si odplivl stranou a otřel si ústa hřbetem ruky.
 
 „Třicet loktů,“ řekl. „Skoro. Skála zase ztvrdla, zase pálíme oheň na čelbě. Den na loket, jak kdy.“
 
@@ -70,7 +70,7 @@ Matěj neodpověděl. Zpíval. Převor tehdy na kapitule oznámil, že bratru Ma
 
 „Nemohl jsem přijet,“ řekl.
 
-„Já vím,“ řekl Ješek. „Proto ti to neříkám, že jsi nepřijel. Říkám ti, že jsem to kopal sám.“
+„Já vím,“ řekl Ješek. „Proto ti nevyčítám, že jsi nepřijel. Říkám ti, že jsem to kopal sám.“
 
 Vzal rýč a začal házet hlínu do jámy, na šedou srst a na plášť. Matěj chvíli stál. Pak vzal krumpáč a začal shrnovat hroudy, protože jinak by tam jen stál.
 
@@ -90,13 +90,13 @@ Ješek položil poslední kámen. Narovnal se.
 
 „To říká Ortlieb.“
 
-„To říkáš i ty.“ Ješek se otočil. „Konrádovi jsi to řekl. Slovo od slova. Ortlieb mi to vyprávěl, smál se tomu. Že mnich je chytřejší, než vypadá, protože ví, kdy mlčet.“
+„To říkáš i ty.“ Ješek se otočil. „Konrádovi jsi to řekl. Slovo od slova. Pán mu to řekl a Ortlieb mi to vyprávěl, smál se tomu. Že mnich je chytřejší, než vypadá, protože ví, kdy mlčet.“
 
 Matěj ucítil, jak mu horko vystoupilo do tváří.
 
 „Řekl jsem to kvůli tobě.“
 
-„Tak mi to teď kvůli mně neříkej.“ Ješek stál nad hrobem, krumpáč v ruce, a jeho hlas byl klidný, a to bylo horší, než kdyby křičel. „Co víš, Mates? Ty, cos tam byl půl hodiny a držel kahan? Co víš ty, co nevím já? Já tam jsem každý den. Stojím v té vodě po kotníky. Hensel v ní stojí. Ortlieb kopal dvacet let v horách, kde bylo vody víc než u nás v rybníce, a žije.“
+„Tak mi to teď kvůli mně neříkej.“ Ješek stál nad hrobem, krumpáč v ruce, a jeho hlas byl klidný, a to bylo horší, než kdyby křičel. „Co víš, Mates? Ty, cos tam byl chvilku a držel kahan? Co víš ty, co nevím já? Já tam jsem každý den. Stojím v té vodě po kotníky. Hensel v ní stojí. Ortlieb kopal dvacet let v horách, kde bylo vody víc než u nás v rybníce, a žije.“
 
 „Štola půjde do vody,“ řekl Matěj.
 
@@ -124,7 +124,7 @@ Ješek se zasmál. Krátce a ostře a vůbec ne vesele. Ten smích Matěj neznal
 
 „Ješku, poslouchej…“
 
-„Ne, ty poslouchej.“ Ješek k němu udělal krok přes hrob a Matěj si uvědomil, že se musí dívat nahoru, jako ten první večer u matky. „Víš, kolik mám? Od žní? Matka ti to neřekla, viď? Matka ti nic neřekne, ona ti ještě nalije kaši a bude se tvářit, že je všechno dobrý.“ Odmlčel se, aby se nadechl, a zakašlal. Když promluvil znovu, měl hlas nižší. „Mám v hrnci za pecí na půlku otcových polí. Na půlku. Kojata je prodá zpátky, řekl to před svědky, za stejně, za kolik je vzal, když mu je matka dala za dluh. Do Martina budu mít na celé. Do Martina, Mates. Jestli budu dělat.“
+„Ne, ty poslouchej.“ Ješek k němu udělal krok přes hrob a Matěj si uvědomil, že se musí dívat nahoru, jako ten první večer u matky. „Víš, kolik mám? Od žní? Matka ti to neřekla, viď? Matka ti nic neřekne, ona ti ještě nalije kaši a bude se tvářit, že je všechno dobrý.“ Odmlčel se, aby se nadechl, a zakašlal. Když promluvil znovu, měl hlas nižší. „Mám v hrnci za pecí na půlku otcových polí. Na půlku. Kojata je prodá zpátky, řekl to před svědky, za tolik, za kolik je vzal, když mu je matka dala za dluh. Do Martina budu mít na celé. Do Martina, Mates. Jestli budu dělat.“
 
 Matěj na něj zíral.
 
@@ -136,7 +136,7 @@ Matěj na něj zíral.
 
 „Ty se bojíš vody,“ řekl Ješek.
 
-Řekl to skoro laskavě. Matěj by bral raději ránu.
+Řekl to skoro laskavě. Matěj by byl radši, kdyby ho uhodil.
 
 „Vždycky ses jí bál. Pamatuješ? U rybníka za mlýnem. Všichni jsme lezli do vody a ty jsi stál na břehu v košili a díval se. Ani do pasu ses neodvážil. Táta tě tam jednou hodil a tys řval, jako by tě topil.“ Ješek pokrčil rameny. „Chlapi se mi smějou. Víš, co říkají v boudě? Že můj bratr mnich leze do děr za drakem, ale vody se bojí. Že se mnich bojí vody, protože ji nemá zapsanou v knize.“
 
@@ -172,11 +172,11 @@ Matka mu nalila kaši. Matěj jedl, protože byl hladový, a poslouchal, protož
 
 Bohuna se pokřižovala.
 
-Matěj držel lžíci nad miskou a nehýbal se. Viděl ten sníh. Viděl, jak Dobroslava nohou zahrnuje krev, jak vítr vrství sníh do stop a jak to moc nejde. Viděl sám sebe, jak klečí a nechává si malého muže s velkýma rukama vylézt na záda. Velké stopy, které je odnesly. Jeho stopy. Jeho onuce.
+Matěj držel lžíci nad miskou a nehýbal se. Viděl ten sníh. Viděl, jak Dobroslava nohou zahrnuje krev, jak vítr vrství sníh do stop a jak to nestačí. Viděl sám sebe, jak klečí a nechává si malého muže s velkýma rukama vylézt na záda. Velké stopy, které je odnesly. Jeho stopy. Jeho onuce.
 
 „A kdo se ztratil?“ zeptala se Zdena. „Letos v zimě se nikdo neztratil. Za potokem by to věděli.“
 
-„Za potokem drží děti doma od Hromnic,“ řekla Kojatova žena. „Od té holky na podzim. Ta se ztratila na houbách a nenašli z ní ani šátek.“
+„Za potokem drží děti doma od Hromnic,“ řekla Kojatova žena. „Od té holky na podzim. Ta se ztratila na houbách a nenašli po ní ani šátek.“
 
 „Vlci,“ řekla Bohuna.
 
@@ -196,7 +196,7 @@ Kojatova žena chvíli mlčela.
 
 „Lovčí viděl krev a stopy,“ řekla matka. „Lovčí neviděl nic, co by bylo malé jak hrnek.“
 
-Bylo ticho. Kolovrátky přestaly vrnět. Pak Bohuna řekla, že má doma nasazenou slepici, a zvedla se, a Zdena s ní. Kojatova žena zůstala ještě chvíli sedět, jako by chtěla něco dodat. Pak taky vstala a u dveří se otočila k Matějovi.
+Bylo ticho. Vřetena se zastavila. Pak Bohuna řekla, že má doma nasazenou slepici, a zvedla se, a Zdena s ní. Kojatova žena zůstala ještě chvíli sedět, jako by chtěla něco dodat. Pak taky vstala a u dveří se otočila k Matějovi.
 
 „A uhlířka,“ řekla. „Ta k nim chodí. To ví každý. Chodí do lesa, kam nikdo nesmí, a nosí odtamtud věci, které nikdo neumí udělat. Ten její nůž.“ Podívala se na Matějův hábit. „A ty s ní chodíš na slatinu, otče. Tak to by sis měl dát pozor. Aby si tě nevzali taky.“
 
@@ -244,7 +244,7 @@ Matka zakryla hrnec víkem a nechala na něm ruku.
 
 Matěj otevřel ústa.
 
-*Neřekneš to nikomu. O vodě. Ani matce.* Slíbil to u štoly a Ješek mu věřil. *Nebudeš o nás mluvit. Ani své matce.* Slíbil to pod zemí a Merin mu věřil, nebo nevěřil, ale vzal si ten slib. A teď seděl u stolu v otcově chalupě, matka měla ruku na hrnci s penězi na otcova pole a ptala se ho na jedinou věc, kterou chtěla vědět. On byl jediný, kdo jí mohl odpovědět, a nemohl jí říct ani to, proč nemůže.
+*Neřekneš to nikomu. O vodě. Ani matce.* Slíbil to u štoly a Ješek mu věřil. *Nebudeš o nás mluvit. Ani své matce.* Slíbil to pod zemí a Merin mu věřil, nebo nevěřil, ale ten slib přijal. A teď seděl u stolu v otcově chalupě, matka měla ruku na hrnci s penězi na otcova pole a ptala se ho na jedinou věc, kterou chtěla vědět. On byl jediný, kdo jí mohl odpovědět, a nemohl jí říct ani to, proč nemůže.
 
 „Nevím, mami,“ řekl.
 
@@ -268,7 +268,7 @@ Ješek vstal. Natáhl na sebe kápi a vzal ze dveří krumpáč, protože ráno 
 
 „Tak to nepozná nikdo,“ řekl Ješek. „Ani ty.“
 
-Odešel. Venku na něj zaštěkal sousedův pes a Ješek na něj něco řekl, tím hlubokým chraplavým hlasem, který Matěj ten první večer neznal. Pes ztichl.
+Odešel. Venku na něj zaštěkal sousedův pes a Ješek na něj něco houkl, tím hlubokým chraplavým hlasem, který Matěj ten první večer neznal. Pes ztichl.
 
 *
 
@@ -282,7 +282,7 @@ Voda do něj bušila. Byla vlažná a voněla železem, jako ta, kterou si tenkr
 
 Vylil ho do strouhy a udělal to znovu. Dva Otčenáše bez kousku. Potřetí taky.
 
-Vytáhl tabulku. V šeru skoro neviděl na vosk a psal po paměti, podle toho, jak rydlo ryje.
+Vytáhl tabulku. V šeru skoro neviděl na vosk a psal poslepu, podle toho, jak rydlo ryje.
 
 *Feria secunda post Laetare, ante laudes. Aqua ex galeria, ubi duo canales concurrunt: situla plena in duobus Pater noster, paulo minus. Ter. Vidi.*
 

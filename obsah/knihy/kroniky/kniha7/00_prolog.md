@@ -66,7 +66,7 @@ Sende si předposlední odstavec nechal přehrát ještě jednou. Ne proto, že 
 
 V prvním návrhu briefu stálo *potvrdit*. Bezpečnostní složka komise tehdy tvrdila, že základ potvrdil už sám fakt, že řád převzal správu, a že výprava nemá letět šest set let proto, aby se cestou ptala. Sende tehdy mluvil čtyři minuty. Nebyl to jeho nejlepší výstup, měl suché rty a dvakrát se opakoval. Ale řekl jednu větu, kterou si pak komise zapsala do odůvodnění. *Moc, která se nedá přezkoumat, není správa. Je to jen moc.* Hlasovalo se a *potvrdit* se změnilo na *přezkoumat*.
 
-Tak to má fungovat, myslel si tehdy. Myslel si to i teď, v dece, se slabýma rukama. Řád, který si sám uloží, že se má zeptat. Byla to nejlepší věc, kterou kdy viděl udělat instituci, a on u toho byl.
+Tak to má fungovat, myslel si tehdy. Myslel si to i teď, v dece, se slabýma rukama. Řád, který si sám uloží, že se má zeptat. Nic lepšího zatím žádnou instituci udělat neviděl, a on u toho byl.
 
 *
 
@@ -76,7 +76,7 @@ Pak brief pokračoval historickou částí. Tu Sende znal ze školy.
 
 Ve škole k tomu ukazovali obraz. Zelený kraj pod modrou oblohou a v něm bílé tvary, které dosedají. Lidé vystupují v řadách. Pod obrazem stála věta, kterou se děti učily nazpaměť: *Každý dostává příležitost začít znovu.* Sende si ji pamatoval líp než vlastní adresu na Iretu.
 
-Bez přístupu k technice. Snažil se to kdysi představit. Bylo mu tehdy devět a jednoho večera ležel v posteli a zkoušel, jaké by to bylo, kdyby řádky zmizely. Nešlo to. Nedokázal si představit tu díru, protože pokaždé, když na ni pomyslel, síť mu k té myšlence nabídla heslo, a heslo bylo něco, ne nic. Usnul nad výkladem o dějinách hibernační techniky.
+Bez přístupu k technice. Kdysi se pokoušel si to představit. Bylo mu tehdy devět a jednoho večera ležel v posteli a zkoušel, jaké by to bylo, kdyby řádky zmizely. Nešlo to. Nedokázal si představit tu díru, protože pokaždé, když na ni pomyslel, síť mu k té myšlence nabídla heslo, a heslo bylo něco, ne nic. Usnul nad výkladem o dějinách hibernační techniky.
 
 A teď tam dole žilo osm miliard lidí. Měli rádio. Měli lodě, které létaly k jejich vlastnímu měsíci. Ve vysíláních mluvili tisíci jazyky. Na lodi se o tom mluvilo od začátku brzdění, nahlas a s hrdostí, jako by šlo o vlastní děti. *Naši to dokázali.* Šest set let spánku, a na konci se ukáže, že ten nejstarší humánní rozsudek v dějinách nebyl jen slib.
 

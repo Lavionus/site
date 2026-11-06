@@ -56,7 +56,7 @@ Na stěně vedle okna se objevil řádek. Pak další. Síť je každému z nich
 
 „O kolik?“
 
-„Pár milimetrů za rok. Zrychluje to.“ Marn se podíval na Kerr, ne na Hesk. „Jestli chcete číslo, dám ho, ale bude špatně. Řeknu to slovy. Do dvou let selže chlazení. Pak se stane jedna ze dvou věcí. Buď se jádro samo odstaví, vyhoří a zchladne. To by bylo dobře. Nebo povolí klenba dřív, a pak půjde nahoru pára, horká voda a plyn, který je v té hornině tak jako tak. Nad komorou je dům. Asi kilometr od ní vesnice.“
+„Pár milimetrů za rok. Zrychluje to.“ Marn se podíval na Kerr, ne na Hesk. „Jestli chcete číslo, dám ho, ale bude špatně. Řeknu to slovy. Do dvou let selže chlazení. Pak se stane jedna ze dvou věcí. Buď se jádro samo odstaví, vyhoří a zchladne. To by bylo dobře. Nebo povolí klenba dřív, a pak půjde nahoru pára, horká voda a plyn, který je v té hornině tak jako tak. Nad komorou je dům. Pár set metrů od ní vesnice.“
 
 „Dům,“ řekla Kerr.
 
@@ -140,7 +140,7 @@ Sende tu větu znal ze školy jako slavnostní. Teď ji četl jako právník a z
 
 *Nevysazují se osoby.*
 
-Sende se nad tou větou zastavil. Pak si v archivu řádu vyhledal rozsudek Terra. Veřejnou část. Měl ji převzatou celou a znal ji, jak ji znal každý student. Místo výkonu trestu. Neobydlená divočina vhodná k přežití. Dvě věty, a v nich se vyhnanci vysazovali přesně tam, kam statut zakazoval vysazovat osoby.
+Sende se nad tou větou zastavil. Pak si v archivu řádu vyhledal rozsudek Terra. Veřejnou část. Byla převzatá celá a znal ji, jak ji znal každý student. *Místem výkonu je Země, kolébka lidstva.* *Země je neobydlený svět, kde člověk přežije bez techniky.* Dvě věty, a v nich se vyhnanci vysazovali přesně tam, kam statut zakazoval vysazovat osoby.
 
 Výjimka tedy byla. Musela být. Shromáždění ji muselo udělit, veřejně.
 
@@ -176,7 +176,7 @@ Označil si ten řádek. *Vess – vyhledat.*
 
 Pak část třetí statutu. Protokol.
 
-Řád ho neměl celý. Měl výtah. Devět listů pracovního překladu ze starého úředního archivu, pořízeného kdysi podle slovníku, který se mezitím ztratil. Neúplné, s mezerami označenými závorkami, s větami, které končily uprostřed. Sende to věděl. Věděl to každý. Výtah protokolu se učil jako příklad toho, jak málo stačí, aby právo platilo.
+Řád ho neměl celý. Měl výtah. Devět listů pracovního překladu z opisu, který se do archivu Shromáždění dostal až po věci Vess. Překlad pořídili kdysi podle slovníku, který se mezitím ztratil. Neúplné, s mezerami označenými závorkami, s větami, které končily uprostřed. Sende to věděl. Věděl to každý. Výtah protokolu se učil jako příklad toho, jak málo stačí, aby právo platilo.
 
 Teď ho četl větu po větě.
 
@@ -242,7 +242,7 @@ Druhé jednání bylo za dva dny. Sende přišel první. Terra v okně byla cel�
 
 Řekl to, co měl na seznamu. Všech šest bodů. Pomalu, každý zvlášť, s odkazem na znění. Kerr poslouchala zády k oknu, se zavřenýma očima, jako stará soudkyně, kterou kdysi viděl na Iretu. Marn se díval na stůl. Hesk stála a držela okraj stolu.
 
-„Neříkám, že plán sanace je protiprávní,“ řekl Sende na konci. „Říkám, že nevím, jestli je. A že to nevíme nikdo. Stojí na předpisu, který se odvolává na text, v němž to, co předpis tvrdí, nestojí. Stojí na rozsudku, ke kterému nemáme výjimku, jakou statut žádá. A dvakrát v textu, na kterém stojí, je odkaz na věc, kterou neznáme.“
+„Neříkám, že plán sanace je protiprávní,“ řekl Sende na konci. „Říkám, že nevím, jestli je. A že to neví nikdo z nás. Stojí na předpisu, který se odvolává na text, v němž to, co předpis tvrdí, nestojí. Stojí na rozsudku, ke kterému nemáme výjimku, jakou statut žádá. A dvakrát v textu, na kterém stojí, je odkaz na věc, kterou neznáme.“
 
 „Věc Vess,“ řekla Hesk.
 
@@ -258,7 +258,7 @@ Hesk dlouho mlčela. Nakonec pustila stůl.
 
 „Já ta čísla nezpochybňuji.“
 
-„Ne. Jen chcete, abychom na ně čekali, než dočtete.“
+„Ne. Jen chcete, abychom s nimi čekali, než dočtete.“
 
 „Chci, abychom na ně nesáhli rukou, kterou neumíme ukázat,“ řekl Sende. „Kdybych byl tam dole a někdo mi zavalil dům podle předpisu, který si napsal sám, chtěl bych vědět, kde to stojí. Oni se zeptají. Jejich slovník má sloupec pro to, co slovo dělá navíc. Zeptají se, kde stojí *sanace*, a já jim musím umět ukázat stránku.“
 
@@ -342,7 +342,7 @@ Sende odložil lžíci.
 
 V řádu to tak bylo. Chráněná osoba nemá postavení účastníka. Nepodává návrhy, nevyjadřuje se, nepodepisuje. Ochrana se jí poskytuje, ne vyjednává. Učil se to v prvním ročníku a nikdy o tom nepřemýšlel. Bylo to jako s gravitací v obytném prstenci. Prostě tam byla.
 
-Pomyslel si, jak by musel znít řádek, kdyby to někdy někdo zkusil. Kdo by do kolonky napsal, že není účastník, ale že se ho věc týká. *Navrhovatelka: osoba dotčená.* Takový řádek nikde nečetl. Síť ho hledala s ním a nenašla nic. V rejstříku u věci Vess stálo jen jméno a *zamítnut*.
+Pomyslel si, jak by musel znít řádek, kdyby to někdy někdo zkusil. Někdo by do kolonky napsal, že není účastník, ale že se ho věc týká. *Navrhovatelka: osoba dotčená.* Takový řádek nikde nečetl. Síť ho hledala s ním a nenašla nic. V rejstříku u věci Vess stálo jen jméno a *zamítnut*.
 
 „Kdo podá návrh za chráněného,“ řekl, „když se on sám nesmí ptát?“
 

@@ -44,7 +44,7 @@ Napsala ho komise na Iretu. Sende tehdy seděl u stolu a nic proti tomu neřekl,
 
 Zítra se to šetření mělo kus pohnout. Ne celé. Kus.
 
-Síť se ho zeptala, jestli si přeje shrnutí předpovědí. Odmítl. Měl je v hlavě. Čtyři odstavce, které zdravotní služba sepsala za týden na začátku srpna. Stará genetička, která prospala celý let a probudila se až na dráze, a její asistent, který neprospal nic, protože hlídal hibernační halu. Síť jim spočítala, co bylo třeba. Podepsali to oni dva, ne síť. Na tom Sende trval. Za předpověď musí ručit člověk, kterého se dá zeptat, proč.
+Síť se ho zeptala, jestli si přeje shrnutí předpovědí. Odmítl. Měl je v hlavě. Čtyři odstavce, které zdravotní služba sepsala za týden na začátku srpna. Stará genetička, která prospala celý let a probudila se až na dráze, a její asistent, který z brzdění neprospal nic, protože hlídal hibernační halu. Síť jim spočítala, co bylo třeba. Podepsali to oni dva, ne síť. Na tom Sende trval. Za předpověď musí ručit člověk, kterého se dá zeptat, proč.
 
 Pak otevřel ještě jednu věc. Seznam, který sestavil sám, v červenci, když Sokolová ten test navrhla.
 
@@ -52,7 +52,7 @@ Pak otevřel ještě jednu věc. Seznam, který sestavil sám, v červenci, kdy�
 
 Pod tím číslo. *Dotázáno: 300. Souhlas: 211. Nesouhlas: 61. Bez odpovědi: 28.*
 
-Sokolová se v roce třicet ptala dvanácti lidí. Každého zvlášť, dopisem. Sende se ptal tří set. Přes síť, za jeden den, jednou otázkou. Na Iretu by se nikdo neptal vůbec. Data zdraví měla síť a síť je použila, kdykoli to bylo k užitku.
+Sokolová měla v roce třicet dvanáct lidí, kteří se jí přihlásili sami. Každý zvlášť, každý s vlastním podpisem. Sende se ptal tří set. Přes síť, za jeden den, jednou otázkou. Na Iretu by se nikdo neptal vůbec. Data zdraví měla síť a síť je použila, kdykoli to bylo k užitku.
 
 Mezi těmi dvěma sty jedenácti byl i on. Řekl ano jako první. Chtěl, aby to ostatní viděli.
 
@@ -84,7 +84,7 @@ V pátek ráno jeli do Prahy autem.
 
 Bylo to černé vládní auto s řidičem, který mluvil jen česky a nemluvil vůbec. Lis Aven seděla vzadu vedle Sendeho. Oba sledovali krajinu za oknem.
 
-Krajina se míjela rychle a nebyla nikde konec. Na Iretu měla každá plocha okraj, a za okrajem stěnu, a za stěnou plášť. Tady se pole táhla až k lesu a za lesem byla další pole, a nad tím vším nebe, které nikde nekončilo. Sende si na to za tři měsíce nezvykl. Jen se to naučil nevnímat, když se díval na silnici.
+Krajina se míjela rychle a nikde jí nebyl konec. Na Iretu měla každá plocha okraj, a za okrajem stěnu, a za stěnou plášť. Tady se pole táhla až k lesu a za lesem byla další pole, a nad tím vším nebe, které nikde nekončilo. Sende si na to za tři měsíce nezvykl. Jen se to naučil nevnímat, když se díval na silnici.
 
 U jedné vesnice stál na poli stroj, velký, žlutý, a za ním se zvedal prach. Vypadal jako ty stroje na Iretu, které čistí filtry v zahradním prstenci. Jen tenhle neměl kolem sebe zeď.
 
@@ -178,7 +178,7 @@ V místnosti bylo ticho. Na monitoru se tři lidé v německé laboratoři nehý
 
 Sende ten text znal. Četl ho devátého. Ale čtvrtý bod zněl nahlas jinak. Na lodi ho tenkrát přečetl rychle a kývl, protože vypadal jako technická poznámka. *Nebude vyšší.* Teď to slyšel česky, v místnosti, kde seděla žena, která těm vzorkům pět let říkala jen čísly, protože to slíbila.
 
-Kdyby byl čtvrtý bod opačně, znamenalo by to, že ti s druhou příměsí jsou *víc naši*. Že linie u hory a v Lipsku jsou nějak blíž lodi než ostatní. Na lodi by to někoho potěšilo. Sende by uměl říct koho.
+Kdyby čtvrtý bod zněl opačně, znamenalo by to, že ti s druhou příměsí jsou *víc naši*. Že linie u hory a v Lipsku jsou nějak blíž lodi než ostatní. Na lodi by to někoho potěšilo. Sende by uměl říct koho.
 
 Zdravotní služba předpověděla opak.
 
@@ -190,7 +190,7 @@ Sokolová promítla na velký monitor tabulku. Svou a vedle ní německou. Nekom
 
 Pak začala.
 
-„Bod jedna. U nás třicet čtyři oblastí ze čtyřiceti. V Německu třicet tři. Ve všech jedenácti vzorcích.“ Odmlčela se. „Ve čtyřech oblastech se shoda dá vysvětlit i jinak. Starým společným předkem všech lidí, který je v Africe. Nelze to vyloučit. Ve zbylých třiceti ne.“
+„Bod jedna. U nás třicet čtyři oblastí ze čtyřiceti. V Německu třicet tři. Ve všech jedenácti vzorcích.“ Odmlčela se. „Ve čtyřech oblastech se shoda dá vysvětlit i jinak. Starým společným předkem všech lidí, který žil v Africe. Nelze to vyloučit. Ve zbylých třiceti ne.“
 
 „Bod dva. Druhá příměs referenci neodpovídá. Je jí bližší než kterákoli populace, kterou máme. U nás oddělení sto osmdesát tisíc let, plus minus šedesát. V Německu dvě stě pět, plus minus sedmdesát. Předpověď říká sto devadesát.“ Odmlčela se. „Pozdější úzké hrdlo v referenci je. Ve druhé příměsi není. Společné starší úzké hrdlo… U nás slabě. V Německu pod hranicí. Neprokázáno.“
 
@@ -352,7 +352,7 @@ To znal. Pod tím byl odkaz na zápis komise. Sende ho otevřel. Byl tam, celý,
 
 Seděli tehdy ve velké místnosti na Iretu, s oknem do zahradního prstence. Bylo jich jedenáct. On byl nejmladší. Navrhl, aby stanoviska delegáta měla odkladný účinek. Aby se úkon, o jehož nezákonnosti delegát podá stanovisko, neprovedl, dokud o něm nerozhodne vedoucí s centrálou. Mluvil o tom dvacet minut. Zápis to měl celé.
 
-*Návrh na odkladný účinek stanovisek delegáta zamítnut, 7:2. Odůvodnění: výprava musí být schopna jednat bez spojení s centrálou. Delegát nesmí mít moc, kterou nemá vedoucí.*
+*Návrh na odkladný účinek stanovisek delegáta zamítnut, 7:2, dva se zdrželi. Odůvodnění: výprava musí být schopna jednat bez spojení s centrálou. Delegát nesmí mít moc, kterou nemá vedoucí.*
 
 Pak kompromis. *Přezkoumat* místo *potvrdit*. To vyhrál. Byl na to hrdý.
 
@@ -386,7 +386,7 @@ Sende vypnul obrazovku a sedl si na lůžko.
 
 Kajuta v člunu byla menší než na lodi. Dva kroky na šířku, dva na délku. Polička nad lůžkem, a na ní propiska. Modrá, s okousaným koncem. Položil ji tam, když se svlékal, a teď se na ni díval.
 
-Zklidnění měl vypnuté od čtrnáctého. Za ty dny se to naučil. Strach chodil v noci a nebyl celý najednou. Přicházel po kouscích, jako voda do lodi, která netěsní na jednom místě.
+Zklidnění měl vypnuté od čtrnáctého. Za ty dny se to naučil. Strach chodil v noci a nebyl celý najednou. Přicházel po kouscích, jako chlad do habitatu, který netěsní na jednom místě.
 
 Bál se toho, co dnes slyšel. Ne kvůli sobě. Kvůli tomu, co si posádka myslela šest set let. *Naši to dokázali.* Nedokázali. Umřeli, většinou, a zbyl z nich kousek v cizích lidech. Nikdo se jich neptal.
 

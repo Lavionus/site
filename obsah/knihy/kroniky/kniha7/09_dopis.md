@@ -26,7 +26,7 @@ O desetinu víc než minulý týden. Zapíše to. Pak vodivost, pak plyn, a pod�
 
 8:56.
 
-Sedne si na okraj jímky. Beton je studený a vlhký a Hana to cítí přes kalhoty. Vytáhne telefon. Signál je tu slabý, jedna čárka, někdy dvě. V lese za ní zpívá pták, kterého nezná. Hana si vzpomene, že Sende se jí v Praze ptal na ptáky a ona mu neuměla odpovědět.
+Sedne si na okraj jímky. Beton je studený a vlhký a Hana to cítí přes kalhoty. Vytáhne telefon. Signál je tu slabý, jedna čárka, někdy dvě. V lese za ní zpívá pták, kterého nezná. Hana si vzpomene, jak se jí Sende v Praze na schodech ptal, jak velký je rozdíl mezi tím, kdo je a co dělal, a ona mu neuměla odpovědět.
 
 ![Hana sedí na okraji staré betonové jímky pod Hřbetem, nad vodou slabá pára, vedle kufr s přístroji, v rukou telefon](obrazky/06_pramen_dopis.webp)
 
@@ -52,13 +52,13 @@ Pod tím text.
 
 *Nevím, kdo jste. Nevím, jakou řečí mluvíte. Kdo to bude překládat, ať píše slova, jaká tu stojí. Ne to, co si o nich myslí. Píšu krátce, aby se v tom dalo méně splést.*
 
-*Jmenuji se Nara Vess. Jsem advokátka. Jsem matka Ilana Vess, který odletěl druhým transportem. Snažila jsem se, aby neodletěl. Nepovedlo se to.*
+*Jmenuji se Nara Vess. Jsem advokátka. Jsem matka Ilana Vesse, který odletěl druhým transportem. Snažila jsem se, aby neodletěl. Nepovedlo se to.*
 
 *Všechno ostatní v tomhle kameni je spis. Spis je pravdivý. Tenhle list do spisu nepatří.*
 
 *Ilanovi je sedmnáct let. Když neví, co říct, dívá se na člověka dlouho. Lidé si myslí, že se zlobí. Nezlobí se. Čte si je.*
 
-*Odsoudili ho, protože seděl na náměstí. Bylo jich tam čtyři sta. Odpojili se od sítě, sedli si na zem a mlčeli. Nikomu neublížili. Bylo tam takové ticho, že jsem slyšela ventilaci. Tehdy jsem nevěděla, že právě tohle chtěli slyšet. Teď to vím.*
+*Odsoudili ho, protože seděl na náměstí. Bylo jich tam čtyři sta. Odpojili se od sítě, sedli si na zem a mlčeli. Nikomu neublížili. Bylo tam takové ticho, že jsem nic neslyšela. Ventilaci jsem uslyšela až doma, když jsem se odpojila. Tehdy jsem nevěděla, že právě tohle chtěli slyšet. Teď to vím.*
 
 *[Na tomto místě je povrch listu matnější. Věta o tichu byla napsána nejméně dvakrát.]*
 
@@ -108,7 +108,7 @@ Pak se jí stane věc, které se brání.
 
 Nečte to jako dopis Ilanovi. Čte to jako dopis sobě.
 
-Ví, že to tak není. Ví to přesně a umí to říct větou: dopis je adresován synovi a těm, kdo budou po něm, a nikdo neví, kdo po něm byl. Nikdo neví, jestli Ilan vůbec někam doletěl. Nikdo neví, jestli měl děti. A i kdyby je měl, šedesát osm tisíc let je dva a půl tisíce generací. To je jako házet kapku inkoustu do moře a pak se ptát, která vlna je modrá.
+Ví, že to tak není. Ví to přesně a umí to říct větou: dopis je adresován synovi a těm, kdo budou po něm, a nikdo neví, kdo po něm byl. Nikdo neví, jestli Ilan vůbec někam doletěl. Nikdo neví, jestli měl děti. A i kdyby je měl, šedesát osm tisíc let je dva a půl tisíce generací. To je jako hodit kapku inkoustu do moře a pak se ptát, která vlna je modrá.
 
 A přesto.
 
@@ -118,7 +118,7 @@ To je ona. Na tohle se nedá nic namítnout. Nara Vess nevěděla, kdo to bude �
 
 *A těm, kdo budou po tobě.*
 
-Sokolová to Haně řekla v roce třicet dva, v kuchyni u sebe doma, nad vínem, když zveřejnila model. Dvě slabé příměsi. Dvě populace, o kterých se neví nic, jen že mají jinou historii než všechny ostatní. Odkud přišly, Sokolová neřekla. Řekla jen, že jedna z nich je slabá, pod procentem, ale rozšířená. Ne u pár rodin pod horou. U velké části lidí, kteří žijí mimo Afriku.
+Sokolová to Haně řekla v roce třicet dva, v kuchyni u sebe doma, nad vínem, když vyšel ten článek. Dvě slabé příměsi. Dvě populace, o kterých se neví nic, jen že mají jinou historii než všechny ostatní. Odkud přišly, Sokolová neřekla. Řekla jen, že jedna z nich je slabá, pod procentem, ale rozšířená. Ne u pár rodin pod horou. U velké části lidí, kteří žijí mimo Afriku.
 
 V té době si tykaly rok, od jara třicet jedna. Nabídla to Sokolová, nad prvními daty. Hana si zvykala týden.
 
@@ -252,7 +252,7 @@ Na nástupišti v Chebu jí přijde zpráva od Sael. Krátká, bez pozdravu. Sae
 
 Hana si zprávu přečte a nastoupí do vlaku.
 
-Ve vlaku se nečte. Jen sedí. Krajina za oknem je zelená a pak žlutá, kde už sklidili. Hana má oči na polích a myslí na náměstí, které nikdy neviděla.
+Ve vlaku nečte. Jen sedí. Krajina za oknem je zelená a pak žlutá, kde už sklidili. Hana hledí na pole a myslí na náměstí, které nikdy neviděla.
 
 Čtyři sta mladých lidí, kteří sedí na zemi a mlčí. Odpojení od sítě. Hana neví, jaké to je, být připojený. Sende to ví. Lis Aven to ví. Hana viděla Lis Aven sahat si za ucho, když poslouchá, a pochopila, že to je jako sahat si na kapsu, kde má člověk klíče. A čtyři sta lidí si tam sáhlo a vytáhlo klíče a hodilo je pryč. A sedli si a poslouchali ventilaci.
 
@@ -308,7 +308,7 @@ Hana sedí pod lampou. To slovo zní skoro jako u nás. Ne úplně. Ale skoro.
 
 Chvíli mlčí.
 
-„Ve většině jazyků na Zemi je to podobné,“ řekne pak. „Lingvisté říkají, že je to proto, že to jsou první zvuky, které dítě umí udělat. Rty k sobě a otevřít. Nic to nedokazuje.“
+„Ve většině jazyků na Zemi je to podobné,“ řekne pak. „Lingvisté říkají, že je to proto, že to jsou první zvuky, které dítě umí vydat. Rty k sobě a otevřít. Nic to nedokazuje.“
 
 „Ne,“ řekne Lis Aven. „Nic.“
 
@@ -340,7 +340,7 @@ Nahoru na okraj stránky napíše:
 
 *Do 30. 8.: 41 dní.*
 
-Pak udělá svislou čáru. Jako vždycky, od roku třicet, od února, kdy začala psát o hoře. Vlevo, co se vidělo. Vpravo, co si o tom myslí.
+Pak udělá svislou čáru. Jako vždycky. U hory ji dělá od února třicet, kdy o ní začala psát. Vlevo, co se vidělo. Vpravo, co si o tom myslí.
 
 Pero se zastaví nad papírem.
 
@@ -356,7 +356,7 @@ Nic to nedokazuje.
 
 Vlevo napíše:
 
-*20. 7. 2035, 9:00. Zveřejněn pracovní překlad písemnosti bez čísla (L. Aven, A. Krausová, lingvistka z Prahy; čteno nahlas 17.–19. 7., se záznamem). Jeden list, oboustranně, psán rukou. Pisatelka: Nara Vess, advokátka, matka Ilana Vess (17, druhý transport). Podpis: „Máma“.*
+*20. 7. 2035, 9:00. Zveřejněn pracovní překlad písemnosti bez čísla (L. Aven, A. Krausová, lingvistka z Prahy; čteno nahlas 17.–19. 7., se záznamem). Jeden list, oboustranně, psán rukou. Pisatelka: Nara Vess, advokátka, matka Ilana Vesse (17, druhý transport). Podpis: „Máma“.*
 
 *Ve středu listu: náměstí (400 lidí, odpojeni, mlčeli; věta napsána nejméně 2×). Zklidnění v 15 letech („Byla to první věc, kterou jsem rozhodla za něj.“). Lidé na místě výkonu („Úřad to ví a posílá ho tam.“). Kesi Amar, 16. Věta z posledního dne návštěv, napsána 2× („Chtěla jsem, abys zůstal. Víc, než jsem chtěla vyhrát.“; „vyhrát“ nejisté).*
 

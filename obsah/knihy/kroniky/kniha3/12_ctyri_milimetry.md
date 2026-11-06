@@ -2,7 +2,7 @@
 
 Ve tři čtvrtě na sedm sedí Hana u stolku pod oknem a píše čísla.
 
-Jen čísla. Ne slova, ne dojmy, ne *měkčí* ani *zploštělý*. Na novou stránku deníku, vlevo, pod sebe, s jednotkou a s chybou, jak se to učí prváky v prvním týdnu a jak to pak polovina z nich celý život nedělá.
+Jen čísla. Ne slova, ne dojmy, ne *měkčí* ani *zploštělý*. Na novou stránku deníku, vlevo, pod sebe, s jednotkou a s chybou, jak to učí prváky v prvním týdnu a jak to pak polovina z nich celý život nedělá.
 
 *Předmět, bodega, 21. 3. večer (H. V.):*
 *délka 460 ± 1 mm (ocelový metr, 2 úhelníky, 3 čtení)*
@@ -27,7 +27,7 @@ Snímek čtyřicet jedna. Podélný řez. Válec leží na obrazovce na boku a p
 
 *464,2 mm.*
 
-Na snímku čtyřicet dva je kruh a přes něj druhá žlutá čára. *110,9 mm.*
+Na snímku čtyřicet dva je kruh a přes něj druhá žlutá čára, vedená po povrchu pryskyřice, pod vrstvou nalepené drti. *110,9 mm.*
 
 Vstane, dojde ke dveřím, vrátí se a sedne si. Ruce si položí na stůl vedle notebooku, dlaněmi dolů, jako se kladou na stůl při zkoušce, aby bylo vidět, že pod nimi nic není.
 
@@ -73,7 +73,7 @@ Předmět, který ležel v úterý na CT, je o čtyři milimetry delší než p�
 
 Replika zopakovala její chybu.
 
-Neodlil ji nikdo podle předmětu. Kdo by ho měl v ruce, odlil by ho v jeho skutečné velikosti, čtyři sta šedesát. Odlil ji podle modelu. Podle šesti set čtyřiceti Ríšových fotek a jedné značky, kterou ona dala na šedivém terči o kousek dovnitř, k tyči.
+Neodlil ji nikdo podle předmětu. Kdo by ho měl v ruce, odlil by ji v jeho skutečné velikosti, čtyři sta šedesát. Odlil ji podle modelu. Podle šesti set čtyřiceti Ríšových fotek a jedné značky, kterou ona dala na šedivém terči o kousek dovnitř, k tyči.
 
 Hana si vzpomene na spodní konec. Na klinice si ho všimla a v noci na fotce ústavu taky. Z jedné strany zploštělý, jako by ho někdo zmáčkl palcem. V modelu tam byla jen boule pod polevou, *jako prst pod prostěradlem*. Model nevěděl, jak ten konec vypadá zespodu, kde ležel v polevě. Nikdo to nevěděl. Až v sobotu ona, když ho vytáhla.
 
@@ -89,7 +89,7 @@ Hana otevře batoh a sáhne do vnitřní kapsy na zip. Fleška je tam, vedle den
 
 Nemůže to vyloučit. Zapíše to. *H. V.: fleška u sebe od 18. 3. Notebook v táboře během ponorů 20. 3. a 21. 3. (heslo). Nelze vyloučit.*
 
-Otevře model na flešce a změří ho znovu, aby to neměla jen z deníku. Střed čela, konec obrysu pod polevou. *464 mm.* Průměr přes viditelnou část, na třech místech. *110,8. 110,9. 110,9.*
+Otevře model na flešce a změří ho znovu, aby to neměla jen z deníku. Střed čela, konec obrysu pod polevou. *464 mm.* Průměr přes viditelnou část, na třech místech, vždy nahoře u čela, kde je poleva jen tenký průsvitný povlak. *110,8. 110,9. 110,9.*
 
 Vedle snímku čtyřicet jedna vypadá to číslo jako dvojče.
 
@@ -107,7 +107,7 @@ Jedou z města stejnou silnicí, po které Hana v pondělí jela za dodávkou ú
 
 „Dvě hodiny.“
 
-„Já taky ne.“ Jana přeřadí. „Salcedo tu nebyl od pondělka. Nebere telefon ani mně. Kompresor stojí. Bez něj nikdo nenaplní láhve, protože klíč od bodegy má on. Teda měl. Teď je tam páska od policie.“
+„Já taky ne.“ Jana přeřadí. „Salcedo tu nebyl od pondělka. Nebere telefon ani mně. Kompresor stojí. Bez něj nikdo nenaplní láhve, protože palivo a kyslík jsou v bodeze a klíč od bodegy má on. Teda měl. Teď je tam páska od policie.“
 
 Za oknem je kamenolom tichý. Na stupních stojí bagr a nehýbe se.
 
@@ -193,7 +193,7 @@ Hana nic neřekne. Zploštění, které je vzpomínka, právě dostalo vysvětle
 
 „Chtěl to v STL,“ řekne Ríša. „Říkal, že to tak chce ten animátor v LA. Že jiný formát neotevře.“ Odmlčí se. „Já jsem si nic nemyslel. Byly dvě ráno a já stříhal tu stěnu už potřetí.“
 
-Pak se mu to stane. Hana to vidí. Ríša zavře ústa a zase je otevře a nic neřekne.
+Pak mu to dojde. Hana to vidí. Ríša zavře ústa a zase je otevře a nic neřekne.
 
 „STL nemá texturu,“ řekne potom. Pomalu. „Je to holá síť, šedá. Animátor by chtěl OBJ s texturou. Uzavřená síť v STL je to, co pošleš do tiskárny.“
 
@@ -263,7 +263,7 @@ Kalina zavře sešit.
 
 *
 
-Na kámen u cenotu si sedne v poledne. Za páskou, kde se smí sedět. Voda dole je čirá. Severní jizva svítí na slunci, bílá. Odstřel dnes není. Lom od pondělka nestřílí, prý do odvolání. Jana to ví od inženýra.
+Na kámen u cenotu si Hana sedne v poledne. Za páskou, kde se smí sedět. Voda dole je čirá. Severní jizva svítí na slunci, bílá. Odstřel dnes není. Lom od pondělka nestřílí, prý do odvolání. Jana to ví od inženýra.
 
 Hana otevře na telefonu fotky bedny.
 
@@ -273,9 +273,9 @@ Pak sobotní ráno. Plošina, slunce, Marisol s fixou. Zvětší ji taky a dá o
 
 Jsou jiné. Hana to vidí hned. Na ranní fotce jde páska přes horní třetinu suku, šikmo, a *h* leží na suku. Na fotce z Méridy jde páska níž. Přes střed suku, skoro přes jeho nejširší místo. A *h*…
 
-Srdce se jí rozbuší, a pak se zastaví.
+Srdce se jí rozbuší, a pak se Hana zarazí.
 
-Ráno je špatně. Ranní pásku Marisol v sobotu večer strhla. Hana u toho stála a fotila modrý stín na dřevě. Pak Marisol nalepila novou. Je jasné, že nová páska jde jinudy. Kdo srovnává ranní fotku s Méridou, srovnává dvě různé pásky a najde, co chce najít.
+Srovnávat s ranní fotkou je chyba. Ranní pásku Marisol v sobotu večer strhla. Hana u toho stála a fotila modrý stín na dřevě. Pak Marisol nalepila novou. Je jasné, že nová páska jde jinudy. Kdo srovnává ranní fotku s Méridou, srovnává dvě různé pásky a najde, co chce najít.
 
 Přesně tohle by udělal někdo, kdo chce, aby to vyšlo.
 
@@ -311,7 +311,7 @@ Klíče byly dva.
 
 Hana sedí na kameni a čtyři milimetry a tři milimetry se jí v hlavě skládají dohromady.
 
-Replika podle modelu. Model ve Viktorově poště, stažený v pátek ráno. Páska přelepená mezi sobotou večer a Méridou, nejspíš v bodeze. Klíč od bodegy u Salceda. Salcedo nebere telefon od pondělka. Salcedo je Viktorův logistik.
+Replika podle modelu. Model ve Viktorově poště, stažený v pátek ráno. Páska přelepená mezi sobotou večer a Méridou, nejspíš v bodeze. Klíč od bodegy u Salceda. Salcedo nebere telefon od pondělka. A jeho podpis, rychlý, se smyčkou, je na prohlášení, které Viktor sepsal až v úterý. Salcedo je Viktorův logistik.
 
 Je to záznam. Všechno to je záznam. Fotky, čísla, čas odeslání, čas stažení.
 

@@ -1,5 +1,7 @@
 # 10. Orrin
 
+Tři dny pršelo. Potok zhnědl a v údolí se voda rozlila do stromů, skoro k té čáře na kmenech, kterou Eren viděl s Tal.
+
 Přišli od severu, údolím, devatenáctého dne od sněhu.
 
 Viděla je Bena. Chodila pro dřevo nejdál ze všech, protože chodila nejrychleji, a ten den došla až k místu, kde se údolí stáčelo k jezeru. Vrátila se bez dřeva. Běžela. V kotli se zastavila u prvního ohně a nemohla mluvit, jen ukazovala zpátky, odkud přišla, a dýchala.
@@ -38,7 +40,7 @@ Pak přišel první mráz. Místní začali stavět u jezera nové kruhy, větš
 
 Sefa jí čistila ruku. Kůže na hřbetu byla rudá a lesklá a na okrajích černá, a pod ní něco žlutého. Vesa sebou neškubla.
 
-„Třetí noc se vrátili,“ řekla. „Ne ke kruhům. Ke skladu. Ke kruhům by nás bylo moc. Ale ve skladu spali čtyři.“ Zvedla ovázanou ruku a prohlížela si ji, jako by nebyla její. „Zapálili to. Plachty hoří dobře, víte to? Hoří lépe než dřevo. Ty vložky taky. A dávky.“ Položila ruku zpátky do klína. „Vytahovala jsem je. Pak už ne.“
+„Třetí noc se vrátili,“ řekla. „Ne ke kruhům. Ke skladu. U kruhů nás bylo moc. Ale ve skladu spali čtyři.“ Zvedla ovázanou ruku a prohlížela si ji, jako by nebyla její. „Zapálili to. Plachty hoří dobře, víte to? Hoří lépe než dřevo. Ty vložky taky. A dávky.“ Položila ruku zpátky do klína. „Vytahovala jsem je. Pak už ne.“
 
 Nikdo nic neřekl.
 
@@ -76,7 +78,7 @@ Nic neřekla. Šla k jejich plachtě, sehnula se pod ni a vrátila se se svou d�
 
 Eren šel pro svou.
 
-Sefa dala svou. Ardo svou. Bena taky, i když na ni přitom nikdo nečekal. Pak se ze tmy za ohněm ozval Helin hlas.
+Sefa dala svou. Ardo svou. Bena taky, i když to od ní nikdo nečekal. Pak se ze tmy za ohněm ozval Helin hlas.
 
 „Já mám navíc,“ řekla. Došla k ohni a položila na kámen dávku. Celou, nerozbalenou. „Dřív jsem dávala půlku jemu.“
 
@@ -96,9 +98,9 @@ Mlčela. Pak řekla: „Šedesát. Šedesátý den. Pro všechny.“
 
 Eren se otočil na bok.
 
-„Před týdnem jsi říkala osmdesát.“
+„Před týdnem jsi říkala sedmdesát.“
 
-„Před týdnem pršelo.“ Maela pořád ležela na zádech a mluvila ke střeše plachty. „Dvě bedny stály v prohlubni u skály. Voda do nich natekla, a pak zmrzla, a pak roztála. Dávky nabobtnaly. Teď na nich roste šedé chmýří.“ Odmlčela se. „A tu noc, co jsi byl dole, se k bednám dostala ta zvířata s holými obličeji. Hlídka spala. Jednu bednu roztrhala. Co nesnědla, rozházela po suti, a tam to pak sezobali ptáci. A když jsem pak bedny přepočítala po vrstvách, ne jen po víkách, chybělo tolik, co by naplnilo dalších sedm beden. Ze spodních vrstev. Někdo bral po nocích, dlouho, a víka pokaždé zase zavřel.“
+„Pršelo tři dny.“ Maela pořád ležela na zádech a mluvila ke střeše plachty. „Dvě bedny stály v prohlubni u skály. Voda do nich natekla, a pak zmrzla, a pak roztála. Dávky nabobtnaly. Teď na nich roste šedé chmýří.“ Odmlčela se. „A tu noc, co jsi byl dole, se k bednám dostala ta zvířata s holými obličeji. Hlídka spala. Jednu bednu roztrhala. Co nesnědla, rozházela po suti, a tam to pak sezobali ptáci. A když jsem pak bedny přepočítala po vrstvách, ne jen po víkách, chybělo tolik, kolik by naplnilo dalších sedm beden. Ze spodních vrstev. Někdo bral po nocích, dlouho, a víka pokaždé zase zavřel.“
 
 „Hlídka spala.“
 
@@ -120,7 +122,7 @@ Eren věděl, co tím myslí. Věděl to tak jistě, jako by mu to řekla celé.
 
 „Tak proto šedesát,“ řekl.
 
-„Ty čtyři bedny nepočítám. Nejsou naše.“ Maela se zase otočila na záda. „A dnes jsem dala dávku pryč. A ty taky. Takže možná padesát osm.“
+„Ty čtyři bedny nepočítám. Nejsou naše.“ Maela se zase otočila na záda. „A dnes jsem dala dávku pryč. A ty taky. Šest dávek nic není. Ale když budou jíst s námi, a budou, tak padesát osm.“
 
 „Proč jsi ji dala?“
 
@@ -178,7 +180,7 @@ Eren stál vzadu u skály. Maela stála vedle něj, s Tio na ruce. Tio byla pro 
 
 Nemluvil nahlas. Nikdy nemusel. V kotli bylo ticho takové, že slyšeli páru nad tůněmi.
 
-„Slyšeli jste, co se stalo u jezera. Já jsem to slyšel dvakrát, protože jsem se ptal dvakrát. Chtěl jsem to pochopit. A pochopil jsem jednu věc.“ Odmlčel se. „Oni tam nevěděli, co dělají. Měli sklad pod hlídkou a hlídka nehlídala. Šli si vzít místo k zimování, a šli s ním bez plánu, jen se sekerami. Vzali, co se dalo vzít, a pak tam seděli a čekali, co se stane. A ono se to stalo.“
+„Slyšeli jste, co se stalo u jezera. Já jsem to slyšel dvakrát, protože jsem se ptal dvakrát. Chtěl jsem to pochopit. A pochopil jsem jednu věc.“ Odmlčel se. „Oni tam nevěděli, co dělají. Měli sklad pod hlídkou a hlídka nehlídala. Šli si vzít místo k zimování, a šli tam bez plánu, jen se sekerami. Vzali, co se dalo vzít, a pak tam seděli a čekali, co se stane. A ono se to stalo.“
 
 Vesa stála vpředu. Eren jí neviděl do obličeje.
 
@@ -186,7 +188,7 @@ Vesa stála vpředu. Eren jí neviděl do obličeje.
 
 Eren cítil, jak se na něj dívají.
 
-„Devadesát tři malých,“ řekl Orrin. „V hloubce, kde je teplo celou noc. Ze skály, říká Eren. Kde je voda. Kde jsou síně a chodby, které vytesali do kamene. Pro devadesát tři.“ Nechal to chvíli ležet. „A nám nabídli dvanáct míst. U vchodu, kde táhne. Za dřevo, které jim máme nosit. Ze tří set jedenácti dvanáct.“
+„Devadesát tři malých,“ řekl Orrin. „V hloubce, kde je teplo celou noc. Ze skály, říká Eren. Kde je voda. Kde jsou síně a chodby, které vytesali do kamene. Pro devadesát tři.“ Nechal to chvíli doznít. „A nám nabídli dvanáct míst. U vchodu, kde táhne. Za dřevo, které jim máme nosit. Ze tří set jedenácti dvanáct.“
 
 Ticho se pohnulo. Ne zvukem. Lidé přešlápli.
 
@@ -202,7 +204,7 @@ Pár lidí se zasmálo. Krátce, hořce.
 
 „Tak ať loví,“ řekl Orrin. „Pro sebe i pro nás. Dáme jim za to, co chtějí. Nože. Plachty, které nepromoknou. Ochranu.“
 
-„Před čím?“ Byla to Sefa. Stála kus od Erena, s rukama složenýma.
+„Před čím?“ Byla to Sefa. Stála kus od Erena, s rukama založenýma.
 
 Orrin se na ni usmál. „Před zimou, Sefo. Před tím, co přijde od jezera. Před dvěma stovkami lidí, kteří šli na západ a nemají co jíst.“ Odmlčel se. „Viděli jste dnes ráno ty dva nahoře? Přišli od severu. Odkud jinud než od jezera? Co myslíte, že vyprávěli?“ Pak přelétl očima celý kotel. „Oni budou lovit pro nás. A my budeme v teple.“
 
@@ -212,7 +214,7 @@ Orrin se na ni usmál. „Před zimou, Sefo. Před tím, co přijde od jezera. P
 
 Bylo ticho.
 
-„Ti malí,“ řekl Orrin klidně, „mají celou horu. Eren říká, že hloubka je hluboká. Že voda teče dál dolů, pod zem. Tam jsou další síně. Mají kam jít.“ Pokrčil rameny. „Nemusí to být zlé. Nikdo nemusí zemřít. Jen se posunou níž. A my budeme tam, kde jsou teď oni.“
+„Ti malí,“ řekl Orrin klidně, „mají celou horu. Eren říká, že voda teče dál dolů. Kam teče voda, tam je místo. Mají kam jít.“ Pokrčil rameny. „Nemusí to být zlé. Nikdo nemusí zemřít. Jen se posunou níž. A my budeme tam, kde jsou teď oni.“
 
 „Chodby jsou úzké,“ řekl Haro. Stál u bedny pod Orrinem. „Eren to říkal. V úzké chodbě by nás pobili jednoho po druhém.“
 
@@ -268,11 +270,11 @@ Erenovi se zastavil dech.
 
 „Dvě stě kroků,“ řekl Orrin. „A nikde to není blíž?“
 
-Eren cítil pod dlaní hlínu. Uhlazenou, velkou jako dvě dlaně. A ten studený tah kolem okraje. A slyšel přes ni potok.
+Eren cítil pod dlaní hlínu. Uhlazenou, velkou jako dvě dlaně. A ten tah kolem okraje, který šel ven. A slyšel přes ni potok.
 
 „Nevím,“ řekl.
 
-Byla to první věc, kterou kdy z bedny řekl a nebyla pravda.
+Byla to první věc, kterou kdy z bedny řekl a která nebyla pravda.
 
 Orrin to slyšel. Eren nevěděl, jestli slyšel i to, že to není pravda. Orrin se po chvíli usmál. Pomalu, vlídně, jako se usmíval vždycky.
 
@@ -340,4 +342,4 @@ Uvědomil si, že tu znalost drží stejně, jako drží řezák v bedně, člá
 
 Dabře to ale říkat nemusel. Dabra to věděla. Ukázala mu to sama.
 
-Ležel pak dlouho pod plachtou a necítil mráz ze země. Cítil na dlani hlínu. Uhlazenou a chladnou. A kolem jejího okraje tah, studený a venkovní. Jako když v habitatu na nejzazším konci chodby přiložíš ruku k těsnění, které už brzy povolí, a ucítíš, jak tudy uniká vzduch ven.
+Ležel pak dlouho pod plachtou a necítil mráz ze země. Cítil na dlani hlínu. Uhlazenou a chladnou. A kolem jejího okraje tah, který šel ven. Jako když v habitatu na nejzazším konci chodby přiložíš ruku k těsnění, které už brzy povolí, a ucítíš, jak tudy uniká vzduch ven.

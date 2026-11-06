@@ -30,7 +30,7 @@ A pod stolem kazeta.
 
 Šedý plech, rohy otlučené, víko s malým zámkem, který by otevřelo dítě s vlásenkou. Nikdy na něm nezáleželo. Kazetu nechránil zámek. Chránila ji hora.
 
-Sael si klekla a vytáhla ji. Byla těžší, než si pamatovala. Čtyřicet dva listů a v nich jména, adresy, roky narození, kdo s kým, kdo u kterého lékaře. Polovinu těch řádků psala sama. Na psacím stroji, který poskakoval na *e*. A modrou propiskou, když nebyl čas.
+Sael si klekla a vytáhla ji. Byla těžší, než si pamatovala. Čtyřicet dva listů a v nich jména, adresy, roky narození, kdo s kým, kdo u kterého lékaře. Většinu těch řádků psala sama. Na psacím stroji, který poskakoval na *e*. A modrou propiskou, když nebyl čas.
 
 Vložila ji do plátěné tašky a tašku si přetáhla přes hlavu, aby jí visela na prsou, ne na zádech. Kdo nese něco na zádech, nevidí, kdy o to přijde.
 
@@ -56,15 +56,17 @@ Lada sklopila oči ke žluté krabičce na koleni. „Jedna a půl. Nahoře na s
 
 „Tak se na to dívej ty. Já se dívám na tohle.“
 
-Sael si sedla na schod u dveří, kde seděla v dubnu, když jí Tadeáš ukazoval křivky. Taška s kazetou ji tlačila do žeber. Vysílačka na stole zachrčela a velitelův hlas se zeptal, jak to vypadá. Lada odpověděla. Sael ji poslouchala a myslela na to, že Lada mluví do vysílačky stejně jako do telefonu. Bez pozdravu. Jen čísla a co z nich plyne.
+Sael si sedla na schod u dveří, kde seděla v dubnu, když jí Tadeáš ukazoval křivky. Taška s kazetou ji tlačila do žeber.
 
-Kolem jedenácté přišlo světlo.
+Krátce po půl jedenácté přišlo světlo.
 
 Neviděli ho. Skála byla na druhém konci chodby, za ohybem, ve spodní síni, odkud žlab vedl dolů. Ale voda ve žlabu ho přinesla. Bledé, jako list proti oknu, teklo po hladině od skály až k nim, a v páře nad žlabem se rozsvítila mlha. Na chvíli. Pak zhasla. Pak se rozsvítila znovu.
 
 Kryštof se podíval na Ladu. Lada na vodu.
 
-„Svítí,“ řekla do vysílačky. „Hřeje.“
+„Dole dobrý,“ řekla do vysílačky. „Svítí. Hřeje.“
+
+Vysílačka zachrčela a velitelův hlas se zeptal kolik. Lada odpověděla. Sael ji poslouchala a myslela na to, že Lada mluví do vysílačky stejně jako do telefonu. Bez pozdravu. Jen čísla a co z nich plyne.
 
 Apolena pohnula dlaněmi po kameni. Sael viděla, jak jí prsty sjedou o kousek níž a zastaví se. Jako když člověk v posteli hledá ve tmě ruku toho, kdo leží vedle.
 
@@ -110,7 +112,7 @@ Sael sáhla po detektoru pod límcem. Od jedenácti ho nekontrolovala.
 
 *
 
-Archiv nad nimi neslyšela. Mezi nimi a archivem byla celá dolní chodba, dva ohyby skály a čtyřicet čtyři schodů druhého schodiště, které vedlo z archivu dolů. Ale věděla, co tam ti dva vidí.
+Z archivu nad nimi nic neslyšela. Mezi nimi a archivem byla celá dolní chodba, dva ohyby skály a čtyřicet čtyři schodů druhého schodiště, které vedlo z archivu dolů. Ale věděla, co tam ti dva vidí.
 
 Holé police. Prázdnou truhlu. Odvlhčovač. Vlhkoměr na šedesáti šesti. Stůl, u kterého sedělo dvacet rukou, a pod stolem nic. Obdélník v prachu, kde stála kazeta.
 
@@ -164,7 +166,7 @@ Lada přejela očima z krabičky na ventily a z ventilů na Sael.
 
 Sael to věděla taky. Schody pod archivem ležely v ohybu chodby blíž ke skále, v nejhustší páře. Dva mladí muži to proběhli se zadrženým dechem. Apolena by to neprošla. Kryštof s ní na zádech taky ne.
 
-Lada sáhla po třetím kole ventilu a nechala ho, kde bylo. Otevřené. Pak sundala ze zdi Tadeášovu tabulku a strčila si ji pod zástěru. „Stará cesta.“
+Lada sáhla po třetím kole ventilu a nechala ho, jak bylo. Otevřené. Pak sundala ze zdi Tadeášovu tabulku a strčila si ji pod zástěru. „Stará cesta.“
 
 „Odtud přišli.“
 
@@ -188,19 +190,19 @@ Komory byly prázdné.
 
 Pak chodba klesla doleva.
 
-Sael šla po staré cestě poprvé po devatenácti letech. Naposledy tu šla po povodni, kdy voda v dolní chodbě stála po kolena a rada chtěla vědět, jestli je stará cesta pořád suchá. Byla. Byla vždycky. Stará cesta šla pod horou dlouhým obloukem, vysoká jako dveře pro Ostré, Sael se musela sklánět. V kameni vyšlapané kroky. Ve stěnách niky na kahany, prázdné, začouzené tak dávno, že saze zkameněly. Při stěně žlábek, kterým odtékala voda, když nějaká přišla.
+Sael šla po staré cestě poprvé po devatenácti letech. Naposledy tu šla po povodni, kdy voda v dolní chodbě stála po kolena a rada chtěla vědět, jestli je stará cesta pořád průchozí. Byla. Byla vždycky. Stará cesta šla pod horou dlouhým obloukem, vysoká jako dveře pro Ostré, Sael se musela sklánět. V kameni vyšlapané kroky. Ve stěnách niky na kahany, prázdné, začouzené tak dávno, že saze zkameněly. Při stěně žlábek, kterým odtékala voda, když nějaká přišla.
 
 A průvan. Teď ho cítila celou tváří. Studený, živý, s vůní bukového listí a mokré hlíny. Detektor pod límcem pípal pomaleji. Pak už jen jednou za čas. Pak přestal.
 
 Kryštof za ní dýchal těžce. Apolena mu visela na zádech a mlčela.
 
-U jednoho místa se Lada zastavila. Sael to poznala podle toho, že lampa za ní přestala kývat.
+U jednoho místa se Lada zastavila. Sael to poznala podle toho, že lampa za ní se přestala kývat.
 
 Byla tam úzká boční chodbička, jen na jednoho, a na jejím konci, na dosah světla, kus stěny ohlazený jako kámen v potoce. Velký jako dvě dlaně.
 
 „Tady Ostra poslouchala,“ řekla Lada. „Celou zimu. Když kopali.“
 
-Položila na to místo dlaň. Na chvíli. Pak ji sundala a šla dál.
+Položila na to místo dlaň. Na chvíli. Pak ji odtáhla a šla dál.
 
 Sael nic neřekla. V knize to nestálo. Ostří to věděli bez knihy osm set let.
 
@@ -210,7 +212,7 @@ Krk, jak Ostří říkali té strmině, byl takový, jak ho pamatovala. Schody d
 
 Dnes jí bylo po pás.
 
-A byla teplá. Ne horká, ne jako voda ve žlabu. Teplá jako koupel. Hora pila teplo do všech svých cest.
+A byla teplá. Ne horká, ne jako voda ve žlabu. Teplá jako koupel. Hora hnala teplo do všech svých cest.
 
 Sael stála na posledním schodu a dívala se na černou hladinu. Pro ni po pás. Pro Kryštofa po prsa. Pro Ladu po bradu. Pro Apolenu nad hlavu.
 
@@ -224,7 +226,7 @@ Sael si klekla. Apolena se jí chytila kolem krku. Byla lehká. Lehčí, než č
 
 Kazeta.
 
-Visela jí na prsou v plátěné tašce, a když Sael vstala s Apolenou na zádech, taška se zhoupla nad hladinou. Po pás. Plech nevadí. Ale uvnitř byl papír, čtyřicet dva listů, a víko kazety netěsnilo nikdy.
+Visela jí na prsou v plátěné tašce, a když Sael vstala s Apolenou na zádech, taška se zhoupla nad hladinou. Po pás. Plechu by to nevadilo. Ale uvnitř byl papír, čtyřicet dva listů, a víko kazety netěsnilo nikdy.
 
 Kryštof stál na schodu, jednou rukou se držel stěny a dýchal krátce a mělce. Na víc než na sebe už neměl.
 
@@ -234,7 +236,7 @@ Kryštof stál na schodu, jednou rukou se držel stěny a dýchal krátce a měl
 
 „Rada řekla, že ji vyneseš ty.“ Lada natáhla ruce. „Já ji nesu jenom přes vodu. Pak je zas tvoje.“
 
-Sael přetáhla tašku přes hlavu. Apolena se jí přitom držela kolem krku a nepustila. Lada vzala tašku za uši, vytáhla z ní kazetu a zvedla ji nad hlavu, oběma rukama, jako se nese něco přes brod.
+Sael přetáhla tašku přes hlavu. Apolena se jí přitom držela kolem krku a nepustila. Lada vzala tašku za ucha, vytáhla z ní kazetu a zvedla ji nad hlavu, oběma rukama, jako se nese něco přes brod.
 
 Pak vstoupila do vody první.
 
@@ -286,7 +288,7 @@ Brandl chvíli nic neříkal.
 
 „Když jsem je viděla naposledy, utíkali.“
 
-Brandl pomalu kývl a podíval se za ni, na škvíru v kameni. Vyšel z ní Kryštof s Apolenou na zádech, pak Lada s lampou. Všichni tři mokří, všichni tři malí. Brandl je viděl v baterce a Sael viděla, že je vidí poprvé. Za dvaadvacet let ve funkci koordinátora bezpečnosti je viděl na papíře. Čísla, lokality, počty lůžek.
+Brandl pomalu kývl a podíval se za ni, na škvíru v kameni. Vyšel z ní Kryštof s Apolenou na zádech, pak Lada s lampou. Všichni tři mokří, všichni tři malí. Brandl je viděl ve světle baterky a Sael viděla, že je vidí poprvé. Za dvaadvacet let ve funkci koordinátora bezpečnosti je viděl jen na papíře. Čísla, lokality, počty lůžek.
 
 Stará Apolena se mu podívala do světla a nezamžourala.
 
@@ -332,7 +334,7 @@ Sael čekala.
 
 „Šli s vaší mapou,“ řekla Sael.
 
-Brandl se na ni podíval zespodu. Na chvíli vypadal jako Václav Ostrý ten den v lednu, v posteli u okna. Starý muž, který ví, že už nic nezmění.
+Brandl se na ni podíval zespodu. Na chvíli vypadal jako Václav Ostrý v posledních týdnech, v posteli u okna. Starý muž, který ví, že už nic nezmění.
 
 „S naší,“ řekl. „Ukazovala jste mi ji vy.“
 
@@ -408,7 +410,7 @@ Kubeš přijel ve čtyři. Mluvil s tou ženou, s velitelem, s Brandlem v autě.
 
 Ta žena stála u auta s telefonem u ucha. Kalina. Sael to poznala podle toho, jak ta žena poslouchala. Nekývala. Psala.
 
-Pak to zavěsila a přišla k lavici.
+Pak zavěsila a přišla k lavici.
 
 „Pulzy se zkracují,“ řekla. „Od jedné. Kalina říká, že vrchol je za námi.“ Odmlčela se. „Na skálu to nevidí.“
 
@@ -420,7 +422,7 @@ Telefon v Saelině kapse zabzučel. Byl suchý, protože ho měla v náprsní ka
 
 *Je pravda, co se říká o Brandlovi? Sněm je zítra. Co jim mám říct?*
 
-Sael se na to dlouho dívala. Ines byla v Úmluvě dvacet let tou, která chtěla, aby se to řeklo nahlas. Dvacet let jí odpovídali *ne teď*. Sael taky.
+Sael se na to dlouho dívala. Ines byla v Úmluvě dvacet let, v radě teprve druhý rok, a celou tu dobu tou, která chtěla, aby se to řeklo nahlas. Dvacet let jí odpovídali *ne teď*. Sael taky.
 
 Napsala odpověď. Krátkou, jak psala vždycky.
 

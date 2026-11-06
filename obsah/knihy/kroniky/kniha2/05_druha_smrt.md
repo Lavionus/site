@@ -6,13 +6,13 @@ Bylo v nich všechno. Čistý zápis o Ursule Kolbové, ten první, s vrzáním 
 
 V písárně bylo horko jako v pekárně. Kunz seděl u pultu v kožichu, s brýlemi na šňůrce, a když vešla, zvedl levou ruku. Čekala. Na pultu vedle kalamáře stála lahvička z hnědého skla, zazátkovaná, s papírkem uvázaným kolem hrdla, a v místnosti to vonělo něčím, co Ilona znala z Řehořovy brašny: anýzem, medem a opiem.
 
-„Teriak,“ řekl Kunz, když si všiml, kam se dívá. Dopsal řádek a posypal ho pískem. „Na kosti. Lékárník mi to píše na křídu už od Hromnic. Za kosti se v tomhle městě platí dráž než za hříchy, paní Ilona, a hříchy si člověk aspoň užije.“ Natáhl ruku. „Pan perkmistr tu není. Jel v sobotu nahoru ke Klínovci, k rodovým dílům, voda jim zatopila chodbu. Vrátí se ve čtvrtek, říkal. Nebo v pátek, když bude pršet.“
+„Teriak,“ řekl Kunz, když si všiml, kam se dívá. Dopsal řádek a posypal ho pískem. „Na kosti. Lékárník mi to píše na křídu už od Hromnic. Za kosti se v tomhle městě platí dráž než za hříchy, paní Ilona, a z hříchů má člověk aspoň potěšení.“ Natáhl ruku. „Pan perkmistr tu není. Jel v sobotu nahoru ke Klínovci, k rodovým dílům, voda jim zatopila chodbu. Vrátí se ve čtvrtek, říkal. Nebo v pátek, když bude pršet.“
 
 „Tak to počká na něj.“
 
 „Počká. Ale já to přečtu. Jsem písař.“
 
-Četl. Ilona stála u kamen a dívala se, jak jeho oči jdou po řádcích, jak se u tabulky zastavily a vrátily, jak prstem přejel svislou čáru mezi *Puštěno* a *Vylito*, jako by zkoušel, jestli je rovná. Pak četl slova děvečky. Četl je dlouho. Dvakrát si posunul brýle.
+Četl. Ilona stála u kamen a dívala se, jak jeho oči jdou po řádcích, jak se u tabulky zastaví a vrátí, jak prstem přejel svislou čáru mezi *Puštěno* a *Vylito*, jako by zkoušel, jestli je rovná. Pak četl slova děvečky. Četl je dlouho. Dvakrát si posunul brýle.
 
 „Děvečka v lázni,“ řekl. „To je Jobstova Lene.“
 
@@ -36,7 +36,7 @@ V úterý pršelo. Ilona pustila žilou mlynářově ženě, která měla horkou
 
 „Že chodíte v noci.“ Pokrčil rameny. „Strážný to slyšel v hospodě. Já to říkám jen proto, abyste to věděla.“
 
-Večer nemohla spát a nevěděla proč. Ležela a poslouchala déšť na šindelích a mezi deštěm stoupy, jak tlučou, dole a nahoře. V tichu mezi nimi myslela na to, kdy půjde ve středu k lázni, aby viděla, jestli si soudek vyzvedne ten muž, a kde bude stát, aby ji nikdo neviděl. Po půlnoci déšť ustal; slyšela, jak přestal. Usnula pozdě. Spala tvrdě, bez snů.
+Večer nemohla spát a nevěděla proč. Ležela a poslouchala déšť na šindelích a přes déšť stoupy, jak tlučou, dole a nahoře. V tichu mezi nimi myslela na to, kdy půjde ve středu k lázni, aby viděla, jestli si soudek vyzvedne ten muž, a kde bude stát, aby ji nikdo neviděl. Po půlnoci déšť ustal; slyšela, jak přestal. Usnula pozdě. Spala tvrdě, bez snů.
 
 *
 
@@ -45,6 +45,8 @@ Ve středu ráno na ni bušili do předních dveří, a nebyl to Jockel.
 Byl to vozka Pankrác, ten, který jí dlužil za nohu, a byl bílý v obličeji, jak bývají bílí silní muži, kterým se udělalo zle. „Paní,“ řekl. „Pojďte dolů. K mostu.“ Polkl. „Lene.“
 
 Šla s ním, jak byla, s brašnou, kterou popadla od dveří, a s vlasy, které si zavazovala za chůze. Pankrác šel rychle a mluvil, protože musel mluvit. Vedl koně k vodě, jako každé ráno, pod most, kde je kamenitý brod. Kůň se zastavil a nechtěl dál. Frkal. Pankrác myslel, že je to vydra nebo pes. Pak to uviděl.
+
+![Brod pod mostem](obrazky/05_druha_smrt.webp)
 
 U mostu už stáli lidé. Ilona je slyšela dřív, než je uviděla: hlasy, ne hlasité, ale husté, jako když se na trhu hádá deset lidí o jednu věc a každý o jinou. Ženy s vědry. Havíři z ranní šichty, kteří šli kolem a zůstali. Děti, které tam neměly být. Jobstova žena stála u zábradlí s rukama na ústech a nehýbala se.
 
@@ -86,7 +88,7 @@ Tohle neudělaly zuby. Tohle udělala ruka, která držela nástroj, a bodla dva
 
 Ilona vzala Lene za ruku.
 
-Na zápěstí měla modřiny. Na obou, z vnitřní strany, čtyři tmavé skvrny vedle sebe a pátá na druhé straně, kde drží palec. Někdo ji držel. Silně, dlouho. Nehty na pravé ruce měla zlomené, dva, a pod nimi nic, žádná vlna, jen písek z potoka. Ilona jí jemně rozevřela rty. Na vnitřní straně, proti zubům, byla sliznice potrhaná a modrá. Někdo jí držel ruku přes ústa. Tak pevně, že se jí rty rozdrtily o vlastní zuby.
+Na zápěstí měla modřiny. Na obou, z vnitřní strany, čtyři tmavé skvrny vedle sebe a pátá na druhé straně, kde drží palec. Někdo ji držel. Silně, dlouho. Nehty na pravé ruce měla zlomené, dva, a pod nimi nic, žádná vlna, jen písek z potoka. Ilona jí jemně rozevřela rty. Na vnitřní straně, proti zubům, byla sliznice potrhaná a modrá. Někdo jí držel ruku přes ústa. Tak pevně, že se jí rty rozedřely o vlastní zuby.
 
 Pod Lene, na kamenech, nebyla krev. Skoro žádná. Kameny byly mokré od vody a trochu zarůžovělé tam, kde ležela šíje, ale to bylo vše. Sukně byla mokrá do pasu, ale halena suchá, a záda haleny suchá taky, jen od rosy vlhká. Kdyby ležela u vody celou noc, byla by mokrá celá. Ležela tu krátce. Položili ji sem, když už bylo po všem.
 
@@ -106,7 +108,7 @@ Stöckel stál na břehu nad ní, ve sváteční kazajce, jako by ho vytáhli od
 
 Ilona vstala. Kolena měla mokrá a studená.
 
-„Někdo ji držel za ruce,“ řekla. „Na zápěstích má otisky prstů. Někdo jí držel ústa. Pak ji bodl do krku. Dvakrát, stejným nástrojem, šikmo do žíly. A pak ji sem položil.“
+„Někdo ji držel za ruce,“ řekla. „Na zápěstích má otlaky prstů. Někdo jí držel ústa. Pak ji bodl do krku. Dvakrát, stejným nástrojem, šikmo do žíly. A pak ji sem položil.“
 
 „Bodl.“ Stöckel se podíval na kazatele. „Nástrojem.“
 
@@ -122,7 +124,7 @@ Lidé na mostě zahučeli, souhlasně, jako když v kostele zazní amen.
 
 Stöckel sešel o krok níž, takže stál skoro u ní, a řekl tišeji, jen pro ni a pro kazatele a pro biřice: „Já vám něco řeknu. Ta holka je druhá. Kolbová byla první. Obě bílé, obě bez krve, a krev nikde. Ve městě se mluví o nočním lidu. Rada o tom ví. Za měsíc je svatý Jan.“ Odmlčel se. „Vy jste zapisovatelka horního soudu. Když vy napíšete, že to byla rána od zubů, tak to bude psané rukou horního soudu a ne rukou kožešníka. A pak se nikdo nebude ptát, proč jsme šli nahoru.“
 
-„A ten váš kluk,“ řekl Stöckel ještě tišeji, „ten v noci chodil na dvůr. Říkal to sám a vy jste to napsala. Komu otvíral, paní? Kdo k němu chodil? Takový kluk, syn havíře, ten zná štoly. Ten ví, kde kdo bydlí.“
+„A ten váš kluk,“ řekl Stöckel ještě tišeji, „ten v noci chodil na dvůr. Říkal to sám a vy jste to napsala, Kunz to v hospodě nezamlčel. Komu otvíral, paní? Kdo k němu chodil? Takový kluk, syn havíře, ten zná štoly. Ten ví, kde kdo bydlí.“
 
 „Tobiáš sedí od minulé středy pod schodištěm horního úřadu. Pod zámkem. Hlídají ho dva havíři.“
 
@@ -136,7 +138,7 @@ Kdyby řekla *zuby*, rada by šla nahoru dřív než na svatého Jana. A našla 
 
 Kdyby řekla *zuby*, nebyla by to pravda.
 
-„Napíšu, co jsem viděla,“ řekla. Hlasitě, aby to slyšel most. „Dvě bodné rány do krku od nástroje, ne od zubů. Otisky prstů na zápěstích. Potrhané rty od ruky přes ústa. Smrt v noci kolem půlnoci. Krev chybí. Položena sem po smrti.“ Odmlčela se. „Nenapíšu, kdo to udělal, protože to nevím. A nenapíšu, že to byl noční lid, protože to není pravda.“
+„Napíšu, co jsem viděla,“ řekla. Hlasitě, aby to slyšel most. „Dvě bodné rány do krku od nástroje, ne od zubů. Otlaky prstů na zápěstích. Potrhané rty od ruky přes ústa. Smrt v noci kolem půlnoci. Krev chybí. Položena sem po smrti.“ Odmlčela se. „Nenapíšu, kdo to udělal, protože to nevím. A nenapíšu, že to byl noční lid, protože to není pravda.“
 
 Bylo ticho. Jen potok, a pod mostem kůň, který pořád frkal.
 
@@ -182,7 +184,7 @@ Tobiáš se otočil. Viděla, že plakal, a že nechce, aby to viděla, a tak se
 
 Ilona mlčela. Venku pod okénkem někdo zaklepal na mříž, kladivem, třikrát, a pak se zasmál.
 
-„Mluvila s vámi,“ řekl Tobiáš. „V sobotu. Vy jste šla do lázně a v pondělí jste přišla a měla jste v sešitě něco nového. Viděl jsem to na vás.“
+„Mluvila s vámi,“ řekl Tobiáš. „V sobotu. Vy jste šla do lázně, strážný to říkal, a v pondělí jste přišla a měla jste v sešitě něco nového. Viděl jsem to na vás.“
 
 „Ano.“
 
@@ -296,13 +298,13 @@ Wehrl se na ni podíval přes rameno, dlouze, a v jeho tváři bylo to, co tam v
 
 Večer sedla ke stolu a napsala zápis o Lene.
 
-Psala ho pomalu. *Ve středu 24. května ráno, pod mostem u brodu, Magdalena, děvečka v lázni mistra Jobsta, šestnáct let.* Jméno. Teď už ho psát mohla. Teď už jí nemohlo ublížit.
+Psala ho pomalu. *Ve středu 24. května ráno, pod mostem u brodu, Magdalena, děvečka v lázni mistra Jobsta, asi šestnáct let.* Jméno. Teď už ho psát mohla. Teď už jí nemohlo ublížit.
 
 Napsala tuhost čelisti a paží a prstů, které ještě povolily. Napsala dvě dírky, stéblo, dva články prstu, šikmo dolů a dovnitř, obě stejně. Napsala, že kolem nebyl oblouk od zubů ani modřina od rtů. Napsala zápěstí, čtyři a jedna. Rty. Nehty, dva zlomené, pod nimi písek. Suchou halenu. Kameny bez krve. Napsala *rána od nástroje, ne od zubů*, a napsala, že to řekla nahlas na mostě, a co jí odpověděl kazatel, slovo po slově, *ďábel umí držet nůž*, protože to řekl a patřilo mu to.
 
 Pak se zastavila.
 
-Na tohle místo patřila ještě jedna věc. Že slova Lene ležela tři dny v truhle horního úřadu, a že kdo je četl, ten věděl, kdo je děvečka v lázni. Že ve středu ležely listy jinak. Že na pultu stála plná lahvička.
+Na tohle místo patřila ještě jedna věc. Že slova Lene ležela od pondělního rána v truhle horního úřadu, a že kdo je četl, ten věděl, kdo je děvečka v lázni. Že ve středu ležely listy jinak. Že na pultu stála plná lahvička.
 
 Ale to nebylo, co viděla. To bylo, co si myslela. Listy ležely jinak, to viděla. Lahvička byla plná, to viděla. Co z toho skládala, to byl džbán ze střepů, a otec by jí ho z ruky vyrazil.
 

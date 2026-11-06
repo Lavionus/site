@@ -68,7 +68,7 @@ Zastavil se vedle Erena a díval se na Dorna. Dorn se na něj nepodíval. Díval
 
 Řekl to tiše. *Já vím.* Eren to slyšel a čekal, jestli se mu sevře hruď, jako na bedně, když to Orrin řekl o pojistce. Nesevřela se. Bylo to jen *já vím*. Orrin to říkal o všem.
 
-„Nikoho jsem neposlal zabíjet,“ řekl Orrin. „Řekl jsem to. Platí to. Ale ani nikoho nevydám.“ Podíval se Erenovi do očí. „To je moje pravidlo. Mám jen to jedno. Ty máš čtyři a tři kameny.“
+„Nikoho jsem neposlal zabíjet,“ řekl Orrin. „Řekl jsem to. Platí to. Ale ani nikoho nevydám.“ Podíval se Erenovi do očí. „To je moje pravidlo. Mám jen to jedno. Ty jich máš čtyři.“
 
 Pak se otočil a šel zpátky do čela.
 
@@ -130,7 +130,7 @@ Od jednoho k druhému, krátce, jako včera u přístřešku. Někomu položil r
 
 Maela stála pod sutí a pohybovala rty.
 
-Eren to poznal i na tu dálku. Počítala. Ne prsty. Rty, jak počítala dávky, když je ještě četla. Viděl, jak jí rty zastavily na konci řady a zůstaly tak.
+Eren to poznal i na tu dálku. Počítala. Ne prsty. Rty, jak počítala dávky, když je ještě četla. Viděl, jak se jí rty zastavily na konci řady a zůstaly tak.
 
 Šel k ní.
 
@@ -148,7 +148,7 @@ Eren si to v hlavě rozložil, jak by si to rozložila ona. Tři sta devět živ
 
 „A oni?“ Kývla nahoru, k síni, k terase, k hloubce. „Kolik jich je?“
 
-Eren nevěděl. Talini nikdy nestáli všichni pohromadě. Skalní lidé byli dole za zdí, devadesát tři, když je počítal. Kolik jich je teď, netušil.
+Eren to věděl jen zhruba. Pětadvacet, třicet, když je kdysi počítal u ohňů. Talini nikdy nestáli všichni pohromadě. Skalní lidé byli dole za zdí, devadesát tři, když je počítal. Kolik jich je teď, netušil.
 
 „Nevím,“ řekl.
 
@@ -172,7 +172,7 @@ Eren stál.
 
 Ta věta mu ležela v hrudi jako kámen, který spolkl. Zněla stejně jako u ohně nad vrakem sedmého. Stejný hlas, stejná slova, stejný úsměv. Za řezák, pomyslel si tehdy. Za to, že rozchodil řezák. Pak na svahu cestou dolů dotlačil Orrina k otázce a dostal *koho jsi tam chtěl slyšet* a *já vím*. Od té doby si tu větu nesl. Ležel s ní pod plachtou a otáčel ji, ze všech stran, jako se otáčí díl, u kterého nevíš, kam patří.
 
-Za řezák. Za vodu. Za pravidla. Za to, že je dnes nechal odejít. Za terminál v sáčku od náhradních dílů. Za devatenáct dní, kdy se nesháněl.
+Za řezák. Za vodu. Za pravidla. Za to, že je dnes nechal odejít. Za terminál v sáčku od náhradních dílů. Za devatenáct dní, kdy se po něm nesháněl.
 
 Mohl se zeptat. Orrin stál před ním a čekal. Možná čekal právě na to. Možná by odpověděl.
 
@@ -224,7 +224,7 @@ Ve vnější síni, u prostředního ohně, kde předtím ležel Ikku. Teď tam 
 
 Třetí místo bylo prázdné.
 
-Kotel se na to ptal ráno, když Orrinova řada zmizela u velké vody. Eren se zeptal u bedny s rozbitým rohem, kdo bude sedět. Nikdo neodpověděl hned. Pak Bena řekla *Hela*, a Ardo, a pak další, a Hela přišla od domů s rukama v hlíně, protože zrovna mazala stěnu.
+Kotel o tom rozhodl ráno, když Orrinova řada zmizela u velké vody. Eren se zeptal u bedny s rozbitým rohem, kdo bude sedět. Nikdo neodpověděl hned. Pak Bena řekla *Hela*, a Ardo, a pak další, a Hela přišla od domů s rukama v hlíně, protože zrovna mazala stěnu.
 
 „Jedla jsem to maso,“ řekla.
 
@@ -284,7 +284,7 @@ Tal a Dabra tou starou řečí, s rukama, a Hela naší řečí, a Ru mezi nimi,
 
 Jednou se Hela otočila k Erenovi. Jako by se chtěla zeptat. Eren se nepohnul. Hela se otočila zpátky a řekla něco sama.
 
-Pak to bylo.
+Pak to padlo.
 
 Řekla to Tal. Krátce, každé slovo zvlášť. Ru to přeložil Kajovi do obličeje.
 
@@ -308,7 +308,7 @@ Eren kývl. On to maso nejedl. Na tom nezáleželo. Dá taky.
 
 Pak řekla Tal Dornovo jméno.
 
-Jednou. Nahlas. Do síně, ne nikomu. Ru to nepřeložil. Jméno se nepřekládá.
+Jednou. Nahlas. Do síně, nikomu zvlášť. Ru to nepřeložil. Jméno se nepřekládá.
 
 Svitovo jméno. A Harovo.
 
@@ -360,9 +360,9 @@ Odpoledne nosil Kaj kameny.
 
 Eren ho viděl ze suti. Kaj šel po té úzké stezce nad soutěskou, po které ráno odnesli Ikkua, a na zádech nesl kámen. Velký, plochý, svázaný řemenem. Šel pomalu a v ohybu stezky se zastavil a opřel se o skálu. Pak šel dál.
 
-Za ním šla Ammu. S dítětem v kůži na zádech. Nesla nic.
+Za ním šla Ammu. S dítětem v kůži na zádech. Nenesla nic.
 
-Vrátil se za soumraku a vzal další. Na suti ležela hromada, kterou místní ženy nasbíraly. Kaj ji nosil celé odpoledne, kámen po kameni, nahoru mezi skály, kam Eren nikdy nešel a nepůjde. Na hrob, který Eren nikdy neuvidí.
+Vrátil se a vzal další. Na suti ležela hromada, kterou místní ženy nasbíraly. Kaj ji nosil celé odpoledne, kámen po kameni, nahoru mezi skály, kam Eren nikdy nešel a nepůjde. Na hrob, který Eren nikdy neuvidí.
 
 Při posledním kameni se zastavil u Erena.
 

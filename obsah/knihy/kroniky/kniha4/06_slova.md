@@ -24,7 +24,7 @@ Seděl u ohně třetí den. Sefa mu zakázala chodit, dokud se pata nezatáhne, 
 
 Tio jich znala už desítky. Eren je počítal. *Ta*, oheň. *Nu*, voda, ale jen ta, která se pije, protože voda v potoce byla jiné slovo. Pak slova pro maso, pro kámen, pro dítě, pro jít a pro přijít, která se lišila jen tím, kam se při nich člověk díval. Slovo pro ne. To nebylo slovo, ale cvaknutí jazykem o patro a k tomu dlaň, plochá, otočená dolů, která se pohnula ze strany na stranu. Tio to dělala celý den. Maela jí to zakazovala a Tio na to cvakala jazykem a pohybovala dlaní.
 
-Tio mluvila tou řečí od rána do večera. Eren ji poslouchal a nevěřil vlastním uším. Před čtrnácti dny se probudila v modulu a plakala, protože jí byla zima. Teď seděla na kameni s klukem, který nosil kůži přes ramena, a hádala se s ním o to, jak se jmenuje šiška.
+Tio mluvila tou řečí od rána do večera. Eren ji poslouchal a nevěřil vlastním uším. Před patnácti dny se probudila v modulu a plakala, protože jí byla zima. Teď seděla na kameni s klukem, který nosil kůži přes ramena, a hádala se s ním o to, jak se jmenuje šiška.
 
 Šiška měla tři slova. Podle toho, jestli byla zelená, hnědá, nebo spadlá.
 
@@ -36,7 +36,7 @@ Tio mluvila tou řečí od rána do večera. Eren ji poslouchal a nevěřil vlas
 
 Tio se na něj podívala, jako by se ptal, jak ví, že je den. „Ukázal mi to,“ řekla.
 
-Eren si v duchu zkusil postavit, jak by to udělal on. Seznam předmětů. Slovo ke každému. Kontrola opakováním. Vzorek, chyba, oprava. Bylo by to pomalé a spolehlivé. Tio to dělala jinak. Prostě to věděla, jak předtím věděla slova, která jí nikdo nevysvětloval, jen je kolem ní lidé říkali. On sám měl k ruce síť od učení. Kdykoli neznal slovo, objevilo se samo, i s výkladem. Nikdy se slovo nemusel naučit tak jako Tio, rukama a očima.
+Eren si v duchu zkusil představit, jak by to udělal on. Seznam předmětů. Slovo ke každému. Kontrola opakováním. Vzorek, chyba, oprava. Bylo by to pomalé a spolehlivé. Tio to dělala jinak. Prostě to věděla, jak předtím věděla slova, která jí nikdo nevysvětloval, jen je kolem ní lidé říkali. On sám měl k ruce síť od učení. Kdykoli neznal slovo, objevilo se samo, i s výkladem. Nikdy se slovo nemusel naučit tak jako Tio, rukama a očima.
 
 Večer, když Ru odešel nahoru, si Tio lehla vedle něj a dlouho mlčela.
 
@@ -62,7 +62,7 @@ Sefa přišla čtvrtý den ráno.
 
 „Půjdeš se mnou nahoru,“ řekla.
 
-Neříkala to jako otázku. Klekla si k Erenovi a rozvázala mu patu, prohlédla si ránu a přičichla k ní. Rána se zatahovala. Okraje měla růžové, ne rudé, a nezapáchala. Sefa přikývla a zavázala ji znovu.
+Neříkala to jako otázku. Klekla si k Erenovi a rozvázala mu obvaz na patě, prohlédla si ránu a přičichla k ní. Rána se zatahovala. Okraje měla růžové, ne rudé, a nezapáchala. Sefa přikývla a obvaz znovu zavázala.
 
 „Proč já?“
 
@@ -162,7 +162,7 @@ Eren se přistihl, že to slyší i ve spánku.
 
 Bylo to osmnáctý den, k večeru.
 
-Pata se zatáhla. Eren už chodil, napůl na špičku, napůl o holi, a ten večer šel k dolní tůni pro vodu. Vyhnanci brali vodu z dolní tůně, místní taky. Nikdo to nikomu neřekl. Prostě to tak bylo, od prvního dne, protože dolní tůň byla blíž kotli a dalo se k ní dojít po kamenech, a protože u horní stála ta malá žena. Pak už tam nikdo nestál. A nikdo tam nechodil.
+Pata se zatáhla. Eren už chodil, napůl po špičkách, napůl o holi, a ten večer šel k dolní tůni pro vodu. Vyhnanci brali vodu z dolní tůně, místní taky. Nikdo to nikomu neřekl. Prostě to tak bylo, od prvního dne, protože dolní tůň byla blíž kotli a dalo se k ní dojít po kamenech, a protože u horní stála ta malá žena. Pak už tam nikdo nestál. A nikdo tam nechodil.
 
 Jen ta žena.
 
@@ -228,7 +228,7 @@ Pracovali celou noc.
 
 Kotel se uklidnil, až když vyhnanci pochopili, že je nikdo nenapadne. Místní stáli dál u tůně, s oštěpy, ale hroty spustili k zemi. Matka s dítětem odešla dolů. Orrin přišel a chvíli mlčky stál vedle Erena. „Pojď dolů,“ řekl. „Jsi mokrý.“ Eren nešel. Orrin pokrčil rameny a odešel.
 
-Malí lidé nejdřív ucpali štěrbinu. Přinesli kůže, svinuté a těžké, a jeden z nich vlezl do vody a zatlačil je do tmavého otvoru. Pak přinesli mísy. Byly kamenné, mělké, vybroušené z jednoho kusu, a každá byla tak hladká, že se v ní na okraji odráželo světlo z ohně. Nabírali do nich vodu z horní tůně a vynášeli ji přes bílý práh a lili ji dolů, pod dolní tůň, do potoka. Mísu za mísou. Pramen dodával čerstvou vodu a oni ji zase vynášeli, aby vytlačila tu starou.
+Malí lidé nejdřív ucpali štěrbinu. Přinesli kůže, svinuté a těžké, a jeden z nich vlezl do vody a zatlačil je do tmavého otvoru. Pak přinesli mísy. Byly kamenné, mělké, vybroušené z jednoho kusu, a každá byla tak hladká, že se v ní na okraji odráželo světlo z ohně. Nabírali do nich vodu z horní tůně a vynášeli ji přes bílý práh a lili ji dolů, pod dolní tůň, do potoka. Mísu za mísou. Pramen dodával čerstvou vodu a oni vynášeli tu starou, aby ji čerstvá vytlačila.
 
 Byla to nekonečná práce a byla úplně tichá. Nikdo z nich nemluvil. Pohybovali se v šeru jistě, a když padla noc, pohybovali se ve tmě stejně jistě, jako by viděli. Možná viděli.
 
@@ -328,7 +328,7 @@ Večer seděla Maela u ohně a krájela dávku pro Tio na menší kousky, aby j�
 
 „Myslíš si, že už nerozhoduješ za druhé,“ řekla. Nedívala se na něj.
 
-Eren se zarazil. Neřekl jí to. Řekl si to jen v duchu, tu noc pod plachtou, když si myslel, že spí. Jenže Maela ho znala jedenáct let.
+Eren se zarazil. Neřekl jí to. Řekl si to jen v duchu, tu noc pod plachtou, když si myslel, že Maela spí. Jenže Maela ho znala jedenáct let.
 
 „To jsem nerozhodl já,“ řekl. „To je jejich pravidlo.“
 
@@ -338,7 +338,7 @@ Eren se zarazil. Neřekl jí to. Řekl si to jen v duchu, tu noc pod plachtou, k
 
 Sníh napadl dvaadvacátý den v noci.
 
-Ne v kotli. Nahoře. Eren se ráno probudil zimou, vylezl zpod plachty a uviděl to nad okrajem rokle. Hory, ty nejvyšší, které ležely daleko za údolím, byly bílé. Ne skvrnitě, jako předtím, kdy na nich ležely staré skvrny ve stínu. Bílé celé, od hřebene dolů, kus po svazích, a pod tou bílou byla ostrá hranice, za kterou začínala šedá skála.
+Ne v kotli. Nahoře. Eren se ráno probudil zimou, vylezl zpod plachty a uviděl to nad okrajem rokle. Hory, ty nejvyšší, které ležely daleko za údolím, byly bílé. Ne skvrnitě, jako předtím, kdy na nich ležely jen zbytky starého sněhu ve stínu. Bílé celé, od hřebene dolů, kus po svazích, a pod tou bílou byla ostrá hranice, za kterou začínala šedá skála.
 
 Odhadoval, jak vysoko ta hranice leží. Nevěděl, jak vysoko leží kotel, ani jak rychle hranice sejde dolů. Neměl data. Měl jen bílou čáru na horách a zimu v prstech.
 
@@ -366,11 +366,11 @@ Maela stála za ním. Slyšela to.
 
 Eren se k ní otočil.
 
-„Dvacet dva dní pryč,“ řekla. Mluvila pomalu a přitom počítala. Viděl, jak jí jdou rty. „Děti na polovině, od desátého dne čtvrtiny navíc pro nemocné. A to ze sedmého.“ Zavřela oči. „Čtyřicet osm. Padesát, když se uskrovníme.“
+„Dvacet dva dní pryč,“ řekla. Mluvila pomalu a přitom počítala. Viděl, jak se jí pohybují rty. „Děti na polovině, od desátého dne čtvrtiny navíc pro nemocné. A to ze sedmého.“ Zavřela oči. „Čtyřicet pět. Čtyřicet osm, když se uskrovníme.“
 
-Padesát dní jídla. Čtyřicet dní do sněhu, možná míň.
+Necelých padesát dní jídla. Čtyřicet dní do sněhu, možná míň.
 
-Eren ta dvě čísla položil vedle sebe, jak se pokládají dva díly, aby se vidělo, jestli do sebe zapadnou. Nezapadala. Mezi nimi zbývalo deset dní, a těch deset dní leželo na druhé straně. Za sněhem. Jídlo vydrží o kus déle než podzim a pak skončí, uprostřed zimy, o které nikdo z nich neví, jak je dlouhá. Ru to věděl. Eren se ho nezeptal. Nechtěl to slyšet od dítěte.
+Eren ta dvě čísla položil vedle sebe, jak se pokládají dva díly, aby se vidělo, jestli do sebe zapadnou. Nezapadala. Mezi nimi zbývalo osm dní, a těch osm dní leželo na druhé straně. Za sněhem. Jídlo vydrží o kus déle než podzim a pak skončí, uprostřed zimy, o které nikdo z nich neví, jak je dlouhá. Ru to věděl. Eren se ho nezeptal. Nechtěl to slyšet od dítěte.
 
 Díval se na hory. Na bílou čáru, pod kterou byla skála.
 

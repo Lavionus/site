@@ -82,7 +82,7 @@ V síni bylo ticho. Za zdmi se do záznamu dívaly tisíce lidí. Nara je necít
 
 „Senát poslouchá.“
 
-„Devátého dne senát rozhodl, že navrhovatelka smí o obsahu přílohy mluvit před senátem. Zda bude zápis z takového jednání pod pečetí, si senát vyhradil.“ Nara se podívala na Tann. „Řekla jste: tehdy, ne dnes. Navrhovatelka žádá, aby senát o zápisu rozhodl teď. Než začne mluvit.“
+„Devátého dne senát rozhodl, že navrhovatelka smí o obsahu přílohy mluvit před senátem. Rozhodnutí, zda bude zápis z takového jednání pod pečetí, si senát vyhradil.“ Nara se podívala na Tann. „Řekla jste: tehdy, ne dnes. Navrhovatelka žádá, aby senát o zápisu rozhodl teď. Než začne mluvit.“
 
 „Odůvodnění.“
 
@@ -90,7 +90,7 @@ V síni bylo ticho. Za zdmi se do záznamu dívaly tisíce lidí. Nara je necít
 
 Tann nic neřekla. Mladší soudce si něco zapsal.
 
-„Za druhé. Příloha byla zapečetěna z bezpečnostních důvodů. V čem ty důvody spočívají, uvedl odpůrce při jednání o přístupu. Senát to má v zápisu.“ Nara neřekla, co tam stojí. Zápis z devátého dne byl pod pečetí. „Navrhovatelka nepřednese žádný údaj o poloze kteréhokoli místa. Ani místa výkonu, ani průzkumné oblasti. Na tom, co zbude, žádný bezpečnostní důvod, který odpůrce uvedl, nespočívá.“
+„Za druhé. Příloha byla zapečetěna z bezpečnostních důvodů. V čem ty důvody spočívají, uvedl odpůrce při jednání o přístupu. Senát to má v zápisu.“ Nara neřekla, co tam stojí. Zápis z devátého dne byl pod pečetí. „Navrhovatelka nepřednese žádný údaj o poloze kteréhokoli místa. Ani místa výkonu, ani průzkumné oblasti. Toho, co zbude, se žádný bezpečnostní důvod, který odpůrce uvedl, netýká.“
 
 „Za třetí?“
 
@@ -134,7 +134,7 @@ Ardaine tentokrát odpověděla hned.
 
 „Odpůrce nemůže uvést jiný důvod, aniž by porušil pečeť,“ řekla.
 
-„Senát to bere na vědomí,“ řekla Tann. „Senát se přerušuje na dvacet minut.“
+„Senát to bere na vědomí,“ řekla Tann. „Jednání se přerušuje na dvacet minut.“
 
 *
 
@@ -184,7 +184,7 @@ Tann se podívala na Ardaine.
 
 Ardaine vstala.
 
-„Odpůrce bere na vědomí,“ řekla. A pak, po krátké odmlce: „A trvá na tom, že bude-li navrhovatelka přednášet údaje, které se týkají polohy, bude vznášet námitky.“
+„Odpůrce bere na vědomí,“ řekla. A pak, po krátké odmlce: „A upozorňuje, že bude-li navrhovatelka přednášet údaje, které se týkají polohy, bude vznášet námitky.“
 
 „Senát o nich rozhodne hned.“
 
@@ -208,11 +208,11 @@ Hlas jí zněl cize. Zněl hlasitěji, než chtěla, a odrážel se od stropu. S
 
 Ohnula palec.
 
-„Na listech jsou lidé. Skupiny po dvaceti až čtyřiceti osobách. S ohněm, s nástroji z kamene, v kůžích. Žena s dítětem na zádech. Ve všech oblastech průzkumu.“
+„Na listech jsou lidé. Skupiny po dvaceti až čtyřiceti osobách. S ohněm, s nástroji z kamene, v kůžích. Jeden z nich nese na zádech dítě. Ve všech oblastech průzkumu.“
 
 V lavicích někdo nahlas vydechl. Nara se nezastavila.
 
-„Na listech jsou létající plazi. Rozpětí křídel asi dvakrát výška člověka. Hnízdí jednotlivě, v převisech skal. V hnízdě jsou řady předmětů, srovnané: zlatá zrna, krystaly, valouny. Ve skále nad hnízdem jsou rýhy, po třech. Na listu z druhé návštěvy, po přeletu průzkumného člunu, je v hnízdě o jednu řadu víc. Na pohyblivém záznamu se plaz podívá nahoru k přístroji. Pak vyryje do skály tři čáry.“
+„Na listech jsou létající plazi. Rozpětí křídel dvě až tři výšky člověka. Hnízdí jednotlivě, v převisech skal. V hnízdě jsou řady předmětů, srovnané: žlutá zrna kovu, krystaly, valouny. Ve skále nad hnízdem jsou rýhy, po třech. Na listu z druhé návštěvy, po přeletu průzkumného člunu, je v hnízdě o jednu řadu víc. Na pohyblivém záznamu se plaz podívá nahoru k přístroji. Pak vyryje do skály tři čáry.“
 
 Ohnula ukazovák.
 
@@ -258,7 +258,7 @@ Tann chvíli mlčela.
 
 Nara viděla, jak Ardaine kývla a sedla si. Nevypadala poraženě. Vypadala jako někdo, kdo udělal, co musel, a ví, že to nestačilo.
 
-„Na téže mapě,“ řekla Nara, „je mimo všechny dvacet tři oblasti přerušovanou čarou ohraničeno ještě jedno místo. Je u něj napsáno: *Nepřistávat. Podle záznamů patronů.* Kde leží, navrhovatelka neuvede. Co znamená, neví.“
+„Na téže mapě,“ řekla Nara, „je mimo všech dvacet tři oblastí přerušovanou čarou ohraničeno ještě jedno místo. Je u něj napsáno: *Nepřistávat. Podle záznamů patronů.* Kde leží, navrhovatelka neuvede. Co znamená, neví.“
 
 Ohnula prsteníček. Na pravé ruce jí zbyl malíček.
 
@@ -294,7 +294,7 @@ Hals se nepohnul. Jen sklopil hlavu.
 
 Tady nemusela nic vážit. Tady to měla celé.
 
-„Nahoře je opis ve znacích, které nikdo nečte. Dole překlad Koloniálního úřadu, pořízený podle slovníku úřadu. Slovník je ztracen. Překladatel označil překlad za pracovní. Klíčový pojem přeložil slovem *kontaminant*. U jednoho slovesa zapsal, že slovník uvádí *hlídá, opatruje*, a že přeložil *izoluje*, podle smyslu. Doporučil ověření podle úplného znění. Nikdy se neprovedlo.“
+„Nahoře je opis ve znacích, které nikdo nečte. Dole překlad Koloniálního úřadu, pořízený podle slovníku úřadu. Slovník je ztracen. Překladatel označil překlad za pracovní. Klíčový pojem přeložil slovem *kontaminant*. Překlad říká: kontaminant se drží v místě, kde vznikl. Izoluje se. Neničí se. Kdo na světě zůstává, odpovídá za… a dál list chybí. U jednoho slovesa zapsal, že slovník uvádí *hlídá, opatruje*, a že přeložil *izoluje*, podle smyslu. Doporučil ověření podle úplného znění. Nikdy se neprovedlo.“
 
 Pak řekla poznámku. Celou, slovo od slova, jak ji patnáctého dne nadiktovala do zapisovače dvanáct set metrů pod povrchem.
 
@@ -346,7 +346,7 @@ Nara stála a čekala, až se jí vrátí hlas. Vracel se pomalu. Ruce měla na 
 
 „Domněnka v odstavci tři sta devadesát jedna je vyvrácena. Vyvrátily ji listiny, které soud před devíti sty lety přijal neotevřené. Koloniální úřad v době rozsudku věděl, že Země obydlená je. Věděl, že je chráněná. Věděl, že výjimku může dát jen Shromáždění veřejně. Nepožádal o ni. Místo toho zařídil, aby rozsudek mlčel.“
 
-„Výkon trestu podle rozsudku Terra se neděje před devíti sty lety. Děje se teď. Za deset dní má loď odvézt šest tisíc dvanáct osob na svět, na který statut, platný dodnes, zakazuje vysazovat osoby. Je to vědomé porušení ochrany chráněného světa. Bylo vědomé tehdy a dnes je vědomé znovu, protože ode dneška to ví každý.“
+„Výkon trestu podle rozsudku Terra se neodehrál před devíti sty lety. Děje se teď. Za devět dní má loď odvézt šest tisíc dvanáct osob na svět, na který statut, platný dodnes, zakazuje vysazovat osoby. Je to vědomé porušení ochrany chráněného světa. Bylo vědomé tehdy a dnes je vědomé znovu, protože ode dneška to ví každý.“
 
 „Navrhovatelka žádá, aby senát výkon trestu vyhnanství, druhý transport, zastavil.“
 
@@ -370,7 +370,7 @@ Pak to řekla celé. Krátce, po bodech, jak psala. Navrhovatelka napadá místo
 
 „A protokol,“ řekla Ardaine. „Je součástí statutu, jak navrhovatelka sama uvedla. Mluví o kontaminantu a o hranici. Odpůrce trvá na tom, že jde o karanténu. Navrhovatelka jiný výklad nemá.“ Podívala se na Naru. „Odpůrce oceňuje, že ho nepředstírá.“
 
-„Konečně,“ řekla Ardaine. „Třicátého dne podal Koloniální úřad osvědčení bezpečnostní nezbytnosti výkonu. Zákon o výkonu trestu senátu dovoluje přezkoumat jen to, zda je vydal příslušný orgán v předepsané formě. Vydal ho příslušný orgán. Forma je předepsaná.“
+„Konečně,“ řekla Ardaine. „Třicátého dne podal Koloniální úřad osvědčení bezpečnostní nezbytnosti výkonu. Zákon o výkonu trestu senátu dovoluje přezkoumat jen to, zda je vydal příslušný orgán v předepsané formě. Vydal ho příslušný orgán. Forma odpovídá předpisu.“
 
 Odmlčela se.
 
@@ -384,7 +384,7 @@ Sedla si.
 
 Nara vstala. Měla toho mnoho a vybrala jednu věc.
 
-„Osvědčení se dovolává bezpečnostních důvodů uvedených v příloze,“ řekla. „V příloze je jediný bezpečnostní důvod. Je to věta stanoviska, že statut neodpovídá bezpečnostní potřebě Konfederace. Bezpečnostní důvod, který odpůrce osvědčuje, je rozhodnutí statut obejít.“ Odmlčela se. „Senát nesmí přezkoumat, zda je osvědčení důvodné. Navrhovatelka žádá jen, aby senát zapsal, o co se opírá.“
+„Osvědčení se dovolává bezpečnostních důvodů uvedených v příloze,“ řekla. „Stanovisko v příloze uvádí dva bezpečnostní důvody. Že statut neodpovídá bezpečnostní potřebě Konfederace a že ponechat odsouzené v habitatech je riziko. Oba vedou k témuž. Bezpečnostní důvod, který odpůrce osvědčuje, je rozhodnutí statut obejít.“ Odmlčela se. „Senát nesmí přezkoumat, zda je osvědčení důvodné. Navrhovatelka žádá jen, aby senát zapsal, o co se opírá.“
 
 „Senát to zapsal,“ řekla Tann.
 
@@ -430,7 +430,7 @@ Ardaine odcházela poslední. U Nařina stolu se nezastavila. Prošla kolem, dí
 
 Na chodbě se Naře vrátila síť celá najednou.
 
-*Záznam jednání: veřejný. Sledovalo: 1 380 000. Ohlasy: …* Číslo se měnilo tak rychle, že ho síť přestala ukazovat a místo něj napsala jen *mnoho*. Pak, menším písmem, řádek, který Nara nikdy neviděla:
+*Záznam jednání: veřejný. Sledovalo: 1 380 000. Ohlasy: …* Číslo se měnilo tak rychle, že ho síť přestala ukazovat a místo něj napsala jen *mnoho*. Pak, menším písmem, řádek, který Nara ještě nikdy neviděla:
 
 *Zápis obsahuje rizikový obsah. Veřejný záznam Spolkového soudu nelze filtrovat.*
 

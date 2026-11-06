@@ -66,7 +66,7 @@ Pak Ortlieb zvedl svůj kahan a podržel ho vpravo, kde se čelba stáčela, a M
 
 Skála tam nekončila skálou.
 
-Skála tam byla odloupnutá v místě velkém asi jako dveře, možná menším, protože pravý kraj ještě zakrývala rozpukaná hornina. A pod ní, kde měla být zase skála, jen jiná, bylo něco hladkého. Tmavého. Ne černého, Matěj neuměl říct, jakou to mělo barvu. Jako voda v hluboké studni, když se do ní člověk podívá za poledne. Bylo to mírně vypouklé, jako bok velikého džbánu, který leží v zemi, a nebyla na tom žádná spára, žádná vrstva, žádná rýha. Po povrchu stékala voda tenkou blánou a kouřila, a tam, kde stekla, zůstávala na té hladkosti suchá místa, která se během dechu zase zamžila.
+Skála tam byla odloupnutá v místě velkém asi jako dveře, možná menším, protože pravý kraj ještě zakrývala rozpukaná hornina. A pod ní, kde měla být zase skála, jen jiná, bylo něco hladkého. Tmavého. Ne černého, Matěj neuměl říct, jakou to mělo barvu. Jako voda v hluboké studni, když se do ní člověk podívá za poledne. Bylo to mírně vypouklé, jako bok velikého džbánu, který leží v zemi, a nebyla na tom žádná spára, žádná vrstva, žádná rýha. Po povrchu stékala voda tenkou blánou a kouřila, a tam, kde stekla, zůstávala na té hladkosti suchá místa, která se za jeden nádech zase zamžila.
 
 ![Hladká skála](obrazky/16_svetlo_v_hore.webp)
 
@@ -90,7 +90,7 @@ Bylo to hladké. Hladší než led, hladší než glazura na džbánu z Chebu, a
 
 Matěj ruku stáhl.
 
-„Je teplé,“ řekl Konrád. „Bije. Cítíš to, Matěji? Bije.“ Postavil se vedle něj a položil na to dlaň sám, rozevřenou, a nesundal ji, i když ho to muselo pálit. Jeho tvář v kahanovém světle byla mokrá od potu a oči mu svítily. „Mistře. Otevři ho.“
+„Je teplé,“ řekl Konrád. „Bije. Cítíš to, Matěji? Bije.“ Postavil se vedle něj a položil na to dlaň sám, rozevřenou, a nesundal ji, i když ho to muselo pálit. Ve světle kahanu měl tvář mokrou od potu a oči mu svítily. „Mistře. Otevři ho.“
 
 „Pane…“
 
@@ -98,7 +98,7 @@ Matěj ruku stáhl.
 
 Ortlieb se nepohnul. Díval se na tu hladkost a na Konrádovu ruku na ní a jeho tvář byla šedá. Pak se podíval na Ješka.
 
-Ješek se sehnul pro mlátek a želízko. Nikdo mu to nepřikázal. Přistoupil k čelbě, nasadil želízko na kraj, kde ještě držela rozpukaná skála, aby ji odlomil, jak se to dělá. Matěj viděl jeho ruce. Třásly se. Ješek se nikdy netřásl. Ješek se třásl, protože nespal dva dny, a protože tohle byla dvojí mzda za dvě party, a protože se pán díval.
+Ješek se sehnul pro mlátek a želízko. Nikdo mu to nepřikázal. Přistoupil k čelbě, nasadil želízko na kraj, kde ještě držela rozpukaná skála, aby ji odlomil, jak se to dělá. Matěj viděl jeho ruce. Třásly se. Ješek se nikdy netřásl. Ješek se třásl, protože nespal tři dny, a protože tohle byla dvojí mzda za dvě party, a protože se pán díval.
 
 Udeřil.
 
@@ -130,7 +130,7 @@ Ne tma štoly. Jiná. Hluboká a čistá, a v ní světla. Mnoho, nespočetně, 
 
 Pak se některá z nich pohnula.
 
-Ne všechna. Několik. Matěj by je nespočítal, protože nemohl odtrhnout oči, ale bylo jich víc než prstů na jedné ruce a míň než na dvou. Pohnula se a padala. Pomalu. Ne jako hvězdy, které padají v srpnu a které člověk zahlédne koutkem oka a už nejsou. Tahle padala tak pomalu, jako padají listy za bezvětří, a za každým zůstávala slabá stopa, bledá, jako za prstem v mouce. Padala v řadě, jedno za druhým. Pod nimi se ze tmy vynořilo něco velikého a zakřiveného, zelené a modré a bílé. Matěj nevěděl, co to je, a pak to pochopil, protože to bylo, jako když se člověk dívá z hřbetu dolů do kraje.
+Ne všechna. Několik. Matěj by je nespočítal, protože nemohl odtrhnout oči, ale bylo jich víc než prstů na jedné ruce a míň než na dvou. Pohnula se a padala. Pomalu. Ne jako hvězdy, které padají v srpnu a které člověk zahlédne koutkem oka a už nejsou. Tahle padala tak pomalu, jako padají listy za bezvětří, a za každým zůstávala slabá stopa, bledá, jako za prstem v mouce. Padala v řadě, jedno za druhým. Pod nimi se ze tmy vynořilo něco velikého a zakřiveného, zeleného a modrého a bílého. Matěj nevěděl, co to je, a pak to pochopil, protože to bylo, jako když se člověk dívá z hřbetu dolů do kraje.
 
 Země. Kraj. Hory a mezi nimi voda, lesknoucí se. Viděl to shora, jako to vidí pták, nebo Bůh.
 
@@ -156,7 +156,9 @@ Nad tou osadou, nad oblými střechami, se tma znovu otevřela, a v ní bylo sv�
 
 Zvětšovalo se.
 
-*Fiat voluntas tua.*
+*Fiat voluntas tua.* A pak *panem nostrum* a *dimitte nobis* a světlo rostlo dál.
+
+*Sed libera nos a malo.*
 
 A pak zhaslo všechno. Tma. Hladkost zase tmavá, s vodou, která po ní stékala, a kahany za zády, a ticho.
 
@@ -170,11 +172,11 @@ A pak, než stačil kdokoli promluvit, se světlo na dně té hladkosti rozsvít
 
 Stejně. Zase tma a hvězdy. Zase světla, která se pohnula a padala. Matěj začal Otčenáš znovu, od začátku, a tentokrát se díval jinak. Ne jako ten, kdo vidí zázrak. Jako ten, kdo opisuje. Počítal padající světla: osm. Ne, devět. Jedno bylo slabší než ostatní a padalo pozadu. Díval se na kraj, na hory a vodu, a nepoznal je. Nebyly to hory, jaké znal. Díval se na osadu. Řady. Počítal řady, a nedopočítal, protože se mu to rozmazávalo. Díval se na světlo, které přicházelo shora, a tentokrát si všiml, že nepřichází z místa, odkud padala ta první. Odjinud. Z jiné strany tmy.
 
-U *fiat voluntas tua* zase zhaslo.
+U *sed libera nos a malo* zase zhaslo.
 
 Jeden Otčenáš. Skoro přesně. Matěj stál ve vodě po kotníky a srdce mu bušilo a on si pomyslel, úplně jasně, jako se myslí věci, které člověk napíše do vosku: *Opakuje se. Jako ta skupina rýh v hnízdě. Kdo to ukazuje, chce, aby to bylo vidět.*
 
-Pak se lekl té myšlenky a odložil ji. Tu nevěděl. Tu si myslel.
+Pak se lekl té myšlenky a odložil ji. To nevěděl. To si jen myslel.
 
 Rozsvítilo se potřetí.
 
@@ -202,7 +204,7 @@ Nebylo to najednou. Bylo to jako tání. Matěj znal tu tvář: pohyblivou, chyt
 
 Ta tvář odcházela.
 
-Nejdřív ztuhl úsměv. Pak oči. Ty pohyblivé oči se zastavily a přestaly se pohybovat, a Matěj si uvědomil, že je to poprvé, co je vidí stát. Upřené. Nehybné. Ústa se pootevřela. A pak, jak světlo přicházející shora rostlo, se Konrádovi rozevřely ruce. Visely mu podél těla a dlaně se otočily dopředu, k té hladkosti, prázdné, jak se otáčejí dlaně u oltáře, když kněz říká *Dominus vobiscum*. Jak se otáčejí, když člověk něco přijímá.
+Nejdřív ztuhl úsměv. Pak oči. Ty těkavé oči se zastavily, a Matěj si uvědomil, že je to poprvé, co je vidí stát. Upřené. Nehybné. Ústa se pootevřela. A pak, jak světlo přicházející shora rostlo, se Konrádovi rozevřely ruce. Visely mu podél těla a dlaně se otočily dopředu, k té hladkosti, prázdné, jak se otáčejí dlaně u oltáře, když kněz říká *Dominus vobiscum*. Jak se otáčejí, když člověk něco přijímá.
 
 Po tvářích mu tekly slzy. Nevšiml si jich.
 
@@ -216,7 +218,7 @@ Matěj se díval na něj. Na čelbu už ne.
 
 *
 
-Potřetí zhaslo u *fiat voluntas tua*. A pak, ani ne po celém dechu, se rozsvítilo znovu, ale jinak.
+Potřetí zhaslo u *sed libera nos a malo*. A pak, ani ne po celém dechu, se rozsvítilo znovu, ale jinak.
 
 Nebyla to tma s hvězdami. Bylo to jen světlo. To bledé, studené, jako měsíc v ledu, a bylo ho méně, jako by se sbíralo. Stahovalo se z celé hladkosti do jednoho místa, do středu, a tam se zhustilo, až bylo tak jasné, že se na ně nedalo dívat, a Matěj přimhouřil oči a viděl ho i tak, přes víčka, bílé.
 
@@ -248,7 +250,7 @@ Pak se hora pohnula ještě jednou, krátce, slaběji než předtím, jako se ot
 
 *
 
-Rüdiger přišel zvenku, protože se nikdo nevracel. Konrád se zvedl, až když ho Rüdiger chytil pod paží. Plášť z něj crčel. Volkmar klečel dál a nepřestával mluvit, a Rüdiger se na něj podíval a nechal ho být.
+Rüdiger přišel zvenku, protože se nikdo nevracel. Konrád se zvedl, až když ho Rüdiger chytil pod paží. Z pláště mu crčela voda. Volkmar klečel dál a nepřestával mluvit, a Rüdiger se na něj podíval a nechal ho být.
 
 „Nikdo,“ řekl Konrád. Hlas měl chraplavý a tichý a Matěj ho skoro nepoznal. „Nikdo na to nesáhne. Mistře. Slyšíš? Nikdo.“
 
@@ -317,7 +319,7 @@ Ješek dlouho mlčel.
 
 „Tentokrát ti věřím,“ řekl.
 
-Matěj na to neřekl nic. Ješek vstal, zvedl mlátek, zvážil ho v ruce, jako by nevěděl, co s ním, a pak ho položil na Henselův kámen a šel do boudy spát. Poprvé za dva dny mohl spát celou noc.
+Matěj na to neřekl nic. Ješek vstal, zvedl mlátek, zvážil ho v ruce, jako by nevěděl, co s ním, a pak ho položil na Henselův kámen a šel do boudy spát. Poprvé za tři dny mohl spát celou noc.
 
 *
 
@@ -341,7 +343,7 @@ Dívali se dlouho. Matěj čekal, že se to objeví. Že to jen není vidět v t
 
 Matěj neodpověděl.
 
-„Za dvacet let se to nestalo ani jednou,“ řekla. „Ani v létě, když bylo chladno. Vždycky.“ Opřela se o tyč a dívala se nahoru, a Matěj poprvé viděl v její tváři strach. Ne o sebe. Dobroslava se o sebe nikdy nebála, ani na okraji prohlubně, ani když u jejích dveří stál lovčí. „Co jste tam nahoře dělali?“
+„Za dvacet let se to nestalo ani jednou,“ řekla. „V létě, v zimě, vždycky.“ Opřela se o tyč a dívala se nahoru, a Matěj poprvé viděl v její tváři strach. Ne o sebe. Dobroslava se o sebe nikdy nebála, ani na okraji prohlubně, ani když u jejích dveří stál lovčí. „Co jste tam nahoře dělali?“
 
 „Nic,“ řekl Matěj. „Dívali jsme se.“
 

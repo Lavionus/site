@@ -18,7 +18,7 @@ Nara jela odpolední linkou. Sama, bez senátu, bez Ardaine. Příloha k přizn�
 
 Nara se na něj podívala.
 
-„Ostatní se nejednaly,“ řekl Hals. „Ostatní podepsali bez podmínek. Nebo s podmínkami, které nikdo nezapsal.“
+„O ostatních se nejednalo,“ řekl Hals. „Ostatní podepsali bez podmínek. Nebo s podmínkami, které nikdo nezapsal.“
 
 Vytáhl list. Byl menší než list přiznání, tenčí, a na horním okraji měl tentýž znak totožnosti, jaký stál pod přiznáním v zápisu. Pod ním stálo jméno.
 
@@ -36,6 +36,8 @@ Nara si vzala lupu. Ruka se jí netřásla. Za ty dny tady dole se to naučila. 
 
 Pod tím dva znaky. Jeden Erenův. Druhý patřil vyšetřovacímu odboru Koloniálního úřadu. Jméno u něj nebylo.
 
+„V síti ji viděl jako řádek pod přiznáním,“ řekl Hals. „Archiv ji vede zvlášť, jako přílohu.“
+
 Nara si doložku přečetla jednou. Pak ještě jednou, v pořadí staré řeči. A pak potřetí, pomalu, po slovech, jako se čte smlouva, o které už víte, že ji někdo porušil, a hledáte jen místo, kde se to stalo.
 
 *Budou z řízení vyňaty.*
@@ -46,7 +48,7 @@ Seděla nad tím dlouho.
 
 Hals si přinesl židli a sedl si naproti. Nic neříkal. Dýchal pomalu a pára mu stoupala od úst k lampě a tam se ztrácela.
 
-Nara znala ten řádek z veřejné přílohy Terry, z rozdělení do modulů. Našla ho šestý den, na zpáteční lince, a ještě tehdy jí přišel jen smutný. *Oblast 6. Modul 4. Eren, technik údržby distribučních sítí. Přiznání podepsáno. Doprovod: Maela, Tio (dcera, 6).*
+Nara znala ten řádek z veřejné přílohy Terry, z výkonového seznamu rozděleného do modulů. Našla ho šestý den, na zpáteční lince, a ještě tehdy jí přišel jen smutný. *Oblast 6. Modul 4. Eren, technik údržby distribučních sítí. Přiznání podepsáno. Doprovod: Maela, Tio (dcera, 6).*
 
 Doprovod.
 
@@ -172,7 +174,7 @@ Jeden modul ze sedmi. Hlášení neříkalo který.
 
 Nara si uvědomila, že doufá. Bylo to hloupé a nepotřebné a nemohla s tím nic udělat. Doufala, že to nebyl čtvrtý. Člověk, kterého nikdy neviděla, který devět set let nežil, který udělal nástroj a mlčel devatenáct dní. Doufala, že přistál.
 
-Zpráva nic dalšího neříkala. Pozorovací síť zapsala, kolik modulů dosedlo, a pak už nic. *Další hlášení: nedošlo.* Nevěděla proč. Nevěděla, jestli síť přestala posílat, nebo jestli hlášení teprve letí, nebo jestli se ztratila po cestě. Věděla jen, že kdo tam dole přistál, přistál na světě, kde necelý den chůze od navrženého místa stoupala nad teplou vodou pára a u ní stál kroužek.
+Zpráva nic dalšího neříkala. Pozorovací síť zapsala, kolik modulů dosedlo, a pak už nic. *Další hlášení: nedošlo.* Nevěděla proč. Nevěděla, jestli síť přestala posílat, nebo jestli hlášení teprve letí, nebo jestli se ztratilo po cestě. Věděla jen, že kdo tam dole přistál, přistál na světě, kde necelý den chůze od navrženého místa stoupala nad teplou vodou pára a u ní stál kroužek.
 
 To poslední směla vědět jen ona. To první mohl vědět kdokoli.
 
@@ -222,7 +224,7 @@ Lumi kývla.
 
 „Ale v přiznání to je.“
 
-„V přiznání je šablona.“ Nara se vrátila ke stolu a otevřela znění, které měla v záznamu ze šestého dne. „*Hlásil jsem se k hnutí Otevřená mysl. Věděl jsem o jeho záměrech. Účastnil jsem se schůzek, na nichž se o nich mluvilo. Nesu svůj díl odpovědnosti za čin, který hnutí spáchalo.* Slovo od slova stejné u jedenácti tisíc lidí. Podepsal ho výměnou za slib, že jeho partnerka a dcera budou vyňaty a chráněny. Ten slib byl dodržen tak, že je úřad dvanáct dní po rozsudku přidružil k výkonu. Šly s ním.“
+„V přiznání je šablona.“ Nara se vrátila ke stolu a otevřela znění, které měla v záznamu ze šestého dne. „*Hlásil jsem se k hnutí Otevřená mysl. Věděl jsem o jeho záměrech. Účastnil jsem se schůzek, na nichž se o nich mluvilo. Nesu svůj díl odpovědnosti za čin, který hnutí spáchalo.* Slovo od slova stejné u všech členů. Podepsal ho výměnou za slib, že jeho partnerka a dcera budou vyňaty a chráněny. Ten slib byl dodržen tak, že je úřad dvanáct dní po rozsudku přidružil k výkonu. Šly s ním.“
 
 Lumi chvíli mlčela.
 
@@ -238,7 +240,7 @@ Na konci měly tři odstavce. Nara si je přečetla nahlas, jednou, v prázdné 
 
 *Rozsudek Terra opřel zjištění o provedení činu o technické záznamy a o jediné jmenovité přiznání, přiznání obviněného Erena. Rekonstrukce technických záznamů (položka 8) prokazuje, že obviněný upravil zařízení, jímž byl čin proveden, a že při tom viděl, jaký rozsah oprávnění zařízení má. Prokazuje tedy jeho příčinný podíl a zanedbání opatrnosti, k níž byl povinen. Neprokazuje, že věděl, k čemu bude zařízení použito. Neprokazuje, kdo zařízení převzal. V době činu byl obviněný v bydlišti.*
 
-*Jediným dokladem úmyslu je přiznání. Jeho text je stejná šablona, jakou podepsalo jedenáct tisíc tři sta odsouzených. Obviněný ho podepsal na základě doložky (položka 9), podle níž měly být osoby v jeho domácnosti z řízení vyňaty a úřad měl zajistit jejich ochranu. Úřad je dvanáct dní po rozsudku opatřením o výkonu přidružil k trestu. Doložka byla v první větě obejita a ve druhé porušena. Přiznání získané takto nemůže být dokladem úmyslu.*
+*Jediným dokladem úmyslu je přiznání. Jeho text je tatáž šablona, jakou ve čtyřech nebo ve třech větách podepsalo jedenáct tisíc tři sta odsouzených. Obviněný ho podepsal na základě doložky (položka 9), podle níž měly být osoby v jeho domácnosti z řízení vyňaty a úřad měl zajistit jejich ochranu. Úřad je dvanáct dní po rozsudku opatřením o výkonu přidružil k trestu. Doložka byla v první větě obejita a ve druhé porušena. Přiznání získané takto nemůže být dokladem úmyslu.*
 
 *I kdyby obviněný jednal úmyslně, jeho vina by byla jeho vinou. Navrhovatelka netvrdí, že obviněný byl nevinný. Tvrdí, že ani ten jediný člověk, jehož čin soud doložil, nebyl doložen jako pachatel vraždy, a přesto se z jeho přiznání stal základ odsouzení necelých dvaceti čtyř tisíc lidí, kteří žádné zařízení neupravili. Individuální pochybení neospravedlňuje kolektivní trest. Rozsudek nad čtyřmi sty jedním členem hnutí Nové otevření se opírá o tentýž odstavec dvě stě osmnáct.*
 
@@ -258,7 +260,7 @@ Lumi se na ni dívala dál, ale nezeptala se, co je levý sloupec. Nara to oceni
 
 *
 
-Doplnění podala dvacátého druhého dne v jedenáct dopoledne. Do veřejné části spisu, se třemi přílohami: rekonstrukce Juno Pell, doložka a souhrnné hlášení pozorovací sítě. To poslední jako doklad, že transport dorazil k cíli. K obydlenému světu, to už napsat nesměla. Napsala jen *k cíli*. Kdo četl pod pečetí, věděl, co je to za cíl.
+Druhou část doplnění podala dvacátého druhého dne v jedenáct dopoledne. Do veřejné části spisu, se třemi přílohami: rekonstrukce Juno Pell, doložka a souhrnné hlášení pozorovací sítě. To poslední jako doklad, že transport dorazil k cíli. K obydlenému světu, to už napsat nesměla. Napsala jen *k cíli*. Kdo četl pod pečetí, věděl, co je to za cíl.
 
 *Doručeno. Senát předsedkyně O. Tann. Odpůrce vyrozuměn.*
 

@@ -22,7 +22,7 @@ Hana píše. *29. 4., 4:12, T. K. tel.*
 
 „Chyba přístroje?“
 
-„Hledal jsem ji dvě hodiny. Je to tam na dvou přijímačích, které spolu nemají nic společného, kromě střechy.“ Kalina se nadechne. „A ještě jedna věc. Mladý Ostrý mi posílá čísla od skály každé ráno, vy víte. Ráno jsem se nedočkal, tak jsem mu napsal. Odepsal hned. On taky nespí.“
+„Hledal jsem ji dvě hodiny. Je to tam na dvou přijímačích, které spolu nemají nic společného, kromě střechy.“ Kalina se nadechne. „A ještě jedna věc. Mladý Ostrý mi posílá čísla od skály každé ráno, jak víte. Ráno jsem se nedočkal, tak jsem mu napsal. Odepsal hned. On taky nespí.“
 
 „A?“
 
@@ -130,7 +130,7 @@ Velitel podrží detektor u prahu. Pak u kolen. Pak nad hlavou. Čísla se měn�
 
 „A dole?“
 
-„Dole je plyn,“ řekne Lada. „Na ten se dívejte. Na nic jiného tam není co dívat.“
+„Dole je plyn,“ řekne Lada. „Na ten se dívejte. Na nic jiného se tam není co dívat.“
 
 Velitel na ni hledí shora. Lada mu sahá k prsům. Nezaklání hlavu. Ostří ji nezaklánějí.
 
@@ -162,7 +162,7 @@ Hana nevzhlédne. Klekne si k vývěru, jako by měřila, a telefon opře o kám
 
 Když vstane, je pryč.
 
-Ráno to řekne Tadeášovi. Ukáže mu fotku. Tadeáš drží telefon dlouho, s rukama v kapsách, a pes čenichá u kamene.
+Ráno to řekne Tadeášovi. Ukáže mu fotku. Tadeáš drží telefon dlouho a pes čenichá u kamene.
 
 „To je on,“ řekne Tadeáš.
 
@@ -182,7 +182,7 @@ Kalina přijede v sobotu osmnáctého, vlakem v jedenáct dvacet, ve stejné bun
 
 Kalina na levý stůl rozloží tři listy. Vlastní měření z dubnové noci. A dvě další, cizí, v angličtině, s hlavičkami, které Hana nezná.
 
-„Jih,“ řekne a položí prst na jeden. „Evropa.“ Na druhý. „Nedal jsem jim nic než souřadnice a čas. Zlom našli obě. Ve stejné minutě. Posun mezi nimi je přesně takový, jaký má být, když stojí každá jinde na Zemi.“
+„Jih,“ řekne a položí prst na jeden. „Evropa.“ Na druhý. „Nedal jsem jim nic než souřadnice a čas. Zlom našly obě. Ve stejné minutě. Posun mezi nimi je přesně takový, jaký má být, když stojí každá jinde na Zemi.“
 
 Hana se dívá na tři čáry. Tři různé ruce, tři různé přístroje. Každá čára je rovná až do jednoho místa a tam se láme. Stejně.
 
@@ -192,7 +192,7 @@ Hana se dívá na tři čáry. Tři různé ruce, tři různé přístroje. Kaž
 
 „To slovo, které jste mi v dubnu neřekl.“
 
-„Řízené,“ řekne Kalina. Řekne to tiše, aby to nikdo v kuchyni neslyšel. Nikdo v kuchyni není. „To slovo už říct můžu. Před vámi. Před nimi až v srpnu, až to projde těmi, kdo mi to mají roztrhat. Se dvěma observatořemi jako spoluautory. Ať to není jen moje.“
+„Řízené,“ řekne Kalina. Řekne to tiše, aby to nikdo v kuchyni neslyšel. Nikdo v kuchyni není. „To slovo už říct můžu. Před vámi. Před ostatními až v srpnu, až to projde těmi, kdo mi to mají roztrhat. Se dvěma observatořemi jako spoluautory. Ať to není jen moje.“
 
 „A kdy přiletí?“
 
@@ -249,7 +249,7 @@ Kubeš se opře. Neříká nic. Vezme propisku a napíše si na kraj stolní pod
 
 „A kdo tam bydlel předtím?“
 
-Hana zvedne oči. Kubeš jí pohled vrátí. Není to past. Je to otázka, kterou si potom položí sám, jestli se ji teď nezeptá.
+Hana zvedne oči. Kubeš jí pohled vrátí. Není to past. Je to otázka, kterou si potom položí sám, jestli se na ni teď nezeptá.
 
 „Majitelé,“ řekne Hana. „Rodina. Stará rodina, statek drží přes dvě stě let. Nejsou na tom seznamu z fóra a nikdo z nich nechce, abych o nich mluvila. Tak o nich nemluvím.“
 
@@ -369,7 +369,7 @@ Kalina volá v devět deset z pokoje nad jídelnou.
 
 V devět dvacet vyjde ze sadu Sael.
 
-Hana ji pozná podle chůze dřív než podle tváře. Vysoká postava v šedém kabátě, s plátěnou taškou přes rameno, prázdnou, složenou na plocho. Jde po pěšině mezi stromy a nedívá se na hasiče ani na auta. Dívá se na dům.
+Hana ji pozná podle chůze dřív než podle tváře. Vysoká postava v šedém kabátě, s plátěnou taškou přes rameno, prázdnou, složenou naplocho. Jde po pěšině mezi stromy a nedívá se na hasiče ani na auta. Dívá se na dům.
 
 U vrat se zastaví vedle Hany.
 
@@ -383,7 +383,7 @@ Sael kývne. Přejede očima hasičská auta, lahve, muže na schůdcích, kteř
 
 „Ano.“
 
-Sael jde k němu. Hana nevidí, co mu řekne. Vidí jen, že velitel poslouchá, pak se podívá na hodinky a něco řekne on. Sael kývne. Velitel jí podá vysílačku a malý šedý detektor. Sael si detektor připne na kabát, pod límec, jako brož.
+Sael jde k němu. Hana neslyší, co mu řekne. Vidí jen, že velitel poslouchá, pak se podívá na hodinky a něco řekne on. Sael kývne. Velitel jí podá vysílačku a malý šedý detektor. Sael si detektor připne na kabát, pod límec, jako brož.
 
 Pak se vrátí k Haně.
 

@@ -6,7 +6,7 @@ Hana to ví, protože si k ní v úterý v devět ráno nastaví dlaně, jako se
 
 „Říkala jsem to už tenkrát,“ řekne. „Je to lampa pro papír. Ne pro lidi.“
 
-Je o pět let starší, než když ji Hana viděla naposledy, a je to na ní vidět jen na rukou. Brýle má jedny, na nose. Ty druhé, co nosila ve vlasech, asi někde zůstaly. Nebo už nejsou potřeba.
+Je o pět let starší, než když ji Hana viděla naposledy, a je to na ní vidět jen na rukou. Brýle má jedny, na nose, jako tenkrát v dubnu.
 
 „Restaurátorka tu bude za chvíli,“ řekne Šindelářová. „Kodex přinese sama. Je to její podmínka.“
 
@@ -70,7 +70,7 @@ Nic dalšího. Hana čeká. Sálová taky. Šindelářová chvíli přešlapuje 
 
 Hana čte list po listu.
 
-V lednu 2025 hledala kámen. V dubnu hledala, kde je napsáno, odkud ten kámen je. Celé čtyři roky potom četla pracovní překlad a hledala v něm to, co se hodilo k válci, ke kosti, ke značkám. Teď si slíbila, že nebude hledat nic. Bude číst, co tam je. Kudy jde inkoust. Kde ruka přitlačila. Kde se zastavila.
+V lednu 2025 hledala kámen. V dubnu hledala, kde je napsáno, odkud ten kámen je. Skoro pět let potom četla pracovní překlad a hledala v něm to, co se hodilo k válci, ke kosti, ke značkám. Teď si slíbila, že nebude hledat nic. Bude číst, co tam je. Kudy jde inkoust. Kde ruka přitlačila. Kde se zastavila.
 
 Je to těžší, než si myslela. Oko chce hledat. Oko chce vždycky hledat.
 
@@ -106,7 +106,7 @@ Hana se zarazí.
 
 Sálová nic neřekne. Na mapu se nedívá. Dívá se na Hanu.
 
-Vedle konce štoly čtvereček se znaky. Kroužek, čtvereček, trojúhelník. To je dutina, kterou Hana zná z dvoustrany s mřížkou. Dole pod horou shluk několika malých komůrek, nakreslených tenčeji, a vedle drobně *non certum*. Nejisté. Nad komůrkami a vpravo nepravidelná plocha vyplněná vlnovkami. Voda. A těsně u vody, kus nad koncem štoly, kruh šrafovaný krátkými hustými vlnovkami, jako by z něj šly paprsky.
+Vedle konce štoly rámeček se znaky. Kroužek, čtvereček, trojúhelník. To je dutina, kterou Hana zná z dvoustrany s mřížkou. Dole pod horou shluk několika malých komůrek, nakreslených tenčeji, a vedle drobně *non certum*. Nejisté. Nad komůrkami a vpravo nepravidelná plocha vyplněná vlnovkami. Voda. A těsně u vody, kus nad koncem štoly, kruh šrafovaný krátkými hustými vlnovkami, jako by z něj šly paprsky.
 
 U kruhu *teplá skála*. Česky, starým pravopisem.
 
@@ -132,7 +132,7 @@ Sálová chvíli mlčí. Baterka v její ruce se nehne.
 
 Hana se dívá na zbytek oblouku pod českým slovem. Napadne ji Ilona. Pět rubů, které vdova po ranhojiči seškrábala tak dobře, že papír vypadá jako krajina z letadla, a pak to u soudu přiznala. Napadne ji mnich, který na pergamenu nemohl uhladit chybu jako ve vosku, a tak ji vyškrábal nožem. Dva lidé, čtyři sta let od sebe, a oba věděli, jak se ruší, co se napsalo. Oba to udělali tak, aby bylo vidět, že se to stalo.
 
-„Ukazujete mi to,“ řekne Hana, „protože jsem se ptala na tři roky.“
+„Ukazujete mi to,“ řekne Hana, „protože jsem se ptala na ty tři roky.“
 
 „Ukazuju vám to, protože to je v protokolu o stavu,“ řekne Sálová. „Stav pergamenu, strana čtyřicet. Paní Šindelářová ho má.“ Rozsvítí lampu. Bílé studené světlo spadne na mapu a rasura zmizí, jako by tam nikdy nebyla. „A protože jste se dívala na to slovo jinak než na ostatní.“
 
@@ -184,7 +184,7 @@ U slova *Tacui*, které stojí samo vedle *exivimus*, se zastaví.
 
 „Proto se tomu říká mlčet,“ řekne Hana.
 
-Šindelářová se zasměje. Krátce. Poprvé, co ji Hana zná.
+Šindelářová se zasměje. Krátce. Poprvé, co ji Hana slyší se smát.
 
 Sálová se nesměje. Dívá se na to slovo a pak zavře kodex. Pomalu, oběma rukama, desku na desku, a položí na ně dlaň, jako to tenkrát udělala Šindelářová. Kniha je velká jako dlaň. Pod její dlaní zmizí celá.
 
@@ -202,7 +202,7 @@ Hana se zapře v židli. Tohle je první věc, kterou mnich nakreslil, a je spr�
 
 Kus na východ od statku, asi v třetině výšky svahu, něco jiného.
 
-Kužel. Nízký, rozplizlý, s plochým vrcholem. Halda. Hana jich viděla v lidaru stovky, v Krušných horách, v Jeseníkách, kolem Jihlavy. Vypadají všechny stejně, protože hlušina se vždycky sype stejně. Tahle je stará, rozježděná deštěm a kořeny, ale je to halda. Nad ní, do svahu, krátká rovná rýha, která končí jamkou. Zasypané ústí. Kdo ho zasypal, nasypal hlínu do vchodu a nechal ji sednout. Po osmi stech letech je z toho žlábek a na konci prohlubeň.
+Kužel. Nízký, rozplizlý, s plochým vrcholem. Halda. Hana jich viděla v lidaru stovky, v Krušných horách, v Jeseníkách, kolem Jihlavy. Vypadají všechny stejně, protože hlušina se vždycky sype stejně. Tahle je stará, rozrušená deštěm a kořeny, ale je to halda. Nad ní, do svahu, krátká rovná rýha, která končí jamkou. Zasypané ústí. Kdo ho zasypal, nasypal hlínu do vchodu a nechal ji sednout. Po osmi stech letech je z toho žlábek a na konci prohlubeň.
 
 ![Řez horou z kodexu a stínovaný reliéf z lidaru](obrazky/02_mapa_lidar.webp)
 
@@ -212,7 +212,7 @@ Pak si vezme mapu z kodexu. Sken. Položí ho vedle obrazovky.
 
 Dvě stě třicet jedna kroků. Mnichových. Ve štole se chodí shrbeně a krok je kratší. Šedesát centimetrů, možná sedmdesát. Hana to spočítá dvakrát, protože nevěří prvnímu výsledku. Sto čtyřicet až sto šedesát metrů. Štola šla do hory šikmo a mírně nahoru. Kam, to z řezu nepozná. Řez neumí směr. Ale horníci razí do svahu kolmo, pokud nemají důvod jinak. A mnich psal, že se štola od jara stáčela doprava a nahoru, za teplem.
 
-Hana nakreslí od ústí do hory oblouk. Pak kolem jeho konce kruh. Čtyřicet metrů poloměr, protože víc přesně to neví.
+Hana nakreslí od ústí do hory oblouk. Pak kolem jeho konce kruh. Čtyřicet metrů poloměr, protože přesněji to neví.
 
 Kruh leží pod hřbetem, pod lesem, osmdesát až sto metrů pod povrchem. Níž a na západ od něj statek.
 
@@ -222,7 +222,7 @@ Do sešitu napíše vlevo:
 
 *Lidar (stát. model terénu, předjaří): hřbet nad Mlýncem souhlasí s řezem v kodexu (strmější V konec). Svah nad vsí, V od statku: halda + rýha s prohlubní = zasypané ústí štoly (pravděp.). Pod haldou kulatá prohlubeň Ø ~6 m.*
 
-*Mapa v kodexu: štola CCXV (215), text CCXXXI (231) → mapa kreslena před dosažením skály. Křížení staré cesty se štolou za puklinou: vnitřně nemožné (cesta klesá od sídla pod štolou) → průmět řezu, cesta hlouběji nebo jinde. Mnich: „non bene“.*
+*Mapa v kodexu: štola CCXV (215), text CCXXXI (231) → mapa kreslena před dosažením skály. Křížení staré cesty se štolou za puklinou: vnitřně nemožné (cesta klesá od komůrek pod štolou) → průmět řezu, cesta hlouběji nebo jinde. Mnich: „non bene“.*
 
 *Odhad: konec štoly 140–160 m od ústí (krok 60–70 cm), „teplá skála“ v kruhu r = 40 m, 80–100 m pod povrchem. Nejisté: směr štoly, délka kroku.*
 
@@ -266,7 +266,7 @@ Mnich psal *audivi* a k tomu od koho. Ona píše totéž, jen jinými slovy.
 
 Studánka je na lesní cestě nad vsí, u odbočky k haldě. Kamenná skruž, dřevěná stříška, plechový hrnek na řetízku. Voda vytéká trubkou do korýtka a korýtko je z jedné strany porostlé rezavým povlakem, jak to u železitých pramenů bývá. Z vody stoupají drobné bublinky. Na Chebsku má bublinky skoro každý pramen. Kyselky. Oxid uhličitý z hloubky.
 
-Na stříšce visí v plastovém obalu zalaminovaná karta. *Pramen pod Hřbetem. Měří spolek Prameny Chebska, 1× měsíčně.* Tabulka. Data, teplota, vydatnost. Hana čte od spodu. Duben 2027: 8,3 °C. Srpen 2028: 8,6 °C. Prosinec 2029: 8,4 °C. Poslední řádek: *12. 1. 2030 – 8,4 °C – 0,15 l/s.*
+Na stříšce visí v plastovém obalu zalaminovaná karta. *Pramen pod Hřbetem. Měří spolek Prameny Chebska, 1× měsíčně.* Tabulka. Data, teplota, vydatnost. Hana čte odspodu. Duben 2027: 8,3 °C. Srpen 2028: 8,6 °C. Prosinec 2029: 8,4 °C. Poslední řádek: *12. 1. 2030 – 8,4 °C – 0,15 l/s.*
 
 Pět let a teplota se nehne o půl stupně.
 
@@ -332,7 +332,7 @@ Pomalu spouští větev přes okraj prohlubně. Svíčka sestupuje. Půl metru n
 
 Zhasne.
 
-Hana vytáhne větev. Knot doutná a z něj stoupá tenký šedý dým a ten dým nestoupá. Klesá. Plazí se dolů, do prohlubně, jako by ho tam něco táhlo.
+Hana vytáhne větev. Knot doutná a z něj jde tenký šedý dým a ten dým nestoupá. Klesá. Plazí se dolů, do prohlubně, jako by ho tam něco táhlo.
 
 Větev si označí nožem. Rýha tam, kde svíčka zhasla. Třicet osm centimetrů nad dnem.
 
@@ -348,7 +348,7 @@ Ale svíčka jí řekla, kde je hladina. Detektor ne.
 
 Hana se otočí.
 
-Na cestě pod haldou stojí muž se psem. Pes je velký, černý, krátkosrstý, na vodítku, a nestojí, ale sedí, a dívá se na ni. Muž je malý. Hana to pozná, i když sama stojí níž na svahu, protože je to první, co na něm vidí: je malý a široký. Sotva sto čtyřicet, odhadne profesionálně, jako odhaduje výšku sondy. Ramena jako dveře, krátký krk, krátké nohy v těžkých botách. V ruce drží vodítko a sekeru. Na sobě má zelenou mysliveckou bundu a pletenou čepici. Je mladý. Třicet, víc ne.
+Na cestě pod haldou stojí muž se psem. Pes je velký, černý, krátkosrstý, na vodítku, a nestojí, ale sedí, a dívá se na ni. Muž je malý. Hana to pozná, i když sama stojí níž na svahu, protože je to první, co na něm vidí: je malý a široký. Sotva sto čtyřicet, odhadne profesionálně, jako odhaduje hloubku sondy. Ramena jako dveře, krátký krk, krátké nohy v těžkých botách. V ruce drží vodítko a sekeru. Na sobě má zelenou mysliveckou bundu a pletenou čepici. Je mladý. Třicet, víc ne.
 
 „Je tu plyn,“ řekne. „Minulý týden tu chcípla liška.“
 

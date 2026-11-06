@@ -2,7 +2,7 @@
 
 V pátek foukalo od rána a Matěj to považoval za dobré znamení. Teprve na cestě si uvědomil, že takhle by uvažovala Dobroslava.
 
-Vítr přišel v noci od západu, vlhký a skoro teplý, a smrky kolem cesty z něj byly neklidné. Shazovaly ze sebe sníh v těžkých chuchvalcích, které padaly za krk i do stopy. Matěj šel bez psa. Poprvé od chvíle, kdy přijel do Mlýnce, šel touhle cestou sám a několikrát si všiml, že se ohlíží, jestli za ním něco neběží.
+Vítr přišel v noci od západu, vlhký a skoro teplý, a smrky kolem cesty se v něm neklidně kývaly. Shazovaly ze sebe sníh v těžkých chuchvalcích, které padaly za krk i do stopy. Matěj šel bez psa. Poprvé od chvíle, kdy přijel do Mlýnce, šel touhle cestou sám a několikrát si všiml, že se ohlíží, jestli za ním něco neběží.
 
 Dobroslava štípala před chalupou dříví. Když vyšel z lesa, nepřestala, jen po něm přelétla pohledem. U dveří stála opřená jasanová tyč s hákem a na háku pořád visel cíp jeho hábitu. Za ty dny zešedl a změkl. Vypadal jako hadr, kterým se utírá kotel.
 
@@ -34,7 +34,7 @@ Rozštípla poleno. Pak opřela sekerku o špalek, došla ke dveřím a sundala 
 
 „Tvoje.“
 
-Matěj si ho vzal. Byl tuhý mrazem a voněl kouřem.
+Matěj si ho vzal. Byl studený a voněl kouřem.
 
 „Jdu na slatinu,“ řekla Dobroslava. „Když fouká, dá se tam. Jestli chceš, pojď. Ale nesklánět, nesahat a mlčet.“
 
@@ -58,9 +58,9 @@ Matěj se rozběhl dřív, než mu Dobroslava stačila něco říct.
 
 Když poklekl do sněhu a otočil postavu k sobě, uviděl vous.
 
-Byl prošedivělý, krátký a hustý a byla v něm zmrzlá krev. Pod vousem byla široká tvář, šedá zimou. Měla tvrdé lícní kosti a ústa sevřená tak pevně, že na nich nebyly vidět rty. Muž nebyl o nic větší než dvanáctiletý chlapec. Ruce, které měl sevřené na hrudi, ale byly větší než Matějovy, širší v dlani a s tlustými prsty. Konečky měl rozedřené do krve. Matěj pochopil proč, když se podíval na nohu.
+Byl prošedivělý, krátký a hustý a byla v něm zmrzlá krev. Pod vousem byla široká tvář, šedá zimou. Měla tvrdé lícní kosti a rty sevřené do tenké čárky. Muž nebyl o nic větší než dvanáctiletý chlapec. Ruce, které měl sevřené na hrudi, ale byly větší než Matějovy, širší v dlani a s tlustými prsty. Konečky měl rozedřené do krve. Matěj pochopil proč, když se podíval na nohu.
 
-Byl to drát. Železný, tenký jako struna, ze dvou pramenů stočených k sobě. Takový Matěj viděl jen jednou, u kováře v Řezně, který spravoval kroužkové košile. Byl smotaný do oka a oko se zadrhlo nad kotníkem a zařízlo se do kůže. Muž se z něj zjevně snažil vyvléknout celou noc, prsty i zuby. Na drátě byly stopy po zubech. Kotník pod ním byl oteklý do dvojnásobku a chodidlo se stáčelo do strany, kam se stáčet nemělo.
+Byl to drát. Železný, tenký jako struna, ze dvou pramenů stočených k sobě. Takový Matěj viděl jen jednou, u kováře v Řezně, který spravoval kroužkové košile. Byl smotaný do oka a oko se zadrhlo nad kotníkem a zařízlo se do kůže. Muž se z něj zjevně snažil vyvléknout celou noc, prsty i zuby. Na drátě byly stopy po zubech. Kotník pod ním byl oteklý na dvojnásobek a chodidlo se stáčelo do strany, kam se stáčet nemělo.
 
 „Je živý,“ řekl Matěj.
 
@@ -76,7 +76,7 @@ Strom se narovnal a švihl do sněhu. Drát povolil. Noha spadla. Muž poprvé v
 
 „Drž ho,“ řekla Dobroslava.
 
-Matěj ho držel. Dobroslava se snažila oko rozevřít prsty, pak nožem, a nešlo to. Drát byl provlečený očkem z téhož drátu, a jak se muž v noci zmítal, zatáhl se tak, že se oko zakouslo do masa. Dobroslava zaklela. Matěj jí sáhl do ruky a vzal si od ní nůž. Neměl k tomu jiný důvod než ten, že měl jemnější prsty a že tímhle celý život žil: rozvazoval uzly na svazcích listin, páčil zaschlé pečeti a vyndával zlomené hroty per z kalamářů. Zasunul špičku nože pod očko, opatrně, aby nezajela do kůže, a pomalu, po vláscích, povolil smyčku. Dvakrát mu nůž sklouzl a muž pod jeho rukama ztuhl. Potřetí drát povolil a Matěj stáhl oko přes chodidlo, které při tom zaskřípalo.
+Matěj ho držel. Dobroslava se snažila oko rozevřít prsty, pak nožem, a nešlo to. Drát byl provlečený očkem z téhož drátu, a jak se muž v noci zmítal, zatáhl se tak, že se oko zakouslo do masa. Dobroslava zaklela. Matěj jí sáhl do ruky a vzal si od ní nůž. Neměl k tomu jiný důvod než ten, že měl jemnější prsty a že tímhle celý život žil: rozvazoval uzly na svazcích listin, páčil zaschlé pečeti a vyndával zlomené hroty per z kalamářů. Zasunul špičku nože pod očko, opatrně, aby nezajela do kůže, a pomalu, po vlásku, povolil smyčku. Dvakrát mu nůž sklouzl a muž pod jeho rukama ztuhl. Potřetí drát povolil a Matěj stáhl oko přes chodidlo, které při tom zaskřípalo.
 
 Muž otevřel oči.
 
@@ -106,7 +106,7 @@ Dobroslava schovala smotaný drát do vaku. Pak se vrátila k pokácené bříze
 
 „Kdo myslíš? Ve vsi takový drát nemá nikdo.“ Šla vedle něj a nedívala se na něj. „Lovčí pana Konráda. Od Hromnic kladou oka po kraji lesa. Na vlky, říkají.“ Odmlčela se. „Vlk by se z toho vykousal i s nohou.“
 
-Pan Konrád řekl, že les projde po svatém Jiří. *Kdo tam je, ať jde.* Matěj si ta slova přehrál v hlavě, jak je slyšel na hřbetě, ve větru. Bylo v nich *po*. Drát ve sněhu ležel *před*.
+Pan Konrád řekl, že les projde po svatém Jiří. *Kdo tam je, ať jde.* Matěj si ta slova v duchu zopakoval, jak je slyšel na hřbetě, ve větru. Bylo v nich *po*. Drát ve sněhu ležel *před*.
 
 „Nevěděl jsem,“ řekl, „že je znáte.“
 
@@ -146,7 +146,7 @@ Matěj se otočil.
 
 „Z hory?“
 
-„Byl jsi v hoře. S tím vysokým. Šli jste dovnitř za tmy a ven za dne.“ Muž mluvil pomalu a každé slovo stavěl opatrně, jako se staví kámen na kámen. „Pak jsi seděl pod smrkem a psal.“
+„Byl jsi v hoře. S tím vysokým. Šli jste dovnitř za šera a ven v poledne.“ Muž mluvil pomalu a každé slovo stavěl opatrně, jako se staví kámen na kámen. „Pak jsi seděl pod smrkem a psal.“
 
 Matěj necítil zimu. Viděl sám sebe, jak sedí na kořeni pod smrkem s rozklepanýma rukama a s tabulkou na kolenou, a jak si myslí, že ho nikdo nevidí.
 
@@ -196,7 +196,7 @@ U tisíce sto čtyřiceti se pod nohama změnila zem. Mech a jehličí přestaly
 
 A pak přišlo teplo.
 
-Neohlásilo se jako ve štole, kde se šplhalo od sedmdesátého kroku pomalu nahoru. Bylo to jako vejít z mrazu do světnice. Mráz za ním zůstal ve skalní chodbě a před ním stál vzduch teplý, vlhký a těžký. Na tváři pod plstí ucítil pot dřív, než ušel deset kroků.
+Neohlásilo se jako ve štole, kde ho od sedmdesátého kroku pomalu přibývalo. Bylo to jako vejít z mrazu do světnice. Mráz za ním zůstal ve skalní chodbě a před ním stál vzduch teplý, vlhký a těžký. Na tváři pod plstí ucítil pot dřív, než ušel deset kroků.
 
 U toho místa slyšel vodu.
 
@@ -302,9 +302,9 @@ Matěj zaváhal. „Jako koňská kůže. Když se na koně položí ruka v zim�
 
 „Ale oni tam jsou,“ řekla Ostra. „Ti, co kopou. Co říkají?“
 
-„Že je to čím dál teplejší,“ řekl Matěj. „Čím dál kopou.“
+„Že čím dál kopou, tím je tepleji,“ řekl Matěj.
 
-Ostra se otočila zpátky ke stěně a už nic neřekla. Matěj se díval na její záda a na dlaň položenou na skále a nerozuměl tomu, co viděl, ale rozuměl, že to bylo důležité.
+Ostra se otočila zpátky ke stěně a už nic neřekla. Matěj se díval na její záda a na dlaň položenou na skále a nerozuměl tomu, co viděl, ale chápal, že je to důležité.
 
 „Nebudeš o nás mluvit,“ řekl Merin.
 
@@ -324,7 +324,7 @@ Matěj se podíval na zraněného na lavici. Spal, nebo se tak tvářil. Pláš�
 
 „Jak to můžete vědět?“
 
-Merin se na něj podíval tak, že Matěj tu otázku nechal klesnout, jako se nechá klesnout kámen do vody.
+Merin se na něj podíval tak, že Matěj tu otázku nechal být.
 
 „Slibuješ?“ zeptal se Merin.
 
@@ -352,9 +352,9 @@ Matěj na něj zíral.
 
 *
 
-Ven ho vedli stejnou cestou a se stejnou plstí na očích. Tentokrát nenesl nic. Žena ho držela za loket, muž s kopím šel vpředu a Matěj znovu počítal. Šikmá plocha, teplo, šum vody, tentokrát nalevo nahoře, protože šel opačně. Zkusil si zapamatovat, kde přesně začal a kde přestal, a nedokázal to. Schody. Čtyřicet tři. Minule jich bylo čtyřicet dva. Nebo tehdy s nosítky jeden vynechal. Skála, pak mech, pak mráz, který ho udeřil do tváře jako dlaň.
+Ven ho vedli stejnou cestou a se stejnou plstí na očích. Tentokrát nenesl nic. Žena ho držela za loket, muž s kopím šel vpředu a Matěj znovu počítal. Šikmá plocha, teplo, šum vody, tentokrát nalevo nahoře, protože šel opačně. Zkusil si zapamatovat, kde přesně šum začal a kde přestal, a nedokázal to. Schody. Čtyřicet tři. Minule jich bylo čtyřicet dva. Nebo tehdy s nosítky jeden vynechal. Skála, pak mech, pak mráz, který ho udeřil do tváře jako dlaň.
 
-Než vyšli, vtiskla mu Ostra do ruky váček z kůže. Byl těžký a teplý. Uvnitř byl kámen, hladký, velký jako pěst, a hřál, jako hřeje cihla vytažená z kamen.
+Ještě dole, než se vydali na cestu, mu Ostra vtiskla do ruky váček z kůže. Byl těžký a teplý. Uvnitř byl kámen, hladký, velký jako pěst, a hřál, jako hřeje cihla vytažená z pece.
 
 U balvanu mu plst sundali. Byla tma a les byl černý. Muž s kopím ukázal směrem, kterým Matěj sám nikdy nešel. Řekl jen: „Tam. Potok. Pak dolů.“ Když se Matěj otočil, aby poděkoval, byli pryč. Neslyšel je odcházet, stejně jako je neslyšel přicházet.
 
@@ -366,7 +366,7 @@ Udalrich stál ve vratech grangie s lucernou. Bylo po půlnoci. Matěj to poznal
 
 „V lese.“
 
-Udalrich si ho posvítil do tváře, pak na hábit, na kterém byla krev, ne jeho, a na mokré onuce, a pak lucernu sklonil.
+Udalrich mu posvítil do tváře, pak na hábit, na kterém byla krev, ne jeho, a na mokré onuce, a pak lucernu sklonil.
 
 „Kompletář ses nemodlil,“ řekl.
 
@@ -382,7 +382,7 @@ V komoře u oratoře si sedl na lůžko a vytáhl tabulku.
 
 Chvíli ji držel zavřenou na kolenou. Pak ji otevřel a do čistého místa pod datem a pod *usque ad festum sancti Georgii* napsal: *Feria sexta.* Pátek. Rydlo se zastavilo.
 
-Viděl je, jak by to napsal. Řádek po řádku. *Vidi:* muž, malý jako dítě, vousatý, ruce velké. *Vidi:* drát, oko, lovčí pana Konráda. *Vidi:* kámen, tři údery. Kroky: tisíc sto čtyřicet, schody čtyřicet dva, teplo, voda nad hlavou. *Vidi:* stará žena, která poslouchá dlaní. *Vidi:* vysoký, bledý, oči jako kočka v šeru. *Audivi, od Merina:* Štola půjde do vody. Skála se probudí. Viděl to všechno tak jasně, že stačilo pohnout rukou.
+Viděl přesně, jak by to napsal. Řádek po řádku. *Vidi:* muž, malý jako dítě, vousatý, ruce velké. *Vidi:* drát, oko, lovčí pana Konráda. *Vidi:* kámen, tři údery. Kroky: tisíc sto čtyřicet, schody čtyřicet dva, teplo, voda nad hlavou. *Vidi:* stará žena, která poslouchá dlaní. *Vidi:* vysoký, bledý, oči jako kočka v šeru. *Audivi, od Merina:* Štola půjde do vody. Skála se probudí. Viděl to všechno tak jasně, že stačilo pohnout rukou.
 
 *Nebudeš o nás psát. Ani na vosk.*
 

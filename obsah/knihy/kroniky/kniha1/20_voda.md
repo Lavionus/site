@@ -2,7 +2,7 @@
 
 Ráno šel Matěj ke žlabu s vědrem, protože tam chodil každé ráno celé jaro a nohy to věděly dřív než on.
 
-Žlab tam nebyl. Ani jeden z obou. Voda je v noci vytrhla z podpěr a odnesla dolů k potoku a dál, a Matěj viděl jejich kusy na lukách grangie, kde je nechala ležet, když opadla: prkna, trámky, a jeden celý žlab, dlouhý jako vůz, zaklíněný mezi dvěma olšemi u potoka, jako by ho tam někdo položil schválně. Pod haldou, kde se oba žlaby sbíhaly, byla jen vymletá rýha v hlíně, a v ní tekla voda.
+Žlab tam nebyl. Ani jeden z těch dvou. Voda je v noci vytrhla z podpěr a odnesla dolů k potoku a dál, a Matěj viděl jejich kusy na lukách grangie, kde je nechala ležet, když opadla: prkna, trámky, a jeden celý žlab, dlouhý jako vůz, zaklíněný mezi dvěma olšemi u potoka, jako by ho tam někdo položil schválně. Pod haldou, kde se oba žlaby sbíhaly, byla jen vymletá rýha v hlíně, a v ní tekla voda.
 
 Klekl si k ní. Nastavil vědro.
 
@@ -116,7 +116,7 @@ Zeptal se ještě na jednu věc.
 
 „Lovčí tu byl?“
 
-„Byl. Ráno, když šel ke kameni.“ Dobroslava pokrčila rameny. „Postál tu. Díval se do chalupy. Psi čuchali k mým dveřím.“ Odmlčela se. „Nic neřekl. Šel. Ty stopy u řeky,“ řekla potom, „byly i moje. A Bořkovy. To ví. Ale za vodou je jiný pán, a pán z Wehrbergu…“
+„Byl. Ráno, když šel ke kameni.“ Dobroslava pokrčila rameny. „Je to vidět v blátě. Postál tu u okna, díval se do chalupy. Psi čuchali k mým dveřím.“ Odmlčela se. „Nic tu nenechal. Šel. Ty stopy u řeky,“ řekla potom, „byly i moje. A Bořkovy. To ví. Ale za vodou je jiný pán, a pán z Wehrbergu…“
 
 „Co?“
 
@@ -126,9 +126,9 @@ Zeptal se ještě na jednu věc.
 
 Muž z Chebu přijel ve čtvrtek.
 
-Udalrich pro něj poslal v pondělí v noci, když voda dosáhla k plotu ovčína a ovce se tlačily v rohu a bečely, a Udalrich je s pacholkem do rána vyháněl do kopce. Poslal i do Waldsassenu. Grangie měla luka pod vodou, potok plný bahna a prken, dva beránky utopené. A v hoře umřel člověk.
+Udalrich pro něj poslal v pondělí v noci, když voda dosáhla plotu ovčína a ovce se tlačily v rohu a bečely, a Udalrich je s pacholkem do rána vyháněl do kopce. Poslal i do Waldsassenu. Grangie měla luka pod vodou, potok plný bahna a prken, dva beránky utopené. A v hoře umřel člověk.
 
-Přijel na koni, s písařem na mezkovi a se čtyřmi ozbrojenými. Byl starší, se šedou bradkou a s tváří, která se nesmála, a mluvil německy s lidmi, kteří mu rozuměli, a přes písaře s ostatními. Lidé v Mlýnci mu říkali rychtář. Matěj nevěděl, jestli to byl jeho úřad. Nevěděl, jestli je purkrabí, nebo císařův soudce, nebo jen člověk, kterého pán chebského hradu poslal, protože měl zrovna čas. Věděl jen, že když sesedl u vrat grangie, Konrád, který tam čekal, sklonil hlavu dřív než on.
+Přijel na koni, s písařem na mezkovi a se čtyřmi ozbrojenými. Byl starší, se šedou bradkou a s tváří, která se nesmála, a mluvil německy s lidmi, kteří mu rozuměli, a přes písaře s ostatními. Lidé v Mlýnci mu říkali správce. Matěj nevěděl, jestli to byl jeho úřad. Nevěděl, jestli je purkrabí, nebo císařův soudce, nebo jen člověk, kterého pán chebského hradu poslal, protože měl zrovna čas. Věděl jen, že když sesedl u vrat grangie, Konrád, který tam čekal, sklonil hlavu dřív než on.
 
 Seděli venku. U stolu před vraty, u Udalrichova stolu, na kterém krájel chleba a na kterém v neděli ležela kost. Tentokrát bez plátna. Muž z Chebu za ním, písař vedle něj s voskovými deskami, a před stolem lidé. Míň než na svatého Jiří. Horníci. Ves, ti, kdo museli, a ti, kdo chtěli. Udalrich. Konrád s Volkmarem a Rüdigerem, stranou.
 
@@ -274,7 +274,7 @@ A Matěj si pomyslel, že tohle slovo, *Dienstmann*, služebník, je to, čeho s
 
 Ortlieb vyplácel ještě ten den, na pasece, u boudy.
 
-Neměl z čeho. Matěj to věděl, a věděli to všichni, kdo stáli v řadě: Sasové, místní, Mikuláš s obvázanou hlavou, Vítek, Ješek. Ortlieb seděl na Henselově kameni s vakem na kolenou a vybíral z něj, co v něm bylo. Ne Konrádovo stříbro. Svoje. Matěj to poznal podle toho, jak ty mince držel, každou zvlášť, než ji položil do natažené dlaně.
+Neměl z čeho, aspoň ne z peněz za dílo. Matěj to věděl, a věděli to všichni, kdo stáli v řadě: Sasové, místní, Mikuláš s obvázanou hlavou, Vítek, Ješek. Ortlieb seděl na Henselově kameni s vakem na kolenou a vybíral z něj, co v něm bylo. Ne Konrádovo stříbro. Svoje. Matěj to poznal podle toho, jak ty mince držel, každou zvlášť, než ji položil do natažené dlaně.
 
 Ješek dostal tři denáry.
 
@@ -336,7 +336,7 @@ Matěj sáhl pod hábit pro tabulku. Vosk byl zvlněný, rozměklý ve vodě a z
 
 *Vidi lumen unum veniens desuper, aliunde.* Viděl jsem jedno světlo, které přicházelo shora, odjinud.
 
-Konrád poslouchal se zavřenýma očima. Pak kývl k Volkmarovi, který stál u vrat, a Volkmar přišel s deskami, a Konrád řekl: „Ještě jednou. Pomalu. Ať to má.“
+Konrád poslouchal se zavřenýma očima. Pak kývl na Volkmara, který stál u vrat, a Volkmar přišel s deskami, a Konrád řekl: „Ještě jednou. Pomalu. Ať to má.“
 
 A Matěj to četl ještě jednou, a Volkmar to psal, slovo po slově, a Matěj se díval, jak se jeho řádky, *vidi*, *vidi*, *vidi*, mění pod Volkmarovým rydlem v cizí rukopis, rovný, porýnský. Věděl, co z nich Konrád udělá. Že je přečte znovu, a pak znovu, a že v nich bude číst, co v nich není. Že to *desuper*, shora, bude jednou kázání.
 
@@ -360,9 +360,9 @@ Pak se otočil a šel k vratům, kde na něj čekal kůň, a Volkmar s deskami p
 
 *
 
-Večer přišel od Waldsassenu konvrš na mezkovi, mladý, kterého Matěj neznal. Přivezl Udalrichovi převorovu odpověď na zprávu o lukách, a ústně, pro Matěje, jednu větu.
+Večer přijel z Waldsassenu konvrš na mezkovi, mladý, kterého Matěj neznal. Přivezl Udalrichovi převorovu odpověď na zprávu o lukách, a ústně, pro Matěje, jednu větu.
 
-Bratr Matthias se postaví před kapitulu v neděli, nejpozději.
+Bratr Matthias se postaví před kapitulu nejpozději v neděli.
 
 Udalrich mu to řekl u vrat, když se stmívalo. Pak mu podal chleba, jako v noci na pondělí, ulomený, a Matěj ho vzal.
 
@@ -378,7 +378,7 @@ Udalrich kývl. Díval se na luka, šedá od bahna, na hrušeň, která v šeru 
 
 V noci si Matěj sedl v komoře u oratoře, naposled, a otevřel tabulku.
 
-Uhladil, co se uhladit dalo. Rozteklé řádky z jara, Otčenáše pozpátku, vědra. Nechal jen ty, které Konrád dnes slyšel. A pod ně, malým písmem, napsal:
+Uhladil, co se uhladit dalo. Rozteklé řádky z jara, Otčenáše pozpátku, vědra. Nechal jen ty, které Konrád dnes slyšel, a ten jeden, který neslyšel. A pod ně, malým písmem, napsal:
 
 *Aqua ex monte frigida et pura. Vas tribus Pater noster.*
 

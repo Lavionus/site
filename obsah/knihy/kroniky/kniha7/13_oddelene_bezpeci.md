@@ -42,7 +42,7 @@ Sál byl velký a skoro prázdný. Dlouhý stůl, bílý ubrus, karafy s vodou. 
 
 Hesk stála u okna. Vysoká, šedovlasá, s rukama za zády. Když Sael vešla, otočila se a kývla. Neusmála se. Sael se neusmála taky. Bylo to první, na čem se shodly.
 
-Lis Aven seděla u kraje stolu s tabletem. Pozdravila Sael česky a jménem. Ve tváři měla únavu, kterou Sael znala z Hanina hlasu do telefonu. Únavu člověka, který dělá práci, kterou nikdo jiný dělat neumí, a který by ji raději nedělal.
+Lis Aven seděla u kraje stolu s tabletem. Pozdravila Sael česky a jménem. Ve tváři měla únavu, kterou Sael znala z Hanina hlasu v telefonu. Únavu člověka, který dělá práci, kterou nikdo jiný dělat neumí, a který by ji raději nedělal.
 
 Wehrle vstal.
 
@@ -66,7 +66,7 @@ Hesk mluvila první. Krátké věty. Lis Aven je překládala stejně krátce, t
 
 „Sanace populací nemá v protokolu oporu. Navrhla jsem vedoucí výpravy, aby ji stáhla. Pro všechny populace. Pro válec a jeskyně taky. Stanoviště na Chebsku je jiná věc. O něm dnes mluvit nebudu.“
 
-Sael to věděla od Hany a Hana od Sendeho.
+Sael to věděla z odpovědi lodi, kterou dostaly všechny strany.
 
 „Protokol ale ukládá ochranu,“ řekla Hesk. „Ne jen zákaz ničení. Ukládá opatrovat. Odpovídat za život, místo a počet.“ Položila na stůl list. Lis Aven podala Sael druhý, přeložený. „Tohle je návrh. Chci ho předložit vedoucí. Nechci ho předložit jako náš papír. Chci vědět, jestli ho přijmete.“
 
@@ -190,7 +190,7 @@ Neřekla nic.
 
 Hesk se pohnula. Udělala krok ke stolu.
 
-„Nevím, kdo z vás má pravdu o tom dopise,“ řekla. Lis Aven překládala. „Nezajímá mě to. Mě zajímá, co bude třicátého. Návrh předložím. S vámi, nebo bez vás. S vámi by byl lepší. Byl by váš. Bez vás bude jen náš.“
+„Nevím, kdo z vás ten dopis čte správně,“ řekla. Lis Aven překládala. „Nezajímá mě to. Mě zajímá, co bude třicátého. Návrh předložím. S vámi, nebo bez vás. S vámi by byl lepší. Byl by váš. Bez vás bude jen náš.“
 
 „A když ho vedoucí nepřijme?“
 
@@ -230,7 +230,7 @@ Hesk řekla jednu krátkou větu. Lis Aven ji přeložila.
 
 „Paní velitelka říká, že je to správný postup.“
 
-Sael a Hesk se na sebe dívaly. V tváři Hesk nebylo nic, co by Sael uměla přečíst. Jen to, že to myslí vážně.
+Sael a Hesk se na sebe dívaly. V tváři Hesk nebylo nic, co by Sael uměla vyčíst. Jen to, že to myslí vážně.
 
 „Ať vám odpovědí do neděle,“ řekla Hesk. „V pondělí předkládám.“
 
@@ -352,7 +352,7 @@ Jonáš se na ni podíval, jako by se ptala hloupě.
 
 *
 
-V sobotu večer se sešla rada. Na obrazovce, jako v květnu. Ines vedla. Sael seděla ve světnici statku u Tadeášova notebooku a za ní u kamen seděla Lada, protože se jí to týkalo taky, i když nehlasovala.
+V sobotu večer se sešla rada. Tentokrát na obrazovce. Ines vedla. Sael seděla ve světnici statku u Tadeášova notebooku a za ní u kamen seděla Lada, protože se jí to týkalo taky, i když nehlasovala.
 
 Sael přečetla návrh celý. Bod po bodu, slovo od slova, jak ho Lis Aven přeložila. Pak přečetla, co řekla Hesk. *Z krve. Dítě se posoudí. Můžu chránit místa, ne byty.* Pak, co řekl Wehrle. I to o šedesáti letech. Pak, co řekla ona.
 

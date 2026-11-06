@@ -2,7 +2,7 @@
 
 Dvanáct se vrátilo za tmy.
 
-Eren je nesl nahoru s Ardem a s Vesou, jednoho po druhém, po suti, kterou v noci zmrzlý sníh udělal kluzkou jako sklo. Muži na kraji terasy ustoupili. Nikdo nemířil. Ve vnější síni čekala řada kamenů a na každém ležela kůže, srovnaná, jako by je někdo ráno vytřepal a čekal, kdy se vrátí. Vesina holka šla zase sama. Na dvanáctém kameni si sedla, přitáhla si kůži přes ramena a dívala se do ohně.
+Eren je nesl nahoru s Ardem a s Vesou, jednoho po druhém, po suti, kterou v noci zmrzlý sníh udělal kluzkou jako sklo. Muži na kraji terasy ustoupili. Nikdo nemířil. Ve vnější síni čekala řada kamenů a na každém ležela kůže, srovnaná, jako by je někdo ráno vytřepal a čekal, kdy se vrátí. Vesina holka šla zase sama. Na dvanáctý kámen si sedla, přitáhla si kůži přes ramena a dívala se do ohně.
 
 Starší z dvou sester z Ardovy desítky se na Erena podívala, když ji pokládal.
 
@@ -90,7 +90,7 @@ Nemělo to žádný řád, žádný záznam, nikdo to nemohl ověřit ani spoč�
 
 „Pak jim to nahoře řeknu. A řezák zůstane v bedně.“
 
-Ardo si ho chvíli měřil a pak kývl, jako by to bylo to jediné, na co se chtěl zeptat.
+Ardo si Erena chvíli měřil a pak kývl, jako by to bylo to jediné, na co se chtěl zeptat.
 
 Hela šla první. Sehnula se u ohniště, vyhrabala ze sněhu kámen velký jako vejce a položila ho na víko vedle řezáku. Nepodívala se na Erena. Vrátila se na své místo.
 
@@ -102,7 +102,7 @@ Mladá matka stála dlouho.
 
 „Pak se sejdou tři kameny,“ řekl Eren. „A budeme se ptát. Všichni.“
 
-Dítě na jejím boku se zavrtělo a vystrčilo ruku z plachty. Mladá matka se sehnula, vzala ze země kámen a dala ho dítěti do dlaně. Odnesla ho s ním k bedně a nechala dítě, aby ho pustilo samo.
+Dítě na jejím boku se zavrtělo a vystrčilo ruku z plachty. Mladá matka se sehnula, vzala ze země kámen a dala ho dítěti do dlaně. Odnesla dítě i s kamenem k bedně a nechala dítě, aby ho pustilo samo.
 
 Kámen se skutálel po hromadě a zůstal ležet na kraji.
 
@@ -136,7 +136,7 @@ Narovnala se. Na víku zůstal ležet řezák v cárech, prázdný a šedý, a v
 
 Orrin chvíli mlčel. Pak kývl. Ne Erenovi. Kotli.
 
-„Tak jim ho dej,“ řekl. „Řezák je tvůj. Řekl jsem to od začátku. Článek je můj. Uschoval jsem ho pro všechny, kdo tu jsou. A tady dnes stojí jen ti, kdo položili kámen.“
+„Tak jim ho dej,“ řekl. „Řezák je tvůj. Nikdy jsem ho od tebe nechtěl. Článek je můj. Uschoval jsem ho pro všechny, kdo tu jsou. A tady dnes stojí jen ti, kdo položili kámen.“
 
 Otočil se a šel nahoru, k přístřešku. Haro za ním, Svit, Dorn. Maela šla taky. U teplé skály se jednou ohlédla. Ne na Erena. Na řady kamenů ve sněhu.
 
@@ -200,7 +200,7 @@ Maela zvedla hlavu.
 
 „Kam?“ zeptal se Eren.
 
-„Dolů. Kolem velké vody a dál.“ Orrin pokrčil rameny. „Vesa říkala, že u jezera bylo víc trávy. Že tam sníh tolik nedrží. Že tam byly stopy zvěře až k vodě. Tady budeme hosté. Pod oštěpy. Pod pravidly, která jsi jim nahoře vyměnil za náš poslední nástroj. Já nechci být host.“
+„Dolů. Kolem velké vody a dál.“ Orrin pokrčil rameny. „Vesa říkala, že u jezera bylo víc trávy. Že tam sníh tolik nedrží. Že tam byly stopy zvěře až k vodě. Tady budeme hosté. Pod oštěpy. Pod pravidly, za která jsi jim nahoře dal náš poslední nástroj. Já nechci být host.“
 
 „Bylo tam šedesát mužů se sekerami,“ řekl Eren. „U jezera. Tak to Vesa říkala taky.“
 
@@ -320,11 +320,11 @@ Skalní stupeň byl pod terasou, nalevo, kde se stěna zvedala nad horní tůň.
 
 Pod stupněm, na zálivu horní tůně, kde skála přečnívala nad vodou, stála Dabra.
 
-Nebyla sama. Za ní, v šeru pod převisem, stáli další. Pět, šest, s dlaněmi nad očima, i když slunce už bylo pryč. Eren poznal starého muže s miskou. Ten, který brousil ve tmě, když šel Eren poprvé dolů. Stál nejblíž u vody a díval se nahoru, na stupeň.
+Nebyla sama. Za ní, v šeru pod převisem, stáli další. Pět, šest, s dlaněmi nad očima, i když slunce už bylo pryč. Eren poznal starého muže s miskou. Toho, který brousil ve tmě, když šel Eren poprvé dolů. Stál nejblíž u vody a díval se nahoru, na stupeň.
 
 Na stupeň se dalo vylézt z obou stran. Ze suti a od zálivu. Eren vylezl ze suti, s řezákem pod paží. Maela za ním.
 
-Tal na stupeň sešla z terasy. Pomalu, s Ruem po boku, který ji držel za loket. Dabra vylezla od vody. Rychle, jak skalní lidé chodili po kameni, bez rukou, jako by stupeň byla rovná zem.
+Tal na stupeň sešla z terasy. Pomalu, s Ruem po boku, který ji držel za loket. Dabra vylezla od vody. Rychle, jak skalní lidé chodili po kameni, bez rukou, jako by stupeň byl rovná zem.
 
 Stáli na něm čtyři. Eren, Maela, Tal a Dabra. A Ru, který se přitiskl ke skále, aby se tam vešel.
 
@@ -396,7 +396,7 @@ Pak slezl i on.
 
 Nika byla zase jen tmavší skvrna ve skále. Nic se v ní nehýbalo. Nic nesvítilo.
 
-Tal se podívala na Dabru. Dabra na Tal. Neřekly nic, ani tou starou řečí, a Eren viděl, jak se jejich ruce pohnuly. Ne k sobě. Každá k sobě, k prsům, dlaní na srdce. Tak jako se Dabra představila u horní tůně, když řekla svoje jméno.
+Tal se podívala na Dabru. Dabra na Tal. Neřekly nic, ani tou starou řečí, a Eren viděl, jak se jejich ruce pohnuly. Ne jedna k druhé. Každá k sobě, k prsům, dlaní na srdce. Tak jako se Dabra představila u horní tůně, když řekla svoje jméno.
 
 Dabra slezla k vodě a skalní lidé zmizeli pod převisem. Tal se otočila a Ru ji vedl zpátky po skále na terasu. Na stupni zůstali Eren a Maela.
 

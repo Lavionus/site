@@ -10,7 +10,7 @@ Sael vyšla do předsíně. Klára stála na chodníku, kočárek měla před se
 
 Sael vyšla ven.
 
-Ulička byla úzká a slunce do ní svítilo jen kolem poledne, ale teď už sem padalo šikmo přes střechy a dopadalo přímo do kočárku. Jonáš ležel na zádech pod tenkou dekou se žirafami a díval se na světlo, ne na Sael. Měl sevřenou pěst a v ní knoflík od Klářina svetru, který držel tak pevně, že mu zbělely klouby.
+Ulička byla úzká a slunce do ní svítilo jen kolem poledne, ale teď už sem paprsky padaly šikmo přes střechy přímo do kočárku. Jonáš ležel na zádech pod tenkou dekou se žirafami a díval se na světlo, ne na Sael. Měl sevřenou pěst a v ní knoflík od Klářina svetru, který držel tak pevně, že mu zbělely klouby.
 
 Bylo mu pět měsíců. Sael ho zapsala v noci z druhého na třetího února, ptačím písmem, s občanským jménem latinkou na kraji. Od té doby ho neviděla.
 
@@ -40,7 +40,7 @@ Klára kývla a poprvé se podívala nahoru, na Sael. V tom šikmém světle byl
 
 „Obojí,“ řekla Sael.
 
-Jonáš pustil knoflík. Ten mu sklouzl po dece a zapadl mezi deku a bok kočárku. Jonáš se za ním neohlédl. Natáhl ruku ke světlu a otevřel a zavřel prsty, jako by ho chtěl chytit.
+Jonáš pustil knoflík. Ten mu sklouzl po dece a zapadl mezi ni a bok kočárku. Jonáš se za ním neohlédl. Natáhl ruku ke světlu a otevřel a zavřel prsty, jako by ho chtěl chytit.
 
 „Podruhé jsem neutekla,“ řekla Klára.
 
@@ -48,7 +48,7 @@ Jonáš pustil knoflík. Ten mu sklouzl po dece a zapadl mezi deku a bok kočár
 
 „Tak to tam napište taky,“ řekla Klára. „Kdo to bude psát. Že jsem neutekla.“
 
-Pak otočila kočárek a šla uličkou dolů, k náměstí, a kolečka drnčela po dlažbě. U rohu se neohlédla. Sael stála ve dveřích, dokud zvuk koleček nezanikl ve zvuku města.
+Pak otočila kočárek a šla uličkou dolů, k náměstí, a kolečka drnčela po dlažbě. U rohu se neohlédla. Sael stála ve dveřích, dokud zvuk koleček nezanikl v hluku města.
 
 Javor stál za ní v předsíni.
 
@@ -74,7 +74,7 @@ Sael ho přečetla dvakrát a položila na stůl vedle matriky. Byl to dobrý do
 
 „Ano.“
 
-„A ještě něco,“ řekla Šindelářová. „Ten kodex. Až se ho bude někdo ptát, kdo ho dva a půl roku držel v trezoru, odpovím mu. Vaše oprava je v protokolu. Pod ní můj podpis. Tak to zůstane.“
+„A ještě něco,“ řekla Šindelářová. „Ten kodex. Až se na něj bude někdo ptát, kdo ho dva a půl roku držel v trezoru, odpovím mu. Vaše oprava je v protokolu. Pod ní můj podpis. Tak to zůstane.“
 
 *
 
@@ -84,9 +84,9 @@ Dveře do sklepa byly přelepené páskou s razítkem úřadu. Sael šla kolem n
 
 Ve světnici bylo plno.
 
-Rada Ostrých, jedenáct, kolem dlouhého stolu. Přijeli kvůli té noci ze Saska a z Bavorska a ze dvou bytů v Chebu. Lada v čele, s brýlemi v kapse zástěry. Kryštof u okna. Stará Apolena na konci stolu u kamen, která se netopila, s dlaněmi na desce. Tadeáš na konci stolu, s levou rukou ještě v obvazu a s notebookem, který neotevřel.
+Rada Ostrých, jedenáct, kolem dlouhého stolu. Přijeli kvůli té noci ze Saska a z Bavorska a ze dvou bytů v Chebu. Lada v čele, s brýlemi v kapse zástěry. Kryštof u okna. Stará Apolena na konci stolu u kamen, ve kterých se netopilo, s dlaněmi na desce. Tadeáš na druhém konci stolu, s levou rukou ještě v obvazu a s notebookem, který neotevřel.
 
-Pak ti druzí. Lorenz z Vídně, poprvé ne na obrazovce. Starší, než vypadal v kameře, s holí, o kterou se neopíral. Ines z Lipska, která přijela vlakem a do statku dvě hodiny šla pěšky, protože jí ujel autobus. Žena z Vratislavi. Muž ze saských sídel, který se na obrazovce usmíval, kdykoli mu do kamery vlezlo dítě, a teď neměl na koho. A u dveří, mimo světlo lampy, Benedikt. Agnes vedle něj. Přišli až po desáté, když byla tma úplná. Benedikt seděl na židli, kterou mu Kryštof přinesl z kuchyně a postavil tam, kam lampa nedosáhla. Proč tam, Kryštof neříkal. Benedikt to věděl.
+Pak ti druzí. Lorenz z Vídně, poprvé ne na obrazovce. Starší, než vypadal přes kameru, s holí, o kterou se neopíral. Ines z Lipska, která přijela vlakem a do statku dvě hodiny šla pěšky, protože jí ujel autobus. Žena z Vratislavi. Muž ze saských sídel, který se na obrazovce usmíval, kdykoli mu do kamery vlezlo dítě, a teď neměl na koho. A u dveří, mimo světlo lampy, Benedikt. Agnes vedle něj. Přišli až po desáté, když byla tma úplná. Benedikt seděl na židli, kterou mu Kryštof přinesl z kuchyně a postavil tam, kam lampa nedosáhla. Proč tam, Kryštof neříkal. Benedikt to věděl.
 
 Javor a Olše stáli vedle Sael. Za Saelinu domácnost. Javor vysoký a starý jako strom. Olše malá na vysokou, s rukama v kapsách svetru. Ta, co Sael k sedmdesátinám dala hodinky.
 
@@ -134,7 +134,7 @@ Lorenz si sundal brýle a promnul si kořen nosu.
 
 „Já vím,“ řekla Sael. „Proto jsem ho řekla nahlas. Vy jste se mě ptali, jestli jsem porušila pravidla Úmluvy. Porušila. Nevarovala jsem rodiny. To soudit můžete. Tohle druhé je naše. Ale nechtěla jsem, abyste rozhodovali a nevěděli o tom.“
 
-Benedikt se ozval zpoza lampy. Suše a tiše, saskou němčinou, kterou rozuměli všichni, i když ji nikdo jiný nemluvil.
+Benedikt se ozval zpoza lampy. Suše a tiše, saskou němčinou, které rozuměli všichni, i když ji nikdo jiný nemluvil.
 
 „Jíva předala jméno Svídě,“ řekl. „Komu ho předáš ty?“
 
@@ -144,7 +144,7 @@ Sael se podívala do tmy, kde seděl. Viděla ho tam líp než ostatní. Ruce na
 
 Tohle bylo poprvé, co se ve světnici někdo pohnul. Muž ze saských sídel. Žena z Vratislavi se podívala na Lorenze.
 
-„Kniha bude u rady,“ řekla Sael. „V radě budou tři. Rada rodu, rada Ostrých a Benediktova komunita. Originál bude v chebském archivu, jako deponát, podle pravidel, která podepsali čtyři správci a která ředitel podepíše, až rozhodnete. Kopie zůstanou u těch čtyř správců, jak je to už teď. Kdo se v knize narodí nebo zemře, toho zapíše ten, koho si rodina vybere. Ne úřad. A podepíše se jménem.“ Odmlčela se. „Ne znakem.“
+„Kniha bude u rady,“ řekla Sael. „V radě budou tři. Rada rodu, rada Ostrých a Benediktova komunita. Originál bude v chebském archivu, jako deponát, podle pravidel, která podepsali čtyři správci a která ředitel podepíše, až rozhodnete. Kopie zůstanou u těch čtyř správců, jak je to už teď. Kdo se narodí nebo zemře, toho do knihy zapíše ten, koho si rodina vybere. Ne úřad. A podepíše se jménem.“ Odmlčela se. „Ne znakem.“
 
 „A jméno Merin?“ zeptal se Javor. Poprvé za celý večer. Stál vedle ní a díval se před sebe, ne na ni.
 
@@ -182,7 +182,7 @@ Nikdo jí neodpověděl hned.
 
 Hlasovali dvakrát. Nejdřív rada sítí. Pak Ostří, protože pod horou rozhodují Ostří, i když je hora prázdná.
 
-Rada sítí: Ines pro. Žena z Vratislavi pro, jak řekla. Muž ze saských sídel pro, ale řekl, že by chtěl, aby to bylo napsané, kdo knihu smí číst. Lorenz se zdržel.
+Rada sítí: Ines pro. Žena z Vratislavi pro, jak řekla. Muž ze saských sídel pro, ale řekl, že by chtěl, aby to bylo napsané, kdo knihu smí číst. Čtyři sítě, které nepřijely, poslaly hlas písemně a Ines ho přečetla: pro. Lorenz se zdržel.
 
 „Já jsem tuhle radu dvacet let vedl tak, aby nic takového nebylo potřeba,“ řekl. „Nemám právo teď hlasovat pro to, aby to skončilo, jako by to byl můj nápad.“
 
@@ -206,13 +206,13 @@ Sael chtěla poděkovat. Neudělala to. Hlasování není dar.
 
 Pak mluvili o seznamu.
 
-Kazeta ležela v trezoru dílny v Kozí uličce, od té noci. Suchá, zamčená zámkem, který by otevřelo dítě s vlásenkou. Kopie na klinice už neexistovala. MUDr. Kříž ji smazal prvního července v přítomnosti paní Hronkové a jedné úřednice, která sepsala protokol, a pak si sedl a dlouho se díval z okna na Teplou. Kopie u Wehrleho? Tu měla německá policie, nebo její část. Co dalšího pan Wehrle měl a kde, nevěděl nikdo. Ani Kubeš. Ani Hronková.
+Kazeta ležela v trezoru dílny v Kozí uličce, od té noci. Suchá, zamčená zámkem, který by otevřelo dítě s vlásenkou. Kopie na klinice už neexistovala. MUDr. Kříž ji smazal prvního července v přítomnosti paní Hronkové a jedné úřednice, která sepsala protokol, a pak si sedl a dlouho se díval z okna na Teplou. Kopie u Wehrleho? Tu, nebo aspoň její část, měla německá policie. Co dalšího pan Wehrle měl a kde, nevěděl nikdo. Ani Kubeš. Ani Hronková.
 
 „Nikdo nemůže slíbit, že to nikde jinde není,“ řekla Ines.
 
 „Ne,“ řekla Sael. „To mi řekla v dubnu jedna žena. Že slíbit může jen to, co udělá sama.“
 
-Rada rozhodla to, co Sael navrhla Ladě v červnu v telefonu a co Lada přinesla Ostrým. Kazeta se rozdělí. Každá rodina, kterou je možné najít, dostane svůj list. Ne kopii. Originál. Co s ním udělá, je její věc. Spálí ho, schová, dá ho do kontaktního místa, nechá si ho v šuplíku. Listy rodin, které najít nejde, zůstanou zapečetěné v dělené úschově, dokud se nenajdou. A nikdo, ani rada, ani Ostří, ani Sael, už nikdy nebude držet celý seznam pohromadě.
+Rada rozhodla to, co Sael navrhla Ladě v červnu po telefonu a co Lada přinesla Ostrým. Kazeta se rozdělí. Každá rodina, kterou je možné najít, dostane svůj list. Ne kopii. Originál. Co s ním udělá, je její věc. Spálí ho, schová, odnese ho do kontaktního místa, nechá si ho v šuplíku. Listy rodin, které najít nejde, zůstanou zapečetěné v dělené úschově, dokud se nenajdou. A nikdo, ani rada, ani Ostří, ani Sael, už nikdy nebude držet celý seznam pohromadě.
 
 „Náš list mi dej,“ řekla Lada. „Ten nikam nevoz.“
 
@@ -224,7 +224,7 @@ Nikdo jí to nerozmlouval. Byl to její list.
 
 „Kdo je bude rozvážet?“ zeptal se muž ze saských sídel.
 
-„Já,“ řekla Sael. „Většinu z nich jsem do toho seznamu zapsala. Ať je vidí, kdo to byl.“
+„Já,“ řekla Sael. „Většinu z nich jsem do toho seznamu zapsala. Ať vidí, kdo to byl.“
 
 *
 
@@ -258,7 +258,7 @@ Ve světnici se zase ztišilo. Několik hlav se otočilo k Sael.
 
 „Já neříkám teď.“
 
-„Ani potom,“ řekla Sael, „pokud vás nezvolí. Výslovně. Na čas. A s tím, že ho můžete odvolat, když začne rozhodovat sám.“
+„Ani potom,“ řekla Sael, „pokud ho nezvolíte. Výslovně. Na čas. A s tím, že ho můžete odvolat, když začne rozhodovat sám.“
 
 Ines se usmála až po dlouhé chvíli, unaveně, jako člověk, který čekal dvacet let na jednu větu a dostal jinou.
 
@@ -284,7 +284,7 @@ Sael stála s Ladou a Tadeášem v sadu nad statkem. Bylo ještě šero, ale na 
 
 Tadeáš držel v pravé ruce telefon. Levou, v obvazu, měl přitisknutou k tělu.
 
-„Pan Kalina mi posílá pulzy,“ řekl. „Pořád. Každou noc. Kratší než v květnu, ale delší než v lednu. A Hana mi posílá pramen. Má dvacet šest celá osm. Zpomaluje. Ale neklesá.“
+„Pan Kalina mi posílá pulzy,“ řekl. „Pořád. Každou noc. Kratší než v květnu, ale delší než v lednu. V srpnu to řekne nahlas, psal mi to. A Hana mi posílá čísla z pramene. Má dvacet šest celá osm. Zpomaluje. Ale neklesá.“
 
 Hana. Ne paní Vrbová. Sael si toho všimla.
 
@@ -354,7 +354,7 @@ Hana vytáhla sešit a zapsala to. Doleva. Datum, čas, *Řekla S.* Pak Hana se�
 
 Hana se tentokrát usmála doopravdy. Krátce.
 
-Pak se zase zvážněla.
+Pak zase zvážněla.
 
 „Jestli budete zase rozhodovat za někoho,“ řekla, „řeknu vám to.“
 

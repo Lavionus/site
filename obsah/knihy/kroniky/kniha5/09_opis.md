@@ -50,7 +50,7 @@ Hana vezme lístek. Je teplý, jako by ho Sálová držela v ruce dlouho.
 
 „Kdo je Agnes?“
 
-„Ta, kdo vás odveze,“ řekne Sálová. „Zbytek vám řeknou oni. Nebo ne.“
+„Ta, kdo vás dovede,“ řekne Sálová. „Zbytek vám řeknou oni. Nebo ne.“
 
 *
 
@@ -194,7 +194,7 @@ Benedikt mluví dlouho.
 
 Agnes překládá po kusech. Hana píše. Ne všechno. Jen to, co se dá napsat s *řekl B.* před tím.
 
-V údolí měli pro všechny jedno slovo, říká Benedikt. Pro ty, kdo kupovali krev, i pro ty, kdo si pouštěli krev kozám. Pro ty z Horní štoly i pro ty z olšové rokle. Jedno slovo. Pak to slovo napsali do knih. Pak z knih udělali divadla a pak filmy. A v každém je jen jeden druh.
+V údolí měli pro všechny jedno slovo, říká Benedikt. Pro ty, kdo kupovali krev, i pro ty, kdo si pouštěli krev kozám. Pro ty z Horní štoly i pro ty z olšové rokle. Jedno slovo. Pak to slovo napsali do knih. Pak z knih udělali divadelní hry a pak filmy. A v každém je jen jeden druh.
 
 „Ona napsala dva,“ překládá Agnes. „Ta žena. Nikdo jiný to nenapsal. Ani předtím, ani potom.“
 
@@ -242,7 +242,7 @@ Hana položí vedle každého listu kartu s měřítkem. Fotí kolmo shora, kaž
 
 „Kdo?“ přeloží Agnes.
 
-„Archivářka. Z Chebu. Čte ruce. Pozná papír a inkoust. Já to neumím. Umím jen srovnat, co je na fotce.“
+„Archivářka. Z Chebu. Čte staré písmo. Pozná papír a inkoust. Já to neumím. Umím jen srovnat, co je na fotce.“
 
 Agnes překládá. Ze tmy přijde otázka.
 
@@ -256,11 +256,11 @@ Ticho je tentokrát kratší.
 
 *
 
-Ve tři ráno sedí Hana v pokoji penzionu U Mlýna se dvěma okny na obrazovce.
+Ve tři ráno sedí Hana v pokoji penzionu U Mlýna a na obrazovce má otevřená dvě okna.
 
 Vlevo sken. Spis horního soudu, Jáchymov 1595, první list Ilonina vlastního svědectví. Drobná rovná ruka, zoraná pole. Vpravo fotka z dnešní noci. Jeremiášova ruka, smyčky, *J* s ocasem.
 
-Číst tu ruku Hana umí. Rozumět ne, ne celé. Na srovnání to stačí. Nesrovnává věty. Srovnává slova, písmeno po písmenu, jako se srovnávají dva profily z vrtu. Vrstvu po vrstvě, odshora dolů. Kde je v jednom písek, musí být písek i ve druhém.
+Číst tu ruku Hana umí. Rozumět ne, ne všemu. Na srovnání to stačí. Nesrovnává věty. Srovnává slova, písmeno po písmenu, jako se srovnávají dva profily z vrtu. Vrstvu po vrstvě, odshora dolů. Kde je v jednom písek, musí být písek i ve druhém.
 
 První řádek. *Ich schreib, was ich gesehen vnd was ich gethan hab.* Stejně vlevo i vpravo. *Vnd* s *v* na začátku, jak to Ilona píše vždycky.
 
@@ -346,7 +346,7 @@ Ve středu ráno v sedm dvanáct zazvoní telefon.
 
 Hana sedí v autě u pramene a čeká na osmou. Pes leží u odbočky. Tadeáš ještě nepřišel.
 
-„Jeremias,“ řekne Šindelářová bez pozdravu. „Kniha smluv a kniha trhová, Jáchymov. Je tam od léta devadesát pět. Podepisuje se jako *Jeremias, des Raths Schreibers Gehülf*. Pomocník radního písaře. Bez příjmení. U pomocného písaře to nic neznamená. Naposled v listopadu 1600. Pak nikde.“
+„Jeremias,“ řekne Šindelářová bez pozdravu. „Kniha smluv a kniha trhová, Jáchymov. Je tam od jara devadesát pět. Podepisuje se jako *Jeremias, des Raths Schreibers Gehülf*. Pomocník radního písaře. Bez příjmení. U pomocného písaře to nic neznamená. Naposled v listopadu 1600. Pak nikde.“
 
 „Ruka?“
 
@@ -408,7 +408,7 @@ A ve třetím listu, uprostřed jedné poloviny, stín. Zvíře. Na čtyřech no
 
 „Medvěd,“ řekne. „V regestu jsem napsala *nejspíš medvěd*. Teď už to vím.“ Otevře na telefonu sken spisu, list s vodoznakem, a položí telefon vedle desky. Dva stíny vedle sebe. „Stejný medvěd. Stejná vzdálenost linek. Stejné síto, nebo jeho dvojče. Papír je ze stejné zásoby jako spis.“
 
-Pak inkoust. Šindelářová ho nepoužije na nic. Jen se dívá. Lupou, šikmo, proti světlu desky, a pak zase odshora.
+Pak inkoust. Na ten Šindelářová nepoužije nic. Jen se dívá. Lupou, šikmo, proti světlu desky, a pak zase odshora.
 
 „Vidíte tohle?“ řekne. Poprvé za celou dobu se otočí k Haně. Ukáže na osmý list, na dlouhý tah písmene. Kolem tahu je papír hnědší. Na jednom místě je tah prasklý a papír pod ním prosvítá, jako by ho inkoust prožral. „Inkoust se do papíru zakousl. Za staletí. Takhle to dělá jen železitoduběnkový. Žádný dnešní inkoust tohle za pět let neudělá. Ani za padesát.“
 
@@ -440,7 +440,7 @@ Pak řekne tu druhou věc. Pět let ji nosí a teď ji řekne jednoduše, jako s
 
 Hana stojí za její židlí. Nehýbe se.
 
-„*A na stejném řádku, každou středu od Hromnic, stálo…*“ Šindelářová se zastaví. Skloní se. Prst jí jde nad řádek, centimetr nad papír. „Tady je to napsané jinak. Jiným písmem. Napodobené.“
+„*A na stejném řádku, každou středu od Hromnic, stálo…*“ Šindelářová se zastaví. Skloní se. Prst jí jde nad řádkem, centimetr nad papírem. „Tady je to napsané jinak. Jiným písmem. Napodobené.“
 
 Hana se nakloní. Uprostřed řádku velké *W* s kličkou na prostředním hrotu. Za ním čísla a zkratky.
 
@@ -550,7 +550,7 @@ Vlevo:
 
 *Ověření:*
 *1. Listy 1–4 opisu = listy 1–4 Ilonina svědectví ve spisu horního soudu (sken 2025): shoda slovo od slova, i pravopis (pluet, vnd), zkratky a škrt na 2. listu (am Mittwoch → am Sonnabend). Srovnávala jsem sama.*
-*2. 3. list: ve spisu chybí dolní pravý roh, v opisu jsou konce 3 řádků celé. Kolega L. Š. v KV našel na originálu na hraně lomu zbytky tahů (g, h, t?), sedí na text opisu. → opis vznikl z originálu před poškozením. (Řekla L. Š., 13. 3.)*
+*2. 3. list: ve spisu chybí dolní pravý roh, v opisu jsou konce 3 řádků celé. Kolega L. Š. v KV našel na originálu na hraně lomu zbytky tahů (g, s?, t?), sedí na text opisu. → opis vznikl z originálu před poškozením. (Řekla L. Š., 13. 3.)*
 *3. Ruka: Jeremias, des Raths Schreibers Gehülf, Jáchymov, městské knihy 1595–XI/1600, podpisy; velmi pravděpodobně tatáž ruka (L. Š.).*
 *4. Papír: vodoznak medvěd, stejný jako spis, stejné síto. Inkoust železitoduběnkový, koroze odpovídá stáří (L. Š.).*
 *Závěr: soudobý opis (ruka doložena 1595–1600, opsáno před poškozením rohu; rok 1595 Řekl B.). Ne Ilonina ruka.*

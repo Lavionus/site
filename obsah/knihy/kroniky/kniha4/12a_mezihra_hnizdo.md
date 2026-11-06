@@ -6,7 +6,7 @@ Bolest sedí v kloubu, tam, kde ji zasáhl kámen. Je tupá a horká a nepřest�
 
 Mládě to slyší taky. Strká do rány nos a ona ho odstrčí.
 
-Mládě ještě nelétá. Roztahuje křídla na kraji útesu každý den, a vítr ho zvedne o kus a zase položí. Je hladové. Piští, když ona nepřinese nic, a ona nepřináší skoro nic. Ryby v teplé vodě jsou malé. Nad planinu, kam se létá pro kořist, by se neodrazila. Zkusila to jednou. Vítr ji vzal, ale roztržené křídlo nedrželo a stočilo ji dolů, k útesu, a ona dopadla na římsu tak tvrdě, že ležela do večera.
+Mládě ještě nelétá. Roztahuje křídla na kraji útesu každý den, a vítr ho zvedne o kus a zase položí. Je hladové. Piští, když ona nepřinese nic, a ona nepřináší skoro nic. Ryby v teplé vodě jsou malé. Až nad planinu, kam se létá pro kořist, by nedoletěla. Zkusila to jednou. Vítr ji vzal, ale roztržené křídlo nedrželo a stočilo ji dolů, k útesu, a ona dopadla na římsu tak tvrdě, že ležela do večera.
 
 Teď už to nezkouší.
 
@@ -14,7 +14,7 @@ Teď už to nezkouší.
 
 Na plochém kameni pod útesem leželo maso.
 
-Bylo to té noci po kameni a po noži. Cítila ho až nahoru. Maso, ještě s kostí, a na něm pach toho zvláštního. Toho, který stál v horní vodě a celou noc u ní seděl. Šel přes vodu, na její stranu, kam nikdo z těch dole nechodí. Ti staří od teplé vody nechávají kozu. Tohle nebyla koza. Ale leželo to na tom kameni, tak jak tam leží koza, a pach na tom byl jen jeho.
+Bylo to té noci po kameni a po noži. Cítila ho až nahoře. Maso, ještě s kostí, a na něm pach toho zvláštního. Toho, který stál v horní vodě a celou noc u ní seděl. Šel přes vodu, na její stranu, kam nikdo z těch dole nechodí. Ti staří od teplé vody nechávají kozu. Tohle nebyla koza. Ale leželo to na tom kameni, tak jak tam leží koza, a pach na tom byl jen jeho.
 
 Slezla pro to za tmy, po skále, s křídlem staženým k tělu, a nahoru to vynesla v tlamě. Snědla to. Dala mláděti.
 
@@ -126,7 +126,7 @@ Vedle ní rýha krátká. Hluboká. Tlačí do ní tak dlouho, až ji dráp bol�
 
 Pak se zastaví. Dívá se.
 
-A ryje dál. Kousek vedle, na šířku dlaně, aby se to nedotýkalo, ale aby to bylo blízko. Čtyři rýhy. Prostřední kratší. Ti od teplé vody, ti staří, kteří nechávají kozu a nechodí přes vodu. Skupina, která je v hnízdě mnohokrát, na mnoha místech, stará i její. Teď je tady znovu. Vedle lesku. Vedle toho, co se láme a padá.
+A ryje dál. Kousek vedle, na šířku tlapy, aby se to nedotýkalo, ale aby to bylo blízko. Čtyři rýhy. Prostřední kratší. Ti od teplé vody, ti staří, kteří nechávají kozu a nechodí přes vodu. Skupina, která je v hnízdě mnohokrát, na mnoha místech, stará i její. Teď je tady znovu. Vedle lesku. Vedle toho, co se láme a padá.
 
 Protože jsou tam teď spolu. U teplé vody. Ti staří a ti noví. A ti od hloubky pod nimi, s dechem, který tam venku pod žebrem někdo zakryl hlínou.
 

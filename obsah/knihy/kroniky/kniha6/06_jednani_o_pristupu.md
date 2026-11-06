@@ -10,7 +10,7 @@ Seděl naproti ní u stejného stolu jako před pěti dny a vypadal stejně, jen
 
 Nara se na něj podívala.
 
-„Táta to říkal,“ řekl Ilan. „Volal ti a ty jsi byla bez spojení. Zeptal se kanceláře. Ta tvoje… Lumi. Řekla mu, že jsi v hlubokém úložišti.“ Pokrčil rameny. „Vzkázal mi to sem přes personál, jako by to bylo něco.“
+„Táta to říkal,“ řekl Ilan. „Volal ti a ty jsi byla bez spojení. Zeptal se kanceláře. Ta tvoje… Lumi. Řekla mu, že jsi v hlubokém úložišti.“ Pokrčil rameny. „Řekl mi to tady, jako by to bylo něco.“
 
 „Byla jsem tam kvůli spisu.“
 
@@ -34,7 +34,7 @@ Ilan se zasmál. Krátce, nosem, a hned toho nechal, jako by se zasmál omylem. 
 
 *
 
-Řekla mu o přiznáních. O osmdesáti schránkách a o čtyřech větách, které stály na každém listu stejně, slovo od slova, jen se měnilo jméno. Ilan poslouchal se skloněnou hlavou. Když skončila, chvíli mlčel.
+Řekla mu o přiznáních. O osmdesáti schránkách a o čtyřech větách, u podporovatelů třech, které stály na každém listu stejně, slovo od slova, jen se měnilo jméno. Ilan poslouchal se skloněnou hlavou. Když skončila, chvíli mlčel.
 
 „Kolik jich odmítlo?“
 
@@ -402,7 +402,7 @@ Lumi seděla na kraji stolu a dívala se, jak to Nara čte.
 
 „Mám přístup.“
 
-„A co v ní je?“
+„A co v té příloze je?“
 
 Nara se na ni podívala. Lumi se ptala tak, jak se ptala vždycky, rychle a bez obalu, a čekala odpověď, protože odpověď vždycky dostala.
 

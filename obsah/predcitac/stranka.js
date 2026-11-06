@@ -3,7 +3,7 @@
    hraje i při zamčené obrazovce (na rozdíl od speechSynthesis). */
 (function () {
   'use strict';
-  const J = window.PREDC_JADRO;
+  const J = window.PREDC_JADRO, E = window.HLASY_EFEKTY;
   const $ = id => document.getElementById(id);
   const HF = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
   const CACHE_HLASU = 'piper-hlasy';          // pozor: ne „webapp-…“ – ty maže sw.js při nové verzi
@@ -11,7 +11,7 @@
   const MAX_ULOZ_TEXT = 300000;               // znaků; delší text se neukládá (localStorage je sdílený)
   const ZASOBA_S = 150;                       // průběžně: kolik sekund zvuku držet připravené dopředu
 
-  const nast = Object.assign({ hlas: '', rychlost: 1, rezim: 'prubezne', mluvci: 0, jazyk: '', veta: 0 },
+  const nast = Object.assign({ hlas: '', rychlost: 1, rezim: 'prubezne', mluvci: 0, jazyk: '', veta: 0, uprava: '' },
     (() => { try { return JSON.parse(localStorage.getItem(KLIC)) || {}; } catch (e) { return {}; } })());
   const ulozNast = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch (e) { /* plné úložiště */ } };
 
@@ -79,6 +79,24 @@
     karta: 'https://huggingface.co/Thomcles/Piper-TTS-Czech',
     files: { [q + '/model.onnx']: { size_bytes: q === 'high' ? 84909623 : 63516050 }, [q + '/model.onnx.json']: { size_bytes: 4855 } },
   }));
+  // vlastní hlasy nahrané v Dílně hlasů (obsah/hlasy.html) – soubory už leží v Cache Storage
+  const VLASTNI_URL = 'https://vlastni-hlas.local/';
+  function vlastniHlasy() {
+    let v = [];
+    try { v = JSON.parse(localStorage.getItem('webapp_hlasy_vlastni')) || []; } catch (e) { /* nic */ }
+    return v.map(x => ({
+      key: 'vlastni-' + x.id, name: x.nazev, quality: 'vlastní', num_speakers: x.mluvcich || 1, vlastni: true,
+      language: Object.assign({ family: 'cs', code: 'cs', name_native: 'Čeština' }, x.jazyk, { name_english: (x.jazyk && (x.jazyk.name_english || x.jazyk.name_native)) || 'Czech' }),
+      zaklad: VLASTNI_URL + x.id + '/', files: { 'model.onnx': { size_bytes: x.velikost || 0 }, 'model.onnx.json': { size_bytes: 0 } },
+    }));
+  }
+  // úprava hlasu z Dílny hlasů: 'p:<předvolba>' nebo 'm:<můj hlas>'
+  function parametryUpravy() {
+    const [typ, id] = (nast.uprava || '').split(':');
+    if (typ === 'p') return (E.PRESETY.find(p => p.id === id) || {}).param || null;
+    if (typ === 'm') { try { return ((JSON.parse(localStorage.getItem('webapp_hlasy_upravy')) || []).find(u => u.id === id) || {}).param || null; } catch (e) { return null; } }
+    return null;
+  }
   // plné adresy souborů hlasu (zároveň klíče v Cache Storage)
   const soubory = h => {
     const k = Object.keys(h.files), z = h.zaklad || HF, cesta = f => f && z + f;
@@ -100,7 +118,7 @@
       katalog = Object.values(await ulozeny.json());
       zapis('Seznam hlasů offline z mezipaměti (' + e.message + ')');
     }
-    katalog.push(...KOMUNITNI);
+    katalog.push(...KOMUNITNI, ...vlastniHlasy());
     katalog.sort((a, b) => a.key.localeCompare(b.key));
     for (const h of katalog) if (await cache.match(soubory(h).onnx)) stazene.add(h.key);
   }
@@ -188,6 +206,8 @@
   async function generuj(gen, od) {
     const predem = nast.rezim === 'predem';
     const sr = konfigHlasu.audio.sample_rate;
+    const upr = parametryUpravy(), tempo = upr && upr.tempo || 1;
+    if (upr) zapis('Úprava hlasu: ' + nast.uprava);
     let kus;
     while (gen === prehr.gen && (kus = J.dalsiKus(vety, od, { celyNajednou: predem }))) {
       while (!predem && gen === prehr.gen && dopredu() > ZASOBA_S) await cekej(1000);
@@ -195,7 +215,8 @@
       const casti = [], casy = [];
       let vzorku = 0, msKus = 0;
       for (let i = kus.od; i < kus.do; i++) {
-        const { pcm, ms } = await zadej({ typ: 'veta', text: vety[i].text, rychlost: nast.rychlost, mluvci: nast.mluvci });
+        const r = await zadej({ typ: 'veta', text: vety[i].text, rychlost: nast.rychlost * tempo, mluvci: nast.mluvci });
+        const pcm = upr ? E.uprav(r.pcm, sr, upr, i + 1) : r.pcm, ms = r.ms;
         if (gen !== prehr.gen) return;
         casy.push(vzorku / sr);
         const ticho = new Int16Array(Math.round(J.pauza(vety[i]) * sr));
@@ -478,6 +499,18 @@
   $('tlVpred').onclick = () => skok(prehr.veta + 1);
   $('rychlost').value = String(nast.rychlost);
   $('rychlost').onchange = e => { nast.rychlost = +e.target.value; ulozNast(); if (prehr.hraje) spust(prehr.veta); };
+  function naplnUpravy() {
+    let moje = [];
+    try { moje = JSON.parse(localStorage.getItem('webapp_hlasy_upravy')) || []; } catch (e) { /* nic */ }
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    $('upravaVyber').innerHTML = '<option value="">bez úpravy</option><optgroup label="Předvolby">' +
+      E.PRESETY.filter(p => p.id !== 'puvodni').map(p => `<option value="p:${p.id}">${esc(p.nazev)}</option>`).join('') + '</optgroup>' +
+      (moje.length ? '<optgroup label="Moje hlasy">' + moje.map(u => `<option value="m:${esc(u.id)}">⭐ ${esc(u.nazev)}</option>`).join('') + '</optgroup>' : '');
+    if (nast.uprava && !parametryUpravy()) nast.uprava = '';
+    $('upravaVyber').value = nast.uprava;
+  }
+  naplnUpravy();
+  $('upravaVyber').onchange = e => { nast.uprava = e.target.value; ulozNast(); if (prehr.hraje) spust(prehr.veta); };
   $('hlasVyber').onchange = e => { if (e.target.value) vyberHlas(e.target.value); };
   $('tlHlasy').onclick = otevriHlasy;
   $('hlasyJazyk').onchange = vykresliHlasy;

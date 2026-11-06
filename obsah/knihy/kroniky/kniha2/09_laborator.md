@@ -36,7 +36,7 @@ Tak si to řekla. A teď, ve světle, s rukou, která tepala, to rozkládala na 
 
 Kdyby přišla k Wehrlovi a řekla mu o mezkovi, zeptal by se, kam mezek jde. Řekla by: k Horní štole. Zeptal by se, jak to ví. Wehrl se ptal vždycky, ptal se dobře, sám jí to řekl: *Ptáte se dobře. Zapište si to.* A ona by mu musela říct, že tam byla. S kým. Kudy šli. Že pod Horní štolou, v síni plné kouře, žije dvacet nebo třicet lidí, kteří si pouštějí krev do lahviček, a že v jiné štole, v olšové rokli, žije čtyřicet jiných, kteří s nimi nemají nic společného kromě bledé kůže a jednoho bratrance.
 
-A Wehrl by to věděl. Wehrl, který byl na její straně. Wehrl, který řekl o razii *nebezpečná hloupost*.
+A Wehrl by to věděl. Wehrl, který byl na její straně. Wehrl, který řekl o honbě *nebezpečná hloupost*.
 
 A pak by to věděl Kunz, protože Kunz věděl všechno, co prošlo horním úřadem. A to, co věděl Kunz, vědělo do týdne lékárníkovo pero.
 
@@ -52,15 +52,15 @@ Ale odpoledne se slunce sklonilo nad haldy a na předních dveřích se nic neob
 
 Dům s nápisem *Expectans expectavi* měl zavřené okenice v prvním patře a otevřená vrátka do dvora. Služka, stará a hluchá, ji poznala a ukázala dovnitř a řekla hlasitě, jak mluví hluší: „Pán není doma! Na mincovně! Do večera!“ A pak, stejně hlasitě: „Laborant je dole!“
 
-Ilona chtěla odejít. Pak uslyšela z hloubi domu, ze schodů do suterénu, zvuk, který znala. Krátký, přidušený, jako když člověk sykne skrz zuby a zároveň se snaží, aby ho nikdo neslyšel.
+Ilona chtěla odejít. Pak uslyšela z hloubi domu, ze schodů do sklepa, zvuk, který znala. Krátký, přidušený, jako když člověk sykne skrz zuby a zároveň se snaží, aby ho nikdo neslyšel.
 
 Sešla dolů.
 
 *
 
-Suterén byl delší než dům nad ním, jako by se do svahu zakousl hlouběji, než bylo vidět z ulice. Klenba z lomového kamene, začouzená. Pec, kterou Ilona před dvěma týdny jen cítila ze schodů, byla zblízka velká, z cihel, s několika dvířky a s komínem, který mizel ve stropě. Kolem ní stály na policích a na zemi věci, kterým Ilona většinou nerozuměla. Baňky s dlouhými zahnutými krky. Hliněné kelímky, černé od ohně. Měchy. Kleště. Měděná pánev s pískem. Mísa, ve které ležela kulička něčeho stříbrného, co se pohnulo, když Ilona sestoupila z posledního schodu a podlaha se pod ní zachvěla. Rtuť. Vzduch byl teplý a kovový a štípal v nose.
+Sklep byl delší než dům nad ním, jako by se do svahu zakousl hlouběji, než bylo vidět z ulice. Klenba z lomového kamene, začouzená. Pec, kterou Ilona před dvěma týdny jen cítila ze schodů, byla zblízka velká, z cihel, s několika dvířky a s komínem, který mizel ve stropě. Kolem ní stály na policích a na zemi věci, kterým Ilona většinou nerozuměla. Baňky s dlouhými zahnutými krky. Hliněné kelímky, černé od ohně. Měchy. Kleště. Měděná pánev s pískem. Mísa, ve které ležela kulička něčeho stříbrného, co se pohnulo, když Ilona sestoupila z posledního schodu a podlaha se pod ní zachvěla. Rtuť. Vzduch byl teplý a kovový a štípal v nose.
 
-U stolu pod jediným okénkem, ve výšce dlažby na dvoře, seděl Valentin Hesse a držel si levou ruku v pravé, jako se drží zraněný pták.
+U stolu pod jediným okénkem, ve výšce dlažby na dvoře, seděl Valentin Hesse a držel si levou ruku v pravé, jako se drží zraněného ptáka.
 
 Vyskočil, když ji uviděl, a ruku schoval za záda.
 
@@ -72,7 +72,7 @@ Vyskočil, když ji uviděl, a ruku schoval za záda.
 
 „Ukažte mi to.“
 
-Hesse byl mladší, než si ho pamatovala. Hubený, bledý od suterénu, s vlasy ostříhanými nakrátko, aby se nevznítily, a s tím výrazem, jaký mívají tovaryši, kteří se celý život bojí, že něco rozbijí. Už když ho viděla poprvé, měl obvázané prsty. Obvazy byly pořád tytéž, nebo nové, ale stejně špinavé. Váhal. Pak natáhl ruku.
+Hesse byl mladší, než si ho pamatovala. Hubený, bledý od sklepa, s vlasy ostříhanými nakrátko, aby se nevznítily, a s tím výrazem, jaký mívají tovaryši, kteří se celý život bojí, že něco rozbijí. Už když ho viděla poprvé, měl obvázané prsty. Obvazy byly pořád tytéž, nebo nové, ale stejně špinavé. Váhal. Pak natáhl ruku.
 
 Ilona ji vzala svou zdravou, levou, a Hesse se podíval na šátek a na její druhou ruku a otevřel ústa a zase je zavřel.
 
@@ -122,7 +122,7 @@ Bylo to první, co ji napadlo. A teprve když to řekla, uvědomila si, že to j
 
 *
 
-Hesse jí šel pro čisté plátno nahoru, protože to dole bylo všechno od sazí, a Ilona zůstala v suterénu sama.
+Hesse jí šel pro čisté plátno nahoru, protože to dole bylo všechno od sazí, a Ilona zůstala ve sklepě sama.
 
 Neměla v úmyslu nic prohlížet. Seděla u stolu s rukou v šátku a čekala, až přestane tepat, a dívala se, protože jinam se dívat nedalo. Na pec. Na baňky. Na kuličku rtuti v míse. Na zeď za pecí. Ve zdi byla vysekaná hluboká nika. V ní stál džbán s vodou a pod džbánem, na kameni mokrém od vody, která ze džbánu prosakovala, dřevěná bedýnka.
 
@@ -133,6 +133,8 @@ Nebyla velká. Tmavé dřevo, víko na pantech z kůže, a uvnitř přihrádky. 
 Přihrádky. Čtyři řady po pěti. Dvacet.
 
 V každé přihrádce lahvička. Malá, z nazelenalého skla, menší než ta s duchem krve, kterou jí Röhrich podržel proti oknu. Ilona je znala. Viděla je prázdné, desítky, v bedýnce na polici v lékárníkově zadní místnosti. Slyšela je, jak cinkly sklem o sklo pod pláštěm vyhublého muže u ústí štoly. Viděla je plnit se, jednu po druhé, pod lancetou ženy, která klečela u mladíka s řemenem nad loktem, pět, šest, sedm, až se mladík opřel hlavou o skálu.
+
+![Bedýnka za pecí](obrazky/09_laborator.webp)
 
 Teď byly plné. Tmavé. Ve světle z okénka u stropu měly barvu starého vína.
 
@@ -196,7 +198,7 @@ Wehrl se vrátil, když dovazovala druhý prst.
 
 Slyšela ho nahoře, jeho hlas, služku, která křičela, že je tu paní ranhojička, a pak jeho kroky na schodech, rychlé. Pak stál na posledním schodu v hornickém kabátě přes černé sukno a díval se na ně, na Hesseho s rukou na stole a na ni s rukou v šátku.
 
-„Paní Ilono,“ řekl. Nebyl v tom hněv, ani překvapení. Jen otázka. A pak, když přešel suterén a uviděl Hesseho prsty: „Proboha. Valentine. Proč jsi nic neřekl?“
+„Paní Ilono,“ řekl. Nebyl v tom hněv, ani překvapení. Jen otázka. A pak, když přešel sklep a uviděl Hesseho prsty: „Proboha. Valentine. Proč jsi nic neřekl?“
 
 „Musel jsem pracovat, pane.“
 
@@ -222,7 +224,7 @@ Pak se podíval do niky. Na bedýnku s odklopeným víkem. Ilona viděla, že se
 
 „A přesto ji pijete.“
 
-„A přesto ji piju.“ Wehrl se otočil a opřel se zády o zeď vedle niky. V šeru suterénu vypadal najednou starší, s popelavým plnovousem a s rukama, které se mu třásly, i když je měl založené. „Člověk, který se bojí, že umře den předtím, paní Ilono, pije i kozí krev. Myslel jsem, že to víte. Vy jste přece viděla matky pod popravištěm s hrnky v ruce.“
+„A přesto ji piju.“ Wehrl se otočil a opřel se zády o zeď vedle niky. V šeru sklepa vypadal najednou starší, s popelavým plnovousem a s rukama, které se mu třásly, i když je měl založené. „Člověk, který se bojí, že umře den předtím, paní Ilono, pije i kozí krev. Myslel jsem, že to víte. Vy jste přece viděla matky pod popravištěm s hrnky v ruce.“
 
 Ilona ztuhla. Tohle mu nikdy neřekla. Tady to neřekla nikomu. Jen jednou, první zimu v Jáchymově, Řehořovi, v noci, když nemohla spát a on se zeptal, proč se bojí kata, který jim prodával psí sádlo.
 
@@ -254,7 +256,7 @@ Ilona mlčela.
 
 „Napište to dřív. Kdyby se vám něco stalo…“ Podíval se na šátek. „Psi, paní Ilono. Ve městě je hodně psů.“
 
-Podíval se na ni tak, jak se dívá lékař, který je sám nemocný. Ilona v tom pohledu viděla starost a viděla v něm i něco dalšího, co nedokázala pojmenovat, a proto to nechala stát.
+Podíval se na ni tak, jak se dívá lékař, který je sám nemocný. Ilona v tom pohledu viděla starost a viděla v něm i něco dalšího, co nedokázala pojmenovat, a proto to nechala být.
 
 Řekla mu, že napíše. A neřekla mu o čtvrtečním měšci. Ani on se o něm nezmínil.
 
@@ -276,7 +278,7 @@ Röhrich je prostředník. To věděla. Prostředník prodává oběma stranám 
 
 To bylo možné. To bylo dokonce pravděpodobné. Ilona si to opakovala, až to znělo jako pravda.
 
-Pak si vzpomněla, že u globusu mluvil o otci, který se díval na hvězdu, a o rodě, který má staré knihy, a o tom, co se slíbilo. Že se ptal, kolik krve chybělo Ursule. Že nosí černé sukno. Že četl její desky celé, u ní, a že ví, co v nich je, lépe než Kunz.
+Pak si vzpomněla, že u globusu mluvil o otci, který se díval na hvězdu, a o rodě, který má staré knihy, a o tom, co se slíbilo. Že se ptal, kolik krve chybělo Ursule. Že nosí černé sukno. Že si chtěl přečíst její desky celé, u ní, a že její výpovědi zná lépe než Kunz.
 
 To jí nepomohlo. Tak to položila stranou. Jako výpověď na jiný kraj stolu.
 
@@ -294,7 +296,7 @@ Lázeň byla poloprázdná. Jobst stál u kotle a nepodíval se na ni. Jeho žen
 
 Ilona počítala.
 
-Pouštělo se míň. Ženy se dívaly k oknu, pod kterým tekl potok, a když přišly k Jobstovi s obnaženou paží, hleděly mu na ruce. Jedna vstala a odešla, když viděla misku. Ilona napočítala dvanáct misek. Možná třináct. Jednu nedohlédla přes páru.
+Pouštělo se míň. Ženy se dívaly k oknu, pod kterým tekl potok, a když přišly k Jobstovi s obnaženou paží, hleděly mu na ruce. Jedna vstala a odešla, když viděla misku. Ilona napočítala dvanáct misek. Možná třináct. U jedné přes páru nedohlédla.
 
 Večer stála v seníku vozky Pankráce, jako stála před dvěma týdny, a dívala se. Nová děvečka vynesla misky ke struze jednu po druhé a vylila je. Nešlehala, necedila. Krev se srazila v miskách do černých koláčů a děvečka je vyklepávala o kraj struhy, jako se vyklepává těsto. Potok pod mostem zrůžověl a pak zase zprůzračněl.
 
@@ -306,7 +308,7 @@ Doma zapálila svíčku a vytáhla desky.
 
 Tabulka ležela tam, kde ji nechala. Dva řádky, *Sobota 20. května. Sobota 27. května.* Její písmo, drobné, rovné, jako by pod papírem leželo pravítko. Pod druhým řádkem bylo místa na pět dalších.
 
-Namočila pero a levou rukou napsala *Sobota 3.* – a dál nemohla. Písmena byla tak velká, že se *3* nevešla do sloupce a vylezla přes svislou čáru do *Vylito*. Ilona se dívala na tu trojku, která jí rozbila tabulku, a pak list zvedla a položila stranou.
+Namočila pero a levou rukou napsala *Sobota 3.* – a dál nemohla. Písmena byla tak velká, že se *3* nevešla do sloupce a vylezla přes svislou čáru do *Vylito*. Ilona se dívala na tu trojku, která jí rozbila tabulku. Pak řádek přeškrtla jednou rovnou čarou, připsala k němu *viz list druhý* a list zvedla a položila stranou.
 
 Vytáhla nový. Ze stejného dobrého papíru.
 
@@ -314,7 +316,7 @@ Nahoru napsala, velkými křivými písmeny, která nebyla její: *Lázeň pod m
 
 Zabralo to polovinu listu. Na jednu sobotu.
 
-Pod čáru napsala, co věděla jistě: *Mistr Jobst vylévá třetí týden. Lékárník nekupuje. Ženy pouštějí míň.*
+Pod čáru napsala, co věděla jistě: *Mistr Jobst vylévá druhý týden. Lékárník nekupuje. Ženy pouštějí míň.*
 
 Pak vzala svůj sešit s koženou chlopní, otevřela ho a dlouho se dívala na prázdné místo pod pátečním zápisem.
 

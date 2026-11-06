@@ -46,7 +46,7 @@ Pak se Matěj otočil a vešel do hory.
 
 Počítal.
 
-Ješkův křížek na třicátém. Teplo až u sto dvacátého, a to slabé, jako v pokoji, kde se večer přestalo topit. Pod prkny hučel žlab. U sto osmdesátého puklina. Teklo z ní, jak teklo v noci, pramen silný jako palec, ale už nekouřil. Voda pod ním byla jen teplá. Rámy kolem pukliny byly tmavé, nasáklé, a jeden z nich, ten Ortliebův, se značkou, byl prohnutý, jako se prohne trám, na který se léta sype seno. V únoru byl rovný. Matěj si toho všiml. Nikdo jiný se nezastavil.
+Ješkův křížek na třicátém. Teplo až u sto dvacátého, a to slabé, jako ve světnici, kde se večer přestalo topit. Pod prkny hučel žlab. U sto osmdesátého puklina. Teklo z ní, jak teklo v noci, pramen silný jako palec, ale už nekouřil. Voda pod ním byla jen teplá. Rámy kolem pukliny byly tmavé, nasáklé, a jeden z nich, ten Ortliebův, se značkou, byl prohnutý, jako se prohne trám, na který se léta sype seno. V únoru byl rovný. Matěj si toho všiml. Nikdo jiný se nezastavil.
 
 U dvou set patnácti prkna. Matěj se na ně nepodíval. Šel kolem a nepodíval se, a cítil to v zádech, jako se cítí pohled.
 
@@ -74,11 +74,11 @@ Pak se díval, jak se hrázka plní.
 
 *Pater noster, qui es in caelis.*
 
-Za ním na čelbě začala bít želízka. Ne jako v pondělí po Velikonocích, kdy to v hoře znělo jako kovárna o jarmarku. Opatrně. Ťuk, ťuk, a pak pauza, a pak zase ťuk, jako když se tluče na dveře domu, kde je mrtvý.
+Za ním na čelbě začala bít želízka. Ne jako v pondělí po Velikonocích, kdy to v hoře znělo jako kovárna o jarmarku. Opatrně. Ťuk, ťuk, a pak odmlka, a pak zase ťuk, jako když se tluče na dveře domu, kde je mrtvý.
 
 *Sanctificetur nomen tuum. Adveniat regnum tuum.*
 
-Voda za fošnami stoupala. Matěj se díval na tmavou čáru na prkně, kam sahala, když začal, a na hladinu, jak se k ní plazí, a modlil se a počítal. U *panem nostrum* druhého Otčenáše byla zase po okraj. Vytáhl ucpávku. Pak znovu. Tentokrát byla po okraj u *et dimitte nobis*. Potřetí u *fiat voluntas tua*.
+Voda za fošnami stoupala. Matěj se díval na tmavou čáru na prkně, kam sahala, když začal, a na hladinu, jak se k ní plazí, a modlil se a počítal. U *et dimitte nobis* druhého Otčenáše byla zase po okraj. Vytáhl ucpávku. Pak znovu. Tentokrát byla po okraj u *panem nostrum*. Potřetí u *fiat voluntas tua*.
 
 Otčenáš pozpátku. Jako u žlabu, každé ráno celé jaro. Jenže tady to nebylo za tři týdny. Tady to bylo za hodinu.
 
@@ -96,7 +96,7 @@ Syčení. Tiché, vysoké, jako když se nechá na ohni hrnec s pokličkou. Ne j
 
 Jenže tenkrát byl za stěnou. Teď byl tady.
 
-Hensel sundal dlaň. Podíval se na ni. Pak se sehnul, zvedl mlátek, který mu ležel u nohou, a položil ho na zem. Ne hodil. Položil, rovně, jak se pokládá nářadí na konci směny.
+Hensel sundal dlaň. Podíval se na ni. Pak se sehnul, zvedl mlátek, který mu ležel u nohou, a položil ho ke stěně. Ne hodil. Položil, rovně, jak se pokládá nářadí na konci směny.
 
 „Nein,“ řekl.
 
@@ -166,7 +166,7 @@ Ješek se podíval na Matěje. Pak sklonil hlavu, vzal kahan z niky a šel k Ort
 
 Ortlieb udeřil.
 
-Opatrně. Jako když kovář nasazuje první ránu na nový kus železa, aby věděl, jak je měkké. Pak druhou. Želízko vjelo do skály o prst. Ortlieb ho vytáhl, otočil, nasadil znovu. Jedenkrát, dvakrát, třikrát. Bylo to slyšet v celé štole. Nikdo jiný se nehýbal. Lutz nahoře na hromadě skály měl rty pohnuté, a Matěj věděl, co říká, protože to říkal sám.
+Opatrně. Jako když kovář zasazuje první ránu na nový kus železa, aby věděl, jak je měkké. Pak druhou. Želízko vjelo do skály o prst. Ortlieb ho vytáhl, otočil, nasadil znovu. Jedenkrát, dvakrát, třikrát. Bylo to slyšet v celé štole. Nikdo jiný se nehýbal. Lutz nahoře na hromadě skály hýbal rty, a Matěj věděl, co říká, protože to říkal sám.
 
 *Fiat voluntas tua.*
 
@@ -214,7 +214,7 @@ Ortlieb, nebo někdo jiný. Nějaká ruka ho chytila za rameno a otočila, a on 
 
 Běželi všichni. Matěj neviděl nic, jen dva tři kahany vpředu, které poskakovaly a mizely a zase se objevovaly, a slyšel jen tu vodu. Narážel do rámů. Prkna pod nohama se zvedala, voda je vytrhávala z podlahy a ony plavaly a narážely mu do holení. Upadl. Někdo ho zvedl za hábit. Ješek? Ne, ruka byla malá a tvrdá a měla tři prsty. Hensel. Běželi dál.
 
-Dvě stě patnáct. Prkna přes otvor do dutiny, Matěj je cítil rukou, když se o ně opřel, a byla celá. Dvě stě. Voda už nebyla po stehna, opadala, rozlévala se po delší štole a tekla rychleji, a Matěj pochopil, že jestli doběhnou k ústí, doběhnou. Sto devadesát. Před ním, ve světle kahanu, světlé vlasy. Lutz. Běžel nejrychleji ze všech, byl mladý a lehký, a už byl daleko, a za ním Mikuláš a ti dva mladí Sasové a ti ze vsi za potokem, a ještě kahan vpředu, a ještě jeden.
+Dvě stě patnáct. Prkna přes otvor do dutiny, Matěj je cítil rukou, když se o ně opřel, a byla celá. Dvě stě. Voda už nebyla po stehna, opadala, rozlévala se po delší štole a tekla rychleji, a Matěj pochopil, že teď už jde jen o to doběhnout k ústí. Sto devadesát. Před ním, ve světle kahanu, světlé vlasy. Lutz. Běžel nejrychleji ze všech, byl mladý a lehký, a už byl daleko, a za ním Mikuláš a ti dva mladí Sasové a ti ze vsi za potokem, a ještě kahan vpředu, a ještě jeden.
 
 Sto osmdesát.
 
@@ -304,7 +304,7 @@ Matěj mlčel.
 
 Hledali.
 
-Hensel šel podél stěny s kahanem v dlani a s druhou dlaní na skále, a Matěj šel za ním. Gotthard a Kunz tloukli mlátky do podlahy, tam, kde ještě nebyla voda tak hluboká, aby to nešlo, a Ortlieb klečel ve vodě a tloukl pěstí do stěny naproti a poslouchal. Vítek stál u rámu a modlil se. Ješek tloukl do podlahy želízkem, které si přinesl, jediné, které někdo nepustil z ruky.
+Hensel šel podél stěny s kahanem v dlani a s druhou dlaní na skále, a Matěj šel za ním. Gotthard a Kunz tloukli mlátky do podlahy, tam, kde ještě nebyla voda tak hluboká, aby to nešlo, a Ortlieb klečel ve vodě a tloukl pěstí do stěny naproti a poslouchal. Vítek stál u rámu a modlil se. Ješek tloukl do podlahy želízkem, které si přinesl, jediným, které někdo nepustil z ruky.
 
 Plno. Plno. Plno.
 
@@ -320,7 +320,7 @@ Díval se na list.
 
 Čára štoly. Přerušovaná čára staré cesty. Křížily se. Na listu se křížily. Na Merinově kůži se taky křížily, nebo ne, nevěděl, protože tu kůži viděl jen na jeden Otčenáš, a ani ten nedomodlil. Kreslil ji v komoře u oratoře na Velký pátek, z paměti, a vedle té čáry napsal sám, vlastní rukou: *vidi semel, non bene.* Viděl jsem jednou, ne dobře.
 
-A kreslil horu jako bochník. Rozříznutou nožem, z boku. Tak to dělali ti, kdo kreslili kůži, a tak to udělal on. A na řezu bochníku se můžou křížit dvě díry, které vedou každá jinam, i když se v chlebu nikdy nepotkají. Jedna jde blíž ke kůrce, druhá hlouběji. Na řezu jsou to dvě čáry přes sebe. V chlebu jsou to dvě nitě v látce, jedna nad, druhá pod, a mezi nimi celá tloušťka.
+A kreslil horu jako bochník. Rozříznutou nožem, z boku. Tak to dělali ti, kdo kreslili kůži, a tak to udělal on. A na kresbě z boku se můžou křížit dvě díry, které vedou každá jinam, i když se v chlebu nikdy nepotkají. Jedna jde těsně pod řezem, druhá hlouběji v bochníku, až u protější kůrky. Na kresbě jsou to dvě čáry přes sebe. V chlebu jsou jako dvě nitě v látce, jedna nad, druhá pod, a mezi nimi celá tloušťka.
 
 Na listu se čáry křížily. V hoře se křížit nemusely.
 
@@ -338,7 +338,7 @@ Voda byla u rýhy o čtyři prsty výš.
 
 *Pod vámi. Kolem.*
 
-Merin řekl kolem. Matěj to slyšel a nechal to propadnout, protože chtěl slyšet *pod*, protože *pod* bylo na jeho listu. *Slyšíme vás z ní. Každou ránu.* A Ostra: *Budu u ucha.*
+Merin řekl kolem. Matěj to slyšel a přešel to, protože chtěl slyšet *pod*, protože *pod* bylo na jeho listu. *Slyšíme vás z ní. Každou ránu.* A Ostra: *Budu u ucha.*
 
 U ucha.
 
@@ -368,13 +368,13 @@ Ale Hensel to cítil. Matěj to viděl v jeho tváři. Hensel, který neslyšel 
 
 „Still!“
 
-Všichni zmlkli. I Vítek. I voda ne, ale oni ano.
+Všichni zmlkli. I Vítek. Voda ne, ale oni ano.
 
 Hensel stál s dlaní na skále. Pak zvedl tři prsty pravé ruky. Ty tři, co mu zbyly.
 
 Jeden. Dva. Tři.
 
-Pauza.
+Odmlka.
 
 A znovu. Jeden. Dva. Tři.
 
@@ -390,7 +390,7 @@ Odpověděli.
 
 *
 
-Hensel šel po skále jako slepý po zdi. Dlaň, krok, dlaň. Nahoru, proti vodě, proti proudu, který jim teď tekl k pasu. Dvě stě. Dvě stě deset. Matěj šel za ním a každých pár kroků udeřil třikrát, a Hensel se zastavil a čekal, a pak šel dál. Ortlieb šel za nimi. Nikdo mu to neřekl.
+Hensel šel po skále jako slepý po zdi. Dlaň, krok, dlaň. Nahoru, proti vodě, proti proudu, který jim teď sahal po pás. Dvě stě. Dvě stě deset. Matěj šel za ním a každých pár kroků udeřil třikrát, a Hensel se zastavil a čekal, a pak šel dál. Ortlieb šel za nimi. Nikdo mu to neřekl.
 
 U dvou set patnácti se Hensel zastavil.
 
@@ -400,7 +400,7 @@ Prkna.
 
 Odtamtud. Z dutiny. Z hnízda, které na Merinově kůži nebylo, protože o něm nevěděli. Ze zavřené hory, zasypané hlínou ve stovkách vrstev, do které nikdo nikdy neviděl.
 
-Ale slyšet do ní šlo. Prázdnou dutinou se zvuk nese jako bubínkem.
+Ale slyšet do ní šlo. Prázdnou dutinou se zvuk nese jako v bubínku.
 
 Hensel vzal páku. Nasadil ji pod první hřeb, a hřeb vyjel ze dřeva sám, skoro bez odporu, narovnaný, jak ho Hensel v noci narovnal palcem a jak ho zase zahnul. Druhý. Třetí. Hensel je tentokrát nekladl vedle sebe. Pouštěl je do vody.
 
@@ -420,7 +420,7 @@ Hensel odhodil poslední fošnu.
 
 Voda vtekla do hnízda před nimi.
 
-Matěj to viděl, když se protahoval otvorem. Hladina štoly dosáhla prahu dutiny a přelila se přes něj, nejdřív tence, jako se přelévá mléko přes okraj hrnce, a pak víc. Tekla po hladké podlaze. Po rýhách. Rýhy se plnily jedna po druhé, rovné a stejně dlouhé, prostřední kratší, a voda v nich stála chvíli rovně jako inkoust v rýze rydla, a pak je přelila a zmizely.
+Matěj to viděl, když se protahoval otvorem. Hladina štoly dosáhla prahu dutiny a přelila se přes něj, nejdřív tence, jako se přelévá mléko přes okraj hrnce, a pak víc. Tekla po hladké podlaze. Po rýhách. Rýhy se plnily jedna po druhé, rovné a mělké, skupina po skupině, a voda v nich stála chvíli rovně jako inkoust v rýze rydla, a pak je přelila a zmizely.
 
 Kroužky. Valouny, kalné, matně žluté, pod vodou najednou zářily, jako září kameny v potoce. Důlky po těch, které vzal on. Křížky, které nakreslil. Čtvrtá skupina, celá, jediná. Řada u svahu, kde chyběl každý druhý.
 
@@ -436,7 +436,7 @@ Pak už ji neviděl.
 
 Hensel byl u zadní stěny. Vlevo, kde končila šedá hlína ve vrstvách a začínala skála. Stál ve vodě po kolena s dlaní na kameni, a když Matěj doklečel k němu a udeřil třikrát, Hensel ukázal přímo před sebe. Na skálu ve výšce prsou. A odpověď přišla tak blízko, že ji Matěj tentokrát uslyšel i sám.
 
-Železo o kámen. Těsně. Za dlaní skály.
+Železo o kámen. Těsně. Za skálou tenkou na dlaň.
 
 „Hier,“ řekl Hensel.
 
@@ -448,7 +448,7 @@ Matěj nikdy neviděl horníky dělat tohle. Kopat, ano. Celé jaro je slyšel. 
 
 Voda stoupala. V hnízdě jim byla už nad kolena, a otvorem ze štoly se valila dál.
 
-Matěj stál za nimi a nemohl dělat nic. Neuměl to. Držel Vítka za loket, protože Vítek se třásl tak, že se nemohl udržet na nohou, a počítal údery, a počítal Otčenáše, a ztratil počet obojího.
+Matěj stál za nimi a nemohl dělat nic. Neuměl to. Držel Vítka za loket, protože Vítek se třásl tak, že se nemohl udržet na nohou, a počítal údery, a počítal Otčenáše, a v obojím se spletl.
 
 A pak Ješkovo želízko vjelo do prázdna.
 

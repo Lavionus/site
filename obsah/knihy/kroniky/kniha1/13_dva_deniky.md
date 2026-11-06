@@ -4,7 +4,7 @@ Na Bílou sobotu se vědro přelilo u *panem nostrum*.
 
 Matěj nad ním stál dlouho a voda mu tekla přes prsty. Bylo to o prosbu dřív než ve čtvrtek. Od čtvrtka se v hoře zase kopalo, a jestli to Ješek říkal dobře, kopalo se rychleji než předtím, protože Ortlieb chtěl dohnat ty dva dny. Matěj nevěděl, jestli je to tím. Věděl jen, kde se vědro přelilo. Zapsal to.
 
-Ješek sešel z hory s noční směnou za šera. Ostatní šli po cestě dolů ke vsi, mlčky a s kápěmi přes hlavu. Ješek se od nich oddělil u haldy a sešel ke strouze. Byl mokrý. Ne od potu. Kalhoty měl mokré nad kolena a tmavé, a když se zastavil, kapalo z nich na kamení.
+Ješek sešel z hory s noční směnou za šera. Ostatní šli po cestě dolů ke vsi, mlčky a s kápěmi přes hlavu. Ješek se od nich oddělil u haldy a sešel ke strouze. Byl mokrý. Ne od potu. Nohavice měl mokré nad kolena a tmavé, a když se zastavil, kapalo z nich na kamení.
 
 Matěj se podíval na jeho nohy a pak na jeho tvář. Ješek si všiml, kam se dívá, a nic neřekl.
 
@@ -58,7 +58,7 @@ Truhla stála v koutě boudy pod hromadou kápí. Byla dubová, kovaná, s visac
 
 Uvnitř bylo nářadí, zabalené v kůži: želízka, která se nepoužívala, dlátko, mosazné váhy se závažím. Kus provazu s uzly, jako ten, který Matěj držel v úterý v noci. Kožený vak, prázdný. A pod tím, svázané řemínkem, pět dřevěných tabulek, takových, jakou Ortlieb nosil na pase, malých a ohmataných, s voskem tmavým od špinavých prstů.
 
-A pergamen. Jeden list, přeložený na čtvrtky, s pečetí na proužku.
+A pergamen. Jeden list, přeložený načtvrto, s pečetí na proužku.
 
 Matěj ho vzal jako první. Nechtěl. Ruka to udělala za něj, jako se ruka natáhne po knize na pultu, kterou nikdo nečte. Rozložil ho u kahanu. Pečeť neznal: jezdec s praporcem a kolem opis, ve kterém se dalo přečíst *CONRADI*. Písmo bylo úhledné, trochu nakloněné, školené někde u Rýna. Kdo jiný v Konrádově službě uměl psát než Volkmar?
 
@@ -78,7 +78,7 @@ Ješek se otočil. Díval se na pergamen v Matějových rukou, který nemohl př
 
 „Ano,“ řekl Matěj. „Voda je jeho starost. Tak to říkal.“
 
-Složil smlouvu zpátky na čtvrtky a položil ji do truhly, přesně tak, jak ležela. Pak vzal tabulky.
+Složil smlouvu zpátky načtvrto a položil ji do truhly, přesně tak, jak ležela. Pak vzal tabulky.
 
 *
 
@@ -96,7 +96,7 @@ Neděle. Matěj přikývl. To pochopil i sám.
 
 Hensel přejel prstem po žebříku. Řekl slovo. Ješek, který se mezitím vrátil ode dveří a dřepl si vedle nich, přeložil: „Rám. Každej rám, co postaví.“ Hadí jazyk: „Puklina. Ta tvoje.“ Kroužek: „Vědro.“ Čtverec s čárou přes: Hensel ukázal rukou, jak se vytahuje ucpávka, a Ješek řekl: „Hrázka. Kolikrát se vypouštěla.“
 
-Matěj vytáhl převorův sešitek. Zbýval v něm list a půl, prázdný. Otevřel ho, natáhl olůvkem linky, jako vždycky, a nahoru napsal: *Ex tabulis magistri Ortliebi, ut scriptae sunt.* Z tabulek mistra Ortlieba, jak jsou napsány.
+Matěj vytáhl převorův sešitek. Za mapou a za prázdným listem pro převora mu zbýval list a půl. Otevřel ho, natáhl olůvkem linky, jako vždycky, a nahoru napsal: *Ex tabulis magistri Ortliebi, ut scriptae sunt.* Z tabulek mistra Ortlieba, jak jsou napsány.
 
 Pak začal.
 
@@ -142,7 +142,7 @@ Hensel slyšel své jméno. Podíval se na Ješka, pak na Matěje, a položil dl
 
 Poslední tabulka končila v sobotu před Květnou nedělí. Hadí jazyk a patnáct kroužků. Čtverec a devět čárek. Devětkrát za směnu se musela vypouštět hrázka, ve které stála teplá voda.
 
-Matěj sečetl, co mohl. Od Hromnic do Květné neděle: u pukliny ze tří vědrů na patnáct. Na čelbě z ničeho na devět hrázek. Napsal to dole pod opis, latinsky, bez komentáře. Čísla. Jen čísla.
+Matěj sečetl, co mohl. Od Hromnic do Květné neděle: u pukliny ze tří vědrů na patnáct. Na čelbě z ničeho na devět vypuštění hrázky. Napsal to dole pod opis, latinsky, bez komentáře. Čísla. Jen čísla.
 
 *
 
@@ -174,7 +174,7 @@ Matěj čekal.
 
 Matěj seděl na zemi s otevřeným sešitkem na kolenou. Venku za Ješkem hořel pod hlínou oheň, sotva, rudě, a Hensel u něj stál a díval se na ně dva, a nerozuměl ani slovu.
 
-Slíbil Ješkovi u štoly. Slíbil Merinovi pod zemí. Slíbil převorovi, že mu do svatého Jiří řekne jistotu, a slíbil Konrádovi, že na svatého Jiří bude svědčit. Každý slib, který dal, ho teď držel za jinou ruku.
+Slíbil Ješkovi u štoly. Slíbil Merinovi pod zemí. Slíbil převorovi, že mu do svatého Jiří přinese jistotu, a slíbil Konrádovi, že na svatého Jiří bude svědčit. Každý slib, který dal, ho teď držel za jinou ruku.
 
 „Neslíbím,“ řekl.
 
@@ -222,7 +222,7 @@ Matěj viděl, jak se Ortliebovi napjala čelist pod rezavým vousem.
 
 „Pane, to je šest dní. Na čelbě je…“ Zarazil se. Bylo to tak krátké, že by si toho nevšiml nikdo, kdo nečekal, a Matěj čekal. Ortlieb polkl, co chtěl říct, a řekl něco jiného: „Lidi jsou unavení.“
 
-„Tak jim dej dvojnásob,“ řekl Konrád. „Řekls, že chceš dvě party. Máš je. Od zítřka. Dvojí mzda pro každého, kdo bude na čelbě.“ Otočil se k horníkům. Mluvil teď česky, svou lámanou chůvinou češtinou. „Slyšeli jste? Dvojí mzda! Do svatého Jiří, kdo dokope k dračímu srdci, ten bude mít na celý rok.“
+„Tak jim dej dvojnásob,“ řekl Konrád. „Řekls, že chceš dvě party. Máš je. Od dnešní noci. Dvojí mzda pro každého, kdo bude na čelbě.“ Otočil se k horníkům. Mluvil teď česky, svou lámanou chůvinou češtinou. „Slyšeli jste? Dvojí mzda! Do svatého Jiří, kdo dokope k dračímu srdci, ten bude mít na celý rok.“
 
 Mezi horníky to zašumělo. Matěj viděl Ješkovu tvář. Byla bledá a oči měl upřené na Konráda.
 
@@ -250,7 +250,7 @@ Matěj stál na kraji paseky a pod hábitem, na prsou, kde nosil tabulku, měl s
 
 Podíval se na Hensela. Hensel stál mezi horníky, nic neslyšel a díval se na Volkmara, jak čte, a jeho tvář byla jako kámen. Podíval se na Ješka. Ješek stál u ústí, ve staré kápi z pytloviny, a díval se na něj.
 
-Poprvé za celé poledne se Ješek díval na něj. A v tom pohledu byla prosba.
+Poprvé za celou tu dobu se Ješek díval na něj. A v tom pohledu byla prosba.
 
 „A mnich,“ řekl Ortlieb.
 
@@ -318,7 +318,7 @@ Konrád se otočil. Hledal někoho očima a našel Matěje.
 
 Matěj šel. Každý krok k němu byl delší, než měl být.
 
-„Ty s ní chodíš na slatinu,“ řekl Konrád. Ne jako otázku. Jako fakt, jako se říká, že je Velikonoční pondělí.
+„Ty s ní chodíš na slatinu,“ řekl Konrád. Ne jako otázku. Jako samozřejmost, jako se říká, že je Velikonoční pondělí.
 
 „Chodím.“
 
@@ -332,9 +332,9 @@ Pak si ten nůž zase vzal zpátky, jako by si to rozmyslel, a podal ho lovčím
 
 Dobroslava seděla před chalupou na špalku a nespravovala nic. Ruce měla v klíně.
 
-Když Matěj vyšel z lesa, nevstala. Podívala se na něj a pak zase před sebe, na pasekovou cestu, po které ráno přišli psi. Byla rozrytá tlapami a v blátě u jejích dveří byl vyšlapaný kruh, jako by tu někdo dlouho stál.
+Když Matěj vyšel z lesa, nevstala. Podívala se na něj a pak zase před sebe, na cestu přes paseku, po které ráno přišli psi. Byla rozrytá tlapami a v blátě u jejích dveří byl vyšlapaný kruh, jako by tu někdo dlouho stál.
 
-„Stál tady,“ řekla. „Ten s uchem. Za svítání. Dlouho. Díval se dveřmi dovnitř a nic neřekl. Psi mu čuchali k mé sekeře. Pak je pustil a šel za nimi do lesa.“
+„Stál tady,“ řekla. „Ten s uchem. Za svítání. Dlouho. Díval se dveřmi dovnitř a nic neřekl. Psi očichávali mou sekeru. Pak je pustil a šel za nimi do lesa.“
 
 „Našli nůž,“ řekl Matěj. „Na kameni. Pán ho má.“
 
@@ -366,13 +366,13 @@ Pak položil sešitek na lůžko, otevřený, a díval se na něj.
 
 Dva sloupce. Vlevo Ortlieb, jeho vlastní znaky, kroužky a čárky a hadí jazyk, *drückt*, *Bad*, *Berg zittert*, postavička s kápí. Tři, pět, osm, deset, patnáct. Vpravo Volkmar, úhledná latina: tři, někdy čtyři. *Ut in omni monte.* Jako v každé hoře.
 
-Oba psal tentýž člověk. Jeden pro sebe a druhý pro pána.
+Oba pocházely od téhož člověka. Jeden si psal sám, druhý nadiktoval pro pána.
 
 Matěj obracel listy zpátky. Mapa: štola šikmo dovnitř, kruh šrafovaný vlnovkami, *teplá skála*, voda nad sídlem, *non certum*, přerušovaná čára ke strmějšímu konci hory. Dutina: dvoustrana, mřížka, kroužky, čtverečky, trojúhelníky, *sic*, tečky na okraji. Prázdný list, na který měl převorovi nakreslit, kam štola vede. Ten nechal prázdný. Kam vede, nakreslil o list dřív, pro sebe, i se sídlem, a to převorovi ukázat nemohl.
 
 Celé to bylo sotva větší než dvě dlaně. Držel v něm to, co neviděl nikdo jiný. Nebo co viděli jiní a nezapsali. Nebo co zapsali a nikomu neukázali. Měl to všechno v ruce a nemohl to ukázat nikomu, komu by to pomohlo, aniž by tím ublížil někomu jinému.
 
-Do svatého Jiří zbývalo šest dní. Od zítřka se na čelbě bude kopat ve dvou partách. Ješek se upíše, to věděl jistě, jako věděl, že svíce na dně prohlubně zhasne. Ortlieb ví, že mnich měří. Lovčí ví o kameni. Konrád ví, že Matěj chodí s uhlířkou.
+Do svatého Jiří zbývalo šest dní. Od noci se na čelbě bude kopat ve dvou partách. Ješek se upíše, to věděl jistě, jako věděl, že svíce na dně prohlubně zhasne. Ortlieb ví, že mnich měří. Lovčí ví o kameni. Konrád ví, že Matěj chodí s uhlířkou.
 
 A nikdo z nich neví, kolik vody je v hoře. Ani Konrád. Ten ze všech nejmíň.
 

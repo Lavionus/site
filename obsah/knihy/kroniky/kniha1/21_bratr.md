@@ -22,7 +22,7 @@ Udalrich se pokřižoval. Pomalu, celou dlaní, jak se křižují staří sedlá
 
 Bylo teplo. Poprvé od podzimu. Na lukách kvetly blatouchy a v lese u cesty se rozvíjely buky, tak zeleně, že se na ně skoro nedalo dívat. Ptáci zpívali i u kyselky u břízy, kterou mu v únoru ukázal Udalrich a kde tehdy nezpívali, a Matěj se tam zastavil a poslouchal a nevěděl, jestli se mýlil Udalrich, nebo jestli se mýlí ptáci. Nebo jestli se jen změnil vítr.
 
-Spal u kostela v jedné vsi a podruhé pod stodolou, protože kostel byl zamčený. Nikdo se ho na nic neptal. Mnich na cestě, s mošnou, roztrhaný na koleni. Mnichů chodí po cestách dost.
+Spal u kostela v jedné vsi. Nikdo se ho na nic neptal. Mnich na cestě, s mošnou, v hábitu roztrhaném na koleni. Mnichů chodí po cestách dost.
 
 V sobotu večer viděl Waldsassen.
 
@@ -46,13 +46,13 @@ Matěj sundal mošnu a položil ji na stůl. Převor ji otevřel a vytahoval vě
 
 A sešitek.
 
-Převor ho vzal do ruky. Byl zvlněný od vody, okraje tvrdé a hnědé. Převor ho neotevřel. Držel ho, jako by vážil, kolik váží, a pak ho položil na stůl, stranou od ostatních věcí, a položil na něj dlaň.
+Převor ho vzal do ruky. Byl zvlněný od vody, okraje tvrdé a hnědé. Převor ho neotevřel. Držel ho, jako by odhadoval, kolik váží, a pak ho položil na stůl, stranou od ostatních věcí, a položil na něj dlaň.
 
 „Pan Konrád mi psal,“ řekl. „Kaplan Volkmar. Přišel posel ve středu.“
 
 Matěj čekal.
 
-„Pan Konrád se omlouvá klášteru za škodu na lukách a zaplatí, co rychtář z Chebu nařídil. Pan Konrád děkuje za modlitby za duši svého otce. A pan Konrád prosí,“ převor mluvil pomalu, jak se čte z listu, který člověk zná zpaměti, „aby mu klášter laskavě zapůjčil knihu, ve které bratr Matthias kreslil horu. Horníci prý říkají, že je mnich vedl podle kresby.“
+„Pan Konrád se omlouvá klášteru za škodu na lukách a zaplatí, co správce z Chebu nařídil. Pan Konrád děkuje za modlitby za duši svého otce. A pan Konrád prosí,“ převor mluvil pomalu, jak se čte z listu, který člověk zná zpaměti, „aby mu klášter laskavě zapůjčil knihu, ve které bratr Matthias kreslil horu. Horníci prý říkají, že je mnich vedl podle kresby.“
 
 Matěj se díval na převorovu dlaň na sešitku.
 
@@ -92,7 +92,7 @@ K vigiliím vstal sám. Nikdo ho nebudil, jak převor řekl. Šel do kostela s o
 
 *Domine, labia mea aperies.* Pane, otevři mé rty.
 
-Pak si ve skriptoriu, po primě, když měl čas do kapituly, sedl ke svému pultu. Na pultu ležel list s opisem svatého Bernarda, jak ho nechal v únoru. Jedenáct řádků, a pak nic. Inkoust v kalamáři byl zaschlý.
+Pak si ve skriptoriu, po primě, když měl čas do kapituly, sedl ke svému pultu. Na pultu ležel list s opisem otce Bernarda, jak ho nechal v únoru. Jedenáct řádků, a pak nic. Inkoust v kalamáři byl zaschlý.
 
 Wigandův pult vedle byl prázdný. Někdo ho umyl.
 
@@ -112,7 +112,7 @@ Hartmann ji četl a hlas se mu třásl. Matěj ji znal zpaměti. Všichni ji zna
 
 *Ne una ovis morbida omnem gregem contagiet.* Aby jedna nemocná ovce nenakazila celé stádo.
 
-Hartmann dočetl a sedl si. Nikdo se nepodíval na Matěje. Všichni se podívali na něj.
+Hartmann dočetl a sedl si. Nikdo se nepodíval na Matěje. Všichni se podívali na převora.
 
 *
 
@@ -142,7 +142,7 @@ Bylo ticho. Matěj slyšel, jak někdo na lavici polkl.
 
 „Ptám se tě podruhé. V poslušnosti.“
 
-Matěj si vzpomněl na Merina. *Nepřísahej na nic, co tu není. Slib to sám za sebe.* Na to, jak to jedno slovo, *slibuju*, znělo v té nízké místnosti malé.
+Matěj si vzpomněl na Merina. *Nepřísahej na nic, co tu není. Slib to sám za sebe.* Na to, jak malé se to jedno slovo, *slibuju*, zdálo v té nízké místnosti.
 
 „Neodpovím.“
 
@@ -172,7 +172,7 @@ Bratr vestiář ji otevřel a vytáhl ranec, svázaný řemenem, se jménem na p
 
 Matěj ranec rozvázal.
 
-Košile. Kabátec z hnědého sukna, se záplatou na lokti. Kalhoty. Onuce, ztvrdlé. Boty, ve kterých šel v jednadvaceti z Mlýnce do Waldsassenu, a ve kterých mu cestou upadla podrážka a on ji přivázal lýkem. Lýko tam ještě bylo.
+Košile. Kabátec z hnědého sukna, se záplatou na lokti. Nohavice. Onuce, ztvrdlé. Boty, ve kterých šel v jednadvaceti z Mlýnce do Waldsassenu, a ve kterých mu cestou upadla podrážka a on ji přivázal lýkem. Lýko tam ještě bylo.
 
 Všechno to vonělo truhlou. Pelyňkem, který dávali mezi šaty proti molům, a prachem.
 
@@ -202,7 +202,7 @@ Matěj ho nahmatal přes kůži mošny. Podíval se na převora.
 
 Pak mu podal to v plátně.
 
-Matěj to poznal, ještě než to vzal. Podle délky, podle tvaru, podle toho, jak to převor držel, v obou rukou, jako se podává rána. A když to vzal, poznal to podle váhy. Těžké jako kámen. Studené jako kámen.
+Matěj to poznal, ještě než to vzal. Podle délky, podle tvaru, podle toho, jak to převor držel, v obou rukou, jako se podává ostatek. A když to vzal, poznal to podle váhy. Těžké jako kámen. Studené jako kámen.
 
 „Kapitula nechce na oltáři ostatek,“ řekl převor, „o jehož listině celý kraj slyšel, že lže. Pan Konrád ho nechce zpátky. Řekl, že to, co hledal, našel jinde.“ Převor se díval na plátno v Matějových rukou. „Do Mlýnce. Do kostela pod horou. Ať leží tam, kde o něm vyprávějí babičky. Kněz z fary to bude vědět. Napsal jsem mu.“
 
@@ -212,7 +212,7 @@ Matěj držel kost.
 
 Převor se na něj podíval. Dlouho.
 
-„Bratr Wigand,“ řekl potom, „se mě ptal, než umřel, jestli píšeš zvlášť. Co jsi viděl a co si myslíš.“ Odmlčel se. „Řekl jsem mu, že ano. Tenkrát jsem to nevěděl. Řekl jsem to, protože umíral.“ Převor se díval přes Matěje, přes bránu, na cestu, která vedla dolů k řece a pak dál. „Teď to vím.“
+„Bratr Wigand,“ řekl potom, „se mě ptal, než umřel, jestli píšeš zvlášť. Řekl jsem mu, že píšeš. Řekl, že to není totéž.“ Odmlčel se. „Tenkrát jsem nevěděl, co tím myslí.“ Převor se díval přes Matěje, přes bránu, na cestu, která vedla dolů k řece a pak dál. „Teď to vím.“
 
 Matěj nic neřekl.
 
@@ -228,15 +228,15 @@ Brána se za ním zavřela.
 
 Domů šel tři dny, protože nevěděl, kam jinam.
 
-Bylo to jiné než cestou tam. Nikdo ho nezdravil *pochválen*. Vozka, který ho dohonil za Waldsassenem, mu nabídl místo na voze, a když se Matěj vyhoupl nahoru, vozka uviděl tonzuru a dlouho se na ni díval, a pak už nemluvil a v příští vsi řekl, že tady odbočuje. Neodbočil. Matěj ho viděl jet dál po cestě.
+Bylo to jiné než cestou tam. Nikdo ho nezdravil *pomáhej Pánbůh*. Vozka, který ho dohonil za Waldsassenem, mu nabídl místo na voze, a když se Matěj vyhoupl nahoru, vozka uviděl tonzuru a dlouho se na ni díval, a pak už nemluvil a v příští vsi řekl, že tady odbočuje. Neodbočil. Matěj ho viděl jet dál po cestě.
 
 V kostele, kde spal cestou tam, ho kostelník vyhodil.
 
-Spal pod stodolou. Pak pod smrkem. Nebylo mu zima. Bylo mu jen jinak, a nevěděl, jak tomu říct. Jako by šel bez kůže. Mošnu nesl na prsou, ne na zádech, a kost v plátně pod paží, a každou chvíli ji nahmatal, jako se nahmatá peníz v kapse, aby člověk věděl, že ho neztratil.
+Spal pod stodolou. Pak pod smrkem. Nebylo mu zima. Bylo mu jen jinak, a nevěděl, jak tomu říct. Jako by šel bez kůže. Mošnu nesl na prsou, ne na zádech, a kost v plátně pod paží, a každou chvíli ji nahmatal, jako se nahmatá peníz v měšci, aby člověk věděl, že ho neztratil.
 
 Ve středu večer viděl horu.
 
-Hřbet, dlouhý, s jedním koncem strmějším. Les na něm, zelený. A pod ním Mlýnec, dvacet chalup, mlýn, dřevěný kostelík. Kouř z komínů. Nad roklí pod hřbetem nebe čisté.
+Hřbet, dlouhý, s jedním koncem strmějším. Les na něm, zelený. A pod ním Mlýnec, dvacet chalup, mlýn, dřevěný kostelík. Kouř nad střechami. Nad roklí pod hřbetem nebe čisté.
 
 *
 
@@ -258,7 +258,7 @@ Matěj mlčel.
 
 „Řekni něco.“
 
-„Nevím, co bych řekl,“ řekl Matěj.
+„Nevím, co bych řekl,“ odpověděl Matěj.
 
 Vítkova matka si odplivla přes plot. Neplivla na něj. Vedle. Pak se otočila a šla dovnitř.
 
@@ -288,7 +288,7 @@ Stál ve dveřích a díval se na Matěje na lavici. Na kabátec. Na tonzuru.
 
 „Ano.“
 
-Ješek vešel. Nesedl si. Stál u stolu, s rukama v podpaží, jako stál u hrobu pod hrušní tu noc po svatém Jiří, a díval se na Matěje shora.
+Ješek vešel. Nesedl si. Stál u stolu, s rukama v podpaží, jako stál ve dveřích boudy tu noc po svatém Jiří, a díval se na Matěje shora.
 
 „Byl jsem u Kojaty,“ řekl. „V pondělí. Vrátil jsem mu slovo.“
 
@@ -342,13 +342,13 @@ Matka dlouho mlčela.
 
 Dobroslava seděla na špalku před chalupou.
 
-Bylo už tma. V chalupě svítilo škvírou ve dveřích, a Dobroslava seděla venku, s tyčí přes kolena, a dívala se, jak přichází po cestě od vsi. Nevstala. Dívala se na kabátec, na boty, na tonzuru, kterou v té tmě nemohla vidět, a stejně ji viděla.
+Byla už tma. V chalupě svítilo škvírou ve dveřích, a Dobroslava seděla venku, s tyčí přes kolena, a dívala se, jak přichází po cestě od vsi. Nevstala. Dívala se na kabátec, na boty, na tonzuru, kterou v té tmě nemohla vidět, a stejně ji viděla.
 
 „Vypadáš jako uhlíř,“ řekla, „co přišel o milíř.“
 
 Matěj se zastavil před ní.
 
-„Lovčí tu byl,“ řekla, ještě než se zeptal. „Včera. Postál. Napil se vody ze džbánu. Řekl, že pán už les nechce, že ho dal klášteru, a klášter chce jen pastvu a dřevo, a uhlířky mu jsou jedno.“ Odmlčela se. „A že kdyby pán zase chtěl, najde mě vždycky. Ví, kde bydlím.“
+„Lovčí tu byl,“ řekla, ještě než se zeptal. „Včera. Postál. Napil se vody ze džbánu. Řekl, že pán už les nechce, že ho dal klášteru, a klášter chce jen pastvu a dřevo, a uhlířka je mu jedno.“ Odmlčela se. „A že kdyby pán zase chtěl, najde mě vždycky. Ví, kde bydlím.“
 
 „A vy?“
 

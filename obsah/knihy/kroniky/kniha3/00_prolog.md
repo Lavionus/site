@@ -20,7 +20,7 @@ Sintr. Pozná to dřív, než si to stihne pojmenovat. Sintrová poleva, krémov
 
 Kužel se posune doleva a zastaví se.
 
-Z polevy vystupuje něco bledého. Válec, dlouhý asi jako předloktí, možná víc, zapuštěný šikmo do sintru jako kost do hlíny v profilu. Je hladký. Hana nevidí žádný šev, žádnou spáru, nic, kde by se dvě části potkaly. Barvu na displeji telefonu nepozná: šedobílá, pod světlem trochu do zelena, ale to může být čip kamery.
+Z polevy vystupuje něco bledého. Válec, dlouhý asi jako předloktí, možná víc, zapuštěný šikmo do sintru jako kost do hlíny v profilu. Je hladký. Hana nevidí žádný šev, žádnou spáru, nic, kde by se dvě části potkaly. Barvu na displeji telefonu nepozná: šedobílá, pod světlem trochu dozelena, ale to může být čip kamery.
 
 Ruka v rukavici vjede do záběru a ukáže na konec válce. Kužel se tam přesune. Kamera zaostří, rozostří a zase zaostří.
 
@@ -62,7 +62,7 @@ Telefon za minutu zabzučí znovu. Tentokrát volá.
 
 „Je to v sintrové polevě,“ řekne. „Zarostlé zespodu. Leželo to tam, když byla jeskyně suchá.“
 
-„Já to věděl.“ Slyší, jak se usmívá. Patnáct let ten úsměv slyší v telefonu. Poprvé v Moravském krasu, kdy jí v Býčí skále podal ruku z vody a řekl *vy jste ta geoložka, co nám řekne, kudy dál*, a ona mu řekla, že tudy ne, a měla pravdu. Pak Hranická propast, tři sezony, jeho kamery, její vzorky a jeho dokument, ve kterém ji nazval *naše paní Země* a ona se tři dny nemohla podívat do zrcadla. „Proto volám. Potřebuju geoarcheoložku.“
+„Já to věděl.“ Slyší, jak se usmívá. Patnáct let ten úsměv slyší v telefonu. Poprvé v Moravském krasu, když jí v Býčí skále podal ruku z vody a řekl *vy jste ta geoložka, co nám řekne, kudy dál*, a ona mu řekla, že tudy ne, a měla pravdu. Pak Hranická propast, tři sezony, jeho kamery, její vzorky a jeho dokument, ve kterém ji nazval *naše paní Země* a ona se tři dny nemohla podívat do zrcadla. „Proto volám. Potřebuju geoarcheoložku.“
 
 „Máš tam INAH.“
 
@@ -70,7 +70,7 @@ Telefon za minutu zabzučí znovu. Tentokrát volá.
 
 „Kdo to platí?“
 
-„Sponzor. Americká produkce, dokumenty pro jednu velkou platformu. Mají rádi záhady a ještě radši mají rádi, když je záhada pořádně podložená. Zaplatí laboratoř na uran-thorium. Rychlou. A CT, kdyby bylo potřeba.“ Krátká pauza. „A zaplatí tebe. Normálně, Hanko. Ne za kafe a ne za jméno v titulcích. Šest týdnů, odlet na začátku března.“
+„Sponzor. Americká produkce, dokumenty pro jednu velkou platformu. Mají rádi záhady a ještě radši mají, když je záhada pořádně podložená. Zaplatí laboratoř na uran-thorium. Rychlou. A CT, kdyby bylo potřeba.“ Krátká pauza. „A zaplatí tebe. Normálně, Hanko. Ne za kafe a ne za jméno v titulcích. Šest týdnů, odlet na začátku března.“
 
 Hana neřekne nic. Na stole leží posudek z Ivančic a pod ním obálka od pronajímatele s novou zálohou na topení, kterou ještě neotevřela, protože ví, co v ní je.
 
@@ -106,7 +106,7 @@ Rovné čáry. Tečky. Pole, které má řádky. Na kosti jsou čáry svislé a 
 
 Podobnost je zarážející.
 
-A nic nedokazuje. Hana to ví tak přesně, že se jí z toho skoro uleví. Rovná čára a tečka jsou nejjednodušší znamení, jaká lidská ruka udělá. Najdou se na kostech z mladého paleolitu, na kalendářních hůlkách, na hrncích, na dveřích stodol a na kamenech, které nikdo neryl, protože je tak poškrábal led. Člověk, který chce vidět podobnost, ji vidí. Na to je celý obor plný knih. Stojí v antikvariátech v oddělení, kam ona nechodí.
+A nic nedokazuje. Hana to ví tak přesně, že se jí z toho skoro uleví. Rovná čára a tečka jsou nejjednodušší znamení, jaká lidská ruka udělá. Najdou se na kostech z mladého paleolitu, na kalendářních hůlkách, na hrncích, na dveřích stodol a na kamenech, které nikdo neryl, protože je tak poškrábal led. Člověk, který chce vidět podobnost, ji vidí. O tom jsou celé police knih. Stojí v antikvariátech v oddělení, kam ona nechodí.
 
 Šindelářová tehdy řekla: *Asi viděl na relikvii rytinu.* A mnich, který ke všemu v knize připsal, jestli to viděl, nebo neviděl, k té kosti nepřipsal nic. Napsal tu větu, jako se píše, kolik je dva a dva.
 
@@ -114,7 +114,7 @@ Hana zavře složku a zase ji otevře, protože náhled chce mít před sebou, a
 
 *
 
-Terénní deník leží na stole od srpna, kde ho nechala. Obal má ohlazený a jeden roh rozmočený od hrnku. Otevře ho na čisté dvoustraně a vede svislou čáru shora dolů, pravítkem, protože tahle čára má být rovná.
+Terénní deník leží od srpna na stole, kde ho nechala. Obal má ohlazený a jeden roh rozmočený od hrnku. Otevře ho na čisté dvoustraně a vede svislou čáru shora dolů, pravítkem, protože tahle čára má být rovná.
 
 Vlevo píše, co vidí.
 

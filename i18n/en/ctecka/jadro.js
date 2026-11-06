@@ -1,0 +1,21 @@
+// ctecka/jadro – en (sdílený modul obsah/ctecka/jadro.js). Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Kroniky vyhnanství': 'Chronicles of Exile',
+  'Obsah': 'Contents',
+  'Obálka': 'Cover',
+  'poznámky': 'notes',
+  'čtenáře {jmeno}': 'of reader {jmeno}',
+  '{toLocaleString} · {n} zvýraznění, {n2} záložek_': '{toLocaleString} · {n} highlights, {n2} bookmarks_',
+  'Šedá': 'Grey',
+  'Sépie': 'Sepia',
+  'Šalvěj': 'Sage',
+  'Tyrkys': 'Turquoise',
+  'Modrá': 'Blue',
+  'Levandule': 'Lavender',
+  'Růžová': 'Pink',
+  'tmavé': 'dark',
+  'mírně tmavé': 'slightly dark',
+  'střední': 'medium',
+  'mírně světlé': 'slightly light',
+  'světlé': 'light',
+});

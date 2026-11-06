@@ -2,7 +2,7 @@
 
 Šaty si oblékla ty, ve kterých chodila k pohřbům. Tmavomodré, po matce, s límcem, který se dal zapnout až pod bradu. Zapnula ho a zase rozepnula, protože jí knoflík tlačil do stehů, a nechala ho rozepnutý. Ať je to vidět. Kdo se bude chtít dívat, uvidí dvě černé nitě pod levým uchem a pod nimi strup jako tenkou rudou čárku, kterou někdo udělal pravítkem.
 
-Do Řehořovy brašny dala věci na stole. Jednu po druhé, v pořadí, v jakém je bude vyndávat. Zápis z úterý svatodušního. Tři lázeňské listy. Šest listů z knihy, psanou stranou nahoru, do přeloženého plátna. Lancetu s pelikánem, zabalenou zvlášť. Kožený pytlík s řemínkem, pořád zavázaným na tentýž uzel, jak ho zavázal Röhrich. Navrch jedenáct výpovědí žen v deskách.
+Do Řehořovy brašny dala věci ze stolu. Jednu po druhé, v pořadí, v jakém je bude vyndávat. Zápis z úterý svatodušního. Tři lázeňské listy. Šest listů z knihy, psanou stranou nahoru, do přeloženého plátna. Lancetu s pelikánem, zabalenou zvlášť. Kožený pytlík s řemínkem, pořád zavázaným na tentýž uzel, který udělal Röhrich. Navrch jedenáct výpovědí žen v deskách.
 
 Brašna byla těžší, než si myslela. Papír váží víc, když ho člověk nese někam, kde ho budou číst.
 
@@ -54,7 +54,7 @@ Byl hubenější, než když ho viděla ve středu. Vousy mu rostly po bradě ř
 
 Pak přivedli Röhricha.
 
-Šel pomalu. Pravou ruku měl v šátku přes rameno, ovázanou do koule velké jako bochník, a pod obvazem byla ruka oteklá až k lokti, Ilona to viděla i přes rukáv. Tvář měl šedou. Na čele pot, i když v síni ještě nebylo horko. Na dveřích se zastavil a hledal očima, a Ilona viděla, koho hledá. Ne ji. Stůl. Prostředek stolu.
+Šel pomalu. Pravou ruku měl v šátku přes rameno, ovázanou do koule velké jako bochník, a pod obvazem byla ruka oteklá až k lokti, Ilona to viděla i přes rukáv. Tvář měl šedou. Na čele pot, i když v síni ještě nebylo horko. Ve dveřích se zastavil a hledal očima, a Ilona viděla, koho hledá. Ne ji. Stůl. Prostředek stolu.
 
 Wehrl se díval do papírů.
 
@@ -62,7 +62,7 @@ Röhrich si sedl na lavici na druhé straně síně, naproti Tobiášovi, a mezi
 
 *
 
-Kunz přečetl žalobu. Česky a pak německy, protože přísežní mluvili německy a Tobiáš česky, a Ilona slyšela, jak se mu hlas ve druhé řeči třese víc než v první. *Tobiáš, syn havíře Matze Lindnera, učedník ranhojičské praxe vdovy po Řehořovi, pro smrt Ursuly, vdovy po Kolbovi…*
+Kunz přečetl žalobu. Česky a pak německy, protože přísežní mluvili německy a Tobiáš česky, a Ilona slyšela, jak se Kunzovi hlas ve druhé řeči třese víc než v první. *Tobiáš, syn havíře Matze Lindnera, učedník ranhojičské praxe vdovy po Řehořovi, pro smrt Ursuly, vdovy po Kolbovi…*
 
 Pak se Kunz zvedl, šel k truhle pod oknem a vyndal z ní uzlíček.
 
@@ -108,6 +108,8 @@ A pak šest listů.
 
 Rozložila je na modré sukno, jeden vedle druhého, psanou stranou nahoru. Kunz vstal a přišel blíž, protože listy patřily do zápisu a on je musel zapsat a popsat. Když se nad ně sklonil, Ilona viděla, jak se mu brýle na šňůrce rozhoupaly.
 
+![Šest listů](obrazky/17_horni_soud.webp)
+
 „Ruka lékárníka Röhricha,“ řekla Ilona. „Jeho knihy. Lékárník soudu potvrdí, že je to jeho ruka, nebo to potvrdí jeho tovaryš.“
 
 Röhrich na lavici neřekl nic.
@@ -136,7 +138,7 @@ Tobiáš se díval na list. Pak zavřel oči.
 
 Musel. Byl to soudní písař a listy se do zápisu popisovaly jeden po druhém, jejich stav, jejich ruka, jejich první slova. Vzal ho tak, jak bral všechny papíry, dvěma prsty za roh, a nasadil si brýle a začal číst nahlas, jak to dělal dvacet let.
 
-„List z jiné knihy,“ řekl. „Hnědé, menší. Přeložený. Nahoře jméno…“
+„List z jiné knihy,“ řekl. „Z té v hnědých deskách. Menší. Přeložený. Nahoře jméno…“
 
 A zastavil se.
 
@@ -226,15 +228,15 @@ Florian vypovídal dlouho.
 
 Přivedl ho havíř ze stráže. Florian stál uprostřed síně, v kosočtverci slunce, protože nevěděl, kam se postavit, mžoural do okna a mačkal v rukou čepici. Ilona si pomyslela, že nikdy neviděla člověka, který by se tolik bál a přesto mluvil.
 
-Mluvil o soudku. O středách. O tom, že od zimy nosil každou sobotu večer z lázně soudek do dvora za lékárnou a že od Velikonoc i ve středu. O mezkovi, kterého v noci vyváděl mistr sám, a o mezkaři, kterého nikdy neviděl do tváře. O tom, že mistr se z cest nahoru vracel s bedýnkou a že bedýnka chodila ve čtvrtek dál.
+Mluvil o soudku. O středách. O tom, že od zimy nosil každou sobotu večer z lázně soudek do dvora za lékárnou a že od Velikonoc i ve středu. O mezkovi, kterého v noci vyváděl mistr sám, a o mezkaři, kterého nikdy neviděl do tváře. O tom, že mistr posílal mezka nahoru, že se mezek vracel s bedýnkou a že bedýnka šla ve čtvrtek dál.
 
 „Komu?“ zeptal se mladší přísežný.
 
 Florian se podíval na Röhricha. Pak na stůl.
 
-„Nevím, pane. Nosil ji mistr. Já ne.“
+„Nevím, pane. Nosil ji mezkař. Já ne.“
 
-Ilona slyšela, že nelže. Florian nikdy nevěděl, komu chodí čtvrteční bedýnka, protože ji nosil Röhrichův člověk a Hesse ji přebíral ve dveřích do suterénu. Florian nevěděl nic. Jen to, co nosil sám.
+Ilona slyšela, že nelže. Florian nikdy nevěděl, komu chodí čtvrteční bedýnka, protože ji nosil mezkař, ne on. Kdo ji přebíral, mohla Ilona jen hádat. Nejspíš Hesse, ve dveřích do sklepa. Florian nevěděl nic. Jen to, co nosil sám.
 
 Pak mluvil o Lene. O tom, že mu jednou, když mistr nebyl na dvoře, posvítila lucernou k brance a pomohla mu zvednout soudek na rameno. O noci na středu, kdy mistr odešel a pak celé ráno sám drhnul na dvoře škopek pískem. Havíř přinesl škopek a postavil ho na podlahu před stůl. Byl to malý bednářský škopek s obručemi z lískového prutu, vydrhnutý do běla, a voněl ještě pískem a vodou a ničím jiným.
 
@@ -262,7 +264,7 @@ Jobst přiložil k ráně kus vosku, do kterého se Ilona před soudem kousla. S
 
 „Ta ruka,“ řekla Ilona, a Wehrl se na ni podíval, protože se jí na nic neptal. „Ta ruka se musí otevřít. Dnes. Ta čára pod kůží půjde k podpaží a pak dál. Za týden bude mít horečku a za dva…“ Zarazila se.
 
-Za dva týdny ho zabije, chtěla říct. Lidský kousanec. Lidská ústa jsou špinavější než psí, říkal Řehoř, a ruka je místo, kde se to ukáže nejdřív.
+Za dva týdny ho to zabije, chtěla říct. Lidský kousanec. Lidská ústa jsou špinavější než psí, říkal Řehoř, a ruka je místo, kde se to ukáže nejdřív.
 
 „Zapište to,“ řekl Wehrl Kunzovi. „Mistr Jobst ránu otevře. Dnes.“
 
@@ -288,7 +290,7 @@ Wehrl zvedl hlavu.
 
 Usmál se. Tím laskavým a unaveným úsměvem, který měl na střeše, když jí ukazoval zub v kostěné krabičce.
 
-„Kupoval jsem je,“ řekl. „Od mistra Röhricha. Od Hromnic, každý čtvrtek. Lék. Mistr mu říkal krev starších a tvrdil, že je od lidí, kteří se dožívají sta let.“ Rozhlédl se po síni. „Platil jsem čtyři zlaté týdně. Je to hodně peněz. Kdo z vás, páni, by nezaplatil čtyři zlaté za týden života, kdyby mu ho někdo slíbil?“
+„Kupoval jsem je,“ řekl. „Od mistra Röhricha. Od Hromnic, každý čtvrtek. Lék. Mistr tomu říkal krev starších a tvrdil, že je od lidí, kteří se dožívají sta let.“ Rozhlédl se po síni. „Platil jsem čtyři zlaté týdně. Je to hodně peněz. Kdo z vás, páni, by nezaplatil čtyři zlaté za týden života, kdyby mu ho někdo slíbil?“
 
 Mladší přísežný sklopil oči. Stöckel na lavici zčervenal.
 
@@ -312,7 +314,7 @@ Mladší přísežný se zasmál, tentokrát doopravdy, s úlevou. Starší ne.
 
 „A soudek nahoru?“ zeptal se starší. „Lidská krev z lázně, co šla nahoru? Komu?“
 
-„Tulákům.“ Röhrich pokrčil rameny, a zasyčel, protože ho zabolela ruka. „Ve starých dílech žijí tuláci. Saská chátra, žebráci. Platili, kupovali na pálenku a na černou magii, co já vím. Já prodával.“
+„Tulákům.“ Röhrich pokrčil rameny, a zasyčel, protože ho zabolela ruka. „Ve starých dílech žijí tuláci. Saská chátra, žebráci. Platili, kupovali na pálenku a na černé umění, co já vím. Já prodával.“
 
 Starší přísežný se otočil k Iloně.
 
@@ -424,7 +426,7 @@ Lidé se rozestoupili, když vycházela. Nikdo nic nekřičel. Někdo řekl *lé
 
 Tobiáš vyšel za ní.
 
-Stál na schodech horního úřadu, na slunci, a mžoural, jako by na slunci nebyl pět týdnů. Pak ho uviděla babka o holi, ta, která pod jeho okénkem křičela *kniha*, a řekla nahlas *to je ten kluk, co ho pustili*, a lidé se otočili.
+Stál na schodech horního úřadu, na slunci, a mžoural, jako by na slunci nebyl pět týdnů. Pak ho uviděla babka o holi, ta, která pod jeho okénkem chtěla, ať to řekne, a řekla nahlas *to je ten kluk, co ho pustili*, a lidé se otočili.
 
 Ilona čekala dole pod schody. Nevěděla, na co čeká.
 
@@ -448,4 +450,4 @@ Ilona stála pod schody a dívala se za ním, dokud nezmizel v uličce.
 
 Pak se ohlédla. Ve dveřích horního úřadu, ve stínu pod klenbou, stál mladý písař z radnice s deskami pod paží a díval se na náměstí, plné slunce od zdi ke zdi. Nevycházel. Stál tam a čekal, jako se čeká na konec deště, a Ilona si pomyslela, že má nejspíš bolení hlavy, jak ho mívají písaři, kteří celé dopoledne píšou proti oknu.
 
-Pak přešel přes náměstí mrak. Písař sešel ze schodů a šel, rychle, pod tím mrakem, až k radnici, a byl uvnitř dřív, než mrak odešel.
+Pak přešel přes náměstí mrak. Písař sešel ze schodů a šel, rychle, pod tím mrakem, až k radnici, a byl uvnitř dřív, než mrak přešel.

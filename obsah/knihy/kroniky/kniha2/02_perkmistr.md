@@ -2,7 +2,7 @@
 
 Dům horního úřadu stál v horní polovině náměstí, které nebylo náměstím, ale širší ulicí s pochybným sklonem. Nad vchodem měl kamenný znak s mlátkem a želízkem, zkříženými jako dva meče, které se nikdy nepřou. Ilona tam chodila s výpověďmi žen léta a pokaždé jí vchod připadal o něco nižší, než si ho pamatovala. Muži z horního úřadu se pod ním skláněli, i když nemuseli. Ona nemusela nikdy.
 
-V písárně bylo teplo. Starý pan horní písař Nickel Kunz topil i v květnu, protože měl, jak říkal, v kostech zimu ze čtyřiceti let po štolách a ta už z nich nevyleze. Seděl u pultu s brýlemi na šňůrce a psal, a když Ilona vešla, nepřestal, jen zvedl levou ruku, aby počkala.
+V písárně bylo teplo. Starý pan horní písař Nickel Kunz topil i v květnu, protože měl, jak říkal, v kostech zimu ze čtyřiceti let po štolách, nejdřív s želízkem, pak s perem, a ta už z nich nevyleze. Seděl u pultu s brýlemi na šňůrce a psal, a když Ilona vešla, nepřestal, jen zvedl levou ruku, aby počkala.
 
 Čekala. Za pultem visely na stěně stejné věci jako vždycky: rejstříky děl v kožených deskách, svazky lístků navlečené na motouzu, pečetidla, a mapa údolí. Kdosi ji kreslil před padesáti lety, kdy se tu ještě všechno teprve otevíralo, a štoly na ní vedly do hor jako žíly v ruce. Některé z nich byly přeškrtnuté. U jedné, vysoko nahoře, stálo drobným písmem *verlassen*. Opuštěná.
 
@@ -18,7 +18,7 @@ Kunz si sundal brýle.
 
 „Musela.“
 
-„Já vím, že si to myslíte. Váš pan otec si to myslel taky, já ho neznal, ale znám jeho dceru.“ Vzdychl. „Stöckel bude tvrdit, že je to městská věc. Já bych řekl, že není, Kolbová bere od bratrské pokladny vdovský groš, a co je pod pokladnou, je pod horním úřadem. Ale já jsem písař. Tohle musí vidět perkmistr.“
+„Já vím, že si to myslíte. Váš pan otec si to myslel taky, já ho neznal, ale znám jeho dceru.“ Vzdychl. „Stöckel bude tvrdit, že je to městská věc. Já bych řekl, že není, Kolbová brala od bratrské pokladny vdovský groš, a co je pod pokladnou, je pod horním úřadem. Ale já jsem písař. Tohle musí vidět perkmistr.“
 
 „Který?“
 
@@ -50,7 +50,7 @@ Wehrl k ní přistoupil a vzal její ruku do své, aby si uzel prohlédl zblízk
 
 Podala mu list, přišitý v rohu zápisu. Wehrl ho rozevřel u okna, podržel proti světlu a dlouho se díval na pár tmavých vláken.
 
-„Jemná,“ řekl. „Tohle není z naší ovce. Tohle je sukno, jaké se vozí z Nizozemí nebo z Anglie, nebo aspoň z Lipska. Barvené na černo, a dobře.“ Vrátil jí list. „Nosí ho kazatelé, úředníci a lékárníci. A já.“ Ukázal si na zápěstí, kde mu z hornického kabátu vyčuhoval černý rukáv. „Mám se bát?“
+„Jemná,“ řekl. „Tohle není z naší ovce. Tohle je sukno, jaké se vozí z Nizozemí nebo z Anglie, nebo aspoň z Lipska. Barvené načerno, a dobře.“ Vrátil jí list. „Nosí ho kazatelé, úředníci a lékárníci. A já.“ Ukázal si na zápěstí, kde mu z hornického kabátu vyčuhoval černý rukáv. „Mám se bát?“
 
 „Byl jste v pondělí v noci u Ursuly Kolbové?“
 
@@ -70,7 +70,7 @@ Ilona zaváhala. „Žena její postavy,“ řekla, „má v sobě tolik krve, k
 
 Wehrl mlčel. Díval se na ni a pak na desky v Kunzově ruce, a ona v jeho tváři viděla něco, co nedokázala pojmenovat. Ne zděšení. Ne podezření. Něco jako soustředění člověka, který při čtení cizího textu narazí na slovo ze své vlastní řeči.
 
-„Krev je drahá věc,“ řekl nakonec. „Lidé to zapomínají, protože jí mají plné tělo.“
+„Krev je drahá věc,“ řekl nakonec. „Lidé na to zapomínají, protože jí mají plné tělo.“
 
 *
 
@@ -106,7 +106,7 @@ Pustili ji k němu před nešporami. Seděl na lavici v komoře pod schodištěm
 
 „Patříš soudu.“
 
-„To je totéž.“ Vzal chléb a nejedl. „Stöckel mi v noci říkal, co mi udělají, až mě vezmou na mučidla. Jak se to dělá. Celou noc. Tichým hlasem, jako by mi vyprávěl pohádku. A ráno přišel písař a četl mi z papíru, že já, Tobiáš, syn Matze Lindnera, havíře, jsem v noci vycházel z domu, jak dosvědčuje moje vlastní mistrová.“
+„To je totéž.“ Vzal chléb a nejedl. „Stöckel mi v noci říkal, co mi udělají, až mě vezmou na mučidla. Jak se to dělá. Půl noci. Tichým hlasem, jako by mi vyprávěl pohádku. A tady, sotva mě přivedli, mi pan horní písař četl z papíru, že já, Tobiáš, syn Matze Lindnera, havíře, jsem v noci vycházel z domu, jak dosvědčuje moje vlastní mistrová.“
 
 Ilona mlčela.
 
@@ -116,7 +116,7 @@ Ilona mlčela.
 
 „Ty mi nečetl.“
 
-„Perkmistr je četl. Všechny.“ Ilona si sedla vedle něj na lavici. „Proto tu sedíš, a ne tam. Proto ti nikdo nezkroutí palce. Proto mám tohle.“ Vytáhla Wehrlův list s pečetí a podala mu ho, a Tobiáš ho četl, pomalu, protože číst se naučil teprve u ní a v němčině mu to šlo hůř než v češtině.
+„Perkmistr je četl. Všechny.“ Ilona si sedla vedle něj na lavici. „Proto tu sedíš, a ne tam. Proto ti nikdo nezkroutí palce. Proto mám tohle.“ Vytáhla Wehrlův list s pečetí a podala mu ho, a Tobiáš ho četl, pomalu, protože číst pořádně se naučil teprve u ní a v němčině mu to šlo hůř než v češtině.
 
 „Pověřena,“ řekl.
 
@@ -130,7 +130,7 @@ Tobiáš jí list vrátil. „A kdyby ten perkmistr řekl, že tam ten řádek o
 
 „Právě pro tebe ne,“ řekla Ilona. „Kdybych škrtla jeden řádek, kdo by pak věřil ostatním?“
 
-Tobiáš se na ni díval, jako se člověk dívá na rovnici, která vyjde, a přesto se mu nelíbí. Pak se natáhl a vzal si sýr.
+Tobiáš se na ni díval, jako se člověk dívá na počet, který vyjde, a přesto se mu nelíbí. Pak se natáhl a vzal si sýr.
 
 „Táta,“ řekl s plnými ústy. „Řekněte tátovi, že jsem v pořádku. On to neví. On nevstane z postele.“
 
@@ -146,7 +146,9 @@ Otevřel jí mladý muž, hubený, bledý, s rukama, které držel trochu od tě
 
 „Pan perkmistr čeká nahoře,“ řekl. Nepředstavil se. Šel před ní po schodech a ona viděla, že mu zezadu pod kabátem vyčuhuje zástěra z kůže, propálená na několika místech.
 
-Nahoře byla světnice, jakou Ilona nikdy neviděla. Byly v ní knihy, stovky, na policích od podlahy ke stropu, ležely i na stole, na lavicích, na zemi u kamen, otevřené, s lístky mezi listy. Byly tam přístroje, kterým nerozuměla: mosazné kruhy do sebe vsazené jako kostra koule, trubice, skleněné baňky s hrdly ohnutými jako krk husy. A uprostřed, na podstavci, velká koule pokrytá papírem a na tom papíře hvězdy a obrazy zvířat a lidí, kteří se drželi za ruce nebo napínali luky.
+Nahoře byla světnice, jakou Ilona nikdy neviděla. Byly v ní knihy, stovky, na policích od podlahy ke stropu, ležely i na stole, na lavicích, na zemi u kamen, otevřené, s lístky mezi listy. Byly tam nástroje, kterým nerozuměla: mosazné kruhy do sebe vsazené jako kostra koule, trubice, skleněné baňky s hrdly ohnutými jako krk husy. A uprostřed, na podstavci, velká koule pokrytá papírem a na tom papíře hvězdy a obrazy zvířat a lidí, kteří se drželi za ruce nebo napínali luky.
+
+![Perkmistrova pracovna](obrazky/02_perkmistr.webp)
 
 Wehrl seděl u okna se sklenkou vína a vstal, když vešla.
 
@@ -176,11 +178,11 @@ Ilona mlčela.
 
 „A vy?“
 
-„Já si myslím, že je to hloupost,“ řekl Wehrl. „A že je to nebezpečná hloupost. Opuštěné štoly nejsou bezpečné ani ve dne. Ve spoustě z nich stojí špatný vzduch, v některých voda. Pochodeň v takové štole je jako svíce v sudu s prachem, víte, že u nás někdy bouchne důl? A lidé, kteří vytáhnou v noci se psy a s pivem, nebudou v kopci hledat nikoho. Budou hledat někoho. A když v kopci nikoho nenajdou, vrátí se dolů a vzpomenou si, že tu je jeden chlapec v komoře pod schodištěm a jedna cizí ženská, která mu pomáhá.“
+„Já si myslím, že je to hloupost,“ řekl Wehrl. „A že je to nebezpečná hloupost. Opuštěné štoly nejsou bezpečné ani ve dne. V mnohých z nich stojí špatný vzduch, v některých voda. Pochodeň v takové štole je jako svíce v sudu s prachem, víte, že u nás někdy bouchne důl? A lidé, kteří vytáhnou v noci se psy a s pivem, nebudou v kopci hledat nikoho. Budou hledat někoho. A když v kopci nikoho nenajdou, vrátí se dolů a vzpomenou si, že tu je jeden chlapec v komoře pod schodištěm a jedna cizí ženská, která mu pomáhá.“
 
 Ilona položila pohár na stůl.
 
-„Proto vám to říkám,“ řekl Wehrl. „Horní soud po svatém Vítu. Svatojánská noc o týden později. Jestli do soudu nebudete mít, kdo zabil Ursulu Kolbovou, soud bude muset rozhodnout podle toho, co má. A já budu moct chlapce chránit jen do té doby, dokud bude ve spisu víc otazníků než odpovědí. Pak to přestane být moje věc.“ Zvedl ruku, chvějící se, jako by se omlouval. „Nejsem král. Jsem perkmistr. Mám pod sebou díla a havíře a pár písařů. Rada je rada.“
+„Proto vám to říkám,“ řekl Wehrl. „Horní soud po svatém Vítu. Svatojánská noc o týden později. Jestli do soudu nebudete mít toho, kdo zabil Ursulu Kolbovou, soud bude muset rozhodnout podle toho, co má. A já budu moct chlapce chránit jen do té doby, dokud bude ve spisu víc otázek než odpovědí. Pak to přestane být moje věc.“ Zvedl ruku, chvějící se, jako by se omlouval. „Nejsem král. Jsem perkmistr. Mám pod sebou díla a havíře a pár písařů. Rada je rada.“
 
 „A tu noc?“
 
@@ -206,7 +208,7 @@ Ilona si vzpomněla. Bylo jí patnáct. Ve Štiavnici o tom kázali, otec si to 
 
 „Pamatuju si ji,“ řekla.
 
-„Můj otec ji viděl jako jeden z prvních v těchhle horách,“ řekl Wehrl. „Jel večer z Klínovce, kde jsme měli díla, a koně se mu splašili, protože bylo náhle světlo, jako by vyšel měsíc tam, kde žádný neměl být. Zastavil a díval se. Pak sesedl a díval se dál, celou noc, a koně mu utekli domů sami, a matka myslela, že je mrtvý.“ Wehrl se zasmál, tiše. „Byl to střízlivý člověk, můj otec. Horní úředník jako já. Do té doby věřil jen tomu, co se dalo zvážit. A od té noci až do smrti každý večer, když bylo jasno, vycházel na dvůr a díval se tím směrem.“
+„Můj otec ji viděl jako jeden z prvních v těchhle horách,“ řekl Wehrl. „Jel večer z Klínovce, kde jsme měli díla, a koně se mu splašili, protože bylo náhle světlo, jako by vyšel měsíc tam, kde žádný neměl být. Zastavil a díval se. Pak sesedl a díval se dál, celou noc, a koně mu utekli domů sami, a matka myslela, že je mrtvý.“ Wehrl se zasmál, tiše. „Byl to střízlivý člověk, můj otec. Horní úředník jako já. Do té doby věřil jen tomu, co se dalo zvážit, a rodovou knihu četl jako rodový inventář. A od té noci až do smrti každý večer, když bylo jasno, vycházel na dvůr a díval se tím směrem.“
 
 „Proč?“
 

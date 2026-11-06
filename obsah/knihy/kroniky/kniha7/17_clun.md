@@ -66,7 +66,7 @@ Hana se na tu mapu dívá dlouho.
 
 „Znáte to?“ zeptá se Kubeš.
 
-„Tohle je stará cesta do hory,“ řekne Hana. „Korytem odtoku. Komory. Tady je ucho.“ Ukáže na místo, kde se čára zúží. „Tady krk. Tady voda po pás. Tudy šli v roce třicet ti tři. A tudy je pak Lada vyvedla ven.“
+„Tohle je stará cesta do hory,“ řekne Hana. Ví, kde na té čáře je ucho a kde krk. Neukáže na ně. „Tudy šli v roce třicet ti tři. A tudy pak Lada vyvedla ven svoje.“
 
 „Tu mapu jsme tenkrát u nich nenašli,“ řekne Kubeš. „Technik ji měl v hlavě. Ne v tašce.“
 
@@ -76,7 +76,7 @@ Hana se na tu mapu dívá dlouho.
 
 Hana se dívá na drobné německé písmo. Na pečlivé šipky. Na číslici *4*, která má nahoře malý háček, jak se píše v Německu.
 
-„Nevím,“ řekne. „Kdo tou cestou šel a přežil, aby ji mohl nakreslit. Ten technik. Pohl a ten druhý od Brandla, co šli s ním. Brandl ji zná z evakuačního plánu.“ Odmlčí se. „A kdo ji od nich dostal.“
+„Nevím,“ řekne. „Kdo tou cestou šel a přežil, takže ji mohl nakreslit. Ten technik. Pohl a ten druhý od Brandla, co šli s ním. Brandl ji zná z evakuačního plánu.“ Odmlčí se. „A kdo ji od nich dostal.“
 
 „Wehrle,“ řekne Kubeš.
 
@@ -94,7 +94,7 @@ Kubeš kývne. Napíše si to. *Výklad.* Hana to vidí přes stůl, protože p�
 
 Kubeš se na ni dívá.
 
-„Výprava nám nic říct nesmí,“ řekne. „Delegát to v červnu řekl tomu policistovi u brány. Že předává obálku. Ne informace.“
+„Výprava nám nic říct nesmí,“ řekne. „Delegát tomu policistovi u brány v červnu řekl jen, komu obálka patří a že ji nikdo neotevřel. Nic víc.“
 
 „Zeptám se ho,“ řekne Hana. „Jestli smí.“
 
@@ -140,7 +140,7 @@ Chvíli se jen dívají.
 
 Je to stejná fotka. Ne stejná mapa. Stejná fotka. V levém dolním rohu je na obou stín palce, který držel papír, když se fotilo. Na obou je v pravém horním rohu ohyb, kde byl list kdysi přeložený. Na obou je u okraje stolu, na kterém papír ležel, kousek něčeho tmavého. Hrana kožené vazby. Kovový roh.
 
-„Tohle napsal pan Wehrle na otevřený kanál výpravy,“ řekne Sende. „Sedmého června. Kanál čte síť. Poslala to velitelce Varo. Velitelka to má v záznamu. Odtud jsem to vzal. Od nás to neodešlo. Ověřil jsem to. Síť zapisuje každé předání. Tahle fotka byla předána jednou. Od velitelky mně, dnes ve 14:10.“
+„Tohle poslal pan Wehrle na otevřený kanál výpravy,“ řekne Sende. „Sedmého června. Kanál čte síť. Poslala to velitelce Varo. Velitelka to má v záznamu. Odtud jsem to vzal. Od nás to neodešlo. Ověřil jsem to. Síť zapisuje každé předání. Tahle fotka šla od sítě velitelce a od velitelky mně, dnes ve 14:10. Ven nikam. Fólii z června má velitelka u sebe.“
 
 „Takže to odešlo od něj,“ řekne Kubeš.
 
@@ -408,7 +408,7 @@ V 7:50 přijde zpráva od Sendeho.
 
 Hana si to přečte dvakrát a zapíše to vlevo.
 
-Je to pravda. Skupina měla mapu staré cesty. Do hory, ne jen k člunu. Policie neví, co s ní chtěli. Hana to neví taky. Velitelka to neví. Ale mapa byla u nich a teď je v krabici na policii, a velitelka to ví a má pravdu, že to ví.
+Je to pravda. Skupina měla mapu staré cesty. Do hory, ne jen k člunu. Policie neví, co s ní chtěli. Ani Hana to neví. Velitelka to neví. Ale mapa byla u nich a teď je v krabici na policii, a velitelka to ví a má pravdu, že to ví.
 
 *
 

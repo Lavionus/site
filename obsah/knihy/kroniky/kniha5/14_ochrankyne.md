@@ -10,7 +10,7 @@ Tadeáš přijde v osm nula čtyři. Pes jde napřed, čenichá u kamene, kde Ha
 
 „To jsem řekla já.“
 
-„Já vím. Lada to slyšela.“ Tadeáš se podívá na displej. „Dvacet jedna.“
+„Já vím. Paní Alžběta to Ladě v noci řekla sama.“ Tadeáš se podívá na displej. „Dvacet jedna.“
 
 „Celá nula.“
 
@@ -36,7 +36,7 @@ Tadeáš už jde. U kraje lesa se otočí.
 
 „Paní Alžběta.“ Pokrčí rameny. „Ona jenom neumí, aby to rozhodoval někdo jiný.“
 
-Pes vstane a jde za ním. Hana se dívá, jak mizí mezi kmeny, malý široký muž a pes bez jména, a myslí na to, že tohle je nejpřesnější posudek, jaký o Sálové kdo napsal.
+Pes vstane a jde za ním. Hana se dívá, jak mizí mezi kmeny, malý široký muž a pes bez jména, a myslí na to, že tohle je nejpřesnější posudek, jaký o Sálové kdo vyslovil.
 
 *
 
@@ -136,7 +136,7 @@ Klára se otočí k Martinovi. Hana čeká. Martin stojí u okna a mne si palcem
 
 *
 
-Klára volá mámě z ložnice. Dveře nechá pootevřené, Hana neslyší slova, jen tón. Ten se mění třikrát. Nejdřív prosba, pak vztek, pak ticho.
+Klára volá mámě z ložnice. Dveře nechá pootevřené, Hana neslyší slova, jen tón. Ten se dvakrát změní. Nejdřív prosba, pak vztek, pak ticho.
 
 Klára se vrátí s telefonem v ruce.
 
@@ -242,7 +242,7 @@ Kubeš kývne. Napíše jí na lísteček číslo, které není to na vrátnici.
 
 V pondělí večer jede Hana do Brna. Domů. Pramen v úterý změří Tadeáš, slíbil to.
 
-Byt je studený, jak bývají byty, ve kterých nikdo tři týdny netopil. Na poličce je prázdné místo po složce *Mlýnec* a po kopii deníku, které vozí s sebou. Hana se ráno osprchuje, převlékne a v deset stojí na chodbě kanceláře veřejné ochránkyně práv.
+Byt je studený, jak bývají byty, ve kterých nikdo skoro tři týdny netopil. Na poličce je prázdné místo po složce *Mlýnec* a po kopii deníku, které vozí s sebou. Hana se ráno osprchuje, převlékne a v deset stojí na chodbě kanceláře veřejné ochránkyně práv.
 
 Je to obyčejná budova s obyčejnými dveřmi. Na chodbě lavice, na lavici žena s taškou papírů a starší muž, který si potichu opakuje větu, kterou chce říct. Hana si sedne vedle nich a uvědomí si, že sem lidé chodí s větami, které si opakují.
 
@@ -330,7 +330,7 @@ Ve středu ráno to Hana čte v autě na parkovišti u pramene, s termoskou mezi
 
 Poslala jí to Dana z olomoucké firmy. Bez komentáře, jen odkaz a pod ním: *Promiň. Myslela jsem, že bys to měla vidět dřív než šéf.*
 
-Je to německý portál, *rodinná historie, záhady, region*, a pod ním český web, který to převzal do půl hodiny a přidal vlastní titulek.
+Je to německý portál, *rodinná historie, záhady, region*, a po něm český web, který to převzal do půl hodiny a přidal vlastní titulek.
 
 *ATLANTOLOŽKA LOVÍ „ELFY“ NA CHEBSKU.*
 
@@ -358,7 +358,7 @@ Hana si všimne těch uvozovek. Ona nikdy neřekla *staré rody* nikomu, kdo by 
 
 A na konci, menším písmem, odstavec s odkazem na rok 2026. *Atlantoložka z Brna.* Odkaz vede na článek o podvrhu. Tam je fotka válce z CT, s olověným jádrem a švem formy. Fotka, kterou Hana pořídila sama, telefonem, přes rameno technika.
 
-Hana zavře telefon.
+Hana odloží telefon.
 
 Za oknem auta stojí pára nad roklí. Pramen šumí. Je osm nula dvě a Tadeáš nepřišel.
 
@@ -398,7 +398,7 @@ Kalina volá v devět. Neříká *říkal jsem vám to*. Hana to slyší i tak.
 
 „Postavili mě vedle vás.“
 
-„Ne,“ řekne Kalina. „Mě vedle vás. Vy jste ta, koho znají. Já jsem ten, co slyší hvězdy.“ Je to skoro vtip. Kalina vtipy nedělá. „Ředitel ústavu se mě ráno zeptal, s kým spolupracuju.“
+„Ne,“ řekne Kalina. „Mě vedle vás. Vy jste ta, kterou znají. Já jsem ten, co slyší hvězdy.“ Je to skoro vtip. Kalina vtipy nedělá. „Ředitel ústavu se mě ráno zeptal, s kým spolupracuju.“
 
 „Co jste mu řekl?“
 
