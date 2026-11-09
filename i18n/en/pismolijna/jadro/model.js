@@ -1,0 +1,21 @@
+// pismolijna/jadro/model – en (sdílený modul obsah/pismolijna/jadro/model.js). Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'ÁČĎÉĚÍŇÓŘŠŤÚŮÝŽáčďéěíňóřšťúůýž': null,
+  'Základní latinka (ASCII)': null,
+  'Česká abeceda': null,
+  'Latin-1 doplněk': null,
+  'Latinka rozšířená A': null,
+  'Latinka rozšířená B': null,
+  'Diakritika (samostatná a kombinační)': null,
+  'Řecké písmo': null,
+  'Azbuka': null,
+  'Interpunkce a symboly': null,
+  'Číslice a zlomky': null,
+  'Geometrické tvary': null,
+  'Šipky': null,
+  'Rámečky': null,
+  'Soukromá oblast (PUA) – vlastní značky': null,
+  'Moje písmo': null,
+  'Tento font je licencován pod SIL Open Font License 1.1.': null,
+  'Soubor není projekt Písmolijny.': null,
+});

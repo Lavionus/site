@@ -23,6 +23,7 @@
     scena.add(kamera);
     const matDil = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.05, clearcoat: 0.3, clearcoatRoughness: 0.5, side: THREE.DoubleSide });
     const matHrany = new THREE.LineBasicMaterial({ color: 0x0b1a33, transparent: true, opacity: 0.32 });
+    const matHranyDuch = new THREE.LineBasicMaterial({ color: 0x55606a, transparent: true, opacity: 0.45, depthWrite: false });
     const matDuch = new THREE.MeshStandardMaterial({ color: 0x9aa4ae, metalness: 0.5, roughness: 0.4, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide });
     const skupina = new THREE.Group(); scena.add(skupina);
     let dil = null, hrany = null, mrizka = null, duchove = [], model = null, rozmer = 100, prvni = true;
@@ -69,7 +70,13 @@
     }
     function duch(d) {
       let m;
-      if (d.typ === 'box') {
+      if (d.typ === 'sit') {
+        // obecná síť (např. průřez hliníkového profilu) s jemnými obrysovými hranami
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(d.poz, 3)); g.setIndex(new THREE.BufferAttribute(d.idx, 1)); g.computeVertexNormals();
+        m = new THREE.Mesh(g, matDuch);
+        m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), matHranyDuch));
+      } else if (d.typ === 'box') {
         m = new THREE.Mesh(new THREE.BoxGeometry(d.max[0] - d.min[0], d.max[1] - d.min[1], d.max[2] - d.min[2]), matDuch);
         m.position.set((d.min[0] + d.max[0]) / 2, (d.min[1] + d.max[1]) / 2, (d.min[2] + d.max[2]) / 2);
       } else {
@@ -101,7 +108,7 @@
     new ResizeObserver(velikost).observe(kontejner);
 
     function uklid() {
-      for (const o of [dil, hrany, mrizka, ...duchove]) if (o) { skupina.remove(o); o.geometry.dispose(); }
+      for (const o of [dil, hrany, mrizka, ...duchove]) if (o) { skupina.remove(o); o.traverse(c => { if (c.geometry) c.geometry.dispose(); }); }
       dil = hrany = mrizka = null; duchove = [];
     }
     /** model = {poz, idx, duchove, tisk: {poz, tridy}} nebo null */

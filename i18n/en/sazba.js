@@ -157,4 +157,10 @@ I18N.pridej('en', {
   'Kroniky vyhnanství': 'Kroniky vyhnanství',
   'Bez názvu': 'Untitled',
   'Knihu ve Skriptoriu jsem nenašel.': 'The book was not found in Scriptorium.',
+  'Vytisknout a svázat doma': 'Print and bind at home',
+  'uložené PDF otevřete v': 'open the saved PDF in',
+  'Tisku knížky doma': 'Print a book at home',
+  'rozloží strany na archy A4 (sešitek, složky, lepená vazba) a případnou spadávku sám odřízne. Obálku s hřbetem vyrobí': 'it lays the pages out on A4 sheets (booklet, signatures, perfect binding) and trims any bleed by itself. The cover with the spine is made by',
+  'Obálka knihy': 'Book cover',
+  'Neznámé dílo {diloId}': 'Unknown work {diloId}',
 });

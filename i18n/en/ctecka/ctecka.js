@@ -98,4 +98,12 @@ I18N.pridej('en', {
   '{uvod}Hlas {nazev} (Piper) se jednou stáhne (asi {mb} MB) a pak funguje i bez internetu. Předčítá přirozeněji než hlas prohlížeče a hraje i při zamčené obrazovce. Stáhnout?': '{uvod}The voice {nazev} (Piper) is downloaded once (about {mb} MB) and then works offline. It sounds more natural than the browser voice and keeps playing with the screen locked. Download?',
   'Prohlížeč nemá žádný hlas pro předčítání a u stránky otevřené jako soubor (file://) nejdou použít ani hlasy Piper. Otevřete čtečku přes web nebo místní server (./test_local.sh → http://localhost:8000).': 'The browser has no voice for reading aloud, and Piper voices cannot be used on a page opened as a file (file://). Open the reader via the web or a local server (./test_local.sh → http://localhost:8000).',
   'Prohlížeč nemá žádný systémový hlas pro předčítání.': 'The browser has no system voice for reading aloud.',
+  'prázdná odpověď': 'empty response',
+  'Knihu se nepodařilo načíst – asi chvíli chybí připojení.': 'The book could not be loaded – the connection is probably down for a moment.',
+  'Zkusit znovu': 'Try again',
+  'Kapitolu se nepodařilo načíst – asi chvíli chybí připojení.': 'The chapter could not be loaded – the connection is probably down for a moment.',
+  'Napište hledaný text do pole 🔍 v liště (aspoň 2 znaky). Hledá se v celém díle bez ohledu na diakritiku a velká písmena.': 'Type the text to find into the 🔍 box in the toolbar (at least 2 characters). The whole work is searched, ignoring diacritics and letter case.',
+  'Předčítání pozastaveno časovačem': 'Reading aloud paused by the sleep timer',
+  'Motiv: {barva}, {stupen}': 'Theme: {barva}, {stupen}',
+  '{nazev} (stáhnout ~{mb} MB)': '{nazev} (download ~{mb} MB)',
 });

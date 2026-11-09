@@ -43,6 +43,8 @@
 
   /* ---------- text v neznámém kódování ---------- */
   function dekoduj(u8) {
+    if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8.subarray(2));   // Poznámkový blok „Unicode“
+    if (u8[0] === 0xFE && u8[1] === 0xFF) return new TextDecoder('utf-16be').decode(u8.subarray(2));
     try { return new TextDecoder('utf-8', { fatal: true }).decode(u8).replace(/^﻿/, ''); }
     catch (e) { return new TextDecoder('windows-1250').decode(u8); }   // starší české TXT
   }
@@ -171,6 +173,33 @@
     }
     return soubory;
   }
+  // Totéž nad Blobem/File bez načtení celého souboru (záloha knihovny může mít stovky MB – iPad by kartu shodil):
+  // čte se jen konec (adresář) a pak každý soubor zvlášť přes slice.
+  async function ctiZipBlob(blob) {
+    const kus = async (od, n) => new Uint8Array(await blob.slice(od, od + n).arrayBuffer());
+    const zac = Math.max(0, blob.size - 65557), konec = await kus(zac, blob.size - zac);
+    const dk = new DataView(konec.buffer);
+    let e = konec.length - 22;
+    while (e >= 0 && dk.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error('Soubor není platný ZIP.');
+    const pocet = dk.getUint16(e + 10, true), velAdr = dk.getUint32(e + 12, true);
+    const adr = await kus(dk.getUint32(e + 16, true), velAdr), dv = new DataView(adr.buffer), soubory = new Map();
+    let p = 0;
+    for (let i = 0; i < pocet && p + 46 <= adr.length && dv.getUint32(p, true) === 0x02014b50; i++) {
+      const metoda = dv.getUint16(p + 10, true), velikost = dv.getUint32(p + 20, true);
+      const lj = dv.getUint16(p + 28, true), lx = dv.getUint16(p + 30, true), lk = dv.getUint16(p + 32, true);
+      const lh = dv.getUint32(p + 42, true), jmeno = new TextDecoder().decode(adr.subarray(p + 46, p + 46 + lj));
+      p += 46 + lj + lx + lk;
+      soubory.set(jmeno, async () => {
+        const h = new DataView((await kus(lh, 30)).buffer), od = lh + 30 + h.getUint16(26, true) + h.getUint16(28, true);
+        const data = blob.slice(od, od + velikost);
+        if (metoda === 0) return new Uint8Array(await data.arrayBuffer());
+        if (metoda !== 8) throw new Error('Nepodporovaná komprese v ZIP.');
+        return new Uint8Array(await new Response(data.stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+      });
+    }
+    return soubory;
+  }
   const relativne = (zaklad, href) => {
     const cesta = zaklad.split('/').slice(0, -1);
     for (const c of decodeURIComponent(href.split('#')[0]).split('/')) {
@@ -184,20 +213,21 @@
   /* ---------- EPUB ---------- */
   // „Page 12“, „page-1“, „title_page“ (e-knihy převedené z PDF a Wordu) nejsou názvy kapitol
   const nesmyslnyNazev = t => /^(page|strana|str\.?)\s*-?\d+$/i.test(t) || /^[a-z0-9]+([_-][a-z0-9]+)+$/.test(t);
+  // OPF/NCX bývají s předponou (<opf:spine>) – hledat podle místního jména v libovolném jmenném prostoru
   async function zEpubu(buf, jmenoSouboru = 'kniha.epub') {
     const zip = ctiZip(buf);
     const text = async jm => { const f = zip.get(jm); if (!f) throw new Error('V EPUB chybí ' + jm); return new TextDecoder().decode(await f()); };
     const kontejner = parsujXhtml(await text('META-INF/container.xml'));
-    const opfCesta = kontejner.getElementsByTagName('rootfile')[0].getAttribute('full-path');
+    const opfCesta = kontejner.getElementsByTagNameNS('*', 'rootfile')[0].getAttribute('full-path');
     const opf = parsujXhtml(await text(opfCesta));
     const meta = jm => { const el = opf.getElementsByTagNameNS('*', jm)[0]; return el ? el.textContent.trim() : ''; };
     const manifest = new Map();
-    for (const it of opf.getElementsByTagName('item'))
+    for (const it of opf.getElementsByTagNameNS('*', 'item'))
       manifest.set(it.getAttribute('id'), { href: relativne(opfCesta, it.getAttribute('href')), typ: it.getAttribute('media-type') || '', vlastnosti: it.getAttribute('properties') || '' });
     // názvy kapitol z obsahu (EPUB 3 nav, jinak EPUB 2 NCX)
     const nazvy = new Map();
     const navItem = [...manifest.values()].find(m => /\bnav\b/.test(m.vlastnosti));
-    const ncxId = opf.getElementsByTagName('spine')[0].getAttribute('toc');
+    const ncxId = opf.getElementsByTagNameNS('*', 'spine')[0].getAttribute('toc');
     const ncxItem = (ncxId && manifest.get(ncxId)) || [...manifest.values()].find(m => m.typ === 'application/x-dtbncx+xml');
     const pridejNazev = (cil, t) => {
       t = t.replace(/\s+/g, ' ').trim();
@@ -205,21 +235,21 @@
     };
     try {
       const nav = navItem && parsujXhtml(await text(navItem.href));
-      const toc = nav && [...nav.getElementsByTagName('nav')].find(n => /toc/.test(n.getAttribute('epub:type') || n.getAttributeNS('http://www.idpf.org/2007/ops', 'type') || ''));
+      const toc = nav && [...nav.getElementsByTagNameNS('*', 'nav')].find(n => /toc/.test(n.getAttribute('epub:type') || n.getAttributeNS('http://www.idpf.org/2007/ops', 'type') || ''));
       if (toc) {
-        for (const a of toc.getElementsByTagName('a')) pridejNazev(relativne(navItem.href, a.getAttribute('href') || ''), a.textContent);
+        for (const a of toc.getElementsByTagNameNS('*', 'a')) pridejNazev(relativne(navItem.href, a.getAttribute('href') || ''), a.textContent);
       } else if (ncxItem) {
         const ncx = parsujXhtml(await text(ncxItem.href));
-        for (const np of ncx.getElementsByTagName('navPoint')) {
-          const cil = relativne(ncxItem.href, np.getElementsByTagName('content')[0].getAttribute('src'));
-          const t = np.getElementsByTagName('text')[0];
+        for (const np of ncx.getElementsByTagNameNS('*', 'navPoint')) {
+          const cil = relativne(ncxItem.href, np.getElementsByTagNameNS('*', 'content')[0].getAttribute('src'));
+          const t = np.getElementsByTagNameNS('*', 'text')[0];
           if (t) pridejNazev(cil, t.textContent);
         }
       }
     } catch (e) { /* obsah je jen pro názvy – bez něj se vezmou nadpisy z textu */ }
     // obálka
     let obalkaHref = null;
-    const obalkaMeta = [...opf.getElementsByTagName('meta')].find(m => m.getAttribute('name') === 'cover');
+    const obalkaMeta = [...opf.getElementsByTagNameNS('*', 'meta')].find(m => m.getAttribute('name') === 'cover');
     const obalkaItem = [...manifest.values()].find(m => /cover-image/.test(m.vlastnosti)) || (obalkaMeta && manifest.get(obalkaMeta.getAttribute('content')));
     if (obalkaItem && /^image\//.test(obalkaItem.typ)) obalkaHref = obalkaItem.href;
 
@@ -235,7 +265,7 @@
       return jm;
     };
     const kapitoly = [];
-    for (const ref of opf.getElementsByTagName('itemref')) {
+    for (const ref of opf.getElementsByTagNameNS('*', 'itemref')) {
       const it = manifest.get(ref.getAttribute('idref'));
       if (!it || !/html|xml/.test(it.typ) || !zip.get(it.href) || it === navItem) continue;   // obsah e-knihy má čtečka vlastní
       const dok = parsujXhtml(await text(it.href));
@@ -263,9 +293,9 @@
     if (!kapitoly.length) throw new Error('V EPUB jsem nenašel žádný text.');
     const obalka = obalkaHref ? await pridejObrazek(obalkaHref) : null;
     // série: Calibre (meta calibre:series) nebo EPUB 3 (belongs-to-collection + group-position)
-    const metaJm = jm => { const el = [...opf.getElementsByTagName('meta')].find(m => m.getAttribute('name') === jm); return el ? el.getAttribute('content') : ''; };
-    const kolekce = [...opf.getElementsByTagName('meta')].find(m => m.getAttribute('property') === 'belongs-to-collection');
-    const pozice = kolekce && kolekce.getAttribute('id') && [...opf.getElementsByTagName('meta')].find(m => m.getAttribute('property') === 'group-position' && m.getAttribute('refines') === '#' + kolekce.getAttribute('id'));
+    const metaJm = jm => { const el = [...opf.getElementsByTagNameNS('*', 'meta')].find(m => m.getAttribute('name') === jm); return el ? el.getAttribute('content') : ''; };
+    const kolekce = [...opf.getElementsByTagNameNS('*', 'meta')].find(m => m.getAttribute('property') === 'belongs-to-collection');
+    const pozice = kolekce && kolekce.getAttribute('id') && [...opf.getElementsByTagNameNS('*', 'meta')].find(m => m.getAttribute('property') === 'group-position' && m.getAttribute('refines') === '#' + kolekce.getAttribute('id'));
     const serie = (metaJm('calibre:series') || (kolekce ? kolekce.textContent : '')).trim();
     const dil = parseFloat(metaJm('calibre:series_index') || (pozice ? pozice.textContent : '')) || null;
     return { nazev: skutecny(meta('title'), bezPripony(jmenoSouboru)), autor: skutecny(meta('creator')), kapitoly, obrazky, obalka, serie, dil: serie ? dil : null };
@@ -310,6 +340,13 @@
     if (d[0] === 0x42 && d[1] === 0x4D) return 'image/bmp';
     return null;
   }
+  // Starší české MOBI/PRC hlásí kódování 1252, ale text je ve windows-1250 (ě, ř by vyšly jako ì, ø).
+  // ě (0xEC) a ř (0xF8) jsou v češtině časté, ì a ø v západních jazycích vzácné; å, æ (0xE5, 0xE6) prozradí skandinávštinu.
+  function jeCp1250(u8) {
+    let cz = 0, sk = 0;
+    for (let i = 0; i < u8.length; i++) { const b = u8[i]; if (b === 0xEC || b === 0xF8) cz++; else if (b === 0xE5 || b === 0xE6) sk++; }
+    return cz >= 20 && cz > 4 * sk;
+  }
   function mobiText(buf) {
     const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
     const typ = new TextDecoder('latin1').decode(u8.subarray(60, 68));
@@ -322,11 +359,12 @@
     if (komprese !== 1 && komprese !== 2) throw new Error('Tento MOBI používá kompresi HUFF/CDIC, kterou čtečka neumí. Převeďte ho na EPUB (např. v Calibre).');
     const jeMobi = r0.length > 20 && new TextDecoder('latin1').decode(r0.subarray(16, 20)) === 'MOBI';
     let kodovani = 1252, nazev = '', autor = '', prvniObr = 0, obalkaIdx = -1, priznaky = 0;
+    const nazevB = [], autorB = [];   // bajty metadat – dekódují se až se známým kódováním textu
     if (jeMobi) {
       const hl = d0.getUint32(20);
       kodovani = d0.getUint32(28);
       const no = d0.getUint32(84), nd = d0.getUint32(88);
-      nazev = new TextDecoder(kodovani === 65001 ? 'utf-8' : 'windows-1252').decode(r0.subarray(no, no + nd));
+      nazevB.push(r0.subarray(no, no + nd));
       prvniObr = d0.getUint32(108);
       if (hl >= 0xE4) priznaky = d0.getUint16(16 + 0xE2);
       if (d0.getUint32(128) & 0x40) {
@@ -334,11 +372,10 @@
         const exth = new TextDecoder('latin1').decode(r0.subarray(p, p + 4)) === 'EXTH';
         const n = exth ? d0.getUint32(p + 8) : 0;
         p += 12;
-        const dek = new TextDecoder(kodovani === 65001 ? 'utf-8' : 'windows-1252');
         for (let i = 0; i < n; i++) {
           const t = d0.getUint32(p), l = d0.getUint32(p + 4), data = r0.subarray(p + 8, p + l);
-          if (t === 100) autor = autor ? autor + ', ' + dek.decode(data) : dek.decode(data);
-          if (t === 503) nazev = dek.decode(data);
+          if (t === 100) autorB.push(data);
+          if (t === 503) nazevB.splice(0, nazevB.length, data);
           if (t === 201) obalkaIdx = new DataView(data.buffer, data.byteOffset, 4).getUint32(0);
           p += l;
         }
@@ -352,7 +389,10 @@
     }
     const vse = new Uint8Array(casti.reduce((s, c) => s + c.length, 0));
     let o = 0; for (const c of casti) { vse.set(c, o); o += c.length; }
-    const text = new TextDecoder(kodovani === 65001 ? 'utf-8' : 'windows-1252').decode(vse);
+    const dek = new TextDecoder(kodovani === 65001 ? 'utf-8' : jeCp1250(vse) ? 'windows-1250' : 'windows-1252');
+    const text = dek.decode(vse);
+    if (nazevB.length) nazev = dek.decode(nazevB[0]);
+    autor = autorB.map(b => dek.decode(b)).join(', ');
     // obrázky: záznamy od prvniObr, v HTML <img recindex="00001"> (číslováno od 1)
     const obrazky = {};
     if (prvniObr && prvniObr < pocet) {
@@ -407,6 +447,14 @@
     return null;
   }
 
+  /* ---------- český text už jednou špatně převedený (cp1250 čtené jako 1252 a uložené v UTF-8): „nìkam“, „poøídil“ ---------- */
+  const MOJIBAKE = { 'ì': 'ě', 'ø': 'ř', 'ù': 'ů', 'è': 'č', 'ò': 'ň', 'ï': 'ď', 'Ì': 'Ě', 'Ø': 'Ř', 'Ù': 'Ů', 'È': 'Č', 'Ò': 'Ň', 'Ï': 'Ď' };
+  const jeMojibake = t => { const z = (t.match(/[ìø]/g) || []).length; return z >= 20 && z > 4 * (t.match(/[ěř]/g) || []).length; };
+  // řídicí znaky C1 (U+0080–U+009F) v textu nebývají – jsou to bajty windows-1250/1252 („už“ jako „u\u009e“, uvozovky \u0084 \u0093)
+  let dek1250;
+  const opravC1 = t => String(t || '').replace(/[\u0080-\u009f]/g, z => (dek1250 = dek1250 || new TextDecoder('windows-1250')).decode(Uint8Array.of(z.charCodeAt(0))));
+  const opravMojibake = t => opravC1(String(t || '').replace(/[ìøùèòïÌØÙÈÒÏ]/g, z => MOJIBAKE[z]));
+
   /* ---------- vstup: soubory z <input type=file> nebo přetažení ---------- */
   const PRIPONY = /\.(md|markdown|txt|text|epub|mobi|prc|azw|azw3)$/i;
   // jeden soubor knihy → kniha; obr = {jméno: File} obrázky přiložené k Markdownu (použijí se jako ilustrace)
@@ -420,6 +468,9 @@
       k = /^(md|markdown)$/.test(pr) ? zMarkdownu(t, f.name, obr) : zTextu(t, f.name);
     }
     if (!k.kapitoly.length) throw new Error('Soubor neobsahuje žádný text.');
+    const oprava = jeMojibake(k.kapitoly.map(c => c.md).join('\n')) ? opravMojibake : opravC1;
+    k.kapitoly = k.kapitoly.map(c => ({ nazev: oprava(c.nazev), md: oprava(c.md) }));
+    k.nazev = oprava(k.nazev); k.autor = oprava(k.autor || '');
     return { ...k, format: pr === 'markdown' ? 'md' : pr === 'text' ? 'txt' : pr, soubor: f.name, velikost: f.size };
   }
   const obrazkyZeSouboru = soubory => { const obr = {}; for (const f of soubory) if (typObrazku(f.name)) obr[f.name] = f; return obr; };
@@ -432,7 +483,7 @@
     return vysl;
   }
 
-  const API = { serieZNazvu, nactiSoubor, obrazkyZeSouboru, typObrazku, naKapitoly, jeNadpis, zMarkdownu, zTextu, zEpubu, zMobi, mobiText, palmdoc, delkaPrivesku, ctiZip, htmlNaMd, nactiSoubory, dekoduj, PRIPONY, slov, prosty };
+  const API = { serieZNazvu, nactiSoubor, obrazkyZeSouboru, typObrazku, naKapitoly, jeNadpis, zMarkdownu, zTextu, zEpubu, zMobi, mobiText, jeCp1250, jeMojibake, opravMojibake, opravC1, palmdoc, delkaPrivesku, ctiZip, ctiZipBlob, htmlNaMd, nactiSoubory, dekoduj, PRIPONY, slov, prosty };
   if (typeof module === 'object' && module.exports) module.exports = API;
   else koren.CTECKA_PREVOD = API;
 })(this);

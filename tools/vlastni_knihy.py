@@ -62,8 +62,10 @@ def hezke_jmeno(jmeno):
 
 def cti_text(cesta):
     data = open(cesta, 'rb').read()
+    if data[:2] in (b'\xff\xfe', b'\xfe\xff'):
+        return data.decode('utf-16')   # Poznámkový blok „Unicode“
     try:
-        return data.decode('utf-8')
+        return data.decode('utf-8-sig')
     except UnicodeDecodeError:
         return data.decode('cp1250', errors='replace')   # starší české TXT
 

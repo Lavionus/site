@@ -12,12 +12,14 @@
 <script src="lib/opentype.min.js"></script>
 <script src="lib/jspdf.umd.min.js"></script>
 <script src="lib/clipper.min.js"></script>
+<script src="lib/qrcode/qrcode.js"></script>
 <script src="modelar/jadro/soubory/svg.js"></script>
+<script src="zalozky_exlibris/vzory_data.js"></script>
 <script src="zalozky_exlibris/jadro.js"></script>
 <script src="zalozky_exlibris/razitko3d.js"></script>
 <script src="zalozky_exlibris/vystup.js"></script>
 <style>
-body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--text);font-family:var(--font)}
+body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;color:var(--text);font-family:var(--font)}
 [hidden]{display:none !important}
 button,input,select,textarea{font-family:inherit}
 
@@ -42,7 +44,7 @@ button,input,select,textarea{font-family:inherit}
 .tl.mini{padding:2px 7px;font-size:.78rem}
 a.tl{text-decoration:none;display:inline-block}
 @media (max-width:1100px){.lista .txt{display:none}}
-.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100dvh - 70px);overflow-y:auto}
 .nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
 .nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
 .nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
@@ -123,8 +125,27 @@ dialog.okno::backdrop{background:rgba(0,0,0,.45)}
 .knihy .kn{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pomoc kbd{margin-left:0}
 
+button,.tl,.vyber,.paleta,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.kus .obal:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
+.veta{display:flex;gap:4px;align-items:stretch}
+.veta > button:first-child{flex:1}
+/* dotykové displeje (iPad): větší cíle, písmo vstupů 16 px (jinak Safari při psaní přibližuje) */
+@media (pointer:coarse){
+  .tl{min-height:40px;padding:7px 12px}
+  .tl.mini{min-height:36px;padding:5px 10px}
+  .lista .tl{min-height:38px}
+  .nabidka .tl{padding:11px 12px}
+  .pole input[type=text],.pole input[type=number],.pole select,.pole textarea,input[type=search]{font-size:16px}
+  .pole input[type=color]{height:40px}
+  .segment button{min-height:40px}
+  .zaskrt{min-height:36px}
+  .zaskrt input{width:22px;height:22px}
+  .tiskbarvy button{width:34px;height:34px}
+  .paleta{height:36px}
+  details.oddil > summary{padding:11px 10px}
+}
 @media (max-width:760px){
-  body{height:auto;min-height:100vh;overflow:auto}
+  body{height:auto;min-height:100vh;min-height:100dvh;overflow:auto}
   main{grid-template-columns:1fr}
   .panel{border-right:0;border-bottom:1px solid var(--border);padding-bottom:12px;overflow:visible}
   .plocha{overflow:visible;padding:14px 8px 30px;order:-1;border-bottom:1px solid var(--border)}
@@ -139,6 +160,10 @@ dialog.okno::backdrop{background:rgba(0,0,0,.45)}
   <div class="skup" role="group" aria-label="Druh"><span class="skup-nazev" aria-hidden="true">Druh</span><div class="skup-tl">
     <button class="tl" data-druh="zalozka" aria-pressed="true" title="Záložka do knihy (1)">🔖<span class="txt"> Záložka</span></button>
     <button class="tl" data-druh="exlibris" aria-pressed="false" title="Ex libris (2)">🏷<span class="txt"> Ex libris</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Upravit"><span class="skup-nazev" aria-hidden="true">Upravit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="zpet" id="btnZpet" disabled title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl" data-prikaz="znovu" id="btnZnovu" disabled title="Znovu (Ctrl+Shift+Z)" aria-label="Znovu">↷</button>
   </div></div>
   <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
     <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false" title="Nový, galerie, uložení">📁<span class="txt"> Soubor</span> ▾</button>
@@ -267,6 +292,10 @@ dialog.okno::backdrop{background:rgba(0,0,0,.45)}
             </div>
             <div class="pole" id="zKryti"><label for="s_kryti">Krytí obrázku v pozadí</label><input type="range" id="s_kryti" data-p="s.obrazek.kryti" min="0.05" max="1" step="0.05"></div>
           </div>
+          <div class="pole">
+            <label for="s_qr">QR kód dole – odkaz (např. na knihu nebo web)</label>
+            <input type="text" id="s_qr" data-p="s.qr.text" data-i18n="ne" maxlength="300" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://">
+          </div>
         </div>
       </details>
     </div>
@@ -358,6 +387,13 @@ dialog.okno::backdrop{background:rgba(0,0,0,.45)}
             <div class="pole"><label for="t_py">Posun rubu ↓ (mm)</label><input type="number" id="t_py" data-p="t.posunY" min="-10" max="10" step="0.1"></div>
           </div>
           <p class="pozn">Tiskněte oboustranně s otáčením přes dlouhou hranu. Když rub „ujíždí“, změřte posun na zkušebním archu a zadejte ho sem.</p>
+          <div class="radek-tl"><button class="tl mini" type="button" data-prikaz="kalibrace">🎯 Zkušební arch pro seřízení rubu (PDF)</button></div>
+          <label class="zaskrt"><input type="checkbox" data-p="z.serie"> Série: na každém kusu jiný citát (líc)</label>
+          <div class="pole" id="tSerie">
+            <label for="z_serie">Citáty série – každý na zvláštní řádek, autor za pomlčkou „ – “</label>
+            <textarea id="z_serie" data-p="z.serieText" data-i18n="ne" maxlength="20000" placeholder="Citát – Autor"></textarea>
+            <p class="pozn" id="serieInfo"></p>
+          </div>
         </div>
         <p class="pozn" id="tiskSouhrn"></p>
       </div>
@@ -423,6 +459,13 @@ dialog.okno::backdrop{background:rgba(0,0,0,.45)}
       <li><b>Otvor na střapec</b> je na archu vyznačený tenkým kroužkem s křížkem – prorazte ho děrovačkou daného průměru.</li>
       <li>Ex libris se tiskne bez pozadí (barva papíru je jen náhled), pokud nezapnete „Tisknout i barvu papíru“.</li>
     </ul>
+    <h3>Novinky</h3>
+    <ul>
+      <li><b>Zpět / Znovu</b> (↶ ↷ v liště, Ctrl+Z / Ctrl+Shift+Z) – vrátí změny návrhu.</li>
+      <li><b>Série citátů</b> (Tisk na arch) – každá záložka na archu dostane jiný citát; řádky můžete přidávat i z dialogu „Z mých knih“ tlačítkem +.</li>
+      <li><b>QR kód</b> – odkaz (na knihu, web, e-shop) se vykreslí dole na zvolené straně záložky jako vektor.</li>
+      <li><b>Zkušební arch</b> – PDF s křížky na líci a stupnicemi na rubu; proti světlu odečtete posun rubu a zadáte ho do nastavení tisku.</li>
+    </ul>
     <h3>Export</h3>
     <ul>
       <li><b>SVG</b> – vektor jednoho kusu, písmo převedené na křivky (otevře se kdekoli).</li>
@@ -433,7 +476,7 @@ dialog.okno::backdrop{background:rgba(0,0,0,.45)}
     <ul>
       <li><kbd>1</kbd> / <kbd>2</kbd> záložka / ex libris, <kbd>L</kbd> přepnout líc a rub</li>
       <li><kbd>N</kbd> náhled, <kbd>A</kbd> arch, <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> velikost náhledu</li>
-      <li><kbd>R</kbd> jiná varianta vzoru, <kbd>G</kbd> galerie</li>
+      <li><kbd>R</kbd> jiná varianta vzoru, <kbd>G</kbd> galerie, <kbd>Ctrl+Z</kbd> zpět, <kbd>Ctrl+Shift+Z</kbd> znovu</li>
       <li><kbd>Ctrl+S</kbd> uložit do galerie, <kbd>Ctrl+P</kbd> PDF, <kbd>Ctrl+E</kbd> SVG, <kbd>F1</kbd> nápověda</li>
     </ul>
     <p class="pozn">Návrhy i obrázky zůstávají jen ve vašem prohlížeči (IndexedDB). Písma jsou volně šiřitelná (SIL OFL), viz složka fonty.</p>

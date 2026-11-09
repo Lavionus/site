@@ -151,6 +151,9 @@
     }
     const vada = kontrolaTvaru(pribeh);
     if (vada) throw new Error(vada);
+    // engine i stránka gamebooku sahají na p.predmety[x] a p.konce[k] – bez nich by hra spadla
+    if (!pribeh.predmety) pribeh.predmety = {};
+    if (!pribeh.konce) pribeh.konce = {};
     return { pribeh, hlavicka, globalni, format };
   }
 
@@ -286,18 +289,99 @@
     return 'volba ' + (i + 1) + (t ? ' „' + (t.length > 40 ? t.slice(0, 39) + '…' : t) + '“' : '');
   }
 
-  /* Pokrývají podmínky voleb všechny možné stavy? Projde všechna ohodnocení předmětů a příznaků
-     z podmínek (do 12 proměnných); volba s podmínkou na zlato se počítá jako nejistá. */
-  function pokryto(volby) {
+  /* Atomy podmínky: [[atom, chci]] – atom 'p:x' = má předmět x, 'f:x' = má příznak x. */
+  function atomyPodminky(pk) {
+    pk = pk || {};
+    return [].concat(
+      seznam(pk.ma).map(x => ['p:' + x, true]), seznam(pk.nema).map(x => ['p:' + x, false]),
+      seznam(pk.priznak).map(x => ['f:' + x, true]), seznam(pk.bez).map(x => ['f:' + x, false]));
+  }
+  const ziskyEf = e => e ? seznam(e.predmet).map(x => 'p:' + x).concat(seznam(e.priznak).map(x => 'f:' + x)) : [];
+  const ztratyEf = e => e ? seznam(e.odeber).map(x => 'p:' + x) : [];
+
+  /* Co hráč při příchodu do scény MŮŽE mít (moze) a co MÁ JISTĚ (jiste) – toková analýza po hranách grafu.
+     Projde se jen dosažitelná část; při průchodu volbou s podmínkou platí, že podmínka byla splněná
+     (volba „nema X“ vede jen bez X, „ma X“ jen s X). Příznaky engine nikdy neodebírá; předmět, který jde
+     ztratit (odeber, spotřební), se do „jistě“ nepočítá. Vrací {moze: {id: Set}, jiste: {id: Set}}. */
+  function stavyScen(p) {
+    const sc = p.sceny || {}, pred = p.predmety || {};
+    const odebiratelne = new Set();
+    for (const [k, d] of Object.entries(pred)) if (d && d.spotrebni) odebiratelne.add('p:' + k);
+    for (const s of Object.values(sc)) {
+      ztratyEf(s.efekty).forEach(a => odebiratelne.add(a));
+      for (const v of s.volby || []) ztratyEf(v.efekty).forEach(a => odebiratelne.add(a));
+    }
+    for (const d of Object.values(pred)) if (d && d.pouziti) ztratyEf(d.pouziti).forEach(a => odebiratelne.add(a));
+    // co může přinést použití předmětu z torby (kdykoli, když ho hráč má)
+    const zPouziti = Object.entries(pred).filter(([, d]) => d && d.pouziti).map(([k, d]) => ['p:' + k, ziskyEf(d.pouziti)]);
+    const uzaver = m => { let zmena = true; while (zmena) { zmena = false; for (const [k, z] of zPouziti) if (m.has(k)) for (const a of z) if (!m.has(a)) { m.add(a); zmena = true; } } return m; };
+    const moze = {}, jiste = {};
+    if (!sc[p.start]) return { moze, jiste };
+    const zac = seznam((p.zacatek || {}).predmety).map(x => 'p:' + x);
+    moze[p.start] = uzaver(new Set(zac));
+    jiste[p.start] = new Set(zac.filter(a => !odebiratelne.has(a)));
+    const fronta = [p.start], ve = new Set(fronta);
+    let kroku = 0;
+    while (fronta.length && kroku++ < 200000) {
+      const id = fronta.shift(); ve.delete(id);
+      const s = sc[id];
+      if (!s || s.konec != null) continue;
+      const mVstup = new Set([...moze[id], ...ziskyEf(s.efekty)]);
+      const jVstup = new Set([...jiste[id], ...ziskyEf(s.efekty).filter(a => !odebiratelne.has(a))]);
+      const prechody = [];
+      (s.volby || []).forEach(v => {
+        const at = atomyPodminky(v.pokud);
+        const m = new Set(mVstup), j = new Set(jVstup);
+        for (const [a, chci] of at) { if (chci) { m.add(a); if (!odebiratelne.has(a)) j.add(a); } else { m.delete(a); j.delete(a); } }
+        ziskyEf(v.efekty).forEach(a => { m.add(a); if (!odebiratelne.has(a)) j.add(a); });
+        const cile = v.zkouska ? [v.zkouska.uspech, v.zkouska.neuspech] : v.boj ? [v.boj.vyhra, v.boj.prohra, v.boj.utek] : [v.cil];
+        prechody.push([cile, m, j]);
+      });
+      if (s.boj) prechody.push([[s.boj.vyhra, s.boj.prohra, s.boj.utek], mVstup, jVstup]);
+      for (const [cile, m, j] of prechody) for (const c of cile) {
+        if (c == null || c === '' || !sc[c]) continue;
+        let zmena = false;
+        if (!moze[c]) { moze[c] = uzaver(new Set(m)); jiste[c] = new Set(j); zmena = true; }
+        else {
+          const n = moze[c].size;
+          m.forEach(a => moze[c].add(a)); uzaver(moze[c]);
+          if (moze[c].size !== n) zmena = true;
+          for (const a of [...jiste[c]]) if (!j.has(a)) { jiste[c].delete(a); zmena = true; }
+        }
+        if (zmena && !ve.has(c)) { ve.add(c); fronta.push(c); }
+      }
+    }
+    return { moze, jiste };
+  }
+
+  /* Může volba vůbec někdy být dostupná? Vrací důvod, proč ne, nebo ''. */
+  function nikdyDostupna(v, moze, jiste) {
+    for (const [a, chci] of atomyPodminky(v.pokud)) {
+      const druh = a[0] === 'p' ? 'předmět' : 'příznak', x = a.slice(2);
+      if (chci && !moze.has(a)) return druh + ' „' + x + '“ tu hráč mít nemůže';
+      if (!chci && jiste.has(a)) return druh + ' „' + x + '“ tu hráč má vždy';
+    }
+    return '';
+  }
+
+  /* Pokrývají podmínky voleb všechny stavy, ve kterých sem hráč může přijít? Projde všechna ohodnocení
+     předmětů a příznaků z podmínek (do 12 volných proměnných); atomy, které tu hráč mít nemůže / má jistě,
+     jsou pevné. Volba s podmínkou na zlato se počítá jako nejistá. */
+  function pokryto(volby, moze, jiste) {
     const atomy = [];
-    const at = x => { if (!atomy.includes(x)) atomy.push(x); return atomy.indexOf(x); };
     const pravidla = [];
     for (const v of volby) {
       const pk = v.pokud || {};
       if (pk.zlato != null) continue;
-      pravidla.push([].concat(
-        seznam(pk.ma).map(x => [at('p:' + x), true]), seznam(pk.nema).map(x => [at('p:' + x), false]),
-        seznam(pk.priznak).map(x => [at('f:' + x), true]), seznam(pk.bez).map(x => [at('f:' + x), false])));
+      const r = [];
+      let mozna = true;
+      for (const [a, chci] of atomyPodminky(pk)) {
+        if (moze && !moze.has(a)) { if (chci) mozna = false; continue; }
+        if (jiste && jiste.has(a)) { if (!chci) mozna = false; continue; }
+        if (!atomy.includes(a)) atomy.push(a);
+        r.push([atomy.indexOf(a), chci]);
+      }
+      if (mozna) pravidla.push(r);
     }
     if (!pravidla.length || atomy.length > 12) return false;
     for (let m = 0; m < (1 << atomy.length); m++) {
@@ -353,12 +437,18 @@
     /* dosažitelnost a cesty ke konci */
     const { ven, dovnitr } = sousede(p);
     const dos = dosazitelne(p, p.start);
+    const stavy = stavyScen(p);
     for (const id of ids) if (!dos.has(id) && id !== p.smrt && id !== p.tma) pridej('chyba', 'nedosazitelna', id, 'Scéna je nedosažitelná ze startu.');
     for (const id of ids) {
       const s = sc[id];
       if (s.konec == null && !H.some(h => h.z === id)) pridej('chyba', 'slepa', id, 'Slepá ulička: scéna není konec a nevede z ní žádná volba.');
-      else if (s.konec == null && !s.boj && (s.volby || []).length && s.volby.every(v => v.pokud && Object.keys(v.pokud).length) && !pokryto(s.volby))
+      else if (s.konec == null && !s.boj && (s.volby || []).length && s.volby.every(v => v.pokud && Object.keys(v.pokud).length) && dos.has(id) &&
+        !pokryto(s.volby, stavy.moze[id], stavy.jiste[id]))
         pridej('varovani', 'podminene', id, 'Všechny volby mají podmínku – když žádná neplatí, hráč uvízne.');
+      if (s.konec == null && stavy.moze[id]) (s.volby || []).forEach((v, i) => {
+        const proc = nikdyDostupna(v, stavy.moze[id], stavy.jiste[id]);
+        if (proc) pridej('varovani', 'nikdy', id, popisVolby(s, i) + ' se nikdy nenabídne: ' + proc + '.');
+      });
     }
     // zpětné BFS od konců: scény, ze kterých nevede cesta k žádnému konci
     const kKonci = new Set(ids.filter(id => sc[id].konec != null));
@@ -768,11 +858,121 @@
     return st;
   }
 
+  /* =========================================================
+     Export pro tisk – papírový gamebook v Markdownu (oddíly s čísly, „jdi na“)
+     o: {zamichat: bool, seed: číslo} – zamíchání čísel oddílů (start je vždy 1), aby se nedalo číst dopředu.
+     Vrací {md, cisla: {id: číslo}}.
+     ========================================================= */
+  function doMarkdown(p, o) {
+    o = o || {};
+    const sc = p.sceny || {}, pred = p.predmety || {}, konce = p.konce || {};
+    const bezEmoji = t => String(t == null ? '' : t).replace(/^[^\p{L}\p{N}]+/u, '').trim();
+    const nazvyVl = { obratnost: 'obratnost', zdravi: 'zdraví', stesti: 'štěstí', olej: 'olej', zlato: 'zlato' };
+    for (const k of ['olej', 'zlato']) if (p.nazvy && p.nazvy[k]) nazvyVl[k] = bezEmoji(p.nazvy[k]).toLowerCase();
+    const predmet = x => bezEmoji((pred[x] || {}).nazev) || x;
+    // pořadí: start, pak po šířce grafu, pak ostatní (smrt, tma, nedosažitelné)
+    const { ven } = sousede(p);
+    const poradi = [];
+    if (sc[p.start]) {
+      const vid = new Set([p.start]), f = [p.start];
+      while (f.length) { const a = f.shift(); poradi.push(a); for (const c of ven[a]) if (!vid.has(c)) { vid.add(c); f.push(c); } }
+    }
+    for (const id of Object.keys(sc)) if (!poradi.includes(id)) poradi.push(id);
+    const zbytek = poradi.slice(sc[p.start] ? 1 : 0);
+    if (o.zamichat) {
+      let r = (o.seed == null ? 1 : o.seed) >>> 0 || 1;
+      const nah = () => { r = (r + 0x6D2B79F5) >>> 0; let t = r; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+      for (let i = zbytek.length - 1; i > 0; i--) { const j = Math.floor(nah() * (i + 1)); [zbytek[i], zbytek[j]] = [zbytek[j], zbytek[i]]; }
+    }
+    const cisla = {};
+    (sc[p.start] ? [p.start] : []).concat(zbytek).forEach((id, i) => { cisla[id] = i + 1; });
+    const odkaz = id => sc[id] ? '**' + cisla[id] + '**' : '**?' + id + '?**';
+    const efekty = e => {
+      if (!e) return '';
+      const c = [];
+      for (const v of VLASTNOSTI) if (e[v]) c.push(nazvyVl[v] + ' ' + (e[v] > 0 ? '+' : '−') + Math.abs(e[v]));
+      seznam(e.predmet).forEach(x => c.push('získáváš: ' + predmet(x)));
+      seznam(e.odeber).forEach(x => c.push('škrtni: ' + predmet(x)));
+      seznam(e.priznak).forEach(x => c.push('zapiš si heslo ' + x.toUpperCase()));
+      return c.join('; ');
+    };
+    const podminka = pk => {
+      if (!pk) return '';
+      const c = [];
+      seznam(pk.ma).forEach(x => c.push('máš-li ' + predmet(x)));
+      seznam(pk.nema).forEach(x => c.push('nemáš-li ' + predmet(x)));
+      seznam(pk.priznak).forEach(x => c.push('máš-li heslo ' + x.toUpperCase()));
+      seznam(pk.bez).forEach(x => c.push('nemáš-li heslo ' + x.toUpperCase()));
+      if (pk.zlato != null) c.push('máš-li aspoň ' + pk.zlato + ' ' + nazvyVl.zlato);
+      return c.join(' a ');
+    };
+    const velke = t => t ? t[0].toUpperCase() + t.slice(1) : t;
+    const boj = b => 'Souboj: ' + (b.jmeno || 'soupeř') + ' – obratnost ' + b.obratnost + ', zdraví ' + b.zdravi + '. ' +
+      'Vyhraješ-li, jdi na ' + odkaz(b.vyhra) + '. Prohraješ-li, jdi na ' + odkaz(b.prohra || p.smrt) + '.' +
+      (b.utek ? ' Můžeš také utéct (zdraví −2) na ' + odkaz(b.utek) + '.' : '');
+    const out = [];
+    out.push('# ' + (p.nazev || 'Gamebook'));
+    if (p.podtitul) out.push('*' + p.podtitul + '*');
+    const z = p.zacatek || {};
+    const pravidla = ['# Jak hrát',
+      'Hoď jednou kostkou a přičti 6 – to je tvoje **obratnost**. Hoď dvěma kostkami a přičti 12 – to je **zdraví**. Hoď jednou kostkou a přičti 6 – to je **štěstí**. ' +
+      'Na začátku máš ' + nazvyVl.olej + ' ' + (z.olej || 10) + ' a ' + nazvyVl.zlato + ' ' + (z.zlato || 0) + '.' +
+      (seznam(z.predmety).length ? ' V torbě máš: ' + seznam(z.predmety).map(predmet).join(', ') + '.' : ''),
+      '**Zkouška**: hoď dvěma kostkami. Padne-li nejvýš hodnota zkoušené vlastnosti, zkouška se podařila. Každá zkouška štěstí ti ubere 1 štěstí.',
+      '**Souboj** probíhá v kolech: ty i soupeř hodíte dvěma kostkami a přičtete obratnost. Kdo má víc, ubere druhému 2 zdraví. Při shodě se nic nestane.',
+      'Efekty oddílu platí jen při první návštěvě. Hesla si zapisuj, škrtnuté předměty už nemáš.' +
+      (sc[p.smrt] ? ' Klesne-li zdraví na 0, jdi ihned na ' + odkaz(p.smrt) + '.' : '') +
+      (sc[p.tma] ? ' Dojde-li ' + nazvyVl.olej + (p.svetlo && pred[p.svetlo] ? ' a nemáš-li ' + predmet(p.svetlo) : '') + ', jdi ihned na ' + odkaz(p.tma) + '.' : '')];
+    out.push(...pravidla);
+    const pouzitelne = Object.keys(pred).filter(k => pred[k].pouziti);
+    if (pouzitelne.length) out.push('Předměty, které jde kdykoli použít: ' + pouzitelne.map(k => predmet(k) + ' (' + efekty(pred[k].pouziti) + (pred[k].spotrebni ? ', pak ho škrtni' : '') + ')').join('; ') + '.');
+    out.push('*');
+    const podleCisla = Object.keys(cisla).sort((a, b) => cisla[a] - cisla[b]);
+    for (const id of podleCisla) {
+      const s = sc[id];
+      out.push('## ' + cisla[id]);
+      String(s.text || '').split(/\n\s*\n/).map(t => t.trim()).filter(Boolean).forEach(t => out.push(t));
+      const ef = efekty(s.efekty);
+      if (ef) out.push('*' + velke(ef) + '.*');
+      if (s.konec != null) { out.push('**KONEC – ' + (((konce[s.konec] || {}).nazev) || s.konec) + '**'); continue; }
+      if (s.boj) out.push(boj(s.boj));
+      for (const v of s.volby || []) {
+        const pd = podminka(v.pokud), e = efekty(v.efekty);
+        let t = (pd ? '*' + velke(pd) + ':* ' : '') + (v.text || 'Pokračovat') + (e ? ' (' + e + ')' : '');
+        if (v.zkouska) t += ' – zkouška ' + ({ obratnost: 'obratnosti', zdravi: 'zdraví', stesti: 'štěstí', olej: 'oleje', zlato: 'zlata' }[v.zkouska.co] || v.zkouska.co) + ': uspěješ-li, jdi na ' + odkaz(v.zkouska.uspech) + ', jinak na ' + odkaz(v.zkouska.neuspech) + '.';
+        else if (v.boj) t += ' – ' + boj(v.boj);
+        else t += ' – jdi na ' + odkaz(v.cil) + '.';
+        out.push(t);
+      }
+    }
+    return { md: out.join('\n\n') + '\n', cisla };
+  }
+
+  /* =========================================================
+     Záloha všech projektů
+     ========================================================= */
+  const TYP_ZALOHY = 'gamebook_editor_zaloha';
+  function zaloha(projekty) { return { typ: TYP_ZALOHY, verze: 1, vytvoreno: new Date().toISOString(), projekty }; }
+  function jeZaloha(d) { return !!(d && typeof d === 'object' && d.typ === TYP_ZALOHY); }
+  /* Vrátí platné projekty ze zálohy (vadné přeskočí a spočítá). */
+  function projektyZeZalohy(d) {
+    if (!jeZaloha(d) || !Array.isArray(d.projekty)) throw new Error('Soubor není záloha Editoru gamebooků.');
+    const ok = [];
+    let vadnych = 0;
+    for (const pr of d.projekty) {
+      if (!pr || typeof pr !== 'object' || typeof pr.id !== 'string' || kontrolaTvaru(pr.pribeh)) { vadnych++; continue; }
+      if (!pr.pribeh.predmety) pr.pribeh.predmety = {};
+      if (!pr.pribeh.konce) pr.pribeh.konce = {};
+      ok.push(Object.assign({ nazev: pr.pribeh.nazev || 'Příběh', pozice: {}, hlavicka: '', globalni: 'GAMEBOOK_PRIBEH', vytvoreno: Date.now(), upraveno: Date.now() }, pr));
+    }
+    return { projekty: ok, vadnych };
+  }
+
   const API = {
     VLASTNOSTI, parsujLiteral, nactiSoubor, kontrolaTvaru, doJs, doJson, lit,
-    hrany, sousede, dosazitelne, komponenty, analyzuj, statistiky, simuluj, rozloz,
+    hrany, sousede, dosazitelne, komponenty, stavyScen, nikdyDostupna, pokryto, analyzuj, statistiky, simuluj, rozloz,
     noveId, odkazyNa, prejmenujScenu, prejmenujPredmet, prejmenujKonec, pouziti, priznaky, typUzlu,
-    nastav, zTextu, doTextu, prazdnyPribeh, Historie, hraOd, kopie, popisVolby
+    nastav, zTextu, doTextu, prazdnyPribeh, Historie, hraOd, kopie, popisVolby, doMarkdown, zaloha, jeZaloha, projektyZeZalohy
   };
   if (typeof module !== 'undefined') module.exports = API; else window.GamebookEditorJadro = API;
 })();

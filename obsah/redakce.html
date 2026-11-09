@@ -10,7 +10,7 @@
 <script src="../podpis.js" defer></script>
 <script src="redakce/jadro.js"></script>
 <style>
-body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--text)}
+body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;color:var(--text)}
 [hidden]{display:none !important}
 
 /* horní lišta – skupiny s nadpisem (vzor prompty.html) */
@@ -46,9 +46,20 @@ body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;display:flex;flex
 .ed-hlava input{flex:1 1 160px;min-width:0;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font:inherit;font-weight:600}
 .stav{font-size:.78rem;color:var(--text-muted);white-space:nowrap}
 .stav.zast{color:var(--warn)}
-.ed{position:relative;flex:1;min-height:0}
-#podklad,#text{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:18px 22px 40vh;box-sizing:border-box;border:0;
-  font:17px/1.75 Georgia,'Times New Roman',serif;letter-spacing:normal;word-spacing:normal;tab-size:4;
+.ed-obal{flex:1;min-height:0;display:flex}
+.ed{position:relative;flex:1;min-height:0;min-width:0}
+/* mapa nálezů: svislý pruh vedle textu, klepnutí = posun */
+.mapa{width:14px;flex-shrink:0;position:relative;background:var(--bg-panel);border-left:1px solid var(--border);cursor:pointer;touch-action:none}
+.mapa canvas{position:absolute;inset:0;width:100%;height:100%}
+.bez-mapy .mapa{display:none}
+.bez-panelu .plocha{grid-template-columns:minmax(0,1fr)}
+.bez-panelu .panel{display:none}
+.bez-panelu .editor-sl{border-right:0}
+#podklad.zastarale #vrstva{display:none}
+#vrstva{position:absolute;left:0;top:0;width:0;height:0}
+#vrstva i{position:absolute;outline:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent);border-radius:2px}
+#podklad,#text{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:18px 22px 40vh;box-sizing:border-box;border:0;border-radius:0;
+  font:var(--ed-pismo,17px)/1.75 Georgia,'Times New Roman',serif;letter-spacing:normal;word-spacing:normal;tab-size:4;
   white-space:pre-wrap;overflow-wrap:break-word;word-break:normal;overflow-y:scroll;overflow-x:hidden}
 #podklad{color:transparent;background:var(--bg-input);pointer-events:none;overflow-y:hidden}
 #text{background:transparent;color:var(--text);resize:none;outline:none;caret-color:var(--accent)}
@@ -65,6 +76,8 @@ body{background:var(--bg-deep,var(--bg));margin:0;height:100vh;display:flex;flex
 .t-rec{text-decoration:underline double var(--accent)}
 .t-trpny{text-decoration:underline dashed var(--accent);background:var(--accent-soft)}
 .t-retez{text-decoration:underline solid var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.t-zacatky{text-decoration:underline wavy var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.t-zacatky.pred{background:none}
 .t-ign{opacity:.45;text-decoration-style:dotted !important}
 .akt{outline:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent) !important}
 .vzor{display:inline-block;min-width:1.6em;text-align:center;color:var(--text);line-height:1.2}
@@ -154,7 +167,18 @@ dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;
   .obsah-karty{overflow:visible}
   .lista .txt{display:none}
   .seznamy{grid-template-columns:1fr}
-  #podklad,#text{font-size:16px;padding:12px 12px 30vh}
+  #podklad,#text{padding:12px 12px 30vh}
+}
+/* dotyk (iPad, telefon): větší cíle, písmo vstupů ≥ 16 px (Safari jinak přibližuje) */
+@media (pointer:coarse){
+  .tl{padding:8px 11px;min-height:38px}
+  .tl.mini{padding:6px 10px;min-height:34px;font-size:.8rem}
+  .cip{padding:6px 11px;font-size:.82rem}
+  .karty button{padding:9px 12px}
+  .polozka{padding:9px 8px}
+  .nabidka .tl{padding:10px 12px}
+  input,select,textarea{font-size:16px !important}
+  .mapa{width:22px}
 }
 </style>
 </head>
@@ -173,6 +197,7 @@ dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;
   </div></div>
   <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
     <button class="tl" id="btnPodtrzeni" data-prikaz="podtrzeni" aria-pressed="true" title="Podtržení nálezů v textu (Alt+P)">〰<span class="txt"> Podtržení</span></button>
+    <button class="tl" data-nabidka="nabZobrazit" title="Velikost písma, panel rozboru, mapa nálezů">👁<span class="txt"> Zobrazit</span> ▾</button>
   </div></div>
   <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
     <button class="tl" data-nabidka="nabExport" title="Zpráva do Markdownu, nálezy do CSV, text">⬇<span class="txt"> Export</span> ▾</button>
@@ -199,6 +224,13 @@ dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;
   <hr>
   <button class="tl" data-prikaz="zrusitIgnor">↩️ Zrušit všechna ignorování v rukopisu</button>
 </div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pismoVetsi">🔠 Větší písmo <kbd>Ctrl+=</kbd></button>
+  <button class="tl" data-prikaz="pismoMensi">🔡 Menší písmo <kbd>Ctrl+-</kbd></button>
+  <hr>
+  <button class="tl" id="btnPanel" data-prikaz="panel" aria-pressed="true">📋 Panel rozboru <kbd>Alt+R</kbd></button>
+  <button class="tl" id="btnMapa" data-prikaz="mapa" aria-pressed="true">▮ Mapa nálezů vedle textu</button>
+</div>
 <div id="nabExport" class="nabidka" hidden>
   <button class="tl" data-prikaz="exportMd">📄 Redakční zpráva (Markdown)</button>
   <button class="tl" data-prikaz="exportCsv">📊 Seznam nálezů (CSV)</button>
@@ -213,10 +245,10 @@ dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;
       <input id="nazev" aria-label="Název rukopisu" data-i18n="ne" placeholder="Název rukopisu">
       <span class="stav" id="stav"></span>
     </div>
-    <div class="ed">
+    <div class="ed-obal"><div class="ed">
       <div id="podklad" aria-hidden="true" data-i18n="ne"></div>
       <textarea id="text" spellcheck="false" data-i18n="ne" aria-label="Text rukopisu (Markdown)" placeholder="Sem vložte nebo pište text (Markdown: # nadpis kapitoly, prázdný řádek mezi odstavci)…"></textarea>
-    </div>
+    </div><div class="mapa" id="mapa" title="Mapa nálezů – klepnutím přejdete na místo" aria-hidden="true"><canvas id="mapaPlatno"></canvas></div></div>
   </section>
   <section class="panel" aria-label="Rozbor">
     <div class="karty" role="tablist">
@@ -249,6 +281,7 @@ dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;
       <label class="cela"><input type="checkbox" id="nJmena"> Jména postav do opakování nepočítat</label>
       <label for="nPrah">Dlouhá věta: víc slov než</label><input type="number" id="nPrah" min="5" max="200">
       <label for="nRetez">Řetězec podstatných jmen: aspoň (slov)</label><input type="number" id="nRetez" min="2" max="10">
+      <label for="nZacatky">Stejné začátky: aspoň (vět po sobě)</label><input type="number" id="nZacatky" min="2" max="10">
       <label class="cela"><input type="checkbox" id="nRec"> Vatu a slabá slovesa v přímé řeči nehlásit (mluva postav)</label>
       <label for="nRychl">Tiché čtení (slov za minutu)</label><input type="number" id="nRychl" min="50" max="800">
       <label for="nNahlas">Čtení nahlas (slov za minutu)</label><input type="number" id="nNahlas" min="50" max="400">
@@ -293,7 +326,11 @@ dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;
       <tr><td><span data-i18n="ne" class="vzor t-rec">řekl tiše</span></td><td><b>Příslovce u slovesa řeči</b> – ukázat raději jednáním.</td></tr>
       <tr><td><span data-i18n="ne" class="vzor t-trpny">byl zbořen</span></td><td><b>Trpný rod</b> – kdo to dělá?</td></tr>
       <tr><td><span data-i18n="ne" class="vzor t-retez">zlepšení kvality řízení</span></td><td><b>Řetězec podstatných jmen</b> – úřední styl, rozepsat slovesem.</td></tr>
+      <tr><td><span data-i18n="ne" class="vzor t-zacatky">Věra…</span></td><td><b>Stejné začátky vět</b> – tři a více vět po sobě začíná stejným slovem (Věra… Věra… Věra…); věty začínající přímou řečí se nepočítají.</td></tr>
     </table>
+    <h3>Zobrazení a tablet</h3>
+    <p>V nabídce 👁 Zobrazit jde zvětšit písmo editoru, skrýt panel rozboru (celá šířka pro text, hodí se na iPadu na výšku) a zapnout <b>mapu nálezů</b> – úzký pruh vpravo od textu, kde každá čárka je nález v barvě jeho typu a rámeček ukazuje, kde právě jste. Klepnutím nebo tažením po mapě se v textu přesunete. Na dotykovém zařízení skok na nález neotevírá klávesnici; psát začnete klepnutím do textu.</p>
+    <p>Karta <b>Postavy</b> dělí jména na postavy a místa: jméno, které stojí často po předložkách v, do, z (v Chebu, do Prahy), se bere jako místo. Tvary jména (Věra, Věře, Věrou) i přivlastňovací tvary (Kojatův, Kojatova) se sčítají.</p>
     <p>Jde o heuristiky bez slovníku – rozhoduje autor. Nález, se kterým nesouhlasíte, označte <b>Ignorovat</b> (pamatuje se k rukopisu i po úpravách jinde v textu). U opakování jde slovo vyřadit natrvalo.</p>
     <h3>Ovládání</h3>
     <table>
@@ -303,9 +340,11 @@ dialog .dl-pata{display:flex;gap:6px;justify-content:flex-end;padding:10px 14px;
       <tr><td><kbd>Ctrl+S</kbd></td><td>uložit hned</td></tr>
       <tr><td><kbd>Ctrl+O</kbd></td><td>otevřít soubor</td></tr>
       <tr><td><kbd>Alt+P</kbd></td><td>podtržení zapnout / vypnout</td></tr>
+      <tr><td><kbd>Alt+R</kbd></td><td>panel rozboru skrýt / ukázat</td></tr>
+      <tr><td><kbd>Ctrl+=</kbd> / <kbd>Ctrl+-</kbd></td><td>větší / menší písmo editoru</td></tr>
       <tr><td><kbd>F1</kbd></td><td>nápověda</td></tr>
     </table>
-    <p>Kliknutím do textu se v kartě Nálezy ukáže, co je na místě kurzoru. Kapitoly se poznají podle nadpisů <code>#</code> (nebo <code>##</code>, je-li jich víc). Čtivost: průměr slov ve větě do 10 velmi svižné, do 15 svižné, do 20 běžné, do 25 náročnější, nad 25 náročné. Doba čtení vychází z nastavené rychlosti (výchozí 220 slov/min potichu, 150 nahlas).</p>
+    <p>Kliknutím do textu se v kartě Nálezy ukáže, co je na místě kurzoru. Kapitoly se poznají podle nadpisů <code>#</code> (nebo <code>##</code>, je-li jich víc). Čtivost: průměr slov ve větě do 10 velmi svižné, do 15 svižné, do 20 běžné, do 25 náročnější, nad 25 náročné. Doba čtení vychází z nastavené rychlosti (výchozí 220 slov/min potichu, 150 nahlas). Opakování se hledá ve výchozím okně 20 slov.</p>
   </div>
 </dialog>
 
@@ -325,7 +364,10 @@ const pct = x => Math.round(x * 100) + ' %';
 function nactiJson(k, vych) { try { return Object.assign(vych, JSON.parse(localStorage.getItem(k)) || {}); } catch (e) { return vych; } }
 let nast = nactiJson(KL_NAST, JSON.parse(JSON.stringify(R.VYCHOZI)));
 nast.typy = Object.assign({}, R.VYCHOZI.typy);   // rozbor hledá vždy vše, filtr je jen v zobrazení
-const ui = nactiJson(KL_UI, { karta: 'nalezy', skryte: {}, ignorZobrazit: false, podtrzeni: true, kapFiltr: -1, rytmusKap: 0 });
+const ui = nactiJson(KL_UI, { karta: 'nalezy', skryte: {}, ignorZobrazit: false, podtrzeni: true, kapFiltr: -1, rytmusKap: 0, pismo: 17, panel: true, mapa: true });
+// dotykové zařízení (iPad se hlásí jako Mac s dotykem): skok na nález nemá vyvolat klávesnici
+const DOTYK = matchMedia('(pointer:coarse)').matches;
+const IOS = /iP(ad|hone|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 const ulozNast = () => localStorage.setItem(KL_NAST, JSON.stringify(nast));
 const ulozUi = () => localStorage.setItem(KL_UI, JSON.stringify(ui));
 
@@ -414,9 +456,9 @@ function vykresliPodklad() {
   const nal = viditelne();
   for (const n of nal) {
     const ign = jeIgn(n);
-    const tr = 't-' + n.typ + (ign ? ' t-ign' : '') + (n.id === aktivni ? ' akt' : '');
+    const tr = 't-' + n.typ + (ign ? ' t-ign' : '');
     if (n.do > n.od) udalosti.push([n.od, 1, tr], [n.do, -1, tr]);
-    for (const d of n.dalsi || []) { const t2 = 't-' + n.typ + ' pred' + (n.id === aktivni ? ' akt' : ''); udalosti.push([d.od, 1, t2], [d.do, -1, t2]); }
+    for (const d of n.dalsi || []) { const t2 = 't-' + n.typ + ' pred'; udalosti.push([d.od, 1, t2], [d.do, -1, t2]); }
   }
   udalosti.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const aktivniTr = new Map(); let pos = 0, h = '';
@@ -429,35 +471,112 @@ function vykresliPodklad() {
     }
     aktivniTr.set(tr, (aktivniTr.get(tr) || 0) + d);
   }
-  h += esc(text.slice(pos)) + '\n ';
+  h += esc(text.slice(pos)) + '\n <div id="vrstva"></div>';
   P.innerHTML = h;
   P.classList.remove('zastarale');
   P.classList.toggle('bez', !ui.podtrzeni);
   srovnejPodklad();
+  kotvyMapy = null;
+  oznacAktivni();
+  kresliMapu();
+}
+
+// Range nad podkladem pro úseky textu [od, do) – jeden průchod textovými uzly
+function rozsahy(useky) {
+  const P = $('podklad'), w = document.createTreeWalker(P, NodeFilter.SHOW_TEXT);
+  const body = useky.flatMap(([a, b], i) => [[a, i, 0], [b, i, 1]]).sort((x, y) => x[0] - y[0]);
+  const vys = useky.map(() => document.createRange());
+  let n, zac = 0, k = 0;
+  while ((n = w.nextNode()) && k < body.length) {
+    if (n.parentNode.id === 'vrstva') break;
+    while (k < body.length && body[k][0] <= zac + n.length) {
+      const [poz, i, konec] = body[k], o = Math.max(0, poz - zac);
+      konec ? vys[i].setEnd(n, o) : vys[i].setStart(n, o);
+      k++;
+    }
+    zac += n.length;
+  }
+  return vys;
+}
+// aktivní nález: obdélníky ve vrstvě podkladu (bez překreslení celého textu)
+function oznacAktivni() {
+  const V = $('vrstva'); if (!V) return;
+  V.textContent = '';
+  const n = rozbor && aktivni >= 0 && !zastarale ? rozbor.nalezy[aktivni] : null;
+  if (!n || !ui.podtrzeni) return;
+  const P = $('podklad'), pb = P.getBoundingClientRect(), f = document.createDocumentFragment();
+  for (const r of rozsahy([[n.od, n.do], ...(n.dalsi || []).map(d => [d.od, d.do])]))
+    for (const b of r.getClientRects()) {
+      if (b.width < 1) continue;
+      const i = document.createElement('i');
+      i.style.cssText = `left:${b.left - pb.left + P.scrollLeft}px;top:${b.top - pb.top + P.scrollTop}px;width:${b.width}px;height:${b.height}px`;
+      f.appendChild(i);
+    }
+  V.appendChild(f);
+}
+
+// ---------- mapa nálezů ----------
+const BARVA_TYPU = { opakovani: '--warn', vata: '--danger', zacal: '--danger', slabe: '--text-faint', rec: '--accent', trpny: '--accent', retez: '--ok', dlouha: '--border-strong', zacatky: '--warn' };
+let kotvyMapy = null;   // [pozice znaku, y v podkladu] – pro převod pozice na výšku
+function kotvy() {
+  if (kotvyMapy) return kotvyMapy;
+  const L = doc.text.length, N = Math.min(400, Math.max(2, Math.ceil(L / 400)));
+  const poz = Array.from({ length: N + 1 }, (_, i) => Math.round(i * L / N));
+  const P = $('podklad'), pb = P.getBoundingClientRect();
+  kotvyMapy = rozsahy(poz.map(p => [p, p])).map((r, i) => {
+    const b = r.getBoundingClientRect();
+    return [poz[i], b.top - pb.top + P.scrollTop];
+  });
+  return kotvyMapy;
+}
+function yZnaku(p) {
+  const K = kotvy();
+  let lo = 0, hi = K.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (K[m][0] <= p) lo = m; else hi = m; }
+  const [p0, y0] = K[lo], [p1, y1] = K[hi];
+  return p1 > p0 ? y0 + (y1 - y0) * (p - p0) / (p1 - p0) : y0;
+}
+function kresliMapu() {
+  const M = $('mapa'), C = $('mapaPlatno');
+  if (!ui.mapa || !rozbor || !M.offsetHeight) return;
+  const dpr = window.devicePixelRatio || 1, W = M.clientWidth, H = M.clientHeight;
+  C.width = Math.round(W * dpr); C.height = Math.round(H * dpr);
+  const g = C.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const T = $('text'), vyska = Math.max(1, T.scrollHeight), cs = getComputedStyle(document.documentElement);
+  const barvy = {}; for (const [t, v] of Object.entries(BARVA_TYPU)) barvy[t] = cs.getPropertyValue(v).trim() || '#888';
+  for (const n of viditelne()) {
+    if (jeIgn(n)) continue;
+    g.fillStyle = barvy[n.typ];
+    g.fillRect(n.typ === 'dlouha' ? 0 : 3, Math.round(yZnaku(n.od) / vyska * H), n.typ === 'dlouha' ? 3 : W - 6, 2);
+  }
+  // rámeček viditelné části
+  g.strokeStyle = cs.getPropertyValue('--accent').trim() || '#48f'; g.lineWidth = 1.5;
+  g.strokeRect(1, T.scrollTop / vyska * H + 1, W - 2, Math.max(6, T.clientHeight / vyska * H) - 2);
+}
+function mapaNa(e) {
+  const M = $('mapa'), T = $('text'), r = M.getBoundingClientRect();
+  const f = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+  T.scrollTop = f * T.scrollHeight - T.clientHeight / 2;
 }
 
 // y souřadnice znaku v podkladu (pro posun k nálezu)
 function yNaPozici(pos) {
-  const P = $('podklad'), w = document.createTreeWalker(P, NodeFilter.SHOW_TEXT);
-  let n, zbyva = pos;
-  while ((n = w.nextNode())) {
-    if (zbyva <= n.length) {
-      const r = document.createRange(); r.setStart(n, Math.min(zbyva, n.length)); r.setEnd(n, Math.min(zbyva + 1, n.length));
-      const b = r.getBoundingClientRect(), pb = P.getBoundingClientRect();
-      return b.top - pb.top + P.scrollTop;
-    }
-    zbyva -= n.length;
-  }
-  return 0;
+  const P = $('podklad'), r = rozsahy([[pos, Math.min(pos + 1, doc.text.length)]])[0];
+  const b = r.getClientRects()[0] || r.getBoundingClientRect();
+  return b.top - P.getBoundingClientRect().top + P.scrollTop;
 }
 function skocNa(od, doo, id) {
   const T = $('text');
-  if (id !== undefined) { aktivni = id; vykresliPodklad(); }
+  if (id !== undefined) aktivni = id;
   const y = yNaPozici(od);
-  T.focus({ preventScroll: true });
+  if (!DOTYK) T.focus({ preventScroll: true });   // na iPadu by fokus vysunul klávesnici
   T.setSelectionRange(od, doo);
   T.scrollTop = Math.max(0, y - T.clientHeight / 3);
   $('podklad').scrollTop = T.scrollTop;
+  oznacAktivni(); kresliMapu();
+  // úzké rozložení (panel pod textem): přejet nahoru k editoru
+  const E = document.querySelector('.editor-sl'), re = E.getBoundingClientRect();
+  if (re.bottom < 40 || re.top > innerHeight - 40) E.scrollIntoView({ block: 'start', behavior: 'smooth' });
   aktualizujKurzor();
   oznacAktivniVSeznamu();
 }
@@ -468,7 +587,7 @@ function aktualizujKurzor() {
   if (!rozbor || zastarale) return;
   const p = $('text').selectionStart;
   naKurzoru = viditelne().filter(n => (p >= n.od && p <= n.do) || (n.dalsi || []).some(d => p >= d.od && p <= d.do));
-  if (naKurzoru.length && !naKurzoru.some(n => n.id === aktivni)) { aktivni = naKurzoru[naKurzoru.length - 1].id; vykresliPodklad(); }
+  if (naKurzoru.length && !naKurzoru.some(n => n.id === aktivni)) { aktivni = naKurzoru[naKurzoru.length - 1].id; oznacAktivni(); oznacAktivniVSeznamu(); }
   if (ui.karta === 'nalezy') vykresliDetail();
 }
 
@@ -505,6 +624,10 @@ function kartaNalezy(O) {
     const b = e.target.closest('[data-ign]'); if (b) { e.stopPropagation(); return prepniIgnor(rozbor.nalezy[+b.dataset.ign]); }
     const p = e.target.closest('.polozka'); if (p) skocNaNalez(rozbor.nalezy[+p.dataset.id]);
   };
+  $('seznam').onkeydown = e => {
+    const p = e.target.closest('.polozka');
+    if (p && e.target === p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); skocNaNalez(rozbor.nalezy[+p.dataset.id]); }
+  };
 }
 function polozkaHtml(n) {
   const ign = jeIgn(n), K = rozbor.kapitoly[n.kap];
@@ -517,7 +640,8 @@ function polozkaHtml(n) {
 function oznacAktivniVSeznamu() {
   document.querySelectorAll('.polozka.akt-pol').forEach(p => p.classList.remove('akt-pol'));
   const p = document.querySelector(`.polozka[data-id="${aktivni}"]`);
-  if (p) { p.classList.add('akt-pol'); p.scrollIntoView({ block: 'nearest' }); }
+  // v úzkém rozložení je seznam pod textem – posun stránky by odjel od editoru
+  if (p) { p.classList.add('akt-pol'); if (!matchMedia('(max-width:900px)').matches) p.scrollIntoView({ block: 'nearest' }); }
 }
 function vykresliDetail() {
   const D = $('detail'); if (!D) return;
@@ -624,7 +748,7 @@ function dalsiVyskyt(test) {
   for (let i = 0; i < T.length; i++) { const d = test(i); if (d) shody.push(d); }
   if (!shody.length) return;
   const s = shody.find(x => x[0] >= p) || shody[0];
-  aktivni = -1; vykresliPodklad();
+  aktivni = -1; oznacAktivni();
   skocNa(s[0], s[1]);
   Dialog.info(`Výskyt ${shody.indexOf(s) + 1} z ${shody.length}`);
 }
@@ -646,17 +770,17 @@ function kartaPostavy(O) {
   const P = rozbor.postavy, kap = rozbor.kapitoly;
   if (!P.length) { O.innerHTML = '<p class="prazdne">Žádná jména (slova s velkým písmenem uprostřed věty, aspoň 3×).</p>'; return; }
   const max = Math.max(...P.flatMap(p => p.poKap), 1);
-  let h = '<h3>Výskyty jmen po kapitolách</h3><p class="muted">Jméno = slovo s velkým písmenem uvnitř věty (postavy, ale i místa); tvary (Petr, Petra, Petrovi) sloučené. Sytost buňky = počet. Klik = další výskyt.</p>';
-  h += '<div class="tabulka-obal"><table class="tab"><thead><tr><th>Jméno</th><th>Celkem</th>' + kap.map((K, i) => `<th title="${esc(K.nazev)}">${i + 1}</th>`).join('') + '</tr></thead><tbody>';
-  P.forEach((p, i) => {
-    h += `<tr class="klik" data-p="${i}"><td data-i18n="ne" title="${esc(p.tvary.join(', '))}">${esc(p.jmeno)}</td><td><b>${p.celkem}</b></td>` +
-      p.poKap.map(c => `<td class="bunka" style="background:color-mix(in srgb,var(--accent) ${c ? Math.round(10 + c / max * 60) : 0}%,transparent)">${c || '·'}</td>`).join('') + '</tr>';
-  });
-  O.innerHTML = h + '</tbody></table></div>';
-  O.querySelectorAll('tr[data-p]').forEach(tr => tr.onclick = () => {
+  const tabulka = (nadpis, sez) => !sez.length ? '' : `<h3>${nadpis}</h3><div class="tabulka-obal"><table class="tab"><thead><tr><th>Jméno</th><th>Celkem</th>` +
+    kap.map((K, i) => `<th title="${esc(K.nazev)}">${i + 1}</th>`).join('') + '</tr></thead><tbody>' + sez.map(p =>
+      `<tr class="klik" data-p="${P.indexOf(p)}" tabindex="0"><td data-i18n="ne" title="${esc(p.tvary.join(', '))}">${esc(p.jmeno)}</td><td><b>${p.celkem}</b></td>` +
+      p.poKap.map(c => `<td class="bunka" style="background:color-mix(in srgb,var(--accent) ${c ? Math.round(10 + c / max * 60) : 0}%,transparent)">${c || '·'}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>';
+  O.innerHTML = '<p class="muted">Jméno = slovo s velkým písmenem uvnitř věty; tvary (Věra, Věře, Věrou) i přivlastňovací tvary sloučené. Místo = jméno, které stojí často po v, do, z. Sytost buňky = počet. Klik = další výskyt.</p>' +
+    tabulka('Postavy', P.filter(p => !p.misto)) + tabulka('Místa', P.filter(p => p.misto));
+  const jdi = tr => {
     const p = P[+tr.dataset.p], T = rozbor.tokeny;
-    dalsiVyskyt(i => T[i].velke && R.kmen(T[i].s) === p.kmen ? [T[i].od, T[i].do] : null);
-  });
+    dalsiVyskyt(i => T[i].velke && R.kmenJmena(T[i].s) === p.kmen ? [T[i].od, T[i].do] : null);
+  };
+  O.querySelectorAll('tr[data-p]').forEach(tr => { tr.onclick = () => jdi(tr); tr.onkeydown = e => { if (e.key === 'Enter') jdi(tr); }; });
 }
 
 // ---------- navigace nálezy ----------
@@ -677,10 +801,12 @@ async function nactiText(nazev, text, zdroj) {
     const ex = (await dbVsechny()).find(d => d.zdroj === zdroj);
     if (ex) {
       const stejne = ex.text === text;
-      if (stejne || await Dialog.potvrd(`„${ex.nazev}“ už máte uložený (upravený ${new Date(ex.upraveno).toLocaleString('cs-CZ')}). Otevřít uloženou verzi?`, { ok: 'Otevřít uloženou', zrus: 'Načíst znovu' })) {
+      // uložená verze se nikdy nepřepíše – „načíst znovu“ založí nový rukopis vedle ní
+      if (stejne || await Dialog.potvrd(`„${ex.nazev}“ už máte uložený a liší se od originálu (upravený ${new Date(ex.upraveno).toLocaleString('cs-CZ')}). Otevřít vaši uloženou verzi, nebo načíst originál jako nový rukopis?`, { ok: 'Otevřít uloženou', zrus: 'Načíst originál jako nový' })) {
         return otevriDoc(ex);
       }
-      ex.text = text; ex.upraveno = Date.now(); await dbUloz(ex); return otevriDoc(ex);
+      const d = novyDoc(nazev + ' (originál)', text, zdroj + '#' + Date.now().toString(36));
+      await dbUloz(d); return otevriDoc(d);
     }
   }
   const d = novyDoc(nazev, text, zdroj);
@@ -763,7 +889,7 @@ async function dialogUlozene() {
 }
 
 // ---------- nastavení ----------
-const POLE = [['nOkno', 'okno'], ['nMin', 'minDelka'], ['nPrah', 'prahVety'], ['nRetez', 'retezMin'], ['nRychl', 'rychlost'], ['nNahlas', 'rychlostNahlas']];
+const POLE = [['nOkno', 'okno'], ['nMin', 'minDelka'], ['nPrah', 'prahVety'], ['nRetez', 'retezMin'], ['nZacatky', 'zacatkyMin'], ['nRychl', 'rychlost'], ['nNahlas', 'rychlostNahlas']];
 function naplnNastaveni(z) {
   POLE.forEach(([id, k]) => { $(id).value = z[k]; });
   $('nJmena').checked = z.ignorovatJmena; $('nRec').checked = z.recNehlasit;
@@ -833,12 +959,30 @@ async function prikaz(p) {
     case 'zrusitIgnor':
       if (await Dialog.potvrd('Zrušit všechna ignorování nálezů v tomto rukopisu?', { ok: 'Zrušit ignorování' })) { ignSet.clear(); doc.ignorTexty = []; po_ignoru(); }
       break;
-    case 'podtrzeni': ui.podtrzeni = !ui.podtrzeni; ulozUi(); $('btnPodtrzeni').setAttribute('aria-pressed', ui.podtrzeni); $('podklad').classList.toggle('bez', !ui.podtrzeni); break;
+    case 'podtrzeni': ui.podtrzeni = !ui.podtrzeni; ulozUi(); $('btnPodtrzeni').setAttribute('aria-pressed', ui.podtrzeni); $('podklad').classList.toggle('bez', !ui.podtrzeni); oznacAktivni(); break;
     case 'exportMd': if (zastarale) rozebrat(); stahni(R.zpravaMd(rozbor, doc.text, doc.nazev, jeIgn), jmenoSouboru() + '_redakce.md', 'text/markdown;charset=utf-8'); break;
     case 'exportCsv': if (zastarale) rozebrat(); stahni(R.csv(rozbor, doc.text, jeIgn), jmenoSouboru() + '_nalezy.csv', 'text/csv;charset=utf-8'); break;
     case 'exportText': stahni($('text').value, jmenoSouboru() + '.md', 'text/markdown;charset=utf-8'); break;
     case 'napoveda': $('dlgNapoveda').showModal(); break;
+    case 'pismoVetsi': nastavPismo(ui.pismo + 1); break;
+    case 'pismoMensi': nastavPismo(ui.pismo - 1); break;
+    case 'panel': ui.panel = !ui.panel; ulozUi(); nastavZobrazeni(); break;
+    case 'mapa': ui.mapa = !ui.mapa; ulozUi(); nastavZobrazeni(); break;
   }
+}
+
+// zobrazení: písmo editoru, panel, mapa
+function nastavPismo(px) {
+  ui.pismo = Math.min(30, Math.max(12, px)); ulozUi();
+  document.documentElement.style.setProperty('--ed-pismo', ui.pismo + 'px');
+  if (rozbor && !zastarale) { kotvyMapy = null; oznacAktivni(); kresliMapu(); }
+}
+function nastavZobrazeni() {
+  document.body.classList.toggle('bez-panelu', !ui.panel);
+  document.body.classList.toggle('bez-mapy', !ui.mapa);
+  $('btnPanel').setAttribute('aria-pressed', ui.panel);
+  $('btnMapa').setAttribute('aria-pressed', ui.mapa);
+  if (rozbor && !zastarale) { kotvyMapy = null; requestAnimationFrame(() => { oznacAktivni(); kresliMapu(); }); }
 }
 
 // nabídky lišty
@@ -877,7 +1021,14 @@ T.addEventListener('input', () => {
   clearTimeout(casRozboru);
   if (T.value.length <= VELKY_TEXT) casRozboru = setTimeout(rozebrat, T.value.length > 40000 ? 1200 : 600);
 });
-T.addEventListener('scroll', () => { $('podklad').scrollTop = T.scrollTop; });
+let mapaRaf = 0;
+T.addEventListener('scroll', () => {
+  $('podklad').scrollTop = T.scrollTop;
+  if (!mapaRaf) mapaRaf = requestAnimationFrame(() => { mapaRaf = 0; if (!zastarale) kresliMapu(); });
+});
+// mapa: klepnutí i tažení (pointer události fungují pro myš, pero i prst)
+$('mapa').addEventListener('pointerdown', e => { e.preventDefault(); $('mapa').setPointerCapture(e.pointerId); mapaNa(e); });
+$('mapa').addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'touch') { if ($('mapa').hasPointerCapture(e.pointerId)) mapaNa(e); } });
 T.addEventListener('click', aktualizujKurzor);
 T.addEventListener('keyup', e => { if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End' || e.key.startsWith('Page')) aktualizujKurzor(); });
 $('nazev').addEventListener('input', planujUlozeni);
@@ -887,10 +1038,13 @@ T.addEventListener('drop', async e => { if (e.dataTransfer.files.length) { e.pre
 // podklad bez posuvníku: šířku posuvníku textarey mu přidáme do pravého odsazení, ať se řádky lámou stejně
 function srovnejPodklad() {
   const P = $('podklad'), sb = T.offsetWidth - T.clientWidth;
-  P.style.paddingRight = (parseFloat(getComputedStyle(T).paddingRight) + sb) + 'px';
+  // Safari na iOS/iPadOS kreslí text v textarey o 3 px dovnitř – podklad posunout stejně
+  const ios = IOS ? 3 : 0, cs = getComputedStyle(T);
+  P.style.paddingLeft = (parseFloat(cs.paddingLeft) + ios) + 'px';
+  P.style.paddingRight = (parseFloat(cs.paddingRight) + sb + ios) + 'px';
   P.scrollTop = T.scrollTop;
 }
-new ResizeObserver(srovnejPodklad).observe(T);
+new ResizeObserver(() => { srovnejPodklad(); if (rozbor && !zastarale) { kotvyMapy = null; oznacAktivni(); kresliMapu(); } }).observe(T);
 
 document.addEventListener('keydown', e => {
   const k = e.key;
@@ -901,15 +1055,20 @@ document.addEventListener('keydown', e => {
   else if ((e.ctrlKey || e.metaKey) && (k === 'o' || k === 'O')) { e.preventDefault(); prikaz('otevrit'); }
   else if (e.altKey && (e.code === 'KeyI')) { e.preventDefault(); if (aktivni >= 0 && rozbor && !zastarale) prepniIgnor(rozbor.nalezy[aktivni]); }
   else if (e.altKey && (e.code === 'KeyP')) { e.preventDefault(); prikaz('podtrzeni'); }
+  else if (e.altKey && (e.code === 'KeyR')) { e.preventDefault(); prikaz('panel'); }
+  else if ((e.ctrlKey || e.metaKey) && (k === '=' || k === '+')) { e.preventDefault(); prikaz('pismoVetsi'); }
+  else if ((e.ctrlKey || e.metaKey) && k === '-') { e.preventDefault(); prikaz('pismoMensi'); }
   else if (k === 'Escape' && document.querySelector('.nabidka:not([hidden])')) zavriNabidky();
 });
 addEventListener('beforeunload', () => { if (doc) { doc.text = T.value; ulozDoc(false); } });
 addEventListener('pagehide', () => { if (doc) ulozDoc(false); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && doc) ulozDoc(false); });
 
 // ---------- start ----------
 (async function start() {
   if (window.self === window.top) document.body.classList.add('samostatne');
   $('btnPodtrzeni').setAttribute('aria-pressed', ui.podtrzeni);
+  nastavPismo(ui.pismo); nastavZobrazeni();
   let d = null;
   try {
     const id = localStorage.getItem(KL_POSL);

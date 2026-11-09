@@ -36,10 +36,10 @@
         id: kx.prefix + (ctenar ? 'cizi:' + ctenar.id + ':' : '') + z.id,
         druh, zdroj: kx.zdroj, zdrojNazev: kx.zdrojNazev, knihaKlic: k.klic, kniha: k.nazev, autor: kx.autor || '',
         kapitola: kap ? kap.nazev : bezMd(z.soubor), kapIndex: kapIndex < 0 ? 9999 : kapIndex, knihaIndex: k.index,
-        soubor: z.soubor || '', blok: +z.blok || 0, od: +z.od || 0,
+        zdrojId: kx.zdrojId, knihaId: z.kniha, soubor: z.soubor || '', blok: +z.blok || 0, od: +z.od || 0, konec: +z.do || 0,
         text, poznamka: String(z.poznamka || '').trim(), barva: druh === 'zalozka' ? '' : (BARVY[z.barva] ? z.barva : 'zluta'),
         cas: +z.cas || 0, odkaz: kx.odkaz(z, k), ctenar: ctenar ? (ctenar.jmeno || 'čtenář') : '',
-        stitky: [], hvezda: false,
+        stitky: [], hvezda: false, komentar: '',
       });
     };
     pole(pozn && pozn.zvyrazneni).forEach(z => pridej(z, 'zvyrazneni'));
@@ -63,7 +63,7 @@
       const kapitoly = pole(meta.kapitoly);
       const info = { klic: 'ctecka:' + meta.id, nazev: meta.nazev || 'Bez názvu', index: 0, kapitoly };
       ven.push(...zPoznamek(poznamky, {
-        zdroj: 'ctecka', prefix: 'c:' + meta.id + ':', zdrojNazev: 'Čtečka knih', autor: meta.autor,
+        zdroj: 'ctecka', zdrojId: meta.id, prefix: 'c:' + meta.id + ':', zdrojNazev: 'Čtečka knih', autor: meta.autor,
         knihaPodle: () => info,
         odkaz: z => `ctecka_knih.html?id=${encodeURIComponent(meta.id)}&kniha=1&kap=${encodeURIComponent(bezMd(z.soubor))}&blok=${+z.blok || 0}`,
       }, moznosti));
@@ -77,7 +77,7 @@
           : { klic: 'dilo:' + dilo.id + ':' + id, nazev: String(id || dilo.nazev), index: 999, kapitoly: [] };
       };
       ven.push(...zPoznamek(poznamky, {
-        zdroj: 'dilo', prefix: 'd:' + dilo.id + ':', zdrojNazev: dilo.nazev || dilo.id, autor: dilo.autor || '',
+        zdroj: 'dilo', zdrojId: dilo.id, prefix: 'd:' + dilo.id + ':', zdrojNazev: dilo.nazev || dilo.id, autor: dilo.autor || '',
         knihaPodle,
         odkaz: (z, k) => k.index < 999
           ? `${dilo.stranka}?kniha=${k.index + 1}&kap=${encodeURIComponent(bezMd(z.soubor))}&blok=${+z.blok || 0}` : dilo.stranka,
@@ -90,14 +90,14 @@
         knihaKlic: 'vlastni:' + normalizuj(c.zdroj || ''), kniha: c.zdroj || '', autor: c.autor || '',
         kapitola: '', kapIndex: 0, knihaIndex: 0, soubor: '', blok: 0, od: 0,
         text: String(c.text || '').trim(), poznamka: String(c.poznamka || '').trim(), barva: '', cas: +c.cas || 0,
-        odkaz: '', ctenar: '', stitky: pole(c.stitky).slice(), hvezda: !!c.hvezda, vlastniId: c.id,
+        odkaz: '', ctenar: '', stitky: pole(c.stitky).slice(), hvezda: !!c.hvezda, komentar: '', vlastniId: c.id,
       });
     }
     // štítky a hvězdičky k výpiskům ze čteček (uložené u nás podle id výpisku)
     const dopl = v.doplnky || {};
     for (const p of ven) {
       const d = dopl[p.id];
-      if (d && p.druh !== 'vlastni') { p.stitky = pole(d.stitky).slice(); p.hvezda = !!d.hvezda; }
+      if (d && p.druh !== 'vlastni') { p.stitky = pole(d.stitky).slice(); p.hvezda = !!d.hvezda; p.komentar = String(d.komentar || ''); }
     }
     return ven.filter(p => p.text || p.poznamka);
   }
@@ -113,7 +113,7 @@
     }
     return d;
   }
-  const hledanyText = p => normalizuj([p.text, p.poznamka, p.kniha, p.kapitola, p.autor, p.zdrojNazev, p.ctenar, p.stitky.join(' ')].join(' \u0001 '));
+  const hledanyText = p => normalizuj([p.text, p.poznamka, p.komentar, p.kniha, p.kapitola, p.autor, p.zdrojNazev, p.ctenar, p.stitky.join(' ')].join(' \u0001 '));
 
   /* f = {hledat, druh, barva ('' | barva | 'zadna'), kniha (knihaKlic), stitek, jenPoznamka, jenHvezda} */
   function filtruj(polozky, f = {}) {
@@ -123,7 +123,7 @@
       if (f.druh && p.druh !== f.druh) return false;
       if (f.barva === 'zadna' ? p.barva : f.barva && p.barva !== f.barva) return false;
       if (f.kniha && p.knihaKlic !== f.kniha) return false;
-      if (f.jenPoznamka && !p.poznamka) return false;
+      if (f.jenPoznamka && !p.poznamka && !p.komentar) return false;
       if (f.jenHvezda && !p.hvezda) return false;
       const st = p.stitky.map(normalizuj);
       if (stitek && !st.includes(stitek)) return false;
@@ -225,6 +225,7 @@
       if (p.druh === 'vlastni' && p.autor) radky.push('>', `> — ${p.autor}`);
       const info = [];
       if (p.poznamka) info.push(`📝 ${p.poznamka}`);
+      if (p.komentar) info.push(`💬 ${p.komentar}`);
       if (p.ctenar) info.push(`👤 ${p.ctenar}`);
       if (p.stitky.length) info.push(p.stitky.map(s => '#' + s.replace(/\s+/g, '_')).join(' '));
       if (p.hvezda) info.push('★');
@@ -234,13 +235,13 @@
     return radky.join('\n');
   }
 
-  const CSV_SLOUPCE = ['druh', 'text', 'poznamka', 'autor', 'zdroj', 'kniha', 'kapitola', 'barva', 'stitky', 'hvezda', 'datum', 'odkaz'];
+  const CSV_SLOUPCE = ['druh', 'text', 'poznamka', 'komentar', 'autor', 'zdroj', 'kniha', 'kapitola', 'barva', 'stitky', 'hvezda', 'datum', 'odkaz'];
   const csvPole = v => /[";\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   // středník a BOM kvůli českému Excelu
   function exportCsv(polozky) {
     const radky = [CSV_SLOUPCE.join(';')];
     for (const p of polozky) {
-      radky.push([p.druh, p.text, p.poznamka, p.autor, p.druh === 'vlastni' ? p.kniha : p.zdrojNazev, p.druh === 'vlastni' ? '' : p.kniha,
+      radky.push([p.druh, p.text, p.poznamka, p.komentar, p.autor, p.druh === 'vlastni' ? p.kniha : p.zdrojNazev, p.druh === 'vlastni' ? '' : p.kniha,
         p.kapitola, p.barva, p.stitky.join(', '), p.hvezda ? '1' : '', p.cas ? new Date(p.cas).toISOString().slice(0, 10) : '', p.odkaz]
         .map(v => csvPole(String(v == null ? '' : v))).join(';'));
     }
@@ -251,7 +252,7 @@
   function exportJson(polozky, vlastni = {}) {
     const ven = polozky.map(p => {
       const o = { druh: p.druh, text: p.text };
-      for (const k of ['poznamka', 'autor', 'kniha', 'kapitola', 'barva', 'ctenar', 'odkaz']) if (p[k]) o[k] = p[k];
+      for (const k of ['poznamka', 'komentar', 'autor', 'kniha', 'kapitola', 'barva', 'ctenar', 'odkaz']) if (p[k]) o[k] = p[k];
       if (p.druh !== 'vlastni') o.zdroj = p.zdrojNazev; else if (p.kniha) { o.zdroj = p.kniha; delete o.kniha; }
       if (p.stitky.length) o.stitky = p.stitky;
       if (p.hvezda) o.hvezda = true;
@@ -291,7 +292,7 @@
 
   const HLAVICKY = {
     text: ['text', 'citat', 'quote', 'vypisek', 'zvyrazneni'], autor: ['autor', 'author'], zdroj: ['zdroj', 'source', 'dilo', 'kniha', 'book', 'title', 'nazev'],
-    stitky: ['stitky', 'stitek', 'tags', 'tag', 'stitky (oddelene carkou)'], poznamka: ['poznamka', 'note', 'notes', 'komentar'], druh: ['druh'], hvezda: ['hvezda', 'oblibene', 'star'],
+    druh: ['druh'], stitky: ['stitky', 'stitek', 'tags', 'tag', 'stitky (oddelene carkou)'], poznamka: ['poznamka', 'note', 'notes'], hvezda: ['hvezda', 'oblibene', 'star'],
   };
   // CSV → [{text, autor, zdroj, stitky, poznamka}]; bez známé hlavičky: text, autor, zdroj, štítky
   function importCsv(text) {
@@ -305,7 +306,8 @@
     const maHlavicku = sl.text != null;
     const data = maHlavicku ? radky.slice(1) : radky;
     if (!maHlavicku) Object.assign(sl, { text: 0, autor: 1, zdroj: 2, stitky: 3 });
-    return data.map(r => {
+    // řádky výpisků ze čtečky (náš export) se přeskočí – patří čtečce, stejně jako u JSON
+    return data.filter(r => sl.druh == null || !/^(zvyrazneni|zalozka)$/.test(String(r[sl.druh] || '').trim())).map(r => {
       const g = k => (sl[k] != null ? String(r[sl[k]] || '') : '').trim();
       // výpisek ze čtečky v našem CSV: zdroj = dílo, kniha = název knihy
       const zdroj = g('kniha') ? [g('zdroj') !== g('kniha') ? g('zdroj') : '', g('kniha')].filter(Boolean).join(' – ') : g('zdroj');
@@ -412,10 +414,14 @@
      → {pt, radky, oriznuto} – když se nevejde ani minPt, poslední řádek končí „…“. */
   function prizpusob(text, w, h, mer, o = {}) {
     const maxPt = o.maxPt || 14, minPt = o.minPt || 6, rad = o.radkovani || 1.25;
-    for (let pt = maxPt; pt >= minPt; pt -= 0.5) {
-      const radky = zalom(text, w, s => mer(s, pt));
-      if (radky.length * pt * PT * rad <= h + 1e-6) return { pt, radky, oriznuto: false };
+    // binární hledání po 0,5 pt: s větším písmem text nikdy nezabere méně místa
+    const zkus = pt => { const radky = zalom(text, w, s => mer(s, pt)); return radky.length * pt * PT * rad <= h + 1e-6 ? radky : null; };
+    let dole = 0, nahore = Math.round((maxPt - minPt) * 2), nej = null;   // kroky od minPt
+    while (dole <= nahore) {
+      const st = (dole + nahore) >> 1, radky = zkus(minPt + st / 2);
+      if (radky) { nej = { pt: minPt + st / 2, radky, oriznuto: false }; dole = st + 1; } else nahore = st - 1;
     }
+    if (nej) return nej;
     let radky = zalom(text, w, s => mer(s, minPt));
     const max = Math.max(1, Math.floor((h + 1e-6) / (minPt * PT * rad)));
     if (radky.length > max) {
@@ -460,21 +466,23 @@
   /* ---------- kreslení karet (plátno náhledu i jsPDF přes rozhraní g) ----------
      g = {obdelnik(x, y, w, h, tloustka, barva, carkovane), cara(x1, y1, x2, y2, tloustka), text(s, x, y, pt, zarovnani, barva)}
      n = nastavení karet {ramecek: 'zadny'|'linka'|'dvojity'|'rohy', orezy}; vše v mm. */
+  const BARVY_KARTY = { text: '#1e1e1e', podpis: '#555555', cara: '#444444', orez: '#b4b4b4' };
   function kresliKartu(g, x, y, k, roz, n = {}) {
-    if (n.orezy) g.obdelnik(x, y, k.w, k.h, 0.1, '#b4b4b4', true);
+    const b = { ...BARVY_KARTY, ...(n.barvy || {}) };
+    if (n.orezy) g.obdelnik(x, y, k.w, k.h, 0.1, b.orez, true);
     const v = Math.max(2.5, Math.min(k.w, k.h) * 0.06);
-    if (n.ramecek === 'linka') g.obdelnik(x + v, y + v, k.w - 2 * v, k.h - 2 * v, 0.3, '#444444');
-    if (n.ramecek === 'dvojity') { g.obdelnik(x + v, y + v, k.w - 2 * v, k.h - 2 * v, 0.5, '#444444'); g.obdelnik(x + v + 1.2, y + v + 1.2, k.w - 2 * v - 2.4, k.h - 2 * v - 2.4, 0.2, '#444444'); }
+    if (n.ramecek === 'linka') g.obdelnik(x + v, y + v, k.w - 2 * v, k.h - 2 * v, 0.3, b.cara);
+    if (n.ramecek === 'dvojity') { g.obdelnik(x + v, y + v, k.w - 2 * v, k.h - 2 * v, 0.5, b.cara); g.obdelnik(x + v + 1.2, y + v + 1.2, k.w - 2 * v - 2.4, k.h - 2 * v - 2.4, 0.2, b.cara); }
     if (n.ramecek === 'rohy') {
       const d = Math.min(k.w, k.h) * 0.14;
       for (const [cx, cy, sx, sy] of [[x + v, y + v, 1, 1], [x + k.w - v, y + v, -1, 1], [x + v, y + k.h - v, 1, -1], [x + k.w - v, y + k.h - v, -1, -1]]) {
-        g.cara(cx, cy, cx + sx * d, cy, 0.4); g.cara(cx, cy, cx, cy + sy * d, 0.4);
-        g.cara(cx + sx * 1.5, cy + sy * 1.5, cx + sx * d * 0.6, cy + sy * 1.5, 0.15); g.cara(cx + sx * 1.5, cy + sy * 1.5, cx + sx * 1.5, cy + sy * d * 0.6, 0.15);
+        g.cara(cx, cy, cx + sx * d, cy, 0.4, b.cara); g.cara(cx, cy, cx, cy + sy * d, 0.4, b.cara);
+        g.cara(cx + sx * 1.5, cy + sy * 1.5, cx + sx * d * 0.6, cy + sy * 1.5, 0.15, b.cara); g.cara(cx + sx * 1.5, cy + sy * 1.5, cx + sx * 1.5, cy + sy * d * 0.6, 0.15, b.cara);
       }
     }
     const stred = roz.zarovnani === 'stred';
-    for (const r of roz.text.radky) g.text(r.s, x + r.x, y + r.y, roz.text.pt, stred ? 'center' : 'left', '#1e1e1e');
-    if (roz.podpis) for (const r of roz.podpis.radky) g.text(r.s, x + r.x, y + r.y, roz.podpis.pt, stred ? 'center' : 'right', '#555555');
+    for (const r of roz.text.radky) g.text(r.s, x + r.x, y + r.y, roz.text.pt, stred ? 'center' : 'left', b.text);
+    if (roz.podpis) for (const r of roz.podpis.radky) g.text(r.s, x + r.x, y + r.y, roz.podpis.pt, stred ? 'center' : 'right', b.podpis);
   }
 
   // vestavěná písma jsPDF neumějí češtinu → vložit TTF (pismo = {base64, rodina, soubor}), jako ostatní stránky webu
@@ -492,7 +500,7 @@
     const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
     const g = {
       obdelnik(x, y, w, h, tl, barva, carkovane) { doc.setLineWidth(tl); doc.setDrawColor(...rgb(barva)); doc.setLineDashPattern(carkovane ? [1.5, 1.5] : [], 0); doc.rect(x, y, w, h, 'S'); doc.setLineDashPattern([], 0); },
-      cara(x1, y1, x2, y2, tl) { doc.setLineWidth(tl); doc.setDrawColor(68, 68, 68); doc.line(x1, y1, x2, y2); },
+      cara(x1, y1, x2, y2, tl, barva) { doc.setLineWidth(tl); doc.setDrawColor(...rgb(barva)); doc.line(x1, y1, x2, y2); },
       text(s, x, y, pt, zarovnani, barva) { doc.setFontSize(pt); doc.setTextColor(...rgb(barva)); doc.text(s, x, y, { align: zarovnani }); },
     };
     archy.forEach((arch, a) => {
@@ -502,9 +510,49 @@
     return doc;
   }
 
+  /* ---------- kontext výpisku v textu knihy ----------
+     bloky = rozbor kapitoly (KRONIKY_JADRO.rozeber: [{typ, text}]), p = výpisek {blok, od, konec, text}.
+     Text knihy se mohl od zvýraznění změnit: nejdřív přesné místo, pak text v tomtéž odstavci, pak nejbližší odstavec s textem.
+     → null | {blok, posunuto, pred, odstavec: {pred, shoda, po}, po}  (pred/po = sousední textové odstavce nebo '') */
+  function kontext(bloky, p) {
+    const textove = i => bloky[i] && (bloky[i].typ === 'p' || bloky[i].typ === 'h') && bloky[i].text;
+    const hledany = String(p.text || '');
+    let i = -1, od = -1;
+    const b = bloky[p.blok];
+    if (b && textove(p.blok)) {
+      if (p.konec > p.od && b.text.slice(p.od, p.konec) === hledany) { i = p.blok; od = p.od; }
+      else if (hledany && b.text.includes(hledany)) { i = p.blok; od = b.text.indexOf(hledany); }
+    }
+    if (i < 0 && hledany) {
+      for (let d = 1; d < bloky.length && i < 0; d++) for (const j of [p.blok - d, p.blok + d]) {
+        if (textove(j) && bloky[j].text.includes(hledany)) { i = j; od = bloky[j].text.indexOf(hledany); break; }
+      }
+    }
+    if (i < 0) return null;
+    const t = bloky[i].text;
+    let pred = '', po = '';
+    for (let j = i - 1; j >= 0 && !pred; j--) if (textove(j)) pred = bloky[j].text;
+    for (let j = i + 1; j < bloky.length && !po; j++) if (textove(j)) po = bloky[j].text;
+    return { blok: i, posunuto: i !== p.blok || od !== p.od, pred, po,
+      odstavec: { pred: t.slice(0, od), shoda: t.slice(od, od + hledany.length), po: t.slice(od + hledany.length) } };
+  }
+
+  /* ---------- citát jako obrázek (PNG pro sdílení) ----------
+     rozměry v „mm“ jen jako poměr stran; obrázek má 1080 px na šířku */
+  const OBRAZKY = { ctverec: { nazev: 'Čtverec 1 : 1', w: 100, h: 100, podpisPt: 9, maxPt: 30 },
+    vyska: { nazev: 'Na výšku 4 : 5', w: 100, h: 125, podpisPt: 9, maxPt: 30 },
+    pribeh: { nazev: 'Příběh 9 : 16', w: 100, h: 177.78, podpisPt: 9, maxPt: 30 },
+    sirka: { nazev: 'Na šířku 16 : 9', w: 177.78, h: 100, podpisPt: 9, maxPt: 30 } };
+  const MOTIVY_OBRAZKU = { papir: { nazev: 'Papír', pozadi: '#fbf7ee', text: '#1e1e1e', podpis: '#5a5a5a', cara: '#8a7a5a' },
+    sepie: { nazev: 'Sépie', pozadi: '#efe1c6', text: '#3b2f22', podpis: '#6b5a45', cara: '#8b6f47' },
+    noc: { nazev: 'Noc', pozadi: '#1d2330', text: '#f2efe6', podpis: '#b8b4aa', cara: '#c9b27c' },
+    bila: { nazev: 'Bílá', pozadi: '#ffffff', text: '#111111', podpis: '#555555', cara: '#444444' } };
+  const SIRKA_OBRAZKU = 1080;
+  const velikostObrazku = f => { const o = OBRAZKY[f] || OBRAZKY.ctverec; return { w: SIRKA_OBRAZKU, h: Math.round(SIRKA_OBRAZKU * o.h / o.w), s: SIRKA_OBRAZKU / o.w }; };
+
   return {
     BARVY, BARVY_HEX, DRUHY, KARTY, A4, PT, normalizuj, stitkyZTextu, sber, rozeberDotaz, filtruj, serad, seznamKnih, seznamStitku,
     fnv, dnes, citatDne, nahodny, nazevKnihy, podpis, datum, exportMd, exportCsv, exportJson, ctiCsv, importCsv, importJson, slucCitaty,
-    rozvrh, naArchy, zalom, prizpusob, rozlozKartu, kresliKartu, pridejPismo, pdfKaret,
+    rozvrh, naArchy, zalom, prizpusob, rozlozKartu, kresliKartu, pridejPismo, pdfKaret, BARVY_KARTY, kontext, OBRAZKY, MOTIVY_OBRAZKU, velikostObrazku,
   };
 });

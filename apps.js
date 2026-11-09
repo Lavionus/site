@@ -964,6 +964,12 @@ const KATALOG_SEKCE = [
         "nazev": "🍎 Sezónní kalendář potravin",
         "stav": "vyvoj",
         "tagy": ["sezóna", "sezónní", "zelenina", "ovoce", "houby", "bylinky", "zvěřina", "ryby", "nákup", "kalendář", "lokální", "co vařit"]
+      },
+      {
+        "soubor": "obsah/svet_u_stolu.html",
+        "nazev": "🌍 Svět u stolu",
+        "stav": "vyvoj",
+        "tagy": ["svátky", "tradice", "zvyky", "rituál", "kalendář", "svět", "národní jídla", "Vánoce", "Velikonoce", "Nový rok", "čínský Nový rok", "ramadán", "Diwali", "recept", "mapa", "co se jí"]
       }
     ]
   },
@@ -1284,6 +1290,12 @@ const KATALOG_SEKCE = [
           "měsíc",
           "ryby"
         ]
+      },
+      {
+        "soubor": "obsah/cestovni_mapa.html",
+        "nazev": "🧭 Cestovatelská mapa",
+        "stav": "vyvoj",
+        "tagy": ["cestopis", "mapa", "trasa", "video", "animace", "YouTube", "vlog", "kreslená mapa", "inkoust", "akvarel", "stará mapa", "Bézier", "MP4", "WebM", "PNG", "Indiana Jones mapa", "cesta letadlem"]
       }
     ]
   },
@@ -1573,6 +1585,12 @@ const KATALOG_SEKCE = [
         "nazev": "🧝 Převodník písma",
         "stav": "beta",
         "tagy": ["fonty", "písmo", "elfí písmo", "tengwar", "tolkien", "pán prstenů", "runy", "futhark", "hlaholice", "azbuka", "cyrilice", "alfabeta", "řečtina", "ogam", "braille", "slepecké písmo", "hieroglyfy", "egypt", "fénické písmo", "etruské písmo", "gótské písmo", "morseovka", "přepis", "transliterace", "vlastní font"]
+      },
+      {
+        "soubor": "obsah/prekladac_svetu.html",
+        "nazev": "🪐 Překladač do sci-fi a fantasy jazyků",
+        "stav": "vyvoj",
+        "tagy": ["překladač", "vymyšlený jazyk", "conlang", "elfština", "elfí jazyk", "trpasličí", "skřetí", "dračí řeč", "mimozemský jazyk", "robot", "fantasy", "sci-fi", "jména postav", "RPG", "dračí doupě", "tengwar", "runy", "zaklínadla"]
       },
       {
         "soubor": "obsah/pismolijna.html",
@@ -2378,6 +2396,12 @@ const KATALOG_SEKCE = [
         "nazev": "♾️ Laboratoř nemožných tvarů",
         "stav": "vyvoj",
         "tagy": ["matematika", "topologie", "Möbiova páska", "Kleinova láhev", "Boyova plocha", "uzly", "minimální plochy", "Costa", "Gömböc", "fraktály", "Mandelbulb", "Menger", "Penrose", "iluze", "3D", "3D tisk", "STL", "výuka"]
+      },
+      {
+        "soubor": "obsah/vodopady.html",
+        "nazev": "💧 Simulátor vodopádů",
+        "stav": "vyvoj",
+        "tagy": ["voda", "vodopád", "tekutina", "proudění", "fyzika", "simulace", "částice", "SPH", "kaskáda", "přehrada", "řeka", "pískoviště", "výuka"]
       }
     ]
   },
@@ -2595,6 +2619,12 @@ const KATALOG_SEKCE = [
         "nazev": "🔗 Spojky profilů, trubek a latí",
         "stav": "vyvoj",
         "tagy": ["3D tisk", "STL", "3MF", "spojka", "hliníkový profil", "2020", "3030", "4040", "T-matice", "úhelník", "trubka", "jäkl", "uzel", "kopule", "stan", "latě", "rám"]
+      },
+      {
+        "soubor": "obsah/uhelniky.html",
+        "nazev": "📐 Úhelníky a odsávání frézky",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "úhelník", "vingl", "výztuha", "vruty", "zápustná hlava", "dřevo", "nábytek", "odsávání", "frézka", "stolní frézka", "pravítko", "hadice", "vysavač", "generátor"]
       },
       {
         "soubor": "obsah/bryle.html",

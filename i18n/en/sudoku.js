@@ -22,4 +22,6 @@ I18N.pridej('en', {
   'Pozastavit čas (P)': 'Pause timer (P)',
   'Pokračovat (P)': 'Resume (P)',
   'Pozastaveno': 'Paused',
+  'Top 10 časů': 'Top 10 times',
+  'Zatím žádné vyřešené sudoku.': 'No solved sudoku yet.',
 });

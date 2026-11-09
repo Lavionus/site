@@ -17,7 +17,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 let nast = (() => { try { return J.normalizuj(JSON.parse(localStorage.getItem(KLIC))); } catch (e) { return J.normalizuj({}); } })();
 const ulozNast = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch (e) { /* plné úložiště */ } };
 
-const S = { nazev: '', bajty: null, doc: null, plan: null, arch: 0 };
+const S = { nazev: '', bajty: null, doc: null, plan: null, arch: 0, rozmery: [] };
 
 /* ---------- IndexedDB: poslední PDF ---------- */
 function db() {
@@ -55,7 +55,7 @@ async function nactiPdf(bajty, nazev, ulozit = true) {
   catch (e) { Dialog.chyba('Soubor se nepodařilo otevřít jako PDF: ' + e.message); return; }
   if (doc.isEncrypted) { Dialog.chyba('PDF je zašifrované (chráněné heslem) – nejdřív ho uložte bez ochrany.'); return; }
   if (!doc.getPageCount()) { Dialog.chyba('PDF nemá žádné strany.'); return; }
-  Object.assign(S, { nazev, bajty, doc, arch: 0 });
+  Object.assign(S, { nazev, bajty, doc, arch: 0, rozmery: doc.getPages().map((_, i) => J.rozmerStrany(doc, i)) });
   $('souborNazev').textContent = `${nazev} · ${doc.getPageCount()} str.`;
   if (ulozit) ulozPosledni();
   prepocitej();
@@ -72,7 +72,8 @@ async function otevritSoubor(f) {
 function vyplnFormular() {
   document.querySelectorAll('[data-v]').forEach(el => {
     const v = nast[el.dataset.v];
-    if (el.type === 'checkbox') el.checked = !!v; else el.value = String(v);
+    if (el.type === 'checkbox') el.checked = !!v;
+    else if (el !== document.activeElement || el.tagName === 'SELECT') el.value = el.tagName === 'INPUT' ? String(v).replace('.', ',') : String(v);
   });
   document.querySelectorAll('[data-jen]').forEach(el => { el.hidden = !el.dataset.jen.split(' ').includes(nast.rezim); });
   document.querySelectorAll('[data-jen-vystup]').forEach(el => { el.hidden = el.dataset.jenVystup !== nast.vystup; });
@@ -87,8 +88,8 @@ function nastav(zmena) {
 }
 $('nastaveni').addEventListener('change', e => {
   const el = e.target.closest('[data-v]'); if (!el) return;
-  const v = el.type === 'checkbox' ? el.checked : ('cislo' in el.dataset ? Number(String(el.value).replace(',', '.')) : el.value);
-  nastav({ [el.dataset.v]: v });
+  nastav({ [el.dataset.v]: el.type === 'checkbox' ? el.checked : el.value });   // čísla (i s čárkou) převádí jádro
+  if (el.tagName === 'INPUT' && el.type !== 'checkbox') el.value = String(nast[el.dataset.v]).replace('.', ',');
 });
 
 /* ---------- přepočet a zobrazení ---------- */
@@ -97,7 +98,7 @@ function prepocitej() {
   document.querySelectorAll('[data-potreba="pdf"]').forEach(b => { b.disabled = !ma; });
   $('prazdne').hidden = ma; $('vysledek').hidden = !ma;
   if (!ma) { S.plan = null; return; }
-  S.plan = J.plan(S.doc.getPageCount(), J.rozmerStrany(S.doc), nast);
+  S.plan = J.plan(S.doc.getPageCount(), S.rozmery[0], nast);
   S.arch = Math.min(S.arch, S.plan.archy.length - 1);
   kresliSouhrn(); kresliTabulku(); nahled();
 }
@@ -112,6 +113,7 @@ function kresliSouhrn() {
     `arch ${J.ARCHY[o.arch].nazev.split(' ')[0]} <b>${g.W > g.H ? 'na šířku' : 'na výšku'}</b>`,
     `měřítko <b>${f1(g.m * 100)} %</b>`,
     `strana knihy po ořezu <b>${f1(p.kniha.s)} × ${f1(p.kniha.v)} mm</b>`,
+    `tloušťka bloku <b>≈ ${f1(p.tloustka)} mm</b>`,
     p.posunMax ? `creep nejvnitřnějšího listu <b>${(Math.round(p.posunMax * 100) / 100).toLocaleString('cs-CZ')} mm</b>` : ''
   ].filter(Boolean);
   $('souhrn').innerHTML = polozky.map(t => `<span>${t}</span>`).join('');
@@ -119,7 +121,12 @@ function kresliSouhrn() {
   const v = [...p.varovani];
   const zdrojRot = S.doc.getPages().some(pg => pg.getRotation().angle % 360);
   if (zdrojRot) v.push('Některé strany PDF mají nastavené otočení – vloží se neotočené. Uložte PDF bez otočení stran.');
-  $('varovani').innerHTML = v.map(t => `<p class="varovani">⚠ ${esc(t)}</p>`).join('');
+  const jine = J.ruzneRozmery(S.rozmery);
+  if (jine.length) v.push(`Strany ${jine.slice(0, 8).map(i => i + 1).join(', ')}${jine.length > 8 ? '…' : ''} mají jiný rozměr než první strana – vystředí se a oříznou na rozměr listu.`);
+  let html = v.map(t => `<p class="varovani">⚠ ${esc(t)}</p>`).join('');
+  const odhad = !o.spadavka && J.odhadSpadavky(S.rozmery[0]);
+  if (odhad) html += `<p class="varovani info">💡 Strany PDF mají ${f1(p.zdrojova.s)} × ${f1(p.zdrojova.v)} mm – vypadá to na formát ${f1(odhad.s)} × ${f1(odhad.v)} mm se spadávkou ${f1(odhad.spadavka)} mm (např. ze Sazby knihy). <button class="tl" type="button" data-prikaz="pouzijSpadavku" data-mm="${odhad.spadavka}">✂ Odříznout spadávku</button></p>`;
+  $('varovani').innerHTML = html;
   const hrana = o.preklapeni === 'dlouha' ? 'po dlouhé hraně' : 'po krátké hraně';
   $('poznOtoceni').textContent = rot
     ? `Rub je v PDF otočený o 180°, aby při obracení ${hrana} stál stejně jako líc.`
@@ -131,12 +138,24 @@ function kresliSouhrn() {
 function kresliTabulku() {
   const p = S.plan, sl = p.volby.rezim === 'slozky';
   $('prehled').tBodies[0].innerHTML = J.prehled(p).map((r, i) =>
-    `<tr data-arch="${i}"${i === S.arch ? ' class="aktivni"' : ''}><td>${r.cislo}</td>${sl ? `<td>${r.slozka}</td>` : ''}<td class="str">${esc(r.lic)}</td><td class="str">${esc(r.rub)}</td></tr>`).join('');
+    `<tr data-arch="${i}" tabindex="0"${i === S.arch ? ' class="aktivni"' : ''}><td>${r.cislo}</td>${sl ? `<td>${r.slozka}</td>` : ''}<td class="str">${esc(r.lic)}</td><td class="str">${esc(r.rub)}</td></tr>`).join('');
   $('vyberArchu').innerHTML = p.archy.map((a, i) => `<option value="${i}">${i + 1} / ${p.archy.length}</option>`).join('');
   $('vyberArchu').value = S.arch;
 }
 $('prehled').addEventListener('click', e => { const tr = e.target.closest('tr[data-arch]'); if (tr) jdiNa(+tr.dataset.arch); });
+$('prehled').addEventListener('keydown', e => { const tr = e.target.closest('tr[data-arch]'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); jdiNa(+tr.dataset.arch); } });
 $('vyberArchu').addEventListener('change', e => jdiNa(+e.target.value));
+// přejetí prstem po náhledu = další / předchozí arch (tablet)
+{
+  let x0 = null, y0 = 0;
+  const archy = document.querySelector('.archy');
+  archy.addEventListener('touchstart', e => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } else x0 = null; }, { passive: true });
+  archy.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) jdiNa(S.arch + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+}
 
 function jdiNa(i) {
   if (!S.plan) return;
@@ -167,6 +186,8 @@ async function kresliNahled() {
       const c = document.createElement('canvas');
       c.width = Math.round(vp.width); c.height = Math.round(vp.height);
       c.style.width = Math.round(vp.width / dpr) + 'px';
+      c.setAttribute('role', 'img');
+      c.setAttribute('aria-label', `${i === 1 ? 'Líc' : 'Rub'}: ${J.popisStrany(i === 1 ? a.lic : a.rub)}`);
       await str.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
       if (moje !== nahledCislo) { d.destroy(); return; }
       $(cil).replaceChildren(c);
@@ -190,21 +211,47 @@ function stahni(bajty, jmeno, typ = 'application/pdf') {
 const zaklad = () => (S.nazev || 'kniha').replace(/\.pdf$/i, '');
 const pripona = () => ({ sesitek: 'sesitek', slozky: 'slozky', lepena: 'listy', ctyri: '4na-list' }[nast.rezim]) + '-' + nast.arch;
 
+async function sestav(volby) {
+  const konec = prubeh('Skládám archy do PDF…');
+  try { return await J.sestavPdf(PDFLib, S.doc, S.plan, { pismo: await pismo(), nazev: zaklad(), ...volby }); }
+  catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); return null; }
+  finally { konec(); }
+}
 async function ulozit(oddelene) {
   if (!S.plan) return;
-  const konec = prubeh('Skládám archy do PDF…');
-  try {
-    const v = { pismo: await pismo(), nazev: zaklad() };
-    if (oddelene) {
-      stahni(await J.sestavPdf(PDFLib, S.doc, S.plan, { ...v, strany: 'lic' }), `${zaklad()}-archy-${pripona()}-1-lice.pdf`);
-      stahni(await J.sestavPdf(PDFLib, S.doc, S.plan, { ...v, strany: 'rub' }), `${zaklad()}-archy-${pripona()}-2-ruby.pdf`);
-      Dialog.info('Uloženo: líce a ruby zvlášť. Nejdřív vytiskněte líce, pak stoh obraťte a vytiskněte ruby.');
-    } else {
-      stahni(await J.sestavPdf(PDFLib, S.doc, S.plan, v), `${zaklad()}-archy-${pripona()}.pdf`);
-      Dialog.info(`Uloženo ${S.plan.archy.length * 2} stran PDF (${S.plan.archy.length} archů). Tiskněte oboustranně, 100 %.`);
-    }
-  } catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); }
-  finally { konec(); }
+  if (oddelene) {
+    const lic = await sestav({ strany: 'lic' }); if (!lic) return;
+    stahni(lic, `${zaklad()}-archy-${pripona()}-1-lice.pdf`);
+    // druhé stažení až po dalším klepnutí – Safari na iPadu jinak druhý soubor zahodí
+    if (!(await Dialog.potvrd('Líce jsou uložené. Uložit i ruby?', { ok: 'Uložit ruby', zrus: 'Později' }))) return;
+    const rub = await sestav({ strany: 'rub' }); if (!rub) return;
+    stahni(rub, `${zaklad()}-archy-${pripona()}-2-ruby.pdf`);
+    Dialog.info('Uloženo: líce a ruby zvlášť. Nejdřív vytiskněte líce, pak stoh obraťte a vytiskněte ruby.');
+  } else {
+    const b = await sestav({}); if (!b) return;
+    stahni(b, `${zaklad()}-archy-${pripona()}.pdf`);
+    Dialog.info(`Uloženo ${S.plan.archy.length * 2} stran PDF (${S.plan.archy.length} archů). Tiskněte oboustranně, 100 %.`);
+  }
+}
+async function ulozitVybrane() {
+  if (!S.plan) return;
+  const pocet = S.plan.archy.length;
+  const text = await Dialog.zeptej(`Které archy uložit? (1–${pocet}, např. 1, 3-5)`, String(S.arch + 1), { ok: 'Uložit' });
+  if (text === null) return;
+  let archy;
+  try { archy = J.rozsahArchu(text, pocet); } catch (e) { Dialog.chyba(e.message); return; }
+  const b = await sestav({ archy }); if (!b) return;
+  stahni(b, `${zaklad()}-archy-${String(text).replace(/[^\d-]+/g, '_')}.pdf`);
+  Dialog.info(`Uloženo ${archy.length} archů (${archy.length * 2} stran PDF).`);
+}
+// iPad / telefon: sdílecí nabídka systému (Tisk, Uložit do Souborů, AirDrop…)
+const umiSdilet = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File([new Uint8Array(1)], 'x.pdf', { type: 'application/pdf' })] })); } catch (e) { return false; } };
+async function sdilet() {
+  if (!S.plan) return;
+  const b = await sestav({}); if (!b) return;
+  const f = new File([b], `${zaklad()}-archy-${pripona()}.pdf`, { type: 'application/pdf' });
+  try { await navigator.share({ files: [f], title: f.name }); }
+  catch (e) { if (e.name !== 'AbortError') Dialog.chyba('Sdílení se nepodařilo: ' + e.message); }
 }
 
 /* ---------- příkazy ---------- */
@@ -225,6 +272,9 @@ const PRIKAZY = {
   },
   ulozit: () => ulozit(nast.vystup === 'oddelene'),
   ulozitOddelene: () => ulozit(true),
+  ulozitVybrane,
+  sdilet,
+  pouzijSpadavku: () => { const b = document.querySelector('[data-prikaz="pouzijSpadavku"]'); if (b) nastav({ spadavka: +b.dataset.mm }); },
   ulozitPrehled: () => S.plan && stahni(new TextEncoder().encode(J.prehledText(S.plan, S.nazev)), `${zaklad()}-prehled-archu.txt`, 'text/plain;charset=utf-8'),
   zavrit: async () => {
     if (!(await Dialog.potvrd('Zavřít PDF? Nastavení zůstane.', { ok: 'Zavřít', zrus: 'Ponechat' }))) return;
@@ -289,6 +339,7 @@ addEventListener('keydown', e => {
 });
 
 if (window.self === window.top) document.body.classList.add('samostatne');
+if (umiSdilet()) document.querySelectorAll('[data-prikaz="sdilet"]').forEach(b => { b.hidden = false; });
 vyplnFormular();
 prepocitej();
 idb('readonly', s => s.get('posledni')).then(z => { if (z && z.bajty && !S.doc) nactiPdf(z.bajty, z.nazev, false); }).catch(() => {});

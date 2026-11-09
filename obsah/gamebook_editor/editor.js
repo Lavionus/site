@@ -70,17 +70,22 @@ function zmena(o) {
   ulozPozdeji();
   if (o.panel) vykresliPanel();
 }
+let neulozeno = false;
 function ulozPozdeji() {
+  neulozeno = true;
   clearTimeout(tUloz);
   $('nazevProjektu').textContent = proj.nazev + ' · ukládám…';
   tUloz = setTimeout(ulozHned, 700);
 }
-async function ulozHned() {
-  clearTimeout(tUloz);
-  if (!proj) return;
-  proj.upraveno = Date.now();
-  try { await dbUloz(proj); $('nazevProjektu').textContent = proj.nazev + ' · uloženo'; }
-  catch (e) { $('nazevProjektu').textContent = proj.nazev + ' · neuloženo!'; Dialog.chyba('Projekt se nepodařilo uložit: ' + e.message); }
+/* Uloží jen skutečnou změnu (otevření či záloha projektu nemá měnit čas úpravy a pořadí v seznamu). */
+async function ulozHned(vynutit) {
+  clearTimeout(tUloz); tUloz = 0;
+  if (!proj || (!neulozeno && vynutit !== true)) return;
+  neulozeno = false;
+  const pr = proj;
+  pr.upraveno = Date.now();
+  try { await dbUloz(pr); if (pr === proj) $('nazevProjektu').textContent = pr.nazev + ' · uloženo'; }
+  catch (e) { if (pr === proj) { neulozeno = true; $('nazevProjektu').textContent = pr.nazev + ' · neuloženo!'; } Dialog.chyba('Projekt se nepodařilo uložit: ' + e.message); }
 }
 function tlacitkaHistorie() { $('btnZpet').disabled = !hist.lzeZpet(); $('btnZnovu').disabled = !hist.lzeZnovu(); }
 function obnov(s) {
@@ -134,12 +139,39 @@ async function importVestaveny(klic) {
     const r = await fetch(v.soubor);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = E.nactiSoubor(await r.text());
+    // vestavěný příběh už mezi projekty je → nabídnout otevření rozpracovaného místo nové kopie
+    const uz = (await dbVsechny()).filter(pr => pr.pribeh && pr.pribeh.id === d.pribeh.id).sort((a, b) => b.upraveno - a.upraveno)[0];
+    if (uz) {
+      if (await Dialog.potvrd('Projekt „' + uz.nazev + '“ s tímto příběhem už máš (upraven ' + new Date(uz.upraveno).toLocaleString('cs-CZ') + '). Otevřít ho?', { ok: 'Otevřít uložený', zrus: 'Ne' })) { await otevri(uz); return; }
+      if (!(await Dialog.potvrd('Načíst novou, čistou kopii příběhu jako další projekt?', { ok: 'Načíst kopii', zrus: 'Zrušit' }))) return;
+    }
     await vytvorAOtevri(d.pribeh, { nazev: d.pribeh.nazev || v.nazev, hlavicka: d.hlavicka, globalni: d.globalni });
     Dialog.info('Načteno: ' + proj.nazev + ' (' + Object.keys(P.sceny).length + ' scén)');
   } catch (e) { Dialog.chyba('Příběh se nepodařilo načíst: ' + e.message); }
 }
+async function obnovZalohu(data) {
+  const { projekty, vadnych } = E.projektyZeZalohy(data);
+  const mam = new Map((await dbVsechny()).map(pr => [pr.id, pr]));
+  let nove = 0, stejne = 0;
+  for (const pr of projekty) {
+    const m = mam.get(pr.id);
+    if (m && m.upraveno === pr.upraveno) { stejne++; continue; }
+    if (m) pr.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);   // jiná verze – nepřepisovat, uložit vedle
+    await dbUloz(pr); nove++;
+  }
+  Dialog.info('Obnoveno projektů: ' + nove + (stejne ? ', už uložených: ' + stejne : '') + (vadnych ? ', vadných: ' + vadnych : ''));
+  if (nove) { await seznamProjektu(); $('dlgProjekty').showModal(); }
+}
+async function zalohujVse() {
+  if (tZapis) zapisHistorie();
+  await ulozHned();
+  const vse = await dbVsechny();
+  stahni(JSON.stringify(E.zaloha(vse)), 'gamebooky_zaloha_' + new Date().toISOString().slice(0, 10) + '.json', 'application/json');
+  nast.zalohovano = Date.now(); ulozNast();
+}
 async function importText(text, jmeno) {
   try {
+    if (/^\s*\{/.test(text)) { let d = null; try { d = JSON.parse(text); } catch (e) { /* není čistý JSON */ } if (E.jeZaloha(d)) return obnovZalohu(d); }
     const d = E.nactiSoubor(text);
     await vytvorAOtevri(d.pribeh, { nazev: d.pribeh.nazev || jmeno, hlavicka: d.hlavicka, globalni: d.globalni });
     Dialog.info('Načteno ze souboru: ' + Object.keys(P.sceny).length + ' scén');
@@ -242,7 +274,7 @@ function kresliUzly() {
       <text class="utext" x="${-W / 2 + 10}" y="${-H / 2 + 34}">${esc(r1)}</text>
       <text class="utext" x="${-W / 2 + 10}" y="${-H / 2 + 48}">${esc(r2)}</text>
       ${problemy[id] ? `<text class="${problemy[id] === 'chyba' ? 'chyba-znak' : 'var-znak'}" x="${W / 2 - 18}" y="${-H / 2 + 17}">⚠</text>` : ''}
-      ${s.konec == null ? `<circle class="uchyt" cx="${ux}" cy="${uy}" r="8"/><text class="uchyt-plus" x="${ux - 4}" y="${uy + 4}">+</text>` : ''}
+      ${s.konec == null ? `<circle class="uchyt" cx="${ux}" cy="${uy}" r="8"/><text class="uchyt-plus" x="${ux - 4}" y="${uy + 4}">+</text><circle class="uchyt uchyt-zona" cx="${ux}" cy="${uy}" r="18"/>` : ''}
     </g>`;
   }
   $('gUzly').innerHTML = h;
@@ -320,29 +352,48 @@ function zoomKolem(f, cx, cy) {
 }
 const naSvet = (cx, cy) => { const r = svg.getBoundingClientRect(); return { x: (cx - r.left - pohled.x) / pohled.k, y: (cy - r.top - pohled.y) / pohled.k }; };
 
-/* ---------- myš a dotyk ---------- */
+/* ---------- myš a dotyk ----------
+   Jeden prst / myš: tah uzlu, tah z úchytu (nová volba), posun plochy. Dva prsty: zoom a posun zároveň.
+   Dvojí klepnutí prstem (iPad nemá spolehlivý dblclick): na uzel = upravit text, do prázdna = nová scéna.
+   Úchyt na dotyku reaguje jen u vybrané scény (jinak by klepnutí na spodní okraj nechtěně táhlo spojení). */
 const prsty = new Map();
-let tah = null;
+let tah = null, posledniKlepnuti = null, posledniDotyk = 0;
+function zacniStisk() {
+  const [a, b] = [...prsty.values()], r = svg.getBoundingClientRect();
+  if (tah && tah.druh === 'uzel' && tah.pohyb) zmena({ hned: true });
+  $('gNova').innerHTML = ''; svg.classList.remove('tazeni');
+  tah = { druh: 'stisk', d: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), k: pohled.k, px: pohled.x, py: pohled.y,
+    mx: (a.x + b.x) / 2 - r.left, my: (a.y + b.y) / 2 - r.top };
+}
 svg.addEventListener('pointerdown', e => {
   if (e.button > 0) return;
+  if (e.pointerType !== 'mouse') posledniDotyk = Date.now();
   prsty.set(e.pointerId, { x: e.clientX, y: e.clientY });
   try { svg.setPointerCapture(e.pointerId); } catch (er) { /* syntetická událost */ }
-  if (prsty.size === 2) { const [a, b] = [...prsty.values()]; tah = { druh: 'stisk', d: Math.hypot(a.x - b.x, a.y - b.y), k: pohled.k }; return; }
-  const uchyt = e.target.closest('.uchyt'), uzel = e.target.closest('.uzel');
+  if (prsty.size >= 2) return zacniStisk();
+  const uzel = e.target.closest('.uzel');
+  const uchyt = e.target.closest('.uchyt') && uzel && (e.pointerType === 'mouse' || uzel.dataset.id === vybrana);
   const w = naSvet(e.clientX, e.clientY);
-  if (uchyt && uzel) tah = { druh: 'spoj', z: uzel.dataset.id, sx: e.clientX, sy: e.clientY, pohyb: false };
+  if (uchyt) tah = { druh: 'spoj', z: uzel.dataset.id, sx: e.clientX, sy: e.clientY, pohyb: false };
   else if (uzel) { const q = proj.pozice[uzel.dataset.id]; tah = { druh: 'uzel', id: uzel.dataset.id, dx: w.x - q.x, dy: w.y - q.y, sx: e.clientX, sy: e.clientY, pohyb: false }; }
   else { tah = { druh: 'posun', sx: e.clientX, sy: e.clientY, px: pohled.x, py: pohled.y, pohyb: false }; svg.classList.add('tazeni'); }
+  tah.dotyk = e.pointerType !== 'mouse';
 });
 svg.addEventListener('pointermove', e => {
   if (!prsty.has(e.pointerId) || !tah) return;
   prsty.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (tah.druh === 'stisk' && prsty.size === 2) {
+  if (tah.druh === 'stisk') {
+    if (prsty.size < 2) return;
     const [a, b] = [...prsty.values()], r = svg.getBoundingClientRect();
-    zoomKolem(tah.k * Math.hypot(a.x - b.x, a.y - b.y) / tah.d / pohled.k, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+    const k = Math.max(0.05, Math.min(3, tah.k * Math.hypot(a.x - b.x, a.y - b.y) / tah.d));
+    const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+    pohled.k = k;
+    pohled.x = mx - (tah.mx - tah.px) * k / tah.k;
+    pohled.y = my - (tah.my - tah.py) * k / tah.k;
+    nastavPohled();
     return;
   }
-  if (!tah.pohyb && Math.hypot(e.clientX - tah.sx, e.clientY - tah.sy) < 4) return;
+  if (!tah.pohyb && Math.hypot(e.clientX - tah.sx, e.clientY - tah.sy) < (tah.dotyk ? 8 : 4)) return;
   tah.pohyb = true;
   if (tah.druh === 'posun') { pohled.x = tah.px + e.clientX - tah.sx; pohled.y = tah.py + e.clientY - tah.sy; nastavPohled(); }
   else if (tah.druh === 'uzel') {
@@ -355,17 +406,33 @@ svg.addEventListener('pointermove', e => {
     $('gNova').innerHTML = `<path class="hrana nova" d="M${sx},${sy} L${w.x},${w.y}" marker-end="url(#sAkt)"/>`;
   }
 });
+function upravText(id) { vyber(id); prepniZalozku('scena'); const t = document.querySelector('[data-k="text"]'); if (t) t.focus(); }
+/* Dvojí klepnutí prstem: vrací true, když šlo o druhé klepnutí (akce provedena). */
+function dvojKlepnuti(e, id) {
+  const ted = Date.now(), p = posledniKlepnuti;
+  if (p && ted - p.cas < 400 && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 30 && p.id === id) {
+    posledniKlepnuti = null;
+    if (id) upravText(id);
+    else { const w = naSvet(e.clientX, e.clientY); novaScena({ poz: { x: Math.round(w.x), y: Math.round(w.y) } }); }
+    return true;
+  }
+  posledniKlepnuti = { cas: ted, x: e.clientX, y: e.clientY, id };
+  return false;
+}
 async function konecTahu(e) {
   prsty.delete(e.pointerId);
   svg.classList.remove('tazeni');
-  const t = tah; tah = null;
-  if (!t || t.druh === 'stisk') return;
+  const t = tah;
+  if (t && t.druh === 'stisk') { if (!prsty.size) tah = null; return; }
+  tah = null;
+  if (!t) return;
+  if (t.druh === 'posun') { if (!t.pohyb && t.dotyk) dvojKlepnuti(e, null); return; }
   if (t.druh === 'uzel') {
     if (t.pohyb) zmena({ hned: true });
-    else vyber(t.id);
+    else if (!(t.dotyk && dvojKlepnuti(e, t.id))) vyber(t.id);
   } else if (t.druh === 'spoj') {
     $('gNova').innerHTML = '';
-    if (!t.pohyb) { vyber(t.z); return; }
+    if (!t.pohyb) { if (!(t.dotyk && dvojKlepnuti(e, t.z))) vyber(t.z); return; }
     const cil = document.elementFromPoint(e.clientX, e.clientY);
     const uzel = cil && cil.closest && cil.closest('.uzel');
     let id;
@@ -376,22 +443,26 @@ async function konecTahu(e) {
     vybrana = t.z;
     zmena({ hned: true });
     prepniZalozku('scena');
-    setTimeout(() => { const v = document.querySelectorAll('.volba'); const posl = v[v.length - 1]; if (posl) { posl.scrollIntoView({ block: 'nearest' }); const i = posl.querySelector('input'); if (i) i.focus(); } }, 30);
+    setTimeout(() => { const v = document.querySelectorAll('.volba'); const posl = v[v.length - 1]; if (posl) { posl.scrollIntoView({ block: 'nearest' }); const i = posl.querySelector('input'); if (i && !t.dotyk) i.focus(); } }, 30);
   }
 }
 svg.addEventListener('pointerup', konecTahu);
-svg.addEventListener('pointercancel', e => { prsty.delete(e.pointerId); tah = null; $('gNova').innerHTML = ''; svg.classList.remove('tazeni'); });
+svg.addEventListener('pointercancel', e => { prsty.delete(e.pointerId); if (!prsty.size) tah = null; $('gNova').innerHTML = ''; svg.classList.remove('tazeni'); });
 svg.addEventListener('wheel', e => {
   e.preventDefault();
   const r = svg.getBoundingClientRect();
   zoomKolem(Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)), e.clientX - r.left, e.clientY - r.top);
 }, { passive: false });
 svg.addEventListener('dblclick', e => {
+  if (Date.now() - posledniDotyk < 800) return;   // dotyk řeší dvojKlepnuti, ať nevzniknou dvě scény
   const uzel = e.target.closest('.uzel');
-  if (uzel) { vyber(uzel.dataset.id); prepniZalozku('scena'); const t = document.querySelector('[data-k="text"]'); if (t) t.focus(); return; }
+  if (uzel) return upravText(uzel.dataset.id);
   const w = naSvet(e.clientX, e.clientY);
   novaScena({ poz: { x: Math.round(w.x), y: Math.round(w.y) } });
 });
+// po dotyku prohlížeč posílá ještě náhradní mousedown/click – ten by vzal fokus z textu otevřeného dvojím klepnutím
+svg.addEventListener('touchend', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+svg.addEventListener('contextmenu', e => { if (posledniDotyk && Date.now() - posledniDotyk < 1500) e.preventDefault(); });
 
 /* ---------- minimapa ---------- */
 const mm = $('minimapa');
@@ -603,8 +674,8 @@ function volbaHtml(s, i) {
       <select class="vstup" style="flex:0 0 auto;width:auto" data-akce="druhVolby" data-i="${i}" aria-label="Druh volby">
         <option value="cil"${d === 'cil' ? ' selected' : ''}>→ cíl</option><option value="zkouska"${d === 'zkouska' ? ' selected' : ''}>🎲 zkouška</option><option value="boj"${d === 'boj' ? ' selected' : ''}>⚔ souboj</option></select></div>
     ${telo}
-    <details class="blok"${maPodm ? ' open' : ''}><summary>Podmínka: <span data-i18n="ne">${esc(souhrnPodminky(v.pokud))}</span></summary>${pokudHtml(s, c + '.pokud')}</details>
-    <details class="blok"${maEf ? ' open' : ''}><summary>Efekty volby: <span data-i18n="ne">${esc(souhrnEfektu(v.efekty))}</span></summary>${efektyHtml(s, c + '.efekty')}</details>
+    <details class="blok" data-blok="${c}.pokud"${maPodm ? ' open' : ''}><summary>Podmínka: <span data-i18n="ne">${esc(souhrnPodminky(v.pokud))}</span></summary>${pokudHtml(s, c + '.pokud')}</details>
+    <details class="blok" data-blok="${c}.efekty"${maEf ? ' open' : ''}><summary>Efekty volby: <span data-i18n="ne">${esc(souhrnEfektu(v.efekty))}</span></summary>${efektyHtml(s, c + '.efekty')}</details>
     <div class="volba-akce">
       <button type="button" class="btn mini" data-akce="volbaNahoru" data-i="${i}" title="Posunout nahoru" aria-label="Posunout nahoru"${i ? '' : ' disabled'}>↑</button>
       <button type="button" class="btn mini" data-akce="volbaDolu" data-i="${i}" title="Posunout dolů" aria-label="Posunout dolů"${i < s.volby.length - 1 ? '' : ' disabled'}>↓</button>
@@ -624,9 +695,35 @@ function vykresliPanel() {
   const t = $('teloPanelu');
   const top = t.scrollTop;
   const f = { scena: panelScena, kontrola: panelKontrola, hra: panelHra, pribeh: panelPribeh }[nast.zalozka] || panelScena;
+  const akt = document.activeElement && t.contains(document.activeElement) ? document.activeElement : null;
+  const aktK = akt && (akt.dataset.k || (akt.dataset.chip && akt.closest('.chips').dataset.k + '|chip'));
   t.innerHTML = f();
+  // rozbalené/sbalené bloky si pamatovat (jinak by se prázdný blok po každé změně zavřel)
+  const pre = predponaBloku();
+  t.querySelectorAll('details[data-blok]').forEach(d => { const o = bloky.get(pre + d.dataset.blok); if (o != null) d.open = o; });
+  // fokus zůstane ve stejném poli (změna jednoho čísla nepřeskočí jinam)
+  if (aktK) {
+    const el = aktK.endsWith('|chip') ? t.querySelector(`.chips[data-k="${CSS.escape(aktK.slice(0, -5))}"] input`) : t.querySelector(`[data-k="${CSS.escape(aktK)}"]:not(.chips)`);
+    if (el) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }
+  }
   t.scrollTop = top;
 }
+/* Souhrn v nadpisu bloku (Podmínka: …, Efekty: …) přepsat na místě – překreslení panelu při opuštění pole
+   by na dotyku zahodilo klepnutí do dalšího pole. */
+function obnovSouhrn(el) {
+  const d = el.closest && el.closest('details[data-blok]'), sp = d && d.querySelector('summary > span');
+  if (!sp) return;
+  const k = d.dataset.blok;
+  let v;
+  if (k.startsWith('pouziti-')) v = souhrnEfektu(((P.predmety || {})[k.slice(8)] || {}).pouziti);
+  else if (k.endsWith('pokud')) v = souhrnPodminky(ctiCestu(P.sceny[vybrana] || {}, k));
+  else if (k.endsWith('efekty')) v = souhrnEfektu(ctiCestu(P.sceny[vybrana] || {}, k));
+  else return;
+  sp.textContent = v;
+}
+const bloky = new Map();
+const predponaBloku = () => nast.zalozka + ':' + (nast.zalozka === 'scena' ? vybrana : '') + ':';
+$('teloPanelu').addEventListener('toggle', e => { const d = e.target; if (d.dataset && d.dataset.blok) bloky.set(predponaBloku() + d.dataset.blok, d.open); }, true);
 function panelScena() {
   const s = vybrana && P.sceny[vybrana];
   if (!s) return `<div class="prazdne">Vyber scénu v grafu, nebo vytvoř novou.<br><br><button class="btn hlavni" data-akce="novaScena">✚ Nová scéna</button></div>`;
@@ -651,15 +748,15 @@ function panelScena() {
   </div>
   ${obr}
   <label class="pole"><span>Text scény (odstavce odděl prázdným řádkem)</span><textarea class="vstup" data-k="text" data-t="str" rows="10" data-i18n="ne">${esc(s.text || '')}</textarea><span class="pocet-slov" id="pocetSlov">${slov} slov</span></label>
-  <details class="blok"${s.efekty && Object.keys(s.efekty).length ? ' open' : ''}><summary>Efekty při první návštěvě: <span data-i18n="ne">${esc(souhrnEfektu(s.efekty))}</span></summary>${efektyHtml(s, 'efekty')}</details>
-  <details class="blok"${s.boj ? ' open' : ''}><summary>Souboj hned při vstupu${s.boj ? ': <span data-i18n="ne">' + esc(s.boj.jmeno || '') + '</span>' : ''}</summary>
+  <details class="blok" data-blok="efekty"${s.efekty && Object.keys(s.efekty).length ? ' open' : ''}><summary>Efekty při první návštěvě: <span data-i18n="ne">${esc(souhrnEfektu(s.efekty))}</span></summary>${efektyHtml(s, 'efekty')}</details>
+  <details class="blok" data-blok="boj"${s.boj ? ' open' : ''}><summary>Souboj hned při vstupu${s.boj ? ': <span data-i18n="ne">' + esc(s.boj.jmeno || '') + '</span>' : ''}</summary>
     <label class="zatrzitko"><input type="checkbox" data-akce="prepBoj"${s.boj ? ' checked' : ''}> Scéna začíná soubojem</label>${s.boj ? bojHtml(s, 'boj') : ''}</details>
   <div class="sekce">Volby (${(s.volby || []).length})</div>
   ${s.konec != null && !(s.volby || []).length ? '<p class="popis-pole">Koncová scéna nemá volby – hra tu skončí.</p>' : (s.volby || []).map((v, i) => volbaHtml(s, i)).join('')}
   ${s.konec == null ? `<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" data-akce="pridatVolbu">✚ Volba</button><button class="btn" data-akce="pridatVolbuNova">✚ Volba do nové scény</button></div>` : ''}
   <div class="sekce">Odkazy sem (${odk.length})</div>
   <div class="odkazy">${odk.length ? odk.map(o => o.scena ? `<button class="odkaz" data-akce="jdi" data-cil="${esc(o.scena)}">${esc(o.scena)}</button> <span data-i18n="ne">${esc(o.kde)}</span>` : `<b>${esc(o.kde)}</b>`).join('<br>') : 'Žádná scéna sem nevede.'}</div>
-  <details class="blok" style="margin-top:14px"><summary>{ } Surový JSON scény (pokročilé)</summary>
+  <details class="blok" data-blok="surovy" style="margin-top:14px"><summary>{ } Surový JSON scény (pokročilé)</summary>
     <textarea class="vstup surovy" id="surovyScena" spellcheck="false" data-i18n="ne">${esc(JSON.stringify(s, null, 2))}</textarea>
     <div style="margin-top:5px"><button class="btn" data-akce="pouzitSurovyScena">Použít JSON</button></div></details>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">
@@ -701,7 +798,7 @@ function panelKontrola() {
     ${tile(f(st.prumernaCesta), 'průměrná cesta ke konci')}${tile(st.nejdelsiCesta ? st.nejdelsiCesta.delka : '–', 'nejdelší cesta')}${tile(st.nejkratsiVyhra ? st.nejkratsiVyhra.delka : '–', 'nejkratší cesta k výhře')}
   </div>
   <p class="popis-pole">Cesty se počítají v krocích (volbách) od startu. Průměr = průměr nejkratších cest ke všem dosažitelným koncům; nejdelší cesta nepoužije žádnou scénu dvakrát.</p>
-  ${st.nejdelsiCesta ? `<details class="blok"><summary>Nejdelší cesta (${st.nejdelsiCesta.delka} kroků)</summary><div class="cesta" data-i18n="ne">${st.nejdelsiCesta.cesta.map(odkazId).join(' → ')}</div></details>` : ''}
+  ${st.nejdelsiCesta ? `<details class="blok" data-blok="cesta"><summary>Nejdelší cesta (${st.nejdelsiCesta.delka} kroků)</summary><div class="cesta" data-i18n="ne">${st.nejdelsiCesta.cesta.map(odkazId).join(' → ')}</div></details>` : ''}
   <div class="sekce">Nálezy kontroly (${n.length})</div>
   <div class="filtr-nalezu">${[['vse', 'Vše ' + n.length], ['chyba', '⛔ Chyby ' + pocty.chyba], ['varovani', '⚠ Varování ' + pocty.varovani], ['info', 'ℹ Info ' + pocty.info]].map(([k, t]) => `<button class="tl" data-akce="filtr" data-f="${k}" aria-pressed="${filtrNalezu === k}">${t}</button>`).join('')}</div>
   ${filtr.length ? `<ul class="nalezy">${filtr.map(x => `<li class="u-${x.uroven}" ${x.scena ? `data-akce="jdi" data-cil="${esc(x.scena)}"` : ''}><span class="ik">${x.uroven === 'chyba' ? '⛔' : x.uroven === 'varovani' ? '⚠' : 'ℹ'}</span><span class="sc" data-i18n="ne">${esc(x.scena || '')}</span><span>${esc(x.text)}</span></li>`).join('')}</ul>` : '<p>✓ Nic k hlášení.</p>'}
@@ -803,10 +900,10 @@ function panelPribeh() {
       <button class="btn mini" data-akce="prejmenovatPredmet" data-x="${esc(k)}" title="Přejmenovat klíč všude">✎</button>
       <button class="btn mini nebezpecne" data-akce="smazatPredmet" data-x="${esc(k)}" title="Smazat předmět">🗑</button><span class="pocet">ve scénách: ${u.length}×</span></div>
     <div class="radek">${pole('Název (s emoji)', vstup(P, 'predmety.' + k + '.nazev', 'str', 'data-i18n="ne"'))}${pole('Popis', vstup(P, 'predmety.' + k + '.popis', 'str', 'data-i18n="ne"'))}</div>
-    <details class="blok"${pr[k].pouziti ? ' open' : ''}><summary>Použití z torby: <span data-i18n="ne">${esc(souhrnEfektu(pr[k].pouziti))}</span></summary>
+    <details class="blok" data-blok="pouziti-${esc(k)}"${pr[k].pouziti ? ' open' : ''}><summary>Použití z torby: <span data-i18n="ne">${esc(souhrnEfektu(pr[k].pouziti))}</span></summary>
       <div class="radek-5">${E.VLASTNOSTI.map(v => pole(NAZVY_VL[v], cislo(P, 'predmety.' + k + '.pouziti.' + v, 'placeholder="±0"'))).join('')}</div>
       <label class="zatrzitko"><input type="checkbox" data-k="predmety.${esc(k)}.spotrebni" data-t="bool"${pr[k].spotrebni ? ' checked' : ''}> Použitím se spotřebuje</label></details>
-    ${u.length ? `<details class="blok"><summary>Kde se používá</summary><div class="odkazy">${u.map(o => `<button class="odkaz" data-akce="jdi" data-cil="${esc(o.scena)}">${esc(o.scena)}</button> <span data-i18n="ne">${esc(o.kde)}</span>`).join('<br>')}</div></details>` : ''}
+    ${u.length ? `<details class="blok" data-blok="kde-${esc(k)}"><summary>Kde se používá</summary><div class="odkazy">${u.map(o => `<button class="odkaz" data-akce="jdi" data-cil="${esc(o.scena)}">${esc(o.scena)}</button> <span data-i18n="ne">${esc(o.kde)}</span>`).join('<br>')}</div></details>` : ''}
     </div>`; }).join('')}
   <button class="btn" data-akce="novyPredmet">✚ Nový předmět</button>
 
@@ -877,6 +974,7 @@ telo.addEventListener('change', e => {
   if (!el.dataset.k) return;
   if (el.dataset.t === 'id' && el.closest('[data-koren="hra"]')) { hra.nast[el.dataset.k] = el.value.trim(); return vykresliPanel(); }
   if (zapisPole(el)) zmena({ hned: true, panel: el.tagName === 'SELECT' || el.dataset.t === 'id' || el.type === 'checkbox' });
+  obnovSouhrn(el);
 });
 telo.addEventListener('keydown', e => {
   if (e.target.dataset.chip && e.key === 'Enter') { e.preventDefault(); pridejChip(e.target); }
@@ -1069,7 +1167,7 @@ async function prikaz(p) {
     case 'novyProjekt': return vytvorAOtevri(E.prazdnyPribeh(), { nazev: 'Nový příběh' });
     case 'prejmenovatProjekt': {
       const n = await Dialog.zeptej('Název projektu:', proj.nazev, { ok: 'Uložit' });
-      if (n && n.trim()) { proj.nazev = n.trim(); ulozHned(); }
+      if (n && n.trim()) { proj.nazev = n.trim(); ulozHned(true); }
       return;
     }
     case 'duplikovatProjekt': {
@@ -1086,6 +1184,12 @@ async function prikaz(p) {
     case 'nacistSoubor': return $('soubor').click();
     case 'exportJs': return stahni(exportJs(), jmenoSouboru() + '.js', 'text/javascript');
     case 'exportJson': return stahni(E.doJson(P), jmenoSouboru() + '.json', 'application/json');
+    case 'exportMd': case 'exportMdZamichat': {
+      const r = E.doMarkdown(P, { zamichat: p === 'exportMdZamichat', seed: Date.now() % 100000 });
+      stahni(r.md, jmenoSouboru() + (p === 'exportMdZamichat' ? '_tisk_zamichane' : '_tisk') + '.md', 'text/markdown');
+      return Dialog.info('Staženo: ' + Object.keys(r.cisla).length + ' oddílů. Soubor jde vložit do Sazby knihy.');
+    }
+    case 'zalohovat': return zalohujVse();
     case 'kopirovatJs':
       try { await navigator.clipboard.writeText(exportJs()); Dialog.info('Zkopírováno do schránky.'); }
       catch (e) { Dialog.chyba('Schránka není dostupná – použij stažení souboru.'); }
@@ -1131,12 +1235,44 @@ addEventListener('keydown', e => {
   if (k === '+' || k === '=') return prikaz('priblizit');
   if (k === '-' || k === '−') return prikaz('oddalit');
   if (k === '?') return prikaz('napoveda');
+  const naGrafu = t === document.body || t === document.documentElement || (t.closest && t.closest('#platno') && !t.closest('button'));
+  if (naGrafu && k.startsWith('Arrow') && vybrana) { e.preventDefault(); return sipka(k); }
+  if (naGrafu && k === 'Enter' && vybrana) { e.preventDefault(); return upravText(vybrana); }
 });
-addEventListener('beforeunload', () => { if (tZapis) zapisHistorie(); if (proj && tUloz) ulozHned(); });
+/* iPad/Safari beforeunload často nevolá – ukládat i při skrytí stránky (přepnutí aplikace, zavření panelu) */
+function ulozPriOdchodu() { if (tZapis) zapisHistorie(); if (proj && neulozeno) ulozHned(); }
+addEventListener('beforeunload', ulozPriOdchodu);
+addEventListener('pagehide', ulozPriOdchodu);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') ulozPriOdchodu(); });
+
+/* ---------- šipky: pohyb výběru po grafu ----------
+   ↓ = první scéna, kam vede volba; ↑ = první scéna, která sem vede; ←/→ = nejbližší scéna vlevo/vpravo ve stejné výšce
+   (u rozložení zleva doprava se role os prohodí). */
+function sipka(k) {
+  const vpravo = nast.smer === 'vpravo';
+  const map = vpravo ? { ArrowRight: 'dal', ArrowLeft: 'zpet', ArrowUp: 'pred', ArrowDown: 'po' } : { ArrowDown: 'dal', ArrowUp: 'zpet', ArrowLeft: 'pred', ArrowRight: 'po' };
+  const smer = map[k];
+  let cil = null;
+  if (smer === 'dal') cil = (E.sousede(P).ven[vybrana] || [])[0];
+  else if (smer === 'zpet') cil = (E.sousede(P).dovnitr[vybrana] || [])[0];
+  else {
+    const q = proj.pozice[vybrana], znam = smer === 'po' ? 1 : -1;
+    let nej = Infinity;
+    for (const [id, r] of Object.entries(proj.pozice)) {
+      if (id === vybrana || !P.sceny[id]) continue;
+      const hl = vpravo ? (r.y - q.y) * znam : (r.x - q.x) * znam, bok = Math.abs(vpravo ? r.x - q.x : r.y - q.y);
+      if (hl <= 0) continue;
+      const d = hl + bok * 3;
+      if (d < nej) { nej = d; cil = id; }
+    }
+  }
+  if (cil && P.sceny[cil]) vyber(cil);
+}
 
 /* ---------- start ---------- */
 (async function start() {
   prepinace();
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* nepodporováno */ }
   try {
     let pr = nast.posledni ? await dbNacti(nast.posledni) : null;
     if (!pr) { const vse = (await dbVsechny()).sort((a, b) => b.upraveno - a.upraveno); pr = vse[0]; }

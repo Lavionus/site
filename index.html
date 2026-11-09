@@ -753,7 +753,7 @@
 
       <main class="pracovni-plocha">
         <nav class="drobky" id="drobky" aria-label="Umístění na webu"></nav>
-        <iframe name="okno" src="obsah/aplikace.html" title="Aktivní aplikace" allow="fullscreen; autoplay; encrypted-media; picture-in-picture; camera; screen-wake-lock" allowfullscreen></iframe>
+        <iframe name="okno" src="obsah/aplikace.html" title="Aktivní aplikace" allow="fullscreen; autoplay; encrypted-media; picture-in-picture; camera; screen-wake-lock; local-fonts; clipboard-write" allowfullscreen></iframe>
       </main>
     </div>
   </div>
@@ -1162,7 +1162,8 @@
       if (sekceEl) setCollapsed(sekceEl, false);
       saveCollapsed();
       aplikujFiltr();
-      const cil = (p && sekceEl.querySelector(`a[data-page="${CSS.escape(p.soubor)}"]`))
+      if (!blok) return;
+      const cil = (p && sekceEl && sekceEl.querySelector(`a[data-page="${CSS.escape(p.soubor)}"]`))
         || (sekceEl && !sekceEl.classList.contains('jedina') && sekceEl.querySelector('h3'))
         || blok.querySelector('h2');
       if (p) { cil.scrollIntoView({ block: 'nearest' }); return; }
@@ -1182,12 +1183,19 @@
       stavAplikace.title = stav.popis;
     }
 
+    // poškozený odkaz (useknuté „%E9“ při kopírování) nesmí shodit rozcestník – pak se bere hash, jak je
+    function hashStranky() {
+      const h = location.hash.slice(1);
+      try { return decodeURIComponent(h); } catch (e) { return h; }
+    }
     window.addEventListener('hashchange', () => {
-      otevri(decodeURIComponent(location.hash.slice(1)) || DOMOVSKA);
+      otevri(hashStranky() || DOMOVSKA);
     });
 
     // dashboard (v iframe) může požádat o otevření aplikace
+    // jen od vlastních stránek webu (iframe, okno z něj) – ne od cizích rámců vložených v aplikacích (YouTube…)
     window.addEventListener('message', e => {
+      if (e.origin !== location.origin && !(location.protocol === 'file:' && e.origin === 'null')) return;
       if (e.data && typeof e.data.otevri === 'string') {
         location.hash = e.data.otevri;
         otevri(e.data.otevri);
@@ -1507,7 +1515,7 @@
 
     /* ---- Start ---- */
     renderMenu();
-    const zHashe = decodeURIComponent(location.hash.slice(1));
+    const zHashe = hashStranky();
     // false = obnovení stránky, ne akce uživatele -> sbalení sekcí zůstane, jak si ho nastavil
     otevri(zHashe || precti(sessionStorage, KEY_PAGE) || DOMOVSKA, false);
 

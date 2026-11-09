@@ -239,6 +239,24 @@ modelu. Headless testy běží ve výchozím DPI 1, takže na to nepřijdou — 
 v `_test/vykr_dpi.py` běh s `--force-device-scale-factor=2`, který porovná CSS
 rozměr plátna s kontejnerem.
 
+**Překladač světů** (`obsah/prekladac_svetu.html`, jádro `prekladac_svetu/jadro.js` = `PRESVETU`,
+rozhraní `prekladac_svetu/ui.js`) překládá do 8 vestavěných vymyšlených jazyků (elfština, trpasličí,
+skřetí, dračí, mimozemská, robotí, galaktická, řeč mágů – žádný není převzatý z knih či filmů) a do
+**vlastních jazyků** z editoru (začátky/jádra/konce slabik, přípony, semínko, slabiky, oddělovač, písmo,
+hlas, volby; 🎲 náhodný jazyk; vestavěný se ukládá jako kopie i s lexikonem). Slovo se rozdělí na kmen
+a českou koncovku, kořen se poskládá hashem kmene (FNV + mulberry32), koncovka dostane příponu; ~400
+běžných slov (`SLOVA`) má tabulku bez shod (shoda → jiná přípona, pak „sůl“ kořene). **Lexikon**
+(ruční překlady: jen tvar, nebo celý kmen) má přednost; klik na slovo ve výstupu nebo ✏️ v rozboru,
+import/export CSV. Dál rozbor slov (kmen·koncovka → kořen·přípona, zdroj), mezířádkový výstup,
+generátor jmen s přídomky, uložené texty (Ctrl+S/O), export TXT/MD/CSV/PNG (PNG kreslí i tengwar,
+runy… i vlastní abecedy) a jazyk jako JSON. **Vlastní abecedy** (`prekladac_svetu/abecedy.js` = `ABECEDY`): každý
+jazyk má `pismo: 'abeceda', abeceda: {styl, semeno}` – 8 stylů (vlnité, runové, drápance, dračí háky, kroužky pod
+linkou, plošné spoje, geometrické, pečetě); znak = tahy na mřížce u,v → obtah Clipperem → TTF exportem Písmolijny
+(`pismolijna/jadro/{model,krivky,export}.js`), v prohlížeči `FontFace` (rodina `Abeceda <styl>_<semeno>`), ke stažení .ttf.
+Font mapuje a–z, A–Z, diakritiku (č → c), číslice a interpunkci; podobné znaky se přegenerují (podpis na mřížce po čtvrtinách). localStorage: `webapp_prekladac_svetu{,_slova,_jazyky,_lexikon,_texty}`.
+Test `node _test/prekladac_svetu_test.js` (vč. 30 náhodných jazyků tam a zpět). **Změna `SLOVA`, hlásek
+nebo koncovek změní překlady** (dřív uložené texty se rozejdou).
+
 **Písma: 3D text a Převodník písma** (`obsah/text3d.html`, `obsah/prevod_pisma.html`)
 sdílejí složku `obsah/fonty/`: 70 volně šiřitelných fontů (SIL OFL, tři Apache 2.0;
 soupis a copyrighty v `fonty/LICENCE.md`, plné znění `fonty/OFL.txt` a `APACHE-2.0.txt`), katalog
@@ -755,6 +773,34 @@ Ukládá do `webapp_plakat_mapy_posledni` a `webapp_plakat_mapy_ulozene`, nastav
 jde exportovat/načíst jako `.json` (i přetažením). Test `node _test/plakat_mapy_test.js`
 (formáty a DPI, souřadnice, styly všech palet, rozvržení, tvary, hvězdný čas, 280 kontrol).
 
+**Cestovatelská mapa** (`obsah/cestovni_mapa.html` + `obsah/cestovni_mapa/{jadro,styly,ui}.js`)
+kreslí ručně stylizované mapy cesty s animovanou trasou pro cestopisná videa. Obrysy zemí jsou
+offline z **Natural Earth** (volné dílo): přehled světa 1:50m v `svet.js` (258 zemí, řeky, jezera,
+města), detail 1:10m po zemích v `zeme/<A3>.json` (obrys, řeky a jezera oříznuté na zemi, města),
+načítá se jen to, co je v záběru a od 22 px/° výš. Data vyrábí
+`python3 -I tools/cestovni_mapa_data.py <složka s NE GeoJSON>` (shapely); `hb` = obdélník hlavní
+části země (bez zámoří, přes antimeridián). Názvy zemí z `Intl.DisplayNames` podle ISO kódu.
+Projekce lokální válcová kolem středu pohledu, vše se kreslí v referenčních px šířky 1920
+(export v libovolném rozlišení vypadá stejně). Trasa = kubické Bézierovy úseky: automatické
+tečny Catmull-Rom + vybočení „ohyb“ podle dopravy, nebo ruční úchyty uložené v zeměpisných
+souřadnicích. **Ruční chvění čar je deformační pole** (2D šum podle polohy), takže společné
+hranice sousedů zůstanou společné. 7 stylů (Inkoust a papír – výchozí podle předlohy uživatele,
+Kresba tužkou se šrafami, Akvarel, Stará mapa s vlnkami u pobřeží, Křída, Čistá, Noční neon),
+periodické textury papíru a mraků, kreslené dopravní prostředky (loď, letadlo, auto, bus, vlak,
+kolo, pěšky), automatické rozmístění popisků bez překryvů, titulek, kompas, měřítko, legenda.
+Animace: tempo po úsecích/po délce, zastávky, kamera statická/sledující/přelet; export PNG
+(i průhledné pozadí) a video MP4/WebM snímek po snímku přes Mediabunny. Místa: klik (jméno
+nejbližšího města), Nominatim, souřadnice (`PLAKAT.ctiSouradnice`), GPX. Ukládá do
+`webapp_cestovni_mapa` (víc map), fotky bodů do IndexedDB `webapp_cestovni_mapa_fotky` (zmenšené
+na 1600 px; v projektu jen id, stažený JSON je přibalí jako `_fotky`). **Editor kreslí mapový podklad
+jednou do mezipaměti** (`CMSTYLY.vykresliPodklad`, při přehrávání s kamerou 2× převzorkovaný)
+a za pohybu jen trasu a značky (~1 ms/snímek); export kreslí vše vektorově. Fotky (polaroid)
+a počítadlo km jsou v prostoru obrazovky – sledující kamera je neořízne. Úchyty křivek se
+zrcadlí na sousední úsek (Alt = zlom), zoom tlačítky i dvěma prsty, značky příjezdů na časové
+ose (`datalist`), šipky směru, průhledné video WebM (`alpha: 'keep'`). Testy
+`node _test/cestovni_mapa_test.js` (48) a `python3 _test/cestovni_mapa_ui.py [dpi] [--styly] [--mp4] [--alfa]`
+(skutečná myš i dva dotykové prsty, fotka, export videa, alfa přes ffprobe, úzký displej).
+
 ## Lamamp – přehrávač (29. 10. 2026)
 
 **Lamamp** (`obsah/lamamp.html` + `obsah/lamamp/`) je retro přehrávač hudby (vzhled klasických
@@ -821,7 +867,7 @@ Kód je rozdělený na dvě části:
 Co čtečka umí:
 - horní lišta s nabídkami (Obrazovka = celá obrazovka zvlášť), obsah s obálkami,
   přečtenými kapitolami a časem čtení;
-- fulltext v obou knihách;
+- fulltext ve všech knihách díla;
 - záložky vázané na slovo a větu: označené slovo, bez výběru první slovo nahoře.
   Ukládá se `slovo`, `veta` a `vOd`, takže se záložka po redakci dohledá podle
   věty, pak podle slova. Staré záložky na odstavec se převedou samy;
@@ -835,7 +881,14 @@ Co čtečka umí:
     přerušené věty;
 - motivy, písmo, řádkování, šířka sloupce, volba „nezhasínat obrazovku“;
 - export EPUB a MOBI s ilustracemi, Markdown, poznámky, tisk, offline, statistiky,
-  záloha JSON, odkaz `?kniha=2&kap=05_druha_smrt&blok=12`.
+  záloha JSON, odkaz `?kniha=2&kap=05_druha_smrt&blok=12`;
+- barevné motivy (7 barev × 5 stupňů, kontrast WCAG), listování po stránkách (klepnutí doprostřed schová lišty),
+  🔤 význam slova (Wikislovník), hlasy Piper, zpět na místo před skokem (↩, Backspace), zvýraznění čtené věty
+  a časovač vypnutí předčítání (revize 9. 11. 2026);
+- odolnost: kapitola/knihy.json se stahují s opakováním a při výpadku sítě se ukáže „↻ Zkusit znovu“;
+  výběr prstem nepřekresluje odstavec (touchend by šel odpojenému `<em>`); místo čtení drží ResizeObserver plochy;
+  značky se ukotvují jednou za otevření kapitoly (3000 odstavců ~0,1 s). Testy `_test/ctecka_dotyk_ui.py`,
+  `_test/ctecka_revize_ui.py`.
 
 Tisk celé knihy (Nástroje → Sazba celé knihy / Vysázet tuto kapitolu) otevírá
 samostatnou stránku Sazba knihy (`obsah/sazba.html?dilo=kroniky&kniha=kniha1[&kapitola=N]`),
@@ -896,6 +949,11 @@ e-knihy uživatele ve stejné společné čtečce jako Kroniky:
 - Angličtina: slovník stránky `i18n/en/ctecka_knih.js` a sdílené `i18n/en/ctecka/{sablona,ctecka,jadro}.js`.
   Čtečka se načítá za běhu, proto jsou ve stránce nespouštěné `<script type="text/plain" src>`
   (jen pro nástroje i18n). Složené texty jsou v kódu po `<span>`, aby šly přeložit po kusech.
+- revize 9. 11. 2026: import ověřen na 700 skutečných e-knihách (`_test/ctecka_knih_hromadny.py`) – OPF s předponou
+  `opf:`, MOBI ve windows-1250, řídicí znaky C1 a dvojitě převedená čeština, UTF-16; přejmenovaný soubor na webu
+  se napojí podle názvu, smazaný dostane značku „není na webu“, přejmenovaná/spojená kapitola převezme pozice
+  a poznámky; záloha a obnova po částech (iPad), sdílení zálohy, připomínka po 30 dnech, 🆕 nová verze z webu,
+  odhad dočtení, zobrazení mřížka/seznam.
 - testy: `node _test/ctecka_knih_test.js`, `python3 _test/ctecka_knih_ui.py` (vlastní EPUB/MOBI
   z exportu čtečky + vzorek skutečných e-knih z `~/Dokumenty`, `KNIH=`, `SEMINKO=`, `JEN=`),
   `python3 _test/ctecka_knih_ui2.py` (web, napojení, hromadné přidání, záloha, série, úpravy, deník),
@@ -1017,3 +1075,23 @@ z otevřených dat MPSV / Úřadu práce ČR (≈40 tis. inzerátů). Plán a et
   mapa (Leaflet + vlastní shlukování v mřížce 56 px), odkaz na Čistou mzdu (`net_salary.html?hruba=`).
 - Klíče: `webapp_prace_filtr`, `webapp_prace_domov`.
 - Testy: `node _test/prace_test.js` (jádro nad skutečnými daty), `python3 _test/prace_ui.py`.
+
+**Svět u stolu** (`obsah/svet_u_stolu.html` + `obsah/svet_u_stolu/`, sekce Recepty & kuchyně) – kalendář
+svátečních a zvykových jídel světa (273 současných + 113 historických tradic, 103 zemí; průzkum a schválení `SvetUStolu_PRUZKUM.md`).
+- Historické tradice: pole `doba` (38 epoch v `SUS.DOBY` – antika, Vikingové, Lucemburkové, Tudorovci, tereziánská doba,
+  biedermeier/Rettigová, viktoriánská Anglie, první republika, přídělový systém, socialismus, Edo, Inkové…) a `pramen`
+  (dobový zdroj), id `hist-…`, soubory `hist_*_data.js`. V pohledu Den oddíl „📜 V historii“, pohled Dějiny (H) = časová
+  osa epoch, filtr Doba. Neověřené dobové recepty jsou označené „rekonstrukce v duchu…“.
+- Pohledy Den / Měsíc / Rok / Mapa (Equal Earth, výřez kolem zemí dne), hledání i v surovinách, filtr
+  tradic (novodobé „dny jídla“ výchozí vypnuté) a kontinentů, detail se symbolikou, recept s přepočtem porcí,
+  odkaz na zdroj, URL `#pohled/datum/id`.
+- Data `*_data.js` po regionech (formát `svet_u_stolu/FORMAT_DAT.md`; koncovka `_data.js` = nástroje i18n
+  je neberou jako rozhraní – texty dat jsou jen česky, ve stránce `data-i18n="ne"`). Ověřeno 11/2026.
+- `jadro.js` (`SUS`, bez DOM): pevná data, Velikonoce západní i pravoslavné, týdenní pravidla, islámský
+  (Umm al-Qura) a židovský kalendář přes `Intl`, čínský z tabulek Hongkongské observatoře (`lunarni.js`,
+  2023–2038 – ICU se u novoluní u půlnoci plete o den, např. Nový rok 2027 a 2030), slunovrat (`slunecni`),
+  hinduistické svátky a japonské Dojó/Secubun z tabulek **jen na 2025–2036 – před rokem 2036 doplnit**.
+- Generátory: `node tools/svet_u_stolu_mapa.mjs` (mapa z `cestovni_mapa/svet.js`),
+  `node tools/svet_u_stolu_hko.mjs <složka s T<rok>e.txt z hko.gov.hk>`.
+- Klíč `webapp_svet_u_stolu` (pohled, filtry). Test `node _test/svet_u_stolu_test.js` (výpočty dat +
+  kontrola dat, každá položka má termín v letech 2025–2036).

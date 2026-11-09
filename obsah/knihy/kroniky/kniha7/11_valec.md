@@ -1,396 +1,396 @@
 # 11. Válec
 
-V pátek v sedm ráno visí slovník na webu.
+V pátek v sedm ráno visel slovník na webu.
 
-Hana ho otevře na letišti v Praze, u okna, za kterým stojí bílé letadlo mexické vlády s vytaženými schůdky. Slovník technických pojmů má čtyři sta dvanáct hesel. U každého znak patronů, jak ho výprava zdědila v návodech ke strojům, které po patronech zůstaly, pak slovo v řeči výpravy a pak česky, anglicky a španělsky. Sto třicet hesel má poznámku *nejisté*. Jednačtyřicet poznámku *nečteno, jen zapsáno*.
+Hana ho otevřela na letišti v Praze, u okna, za kterým stálo bílé letadlo mexické vlády s vytaženými schůdky. Slovník technických pojmů měl čtyři sta dvanáct hesel. U každého znak patronů, jak ho výprava zdědila v návodech ke strojům, které po patronech zůstaly, pak slovo v řeči výpravy a pak česky, anglicky a španělsky. Sto třicet hesel mělo poznámku *nejisté*. Jednačtyřicet poznámku *nečteno, jen zapsáno*.
 
-K tomu popis kódování. Čtyřicet stran. Hana mu nerozumí. Fuchsová mu rozumí napůl, napsala jí to hodinu po zveřejnění a dodala, že napůl je víc, než čekala.
+K tomu popis kódování. Čtyřicet stran. Hana mu nerozuměla. Fuchsová mu rozuměla napůl, napsala jí to hodinu po zveřejnění a dodala, že napůl je víc, než čekala.
 
 A k tomu výtah protokolu z archivu řádu. Devět listů, jak ho výprava měla. Nahoře na každém listu opis ve znacích patronů, dole starý pracovní překlad, s mezerami a se slovem *chybí*. Výprava ho zveřejnila celý. I se značkou u slova *kontaminant*. *K překladu připojena poznámka. Viz věc Vess.* A pod ní nový řádek, podepsaný Sendem.
 
-Všechno u pěti institucí ve čtyřech zemích, s kontrolními součty. Dřív, než výprava sáhne na válec.
+Všechno u pěti institucí ve čtyřech zemích, s kontrolními součty. Dřív, než výprava sáhla na válec.
 
-Ve 7:12 přijde zpráva od Sendeho. Česky, bez chyby.
+Ve 7:12 přišla zpráva od Sendeho. Česky, bez chyby.
 
 *Předáno. Za rok nás můžete kontrolovat. I. S.*
 
-Hana odepíše: *Za rok budeme.*
+Hana odepsala: *Za rok budeme.*
 
-Sedne si a otevře sešit. Nahoru na okraj stránky napíše:
+Sedla si a otevřela sešit. Nahoru na okraj stránky napsala:
 
 *Do 30. 8.: 34 dní.*
 
-Vlevo zapíše slovník, kódování, výtah a čas. A pod to ještě jednu věc, kterou nosí v hlavě od června a kterou nikomu neřekla, protože nikdo se neptal.
+Vlevo zapsala slovník, kódování, výtah a čas. A pod to ještě jednu věc, kterou nosila v hlavě od června a kterou nikomu neřekla, protože nikdo se neptal.
 
 *V pečeti z 26. 6. stojí „CT z kliniky (2026)“, bez poznámky. V Praze jsem řekla, že na klinice tenkrát snímali repliku, ale do tabulky to nikdo nepřipsal. Olovo, pryskyřice, nalepená drť. Originál snímali v létě 2026 Švýcaři, neutrony. Zapečetěno je obojí, odděleně. Správně, replika patří k historii. Ale ať nikdo neporovnává čtení s CT z kliniky.*
 
 Vpravo: *Měla jsem to říct v červnu.*
 
-Hned ten den napíše Švýcarům a zmocněnci, aby se to do zápisu doplnilo. Do oběda je to doplněné.
+Hned ten den napsala Švýcarům a zmocněnci, aby se to do zápisu doplnilo. Do oběda to bylo doplněné.
 
-Než zavolají k nástupu, otevře v telefonu ještě snímek posledního listu kodexu. Kresbu kosti. Kost se nenašla, inventář z osmnáctého století zná jen knihu. Zůstala mnichova kresba úlomku s mřížkou čar a teček, pět řádků. V roce dvacet šest je porovnala se znaky na čele válce. Stejná pravidla, žádný shodný řádek.
+Než zavolali k nástupu, otevřela v telefonu ještě snímek posledního listu kodexu. Kresbu kosti. Kost se nenašla, inventář z osmnáctého století znal jen knihu. Zůstala mnichova kresba úlomku s mřížkou čar a teček, pět řádků. V roce dvacet šest je porovnala se znaky na čele válce. Stejná pravidla, žádný shodný řádek.
 
-Teď jde heslo po hesle. Ve slovníku je skupina devatenácti hesel nadepsaná *označení vzorku ve sbírce*. Dvanáct z nich má poznámku *nejisté*. Všechna začínají stejnými dvěma tahy jako první řádek kresby. Další dva řádky kresby mají stavbu, jakou slovník uvádí u pořadových čísel. Poslední dva nesedí s ničím.
+Teď šla heslo po hesle. Ve slovníku byla skupina devatenácti hesel nadepsaná *označení vzorku ve sbírce*. Dvanáct z nich mělo poznámku *nejisté*. Všechna začínala stejnými dvěma tahy jako první řádek kresby. Další dva řádky kresby měly stavbu, jakou slovník uváděl u pořadových čísel. Poslední dva neseděly s ničím.
 
-Vlevo zapíše: *Kost (kresba v kodexu, 1172), ř. 1–3: stavba odpovídá heslům „označení vzorku ve sbírce“. Ř. 4–5 bez shody. Kresba není kost, mnich mohl tah přidat i vynechat. Jistota nízká až střední.*
+Vlevo zapsala: *Kost (kresba v kodexu, 1172), ř. 1–3: stavba odpovídá heslům „označení vzorku ve sbírce“. Ř. 4–5 bez shody. Kresba není kost, mnich mohl tah přidat i vynechat. Jistota nízká až střední.*
 
 Vpravo: *Mnich ji měl za znamení, ne za přírodu. Možná je to štítek.*
 
 *
 
-V letadle sedí Lis Aven u okna a Edo Marn u uličky, protože se oken bojí.
+V letadle seděla Lis Aven u okna a Edo Marn u uličky, protože se oken bál.
 
-Marn se bojí i letadla. Hana to pozná podle toho, jak drží opěrky. Letěl lodí přes šest set let, prošel brzděním, sestoupil člunem na zem, a teď se nad Atlantikem drží opěrek a při každém zhoupnutí zavře oči. Hana ho chápe. Loď nemá křídla. Loď se nehoupe.
+Marn se bál i letadla. Hana to poznala podle toho, jak držel opěrky. Letěl lodí přes šest set let, prošel brzděním, sestoupil člunem na zem, a teď se nad Atlantikem držel opěrek a při každém zhoupnutí zavřel oči. Hana ho chápala. Loď nemá křídla. Loď se nehoupe.
 
-„Je to normální?“ zeptá se Lis Aven za něj. Česky, aby to Hana pochopila.
+„Je to normální?“ zeptala se Lis Aven za něj. Česky, aby to Hana pochopila.
 
 „Je.“
 
-Lis Aven to přeloží. Marn oči nechá zavřené.
+Lis Aven to přeložila. Marn oči nechal zavřené.
 
-Lis Aven se dívá z okna. Pod nimi je moře. Je ho tolik, že Hana na něj po dvou hodinách přestane myslet. Lis Aven ne.
+Lis Aven se dívala z okna. Pod nimi bylo moře. Bylo ho tolik, že Hana na něj po dvou hodinách přestala myslet. Lis Aven ne.
 
-„Z dráhy jsme ho viděli celé,“ řekne. „Bylo to jako obraz. Modrá plocha. Tady je to daleko.“
+„Z dráhy jsme ho viděli celé,“ řekla. „Bylo to jako obraz. Modrá plocha. Tady je to daleko.“
 
-Hana neví, co na to říct. Neřekne nic.
+Hana nevěděla, co na to říct. Neřekla nic.
 
-Přes uličku sedí pozorovatel, kterého vyslalo Mexiko a který letěl i na Měsíc. Spí s otevřenou pusou. Zmocněnec nejel. Hana je za to ráda. Česká delegace je tentokrát ona sama a v zápise o cestě stojí, že je tam jako odborná svědkyně. Ne jako mluvčí. Napsala si to tam sama.
+Přes uličku seděl pozorovatel, kterého vyslalo Mexiko a který letěl i na Měsíc. Spal s otevřenou pusou. Zmocněnec nejel. Hana za to byla ráda. Česká delegace byla tentokrát ona sama a v zápise o cestě stálo, že je tam jako odborná svědkyně. Ne jako mluvčí. Napsala si to tam sama.
 
 *
 
-V Méridě je v sobotu v osm ráno třicet dva stupňů.
+V Méridě bylo v sobotu v osm ráno třicet dva stupňů.
 
-Marisol Couoh na ni čeká před ústavem. Je starší. Hana ví, že ona sama taky. Marisol má v černých vlasech šedý pramen, který si nebarví, a pořád stejné tenisky. Podají si ruce. Marisol ji drží o chvilku déle, než je třeba.
+Marisol Couoh na ni čekala před ústavem. Byla starší. Hana věděla, že ona sama taky. Marisol měla v černých vlasech šedý pramen, který si nebarvila, a pořád stejné tenisky. Podaly si ruce. Marisol ji držela o chvilku déle, než bylo třeba.
 
 „Doktorko Vrbová.“
 
 „Marisol.“
 
-V roce dvacet šest jí přestala věřit. Hana to ví a Marisol ví, že to Hana ví. Pak Marisol vložila Haninu opravu do archivní zprávy ústavu, celou, a za pásku dostala důtku. Od té doby si psaly třikrát. Pokaždé věcně.
+V roce dvacet šest jí přestala věřit. Hana to věděla a Marisol věděla, že to Hana ví. Pak Marisol vložila Haninu opravu do archivní zprávy ústavu, celou, a za pásku dostala důtku. Od té doby si psaly třikrát. Pokaždé věcně.
 
-„Tentokrát podepisuju já,“ řekne Marisol. „Každý krok. Vy se budete jen dívat.“
+„Tentokrát podepisuju já,“ řekla Marisol. „Každý krok. Vy se budete jen dívat.“
 
-„To chci,“ řekne Hana.
+„To chci,“ řekla Hana.
 
-Marisol odemkne.
+Marisol odemkla.
 
-V depozitáři leží válec v nové bedně, ne v té borové od truhláře z obce. Ta stojí vedle, prázdná, a přes horní třetinu víka jde pořád stará páska s modrým nápisem, roztržená a přelepená průsvitnou fólií, aby se nerozpadla. Jako exponát. Hana se na ni dívá a cítí v prstech chlad cenotu. Vyndala ten válec holýma rukama. Bylo to před devíti lety a pořád to cítí.
+V depozitáři ležel válec v nové bedně, ne v té borové od truhláře z obce. Ta stála vedle, prázdná, a přes horní třetinu víka šla pořád stará páska s modrým nápisem, roztržená a přelepená průsvitnou fólií, aby se nerozpadla. Jako exponát. Hana se na ni dívala a cítila v prstech chlad cenotu. Vyndala ten válec holýma rukama. Bylo to před devíti lety a pořád to cítila.
 
-Nová bedna má na víku list. Ústav ho vydal v září dvacet šest, po trojí zprávě laboratoří, a od té doby na něm nikdo nic nezměnil.
+Nová bedna měla na víku list. Ústav ho vydal v září dvacet šest, po trojí zprávě laboratoří, a od té doby na něm nikdo nic nezměnil.
 
 *Předmět se neotvírá. Předmět se nenavrtává. Odběr vzorků zakázán. Výjimku nelze udělit.*
 
-„Výjimku nelze udělit,“ přečte Hana nahlas.
+„Výjimku nelze udělit,“ přečetla Hana nahlas.
 
-„To jsem tam napsala já,“ řekne Marisol. „Ředitel chtěl *bez souhlasu ředitele*. Řekla jsem mu, že pak za deset let přijde někdo, kdo ředitele přesvědčí.“
-
-*
-
-V neděli v šest ráno se sejde shromáždění ejida X'Kanlum. Na krytém hřišti jako tenkrát, pod plechovou střechou, se stejnými plastovými židlemi a s ventilátorem pod stropem, který se točí tak pomalu, že Hana počítá jeho otáčky. Jedna otáčka, dvě, tři.
-
-Luis Ek stojí u dveří. Je mu přes čtyřicet, ztloustl, a když vidí Hanu, usměje se, ale nepřijde k ní. Až po shromáždění, řekne jí očima. Teď je to věc obce.
-
-Don Felipe sedí vepředu. Je mu přes sedmdesát. Hůl má opřenou o kolena a obě ruce položené na ní. Když mluví, mluví maysky, a mladý muž vedle něj to překládá do španělštiny a Marisol šeptem Haně do angličtiny.
-
-Hana sedí vzadu. Lis Aven a Marn sedí vedle ní, protože je tam posadil Luis. Marn má košili na zádech propocenou. Lis Aven má ruce v klíně a nedotkne se ucha ani jednou. Hana si toho všimne.
-
-Shromáždění vyslechne, co výprava chce. Číst, ne otvírat. Číst v ústavu, ne jinde. Pět dní. Obrazy každé vrstvy zveřejnit dřív, než je kdo přeloží.
-
-Don Felipe se zeptá Lis Aven. Přímo, bez okolků. Mladý muž to přeloží, Marisol taky, a Lis Aven odpoví španělsky. Mluví jím hůř než česky, pomalu, se špatnými koncovkami, ale každé slovo je tam, kde má být.
-
-„Ptá se, jestli jste vy ti, kdo to tam dali,“ šeptá Marisol, i když to Hana pochopila.
-
-„Ne,“ řekne Lis Aven. „My jsme ti, kdo to chtěli zničit.“
-
-Ventilátor se točí. Jedna otáčka. Dvě.
-
-„V dubnu to stálo v plánu,“ řekne Lis Aven. „Převzít a zneškodnit. Pořád to tam stojí. Je to odložené. Do třicátého srpna.“
-
-Don Felipe se na ni dívá dlouho. Pak řekne něco krátkého a pár lidí na židlích se zasměje. Ne zle.
-
-„Říká, že je dobře, že jste to řekla vy,“ přeloží Marisol. „Protože kdyby nám to řekl někdo jiný, nevěřili bychom, že to víte vy.“
+„To jsem tam napsala já,“ řekla Marisol. „Ředitel chtěl *bez souhlasu ředitele*. Řekla jsem mu, že pak za deset let přijde někdo, kdo ředitele přesvědčí.“
 
 *
 
-Shromáždění dá podmínky. Don Felipe je diktuje a Luis je píše do sešitu obce, do stejného, do kterého se tenkrát psaly ponorové dny.
+V neděli v šest ráno se sešlo shromáždění ejida X'Kanlum. Na krytém hřišti jako tenkrát, pod plechovou střechou, se stejnými plastovými židlemi a s ventilátorem pod stropem, který se točil tak pomalu, že Hana počítala jeho otáčky. Jedna otáčka, dvě, tři.
 
-Celou dobu čtení bude u válce někdo z obce. Luis. Válec neopustí Méridu. Jméno ejida bude v každém zveřejnění, ve všech jazycích, i ve vašem, řekne don Felipe a ukáže holí na Lis Aven. Na válec nesáhne nikdo kromě konzervátorky ústavu. A jestli v něm bude něco o téhle zemi, o studni nebo o vodě, obec se to dozví ve stejnou minutu jako ostatní. Ne potom.
+Luis Ek stál u dveří. Bylo mu přes čtyřicet, ztloustl, a když uviděl Hanu, usmál se, ale nepřišel k ní. Až po shromáždění, řekl jí očima. Teď to byla věc obce.
 
-Hlasují rukama. Hana je nepočítá. Je jich hodně.
+Don Felipe seděl vepředu. Bylo mu přes sedmdesát. Hůl měl opřenou o kolena a obě ruce položené na ní. Když mluvil, mluvil maysky, a mladý muž vedle něj to překládal do španělštiny a Marisol šeptem Haně do angličtiny.
 
-Don Felipe ještě něco řekne. Marisol to přeloží až venku, na prahu, kde už je horko.
+Hana seděla vzadu. Lis Aven a Marn seděli vedle ní, protože je tam posadil Luis. Marn měl košili na zádech propocenou. Lis Aven měla ruce v klíně a nedotkla se ucha ani jednou. Hana si toho všimla.
+
+Shromáždění vyslechlo, co výprava chce. Číst, ne otvírat. Číst v ústavu, ne jinde. Pět dní. Obrazy každé vrstvy zveřejnit dřív, než je kdo přeloží.
+
+Don Felipe se zeptal Lis Aven. Přímo, bez okolků. Mladý muž to přeložil, Marisol taky, a Lis Aven odpověděla španělsky. Mluvila jím hůř než česky, pomalu, se špatnými koncovkami, ale každé slovo bylo tam, kde mělo být.
+
+„Ptá se, jestli jste vy ti, kdo to tam dali,“ šeptala Marisol, i když to Hana pochopila.
+
+„Ne,“ řekla Lis Aven. „My jsme ti, kdo to chtěli zničit.“
+
+Ventilátor se točil. Jedna otáčka. Dvě.
+
+„V dubnu to stálo v plánu,“ řekla Lis Aven. „Převzít a zneškodnit. Pořád to tam stojí. Je to odložené. Do třicátého srpna.“
+
+Don Felipe se na ni díval dlouho. Pak řekl něco krátkého a pár lidí na židlích se zasmálo. Ne zle.
+
+„Říká, že je dobře, že jste to řekla vy,“ přeložila Marisol. „Protože kdyby nám to řekl někdo jiný, nevěřili bychom, že to víte vy.“
+
+*
+
+Shromáždění dalo podmínky. Don Felipe je diktoval a Luis je psal do sešitu obce, do stejného, do kterého se tenkrát psaly ponorové dny.
+
+Celou dobu čtení bude u válce někdo z obce. Luis. Válec neopustí Méridu. Jméno ejida bude v každém zveřejnění, ve všech jazycích, i ve vašem, řekl don Felipe a ukázal holí na Lis Aven. Na válec nesáhne nikdo kromě konzervátorky ústavu. A jestli v něm bude něco o téhle zemi, o studni nebo o vodě, obec se to dozví ve stejnou minutu jako ostatní. Ne potom.
+
+Hlasovali rukama. Hana je nepočítala. Bylo jich hodně.
+
+Don Felipe ještě něco řekl. Marisol to přeložila až venku, na prahu, kde už bylo horko.
 
 „Voda ho držela sto tisíc let. Ať ho vaše ruce drží pět dní.“
 
-Luis k nim přijde, až když se židle vyprázdní. Podá Haně ruku a pak ji obejme, krátce, po mexicku, a Hana se tomu ani nebrání.
+Luis k nim přišel, až když se židle vyprázdnily. Podal Haně ruku a pak ji objal, krátce, po mexicku, a Hana se tomu ani nebránila.
 
-„Tenkrát jsem řekl, že to není naše,“ řekne.
+„Tenkrát jsem řekl, že to není naše,“ řekl.
 
 „Pamatuju si to.“
 
-„Teď obec řekla ano.“ Pokrčí rameny. „Tak je to trochu naše. Kdyby se něco stalo, bude to naše.“
+„Teď obec řekla ano.“ Pokrčil rameny. „Tak je to trochu naše. Kdyby se něco stalo, bude to naše.“
 
 *
 
-V sobotu večer napsala Sael. Hana tu zprávu čte znovu v neděli v autě, cestou zpátky do Méridy, protože večer v hotelu usnula dřív, než ji dočetla.
+V sobotu večer napsala Sael. Hana tu zprávu četla znovu v neděli v autě, cestou zpátky do Méridy, protože večer v hotelu usnula dřív, než ji dočetla.
 
 *Rada sítí dnes souhlasila. Opisy glos se smějí otevřít a dát týmům, které budou číst válec. Bez jmen, bez míst. Zveřejní se spolu s tím, co týmy napíšou, ne dřív. Hlasovaly čtyři sítě, Vratislav jen poslouchala. Rokyta je opisovala z listů, které nikdo nečetl. Teď je bude číst někdo. S.*
 
-V pondělí v osm ráno se pečeť glos otevře u pěti institucí naráz. Hana to vidí na telefonu v laboratoři ústavu, mezi dvěma kontrolami teploty.
+V pondělí v osm ráno se pečeť glos otevřela u pěti institucí naráz. Hana to viděla na telefonu v laboratoři ústavu, mezi dvěma kontrolami teploty.
 
 *
 
-Laboratoř je bílá a studená. Klimatizace hučí. Válec leží uprostřed stolu na pěnovém klínu, holý, bez fólie. Hana ho naposledy viděla v roce dvacet šest.
+Laboratoř byla bílá a studená. Klimatizace hučela. Válec ležel uprostřed stolu na pěnovém klínu, holý, bez fólie. Hana ho naposledy viděla v roce dvacet šest.
 
-Je stejný. Hladký. Bez švu, bez stopy nástroje. Na čele sedm řádků značek. Krátké čáry, dlouhé čáry, tečky ve skupinách. Každý řádek začíná krátkou čarou. Ve čtvrtém řádku tečka nad čarou. Pod jizvou dvě, kde v roce dvacet šest vzaly laboratoře tři mikrovzorky, je místo o odstín světlejší. Hana ho najde očima dřív, než si uvědomí, že ho hledá.
+Byl stejný. Hladký. Bez švu, bez stopy nástroje. Na čele sedm řádků značek. Krátké čáry, dlouhé čáry, tečky ve skupinách. Každý řádek začínal krátkou čarou. Ve čtvrtém řádku tečka nad čarou. Pod jizvou dvě, kde v roce dvacet šest vzaly laboratoře tři mikrovzorky, bylo místo o odstín světlejší. Hana ho našla očima dřív, než si uvědomila, že ho hledá.
 
-Konzervátorka ústavu je stará žena s rukama, které se netřesou. Má na nich rukavice a teploměr s tenkým čidlem. Změří povrch válce na šesti místech a čísla nadiktuje Marisol. Marisol je podepíše.
+Konzervátorka ústavu byla stará žena s rukama, které se netřásly. Měla na nich rukavice a teploměr s tenkým čidlem. Změřila povrch válce na šesti místech a čísla nadiktovala Marisol. Marisol je podepsala.
 
-Marn rozbalí přístroj.
+Marn rozbalil přístroj.
 
-Jsou to dvě ploché věci, každá velká jako podnos. Šedé. Bez knoflíků. Marn je postaví na stojany po obou stranách válce, na dva prsty od pláště. Nedotknou se ho. Od jedné vede kabel ke krabici na zemi a od krabice do zásuvky ve zdi. Měnič, podobný tomu v Brně u sondy, jen na zdejší síť. Hana se dívá na ten kabel a na obyčejnou bílou zásuvku a myslí si, že nic na světě nevypadá tak obyčejně jako místo, odkud bere proud věc z jiné hvězdy.
+Byly to dvě ploché věci, každá velká jako podnos. Šedé. Bez knoflíků. Marn je postavil na stojany po obou stranách válce, na dva prsty od pláště. Nedotýkaly se ho. Od jedné vedl kabel ke krabici na zemi a od krabice do zásuvky ve zdi. Měnič, podobný tomu v Brně u sondy, jen na zdejší síť. Hana se dívala na ten kabel a na obyčejnou bílou zásuvku a myslela si, že nic na světě nevypadá tak obyčejně jako místo, odkud bere proud věc z jiné hvězdy.
 
 ![Laboratoř v Méridě: válec leží na pěnovém klínu mezi dvěma šedými deskami přístroje, které se ho nedotýkají, konzervátorka v rukavicích drží u pláště teploměr](obrazky/08_valec_cteni.webp)
 
-„Než začnete,“ řekne Hana.
+„Než začnete,“ řekla Hana.
 
-Marn se otočí. Lis Aven přeloží.
+Marn se otočil. Lis Aven přeložila.
 
 „Kolik vrstev ten přístroj vidí? Řekněte číslo, než cokoli přečtete. Do záznamu.“
 
-Marn se podívá na Lis Aven a na Marisol. Marisol kývne.
+Marn se podíval na Lis Aven a na Marisol. Marisol kývla.
 
-Marn něco řekne do vzduchu, pro sebe, a chvíli čeká. Pak řekne číslo. Lis Aven ho zopakuje česky, španělsky a anglicky.
+Marn něco řekl do vzduchu, pro sebe, a chvíli čekal. Pak řekl číslo. Lis Aven ho zopakovala česky, španělsky a anglicky.
 
 „Šest set čtyřicet osm.“
 
-Marisol to zapíše. Hana otevře v telefonu soubor, který si v červnu vyžádala od Švýcarů a který je v pečeti od 26. 6. Neutronová tomografie originálu z léta dvacet šest. Tenkrát napsali *stovky vrstev, neinterpretováno*. V červnu jí na její prosbu napsali i počet. Zveřejnili ho dřív, než výprava řekla, kolik vrstev vidí její přístroj.
+Marisol to zapsala. Hana otevřela v telefonu soubor, který si v červnu vyžádala od Švýcarů a který byl v pečeti od 26. 6. Neutronová tomografie originálu z léta dvacet šest. Tenkrát napsali *stovky vrstev, neinterpretováno*. V červnu jí na její prosbu napsali i počet. Zveřejnili ho dřív, než výprava řekla, kolik vrstev vidí její přístroj.
 
 *Šest set třicet osm až šest set padesát pět, podle toho, jak počítat nejtenčí vrstvy u osy. Přesnější odhad naše rozlišení nedovoluje.*
 
-Hana to přečte nahlas. Marisol to zapíše pod Marnovo číslo.
+Hana to přečetla nahlas. Marisol to zapsala pod Marnovo číslo.
 
-„Sedí,“ řekne Marisol.
+„Sedí,“ řekla Marisol.
 
-„Sedí s tím, co jde ověřit,“ řekne Hana. „Ne s tím, co je ve vrstvách. To zatím neví nikdo.“
-
-*
-
-Čte se pomalu.
-
-Přístroj nevydá žádný zvuk. Válec se nerozsvítí. Na obrazovce, kterou Marn postaví na vedlejší stůl, se po dvaceti minutách objeví první obraz. Řádky znaků, hustých a drobných, šedých na černém. Pak další. Asi jedna vrstva za pět minut.
-
-Každý obraz jde nejdřív na web. S kontrolním součtem, k pěti institucím. Teprve potom ho Lis Aven otevře. Nečte nahlas. Nečte vůbec, jen se dívá, jestli je obraz celý, a když je, kývne a Marn pustí další. Tak se dohodli. Číst budou čtyři týmy, každý zvlášť, z toho, co je na webu. Výprava. Ústav s epigrafiky z univerzity v Mexiku. Krausová s lingvistkou z Prahy a s Fuchsovou, která rozumí kódování napůl. A tým z Lipska, který si vyžádala Ines. Nesmějí se radit, dokud neodevzdají. Pak se porovná, kde se shodly a kde ne.
-
-Každou hodinu změří konzervátorka teplotu povrchu. Za hodinu čtení vzroste o osm desetin stupně. Konzervátorka řekne, že při dvou stupních se končí. Po dvou hodinách se čtení přeruší a čeká se, až válec vychladne.
-
-Luis sedí na židli u dveří a dívá se. Celý den. Hana mu přinese kafe z automatu na chodbě a on ho vypije, aniž by spustil oči z válce.
-
-Večer je venku sto dvacet šest vrstev.
+„Sedí s tím, co jde ověřit,“ řekla Hana. „Ne s tím, co je ve vrstvách. To zatím neví nikdo.“
 
 *
 
-Ve čtyřicáté první vrstvě se Lis Aven zastaví.
+Četlo se pomalu.
 
-Je to v pondělí kolem poledne. Hana sedí u okna a píše do sešitu teploty. Vidí, jak se Lis Aven nad obrazovkou narovná a pak se k ní nakloní blíž. Na svém tabletu otevře jiný obraz. Hana ho pozná i z dálky. První list výtahu. Nahoře opis ve znacích patronů, dole překlad s mezerami.
+Přístroj nevydal žádný zvuk. Válec se nerozsvítil. Na obrazovce, kterou Marn postavil na vedlejší stůl, se po dvaceti minutách objevil první obraz. Řádky znaků, hustých a drobných, šedých na černém. Pak další. Asi jedna vrstva za pět minut.
 
-Lis Aven drží tablet vedle obrazovky. Jede prstem po znacích. Nahoře na tabletu, a pak dole na obrazovce. Znak po znaku.
+Každý obraz šel nejdřív na web. S kontrolním součtem, k pěti institucím. Teprve potom ho Lis Aven otevřela. Nečetla nahlas. Nečetla vůbec, jen se dívala, jestli je obraz celý, a když byl, kývla a Marn pustil další. Tak se dohodli. Číst měly čtyři týmy, každý zvlášť, z toho, co bylo na webu. Výprava. Ústav s epigrafiky z univerzity v Mexiku. Krausová s lingvistkou z Prahy a s Fuchsovou, která rozuměla kódování napůl. A tým z Lipska, který si vyžádala Ines. Nesměly se radit, dokud neodevzdají. Pak se mělo porovnat, kde se shodly a kde ne.
 
-Tablet položí.
+Každou hodinu změřila konzervátorka teplotu povrchu. Za hodinu čtení vzrostla o osm desetin stupně. Konzervátorka řekla, že při dvou stupních se končí. Po dvou hodinách se čtení přerušilo a čekalo se, až válec vychladne.
 
-„Paní doktorko,“ řekne. Tiše, ale v laboratoři je ticho, a slyší to všichni. Marisol, konzervátorka, Luis, Marn. „Nebudu číst. Jen řeknu, co vidím.“
+Luis seděl na židli u dveří a díval se. Celý den. Hana mu přinesla kafe z automatu na chodbě a on ho vypil, aniž by spustil oči z válce.
 
-„Řekněte to do záznamu,“ řekne Marisol.
+Večer bylo venku sto dvacet šest vrstev.
 
-„První řádek čtyřicáté první vrstvy má stejné znaky jako první řádek výtahu v našem archivu,“ řekne Lis Aven. „Ve stejném pořadí. Všechny.“ Odmlčí se. „Ve výtahu je pak mezera. Je tam napsáno *chybí*. Ve válci tam mezera není.“
+*
 
-Konzervátorka odloží teploměr.
+Ve čtyřicáté první vrstvě se Lis Aven zastavila.
 
-„To je všechno,“ řekne Lis Aven. „Co ty znaky znamenají, nevím. Teda vím, co znamenají ve výtahu. *Protokol. Pro svět, jenž je kolébkou lidského druhu.* Ale to je starý překlad. Ten jsem nedělala já.“
+Bylo to v pondělí kolem poledne. Hana seděla u okna a psala do sešitu teploty. Viděla, jak se Lis Aven nad obrazovkou narovnala a pak se k ní naklonila blíž. Na svém tabletu otevřela jiný obraz. Hana ho poznala i z dálky. První list výtahu. Nahoře opis ve znacích patronů, dole překlad s mezerami.
 
-Marisol to zapíše a otočí se k Haně.
+Lis Aven držela tablet vedle obrazovky. Jela prstem po znacích. Nahoře na tabletu, a pak dole na obrazovce. Znak po znaku.
 
-Hana zapíše vlevo: *41. vrstva, 1. řádek = 1. řádek opisu ve výtahu řádu (L. A., znak po znaku, do záznamu). Ve výtahu dál „chybí“, ve válci ne.*
+Tablet položila.
+
+„Paní doktorko,“ řekla. Tiše, ale v laboratoři bylo ticho, a slyšeli to všichni. Marisol, konzervátorka, Luis, Marn. „Nebudu číst. Jen řeknu, co vidím.“
+
+„Řekněte to do záznamu,“ řekla Marisol.
+
+„První řádek čtyřicáté první vrstvy má stejné znaky jako první řádek výtahu v našem archivu,“ řekla Lis Aven. „Ve stejném pořadí. Všechny.“ Odmlčela se. „Ve výtahu je pak mezera. Je tam napsáno *chybí*. Ve válci tam mezera není.“
+
+Konzervátorka odložila teploměr.
+
+„To je všechno,“ řekla Lis Aven. „Co ty znaky znamenají, nevím. Teda vím, co znamenají ve výtahu. *Protokol. Pro svět, jenž je kolébkou lidského druhu.* Ale to je starý překlad. Ten jsem nedělala já.“
+
+Marisol to zapsala a otočila se k Haně.
+
+Hana zapsala vlevo: *41. vrstva, 1. řádek = 1. řádek opisu ve výtahu řádu (L. A., znak po znaku, do záznamu). Ve výtahu dál „chybí“, ve válci ne.*
 
 Vpravo: *Je to tam.*
 
-Pak to škrtne. Je to vlevo. Lis Aven to porovnala znak po znaku. Vpravo napíše jen: *Ruka se mi třese. Proč?*
+Pak to škrtla. Bylo to vlevo. Lis Aven to porovnala znak po znaku. Vpravo napsala jen: *Ruka se mi třese. Proč?*
 
 *
 
-V úterý v poledne vysílá mexická televize titulek.
+V úterý v poledne vysílala mexická televize titulek.
 
-Hana ho vidí v jídelně ústavu, na obrazovce nad pultem s polévkou. *PROTOKOL NALEZEN V MÉRIDĚ.* A pod tím menším písmem, které se posouvá: *LIDÉ NEJSOU KONTAMINANT, TVRDÍ ZDROJ.*
+Hana ho viděla v jídelně ústavu, na obrazovce nad pultem s polévkou. *PROTOKOL NALEZEN V MÉRIDĚ.* A pod tím menším písmem, které se posouvalo: *LIDÉ NEJSOU KONTAMINANT, TVRDÍ ZDROJ.*
 
-Nikdo nic nepřeložil. Hana to ví jistě, protože to dohodli a protože Lis Aven celý den nečetla, jen se dívala, jestli je obraz celý. Ale v budově je čtyřicet lidí a někdo slyšel, jak Lis Aven včera řekla *protokol*.
+Nikdo nic nepřeložil. Hana to věděla jistě, protože to dohodli a protože Lis Aven celý den nečetla, jen se dívala, jestli je obraz celý. Ale v budově bylo čtyřicet lidí a někdo slyšel, jak Lis Aven den předtím řekla *protokol*.
 
-Ve 12:40 volá zmocněnec.
+Ve 12:40 volal zmocněnec.
 
 „Paní doktorko, je to pravda?“
 
-„Není to nic,“ řekne Hana. „Nikdo nic nepřeložil. Čtou se vrstvy. Je venku asi sto osmdesát obrazů. Překládat budou čtyři týmy zvlášť, a ještě nezačaly.“
+„Není to nic,“ řekla Hana. „Nikdo nic nepřeložil. Čtou se vrstvy. Je venku asi sto osmdesát obrazů. Překládat budou čtyři týmy zvlášť, a ještě nezačaly.“
 
 „Ministerstvo zahraničí se ptá, jestli by to šlo potvrdit. Aspoň to první. Že tam je protokol.“
 
-„Tam je řádek, který se shoduje s výtahem,“ řekne Hana. „To je v záznamu. Víc ne.“
+„Tam je řádek, který se shoduje s výtahem,“ řekla Hana. „To je v záznamu. Víc ne.“
 
 „Mexičané chtějí tiskovou konferenci. Dnes večer. S vámi. Jste ta, která to vytáhla z vody.“
 
-Hana se dívá na titulek. Posouvá se pořád dokola. *LIDÉ NEJSOU KONTAMINANT.* Chtěla by, aby to byla pravda. Chtěla by to víc, než je zdravé. Kvůli Kláře Rybové. Kvůli Jonášovi, který umí napsat svoje jméno i obráceně. Kvůli Sael, kvůli Ladě. A kvůli sobě, protože ten titulek je přesně to, co by sama napsala vpravo, kdyby si to dovolila.
+Hana se dívala na titulek. Posouval se pořád dokola. *LIDÉ NEJSOU KONTAMINANT.* Chtěla, aby to byla pravda. Chtěla to víc, než bylo zdravé. Kvůli Kláře Rybové. Kvůli Jonášovi, který uměl napsat svoje jméno i obráceně. Kvůli Sael, kvůli Ladě. A kvůli sobě, protože ten titulek byl přesně to, co by sama napsala vpravo, kdyby si to dovolila.
 
-„Nepůjdu,“ řekne.
+„Nepůjdu,“ řekla.
 
 „Paní doktorko…“
 
-„Kdybych dnes řekla, že to tam stojí,“ řekne Hana, „a za deset dní by čtyři týmy napsaly něco jiného, kdo jim bude věřit? Mně ne. A jim taky ne. Řeknou, že je někdo dotlačil k tomu, co už bylo v televizi. Ať čtou. Pak řeknu, co napsali. Všechno, co napsali.“
+„Kdybych dnes řekla, že to tam stojí,“ řekla Hana, „a za deset dní by čtyři týmy napsaly něco jiného, kdo jim bude věřit? Mně ne. A jim taky ne. Řeknou, že je někdo dotlačil k tomu, co už bylo v televizi. Ať čtou. Pak řeknu, co napsali. Všechno, co napsali.“
 
 „A do té doby?“
 
-„Do té doby nic,“ řekne Hana. „Tenhle předmět ležel sto tisíc let ve vodě a nikdo o něm nic nevěděl. Deset dní vydrží, aniž by o něm něco říkala televize.“
+„Do té doby nic,“ řekla Hana. „Tenhle předmět ležel sto tisíc let ve vodě a nikdo o něm nic nevěděl. Deset dní vydrží, aniž by o něm něco říkala televize.“
 
-Zmocněnec mlčí. Pak řekne, že to ministerstvu vyřídí. Řekne to tónem, ze kterého Hana pozná, že to vyřídí jinými slovy.
+Zmocněnec mlčel. Pak řekl, že to ministerstvu vyřídí. Řekl to tónem, ze kterého Hana poznala, že to vyřídí jinými slovy.
 
-Večer vydá ústav prohlášení. Napsala ho Marisol. Tři věty: čte se, nic se nepřeložilo, výsledky zveřejní čtyři nezávislé týmy současně. Pod tím jméno ejida X'Kanlum. Ve španělštině, mayštině a angličtině.
+Večer vydal ústav prohlášení. Napsala ho Marisol. Tři věty: čte se, nic se nepřeložilo, výsledky zveřejní čtyři nezávislé týmy současně. Pod tím jméno ejida X'Kanlum. Ve španělštině, mayštině a angličtině.
 
-Titulek běží dál. Jen se mu přidá otazník.
+Titulek běžel dál. Jen se mu přidal otazník.
 
 *
 
-Ve středu ráno se ozve Hesk.
+Ve středu ráno se ozvala Hesk.
 
-Ne Haně. Výpravě, přes Marna. Marn to pustí z tabletu a Lis Aven to řekne nahlas, protože to tak dohodli: všechno, co přijde z lodi a týká se válce, se říká nahlas.
+Ne Haně. Výpravě, přes Marna. Marn to pustil z tabletu a Lis Aven to řekla nahlas, protože to tak dohodli: všechno, co přijde z lodi a týká se válce, se říká nahlas.
 
-Hesk navrhuje zrychlit. Dvojnásobný výkon přístroje, bez přestávek na chladnutí. Čtení by skončilo zítra večer, ne v pátek. Nebo válec převézt člunem na loď, kde jsou lepší přístroje a nikdo nemusí čekat, až vychladne.
+Hesk navrhovala zrychlit. Dvojnásobný výkon přístroje, bez přestávek na chladnutí. Čtení by skončilo druhý den večer, ne v pátek. Nebo válec převézt člunem na loď, kde byly lepší přístroje a nikdo nemusel čekat, až vychladne.
 
-„Do konce lhůty zbývá devětadvacet dní,“ přeloží Lis Aven. Hesk to říká krátkými větami a Lis Aven je tak i překládá. „Teplota jádra stanoviště stoupá. Každý den čekání je den, kdy nevíme, co protokol dovoluje. A co ne.“
+„Do konce lhůty zbývá devětadvacet dní,“ přeložila Lis Aven. Hesk to říkala krátkými větami a Lis Aven je tak i překládala. „Teplota jádra stanoviště stoupá. Každý den čekání je den, kdy nevíme, co protokol dovoluje. A co ne.“
 
-Konzervátorka se podívá na teploměr a pak na Marisol. Řekne španělsky jednu větu. Marisol ji nepřeloží. Nemusí, Hana ji pochopí: při dvojnásobném výkonu by povrch přešel limit za hodinu.
+Konzervátorka se podívala na teploměr a pak na Marisol. Řekla španělsky jednu větu. Marisol ji nepřeložila. Nemusela, Hana ji pochopila: při dvojnásobném výkonu by povrch přešel limit za hodinu.
 
-„Ne,“ řekne Marisol. „Na loď ne. Dvojnásobek ne. Válec neopustí Méridu, to je podmínka obce. A teplota je podmínka ústavu.“
+„Ne,“ řekla Marisol. „Na loď ne. Dvojnásobek ne. Válec neopustí Méridu, to je podmínka obce. A teplota je podmínka ústavu.“
 
-Lis Aven to přeloží. Za chvíli přijde odpověď.
+Lis Aven to přeložila. Za chvíli přišla odpověď.
 
-„Paní velitelka se ptá na názor odborné svědkyně,“ řekne Lis Aven. Dívá se na Hanu. „Té, která měří stanoviště.“
+„Paní velitelka se ptá na názor odborné svědkyně,“ řekla Lis Aven. Dívala se na Hanu. „Té, která měří stanoviště.“
 
-Hana vstane. Neví proč. Řekne to vestoje.
+Hana vstala. Nevěděla proč. Řekla to vestoje.
 
-„Vím, co dělá hora,“ řekne. „Měřím ji pět let. Klenbu ne, tu měří jen to stanoviště. Ale každý pátek měřím pramen pod Hřbetem a vidím, jak stoupá. Vím, že je to nebezpečné. Nevymýšlím si to.“ Odmlčí se. „Ale tohle je jediná věc, která nám může říct, co se s lidmi v té hoře smí a nesmí dělat. Ne se zařízením. S lidmi. Jestli ji spálíme, abychom to věděli o den dřív, nebudeme to vědět nikdy.“
+„Vím, co dělá hora,“ řekla. „Měřím ji pět let. Klenbu ne, tu měří jen to stanoviště. Ale každý pátek měřím pramen pod Hřbetem a vidím, jak stoupá. Vím, že je to nebezpečné. Nevymýšlím si to.“ Odmlčela se. „Ale tohle je jediná věc, která nám může říct, co se s lidmi v té hoře smí a nesmí dělat. Ne se zařízením. S lidmi. Jestli ji spálíme, abychom to věděli o den dřív, nebudeme to vědět nikdy.“
 
-Lis Aven překládá. Hana čeká.
+Lis Aven překládala. Hana čekala.
 
-„Kdo něco čte ve spěchu,“ řekne pak, „čte to, co chce. To dělám i já. Proto mám dva sloupce.“
+„Kdo něco čte ve spěchu,“ řekla pak, „čte to, co chce. To dělám i já. Proto mám dva sloupce.“
 
-Za minutu přijde odpověď. Lis Aven ji řekne bez výrazu.
+Za minutu přišla odpověď. Lis Aven ji řekla bez výrazu.
 
 „Paní velitelka bere na vědomí. Připojuje odlišné stanovisko.“
 
-Marisol to zapíše. Hana si sedne. Ruce má studené, i když je v laboratoři dvacet čtyři stupňů.
+Marisol to zapsala. Hana si sedla. Ruce měla studené, i když bylo v laboratoři dvacet čtyři stupňů.
 
-Luis u dveří zvedne palec. Jen trochu, aby to nikdo neviděl.
+Luis u dveří zvedl palec. Jen trochu, aby to nikdo neviděl.
 
 *
 
-Ve čtvrtek přijde zpráva od Krausové. Ne o překladu, ten nesmí nikomu posílat. Je to procesní zpráva.
+Ve čtvrtek přišla zpráva od Krausové. Ne o překladu, ten nesměla nikomu posílat. Byla to procesní zpráva.
 
 *Pracujeme. Glosy jsou dobré. Jedna věc: v opisech z archivu rady stojí jeden znak dvakrát vedle sebe, ve dvou podobách. Liší se jedním tahem. Opisovatelka k nim připsala dvě různé glosy. Totéž mají podle všeho i ostatní týmy, protože glosy jsou stejné pro všechny. Víc říct nesmím. A. K.*
 
-Hana si zprávu přečte.
+Hana si zprávu přečetla.
 
 *Liší se jedním tahem.*
 
-Vzpomene si na Lis Aven v hale v Brně, jak nadiktovala dvě slova, protože se lišila jedním znakem. *Dotčená. Blízká.*
+Vzpomněla si na Lis Aven v hale v Brně, jak nadiktovala dvě slova, protože se lišila jedním znakem. *Dotčená. Blízká.*
 
-Zapíše to vpravo. Vlevo napíše jen: *Krausová: v glosách jeden znak ve 2 podobách, liší se 1 tahem, 2 různé glosy. (Procesní zpráva, bez obsahu.)*
+Zapsala to vpravo. Vlevo napsala jen: *Krausová: v glosách jeden znak ve 2 podobách, liší se 1 tahem, 2 různé glosy. (Procesní zpráva, bez obsahu.)*
 
-Napíše Sael.
+Napsala Sael.
 
 *Rokyta opsala jeden znak dvakrát. Víte proč?*
 
-Odpověď přijde za hodinu. V Chebu je jedenáct večer.
+Odpověď přišla za hodinu. V Chebu bylo jedenáct večer.
 
 *Protože jsou to dva znaky. Ona to věděla. Já jsem to nevěděla. Psala to pro někoho, kdo to jednou bude číst. S.*
 
 *
 
-V pátek ve 14:20 je venku šest set čtyřicátá osmá vrstva.
+V pátek ve 14:20 byla venku šest set čtyřicátá osmá vrstva.
 
-Marn vypne přístroj. Nic se nestane. Žádný zvuk, žádné světlo. Jen obrazovka na vedlejším stole ztmavne a Marn si sedne na židli a zakryje si obličej rukama, a Hana pochopí, že pět dní nespal víc než čtyři hodiny za noc.
+Marn vypnul přístroj. Nic se nestalo. Žádný zvuk, žádné světlo. Jen obrazovka na vedlejším stole ztmavla a Marn si sedl na židli a zakryl si obličej rukama, a Hana pochopila, že pět dní nespal víc než čtyři hodiny za noc.
 
-Konzervátorka změří povrch. Šest míst, šest čísel. Za hodinu je měří znovu. Válec má teplotu laboratoře. Konzervátorka ho nafotí ze všech stran, stejně jako v pondělí ráno, a fotky položí vedle sebe. Nic se nezměnilo. Ani odstín pod jizvou dvě.
+Konzervátorka změřila povrch. Šest míst, šest čísel. Za hodinu je změřila znovu. Válec měl teplotu laboratoře. Konzervátorka ho nafotila ze všech stran, stejně jako v pondělí ráno, a fotky položila vedle sebe. Nic se nezměnilo. Ani odstín pod jizvou dvě.
 
-Marisol podepíše. Luis podepíše za obec. Lis Aven podepíše za výpravu. Hana podepíše, že u toho byla.
+Marisol podepsala. Luis podepsal za obec. Lis Aven podepsala za výpravu. Hana podepsala, že u toho byla.
 
-Pak se válec vrátí do bedny. Konzervátorka ho tam položí sama. Marisol přes víko nalepí novou pásku, bílou, s modrým nápisem, a podepíše se přes ni a přes dřevo. Hana to vyfotí. Nemusí. Udělá to ze zvyku a Marisol se usměje.
+Pak se válec vrátil do bedny. Konzervátorka ho tam položila sama. Marisol přes víko nalepila novou pásku, bílou, s modrým nápisem, a podepsala se přes ni a přes dřevo. Hana to vyfotila. Nemusela. Udělala to ze zvyku a Marisol se usmála.
 
-„Zase,“ řekne.
+„Zase,“ řekla.
 
-„Zase,“ řekne Hana.
+„Zase,“ řekla Hana.
 
 *
 
-Lis Aven ji najde na chodbě u automatu na kafe.
+Lis Aven ji našla na chodbě u automatu na kafe.
 
-Je bledá. Jizva za uchem je v tom světle vidět víc než jindy. Hana ví, že Lis Aven celý týden nečetla. Ví taky, že se dívala. Kdo se pět dní dívá na znaky, které umí číst, a nečte je, ten je stejně čte. Jen si to nesmí přiznat.
+Byla bledá. Jizva za uchem byla v tom světle vidět víc než jindy. Hana věděla, že Lis Aven celý týden nečetla. Věděla taky, že se dívala. Kdo se pět dní dívá na znaky, které umí číst, a nečte je, ten je stejně čte. Jen si to nesmí přiznat.
 
-„Paní doktorko,“ řekne Lis Aven.
+„Paní doktorko,“ řekla Lis Aven.
 
-„Neříkejte mi to,“ řekne Hana.
+„Neříkejte mi to,“ řekla Hana.
 
-Lis Aven se zarazí.
+Lis Aven se zarazila.
 
-„Neřeknu,“ řekne pak. „Jen procesní věc. Tu smím.“
+„Neřeknu,“ řekla pak. „Jen procesní věc. Tu smím.“
 
 „Dobře.“
 
-„Je tam víc,“ řekne Lis Aven. „Víc než to, co je v televizi. Víc, než chtějí slyšet oni. A víc, než chceme slyšet my.“ Odmlčí se. „Až to týmy napíšou, bude to těžké. Pro všechny. I pro vás.“
+„Je tam víc,“ řekla Lis Aven. „Víc než to, co je v televizi. Víc, než chtějí slyšet oni. A víc, než chceme slyšet my.“ Odmlčela se. „Až to týmy napíšou, bude to těžké. Pro všechny. I pro vás.“
 
 „Kdy?“
 
 „Za deset dní. Třináctého srpna v devět. Všem naráz.“
 
-„Tak třináctého v devět,“ řekne Hana. „Jako ostatní.“
+„Tak třináctého v devět,“ řekla Hana. „Jako ostatní.“
 
-Lis Aven kývne. Pak udělá něco, co Hana nečeká. Sáhne si za ucho, na jizvu, a hned ruku stáhne, jako by se spálila.
+Lis Aven kývla. Pak udělala něco, co Hana nečekala. Sáhla si za ucho, na jizvu, a hned ruku stáhla, jako by se spálila.
 
-„Odpojila jsem se,“ řekne. „Na celý týden. Aby mi to síť nepřečetla sama. Kdybych se připojila, přeložila by mi každý obraz, který jsem viděla. Nechtěla jsem to.“ Pokrčí rameny. „Je to divné. Takové ticho.“
+„Odpojila jsem se,“ řekla. „Na celý týden. Aby mi to síť nepřečetla sama. Kdybych se připojila, přeložila by mi každý obraz, který jsem viděla. Nechtěla jsem to.“ Pokrčila rameny. „Je to divné. Takové ticho.“
 
-Hana si vzpomene na náměstí. Na čtyři sta lidí, kteří si sedli na zem a mlčeli. *Bylo tam takové ticho, že jsem nic neslyšela. Ventilaci jsem uslyšela až doma, když jsem se odpojila.*
+Hana si vzpomněla na náměstí. Na čtyři sta lidí, kteří si sedli na zem a mlčeli. *Bylo tam takové ticho, že jsem nic neslyšela. Ventilaci jsem uslyšela až doma, když jsem se odpojila.*
 
-„Slyšíte klimatizaci?“ zeptá se Hana.
+„Slyšíte klimatizaci?“ zeptala se Hana.
 
-Lis Aven poslouchá. Hana jí na tváři vidí, že pochopila, na co se ptá.
+Lis Aven poslouchala. Hana jí na tváři viděla, že pochopila, na co se ptá.
 
-„Ano,“ řekne Lis Aven. „Pět dní ji slyším.“
+„Ano,“ řekla Lis Aven. „Pět dní ji slyším.“
 
 *
 
-Večer ji Luis odveze do X'Kanlum. Luis nejdřív nechce, aby jela. Pak chce. Řekne, že don Felipe řekl, ať ji tam vezme, a s donem Felipem se nehádá ani Luis.
+Večer ji Luis odvezl do X'Kanlum. Luis nejdřív nechtěl, aby jela. Pak chtěl. Řekl, že don Felipe řekl, ať ji tam vezme, a s donem Felipem se nehádá ani Luis.
 
-Cesta trvá necelé dvě hodiny. Prach, pak les, pak brána ejida, kterou Luis odemkne svým klíčem. Pak pole pana Chana.
+Cesta trvala necelé dvě hodiny. Prach, pak les, pak brána ejida, kterou Luis odemkl svým klíčem. Pak pole pana Chana.
 
-Na poli rostou dýně. Velké, oranžové, mezi širokými listy. Uprostřed pole, kde byl tenkrát vrt, stojí betonový křížek, malý, po kolena, a dýně kolem něj rostou tak hustě, že ho skoro není vidět.
+Na poli rostly dýně. Velké, oranžové, mezi širokými listy. Uprostřed pole, kde byl tenkrát vrt, stál betonový křížek, malý, po kolena, a dýně kolem něj rostly tak hustě, že ho skoro nebylo vidět.
 
-Pan Chan stojí na kraji pole. Zvedne ruku. Hana mu zamává.
+Pan Chan stál na kraji pole. Zvedl ruku. Hana mu zamávala.
 
-K cenotu jdou pěšky. Luis ji vede po pěšině, kterou zná líp než kdokoli. U kraje se zastaví. Dolů nejdou. Hana tam už dolů nikdy nepůjde, a ví to, a Luis to ví taky.
+K cenotu šli pěšky. Luis ji vedl po pěšině, kterou znal líp než kdokoli. U kraje se zastavil. Dolů nešli. Hana tam už dolů nikdy nepůjde, a věděla to, a Luis to věděl taky.
 
-Voda dole je tmavá. Nad ní stojí vzduch, horký a těžký, a pod převisem visí kořeny.
+Voda dole byla tmavá. Nad ní stál vzduch, horký a těžký, a pod převisem visely kořeny.
 
-„Tady jsem ho vzala do ruky,“ řekne Hana.
+„Tady jsem ho vzala do ruky,“ řekla Hana.
 
 „Já vím. Natáčel jsem to.“
 
 „Byl studený.“
 
-„Voda je dole na ruku studená,“ řekne Luis. „I pod tou slanou, co je teplejší.“
+„Voda je dole na ruku studená,“ řekl Luis. „I pod tou slanou, co je teplejší.“
 
-Hana se dívá do vody. Za šest set čtyřicet osm vrstev, za čtyři týmy, za deset dní přečtou, co v tom válci stálo. Bude to těžké, řekla Lis Aven. Pro všechny.
+Hana se dívala do vody. Za šest set čtyřicet osm vrstev, za čtyři týmy, za deset dní přečtou, co v tom válci stálo. Bude to těžké, řekla Lis Aven. Pro všechny.
 
-Nikdo to ještě nečetl. Ani ona. A přece ví, že to nebude tak nevinné jako titulek v televizi. Pozná to podle Lis Aven. Podle toho, jak si sáhla za ucho a ucukla.
+Nikdo to ještě nečetl. Ani ona. A přece věděla, že to nebude tak nevinné jako titulek v televizi. Poznala to podle Lis Aven. Podle toho, jak si sáhla za ucho a ucukla.
 
 *
 
-V hotelu otevře sešit.
+V hotelu otevřela sešit.
 
 Nahoru: *Do 30. 8.: 27 dní.*
 
@@ -416,8 +416,8 @@ Vpravo:
 
 *Lis Aven: „Je tam víc, než chceme slyšet my.“ Kdo jsme „my“? Výprava? Nebo i já?*
 
-Zastaví se nad pravým sloupcem, nad tou poslední otázkou. A připíše pod ni ještě jeden řádek.
+Zastavila se nad pravým sloupcem, nad tou poslední otázkou. A připsala pod ni ještě jeden řádek.
 
 *Až to přečtou, budu to muset říct celé. I to, co nechci.*
 
-Zavře sešit. V hotelu hučí klimatizace, stejná jako v laboratoři. Hana ji slyší. Pět dní ji slyšela a nevšimla si jí.
+Zavřela sešit. V hotelu hučela klimatizace, stejná jako v laboratoři. Hana ji slyšela. Pět dní ji předtím slyšela a nevšimla si jí.

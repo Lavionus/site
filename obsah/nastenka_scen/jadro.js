@@ -424,6 +424,56 @@
     });
   }
 
+  /** Kontrola osnovy: seznam upozornění {typ, uroven ('pozor'|'info'), text, sceny:[id]} pro autora. */
+  function kontrola(p) {
+    const sceny = poradi(p), n = sceny.length, out = [];
+    const pridej = (typ, uroven, text, ids) => out.push({ typ, uroven, text, sceny: ids || [] });
+    // stejné názvy: rukopis se páruje podle nadpisů, duplicita páruje špatně
+    const podleNazvu = new Map();
+    for (const s of sceny) { const k = klicNazvu(s.nazev); if (!k) continue; if (!podleNazvu.has(k)) podleNazvu.set(k, []); podleNazvu.get(k).push(s); }
+    for (const v of podleNazvu.values()) if (v.length > 1) { const pocet = v.length, nazev = v[0].nazev; pridej('duplicita', 'pozor', `Stejný název má ${pocet} scén: „${nazev}“ (párování s rukopisem podle nadpisů bude nejisté).`, v.map(s => s.id)); }
+    for (const c of p.sloupce) if (!scenySloupce(p, c.id).length) { const nazev = c.nazev; pridej('prazdny', 'info', `Prázdný sloupec „${nazev}“.`); }
+    // POV: jen když ho projekt vůbec používá
+    const sPov = sceny.filter(s => s.pov).length;
+    if (sPov && sPov < n) { const bez = sceny.filter(s => !s.pov); const pocet = bez.length; pridej('bezpov', 'pozor', `Scény bez POV postavy: ${pocet}.`, bez.map(s => s.id)); }
+    let beh = [];
+    const konecBehu = () => { const pocet = beh.length, pov = beh.length && beh[0].pov; if (pocet >= 5) pridej('pov-rada', 'info', `Z pohledu postavy ${pov} je ${pocet} scén po sobě.`, beh.map(s => s.id)); };
+    for (const s of sceny) { if (s.pov && beh.length && beh[0].pov === s.pov) beh.push(s); else { konecBehu(); beh = s.pov ? [s] : []; } }
+    konecBehu();
+    const bezShrnuti = sceny.filter(s => !s.shrnuti.trim());
+    if (bezShrnuti.length) { const pocet = bezShrnuti.length; pridej('shrnuti', 'info', `Scény bez shrnutí: ${pocet}.`, bezShrnuti.map(s => s.id)); }
+    // postava zmizí na dlouho
+    const prah = Math.max(5, Math.ceil(n / 4));
+    for (const po of pruhyPostav(p).postavy) {
+      if (po.celkem < 3 || po.mezera < prah) continue;
+      let k = 1; while (k < po.vyskyty.length && po.vyskyty[k].i - po.vyskyty[k - 1].i - 1 !== po.mezera) k++;
+      const jmeno = po.jmeno, mezera = po.mezera, od = po.vyskyty[k - 1].i + 1, po2 = po.vyskyty[k].i + 1;
+      pridej('mezera', 'info', `Postava ${jmeno} chybí ${mezera} scén po sobě (mezi scénami ${od} a ${po2}).`,
+        [sceny[po.vyskyty[k - 1].i].id, sceny[po.vyskyty[k].i].id]);
+    }
+    // čas: retrospektivy jako informace (záměr autora, nebo překlep v čase)
+    const retro = casovaOsa(p).polozky.filter(x => x.retro);
+    const pocetRetro = retro.length; if (pocetRetro) pridej('retro', 'info', `Scény, které se dějí dřív než už přečtené (retrospektiva nebo chyba v čase): ${pocetRetro}.`, retro.map(x => x.scena.id));
+    // gradace
+    if (n >= 6) {
+      let max = -1, iMax = 0;
+      sceny.forEach((s, i) => { if (s.napeti > max) { max = s.napeti; iMax = i; } });
+      const kde = iMax + 1; if (iMax < n * 0.6) pridej('vrchol', 'pozor', `Nejvyšší napětí (${max}) přichází už ve scéně ${kde} z ${n} – vyvrcholení bývá v poslední čtvrtině.`, [sceny[iMax].id]);
+      for (let i = 0; i + 3 < n; ) {
+        let j = i; while (j + 1 < n && sceny[j + 1].napeti === sceny[i].napeti) j++;
+        const hodnota = sceny[i].napeti, pocet = j - i + 1, od = i + 1, az = j + 1;
+        if (pocet >= 4) pridej('plocha', 'info', `Stejné napětí (${hodnota}) ve ${pocet} scénách po sobě (${od}–${az}).`, sceny.slice(i, j + 1).map(s => s.id));
+        i = j + 1;
+      }
+    }
+    // délky
+    const prestrel = sceny.filter(s => s.cilSlov && s.slov > s.cilSlov * 1.5);
+    const pocetDl = prestrel.length; if (pocetDl) pridej('delka', 'info', `Scény delší než cíl o víc než polovinu: ${pocetDl}.`, prestrel.map(s => s.id));
+    const hotovoPrazdne = sceny.filter(s => s.stav === 'hotovo' && !s.slov) ;
+    const pocetH = hotovoPrazdne.length; if (pocetH && sceny.some(s => s.slov)) pridej('hotovo0', 'pozor', `Scény označené „hotovo“ bez slov v rukopisu: ${pocetH}.`, hotovoPrazdne.map(s => s.id));
+    return out.sort((a, b) => (a.uroven === 'pozor' ? 0 : 1) - (b.uroven === 'pozor' ? 0 : 1));
+  }
+
   // ---------- slova a Markdown ----------
   function textBezZnacek(md) {
     return String(md || '')
@@ -662,7 +712,7 @@
     pridejScenu, smazScenu, duplikujScenu, presunScenu, posunScenu,
     pouzijSablonu, casKlic, casovaOsa,
     postavySceny, vsechnyPostavy, vsechnyStitky, pruhyPostav, filtruj,
-    statistiky, krivkaNapeti,
+    statistiky, krivkaNapeti, kontrola,
     pocetSlov, rozdelMarkdown, importMarkdown, exportMarkdown, spocitejRukopis, klicNazvu,
     Historie, zaloha, nactiZalohu
   };

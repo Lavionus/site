@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulátor vodopádů</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="vodopady/jadro.js"></script>
+<style>
+html, body { height: 100%; }
+body { margin: 0; display: flex; flex-direction: column; background: var(--bg-deep); color: var(--text); overflow: hidden; }
+
+/* horní lišta – vzor prompty.html */
+.lista { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg-elevated); border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
+.lista::-webkit-scrollbar { display: none; }
+.lista > * { flex-shrink: 0; }
+.lista h1 { font-size: 1.02rem; font-weight: 600; white-space: nowrap; margin: 0 4px 0 0; }
+.lista .skup { display: flex; flex-direction: column; align-items: stretch; gap: 1px; padding: 1px 4px 3px; border-radius: 9px; background: color-mix(in srgb, var(--bg-control) 45%, transparent); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
+.lista .skup-nazev { font-size: 9.5px; line-height: 1.25; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); text-align: center; user-select: none; }
+.lista .skup-tl { display: flex; align-items: center; gap: 2px; }
+.lista .vpravo { margin-left: auto; display: flex; gap: 4px; }
+.samostatne .lista { padding-right: 72px; }
+.tl { background: var(--bg-control); color: var(--text); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: .84rem; white-space: nowrap; font-family: inherit; line-height: 1.3; }
+.tl:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.tl:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tl[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.tl.hlavni-tl { background: var(--accent); color: var(--on-accent, #fff); border-color: var(--accent); font-weight: 600; min-width: 92px; }
+.tl.hlavni-tl:hover { background: var(--accent-hover); }
+select.tl { padding: 4px 6px; }
+@media (max-width: 1100px) { .lista .txt { display: none; } }
+
+.nabidka { position: fixed; z-index: 60; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 2px; min-width: 250px; max-width: calc(100vw - 12px); max-height: calc(100vh - 70px); overflow-y: auto; }
+.nabidka[hidden] { display: none; }
+.nabidka .tl { text-align: left; background: none; border-color: transparent; padding: 6px 10px; }
+.nabidka .tl:hover { background: var(--bg-hover); }
+.nabidka .tl[aria-pressed="true"] { background: var(--accent-soft); }
+.nabidka hr { border: 0; border-top: 1px solid var(--border); margin: 4px 0; width: 100%; }
+.nabidka .titulek { font-size: .72rem; color: var(--text-faint); padding: 4px 10px; text-transform: uppercase; letter-spacing: .04em; }
+.nabidka label.posuvnik { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 4px 10px; font-size: .82rem; color: var(--text-muted); }
+.nabidka label.posuvnik input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.nabidka label.posuvnik output { color: var(--text); font-variant-numeric: tabular-nums; }
+.nabidka label.zaskrt { display: flex; gap: 8px; align-items: center; padding: 5px 10px; font-size: .84rem; cursor: pointer; }
+.nabidka label.zaskrt input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+/* plocha */
+.plocha { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 10px; position: relative; }
+.obal { position: relative; border: 1px solid var(--border); border-radius: var(--radius, 8px); overflow: hidden; box-shadow: var(--shadow); }
+.obal canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.obal.nastroj-zdroj canvas { cursor: move; }
+.udaje { position: absolute; left: 8px; top: 8px; display: flex; gap: 10px; flex-wrap: wrap; font-size: .76rem; color: var(--text); background: color-mix(in srgb, var(--bg-elevated) 82%, transparent); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.udaje b { font-weight: 600; }
+@media (max-width: 520px) { .udaje { font-size: .68rem; gap: 6px; } .udaje .mene { display: none; } }
+.pauza-stitek { position: absolute; right: 8px; top: 8px; font-size: .78rem; background: var(--warn); color: #000; border-radius: 6px; padding: 2px 8px; pointer-events: none; }
+
+dialog { background: var(--bg-panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; max-width: min(640px, calc(100vw - 24px)); padding: 16px 20px; box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(0, 0, 0, .45); }
+dialog h2 { margin: 0 0 8px; font-size: 1.1rem; }
+dialog p, dialog li { font-size: .88rem; line-height: 1.5; color: var(--text-muted); }
+dialog b { color: var(--text); }
+dialog kbd { border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 5px; font-size: .78rem; background: var(--bg-control); color: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="lista" id="lista">
+  <h1>💧 Simulátor vodopádů</h1>
+  <div class="skup" role="group" aria-label="Simulace"><span class="skup-nazev" aria-hidden="true">Simulace</span><div class="skup-tl">
+    <button class="tl hlavni-tl" id="btnBeh" data-prikaz="beh" title="Spustit / pozastavit (mezerník)">⏸ Pauza</button>
+    <button class="tl" data-prikaz="restart" title="Začít krajinu znovu (R)">↺<span class="txt"> Znovu</span></button>
+    <button class="tl" data-nabidka="nabKrajina" title="Předvolené krajiny">⛰<span class="txt"> Krajina</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroje"><span class="skup-nazev" aria-hidden="true">Nástroje</span><div class="skup-tl">
+    <button class="tl" data-nastroj="skala" aria-pressed="true" title="Kreslit skálu (1)">🪨<span class="txt"> Skála</span></button>
+    <button class="tl" data-nastroj="guma" aria-pressed="false" title="Mazat skálu (2)">🧽<span class="txt"> Guma</span></button>
+    <button class="tl" data-nastroj="voda" aria-pressed="false" title="Přilít vodu (3)">💧<span class="txt"> Voda</span></button>
+    <button class="tl" data-nastroj="vysat" aria-pressed="false" title="Odebrat vodu (4)">🫗<span class="txt"> Vysát</span></button>
+    <button class="tl" data-nastroj="zdroj" aria-pressed="false" title="Přesunout pramen (5)">🚰<span class="txt"> Pramen</span></button>
+    <select id="velikost" class="tl" aria-label="Velikost štětce" title="Velikost štětce">
+      <option value="3">Štětec S</option>
+      <option value="6" selected>Štětec M</option>
+      <option value="12">Štětec L</option>
+      <option value="22">Štětec XL</option>
+    </select>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nastavení"><span class="skup-nazev" aria-hidden="true">Nastavení</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPramen" title="Šířka a rychlost pramene">🚰<span class="txt"> Pramen</span> ▾</button>
+    <button class="tl" data-nabidka="nabFyzika" title="Gravitace, viskozita, tření">⚙<span class="txt"> Fyzika</span> ▾</button>
+    <button class="tl" data-nabidka="nabZobrazit" title="Vykreslení a rychlost času">👁<span class="txt"> Zobrazit</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda (F1)" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabKrajina" class="nabidka" hidden>
+  <div class="titulek">Předvolené krajiny</div>
+  <button class="tl" data-krajina="vysoky">🏞 Vysoký vodopád</button>
+  <button class="tl" data-krajina="kaskada">🪜 Kaskáda</button>
+  <button class="tl" data-krajina="stupne">🪨 Skalní stupně</button>
+  <button class="tl" data-krajina="prehrada">🧱 Přehrada s přelivem</button>
+  <button class="tl" data-krajina="prazdna">⬜ Prázdná krajina</button>
+  <hr>
+  <button class="tl" data-prikaz="vylitVodu">🫗 Vylít všechnu vodu</button>
+  <button class="tl" data-prikaz="smazatSkaly">🧽 Smazat všechny skály</button>
+</div>
+
+<div id="nabPramen" class="nabidka" hidden>
+  <label class="zaskrt"><input type="checkbox" id="zdrojZap" checked> Pramen teče</label>
+  <label class="posuvnik">Šířka proudu <output id="oSirka"></output><input type="range" id="sirka" min="3" max="40" step="1"></label>
+  <label class="posuvnik">Rychlost proudu <output id="oRychlost"></output><input type="range" id="rychlost" min="-150" max="150" step="5"></label>
+  <p class="titulek" style="text-transform:none;letter-spacing:0">Záporná rychlost = proud doleva.</p>
+</div>
+
+<div id="nabFyzika" class="nabidka" hidden>
+  <label class="posuvnik">Gravitace <output id="oGravitace"></output><input type="range" id="gravitace" min="20" max="400" step="4"></label>
+  <label class="posuvnik">Viskozita <output id="oViskozita"></output><input type="range" id="viskozita" min="0" max="60" step="1"></label>
+  <label class="posuvnik">Tření o skálu <output id="oTreni"></output><input type="range" id="treni" min="0" max="0.5" step="0.01"></label>
+  <label class="posuvnik">Nejvíc částic <output id="oLimit"></output><input type="range" id="limit" min="500" max="6000" step="100"></label>
+  <label class="zaskrt"><input type="checkbox" id="sprej" checked> Odstřik a mlha</label>
+  <hr>
+  <button class="tl" data-prikaz="vychozi">↺ Výchozí fyzika</button>
+</div>
+
+<div id="nabZobrazit" class="nabidka" hidden>
+  <div class="titulek">Vykreslení</div>
+  <button class="tl" data-rezim="voda" aria-pressed="true">🌊 Voda</button>
+  <button class="tl" data-rezim="rychlost" aria-pressed="false">🌈 Rychlost proudění</button>
+  <button class="tl" data-rezim="castice" aria-pressed="false">⚫ Částice</button>
+  <hr>
+  <div class="titulek">Běh času</div>
+  <button class="tl" data-cas="1" aria-pressed="true">1× skutečný čas</button>
+  <button class="tl" data-cas="0.5" aria-pressed="false">½× zpomaleně</button>
+  <button class="tl" data-cas="0.2" aria-pressed="false">⅕× zpomalený záběr</button>
+</div>
+
+<main class="plocha" id="plocha">
+  <div class="obal" id="obal">
+    <canvas id="platno" aria-label="Simulace vodopádu – kreslením měníte terén"></canvas>
+    <div class="udaje">
+      <span>Částic: <b id="uN">0</b></span>
+      <span>Průtok: <b id="uPrutok">0</b> l/s</span>
+      <span>Nejvyšší rychlost: <b id="uV">0</b> m/s</span>
+      <span class="mene">Čas: <b id="uCas">0</b> s</span>
+      <span class="mene"><b id="uFps">0</b> FPS</span>
+    </div>
+    <div class="pauza-stitek" id="stitekPauza" hidden>⏸ pozastaveno</div>
+  </div>
+</main>
+
+<dialog id="napoveda">
+  <h2>💧 Simulátor vodopádů</h2>
+  <p>Voda je složená z tisíců částic, které se navzájem odpuzují, když jsou moc blízko, a přitahují, když se vzdalují
+    (metoda <b>dvojité relaxace hustoty</b>, Clavet a kol. 2005). Díky tomu teče, vytváří hladinu, plní tůně
+    a při prudkém dopadu odstřikuje. Měřítko: celá scéna je 20 × 12,5 m, gravitace 9,81 m/s².</p>
+  <ul>
+    <li><b>🪨 Skála / 🧽 Guma</b> – kreslete a mažte terén tažením myší či prstem. Zkuste přehradit tok nebo vylámat převis.</li>
+    <li><b>💧 Voda / 🫗 Vysát</b> – přilijte vodu kamkoli nebo ji odeberte.</li>
+    <li><b>🚰 Pramen</b> – přetáhněte místo, odkud voda vytéká; šířku a rychlost nastavíte v nabídce Pramen.</li>
+    <li>Voda, která odteče za okraj obrazu, zmizí – řeka teče dál.</li>
+    <li>Barva: bílá pěna = rychlý, rozbouřený proud; tmavě modrá = klidná hloubka.</li>
+  </ul>
+  <p>Klávesy: <kbd>mezerník</kbd> pauza, <kbd>R</kbd> znovu, <kbd>1</kbd>–<kbd>5</kbd> nástroje, <kbd>F1</kbd> nápověda.</p>
+  <form method="dialog" style="text-align:right"><button class="tl hlavni-tl">Zavřít</button></form>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+const V = window.VODOPAD, W = V.W, H = V.H;
+const $ = id => document.getElementById(id);
+const S = V.vytvor(6000);
+const VYCHOZI_FYZIKA = { ...S.par };
+
+let krajina = 'vysoky', bezi = true, nastroj = 'skala', rezim = 'voda', casKoef = 1;
+let mys = null;               // {x, y} ve světě, když je ukazatel nad plátnem
+let tah = null;               // probíhající tah štětcem
+
+// ---------- plátno ----------
+const platno = $('platno'), ctx = platno.getContext('2d');
+const mezi = document.createElement('canvas'); mezi.width = W; mezi.height = H;
+const mctx = mezi.getContext('2d');
+const obr = mctx.createImageData(W, H), obr32 = new Uint32Array(obr.data.buffer);
+const pozadi = new Uint32Array(W * H);
+const hustota = new Float32Array(W * H), rychlostPole = new Float32Array(W * H);
+let meritko = 1;
+
+function rozmer() {
+  const p = $('plocha'), sw = p.clientWidth - 20, sh = p.clientHeight - 20;
+  const s = Math.max(0.5, Math.min(sw / W, sh / H));
+  const cw = Math.floor(W * s), ch = Math.floor(H * s), dpr = window.devicePixelRatio || 1;
+  $('obal').style.width = cw + 'px'; $('obal').style.height = ch + 'px';
+  platno.width = Math.round(cw * dpr); platno.height = Math.round(ch * dpr);
+  meritko = platno.width / W;
+}
+
+const rgba = (r, g, b, a = 255) => (a << 24) | (b << 16) | (g << 8) | r;
+const svetle = () => document.documentElement.dataset.theme === 'light';
+
+// pozadí (nebe + skála s mechem) – přepočet jen při změně terénu nebo tématu
+function prekresliPozadi() {
+  const den = svetle();
+  for (let y = 0; y < H; y++) {
+    const t = y / H;
+    const nebe = den
+      ? rgba(150 + 70 * t, 195 + 45 * t, 235 + 15 * t)
+      : rgba(14 + 20 * t, 22 + 28 * t, 42 + 34 * t);
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (!S.skala[i]) { pozadi[i] = nebe; continue; }
+      const d = S.hloubka[i];                         // 2 = povrch, roste dovnitř
+      const sum = ((x * 73856093 ^ y * 19349663) >>> 0) % 23 - 11;
+      const navrchu = y > 0 && (!S.skala[i - W] || (y > 1 && !S.skala[i - 2 * W]));
+      let r, g, b;
+      if (navrchu) { r = 74; g = 116; b = 52; }        // mech a tráva na horních plochách
+      else { const tm = Math.max(0.55, 1 - d / 60); r = 118 * tm; g = 106 * tm; b = 92 * tm; }
+      if (d <= 2 && !navrchu) { r += 22; g += 20; b += 18; }   // světlejší hrana
+      const k = den ? 1 : 0.72;
+      pozadi[i] = rgba(Math.max(0, Math.min(255, (r + sum) * k)), Math.max(0, Math.min(255, (g + sum) * k)), Math.max(0, Math.min(255, (b + sum) * k)));
+    }
+  }
+}
+
+// rozmazání částic do pole hustoty → hladká hladina
+const R = 3.5, R2 = R * R;
+function rozmazCastice() {
+  hustota.fill(0); rychlostPole.fill(0);
+  for (let i = 0; i < S.n; i++) {
+    const px = S.x[i], py = S.y[i], v = Math.hypot(S.vx[i], S.vy[i]);
+    const x0 = Math.max(0, Math.floor(px - R)), x1 = Math.min(W - 1, Math.ceil(px + R));
+    const y0 = Math.max(0, Math.floor(py - R)), y1 = Math.min(H - 1, Math.ceil(py + R));
+    for (let y = y0; y <= y1; y++) {
+      const dy = y + 0.5 - py;
+      for (let x = x0; x <= x1; x++) {
+        const dx = x + 0.5 - px, q = 1 - (dx * dx + dy * dy) / R2;
+        if (q <= 0) continue;
+        const w = q * q, j = y * W + x;
+        hustota[j] += w; rychlostPole[j] += w * v;
+      }
+    }
+  }
+}
+
+function barvaRychlosti(t) {   // 0 modrá → 1 červená
+  const h = (1 - t) * 230;
+  const f = (n) => { const k = (n + h / 30) % 12; return 255 * (0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1))); };
+  return [f(0), f(8), f(4)];
+}
+
+function kresli() {
+  const den = svetle();
+  if (rezim === 'castice') {
+    obr32.set(pozadi);
+  } else {
+    rozmazCastice();
+    for (let j = 0; j < W * H; j++) {
+      const d = hustota[j];
+      if (d < 0.35) { obr32[j] = pozadi[j]; continue; }
+      const a = Math.min(1, (d - 0.35) / 0.6) * (rezim === 'voda' ? 0.88 : 0.95);
+      const v = rychlostPole[j] / d;
+      let r, g, b;
+      if (rezim === 'rychlost') {
+        [r, g, b] = barvaRychlosti(Math.min(1, v / 220));
+      } else {
+        const pena = Math.min(1, Math.max(0, (v - 70) / 170) + Math.max(0, (1.3 - d) / 1.6) * 0.45);
+        const hloub = Math.min(1, Math.max(0, (d - 2) / 3));
+        r = 32 - 18 * hloub; g = 110 - 40 * hloub; b = 185 - 35 * hloub;
+        if (!den) { r *= 0.8; g *= 0.85; b *= 0.95; }
+        r += (235 - r) * pena; g += (244 - g) * pena; b += (250 - b) * pena;
+      }
+      const p = pozadi[j], pr = p & 255, pg = (p >>> 8) & 255, pb = (p >>> 16) & 255;
+      obr32[j] = rgba(pr + (r - pr) * a, pg + (g - pg) * a, pb + (b - pb) * a);
+    }
+  }
+  mctx.putImageData(obr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(mezi, 0, 0, platno.width, platno.height);
+  const m = meritko;
+
+  if (rezim === 'castice') {
+    const r = Math.max(1.5, m * 1.1);
+    for (let i = 0; i < S.n; i++) {
+      const [cr, cg, cb] = barvaRychlosti(Math.min(1, Math.hypot(S.vx[i], S.vy[i]) / 220));
+      ctx.fillStyle = `rgb(${cr | 0},${cg | 0},${cb | 0})`;
+      ctx.fillRect(S.x[i] * m - r / 2, S.y[i] * m - r / 2, r, r);
+    }
+  }
+
+  // odstřik: mladé kapky drobné a jasné, staré = rozptýlená mlha
+  const sp = S.sprej;
+  for (let k = 0; k < sp.n; k++) {
+    const t = sp.vek[k] / sp.zivot[k];
+    const r = m * (0.5 + t * 3.5), a = (1 - t) * (0.55 - t * 0.35);
+    ctx.fillStyle = den ? `rgba(255,255,255,${a})` : `rgba(215,230,245,${a * 0.8})`;
+    ctx.beginPath(); ctx.arc(sp.x[k] * m, sp.y[k] * m, r, 0, 6.2832); ctx.fill();
+  }
+
+  // pramen
+  const z = S.zdroj, smer = z.rychlost < 0 ? -1 : 1;
+  ctx.save();
+  ctx.lineWidth = Math.max(1.5, m * 0.6);
+  ctx.strokeStyle = nastroj === 'zdroj' ? '#ffd24a' : 'rgba(255,255,255,.55)';
+  ctx.setLineDash([m * 2, m * 1.5]);
+  ctx.strokeRect((z.x - (smer > 0 ? 3 : 0)) * m, (z.y - z.sirka / 2) * m, 3 * m, z.sirka * m);
+  ctx.setLineDash([]);
+  if (!z.zapnut) { ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = `${Math.max(10, m * 4)}px sans-serif`; ctx.fillText('⏹', (z.x + 3) * m, (z.y - z.sirka / 2 - 2) * m); }
+
+  // obrys štětce
+  if (mys && nastroj !== 'zdroj') {
+    ctx.strokeStyle = den ? 'rgba(0,0,0,.6)' : 'rgba(255,255,255,.7)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(mys.x * m, mys.y * m, velikostStetce() * m, 0, 6.2832); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ---------- ovládání myší / dotykem ----------
+const velikostStetce = () => +$('velikost').value;
+function svet(e) {
+  const r = platno.getBoundingClientRect();
+  return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+}
+function pouzijNastroj(p, predchozi) {
+  const r = velikostStetce();
+  // u rychlého tahu doplnit mezilehlé body, ať čára nemá díry
+  const kroky = predchozi ? Math.max(1, Math.ceil(Math.hypot(p.x - predchozi.x, p.y - predchozi.y) / (r * 0.5))) : 1;
+  let teren = false;
+  for (let k = 1; k <= kroky; k++) {
+    const t = k / kroky;
+    const x = predchozi ? predchozi.x + (p.x - predchozi.x) * t : p.x, y = predchozi ? predchozi.y + (p.y - predchozi.y) * t : p.y;
+    if (nastroj === 'skala') { V.stetec(S, x, y, r, 1); teren = true; }
+    else if (nastroj === 'guma') { V.stetec(S, x, y, r, 0); teren = true; }
+    else if (nastroj === 'voda') V.vodaStetcem(S, x, y, r);
+    else if (nastroj === 'vysat') V.odeberStetcem(S, x, y, r);
+  }
+  if (nastroj === 'zdroj') { S.zdroj.x = Math.max(0, Math.min(W, p.x)); S.zdroj.y = Math.max(0, Math.min(H, p.y)); }
+  if (teren) { V.prepocitejHloubku(S); prekresliPozadi(); }
+  if (!bezi) kresli();
+}
+platno.addEventListener('pointerdown', e => {
+  zavriNabidky();
+  platno.setPointerCapture(e.pointerId);
+  const p = svet(e);
+  tah = p; mys = p;
+  pouzijNastroj(p, null);
+});
+platno.addEventListener('pointermove', e => {
+  mys = svet(e);
+  if (tah) { pouzijNastroj(mys, tah); tah = mys; }
+  else if (!bezi) kresli();
+});
+const konecTahu = () => { tah = null; };
+platno.addEventListener('pointerup', konecTahu);
+platno.addEventListener('pointercancel', konecTahu);
+platno.addEventListener('pointerleave', () => { mys = null; if (!bezi) kresli(); });
+
+// ---------- nabídky lišty (vzor prompty.html) ----------
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-prikaz],[data-krajina],[data-nastroj],[data-rezim],[data-cas]');
+  if (b) {
+    if (b.dataset.prikaz) prikaz(b.dataset.prikaz);
+    else if (b.dataset.krajina) { krajina = b.dataset.krajina; restart(); zavriNabidky(); }
+    else if (b.dataset.nastroj) zvolNastroj(b.dataset.nastroj);
+    else if (b.dataset.rezim) { rezim = b.dataset.rezim; oznac('[data-rezim]', 'rezim', rezim); if (!bezi) kresli(); }
+    else if (b.dataset.cas) { casKoef = +b.dataset.cas; oznac('[data-cas]', 'cas', b.dataset.cas); }
+    return;
+  }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+addEventListener('resize', () => { zavriNabidky(); rozmer(); kresli(); });
+
+function oznac(sel, klic, hodnota) {
+  document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[klic] === hodnota)));
+}
+function zvolNastroj(n) {
+  nastroj = n;
+  oznac('[data-nastroj]', 'nastroj', n);
+  $('obal').classList.toggle('nastroj-zdroj', n === 'zdroj');
+  if (!bezi) kresli();
+}
+function nastavBeh(b) {
+  bezi = b;
+  $('btnBeh').textContent = bezi ? '⏸ Pauza' : '▶ Spustit';
+  $('stitekPauza').hidden = bezi;
+  posledni = performance.now();
+}
+function restart() {
+  V.predvolba(S, krajina);
+  nacistPosuvniky();
+  prekresliPozadi();
+  oznac('[data-krajina]', 'krajina', krajina);
+  kresli();
+}
+function prikaz(p) {
+  if (p === 'beh') nastavBeh(!bezi);
+  else if (p === 'restart') restart();
+  else if (p === 'napoveda') { zavriNabidky(); $('napoveda').showModal(); }
+  else if (p === 'vylitVodu') { S.n = 0; S.sprej.n = 0; zavriNabidky(); kresli(); }
+  else if (p === 'smazatSkaly') { S.skala.fill(0); V.prepocitejHloubku(S); prekresliPozadi(); zavriNabidky(); kresli(); }
+  else if (p === 'vychozi') { Object.assign(S.par, VYCHOZI_FYZIKA); nacistPosuvniky(); }
+}
+
+// ---------- posuvníky ----------
+const POSUVNIKY = {
+  sirka:     { cti: () => S.zdroj.sirka,    pis: v => { S.zdroj.sirka = v; },    text: v => (v * V.MERITKO_M * 100).toFixed(0) + ' cm' },
+  rychlost:  { cti: () => S.zdroj.rychlost, pis: v => { S.zdroj.rychlost = v; }, text: v => (v * V.MERITKO_M).toFixed(2).replace('.', ',') + ' m/s' },
+  gravitace: { cti: () => S.par.gravitace,  pis: v => { S.par.gravitace = v; },  text: v => (v * V.MERITKO_M).toFixed(1).replace('.', ',') + ' m/s²' },
+  viskozita: { cti: () => S.par.viskozita,  pis: v => { S.par.viskozita = v; },  text: v => String(v) },
+  treni:     { cti: () => S.par.treni,      pis: v => { S.par.treni = v; },      text: v => Math.round(v * 100) + ' %' },
+  limit:     { cti: () => S.par.limit,      pis: v => { S.par.limit = v; },      text: v => String(v) },
+};
+const vystup = k => $('o' + k[0].toUpperCase() + k.slice(1));
+function nacistPosuvniky() {
+  for (const [k, p] of Object.entries(POSUVNIKY)) { $(k).value = p.cti(); vystup(k).textContent = p.text(p.cti()); }
+  $('zdrojZap').checked = S.zdroj.zapnut;
+  $('sprej').checked = S.par.sprej;
+}
+for (const [k, p] of Object.entries(POSUVNIKY))
+  $(k).addEventListener('input', () => { const v = +$(k).value; p.pis(v); vystup(k).textContent = p.text(v); });
+$('zdrojZap').addEventListener('change', e => { S.zdroj.zapnut = e.target.checked; if (!bezi) kresli(); });
+$('sprej').addEventListener('change', e => { S.par.sprej = e.target.checked; if (!e.target.checked) S.sprej.n = 0; });
+$('velikost').addEventListener('change', () => { if (!bezi) kresli(); });
+
+// ---------- klávesy ----------
+addEventListener('keydown', e => {
+  if (e.target.closest('input, select, textarea') || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === ' ') { e.preventDefault(); nastavBeh(!bezi); }
+  else if (e.key === 'r' || e.key === 'R') restart();
+  else if (e.key === 'F1') { e.preventDefault(); prikaz('napoveda'); }
+  else if (e.key === 'Escape') zavriNabidky();
+  else if ('12345'.includes(e.key) && e.key.length === 1) zvolNastroj(['skala', 'guma', 'voda', 'vysat', 'zdroj'][+e.key - 1]);
+});
+
+// téma: přebarvit pozadí scény
+new MutationObserver(() => { prekresliPozadi(); kresli(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// ---------- smyčka ----------
+let posledni = performance.now(), zasoba = 0, snimku = 0, fpsCas = posledni, posledniOdteklo = 0, prutokCas = 0;
+function smycka(ted) {
+  requestAnimationFrame(smycka);
+  const dt = Math.min(0.05, (ted - posledni) / 1000);
+  posledni = ted;
+  if (bezi) {
+    zasoba += dt * casKoef;
+    let kroku = 0;
+    while (zasoba >= V.DT && kroku < 4) { V.krok(S); zasoba -= V.DT; kroku++; }
+    if (kroku === 4) zasoba = 0;           // pomalý počítač – raději zpomalit než se zahltit
+    kresli();
+  }
+  snimku++;
+  if (ted - fpsCas >= 1000) {
+    const s = (ted - fpsCas) / 1000;
+    $('uFps').textContent = Math.round(snimku / s);
+    // průtok přes okraj obrazu: částice ≈ ROZESTUP² × hloubka toku 1 m (2D řez širokou řekou)
+    const litru = (V.ROZESTUP * V.MERITKO_M) ** 2 * 1 * 1000;
+    const zaSimCas = S.cas - prutokCas;
+    if (zaSimCas > 0) $('uPrutok').textContent = Math.round((S.odteklo - posledniOdteklo) * litru / zaSimCas);
+    posledniOdteklo = S.odteklo; prutokCas = S.cas;
+    snimku = 0; fpsCas = ted;
+  }
+  if (snimku % 6 === 0) {
+    let vmax = 0;
+    for (let i = 0; i < S.n; i++) vmax = Math.max(vmax, S.vx[i] * S.vx[i] + S.vy[i] * S.vy[i]);
+    $('uN').textContent = S.n;
+    $('uV').textContent = (Math.sqrt(vmax) * V.MERITKO_M).toFixed(1).replace('.', ',');
+    $('uCas').textContent = S.cas.toFixed(0);
+  }
+}
+
+if (window.self === window.top) document.body.classList.add('samostatne');
+rozmer();
+restart();
+requestAnimationFrame(smycka);
+window.VODOPADY_APP = { S, restart, kresli, prikaz, zvolNastroj, nastavBeh };
+})();
+</script>
+</body>
+</html>

@@ -42,6 +42,8 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 .snap .del:hover{background:#7a3030}
 .board.paused{filter:blur(8px);pointer-events:none}
 #pauseBtn{padding:4px 9px;margin-left:4px}
+.top10 ol{padding-left:28px;font-size:.9rem;color:var(--text-muted)}
+.top10 li{padding:3px 0}.top10 li b{color:var(--text)}.top10 li.nove{color:var(--ok,#27ae60);font-weight:700}
 .snaps .empty{color:var(--text-faint);font-size:.85rem}
 
 /* světlý režim: dorovnání kontrastu textu */
@@ -62,13 +64,17 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 <div class="board" id="board"></div>
 <div class="pad" id="pad"></div>
 <div class="msg" id="msg"></div>
+<div class="snaps top10">
+  <h2>🏆 Top 10 časů</h2>
+  <div id="topList"></div>
+</div>
 <div class="snaps">
   <h2>📸 Snímky</h2>
   <div id="snapList"></div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
-let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false,history=[],paused=false,solved=false;
+let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false,history=[],paused=false,solved=false,level='Střední';
 function genSolved(){
   const g=Array.from({length:9},()=>Array(9).fill(0));
   function valid(r,c,n){for(let i=0;i<9;i++)if(g[r][i]===n||g[i][c]===n)return false;
@@ -97,7 +103,7 @@ function newGame(clearSnaps){
   puzzle=solution.map(r=>[...r]);
   // Cílový počet odebraných buněk podle obtížnosti. Buňku odebereme jen tehdy,
   // pokud hádanka i poté zůstane s jediným řešením – jinak ji vrátíme zpět.
-  const target=+$('level').value;const cells=[...Array(81).keys()].sort(()=>Math.random()-0.5);
+  const target=+$('level').value;level=$('level').selectedOptions[0].textContent;const cells=[...Array(81).keys()].sort(()=>Math.random()-0.5);
   let removed=0;
   for(const idx of cells){
     if(removed>=target)break;
@@ -214,7 +220,7 @@ function findWrong(){
 }
 function checkWin(){
   if(findConflicts().size||findWrong().size)return; // plné, ale chybné – ještě není vyřešeno
-  clearInterval(timer);solved=true;$('pauseBtn').disabled=true;$('msg').textContent='🎉 Vyřešeno za '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'!';
+  clearInterval(timer);solved=true;$('pauseBtn').disabled=true;$('msg').textContent='🎉 Vyřešeno za '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'!';addTop();
 }
 $('checkBtn').onclick=()=>{
   if(paused)return;
@@ -258,7 +264,7 @@ function saveSnapshot(){
   const filled=puzzle.flat().filter(v=>v!==0).length;
   snapshots.unshift({
     name:d.toLocaleDateString('cs-CZ')+' '+d.toLocaleTimeString('cs-CZ'),
-    seconds,filled,
+    seconds,filled,level,
     puzzle:puzzle.map(r=>[...r]),
     given:given.map(r=>[...r]),
     solution:solution.map(r=>[...r]),
@@ -273,7 +279,7 @@ function restoreSnapshot(idx){
   given=s.given.map(r=>[...r]);
   solution=s.solution.map(r=>[...r]);
   notes=s.notes.map(a=>new Set(a));
-  seconds=s.seconds;selected=-1;history=[];startTimer();
+  seconds=s.seconds;level=s.level||level;selected=-1;history=[];startTimer();
   $('msg').textContent='';render();
 }
 function deleteSnapshot(idx){snapshots.splice(idx,1);persistSnaps();renderSnaps();}
@@ -292,6 +298,21 @@ function renderSnaps(){
   });
 }
 $('snapBtn').onclick=saveSnapshot;
+// ---- Top 10 nejrychlejších vyřešení (napříč obtížnostmi, u každého uvedena) ----
+const TOP_KEY='webapp_hra_sudoku_top10';let topCasy=[];
+try{topCasy=JSON.parse(localStorage.getItem(TOP_KEY)||'[]');}catch(e){topCasy=[];}
+function addTop(){
+  const z={seconds,level,date:new Date().toLocaleDateString('cs-CZ')};
+  topCasy.push(z);topCasy.sort((a,b)=>a.seconds-b.seconds);topCasy=topCasy.slice(0,10);
+  try{localStorage.setItem(TOP_KEY,JSON.stringify(topCasy));}catch(e){}
+  renderTop(topCasy.indexOf(z));
+}
+function renderTop(nove=-1){
+  if(!topCasy.length){$('topList').innerHTML='<div class="empty">Zatím žádné vyřešené sudoku.</div>';return;}
+  $('topList').innerHTML='<ol>'+topCasy.map((z,i)=>'<li'+(i===nove?' class="nove"':'')+'><b>'+Math.floor(z.seconds/60)+':'+String(z.seconds%60).padStart(2,'0')+
+    '</b> · <span>'+z.level+'</span> · <small>'+z.date+'</small></li>').join('')+'</ol>';
+}
+renderTop();
 renderSnaps();
 
 // Nová hra spuštěná uživatelem smaže uložené snímky; prvotní načtení stránky je zachová.

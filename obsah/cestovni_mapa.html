@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="cs" data-i18n-platno="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧭 Cestovatelská mapa</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="plakat_mapy/jadro.js"></script>
+<script src="cestovni_mapa/jadro.js"></script>
+<script src="cestovni_mapa/styly.js"></script>
+<script src="cestovni_mapa/svet.js" defer></script>
+<script src="lib/mediabunny.min.js" defer></script>
+<script src="cestovni_mapa/ui.js" defer></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--text);font-family:var(--font, system-ui, sans-serif)}
+[hidden]{display:none !important}
+input,select,textarea,button{font-family:inherit}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 220px;flex-shrink:1;min-width:150px}
+.lista .hledat input{flex:1;min-width:90px;width:100%}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1550px){.lista .txt{display:none}}
+@media (max-width:1100px){.lista .txt-h,.lista .skup-nazev{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .tl.prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+.vysledky{position:fixed;z-index:61;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:4px;min-width:300px;max-width:420px;max-height:60vh;overflow:auto}
+.vysledky button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--text);padding:6px 10px;border-radius:5px;cursor:pointer;font-size:.85rem}
+.vysledky button:hover,.vysledky button.akt{background:var(--bg-hover)}
+.vysledky small{color:var(--text-faint)}
+.vysledky .info{padding:6px 10px;color:var(--text-muted);font-size:.8rem}
+
+/* plocha + panel */
+.rozlozeni{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px}
+.plocha{display:flex;flex-direction:column;min-width:0;min-height:0}
+.scena{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:12px;background:repeating-conic-gradient(color-mix(in srgb,var(--bg-control) 60%,transparent) 0 25%,transparent 0 50%) 0 0/22px 22px}
+#platno{display:block;box-shadow:0 4px 24px rgba(0,0,0,.28);touch-action:none;background:#fff}
+.scena.pridat #platno{cursor:crosshair}
+.scena.zeme #platno{cursor:pointer}
+.scena.tah #platno{cursor:grabbing}
+.zoom{position:absolute;right:18px;bottom:16px;display:flex;flex-direction:column;gap:4px}
+.zoom .tl{width:34px;height:34px;padding:0;font-size:1.05rem;background:var(--bg-panel);box-shadow:var(--shadow)}
+.stav-mapy{position:absolute;left:18px;bottom:16px;font-size:.75rem;color:var(--text-muted);background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:2px 8px;pointer-events:none;opacity:.92}
+.casova{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-elevated);border-top:1px solid var(--border);flex-shrink:0}
+.casova input[type=range]{flex:1;accent-color:var(--accent)}
+.casova .cas{font-variant-numeric:tabular-nums;font-size:.82rem;color:var(--text-muted);min-width:92px;text-align:right}
+
+aside{background:var(--bg-panel);border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+.karty{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.karty button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-muted);padding:9px 4px;cursor:pointer;font-size:.84rem}
+.karty button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.obsah-karty{flex:1;overflow:auto;padding:12px}
+h3{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin:14px 0 6px}
+h3:first-child{margin-top:0}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.85rem;box-sizing:border-box}
+.radek{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.85rem}
+.radek > label:first-child{flex:0 0 118px;color:var(--text-muted)}
+.radek .vstup,.radek select{flex:1;min-width:0}
+.radek input[type=range]{flex:1;accent-color:var(--accent)}
+.radek output{min-width:44px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted);font-size:.8rem}
+.radek input[type=color]{width:42px;height:28px;padding:0 2px;border:1px solid var(--border);border-radius:5px;background:var(--bg-input)}
+.tlacitka{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.napoveda{font-size:.78rem;color:var(--text-muted);line-height:1.45}
+
+/* seznam bodů */
+.bod{border:1px solid var(--border);border-radius:8px;background:var(--bg-elevated);margin:4px 0}
+.bod.vybrany{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.bod-hlava{display:flex;align-items:center;gap:6px;padding:6px}
+.bod-cislo{flex:0 0 24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent,#fff);display:grid;place-items:center;font-size:.75rem;font-weight:700}
+.bod-hlava .vstup{flex:1;min-width:0;padding:4px 6px}
+.mini{background:none;border:1px solid transparent;color:var(--text-muted);border-radius:5px;cursor:pointer;padding:2px 5px;font-size:.85rem}
+.mini:hover{background:var(--bg-hover);color:var(--text)}
+.bod-detail{padding:0 8px 8px;border-top:1px dashed var(--border)}
+.bod-detail .radek > label:first-child{flex-basis:80px}
+.souradnice{font-size:.72rem;color:var(--text-faint);padding:0 8px 6px 36px}
+.usek{display:flex;align-items:center;gap:6px;margin:0 0 0 14px;padding:4px 0 4px 16px;border-left:3px dotted var(--accent);font-size:.8rem;color:var(--text-muted)}
+.usek select{padding:2px 4px;font-size:.8rem}
+.usek input[type=range]{width:80px;accent-color:var(--accent)}
+.usek.vybrany{background:var(--accent-soft);border-radius:0 6px 6px 0}
+.cipy{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.cip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:999px;padding:2px 4px 2px 10px;font-size:.84rem}
+.cip .mini{padding:0 5px}
+.styly{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.styl-karta{border:2px solid var(--border);border-radius:8px;padding:0;background:var(--bg-elevated);cursor:pointer;overflow:hidden;color:var(--text);text-align:left}
+.styl-karta canvas{display:block;width:100%;aspect-ratio:16/9}
+.styl-karta span{display:block;padding:4px 6px;font-size:.78rem}
+.styl-karta[aria-pressed="true"]{border-color:var(--accent)}
+.prazdno{color:var(--text-muted);font-size:.85rem;padding:10px;border:1px dashed var(--border);border-radius:8px;line-height:1.5}
+.prubeh{height:8px;border-radius:4px;background:var(--bg-control);overflow:hidden;margin:6px 0}
+.prubeh > div{height:100%;background:var(--accent);width:0}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;background:var(--bg-panel);color:var(--text);max-width:min(560px,94vw);width:100%;padding:16px}
+dialog.okno::backdrop{background:rgba(0,0,0,.45)}
+.mapy-seznam button{display:flex;justify-content:space-between;width:100%;gap:10px}
+.pomoc kbd{font-size:.75rem;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.pomoc li{margin:4px 0}
+
+@media (max-width:900px){
+  body{height:auto;overflow:auto}
+  .rozlozeni{display:block}
+  .scena{min-height:56vw}
+  aside{border-left:0;border-top:1px solid var(--border)}
+  .obsah-karty{overflow:visible}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🧭<span class="txt-h"> Cestovatelská mapa</span></h1>
+  <div class="skup"><span class="skup-nazev">Projekt</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-nabidka="nabUpravy">✏️<span class="txt"> Úpravy</span> ▾</button>
+    <button class="tl" data-nabidka="nabZobrazit">👁<span class="txt"> Vrstvy</span> ▾</button>
+  </div></div>
+  <div class="skup skup-hledat"><span class="skup-nazev">Země</span><div class="skup-tl hledat">
+    <input id="hledatZemi" class="vstup" list="seznamZemi" placeholder="Najít zemi… (Vietnam)" autocomplete="off" aria-label="Najít zemi">
+    <datalist id="seznamZemi"></datalist>
+    <button class="tl" id="tlZeme" data-rezim="zeme" aria-pressed="false" title="Klikáním do mapy přidávat a odebírat země cesty">🌍<span class="txt"> Vybrat klikem</span></button>
+  </div></div>
+  <div class="skup skup-hledat"><span class="skup-nazev">Místa trasy</span><div class="skup-tl hledat">
+    <input id="hledatMisto" class="vstup" placeholder="Město, adresa nebo 21.03, 105.85" autocomplete="off" aria-label="Najít místo">
+    <button class="tl" data-rezim="pridat" aria-pressed="false" title="Klikáním do mapy přidávat body trasy (P)">📍<span class="txt"> Klikat body</span></button>
+    <button class="tl" data-rezim="vyber" aria-pressed="true" title="Posun mapy, tažení bodů, úchytů a popisků (V)">✋</button>
+  </div></div>
+  <div class="skup"><span class="skup-nazev">Hotovo</span><div class="skup-tl">
+    <button class="tl hlavni" id="tlExport" title="Uložit obrázek nebo video">⬇<span class="txt"> Export</span></button>
+    <button class="tl" id="tlPomoc" title="Nápověda (F1)">?</button>
+  </div></div>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">🆕 Nová mapa</button>
+  <button class="tl" data-prikaz="mojeMapy">🗂 Moje mapy…</button>
+  <button class="tl" data-prikaz="kopie">⧉ Uložit jako kopii</button>
+  <button class="tl" data-prikaz="prejmenuj">✎ Přejmenovat…</button>
+  <hr>
+  <button class="tl" data-prikaz="exportJson">💾 Stáhnout projekt (JSON)</button>
+  <button class="tl" data-prikaz="importJson">📂 Otevřít projekt (JSON)…</button>
+  <button class="tl" data-prikaz="importGpx">🛰 Načíst body z GPX…</button>
+  <hr>
+  <button class="tl" data-prikaz="ukazka">✨ Ukázka: Vietnam</button>
+</div>
+<div id="nabUpravy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="zpet">↶ Zpět <kbd>Ctrl+Z</kbd></button>
+  <button class="tl" data-prikaz="znovu">↷ Znovu <kbd>Ctrl+Y</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="naTrasu">🎯 Přizpůsobit pohled trase</button>
+  <button class="tl" data-prikaz="naZeme">🗺 Přizpůsobit pohled zemím</button>
+  <button class="tl" data-prikaz="obratit">⇄ Obrátit trasu</button>
+  <button class="tl" data-prikaz="autoUchyty">〰 Všechny křivky automaticky</button>
+  <hr>
+  <button class="tl" data-prikaz="smazatBody">🗑 Smazat všechny body</button>
+  <button class="tl" data-prikaz="doplnitZeme">＋ Doplnit země podle trasy</button>
+  <button class="tl" data-prikaz="smazatZeme">✖ Zrušit výběr zemí</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <div class="titulek">Mapa</div>
+  <button class="tl prep" data-vrstva="sousede">Okolní země</button>
+  <button class="tl prep" data-vrstva="hranice">Hranice států</button>
+  <button class="tl prep" data-vrstva="nazvyZemi">Názvy zemí</button>
+  <button class="tl prep" data-vrstva="reky">Řeky</button>
+  <button class="tl prep" data-vrstva="jezera">Jezera</button>
+  <button class="tl prep" data-vrstva="mesta">Velká města zemí cesty</button>
+  <div class="titulek">Trasa</div>
+  <button class="tl prep" data-vrstva="km">Kilometry u úseků</button>
+  <button class="tl prep" data-vrstva="pocitadlo">Počítadlo km při animaci</button>
+  <div class="titulek">Doplňky</div>
+  <button class="tl prep" data-vrstva="titulek">Titulek</button>
+  <button class="tl prep" data-vrstva="kompas">Kompas</button>
+  <button class="tl prep" data-vrstva="meritko">Měřítko</button>
+  <button class="tl prep" data-vrstva="legenda">Legenda dopravy</button>
+  <button class="tl prep" data-vrstva="ramecek">Rámeček</button>
+</div>
+
+<div class="rozlozeni">
+  <div class="plocha">
+    <div class="scena" id="scena">
+      <canvas id="platno" aria-label="Mapa cesty" tabindex="0"></canvas>
+      <div class="stav-mapy" id="stavMapy"></div>
+      <div class="zoom" role="group" aria-label="Přiblížení">
+        <button class="tl" id="zoomPlus" title="Přiblížit">＋</button>
+        <button class="tl" id="zoomMinus" title="Oddálit">−</button>
+        <button class="tl" id="zoomCelek" title="Pohled na celou trasu">⤢</button>
+      </div>
+    </div>
+    <div class="casova">
+      <button class="tl" id="tlPrehrat" title="Přehrát animaci (mezerník)">▶</button>
+      <button class="tl" id="tlCelek" title="Ukázat celou trasu (úpravy)">⏹</button>
+      <input type="range" id="casovac" min="0" max="12" step="0.01" value="12" aria-label="Čas animace" list="znackyCasu">
+      <datalist id="znackyCasu"></datalist>
+      <span class="cas" id="casText">—</span>
+    </div>
+  </div>
+
+  <aside>
+    <div class="karty" role="tablist">
+      <button role="tab" data-karta="trasa" aria-selected="true">📍 Trasa</button>
+      <button role="tab" data-karta="vzhled" aria-selected="false">🎨 Vzhled</button>
+      <button role="tab" data-karta="animace" aria-selected="false">🎬 Animace</button>
+      <button role="tab" data-karta="export" aria-selected="false">⬇ Export</button>
+    </div>
+
+    <div class="obsah-karty" data-panel="trasa">
+      <h3>Země cesty</h3>
+      <div class="cipy" id="seznamZemiCesty"></div>
+      <div class="radek"><label for="autoZeme">Přidávat podle bodů</label><input type="checkbox" id="autoZeme"><span class="napoveda">nový bod přidá svou zemi</span></div>
+      <div class="tlacitka">
+        <button class="tl" data-prikaz="doplnitZeme">＋ Doplnit podle trasy</button>
+        <button class="tl" data-prikaz="naZeme">🗺 Pohled na země</button>
+      </div>
+      <h3>Body a úseky</h3>
+      <div class="tlacitka">
+        <button class="tl" data-prikaz="naTrasu">🎯 Pohled na trasu</button>
+        <button class="tl" data-prikaz="obratit">⇄ Obrátit</button>
+      </div>
+      <div id="seznamBodu"></div>
+      <div class="radek" id="soucetKm" style="justify-content:space-between"></div>
+      <h3>Trasa</h3>
+      <div class="radek"><label for="trStyl">Čára</label>
+        <select id="trStyl" class="vstup">
+          <option value="styl">podle stylu mapy</option>
+          <option value="plna">plná</option>
+          <option value="carkovana">čárkovaná</option>
+          <option value="teckovana">tečkovaná</option>
+          <option value="doprava">podle dopravy (letadlo, loď, vlak…)</option>
+        </select></div>
+      <div class="radek"><label for="trSipky">Šipky směru</label><input type="checkbox" id="trSipky"></div>
+      <div class="radek"><label for="trNapeti">Plynulost křivek</label><input type="range" id="trNapeti" min="0" max="1" step="0.05"><output id="trNapetiO"></output></div>
+      <p class="napoveda">Klikněte na úsek – objeví se úchyty křivky, tažením ji upravíte (navazující úsek se plynule přizpůsobí, s klávesou Alt vznikne ostrý zlom). Dvojklik na úsek vloží bod. Popisek i fotku bodu jde přetáhnout.</p>
+    </div>
+
+    <div class="obsah-karty" data-panel="vzhled" hidden>
+      <h3>Záběr</h3>
+      <div class="radek"><label for="selFormat">Formát videa</label><select id="selFormat" class="vstup"></select></div>
+      <div class="radek"><label for="selStyl">Styl mapy</label><select id="selStyl" class="vstup"></select></div>
+      <div class="styly" id="karticky"></div>
+      <h3>Barvy a písmo</h3>
+      <div id="upravyStylu"></div>
+      <div class="tlacitka"><button class="tl" id="tlResetStyl">↺ Výchozí barvy stylu</button></div>
+      <h3>Titulek</h3>
+      <div class="radek"><label for="tiText">Nadpis</label><input id="tiText" class="vstup" placeholder="Vietnam 2026"></div>
+      <div class="radek"><label for="tiPod">Podtitul</label><input id="tiPod" class="vstup" placeholder="Ze severu na jih za 3 týdny"></div>
+      <div class="radek"><label for="tiPoloha">Umístění</label>
+        <select id="tiPoloha" class="vstup">
+          <option value="hl">vlevo nahoře</option><option value="hs">nahoře uprostřed</option><option value="hp">vpravo nahoře</option>
+          <option value="dl">vlevo dole</option><option value="ds">dole uprostřed</option><option value="dp">vpravo dole</option>
+        </select></div>
+      <h3>Velikosti</h3>
+      <div class="radek"><label for="velTitulek">Titulek</label><input type="range" id="velTitulek" min="0.5" max="2" step="0.05"><output></output></div>
+      <div class="radek"><label for="velPopisky">Popisky bodů</label><input type="range" id="velPopisky" min="0.5" max="2" step="0.05"><output></output></div>
+      <div class="radek"><label for="velVozidlo">Dopravní prostředek</label><input type="range" id="velVozidlo" min="0.4" max="2.5" step="0.05"><output></output></div>
+      <div class="radek"><label for="sirTrasy">Šířka trasy</label><input type="range" id="sirTrasy" min="0.3" max="2.5" step="0.05"><output></output></div>
+      <div class="radek"><label for="pocetMest">Počet měst</label><input type="range" id="pocetMest" min="0" max="40" step="1"><output></output></div>
+    </div>
+
+    <div class="obsah-karty" data-panel="animace" hidden>
+      <h3>Časování</h3>
+      <div class="radek"><label for="anDelka">Délka videa</label><input type="range" id="anDelka" min="3" max="90" step="0.5"><output></output></div>
+      <div class="radek"><label for="anZac">Klid na začátku</label><input type="range" id="anZac" min="0" max="10" step="0.25"><output></output></div>
+      <div class="radek"><label for="anKon">Klid na konci</label><input type="range" id="anKon" min="0" max="10" step="0.25"><output></output></div>
+      <div class="radek"><label for="anTempo">Tempo</label>
+        <select id="anTempo" class="vstup"><option value="useky">každý úsek stejně dlouho</option><option value="delka">podle délky (stálá rychlost)</option></select></div>
+      <div class="radek"><label for="anPrubeh">Rozjezd</label>
+        <select id="anPrubeh" class="vstup"><option value="plynule">plynulý rozjezd i dojezd</option><option value="linearni">stálá rychlost</option><option value="rozjezd">jen rozjezd</option><option value="dojezd">jen dojezd</option></select></div>
+      <div class="radek"><label for="anPauza">Zastávka v bodě</label><input type="range" id="anPauza" min="0" max="0.4" step="0.01"><output></output></div>
+      <h3>Kamera</h3>
+      <div class="radek"><label for="anKamera">Pohyb</label>
+        <select id="anKamera" class="vstup"><option value="staticka">celá mapa (bez pohybu)</option><option value="sleduj">sleduje cestovatele</option><option value="prelet">sleduje od začátku přiblížená</option></select></div>
+      <div class="radek"><label for="anPribl">Přiblížení</label><input type="range" id="anPribl" min="1.2" max="5" step="0.1"><output></output></div>
+      <h3>Na trase</h3>
+      <div class="radek"><label for="anIkona">Dopravní prostředek</label><input type="checkbox" id="anIkona"></div>
+      <h3>Fotky u bodů</h3>
+      <div class="radek"><label for="foRezim">Zobrazení</label>
+        <select id="foRezim" class="vstup"><option value="animace">při příjezdu na chvíli vyskočí</option><option value="vzdy">zůstanou na mapě (koláž)</option><option value="skryt">skrýt</option></select></div>
+      <div class="radek"><label for="foDoba">Jak dlouho</label><input type="range" id="foDoba" min="1" max="8" step="0.25"><output></output></div>
+      <div class="radek"><label for="foVel">Velikost</label><input type="range" id="foVel" min="0.5" max="2" step="0.05"><output></output></div>
+      <p class="napoveda">Fotku přidáte v seznamu bodů (⋯ → 📷 Přidat fotku). Ukládá se jen ve vašem prohlížeči, do staženého projektu (JSON) se přibalí.</p>
+      <p class="napoveda">Náhled spustíte tlačítkem ▶ pod mapou nebo mezerníkem. Časovou osou se dá posouvat ručně.</p>
+    </div>
+
+    <div class="obsah-karty" data-panel="export" hidden>
+      <h3>Obrázek PNG</h3>
+      <div class="radek"><label for="exRozliseni">Šířka</label>
+        <select id="exRozliseni" class="vstup"><option value="1280">1280 px (HD)</option><option value="1920" selected>1920 px (Full HD)</option><option value="2560">2560 px (QHD)</option><option value="3840">3840 px (4K)</option></select></div>
+      <div class="radek"><label for="exPruhledne">Průhledné pozadí</label><input type="checkbox" id="exPruhledne"><span class="napoveda">jen trasa, popisky a doplňky – na překrytí vlastního záběru (PNG i video WebM)</span></div>
+      <div class="tlacitka">
+        <button class="tl hlavni" id="tlPng">🖼 Uložit PNG (celá trasa)</button>
+        <button class="tl" id="tlPngCas">🖼 PNG v aktuálním čase</button>
+      </div>
+      <h3>Video</h3>
+      <div class="radek"><label for="exKontejner">Formát</label>
+        <select id="exKontejner" class="vstup"><option value="mp4">MP4 (H.264) – pro střih</option><option value="webm">WebM (VP9)</option></select></div>
+      <div class="radek"><label for="exFps">Snímků za s</label>
+        <select id="exFps" class="vstup"><option>24</option><option>25</option><option selected>30</option><option>50</option><option>60</option></select></div>
+      <div class="radek"><label for="exKvalita">Kvalita</label>
+        <select id="exKvalita" class="vstup"><option value="MEDIUM">střední</option><option value="HIGH" selected>vysoká</option><option value="VERY_HIGH">velmi vysoká</option></select></div>
+      <div class="tlacitka"><button class="tl hlavni" id="tlVideo">🎬 Vytvořit video</button><button class="tl" id="tlZrusit" hidden>Zrušit</button><button class="tl" id="tlUlozVideo" hidden>💾 Uložit video</button></div>
+      <div class="prubeh" id="prubeh" hidden><div></div></div>
+      <p class="napoveda" id="exInfo">Video se skládá snímek po snímku přímo v prohlížeči – nic se nikam neposílá. Délka a kamera se nastavují v kartě Animace.</p>
+      <p class="napoveda">Mapová data: Natural Earth (volné dílo). Vyhledávání míst: © OpenStreetMap přispěvatelé (Nominatim).</p>
+    </div>
+  </aside>
+</div>
+
+<input type="file" id="souborJson" accept=".json,application/json" hidden>
+<input type="file" id="souborGpx" accept=".gpx,application/gpx+xml" hidden>
+<input type="file" id="souborFoto" accept="image/*" hidden>
+
+<dialog class="okno" id="oknoMapy">
+  <h3 style="margin-top:0">🗂 Moje mapy</h3>
+  <div class="mapy-seznam" id="seznamMap"></div>
+  <div class="tlacitka" style="justify-content:flex-end"><button class="tl" data-zavrit>Zavřít</button></div>
+</dialog>
+<dialog class="okno pomoc" id="oknoPomoc">
+  <h3 style="margin-top:0">Jak na to</h3>
+  <ol>
+    <li><b>Země:</b> napište ji do pole <i>Najít zemi</i> (Enter), nebo zapněte 🌍 a klikejte do mapy. Cesta přes víc států: body trasy samy přidávají svou zemi a hledání země ji k existující trase přidá. Seznam zemí je v kartě Trasa.</li>
+    <li><b>Body trasy:</b> zapněte 📍 a klikejte do mapy, nebo napište město či souřadnice do pole <i>Místa trasy</i>. Jméno bodu se doplní podle nejbližšího města.</li>
+    <li><b>Křivky:</b> klikněte na úsek a tahejte úchyty. U úseku v seznamu nastavíte dopravu a vybočení oblouku.</li>
+    <li><b>Styl a titulek</b> v kartě Vzhled, <b>pohyb kamery a délka</b> v kartě Animace, <b>PNG a video</b> v kartě Export.</li>
+  </ol>
+  <ul>
+    <li><kbd>V</kbd> výběr a posun, <kbd>P</kbd> přidávání bodů, <kbd>Z</kbd> výběr zemí</li>
+    <li>kolečko myši = přiblížení, tažení prázdného místa = posun mapy</li>
+    <li><kbd>Delete</kbd> smaže vybraný bod, <kbd>Esc</kbd> zruší výběr, <kbd>Mezerník</kbd> přehraje animaci</li>
+    <li><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd> zpět / znovu</li>
+    <li>tažení úchytu s <kbd>Alt</kbd> = ostrý zlom trasy; na dotykovém displeji přibližujte dvěma prsty</li>
+  </ul>
+  <p class="napoveda">Mapy se ukládají jen ve vašem prohlížeči. Zálohu uděláte přes Soubor → Stáhnout projekt.</p>
+  <div class="tlacitka" style="justify-content:flex-end"><button class="tl" data-zavrit>Zavřít</button></div>
+</dialog>
+</body>
+</html>

@@ -10,17 +10,7 @@
   const fmt = (x, d = 1) => (Math.round(x * 10 ** d) / 10 ** d).toString().replace('.', ',');
 
   const PAPIRY = { A4: { w: 210, h: 297 }, A3: { w: 297, h: 420 }, A5: { w: 148, h: 210 }, Letter: { w: 215.9, h: 279.4 }, SRA3: { w: 320, h: 450 } };
-  const CITATY = [
-    { text: 'Mám-li zahradu a knihovnu, nechybí mi nic.', autor: 'Marcus Tullius Cicero' },
-    { text: 'Kniha je zahrada, kterou nosíš v kapse.', autor: 'arabské přísloví' },
-    { text: 'Knihy jsou nástroje moudrosti.', autor: 'Jan Amos Komenský' },
-    { text: 'Pokoj bez knih je jako tělo bez duše.', autor: 'Marcus Tullius Cicero' },
-    { text: 'Čtení je pro ducha tím, čím je cvičení pro tělo.', autor: 'Joseph Addison' },
-    { text: 'Vždycky jsem si představoval ráj jako nějakou knihovnu.', autor: 'Jorge Luis Borges' },
-    { text: 'Kdo nečte, nežije o nic víc než ten, kdo neumí číst.', autor: 'Mark Twain' },
-    { text: 'Dobrá kniha je nejlepší přítel, dnes i navždy.', autor: 'Martin Farquhar Tupper' },
-    { text: 'Tady jsem skončil a zítra budu pokračovat.', autor: '' },
-  ];
+  const CITATY = ZE.DATA.CITATY;
   const TISK_Z = { papir: 'A4', otaceni: 'auto', spadavka: 2, mezera: 4, okraj: 5, dpi: '600', format: 'PNG', znacky: true, obrys: false, oboustranne: true, posunX: 0, posunY: 0 };
   const TISK_E = Object.assign({}, TISK_Z, { spadavka: 0, mezera: 0, oboustranne: false });
 
@@ -152,6 +142,10 @@
     document.querySelectorAll('[data-mono]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mono === e.monogram)));
     document.querySelectorAll('[data-tbarva]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tbarva.toLowerCase() === String(e.barvy.inkoust).toLowerCase())));
     $('tOboustranne').hidden = !jeZ;
+    $('tSerie').hidden = !z.serie;
+    const nSerie = ZE.parsujSerii(z.serieText).length;
+    $('serieInfo').textContent = z.serie ? (nSerie ? `Citátů v sérii: ${nSerie}` : 'Série je prázdná – tiskne se citát z líce.') : '';
+    $('btnZpet').disabled = !historie.zpet.length; $('btnZnovu').disabled = !historie.vpred.length;
     $('mnRazitko').disabled = jeZ;
     $('mnRazitko').title = jeZ ? 'Jen pro ex libris' : '';
     // souhrny
@@ -168,13 +162,16 @@
   async function nahledyMonogramu() {
     const S = await sazec(), e = exl(), inic = e.inicialy || ZE.inicialy(e.jmeno) || 'AB';
     $('monogramy').innerHTML = Object.entries(ZE.MONOGRAMY).map(([k, nz]) => `<button type="button" class="vyber" data-mono="${k}"><svg viewBox="0 0 100 100">${ZE.monogram(inic, k, 50, 50, 86, PAL_NAHLED, S, { pismo: e.pismoMonogram }).map(p => p.s).join('')}</svg><span>${esc(nz)}</span></button>`).join('');
-    const vz = Object.assign(kopie(e), { stred: 'symbol', symbol: e.symbol || 'sova', jmeno: e.jmeno || 'Jan Novák', rozmer: '60x80' });
+    const vz = Object.assign(kopie(e), { stred: 'symbol', symbol: e.symbol || 'sova', jmeno: e.jmeno || ZE.DATA.VYCHOZI.jmeno, rozmer: '60x80' });
     $('kompozice').innerHTML = Object.entries(ZE.KOMPOZICE).map(([k, nz]) => {
       const x = Object.assign(kopie(vz), { kompozice: k, rozmer: k === 'pecet' ? '60x60' : '60x80' }, { dvoubarevne: true, barvy: PAL_NAHLED });
       return `<button type="button" class="vyber" data-komp="${k}">${ZE.svg(ZE.kresliExlibris(x, S, {}), { id: 'k' + k }).replace(/width="[^"]+" height="[^"]+"/, '')}<span>${esc(nz)}</span></button>`;
     }).join('');
     naplnFormular();
   }
+
+  let casMonogramu = 0;   // náhledy monogramů a kompozic jsou dražší – při psaní jména až po pauze
+  function planujMonogramy() { clearTimeout(casMonogramu); casMonogramu = setTimeout(() => nahledyMonogramu().catch(chybaKresleni), 350); }
 
   /* ------------------------------------------------------------ náhled */
   let token = 0, posledni = null;
@@ -188,18 +185,22 @@
     let varovani = [];
     if (stav.druh === 'zalozka') {
       const z = zal(), kL = ZE.kresliZalozku(z, 'lic', S, obrazky), kR = ZE.kresliZalozku(z, 'rub', S, obrazky);
-      posledni = { lic: kL, rub: kR };
-      varovani = [...kL.varovani.map(v => 'Líc: ' + v), ...kR.varovani.map(v => 'Rub: ' + v)];
+      const serie = ZE.variantySerie(z).map(v => ZE.kresliZalozku(v, 'lic', S, obrazky));
+      posledni = { lic: kL, rub: kR, serie };
+      varovani = [...kL.varovani.map(v => `Líc: ${v}`), ...kR.varovani.map(v => `Rub: ${v}`)];
+      serie.forEach((k, i) => k.varovani.forEach(v => varovani.push(`Série č. ${i + 1}: ${v}`)));
       if (stav.pohled === 'kus') {
         const hh = kL.h + (stav.prep.spadavka ? 2 * b : 0), ww = kL.w + (stav.prep.spadavka ? 2 * b : 0);
         const mer = Math.min(vyskaPlochy / hh, (sirkaPlochy - 40) / (2 * ww), 12) * stav.zoom;
         const kus = (k, strana) => {
           const svg = ZE.svg(k, stav.prep.spadavka ? { spadavka: b, otvor: stav.prep.kota ? 'kota' : 'znacka', obrys: true, id: strana } : { orez: true, otvor: stav.prep.kota ? 'kota' : null, id: strana })
             .replace(/width="[^"]+" height="[^"]+"/, `width="${Math.round(ww * mer)}" height="${Math.round(hh * mer)}"`);
-          return `<div class="kus"><div class="obal${stav.strana === strana ? ' aktivni' : ''}" data-vyber-strana="${strana}" title="Upravit ${strana === 'lic' ? 'líc' : 'rub'}">${svg}</div><span class="stitek">${strana === 'lic' ? 'Líc' : 'Rub'}</span></div>`;
+          const popis = strana === 'lic' ? 'Upravit líc' : 'Upravit rub';
+          return `<div class="kus"><div class="obal${stav.strana === strana ? ' aktivni' : ''}" data-vyber-strana="${strana}" role="button" tabindex="0" aria-pressed="${stav.strana === strana}" title="${popis}" aria-label="${popis}">${svg}</div><span class="stitek">${strana === 'lic' ? 'Líc' : 'Rub'}</span></div>`;
         };
         $('pohledKus').innerHTML = `<div class="zalozky">${kus(kL, 'lic')}${kus(kR, 'rub')}</div>` +
-          `<p class="info">${fmt(kL.w)} × ${fmt(kL.h)} mm` + (kL.otvor ? ` · otvor na střapec ⌀ ${fmt(kL.otvor.r * 2)} mm, střed ${fmt(kL.otvor.cy)} mm od horní hrany` : '') + '</p>' +
+          `<p class="info">${fmt(kL.w)} × ${fmt(kL.h)} mm` + (kL.otvor ? ` · otvor na střapec ⌀ ${fmt(kL.otvor.r * 2)} mm, střed ${fmt(kL.otvor.cy)} mm od horní hrany` : '') +
+          (serie.length ? ` · série ${serie.length} citátů (náhled všech v pohledu Arch)` : '') + '</p>' +
           (varovani.length ? `<p class="varovani">⚠ ${varovani.map(esc).join('<br>⚠ ')}</p>` : '');
       }
     } else {
@@ -216,7 +217,10 @@
       }
     }
     $('pohledKus').hidden = stav.pohled !== 'kus'; $('pohledArch').hidden = stav.pohled !== 'arch';
-    if (stav.pohled === 'arch') kresliArch(sirkaPlochy, vyskaPlochy);
+    if (stav.pohled === 'arch') {
+      kresliArch(sirkaPlochy, vyskaPlochy);
+      if (varovani.length) $('pohledArch').insertAdjacentHTML('afterbegin', `<p class="varovani">⚠ ${varovani.map(esc).join('<br>⚠ ')}</p>`);
+    }
     $('tiskSouhrn').textContent = souhrnTisku();
   }
   function rozvrh() {
@@ -225,6 +229,8 @@
   }
   const bezPozadi = () => stav.druh === 'exlibris' && !exl().tiskPozadi;
   function svgProTisk(kus) { return ZE.svg(kus, { spadavka: +tisk().spadavka || 0, otvor: 'znacka', bezPozadi: bezPozadi(), id: 't' + Math.random().toString(36).slice(2, 6) }); }
+  /* líc pro tisk: série (pole SVG, kus i = citát i mod n) nebo jeden kus */
+  function svgLice() { return posledni.serie && posledni.serie.length ? posledni.serie.map(svgProTisk) : svgProTisk(posledni.lic); }
   function souhrnTisku() {
     if (!posledni) return '';
     const R = rozvrh();
@@ -235,7 +241,7 @@
     const R = rozvrh(), t = tisk();
     if (!R.pocet) { $('pohledArch').innerHTML = `<p class="varovani">${esc(souhrnTisku())}</p>`; return; }
     const sirka = Math.min(sw, sh * R.papir.w / R.papir.h) * stav.zoom;
-    let h = `<div class="arch" style="width:${Math.round(sirka)}px">${V.archSvg(R, svgProTisk(posledni.lic), { rezy: stav.prep.rezy })}</div>`;
+    let h = `<div class="arch" style="width:${Math.round(sirka)}px">${V.archSvg(R, svgLice(), { rezy: stav.prep.rezy })}</div>`;
     h += `<p class="archinfo">${esc(souhrnTisku())} Spadávka ${fmt(R.spadavka)} mm, mezera ${fmt(R.mezera)} mm. Modrá čárkovaná = okraj tiskárny${stav.prep.rezy ? ', červená = řez' : ''}.</p>`;
     if (stav.druh === 'zalozka' && t.oboustranne) {
       h += `<div class="arch" style="width:${Math.round(sirka)}px">${V.archSvg(R, svgProTisk(posledni.rub), { rub: true, posun: { x: +t.posunX || 0, y: +t.posunY || 0 }, rezy: stav.prep.rezy })}</div>`;
@@ -243,8 +249,40 @@
     }
     $('pohledArch').innerHTML = h;
   }
+  /* ------------------------------------------------------------ zpět / znovu (snímky návrhů, změny do 0,6 s se slučují) */
+  const historie = { zpet: [], vpred: [], posl: null, cas: 0, ceka: null, obnovuji: false };
+  const snimekNavrhu = () => JSON.stringify({ z: stav.zalozka, e: stav.exlibris });
+  function dokonciZaznam() {
+    if (historie.ceka == null) return;
+    clearTimeout(historie.cas);
+    if (historie.ceka !== historie.posl) {
+      if (historie.posl !== null) { historie.zpet.push(historie.posl); if (historie.zpet.length > 100) historie.zpet.shift(); historie.vpred = []; }
+      historie.posl = historie.ceka;
+    }
+    historie.ceka = null;
+    $('btnZpet').disabled = !historie.zpet.length; $('btnZnovu').disabled = !historie.vpred.length;
+  }
+  function zaznamenej() {
+    if (historie.obnovuji) return;
+    const t = snimekNavrhu();
+    if (t === historie.posl && historie.ceka == null) return;
+    historie.ceka = t;
+    clearTimeout(historie.cas);
+    historie.cas = setTimeout(dokonciZaznam, 600);
+  }
+  function obnov(t) {
+    const o = JSON.parse(t);
+    historie.obnovuji = true;
+    stav.zalozka = o.z; stav.exlibris = o.e;
+    zmena();
+    historie.obnovuji = false;
+    if (stav.druh === 'exlibris') planujMonogramy();
+  }
+  function zpet() { dokonciZaznam(); if (!historie.zpet.length) return; historie.vpred.push(historie.posl); historie.posl = historie.zpet.pop(); obnov(historie.posl); }
+  function znovu() { dokonciZaznam(); if (!historie.vpred.length) return; historie.zpet.push(historie.posl); historie.posl = historie.vpred.pop(); obnov(historie.posl); }
+
   let snimek = 0;
-  function zmena(bezFormulare) { ulozStav(); if (!bezFormulare) naplnFormular(); cancelAnimationFrame(snimek); snimek = requestAnimationFrame(() => prekresli().catch(chybaKresleni)); }
+  function zmena(bezFormulare) { zaznamenej(); ulozStav(); if (!bezFormulare) naplnFormular(); cancelAnimationFrame(snimek); snimek = requestAnimationFrame(() => prekresli().catch(chybaKresleni)); }
   const chybaKresleni = e => { console.error(e); Dialog.chyba('Náhled se nepodařilo vykreslit: ' + e.message); };
 
   /* ------------------------------------------------------------ události formuláře */
@@ -258,7 +296,7 @@
       const sez = el.dataset.p === 'z.rozmer' ? ZE.ROZMERY_ZALOZKY : ZE.ROZMERY_EXLIBRIS, r = sez.find(x => x.id === v && x.w), o = el.dataset.p[0] === 'z' ? zal() : exl();
       if (r) { o.sirka = r.w; o.vyska = r.h; }
     }
-    if (el.dataset.p === 'e.inicialy' || el.dataset.p === 'e.pismoMonogram' || (el.dataset.p === 'e.jmeno' && !exl().inicialy)) nahledyMonogramu();
+    if (el.dataset.p === 'e.inicialy' || el.dataset.p === 'e.pismoMonogram' || (el.dataset.p === 'e.jmeno' && !exl().inicialy)) planujMonogramy();
     zmena(el.tagName === 'TEXTAREA' || el.type === 'text');
     if (el.tagName === 'TEXTAREA' || el.type === 'text') naplnFormular();
   });
@@ -276,6 +314,10 @@
     const c = CITATY[+e.target.value]; e.target.value = '';
     if (!c) return;
     const st = zal()[stav.strana]; st.text = c.text; st.autor = c.autor; st.zdroj = ''; zmena();
+  });
+  $('plocha').addEventListener('keydown', e => {
+    const o = e.target.closest('[data-vyber-strana]');
+    if (o && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); o.click(); }
   });
   $('plocha').addEventListener('click', e => {
     const o = e.target.closest('[data-vyber-strana]');
@@ -306,7 +348,8 @@
     if (b && !b.disabled) { e.stopPropagation(); zavriNabidky(); const p = PRIKAZY[b.dataset.prikaz]; if (p) p(); return; }
     if (!e.target.closest('.nabidka')) zavriNabidky();
   });
-  addEventListener('resize', () => { zavriNabidky(); zmena(true); });
+  let sirkaOkna = innerWidth;
+  addEventListener('resize', () => { if (innerWidth !== sirkaOkna) { sirkaOkna = innerWidth; zavriNabidky(); } zmena(true); });
   document.querySelectorAll('dialog [data-zavrit]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
 
   /* ------------------------------------------------------------ příkazy */
@@ -353,8 +396,17 @@
         $('dlgGalerie').close(); zmena(); if (x.druh === 'exlibris') nahledyMonogramu();
       } else if (b.dataset.d) { await dbUloz('navrhy', Object.assign(kopie(x), { id: noveId(), nazev: x.nazev + ' (kopie)', upraveno: Date.now() })); galerie(); }
       else if (b.dataset.p) { const n = await Dialog.zeptej('Nový název', x.nazev, { ok: 'Přejmenovat' }); if (n && n.trim()) { x.nazev = n.trim(); await dbUloz('navrhy', x); if (stav.id[x.druh] === x.id) stav.nazev[x.druh] = x.nazev; galerie(); } }
-      else if (b.dataset.s) { if (await Dialog.potvrd(`Smazat návrh „${x.nazev}“?`, { ok: 'Smazat' })) { await dbSmaz('navrhy', x.id); if (stav.id[x.druh] === x.id) stav.id[x.druh] = null; galerie(); } }
+      else if (b.dataset.s) { if (await Dialog.potvrd(`Smazat návrh „${x.nazev}“?`, { ok: 'Smazat' })) { await dbSmaz('navrhy', x.id); if (stav.id[x.druh] === x.id) stav.id[x.druh] = null; await uklidObrazky(); galerie(); } }
     };
+  }
+  /* obrázky, na které neodkazuje žádný uložený návrh ani rozpracovaný stav, se smažou z IndexedDB */
+  async function uklidObrazky() {
+    try {
+      const navrhy = await dbVse('navrhy'), obr = await dbVse('obrazky');
+      const id = d => [d && d.lic && d.lic.obrazek && d.lic.obrazek.id, d && d.rub && d.rub.obrazek && d.rub.obrazek.id, d && d.obrazek && d.obrazek.id];
+      const pouzite = new Set([...navrhy.flatMap(x => id(x.data)), ...id(stav.zalozka), ...id(stav.exlibris)].filter(Boolean));
+      for (const o of obr) if (!pouzite.has(o.id)) { await dbSmaz('obrazky', o.id); delete obrazky[o.id]; }
+    } catch (e) { /* úklid není kritický */ }
   }
   async function zalohaVen() {
     const navrhy = await dbVse('navrhy'), obr = await dbVse('obrazky');
@@ -397,9 +449,9 @@
       const k = posledni.lic, jeZ = stav.druh === 'zalozka';
       const popis = `${nazevKusu().trim()} · ${R.pocet} ks · ${fmt(k.w)} × ${fmt(k.h)} mm` + (R.spadavka ? ` · spadávka ${fmt(R.spadavka)} mm` : '') +
         (jeZ && k.otvor ? ` · otvor ⌀ ${fmt(k.otvor.r * 2)} mm` : '') + ' · tiskněte v měřítku 100 %';
-      const doc = await V.pdf(svgProTisk(k), jeZ && t.oboustranne ? svgProTisk(posledni.rub) : null, R,
+      const doc = await V.pdf(svgLice(), jeZ && t.oboustranne ? svgProTisk(posledni.rub) : null, R,
         { dpi: +t.dpi || 600, format: t.format, popis, posun: { x: +t.posunX || 0, y: +t.posunY || 0 }, obrys: !!t.obrys });
-      doc.save(V.jmenoSouboru(nazevKusu()) + '_arch.pdf');
+      V.stahni(doc.output('blob'), V.jmenoSouboru(nazevKusu()) + '_arch.pdf', 'application/pdf');
     } catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); }
     finally { pdfBezi = false; }
   }
@@ -459,11 +511,20 @@
     O.innerHTML = `<p class="pozn">Vyberte větu na záložku (${vety.length}). Text pak můžete upravit.</p><input type="search" id="hledatVetu" class="tl" placeholder="🔍 Hledat ve větách…" aria-label="Hledat ve větách"><div class="vety" id="vety"></div>`;
     const vypis = q => {
       const f = q ? vety.filter(v => v.toLowerCase().includes(q.toLowerCase())) : vety;
-      $('vety').innerHTML = f.slice(0, 400).map(v => `<button class="tl" data-veta="${esc(v)}" data-i18n="ne">${esc(v)}</button>`).join('') || '<p class="prazdne">Nic nenalezeno.</p>';
+      $('vety').innerHTML = f.slice(0, 400).map(v => `<div class="veta"><button class="tl" data-veta="${esc(v)}" data-i18n="ne">${esc(v)}</button>` +
+        `<button class="tl" data-serie="${esc(v)}" title="Přidat do série citátů" aria-label="Přidat do série citátů">+</button></div>`).join('') || '<p class="prazdne">Nic nenalezeno.</p>';
     };
     vypis('');
     $('hledatVetu').addEventListener('input', e => vypis(e.target.value));
     $('vety').onclick = e => {
+      const pr = e.target.closest('[data-serie]');
+      if (pr) {
+        const z = zal(), radek = pr.dataset.serie + (autor || zdroj ? ' – ' + (autor || zdroj) : '');
+        z.serieText = (z.serieText && !z.serieText.endsWith('\n') ? z.serieText + '\n' : z.serieText || '') + radek;
+        z.serie = true; pr.disabled = true; pr.textContent = '✓';
+        Dialog.info(`Přidáno do série (${ZE.parsujSerii(z.serieText).length})`);
+        zmena(); return;
+      }
       const b = e.target.closest('[data-veta]'); if (!b) return;
       st.text = b.dataset.veta; if (zdroj) st.zdroj = zdroj; st.autor = autor || st.autor || '';
       if (st.sablona !== 'citat' && st.sablona !== 'ramecek') st.sablona = 'citat';
@@ -538,6 +599,11 @@
     zmensit: () => { stav.zoom = Math.max(0.3, stav.zoom / 1.2); zmena(true); },
     prizpusobit: () => { stav.zoom = 1; zmena(true); },
     napoveda: () => $('dlgNapoveda').showModal(),
+    zpet, znovu,
+    kalibrace: async () => {
+      try { const doc = await V.kalibrace(PAPIRY[tisk().papir] || PAPIRY.A4); V.stahni(doc.output('blob'), 'zkusebni_arch_oboustranny.pdf', 'application/pdf'); }
+      catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); }
+    },
   };
 
   /* ------------------------------------------------------------ klávesy */
@@ -547,6 +613,8 @@
     if (ctrl && !e.altKey) {
       const k = e.key.toLowerCase();
       if (k === 's') { e.preventDefault(); PRIKAZY.ulozit(); return; }
+      if (k === 'z' && !vPoli && !document.querySelector('dialog[open]')) { e.preventDefault(); if (e.shiftKey) znovu(); else zpet(); return; }
+      if (k === 'y' && !vPoli && !document.querySelector('dialog[open]')) { e.preventDefault(); znovu(); return; }
       if (k === 'p') { e.preventDefault(); exportPdf(); return; }
       if (k === 'e') { e.preventDefault(); exportSvg(); return; }
     }
@@ -559,7 +627,8 @@
     if (akce) { e.preventDefault(); akce(); }
   });
 
-  window.ZE_APP = { stav: () => stav, prekresli, PRIKAZY, posledni: () => posledni, rozvrh: () => rozvrh() };
+  window.ZE_APP = { stav: () => stav, prekresli, PRIKAZY, posledni: () => posledni, rozvrh: () => rozvrh(), historie: () => historie };
+  historie.posl = snimekNavrhu();
   naplnFormular();
   prekresli().then(() => { if (stav.druh === 'exlibris') nahledyMonogramu(); else setTimeout(nahledyMonogramu, 300); }).catch(chybaKresleni);
 })();

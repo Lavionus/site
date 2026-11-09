@@ -27,6 +27,7 @@
     rec:       { nazev: 'Příslovce u slovesa řeči', ikona: '💬' },
     trpny:     { nazev: 'Trpný rod', ikona: '⛓' },
     retez:     { nazev: 'Řetězec podstatných jmen', ikona: '🚃' },
+    zacatky:   { nazev: 'Stejné začátky vět', ikona: '🔂' },
   };
 
   // ---------- funkční slova (do opakování ani četnosti se nepočítají) ----------
@@ -48,15 +49,16 @@
     ' arch akad csc drsc mvdr phmr thdr ved').split(' '));
 
   const VYCHOZI = {
-    okno: 30,            // opakování: kolik slov dozadu hledat stejný kmen
+    okno: 20,            // opakování: kolik slov dozadu hledat stejný kmen
     minDelka: 4,         // opakování: nejkratší sledované slovo
     ignorovatJmena: true,
     prahVety: 30,        // dlouhá věta: více slov než práh
     retezMin: 3,         // řetězec podstatných jmen: aspoň tolik za sebou
+    zacatkyMin: 3,       // stejné začátky: aspoň tolik vět po sobě začíná stejným slovem
     rychlost: 220,       // tiché čtení, slov za minutu
     rychlostNahlas: 150, // předčítání nahlas
     recNehlasit: true,   // vatu a slabá slovesa v přímé řeči nehlásit (mluva postav)
-    typy: { opakovani: true, dlouha: true, vata: true, zacal: true, slabe: true, rec: true, trpny: true, retez: true },
+    typy: { opakovani: true, dlouha: true, vata: true, zacal: true, slabe: true, rec: true, trpny: true, retez: true, zacatky: true },
     vata: ['vlastně', 'nějak', 'docela', 'trochu', 'trošku', 'jakoby', 'jaksi', 'prostě', 'opravdu', 'skutečně', 'celkem', 'poměrně',
       'víceméně', 'zkrátka', 'vůbec', 'hrozně', 'strašně', 'úplně', 'naprosto', 'absolutně', 'totálně', 'zrovna', 'samozřejmě',
       'rozhodně', 'určitě', 'doopravdy', 'poněkud', 'velmi', 'najednou', 'náhle', 'takříkajíc', 'tak nějak', 'tak trochu',
@@ -109,6 +111,19 @@
     else if (w.length > 5 && w.endsWith('in')) w = palatal(w.slice(0, -1));
     if (slovo[0] === w[0] && w.length >= 5 && RE_SLOVESO.test(w)) w = w.slice(0, -2);
     else if (w.length >= 4 && /[^aeiouyáéíóúůýě](?:ek|el)$/.test(w)) w = w.slice(0, -2) + w.slice(-1);   // pohyblivé e: Ješek/Ješka, Pavel/Pavla, domek/domku
+    return w;
+  }
+
+  // kmen vlastního jména: jen pádové koncovky (Udalrich/Udalricha, Věra/Věře, Ješek/Ješka, Mlýnec/Mlýnce)
+  const KONC_JMEN = ['ovi', 'ové', 'ech', 'ami', 'ích', 'em', 'ou', 'ům', 'a', 'u', 'y', 'e', 'ě', 'i', 'o', 'ů', 'í'];
+  function kmenJmena(slovo) {
+    let w = slovo.toLowerCase();
+    // přivlastňovací tvary k majiteli (Kojatův, Henselova, Matějově); dativ -ovi zůstává pádem
+    const priv = /(?:ův|ova|ovo|ově|ovu|ovou|ových|ovým|ovými|ovy)$/.exec(w);
+    if (priv && w.length - priv[0].length >= 3) return kmenJmena(slovo.slice(0, -priv[0].length));
+    for (const k of KONC_JMEN) if (w.endsWith(k) && w.length - k.length >= 2) { w = w.slice(0, -k.length); break; }
+    if (w.endsWith('ř')) w = w.slice(0, -1) + 'r';
+    if (w.length >= 4 && /[^aeiouyáéíóúůýě]e[klc]$/.test(w)) w = w.slice(0, -2) + w.slice(-1);
     return w;
   }
 
@@ -230,6 +245,7 @@
   const RE_INF = /(?:at|át|et|ět|it|ít|out|ýt|ovat|ést|íst|ást|ct|ci|zt)$/;
   const RE_PRISL = /(?:ně|le|tě|vě|še|ce|ze|dě|[dsthm]ře)$/;   // -ře jen dobře, ostře, chytře, moudře…   // ne -sky/-cky: „řekl česky“ je informace, ne ozdoba
   const NE_PRISL = new Set('ruce noze hlavě ženě tváře dveře chvíle stole škole posteli vodě matce zemi cestě ulice ruka tvé své mé ale pole ně mě sestře dceři ženy matky stejně jistě konečně přesně zase proto teprve hned právě nahoře dole venku uvnitř hodně hlavně zřejmě původně především'.split(' '));
+  const MISTNI = new Set('v ve do z ze ze'.split(' '));
   const PREDLOZKY = new Set('v ve na o po při u k ke s se z ze za před pod nad'.split(' '));
   const ZAJMENA = new Set('on ona ono oni ony já ty my vy'.split(' '));
 
@@ -312,11 +328,11 @@
     const jmenaKmeny = new Map();
     for (const t of T) {
       if (t.velke && !t.zac && !t.cislo && t.s.length >= 2 && !/^\p{Lu}+$/u.test(t.s.length > 1 ? t.s : '') && !STOP.has(t.l)) {
-        const k = kmen(t.s);
+        const k = kmenJmena(t.s);
         jmenaKmeny.set(k, (jmenaKmeny.get(k) || 0) + 1);
       }
     }
-    const jeJmeno = t => t.velke && !t.cislo && (jmenaKmeny.get(kmen(t.s)) || 0) >= (t.zac ? 2 : 1);
+    const jeJmeno = t => t.velke && !t.cislo && (jmenaKmeny.get(kmenJmena(t.s)) || 0) >= (t.zac ? 2 : 1);
 
     const nalezy = [];
     const pridej = (typ, od, doo, zprava, extra) => {
@@ -328,6 +344,28 @@
     // --- dlouhé věty ---
     for (const v of vetyArr) if (v.slov > N.prahVety)
       pridej('dlouha', v.od, v.do, `Dlouhá věta: ${v.slov} slov (práh ${N.prahVety})`, { slov: v.slov });
+
+    // --- stejné začátky vět (Věra… Věra… Věra…) – jen vyprávění, ne věty začínající přímou řečí ---
+    {
+      let beh = [];
+      const uzavri = () => {
+        if (beh.length >= N.zacatkyMin) {
+          const [a, ...dal] = beh;
+          const n = beh.length, kolik = n < 5 ? `${n} věty po sobě začínají` : `${n} vět po sobě začíná`;
+          pridej('zacatky', a.od, a.do, `${kolik} slovem „${a.s}“ – obměňte začátky`,
+            { dalsi: dal.map(t => ({ od: t.od, do: t.do })), pocet: beh.length });
+        }
+        beh = [];
+      };
+      for (const v of vetyArr) {
+        const t = T[v.prvni];
+        if (!t || t.rec || t.cislo) { uzavri(); continue; }
+        const posl = beh[beh.length - 1];
+        if (posl && (posl.k !== t.k || posl.l !== t.l)) uzavri();
+        beh.push(t);
+      }
+      uzavri();
+    }
 
     // --- opakovaná slova v blízkosti ---
     if (N.typy.opakovani) {
@@ -468,17 +506,21 @@
     spojeni = spojeni.slice(0, 60);
 
     // --- postavy (jména) po kapitolách ---
+    // místo = jméno, které stojí často po místní předložce (v Chebu, do Prahy, z Brna); postava skoro nikdy
     const post = new Map();
-    for (const t of T) {
+    for (let i = 0; i < T.length; i++) {
+      const t = T[i];
       if (!jeJmeno(t) || STOP.has(t.l)) continue;
-      const k = kmen(t.s);
+      const k = kmenJmena(t.s);
       if ((jmenaKmeny.get(k) || 0) < 2) continue;
-      let p = post.get(k); if (!p) post.set(k, p = { kmen: k, celkem: 0, tvary: {}, poKap: kapitoly.map(() => 0), prvni: t.od });
+      let p = post.get(k); if (!p) post.set(k, p = { kmen: k, celkem: 0, mistni: 0, tvary: {}, poKap: kapitoly.map(() => 0), prvni: t.od });
       p.celkem++; p.tvary[t.s] = (p.tvary[t.s] || 0) + 1; p.poKap[t.k]++;
+      if (i > 0 && tesne(i - 1) && MISTNI.has(T[i - 1].l)) p.mistni++;
     }
     const postavy = [...post.values()].filter(p => p.celkem >= 3)
-      .map(p => ({ jmeno: nejTvar(p.tvary), kmen: p.kmen, celkem: p.celkem, poKap: p.poKap, prvni: p.prvni, tvary: Object.keys(p.tvary) }))
-      .sort((a, b) => b.celkem - a.celkem).slice(0, 40);
+      .map(p => ({ jmeno: nejTvar(p.tvary), kmen: p.kmen, celkem: p.celkem, poKap: p.poKap, prvni: p.prvni, tvary: Object.keys(p.tvary),
+        misto: p.mistni / p.celkem >= 0.35 }))
+      .sort((a, b) => b.celkem - a.celkem).slice(0, 60);
 
     // --- souhrny kapitol ---
     for (const K of kapitoly) {
@@ -579,11 +621,12 @@
       const nal = platne.filter(n => n.kap === i).length;
       o.push(`| ${K.nazev.replace(/\|/g, '/')} | ${K.slov} | ${K.vet} | ${cislo(K.slovNaVetu)} | ${cislo(K.slabikNaSlovo, 2)} | ${procenta(K.podilReci)} | ${doba(K.minut)} | ${nal} |`);
     });
-    if (rozbor.postavy.length) {
-      o.push('', '## Postavy (výskyty jmen)', '');
+    for (const [nadpis, sez] of [['Postavy (výskyty jmen)', rozbor.postavy.filter(p => !p.misto)], ['Místa', rozbor.postavy.filter(p => p.misto)]]) {
+      if (!sez.length) continue;
+      o.push('', '## ' + nadpis, '');
       o.push('| Jméno | Celkem | ' + rozbor.kapitoly.map((K, i) => String(i + 1)).join(' | ') + ' |');
       o.push('|---|---:|' + rozbor.kapitoly.map(() => '---:').join('|') + '|');
-      for (const p of rozbor.postavy.slice(0, 20)) o.push(`| ${p.jmeno} | ${p.celkem} | ${p.poKap.join(' | ')} |`);
+      for (const p of sez.slice(0, 20)) o.push(`| ${p.jmeno} | ${p.celkem} | ${p.poKap.join(' | ')} |`);
     }
     o.push('', '## Nejčastější slova', '', rozbor.frekvence.slice(0, 30).map(f => `${f.slovo} (${f.pocet})`).join(', ') || '–');
     o.push('', '## Opakovaná slovní spojení', '', rozbor.spojeni.slice(0, 25).map(f => `„${f.text}“ (${f.pocet})`).join(', ') || '–');
@@ -596,5 +639,5 @@
     return o.join('\n') + '\n';
   }
 
-  return { TYPY, VYCHOZI, STOP, rozeber, vety, bloky, kmen, slabiky, pripravSeznam, klic, kontext, doba, radkyIndex, csv, zpravaMd, hodnoceniCtivosti };
+  return { TYPY, VYCHOZI, STOP, rozeber, vety, bloky, kmen, kmenJmena, slabiky, pripravSeznam, klic, kontext, doba, radkyIndex, csv, zpravaMd, hodnoceniCtivosti };
 });

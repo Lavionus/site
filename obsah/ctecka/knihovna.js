@@ -19,9 +19,21 @@
     // napojená kniha z webu: před čtením stáhnout novější verzi (offline / pomalá síť = čte se uložená)
     if (meta.web) {
       const seznam = await D.seznamWeb(3000);
-      if ((await D.aktualizujZWebu([meta], seznam)).length) Dialog.info('🌐 Kniha aktualizována z webu');
+      if ((await D.aktualizujZWebu([meta], seznam, await D.vsechnyMeta())).length) Dialog.info('🌐 Kniha aktualizována z webu');
     }
-    const obsah = await D.obsahKnihy(id);
+    let obsah = await D.obsahKnihy(id);
+    // text knihy v databázi chybí (nedokončená obnova, prohlížeč smazal část dat): kniha z webu se stáhne znovu
+    if (!obsah && meta.web) {
+      const seznam = await D.seznamWeb(6000), pol = seznam && D.polozkaWebu(meta, seznam, await D.vsechnyMeta());
+      if (pol) try { Object.assign(meta, await D.ulozKnihu(await D.knihaZWebu(pol), meta, { web: { id: pol.id, otisk: pol.otisk, nazev: pol.nazev } })); obsah = await D.obsahKnihy(id); } catch (e) {}
+    }
+    if (!obsah) {
+      document.body.insertAdjacentHTML('afterbegin', `<main class="knihovna"><div class="uvod"><h2>Text knihy se nenašel</h2>
+        <p><b data-i18n="ne">${esc(meta.nazev)}</b> – <span>je v knihovně, ale prohlížeč nemá uložený její text (nedokončená obnova zálohy nebo smazaná data webu).</span>
+        <span>${meta.web ? 'Kniha z webu se teď stáhnout nedala – zkuste to znovu, až budete online.' : 'Obnovte knihovnu ze zálohy, nebo knihu odeberte a přidejte znovu.'}</span></p>
+        <p><button class="tl" onclick="location.reload()">↻ Zkusit znovu</button> <a class="tl" href="ctecka_knih.html">📚 Zpět do knihovny</a></p></div></main>`);
+      return;
+    }
     // nová kniha převezme vzhled (písmo, motiv…) z naposledy čtené
     if (!localStorage.getItem(D.klicKnihy(id)) && nast.posledni) {
       const s = D.stavKnihy(nast.posledni);
@@ -56,11 +68,25 @@
   }
   // vlastní kniha není na webu: bez sazby, odkazů, betačtení a stahování „pro offline“ (je už v zařízení)
   function upravCtecku() {
+    // oddíl Betačtení se přejmenuje (podle tlačítka, ne podle textu – nadpis už může být přeložený)
+    const zPoznamek = document.querySelector('[data-prikaz="exp-poznamky"]');
+    let t = zPoznamek && zPoznamek.previousElementSibling;
+    while (t && !t.classList.contains('titulek')) t = t.previousElementSibling;
     ['odkaz', 'tisk-knihy', 'sazba-kapitoly', 'offline', 'odeslat-poznamky', 'nacist-poznamky', 'odkaz-beta']
       .forEach(p => document.querySelectorAll(`[data-prikaz="${p}"]`).forEach(b => b.remove()));
-    document.querySelectorAll('.nabidka .titulek').forEach(t => {
-      if (/^Sdílet/.test(t.textContent)) t.remove();
-      if (/^Betačtení/.test(t.textContent)) t.textContent = 'Poznámky';
+    if (t) t.textContent = 'Poznámky';
+    // prázdné oddíly nabídek: nadpis bez tlačítek pod sebou a zdvojené / krajní čáry pryč
+    document.querySelectorAll('.nabidka').forEach(n => {
+      [...n.children].forEach(el => {
+        if (!el.classList.contains('titulek')) return;
+        const dalsi = el.nextElementSibling;
+        if (!dalsi || dalsi.tagName === 'HR' || dalsi.classList.contains('titulek')) el.remove();
+      });
+      [...n.children].forEach(el => {
+        if (el.tagName !== 'HR') return;
+        const pred = el.previousElementSibling, dalsi = el.nextElementSibling;
+        if (!pred || !dalsi || pred.tagName === 'HR') el.remove();
+      });
     });
     document.getElementById('hledat').placeholder = '🔍 Hledat v knize…';
     const h1 = document.querySelector('#lista h1');
@@ -70,6 +96,7 @@
 
   /* =================== správce knihovny =================== */
   async function spravce() {
+    document.body.classList.add('spravce');
     document.body.insertAdjacentHTML('afterbegin', `
 <header class="lista">
   <h1>📚<span class="nazev-webu"> Čtečka knih</span></h1>
@@ -96,6 +123,9 @@
   <button class="tl prep" data-razeni="serie">Série (po policích)</button>
   <button class="tl prep" data-razeni="pokrok">Pokroku čtení</button>
   <button class="tl prep" data-razeni="hodnoceni">Hodnocení</button>
+  <hr><div class="titulek">Vzhled</div>
+  <button class="tl prep" data-zobrazeni="mrizka">▦ Mřížka obálek</button>
+  <button class="tl prep" data-zobrazeni="seznam">☰ Seznam</button>
   <hr><div class="titulek">Zobrazit</div>
   <button class="tl prep" data-filtr="">Všechny knihy</button>
   <button class="tl prep" data-filtr="rozectene">Rozečtené</button>
@@ -166,6 +196,24 @@
       }
       return `<div class="gen" style="background:${barva(m.nazev)}"><b>${esc(m.nazev)}</b><span>${esc(m.autor)}</span></div>`;
     }
+    // kniha z webu: nová verze od posledního čtení / soubor z webu zmizel
+    function znackaFormatu(m) {
+      if (!m.web) return `<span class="format">${esc(m.format)}</span>`;
+      if (m.web.chybi) return '<span class="format chybi" title="Kniha už na webu není – zůstává v knihovně, jen se neaktualizuje">🌐 není na webu</span>';
+      if (D.novaVerze(m)) {
+        const z = m.zmenaWeb || {}, sl = z.slov ? ` (${z.slov > 0 ? '+' : '−'}${Math.abs(z.slov).toLocaleString('cs')} slov)` : '';
+        return `<span class="format nova" title="Na webu je nová verze${esc(sl)} – už stažená, stačí číst">🆕 nová verze</span>`;
+      }
+      return '<span class="format">🌐 web</span>';
+    }
+    // odhad podle průměrného času čtení za posledních 14 dní
+    const odhadKonce = (m, p) => {
+      const dni = D.dniDoKonce(m, p, tempo);
+      if (!dni) return '';
+      const kdy = new Date(Date.now() + (dni - 1) * 864e5);
+      return dni === 1 ? 'dočtete asi dnes' : `dočtete asi do ${kdy.getDate()}. ${kdy.getMonth() + 1}.`;
+    };
+    let tempo = 0;
     const procentaZbyva = (m, p) => p >= 0.999 ? '100 %' : `${Math.floor(p * 100)} % · zbývá ${J.formatCas(m.slov * (1 - p) / 220)}`;
     const hvezdy = n => n ? '★'.repeat(n) + '☆'.repeat(5 - n) : '';
     const dil = m => m.dil != null && m.dil !== '' ? `${String(m.dil).replace('.', ',')}. díl` : '';
@@ -175,7 +223,7 @@
     function karta(m, p, d) {
       const sirka = d ? 100 : p * 100;
       return `<div class="karta${d ? ' docteno' : ''}" data-id="${esc(m.id)}">
-        <button class="obal" data-akce="cti" title="Číst: ${esc(m.nazev)}">${obalHtml(m)}<span class="format">${m.web ? '🌐 web' : esc(m.format)}</span>${d ? '<span class="znacka-docteno">✔ Dočteno</span>' : ''}</button>
+        <button class="obal" data-akce="cti" title="Číst: ${esc(m.nazev)}">${obalHtml(m)}${znackaFormatu(m)}${d ? '<span class="znacka-docteno">✔ Dočteno</span>' : ''}</button>
         <div class="nazev" title="${esc(m.nazev)}">${esc(m.nazev)}</div>
         <div class="autor">${esc(m.autor || '—')}</div>
         ${m.serie ? `<div class="serie" title="${esc(m.serie)}">${esc(m.serie)}${dil(m) ? ' · ' + dil(m) : ''}</div>` : ''}
@@ -189,6 +237,9 @@
     }
     function vykresli() {
       const q = J.normalizuj($('hledat').value.trim());
+      tempo = D.tempoCteni(knihy);
+      $('knihovna').classList.toggle('seznam', nast.zobrazeni === 'seznam');
+      document.querySelectorAll('[data-zobrazeni]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.zobrazeni === (nast.zobrazeni || 'mrizka'))));
       const pk = new Map(knihy.map(m => [m.id, D.pokrok(m)]));
       const hotovo = new Map(knihy.map(m => [m.id, D.docteno(m, pk.get(m.id))]));
       // deník: kniha dočtená do konce dostane datum dočtení sama
@@ -226,7 +277,7 @@
           return `<button class="rozect" data-id="${esc(m.id)}" data-akce="cti" title="Pokračovat: ${esc(m.nazev)}">
             <span class="obal mini">${obalHtml(m)}</span>
             <span class="rozect-text"><b>${esc(m.nazev)}</b><span>${esc(kap)}</span>
-            <span class="pokrok"><i style="width:${(p * 100).toFixed(1)}%"></i></span><span>${procentaZbyva(m, p)}</span></span></button>`;
+            <span class="pokrok"><i style="width:${(p * 100).toFixed(1)}%"></i></span><span>${procentaZbyva(m, p)}</span>${odhadKonce(m, p) ? `<span class="odhad">${odhadKonce(m, p)}</span>` : ''}</span></button>`;
         }).join('')}</div></section>`;
       }
       if (!vyber.length) h += '<p class="uvod">Nic nenalezeno.</p>';
@@ -236,15 +287,32 @@
         for (const [serie, seznam] of police)
           h += `<section class="police"><h2>${serie ? '📚 ' + esc(serie) : 'Bez série'} <span>${seznam.length}</span></h2><div class="mrizka">${seznam.map(m => karta(m, pk.get(m.id), hotovo.get(m.id))).join('')}</div></section>`;
       } else h += `<div class="mrizka">${vyber.map(m => karta(m, pk.get(m.id), hotovo.get(m.id))).join('')}</div>`;
-      $('knihovna').innerHTML = h + '<div class="paticka-knihovny" id="paticka"></div>';
+      $('knihovna').innerHTML = upozorneniZalohy() + h + '<div class="paticka-knihovny" id="paticka"></div>';
       paticka();
     }
     async function paticka() {
-      let t = `${knihy.length} ${knihy.length === 1 ? 'kniha' : knihy.length < 5 ? 'knihy' : 'knih'}`;
+      // části po <span> – každá se překládá zvlášť
+      const casti = [`${knihy.length} ${knihy.length === 1 ? 'kniha' : knihy.length < 5 ? 'knihy' : 'knih'}`];
       if (navigator.storage && navigator.storage.estimate) {
-        try { const e = await navigator.storage.estimate(); t += ` · úložiště prohlížeče: ${(e.usage / 1e6).toFixed(1)} MB z ${(e.quota / 1e9).toFixed(1)} GB`; } catch (e) {}
+        try { const e = await navigator.storage.estimate(); casti.push(`úložiště prohlížeče: ${(e.usage / 1e6).toFixed(1)} MB z ${(e.quota / 1e9).toFixed(1)} GB`); } catch (e) {}
       }
-      if ($('paticka')) $('paticka').textContent = t + ' · knihy jsou jen v tomto zařízení';
+      let trvale = null;
+      if (navigator.storage && navigator.storage.persisted) try { trvale = await navigator.storage.persisted(); } catch (e) {}
+      casti.push(trvale === false ? 'knihy jsou jen v tomto zařízení a prohlížeč je může při nedostatku místa smazat' : 'knihy jsou jen v tomto zařízení');
+      casti.push(nast.zalohovano ? `poslední záloha ${new Date(nast.zalohovano).toLocaleDateString('cs')}` : 'zatím bez zálohy');
+      if ($('paticka')) $('paticka').innerHTML = casti.map(c => `<span>${esc(c)}</span>`).join(' · ');
+    }
+    // Safari (iPad) maže data webu, který se dlouho neotevřel, a knihy nikde jinde nejsou → připomenout zálohu
+    const DEN = 864e5;
+    function upozorneniZalohy() {
+      if (!knihy.length || Date.now() < (nast.zalohaOdlozit || 0)) return '';
+      const posledni = nast.zalohovano || 0;
+      const zmena = knihy.some(m => (m.pridano || 0) > posledni || (m.otevreno || 0) > posledni);
+      const stari = posledni ? Math.floor((Date.now() - posledni) / DEN) : null;
+      if (!zmena || (stari !== null && stari < 30) || (stari === null && knihy.length < 3)) return '';
+      return `<div class="upozorneni" role="status">💾 <span><span>${stari === null ? 'Knihovnu jste ještě nezálohovali.' : `Poslední záloha knihovny je ${stari} dní stará.`}</span>
+        <span>Knihy, pozice a poznámky jsou jen v tomto prohlížeči – záloha je ochrání (a přenese na jiné zařízení).</span></span>
+        <button class="tl hlavni" data-prikaz="zaloha">💾 Zálohovat</button><button class="tl" data-prikaz="zalohaPozdeji">Později</button></div>`;
     }
 
     /* ---------- průběh dlouhých operací ---------- */
@@ -259,6 +327,9 @@
       $('prubehZrus').hidden = !(n > 1);
     }
     const konecPrubehu = () => { $('prubeh') && $('prubeh').remove(); zrusit = false; };
+    // plné úložiště (IndexedDB) – srozumitelně místo „QuotaExceededError“
+    const plne = e => e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
+    const textChyby = e => plne(e) ? 'Úložiště prohlížeče je plné. Odeberte některé knihy (nebo jejich zálohu uložte jinam) a zkuste to znovu.' : (e && e.message) || String(e);
     const dokoncePridani = n => { if (n && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); };   // ať prohlížeč knihy sám nesmaže
 
     /* ---------- přidání knih ze zařízení (i celé složky) ---------- */
@@ -276,7 +347,7 @@
         // jedna kniha: zeptat se; celá složka: duplicity tiše přeskočit
         if (stejna && (hromadne || !(await Dialog.potvrd(`Kniha „${stejna.nazev}“ už v knihovně je. Přidat ji znovu?`, { ok: 'Přidat znovu', zrus: 'Přeskočit' })))) { preskoceno++; continue; }
         try { knihy.push(await D.ulozKnihu(await P.nactiSoubor(f, obr))); pridano++; }
-        catch (e) { chyby.push(`${f.name}: ${e.message || e}`); }
+        catch (e) { chyby.push(`${f.name}: ${textChyby(e)}`); if (plne(e)) break; }
         if (hromadne && i % 10 === 9) vykresli();
       }
       const zruseno = zrusit;
@@ -334,14 +405,15 @@
         const pol = seznam.find(x => x.id === b.closest('[data-web]').dataset.web);
         b.disabled = true; b.textContent = '⏳ Stahuji…';
         try { knihy.push(await D.pridejZWebu(pol)); dokoncePridani(1); Dialog.info(`📚 Přidáno: ${pol.nazev}`); }
-        catch (err) { Dialog.chyba(`${pol.nazev}: ${err.message || err}`); }
+        catch (err) { Dialog.chyba(`${pol.nazev}: ${textChyby(err)}`); }
         vykresliWeb(); vykresli();
       };
     }
     async function aktualizujWeb(potichu) {
       if (!knihy.some(m => m.web)) { if (!potichu) Dialog.info('V knihovně nejsou žádné knihy z webu.'); return; }
       const hotovo = await D.aktualizujZWebu(knihy);
-      if (hotovo.length) { Dialog.info('🌐 Aktualizováno z webu: ' + hotovo.join(', ')); vykresli(); }
+      vykresli();   // i značky „není na webu“ / přejmenované napojení
+      if (hotovo.length) Dialog.info('🌐 Aktualizováno z webu: ' + hotovo.join(', '));
       else if (!potichu) Dialog.info('Knihy z webu jsou aktuální.');
     }
 
@@ -349,14 +421,25 @@
     async function zalohuj() {
       try {
         const blob = await D.zaloha((i, n, t) => prubeh('Zálohuji: ' + t, i, n));
+        konecPrubehu();
+        const jmeno = `knihovna_zaloha_${new Date().toLocaleDateString('sv')}.zip`, mb = (blob.size / 1e6).toFixed(1);
+        // tablet/telefon: sdílení (Uložit do Souborů, iCloud, AirDrop…) – stažení v Safari končí ve Stažených a snadno se ztratí
+        const soubor = typeof File === 'function' ? new File([blob], jmeno, { type: 'application/zip' }) : null;
+        const sdilet = soubor && navigator.canShare && matchMedia('(pointer:coarse)').matches && navigator.canShare({ files: [soubor] });
+        if (sdilet && await Dialog.potvrd(`Záloha knihovny je hotová (${mb} MB). Uložit ji do Souborů / iCloudu nebo poslat na jiné zařízení?`, { ok: '📤 Sdílet / uložit', zrus: '⬇ Stáhnout' })) {
+          try { await navigator.share({ files: [soubor], title: jmeno }); hotovaZaloha(); return; }
+          catch (e) { if (e.name === 'AbortError') return; }   // zrušené sdílení = bez zálohy; jiná chyba → stáhnout
+        }
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); a.download = `knihovna_zaloha_${new Date().toLocaleDateString('sv')}.zip`;
+        a.href = URL.createObjectURL(blob); a.download = jmeno;
         document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-        Dialog.info(`💾 Záloha knihovny stažena (${(blob.size / 1e6).toFixed(1)} MB)`);
-      } catch (e) { Dialog.chyba('Zálohu se nepodařilo vytvořit: ' + (e.message || e)); }
+        setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+        hotovaZaloha();
+        Dialog.info(`💾 Záloha knihovny stažena (${mb} MB)`);
+      } catch (e) { Dialog.chyba('Zálohu se nepodařilo vytvořit: ' + textChyby(e)); }
       konecPrubehu();
     }
+    function hotovaZaloha() { nast.zalohovano = Date.now(); delete nast.zalohaOdlozit; ulozNast(); vykresli(); }
     async function obnov(soubor) {
       try {
         const z = await D.prectiZalohu(soubor);
@@ -364,12 +447,13 @@
         if (z.existujici) {
           prepsat = await Dialog.potvrd(`Záloha obsahuje ${z.data.knihy.length} knih, ${z.existujici} z nich už v knihovně je. Nahradit je verzí ze zálohy (včetně pokroku a poznámek)?`, { ok: 'Nahradit', zrus: 'Ponechat moje' });
         } else if (!(await Dialog.potvrd(`Obnovit ${z.data.knihy.length} knih ze zálohy?`, { ok: 'Obnovit', zrus: 'Zrušit' }))) return;
-        const n = await D.obnovZalohu(z, prepsat, (i, n, t) => prubeh('Obnovuji: ' + t, i, n));
+        const { n, vadne } = await D.obnovZalohu(z, prepsat, (i, n, t) => prubeh('Obnovuji: ' + t, i, n));
         if (z.data.nast && z.data.nast.cil && !nast.cil) { nast.cil = z.data.nast.cil; ulozNast(); }
         knihy = await D.vsechnyMeta();
         dokoncePridani(n);
-        Dialog.info(`📂 Obnoveno knih: ${n}`);
-      } catch (e) { Dialog.chyba(e.message || String(e)); }
+        if (vadne.length) Dialog.chyba(`Obnoveno knih: ${n}. V záloze chybí text u: ${vadne.slice(0, 8).join(', ')}${vadne.length > 8 ? '…' : ''} (záloha je neúplná).`);
+        else Dialog.info(`📂 Obnoveno knih: ${n}`);
+      } catch (e) { Dialog.chyba(textChyby(e)); }
       konecPrubehu();
       vykresli();
     }
@@ -377,17 +461,18 @@
     /* ---------- úprava knihy (údaje, obálka, hodnocení, kapitoly) ---------- */
     let uprava = null;   // {m, obsah, kapitoly: [{soubor, nazev, md, slov}], hodnoceni, obalka: Blob|null|undefined}
     async function upravKnihu(m) {
-      const obsah = await D.obsahKnihy(m.id);
+      const obsah = await D.obsahKnihy(m.id) || { id: m.id, md: {}, obrazky: {} };   // poškozená kniha: aspoň údaje a obálka
       uprava = { m, obsah, hodnoceni: m.hodnoceni || 0, obalka: undefined,
-        kapitoly: m.kapitoly.map(c => ({ ...c, md: obsah.md[c.soubor] || '' })) };
+        kapitoly: m.kapitoly.map(c => ({ ...c, md: obsah.md[c.soubor] || '', puvod: [{ soubor: c.soubor, bloky: 0, slov: 0 }] })) };
       $('upNazev').value = m.nazev; $('upAutor').value = m.autor || '';
       $('upSerie').value = m.serie || ''; $('upDil').value = m.dil != null ? m.dil : '';
       $('upPoznamka').value = m.poznamka || '';
       const datum = t => t ? new Date(t).toLocaleDateString('sv') : '';
       $('upZacato').value = datum(m.zacato); $('upDokonceno').value = datum(m.dokonceno);
       $('seznamSerii').innerHTML = [...new Set(knihy.map(x => x.serie).filter(Boolean))].map(s => `<option value="${esc(s)}">`).join('');
-      $('upKapNapoveda').textContent = m.web
-        ? 'Kniha je napojená na web – úpravy kapitol přepíše další aktualizace z webu (opravte raději rukopis).'
+      $('upKapNapoveda').textContent = m.web && m.web.chybi
+        ? 'Kniha už na webu není – zůstává v knihovně, ale neaktualizuje se. Kapitoly můžete upravit.'
+        : m.web ? 'Kniha je napojená na web – úpravy kapitol přepíše další aktualizace z webu (opravte raději rukopis).'
         : 'Když převod rozdělil knihu špatně: přejmenujte kapitolu, spojte ji s předchozí (⤒) nebo odeberte (🗑).';
       kresliUpravu();
       otevriModal('mUprava');
@@ -411,8 +496,11 @@
       if (!k) return;
       const i = +k.closest('[data-i]').dataset.i, seznam = uprava.kapitoly;
       if (k.dataset.kap === 'spojit') {
-        seznam[i - 1].md += '\n\n' + seznam[i].md;
-        seznam[i - 1].slov += seznam[i].slov;
+        // pozice a poznámky ze spojené kapitoly se posunou o bloky a slova té předchozí
+        const pred = seznam[i - 1], bloky = J.rozeber(pred.md).length, slov = D.slovMd(pred.md);
+        pred.puvod.push(...seznam[i].puvod.map(p => ({ soubor: p.soubor, bloky: p.bloky + bloky, slov: p.slov + slov })));
+        pred.md += '\n\n' + seznam[i].md;
+        pred.slov += seznam[i].slov;
         seznam.splice(i, 1);
       } else seznam.splice(i, 1);
       kresliUpravu();
@@ -426,6 +514,12 @@
     $('upObalOdebrat').onclick = () => { uprava.obalka = null; kresliUpravu(); };
     $('upUlozit').onclick = async () => {
       const u = uprava, m = u.m, rucne = { ...(m.rucne || {}) };
+      // kam se přesunula která původní kapitola (spojení, odebrání) – pozice a poznámky jdou s textem
+      const zbyle = new Map();
+      u.kapitoly.forEach(c => c.puvod.forEach(p => zbyle.set(p.soubor, { soubor: c.soubor, bloky: p.bloky, slov: p.slov })));
+      const smazane = m.kapitoly.map(c => c.soubor).filter(f => !zbyle.has(f));
+      const nPozn = smazane.length ? D.poznamkyVKapitolach(m.id, smazane) : 0;
+      if (nPozn && !(await Dialog.potvrd(`V odebraných kapitolách je záložek a poznámek: ${nPozn}. Smažou se s nimi. Pokračovat?`, { ok: '🗑 Odebrat', zrus: 'Zpět k úpravám' }))) return;
       const nazev = $('upNazev').value.trim() || m.nazev, autor = $('upAutor').value.trim();
       const serie = $('upSerie').value.trim(), dilV = $('upDil').value === '' ? null : +$('upDil').value;
       if (nazev !== m.nazev) rucne.nazev = true;
@@ -442,10 +536,19 @@
       // kapitoly: přejmenování přepíše i nadpis v textu; soubory zůstávají (pozice a záložky platí dál)
       const zmenaKap = u.kapitoly.length !== m.kapitoly.length || u.kapitoly.some((c, i) => c.nazev !== m.kapitoly[i].nazev || c.md !== (u.obsah.md[c.soubor] || ''));
       if (zmenaKap) {
+        // smazaná kapitola → pozice na začátek následující zachované (u poslední předchozí)
+        const mapa = {};
+        m.kapitoly.forEach((c, i) => {
+          if (zbyle.has(c.soubor)) { const z = zbyle.get(c.soubor); if (z.soubor !== c.soubor || z.bloky) mapa[c.soubor] = z; return; }
+          const dalsi = m.kapitoly.slice(i + 1).find(x => zbyle.has(x.soubor)) || [...m.kapitoly.slice(0, i)].reverse().find(x => zbyle.has(x.soubor));
+          if (dalsi) mapa[c.soubor] = { ...zbyle.get(dalsi.soubor), smazana: true };
+        });
+        D.preklopKapitoly(m.id, mapa);
         const md = {};
         u.kapitoly.forEach(c => {
           const puv = m.kapitoly.find(x => x.soubor === c.soubor);
-          if (puv && c.nazev.trim() && c.nazev !== puv.nazev) c.md = c.md.replace(/^#\s+.*$/m, '# ' + c.nazev.trim());
+          // jen nadpis na začátku kapitoly (ne první „#“ kdekoli uvnitř – po spojení jich je víc)
+          if (puv && c.nazev.trim() && c.nazev !== puv.nazev) c.md = c.md.replace(/^(\s*)#[ \t]+[^\n]*/, '$1# ' + c.nazev.trim());
           c.nazev = c.nazev.trim() || (puv && puv.nazev) || 'Kapitola';
           md[c.soubor] = c.md;
         });
@@ -511,11 +614,12 @@
     }
     const napoveda = () => Dialog.potvrd(
       'Čtečka knih\n\n• Formáty: EPUB, MOBI (i PRC/AZW bez DRM), Markdown (.md) a prostý text (.txt). K Markdownu můžete vybrat zároveň i jeho obrázky – použijí se jako ilustrace. Najednou jde přidat celá složka (i přetažením do okna).\n' +
-      '• Moje knihy z webu: rukopisy nahrané na web. Přidaná kniha je napojená a sama se aktualizuje, když se na webu změní.\n' +
-      '• Kapitoly se poznají z obsahu e-knihy, v Markdownu podle nadpisů #, v TXT podle řádků „Kapitola…“, „Část…“. Špatné rozdělení opravíte v ✏️ Upravit.\n' +
+      '• Moje knihy z webu: rukopisy nahrané na web. Přidaná kniha je napojená a sama se aktualizuje, když se na webu změní – na kartě pak svítí 🆕 nová verze (s počtem přidaných slov), dokud ji neotevřete. Přejmenovaný soubor na webu se napojí podle názvu knihy; kniha smazaná z webu zůstane v knihovně se značkou „není na webu“.\n' +
+      '• Kapitoly se poznají z obsahu e-knihy, v Markdownu podle nadpisů #, v TXT podle řádků „Kapitola…“, „Část…“. Špatné rozdělení opravíte v ✏️ Upravit – pozice čtení, záložky a poznámky se při spojení kapitol přesunou s textem.\n' +
+      '• Řadit a filtr → Vzhled: mřížka obálek, nebo seznam (přehlednější na telefonu). U rozečtených knih je odhad, kdy je dočtete – podle toho, kolik jste průměrně četli za posledních 14 dní.\n' +
       '• Při čtení: obsah (T), hledání (Ctrl+F), záložky (B), zvýraznění a poznámky, předčítání (R), motivy, písmo a stránkování v nabídce Zobrazení. Pokrok se ukládá sám.\n' +
       '• Deník: dočtené knihy s datem, hodnocením a poznámkou, statistiky a roční cíl.\n' +
-      '• Knihy i poznámky jsou jen v tomto prohlížeči. Celou knihovnu přenesete jinam přes 🧰 Nástroje → Zálohovat / Obnovit.\n' +
+      '• Knihy i poznámky jsou jen v tomto prohlížeči. Celou knihovnu přenesete jinam přes 🧰 Nástroje → Zálohovat / Obnovit. Na tabletu jde záloha rovnou sdílet (Uložit do Souborů, iCloud, AirDrop) a na druhém zařízení ji obnovíte výběrem souboru ZIP. Safari maže data webů, které se dlouho neotevřely – proto knihovna po 30 dnech bez zálohy sama připomene.\n' +
       '• MOBI s kompresí HUFF/CDIC (některé knihy z Amazonu) a knihy s DRM otevřít nejde – převeďte je na EPUB.',
       { ok: 'Rozumím', zrus: 'Zavřít' });
 
@@ -529,6 +633,7 @@
       zaloha: zalohuj,
       obnova: () => $('souborZaloha').click(),
       aktualizovat: () => aktualizujWeb(false),
+      zalohaPozdeji: () => { nast.zalohaOdlozit = Date.now() + 7 * DEN; ulozNast(); vykresli(); },
       napoveda,
     };
     const zavriNabidky = () => document.querySelectorAll('.nabidka').forEach(n => { n.hidden = true; });
@@ -545,9 +650,11 @@
     document.addEventListener('click', e => {
       const p = e.target.closest('[data-prikaz]');
       if (p && PRIKAZY[p.dataset.prikaz]) { zavriNabidky(); PRIKAZY[p.dataset.prikaz](); return; }
-      const r = e.target.closest('[data-razeni], [data-filtr]');
+      const r = e.target.closest('[data-razeni], [data-filtr], [data-zobrazeni]');
       if (r) {
-        if (r.dataset.razeni) nast.razeni = r.dataset.razeni; else nast.filtr = r.dataset.filtr;
+        if (r.dataset.razeni) nast.razeni = r.dataset.razeni;
+        else if (r.dataset.zobrazeni) nast.zobrazeni = r.dataset.zobrazeni;
+        else nast.filtr = r.dataset.filtr;
         ulozNast(); zavriNabidky(); vykresli(); return;
       }
       if (!e.target.closest('.nabidka')) zavriNabidky();

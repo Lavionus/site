@@ -5,6 +5,7 @@
 (function () {
   'use strict';
   const O = window.OBALKA, K = window.OBALKA_KRESBA;
+  const ZDE = document.currentScript ? document.currentScript.src : location.href;
   const $ = id => document.getElementById(id);
   const KLIC = 'webapp_obalka_knihy', KLIC_NAST = 'webapp_obalka_knihy_nast';
   const kopie = x => JSON.parse(JSON.stringify(x));
@@ -25,9 +26,9 @@
   try { ulozeny = JSON.parse(localStorage.getItem(KLIC) || 'null'); } catch (e) { ulozeny = null; }
   let navrh = slij((ulozeny && ulozeny.navrh) || {}, O.VYCHOZI);
   let aktualni = { id: (ulozeny && ulozeny.id) || null, nazev: (ulozeny && ulozeny.nazev) || '' };
-  let nast = { vod: { orez: true, spadavka: true, bezpecna: true, hrbet: true, drazky: true, kdp: true, popisky: true }, exp: { voditka: false, znacky: false }, zoom: 0 };
+  let nast = { vod: { orez: true, spadavka: true, bezpecna: true, hrbet: true, drazky: true, kdp: true, popisky: true }, exp: { voditka: false, znacky: false }, zoom: 0, prst: false };
   try { nast = slij(JSON.parse(localStorage.getItem(KLIC_NAST) || '{}'), nast); } catch (e) { /* výchozí */ }
-  const ulozNast = () => localStorage.setItem(KLIC_NAST, JSON.stringify(nast));
+  const ulozNast = () => { try { localStorage.setItem(KLIC_NAST, JSON.stringify(nast)); } catch (e) { /* plné úložiště – nastavení zobrazení není kritické */ } };
 
   /* ---------- IndexedDB: obrázky a pojmenované návrhy ---------- */
   let dbSlib = null;
@@ -80,6 +81,7 @@
   async function uklidObrazky() {
     try {
       const pouzite = new Set(pouzitaObr(navrh));
+      for (const h of historie) pouzitaObr(JSON.parse(h)).forEach(i => pouzite.add(i));   // Zpět je musí umět vrátit
       for (const z of await idbVse('navrhy')) pouzitaObr(slij(z.navrh, O.VYCHOZI)).forEach(i => pouzite.add(i));
       const vse = await tx('obrazky', 'readonly', s => s.getAllKeys());
       for (const id of vse) if (!pouzite.has(id)) {
@@ -108,7 +110,9 @@
     if (ex) p = fetch(ex.url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then(b => opentype.parse(b));
     else if (id.startsWith('sys:')) {
       const s = systemova.find(x => x.id === id);
-      p = s ? s.data.blob().then(b => b.arrayBuffer()).then(b => opentype.parse(b)) : Promise.reject(new Error('Systémové písmo není načtené – zvolte v nabídce „Text knihy“ Načíst systémová písma.'));
+      p = s ? s.data.blob().then(b => b.arrayBuffer()).then(b => opentype.parse(b))
+        : Promise.reject(new Error(window.queryLocalFonts ? 'Systémové písmo není načtené – zvolte v nabídce „Text knihy“ Načíst systémová písma.'
+          : 'Návrh používá systémové písmo z jiného počítače, které tu není. Vyberte jiné písmo.'));
     } else p = FONTY.opentype(id);
     pismaSlib[id] = p.then(f => { pisma[id] = f; return f; }, e => { pismaChyba[id] = e.message || String(e); delete pismaSlib[id]; throw e; });
     return pismaSlib[id];
@@ -157,7 +161,9 @@
       <div class="pole"><span>Odshora</span><div class="radek"><input type="number" data-k="${k}.y" min="0" max="98" step="0.5" aria-label="Odshora"> <span class="jedn">%</span>
         <select data-k="${k}.zarovnani" aria-label="Zarovnání"><option value="stred">Na střed</option><option value="vlevo">Vlevo</option><option value="vpravo">Vpravo</option></select></div></div>
       <div class="pole"><span>Prostrkání, řádky</span><div class="radek"><input type="number" data-k="${k}.prostrkani" min="-100" max="800" step="10" aria-label="Prostrkání" title="Prostrkání v tisícinách em"> <span class="jedn">/1000 em</span>
-        <input type="number" data-k="${k}.radkovani" min="0.7" max="3" step="0.05" aria-label="Řádkování" title="Řádkování víceřádkového textu" style="width:64px"></div></div>`).join('');
+        <input type="number" data-k="${k}.radkovani" min="0.7" max="3" step="0.05" aria-label="Řádkování" title="Řádkování víceřádkového textu" style="width:64px"></div></div>
+      <div class="pole"><span>Obrys</span><div class="radek"><input type="number" data-k="${k}.obrys" min="0" max="3" step="0.05" aria-label="Obrys" title="Tloušťka obrysu písmen v mm (0 = bez obrysu)"> <span class="jedn">mm</span>
+        <input type="color" data-k="${k}.barvaObrysu" aria-label="Barva obrysu"></div></div>`).join('');
   }
   function doFormulare() {
     document.querySelectorAll('[data-k]').forEach(el => {
@@ -195,6 +201,10 @@
       k.tiskarna = 'obecna'; const t = O.TISKARNY.obecna; k.spad = t.spad; k.bezpecna = t.bezpecna; k.pridavek = t.pridavek;
       Dialog.info('Pevná vazba se počítá pro obecnou tiskárnu (KDP má vlastní šablony).');
     }
+    // papír KDP jinde než v KDP nedává smysl (vzorec hřbetu je jejich) – zpět na offset
+    if (k.tiskarna !== 'kdp' && O.PAPIRY[k.papir] && O.PAPIRY[k.papir].typ === 'kdp' && cesta !== 'kniha.papir') {
+      k.papir = 'offset80'; const p = O.PAPIRY.offset80; k.gramaz = p.gramaz; k.objemnost = p.objemnost; k.tloustka = 0;
+    }
     if (cesta === 'kniha.papir' && k.papir !== 'vlastni') {
       const p = O.PAPIRY[k.papir];
       if (p.typ === 'list') { k.gramaz = p.gramaz; k.objemnost = p.objemnost; k.tloustka = 0; }
@@ -202,7 +212,7 @@
   }
   function priZmene(e) {
     const el = e.target.closest('[data-k]');
-    if (!el) return;
+    if (!el || (el.tagName === 'SELECT' && e.type === 'input')) return;   // select posílá input i change
     let h = el.type === 'checkbox' ? el.checked : el.value;
     if (el.type === 'number' || el.type === 'range') { h = parseFloat(String(h).replace(',', '.')); if (!isFinite(h)) return; }
     nastav(el.dataset.k, h);
@@ -233,16 +243,32 @@
     tlacitkaHistorie(); doFormulare(); await nactiObrazkyNavrhu(); zmena(true);
   }
 
-  let ulozCasovac = null;
+  let ulozCasovac = null, plnoHlaseno = false;
+  /* rozpracovanost: otisk návrhu při posledním uložení / otevření */
+  let cisty = (ulozeny && ulozeny.cisty) || JSON.stringify(O.VYCHOZI);
+  const zmeneno = () => JSON.stringify(navrh) !== cisty;
+  function oznacCisty() { cisty = JSON.stringify(navrh); stavUlozeni(); }
+  function stavUlozeni() {
+    const el = $('nazevNavrhu'), z = zmeneno();
+    el.textContent = (aktualni.nazev || '') + (z && aktualni.nazev ? ' •' : '');
+    el.title = z ? 'Neuložené změny' : '';
+  }
+  async function smimZahodit(text) {
+    return !zmeneno() || await Dialog.potvrd(text + ' Aktuální návrh má neuložené změny – zahodit je?', { ok: 'Zahodit změny', zrus: 'Zpět' });
+  }
   function zmena(bezHistorie) {
     prekresli();
     clearTimeout(ulozCasovac);
-    ulozCasovac = setTimeout(() => localStorage.setItem(KLIC, JSON.stringify({ navrh, id: aktualni.id, nazev: aktualni.nazev })), 300);
+    ulozCasovac = setTimeout(() => {
+      try { localStorage.setItem(KLIC, JSON.stringify({ navrh, id: aktualni.id, nazev: aktualni.nazev, cisty })); }
+      catch (e) { if (!plnoHlaseno) { plnoHlaseno = true; Dialog.chyba('Úložiště prohlížeče je plné – rozpracovaný návrh se neukládá. Uložte ho do souboru (Soubor → Návrh do souboru).'); } }
+    }, 300);
+    stavUlozeni();
     if (!bezHistorie) { clearTimeout(hCasovac); hCasovac = setTimeout(zapisHistorii, 400); }
   }
 
   /* ---------- náhled ---------- */
-  let scena = null, kNahled = 1, kreslim = false;
+  let scena = null, kNahled = 1, kreslim = false, dprNahled = 1;
   function prekresli() {
     if (kreslim) return;
     kreslim = true;
@@ -254,12 +280,15 @@
     if (cekat.length) Promise.allSettled(cekat.map(nactiPismo)).then(prekresli);
     scena = sc;
     const a = sc.a, obal = $('platnoObal'), c = $('nahled');
-    const dpr = window.devicePixelRatio || 1;
+    let dpr = window.devicePixelRatio || 1;
     if (nast.zoom > 0) kNahled = nast.zoom * 96 / 25.4;
     else kNahled = Math.max(0.3, Math.min((obal.clientWidth - 36) / a.sirka, (obal.clientHeight - 36) / a.vyska));
     obal.classList.toggle('zvetseno', nast.zoom > 0);
     const w = Math.round(a.sirka * kNahled), h = Math.round(a.vyska * kNahled);
     c.style.width = w + 'px'; c.style.height = h + 'px';
+    // Safari nekreslí plátno nad 16,7 Mpx a velké plátno žere paměť iPadu – při zvětšení raději méně ostré
+    if (w * h * dpr * dpr > 12e6) dpr = Math.sqrt(12e6 / (w * h));
+    dprNahled = dpr;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
     const ctx = c.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, c.width, c.height);
@@ -270,12 +299,13 @@
     K.kresliVoditka(ctx, sc, nast.vod, 1 / kNahled);
     if (nast.vod.popisky) popisky(ctx, sc);
     c.classList.toggle('tahni', !!(navrh.obrPredni.id && obrazky[navrh.obrPredni.id]));
+    document.body.classList.toggle('prst', !!nast.prst && c.classList.contains('tahni'));
     vypisInfo(sc);
   }
   function popisky(ctx, sc) {
     const a = sc.a, k = kNahled;
     ctx.save();
-    ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+    ctx.setTransform(dprNahled, 0, 0, dprNahled, 0, 0);
     ctx.font = '11px system-ui, sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
     const stitek = (text, xmm, ymm) => {
       const w = ctx.measureText(text).width + 10, x = xmm * k, y = ymm * k;
@@ -299,12 +329,13 @@
     $('rozmery').innerHTML = s;
     // výsledek v panelu
     const papir = R.papir;
-    const tl = papir.typ === 'kdp' ? `${papir.naStranu}" na stranu (KDP)` : `list ${cislo(O.tloustkaListu(papir), 0)} µm`;
+    const tl = papir.typ === 'kdp' ? `${papir.naStranu.toLocaleString('cs-CZ', { maximumFractionDigits: 6 })}" na stranu (KDP)` : `list ${cislo(O.tloustkaListu(papir), 0)} µm`;
     $('vysledekKniha').innerHTML = `Hřbet bloku <b>${cislo(R.hrbetBloku, 2)} mm</b> (${tl})` +
       (+k.pridavek ? ` + přídavek ${cislo(k.pridavek)} mm` : '') + ` = <b>${cislo(R.hrbet, 2)} mm</b>` +
       (a.vazba === 'pevna' ? `<br>Hřbet desek <b>${cislo(a.hrbetDesek, 2)} mm</b>` : '') +
       `<br>Arch <b>${cislo(a.sirka, 2)} × ${cislo(a.vyska, 2)} mm</b>` +
-      (kdp ? `<br><span class="mala">KDP: ${pal(a.sirka)} × ${pal(a.vyska)}, hřbet ${pal(a.hrbet.w)}</span>` : '');
+      (kdp ? `<br><span class="mala">KDP: ${pal(a.sirka)} × ${pal(a.vyska)}, hřbet ${pal(a.hrbet.w)}</span>` : '') +
+      `<br>Hmotnost knihy ≈ <b>${Math.round(O.hmotnost(k, a))} g</b> <span class="mala">(odhad pro poštovné)</span>`;
     // ISBN
     const ri = sc.info.isbn, st = $('isbnStav');
     const CHYBY = { znaky: 'ISBN obsahuje nepovolené znaky.', predpona: 'ISBN-13 musí začínat 978 nebo 979.', delka: 'ISBN má 10 nebo 13 číslic.' };
@@ -339,6 +370,7 @@
   $('nahled').addEventListener('pointerdown', e => {
     const img = obrazky[navrh.obrPredni.id];
     if (!img || !scena) return;
+    if (e.pointerType !== 'mouse' && !nast.prst) return;     // prstem se náhled posouvá; obrázek jen v režimu ✋
     const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) / kNahled, y = (e.clientY - r.top) / kNahled;
     const b = scena.boxPredni;
     if (x < b.x || x > b.x + b.w || y < b.y || y > b.y + b.h) return;
@@ -369,6 +401,24 @@
     });
   }
   let cilObr = null;
+  /* Velké fotky (iPad 12–48 Mpx) zmenší při nahrání – Safari by jinak s několika obrázky
+     v paměti spadl a 300 DPI na obálku stejně nepotřebují víc. Průhlednost (PNG, WebP) zůstane. */
+  async function zmensenyObrazek(f, maxPx) {
+    const url = URL.createObjectURL(f);
+    try {
+      const img = await new Promise((ok, chyba) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => chyba(new Error('Obrázek se nepodařilo přečíst.')); i.src = url; });
+      const r = O.zmensiObr(img.naturalWidth, img.naturalHeight, maxPx);
+      if (!r) return f;
+      const c = document.createElement('canvas'); c.width = r.w; c.height = r.h;
+      const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, 0, 0, r.w, r.h);
+      const pruhledny = /png|webp|gif/.test(f.type);
+      const b = await new Promise(ok => c.toBlob(ok, pruhledny ? 'image/png' : 'image/jpeg', 0.92));
+      c.width = c.height = 0;
+      if (!b) return f;
+      Dialog.info(`Obrázek zmenšen z ${img.naturalWidth} × ${img.naturalHeight} na ${r.w} × ${r.h} px (stačí pro tisk 300 DPI).`);
+      return b;
+    } finally { URL.revokeObjectURL(url); }
+  }
   document.addEventListener('click', e => {
     const n = e.target.closest('[data-nahraj]'), o = e.target.closest('[data-odeber]');
     if (n) { cilObr = n.dataset.nahraj; $('souborObr').value = ''; $('souborObr').click(); }
@@ -379,7 +429,8 @@
     if (!f || !cilObr) return;
     try {
       const id = noveId('o');
-      await idbVloz('obrazky', { id, blob: f, nazev: f.name });
+      const blob = await zmensenyObrazek(f, cilObr === 'logo' ? 4e6 : 12e6);
+      await idbVloz('obrazky', { id, blob, nazev: f.name });
       await nactiObrazek(id);
       if (!obrazky[id]) throw new Error('Obrázek se nepodařilo přečíst.');
       Object.assign(navrh[cilObr], { id }, cilObr === 'logo' ? {} : { zoom: 1, posX: 0, posY: 0 });
@@ -464,6 +515,10 @@
     if (chybi.length) throw new Error('Nepodařilo se načíst písmo: ' + chybi.join(', '));
     return sc;
   }
+  function hlasDpi(sc) {
+    const d = O.bezpecneDpi(sc.a.sirka, sc.a.vyska, 300);
+    if (d < 300) Dialog.info(`Arch je velký – rastrová část má ${d} DPI místo 300 (víc prohlížeč na iPadu neunese). Texty a čárový kód jsou vektorově.`);
+  }
   function vodExportu() { return nast.exp.voditka ? { orez: true, hrbet: true, drazky: true, bezpecna: true, kdp: true } : null; }
 
   async function nahledProUlozeni() {
@@ -475,15 +530,16 @@
     const z = { id: id || noveId('n'), nazev, navrh: kopie(navrh), upraveno: Date.now(), nahled: await nahledProUlozeni().catch(() => '') };
     await idbVloz('navrhy', z);
     aktualni = { id: z.id, nazev };
-    $('nazevNavrhu').textContent = nazev;
-    zmena(true);
+    oznacCisty(); zmena(true);
+    // Safari maže data webu po 7 dnech bez návštěvy, pokud úložiště není trvalé
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
     Dialog.info(`Návrh „${nazev}“ je uložený (i s obrázky).`);
   }
 
   const PRIKAZY = {
     async novy() {
-      if (!await Dialog.potvrd('Začít nový návrh? Neuložené změny aktuálního návrhu se zahodí.', { ok: 'Nový návrh' })) return;
-      navrh = novyNavrh(); aktualni = { id: null, nazev: '' }; $('nazevNavrhu').textContent = '';
+      if (!await smimZahodit('Začít nový návrh?')) return;
+      navrh = novyNavrh(); aktualni = { id: null, nazev: '' }; oznacCisty();
       doFormulare(); zmena(); uklidObrazky();
     },
     async ulozit() {
@@ -502,14 +558,14 @@
         smazat: async () => {
           if (!await Dialog.potvrd(`Smazat návrh „${z.nazev}“?`, { ok: 'Smazat' })) return false;
           await idbSmaz('navrhy', z.id);
-          if (aktualni.id === z.id) { aktualni = { id: null, nazev: '' }; $('nazevNavrhu').textContent = ''; }
+          if (aktualni.id === z.id) { aktualni = { id: null, nazev: '' }; stavUlozeni(); }
           uklidObrazky(); return true;
         },
       })), 'Zatím žádný uložený návrh. Uložte ho přes Soubor → Uložit (Ctrl+S).');
-      if (!id) return;
+      if (!id || !await smimZahodit('Otevřít jiný návrh?')) return;
       const z = await idbVem('navrhy', id);
       if (!z) return;
-      navrh = slij(z.navrh, O.VYCHOZI); aktualni = { id: z.id, nazev: z.nazev }; $('nazevNavrhu').textContent = z.nazev;
+      navrh = slij(z.navrh, O.VYCHOZI); aktualni = { id: z.id, nazev: z.nazev }; oznacCisty();
       await nactiObrazkyNavrhu(); doFormulare(); zmena();
     },
     async zalohaVen() {
@@ -532,6 +588,7 @@
         const doc = K.pdf(window.jspdf.jsPDF, sc, { voditka: vodExportu(), znacky: nast.exp.znacky, dpi: 300, nazev: navrh.nazev.text.replace(/\n/g, ' '), autor: navrh.autor.text });
         stahni(doc.output('blob'), jmenoSouboru('pdf'));
         Dialog.info(`PDF ${cislo(sc.a.sirka, 2)} × ${cislo(sc.a.vyska, 2)} mm je hotové.`);
+        hlasDpi(sc);
       } catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); }
       finally { b.disabled = false; b.textContent = puv; }
     },
@@ -539,14 +596,30 @@
       try {
         await cekej();
         const sc = await hotovaScena();
-        const c = K.platno(sc, 300, { vektory: true, voditka: vodExportu() });
+        const dpi = O.bezpecneDpi(sc.a.sirka, sc.a.vyska, 300);
+        const c = K.platno(sc, dpi, { vektory: true, voditka: vodExportu() });
         const blob = await new Promise(ok => c.toBlob(ok, 'image/png'));
         c.width = c.height = 0;
         if (!blob) throw new Error('prohlížeči došla paměť na plátno');
-        const u8 = O.pngSDpi(new Uint8Array(await blob.arrayBuffer()), 300);
+        const u8 = O.pngSDpi(new Uint8Array(await blob.arrayBuffer()), dpi);
         stahni(new Blob([u8], { type: 'image/png' }), jmenoSouboru('png'));
+        hlasDpi(sc);
       } catch (e) { Dialog.chyba('PNG se nepodařilo vytvořit: ' + e.message); }
     },
+    async ekniha() {
+      try {
+        await cekej();
+        const sc = await hotovaScena();
+        const c = K.platnoPredni(sc, 2560);
+        const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.92));
+        const roz = c.width + ' × ' + c.height;
+        c.width = c.height = 0;
+        if (!blob) throw new Error('prohlížeči došla paměť na plátno');
+        stahni(blob, jmenoSouboru('jpg').replace(/\.jpg$/, '_ekniha.jpg'));
+        Dialog.info(`Obálka e-knihy ${roz} px je hotová.`);
+      } catch (e) { Dialog.chyba('Obálku e-knihy se nepodařilo vytvořit: ' + e.message); }
+    },
+    zPdf() { $('souborPdf').value = ''; $('souborPdf').click(); },
     async sablona() {
       try {
         const sc = await hotovaScena();
@@ -586,6 +659,8 @@
       try {
         const vse = await window.queryLocalFonts();
         systemova = vse.map(f => ({ id: 'sys:' + f.postscriptName, nazev: f.fullName, data: f })).sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
+        for (const id of Object.keys(pismaChyba)) if (id.startsWith('sys:')) delete pismaChyba[id];   // zkusit znovu
+        prekresli();
         await naplnPisma();
         Dialog.info(`Načteno ${systemova.length} systémových písem – najdete je na konci výběru písma.`);
       } catch (e) { Dialog.chyba('Přístup k systémovým písmům byl odmítnut.'); }
@@ -626,12 +701,41 @@
       .replace(/^#+\s*/gm, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*\n]+)\*/g, '$1').replace(/^\s*\*\s*$/gm, '')
       .replace(/\n{3,}/g, '\n\n').trim();
     // odstavce oddělené prázdným řádkem → jeden řádek na odstavec
-    navrh.anotace.text = t.split(/\n\s*\n/).map(o => o.replace(/\s*\n\s*/g, ' ')).join('\n');
+    let odst = t.split(/\n\s*\n/).map(o => o.replace(/\s*\n\s*/g, ' '));
+    const delka = odst.join('\n').length;
+    if (delka > 3000 && await Dialog.potvrd(`Soubor má ${delka.toLocaleString('cs-CZ')} znaků – anotace mívá do 1 500. Vzít jen začátek (celé odstavce do 1 500 znaků)?`, { ok: 'Vzít začátek', zrus: 'Vzít celý' })) {
+      const vyber = []; let n = 0;
+      for (const o of odst) { if (vyber.length && n + o.length > 1500) break; vyber.push(o); n += o.length + 1; }
+      odst = vyber;
+    }
+    navrh.anotace.text = odst.join('\n');
     doFormulare(); zmena();
+  });
+  /* rozměr a počet stran z hotového PDF knihy (Sazba knihy, InDesign…) */
+  let pdfjs = null;
+  $('souborPdf').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      if (!pdfjs) {
+        pdfjs = await import(new URL('../lib/pdfjs/pdf.min.mjs', ZDE).href);
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL('../lib/pdfjs/pdf.worker.min.mjs', ZDE).href;
+      }
+      const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
+      const v = (await doc.getPage(Math.min(doc.numPages, 3))).view;   // 3. strana – titul bývá stejný, ale jistota
+      const w = Math.round(Math.abs(v[2] - v[0]) * 25.4 / 72 * 10) / 10, h = Math.round(Math.abs(v[3] - v[1]) * 25.4 / 72 * 10) / 10;
+      const strany = doc.numPages + doc.numPages % 2;
+      doc.destroy();
+      const k = navrh.kniha;
+      k.format = O.formatZRozmeru(w, h);
+      if (k.format === 'vlastni') { k.sirka = w; k.vyska = h; } else { k.sirka = +O.FORMATY[k.format].sirka.toFixed(2); k.vyska = +O.FORMATY[k.format].vyska.toFixed(2); }
+      k.strany = strany;
+      doFormulare(); zmena();
+      Dialog.info(`Z PDF: ${doc.numPages} stran${doc.numPages % 2 ? ' ' + T('(zaokrouhleno na sudé)', {}) : ''}, strana ${cislo(w)} × ${cislo(h)} mm. Má-li PDF spadávku nebo ořezové značky, opravte rozměr bloku ručně.`);
+    } catch (er) { Dialog.chyba('PDF knihy se nepodařilo přečíst: ' + er.message); }
   });
   $('souborPismo').addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
-    try { const z = await FONTY.pridej(f); await naplnPisma(); Dialog.info(`Písmo „${z.nazev}“ je přidané – najdete ho ve skupině Vlastní fonty.`); }
+    try { const z = await FONTY.pridej(f); for (const id in pismaChyba) delete pismaChyba[id]; await naplnPisma(); prekresli(); Dialog.info(`Písmo „${z.nazev}“ je přidané – najdete ho ve skupině Vlastní fonty.`); }
     catch (er) { Dialog.chyba(er.message); }
   });
   $('souborNavrh').addEventListener('change', async e => {
@@ -643,8 +747,8 @@
         const blob = await (await fetch(o.data)).blob();
         await idbVloz('obrazky', { id, blob, nazev: o.nazev || id });
       }
-      navrh = slij(d.navrh, O.VYCHOZI); aktualni = { id: null, nazev: d.nazev || '' };
-      $('nazevNavrhu').textContent = aktualni.nazev;
+      if (!await smimZahodit('Načíst návrh ze souboru?')) return;
+      navrh = slij(d.navrh, O.VYCHOZI); aktualni = { id: null, nazev: d.nazev || '' }; stavUlozeni();
       await nactiObrazkyNavrhu(); doFormulare(); zmena();
       Dialog.info('Návrh načten. Do seznamu uložených ho přidáte přes Uložit.');
     } catch (er) { Dialog.chyba('Návrh nejde načíst: ' + er.message); }
@@ -675,8 +779,12 @@
   $('panel').addEventListener('change', priZmene);
   $('zoom').value = String(nast.zoom);
   $('zoom').addEventListener('change', e => { nast.zoom = +e.target.value; ulozNast(); prekresli(); });
-  $('nazevNavrhu').textContent = aktualni.nazev;
-  if (!window.queryLocalFonts) $('btnSysPisma').title = 'Umí jen Chrome a Edge';
+  // mimo rozcestník kreslí podpis.js štítek stavu vpravo nahoře – lišta mu uhne (pravidlo .samostatne)
+  if (window.top === window) document.body.classList.add('samostatne');
+  if (!window.queryLocalFonts) $('btnSysPisma').hidden = true;   // Safari a Firefox systémová písma stránce nedají
+  $('prst').checked = !!nast.prst;
+  $('prst').addEventListener('change', e => { nast.prst = e.target.checked; ulozNast(); prekresli(); });
+  stavUlozeni();
   prepinace(); tlacitkaHistorie(); doFormulare();
   if (typeof ResizeObserver === 'function') new ResizeObserver(() => prekresli()).observe($('platnoObal'));
   ['lsans', navrh.nazev.pismo, navrh.anotace.pismo].forEach(id => nactiPismo(id).catch(() => {}));

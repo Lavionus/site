@@ -136,7 +136,7 @@
         obrysy(f, radek, vel, t.prostrkani, (u, v) => [x + u, yy + v], cesty);
         y += rad;
       }
-      sc.vektory.push({ druh: 'cesta', prikazy: cesty, barva: t.barva, co: klic });
+      sc.vektory.push({ druh: 'cesta', prikazy: cesty, barva: t.barva, co: klic, obrys: +t.obrys || 0, barvaObrysu: t.barvaObrysu });
     }
 
     /* hřbet */
@@ -159,7 +159,7 @@
         : (u, v) => [cx - (v - v0), stred + (u + u0)];
       const cesty = [];
       obrysy(fh, textHrbetu, vel, h.prostrkani, tr, cesty);
-      sc.vektory.push({ druh: 'cesta', prikazy: cesty, barva: h.barva, co: 'hrbet' });
+      sc.vektory.push({ druh: 'cesta', prikazy: cesty, barva: h.barva, co: 'hrbet', obrys: +h.obrys || 0, barvaObrysu: h.barvaObrysu });
     }
 
     /* anotace */
@@ -277,8 +277,12 @@
   function kresliVektory(ctx, sc) {
     for (const v of sc.vektory) {
       ctx.fillStyle = v.barva;
-      if (v.druh === 'obdelnik') ctx.fillRect(v.x, v.y, v.w, v.h);
-      else { cestaNaPlatno(ctx, v.prikazy); ctx.fill('nonzero'); }
+      if (v.druh === 'obdelnik') { ctx.fillRect(v.x, v.y, v.w, v.h); continue; }
+      cestaNaPlatno(ctx, v.prikazy);
+      if (v.obrys > 0) {        // obrys (vnější polovina tahu) – pod výplní, aby písmena nehubla
+        ctx.save(); ctx.lineJoin = 'round'; ctx.lineWidth = 2 * v.obrys; ctx.strokeStyle = v.barvaObrysu || '#000'; ctx.stroke(); ctx.restore();
+      }
+      ctx.fill('nonzero');
     }
   }
   const BARVY_VOD = { orez: '#e6007e', hrbet: '#00a0e0', drazky: '#ff8a00', bezpecna: '#00b050', kdp: '#f2c200' };
@@ -305,6 +309,16 @@
   }
 
   /* plátno celého archu v daném DPI (PNG, raster do PDF) */
+  /* jen přední strana (ořez), výška v px – obálka e-knihy, obrázek do e-shopu */
+  function platnoPredni(sc, vyskaPx) {
+    const p = sc.a.predni, k = vyskaPx / p.h;
+    const c = document.createElement('canvas');
+    c.width = Math.round(p.w * k); c.height = Math.round(vyskaPx);
+    const ctx = c.getContext('2d');
+    ctx.setTransform(k, 0, 0, k, -p.x * k, -p.y * k);
+    kresliRaster(ctx, sc); kresliVektory(ctx, sc);
+    return c;
+  }
   function platno(sc, dpi, co) {
     const k = dpi / 25.4;
     const c = document.createElement('canvas');
@@ -327,16 +341,13 @@
     const jenBarva = sc.raster.length === 1 && sc.raster[0].druh === 'barva';
     if (jenBarva) { doc.setFillColor(sc.raster[0].barva); doc.rect(m, m, a.sirka, a.vyska, 'F'); }
     else {
-      const c = platno(sc, volby.dpi || 300, {});
+      const c = platno(sc, O.bezpecneDpi(a.sirka, a.vyska, volby.dpi || 300), {});
       doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', m, m, a.sirka, a.vyska, undefined, 'NONE');
       c.width = c.height = 0;
     }
-    for (const v of sc.vektory) {
-      doc.setFillColor(v.barva);
-      if (v.druh === 'obdelnik') { doc.rect(m + v.x, m + v.y, v.w, v.h, 'F'); continue; }
-      if (!v.prikazy.length) continue;
+    const cesta = prikazy => {
       let px = 0, py = 0, otevreno = false;
-      for (const c of v.prikazy) {
+      for (const c of prikazy) {
         if (c.type === 'M') { doc.moveTo(m + c.x, m + c.y); otevreno = true; }
         else if (c.type === 'L') doc.lineTo(m + c.x, m + c.y);
         else if (c.type === 'Q') {      // kvadratická → kubická
@@ -345,7 +356,18 @@
         else { doc.close(); }
         if (c.type !== 'Z') { px = c.x; py = c.y; }
       }
-      if (otevreno) doc.fill();
+      return otevreno;
+    };
+    for (const v of sc.vektory) {
+      doc.setFillColor(v.barva);
+      if (v.druh === 'obdelnik') { doc.rect(m + v.x, m + v.y, v.w, v.h, 'F'); continue; }
+      if (!v.prikazy.length) continue;
+      if (v.obrys > 0) {
+        doc.setDrawColor(v.barvaObrysu || '#000000'); doc.setLineWidth(2 * v.obrys); doc.setLineJoin('round');
+        if (cesta(v.prikazy)) doc.stroke();
+        doc.setLineJoin('miter');
+      }
+      if (cesta(v.prikazy)) doc.fill();
     }
     if (volby.voditka) {
       doc.setLineWidth(0.2);
@@ -371,5 +393,5 @@
     return doc;
   }
 
-  window.OBALKA_KRESBA = { sestav, kresliRaster, kresliVektory, kresliVoditka, kresliSpad, platno, pdf, umisteniObr, boxPredni, sirkaTextu, chybejici, BARVY_VOD, PT };
+  window.OBALKA_KRESBA = { platnoPredni, sestav, kresliRaster, kresliVektory, kresliVoditka, kresliSpad, platno, pdf, umisteniObr, boxPredni, sirkaTextu, chybejici, BARVY_VOD, PT };
 })();

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🪐 Překladač do sci-fi a fantasy jazyků</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="fonty/prepis.js"></script>
+<script src="lib/clipper.min.js"></script>
+<script src="pismolijna/jadro/model.js"></script>
+<script src="pismolijna/jadro/krivky.js"></script>
+<script src="pismolijna/jadro/export.js"></script>
+<script src="prekladac_svetu/jadro.js"></script>
+<script src="prekladac_svetu/abecedy.js"></script>
+<style>
+@font-face{font-family:'PS Tengwar';src:url('fonty/AlcarinTengwar-Regular.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'PS Runy';src:url('fonty/NotoSansRunic-Regular.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'PS Hlaholice';src:url('fonty/NotoSansGlagolitic-Regular.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'PS Ogam';src:url('fonty/NotoSansOgham-Regular.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'PS Goticke';src:url('fonty/NotoSansGothic-Regular.ttf') format('truetype');font-display:swap}
+body{background:var(--bg-deep,var(--bg));margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--text)}
+[hidden]{display:none !important}
+
+/* horní lišta (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:50}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:column;align-items:flex-start;gap:0;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .dokument{font-size:.72rem;color:var(--text-faint);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover,var(--accent))}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1000px){.lista .txt{display:none}}
+
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel,var(--bg-elevated));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700;flex:none}
+.nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
+
+main{flex:1;padding:14px;display:flex;flex-direction:column;gap:14px;max-width:1400px;width:100%;margin:0 auto;box-sizing:border-box}
+.dvoj{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.dvoj{grid-template-columns:1fr}}
+.panel{background:var(--bg-panel,var(--bg-elevated));border:1px solid var(--border);border-radius:var(--radius,10px);padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.panel-hlava{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.panel-hlava .pocet{margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint)}
+textarea{width:100%;box-sizing:border-box;min-height:200px;resize:vertical;background:var(--bg-input,var(--bg));color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font:inherit;font-size:1.05rem;line-height:1.5}
+textarea:focus,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.vystup{min-height:200px;box-sizing:border-box;font-size:1.15rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;padding:10px;border-radius:8px;background:color-mix(in srgb,var(--accent) 7%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,var(--border))}
+.vystup.prazdny{color:var(--text-faint)}
+.vystup .nezname{color:var(--warn,var(--danger));font-style:italic}
+.vystup .w{cursor:pointer;border-radius:3px}
+.vystup .w:hover{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.vystup .w.lex{text-decoration:underline dotted color-mix(in srgb,var(--accent) 70%,transparent);text-underline-offset:3px}
+/* mezířádkový výstup: překlad nad původním slovem */
+.vystup.mezi{white-space:normal;display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;gap:6px 4px}
+.vystup.mezi .ilw{display:inline-flex;flex-direction:column;align-items:flex-start;padding:2px 4px}
+.vystup.mezi .ilw small{font-size:.72rem;color:var(--text-muted);line-height:1.2}
+.vystup.mezi .zlom{flex-basis:100%;height:0}
+.pismo{font-size:1.6rem;line-height:1.7;white-space:pre-wrap;word-break:break-word;padding:6px 4px;overflow-x:auto}
+.pismo.abeceda{font-size:2.1rem;line-height:1.6}
+.abeceda-mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px}
+.abeceda-mrizka div{display:flex;flex-direction:column;align-items:center;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:4px 2px}
+.abeceda-mrizka b{font-size:2rem;line-height:1.3;font-weight:400;color:var(--text)}
+.abeceda-mrizka small{font-size:.75rem;color:var(--text-muted)}
+.jazyk-karta .skript{font-size:1.25rem;color:var(--text);line-height:1.5}
+td.skript{font-size:1.35rem;white-space:nowrap}
+.pozn{font-size:.8rem;color:var(--text-muted);line-height:1.5}
+.pozn p{margin:4px 0}
+
+.karta-jazyka{display:flex;gap:12px;align-items:flex-start}
+.karta-jazyka .velke-emoji{font-size:2.4rem;line-height:1}
+.karta-jazyka h2{margin:0 0 4px;font-size:1.1rem}
+.karta-jazyka p{margin:3px 0;font-size:.88rem;line-height:1.5;color:var(--text-muted)}
+.karta-jazyka .hlasky{font-family:ui-monospace,Consolas,monospace;font-size:.8rem}
+
+.tab-obal{max-height:340px;overflow:auto}
+table.tab{border-collapse:collapse;width:100%;font-size:.86rem}
+table.tab td,table.tab th{padding:4px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}
+table.tab th{color:var(--text-faint);font-weight:600;font-size:.72rem;text-transform:uppercase;position:sticky;top:0;background:var(--bg-panel,var(--bg-elevated))}
+table.tab .cil{font-weight:600}
+table.tab .roz{font-family:ui-monospace,Consolas,monospace;font-size:.8rem;color:var(--text-muted)}
+table.tab .roz i{font-style:normal;color:var(--accent)}
+.zdroj{font-size:.72rem;padding:1px 7px;border-radius:8px;background:var(--bg-control);color:var(--text-muted);white-space:nowrap}
+.zdroj.lex{background:var(--accent-soft,var(--bg-control));color:var(--text)}
+.mini{background:none;border:1px solid transparent;border-radius:5px;cursor:pointer;padding:2px 6px;font:inherit;color:var(--text)}
+.mini:hover{background:var(--bg-hover);border-color:var(--border)}
+
+.mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.jazyk-karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;text-align:left;font:inherit;color:var(--text);display:flex;flex-direction:column;gap:4px}
+.jazyk-karta:hover{border-color:var(--accent)}
+.jazyk-karta.aktivni{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.jazyk-karta b{font-size:.84rem}
+.jazyk-karta span{font-size:.92rem;color:var(--text-muted);word-break:break-word}
+
+/* dialogová okna */
+dialog.okno{background:var(--bg-panel,var(--bg-elevated));color:var(--text);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:0;width:min(760px,calc(100vw - 20px));max-height:calc(100vh - 30px)}
+dialog.okno.siroke{width:min(1000px,calc(100vw - 20px))}
+dialog.okno::backdrop{background:rgba(0,0,0,.45)}
+.okno-obal{display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
+.okno-hlava{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.okno-hlava h3{margin:0;font-size:1rem;flex:1}
+.okno-telo{padding:12px 14px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.okno-pata{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--border)}
+.okno-pata .vlevo{margin-right:auto}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.danger{color:var(--danger)}
+.vstup{background:var(--bg-input,var(--bg));border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font:inherit;font-size:.88rem;box-sizing:border-box;min-width:0}
+.formular{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 12px}
+.formular label,.pole{display:flex;flex-direction:column;gap:3px;font-size:.76rem;color:var(--text-muted);font-weight:600}
+.formular .cela{grid-column:1/-1}
+.formular input[type=range]{accent-color:var(--accent)}
+.zatrzitka{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem}
+.zatrzitka label,label.zatrzitka{display:flex;flex-direction:row;align-items:center;gap:6px;font-weight:400;color:var(--text)}
+.radek{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.radek .vstup{flex:1 1 140px}
+.nahled-ed{background:color-mix(in srgb,var(--accent) 7%,transparent);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:1rem;line-height:1.5;word-break:break-word}
+.jmena{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+.jmeno{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;text-align:left;font:inherit;color:var(--text)}
+.jmeno:hover{border-color:var(--accent)}
+.jmeno b{display:block;font-size:1.02rem}
+.jmeno small{color:var(--text-muted)}
+.prazdne{color:var(--text-faint);font-size:.85rem;padding:8px 0}
+</style>
+</head>
+<body>
+<header class="lista">
+  <div class="skup skup-projekt"><h1>🪐 Překladač světů</h1><span class="dokument" id="dokNazev" data-i18n="ne"></span></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Texty, import a export">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Jazyk"><span class="skup-nazev" aria-hidden="true">Jazyk</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-nabidka="nabJazyk" id="tlJazyk" title="Vybrat nebo vytvořit jazyk">🧝 Elfština ▾</button>
+    <button class="tl" data-prikaz="smer" title="Přepnout směr překladu (Ctrl+Enter)">⇄<span class="txt" id="smerTxt"> Česky → jazyk</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Text"><span class="skup-nazev" aria-hidden="true">Text</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPriklady" title="Vložit ukázkovou větu">💬<span class="txt"> Příklady</span> ▾</button>
+    <button class="tl" data-nabidka="nabZobrazit" title="Písmo, mezířádkový překlad, panely">👁<span class="txt"> Zobrazit</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroje"><span class="skup-nazev" aria-hidden="true">Nástroje</span><div class="skup-tl">
+    <button class="tl" data-prikaz="lexikon" title="Vlastní překlady slov">📚<span class="txt"> Lexikon</span></button>
+    <button class="tl" data-prikaz="jmena" title="Generátor jmen postav a míst">🏷<span class="txt"> Jména</span></button>
+    <button class="tl" data-prikaz="editor" title="Upravit hlásky a pravidla jazyka">🛠<span class="txt"> Editor jazyka</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Akce"><span class="skup-nazev" aria-hidden="true">Akce</span><div class="skup-tl">
+    <button class="tl" data-prikaz="kopirovat" title="Zkopírovat překlad">📋<span class="txt"> Kopírovat</span></button>
+    <button class="tl" data-prikaz="vyslovit" title="Přečíst překlad nahlas">🔊<span class="txt"> Vyslovit</span></button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Jak překladač funguje" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">📄 Nový text</button>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít uložený text… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="ulozitJako">💾 Uložit jako…</button>
+  <button class="tl" data-prikaz="importText">📥 Načíst text ze souboru (.txt, .md)…</button>
+  <hr>
+  <div class="titulek">Export</div>
+  <button class="tl" data-prikaz="expTxt">📝 Překlad jako text (.txt)</button>
+  <button class="tl" data-prikaz="expMd">📖 Dvojjazyčně – originál a překlad (.md)</button>
+  <button class="tl" data-prikaz="expCsv">📊 Rozbor slov (.csv)</button>
+  <button class="tl" data-prikaz="expPng">🖼 Obrázek překladu i s písmem (.png)</button>
+</div>
+<div id="nabJazyk" class="nabidka" hidden></div>
+<div id="nabPriklady" class="nabidka" hidden>
+  <div class="titulek">Fantasy</div>
+  <button class="tl" data-veta>Vítej, poutníku, u našeho ohně.</button>
+  <button class="tl" data-veta>Přítel nebo nepřítel?</button>
+  <button class="tl" data-veta>Drak spí pod horou a hlídá poklad.</button>
+  <button class="tl" data-veta>Ať tě provází světlo hvězd.</button>
+  <button class="tl" data-veta>Meč, štít a odvaha. Nic víc nepotřebuji.</button>
+  <button class="tl" data-veta>Kde je nejbližší hospoda?</button>
+  <hr>
+  <div class="titulek">Sci-fi</div>
+  <button class="tl" data-veta>Přicházíme v míru. Zbraně dolů!</button>
+  <button class="tl" data-veta>Moje loď potřebuje palivo.</button>
+  <button class="tl" data-veta>Motory na plný výkon, kapitáne!</button>
+  <button class="tl" data-veta>Lidé jsou zvláštní tvorové.</button>
+  <button class="tl" data-veta>Signál přichází z planety 42.</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <div class="titulek">Písmo</div>
+  <button class="tl prep" data-pismo="latinka">Jen latinkou</button>
+  <button class="tl prep" data-pismo="obe">Latinkou i vlastním písmem jazyka</button>
+  <hr>
+  <button class="tl prep" data-zobraz="mezi">Mezířádkově – překlad nad původním slovem</button>
+  <button class="tl prep" data-zobraz="rozbor">Rozbor slov</button>
+  <button class="tl prep" data-zobraz="vsechny">Tentýž text ve všech jazycích</button>
+  <button class="tl prep" data-zobraz="karta">Popis jazyka</button>
+  <button class="tl prep" data-zobraz="abeceda">Abeceda jazyka</button>
+</div>
+
+<main>
+  <section class="panel pozn" id="napoveda" hidden>
+    <div class="panel-hlava">❓ Jak překladač funguje</div>
+    <p>Všechny vestavěné jazyky jsou vymyšlené pro tuto stránku. Žádný z nich nepochází z knihy ani filmu. Každé české slovo
+    se rozdělí na kmen a koncovku. Z kmene se podle pevného pravidla poskládá kořen z hlásek jazyka, koncovka dostane
+    vlastní příponu. Stejné slovo proto dá vždy stejný překlad a tvary jednoho slova (drak, draka, drakovi) mají společný kořen.</p>
+    <p><b>Lexikon:</b> klikněte na slovo v překladu nebo na ✏️ v rozboru a zadejte vlastní překlad. Platí buď jen pro
+    daný tvar, nebo pro všechny tvary kmene (přípony se pak přidávají automaticky).</p>
+    <p><b>Editor jazyka:</b> vlastní jazyk se skládá ze začátků slabik, samohlásek, koncových souhlásek a přípon. Semínko
+    rozhoduje, které kombinace jazyk použije – jiné semínko = jiná slova se stejným zvukem. Vestavěný jazyk se upravuje jako kopie.</p>
+    <p><b>Zpětný překlad</b> zná asi 400 běžných slov, slova z lexikonu a všechna slova, která jste v tomto prohlížeči už
+    překládali.</p>
+    <p><b>Abecedy:</b> každý jazyk má vlastní písmo, které se vygeneruje jako skutečný font přímo v prohlížeči. Znaky
+    vznikají z tahů ve stylu jazyka (elfí křivky, trpasličí runy, robotí plošné spoje…); styl a semínko abecedy změníte v Editoru
+    jazyka. Font jde stáhnout (.ttf) a nainstalovat – pak stačí kdekoli napsat překlad latinkou a nastavit tento font.
+    V editoru lze místo vlastní abecedy zvolit i skutečná písma (tengwar, runy, hlaholice…), ta však mimo stránku potřebují
+    svůj font (najdete ho v <a href="prevod_pisma.html">Převodníku písma</a>).</p>
+    <p><b>Zkratky:</b> Ctrl+S uložit, Ctrl+O otevřít, Ctrl+Enter přepnout směr, Esc zavřít nabídku.</p>
+  </section>
+
+  <div class="dvoj">
+    <section class="panel">
+      <div class="panel-hlava"><span id="vstupNadpis">Česky</span><span class="pocet" id="pocet"></span></div>
+      <textarea id="vstup" placeholder="Napište text…" aria-label="Text k překladu"></textarea>
+    </section>
+    <section class="panel">
+      <div class="panel-hlava"><span id="vystupNadpis">Elfština</span><span class="pocet" id="vystupInfo"></span></div>
+      <div class="vystup" id="vystup" data-i18n="ne" aria-live="polite"></div>
+      <div class="pismo" id="pismo" data-i18n="ne" hidden></div>
+      <div class="pozn" id="neznamaPozn" hidden></div>
+    </section>
+  </div>
+
+  <section class="panel" id="panelKarta">
+    <div class="karta-jazyka">
+      <div class="velke-emoji" id="kartaEmoji">🧝</div>
+      <div>
+        <h2 id="kartaNazev"></h2>
+        <p id="kartaPopis"></p>
+        <p><b>Výslovnost:</b> <span id="kartaVyslovnost"></span></p>
+        <p class="hlasky" id="kartaHlasky" data-i18n="ne"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panelAbeceda">
+    <div class="panel-hlava">🔤 Abeceda jazyka<span class="pocet" id="abecedaInfo"></span></div>
+    <div class="abeceda-mrizka" id="abecedaMrizka" data-i18n="ne"></div>
+    <div class="radek">
+      <button class="btn" data-prikaz="stahnoutFont">⬇ Stáhnout font (.ttf)</button>
+      <button class="btn" data-prikaz="upravitAbecedu">🎨 Jiná podoba písma…</button>
+    </div>
+    <div class="pozn" id="abecedaPozn">Font zobrazuje latinku písmem jazyka: velká i malá písmena i písmena s diakritikou (č → c) mají stejný znak. Po instalaci fontu (dvojklik na stažený soubor) stačí ve Wordu nebo v grafickém programu napsat překlad latinkou a nastavit tento font. Při kopírování ze stránky se kopíruje latinka.</div>
+  </section>
+
+  <section class="panel" id="panelRozbor">
+    <div class="panel-hlava">🔍 Rozbor slov<span class="pocet" id="rozborInfo"></span></div>
+    <div class="tab-obal"><table class="tab">
+      <thead><tr><th>Česky</th><th>Kmen · koncovka</th><th id="rozborJazyk">Překlad</th><th>Písmem</th><th>Kořen · přípona</th><th>Zdroj</th><th>×</th><th></th></tr></thead>
+      <tbody id="rozbor"></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" id="panelVsechny">
+    <div class="panel-hlava">🌌 Tentýž text ve všech jazycích</div>
+    <div class="mrizka" id="vsechny"></div>
+  </section>
+</main>
+
+<!-- úprava jednoho slova -->
+<dialog class="okno" id="dlgSlovo"><form method="dialog" class="okno-obal">
+  <div class="okno-hlava"><h3>✏️ Překlad slova <span id="slovoCs" data-i18n="ne"></span></h3></div>
+  <div class="okno-telo">
+    <div class="pozn" id="slovoInfo"></div>
+    <label class="pole">Překlad<input class="vstup" id="slovoCil" autocomplete="off"></label>
+    <div class="zatrzitka"><label><input type="checkbox" id="slovoTvary"> <span>Pro všechny tvary slova (kmen <b id="slovoKmen" data-i18n="ne"></b>) – přípony podle koncovky se přidají samy</span></label></div>
+  </div>
+  <div class="okno-pata">
+    <button class="btn danger vlevo" value="odebrat" id="slovoOdebrat">🗑 Vrátit vygenerovaný</button>
+    <button class="btn" value="zrusit">Zrušit</button>
+    <button class="btn primary" value="ok">Uložit do lexikonu</button>
+  </div>
+</form></dialog>
+
+<!-- lexikon -->
+<dialog class="okno siroke" id="dlgLexikon"><div class="okno-obal">
+  <div class="okno-hlava"><h3>📚 Lexikon – <span id="lexJazyk"></span></h3><button class="mini" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="okno-telo">
+    <div class="pozn">Vlastní překlady mají přednost před vygenerovanými. „Všechny tvary“ nahradí kořen celého kmene (drak, draka, drakovi…).</div>
+    <div class="radek">
+      <input class="vstup" id="lexCs" placeholder="Česky (např. drak)" aria-label="Česky">
+      <input class="vstup" id="lexCil" placeholder="Překlad" aria-label="Překlad">
+      <label class="zatrzitka"><input type="checkbox" id="lexTvary" checked> Všechny tvary</label>
+      <button class="btn primary" id="lexPridat">✚ Přidat</button>
+    </div>
+    <input class="vstup" type="search" id="lexHledat" placeholder="🔍 Hledat v lexikonu…" aria-label="Hledat v lexikonu">
+    <div class="tab-obal" style="max-height:50vh"><table class="tab">
+      <thead><tr><th>Česky</th><th>Překlad</th><th>Platí pro</th><th></th></tr></thead>
+      <tbody id="lexTab"></tbody>
+    </table></div>
+  </div>
+  <div class="okno-pata">
+    <button class="btn danger vlevo" id="lexVymazat">🗑 Vymazat lexikon</button>
+    <button class="btn" id="lexImport">📥 Import CSV…</button>
+    <button class="btn" id="lexExport">📤 Export CSV</button>
+    <button class="btn primary" data-zavrit>Hotovo</button>
+  </div>
+</div></dialog>
+
+<!-- generátor jmen -->
+<dialog class="okno siroke" id="dlgJmena"><div class="okno-obal">
+  <div class="okno-hlava"><h3>🏷 Generátor jmen – <span id="jmJazyk"></span></h3><button class="mini" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="okno-telo">
+    <div class="formular">
+      <label>Počet jmen<input class="vstup" type="number" id="jmPocet" min="1" max="100" value="24"></label>
+      <label>Slabik nejméně<input class="vstup" type="number" id="jmMin" min="1" max="6" value="2"></label>
+      <label>Slabik nejvíce<input class="vstup" type="number" id="jmMax" min="1" max="6" value="3"></label>
+      <div class="zatrzitka" style="align-self:end"><label><input type="checkbox" id="jmPridomek"> S přídomkem (přeloženým)</label></div>
+    </div>
+    <div class="pozn">Kliknutím jméno zkopírujete. Jména se skládají ze stejných hlásek jako slova jazyka.</div>
+    <div class="jmena" id="jmSeznam"></div>
+  </div>
+  <div class="okno-pata">
+    <button class="btn vlevo" id="jmKopirovat">📋 Kopírovat vše</button>
+    <button class="btn primary" id="jmDalsi">🎲 Další várka</button>
+  </div>
+</div></dialog>
+
+<!-- editor jazyka -->
+<dialog class="okno siroke" id="dlgEditor"><form class="okno-obal" id="edForm">
+  <div class="okno-hlava"><h3 id="edTitulek">🛠 Editor jazyka</h3><button class="mini" type="button" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="okno-telo">
+    <div class="pozn" id="edKopie" hidden>Vestavěný jazyk nelze přepsat – ukládá se jako nový vlastní jazyk.</div>
+    <div class="formular">
+      <label>Název jazyka<input class="vstup" id="edNazev"></label>
+      <label>Jak se jazyk sám nazývá<input class="vstup" id="edVlastni"></label>
+      <label>Emoji<input class="vstup" id="edEmoji" maxlength="8"></label>
+      <label>Semínko (jiné = jiná slova)<span class="radek"><input class="vstup" type="number" id="edSemeno"><button class="btn" type="button" id="edSemenoNahodne" title="Náhodné semínko">🎲</button></span></label>
+      <label class="cela">Popis<input class="vstup" id="edPopis"></label>
+      <label class="cela">Výslovnost<input class="vstup" id="edVyslovnost"></label>
+      <label class="cela">Začátky slabik (souhlásky a skupiny oddělené mezerou; ∅ = slabika bez souhlásky)<input class="vstup" id="edZac"></label>
+      <label class="cela">Jádra slabik (samohlásky; opakováním zvýšíte četnost)<input class="vstup" id="edJadro"></label>
+      <label class="cela">Koncové souhlásky slabik<input class="vstup" id="edKon"></label>
+      <label class="cela">Přípony za koncovky (první = slovo bez koncovky, ∅ = nic)<input class="vstup" id="edPripony"></label>
+      <label>Koncová souhláska: <span id="edPKonV"></span><input type="range" id="edPKon" min="0" max="1" step="0.05"></label>
+      <label>Slabik nejméně<input class="vstup" type="number" id="edMin" min="1" max="6"></label>
+      <label>Slabik nejvíce<input class="vstup" type="number" id="edMax" min="1" max="8"></label>
+      <label>Oddělovač slabik<input class="vstup" id="edSpojka" maxlength="3" placeholder="např. - nebo '"></label>
+      <label>Oddělovač: <span id="edPSpojkaV"></span><input type="range" id="edPSpojka" min="0" max="1" step="0.05"></label>
+      <label>Písmo<select class="vstup" id="edPismo">
+        <option value="abeceda">vlastní abeceda jazyka</option><option value="">jen latinka</option>
+        <option value="tengwar">tengwar (Tolkienovo elfí)</option><option value="runy">runy (starší futhark)</option>
+        <option value="hlaholice">hlaholice</option><option value="ogam">ogam</option><option value="goticke">gótské písmo</option>
+      </select></label>
+      <label class="ed-abeceda">Styl abecedy<select class="vstup" id="edAbStyl"></select></label>
+      <label class="ed-abeceda">Semínko abecedy (jiné = jiné znaky)<span class="radek"><input class="vstup" type="number" id="edAbSemeno"><button class="btn" type="button" id="edAbNahodne" title="Náhodné znaky">🎲</button></span></label>
+      <div class="cela ed-abeceda abeceda-mrizka" id="edAbNahled" data-i18n="ne"></div>
+      <label>Výška hlasu: <span id="edVyskaV"></span><input type="range" id="edVyska" min="0" max="2" step="0.05"></label>
+      <label>Rychlost hlasu: <span id="edRychlostV"></span><input type="range" id="edRychlost" min="0.5" max="2" step="0.05"></label>
+      <div class="zatrzitka cela">
+        <label><input type="checkbox" id="edVelka"> velkými písmeny</label>
+        <label><input type="checkbox" id="edObracene"> obrácený slovosled</label>
+        <label><input type="checkbox" id="edVykrik"> věty končí vykřičníkem</label>
+        <label><input type="checkbox" id="edBinarni"> čísla dvojkově</label>
+      </div>
+    </div>
+    <label class="pole">Věta pro náhled<input class="vstup" id="edVeta" value="Drak spí pod horou a hlídá poklad."></label>
+    <div class="nahled-ed" id="edNahled" data-i18n="ne"></div>
+    <div class="pozn"><b>Ukázková jména:</b> <span id="edJmena" data-i18n="ne"></span></div>
+    <div class="pozn" id="edChyba" style="color:var(--danger)" hidden></div>
+  </div>
+  <div class="okno-pata">
+    <button class="btn danger vlevo" type="button" id="edSmazat">🗑 Smazat jazyk</button>
+    <button class="btn" type="button" id="edNahodny">🎲 Náhodné hlásky</button>
+    <button class="btn" type="button" id="edJakoNovy">Uložit jako nový</button>
+    <button class="btn primary" type="submit">Uložit</button>
+  </div>
+</form></dialog>
+
+<!-- uložené texty -->
+<dialog class="okno" id="dlgDokumenty"><div class="okno-obal">
+  <div class="okno-hlava"><h3>📂 Uložené texty</h3><button class="mini" data-zavrit aria-label="Zavřít">✕</button></div>
+  <div class="okno-telo"><div class="tab-obal" style="max-height:60vh"><table class="tab">
+    <thead><tr><th>Název</th><th>Jazyk</th><th>Upraveno</th><th></th></tr></thead>
+    <tbody id="dokTab"></tbody>
+  </table></div></div>
+</div></dialog>
+
+<input type="file" id="soubor" hidden>
+<script src="prekladac_svetu/ui.js"></script>
+</body>
+</html>

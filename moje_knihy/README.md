@@ -14,5 +14,11 @@ při `./upload.sh` i `./test_local.sh` (nebo ručně `python3 tools/vlastni_knih
   author: Jméno Autora
   ---
   ```
-- Když knihu upravíš a nahraješ znovu, čtečky ji samy stáhnou (pozice a poznámky zůstanou).
+- Když knihu upravíš a nahraješ znovu, čtečky ji samy stáhnou (pozice a poznámky zůstanou)
+  a na kartě knihy ukážou 🆕 nová verze (s počtem přidaných slov), dokud ji čtenář neotevře.
+- Přejmenovat soubor jde – čtečka knihu znovu napojí podle názvu (`title`), pokud je na webu jediná
+  s tímto názvem. Smazaná kniha čtenářům zůstane, jen se značkou „není na webu“.
+- Pozice čtení a poznámky drží kapitola podle nadpisu. Přejmenovaný nadpis čtečka pozná podle pořadí
+  (kapitola zmizela a na stejném místě je nová); nejistější je přejmenovat a zároveň vložit kapitolu před ni.
+- Kódování: UTF-8 (i s BOM), UTF-16 z Poznámkového bloku nebo starší windows-1250.
 - Tento README, soubory začínající `_` nebo `.` se do seznamu nepočítají.

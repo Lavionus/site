@@ -553,7 +553,8 @@
     try { history.replaceState(null, '', '#' + h); } catch (_) { /* file:// v některých prohlížečích */ }
   }
   function ctiHash() {
-    const h = decodeURIComponent(location.hash.slice(1));
+    let h = location.hash.slice(1);
+    try { h = decodeURIComponent(h); } catch (e) { /* poškozený odkaz – vzít, jak je */ }
     if (!h) return false;
     if (h.startsWith('rezim=')) { prepniRezim(h.slice(6), true); return 'rezim'; }
     if (h.startsWith('hledat=')) { prepniRezim('hledani', true); if (window.Voynich.hledej) window.Voynich.hledej(h.slice(7)); return 'hledat'; }

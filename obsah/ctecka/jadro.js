@@ -250,15 +250,22 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
   }
 
   // věty pro předčítání (dlouhé promluvy prohlížeče se někde utnou, proto po kouscích)
-  function vety(text, max = 220) {
-    const kusy = text.match(/[^.!?…]+[.!?…]+[“"»]?\s*|[^.!?…]+$/g) || [text];
-    const out = [];
-    for (const k of kusy) {
-      if (out.length && (out[out.length - 1] + k).length <= max) out[out.length - 1] += k;
-      else out.push(k);
+  // vetyPozice = totéž i s polohou v textu {od, do} (zvýraznění právě čtené věty)
+  function vetyPozice(text, max = 220) {
+    const out = [], re = /[^.!?…]+[.!?…]+[“"»]?\s*|[^.!?…]+$/g;
+    let m;
+    while ((m = re.exec(text))) {
+      const posl = out[out.length - 1], konec = m.index + m[0].length;
+      if (posl && konec - posl.od <= max) posl.do = konec;
+      else out.push({ od: m.index, do: konec });
     }
-    return out.map(s => s.trim()).filter(Boolean);
+    if (!out.length && text.trim()) out.push({ od: 0, do: text.length });   // jen „…“ apod.
+    return out.map(v => {
+      const kus = text.slice(v.od, v.do), od = v.od + kus.length - kus.trimStart().length;
+      return { od, do: od + kus.trim().length };
+    }).filter(v => v.do > v.od);
   }
+  const vety = (text, max) => vetyPozice(text, max).map(v => text.slice(v.od, v.do));
 
   /* ---------- poznámky pro betačtení: balík {format, verze, jmeno, cas, zalozky, zvyrazneni} ---------- */
   const FORMAT_P = 'kroniky-poznamky';
@@ -362,7 +369,7 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
     };
   }
 
-  const API = { RODINY_MOTIVU, STUPNE_MOTIVU, barvyMotivu, kontrast, slovoKolem, vetaKolem, rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, esc, balikPoznamek, poznamkyMd, prectiPoznamky };
+  const API = { RODINY_MOTIVU, STUPNE_MOTIVU, barvyMotivu, kontrast, slovoKolem, vetaKolem, rozeber, inline, prosty, slov, normalizuj, hledej, formatCas, zip, epub, mobi, vety, vetyPozice, esc, balikPoznamek, poznamkyMd, prectiPoznamky };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else koren.KRONIKY_JADRO = API;
 })(this);

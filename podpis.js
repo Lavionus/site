@@ -90,6 +90,9 @@
   }));
 
   if (window.self !== window.top) return;   // v rámu podpis patří nadřazené stránce
+  // mimo rozcestník kreslíme štítek stavu vpravo nahoře – stránky s horní lištou mu uhýbají přes `.samostatne .lista`
+  const oznacSamostatne = () => document.body && document.body.classList.add('samostatne');
+  if (document.body) oznacSamostatne(); else document.addEventListener('DOMContentLoaded', oznacSamostatne);
 
   // Štítek fáze vývoje (vývoj / beta / stable) vpravo nahoře u stránky
   // otevřené samostatně – v rozcestníku ho ukazuje hlavička. Katalog se

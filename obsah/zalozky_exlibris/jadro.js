@@ -15,6 +15,8 @@
 (function (koren) {
   'use strict';
   const ZE = {};
+  const D = typeof module !== 'undefined' && module.exports ? require('./vzory_data.js') : koren.ZE_DATA;
+  ZE.DATA = D;
   const PI = Math.PI;
   const n = x => { const r = Math.round(x * 100) / 100; return (Object.is(r, -0) ? 0 : r).toString(); };
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -238,7 +240,7 @@
      řezy (x, y polohy) a značky [[x1, y1, x2, y2]]. Značky leží jen v okrajích, mimo kusy i spadávku. */
   ZE.rozvrh = function (o) {
     const P = o.papir || { w: 210, h: 297 }, K = o.kus;
-    const b = omez(cislo(o.spadavka, 0), 0, 5);
+    const b = omez(cislo(o.spadavka, 0), 0, 3);   // víc spadávky SVG kusu nemá (PRESAH)
     const mezera = Math.max(cislo(o.mezera, 0), 2 * b);
     const okraj = Math.max(0, cislo(o.okraj, 5));
     const zn = o.znacky !== false, odstup = cislo(o.odstup, 1.5), dMax = cislo(o.delka, 5), dMin = 2.5;
@@ -277,6 +279,19 @@
   };
 
   /* Poloha bodu návrhu (u, v) kusu na archu. Otočení 90 = po směru hodin (horní hrana kusu vpravo). */
+  /* DPI rastru omezené tak, aby plátno nepřekročilo limit Safari/iPadu (16,7 Mpx, strana 16 384 px).
+     Při překročení vykreslí iPad prázdné plátno bez chyby. */
+  ZE.dpiProPlatno = function (wmm, hmm, dpi, maxPx, maxStrana) {
+    maxPx = maxPx || 16e6; maxStrana = maxStrana || 16000;
+    const px = d => [wmm / 25.4 * d, hmm / 25.4 * d];
+    let d = dpi;
+    const [a, b] = px(d);
+    if (a * b > maxPx) d *= Math.sqrt(maxPx / (a * b));
+    const [c, e] = px(d);
+    if (Math.max(c, e) > maxStrana) d *= maxStrana / Math.max(c, e);
+    return Math.floor(d);
+  };
+
   ZE.naStranku = function (k, kus, u, v) {
     if (k.otoceni === 90) return [k.x + (kus.h - v), k.y + u];
     if (k.otoceni === -90) return [k.x + v, k.y + (kus.w - u)];
@@ -291,35 +306,38 @@
   };
 
   /* ================================================================ 2. pád jména */
-  const MEKKE = 'šžčřcjďťň';
-  const VYJIMKY_EL = new Set(['daniel', 'gabriel', 'michael', 'rafael', 'samuel', 'emanuel', 'ezechiel', 'israel', 'izrael', 'abel', 'nathaniel', 'raphael', 'lionel']);
-  function genSlovo(s, zena, prijmeni) {
-    const l = s.toLowerCase(), vel = s[0] === s[0].toUpperCase() && s.length > 1 && s.slice(1) === s.slice(1).toLowerCase() ? 1 : (s === s.toUpperCase() ? 2 : 0);
+  /* Koncovky jsou v vzory_data.js (data, ne texty rozhraní). */
+  function genSlovo(s, zena) {
+    const l = s.toLowerCase(), vel = s.length > 1 && s === s.toUpperCase() ? 2 : (s[0] === s[0].toUpperCase() ? 1 : 0);
     let r = null;
-    const konc = (k, z) => { if (l.endsWith(k)) { r = l.slice(0, l.length - k.length) + z; return true; } return false; };
-    if (zena) {
-      konc('ová', 'ové') || konc('á', 'é') || konc('ie', 'ie') || konc('e', 'e') || konc('ea', 'ey') ||
-        (l.endsWith('a') && (MEKKE.includes(l[l.length - 2]) ? konc('a', 'i') : konc('a', 'y'))) || (r = l);
-    } else {
-      konc('ý', 'ého') || konc('í', 'ího') || konc('ek', 'ka') || konc('ec', 'ce') ||
-        (l.endsWith('el') && !prijmeni && !VYJIMKY_EL.has(l) && konc('el', 'la')) ||
-        (l.endsWith('a') && (MEKKE.includes(l[l.length - 2]) ? konc('a', 'i') : konc('a', 'y'))) ||
-        konc('o', 'a') || konc('e', 'e') ||
-        (MEKKE.includes(l[l.length - 1]) ? (r = l + 'e') : /[aáeéěiíoóuúůyý]$/.test(l) ? (r = l) : (r = l + 'a'));
+    const zkus = tab => { for (const [k, z] of tab) if (l.endsWith(k) && l.length >= k.length) { r = l.slice(0, l.length - k.length) + z; return true; } return false; };
+    const naA = () => l.endsWith('a') && (r = l.slice(0, -1) + (D.MEKKE.includes(l[l.length - 2]) ? 'i' : 'y'));
+    if (zena) zkus(D.ZENA) || naA() || (r = l);
+    else {
+      zkus(D.MUZ) ||
+        (/[^aeiouyáéíóúůýě]el$/.test(l) && !D.VYJIMKY_EL.includes(l) && (r = l.slice(0, -2) + 'la')) ||
+        naA() ||
+        (D.MEKKE.includes(l[l.length - 1]) ? (r = l + 'e') : /[aáeéěiíoóuúůyý]$/.test(l) ? (r = l) : (r = l + 'a'));
     }
     if (vel === 2) return r.toUpperCase();
     if (vel === 1) return r[0].toUpperCase() + r.slice(1);
-    return s === l ? r : r;
+    return r;
   }
-  /* „Jan Novák“ → „Jana Nováka“, „Marie Nováková“ → „Marie Novákové“. Jen návrh – uživatel ho může přepsat. */
+  /* „Jan Novák“ → „Jana Nováka“, „Marie Nováková“ → „Marie Novákové“, „Jan a Marie Novákovi“ → „Jana a Marie Novákových“.
+     Jen návrh – uživatel ho může přepsat. */
   ZE.genitiv = function (jmeno) {
     const slova = String(jmeno || '').trim().split(/\s+/).filter(Boolean);
     if (!slova.length) return '';
     const posl = slova[slova.length - 1].toLowerCase();
-    const zenskaPrijmeni = /(ová|á)$/.test(posl);
-    const zenskaJmeno = slova.length === 1 && /(a|ie|e)$/.test(posl) && !/(ek|ec)$/.test(posl);
-    const zena = zenskaPrijmeni || zenskaJmeno;
-    return slova.map((s, i) => /^[A-ZÁ-Ž]\.$/.test(s) || /^(rodiny|rod)$/i.test(s) ? s : genSlovo(s, zena, i === slova.length - 1 && slova.length > 1)).join(' ');
+    const mnozne = /ovi$|ových$/.test(posl) && slova.length > 1;
+    const zenaPrijmeni = D.ZENSKE_PRIJMENI.some(k => posl.endsWith(k));
+    const zenaJmeno = slova.length === 1 && /(a|ie|e)$/.test(posl);
+    return slova.map((s, i) => {
+      const l = s.toLowerCase();
+      if (s.endsWith('.') || D.NESKLONNE.includes(l) || !/\p{L}/u.test(s)) return s;
+      const zena = mnozne && i < slova.length - 1 ? /(a|ie|e)$/.test(l) : (zenaPrijmeni || zenaJmeno);
+      return genSlovo(s, zena);
+    }).join(' ');
   };
   ZE.inicialy = jmeno => String(jmeno || '').trim().split(/[\s-]+/).filter(Boolean).map(s => s[0].toUpperCase()).slice(0, 3).join('');
 
@@ -794,15 +812,16 @@
       ramecek: 'zadny', ozdoba: 'linka', vzor: 'artdeco', hustota: 3, seed: 1, stitek: true, uvozovky: true,
       svisle: false, zarovnani: 'stred', invert: false, poleStrana: false,
       obrazek: { id: '', umisteni: 'zadne', kryti: 0.35 },
+      qr: { text: '' },
     };
   };
   ZE.novaZalozka = function () {
     const lic = Object.assign(ZE.novaStrana('citat'), {
-      text: 'Mám-li zahradu a knihovnu, nechybí mi nic.', autor: 'Marcus Tullius Cicero', zdroj: '', ramecek: 'rohy',
+      text: D.VYCHOZI.citat, autor: D.VYCHOZI.autor, zdroj: '', ramecek: 'rohy',
     });
-    const rub = Object.assign(ZE.novaStrana('vzor'), { vzor: 'artdeco', text: 'Tady jsem skončil', stitek: false, seed: 3 });
+    const rub = Object.assign(ZE.novaStrana('vzor'), { vzor: 'artdeco', text: D.VYCHOZI.rub, stitek: false, seed: 3 });
     return { rozmer: '50x150', sirka: 50, vyska: 150, zaobleni: 3, paleta: 'inkoust', barvy: Object.assign({}, ZE.PALETY.inkoust),
-      otvor: { pouzit: true, prumer: 5, odsazeni: 9 }, lic, rub };
+      otvor: { pouzit: true, prumer: 5, odsazeni: 9 }, lic, rub, serie: false, serieText: '' };
   };
   /* Paleta strany (invert prohodí papír a inkoust). */
   ZE.paletaStrany = (z, st) => {
@@ -843,6 +862,18 @@
 
     const sab = st.sablona;
     const ix = m, iw = w - 2 * m;
+    let qrPrvky = [];
+    if (st.qr && String(st.qr.text || '').trim()) {
+      const mat = ZE.qrMatice(st.qr.text);
+      if (mat) {
+        const vel = Math.min(iw * 0.78, 24), k = vel / (mat.length + 4);
+        if (k < 0.3) varovani.push('QR kód je pro tuto šířku příliš hustý – zkraťte odkaz.');
+        const svetla = ZE.jas(pal.papir) >= ZE.jas(pal.inkoust) ? pal.papir : pal.inkoust, tmava = svetla === pal.papir ? pal.inkoust : pal.papir;
+        const qy = bottom - vel;
+        qrPrvky = ZE.qrPrvky(mat, (w - vel) / 2, qy, vel, svetla, tmava);
+        bottom = qy - Math.max(3, m * 0.5);
+      }
+    }
     if (st.ramecek && st.ramecek !== 'zadny' && sab !== 'vzor' && um !== 'dole') bottom = h - m * 1.5;
     if (sab === 'vzor' && um !== 'pozadi') pridej(ZE.vzor(st.vzor, -PRESAH, um === 'nahore' ? top - m * 0.7 : -PRESAH, w + 2 * PRESAH,
       (um === 'dole' ? bottom + m * 0.7 : h + PRESAH) - (um === 'nahore' ? top - m * 0.7 : -PRESAH), pal, { hustota: st.hustota, seed: st.seed }));
@@ -948,6 +979,7 @@
         if (autor) prvky.push(radek(S, autor.toUpperCase(), w / 2, sy + pad + a.vyska + v2 * 1.3 + v2 * m2.cap * 0.3, v2, sw - 2 * pad, id2, pal.akcent, 2, { prostrkani: 0.2 }));
       }
     }
+    for (const p of qrPrvky) prvky.push(p);
     return { w, h, prvky, otvor, zaobleni: omez(cislo(z.zaobleni, 0), 0, Math.min(w, h) / 4), varovani, papir: pal.papir };
   };
 
@@ -957,7 +989,7 @@
   ZE.noveExlibris = function () {
     return {
       rozmer: '60x80', sirka: 60, vyska: 80, kompozice: 'ramecek', napis: 'exlibris', napisVlastni: '',
-      jmeno: 'Jan Novák', jmeno2: '', motto: '', stred: 'symbol', inicialy: '', monogram: 'propletene', symbol: 'sova',
+      jmeno: D.VYCHOZI.jmeno, jmeno2: '', motto: '', stred: 'symbol', inicialy: '', monogram: 'propletene', symbol: 'sova',
       ramecek: 'dvojita', pismoNapis: 'marcellus', pismoJmeno: 'fell', pismoMonogram: 'marcellus',
       dvoubarevne: true, barvy: { inkoust: '#1f2a36', akcent: '#8a6a2f', papir: '#fbf7ee' }, tiskPozadi: false,
       obrazek: { id: '' },
@@ -991,6 +1023,7 @@
   ZE.kresliExlibris = function (e, S, obrazky) {
     const { w, h } = ZE.rozmerExlibris(e), pal = ZE.paletaExlibris(e), T = ZE.textyExlibris(e);
     const prvky = [], varovani = [];
+    if (!e.tiskPozadi && ZE.jas(pal.inkoust) > 0.45) varovani.push('Světlý inkoust se tiskne na bílý papír bez pozadí – bude špatně čitelný. Zvolte tmavší inkoust nebo zapněte tisk barvy papíru.');
     const pridej = a => { for (const x of a) if (x) prvky.push(x); };
     prvky.push({ s: obdelnik(-PRESAH, -PRESAH, w + 2 * PRESAH, h + 2 * PRESAH, `fill="${pal.papir}"`), b: 0, pozadi: true });
     const m = Math.min(w, h) * 0.07, idN = e.pismoNapis || 'marcellus', idJ = e.pismoJmeno || 'fell';
@@ -1097,6 +1130,58 @@
     pridej(blok(S, vj, ix, yJ, iw, idJ, pal, 'inkoust', komp === 'volna' ? { prostrkani: 0.06 } : {}));
     if (motto) prvky.push(radek(S, motto, w / 2, yJ + vj.vyska + vMotto * 1.6, vMotto, iw, 'libserifi', pal.akcent, 2, { prostrkani: 0 }));
     return { w, h, prvky, varovani, papir: pal.papir };
+  };
+
+  /* Série citátů: řádek = citát, autor za poslední pomlčkou obklopenou mezerami („ – “, „ — “) nebo za „ | “.
+     Prázdné řádky se vynechají. Vrací [{text, autor}]. */
+  ZE.parsujSerii = function (text) {
+    const out = [];
+    for (let r of String(text || '').replace(/\r/g, '').split('\n')) {
+      r = r.trim();
+      if (!r) continue;
+      const m = r.match(/^(.*\S)\s+(?:[–—|]|--)\s+([^–—|]+)$/);
+      out.push(m ? { text: m[1].trim(), autor: m[2].trim() } : { text: r, autor: '' });
+    }
+    return out;
+  };
+  /* Varianty záložky pro sérii: líc s textem a autorem z řádku, ostatní nastavení stejné. */
+  ZE.variantySerie = function (z) {
+    if (!z.serie) return [];
+    return ZE.parsujSerii(z.serieText).map(c => Object.assign({}, z, { lic: Object.assign({}, z.lic, { text: c.text, autor: c.autor || (c.text ? '' : z.lic.autor) }) }));
+  };
+
+  /* ================================================================ QR kód */
+  /* Matice QR (true = tmavý modul) přes qrcode-generator (lib/qrcode/qrcode.js), UTF-8, oprava M. */
+  ZE.qrMatice = function (text) {
+    const lib = typeof module !== 'undefined' && module.exports ? require('../lib/qrcode/qrcode.js') : koren.qrcode;
+    if (!lib || !String(text || '').trim()) return null;
+    lib.stringToBytes = lib.stringToBytesFuncs && lib.stringToBytesFuncs['UTF-8'] || lib.stringToBytes;
+    const q = lib(0, 'M');
+    q.addData(String(text).trim());
+    q.make();
+    const N = q.getModuleCount(), m = [];
+    for (let r = 0; r < N; r++) { const radek = []; for (let c = 0; c < N; c++) radek.push(q.isDark(r, c)); m.push(radek); }
+    return m;
+  };
+  /* Matice → prvky: světlý čtverec s klidovou zónou 2 moduly a tmavé moduly jako jedna cesta (běhy po řádcích). */
+  ZE.qrPrvky = function (mat, x, y, vel, svetla, tmava) {
+    const N = mat.length, zona = 2, k = vel / (N + 2 * zona);
+    let d = '';
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        if (!mat[r][c]) continue;
+        let e = c; while (e + 1 < N && mat[r][e + 1]) e++;
+        d += `M${n4(x + (zona + c) * k)} ${n4(y + (zona + r) * k)}h${n4((e - c + 1) * k)}v${n4(k)}h${n4(-(e - c + 1) * k)}z`;
+        c = e;
+      }
+    }
+    return [{ s: obdelnik(x, y, vel, vel, `fill="${svetla}"`), b: 0 }, { s: `<path d="${d}" fill="${tmava}"/>`, b: 1, qr: true }];
+  };
+  ZE.jas = function (hex) {
+    const m = String(hex || '').match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (!m) return 0;
+    const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * lin(parseInt(m[1], 16)) + 0.7152 * lin(parseInt(m[2], 16)) + 0.0722 * lin(parseInt(m[3], 16));
   };
 
   /* ================================================================ citáty z rukopisu */

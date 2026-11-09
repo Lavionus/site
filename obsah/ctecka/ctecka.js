@@ -36,7 +36,42 @@
   // knihy.json vždy čerstvý (?t – obejde i CDN GitHub Pages); kapitoly a obrázky s otiskem obsahu (?h).
   // DILO.zdroj = knihy nahrané uživatelem (ctecka_knih.html): {knihy(), kapitola(kniha, soubor), obrazek(kniha, src)}
   const ZDROJ = DILO.zdroj;
-  const knihy = ZDROJ ? await ZDROJ.knihy() : await (await fetch(DILO.data + 'knihy.json?t=' + Date.now())).json();
+  // Po probuzení tabletu bývá síť pár sekund pryč – první pokus selže a kapitola by zůstala prázdná.
+  // Proto několik pokusů s rostoucí pauzou (a další pokus, jakmile je prohlížeč zase online).
+  async function sOpakovanim(fn, pokusu = 4) {
+    for (let i = 0; ; i++) {
+      try { return await fn(); }
+      catch (e) {
+        if (i >= pokusu - 1) throw e;
+        await new Promise(ok => { const t = setTimeout(ok, 700 * (i + 1)); addEventListener('online', () => { clearTimeout(t); ok(); }, { once: true }); });
+      }
+    }
+  }
+  const stahniText = url => sOpakovanim(async () => {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const t = await r.text();
+    if (!t.trim()) throw new Error('prázdná odpověď');
+    return t;
+  });
+  // až bude zase síť (událost online) nebo se tablet probudí (návrat do karty), zkusit to samo znovu
+  function znovuAz(fn) {
+    const zkus = () => {
+      if (document.visibilityState !== 'visible') return;
+      removeEventListener('online', zkus); document.removeEventListener('visibilitychange', zkus);
+      fn();
+    };
+    addEventListener('online', zkus); document.addEventListener('visibilitychange', zkus);
+  }
+  let knihy;
+  try { knihy = ZDROJ ? await ZDROJ.knihy() : JSON.parse(await stahniText(DILO.data + 'knihy.json?t=' + Date.now())); }
+  catch (e) {
+    // bez seznamu kapitol čtečka nemůže nic – místo prázdné stránky hláška a nové načtení
+    text.innerHTML = `<p class="nenacteno">Knihu se nepodařilo načíst – asi chvíli chybí připojení.</p><p><button class="tl" id="znovuNacist">↻ Zkusit znovu</button></p>`;
+    $('znovuNacist').onclick = () => location.reload();
+    znovuAz(() => location.reload());
+    return;
+  }
   const sOtiskem = (k, src) => { if (ZDROJ) return ZDROJ.obrazek(k, src); const h = k.otisky && k.otisky[src]; return `${DILO.data}${k.id}/${src}` + (h ? '?h=' + h : ''); };
   knihy.forEach(k => { k.slov = k.kapitoly.reduce((s, c) => s + c.slov, 0); });
   const mezipamet = new Map();
@@ -44,10 +79,7 @@
     const c = kniha.kapitoly.find(x => x.soubor === soubor), h = c && c.h ? '?h=' + c.h : '';
     const klic = kniha.id + '/' + soubor + h;
     if (!mezipamet.has(klic)) {
-      mezipamet.set(klic, (ZDROJ ? Promise.resolve(ZDROJ.kapitola(kniha, soubor)) : fetch(DILO.data + klic).then(r => {
-        if (!r.ok) throw new Error('Kapitolu se nepodařilo načíst');
-        return r.text();
-      })).then(md => ({ md, bloky: J.rozeber(md) })).catch(e => { mezipamet.delete(klic); throw e; }));
+      mezipamet.set(klic, (ZDROJ ? Promise.resolve(ZDROJ.kapitola(kniha, soubor)) : stahniText(DILO.data + klic)).then(md => ({ md, bloky: J.rozeber(md) })).catch(e => { mezipamet.delete(klic); throw e; }));
     }
     return mezipamet.get(klic);
   }
@@ -69,7 +101,7 @@
   const rozlozMotiv = m => { const x = /^([a-z]+)-([1-5])$/.exec(m || ''); return x && J.barvyMotivu(x[1], +x[2]); };
   $('motivyBarvy').innerHTML = J.RODINY_MOTIVU.map(r => `<div class="motiv-radek"><span class="motiv-nazev">${r.nazev}</span>${J.STUPNE_MOTIVU.map((st, i) => {
     const m = J.barvyMotivu(r.id, i + 1).promenne;
-    return `<button class="vzorek" data-prikaz="motiv-${r.id}-${i + 1}" title="${r.nazev} – ${st.nazev}" aria-label="${r.nazev} – ${st.nazev}" style="background:${m['--bg']};color:${m['--text']};border-color:${m['--border-strong']}">Aa</button>`;
+    return `<button class="vzorek" data-prikaz="motiv-${r.id}-${i + 1}" title="Motiv: ${r.nazev}, ${st.nazev}" aria-label="Motiv: ${r.nazev}, ${st.nazev}" style="background:${m['--bg']};color:${m['--text']};border-color:${m['--border-strong']}">Aa</button>`;
   }).join('')}</div>`).join('');
   function pouzijNastaveni() {
     const n = nast(), s = document.body.style;
@@ -114,13 +146,22 @@
     if (!volby.zTts) zastavTts();
     let obsah;
     try { obsah = await nactiKapitolu(nova, nova.kapitoly[cIdx].soubor); }
-    catch (e) { Dialog.chyba('Kapitolu se nepodařilo načíst. Jste offline?'); return; }
+    catch (e) {
+      // nenechat prázdnou stránku: hláška s tlačítkem, a sama se zkusí znovu, až bude síť
+      if (!text.children.length || !kniha) {
+        text.innerHTML = `<p class="nenacteno">Kapitolu se nepodařilo načíst – asi chvíli chybí připojení.</p><p><button class="tl" id="znovuNacist">↻ Zkusit znovu</button></p>`;
+        $('znovuNacist').onclick = () => otevri(kIdx, cIdx, blok, volby);
+        znovuAz(() => { if ($('znovuNacist')) otevri(kIdx, cIdx, blok, volby); });
+      } else Dialog.chyba('Kapitolu se nepodařilo načíst. Jste offline?');
+      return;
+    }
     kniha = nova; kapIdx = cIdx; stav.kniha = kIdx;
     bloky = obsah.bloky;
     kum = []; let s = 0;
     bloky.forEach((b, i) => { kum[i] = s; s += J.slov(b.text); });
     text.innerHTML = bloky.map((b, i) => htmlBloku(b, i)).join('');
-    bloky.forEach((b, i) => { if (b.typ === 'p' || b.typ === 'h') vyznacBlok(i); });
+    kotvy = new WeakMap();
+    prekresliText();
     zavriVyber();
     $('zahlavi').textContent = `${kniha.nazev} · ${kniha.podtitul}`;
     $('tlKniha').title = `${kniha.nazev} – výběr knihy a pokrok čtení`;
@@ -172,6 +213,7 @@
     if (!kniha) return;
     const i = aktualniBlok(), slovZde = prectenoSlov();
     stav.pozice[kniha.id] = { soubor: kap().soubor, blok: i, slov: slovZde };
+    zapamatujMisto(i);
     if (naKonciKapitoly()) {
       (stav.precteno[kniha.id] = stav.precteno[kniha.id] || {})[kap().soubor] = true;
     }
@@ -199,18 +241,22 @@
   async function skok(knihaId, soubor, blok, hledany, zalozkaId) {
     const k = knihy.findIndex(x => x.id === knihaId), c = k < 0 ? -1 : indexKap(knihy[k], soubor);
     if (c < 0) { Dialog.chyba('Toto místo už v knize není.'); return; }
+    const pred = mistoCteni();
     if (k !== stav.kniha || c !== kapIdx) await otevri(k, c, blok);
     if (hledany) vyznacBlok(blok, hledany);
     const slovo = zalozkaId && text.querySelector(`mark.zal-slovo[data-zal="${zalozkaId}"]`);
     if (slovo) {
       // slovo záložky do horní třetiny plochy, jeho věta krátce blikne
-      plocha.scrollTo({ top: plocha.scrollTop + slovo.getBoundingClientRect().top - plocha.getBoundingClientRect().top - plocha.clientHeight / 3, behavior: 'smooth' });
+      const cil = plocha.scrollTop + slovo.getBoundingClientRect().top - plocha.getBoundingClientRect().top - plocha.clientHeight / 3;
+      poSkoku(pred, cil);
+      plocha.scrollTo({ top: cil, behavior: 'smooth' });
       const veta = text.querySelectorAll(`.zal-veta[data-zal="${zalozkaId}"]`);
       veta.forEach(v => v.classList.add('blik'));
       setTimeout(() => veta.forEach(v => v.classList.remove('blik')), 1800);
     } else {
     const el = prvekBloku(blok);
     if (el) {
+      poSkoku(pred, el.offsetTop);
       skocNaBlok(blok);
       el.classList.add('blik');
       setTimeout(() => el.classList.remove('blik'), 1600);
@@ -271,13 +317,25 @@
     return false;
   }
 
+  // Dohledání po redakci prochází celou kapitolu – u dlouhé knihy (TXT bez nadpisů = jedna kapitola o tisících
+  // odstavců) a značky, jejíž text už v knize není, by to pro každý odstavec trvalo sekundy. Proto se každá
+  // značka ukotví jen jednou za otevření kapitoly (otevri vynuluje kotvy).
+  let kotvy = new WeakMap();
+  const ukotvena = (z, fn) => { if (!kotvy.has(z)) kotvy.set(z, fn(z)); return kotvy.get(z); };
+  function znackyKapitoly() {
+    const soubor = kap().soubor, zde = z => z.kniha === kniha.id && z.soubor === soubor;
+    return {
+      zv: data.zvyrazneni.filter(z => zde(z) && ukotvena(z, ukotvi)),
+      cizi: data.cizi.filter(c => !c.skryta).flatMap(c => c.zvyrazneni.filter(z => zde(z) && ukotvena(z, ukotvi)).map(z => [c, z])),
+      zal: data.zalozky.filter(z => zde(z) && ukotvena(z, ukotviZalozku)),
+    };
+  }
   function vyznacBlok(i, hledany) {
     const el = prvekBloku(i), b = bloky[i];
     if (!el || !b || (b.typ !== 'p' && b.typ !== 'h')) return;
     el.innerHTML = J.inline(b.md);
-    const soubor = kap().soubor;
-    data.zvyrazneni
-      .filter(z => z.kniha === kniha.id && z.soubor === soubor && ukotvi(z) && z.blok === i)
+    const zn = znackyKapitoly();
+    zn.zv.filter(z => z.blok === i)
       .sort((a, b) => a.od - b.od)
       .forEach(z => obal(el, z.od, z.do, () => {
         const m = document.createElement('mark');
@@ -286,15 +344,13 @@
         if (z.poznamka) m.title = z.poznamka;
         return m;
       }));
-    data.cizi.filter(c => !c.skryta).forEach(c => c.zvyrazneni
-      .filter(z => z.kniha === kniha.id && z.soubor === soubor && ukotvi(z) && z.blok === i)
-      .forEach(z => obal(el, z.od, z.do, () => {
+    zn.cizi.filter(([, z]) => z.blok === i)
+      .forEach(([c, z]) => obal(el, z.od, z.do, () => {
         const m = Object.assign(document.createElement('mark'), { className: 'zv cizi', title: `👤 ${c.jmeno || 'čtenář'}` + (z.poznamka ? ': ' + z.poznamka : '') });
         m.dataset.cizi = c.id; m.dataset.id = z.id;
         return m;
-      })));
-    data.zalozky
-      .filter(z => z.kniha === kniha.id && z.soubor === soubor && ukotviZalozku(z) && z.blok === i)
+      }));
+    zn.zal.filter(z => z.blok === i)
       .forEach(z => {
         const v = J.vetaKolem(b.text, z.od);
         obal(el, v.od, v.do, () => { const sp = document.createElement('span'); sp.className = 'zal-veta'; sp.dataset.zal = z.id; return sp; });
@@ -304,6 +360,7 @@
           return m;
         });
       });
+    if (tts.aktivni && i === tts.blok) vyznacVetu(el);
     planujZnacky();
     if (hledany) {
       const t = J.normalizuj(b.text), q = J.normalizuj(hledany);
@@ -420,10 +477,13 @@
     return el && /^(P|H1)$/.test(el.tagName) ? { blok: +el.dataset.i, off: offsetV(el, uzel, off) } : null;
   };
   const dotyk = { cas: 0, start: null, kotva: null, rozsah: null, konec: 0 };
+  // Odstavec se tu NEpřekresluje (vyznacBlok): prvek pod prstem (třeba <em> kurzívy) musí zůstat v dokumentu,
+  // jinak mu prohlížeč pošle touchend už odpojenému a výběr nikdy neskončí (lišta nevyskočí).
   function ukazDotykovyVyber() {
-    const { blok, od, do: do_ } = dotyk.rozsah;
-    vyznacBlok(blok);
-    obal(prvekBloku(blok), od, do_, () => Object.assign(document.createElement('mark'), { className: 'vyb' }));
+    const { blok, od, do: do_ } = dotyk.rozsah, el = prvekBloku(blok);
+    text.querySelectorAll('mark.vyb').forEach(m => m.replaceWith(...m.childNodes));
+    el.normalize();
+    obal(el, od, do_, () => Object.assign(document.createElement('mark'), { className: 'vyb' }));
   }
   addEventListener('pointerdown', e => document.body.classList.toggle('dotyk', e.pointerType === 'touch'), true);
   text.addEventListener('touchstart', e => {
@@ -446,7 +506,10 @@
       ukazDotykovyVyber();
     }, 450);
   }, { passive: true });
-  text.addEventListener('touchmove', e => {
+  // touchmove/touchend poslouchá dokument: výběr překresluje odstavec, a když prst začal na kurzívě (<em>),
+  // prohlížeč posílá další události už odpojenému <em> – k #text by nedobublaly a lišta by nevyskočila
+  document.addEventListener('touchmove', e => {
+    if (!dotyk.start) return;
     const t = e.touches[0];
     if (!dotyk.kotva) {   // prst se pohnul dřív, než vypršelo podržení → posouvání stránky
       if (dotyk.start && Math.hypot(t.clientX - dotyk.start.x, t.clientY - dotyk.start.y) > 10) clearTimeout(dotyk.cas);
@@ -461,7 +524,8 @@
   }, { passive: false });
   const konecDotyku = e => {
     clearTimeout(dotyk.cas);
-    if (!dotyk.kotva) { if (Date.now() - dotyk.konec < 700 && e.cancelable) e.preventDefault(); return; }
+    const zText = dotyk.start; dotyk.start = null;
+    if (!dotyk.kotva) { if (zText && Date.now() - dotyk.konec < 700 && e.cancelable) e.preventDefault(); return; }
     if (e.cancelable) e.preventDefault();   // bez následného „kliknutí“, které by lištu hned zavřelo
     const { blok, od, do: do_ } = dotyk.rozsah;
     dotyk.kotva = null; dotyk.konec = Date.now();
@@ -470,8 +534,8 @@
     const r = znacky[0].getBoundingClientRect(), r2 = znacky[znacky.length - 1].getBoundingClientRect();
     ukazListu({ top: r.top, bottom: r2.bottom, left: Math.min(r.left, r2.left), width: Math.max(r.right, r2.right) - Math.min(r.left, r2.left) });
   };
-  text.addEventListener('touchend', konecDotyku);
-  text.addEventListener('touchcancel', () => { clearTimeout(dotyk.cas); if (dotyk.kotva) { dotyk.kotva = null; vyznacBlok(dotyk.rozsah.blok); } });
+  document.addEventListener('touchend', konecDotyku, { passive: false });
+  document.addEventListener('touchcancel', () => { clearTimeout(dotyk.cas); dotyk.start = null; if (dotyk.kotva) { dotyk.kotva = null; vyznacBlok(dotyk.rozsah.blok); } });
   text.addEventListener('contextmenu', e => { if (document.body.classList.contains('dotyk')) e.preventDefault(); });
   lista.addEventListener('click', async e => {
     const tl = e.target.closest('button');
@@ -487,7 +551,9 @@
       if (z) z.barva = tl.dataset.barva; else nove(tl.dataset.barva);
     } else if (tl.dataset.vyber === 'poznamka') {
       zavriVyber(); getSelection().removeAllRanges();
+      zapamatujMisto();
       const p = await Dialog.zeptej('Poznámka k vybranému textu', z ? z.poznamka : '', { ok: 'Uložit' });
+      scrollTo(0, 0);
       if (p === null) return;
       if (!z) nove('zluta');
       z.poznamka = p.trim();
@@ -596,7 +662,7 @@
         });
       });
     } else if (stav.panel === 'hledani') {
-      if (!dotaz) h = '<p class="prazdne">Napište hledaný text do pole 🔍 v liště (aspoň 2 znaky). Hledá se v obou knihách bez ohledu na diakritiku a velká písmena.</p>';
+      if (!dotaz) h = '<p class="prazdne">Napište hledaný text do pole 🔍 v liště (aspoň 2 znaky). Hledá se v celém díle bez ohledu na diakritiku a velká písmena.</p>';
       else if (!vysledky) h = '<p class="prazdne">Hledám…</p>';
       else if (!vysledky.length) h = `<p class="prazdne">„${e(dotaz)}“ v knihách není.</p>`;
       else {
@@ -676,8 +742,9 @@
       return;
     }
     if (t.dataset.kap) {
-      const [k, c] = t.dataset.kap.split('|').map(Number);
+      const [k, c] = t.dataset.kap.split('|').map(Number), pred = mistoCteni();
       await otevri(k, c);
+      poSkoku(pred);
       if (matchMedia('(max-width:760px)').matches) zavriPanel();
       return;
     }
@@ -815,16 +882,28 @@
     } catch (e) { /* starší prohlížeč */ }
   }
 
+  // právě čtená věta: <span class="cte-veta"> (víc kusů, když věta jde přes kurzívu)
+  function zrusVetu() { text.querySelectorAll('span.cte-veta').forEach(sp => { const r = sp.parentNode; sp.replaceWith(...sp.childNodes); r.normalize(); }); }
+  function vyznacVetu(el) {
+    const v = tts.pozice && tts.pozice[tts.vi];
+    // během výběru prstem odstavec neměnit (viz ukazDotykovyVyber)
+    if (v && !dotyk.kotva) obal(el, v.od, v.do, () => Object.assign(document.createElement('span'), { className: 'cte-veta' }));
+  }
   function oznacCteny() {
     text.querySelectorAll('.cte').forEach(el => el.classList.remove('cte'));
+    zrusVetu();
     const el = prvekBloku(tts.blok);
     if (!el) return;
     el.classList.add('cte');
-    const r = el.getBoundingClientRect(), p = plocha.getBoundingClientRect();
-    if (r.top < p.top + 10 || r.top > p.bottom - 80) {
-      if (nast().strankovani) { plocha.scrollTop = el.offsetTop - 14; zarovnejStranu(); }   // při listování se nejede plynule
-      else plocha.scrollTo({ top: el.offsetTop - plocha.clientHeight / 3, behavior: 'smooth' });
-    }
+    vyznacVetu(el);
+    // na obrazovce má být celá čtená věta (u dlouhého odstavce nestačí jeho začátek)
+    const kusy = el.querySelectorAll('.cte-veta'), p = plocha.getBoundingClientRect();
+    const r = kusy.length ? { top: kusy[0].getBoundingClientRect().top, bottom: kusy[kusy.length - 1].getBoundingClientRect().bottom } : el.getBoundingClientRect();
+    const mimo = r.top < p.top + 10 || r.top > p.bottom - 60;
+    if (nast().strankovani) {   // při listování se nejede plynule: věta dole useknutá = další stránka
+      if (mimo) { plocha.scrollTop += r.top - p.top - 14; zarovnejStranu(); }
+      else if (r.bottom > p.bottom) strana(1);
+    } else if (mimo || r.bottom > p.bottom - 20) plocha.scrollTo({ top: plocha.scrollTop + r.top - p.top - plocha.clientHeight / 3, behavior: 'smooth' });
   }
   async function mluv() {
     const gen = ++tts.gen;
@@ -834,12 +913,17 @@
     if (tts.blok >= bloky.length) {
       const k = stav.kniha, posledniKap = kapIdx === kniha.kapitoly.length - 1;
       if (posledniKap && k === knihy.length - 1) return zastavTts();
+      if (casovac.kapitola) return vypnutoCasovacem();   // pokračování (▶) otevře další kapitolu
       await otevri(posledniKap ? k + 1 : k, posledniKap ? 0 : kapIdx + 1, 0, { zTts: true });
       if (gen !== tts.gen) return;
       tts.blok = 0; tts.vi = 0; tts.vety = [];
       return mluv();
     }
-    if (!tts.vety.length) tts.vety = J.vety(bloky[tts.blok].text);
+    if (casovac.konec && Date.now() >= casovac.konec) return vypnutoCasovacem();
+    if (!tts.vety.length) {
+      const t = bloky[tts.blok].text;
+      tts.pozice = J.vetyPozice(t); tts.vety = tts.pozice.map(v => t.slice(v.od, v.do));
+    }
     oznacCteny();
     if (jePiper()) return mluvPiper(gen);
     const u = new SpeechSynthesisUtterance(tts.vety[tts.vi] || '');
@@ -898,12 +982,32 @@
     $('tlPredcitat').setAttribute('aria-pressed', 'false');
     aktualizujZamek();
     text.querySelectorAll('.cte').forEach(el => el.classList.remove('cte'));
+    zrusVetu();
+    zrusCasovac();
   }
   const ttsSkok = smer => {
     let i = tts.blok + smer;
     while (bloky[i] && !bloky[i].text) i += smer;
     tts.blok = Math.max(0, i); tts.vi = 0; tts.vety = []; tts.pauza = false; $('ttsPauza').textContent = '⏸';
     mluv();
+  };
+  // časovač vypnutí (usínání u předčítání): po N minutách nebo na konci kapitoly se předčítání pozastaví;
+  // hlídá se na začátku každé věty, takže funguje i s hlasem Piper při zamčené obrazovce
+  const casovac = { konec: 0, kapitola: false };
+  function ukazCasovac() {
+    $('ttsZbyva').textContent = casovac.konec ? Math.max(1, Math.ceil((casovac.konec - Date.now()) / 60e3)) + '′' : '';
+  }
+  function zrusCasovac() { casovac.konec = 0; casovac.kapitola = false; $('ttsCasovac').value = ''; ukazCasovac(); }
+  function vypnutoCasovacem() {
+    zrusCasovac();
+    if (!tts.pauza) pauzaTts();
+    Dialog.info('⏾ Předčítání pozastaveno časovačem');
+  }
+  $('ttsCasovac').onchange = e => {
+    const v = e.target.value;
+    casovac.kapitola = v === 'kap';
+    casovac.konec = /^\d+$/.test(v) ? Date.now() + v * 60e3 : 0;
+    ukazCasovac();
   };
   $('ttsPauza').onclick = pauzaTts;
   $('ttsStop').onclick = zastavTts;
@@ -959,14 +1063,15 @@
       Dialog.info('Prohlížeč na iPadu nedovolí skrýt svou lištu. Pro čtení přes celou obrazovku přidejte čtečku na plochu (v nabídce prohlížeče Sdílet → Přidat na plochu) a spouštějte ji odtud.');
     });
   }
-  function soustredeni(zapnout = !document.body.classList.contains('soustredeni')) {
+  // jenLisy = klepnutí doprostřed stránky při listování: schovat/ukázat lišty bez celé obrazovky
+  function soustredeni(zapnout = !document.body.classList.contains('soustredeni'), jenLisy = false) {
     document.body.classList.toggle('soustredeni', zapnout);
-    $('ven').hidden = !zapnout;
+    $('ven').hidden = !zapnout || jenLisy;
     $('tlCelaObr').setAttribute('aria-pressed', String(zapnout));
-    if (zapnout) celaObrazovka();
-    else if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-    else if (document.webkitFullscreenElement) document.webkitExitFullscreen?.();
-    if (bloky.length) { const b = aktualniBlok(); requestAnimationFrame(() => skocNaBlok(b, false)); }
+    if (zapnout && !jenLisy) celaObrazovka();
+    else if (!zapnout && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    else if (!zapnout && document.webkitFullscreenElement) document.webkitExitFullscreen?.();
+    // místo čtení drží ResizeObserver plochy (zapamatujMisto)
   }
   $('ven').onclick = () => soustredeni(false);
   const poZmeneCeleObr = () => { if (!document.fullscreenElement && !document.webkitFullscreenElement && document.body.classList.contains('soustredeni')) soustredeni(false); };
@@ -979,6 +1084,7 @@
   ['keydown', 'pointerdown', 'wheel'].forEach(t => addEventListener(t, aktivita, { passive: true }));
   const dnes = () => new Date().toLocaleDateString('sv');   // RRRR-MM-DD
   setInterval(() => {
+    ukazCasovac();
     const cte = (tts.aktivni && !tts.pauza) || Date.now() - posledniAktivita < 120000;
     if (document.visibilityState !== 'visible' || !cte || !kniha) return;
     stav.cas += 15;
@@ -1005,7 +1111,11 @@
   $('wpm').addEventListener('change', e => { const v = Math.round(+e.target.value); if (v >= 80 && v <= 600) { nast().wpm = v; ulozStav(); poScrollu(); ukazStatistiky(); } });
 
   /* ---------- export, tisk, offline, záloha ---------- */
-  const souborNazev = k => SOUBOR + '_' + J.normalizuj(k.nazev).replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '');
+  // Kroniky_vyhnanstvi_I_Posledni_drak; dílo s jedinou knihou stejného jména jen jednou (ne treti_breh_treti_breh)
+  const souborNazev = k => {
+    const kn = J.normalizuj(k.nazev).replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '');
+    return !kn || kn.toLowerCase() === SOUBOR.toLowerCase() ? SOUBOR : SOUBOR + '_' + kn;
+  };
   function stahni(jmeno, obsah, typ) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
@@ -1090,7 +1200,13 @@
     ulozData(); prekresliText(); otevriPanel('poznamky');
   }
   $('souborPoznamky').onchange = e => { if (e.target.files.length) nactiPoznamky([...e.target.files]); e.target.value = ''; };
-  function prekresliText() { if (kniha) bloky.forEach((b, i) => { if (b.typ === 'p' || b.typ === 'h') vyznacBlok(i); }); }
+  // překreslí jen odstavce se značkami (dřívějšími v textu i současnými v datech)
+  function prekresliText() {
+    if (!kniha) return;
+    const zn = znackyKapitoly(), bl = new Set([...text.querySelectorAll('mark')].map(m => +m.closest('[data-i]').dataset.i));
+    [...zn.zv, ...zn.cizi.map(x => x[1]), ...zn.zal].forEach(z => bl.add(z.blok));
+    bl.forEach(i => vyznacBlok(i));
+  }
   async function ukazCizi(sadaId, id) {
     const c = data.cizi.find(x => x.id === sadaId), z = c && c.zvyrazneni.find(x => x.id === id);
     if (!z) return;
@@ -1145,7 +1261,7 @@
 
   function vykresliNabKniha() {
     $('nabKniha').innerHTML = '<div class="titulek">Kniha</div>' + knihy.map((k, i) =>
-      `<button class="tl prep" data-prikaz="kniha-${i}" aria-pressed="${kniha && k.id === kniha.id}">${J.esc(k.nazev)}<span class="procento">${Math.floor(pokrokKnihy(k) * 100)} %</span></button>`).join('') +
+      `<button class="tl prep" data-prikaz="kniha-${i}" aria-pressed="${kniha && k.id === kniha.id}"><span data-i18n="ne">${J.esc(k.nazev)}</span><span class="procento">${Math.floor(pokrokKnihy(k) * 100)} %</span></button>`).join('') +
       '<hr><button class="tl" data-prikaz="panel-obsah">☰ Obsah knihy <kbd>T</kbd></button><button class="tl" data-prikaz="od-zacatku">⏮ Číst tuto knihu od začátku</button>';
   }
   function zavriNabidky() {
@@ -1161,13 +1277,14 @@
     n.hidden = false; b.setAttribute('aria-expanded', 'true');
     const r = b.getBoundingClientRect();
     n.style.top = (r.bottom + 4) + 'px';
+    n.style.maxHeight = Math.max(160, innerHeight - r.bottom - 12) + 'px';   // iOS: 100vh je vyšší než viditelná část
     n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
   }));
 
   const PRIKAZY = {
     predchozi: () => posun(-1),
     dalsi: () => posun(1),
-    'od-zacatku': () => otevri(stav.kniha, 0),
+    'od-zacatku': () => { const pred = mistoCteni(); otevri(stav.kniha, 0).then(() => poSkoku(pred)); },
     'panel-obsah': () => prepniPanel('obsah'),
     'panel-zalozky': () => prepniPanel('zalozky'),
     'panel-poznamky': () => prepniPanel('poznamky'),
@@ -1208,7 +1325,7 @@
     zavriNabidky();
     if (PRIKAZY[id]) return PRIKAZY[id]();
     const [co, hodnota] = id.split('-');
-    if (co === 'kniha') { const k = knihy[+hodnota], p = stav.pozice[k.id], c = p ? Math.max(0, indexKap(k, p.soubor)) : 0; otevri(+hodnota, c, p && c === indexKap(k, p.soubor) ? p.blok : 0); }
+    if (co === 'kniha') { const k = knihy[+hodnota], p = stav.pozice[k.id], c = p ? Math.max(0, indexKap(k, p.soubor)) : 0, pred = mistoCteni(); otevri(+hodnota, c, p && c === indexKap(k, p.soubor) ? p.blok : 0).then(() => poSkoku(pred)); }
     if (co === 'motiv') nastav({ motiv: id.slice(6) });   // i „motiv-sepie-2“
     if (co === 'pismo') nastav({ pismo: hodnota });
     if (co === 'bublina') nastav({ bublina: hodnota });
@@ -1221,7 +1338,8 @@
     // na úzkém displeji panel překrývá text – klepnutí vedle ho zavře
     if (stav.panel && matchMedia('(max-width:760px)').matches && !e.target.closest('aside, .lista, .nabidka, .modal, dialog, #vyber')) zavriPanel();
   });
-  addEventListener('resize', () => { zavriNabidky(); zavriVyber(); });
+  let sirkaOkna = innerWidth;
+  addEventListener('resize', () => { if (innerWidth === sirkaOkna) return; sirkaOkna = innerWidth; zavriNabidky(); zavriVyber(); });
 
   /* ---------- klávesnice ---------- */
   document.addEventListener('keydown', e => {
@@ -1254,7 +1372,7 @@
       Home: () => plocha.scrollTo({ top: 0 }), End: () => plocha.scrollTo({ top: plocha.scrollHeight }),
       '/': () => { $('hledat').focus(); $('hledat').select(); },
       t: () => prepniPanel('obsah'), b: prepniZalozku, z: () => prepniPanel('zalozky'), n: () => prepniPanel('poznamky'),
-      r: spustTts, f: () => soustredeni(),
+      r: spustTts, f: () => soustredeni(), Backspace: () => navrat && vratSe(),
       '+': () => nastav({ velikost: Math.min(1.8, +(nast().velikost + 0.05).toFixed(2)) }),
       '=': () => nastav({ velikost: Math.min(1.8, +(nast().velikost + 0.05).toFixed(2)) }),
       '-': () => nastav({ velikost: Math.max(0.8, +(nast().velikost - 0.05).toFixed(2)) }),
@@ -1263,6 +1381,29 @@
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
     if (akce) { e.preventDefault(); akce(); }
   });
+
+  /* ---------- zpět na místo před skokem (obsah, hledání, záložky, poznámky, tažení posuvníku) ---------- */
+  let navrat = null, casNavratu = 0;
+  const mistoCteni = () => kniha && { k: stav.kniha, c: kapIdx, blok: aktualniBlok(), top: plocha.scrollTop };
+  // pred = místo před skokem, cilTop = kam skok vede (plynulé posouvání ještě nedojelo); bližší skok než o obrazovku se nenabízí
+  function poSkoku(pred, cilTop = plocha.scrollTop) {
+    if (!pred || !kniha) return;
+    if (pred.k === stav.kniha && pred.c === kapIdx && Math.abs(cilTop - pred.top) < plocha.clientHeight) return;
+    navrat = pred;
+    $('zpetMisto').hidden = false;
+    clearTimeout(casNavratu);
+    casNavratu = setTimeout(() => { $('zpetMisto').hidden = true; navrat = null; }, 120e3);
+  }
+  // návrat; tlačítko pak vede zase na místo skoku (přepínání mezi dvěma místy)
+  async function vratSe() {
+    const cil = navrat, ted = mistoCteni();
+    if (!cil) return;
+    $('zpetMisto').hidden = true; navrat = null;
+    if (cil.k !== stav.kniha || cil.c !== kapIdx) await otevri(cil.k, cil.c, cil.blok);
+    else plocha.scrollTo({ top: cil.top });
+    poSkoku(ted);
+  }
+  $('zpetMisto').onclick = vratSe;
 
   /* ---------- posuvník kapitoly ---------- */
   const posuvnik = $('posuvnik'), jezdec = $('jezdec'), bublina = $('bublina'), drazka = posuvnik.querySelector('.drazka');
@@ -1304,14 +1445,42 @@
     const podil = Math.min(1, Math.max(0, (e.clientY - r.top - vyska / 2) / Math.max(1, r.height - vyska)));
     plocha.scrollTop = podil * (plocha.scrollHeight - plocha.clientHeight);
   }
+  let predTazenim = null;
   posuvnik.addEventListener('pointerdown', e => {
+    predTazenim = mistoCteni();
     tazeni = true; posuvnik.classList.add('tazeni'); posuvnik.setPointerCapture(e.pointerId); posunNa(e); e.preventDefault();
   });
   posuvnik.addEventListener('pointermove', e => { if (tazeni) posunNa(e); });
-  const konecTazeni = () => { if (!tazeni) return; tazeni = false; posuvnik.classList.remove('tazeni'); kresliPosuvnik(); };
+  const konecTazeni = () => { if (!tazeni) return; tazeni = false; posuvnik.classList.remove('tazeni'); kresliPosuvnik(); poSkoku(predTazenim); };
   posuvnik.addEventListener('pointerup', konecTazeni);
   posuvnik.addEventListener('pointercancel', konecTazeni);
   new ResizeObserver(planujZnacky).observe(text);   // dorazily obrázky, změna písma, šířky…
+
+  /* ---------- místo čtení drží i při změně velikosti plochy ----------
+     Klávesnice u poznámky, otočení tabletu, schování lišty prohlížeče nebo iframe, který dostane
+     rozměry až po načtení – bez tohohle text uskočil a značky u posuvníku zůstaly na starých místech. */
+  let misto = null;   // {blok, podil} – horní blok a jak daleko v něm je horní hrana plochy
+  function zapamatujMisto(i = aktualniBlok()) {
+    const el = prvekBloku(i);
+    if (el) misto = { blok: i, podil: Math.max(0, (plocha.scrollTop - el.offsetTop) / Math.max(1, el.offsetHeight)) };
+  }
+  let rozmerPlochy = '';
+  new ResizeObserver(() => {
+    const r = plocha.clientWidth + 'x' + plocha.clientHeight;
+    if (r === rozmerPlochy) return;
+    rozmerPlochy = r;
+    const el = misto && kniha && prvekBloku(misto.blok);
+    if (el && !tazeni) {
+      plocha.scrollTop = el.offsetTop + misto.podil * el.offsetHeight;
+      if (nast().strankovani) zarovnejStranu();
+    }
+    planujZnacky();
+  }).observe(plocha);
+  new ResizeObserver(planujZnacky).observe(drazka);
+  // iOS při psaní do okna posune celou stránku nahoru a sám ji nevrátí
+  const srovnejOkno = () => { if (!document.activeElement || !document.activeElement.matches('input, textarea')) scrollTo(0, 0); };
+  if (window.visualViewport) visualViewport.addEventListener('resize', srovnejOkno);
+  addEventListener('focusout', () => setTimeout(srovnejOkno, 50));
 
   /* ---------- stránkování: listování po obrazovkách jako na čtečce e-knih ----------
      Plocha se neposouvá prstem ani kolečkem; stránka končí posledním celým řádkem –
@@ -1377,7 +1546,12 @@
     if (e.target.closest('a, button, input, mark, figure, .dole') || !getSelection().isCollapsed || Date.now() - dotyk.konec < 700) return;
     const x = e.clientX - plocha.getBoundingClientRect().left;
     clearTimeout(casKlepnuti);
-    casKlepnuti = setTimeout(() => { if (getSelection().isCollapsed && lista.hidden) strana(x < plocha.clientWidth / 3 ? -1 : 1); }, 260);
+    // levá třetina zpět, pravá dál, prostředek schová / ukáže lišty (jako čtečka e-knih)
+    casKlepnuti = setTimeout(() => {
+      if (!getSelection().isCollapsed || !lista.hidden) return;
+      const w = plocha.clientWidth;
+      if (x < w / 3) strana(-1); else if (x > w * 2 / 3) strana(1); else soustredeni(undefined, true);
+    }, 260);
   });
   plocha.addEventListener('dblclick', () => clearTimeout(casKlepnuti));
   plocha.addEventListener('touchstart', e => { prejeti = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });

@@ -126,7 +126,6 @@
       '30': { obr: 'bazina', efekty: { olej: -1 }, text: 'Bažina páchne tlejícím listím. Přes černou vodu vede stezka z prken, napůl shnilých. A nad vodou tančí modrá světýlka – bludičky. Kroužkují kolem tvé lucerny a svíčka se chvěje, jako by ji něco chtělo sfouknout.\n\nJedno světýlko je jasnější než ostatní. Kyne ti. Pojď, tudy je to blíž.',
         volby: [
           { text: 'Obrátit kabát naruby, jak radil Vavřinec', pokud: { priznak: 'rada' }, cil: '31' },
-          { text: 'Posvítit si kapradím květem', pokud: { ma: 'kvet' }, cil: '31' },
           { text: 'Jít za nejjasnějším světýlkem', cil: '32' },
           { text: 'Jít po prknech a nedívat se do stran (zkouška obratnosti)', zkouska: { co: 'obratnost', uspech: '31', neuspech: '33' } }
         ] },
@@ -226,9 +225,7 @@
         volby: [
           { text: 'Obsypat se kruhem soli a v klidu čekat', pokud: { ma: 'sul', nema: 'kvet', bez: 'kvet_zkouska' }, cil: '71' },
           { text: 'Zavřít oči, čekat a neohlédnout se (zkouška štěstí)', pokud: { nema: 'kvet', bez: 'kvet_zkouska' }, efekty: { priznak: 'kvet_zkouska' }, zkouska: { co: 'stesti', uspech: '71', neuspech: '73' } },
-          { text: 'Natáhnout ruku a utrhnout pupen, jen co se otevře (zkouška obratnosti)', pokud: { nema: 'kvet', bez: 'kvet_zkouska' }, efekty: { priznak: 'kvet_zkouska' }, zkouska: { co: 'obratnost', uspech: '71', neuspech: '73' } },
-          { text: 'Jít dál po mýtině', pokud: { priznak: 'kvet_zkouska' }, cil: '74' },
-          { text: 'Jít dál po mýtině', pokud: { ma: 'kvet', bez: 'kvet_zkouska' }, cil: '74' }
+          { text: 'Natáhnout ruku a utrhnout pupen, jen co se otevře (zkouška obratnosti)', pokud: { nema: 'kvet', bez: 'kvet_zkouska' }, efekty: { priznak: 'kvet_zkouska' }, zkouska: { co: 'obratnost', uspech: '71', neuspech: '73' } }
         ] },
       '71': { obr: 'kapradi', efekty: { predmet: 'kvet', priznak: 'kvet_zkouska' }, text: 'Hlasy za zády křičí, prosí, pláčou. Ty se neohlédneš. A pak – přesně o půlnoci – se květ rozevře a ty ho máš v dlani. Je teplý a svítí tak jasně, že vidíš každou žilku na listech kapradí.\n\nSvět se změní. Slyšíš, jak si stromy šeptají o dešti, jak brouk pod kůrou počítá léta. Na větvi nad tebou si odkašle sova.',
         volby: [{ text: 'Rozhlédnout se po mýtině', cil: '74' }] },

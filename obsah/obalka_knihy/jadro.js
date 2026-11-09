@@ -29,6 +29,8 @@
     kniha90:    { nazev: 'Knižní 90 g krémový (objemnost 1,5)', typ: 'list', gramaz: 90, objemnost: 1.5 },
     kdp_bily:   { nazev: 'KDP bílý (0,002252" na stranu)', typ: 'kdp', naStranu: 0.002252 },
     kdp_kremovy:{ nazev: 'KDP krémový (0,0025" na stranu)', typ: 'kdp', naStranu: 0.0025 },
+    kdp_barva:  { nazev: 'KDP barevný standard (0,002252" na stranu)', typ: 'kdp', naStranu: 0.002252 },
+    kdp_premium:{ nazev: 'KDP barevný prémiový (0,002347" na stranu)', typ: 'kdp', naStranu: 0.002347 },
     vlastni:    { nazev: 'Vlastní (gramáž a objemnost / tloušťka listu)', typ: 'list' },
   };
 
@@ -36,7 +38,7 @@
   const TISKARNY = {
     obecna: { nazev: 'Obecná tiskárna', spad: 3, bezpecna: 5, pridavek: 0.5, okrajHrbetu: 1 },
     kdp: { nazev: 'Amazon KDP – brožura (paperback)', spad: 0.125 * PALEC, bezpecna: 0.125 * PALEC,
-      pridavek: 0, okrajHrbetu: 0.0625 * PALEC, minStran: 24, maxStran: { kdp_bily: 828, kdp_kremovy: 776 },
+      pridavek: 0, okrajHrbetu: 0.0625 * PALEC, minStran: 24, maxStran: { kdp_bily: 828, kdp_kremovy: 776, kdp_barva: 600, kdp_premium: 828 },
       textHrbetuOd: 80, kod: { sirka: 2 * PALEC, vyska: 1.2 * PALEC, odHrbetu: 0.25 * PALEC, odSpodu: 0.25 * PALEC } },
   };
   /* Pevná vazba (předpoklady – ověřit u knihárny):
@@ -308,7 +310,7 @@
       if (v.strany < t.minStran) z.push({ uroven: 'chyba', text: `KDP tiskne brožury od ${t.minStran} stran.` });
       const max = t.maxStran[v.papir];
       if (max && v.strany > max) z.push({ uroven: 'chyba', text: `KDP na tomto papíru tiskne nejvýš ${max} stran.` });
-      if (!max) z.push({ uroven: 'varovani', text: 'Pro KDP zvolte papír KDP bílý nebo krémový – jiný vzorec hřbetu KDP nepřijme.' });
+      if (!max) z.push({ uroven: 'varovani', text: 'Pro KDP zvolte některý papír KDP – jiný vzorec hřbetu KDP nepřijme.' });
       if (v.maHrbetText && v.strany < t.textHrbetuOd) z.push({ uroven: 'chyba', text: `KDP dovolí text na hřbetu až od ${t.textHrbetuOd} stran.` });
     }
     if (v.strany % 2) z.push({ uroven: 'varovani', text: 'Lichý počet stran – kniha má vždy sudý počet (poslední strana bývá prázdná).' });
@@ -330,10 +332,10 @@
     pozadi: { typ: 'prechod', barva1: '#1d3557', barva2: '#5b8db8', uhel: 160 },
     obrArch: { id: null, zoom: 1, posX: 0, posY: 0, kryti: 100 },
     obrPredni: { id: null, zoom: 1, posX: 0, posY: 0, okraj: 0, vyska: 100, svisle: 'nahore' },
-    nazev: { text: 'Název knihy', pismo: 'libserif', velikost: 30, barva: '#ffffff', y: 16, zarovnani: 'stred', prostrkani: 0, radkovani: 1.1 },
-    podtitul: { text: 'Podtitul knihy', pismo: 'lserif-i', velikost: 14, barva: '#e8eef5', y: 33, zarovnani: 'stred', prostrkani: 0, radkovani: 1.2 },
-    autor: { text: 'Jméno Autora', pismo: 'lserif', velikost: 16, barva: '#ffffff', y: 86, zarovnani: 'stred', prostrkani: 60, radkovani: 1.2 },
-    hrbet: { text: 'Jméno Autora · Název knihy', pismo: 'libserif', velikost: 10, barva: '#ffffff', smer: 'shora', posun: 0, prostrkani: 40 },
+    nazev: { obrys: 0, barvaObrysu: '#000000', text: 'Název knihy', pismo: 'libserif', velikost: 30, barva: '#ffffff', y: 16, zarovnani: 'stred', prostrkani: 0, radkovani: 1.1 },
+    podtitul: { obrys: 0, barvaObrysu: '#000000', text: 'Podtitul knihy', pismo: 'lserif-i', velikost: 14, barva: '#e8eef5', y: 33, zarovnani: 'stred', prostrkani: 0, radkovani: 1.2 },
+    autor: { obrys: 0, barvaObrysu: '#000000', text: 'Jméno Autora', pismo: 'lserif', velikost: 16, barva: '#ffffff', y: 86, zarovnani: 'stred', prostrkani: 60, radkovani: 1.2 },
+    hrbet: { obrys: 0, barvaObrysu: '#000000', text: 'Jméno Autora · Název knihy', pismo: 'libserif', velikost: 10, barva: '#ffffff', smer: 'shora', posun: 0, prostrkani: 40 },
     anotace: { text: 'Sem patří anotace – krátké shrnutí příběhu, které čtenáře přiměje knihu otevřít. Odstavce oddělte novým řádkem.\nDruhý odstavec může nést citát z recenze nebo pár slov o autorovi.', pismo: 'lserif', velikost: 10, barva: '#ffffff', y: 12, zarovnani: 'blok', okraj: 10, radkovani: 1.4 },
     logo: { id: null, sirka: 12, kde: 'hrbet' },
     isbn: { text: '', doplnek: '', zvetseni: 85, bwr: 0, pozice: 'vpravo', vyskaPruhu: 100, popisek: true },
@@ -360,7 +362,53 @@
     return Math.max(4, s + (s % 2));
   }
 
+  /* ---------- bezpečná velikost plátna ----------
+     Safari (iPad, iPhone) neumí plátno nad 16 777 216 px a při větším tiše kreslí prázdno.
+     Vrátí nejvyšší DPI ≤ dpi, při kterém má arch nejvýš maxPx pixelů. */
+  const MAX_PX = 16000000;
+  function bezpecneDpi(sirkaMm, vyskaMm, dpi, maxPx) {
+    maxPx = maxPx || MAX_PX;
+    const px = d => Math.round(sirkaMm / PALEC * d) * Math.round(vyskaMm / PALEC * d);
+    if (px(dpi) <= maxPx) return dpi;
+    let d = Math.floor(Math.sqrt(maxPx / (sirkaMm * vyskaMm)) * PALEC);
+    while (d > 1 && px(d) > maxPx) d--;
+    return d;
+  }
+  /* zmenšení obrázku při nahrání: nový rozměr, nebo null (není třeba) */
+  function zmensiObr(w, h, maxPx) {
+    if (w * h <= maxPx) return null;
+    const k = Math.sqrt(maxPx / (w * h));
+    return { w: Math.max(1, Math.floor(w * k)), h: Math.max(1, Math.floor(h * k)) };
+  }
+
+  /* rozměr stránky PDF (mm) → id formátu, nebo 'vlastni' (tolerance 0,6 mm) */
+  function formatZRozmeru(w, h) {
+    for (const [id, f] of Object.entries(FORMATY))
+      if (f.sirka && Math.abs(f.sirka - w) <= 0.6 && Math.abs(f.vyska - h) <= 0.6) return id;
+    return 'vlastni';
+  }
+
+  /* Odhad hmotnosti brožury / knihy v gramech.
+     blok = listy × plocha × gramáž; obálka = arch × gramáž kartonu (výchozí 300 g/m²);
+     pevná vazba navíc 3 kusy lepenky (2 desky + hřbet) s hustotou 0,75 g/cm³.
+     KDP gramáž neuvádí – bílý ≈ 75 g/m², krémový ≈ 80 g/m², barevný ≈ 80 g/m², prémiový ≈ 90 g/m² (odhad). */
+  const GRAMAZ_KDP = { kdp_bily: 75, kdp_kremovy: 80, kdp_barva: 80, kdp_premium: 90 };
+  function hmotnost(k, a, karton) {
+    const papir = papirNavrhu(k);
+    const g = papir.typ === 'kdp' ? GRAMAZ_KDP[k.papir] || 80 : (+papir.gramaz || 80);
+    const listy = Math.ceil((+k.strany || 0) / 2);
+    let m = listy * (k.sirka / 1000) * (k.vyska / 1000) * g;
+    m += (a.sirka / 1000) * (a.vyska / 1000) * (karton || (a.vazba === 'pevna' ? 150 : 300));
+    if (a.vazba === 'pevna') {
+      const t = a.parametry.lepenka / 10, hust = 0.75;   // cm, g/cm³
+      m += (2 * a.deska.w * a.deska.h + a.hrbetDesek * a.deska.h) / 100 * t * hust;
+      m += 2 * (k.sirka / 1000) * (k.vyska / 1000) * 2 * 120;   // předsádky (2 × dvojlist 120 g)
+    }
+    return m;
+  }
+
   return {
+    MAX_PX, bezpecneDpi, zmensiObr, formatZRozmeru, hmotnost, GRAMAZ_KDP,
     VYCHOZI, papirNavrhu, zNavrhu, odhadStran,
     PALEC, FORMATY, PAPIRY, TISKARNY, PEVNA, mmNaPalce, tloustkaListu, hrbetBloku, arch, zmensi,
     cisti, kontrolni10, kontrolni13, isbn10na13, isbn13na10, rozborIsbn, textIsbn,

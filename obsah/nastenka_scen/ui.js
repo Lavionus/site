@@ -11,8 +11,8 @@ const plocha = $('plocha');
 let projekty = [];          // všechny projekty (celé objekty)
 let p = null;               // aktivní projekt
 const hist = new J.Historie(150);
-let nast = Object.assign({ aktivni: '', pohled: 'nastenka', kompakt: false, cisla: true, grafSlova: false }, cti());
-const filtr = { text: '', postava: '', stitek: '', stav: '' };
+let nast = Object.assign({ aktivni: '', pohled: 'nastenka', kompakt: false, cisla: true, grafSlova: false, obarvit: 'barva', velikost: 'M' }, cti());
+const filtr = { text: '', postava: '', stitek: '', stav: '', ids: null, popis: '' };
 let viditelne = null;       // Set id scén odpovídajících filtru, null = bez filtru
 let otevrena = null;        // id scény v editoru
 let fokusPo = null;         // {typ, id} – kam vrátit fokus po překreslení
@@ -28,17 +28,21 @@ function hlas(t) { $('hlasatel').textContent = t; }
 let dbSlib = null;
 function db() {
   if (!dbSlib) dbSlib = new Promise((ok, chyba) => {
-    const r = indexedDB.open(KLIC, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('projekty', { keyPath: 'id' });
+    const r = indexedDB.open(KLIC, 2);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if (!d.objectStoreNames.contains('projekty')) d.createObjectStore('projekty', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('verze')) d.createObjectStore('verze', { keyPath: 'id' });
+    };
     r.onsuccess = () => ok(r.result);
     r.onerror = () => chyba(r.error);
   });
   return dbSlib;
 }
-async function dbOperace(rezim, fn) {
+async function dbOperace(rezim, fn, store) {
   const d = await db();
   return new Promise((ok, chyba) => {
-    const tx = d.transaction('projekty', rezim), st = tx.objectStore('projekty');
+    const tx = d.transaction(store || 'projekty', rezim), st = tx.objectStore(store || 'projekty');
     const r = fn(st);
     tx.oncomplete = () => ok(r && r.result);
     tx.onerror = () => chyba(tx.error);
@@ -47,6 +51,9 @@ async function dbOperace(rezim, fn) {
 const dbVse = () => dbOperace('readonly', st => st.getAll());
 const dbUloz = proj => dbOperace('readwrite', st => st.put(proj));
 const dbSmaz = id => dbOperace('readwrite', st => st.delete(id));
+const verzeVse = () => dbOperace('readonly', st => st.getAll(), 'verze');
+const verzeUloz = v => dbOperace('readwrite', st => st.put(v), 'verze');
+const verzeSmaz = id => dbOperace('readwrite', st => st.delete(id), 'verze');
 
 let casUlozeni = 0;
 function naplanujUlozeni() {
@@ -54,7 +61,9 @@ function naplanujUlozeni() {
   const proj = p;
   casUlozeni = setTimeout(() => dbUloz(proj).catch(e => Dialog.chyba('Uložení selhalo: ' + e.message)), 350);
 }
-addEventListener('pagehide', () => { if (p) dbUloz(p); });
+function ulozHned() { clearTimeout(casUlozeni); if (p) dbUloz(p).catch(() => {}); }
+addEventListener('pagehide', ulozHned);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') ulozHned(); });
 
 // ---------- změny s historií ----------
 function zmena(fn, bezPrekresleni) {
@@ -117,6 +126,7 @@ function duplikujProjekt() {
 async function smazProjekt() {
   if (!await Dialog.potvrd(`Smazat projekt „${p.nazev}“ se všemi ${p.sceny.length} scénami? Tohle nejde vrátit – případně si nejdřív uložte zálohu.`, { ok: 'Smazat', zrus: 'Ponechat' })) return;
   const id = p.id;
+  clearTimeout(casUlozeni);
   projekty = projekty.filter(x => x.id !== id);
   await dbSmaz(id).catch(() => {});
   p = null;
@@ -143,14 +153,17 @@ function ukazka() {
 }
 
 // ---------- filtr ----------
-function aktivniFiltr() { return !!(filtr.text.trim() || filtr.postava || filtr.stitek || filtr.stav); }
+function aktivniFiltr() { return !!(filtr.text.trim() || filtr.postava || filtr.stitek || filtr.stav || filtr.ids); }
 function prepocitejFiltr() {
   viditelne = aktivniFiltr() ? J.filtruj(p, filtr) : null;
+  if (viditelne && filtr.ids) { const ids = new Set(filtr.ids); viditelne = new Set([...viditelne].filter(id => ids.has(id))); }
   $('filtrPruh').hidden = !viditelne;
   if (viditelne) $('filtrInfo').textContent = `Odpovídá ${viditelne.size} z ${p.sceny.length} scén`;
+  $('filtrKontrola').hidden = !filtr.ids;
+  $('filtrKontrola').textContent = filtr.popis;
 }
 function vycistiFiltr(tise) {
-  filtr.text = filtr.postava = filtr.stitek = filtr.stav = '';
+  filtr.text = filtr.postava = filtr.stitek = filtr.stav = filtr.popis = ''; filtr.ids = null;
   $('hledat').value = ''; $('fPostava').value = ''; $('fStitek').value = ''; $('fStav').value = '';
   if (!tise) vykresli();
 }
@@ -173,10 +186,23 @@ function naplnSeznamy() {
 }
 
 // ---------- vykreslení ----------
-let cisloSceny = new Map();
+let cisloSceny = new Map(), povBarvy = new Map();
+const STAV_BARVA = { napad: 'seda', rozepsano: 'oranzova', hotovo: 'zelena' };
+function barvaKarty(s) {
+  if (nast.obarvit === 'pov') return povBarvy.get(s.pov) || '';
+  if (nast.obarvit === 'stav') return STAV_BARVA[s.stav];
+  return s.barva;
+}
+function legendaBarev() {
+  if (nast.obarvit === 'barva') return '';
+  const pol = nast.obarvit === 'pov' ? [...povBarvy].map(([j, b]) => `<span><i data-barva="${b}"></i><span data-i18n="ne">${esc(j)}</span></span>`)
+    : Object.keys(STAV_BARVA).map(k => `<span><i data-barva="${STAV_BARVA[k]}"></i>${STAV_IKONA[k]} ${J.STAVY[k]}</span>`);
+  return `<div class="legenda-barev">${nast.obarvit === 'pov' ? '<b>Barva = POV postava:</b>' : '<b>Barva = stav:</b>'} ${pol.join('')}</div>`;
+}
 function vykresli() {
   if (!p) return;
   cisloSceny = new Map(J.poradi(p).map((s, i) => [s.id, i + 1]));
+  povBarvy = new Map([...new Set(J.poradi(p).map(s => s.pov).filter(Boolean))].map((j, i) => [j, J.BARVY[1 + i % (J.BARVY.length - 1)]]));
   naplnSeznamy();
   prepocitejFiltr();
   $('btnProjekt').textContent = '📚 ' + p.nazev + ' ▾';
@@ -184,6 +210,8 @@ function vykresli() {
   document.title = '🗂️ ' + p.nazev + ' – Nástěnka scén';
   $('btnZpet').disabled = !hist.lzeZpet; $('btnVpred').disabled = !hist.lzeVpred;
   $('mnPrepocitat').disabled = !(p.rukopis && p.rukopis.typ);
+  document.querySelectorAll('[data-obarvit]').forEach(b => b.setAttribute('aria-pressed', b.dataset.obarvit === nast.obarvit));
+  document.querySelectorAll('[data-velikost]').forEach(b => b.setAttribute('aria-pressed', b.dataset.velikost === nast.velikost));
   $('mnKompakt').setAttribute('aria-pressed', nast.kompakt); $('mnCisla').setAttribute('aria-pressed', nast.cisla); $('mnGrafSlova').setAttribute('aria-pressed', nast.grafSlova);
   document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pohled === nast.pohled));
   const sx = plocha.scrollLeft, sy = plocha.scrollTop;
@@ -228,7 +256,7 @@ function kartaHtml(s, tazitelna) {
   if (s.cas) meta.push(`<span title="Čas v příběhu">🕒 ${esc(s.cas)}</span>`);
   const chipy = (s.beat ? `<span class="chip beat" title="Beat struktury">◆ ${esc(s.beat)}</span>` : '') + s.stitky.filter(t => t !== 'beat' || !s.beat).map(t => `<span class="chip">#${esc(t)}</span>`).join('');
   const c = cisloSceny.get(s.id);
-  return `<article class="karta${skryta(s.id) ? ' ztlumena' : ''}" tabindex="0" data-id="${s.id}" data-barva="${s.barva}" aria-label="Scéna ${c}: ${esc(s.nazev)}">
+  return `<article class="karta${skryta(s.id) ? ' ztlumena' : ''}" tabindex="0" data-id="${s.id}" data-barva="${barvaKarty(s)}" aria-label="Scéna ${c}: ${esc(s.nazev)}">
     <div class="k-hlava">${nast.cisla ? `<span class="k-cislo">${c}</span>` : ''}<h3 data-i18n="ne">${esc(s.nazev || 'Bez názvu')}</h3>${tazitelna ? '<button class="uchop" tabindex="-1" aria-hidden="true" title="Přetáhnout">⠿</button>' : ''}</div>
     ${s.shrnuti ? `<div class="shrnuti" data-i18n="ne">${esc(s.shrnuti)}</div>` : ''}
     ${meta.length ? `<div class="meta" data-i18n="ne">${meta.join('')}</div>` : ''}
@@ -239,7 +267,7 @@ function kartaHtml(s, tazitelna) {
 
 // ---------- pohled: nástěnka ----------
 function kresliNastenku() {
-  plocha.innerHTML = `<div class="korek${nast.kompakt ? ' kompakt' : ''}" id="korek">` + p.sloupce.map(c => {
+  plocha.innerHTML = legendaBarev() + `<div class="korek vel-${nast.velikost}${nast.kompakt ? ' kompakt' : ''}" id="korek">` + p.sloupce.map(c => {
     const sc = J.scenySloupce(p, c.id);
     const slov = sc.reduce((a, s) => a + s.slov, 0), cil = sc.reduce((a, s) => a + s.cilSlov, 0);
     return `<section class="sloupec" data-id="${c.id}">
@@ -258,11 +286,11 @@ function kresliNastenku() {
 // ---------- pohled: osnova ----------
 function kresliOsnovu() {
   const st = J.statistiky(p);
-  plocha.innerHTML = '<div class="list">' + p.sloupce.map((c, ci) => {
+  plocha.innerHTML = legendaBarev() + '<div class="list">' + p.sloupce.map((c, ci) => {
     const sc = J.scenySloupce(p, c.id), sst = st.sloupce[ci];
     return `<h2><span data-i18n="ne">${esc(c.nazev)}</span> <small><span>${sc.length} scén · ${cis(sst.slov)} slov</span>${sst.cil ? ` <span>· cíl ${cis(sst.cil)}</span>` : ''} <span>· hotovo ${sst.hotovo}</span></small></h2>
       <div class="obal-tab"><table class="osnova"><colgroup><col class="w-c"><col><col class="w-p"><col class="w-m"><col class="w-t"><col class="w-s"><col class="w-n"><col class="w-e"></colgroup><thead><tr><th>#</th><th>Scéna</th><th>POV</th><th>Místo</th><th>Čas</th><th>Stav</th><th style="text-align:right">Slova / cíl</th><th style="text-align:right">⚡</th></tr></thead><tbody>
-      ${sc.map(s => `<tr class="radek${skryta(s.id) ? ' ztlumena' : ''}" tabindex="0" data-id="${s.id}" data-barva="${s.barva}">
+      ${sc.map(s => `<tr class="radek${skryta(s.id) ? ' ztlumena' : ''}" tabindex="0" data-id="${s.id}" data-barva="${barvaKarty(s)}">
         <td class="c">${cisloSceny.get(s.id)}</td>
         <td data-i18n="ne"><b>${esc(s.nazev)}</b>${s.shrnuti ? `<div class="sh">${esc(s.shrnuti)}</div>` : ''}</td>
         <td data-i18n="ne">${esc(s.pov)}</td><td data-i18n="ne">${esc(s.misto)}</td><td data-i18n="ne">${esc(s.cas)}</td>
@@ -274,7 +302,7 @@ function kresliOsnovu() {
 
 // ---------- pohled: časová osa ----------
 function miniKarta(s, extra) {
-  return `<article class="karta${skryta(s.id) ? ' ztlumena' : ''}" tabindex="0" data-id="${s.id}" data-barva="${s.barva}">
+  return `<article class="karta${skryta(s.id) ? ' ztlumena' : ''}" tabindex="0" data-id="${s.id}" data-barva="${barvaKarty(s)}">
     <div class="k-hlava"><span class="k-cislo">${cisloSceny.get(s.id)}</span><h3 data-i18n="ne">${esc(s.nazev)}</h3></div>
     ${extra || ''}
     <div class="meta" data-i18n="ne">${s.misto ? `<span>📍 ${esc(s.misto)}</span>` : ''}${s.postavy.length ? `<span>👥 ${esc(s.postavy.join(', '))}</span>` : ''}</div>
@@ -581,7 +609,13 @@ function umistiCil() {
     if (!sl) return;
     const telo = sl.querySelector('.sl-telo');
     const karty = [...telo.querySelectorAll('.karta:not(.tazena)')];
-    const pred = karty.find(k => { const r = k.getBoundingClientRect(); return tah.y < r.top + r.height / 2; });
+    // karty pod značkou dopadu jsou o její výšku níž – počítat s polohou, jako by značka nebyla (jinak značka „uteče“ a nejde pustit za poslední kartu)
+    const posun = tah.misto.parentElement === telo ? tah.misto.offsetHeight + 8 : 0;
+    const pred = karty.find(k => {
+      const r = k.getBoundingClientRect();
+      const dole = posun && (tah.misto.compareDocumentPosition(k) & Node.DOCUMENT_POSITION_FOLLOWING);
+      return tah.y < r.top - (dole ? posun : 0) + r.height / 2;
+    });
     if (pred) { if (pred.previousElementSibling !== tah.misto) telo.insertBefore(tah.misto, pred); }
     else if (telo.lastElementChild !== tah.misto) telo.appendChild(tah.misto);
   } else {
@@ -781,6 +815,11 @@ plocha.addEventListener('pointerup', () => {
     fokusPo = { typ: 'bod', id: t.id }; vykresli();
   }
 });
+plocha.addEventListener('pointercancel', () => {
+  if (!grafTah) return;
+  const t = grafTah; grafTah = null;
+  if (t.snimek !== JSON.stringify(p)) vratStav(JSON.parse(t.snimek));
+});
 addEventListener('resize', () => { if (nast.pohled === 'napeti') kresliGraf(); });
 
 // ---------- nabídky lišty ----------
@@ -817,6 +856,10 @@ document.addEventListener('click', e => {
   if (b && !b.disabled) { e.stopPropagation(); zavriNabidky(); return prikaz(b.dataset.prikaz); }
   const v = e.target.closest('[data-pohled]');
   if (v) { nast.pohled = v.dataset.pohled; ulozNast(); return vykresli(); }
+  const ob = e.target.closest('[data-obarvit]');
+  if (ob) { nast.obarvit = ob.dataset.obarvit; ulozNast(); zavriNabidky(); return vykresli(); }
+  const ve = e.target.closest('[data-velikost]');
+  if (ve) { nast.velikost = ve.dataset.velikost; ulozNast(); zavriNabidky(); return vykresli(); }
   if (!e.target.closest('.nabidka')) zavriNabidky();
   const z = e.target.closest('[data-zavri]'); if (z) zavriModal(z.dataset.zavri);
 });
@@ -835,6 +878,7 @@ const PRIKAZY = {
   tisk: () => { zavriNabidky(); setTimeout(() => print(), 50); },
   vynulovatSlova: async () => { if (await Dialog.potvrd('Vynulovat skutečný počet slov u všech scén projektu?', { ok: 'Vynulovat', zrus: 'Zrušit' })) zmena(() => p.sceny.forEach(s => { s.slov = 0; })); },
   kompakt: () => { nast.kompakt = !nast.kompakt; ulozNast(); vykresli(); },
+  kontrola: () => otevriKontrolu(), verze: () => otevriVerze(),
   cisla: () => { nast.cisla = !nast.cisla; ulozNast(); vykresli(); },
   grafSlova: () => { nast.grafSlova = !nast.grafSlova; ulozNast(); vykresli(); },
   vycistitFiltr: () => vycistiFiltr(),
@@ -983,6 +1027,67 @@ async function prepocitat() {
   } catch (e) { Dialog.chyba('Zdroj „' + (z.nazev || '') + '“ se nepodařilo načíst: ' + e.message); }
 }
 
+// ---------- kontrola osnovy ----------
+let kontrolaVysledek = [];
+function otevriKontrolu() {
+  kontrolaVysledek = J.kontrola(p);
+  $('kontrolaSeznam').innerHTML = kontrolaVysledek.length ? kontrolaVysledek.map((x, i) => `<div class="kontrola-pol ${x.uroven}">
+      <span class="ikona">${x.uroven === 'pozor' ? '⚠️' : 'ℹ️'}</span><span class="txt-k">${esc(x.text)}</span>
+      ${x.sceny.length ? `<button class="btn mini" data-kontrola="${i}">Ukázat (${x.sceny.length})</button>` : ''}</div>`).join('')
+    : '<p class="kontrola-ok">✅ Osnova je v pořádku – kontrola nic nenašla.</p>';
+  otevriModal('kontrolaBg');
+}
+$('kontrolaSeznam').addEventListener('click', e => {
+  const b = e.target.closest('[data-kontrola]'); if (!b) return;
+  const x = kontrolaVysledek[b.dataset.kontrola];
+  zavriModal('kontrolaBg');
+  vycistiFiltr(true);
+  filtr.ids = x.sceny; filtr.popis = x.text;
+  if (nast.pohled !== 'nastenka' && nast.pohled !== 'osnova') { nast.pohled = 'nastenka'; ulozNast(); }
+  vykresli();
+  const el = plocha.querySelector(`.karta[data-id="${x.sceny[0]}"], tr[data-id="${x.sceny[0]}"]`);
+  if (el) { el.scrollIntoView({ block: 'nearest', inline: 'center' }); el.focus({ preventScroll: true }); }
+});
+
+// ---------- verze projektu (snímky v IndexedDB) ----------
+async function otevriVerze() {
+  $('verzeNazev').value = '';
+  await vykresliVerze();
+  otevriModal('verzeBg');
+}
+async function vykresliVerze() {
+  let vse = [];
+  try { vse = (await verzeVse()).filter(v => v.projekt === p.id).sort((a, b) => b.cas.localeCompare(a.cas)); } catch (e) { /* bez IndexedDB */ }
+  $('verzeSeznam').innerHTML = vse.length ? vse.map(v => `<div class="verze-pol">
+      <div><b data-i18n="ne">${esc(v.nazev)}</b><small>${new Date(v.cas).toLocaleString('cs-CZ')} · ${v.data.sceny.length} scén · ${cis(v.data.sceny.reduce((a, s) => a + (s.slov || 0), 0))} slov</small></div>
+      <button class="btn mini" data-verze-obnov="${v.id}">↩ Obnovit</button><button class="btn mini danger" data-verze-smaz="${v.id}" aria-label="Smazat verzi">🗑</button></div>`).join('')
+    : '<p class="napoveda-txt">Zatím žádná uložená verze.</p>';
+}
+$('verzeUlozit').onclick = async () => {
+  const nazev = $('verzeNazev').value.trim() || 'Verze ' + new Date().toLocaleString('cs-CZ');
+  try { await verzeUloz({ id: J.noveId('v'), projekt: p.id, nazev, cas: new Date().toISOString(), data: JSON.parse(JSON.stringify(p)) }); }
+  catch (e) { return Dialog.chyba('Verzi se nepodařilo uložit: ' + e.message); }
+  $('verzeNazev').value = '';
+  await vykresliVerze();
+  Dialog.info('Verze uložena.');
+};
+$('verzeSeznam').addEventListener('click', async e => {
+  const ob = e.target.closest('[data-verze-obnov]'), sm = e.target.closest('[data-verze-smaz]');
+  if (!ob && !sm) return;
+  const v = (await verzeVse()).find(x => x.id === (ob || sm).dataset[ob ? 'verzeObnov' : 'verzeSmaz']);
+  if (!v) return;
+  if (sm) {
+    if (!await Dialog.potvrd(`Smazat verzi „${v.nazev}“?`, { ok: 'Smazat', zrus: 'Ponechat' })) return;
+    await verzeSmaz(v.id); return vykresliVerze();
+  }
+  if (!await Dialog.potvrd(`Obnovit projekt do stavu verze „${v.nazev}“? Současný stav jde vrátit přes Zpět.`, { ok: 'Obnovit', zrus: 'Zrušit' })) return;
+  const data = J.normalizujProjekt(JSON.parse(JSON.stringify(v.data)));
+  zavriModal('verzeBg');
+  if (otevrena) zavriEditor();
+  zmena(() => { const id = p.id; Object.keys(p).forEach(k => delete p[k]); Object.assign(p, data, { id }); });
+  Dialog.info('Verze obnovena.');
+});
+
 // ---------- import JSON ----------
 $('jsonSoubor').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
@@ -1028,6 +1133,7 @@ document.addEventListener('keydown', e => {
   if (pise || e.altKey || document.querySelector('.modal-bg.zobraz') || otevrena) return;
   if (k === '/') { e.preventDefault(); $('hledat').focus(); }
   else if (k === 'F1') { e.preventDefault(); prikaz('napoveda'); }
+  else if (k === 'k' || k === 'K') { e.preventDefault(); otevriKontrolu(); }
   else if (k === 'n' || k === 'N') { e.preventDefault(); e.shiftKey ? novySloupec() : novaScena(); }
   else if ('12345'.includes(k) && k.length === 1) { nast.pohled = ['nastenka', 'osnova', 'osa', 'postavy', 'napeti'][+k - 1]; ulozNast(); vykresli(); }
 });

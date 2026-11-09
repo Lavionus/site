@@ -1,7 +1,8 @@
 /* Výpisky a citáty – rozhraní (obsah/vypisky.html). Logika je ve VYPISKY (jadro.js).
    Čte (nikdy nezapisuje): IndexedDB webapp_ctecka_knih (store meta), localStorage webapp_ctecka_knih_<id>_poznamky,
    knihy/dila.json + knihy/<dílo>/knihy.json a <klic díla>_poznamky.
-   Zapisuje jen localStorage webapp_vypisky = {citaty, doplnky: {idVýpisku: {stitky, hvezda}}, nast}. */
+   Zapisuje jen localStorage webapp_vypisky = {citaty, doplnky: {idVýpisku: {stitky, hvezda, komentar}}, nast}.
+   Kontext výpisku čte text kapitoly: IndexedDB store obsah (Čtečka knih) nebo soubor kapitoly díla; rozbor = KRONIKY_JADRO.rozeber. */
 (() => {
   'use strict';
   const V = window.VYPISKY;
@@ -18,6 +19,7 @@
   const data = { citaty: Array.isArray(ulozene.citaty) ? ulozene.citaty : [], doplnky: ulozene.doplnky || {} };
   const nast = { razeni: 'nove', den: true, hvezdyNahoru: false, cizi: false, zalozky: true, ...(ulozene.nast || {}) };
   nast.karty = { ...VYCHOZI_KARTY, ...(nast.karty || {}) };
+  nast.obrazek = { format: 'ctverec', motiv: 'papir', pismo: 'serif_i', ramecek: 'rohy', ...(nast.obrazek || {}) };
   function uloz() {
     try { localStorage.setItem(KLIC, JSON.stringify({ citaty: data.citaty, doplnky: data.doplnky, nast })); }
     catch (e) { Dialog.chyba('Úložiště prohlížeče je plné – změny se neuložily.'); }
@@ -25,22 +27,24 @@
 
   /* ---------- čtení zdrojů (jen čtení!) ---------- */
   // Otevření bez verze; kdyby databáze neexistovala, upgrade se zruší – jinak bychom založili prázdnou DB bez storů a rozbili čtečku.
-  function ctiMetaCtecky() {
+  // store + klic (null = vše) → výsledek čtení, při jakékoli potíži null
+  function ctiCtecku(store, klic = null) {
     return new Promise(ok => {
       let r;
-      try { r = indexedDB.open('webapp_ctecka_knih'); } catch (e) { ok([]); return; }
+      try { r = indexedDB.open('webapp_ctecka_knih'); } catch (e) { ok(null); return; }
       r.onupgradeneeded = () => { try { r.transaction.abort(); } catch (e) { /* nic */ } };
-      r.onerror = () => ok([]);
-      r.onblocked = () => ok([]);
+      r.onerror = () => ok(null);
+      r.onblocked = () => ok(null);
       r.onsuccess = () => {
         const db = r.result;
-        if (!db.objectStoreNames.contains('meta')) { db.close(); ok([]); return; }
-        const q = db.transaction('meta', 'readonly').objectStore('meta').getAll();
-        q.onsuccess = () => { db.close(); ok((q.result || []).map(({ id, nazev, autor, kapitoly }) => ({ id, nazev, autor, kapitoly }))); };
-        q.onerror = () => { db.close(); ok([]); };
+        if (!db.objectStoreNames.contains(store)) { db.close(); ok(null); return; }
+        const s = db.transaction(store, 'readonly').objectStore(store), q = klic == null ? s.getAll() : s.get(klic);
+        q.onsuccess = () => { db.close(); ok(q.result || null); };
+        q.onerror = () => { db.close(); ok(null); };
       };
     });
   }
+  const ctiMetaCtecky = async () => ((await ctiCtecku('meta')) || []).map(({ id, nazev, autor, kapitoly }) => ({ id, nazev, autor, kapitoly }));
   const ctiLS = k => { try { return JSON.parse(localStorage.getItem(k)) || null; } catch (e) { return null; } };
   const ctiJson = async url => { try { const r = await fetch(url); return r.ok ? await r.json() : null; } catch (e) { return null; } };
   let dilaCache = null;   // dila.json + knihy.json stačí stáhnout jednou
@@ -70,7 +74,7 @@
     const d = doplnek(p);
     if (!d) return;
     Object.assign(d, zmena);
-    if (p.druh !== 'vlastni' && !d.hvezda && !(d.stitky || []).length) delete data.doplnky[p.id];
+    if (p.druh !== 'vlastni' && !d.hvezda && !(d.stitky || []).length && !d.komentar) delete data.doplnky[p.id];
     Object.assign(p, zmena);
     uloz();
   }
@@ -119,7 +123,7 @@
   function polozkaHtml(p) {
     const vyb = vyber && vyber.has(p.id);
     const meta = [];
-    meta.push(`<span class="druh">${esc(V.DRUHY[p.druh])}</span>`);
+    meta.push(`<span class="druh">${esc(V.DRUHY[p.druh])}${p.barva ? `<span class="sr"> (${esc(V.BARVY[p.barva])})</span>` : ''}</span>`);
     if (p.druh === 'vlastni') {
       if (p.autor) meta.push(`<b>${esc(p.autor)}</b>`);
       if (p.kniha) meta.push(`<span>${esc(p.kniha)}</span>`);
@@ -133,15 +137,18 @@
       <input type="checkbox" class="zaskrtnout" data-akce="vybrat" ${vyb ? 'checked' : ''} aria-label="Vybrat">
       <blockquote>${p.druh === 'zalozka' ? '🔖 ' : ''}${sHledanim(p.text)}</blockquote>
       ${p.poznamka ? `<div class="pozn">📝 ${sHledanim(p.poznamka)}</div>` : ''}
+      ${p.komentar ? `<div class="pozn koment" title="Můj komentář (jen na této stránce)">💬 ${sHledanim(p.komentar)}</div>` : ''}
       <div class="meta">${meta.join('')}</div>
       ${p.stitky.length ? `<div class="stitky">${p.stitky.map(s => `<button class="stitek${V.normalizuj(s) === V.normalizuj(filtr.stitek) ? ' aktivni' : ''}" data-akce="stitek" data-stitek="${esc(s)}">#${esc(s)}</button>`).join('')}</div>` : ''}
       <div class="akce">
         <button class="hvezda${p.hvezda ? ' ano' : ''}" data-akce="hvezda" title="Oblíbený" aria-label="Oblíbený" aria-pressed="${p.hvezda}">${p.hvezda ? '★' : '☆'}</button>
         ${odkazHtml(p)}
-        <button class="tl mini" data-akce="kopirovat" title="Kopírovat citát">⧉</button>
-        <button class="tl mini" data-akce="stitky" title="Štítky">🏷</button>
-        ${p.druh !== 'zalozka' ? '<button class="tl mini" data-akce="karta" title="Kartička z tohoto citátu">🖨</button>' : ''}
-        ${p.druh === 'vlastni' ? '<button class="tl mini" data-akce="upravit" title="Upravit">✎</button><button class="tl mini" data-akce="smazat" title="Smazat" aria-label="Smazat">🗑</button>' : ''}
+        ${p.druh !== 'vlastni' ? '<button class="tl mini" data-akce="kontext" title="Celý odstavec z knihy" aria-label="Kontext v knize">📄</button>' : ''}
+        <button class="tl mini" data-akce="kopirovat" title="Kopírovat citát" aria-label="Kopírovat citát">⧉</button>
+        ${p.druh !== 'vlastni' ? '<button class="tl mini" data-akce="komentar" title="Můj komentář k výpisku" aria-label="Můj komentář k výpisku">💬</button>' : ''}
+        <button class="tl mini" data-akce="stitky" title="Štítky" aria-label="Štítky">🏷</button>
+        ${p.druh !== 'zalozka' ? '<button class="tl mini" data-akce="obrazek" title="Citát jako obrázek" aria-label="Citát jako obrázek">🖼</button><button class="tl mini" data-akce="karta" title="Kartička z tohoto citátu" aria-label="Kartička z tohoto citátu">🖨</button>' : ''}
+        ${p.druh === 'vlastni' ? '<button class="tl mini" data-akce="upravit" title="Upravit" aria-label="Upravit">✎</button><button class="tl mini" data-akce="smazat" title="Smazat" aria-label="Smazat">🗑</button>' : ''}
       </div>
     </article>`;
   }
@@ -153,7 +160,21 @@
       s.innerHTML = vse.length
         ? '<div class="prazdne">Filtrům nic neodpovídá. <button class="tl" data-prikaz="zrusit-filtry">✕ Zrušit filtry</button></div>'
         : `<div class="prazdne"><p><b>Zatím tu nejsou žádné výpisky.</b></p><p>Označte v <a href="ctecka_knih.html">Čtečce knih</a> nebo v <a href="kroniky.html">Kronikách</a> kus textu a vyberte barvu nebo 📝 poznámku – objeví se tady. Nebo si zapište vlastní citát.</p><button class="tl hlavni" data-prikaz="novy">✚ Nový citát</button></div>`;
-    } else s.innerHTML = zobrazene.slice(0, limit).map(polozkaHtml).join('');
+    } else {
+      // řazení podle knihy: nadpisy knih a kapitol
+      let h = '', kniha = null, kap = null;
+      for (const p of zobrazene.slice(0, limit)) {
+        if (nast.razeni === 'kniha') {
+          if (p.knihaKlic !== kniha) {
+            kniha = p.knihaKlic; kap = null;
+            h += `<h2 class="skupina">${esc(p.druh === 'vlastni' ? (p.kniha || V.DRUHY.vlastni) : V.nazevKnihy(p))}${p.druh !== 'vlastni' && p.autor ? ` <small>${esc(p.autor)}</small>` : ''}</h2>`;
+          }
+          if (p.kapitola && p.kapitola !== kap) { kap = p.kapitola; h += `<h3 class="skupina-kap">${esc(kap)}</h3>`; }
+        }
+        h += polozkaHtml(p);
+      }
+      s.innerHTML = h;
+    }
     $('dalsi').hidden = zobrazene.length <= limit;
     $('dalsi').textContent = `Zobrazit další (${zobrazene.length - limit})`;
     $('pocet').textContent = zobrazene.length === vse.length ? `${vse.length} výpisků` : `${zobrazene.length} z ${vse.length}`;
@@ -236,7 +257,14 @@
     }
     if (!el) return;
     switch (el.dataset.akce) {
-      case 'hvezda': upravDoplnek(p, { hvezda: !p.hvezda }); vykresliSeznam(); break;
+      case 'hvezda': upravDoplnek(p, { hvezda: !p.hvezda }); vykresliFiltry(); vykresliSeznam(); break;
+      case 'kontext': otevriKontext(p); break;
+      case 'obrazek': otevriObrazek(p); break;
+      case 'komentar': {
+        const t = await Dialog.zeptej('Můj komentář k výpisku (uloží se jen tady, ne do čtečky):', p.komentar, { ok: 'Uložit' });
+        if (t == null) return;
+        upravDoplnek(p, { komentar: t.trim() }); vse_(); break;
+      }
       case 'kopirovat': kopiruj(textCitatu(p)); break;
       case 'stitek': filtr.stitek = V.normalizuj(filtr.stitek) === V.normalizuj(el.dataset.stitek) ? '' : el.dataset.stitek; vse_(); break;
       case 'stitky': {
@@ -255,7 +283,8 @@
   });
 
   /* ---------- editor vlastního citátu ---------- */
-  let upravovany = null;
+  let upravovany = null, editorPuvodne = '';
+  const editorHodnoty = () => ['eText', 'eAutor', 'eZdroj', 'eStitky', 'ePoznamka'].map(id => $(id).value).join('\u0001') + $('eHvezda').checked;
   function otevriEditor(p = null) {
     upravovany = p;
     const c = p ? data.citaty.find(x => x.id === p.vlastniId) : null;
@@ -267,6 +296,7 @@
     $('ePoznamka').value = c ? c.poznamka || '' : '';
     $('eHvezda').checked = !!(c && c.hvezda);
     $('eSmazat').hidden = !c;
+    editorPuvodne = editorHodnoty();
     otevriModal('editorBg');
     $('eText').focus();
   }
@@ -275,6 +305,7 @@
     if (!text) { Dialog.chyba('Citát nemá text.'); $('eText').focus(); return; }
     const hodnoty = { text, autor: $('eAutor').value.trim(), zdroj: $('eZdroj').value.trim(), stitky: V.stitkyZTextu($('eStitky').value), poznamka: $('ePoznamka').value.trim(), hvezda: $('eHvezda').checked };
     const c = upravovany && data.citaty.find(x => x.id === upravovany.vlastniId);
+    editorPuvodne = editorHodnoty();
     if (c) Object.assign(c, hodnoty);
     else data.citaty.push({ id: noveId(), cas: Date.now(), ...hodnoty });
     uloz(); prepocitej(); zavriModal('editorBg'); vse_();
@@ -297,6 +328,16 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
+  // iPad/iPhone: systémové sdílení souboru (Soubory, Mail, AirDrop…); jinde nebo po chybě stažení
+  const lzeSdiletSoubor = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.txt', { type: 'text/plain' })] })); } catch (e) { return false; } };
+  async function sdilej(nazev, obsah, typ) {
+    const blob = obsah instanceof Blob ? obsah : new Blob([obsah], { type: typ });
+    const f = new File([blob], nazev, { type: blob.type || typ });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: nazev }); return; }
+    } catch (e) { if (e.name === 'AbortError') return; }
+    stahni(nazev, blob);
+  }
   const jmeno = pr => `vypisky_${V.dnes()}.${pr}`;
   function exportuj(druh) {
     const p = proExport();
@@ -304,6 +345,7 @@
     if (druh === 'md') stahni(jmeno('md'), V.exportMd(p), 'text/markdown;charset=utf-8');
     if (druh === 'csv') stahni(jmeno('csv'), V.exportCsv(p), 'text/csv;charset=utf-8');
     if (druh === 'json') stahni(jmeno('json'), V.exportJson(p, data), 'application/json');
+    if (druh === 'sdilet-md') { sdilej(jmeno('md'), V.exportMd(p), 'text/markdown'); return; }
     Dialog.info(`⬇ Exportováno ${p.length} výpisků`);
   }
   function importuj(text, nazev = '') {
@@ -319,7 +361,8 @@
     for (const [id, d] of Object.entries(doplnky || {})) {
       if (!d || typeof d !== 'object') continue;
       const stare = data.doplnky[id] || { stitky: [], hvezda: false };
-      data.doplnky[id] = { stitky: [...new Set([...(stare.stitky || []), ...(Array.isArray(d.stitky) ? d.stitky : [])])], hvezda: !!(stare.hvezda || d.hvezda) };
+      data.doplnky[id] = { stitky: [...new Set([...(stare.stitky || []), ...(Array.isArray(d.stitky) ? d.stitky : [])])], hvezda: !!(stare.hvezda || d.hvezda),
+        komentar: String(stare.komentar || d.komentar || '') };
       nDopl++;
     }
     return { ...r, nDopl };
@@ -428,10 +471,12 @@
   }
   const volbyKarty = k => ({ okraj: Math.max(4, Math.round(Math.min(k.w, k.h) * 0.1)), uvozovky: kn().uvozovky, podpis: kn().podpis, zarovnani: kn().zarovnani, maxPt: +kn().maxPt || k.maxPt });
 
+  let poradiKaret = 0;   // rychlé změny (posuvník): platí jen poslední výpočet
   async function prekresliKarty() {
-    const info = $('kartyInfo');
+    const info = $('kartyInfo'), moje = ++poradiKaret;
     let m;
-    try { m = await pripravMereni(); } catch (e) { info.innerHTML = `<span class="varovani">${esc(e.message)}</span>`; return; }
+    try { m = await pripravMereni(); } catch (e) { if (moje === poradiKaret) info.innerHTML = `<span class="varovani">${esc(e.message)}</span>`; return; }
+    if (moje !== poradiKaret) return;
     const k = rozmerKarty(), r = rozvrhKaret();
     if (!r.naArch) { info.innerHTML = '<span class="varovani">Karta se s tímto okrajem na arch A4 nevejde – zmenšete okraj.</span>'; kartyStav = null; kresliNahled(null); return; }
     const archy = V.naArchy(kartyCitaty, r.naArch);
@@ -442,10 +487,25 @@
     info.innerHTML = `Karet na list: ${r.naArch} · listů: ${archy.length}`
       + (r.archW > r.archH && kn().arch === 'a4' ? ' · A4 na šířku' : '')
       + (orez ? `<br><span class="varovani">⚠ Zkrácené dlouhé citáty: ${orez}. Zkuste větší kartu.</span>` : '');
-    $('kStrana').textContent = `List ${kartyArch + 1} / ${archy.length}`;
+    listuj(0);
+  }
+  function listuj(o) {
+    if (!kartyStav) return;
+    const n = kartyStav.archy.length;
+    kartyArch = Math.max(0, Math.min(n - 1, kartyArch + o));
+    $('kStrana').textContent = `List ${kartyArch + 1} / ${n}`;
     $('kPred').disabled = kartyArch <= 0;
-    $('kDalsi').disabled = kartyArch >= archy.length - 1;
+    $('kDalsi').disabled = kartyArch >= n - 1;
     kresliNahled(kartyStav);
+  }
+  /* Kreslení do plátna v mm; písmo a čáry se přepočítají na pixely zvlášť – WebKit (iPad) kreslí text o velikosti
+     pár „pixelů“ ve zvětšené soustavě nespolehlivě. k = pixelů na mm (včetně devicePixelRatio). */
+  function platnoG(ctx, k, rodina) {
+    return {
+      obdelnik(x, y, w, h, tl, barva, carkovane) { ctx.save(); ctx.lineWidth = Math.max(1, tl * k); ctx.strokeStyle = barva; ctx.setLineDash(carkovane ? [1.5 * k, 1.5 * k] : []); ctx.strokeRect(x * k, y * k, w * k, h * k); ctx.restore(); },
+      cara(x1, y1, x2, y2, tl, barva) { ctx.save(); ctx.lineWidth = Math.max(1, tl * k); ctx.strokeStyle = barva; ctx.beginPath(); ctx.moveTo(x1 * k, y1 * k); ctx.lineTo(x2 * k, y2 * k); ctx.stroke(); ctx.restore(); },
+      text(s, x, y, pt, zarovnani, barva) { ctx.font = `${(pt * V.PT * k).toFixed(2)}px "${rodina}"`; ctx.fillStyle = barva; ctx.textAlign = zarovnani; ctx.textBaseline = 'alphabetic'; ctx.fillText(s, x * k, y * k); },
+    };
   }
 
   function kresliNahled(st) {
@@ -456,24 +516,21 @@
     const s = Math.min(max / r.archW, 560 / r.archH);   // px na mm
     c.style.width = Math.round(r.archW * s) + 'px'; c.style.height = Math.round(r.archH * s) + 'px';
     c.width = Math.round(r.archW * s * dpr); c.height = Math.round(r.archH * s * dpr);
-    ctx.setTransform(s * dpr, 0, 0, s * dpr, 0, 0);
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, r.archW, r.archH);   // papír je vždy bílý
-    const g = {
-      obdelnik(x, y, w, h, tl, barva, carkovane) { ctx.save(); ctx.lineWidth = tl; ctx.strokeStyle = barva; ctx.setLineDash(carkovane ? [1.5, 1.5] : []); ctx.strokeRect(x, y, w, h); ctx.restore(); },
-      cara(x1, y1, x2, y2, tl) { ctx.save(); ctx.lineWidth = tl; ctx.strokeStyle = '#444444'; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore(); },
-      text(s, x, y, pt, zarovnani, barva) { ctx.font = `${pt * V.PT}px "${m.pismo.rodina}"`; ctx.fillStyle = barva; ctx.textAlign = zarovnani; ctx.textBaseline = 'alphabetic'; ctx.fillText(s, x, y); },
-    };
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);   // papír je vždy bílý
+    const g = platnoG(ctx, s * dpr, m.pismo.rodina);
     (archy[kartyArch] || []).forEach((p, i) => V.kresliKartu(g, r.pozice[i].x, r.pozice[i].y, k, rozlozeni.get(p.id), kn()));
   }
 
-  async function stahniPdf() {
+  async function stahniPdf(sdilet = false) {
     if (!kartyStav) return;
     const tl = $('kPdf');
     tl.disabled = true;
     try {
       const { m, k, r, archy, rozlozeni } = kartyStav;
       const doc = V.pdfKaret(m.JsPDF, { r, k, archy, rozlozeni, n: kn(), pismo: m.pismo });
-      stahni(`citaty_karticky_${kn().velikost}_${V.dnes()}.pdf`, doc.output('blob'));
+      const nazev = `citaty_karticky_${kn().velikost}_${V.dnes()}.pdf`;
+      if (sdilet) await sdilej(nazev, doc.output('blob'), 'application/pdf'); else stahni(nazev, doc.output('blob'));
       Dialog.info(`⬇ PDF: kartiček ${kartyCitaty.length}, listů ${archy.length}`);
     } catch (e) { Dialog.chyba(`PDF se nepodařilo vytvořit: ${e.message}`); }
     finally { tl.disabled = false; }
@@ -484,17 +541,112 @@
   for (const [id, klic] of [['kOkraj', 'okraj'], ['kMezera', 'mezera']]) $(id).oninput = e => zmenaKaret(klic, Math.max(0, Math.min(30, +e.target.value || 0)));
   $('kMaxPt').oninput = e => { $('kMaxPtHodnota').value = e.target.value + ' pt'; zmenaKaret('maxPt', +e.target.value); };
   for (const [id, klic] of [['kOrezy', 'orezy'], ['kUvozovky', 'uvozovky'], ['kPodpis', 'podpis']]) $(id).onchange = e => zmenaKaret(klic, e.target.checked);
-  $('kPred').onclick = () => { kartyArch--; prekresliKarty(); };
-  $('kDalsi').onclick = () => { kartyArch++; prekresliKarty(); };
-  $('kPdf').onclick = stahniPdf;
+  $('kPred').onclick = () => listuj(-1);
+  $('kDalsi').onclick = () => listuj(1);
+  $('kPdf').onclick = () => stahniPdf(false);
+  $('kSdilet').onclick = () => stahniPdf(true);
+
+  /* ---------- kontext: celý odstavec z knihy ---------- */
+  let kontextPolozka = null, kontextOdstavec = '';
+  async function textKapitoly(p) {
+    if (p.zdroj === 'ctecka') {
+      const o = await ctiCtecku('obsah', p.zdrojId);
+      return o && o.md ? o.md[p.soubor] : null;
+    }
+    const d = (await nactiDila()).find(x => x.dilo.id === p.zdrojId);
+    if (!d) return null;
+    const kniha = d.knihy.find(k => k.id === p.knihaId), c = kniha && (kniha.kapitoly || []).find(x => x.soubor === p.soubor);
+    if (!c) return null;
+    try { const r = await fetch(d.dilo.data + p.knihaId + '/' + p.soubor + (c.h ? '?h=' + c.h : '')); return r.ok ? await r.text() : null; } catch (e) { return null; }
+  }
+  async function otevriKontext(p) {
+    kontextPolozka = p;
+    $('kontextNadpis').textContent = `📄 ${V.nazevKnihy(p)}${p.kapitola ? ' · ' + p.kapitola : ''}`;
+    $('kontextText').innerHTML = '<p class="info-karet">Načítám kapitolu…</p>';
+    $('kontextPosun').hidden = true;
+    kontextOdstavec = '';
+    const a = $('kontextOtevrit');
+    a.hidden = !p.odkaz;
+    if (p.odkaz) { const ad = adresa(p.odkaz); a.href = ad.href; a.target = ad.target; }
+    otevriModal('kontextBg');
+    const md = await textKapitoly(p);
+    if (kontextPolozka !== p) return;
+    const k = md && window.KRONIKY_JADRO ? V.kontext(KRONIKY_JADRO.rozeber(md), p) : null;
+    if (!k) {
+      $('kontextText').innerHTML = `<p class="info-karet">${md ? 'Text výpisku už v kapitole není – kniha se od té doby změnila.' : 'Text kapitoly se nepodařilo načíst (kniha není v této knihovně nebo jste offline).'}</p>`;
+      return;
+    }
+    const o = k.odstavec;
+    $('kontextText').innerHTML = (k.pred ? `<p class="okoli">${esc(k.pred)}</p>` : '')
+      + `<p>${esc(o.pred)}<mark style="--pruh:${V.BARVY_HEX[p.barva] || 'var(--accent)'}">${esc(o.shoda)}</mark>${esc(o.po)}</p>`
+      + (k.po ? `<p class="okoli">${esc(k.po)}</p>` : '');
+    $('kontextPosun').hidden = !k.posunuto;
+    kontextOdstavec = o.pred + o.shoda + o.po;
+  }
+  $('kontextKopirovat').onclick = () => kontextOdstavec && kopiruj(kontextOdstavec);
+
+  /* ---------- citát jako obrázek (PNG) ---------- */
+  let obrazekPolozka = null, poradiObrazku = 0;
+  const no = () => nast.obrazek;
+  $('oFormat').innerHTML = Object.entries(V.OBRAZKY).map(([k, v]) => `<option value="${k}">${v.nazev}</option>`).join('');
+  $('oMotiv').innerHTML = Object.entries(V.MOTIVY_OBRAZKU).map(([k, v]) => `<option value="${k}">${v.nazev}</option>`).join('');
+  $('oPismo').innerHTML = $('kPismo').innerHTML;
+  function otevriObrazek(p) {
+    obrazekPolozka = p;
+    for (const [id, k] of [['oFormat', 'format'], ['oMotiv', 'motiv'], ['oPismo', 'pismo'], ['oRamecek', 'ramecek']]) $(id).value = no()[k];
+    $('oSdilet').hidden = !lzeSdiletSoubor();
+    otevriModal('obrazekBg');
+    kresliObrazek();
+  }
+  // vykreslí obrázek v plné velikosti (1080 px) do plátna; náhled je totéž plátno zmenšené stylem
+  async function kresliObrazek() {
+    const moje = ++poradiObrazku, p = obrazekPolozka;
+    let JsPDF, pismo;
+    try { [JsPDF, pismo] = await Promise.all([nactiJsPdf(), nactiPismo(no().pismo)]); }
+    catch (e) { Dialog.chyba(e.message); return; }
+    if (moje !== poradiObrazku) return;
+    const doc = new JsPDF({ unit: 'mm' });
+    V.pridejPismo(doc, pismo);
+    const mer = (s, pt) => doc.getStringUnitWidth(s) * pt * V.PT;
+    const f = V.OBRAZKY[no().format], vel = V.velikostObrazku(no().format), motiv = V.MOTIVY_OBRAZKU[no().motiv];
+    const c = $('oNahled'), ctx = c.getContext('2d');
+    c.width = vel.w; c.height = vel.h;
+    ctx.fillStyle = motiv.pozadi; ctx.fillRect(0, 0, vel.w, vel.h);
+    const roz = V.rozlozKartu(p, f, mer, { okraj: Math.min(f.w, f.h) * 0.12, maxPt: f.maxPt });
+    V.kresliKartu(platnoG(ctx, vel.s, pismo.rodina), 0, 0, f, roz, { ramecek: no().ramecek, barvy: motiv });
+  }
+  for (const [id, k] of [['oFormat', 'format'], ['oMotiv', 'motiv'], ['oPismo', 'pismo'], ['oRamecek', 'ramecek']])
+    $(id).onchange = e => { no()[k] = e.target.value; uloz(); kresliObrazek(); };
+  const pngObrazku = () => new Promise(ok => $('oNahled').toBlob(ok, 'image/png'));
+  const jmenoObrazku = () => `citat_${V.normalizuj(obrazekPolozka.text).replace(/[^a-z0-9]+/g, '_').slice(0, 30).replace(/^_|_$/g, '') || 'obrazek'}.png`;
+  $('oStahnout').onclick = async () => stahni(jmenoObrazku(), await pngObrazku());
+  $('oSdilet').onclick = async () => sdilej(jmenoObrazku(), await pngObrazku(), 'image/png');
 
   /* ---------- modální okna a nabídky ---------- */
-  function otevriModal(id) { zavriNabidky(); $(id).classList.add('zobraz'); }
-  function zavriModal(id) { $(id).classList.remove('zobraz'); }
+  const navrat = {};   // kam vrátit fokus po zavření okna
+  function otevriModal(id) { zavriNabidky(); navrat[id] = document.activeElement; $(id).classList.add('zobraz'); }
+  function zavriModal(id) {
+    $(id).classList.remove('zobraz');
+    const n = navrat[id];
+    if (n && n.isConnected && n.focus) n.focus({ preventScroll: true });
+  }
+  // rozepsaný citát se bez dotazu nezahodí
+  async function zavriOkno(id) {
+    if (id === 'editorBg' && editorHodnoty() !== editorPuvodne && $('eText').value.trim()
+      && !await Dialog.potvrd('Zahodit rozepsaný citát?', { ok: 'Zahodit', zrus: 'Psát dál' })) return;
+    zavriModal(id);
+  }
   const otevrenyModal = () => document.querySelector('.modal-bg.zobraz');
-  document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click', e => {
-    if (e.target === bg || e.target.closest('[data-zavrit]')) zavriModal(bg.id);
-  }));
+  // zavřít klepnutím vedle okna jen když stisk i puštění byly mimo okno (tažení výběru textu ven okno nezavře)
+  let stiskMimo = null;
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('pointerdown', e => { stiskMimo = e.target === bg ? bg : null; });
+    bg.addEventListener('click', e => {
+      if (e.target.closest('[data-zavrit]')) zavriOkno(bg.id);
+      else if (e.target === bg && stiskMimo === bg) zavriOkno(bg.id);
+      stiskMimo = null;
+    });
+  });
   function zavriNabidky() {
     document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
     document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
@@ -511,6 +663,7 @@
     n.hidden = false; b.setAttribute('aria-expanded', 'true');
     const r = b.getBoundingClientRect();
     n.style.top = (r.bottom + 4) + 'px';
+    n.style.maxHeight = Math.max(160, innerHeight - r.bottom - 14) + 'px';
     n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
   }));
 
@@ -525,6 +678,9 @@
     den: () => { nast.den = !nast.den || denNahodny; denNahodny = false; uloz(); vykresliDen(); $('tlDen').setAttribute('aria-pressed', String(nast.den)); },
     'den-dnes': () => { denNahodny = false; vykresliDen(); },
     'den-kopirovat': () => denPolozka && kopiruj(textCitatu(denPolozka)),
+    'den-obrazek': () => denPolozka && otevriObrazek(denPolozka),
+    'den-sdilet': async () => { if (!denPolozka) return; try { await navigator.share({ text: textCitatu(denPolozka) }); } catch (e) { /* zrušeno */ } },
+    'sdilet-md': () => exportuj('sdilet-md'),
     vyber: () => { vyber = vyber ? null : new Set(); vykresliSeznam(); },
     'vybrat-vse': () => { zobrazene.forEach(p => vyber.add(p.id)); vykresliSeznam(); },
     'zrusit-vyber': () => { vyber = new Set(); vykresliSeznam(); },
@@ -581,7 +737,8 @@
   document.addEventListener('keydown', e => {
     const m = otevrenyModal();
     if (e.key === 'Escape') {
-      if (m) { zavriModal(m.id); return; }
+      if (document.querySelector('dialog[open]')) return;   // Esc zavře jen dotaz dialog.js, ne okno pod ním
+      if (m) { e.preventDefault(); zavriOkno(m.id); return; }
       if (!document.querySelector('.nabidka:not([hidden])') && vyber) { vyber = null; vykresliSeznam(); }
       zavriNabidky(); document.body.classList.remove('filtry-otevrene');
       return;
@@ -602,6 +759,9 @@
   /* ---------- start ---------- */
   if (matchMedia('(max-width:760px)').matches) document.body.classList.remove('filtry-otevrene');
   $('seznam').innerHTML = '<div class="prazdne">Načítám výpisky…</div>';
+  $('tlDenSdilet').hidden = !navigator.share;
+  $('tlSdiletMd').hidden = !lzeSdiletSoubor();
+  $('kSdilet').hidden = !lzeSdiletSoubor();
   nactiVse().then(vse_);
-  window.VYPISKY_APP = { stav: () => ({ vse, filtr, nast, data, nacteno }), prikaz: id => PRIKAZY[id](), otevriKarty, kartyStav: () => kartyStav };
+  window.VYPISKY_APP = { stav: () => ({ vse, filtr, nast, data, nacteno }), prikaz: id => PRIKAZY[id](), otevriKarty, kartyStav: () => kartyStav, otevriKontext, otevriObrazek };
 })();
