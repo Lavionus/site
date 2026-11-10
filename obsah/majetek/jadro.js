@@ -1,10 +1,10 @@
 /* Evidence majetku – výpočetní jádro bez DOM (testuje se v node: _test/majetek_test.js).
    Obsah: data a lhůty (§ 605 a § 607 OZ), stav záruky, hledání a filtry, souhrny hodnot,
-   CSV pro Excel, ZIP („uloženo“ + CRC32, čtení i deflate), migrace schématu, slučování záloh, iCalendar. */
+   CSV pro Excel, ZIP („uloženo“ + CRC32, čtení i deflate), migrace schématu, slučování záloh, iCalendar, půjčené věci. */
 (function () {
   'use strict';
 
-  const SCHEMA = 2;                 // aktuální verze datového schématu (záloha i IndexedDB)
+  const SCHEMA = 3;                 // aktuální verze datového schématu (záloha i IndexedDB)
   const VYCHOZI_ZARUKA = 24;        // ČR: spotřebitelský nákup, § 2165 OZ – 24 měsíců
   const TYPY_PRILOH = ['foto', 'uctenka', 'navod', 'servis', 'jine'];
   const NAZVY_PRILOH = { foto: 'Fotografie', uctenka: 'Účtenka / faktura', navod: 'Návod', servis: 'Servisní doklad', jine: 'Jiné' };
@@ -177,10 +177,70 @@
     };
   }
 
+  /* ---------- půjčky ----------
+     smer: 'ven' = půjčil jsem (komu), 'k_nam' = půjčil jsem si (od koho). Věc buď z evidence (polozkaId), nebo volný název.
+     termin '' = bez termínu; vraceno '' = dosud nevráceno. Fotky jsou přílohy s polozkaId = id půjčky. */
+  const SMERY = ['ven', 'k_nam'];
+  const PUJCKA_BLIZI = 7;            // „blíží se“ = do termínu zbývá nejvýš tolik dní
+  function normPujcka(x, ted) {
+    x = x || {};
+    const z = cislo(x.zaloha);
+    return {
+      id: txt(x.id, 40), smer: SMERY.includes(x.smer) ? x.smer : 'ven',
+      polozkaId: txt(x.polozkaId, 40), nazev: txt(x.nazev, 200),
+      osoba: txt(x.osoba, 120), kontakt: txt(x.kontakt, 200),
+      datumPujceni: jeDatum(x.datumPujceni) ? x.datumPujceni : '', termin: jeDatum(x.termin) ? x.termin : '',
+      stavPujceni: txt(x.stavPujceni, 2000), zaloha: z == null || z < 0 ? null : Math.round(z * 100) / 100,
+      vraceno: jeDatum(x.vraceno) ? x.vraceno : '', stavVraceni: txt(x.stavVraceni, 2000),
+      fotoPujceniId: txt(x.fotoPujceniId, 40), fotoVraceniId: txt(x.fotoVraceniId, 40),
+      vytvoreno: Number(x.vytvoreno) || ted || 0, upraveno: Number(x.upraveno) || Number(x.vytvoreno) || ted || 0
+    };
+  }
+  /* Název půjčené věci: z evidence (i z koše), jinak volný název. */
+  function nazevPujcky(x, polozky) {
+    const p = x.polozkaId && (polozky || []).find(q => q.id === x.polozkaId);
+    return (p && p.nazev) || x.nazev || 'Bez názvu';
+  }
+  /* stav: 'vraceno' | 'po_terminu' | 'blizi' | 'v_terminu' | 'bez_terminu'; dni = do termínu (záporné = po termínu). */
+  function stavPujcky(x, dnes, blizi) {
+    if (x.vraceno) return { stav: 'vraceno', dni: null };
+    if (!x.termin) return { stav: 'bez_terminu', dni: null };
+    const dni = rozdilDni(dnes, x.termin), lim = Number.isFinite(+blizi) ? +blizi : PUJCKA_BLIZI;
+    return { stav: dni < 0 ? 'po_terminu' : (dni <= lim ? 'blizi' : 'v_terminu'), dni };
+  }
+  function osobyPujcek(pujcky) {
+    const m = new Map();
+    for (const x of pujcky || []) if (x.osoba) { const k = bezDiakritiky(x.osoba); if (!m.has(k)) m.set(k, x.osoba); }
+    return [...m.values()].sort((a, b) => kolator.compare(a, b));
+  }
+  /* Přehled pro pohled Půjčené: nevrácené podle směru (po termínu první, pak podle termínu), historie vrácených (nejnovější první). */
+  function prehledPujcek(pujcky, dnes, osoba, blizi) {
+    const o = osoba ? bezDiakritiky(osoba) : '';
+    const vse = (pujcky || []).filter(x => !o || bezDiakritiky(x.osoba) === o);
+    const sStavem = vse.map(x => Object.assign({ x }, stavPujcky(x, dnes, blizi)));
+    const otevrene = sStavem.filter(s => s.stav !== 'vraceno')
+      .sort((a, b) => (a.x.termin || '\uffff').localeCompare(b.x.termin || '\uffff') || (a.x.datumPujceni < b.x.datumPujceni ? -1 : 1));
+    return {
+      ven: otevrene.filter(s => s.x.smer === 'ven'), kNam: otevrene.filter(s => s.x.smer === 'k_nam'),
+      historie: sStavem.filter(s => s.stav === 'vraceno').sort((a, b) => (a.x.vraceno < b.x.vraceno ? 1 : a.x.vraceno > b.x.vraceno ? -1 : 0)),
+      pocet: otevrene.length, poTerminu: otevrene.filter(s => s.stav === 'po_terminu').length, blizi: otevrene.filter(s => s.stav === 'blizi').length
+    };
+  }
+  /* Aktivní (nevrácená) půjčka věci z evidence, nebo null. */
+  function pujckaPolozky(pujcky, polozkaId) { return (pujcky || []).find(x => x.polozkaId === polozkaId && !x.vraceno) || null; }
+  /* Text připomínky ke zkopírování do zprávy. */
+  function textPripominky(x, nazev, dnes) {
+    const t = x.termin ? (x.termin < (dnes || dnesIso()) ? ' – domluvili jsme se na ' + formatDatum(x.termin) : ' do ' + formatDatum(x.termin)) : '';
+    if (x.smer === 'k_nam') return 'Ahoj' + (x.osoba ? ' ' + x.osoba : '') + ', děkuji za půjčení: ' + nazev + (x.datumPujceni ? ' (od ' + formatDatum(x.datumPujceni) + ')' : '') +
+      '. Vrátím ' + (x.termin ? 'nejpozději ' + formatDatum(x.termin) : 'co nejdřív') + ' – kdybys to potřeboval(a) dřív, dej vědět.';
+    return 'Ahoj' + (x.osoba ? ' ' + x.osoba : '') + ', nezapomeň prosím vrátit: ' + nazev + (x.datumPujceni ? ' (půjčeno ' + formatDatum(x.datumPujceni) + ')' : '') + t + '. Díky!';
+  }
+
   /* ---------- migrace schématu ----------
      v1 = formát prototypu (export JSON, verze: 1): cena jako text „1 299,50 Kč“, zarukaRoky, štítky jako text
           „a, b“, umístění jako volný text „misto“, kategorie jako text „kategorie“, bez koše a servisu.
-     v2 = současný formát: číselníky s ID, záruka v měsících, převzetí, koš (smazano), servisní záznamy. */
+     v2 = číselníky s ID, záruka v měsících, převzetí, koš (smazano), servisní záznamy.
+     v3 = navíc půjčky (pujcky[]); starší data se načtou beze změny s prázdným seznamem půjček. */
   function migruj(vstup, ted) {
     ted = ted || 0;
     let d = vstup;
@@ -190,6 +250,7 @@
     if (v > SCHEMA) throw new Error('Záloha je z novější verze aplikace (schéma ' + v + '). Aktualizujte stránku.');
     const kroky = [];
     if (v < 2) { d = z1na2(d, ted); v = 2; kroky.push('1→2'); }
+    if (v < 3) { d = Object.assign({}, d, { pujcky: [] }); v = 3; kroky.push('2→3'); }
     const out = {
       schema: SCHEMA,
       lokality: (d.lokality || []).map(l => ({ id: txt(l.id, 40), nazev: txt(l.nazev, 120) || 'Lokalita', adresa: txt(l.adresa, 300) })).filter(x => x.id),
@@ -201,6 +262,7 @@
         nazev: txt(a.nazev, 200) || 'příloha', mime: txt(a.mime, 100) || 'application/octet-stream',
         velikost: Number(a.velikost) || 0, vytvoreno: Number(a.vytvoreno) || ted, soubor: txt(a.soubor, 300), nahledSoubor: txt(a.nahledSoubor, 300)
       })).filter(a => a.id && a.polozkaId),
+      pujcky: (d.pujcky || []).map(x => normPujcka(x, ted)).filter(x => x.id),
       nastaveni: Object.assign({}, d.nastaveni || {})
     };
     return { data: out, kroky };
@@ -489,6 +551,14 @@
     }
     const pids = new Set((stav.prilohy || []).map(a => a.id));
     for (const a of zaloha.prilohy || []) { if (pids.has(a.id)) plan.prilohy.ponechat++; else plan.prilohy.pridat.push(a); }
+    plan.pujcky = { pridat: [], prepsat: [], ponechat: 0 };
+    const mamP = new Map((stav.pujcky || []).map(x => [x.id, x]));
+    for (const x of zaloha.pujcky || []) {
+      const m = mamP.get(x.id);
+      if (!m) plan.pujcky.pridat.push(x);
+      else if ((x.upraveno || 0) > (m.upraveno || 0)) plan.pujcky.prepsat.push(x);
+      else plan.pujcky.ponechat++;
+    }
     return plan;
   }
 
@@ -504,7 +574,8 @@
     out.push(akt);
     return out.join('\r\n ');
   }
-  function ics(polozky, dnyPredem, razitko) {
+  /* pujcky (nepovinné) = [{x: půjčka, nazev}] – nevrácené s termínem přibudou jako události s připomínkou den předem. */
+  function ics(polozky, dnyPredem, razitko, pujcky) {
     const r = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//webapp//Evidence majetku//CS', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
     const ts = razitko || '20000101T000000Z';
     for (const p of polozky) {
@@ -518,6 +589,17 @@
       if (dnyPredem > 0) r.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText('Blíží se konec záruky: ' + p.nazev), 'TRIGGER:-P' + Math.round(dnyPredem) + 'D', 'END:VALARM');
       r.push('END:VEVENT');
     }
+    for (const { x, nazev } of pujcky || []) {
+      if (x.vraceno || !x.termin) continue;
+      const d = x.termin.replace(/-/g, '');
+      const shrnuti = x.smer === 'k_nam' ? 'Vrátit: ' + nazev + (x.osoba ? ' (' + x.osoba + ')' : '') : 'Má se vrátit: ' + nazev + (x.osoba ? ' od ' + x.osoba : '');
+      r.push('BEGIN:VEVENT', 'UID:pujcka-' + x.id + '@majetek.local', 'DTSTAMP:' + ts,
+        'DTSTART;VALUE=DATE:' + d, 'DTEND;VALUE=DATE:' + pridejDny(x.termin, 1).replace(/-/g, ''),
+        'SUMMARY:' + icsText(shrnuti),
+        'DESCRIPTION:' + icsText((x.smer === 'k_nam' ? 'Půjčil jsem si od: ' : 'Půjčil jsem: ') + (x.osoba || '?') + (x.kontakt ? ', ' + x.kontakt : '') +
+          (x.datumPujceni ? '\nPůjčeno ' + formatDatum(x.datumPujceni) : '') + (x.zaloha != null ? '\nZáloha ' + formatKc(x.zaloha) : '')),
+        'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(shrnuti), 'TRIGGER:-P1D', 'END:VALARM', 'END:VEVENT');
+    }
     r.push('END:VCALENDAR');
     return r.map(icsZalom).join('\r\n') + '\r\n';
   }
@@ -528,6 +610,7 @@
     velikonoce, svatky, jePracovniDen, posunNaPracovni, zaruka, stavZaruky,
     cislo, formatCislo, formatKc, formatDatum, velikost, bezDiakritiky, normStitky, novyId, idZeSkenu, textQr,
     normPolozka, migruj, kontext, nazevMista, filtruj, serad, souhrn,
+    SMERY, PUJCKA_BLIZI, normPujcka, nazevPujcky, stavPujcky, osobyPujcek, prehledPujcek, pujckaPolozky, textPripominky,
     csvBunka, csv, ctiCsv, crc32, zapisZip, spoj, ctiZip, bezpecneJmeno, planSlouceni, ics, icsText, icsZalom
   };
   if (typeof module !== 'undefined') module.exports = API; else window.MajetekJadro = API;

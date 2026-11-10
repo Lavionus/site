@@ -9,7 +9,7 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const IKONY = { foto: '🖼', uctenka: '🧾', navod: '📘', servis: '🔧', jine: '📄' };
 
-  let S = { polozky: [], lokality: [], mistnosti: [], kategorie: [], prilohy: [], nastaveni: {}, posledniZaloha: 0 };
+  let S = { polozky: [], lokality: [], mistnosti: [], kategorie: [], prilohy: [], pujcky: [], nastaveni: {}, posledniZaloha: 0 };
   let ctx = J.kontext(S);
   let dnes = J.dnesIso();
   const vybrane = new Set();
@@ -55,10 +55,12 @@
     vyplnVolby();
     $('pocetPolozek').textContent = S.polozky.filter(p => !p.smazano).length;
     $('pocetKos').textContent = S.polozky.filter(p => p.smazano).length;
+    $('pocetPujcek').textContent = S.pujcky.filter(x => !x.vraceno).length;
     vykresliAktivni();
   }
   function vykresliAktivni() {
     if (aktivni === 'polozky') vykresliSeznam();
+    else if (aktivni === 'pujcky') vykresliPujcky();
     else if (aktivni === 'prehled') vykresliPrehled();
     else if (aktivni === 'stitky') vykresliStitky();
     else if (aktivni === 'ciselniky') vykresliCiselniky();
@@ -131,6 +133,13 @@
     if (s.stav === 'konci') return '<span class="zaruka konci" title="Poslední den pro uplatnění">' + (s.dni === 0 ? 'záruka končí dnes' : 'záruka končí za ' + s.dni + ' ' + sklon(s.dni, 'den', 'dny', 'dní')) + '</span>';
     return '<span class="zaruka platna" title="Poslední den pro uplatnění">záruka do ' + d + '</span>';
   }
+  /* „půjčeno – komu, od kdy“ u věci z evidence */
+  function pujcenoHtml(p) {
+    const x = J.pujckaPolozky(S.pujcky, p.id); if (!x) return '';
+    const st = J.stavPujcky(x, dnes);
+    return '<span class="lhuta ' + st.stav + '" title="' + (x.termin ? 'vrátit do ' + J.formatDatum(x.termin) : 'bez termínu vrácení') + '">🤝 ' +
+      (x.smer === 'k_nam' ? 'vypůjčeno od ' : 'půjčeno – ') + esc(x.osoba || '?') + (x.datumPujceni ? ', od ' + J.formatDatum(x.datumPujceni) : '') + '</span>';
+  }
   function sklon(n, a, b, c) { n = Math.abs(n); return n === 1 ? a : (n >= 2 && n <= 4 ? b : c); }
   function radekPolozky(p, nahled, kos) {
     const k = ctx.kat.get(p.kategorieId), misto = J.nazevMista(p, ctx);
@@ -144,7 +153,7 @@
       '<div>' + (p.stitky || []).map(s => '<span class="stitek">' + esc(s) + '</span>').join('') + '</div></div>' +
       '<div class="vpravo"><span class="cena">' + (p.cena == null ? '<span class="faint">cena neuvedena</span>' : J.formatKc(p.cena)) + '</span>' +
       (kos ? '<span class="faint">smazáno ' + new Date(p.smazano).toLocaleDateString('cs-CZ') + '</span><span class="rada"><button class="maly" data-obnovit>Obnovit</button><button class="maly nebezpecne" data-trvale>Smazat trvale</button></span>'
-        : stavHtml(p) + (pocetPril ? '<span class="faint">📎 ' + pocetPril + '</span>' : '')) + '</div></div>';
+        : pujcenoHtml(p) + stavHtml(p) + (pocetPril ? '<span class="faint">📎 ' + pocetPril + '</span>' : '')) + '</div></div>';
   }
   function uvolniUrl() { for (const u of urlSeznam) URL.revokeObjectURL(u); urlSeznam = []; }
   const LIMIT = 400;
@@ -210,14 +219,17 @@
   }
   $('btnCsv').addEventListener('click', () => exportCsv(zobrazene(), 'majetek_' + dnes + '.csv'));
   $('btnCsvVse').addEventListener('click', () => exportCsv(J.serad(S.polozky.filter(p => !p.smazano), 'nazev', ctx), 'majetek_vse_' + dnes + '.csv'));
-  function exportIcs(pol) {
+  /* pujcky = půjčky, jejichž termíny vrácení se přidají (nevrácené s termínem) */
+  function exportIcs(pol, pujcky, jmeno) {
     const s = pol.filter(p => { const z = J.stavZaruky(p, dnes, 0); return z.stav !== 'bez' && z.stav !== 'prosla'; });
-    if (!s.length) { chyba('Žádná z položek nemá běžící záruku.'); return; }
+    const pj = (pujcky || []).filter(x => !x.vraceno && x.termin).map(x => ({ x, nazev: J.nazevPujcky(x, S.polozky) }));
+    if (!s.length && !pj.length) { chyba(pujcky && !pol.length ? 'Žádná nevrácená půjčka nemá termín vrácení.' : 'Žádná z položek nemá běžící záruku ani termín vrácení půjčky.'); return; }
     const ts = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
-    stahni(new Blob([J.ics(s, nast().upozornitDni, ts)], { type: 'text/calendar;charset=utf-8' }), 'zaruky_' + dnes + '.ics');
-    info('Kalendář obsahuje ' + s.length + ' ' + sklon(s.length, 'událost', 'události', 'událostí') + ' s připomínkou ' + nast().upozornitDni + ' dní předem. Otevřete jej v aplikaci kalendáře.');
+    stahni(new Blob([J.ics(s, nast().upozornitDni, ts, pj)], { type: 'text/calendar;charset=utf-8' }), (jmeno || 'zaruky') + '_' + dnes + '.ics');
+    info('Kalendář obsahuje ' + (s.length ? s.length + ' ' + sklon(s.length, 'konec záruky', 'konce záruk', 'konců záruk') + ' (připomínka ' + nast().upozornitDni + ' dní předem)' : '') +
+      (s.length && pj.length ? ' a ' : '') + (pj.length ? pj.length + ' ' + sklon(pj.length, 'termín vrácení', 'termíny vrácení', 'termínů vrácení') + ' (připomínka den předem)' : '') + '. Otevřete jej v aplikaci kalendáře.');
   }
-  $('btnIcs').addEventListener('click', () => exportIcs(zobrazene()));
+  $('btnIcs').addEventListener('click', () => exportIcs(zobrazene(), S.pujcky));
   $('btnStitkyVybr').addEventListener('click', () => { $('sZdroj').value = vybrane.size ? 'vybrane' : 'filtr'; prepni('stitky'); });
 
   /* ---------- upozornění při otevření ---------- */
@@ -240,6 +252,11 @@
       '<span class="faint">Vadu reklamujte u prodejce nejpozději v poslední den. Kontroluje se jen při otevření této stránky.</span></div>');
     if (prosle.length) casti.push('<div class="hlaseni info"><b>Záruka nedávno skončila (' + prosle.length + ')</b><ul>' +
       prosle.slice(0, 6).map(x => li(x, s => 'poslední den byl ' + J.formatDatum(s.z.posledniDen))).join('') + '</ul></div>');
+    const pj = J.prehledPujcek(S.pujcky, dnes);
+    const poT = pj.ven.concat(pj.kNam).filter(z => z.stav === 'po_terminu');
+    if (poT.length) casti.push('<div class="hlaseni chyba"><b>🤝 Půjčky po termínu (' + poT.length + ')</b><ul>' +
+      poT.slice(0, 8).map(z => '<li><button class="odkaz" data-pujcka="' + esc(z.x.id) + '">' + esc(J.nazevPujcky(z.x, S.polozky)) + '</button> – ' +
+        (z.x.smer === 'k_nam' ? 'vrátit: ' : 'má vrátit: ') + esc(z.x.osoba) + ', termín byl ' + J.formatDatum(z.x.termin) + '</li>').join('') + '</ul></div>');
     const zm = akt.reduce((m, p) => Math.max(m, p.upraveno || 0), 0);
     if (akt.length && n.zalohaDni > 0 && zm > (S.posledniZaloha || 0) && Date.now() - (S.posledniZaloha || 0) > n.zalohaDni * 864e5)
       casti.push('<div class="hlaseni info"><b>💾 Záloha</b> – ' + (S.posledniZaloha ? 'poslední záloha ' + new Date(S.posledniZaloha).toLocaleDateString('cs-CZ') + ', od té doby se data změnila.' : 'data zatím nikdy nebyla zálohována.') +
@@ -252,6 +269,7 @@
   }
   $('upozorneni').addEventListener('click', e => {
     const o = e.target.closest('[data-otevri]'); if (o) { otevriEditor(o.dataset.otevri); return; }
+    const pj = e.target.closest('[data-pujcka]'); if (pj) { otevriPujcku(pj.dataset.pujcka); return; }
     const a = e.target.closest('[data-akce-up]'); if (!a) return;
     if (a.dataset.akceUp === 'skryt') { skrytaUpozorneni = true; vykresliUpozorneni(); }
     else if (a.dataset.akceUp === 'zaloha') stahniZalohu();
@@ -285,6 +303,8 @@
     $('pStitky').value = (z.stitky || []).join(', '); $('pPoznamka').value = z.poznamka || '';
     $('pServis').innerHTML = ''; for (const s of z.servis || []) pridejServis(s);
     for (const b of ['pStitek', 'pIcs', 'pDuplikat', 'pSmazat']) $(b).hidden = !p;
+    $('pPujcit').hidden = !p || !!p.smazano;
+    if (p) { const x = J.pujckaPolozky(S.pujcky, p.id); $('pPujcit').textContent = x ? '🤝 ' + (x.smer === 'k_nam' ? 'Vypůjčeno od ' : 'Půjčeno – ') + (x.osoba || '?') : '🤝 Půjčit'; }
     $('pSmazat').textContent = p && p.smazano ? 'Obnovit z koše' : 'Do koše';
     vykresliPrilohyEditoru(); aktualizujZaruku();
     ed.otisk = otisk();
@@ -487,7 +507,13 @@
     info('Kopie bez sériového čísla, servisu a příloh – po kontrole uložte.');
   });
   $('pStitek').addEventListener('click', async () => { const id = ed.id; await zavritEditor(); if (ed) return; vybrane.clear(); vybrane.add(id); $('sZdroj').value = 'vybrane'; prepni('stitky'); });
-  $('pIcs').addEventListener('click', () => { const p = ed && ed.puvodni; if (p) exportIcs([J.normPolozka(Object.assign({}, p, hodnotyFormulare()))]); });
+  $('pIcs').addEventListener('click', () => { const p = ed && ed.puvodni; if (p) exportIcs([J.normPolozka(Object.assign({}, p, hodnotyFormulare()))], S.pujcky.filter(x => x.polozkaId === p.id)); });
+  $('pPujcit').addEventListener('click', async () => {
+    const id = ed && ed.id; if (!id) return;
+    await zavritEditor(); if (ed) return;
+    const x = J.pujckaPolozky(S.pujcky, id);
+    if (x) otevriPujcku(x.id); else otevriPujcku(null, { smer: 'ven', polozkaId: id });
+  });
   $('btnNova').addEventListener('click', () => otevriEditor(null));
   for (const d of ['dlgNahled', 'dlgObnova']) $(d).querySelectorAll('[data-zavrit]').forEach(b => b.addEventListener('click', () => $(d).close()));
 
@@ -509,6 +535,9 @@
     const servis = akt.reduce((s, p) => s + (p.servis || []).reduce((t, z) => t + (z.cena || 0), 0), 0);
     const uk = [[J.formatKc(sk.celkem, 0), 'pořizovací hodnota celkem'], [sk.pocet, 'položek v evidenci' + (sk.bezCeny ? ' (' + sk.bezCeny + ' bez ceny)' : '')],
       [J.formatKc(vZaruce, 0), 'hodnota věcí v záruce'], [st.konci, 'záruk brzy končí'], [S.prilohy.filter(a => akt.some(p => p.id === a.polozkaId)).length + ' / ' + J.velikost(velPril), 'příloh / jejich velikost'], [J.formatKc(servis, 0), 'náklady na servis']];
+    const pjh = J.prehledPujcek(S.pujcky, dnes);
+    uk.push(['<button data-akce-pr="pujcky" title="Zobrazit půjčené" style="background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer">🤝 ' + pjh.pocet +
+      (pjh.poTerminu ? ' <span style="color:var(--danger-text)">/ ' + pjh.poTerminu + '</span>' : '') + '</button>', 'půjčeno ' + pjh.pocet + ', po termínu ' + pjh.poTerminu]);
     $('ukazatele').innerHTML = uk.map(([h, n]) => '<div class="ukazatel"><div class="h">' + h + '</div><div class="n">' + n + '</div></div>').join('');
     $('prehledKat').innerHTML = tabulkaSouhrnu(sk, 'Kategorie');
     $('prehledLok').innerHTML = tabulkaSouhrnu(sl, 'Lokalita');
@@ -518,6 +547,7 @@
     $('prehledTop').innerHTML = top.length ? '<table><tbody>' + top.map(p => '<tr><td><button class="maly" data-otevri="' + esc(p.id) + '">' + esc(p.nazev) + '</button></td><td class="faint">' + esc((ctx.kat.get(p.kategorieId) || {}).nazev || '') + '</td><td class="c">' + J.formatKc(p.cena, 0) + '</td></tr>').join('') + '</tbody></table>' : '<p class="muted">Žádná položka nemá cenu.</p>';
   }
   $('list-prehled').addEventListener('click', e => {
+    if (e.target.closest('[data-akce-pr="pujcky"]')) { prepni('pujcky'); return; }
     const z = e.target.closest('[data-zaruka]');
     if (z) { $('btnZrusFiltry').click(); $('fZaruka').value = z.dataset.zaruka; ulozFiltry(); prepni('polozky'); return; }
     const o = e.target.closest('[data-otevri]'); if (o) otevriEditor(o.dataset.otevri);
@@ -725,10 +755,10 @@
       meta.push(m);
     }
     const data = { aplikace: 'evidence-majetku', schema: J.SCHEMA, vytvoreno: new Date().toISOString(),
-      polozky: S.polozky, lokality: S.lokality, mistnosti: S.mistnosti, kategorie: S.kategorie, prilohy: meta, nastaveni: S.nastaveni };
+      polozky: S.polozky, lokality: S.lokality, mistnosti: S.mistnosti, kategorie: S.kategorie, prilohy: meta, pujcky: S.pujcky, nastaveni: S.nastaveni };
     const csvAkt = J.csv(J.serad(S.polozky.filter(p => !p.smazano), 'nazev', ctx), ctx, dnes, nast().upozornitDni, pocetPriloh());
     const precti = 'Záloha Evidence domácího majetku (' + new Date().toLocaleString('cs-CZ') + ')\r\n\r\n' +
-      'data.json   – všechna data (schéma ' + J.SCHEMA + '), obnova: stránka Evidence majetku → Záloha a úložiště → Obnova ze zálohy\r\n' +
+      'data.json   – všechna data včetně půjček (schéma ' + J.SCHEMA + '), obnova: stránka Evidence majetku → Záloha a úložiště → Obnova ze zálohy\r\n' +
       'seznam.csv  – seznam položek pro Excel (UTF-8, středník)\r\nprilohy/    – originální soubory příloh podle ID položky\r\nnahledy/    – zmenšené náhledy fotografií\r\n';
     return J.zapisZip([{ name: 'data.json', data: JSON.stringify(data, null, 1) }, { name: 'seznam.csv', data: csvAkt }, { name: 'PRECTI.txt', data: precti }].concat(soubory), new Date());
   }
@@ -776,9 +806,10 @@
         '<ul style="margin:6px 0 0 18px"><li>položek: <b>' + mg.data.polozky.length + '</b> (v koši ' + mg.data.polozky.filter(p => p.smazano).length + ')</li>' +
         '<li>lokalit ' + mg.data.lokality.length + ', místností ' + mg.data.mistnosti.length + ', kategorií ' + mg.data.kategorie.length + '</li>' +
         '<li>příloh: <b>' + mg.data.prilohy.length + '</b> (' + J.velikost(vel) + ')</li>' +
+        '<li>půjček: <b>' + mg.data.pujcky.length + '</b> (nevrácených ' + mg.data.pujcky.filter(x => !x.vraceno).length + ')</li>' +
         (mg.kroky.length ? '<li>převedeno ze staršího formátu (' + mg.kroky.join(', ') + ')</li>' : '') + '</ul>' +
         (chybi.length ? '<p class="hlaseni chyba" style="margin-top:8px">V záloze chybí ' + chybi.length + ' ' + sklon(chybi.length, 'soubor přílohy', 'soubory příloh', 'souborů příloh') + ' – tyto přílohy se neobnoví.</p>' : '') +
-        '<p style="margin-top:8px">Při sloučení: přibude ' + plan.polozky.pridat.length + ' položek, ' + plan.polozky.prepsat.length + ' se aktualizuje na novější verzi, ' + plan.polozky.ponechat + ' zůstane; přibude ' + plan.prilohy.pridat.length + ' příloh.</p>';
+        '<p style="margin-top:8px">Při sloučení: přibude ' + plan.polozky.pridat.length + ' položek, ' + plan.polozky.prepsat.length + ' se aktualizuje na novější verzi, ' + plan.polozky.ponechat + ' zůstane; přibude ' + plan.prilohy.pridat.length + ' příloh a ' + plan.pujcky.pridat.length + ' půjček (' + plan.pujcky.prepsat.length + ' se aktualizuje).</p>';
       $('dlgObnova').showModal();
     } catch (err) {
       console.error(err);
@@ -835,13 +866,194 @@
     });
   }
   $('btnSmazVse').addEventListener('click', async () => {
-    const t = await Dialog.zeptej('Smaže se úplně vše: ' + S.polozky.length + ' položek, ' + S.prilohy.length + ' příloh, místa i kategorie. Nelze to vrátit. Pro potvrzení napište SMAZAT.', '', { ok: 'Smazat vše' });
+    const t = await Dialog.zeptej('Smaže se úplně vše: ' + S.polozky.length + ' položek, ' + S.prilohy.length + ' příloh, ' + S.pujcky.length + ' půjček, místa i kategorie. Nelze to vrátit. Pro potvrzení napište SMAZAT.', '', { ok: 'Smazat vše' });
     if (t == null) return;
     if (t.trim().toUpperCase() !== 'SMAZAT') { chyba('Nic se nesmazalo – potvrzovací slovo nesouhlasí.'); return; }
-    if (await zapis(() => DB.nahradVse({ polozky: [], prilohy: [], lokality: [], mistnosti: [], kategorie: [], nastaveni: S.nastaveni }))) {
+    if (await zapis(() => DB.nahradVse({ polozky: [], prilohy: [], lokality: [], mistnosti: [], kategorie: [], pujcky: [], nastaveni: S.nastaveni }))) {
       await prvniSpusteni(); vybrane.clear(); info('Všechna data smazána.'); await obnovVse(true); vykresliUpozorneni();
     }
   });
+
+  /* ---------- půjčené věci ---------- */
+  const NAZVY_LHUT = { po_terminu: 'po termínu', blizi: 'blíží se', v_terminu: 'v termínu', bez_terminu: 'bez termínu', vraceno: 'vráceno' };
+  function lhutaHtml(z) {
+    const x = z.x;
+    let t;
+    if (z.stav === 'vraceno') t = 'vráceno ' + J.formatDatum(x.vraceno);
+    else if (z.stav === 'bez_terminu') t = 'bez termínu';
+    else if (z.stav === 'po_terminu') t = 'po termínu ' + -z.dni + ' ' + sklon(z.dni, 'den', 'dny', 'dní') + ' (' + J.formatDatum(x.termin) + ')';
+    else t = (z.dni === 0 ? 'vrátit dnes' : 'vrátit do ' + J.formatDatum(x.termin) + ' (za ' + z.dni + ' ' + sklon(z.dni, 'den', 'dny', 'dní') + ')');
+    return '<span class="lhuta ' + z.stav + '" title="' + NAZVY_LHUT[z.stav] + '">' + t + '</span>';
+  }
+  function radekPujcky(z) {
+    const x = z.x;
+    const det = [(x.smer === 'k_nam' ? 'od: ' : 'komu: ') + (x.osoba || '?'), x.kontakt, x.datumPujceni ? 'půjčeno ' + J.formatDatum(x.datumPujceni) : '',
+      x.zaloha != null ? 'záloha ' + J.formatKc(x.zaloha) : '', x.polozkaId ? 'z evidence' : ''].filter(Boolean).map(esc).join(' · ');
+    const pozn = z.stav === 'vraceno' ? x.stavVraceni : x.stavPujceni;
+    const foto = x.fotoPujceniId || x.fotoVraceniId ? ' <span class="faint" title="Má fotku">🖼</span>' : '';
+    return '<div class="pujc ' + z.stav + '" data-pid="' + esc(x.id) + '"><div style="min-width:0"><div class="nazev">' + esc(J.nazevPujcky(x, S.polozky)) + foto + '</div>' +
+      '<div class="det">' + det + '</div>' + (pozn ? '<div class="det">' + esc(pozn.slice(0, 160)) + '</div>' : '') + '</div>' +
+      '<div class="vpravo">' + lhutaHtml(z) + (z.stav === 'vraceno' ? '' : '<button class="maly" data-pripominka>💬 Připomínka</button><button class="maly" data-vratit>✔ Vráceno</button>') + '</div></div>';
+  }
+  function vykresliPujcky() {
+    const osoby = J.osobyPujcek(S.pujcky);
+    const sel = $('fOsoba'), v = sel.value || lsCti('pujckyOsoba', '');
+    sel.innerHTML = '<option value="">všechny osoby</option>' + osoby.map(o => '<option value="' + esc(o) + '">' + esc(o) + '</option>').join('');
+    sel.value = osoby.includes(v) ? v : '';
+    const h = J.prehledPujcek(S.pujcky, dnes, sel.value);
+    $('souhrnPujcek').innerHTML = 'Půjčeno <b>' + h.pocet + '</b>' + (h.poTerminu ? ' · <b style="color:var(--danger-text)">po termínu ' + h.poTerminu + '</b>' : ' · po termínu 0') +
+      (h.blizi ? ' · <b style="color:var(--warn-text)">blíží se ' + h.blizi + '</b>' : '') + ' · vráceno v historii ' + h.historie.length + (sel.value ? ' <span class="faint">(jen ' + esc(sel.value) + ')</span>' : '');
+    const prazdne = t => '<p class="muted">' + t + '</p>';
+    $('pujVen').innerHTML = h.ven.map(radekPujcky).join('') || prazdne('Nic nemáte půjčeno. Věc z evidence půjčíte tlačítkem 🤝 Půjčit v kartě položky.');
+    $('pujKNam').innerHTML = h.kNam.map(radekPujcky).join('') || prazdne('Nic si nemáte vypůjčeno.');
+    $('pujHist').innerHTML = h.historie.slice(0, 200).map(radekPujcky).join('') || prazdne('Zatím žádná vrácená půjčka.');
+    document.getElementById('dlOsoby').innerHTML = osoby.map(o => '<option value="' + esc(o) + '">').join('');
+  }
+  $('fOsoba').addEventListener('change', () => { lsPis('pujckyOsoba', $('fOsoba').value); vykresliPujcky(); });
+  $('btnPujcVen').addEventListener('click', () => otevriPujcku(null, { smer: 'ven' }));
+  $('btnPujcKNam').addEventListener('click', () => otevriPujcku(null, { smer: 'k_nam' }));
+  $('btnIcsPujcky').addEventListener('click', () => exportIcs([], S.pujcky, 'pujcky'));
+  $('list-pujcky').addEventListener('click', e => {
+    const r = e.target.closest('.pujc'); if (!r) return;
+    const x = S.pujcky.find(q => q.id === r.dataset.pid); if (!x) return;
+    if (e.target.closest('[data-pripominka]')) ukazPripominku(x);
+    else if (e.target.closest('[data-vratit]')) otevriPujcku(x.id, null, true);
+    else otevriPujcku(x.id);
+  });
+
+  /* text připomínky ke zkopírování */
+  function ukazPripominku(x) {
+    const d = document.createElement('dialog'); d.className = 'okno'; d.style.width = 'min(520px, calc(100vw - 16px))';
+    d.innerHTML = '<div class="hlava"><h2>Text připomínky</h2></div><div class="telo"><textarea rows="5" style="margin-top:8px"></textarea>' +
+      (x.kontakt ? '<p class="male" style="margin-top:6px">Kontakt: <b>' + esc(x.kontakt) + '</b></p>' : '') + '</div>' +
+      '<div class="pata"><button class="hlavni" data-kopirovat>📋 Kopírovat</button><button data-zrus>Zavřít</button></div>';
+    document.body.appendChild(d);
+    const ta = d.querySelector('textarea'); ta.value = J.textPripominky(x, J.nazevPujcky(x, S.polozky), dnes);
+    const konec = () => { d.close(); d.remove(); };
+    d.querySelector('[data-zrus]').onclick = konec;
+    d.addEventListener('cancel', e => { e.preventDefault(); konec(); });
+    d.querySelector('[data-kopirovat]').onclick = async () => {
+      try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); try { document.execCommand('copy'); } catch (e2) { /* nic */ } }
+      info('Text zkopírován – vložte ho do zprávy.'); konec();
+    };
+    d.showModal(); ta.focus(); ta.select();
+  }
+
+  /* editor půjčky; fotky = přílohy s polozkaId = id půjčky (stejné úložiště i záloha jako přílohy položek) */
+  let ep = null;
+  const dlgU = $('dlgPujcka');
+  const SLOTY = { pujceni: 'fotoPujceniId', vraceni: 'fotoVraceniId' };
+  function hodnotyPujcky() {
+    return { smer: $('uSmer').value, polozkaId: $('uPolozka').value, nazev: $('uNazev').value, osoba: $('uOsoba').value, kontakt: $('uKontakt').value,
+      datumPujceni: $('uDatum').value, termin: $('uTermin').value, zaloha: $('uZaloha').value, stavPujceni: $('uStav').value,
+      vraceno: $('uVraceno').value, stavVraceni: $('uStavV').value };
+  }
+  function otiskPujcky() { return JSON.stringify(hodnotyPujcky()) + JSON.stringify(ep ? Object.keys(SLOTY).map(k => [ep.foto[k].nova && ep.foto[k].nova.id, ep.foto[k].smazat]) : ''); }
+  function aktualizujSmer() {
+    const kNam = $('uSmer').value === 'k_nam';
+    $('uOsobaPopis').textContent = kNam ? 'Od koho *' : 'Komu *';
+    $('uNazevObal').hidden = !!$('uPolozka').value;
+  }
+  function otevriPujcku(id, sablona, vracim) {
+    const x = id ? S.pujcky.find(q => q.id === id) : null;
+    if (id && !x) { chyba('Půjčka nenalezena.'); return; }
+    const z = x || J.normPujcka(Object.assign({ datumPujceni: dnes }, sablona || {}));
+    ep = { id: x ? x.id : null, puvodni: x, foto: { pujceni: { nova: null, smazat: null }, vraceni: { nova: null, smazat: null } }, urls: [] };
+    $('uTitulek').textContent = x ? (x.vraceno ? 'Vrácená půjčka' : 'Upravit půjčku') : 'Nová půjčka';
+    const akt = serazene(S.polozky.filter(p => !p.smazano || p.id === z.polozkaId));
+    $('uPolozka').innerHTML = '<option value="">— mimo evidenci (volný název) —</option>' + akt.map(p => '<option value="' + esc(p.id) + '">' + esc(p.nazev) + ' (' + esc(p.id) + ')</option>').join('');
+    $('uSmer').value = z.smer; $('uPolozka').value = z.polozkaId || '';
+    $('uNazev').value = z.polozkaId ? '' : z.nazev; $('uOsoba').value = z.osoba; $('uKontakt').value = z.kontakt;
+    $('uDatum').value = z.datumPujceni; $('uTermin').value = z.termin; $('uZaloha').value = z.zaloha == null ? '' : String(z.zaloha).replace('.', ',');
+    $('uStav').value = z.stavPujceni; $('uVraceno').value = z.vraceno || (vracim ? dnes : ''); $('uStavV').value = z.stavVraceni;
+    $('dlOsoby').innerHTML = J.osobyPujcek(S.pujcky).map(o => '<option value="' + esc(o) + '">').join('');
+    $('uSmazat').hidden = !x; $('uPripominka').hidden = !x || !!x.vraceno; $('uVratitDnes').hidden = !!z.vraceno; $('uIcs').hidden = !x || !!x.vraceno || !x.termin;
+    aktualizujSmer(); vykresliFotky();
+    ep.otisk = vracim ? '' : otiskPujcky();
+    if (!dlgU.open) dlgU.showModal();
+    (vracim ? $('uStavV') : x ? $('uOsoba') : (z.polozkaId ? $('uOsoba') : $('uNazev'))).focus();
+  }
+  function fotkaSlotu(k) {
+    const f = ep.foto[k];
+    if (f.nova) return f.nova;
+    const id = ep.puvodni && ep.puvodni[SLOTY[k]];
+    return id && id !== f.smazat ? S.prilohy.find(a => a.id === id) || null : null;
+  }
+  function vykresliFotky() {
+    for (const u of ep.urls) URL.revokeObjectURL(u); ep.urls = [];
+    for (const el of dlgU.querySelectorAll('.foto-slot')) {
+      const k = el.dataset.slot, a = fotkaSlotu(k);
+      let h = '';
+      if (a && (a.nahled || a.blob)) { const u = URL.createObjectURL(a.nahled || a.blob); ep.urls.push(u); h += '<div class="nh" data-ukaz title="Zobrazit"><img src="' + u + '" alt=""></div>'; }
+      h += '<button type="button" class="maly" data-fotit>📷 ' + (a ? 'Jiná fotka' : 'Přidat fotku') + '</button>' + (a ? '<button type="button" class="maly nebezpecne" data-odebrat>Odebrat fotku</button>' : '') +
+        (ep.foto[k].nova ? ' <span class="faint">neuloženo</span>' : '');
+      el.innerHTML = h;
+    }
+  }
+  let slotFotky = '';
+  dlgU.addEventListener('click', e => {
+    const el = e.target.closest('.foto-slot'); if (!el) return;
+    const k = el.dataset.slot;
+    if (e.target.closest('[data-fotit]')) { slotFotky = k; $('uFotoSoubor').click(); }
+    else if (e.target.closest('[data-odebrat]')) { const f = ep.foto[k]; if (f.nova) f.nova = null; else f.smazat = ep.puvodni && ep.puvodni[SLOTY[k]]; vykresliFotky(); }
+    else if (e.target.closest('[data-ukaz]')) { const a = fotkaSlotu(k); if (a && a.blob) otevriPrilohu(a); }
+  });
+  $('uFotoSoubor').addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f || !ep || !slotFotky) return;
+    if (!/^image\//.test(f.type)) { chyba('Vyberte obrázek.'); return; }
+    const r = await zpracujObrazek(f, nast().fotoMax);
+    const s = ep.foto[slotFotky];
+    if (!s.nova && ep.puvodni && ep.puvodni[SLOTY[slotFotky]]) s.smazat = ep.puvodni[SLOTY[slotFotky]];
+    s.nova = { id: J.novyId('A'), polozkaId: '', typ: 'foto', nazev: slotFotky + '_' + J.bezpecneJmeno(r.nazev || f.name), mime: r.blob.type || f.type, velikost: r.blob.size, vytvoreno: Date.now(), blob: r.blob, nahled: r.nahled };
+    vykresliFotky();
+  });
+  async function zavritPujcku(vynutit) {
+    if (!ep) { dlgU.close(); return; }
+    if (!vynutit && otiskPujcky() !== ep.otisk && !await Dialog.potvrd('Zahodit neuložené změny půjčky?', { ok: 'Zahodit', zrus: 'Pokračovat v úpravách' })) return;
+    for (const u of ep.urls) URL.revokeObjectURL(u);
+    ep = null; dlgU.close();
+  }
+  dlgU.addEventListener('cancel', e => { e.preventDefault(); zavritPujcku(); });
+  dlgU.querySelectorAll('[data-zavrit]').forEach(b => b.addEventListener('click', () => zavritPujcku()));
+  $('uSmer').addEventListener('change', aktualizujSmer);
+  $('uPolozka').addEventListener('change', aktualizujSmer);
+  $('uVratitDnes').addEventListener('click', () => { if (!$('uVraceno').value) $('uVraceno').value = dnes; $('uStavV').focus(); });
+  $('uPripominka').addEventListener('click', () => { if (ep && ep.puvodni) ukazPripominku(J.normPujcka(Object.assign({}, ep.puvodni, hodnotyPujcky()))); });
+  $('uIcs').addEventListener('click', () => { if (ep && ep.puvodni) exportIcs([], [J.normPujcka(Object.assign({}, ep.puvodni, hodnotyPujcky()))], 'pujcka'); });
+  $('formPujcka').addEventListener('submit', async e => {
+    e.preventDefault();
+    const h = hodnotyPujcky();
+    const pol = h.polozkaId ? S.polozky.find(p => p.id === h.polozkaId) : null;
+    if (!pol && !h.nazev.trim()) { $('uNazev').focus(); chyba('Vyberte věc z evidence nebo napište název věci.'); return; }
+    if (!h.osoba.trim()) { $('uOsoba').focus(); chyba(h.smer === 'k_nam' ? 'Vyplňte, od koho máte věc půjčenou.' : 'Vyplňte, komu věc půjčujete.'); return; }
+    if (h.zaloha.trim() && (J.cislo(h.zaloha) == null || J.cislo(h.zaloha) < 0)) { $('uZaloha').focus(); chyba('Zálohu se nepodařilo přečíst – zadejte částku v Kč, např. 500.'); return; }
+    if (h.termin && h.datumPujceni && h.termin < h.datumPujceni) { $('uTermin').focus(); chyba('Termín vrácení je dřív než datum půjčení.'); return; }
+    if (h.vraceno && h.datumPujceni && h.vraceno < h.datumPujceni) { $('uVraceno').focus(); chyba('Datum vrácení je dřív než datum půjčení.'); return; }
+    const id = ep.id || J.novyId('P');
+    if (pol && !h.vraceno) {
+      const jina = S.pujcky.find(q => q.polozkaId === pol.id && !q.vraceno && q.id !== id);
+      if (jina) { chyba('„' + pol.nazev + '“ je už zapsaná jako půjčená (' + (jina.osoba || '?') + '). Nejdřív tu půjčku označte jako vrácenou.'); return; }
+    }
+    const ted = Date.now();
+    const x = J.normPujcka(Object.assign({}, ep.puvodni || {}, h, { id, nazev: pol ? pol.nazev : h.nazev, vytvoreno: ep.puvodni ? ep.puvodni.vytvoreno : ted, upraveno: ted }), ted);
+    const nove = [], smazane = [];
+    for (const [k, pole] of Object.entries(SLOTY)) {
+      const f = ep.foto[k];
+      if (f.smazat) { smazane.push(f.smazat); x[pole] = ''; }
+      if (f.nova) { nove.push(Object.assign({}, f.nova, { polozkaId: id })); x[pole] = f.nova.id; }
+    }
+    if (await zapis(() => DB.ulozPujcku(x, nove, smazane))) {
+      info(ep.id ? (x.vraceno && !(ep.puvodni || {}).vraceno ? 'Zapsáno jako vrácené.' : 'Uloženo.') : 'Půjčka zapsána.');
+      await zavritPujcku(true); await obnovVse(true); vykresliUpozorneni();
+    }
+  });
+  $('uSmazat').addEventListener('click', async () => {
+    const x = ep && ep.puvodni; if (!x) return;
+    if (!await Dialog.potvrd('Smazat záznam o půjčce „' + J.nazevPujcky(x, S.polozky) + '“ včetně fotek? Vrácenou půjčku raději ponechte v historii.', { ok: 'Smazat' })) return;
+    if (await zapis(() => DB.smazPujcku(x.id))) { info('Půjčka smazána.'); await zavritPujcku(true); await obnovVse(true); vykresliUpozorneni(); }
+  });
+  $('btnNapoveda').addEventListener('click', () => $('dlgNapoveda').showModal());
+  $('dlgNapoveda').querySelector('[data-zavrit]').addEventListener('click', () => $('dlgNapoveda').close());
 
   /* ---------- ukázková data ---------- */
   async function obrazekUkazky(text, barva, uctenka) {
@@ -885,7 +1097,13 @@
     }
     const uc = await obrazekUkazky(pol[0].prodejce + '\n' + J.formatDatum(pol[0].datumNakupu) + '\n\n' + pol[0].nazev + '\n' + J.formatKc(pol[0].cena) + '\n\nDPH 21 %', '', true);
     pril.push({ id: J.novyId('A'), polozkaId: pol[0].id, typ: 'uctenka', nazev: 'uctenka_televize.jpg', mime: 'image/jpeg', velikost: uc.size, vytvoreno: ted + 1, blob: uc, nahled: (await zpracujObrazek(new File([uc], 'u.jpg', { type: 'image/jpeg' }), 0)).nahled });
-    if (await zapis(async () => { await DB.uloz('polozky', pol); await DB.uloz('prilohy', pril); })) {
+    const vrt = pol.find(p => p.nazev === 'Aku vrtačka');
+    const pujc = [
+      J.normPujcka({ id: J.novyId('P'), smer: 'ven', polozkaId: vrt.id, nazev: vrt.nazev, osoba: 'Petr (soused)', kontakt: '777 123 456', datumPujceni: J.pridejDny(dnes, -20), termin: J.pridejDny(dnes, -3), stavPujceni: 'Bez poškození, 2 akumulátory a nabíječka.', vytvoreno: ted, upraveno: ted }, ted),
+      J.normPujcka({ id: J.novyId('P'), smer: 'k_nam', nazev: 'Kniha Duna (ukázka)', osoba: 'Jana', datumPujceni: J.pridejDny(dnes, -10), termin: J.pridejDny(dnes, 5), vytvoreno: ted, upraveno: ted }, ted),
+      J.normPujcka({ id: J.novyId('P'), smer: 'ven', nazev: 'Stan pro 4 osoby (ukázka)', osoba: 'Jana', datumPujceni: J.pridejDny(dnes, -60), termin: J.pridejDny(dnes, -40), zaloha: 500, vraceno: J.pridejDny(dnes, -41), stavVraceni: 'V pořádku, suchý.', vytvoreno: ted, upraveno: ted }, ted)
+    ];
+    if (await zapis(async () => { await DB.uloz('polozky', pol); await DB.uloz('prilohy', pril); await DB.uloz('pujcky', pujc); })) {
       info('Vloženo ' + pol.length + ' ukázkových položek se štítkem „ukázka“.'); skrytaUpozorneni = false; await obnovVse(true); vykresliUpozorneni();
     }
   }
@@ -988,6 +1206,6 @@
     await vykresliUpozorneni();
     zHashe();
   }
-  window.MajetekApp = { stav: () => S, otevriEditor, vlozUkazku, prepni, sestavZalohu, vykresli };
+  window.MajetekApp = { stav: () => S, otevriEditor, otevriPujcku, vlozUkazku, prepni, sestavZalohu, vykresli };
   start();
 })();

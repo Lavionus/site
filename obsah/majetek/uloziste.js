@@ -3,8 +3,8 @@
   'use strict';
   const J = window.MajetekJadro;
   const JMENO = 'webapp_majetek';
-  const VERZE_DB = 1;                 // verze struktury úložišť IndexedDB (ne datového schématu)
-  const STORY = ['polozky', 'lokality', 'mistnosti', 'kategorie', 'prilohy', 'meta'];
+  const VERZE_DB = 2;                 // verze struktury úložišť IndexedDB (ne datového schématu)
+  const STORY = ['polozky', 'lokality', 'mistnosti', 'kategorie', 'prilohy', 'pujcky', 'meta'];
   let db = null;
 
   function req(r) { return new Promise((ok, chyba) => { r.onsuccess = () => ok(r.result); r.onerror = () => chyba(r.error); }); }
@@ -39,7 +39,8 @@
           d.createObjectStore('prilohy', { keyPath: 'id' }).createIndex('polozkaId', 'polozkaId');
           d.createObjectStore('meta', { keyPath: 'klic' });
         }
-        // budoucí změny struktury: if (stara < 2) { … }
+        if (stara < 2) d.createObjectStore('pujcky', { keyPath: 'id' });
+        // budoucí změny struktury: if (stara < 3) { … }
       };
       r.onblocked = () => chyba(new Error('Databázi blokuje jiná otevřená karta s touto stránkou. Zavřete ji a načtěte stránku znovu.'));
       r.onsuccess = () => {
@@ -66,12 +67,12 @@
   async function nactiVse() {
     const d = await otevri();
     const tx = d.transaction(STORY);
-    const [polozky, lokality, mistnosti, kategorie, prilohy, metaPole] = await Promise.all(STORY.map(s => req(tx.objectStore(s).getAll())));
+    const [polozky, lokality, mistnosti, kategorie, prilohy, pujcky, metaPole] = await Promise.all(STORY.map(s => req(tx.objectStore(s).getAll())));
     const m = Object.fromEntries(metaPole.map(x => [x.klic, x.hodnota]));
-    const stav = { polozky, lokality, mistnosti, kategorie, prilohy, nastaveni: m.nastaveni || {}, schema: m.schema || 0, posledniZaloha: m.posledniZaloha || 0 };
+    const stav = { polozky, lokality, mistnosti, kategorie, prilohy, pujcky, nastaveni: m.nastaveni || {}, schema: m.schema || 0, posledniZaloha: m.posledniZaloha || 0 };
     if (stav.schema && stav.schema < J.SCHEMA) {
       const blob = new Map(prilohy.map(a => [a.id, { blob: a.blob, nahled: a.nahled }]));
-      const mg = J.migruj({ schema: stav.schema, polozky, lokality, mistnosti, kategorie, prilohy, nastaveni: stav.nastaveni }, Date.now());
+      const mg = J.migruj({ schema: stav.schema, polozky, lokality, mistnosti, kategorie, prilohy, pujcky, nastaveni: stav.nastaveni }, Date.now());
       for (const a of mg.data.prilohy) Object.assign(a, blob.get(a.id) || {});
       await nahradVse(mg.data);
       return nactiVse();
@@ -98,6 +99,23 @@
     for (const id of smazane || []) pr.delete(id);
     return hotovo(tx);
   }
+  /* Uložení půjčky i jejích fotek (přílohy s polozkaId = id půjčky) v jedné transakci. */
+  async function ulozPujcku(x, nove, smazane) {
+    const d = await otevri(); const tx = d.transaction(['pujcky', 'prilohy'], 'readwrite');
+    tx.objectStore('pujcky').put(x);
+    const pr = tx.objectStore('prilohy');
+    for (const a of nove || []) pr.put(a);
+    for (const id of smazane || []) pr.delete(id);
+    return hotovo(tx);
+  }
+  /* Smazání půjčky včetně jejích fotek. */
+  async function smazPujcku(id) {
+    const d = await otevri(); const tx = d.transaction(['pujcky', 'prilohy'], 'readwrite');
+    tx.objectStore('pujcky').delete(id);
+    const pr = tx.objectStore('prilohy');
+    pr.index('polozkaId').openKeyCursor(IDBKeyRange.only(id)).onsuccess = e => { const c = e.target.result; if (c) { pr.delete(c.primaryKey); c.continue(); } };
+    return hotovo(tx);
+  }
   async function smazTrvale(ids) {
     const d = await otevri(); const tx = d.transaction(['polozky', 'prilohy'], 'readwrite');
     const pr = tx.objectStore('prilohy'), idx = pr.index('polozkaId');
@@ -112,7 +130,7 @@
   /* Nahradí veškerá data (obnova „nahradit“). Přílohy musí mít vyplněný blob. */
   async function nahradVse(data) {
     const d = await otevri(); const tx = d.transaction(STORY, 'readwrite');
-    for (const s of ['polozky', 'lokality', 'mistnosti', 'kategorie', 'prilohy']) {
+    for (const s of ['polozky', 'lokality', 'mistnosti', 'kategorie', 'prilohy', 'pujcky']) {
       const os = tx.objectStore(s); os.clear();
       for (const z of data[s] || []) os.put(z);
     }
@@ -127,6 +145,7 @@
     for (const p of plan.polozky.pridat.concat(plan.polozky.prepsat)) tx.objectStore('polozky').put(p);
     for (const k of ['lokality', 'mistnosti', 'kategorie']) for (const z of plan.ciselnikyPridat[k]) tx.objectStore(k).put(z);
     for (const a of plan.prilohy.pridat) tx.objectStore('prilohy').put(a);
+    for (const x of plan.pujcky ? plan.pujcky.pridat.concat(plan.pujcky.prepsat) : []) tx.objectStore('pujcky').put(x);
     tx.objectStore('meta').put({ klic: 'schema', hodnota: J.SCHEMA });
     return hotovo(tx);
   }
@@ -142,5 +161,5 @@
     try { return navigator.storage && navigator.storage.persist ? await navigator.storage.persist() : false; } catch (e) { return false; }
   }
 
-  window.MajetekDB = { otevri, nactiVse, uloz, smaz, ulozPolozku, smazTrvale, priloha, nahradVse, sloucit, meta, nastavMeta, odhad, pozadatTrvale, popisChyby, vse };
+  window.MajetekDB = { otevri, nactiVse, uloz, smaz, ulozPolozku, ulozPujcku, smazPujcku, smazTrvale, priloha, nahradVse, sloucit, meta, nastavMeta, odhad, pozadatTrvale, popisChyby, vse };
 })();
