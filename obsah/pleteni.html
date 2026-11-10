@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pletení a háčkování – vzorek, příze, počítadlo, schéma</title>
+<meta name="description" content="Pomocník k pletení a háčkování: přepočet vzorku a návodu, rovnoměrné přidávání a ubírání, spotřeba příze a počet klubek, počítadlo řad s připomínkami, editor schémat vzorů, tabulky jehlic, přízí a zkratek CZ↔EN.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="pleteni/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Hlídač termínů / Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+select.tl{padding:4px 6px;max-width:190px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+input.vstup[type=number]{width:100%}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(8px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto}
+.karty{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px;align-items:start}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px 14px;display:grid;gap:10px;min-width:0}
+.karta h2{margin:0;font-size:1rem}
+.karta .popis{margin:0;font-size:.8rem;color:var(--text-muted);line-height:1.45}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:420px){.radek3{grid-template-columns:1fr 1fr}}
+.zaskrt{display:flex;gap:6px;align-items:center;font-size:.84rem}
+.vysledek{background:var(--bg-control);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;padding:9px 11px;font-size:.9rem;line-height:1.5;word-break:break-word}
+.vysledek b.velke{font-size:1.35rem}
+.vysledek .mal{font-size:.78rem;color:var(--text-muted)}
+.vysledek.chyba{border-left-color:var(--danger)}
+.kroky{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.kroky span{font-size:.74rem;border-radius:5px;padding:1px 6px;background:var(--bg-panel);border:1px solid var(--border)}
+.kroky span.z{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;background:var(--bg-panel)}
+tr.zvyr td{background:var(--accent-soft)}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;max-height:70vh}
+td code{font-weight:600;color:var(--text)}
+
+/* počítadla */
+.pocitadla{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.poc{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:grid;gap:8px;grid-template-columns:1fr auto}
+.poc.ted{border-color:var(--warn);box-shadow:0 0 0 2px var(--warn)}
+.poc h3{margin:0;font-size:.95rem;align-self:center;word-break:break-word}
+.poc .cislo{grid-column:1/-1;text-align:center;font-size:clamp(3.2rem,16vw,5.5rem);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.poc .stav{grid-column:1/-1;text-align:center;font-size:.86rem;color:var(--text-muted);min-height:1.3em}
+.poc .stav b{color:var(--warn)}
+.poc .ovl{grid-column:1/-1;display:grid;grid-template-columns:1fr 3fr;gap:8px}
+.poc .ovl button{font-size:2.2rem;font-weight:700;padding:14px 0;border-radius:12px;cursor:pointer;font-family:inherit;touch-action:manipulation;user-select:none}
+.poc .minus{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.poc .plus{background:var(--accent);color:var(--on-accent,#fff);border:1px solid var(--accent)}
+.poc .plus:active,.poc .minus:active{transform:scale(.97)}
+.projekt-info{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--text-muted);margin-bottom:10px;align-items:center}
+.projekt-info b{color:var(--text)}
+.poznamka{white-space:pre-wrap;font-size:.86rem;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:12px}
+
+/* schéma */
+.sch-nastroje{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.sch-nastroje input.vstup{padding:4px 6px;width:4.6em}
+.sch-nastroje label{font-size:.8rem;color:var(--text-muted);display:flex;gap:4px;align-items:center}
+.paleta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.paleta button{width:36px;height:36px;border:1px solid var(--border-strong);border-radius:6px;background:var(--bg-input);cursor:pointer;padding:3px;display:grid;place-items:center;color:var(--text)}
+.paleta button[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:1px}
+.paleta button svg{width:26px;height:26px}
+.paleta .barva{border-radius:50%}
+.platno-obal{overflow:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;max-height:72vh;touch-action:none}
+#platno{display:block;touch-action:none;cursor:crosshair}
+.napis-nastroj{font-size:.8rem;color:var(--text-muted);margin:4px 0}
+#tiskovy{display:none}
+@media print{
+  body{display:block;height:auto;background:#fff;color:#000}
+  .lista,main,dialog,#podpis-pruh,.nabidka{display:none!important}
+  #tiskovy{display:block}
+  #tiskovy img{width:100%;height:auto}
+  @page{size:A4;margin:10mm}
+}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,900px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+#nahledPlochy{background:#fff;border-radius:6px;overflow:auto;max-height:60vh}
+#nahledPlochy img{display:block;max-width:none}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🧶 Pletení a háčkování</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Záloha, import, export a tisk schématu">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Projekt"><span class="skup-nazev" aria-hidden="true">Projekt</span><div class="skup-tl">
+    <select class="tl" id="volbaProjektu" aria-label="Projekt"></select>
+    <button class="tl" data-nabidka="nabProjekt" aria-expanded="false" title="Nový, upravit, smazat projekt">✎<span class="txt"> Projekt</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="pocitadlo" aria-pressed="true">🔢<span class="txt"> Počítadlo</span></button>
+    <button class="tl" data-pohled="schema" aria-pressed="false">▦<span class="txt"> Schéma</span></button>
+    <button class="tl" data-pohled="vzorek" aria-pressed="false">📏<span class="txt"> Vzorek</span></button>
+    <button class="tl" data-pohled="prize" aria-pressed="false">🧶<span class="txt"> Příze</span></button>
+    <button class="tl" data-pohled="tabulky" aria-pressed="false">🪡<span class="txt"> Tabulky</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tiskSchema">🖨️ Tisk schématu (A4)</button>
+  <button class="tl" data-prikaz="png">🖼️ Schéma jako PNG</button>
+  <button class="tl" data-prikaz="svg">📐 Schéma jako SVG</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha všech projektů (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+</div>
+<div id="nabProjekt" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novyProjekt">✚ Nový projekt</button>
+  <button class="tl" data-prikaz="upravProjekt">✎ Upravit projekt (příze, jehlice, poznámky)</button>
+  <button class="tl" data-prikaz="kopieProjektu">⧉ Duplikovat projekt</button>
+  <hr>
+  <button class="tl" data-prikaz="smazProjekt">🗑️ Smazat projekt…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+<div id="tiskovy"></div>
+
+<!-- projekt -->
+<dialog class="okno" id="dlgProjekt"><form method="dialog">
+  <header>✎ Projekt</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" required maxlength="200"></label>
+    <div class="radek">
+      <label class="pole">Příze (značka, barva, šarže)<input class="vstup" name="prize" maxlength="300"></label>
+      <label class="pole">Jehlice / háček<input class="vstup" name="jehlice" maxlength="100" placeholder="např. 4 mm kruhové 80 cm"></label>
+    </div>
+    <label class="pole">Poznámky (úpravy návodu, míry, odkazy)<textarea class="vstup" name="poznamka" rows="7" maxlength="20000"></textarea></label>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- počítadlo -->
+<dialog class="okno" id="dlgPocitadlo"><form method="dialog">
+  <header>⚙️ Počítadlo</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Název<input class="vstup" name="nazev" required maxlength="80"></label>
+      <label class="pole">Hodnota<input class="vstup" name="hodnota" type="number" min="0" step="1"></label>
+    </div>
+    <label class="pole">Raport vzoru – řad (0 = nepočítat opakování)<input class="vstup" name="raport" type="number" min="0" step="1"></label>
+    <div class="radek">
+      <label class="pole">Připomínka každou … řadu (0 = bez)<input class="vstup" name="kazdych" type="number" min="0" step="1"></label>
+      <label class="pole">Poprvé v řadě (0 = podle intervalu)<input class="vstup" name="od" type="number" min="0" step="1"></label>
+    </div>
+    <label class="pole">Text připomínky<input class="vstup" name="text" maxlength="200" placeholder="např. přidat na začátku a na konci"></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgPocSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- náhled plochy -->
+<dialog class="okno siroke" id="dlgPlocha"><form method="dialog">
+  <header>🔁 Náhled celé plochy (opakování raportu)</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Opakovat do šířky ×<input class="vstup" id="plochaNx" type="number" min="1" max="50" value="4"></label>
+      <label class="pole">Opakovat do výšky ×<input class="vstup" id="plochaNy" type="number" min="1" max="50" value="3"></label>
+    </div>
+    <div id="nahledPlochy"></div>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>🔢 Počítadlo</b> – velké tlačítko <b>+</b> jde mačkat palcem jednou rukou. Každý projekt má libovolně počítadel (řady, opakování vzoru, přidávání). V ⚙️ nastavíte <i>raport</i> (počítadlo pak ukazuje „řada 3 z 8, opakování 2“) a <i>připomínku</i> („každou 6. řadu přidat“) – karta se v té řadě zvýrazní a telefon krátce zavibruje. Volba <i>Nezhasínat displej</i> drží obrazovku rozsvícenou (Wake Lock, jen v prohlížečích, které ho umí).</p>
+    <p style="margin:0"><b>▦ Schéma</b> – vyberte symbol nebo barvu a klikejte/táhněte po mřížce. Řada 1 je dole; u plošného pletení se liché (lícové) řady čtou zprava, sudé (rubové) zleva – čísla stojí na straně, odkud řada začíná. Prázdná buňka znamená „hladce na líci“. <i>Raport</i> označíte tažením v režimu 🔲, náhled celé plochy ho zopakuje. Tisk, PNG a SVG najdete v menu Soubor.</p>
+    <p style="margin:0"><b>📏 Vzorek</b> – upleťte zkušební čtverec, změřte oček a řad na 10 cm a stránka přepočte návod na vaše pletení i rozdělí přidávání do řady.</p>
+    <p style="margin:0"><b>🧶 Příze</b> – spotřeby výrobků jsou <b>orientační</b> (běžné tabulky výrobců, stav 11/2026) a liší se podle vzoru; nejpřesnější je zvážit vzorek. Počítá se 10 % rezerva.</p>
+    <p style="margin:0">Pozor na háčkování: <b>americké a britské návody</b> používají stejné zkratky pro různá očka (US <i>dc</i> = UK <i>tr</i>) – viz Tabulky.</p>
+    <p style="margin:0">Data jsou jen v tomto prohlížeči (localStorage) – zálohujte přes <i>Soubor → Záloha</i>. Převod fotky na vzor křížkové výšivky nebo korálků najdete ve stránce Vzory z obrázku.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.PleteniJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const num = v => { const x = parseFloat(String(v == null ? '' : v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
+const fmt = (x, d = 1) => Number.isFinite(x) ? x.toLocaleString('cs-CZ', { maximumFractionDigits: d }) : '–';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data;
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let pohled = 'pocitadlo';
+try { pohled = localStorage.getItem(J.KLIC + '_pohled') || 'pocitadlo'; } catch (e) {}
+
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+const projekt = () => data.projekty.find(p => p.id === data.aktivni) || data.projekty[0];
+
+function otevri(dlg) {
+  return new Promise(res => {
+    dlg.addEventListener('close', () => res(dlg.returnValue), { once: true });
+    dlg.returnValue = '';
+    dlg.showModal();
+  });
+}
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(obsah instanceof Blob ? obsah : new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const jmenoSouboru = s => (s || 'vzor').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60);
+
+/* ---------- lišta: projekty ---------- */
+function obnovProjekty() {
+  $('volbaProjektu').innerHTML = data.projekty.map(p => `<option value="${esc(p.id)}">${esc(p.nazev)}</option>`).join('');
+  $('volbaProjektu').value = projekt().id;
+}
+$('volbaProjektu').addEventListener('change', e => { data.aktivni = e.target.value; zpet = []; uloz(); vykresli(); });
+
+async function upravProjekt(p, novy) {
+  const f = $('dlgProjekt').querySelector('form');
+  for (const k of ['nazev', 'prize', 'jehlice', 'poznamka']) f.elements[k].value = p[k] || '';
+  if (await otevri($('dlgProjekt')) !== 'ok') return false;
+  for (const k of ['nazev', 'prize', 'jehlice', 'poznamka']) p[k] = f.elements[k].value.trim();
+  if (!p.nazev) p.nazev = 'Projekt';
+  if (novy) { data.projekty.push(p); data.aktivni = p.id; }
+  uloz(); obnovProjekty(); vykresli(); return true;
+}
+
+/* ---------- 🔢 počítadlo ---------- */
+let zamek = null, chciZamek = false;
+async function nastavZamek(zap) {
+  chciZamek = zap;
+  try {
+    if (zap && navigator.wakeLock && document.visibilityState === 'visible') zamek = await navigator.wakeLock.request('screen');
+    else if (!zap && zamek) { await zamek.release(); zamek = null; }
+  } catch (e) { zamek = null; }
+}
+document.addEventListener('visibilitychange', () => { if (chciZamek && document.visibilityState === 'visible') nastavZamek(true); });
+
+function textStavu(c) {
+  const s = J.stavPocitadla(c), casti = [];
+  if (c.raport > 0) casti.push(`řada ${s.vRaportu} z ${c.raport} · opakování ${s.opakovani}`);
+  if (c.kazdych > 0) casti.push(s.ted ? `<b>⚠️ Teď: ${esc(c.text || 'připomínka')}</b>` : `${esc(c.text || 'připomínka')} za ${s.za} ř. (hotovo ${s.kolikrat}×)`);
+  return { html: casti.join('<br>'), ted: !!s.ted };
+}
+function kartaPocitadla(c) {
+  const st = textStavu(c);
+  return `<div class="poc${st.ted ? ' ted' : ''}" data-poc="${esc(c.id)}">
+    <h3>${esc(c.nazev)}</h3>
+    <button class="btn mini" data-akce="nastav" aria-label="Nastavení počítadla">⚙️</button>
+    <div class="cislo" aria-live="polite">${c.hodnota}</div>
+    <div class="stav">${st.html}</div>
+    <div class="ovl"><button class="minus" data-akce="minus" aria-label="O jednu zpět">−</button><button class="plus" data-akce="plus" aria-label="Přičíst">+</button></div>
+  </div>`;
+}
+function vykresliPocitadlo() {
+  const p = projekt();
+  $('obsah').innerHTML = `<div class="projekt-info">
+      <span>📁 <b>${esc(p.nazev)}</b></span>
+      ${p.prize ? `<span>🧶 ${esc(p.prize)}</span>` : ''}${p.jehlice ? `<span>🪡 ${esc(p.jehlice)}</span>` : ''}
+      <button class="btn mini" data-prikaz="noveRadky">✚ Počítadlo</button>
+      <label class="zaskrt" ${'wakeLock' in navigator ? '' : 'hidden'}><input type="checkbox" id="zamekDispleje" ${chciZamek ? 'checked' : ''}> Nezhasínat displej</label>
+    </div>
+    <div class="pocitadla">${p.pocitadla.map(kartaPocitadla).join('')}</div>
+    ${p.poznamka ? `<div class="poznamka">${esc(p.poznamka)}</div>` : ''}`;
+  const z = $('zamekDispleje'); if (z) z.onchange = () => nastavZamek(z.checked);
+}
+function obnovKartu(c) {
+  const el = document.querySelector(`[data-poc="${CSS.escape(c.id)}"]`); if (!el) return;
+  const st = textStavu(c);
+  el.querySelector('.cislo').textContent = c.hodnota;
+  el.querySelector('.stav').innerHTML = st.html;
+  el.classList.toggle('ted', st.ted);
+  if (st.ted && navigator.vibrate) try { navigator.vibrate([80, 60, 80]); } catch (e) {}
+}
+async function nastavPocitadlo(c) {
+  const f = $('dlgPocitadlo').querySelector('form'), p = projekt();
+  for (const k of ['nazev', 'hodnota', 'raport', 'kazdych', 'od', 'text']) f.elements[k].value = c[k];
+  let smazat = false;
+  $('dlgPocSmaz').onclick = async () => {
+    if (p.pocitadla.length < 2) return Dialog.info('Projekt musí mít aspoň jedno počítadlo.');
+    if (await Dialog.potvrd(`Smazat počítadlo „${c.nazev}“?`)) { smazat = true; $('dlgPocitadlo').close('smaz'); }
+  };
+  const v = await otevri($('dlgPocitadlo'));
+  if (smazat) p.pocitadla = p.pocitadla.filter(x => x !== c);
+  else if (v === 'ok') {
+    c.nazev = f.elements.nazev.value.trim() || 'Počítadlo'; c.text = f.elements.text.value.trim();
+    for (const k of ['hodnota', 'raport', 'kazdych', 'od']) c[k] = Math.max(0, Math.round(num(f.elements[k].value)) || 0);
+  } else return;
+  uloz(); vykresli();
+}
+
+/* ---------- ▦ schéma ---------- */
+let nastroj = { druh: 'symbol', id: 'p' }, zpet = [], tahne = null, bunka = 22;
+const OKRAJ = 30;
+function schema() {
+  const p = projekt();
+  if (!p.schema) p.schema = J.noveSchema(20, 16, 'pleteni');
+  return p.schema;
+}
+function ikonaSymbolu(sym, sir = 1) {
+  return `<svg viewBox="0 0 ${10 * Math.min(sir, 2)} 10" aria-hidden="true"><path d="${sym.d}" transform="scale(${Math.min(sir, 2)},1)" fill="${sym.fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" style="stroke-width:1.6px"/>${sym.sedy ? '<rect width="10" height="10" fill="currentColor" opacity=".35"/>' : ''}</svg>`;
+}
+function vykresliSchema() {
+  const s = schema();
+  if (!J.SYMBOL[s.sada][nastroj.id] && nastroj.druh === 'symbol') nastroj = { druh: 'symbol', id: '' };
+  $('obsah').innerHTML = `
+    <div class="sch-nastroje">
+      <select class="tl" id="schSada" aria-label="Sada symbolů"><option value="pleteni">🪡 Pletení</option><option value="hackovani">🪝 Háčkování</option></select>
+      <label>Š <input class="vstup" id="schS" type="number" min="1" max="${J.MAX_ROZMER}" value="${s.sirka}"></label>
+      <label>V <input class="vstup" id="schV" type="number" min="1" max="${J.MAX_ROZMER}" value="${s.vyska}"></label>
+      <button class="btn mini" data-sch="rozmer">Použít rozměr</button>
+      <label class="zaskrt"><input type="checkbox" id="schKruh" ${s.kruhove ? 'checked' : ''}> kruhově</label>
+      <button class="btn mini" data-sch="zpet" title="Zpět (Ctrl+Z)">↶ Zpět</button>
+      <button class="btn mini" data-sch="zrcH" title="Zrcadlit vodorovně (copánky a ubírání se otočí)">⇋ Zrcadlit</button>
+      <button class="btn mini" data-sch="zrcV" title="Převrátit svisle">⇵ Převrátit</button>
+      <button class="btn mini" data-sch="raport" aria-pressed="${nastroj.druh === 'raport'}" title="Táhnutím vyznačte raport">🔲 Raport</button>
+      <button class="btn mini" data-sch="plocha">🔁 Náhled plochy</button>
+      <label>Zvětšení <input type="range" id="schZoom" min="10" max="40" value="${bunka}"></label>
+      <button class="btn mini danger" data-sch="vycistit">Vyčistit</button>
+    </div>
+    <div class="paleta" id="schSymboly">${J.SYMBOLY[s.sada].map(x => `<button data-sym="${esc(x.id)}" title="${esc(x.nazev)}${x.zk ? ' (' + esc(x.zk) + ')' : ''}" aria-label="${esc(x.nazev)}" aria-pressed="${nastroj.druh === 'symbol' && nastroj.id === x.id}">${ikonaSymbolu(x, x.s || 1)}</button>`).join('')}</div>
+    <div class="paleta" id="schBarvy">${s.paleta.map((b, i) => `<button class="barva" data-barva="${i}" style="background:${b}" title="Barva ${String.fromCharCode(65 + i)}${i ? '' : ' (podklad)'}" aria-label="Barva ${String.fromCharCode(65 + i)}" aria-pressed="${nastroj.druh === 'barva' && nastroj.id === i}"></button>`).join('')}
+      <label class="btn mini" title="Upravit vybranou barvu" style="display:flex;align-items:center;gap:4px">🎨 <input type="color" id="schBarvaVol" value="${s.paleta[nastroj.druh === 'barva' ? nastroj.id : 1] || '#000000'}" style="width:28px;height:22px;border:0;padding:0;background:none"></label>
+      <button class="btn mini" data-sch="pridejBarvu" ${s.paleta.length >= 16 ? 'disabled' : ''}>+ barva</button>
+    </div>
+    <div class="napis-nastroj" id="schNapis"></div>
+    <div class="platno-obal"><canvas id="platno"></canvas></div>
+    <p class="info" style="margin-top:8px">Řada 1 je dole. ${s.kruhove ? 'Kruhově se všechny řady čtou zprava.' : 'Liché (lícové) řady čtěte zprava, sudé (rubové) zleva – na rubu se hladce a obrace prohazují.'} Očka se počítají zprava. <span id="schPopis"></span></p>`;
+  $('schSada').value = s.sada;
+  napisNastroje();
+  kresliPlatno();
+}
+function napisNastroje() {
+  const s = schema(), el = $('schNapis'); if (!el) return;
+  if (nastroj.druh === 'symbol') { const x = J.SYMBOL[s.sada][nastroj.id]; el.textContent = 'Kreslí se: ' + (x ? x.nazev : ''); }
+  else if (nastroj.druh === 'barva') el.textContent = 'Kreslí se barva ' + String.fromCharCode(65 + nastroj.id) + (nastroj.id ? '' : ' (podklad = guma barvy)');
+  else el.textContent = 'Táhněte přes buňky raportu (opakující se části vzoru).';
+}
+function kresliPlatno() {
+  const cv = $('platno'); if (!cv) return;
+  const s = schema(), b = bunka, dpr = window.devicePixelRatio || 1;
+  const W = s.sirka * b + 2 * OKRAJ, H = s.vyska * b + 2 * OKRAJ;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cs = getComputedStyle(document.documentElement);
+  g.fillStyle = cs.getPropertyValue('--bg-panel') || '#fff'; g.fillRect(0, 0, W, H);
+  g.save(); g.translate(OKRAJ, OKRAJ);
+  for (let y = 0; y < s.vyska; y++) for (let x = 0; x < s.sirka; x++) {
+    const i = y * s.sirka + x, sym = J.SYMBOL[s.sada][s.bunky[i]];
+    g.fillStyle = sym && sym.sedy ? '#bdbdbd' : (s.paleta[s.barvy[i]] || '#fff');
+    g.fillRect(x * b, y * b, b, b);
+  }
+  for (let x = 0; x <= s.sirka; x++) { const silna = (s.sirka - x) % 10 === 0; g.strokeStyle = silna ? 'rgba(0,0,0,.75)' : 'rgba(0,0,0,.25)'; g.lineWidth = silna ? 1.4 : 1; g.beginPath(); g.moveTo(x * b + .5, 0); g.lineTo(x * b + .5, s.vyska * b); g.stroke(); }
+  for (let y = 0; y <= s.vyska; y++) { const silna = (s.vyska - y) % 10 === 0; g.strokeStyle = silna ? 'rgba(0,0,0,.75)' : 'rgba(0,0,0,.25)'; g.lineWidth = silna ? 1.4 : 1; g.beginPath(); g.moveTo(0, y * b + .5); g.lineTo(s.sirka * b, y * b + .5); g.stroke(); }
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  for (let y = 0; y < s.vyska; y++) for (let x = 0; x < s.sirka; x++) {
+    const i = y * s.sirka + x, sym = J.SYMBOL[s.sada][s.bunky[i]];
+    if (!sym || !sym.d) continue;
+    const sir = sym.s > 1 ? sym.s : 1, c = s.paleta[s.barvy[i]] || '#fff', barva = J.jeTmava(c) ? '#fff' : '#000';
+    if (sir > 1) { g.fillStyle = c; g.fillRect(x * b + 1.5, y * b + 1.5, sir * b - 3, b - 3); }
+    const cesta = new Path2D();
+    cesta.addPath(new Path2D(sym.d), new DOMMatrix([sir * b / 10, 0, 0, b / 10, x * b, y * b]));
+    if (sym.fill) { g.fillStyle = barva; g.fill(cesta); }
+    g.strokeStyle = barva; g.lineWidth = Math.max(1.2, b / 14); g.stroke(cesta);
+  }
+  if (s.raport) { const r = J.normRaport(s, s.raport); g.strokeStyle = '#d32f2f'; g.lineWidth = 3; g.strokeRect(r.x * b, r.y * b, r.w * b, r.h * b); }
+  g.restore();
+  g.fillStyle = cs.getPropertyValue('--text-muted') || '#666'; g.font = `${Math.max(9, Math.min(12, b * .55))}px sans-serif`; g.textBaseline = 'middle';
+  for (let y = 0; y < s.vyska; y++) {
+    const vpravo = J.stranaRady(s, y) === 'vpravo';
+    g.textAlign = vpravo ? 'left' : 'right';
+    g.fillText(J.cisloRady(s, y), vpravo ? OKRAJ + s.sirka * b + 4 : OKRAJ - 4, OKRAJ + y * b + b / 2);
+  }
+  g.textAlign = 'center';
+  for (let x = 0; x < s.sirka; x++) { const n = s.sirka - x; if (n % 5 === 0 || n === 1) g.fillText(n, OKRAJ + x * b + b / 2, OKRAJ + s.vyska * b + 12); }
+}
+function bunkaZUdalosti(e) {
+  const r = $('platno').getBoundingClientRect(), s = schema();
+  const x = Math.floor((e.clientX - r.left - OKRAJ) / bunka), y = Math.floor((e.clientY - r.top - OKRAJ) / bunka);
+  return x >= 0 && y >= 0 && x < s.sirka && y < s.vyska ? { x, y } : null;
+}
+function zapamatuj() { zpet.push(JSON.stringify(schema())); if (zpet.length > 40) zpet.shift(); }
+function kresliBunku(c) {
+  const s = schema();
+  if (nastroj.druh === 'symbol') J.poloz(s, c.x, c.y, nastroj.id);
+  else if (nastroj.druh === 'barva') J.barvi(s, c.x, c.y, nastroj.id);
+}
+function popisRady(c) {
+  const s = schema(), el = $('schPopis'); if (!el || !c) return;
+  el.textContent = `Ř. ${J.cisloRady(s, c.y)} (${J.stranaRady(s, c.y) === 'vpravo' ? 'zprava' : 'zleva'}): ${J.popisRady(s, c.y) || '–'}`;
+}
+$('obsah').addEventListener('pointerdown', e => {
+  if (e.target.id !== 'platno') return;
+  const c = bunkaZUdalosti(e); if (!c) return;
+  e.preventDefault(); e.target.setPointerCapture(e.pointerId);
+  zapamatuj();
+  tahne = { start: c, posl: c };
+  if (nastroj.druh === 'raport') schema().raport = { x: c.x, y: c.y, w: 1, h: 1 };
+  else kresliBunku(c);
+  kresliPlatno(); popisRady(c);
+});
+$('obsah').addEventListener('pointermove', e => {
+  if (e.target.id !== 'platno') return;
+  const c = bunkaZUdalosti(e);
+  if (!tahne) { if (c && e.pointerType === 'mouse') popisRady(c); return; }
+  if (!c || (c.x === tahne.posl.x && c.y === tahne.posl.y)) return;
+  tahne.posl = c;
+  if (nastroj.druh === 'raport') {
+    const a = tahne.start;
+    schema().raport = { x: Math.min(a.x, c.x), y: Math.min(a.y, c.y), w: Math.abs(a.x - c.x) + 1, h: Math.abs(a.y - c.y) + 1 };
+  } else kresliBunku(c);
+  kresliPlatno();
+});
+const konecTahu = () => { if (tahne) { tahne = null; uloz(); } };
+$('obsah').addEventListener('pointerup', konecTahu);
+$('obsah').addEventListener('pointercancel', konecTahu);
+
+function svgSchematu(o = {}) {
+  const p = projekt();
+  return J.schemaSvg(schema(), Object.assign({ nazev: p.nazev, bunka: 18 }, o));
+}
+function svgNaPng(svg) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = 2, cv = document.createElement('canvas');
+      cv.width = img.width * k; cv.height = img.height * k;
+      const g = cv.getContext('2d'); g.scale(k, k); g.drawImage(img, 0, 0);
+      cv.toBlob(b => b ? res(b) : rej(new Error('PNG')), 'image/png');
+    };
+    img.onerror = rej;
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  });
+}
+function nahledPlochy() {
+  const s = schema(), nx = num($('plochaNx').value) || 1, ny = num($('plochaNy').value) || 1;
+  const pl = J.plocha(s, nx, ny);
+  const b = Math.max(6, Math.min(16, Math.floor(860 / pl.sirka)));
+  $('nahledPlochy').innerHTML = `<img alt="Náhled plochy" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(J.schemaSvg(pl, { bunka: b, cisla: false, legenda: false }))}">`;
+}
+$('plochaNx').addEventListener('input', nahledPlochy);
+$('plochaNy').addEventListener('input', nahledPlochy);
+
+const AKCE_SCHEMATU = {
+  rozmer: () => { zapamatuj(); J.zmenVelikost(schema(), num($('schS').value), num($('schV').value)); uloz(); vykresliSchema(); },
+  zpet: () => { if (!zpet.length) return; projekt().schema = J.normSchema(JSON.parse(zpet.pop())); uloz(); vykresliSchema(); },
+  zrcH: () => { zapamatuj(); J.zrcadliVodorovne(schema()); uloz(); kresliPlatno(); },
+  zrcV: () => { zapamatuj(); J.zrcadliSvisle(schema()); uloz(); kresliPlatno(); },
+  raport: async () => {
+    if (nastroj.druh === 'raport' && schema().raport && await Dialog.potvrd('Zrušit vyznačený raport?')) { zapamatuj(); schema().raport = null; uloz(); }
+    nastroj = nastroj.druh === 'raport' ? { druh: 'symbol', id: '' } : { druh: 'raport' };
+    vykresliSchema();
+  },
+  plocha: () => { nahledPlochy(); otevri($('dlgPlocha')); },
+  vycistit: async () => {
+    if (!await Dialog.potvrd('Vymazat celé schéma (symboly, barvy i raport)?')) return;
+    zapamatuj(); const s = schema(); s.bunky.fill(''); s.barvy.fill(0); s.raport = null; uloz(); vykresliSchema();
+  },
+  pridejBarvu: () => { const s = schema(); if (s.paleta.length >= 16) return; zapamatuj(); s.paleta.push(J.PALETA[s.paleta.length] || '#888888'); nastroj = { druh: 'barva', id: s.paleta.length - 1 }; uloz(); vykresliSchema(); }
+};
+$('obsah').addEventListener('change', e => {
+  const s = projekt().schema;
+  if (e.target.id === 'schSada' && s) {
+    const nova = e.target.value; if (nova === s.sada) return;
+    zapamatuj();
+    // symboly druhé sady nedávají smysl – zachovat jen barvy
+    s.sada = nova; s.bunky.fill('');
+    nastroj = { druh: 'symbol', id: '' }; uloz(); vykresliSchema();
+  } else if (e.target.id === 'schKruh' && s) { s.kruhove = e.target.checked; uloz(); vykresliSchema(); }
+  else if (e.target.id === 'schBarvaVol' && s) {
+    const i = nastroj.druh === 'barva' ? nastroj.id : 1;
+    if (i < s.paleta.length) { zapamatuj(); s.paleta[i] = e.target.value; uloz(); vykresliSchema(); }
+  }
+});
+
+/* ---------- 📏 vzorek ---------- */
+function vykresliVzorek() {
+  $('obsah').innerHTML = `<div class="karty">
+  <section class="karta">
+    <h2>📐 Můj vzorek</h2>
+    <p class="popis">Oček a řad na 10 × 10 cm (změřte uprostřed vypraného a vysušeného vzorku).</p>
+    <div class="radek"><label class="pole">Oček na 10 cm<input class="vstup" id="mO" type="number" step="0.5" value="22"></label>
+      <label class="pole">Řad na 10 cm<input class="vstup" id="mR" type="number" step="0.5" value="30"></label></div>
+    <div class="radek"><label class="pole">Požadovaná šířka (cm)<input class="vstup" id="cS" type="number" step="0.5" value="50"></label>
+      <label class="pole">Požadovaná výška (cm)<input class="vstup" id="cV" type="number" step="0.5" value="60"></label></div>
+    <div class="vysledek" id="vRozmer"></div>
+  </section>
+  <section class="karta">
+    <h2>📖 Úprava návodu</h2>
+    <p class="popis">Vzorek z návodu a čísla z návodu → kolik nahodit vy, aby výrobek měl stejnou velikost.</p>
+    <div class="radek"><label class="pole">Návod: oček na 10 cm<input class="vstup" id="nO" type="number" step="0.5" value="20"></label>
+      <label class="pole">Návod: řad na 10 cm<input class="vstup" id="nR" type="number" step="0.5" value="28"></label></div>
+    <div class="radek"><label class="pole">Oček v návodu<input class="vstup" id="nPocO" type="number" step="1" value="88"></label>
+      <label class="pole">Řad v návodu<input class="vstup" id="nPocR" type="number" step="1" value="56"></label></div>
+    <div class="radek"><label class="pole">Počet oček dělitelný (raport)<input class="vstup" id="nNas" type="number" min="1" step="1" value="4"></label>
+      <label class="pole">+ krajových oček<input class="vstup" id="nPlus" type="number" step="1" value="0"></label></div>
+    <div class="vysledek" id="vNavod"></div>
+  </section>
+  <section class="karta">
+    <h2>➗ Rovnoměrně přidat / ubrat v řadě</h2>
+    <div class="radek"><label class="pole">Oček na jehlici<input class="vstup" id="pSt" type="number" min="1" step="1" value="88"></label>
+      <label class="pole">Přidat (záporné = ubrat)<input class="vstup" id="pPr" type="number" step="1" value="8"></label></div>
+    <label class="zaskrt"><input type="checkbox" id="pKruh"> kruhová práce (dokola)</label>
+    <div class="vysledek" id="vPridat"></div>
+  </section>
+  <section class="karta">
+    <h2>📈 Přidávání rozložené do řad</h2>
+    <p class="popis">Např. rukáv: přidat 10× (na obou stranách) během 60 řad.</p>
+    <div class="radek"><label class="pole">Počet řad<input class="vstup" id="rRady" type="number" min="1" step="1" value="60"></label>
+      <label class="pole">Kolikrát přidat<input class="vstup" id="rKrat" type="number" min="1" step="1" value="10"></label></div>
+    <div class="vysledek" id="vRady"></div>
+  </section></div>`;
+  prepocitejVzorek();
+}
+function prepocitejVzorek() {
+  const mO = num($('mO').value), mR = num($('mR').value);
+  const r = J.prepocetVzorku({ ocka: mO, rady: mR, sirka: num($('cS').value), vyska: num($('cV').value) });
+  $('vRozmer').innerHTML = r.ocka || r.rady ? `Nahodit <b class="velke">${r.ocka ?? '–'}</b> oček, uplést <b class="velke">${r.rady ?? '–'}</b> řad<div class="mal">1 cm = ${fmt(mO / 10, 2)} oček, ${fmt(mR / 10, 2)} řad</div>` : 'Zadejte vzorek a rozměr.';
+
+  const nO = num($('nO').value), nR = num($('nR').value);
+  const o = J.upravaNavodu(num($('nPocO').value), nO, mO, num($('nNas').value) || 1, num($('nPlus').value) || 0);
+  const ra = J.upravaNavodu(num($('nPocR').value), nR, mR);
+  let h = '';
+  if (o) h += `Nahodit <b class="velke">${o.pocet}</b> místo ${num($('nPocO').value)} oček <span class="mal">(přesně ${fmt(o.presne, 2)})</span>
+    <div class="mal">Návod počítá s šířkou ${fmt(o.cmNavod)} cm; s původním číslem by vám vyšlo ${fmt(o.cmBezUpravy)} cm, s upraveným ${fmt(o.cmUprava)} cm.</div>`;
+  if (ra) h += `<div style="margin-top:6px">Uplést <b class="velke">${ra.pocet}</b> místo ${num($('nPocR').value)} řad <span class="mal">(${fmt(ra.cmNavod)} cm)</span></div>`;
+  if (o && Math.abs(nO - mO) / nO > 0.15) h += '<div class="mal">⚠️ Vzorek se liší o víc než 15 % – zvažte jinou tloušťku jehlic nebo přízi.</div>';
+  $('vNavod').innerHTML = h || 'Zadejte vzorek z návodu a svůj vzorek.';
+
+  const d = J.rozdelPridavani(num($('pSt').value), num($('pPr').value), $('pKruh').checked);
+  const el = $('vPridat'); el.classList.toggle('chyba', !!(d && d.chyba));
+  if (!d) el.innerHTML = 'Zadejte počet oček a kolik přidat.';
+  else if (d.chyba) el.textContent = d.chyba;
+  else {
+    const kde = d.ubrat ? `Uplétat spolu zhruba každé ${d.kazde.join('. a ')}. očko` : `Přidávat vždy po ${d.kazde.join(' a ')} okách`;
+    el.innerHTML = `<b>${d.text}</b><div class="mal">${kde} · výsledek ${d.vysledek} oček${d.kruhove ? '' : ' · kraje bez ' + (d.ubrat ? 'ubírání' : 'přidání')}</div>
+      <div class="kroky">${d.kroky.map(k => k.o ? `<span>${k.o}</span>` : `<span class="z">${d.ubrat ? '2sp' : '+1'}</span>`).join('')}</div>`;
+  }
+  const v = J.rozdelVRadach(num($('rRady').value), num($('rKrat').value));
+  $('vRady').classList.toggle('chyba', !!(v && v.chyba));
+  $('vRady').innerHTML = !v ? 'Zadejte řady a počet přidání.' : v.chyba ? esc(v.chyba) : `Přidat <b>${v.text}</b><div class="mal">Tip: nastavte v počítadle připomínku „každou ${v.intervaly[0].kazdou}. řadu“.</div>`;
+}
+
+/* ---------- 🧶 příze ---------- */
+function vykresliPrizi() {
+  const moznost = (pole, f) => pole.map(f).join('');
+  $('obsah').innerHTML = `<div class="karty">
+  <section class="karta">
+    <h2>🧥 Spotřeba podle výrobku</h2>
+    <label class="pole">Výrobek<select class="vstup" id="yVyr">${moznost(J.VYROBKY, v => `<option value="${v.id}">${esc(v.nazev)}</option>`)}</select></label>
+    <div class="radek"><label class="pole">Tloušťka příze<select class="vstup" id="yPr">${moznost(J.PRIZE, p => `<option value="${p.id}" ${p.id === 'worsted' ? 'selected' : ''}>${esc(p.nazev)}</option>`)}</select></label>
+      <label class="pole" id="yVelObal">Velikost<select class="vstup" id="yVel">${moznost(J.VELIKOSTI, v => `<option value="${v.id}" ${v.id === 'M' ? 'selected' : ''}>${esc(v.nazev)}</option>`)}</select></label></div>
+    <div class="radek"><label class="pole">Návin klubka (m)<input class="vstup" id="yNav" type="number" step="1" value="95"></label>
+      <label class="pole">Hmotnost klubka (g)<input class="vstup" id="yG" type="number" step="1" value="50"></label></div>
+    <div class="vysledek" id="vVyr"></div>
+    <p class="popis">Orientační hodnoty (stav ${J.PARAMETRY.stav}); copánky a žakár spotřebují o 20–40 % víc.</p>
+  </section>
+  <section class="karta">
+    <h2>⚖️ Spotřeba ze zváženého vzorku</h2>
+    <p class="popis">Zvažte vzorek (kuchyňská váha s přesností na gram), změřte ho a zadejte plochu výrobku.</p>
+    <div class="radek3"><label class="pole">Vzorek (g)<input class="vstup" id="zG" type="number" step="0.5" value="12"></label>
+      <label class="pole">šířka (cm)<input class="vstup" id="zS" type="number" step="0.5" value="12"></label>
+      <label class="pole">výška (cm)<input class="vstup" id="zV" type="number" step="0.5" value="12"></label></div>
+    <label class="pole">Plocha výrobku (cm²) – svetr ≈ 2 × trup + rukávy<input class="vstup" id="zPl" type="number" step="10" value="6000"></label>
+    <div class="radek"><label class="pole">Návin klubka (m)<input class="vstup" id="zNav" type="number" step="1" value="95"></label>
+      <label class="pole">Hmotnost klubka (g)<input class="vstup" id="zKg" type="number" step="1" value="50"></label></div>
+    <div class="vysledek" id="vVz"></div>
+  </section>
+  <section class="karta">
+    <h2>🔄 Záměna příze</h2>
+    <div class="radek3"><label class="pole">Klubek v návodu<input class="vstup" id="qN" type="number" step="1" value="10"></label>
+      <label class="pole">návin (m)<input class="vstup" id="qA" type="number" step="1" value="100"></label>
+      <label class="pole">na (g)<input class="vstup" id="qAg" type="number" step="1" value="50"></label></div>
+    <div class="radek"><label class="pole">Náhradní příze: návin (m)<input class="vstup" id="qB" type="number" step="1" value="125"></label>
+      <label class="pole">na (g)<input class="vstup" id="qBg" type="number" step="1" value="50"></label></div>
+    <div class="vysledek" id="vZam"></div>
+  </section></div>`;
+  prepocitejPrizi();
+}
+const rozsah = (r, d = '') => r[0] === r[1] ? fmt(r[0], 2) + d : `${fmt(r[0], 2)}–${fmt(r[1], 2)}${d}`;
+function prepocitejPrizi() {
+  const v = J.VYROBKY.find(x => x.id === $('yVyr').value);
+  $('yVelObal').hidden = !v.velikost;
+  const o = J.odhadVyrobku(v.id, $('yPr').value, $('yVel').value), nav = num($('yNav').value), g = num($('yG').value);
+  if (!o) $('vVyr').textContent = 'Pro tuto tloušťku se výrobek běžně nedělá.';
+  else {
+    const a = J.klubka(o.min, nav, g), b = J.klubka(o.max, nav, g);
+    $('vVyr').innerHTML = `Asi <b class="velke">${o.min}–${o.max} m</b>${a ? ` → <b class="velke">${a.pocet === b.pocet ? a.pocet : a.pocet + '–' + b.pocet}</b> klubek po ${nav} m` : ''}
+      ${a ? `<div class="mal">včetně 10 % rezervy, ${a.gramy}–${b.gramy} g</div>` : ''}`;
+  }
+  const z = J.spotrebaZVzorku({ vzorekG: num($('zG').value), vzorekSirka: num($('zS').value), vzorekVyska: num($('zV').value), plocha: num($('zPl').value), navin: num($('zNav').value), gramyKlubka: num($('zKg').value) });
+  if (!z) $('vVz').textContent = 'Vyplňte vzorek a plochu.';
+  else {
+    const k = z.metry ? J.klubka(z.metry, num($('zNav').value), num($('zKg').value)) : null;
+    $('vVz').innerHTML = `<b class="velke">${z.gramy} g</b>${z.metry ? ` · ${z.metry} m` : ''}${k ? ` → <b class="velke">${k.pocet}</b> klubek` : ''}<div class="mal">klubka včetně 10 % rezervy</div>`;
+  }
+  const q = J.zamenaPrize(num($('qN').value), num($('qA').value), num($('qAg').value), num($('qB').value), num($('qBg').value));
+  if (!q) $('vZam').textContent = 'Vyplňte obě příze.';
+  else {
+    const kat = p => p ? `${esc(p.nazev)} (CYC ${p.cyc}, jehlice ${rozsah(p.jehlice, ' mm')})` : '–';
+    $('vZam').innerHTML = `Potřebujete ${q.metry} m → <b class="velke">${q.pocet}</b> klubek náhradní příze <span class="mal">(${q.gramy} g, bez rezervy)</span>
+      <div class="mal">Hustota: ${q.mNa100A} vs. ${q.mNa100B} m/100 g (${q.rozdilPct > 0 ? '+' : ''}${q.rozdilPct} %) – ${q.podobna ? '✅ podobná tloušťka, vzorek by měl sedět' : '⚠️ jiná tloušťka, upleťte vzorek a přepočtěte návod'}</div>
+      <div class="mal">Původní: ${kat(q.kategorieA)}<br>Náhradní: ${kat(q.kategorieB)}</div>`;
+  }
+}
+
+/* ---------- 🪡 tabulky ---------- */
+function vykresliTabulky() {
+  $('obsah').innerHTML = `<div class="karty">
+  <section class="karta">
+    <h2>🪡 Jehlice a háčky</h2>
+    <div class="radek"><label class="pole">Převést<input class="vstup" id="tHod" value="4" inputmode="decimal"></label>
+      <label class="pole">ze soustavy<select class="vstup" id="tZ"><option value="mm">mm</option><option value="us">US jehlice</option><option value="uk">UK staré</option><option value="hacek">US háček (písmeno)</option></select></label></div>
+    <div class="vysledek" id="vJeh"></div>
+    <div class="tab-obal"><table><thead><tr><th>mm</th><th>US</th><th>UK staré</th><th>US háček</th></tr></thead>
+      <tbody id="tJeh">${J.JEHLICE.map(r => `<tr data-mm="${r.mm}"><td><b>${fmt(r.mm, 2)}</b></td><td>${r.us || '–'}</td><td>${r.uk || '–'}</td><td>${r.hacek || '–'}</td></tr>`).join('')}</tbody></table></div>
+  </section>
+  <section class="karta" style="grid-column:1/-1">
+    <h2>🧶 Tloušťky příze (Craft Yarn Council)</h2>
+    <div class="tab-obal"><table><thead><tr><th>CYC</th><th>Druh</th><th>WPI</th><th>Návin m/50 g</th><th>Oček/10 cm</th><th>Jehlice mm</th><th>Háček mm</th></tr></thead>
+      <tbody>${J.PRIZE.map(p => `<tr><td><b>${p.cyc}</b></td><td>${esc(p.nazev)}</td><td>${p.wpi}</td><td>${rozsah(p.navin)}</td><td>${rozsah(p.vzorek)}</td><td>${rozsah(p.jehlice)}</td><td>${rozsah(p.hacek)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="popis">WPI = počet závitů příze na 1 palec (2,54 cm) navinutých těsně vedle sebe na tužku. Rozsahy jsou orientační.</p>
+  </section>
+  <section class="karta" style="grid-column:1/-1">
+    <h2>🔤 Zkratky v návodech CZ ↔ EN</h2>
+    <div class="radek"><input class="vstup" id="tHledat" type="search" placeholder="🔍 Hledat zkratku nebo český výraz" aria-label="Hledat zkratku">
+      <select class="vstup" id="tDruh" aria-label="Druh"><option value="">Pletení i háčkování</option><option value="p">Pletení</option><option value="h">Háčkování</option></select></div>
+    <p class="info" style="margin:0">⚠️ Háčkování: <b>americké (US) a britské (UK) návody</b> používají stejné zkratky pro různá očka – US <code>sc</code> = UK <code>dc</code>, US <code>dc</code> = UK <code>tr</code>. Britský návod poznáte podle toho, že nemá <code>sc</code>.</p>
+    <div class="tab-obal"><table><thead><tr><th>EN (US)</th><th>UK</th><th>Česky</th><th>Anglicky celé</th></tr></thead><tbody id="tZk"></tbody></table></div>
+  </section></div>`;
+  prevedJehlice(); filtrujZkratky();
+}
+function prevedJehlice() {
+  const r = J.prevodJehlic($('tHod').value, $('tZ').value);
+  $('vJeh').innerHTML = r ? `<b class="velke">${fmt(r.mm, 2)} mm</b> = US ${r.us || '–'} · UK ${r.uk || '–'}${r.hacek ? ' · háček ' + r.hacek : ''}${r.presne ? '' : '<div class="mal">nejbližší běžná velikost</div>'}` : 'Velikost nenalezena.';
+  document.querySelectorAll('#tJeh tr').forEach(tr => tr.classList.toggle('zvyr', !!r && +tr.dataset.mm === r.mm));
+}
+function filtrujZkratky() {
+  const q = $('tHledat').value.trim().toLowerCase(), d = $('tDruh').value;
+  const rad = J.ZKRATKY.filter(z => (!d || z.druh === d) && (!q || (z.en + ' ' + (z.uk || '') + ' ' + z.cz + ' ' + z.pozn).toLowerCase().includes(q)));
+  $('tZk').innerHTML = rad.map(z => `<tr><td><code>${esc(z.en)}</code></td><td>${z.druh === 'h' ? `<code>${esc(z.uk)}</code>` : '='}</td><td>${z.druh === 'h' ? '🪝 ' : '🪡 '}${esc(z.cz)}</td><td>${esc(z.pozn)}</td></tr>`).join('') || '<tr><td colspan="4">Nic nenalezeno.</td></tr>';
+}
+
+/* ---------- vykreslení, události ---------- */
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pohled === pohled));
+  ({ pocitadlo: vykresliPocitadlo, schema: vykresliSchema, vzorek: vykresliVzorek, prize: vykresliPrizi, tabulky: vykresliTabulky }[pohled] || vykresliPocitadlo)();
+}
+$('obsah').addEventListener('input', e => {
+  if (pohled === 'vzorek') prepocitejVzorek();
+  else if (pohled === 'prize') prepocitejPrizi();
+  else if (pohled === 'tabulky') { if (e.target.id === 'tHod') prevedJehlice(); else filtrujZkratky(); }
+  else if (e.target.id === 'schZoom') { bunka = +e.target.value; kresliPlatno(); }
+});
+$('obsah').addEventListener('change', e => {
+  if (pohled === 'prize') prepocitejPrizi();
+  else if (pohled === 'tabulky') { if (e.target.id === 'tZ') prevedJehlice(); else filtrujZkratky(); }
+});
+$('obsah').addEventListener('click', e => {
+  const a = e.target.closest('[data-akce]');
+  if (a) {
+    const c = projekt().pocitadla.find(x => x.id === a.closest('[data-poc]').dataset.poc); if (!c) return;
+    if (a.dataset.akce === 'nastav') return nastavPocitadlo(c);
+    J.krok(c, a.dataset.akce === 'plus' ? 1 : -1); uloz(); obnovKartu(c); return;
+  }
+  const sch = e.target.closest('[data-sch]');
+  if (sch) return AKCE_SCHEMATU[sch.dataset.sch]();
+  const sym = e.target.closest('[data-sym]');
+  if (sym) { nastroj = { druh: 'symbol', id: sym.dataset.sym }; return vykresliSchema(); }
+  const bar = e.target.closest('[data-barva]');
+  if (bar) { nastroj = { druh: 'barva', id: +bar.dataset.barva }; return vykresliSchema(); }
+});
+
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+
+const PRIKAZY = {
+  napoveda: () => otevri($('dlgNapoveda')),
+  novyProjekt: () => upravProjekt(J.novyProjekt(), true),
+  upravProjekt: () => upravProjekt(projekt(), false),
+  kopieProjektu: () => {
+    const p = J.migruj({ projekty: [JSON.parse(JSON.stringify(projekt()))] }).projekty[0];
+    p.id = J.noveId(); p.nazev += ' (kopie)'; p.pocitadla.forEach(c => { c.id = J.noveId(); c.hodnota = 0; });
+    data.projekty.push(p); data.aktivni = p.id; uloz(); obnovProjekty(); vykresli();
+  },
+  smazProjekt: async () => {
+    const p = projekt();
+    if (!await Dialog.potvrd(`Smazat projekt „${p.nazev}“ včetně počítadel a schématu?`)) return;
+    data.projekty = data.projekty.filter(x => x !== p);
+    if (!data.projekty.length) data = J.prazdna();
+    data.aktivni = data.projekty[0].id; uloz(); obnovProjekty(); vykresli();
+  },
+  noveRadky: async () => {
+    const n = await Dialog.zeptej('Název počítadla (např. Opakování vzoru, Přidávání)', 'Opakování');
+    if (n == null) return;
+    projekt().pocitadla.push(J.novePocitadlo(n.trim().slice(0, 80) || 'Počítadlo')); uloz(); vykresli();
+  },
+  export: () => stahni('pleteni-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(data), 'application/json'),
+  import: () => $('souborImport').click(),
+  svg: () => { if (!projekt().schema) return Dialog.info('Projekt zatím nemá schéma (pohled ▦ Schéma).'); stahni(jmenoSouboru(projekt().nazev) + '.svg', svgSchematu(), 'image/svg+xml'); },
+  png: async () => {
+    if (!projekt().schema) return Dialog.info('Projekt zatím nemá schéma (pohled ▦ Schéma).');
+    try { stahni(jmenoSouboru(projekt().nazev) + '.png', await svgNaPng(svgSchematu())); } catch (e) { Dialog.chyba('PNG se nepodařilo vytvořit.'); }
+  },
+  tiskSchema: () => {
+    if (!projekt().schema) return Dialog.info('Projekt zatím nemá schéma (pohled ▦ Schéma).');
+    const img = new Image();
+    img.alt = 'Schéma';
+    img.onload = () => print();
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgSchematu({ bunka: 16 }));
+    $('tiskovy').replaceChildren(img);
+  }
+};
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; try { localStorage.setItem(J.KLIC + '_pohled', pohled); } catch (er) {} vykresli(); }
+});
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || !Array.isArray(d.projekty)) throw new Error('není záloha');
+    if (!await Dialog.potvrd(`Nahradit současná data zálohou (${d.projekty.length} projektů)?`)) return;
+    data = J.migruj(d); uloz(); obnovProjekty(); vykresli();
+  } catch (er) { Dialog.chyba('Soubor není záloha Pletení a háčkování.'); }
+};
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') zavriNabidky();
+  if (pohled === 'schema' && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.target.closest('input,textarea')) { e.preventDefault(); AKCE_SCHEMATU.zpet(); }
+});
+addEventListener('storage', e => { if (e.key === J.KLIC && !tahne) { data = J.migruj(JSON.parse(e.newValue || 'null')); obnovProjekty(); vykresli(); } });
+addEventListener('message', e => { if (e.data && e.data.tema && pohled === 'schema') setTimeout(kresliPlatno, 50); });
+
+obnovProjekty();
+vykresli();
+})();
+</script>
+</body>
+</html>

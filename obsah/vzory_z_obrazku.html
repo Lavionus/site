@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vzory z obrázku – křížková výšivka, korálky, mozaika</title>
+<meta name="description" content="Převod obrázku na vzor pro křížkovou výšivku (DMC), zažehlovací korálky (Hama, Perler, Artkal) nebo mozaiku: kvantizace v Lab (ΔE 2000), omezení barev, dithering, symboly, legenda se spotřebou, tisk po listech A4 a PDF.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="vzory_z_obrazku/palety.js"></script>
+<script src="vzory_z_obrazku/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Hlídač termínů / Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.86rem;font-family:inherit;min-width:0}
+
+/* rozložení: panel nastavení | vzor | legenda */
+.plocha{flex:1;min-height:0;display:grid;grid-template-columns:280px minmax(0,1fr) 330px}
+.panel{overflow:auto;padding:10px;border-right:1px solid var(--border);background:var(--bg-elevated);display:flex;flex-direction:column;gap:10px}
+.panel.prava{border-right:0;border-left:1px solid var(--border)}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:8px 10px;display:grid;gap:7px}
+.karta h2{margin:0;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+.pole{display:grid;gap:3px;font-size:.78rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.zaskrt{display:flex;gap:6px;align-items:center;font-size:.82rem;cursor:pointer}
+.info{font-size:.78rem;line-height:1.45;color:var(--text-muted)}
+.info b{color:var(--text)}
+.varovani{font-size:.8rem;line-height:1.4;border:1px solid var(--warn);border-radius:6px;padding:6px 8px;background:color-mix(in srgb,var(--warn) 12%,transparent)}
+#zdroj{max-width:100%;max-height:260px;margin:0 auto;border-radius:6px;background:var(--bg-control);touch-action:none;cursor:crosshair;display:block}
+
+.stred{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
+.stav{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:5px 10px;font-size:.78rem;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--bg-elevated);min-height:28px}
+.stav b{color:var(--text)}
+.platno-obal{flex:1;overflow:auto;padding:12px;background:var(--bg-deep,var(--bg))}
+#vzor{display:block;margin:0 auto;touch-action:none;box-shadow:0 1px 6px rgba(0,0,0,.25)}
+.prazdno{margin:30px auto;max-width:520px;color:var(--text-muted);background:var(--bg-panel);border:2px dashed var(--border-strong);border-radius:12px;padding:30px 20px;text-align:center;line-height:1.7}
+.prazdno.nad{border-color:var(--accent);background:var(--accent-soft)}
+.pocitam{position:absolute;top:40px;left:50%;transform:translateX(-50%);background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:6px 14px;box-shadow:var(--shadow);font-size:.85rem}
+
+.legenda{width:100%;border-collapse:collapse;font-size:.8rem}
+.legenda th,.legenda td{padding:4px 5px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}
+.legenda th{color:var(--text-muted);font-weight:600;font-size:.7rem;text-transform:uppercase}
+.legenda td.cislo,.legenda th.cislo{text-align:right;white-space:nowrap}
+.legenda tr{cursor:pointer}
+.legenda tbody tr:hover{background:var(--bg-hover)}
+.legenda tr.aktivni{background:var(--accent-soft)}
+.vzorek{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:4px;border:1px solid var(--border-strong);font-size:14px;line-height:1;font-family:"DejaVu Sans","Segoe UI Symbol",sans-serif}
+.legenda .nazev{color:var(--text-muted);font-size:.74rem}
+.souhrn{font-size:.8rem;line-height:1.5}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.projekty{display:grid;gap:6px}
+.projekt{display:flex;gap:10px;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:6px}
+.projekt img{width:64px;height:64px;object-fit:contain;background:var(--bg-control);border-radius:4px;image-rendering:pixelated}
+.projekt div{flex:1;min-width:0;font-size:.82rem}
+.projekt small{color:var(--text-muted)}
+.barvy-vyber{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:50vh;overflow:auto}
+.barvy-vyber button{display:flex;gap:6px;align-items:center;text-align:left;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px 5px;cursor:pointer;font:inherit;font-size:.74rem}
+.barvy-vyber button:hover{border-color:var(--accent)}
+.barvy-vyber i{width:18px;height:18px;border-radius:3px;flex:none;border:1px solid var(--border-strong)}
+
+#tisk{display:none}
+@media (max-width:1000px){
+  .plocha{display:flex;flex-direction:column;overflow:auto}
+  .stred{order:-1;flex:none}
+  .panel{border:0;border-bottom:1px solid var(--border)}
+  .panel.prava{border-left:0}
+  .stred{height:70vh}
+}
+@media print{
+  @page{size:A4;margin:0}
+  body > *:not(#tisk){display:none!important}
+  body{display:block;height:auto;background:#fff}
+  #tisk{display:block}
+  #tisk img{display:block;width:210mm;height:297mm;break-after:page}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🧵 Vzory z obrázku</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Obrázek, projekty, export, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="otevrit" title="Otevřít obrázek (lze i přetáhnout nebo vložit Ctrl+V)">🖼️<span class="txt"> Obrázek</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Režim"><span class="skup-nazev" aria-hidden="true">Režim</span><div class="skup-tl">
+    <select class="tl" id="rezim" aria-label="Režim">
+      <option value="vysivka">✚ Křížková výšivka</option>
+      <option value="koralky">⚪ Zažehlovací korálky</option>
+      <option value="mozaika">🟦 Mozaika / LEGO</option>
+      <option value="vlastni">🎨 Vlastní paleta</option>
+    </select>
+    <select class="tl" id="paleta" aria-label="Paleta"></select>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-zobr="barvy" title="Jen barvy">🎨<span class="txt"> Barvy</span></button>
+    <button class="tl" data-zobr="symboly" title="Jen symboly (černobíle)">✖<span class="txt"> Symboly</span></button>
+    <button class="tl" data-zobr="obe" title="Barvy se symboly">▦<span class="txt"> Obojí</span></button>
+    <button class="tl" data-prikaz="oddal" title="Oddálit" aria-label="Oddálit">−</button>
+    <button class="tl" data-prikaz="prizpusob" title="Přizpůsobit oknu" aria-label="Přizpůsobit oknu">⤢</button>
+    <button class="tl" data-prikaz="pribliz" title="Přiblížit" aria-label="Přiblížit">+</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
+    <button class="tl" data-nastroj="ukaz" title="Ukazovátko – zobrazí bod pod myší">👆</button>
+    <button class="tl" data-nastroj="stetec" title="Štětec – kreslí vybranou barvou (vyberte ji v legendě)">🖌️<span class="txt"> Štětec</span></button>
+    <button class="tl" data-nastroj="kapatko" title="Kapátko – převezme barvu bodu">💧<span class="txt"> Kapátko</span></button>
+    <button class="tl" data-prikaz="barvaStetce" title="Vybrat barvu štětce z celé palety"><span id="barvaStetce" class="vzorek" style="width:18px;height:18px"></span></button>
+    <button class="tl" data-prikaz="zpet" id="tlZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl" data-prikaz="siroty" title="Odstranit osamocené body teď">🧹<span class="txt"> Sirotci</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">🖼️ Otevřít obrázek…</button>
+  <button class="tl" data-prikaz="schranka">📋 Vložit obrázek ze schránky</button>
+  <hr>
+  <button class="tl" data-prikaz="projekty">🗂️ Moje projekty…</button>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit projekt</button>
+  <button class="tl" data-prikaz="ulozitJako">💾 Uložit jako nový…</button>
+  <hr>
+  <button class="tl" data-prikaz="png">🖼️ Export PNG (vzor + legenda)</button>
+  <button class="tl" data-prikaz="pdf">📄 Export PDF (listy A4)</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk po listech A4</button>
+  <hr>
+  <button class="tl" data-prikaz="export">⬇️ Projekt do souboru (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Načíst projekt ze souboru…</button>
+</div>
+<input type="file" id="souborObr" accept="image/*" hidden>
+<input type="file" id="souborJson" accept=".json,application/json" hidden>
+
+<main class="plocha">
+  <aside class="panel">
+    <section class="karta">
+      <h2>Obrázek a ořez</h2>
+      <canvas id="zdroj" width="260" height="120" aria-label="Náhled obrázku – tažením vyberte ořez"></canvas>
+      <div class="info" id="zdrojInfo">Tažením v náhledu vyberete ořez.</div>
+      <button class="btn mini" data-prikaz="celyObrazek">⤢ Celý obrázek</button>
+    </section>
+    <section class="karta">
+      <h2>Velikost</h2>
+      <div class="radek">
+        <label class="pole">Šířka<input class="vstup" id="sirka" type="number" min="5" max="300" step="1"></label>
+        <label class="pole">Jednotka<select class="vstup" id="jednotka"><option value="body">bodů</option><option value="cm">cm</option></select></label>
+      </div>
+      <div class="radek" id="volbyVysivka">
+        <label class="pole">Aida<select class="vstup" id="ct"><option value="11">11 ct</option><option value="14">14 ct</option><option value="16">16 ct</option><option value="18">18 ct</option></select></label>
+        <label class="pole">Vláken v jehle<select class="vstup" id="vlaken"><option>1</option><option>2</option><option>3</option></select></label>
+      </div>
+      <div class="radek" id="volbyKoralky">
+        <label class="pole">Balení po (ks)<input class="vstup" id="baleni" type="number" min="100" step="100"></label>
+        <span class="info" id="roztecKoralku"></span>
+      </div>
+      <label class="pole" id="volbyDlazdice">Velikost dlaždice (cm)<input class="vstup" id="dlazdiceCm" type="number" min="0.1" max="10" step="0.1"></label>
+      <div class="info" id="velikostInfo"></div>
+    </section>
+    <section class="karta">
+      <h2>Barvy</h2>
+      <label class="pole">Nejvýš barev (0 = bez omezení)<input class="vstup" id="maxBarev" type="number" min="0" max="120" step="1"></label>
+      <label class="pole">Porovnání barev<select class="vstup" id="metrika"><option value="de2000">ΔE 2000 (přesnější)</option><option value="cie76">ΔE CIE76 (rychlejší)</option></select></label>
+      <label class="zaskrt"><input type="checkbox" id="dither"> Dithering (Floyd–Steinberg)</label>
+      <label class="pole" id="poleSila">Síla ditheringu<input id="sila" type="range" min="0.2" max="1" step="0.1"></label>
+      <label class="zaskrt"><input type="checkbox" id="siroty"> Odstranit osamocené body</label>
+      <label class="zaskrt" id="poleJenPlne"><input type="checkbox" id="jenPlne"> Jen plné barvy (bez průhledných, třpytivých…)</label>
+      <button class="btn mini" data-prikaz="vlastniPaleta" id="tlVlastni">✎ Upravit vlastní paletu…</button>
+      <div class="varovani" id="zastarale" hidden>Vzor má ruční úpravy – nové nastavení se projeví až po přepočtu, který je přepíše.<br><button class="btn mini primary" data-prikaz="prepocitat">🔄 Přepočítat</button></div>
+    </section>
+    <section class="karta">
+      <h2>Tisk a PDF</h2>
+      <div class="radek">
+        <label class="pole">Čtvereček (mm)<input class="vstup" id="bunkaMm" type="number" min="2" max="10" step="0.5"></label>
+        <label class="pole">Přesah listů (bodů)<input class="vstup" id="presah" type="number" min="0" max="10" step="1"></label>
+      </div>
+      <div class="info" id="listyInfo"></div>
+    </section>
+  </aside>
+
+  <section class="stred">
+    <div class="stav" id="stav"><span>Otevřete obrázek.</span></div>
+    <div class="platno-obal" id="platnoObal">
+      <div class="prazdno" id="prazdno">
+        <b>Přetáhněte sem obrázek</b>, vložte ho <b>Ctrl+V</b><br>nebo <button class="btn primary" data-prikaz="otevrit">🖼️ vyberte soubor</button><br>
+        <small>Nejlépe fungují jednoduché obrázky s výraznými plochami – loga, kreslené postavičky, pixel art.</small>
+      </div>
+      <canvas id="vzor" hidden></canvas>
+    </div>
+    <div class="pocitam" id="pocitam" hidden>⏳ Počítám…</div>
+  </section>
+
+  <aside class="panel prava">
+    <section class="karta">
+      <h2>Legenda</h2>
+      <div class="souhrn" id="souhrn">—</div>
+      <div style="overflow-x:auto"><table class="legenda" id="legenda"></table></div>
+      <div class="info" id="spotrebaPozn"></div>
+    </section>
+  </aside>
+</main>
+
+<div id="tisk" data-i18n="ne"></div>
+
+<dialog class="okno" id="dlgProjekty"><form method="dialog">
+  <header>🗂️ Moje projekty</header>
+  <div class="telo"><div class="projekty" id="seznamProjektu"></div></div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgVlastni"><form method="dialog">
+  <header>🎨 Vlastní paleta</header>
+  <div class="telo">
+    <div class="info">Jedna barva na řádek: <code>kód název #RRGGBB</code> nebo jen <code>#RRGGBB</code> (případně <code>kód|název|RRGGBB</code>). Řádky začínající <code>;</code> se přeskočí.</div>
+    <textarea class="vstup" id="vlastniText" rows="12" spellcheck="false" style="font-family:ui-monospace,monospace;width:100%"></textarea>
+    <div class="info" id="vlastniInfo"></div>
+    <div><button type="button" class="btn mini" id="vlastniZPalety">⤓ Začít z barev aktuálního vzoru</button></div>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Použít</button>
+  </footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgBarva"><form method="dialog">
+  <header id="dlgBarvaTitul">Vybrat barvu</header>
+  <div class="telo">
+    <input class="vstup" id="barvaHledat" type="search" placeholder="🔍 Kód nebo název…">
+    <div class="barvy-vyber" id="barvyVyber"></div>
+  </div>
+  <footer><button value="zrusit" class="btn">Zrušit</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>1. Obrázek</b> otevřete tlačítkem, přetažením nebo vložením ze schránky (Ctrl+V). V náhledu vlevo tažením vyberete <b>ořez</b>.</p>
+    <p style="margin:0"><b>2. Velikost</b> zadáte v bodech (stehy, korálky, dlaždice) nebo v cm – přepočet podle Aidy (ct = čtverečků na palec), korálků (midi 5 mm, mini 2,6 mm) nebo velikosti dlaždice. Výška se dopočte z poměru stran.</p>
+    <p style="margin:0"><b>3. Barvy</b> se hledají v prostoru CIE Lab podle vzdálenosti ΔE 2000, která odpovídá vnímání oka. Omezení počtu barev najde metodou k-means hlavní barvy obrázku a ty namapuje na paletu. Dithering střídá body dvou barev a napodobí přechody; pro výšivku a korálky bývá lepší bez něj. <b>Osamocené body</b> (samotný steh jiné barvy) se přebarví podle okolí.</p>
+    <p style="margin:0"><b>4. Úpravy:</b> v legendě klikněte na barvu → štětcem 🖌️ kreslíte, kapátkem 💧 berete barvu z vzoru, ⇄ v legendě zamění barvu v celém vzoru. Ctrl+Z vrací.</p>
+    <p style="margin:0"><b>5. Výstup:</b> vzor se symboly a silnější čarou po 10 bodech, legenda s počty a spotřebou. Tisk a PDF dělí vzor na listy A4 s přesahem; první list je přehled s mapou listů.</p>
+    <p style="margin:0"><b>Spotřeba</b> (stav k 11/2026, orientačně): pasmo DMC = 8 m šestipramenné příze, na celý křížek počítáme (2√2 + 2) × strana čtverečku × počet vláken + 30 % na zapošívání. Korálky po baleních (výchozí 1000 ks).</p>
+    <p style="margin:0"><b>Barvy palet jsou orientační</b> – RGB hodnoty z veřejných tabulek (DMC: 454 odstínů; korálky Hama, Perler, Artkal: projekt beadcolors, MIT; LEGO: základní barvy podle BrickLink). Skutečná příze a korálky se liší šarží i monitorem – před nákupem porovnejte se vzorníkem.</p>
+    <p style="margin:0">Projekty (i s obrázkem) se ukládají jen v tomto prohlížeči (IndexedDB). Pro přenos použijte <i>Soubor → Projekt do souboru</i>. Pro čistě výtvarné převody obrázku je tu <a href="dither.html" style="color:var(--accent)">Dithering</a> a <a href="pixel_studio.html" style="color:var(--accent)">Pixel studio</a>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.VzoryJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const cislo = (v, d) => Number(v).toLocaleString('cs-CZ', { maximumFractionDigits: d == null ? 0 : d, minimumFractionDigits: d || 0 });
+const PISMO_SYM = '"DejaVu Sans","Segoe UI Symbol","Noto Sans Symbols",sans-serif';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+const PALETY_REZIMU = { vysivka: ['dmc'], koralky: ['hama', 'hama_mini', 'perler', 'artkal'], mozaika: ['lego'], vlastni: ['vlastni'] };
+const NAZEV_BODU = { vysivka: ['steh', 'stehy', 'stehů'], koralky: ['korálek', 'korálky', 'korálků'], mozaika: ['dlaždice', 'dlaždice', 'dlaždic'], vlastni: ['bod', 'body', 'bodů'] };
+const tvar = (n, t) => t[n === 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2];
+
+let nast = J.vychozi();
+try { nast = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { nast = J.vychozi(); }
+function ulozNast() { try { localStorage.setItem(J.KLIC, JSON.stringify(nast)); } catch (e) {} }
+if (!nast.vlastniPaleta) nast.vlastniPaleta = '; ukázková paleta – upravte\nC1 černá #1A1A1A\nC2 bílá #F5F5F0\nC3 červená #C8202A\nC4 žlutá #F2C230\nC5 modrá #1F5FAF\nC6 zelená #2E8B3E\nC7 hnědá #7A4A26\nC8 růžová #F0A0B8';
+
+/* ---------- stav ---------- */
+let pal = [];                 // aktuální paleta [{kod,nazev,rgb,lab,hexS}]
+let zdroj = null;             // {bitmap, blob, w, h}
+let orez = { x: 0, y: 0, w: 1, h: 1 };
+let vzor = null;              // {w, h, indexy: Int16Array}
+let upraveno = false, zpet = [], bunka = 10, nastroj = 'ukaz', aktivni = -1;
+let projekt = { id: null, nazev: '' };
+let symboly = {}, pocty = [];
+
+function nactiPaletu() {
+  const id = nast.paleta[nast.rezim];
+  pal = J.paleta(id, nast.vlastniPaleta, nast.jenPlne && nast.rezim === 'koralky');
+  pal.forEach(b => { b.hexS = J.hex(b.rgb); });
+}
+function roztecCm() {
+  if (nast.rezim === 'vysivka') return J.ROZTEC.aida(+nast.ct);
+  if (nast.rezim === 'koralky') return J.ROZTEC[nast.paleta.koralky] || 0.5;
+  return +nast.dlazdiceCm || 1;
+}
+function rozmerMrizky() {
+  if (!zdroj) return null;
+  const w = zdroj.w * orez.w, h = zdroj.h * orez.h;
+  const sirka = nast.jednotka === 'cm' ? J.bodyZCm(+nast.sirkaCm, roztecCm()) : +nast.sirka;
+  const r = J.velikostMrizky(w, h, Math.max(5, Math.min(300, sirka || 60)));
+  r.h = Math.max(1, Math.min(400, r.h));
+  return r;
+}
+
+/* ---------- ovládací prvky nastavení ---------- */
+const POLE = ['sirka', 'ct', 'vlaken', 'baleni', 'dlazdiceCm', 'maxBarev', 'metrika', 'dither', 'sila', 'siroty', 'jenPlne', 'bunkaMm', 'presah'];
+function doFormulare() {
+  $('rezim').value = nast.rezim;
+  $('paleta').innerHTML = PALETY_REZIMU[nast.rezim].map(id => `<option value="${id}">${esc(id === 'vlastni' ? '🎨 Vlastní paleta' : J.PALETY[id].nazev)}</option>`).join('');
+  $('paleta').value = nast.paleta[nast.rezim];
+  $('paleta').hidden = nast.rezim === 'vlastni';
+  POLE.forEach(k => { const el = $(k); if (el.type === 'checkbox') el.checked = !!nast[k]; else el.value = nast[k]; });
+  $('jednotka').value = nast.jednotka;
+  if (nast.jednotka === 'cm') $('sirka').value = nast.sirkaCm;
+  $('sirka').step = nast.jednotka === 'cm' ? '0.5' : '1';
+  $('volbyVysivka').hidden = nast.rezim !== 'vysivka';
+  $('volbyKoralky').hidden = $('poleJenPlne').hidden = nast.rezim !== 'koralky';
+  $('volbyDlazdice').hidden = nast.rezim === 'vysivka' || nast.rezim === 'koralky';
+  $('tlVlastni').hidden = nast.rezim !== 'vlastni';
+  $('poleSila').hidden = !nast.dither;
+  $('roztecKoralku').textContent = 'rozteč ' + cislo(roztecCm() * 10, 1) + ' mm';
+  document.querySelectorAll('[data-zobr]').forEach(b => b.setAttribute('aria-pressed', b.dataset.zobr === nast.zobrazeni));
+  document.querySelectorAll('[data-nastroj]').forEach(b => b.setAttribute('aria-pressed', b.dataset.nastroj === nastroj));
+}
+function zFormulare(e) {
+  const id = e.target.id;
+  if (id === 'rezim') nast.rezim = e.target.value;
+  else if (id === 'paleta') nast.paleta[nast.rezim] = e.target.value;
+  else if (id === 'jednotka') {
+    const r = rozmerMrizky();
+    nast.jednotka = e.target.value;
+    if (r && nast.jednotka === 'cm') nast.sirkaCm = +(J.cmZBodu(r.w, roztecCm())).toFixed(1);
+    if (r && nast.jednotka === 'body') nast.sirka = r.w;
+  } else if (id === 'sirka') { if (nast.jednotka === 'cm') nast.sirkaCm = +e.target.value || 1; else nast.sirka = +e.target.value || 5; }
+  else if (POLE.includes(id)) nast[id] = e.target.type === 'checkbox' ? e.target.checked : (e.target.type === 'number' || e.target.type === 'range' ? +e.target.value : e.target.value);
+  else return;
+  ulozNast();
+  if (['rezim', 'paleta', 'jenPlne'].includes(id)) { nactiPaletu(); upraveno = false; zpet = []; aktivni = -1; }  // indexy patří k paletě
+  doFormulare();
+  if (['bunkaMm', 'presah', 'baleni', 'ct', 'vlaken'].includes(id) && !(id === 'ct' && nast.jednotka === 'cm')) { aktualizujInfo(); vykresliLegendu(); return; }
+  zmenaParametru();
+}
+document.querySelector('.panel').addEventListener('change', zFormulare);
+$('rezim').addEventListener('change', zFormulare);
+$('paleta').addEventListener('change', zFormulare);
+$('sirka').addEventListener('input', e => { if (e.target.value) zFormulare(e); });
+
+let casovac = 0;
+function zmenaParametru() {
+  aktualizujInfo();
+  if (!zdroj) return;
+  if (upraveno) { $('zastarale').hidden = false; return; }
+  clearTimeout(casovac); casovac = setTimeout(prepocitej, 250);
+}
+
+/* ---------- načtení obrázku ---------- */
+async function nactiObrazek(blob, nazev) {
+  if (!blob || !/^image\//.test(blob.type || 'image/')) return Dialog.chyba('Tohle není obrázek.');
+  if (upraveno && !await Dialog.potvrd('Zahodit ruční úpravy aktuálního vzoru?')) return;
+  let bitmap;
+  try { bitmap = await createImageBitmap(blob); } catch (e) { return Dialog.chyba('Obrázek se nepodařilo načíst.'); }
+  zdroj = { bitmap, blob, w: bitmap.width, h: bitmap.height };
+  orez = { x: 0, y: 0, w: 1, h: 1 };
+  projekt = { id: null, nazev: (nazev || 'Vzor').replace(/\.[a-z0-9]+$/i, '') };
+  upraveno = false; zpet = [];
+  kresliZdroj(); prepocitej(true);
+}
+$('souborObr').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) nactiObrazek(f, f.name); });
+document.addEventListener('paste', e => {
+  if (e.target.closest && e.target.closest('textarea,input')) return;
+  const it = [...(e.clipboardData || {}).items || []].find(i => i.type.startsWith('image/'));
+  if (it) { e.preventDefault(); nactiObrazek(it.getAsFile(), 'Ze schránky'); }
+});
+const obal = $('platnoObal');
+['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); $('prazdno').classList.add('nad'); } }));
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) $('prazdno').classList.remove('nad'); });
+document.addEventListener('drop', e => {
+  $('prazdno').classList.remove('nad');
+  const f = [...(e.dataTransfer || {}).files || []][0]; if (!f) return;
+  e.preventDefault();
+  if (/json$/i.test(f.name)) nactiJson(f); else nactiObrazek(f, f.name);
+});
+
+/* ---------- náhled zdroje a ořez ---------- */
+const cz = $('zdroj');
+function kresliZdroj() {
+  const ctx = cz.getContext('2d');
+  if (!zdroj) { ctx.clearRect(0, 0, cz.width, cz.height); return; }
+  const sirka = 520, vyska = Math.round(sirka * zdroj.h / zdroj.w);
+  cz.width = sirka; cz.height = Math.min(vyska, 700);
+  const k = Math.min(cz.width / zdroj.w, cz.height / zdroj.h), ox = (cz.width - zdroj.w * k) / 2, oy = (cz.height - zdroj.h * k) / 2;
+  cz._m = { k, ox, oy };
+  ctx.clearRect(0, 0, cz.width, cz.height);
+  ctx.drawImage(zdroj.bitmap, ox, oy, zdroj.w * k, zdroj.h * k);
+  const x = ox + orez.x * zdroj.w * k, y = oy + orez.y * zdroj.h * k, w = orez.w * zdroj.w * k, h = orez.h * zdroj.h * k;
+  ctx.fillStyle = 'rgba(0,0,0,.5)';
+  ctx.beginPath(); ctx.rect(0, 0, cz.width, cz.height); ctx.rect(x, y, w, h); ctx.fill('evenodd');
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.strokeRect(x, y, w, h);
+  $('zdrojInfo').textContent = `${zdroj.w} × ${zdroj.h} px` + (orez.w < 1 || orez.h < 1 ? ` · ořez ${Math.round(orez.w * zdroj.w)} × ${Math.round(orez.h * zdroj.h)} px` : '') + ' · tažením vyberte ořez';
+}
+let tah = null;
+function bodZdroje(e) {
+  const r = cz.getBoundingClientRect(), m = cz._m;
+  const px = (e.clientX - r.left) * cz.width / r.width, py = (e.clientY - r.top) * cz.height / r.height;
+  return [Math.max(0, Math.min(1, (px - m.ox) / (zdroj.w * m.k))), Math.max(0, Math.min(1, (py - m.oy) / (zdroj.h * m.k)))];
+}
+cz.addEventListener('pointerdown', e => { if (!zdroj) return; cz.setPointerCapture(e.pointerId); tah = bodZdroje(e); });
+cz.addEventListener('pointermove', e => {
+  if (!tah) return;
+  const [x, y] = bodZdroje(e);
+  orez = { x: Math.min(x, tah[0]), y: Math.min(y, tah[1]), w: Math.abs(x - tah[0]), h: Math.abs(y - tah[1]) };
+  if (orez.w > 0.02 && orez.h > 0.02) kresliZdroj();
+});
+cz.addEventListener('pointerup', () => {
+  if (!tah) return; tah = null;
+  if (orez.w < 0.02 || orez.h < 0.02) orez = { x: 0, y: 0, w: 1, h: 1 };
+  kresliZdroj(); zmenaParametru();
+});
+
+/* ---------- výpočet ---------- */
+function pixelyMrizky(r) {
+  const sx = orez.x * zdroj.w, sy = orez.y * zdroj.h, sw = Math.max(1, orez.w * zdroj.w), sh = Math.max(1, orez.h * zdroj.h);
+  const k = Math.min(1, 1600 / Math.max(sw, sh)), cw = Math.max(r.w, Math.round(sw * k)), ch = Math.max(r.h, Math.round(sh * k));
+  const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(zdroj.bitmap, sx, sy, sw, sh, 0, 0, cw, ch);
+  return J.zmensi(ctx.getImageData(0, 0, cw, ch).data, cw, ch, r.w, r.h);
+}
+function prepocitej(prizpusob) {
+  if (!zdroj) return;
+  const r = rozmerMrizky();
+  $('pocitam').hidden = false;
+  setTimeout(() => {
+    try {
+      const px = pixelyMrizky(r);
+      const q = J.kvantizuj(px, r.w, r.h, pal, nast.maxBarev, nast.dither, { metrika: nast.metrika, sila: nast.sila });
+      if (nast.siroty) J.odstranSiroty(q.indexy, r.w, r.h, 0);
+      const zmena = !vzor || vzor.w !== r.w || vzor.h !== r.h;
+      vzor = { w: r.w, h: r.h, indexy: q.indexy };
+      upraveno = false; zpet = []; $('zastarale').hidden = true;
+      if (prizpusob || zmena) prizpusobZoom();
+      obnov();
+    } catch (e) { console.error(e); Dialog.chyba('Výpočet se nepovedl: ' + e.message); }
+    $('pocitam').hidden = true;
+  }, 20);
+}
+
+/* ---------- kreslení vzoru (obrazovka, PNG, PDF a tisk sdílí) ---------- */
+function kresliVzor(ctx, o) {
+  const { x0, y0, x1, y1, b, ox, oy } = o, zobr = o.zobrazeni || nast.zobrazeni, w = vzor.w;
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `${Math.round(b * 0.74)}px ${PISMO_SYM}`;
+  const sym = zobr !== 'barvy' && b >= 7;
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+    const v = vzor.indexy[y * w + x], px = ox + (x - x0) * b, py = oy + (y - y0) * b;
+    if (v < 0 || !pal[v]) { ctx.fillStyle = '#fff'; ctx.fillRect(px, py, b, b); continue; }
+    ctx.fillStyle = zobr === 'symboly' ? '#fff' : pal[v].hexS; ctx.fillRect(px, py, b + 0.5, b + 0.5);
+    if (sym) { ctx.fillStyle = zobr === 'symboly' || pal[v].lab[0] > 55 ? '#000' : '#fff'; ctx.fillText(symboly[v] || '?', px + b / 2, py + b / 2 + b * 0.04); }
+  }
+  const sw = (x1 - x0) * b, sh = (y1 - y0) * b, tenka = Math.max(1, b * 0.05), silna = Math.max(1.6, b * 0.14);
+  if (b >= 5) {
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    for (let x = x0 + 1; x < x1; x++) if (x % 10) ctx.fillRect(ox + (x - x0) * b - tenka / 2, oy, tenka, sh);
+    for (let y = y0 + 1; y < y1; y++) if (y % 10) ctx.fillRect(ox, oy + (y - y0) * b - tenka / 2, sw, tenka);
+  }
+  ctx.fillStyle = '#111';
+  for (let x = Math.ceil(x0 / 10) * 10; x <= x1; x += 10) ctx.fillRect(ox + (x - x0) * b - silna / 2, oy, silna, sh);
+  for (let y = Math.ceil(y0 / 10) * 10; y <= y1; y += 10) ctx.fillRect(ox, oy + (y - y0) * b - silna / 2, sw, silna);
+  ctx.strokeStyle = '#111'; ctx.lineWidth = silna; ctx.strokeRect(ox, oy, sw, sh);
+  if (o.cisla) {  // čísla os po 10 (souřadnice v celém vzoru)
+    ctx.fillStyle = '#333'; ctx.font = `${o.cisla}px sans-serif`;
+    for (let x = Math.ceil(x0 / 10) * 10; x <= x1; x += 10) if (x > 0) { ctx.textBaseline = 'bottom'; ctx.fillText(x, ox + (x - x0) * b, oy - 3); }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (let y = Math.ceil(y0 / 10) * 10; y <= y1; y += 10) if (y > 0) ctx.fillText(y, ox - 4, oy + (y - y0) * b);
+  }
+  ctx.restore();
+}
+const cv = $('vzor');
+function prizpusobZoom() {
+  if (!vzor) return;
+  const r = obal.getBoundingClientRect();
+  bunka = Math.max(3, Math.min(30, Math.floor(Math.min((r.width - 60) / vzor.w, (r.height - 60) / vzor.h))));
+}
+function kresliPlatno() {
+  if (!vzor) return;
+  const okraj = bunka >= 8 ? 26 : 4, dpr = window.devicePixelRatio || 1;
+  const w = vzor.w * bunka + okraj + 4, h = vzor.h * bunka + okraj + 4;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+  cv._o = okraj;
+  kresliVzor(ctx, { x0: 0, y0: 0, x1: vzor.w, y1: vzor.h, b: bunka, ox: okraj, oy: okraj, cisla: okraj > 4 ? 11 : 0 });
+}
+
+/* ---------- legenda a souhrn ---------- */
+function spotreba(pocet) {
+  if (nast.rezim === 'vysivka') { const s = J.spotrebaPasem(pocet, +nast.ct, +nast.vlaken); return { text: `${s.pasem} × (${cislo(s.delkaM, 1)} m)`, pasem: s.pasem }; }
+  if (nast.rezim === 'koralky') { const s = J.spotrebaKoralku(pocet, +nast.baleni); return { text: `${s.baleni} bal.`, baleni: s.baleni }; }
+  return { text: '' };
+}
+function vykresliLegendu() {
+  if (!vzor) { $('legenda').innerHTML = ''; $('souhrn').textContent = '—'; return; }
+  const sp = nast.rezim === 'vysivka' ? 'Pasem' : nast.rezim === 'koralky' ? 'Balení' : '';
+  let celkem = 0, pasem = 0, baleni = 0;
+  const radky = pocty.map(p => {
+    const b = pal[p.i]; if (!b) return '';
+    celkem += p.pocet; const s = spotreba(p.pocet); pasem += s.pasem || 0; baleni += s.baleni || 0;
+    return `<tr data-i="${p.i}" class="${p.i === aktivni ? 'aktivni' : ''}">
+      <td><span class="vzorek" style="background:${b.hexS};color:${b.lab[0] > 55 ? '#000' : '#fff'}">${esc(symboly[p.i])}</span></td>
+      <td><b>${esc(b.kod)}</b><div class="nazev">${esc(b.nazev)}</div></td>
+      <td class="cislo">${cislo(p.pocet)}</td>
+      ${sp ? `<td class="cislo">${esc(s.text)}</td>` : ''}
+      <td><button type="button" class="btn mini" data-zamena="${p.i}" title="Zaměnit tuto barvu v celém vzoru za jinou">⇄</button></td>
+    </tr>`;
+  }).join('');
+  $('legenda').innerHTML = `<thead><tr><th></th><th>Kód / název</th><th class="cislo">Počet</th>${sp ? `<th class="cislo">${sp}</th>` : ''}<th></th></tr></thead><tbody>${radky}</tbody>`;
+  const rc = roztecCm(), jed = NAZEV_BODU[nast.rezim];
+  $('souhrn').innerHTML = `<b>${vzor.w} × ${vzor.h}</b> bodů · <b>${pocty.length}</b> ${tvar(pocty.length, ['barva', 'barvy', 'barev'])} · <b>${cislo(celkem)}</b> ${tvar(celkem, jed)}<br>
+    rozměr ${cislo(vzor.w * rc, 1)} × ${cislo(vzor.h * rc, 1)} cm` +
+    (nast.rezim === 'vysivka' ? `<br>příze celkem ≈ <b>${pasem}</b> pasem DMC` : '') +
+    (nast.rezim === 'koralky' ? `<br>balení po ${cislo(nast.baleni)} ks: <b>${baleni}</b> (každá barva zvlášť)` : '');
+  const s = J.spotrebaPasem(1, +nast.ct, +nast.vlaken);
+  $('spotrebaPozn').textContent = nast.rezim === 'vysivka'
+    ? `Pasmo DMC 8 m ≈ ${cislo(s.stehuNaPasmo)} celých křížků na Aidě ${nast.ct} ct při ${nast.vlaken} ${nast.vlaken == 1 ? 'vláknu' : 'vláknech'} (vč. 30 % rezervy). Stav k 11/2026, orientačně.`
+    : nast.rezim === 'koralky' ? 'Počty jsou přesné, balení se počítá pro každou barvu zvlášť. Barvy jsou orientační – porovnejte se vzorníkem.'
+    : 'Barvy jsou orientační.';
+}
+function aktualizujInfo() {
+  const r = rozmerMrizky(), rc = roztecCm();
+  $('velikostInfo').innerHTML = r ? `Mřížka <b>${r.w} × ${r.h}</b> bodů = <b>${cislo(r.w * rc, 1)} × ${cislo(r.h * rc, 1)} cm</b> (${cislo(10 / rc, 1)} bodů na cm)` : `${cislo(10 / rc, 1)} bodů na cm`;
+  const kap = kapacita();
+  const listu = vzor ? J.rozdelNaListy(vzor.w, vzor.h, kap.sloupcu, kap.radku, +nast.presah).length : 0;
+  $('listyInfo').textContent = `Na list A4 se vejde ${kap.sloupcu} × ${kap.radku} bodů` + (vzor ? ` · vzor zabere ${listu} ${tvar(listu, ['list', 'listy', 'listů'])} + přehled a legendu.` : '.');
+}
+function obnov() {
+  if (!vzor) return;
+  pocty = J.spocitejBarvy(vzor.indexy); symboly = J.prirad(pocty);
+  $('prazdno').hidden = true; cv.hidden = false;
+  kresliPlatno(); vykresliLegendu(); aktualizujInfo(); obnovStetec();
+  $('tlZpet').disabled = !zpet.length;
+  $('stav').innerHTML = `<span><b>${esc(projekt.nazev || 'Vzor')}</b>${projekt.id ? '' : ' (neuloženo)'}${upraveno ? ' · ✎ upraveno' : ''}</span><span id="podMysi"></span>`;
+}
+function obnovStetec() {
+  const b = pal[aktivni], el = $('barvaStetce');
+  el.style.background = b ? b.hexS : 'transparent';
+  el.textContent = b ? '' : '?';
+  el.parentElement.title = b ? `Barva štětce: ${b.kod} ${b.nazev} – klikněte pro jinou` : 'Vybrat barvu štětce z celé palety';
+}
+
+/* ---------- úpravy v mřížce ---------- */
+function bunkaPod(e) {
+  const r = cv.getBoundingClientRect(), x = Math.floor((e.clientX - r.left - cv._o) / bunka), y = Math.floor((e.clientY - r.top - cv._o) / bunka);
+  return x >= 0 && y >= 0 && x < vzor.w && y < vzor.h ? { x, y, i: y * vzor.w + x } : null;
+}
+function ulozZpet() { zpet.push(Int16Array.from(vzor.indexy)); if (zpet.length > 40) zpet.shift(); }
+let kreslim = false;
+function nakresli(c) {
+  if (!c || vzor.indexy[c.i] === aktivni) return;
+  vzor.indexy[c.i] = aktivni;
+  const ctx = cv.getContext('2d');
+  kresliVzor(ctx, { x0: Math.max(0, c.x - 1), y0: Math.max(0, c.y - 1), x1: Math.min(vzor.w, c.x + 2), y1: Math.min(vzor.h, c.y + 2), b: bunka, ox: cv._o + Math.max(0, c.x - 1) * bunka, oy: cv._o + Math.max(0, c.y - 1) * bunka });
+}
+cv.addEventListener('pointerdown', e => {
+  const c = bunkaPod(e); if (!c) return;
+  if (nastroj === 'kapatko') { if (vzor.indexy[c.i] >= 0) { aktivni = vzor.indexy[c.i]; vykresliLegendu(); obnovStetec(); nastroj = 'stetec'; doFormulare(); } return; }
+  if (nastroj !== 'stetec') return;
+  if (aktivni < 0) return Dialog.info('Nejdřív vyberte barvu v legendě (klik na řádek) nebo kapátkem 💧.');
+  cv.setPointerCapture(e.pointerId); kreslim = true; ulozZpet(); nakresli(c);
+});
+cv.addEventListener('pointermove', e => {
+  const c = bunkaPod(e), el = $('podMysi');
+  if (el) el.textContent = c ? `x ${c.x + 1}, y ${c.y + 1}` + (vzor.indexy[c.i] >= 0 ? ` · ${pal[vzor.indexy[c.i]].kod} ${pal[vzor.indexy[c.i]].nazev}` : '') : '';
+  if (kreslim) nakresli(c);
+});
+cv.addEventListener('pointerup', () => { if (!kreslim) return; kreslim = false; upraveno = true; obnov(); });
+$('legenda').addEventListener('click', e => {
+  const z = e.target.closest('[data-zamena]');
+  if (z) return zamena(+z.dataset.zamena);
+  const tr = e.target.closest('tr[data-i]'); if (!tr) return;
+  aktivni = +tr.dataset.i; if (nastroj === 'ukaz') nastroj = 'stetec';
+  doFormulare(); vykresliLegendu(); obnovStetec();
+});
+async function vyberBarvu(titul, puvodni) {
+  const d = $('dlgBarva'); $('dlgBarvaTitul').textContent = titul;
+  const vzorBarva = pal[puvodni];
+  const serazene = pal.map((b, i) => ({ b, i, d: vzorBarva ? J.deltaE00(vzorBarva.lab, b.lab) : 0 })).filter(x => x.i !== puvodni).sort((a, b) => a.d - b.d);
+  const vykresli = () => {
+    const t = $('barvaHledat').value.trim().toLowerCase();
+    $('barvyVyber').innerHTML = serazene.filter(x => !t || (x.b.kod + ' ' + x.b.nazev).toLowerCase().includes(t)).slice(0, 300)
+      .map(x => `<button type="button" data-vyber="${x.i}"><i style="background:${x.b.hexS}"></i><span><b>${esc(x.b.kod)}</b> ${esc(x.b.nazev)}</span></button>`).join('');
+  };
+  $('barvaHledat').value = ''; vykresli();
+  $('barvaHledat').oninput = vykresli;
+  return new Promise(ok => {
+    let vysledek = -1;
+    $('barvyVyber').onclick = e => { const b = e.target.closest('[data-vyber]'); if (b) { vysledek = +b.dataset.vyber; d.close(); } };
+    d.addEventListener('close', () => ok(vysledek), { once: true });
+    d.showModal();
+  });
+}
+async function zamena(z) {
+  const b = pal[z];
+  const na = await vyberBarvu(`⇄ Zaměnit ${b.kod} ${b.nazev} za… (nejpodobnější první)`, z);
+  if (na < 0) return;
+  ulozZpet(); J.zamenBarvu(vzor.indexy, z, na); upraveno = true;
+  if (aktivni === z) aktivni = na;
+  obnov();
+}
+
+/* ---------- PDF / tisk / PNG ---------- */
+const DPI = 150, MM = DPI / 25.4, A4 = [210, 297], OKRAJ = 10, HLAVICKA = 14, OSA = 7;
+function kapacita() { return J.kapacitaListu(A4[0] - OSA, A4[1], OKRAJ, HLAVICKA, +nast.bunkaMm || 3); }
+function novyList() {
+  const c = document.createElement('canvas'); c.width = Math.round(A4[0] * MM); c.height = Math.round(A4[1] * MM);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.fillStyle = '#000';
+  return { c, ctx };
+}
+function pata(ctx, text) { ctx.font = `${3 * MM}px sans-serif`; ctx.fillStyle = '#555'; ctx.textAlign = 'center'; ctx.fillText(text, A4[0] * MM / 2, (A4[1] - 5) * MM); ctx.textAlign = 'left'; }
+function radekLegendy(ctx, p, x, y, v) {
+  const b = pal[p.i], s = spotreba(p.pocet);
+  ctx.fillStyle = b.hexS; ctx.fillRect(x, y, v, v); ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(x, y, v, v);
+  ctx.fillStyle = b.lab[0] > 55 ? '#000' : '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `${v * 0.72}px ${PISMO_SYM}`; ctx.fillText(symboly[p.i], x + v / 2, y + v / 2 + v * 0.04);
+  ctx.fillStyle = '#000'; ctx.fillRect(x + v * 1.3, y, v, v); ctx.fillStyle = '#fff'; ctx.fillRect(x + v * 1.3 + 1.5, y + 1.5, v - 3, v - 3);
+  ctx.fillStyle = '#000'; ctx.fillText(symboly[p.i], x + v * 1.8, y + v / 2 + v * 0.04);
+  ctx.textAlign = 'left'; ctx.font = `bold ${v * 0.6}px sans-serif`; ctx.fillText(b.kod, x + v * 2.7, y + v / 2);
+  ctx.font = `${v * 0.55}px sans-serif`; ctx.fillText(b.nazev.slice(0, 34), x + v * 5.2, y + v / 2);
+  ctx.textAlign = 'right'; ctx.fillText(cislo(p.pocet), x + v * 18, y + v / 2);
+  if (s.text) ctx.fillText(s.text, x + v * 22.5, y + v / 2);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+function vytvorListy() {
+  const kap = kapacita(), listy = J.rozdelNaListy(vzor.w, vzor.h, kap.sloupcu, kap.radku, +nast.presah), b = (+nast.bunkaMm || 3) * MM;
+  const strany = [], rc = roztecCm(), jed = NAZEV_BODU[nast.rezim], nazev = projekt.nazev || 'Vzor';
+  /* 1. přehled: náhled s mapou listů + začátek legendy */
+  {
+    const { c, ctx } = novyList();
+    ctx.font = `bold ${6 * MM}px sans-serif`; ctx.fillText(nazev, OKRAJ * MM, (OKRAJ + 6) * MM);
+    ctx.font = `${3.4 * MM}px sans-serif`;
+    const celkem = pocty.reduce((a, p) => a + p.pocet, 0);
+    ctx.fillText(`${vzor.w} × ${vzor.h} bodů · ${pocty.length} ${tvar(pocty.length, ['barva', 'barvy', 'barev'])} · ${cislo(celkem)} ${tvar(celkem, jed)} · ${cislo(vzor.w * rc, 1)} × ${cislo(vzor.h * rc, 1)} cm · ${$('paleta').selectedOptions[0] ? $('paleta').selectedOptions[0].textContent : ''}` + (nast.rezim === 'vysivka' ? ` · Aida ${nast.ct} ct, ${nast.vlaken} vl.` : ''), OKRAJ * MM, (OKRAJ + 12) * MM);
+    const maxW = (A4[0] - 2 * OKRAJ) * MM, maxH = 120 * MM, k = Math.min(maxW / vzor.w, maxH / vzor.h);
+    const ox = OKRAJ * MM, oy = (OKRAJ + 17) * MM;
+    kresliVzor(ctx, { x0: 0, y0: 0, x1: vzor.w, y1: vzor.h, b: k, ox, oy, zobrazeni: 'barvy' });
+    let y = oy + vzor.h * k + 8 * MM;
+    ctx.fillStyle = '#000'; ctx.font = `bold ${3.6 * MM}px sans-serif`; ctx.fillText('Legenda', OKRAJ * MM, y); y += 3 * MM;
+    const v = 5.4 * MM, naPrvni = Math.floor(((A4[1] - OKRAJ - 8) * MM - y) / (v * 1.25));
+    pocty.slice(0, naPrvni).forEach((p, i) => radekLegendy(ctx, p, OKRAJ * MM, y + i * v * 1.25, v));
+    strany.push(c);
+    /* zbytek legendy na další listy */
+    let zbyva = pocty.slice(naPrvni);
+    while (zbyva.length) {
+      const { c: c2, ctx: x2 } = novyList(), naList = Math.floor(((A4[1] - 2 * OKRAJ - 8) * MM) / (v * 1.25));
+      zbyva.slice(0, naList).forEach((p, i) => radekLegendy(x2, p, OKRAJ * MM, (OKRAJ + 4) * MM + i * v * 1.25, v));
+      zbyva = zbyva.slice(naList);
+      strany.push(c2);
+    }
+    /* mapa listů na přehledu – čísla stran jsou známá až teď */
+    const ls = strany.length, celkemStran = ls + listy.length;
+    ctx.lineWidth = 2; ctx.font = `bold ${Math.max(2.5 * MM, Math.min(8 * MM, k * kap.radku / 3))}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    listy.forEach(l => {
+      ctx.strokeStyle = '#d00'; ctx.strokeRect(ox + l.x0 * k, oy + l.y0 * k, (l.x1 - l.x0) * k, (l.y1 - l.y0) * k);
+      ctx.fillStyle = 'rgba(255,255,255,.75)'; const cx = ox + (l.x0 + l.x1) / 2 * k, cy = oy + (l.y0 + l.y1) / 2 * k;
+      ctx.fillRect(cx - 5 * MM, cy - 4 * MM, 10 * MM, 8 * MM); ctx.fillStyle = '#d00'; ctx.fillText(ls + l.cislo, cx, cy);
+    });
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    strany.forEach((c3, i) => pata(c3.getContext('2d'), i ? `${nazev} · legenda · strana ${i + 1} z ${celkemStran}` : `${nazev} · přehled · strana 1 z ${celkemStran} · červená čísla = strany se vzorem`));
+  }
+  const legendStran = strany.length;
+  listy.forEach(l => {
+    const { c, ctx } = novyList(), ox = (OKRAJ + OSA) * MM, oy = (OKRAJ + HLAVICKA) * MM;
+    ctx.font = `bold ${4 * MM}px sans-serif`; ctx.fillText(`${nazev} – strana ${legendStran + l.cislo}`, OKRAJ * MM, (OKRAJ + 4) * MM);
+    ctx.font = `${3 * MM}px sans-serif`; ctx.fillStyle = '#444';
+    ctx.fillText(`list ${l.cislo} z ${listy.length} · řada ${l.radek}, sloupec ${l.sloupec} · body x ${l.x0 + 1}–${l.x1}, y ${l.y0 + 1}–${l.y1}` + (+nast.presah ? ` · šedý okraj = přesah ${nast.presah} b. z vedlejšího listu` : ''), OKRAJ * MM, (OKRAJ + 8.5) * MM);
+    kresliVzor(ctx, { x0: l.x0, y0: l.y0, x1: l.x1, y1: l.y1, b, ox, oy, cisla: Math.round(2.6 * MM), zobrazeni: nast.zobrazeni === 'barvy' ? 'obe' : nast.zobrazeni });
+    const pr = +nast.presah;
+    if (pr) {  // přesah z předchozího listu ztmavit
+      ctx.fillStyle = 'rgba(0,0,0,.13)';
+      if (l.sloupec > 1) ctx.fillRect(ox, oy, pr * b, (l.y1 - l.y0) * b);
+      if (l.radek > 1) ctx.fillRect(ox, oy, (l.x1 - l.x0) * b, pr * b);
+    }
+    pata(ctx, `${nazev} · strana ${legendStran + l.cislo} z ${legendStran + listy.length}`);
+    strany.push(c);
+  });
+  return strany;
+}
+function nactiSkript(src) {
+  return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('Nelze načíst ' + src)); document.head.appendChild(s); });
+}
+function stahni(blob, jmeno) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = jmeno;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+const jmenoSouboru = p => (projekt.nazev || 'vzor').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60) + p;
+async function exportPdf() {
+  if (!vzor) return Dialog.info('Nejdřív otevřete obrázek.');
+  $('pocitam').hidden = false;
+  try {
+    if (!window.jspdf) await nactiSkript('lib/jspdf.umd.min.js');
+    const strany = vytvorListy(), doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    strany.forEach((c, i) => { if (i) doc.addPage(); doc.addImage(c, 'PNG', 0, 0, A4[0], A4[1], undefined, 'FAST'); });
+    stahni(doc.output('blob'), jmenoSouboru('.pdf'));
+  } catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); }
+  $('pocitam').hidden = true;
+}
+async function tisk() {
+  if (!vzor) return Dialog.info('Nejdřív otevřete obrázek.');
+  const t = $('tisk'); t.innerHTML = '';
+  const urls = await Promise.all(vytvorListy().map(c => new Promise(ok => c.toBlob(b => ok(URL.createObjectURL(b)), 'image/png'))));
+  await Promise.all(urls.map(u => new Promise(ok => { const i = new Image(); i.onload = i.onerror = ok; i.src = u; i.alt = ''; t.appendChild(i); })));
+  addEventListener('afterprint', () => { urls.forEach(URL.revokeObjectURL); t.innerHTML = ''; }, { once: true });
+  window.print();
+}
+function exportPng() {
+  if (!vzor) return Dialog.info('Nejdřív otevřete obrázek.');
+  const b = Math.max(6, Math.min(24, Math.floor(6000 / Math.max(vzor.w, vzor.h)))), okraj = 30, v = 22;
+  const w = Math.max(vzor.w * b + 2 * okraj, 560), hVz = vzor.h * b + 2 * okraj, h = hVz + pocty.length * v * 1.25 + 40;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+  kresliVzor(ctx, { x0: 0, y0: 0, x1: vzor.w, y1: vzor.h, b, ox: okraj, oy: okraj, cisla: 12 });
+  pocty.forEach((p, i) => radekLegendy(ctx, p, okraj, hVz + 10 + i * v * 1.25, v));
+  c.toBlob(bl => stahni(bl, jmenoSouboru('.png')), 'image/png');
+}
+
+/* ---------- projekty (IndexedDB) ---------- */
+const DB = (() => {
+  let p;
+  const otevri = () => p || (p = new Promise((ok, ko) => {
+    const r = indexedDB.open(J.KLIC, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('projekty', { keyPath: 'id' });
+    r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
+  }));
+  const tx = async (rezim, fn) => {
+    const db = await otevri();
+    return new Promise((ok, ko) => { const t = db.transaction('projekty', rezim), r = fn(t.objectStore('projekty')); t.oncomplete = () => ok(r && r.result); t.onerror = () => ko(t.error); });
+  };
+  return { vse: () => tx('readonly', s => s.getAll()), uloz: z => tx('readwrite', s => s.put(z)), smaz: id => tx('readwrite', s => s.delete(id)), nacti: id => tx('readonly', s => s.get(id)) };
+})();
+function nahled() {
+  const k = Math.max(1, Math.floor(128 / Math.max(vzor.w, vzor.h))), c = document.createElement('canvas');
+  c.width = vzor.w * k; c.height = vzor.h * k;
+  kresliVzor(c.getContext('2d'), { x0: 0, y0: 0, x1: vzor.w, y1: vzor.h, b: k, ox: 0, oy: 0, zobrazeni: 'barvy' });
+  return c.toDataURL('image/png');
+}
+function zaznamProjektu() {
+  return { id: projekt.id, nazev: projekt.nazev, zmeneno: Date.now(), obrazek: zdroj.blob, orez, nast: JSON.parse(JSON.stringify(nast)),
+    vzor: { w: vzor.w, h: vzor.h, indexy: Int16Array.from(vzor.indexy) }, upraveno, nahled: nahled() };
+}
+async function ulozProjekt(jako) {
+  if (!vzor) return Dialog.info('Nejdřív otevřete obrázek.');
+  if (jako || !projekt.id) {
+    const n = await Dialog.zeptej('Název projektu:', projekt.nazev || 'Vzor'); if (n == null) return;
+    projekt.nazev = n.trim() || 'Vzor'; projekt.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+  try { await DB.uloz(zaznamProjektu()); obnov(); Dialog.info('Projekt uložen.'); }
+  catch (e) { Dialog.chyba('Uložení se nepovedlo: ' + e.message); }
+}
+async function otevriZaznam(z) {
+  let bitmap;
+  try { bitmap = await createImageBitmap(z.obrazek); } catch (e) { return Dialog.chyba('Obrázek projektu je poškozený.'); }
+  zdroj = { bitmap, blob: z.obrazek, w: bitmap.width, h: bitmap.height };
+  orez = z.orez || { x: 0, y: 0, w: 1, h: 1 };
+  nast = J.migruj(Object.assign({}, z.nast, { zobrazeni: nast.zobrazeni })); ulozNast();
+  nactiPaletu(); doFormulare();
+  projekt = { id: z.id, nazev: z.nazev };
+  vzor = { w: z.vzor.w, h: z.vzor.h, indexy: Int16Array.from(z.vzor.indexy) };
+  upraveno = !!z.upraveno; zpet = []; $('zastarale').hidden = true;
+  kresliZdroj(); prizpusobZoom(); obnov();
+}
+async function seznamProjektu() {
+  let vse = [];
+  try { vse = (await DB.vse()).sort((a, b) => b.zmeneno - a.zmeneno); } catch (e) { return Dialog.chyba('Úložiště prohlížeče není dostupné.'); }
+  $('seznamProjektu').innerHTML = vse.length ? vse.map(z => `<div class="projekt" data-id="${esc(z.id)}">
+      <img src="${esc(z.nahled || '')}" alt="">
+      <div><b>${esc(z.nazev)}</b><br><small>${z.vzor.w} × ${z.vzor.h} · ${esc((J.PALETY[z.nast.paleta[z.nast.rezim]] || { nazev: '🎨 Vlastní' }).nazev)} · ${new Date(z.zmeneno).toLocaleString('cs-CZ')}</small></div>
+      <button type="button" class="btn mini primary" data-p="otevrit">Otevřít</button>
+      <button type="button" class="btn mini danger" data-p="smazat" aria-label="Smazat">🗑️</button></div>`).join('')
+    : '<div class="info">Zatím žádné uložené projekty. Uložíte je přes Soubor → Uložit projekt.</div>';
+  $('dlgProjekty').showModal();
+}
+$('seznamProjektu').addEventListener('click', async e => {
+  const b = e.target.closest('[data-p]'); if (!b) return;
+  const id = b.closest('[data-id]').dataset.id;
+  if (b.dataset.p === 'smazat') { if (await Dialog.potvrd('Smazat projekt?')) { await DB.smaz(id); if (projekt.id === id) projekt.id = null; seznamProjektu(); } return; }
+  if (upraveno && projekt.id !== id && !await Dialog.potvrd('Zahodit neuložené úpravy aktuálního vzoru?')) return;
+  $('dlgProjekty').close(); otevriZaznam(await DB.nacti(id));
+});
+const blobNaData = b => new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); });
+async function exportJson() {
+  if (!vzor) return Dialog.info('Nejdřív otevřete obrázek.');
+  const z = zaznamProjektu();
+  const data = { typ: 'vzory_z_obrazku', verze: J.VERZE, nazev: z.nazev, orez: z.orez, nast: z.nast, upraveno: z.upraveno,
+    vzor: { w: z.vzor.w, h: z.vzor.h, indexy: Array.from(z.vzor.indexy) }, obrazek: await blobNaData(z.obrazek) };
+  stahni(new Blob([JSON.stringify(data)], { type: 'application/json' }), jmenoSouboru('.json'));
+}
+async function nactiJson(f) {
+  try {
+    const d = JSON.parse(await f.text());
+    if (d.typ !== 'vzory_z_obrazku' || !d.vzor || !d.obrazek) throw new Error('není to projekt Vzorů z obrázku');
+    const blob = await (await fetch(d.obrazek)).blob();
+    await otevriZaznam({ id: null, nazev: d.nazev, obrazek: blob, orez: d.orez, nast: d.nast, vzor: d.vzor, upraveno: d.upraveno });
+  } catch (e) { Dialog.chyba('Soubor nejde načíst: ' + e.message); }
+}
+$('souborJson').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) nactiJson(f); });
+
+/* ---------- vlastní paleta ---------- */
+function infoVlastni() { const n = J.nactiPaletu($('vlastniText').value).length; $('vlastniInfo').textContent = `Rozpoznáno barev: ${n}`; }
+$('vlastniText').addEventListener('input', infoVlastni);
+$('vlastniZPalety').addEventListener('click', () => {
+  if (!vzor) return;
+  $('vlastniText').value = pocty.map(p => `${pal[p.i].kod.replace(/\s+/g, '_')} ${pal[p.i].nazev} ${pal[p.i].hexS}`).join('\n'); infoVlastni();
+});
+$('dlgVlastni').addEventListener('close', () => {
+  if ($('dlgVlastni').returnValue !== 'ok') return;
+  if (!J.nactiPaletu($('vlastniText').value).length) return Dialog.chyba('V paletě není žádná barva.');
+  nast.vlastniPaleta = $('vlastniText').value; ulozNast(); nactiPaletu();
+  upraveno = false; zpet = []; aktivni = -1; zmenaParametru();
+});
+
+/* ---------- příkazy a nabídky ---------- */
+const PRIKAZY = {
+  otevrit: () => $('souborObr').click(),
+  schranka: async () => {
+    try {
+      for (const it of await navigator.clipboard.read()) {
+        const t = it.types.find(x => x.startsWith('image/'));
+        if (t) return nactiObrazek(await it.getType(t), 'Ze schránky');
+      }
+      Dialog.info('Ve schránce není obrázek.');
+    } catch (e) { Dialog.info('Prohlížeč nepovolil čtení schránky – vložte obrázek klávesami Ctrl+V.'); }
+  },
+  projekty: seznamProjektu,
+  ulozit: () => ulozProjekt(false),
+  ulozitJako: () => ulozProjekt(true),
+  png: exportPng, pdf: exportPdf, tisk,
+  export: exportJson,
+  import: () => $('souborJson').click(),
+  celyObrazek: () => { if (!zdroj) return; orez = { x: 0, y: 0, w: 1, h: 1 }; kresliZdroj(); zmenaParametru(); },
+  prepocitat: async () => { if (await Dialog.potvrd('Přepočítat vzor? Ruční úpravy se ztratí.')) { upraveno = false; prepocitej(); } },
+  oddal: () => { bunka = Math.max(2, Math.round(bunka / 1.25)); kresliPlatno(); },
+  pribliz: () => { bunka = Math.min(60, Math.round(bunka * 1.25) + 1); kresliPlatno(); },
+  prizpusob: () => { prizpusobZoom(); kresliPlatno(); },
+  zpet: () => { if (!zpet.length) return; vzor.indexy = zpet.pop(); upraveno = true; obnov(); },
+  siroty: () => {
+    if (!vzor) return;
+    ulozZpet(); const n = J.odstranSiroty(vzor.indexy, vzor.w, vzor.h, 0);
+    if (!n) { zpet.pop(); return Dialog.info('Žádné osamocené body.'); }
+    upraveno = true; obnov(); Dialog.info(`Přebarveno ${n} osamocených bodů.`);
+  },
+  barvaStetce: async () => { if (!pal.length) return; const i = await vyberBarvu('🖌️ Barva štětce', -1); if (i >= 0) { aktivni = i; nastroj = 'stetec'; doFormulare(); obnovStetec(); vykresliLegendu(); } },
+  vlastniPaleta: () => { $('vlastniText').value = nast.vlastniPaleta; infoVlastni(); $('dlgVlastni').showModal(); },
+  napoveda: () => $('dlgNapoveda').showModal()
+};
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const z = e.target.closest('[data-zobr]');
+  if (z) { nast.zobrazeni = z.dataset.zobr; ulozNast(); doFormulare(); kresliPlatno(); }
+  const n = e.target.closest('[data-nastroj]');
+  if (n) { nastroj = n.dataset.nastroj; doFormulare(); cv.style.cursor = nastroj === 'ukaz' ? 'default' : 'crosshair'; }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') zavriNabidky();
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.target.closest('input,textarea') && !document.querySelector('dialog[open]')) { e.preventDefault(); PRIKAZY.zpet(); }
+});
+addEventListener('beforeunload', e => { if (upraveno) { e.preventDefault(); e.returnValue = ''; } });
+
+nactiPaletu(); doFormulare(); aktualizujInfo(); kresliZdroj();
+window.VZORY_APP = { stav: () => ({ nast, vzor, pal, pocty, upraveno }), nactiObrazek, vytvorListy, prepocitej };
+})();
+</script>
+</body>
+</html>

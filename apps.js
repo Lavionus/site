@@ -691,6 +691,12 @@ const KATALOG_SEKCE = [
           "váhy",
           "převod"
         ]
+      },
+      {
+        "soubor": "obsah/velikosti.html",
+        "nazev": "📏 Tabulky velikostí",
+        "stav": "vyvoj",
+        "tagy": ["velikost", "tabulka velikostí", "převod velikostí", "oblečení", "boty", "velikost bot", "EU", "UK", "US", "Mondopoint", "dětské velikosti", "prsten", "velikost prstenu", "měřítko prstenu", "rukavice", "klobouk", "čepice", "obvod hlavy", "podprsenka", "košíček", "rám kola", "košile", "džíny", "W/L", "míry", "EN 13402"]
       }
     ]
   },
@@ -768,6 +774,12 @@ const KATALOG_SEKCE = [
           "prášky",
           "dávkování"
         ]
+      },
+      {
+        "soubor": "obsah/denik_nemoci.html",
+        "nazev": "🤒 Deník nemoci",
+        "stav": "vyvoj",
+        "tagy": ["nemoc", "horečka", "teplota", "teploměr", "dítě", "paracetamol", "ibuprofen", "Paralen", "Nurofen", "dávkování", "léky", "příznaky", "kašel", "rýma", "dehydratace", "graf teploty", "lékař", "pediatr", "deník", "rodina"]
       },
       {
         "soubor": "obsah/menstrual_calendar.html",
@@ -1702,6 +1714,12 @@ const KATALOG_SEKCE = [
         "tagy": ["krajka", "dečka", "vystřihovánka", "papírová dečka", "lemovka", "paličkování", "podvinek", "torchon", "pavouk", "plátno", "půlhod", "můstky", "plotr", "cricut", "laser", "svg", "dxf", "pdf", "vzor"]
       },
       {
+        "soubor": "obsah/pleteni.html",
+        "nazev": "🧶 Pletení a háčkování",
+        "stav": "vyvoj",
+        "tagy": ["pletení", "háčkování", "vzorek", "přepočet návodu", "přidávání oček", "ubírání", "spotřeba příze", "klubka", "počítadlo řad", "schéma vzoru", "žakár", "copánky", "jehlice", "háček", "zkratky návodů"]
+      },
+      {
         "soubor": "obsah/halloween.html",
         "nazev": "🎃 Halloweenská dílna",
         "stav": "vyvoj",
@@ -1845,6 +1863,12 @@ const KATALOG_SEKCE = [
         "nazev": "🌫️ Dithering obrázku",
         "stav": "beta",
         "tagy": ["dithering", "pixelizace", "rastr", "retro", "obrázek"]
+      },
+      {
+        "soubor": "obsah/vzory_z_obrazku.html",
+        "nazev": "🧵 Vzory z obrázku: křížková výšivka, korálky, mozaika",
+        "stav": "vyvoj",
+        "tagy": ["výšivka", "křížková výšivka", "DMC", "korálky", "zažehlovací korálky", "Hama", "Perler", "Artkal", "mozaika", "LEGO", "vzor", "pixel art", "paleta", "ruční práce", "tisk", "PDF"]
       },
       {
         "soubor": "obsah/exif_viewer.html",

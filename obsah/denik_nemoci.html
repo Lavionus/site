@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deník nemoci – teplota, léky, příznaky</title>
+<meta name="description" content="Deník nemoci pro celou rodinu: teplota s barevnými prahy, léky s hlídáním intervalu a max. denní dávky paracetamolu a ibuprofenu podle hmotnosti, příznaky, tekutiny, graf teploty a souhrn pro lékaře.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="denik_nemoci/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Hlídač termínů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px;max-width:190px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1000px;margin:0 auto;display:grid;gap:12px}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;min-width:0}
+.hlavicka h2{margin:0;font-size:1.05rem}
+.hlavicka .meta{font-size:.82rem;color:var(--text-muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.poplach{border-left:4px solid var(--danger);background:color-mix(in srgb,var(--danger) 12%,var(--bg-panel));font-size:.88rem;line-height:1.45}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.7}
+
+/* velká tlačítka pro rychlý zápis z telefonu */
+.rychle{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:520px){.rychle{grid-template-columns:repeat(4,1fr);gap:6px}}
+.rychle button{background:var(--bg-panel);color:var(--text);border:1px solid var(--border-strong);border-radius:12px;padding:12px 4px;min-height:72px;font:inherit;font-size:.8rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.rychle button b{font-size:1.7rem;line-height:1;font-weight:400}
+.rychle button:hover{background:var(--bg-hover);border-color:var(--accent)}
+
+.leky{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
+.lek{border-left:4px solid var(--ok);font-size:.84rem;line-height:1.5}
+.lek.ceka{border-left-color:var(--warn)}
+.lek.stop{border-left-color:var(--danger)}
+.lek h3{margin:0 0 2px;font-size:.92rem}
+.lek .dalsi{font-size:1rem}
+.lek ul{margin:4px 0 0;padding-left:18px;color:var(--danger);font-size:.8rem}
+.poucka{font-size:.76rem;color:var(--text-muted);margin:0}
+
+/* časová osa */
+.den h3{margin:0 0 6px;font-size:.86rem;color:var(--text-muted);display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.den h3 b{color:var(--text);font-size:.95rem}
+.osa{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.osa li{display:grid;grid-template-columns:3.2em 1.7em 1fr;gap:6px;align-items:baseline;padding:6px 8px;border-radius:6px;border:1px solid var(--border);border-left:4px solid var(--pruh,var(--border));background:var(--bg-elevated);cursor:pointer;font-size:.88rem}
+.osa li:hover{border-color:var(--border-strong)}
+.osa .cas{color:var(--text-muted);font-variant-numeric:tabular-nums}
+.osa .pozn{display:block;color:var(--text-muted);font-size:.8rem}
+.osa .kat{font-size:.75rem;color:var(--text-muted)}
+
+/* graf */
+.graf svg{width:100%;height:auto;display:block}
+.graf text{fill:var(--text-muted);font-size:11px;font-family:inherit}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.76rem;color:var(--text-muted);margin-top:6px}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+
+pre.souhrn{white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.5;margin:0}
+.akce{display:flex;gap:6px;flex-wrap:wrap}
+.varovne h2{margin:0 0 6px;font-size:1rem}
+.varovne ul{margin:0;padding-left:20px;line-height:1.6;font-size:.88rem}
+.varovne .tel{font-size:1.05rem;font-weight:700;color:var(--danger)}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,520px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:92vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.radek{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.vstup.velke{font-size:1.6rem;padding:8px 10px;text-align:center}
+.cipy{display:flex;flex-wrap:wrap;gap:6px}
+.cipy label{display:inline-flex}
+.cipy input{position:absolute;opacity:0;pointer-events:none}
+.cipy span{border:1px solid var(--border-strong);border-radius:16px;padding:6px 11px;font-size:.84rem;cursor:pointer;background:var(--bg-control);color:var(--text)}
+.cipy input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff)}
+.cipy input:focus-visible + span{outline:2px solid var(--accent)}
+.nahled{font-size:.95rem;padding:8px 10px;border-radius:6px;border-left:5px solid var(--barva,var(--border));background:var(--bg-panel)}
+
+@media print{
+  .lista,.rychle,.leky,.akce,dialog,#podpis-pruh,.hlavicka,.poplach{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .karta{border:0;padding:0;background:#fff}
+  pre.souhrn{font-size:10pt;color:#000}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🤒 Deník nemoci</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Záloha, obnova, CSV, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Kdo a nemoc"><span class="skup-nazev" aria-hidden="true">Kdo a nemoc</span><div class="skup-tl">
+    <select class="tl" id="vyberOsoba" aria-label="Osoba"></select>
+    <select class="tl" id="vyberEpizoda" aria-label="Nemoc"></select>
+    <button class="tl hlavni-tl" data-nabidka="nabNovy" aria-expanded="false" title="Nová osoba nebo nemoc, úpravy">✚<span class="txt"> Nový</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="osa" aria-pressed="true" title="Časová osa">⏱️<span class="txt"> Časová osa</span></button>
+    <button class="tl" data-pohled="graf" aria-pressed="false" title="Graf teploty">📈<span class="txt"> Graf teploty</span></button>
+    <button class="tl" data-pohled="souhrn" aria-pressed="false" title="Souhrn pro lékaře">📋<span class="txt"> Pro lékaře</span></button>
+    <button class="tl" data-pohled="varovne" aria-pressed="false" title="Kdy volat lékaře">🚩<span class="txt"> Varovné příznaky</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <button class="tl" data-prikaz="csv">📊 Všechny záznamy do CSV</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<div id="nabNovy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novaEpizoda">🤒 Nová nemoc…</button>
+  <button class="tl" data-prikaz="upravEpizodu">✎ Upravit / ukončit nemoc…</button>
+  <hr>
+  <button class="tl" data-prikaz="novaOsoba">👤 Nová osoba…</button>
+  <button class="tl" data-prikaz="upravOsobu">✎ Upravit osobu (věk, hmotnost)…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal">
+  <div id="obsah" class="obal" style="max-width:none"></div>
+
+  <!-- statický seznam varovných příznaků (pohled 🚩) -->
+  <section class="karta varovne" id="varovne" hidden>
+    <h2>🚩 Kdy volat lékaře nebo záchranku</h2>
+    <p class="tel">Ohrožení života: 📞 155 (záchranná služba) · 112 (tísňová linka)</p>
+    <h3 style="font-size:.92rem;margin:10px 0 4px">Ihned 155:</h3>
+    <ul>
+      <li>dušnost, rychlé nebo namáhavé dýchání, zatahování mezižeberních prostorů, modrání rtů</li>
+      <li>ztuhlá šíje (nejde předklonit hlavu bradou k hrudi), prudká bolest hlavy se zvracením</li>
+      <li>vyrážka, která <b>nevybledne</b> pod tlakem skleničky (drobné tečky, fialové skvrny) – podezření na meningokoka</li>
+      <li>apatie, dítě se nedá probudit, nereaguje, je zmatené, schvácené nebo neutišitelně a jinak než obvykle pláče</li>
+      <li>křeče (i první febrilní křeče), bezvědomí</li>
+      <li>studené, mramorované končetiny a šedá bledost při vysoké horečce</li>
+    </ul>
+    <h3 style="font-size:.92rem;margin:10px 0 4px">Volejte lékaře (pohotovost):</h3>
+    <ul>
+      <li>kojenec <b>do 3 měsíců</b> s teplotou 38 °C a víc</li>
+      <li>teplota nad 40 °C, nebo horečka, která neklesá po lécích</li>
+      <li>horečka déle než 3 dny (u kojenců déle než 24 h), nebo se po zlepšení znovu vrátí</li>
+      <li><b>známky dehydratace</b>: málo moči (suchá plena 6–8 h u kojence, déle než 12 h u staršího dítěte), tmavá moč, suchá ústa a rty, pláč bez slz, vpadlá fontanela, ospalost</li>
+      <li>opakované zvracení, které nedovolí pít, krev ve stolici nebo zvratcích</li>
+      <li>silná bolest ucha, břicha (zvlášť vpravo dole), bolest při močení</li>
+      <li>dospělí: bolest na hrudi, náhle vzniklá slabost končetin nebo porucha řeči (155!)</li>
+      <li>když máte pocit, že je něco vážně špatně – důvěřujte svému úsudku</li>
+    </ul>
+    <p class="poucka" style="margin-top:10px">Stav 11/2026, orientační přehled – nenahrazuje lékaře. Mimo ordinační hodiny: lékařská pohotovostní služba podle kraje.</p>
+  </section>
+</div></main>
+
+<datalist id="seznamLeku"></datalist>
+
+<!-- osoba -->
+<dialog class="okno" id="dlgOsoba"><form method="dialog">
+  <header id="dlgOsobaTitul">Osoba</header>
+  <div class="telo">
+    <label class="pole">Jméno<input class="vstup" name="jmeno" required maxlength="80" placeholder="např. Ema"></label>
+    <div class="radek">
+      <label class="pole">Kdo<select class="vstup" name="typ"><option value="dite">👶 dítě</option><option value="dospely">🧑 dospělý</option></select></label>
+      <label class="pole">Datum narození<input class="vstup" name="narozeni" type="date"></label>
+    </div>
+    <label class="pole">Hmotnost (kg) – pro výpočet dávek<input class="vstup" name="hmotnost" inputmode="decimal" placeholder="např. 14,5"></label>
+    <p class="info" style="margin:0">Hmotnost aktualizujte – u dětí se dávka léků od horečky počítá podle aktuální váhy.</p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgOsobaSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- epizoda nemoci -->
+<dialog class="okno" id="dlgEpizoda"><form method="dialog">
+  <header id="dlgEpizodaTitul">Nemoc</header>
+  <div class="telo">
+    <label class="pole">Kdo je nemocný<select class="vstup" name="osoba" required></select></label>
+    <label class="pole">Název<input class="vstup" name="nazev" maxlength="120" list="seznamNemoci" placeholder="např. angína, chřipka, střevní viróza"></label>
+    <datalist id="seznamNemoci"><option value="Nachlazení"><option value="Chřipka"><option value="Angína"><option value="Covid-19"><option value="Střevní viróza"><option value="Zánět středního ucha"><option value="Neštovice"><option value="Bronchitida"><option value="Horečka nejasného původu"></datalist>
+    <div class="radek">
+      <label class="pole">Začátek<input class="vstup" name="zacatek" type="datetime-local" required></label>
+      <label class="pole">Konec (prázdné = trvá)<input class="vstup" name="konec" type="datetime-local"></label>
+    </div>
+    <label class="pole">Poznámka (lékař, diagnóza, antibiotika…)<textarea class="vstup" name="poznamka" rows="3" maxlength="4000"></textarea></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgEpizodaSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- záznam -->
+<dialog class="okno" id="dlgZaznam"><form method="dialog">
+  <header id="dlgZaznamTitul">Záznam</header>
+  <div class="telo">
+    <label class="pole">Kdy<input class="vstup" name="cas" type="datetime-local" required></label>
+
+    <div class="sekce" data-typ="teplota">
+      <div class="radek">
+        <label class="pole">Teplota (°C)<input class="vstup velke" name="t" type="number" inputmode="decimal" step="0.1" min="30" max="44" placeholder="37,0"></label>
+        <label class="pole">Místo měření<select class="vstup" name="misto"><option value="podpazi">podpaží</option><option value="ucho">ucho</option><option value="usta">ústa</option><option value="konecnik">konečník</option></select></label>
+      </div>
+      <div class="nahled" id="nahledTeplota" style="margin-top:8px">–</div>
+    </div>
+
+    <div class="sekce" data-typ="lek">
+      <label class="pole">Lék<input class="vstup" name="nazev" list="seznamLeku" maxlength="120" placeholder="např. Paralen sirup, Nurofen"></label>
+      <div class="radek" style="margin-top:8px">
+        <label class="pole">Dávka<input class="vstup" name="davka" inputmode="decimal" placeholder="např. 5"></label>
+        <label class="pole">Jednotka<select class="vstup" name="jednotka"></select></label>
+      </div>
+      <label class="pole" id="poleSila" style="margin-top:8px"><span>Síla – mg v 1 ml / kusu (z obalu)</span><input class="vstup" name="sila" inputmode="decimal" placeholder="např. 24 (Paralen sirup 24 mg/ml)"></label>
+      <div class="info" id="nahledLek" style="margin-top:8px"></div>
+      <p class="poucka" style="margin-top:6px">Orientačně, řiďte se příbalovým letákem a lékařem. Pravidelné léky naplánujete v <a href="medication_reminder.html" style="color:var(--accent)">Rozvrhu léků</a>.</p>
+    </div>
+
+    <div class="sekce" data-typ="priznaky">
+      <div class="cipy" id="cipyPriznaky"></div>
+      <label class="pole" style="margin-top:8px">Jiné (oddělte čárkou)<input class="vstup" name="jine" maxlength="200"></label>
+      <div class="pole" style="margin-top:8px">Intenzita
+        <div class="cipy">
+          <label><input type="radio" name="intenzita" value="1"><span>mírné</span></label>
+          <label><input type="radio" name="intenzita" value="2" checked><span>střední</span></label>
+          <label><input type="radio" name="intenzita" value="3"><span>silné</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="sekce" data-typ="tekutiny">
+      <label class="pole">Vypito (ml)<input class="vstup velke" name="ml" type="number" inputmode="numeric" min="0" max="5000" step="10"></label>
+      <div class="cipy" style="margin-top:8px" id="mlRychle"></div>
+    </div>
+
+    <div class="sekce" data-typ="moceni">
+      <label class="pole">Kolikrát (mokrá plena / močení)<input class="vstup velke" name="pocet" type="number" inputmode="numeric" min="1" max="20" step="1"></label>
+      <p class="poucka" style="margin-top:6px">U malých dětí hlídejte dehydrataci: suchá plena 6–8 h, tmavá moč, pláč bez slz → lékař.</p>
+    </div>
+
+    <div class="sekce" data-typ="jidlo">
+      <div class="cipy">
+        <label><input type="radio" name="mnozstvi" value="nic"><span>🚫 nejí</span></label>
+        <label><input type="radio" name="mnozstvi" value="malo"><span>🥄 málo</span></label>
+        <label><input type="radio" name="mnozstvi" value="normalne" checked><span>🍽️ normálně</span></label>
+      </div>
+    </div>
+
+    <div class="sekce" data-typ="spanek">
+      <div class="radek">
+        <label class="pole">Spal(a) hodin<input class="vstup" name="hodin" inputmode="decimal" placeholder="např. 8"></label>
+        <label class="pole">Jak<select class="vstup" name="kvalita"><option value="klidny">klidný</option><option value="neklidny">neklidný</option><option value="spatny">špatný (budil se)</option></select></label>
+      </div>
+    </div>
+
+    <label class="pole">Poznámka<textarea class="vstup" name="pozn" rows="2" maxlength="2000"></textarea></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgZaznamSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0">1. Přidejte <b>osobu</b> (✚ Nový → Nová osoba) s datem narození a <b>hmotností</b> – podle ní se počítají dávky. 2. Založte <b>nemoc</b> (začátek, název). 3. Velkými tlačítky zapisujte teplotu, léky, příznaky, pití… Čas se předvyplní na teď.</p>
+    <p style="margin:0"><b>Teplota:</b> prahy (37,5 / 38 / 39 / 40 °C) platí pro měření v podpaží; ucho, ústa a konečník se orientačně přepočítají (−0,4 / −0,3 / −0,5 °C). U kojence do 3 měsíců je už 38 °C důvod volat lékaře.</p>
+    <p style="margin:0"><b>Léky od horečky:</b> paracetamol (Paralen, Panadol…) 10–15 mg/kg po 4–6 h, max. 60 mg/kg za 24 h; ibuprofen (Nurofen, Ibalgin…) 5–10 mg/kg po 6–8 h, max. 30 mg/kg za 24 h, strop pro dospělé 4 000 / 1 200 mg. Denní maximum se hlídá klouzavě za posledních 24 hodin, ne podle kalendářního dne. U sirupu zadejte sílu (mg v 1 ml) z obalu. <b>Orientačně – řiďte se příbalovým letákem a lékařem.</b> Stav 11/2026.</p>
+    <p style="margin:0"><b>Pro lékaře:</b> souhrn průběhu, nejvyšší teploty, léků s časy a celkovými dávkami za den – jde zkopírovat do zprávy nebo vytisknout.</p>
+    <p style="margin:0">Data jsou jen v tomto prohlížeči (localStorage) – zálohujte přes <i>Soubor → Záloha</i>. Pravidelné léky naplánujete v <a href="medication_reminder.html" style="color:var(--accent)">Rozvrhu léků</a>, prohlídky a očkování v <a href="terminy.html" style="color:var(--accent)">Hlídači termínů</a>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.DenikNemociJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let vyber = { osoba: '', epizoda: '', pohled: 'osa' };
+try { Object.assign(vyber, JSON.parse(localStorage.getItem(J.KLIC + '_vyber')) || {}); } catch (e) {}
+
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+function ulozVyber() { try { localStorage.setItem(J.KLIC + '_vyber', JSON.stringify(vyber)); } catch (e) {} }
+const osoba = () => data.osoby.find(o => o.id === vyber.osoba) || null;
+const epizoda = () => data.epizody.find(e => e.id === vyber.epizoda) || null;
+const epizodyOsoby = id => data.epizody.filter(e => e.osoba === id).sort((a, b) => a.zacatek < b.zacatek ? 1 : -1);
+
+function otevri(dlg) {
+  return new Promise(res => {
+    dlg.addEventListener('close', () => res(dlg.returnValue), { once: true });
+    dlg.returnValue = '';
+    dlg.showModal();
+  });
+}
+
+/* ---------- výběr osoby a nemoci ---------- */
+function obnovVyber() {
+  if (!osoba()) vyber.osoba = data.osoby[0] ? data.osoby[0].id : '';
+  const ep = epizodyOsoby(vyber.osoba);
+  if (!epizoda() || epizoda().osoba !== vyber.osoba) vyber.epizoda = ep[0] ? ep[0].id : '';
+  $('vyberOsoba').innerHTML = data.osoby.length ? data.osoby.map(o => `<option value="${esc(o.id)}">${o.typ === 'dite' ? '👶' : '🧑'} ${esc(o.jmeno)}</option>`).join('') : '<option value="">– žádná osoba –</option>';
+  $('vyberOsoba').value = vyber.osoba;
+  $('vyberEpizoda').innerHTML = ep.length ? ep.map(e => `<option value="${esc(e.id)}">${e.konec ? '✓ ' : '🤒 '}${esc(e.nazev)} (${J.formatCas(e.zacatek).replace(/ \d+:\d+$/, '')})</option>`).join('') : '<option value="">– žádná nemoc –</option>';
+  $('vyberEpizoda').value = vyber.epizoda;
+  $('seznamLeku').innerHTML = ['Paracetamol', 'Paralen', 'Panadol', 'Ibuprofen', 'Nurofen', 'Ibalgin'].concat(data.zaznamy.filter(z => z.typ === 'lek').map(z => z.nazev))
+    .filter((v, i, a) => v && a.indexOf(v) === i).map(n => `<option value="${esc(n)}">`).join('');
+  ulozVyber();
+}
+
+/* ---------- vykreslení ---------- */
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === vyber.pohled)));
+  $('varovne').hidden = vyber.pohled !== 'varovne';
+  const o = osoba(), e = epizoda();
+  if (!o) {
+    $('obsah').innerHTML = vyber.pohled === 'varovne' ? '' : `<div class="prazdno">Zatím tu nikdo není.<br><button class="btn primary" data-prikaz="novaOsoba">👤 Přidat osobu</button><br><small>Jméno, datum narození a hmotnost – podle nich se hlídají teploty a dávky léků.</small></div>`;
+    return;
+  }
+  if (!e) {
+    $('obsah').innerHTML = vyber.pohled === 'varovne' ? '' : `<div class="prazdno">${esc(o.jmeno)} je zdravý/á – žádná zapsaná nemoc.<br><button class="btn primary" data-prikaz="novaEpizoda">🤒 Začít novou nemoc</button></div>`;
+    return;
+  }
+  const vek = J.vekMesice(o, J.tedText());
+  const zz = J.zaznamyEpizody(data, e.id);
+  const posT = zz.filter(z => z.typ === 'teplota' && z.t != null).pop();
+  const kt = posT ? J.kategorieTeploty(posT.t, posT.misto, J.vekMesice(o, posT.cas)) : null;
+  const den = Math.floor((J.naDatum(J.den(e.konec || J.tedText())) - J.naDatum(J.den(e.zacatek))) / 864e5) + 1;
+  let h = `<section class="karta hlavicka">
+    <h2>${e.konec ? '✓' : '🤒'} ${esc(e.nazev)} – ${esc(o.jmeno)}</h2>
+    <div class="meta"><span>od ${J.formatCas(e.zacatek)}${e.konec ? ' do ' + J.formatCas(e.konec) : ''} · ${den}. den</span>
+      ${vek != null ? `<span>${J.popisVeku(vek)}</span>` : ''}
+      <span>${o.hmotnost ? J.cislo(o.hmotnost, 1) + ' kg' : '⚠️ chybí hmotnost'}</span>
+      ${kt ? `<span>naposledy <b style="color:${kt.barva}">${J.cislo(posT.t, 1)} °C</b> ${J.formatCas(posT.cas)} – ${kt.nazev}</span>` : ''}</div>
+  </section>`;
+  if (kt && kt.volatLekare) h += `<section class="karta poplach">🚩 ${esc(kt.varovani.join(' '))} <button class="btn mini" data-pohled="varovne">Varovné příznaky</button></section>`;
+  if (vyber.pohled !== 'varovne') {
+    h += `<section class="rychle">${J.TYPY.map(t => `<button data-novy="${t.id}"><b>${t.ikona}</b>${t.nazev}</button>`).join('')}</section>`;
+    h += kartyLeku(zz, o);
+  }
+  if (vyber.pohled === 'osa') h += pohledOsa(zz, o);
+  else if (vyber.pohled === 'graf') h += pohledGraf(zz, o, e);
+  else if (vyber.pohled === 'souhrn') h += pohledSouhrn(e);
+  $('obsah').innerHTML = h;
+}
+
+function kartyLeku(zz, o) {
+  const latky = [...new Set(zz.filter(z => z.typ === 'lek').map(z => J.latka(z.nazev)).filter(Boolean))];
+  if (!latky.length) return '';
+  const ted = J.tedText(), vek = J.vekMesice(o, ted);
+  return `<section class="leky">${latky.map(l => {
+    const r = J.dalsiDavka(zz, l, o.hmotnost, ted, vek), P = J.PARAMETRY.leky[l];
+    const stav = r.za24h_mg > r.max_mg || r.zbyvaDnes_mg === 0 ? 'stop' : r.uzTed ? '' : 'ceka';
+    return `<div class="karta lek ${stav}">
+      <h3>💊 ${P.nazev}</h3>
+      <div class="dalsi">${r.uzTed ? '✅ další dávka možná už teď' : `⏳ další dávka možná v <b>${J.formatCas(r.mozno)}</b>`}</div>
+      <div>poslední ${J.formatCas(r.posledni)} · za 24 h ${J.cislo(r.za24h_mg, 0)} / ${r.max_mg} mg · zbývá <b>${J.cislo(r.zbyvaDnes_mg, 0)} mg</b></div>
+      ${r.davka_mg ? `<div>jedna dávka ${r.davka_mg[0]}–${r.davka_mg[1]} mg, po ${P.intervalH[0]}–${P.intervalH[1]} h</div>` : ''}
+      ${r.varovani.length ? `<ul>${r.varovani.map(v => `<li>${esc(v)}</li>`).join('')}</ul>` : ''}
+    </div>`;
+  }).join('')}<p class="poucka">⚠️ Orientačně, řiďte se příbalovým letákem a lékařem. Stav ${J.PARAMETRY.stav}.</p></section>`;
+}
+
+function pruh(z, o) {
+  if (z.typ !== 'teplota' || z.t == null) return '';
+  return J.kategorieTeploty(z.t, z.misto, J.vekMesice(o, z.cas)).barva;
+}
+function pohledOsa(zz, o) {
+  if (!zz.length) return '<div class="prazdno">Zatím žádný záznam – zapište první teplotu nebo lék tlačítky výše.</div>';
+  return J.dny(zz).reverse().map(d => {
+    const tt = d.zaznamy.filter(z => z.typ === 'teplota' && z.t != null).map(z => z.t);
+    return `<section class="karta den"><h3><b>${J.formatDen(d.den)}</b>${tt.length ? `<span>max ${J.cislo(Math.max(...tt), 1)} °C</span>` : ''}<span>${d.zaznamy.length} záznamů</span></h3>
+      <ul class="osa">${d.zaznamy.slice().reverse().map(z => {
+        const k = z.typ === 'teplota' && z.t != null ? J.kategorieTeploty(z.t, z.misto, J.vekMesice(o, z.cas)) : null;
+        return `<li data-zaznam="${esc(z.id)}" style="--pruh:${pruh(z, o) || 'var(--border)'}"><span class="cas">${J.formatCas(z.cas, false)}</span><span>${J.TYP[z.typ].ikona}</span>
+          <span>${esc(J.popisZaznamu(z)) || J.TYP[z.typ].nazev}${k ? ` <span class="kat">${k.nazev}</span>` : ''}${z.pozn ? `<span class="pozn">${esc(z.pozn)}</span>` : ''}</span></li>`;
+      }).join('')}</ul></section>`;
+  }).join('');
+}
+
+/* SVG graf: teplota přepočtená na podpaží, pásma prahů, dávky léků jako značky dole */
+function pohledGraf(zz, o, e) {
+  const tt = zz.filter(z => z.typ === 'teplota' && z.t != null).map(z => Object.assign({ ms: J.naDatum(z.cas).getTime(), z }, J.kategorieTeploty(z.t, z.misto, J.vekMesice(o, z.cas))));
+  const lk = zz.filter(z => z.typ === 'lek').map(z => ({ ms: J.naDatum(z.cas).getTime(), z, l: J.latka(z.nazev) }));
+  if (!tt.length) return '<div class="prazdno">Graf se ukáže po prvním změření teploty.</div>';
+  const W = 800, HH = 320, L = 40, R = 12, T = 12, B = 52;
+  const vse = tt.map(x => x.ms).concat(lk.map(x => x.ms));
+  let x0 = Math.min(...vse), x1 = Math.max(...vse);
+  if (x1 - x0 < 6 * 36e5) { const s = (x0 + x1) / 2; x0 = s - 3 * 36e5; x1 = s + 3 * 36e5; }
+  const pad = (x1 - x0) * 0.04; x0 -= pad; x1 += pad;
+  const y0 = Math.min(35.5, Math.floor(Math.min(...tt.map(t => t.prepocet)) * 2) / 2), y1 = Math.max(41, Math.ceil(Math.max(...tt.map(t => t.prepocet)) * 2) / 2);
+  const X = ms => L + (ms - x0) / (x1 - x0) * (W - L - R), Y = t => T + (y1 - t) / (y1 - y0) * (HH - T - B);
+  const pasma = [[y0, 37.5, 'normalni'], [37.5, 38, 'zvysena'], [38, 39, 'horecka'], [39, 40, 'vysoka'], [40, y1, 'velmi_vysoka']];
+  let s = pasma.map(([a, b, k]) => `<rect x="${L}" y="${Y(b)}" width="${W - L - R}" height="${Y(a) - Y(b)}" style="fill:${J.KATEGORIE[k].barva};opacity:.13"/>`).join('');
+  for (let t = Math.ceil(y0); t <= y1; t++) s += `<text x="${L - 6}" y="${Y(t) + 4}" text-anchor="end">${t}</text><line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--border);stroke-width:.5"/>`;
+  [37.5, 38, 39, 40].forEach(t => { s += `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:${J.KATEGORIE[J.kategorieTeploty(t + 0.1).kategorie].barva};stroke-dasharray:4 3;stroke-width:1"/>`; });
+  // půlnoci a popisky dní
+  const d = J.naDatum(J.den(J.naText(new Date(x0)))); d.setDate(d.getDate() + 1);
+  const krok = (x1 - x0) < 2 * 864e5 ? 6 : (x1 - x0) < 5 * 864e5 ? 12 : 24;
+  const h = new Date(d); h.setDate(h.getDate() - 1);
+  for (; h.getTime() <= x1; h.setHours(h.getHours() + krok)) {
+    if (h.getTime() < x0) continue;
+    const pul = h.getHours() === 0, x = X(h.getTime());
+    s += `<line x1="${x}" x2="${x}" y1="${T}" y2="${HH - B}" style="stroke:${pul ? 'var(--border-strong)' : 'var(--border)'};stroke-width:${pul ? 1 : .5}"/>`;
+    s += `<text x="${x}" y="${HH - B + 14}" text-anchor="middle">${pul ? J.formatCas(J.naText(h)).replace(/ \d+:\d+$/, '') : h.getHours() + ':00'}</text>`;
+  }
+  s += `<polyline points="${tt.map(t => X(t.ms) + ',' + Y(t.prepocet)).join(' ')}" style="fill:none;stroke:var(--text-muted);stroke-width:1.5"/>`;
+  s += tt.map(t => `<circle cx="${X(t.ms)}" cy="${Y(t.prepocet)}" r="5" style="fill:${t.barva};stroke:var(--bg-panel);stroke-width:1.5"><title>${J.formatCas(t.z.cas)} ${J.cislo(t.t, 1)} °C (${J.MISTA[t.misto].nazev}) – ${t.nazev}</title></circle>`).join('');
+  s += lk.map(x => {
+    const xx = X(x.ms), yy = HH - B + 30, zn = x.l === 'paracetamol' ? 'P' : x.l === 'ibuprofen' ? 'I' : '•';
+    return `<line x1="${xx}" x2="${xx}" y1="${T}" y2="${HH - B}" style="stroke:var(--accent);stroke-width:1;opacity:.35"/><path d="M${xx - 7},${yy + 12} L${xx + 7},${yy + 12} L${xx},${yy} Z" style="fill:var(--accent)"><title>${J.formatCas(x.z.cas)} ${esc(J.popisZaznamu(x.z))}</title></path><text x="${xx}" y="${yy + 21}" text-anchor="middle" style="font-size:9px;font-weight:700">${zn}</text>`;
+  }).join('');
+  return `<section class="karta graf"><svg viewBox="0 0 ${W} ${HH}" role="img" aria-label="Graf teploty">${s}</svg>
+    <div class="legenda">${['normalni', 'zvysena', 'horecka', 'vysoka', 'velmi_vysoka'].map(k => `<span><i style="background:${J.KATEGORIE[k].barva}"></i>${J.KATEGORIE[k].nazev}</span>`).join('')}<span>▲ P = paracetamol, I = ibuprofen, • jiný lék</span></div>
+    <p class="poucka" style="margin-top:4px">Hodnoty přepočtené na podpaží (ucho −0,4, ústa −0,3, konečník −0,5 °C) – orientačně.</p></section>`;
+}
+
+function pohledSouhrn(e) {
+  const s = J.souhrnEpizody(data, e.id, J.tedText());
+  return `<section class="karta"><div class="akce" style="margin-bottom:10px">
+      <button class="btn primary" data-prikaz="kopiruj">📋 Kopírovat text</button>
+      <button class="btn" data-prikaz="tisk">🖨️ Tisk A4</button></div>
+    <pre class="souhrn" id="souhrnText" data-i18n="ne">${esc(s.text)}</pre></section>`;
+}
+
+/* ---------- dialogy ---------- */
+async function upravOsobu(o) {
+  const f = $('dlgOsoba').querySelector('form');
+  f.reset();
+  $('dlgOsobaTitul').textContent = o ? 'Upravit osobu' : 'Nová osoba';
+  $('dlgOsobaSmaz').hidden = !o;
+  if (o) { f.jmeno.value = o.jmeno; f.typ.value = o.typ; f.narozeni.value = o.narozeni; f.hmotnost.value = o.hmotnost == null ? '' : String(o.hmotnost).replace('.', ','); }
+  const v = await otevri($('dlgOsoba'));
+  if (v === 'smaz') {
+    const ep = data.epizody.filter(e => e.osoba === o.id).map(e => e.id);
+    if (!await Dialog.potvrd(`Smazat osobu ${o.jmeno} včetně ${ep.length} nemocí a jejich záznamů?`)) return;
+    data.osoby = data.osoby.filter(x => x !== o); data.epizody = data.epizody.filter(e => e.osoba !== o.id);
+    data.zaznamy = data.zaznamy.filter(z => !ep.includes(z.epizoda));
+  } else if (v === 'ok') {
+    const n = J.normOsoba({ id: o && o.id, jmeno: f.jmeno.value.trim(), typ: f.typ.value, narozeni: f.narozeni.value, hmotnost: f.hmotnost.value });
+    if (o) Object.assign(o, n); else { data.osoby.push(n); vyber.osoba = n.id; vyber.epizoda = ''; }
+  } else return;
+  uloz(); obnovVyber(); vykresli();
+}
+
+async function upravEpizodu(e) {
+  if (!data.osoby.length) return upravOsobu(null);
+  const f = $('dlgEpizoda').querySelector('form');
+  f.reset();
+  f.osoba.innerHTML = data.osoby.map(o => `<option value="${esc(o.id)}">${esc(o.jmeno)}</option>`).join('');
+  $('dlgEpizodaTitul').textContent = e ? 'Upravit nemoc' : 'Nová nemoc';
+  $('dlgEpizodaSmaz').hidden = !e;
+  f.osoba.value = e ? e.osoba : vyber.osoba;
+  f.nazev.value = e ? e.nazev : ''; f.zacatek.value = e ? e.zacatek : J.tedText(); f.konec.value = e ? e.konec : ''; f.poznamka.value = e ? e.poznamka : '';
+  const v = await otevri($('dlgEpizoda'));
+  if (v === 'smaz') {
+    if (!await Dialog.potvrd(`Smazat nemoc „${e.nazev}“ a všech ${data.zaznamy.filter(z => z.epizoda === e.id).length} záznamů?`)) return;
+    data.epizody = data.epizody.filter(x => x !== e); data.zaznamy = data.zaznamy.filter(z => z.epizoda !== e.id); vyber.epizoda = '';
+  } else if (v === 'ok') {
+    const n = J.normEpizoda({ id: e && e.id, osoba: f.osoba.value, nazev: f.nazev.value.trim(), zacatek: f.zacatek.value, konec: f.konec.value, poznamka: f.poznamka.value });
+    if (e) Object.assign(e, n); else data.epizody.push(n);
+    vyber.osoba = n.osoba; vyber.epizoda = n.id;
+  } else return;
+  uloz(); obnovVyber(); vykresli();
+}
+
+let upravovany = null;
+function nahledy() {
+  const f = $('dlgZaznam').querySelector('form'), o = osoba(), typ = f.dataset.typ;
+  if (typ === 'teplota') {
+    const t = parseFloat(String(f.t.value).replace(',', '.'));
+    const el = $('nahledTeplota');
+    if (!(t > 30)) { el.textContent = 'Zadejte teplotu'; el.style.removeProperty('--barva'); return; }
+    const k = J.kategorieTeploty(t, f.misto.value, J.vekMesice(o, f.cas.value));
+    el.style.setProperty('--barva', k.barva);
+    el.innerHTML = `<b>${k.nazev}</b>${f.misto.value !== 'podpazi' ? ` · v podpaží asi ${J.cislo(k.prepocet, 1)} °C` : ''}${k.varovani.length ? `<br><b style="color:var(--danger)">🚩 ${esc(k.varovani.join(' '))}</b>` : ''}`;
+  }
+  if (typ === 'lek') {
+    $('poleSila').hidden = f.jednotka.value === 'mg';
+    const l = J.latka(f.nazev.value), el = $('nahledLek');
+    if (!l) { el.textContent = f.nazev.value ? 'Interval a max. denní dávku hlídám jen u paracetamolu a ibuprofenu.' : 'Vyberte lék.'; return; }
+    const ostatni = data.zaznamy.filter(z => z.epizoda === vyber.epizoda && z !== upravovany);
+    const r = J.dalsiDavka(ostatni, l, o && o.hmotnost, f.cas.value || J.tedText(), J.vekMesice(o, f.cas.value));
+    const mg = J.mgDavky({ davka: parseFloat(String(f.davka.value).replace(',', '.')), jednotka: f.jednotka.value, sila: parseFloat(String(f.sila.value).replace(',', '.')) });
+    const rady = [];
+    if (r.davka_mg) rady.push(`Doporučená jedna dávka ${r.davka_mg[0]}–${r.davka_mg[1]} mg (${J.PARAMETRY.leky[l].mgKg.join('–')} mg/kg).`);
+    if (r.posledni) rady.push(r.uzTed ? 'Interval od poslední dávky je dodržen.' : `⏳ Další dávka možná až v ${J.formatCas(r.mozno)}.`);
+    rady.push(`Za 24 h zatím ${J.cislo(r.za24h_mg, 0)} z max. ${r.max_mg} mg.`);
+    if (mg != null) rady.push(`Tato dávka = ${J.cislo(mg, 0)} mg` + (r.za24h_mg + mg > r.max_mg ? ' – <b style="color:var(--danger)">překročila by max. denní dávku!</b>' : r.davka_mg && mg > r.davka_mg[1] * 1.1 ? ' – <b style="color:var(--danger)">víc než doporučená dávka!</b>' : '.'));
+    el.innerHTML = rady.join('<br>') + (r.varovani.length ? '<br><b style="color:var(--danger)">' + r.varovani.map(esc).join('<br>') + '</b>' : '');
+  }
+}
+
+async function upravZaznam(typ, z) {
+  if (!epizoda()) return upravEpizodu(null);
+  const dlg = $('dlgZaznam'), f = dlg.querySelector('form');
+  f.reset(); upravovany = z || null;
+  typ = z ? z.typ : typ; f.dataset.typ = typ;
+  dlg.querySelectorAll('.sekce').forEach(s => { s.hidden = s.dataset.typ !== typ; });
+  $('dlgZaznamTitul').textContent = J.TYP[typ].ikona + ' ' + J.TYP[typ].nazev + (z ? ' – úprava' : '');
+  $('dlgZaznamSmaz').hidden = !z;
+  f.cas.value = z ? z.cas : J.tedText();
+  const posl = data.zaznamy.filter(x => x.typ === typ && x.epizoda === vyber.epizoda).pop();
+  const zdroj = z || (typ === 'lek' || typ === 'teplota' ? posl : null);
+  if (typ === 'teplota') { f.t.value = z && z.t != null ? z.t : ''; f.misto.value = zdroj ? zdroj.misto : 'podpazi'; }
+  if (typ === 'lek' && zdroj) { f.nazev.value = zdroj.nazev; f.davka.value = zdroj.davka == null ? '' : String(zdroj.davka).replace('.', ','); f.jednotka.value = zdroj.jednotka; f.sila.value = zdroj.sila == null ? '' : String(zdroj.sila).replace('.', ','); }
+  if (typ === 'priznaky') {
+    const vyb = z ? z.priznaky : posl ? posl.priznaky : [];
+    const vse = J.PRIZNAKY.concat(vyb.filter(p => !J.PRIZNAKY.includes(p)));
+    $('cipyPriznaky').innerHTML = vse.map(p => `<label><input type="checkbox" value="${esc(p)}" ${vyb.includes(p) ? 'checked' : ''}><span>${esc(p)}</span></label>`).join('');
+    f.querySelector(`[name=intenzita][value="${z ? z.intenzita : 2}"]`).checked = true;
+  }
+  if (typ === 'tekutiny') f.ml.value = z && z.ml != null ? z.ml : '';
+  if (typ === 'moceni') f.pocet.value = z ? z.pocet : 1;
+  if (typ === 'jidlo' && z) f.querySelector(`[name=mnozstvi][value="${z.mnozstvi}"]`).checked = true;
+  if (typ === 'spanek' && z) { f.hodin.value = z.hodin == null ? '' : String(z.hodin).replace('.', ','); f.kvalita.value = z.kvalita; }
+  f.pozn.value = z ? z.pozn : '';
+  nahledy();
+  const v = await otevri(dlg);
+  if (v === 'smaz') {
+    if (!await Dialog.potvrd('Smazat tento záznam?')) return;
+    data.zaznamy = data.zaznamy.filter(x => x !== z);
+  } else if (v === 'ok') {
+    const vstup = { id: z && z.id, epizoda: z ? z.epizoda : vyber.epizoda, typ, cas: f.cas.value, pozn: f.pozn.value.trim() };
+    if (typ === 'teplota') {
+      const t = parseFloat(String(f.t.value).replace(',', '.'));
+      if (!(t >= 30 && t <= 44)) return Dialog.chyba('Teplota musí být mezi 30 a 44 °C.');
+      Object.assign(vstup, { t, misto: f.misto.value });
+    }
+    if (typ === 'lek') {
+      if (!f.nazev.value.trim()) return Dialog.chyba('Zadejte název léku.');
+      Object.assign(vstup, { nazev: f.nazev.value.trim(), davka: f.davka.value, jednotka: f.jednotka.value, sila: f.jednotka.value === 'mg' ? null : f.sila.value });
+    }
+    if (typ === 'priznaky') {
+      vstup.priznaky = [...$('cipyPriznaky').querySelectorAll('input:checked')].map(c => c.value)
+        .concat(f.jine.value.split(',').map(s => s.trim()).filter(Boolean));
+      vstup.intenzita = f.querySelector('[name=intenzita]:checked').value;
+    }
+    if (typ === 'tekutiny') vstup.ml = f.ml.value;
+    if (typ === 'moceni') vstup.pocet = f.pocet.value;
+    if (typ === 'jidlo') vstup.mnozstvi = f.querySelector('[name=mnozstvi]:checked').value;
+    if (typ === 'spanek') Object.assign(vstup, { hodin: f.hodin.value, kvalita: f.kvalita.value });
+    const n = J.normZaznam(vstup);
+    if (z) Object.assign(z, n); else data.zaznamy.push(n);
+    if (typ === 'teplota' && !z) {
+      const k = J.kategorieTeploty(n.t, n.misto, J.vekMesice(osoba(), n.cas));
+      if (k.volatLekare) Dialog.chyba('🚩 ' + k.varovani.join(' '));
+    }
+  } else return;
+  uloz(); obnovVyber(); vykresli();
+}
+['dlgOsoba', 'dlgEpizoda', 'dlgZaznam'].forEach(id => { $(id + 'Smaz').onclick = () => $(id).close('smaz'); });
+(() => {
+  const f = $('dlgZaznam').querySelector('form');
+  f.jednotka.innerHTML = J.JEDNOTKY.map(j => `<option>${j}</option>`).join('');
+  f.addEventListener('input', nahledy);
+  f.addEventListener('change', nahledy);
+  $('mlRychle').innerHTML = [50, 100, 150, 200, 250, 330].map(m => `<label><input type="radio" name="mlr" value="${m}"><span>${m} ml</span></label>`).join('');
+  $('mlRychle').addEventListener('change', e => { f.ml.value = e.target.value; });
+})();
+
+/* ---------- soubor ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const PRIKAZY = {
+  novaOsoba: () => upravOsobu(null),
+  upravOsobu: () => osoba() ? upravOsobu(osoba()) : upravOsobu(null),
+  novaEpizoda: () => upravEpizodu(null),
+  upravEpizodu: () => epizoda() ? upravEpizodu(epizoda()) : upravEpizodu(null),
+  napoveda: () => otevri($('dlgNapoveda')),
+  tisk: () => print(),
+  kopiruj: async () => {
+    try { await navigator.clipboard.writeText($('souhrnText').textContent); Dialog.info('Zkopírováno do schránky'); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('souhrnText')); getSelection().removeAllRanges(); getSelection().addRange(r); Dialog.info('Text je označený – zkopírujte Ctrl+C'); }
+  },
+  export: () => stahni('denik-nemoci-' + J.den(J.tedText()) + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  csv: () => stahni('denik-nemoci.csv', J.csv(data), 'text/csv'),
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Opravdu smazat všechny osoby, nemoci a záznamy? Doporučujeme nejdřív zálohu.')) return;
+    data = J.prazdna(); uloz(); obnovVyber(); vykresli();
+  }
+};
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.zaznamy) || !Array.isArray(d.osoby)) return Dialog.chyba('Tohle není záloha Deníku nemoci.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.osoby.length} osob, ${m.epizody.length} nemocí a ${m.zaznamy.length} záznamů. Nahradit jimi současná data?`)) return;
+  data = m; uloz(); obnovVyber(); vykresli(); Dialog.info('Obnoveno.');
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { vyber.pohled = pv.dataset.pohled; ulozVyber(); return vykresli(); }
+  const nv = e.target.closest('[data-novy]');
+  if (nv) return upravZaznam(nv.dataset.novy, null);
+  const zz = e.target.closest('[data-zaznam]');
+  if (zz) { const z = data.zaznamy.find(x => x.id === zz.dataset.zaznam); if (z) upravZaznam(z.typ, z); }
+});
+$('vyberOsoba').addEventListener('change', e => { vyber.osoba = e.target.value; vyber.epizoda = ''; obnovVyber(); vykresli(); });
+$('vyberEpizoda').addEventListener('change', e => { vyber.epizoda = e.target.value; obnovVyber(); vykresli(); });
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('storage', e => { if (e.key === J.KLIC) { data = J.migruj(JSON.parse(e.newValue || 'null')); obnovVyber(); vykresli(); } });
+/* karty léků („další dávka možná v…“) se jinak nepřepočítají – obnova každou minutu, když není otevřený dialog */
+setInterval(() => { if (!document.querySelector('dialog[open]') && !document.hidden) vykresli(); }, 60000);
+
+obnovVyber();
+vykresli();
+window.DENIK_NEMOCI_APP = { data: () => data };
+})();
+</script>
+</body>
+</html>
