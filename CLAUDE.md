@@ -30,7 +30,8 @@ proměnných i komentáře v duchu okolního kódu – tedy převážně česky.
 
 | Cesta | Co to je |
 |---|---|
-| `index.html` | Rozcestník: menu vlevo, aplikace v `<iframe name="okno">`, otevírá se přes `#obsah/<soubor>.html` (`otevri()`), přepínač tématu, hledání, filtr stavu |
+| `index.html` | Rozcestník: menu vlevo, aplikace v záložkách (aktivní iframe má `name="okno"`), otevírá se přes `#obsah/<soubor>.html` (`otevri()` → `Zalozky.ukaz()`), přepínač tématu, hledání, filtr stavu |
+| `zalozky.js` | Záložky otevřených stránek: iframe na záložku, skrytá = `document.hidden` + zastavený rAF, uspávání podle ⚙️ Nastavení (`webapp_zalozky_uspavani`, výchozí 2 živé / po 5 min), připnutí, 🔊, neuložené změny přes beforeunload, přehled ▾, zkratky Alt+Shift+…, stav v `webapp_zalozky`; test `_test/zalozky_test.py`. Texty se ručně překládají v `i18n/en/index.js` (extraktor kořenové JS nečte) |
 | `apps.js` | **Katalog – jediný zdroj pravdy** pro menu, hledání i úvodní dlaždice: `KATALOG_STAVY`, `KATALOG_SKUPINY`, `KATALOG_SEKCE[].polozky[]` |
 | `obsah/*.html` | Jednotlivé aplikace (jedna stránka = jeden soubor; větší mají vedle sebe složku stejného jména s moduly, např. `obsah/modelar/`, `obsah/dron/`) |
 | `obsah/aplikace.html` | Domovská stránka v iframu (dlaždice podle katalogu) |

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kolíčky na prádlo – generátor pro 3D tisk</title>
+  <meta name="description" content="Generátor kolíčků na prádlo pro 3D tisk: pružina ze starého dřevěného nebo plastového kolíčku, tištěné pružiny (pružné oko, jazýček, V pružina, hadovitá) i gumička, kloub s čepem, háček / oko / klip na zavěšení, zoubkované čelisti, drážka na šňůru, kapsa na magnet. Skicář bočního obrysu s podkladem z fotky, výpočet síly sevření a stisku, pevnost, export STL a 3MF.">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="trubky_gui.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="trubky_gui.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/three.r128.min.js"></script>
+  <script src="krabicky/jadro.js"></script>
+  <script src="spojky/jadro.js"></script>
+  <script src="kolicky/jadro.js"></script>
+  <script src="kolicky/geometrie.js"></script>
+  <script src="kolicky/nahled.js"></script>
+  <script src="kolicky/skicar.js"></script>
+  <script src="../tvary.js"></script>
+  <style>
+    :root { --sloupec: 320px; }
+    button, select, input, textarea { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    .stred { display: flex; flex-direction: column; min-height: 0; }
+    .prepinac-nahledu { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; align-items: center; }
+    .prepinac-nahledu button { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; font-size: 0.84rem; }
+    .prepinac-nahledu button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .prepinac-nahledu .rozevreni { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: 0.78rem; color: var(--text-muted); }
+    .prepinac-nahledu .rozevreni + .rozevreni { margin-left: 10px; }
+    #legendaVolne { bottom: 58px; }
+    .prepinac-nahledu .rozevreni input { width: 130px; accent-color: var(--accent); }
+    #canvas-container, #skicar { flex: 1 1 auto; min-height: 260px; }
+    #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border);
+      background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
+    #canvas-container:active { cursor: grabbing; }
+    #platno { position: absolute; inset: 0; }
+    .stav3d { position: absolute; left: 10px; top: 10px; font-size: 0.8rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: calc(100% - 20px); z-index: 2; }
+    .stav3d:empty { display: none; }
+    .stav3d.chyba { color: var(--danger); border-color: var(--danger); }
+    .karta3d { position: absolute; right: 10px; top: 10px; z-index: 2; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+      max-width: min(250px, 55%); pointer-events: none; }
+    .karta3d:empty { display: none; }
+    .karta3d b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .karta3d .titul { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+    .legenda3d { position: absolute; left: 10px; bottom: 30px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .legenda3d i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }
+    @media (max-width: 600px) { .karta3d { display: none; } }
+
+    /* skicář */
+    #skicar { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-input); }
+    .skicar-lista { display: flex; flex-wrap: wrap; gap: 3px 4px; align-items: center; padding: 5px 6px; background: var(--bg-elevated); border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+    .skicar-lista .tl { padding: 4px 8px; font-size: 0.8rem; border: 1px solid var(--border); background: var(--bg-input); }
+    .skicar-lista .tl[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .skicar-lista .odd { width: 1px; align-self: stretch; background: var(--border); margin: 0 3px; }
+    .skicar-lista label { display: inline-flex; align-items: center; gap: 4px; margin: 0; font-size: 0.78rem; color: var(--text); cursor: pointer; }
+    .skicar-lista label input[type="checkbox"] { accent-color: var(--accent); }
+    .skicar-lista select { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 3px 5px; font-size: 0.78rem; }
+    .skicar-lista input[type="range"] { width: 90px; accent-color: var(--accent); }
+    .skicar-lista input.male { width: 56px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 3px 5px; font-size: 0.78rem; }
+    #skicarPlatno { flex: 1 1 auto; width: 100%; min-height: 200px; display: block; touch-action: none; outline: none; }
+    .skicar-info { display: flex; justify-content: space-between; gap: 10px; padding: 3px 8px; font-size: 0.72rem; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--bg-elevated); flex-wrap: wrap; }
+    .skicar-vyzva { padding: 6px 10px; font-size: 0.8rem; background: var(--accent-soft); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    .aplikace input[type="text"], .aplikace select, .aplikace textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 6px 8px; font-size: 0.9rem; min-width: 0; box-sizing: border-box;
+    }
+    .skicar-lista select, .skicar-lista input.male { width: auto; padding: 3px 5px; font-size: 0.78rem; }
+    .aplikace input:focus, .aplikace select:focus, .aplikace textarea:focus { outline: none; border-color: var(--accent); }
+    input.spatne { border-color: var(--danger) !important; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0 10px; align-items: end; }
+    .pole { min-width: 0; position: relative; }
+    .jedn { position: absolute; right: 9px; bottom: 7px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .pole input.mm { padding-right: 30px; }
+    .pozn { color: var(--text-faint); font-size: 0.7rem; }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin: 6px 0 0; line-height: 1.45; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+    .dlazdice { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius, 8px); padding: 7px 9px; min-width: 0; }
+    .dlazdice .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px; }
+    .dlazdice .cislo { font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
+    .dlazdice .dalsi { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .ok-t { color: var(--ok); } .mez-t { color: var(--warn); } .chyba-t { color: var(--danger); }
+    .hlaseni { list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; line-height: 1.4; padding: 0; margin: 0; }
+    .hlaseni li { padding: 5px 9px; border-left: 3px solid var(--border-strong); background: var(--bg-elevated); border-radius: 4px; }
+    .hlaseni li.chyba { border-left-color: var(--danger); }
+    .hlaseni li.varovani { border-left-color: var(--warn); }
+    .hlaseni li.info { border-left-color: var(--text-faint); color: var(--text-muted); }
+    .hlaseni li.ok { border-left-color: var(--ok); }
+    .hlaseni li.skok { cursor: pointer; }
+    .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+    .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
+    @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
+    .zvyrazni { animation: zvyrazni 2.4s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .zvyrazni { animation: none; box-shadow: 0 0 0 3px var(--accent); } }
+    .tabulka { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .tabulka th, .tabulka td { text-align: left; padding: 4px 5px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .tabulka th { color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; }
+    .tabulka td.c { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .tabulka tr.klik { cursor: pointer; } .tabulka tr.klik:hover td, .tabulka tr.klik:focus-visible td { background: var(--bg-hover); }
+    .tabulka tr.vybrana td { background: var(--accent-soft); }
+    .podnadpis { font-size: 0.8rem; margin: 14px 0 4px; color: var(--text); }
+    .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
+    .obal-tab { overflow-x: auto; }
+    kbd { font-family: inherit; font-size: 0.72rem; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg-elevated); color: var(--text); }
+    .skryty { display: none; }
+    .segment { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 4px; margin-top: 4px; }
+    .segment button { padding: 7px 4px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; font-size: 0.78rem; line-height: 1.2; }
+    .segment button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .segment button span { display: block; font-size: 1.15rem; }
+
+    dialog.napoveda-dlg { margin: auto; max-width: min(760px, 94vw); max-height: 86vh; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-panel); color: var(--text); padding: 0; }
+    dialog.napoveda-dlg::backdrop { background: color-mix(in srgb, var(--bg-deep, #000) 70%, transparent); }
+    .napoveda-dlg .hlava { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); }
+    .napoveda-dlg .hlava h2 { font-size: 1rem; margin: 0; }
+    .napoveda-dlg .telo { padding: 6px 18px 16px; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+    .napoveda-dlg .telo b { color: var(--text); }
+
+    .box-obecne { max-height: 46%; }
+    .stred.skicar-aktivni .box-obecne { max-height: 28%; }
+    #skicar { min-height: 340px; }
+    .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
+    .zalozky .souhrn-zal:empty { display: none; }
+    .pol[aria-checked="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-checked="false"]::before { content: '✓ '; visibility: hidden; }
+    .nab-pole input { width: 100%; box-sizing: border-box; }
+    .sloupec-nab { display: flex; flex-direction: column; max-height: 70vh; overflow-y: auto; }
+    .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
+    .lista-stav .odznak:hover { background: var(--bg-hover); }
+    .odznak.ok { color: var(--ok); } .odznak.mez { color: var(--warn); } .odznak.chyba { color: var(--danger); }
+    .box-telo .tl, .zalozka-telo .tl, .napoveda-dlg .tl { background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font: inherit; font-size: 0.82rem; color: var(--text); cursor: pointer; }
+    .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
+    .lista .tl:disabled { opacity: .4; cursor: default; }
+    .vzhled-volba .pol[aria-checked="true"]::before { content: '● '; color: var(--accent); }
+    .vzhled-volba .pol[aria-checked="false"]::before { content: '● '; visibility: hidden; }
+    .popis-pruziny { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin: 8px 0 2px; padding: 6px 9px; border-left: 3px solid var(--accent); background: var(--bg-elevated); border-radius: 4px; }
+    /* graf síly */
+    .graf { width: 100%; max-width: 560px; height: auto; display: block; }
+    .graf .osa { stroke: var(--border-strong); stroke-width: 1; }
+    .graf .mrz { stroke: var(--border); stroke-width: 1; }
+    .graf text { fill: var(--text-muted); font-size: 11px; font-family: inherit; }
+    .graf .k1 { stroke: var(--accent); stroke-width: 2.5; fill: none; }
+    .graf .k2 { stroke: var(--barva-vystup); stroke-width: 2.5; fill: none; stroke-dasharray: 6 3; }
+    .graf .mez { stroke: var(--danger); stroke-width: 1.5; stroke-dasharray: 3 3; }
+    .graf .bod { fill: var(--accent); }
+    .legenda-grafu { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-muted); margin: 4px 0; }
+    .legenda-grafu i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid var(--accent); vertical-align: middle; margin-right: 4px; }
+    .legenda-grafu i.k2 { border-top: 2.5px dashed var(--barva-vystup); }
+    .legenda-grafu i.mez { border-top: 1.5px dashed var(--danger); }
+    #profil1 { display: none; }
+    @media print {
+      html.tisk-profilu body > *:not(#profil1) { display: none !important; }
+      html.tisk-profilu #profil1 { display: block !important; }
+      html.tisk-profilu, html.tisk-profilu body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+      @page { size: A4 landscape; margin: 8mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Kolíčky na prádlo"><span aria-hidden="true">🧺</span><span class="jmeno"> Kolíčky</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label>
+              <input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
+            <hr>
+            <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty</button>
+            <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
+            <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
+            <button class="pol" id="btnOdkaz" role="menuitem">🔗 Odkaz na tento kolíček <span class="pozn">sdílet</span></button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje kolíčky…</button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk (díly na boku)</div>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – celá sada <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – celá sada <span class="pozn">s názvy a barvami</span></button>
+            <div class="sloupec-nab" id="exportDilu"></div>
+            <div class="nab-tip">Sada = všechny díly × počet kolíčků (záložka Tisk). Díly leží na boku – boční profil je na podložce, tisk bez podpor.</div>
+            <hr>
+            <button class="pol" id="btnProfil" role="menuitem">📐 Boční profil 1:1 <span class="pozn">tisk A4 – přiložte starý kolíček</span></button>
+            <button class="pol" id="btnSvg" role="menuitem">⬇ Boční profil <span class="pozn">SVG</span></button>
+            <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Přepíše celé nastavení</div>
+            <div class="sloupec-nab" id="seznamPredvoleb"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-checked="true">🧵 Pružina, šňůra a tyč <span class="pozn">D</span></button>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-checked="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-checked="false">🖨 Tisková poloha <span class="pozn">M</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-checked="true">🟥 Převisy barevně <span class="pozn">V</span></button>
+            <button class="pol" id="tAnimace" role="menuitemcheckbox" aria-checked="false">▶ Animace otevírání <span class="pozn">A</span></button>
+            <button class="pol" id="tMeritko" role="menuitemcheckbox" aria-checked="true">📏 Měřítko (pravítko v mm) <span class="pozn">L</span></button>
+            <button class="pol" id="tVolne" role="menuitemcheckbox" aria-checked="false">🟧 Volná pružina – předpětí <span class="pozn">P</span></button>
+            <button class="pol" id="tRozpad" role="menuitemcheckbox" aria-checked="false">🧩 Rozpad na díly <span class="pozn">R</span></button>
+            <hr>
+            <div class="nab-nadpis">Vzhled v sestavě</div>
+            <div class="sloupec-nab vzhled-volba" id="vzhledy" role="group" aria-label="Vzhled"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku (profil) <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Na čelisti <span class="pozn">4</span></button>
+            <hr>
+            <button class="pol" id="btnSkicar" role="menuitem">✏️ Skicář obrysu <span class="pozn">K</span></button>
+          </div>
+        </div>
+        <button class="tl" id="btnNahodny" title="Náhodný kolíček – po pár kliknutích uvidíte, co generátor umí (N)">🎲<span class="jmeno"> Náhodný</span></button>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNapoveda" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
+    </header>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryty">
+    <input type="file" id="souborPodklad" accept="image/*" class="skryty">
+
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">⚙ Pružina</button>
+      <button data-ukaz="obecne" class="aktivni">🧺 Náhled</button>
+      <button data-ukaz="out" class="je-vystup">Tvar ✳</button>
+    </nav>
+
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in" id="boxPruzina" data-box="in" aria-label="Pružina a kloub">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Pružina a kloub</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <div class="segment" role="group" aria-label="Druh pružiny" id="segPruzina"></div>
+          <p class="popis-pruziny" id="pPruzina"></p>
+          <button type="button" class="tl" id="btnNavrh" style="width:100%;margin-top:6px" title="Projde tisíce variant a vybere nejsilnější sevření, které pružina vydrží bez únavy">🔧 Navrhnout pružinu na nejsilnější sevření</button>
+
+          <details class="oddil" data-oddil="kov" open data-pruz="kov_drevo kov_plast kov_trmen">
+            <summary><span class="oddil-nazev">Kovová pružina</span><span class="souhrn" id="sKov"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole" style="grid-column: 1 / -1"><label for="f_kpred">Pružina</label><select id="f_kpred" data-p="kov.predloha" data-typ="text"></select></div>
+                <div class="pole"><label for="f_kdrat">Drát Ø</label><input type="text" inputmode="decimal" class="mm" id="f_kdrat" data-p="kov.drat"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_kprumer">Cívka vnější Ø</label><input type="text" inputmode="decimal" class="mm" id="f_kprumer" data-p="kov.prumer"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_kzav">Závitů</label><input type="text" inputmode="decimal" class="mm" id="f_kzav" data-p="kov.zavitu"><span class="jedn">×</span></div>
+                <div class="pole"><label for="f_knoha">Délka nohy</label><input type="text" inputmode="decimal" class="mm" id="f_knoha" data-p="kov.noha" title="Od středu cívky ke konci nohy"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_kuhel">Volný úhel nohou</label><input type="text" inputmode="text" class="mm" id="f_kuhel" data-p="kov.volnyUhel" title="Úhel mezi nohama volné (nevložené) pružiny"><span class="jedn">°</span></div>
+                <div class="pole" data-pruz="kov_drevo kov_trmen"><label for="f_kvule">Vůle v zářezu</label><input type="text" inputmode="decimal" class="mm" id="f_kvule" data-p="kov.vule"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="pKov"></p>
+            </div>
+          </details>
+
+          <details class="oddil" data-oddil="omega" open data-pruz="omega">
+            <summary><span class="oddil-nazev">Pružné oko</span><span class="souhrn" id="sOmega"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_opol">Poloměr oka</label><input type="text" inputmode="decimal" class="mm" id="f_opol" data-p="omega.polomer" title="Poloměr středu pásku oka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_otl">Tloušťka pásku</label><input type="text" inputmode="decimal" class="mm" id="f_otl" data-p="omega.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_omez">Mezera při tisku</label><input type="text" inputmode="decimal" class="mm" id="f_omez" data-p="omega.mezera" title="Mezera mezi čelistmi a kolem oka, aby se díly při tisku neslily"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Oko pruží ohybem – tenký a dlouhý pásek vydrží víc otevření, silný drží pevněji, ale dřív praskne. Uvnitř oka se o sebe opírají dva hroty (opěrný bod páky).
+                Tiskněte tak, aby obvodová stěna vedla podél pásku (2 obvody, bez výplně).</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="jazycek" open data-pruz="jazycek">
+            <summary><span class="oddil-nazev">Pružný jazýček</span><span class="souhrn" id="sJazycek"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_jdel">Délka</label><input type="text" inputmode="decimal" class="mm" id="f_jdel" data-p="jazycek.delka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_jtl">Tloušťka</label><input type="text" inputmode="decimal" class="mm" id="f_jtl" data-p="jazycek.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_jpr">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_jpr" data-p="jazycek.predpeti" title="O kolik je volný konec jazýčku nad horní rukojetí"><span class="jedn">mm</span></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="f_jzuz" data-p="jazycek.zuzeni" data-typ="bool"> Zúžený ke konci (nosník stálé pevnosti)</label>
+              <p class="napoveda">Jazýček vyrůstá ze dna kapsy v dolní rukojeti a konec tlačí na horní rukojeť. Při stisku se schová do kapsy.
+                Zúžený jazýček je ohnutý rovnoměrně po celé délce – při stejném napětí pruží asi 2× víc, takže vydrží silnější předpětí.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="listova" open data-pruz="listova">
+            <summary><span class="oddil-nazev">V pružina</span><span class="souhrn" id="sListova"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_vdel">Délka ramínek</label><input type="text" inputmode="decimal" class="mm" id="f_vdel" data-p="listova.delka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_vtl">Tloušťka</label><input type="text" inputmode="decimal" class="mm" id="f_vtl" data-p="listova.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_vpr">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_vpr" data-p="listova.predpeti" title="O kolik jsou konce volné pružiny dál od sebe než v kolíčku"><span class="jedn">mm</span></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="f_vzuz" data-p="listova.zuzeni" data-typ="bool"> Ramínka zúžená ke konci (nosník stálé pevnosti)</label>
+              <p class="napoveda">Konce pružiny sedí v kapsách na rukojetích, špička V se opírá o kloub. Pružinu stiskněte a vložte mezi rukojeti.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="meandr" open data-pruz="meandr">
+            <summary><span class="oddil-nazev">Hadovitá pružina</span><span class="souhrn" id="sMeandr"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_mzav">Ohybů</label><input type="text" inputmode="numeric" class="mm" id="f_mzav" data-p="meandr.zavitu"><span class="jedn">×</span></div>
+                <div class="pole"><label for="f_mtl">Tloušťka pásku</label><input type="text" inputmode="decimal" class="mm" id="f_mtl" data-p="meandr.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_msir">Šířka</label><input type="text" inputmode="decimal" class="mm" id="f_msir" data-p="meandr.sirka" title="Délka vodorovných pásků"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mpr">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_mpr" data-p="meandr.predpeti"><span class="jedn">mm</span></div>
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="gumicka" open data-pruz="gumicka">
+            <summary><span class="oddil-nazev">Gumička / O‑kroužek</span><span class="souhrn" id="sGumicka"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_gcs">Průřez</label><input type="text" inputmode="decimal" class="mm" id="f_gcs" data-p="gumicka.prurez"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_gid">Vnitřní Ø <span class="pozn">0 = doporučený</span></label><input type="text" inputmode="decimal" class="mm" id="f_gid" data-p="gumicka.vnitrni"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_gpol">Poloha od špičky</label><input type="text" inputmode="decimal" class="mm" id="f_gpol" data-p="gumicka.poloha"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="pGumicka"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="ocka" open data-pruz="ocka">
+            <summary><span class="oddil-nazev">Očka</span><span class="souhrn" id="sOcka"></span></summary>
+            <div class="oddil-telo">
+              <div class="segment" role="group" aria-label="Tvar oček" id="segOcka"></div>
+              <div class="mrizka">
+                <div class="pole"><label for="f_opoc">Oček nad sebou</label><input type="text" inputmode="numeric" class="mm" id="f_opoc" data-p="ocka.pocet"><span class="jedn">×</span></div>
+                <div class="pole" data-ocko-sirka><label for="f_osir">Šířka očka</label><input type="text" inputmode="decimal" class="mm" id="f_osir" data-p="ocka.sirka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_otl2">Tloušťka pásku</label><input type="text" inputmode="decimal" class="mm" id="f_otl2" data-p="ocka.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_opr">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_opr" data-p="ocka.predpeti"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_opol2">Poloha <span class="pozn">0 kloub – 1 konec</span></label><input type="text" inputmode="decimal" class="mm" id="f_opol2" data-p="ocka.poloha"><span class="jedn">–</span></div>
+              </div>
+              <p class="napoveda">Víc oček nad sebou = větší zdvih a měkčí stisk. Širší (elipsa, ovál) jsou měkčí než kruh; kosočtverec pruží hlavně v rozích.
+                Síla se počítá z ohybu po celém obvodu očka (Castigliano). Tiskněte na ležato, 2 obvody bez výplně.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="oblouk" open data-pruz="oblouk">
+            <summary><span class="oddil-nazev">Oblouk na konci</span><span class="souhrn" id="sOblouk"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_bram">Na rameni</label><select id="f_bram" data-p="oblouk.rameno" data-typ="text"><option value="dolni">dolním (tlačí na horní)</option><option value="horni">horním (tlačí na dolní)</option></select></div>
+                <div class="pole"><label for="f_bd">Délka ramene</label><input type="text" inputmode="decimal" class="mm" id="f_bd" data-p="oblouk.delka" title="Od konce rukojeti k místu, kde rameno tlačí na druhou rukojeť"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_bt">Tloušťka ramene</label><input type="text" inputmode="decimal" class="mm" id="f_bt" data-p="oblouk.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_bto">Tloušťka oblouku <span class="pozn">0 = jako rameno</span></label><input type="text" inputmode="decimal" class="mm" id="f_bto" data-p="oblouk.tloustkaOblouku"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_bs">Šířka pásku <span class="pozn">0 = celá</span></label><input type="text" inputmode="decimal" class="mm" id="f_bs" data-p="oblouk.sirka" title="Užší oblouk je měkčí; leží u strany, která je při tisku na podložce"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_btvar">Tvar</label><select id="f_btvar" data-p="oblouk.tvar" data-typ="text"><option value="oblouk">oblouk mezi rukojeťmi (elipsa / U / Ω)</option><option value="smycka">smyčka za koncem (vybíhá ven)</option></select></div>
+                <div class="pole" data-smycka><label for="f_bpos">Posun ven</label><input type="text" inputmode="text" class="mm" id="f_bpos" data-p="oblouk.posun" title="O kolik je střed smyčky posunutý ven – pod nosné rameno (záporné = k druhému rameni)"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_brad">Poloměr oblouku <span class="pozn">0 = elipsa</span></label><input type="text" inputmode="decimal" class="mm" id="f_brad" data-p="oblouk.polomer" title="Větší než polovina výšky = kruhové oko (Ω), menší = oblouk tvaru U se zaoblenými rohy"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_bpr">Přesah za konec <span class="pozn">0 = půlkruh</span></label><input type="text" inputmode="decimal" class="mm" id="f_bpr" data-p="oblouk.presah" title="Jak daleko oblouk vybíhá za konec rukojeti – delší elipsa je měkčí a víc vydrží"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_bp">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_bp" data-p="oblouk.predpeti" title="O kolik je konec volného ramene při tisku dál od druhé rukojeti"><span class="jedn">mm</span></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="f_bzuz" data-p="oblouk.zuzeni" data-typ="bool"> Rameno zúžené ke konci (nosník stálé pevnosti)</label>
+              <p class="napoveda" id="pOblouk"></p>
+              <p class="napoveda">Oblouk se tiskne spolu s ramenem. Delší rameno a větší přesah = měkčí a vydrží víc stisků; silnější oblouk a kratší rameno = silnější sevření. Hodnoty po změně zkontroluje záložka Síla a pevnost.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="tlacna" open data-pruz="tlacna">
+            <summary><span class="oddil-nazev">Tlačná pružina</span><span class="souhrn" id="sTlacna"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole" style="grid-column: 1 / -1"><label for="f_tpred">Pružina</label><select id="f_tpred" data-p="tlacna.predloha" data-typ="text"></select></div>
+                <div class="pole"><label for="f_tdrat">Drát Ø</label><input type="text" inputmode="decimal" class="mm" id="f_tdrat" data-p="tlacna.drat"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_tpr">Vnější Ø</label><input type="text" inputmode="decimal" class="mm" id="f_tpr" data-p="tlacna.prumer"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_tdel">Volná délka</label><input type="text" inputmode="decimal" class="mm" id="f_tdel" data-p="tlacna.delka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_tzav">Závitů</label><input type="text" inputmode="decimal" class="mm" id="f_tzav" data-p="tlacna.zavitu" title="Činné závity (bez dosedacích na koncích)"><span class="jedn">×</span></div>
+                <div class="pole"><label for="f_tpol">Poloha <span class="pozn">0 kloub – 1 konec</span></label><input type="text" inputmode="decimal" class="mm" id="f_tpol" data-p="tlacna.poloha"><span class="jedn">–</span></div>
+                <div class="pole"><label for="f_thl">Hloubka jamek <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_thl" data-p="tlacna.hloubka"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Blíž ke kloubu = silnější sevření, ale menší zdvih pružiny. Automatické jamky stlačí pružinu v klidu o čtvrtinu jejího zdvihu.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="dratU" open data-pruz="dratU">
+            <summary><span class="oddil-nazev">U sponka z drátu</span><span class="souhrn" id="sDratU"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_udrat">Drát Ø</label><input type="text" inputmode="decimal" class="mm" id="f_udrat" data-p="dratU.drat"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_udel">Délka ramínek</label><input type="text" inputmode="decimal" class="mm" id="f_udel" data-p="dratU.delka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_uohyb">Poloměr ohybu</label><input type="text" inputmode="decimal" class="mm" id="f_uohyb" data-p="dratU.ohyb"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_upr">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_upr" data-p="dratU.predpeti" title="O kolik jsou konce ohnuté sponky dál od sebe než v kolíčku"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Pružinový (pianový) drát ohněte kolem kolíku do U a ramínka rozevřete o předpětí. Tvar 1:1 vytiskne Soubor → Boční profil.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="pasek" open data-pruz="pasek">
+            <summary><span class="oddil-nazev">Ocelový pásek</span><span class="souhrn" id="sPasek"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_ptl">Tloušťka</label><input type="text" inputmode="decimal" class="mm" id="f_ptl" data-p="pasek.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_psir">Šířka <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_psir" data-p="pasek.sirka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_pdel">Volná délka</label><input type="text" inputmode="decimal" class="mm" id="f_pdel" data-p="pasek.delka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_pzas">Zasunutí</label><input type="text" inputmode="decimal" class="mm" id="f_pzas" data-p="pasek.zasunuti" title="Jak hluboko je pásek ve štěrbině"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_ppr">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_ppr" data-p="pasek.predpeti"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Pásek z pružinové oceli (spárová měrka, pásek z hodinářských potřeb) zasuňte do štěrbiny v dolní rukojeti, volný konec tlačí zespodu na horní rukojeť u kloubu.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="tpu" open data-pruz="tpu">
+            <summary><span class="oddil-nazev">Váleček z TPU</span><span class="souhrn" id="sTpu"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_upr2">Průměr</label><input type="text" inputmode="decimal" class="mm" id="f_upr2" data-p="tpu.prumer"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_ust">Stěna <span class="pozn">0 = plný</span></label><input type="text" inputmode="decimal" class="mm" id="f_ust" data-p="tpu.stena"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_upol">Poloha <span class="pozn">0 kloub – 1 konec</span></label><input type="text" inputmode="decimal" class="mm" id="f_upol" data-p="tpu.poloha"><span class="jedn">–</span></div>
+                <div class="pole"><label for="f_uprd">Předpětí</label><input type="text" inputmode="decimal" class="mm" id="f_uprd" data-p="tpu.predpeti"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_uhl">Hloubka jamek <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_uhl" data-p="tpu.hloubka"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Tiskněte z TPU 95A nastojato, 100 % výplň. Trubička (stěna &gt; 0) je měkčí než plný váleček. Trvale snese stlačení ≈ 30 %.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="cep" open data-kloub>
+            <summary><span class="oddil-nazev">Kloub a čep</span><span class="souhrn" id="sCep"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole" style="grid-column: 1 / -1"><label for="f_cdruh">Čep</label><select id="f_cdruh" data-p="cep.druh" data-typ="text"></select></div>
+                <div class="pole" data-cep-prumer><label for="f_cpr">Průměr čepu</label><input type="text" inputmode="decimal" class="mm" id="f_cpr" data-p="cep.prumer"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_cvule">Vůle v horním rameni</label><input type="text" inputmode="decimal" class="mm" id="f_cvule" data-p="cep.vule" title="Na stranu – horní rameno se na čepu otáčí"><span class="jedn">mm</span></div>
+                <div class="pole" data-cep-lis><label for="f_clis">Přesah v dolním <span class="pozn">− = vůle</span></label><input type="text" inputmode="text" class="mm" id="f_clis" data-p="cep.lis" title="Na stranu – v dolním rameni čep drží natěsno"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_cst">Stěna oka kloubu</label><input type="text" inputmode="decimal" class="mm" id="f_cst" data-p="cep.stena"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Kloub má dvě oka vedle sebe (každé rameno jedno). Dolní rameno se tiskne obrácené, takže obě oka leží na podložce – bez podpor.</p>
+            </div>
+          </details>
+        </div>
+      </aside>
+
+      <section class="stred">
+        <div class="prepinac-nahledu" role="group" aria-label="Náhled">
+          <button type="button" id="vNahled3d" aria-pressed="true">🧊 3D náhled</button>
+          <button type="button" id="vSkicar" aria-pressed="false">✏️ Skicář</button>
+          <label class="rozevreni" for="f_rozev" title="Pootevřít kolíček v náhledu">Otevřít <input type="range" id="f_rozev" min="0" max="100" value="0"> <span id="tRozev">0 mm</span></label>
+          <label class="rozevreni" for="f_rozpad" title="Rozložit kolíček na díly">Rozložit <input type="range" id="f_rozpad" min="0" max="100" value="0"></label>
+        </div>
+        <div id="canvas-container" aria-label="3D náhled kolíčku">
+          <div id="platno"></div>
+          <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
+          <div class="karta3d" id="karta3d"></div>
+          <div class="legenda3d" id="legendaVolne" hidden><span><i style="background:#ff8a3d"></i>pružina volná (před montáží) – rozdíl proti sestavě je předpětí <b id="tPredpeti"></b></span></div>
+          <div class="legenda3d" id="legenda3d" hidden><span><i style="background:#db3833"></i>převis bez opory</span><span><i style="background:#d9a833"></i>most nad dílem</span></div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
+        </div>
+        <div id="skicar" hidden>
+          <div class="skicar-lista" role="toolbar" aria-label="Nástroje skicáře">
+            <button type="button" class="tl" data-nastroj="body" aria-pressed="true" title="Táhnout body, posun plochy">✋ Body</button>
+            <button type="button" class="tl" data-nastroj="pridat" aria-pressed="false" title="Klik přidá bod do nejbližší hrany">➕ Bod</button>
+            <button type="button" class="tl" data-nastroj="mereni" aria-pressed="false" title="Táhnutím změříte vzdálenost a úhel">📏 Měřit</button>
+            <button type="button" class="tl" data-nastroj="podklad" aria-pressed="false" title="Táhnutím posunete podklad, Alt + kolečko otočí">🖼 Podklad</button>
+            <button type="button" class="tl" data-nastroj="kalibrace" aria-pressed="false" title="Klikněte na dva body fotky a zadejte skutečnou vzdálenost">📐 Kalibrace</button>
+            <span class="odd"></span>
+            <button type="button" class="tl" id="skPrevzit" title="Obrys z parametrů převezme do skici">✏️ Převzít z parametrů</button>
+            <button type="button" class="tl" id="skSmazBod" title="Smazat vybraný bod (Delete)">🗑 Bod</button>
+            <button type="button" class="tl" id="skPrizpusob" title="Celý kolíček do okna">⤢</button>
+            <span class="odd"></span>
+            <label><input type="checkbox" id="skZapnuta" data-p="skica.zapnuta" data-typ="bool"> tvar ze skici</label>
+            <label><input type="checkbox" id="skSoumerna" data-p="skica.soumerna" data-typ="bool"> souměrně</label>
+            <select id="skUpravuji" aria-label="Upravované rameno"><option value="horni">horní rameno</option><option value="dolni">dolní rameno</option></select>
+            <label><input type="checkbox" id="skHladka" data-p="skica.hladka" data-typ="bool"> hladká křivka</label>
+            <label><input type="checkbox" id="skPrichytit" checked> mřížka 0,5</label>
+          </div>
+          <div class="skicar-lista" id="skPodkladLista">
+            <button type="button" class="tl" id="skVlozit">🖼 Vložit fotku…</button>
+            <span data-podklad>průhlednost <input type="range" id="skPruhl" min="0.05" max="1" step="0.05" value="0.5"></span>
+            <span data-podklad>otočení <input class="male" type="text" inputmode="text" id="skUhel" value="0"> °</span>
+            <button type="button" class="tl" id="skSmazPodklad" data-podklad>✕ Podklad</button>
+          </div>
+          <div class="skicar-vyzva" id="skVyzva" hidden>Tvar ramen je z parametrů (záložka Tvar). Chcete ho kreslit ručně? <button type="button" class="tl" id="skVyzvaBtn">✏️ Převzít a upravit</button></div>
+          <canvas id="skicarPlatno" aria-label="Skicář bočního obrysu ramene"></canvas>
+          <div class="skicar-info"><span id="skPozice">–</span><span>dvojklik na bod = ostrý / hladký · dvojklik na hranu = nový bod · Delete / pravé tl. = smazat · šipky posunou bod</span></div>
+        </div>
+        <div class="box box-obecne" aria-label="Výsledky a tisk">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
+            <button role="tab" data-zalozka="mechanika" aria-selected="false">💪 Síla a pevnost <span class="souhrn-zal" id="sMechanika"></span></button>
+            <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk <span class="souhrn-zal" id="sTisk"></span></button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false">🔩 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje kolíčky</button>
+          </div>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel">
+            <div class="vysledky" id="vVysledky"></div>
+            <div class="obal-tab" style="margin-top:8px"><table class="tabulka" id="tabDily"></table></div>
+          </div>
+          <div class="zalozka-telo" data-telo="mechanika" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_latka">Tloušťka látky</label><input type="text" inputmode="decimal" class="mm" id="f_latka" data-p="tisk.latka" title="Pro výpočet síly sevření (tričko ≈ 0,5, ručník ≈ 3 mm)"><span class="jedn">mm</span></div>
+            </div>
+            <div class="legenda-grafu"><span><i></i>síla čelistí (sevření)</span><span><i class="k2"></i>síla prstů na rukojeti</span><span id="lgMez"><i class="mez"></i>mez únavy pružiny</span></div>
+            <div id="graf"></div>
+            <div class="obal-tab" style="margin-top:6px"><table class="tabulka" id="tabMech"></table></div>
+            <p class="napoveda" id="pMech"></p>
+            <h3 class="podnadpis">Porovnání pružin pro tento kolíček</h3>
+            <div class="obal-tab"><table class="tabulka" id="tabPorovnani"></table></div>
+            <p class="napoveda">Stejná ramena a rozměry, jen jiná pružina (u tištěných současné rozměry – tlačítkem 🔧 je navrhnete). Řádek klepnutím vyberete.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="tisk" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_mat">Materiál</label><select id="f_mat" data-p="tisk.material" data-typ="text"></select></div>
+              <div class="pole"><label for="f_vypln">Výplň</label><input type="text" inputmode="decimal" class="mm" id="f_vypln" data-p="tisk.vypln"><span class="jedn">%</span></div>
+              <div class="pole"><label for="f_kusu">Počet kolíčků</label><input type="text" inputmode="numeric" class="mm" id="f_kusu" data-p="tisk.kusu"><span class="jedn">ks</span></div>
+            </div>
+            <p class="napoveda" id="pMaterial"></p>
+            <p class="napoveda">Všechny díly leží <b>na boku</b>: boční profil je na podložce a vrstvy vedou podél ramen – v ohybu je kolíček nejpevnější a tiskne se bez podpor.
+              Ramena tiskněte se 4 obvody a výplní 100 %, tištěné pružiny se 2 obvody bez výplně (celé z obvodů) – pruží rovnoměrněji. Rozměrové vůle si ověřte na jednom kusu, než vytisknete celou sadu.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden>
+            <div class="obal-tab"><table class="tabulka" id="tabKusovnik"></table></div>
+            <p class="napoveda" id="pMontaz"></p>
+          </div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
+            <ul class="hlaseni" id="hlaseni"></ul>
+            <div class="vysledky" id="vSit" style="margin-top:8px"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
+        </div>
+      </section>
+
+      <aside class="box box-out" id="boxTvar" data-box="out" aria-label="Tvar kolíčku">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">✳</span><h2>Tvar kolíčku</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="telo" open>
+            <summary><span class="oddil-nazev">Ramena</span><span class="souhrn" id="sTelo"></span></summary>
+            <div class="oddil-telo">
+              <div class="segment" role="group" aria-label="Tvar ramen" id="segTvar" data-param></div>
+              <p class="napoveda" id="pSkicaTvar" hidden>Obrys ramen je ze skicáře – tvar, tloušťku, špičku a rozevření mění skica. <button type="button" class="tl" id="btnDoSkicare">✏️ Otevřít skicář</button></p>
+              <div class="mrizka">
+                <div class="pole" data-param><label for="f_delka">Délka</label><input type="text" inputmode="decimal" class="mm" id="f_delka" data-p="telo.delka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_sirka">Šířka</label><input type="text" inputmode="decimal" class="mm" id="f_sirka" data-p="telo.sirka"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_tl">Tloušťka ramene</label><input type="text" inputmode="decimal" class="mm" id="f_tl" data-p="telo.tloustka"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_spicka">Špička</label><input type="text" inputmode="decimal" class="mm" id="f_spicka" data-p="telo.spicka" title="Tloušťka ramene na špičce čelisti"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_cep">Čep od špičky</label><input type="text" inputmode="decimal" class="mm" id="f_cep" data-p="telo.cep" title="Poloha osy otáčení (cívky / čepu) od špičky"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_celist">Délka čelisti</label><input type="text" inputmode="decimal" class="mm" id="f_celist" data-p="telo.celist" title="Jak dlouho na sebe čelisti dosedají"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_mcep">Mezera u čepu</label><input type="text" inputmode="decimal" class="mm" id="f_mcep" data-p="telo.mezeraCep"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_rozevr">Rozevření rukojetí</label><input type="text" inputmode="decimal" class="mm" id="f_rozevr" data-p="telo.rozevreni" title="Mezera mezi konci rukojetí zavřeného kolíčku – určuje, jak moc se otevře"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_zaob">Zaoblení hran</label><input type="text" inputmode="decimal" class="mm" id="f_zaob" data-p="telo.zaobleni"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_tld">Dolní rameno tl. <span class="pozn">0 = stejně</span></label><input type="text" inputmode="decimal" class="mm" id="f_tld" data-p="telo.tloustkaDolni"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_prolis">Prohlubeň na prst <span class="pozn">0 = dle tvaru</span></label><input type="text" inputmode="decimal" class="mm" id="f_prolis" data-p="telo.prolis"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_vyp">Vypouklost rukojeti</label><input type="text" inputmode="text" class="mm" id="f_vyp" data-p="telo.vypouklost" title="Kladná = rukojeť vyklenutá ven, záporná = prohnutá dovnitř"><span class="jedn">mm</span></div>
+                <div class="pole" data-param><label for="f_konec">Konec rukojeti</label><select id="f_konec" data-p="telo.konec" data-typ="text"></select></div>
+                <div class="pole"><label for="f_otvk">Otvor na konci Ø <span class="pozn">0 = bez</span></label><input type="text" inputmode="decimal" class="mm" id="f_otvk" data-p="telo.otvorKonec" title="Na kroužek, šňůrku nebo hřebík"><span class="jedn">mm</span></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="f_vroubky" data-p="telo.vroubky" data-typ="bool"> Vroubkování rukojetí (neklouže)</label>
+              <label class="zaskrt"><input type="checkbox" id="f_odl" data-p="telo.odlehceni" data-typ="bool"> Odlehčení rukojetí (otvory skrz, méně materiálu)</label>
+              <p class="napoveda">Rozevření rukojetí určuje, jak daleko se čelisti otevřou (páka: čelist ÷ rukojeť). Delší rukojeť = menší síla prstů, ale menší otevření.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="celisti" open>
+            <summary><span class="oddil-nazev">Čelisti</span><span class="souhrn" id="sCelisti"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_cprof">Povrch čelistí</label><select id="f_cprof" data-p="celisti.profil" data-typ="text"></select></div>
+                <div class="pole" data-zuby data-pocet><label for="f_zpocet" id="lZpocet">Počet zoubků</label><input type="text" inputmode="numeric" class="mm" id="f_zpocet" data-p="celisti.pocet"><span class="jedn">×</span></div>
+                <div class="pole" data-zuby><label for="f_zhl" id="lZhl">Výška zoubků</label><input type="text" inputmode="decimal" class="mm" id="f_zhl" data-p="celisti.hloubka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_nabeh">Náběh u špičky <span class="pozn">0 = bez</span></label><input type="text" inputmode="decimal" class="mm" id="f_nabeh" data-p="celisti.nabeh" title="Délka klínu, který špičky rozevře – látka vjede bez zadrhnutí"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_nabv">Výška náběhu <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_nabv" data-p="celisti.nabehVyska" title="O kolik je každá špička u čela seříznutá – velký klín jako u plastových kolíčků"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="pCelisti"></p>
+              <label class="zaskrt"><input type="checkbox" id="f_snura" data-p="celisti.snura" data-typ="bool"> Drážka na šňůru</label>
+              <div class="mrizka" data-snura>
+                <div class="pole"><label for="f_spr">Šňůra Ø</label><input type="text" inputmode="decimal" class="mm" id="f_spr" data-p="celisti.snuraPrumer"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_spol">Poloha <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_spol" data-p="celisti.snuraPoloha"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_spr2">Druhý otvor Ø <span class="pozn">0 = bez</span></label><input type="text" inputmode="decimal" class="mm" id="f_spr2" data-p="celisti.snura2" title="Menší otvor pro tenkou šňůru, dál od špičky"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_spol2">Poloha 2 <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_spol2" data-p="celisti.snuraPoloha2"><span class="jedn">mm</span></div>
+              </div>
+              <div class="mrizka">
+                <div class="pole"><label for="f_mag">Kapsa na magnet</label><select id="f_mag" data-p="celisti.magnet" data-typ="text"><option value="zadny">bez magnetu</option><option value="horni">v horním rameni</option><option value="dolni">v dolním rameni</option></select></div>
+                <div class="pole" data-magnet><label for="f_mpr2">Magnet Ø</label><input type="text" inputmode="decimal" class="mm" id="f_mpr2" data-p="celisti.magnetPrumer"><span class="jedn">mm</span></div>
+                <div class="pole" data-magnet><label for="f_mvy">Výška</label><input type="text" inputmode="decimal" class="mm" id="f_mvy" data-p="celisti.magnetVyska"><span class="jedn">mm</span></div>
+                <div class="pole" data-magnet><label for="f_mpol">Poloha <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_mpol" data-p="celisti.magnetPoloha"><span class="jedn">mm</span></div>
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="hacek" open>
+            <summary><span class="oddil-nazev">Háček na zavěšení</span><span class="souhrn" id="sHacek"></span></summary>
+            <div class="oddil-telo">
+              <label class="zaskrt"><input type="checkbox" id="f_hzap" data-p="hacek.zapnuty" data-typ="bool"> Prodloužit rameno do háčku</label>
+              <div data-hacek>
+                <div class="segment" role="group" aria-label="Tvar háčku" id="segHacek"></div>
+                <div class="mrizka">
+                  <div class="pole"><label for="f_hram">Rameno</label><select id="f_hram" data-p="hacek.rameno" data-typ="text"><option value="horni">horní</option><option value="dolni">dolní</option></select></div>
+                  <div class="pole"><label for="f_hsmer">Ohnout</label><select id="f_hsmer" data-p="hacek.smer" data-typ="text"><option value="ven">ven (od kolíčku)</option><option value="dovnitr">dovnitř</option></select></div>
+                  <div class="pole"><label for="f_hpr" id="lHpr">Tyč Ø</label><input type="text" inputmode="decimal" class="mm" id="f_hpr" data-p="hacek.prumer"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_hdel">Rovná část</label><input type="text" inputmode="decimal" class="mm" id="f_hdel" data-p="hacek.delka" title="Prodloužení za koncem rukojeti"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_htl">Tloušťka</label><input type="text" inputmode="decimal" class="mm" id="f_htl" data-p="hacek.tloustka"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_hsir">Šířka <span class="pozn">0 = jako rameno</span></label><input type="text" inputmode="decimal" class="mm" id="f_hsir" data-p="hacek.sirka" title="U konce ramene má háček šířku ramene a plynule přejde na tuto šířku"><span class="jedn">mm</span></div>
+                  <div class="pole" data-hsir><label for="f_hpre">Přechod <span class="pozn">0 = auto</span></label><input type="text" inputmode="decimal" class="mm" id="f_hpre" data-p="hacek.prechod" title="Délka, na které se šířka změní"><span class="jedn">mm</span></div>
+                  <div class="pole" data-hsir><label for="f_hzar">Užší háček</label><select id="f_hzar" data-p="hacek.zarovnani" data-typ="text"><option value="podlozka">u strany na podložce (bez podpor)</option><option value="stred">uprostřed (s podporami)</option></select></div>
+                  <div class="pole"><label for="f_huhel">Sklon</label><input type="text" inputmode="text" class="mm" id="f_huhel" data-p="hacek.uhel" title="Kladný = od kolíčku ven"><span class="jedn">°</span></div>
+                  <div class="pole" data-htvar="klip"><label for="f_hotv">Otvor klipu <span class="pozn">0 = 80 % Ø</span></label><input type="text" inputmode="decimal" class="mm" id="f_hotv" data-p="hacek.otvor" title="Mezera mezi zaoblenými konci klipu – menší než tyč, aby se nacvakl"><span class="jedn">mm</span></div>
+                  <div class="pole" data-htvar="hacek"><label for="f_hhl">Hloubka háčku</label><input type="text" inputmode="decimal" class="mm" id="f_hhl" data-p="hacek.hloubka" title="Rovná vratná část za obloukem – tyč sedí hlouběji a háček nesklouzne"><span class="jedn">mm</span></div>
+                  <div class="pole" data-htvar="hacek"><label for="f_hzah">Zahnutí špičky</label><input type="text" inputmode="decimal" class="mm" id="f_hzah" data-p="hacek.zahnuti" title="Kolik stupňů navíc za půlkruh – zobáček, aby háček nesklouzl"><span class="jedn">°</span></div>
+                  <div class="pole"><label for="f_hzat">Zatížení</label><input type="text" inputmode="decimal" class="mm" id="f_hzat" data-p="hacek.zatizeni" title="Co bude na háčku viset"><span class="jedn">kg</span></div>
+                </div>
+                <p class="napoveda" id="pHacek"></p>
+              </div>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="profil1" aria-hidden="true"></div>
+
+<dialog class="napoveda-dlg" id="napoveda">
+  <div class="hlava"><h2>Kolíčky na prádlo – nápověda</h2><button class="tl" id="btnZavritNap" aria-label="Zavřít">✕</button></div>
+  <div class="telo">
+    <p><b>Jak kolíček funguje.</b> Je to dvojzvratná páka: uprostřed je osa (cívka pružiny nebo čep), vpředu čelisti, vzadu rukojeti. Pružina tlačí čelisti k sobě;
+      stiskem rukojetí se čelisti otevřou. Kolíček se navrhuje zavřený – čelisti na sebe dosedají v rovině, rukojeti jsou od sebe o „rozevření“.</p>
+    <p><b>Pružina ze starého kolíčku.</b> U dřevěného kolíčku sedí cívka v zářezech uprostřed obou ramen (je zároveň opěrným bodem) a nohy leží v drážkách na vnější straně čelistí.
+      U plastového kolíčku je cívka navlečená na čepu a nohy se opírají zevnitř o rukojeti. Pružinu vyndejte kleštěmi, změřte posuvkou drát, vnější průměr cívky a délku nohou
+      a odhadněte <b>volný úhel nohou</b> (úhel mezi nohama volné pružiny). Z rozdílu proti úhlu v kolíčku se počítá předpětí a síla sevření.</p>
+    <p><b>Tištěné pružiny</b> pruží ohybem plastu. Dlouhé a tenké vydrží velký zdvih, krátké a silné drží pevněji, ale únavou prasknou. Záložka <b>Síla a pevnost</b> ukazuje,
+      jak se síla mění s otevřením, a hlídá mez únavy materiálu. Na pružiny používejte PETG nebo nylon – PLA časem povolí.</p>
+    <p><b>Háček / oko / klip.</b> Konec zvoleného ramene se prodlouží do háčku na tyč, oka na hřebík nebo klipu, který se nacvakne na tyč. Hlídá se, aby háček nenarazil do druhého ramene.</p>
+    <p><b>Skicář.</b> Obrys ramene nakreslíte body: tažení posune bod, dvojklik na bod přepne ostrý / hladký roh, dvojklik na hranu přidá bod, Delete nebo pravé tlačítko bod smaže.
+      Vložte fotku starého kolíčku jako podklad, nástrojem 📐 klikněte na dva body se známou vzdáleností (např. délku kolíčku) a obrys obkreslete.
+      Zářezy, kloub, drážky a pružinu doplní generátor sám – čelisti musí dosedat na vodorovnou čáru dosednutí.</p>
+    <p><b>Boční profil 1:1</b> (Soubor) vytiskne profil ve skutečné velikosti – přiložíte k němu starý kolíček nebo pružinu a ověříte rozměry před tiskem.</p>
+    <p><b>Volná pružina a rozpad.</b> Zobrazení → Volná pružina ukáže oranžově pružinu, jak vypadá mimo kolíček (tištěná tak, jak vyjde z tiskárny) – o tolik se při montáži stlačí nebo natočí, to je předpětí.
+      Posuvník Rozložit (klávesa <kbd>R</kbd>) rozloží kolíček na díly: ramena od sebe, čep do strany, pružina ven.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy, <kbd>K</kbd> skicář / 3D, <kbd>A</kbd> animace otevírání, <kbd>P</kbd> volná pružina, <kbd>R</kbd> rozpad na díly, <kbd>L</kbd> měřítko, <kbd>N</kbd> náhodný kolíček, <kbd>M</kbd> tisková poloha, <kbd>D</kbd> pružina a šňůra, <kbd>V</kbd> převisy, <kbd>H</kbd> hrany,
+      <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p class="pozn">Materiálové hodnoty jsou orientační pro FDM tisk (stav 11/2026); skutečná síla závisí na tiskárně, teplotě a obvodech.</p>
+  </div>
+</dialog>
+<script src="kolicky/ui.js"></script>
+</body>
+</html>

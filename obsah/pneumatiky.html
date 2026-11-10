@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulačka pneumatik a disků</title>
+<meta name="description" content="Dekodér označení pneumatik (205/55 R16 91V, XL, M+S, 3PMSF, C, LT, DOT), porovnání rozměrů a tachometr, disky ET a rozteč, posun hran kola, šířka ráfku, tlak podle nosnosti, zimní povinnost v ČR a evidence vlastních sad.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="pneumatiky/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Hlídač termínů / Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.92rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1150px;margin:0 auto;display:grid;gap:12px}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px 14px;min-width:0}
+.karta h2{margin:0 0 8px;font-size:.98rem}
+.karta h3{margin:12px 0 6px;font-size:.86rem;color:var(--text-muted)}
+.mrizka2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;align-items:start}
+.vstupy{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:8px}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.velky{font-size:1rem;font-weight:600;letter-spacing:.02em}
+.priklady{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.priklady button{background:var(--bg-control);color:var(--text-muted);border:1px solid var(--border);border-radius:12px;padding:2px 9px;font-size:.76rem;cursor:pointer;font-family:inherit}
+.priklady button:hover{color:var(--text);border-color:var(--border-strong)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:480px){.radek,.radek3{grid-template-columns:1fr}}
+
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.76rem}
+td.c,th.c{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tab-obal{overflow-x:auto}
+@media (max-width:480px){td.c{white-space:normal}}
+.plus{color:var(--warn)} .minus{color:var(--accent)}
+.stitky{display:flex;flex-wrap:wrap;gap:4px}
+.stitek{display:inline-block;font-size:.74rem;border-radius:8px;padding:1px 8px;background:var(--bg-control);border:1px solid var(--border)}
+.hlaska{font-size:.84rem;line-height:1.45;border-radius:6px;padding:7px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-left:4px solid var(--accent);margin-top:6px}
+.hlaska.pozor{border-left-color:var(--warn)} .hlaska.chyba{border-left-color:var(--danger)} .hlaska.ok{border-left-color:var(--ok)}
+.info{font-size:.8rem;line-height:1.5;color:var(--text-muted)}
+.svg-obal{overflow-x:auto;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:6px}
+.svg-obal svg{display:block;width:100%;height:auto;max-height:440px;min-width:300px}
+svg text{font-family:system-ui,sans-serif}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;margin-top:6px}
+.legenda i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.s0{--barva:var(--accent)} .s1{--barva:var(--warn)} .s2{--barva:var(--ok)}
+.vystup{display:grid;gap:12px;min-width:0}
+.prazdno{color:var(--text-muted);border:1px dashed var(--border-strong);border-radius:8px;padding:18px;text-align:center;line-height:1.6}
+details summary{cursor:pointer;color:var(--accent);font-size:.86rem;margin-top:8px}
+.tab-li{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:2px 10px;font-size:.78rem;font-variant-numeric:tabular-nums;margin-top:6px}
+.tab-li b{display:inline-block;min-width:2.4em}
+
+/* sady */
+.sady{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px}
+.sada{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--border-strong);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.sada.zimni{border-left-color:var(--accent)} .sada.letni{border-left-color:var(--warn)} .sada.celorocni{border-left-color:var(--ok)}
+.sada h3{margin:0;font-size:.94rem;word-break:break-word}
+.sada .meta{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:.8rem;color:var(--text-muted)}
+.sada .akce{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+
+@media print{
+  .lista,.akce,dialog,#podpis-pruh,.priklady{display:none!important}
+  body{display:block;height:auto}
+  main{overflow:visible}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🛞 Pneumatiky a disky</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Záloha a obnova sad">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výpočty"><span class="skup-nazev" aria-hidden="true">Výpočty</span><div class="skup-tl">
+    <button class="tl" data-pohled="dekoder" title="Co znamená označení pneumatiky">🔎<span class="txt"> Dekodér</span></button>
+    <button class="tl" data-pohled="porovnani" title="Porovnání 2–3 rozměrů a tachometr">⚖️<span class="txt"> Porovnání</span></button>
+    <button class="tl" data-pohled="disky" title="Disky: ET, rozteč, posun hran">⚙️<span class="txt"> Disky</span></button>
+    <button class="tl" data-pohled="tlak" title="Tlak podle nosnosti, indexy">🌡️<span class="txt"> Tlak a nosnost</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Moje"><span class="skup-nazev" aria-hidden="true">Moje</span><div class="skup-tl">
+    <button class="tl" data-pohled="sady" title="Uložené sady pneumatik">🗂️<span class="txt"> Moje sady</span></button>
+    <button class="tl" data-pohled="zima" title="Zimní povinnost v ČR">❄️<span class="txt"> Zimní povinnost</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novaSada">✚ Nová sada pneumatik…</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal">
+
+<!-- DEKODÉR -->
+<section data-sekce="dekoder" class="obal">
+  <div class="karta">
+    <h2>🔎 Co znamená označení pneumatiky</h2>
+    <label class="pole">Označení z bočnice (i s DOT kódem)
+      <input class="vstup velky" id="dekVstup" data-ulozit autocomplete="off" spellcheck="false" placeholder="205/55 R16 91V XL M+S DOT 2319"></label>
+    <div class="priklady" id="dekPriklady"></div>
+  </div>
+  <div id="dekVystup" class="vystup"></div>
+</section>
+
+<!-- POROVNÁNÍ -->
+<section data-sekce="porovnani" class="obal" hidden>
+  <div class="karta">
+    <h2>⚖️ Porovnání rozměrů</h2>
+    <div class="vstupy">
+      <label class="pole s0">① Původní (z technického průkazu)<input class="vstup velky" id="por1" data-ulozit placeholder="205/55 R16" autocomplete="off"></label>
+      <label class="pole s1">② Nový rozměr<input class="vstup velky" id="por2" data-ulozit placeholder="225/45 R17" autocomplete="off"></label>
+      <label class="pole s2">③ Další (nepovinné)<input class="vstup velky" id="por3" data-ulozit placeholder="215/50 R17" autocomplete="off"></label>
+    </div>
+  </div>
+  <div id="porVystup" class="vystup"></div>
+</section>
+
+<!-- DISKY -->
+<section data-sekce="disky" class="obal" hidden>
+  <div class="karta">
+    <h2>⚙️ Disky – zális (ET), rozteč a posun kola</h2>
+    <div class="vstupy">
+      <label class="pole">① Původní disk<input class="vstup velky" id="diskA" data-ulozit placeholder="7Jx17 ET45 5x112 57.1" autocomplete="off"></label>
+      <label class="pole">Pneu na ① (nepovinné)<input class="vstup" id="pneuA" data-ulozit placeholder="225/45 R17" autocomplete="off"></label>
+      <label class="pole">② Nový disk<input class="vstup velky" id="diskB" data-ulozit placeholder="8Jx18 ET35 5x112 66.6" autocomplete="off"></label>
+      <label class="pole">Pneu na ② (nepovinné)<input class="vstup" id="pneuB" data-ulozit placeholder="235/40 R18" autocomplete="off"></label>
+    </div>
+    <p class="info" style="margin:8px 0 0">Zápis: šířka ráfku v palcích, J = tvar okraje, × průměr, ET = zális (mm od středu ráfku k dosedací ploše, kladný = disk víc „schovaný“), rozteč děr (počet × průměr kružnice), středový otvor (mm). Jde i americký zápis 17x7.5 +40 5x4.5.</p>
+  </div>
+  <div id="diskVystup" class="vystup"></div>
+</section>
+
+<!-- TLAK -->
+<section data-sekce="tlak" class="obal" hidden>
+  <div class="mrizka2">
+    <div class="karta">
+      <h2>🌡️ Tlak po změně pneumatiky</h2>
+      <p class="info" style="margin:0 0 8px">Při jiném rozměru či indexu nosnosti najde tlak, při kterém nová pneumatika unese stejně jako původní při tlaku od výrobce vozu. Orientačně (aproximace tabulek ETRTO) – přednost má štítek vozu a doporučení výrobce pneu.</p>
+      <h3>Původní pneumatika</h3>
+      <div class="radek3">
+        <label class="pole">Index nosnosti<input class="vstup" id="tlLi1" data-ulozit type="number" min="40" max="126" value="91"></label>
+        <label class="pole">Provedení<select class="vstup" id="tlTyp1" data-ulozit><option value="std">standard</option><option value="xl">XL / Reinforced</option><option value="c">C (dodávka)</option></select></label>
+        <label class="pole">Tlak od výrobce (bar)<input class="vstup" id="tlP1" data-ulozit type="number" min="1" max="6" step="0.1" value="2.2"></label>
+      </div>
+      <h3>Nová pneumatika</h3>
+      <div class="radek3">
+        <label class="pole">Index nosnosti<input class="vstup" id="tlLi2" data-ulozit type="number" min="40" max="126" value="94"></label>
+        <label class="pole">Provedení<select class="vstup" id="tlTyp2" data-ulozit><option value="std">standard</option><option value="xl" selected>XL / Reinforced</option><option value="c">C (dodávka)</option></select></label>
+        <label class="pole">Zatížení nápravy (kg, nepovinné)<input class="vstup" id="tlNaprava" data-ulozit type="number" min="0" max="5000" step="10" placeholder="z TP"></label>
+      </div>
+      <div id="tlakVystup"></div>
+    </div>
+    <div class="karta">
+      <h2>📋 Indexy nosnosti a rychlosti</h2>
+      <h3>Index nosnosti (LI) → kg na jednu pneumatiku</h3>
+      <div class="tab-li" id="tabLi"></div>
+      <h3>Index rychlosti → km/h</h3>
+      <div class="tab-li" id="tabSi"></div>
+      <p class="info">ZR = radiální pro rychlosti nad 240 km/h; (Y) v závorce = nad 300 km/h. Pneumatika musí mít index rychlosti alespoň podle TP (u zimních smí být nižší, pokud je na palubní desce štítek s maximem).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ZIMA -->
+<section data-sekce="zima" class="obal" hidden>
+  <div class="karta">
+    <h2>❄️ Zimní pneumatiky v ČR</h2>
+    <div id="zimaStav"></div>
+    <ul style="line-height:1.6;font-size:.9rem;padding-left:20px">
+      <li><b>Od 1. 11. do 31. 3.</b> musí mít osobní auto (do 3,5 t) zimní pneumatiky na všech kolech, <b>pokud je na silnici souvislá vrstva sněhu, ledu nebo námraza</b>, nebo se dá vzhledem k počasí očekávat (zákon č. 361/2000 Sb., § 40a).</li>
+      <li>Kde je značka <b>„Zimní výbava“</b>, platí povinnost v tomto období bez ohledu na počasí.</li>
+      <li>Zimní = označení <b>M+S</b> (M&amp;S, M/S) nebo symbol vločky v hoře <b>3PMSF</b>. Celoroční pneumatiky s tímto označením vyhovují.</li>
+      <li>Minimální hloubka dezénu zimních: <b>4 mm</b> (vozidla do 3,5 t), <b>6 mm</b> na hnací nápravě vozidel nad 3,5 t.</li>
+      <li>Letní pneumatiky: zákonné minimum <b>1,6 mm</b>; pod 3 mm výrazně roste riziko aquaplaningu.</li>
+      <li>Místo zimních lze v zimních podmínkách použít sněhové řetězy, jen je-li silnice souvisle pokrytá sněhem nebo ledem.</li>
+      <li>Za jízdu bez zimní výbavy hrozí pokuta (na místě až 2 000 Kč, ve správním řízení více) a pojišťovna může krátit plnění.</li>
+      <li>V cizině platí jiná pravidla – např. Německo uznává jako zimní už jen 3PMSF, Rakousko má povinnost 1. 11.–15. 4.</li>
+    </ul>
+    <p class="info">Stav k 11/2026, orientačně – ověřte v aktuálním znění předpisů.</p>
+  </div>
+</section>
+
+<!-- SADY -->
+<section data-sekce="sady" class="obal" hidden>
+  <div class="karta" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between">
+    <h2 style="margin:0">🗂️ Moje auta a sady pneumatik</h2>
+    <button class="btn primary" data-prikaz="novaSada">✚ Nová sada</button>
+  </div>
+  <div id="sadyVystup" class="vystup"></div>
+</section>
+
+</div></main>
+
+<dialog class="okno" id="dlgSada"><form method="dialog">
+  <header id="dlgSadaTitul">Sada pneumatik</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Auto<input class="vstup" name="auto" maxlength="80" list="seznamAut" placeholder="např. Octavia 3"></label>
+      <label class="pole">Druh<select class="vstup" name="druh"><option value="letni">☀️ letní</option><option value="zimni">❄️ zimní</option><option value="celorocni">🌦️ celoroční</option></select></label>
+    </div>
+    <label class="pole">Název / značka a model<input class="vstup" name="nazev" maxlength="120" placeholder="např. Michelin Alpin 6"></label>
+    <div class="radek">
+      <label class="pole">Rozměr<input class="vstup" name="rozmer" maxlength="80" placeholder="205/55 R16 91H"></label>
+      <label class="pole">Disky<input class="vstup" name="disk" maxlength="80" placeholder="6.5Jx16 ET46 5x112"></label>
+    </div>
+    <div class="radek3">
+      <label class="pole">DOT (týden+rok)<input class="vstup" name="dot" maxlength="40" placeholder="2319"></label>
+      <label class="pole">Dezén – nejmenší (mm)<input class="vstup" name="dezen" inputmode="decimal" placeholder="6,5"></label>
+      <label class="pole">Ujeto (km)<input class="vstup" name="km" inputmode="numeric"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Tlak (bar)<input class="vstup" name="tlak" inputmode="decimal" placeholder="2,3"></label>
+      <label class="pole">Kde jsou uskladněné<input class="vstup" name="uskladneni" maxlength="200" placeholder="garáž, pneuservis…"></label>
+    </div>
+    <label class="pole">Poznámka<textarea class="vstup" name="poznamka" rows="3" maxlength="2000"></textarea></label>
+    <label style="display:flex;gap:6px;font-size:.84rem;align-items:center"><input type="checkbox" name="namontovano"> Právě namontované na autě</label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgSadaSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+<datalist id="seznamAut"></datalist>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>Dekodér</b> rozloží označení z bočnice: šířka (mm), profil (výška bočnice v % šířky), konstrukce (R radiální, ZR, diagonální), průměr ráfku (palce), index nosnosti a rychlosti, značky XL, M+S, 3PMSF, C, LT, run-flat a DOT kód (poslední 4 číslice = týden a rok výroby). Zvládne i motocyklové (120/70 ZR17), flotační (31x10.50R15) a staré palcové (7.50-16 – průměr jen odhadem).</p>
+    <p style="margin:0"><b>Průměr kola</b> = ráfek × 25,4 + 2 × šířka × profil / 100. Obvod a otáčky na km jsou geometrické – skutečný valivý obvod je pod zatížením asi o 2–3 % menší.</p>
+    <p style="margin:0"><b>Porovnání</b> ukáže rozdíl průměru, chybu tachometru a změnu světlé výšky. Rozdíl do ±3 % je běžná orientační mez, <b>platí ale jen rozměry uvedené v COC listu / technickém průkazu</b> (nebo schválené zkušebnou).</p>
+    <p style="margin:0"><b>Disky:</b> ET je vzdálenost dosedací plochy od středu ráfku. Menší ET = kolo víc ven. Výpočet ukáže, o kolik se posune vnější a vnitřní hrana ráfku (a pneu, když ji zadáte).</p>
+    <p style="margin:0"><b>Moje sady</b> se ukládají jen v tomto prohlížeči (localStorage, klíč <code>webapp_pneumatiky</code>). Zálohujte přes <i>Soubor → Záloha</i>.</p>
+    <p style="margin:0">Předpisy a tabulky: stav k 11/2026, orientačně. Šířky ráfků a přepočet tlaku jsou zjednodušené – rozhoduje výrobce vozu a pneumatik.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.PneumatikyJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const c = J.cislo;
+const zn = (x, d = 1) => (x > 0.05 ? '+' : '') + c(x, d);
+const tr = (k, v) => `<tr><td>${k}</td><td class="c">${v}</td></tr>`;
+const BARVY = ['var(--accent)', 'var(--warn)', 'var(--ok)'];
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+
+/* ---------- dekodér ---------- */
+const PRIKLADY = ['205/55 R16 91V', '225/45 ZR17 94W XL', '275/35 ZR19 (100Y) RFT', '205/55 R16 91H M+S 3PMSF', '215/65 R16C 109/107T',
+  'LT265/75R16 123/120Q', '31x10.50R15 LT 109Q', '120/70 ZR17 M/C (58W)', '7.50-16 112/110L', '195/65 R15 91T DOT XEDF 2319'];
+$('dekPriklady').innerHTML = PRIKLADY.map(p => `<button type="button" data-priklad="${esc(p)}">${esc(p)}</button>`).join('');
+
+function hlasky(seznam, druh) { return seznam.map(t => `<div class="hlaska ${druh || 'pozor'}">${esc(t)}</div>`).join(''); }
+
+function vykresliDekoder() {
+  const v = $('dekVstup').value.trim(), out = $('dekVystup');
+  if (!v) { out.innerHTML = '<div class="prazdno">Napište označení z bočnice pneumatiky nebo klikněte na příklad.</div>'; return; }
+  const r = J.dekodujPneu(v);
+  if (!r.ok) { out.innerHTML = hlasky([r.chyba], 'chyba'); return; }
+  const raf = J.rafekProPneu(r.sirka);
+  const inch = r.typ === 'flotace' || r.typ === 'palcova';
+  let h = `<div class="mrizka2"><div class="karta"><h2>Rozpad označení</h2><div class="tab-obal"><table>
+    ${tr('Šířka pneumatiky', c(r.sirka, inch ? 1 : 0) + ' mm' + (inch ? ` (${c(r.sirka / J.PALEC, 2)}″)` : ''))}
+    ${tr('Profil (výška bočnice / šířka)', c(r.profil, 0) + ' %' + (r.profilOdhad ? ' (odhad)' : ''))}
+    ${tr('Výška bočnice', c(r.bocnice) + ' mm')}
+    ${tr('Konstrukce', esc(r.konstrukce + ' – ' + r.konstrukceText))}
+    ${tr('Průměr ráfku', r.rafek + '″ = ' + c(r.prumerRafku) + ' mm')}
+    <tr><td><b>Průměr kola</b></td><td class="c"><b>${c(r.prumer)} mm</b></td></tr>
+    ${tr('Obvod (geometrický)', c(r.obvod, 0) + ' mm')}
+    ${tr('Otáčky na 1 km', c(r.otackyNaKm, 0))}
+    ${r.li != null ? tr('Index nosnosti', `${r.li}${r.li2 ? '/' + r.li2 : ''} = ${r.nosnost != null ? r.nosnost : '?'} kg${r.li2 ? ` (jednomontáž) / ${r.nosnost2} kg (dvojmontáž)` : ''} na kolo`) : ''}
+    ${r.rychlost ? tr('Index rychlosti', `${esc(r.rychlost)} = ${r.rychlostNad ? 'nad ' : 'do '}${r.rychlostKmh} km/h`) : ''}
+    ${tr('Druh', esc(r.typText))}
+    ${r.pr ? tr('Počet vrstev (PR)', r.pr) : ''}
+    ${r.dot && !r.dot.chyba ? tr('Výroba (DOT ' + esc(r.dot.kod) + ')', `${r.dot.tyden}. týden ${r.dot.rok}${r.dot.stary ? '?' : ''} · stáří ${c(r.dot.stariLet)} let`) : ''}
+  </table></div>
+  ${r.znacky.length ? `<h3>Značky</h3><div class="stitky">${r.znacky.map(z => `<span class="stitek" title="${esc(POPIS_ZNACEK[z] || '')}">${esc(z)}</span>`).join('')}</div>
+    <ul class="info" style="margin:6px 0 0;padding-left:18px">${r.znacky.filter(z => POPIS_ZNACEK[z]).map(z => `<li><b>${esc(z)}</b> – ${esc(POPIS_ZNACEK[z])}</li>`).join('')}</ul>` : ''}
+  ${r.nerozpoznano ? `<p class="info">Nerozpoznáno: <code>${esc(r.nerozpoznano)}</code></p>` : ''}
+  ${r.dot && r.dot.chyba ? hlasky(['DOT: ' + r.dot.chyba], 'chyba') : ''}
+  ${hlasky(r.varovani)}
+  </div>
+  <div class="karta"><h2>Náhled kola</h2><div class="svg-obal">${svgProfil([r])}</div>
+    ${r.typ !== 'moto' && !r.moznaMoto ? `<h3>Šířka ráfku (orientačně, ETRTO)</h3><p class="info" style="margin:0">Pro šířku ${c(r.sirka, 0)} mm: povoleno asi <b>${c(raf.min)}″–${c(raf.max)}″</b>, ideálně <b>${c(raf.dop)}″</b>.</p>` : ''}
+  </div></div>`;
+  out.innerHTML = h;
+}
+const POPIS_ZNACEK = {
+  XL: 'zesílená (Extra Load / Reinforced) – vyšší nosnost při vyšším tlaku (referenčně 2,9 bar místo 2,5)',
+  'M+S': 'bláto a sníh (Mud + Snow) – v ČR uznávaná zimní pneumatika',
+  '3PMSF': 'vločka v trojvrší – prošla zkouškou na sněhu; plnohodnotná zimní i v Německu a Rakousku',
+  'run-flat': 'dojezdová – po defektu dojede omezeně (typicky 80 km při 80 km/h); vyžaduje TPMS',
+  C: 'commercial – dodávková, zesílená, vysoký tlak; nosnost jednomontáž/dvojmontáž',
+  LT: 'light truck (US) – lehká nákladní / offroad, vyšší tlaky',
+  'M/C': 'motocyklová',
+  TL: 'bezdušová (tubeless)', TT: 's duší (tube type)'
+};
+
+/* ---------- SVG: profil kol přes sebe ---------- */
+function svgProfil(pneu) {
+  const W = pneu.length === 1 ? 430 : 560, H = 360, zem = H - 24, maxD = Math.max(...pneu.map(p => p.prumer));
+  const k = (H - 60) / maxD, cx = 200;
+  let g = `<line x1="10" y1="${zem}" x2="${W - 10}" y2="${zem}" style="stroke:var(--text-faint)" stroke-width="1.5"/>`;
+  pneu.forEach((p, i) => {
+    const R = p.prumer / 2 * k, r = p.prumerRafku / 2 * k, cy = zem - R, col = BARVY[i], dash = i ? ' stroke-dasharray="7 4"' : '';
+    g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" style="stroke:${col}" stroke-width="${i ? 2 : 3}"${dash}/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" style="stroke:${col}" stroke-width="1.2" opacity=".7"${dash}/>
+      <circle cx="${cx}" cy="${cy}" r="3" style="fill:${col}"/>`;
+    // kóta průměru vpravo
+    const x = 360 + i * 62;
+    g += `<line x1="${cx}" y1="${zem - 2 * R}" x2="${x + 6}" y2="${zem - 2 * R}" style="stroke:${col}" stroke-width=".8" stroke-dasharray="2 3"/>
+      <line x1="${x}" y1="${zem - 2 * R}" x2="${x}" y2="${zem}" style="stroke:${col}" stroke-width="1.2" marker-start="url(#sip)" marker-end="url(#sip)"/>
+      <text x="${x + 4}" y="${zem - R}" style="fill:${col}" font-size="12" transform="rotate(-90 ${x + 4} ${zem - R})" text-anchor="middle" dy="-4">⌀ ${c(p.prumer)} mm</text>`;
+    if (i === 0 && pneu.length === 1) {
+      g += `<line x1="${cx + r}" y1="${cy}" x2="${cx + R}" y2="${cy}" style="stroke:var(--text-muted)" stroke-width="1"/>
+        <text x="${cx + (r + R) / 2}" y="${cy - 6}" text-anchor="middle" font-size="11" style="fill:var(--text-muted)">bočnice ${c(p.bocnice)}</text>`;
+    }
+  });
+  // rozdíly: horní hrana a osa vůči prvnímu
+  if (pneu.length > 1) {
+    const R0 = pneu[0].prumer / 2 * k;
+    pneu.slice(1).forEach((p, j) => {
+      const R = p.prumer / 2 * k, d = p.prumer - pneu[0].prumer, x = 40 + j * 70;
+      g += `<line x1="${x}" y1="${zem - 2 * R0}" x2="${x}" y2="${zem - 2 * R}" style="stroke:${BARVY[j + 1]}" stroke-width="2"/>
+        <text x="${x + 4}" y="${Math.min(zem - 2 * R0, zem - 2 * R) - 6}" font-size="11" style="fill:${BARVY[j + 1]}">${zn(d)} mm</text>
+        <line x1="${x}" y1="${zem - R0}" x2="${x}" y2="${zem - R}" style="stroke:${BARVY[j + 1]}" stroke-width="2"/>
+        <line x1="${x - 4}" y1="${zem - R}" x2="${cx}" y2="${zem - R}" style="stroke:${BARVY[j + 1]}" stroke-width=".7" stroke-dasharray="2 3"/>
+        <text x="${x + 4}" y="${zem - Math.max(R, R0) - 6}" font-size="11" style="fill:${BARVY[j + 1]}">osa ${zn(d / 2)}</text>`;
+    });
+    g += `<line x1="${30}" y1="${zem - R0}" x2="${cx}" y2="${zem - R0}" style="stroke:var(--accent)" stroke-width=".7" stroke-dasharray="2 3"/>`;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Náhled kol z boku"><defs><marker id="sip" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" style="fill:var(--text-muted)"/></marker></defs>${g}</svg>`;
+}
+
+/* ---------- porovnání ---------- */
+function vykresliPorovnani() {
+  const out = $('porVystup');
+  const vst = ['por1', 'por2', 'por3'].map(id => $(id).value.trim());
+  const rr = vst.map(v => v ? J.dekodujPneu(v) : null);
+  const chyby = rr.map((r, i) => r && !r.ok ? `${i + 1}: ${r.chyba}` : null).filter(Boolean);
+  const pneu = rr.filter(r => r && r.ok);
+  if (!rr[0] || !rr[0].ok || pneu.length < 2) { out.innerHTML = hlasky(chyby, 'chyba') + '<div class="prazdno">Zadejte původní a alespoň jeden nový rozměr.</div>'; return; }
+  const p = J.porovnej(pneu);
+  const sl = f => p.map(x => `<td class="c s${x.i}" style="color:var(--barva)">${f(x)}</td>`).join('');
+  const r = (n, f) => `<tr><td>${n}</td>${sl(f)}</tr>`;
+  const vyroky = { ok: ['ok', '✅ Rozdíl průměru do ±1,5 % – běžně používaná náhrada.'], pozor: ['pozor', '⚠️ Rozdíl do 3 % – na hraně; zkontrolujte vůli v podběhu a tachometr.'], mimo: ['chyba', '⛔ Rozdíl přes ±3 % – nedoporučuje se, ovlivní tachometr, ABS/ESP i převody.'] };
+  let h = hlasky(chyby, 'chyba') + `<div class="karta"><h2>Srovnání</h2><div class="tab-obal"><table>
+    <tr><th></th>${p.map(x => `<th class="c">${'①②③'[x.i]} ${esc(x.p.vstup)}</th>`).join('')}</tr>
+    ${r('Šířka', x => c(x.p.sirka, 0) + ' mm' + (x.i ? ` (${zn(x.dSirka, 0)})` : ''))}
+    ${r('Výška bočnice', x => c(x.p.bocnice) + ' mm' + (x.i ? ` (${zn(x.dBocnice)})` : ''))}
+    ${r('Průměr ráfku', x => x.p.rafek + '″')}
+    ${r('<b>Průměr kola</b>', x => `<b>${c(x.p.prumer)} mm</b>`)}
+    ${r('Rozdíl průměru', x => x.i ? `${zn(x.dPrumer)} mm · <b>${zn(x.dProc, 2)} %</b>` : '–')}
+    ${r('Obvod', x => c(x.p.obvod, 0) + ' mm' + (x.i ? ` (${zn(x.dObvod, 0)})` : ''))}
+    ${r('Otáčky na km', x => c(x.p.otackyNaKm, 0))}
+    ${r('Světlá výška', x => x.i ? zn(x.dVyska) + ' mm' : '–')}
+    ${r('Nosnost / rychlost', x => (x.p.nosnost ? x.p.nosnost + ' kg' : '–') + ' · ' + (x.p.rychlostKmh ? (x.p.rychlostNad ? '>' : '') + x.p.rychlostKmh + ' km/h' : '–'))}
+  </table></div>
+  <h3>Tachometr (ocejchovaný na ①)</h3><div class="tab-obal"><table>
+    <tr><th>Tachometr ukazuje</th>${p.slice(1).map(x => `<th class="c">skutečně s ${'①②③'[x.i]}</th>`).join('')}</tr>
+    ${[50, 90, 130].map((v, j) => `<tr><td>${v} km/h</td>${p.slice(1).map(x => `<td class="c s${x.i}" style="color:var(--barva)">${c(x.tachometr[j].skutecne)} km/h (${zn(x.tachometr[j].rozdil)})</td>`).join('')}</tr>`).join('')}
+  </table></div>
+  ${p.slice(1).map(x => `<div class="hlaska ${vyroky[x.verdikt][0]}"><b>${'①②③'[x.i]} ${esc(x.p.vstup)}:</b> ${vyroky[x.verdikt][1]}${x.dProc > 0.05 ? ' Větší kolo: tachometr ukazuje méně, než jedete – předpis (EHK 39) vyžaduje, aby nikdy neukazoval méně.' : ''}</div>`).join('')}
+  ${p.slice(1).filter(x => x.p.nosnost && pneu[0].nosnost && x.p.nosnost < pneu[0].nosnost).map(x => `<div class="hlaska chyba">${'①②③'[x.i]}: nižší index nosnosti než původní – nesmí být pod hodnotou z TP.</div>`).join('')}
+  <div class="hlaska">⚖️ Rozhoduje <b>COC list / technický průkaz</b>: bez úprav lze použít jen rozměry tam uvedené (případně v homologaci výrobce). Jiný rozměr vyžaduje schválení technické změny (zkušebna, STK). Mez ±3 % je jen orientační.</div>
+  </div>
+  <div class="karta"><h2>Profil kol přes sebe</h2><div class="svg-obal">${svgProfil(pneu)}</div>
+    <div class="legenda">${p.map(x => `<span><i style="background:${BARVY[x.i]}"></i>${'①②③'[x.i]} ${esc(x.p.vstup)}</span>`).join('')}</div></div>`;
+  out.innerHTML = h;
+}
+
+/* ---------- disky ---------- */
+function svgDisky(a, b, pa, pb) {
+  // řez kolem: vodorovně osa nápravy (vlevo auto, vpravo ven), svisle poloměr
+  const kola = [[a, pa, 0], [b, pb, 1]].filter(x => x[0]);
+  const PAL = J.PALEC;
+  let minX = 0, maxX = 0, maxR = 0;
+  kola.forEach(([d, p]) => {
+    const w = d.sirka * PAL, st = -d.et, sp = p ? p.sirka : 0;
+    minX = Math.min(minX, st - Math.max(w, sp) / 2 - 10); maxX = Math.max(maxX, st + Math.max(w, sp) / 2 + 10);
+    maxR = Math.max(maxR, p ? p.prumer / 2 : d.prumer * PAL / 2 + 20);
+  });
+  const W = 560, H = 400, okraj = 50, k = Math.min((W - 2 * okraj) / (maxX - minX), (H - 80) / maxR);
+  const X = x => okraj + (x - minX) * k, Y = r => H - 50 - r * k;
+  let g = `<line x1="${X(0)}" y1="${Y(0) + 10}" x2="${X(0)}" y2="${Y(maxR) - 20}" style="stroke:var(--text-faint)" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="${X(0)}" y="${Y(0) + 32}" font-size="11" text-anchor="middle" style="fill:var(--text-muted)">↑ dosedací plocha náboje</text>
+    <line x1="10" y1="${Y(0)}" x2="${W - 10}" y2="${Y(0)}" style="stroke:var(--text-faint)" stroke-width="1"/>
+    <text x="12" y="${Y(0) + 18}" font-size="11" style="fill:var(--text-muted)">← k autu</text>
+    <text x="${W - 12}" y="${Y(0) + 18}" font-size="11" text-anchor="end" style="fill:var(--text-muted)">ven →</text>`;
+  kola.forEach(([d, p, i]) => {
+    const col = BARVY[i], dash = i ? ' stroke-dasharray="7 4"' : '', w = d.sirka * PAL, st = -d.et, R = d.prumer * PAL / 2;
+    const x1 = X(st - w / 2), x2 = X(st + w / 2);
+    // ráfek: válec + okraje + disk (miska) k náboji
+    g += `<path d="M${x1} ${Y(R + 12)} L${x1} ${Y(R)} L${x2} ${Y(R)} L${x2} ${Y(R + 12)}" fill="none" style="stroke:${col}" stroke-width="${i ? 2 : 3}"${dash}/>
+      <path d="M${X(0)} ${Y(R)} L${X(0)} ${Y(30)}" fill="none" style="stroke:${col}" stroke-width="${i ? 2 : 3}"${dash}/>`;
+    if (p) {
+      const s1 = X(st - p.sirka / 2), s2 = X(st + p.sirka / 2), top = Y(p.prumer / 2), rr = Math.min(18, (s2 - s1) / 4);
+      g += `<path d="M${x1} ${Y(R + 12)} L${s1} ${Y(R + 30)} L${s1} ${top + rr} Q${s1} ${top} ${s1 + rr} ${top} L${s2 - rr} ${top} Q${s2} ${top} ${s2} ${top + rr} L${s2} ${Y(R + 30)} L${x2} ${Y(R + 12)}" fill="none" style="stroke:${col}" stroke-width="1.5" opacity=".8"${dash}/>`;
+    }
+    g += `<line x1="${X(st)}" y1="${Y(0)}" x2="${X(st)}" y2="${Y(R)}" style="stroke:${col}" stroke-width=".8" stroke-dasharray="2 4"/>`;
+  });
+  if (a && b) {
+    const yA = 22, R = Math.max(a.prumer, b.prumer) * PAL / 2;
+    const ha = (x, y1, y2, col) => `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" style="stroke:${col}" stroke-width=".7" stroke-dasharray="2 3"/>`;
+    const oa = X(-a.et + a.sirka * PAL / 2), ob = X(-b.et + b.sirka * PAL / 2), ia = X(-a.et - a.sirka * PAL / 2), ib = X(-b.et - b.sirka * PAL / 2);
+    const dv = (b.sirka - a.sirka) * PAL / 2 - (b.et - a.et), di = (b.sirka - a.sirka) * PAL / 2 + (b.et - a.et);
+    g += ha(oa, yA, Y(R), 'var(--text-muted)') + ha(ob, yA, Y(R), 'var(--text-muted)') + ha(ia, yA, Y(R), 'var(--text-muted)') + ha(ib, yA, Y(R), 'var(--text-muted)');
+    g += `<line x1="${oa}" y1="${yA}" x2="${ob}" y2="${yA}" style="stroke:var(--text)" stroke-width="1.4"/><text x="${(oa + ob) / 2}" y="${yA - 6}" text-anchor="middle" font-size="12" style="fill:var(--text)">vnější ${zn(dv)} mm</text>
+      <line x1="${ia}" y1="${yA + 22}" x2="${ib}" y2="${yA + 22}" style="stroke:var(--text)" stroke-width="1.4"/><text x="${(ia + ib) / 2}" y="${yA + 16}" text-anchor="middle" font-size="12" style="fill:var(--text)">vnitřní ${zn(di)} mm</text>`;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Řez kolem – porovnání disků">${g}</svg>`;
+}
+
+function popisDisku(d) {
+  return `<table>
+    ${tr('Šířka ráfku', `${c(d.sirka)}″ = ${c(d.sirkaMm)} mm${d.priruba ? ' · okraj ' + esc(d.priruba) : ''}`)}
+    ${tr('Průměr', `${c(d.prumer, d.prumer % 1 ? 1 : 0)}″ = ${c(d.prumer * J.PALEC)} mm`)}
+    ${tr('Zális ET', d.etChybi ? 'nezadán (počítáno 0)' : c(d.et, d.et % 1 ? 1 : 0) + ' mm')}
+    ${tr('Rozteč děr', d.der ? `${d.der} × ${c(d.roztec)} mm${d.roztecPalce ? ` (${d.roztecPalce}″)` : ''}` : '–')}
+    ${tr('Středový otvor', d.stred ? c(d.stred) + ' mm' : '–')}
+    ${tr('Vnější hrana od náboje', c(d.vnejsi) + ' mm ven')}
+    ${tr('Vnitřní hrana od náboje', c(d.vnitrni) + ' mm dovnitř')}
+  </table>`;
+}
+
+function vykresliDisky() {
+  const out = $('diskVystup');
+  const a = $('diskA').value.trim() ? J.dekodujDisk($('diskA').value) : null;
+  const b = $('diskB').value.trim() ? J.dekodujDisk($('diskB').value) : null;
+  const pa = $('pneuA').value.trim() ? J.dekodujPneu($('pneuA').value) : null;
+  const pb = $('pneuB').value.trim() ? J.dekodujPneu($('pneuB').value) : null;
+  const chyby = [a, b, pa, pb].filter(x => x && !x.ok).map(x => `„${x.vstup}“: ${x.chyba}`);
+  const A = a && a.ok ? a : null, B = b && b.ok ? b : null, PA = pa && pa.ok ? pa : null, PB = pb && pb.ok ? pb : null;
+  if (!A && !B) { out.innerHTML = hlasky(chyby, 'chyba') + '<div class="prazdno">Zadejte alespoň jeden disk, např. 7Jx17 ET45 5x112 57.1.</div>'; return; }
+  let h = hlasky(chyby, 'chyba') + '<div class="mrizka2">';
+  [[A, PA, '①'], [B, PB, '②']].forEach(([d, p, n]) => {
+    if (!d) return;
+    let raf = '';
+    if (p) {
+      const kr = J.kontrolaRafku(p.sirka, d.sirka);
+      const txt = { ok: ['ok', '✅ šířka ráfku sedí'], uzky: ['pozor', '⚠️ ráfek je na tuto pneu úzký'], siroky: ['pozor', '⚠️ ráfek je na tuto pneu široký'] }[kr.stav];
+      raf = `<div class="hlaska ${txt[0]}">${n} ${esc(p.vstup)} na ${c(d.sirka)}″: ${txt[1]} (orientačně ${c(kr.min)}–${c(kr.max)}″, ideál ${c(kr.dop)}″).</div>`;
+      if (Math.abs(p.rafek - d.prumer) > 0.01) raf += hlasky([`Průměr pneu (${p.rafek}″) neodpovídá disku (${d.prumer}″)!`], 'chyba');
+    }
+    h += `<div class="karta s${n === '①' ? 0 : 1}"><h2 style="color:var(--barva)">${n} ${esc(d.vstup)}</h2><div class="tab-obal">${popisDisku(d)}</div>${raf}</div>`;
+  });
+  h += '</div>';
+  if (A && B) {
+    const s = J.porovnejDisky(A, B, PA && PA.sirka, PB && PB.sirka);
+    h += `<div class="karta"><h2>Posun kola ② proti ①</h2><div class="tab-obal"><table>
+      ${tr('Vnější hrana ráfku', `<b>${zn(s.dVnejsi)} mm</b> ${s.dVnejsi > 0.05 ? '(víc ven, k blatníku)' : s.dVnejsi < -0.05 ? '(víc dovnitř)' : ''}`)}
+      ${tr('Vnitřní hrana ráfku', `<b>${zn(s.dVnitrni)} mm</b> ${s.dVnitrni > 0.05 ? '(blíž k tlumiči)' : s.dVnitrni < -0.05 ? '(dál od tlumiče)' : ''}`)}
+      ${s.dPneuVnejsi != null ? tr('Vnější bok pneu', zn(s.dPneuVnejsi) + ' mm') + tr('Vnitřní bok pneu', zn(s.dPneuVnitrni) + ' mm') : ''}
+      ${tr('Střed kola', zn(s.dStred) + ' mm ven')}
+      ${tr('Rozchod kol nápravy', zn(s.dRozchod) + ' mm')}
+      ${tr('Poloměr ráfku', zn(s.dPolomer) + ' mm')}
+    </table></div>
+    ${s.poznamky.map(x => `<div class="hlaska ${x.u}">${esc(x.t)}</div>`).join('')}
+    <div class="hlaska">⚖️ Disky musí odpovídat COC / TP (rozměr, ET, rozteč), jinak schválení technické změny. Pneumatika nesmí přesahovat obrys karoserie.</div></div>`;
+  }
+  h += `<div class="karta"><h2>Řez kolem</h2><div class="svg-obal">${svgDisky(A, B, PA, PB)}</div>
+    <div class="legenda">${A ? `<span><i style="background:${BARVY[0]}"></i>① ${esc(A.vstup)}</span>` : ''}${B ? `<span><i style="background:${BARVY[1]}"></i>② ${esc(B.vstup)}</span>` : ''}</div></div>`;
+  h += `<div class="karta"><h2>Doporučené šířky ráfku podle šířky pneu</h2><p class="info" style="margin:0 0 6px">Orientačně podle ETRTO pro osobní pneu řady 45–65 (nízké profily snesou spíš horní mez). Rozhoduje údaj výrobce pneumatiky.</p>
+    <div class="tab-obal"><table><tr><th>Pneu (mm)</th><th class="c">Min</th><th class="c">Ideál</th><th class="c">Max</th></tr>
+    ${J.RAFKY.map(r => `<tr${(PA && Math.abs(PA.sirka - r[0]) < 5) || (PB && Math.abs(PB.sirka - r[0]) < 5) ? ' style="background:var(--accent-soft)"' : ''}><td>${r[0]}</td><td class="c">${c(r[1])}″</td><td class="c">${c(r[3])}″</td><td class="c">${c(r[2])}″</td></tr>`).join('')}
+    </table></div></div>`;
+  out.innerHTML = h;
+}
+
+/* ---------- tlak ---------- */
+function vykresliTlak() {
+  const n = id => parseFloat(String($(id).value).replace(',', '.'));
+  const o = { li1: n('tlLi1'), typ1: $('tlTyp1').value, p1: n('tlP1'), li2: n('tlLi2'), typ2: $('tlTyp2').value, naprava: n('tlNaprava') || 0 };
+  const r = J.prepocetTlaku(o), out = $('tlakVystup');
+  if (!r) { out.innerHTML = hlasky(['Zadejte indexy nosnosti 40–126 a tlak.'], 'chyba'); return; }
+  out.innerHTML = `<div class="hlaska ok" style="font-size:1rem">Nová pneumatika: <b>${c(r.p2)} bar</b> (${c(r.p2 * 100, 0)} kPa)</div>
+    <table style="margin-top:6px">
+      ${tr('Původní unese při ' + c(o.p1) + ' bar', Math.round(r.nosnost1) + ' kg / kolo')}
+      ${tr('Nová unese nejvýš (při ' + c(r.ref2) + ' bar)', r.nosnost2Max + ' kg / kolo')}
+      ${r.potrebaNaKolo ? tr('Potřeba z nápravy', Math.round(r.potrebaNaKolo) + ' kg / kolo') : ''}
+    </table>${hlasky(r.varovani)}
+    <p class="info">Výpočet: nosnost ≈ nosnost podle LI × (tlak / referenční tlak)<sup>0,8</sup>; referenční tlak 2,5 bar standard, 2,9 bar XL, ~4,5 bar C. Tlak měřte za studena.</p>`;
+}
+$('tabLi').innerHTML = Object.entries(J.LI).map(([k, v]) => `<span><b>${k}</b> ${v} kg</span>`).join('');
+$('tabSi').innerHTML = Object.entries(J.RYCHLOST).map(([k, v]) => `<span><b>${k}</b> ${v} km/h</span>`).join('');
+
+/* ---------- zima ---------- */
+function vykresliZimu() {
+  const z = J.jeZimniObdobi(J.dnesIso());
+  $('zimaStav').innerHTML = z ? '<div class="hlaska pozor">❄️ Právě je zimní období (1. 11.–31. 3.) – při sněhu, ledu nebo námraze jen se zimními pneumatikami.</div>'
+    : '<div class="hlaska ok">☀️ Teď není zimní období – povinnost začíná 1. listopadu.</div>';
+}
+
+/* ---------- sady ---------- */
+function vykresliSady() {
+  const out = $('sadyVystup'), dnes = J.dnesIso();
+  $('seznamAut').innerHTML = [...new Set(data.sady.map(s => s.auto).filter(Boolean))].map(a => `<option value="${esc(a)}">`).join('');
+  if (!data.sady.length) { out.innerHTML = '<div class="prazdno">Zatím žádné sady. Uložte si letní a zimní pneumatiky – rozměr, DOT, hloubku dezénu, najeté km a kde jsou uskladněné.<br>Hlídá stáří, minimální dezén i zimní období.</div>'; return; }
+  const auta = {};
+  data.sady.forEach(s => { (auta[s.auto || 'Bez auta'] = auta[s.auto || 'Bez auta'] || []).push(s); });
+  out.innerHTML = Object.keys(auta).sort((a, b) => a.localeCompare(b, 'cs')).map(a => `<h3 style="margin:6px 0">🚗 ${esc(a)}</h3><div class="sady">${auta[a].map(s => {
+    const k = J.kontrolaSady(s, dnes), p = s.rozmer ? J.dekodujPneu(s.rozmer) : null;
+    return `<article class="sada ${s.druh}" data-id="${esc(s.id)}">
+      <h3>${esc(J.DRUHY[s.druh])} ${esc(s.nazev || s.rozmer || 'sada')} ${s.namontovano ? '<span class="stitek">na autě</span>' : ''}</h3>
+      <div class="meta">
+        ${s.rozmer ? `<span>🛞 ${esc(s.rozmer)}${p && p.ok ? ` (⌀ ${c(p.prumer, 0)} mm)` : ''}</span>` : ''}
+        ${s.disk ? `<span>⚙️ ${esc(s.disk)}</span>` : ''}
+        ${k.dot && !k.dot.chyba ? `<span>📅 DOT ${esc(s.dot)} → ${k.dot.tyden}/${k.dot.rok}, ${c(k.dot.stariLet)} let</span>` : ''}
+        ${s.dezen != null ? `<span>📏 dezén ${c(s.dezen)} mm</span>` : ''}
+        ${s.km != null ? `<span>🛣️ ${Math.round(s.km).toLocaleString('cs-CZ')} km</span>` : ''}
+        ${s.tlak != null ? `<span>🌡️ ${c(s.tlak)} bar</span>` : ''}
+        ${s.uskladneni ? `<span>📦 ${esc(s.uskladneni)}</span>` : ''}
+      </div>
+      ${s.poznamka ? `<div class="info">${esc(s.poznamka)}</div>` : ''}
+      ${k.varovani.map(v => `<div class="hlaska ${v.u === 'info' ? '' : v.u}">${esc(v.t)}</div>`).join('')}
+      <div class="akce"><button class="btn mini" data-akce="upravit">✎ Upravit</button><button class="btn mini" data-akce="prehod">${s.namontovano ? '📦 Sundat' : '🔧 Nasadit'}</button></div>
+    </article>`;
+  }).join('')}</div>`).join('');
+}
+
+let upravovana = null;
+async function upravSadu(s) {
+  const dlg = $('dlgSada'), f = dlg.querySelector('form');
+  upravovana = s;
+  const v = s || J.normSada({});
+  ['auto', 'nazev', 'druh', 'rozmer', 'disk', 'dot', 'uskladneni', 'poznamka'].forEach(k => { f[k].value = v[k] || (k === 'druh' ? 'letni' : ''); });
+  ['dezen', 'km', 'tlak'].forEach(k => { f[k].value = v[k] == null ? '' : String(v[k]).replace('.', ','); });
+  f.namontovano.checked = !!v.namontovano;
+  if (!s && data.sady.length) f.auto.value = data.sady[data.sady.length - 1].auto;
+  $('dlgSadaTitul').textContent = s ? 'Upravit sadu' : 'Nová sada pneumatik';
+  $('dlgSadaSmaz').hidden = !s;
+  dlg.returnValue = '';
+  dlg.showModal();
+  const ret = await new Promise(res => dlg.addEventListener('close', () => res(dlg.returnValue), { once: true }));
+  if (ret !== 'ok') return;
+  const o = { id: s ? s.id : undefined };
+  ['auto', 'nazev', 'druh', 'rozmer', 'disk', 'dot', 'uskladneni', 'poznamka', 'dezen', 'km', 'tlak'].forEach(k => { o[k] = f[k].value.trim(); });
+  o.namontovano = f.namontovano.checked;
+  const n = J.normSada(o);
+  if (s) data.sady[data.sady.indexOf(s)] = n; else data.sady.push(n);
+  uloz(); vykresliSady();
+}
+$('dlgSadaSmaz').onclick = async () => {
+  const s = upravovana; if (!s) return;
+  $('dlgSada').close('zrusit');
+  if (!await Dialog.potvrd('Smazat tuto sadu?')) return;
+  data.sady = data.sady.filter(x => x !== s); uloz(); vykresliSady();
+};
+$('sadyVystup').addEventListener('click', e => {
+  const b = e.target.closest('[data-akce]'); if (!b) return;
+  const s = data.sady.find(x => x.id === b.closest('[data-id]').dataset.id); if (!s) return;
+  if (b.dataset.akce === 'upravit') return upravSadu(s);
+  s.namontovano = !s.namontovano;
+  if (s.namontovano) data.sady.forEach(x => { if (x !== s && x.auto === s.auto) x.namontovano = false; });
+  uloz(); vykresliSady();
+});
+
+/* ---------- pohledy, vstupy, příkazy ---------- */
+const KRESLI = { dekoder: vykresliDekoder, porovnani: vykresliPorovnani, disky: vykresliDisky, tlak: vykresliTlak, zima: vykresliZimu, sady: vykresliSady };
+function ukaz(p) {
+  if (!KRESLI[p]) p = 'dekoder';
+  data.pohled = p;
+  document.querySelectorAll('[data-sekce]').forEach(s => { s.hidden = s.dataset.sekce !== p; });
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === p)));
+  KRESLI[p]();
+}
+const VYCHOZI = { dekVstup: '205/55 R16 91V', por1: '205/55 R16', por2: '225/45 R17', diskA: '6.5Jx16 ET46 5x112 57.1', diskB: '7.5Jx17 ET40 5x112 57.1', pneuA: '205/55 R16', pneuB: '225/45 R17' };
+document.querySelectorAll('[data-ulozit]').forEach(el => {
+  const v = data.vstupy[el.id] != null ? data.vstupy[el.id] : VYCHOZI[el.id];
+  if (v != null) el.value = v;
+  el.addEventListener('input', () => { data.vstupy[el.id] = el.value; uloz(); KRESLI[data.pohled](); });
+});
+$('dekPriklady').addEventListener('click', e => {
+  const b = e.target.closest('[data-priklad]'); if (!b) return;
+  $('dekVstup').value = b.dataset.priklad; data.vstupy.dekVstup = b.dataset.priklad; uloz(); vykresliDekoder();
+});
+
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const PRIKAZY = {
+  napoveda: () => $('dlgNapoveda').showModal(),
+  novaSada: () => { ukaz('sady'); uloz(); upravSadu(null); },
+  export: () => stahni('pneumatiky-' + J.dnesIso() + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  tisk: () => print(),
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Smazat všechny uložené sady a zadání? Nejde vrátit.')) return;
+    data = J.prazdna(); uloz(); location.reload();
+  }
+};
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.sady)) return Dialog.chyba('Tohle není záloha Kalkulačky pneumatik.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.sady.length} sad. Nahradit jimi současná data?`)) return;
+  data = m; uloz(); ukaz('sady'); Dialog.info('Obnoveno.');
+};
+
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { ukaz(pv.dataset.pohled); uloz(); }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('storage', e => { if (e.key === J.KLIC) { data = J.migruj(JSON.parse(e.newValue || 'null')); KRESLI[data.pohled] && KRESLI[data.pohled](); } });
+
+ukaz(data.pohled);
+window.PNEU_APP = { data: () => data, ukaz };
+})();
+</script>
+</body>
+</html>

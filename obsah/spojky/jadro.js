@@ -10,9 +10,10 @@
   /* ---------- tabulky ---------- */
   // typické hodnoty profilů s drážkou typu B – u konkrétního výrobce změřte (drážka, límec, hloubka)
   const PROFILY = {
-    '2020': { a: 20, drazka: 6.2, limec: 1.8, hloubka: 6.1, stred: 4.2, sroub: 'M5' },
-    '3030': { a: 30, drazka: 8.2, limec: 2.2, hloubka: 9.0, stred: 6.8, sroub: 'M6' },
-    '4040': { a: 40, drazka: 8.2, limec: 4.3, hloubka: 12.2, stred: 6.8, sroub: 'M8' },
+    // dutina = šířka dutiny drážky těsně pod límcem (k dnu se zužuje na šířku drážky)
+    '2020': { a: 20, drazka: 6.2, limec: 1.8, hloubka: 6.1, stred: 4.2, dutina: 11, sroub: 'M5' },
+    '3030': { a: 30, drazka: 8.2, limec: 2.2, hloubka: 9.0, stred: 6.8, dutina: 16.5, sroub: 'M6' },
+    '4040': { a: 40, drazka: 8.2, limec: 4.3, hloubka: 12.2, stred: 6.8, dutina: 20, sroub: 'M8' },
   };
   // otvor = průchozí střední řada (ISO 273), hlava = válcová s vnitřním šestihranem (ISO 4762)
   const SROUBY = {
@@ -32,7 +33,10 @@
     PC: { nazev: 'PC', hustota: 1.2, pozn: 'pevné a teplu odolné, náročný tisk' },
   };
   const TYPY = { profil: 'Hliníkový profil', trubka: 'Trubky', lat: 'Dřevěné latě' };
-  const DRUHY = { uhelnik: 'Rohový úhelník', plocha: 'Plochá spojka', krytka: 'Krytka konce', kostka: 'Rohová kostka 3 profilů' };
+  const DRUHY = { uhelnik: 'Rohový úhelník', plocha: 'Plochá spojka', krytka: 'Krytka konce', kostka: 'Rohová kostka 3 profilů',
+    vzpera: 'Šikmá vzpěra', vnitrni: 'Vnitřní skrytý úhelník', lista: 'Krytka drážky (lišta)' };
+  // stavěcí šrouby s vnitřním šestihranem a plochým koncem (ISO 4026) – délky
+  const DELKY_CERVIKU = [3, 4, 5, 6, 8, 10, 12, 16, 20];
   const TVARY_PLOCHY = { I: 'I – rovná (nastavení)', L: 'L – roh', T: 'T – odbočka', X: 'X – kříž' };
   const TVARY_RAMEN = {
     I: { nazev: 'I – rovná (2 ramena)', smery: [[0, 0], [180, 0]] },
@@ -51,7 +55,8 @@
     nazev: 'Spojka',
     typ: 'profil',
     profil: {
-      rada: '2020', a: 20, drazka: 6.2, limec: 1.8, hloubka: 6.1, stred: 4.2,
+      rada: '2020', a: 20, drazka: 6.2, limec: 1.8, hloubka: 6.1, stred: 4.2, dutina: 11,
+      uhel: 45, vzperaTl: 6, listaTl: 1.2, presah: 1.5, zachyt: 0.5,
       druh: 'uhelnik', tvar: 'L', sroub: 'M5', delka: 25, tloustka: 4, otvoru: 1, zahloubeni: false,
       vystupek: 1.6, delkaVystupku: 8, zebra: true, zebro: 2.5, stredOtvor: true, kostka: 0,
     },
@@ -65,7 +70,8 @@
   // [min, max] – mimo rozsah se hodnota omezí a uživatel dostane hlášení
   const ROZSAHY = {
     'profil.a': [10, 100], 'profil.drazka': [2, 20], 'profil.limec': [0.8, 10], 'profil.hloubka': [2, 30], 'profil.stred': [0, 20],
-    'profil.delka': [8, 200], 'profil.tloustka': [1, 20], 'profil.otvoru': [0, 6], 'profil.vystupek': [0, 10],
+    'profil.delka': [8, 500], 'profil.dutina': [2, 40], 'profil.uhel': [20, 70], 'profil.vzperaTl': [2, 20],
+    'profil.listaTl': [0.6, 4], 'profil.presah': [0, 6], 'profil.zachyt': [0, 1.5], 'profil.tloustka': [1, 20], 'profil.otvoru': [0, 6], 'profil.vystupek': [0, 10],
     'profil.delkaVystupku': [2, 40], 'profil.zebro': [1, 10], 'profil.kostka': [0, 120],
     'trubka.rozmer': [4, 120], 'trubka.stenaTrubky': [0.3, 20],
     'lat.sirka': [8, 150], 'lat.vyska': [8, 150],
@@ -88,6 +94,12 @@
       p: { typ: 'profil', profil: { rada: '2020', druh: 'krytka', sroub: 'M5', tloustka: 3, vystupek: 1.6, delkaVystupku: 8, stredOtvor: true } } },
     { nazev: '2020 – rohová kostka', popis: '3 profily, šrouby M5 do závitu ve středovém otvoru',
       p: { typ: 'profil', profil: { rada: '2020', druh: 'kostka', sroub: 'M5', tloustka: 4, vystupek: 1.6, delkaVystupku: 8, kostka: 0 } } },
+    { nazev: '2020 – šikmá vzpěra 45°', popis: 'diagonála 80 mm do trojúhelníku, 1 šroub M5 na patce, výstupky do drážek',
+      p: { typ: 'profil', profil: { rada: '2020', druh: 'vzpera', sroub: 'M5', delka: 80, tloustka: 4, otvoru: 1, uhel: 45, vzperaTl: 6 } } },
+    { nazev: '2020 – vnitřní skrytý úhelník', popis: 'zasune se do drážek obou profilů, 2 stavěcí šrouby M4 na rameni',
+      p: { typ: 'profil', profil: { rada: '2020', druh: 'vnitrni', sroub: 'M4', delka: 25, otvoru: 2 } } },
+    { nazev: '2020 – krytka drážky 200 mm', popis: 'lišta se zacvakne do drážky a zakryje ji',
+      p: { typ: 'profil', profil: { rada: '2020', druh: 'lista', delka: 200 } } },
     { nazev: 'Jäkl 25×25 – 3cestný roh (objímka)', popis: 'rám regálu nebo stolu, objímka přes trubku',
       p: { typ: 'trubka', trubka: { prurez: 'ctverec', rozmer: 25, stenaTrubky: 1.5, styl: 'vnejsi' }, ramena: { tvar: 'roh3' },
         spoj: { vule: 0.2, zasunuti: 30, stena: 3, odstup: 0, otvor: 3.5, skrz: false } } },
@@ -162,7 +174,7 @@
   function nastavRadu(p, rada) {
     p.profil.rada = rada;
     const r = PROFILY[rada]; if (!r) return;
-    Object.assign(p.profil, { a: r.a, drazka: r.drazka, limec: r.limec, hloubka: r.hloubka, stred: r.stred, sroub: r.sroub });
+    Object.assign(p.profil, { a: r.a, drazka: r.drazka, limec: r.limec, hloubka: r.hloubka, stred: r.stred, dutina: r.dutina, sroub: r.sroub });
     p.profil.vystupek = Math.round(Math.max(1, r.limec - 0.2) * 10) / 10;
   }
 
@@ -276,6 +288,28 @@
       o.x1 = a / 2 + q.delka - o.otvor / 2 - 2;
       o.otvory = rozloz(q.otvoru, o.x0, o.x1);
       o.smery = { I: [[1, 0], [-1, 0]], L: [[1, 0], [0, 1]], T: [[1, 0], [-1, 0], [0, 1]], X: [[1, 0], [-1, 0], [0, 1], [0, -1]] }[q.tvar];
+    } else if (q.druh === 'vzpera') {
+      // osa vzpěry z H = (xh, t) na vodorovné patce do V = (t, zv) na svislé, pod úhlem θ k vodorovnému profilu
+      const th = q.uhel * RAD, tb = q.vzperaTl, D = q.delka, sn = Math.sin(th), cs = Math.cos(th);
+      Object.assign(o, { th, tb, D, xh: t + D * cs, zv: t + D * sn });
+      // otvory za stopou vzpěry na patce (hlava šroubu se nesmí krýt se vzpěrou), patka končí za posledním otvorem
+      const krok = o.hlava + 2, konec = n => (n ? o.otvor / 2 + Math.max(3, o.hlava / 2 - o.otvor / 2 + 1.5) : 3);
+      const h0 = o.xh + tb / (2 * sn) + o.hlava / 2 + 1, v0 = o.zv + tb / (2 * cs) + o.hlava / 2 + 1;
+      o.otvoryH = Array.from({ length: q.otvoru }, (_, i) => h0 + i * krok);
+      o.otvoryV = Array.from({ length: q.otvoru }, (_, i) => v0 + i * krok);
+      o.patkaH = [o.xh - tb / (2 * sn) - 2, (q.otvoru ? o.otvoryH[q.otvoru - 1] : o.xh + tb / (2 * sn)) + konec(q.otvoru)];
+      o.patkaV = [o.zv - tb / (2 * cs) - 2, (q.otvoru ? o.otvoryV[q.otvoru - 1] : o.zv + tb / (2 * cs)) + konec(q.otvoru)];
+    } else if (q.druh === 'vnitrni') {
+      // ramena v dutině drážky: hrdlo šířky drážky skrz límec, pod ním lichoběžník od šířky dutiny k šířce drážky u dna
+      o.hrdlo = q.drazka / 2 - v; o.dutinaPul = q.dutina / 2 - v; o.dno = q.hloubka - v;
+      o.zavit = Math.round(0.85 * s.d * 10) / 10;   // otvor pro závit stavěcího šroubu řezaný do plastu
+      const z0 = o.zavit / 2 + 2.5;
+      o.otvory = rozloz(q.otvoru, z0, q.delka - o.zavit / 2 - 2.5);
+      o.x0 = z0; o.x1 = q.delka - o.zavit / 2 - 2.5;
+    } else if (q.druh === 'lista') {
+      // krytka drážky: víčko přes drážku, krk skrz límec, pod límcem zobáčky rozříznuté štěrbinou (pruží)
+      o.vicko = q.drazka / 2 + q.presah; o.krk = q.drazka / 2 - v; o.zobak = q.drazka / 2 + q.zachyt;
+      o.hZobak = Math.max(0.6, Math.min(q.hloubka - q.limec - 0.3, 2));
     } else if (q.druh === 'kostka') {
       // hlavy tří šroubů ve středu kostky: hlava osy X a díra osy Y se nesmí potkat → K/2 − stěna − hlava > poloměr díry
       o.minKostka = Math.ceil(2 * (t + o.vyskaHlavy + o.hlava / 2) + 0.5);
@@ -299,13 +333,13 @@
     if (p.typ === 'profil') {
       const q = p.profil, r = o.profil, s = r.sroub;
       if (r.sirkaKlice < 1) pridej('chyba', `Výstupek do drážky by měl šířku ${fmt(r.sirkaKlice, 2)} mm – drážka je na vůli úzká.`, ['profil.drazka', 'spoj.vule']);
-      if (q.vystupek > 0 && (q.druh === 'uhelnik' || q.druh === 'plocha') && q.vystupek > q.limec + 0.05)
+      if (q.vystupek > 0 && (q.druh === 'uhelnik' || q.druh === 'plocha' || q.druh === 'vzpera') && q.vystupek > q.limec + 0.05)
         pridej('varovani', `Výstupek ${fmt(q.vystupek, 2)} mm je vyšší než límec drážky ${fmt(q.limec, 2)} mm – zasáhne pod límec, kde sedí T-matice.`, 'profil.vystupek',
           { pole: 'profil.vystupek', hodnota: Math.round((q.limec - 0.2) * 10) / 10, text: `výstupek ${fmt(q.limec - 0.2)} mm` });
       if (q.vystupek > q.hloubka) pridej('chyba', `Výstupek ${fmt(q.vystupek)} mm je hlubší než drážka (${fmt(q.hloubka)} mm).`, 'profil.vystupek');
-      if (q.druh !== 'kostka' && q.druh !== 'krytka' && s.d >= q.drazka)
+      if (q.druh !== 'kostka' && q.druh !== 'krytka' && q.druh !== 'lista' && s.d >= q.drazka)
         pridej('chyba', `Šroub ${q.sroub} neprojde drážkou širokou ${fmt(q.drazka)} mm – zvolte menší šroub.`, 'profil.sroub');
-      if (q.tloustka < 2.4) pridej('varovani', `Tloušťka ${fmt(q.tloustka)} mm je tenká – spojka se bude prohýbat (doporučeno ≥ 3 mm).`, 'profil.tloustka');
+      if (q.druh !== 'lista' && q.druh !== 'vnitrni' && q.tloustka < 2.4) pridej('varovani', `Tloušťka ${fmt(q.tloustka)} mm je tenká – spojka se bude prohýbat (doporučeno ≥ 3 mm).`, 'profil.tloustka');
       if (r.otvory && r.otvory.length && r.x1 < r.x0 - 1e-9) {
         const d = Math.ceil((q.delka + r.x0 - r.x1) * 2) / 2;
         pridej('chyba', `Na rameni délky ${fmt(q.delka)} mm se otvor nevejde (hlava šroubu potřebuje odstup od rohu) – prodlužte rameno na ≥ ${fmt(d)} mm.`, 'profil.delka',
@@ -315,7 +349,7 @@
         pridej('chyba', `Otvory na rameni jsou příliš blízko (rozteč ${fmt((r.x1 - r.x0) / (r.otvory.length - 1))} mm) – hlavy šroubů ${fmt(s.hlava)} mm se nevejdou vedle sebe.`, ['profil.otvoru', 'profil.delka']);
       if (q.druh === 'uhelnik' && q.zebra && q.otvoru > 0 && r.hlava > q.a - 2 * q.zebro)
         pridej('chyba', `Hlava šroubu (${fmt(s.hlava)} mm) se mezi boční žebra nevejde – zeslabte žebra nebo vypněte.`, ['profil.zebro', 'profil.zebra']);
-      if (q.zahloubeni && (q.druh === 'uhelnik' || q.druh === 'plocha') && q.otvoru > 0 && q.tloustka - r.vyskaHlavy < 2) {
+      if (q.zahloubeni && (q.druh === 'uhelnik' || q.druh === 'plocha' || q.druh === 'vzpera') && q.otvoru > 0 && q.tloustka - r.vyskaHlavy < 2) {
         const t = Math.ceil(r.vyskaHlavy + 2);
         pridej('chyba', `Na zahloubení hlavy (${fmt(r.vyskaHlavy)} mm) nestačí tloušťka ${fmt(q.tloustka)} mm – pod hlavou musí zůstat aspoň 2 mm.`, ['profil.tloustka', 'profil.zahloubeni'],
           { pole: 'profil.tloustka', hodnota: t, text: `tloušťka ${t} mm` });
@@ -327,6 +361,24 @@
         if (q.tloustka < 3) pridej('varovani', `Stěna pod hlavou šroubu ${fmt(q.tloustka)} mm – při dotažení se může protlačit (doporučeno ≥ 3 mm).`, 'profil.tloustka');
         if (r.K > q.a + 0.01) pridej('info', `Kostka má hranu ${fmt(r.K)} mm – přesahuje profil ${fmt(q.a)} mm o ${fmt((r.K - q.a) / 2)} mm na každou stranu (místo pro hlavy šroubů).`, 'profil.kostka');
         if (q.stred > 0 && s.d * 0.85 > q.stred + 0.5) pridej('varovani', `Šroub ${q.sroub} je na středový otvor profilu Ø ${fmt(q.stred)} mm velký – závit se do něj nevyřízne.`, ['profil.sroub', 'profil.stred']);
+      }
+      if (q.druh === 'vzpera' && q.vzperaTl < 4) pridej('varovani', `Vzpěra tlustá ${fmt(q.vzperaTl)} mm se pod zatížením prohne – doporučeno ≥ 5 mm.`, 'profil.vzperaTl');
+      if (q.druh === 'vzpera' && q.otvoru === 0) pridej('info', 'Patky vzpěry jsou bez otvorů – vzpěru bude třeba přilepit nebo zajistit jinak.', 'profil.otvoru');
+      if (q.druh === 'vnitrni' || q.druh === 'lista') {
+        if (q.dutina <= q.drazka + 0.5) pridej('chyba', `Dutina pod límcem (${fmt(q.dutina)} mm) musí být širší než drážka (${fmt(q.drazka)} mm) – změřte profil.`, ['profil.dutina', 'profil.drazka']);
+        if (q.hloubka - q.limec < 1.5) pridej('chyba', 'Pod límcem není skoro žádná dutina – zkontrolujte hloubku drážky a tloušťku límce.', ['profil.hloubka', 'profil.limec']);
+      }
+      if (q.druh === 'vnitrni') {
+        if (q.otvoru > 1 && (r.x1 - r.x0) / (q.otvoru - 1) < r.zavit + 3) pridej('chyba', `Otvory pro stavěcí šrouby jsou na rameni ${fmt(q.delka)} mm příliš blízko – prodlužte rameno nebo ubírejte.`, ['profil.otvoru', 'profil.delka']);
+        if (r.x1 < r.x0 && q.otvoru > 0) pridej('chyba', `Rameno ${fmt(q.delka)} mm je na stavěcí šroub krátké.`, 'profil.delka');
+        if (r.zavit > 2 * r.hrdlo - 1.2) pridej('chyba', `Šroub ${q.sroub} je na dutinu drážky velký – otvor pro závit Ø ${fmt(r.zavit)} nenechá v hrdle ramene stěnu (u 2020 M3 až M5).`, 'profil.sroub');
+        if (s.d > 5) pridej('info', 'Vnitřní úhelník drží stavěcími šrouby, které se opřou o dno drážky – stačí M3 až M5.', 'profil.sroub');
+        pridej('info', 'Vnitřní úhelník se zasouvá z konce profilu – nasaďte ho dřív, než profily sešroubujete. Šířku dutiny přeměřte: liší se výrobce od výrobce.', 'profil.dutina');
+      }
+      if (q.druh === 'lista') {
+        if (q.zachyt < 0.2) pridej('varovani', 'Zobáčky skoro nepřesahují drážku – lišta nebude držet.', 'profil.zachyt');
+        if (q.zachyt > 1) pridej('varovani', `Přesah zobáčků ${fmt(q.zachyt)} mm je velký – lišta půjde do drážky ztěžka nebo se zlomí.`, 'profil.zachyt');
+        if (q.delka > 250) pridej('info', 'Dlouhou lištu tiskněte na boku po délce podložky, případně ji rozdělte na několik kusů.', 'profil.delka');
       }
       if (q.druh === 'krytka' && q.stredOtvor && q.stred > 0 && s.d * 0.85 > q.stred + 0.5)
         pridej('varovani', `Šroub ${q.sroub} je na středový otvor profilu Ø ${fmt(q.stred)} mm velký.`, ['profil.sroub', 'profil.stred']);
@@ -550,6 +602,18 @@
             pozn: d ? `sevřeno ${fmt(sev)} mm, do drážky ${fmt(d - sev)} mm` : `délku nelze vybrat: ${fmt(sev + q.limec + 2.5)}–${fmt(sev + q.hloubka)} mm`, chyba: !d });
           out.push({ ks: n, co: `T-matice ${s} do drážky ${fmt(q.drazka)} mm`, pozn: 'vsuvná nebo otočná (vkládá se i do hotového rámu)' });
         }
+      } else if (q.druh === 'vzpera') {
+        const n = 2 * q.otvoru;
+        if (n) {
+          const sev = q.tloustka - (q.zahloubeni ? r.vyskaHlavy : 0), d = delkaSroubu(sev + q.limec + 2.5, sev + q.hloubka);
+          out.push({ ks: n, co: `Šroub ${s}${d ? '×' + d : ''} s válcovou hlavou (ISO 4762) nebo půlkulatou (ISO 7380)`, pozn: d ? `sevřeno ${fmt(sev)} mm, do drážky ${fmt(d - sev)} mm` : 'délku nelze vybrat', chyba: !d });
+          out.push({ ks: n, co: `T-matice ${s} do drážky ${fmt(q.drazka)} mm`, pozn: 'vsuvná nebo otočná' });
+        }
+      } else if (q.druh === 'vnitrni') {
+        const L = [...DELKY_CERVIKU].reverse().find(x => x <= q.hloubka) || null;
+        if (q.otvoru) out.push({ ks: 2 * q.otvoru, co: `Stavěcí šroub ${s}${L ? '×' + L : ''} s plochým koncem (ISO 4026)`, pozn: `závit se vyřízne do otvoru Ø ${fmt(r.zavit)} mm; šroub se opře o dno drážky`, chyba: !L });
+      } else if (q.druh === 'lista') {
+        // bez spojovacího materiálu
       } else if (q.druh === 'krytka') {
         if (q.stredOtvor) out.push({ ks: 1, co: `Šroub ${s}×${delkaSroubu(q.tloustka + 6, 999) || 10} do závitu ve středovém otvoru`, pozn: `závit vyříznout do Ø ${fmt(q.stred)} mm` });
       } else if (q.druh === 'kostka') {
@@ -591,7 +655,8 @@
   function popis(p) {
     if (p.typ === 'profil') {
       const q = p.profil;
-      return `${q.rada === 'vlastni' ? fmt(q.a) + ' mm' : q.rada} – ${DRUHY[q.druh].toLowerCase()}${q.druh === 'plocha' ? ' ' + q.tvar : ''}, ${q.sroub}`;
+      const navic = q.druh === 'plocha' ? ' ' + q.tvar : q.druh === 'vzpera' ? ` ${fmt(q.uhel)}°, ${fmt(q.delka)} mm` : q.druh === 'lista' ? ` ${fmt(q.delka)} mm` : '';
+      return `${q.rada === 'vlastni' ? fmt(q.a) + ' mm' : q.rada} – ${DRUHY[q.druh].toLowerCase()}${navic}${q.druh === 'lista' ? '' : ', ' + q.sroub}`;
     }
     const ch = [], n = uhlyRamen(p.ramena, ch).length;
     const pr = p.typ === 'lat' ? `lať ${fmt(p.lat.sirka)}×${fmt(p.lat.vyska)}` : (p.trubka.prurez === 'kruh' ? `Ø ${fmt(p.trubka.rozmer)}` : `□ ${fmt(p.trubka.rozmer)}`);
@@ -599,7 +664,7 @@
   }
 
   const API = {
-    VERZE_FORMATU, PROFILY, SROUBY, MATERIALY, TYPY, DRUHY, TVARY_PLOCHY, TVARY_RAMEN, VYCHOZI, ROZSAHY, PREDVOLBY, DELKY_SROUBU,
+    VERZE_FORMATU, PROFILY, SROUBY, DELKY_CERVIKU, MATERIALY, TYPY, DRUHY, TVARY_PLOCHY, TVARY_RAMEN, VYCHOZI, ROZSAHY, PREDVOLBY, DELKY_SROUBU,
     kopie, cislo, fmt, vezmi, poloz, normalizuj, nastavRadu, zPredvolby, V, smerZUhlu, ramRamene, uhlyRamen, zvetsi, oper, sirkaPr,
     odvozene, kontroly, rotaceDolu, otoc, tiskovaPoloha, previsy, kandidatiOrientace, rozborTisku, kontrolyTisku, potrebujePodpory,
     odhadTisku, kusovnik, ulozProjekt, nactiProjekt, popis,

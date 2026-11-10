@@ -252,3 +252,41 @@ snímky a ověřil sporná místa v datech.
 **Testy:** `_test/test_valka_cas.py` (navíc kontroly snímků 21. 3. a 7. 4. 2022 a 18. 2. 2024),
 `_test/snimek_valka.py` (obě témata, 360 px) a test výpadku všech zdrojů z GitHubu — 0 chyb JS,
 nic nevisí na „Načítám…“.
+
+---
+
+## Revize stránky `obsah/whiteboard.html` (10. 11. 2026)
+
+Dva nezávislé revizoři (jádro `whiteboard/jadro.js` + šablony; ovládání `whiteboard/app.js` + HTML),
+23 nálezů, všechny opravené.
+
+### Bezpečnost a robustnost dat (jádro)
+- **Kód v exportovaném SVG:** barva/výplň z importu nebo schránky šla do atributů SVG bez kontroly
+  (`barva: 'red"/><script>…'`). `platnyObjekt` teď pouští jen `#hex` / `rgb(a)()`.
+- **Zamrznutí:** sprej s obřím tahem (strop ~140 tis. kapek), dlouhé slovo bez mezer v lístku
+  (`zalom` hledá zlom binárně), text se statisíci řádky (`Math.max(...pole)` přetekl zásobník).
+- **Meze importu:** souřadnice ≤ 1e7, šířka 0–500, písmo 1–2000, krytí 0–1, povinné `id`, čára/tah se šířkou > 0;
+  vlastní uložené tabule se kontrolují mírně (`platnyObjekt(o, false)`), aby se po zpřísnění nic neztratilo.
+  Import tabule prochází `klonuj` (duplicitní id), obrázky z cizích dat dostanou id podle obsahu
+  (nepřepíšou existující obrázek).
+- SVG bez řídicích znaků a osamocených surrogatů (jinak neplatné XML).
+- Popisky čar a přetékající popisky tvarů jsou v hranicích – jdou chytit myší a export je neořízne.
+- Pořadí rámů (snímků) je tranzitivní – schodovitě posunuté rámy už nemají náhodné pořadí.
+
+### Chování (aplikace)
+- Hledání drželo odkazy na smazané objekty → vybralo neexistující id a padalo vykreslování i myš.
+- Přepnutí tabule: rozepsaný text, rozdělaná lomená čára a neuložené změny se nejdřív uloží do **staré**
+  tabule; kbelík a vkládání obrázku po `await` nezapíšou do jiné tabule.
+- **Dvě okna** si přepisovala seznam tabulí – seznam se teď mění v transakci nad verzí z DB, galerie ho načítá znovu.
+- Druhé F5 v prezentaci zničilo uložený pohled a nástroj.
+- Posun šipkami se zapisuje i bez keyup (Alt+Tab, Ctrl+F); Mezerník se nezasekne po ztrátě fokusu.
+- Dvojklik kbelíkem = jedna výplň; Alt+klik bez tažení už nevyrobí neviditelný duplikát.
+- Klávesové zkratky během tažení myší model nemění (Ctrl+A při změně velikosti házel výjimky).
+- „Vložit“ z kontextové nabídky vkládá na místo pravého kliku; dlouhý stisk prstem nedokreslí tečku.
+- Zoom dvěma prsty nezahodí rozdělanou lomenou čáru, Ctrl+Z u ní ubere poslední bod.
+- Přístupnost: Mezerník/Enter na tlačítku patří tlačítku, karty galerie a název tabule jdou ovládat klávesnicí.
+
+### Testy
+`node _test/whiteboard_test.js` (130 kontrol, z toho 15 regresních k revizi) a čtyři scénáře
+`_test/ovladani.py obsah/whiteboard.html _test/whiteboard_scenar{,2,3,4}.json` (24 + 26 + 23 + 11 kontrol,
+čtvrtý pokrývá nálezy revize: hledání po smazání, Zpět u lomené čáry, dvojí F5, dvě okna, přepnutí tabule při psaní).

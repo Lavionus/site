@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Návrh bateriového packu – SxP, BMS, rozložení, držák článků</title>
+<meta name="description" content="Návrh bateriového packu z článků 18650, 21700, 26650, 32700, prizmatických LFP i NiMH: konfigurace SxP nebo návrh podle cílového napětí a kapacity, energie, proud, ztráty a ohřev, doba běhu, BMS, pojistka, vodiče, nikl pásky, 2D rozložení a držák článků pro 3D tisk (STL).">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="baterie_pack/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 200px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em}
+td.cena,th.cena{text-align:right;white-space:nowrap}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,820px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:480px){.radek,.radek3{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info.zakon{border-left:3px solid var(--accent)}
+.predlohy h4{margin:10px 0 4px;font-size:.8rem;color:var(--text-muted)}
+.predlohy label{display:flex;gap:8px;align-items:flex-start;padding:4px 2px;font-size:.84rem;cursor:pointer;line-height:1.35}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;align-items:start}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px 14px;min-width:0;display:grid;gap:10px}
+.karta h2{margin:0;font-size:.95rem}
+.karta.siroka{grid-column:1/-1}
+.cisla{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.cislo{background:var(--bg-control);border:1px solid var(--border);border-radius:6px;padding:6px 9px}
+.cislo b{display:block;font-size:1.15rem}
+.cislo span{font-size:.74rem;color:var(--text-muted)}
+.hlaseni{font-size:.82rem;line-height:1.45;border-radius:6px;padding:7px 10px;border:1px solid var(--border);border-left:4px solid var(--accent);background:var(--bg-control)}
+.hlaseni.chyba{border-left-color:var(--danger)} .hlaseni.varovani{border-left-color:var(--warn)} .hlaseni.info{border-left-color:var(--ok)}
+.seznam-dop{margin:0;padding-left:18px;font-size:.84rem;line-height:1.55}
+.prepinac{display:flex;gap:4px;flex-wrap:wrap}
+#nahled{width:100%;max-width:100%;height:auto;max-height:65vh;display:block;background:var(--bg-control);border:1px solid var(--border);border-radius:6px}
+#nahled text{font-family:system-ui,sans-serif}
+.legenda{font-size:.78rem;color:var(--text-muted);line-height:1.5}
+.pozn{font-size:.76rem;color:var(--text-faint)}
+tr.klik{cursor:pointer} tr.klik:hover td{background:var(--bg-hover)}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🔋 Návrh bateriového packu</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Návrhy, záloha, export STL">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Návrh"><span class="skup-nazev" aria-hidden="true">Návrh</span><div class="skup-tl">
+    <button class="tl" data-rezim="sp" aria-pressed="true">🔢<span class="txt"> Zadat S × P</span></button>
+    <button class="tl" data-rezim="cil" aria-pressed="false">🎯<span class="txt"> Podle cíle</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Články"><span class="skup-nazev" aria-hidden="true">Články</span><div class="skup-tl">
+    <button class="tl" data-prikaz="clanky" title="Vlastní články – přidat, upravit">🧪<span class="txt"> Moje články</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="3D"><span class="skup-nazev" aria-hidden="true">3D tisk</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="stl" title="Držák článků do STL">⬇️<span class="txt"> Držák STL</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="uloz">💾 Uložit návrh pod názvem…</button>
+  <button class="tl" data-prikaz="navrhy">📂 Moje návrhy…</button>
+  <button class="tl" data-prikaz="novy">✚ Nový návrh (výchozí)</button>
+  <hr>
+  <button class="tl" data-prikaz="stl">⬇️ Držák článků (STL)</button>
+  <button class="tl" data-prikaz="svg">🖼️ Rozložení (SVG)</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal">
+  <div class="mrizka">
+    <section class="karta">
+      <h2>Článek a zapojení</h2>
+      <label class="pole">Článek<select class="vstup" id="clanek"></select></label>
+      <p class="pozn" id="clanekInfo" style="margin:0"></p>
+      <div id="paneSP" class="radek">
+        <label class="pole">S – článků v sérii<input class="vstup" id="S" type="number" min="1" max="200" step="1"></label>
+        <label class="pole">P – paralelně ve skupině<input class="vstup" id="P" type="number" min="1" max="200" step="1"></label>
+      </div>
+      <div id="paneCil" hidden>
+        <div class="radek">
+          <label class="pole">Cílové jmenovité napětí (V)<input class="vstup" id="cilU" type="number" min="0.5" step="0.1"></label>
+          <label class="pole">Max. trvalý proud (A)<input class="vstup" id="cilI" type="number" min="0" step="0.5"></label>
+        </div>
+        <div class="radek">
+          <label class="pole">Kapacita / energie<input class="vstup" id="cilHodnota" type="number" min="0.01" step="any"></label>
+          <label class="pole">Jednotka<select class="vstup" id="cilTyp"><option value="Wh">Wh (energie)</option><option value="Ah">Ah (kapacita)</option></select></label>
+        </div>
+      </div>
+      <h2>Odběr</h2>
+      <div class="radek">
+        <label class="pole">Spotřebič<input class="vstup" id="odbHodnota" type="number" min="0" step="any"></label>
+        <label class="pole">Jednotka<select class="vstup" id="odbTyp"><option value="W">W (výkon spotřebiče)</option><option value="A">A (proud z packu)</option></select></label>
+      </div>
+      <div class="radek">
+        <label class="pole">Účinnost měniče (%)<input class="vstup" id="odbUcinnost" type="number" min="10" max="100" step="1"></label>
+        <label class="pole">Využitelná kapacita (%)<input class="vstup" id="odbVyuziti" type="number" min="10" max="100" step="1"></label>
+      </div>
+    </section>
+
+    <section class="karta" id="kartaVarianty" hidden>
+      <h2>🎯 Navržené varianty</h2>
+      <div class="prepinac"><span class="pozn">Řadit:</span>
+        <button class="tl" data-razeni="hmotnost" aria-pressed="true">podle hmotnosti</button>
+        <button class="tl" data-razeni="pocet" aria-pressed="false">podle počtu článků</button></div>
+      <div class="tab-obal"><table><thead><tr><th>Článek</th><th>S×P</th><th class="cena">V</th><th class="cena">Wh</th><th class="cena">A max</th><th class="cena">kg</th></tr></thead><tbody id="varianty"></tbody></table></div>
+      <p class="pozn" style="margin:0">Napětí v toleranci ±12 %, P podle kapacity i proudu. Kliknutím variantu použijete.</p>
+    </section>
+
+    <section class="karta">
+      <h2>Výsledek</h2>
+      <div class="cisla" id="cisla"></div>
+      <div id="hlaseni" style="display:grid;gap:6px"></div>
+    </section>
+
+    <section class="karta">
+      <h2>Doporučení</h2>
+      <ul class="seznam-dop" id="doporuceni"></ul>
+      <p class="pozn" style="margin:0">Proudové tabulky a údaje článků jsou orientační, stav k 11/2026 – rozhoduje datasheet konkrétního článku a výrobce BMS.</p>
+    </section>
+
+    <section class="karta siroka">
+      <h2>Rozložení článků (pohled shora)</h2>
+      <div class="radek3">
+        <label class="pole">Uspořádání<select class="vstup" id="rozTyp"><option value="mrizka">Mřížka</option><option value="plastev">Plástev (hexagonální)</option></select></label>
+        <label class="pole">Řad (0 = P)<input class="vstup" id="rozRady" type="number" min="0" max="200" step="1"></label>
+        <label class="pole" id="poleMezera">Mezera mezi prizmaty (mm)<input class="vstup" id="rozMezera" type="number" min="0" max="50" step="0.5"></label>
+      </div>
+      <svg id="nahled" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rozložení článků"></svg>
+      <p class="legenda" id="legenda" style="margin:0"></p>
+    </section>
+
+    <section class="karta siroka" id="kartaDrzak">
+      <h2>🖨️ Držák článků pro 3D tisk</h2>
+      <div class="radek3">
+        <label class="pole">Vůle otvoru (mm, na průměr)<input class="vstup" id="drVule" type="number" min="0" max="3" step="0.05"></label>
+        <label class="pole">Stěna mezi články (mm)<input class="vstup" id="drStena" type="number" min="0.4" max="10" step="0.1"></label>
+        <label class="pole">Výška držáku (mm)<input class="vstup" id="drVyska" type="number" min="1" max="200" step="0.5"></label>
+      </div>
+      <div class="radek3">
+        <label class="pole">Lem – doraz (mm, 0 = bez)<input class="vstup" id="drLem" type="number" min="0" max="10" step="0.1"></label>
+        <label class="pole">Přesah lemu do otvoru (mm)<input class="vstup" id="drLemSirka" type="number" min="0.3" max="20" step="0.1"></label>
+        <label class="pole">Šířka pásku (mm)<input class="vstup" id="drPasek" type="number" min="2" max="30" step="0.5"></label>
+      </div>
+      <label style="display:flex;gap:6px;font-size:.84rem;align-items:center"><input type="checkbox" id="drDrazky"> Drážky pro pásky v lemu (mezi spojovanými články)</label>
+      <p class="info" id="drzakInfo" style="margin:0"></p>
+      <div><button class="btn primary" data-prikaz="stl">⬇️ Stáhnout držák (STL)</button></div>
+    </section>
+
+    <section class="karta siroka">
+      <h2>⚠️ Bezpečnost při stavbě</h2>
+      <ul class="seznam-dop" id="bezpecnost"></ul>
+      <p class="pozn" style="margin:0">Baterii pro dům nebo chatu (měnič, FVE, kWh) spočítáte v <a href="offgrid_baterie.html">Ostrovním systému</a>.</p>
+    </section>
+  </div>
+</div></main>
+
+<!-- vlastní články -->
+<dialog class="okno siroke" id="dlgClanky"><form method="dialog">
+  <header>🧪 Moje články</header>
+  <div class="telo">
+    <div class="tab-obal"><table><thead><tr><th>Název</th><th>Chemie</th><th class="cena">V</th><th class="cena">Ah</th><th class="cena">A</th><th></th></tr></thead><tbody id="clankySeznam"></tbody></table></div>
+    <div><button type="button" class="btn" id="clNovy">✚ Nový článek</button> <button type="button" class="btn" id="clKopie">⧉ Kopie zvoleného článku</button></div>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgClanek"><form method="dialog">
+  <header>Článek</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" maxlength="120" required></label>
+    <div class="radek">
+      <label class="pole">Chemie<select class="vstup" name="chemie"></select></label>
+      <label class="pole">Tvar<select class="vstup" name="tvar"><option value="valec">Válcový (Ø × výška)</option><option value="prizma">Prizmatický (š × tl × v)</option><option value="pouch">Pouch (š × tl × v)</option></select></label>
+    </div>
+    <div class="radek3" data-tvar="valec">
+      <label class="pole">Průměr (mm)<input class="vstup" name="d" type="number" step="any"></label>
+      <label class="pole">Výška (mm)<input class="vstup" name="h" type="number" step="any"></label>
+    </div>
+    <div class="radek3" data-tvar="hranol">
+      <label class="pole">Šířka (mm)<input class="vstup" name="s" type="number" step="any"></label>
+      <label class="pole">Tloušťka (mm)<input class="vstup" name="t" type="number" step="any"></label>
+      <label class="pole">Výška (mm)<input class="vstup" name="v" type="number" step="any"></label>
+    </div>
+    <div class="radek3">
+      <label class="pole">Jmenovité napětí (V)<input class="vstup" name="U" type="number" step="any"></label>
+      <label class="pole">Max. napětí (V)<input class="vstup" name="Umax" type="number" step="any"></label>
+      <label class="pole">Min. napětí (V)<input class="vstup" name="Umin" type="number" step="any"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Kapacita (Ah)<input class="vstup" name="Ah" type="number" step="any"></label>
+      <label class="pole">Max. trvalý proud (A)<input class="vstup" name="I" type="number" step="any"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Vnitřní odpor (mΩ)<input class="vstup" name="Ri" type="number" step="any"></label>
+      <label class="pole">Hmotnost (g)<input class="vstup" name="g" type="number" step="any"></label>
+    </div>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="clSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNavrhy"><form method="dialog">
+  <header>📂 Moje návrhy</header>
+  <div class="telo"><div class="tab-obal"><table><tbody id="navrhySeznam"></tbody></table></div></div>
+  <footer><button value="zrusit" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>Zadat S × P:</b> vyberte článek a počet článků v sérii (S – určuje napětí) a paralelně (P – kapacita a proud). <b>Podle cíle:</b> zadejte napětí, kapacitu nebo energii a proud – stránka projde všechny články v katalogu a nabídne varianty seřazené podle hmotnosti nebo počtu článků.</p>
+    <p style="margin:0"><b>Výpočty:</b> napětí = S × napětí článku, kapacita = P × Ah, odpor packu = S × Ri / P, ztráta = I² × R. Odběr ve W se přepočte na proud přes účinnost měniče při jmenovitém napětí. Ohřev je horní odhad bez chlazení za celé vybití (tepelná kapacita ≈ 1 J/g·K).</p>
+    <p style="margin:0"><b>Doporučení</b> (BMS, pojistka, průřez vodiče, nikl pásek ≈ 5 A/mm²) jsou orientační – stav k 11/2026. Letecký limit 100 / 160 Wh podle pravidel IATA pro lithiové baterie cestujících.</p>
+    <p style="margin:0"><b>Rozložení:</b> skupiny P jdou po sloupcích hadovitě, barva = skupina, + / − = pól nahoře, plné čáry = pásky nahoře, čárkované = dole, šipky = tok proudu sériemi.</p>
+    <p style="margin:0"><b>Držák:</b> deska s otvory (průměr článku + vůle), stěna mezi otvory, nahoře lem jako doraz. Tiskněte lemem na podložku; vytiskněte dva (horní a spodní). Vlastní články přidáte v <i>Moje články</i>.</p>
+    <p style="margin:0">Data jsou jen v tomto prohlížeči (localStorage) – zálohujte přes <i>Soubor → Záloha</i>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.BateriePackJadro, $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, z => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[z]));
+const f = (x, d = 1) => Number.isFinite(x) ? x.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d }) : '–';
+
+let data;
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC) || 'null')); } catch (e) { data = J.vychoziData(); }
+let razeni = 'hmotnost';
+const uloz = () => { try { localStorage.setItem(J.KLIC, JSON.stringify(data)); } catch (e) { /* plné úložiště */ } };
+const clanek = () => J.najdiClanek(data.projekt.clanek, data.clanky);
+
+/* ---------- formulář ---------- */
+const POLE = {
+  S: ['S'], P: ['P'], cilU: ['cil', 'U'], cilI: ['cil', 'I'], cilHodnota: ['cil', 'hodnota'], cilTyp: ['cil', 'typ'],
+  odbHodnota: ['odber', 'hodnota'], odbTyp: ['odber', 'typ'], odbUcinnost: ['odber', 'ucinnost'], odbVyuziti: ['odber', 'vyuziti'],
+  rozTyp: ['rozlozeni', 'typ'], rozRady: ['rozlozeni', 'rady'], rozMezera: ['rozlozeni', 'mezera'],
+  drVule: ['drzak', 'vule'], drStena: ['drzak', 'stena'], drVyska: ['drzak', 'vyska'], drLem: ['drzak', 'lem'],
+  drLemSirka: ['drzak', 'lemSirka'], drPasek: ['drzak', 'pasek'], drDrazky: ['drzak', 'drazky']
+};
+function naplnClanky() {
+  const opt = c => `<option value="${esc(c.id)}">${esc(c.nazev)}</option>`;
+  $('clanek').innerHTML = `<optgroup label="Předvolby">${J.PREDVOLBY.map(opt).join('')}</optgroup>` +
+    (data.clanky.length ? `<optgroup label="Moje články">${data.clanky.map(opt).join('')}</optgroup>` : '');
+}
+function doFormulare() {
+  const p = data.projekt;
+  naplnClanky(); $('clanek').value = clanek().id;
+  for (const [id, [a, b]] of Object.entries(POLE)) {
+    const v = b ? p[a][b] : p[a];
+    if ($(id).type === 'checkbox') $(id).checked = v; else $(id).value = v;
+  }
+  document.querySelectorAll('[data-rezim]').forEach(t => t.setAttribute('aria-pressed', t.dataset.rezim === p.rezim));
+  $('paneSP').hidden = p.rezim !== 'sp'; $('paneCil').hidden = p.rezim !== 'cil'; $('kartaVarianty').hidden = p.rezim !== 'cil';
+}
+function zFormulare() {
+  const p = JSON.parse(JSON.stringify(data.projekt));
+  p.clanek = $('clanek').value;
+  for (const [id, [a, b]] of Object.entries(POLE)) {
+    const el = $(id), v = el.type === 'checkbox' ? el.checked : el.value;
+    if (b) p[a][b] = v; else p[a] = v;
+  }
+  data.projekt = J.normalizuj(p);
+  uloz(); prepocitej();
+}
+document.querySelector('main').addEventListener('input', e => { if (e.target.closest('.karta') && e.target.id) zFormulare(); });
+document.querySelector('main').addEventListener('change', e => { if (e.target.id) zFormulare(); });
+
+/* ---------- výpočet a zobrazení ---------- */
+function prepocitej() {
+  const p = data.projekt, c = clanek(), v = J.spocitej(c, p.S, p.P, p.odber), ch = J.CHEMIE[c.chemie];
+  $('clanekInfo').textContent = `${ch.nazev} · ${f(c.U, 2)} V (${f(c.Umin, 2)}–${f(c.Umax, 2)} V) · ${f(c.Ah, 2)} Ah · max. ${f(c.I, 1)} A · ${f(c.Ri, 1)} mΩ · ${f(c.g, 0)} g · ${J.rozmerClanku(c)}`;
+  const doba = v.doba === Infinity ? '–' : v.doba >= 1 ? f(v.doba, 1) + ' h' : f(v.doba * 60, 0) + ' min';
+  const C = [
+    [`${p.S}S${p.P}P`, `${v.n} článků`], [f(v.U, 1) + ' V', `jmenovité (${f(v.Umin, 1)}–${f(v.Umax, 1)} V)`],
+    [f(v.Ah, 1) + ' Ah', 'kapacita'], [f(v.Wh, 0) + ' Wh', 'energie'], [f(v.Imax, 1) + ' A', 'max. trvalý proud'],
+    [f(v.Pmax, 0) + ' W', 'max. trvalý výkon'], [f(v.R * 1000, 1) + ' mΩ', 'vnitřní odpor packu'], [f(v.hmotnost / 1000, 2) + ' kg', 'hmotnost článků'],
+    [f(v.I, 2) + ' A', `odběr z packu (${f(v.C, 2)} C)`], [doba, 'doba běhu'],
+    [f(v.ztrata, 1) + ' W', `ztráta I²R (${f(v.ztrataClanek, 2)} W/čl., pokles ${f(v.pokles, 2)} V)`], ['+' + f(v.ohrev, 0) + ' °C', 'ohřev bez chlazení (horní mez)']
+  ];
+  $('cisla').innerHTML = C.map(([b, s]) => `<div class="cislo"><b>${b}</b><span>${s}</span></div>`).join('');
+  $('hlaseni').innerHTML = v.upozorneni.map(u => `<div class="hlaseni ${u.uroven}">${esc(u.text)}</div>`).join('');
+
+  const d = v.doporuceni, L = [];
+  if (d.bms) L.push(`<b>BMS ${d.bms.serii}S</b> pro ${esc(d.bms.typ)}, trvalý proud ≥ <b>${d.bms.proud} A</b> (odběr × ${J.PARAMETRY.rezervaBms}); ${esc(d.bms.vypnuti)}; ${esc(d.bms.balancovani)}.`);
+  else L.push('<b>Bez BMS</b> – NiMH: nabíječka s ukončením −ΔV / teplotou, případně termistor a vratná pojistka (PTC).');
+  L.push(`<b>Pojistka ${String(d.pojistka).replace('.', ',')} A</b>, stejnosměrná, na ≥ ${d.pojistkaU} V DC, co nejblíž kladnému pólu.`);
+  L.push(d.vodic.mm2 ? `<b>Vodič ${String(d.vodic.mm2).replace('.', ',')} mm²</b> Cu (≈ AWG ${d.vodic.awg}, do ${d.vodic.A} A, krátké vedení, silikonová izolace).` : `<b>Proud nad ${d.vodic.A} A</b> – přípojnice nebo více paralelních vodičů, dimenzovat podle normy.`);
+  if (d.pasek) L.push(`<b>Nikl pásek ${String(d.pasek.t).replace('.', ',')} × ${d.pasek.s} mm${d.pasek.vrstev > 1 ? ' v ' + d.pasek.vrstev + ' vrstvách' : ''}</b> (čistý nikl ≈ ${f(d.pasek.A, 0)} A; poniklovaná ocel snese asi polovinu). Při větším proudu měděný pásek pod niklem (sendvič).`);
+  else L.push(`<b>Přípojnice</b> Cu ≥ ${d.prurezPripojnice} mm² (≈ 2 A/mm²) se šrouby na pólech, momentem podle výrobce článku.`);
+  $('doporuceni').innerHTML = L.map(x => `<li>${x}</li>`).join('');
+
+  if (p.rezim === 'cil') kresliVarianty();
+  kresliRozlozeni(c, p);
+}
+
+function kresliVarianty() {
+  const p = data.projekt;
+  const V = J.navrhniVarianty(J.vsechnyClanky(data.clanky), p.cil, { razeni });
+  document.querySelectorAll('[data-razeni]').forEach(t => t.setAttribute('aria-pressed', t.dataset.razeni === razeni));
+  $('varianty').innerHTML = V.length ? V.map(v => `<tr class="klik" data-var="${esc(v.clanek)}|${v.S}|${v.P}"${v.clanek === p.clanek && v.S === p.S && v.P === p.P ? ' style="background:var(--accent-soft)"' : ''}>
+    <td>${esc(v.nazev)}</td><td>${v.S}S${v.P}P</td><td class="cena">${f(v.U, 1)}</td><td class="cena">${f(v.Wh, 0)}</td><td class="cena">${f(v.Imax, 0)}</td><td class="cena">${f(v.hmotnost / 1000, 2)}</td></tr>`).join('')
+    : '<tr><td colspan="6">Žádný článek nedá napětí v toleranci – zkuste jiné napětí.</td></tr>';
+}
+$('varianty').addEventListener('click', e => {
+  const r = e.target.closest('[data-var]'); if (!r) return;
+  const [id, S, P] = r.dataset.var.split('|');
+  Object.assign(data.projekt, { clanek: id, S: +S, P: +P });
+  uloz(); doFormulare(); prepocitej();
+});
+document.querySelectorAll('[data-razeni]').forEach(t => t.addEventListener('click', () => { razeni = t.dataset.razeni; kresliVarianty(); }));
+document.querySelectorAll('[data-rezim]').forEach(t => t.addEventListener('click', () => { data.projekt.rezim = t.dataset.rezim; uloz(); doFormulare(); prepocitej(); }));
+
+/* ---------- rozložení (SVG) ---------- */
+function kresliRozlozeni(c, p) {
+  const r = J.rozloz(c, p.S, p.P, p.rozlozeni, p.drzak);
+  const valec = r.valec, okraj = valec ? r.okraj : 0, w2 = valec ? c.d / 2 : c.t / 2, h2 = valec ? c.d / 2 : c.s / 2;
+  const xs = r.bunky.map(b => b.x), ys = r.bunky.map(b => b.y);
+  const m = Math.max(w2, okraj, h2) + 4, x0 = Math.min(...xs) - m, y0 = Math.min(...ys) - m;
+  const W = Math.max(...xs) - Math.min(...xs) + 2 * m, H = Math.max(...ys) - Math.min(...ys) + 2 * m;
+  const sw = Math.max(W, H) / 300, barva = sk => `hsl(${(sk * 137.5) % 360} 65% 55%)`;
+  const s = [`<defs><marker id="sipka" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--danger)"/></marker></defs>`];
+  if (valec) s.push(`<polygon points="${J.obrysDrzaku(r).map(q => q.map(v => v.toFixed(2)).join(',')).join(' ')}" fill="none" stroke="var(--border-strong)" stroke-width="${sw}" stroke-dasharray="${3 * sw}"/>`);
+  const popisky = [];
+  for (const b of r.bunky) {
+    const tvar = valec ? `<circle cx="${b.x}" cy="${b.y}" r="${w2}"` : `<rect x="${b.x - w2}" y="${b.y - h2}" width="${2 * w2}" height="${2 * h2}" rx="${sw * 2}"`;
+    s.push(`${tvar} fill="${barva(b.sk)}" fill-opacity=".45" stroke="var(--text-muted)" stroke-width="${sw}"/>`);
+    popisky.push(`<text x="${b.x}" y="${b.y}" text-anchor="middle" dominant-baseline="central" font-size="${Math.min(w2, h2) * 0.9}" font-weight="700" fill="var(--text)">${b.sk % 2 ? '−' : '+'}</text>`);
+  }
+  // pásky: uvnitř skupiny po hadu, mezi sousedními skupinami nahoře (sudá→lichá) plně, dole čárkovaně
+  const pasek = (A, B, sirka, dole) => s.push(`<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="var(--text-faint)" stroke-opacity=".75" stroke-width="${sirka}"${dole ? ` stroke-dasharray="${4 * sw}"` : ''} stroke-linecap="round"/>`);
+  for (let i = 1; i < r.bunky.length; i++) if (r.bunky[i].sk === r.bunky[i - 1].sk) pasek(r.bunky[i - 1], r.bunky[i], Math.min(w2, h2) * 0.35, false);
+  for (const [a, b] of J.sousede(r)) {
+    const A = r.bunky[a], B = r.bunky[b];
+    if (Math.abs(A.sk - B.sk) === 1) pasek(A, B, Math.min(w2, h2) * 0.2, Math.min(A.sk, B.sk) % 2 === 1);
+  }
+  s.push(...popisky);
+  const tez = [];
+  for (const b of r.bunky) { const t = tez[b.sk] || (tez[b.sk] = [0, 0, 0]); t[0] += b.x; t[1] += b.y; t[2]++; }
+  for (let i = 1; i < tez.length; i++) {
+    const [ax, ay, an] = tez[i - 1], [bx, by, bn] = tez[i];
+    s.push(`<line x1="${ax / an}" y1="${ay / an}" x2="${bx / bn}" y2="${by / bn}" stroke="var(--danger)" stroke-width="${2 * sw}" marker-end="url(#sipka)"/>`);
+  }
+  const prvni = r.bunky[0], posl = r.bunky[r.bunky.length - 1];
+  s.push(`<text x="${prvni.x}" y="${prvni.y - h2 - 1}" text-anchor="middle" font-size="${Math.max(3, Math.min(h2 * 0.35, 12))}" fill="var(--danger)">B−</text>`);
+  s.push(`<text x="${posl.x}" y="${posl.y - h2 - 1}" text-anchor="middle" font-size="${Math.max(3, Math.min(h2 * 0.35, 12))}" fill="var(--danger)">B+</text>`);
+  const svg = $('nahled');
+  svg.setAttribute('viewBox', `${x0} ${y0} ${W} ${H}`);
+  svg.style.width = Math.round(Math.max(W * 4, 200)) + 'px';
+  svg.innerHTML = s.join('');
+  $('poleMezera').hidden = valec;
+  $('rozTyp').disabled = !valec;
+  $('legenda').innerHTML = `Blok článků <b>${f(r.blok[0], 1)} × ${f(r.blok[1], 1)} × ${f(r.blok[2], 1)} mm</b>` +
+    (valec ? ` · s držáky <b>${f(r.drzak[0], 1)} × ${f(r.drzak[1], 1)} mm</b>` : '') +
+    ` · ${r.sloupcu} sloupců × ${r.rady} řad. Barva = skupina P, + / − = pól nahoře, plné pásky nahoře, čárkované dole, šipky = tok sérií od B− k B+. Bez izolace, smršťovací fólie a BMS.`;
+  $('kartaDrzak').hidden = !valec;
+  if (valec) $('drzakInfo').textContent = `Otvor Ø ${f(r.otvor, 2)} mm, rozteč ${f(r.py, 2)} mm, stěna mezi otvory ${f(p.drzak.stena, 1)} mm, okraj ${f(p.drzak.stena, 1)} mm, lem s otvorem Ø ${f(Math.max(1, r.otvor - 2 * p.drzak.lemSirka), 1)} mm. Rozměr ${f(r.drzak[0], 1)} × ${f(r.drzak[1], 1)} × ${f(r.drzak[2], 1)} mm. Otvory si nejdřív vyzkoušejte na malém kusu (1S2P) – vůle závisí na tiskárně.`;
+}
+
+/* ---------- STL přes manifold ---------- */
+function nactiSkript(src) {
+  return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('nenačteno ' + src)); document.head.appendChild(s); });
+}
+let manifold = null;
+async function nactiManifold() {
+  if (manifold) return manifold;
+  globalThis.MANIFOLD_URL = new URL('lib/manifold/manifold.klasicky.js', location.href).href;
+  if (!globalThis.ManifoldModule) await nactiSkript('lib/manifold/manifold.klasicky.js');
+  let volby;
+  if (location.protocol === 'file:') {
+    await nactiSkript('lib/manifold/manifold.wasm.js');
+    const s = atob(globalThis.MANIFOLD_WASM_B64), bin = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) bin[i] = s.charCodeAt(i);
+    delete globalThis.MANIFOLD_WASM_B64;
+    volby = { wasmBinary: bin };
+  } else volby = { locateFile: f => new URL('lib/manifold/' + f, location.href).href };
+  const w = await globalThis.ManifoldModule(volby);
+  w.setup();
+  return (manifold = w);
+}
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function stl() {
+  const p = data.projekt, c = clanek();
+  if (c.tvar !== 'valec') return Dialog.info('Držák se generuje jen pro válcové články. Prizmatické a pouch články se stahují deskami a páskou.');
+  try {
+    const w = await nactiManifold();
+    const sit = J.postavDrzak(w, J.rozloz(c, p.S, p.P, p.rozlozeni, p.drzak), p.drzak);
+    stahni(`drzak_${p.S}S${p.P}P_${c.id}.stl`, J.stlBinarni(sit), 'model/stl');
+  } catch (e) { Dialog.chyba('Držák se nepodařilo vytvořit: ' + (e && e.message || e)); }
+}
+
+/* ---------- vlastní články ---------- */
+let upravovany = null;
+function seznamClanku() {
+  $('clankySeznam').innerHTML = data.clanky.length ? data.clanky.map(c => `<tr class="klik" data-cl="${esc(c.id)}"><td>${esc(c.nazev)}</td><td>${esc(J.CHEMIE[c.chemie].nazev)}</td><td class="cena">${f(c.U, 2)}</td><td class="cena">${f(c.Ah, 2)}</td><td class="cena">${f(c.I, 1)}</td><td>✎</td></tr>`).join('')
+    : '<tr><td colspan="6">Zatím žádné vlastní články. Založte nový nebo kopii předvolby a upravte údaje podle datasheetu.</td></tr>';
+}
+function ukazTvar() { const t = $('dlgClanek').querySelector('[name=tvar]').value; $('dlgClanek').querySelector('[data-tvar=valec]').hidden = t !== 'valec'; $('dlgClanek').querySelector('[data-tvar=hranol]').hidden = t === 'valec'; }
+function upravClanek(c, novy) {
+  upravovany = novy ? null : c.id;
+  const F = $('dlgClanek').querySelector('form');
+  F.chemie.innerHTML = Object.entries(J.CHEMIE).map(([k, v]) => `<option value="${k}">${esc(v.nazev)}</option>`).join('');
+  for (const k of ['nazev', 'chemie', 'tvar', 'd', 'h', 's', 't', 'v', 'U', 'Umax', 'Umin', 'Ah', 'I', 'Ri', 'g']) F[k].value = c[k] == null ? '' : c[k];
+  if (novy) F.nazev.value = c.nazev + (c.vlastni ? ' (kopie)' : '');
+  $('clSmaz').hidden = novy;
+  ukazTvar();
+  $('dlgClanek').showModal();
+}
+$('dlgClanek').querySelector('[name=tvar]').addEventListener('change', ukazTvar);
+$('dlgClanek').addEventListener('close', () => {
+  if ($('dlgClanek').returnValue !== 'ok') return;
+  const F = $('dlgClanek').querySelector('form'), o = { id: upravovany || 'v' + Date.now().toString(36) };
+  for (const k of ['nazev', 'chemie', 'tvar', 'd', 'h', 's', 't', 'v', 'U', 'Umax', 'Umin', 'Ah', 'I', 'Ri', 'g']) o[k] = F[k].value === '' ? undefined : F[k].value;
+  const c = Object.assign(J.normalizujClanek(o), { vlastni: true }), i = data.clanky.findIndex(x => x.id === c.id);
+  if (i >= 0) data.clanky[i] = c; else data.clanky.push(c);
+  data.projekt.clanek = c.id;
+  uloz(); seznamClanku(); doFormulare(); prepocitej();
+});
+$('clSmaz').addEventListener('click', async () => {
+  if (!await Dialog.potvrd('Smazat tento článek z vašeho seznamu?')) return;
+  data.clanky = data.clanky.filter(x => x.id !== upravovany);
+  if (data.projekt.clanek === upravovany) data.projekt.clanek = J.PREDVOLBY[0].id;
+  $('dlgClanek').close(); uloz(); seznamClanku(); doFormulare(); prepocitej();
+});
+$('clankySeznam').addEventListener('click', e => { const r = e.target.closest('[data-cl]'); if (r) upravClanek(data.clanky.find(c => c.id === r.dataset.cl), false); });
+$('clNovy').addEventListener('click', () => upravClanek(Object.assign({}, J.PREDVOLBY[0], { nazev: 'Můj článek' }), true));
+$('clKopie').addEventListener('click', () => upravClanek(Object.assign({}, clanek()), true));
+
+/* ---------- návrhy ---------- */
+function seznamNavrhu() {
+  $('navrhySeznam').innerHTML = data.navrhy.length ? data.navrhy.map(n => `<tr><td><b>${esc(n.nazev)}</b><br><small>${esc(n.datum)} · ${n.projekt.S}S${n.projekt.P}P · ${esc(J.najdiClanek(n.projekt.clanek, data.clanky).nazev)}</small></td>
+    <td style="white-space:nowrap;text-align:right"><button type="button" class="btn mini" data-otevri="${esc(n.id)}">Otevřít</button> <button type="button" class="btn mini danger" data-smaz="${esc(n.id)}" aria-label="Smazat">🗑️</button></td></tr>`).join('')
+    : '<tr><td>Zatím žádné uložené návrhy (Soubor → Uložit návrh).</td></tr>';
+}
+$('navrhySeznam').addEventListener('click', async e => {
+  const o = e.target.closest('[data-otevri]'), s = e.target.closest('[data-smaz]');
+  if (o) { data.projekt = J.normalizuj(data.navrhy.find(n => n.id === o.dataset.otevri).projekt); uloz(); doFormulare(); prepocitej(); $('dlgNavrhy').close(); }
+  if (s && await Dialog.potvrd('Smazat uložený návrh?')) { data.navrhy = data.navrhy.filter(n => n.id !== s.dataset.smaz); uloz(); seznamNavrhu(); }
+});
+
+const dnes = () => new Date().toISOString().slice(0, 10);
+const PRIKAZY = {
+  napoveda: () => $('dlgNapoveda').showModal(),
+  clanky: () => { seznamClanku(); $('dlgClanky').showModal(); },
+  stl,
+  svg: () => stahni('rozlozeni_baterie.svg', '<?xml version="1.0" encoding="UTF-8"?>\n' + $('nahled').outerHTML
+    .replace(/var\(--text-faint\)/g, '#888').replace(/var\(--text-muted\)/g, '#555').replace(/var\(--text\)/g, '#000').replace(/var\(--danger\)/g, '#c0392b').replace(/var\(--border-strong\)/g, '#999'), 'image/svg+xml'),
+  uloz: async () => {
+    const p = data.projekt, n = await Dialog.zeptej('Název návrhu', `${p.S}S${p.P}P ${clanek().nazev.split(' ')[0]}`);
+    if (!n) return;
+    const st = data.navrhy.find(x => x.nazev === n);
+    if (st && !await Dialog.potvrd(`Návrh „${n}“ už existuje. Přepsat?`)) return;
+    if (st) Object.assign(st, { datum: dnes(), projekt: J.normalizuj(p) });
+    else data.navrhy.push({ id: Date.now().toString(36), nazev: n, datum: dnes(), projekt: J.normalizuj(p) });
+    uloz(); Dialog.info('Návrh uložen.');
+  },
+  navrhy: () => { seznamNavrhu(); $('dlgNavrhy').showModal(); },
+  novy: async () => { if (await Dialog.potvrd('Začít nový návrh s výchozími hodnotami? (Uložené návrhy a články zůstanou.)')) { data.projekt = J.vychoziProjekt(); uloz(); doFormulare(); prepocitej(); } },
+  export: () => stahni('baterie-pack-' + dnes() + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click()
+};
+$('souborImport').addEventListener('change', async e => {
+  const soub = e.target.files[0]; e.target.value = ''; if (!soub) return;
+  let d; try { d = JSON.parse(await soub.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !d.projekt) return Dialog.chyba('Tohle není záloha Návrhu bateriového packu.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.navrhy.length} návrhů a ${m.clanky.length} vlastních článků. Nahradit jimi současná data?`)) return;
+  data = m; uloz(); doFormulare(); prepocitej(); Dialog.info('Obnoveno.');
+});
+
+/* ---------- nabídky ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+
+$('bezpecnost').innerHTML = J.BEZPECNOST.map(t => `<li>${esc(t)}</li>`).join('');
+doFormulare(); prepocitej();
+})();
+</script>
+</body>
+</html>

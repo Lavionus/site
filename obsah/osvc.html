@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSVČ: paušální daň vs. skutečné výdaje</title>
+<meta name="description" content="Kalkulačka pro OSVČ: porovnání skutečných výdajů, výdajového paušálu a paušální daně – daň, sociální a zdravotní pojištění, čistý příjem a doporučení. Bonus: odvody z DPP a DPČ.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="osvc/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Hlídač termínů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.9rem;font-family:inherit;min-width:0;width:100%}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1280px;margin:0 auto}
+.stav{font-size:.8rem;color:var(--text-muted);margin:0 0 12px}
+.rozlozeni{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:16px;align-items:start}
+@media (max-width:820px){.rozlozeni{grid-template-columns:1fr}}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:14px 16px}
+.karta h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:0 0 8px}
+.karta h2:not(:first-child){margin-top:14px}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted);margin-bottom:9px}
+.pole .vstup{color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:400px){.radek{grid-template-columns:1fr}}
+.zaskrt{display:flex;gap:8px;align-items:center;font-size:.86rem;margin:6px 0;cursor:pointer}
+.zaskrt input{width:auto;margin:0}
+
+.varianty{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.var{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.var.nejlepsi{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}
+.var.nelze{opacity:.72}
+.var h3{margin:0 0 4px;font-size:.98rem;display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.var h3 .znacka{font-size:.68rem;border-radius:8px;padding:1px 7px;background:var(--ok);color:var(--on-accent,#fff);font-weight:600;white-space:nowrap}
+.var .r{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;padding:2px 0;border-bottom:1px dotted var(--border)}
+.var .r span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.var .r.sum{font-weight:700;border-bottom:none;font-size:.95rem;margin-top:4px}
+.var .r.cist{color:var(--ok);font-weight:700;font-size:1.05rem;border-bottom:none}
+.var .r.rozdil span:last-child{color:var(--danger)}
+.var .r.sub{color:var(--text-muted);font-size:.76rem;padding-left:10px}
+.var .pozn{font-size:.76rem;color:var(--text-muted);line-height:1.4;margin:4px 0 0}
+.var .pozn.varuj{color:var(--warn)}
+.doporuceni{margin-top:12px;background:var(--bg-elevated);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:.88rem;line-height:1.5}
+.doporuceni p{margin:0 0 4px}
+details.param{margin-top:12px;font-size:.82rem}
+details.param summary{cursor:pointer;color:var(--text-muted)}
+table{border-collapse:collapse;width:100%;font-size:.84rem;margin-top:6px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase}
+td.c,th.c{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tab-obal{overflow-x:auto}
+.vys{margin-top:10px}
+a{color:var(--accent)}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+@media print{.lista,dialog,#podpis-pruh{display:none!important}body{display:block;height:auto;background:#fff;color:#000}main{overflow:visible;padding:0}}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🧾 OSVČ: paušální daň vs. výdaje</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Záloha zadání, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pohled"><span class="skup-nazev" aria-hidden="true">Pohled</span><div class="skup-tl">
+    <button class="tl" data-pohled="osvc" aria-pressed="true">⚖️<span class="txt"> Srovnání OSVČ</span></button>
+    <button class="tl" data-pohled="dohody" aria-pressed="false">👔<span class="txt"> DPP / DPČ</span></button>
+    <select class="tl" id="rok" aria-label="Rok"></select>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Uložit zadání (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Načíst zadání…</button>
+  <hr>
+  <button class="tl" data-prikaz="vychozi">↺ Výchozí hodnoty</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal">
+  <p class="stav">⚠️ Stav k 11/2026, orientačně – zjednodušený roční výpočet, ověřte u daňového poradce. Hodnoty označené ⚠ nejsou potvrzené z úředního zdroje. Zaměstnanec: <a href="net_salary.html">Čistá mzda</a>, DPH: <a href="dph_calc.html">Kalkulačka DPH</a>.</p>
+
+  <section id="pohledOsvc" class="rozlozeni">
+    <div class="karta">
+      <h2>Příjmy a činnost</h2>
+      <label class="pole">Roční příjmy bez DPH (Kč)<input class="vstup" id="prijmy" type="number" min="0" step="10000" value="1200000"></label>
+      <label class="pole">Skutečné roční výdaje (Kč)<input class="vstup" id="vydaje" type="number" min="0" step="10000" value="300000"></label>
+      <label class="pole">Druh činnosti (výdajový paušál)<select class="vstup" id="druh"></select></label>
+      <label class="zaskrt"><input type="checkbox" id="vedlejsi"> Vedlejší činnost (zaměstnání, důchod, rodičovská, student)</label>
+      <label class="zaskrt"><input type="checkbox" id="platceDph"> Plátce DPH</label>
+      <label class="zaskrt"><input type="checkbox" id="zamestnani"> Mám i příjmy ze zaměstnání (kromě dohod se srážkovou daní)</label>
+      <label class="zaskrt"><input type="checkbox" id="ostatniPrijmy"> Ostatní příjmy (kapitál, nájem, § 10) nad 50 000 Kč</label>
+
+      <h2>Slevy na dani</h2>
+      <div class="radek">
+        <label class="pole">Vyživované děti<input class="vstup" id="deti" type="number" min="0" max="20" step="1" value="0"></label>
+        <label class="pole">Invalidita<select class="vstup" id="invalidita"><option value="0">žádná</option><option value="12">I. / II. stupeň</option><option value="3">III. stupeň</option><option value="ztpp">ZTP/P</option></select></label>
+      </div>
+      <label class="zaskrt"><input type="checkbox" id="manzel"> Manžel/ka s příjmy do 68 000 Kč pečující o dítě do 3 let</label>
+
+      <h2>Nezdanitelné části (ročně)</h2>
+      <div class="radek">
+        <label class="pole">Penzijní / DIP (Kč)<input class="vstup" id="penzijni" type="number" min="0" step="1000" value="0"></label>
+        <label class="pole">Životní pojištění (Kč)<input class="vstup" id="zivotni" type="number" min="0" step="1000" value="0"></label>
+      </div>
+      <label class="pole">Dary (Kč)<input class="vstup" id="dary" type="number" min="0" step="500" value="0"></label>
+    </div>
+
+    <div>
+      <div class="varianty" id="varianty"></div>
+      <div class="doporuceni" id="doporuceni"></div>
+      <details class="param"><summary>Parametry roku a poznámky k výpočtu</summary><div id="parametry"></div></details>
+    </div>
+  </section>
+
+  <section id="pohledDohody" class="rozlozeni" hidden>
+    <div class="karta">
+      <h2>Dohoda</h2>
+      <label class="pole">Druh dohody<select class="vstup" id="dohTyp"><option value="dpp">DPP – dohoda o provedení práce</option><option value="dpc">DPČ – dohoda o pracovní činnosti</option></select></label>
+      <label class="pole">Hrubá měsíční odměna (Kč)<input class="vstup" id="dohOdmena" type="number" min="0" step="500" value="10000"></label>
+      <label class="zaskrt"><input type="checkbox" id="dohProhlaseni"> Podepsané prohlášení poplatníka (sleva 2 570 Kč/měs.)</label>
+      <p class="stav" id="dohLimity" style="margin-top:10px"></p>
+    </div>
+    <div class="karta vys">
+      <h2>Odvody a čistá odměna</h2>
+      <div class="tab-obal"><table id="dohTabulka"></table></div>
+      <p class="stav" style="margin-top:10px">DPP: limit pro pojistné je 25 % průměrné mzdy zaokrouhleno na 500 Kč dolů (od limitu včetně); bez prohlášení do limitu srážková daň 15 % (nevstupuje do přiznání). DPČ: pojistné od 4 500 Kč včetně, srážková daň bez prohlášení pod 4 500 Kč. Limity u DPP platí na úhrn dohod u jednoho zaměstnavatele. Dohody se srážkovou daní nevylučují paušální daň OSVČ.</p>
+    </div>
+  </section>
+</div></main>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0">Zadejte roční příjmy a výdaje. Stránka spočítá tři varianty vedle sebe: <b>A</b> skutečné výdaje (daňová evidence), <b>B</b> výdajový paušál procentem z příjmů (80/60/40/30 % se stropem 2 mil. Kč příjmů) a <b>C</b> paušální daň (jedna měsíční platba zahrnující daň, sociální i zdravotní pojištění).</p>
+    <p style="margin:0">Pro A i B: daň 15 % (23 % nad 36násobek průměrné mzdy) po slevách a zvýhodnění na děti (přeplatek = daňový bonus), sociální pojištění 29,2 % z 55 % základu daně (minimum podle hlavní/vedlejší činnosti), zdravotní 13,5 % z 50 % základu (minimum jen u hlavní činnosti). Příjmy z nájmu (§ 9) pojistnému nepodléhají.</p>
+    <p style="margin:0">Paušální daň nelze při DPH, souběhu se zaměstnáním, ostatních příjmech nad 50 000 Kč a příjmech nad 2 mil. Kč; neuplatní se v ní žádné slevy ani nezdanitelné části – proto se někdy nevyplatí rodinám s dětmi. Pásmo se určí podle příjmů a druhu činnosti.</p>
+    <p style="margin:0"><b>Čistý příjem</b> = příjmy − skutečné výdaje − odvody (u všech variant stejné výdaje, liší se jen odvody). <b>Efektivní sazba</b> = odvody / příjmy.</p>
+    <p style="margin:0">Pohled <b>DPP / DPČ</b>: čistá měsíční odměna z dohody a náklady zaměstnavatele podle limitů daného roku.</p>
+    <p style="margin:0">Parametry (průměrná mzda, slevy, paušální daň, limity) jsou v jádru po letech ke stavu 11/2026 a je třeba je ročně aktualizovat. Zadání se ukládá jen v tomto prohlížeči.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.OsvcJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const kc = v => Math.round(v).toLocaleString('cs-CZ') + ' Kč';
+const pct = v => (v * 100).toFixed(1).replace('.', ',') + ' %';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+const POLE = ['prijmy', 'vydaje', 'druh', 'vedlejsi', 'platceDph', 'zamestnani', 'ostatniPrijmy', 'deti', 'invalidita', 'manzel', 'penzijni', 'zivotni', 'dary'];
+const DOH = ['dohTyp', 'dohOdmena', 'dohProhlaseni'];
+const VYCHOZI = { rok: J.ROKY[J.ROKY.length - 1], prijmy: 1200000, vydaje: 300000, druh: '60', deti: 0, invalidita: '0', penzijni: 0, zivotni: 0, dary: 0, dohTyp: 'dpp', dohOdmena: 10000, pohled: 'osvc' };
+let pohled = 'osvc';
+
+$('rok').innerHTML = J.ROKY.map(r => `<option value="${r}">${r}</option>`).join('');
+$('druh').innerHTML = J.DRUHY.map(d => `<option value="${d.id}">${esc(d.nazev)}</option>`).join('');
+
+/* ---------- stav ---------- */
+function cti() {
+  const v = { rok: +$('rok').value, pohled };
+  for (const id of POLE.concat(DOH)) { const el = $(id); v[id] = el.type === 'checkbox' ? el.checked : el.value; }
+  return v;
+}
+function nastav(v) {
+  v = Object.assign({}, VYCHOZI, v || {});
+  $('rok').value = J.PARAMETRY[v.rok] ? v.rok : VYCHOZI.rok;
+  for (const id of POLE.concat(DOH)) { const el = $(id); if (el.type === 'checkbox') el.checked = !!v[id]; else if (v[id] != null) el.value = v[id]; }
+  prepniPohled(v.pohled === 'dohody' ? 'dohody' : 'osvc');
+}
+function uloz() { try { localStorage.setItem(J.KLIC, JSON.stringify(Object.assign({ verze: J.VERZE }, cti()))); } catch (e) {} }
+
+/* ---------- srovnání OSVČ ---------- */
+function radek(popis, hodnota, trida) { return `<div class="r ${trida || ''}"><span>${popis}</span><span>${hodnota}</span></div>`; }
+function kartaVarianty(x, v) {
+  const h = [`<h3><span>${x.id} · ${esc(x.nazev)}</span>${x.mozna && x.rozdil === 0 ? '<span class="znacka">nejvýhodnější</span>' : ''}</h3>`];
+  if (!x.mozna) {
+    h.push(`<p class="pozn varuj">⛔ Nelze použít: ${esc(x.vylucuje.join('; '))}.</p>`);
+    return `<div class="var nelze">${h.join('')}</div>`;
+  }
+  if (x.id === 'C') {
+    h.push(radek('Měsíční paušální záloha', kc(x.mesicne)));
+    h.push(radek('Daň + SP + ZP za rok', kc(x.odvody), 'sum'));
+    if (x.neuplatnene.length) h.push(`<p class="pozn varuj">⚠ Neuplatní se: ${esc(x.neuplatnene.join(', '))}.</p>`);
+  } else {
+    h.push(radek('Daňové výdaje', kc(x.vydajeDanove)));
+    h.push(radek('Základ daně', kc(x.zaklad)));
+    if (x.dan.nezdanitelne.celkem) h.push(radek('− nezdanitelné části', kc(x.dan.nezdanitelne.celkem), 'sub'));
+    h.push(radek('Daň před slevami', kc(x.dan.danPred), 'sub'));
+    h.push(radek('− slevy', kc(x.dan.slevy), 'sub'));
+    if (x.dan.zvyhodneni) h.push(radek('− zvýhodnění na děti', kc(x.dan.zvyhodneni), 'sub'));
+    h.push(radek('Daň z příjmů', x.dan.bonus ? 'bonus +' + kc(x.dan.bonus) : kc(x.dan.dan)));
+    h.push(radek('Sociální pojištění', kc(x.sp.castka)));
+    if (x.sp.vz) h.push(radek('z VZ ' + kc(x.sp.vz) + (x.sp.vz === x.sp.min ? ' (minimum)' : x.sp.vz === x.sp.max ? ' (maximum)' : ''), '', 'sub'));
+    h.push(radek('Zdravotní pojištění', kc(x.zp.castka)));
+    if (x.zp.vz) h.push(radek('z VZ ' + kc(x.zp.vz) + (x.zp.vz === x.zp.min ? ' (minimum)' : ''), '', 'sub'));
+    h.push(radek('Odvody celkem', kc(x.odvody), 'sum'));
+  }
+  h.push(radek('Efektivní sazba z příjmů', pct(x.efektivni)));
+  h.push(radek('Po odvodech (bez výdajů)', kc(x.poOdvodech)));
+  h.push(radek('Čistý příjem po výdajích', kc(x.cisty), 'cist'));
+  if (x.rozdil > 0) h.push(radek('Rozdíl vs. nejlepší', '+' + kc(x.rozdil) + ' ročně', 'rozdil'));
+  for (const p of (x.pozn || []).concat(x.sp && x.sp.pozn ? [x.sp.pozn] : [], x.zp && x.zp.pozn ? [x.zp.pozn] : [])) h.push(`<p class="pozn">${esc(p)}</p>`);
+  return `<div class="var${x.rozdil === 0 ? ' nejlepsi' : ''}">${h.join('')}</div>`;
+}
+function parametryHtml(P) {
+  const o = k => P[k] && P[k].overit ? ' ⚠' : '';
+  const r = (a, b) => `<tr><td>${a}</td><td class="c">${b}</td></tr>`;
+  return `<table>${
+    r('Průměrná mzda', kc(P.prumernaMzda) + ' · hranice 23 % ' + kc(P.nasobekHranice * P.prumernaMzda)) +
+    r('Sociální pojištění', '29,2 % z ' + Math.round(P.sp.podilZakladu * 100) + ' % základu; min. VZ hlavní ' + Math.round(P.sp.minHlavni * 100) + ' % / vedlejší ' + Math.round(P.sp.minVedlejsi * 100) + ' % prům. mzdy, záloha min. ' + kc(Math.ceil(Math.ceil(P.prumernaMzda * P.sp.minHlavni) * P.sp.sazba)) + '/měs.' + o('sp')) +
+    r('Rozhodná částka vedlejší činnosti', kc(P.sp.rozhodnaCastkaVedlejsi)) +
+    r('Zdravotní pojištění', '13,5 % z 50 % základu; min. záloha ' + kc(Math.ceil(P.prumernaMzda * 0.5 * P.zp.sazba)) + '/měs. (hlavní činnost)') +
+    r('Slevy', 'poplatník ' + kc(P.slevy.poplatnik) + ', manžel/ka ' + kc(P.slevy.manzel) + ', děti ' + P.slevy.deti.map(d => kc(d)).join(' / ') + ', invalidita ' + kc(P.slevy.invalidita12) + ' / ' + kc(P.slevy.invalidita3) + ', ZTP/P ' + kc(P.slevy.ztpp)) +
+    r('Nezdanitelné části', 'penzijní + životní max. ' + kc(P.nezdanitelne.penzijniZivotniMax) + ', dary max. ' + Math.round(P.nezdanitelne.daryMaxPodil * 100) + ' % základu' + o('nezdanitelne')) +
+    r('Paušální daň měsíčně', P.pausalniDan.mesicne.map((m, i) => (i + 1) + '. pásmo ' + kc(m)).join(' · ') + o('pausalniDan')) +
+    r('Daňový bonus na děti', 'jen při příjmech ≥ 6× minimální mzda (' + kc(6 * P.minimalniMzda) + ')') +
+    r('DPP / DPČ limit pro pojistné', kc(P.dpp.limit) + ' / ' + kc(P.dpc.limit))
+  }</table>
+  <p style="margin:8px 0 0;color:var(--text-muted)">Zjednodušení: celoroční činnost, jediný druh příjmů, zaokrouhlení základu na stovky dolů; neřeší spolupracující osoby, ztrátu z minulých let, důchodce a studenty v paušálním režimu, zálohy vs. doplatek.${P.rok === 2026 ? ' ⚠ 2026: minimální VZ sociálního pojištění 35 % a 1. pásmo paušální daně 9 162 Kč platí po novele zpětně od ledna (leden–červen se platilo 9 984 Kč, přeplatek se započítává).' : ''}</p>`;
+}
+function prepocti() {
+  const v = cti();
+  const S = J.srovnani(v);
+  $('varianty').innerHTML = S.varianty.map(x => kartaVarianty(x, S.vstup)).join('');
+  $('doporuceni').innerHTML = S.doporuceni.map(d => `<p>${esc(d)}</p>`).join('');
+  $('parametry').innerHTML = parametryHtml(S.parametry);
+  prepoctiDohodu(v);
+  uloz();
+}
+
+/* ---------- DPP / DPČ ---------- */
+function prepoctiDohodu(v) {
+  const P = J.PARAMETRY[v.rok];
+  const d = (v.dohTyp === 'dpc' ? J.dpc : J.dpp)(v.dohOdmena, v.dohProhlaseni, v.rok);
+  $('dohLimity').textContent = `Rok ${v.rok}: pojistné od ${kc(P[v.dohTyp].limit)} měsíčně, minimální mzda ${kc(P.minimalniMzda)}.`;
+  const r = (a, b, t) => `<tr class="${t || ''}"><td>${a}</td><td class="c">${b}</td></tr>`;
+  $('dohTabulka').innerHTML =
+    r('Hrubá odměna', kc(d.odmena)) +
+    r('− sociální pojištění zaměstnanec (7,1 %)', d.pojistne ? kc(d.spZam) : '0 Kč (pod limitem)') +
+    r('− zdravotní pojištění zaměstnanec (4,5 %)', d.pojistne ? kc(d.zpZam) : '0 Kč (pod limitem)') +
+    r('− daň: ' + esc(d.druhDane), kc(d.dan)) +
+    `<tr><td style="font-weight:700;color:var(--ok);font-size:1.05rem">Čistá odměna</td><td class="c" style="font-weight:700;color:var(--ok);font-size:1.05rem">${kc(d.cista)}</td></tr>` +
+    r('Efektivní zatížení', pct(d.efektivni)) +
+    r('+ sociální pojištění zaměstnavatel (24,8 %)', kc(d.spFirma)) +
+    r('+ zdravotní pojištění zaměstnavatel (9 %)', kc(d.zpFirma)) +
+    `<tr><td><b>Náklady zaměstnavatele</b></td><td class="c"><b>${kc(d.nakladyFirmy)}</b></td></tr>` +
+    (d.pojistne && v.dohTyp === 'dpp' ? r('Pozn.', 'Od limitu vzniká účast na nemocenském i důchodovém pojištění; evidujte dohody i pro oznamovací povinnost.') : '') +
+    (!d.srazkova && !v.dohProhlaseni ? r('Pozn.', 'Bez prohlášení nad limit jde o zálohovou daň – uplatníte ji v daňovém přiznání.') : '');
+}
+
+/* ---------- pohledy, lišta ---------- */
+function prepniPohled(p) {
+  pohled = p;
+  $('pohledOsvc').hidden = p !== 'osvc';
+  $('pohledDohody').hidden = p !== 'dohody';
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === p)));
+}
+let otevrena = null;
+function zavriNabidky() { document.querySelectorAll('.nabidka').forEach(n => n.hidden = true); document.querySelectorAll('[data-nabidka]').forEach(b => b.setAttribute('aria-expanded', 'false')); otevrena = null; }
+document.addEventListener('click', e => {
+  const tl = e.target.closest('[data-nabidka]');
+  if (tl) {
+    const n = $(tl.dataset.nabidka), uz = otevrena === n;
+    zavriNabidky(); if (uz) return;
+    const r = tl.getBoundingClientRect(); n.hidden = false; n.style.left = Math.min(r.left, window.innerWidth - n.offsetWidth - 6) + 'px'; n.style.top = r.bottom + 4 + 'px';
+    tl.setAttribute('aria-expanded', 'true'); otevrena = n; return;
+  }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const p = e.target.closest('[data-pohled]'); if (p) { prepniPohled(p.dataset.pohled); uloz(); }
+  const k = e.target.closest('[data-prikaz]'); if (k) { zavriNabidky(); prikaz(k.dataset.prikaz); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+
+function stahni(nazev, text) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = nazev; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function prikaz(p) {
+  if (p === 'napoveda') $('dlgNapoveda').showModal();
+  else if (p === 'tisk') window.print();
+  else if (p === 'export') stahni('osvc_zadani_' + $('rok').value + '.json', JSON.stringify(Object.assign({ verze: J.VERZE }, cti()), null, 2));
+  else if (p === 'import') $('souborImport').click();
+  else if (p === 'vychozi') { if (await Dialog.potvrd('Vrátit všechna pole na výchozí hodnoty?')) { nastav(VYCHOZI); prepocti(); } }
+}
+$('souborImport').addEventListener('change', async () => {
+  const f = $('souborImport').files[0]; $('souborImport').value = ''; if (!f) return;
+  try { const v = JSON.parse(await f.text()); if (!v || typeof v !== 'object' || !('prijmy' in v)) throw 0; nastav(v); prepocti(); Dialog.info('Zadání načteno'); }
+  catch (e) { Dialog.chyba('Soubor není zadání této kalkulačky.'); }
+});
+for (const id of POLE.concat(DOH, ['rok'])) $(id).addEventListener('input', prepocti);
+
+let ulozene = null;
+try { ulozene = JSON.parse(localStorage.getItem(J.KLIC)); } catch (e) {}
+nastav(ulozene);
+prepocti();
+})();
+</script>
+</body>
+</html>

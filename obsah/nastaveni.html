@@ -50,6 +50,10 @@ td.akce{width:1%;vertical-align:top}
 .trvale{font-size:.78rem;color:var(--text-faint)}
 .note{font-size:.78rem;color:var(--text-faint);margin-top:10px;line-height:1.5}
 .prazdne{padding:14px;text-align:center;color:var(--text-faint)}
+.volby{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.volby label{display:flex;flex-direction:column;gap:6px;color:var(--text)}
+.volby select{padding:7px 9px;background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:5px;font-size:.88rem}
+.volby small{color:var(--text-faint);font-size:.76rem;line-height:1.45}
 </style>
 </head>
 <body>
@@ -57,6 +61,36 @@ td.akce{width:1%;vertical-align:top}
   <h1>⚙️ Nastavení</h1>
   <p class="lead">Všechny aplikace tohoto webu si ukládají data jen lokálně v tomto prohlížeči – drobnosti do sdíleného
   <code>localStorage</code>, větší data (fotky, písma, modely) do databází IndexedDB.</p>
+
+  <div class="card" id="zalozky">
+    <h2>🗂️ Záložky – uspávání stránek</h2>
+    <div class="volby">
+      <label>Stránky držené v paměti
+        <select id="zivych">
+          <option value="1">1 – jen aktivní (přepnutí vždy znovu načte)</option>
+          <option value="2">2 – aktivní a předchozí (úsporné, výchozí)</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="6">6</option>
+          <option value="8">8 – hodně paměti</option>
+        </select>
+        <small>Kolik naposledy použitých záložek zůstane naživu i se stavem (rozehraná hra, vyplněný formulář). Ostatní se uspí a po kliknutí se znovu načtou.</small>
+      </label>
+      <label>Uspat skrytou záložku po
+        <select id="poMin">
+          <option value="1">1 minutě</option>
+          <option value="5">5 minutách (výchozí)</option>
+          <option value="15">15 minutách</option>
+          <option value="30">30 minutách</option>
+          <option value="60">hodině</option>
+          <option value="0">nikdy – jen podle počtu</option>
+        </select>
+        <small>Skrytá záložka se po této době uspí, i když se do počtu vejde.</small>
+      </label>
+    </div>
+    <p class="note">Nikdy se neuspí připnutá záložka 📌, záložka, ve které hraje zvuk 🔊, a stránka s neuloženými změnami.
+    Uspaná stránka přijde o to, co si sama neuloží. Změna platí hned.</p>
+  </div>
 
   <div class="card">
     <h2>💾 Sdílené úložiště (localStorage)</h2>
@@ -311,8 +345,31 @@ td.akce{width:1%;vertical-align:top}
     vypisIdb();
   });
 
+  /* ---- uspávání záložek rozcestníku (čte zalozky.js, stejné výchozí hodnoty) ---- */
+  const KLIC_USPAVANI = 'webapp_zalozky_uspavani';
+  const USPAVANI_VYCHOZI = { zivych: 2, poMin: 5 };
+  function ukazUspavani(){
+    let u = {};
+    try{ u = JSON.parse(localStorage.getItem(KLIC_USPAVANI)) || {}; }catch(e){}
+    $('zivych').value = String(u.zivych || USPAVANI_VYCHOZI.zivych);
+    $('poMin').value = String(u.poMin ?? USPAVANI_VYCHOZI.poMin);
+    // hodnota mimo nabídku (ručně / starší verze) → výchozí
+    if($('zivych').selectedIndex < 0) $('zivych').value = String(USPAVANI_VYCHOZI.zivych);
+    if($('poMin').selectedIndex < 0) $('poMin').value = String(USPAVANI_VYCHOZI.poMin);
+  }
+  function ulozUspavani(){
+    try{
+      localStorage.setItem(KLIC_USPAVANI, JSON.stringify({ zivych: +$('zivych').value, poMin: +$('poMin').value }));
+      Dialog.info('Uspávání záložek uloženo.');
+    }catch(e){ Dialog.chyba('Nastavení nejde uložit – úložiště prohlížeče je plné nebo zablokované.'); }
+    vypis();
+  }
+  $('zivych').addEventListener('change', ulozUspavani);
+  $('poMin').addEventListener('change', ulozUspavani);
+  ukazUspavani();
+
   // změny z jiných záložek
-  window.addEventListener('storage', vypis);
+  window.addEventListener('storage', e => { vypis(); if(e.key === KLIC_USPAVANI) ukazUspavani(); });
   vypis();
   vypisIdb();
 })();

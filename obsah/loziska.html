@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Katalog ložisek, O-kroužků a těsnění</title>
+<meta name="description" content="Dekodér označení ložisek (6204-2RS C3, 608ZZ, 30205, NU205…), hledání podle rozměrů, trvanlivost L10, uložení, O-kroužky s návrhem drážky, gufera DIN 3760, náčrty SVG a makety STL.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="loziska/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 200px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em}
+td.cena,th.cena{text-align:right;white-space:nowrap}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,820px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:480px){.radek,.radek3{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info.zakon{border-left:3px solid var(--accent)}
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto;display:grid;gap:12px}
+.mriz{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;align-items:start}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px 14px;min-width:0;display:grid;gap:10px;align-content:start}
+.karta h2{margin:0;font-size:.98rem}
+.karta h3{margin:4px 0 0;font-size:.86rem;color:var(--text-muted)}
+.priklady{display:flex;flex-wrap:wrap;gap:4px}
+.priklady .btn{padding:3px 8px;font-size:.76rem}
+.velky{font-size:1.25rem;font-weight:600}
+.vysl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.86rem;margin:0}
+.vysl dt{color:var(--text-muted)}
+.vysl dd{margin:0;word-break:break-word}
+.varovani{border-left:3px solid var(--warn);background:var(--bg-elevated);padding:6px 10px;border-radius:4px;font-size:.82rem;line-height:1.45}
+.varovani.ok{border-left-color:var(--ok)}
+.varovani.chyba{border-left-color:var(--danger)}
+.akce{display:flex;flex-wrap:wrap;gap:6px}
+.nacrt{background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);overflow:auto}
+.nacrt svg{display:block;width:100%;height:auto;max-height:420px}
+tr.klik{cursor:pointer}
+tr.klik:hover td{background:var(--bg-hover)}
+tr.vybrany td{background:var(--accent-soft)}
+td.c,th.c{text-align:right;white-space:nowrap}
+.hvezda{background:none;border:0;cursor:pointer;font-size:1.05rem;color:var(--text-muted);padding:0 4px}
+.hvezda[aria-pressed="true"]{color:var(--warn)}
+.pozn{font-size:.78rem;color:var(--text-muted);line-height:1.45;margin:0}
+.ok-txt{color:var(--ok)} .warn-txt{color:var(--warn)} .chyba-txt{color:var(--danger)}
+details summary{cursor:pointer;font-size:.86rem;color:var(--text-muted)}
+a{color:var(--accent)}
+@media print{
+  .lista,.akce,.priklady,dialog,#podpis-pruh,.neTisk{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .karta,.tab-obal{break-inside:avoid;background:#fff;border-color:#999}
+  .nacrt{background:#fff;color:#000}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>⚙️ Ložiska a těsnění</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Záloha oblíbených a vlastních položek, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Ložiska"><span class="skup-nazev" aria-hidden="true">Ložiska</span><div class="skup-tl">
+    <button class="tl" data-pohled="lozisko" aria-pressed="true" title="Dekodér označení, rozměry, náčrt, uložení">🔩<span class="txt"> Dekodér</span></button>
+    <button class="tl" data-pohled="hledat" aria-pressed="false" title="Hledání podle hřídele, díry a šířky">🔎<span class="txt"> Podle rozměrů</span></button>
+    <button class="tl" data-pohled="trvanlivost" aria-pressed="false" title="Trvanlivost L10 a potřebná únosnost">⏱️<span class="txt"> Trvanlivost</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Těsnění"><span class="skup-nazev" aria-hidden="true">Těsnění</span><div class="skup-tl">
+    <button class="tl" data-pohled="okrouzky" aria-pressed="false" title="O-kroužky a návrh drážky">⭕<span class="txt"> O-kroužky</span></button>
+    <button class="tl" data-pohled="gufera" aria-pressed="false" title="Hřídelová těsnění DIN 3760">🛞<span class="txt"> Gufera</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Moje"><span class="skup-nazev" aria-hidden="true">Moje</span><div class="skup-tl">
+    <button class="tl" data-pohled="oblibene" aria-pressed="false" title="Oblíbené a vlastní položky">⭐<span class="txt"> Oblíbené</span></button>
+    <button class="tl" data-prikaz="noveLozisko" title="Přidat vlastní ložisko do katalogu">✚<span class="txt"> Vlastní ložisko</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha oblíbených a vlastních (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat oblíbené a vlastní položky…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main>
+<!-- ===== dekodér ===== -->
+<div class="obal" data-sekce="lozisko">
+  <div class="mriz">
+    <section class="karta">
+      <h2>🔩 Dekodér označení ložiska</h2>
+      <label class="pole">Označení (např. 6204-2RS C3)<input class="vstup" id="lOzn" value="6204-2RS C3" autocomplete="off" spellcheck="false"></label>
+      <div class="priklady" id="lPriklady"></div>
+      <div id="lVysledek"></div>
+    </section>
+    <section class="karta">
+      <h2>📐 Náčrt řezu</h2>
+      <div class="nacrt" id="lNacrt"></div>
+      <div class="akce">
+        <button class="btn mini" data-prikaz="svgKopie" data-zdroj="lNacrt">📋 Kopírovat SVG</button>
+        <button class="btn mini" data-prikaz="svgStahni" data-zdroj="lNacrt">⬇️ Stáhnout SVG</button>
+        <button class="btn mini" data-prikaz="tisk">🖨️ Tisk</button>
+      </div>
+      <h3>🧊 Do Modeláře 3D (STL)</h3>
+      <div class="radek neTisk">
+        <label class="pole">Vůle díry pouzdra (mm)<input class="vstup" id="lVule" value="0,1" inputmode="decimal"></label>
+        <label class="pole">Stěna pouzdra (mm)<input class="vstup" id="lStena" value="4" inputmode="decimal"></label>
+      </div>
+      <div class="akce">
+        <button class="btn mini" data-prikaz="stlMaketa">⬇️ Maketa ložiska (STL)</button>
+        <button class="btn mini" data-prikaz="stlPouzdro">⬇️ Pouzdro s osazením (STL)</button>
+      </div>
+      <p class="pozn">Modelář zatím nepřijímá data z jiných stránek přímo – stáhněte STL a v <a href="modelar.html" target="_self">Modeláři 3D</a> ho otevřete přes <i>Soubor → Otevřít / importovat</i> (Ctrl+O). Maketa je dutý válec d × D × B, pouzdro má díru D + vůle a dno s otvorem jako osazení.</p>
+    </section>
+    <section class="karta">
+      <h2>🎯 Doporučené uložení</h2>
+      <div class="radek">
+        <label class="pole">Co se otáčí vůči zatížení<select class="vstup" id="uRotuje"><option value="hridel">hřídel (běžné – motor, převodovka)</option><option value="pouzdro">pouzdro / náboj (kolo na čepu, kladka)</option></select></label>
+        <label class="pole">Zatížení<select class="vstup" id="uZatizeni"><option value="lehke">lehké (P ≤ 0,05 C)</option><option value="normalni" selected>normální (do 0,1 C)</option><option value="tezke">těžké (nad 0,1 C)</option></select></label>
+      </div>
+      <div id="uVysledek"></div>
+      <p class="pozn">Mezní úchylky a vůle/přesah konkrétního uložení spočítáte v <a href="iso_tolerance.html" target="_self">Tolerance a uložení ISO</a> (vnitřní kroužek ložiska má úchylku 0 až záporná – uložení k5 na něm dává lehký přesah).</p>
+    </section>
+  </div>
+</div>
+
+<!-- ===== hledání podle rozměrů ===== -->
+<div class="obal" data-sekce="hledat" hidden>
+  <section class="karta">
+    <h2>🔎 Ložisko podle rozměrů</h2>
+    <div class="radek3">
+      <label class="pole">Hřídel d (mm)<input class="vstup" id="hD1" inputmode="decimal" placeholder="např. 20"></label>
+      <label class="pole">Díra D (mm, prázdné = libovolná)<input class="vstup" id="hD2" inputmode="decimal"></label>
+      <label class="pole">Díra D nejvýš (mm)<input class="vstup" id="hDmax" inputmode="decimal"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Šířka B nejvýš (mm)<input class="vstup" id="hBmax" inputmode="decimal"></label>
+      <label class="pole">Typ<select class="vstup" id="hTyp"><option value="">všechny</option><option value="kulickove">kuličkové</option><option value="kuzelikove">kuželíkové</option><option value="valeckove">válečkové</option><option value="axialni">axiální</option></select></label>
+    </div>
+    <div class="tab-obal" id="hVysledek"></div>
+    <p class="pozn">Klepnutím na řádek otevřete ložisko v dekodéru. Únosnosti a otáčky jsou orientační (stav 11/2026), rozměry podle ISO 15.</p>
+  </section>
+</div>
+
+<!-- ===== trvanlivost ===== -->
+<div class="obal" data-sekce="trvanlivost" hidden>
+  <div class="mriz">
+    <section class="karta">
+      <h2>⏱️ Základní trvanlivost L10</h2>
+      <label class="pole">Ložisko (vyplní C a typ; nebo zadejte C ručně)<input class="vstup" id="tOzn" placeholder="např. 6205" autocomplete="off"></label>
+      <div class="radek">
+        <label class="pole">Dynamická únosnost C (kN)<input class="vstup" id="tC" inputmode="decimal" value="14,8"></label>
+        <label class="pole">Ekvivalentní zatížení P (kN)<input class="vstup" id="tP" inputmode="decimal" value="1,5"></label>
+      </div>
+      <div class="radek">
+        <label class="pole">Otáčky n (ot/min)<input class="vstup" id="tN" inputmode="decimal" value="1450"></label>
+        <label class="pole">Typ (exponent p)<select class="vstup" id="tTyp"><option value="3">kuličková (p = 3)</option><option value="3.3333333333">válečková, kuželíková (p = 10/3)</option></select></label>
+      </div>
+      <div id="tVysledek"></div>
+      <h3>Potřebná únosnost</h3>
+      <label class="pole">Požadovaná trvanlivost (h)<input class="vstup" id="tLh" inputmode="decimal" value="20000"></label>
+      <div id="tPotreba"></div>
+      <p class="pozn">L10 = (C/P)<sup>p</sup> milionů otáček – 90 % ložisek vydrží aspoň tolik. L10h = L10 · 10⁶ / (60 · n). Při čistě radiálním zatížení P = Fr; s axiální složkou P = X·Fr + Y·Fa podle katalogu. Nezahrnuje vliv maziva a čistoty (a<sub>ISO</sub>).</p>
+    </section>
+    <section class="karta">
+      <h2>📋 Obvyklá požadovaná trvanlivost</h2>
+      <div class="tab-obal"><table id="tTabulka"></table></div>
+    </section>
+  </div>
+</div>
+
+<!-- ===== O-kroužky ===== -->
+<div class="obal" data-sekce="okrouzky" hidden>
+  <div class="mriz">
+    <section class="karta">
+      <h2>⭕ Návrh drážky O-kroužku</h2>
+      <div class="radek">
+        <label class="pole">Uspořádání<select class="vstup" id="oTyp"><option value="pist">radiální – drážka na pístu / hřídeli (těsní v díře)</option><option value="tyc">radiální – drážka v tělese (těsní na tyči)</option><option value="celni">axiální – čelní drážka (vnitřní tlak)</option></select></label>
+        <label class="pole">Provoz<select class="vstup" id="oRezim"><option value="staticke">statické (stlačení 15–30 %)</option><option value="dynamicke">dynamické – pohyb (10–20 %)</option></select></label>
+      </div>
+      <div class="radek">
+        <label class="pole"><span id="oPrumerPopis">Průměr díry D (mm)</span><input class="vstup" id="oPrumer" inputmode="decimal" value="50"></label>
+        <label class="pole">Průřez d2<select class="vstup" id="oD2"><option value="">libovolný</option></select></label>
+      </div>
+      <h3>Vhodné kroužky</h3>
+      <div class="tab-obal" id="oKandidati"></div>
+    </section>
+    <section class="karta">
+      <h2>📏 Drážka a kontrola</h2>
+      <div class="radek">
+        <label class="pole">Kroužek d1 vnitřní (mm)<input class="vstup" id="oD1v" inputmode="decimal"></label>
+        <label class="pole">Kroužek d2 průřez (mm)<input class="vstup" id="oD2v" inputmode="decimal"></label>
+      </div>
+      <div class="radek">
+        <label class="pole">Hloubka drážky t (mm)<input class="vstup" id="oT" inputmode="decimal"></label>
+        <label class="pole">Šířka drážky b (mm)<input class="vstup" id="oB" inputmode="decimal"></label>
+      </div>
+      <div class="akce"><button class="btn mini" data-prikaz="oNavrh">🔄 Navrhnout t a b znovu</button><button class="hvezda" id="oHvezda" data-prikaz="oOblibene" aria-pressed="false" title="Do oblíbených">☆</button></div>
+      <div id="oVysledek"></div>
+      <div class="nacrt" id="oNacrt"></div>
+      <div class="akce">
+        <button class="btn mini" data-prikaz="svgKopie" data-zdroj="oNacrt">📋 Kopírovat SVG</button>
+        <button class="btn mini" data-prikaz="svgStahni" data-zdroj="oNacrt">⬇️ Stáhnout SVG</button>
+        <button class="btn mini" data-prikaz="stlDrazka">⬇️ Díl s drážkou (STL)</button>
+      </div>
+      <p class="pozn">t = hloubka od těsněné plochy ke dnu drážky (u radiální drážky včetně vůle mezi pístem a dírou). Při tlaku nad ~100 bar hlídejte spáru proti vytlačení (opěrný kroužek). STL je pro 3D tisk zkušebního kusu – v <a href="modelar.html" target="_self">Modeláři</a> přes Soubor → Otevřít.</p>
+    </section>
+  </div>
+  <section class="karta">
+    <h2>🧪 Materiály O-kroužků</h2>
+    <div class="tab-obal"><table id="oMaterialy"></table></div>
+  </section>
+  <section class="karta">
+    <details id="oRadaDet"><summary>📚 Rozměrová řada (AS568 / ISO 3601 palcová a běžné metrické) – <span id="oRadaPocet"></span></summary>
+      <div class="radek" style="margin:8px 0">
+        <label class="pole">Hledat d1 nebo číslo<input class="vstup" id="oRadaHledat" placeholder="např. 44 nebo 2-226" autocomplete="off"></label>
+        <label class="pole">Řada<select class="vstup" id="oRadaRada"><option value="">obě</option><option>AS568</option><option>metrické</option></select></label>
+      </div>
+      <div class="tab-obal" id="oRadaTab" style="max-height:420px;overflow:auto"></div>
+    </details>
+  </section>
+</div>
+
+<!-- ===== gufera ===== -->
+<div class="obal" data-sekce="gufera" hidden>
+  <div class="mriz">
+    <section class="karta">
+      <h2>🛞 Hřídelová těsnění (gufera) DIN 3760 / ISO 6194</h2>
+      <div class="radek3">
+        <label class="pole">Hřídel d (mm)<input class="vstup" id="gD" inputmode="decimal" value="20"></label>
+        <label class="pole">Díra D (mm)<input class="vstup" id="gDD" inputmode="decimal"></label>
+        <label class="pole">Šířka b nejvýš<input class="vstup" id="gB" inputmode="decimal"></label>
+      </div>
+      <div class="tab-obal" id="gVysledek"></div>
+      <p class="pozn">Označení např. <b>20×35×7 AS NBR</b> = d × D × b, typ, materiál. Výběr běžných rozměrů skladem – existují i další.</p>
+    </section>
+    <section class="karta">
+      <h2>🌀 Obvodová rychlost a materiál</h2>
+      <div class="radek">
+        <label class="pole">Hřídel d (mm)<input class="vstup" id="gVd" inputmode="decimal" value="20"></label>
+        <label class="pole">Otáčky (ot/min)<input class="vstup" id="gVn" inputmode="decimal" value="3000"></label>
+      </div>
+      <div id="gRychlost"></div>
+      <h3>Typy</h3>
+      <div id="gTypy"></div>
+      <h3>Hřídel a montáž</h3>
+      <ul id="gRady" style="margin:0;padding-left:18px;font-size:.84rem;line-height:1.5"></ul>
+    </section>
+  </div>
+</div>
+
+<!-- ===== oblíbené ===== -->
+<div class="obal" data-sekce="oblibene" hidden>
+  <section class="karta">
+    <h2>⭐ Oblíbené</h2>
+    <div id="fOblibene"></div>
+  </section>
+  <section class="karta">
+    <h2>🧩 Vlastní ložiska</h2>
+    <p class="pozn">Vlastní položky se objeví v dekodéru (podle označení) i v hledání podle rozměrů.</p>
+    <div class="tab-obal" id="fVlastni"></div>
+    <div class="akce"><button class="btn primary" data-prikaz="noveLozisko">✚ Přidat vlastní ložisko</button></div>
+  </section>
+</div>
+</main>
+
+<!-- vlastní ložisko -->
+<dialog class="okno" id="dlgVlastni"><form method="dialog">
+  <header>🧩 Vlastní ložisko</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Označení<input class="vstup" name="o" required maxlength="40" placeholder="např. 6902-ABC"></label>
+      <label class="pole">Typ<select class="vstup" name="typ"><option value="kulickove">kuličkové</option><option value="kuzelikove">kuželíkové</option><option value="valeckove">válečkové</option><option value="axialni">axiální</option></select></label>
+    </div>
+    <div class="radek3">
+      <label class="pole">d (mm)<input class="vstup" name="d" required inputmode="decimal"></label>
+      <label class="pole">D (mm)<input class="vstup" name="D" required inputmode="decimal"></label>
+      <label class="pole">B (mm)<input class="vstup" name="B" required inputmode="decimal"></label>
+    </div>
+    <div class="radek3">
+      <label class="pole">C (kN)<input class="vstup" name="C" inputmode="decimal"></label>
+      <label class="pole">C0 (kN)<input class="vstup" name="C0" inputmode="decimal"></label>
+      <label class="pole">Mezní otáčky<input class="vstup" name="n" inputmode="decimal"></label>
+    </div>
+    <label class="pole">Poznámka<input class="vstup" name="pozn" maxlength="300"></label>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>Dekodér</b> rozloží označení ložiska na základní číslo (řada + kód díry: 00 = 10 mm, 01 = 12, 02 = 15, 03 = 17, od 04 ×5) a přípony: krytí (Z, 2Z/ZZ, RS, 2RS, LLU…), drážku pro pojistný kroužek (N, NR), radiální vůli (C2–C5) a třídu přesnosti (P6–P2). Rozměry bere z tabulky hlavních řad; u neznámého rozměru odvodí aspoň d.</p>
+    <p style="margin:0"><b>Data:</b> rozměry d × D × B jsou normované (ISO 15, kuželíková ISO 355, axiální ISO 104). Únosnosti C/C0 jsou průměrné katalogové hodnoty a <b>mezní otáčky jsou odhad</b> z n·dm pro mazání tukem – stav k 11/2026, orientačně. Pro konstrukci ověřte v katalogu výrobce.</p>
+    <p style="margin:0"><b>O-kroužky:</b> hloubka drážky se navrhne pro stlačení ~22 % (statické) / 15 % (dynamické) / 25 % (čelní), šířka pro vyplnění ~77 %. Protažení kroužku na pístu snižuje průřez – počítá se s tím. Hodnoty t a b můžete přepsat a kontrola hned ukáže stlačení, vyplnění a varování.</p>
+    <p style="margin:0"><b>Rozměry AS568</b> jsou převedené z palců (řady 0xx, 1xx, 2xx, 3xx). Metrické rozměry odpovídají běžným sortimentům prodejců – dostupnost se liší.</p>
+    <p style="margin:0"><b>Do Modeláře 3D</b> se díly přenášejí přes soubor STL (Soubor → Otevřít / importovat). Náčrty jdou zkopírovat nebo stáhnout jako SVG.</p>
+    <p style="margin:0">Oblíbené a vlastní ložiska se ukládají jen v tomto prohlížeči – zálohujte přes <i>Soubor → Záloha</i>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.LoziskaJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const f = J.fmt;
+const cislo = v => { const x = parseFloat(String(v == null ? '' : v).replace(',', '.').replace(/\s/g, '')); return isFinite(x) ? x : null; };
+const hodnota = id => cislo($(id).value);
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let pohled = 'lozisko';
+try { pohled = localStorage.getItem(J.KLIC + '_pohled') || 'lozisko'; } catch (e) {}
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+const jeOblibene = k => data.oblibene.includes(k);
+const hvezda = (k, popis) => `<button class="hvezda" data-oblibene="${esc(k)}" aria-pressed="${jeOblibene(k)}" title="${jeOblibene(k) ? 'Odebrat z oblíbených' : 'Do oblíbených'}" aria-label="Oblíbené ${esc(popis || '')}">${jeOblibene(k) ? '★' : '☆'}</button>`;
+const TYPN = { kulickove: 'kuličkové', kuzelikove: 'kuželíkové', valeckove: 'válečkové', axialni: 'axiální' };
+
+/* ---------- dekodér ---------- */
+let lozisko = null;
+const PRIKLADY = ['6204-2RS C3', '608ZZ', '6001-2Z C3', '61804-2RS', '625ZZ', 'MR105ZZ', '6305-2Z/C3 P6', '6206 NR', '30205', '51105', 'NU205 ECP', 'NJ306'];
+$('lPriklady').innerHTML = PRIKLADY.map(p => `<button class="btn" data-priklad="${esc(p)}">${esc(p)}</button>`).join('');
+
+function vykresliLozisko() {
+  const r = J.dekoduj($('lOzn').value, data.vlastni);
+  lozisko = r.ok ? r : null;
+  if (!r.ok) {
+    $('lVysledek').innerHTML = `<div class="varovani chyba">${esc(r.chyba)}</div>`;
+    $('lNacrt').innerHTML = ''; $('uVysledek').innerHTML = ''; return;
+  }
+  const p = r.pripony, k = 'L:' + r.vstup;
+  const rad = (dt, dd) => dd ? `<dt>${dt}</dt><dd>${dd}</dd>` : '';
+  const rozm = r.D ? `${f(r.d)} × ${f(r.D)} × ${f(r.B)} mm` : `d = ${f(r.d)} mm (D a B neznámé)`;
+  $('lVysledek').innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="velky">${esc(r.zaklad)}</span>${hvezda(k, r.vstup)}<span class="pozn">${esc(r.rodina)}</span></div>
+    <dl class="vysl">
+      ${rad('Rozměry d × D × ' + esc(r.sirkaPopis.split(' ')[0]), esc(rozm))}
+      ${rad('Typ', esc(r.typNazev) + ' – ' + esc(r.zatizeni))}
+      ${rad('Provedení', r.predpona && esc(r.predpona))}
+      ${rad('Krytí', p.kryti ? `<b>${esc(p.kryti.kod)}</b> – ${esc(p.kryti.popis)}` : (r.typ === 'kulickove' ? 'otevřené (bez krytí) – mazat z okolí, nebo krytí dodatečně' : ''))}
+      ${rad('Drážka', p.drazka && `<b>${esc(p.drazka.kod)}</b> – ${esc(p.drazka.popis)}`)}
+      ${rad('Radiální vůle', p.vule ? `<b>${esc(p.vule.kod)}</b> – ${esc(p.vule.popis)}` : (r.typ !== 'axialni' ? 'normální (CN)' : ''))}
+      ${rad('Přesnost', p.presnost ? `<b>${esc(p.presnost.kod)}</b> – ${esc(p.presnost.popis)}` : 'normální (P0)')}
+      ${p.provedeni.map(x => rad('Konstrukce', `<b>${esc(x.kod)}</b> – ${esc(x.popis)}`)).join('')}
+      ${rad('Klec', p.klec && `<b>${esc(p.klec.kod)}</b> – ${esc(p.klec.popis)}`)}
+      ${rad('Mazivo', p.mazivo && `<b>${esc(p.mazivo.kod)}</b> – ${esc(p.mazivo.popis)}`)}
+      ${rad('Únosnost C / C0', r.C ? `${f(r.C)} kN / ${f(r.C0)} kN <span class="pozn">(orientačně)</span>` : '')}
+      ${rad('Mezní otáčky', r.nMez ? `≈ ${r.nMez.toLocaleString('cs-CZ')} ot/min <span class="pozn">(tuk, odhad)</span>` : '')}
+    </dl>
+    ${r.poznamky.map(x => `<div class="varovani">${esc(x)}</div>`).join('')}
+    ${r.C ? `<div class="akce"><button class="btn mini" data-prikaz="doTrvanlivosti">⏱️ Spočítat trvanlivost</button></div>` : ''}`;
+  $('lNacrt').innerHTML = J.svgLozisko(Object.assign({}, r, { kryti: p.kryti, nazev: r.vstup }));
+  vykresliUlozeni();
+}
+function vykresliUlozeni() {
+  if (!lozisko) return;
+  const u = J.ulozeni({ d: lozisko.d, rotuje: $('uRotuje').value, zatizeni: $('uZatizeni').value, typ: lozisko.typ });
+  $('uVysledek').innerHTML = `<dl class="vysl"><dt>Hřídel Ø ${f(lozisko.d)}</dt><dd><b>${esc(u.hridel)}</b></dd><dt>Díra Ø ${f(lozisko.D)}</dt><dd><b>${esc(u.dira)}</b></dd></dl>` +
+    u.pozn.map(x => `<p class="pozn">• ${esc(x)}</p>`).join('');
+}
+
+/* ---------- hledání ---------- */
+function vykresliHledani() {
+  const fl = { d: hodnota('hD1'), D: hodnota('hD2'), Dmax: hodnota('hDmax'), Bmax: hodnota('hBmax'), typ: $('hTyp').value };
+  if (fl.d == null && fl.D == null && fl.Dmax == null) { $('hVysledek').innerHTML = '<p class="pozn" style="padding:10px">Zadejte aspoň průměr hřídele d nebo díry D.</p>'; return; }
+  const sez = J.najdiLoziska(fl, data.vlastni);
+  if (!sez.length) { $('hVysledek').innerHTML = '<p class="pozn" style="padding:10px">Nic nevyhovuje. Zkuste povolit širší ložisko nebo jiný typ.</p>'; return; }
+  $('hVysledek').innerHTML = `<table><thead><tr><th></th><th>Označení</th><th>Typ</th><th class="c">d</th><th class="c">D</th><th class="c">B</th><th class="c">C kN</th><th class="c">C0 kN</th><th class="c">ot/min</th></tr></thead><tbody>` +
+    sez.map(l => `<tr class="klik" data-otevri="${esc(l.o)}"><td>${hvezda('L:' + l.o, l.o)}</td><td><b>${esc(l.o)}</b>${l.vlastni ? ' 🧩' : ''}</td><td>${TYPN[l.typ]}</td><td class="c">${f(l.d)}</td><td class="c">${f(l.D)}</td><td class="c">${f(l.B)}${l.Bk ? ` <span class="pozn">(kryté ${f(l.Bk)})</span>` : ''}</td><td class="c">${f(l.C)}</td><td class="c">${f(l.C0)}</td><td class="c">${l.nMez ? l.nMez.toLocaleString('cs-CZ') : '–'}</td></tr>`).join('') + '</tbody></table>';
+}
+
+/* ---------- trvanlivost ---------- */
+function vykresliTrvanlivost() {
+  const p = +$('tTyp').value, C = hodnota('tC'), P = hodnota('tP'), n = hodnota('tN'), Lh = hodnota('tLh');
+  const t = J.trvanlivost({ C, P, n, p });
+  $('tVysledek').innerHTML = t ? `<dl class="vysl"><dt>C / P</dt><dd>${f(t.CP, 2)}</dd><dt>L10</dt><dd><b>${f(t.L10, t.L10 < 10 ? 2 : 0)}</b> mil. otáček</dd>
+    <dt>L10h</dt><dd><b class="velky">${t.Lh != null ? Math.round(t.Lh).toLocaleString('cs-CZ') + ' h' : '–'}</b>${t.Lh != null ? ` <span class="pozn">≈ ${f(t.Lh / 8760, 1)} roku nepřetržitě, ${f(t.Lh / 2000, 1)} roku na 1 směnu</span>` : ''}</dd></dl>
+    ${P > 0.5 * C ? '<div class="varovani">P je přes polovinu C – vzorec L10 tu už nedává spolehlivý výsledek, zvolte větší ložisko.</div>' : ''}
+    ${C && P && P < 0.01 * C ? '<div class="varovani">Velmi malé zatížení (P &lt; 0,01 C) – kuličky mohou prokluzovat; trvanlivost určí spíš mazivo.</div>' : ''}`
+    : '<p class="pozn">Zadejte C a P.</p>';
+  const Cp = J.potrebneC({ P, n, Lh, p });
+  $('tPotreba').innerHTML = Cp ? `<dl class="vysl"><dt>Potřebné C</dt><dd><b>${f(Cp, 2)} kN</b></dd></dl>` +
+    (() => {
+      const typ = p === 3 ? 'kulickove' : null;
+      const sez = J.LOZISKA.filter(l => l.C >= Cp && (!typ || J.RODINY[l.rada].typ === typ)).sort((a, b) => a.D - b.D || a.d - b.d).slice(0, 6);
+      return sez.length ? `<p class="pozn">Nejmenší vyhovující ${typ ? 'kuličková ' : ''}ložiska: ${sez.map(l => `<a href="#" data-otevri="${esc(l.o)}">${esc(l.o)}</a> (${f(l.d)}×${f(l.D)}×${f(l.B)}, C ${f(l.C)})`).join(', ')}</p>` : '';
+    })() : '';
+}
+$('tTabulka').innerHTML = '<thead><tr><th>Použití</th><th>L10h</th></tr></thead><tbody>' + J.DOPORUCENA_LH.map(([a, b]) => `<tr><td>${esc(a)}</td><td style="white-space:nowrap">${esc(b)}</td></tr>`).join('') + '</tbody>';
+function nactiDoTrvanlivosti() {
+  const r = J.dekoduj($('tOzn').value, data.vlastni);
+  if (!r.ok || !r.C) return;
+  $('tC').value = f(r.C); $('tTyp').value = r.p === 3 ? '3' : '3.3333333333';
+}
+
+/* ---------- O-kroužky ---------- */
+let navrh = null;
+const D2 = [...new Set(J.OKROUZKY.map(o => o.d2))].sort((a, b) => a - b);
+$('oD2').insertAdjacentHTML('beforeend', D2.map(d => `<option value="${d}">${f(d)} mm</option>`).join(''));
+const POPIS_PRUMERU = { pist: 'Průměr díry D (mm)', tyc: 'Průměr tyče d (mm)', celni: 'Vnější Ø čelní drážky (mm)' };
+function oVstupy() { return { typ: $('oTyp').value, rezim: $('oRezim').value, prumer: hodnota('oPrumer') }; }
+function vykresliKandidaty() {
+  const v = oVstupy();
+  $('oPrumerPopis').textContent = POPIS_PRUMERU[v.typ];
+  $('oRezim').disabled = v.typ === 'celni';
+  const sez = J.najdiOkrouzky(Object.assign({}, v, { d2: cislo($('oD2').value) }));
+  if (!sez.length) { $('oKandidati').innerHTML = '<p class="pozn" style="padding:10px">Žádný kroužek z řady nevyhovuje – zadejte rozměr ručně vpravo.</p>'; return sez; }
+  $('oKandidati').innerHTML = `<table><thead><tr><th>Kroužek d1 × d2</th><th class="c">t</th><th class="c">b</th><th class="c">${v.typ === 'celni' ? 'obvod' : 'protaž.'}</th><th class="c">stlač.</th><th class="c">vypl.</th></tr></thead><tbody>` +
+    sez.map((n, i) => `<tr class="klik" data-kandidat="${i}"><td>${n.ok ? '✅' : '⚠️'} ${esc(n.krouzek.k)}</td><td class="c">${f(n.t)}</td><td class="c">${f(n.b)}</td><td class="c">${f(v.typ === 'celni' ? n.obvodStlaceni : n.protazeni, 1)} %</td><td class="c">${f(n.stlaceni, 1)} %</td><td class="c">${f(n.vyplneni, 0)} %</td></tr>`).join('') + '</tbody></table>';
+  return sez;
+}
+let kandidati = [];
+function vyberKandidata(n) {
+  $('oD1v').value = f(n.d1); $('oD2v').value = f(n.d2); $('oT').value = f(n.t); $('oB').value = f(n.b);
+  vykresliDrazku();
+}
+function oKlic() { const v = oVstupy(); return ['O:' + v.typ, v.rezim, v.prumer, hodnota('oD1v'), hodnota('oD2v'), hodnota('oT'), hodnota('oB')].join(';'); }
+function vykresliDrazku() {
+  const v = oVstupy(), d1 = hodnota('oD1v'), d2 = hodnota('oD2v'), t = hodnota('oT'), b = hodnota('oB');
+  if (!(v.prumer > 0 && d1 > 0 && d2 > 0 && t > 0 && b > 0)) { navrh = null; $('oVysledek').innerHTML = '<p class="pozn">Vyberte kroužek vlevo nebo vyplňte d1, d2, t a b.</p>'; $('oNacrt').innerHTML = ''; return; }
+  navrh = J.vyhodnotDrazku(Object.assign({}, v, { d1, d2, t, b }));
+  const n = navrh, ms = n.mezeStlaceni;
+  const barva = (x, a, c) => x < a || x > c ? 'warn-txt' : 'ok-txt';
+  const k = oKlic();
+  $('oHvezda').setAttribute('aria-pressed', jeOblibene(k)); $('oHvezda').textContent = jeOblibene(k) ? '★' : '☆';
+  $('oVysledek').innerHTML = `<dl class="vysl">
+    <dt>${{ pist: 'Ø dna drážky (píst)', tyc: 'Ø dna drážky (těleso)', celni: 'Ø drážky vnější / vnitřní' }[v.typ]}</dt><dd><b>${v.typ === 'celni' ? f(n.prumer) + ' / ' + f(n.dno) : f(n.dno)} mm</b></dd>
+    <dt>${v.typ === 'celni' ? 'Obvodové stlačení' : 'Protažení d1'}</dt><dd class="${v.typ === 'pist' ? barva(n.protazeni, 1, 5) : v.typ === 'tyc' ? barva(n.protazeni, 0, 3) : barva(n.obvodStlaceni, 0, 3)}">${f(v.typ === 'celni' ? n.obvodStlaceni : n.protazeni, 2)} %</dd>
+    <dt>Průřez po protažení</dt><dd>${f(n.d2ef, 2)} mm</dd>
+    <dt>Stlačení</dt><dd class="${barva(n.stlaceni, ms[0], ms[1])}"><b>${f(n.stlaceni, 1)} %</b> <span class="pozn">(${ms[0]}–${ms[1]} %)</span></dd>
+    <dt>Vyplnění drážky</dt><dd class="${barva(n.vyplneni, 70, 85)}"><b>${f(n.vyplneni, 1)} %</b> <span class="pozn">(70–85 %)</span></dd>
+  </dl>` + (n.ok ? '<div class="varovani ok">✅ Drážka je v doporučených mezích.</div>' : n.varovani.map(x => `<div class="varovani">⚠️ ${esc(x)}</div>`).join(''));
+  $('oNacrt').innerHTML = J.svgDrazka(n);
+}
+function oPrepocet(navrhnout) {
+  kandidati = vykresliKandidaty();
+  if (navrhnout || !hodnota('oD1v')) { if (kandidati.length) return vyberKandidata(kandidati[0]); }
+  vykresliDrazku();
+}
+function oNavrhZnovu() {
+  const v = oVstupy(), d1 = hodnota('oD1v'), d2 = hodnota('oD2v');
+  if (!(v.prumer > 0 && d1 > 0 && d2 > 0)) return Dialog.chyba('Vyplňte průměr a rozměr kroužku d1 × d2.');
+  vyberKandidata(J.navrhDrazky(Object.assign({}, v, { d1, d2 })));
+}
+$('oMaterialy').innerHTML = '<thead><tr><th>Materiál</th><th>Teploty</th><th>Odolá</th><th>Neodolá</th><th>Pozn.</th></tr></thead><tbody>' +
+  J.MATERIALY.map(m => `<tr><td><b>${esc(m.nazev)}</b></td><td style="white-space:nowrap">${m.tep[0]} až +${m.tep[1]} °C</td><td>${esc(m.dobre)}</td><td>${esc(m.spatne)}</td><td>${esc(m.pozn)}</td></tr>`).join('') + '</tbody>';
+$('oRadaPocet').textContent = J.OKROUZKY.length + ' rozměrů';
+function vykresliRadu() {
+  const q = $('oRadaHledat').value.trim().replace(',', '.'), rada = $('oRadaRada').value;
+  const x = cislo(q);
+  const sez = J.OKROUZKY.filter(o => (!rada || o.rada === rada) && (!q || (x != null && Math.abs(o.d1 - x) <= Math.max(1, x * 0.03)) || o.k.toLowerCase().includes(q.toLowerCase()))).slice(0, 400);
+  $('oRadaTab').innerHTML = `<table><thead><tr><th>Označení</th><th class="c">d1</th><th class="c">d2</th><th class="c">vnější Ø</th><th>Řada</th></tr></thead><tbody>` +
+    sez.map(o => `<tr><td>${esc(o.k)}</td><td class="c">${f(o.d1)}</td><td class="c">${f(o.d2)}</td><td class="c">${f(o.d1 + 2 * o.d2)}</td><td>${esc(o.rada)}</td></tr>`).join('') + '</tbody></table>';
+}
+
+/* ---------- gufera ---------- */
+function vykresliGufera() {
+  const sez = J.najdiGufera({ d: hodnota('gD'), D: hodnota('gDD'), b: hodnota('gB') });
+  $('gVysledek').innerHTML = sez.length ? `<table><thead><tr><th></th><th>d × D × b</th><th class="c">d</th><th class="c">D</th><th class="c">b</th></tr></thead><tbody>` +
+    sez.map(g => `<tr><td>${hvezda('G:' + g.k, g.k)}</td><td><b>${esc(g.k)}</b></td><td class="c">${f(g.d)}</td><td class="c">${f(g.D)}</td><td class="c">${f(g.b)}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="pozn" style="padding:10px">Žádný z běžných rozměrů nevyhovuje.</p>';
+  const v = J.obvodovaRychlost(hodnota('gVd') || 0, hodnota('gVn') || 0);
+  $('gRychlost').innerHTML = `<p style="margin:0">Obvodová rychlost <b class="velky">${f(v, 2)} m/s</b></p><div class="tab-obal"><table><thead><tr><th>Materiál</th><th class="c">v max</th><th>Teploty</th><th>Pozn.</th></tr></thead><tbody>` +
+    J.GUFERA_MATERIALY.map(m => `<tr><td><b>${m.k}</b> ${v <= m.vMax ? '<span class="ok-txt">✓</span>' : '<span class="chyba-txt">✗</span>'}</td><td class="c">${m.vMax} m/s</td><td style="white-space:nowrap">${m.tep[0]} až +${m.tep[1]} °C</td><td>${esc(m.pozn)}</td></tr>`).join('') + '</tbody></table></div><p class="pozn">Mezní rychlosti orientačně při dobrém mazání; u malých průměrů jsou nižší.</p>';
+}
+$('gTypy').innerHTML = '<dl class="vysl">' + J.GUFERA_TYPY.map(([k, p]) => `<dt><b>${esc(k)}</b></dt><dd>${esc(p)}</dd>`).join('') + '</dl>';
+$('gRady').innerHTML = J.GUFERA_RADY.map(r => `<li>${esc(r)}</li>`).join('');
+
+/* ---------- oblíbené a vlastní ---------- */
+function vykresliOblibene() {
+  const pol = data.oblibene.map(k => {
+    const [druh, ...zb] = k.split(':'); const s = zb.join(':');
+    if (druh === 'L') { const r = J.dekoduj(s, data.vlastni); return `<tr><td>${hvezda(k, s)}</td><td>🔩 ložisko</td><td><a href="#" data-otevri="${esc(s)}"><b>${esc(s)}</b></a></td><td>${r.ok && r.D ? `${f(r.d)} × ${f(r.D)} × ${f(r.B)}` : ''}</td></tr>`; }
+    if (druh === 'O') { const [typ, rezim, pr, d1, d2, t, b] = s.split(';'); return `<tr><td>${hvezda(k, '')}</td><td>⭕ O-kroužek</td><td><a href="#" data-okrouzek="${esc(k)}"><b>${f(+d1)} × ${f(+d2)}</b></a></td><td>${esc({ pist: 'píst v díře', tyc: 'na tyči', celni: 'čelní' }[typ] || '')} Ø ${f(+pr)}, drážka t ${f(+t)} × b ${f(+b)} (${rezim === 'dynamicke' ? 'dyn.' : 'stat.'})</td></tr>`; }
+    if (druh === 'G') return `<tr><td>${hvezda(k, s)}</td><td>🛞 gufero</td><td><b>${esc(s)}</b></td><td>DIN 3760</td></tr>`;
+    return '';
+  });
+  $('fOblibene').innerHTML = pol.length ? `<div class="tab-obal"><table><tbody>${pol.join('')}</tbody></table></div>` : '<p class="pozn">Zatím nic. Hvězdičkou ☆ u ložiska, gufera nebo návrhu drážky si položku uložíte sem.</p>';
+  $('fVlastni').innerHTML = data.vlastni.length ? `<table><thead><tr><th>Označení</th><th>Typ</th><th class="c">d × D × B</th><th class="c">C / C0</th><th>Pozn.</th><th></th></tr></thead><tbody>` +
+    data.vlastni.map((v, i) => `<tr><td><a href="#" data-otevri="${esc(v.o)}"><b>${esc(v.o)}</b></a></td><td>${TYPN[v.typ]}</td><td class="c">${f(v.d)} × ${f(v.D)} × ${f(v.B)}</td><td class="c">${f(v.C)} / ${f(v.C0)}</td><td>${esc(v.pozn)}</td><td style="white-space:nowrap"><button class="btn mini" data-vlastni-uprav="${i}">✎</button> <button class="btn mini danger" data-vlastni-smaz="${i}">🗑️</button></td></tr>`).join('') + '</tbody></table>'
+    : '<p class="pozn" style="padding:10px">Žádná vlastní ložiska.</p>';
+}
+async function upravVlastni(i) {
+  const dlg = $('dlgVlastni'), fm = dlg.querySelector('form'), v = i != null ? data.vlastni[i] : {};
+  for (const el of fm.elements) if (el.name) el.value = v[el.name] == null ? (el.name === 'typ' ? 'kulickove' : '') : (typeof v[el.name] === 'number' ? f(v[el.name], 3) : v[el.name]);
+  dlg.returnValue = ''; dlg.showModal();
+  await new Promise(r => dlg.addEventListener('close', r, { once: true }));
+  if (dlg.returnValue !== 'ok') return;
+  const n = { o: fm.elements.o.value.trim(), typ: fm.elements.typ.value, pozn: fm.elements.pozn.value.trim() };
+  for (const k of ['d', 'D', 'B', 'C', 'C0', 'n']) n[k] = cislo(fm.elements[k].value);
+  const m = J.migruj({ vlastni: [n] }).vlastni[0];
+  if (!m) return Dialog.chyba('Zkontrolujte rozměry: d, D a B musí být kladné a D větší než d.');
+  if (i != null) data.vlastni[i] = m; else data.vlastni.push(m);
+  uloz(); vykresli(); Dialog.info('Uloženo.');
+}
+
+/* ---------- soubory ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const bezpecneJmeno = s => String(s).replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '') || 'dil';
+function svgText(id) {
+  const svg = $(id).querySelector('svg');
+  return svg ? '<?xml version="1.0" encoding="UTF-8"?>\n' + svg.outerHTML.replace(/currentColor/g, '#000') : null;
+}
+function stl(sit, jmeno) {
+  const k = J.kontrolaSite(sit);
+  if (!k.vodotesna || !(k.objem > 0)) return Dialog.chyba('Síť se nepodařilo sestavit uzavřenou – zkontrolujte rozměry.');
+  stahni(jmeno + '.stl', J.stlBinarni(sit, jmeno), 'model/stl');
+}
+
+const PRIKAZY = {
+  napoveda: () => { $('dlgNapoveda').returnValue = ''; $('dlgNapoveda').showModal(); },
+  tisk: () => print(),
+  export: () => stahni('loziska-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Smazat všechny oblíbené a vlastní položky?')) return;
+    data = J.prazdna(); uloz(); vykresli();
+  },
+  noveLozisko: () => upravVlastni(null),
+  svgKopie: async el => {
+    const t = svgText(el.dataset.zdroj); if (!t) return Dialog.chyba('Náčrt je prázdný.');
+    try { await navigator.clipboard.writeText(t); Dialog.info('SVG zkopírováno.'); } catch (e) { Dialog.chyba('Schránka není dostupná – použijte stažení.'); }
+  },
+  svgStahni: el => {
+    const t = svgText(el.dataset.zdroj); if (!t) return Dialog.chyba('Náčrt je prázdný.');
+    stahni(bezpecneJmeno(el.dataset.zdroj === 'lNacrt' ? (lozisko ? lozisko.vstup : 'lozisko') : 'drazka-orings') + '.svg', t, 'image/svg+xml');
+  },
+  stlMaketa: () => {
+    if (!lozisko || !lozisko.D) return Dialog.chyba('Nejdřív zadejte ložisko se známými rozměry.');
+    stl(J.sitPrstenec(lozisko.d, lozisko.D, lozisko.B), bezpecneJmeno(lozisko.vstup) + '-maketa');
+  },
+  stlPouzdro: () => {
+    if (!lozisko || !lozisko.D) return Dialog.chyba('Nejdřív zadejte ložisko se známými rozměry.');
+    const vule = hodnota('lVule') || 0, stena = hodnota('lStena');
+    if (!(stena > 0.5)) return Dialog.chyba('Stěna pouzdra musí být aspoň 0,5 mm.');
+    stl(J.sitPouzdro(lozisko, { vule, stena }), bezpecneJmeno(lozisko.vstup) + '-pouzdro');
+  },
+  stlDrazka: () => {
+    if (!navrh) return Dialog.chyba('Nejdřív navrhněte drážku.');
+    if (navrh.typ === 'pist' && navrh.dno <= 0) return Dialog.chyba('Drážka je hlubší než poloměr pístu.');
+    stl(J.sitDrazka(navrh), 'drazka-' + navrh.typ + '-' + bezpecneJmeno(f(navrh.prumer)));
+  },
+  oNavrh: oNavrhZnovu,
+  oOblibene: () => { if (!navrh) return; J.prepniOblibene(data, oKlic()); uloz(); vykresliDrazku(); },
+  doTrvanlivosti: () => {
+    if (!lozisko) return;
+    $('tOzn').value = lozisko.vstup; $('tC').value = f(lozisko.C); $('tTyp').value = lozisko.p === 3 ? '3' : '3.3333333333';
+    prepni('trvanlivost');
+  }
+};
+
+$('souborImport').onchange = async e => {
+  const soubor = e.target.files[0]; e.target.value = '';
+  if (!soubor) return;
+  let d;
+  try { d = JSON.parse(await soubor.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || (!Array.isArray(d.oblibene) && !Array.isArray(d.vlastni))) return Dialog.chyba('Tohle není záloha katalogu ložisek.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.oblibene.length} oblíbených a ${m.vlastni.length} vlastních ložisek. Nahradit jimi současná data?`)) return;
+  data = m; uloz(); vykresli(); Dialog.info('Obnoveno.');
+};
+
+/* ---------- pohledy a události ---------- */
+function prepni(p) {
+  pohled = p;
+  try { localStorage.setItem(J.KLIC + '_pohled', p); } catch (e) {}
+  vykresli();
+  document.querySelector('main').scrollTop = 0;
+}
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pohled === pohled));
+  document.querySelectorAll('[data-sekce]').forEach(s => { s.hidden = s.dataset.sekce !== pohled; });
+  if (pohled === 'lozisko') vykresliLozisko();
+  else if (pohled === 'hledat') vykresliHledani();
+  else if (pohled === 'trvanlivost') vykresliTrvanlivost();
+  else if (pohled === 'okrouzky') { kandidati = vykresliKandidaty(); vykresliDrazku(); }
+  else if (pohled === 'gufera') vykresliGufera();
+  else vykresliOblibene();
+}
+function otevriLozisko(o) { $('lOzn').value = o; prepni('lozisko'); }
+
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const hv = e.target.closest('[data-oblibene]');
+  if (hv) { e.stopPropagation(); J.prepniOblibene(data, hv.dataset.oblibene); uloz(); return vykresli(); }
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) return prepni(pv.dataset.pohled);
+  const pr = e.target.closest('[data-priklad]');
+  if (pr) { $('lOzn').value = pr.dataset.priklad; return vykresliLozisko(); }
+  const ot = e.target.closest('[data-otevri]');
+  if (ot) { e.preventDefault(); return otevriLozisko(ot.dataset.otevri); }
+  const ka = e.target.closest('[data-kandidat]');
+  if (ka) return vyberKandidata(kandidati[+ka.dataset.kandidat]);
+  const ok = e.target.closest('[data-okrouzek]');
+  if (ok) {
+    e.preventDefault();
+    const [typ, rezim, pr2, d1, d2, t, b] = ok.dataset.okrouzek.slice(2).split(';');
+    $('oTyp').value = typ; $('oRezim').value = rezim; $('oPrumer').value = f(+pr2);
+    $('oD1v').value = f(+d1); $('oD2v').value = f(+d2); $('oT').value = f(+t); $('oB').value = f(+b);
+    return prepni('okrouzky');
+  }
+  const vu = e.target.closest('[data-vlastni-uprav]');
+  if (vu) return upravVlastni(+vu.dataset.vlastniUprav);
+  const vs = e.target.closest('[data-vlastni-smaz]');
+  if (vs) {
+    (async () => {
+      const i = +vs.dataset.vlastniSmaz;
+      if (!await Dialog.potvrd(`Smazat vlastní ložisko ${data.vlastni[i].o}?`)) return;
+      data.vlastni.splice(i, 1); uloz(); vykresli();
+    })();
+  }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+$('lOzn').addEventListener('input', vykresliLozisko);
+$('uRotuje').addEventListener('change', vykresliUlozeni);
+$('uZatizeni').addEventListener('change', vykresliUlozeni);
+['hD1', 'hD2', 'hDmax', 'hBmax', 'hTyp'].forEach(id => $(id).addEventListener('input', vykresliHledani));
+['tC', 'tP', 'tN', 'tTyp', 'tLh'].forEach(id => $(id).addEventListener('input', vykresliTrvanlivost));
+$('tOzn').addEventListener('input', () => { nactiDoTrvanlivosti(); vykresliTrvanlivost(); });
+['oTyp', 'oRezim', 'oPrumer', 'oD2'].forEach(id => $(id).addEventListener('input', () => oPrepocet(true)));
+['oD1v', 'oD2v', 'oT', 'oB'].forEach(id => $(id).addEventListener('input', vykresliDrazku));
+['oRadaHledat', 'oRadaRada'].forEach(id => $(id).addEventListener('input', vykresliRadu));
+$('oRadaDet').addEventListener('toggle', () => { if ($('oRadaDet').open) vykresliRadu(); });
+['gD', 'gDD', 'gB', 'gVd', 'gVn'].forEach(id => $(id).addEventListener('input', vykresliGufera));
+addEventListener('storage', e => { if (e.key === J.KLIC) { data = J.migruj(JSON.parse(e.newValue || 'null')); vykresli(); } });
+
+if (!document.querySelector(`[data-sekce="${pohled}"]`)) pohled = 'lozisko';
+oPrepocet(true);
+vykresli();
+window.LOZISKA_APP = { data: () => data, navrh: () => navrh, lozisko: () => lozisko };
+})();
+</script>
+</body>
+</html>

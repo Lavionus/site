@@ -369,6 +369,18 @@ const KATALOG_SEKCE = [
         "tagy": ["záruka", "záruky", "preventivní prohlídka", "zubař", "gynekolog", "očkování", "přeočkování", "tetanus", "klíšťata", "kontrola u lékaře", "doklady", "platnost", "občanský průkaz", "pas", "pes", "vzteklina", "připomínky", "kalendář", "rodina"]
       },
       {
+        "soubor": "obsah/zasoby.html",
+        "nazev": "📦 Zásoby spíže a mrazáku",
+        "stav": "vyvoj",
+        "tagy": ["zásoby", "spíž", "mrazák", "lednice", "potraviny", "datum spotřeby", "nákupní seznam", "EAN", "čárový kód", "domácnost", "plýtvání"]
+      },
+      {
+        "soubor": "obsah/predplatne.html",
+        "nazev": "💳 Správce předplatných",
+        "stav": "vyvoj",
+        "tagy": ["předplatné", "streaming", "software", "pojištění", "náklady", "obnova", "kalendář", "ics", "domácnost", "finance", "rozpočet"]
+      },
+      {
         "soubor": "obsah/odecty.html",
         "nazev": "🔌 Domácí odečty",
         "stav": "beta",
@@ -390,6 +402,12 @@ const KATALOG_SEKCE = [
           "tankování",
           "palivo"
         ]
+      },
+      {
+        "soubor": "obsah/pneumatiky.html",
+        "nazev": "🛞 Kalkulačka pneumatik a disků",
+        "stav": "vyvoj",
+        "tagy": ["pneumatiky", "disky", "auto", "rozměr", "tachometr", "ET", "rozteč", "DOT", "index nosnosti", "zimní pneumatiky", "tlak", "kalkulačka"]
       },
       {
         "soubor": "obsah/shopplanner.html",
@@ -458,6 +476,27 @@ const KATALOG_SEKCE = [
           "daň",
           "superhrubá"
         ]
+      },
+      {
+        "soubor": "obsah/davky.html",
+        "nazev": "🤱 Nemocenská, PPM a rodičovský příspěvek",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["nemocenská", "náhrada mzdy", "mateřská", "PPM", "peněžitá pomoc v mateřství", "rodičovský příspěvek", "rodičovská", "otcovská", "ošetřovné", "denní vyměřovací základ", "DVZ", "redukční hranice", "OSSZ", "dávky", "kalkulačka"]
+      },
+      {
+        "soubor": "obsah/osvc.html",
+        "nazev": "🧾 OSVČ: paušální daň vs. výdaje",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["osvč", "paušální daň", "výdajový paušál", "skutečné výdaje", "sociální pojištění", "zdravotní pojištění", "daň z příjmů", "DPP", "DPČ", "živnost", "kalkulačka"]
+      },
+      {
+        "soubor": "obsah/konec_pp.html",
+        "nazev": "📤 Konec pracovního poměru",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["výpověď", "výpovědní doba", "odstupné", "dovolená", "zákoník práce", "flexinovela", "dohoda", "zkušební doba", "úřad práce", "kalkulačka", "lhůty"]
       },
       {
         "soubor": "obsah/prace.html",
@@ -2010,6 +2049,12 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/loziska.html",
+        "nazev": "⚙️ Ložiska, O-kroužky a těsnění",
+        "stav": "vyvoj",
+        "tagy": ["ložiska", "kuličková ložiska", "6204", "608", "2RS", "ZZ", "C3", "O-kroužky", "drážka O-kroužku", "AS568", "gufera", "těsnění", "L10", "uložení", "strojírenství", "3D tisk", "STL"]
+      },
+      {
         "soubor": "obsah/hardness_conv.html",
         "nazev": "🔨 Převodník tvrdosti",
         "stav": "beta",
@@ -2307,6 +2352,12 @@ const KATALOG_SEKCE = [
         "nazev": "🔋 Ostrovní systém",
         "stav": "vyvoj",
         "tagy": ["off-grid", "baterie", "LiFePO4", "měnič", "solární panel", "MPPT", "chata", "průřez kabelu"]
+      },
+      {
+        "soubor": "obsah/baterie_pack.html",
+        "nazev": "🔋 Návrh bateriového packu",
+        "stav": "vyvoj",
+        "tagy": ["baterie", "akumulátor", "18650", "21700", "LiFePO4", "Li-ion", "BMS", "SxP", "článek", "elektronika", "3D tisk", "STL", "kalkulačka"]
       },
       {
         "soubor": "obsah/tarif_spot.html",
@@ -2618,7 +2669,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/spojky.html",
         "nazev": "🔗 Spojky profilů, trubek a latí",
         "stav": "vyvoj",
-        "tagy": ["3D tisk", "STL", "3MF", "spojka", "hliníkový profil", "2020", "3030", "4040", "T-matice", "úhelník", "trubka", "jäkl", "uzel", "kopule", "stan", "latě", "rám"]
+        "tagy": ["3D tisk", "STL", "3MF", "spojka", "hliníkový profil", "2020", "3030", "4040", "T-matice", "úhelník", "vzpěra", "skrytý úhelník", "krytka drážky", "lišta", "trubka", "jäkl", "uzel", "kopule", "stan", "latě", "rám"]
       },
       {
         "soubor": "obsah/uhelniky.html",
@@ -2631,6 +2682,30 @@ const KATALOG_SEKCE = [
         "nazev": "👓 Brýlové obroučky",
         "stav": "vyvoj",
         "tagy": ["3D tisk", "STL", "3MF", "brýle", "obroučky", "generátor", "optika", "pant", "stranice", "most", "drážka pro sklo", "boxing", "obruba"]
+      },
+      {
+        "soubor": "obsah/kliky.html",
+        "nazev": "🚪 Kliky a knoby ke dveřím",
+        "stav": "beta",
+        "tagy": ["3D tisk", "STL", "3MF", "klika", "kliky", "dveřní klika", "knob", "koule", "rozeta", "štít", "čtyřhran", "rozteč 72", "rozteč 90", "PZ", "BB", "WC", "trn", "kování", "dveře", "generátor"]
+      },
+      {
+        "soubor": "obsah/kolicky.html",
+        "nazev": "🧺 Kolíčky na prádlo",
+        "stav": "beta",
+        "tagy": ["3D tisk", "STL", "3MF", "kolíček", "kolíčky", "kolíček na prádlo", "prádlo", "šňůra", "pružina", "torzní pružina", "tlačná pružina", "tištěná pružina", "TPU", "oblouk", "smyčka", "třmen", "dřevěný kolíček", "plastový kolíček", "recyklace", "háček", "klip", "magnet", "skicář", "generátor"]
+      },
+      {
+        "soubor": "obsah/vesaky.html",
+        "nazev": "🧥 Věšáky se skrytými šrouby",
+        "stav": "beta",
+        "tagy": ["3D tisk", "STL", "3MF", "věšák", "háček", "háčky", "věšák na bundy", "kabát", "ručník", "nástěnný věšák", "skryté šrouby", "rybina", "úchyt na zeď", "náhodný tvar", "generátor"]
+      },
+      {
+        "soubor": "obsah/knob.html",
+        "nazev": "🔮 Knob – generátor tvarů",
+        "stav": "beta",
+        "tagy": ["3D tisk", "STL", "3MF", "knob", "koule", "dveřní knoflík", "nábytkový knoflík", "generátor", "semínko", "skica", "krček", "zapuštění", "čtyřhran", "D-profil", "šroubek", "rozeta"]
       },
       {
         "soubor": "obsah/ibc.html",

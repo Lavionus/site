@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zásoby spíže a mrazáku</title>
+<meta name="description" content="Evidence zásob ve spíži, lednici, mrazáku a sklepě: množství, data spotřeby, doporučená doba mražení, minimální zásoba a nákupní seznam, čtečka EAN, historie spotřeby.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="zasoby/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Hlídač termínů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 170px;flex-shrink:1;min-width:140px;background:none;border-color:transparent;padding:0}
+.lista .skup-rychle{flex:2 1 260px;flex-shrink:1;min-width:200px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup,.lista .skup-rychle .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;text-decoration:none}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.dlazdice:hover{border-color:var(--border-strong)}
+.dlazdice b{display:block;font-size:1.5rem;line-height:1.1}
+.dlazdice span{font-size:.78rem;color:var(--text-muted)}
+.dlazdice.po b{color:var(--danger)} .dlazdice.brzy b{color:var(--warn)} .dlazdice.ok b{color:var(--ok)}
+.dlazdice[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+
+h2.skupina{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:16px 0 6px}
+.seznam{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px}
+.karta{--pruh:var(--border-strong);background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--pruh);border-radius:var(--radius,8px);padding:9px 11px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.karta.po{--pruh:var(--danger)} .karta.brzy{--pruh:var(--warn)} .karta.ok{--pruh:var(--ok)}
+.karta.nula{opacity:.7}
+.karta h3{margin:0;font-size:.95rem;line-height:1.3;word-break:break-word;display:flex;justify-content:space-between;gap:8px}
+.karta h3 .mn{white-space:nowrap;font-weight:700}
+.karta .datum{font-size:.84rem}
+.karta.po .datum{color:var(--danger)} .karta.brzy .datum{color:var(--warn)}
+.karta .meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.76rem;color:var(--text-muted)}
+.karta .akce{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.znacka{display:inline-block;font-size:.7rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border)}
+.znacka.dokoupit{border-color:var(--warn);color:var(--text)}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.6}
+.tip{font-size:.8rem;color:var(--text-muted);margin:4px 0 10px}
+
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em}
+td.cislo,th.cislo{text-align:right;white-space:nowrap}
+tr.po td.datum{color:var(--danger)} tr.brzy td.datum{color:var(--warn)}
+td .akce{display:flex;gap:3px;flex-wrap:nowrap}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.pole .spolu{display:flex;gap:4px}
+.pole .spolu .vstup{flex:1}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.radek{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info.mraz{border-left:3px solid var(--accent)}
+
+/* čtečka EAN (zjednodušeno podle Deníku jídla) */
+.ctecka{position:fixed;inset:0;z-index:200;background:#000;color:#fff;display:flex;flex-direction:column}
+.ctecka-hlava{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.ctecka-hlava strong{margin-right:auto}
+.ctecka .btn{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka-obraz{position:relative;flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ctecka video{width:100%;height:100%;object-fit:cover}
+.ctecka-ramecek{position:absolute;left:7%;right:7%;top:25%;bottom:25%;border:2px solid rgba(255,255,255,.85);border-radius:12px;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
+.ctecka-stav{padding:10px 14px;text-align:center;font-size:.92rem;min-height:2.6em}
+.ctecka-stav.chyba{color:#ffb3b3}
+.ctecka-rucne{display:flex;gap:8px;padding:6px 12px 16px;max-width:520px;margin:0 auto;width:100%}
+.ctecka-rucne .vstup{flex:1;background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka-rucne .vstup::placeholder{color:rgba(255,255,255,.6)}
+
+@media print{
+  .lista,.akce,.souhrn,dialog,.ctecka,.tip,#podpis-pruh{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .karta,.tab-obal{break-inside:avoid;background:#fff;border-color:#999}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>📦 Zásoby</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Nákupní seznam, záloha, CSV, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Přidat"><span class="skup-nazev" aria-hidden="true">Přidat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="novy" title="Nová položka">✚<span class="txt"> Nová</span></button>
+    <button class="tl" data-prikaz="ctecka" title="Naskenovat čárový kód kamerou">📷<span class="txt"> EAN</span></button>
+  </div></div>
+  <div class="skup skup-rychle"><input type="text" id="rychle" class="vstup" placeholder="⚡ Rychle: Mléko, 2 l, lednice, 20.11. ⏎" aria-label="Rychlé přidání: název, množství, umístění, datum" autocomplete="off"></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="zasoby" aria-pressed="true">📋<span class="txt"> Zásoby</span></button>
+    <button class="tl" data-pohled="prosle" aria-pressed="false">⏰<span class="txt"> Brzy prošlé</span></button>
+    <button class="tl" data-pohled="dokoupit" aria-pressed="false">🛒<span class="txt"> Dokoupit</span></button>
+    <button class="tl" data-pohled="historie" aria-pressed="false">🧾<span class="txt"> Historie</span></button>
+    <select class="tl" id="filtrUmisteni" aria-label="Umístění"><option value="">Všude</option></select>
+    <select class="tl" id="filtrKategorie" aria-label="Kategorie"><option value="">Všechny kategorie</option></select>
+    <button class="tl" id="rezim" title="Karty / tabulka" aria-label="Karty nebo tabulka">☰</button>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat…" aria-label="Hledat">
+  </div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="seznamSchranka">🛒 Nákupní seznam do schránky</button>
+  <button class="tl" data-prikaz="planovac">🛍️ Zkopírovat seznam a otevřít Plánovač nákupů</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <button class="tl" data-prikaz="csv">📊 Zásoby do CSV</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+
+<datalist id="seznamKategorii"></datalist>
+<datalist id="seznamNazvu"></datalist>
+
+<!-- položka -->
+<dialog class="okno" id="dlgPolozka"><form method="dialog">
+  <header id="dlgPolozkaTitul">Položka</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" required maxlength="120" list="seznamNazvu" autocomplete="off"></label>
+    <div class="radek">
+      <label class="pole">Množství<span class="spolu"><input class="vstup" name="mnozstvi" inputmode="decimal" required><select class="vstup" name="jednotka" style="flex:0 0 5.5em" aria-label="Jednotka"></select></span></label>
+      <label class="pole">Minimální zásoba (pod ní = dokoupit, 0 = nehlídat)<input class="vstup" name="minimum" inputmode="decimal" placeholder="0"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Umístění<select class="vstup" name="umisteni"></select></label>
+      <label class="pole" id="poleVlastni" hidden>Vlastní umístění<input class="vstup" name="vlastni" maxlength="40" placeholder="např. garáž"></label>
+      <label class="pole">Kategorie<input class="vstup" name="kategorie" maxlength="40" list="seznamKategorii" placeholder="maso, zelenina…"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Datum spotřeby (prázdné = bez data)<input class="vstup" name="spotreba" type="date"></label>
+      <label class="pole" id="poleZamrazeno" hidden>Zamrazeno dne<input class="vstup" name="zamrazeno" type="date"></label>
+    </div>
+    <div class="info mraz" id="dlgMraz" hidden></div>
+    <div class="radek">
+      <label class="pole">EAN (čárový kód)<span class="spolu"><input class="vstup" name="ean" inputmode="numeric" maxlength="14" autocomplete="off"><button type="button" class="btn" id="dlgCtecka" title="Naskenovat kamerou" aria-label="Naskenovat kamerou">📷</button></span></label>
+    </div>
+    <label class="pole">Poznámka<textarea class="vstup" name="poznamka" rows="2" maxlength="1000"></textarea></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgPolozkaSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- vyhození -->
+<dialog class="okno" id="dlgVyhozeno"><form method="dialog">
+  <header id="dlgVyhozenoTitul">🗑️ Vyhodit</header>
+  <div class="telo">
+    <label class="pole">Důvod<select class="vstup" name="duvod"><option value="prošlé">prošlé</option><option value="zkažené">zkažené</option><option value="nechutnalo">nechutnalo</option><option value="jiný">jiný</option></select></label>
+    <label class="pole">Poznámka<input class="vstup" name="pozn" maxlength="150"></label>
+    <p class="info" style="margin:0">Zapíše se do historie spotřeby. Položka s minimální zásobou zůstane v seznamu „Dokoupit“, ostatní se odstraní.</p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">🗑️ Vyhodit</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0">Evidujte, co máte ve <b>spíži, lednici, mrazáku a sklepě</b>: množství s jednotkou, datum spotřeby, kategorii a <b>minimální zásobu</b>. Co klesne pod minimum (nebo na nulu), je v pohledu <b>🛒 Dokoupit</b>.</p>
+    <p style="margin:0"><b>⚡ Rychlé přidání</b> v liště: <i>název, množství, umístění, datum</i> a Enter – např. „Mléko, 2 l, lednice, 20.11.“. Pořadí dílů za názvem je volné; datum bez roku, které už minulo, se bere jako příští rok.</p>
+    <p style="margin:0"><b>❄️ Mrazák:</b> zadejte datum zamrazení – podle kategorie se odhadne doporučená doba uskladnění (maso 3–12 měsíců, ryby 2–6, zelenina a ovoce 8–12, pečivo 3, hotová jídla 2–3, mléčné 1–3; orientačně, stav 11/2026). Zadané datum spotřeby má přednost.</p>
+    <p style="margin:0"><b>⏰ Brzy prošlé:</b> po datu červeně, do 7 dní žlutě. Akce u položky: <b>−1/+1</b> množství, <b>✓ spotřebováno</b>, <b>🗑️ vyhozeno</b> (s důvodem) – vše jde do <b>🧾 Historie</b>.</p>
+    <p style="margin:0"><b>📷 EAN:</b> čtečka kamerou (nebo opis čísla) vyplní kód; název se předvyplní z vlastní paměti dřívějších položek se stejným kódem. Žádná online databáze se nevolá.</p>
+    <p style="margin:0"><b>Nákupní seznam</b> (Soubor) se zkopíruje do schránky jako text – vložte ho do poznámek nebo do <a href="shopplanner.html" style="color:var(--accent)">Plánovače nákupů</a>.</p>
+    <p style="margin:0">Data jsou jen v tomto prohlížeči (localStorage) – zálohujte přes <i>Soubor → Záloha</i>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.ZasobyJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const NADPISY = { po: '⛔ Prošlé', brzy: '⏰ Do 7 dní', ok: '✅ V pořádku', bez: '❔ Bez data' };
+const DRUHY = { spotreba: '✓ spotřebováno', vyhozeno: '🗑️ vyhozeno', odebrano: '− odebráno', pridano: '+ přidáno' };
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let pohled = 'zasoby', rezim = 'karty', filtrStav = '';
+try { pohled = localStorage.getItem(J.KLIC + '_pohled') || 'zasoby'; rezim = localStorage.getItem(J.KLIC + '_rezim') || 'karty'; } catch (e) {}
+const dnes = () => J.dnesIso();
+
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+function zapamatuj(klic, hodnota) { try { localStorage.setItem(J.KLIC + '_' + klic, hodnota); } catch (e) {} }
+
+/* ---------- vykreslení ---------- */
+function filtr() { return { text: $('hledat').value, umisteni: $('filtrUmisteni').value, kategorie: $('filtrKategorie').value }; }
+
+/* výběry v liště a našeptávače – po každé změně dat */
+function obnovVybery() {
+  const um = J.umisteniVsechna(data.polozky), selU = $('filtrUmisteni'), aktU = selU.value;
+  selU.innerHTML = '<option value="">Všude</option>' + um.map(u => `<option value="${esc(u.id)}">${esc(u.nazev)}</option>`).join('');
+  selU.value = um.some(u => u.id === aktU) ? aktU : '';
+  const kat = J.kategorieVsechny(data.polozky), selK = $('filtrKategorie'), aktK = selK.value;
+  const pouzite = new Set(data.polozky.map(p => p.kategorie).filter(Boolean));
+  selK.innerHTML = '<option value="">Všechny kategorie</option>' + kat.filter(k => pouzite.has(k)).map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+  selK.value = pouzite.has(aktK) ? aktK : '';
+  $('seznamKategorii').innerHTML = kat.map(k => `<option value="${esc(k)}">`).join('');
+  $('seznamNazvu').innerHTML = [...new Set(data.polozky.map(p => p.nazev).concat(Object.values(data.eany)))].sort((a, b) => a.localeCompare(b, 'cs')).map(n => `<option value="${esc(n)}">`).join('');
+  const f = $('dlgPolozka').querySelector('form');
+  f.umisteni.innerHTML = um.map(u => `<option value="${esc(u.id)}">${esc(u.nazev)}</option>`).join('') + '<option value="__vlastni">✏️ Vlastní…</option>';
+}
+
+function datumHtml(p, s) {
+  if (s.stav === 'bez') return p.umisteni === 'mrazak' && p.zamrazeno ? `zamrazeno ${J.formatDatum(p.zamrazeno)} · doba podle kategorie neznámá` : 'bez data';
+  return `${s.odhad ? 'doporučeno do' : 'spotřeba'} <b>${J.formatDatum(s.datum)}</b> · ${J.popisZbyva(s.dni)}${s.odhad ? ` <span class="znacka" title="odhad ze zamrazení ${J.formatDatum(p.zamrazeno)} a doporučené doby pro kategorii">odhad</span>` : ''}`;
+}
+const chybi = p => p.mnozstvi <= 0 || (p.minimum > 0 && p.mnozstvi < p.minimum);
+function akceHtml(p) {
+  return `<button class="btn mini" data-akce="minus" title="Odebrat 1" aria-label="Odebrat 1">−1</button><button class="btn mini" data-akce="plus" title="Přidat 1" aria-label="Přidat 1">+1</button>
+    <button class="btn mini" data-akce="spotreba" title="Spotřebováno">✓</button><button class="btn mini danger" data-akce="vyhozeno" title="Vyhozeno">🗑️</button><button class="btn mini" data-akce="upravit" title="Upravit">✎</button>`;
+}
+function karta(p, s) {
+  return `<article class="karta ${s.stav}${p.mnozstvi <= 0 ? ' nula' : ''}" data-id="${esc(p.id)}">
+    <h3><span data-i18n="ne">${esc(p.nazev)}</span><span class="mn">${J.formatMnozstvi(p.mnozstvi, p.jednotka)}</span></h3>
+    <div class="datum">${datumHtml(p, s)}</div>
+    <div class="meta">
+      <span>${esc(J.popisUmisteni(p.umisteni))}</span>
+      ${p.kategorie ? `<span>🏷️ ${esc(p.kategorie)}</span>` : ''}
+      ${p.umisteni === 'mrazak' && p.zamrazeno && !s.odhad ? `<span>❄️ od ${J.formatDatum(p.zamrazeno)}</span>` : ''}
+      ${p.minimum > 0 ? `<span>min ${J.formatMnozstvi(p.minimum, p.jednotka)}</span>` : ''}
+      ${chybi(p) ? '<span class="znacka dokoupit">🛒 dokoupit</span>' : ''}
+      ${p.ean ? `<span title="EAN">▌${esc(p.ean)}</span>` : ''}
+      ${p.poznamka ? `<span title="${esc(p.poznamka)}">📝 ${esc(p.poznamka.length > 40 ? p.poznamka.slice(0, 40) + '…' : p.poznamka)}</span>` : ''}
+    </div>
+    <div class="akce">${akceHtml(p)}</div>
+  </article>`;
+}
+function tabulka(rad) {
+  return `<div class="tab-obal"><table><thead><tr><th>Název</th><th class="cislo">Množství</th><th>Umístění</th><th>Kategorie</th><th>Datum</th><th class="cislo">Min</th><th></th></tr></thead><tbody>` +
+    rad.map(({ p, s }) => `<tr class="${s.stav}" data-id="${esc(p.id)}"><td><span data-i18n="ne">${esc(p.nazev)}</span>${chybi(p) ? ' <span class="znacka dokoupit">🛒</span>' : ''}</td><td class="cislo">${J.formatMnozstvi(p.mnozstvi, p.jednotka)}</td>
+      <td>${esc(J.popisUmisteni(p.umisteni))}</td><td>${esc(p.kategorie)}</td><td class="datum">${s.stav === 'bez' ? '' : (s.odhad ? '≈ ' : '') + J.formatDatum(s.datum) + ' (' + J.popisZbyva(s.dni) + ')'}</td>
+      <td class="cislo">${p.minimum > 0 ? J.formatMnozstvi(p.minimum, p.jednotka) : ''}</td><td><div class="akce">${akceHtml(p)}</div></td></tr>`).join('') + '</tbody></table></div>';
+}
+
+function vykresliZasoby() {
+  const d = dnes(), vse = J.filtruj(data.polozky, filtr());
+  const sh = J.souhrn(vse, d);
+  const dl = (st, cislo, popis) => `<button class="dlazdice ${st}" data-filtr="${st}" aria-pressed="${filtrStav === st}"><b>${cislo}</b><span>${popis}</span></button>`;
+  let h = `<div class="souhrn">${dl('', sh.celkem, 'položek')}${dl('po', sh.po, '⛔ prošlých')}${dl('brzy', sh.brzy, '⏰ do 7 dní')}${dl('dokoupit', sh.dokoupit, '🛒 dokoupit')}</div>`;
+  if (!data.polozky.length) {
+    h += `<div class="prazdno">Zatím žádné zásoby.<br>Přidejte první položku <button class="btn primary" data-prikaz="novy">✚ Nová</button> nebo napište do lišty „⚡ Mléko, 2 l, lednice, 20.11.“ a stiskněte Enter.</div>`;
+    $('obsah').innerHTML = h; return;
+  }
+  let pol = vse;
+  if (filtrStav === 'dokoupit') pol = J.dokoupit(pol);
+  else if (filtrStav) pol = pol.filter(p => J.stavPolozky(p, d).stav === filtrStav);
+  const rad = J.serad(pol, d, rezim === 'tabulka' ? 'umisteni' : 'datum');
+  if (!rad.length) h += '<div class="prazdno">Filtru nic neodpovídá.</div>';
+  else if (rezim === 'tabulka') h += tabulka(rad);
+  else {
+    // karty po umístěních, uvnitř podle stavu a data
+    const um = J.umisteniVsechna(data.polozky);
+    for (const u of um) {
+      const r = rad.filter(x => x.p.umisteni === u.id);
+      if (!r.length) continue;
+      h += `<h2 class="skupina">${esc(u.nazev)} (${r.length})</h2><div class="seznam">${r.map(x => karta(x.p, x.s)).join('')}</div>`;
+    }
+  }
+  $('obsah').innerHTML = h;
+}
+
+function vykresliProsle() {
+  const d = dnes();
+  const rad = J.serad(J.filtruj(data.polozky, filtr()), d, 'datum').filter(x => x.s.stav !== 'bez');
+  let h = '<p class="tip">Seřazeno podle data spotřeby (u mrazáku podle doporučené doby uskladnění). Po datu červeně, do 7 dní žlutě.</p>';
+  if (!rad.length) h += '<div class="prazdno">Žádná položka s datem.</div>';
+  else if (rezim === 'tabulka') h += tabulka(rad);
+  else {
+    let akt = null;
+    for (const x of rad) {
+      if (x.s.stav !== akt) { if (akt) h += '</div>'; akt = x.s.stav; h += `<h2 class="skupina">${NADPISY[akt]}</h2><div class="seznam">`; }
+      h += karta(x.p, x.s);
+    }
+    h += '</div>';
+  }
+  $('obsah').innerHTML = h;
+}
+
+function vykresliDokoupit() {
+  const pol = J.dokoupit(J.filtruj(data.polozky, filtr()));
+  let h = '<p class="tip">Položky na nule nebo pod minimální zásobou. <button class="btn mini" data-prikaz="seznamSchranka">📋 Kopírovat seznam</button></p>';
+  if (!pol.length) h += '<div class="prazdno">Nic nechybí. Minimální zásobu nastavíte u položky (✎ Upravit).</div>';
+  else h += `<div class="tab-obal"><table><thead><tr><th>Název</th><th class="cislo">Mám</th><th class="cislo">Minimum</th><th>Umístění</th><th></th></tr></thead><tbody>` +
+    pol.map(p => `<tr data-id="${esc(p.id)}"><td data-i18n="ne">${esc(p.nazev)}</td><td class="cislo">${J.formatMnozstvi(p.mnozstvi, p.jednotka)}</td><td class="cislo">${p.minimum > 0 ? J.formatMnozstvi(p.minimum, p.jednotka) : '—'}</td>
+      <td>${esc(J.popisUmisteni(p.umisteni))}</td><td><div class="akce"><button class="btn mini primary" data-akce="nakoupeno" title="Doplnit na minimum">🛒 Nakoupeno</button><button class="btn mini" data-akce="plus" aria-label="Přidat 1">+1</button><button class="btn mini" data-akce="upravit" title="Upravit">✎</button></div></td></tr>`).join('') +
+    '</tbody></table></div>';
+  $('obsah').innerHTML = h;
+}
+
+function vykresliHistorii() {
+  const q = J.bezDiakritiky($('hledat').value).trim();
+  const z = data.historie.filter(h => !q || J.bezDiakritiky(h.nazev + ' ' + h.duvod).includes(q)).sort((a, b) => a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : 0);
+  const vyh = z.filter(h => h.druh === 'vyhozeno').length;
+  let h = `<p class="tip">${z.length} záznamů${vyh ? `, z toho ${vyh}× vyhozeno` : ''}. Co bylo spotřebováno, vyhozeno nebo odebráno – a kdy.</p>`;
+  if (!z.length) h += '<div class="prazdno">Zatím žádné zápisy.</div>';
+  else h += `<div class="tab-obal"><table><thead><tr><th>Datum</th><th>Položka</th><th class="cislo">Množství</th><th>Co</th><th>Důvod</th><th></th></tr></thead><tbody>` +
+    z.map(x => `<tr><td>${J.formatDatum(x.datum)}</td><td data-i18n="ne">${esc(x.nazev)}</td><td class="cislo">${J.formatMnozstvi(x.mnozstvi, x.jednotka)}</td><td>${DRUHY[x.druh]}</td><td>${esc(x.duvod)}</td>
+      <td><button type="button" class="btn mini danger" data-smaz-zaznam="${esc(x.id)}" title="Smazat zápis" aria-label="Smazat zápis">✕</button></td></tr>`).join('') + '</tbody></table></div>';
+  $('obsah').innerHTML = h;
+}
+
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pohled === pohled));
+  $('rezim').textContent = rezim === 'tabulka' ? '▦' : '☰';
+  $('rezim').title = rezim === 'tabulka' ? 'Přepnout na karty' : 'Přepnout na tabulku';
+  if (pohled === 'prosle') vykresliProsle();
+  else if (pohled === 'dokoupit') vykresliDokoupit();
+  else if (pohled === 'historie') vykresliHistorii();
+  else vykresliZasoby();
+}
+
+/* ---------- dialogy ---------- */
+function otevri(dlg) {
+  return new Promise(res => {
+    dlg.addEventListener('close', () => res(dlg.returnValue), { once: true });
+    dlg.returnValue = '';
+    dlg.showModal();
+  });
+}
+function nastavPole(f) {
+  $('poleVlastni').hidden = f.umisteni.value !== '__vlastni';
+  const mraz = f.umisteni.value === 'mrazak';
+  $('poleZamrazeno').hidden = !mraz;
+  const doba = J.doporucenaDobaMrazeni(f.kategorie.value);
+  let t = '';
+  if (mraz) {
+    t = doba ? `❄️ Doporučená doba uskladnění pro „${f.kategorie.value.trim()}“: ${doba.od === doba.do ? doba.od : doba.od + '–' + doba.do} měsíců.`
+      : '❄️ Zadejte kategorii (maso, ryby, zelenina, ovoce, pečivo, hotová jídla, mléčné) – odhadne se doporučená doba uskladnění.';
+    if (doba && J.jeDatum(f.zamrazeno.value)) {
+      const konec = J.pridejMesice(f.zamrazeno.value, doba.do), dni = J.rozdilDni(dnes(), konec);
+      t += ` Zamrazeno ${J.formatDatum(f.zamrazeno.value)} → spotřebovat do ${J.formatDatum(konec)} (${J.popisZbyva(dni)}).`;
+      if (!f.spotreba.value) t += ' Bez zadaného data spotřeby se hlídá tento odhad.';
+    }
+  }
+  $('dlgMraz').textContent = t; $('dlgMraz').hidden = !t;
+}
+
+async function upravPolozku(p, predvyplneni) {
+  const dlg = $('dlgPolozka'), f = dlg.querySelector('form');
+  const novy = !p;
+  if (novy) p = J.normPolozka(Object.assign({ umisteni: $('filtrUmisteni').value || 'spiz', kategorie: $('filtrKategorie').value, mnozstvi: 1 }, predvyplneni || {}));
+  $('dlgPolozkaTitul').textContent = novy ? '✚ Nová položka' : '✎ ' + p.nazev;
+  f.nazev.value = novy && !(predvyplneni && predvyplneni.nazev) ? '' : p.nazev;
+  f.mnozstvi.value = String(p.mnozstvi).replace('.', ','); f.jednotka.value = p.jednotka;
+  f.minimum.value = p.minimum ? String(p.minimum).replace('.', ',') : '';
+  const zname = [...f.umisteni.options].some(o => o.value === p.umisteni);
+  f.umisteni.value = zname ? p.umisteni : '__vlastni'; f.vlastni.value = zname ? '' : p.umisteni;
+  f.kategorie.value = p.kategorie; f.spotreba.value = p.spotreba; f.zamrazeno.value = p.zamrazeno || (p.umisteni === 'mrazak' && novy ? dnes() : '');
+  f.ean.value = p.ean; f.poznamka.value = p.poznamka;
+  f.umisteni.onchange = f.kategorie.oninput = f.zamrazeno.oninput = f.spotreba.oninput = () => nastavPole(f);
+  f.ean.oninput = () => { const n = data.eany[f.ean.value.replace(/\D/g, '')]; if (n && !f.nazev.value.trim()) f.nazev.value = n; };
+  $('dlgCtecka').onclick = () => ctecka(kod => { f.ean.value = kod; f.ean.oninput(); });
+  nastavPole(f);
+  $('dlgPolozkaSmaz').hidden = novy;
+  $('dlgPolozkaSmaz').onclick = async () => {
+    if (!await Dialog.potvrd(`Smazat „${p.nazev}“ bez zápisu do historie?`)) return;
+    data.polozky = data.polozky.filter(x => x.id !== p.id); uloz(); dlg.close('smazano'); obnovVybery(); vykresli();
+  };
+  if (await otevri(dlg) !== 'ok') return;
+  if (f.ean.value.trim() && !J.eanKontrola(f.ean.value)) Dialog.info('Pozor: EAN nemá platnou kontrolní číslici, uloženo i tak.');
+  J.uloz(data, Object.assign({}, p, {
+    nazev: f.nazev.value, mnozstvi: f.mnozstvi.value, jednotka: f.jednotka.value, minimum: f.minimum.value,
+    umisteni: f.umisteni.value === '__vlastni' ? (f.vlastni.value.trim() || 'spiz') : f.umisteni.value,
+    kategorie: f.kategorie.value, spotreba: f.spotreba.value, zamrazeno: f.zamrazeno.value, ean: f.ean.value, poznamka: f.poznamka.value
+  }));
+  uloz(); obnovVybery(); vykresli();
+}
+
+async function vyhodit(p) {
+  const dlg = $('dlgVyhozeno'), f = dlg.querySelector('form');
+  $('dlgVyhozenoTitul').textContent = '🗑️ Vyhodit – ' + p.nazev + ' (' + J.formatMnozstvi(p.mnozstvi, p.jednotka) + ')';
+  f.duvod.value = J.stavPolozky(p, dnes()).stav === 'po' ? 'prošlé' : 'zkažené'; f.pozn.value = '';
+  if (await otevri(dlg) !== 'ok') return;
+  J.odepis(data, p.id, 'vyhozeno', f.duvod.value + (f.pozn.value.trim() ? ' – ' + f.pozn.value.trim() : ''), dnes());
+  uloz(); obnovVybery(); vykresli();
+}
+
+/* rychlé přidání z lišty */
+function rychlePridani() {
+  const inp = $('rychle'), p = J.rychle(inp.value, dnes());
+  if (!p) return;
+  if (p.umisteni === 'mrazak') p.zamrazeno = dnes();
+  J.uloz(data, p); uloz(); inp.value = ''; obnovVybery(); pohled = 'zasoby'; vykresli();
+  Dialog.info(`Přidáno: ${p.nazev} ${J.formatMnozstvi(p.mnozstvi, p.jednotka)} · ${J.popisUmisteni(p.umisteni)}${p.spotreba ? ' · do ' + J.formatDatum(p.spotreba) : ''}`);
+}
+
+/* ---------- čtečka EAN (kamera nebo opis; zxing z lib/ jako v Deníku jídla) ---------- */
+const ctecka = (() => {
+  const ZXING_JS = 'lib/zxing/zxing-reader.js', ZXING_WASM = 'lib/zxing/zxing_reader.wasm';
+  let okno = null, video = null, stavEl = null, proud = null, smycka = null, detektor = null, naKod = null, seance = 0;
+  const platno = document.createElement('canvas');
+  async function pripravDetektor() {
+    if (detektor) return detektor;
+    if ('BarcodeDetector' in window) {
+      try {
+        const podp = await window.BarcodeDetector.getSupportedFormats();
+        if (podp.includes('ean_13')) {
+          const d = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'].filter(x => podp.includes(x)) });
+          return (detektor = { cti: async zdroj => (await d.detect(zdroj)).map(r => r.rawValue) });
+        }
+      } catch (_) { /* zxing */ }
+    }
+    await new Promise((ok, chyba) => {
+      if (window.ZXingWASM) return ok();
+      const s = document.createElement('script'); s.src = ZXING_JS;
+      s.onload = () => window.ZXingWASM ? ok() : chyba(new Error('Čtečku se nepodařilo načíst.'));
+      s.onerror = () => { s.remove(); chyba(new Error('Čtečku se nepodařilo stáhnout (offline?).')); };
+      document.head.appendChild(s);
+    });
+    const Z = window.ZXingWASM, wasm = new URL(ZXING_WASM, location.href).href;
+    Z.prepareZXingModule({ overrides: { locateFile: (c, prefix) => c.endsWith('.wasm') ? wasm : prefix + c } });
+    return (detektor = {
+      cti: async zdroj => {
+        // střední pás obrazu, nejvýš 1280 px široký
+        const sw = zdroj.videoWidth * 0.86, sh = zdroj.videoHeight * 0.5, m = Math.min(1, 1280 / sw);
+        platno.width = Math.round(sw * m); platno.height = Math.round(sh * m);
+        const c = platno.getContext('2d', { willReadFrequently: true });
+        c.drawImage(zdroj, (zdroj.videoWidth - sw) / 2, (zdroj.videoHeight - sh) / 2, sw, sh, 0, 0, platno.width, platno.height);
+        const r = await Z.readBarcodes(c.getImageData(0, 0, platno.width, platno.height), { formats: ['EAN13', 'EAN8', 'UPCA', 'UPCE'], tryHarder: true, maxNumberOfSymbols: 1 });
+        return r.filter(x => x.isValid !== false).map(x => x.text);
+      }
+    });
+  }
+  function zprava(t, chyba) { stavEl.textContent = t; stavEl.classList.toggle('chyba', !!chyba); }
+  function vytvor() {
+    okno = document.createElement('div');
+    okno.className = 'ctecka'; okno.hidden = true; okno.setAttribute('role', 'dialog'); okno.setAttribute('aria-modal', 'true'); okno.setAttribute('aria-label', 'Čtečka čárových kódů');
+    okno.innerHTML = `<div class="ctecka-hlava"><strong>Naskenuj čárový kód</strong><button type="button" class="btn ctecka-zavri" aria-label="Zavřít čtečku">✕</button></div>
+      <div class="ctecka-obraz"><video playsinline muted autoplay></video><div class="ctecka-ramecek" aria-hidden="true"></div></div>
+      <p class="ctecka-stav" aria-live="polite">Spouštím kameru…</p>
+      <form class="ctecka-rucne"><input type="text" inputmode="numeric" autocomplete="off" maxlength="16" placeholder="nebo opiš číslo pod kódem" aria-label="Číslo čárového kódu" class="vstup"><button type="submit" class="btn">Použít</button></form>`;
+    document.body.appendChild(okno);
+    video = okno.querySelector('video'); stavEl = okno.querySelector('.ctecka-stav');
+    okno.querySelector('.ctecka-zavri').addEventListener('click', zavri);
+    okno.querySelector('.ctecka-rucne').addEventListener('submit', e => {
+      e.preventDefault();
+      const s = e.target.querySelector('input').value.replace(/\D/g, '');
+      if (!s) return;
+      if (!J.eanKontrola(s)) return zprava('Číslo ' + s + ' nemá platnou kontrolní číslici – zkontroluj opis.', true);
+      nalezeno(s);
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && okno && !okno.hidden) { e.preventDefault(); zavri(); } }, true);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && okno && !okno.hidden) zavri(); });
+  }
+  let posledni = { kod: null, cas: 0 };
+  async function cykl() {
+    smycka = null;
+    if (!okno || okno.hidden) return;
+    const moje = seance;
+    if (video.readyState >= 2 && video.videoWidth) {
+      try {
+        for (const t of await detektor.cti(video)) {
+          const k = String(t).replace(/\D/g, '');
+          if (moje !== seance) return;
+          if (!J.eanKontrola(k)) continue;
+          const ted = Date.now();   // dvě shodná čtení po sobě = odolnost proti chybě jedné čárky
+          if (posledni.kod === k && ted - posledni.cas < 2000) return nalezeno(k);
+          posledni = { kod: k, cas: ted };
+        }
+      } catch (e) { if (moje === seance) zprava('Chyba čtečky: ' + e.message, true); }
+    }
+    if (moje === seance && okno && !okno.hidden) smycka = setTimeout(cykl, 120);
+  }
+  function nalezeno(kod) {
+    try { if (navigator.vibrate) navigator.vibrate(60); } catch (_) {}
+    const cb = naKod; zavri(); if (cb) cb(kod);
+  }
+  function zastavKameru() { if (proud) { proud.getTracks().forEach(t => t.stop()); proud = null; } if (video) video.srcObject = null; }
+  async function otevri(cb) {
+    if (!okno) vytvor();
+    naKod = cb; const moje = ++seance; posledni = { kod: null, cas: 0 };
+    okno.hidden = false; okno.querySelector('.ctecka-rucne input').value = '';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      return zprava(window.isSecureContext === false ? 'Kamera funguje jen přes https. Opiš číslo pod kódem.' : 'Tento prohlížeč neumí kameru. Opiš číslo pod kódem.', true);
+    }
+    try {
+      zprava('Spouštím kameru…');
+      const [s] = await Promise.all([navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } }), pripravDetektor()]);
+      if (moje !== seance) { s.getTracks().forEach(t => t.stop()); return; }
+      proud = s; video.srcObject = s; await video.play().catch(() => {});
+      zprava('Namiř kameru na čárový kód'); cykl();
+    } catch (e) {
+      if (moje !== seance) return;
+      const n = e && e.name;
+      zprava((n === 'NotAllowedError' || n === 'SecurityError' ? 'Přístup ke kameře je zakázaný – povol ho v prohlížeči.' : n === 'NotFoundError' ? 'Zařízení nemá kameru.' : n === 'NotReadableError' ? 'Kameru používá jiná aplikace.' : (e && e.message) || 'Kameru se nepodařilo spustit.') + ' Číslo můžeš opsat.', true);
+      zastavKameru();
+    }
+  }
+  function zavri() {
+    if (!okno) return;
+    seance++; okno.hidden = true;
+    if (smycka) { clearTimeout(smycka); smycka = null; }
+    zastavKameru();
+  }
+  return otevri;
+})();
+
+/* ---------- soubor ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function doSchranky(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) { await Dialog.zeptej('Schránka není dostupná – zkopírujte text ručně:', text); return false; }
+}
+function nakupniSeznam() {
+  const t = J.nakupniText(data.polozky, dnes());
+  if (!t) Dialog.info('Nic nechybí – nákupní seznam je prázdný.');
+  return t;
+}
+
+const PRIKAZY = {
+  novy: () => upravPolozku(null),
+  ctecka: () => ctecka(kod => upravPolozku(null, { ean: kod, nazev: data.eany[kod] || '' })),
+  napoveda: () => otevri($('dlgNapoveda')),
+  tisk: () => print(),
+  seznamSchranka: async () => { const t = nakupniSeznam(); if (t && await doSchranky(t)) Dialog.info('Nákupní seznam zkopírován do schránky.'); },
+  planovac: async () => {
+    const t = nakupniSeznam();
+    if (t) await doSchranky(t);
+    if (!await Dialog.potvrd((t ? 'Seznam je ve schránce – v Plánovači nákupů ho vložte do poznámky nebo založte produkty.' : 'Plánovač nákupů se otevře bez seznamu.') + '\n\nOtevřít Plánovač nákupů?')) return;
+    location.href = 'shopplanner.html';
+  },
+  export: () => stahni('zasoby-' + dnes() + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  csv: () => stahni('zasoby.csv', J.csv(data.polozky, dnes()), 'text/csv'),
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Opravdu smazat všechny zásoby, historii i paměť EAN? Doporučujeme nejdřív zálohu.')) return;
+    data = J.prazdna(); uloz(); obnovVybery(); vykresli();
+  }
+};
+
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.polozky)) return Dialog.chyba('Tohle není záloha Zásob.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.polozky.length} položek a ${m.historie.length} zápisů historie. Nahradit jimi současná data?`)) return;
+  data = m; uloz(); obnovVybery(); vykresli(); Dialog.info('Obnoveno.');
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', async e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; zapamatuj('pohled', pohled); return vykresli(); }
+  const fl = e.target.closest('[data-filtr]');
+  if (fl) { filtrStav = filtrStav === fl.dataset.filtr ? '' : fl.dataset.filtr; return vykresli(); }
+  const sz = e.target.closest('[data-smaz-zaznam]');
+  if (sz) { if (await Dialog.potvrd('Smazat tento zápis?')) { J.smazZaznam(data, sz.dataset.smazZaznam); uloz(); vykresli(); } return; }
+  const a = e.target.closest('[data-akce]');
+  if (!a) return;
+  const u = data.polozky.find(x => x.id === a.closest('[data-id]').dataset.id); if (!u) return;
+  const akce = a.dataset.akce, d = dnes();
+  if (akce === 'minus') J.zmenMnozstvi(data, u.id, -1, d);
+  else if (akce === 'plus') J.zmenMnozstvi(data, u.id, 1, d);
+  else if (akce === 'nakoupeno') J.zmenMnozstvi(data, u.id, Math.max(u.minimum - u.mnozstvi, 1), d);
+  else if (akce === 'spotreba') { if (!await Dialog.potvrd(`Spotřebováno: ${u.nazev} (${J.formatMnozstvi(u.mnozstvi, u.jednotka)})?`)) return; J.odepis(data, u.id, 'spotreba', '', d); }
+  else if (akce === 'vyhozeno') return vyhodit(u);
+  else return upravPolozku(u);
+  uloz(); obnovVybery(); vykresli();
+});
+$('rezim').addEventListener('click', () => { rezim = rezim === 'tabulka' ? 'karty' : 'tabulka'; zapamatuj('rezim', rezim); vykresli(); });
+$('rychle').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); rychlePridani(); } });
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+$('hledat').addEventListener('input', vykresli);
+$('filtrUmisteni').addEventListener('change', vykresli);
+$('filtrKategorie').addEventListener('change', vykresli);
+addEventListener('storage', e => { if (e.key === J.KLIC) { data = J.migruj(JSON.parse(e.newValue || 'null')); obnovVybery(); vykresli(); } });
+
+$('dlgPolozka').querySelector('[name=jednotka]').innerHTML = J.JEDNOTKY.map(j => `<option>${j}</option>`).join('');
+obnovVybery();
+vykresli();
+window.ZASOBY_APP = { data: () => data, vykresli };
+})();
+</script>
+</body>
+</html>

@@ -50,7 +50,7 @@
   opt('f_rtvar', S.TVARY_RAMEN, (k, v) => v.nazev);
   opt('f_mat', S.MATERIALY, (k, v) => `${v.nazev} – ${fmt(v.hustota, 2)} g/cm³`);
   const pole = [...document.querySelectorAll('[data-p]')];
-  const ROZMERY_RADY = ['profil.a', 'profil.drazka', 'profil.limec', 'profil.hloubka', 'profil.stred'];
+  const ROZMERY_RADY = ['profil.a', 'profil.drazka', 'profil.limec', 'profil.hloubka', 'profil.stred', 'profil.dutina'];
   function naplnFormular() {
     for (const el of pole) {
       const h = S.vezmi(p, el.dataset.p);
@@ -110,8 +110,9 @@
     for (const el of document.querySelectorAll('[data-rtvar]')) el.hidden = el.dataset.rtvar !== p.ramena.tvar;
     for (const el of document.querySelectorAll('[data-styl]')) el.hidden = el.dataset.styl !== styl;
     document.querySelectorAll('[data-typ-volba]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.typVolba === p.typ)));
-    $('lTl').textContent = { uhelnik: 'Tloušťka ramen', plocha: 'Tloušťka desky', krytka: 'Tloušťka víčka', kostka: 'Stěna pod hlavou šroubu' }[p.profil.druh];
-    $('lDelka').textContent = p.profil.druh === 'plocha' ? 'Délka ramene za středem' : 'Délka ramene';
+    $('lTl').textContent = { uhelnik: 'Tloušťka ramen', plocha: 'Tloušťka desky', krytka: 'Tloušťka víčka', kostka: 'Stěna pod hlavou šroubu', vzpera: 'Tloušťka patek' }[p.profil.druh] || 'Tloušťka';
+    $('lDelka').textContent = { plocha: 'Délka ramene za středem', vzpera: 'Délka vzpěry (osa)', lista: 'Délka lišty' }[p.profil.druh] || 'Délka ramene';
+    $('lOtvoru').textContent = { vzpera: 'Otvorů na patce', vnitrni: 'Stavěcích šroubů na rameni' }[p.profil.druh] || 'Otvorů na rameni';
     $('lStena').textContent = styl === 'vnejsi' ? 'Stěna objímky' : 'Stěna čepu';
     $('lRozmer').textContent = p.trubka.prurez === 'kruh' ? 'Vnější průměr' : 'Vnější strana';
     $('lOtvor').textContent = p.typ === 'lat' ? 'Otvor pro šroub skrz lať' : 'Pojistný otvor';
@@ -193,9 +194,15 @@
         v += dl(o.styl === 'vnejsi' ? 'Dutina objímky' : 'Čep', dut.typ === 'kruh' ? `Ø ${fmt(2 * dut.r, 2)} mm` : `${fmt(2 * dut.hv, 2)} × ${fmt(2 * dut.hu, 2)} mm`, `hloubka ${fmt(o.L)} mm`);
       } else {
         const r = o.profil;
-        if (r.otvory) v += dl('Otvory', `${r.otvory.length} × Ø ${fmt(r.otvor, 1)}`, r.otvory.length ? `od rohu ${r.otvory.map(x => fmt(x - (p.profil.druh === 'plocha' ? 0 : 0))).join(', ')} mm` : '');
+        const dr = p.profil.druh;
+        if (dr === 'vzpera') v += dl('Vzpěra', `${fmt(p.profil.uhel)}° · ${fmt(r.D)} mm`, `tloušťka ${fmt(r.tb)} mm; patky ${fmt(r.patkaH[1] - r.patkaH[0])} a ${fmt(r.patkaV[1] - r.patkaV[0])} mm`)
+          + dl('Otvory', `${2 * p.profil.otvoru} × Ø ${fmt(r.otvor, 1)}`, r.otvoryH.length ? `od rohu ${r.otvoryH.map(x => fmt(x)).join(' · ')} / ${r.otvoryV.map(x => fmt(x)).join(' · ')} mm` : '');
+        if (dr === 'vnitrni') v += dl('Rameno v drážce', `${fmt(2 * r.hrdlo, 2)} / ${fmt(2 * r.dutinaPul, 2)} mm`, `hrdlo skrz límec / dutina pod ním, hloubka ${fmt(r.dno)} mm`)
+          + dl('Otvory pro závit', `${2 * r.otvory.length} × Ø ${fmt(r.zavit, 1)}`, r.otvory.length ? `od rohu ${r.otvory.map(x => fmt(x)).join(' · ')} mm` : '');
+        if (dr === 'lista') v += dl('Lišta', `${fmt(2 * r.vicko, 2)} × ${fmt(p.profil.delka)} mm`, `zobáčky ${fmt(2 * r.zobak, 2)} mm do drážky ${fmt(p.profil.drazka)} mm`);
+        if (r.otvory && dr !== 'vnitrni') v += dl('Otvory', `${r.otvory.length} × Ø ${fmt(r.otvor, 1)}`, r.otvory.length ? `od rohu ${r.otvory.map(x => fmt(x - (p.profil.druh === 'plocha' ? 0 : 0))).join(', ')} mm` : '');
         if (r.K) v += dl('Kostka', `${fmt(r.K)} mm`, `nejmenší ${r.minKostka} mm (hlavy šroubů)`);
-        v += dl('Výstupek', `${fmt(r.sirkaKlice, 2)} × ${fmt(r.vyskaKlice, 2)} mm`, `drážka ${fmt(p.profil.drazka)} − 2 × vůle`);
+        if (dr !== 'vnitrni' && dr !== 'lista') v += dl('Výstupek', `${fmt(r.sirkaKlice, 2)} × ${fmt(r.vyskaKlice, 2)} mm`, `drážka ${fmt(p.profil.drazka)} − 2 × vůle`);
       }
       v += dl('Orientace tisku', m.rozbor.vybrana.nazev, podpory ? `${fmt(m.rozbor.vybrana.volne, 0)} mm² převisů – s podporami` : 'bez podpor', podpory ? 'mez-t' : 'ok-t');
     } else v = dl('Model', wasm ? 'nesestaven' : 'načítám…', chybaStavby || '');

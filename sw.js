@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v655';
+const CACHE = PREFIX + 'v701';
 const JADRO = [
   './',
   './index.html',
@@ -17,6 +17,7 @@ const JADRO = [
   './verze.js',
   './rekord.js',
   './dialog.js',
+  './zalozky.js',
   './tvary.js',
   './i18n.js',
   './i18n/jazyky.js',

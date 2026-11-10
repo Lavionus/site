@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Věšáky se skrytými šrouby – generátor pro 3D tisk</title>
+  <meta name="description" content="Generátor nástěnných věšáků na bundy, kabáty, tašky a ručníky pro 3D tisk se skrytými šrouby: úchyt s rybinou nebo T přišroubovaný na zeď, věšák se nasune shora a vruty zakryje, klín vymezí vůli. Tvar háčku z ramen (rovně, oblouk, spirála, zlom), galerie tvarů, náhodný generátor s kontrolou, že poutko drží, odhad pevnosti, tisk na boku bez podpor, export STL a 3MF.">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="trubky_gui.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="trubky_gui.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/three.r128.min.js"></script>
+  <script src="krabicky/jadro.js"></script>
+  <script src="spojky/jadro.js"></script>
+  <script src="vesaky/jadro.js"></script>
+  <script src="vesaky/geometrie.js"></script>
+  <script src="vesaky/vykres.js"></script>
+  <script src="vesaky/profil.js"></script>
+  <script src="vesaky/nahled.js"></script>
+  <script src="../tvary.js"></script>
+  <style>
+  <style>
+    :root { --sloupec: 320px; }
+    button, select, input, textarea { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border);
+      background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
+    #canvas-container:active { cursor: grabbing; }
+    #platno { position: absolute; inset: 0; }
+    .stav3d { position: absolute; left: 10px; top: 10px; font-size: 0.8rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: calc(100% - 20px); z-index: 2; }
+    .stav3d:empty { display: none; }
+    .stav3d.chyba { color: var(--danger); border-color: var(--danger); }
+    .karta3d { position: absolute; right: 10px; top: 10px; z-index: 2; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+      max-width: min(250px, 55%); pointer-events: none; }
+    .karta3d:empty { display: none; }
+    .karta3d b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .karta3d .titul { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+    .legenda3d { position: absolute; left: 10px; bottom: 30px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .legenda3d i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }
+    @media (max-width: 600px) { .karta3d { display: none; } }
+
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    .aplikace input[type="text"], .aplikace select, .aplikace textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 6px 8px; font-size: 0.9rem; min-width: 0; box-sizing: border-box;
+    }
+    .aplikace textarea { min-height: 96px; font: 0.82rem/1.4 ui-monospace, monospace; resize: vertical; }
+    .aplikace input:focus, .aplikace select:focus, .aplikace textarea:focus { outline: none; border-color: var(--accent); }
+    input.spatne { border-color: var(--danger) !important; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0 10px; align-items: end; }
+    .pole { min-width: 0; position: relative; }
+    .jedn { position: absolute; right: 9px; bottom: 7px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .pole input.mm { padding-right: 30px; }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin: 6px 0 0; line-height: 1.45; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+    .dlazdice { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius, 8px); padding: 7px 9px; min-width: 0; }
+    .dlazdice .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px; }
+    .dlazdice .cislo { font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
+    .dlazdice .dalsi { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .ok-t { color: var(--ok); } .mez-t { color: var(--warn); } .chyba-t { color: var(--danger); }
+    .hlaseni { list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; line-height: 1.4; padding: 0; margin: 0; }
+    .hlaseni li { padding: 5px 9px; border-left: 3px solid var(--border-strong); background: var(--bg-elevated); border-radius: 4px; }
+    .hlaseni li.chyba { border-left-color: var(--danger); }
+    .hlaseni li.varovani { border-left-color: var(--warn); }
+    .hlaseni li.info { border-left-color: var(--text-faint); color: var(--text-muted); }
+    .hlaseni li.ok { border-left-color: var(--ok); }
+    .hlaseni li.skok { cursor: pointer; }
+    .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+    .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
+    .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
+    @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
+    .zvyrazni { animation: zvyrazni 2.4s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .zvyrazni { animation: none; box-shadow: 0 0 0 3px var(--accent); } }
+    .tabulka { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .tabulka th, .tabulka td { text-align: left; padding: 4px 5px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .tabulka th { color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; }
+    .tabulka td.c { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .tabulka tr.vybrana td { background: var(--accent-soft); }
+    .tabulka tr.klik { cursor: pointer; } .tabulka tr.klik:hover td { background: var(--bg-hover); }
+    .obal-tab { overflow-x: auto; }
+    kbd { font-family: inherit; font-size: 0.72rem; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg-elevated); color: var(--text); }
+    .skryty { display: none; }
+    .segment { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px; }
+    .segment button { padding: 7px 4px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; font-size: 0.8rem; line-height: 1.2; }
+    .segment button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .segment button span { display: block; font-size: 1.15rem; }
+
+    dialog.napoveda-dlg { margin: auto; max-width: min(760px, 94vw); max-height: 86vh; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-panel); color: var(--text); padding: 0; }
+    dialog.napoveda-dlg::backdrop { background: color-mix(in srgb, var(--bg-deep, #000) 70%, transparent); }
+    .napoveda-dlg .hlava { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); }
+    .napoveda-dlg .hlava h2 { font-size: 1rem; margin: 0; }
+    .napoveda-dlg .telo { padding: 6px 18px 16px; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+    .napoveda-dlg .telo b { color: var(--text); }
+
+    .box-obecne { max-height: 50%; }
+    .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
+    .zalozky .souhrn-zal:empty { display: none; }
+    .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-pressed="false"]::before { content: '✓ '; visibility: hidden; }
+    .nab-pole input { width: 100%; box-sizing: border-box; }
+    .sloupec-nab { display: flex; flex-direction: column; max-height: 70vh; overflow-y: auto; }
+    .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
+    .lista-stav .odznak:hover { background: var(--bg-hover); }
+    .odznak.ok { color: var(--ok); } .odznak.mez { color: var(--warn); } .odznak.chyba { color: var(--danger); }
+    .box-telo .tl, .zalozka-telo .tl, .napoveda-dlg .tl { background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font: inherit; font-size: 0.82rem; color: var(--text); cursor: pointer; }
+    .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
+    .lista .tl:disabled { opacity: .4; cursor: default; }
+    .segment.pet { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+    .segment.dva { grid-template-columns: repeat(2, 1fr); }
+    .tabulka td.ok-t, .tabulka td.mez-t, .tabulka td.chyba-t { font-weight: 700; }
+    .vzhled-volba .pol[aria-checked="true"]::before { content: '● '; color: var(--accent); }
+    .vzhled-volba .pol[aria-checked="false"]::before { content: '● '; visibility: hidden; }
+    .galerie { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 5px; margin-top: 6px; }
+    .galerie-skupina { grid-column: 1 / -1; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin: 6px 0 0; }
+    .galerie button { padding: 3px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-input); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 0.64rem; line-height: 1.15; color: var(--text-muted); }
+    .galerie button:hover { border-color: var(--accent); }
+    .galerie svg { width: 100%; height: 54px; display: block; }
+    .galerie svg .tvar { fill: var(--accent); }
+    .galerie svg .zed { stroke: var(--text-faint); stroke-width: 1.2; }
+    .akce-tvaru { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .akce-tvaru .tl { padding: 8px 6px !important; font-weight: 600; }
+    .akce-tvaru .hlavni-tl { background: var(--accent) !important; color: var(--on-accent, #fff) !important; border-color: var(--accent) !important; }
+    .ramena-zal { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 2px; }
+    .ramena-zal button { padding: 4px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; font-size: 0.8rem; }
+    .ramena-zal button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .segmenty { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+    .seg-radek { display: grid; grid-template-columns: 26px 1fr auto; gap: 4px 6px; align-items: end; padding: 5px 6px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-elevated); }
+    .seg-radek .cislo-seg { font-size: 0.72rem; color: var(--text-faint); align-self: center; text-align: center; }
+    .seg-radek .seg-pole { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 0 6px; }
+    .seg-radek .seg-pole .pole:first-child { grid-column: 1 / -1; }
+    .seg-radek label { margin: 0 0 2px; font-size: 0.68rem; }
+    .seg-radek select, .seg-radek input { padding: 4px 6px !important; font-size: 0.84rem !important; }
+    .seg-radek .seg-tl { display: flex; gap: 2px; align-self: center; }
+    .seg-radek .seg-tl button { padding: 2px 6px; font-size: 0.8rem; }
+    .pridat-seg { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .pridat-seg .tl { font-size: 0.78rem !important; }
+    .vykres-plocha { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px; overflow-x: auto; }
+    .vykres-plocha svg { display: block; width: 100%; height: auto; max-height: 62vh; min-width: 420px; }
+    .tlacitka-radek { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    #sablona { display: none; }
+    @media print {
+      html.tisk-sablony body > *:not(#sablona) { display: none !important; }
+      html.tisk-sablony #sablona { display: block !important; color: #000; font: 9pt/1.35 sans-serif; }
+      html.tisk-sablony, html.tisk-sablony body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+      #sablona table { border-collapse: collapse; width: 100%; margin-bottom: 2mm; }
+      #sablona th, #sablona td { border-bottom: 0.2mm solid #999; padding: 0.6mm 1.5mm; text-align: left; vertical-align: top; }
+      #sablona h3 { font-size: 10.5pt; margin: 3mm 0 1mm; break-after: avoid; }
+      #sablona .list-hlava { font-size: 12pt; margin-bottom: 2mm; }
+      #sablona .list-vykres svg { max-width: 100%; height: auto; }
+      #sablona .list-pozn { font-size: 8pt; color: #333; }
+      #sablona ol { margin: 0; padding-left: 5mm; }
+      @page { size: A4 portrait; margin: 10mm; }
+    }
+    .galerie svg .dira { fill: var(--bg-input); }
+    .rezim-nahledu { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .rezim-nahledu button { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; font-size: 0.8rem; }
+    .rezim-nahledu button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .rezim-nahledu .pozn { font-size: 0.72rem; color: var(--text-faint); margin-left: auto; }
+    .nahledy { flex: 1 1 auto; min-height: 260px; display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+    .nahledy[data-rezim="3d"] { grid-template-columns: 1fr; } .nahledy[data-rezim="3d"] .profil-pane { display: none; }
+    .nahledy[data-rezim="profil"] { grid-template-columns: 1fr; } .nahledy[data-rezim="profil"] #canvas-container { display: none; }
+    .nahledy #canvas-container { min-height: 0; height: auto; }
+    .profil-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-input); overflow: hidden; }
+    .profil-lista { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 3px; padding: 4px; border-bottom: 1px solid var(--border); background: var(--bg-panel); flex: none; }
+    .profil-lista > * { flex: none; }
+    .profil-lista button { padding: 3px 7px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; font-size: 0.78rem; line-height: 1.2; }
+    .profil-lista button:hover { border-color: var(--accent); }
+    .profil-lista button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .profil-lista .odd { width: 1px; background: var(--border); margin: 2px 2px; }
+    .profil-hostitel { flex: 1 1 auto; min-height: 160px; position: relative; }
+    .profil-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; outline: none; }
+    .profil-svg.posouvam { cursor: grabbing; } .profil-svg.pero { cursor: crosshair; }
+    .profil-svg:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+    .profil-svg .mrizka { fill: none; vector-effect: non-scaling-stroke; stroke: var(--border); stroke-width: 0.5; }
+    .profil-svg .mrizka.m5 { stroke-width: 0.8; } .profil-svg .mrizka.m10 { stroke: var(--border-strong); stroke-width: 0.8; }
+    .profil-svg .osa-y0 { stroke: var(--text-faint); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 6 3; }
+    .profil-svg .zed { fill: color-mix(in srgb, var(--text-faint) 30%, transparent); }
+    .profil-svg .telo, .profil-svg .rameno path, .profil-svg .rameno circle { fill: color-mix(in srgb, var(--accent) 35%, var(--bg-input)); stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .profil-svg .rameno { cursor: pointer; }
+    .profil-svg .obrys { fill: color-mix(in srgb, var(--ok) 35%, transparent); stroke: var(--ok); stroke-width: 1.2; vector-effect: non-scaling-stroke; cursor: move; }
+    .profil-svg .obrys-dira { fill: color-mix(in srgb, var(--danger) 18%, var(--bg-input)); stroke: var(--danger); stroke-width: 1.2; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; cursor: move; }
+    .profil-svg .vybrany.obrys, .profil-svg .vybrany.obrys-dira { stroke-width: 2.2; }
+    .profil-svg .skryta { fill: none; stroke: var(--text); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+    .profil-svg .uchyt { fill: color-mix(in srgb, var(--text-faint) 25%, transparent); stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .profil-svg .osa, .profil-svg .pater { fill: none; stroke: var(--text-muted); stroke-width: 0.8; stroke-dasharray: 8 2 2 2; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .profil-svg .koren { fill: var(--bg-panel); stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; cursor: ns-resize; }
+    .profil-svg .zatez { fill: var(--warn); stroke: none; }
+    .profil-svg .usek-hit { fill: none; stroke: transparent; stroke-width: 12; vector-effect: non-scaling-stroke; cursor: copy; }
+    .profil-svg .usek-hit.vybrany { stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: 6; }
+    .profil-svg .bod { fill: var(--bg-panel); stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; cursor: move; }
+    .profil-svg .bod.vybrany { fill: var(--accent); } .profil-svg .bod.prvni { fill: var(--ok); }
+    .profil-svg .uchyt-cara { stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .profil-svg .uchyt-bod { fill: var(--accent); stroke: none; cursor: move; }
+    .profil-svg .pero-cara { fill: none; stroke: var(--ok); stroke-width: 1.5; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+    .profil-stav { flex: none; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; padding: 3px 8px; border-top: 1px solid var(--border); background: var(--bg-panel); font-size: 0.74rem; color: var(--text-muted); min-height: 26px; }
+    .aplikace .profil-stav input[type="text"] { width: 64px; display: inline-block; padding: 1px 4px; font-size: 0.78rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; color: var(--text); }
+    .profil-stav #profilZprava { flex: 1 1 200px; }
+    .profil-stav label { display: inline; margin: 0; font-size: inherit; }
+    @media (max-width: 900px) { .nahledy { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } .nahledy[data-rezim="oba"] { min-height: 620px; } }
+    .tvary-stitku { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 4px; margin-bottom: 4px; }
+    .tvary-stitku button { padding: 3px 2px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; font-size: 0.66rem; line-height: 1.15; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .tvary-stitku button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--text); font-weight: 600; }
+    .tvary-stitku svg { width: 30px; height: 30px; display: block; }
+    .tvary-stitku svg path { fill: var(--accent); }
+    .tvary-stitku svg .dira { fill: var(--bg-input); }
+    .aplikace .profil-lista select { width: auto; padding: 2px 4px; font-size: 0.76rem; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); }
+    .profil-podklad { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 3px 8px; border-bottom: 1px solid var(--border); background: var(--bg-panel); font-size: 0.76rem; color: var(--text-muted); }
+    .profil-podklad[hidden] { display: none; }
+    .profil-podklad label { display: inline; margin: 0; font-size: inherit; }
+    .aplikace .profil-podklad input[type="text"] { width: 60px; display: inline-block; padding: 1px 4px; }
+    .profil-svg[data-nastroj="mereni"], .profil-svg[data-nastroj="pero"] { cursor: crosshair; } .profil-svg[data-nastroj="podklad"] { cursor: move; }
+    .profil-svg .zed-cela { fill: color-mix(in srgb, var(--text-faint) 14%, transparent); }
+    .profil-svg .silueta { fill: color-mix(in srgb, var(--accent) 22%, transparent); stroke: var(--accent); stroke-width: 0.8; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .profil-svg .obrys.stitek { fill: color-mix(in srgb, var(--accent) 38%, var(--bg-input)); stroke: var(--accent); }
+    .profil-svg .predloha { stroke-dasharray: 6 3; }
+    .profil-svg .vrut { fill: none; stroke: var(--text-muted); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .profil-svg .osa-sym { stroke: var(--text-faint); stroke-width: 1; stroke-dasharray: 10 3 2 3; vector-effect: non-scaling-stroke; }
+    .profil-svg .osa-sym.zapnuta { stroke: var(--accent); }
+    .profil-svg .pero-cara.zrcadlo { opacity: 0.45; }
+    .profil-svg .prichyceno { fill: none; stroke: var(--warn); stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .profil-svg .mereni { stroke: var(--warn); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-dasharray: 6 3; }
+    .profil-svg .mereni-bod { fill: var(--warn); }
+    .profil-svg .obal { fill: none; stroke: var(--text-faint); stroke-width: 0.8; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .profil-svg .kota-text { fill: var(--text); font-family: system-ui, sans-serif; pointer-events: none; }
+    .profil-svg .kota-pozadi { fill: var(--bg-panel); opacity: 0.85; pointer-events: none; }
+    .profil-svg .varovani-text { fill: var(--danger); font-weight: 700; pointer-events: none; }
+    .profil-svg .podklad-obr { pointer-events: none; }
+    .seznam-obrysu { display: flex; flex-direction: column; gap: 4px; }
+    .obrys-radek { display: grid; grid-template-columns: 1fr 62px 50px 50px auto; gap: 4px; align-items: center; padding: 3px 5px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elevated); font-size: 0.78rem; }
+    .obrys-radek.vybrany { border-color: var(--accent); background: var(--accent-soft); }
+    .aplikace .obrys-radek input[type="text"], .aplikace .obrys-radek select { padding: 2px 4px; font-size: 0.78rem; }
+    .obrys-radek .tl { padding: 1px 5px !important; font-size: 0.74rem !important; }
+    .pocet-pokusu { font-size: 0.72rem; color: var(--text-faint); min-height: 1em; margin-top: 3px; }
+  </style>
+</head>
+<body>
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Věšáky se skrytými šrouby"><span aria-hidden="true">🧥</span><span class="jmeno"> Věšáky</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label>
+              <input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
+            <hr>
+            <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty</button>
+            <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
+            <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje věšáky…</button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – věšák i úchyt <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – věšák i úchyt <span class="pozn">s názvy a barvami</span></button>
+            <button class="pol" id="btnStlHacek" role="menuitem">⬇ STL – jen věšák</button>
+            <button class="pol" id="btnStlUchyt" role="menuitem">⬇ STL – jen úchyt na zeď</button>
+            <div class="nab-tip">Věšák leží na boku (vrstvy podél ramen = nejpevnější), úchyt zadní stranou dolů. Počet kusů nastavíte v záložce Tisk.</div>
+            <button class="pol" id="btnStlZkouska" role="menuitem">⬇ STL – zkušební sada vůle <span class="pozn">5 bloků + úchyt</span></button>
+            <hr>
+            <div class="nab-nadpis">K tisku na papír</div>
+            <button class="pol" id="btnList" role="menuitem">📐 Technický list <span class="pozn">výkres, kusovník, montáž – A4</span></button>
+            <button class="pol" id="btnSablona" role="menuitem">📏 Vrtací šablona 1:1 <span class="pozn">A4</span></button>
+            <button class="pol" id="btnSvg" role="menuitem">⬇ Výkres <span class="pozn">SVG</span></button>
+            <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Přepíše celé nastavení</div>
+            <div class="sloupec-nab" id="seznamPredvoleb"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-pressed="true">🧱 Zeď a vruty <span class="pozn">D</span></button>
+            <button class="pol" id="tRozpad" role="menuitemcheckbox" aria-pressed="false">🧩 Rozpad na díly <span class="pozn">R</span></button>
+            <button class="pol" id="tNasazeni" role="menuitemcheckbox" aria-pressed="false">↕ Nasazování (věšák nad úchytem) <span class="pozn">N</span></button>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">V</span></button>
+            <hr>
+            <div class="nab-nadpis">Vzhled</div>
+            <div class="sloupec-nab vzhled-volba" id="vzhledy" role="group" aria-label="Vzhled"></div>
+            <div class="nab-tip">Tisková poloha = jak díly leží na podložce; červeně převisy bez opory, žlutě mosty.</div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu (na zeď) <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku – profil <span class="pozn">4</span></button>
+          </div>
+        </div>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNapoveda" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
+    </header>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryty">
+
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">⚙ Tělo a úchyt</button>
+      <button data-ukaz="obecne" class="aktivni">🧥 Náhled</button>
+      <button data-ukaz="out" class="je-vystup">Tvar ✳</button>
+    </nav>
+
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in" id="boxUchyt" data-box="in" aria-label="Tělo věšáku a úchyt na zeď">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Tělo a úchyt na zeď</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="telo" open>
+            <summary><span class="oddil-nazev">Štítek na zdi</span><span class="souhrn" id="sTelo"></span></summary>
+            <div class="oddil-telo">
+              <div class="tvary-stitku" id="tvaryStitku" role="group" aria-label="Tvar štítku zepředu"></div>
+              <div class="mrizka">
+                <div class="pole"><label for="f_tsir">Šířka</label><input type="text" inputmode="decimal" class="mm" id="f_tsir" data-p="telo.sirka" title="Šířka štítku zepředu"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_tvys">Výška</label><input type="text" inputmode="decimal" class="mm" id="f_tvys" data-p="telo.vyska"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_thl">Hloubka od zdi</label><input type="text" inputmode="decimal" class="mm" id="f_thl" data-p="telo.hloubka" title="Tloušťka štítku = od zdi k čelu"><span class="jedn">mm</span></div>
+                <div class="pole" data-tvar="obdelnik oblouk kosoctverec mnohouhelnik zadny"><label for="f_troh">Zaoblení rohů</label><input type="text" inputmode="decimal" class="mm" id="f_troh" data-p="telo.roh" title="Poloměr rohů štítku zepředu"><span class="jedn">mm</span></div>
+                <div class="pole" data-tvar="mnohouhelnik"><label for="f_tpar">Počet stran</label><input type="text" inputmode="numeric" class="mm" id="f_tpar" data-p="telo.param"><span class="jedn">ks</span></div>
+                <div class="pole"><label for="f_thr">Hrany</label><input type="text" inputmode="decimal" class="mm" id="f_thr" data-p="telo.hrana" title="Zkosení / zaoblení čela štítku a bočních hran ramen, 0 = ostré"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_thtyp">Druh hran</label><select id="f_thtyp" data-p="telo.hranaTyp" data-typ="text"></select></div>
+                <div class="pole"><label for="f_tsr">Šířka ramen <span class="pozn">0 = jako štítek</span></label><input type="text" inputmode="decimal" class="mm" id="f_tsr" data-p="telo.sirkaRamen"><span class="jedn">mm</span></div>
+              </div>
+              <div class="tlacitka-radek"><button type="button" class="tl" id="btnUpravitStitek">✏️ Kreslit / upravit štítek</button></div>
+              <p class="napoveda">Štítek zakryje úchyt i hlavy vrutů. Kapsa se posune výš do štítku tak, aby byla všude krytá; pod ní zůstane zespodu otevřený kanál pro nasunutí.
+                <b>Jen závěs</b> nechá jen nutný blok kolem kapsy – zbytek nakreslete volně v profilu. Tvarovaný štítek se tiskne nejlépe zády dolů (záložka Tisk).</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="uchyt" open>
+            <summary><span class="oddil-nazev">Úchyt na zeď</span><span class="souhrn" id="sUchyt"></span></summary>
+            <div class="oddil-telo">
+              <div class="segment dva" role="group" aria-label="Profil úchytu" id="segProfil"></div>
+              <div class="mrizka">
+                <div class="pole"><label for="f_usir">Šířka vpředu</label><input type="text" inputmode="decimal" class="mm" id="f_usir" data-p="uchyt.sirka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_uhl">Tloušťka</label><input type="text" inputmode="decimal" class="mm" id="f_uhl" data-p="uchyt.hloubka" title="Od zdi k přední ploše úchytu"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_uvys">Výška</label><input type="text" inputmode="decimal" class="mm" id="f_uvys" data-p="uchyt.vyska"><span class="jedn">mm</span></div>
+                <div class="pole" data-profil="rybina"><label for="f_uuhel">Úhel rybiny</label><input type="text" inputmode="decimal" class="mm" id="f_uuhel" data-p="uchyt.uhel" title="Sklon boků od kolmice ke zdi"><span class="jedn">°</span></div>
+                <div class="pole" data-profil="T"><label for="f_upres">Přesah hlavy T</label><input type="text" inputmode="decimal" class="mm" id="f_upres" data-p="uchyt.presah" title="O kolik je hlava T na každé straně širší než krček"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_uklin">Klín <span class="pozn">zúžení nahoře</span></label><input type="text" inputmode="decimal" class="mm" id="f_uklin" data-p="uchyt.klin" title="O kolik je úchyt nahoře užší než dole – věšák se při nasunutí dotáhne"><span class="jedn">mm</span></div>
+                <div class="pole" style="grid-column: 1 / -1"><label class="zaskrt"><input type="checkbox" id="f_uvauto" data-p="uchyt.vyskaAuto" data-typ="bool"> Výška automaticky – úchyt co nejvýš, vruty mají nejdelší páku</label></div>
+                <div class="pole" data-okraj><label for="f_uokraj">Okraj nad kapsou</label><input type="text" inputmode="decimal" class="mm" id="f_uokraj" data-p="uchyt.okraj" title="Kolik materiálu štítku zůstane nad kapsou (u oblých tvarů nad jejími rohy)"><span class="jedn">mm</span></div>
+                <div class="pole"><label class="zaskrt" style="margin-top:22px"><input type="checkbox" id="f_uauto" data-p="uchyt.posunAuto" data-typ="bool"> Kapsa automaticky</label></div>
+                <div class="pole" data-posun><label for="f_uposun">Kapsa nad spodkem</label><input type="text" inputmode="decimal" class="mm" id="f_uposun" data-p="uchyt.posun" title="Výška spodku úchytu nad spodkem štítku"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_uvule">Vůle na straně</label><input type="text" inputmode="decimal" class="mm" id="f_uvule" data-p="uchyt.vule"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Úchyt se přišroubuje na zeď, věšák se na něj nasune shora. Kapsa je zespodu otevřená a nahoře zavřená – věšák dosedne a nejde odtáhnout od zdi.
+                S klínem se při dosednutí vymezí vůle a věšák se neviklá.
+                Automatická výška natáhne úchyt až k horní hraně štítku (s okrajem) – horní vrut je pak co nejvýš a zátěž ho vytahuje nejmenší silou.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="montaz" open>
+            <summary><span class="oddil-nazev">Montáž na zeď</span><span class="souhrn" id="sMontaz"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole" style="grid-column: 1 / -1"><label for="f_zed">Zeď</label><select id="f_zed" data-p="montaz.zed" data-typ="text"></select></div>
+                <div class="pole"><label for="f_omitka">Omítka / obklad</label><input type="text" inputmode="decimal" class="mm" id="f_omitka" data-p="montaz.omitka" title="Tloušťka vrstvy, která nenese (omítka, obklad, izolace) – prodlouží vrut"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mvys">Výška od podlahy</label><input type="text" inputmode="decimal" class="mm" id="f_mvys" data-p="montaz.vyska" title="Spodek věšáku nad podlahou – jen popisek na šabloně, 0 = neuvádět"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mpocet">Věšáků v řadě</label><input type="text" inputmode="numeric" class="mm" id="f_mpocet" data-p="montaz.pocet"><span class="jedn">ks</span></div>
+                <div class="pole"><label for="f_mroz">Rozestup os</label><input type="text" inputmode="decimal" class="mm" id="f_mroz" data-p="montaz.rozestup"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="pMontaz"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="srouby" open>
+            <summary><span class="oddil-nazev">Vruty</span><span class="souhrn" id="sSrouby"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_sroub">Vrut</label><select id="f_sroub" data-p="uchyt.sroub" data-typ="text"></select></div>
+                <div class="pole"><label for="f_spocet">Počet</label><input type="text" inputmode="numeric" class="mm" id="f_spocet" data-p="uchyt.pocet"><span class="jedn">ks</span></div>
+              </div>
+              <p class="napoveda">Zápustná hlava 90° se zahloubí 0,3 mm pod přední plochu úchytu, aby nedřela o kapsu. Do sádrokartonu použijte hmoždinky do dutin (molly, motýlek).</p>
+            </div>
+          </details>
+        </div>
+      </aside>
+
+      <section class="stred">
+        <div class="rezim-nahledu" role="group" aria-label="Náhled">
+          <button type="button" data-zobraz="3d">🧊 3D</button><button type="button" data-zobraz="bok">✏️ Háček zboku</button><button type="button" data-zobraz="cela">🛡 Štítek zepředu</button>
+          <button type="button" id="btnVedle3d" aria-pressed="true" title="Skicář vedle 3D náhledu">◫ vedle 3D</button>
+          <span class="pozn">Skicář: čáry a Bézierovy křivky, volné kreslení</span>
+        </div>
+        <div class="nahledy" id="nahledy" data-rezim="oba">
+        <div id="canvas-container" aria-label="3D náhled věšáku">
+          <div id="platno"></div>
+          <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
+          <div class="karta3d" id="karta3d" aria-live="polite"></div>
+          <div class="legenda3d" id="legenda3d" hidden><span><i style="background:#db3833"></i>převis bez opory</span><span><i style="background:#d9a833"></i>most nad dílem</span></div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
+        </div>
+        <div class="profil-pane" id="profilPane">
+          <div class="profil-lista" role="toolbar" aria-label="Nástroje skicáře">
+            <button type="button" data-nastroj="vyber" title="Výběr: body, úchyty, obrysy; Shift + klepnutí = více obrysů (V)">↖</button>
+            <button type="button" data-nastroj="pero" title="Pero: klepnutí = rohový bod, tažení = hladký bod, klepnutí na první bod / Enter = uzavřít (P)">✒ Pero</button>
+            <button type="button" data-nastroj="mereni" title="Měření vzdálenosti a úhlu (M)">📏</button>
+            <button type="button" data-nastroj="podklad" title="Posun podkladového obrázku">🖼</button>
+            <span class="odd"></span>
+            <button type="button" data-pakce="obdelnik" title="Přidat obdélník (na štítku jako díru)">▭</button>
+            <button type="button" data-pakce="kruh" title="Přidat kruh (na štítku jako díru)">◯</button>
+            <button type="button" id="btnRamenoObrys" data-jen="bok" title="Převést vybrané rameno na vlastní obrys (body pak můžete upravit)">⇢ Rameno</button>
+            <button type="button" id="btnImportSvg" title="Import obrysu z SVG souboru (cesty, mnohoúhelníky, obdélníky, kruhy; 1 jednotka = 1 mm)">📥 SVG</button>
+            <button type="button" id="btnPodklad" title="Načíst podkladový obrázek (fotka, náčrt) k obkreslení – jen do zavření stránky">🖼 Podklad…</button>
+            <span class="odd"></span>
+            <button type="button" data-pakce="hladky" title="Vybraný bod: roh ↔ hladký">◇/◯</button>
+            <button type="button" data-pakce="usek" title="Vybraný úsek: úsečka ↔ Bézierova křivka">⌇</button>
+            <button type="button" data-pakce="zaobli" title="Zaoblit vybraný roh poloměrem">⌒</button>
+            <button type="button" data-pakce="dira" title="Vybraný obrys: plný ↔ díra">◐</button>
+            <span class="odd"></span>
+            <button type="button" data-pakce="sjednot" title="Sjednotit vybrané obrysy (Shift = výběr více)">∪</button>
+            <button type="button" data-pakce="odecti" title="Odečíst od prvního vybraného obrysu ostatní">∖</button>
+            <button type="button" data-pakce="prunik" title="Průnik vybraných obrysů">∩</button>
+            <button type="button" data-pakce="odsad" title="Odsazení obrysu (kladné = ven, záporné = dovnitř) – vznikne nový obrys">⤧</button>
+            <span class="odd"></span>
+            <button type="button" data-pakce="zrcadliX" title="Zrcadlit vodorovně (štítek: podle osy)">⇋</button>
+            <button type="button" data-pakce="zrcadliY" title="Zrcadlit svisle">⇵</button>
+            <button type="button" data-pakce="otocL" title="Otočit o 15° proti směru hodinek">⟲</button>
+            <button type="button" data-pakce="otocP" title="Otočit o 15° po směru hodinek">⟳</button>
+            <button type="button" data-pakce="meritko" title="Změnit velikost vybraného obrysu">⤢</button>
+            <button type="button" data-pakce="prilozit" title="Profil: přiložit k čelu štítku · štítek: vystředit na osu">⇤</button>
+            <button type="button" data-pakce="kopie" title="Kopie vybraného obrysu (Ctrl+D)">⧉</button>
+            <button type="button" data-pakce="smaz" title="Smazat vybraný bod nebo obrysy (Delete)">🗑</button>
+            <span class="odd"></span>
+            <select id="selKrok" title="Mřížka a přichytávání (Alt při tažení = volně)"><option value="0">bez mřížky</option><option value="0.5">mřížka 0,5</option><option value="1" selected>mřížka 1 mm</option><option value="5">mřížka 5 mm</option></select>
+            <button type="button" id="btnBody" aria-pressed="true" title="Přichytávat k bodům a rohům">⌖</button>
+            <button type="button" id="btnSymetrie" data-jen="cela" aria-pressed="true" title="Souměrné kreslení štítku podle svislé osy (S)">⟷</button>
+            <button type="button" id="btnCele" title="Zobrazit vše (F)">⊡</button>
+          </div>
+          <div class="profil-podklad" id="podkladLista" hidden>
+            <span>Podklad:</span>
+            <label>šířka <input type="text" id="pkSirka" inputmode="decimal"> mm</label>
+            <label>průhlednost <input type="range" id="pkPruh" min="0.1" max="1" step="0.05" value="0.5"></label>
+            <button type="button" class="tl" id="pkSmaz" title="Odebrat podklad">✕</button>
+          </div>
+          <div class="profil-hostitel" id="profilSvg"></div>
+          <div class="profil-stav"><span id="profilKurzor"></span><span id="profilBod" hidden>bod <label>x <input id="pbX" type="text" inputmode="decimal"></label> <label>y <input id="pbY" type="text" inputmode="decimal"></label> mm</span><span id="profilZprava"></span></div>
+        </div>
+        </div>
+        <input type="file" id="souborSvg" accept=".svg,image/svg+xml" class="skryty">
+        <input type="file" id="souborPodklad" accept="image/*" class="skryty">
+        <div class="box box-obecne" aria-label="Výsledky a tisk">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
+            <button role="tab" data-zalozka="pevnost" aria-selected="false">💪 Pevnost <span class="souhrn-zal" id="sPevnost"></span></button>
+            <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk <span class="souhrn-zal" id="sTisk"></span></button>
+            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Výkres</button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false">🔩 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje věšáky</button>
+          </div>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel">
+            <div class="vysledky" id="vVysledky"></div>
+            <div class="obal-tab" style="margin-top:8px"><table class="tabulka" id="tabRamena"></table></div>
+          </div>
+          <div class="zalozka-telo" data-telo="pevnost" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_kg">Zátěž na rameno</label><input type="text" inputmode="decimal" class="mm" id="f_kg" data-p="zatez.kg"><span class="jedn">kg</span></div>
+            </div>
+            <div class="obal-tab" style="margin-top:6px"><table class="tabulka" id="tabPevnost"></table></div>
+            <p class="napoveda" id="pSrouby"></p>
+            <p class="napoveda">Hrubý odhad: ohyb ramene od místa, kde visí zátěž, po kořen u těla (tisk na boku, vrstvy podél ramene). Zátěž se bere na nejvzdálenějším místě kapsy.
+              Zimní bunda váží 1–2 kg, mokrý kabát s taškou 5–8 kg; zatáhnutí za bundu při sundávání je chvilkově ještě víc. Bezpečnost ≥ 2 = v pořádku, pod 1,2 praskne.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="tisk" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_mat">Materiál</label><select id="f_mat" data-p="tisk.material" data-typ="text"></select></div>
+              <div class="pole"><label for="f_vypln">Výplň</label><input type="text" inputmode="decimal" class="mm" id="f_vypln" data-p="tisk.vypln"><span class="jedn">%</span></div>
+              <div class="pole"><label for="f_ks">Počet kusů</label><input type="text" inputmode="numeric" class="mm" id="f_ks" data-p="tisk.ks" title="Kolik věšáků (každý s úchytem) dát do exportu"><span class="jedn">ks</span></div>
+              <div class="pole" style="grid-column: span 2"><label for="f_orient">Orientace věšáku</label><select id="f_orient" data-p="tisk.orientace" data-typ="text"></select></div>
+              <div class="pole"><label for="f_previs">Největší převis</label><input type="text" inputmode="decimal" class="mm" id="f_previs" data-p="tisk.previs" title="Úhel od svislice, který tiskárna zvládne bez podpor"><span class="jedn">°</span></div>
+            </div>
+            <p class="napoveda" id="pMaterial"></p>
+            <details class="oddil" data-oddil="zkouska" style="margin-top:8px">
+              <summary><span class="oddil-nazev">Zkušební sada vůle</span><span class="souhrn" id="sZkouska"></span></summary>
+              <div class="oddil-telo">
+                <div class="mrizka"><div class="pole"><label for="f_zkrok">Krok vůle</label><input type="text" inputmode="decimal" class="mm" id="f_zkrok" data-p="zkouska.krok"><span class="jedn">mm</span></div></div>
+                <p class="napoveda">Než vytisknete celý věšák, vytiskněte pět malých bloků s kapsou (vůle kolem nastavené hodnoty, počet zářezů na čele = pořadí) a krátký úchyt.
+                  Ve stejné orientaci jako věšák. Vyberte blok, který jde na úchyt rukou ztuha nasunout, a jeho vůli zapište nahoru do pole Vůle na straně.</p>
+                <div class="tlacitka-radek"><button class="tl" id="btnStlZkouska2">⬇ STL zkušební sady</button></div>
+              </div>
+            </details>
+            <div class="obal-tab" style="margin-top:8px"><table class="tabulka" id="tabTisk"></table></div>
+            <p class="napoveda">Věšák se tiskne <b>na boku</b>: celý profil leží na podložce, rameno se ohýbá v rovině vrstev a je nejpevnější. Kapsa pro úchyt pak vede vodorovně – její strop je krátký most.
+              Úchyt leží zadní stranou na podložce, zahloubení vrutů míří nahoru. Doporučeno 4 obvodové stěny.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="vykres" role="tabpanel" hidden>
+            <div class="vykres-plocha" id="vykres"></div>
+            <div class="tlacitka-radek"><button class="tl" id="btnList2">📐 Tisk technického listu</button><button class="tl" id="btnSablona2">📏 Vrtací šablona 1:1</button><button class="tl" id="btnSvg2">⬇ SVG</button></div>
+          </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden>
+            <div class="obal-tab"><table class="tabulka" id="tabKusovnik"></table></div>
+            <p class="napoveda" id="pKusovnik"></p>
+          </div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
+            <ul class="hlaseni" id="hlaseni"></ul>
+            <div class="vysledky" id="vSit" style="margin-top:8px"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
+        </div>
+      </section>
+
+      <aside class="box box-out" id="boxTvar" data-box="out" aria-label="Tvar háčku">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">✳</span><h2>Tvar háčku</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="generator" open>
+            <summary><span class="oddil-nazev">Generátor tvarů</span></summary>
+            <div class="oddil-telo">
+              <div class="akce-tvaru">
+                <button class="tl hlavni-tl" id="btnNahodny" title="Nová ramena náhodného tvaru (tělo a úchyt zůstanou) – klávesa G">🎲 Náhodný tvar</button>
+                <button class="tl" id="btnObmena" title="Mírně pozmění současný tvar – klávesa O">🧬 Obměna</button>
+              </div>
+              <div class="pocet-pokusu" id="pPokusu"></div>
+              <div class="galerie" id="galerie" aria-label="Galerie tvarů"></div>
+              <p class="napoveda">Náhodné tvary procházejí kontrolou: poutko nesklouzne, rameno nesahá do zdi, unese zátěž a otvor má aspoň 9 mm. Nevyšlo? ↶ vrátí předchozí.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="obrysy" open>
+            <summary><span class="oddil-nazev">Obrysy skici</span><span class="souhrn" id="sObrysy"></span></summary>
+            <div class="oddil-telo">
+              <div class="napoveda" id="pObrysyRezim"></div>
+              <div class="seznam-obrysu" id="seznamObrysu"></div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="ramena" open>
+            <summary><span class="oddil-nazev">Ramena</span><span class="souhrn" id="sRamena"></span></summary>
+            <div class="oddil-telo">
+              <div class="ramena-zal" id="ramenaZal" role="group" aria-label="Výběr ramene"></div>
+              <div id="editorRamene"></div>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+<div id="sablona" aria-hidden="true"></div>
+
+<dialog class="napoveda-dlg" id="napoveda">
+  <div class="hlava"><h2>Věšáky se skrytými šrouby – nápověda</h2><button class="tl" id="btnZavritNap" aria-label="Zavřít">✕</button></div>
+  <div class="telo">
+    <p><b>Jak to drží.</b> Na zeď se přišroubuje malý <b>úchyt</b> (rybina nebo T). Věšák má v zadní straně kapsu stejného tvaru, zespodu otevřenou a nahoře zavřenou:
+      nasune se na úchyt shora, dosedne a zakryje ho i s vruty. Rybina (širší vpředu) brání odtažení od zdi, zatížení věšák tlačí spodkem ke zdi.
+      <b>Klín</b> (úchyt nahoře užší) vymezí vůli – věšák při dosednutí „chytne“ a neviklá se. Sundáte ho tahem nahoru.</p>
+    <p><b>Tvar háčku</b> se skládá z ramen. Každé rameno vychází z čela těla v dané výšce a úhlu (0° = vodorovně od zdi, + nahoru) a pokračuje <b>trasou</b> úseků:
+      <b>rovně</b> (délka), <b>oblouk</b> (poloměr a úhel; + stáčí nahoru, − dolů), <b>spirála</b> (poloměr se mění od–do) a <b>zlom</b> (ostrá změna směru).
+      Tloušťka se mezi kořenem a koncem mění plynule, konec může mít kouli.</p>
+    <p><b>🎲 Náhodný tvar</b> vymyslí nová ramena – háčky, kolíky, ocásky, rohy, vlny, lomené i úplně volné – a pustí je jen tehdy, když drží poutko, unesou zátěž a dají se navléknout.
+      <b>🧬 Obměna</b> současný tvar mírně pozmění. Co se líbí, uložte v záložce Moje věšáky.</p>
+    <p><b>Tisk.</b> Věšák na boku, úchyt zadní stranou dolů, oba bez podpor. PETG nebo ASA, 4 stěny, výplň 30–50 %. Vůle 0,15–0,25 mm na stranu sedí pro většinu tiskáren;
+      zkuste nejdřív jeden kus. Vruty 3,5–5 mm se zápustnou hlavou, do zdi hmoždinky podle materiálu.</p>
+    <p><b>Druhy ramen.</b> <b>Trasa</b> = háček z úseků (rovně, oblouk, spirála, zlom); <b>Blok</b> = hranol, klín nebo polička se sklonem a zubem (minimalistický háček);
+      <b>Kolík s hlavou</b> = hříbek, kotva nebo kolík s límcem. Každé rameno může mít vlastní šířku a posun do strany – na širokém štítku tak vznikne řada háčků (klíče, pásky).
+      Pevnost a to, zda poutko drží, se počítá pro všechny druhy i pro vlastní obrysy; vodorovná plocha drží jen třením.</p>
+    <p><b>Vlastní profil.</b> Přepněte náhled na <b>Háček zboku</b> nebo <b>Obojí</b>. Nástroj <b>Pero</b> (<kbd>P</kbd>): klepnutí přidá rohový bod, tažení hladký bod
+      s Bézierovými úchyty, klepnutí na první bod (nebo <kbd>Enter</kbd>) obrys uzavře. <b>Výběr</b> (<kbd>V</kbd>): táhněte body, úchyty (<kbd>Shift</kbd> = po 15°) i celé obrysy,
+      dvojklik na čáru vloží bod, <kbd>Delete</kbd> maže, šipky posouvají. Obrys může být díra. Obrysy se sjednotí s tělem a rameny – kapsa pro úchyt zůstane.
+      <b>Rameno → obrys</b> převede vybrané rameno na upravitelné body, <b>SVG</b> načte cesty z vektorového programu. U vlastních obrysů se pevnost nepočítá.</p>
+    <p><b>Montáž a výroba.</b> Podle druhu zdi stránka navrhne hmoždinku, vrták a délku vrutu (tloušťka úchytu + omítka + kotevní hloubka) a spočítá, jakou silou zátěž vytahuje horní vrut.
+      Záložka <b>Výkres</b> ukazuje kótovaný profil, pohled zepředu a řez úchytem; <b>Technický list</b> ho vytiskne s parametry, pevností, kusovníkem a postupem montáže.
+      <b>Vrtací šablona</b> se tiskne 1:1 (ověřte měřítkem 50 mm) a u řady věšáků vyznačí i rozestupy. <b>Zkušební sada vůle</b> (Soubor nebo záložka Tisk) ušetří zkažené tisky.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy, <kbd>G</kbd> náhodný tvar, <kbd>O</kbd> obměna, <kbd>R</kbd> rozpad na díly, <kbd>N</kbd> nasazování, <kbd>M</kbd> tisková poloha, <kbd>D</kbd> zeď,
+      <kbd>V</kbd> převisy, <kbd>H</kbd> hrany, <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu,
+      <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+  </div>
+</dialog>
+<script src="vesaky/ui.js"></script>
+</body>
+</html>

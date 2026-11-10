@@ -347,6 +347,49 @@ a automat by se zasekl v půli. Celé dokončení je v historii jeden krok, tak�
 Zpět vrátí najednou. Ze sloupce se smí brát jen sestupná řada střídavých barev
 (`jeSekvence`) a na prázdný sloupec smí jen král – jako v pravidlech.
 
+**Whiteboard** (`obsah/whiteboard.html`, jádro `whiteboard/jadro.js` = `WB_JADRO`,
+ovládání `whiteboard/app.js`) je od 10. 11. 2026 **vektorová** nekonečná tabule
+(dřív rastr do jednoho plátna). Objekty `tah`, `cara`, `tvar` (obdélník/elipsa/
+kosočtverec), `text`, `listek`, `obr` jdou vybírat, posouvat, měnit velikost
+za úchyty, kopírovat, řadit do vrstev a zarovnávat; zoom kolečkem s Ctrl,
+dvěma prsty, laser. **Schránka:** `Ctrl+V` vloží obrázek, text, SVG kód
+i zkopírované objekty (JSON se značkou `whiteboard: 1`, jde i mezi tabulemi),
+tlačítko 📋 Vložit čte přes `navigator.clipboard.read()` (v rozcestníku proto
+`clipboard-read` v `POVOLENI` v `zalozky.js`); „Kopírovat jako obrázek" dá PNG
+do schránky. Tabule se automaticky ukládají do IndexedDB `webapp_whiteboard`
+(klíče `seznam` a `tabule:<id>`, obrázky jako data URL uvnitř tabule, při
+načtení se neodkazované zahodí); export PNG/SVG/JSON. Staré kresby
+z `localStorage` `whiteboard_drawings` se při prvním spuštění převedou na
+tabuli s jedním obrázkem a klíč se smaže.
+Druhá úroveň (10. 11. 2026): **spojnice** (`cara.zac/kon` = id tvarů, `J.prepoj` přepočítá
+konce při každém překreslení i zápisu; trasa přímá/lomená, `osa` drží směr lomené),
+**popisky** v tvarech a na čarách (`text/velikost/pismo`), další tvary (zaoblený,
+trojúhelník, šestiúhelník, hvězda), **vodítka** při přesunu (`J.voditka`, Ctrl vypne),
+**skupiny** (`skupina`, Ctrl+G) a **zámek** (`zamek`), **rámy** (`typ: 'ram'`, kreslí se
+vespod, chytají se jen za okraj/titulek, při přesunu unášejí obsah – kromě připojených
+spojnic), **prezentace** po rámech (F5, pořadí `J.poradiRamu`, Esc/konec fullscreenu ji
+ukončí), **PDF** (stránka na rám, jsPDF z `lib/` načítaný až při exportu), šablony
+`whiteboard/sablony.js` (`WB_SABLONY`, texty přes `I18N.t` při vložení), hledání (Ctrl+F)
+a minimapa. Stránka má `data-i18n-platno="ne"` – plátno nese jen obsah uživatele.
+Třetí úroveň – malování (10. 11. 2026): **kbelík** (F) vykreslí tabuli do rastru
+(nejvýš 2400 px), zaplaví oblast stejné barvy (`J.zaplav`, tolerance 48, „Mezery“ =
+zavírání škvír geodetickou dilatací), obrys po hranách pixelů (`J.obrysy`) + Douglas–Peucker
+→ vektorová `oblast` s dírami (evenodd), vložená hned nad nejvyšší plochu pod kurzorem
+(obrázek → omalovánky); když oblast = celý vnitřek tvaru, nastaví se `vypln` tvaru; klik na
+obrys/čáru přebarví. **Štětce** pera (`tah.stetec`: fix, štětec s `tl` šířkami z tlaku pera
+nebo rychlosti myši, kaligrafie, sprej se semínkem z id), **vyhlazení** (stabilizátor),
+**rozpoznání tvarů** (`J.rozpoznej`), **symetrie** (zrcadla, mandala, kaleidoskop kolem ⊕),
+**lomená čára / mnohoúhelník a hladká křivka** (`krivka`, Catmull-Rom → Bézier), **pipeta**,
+převrácení výběru (obrázky `zrcX/zrcY`), guma s velikostí = tloušťka. Pruh vlastností je
+kontextový (`data-pro` skupiny podle nástroje / typu vybraného objektu).
+Testy: `node _test/whiteboard_test.js`
+(jádro + šablony + kbelík/štětce, 115 kontrol), `_test/whiteboard_scenar3.json` (23 kroků malování), `python3 _test/ovladani.py obsah/whiteboard.html _test/whiteboard_scenar2.json`
+(26 kroků: spojnice, popisky, skupiny, šablony, hledání, rámy, zámek, prezentace, PDF)
+a `python3 _test/ovladani.py obsah/whiteboard.html _test/whiteboard_scenar.json [výstup]`
+(24 kroků skutečnou myší: kreslení, výběr, přesun, změna velikosti, text, lístek,
+vložení ze schránky, uložení po obnovení stránky, převod starých dat). Past:
+`ovladani.py` kliká dřív, než stiskne `klavesy` – nástroj volit v předchozím kroku.
+
 **Markdown → DOCX / ODT** (`obsah/md_dokument.html`) má od 4. 11. 2026 horní lištu
 s nabídkami jako generátory (Soubor / Zobrazení / Poznámky / Změny; ovládání sdílené
 `trubky_gui.js`, CSS lišty zkopírované – celé `trubky_gui.css` by přepsalo `.plocha`),

@@ -35,7 +35,7 @@
     /** Průřez hliníkového profilu n1 × n2 polí (2020, 2040, 3060…): na každém vnějším poli drážka T
        (otvor šířky drážky do hloubky límce, pod ním lichoběžníková dutina k hloubce drážky), v každém poli středový otvor. */
     function prurezProfilu(n1, n2) {
-      const P = o.profil, a = P.a, U = n1 * a, V = n2 * a, dr = P.drazka / 2, wi = 0.275 * a, li = P.limec, hl = P.hloubka;
+      const P = o.profil, a = P.a, U = n1 * a, V = n2 * a, dr = P.drazka / 2, wi = Math.max(dr + 0.3, (P.dutina || 0.55 * a) / 2), li = P.limec, hl = P.hloubka;
       const drazka = [[-dr, -0.01], [dr, -0.01], [dr, li], [wi, li], [dr, hl], [-dr, hl], [-wi, li], [-dr, li]];   // (podél stěny, hloubka)
       const otvory = [];
       for (let i = 0; i < n1; i++) {

@@ -26,12 +26,46 @@
       const m = k(M.hull([box(a0, a1, -wk, wk, -0.5, 0.01), box(a0, a1, -(wk - c), wk - c, h - 0.01, h)]));
       return k(m.transform([X[0], X[1], X[2], 0, Y[0], Y[1], Y[2], 0, Z[0], Z[1], Z[2], 0, 0, 0, 0, 1]));
     }
+    /** Průřez profilu n1 × n2 polí: na každém vnějším poli drážka T (hrdlo do hloubky límce, pod ním lichoběžníková dutina
+       od šířky dutiny k šířce drážky u dna), v každém poli středový otvor. */
+    function prurezProfilu(n1, n2) {
+      const q = p.profil, a = q.a, U = n1 * a, V = n2 * a, dr = q.drazka / 2, wi = Math.max(dr + 0.3, q.dutina / 2), li = q.limec, hl = q.hloubka;
+      const dz = [[-dr, -0.01], [dr, -0.01], [dr, li], [wi, li], [dr, hl], [-dr, hl], [-wi, li], [-dr, li]];
+      const otv = [];
+      for (let i = 0; i < n1; i++) { const u0 = (i + 0.5) * a; otv.push(dz.map(([s, d]) => [u0 + s, d]), dz.map(([s, d]) => [u0 + s, V - d])); }
+      for (let j = 0; j < n2; j++) { const v0 = (j + 0.5) * a; otv.push(dz.map(([s, d]) => [d, v0 + s]), dz.map(([s, d]) => [U - d, v0 + s])); }
+      let cs = k(k(CS.square([U, V])).subtract(k(new CS(otv, 'NonZero'))));
+      if (q.stred > 0) {
+        const st = [];
+        for (let i = 0; i < n1; i++) for (let j = 0; j < n2; j++) st.push(k(k(CS.circle(q.stred / 2, 24)).translate([(i + 0.5) * a, (j + 0.5) * a])));
+        cs = k(cs.subtract(k(CS.union(st))));
+      }
+      return cs;
+    }
+    /** Duch profilu v kvádru min–max: osa = nejdelší rozměr, průřez přes zbylé dva. */
+    function profilovyDuch(min, max) {
+      const a = p.profil.a, roz = [0, 1, 2].map(i => max[i] - min[i]), osa = roz.indexOf(Math.max(...roz));
+      const [i1, i2] = [0, 1, 2].filter(i => i !== osa);
+      const n1 = Math.max(1, Math.round(roz[i1] / a)), n2 = Math.max(1, Math.round(roz[i2] / a));
+      const e = i => [0, 1, 2].map(j => (j === i ? 1 : 0)), [X, Y, Z] = [e(i1), e(i2), e(osa)];
+      // pravotočivě: když (X, Y, Z) zrcadlí, prohodit role průřezu
+      const det = X[0] * (Y[1] * Z[2] - Y[2] * Z[1]) - X[1] * (Y[0] * Z[2] - Y[2] * Z[0]) + X[2] * (Y[0] * Z[1] - Y[1] * Z[0]);
+      const [A1, A2, N1, N2] = det > 0 ? [X, Y, n1, n2] : [Y, X, n2, n1];
+      const [j1, j2] = det > 0 ? [i1, i2] : [i2, i1];
+      const t = [0, 1, 2].map(i => min[i] + (i === j1 ? (roz[j1] - N1 * a) / 2 : i === j2 ? (roz[j2] - N2 * a) / 2 : 0));
+      const m = k(k(prurezProfilu(N1, N2).extrude(roz[osa])).transform([A1[0], A1[1], A1[2], 0, A2[0], A2[1], A2[2], 0, Z[0], Z[1], Z[2], 0, t[0], t[1], t[2], 1]));
+      const mesh = m.getMesh(), np = mesh.numProp, vp = mesh.vertProperties, poz = new Float32Array(vp.length / np * 3);
+      for (let i = 0, j = 0; i < vp.length; i += np, j += 3) { poz[j] = vp[i]; poz[j + 1] = vp[i + 1]; poz[j + 2] = vp[i + 2]; }
+      return { typ: 'sit', poz, idx: new Uint32Array(mesh.triVerts) };
+    }
     const OSY_X_DOLU = [[1, 0, 0], [0, -1, 0], [0, 0, -1]], OSY_Y_DOLU = [[0, 1, 0], [1, 0, 0], [0, 0, -1]];
 
     try {
       let telo;
       if (p.typ === 'profil') telo = profil();
       else telo = uzel();
+      // duchové hliníkových profilů: skutečný průřez místo kvádru
+      if (p.typ === 'profil') duchove.forEach((d, i) => { if (d.typ === 'box') duchove[i] = profilovyDuch(d.min, d.max); });
       const st = telo.status();
       if (st !== 'NoError') throw new Error('manifold hlásí ' + st);
       if (telo.isEmpty()) throw new Error('výsledné těleso je prázdné');
@@ -103,6 +137,50 @@
           box(-wk, wk, a / 2 - h, a / 2, -Lk, 0.5), box(-wk, wk, -a / 2, -a / 2 + h, -Lk, 0.5));
         if (q.stredOtvor) odeb.push(valecZ(ro, -1, t + 1));
         duchove.push({ typ: 'box', min: [-a / 2, -a / 2, -80], max: [a / 2, a / 2, 0] });
+      } else if (q.druh === 'vzpera') {
+        // patka na vodorovném profilu (osa X, plocha z = 0), patka na svislém (osa Z, plocha x = 0), mezi nimi šikmá vzpěra
+        const [xs, xe] = r.patkaH, [zs, ze] = r.patkaV, tb = r.tb;
+        plne.push(box(xs, xe, -a / 2, a / 2, 0, t), box(0, t, -a / 2, a / 2, zs, ze));
+        const g = 0.3;
+        if (h > 0) plne.push(klic(xs + g, xe - g, wk, h, OSY_X_DOLU), klic(zs + g, ze - g, wk, h, [[0, 0, 1], [0, 1, 0], [-1, 0, 0]]));
+        const Lb = r.D + 2 * tb, deg = r.th * 180 / Math.PI;
+        let tyc = k(k(k(box(-Lb / 2, Lb / 2, -a / 2, a / 2, -tb / 2, tb / 2)).rotate([0, deg, 0])).translate([(r.xh + t) / 2, 0, (t + r.zv) / 2]));
+        tyc = k(k(tyc.trimByPlane([0, 0, 1], 0)).trimByPlane([1, 0, 0], 0));
+        plne.push(tyc);
+        for (const x of r.otvoryH) {
+          odeb.push(valecZ(ro, -h - 1, t + 1, x, 0));
+          if (q.zahloubeni) odeb.push(valecZ(rh, t - r.vyskaHlavy, t + 1, x, 0));
+        }
+        for (const z of r.otvoryV) {
+          odeb.push(valecX(ro, -h - 1, t + 1, 0, z));
+          if (q.zahloubeni) odeb.push(valecX(rh, t - r.vyskaHlavy, t + 1, 0, z));
+        }
+        duchove.push({ typ: 'box', min: [-a, -a / 2, -a], max: [xe + 40, a / 2, 0] }, { typ: 'box', min: [-a, -a / 2, 0], max: [0, a / 2, ze + 40] });
+      } else if (q.druh === 'vnitrni') {
+        // průřez ramene v souřadnicích (hloubka d od plochy profilu, napříč y): hrdlo skrz límec, pod ním lichoběžník dutiny
+        const L = q.delka, li = q.limec + r.vule, dno = r.dno;
+        const prurez = k(new CS([[[-0.01, -r.hrdlo], [li, -r.hrdlo], [li, -r.dutinaPul], [dno, -r.hrdlo], [dno, r.hrdlo], [li, r.dutinaPul], [li, r.hrdlo], [-0.01, r.hrdlo]]], 'NonZero'));
+        // rameno 1 v drážce horní plochy vodorovného profilu (osa X): lokální x = hloubka → světové −z
+        const t1 = [0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1];
+        plne.push(k(k(prurez.extrude(L)).transform(t1)));
+        // rameno 2 v drážce boční plochy svislého profilu (osa Z, plocha x = 0): lokální x = hloubka → světové −x, sahá dolů až do rohu
+        const t2 = [-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, -dno, 1];
+        plne.push(k(k(prurez.extrude(L + dno)).transform(t2)));
+        plne.push(box(-0.3, 0.3, -r.hrdlo, r.hrdlo, -dno + 0.2, 0));   // spojka obou ramen přes roh (uvnitř obou drážek)
+        const rz = r.zavit / 2;
+        for (const x of r.otvory) odeb.push(valecZ(rz, -dno - 1, 1, x, 0), valecX(rz, -dno - 1, 1, 0, x));
+        duchove.push({ typ: 'box', min: [0, -a / 2, -a], max: [L + 40, a / 2, 0] }, { typ: 'box', min: [-a, -a / 2, -a], max: [0, a / 2, L + 40] });
+      } else if (q.druh === 'lista') {
+        // průřez (y, z): víčko nad plochou, krk skrz límec, pod límcem zobáčky rozdělené štěrbinou
+        const L = q.delka, z1 = -q.limec, z2 = z1 - r.hZobak, kz = r.krk - 0.4;
+        const tvar = [
+          [[-r.vicko, 0], [r.vicko, 0], [r.vicko, q.listaTl], [-r.vicko, q.listaTl]],
+          [[-r.krk, z1 - 0.01], [r.krk, z1 - 0.01], [r.krk, 0.01], [-r.krk, 0.01]],
+          [[-r.zobak, z1], [-kz, z2], [kz, z2], [r.zobak, z1]],
+        ].map(b => k(new CS([b], 'NonZero'))).reduce((x, y) => k(x.add(y)));
+        const prurez = k(tvar.subtract(k(k(CS.square([1, -z2 + 0.6])).translate([-0.5, z2 - 1]))));
+        plne.push(k(k(prurez.extrude(L)).transform([0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1])));
+        duchove.push({ typ: 'box', min: [-15, -a / 2, -a], max: [L + 15, a / 2, 0] });
       } else {
         // kostka: středem prochází osy tří profilů (+X, +Y, +Z); hlavy šroubů v zahloubení z vnějších stěn
         const K = r.K, c = r.c, Lk = r.delkaKlice, P = K / 2;
