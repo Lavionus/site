@@ -303,7 +303,11 @@ const tvar = (n, t) => t[n === 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2];
 let nast = J.vychozi();
 try { nast = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { nast = J.vychozi(); }
 function ulozNast() { try { localStorage.setItem(J.KLIC, JSON.stringify(nast)); } catch (e) {} }
-if (!nast.vlastniPaleta) nast.vlastniPaleta = '; ukázková paleta – upravte\nC1 černá #1A1A1A\nC2 bílá #F5F5F0\nC3 červená #C8202A\nC4 žlutá #F2C230\nC5 modrá #1F5FAF\nC6 zelená #2E8B3E\nC7 hnědá #7A4A26\nC8 růžová #F0A0B8';
+// ukázkovou paletu (pak data uživatele) založit v jazyce stránky
+const prel = t => window.I18N ? I18N.preloz(t) : t;
+if (!nast.vlastniPaleta) nast.vlastniPaleta = '; ' + prel('ukázková paleta – upravte') + '\n' + [['C1', 'černá', '1A1A1A'], ['C2', 'bílá', 'F5F5F0'],
+  ['C3', 'červená', 'C8202A'], ['C4', 'žlutá', 'F2C230'], ['C5', 'modrá', '1F5FAF'], ['C6', 'zelená', '2E8B3E'], ['C7', 'hnědá', '7A4A26'],
+  ['C8', 'růžová', 'F0A0B8']].map(([k, n, h]) => `${k} ${prel(n)} #${h}`).join('\n');
 
 /* ---------- stav ---------- */
 let pal = [];                 // aktuální paleta [{kod,nazev,rgb,lab,hexS}]
@@ -392,7 +396,7 @@ async function nactiObrazek(blob, nazev) {
   try { bitmap = await createImageBitmap(blob); } catch (e) { return Dialog.chyba('Obrázek se nepodařilo načíst.'); }
   zdroj = { bitmap, blob, w: bitmap.width, h: bitmap.height };
   orez = { x: 0, y: 0, w: 1, h: 1 };
-  projekt = { id: null, nazev: (nazev || 'Vzor').replace(/\.[a-z0-9]+$/i, '') };
+  projekt = { id: null, nazev: (nazev || prel('Vzor')).replace(/\.[a-z0-9]+$/i, '') };
   upraveno = false; zpet = [];
   kresliZdroj(); prepocitej(true);
 }
@@ -573,7 +577,7 @@ function obnov() {
   $('prazdno').hidden = true; cv.hidden = false;
   kresliPlatno(); vykresliLegendu(); aktualizujInfo(); obnovStetec();
   $('tlZpet').disabled = !zpet.length;
-  $('stav').innerHTML = `<span><b>${esc(projekt.nazev || 'Vzor')}</b>${projekt.id ? '' : ' (neuloženo)'}${upraveno ? ' · ✎ upraveno' : ''}</span><span id="podMysi"></span>`;
+  $('stav').innerHTML = `<span><b data-i18n="ne">${esc(projekt.nazev || prel('Vzor'))}</b>${projekt.id ? '' : ' (neuloženo)'}${upraveno ? ' · ✎ upraveno' : ''}</span><span id="podMysi"></span>`;
 }
 function obnovStetec() {
   const b = pal[aktivni], el = $('barvaStetce');
@@ -666,7 +670,7 @@ function radekLegendy(ctx, p, x, y, v) {
 }
 function vytvorListy() {
   const kap = kapacita(), listy = J.rozdelNaListy(vzor.w, vzor.h, kap.sloupcu, kap.radku, +nast.presah), b = (+nast.bunkaMm || 3) * MM;
-  const strany = [], rc = roztecCm(), jed = NAZEV_BODU[nast.rezim], nazev = projekt.nazev || 'Vzor';
+  const strany = [], rc = roztecCm(), jed = NAZEV_BODU[nast.rezim], nazev = projekt.nazev || prel('Vzor');
   /* 1. přehled: náhled s mapou listů + začátek legendy */
   {
     const { c, ctx } = novyList();
@@ -784,8 +788,8 @@ function zaznamProjektu() {
 async function ulozProjekt(jako) {
   if (!vzor) return Dialog.info('Nejdřív otevřete obrázek.');
   if (jako || !projekt.id) {
-    const n = await Dialog.zeptej('Název projektu:', projekt.nazev || 'Vzor'); if (n == null) return;
-    projekt.nazev = n.trim() || 'Vzor'; projekt.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const n = await Dialog.zeptej('Název projektu:', projekt.nazev || prel('Vzor')); if (n == null) return;
+    projekt.nazev = n.trim() || prel('Vzor'); projekt.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   }
   try { await DB.uloz(zaznamProjektu()); obnov(); Dialog.info('Projekt uložen.'); }
   catch (e) { Dialog.chyba('Uložení se nepovedlo: ' + e.message); }
@@ -807,7 +811,7 @@ async function seznamProjektu() {
   try { vse = (await DB.vse()).sort((a, b) => b.zmeneno - a.zmeneno); } catch (e) { return Dialog.chyba('Úložiště prohlížeče není dostupné.'); }
   $('seznamProjektu').innerHTML = vse.length ? vse.map(z => `<div class="projekt" data-id="${esc(z.id)}">
       <img src="${esc(z.nahled || '')}" alt="">
-      <div><b>${esc(z.nazev)}</b><br><small>${z.vzor.w} × ${z.vzor.h} · ${esc((J.PALETY[z.nast.paleta[z.nast.rezim]] || { nazev: '🎨 Vlastní' }).nazev)} · ${new Date(z.zmeneno).toLocaleString('cs-CZ')}</small></div>
+      <div><b data-i18n="ne">${esc(z.nazev)}</b><br><small>${z.vzor.w} × ${z.vzor.h} · ${esc((J.PALETY[z.nast.paleta[z.nast.rezim]] || { nazev: '🎨 Vlastní' }).nazev)} · ${new Date(z.zmeneno).toLocaleString('cs-CZ')}</small></div>
       <button type="button" class="btn mini primary" data-p="otevrit">Otevřít</button>
       <button type="button" class="btn mini danger" data-p="smazat" aria-label="Smazat">🗑️</button></div>`).join('')
     : '<div class="info">Zatím žádné uložené projekty. Uložíte je přes Soubor → Uložit projekt.</div>';

@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS hřiště – Flexbox, Grid, cubic-bezier</title>
+<meta name="description" content="Vizuální hřiště pro CSS: Flexbox, Grid s kreslením oblastí, editor křivek cubic-bezier, steps() a linear(), keyframes – živý náhled a hotový kód ke zkopírování.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="css_hriste/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 200px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,820px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:480px){.radek,.radek3{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info.zakon{border-left:3px solid var(--accent)}
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:minmax(270px,360px) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:820px){.obal{grid-template-columns:minmax(0,1fr)}}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;min-width:0}
+.karta h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:10px 0 6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.karta h2:first-child{margin-top:0}
+.karta h2 .btn{text-transform:none;letter-spacing:0}
+.ovl{display:grid;gap:8px}
+.ovl .pole select,.ovl .pole input,.ovl .pole textarea{width:100%}
+.tip{display:block;font-size:.72rem;color:var(--text-faint);line-height:1.35;margin-top:1px}
+.vstup.chyba{border-color:var(--danger);outline:1px solid var(--danger)}
+.chipy{display:flex;flex-wrap:wrap;gap:4px}
+.chip{background:var(--bg-control);border:1px solid var(--border);color:var(--text);border-radius:14px;padding:2px 10px;cursor:pointer;font:inherit;font-size:.8rem}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.vybrana{border:1px dashed var(--border-strong);border-radius:8px;padding:8px;display:grid;gap:8px}
+.stopa{display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:var(--bg-control);border:1px solid var(--border);border-radius:6px;padding:4px}
+.stopa .vstup{padding:4px 6px;flex:1 1 60px;font-size:.8rem;width:60px}
+.stopa select.vstup{flex:0 0 auto;width:auto}
+.stopa .cis{color:var(--text-faint);font-size:.72rem;min-width:1.4em}
+.seznam-stop{display:grid;gap:4px}
+.oblasti-seznam{display:flex;flex-wrap:wrap;gap:4px}
+.mrizka6{display:grid;grid-template-columns:auto repeat(5,minmax(0,1fr));gap:4px;align-items:center;font-size:.76rem;color:var(--text-muted)}
+.mrizka6 .vstup{padding:4px 5px;font-size:.8rem;width:100%}
+.prepinac{display:inline-flex;justify-self:start;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.prepinac .tl{border:0;border-radius:0}
+label.zaskrt{display:flex;gap:6px;align-items:center;font-size:.84rem;cursor:pointer}
+a.tl{text-decoration:none}
+
+/* výstup */
+.vystup{display:grid;gap:12px;min-width:0}
+.sirka{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.84rem;color:var(--text-muted)}
+.sirka input[type=range]{flex:1 1 160px;accent-color:var(--accent)}
+.nahled-obal{overflow-x:auto;padding:4px 2px 8px}
+.ram{margin:0 auto}
+/* náhled: barvy a rozměry jsou jen dekorace – rozvržení dělá vygenerované CSS */
+.ram .polozka{background:var(--accent-soft);border:2px solid var(--accent);border-radius:6px;padding:10px 14px;font-weight:700;color:var(--text);cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:.9rem}
+.ram .polozka.vyber{outline:3px solid var(--text);outline-offset:-1px}
+#kFlex .polozka:nth-child(3n+2){padding-block:20px}
+#kFlex .polozka:nth-child(3n){padding-inline:30px}
+.ram .kontejner{background:var(--bg-deep,var(--bg));border:2px dashed var(--border-strong);border-radius:6px;min-height:260px;position:relative}
+.osy-obal{display:grid;grid-template-columns:22px minmax(0,1fr);grid-template-rows:22px auto;gap:2px}
+.osa{position:relative;color:var(--text-muted);font-size:.7rem;display:flex;align-items:center;justify-content:center}
+.osa::before{content:"";position:absolute;background:var(--text-muted)}
+.osa span{position:relative;background:var(--bg-panel);padding:0 6px;white-space:nowrap}
+.osa-x{grid-column:2}.osa-x::before{left:0;right:8px;top:50%;height:2px}
+.osa-x::after{content:"";position:absolute;right:0;top:calc(50% - 5px);border:5px solid transparent;border-left:9px solid var(--text-muted);border-right:0}
+.osa-x.obr::before{left:8px;right:0}.osa-x.obr::after{right:auto;left:0;border-left:0;border-right:9px solid var(--text-muted)}
+.osa-y{grid-column:1;grid-row:2}.osa-y::before{top:0;bottom:8px;left:50%;width:2px}
+.osa-y::after{content:"";position:absolute;bottom:0;left:calc(50% - 5px);border:5px solid transparent;border-top:9px solid var(--text-muted);border-bottom:0}
+.osa-y.obr::before{top:8px;bottom:0}.osa-y.obr::after{bottom:auto;top:0;border-top:0;border-bottom:9px solid var(--text-muted)}
+.osa-y span{writing-mode:vertical-rl;transform:rotate(180deg);padding:6px 0}
+.osa.hlavni{color:var(--accent)}.osa.hlavni::before{background:var(--accent)}
+.osa-x.hlavni::after{border-left-color:var(--accent)}.osa-x.hlavni.obr::after{border-right-color:var(--accent)}
+.osa-y.hlavni::after{border-top-color:var(--accent)}.osa-y.hlavni.obr::after{border-bottom-color:var(--accent)}
+/* mřížka – čáry, čísla linek, oblasti */
+#prekryv{position:absolute;inset:0;pointer-events:none;z-index:2}
+#prekryv.kresli{pointer-events:auto;cursor:crosshair;touch-action:none;background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.cara{position:absolute;border:0 dashed color-mix(in srgb,var(--text) 45%,transparent)}
+.cara.sv{top:0;bottom:0;border-left-width:1px}.cara.vod{left:0;right:0;border-top-width:1px}
+.cislo-cary{position:absolute;font-size:10px;line-height:1;background:var(--text);color:var(--bg-panel);border-radius:3px;padding:1px 3px;transform:translate(-50%,-50%)}
+.obl{position:absolute;border:2px solid var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:4px;font-size:.72rem;font-weight:700;color:var(--text);display:flex;align-items:flex-end;justify-content:flex-end;padding:2px 4px;overflow:hidden}
+.obl.novy{border-style:dashed;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+#kGrid{margin:14px 0 0 14px}
+/* křivky */
+.krivky-nahled{display:grid;grid-template-columns:minmax(200px,280px) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:640px){.krivky-nahled{grid-template-columns:minmax(0,1fr)}}
+#graf{width:100%;height:auto;overflow:visible;touch-action:none;user-select:none}
+#graf .osa-g{stroke:var(--border-strong);fill:none}
+#graf .diag{stroke:var(--text-faint);stroke-dasharray:3 3;fill:none}
+#graf .k-a{stroke:var(--accent);stroke-width:3;fill:none}
+#graf .k-b{stroke:var(--warn);stroke-width:2.5;fill:none;stroke-dasharray:6 4}
+#graf .ruc{stroke:var(--text-muted);stroke-width:1.5}
+#graf .bod{fill:var(--bg-panel);stroke:var(--accent);stroke-width:3;cursor:grab}
+#graf .bod:hover{fill:var(--accent)}
+#graf .znacka-a{fill:var(--accent)}#graf .znacka-b{fill:var(--warn)}
+#graf text{fill:var(--text-faint);font-size:10px}
+.drahy{display:grid;gap:10px}
+.draha-skup{display:grid;gap:4px}
+.draha-skup b{font-size:.78rem}
+.draha-skup code{font-size:.72rem;color:var(--text-muted);word-break:break-all}
+.draha{position:relative;height:34px;background:var(--bg-deep,var(--bg));border:1px solid var(--border);border-radius:17px}
+.draha .kul{position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:var(--accent)}
+.draha-skup.b .kul,.draha-skup.b .ctv{background:var(--warn)}
+.ukazky3{display:flex;gap:18px;align-items:center;padding:6px 4px}
+.ctv{width:34px;height:34px;border-radius:6px;background:var(--accent)}
+.popis-ctv{font-size:.7rem;color:var(--text-faint);text-align:center}
+.scena{position:relative;min-height:260px;background:var(--bg-deep,var(--bg));border:2px dashed var(--border-strong);border-radius:6px;overflow:hidden;display:flex;align-items:center;padding-left:30px}
+.scena .animace{width:70px;height:70px;border-radius:10px;background:var(--accent);color:var(--on-accent,#fff);display:flex;align-items:center;justify-content:center;font-weight:700}
+/* kód */
+.kod pre{margin:0;background:var(--bg-deep,var(--bg));border:1px solid var(--border);border-radius:6px;padding:10px;overflow:auto;font-size:.8rem;line-height:1.45;max-height:420px;white-space:pre}
+.kod-mrizka{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:10px}
+@media (max-width:1000px){.kod-mrizka{grid-template-columns:minmax(0,1fr)}}
+.predvolby-seznam{display:grid;gap:4px}
+.predvolba{display:flex;gap:6px;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.84rem}
+.predvolba span{flex:1;min-width:0}
+.predvolba small{color:var(--text-faint)}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🧩 CSS hřiště</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Sdílení, předvolby, záloha">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="odkaz" title="Zkopírovat odkaz s aktuálním nastavením (#…)">🔗<span class="txt"> Sdílet</span></button>
+    <button class="tl" data-prikaz="predvolby" title="Ukázky a uložené předvolby">📚<span class="txt"> Předvolby</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Režim"><span class="skup-nazev" aria-hidden="true">Režim</span><div class="skup-tl">
+    <button class="tl" data-rezim="flex" aria-pressed="true">📦<span class="txt"> Flexbox</span></button>
+    <button class="tl" data-rezim="grid" aria-pressed="false">▦<span class="txt"> Grid</span></button>
+    <button class="tl" data-rezim="krivky" aria-pressed="false">〰️<span class="txt"> cubic-bezier</span></button>
+    <button class="tl" data-rezim="anim" aria-pressed="false">⏱️<span class="txt"> Keyframes</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Související"><span class="skup-nazev" aria-hidden="true">Související</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSouv" aria-expanded="false" title="Další CSS nástroje na webu">🔧<span class="txt"> Další nástroje</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="odkaz">🔗 Kopírovat odkaz s nastavením</button>
+  <button class="tl" data-prikaz="ulozPredvolbu">💾 Uložit jako předvolbu…</button>
+  <button class="tl" data-prikaz="predvolby">📚 Ukázky a moje předvolby…</button>
+  <hr>
+  <button class="tl" data-prikaz="export">⬇️ Záloha předvoleb (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <hr>
+  <button class="tl" data-prikaz="vychozi">↺ Výchozí nastavení tohoto režimu</button>
+</div>
+<div id="nabSouv" class="nabidka" hidden>
+  <a class="tl" href="gradient_gen.html">🌈 CSS gradienty</a>
+  <a class="tl" href="shadow_gen.html">🌑 Generátor stínů</a>
+  <a class="tl" href="live_editor.html">💻 Live HTML/CSS/JS editor</a>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal">
+<section class="karta ovl" aria-label="Nastavení">
+
+  <!-- FLEXBOX -->
+  <div class="ovl" data-panel="flex">
+    <h2>📦 Kontejner (display: flex)</h2>
+    <label class="pole">flex-direction<select class="vstup" data-k="flex.direction"></select>
+      <small class="tip">Určuje hlavní osu: row = vodorovně, column = svisle. -reverse otočí směr.</small></label>
+    <label class="pole">flex-wrap<select class="vstup" data-k="flex.wrap"></select>
+      <small class="tip">nowrap = vše na jeden řádek (položky se smrsknou), wrap = zalamovat.</small></label>
+    <label class="pole">justify-content<select class="vstup" data-k="flex.justify"></select>
+      <small class="tip">Rozložení volného místa podél hlavní osy.</small></label>
+    <label class="pole">align-items<select class="vstup" data-k="flex.alignItems"></select>
+      <small class="tip">Zarovnání položek v příčné ose v rámci řádku.</small></label>
+    <label class="pole">align-content<select class="vstup" data-k="flex.alignContent"></select>
+      <small class="tip">Rozložení celých řádků – má vliv jen při wrap a víc řádcích.</small></label>
+    <label class="pole">gap<input class="vstup" data-k="flex.gap" data-typ="mezera" placeholder="10px"></label>
+    <h2>Položky <button class="btn mini" data-prikaz="pridatFlex">➕ Přidat</button><button class="btn mini" data-prikaz="odebratFlex">➖ Odebrat vybranou</button></h2>
+    <div class="chipy" id="chipyFlex"></div>
+    <div class="vybrana" id="vybranaFlex">
+      <div class="radek">
+        <label class="pole">flex-grow<input class="vstup" type="number" min="0" step="1" data-k="flex.polozky.$f.grow" data-typ="cislo">
+          <small class="tip">Kolik dílů volného místa si vezme.</small></label>
+        <label class="pole">flex-shrink<input class="vstup" type="number" min="0" step="1" data-k="flex.polozky.$f.shrink" data-typ="cislo">
+          <small class="tip">Jak ochotně se zmenší při nedostatku místa (0 = vůbec).</small></label>
+      </div>
+      <div class="radek">
+        <label class="pole">flex-basis<input class="vstup" data-k="flex.polozky.$f.basis" data-typ="delka" placeholder="auto">
+          <small class="tip">Výchozí velikost před rozdělením místa (auto = podle obsahu).</small></label>
+        <label class="pole">order<input class="vstup" type="number" step="1" data-k="flex.polozky.$f.order" data-typ="cislo">
+          <small class="tip">Pořadí zobrazení (jen vizuálně, čtečky čtou HTML).</small></label>
+      </div>
+      <label class="pole">align-self<select class="vstup" data-k="flex.polozky.$f.alignSelf"></select></label>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="ovl" data-panel="grid" hidden>
+    <h2>▦ Sloupce (grid-template-columns) <button class="btn mini" data-prikaz="pridatStopu" data-osa="sloupce">➕ Stopa</button></h2>
+    <div class="seznam-stop" id="stopySloupce"></div>
+    <small class="tip">fr = díl zbylého místa · minmax(min, max) = pružná stopa s mezemi · <b>auto-fill</b> vytvoří tolik stop, kolik se vejde (i prázdných), <b>auto-fit</b> prázdné stopy sbalí a položky se roztáhnou přes celou šířku.</small>
+    <h2>Řádky (grid-template-rows) <button class="btn mini" data-prikaz="pridatStopu" data-osa="radky">➕ Stopa</button></h2>
+    <div class="seznam-stop" id="stopyRadky"></div>
+    <small class="tip">Bez řádků vytváří prohlížeč implicitní řádky podle potřeby (výška auto).</small>
+    <div class="radek">
+      <label class="pole">row-gap<input class="vstup" data-k="grid.gapR" data-typ="mezera"></label>
+      <label class="pole">column-gap<input class="vstup" data-k="grid.gapS" data-typ="mezera"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">justify-items<select class="vstup" data-k="grid.justifyItems"></select><small class="tip">Položka v buňce vodorovně.</small></label>
+      <label class="pole">align-items<select class="vstup" data-k="grid.alignItems"></select><small class="tip">Položka v buňce svisle.</small></label>
+    </div>
+    <div class="radek">
+      <label class="pole">justify-content<select class="vstup" data-k="grid.justifyContent"></select><small class="tip">Celá mřížka vodorovně (když jsou stopy užší než kontejner).</small></label>
+      <label class="pole">align-content<select class="vstup" data-k="grid.alignContent"></select><small class="tip">Celá mřížka svisle.</small></label>
+    </div>
+    <h2>Oblasti (grid-template-areas) <button class="tl" data-prikaz="kresli" id="tlKresli" aria-pressed="false">✏️ Kreslit tažením</button></h2>
+    <div class="oblasti-seznam" id="seznamOblasti"></div>
+    <small class="tip" id="tipOblasti">Zapněte kreslení a táhněte v náhledu přes buňky – pak oblast pojmenujte. Oblast musí být obdélník bez překryvu.</small>
+    <h2>Položky <button class="btn mini" data-prikaz="pridatGrid">➕ Přidat</button><button class="btn mini" data-prikaz="odebratGrid">➖ Odebrat vybranou</button></h2>
+    <div class="chipy" id="chipyGrid"></div>
+    <div class="vybrana" id="vybranaGrid">
+      <label class="pole">grid-area (oblast)<select class="vstup" data-k="grid.polozky.$g.oblast" id="vyberOblasti"></select>
+        <small class="tip">S oblastí se čísla linek níže nepoužijí.</small></label>
+      <div class="radek">
+        <label class="pole">sloupec od linky<input class="vstup" type="number" step="1" data-k="grid.polozky.$g.sloupec" data-typ="cislo"><small class="tip">0 = automaticky, −1 = poslední linka.</small></label>
+        <label class="pole">přes sloupců (span)<input class="vstup" type="number" min="1" step="1" data-k="grid.polozky.$g.sSpan" data-typ="cislo"></label>
+      </div>
+      <div class="radek">
+        <label class="pole">řádek od linky<input class="vstup" type="number" step="1" data-k="grid.polozky.$g.radek" data-typ="cislo"></label>
+        <label class="pole">přes řádků (span)<input class="vstup" type="number" min="1" step="1" data-k="grid.polozky.$g.rSpan" data-typ="cislo"></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- KŘIVKY -->
+  <div class="ovl" data-panel="krivky" hidden>
+    <h2>〰️ Časovací funkce</h2>
+    <div class="prepinac" role="group" aria-label="Upravovaná křivka">
+      <button class="tl" data-krivka="a" aria-pressed="true">Křivka A</button>
+      <button class="tl" data-krivka="b" aria-pressed="false">Křivka B</button>
+    </div>
+    <label class="zaskrt"><input type="checkbox" data-k="krivky.porovnat" data-typ="bool" data-prekresli> Porovnat A a B vedle sebe</label>
+    <label class="pole">Druh<select class="vstup" data-k="krivky.$k.typ" data-prekresli>
+      <option value="bezier">cubic-bezier()</option><option value="steps">steps()</option><option value="linear">linear() s body</option></select></label>
+    <div class="ovl" data-druh="bezier">
+      <label class="pole">Předvolba<select class="vstup" id="presetBezier"></select>
+        <small class="tip">easeOutBack a spol. mají y mimo 0–1 – pohyb přestřelí a vrátí se.</small></label>
+      <div class="radek">
+        <label class="pole">x1<input class="vstup" type="number" step="0.01" min="0" max="1" data-k="krivky.$k.b.0" data-typ="cislo"></label>
+        <label class="pole">y1<input class="vstup" type="number" step="0.01" data-k="krivky.$k.b.1" data-typ="cislo"></label>
+      </div>
+      <div class="radek">
+        <label class="pole">x2<input class="vstup" type="number" step="0.01" min="0" max="1" data-k="krivky.$k.b.2" data-typ="cislo"></label>
+        <label class="pole">y2<input class="vstup" type="number" step="0.01" data-k="krivky.$k.b.3" data-typ="cislo"></label>
+      </div>
+      <small class="tip">Body táhněte v grafu. x je čas (musí být 0–1), y průběh – smí přesáhnout.</small>
+    </div>
+    <div class="ovl" data-druh="steps" hidden>
+      <div class="radek">
+        <label class="pole">Počet kroků<input class="vstup" type="number" min="1" max="100" step="1" data-k="krivky.$k.n" data-typ="cislo"></label>
+        <label class="pole">Kdy skočit<select class="vstup" data-k="krivky.$k.pozice"></select></label>
+      </div>
+      <small class="tip">jump-end (= end) skáče na konci intervalu, jump-start na začátku, jump-none drží začátek i konec, jump-both přidá skok na obou koncích. Hodí se pro sprity a psací stroj.</small>
+    </div>
+    <div class="ovl" data-druh="linear" hidden>
+      <label class="pole">Předvolba<select class="vstup" id="presetLinear"></select></label>
+      <label class="pole">Body linear()<textarea class="vstup" rows="4" data-k="krivky.$k.linear" data-typ="linear" placeholder="0, 0.25 40%, 1"></textarea>
+        <small class="tip">Hodnota a volitelně poloha v %. Mezi body vede lomená čára – lze tak napodobit odraz nebo pružinu (Chrome 113+, Firefox 112+, Safari 17.2+).</small></label>
+    </div>
+    <label class="pole"><span>Délka animace: <output id="delkaKrivky"></output> ms</span><input type="range" min="100" max="5000" step="50" data-k="krivky.delka" data-typ="cislo"></label>
+  </div>
+
+  <!-- KEYFRAMES -->
+  <div class="ovl" data-panel="anim" hidden>
+    <h2>⏱️ @keyframes – transform a opacity</h2>
+    <div class="mrizka6">
+      <span></span><span title="translateX v px">x</span><span title="translateY v px">y</span><span title="rotate ve stupních">rotace°</span><span title="scale">měřítko</span><span title="opacity 0–1">průhl.</span>
+      <span>0 %</span>
+      <input class="vstup" type="number" step="10" data-k="anim.od.x" data-typ="cislo" aria-label="0 % x"><input class="vstup" type="number" step="10" data-k="anim.od.y" data-typ="cislo" aria-label="0 % y">
+      <input class="vstup" type="number" step="15" data-k="anim.od.r" data-typ="cislo" aria-label="0 % rotace"><input class="vstup" type="number" step="0.1" min="0" data-k="anim.od.s" data-typ="cislo" aria-label="0 % měřítko">
+      <input class="vstup" type="number" step="0.1" min="0" max="1" data-k="anim.od.o" data-typ="cislo" aria-label="0 % průhlednost">
+      <span>100 %</span>
+      <input class="vstup" type="number" step="10" data-k="anim.do.x" data-typ="cislo" aria-label="100 % x"><input class="vstup" type="number" step="10" data-k="anim.do.y" data-typ="cislo" aria-label="100 % y">
+      <input class="vstup" type="number" step="15" data-k="anim.do.r" data-typ="cislo" aria-label="100 % rotace"><input class="vstup" type="number" step="0.1" min="0" data-k="anim.do.s" data-typ="cislo" aria-label="100 % měřítko">
+      <input class="vstup" type="number" step="0.1" min="0" max="1" data-k="anim.do.o" data-typ="cislo" aria-label="100 % průhlednost">
+    </div>
+    <small class="tip">Animujte hlavně transform a opacity – prohlížeč je zvládne na GPU bez přepočtu rozvržení.</small>
+    <div class="radek">
+      <label class="pole">Délka (ms)<input class="vstup" type="number" min="50" step="100" data-k="anim.delka" data-typ="cislo"></label>
+      <label class="pole">Zpoždění (ms)<input class="vstup" type="number" step="100" data-k="anim.zpozdeni" data-typ="cislo"><small class="tip">Záporné = začne uprostřed.</small></label>
+    </div>
+    <div class="radek">
+      <label class="pole">iteration-count<input class="vstup" list="iterace" data-k="anim.iterace" data-typ="iterace"><small class="tip">Číslo (i 0.5) nebo infinite.</small></label>
+      <label class="pole">direction<select class="vstup" data-k="anim.smer"></select><small class="tip">alternate = tam a zpět.</small></label>
+    </div>
+    <div class="radek">
+      <label class="pole">fill-mode<select class="vstup" data-k="anim.fill"></select><small class="tip">forwards podrží poslední snímek, backwards použije první už během zpoždění.</small></label>
+      <label class="pole">timing-function<select class="vstup" data-k="anim.casovani" id="casovaniAnim"></select></label>
+    </div>
+    <button class="btn primary" data-prikaz="prehraj">▶ Přehrát znovu</button>
+    <datalist id="kolikStop"><option value="auto-fill"><option value="auto-fit"><option value="2"><option value="3"><option value="4"><option value="12"></datalist>
+    <datalist id="iterace"><option value="1"><option value="2"><option value="3"><option value="0.5"><option value="infinite"></datalist>
+  </div>
+</section>
+
+<section class="vystup">
+  <div class="karta">
+    <div class="sirka"><label for="sirka">↔ Šířka náhledu</label><input type="range" id="sirka" min="320" max="1200" step="10" data-k="sirka" data-typ="cislo"><output id="sirkaHodnota"></output> px</div>
+    <div class="nahled-obal"><div class="ram" id="ram">
+      <div data-nahled="flex" class="osy-obal">
+        <span></span><div class="osa osa-x" id="osaX"><span></span></div>
+        <div class="osa osa-y" id="osaY"><span></span></div>
+        <div class="kontejner" id="kFlex"></div>
+      </div>
+      <div data-nahled="grid" hidden><div class="kontejner" id="kGrid"></div></div>
+      <div data-nahled="krivky" class="krivky-nahled" hidden>
+        <svg id="graf" viewBox="0 0 240 360" role="img" aria-label="Graf časovací funkce"></svg>
+        <div class="drahy" id="drahy"></div>
+      </div>
+      <div data-nahled="anim" hidden><div class="scena"><div class="animace" id="boxAnim">CSS</div></div></div>
+    </div></div>
+  </div>
+  <div class="karta kod">
+    <div class="kod-mrizka">
+      <div><h2>CSS <button class="btn mini" data-prikaz="kopirujCss">📋 Kopírovat</button></h2><pre id="kodCss" data-i18n="ne"></pre></div>
+      <div><h2>HTML kostra <button class="btn mini" data-prikaz="kopirujHtml">📋 Kopírovat</button></h2><pre id="kodHtml" data-i18n="ne"></pre></div>
+    </div>
+  </div>
+</section>
+</div></main>
+
+<dialog class="okno siroke" id="dlgPredvolby"><form method="dialog">
+  <header>📚 Ukázky a moje předvolby</header>
+  <div class="telo" id="predvolbyTelo"></div>
+  <footer><button type="button" class="btn vlevo" data-prikaz="ulozPredvolbu">💾 Uložit aktuální…</button><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0">Vlevo nastavujete, uprostřed vidíte <b>živý náhled</b> a dole hotové <b>CSS a HTML kostru</b> ke zkopírování. Režimy přepnete v liště.</p>
+    <p style="margin:0"><b>📦 Flexbox:</b> šipky u náhledu ukazují hlavní a příčnou osu. Kliknutím na box ho vyberete a upravíte grow/shrink/basis/order/align-self.</p>
+    <p style="margin:0"><b>▦ Grid:</b> čárkované čáry jsou linky mřížky s čísly (na ta se odkazuje grid-column/grid-row). Oblasti nakreslíte tažením přes buňky po zapnutí ✏️ – fungují jen s pevným počtem stop (ne auto-fill/auto-fit) a s definovanými řádky.</p>
+    <p style="margin:0"><b>〰️ Křivky:</b> táhněte dva řídicí body, porovnejte dvě křivky vedle sebe. Kromě cubic-bezier umí steps() a moderní linear() s body.</p>
+    <p style="margin:0"><b>⏱️ Keyframes:</b> přechod transform + opacity mezi 0 % a 100 %.</p>
+    <p style="margin:0"><b>Sdílení:</b> celé nastavení je v adrese za # – tlačítko 🔗 Sdílet zkopíruje odkaz. Předvolby se ukládají jen v tomto prohlížeči (zálohujte přes Soubor).</p>
+    <p style="margin:0">Další nástroje: <a href="gradient_gen.html" style="color:var(--accent)">CSS gradienty</a>, <a href="shadow_gen.html" style="color:var(--accent)">Generátor stínů</a>, vyzkoušet celý kód: <a href="live_editor.html" style="color:var(--accent)">Live HTML/CSS/JS editor</a>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+<style id="stylNahled"></style>
+<script>
+(function () {
+'use strict';
+const J = window.CssHristeJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const NAZVY = { flex: 'Flexbox', grid: 'Grid', krivky: 'Křivky', anim: 'Keyframes' };
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+/* ---------- úložiště ---------- */
+let ul = { verze: J.VERZE, posledni: null, predvolby: [] };
+try { const x = JSON.parse(localStorage.getItem(J.KLIC)); if (x && typeof x === 'object') ul = Object.assign(ul, x); } catch (e) {}
+if (!Array.isArray(ul.predvolby)) ul.predvolby = [];
+let S = J.zHashe(location.hash) || J.normalizuj(ul.posledni || J.vychozi());
+let casUloz = 0;
+function uloz() {
+  ul.posledni = S;
+  try { localStorage.setItem(J.KLIC, JSON.stringify(ul)); } catch (e) { Dialog.chyba('Nastavení se nepodařilo uložit (plné úložiště?)'); }
+}
+function ulozPozdeji() {
+  clearTimeout(casUloz);
+  casUloz = setTimeout(() => { uloz(); try { history.replaceState(null, '', '#' + J.doHashe(S)); } catch (e) {} }, 300);
+}
+
+/* ---------- cesty data-k ---------- */
+function rozloz(cesta) {
+  return cesta.split('.').map(c => (c === '$f' ? S.flex.vybrana : c === '$g' ? S.grid.vybrana : c === '$k' ? S.krivky.aktivni : c));
+}
+function cti(cesta) { return rozloz(cesta).reduce((o, k) => (o == null ? undefined : o[k]), S); }
+function nastav(cesta, v) {
+  const c = rozloz(cesta), posl = c.pop();
+  const o = c.reduce((o, k) => (o == null ? undefined : o[k]), S);
+  if (o != null) o[posl] = v;
+}
+function naplnOvladani() {
+  document.querySelectorAll('[data-k]').forEach(el => {
+    if (el === document.activeElement) return;
+    const v = cti(el.dataset.k);
+    if (v === undefined) return;
+    if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+    el.classList.remove('chyba');
+  });
+}
+function prevedVstup(el) {
+  const t = el.dataset.typ || 'text', s = el.value;
+  if (t === 'bool') return { v: el.checked };
+  if (t === 'cislo') { const n = Number(s); return s.trim() !== '' && Number.isFinite(n) ? { v: n } : null; }
+  if (t === 'delka') { const v = J.delka(s); return v ? { v } : null; }
+  if (t === 'mezera') { const v = J.delka(s, { bezAuto: true }); return v ? { v } : null; }
+  if (t === 'delkafr') { const v = J.delka(s, { fr: true }); return v ? { v } : null; }
+  if (t === 'minRepeat') { if (!s.trim()) return { v: '' }; const v = J.delka(s); return v ? { v } : null; }
+  if (t === 'linear') return J.parsujLinear(s) ? { v: s } : null;
+  if (t === 'iterace') { if (s.trim() === 'infinite') return { v: 'infinite' }; const n = Number(s); return s.trim() !== '' && n >= 0 ? { v: n } : null; }
+  if (t === 'kolik') { const v = s === 'auto-fill' || s === 'auto-fit' ? s : Number(s); return v ? { v } : null; }
+  return { v: s };
+}
+function zmenaVstupu(el) {
+  const r = prevedVstup(el);
+  el.classList.toggle('chyba', !r);
+  if (!r) return;
+  nastav(el.dataset.k, r.v);
+  S = J.normalizuj(S);
+  if (el.hasAttribute('data-prekresli')) vykresliVse(); else obnov();
+}
+document.addEventListener('input', e => { if (e.target.matches('[data-k]')) zmenaVstupu(e.target); });
+document.addEventListener('change', e => {
+  if (e.target.matches('select[data-k]')) return; // vyřešil input
+  if (e.target.matches('[data-k]')) zmenaVstupu(e.target);
+});
+
+/* ---------- ovládání: statické selecty a dynamické seznamy ---------- */
+const moznosti = (sel, hodnoty) => { sel.innerHTML = hodnoty.map(v => `<option>${esc(v)}</option>`).join(''); };
+moznosti(document.querySelector('[data-k="flex.direction"]'), J.FLEX.direction);
+moznosti(document.querySelector('[data-k="flex.wrap"]'), J.FLEX.wrap);
+moznosti(document.querySelector('[data-k="flex.justify"]'), J.FLEX.justify);
+moznosti(document.querySelector('[data-k="flex.alignItems"]'), J.FLEX.alignItems);
+moznosti(document.querySelector('[data-k="flex.alignContent"]'), J.FLEX.alignContent);
+moznosti(document.querySelector('[data-k="flex.polozky.$f.alignSelf"]'), J.FLEX.alignSelf);
+['justifyItems', 'alignItems'].forEach(k => moznosti(document.querySelector(`[data-k="grid.${k}"]`), J.GRID.items));
+['justifyContent', 'alignContent'].forEach(k => moznosti(document.querySelector(`[data-k="grid.${k}"]`), J.GRID.content));
+moznosti(document.querySelector('[data-k="krivky.$k.pozice"]'), J.STEPS_POZICE);
+moznosti(document.querySelector('[data-k="anim.smer"]'), J.ANIM.smer);
+moznosti(document.querySelector('[data-k="anim.fill"]'), J.ANIM.fill);
+$('casovaniAnim').innerHTML = '<option value="krivka">↪ křivka A z editoru</option>' + J.PRESETY.map(p => `<option value="${esc(p.nazev)}">${esc(p.nazev)}</option>`).join('');
+$('presetBezier').innerHTML = '<option value="">— vyberte —</option>' + J.PRESETY.map((p, i) => `<option value="${i}">${esc(p.nazev)} (${p.b.join(', ')})</option>`).join('');
+$('presetLinear').innerHTML = '<option value="">— vyberte —</option>' + J.PRESETY_LINEAR.map((p, i) => `<option value="${i}">${esc(p.nazev)}</option>`).join('');
+$('presetBezier').onchange = e => { const p = J.PRESETY[e.target.value]; if (!p) return; S.krivky[S.krivky.aktivni].b = p.b.slice(); e.target.value = ''; vykresliVse(); };
+$('presetLinear').onchange = e => { const p = J.PRESETY_LINEAR[e.target.value]; if (!p) return; S.krivky[S.krivky.aktivni].linear = p.linear; e.target.value = ''; vykresliVse(); };
+
+function stopaHtml(osa, s, i) {
+  const k = `grid.${osa}.${i}`;
+  const druh = `<select class="vstup" data-k="${k}.druh" data-prekresli aria-label="Druh stopy">${J.GRID.druhy.map(d => `<option${d === s.druh ? ' selected' : ''}>${d}</option>`).join('')}</select>`;
+  let pole = '';
+  if (s.druh === 'fr' || s.druh === 'px' || s.druh === '%') pole = `<input class="vstup" type="number" min="0" step="${s.druh === 'fr' ? 0.5 : 10}" data-k="${k}.h" data-typ="cislo" aria-label="Hodnota">`;
+  else if (s.druh === 'minmax') pole = `<input class="vstup" data-k="${k}.min" data-typ="delka" title="min (bez fr)" aria-label="min"><input class="vstup" data-k="${k}.max" data-typ="delkafr" title="max" aria-label="max">`;
+  else if (s.druh === 'repeat') pole = `<input class="vstup" list="kolikStop" data-k="${k}.kolik" data-typ="kolik" title="Počet nebo auto-fill / auto-fit" aria-label="Počet opakování">`
+    + `<input class="vstup" data-k="${k}.min" data-typ="minRepeat" placeholder="min (prázdné = bez minmax)" title="min pro minmax(); prázdné = jen jedna velikost" aria-label="min">`
+    + `<input class="vstup" data-k="${k}.max" data-typ="delkafr" title="max / velikost" aria-label="max">`;
+  return `<div class="stopa"><span class="cis">${i + 1}.</span>${druh}${pole}<button class="btn mini" data-prikaz="smazStopu" data-osa="${osa}" data-i="${i}" title="Odebrat stopu" aria-label="Odebrat stopu">✕</button></div>`;
+}
+function vykresliOvladani() {
+  const r = S.rezim;
+  document.querySelectorAll('[data-rezim]').forEach(b => b.setAttribute('aria-pressed', b.dataset.rezim === r));
+  document.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== r; });
+  document.querySelectorAll('[data-nahled]').forEach(p => { p.hidden = p.dataset.nahled !== r; });
+  // flex
+  $('chipyFlex').innerHTML = S.flex.polozky.map((p, i) => `<button class="chip" data-vyber-flex="${i}" aria-pressed="${i === S.flex.vybrana}">${i + 1}</button>`).join('');
+  $('vybranaFlex').hidden = !S.flex.polozky.length;
+  // grid
+  $('stopySloupce').innerHTML = S.grid.sloupce.map((s, i) => stopaHtml('sloupce', s, i)).join('');
+  $('stopyRadky').innerHTML = S.grid.radky.map((s, i) => stopaHtml('radky', s, i)).join('') || '<small class="tip">— žádné (implicitní řádky) —</small>';
+  $('chipyGrid').innerHTML = S.grid.polozky.map((p, i) => `<button class="chip" data-vyber-grid="${i}" aria-pressed="${i === S.grid.vybrana}">${i + 1}${p.oblast ? ' · ' + esc(p.oblast) : ''}</button>`).join('');
+  $('vybranaGrid').hidden = !S.grid.polozky.length;
+  $('seznamOblasti').innerHTML = S.grid.oblasti.map(o => `<span class="chip">${esc(o.nazev)} <small>(${o.r1}/${o.s1} → ${o.r2}/${o.s2})</small> <button class="btn mini" data-smaz-oblast="${esc(o.nazev)}" title="Smazat oblast" aria-label="Smazat oblast ${esc(o.nazev)}">✕</button></span>`).join('');
+  $('vyberOblasti').innerHTML = '<option value="">— bez oblasti —</option>' + S.grid.oblasti.map(o => `<option>${esc(o.nazev)}</option>`).join('');
+  // křivky
+  const k = S.krivky[S.krivky.aktivni];
+  document.querySelectorAll('[data-krivka]').forEach(b => b.setAttribute('aria-pressed', b.dataset.krivka === S.krivky.aktivni));
+  document.querySelectorAll('[data-druh]').forEach(d => { d.hidden = d.dataset.druh !== k.typ; });
+  naplnOvladani();
+}
+
+/* ---------- výstup ---------- */
+let posledniKod = { css: '', html: '' };
+function obnov() {
+  const vys = J.css(S);
+  posledniKod = vys;
+  $('kodCss').textContent = vys.css;
+  $('kodHtml').textContent = vys.html;
+  $('sirkaHodnota').textContent = S.sirka;
+  $('delkaKrivky').textContent = S.krivky.delka;
+  $('ram').style.width = S.sirka + 'px';
+  $('stylNahled').textContent = S.rezim === 'flex' || S.rezim === 'grid' || S.rezim === 'anim' ? vys.css : '';
+  if (S.rezim === 'flex') nahledFlex();
+  else if (S.rezim === 'grid') nahledGrid(vys);
+  else if (S.rezim === 'krivky') nahledKrivky();
+  else nahledAnim();
+  ulozPozdeji();
+}
+function vykresliVse() { S = J.normalizuj(S); vykresliOvladani(); obnov(); }
+
+function nahledFlex() {
+  const f = S.flex, osy = J.osyFlex(f.direction, f.wrap);
+  $('kFlex').innerHTML = f.polozky.map((p, i) => `<div class="polozka${i === f.vybrana ? ' vyber' : ''}" data-vyber-flex="${i}">${i + 1}</div>`).join('');
+  [['osaX', osy.vodorovna], ['osaY', osy.svisla]].forEach(([id, o]) => {
+    const el = $(id);
+    el.classList.toggle('hlavni', o.osa === 'hlavní');
+    el.classList.toggle('obr', o.obracene);
+    el.querySelector('span').textContent = o.osa === 'hlavní' ? 'hlavní osa (main)' : 'příčná osa (cross)';
+  });
+}
+
+/* grid: čáry, čísla linek, oblasti, kreslení */
+let kresleni = false, tah = null, geometrie = null;
+function nahledGrid(vys) {
+  const g = S.grid;
+  $('kGrid').innerHTML = g.polozky.map((p, i) => `<div class="polozka${i === g.vybrana ? ' vyber' : ''}" data-vyber-grid="${i}">${esc(p.oblast && vys.oblastiPlatne.includes(p.oblast) ? p.oblast : i + 1)}</div>`).join('')
+    + `<div id="prekryv" class="${kresleni ? 'kresli' : ''}"></div>`;
+  const lzeKreslit = vys.nS > 0 && vys.nR > 0;
+  $('tipOblasti').textContent = lzeKreslit ? 'Zapněte kreslení a táhněte v náhledu přes buňky – pak oblast pojmenujte. Oblast musí být obdélník bez překryvu.'
+    : 'Oblasti potřebují pevný počet sloupců (ne auto-fill/auto-fit) a aspoň jeden definovaný řádek.';
+  if (!lzeKreslit && kresleni) { kresleni = false; $('tlKresli').setAttribute('aria-pressed', 'false'); $('prekryv').classList.remove('kresli'); }
+  requestAnimationFrame(() => kresliMrizku(vys));
+}
+function zmer(k) {
+  const cs = getComputedStyle(k), px = s => s.split(/\s+/).filter(x => /px$/.test(x)).map(parseFloat);
+  const pl = parseFloat(cs.paddingLeft) || 0, pt = parseFloat(cs.paddingTop) || 0;
+  const w = k.clientWidth - pl - (parseFloat(cs.paddingRight) || 0), h = k.clientHeight - pt - (parseFloat(cs.paddingBottom) || 0);
+  return {
+    sl: J.polohyStop(px(cs.gridTemplateColumns), parseFloat(cs.columnGap) || 0, w, cs.justifyContent).map(p => ({ od: p.od + pl, do: p.do + pl })),
+    ra: J.polohyStop(px(cs.gridTemplateRows), parseFloat(cs.rowGap) || 0, h, cs.alignContent).map(p => ({ od: p.od + pt, do: p.do + pt }))
+  };
+}
+function linky(stopy) {
+  if (!stopy.length) return [];
+  return [stopy[0].od, ...stopy.slice(1).map((s, i) => (stopy[i].do + s.od) / 2), stopy[stopy.length - 1].do];
+}
+function kresliMrizku(vys) {
+  const k = $('kGrid'), pr = $('prekryv'); if (!pr || S.rezim !== 'grid') return;
+  geometrie = zmer(k); geometrie.nR = vys.nR; geometrie.nS = vys.nS;
+  let h = '';
+  linky(geometrie.sl).forEach((x, i) => { h += `<div class="cara sv" style="left:${x}px"></div><span class="cislo-cary" style="left:${x}px;top:-8px" title="linka sloupce ${i + 1}">${i + 1}</span>`; });
+  linky(geometrie.ra).forEach((y, i) => { h += `<div class="cara vod" style="top:${y}px"></div><span class="cislo-cary" style="top:${y}px;left:-8px" title="linka řádku ${i + 1}">${i + 1}</span>`; });
+  const obd = (o, tr) => {
+    const a = geometrie.sl[o.s1 - 1], b = geometrie.sl[o.s2 - 1], c = geometrie.ra[o.r1 - 1], d = geometrie.ra[o.r2 - 1];
+    if (!a || !b || !c || !d) return '';
+    return `<div class="obl ${tr}" style="left:${a.od}px;top:${c.od}px;width:${b.do - a.od}px;height:${d.do - c.od}px">${esc(o.nazev || '')}</div>`;
+  };
+  if (kresleni) S.grid.oblasti.filter(o => vys.oblastiPlatne.includes(o.nazev)).forEach(o => { h += obd(o, ''); });
+  if (tah) h += obd(tah, 'novy');
+  pr.innerHTML = h;
+}
+function bunka(e) {
+  const r = $('kGrid').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  const najdi = (stopy, v, n) => {
+    let best = 0, dist = Infinity;
+    stopy.slice(0, n).forEach((s, i) => { const d = v < s.od ? s.od - v : v > s.do ? v - s.do : 0; if (d < dist) { dist = d; best = i; } });
+    return best + 1;
+  };
+  return { s: najdi(geometrie.sl, x, geometrie.nS), r: najdi(geometrie.ra, y, geometrie.nR) };
+}
+$('kGrid').addEventListener('pointerdown', e => {
+  if (!kresleni || !geometrie || e.target.id !== 'prekryv' && !e.target.closest('#prekryv')) return;
+  e.preventDefault();
+  const b = bunka(e);
+  tah = { r0: b.r, s0: b.s, r1: b.r, s1: b.s, r2: b.r, s2: b.s, nazev: '' };
+  $('prekryv').setPointerCapture(e.pointerId);
+  kresliMrizku(J.cssGrid(S.grid));
+});
+$('kGrid').addEventListener('pointermove', e => {
+  if (!tah) return;
+  const b = bunka(e);
+  Object.assign(tah, { r1: Math.min(tah.r0, b.r), r2: Math.max(tah.r0, b.r), s1: Math.min(tah.s0, b.s), s2: Math.max(tah.s0, b.s) });
+  kresliMrizku(J.cssGrid(S.grid));
+});
+$('kGrid').addEventListener('pointerup', async () => {
+  if (!tah) return;
+  const t = tah;
+  const jmeno = await Dialog.zeptej(`Název oblasti (řádky ${t.r1}–${t.r2}, sloupce ${t.s1}–${t.s2})`, 'oblast' + (S.grid.oblasti.length + 1));
+  tah = null;
+  if (jmeno == null) return obnov();
+  const r = J.pridejOblast(S.grid.oblasti, { nazev: jmeno, r1: t.r1, r2: t.r2, s1: t.s1, s2: t.s2 });
+  if (r.chyba) { Dialog.chyba(r.chyba); return obnov(); }
+  S.grid.oblasti = r.oblasti;
+  const p = S.grid.polozky[S.grid.vybrana];
+  if (p && !p.oblast) p.oblast = jmeno.trim();
+  vykresliVse();
+});
+new ResizeObserver(() => { if (S.rezim === 'grid') kresliMrizku(J.cssGrid(S.grid)); }).observe($('kGrid'));
+
+/* křivky: graf, tažení bodů, animace */
+const GX = x => 20 + 200 * x, GY = y => 280 - 200 * y;
+let animace = [], rafKrivky = 0;
+function cestaKrivky(k) {
+  if (k.typ === 'bezier') return `M${GX(0)},${GY(0)} C${GX(k.b[0])},${GY(k.b[1])} ${GX(k.b[2])},${GY(k.b[3])} ${GX(1)},${GY(1)}`;
+  const n = 400; let d = '';
+  for (let i = 0; i <= n; i++) { const x = i / n; d += (i ? 'L' : 'M') + GX(x).toFixed(2) + ',' + GY(J.hodnota(k, x)).toFixed(2); }
+  return d;
+}
+function kresliGraf() {
+  const K = S.krivky, k = K[K.aktivni], jina = K.aktivni === 'a' ? 'b' : 'a';
+  let h = `<rect class="osa-g" x="${GX(0)}" y="${GY(1)}" width="200" height="200"/><path class="diag" d="M${GX(0)},${GY(0)} L${GX(1)},${GY(1)}"/>`
+    + `<text x="${GX(0)}" y="${GY(0) + 14}">0</text><text x="${GX(1) - 6}" y="${GY(0) + 14}">1 čas</text><text x="2" y="${GY(1) + 4}">1</text>`;
+  if (K.porovnat) h += `<path class="k-${jina}" d="${cestaKrivky(K[jina])}"/>`;
+  h += `<path class="k-${K.aktivni}" d="${cestaKrivky(k)}"/>`;
+  if (k.typ === 'bezier') {
+    h += `<line class="ruc" x1="${GX(0)}" y1="${GY(0)}" x2="${GX(k.b[0])}" y2="${GY(k.b[1])}"/><line class="ruc" x1="${GX(1)}" y1="${GY(1)}" x2="${GX(k.b[2])}" y2="${GY(k.b[3])}"/>`
+      + `<circle class="bod" data-bod="0" cx="${GX(k.b[0])}" cy="${GY(k.b[1])}" r="8"><title>P1 – táhněte</title></circle><circle class="bod" data-bod="2" cx="${GX(k.b[2])}" cy="${GY(k.b[3])}" r="8"><title>P2 – táhněte</title></circle>`;
+  }
+  h += '<circle class="znacka-a" id="znA" r="4" cx="-99"/><circle class="znacka-b" id="znB" r="4" cx="-99"/>';
+  $('graf').innerHTML = h;
+}
+let tazenyBod = null;
+$('graf').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-bod]'); if (!b) return;
+  tazenyBod = Number(b.dataset.bod); $('graf').setPointerCapture(e.pointerId); e.preventDefault();
+});
+$('graf').addEventListener('pointermove', e => {
+  if (tazenyBod == null) return;
+  const m = $('graf').getScreenCTM(); if (!m) return;
+  const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+  const k = S.krivky[S.krivky.aktivni], zaokr = v => Math.round(v * 100) / 100;
+  k.b[tazenyBod] = zaokr(Math.min(1, Math.max(0, (p.x - 20) / 200)));
+  k.b[tazenyBod + 1] = zaokr(Math.min(3, Math.max(-2, (280 - p.y) / 200)));
+  naplnOvladani(); obnovKrivkyRychle();
+});
+$('graf').addEventListener('pointerup', () => { if (tazenyBod != null) { tazenyBod = null; obnov(); } });
+function obnovKrivkyRychle() { kresliGraf(); const v = J.css(S); $('kodCss').textContent = v.css; posledniKod = v; ulozPozdeji(); }
+function nahledKrivky() {
+  kresliGraf();
+  const K = S.krivky, krivky = K.porovnat ? ['a', 'b'] : ['a'];
+  $('drahy').innerHTML = krivky.map(id => `<div class="draha-skup ${id}"><b>Křivka ${id.toUpperCase()}</b><code>${esc(J.cssKrivka(K[id]))}</code>
+    <div class="draha"><div class="kul" data-anim="pohyb"></div></div>
+    <div class="ukazky3"><div><div class="ctv" data-anim="meritko"></div><div class="popis-ctv">scale</div></div><div><div class="ctv" data-anim="pruhlednost"></div><div class="popis-ctv">opacity</div></div></div></div>`).join('')
+    + '<small class="tip">Animace běží tam a zpět (alternate). Puntík v grafu ukazuje aktuální čas.</small>';
+  animace.forEach(a => a.cancel()); animace = [];
+  krivky.forEach((id, i) => {
+    const skup = $('drahy').children[i], easing = J.cssKrivka(K[id]);
+    const draha = skup.querySelector('.draha'), vzdal = Math.max(0, draha.clientWidth - 32);
+    const snimky = { pohyb: [{ transform: 'translateX(0)' }, { transform: `translateX(${vzdal}px)` }], meritko: [{ transform: 'scale(.2)' }, { transform: 'scale(1)' }], pruhlednost: [{ opacity: 0 }, { opacity: 1 }] };
+    skup.querySelectorAll('[data-anim]').forEach(el => {
+      try { animace.push(Object.assign(el.animate(snimky[el.dataset.anim], { duration: K.delka, easing, iterations: Infinity, direction: 'alternate' }), { krivka: id })); }
+      catch (e) { skup.querySelector('code').textContent += ' – tento prohlížeč funkci nezná'; }
+    });
+  });
+  cancelAnimationFrame(rafKrivky);
+  const krok = () => {
+    if (S.rezim !== 'krivky') return;
+    ['a', 'b'].forEach(id => {
+      const z = $(id === 'a' ? 'znA' : 'znB'), a = animace.find(x => x.krivka === id);
+      if (!z) return;
+      if (!a || a.currentTime == null) { z.setAttribute('cx', -99); return; }
+      let p = (a.currentTime % (2 * K.delka)) / K.delka; if (p > 1) p = 2 - p;
+      z.setAttribute('cx', GX(p)); z.setAttribute('cy', GY(J.hodnota(K[id], p)));
+    });
+    rafKrivky = requestAnimationFrame(krok);
+  };
+  rafKrivky = requestAnimationFrame(krok);
+}
+function nahledAnim() {
+  const b = $('boxAnim');
+  b.classList.remove('animace'); void b.offsetWidth; b.classList.add('animace');
+}
+
+/* ---------- předvolby ---------- */
+function vykresliPredvolby() {
+  const radek = (p, i, vlastni) => `<div class="predvolba"><span><span${vlastni ? ' data-i18n="ne"' : ''}>${esc(p.nazev)}</span> <small>· ${NAZVY[p.rezim]}${p.datum ? ' · ' + esc(p.datum) : ''}</small></span>
+    <button type="button" class="btn mini primary" data-nacti="${vlastni ? 'm' : 'u'}${i}">Použít</button>${vlastni ? `<button type="button" class="btn mini danger" data-smaz-predvolbu="${i}" aria-label="Smazat">🗑️</button>` : ''}</div>`;
+  $('predvolbyTelo').innerHTML = '<h4 style="margin:0">Ukázky</h4><div class="predvolby-seznam">' + J.UKAZKY.map((p, i) => radek(p, i, false)).join('') + '</div>'
+    + '<h4 style="margin:6px 0 0">Moje předvolby</h4><div class="predvolby-seznam">'
+    + (ul.predvolby.map((p, i) => radek(p, i, true)).join('') || '<small class="tip">Zatím žádné – uložte aktuální nastavení tlačítkem dole.</small>') + '</div>';
+}
+$('predvolbyTelo').addEventListener('click', async e => {
+  const n = e.target.closest('[data-nacti]');
+  if (n) {
+    const id = n.dataset.nacti, p = id[0] === 'u' ? J.UKAZKY[+id.slice(1)] : ul.predvolby[+id.slice(1)];
+    if (!p) return;
+    S = J.pouzij(S, p.rezim, p.data); $('dlgPredvolby').close(); return vykresliVse();
+  }
+  const s = e.target.closest('[data-smaz-predvolbu]');
+  if (s && await Dialog.potvrd('Smazat předvolbu „' + ul.predvolby[+s.dataset.smazPredvolbu].nazev + '“?')) { ul.predvolby.splice(+s.dataset.smazPredvolbu, 1); uloz(); vykresliPredvolby(); }
+});
+
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function kopiruj(text, co) {
+  try { await navigator.clipboard.writeText(text); Dialog.info(co + ' zkopírováno do schránky'); }
+  catch (e) {
+    const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
+    const ok = document.execCommand('copy'); t.remove();
+    if (ok) Dialog.info(co + ' zkopírováno do schránky'); else Dialog.chyba('Schránka není dostupná – označte text ručně.');
+  }
+}
+
+const PRIKAZY = {
+  napoveda: () => $('dlgNapoveda').showModal(),
+  predvolby: () => { vykresliPredvolby(); if (!$('dlgPredvolby').open) $('dlgPredvolby').showModal(); },
+  ulozPredvolbu: async () => {
+    const nazev = await Dialog.zeptej('Název předvolby (' + NAZVY[S.rezim] + ')', NAZVY[S.rezim] + ' ' + (ul.predvolby.length + 1));
+    if (!nazev || !nazev.trim()) return;
+    ul.predvolby.push({ nazev: nazev.trim().slice(0, 80), rezim: S.rezim, data: JSON.parse(JSON.stringify(S[S.rezim])), datum: new Date().toISOString().slice(0, 10) });
+    uloz(); Dialog.info('Předvolba uložena');
+    if ($('dlgPredvolby').open) vykresliPredvolby();
+  },
+  odkaz: () => { const u = location.href.split('#')[0] + '#' + J.doHashe(S); try { history.replaceState(null, '', '#' + J.doHashe(S)); } catch (e) {} kopiruj(u, 'Odkaz'); },
+  export: () => stahni('css-hriste-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify({ verze: J.VERZE, predvolby: ul.predvolby, posledni: S }, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  vychozi: async () => {
+    if (!await Dialog.potvrd('Vrátit režim ' + NAZVY[S.rezim] + ' do výchozího nastavení?')) return;
+    S[S.rezim] = J.vychozi()[S.rezim]; vykresliVse();
+  },
+  kopirujCss: () => kopiruj(posledniKod.css, 'CSS'),
+  kopirujHtml: () => kopiruj(posledniKod.html, 'HTML'),
+  pridatFlex: () => { S.flex.polozky.push(J.vychPolozkaFlex()); S.flex.vybrana = S.flex.polozky.length - 1; vykresliVse(); },
+  odebratFlex: () => { S.flex.polozky.splice(S.flex.vybrana, 1); vykresliVse(); },
+  pridatGrid: () => { S.grid.polozky.push(J.vychPolozkaGrid()); S.grid.vybrana = S.grid.polozky.length - 1; vykresliVse(); },
+  odebratGrid: () => { S.grid.polozky.splice(S.grid.vybrana, 1); vykresliVse(); },
+  pridatStopu: b => { S.grid[b.dataset.osa].push({ druh: 'fr', h: 1 }); vykresliVse(); },
+  smazStopu: b => { S.grid[b.dataset.osa].splice(+b.dataset.i, 1); vykresliVse(); },
+  kresli: () => { kresleni = !kresleni; $('tlKresli').setAttribute('aria-pressed', kresleni); obnov(); },
+  prehraj: () => nahledAnim()
+};
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const x = JSON.parse(await f.text());
+    const nove = (Array.isArray(x.predvolby) ? x.predvolby : []).filter(p => p && typeof p.nazev === 'string' && NAZVY[p.rezim] && p.data && typeof p.data === 'object');
+    if (!nove.length && !x.posledni) throw new Error('prázdné');
+    ul.predvolby = ul.predvolby.concat(nove.map(p => ({ nazev: p.nazev.slice(0, 80), rezim: p.rezim, data: p.data, datum: String(p.datum || '').slice(0, 10) })));
+    if (x.posledni && await Dialog.potvrd('Načíst i poslední nastavení ze zálohy?')) S = J.normalizuj(x.posledni);
+    uloz(); vykresliVse(); Dialog.info('Obnoveno: ' + nove.length + ' předvoleb');
+  } catch (er) { Dialog.chyba('Soubor není platná záloha CSS hřiště.'); }
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.preventDefault(); e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const rz = e.target.closest('[data-rezim]');
+  if (rz) { S.rezim = rz.dataset.rezim; return vykresliVse(); }
+  const vf = e.target.closest('[data-vyber-flex]');
+  if (vf) { S.flex.vybrana = +vf.dataset.vyberFlex; return vykresliVse(); }
+  const vg = e.target.closest('[data-vyber-grid]');
+  if (vg && !kresleni) { S.grid.vybrana = +vg.dataset.vyberGrid; return vykresliVse(); }
+  const kr = e.target.closest('[data-krivka]');
+  if (kr) { S.krivky.aktivni = kr.dataset.krivka; return vykresliVse(); }
+  const so = e.target.closest('[data-smaz-oblast]');
+  if (so) {
+    const jm = so.dataset.smazOblast;
+    S.grid.oblasti = S.grid.oblasti.filter(o => o.nazev !== jm);
+    S.grid.polozky.forEach(p => { if (p.oblast === jm) p.oblast = ''; });
+    vykresliVse();
+  }
+});
+addEventListener('resize', () => { zavriNabidky(); if (S.rezim === 'krivky') nahledKrivky(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('hashchange', () => { const x = J.zHashe(location.hash); if (x) { S = x; vykresliVse(); } });
+
+vykresliVse();
+window.CSS_HRISTE_APP = { stav: () => S };
+})();
+</script>
+</body>
+</html>

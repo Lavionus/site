@@ -290,3 +290,32 @@ Dva nezávislé revizoři (jádro `whiteboard/jadro.js` + šablony; ovládání 
 `node _test/whiteboard_test.js` (130 kontrol, z toho 15 regresních k revizi) a čtyři scénáře
 `_test/ovladani.py obsah/whiteboard.html _test/whiteboard_scenar{,2,3,4}.json` (24 + 26 + 23 + 11 kontrol,
 čtvrtý pokrývá nálezy revize: hledání po smazání, Zpět u lomené čáry, dvojí F5, dvě okna, přepnutí tabule při psaní).
+
+## Revize stránky `obsah/nacrt3d.html` (11. 11. 2026)
+
+Revize etap 1–3 (listy, virtuální papír, výklad + řešič) přečtením celého kódu, 14 nálezů, všechny opravené.
+
+### Data a výklad
+- **Rozpor kót se nemusel nahlásit:** id vazby kóty se skládalo z id prvku; delší než 24 znaků by řešič
+  z Modeláře tiše přečísloval a rozpor by se nespároval s kótou. Vazby kót mají vlastní krátká id.
+- **Mezipohledové vazby** mohly spojit střed díry v nárysu s rohem v půdorysu (stejné X) – díra by pak
+  jezdila s rohem. Spojují se jen vrcholy obrysů.
+- **Kresba z úložiště se nekontrolovala** – poškozený `webapp_nacrt3d_vykres` shodil papír.
+  `N3D.ocistiPrvky` pustí jen platné čáry, kružnice a kóty (konečná čísla, meze, jedinečná id).
+- **Body uprostřed rovné čáry** (obdélník začatý uprostřed strany) zůstávaly jako zbytečné vrcholy.
+  Odebírají se; roztřesený obdélník se teď rozpozná v 59/60 případů (dřív 45/60).
+- Změna typu listu s kresbou se ptá – jiné rámečky by kresbu nechaly mimo pohledy.
+
+### Ovládání a výkon
+- Štípnutí dvěma prsty ve Výběru nechalo první prst táhnout bod; Zpět / Delete během tažení pracovaly
+  se smazaným prvkem.
+- Po Zpět/Znovu mohl zůstat vybraný neexistující prvek.
+- Mezerník (posun) se zasekl po Alt+Tab.
+- Velmi dlouhý tah po 3000 bodech ztratil konec.
+- Mezipaměť pozadí listu povolila až 36 Mpx plátna (> 140 MB) a při zoomu se tvořila v každém snímku;
+  strop 8 Mpx, nad ním se kreslí přímo. Historie Zpět 100 kroků místo 200 (snímky obsahují surové tahy).
+- Hlášení bez prvku v Kontrole bylo klikatelné a nic nedělalo; neplatné CSS písma u políčka kóty.
+
+### Testy
+`node _test/nacrt3d_test.js` (1624 kontrol, nové: čištění úložiště, obdélník od půlky strany) a
+`python3 _test/nacrt3d_ui.py` (i s `NACRT_DPI=2`: plátno v rozlišení displeje; potvrzení změny listu).

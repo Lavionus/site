@@ -353,7 +353,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/majetek.html",
         "nazev": "📦 Evidence domácího majetku",
         "stav": "vyvoj",
-        "tagy": ["domácnost", "záruky", "inventář", "QR štítky", "offline", "záloha"]
+        "tagy": ["domácnost", "záruky", "inventář", "QR štítky", "offline", "záloha", "půjčit", "půjčky", "výpůjčky", "půjčené věci", "zapůjčení", "vrácení", "kauce", "komu jsem půjčil"]
       },
       {
         "soubor": "obsah/udrzba.html",
@@ -680,6 +680,12 @@ const KATALOG_SEKCE = [
           "ruleta",
           "výběr"
         ]
+      },
+      {
+        "soubor": "obsah/turnaj.html",
+        "nazev": "🏆 Turnajový pavouk a rozlosování",
+        "stav": "vyvoj",
+        "tagy": ["turnaj", "pavouk", "rozlosování", "nasazení", "vyřazovací systém", "dvojí vyřazovací", "každý s každým", "bergerovy tabulky", "švýcarský systém", "buchholz", "skupiny", "play-off", "tabulka", "výsledky", "šachy", "stolní tenis", "fotbal", "šipky", "tisk pavouka"]
       },
       {
         "soubor": "obsah/unit_converter.html",
@@ -1038,6 +1044,12 @@ const KATALOG_SEKCE = [
           "teplota",
           "meteo"
         ]
+      },
+      {
+        "soubor": "obsah/forecast2.html",
+        "nazev": "🌤️ Předpověď 2",
+        "stav": "vyvoj",
+        "tagy": ["počasí", "déšť", "teplota", "meteo", "hodinová předpověď", "10 dní", "radar", "výstrahy"]
       },
       {
         "soubor": "obsah/radareu.html",
@@ -1466,6 +1478,12 @@ const KATALOG_SEKCE = [
         "tagy": ["css", "box-shadow", "stín", "web design"]
       },
       {
+        "soubor": "obsah/css_hriste.html",
+        "nazev": "🧩 CSS hřiště: Flexbox, Grid, cubic-bezier",
+        "stav": "vyvoj",
+        "tagy": ["css", "flexbox", "grid", "cubic-bezier", "easing", "animace", "keyframes", "transition", "steps", "linear()", "grid-template-areas", "rozvržení", "web design", "výuka"]
+      },
+      {
         "soubor": "obsah/pattern_gen.html",
         "nazev": "🔳 Generátor vzorů",
         "stav": "beta",
@@ -1796,6 +1814,12 @@ const KATALOG_SEKCE = [
         "nazev": "🧩 Generátor puzzle z fotky",
         "stav": "vyvoj",
         "tagy": ["puzzle", "jigsaw", "skládačka", "fotka", "laser", "plotter", "SVG", "DXF", "PDF", "řezací šablona", "whimsy", "dětské puzzle", "hra"]
+      },
+      {
+        "soubor": "obsah/omalovanky.html",
+        "nazev": "🖍️ Omalovánky z fotky",
+        "stav": "vyvoj",
+        "tagy": ["omalovánky", "obrázky", "děti", "tisk", "malování podle čísel", "skica", "hrany", "PDF"]
       },
       {
         "soubor": "obsah/plakat_mapy.html",
@@ -3230,6 +3254,12 @@ const KATALOG_SEKCE = [
         "nazev": "🏝️ Ostrůvek (three.js + Blender)",
         "stav": "vyvoj",
         "tagy": ["ostrov", "skřítek", "krystaly", "3d", "three.js", "blender", "gltf", "low-poly", "demo", "hra"]
+      },
+      {
+        "soubor": "obsah/lukavice.html",
+        "nazev": "🚗 Lukavice 3D",
+        "stav": "vyvoj",
+        "tagy": ["lukavice", "ústí nad orlicí", "žamberk", "obec", "vesnice", "3d", "auto", "jízda", "chůze", "procházka", "openstreetmap", "mapa", "terén", "three.js", "hra"]
       }
     ]
   },

@@ -279,14 +279,20 @@
     return { stitky: st, pocet: p, barva, velikost };
   }
   /* Plochy menší než minPx přebarví na barvu souseda s nejdelší společnou hranicí. Vrací {indexy, slouceno}. */
-  function sloucitMale(indexy, w, h, minPx, K) {
+  /* minR > 0: sloučí i úzké proužky (bod nejdál od hranice blíž než minR px) – přechody mezi barvami po rozmazání. */
+  function sloucitMale(indexy, w, h, minPx, K, minR) {
     let ix = Uint8Array.from(indexy), slouceno = 0;
-    if (!(minPx > 1)) return { indexy: ix, slouceno };
+    if (!(minPx > 1) && !(minR > 0)) return { indexy: ix, slouceno };
     K = K || 256;
     for (let kolo = 0; kolo < 12; kolo++) {
       const P = oznacPlochy(ix, w, h), male = new Int32Array(P.pocet).fill(-1);
       let m = 0;
-      for (let i = 0; i < P.pocet; i++) if (P.velikost[i] < minPx) male[i] = m++;
+      let maxR = null;
+      if (minR > 0) {
+        const d = vzdalenostOdHranice(P.stitky, w, h); maxR = new Float32Array(P.pocet);
+        for (let i = 0; i < d.length; i++) if (d[i] > maxR[P.stitky[i]]) maxR[P.stitky[i]] = d[i];
+      }
+      for (let i = 0; i < P.pocet; i++) if (P.velikost[i] < minPx || (maxR && maxR[i] < minR)) male[i] = m++;
       if (!m || P.pocet < 2) break;
       const hrany = new Uint32Array(m * K);
       const sousedi = (a, b) => {
@@ -371,10 +377,15 @@
       const roz = gaussRgba(rgba, w, h, (3.2 - det * 0.25) * m);
       const post = posterizuj(roz, w, h, N.barev);
       let ix = modus(modus(post.indexy, w, h, post.paleta.length), w, h, post.paleta.length);
-      ix = sloucitMale(ix, w, h, Math.max(4, w * h * N.minPlocha / 100), post.paleta.length).indexy;
+      ix = sloucitMale(ix, w, h, Math.max(4, w * h * N.minPlocha / 100), post.paleta.length, Math.max(1.5, 3 * m)).indexy;
+      const pouzite = new Uint8Array(post.paleta.length), novy = new Uint8Array(post.paleta.length);   // nepoužité barvy pryč, přečíslovat
+      for (let i = 0; i < ix.length; i++) pouzite[ix[i]] = 1;
+      const paleta = post.paleta.filter((b, k) => pouzite[k]);
+      let c = 0; for (let k = 0; k < pouzite.length; k++) if (pouzite[k]) novy[k] = c++;
+      for (let i = 0; i < ix.length; i++) ix[i] = novy[ix[i]];
       const P = oznacPlochy(ix, w, h);
       return { typ: 'plochy', w, h, maska: zesil(hranicePloch(ix, w, h), w, h, Math.max(1, Math.round(tl * 0.6))),
-        indexy: ix, paleta: post.paleta, cisla: plochyACisla(ix, w, h, P) };
+        indexy: ix, paleta, cisla: plochyACisla(ix, w, h, P) };
     }
     const g = upravKontrast(sedotonovy(rgba, w, h), N.kontrast);
     if (N.rezim === 'skica') {

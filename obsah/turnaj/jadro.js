@@ -555,25 +555,27 @@
     const z = t.zapasy.filter(jeVyrazovaci);
     if (!z.length) return [];
     const ven = [], videni = new Set();
-    const pridej = (ids, misto) => ids.forEach(id => { if (znamy(id) && !videni.has(id)) { videni.add(id); ven.push({ id, misto }); } });
-    let misto = 1;
-    const skupina = ids => { const f = ids.filter(id => znamy(id) && !videni.has(id)); if (f.length) { pridej(f, misto); misto += f.length; } };
+    const pridej = (id, misto) => { if (znamy(id) && !videni.has(id)) { videni.add(id); ven.push({ id, misto }); } };
     const F = z.filter(m => m.sekce === 'F'), W = z.filter(m => m.sekce === 'W'), L = z.filter(m => m.sekce === 'L');
-    const maxW = W.reduce((mx, m) => Math.max(mx, m.kolo), 0);
+    const maxW = W.reduce((mx, m) => Math.max(mx, m.kolo), 0), maxL = L.reduce((mx, m) => Math.max(mx, m.kolo), 0);
+    // místo vypadlých v kole = 1 + počet hráčů, kteří vypadli později (každý hraný zápas vyřadí jednoho) + vítěz
+    const pozdeji = (Z, r, max) => { let s = 0; for (let i = r + 1; i <= max; i++) s += Z.filter(m => m.kolo === i && hrany(m)).length; return s; };
     if (F.length) {
       const gf = F[0], gf2 = F[1];
       const fin = gf2 && znamy(gf2.a) ? gf2 : gf;
-      skupina([vitez(fin)]); skupina([porazeny(fin)]);
-      const maxL = L.reduce((mx, m) => Math.max(mx, m.kolo), 0);
-      for (let r = maxL; r >= 1; r--) skupina(L.filter(m => m.kolo === r).map(porazeny));
+      if (vitez(fin) && (fin === gf2 || !gf2 || gf2.a === VOLNO)) { pridej(vitez(fin), 1); pridej(porazeny(fin), 2); }
+      for (let r = maxL; r >= 1; r--) L.filter(m => m.kolo === r).forEach(m => pridej(porazeny(m), 3 + pozdeji(L, r, maxL)));
     } else {
       const fin = W.find(m => m.kolo === maxW);
-      skupina([vitez(fin)]); skupina([porazeny(fin)]);
+      if (vitez(fin)) { pridej(vitez(fin), 1); pridej(porazeny(fin), 2); }
       const o3 = z.find(m => m.sekce === 'O3');
-      if (o3 && vitez(o3) && vitez(o3) !== VOLNO) { skupina([vitez(o3)]); skupina([porazeny(o3)]); }
-      for (let r = maxW - 1; r >= 1; r--) skupina(W.filter(m => m.kolo === r).map(porazeny));
+      if (o3) { if (vitez(o3) && vitez(o3) !== VOLNO) { pridej(vitez(o3), 3); pridej(porazeny(o3), 4); } }
+      for (let r = maxW - 1; r >= 1; r--) {
+        if (o3 && r === maxW - 1) continue;
+        W.filter(m => m.kolo === r).forEach(m => pridej(porazeny(m), 2 + pozdeji(W, r, maxW)));
+      }
     }
-    return ven;
+    return ven.sort((a, b) => a.misto - b.misto);
   }
 
   /* Celkové pořadí turnaje (pro pohled Pořadí): [{id, misto, …řádek tabulky}] */
@@ -586,12 +588,14 @@
     const videni = new Set(po.map(r => r.id)), ost = [];
     (t.skupiny || []).forEach((g, gi) => tabulkaSkupiny(t, gi).forEach(r => { if (!videni.has(r.id)) ost.push(r); }));
     ost.sort((a, b) => a.misto - b.misto || b.body - a.body || b.rozdil - a.rozdil || b.dal - a.dal);
-    let misto = po.length + 1;
+    // místa za play-off: počet postupujících (sloty 1. kola play-off)
+    const posun = t.zapasy.filter(m => m.sekce === 'W' && m.kolo === 1).reduce((s, m) => s + (m.zA ? 1 : 0) + (m.zB ? 1 : 0), 0);
+    let misto = posun + 1;
     let pred = null;
     const ven = po.slice();
     ost.forEach((r, i) => {
       const kl = [r.misto, r.body, r.rozdil, r.dal].join();
-      if (kl !== pred) misto = po.length + 1 + i;
+      if (kl !== pred) misto = posun + 1 + i;
       pred = kl;
       ven.push({ id: r.id, misto });
     });
@@ -601,7 +605,7 @@
   /* Názvy kol vyřazovací části */
   function nazevKola(t, sekce, kolo) {
     if (sekce === 'O3') return 'O 3. místo';
-    if (sekce === 'F') return kolo === 1 ? 'Velké finále' : 'Finále – rozhodující zápas';
+    if (sekce === 'F') return kolo === 1 ? 'Velké finále' : 'Rozhodující finále';
     if (sekce === 'L') return kolo + '. kolo poražených';
     if (sekce === 'W') {
       const maxW = t.zapasy.filter(m => m.sekce === 'W').reduce((mx, m) => Math.max(mx, m.kolo), 0);
@@ -630,7 +634,7 @@
     const kr = kroky(t), c = {};
     let i = 1;
     t.zapasy.map((m, ix) => [m, ix]).sort((x, y) => kr[x[0].id] - kr[y[0].id] || x[1] - y[1])
-      .forEach(([m]) => { if (!(m.zA === null && m.zB === null && !m.reset) && !(m.sekce === 'W' && m.kolo === 1 && (m.zA === null || m.zB === null)) && !(m.zB === null && !m.reset && (m.sekce === 'RR' || m.sekce === 'SW' || m.sekce === 'G'))) c[m.id] = i++; });
+      .forEach(([m]) => { if (m.a !== VOLNO && m.b !== VOLNO) c[m.id] = i++; });
     return c;
   }
 

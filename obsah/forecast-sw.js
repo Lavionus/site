@@ -11,7 +11,7 @@
  *
  * Při vydání nové verze zvyšte VERSION – stará cache se při aktivaci smaže.
  */
-const VERSION = 'v16';
+const VERSION = 'v36';
 const PREFIX = 'forecast-cache-';
 const CACHE_NAME = PREFIX + VERSION;
 

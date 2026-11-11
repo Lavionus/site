@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omalovánky z fotky – obrys, malování podle čísel, skica</title>
+<meta name="description" content="Převod fotek na omalovánky: čisté obrysové čáry (XDoG nebo Canny), malování podle čísel s paletou barev, skica tužkou. Dávka fotek, ořez, tisk A4/A5 s nadpisem, PDF a PNG – vše v prohlížeči.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="omalovanky/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+/* horní lišta – stejná stavba jako Hlídač termínů / Databanka promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+[hidden]{display:none !important}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.86rem;font-family:inherit;min-width:0}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+/* rozložení: panel nastavení | náhled */
+.plocha{flex:1;min-height:0;display:grid;grid-template-columns:300px minmax(0,1fr)}
+.panel{overflow:auto;padding:10px;border-right:1px solid var(--border);background:var(--bg-elevated);display:flex;flex-direction:column;gap:10px}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:8px 10px;display:grid;gap:7px}
+.karta h2{margin:0;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+.pole{display:grid;gap:3px;font-size:.78rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.pole output{color:var(--text);font-weight:600}
+.pole input[type=range]{width:100%;accent-color:var(--accent)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.zaskrt{display:flex;gap:6px;align-items:center;font-size:.82rem;cursor:pointer}
+.info{font-size:.78rem;line-height:1.45;color:var(--text-muted)}
+#zdroj{max-width:100%;max-height:220px;margin:0 auto;border-radius:6px;background:var(--bg-control);touch-action:none;cursor:crosshair;display:block}
+.fotky{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:6px}
+.fotka{position:relative;border:2px solid var(--border);border-radius:6px;background:var(--bg-control);padding:0;cursor:pointer;aspect-ratio:1;overflow:hidden}
+.fotka img{width:100%;height:100%;object-fit:cover;display:block}
+.fotka[aria-current="true"]{border-color:var(--accent)}
+.fotka .x{position:absolute;top:1px;right:1px;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:50%;width:20px;height:20px;line-height:16px;font-size:12px;padding:0;cursor:pointer}
+.fotka .hot{position:absolute;left:2px;bottom:1px;font-size:11px}
+.legenda{display:flex;flex-wrap:wrap;gap:5px}
+.legenda span{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:var(--bg-control);border:1px solid var(--border);border-radius:6px;padding:2px 6px 2px 2px}
+.legenda i{width:20px;height:20px;border-radius:4px;border:1px solid var(--border-strong)}
+
+.stred{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
+.stav{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:5px 10px;font-size:.78rem;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--bg-elevated);min-height:28px}
+.stav b{color:var(--text)}
+.platno-obal{flex:1;overflow:auto;padding:12px;background:var(--bg-deep,var(--bg));display:flex;flex-direction:column;align-items:center;gap:8px}
+#nahled{display:block;max-width:100%;max-height:calc(100vh - 150px);height:auto;box-shadow:0 1px 6px rgba(0,0,0,.25);background:#fff}
+.posuvnik{display:flex;align-items:center;gap:8px;width:min(100%,600px);font-size:.78rem;color:var(--text-muted)}
+.posuvnik input{flex:1;accent-color:var(--accent)}
+.prazdno{margin:30px auto;max-width:520px;color:var(--text-muted);background:var(--bg-panel);border:2px dashed var(--border-strong);border-radius:12px;padding:30px 20px;text-align:center;line-height:1.7}
+.prazdno.nad{border-color:var(--accent);background:var(--accent-soft)}
+.pocitam{position:absolute;top:40px;left:50%;transform:translateX(-50%);background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:6px 14px;box-shadow:var(--shadow);font-size:.85rem}
+#tisk{display:none}
+@media (max-width:800px){
+  .plocha{display:flex;flex-direction:column;overflow:auto}
+  .stred{order:-1;flex:none;min-height:60vh}
+  .panel{border:0;border-bottom:1px solid var(--border);overflow:visible}
+  #nahled{max-height:65vh}
+}
+@media print{
+  @page{size:A4;margin:0}
+  body > *:not(#tisk){display:none!important}
+  body{display:block;height:auto;background:#fff}
+  #tisk{display:block}
+  #tisk img{display:block;width:100%;height:auto;break-after:page}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🖍️ Omalovánky z fotky</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Fotky, export, tisk, nastavení">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="otevrit" title="Přidat fotky (lze i přetáhnout nebo vložit Ctrl+V)">🖼️<span class="txt"> Fotky</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Režim"><span class="skup-nazev" aria-hidden="true">Režim</span><div class="skup-tl">
+    <button class="tl" data-rezim="omalovanka" title="Čisté čáry k vybarvení">🖍️<span class="txt"> Omalovánka</span></button>
+    <button class="tl" data-rezim="cisla" title="Plochy s čísly a paletou barev">🔢<span class="txt"> Podle čísel</span></button>
+    <button class="tl" data-rezim="skica" title="Kresba tužkou se stínováním">✏️<span class="txt"> Skica</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="prepniList" id="tlList" title="Ukázat celý list s okraji, nadpisem a legendou">📄<span class="txt"> List</span></button>
+    <button class="tl" data-prikaz="vybarvene" id="tlVybarvene" title="Malování podle čísel: ukázat vybarvenou předlohu">🎨<span class="txt"> Vybarvené</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl" data-prikaz="pdf" title="PDF této omalovánky">📄<span class="txt"> PDF</span></button>
+    <button class="tl" data-prikaz="pdfVse" title="Všechny fotky do jednoho PDF">📚<span class="txt"> PDF všech</span></button>
+    <button class="tl" data-prikaz="tisk" title="Vytisknout">🖨️</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">🖼️ Přidat fotky…</button>
+  <button class="tl" data-prikaz="schranka">📋 Vložit obrázek ze schránky</button>
+  <hr>
+  <button class="tl" data-prikaz="png">🖼️ Uložit PNG (tato fotka)</button>
+  <button class="tl" data-prikaz="pdf">📄 PDF (tato fotka)</button>
+  <button class="tl" data-prikaz="pdfVse">📚 PDF všech fotek</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk (tato fotka)</button>
+  <button class="tl" data-prikaz="tiskVse">🖨️ Tisk všech fotek</button>
+  <hr>
+  <button class="tl" data-prikaz="odebrat">🗑️ Odebrat tuto fotku</button>
+  <button class="tl" data-prikaz="odebratVse">🗑️ Odebrat všechny fotky</button>
+  <hr>
+  <button class="tl" data-prikaz="export">⬇️ Nastavení do souboru (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Načíst nastavení ze souboru…</button>
+  <button class="tl" data-prikaz="vychozi">↺ Výchozí nastavení</button>
+</div>
+<input type="file" id="souborObr" accept="image/*" multiple hidden>
+<input type="file" id="souborJson" accept=".json,application/json" hidden>
+
+<main class="plocha">
+  <aside class="panel" id="panel">
+    <section class="karta">
+      <h2>Fotky (<span id="pocetFotek">0</span>)</h2>
+      <div class="fotky" id="fotky"></div>
+      <canvas id="zdroj" width="260" height="120" aria-label="Náhled fotky – tažením vyberte ořez" hidden></canvas>
+      <div class="info" id="zdrojInfo">Přidejte jednu nebo víc fotek.</div>
+      <button class="btn mini" data-prikaz="celyObrazek" id="tlCely" hidden>⤢ Celá fotka (zrušit ořez)</button>
+    </section>
+    <section class="karta">
+      <h2>Převod</h2>
+      <label class="pole" id="poleMetoda">Metoda čar<select class="vstup" id="metoda"><option value="xdog">XDoG – kreslené linky</option><option value="canny">Canny – přesné hrany</option></select></label>
+      <label class="pole">Detail: <output id="o_detail"></output><input type="range" id="detail" min="1" max="10" step="1"></label>
+      <label class="pole" id="poleKontrast">Kontrast: <output id="o_kontrast"></output><input type="range" id="kontrast" min="0.5" max="2" step="0.1"></label>
+      <label class="pole" id="poleTloustka">Tloušťka čar: <output id="o_tloustka"></output><input type="range" id="tloustka" min="1" max="12" step="1"></label>
+      <label class="pole" id="poleUtrzek">Odstranit útržky menší než: <output id="o_utrzek"></output><input type="range" id="utrzek" min="0" max="500" step="10"></label>
+      <label class="zaskrt"><input type="checkbox" id="invert"> Invertovat (světlé čáry na tmavé)</label>
+    </section>
+    <section class="karta" id="kartaCisla">
+      <h2>Malování podle čísel</h2>
+      <label class="pole">Počet barev: <output id="o_barev"></output><input type="range" id="barev" min="2" max="30" step="1"></label>
+      <label class="pole">Nejmenší plocha: <output id="o_minPlocha"></output><input type="range" id="minPlocha" min="0.02" max="2" step="0.02"></label>
+      <div class="legenda" id="legenda"></div>
+      <div class="info" id="plochyInfo"></div>
+    </section>
+    <section class="karta">
+      <h2>List k tisku</h2>
+      <div class="radek">
+        <label class="pole">Formát<select class="vstup" id="format"><option value="a4">A4</option><option value="a5">A5</option></select></label>
+        <label class="pole">Orientace<select class="vstup" id="orientace"><option value="auto">podle fotky</option><option value="navysku">na výšku</option><option value="nasirku">na šířku</option></select></label>
+      </div>
+      <label class="pole">Okraj: <output id="o_okraj"></output><input type="range" id="okraj" min="0" max="30" step="1"></label>
+      <label class="zaskrt"><input type="checkbox" id="ramecek"> Rámeček kolem obrázku</label>
+      <label class="pole">Nadpis pod obrázkem (např. jméno dítěte)<input class="vstup" id="nadpis" type="text" maxlength="80" placeholder="Omalovánka pro Aničku"></label>
+      <label class="zaskrt"><input type="checkbox" id="jmeno"> Řádek „Jméno: ____“ na podpis</label>
+    </section>
+  </aside>
+
+  <section class="stred">
+    <div class="stav" id="stav"><span>Přidejte fotky.</span></div>
+    <div class="platno-obal" id="platnoObal">
+      <div class="prazdno" id="prazdno">
+        <b>Přetáhněte sem fotky</b> (i víc najednou), vložte obrázek <b>Ctrl+V</b><br>nebo <button class="btn primary" data-prikaz="otevrit">🖼️ vyberte soubory</button><br>
+        <small>Nejlépe fungují ostré fotky s jasným motivem a klidným pozadím – zvíře, auto, dům, portrét.</small>
+      </div>
+      <canvas id="nahled" hidden></canvas>
+      <label class="posuvnik" id="posuvnik" hidden>📷 před<input type="range" id="predPo" min="0" max="100" value="50" aria-label="Posuvník před a po">po 🖍️</label>
+    </div>
+    <div class="pocitam" id="pocitam" hidden>⏳ Počítám…</div>
+  </section>
+</main>
+
+<div id="tisk" data-i18n="ne"></div>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>1. Fotky</b> přidáte tlačítkem, přetažením (i několik najednou) nebo vložením ze schránky (Ctrl+V). V náhledu vlevo tažením vyberete <b>ořez</b>, každá fotka má vlastní.</p>
+    <p style="margin:0"><b>2. Převod:</b> fotka se zmenší na pracovní rozlišení (nejvýš 1600 px), převede na šedotón a vyrovná se kontrast. <b>XDoG</b> (rozdíl dvou Gaussových rozmazání) dává měkké kreslené linky, <b>Canny</b> (Sobel + ztenčení + prahování s hysterezí) přesné hrany. Čáry se ztenčí na kostru, zesílí na zvolenou tloušťku a drobné útržky se smažou.</p>
+    <p style="margin:0"><b>🔢 Podle čísel:</b> barvy se sloučí metodou k-means do zvoleného počtu, malé plochy se přidají k sousedovi a číslo se napíše do místa nejdál od hranice plochy. Legenda barev je pod obrázkem.</p>
+    <p style="margin:0"><b>✏️ Skica</b> ponechá jemné šedé stínování jako kresba tužkou.</p>
+    <p style="margin:0"><b>3. Výstup:</b> posuvníkem pod náhledem porovnáte originál a výsledek, 📄 List ukáže stránku k tisku. PDF a tisk A4/A5 s okraji, rámečkem a nadpisem; <i>PDF všech</i> dá celou dávku do jednoho souboru.</p>
+    <p style="margin:0">Vše se počítá jen v prohlížeči, fotky se nikam neodesílají ani neukládají. Nastavení se pamatuje (localStorage <code>webapp_omalovanky</code>). Podobné stránky: <a href="vektorizace.html" style="color:var(--accent)">Vektorizace</a>, <a href="dither.html" style="color:var(--accent)">Dithering</a>, <a href="vzory_z_obrazku.html" style="color:var(--accent)">Vzory z obrázku</a>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.OmalovankyJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let nast = J.vychozi();
+try { nast = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { nast = J.vychozi(); }
+function ulozNast() { try { localStorage.setItem(J.KLIC, JSON.stringify(nast)); } catch (e) {} }
+
+/* ---------- stav ---------- */
+const fotky = [];            // {id, nazev, bitmap, w, h, orez, prac:{data,w,h,klic}, vys, klic, nahledUrl}
+let aktualni = null, ukazList = false, vybarvene = false;
+const PREVOD = ['rezim', 'metoda', 'detail', 'tloustka', 'utrzek', 'kontrast', 'barev', 'minPlocha'];
+const klicPrevodu = f => JSON.stringify([PREVOD.map(k => nast[k]), f.orez]);
+
+/* ---------- worker (bez něj se počítá v hlavním vlákně) ---------- */
+let worker = null, pozadavek = 0;
+const cekaji = new Map();
+try {
+  worker = new Worker('omalovanky/worker.js');
+  worker.onmessage = e => { const c = cekaji.get(e.data.id); if (!c) return; cekaji.delete(e.data.id); e.data.chyba ? c.ko(new Error(e.data.chyba)) : c.ok(e.data.vys); };
+  worker.onerror = () => { worker = null; cekaji.forEach(c => c.ko(new Error('worker'))); cekaji.clear(); };
+} catch (e) { worker = null; }
+function spocti(data, w, h, n) {
+  if (!worker) return new Promise(ok => setTimeout(() => ok(J.zpracuj(data, w, h, n)), 0));
+  const id = ++pozadavek, kopie = new Uint8ClampedArray(data);
+  return new Promise((ok, ko) => { cekaji.set(id, { ok, ko }); worker.postMessage({ id, data: kopie, w, h, nast: n }, [kopie.buffer]); })
+    .catch(() => J.zpracuj(data, w, h, n));
+}
+/* Pracovní pixely fotky (ořez, zmenšení na nejvýš 1600 px). */
+function pracovni(f) {
+  const ok = JSON.stringify(f.orez);
+  if (f.prac && f.prac.orez === ok) return f.prac;
+  const sx = f.orez.x * f.w, sy = f.orez.y * f.h, sw = Math.max(1, f.orez.w * f.w), sh = Math.max(1, f.orez.h * f.h);
+  const r = J.pracovniRozmer(sw, sh), c = document.createElement('canvas'); c.width = r.w; c.height = r.h;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, r.w, r.h); ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(f.bitmap, sx, sy, sw, sh, 0, 0, r.w, r.h);
+  f.prac = { orez: ok, w: r.w, h: r.h, data: ctx.getImageData(0, 0, r.w, r.h).data, platno: c };
+  return f.prac;
+}
+async function zajistiVysledek(f) {
+  const k = klicPrevodu(f);
+  if (f.vys && f.klic === k) return f.vys;
+  const p = pracovni(f), vys = await spocti(p.data, p.w, p.h, nast);
+  if (klicPrevodu(f) !== k) return zajistiVysledek(f);   // mezitím se změnilo nastavení
+  f.vys = vys; f.klic = k; f.platno = null;
+  return vys;
+}
+
+/* ---------- kreslení výsledku ---------- */
+const PISMO = 'system-ui,"Segoe UI",sans-serif';
+/* Výsledek v pracovním rozlišení (bez čísel) – drží se v mezipaměti. */
+function platnoVysledku(f, barevne) {
+  const v = f.vys, klic = nast.invert + '|' + barevne;
+  if (f.platno && f.platno.klic === klic) return f.platno;
+  const c = document.createElement('canvas'); c.width = v.w; c.height = v.h;
+  c.getContext('2d').putImageData(new ImageData(J.naRgba(v, { invert: nast.invert, vybarvene: barevne && v.typ === 'plochy' }), v.w, v.h), 0, 0);
+  c.klic = klic; f.platno = c;
+  return c;
+}
+/* Čísla do ploch; k = px cíle na px pracovního obrázku, min/max velikost písma v px cíle. */
+function kresliCisla(ctx, v, ox, oy, k, min, max) {
+  if (v.typ !== 'plochy' || (vybarvene && ctx.canvas === nahledC)) return;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = nast.invert ? '#bbb' : '#555';
+  for (const c of v.cisla) {
+    const fs = Math.max(min, Math.min(max, c.r * k * 1.15));
+    ctx.font = `${Math.round(fs)}px ${PISMO}`;
+    ctx.fillText(c.cislo, ox + (c.x + 0.5) * k, oy + (c.y + 0.5) * k);
+  }
+}
+/* Celý list (A4/A5) jako plátno v rozlišení dpi. */
+function vykresliList(f, dpi) {
+  const v = f.vys, MM = dpi / 25.4, K = v.paleta ? v.paleta.length : 0;
+  const legRad = K ? Math.ceil(K / 10) : 0;
+  const R = J.rozvrzeniListu(v.w, v.h, { format: nast.format, orientace: nast.orientace, okraj: nast.okraj, nadpis: nast.nadpis, jmeno: nast.jmeno, legenda: legRad ? 4 + legRad * 9 : 0 });
+  const c = document.createElement('canvas'); c.list = true;
+  c.width = Math.round(R.list[0] * MM); c.height = Math.round(R.list[1] * MM);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  const o = R.obr, k = o.w * MM / v.w;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(platnoVysledku(f, false), o.x * MM, o.y * MM, o.w * MM, o.h * MM);
+  kresliCisla(ctx, v, o.x * MM, o.y * MM, k, 2.2 * MM, 6 * MM);
+  ctx.strokeStyle = '#000'; ctx.fillStyle = '#000';
+  if (nast.ramecek) { ctx.lineWidth = 0.6 * MM; ctx.strokeRect((o.x - 2) * MM, (o.y - 2) * MM, (o.w + 4) * MM, (o.h + 4) * MM); }
+  let y = (o.y + o.h + (nast.ramecek ? 4 : 2)) * MM;
+  ctx.textBaseline = 'top';
+  if (nast.nadpis) {
+    ctx.textAlign = 'center'; ctx.font = `bold ${6 * MM}px ${PISMO}`;
+    ctx.fillText(nast.nadpis, R.list[0] / 2 * MM, y + 1.5 * MM, (R.list[0] - 2 * R.okraj) * MM);
+  } else if (nast.jmeno) {
+    ctx.textAlign = 'left'; ctx.font = `${4.5 * MM}px ${PISMO}`;
+    const x0 = Math.max(R.okraj, o.x) * MM, t = 'Jméno: '; ctx.fillText(t, x0, y + 4 * MM);
+    ctx.lineWidth = 0.3 * MM; ctx.beginPath(); const x1 = x0 + ctx.measureText(t).width;
+    ctx.moveTo(x1, y + 8.5 * MM); ctx.lineTo(x1 + 70 * MM, y + 8.5 * MM); ctx.stroke();
+  }
+  if (nast.nadpis || nast.jmeno) y += 14 * MM;
+  if (K) {   // legenda barev
+    const sl = 10, sirka = Math.min(18, (R.list[0] - 2 * R.okraj) / sl), x0 = (R.list[0] - sirka * Math.min(sl, K)) / 2;
+    ctx.font = `bold ${3.4 * MM}px ${PISMO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 0.25 * MM;
+    v.paleta.forEach((b, i) => {
+      const x = (x0 + (i % sl) * sirka + 1) * MM, yy = y + (2 + Math.floor(i / sl) * 9) * MM, s = 7 * MM;
+      ctx.fillStyle = `rgb(${b[0]},${b[1]},${b[2]})`; ctx.fillRect(x, yy, s, s); ctx.strokeRect(x, yy, s, s);
+      ctx.fillStyle = (0.299 * b[0] + 0.587 * b[1] + 0.114 * b[2]) > 140 ? '#000' : '#fff';
+      ctx.fillText(i + 1, x + s / 2, yy + s / 2);
+    });
+  }
+  return c;
+}
+
+const nahledC = $('nahled');
+function kresli() {
+  const f = aktualni;
+  $('prazdno').hidden = !!f; nahledC.hidden = !f || !f.vys;
+  $('posuvnik').hidden = !f || !f.vys || ukazList;
+  if (!f || !f.vys) return;
+  const v = f.vys;
+  if (ukazList) {
+    const l = vykresliList(f, 110);
+    nahledC.width = l.width; nahledC.height = l.height; nahledC.getContext('2d').drawImage(l, 0, 0);
+    return;
+  }
+  nahledC.width = v.w; nahledC.height = v.h;
+  const ctx = nahledC.getContext('2d'), p = pracovni(f), dl = Math.round(v.w * $('predPo').value / 100);
+  ctx.drawImage(platnoVysledku(f, vybarvene), 0, 0);
+  kresliCisla(ctx, v, 0, 0, 1, Math.max(8, v.w / 160), Math.max(16, v.w / 30));
+  if (dl > 0) {
+    ctx.drawImage(p.platno, 0, 0, dl, v.h, 0, 0, dl, v.h);
+    ctx.fillStyle = '#e33'; ctx.fillRect(dl - 1, 0, Math.max(2, v.w / 400), v.h);
+  }
+}
+function legenda() {
+  const v = aktualni && aktualni.vys, ok = v && v.typ === 'plochy';
+  $('legenda').innerHTML = ok ? v.paleta.map((b, i) => `<span><i style="background:rgb(${b.join(',')})"></i>${i + 1}</span>`).join('') : '';
+  $('plochyInfo').textContent = ok ? `${v.cisla.length} ploch, ${v.paleta.length} barev` : '';
+}
+function stav(text) {
+  const f = aktualni;
+  $('stav').innerHTML = text || (f ? `<span><b data-i18n="ne">${esc(f.nazev)}</b></span><span>${f.w} × ${f.h} px</span>` + (f.vys ? `<span>pracovně ${f.vys.w} × ${f.vys.h} px</span>` : '') + `<span>${fotky.indexOf(f) + 1} / ${fotky.length}</span>` : '<span>Přidejte fotky.</span>');
+}
+
+let casovac = 0, poradi = 0;
+async function prepocitej() {
+  const f = aktualni; if (!f) { kresli(); stav(); return; }
+  const moje = ++poradi;
+  const t = setTimeout(() => { $('pocitam').hidden = false; }, 150);
+  try { await zajistiVysledek(f); } catch (e) { Dialog.chyba('Převod se nepovedl: ' + e.message); }
+  clearTimeout(t);
+  if (moje !== poradi) return;
+  $('pocitam').hidden = true;
+  if (f === aktualni) { kresli(); legenda(); stav(); obnovNahledFotky(f); }
+}
+function zmena(prevod) { if (prevod) { clearTimeout(casovac); casovac = setTimeout(prepocitej, 250); } else kresli(); }
+
+/* ---------- ovládací prvky ---------- */
+const POPIS = { detail: v => v + ' / 10', kontrast: v => '×' + (+v).toLocaleString('cs-CZ'), tloustka: v => v + ' px', utrzek: v => v + ' px',
+  barev: v => v, minPlocha: v => (+v).toLocaleString('cs-CZ') + ' % obrázku', okraj: v => v + ' mm' };
+const POLE = ['metoda', 'detail', 'kontrast', 'tloustka', 'utrzek', 'invert', 'barev', 'minPlocha', 'format', 'orientace', 'okraj', 'ramecek', 'nadpis', 'jmeno'];
+function doFormulare() {
+  POLE.forEach(k => { const el = $(k); if (el.type === 'checkbox') el.checked = !!nast[k]; else el.value = nast[k]; if (POPIS[k]) $('o_' + k).textContent = POPIS[k](nast[k]); });
+  document.querySelectorAll('[data-rezim]').forEach(b => b.setAttribute('aria-pressed', b.dataset.rezim === nast.rezim));
+  $('kartaCisla').hidden = nast.rezim !== 'cisla';
+  $('poleMetoda').hidden = $('poleUtrzek').hidden = nast.rezim !== 'omalovanka';
+  $('poleKontrast').hidden = nast.rezim === 'cisla';
+  $('poleTloustka').hidden = nast.rezim === 'skica';
+  $('tlVybarvene').hidden = nast.rezim !== 'cisla';
+  $('tlVybarvene').setAttribute('aria-pressed', vybarvene);
+  $('tlList').setAttribute('aria-pressed', ukazList);
+}
+function zPole(e) {
+  const el = e.target, k = el.id; if (!POLE.includes(k)) return;
+  nast[k] = el.type === 'checkbox' ? el.checked : (el.type === 'range' ? +el.value : el.value);
+  if (POPIS[k]) $('o_' + k).textContent = POPIS[k](nast[k]);
+  ulozNast();
+  if (k === 'invert') fotky.forEach(f => { f.platno = null; });
+  zmena(PREVOD.includes(k));
+}
+$('panel').addEventListener('change', zPole);
+$('panel').addEventListener('input', e => { if (e.target.type === 'range' || e.target.id === 'nadpis') zPole(e); });
+$('predPo').addEventListener('input', kresli);
+
+/* ---------- fotky: načtení, schránka, drag&drop ---------- */
+async function pridejFotky(soubory) {
+  const obr = [...soubory].filter(f => /^image\//.test(f.type || ''));
+  if (!obr.length) return Dialog.chyba('Tohle není obrázek.');
+  let posledni = null;
+  for (const s of obr) {
+    let bitmap;
+    try { bitmap = await createImageBitmap(s); } catch (e) { Dialog.chyba(`Obrázek „${s.name || 'ze schránky'}“ se nepodařilo načíst.`); continue; }
+    const f = { id: Math.random().toString(36).slice(2), nazev: (s.name || 'Ze schránky').replace(/\.[a-z0-9]+$/i, ''), bitmap, w: bitmap.width, h: bitmap.height, orez: { x: 0, y: 0, w: 1, h: 1 } };
+    const t = document.createElement('canvas'), k = 96 / Math.max(f.w, f.h); t.width = Math.max(1, f.w * k); t.height = Math.max(1, f.h * k);
+    t.getContext('2d').drawImage(bitmap, 0, 0, t.width, t.height); f.nahledUrl = t.toDataURL('image/jpeg', 0.7);
+    fotky.push(f); posledni = posledni || f;
+  }
+  if (posledni) vyber(posledni);
+}
+function seznamFotek() {
+  $('pocetFotek').textContent = fotky.length;
+  $('fotky').innerHTML = fotky.map(f => `<div class="fotka" role="button" tabindex="0" data-id="${f.id}" aria-current="${f === aktualni}" title="${esc(f.nazev)}"><img src="${f.nahledUrl}" alt="${esc(f.nazev)}"><button type="button" class="x" data-odeber="${f.id}" aria-label="Odebrat">×</button>${f.vys ? '<span class="hot">✓</span>' : ''}</div>`).join('');
+}
+function obnovNahledFotky() { seznamFotek(); }
+function vyber(f) { aktualni = f; seznamFotek(); kresliZdroj(); stav(); legenda(); prepocitej(); }
+function odeber(f) {
+  const i = fotky.indexOf(f); if (i < 0) return;
+  fotky.splice(i, 1); f.bitmap.close && f.bitmap.close();
+  if (aktualni === f) aktualni = fotky[Math.min(i, fotky.length - 1)] || null;
+  seznamFotek(); kresliZdroj(); stav(); legenda(); if (aktualni) prepocitej(); else kresli();
+}
+$('fotky').addEventListener('click', e => {
+  const x = e.target.closest('[data-odeber]'); if (x) return odeber(fotky.find(f => f.id === x.dataset.odeber));
+  const d = e.target.closest('[data-id]'); if (d) vyber(fotky.find(f => f.id === d.dataset.id));
+});
+$('fotky').addEventListener('keydown', e => { const d = e.target.closest('[data-id]'); if (d && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); vyber(fotky.find(f => f.id === d.dataset.id)); } });
+$('souborObr').addEventListener('change', e => { const s = [...e.target.files]; e.target.value = ''; if (s.length) pridejFotky(s); });
+document.addEventListener('paste', e => {
+  if (e.target.closest && e.target.closest('textarea,input')) return;
+  const s = [...(e.clipboardData || {}).items || []].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile());
+  if (s.length) { e.preventDefault(); pridejFotky(s); }
+});
+['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); $('prazdno').classList.add('nad'); } }));
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) $('prazdno').classList.remove('nad'); });
+document.addEventListener('drop', e => {
+  $('prazdno').classList.remove('nad');
+  const s = [...(e.dataTransfer || {}).files || []]; if (!s.length) return;
+  e.preventDefault();
+  if (s.length === 1 && /json$/i.test(s[0].name)) nactiJson(s[0]); else pridejFotky(s);
+});
+
+/* ---------- ořez (stejně jako Vzory z obrázku) ---------- */
+const cz = $('zdroj');
+function kresliZdroj() {
+  const f = aktualni;
+  cz.hidden = $('tlCely').hidden = !f;
+  if (!f) { $('zdrojInfo').textContent = 'Přidejte jednu nebo víc fotek.'; return; }
+  const ctx = cz.getContext('2d'), sirka = 520;
+  cz.width = sirka; cz.height = Math.min(Math.round(sirka * f.h / f.w), 600);
+  const k = Math.min(cz.width / f.w, cz.height / f.h), ox = (cz.width - f.w * k) / 2, oy = (cz.height - f.h * k) / 2;
+  cz._m = { k, ox, oy };
+  ctx.clearRect(0, 0, cz.width, cz.height);
+  ctx.drawImage(f.bitmap, ox, oy, f.w * k, f.h * k);
+  const o = f.orez, x = ox + o.x * f.w * k, y = oy + o.y * f.h * k, w = o.w * f.w * k, h = o.h * f.h * k;
+  ctx.fillStyle = 'rgba(0,0,0,.5)';
+  ctx.beginPath(); ctx.rect(0, 0, cz.width, cz.height); ctx.rect(x, y, w, h); ctx.fill('evenodd');
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.strokeRect(x, y, w, h);
+  $('zdrojInfo').textContent = `${f.w} × ${f.h} px` + (o.w < 1 || o.h < 1 ? ` · ořez ${Math.round(o.w * f.w)} × ${Math.round(o.h * f.h)} px` : '') + ' · tažením vyberte ořez';
+}
+let tah = null;
+function bodZdroje(e) {
+  const r = cz.getBoundingClientRect(), m = cz._m, f = aktualni;
+  const px = (e.clientX - r.left) * cz.width / r.width, py = (e.clientY - r.top) * cz.height / r.height;
+  return [Math.max(0, Math.min(1, (px - m.ox) / (f.w * m.k))), Math.max(0, Math.min(1, (py - m.oy) / (f.h * m.k)))];
+}
+cz.addEventListener('pointerdown', e => { if (!aktualni) return; cz.setPointerCapture(e.pointerId); tah = bodZdroje(e); });
+cz.addEventListener('pointermove', e => {
+  if (!tah) return;
+  const [x, y] = bodZdroje(e);
+  aktualni.orez = { x: Math.min(x, tah[0]), y: Math.min(y, tah[1]), w: Math.abs(x - tah[0]), h: Math.abs(y - tah[1]) };
+  if (aktualni.orez.w > 0.02 && aktualni.orez.h > 0.02) kresliZdroj();
+});
+cz.addEventListener('pointerup', () => {
+  if (!tah) return; tah = null;
+  const o = aktualni.orez; if (o.w < 0.02 || o.h < 0.02) aktualni.orez = { x: 0, y: 0, w: 1, h: 1 };
+  kresliZdroj(); zmena(true);
+});
+
+/* ---------- výstupy ---------- */
+function nactiSkript(src) {
+  return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('Nelze načíst ' + src)); document.head.appendChild(s); });
+}
+function stahni(blob, jmeno) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = jmeno;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+const jmenoSouboru = (n, p) => (n || 'omalovanka').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60) + p;
+/* Spočítá výsledky pro vybrané fotky s ukazatelem průběhu. */
+async function pripravListy(seznam, dpi) {
+  if (!seznam.length) { Dialog.info('Nejdřív přidejte fotky.'); return null; }
+  const listy = [];
+  $('pocitam').hidden = false;
+  try {
+    for (let i = 0; i < seznam.length; i++) {
+      $('pocitam').textContent = `⏳ Připravuji ${i + 1} / ${seznam.length}…`;
+      await zajistiVysledek(seznam[i]);
+      listy.push(vykresliList(seznam[i], dpi));
+    }
+  } catch (e) { Dialog.chyba('Převod se nepovedl: ' + e.message); return null; }
+  finally { $('pocitam').hidden = true; $('pocitam').textContent = '⏳ Počítám…'; seznamFotek(); }
+  return listy;
+}
+async function exportPdf(vse) {
+  const seznam = vse ? fotky.slice() : (aktualni ? [aktualni] : []);
+  const listy = await pripravListy(seznam, 200); if (!listy) return;
+  try {
+    if (!window.jspdf) await nactiSkript('lib/jspdf.umd.min.js');
+    let doc = null;
+    listy.forEach(c => {
+      const w = c.width / 200 * 25.4, h = c.height / 200 * 25.4, fmt = [w, h], or = w > h ? 'l' : 'p';
+      if (!doc) doc = new window.jspdf.jsPDF({ unit: 'mm', format: fmt, orientation: or, compress: true });
+      else doc.addPage(fmt, or);
+      doc.addImage(c, nast.rezim === 'skica' ? 'JPEG' : 'PNG', 0, 0, w, h, undefined, 'FAST');
+    });
+    stahni(doc.output('blob'), jmenoSouboru(vse && seznam.length > 1 ? 'omalovanky' : seznam[0].nazev, '.pdf'));
+  } catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); }
+}
+function otoc(c) {   // list na šířku → na výšku pro tisk (jedna velikost stránky)
+  const o = document.createElement('canvas'); o.width = c.height; o.height = c.width;
+  const x = o.getContext('2d'); x.translate(o.width, 0); x.rotate(Math.PI / 2); x.drawImage(c, 0, 0);
+  return o;
+}
+async function tisk(vse) {
+  const listy = await pripravListy(vse ? fotky.slice() : (aktualni ? [aktualni] : []), 200); if (!listy) return;
+  const t = $('tisk'); t.innerHTML = '';
+  const st = document.createElement('style');
+  st.textContent = `@media print{@page{size:${nast.format.toUpperCase()} portrait;margin:0}}`;
+  t.appendChild(st);
+  const urls = await Promise.all(listy.map(c => new Promise(ok => (c.width > c.height ? otoc(c) : c).toBlob(b => ok(URL.createObjectURL(b)), 'image/png'))));
+  await Promise.all(urls.map(u => new Promise(ok => { const i = new Image(); i.onload = i.onerror = ok; i.src = u; i.alt = ''; t.appendChild(i); })));
+  addEventListener('afterprint', () => { urls.forEach(URL.revokeObjectURL); t.innerHTML = ''; }, { once: true });
+  window.print();
+}
+async function exportPng() {
+  const f = aktualni; if (!f) return Dialog.info('Nejdřív přidejte fotky.');
+  await zajistiVysledek(f);
+  const v = f.vys, okraj = Math.round(v.w / 30), c = document.createElement('canvas'), dole = nast.nadpis ? Math.round(v.w / 12) : 0;
+  c.width = v.w + 2 * okraj; c.height = v.h + 2 * okraj + dole;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(platnoVysledku(f, false), okraj, okraj);
+  kresliCisla(ctx, v, okraj, okraj, 1, Math.max(8, v.w / 160), Math.max(16, v.w / 30));
+  if (nast.ramecek) { ctx.strokeStyle = '#000'; ctx.lineWidth = Math.max(2, v.w / 400); ctx.strokeRect(okraj / 2, okraj / 2, v.w + okraj, v.h + okraj); }
+  if (nast.nadpis) { ctx.fillStyle = '#000'; ctx.font = `bold ${Math.round(dole * 0.55)}px ${PISMO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(nast.nadpis, c.width / 2, v.h + 2 * okraj + dole / 2 - okraj / 2, c.width - 2 * okraj); }
+  c.toBlob(b => stahni(b, jmenoSouboru(f.nazev, '.png')), 'image/png');
+}
+function exportJson() { stahni(new Blob([JSON.stringify(Object.assign({ typ: 'omalovanky' }, nast), null, 1)], { type: 'application/json' }), 'omalovanky_nastaveni.json'); }
+async function nactiJson(s) {
+  try {
+    const d = JSON.parse(await s.text());
+    if (d.typ !== 'omalovanky') throw new Error('není to nastavení Omalovánek');
+    delete d.typ; nast = J.migruj(d); ulozNast(); fotky.forEach(f => { f.platno = null; }); doFormulare(); zmena(true);
+  } catch (e) { Dialog.chyba('Soubor nejde načíst: ' + e.message); }
+}
+$('souborJson').addEventListener('change', e => { const s = e.target.files[0]; e.target.value = ''; if (s) nactiJson(s); });
+
+/* ---------- příkazy a nabídky ---------- */
+const PRIKAZY = {
+  otevrit: () => $('souborObr').click(),
+  schranka: async () => {
+    try {
+      const s = [];
+      for (const it of await navigator.clipboard.read()) { const t = it.types.find(x => x.startsWith('image/')); if (t) s.push(new File([await it.getType(t)], 'Ze schránky', { type: t })); }
+      if (s.length) return pridejFotky(s);
+      Dialog.info('Ve schránce není obrázek.');
+    } catch (e) { Dialog.info('Prohlížeč nepovolil čtení schránky – vložte obrázek klávesami Ctrl+V.'); }
+  },
+  png: exportPng, pdf: () => exportPdf(false), pdfVse: () => exportPdf(true), tisk: () => tisk(false), tiskVse: () => tisk(true),
+  odebrat: () => { if (aktualni) odeber(aktualni); },
+  odebratVse: async () => { if (fotky.length && await Dialog.potvrd(`Odebrat všech ${fotky.length} fotek?`)) { fotky.slice().forEach(odeber); } },
+  export: exportJson, import: () => $('souborJson').click(),
+  vychozi: async () => { if (await Dialog.potvrd('Vrátit výchozí nastavení?')) { nast = J.vychozi(); ulozNast(); fotky.forEach(f => { f.platno = null; }); doFormulare(); zmena(true); } },
+  celyObrazek: () => { if (!aktualni) return; aktualni.orez = { x: 0, y: 0, w: 1, h: 1 }; kresliZdroj(); zmena(true); },
+  prepniList: () => { ukazList = !ukazList; doFormulare(); kresli(); },
+  vybarvene: () => { vybarvene = !vybarvene; doFormulare(); kresli(); },
+  napoveda: () => $('dlgNapoveda').showModal()
+};
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const r = e.target.closest('[data-rezim]');
+  if (r && r.dataset.rezim !== nast.rezim) { nast.rezim = r.dataset.rezim; ulozNast(); doFormulare(); zmena(true); }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+
+doFormulare(); seznamFotek(); kresliZdroj(); stav();
+window.OMALOVANKY_APP = { stav: () => ({ nast, fotky, aktualni }), pridejFotky, vykresliList, zajistiVysledek };
+})();
+</script>
+</body>
+</html>

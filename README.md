@@ -1138,3 +1138,36 @@ svátečních a zvykových jídel světa (273 současných + 113 historických t
   `node tools/svet_u_stolu_hko.mjs <složka s T<rok>e.txt z hko.gov.hk>`.
 - Klíč `webapp_svet_u_stolu` (pohled, filtry). Test `node _test/svet_u_stolu_test.js` (výpočty dat +
   kontrola dat, každá položka má termín v letech 2025–2036).
+
+**Lukavice 3D** (`obsah/lukavice.html` + `obsah/lukavice/`, sekce Strategie & simulace) – 3D svět obce
+Lukavice (okres Ústí nad Orlicí, ~5,7 × 3,8 km), chůze i jízda autem.
+- Data (pořadí): `python3 tools/lukavice_data.py [--zdroj mezipaměť]` → `python3 tools/lukavice_ploty.py`.
+  OSM přes API `/map` po čtvrtinách (Overpass bývá přetížený) + otevřená data ČÚZK (`tools/lukavice_cuzk.py`,
+  CC BY 4.0) z ags.cuzk.cz v síti EPSG:4326 – **pixely musí být čtvercové ve stupních**, jinak ArcGIS rozsah roztáhne:
+  DMR 5G → terén po 10 m (`vyska.bin`) + `koryto.png` (jemná vložka koryt po ~1,3 × 2 m: R odchylka/4 cm, G váha,
+  B maska; pod silnicemi propustek), hladina a střed vody z příčných řezů; DMP 1G − DMR → okap, výška hřebene,
+  tvar a osa střechy (sedlová/napříč/valbová/pultová/plochá) u ~1200 budov; ortofoto → barva střechy; stavby
+  chybějící v OSM (DMP + červené kůlny z ortofota, ~100). Ploty: parcely INSPIRE WFS ČÚZK → `ploty.json`
+  (usedlosti kolem domů, uliční plot s vraty/brankou, pletivo mezi sousedy; 93 km). Stažení dat 11. 11. 2026.
+- `jadro.js` bez three.js: výška = hrubá mřížka (stejné trojúhelníky jako síť) + odchylka koryta, povrch, kolize
+  s budovami a kmeny, rozsazení stromů (stálé semínko), chodec, auto (jízdní kolo, povrchy, klopení ze 4 kol).
+  `scena.js`: terén s detailní texturou (v pásu koryt se zahazuje a kreslí jemná síť + voda po terénu koryta),
+  pásy cest, budovy (střechy podle dat z DMP, obdélník podle osy; fasády z atlasu `tex_fasady.webp` od Codexu:
+  okna po patrech, kamenný sokl, dveře / vrata garáže na stěně k silnici, prkna/cihly/plech/panely u hospodářských
+  budov – shader s atributem `bunka` a textureGrad), kostel s věží, stromy jako InstancedMesh po 250 m dlaždicích,
+  ploty z katastru jako průhledné textury (pletivo, laťky, pruty na podezdívce) + panely, živé ploty, pilíře vrat.
+- Kamery: pěšky za zády / očima, v autě za autem / celé auto / kabina; kamera se nepropadá do zdí (paprsek).
+  Mapa (M) s přesunem kliknutím, minimapa, zvuk motoru (WebAudio). Klíč `webapp_lukavice` (nastavení).
+- Vybavení ulic (jádro, deterministicky): chodníky se žulovým obrubníkem jen u silnic II./III. třídy v zástavbě
+  (`nadZemi` zvedá chodce i auto), lampy po 38 m, zaparkovaná auta, z OSM zastávky, přechody (zebra), kříže, kapličky,
+  pomníky, schránky, kontejnery, výstražné kříže u přejezdů, sloupy a stožáry vedení s dráty (průvěs), ploty/živé ploty.
+  Vše jsou překážky (obdélníky v mřížce budov). Modely vybavení skládá `scena.js` z kvádrů/prutů jako InstancedMesh.
+- Textury povrchů `tex_*.webp` (asfalt, štěrk, zámková dlažba, kostky, tráva, tašky, omítka) z lokálního Stable
+  Diffusion (Z-Image), navazující přes `python3 tools/lukavice_textury.py ADRESAR_PNG` (prompty v hlavičce skriptu).
+  Tráva na terénu jen jako jasová struktura (barvu dává podklad), tašky a omítka šedé – tónuje je barva vrcholů.
+- Postava (`postava.glb`, akce Stani/Chuze/Beh/Skok, AnimationMixer) a auto (`auto.glb`, kola `Kolo_PL/PP/ZL/ZP`
+  s rotation.order YXZ, materiál `Lak`, `Volant`) z Blenderu: `blender -b --factory-startup --python
+  obsah/lukavice/lukavice_modely.py -- [výstup] [náhledy]`. Při chybě načtení zůstanou kvádrové modely.
+- Testy: `node --import ./_test/three_importmap.mjs _test/lukavice_test.mjs` (jádro, vybavení, měření geometrie všech
+  budov), `python3 _test/lukavice_ui.py [dpi]` (swiftshader; `?start&zastav` vypne smyčku, snímky přes `LUKAVICE.krok(n)`;
+  snímky obrazovky občas ukážou černý trojúhelník – artefakt headless skládání, ve WebGL snímku není).

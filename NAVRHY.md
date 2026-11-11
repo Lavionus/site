@@ -18,7 +18,7 @@ Pravidla:
 - [x] **Etapa 1:** 1 Zásoby (`zasoby`), 2 Předplatné (`predplatne`), 6 Dávky (`davky`), 7 OSVČ (`osvc`)
 - [x] **Etapa 2:** 8 Konec PP (`konec_pp`), 11 Bateriový pack (`baterie_pack`), 12 Ložiska (`loziska`), 13 Pneumatiky (`pneumatiky`)
 - [x] **Etapa 3:** 14 Velikosti, 17 Deník nemoci, 19 Vzory z obrázku, 20 Pletení a háčkování
-- [ ] **Etapa 4:** 21 Omalovánky, 23 CSS hřiště, 25 Turnajový pavouk, 26 Půjčené věci (rozšíření majetku)
+- [x] **Etapa 4:** 21 Omalovánky, 23 CSS hřiště, 25 Turnajový pavouk, 26 Půjčené věci (rozšíření majetku)
 
 ### Návrhy z 10. 11. 2026 (ověřeno proti oběma katalogům, nic z toho zatím není)
 

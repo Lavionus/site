@@ -95,20 +95,33 @@ for (const [index, icon] of icons.entries()) {
   icon.index = index;
 }
 
-const rows = Math.ceil(icons.length / COLS);
+// magick občas náhodně spadne (SIGABRT) – volání se zopakuje.
+function zkus(prikaz, argumenty) {
+  for (let pokus = 1; ; pokus++) {
+    try { return execFileSync(prikaz, argumenty); }
+    catch (e) { if (pokus >= 3) throw e; }
+  }
+}
+
+// Snímá se po částech: jeden vysoký list (nad ~15 000 px) shodí headless Chromium (SIGABRT).
+const ROWS_PER_SHEET = 30;
 const chroma = '#00ff01';
-const renderHeight = rows * SIZE + SIZE;
-const sheet = `<!doctype html><meta charset="utf-8"><style>*{box-sizing:border-box}html,body{margin:0;background:${chroma}}body{width:${COLS * SIZE}px;height:${renderHeight}px;display:grid;align-content:start;grid-template-columns:repeat(${COLS},${SIZE}px);grid-auto-rows:${SIZE}px}img{display:block}</style>${cards.join('')}`;
 const staging = path.join(OUT, '.render-sheet.html');
 const shot = path.join(OUT, '.render-sheet.png');
-fs.writeFileSync(staging, sheet);
-
-execFileSync('chromium', ['--headless', '--disable-gpu', '--no-sandbox', '--hide-scrollbars', `--window-size=${COLS * SIZE},${renderHeight}`, `--screenshot=${shot}`, `file://${staging}`], { stdio: 'inherit' });
-for (const icon of icons) {
-  const x = (icon.index % COLS) * SIZE;
-  const y = Math.floor(icon.index / COLS) * SIZE;
-  execFileSync('magick', [shot, '-crop', `${SIZE}x${SIZE}+${x}+${y}`, '+repage', '-transparent', chroma, path.join(OUT, icon.png)]);
-  execFileSync('cwebp', ['-quiet', '-q', '90', '-alpha_q', '100', path.join(OUT, icon.png), '-o', path.join(OUT, icon.webp)]);
+for (let start = 0; start < icons.length; start += COLS * ROWS_PER_SHEET) {
+  const part = icons.slice(start, start + COLS * ROWS_PER_SHEET);
+  const rows = Math.ceil(part.length / COLS);
+  const renderHeight = rows * SIZE + SIZE;
+  const sheet = `<!doctype html><meta charset="utf-8"><style>*{box-sizing:border-box}html,body{margin:0;background:${chroma}}body{width:${COLS * SIZE}px;height:${renderHeight}px;display:grid;align-content:start;grid-template-columns:repeat(${COLS},${SIZE}px);grid-auto-rows:${SIZE}px}img{display:block}</style>${cards.slice(start, start + part.length).join('')}`;
+  fs.writeFileSync(staging, sheet);
+  execFileSync('chromium', ['--headless', '--disable-gpu', '--no-sandbox', '--hide-scrollbars', `--window-size=${COLS * SIZE},${renderHeight}`, `--screenshot=${shot}`, `file://${staging}`], { stdio: 'inherit' });
+  for (const icon of part) {
+    const i = icon.index - start;
+    const x = (i % COLS) * SIZE;
+    const y = Math.floor(i / COLS) * SIZE;
+    zkus('magick', [shot, '-crop', `${SIZE}x${SIZE}+${x}+${y}`, '+repage', '-transparent', chroma, path.join(OUT, icon.png)]);
+    zkus('cwebp', ['-quiet', '-q', '90', '-alpha_q', '100', path.join(OUT, icon.png), '-o', path.join(OUT, icon.webp)]);
+  }
 }
 fs.rmSync(staging);
 fs.rmSync(shot);
