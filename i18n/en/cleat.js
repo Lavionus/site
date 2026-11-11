@@ -1048,4 +1048,6 @@ I18N.pridej('en', {
   'Zátěž na 1 klip': 'Load per clip',
   '{kg} kg na kus': '{kg} kg per piece',
   'není objekt': 'not an object',
+  'pět samostatných vzorků zámku s různou vůlí – vyzkoušejte na své liště, který sedí': 'five separate lip samples with different clearances – try which one fits your cleat',
+  'Vzorky jsou samostatné kusy a tisknou se na boku vedle sebe – každý zkuste nasadit na lištu. Vyberte nejmenší vůli, která jde nasadit a sundat bez síly, a zadejte ji v boxu Lišta a zámek.': 'The samples are separate pieces printed on their sides next to each other – try each one on the cleat. Pick the smallest clearance that goes on and off without force and enter it in the Cleat and lip box.',
 });

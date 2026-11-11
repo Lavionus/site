@@ -1,5 +1,5 @@
 /* Vygenerováno: node tools/verze.mjs – neupravovat ručně. Stránka: [verze, datum poslední změny] */
-var VERZE_WEBU = 'v744';
+var VERZE_WEBU = 'v745';
 var VERZE_STRANEK = {"obsah/AI_prednaska.html":[7,"2026-10-29"],
 "obsah/Circle_generator.html":[6,"2026-10-13"],
 "obsah/Heritage.html":[13,"2026-10-30"],
