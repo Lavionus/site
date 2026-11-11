@@ -296,15 +296,9 @@ def drobne_stavby(budovy, cesty, dmr, dmp, orto, vyloucit=()):
         if len(kruh) > 2: du.polygon([px(p) for p in kruh], fill=255)
     okoli, uz = np.asarray(okoli) > 0, np.asarray(uz) > 0
     # výška nad terénem po řádcích (DMR bilineárně ve středech pixelů DMP)
-    hn = np.zeros((H, W), np.float32)
+    hn, o = nad_terenem(dmr, dmp, orto)
     xs = dmp.x0 + (np.arange(W) + 0.5) * dmp.sx
-    for j in range(H):
-        z = dmp.z0 + (j + 0.5) * dmp.sz
-        hn[j] = dmp.a[j] - dmr.bilin(xs, np.full(W, z))
     # zeleň z ortofota (nejbližší pixel ortofota ve středu pixelu DMP)
-    oi = np.clip(((xs - orto.x0) / orto.sx).astype(int), 0, orto.W - 1)
-    oj = np.clip(((dmp.z0 + (np.arange(H) + 0.5) * dmp.sz - orto.z0) / orto.sz).astype(int), 0, orto.H - 1)
-    o = orto.a[oj[:, None], oi[None, :]].astype(np.float32)
     zelen = (2 * o[..., 1] - o[..., 0] - o[..., 2]) > 10
     jas = o.mean(axis=2)
     hrana = np.zeros_like(jas)       # zrnitost ortofota (koruny stromů jsou zrnité, střechy hladké)
@@ -386,3 +380,114 @@ def _oblasti(maska):
     mapa = -np.ones((H, W), np.int64)
     mapa[jj, ii] = koreny
     return jj, ii, koreny, mapa
+
+
+def vyrovnej_silnice(Hm, krok, dmr, cesty, zeleznice):
+    """Silnice a koleje jako hladké těleso: podélný profil z DMR v ose (medián 18 m proti propadům pod mosty,
+    pak Gauss σ 8 m), uzly mřížky do šířka/2 + 4 m srovnané na profil, do šířka/2 + 14 m plynulý náběh
+    na původní terén (násep / zářez). Ostatní terén jedno jemné vyhlazení 3 × 3. Mění Hm na místě."""
+    from numpy.lib.stride_tricks import sliding_window_view
+    nz, nx = Hm.shape
+    # jemné vyhlazení všeho (binomické 1-2-1)
+    p = np.pad(Hm, 1, mode='edge')
+    Hm[:] = (p[:-2, :-2] + 2 * p[:-2, 1:-1] + p[:-2, 2:] + 2 * p[1:-1, :-2] + 4 * p[1:-1, 1:-1] + 2 * p[1:-1, 2:]
+             + p[2:, :-2] + 2 * p[2:, 1:-1] + p[2:, 2:]) / 16
+    x0, z0 = dmr.x0, dmr.z0
+    citatel = np.zeros_like(Hm); jmenovatel = np.zeros_like(Hm); vaha_max = np.zeros_like(Hm)
+    seznam = [(sirka, pts) for druh, (sirka, z), pts in cesty if sirka >= 3] + [(4.0, pts) for pts in zeleznice]
+    jadro = np.exp(-0.5 * (np.arange(-12, 13) / 4) ** 2); jadro /= jadro.sum()
+    for sirka, pts in seznam:
+        body = []
+        for a, b in zip(pts, pts[1:]):
+            n = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 2))
+            body += [(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n) for k in range(n)]
+        body.append(pts[-1])
+        B = np.array(body)
+        prof = dmr.bilin(B[:, 0], B[:, 1])
+        if len(prof) >= 9:
+            prof = np.median(sliding_window_view(np.pad(prof, 4, mode='edge'), 9), axis=1)
+        prof = np.convolve(np.pad(prof, 12, mode='edge'), jadro, mode='valid')
+        vnitrni, vnejsi = sirka / 2 + 4, sirka / 2 + 14
+        for (x, z), h in zip(B, prof):
+            i0, i1 = max(0, int((x - vnejsi - x0) / krok)), min(nx - 1, int((x + vnejsi - x0) / krok) + 1)
+            j0, j1 = max(0, int((z - vnejsi - z0) / krok)), min(nz - 1, int((z + vnejsi - z0) / krok) + 1)
+            if i0 > i1 or j0 > j1: continue
+            X = x0 + np.arange(i0, i1 + 1) * krok; Z = z0 + np.arange(j0, j1 + 1) * krok
+            d = np.hypot(X[None, :] - x, Z[:, None] - z)
+            t = np.clip((vnejsi - d) / (vnejsi - vnitrni), 0, 1)
+            w = t * t * (3 - 2 * t)
+            sl = (slice(j0, j1 + 1), slice(i0, i1 + 1))
+            citatel[sl] += w * w * h; jmenovatel[sl] += w * w
+            vaha_max[sl] = np.maximum(vaha_max[sl], w)
+    m = jmenovatel > 0
+    Hm[m] = Hm[m] * (1 - vaha_max[m]) + citatel[m] / jmenovatel[m] * vaha_max[m]
+    print(f'vyrovnání silnic: {len(seznam)} úseků, ovlivněno {m.mean() * 100:.1f} % uzlů terénu')
+
+
+_mezipamet_nad = {}
+
+
+def nad_terenem(dmr, dmp, orto):
+    """Výška povrchu nad terénem (DMP − DMR) a barva ortofota, obojí v mřížce DMP. Počítá se jednou."""
+    if 'hn' not in _mezipamet_nad:
+        H, W = dmp.H, dmp.W
+        hn = np.zeros((H, W), np.float32)
+        xs = dmp.x0 + (np.arange(W) + 0.5) * dmp.sx
+        for j in range(H):
+            hn[j] = dmp.a[j] - dmr.bilin(xs, np.full(W, dmp.z0 + (j + 0.5) * dmp.sz))
+        oi = np.clip(((xs - orto.x0) / orto.sx).astype(int), 0, orto.W - 1)
+        oj = np.clip(((dmp.z0 + (np.arange(H) + 0.5) * dmp.sz - orto.z0) / orto.sz).astype(int), 0, orto.H - 1)
+        _mezipamet_nad['hn'] = hn
+        _mezipamet_nad['o'] = orto.a[oj[:, None], oi[None, :]].astype(np.float32)
+    return _mezipamet_nad['hn'], _mezipamet_nad['o']
+
+
+def stromy_z_dmp(zdroj, svet, dmr, orto, budovy, cesty, x0, z0, cil):
+    """Polohy a výšky jednotlivých stromů z DMP OK (povrch z obrazové korelace VČETNĚ vegetace – DMP 1G ji nemá):
+    vrcholy korun = lokální maxima výšky vegetace (DMP OK − DMR) mimo budovy
+    a silnice, výška > 3 m; jehličnan podle tmavé modrozelené barvy v ortofotu.
+    Zapíše stromy.bin: na strom Uint16 x, Uint16 z (decimetry od rohu světa), Uint8 výška/4 m, Uint8 druh (1 = jehličnan)."""
+    dmp = Rastr(zdroj, 'arcgis2/rest/services/dmp/ImageServer', 1, 3, 2, 'tiff', '&pixelType=F32&interpolation=RSP_BilinearInterpolation', svet)
+    H, W = dmp.H, dmp.W
+    hn = np.zeros((H, W), np.float32)
+    xs = dmp.x0 + (np.arange(W) + 0.5) * dmp.sx
+    for j in range(H):
+        hn[j] = dmp.a[j] - dmr.bilin(xs, np.full(W, dmp.z0 + (j + 0.5) * dmp.sz))
+    oi = np.clip(((xs - orto.x0) / orto.sx).astype(int), 0, orto.W - 1)
+    oj = np.clip(((dmp.z0 + (np.arange(H) + 0.5) * dmp.sz - orto.z0) / orto.sz).astype(int), 0, orto.H - 1)
+    o = orto.a[oj[:, None], oi[None, :]].astype(np.float32)
+    px = lambda p: ((p[0] - dmp.x0) / dmp.sx - 0.5, (p[1] - dmp.z0) / dmp.sz - 0.5)
+    stavby = Image.new('L', (W, H), 0)
+    ds = ImageDraw.Draw(stavby)
+    for b in budovy:
+        pts = [px(p) for p in b['body']]
+        ds.polygon(pts, fill=255); ds.line(pts + pts[:1], fill=255, width=3)
+    for druh, (sirka, z), pts in cesty:
+        ds.line([px(p) for p in pts], fill=255, width=max(2, int(sirka / dmp.sz)), joint='curve')
+    stavby = np.asarray(stavby) > 0
+    # vyhlazená výška korun (3 × 3) a maximum v okně ~5,8 × 5 m (oddělitelný max-filtr)
+    c = np.pad(hn, 1, mode='edge')
+    hs = sum(c[dj:dj + H, di:di + W] for dj in range(3) for di in range(3)) / 9
+    def max_okno(a, rx, rz):
+        m = a.copy()
+        for d in range(1, rx + 1):
+            m[:, d:] = np.maximum(m[:, d:], a[:, :-d]); m[:, :-d] = np.maximum(m[:, :-d], a[:, d:])
+        m2 = m.copy()
+        for d in range(1, rz + 1):
+            m2[d:] = np.maximum(m2[d:], m[:-d]); m2[:-d] = np.maximum(m2[:-d], m[d:])
+        return m2
+    mx = max_okno(hs, 4, 2)
+    zelen = (2 * o[..., 1] - o[..., 0] - o[..., 2]) > -5
+    vrcholy = (hs >= mx - 1e-4) & (hs > 3.0) & (hs < 40) & ~stavby & zelen
+    jj, ii = np.nonzero(vrcholy)
+    vys = hn[jj, ii]
+    jas = o[jj, ii].mean(1)
+    modrost = o[jj, ii, 2] - o[jj, ii, 0]
+    jehlic = (jas < 62) & (modrost > -8)
+    x = dmp.x0 + (ii + 0.5) * dmp.sx - x0
+    z = dmp.z0 + (jj + 0.5) * dmp.sz - z0
+    rec = np.zeros(len(jj), dtype=[('x', '<u2'), ('z', '<u2'), ('h', 'u1'), ('j', 'u1')])
+    rec['x'] = np.clip(np.round(x * 10), 0, 65535); rec['z'] = np.clip(np.round(z * 10), 0, 65535)
+    rec['h'] = np.clip(np.round(vys * 4), 0, 255); rec['j'] = jehlic
+    rec.tofile(os.path.join(cil, 'stromy.bin'))
+    print(f'stromy z DMP: {len(rec)} (jehličnanů {int(jehlic.sum())}), výška medián {np.median(vys):.1f} m')

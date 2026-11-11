@@ -170,8 +170,12 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
       }
       const v = vybouleniUseku(b, i0, i1, k);
       if (!v || abs(v) > 2.5) return null;         // přes ~280° raději víc kusů
-      // skoro rovný „oblouk“ je roztřesená úsečka
-      if (abs(v) * hypot(b[i1][0] - b[i0][0], b[i1][1] - b[i0][1]) / 2 < 1.5 * tolP) return null;
+      // mělký „oblouk“ (pod ~35°) je rukou prohnutá rovná čára – v náčrtu se mělké oblouky skoro nekreslí
+      if (4 * Math.atan(abs(v)) < 0.6) {
+        let el = 0;
+        for (let i = i0 + 1; i < i1; i++) { const d = vzdalOdUsecky(b[i], b[i0], b[i1]); el += d * d; }
+        return { v: 0, e: el };
+      }
       return { v, e };
     };
 
@@ -315,6 +319,8 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
       }
       if (!z) continue;
       if (Array.isArray(p.tah) && p.tah.length <= 5000 && p.tah.every(bod)) z.tah = p.tah;
+      if (z.druh === 'kota' && p.umistit === true) z.umistit = true;
+      if (z.druh === 'kota' && Array.isArray(p.m) && p.m.length === 2 && p.m.every(bod)) z.m = p.m.map(q => q.slice());
       let id = typeof p.id === 'string' && /^[\w-]{1,40}$/.test(p.id) ? p.id : '';
       while (!id || ids.has(id)) id = 'p' + Math.random().toString(36).slice(2, 10);
       ids.add(id);

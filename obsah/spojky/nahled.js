@@ -28,7 +28,7 @@
     const skupina = new THREE.Group(); scena.add(skupina);
     let dil = null, hrany = null, mrizka = null, duchove = [], model = null, rozmer = 100, prvni = true;
     const tema = { mrizka: 0x888888, mrizka2: 0x555555 };
-    const stav = { duchove: true, tisk: false, hrany: true, previsy: true };
+    const stav = { duchove: true, tisk: false, hrany: true, previsy: true, napeti: false };   // napeti: model.barvy (RGB na trojúhelník), když je stránka dodá
     const BARVA = [[0.25, 0.48, 0.84], [0.85, 0.66, 0.2], [0.86, 0.22, 0.2], [0.25, 0.48, 0.84]];
 
     function barvy(cara, cara2, hrana) {
@@ -38,7 +38,7 @@
       prekresli();
     }
     /** Normály s lomem (ostré hrany zůstanou ostré) a barva po trojúhelnících. */
-    function geometrie(poz, idx, tridy) {
+    function geometrie(poz, idx, tridy, barvy) {
       const nT = idx.length / 3, fn = new Float32Array(3 * nT), nV = poz.length / 3, kos = Math.cos(32 * Math.PI / 180);
       const sous = Array.from({ length: nV }, () => []);
       for (let t = 0; t < nT; t++) {
@@ -51,7 +51,7 @@
       }
       const P = new Float32Array(9 * nT), N = new Float32Array(9 * nT), C = new Float32Array(9 * nT);
       for (let t = 0; t < nT; t++) {
-        const bv = BARVA[tridy && stav.tisk && stav.previsy ? tridy[t] : 0];
+        const bv = barvy && stav.napeti ? [barvy[3 * t], barvy[3 * t + 1], barvy[3 * t + 2]] : BARVA[tridy && stav.tisk && stav.previsy ? tridy[t] : 0];
         for (let k = 0; k < 3; k++) {
           const v = idx[3 * t + k], o = 9 * t + 3 * k;
           let nx = 0, ny = 0, nz = 0;
@@ -123,7 +123,7 @@
       const m = model;
       if (!m) { prekresli(); return; }
       const poz = stav.tisk ? m.tisk.poz : m.poz;
-      dil = new THREE.Mesh(geometrie(poz, m.idx, m.tisk.tridy), matDil);
+      dil = new THREE.Mesh(geometrie(poz, m.idx, m.tisk.tridy, m.barvy), matDil);
       skupina.add(dil);
       const gi = new THREE.BufferGeometry();
       gi.setAttribute('position', new THREE.BufferAttribute(poz, 3)); gi.setIndex(new THREE.BufferAttribute(m.idx, 1));
@@ -156,7 +156,7 @@
     }
     function prepni(co, h) {
       stav[co] = h;
-      if (co === 'tisk' || co === 'previsy') { sestav(); if (co === 'tisk') pohled('iso'); return; }
+      if (co === 'tisk' || co === 'previsy' || co === 'napeti') { sestav(); if (co === 'tisk') pohled('iso'); return; }
       duchove.forEach(o => { o.visible = stav.duchove; });
       if (hrany) hrany.visible = stav.hrany;
       prekresli();
@@ -194,7 +194,7 @@
     platno.addEventListener('wheel', e => { e.preventDefault(); ovl.vzd *= Math.exp(e.deltaY * 0.0012); prekresli(); }, { passive: false });
 
     const png = () => { snimek(); return platno.toDataURL('image/png'); };
-    return { nastav, pohled, prepni, png, prekresli, barvy, stav, ovl };
+    return { nastav, pohled, prepni, png, prekresli, barvy, stav, ovl, scena };   // scena: stránka si může přidat vlastní vrstvy (kóty)
   }
   window.SPOJKY_NAHLED = { vytvorNahled };
 })();

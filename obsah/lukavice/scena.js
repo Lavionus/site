@@ -171,7 +171,9 @@ function teren(svet, podklad, detail, trava) {
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', '#include <common>\nuniform sampler2D korytoMaska;')
       .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-        if (texture2D(korytoMaska, vec2((vSvetPoz.x - (${svet.x0.toFixed(3)})) / ${svet.sirka.toFixed(3)}, (vSvetPoz.z - (${svet.z0.toFixed(3)})) / ${svet.hloubka.toFixed(3)})).r > 0.5) discard;`);
+        vec2 kUv = vec2((vSvetPoz.x - (${svet.x0.toFixed(3)})) / ${svet.sirka.toFixed(3)}, (vSvetPoz.z - (${svet.z0.toFixed(3)})) / ${svet.hloubka.toFixed(3)});
+        // jen uvnitř světa – okrajový prstenec by jinak dostal pruhy z krajních pixelů masky (ClampToEdge)
+        if (all(greaterThan(kUv, vec2(0.0))) && all(lessThan(kUv, vec2(1.0))) && texture2D(korytoMaska, kUv).r > 0.5) discard;`);
   };
   const skupina = new THREE.Group();
   skupina.add(m, korytoSit(svet, sDetailem(new THREE.MeshLambertMaterial({ map: podklad }), detail, trava ? 0.6 : 1, trava)));
@@ -180,9 +182,9 @@ function teren(svet, podklad, detail, trava) {
 }
 
 // jemná síť v pásu koryt: uzly ve středech pixelů koryto.png (v ose x po 2 kvůli počtu trojúhelníků)
-function korytoSit(svet, material) {
+export function korytoSit(svet, material) {
   const { kW, kH, korMaska, ksx, ksz } = svet.koryta;
-  const KX = 2;
+  const KX = 2;                // musí souhlasit s KORYTO_KX v jadro.js (fyzika počítá stejnou sítí)
   const sloupcu = Math.floor((kW - 1) / KX);
   const vybrane = (i, j) => {                    // buňka sítě zasahuje do masky (i s okolím 1 px)
     for (let jj = Math.max(0, j - 1); jj <= Math.min(kH - 1, j + 2); jj++)
@@ -219,10 +221,6 @@ function korytoSit(svet, material) {
 }
 
 // ---------- cesty, potoky, koleje ----------
-const BARVY_CEST = {
-  secondary: 0x4e4f52, tertiary: 0x55565a, unclassified: 0x5d5e60, residential: 0x606163, living_street: 0x67666a,
-  service: 0x6a6a6a, track: 0x857258, footway: 0x8a8580, path: 0x7d6b52, cycleway: 0x6e5d5d, steps: 0x8a8580, pedestrian: 0x8a8580,
-};
 const PORADI = { secondary: 0.06, tertiary: 0.05, unclassified: 0.04, residential: 0.04, living_street: 0.03 };
 
 function pas(sit, body, sirka, vyska, zvednuti, barvaFn, krok = 4, meritko = 0) {
@@ -271,7 +269,7 @@ function okrajChodniku(sit, ch, vyska, posun, yOd, yDo, barva, normalaVen) {
 }
 
 function cesty(svet, detail, tex) {
-  const v = svet.vyska, rnd = () => 0.5;
+  const v = svet.vyska;
   const sity = { asfalt: new Sit(), sterk: new Sit(), zamkova: new Sit(), dlazba: new Sit(), voda: new Sit(), plne: new Sit() };
   const TEXTURA = { footway: 'zamkova', cycleway: 'zamkova', pedestrian: 'dlazba', steps: 'dlazba', living_street: 'dlazba' };
   // voda: hladina z příčných řezů DMR (tools/lukavice_cuzk.koryta), šířka podle koryta
@@ -297,7 +295,7 @@ function cesty(svet, detail, tex) {
   const bila = new THREE.Color(0xe8e8e8);
   for (const c of svet.cesty) {
     const druh = !c.zpevnena ? 'sterk' : (TEXTURA[c.druh] || 'asfalt');
-    const col = druh === 'asfalt' ? barva(0xd8d8d8, rnd) : new THREE.Color(druh === 'sterk' ? 0xd0c8b8 : 0xe6e6e6);
+    const col = new THREE.Color(druh === 'asfalt' ? 0xd8d8d8 : druh === 'sterk' ? 0xd0c8b8 : 0xe6e6e6);
     if (c.druh === 'service' || c.druh === 'track') col.multiplyScalar(1.08);
     const meritko = { asfalt: 3.5, sterk: 3, zamkova: 1.6, dlazba: 1.4 }[druh];
     pas(sity[druh], c.body, c.sirka, v, 0.12 + (PORADI[c.druh] || 0), () => col, 4, meritko);
@@ -382,6 +380,12 @@ function skupinaBudovy(druh) {
 
 function obalovyObdelnik(body) {   // nejmenší natočený obdélník
   let nej = null;
+  {                                  // výchozí: osově rovnoběžný (kdyby byly všechny hrany kratší než 0,5 m)
+    let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+    for (let k = 0; k < body.length; k += 2) { a0 = Math.min(a0, body[k]); a1 = Math.max(a1, body[k]); b0 = Math.min(b0, body[k + 1]); b1 = Math.max(b1, body[k + 1]); }
+    // osa u = (1, 0) → b = −x·0 + z·1 = z
+    nej = { plocha: (a1 - a0) * (b1 - b0) + 1e-9, ux: 1, uz: 0, a0, a1, b0, b1 };
+  }
   const n = body.length / 2;
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
@@ -856,7 +860,7 @@ function vybava(svet) {
     }
     for (let k = 0; k + 1 < body.length; k++) {
       const p1 = body[k], p2 = body[k + 1], delka = Math.hypot(p2.x - p1.x, p2.z - p1.z), prues = delka * 0.025;
-      for (const [o, h] of ZAVES[ved.druh]) {
+      for (const [o, h] of ZAVES[ved.druh] || []) {
         const bod = (p, t) => [p.x + Math.cos(p.uhel) * o, p.y + h, p.z - Math.sin(p.uhel) * o];
         const A = bod(p1), B = bod(p2), N = 10;
         for (let i = 0; i < N; i++) {
@@ -991,6 +995,20 @@ function plotyKatastr(svet) {
   return skupina;
 }
 
+// prostředí pro odlesky (lak, sklo, kovy): obloha nahoře, světlý obzor, zemitý spodek → PMREM v lukavice.html
+export function prostredi() {
+  const sc = new THREE.Scene();
+  sc.add(new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `varying vec3 vP; void main(){ float h = normalize(vP).y;
+      vec3 c = h > 0.0 ? mix(vec3(0.86, 0.9, 0.93), vec3(0.32, 0.52, 0.82), pow(h, 0.6)) : mix(vec3(0.62, 0.64, 0.56), vec3(0.28, 0.33, 0.2), pow(-h, 0.4));
+      c += vec3(2.5, 2.3, 1.9) * pow(max(dot(normalize(vP), normalize(vec3(-0.45, 0.75, 0.48))), 0.0), 400.0);
+      gl_FragColor = vec4(c, 1.0); }`,
+  })));
+  return sc;
+}
+
 // ---------- obloha ----------
 function obloha() {
   const g = new THREE.SphereGeometry(4000, 24, 12);
@@ -1103,7 +1121,7 @@ export async function nactiModely(barvaAuta) {
     auto.traverse(o => {
       if (!o.isMesh) return;
       o.castShadow = true; o.receiveShadow = true;
-      if (o.material.name === 'Lak') { lak = o.material; lak.metalness = 0.12; lak.roughness = 0.4; }
+      if (o.material.name === 'Lak') lak = o.material;
     });
     lak.color.set(barvaAuta);
     auto.rotation.order = 'YXZ';

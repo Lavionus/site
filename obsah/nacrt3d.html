@@ -12,9 +12,16 @@
 <script src="lib/jspdf.umd.min.js" defer></script>
 <script src="nacrt3d/listy.js"></script>
 <script src="nacrt3d/tahy.js"></script>
+<script src="nacrt3d/geom.js"></script>
+<script src="nacrt3d/prichyt.js"></script>
+<script src="nacrt3d/nastroje.js"></script>
 <script src="nacrt3d/papir.js"></script>
 <script src="modelar/jadro/vazby.js"></script>
 <script src="nacrt3d/vyklad.js"></script>
+<script src="nacrt3d/stavba.js"></script>
+<script src="krabicky/jadro.js"></script>
+<script src="lib/three.r128.min.js" defer></script>
+<script src="spojky/nahled.js" defer></script>
 <style>
 body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 [hidden]{display:none !important}
@@ -56,6 +63,11 @@ select.tl{padding:4px 6px}
 .pruh #pruh{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pruh #pocty{color:var(--text-faint);white-space:nowrap}
 .tl.mini{padding:1px 7px;font-size:.76rem}
+.pero-tl{font-size:.8rem;letter-spacing:-1px;min-width:34px}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .kroky{display:flex;gap:2px;padding:0 4px}
+.chyt-volby{display:flex;flex-direction:column;gap:1px}
+.nabidka .kroky .tl{flex:1;justify-content:center;padding:4px 6px}
 .vyber-panel{display:flex;align-items:center;gap:4px;white-space:nowrap;color:var(--text)}
 .vyber-panel + #pruh{display:none}
 .kontrola-chyba{color:var(--danger);border-color:var(--danger)}
@@ -63,13 +75,36 @@ select.tl{padding:4px 6px}
 .kontrola-ok{color:var(--ok)}
 .vyber-panel[hidden] + #pruh{display:block}
 .nab-kontrola{max-width:min(460px,calc(100vw - 16px))}
+.nab-koty{min-width:min(330px,calc(100vw - 16px));max-width:calc(100vw - 16px)}
+.nab-koty table{border-collapse:collapse;font-size:.82rem;width:100%}
+.nab-koty td,.nab-koty th{padding:3px 6px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.nab-koty th{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-weight:600}
+.nab-koty input{width:76px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 6px;font:inherit;font-variant-numeric:tabular-nums}
+.nab-koty input:focus{outline:2px solid var(--accent);outline-offset:0}
+.nab-koty .prazdne{padding:8px 10px;color:var(--text-muted);font-size:.84rem;white-space:normal;max-width:300px}
 .nab-kontrola .tl{white-space:normal;line-height:1.4;align-items:flex-start}
 .nab-kontrola .tl:disabled{opacity:1;cursor:default}
-#plocha{flex:1;min-height:0;position:relative;overflow:hidden;margin-bottom:22px}
+.pracoviste{flex:1;min-height:0;display:flex;margin-bottom:22px}
+#plocha{flex:1;min-width:0;position:relative;overflow:hidden}
+.panel3d{flex:0 0 min(42%,560px);display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--bg-panel);min-width:0}
+.p3d-lista{display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid var(--border);font-size:.84rem;flex-wrap:wrap}
+.p3d-pohledy{display:flex;gap:2px;margin-left:auto}
+.nahled3d{flex:1;min-height:0;position:relative;background:radial-gradient(ellipse at 50% 38%,color-mix(in srgb,var(--bg-elevated) 92%,var(--accent) 8%) 0%,var(--bg-input) 72%)}
+.nahled3d canvas{position:absolute;inset:0}
+.stav3d{position:absolute;left:8px;top:8px;right:8px;z-index:2;font-size:.8rem;color:var(--text-muted);background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:5px 8px;pointer-events:none}
+.stav3d:empty{display:none}
+.stav3d.chyba{color:var(--danger);border-color:var(--danger)}
+.p3d-udaje{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;padding:8px;border-top:1px solid var(--border);font-size:.78rem}
+.p3d-udaje .dl{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:5px 8px;min-width:0}
+.p3d-udaje .dl span{display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)}
+.p3d-udaje .dl b{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.p3d-udaje select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:4px;font:inherit;font-size:.74rem;padding:1px 2px;max-width:100%}
+@media (max-width:760px){.pracoviste{position:relative}.panel3d{position:absolute;inset:0;z-index:4;border-left:0}}
 #platno{position:absolute;left:0;top:0;display:block;touch-action:none;outline:none}
 .vstup-koty{position:absolute;z-index:5;width:80px;padding:5px 8px;font-family:inherit;font-weight:600;font-size:1rem;line-height:1.2;color:#d0302a;background:var(--bg-panel);border:2px solid #d0302a;border-radius:6px;box-shadow:var(--shadow)}
 @media (max-width:600px){.pruh #pocty{display:none}}
-@media (max-width:760px){.lista{flex-wrap:wrap;overflow:visible;row-gap:4px}.lista .skup-projekt{flex-basis:100%}.lista .vpravo{margin-left:0}}
+@media (max-width:1180px){.lista{flex-wrap:wrap;overflow:visible;row-gap:4px}}
+@media (max-width:760px){.lista .skup-projekt{flex-basis:100%}.lista .vpravo{margin-left:0}.lista .skup{flex-shrink:1;min-width:0;max-width:100%}.lista .skup-tl{flex-wrap:wrap}}
 
 dialog.pomoc{max-width:640px;width:calc(100% - 32px);background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow)}
 dialog.pomoc::backdrop{background:rgb(0 0 0 / .45)}
@@ -93,14 +128,25 @@ dialog.pomoc .dole{display:flex;justify-content:flex-end;margin-top:12px}
     <label class="pole-tl" id="poleTloustka" title="Tloušťka plochého dílu">tl. <input id="tloustka" type="text" inputmode="decimal" placeholder="mm" aria-label="Tloušťka v mm"></label>
     <button class="tl" id="btnPdf" title="Stáhnout prázdný list jako PDF k vytištění (tisknout ve skutečné velikosti, 100 %)">🖨<span class="txt"> PDF k tisku</span></button>
   </div></div>
+  <div class="skup" role="group" aria-label="Pero"><span class="skup-nazev" aria-hidden="true">Pero</span><div class="skup-tl">
+    <button class="tl ik pero-tl" data-kresli-pero="obrys" aria-pressed="true" title="Obrys – plná čára (1)" aria-label="Pero obrys">━</button>
+    <button class="tl ik pero-tl" data-kresli-pero="skryta" aria-pressed="false" title="Skrytá hrana – čárkovaně (2)" aria-label="Pero skrytá hrana">┅</button>
+    <button class="tl ik pero-tl" data-kresli-pero="osa" aria-pressed="false" title="Osa – čerchovaně (3)" aria-label="Pero osa">─·─</button>
+  </div></div>
   <div class="skup" role="group" aria-label="Kreslit"><span class="skup-nazev" aria-hidden="true">Kreslit</span><div class="skup-tl">
-    <button class="tl" data-nastroj="vyber" aria-pressed="false" title="Výběr a úpravy – posun bodů, konců kót, změna pera (V)">➤<span class="txt"> Výběr</span></button>
-    <button class="tl" data-nastroj="obrys" aria-pressed="true" title="Obrys – plná čára (1)">✏️<span class="txt"> Obrys</span></button>
-    <button class="tl" data-nastroj="skryta" aria-pressed="false" title="Skrytá hrana – čárkovaně (2)">┄<span class="txt"> Skrytá</span></button>
-    <button class="tl" data-nastroj="osa" aria-pressed="false" title="Osa – čerchovaně (3)">─·─<span class="txt"> Osa</span></button>
-    <button class="tl" data-nastroj="kota" aria-pressed="false" title="Kóta – táhněte mezi dvěma body a napište rozměr (4)" style="color:#d0302a">↔<span class="txt"> Kóta</span></button>
-    <button class="tl" data-nastroj="guma" aria-pressed="false" title="Guma (E)">🧽<span class="txt"> Guma</span></button>
-    <button class="tl" data-nastroj="posun" aria-pressed="false" title="Posun listu (H, nebo mezerník + tah)">✋</button>
+    <button class="tl ik" data-nastroj="vyber" aria-pressed="false" title="Výběr: klepnutí, Shift, rám; tažení = posun; Ctrl+D kopie (V)" aria-label="Výběr">➤</button>
+    <button class="tl ik" data-nastroj="ruka" aria-pressed="true" title="Kreslení rukou – čára se srovná (Q)" aria-label="Kreslení rukou">✍️</button>
+    <button class="tl ik" data-nastroj="usecka" aria-pressed="false" title="Úsečka / lomená čára – klikáním, číslo = délka (L)" aria-label="Úsečka">╱</button>
+    <button class="tl ik" data-nastroj="obdelnik" aria-pressed="false" title="Obdélník – z rohu do rohu, číslo = rozměr 40x20 (O)" aria-label="Obdélník">▭</button>
+    <button class="tl ik" data-nastroj="kruh" aria-pressed="false" title="Kružnice – střed a poloměr, číslo = průměr (C)" aria-label="Kružnice">◯</button>
+    <button class="tl ik" data-nastroj="dira" aria-pressed="false" title="Díra s osami – střed a poloměr (D)" aria-label="Díra s osami">⊕</button>
+    <button class="tl ik" data-nastroj="oblouk" aria-pressed="false" title="Oblouk třemi body – začátek, konec, průchozí bod (A)" aria-label="Oblouk">◠</button>
+    <button class="tl" id="btnRoh" data-nabidka="nabRoh" aria-pressed="false" title="Úpravy čar: zaoblení, zkosení, odsazení, ořez">✂<span class="txt"> Upravit</span> ▾</button>
+    <button class="tl ik" data-nastroj="voditko" aria-pressed="false" title="Vodicí linka – klepnutí = vodorovná + svislá, tažení = ve směru (G)" aria-label="Vodicí linka">┼</button>
+    <button class="tl ik" data-nastroj="mereni" aria-pressed="false" title="Měření vzdálenosti a úhlu (U)" aria-label="Měření">📐</button>
+    <button class="tl ik" data-nastroj="kota" aria-pressed="false" title="Kóta – táhněte mezi dvěma body a napište rozměr (4)" aria-label="Kóta" style="color:#d0302a">↔</button>
+    <button class="tl ik" data-nastroj="guma" aria-pressed="false" title="Guma (E)" aria-label="Guma">🧽</button>
+    <button class="tl ik" data-nastroj="posun" aria-pressed="false" title="Posun listu (H, nebo mezerník + tah)" aria-label="Posun listu">✋</button>
   </div></div>
   <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
     <button class="tl ik" id="btnZpet" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
@@ -109,32 +155,83 @@ dialog.pomoc .dole{display:flex;justify-content:flex-end;margin-top:12px}
   </div></div>
   <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
     <button class="tl" data-nabidka="nabZobrazit" title="Zoom, přichytávání, zobrazení kresby">👁<span class="txt"> Zobrazit</span> ▾</button>
+    <button class="tl" id="btnChyt" data-nabidka="nabChyt" title="Přichytávání: body, středy, průsečíky, zarovnání, vodicí linky, krok mřížky">🧲<span class="txt"> Přichytávání</span> ▾</button>
+    <button class="tl" id="btnKoty" data-nabidka="nabKoty" title="Tabulka kót – všechny rozměry na jednom místě (K)">📏<span class="txt"> Kóty</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="3D model"><span class="skup-nazev" aria-hidden="true">3D model</span><div class="skup-tl">
+    <button class="tl" id="btn3d" data-prikaz="panel3d" aria-pressed="false" title="3D náhled vedle kresby (M)">🧊<span class="txt"> 3D</span></button>
+    <button class="tl hlavni-tl" data-nabidka="nabExport" title="Uložit 3D model pro tisk">💾<span class="txt"> Export</span> ▾</button>
   </div></div>
   <span class="vpravo">
     <button class="tl ik" data-prikaz="napoveda" title="Jak kreslit (F1)" aria-label="Jak kreslit">❓</button>
   </span>
 </header>
+<div id="nabRoh" class="nabidka" hidden>
+  <button class="tl" data-nastroj="zaobleni">◜ Zaoblení rohu (poloměr R) <kbd>R</kbd></button>
+  <button class="tl" data-nastroj="zkoseni">◸ Zkosení rohu (sražení) <kbd>X</kbd></button>
+  <button class="tl" data-nastroj="odsazeni">⫴ Odsazení – rovnoběžná kopie <kbd>P</kbd></button>
+  <button class="tl" data-nastroj="orez">✂ Ořez / prodloužení (Shift) <kbd>T</kbd></button>
+</div>
+<div id="nabChyt" class="nabidka" hidden>
+  <button class="tl prep" id="prepPrichyt" data-prikaz="prichyt" aria-pressed="true">Přichytávat (Alt dočasně vypne)</button>
+  <div class="titulek">Přichytávat k</div>
+  <div id="chytVolby" class="chyt-volby"></div>
+  <div class="titulek">Krok mřížky</div>
+  <div class="kroky"><button class="tl prep" data-krok="1">1 mm</button><button class="tl prep" data-krok="2.5">2,5</button><button class="tl prep" data-krok="5">5</button><button class="tl prep" data-krok="10">10</button></div>
+  <hr>
+  <button class="tl prep" id="prepVoditka" data-prikaz="voditka" aria-pressed="true">Zobrazit vodicí linky</button>
+  <button class="tl" data-prikaz="smazatVoditka">🗑 Smazat všechny vodicí linky</button>
+</div>
 <div id="nabZobrazit" class="nabidka" hidden>
   <button class="tl" data-prikaz="prizpusob">⤢ Celý list <kbd>F</kbd></button>
   <button class="tl" data-prikaz="priblizit">＋ Přiblížit <kbd>+</kbd></button>
   <button class="tl" data-prikaz="oddalit">－ Oddálit <kbd>−</kbd></button>
   <hr>
-  <button class="tl prep" id="prepPrichyt" data-prikaz="prichyt" aria-pressed="true">Přichytávat k mřížce</button>
   <button class="tl prep" id="prepSurove" data-prikaz="surove" aria-pressed="false">Ukázat kresbu, jak byla nakreslena</button>
   <button class="tl prep" id="prepVysledek" data-prikaz="vysledek" aria-pressed="true">Ukázat vyřešený tvar (modře)</button>
+  <hr>
+  <button class="tl" data-prikaz="rozpoznat" title="Projde čáry znovu rozpoznáním z původních tahů (třeba rovné čáry, které se dřív rozpoznaly jako mělké oblouky)">↻ Znovu rozpoznat čáry</button>
 </div>
 <div class="pruh">
   <span id="vyberPanel" class="vyber-panel" hidden>Vybráno: <b id="vyberPopis"></b>
     <button class="tl mini" data-pero="obrys" title="Změnit na obrys">Obrys</button>
     <button class="tl mini" data-pero="skryta" title="Změnit na skrytou hranu">Skrytá</button>
     <button class="tl mini" data-pero="osa" title="Změnit na osu">Osa</button>
+    <button class="tl mini" data-operace="kopie" title="Kopie o 10 mm vedle (Ctrl+D)">⧉</button>
+    <button class="tl mini" data-operace="zrcadlitX" title="Zrcadlit vodorovně (podle svislé osy)">⇋</button>
+    <button class="tl mini" data-operace="zrcadlitY" title="Zrcadlit svisle (podle vodorovné osy)">⇵</button>
+    <button class="tl mini" id="btnZrcadlitOsa" data-operace="zrcadlitOsa" title="Dokreslit zrcadlově podle vybrané osy (čerchované)" hidden>🪞 Podle osy</button>
+    <button class="tl mini" data-operace="pole" title="Pole kopií (vzor děr)">▦ Pole</button>
     <button class="tl mini" data-prikaz="smazatVybrane" title="Smazat (Delete)">🗑</button>
   </span>
   <span id="pruh"></span><span id="pocty"></span>
   <button class="tl mini" id="btnKontrola" data-nabidka="nabKontrola" title="Výklad kresby: obrysy, kóty, rozpory" hidden></button>
 </div>
 <div id="nabKontrola" class="nabidka nab-kontrola" hidden></div>
-<main id="plocha"><canvas id="platno" tabindex="0" aria-label="List na kreslení"></canvas></main>
+<div id="nabKoty" class="nabidka nab-koty" hidden></div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="exportStl">📦 STL (3D tisk)</button>
+  <button class="tl" data-prikaz="export3mf">📦 3MF (3D tisk, s názvem)</button>
+  <hr>
+  <button class="tl" data-prikaz="tiskPdf">🖨 Prázdný list k tisku (PDF)</button>
+</div>
+<div class="pracoviste" id="pracoviste">
+  <main id="plocha"><canvas id="platno" tabindex="0" aria-label="List na kreslení"></canvas></main>
+  <section id="panel3d" class="panel3d" hidden aria-label="3D model">
+    <div class="p3d-lista">
+      <b>3D model</b>
+      <span class="p3d-pohledy">
+        <button class="tl mini" data-pohled3d="iso" title="Izometrie">Iso</button>
+        <button class="tl mini" data-pohled3d="zepredu" title="Zepředu">Zepředu</button>
+        <button class="tl mini" data-pohled3d="shora" title="Shora">Shora</button>
+        <button class="tl mini" data-pohled3d="zboku" title="Zboku">Zboku</button>
+      </span>
+      <button class="tl mini ik" data-prikaz="panel3d" title="Zavřít 3D náhled" aria-label="Zavřít 3D náhled">✕</button>
+    </div>
+    <div id="nahled3d" class="nahled3d"><div id="stav3d" class="stav3d"></div></div>
+    <div class="p3d-udaje" id="udaje3d"></div>
+  </section>
+</div>
 
 <dialog class="pomoc" id="napoveda">
   <h2>Jak kreslit</h2>
@@ -158,17 +255,39 @@ dialog.pomoc .dole{display:flex;justify-content:flex-end;margin-top:12px}
     <li>Kreslete myší, prstem nebo perem. Po zvednutí pera se čára srovná (úsečka, oblouk, kružnice) a přichytí k mřížce a ke koncům jiných čar.</li>
     <li>Pero: jakmile kreslíte perem, prsty jen posouvají a zoomují (dlaň nevadí). Bez pera kreslí jeden prst, dva prsty posouvají a zoomují.</li>
     <li>Myš: kolečko = zoom, prostřední/pravé tlačítko nebo mezerník + tah = posun.</li>
-    <li>Klávesy: <b>V</b> výběr, <b>1</b> obrys, <b>2</b> skrytá, <b>3</b> osa, <b>4</b> kóta, <b>E</b> guma, <b>H</b> posun, <b>F</b> celý list, <b>Delete</b> smazat vybrané, <b>Ctrl+Z / Ctrl+Y</b> zpět / znovu.</li>
+    <li>Pera <b>1</b> obrys, <b>2</b> skrytá, <b>3</b> osa platí pro všechny kreslicí nástroje.</li>
+    <li>Nástroje: <b>V</b> výběr, <b>Q</b> ruka, <b>L</b> úsečka, <b>O</b> obdélník, <b>C</b> kružnice, <b>D</b> díra s osami, <b>A</b> oblouk, <b>R</b> zaoblení, <b>X</b> zkosení, <b>P</b> odsazení, <b>T</b> ořez, <b>G</b> vodicí linka, <b>U</b> měření, <b>4</b> kóta, <b>E</b> guma, <b>H</b> posun, <b>F</b> celý list, <b>Ctrl+Z / Ctrl+Y</b> zpět / znovu.</li>
+  </ul>
+  <h3>Přesné kreslení</h3>
+  <ul>
+    <li>Úsečka, obdélník, kružnice, díra a oblouk se přichytávají k bodům (oranžové kolečko) a ke kroku mřížky (👁 Zobrazit → Krok). Během kreslení se ukazuje rozměr.</li>
+    <li><b>Číslo z klávesnice</b> během kreslení: úsečka „40“ (délka ve směru myši) nebo „40&lt;30“ (s úhlem), obdélník „40x20“, kružnice/díra průměr. Zadaný rozměr se rovnou uloží jako kóta.</li>
+    <li>Úsečka: klikáním lomená čára, Enter nebo dvojklik = konec, klik na první bod = uzavřít, Backspace = vrátit bod, Esc = zrušit.</li>
+    <li>✂ Upravit: ◜ zaoblení a ◸ zkosení rohu (klepnout na roh, napsat rozměr), ⫴ odsazení (rovnoběžná kopie čáry nebo kružnice – klepnout na stranu, kam má jít), ✂ ořez kusu čáry mezi průsečíky, se Shiftem prodloužení konce k nejbližší čáře.</li>
+    <li><b>🧲 Přichytávání:</b> konce, průsečíky, středy úseček a oblouků, středy a kvadranty kružnic, vodicí linky, zarovnání s body (tečkovaná stopa), bod na čáře, úhly po 15° a mřížka. Oranžová značka u kurzoru ukazuje, k čemu se přichytí. Každé jde vypnout, <b>Alt</b> přichytávání dočasně vypne.</li>
+    <li><b>┼ Vodicí linky</b> (G): klepnutí = vodorovná a svislá linka bodem, tažení = linka ve směru (po 15°). Jen pomáhají kreslit – do 3D modelu se nepočítají. Maže je guma nebo 🧲 → Smazat.</li>
+    <li><b>📐 Měření</b> (U): dva body → vzdálenost, Δx, Δy a úhel.</li>
+    <li>Výběr: klepnutí, Shift + klepnutí, nebo rám tažením po prázdném místě. Tažením posunete, šipkami po 1 mm (Shift 5 mm). ⧉ kopie (Ctrl+D), ⇋ ⇵ zrcadlení, 🪞 dokreslí zrcadlově podle vybrané osy, ▦ pole kopií (vzor děr).</li>
   </ul>
   <h3>Kóty a výsledek</h3>
   <ul>
-    <li>Kótu nakreslete vedle hrany: konce kóty dejte <b>nad body obrysu</b> (stejné x u vodorovné kóty, stejné y u svislé). Kóta přes kružnici = průměr, od středu na obvod = poloměr.</li>
+    <li>Kótu nakreslete vedle hrany nebo přímo přes ni: konce kóty dejte <b>nad body obrysu</b> (stejné x u vodorovné kóty, stejné y u svislé). Kóta přes kružnici = průměr, od středu na obvod = poloměr.</li>
+    <li>Po zadání čísla kóta <b>odskočí mimo kresbu</b> (na stranu, kde jste ji nakreslili) a dostane vynášecí čáry. Starší kóty odsadí tlačítko v 📏 Kóty.</li>
+    <li>Rovnoběžnost s mřížkou (vodorovně/svisle) se bere z kresby, ale kóty mají přednost: třeba šířka nahoře 37 a dole 35 udělá šikmou hranu.</li>
     <li>U rotačního dílu je vodorovná kóta od osy <b>průměr</b> (⌀).</li>
-    <li>Modře se ukazuje vyřešený tvar podle kót. Co není zakótované, vezme se z kresby (mřížka 5 mm). Když kresba není v měřítku, přepočítá se podle kót.</li>
+    <li>Kresba nemusí být v měřítku: podle kót se nejdřív celá zvětší nebo zmenší (tvar zůstane) a pak se dorovnají jednotlivé zakótované rozměry. Co není zakótované, roste spolu s kresbou.</li>
+    <li>Modrý náhled ukazuje vyřešený tvar v měřítku kresby – kde se od kresby liší, tam kóty mění proporce (nebo si odporují).</li>
     <li>U tří pohledů stačí každý rozměr zakótovat jednou – šířka platí pro nárys i půdorys, výška pro nárys i bokorys.</li>
     <li>Tlačítko <b>Kontrola</b> ukáže nedotažené čáry, kóty bez přiřazení a rozpory.</li>
+    <li><b>📏 Kóty</b> (klávesa K) je tabulka všech rozměrů: čísla jde přepsat přímo v ní (Enter, šipky ↑↓ mezi řádky), 🎯 kótu ukáže na listu.</li>
   </ul>
-  <p>Focení vyplněného listu a stavba 3D modelu přibudou v dalších etapách.</p>
+  <h3>3D model a export</h3>
+  <ul>
+    <li><b>🧊 3D</b> (klávesa M) otevře živý náhled vedle kresby – mění se s každou čarou a kótou. Tažením otáčíte, kolečkem přibližujete, pravým tlačítkem posouváte.</li>
+    <li>Plochý díl se vytáhne o tloušťku, rotační díl se otočí kolem osy, ze tří pohledů vznikne průnik (každý pohled se protáhne skrz celý díl). Kružnice v pohledu je díra skrz.</li>
+    <li><b>💾 Export</b>: STL nebo 3MF pro 3D tisk. Pod náhledem jsou rozměry, objem a hmotnost podle materiálu.</li>
+  </ul>
+  <p>Focení vyplněného listu přibude v dalších etapách.</p>
   <div class="dole"><button class="tl" id="napovedaZavrit">Zavřít</button></div>
 </dialog>
 

@@ -19,7 +19,8 @@ const dmNaM = pole => { const o = new Float32Array(pole.length); for (let i = 0;
 // maska: Uint8Array šířka×výška po data.px metrech (255 les, 120 zahrada)
 // koryto: RGBA pixely koryto.png (data.koryto = [š, v]) – jemná vložka koryt potoků, viz tools/lukavice_cuzk.py
 // plotyKatastr: obsah ploty.json (tools/lukavice_ploty.py) – nepovinné
-export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = null) {
+// stromyBin: ArrayBuffer stromy.bin (6 B na strom: Uint16 x, Uint16 z v dm od rohu světa, Uint8 výška/4 m, Uint8 jehličnan)
+export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = null, stromyBin = null) {
   const { nx, nz, krok, sirka, hloubka, vyskaMin } = data;
   const x0 = -sirka / 2, z0 = -hloubka / 2;
   const H = new Float32Array(nx * nz);
@@ -33,13 +34,21 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
     korOff[i] = korMaska[i] ? (koryto[i * 4] - 128) * 0.04 * koryto[i * 4 + 1] / 255 : 0;
   }
   const ksx = sirka / (kW || 1), ksz = hloubka / (kH || 1);
-  function odchylkaKoryta(x, z) {
-    let fi = (x - x0) / ksx - 0.5, fj = (z - z0) / ksz - 0.5;
-    if (fi < 0 || fj < 0 || fi >= kW - 1 || fj >= kH - 1) return 0;
-    const i = Math.floor(fi), j = Math.floor(fj), u = fi - i, v = fj - j, k = j * kW + i;
-    return korOff[k] * (1 - u) * (1 - v) + korOff[k + 1] * u * (1 - v) + korOff[k + kW] * (1 - u) * v + korOff[k + kW + 1] * u * v;
+  const KORYTO_KX = 2;        // jemná síť v scena.korytoSit má uzly po 2 pixelech v ose x (a po 1 v ose z)
+  // výška v pásu koryt přesně jako vykreslená síť (scena.korytoSit): jen v pixelech masky (jinde se kreslí hrubý
+  // terén), uvnitř lineárně po trojúhelnících uzlů (úhlopříčka b–c jako u terénu); uzel = hrubý terén + odchylka
+  function vyskaKoryta(x, z) {
+    const pi = Math.floor((x - x0) / ksx), pj = Math.floor((z - z0) / ksz);
+    if (pi < 0 || pj < 0 || pi >= kW || pj >= kH || !korMaska[pj * kW + pi]) return null;
+    const fI = ((x - x0) / ksx - 0.5) / KORYTO_KX, fj = (z - z0) / ksz - 0.5;
+    const I = Math.floor(fI), j = Math.floor(fj);
+    if (I < 0 || j < 0 || (I + 1) * KORYTO_KX >= kW || j + 1 >= kH) return null;
+    const u = fI - I, v = fj - j, i0 = I * KORYTO_KX, i1 = i0 + KORYTO_KX;
+    const uzel = (i, jj) => vyskaHruba(x0 + (i + 0.5) * ksx, z0 + (jj + 0.5) * ksz) + korOff[jj * kW + i];
+    const A = uzel(i0, j), B = uzel(i1, j), C = uzel(i0, j + 1), D = uzel(i1, j + 1);
+    return u + v <= 1 ? A + (B - A) * u + (C - A) * v : D + (C - D) * (1 - u) + (B - D) * (1 - v);
   }
-  const vyska = kW ? (x, z) => vyskaHruba(x, z) + odchylkaKoryta(x, z) : vyskaHruba;
+  const vyska = kW ? (x, z) => vyskaKoryta(x, z) ?? vyskaHruba(x, z) : vyskaHruba;
 
   // stejné dělení čtverce na trojúhelníky jako síť terénu: úhlopříčka (i+1,j)–(i,j+1)
   function vyskaHruba(x, z) {
@@ -56,7 +65,11 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
     const i = Math.floor((x - x0) / BUNKA), j = Math.floor((z - z0) / BUNKA);
     return i < 0 || j < 0 || i >= gx || j >= gz ? -1 : j * gx + i;
   };
+  // každý prvek se vkládá i do sousedních buněk do vzdálenosti PRESAH → dotaz na jednu buňku (kolize, vPrekazce,
+  // chodnikBlizko, naJineCeste) vidí vše do PRESAH od bodu; největší dotaz je auto r 2,4 m
+  const PRESAH = 2.5;
   function vloz(m, minx, minz, maxx, maxz, co) {
+    minx -= PRESAH; minz -= PRESAH; maxx += PRESAH; maxz += PRESAH;
     for (let j = Math.max(0, Math.floor((minz - z0) / BUNKA)); j <= Math.min(gz - 1, Math.floor((maxz - z0) / BUNKA)); j++)
       for (let i = Math.max(0, Math.floor((minx - x0) / BUNKA)); i <= Math.min(gx - 1, Math.floor((maxx - x0) / BUNKA)); i++)
         m[j * gx + i].push(co);
@@ -104,6 +117,10 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
         for (const b of mBudovy[j * gx + i]) if (b.vyska && x > b.minx - r && x < b.maxx + r && z > b.minz - r && z < b.maxz + r) return true;
       }
     return false;
+  }
+  function autoSeVejde(x, z, smer) {   // auto 4,3 × 1,8 m jako dva kruhy r 1,1 (předek, zadek) + rezerva
+    const fx = Math.sin(smer), fz = Math.cos(smer);
+    return !vPrekazce(x + fx * 1.25, z + fz * 1.25, 1.1) && !vPrekazce(x - fx * 1.25, z - fz * 1.25, 1.1);
   }
   function vPrekazce(x, z, r) {      // kruh zasahuje do budovy nebo překážky
     const b = bunka(x, z);
@@ -180,7 +197,12 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
         prekazka((ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az), Math.hypot(bx - ax, bz - az), pl.druh === 'zivy' ? 0.7 : 0.15, 'plot');
       }
     }
-    for (const [druh, xd, zd, smer, sirkaDm] of plotyKatastr.branky) vrata.push({ druh, x: xd / 10, z: zd / 10, smer, sirka: sirkaDm / 10 });
+    for (const [druh, xd, zd, smer, sirkaDm] of plotyKatastr.branky) {
+      const v = { druh, x: xd / 10, z: zd / 10, smer, sirka: sirkaDm / 10 };
+      vrata.push(v);
+      for (const st of [-1, 1])                          // pilíře (kreslí scena.plotyKatastr)
+        prekazka(v.x + Math.sin(smer) * st * (v.sirka / 2 + 0.2), v.z + Math.cos(smer) * st * (v.sirka / 2 + 0.2), smer, 0.4, 0.4, 'pilir');
+    }
   }
 
   const objekty = [];         // {druh, x, z, smer} – smer: lokální +z objektu míří k silnici
@@ -193,18 +215,19 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
     const n = nejblizsiCesta(v.x, v.z, 25, false);
     const ven = n ? Math.sign((n.x - v.x) * nx + (n.z - v.z) * nz) || 1 : 1;   // +1 = silnice na straně kolmice
     const ax = v.x - nx * ven * 4.2, az = v.z - nz * ven * 4.2, smer = Math.atan2(nx * ven, nz * ven);
-    if (!vPrekazce(ax, az, 1.3) && !naJineCeste(ax, az, null, 0.5)) {
+    if (autoSeVejde(ax, az, smer) && !naJineCeste(ax, az, null, 0.5)) {
       zaparkovana.push({ x: ax, z: az, smer, barva: Math.floor(rndV() * 8) });
       prekazka(ax, az, smer, 4.3, 1.8, 'auto');
     }
   }
   for (const ch of ulice) {
-    let delka = 0, posledniAuto = -99;
+    let delka = 0, posledniAuto = -99, posledniLampa = -99;
     for (let k = 0; k < ch.body.length; k += 2) {
       const x = ch.body[k], z = ch.body[k + 1], ox = ch.ven[k], oz = ch.ven[k + 1];
       if (k) delka += Math.hypot(x - ch.body[k - 2], z - ch.body[k - 1]);
       // lampa každých 38 m na vnějším okraji chodníku, rameno nad silnici
-      if ((ch.chodnik || ch.strana > 0) && (delka + (ch.strana > 0 ? 8 : 27)) % 38 < 3 && k + 2 < ch.body.length) {
+      if ((ch.chodnik || ch.strana > 0) && (delka + (ch.strana > 0 ? 8 : 27)) % 38 < 3 && delka - posledniLampa > 30 && k + 2 < ch.body.length) {
+        posledniLampa = delka;
         const lxp = x + ox * (ch.chodnik ? 0.55 : 0.2), lzp = z + oz * (ch.chodnik ? 0.55 : 0.2);
         objekty.push({ druh: 'lampa', x: lxp, z: lzp, smer: Math.atan2(-ox, -oz) });
         prekazka(lxp, lzp, 0, 0.3, 0.3, 'lampa');
@@ -212,7 +235,7 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
       // auto zaparkované před domem
       if (delka - posledniAuto > 30 && rndV() < 0.03) {
         const o = ch.chodnik ? 3.0 : 2.6, ax = x + ox * o, az = z + oz * o, smer = Math.atan2(-oz, ox) + (rndV() < 0.5 ? 0 : Math.PI);
-        if (!vPrekazce(ax, az, 2.4) && !naJineCeste(ax, az, null, 1.5) && !chodnikBlizko(ax, az, 1.3)) {
+        if (autoSeVejde(ax, az, smer) && !naJineCeste(ax, az, null, 1.5) && !chodnikBlizko(ax, az, 1.3)) {
           zaparkovana.push({ x: ax, z: az, smer, barva: Math.floor(rndV() * 8) });
           prekazka(ax, az, smer, 4.3, 1.8, 'auto');
           posledniAuto = delka;
@@ -254,6 +277,7 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
       }
       continue;
     }
+    if (!ROZMERY[druh]) continue;              // neznámý druh objektu
     if (druh === 'sloup' || druh === 'stozar') {
       smer = smerVedeni.get(klic(x, z)) ?? smer;
     } else {
@@ -268,13 +292,11 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
         smer = Math.atan2(n.x - x, n.z - z);
       }
     }
-    if (ROZMERY[druh]) {
-      if (druh !== 'sloup' && druh !== 'stozar' && vPrekazce(x, z, 0.3)) continue;   // spadlo by do domu
-      objekty.push({ druh, x, z, smer });
-      prekazka(x, z, smer + Math.PI / 2, ...ROZMERY[druh], druh);
-    }
+    if (druh !== 'sloup' && druh !== 'stozar' && vPrekazce(x, z, 0.3)) continue;   // spadlo by do domu
+    objekty.push({ druh, x, z, smer });
+    prekazka(x, z, smer + Math.PI / 2, ...ROZMERY[druh], druh);
   }
-  const ploty = (data.ploty || []).map(([druh, b]) => {
+  const ploty = (plotyKatastr ? [] : data.ploty || []).map(([druh, b]) => {   // s katastrem by se zdvojily
     const body = dmNaM(b);
     for (let k = 0; k + 3 < body.length; k += 2) {
       const ax = body[k], az = body[k + 1], bx = body[k + 2], bz = body[k + 3];
@@ -284,7 +306,7 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
   });
   for (const o of [...objekty, ...zaparkovana]) o.y = vyska(o.x, o.z);
 
-  // stromy: les ~7,5 m, zahrady řídce; + stromořadí a samostatné stromy z OSM
+  // stromy: ze stromy.bin (DMP OK), jinak rozsazení podle masky (les ~7,5 m, zahrady řídce) + stromořadí z OSM
   const stromy = [];          // {x, z, jehlic, m (měřítko)}
   const mStromy = mrizka();
   const px = data.px, [mw, mh] = data.maska;
@@ -293,7 +315,14 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
     return maska && i >= 0 && j >= 0 && i < mw && j < mh ? maska[j * mw + i] : 0;
   };
   const rnd = nahodne(4242);
-  for (const [krokS, hodnota, jehlic, sance] of [[7.5, 255, 0.7, 1], [16, 120, 0.15, 0.55]]) {
+  if (stromyBin) {                // skutečné stromy z DMP OK − DMR (tools/lukavice_cuzk.stromy_z_dmp)
+    const dv = new DataView(stromyBin);
+    for (let o = 0; o + 6 <= dv.byteLength; o += 6) {
+      const jehlic = dv.getUint8(o + 5) === 1, h = dv.getUint8(o + 4) / 4;
+      stromy.push({ x: x0 + dv.getUint16(o, true) / 10, z: z0 + dv.getUint16(o + 2, true) / 10, jehlic,
+        m: Math.min(2.4, Math.max(0.3, h / (jehlic ? 15.5 : 10))) });
+    }
+  } else for (const [krokS, hodnota, jehlic, sance] of [[7.5, 255, 0.7, 1], [16, 120, 0.15, 0.55]]) {
     for (let z = z0 + 5; z < -z0 - 5; z += krokS) {
       for (let x = x0 + 5; x < -x0 - 5; x += krokS) {
         const sx = x + (rnd() - 0.5) * 0.9 * krokS, sz = z + (rnd() - 0.5) * 0.9 * krokS;
@@ -302,7 +331,7 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
       }
     }
   }
-  for (let k = 0; k < data.stromy.length; k += 3)
+  if (!stromyBin) for (let k = 0; k < data.stromy.length; k += 3)
     stromy.push({ x: data.stromy[k] / 10, z: data.stromy[k + 1] / 10, jehlic: !!data.stromy[k + 2], m: 1.1 });
   // nesázet do chodníků, aut, plotů, zastávek… ani do koryt s vodou
   const voda = new Set();
@@ -315,12 +344,11 @@ export function vytvorSvet(data, vyskyU16, maska, koryto = null, plotyKatastr = 
   }
   for (let i = stromy.length - 1; i >= 0; i--) {
     const s = stromy[i];
-    if (chodnikBlizko(s.x, s.z, 0.6) || vPrekazce(s.x, s.z, 0.6) || voda.has(Math.floor(s.x / 2) + ',' + Math.floor(s.z / 2))) stromy.splice(i, 1);
+    if (chodnikBlizko(s.x, s.z, 0.6) || vPrekazce(s.x, s.z, 0.6) || naJineCeste(s.x, s.z, null, 0.4) || voda.has(Math.floor(s.x / 2) + ',' + Math.floor(s.z / 2))) stromy.splice(i, 1);
   }
   for (const s of stromy) {
     s.y = vyska(s.x, s.z);
-    const b = bunka(s.x, s.z);
-    if (b >= 0) mStromy[b].push(s);
+    vloz(mStromy, s.x, s.z, s.x, s.z, s);
   }
 
   function blizkeCesty(x, z) {
@@ -523,6 +551,7 @@ export function krokAuta(a, vstup, dt, svet) {
   // kopec: složka tíhy podél směru jízdy
   a.rychlost -= 9.81 * Math.sin(a.klopeni) * dt * 0.6;
   if (vstup.plyn === 0 && !vstup.brzda && Math.abs(a.rychlost) < 0.15 && Math.abs(a.klopeni) < 0.15) a.rychlost = 0;
+  if (vstup.brzda && vstup.plyn === 0 && Math.abs(a.rychlost) < 9 * dt) a.rychlost = 0;   // ruční brzda drží i na svahu
 
   a.smer += a.rychlost / AUTO.rozvor * Math.tan(a.rejd) * dt * (vstup.brzda ? 1.4 : 1);
   const fx = Math.sin(a.smer), fz = Math.cos(a.smer);

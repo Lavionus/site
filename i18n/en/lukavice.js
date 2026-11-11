@@ -30,7 +30,6 @@ I18N.pridej('en', {
   'Mapa (M)': 'Map (M)',
   'šipky – chůze, v autě plyn, brzda, zatáčení': 'arrows – walk; in the car throttle, brake, steering',
   'běh ·': 'run ·',
-  'skok, v autě ruční brzda': 'jump; handbrake in the car',
   'nastoupit / vystoupit (u auta) ·': 'get in / out (next to the car) ·',
   'houkačka': 'horn',
   'přepnout kameru · tažení myší – rozhlížení · kolečko – vzdálenost': 'switch camera · drag the mouse – look around · wheel – distance',
@@ -62,4 +61,5 @@ I18N.pridej('en', {
   'Načítám auto a postavu…': 'Loading the car and the character…',
   'Mapa © přispěvatelé OpenStreetMap (ODbL). Reliéf (DMR 5G), výšky a tvary střech (DMP 1G), barvy střech (ortofoto) a hranice pozemků pro ploty © ČÚZK (CC BY 4.0). Fasády a ploty jsou odhad.': 'Map © OpenStreetMap contributors (ODbL). Terrain (DMR 5G), roof heights and shapes (DMP 1G), roof colours (orthophoto) and land parcels for fences © ČÚZK (CC BY 4.0). Facades and fences are estimated.',
   'Reliéf, střechy, ortofoto a katastr © ČÚZK (CC BY 4.0).': 'Terrain, roofs, orthophoto and cadastre © ČÚZK (CC BY 4.0).',
+  'skok, v autě brzda / ruční brzda (smyk v zatáčce)': 'jump; in the car brake / handbrake (slide in corners)',
 });

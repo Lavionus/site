@@ -201,9 +201,11 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
       const k = t.body.length;
       for (let i = 0; i < k; i++) {
         const a = t.body[i], c = t.body[(i + 1) % k];
-        if (a.b) continue;
-        if (abs(a.y - c.y) < 1e-6) vazby.push({ typ: 'vodorovne', a: { t: t.id, u: i } });
-        else if (abs(a.x - c.x) < 1e-6) vazby.push({ typ: 'svisle', a: { t: t.id, u: i } });
+        // oblouk: konce na vodorovné/svislé tětivě drží spolu (jinak by je řešič rozhodil a oblouk se zkroutil)
+        const ref = a.b ? { a: { t: t.id, b: i }, b: { t: t.id, b: (i + 1) % k } } : { a: { t: t.id, u: i } };
+        // id „a…“ = odhad z kresby – při rozporu s kótami ustoupí (zpracuj)
+        if (abs(a.y - c.y) < 1e-6) vazby.push(Object.assign({ typ: 'vodorovne', id: 'a' + vazby.length }, ref));
+        else if (abs(a.x - c.x) < 1e-6) vazby.push(Object.assign({ typ: 'svisle', id: 'a' + vazby.length }, ref));
       }
     }
 
@@ -245,28 +247,32 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
           const q = b2.find(q => abs(q[osa] - p[osa]) < 0.6);
           if (!q) continue;
           hotove.add(klic);
-          vazby.push({ typ, a: p.ref, b: q.ref, mezipohled: true });
+          vazby.push({ typ, a: p.ref, b: q.ref, mezipohled: true, id: 'a' + vazby.length });
         }
       };
       spoj('narys', 'pudorys', 'x', 'svisle');
       spoj('narys', 'bokorys', 'y', 'vodorovne');
     }
 
-    // kotva: levý dolní bod prvního obrysu (u tří pohledů jen v nárysu)
-    const kotvaPohled = vykres.typ === 'pohledy' ? ['narys'] : Object.keys(pohledy);
-    for (const id of kotvaPohled) {
-      const b = bodyPohledu(id).filter(b => !b.kruh);
-      if (!b.length) continue;
+    // kotvy: každá skupina obrysů spojená kótami / mezipohledovými vazbami (samostatný díl) dostane jednu kotvu
+    // v levém dolním bodě (u tří pohledů přednostně v nárysu) – při změně kóty roste díl doprava nahoru, ne na obě strany
+    const rod = new Map(tvary.filter(t => !t.pomocny).map(t => [t.id, t.id]));
+    const najdi = i => { while (rod.get(i) !== i) { rod.set(i, rod.get(rod.get(i))); i = rod.get(i); } return i; };
+    for (const z of vazby) if (z.a && z.b && rod.has(z.a.t) && rod.has(z.b.t)) rod.set(najdi(z.a.t), najdi(z.b.t));
+    const skupiny = new Map();
+    for (const t of tvary) if (rod.has(t.id)) { const r = najdi(t.id); if (!skupiny.has(r)) skupiny.set(r, []); skupiny.get(r).push(t); }
+    const kotvy = [];
+    for (const ts of skupiny.values()) {
+      const ids = new Set(ts.filter(t => t.typ === 'cesta').map(t => t.id));
+      if (!ids.size) continue;                                  // samotné kružnice (díry) se drží kresby
+      let b = Object.keys(pohledy).flatMap(id => bodyPohledu(id)).filter(q => !q.kruh && ids.has(q.ref.t));
+      if (vykres.typ === 'pohledy' && b.some(q => tvary.find(t => t.id === q.ref.t).pohled === 'narys')) b = b.filter(q => tvary.find(t => t.id === q.ref.t).pohled === 'narys');
       b.sort((p, q) => (q.y - p.y) || (p.x - q.x));
-      vazby.push({ typ: 'pevny', a: b[0].ref, hodnota: [b[0].x, b[0].y], kotva: true });
+      kotvy.push({ typ: 'pevny', a: b[0].ref, hodnota: [b[0].x, b[0].y], kotva: true, plocha: ts.length });
     }
-    if (vykres.typ === 'pohledy') for (const id of ['pudorys', 'bokorys']) {
-      // bez obrysu v nárysu by pohledy plavaly – kotva i v nich, když nejsou spojené
-      if (!bodyPohledu('narys').some(b => !b.kruh)) {
-        const b = bodyPohledu(id).filter(b => !b.kruh).sort((p, q) => (q.y - p.y) || (p.x - q.x));
-        if (b.length) vazby.push({ typ: 'pevny', a: b[0].ref, hodnota: [b[0].x, b[0].y], kotva: true });
-      }
-    }
+    // první kotva (střed přeškálování) = největší skupina
+    kotvy.sort((a, b) => b.plocha - a.plocha);
+    for (const z of kotvy) { delete z.plocha; vazby.push(z); }
     return { rv, pohledy, tvary, vazby, koty, hlaseni };
   };
 
@@ -301,24 +307,26 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
       const druhy = abs(ax - osaRef.x) < TOL_KOTA ? [bx, by] : [ax, ay];
       const p = nejblizsi(body.filter(b => !b.kruh && abs(b.x - osaRef.x) > 0.5), druhy, 'x');
       if (!p) return { stav: 'nepřiřazená', popis: '⌀' + fmt(h) + ' – nenašel se bod obrysu' };
-      return pridej({ typ: 'vzdalX', a: { t: osaRef.t, b: osaRef.b }, b: p.ref, hodnota: h / 2, smer: p.x >= osaRef.x ? 1 : -1 }, '⌀' + fmt(h));
+      return pridej({ typ: 'vzdalX', a: { t: osaRef.t, b: osaRef.b }, b: p.ref, hodnota: h / 2, smer: p.x >= osaRef.x ? 1 : -1 }, '⌀' + fmt(h), [[osaRef.x, p.y], [p.x, p.y]]);
     }
     if (vodor || svis) {
       const osa = vodor ? 'x' : 'y';
       const p = nejblizsi(body, k.a, osa), q = nejblizsi(body.filter(b => b !== p), k.b, osa);
       if (!p || !q || abs(p[osa] - q[osa]) < 0.5) return { stav: 'nepřiřazená', popis: fmt(h) + ' – konce kóty nesedí na body obrysu' };
-      return pridej({ typ: vodor ? 'vzdalX' : 'vzdalY', a: p.ref, b: q.ref, hodnota: h, smer: q[osa] >= p[osa] ? 1 : -1 }, fmt(h));
+      return pridej({ typ: vodor ? 'vzdalX' : 'vzdalY', a: p.ref, b: q.ref, hodnota: h, smer: q[osa] >= p[osa] ? 1 : -1 }, fmt(h), [[p.x, p.y], [q.x, q.y]]);
     }
-    // šikmá kóta: nejbližší body ke koncům
-    const p = nejblizsiBod(body, k.a), q = nejblizsiBod(body.filter(b => b !== p), k.b);
+    // šikmá kóta: nejbližší body ke koncům (odsazená kóta si měřené body pamatuje v m)
+    const m = Array.isArray(k.m) ? k.m : [k.a, k.b];
+    const p = nejblizsiBod(body, m[0]), q = nejblizsiBod(body.filter(b => b !== p), m[1]);
     if (!p || !q) return { stav: 'nepřiřazená', popis: fmt(h) + ' – konce kóty nesedí na body obrysu' };
-    return pridej({ typ: 'delka', a: p.ref, b: q.ref, hodnota: h }, fmt(h));
+    return pridej({ typ: 'delka', a: p.ref, b: q.ref, hodnota: h }, fmt(h), [[p.x, p.y], [q.x, q.y]]);
 
-    function pridej(v, popis) {
+    /** body = měřené body v kresbě [[x, y], [x, y]] (pro vynášecí čáry a odsazení kóty) */
+    function pridej(v, popis, body) {
       // vlastní krátké id (řešič přijme jen [\w-]{1,24}, jinak by ho přečísloval a rozpor by se nespároval s kótou)
       v.id = 'k' + vazby.length; v.kota = k.id;
       vazby.push(v);
-      return { stav: 'ok', typ: v.typ, popis, vazba: v.id };
+      return { stav: 'ok', typ: v.typ, popis, vazba: v.id, body: body || null, tvary: [v.a.t, v.b && v.b.t] };
     }
   }
   const fmt = v => String(+(+v).toFixed(3)).replace('.', ',');
@@ -340,46 +348,133 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
     return nej;
   }
 
+  // ------------------------------------------------------------ odsazení kóty od kresby
+  const ODSAZENI = 8, ROZESTUP = 7;     // mm – první kóta od obrysu, další kóty na téže straně
+  /** Nová poloha kóty mimo kresbu: {a, b} nebo null (kóta nepřiřazená / bez místa v rámečku).
+      Vodorovná jde nad/pod obrys (podle strany, kde byla nakreslená), svislá vlevo/vpravo, šikmá kolmo ven;
+      kóty na téže straně se řadí za sebe. prvky = všechny prvky výkresu (kvůli ostatním kótám). */
+  N.umistiKotu = function (v, kota, prvky) {
+    const kk = v && v.koty.find(q => q.id === kota.id);
+    if (!kk || kk.stav !== 'ok' || !kk.body || !['vzdalX', 'vzdalY', 'delka'].includes(kk.typ)) return null;
+    const P = v.pohledy[kk.pohled], r = P && P.ramec;
+    // oba body na jednom obrysu (výřez, díra) → odsadit od něj, jinak od celého pohledu
+    const jeden = kk.tvary && kk.tvary[0] === kk.tvary[1] ? kk.tvary[0] : null;
+    const l = v.tvary.filter(t => t.pohled === kk.pohled && !t.pomocny && (!jeden || t.id === jeden)).flatMap(t => t.typ === 'kruh'
+      ? [[t.x - t.rx, t.y - t.rx], [t.x + t.rx, t.y + t.rx]] : lomenaObrysu(t.body));
+    if (!r || !l.length) return null;
+    const bb = [min(...l.map(p => p[0])), min(...l.map(p => p[1])), max(...l.map(p => p[0])), max(...l.map(p => p[1]))];
+    const [p, q] = kk.body, mx = (kota.a[0] + kota.b[0]) / 2, my = (kota.a[1] + kota.b[1]) / 2;
+    const jine = prvky.filter(o => o.druh === 'kota' && o.id !== kota.id);
+    if (kk.typ === 'delka') {
+      const dx = q[0] - p[0], dy = q[1] - p[1], L = hypot(dx, dy) || 1;
+      let nx = -dy / L, ny = dx / L;
+      if ((p[0] + q[0]) / 2 * nx + (p[1] + q[1]) / 2 * ny < (bb[0] + bb[2]) / 2 * nx + (bb[1] + bb[3]) / 2 * ny) { nx = -nx; ny = -ny; }
+      const a = [p[0] + nx * ODSAZENI, p[1] + ny * ODSAZENI], b = [q[0] + nx * ODSAZENI, q[1] + ny * ODSAZENI];
+      return [a, b].every(([x, y]) => x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1) ? { a, b, m: [p.slice(), q.slice()] } : null;
+    }
+    const vod = kk.typ === 'vzdalX', i = vod ? 1 : 0;               // osa, ve které se kóta posouvá
+    const od = min(p[1 - i], q[1 - i]), do_ = max(p[1 - i], q[1 - i]);
+    const zkus = strana => {
+      let c = (strana < 0 ? bb[i] : bb[i + 2]) + strana * ODSAZENI;
+      for (let n = 0; n < 20; n++) {
+        const srazka = jine.some(o => {
+          const oa = o.a[i], ob = o.b[i];
+          if (abs(oa - ob) > 0.5) return false;                  // jiná orientace
+          return abs(oa - c) < ROZESTUP - 0.5 && min(o.a[1 - i], o.b[1 - i]) < do_ && max(o.a[1 - i], o.b[1 - i]) > od;
+        });
+        if (!srazka) break;
+        c += strana * ROZESTUP;
+      }
+      const meze = vod ? [r.y0 + 3, r.y1 - 3] : [r.x0 + 3, r.x1 - 3];
+      return c > meze[0] && c < meze[1] ? c : null;
+    };
+    const strana = (vod ? my : mx) < (bb[i] + bb[i + 2]) / 2 ? -1 : 1;
+    const c = zkus(strana) ?? zkus(-strana);
+    if (c == null) return null;
+    return vod ? { a: [p[0], c], b: [q[0], c] } : { a: [c, p[1]], b: [c, q[1]] };
+  };
+
   // ------------------------------------------------------------ řešení
-  /** Měřítko kresby: medián poměru kóta / nakreslená délka (kresba nemusí být v měřítku 1:1). Vrací 1, když nejde poznat. */
-  function meritkoKresby(v) {
-    const pomery = [];
+  /** Měřítko kresby: medián poměru kóta / nakreslená délka (kresba nemusí být v měřítku 1:1).
+      Kresba se jím nejdřív celá přeškáluje (tvar zůstane), řešič pak dorovná jednotlivé kóty –
+      už první kóta tak určí velikost a nezakótované rozměry rostou s ní. */
+  // osa listu v pohledu → osa dílu (u tří pohledů sdílí nárys s půdorysem X a s bokorysem Z, půdorys s bokorysem hloubku)
+  const OSY_POHLEDU = { narys: { x: 'X', y: 'Z' }, pudorys: { x: 'X', y: 'D' }, bokorys: { x: 'D', y: 'Z' } };
+  const median = a => { a = a.slice().sort((p, q) => p - q); const n = a.length; return n % 2 ? a[n >> 1] : Math.sqrt(a[n / 2 - 1] * a[n / 2]); };
+  function meritkoKresby(v, typ) {
+    const vse = [], podleOsy = {}, pohledTvaru = new Map(v.tvary.map(t => [t.id, t.pohled]));
+    const osaDilu = (pohled, osa) => typ === 'pohledy' ? (OSY_POHLEDU[pohled] || {})[osa] || osa : osa;
     for (const z of v.vazby) {
       if (!z.kota || !(z.hodnota > 0)) continue;
       const m = M.zmerVazbu(v.tvary, z);
-      if (m > 0.5) pomery.push(z.hodnota / (z.typ === 'vzdalX' || z.typ === 'vzdalY' ? abs(m) : m));
+      if (!(m > 0.5)) continue;
+      const r = z.hodnota / m;
+      vse.push(r);
+      if (z.typ === 'vzdalX' || z.typ === 'vzdalY') {
+        const o = osaDilu(pohledTvaru.get(z.b.t), z.typ === 'vzdalX' ? 'x' : 'y');
+        (podleOsy[o] = podleOsy[o] || []).push(r);
+      }
     }
-    // jen když se aspoň dvě kóty shodnou (±10 %) – jediná kóta jen mění jeden rozměr, ne měřítko celé kresby
-    if (pomery.length < 2) return 1;
-    pomery.sort((a, b) => a - b);
-    const med = pomery[pomery.length >> 1];
-    const shodne = pomery.filter(p => abs(p / med - 1) < 0.1).length;
-    return shodne >= 2 && abs(med - 1) > 0.1 ? med : 1;
+    // kóta, která přesně sedí s kresbou (±2 %), je důkaz kresby 1 : 1 – pak se jen dorovnají ostatní kóty
+    const odhad = a => a.some(r => abs(r - 1) < 0.02) ? 1 : median(a);
+    const k = vse.length ? odhad(vse) : 1;
+    const ok = r => r > 0.05 && r < 20 && abs(r - 1) > 1e-6 ? r : 1;
+    const f = {};
+    for (const [o, a] of Object.entries(podleOsy)) f[o] = odhad(a);
+    return { k: ok(k), osa: (pohled, osa) => ok(f[osaDilu(pohled, osa)] != null ? f[osaDilu(pohled, osa)] : k) };
   }
 
   N.zpracuj = function (vykres) {
     const v = N.vyloz(vykres);
     const pouzite = v.tvary;
     // kresba v jiném měřítku → nejdřív přeškálovat kolem kotev, ať řešič mění tvar co nejméně
-    const k = meritkoKresby(v);
+    // měřítko zvlášť pro každý směr (kresba bývá jinak natažená na šířku a na výšku)
+    const mer = meritkoKresby(v, vykres.typ), k = mer.k;
     v.meritko = k;
-    let start = pouzite;
-    if (k !== 1 && k > 0.05 && k < 20) {
-      // střed škálování: kotva (u tří pohledů kotva nárysu); půdorys a bokorys sdílejí s nárysem jen jednu osu,
-      // ve druhé (hloubka) se škálují od svého zadního okraje → zarovnání zůstane a pohledy neodjedou
-      const kotva = v.vazby.find(z => z.kotva), c = kotva ? kotva.hodnota : [0, 0];
-      const minPohledu = (id, i) => min(...pouzite.filter(t => t.pohled === id && !t.pomocny).flatMap(t => t.typ === 'kruh' ? [i ? t.y - t.rx : t.x - t.rx] : t.body.map(b => i ? b.y : b.x)));
-      const stredy = vykres.typ === 'pohledy' ? { narys: c, pudorys: [c[0], minPohledu('pudorys', 1)], bokorys: [minPohledu('bokorys', 0), c[1]] } : {};
-      const sk = (t, x, y) => { const q = stredy[t.pohled] || c; return [q[0] + (x - q[0]) * k, q[1] + (y - q[1]) * k]; };
-      start = pouzite.map(t => {
-        if (t.pomocny) return t;
-        if (t.typ === 'kruh') { const [x, y] = sk(t, t.x, t.y); return Object.assign({}, t, { x, y, rx: t.rx * k, ry: t.ry * k }); }
-        return Object.assign({}, t, { body: t.body.map(b => { const [x, y] = sk(t, b.x, b.y); return { x, y, b: b.b }; }) });
-      });
-    }
+    // střed škálování: kotva (u tří pohledů kotva nárysu); půdorys a bokorys sdílejí s nárysem jen jednu osu,
+    // ve druhé (hloubka) se škálují od svého zadního okraje → zarovnání zůstane a pohledy neodjedou
+    const kotva = v.vazby.find(z => z.kotva), c = kotva ? kotva.hodnota : [0, 0];
+    const minPohledu = (id, i) => min(...pouzite.filter(t => t.pohled === id && !t.pomocny).flatMap(t => t.typ === 'kruh' ? [i ? t.y - t.rx : t.x - t.rx] : t.body.map(b => i ? b.y : b.x)));
+    const stredy = vykres.typ === 'pohledy' ? { narys: c, pudorys: [c[0], minPohledu('pudorys', 1)], bokorys: [minPohledu('bokorys', 0), c[1]] } : {};
+    /** Tvary přeškálované měřítkem po osách (obrácené = zpět do měřítka kresby) kolem středů pohledů. */
+    const preskaluj = (tvary, obracene) => tvary.map(t => {
+      if (t.pomocny) return t;
+      let fx = mer.osa(t.pohled, 'x'), fy = mer.osa(t.pohled, 'y');
+      if (fx === 1 && fy === 1) return t;
+      if (obracene) { fx = 1 / fx; fy = 1 / fy; }
+      const q = stredy[t.pohled] || c, sk = (x, y) => [q[0] + (x - q[0]) * fx, q[1] + (y - q[1]) * fy];
+      if (t.typ === 'kruh') { const [x, y] = sk(t.x, t.y), f = Math.sqrt(fx * fy); return Object.assign({}, t, { x, y, rx: t.rx * f, ry: t.ry * f }); }
+      return Object.assign({}, t, { body: t.body.map(b => { const [x, y] = sk(b.x, b.y); return { x, y, b: b.b }; }) });
+    });
+    const start = preskaluj(pouzite, false);
     let res = { tvary: start, ok: true, zbytek: 0, konflikt: [], volnost: 0, urcene: [] };
     if (start.length) {
-      res = M.resVazbySkici(start, v.vazby, {});
+      // kóty mají přednost před odhadem z kresby: vodorovně/svisle (id „a…“), které se s nimi pohádají, se uvolní
+      let vazby = v.vazby;
+      const uvolnene = [];
+      res = M.resVazbySkici(start, vazby, {});
+      let rozpocet = 24;                                       // strop počtu řešení – výklad běží po každé změně
+      for (let pokus = 0; !res.ok && pokus < 6 && rozpocet > 0; pokus++) {
+        const odhad = (res.konflikt || []).filter(id => /^a\d+$/.test(id));
+        if (!odhad.length) break;
+        // po jedné: první odhad, jehož uvolnění rozpor vyřeší; jinak ten, který nejvíc zmenší zbytek
+        let vyber = null, r2 = null, nej = null;
+        for (const id of odhad) {
+          if (rozpocet-- <= 0) break;
+          const r = M.resVazbySkici(start, vazby.filter(z => z.id !== id), {});
+          if (r.ok) { vyber = id; r2 = r; break; }
+          if (!nej || r.zbytek < nej.r.zbytek) nej = { id, r };
+        }
+        if (!vyber) {
+          if (!nej || nej.r.zbytek > res.zbytek * 0.9) break;   // odhad nepomáhá → skutečný rozpor kót
+          vyber = nej.id; r2 = nej.r;
+        }
+        uvolnene.push(vyber);
+        vazby = vazby.filter(z => z.id !== vyber);
+        res = r2;
+      }
+      if (res.ok && uvolnene.length) v.hlaseni.push({ druh: 'info', text: `Kóty vyžadují šikmou hranu – ${uvolnene.length === 1 ? 'jedna hrana přestala' : uvolnene.length + ' hran přestalo'} být vodorovná/svislá podle kresby.` });
+      v.uvolnene = uvolnene;
       // řešič vrací kopie bez vlastních klíčů – vrátit pohled a pomocné příznaky
       res.tvary = res.tvary.map((t, i) => Object.assign({}, t, { pohled: start[i].pohled, pomocny: start[i].pomocny }));
     }
@@ -393,7 +488,7 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
     if (nepr.length) v.hlaseni.push({ druh: 'varovani', text: 'Kóty bez přiřazení: ' + nepr.map(kk => kk.popis).join('; ') + '. Konce kóty dejte nad body obrysu.', prvky: nepr.map(kk => kk.id) });
     const bez = v.koty.filter(kk => kk.stav === 'bez čísla');
     if (bez.length) v.hlaseni.push({ druh: 'varovani', text: 'Kóty bez čísla: ' + bez.length + ' (dvojklikem doplníte).', prvky: bez.map(kk => kk.id) });
-    if (k !== 1) v.hlaseni.push({ druh: 'info', text: 'Kresba je v měřítku přibližně ' + (k >= 1 ? '1 : ' + fmt(+k.toFixed(2)) : fmt(+(1 / k).toFixed(2)) + ' : 1') + ' – rozměry se dopočítaly z kót.' });
+    if (abs(k - 1) > 0.05) v.hlaseni.push({ druh: 'info', text: 'Kresba je v měřítku přibližně ' + (k >= 1 ? '1 : ' + fmt(+k.toFixed(2)) : fmt(+(1 / k).toFixed(2)) + ' : 1') + ' – rozměry se dopočítaly z kót.' });
     // rotační díl: profil nesmí na druhou stranu osy (rotace by se protínala sama se sebou)
     const osa = v.tvary.find(t => t.pomocny);
     if (vykres.typ === 'rotacni' && osa) {
@@ -405,10 +500,11 @@ var N3D = globalThis.N3D = globalThis.N3D || {};
     if (obrysu && res.ok) {
       const neurcene = v.tvary.filter(t => !t.pomocny && !(res.urcene || []).includes(t.id)).length;
       v.hlaseni.push({ druh: neurcene ? 'info' : 'ok', text: neurcene
-        ? `Zakótováno ${v.koty.filter(kk => kk.stav === 'ok').length} rozměrů; ${neurcene} z ${obrysu} obrysů ještě není plně určeno kótami – chybějící rozměry se vezmou z kresby (mřížka 5 mm).`
+        ? `Zakótované rozměry: ${v.koty.filter(kk => kk.stav === 'ok').length}. Obrysy, které kóty plně neurčují (${neurcene} z ${obrysu}), mají zbylé rozměry z kresby v jejím měřítku.`
         : 'Všechny obrysy jsou plně určené kótami.' });
     }
-    v.vysledek = { tvary: res.tvary, ok: res.ok, volnost: res.volnost, urcene: res.urcene || [] };
+    // tvary = skutečné rozměry (pro stavbu), zobrazit = totéž v měřítku kresby (modrý náhled se kryje s kresbou)
+    v.vysledek = { tvary: res.tvary, zobrazit: preskaluj(res.tvary, true), ok: res.ok, volnost: res.volnost, urcene: res.urcene || [] };
     return v;
   };
 

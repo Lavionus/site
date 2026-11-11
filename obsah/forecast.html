@@ -7697,6 +7697,19 @@
     let nahledIndex = null;   // { t, past: [snímky] }
     let nahledSeq = 0;
     let nahledPohyb = null;   // výsledek pohybu srážek, podle kterého se kreslila stopa v náhledu
+    let nahledRozmer = '';    // rozměr, na který je náhled vykreslený („" = nevykreslený)
+    // Náhled se ve skryté záložce (radar, geomagnetika…) nekreslí – plátno nemá rozměr. Po zobrazení
+    // nebo změně velikosti boxu ho dokreslit, jinak zůstane šedá plocha.
+    if (window.ResizeObserver) {
+      let nahledCasovac = 0;
+      new ResizeObserver(() => {
+        clearTimeout(nahledCasovac);
+        nahledCasovac = setTimeout(() => {
+          const cv = document.getElementById('radarNahled');
+          if (cv && cv.clientWidth && `${cv.clientWidth}x${cv.clientHeight}` !== nahledRozmer) radarNahled();
+        }, 120);
+      }).observe(document.getElementById('radarNahled'));
+    }
     function nahledDlazdice(url) {
       return new Promise(ok => { const img = new Image(); img.onload = () => ok(img); img.onerror = () => ok(null); img.src = url; });
     }
@@ -7757,7 +7770,10 @@
           ? nahledDlazdice(`${RADAR_TILE_BASE}${snimek.path}/256/${z}/${wrap(x)}/${y}/2/1_1.png`) : null))
       ]);
       if (seq !== nahledSeq) return;
+      // záložka Předpověď se mezitím mohla skrýt (rozměr 0) – nekreslit, dokreslí to hlídač rozměru
+      if (cv.clientWidth !== W || cv.clientHeight !== H) { nahledRozmer = ''; if (cv.clientWidth) radarNahled(); return; }
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      nahledRozmer = `${W}x${H}`;
       const c = cv.getContext('2d');
       c.setTransform(dpr, 0, 0, dpr, 0, 0);
       dlazdice.forEach(([x, y], i) => { if (podklad[i]) c.drawImage(podklad[i], ox + x * T, oy + y * T, T + 0.5, T + 0.5); });

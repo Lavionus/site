@@ -319,3 +319,66 @@ Revize etap 1–3 (listy, virtuální papír, výklad + řešič) přečtením c
 ### Testy
 `node _test/nacrt3d_test.js` (1624 kontrol, nové: čištění úložiště, obdélník od půlky strany) a
 `python3 _test/nacrt3d_ui.py` (i s `NACRT_DPI=2`: plátno v rozlišení displeje; potvrzení změny listu).
+
+## Revize stránky `obsah/nacrt3d.html` – 2 (11. 11. 2026)
+
+Revize kódu přidaného po první revizi (stavba 3D a export, tabulka kót, měřítko po osách, uvolňování odhadnutých
+vazeb, odsazení kót, přesné nástroje, vícenásobný výběr a operace), 7 nálezů, všechny opravené.
+
+- **Export mohl uložit starý model:** když export přišel během rozběhnuté stavby, `postav()` vrátil předchozí těleso.
+  Stavby teď jdou ve frontě (`fronta.then(postavHned)`), export čeká na stavbu z aktuální kresby.
+- **Zastaralá hlášení 3D v Kontrole:** po exportu se zavřeným 3D panelem zůstala hlášení stavby i po změně kresby.
+  Se zavřeným panelem se při výkladu těleso zahodí.
+- **Roh ze dvou čar** se mohl zaoblit i mezi obrysem a osou / skrytou hranou se společným koncem – jen stejné pero.
+- **Uvolňování odhadnutých vazeb** (vodorovně/svisle z kresby) mohlo při rozporu zkoušet desítky řešení po každé
+  změně: strop 24 řešení, a když žádné uvolnění rozpor nezmenší, skončí (skutečný rozpor kót).
+- **Smíšené kóty a samostatné tvary** (nalezeno při ladění nástrojů): jedna kóta posunula a přeškálovala i nesouvisející
+  tvary. Každá skupina obrysů spojená kótami má vlastní kotvu a kóta přesně sedící s kresbou drží měřítko 1 : 1.
+- **Políčko na poloměr rohu** se při otevření na stisk myši hned zavřelo (fokus se přesunul na plátno) – otevírá se po puštění.
+- Posun výběru šipkami zahazoval surový tah, ačkoli se převedl s prvkem (příkaz Znovu rozpoznat by pak čáru vynechal).
+
+Testy: `node _test/nacrt3d_test.js` (1676 kontrol), `node _test/nacrt3d_stavba_test.js` (46),
+`python3 _test/nacrt3d_ui.py` (nově: přesné nástroje myší, výběr rámem, kopie, zrcadlení, pole, šipky, zaoblení,
+fronta staveb a mazání starých hlášení 3D).
+
+## Revize stránky `obsah/lukavice.html` (11. 11. 2026)
+
+Revize jádra a scény (nezávislé čtení + ověření skripty nad skutečnými daty) a stránky. Opraveno:
+
+- **Kolize viděly jen buňku mřížky se středem kruhu** – u hranice 20m buňky zajelo auto čumákem do zdi nebo
+  „nabodlo“ strom do kapoty, chodec zašel do kmene. Prvky se teď do mřížek vkládají s přesahem 2,5 m
+  (`PRESAH` v `jadro.js`), takže dotaz na jednu buňku vidí vše v dosahu (i `vPrekazce`, `chodnikBlizko`, `naJineCeste`).
+- **Výška v korytě neodpovídala vykreslené síti** (až 43 cm, na okraji masky až 1,1 m) – fyzika (`vyskaKoryta`)
+  teď počítá stejnou trojúhelníkovou sítí jako `scena.korytoSit` a jen v pixelech masky; odchylka 0 cm.
+- **Maska koryt v shaderu terénu** vyřezávala do okrajového prstence škvíry až k mlze – `discard` jen uvnitř světa.
+- **Auta za vraty** se kontrolovala jedním kruhem r 1,3 m a 15 z nich trčelo do domu – teď dvěma kruhy po délce auta.
+- **Pilíře vrat a branek** neměly kolizi – jsou překážky.
+- **Ruční brzda na svahu** nechávala auto pomalu sjíždět (6,8 m za 10 min) – při brzdě a nízké rychlosti stojí.
+- **Zdvojené lampy** (22 dvojic do 3 m) – hlídá se rozestup.
+- **Ploty z OSM** přehrazovaly cesty a zdvojovaly katastrální ploty – s katastrem se nepoužijí.
+- Ošetřené možné pády na nových datech (budova bez hrany ≥ 0,5 m, neznámý druh objektu nebo vedení); úklid mrtvého kódu.
+- Stránka: **mezerník / Enter na tlačítku lišty** po kliknutí znovu „mačkaly“ tlačítko (během jízdy se otevírala
+  nabídka); **vystoupení v úzkém místě** přeneslo postavu tam, kde naposledy stála; **odstrčení od auta** mohlo
+  skončit ve zdi.
+
+Testy: `node --import ./_test/three_importmap.mjs _test/lukavice_test.mjs` (nově kolize hrubou silou přes hranice
+buněk, ruční brzda na svahu 28 %, rozestup lamp, auta celou karoserií mimo domy, pilíře, výška v korytě vs. síť),
+`python3 _test/lukavice_ui.py [dpi]` (DPI 1 i 2 bez chyb).
+
+## Revize stránky `obsah/whiteboard.html` – 2 (11. 11. 2026)
+
+Revize přidaného kódu (kurzor ve velikosti stopy, průhledná tabule, nástroj 🪄 Barva → průhledná), 5 nálezů, všechny opravené.
+
+- **Výkon kurzoru:** stopa pera se kreslila do hlavního plátna, takže každý pohyb myši překreslil celou tabuli
+  (na plné tabuli se sprejem citelné sekání). Stopa má vlastní průhlednou vrstvu `#vrstvaKurzoru` nad tabulí
+  (`pointer-events: none`), pohyb myši kreslí jen ji.
+- **Souběh 🪄:** dva rychlé kliky počítaly oba z původního obrázku a druhý výsledek přepsal první. Výpočty jdou
+  po jednom a výsledek se zahodí, když mezitím obrázek změnilo Zpět.
+- **Pipeta na průhledné tabuli** v průhledném místě obrázku nebo uvnitř rámu brala barvu šachovnice.
+  Bod se skládá jen z objektů (`bodBezPozadi`), průhledný bod barvu nepřevezme.
+- **Rychlost jádra:** `Math.hypot` a pole sousedů vytvářené pro každý pixel nahrazeny – obrázek 3000×3000 za 0,05 s
+  (souvislá oblast 0,14 s).
+- Komentář „text objektu pro hledání“ se při vkládání odtrhl od své funkce.
+
+Testy: `node _test/whiteboard_test.js` (137), scénáře `_test/whiteboard_scenar{,2,3,4,5}.json`
+(24 + 26 + 23 + 11 + 20; nově pipeta na průhledné tabuli, vrstva kurzoru a dvojklik nástrojem 🪄).

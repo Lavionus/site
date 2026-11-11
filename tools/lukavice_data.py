@@ -259,9 +259,6 @@ def main():
     dmr, dmp, orto = cuzk.nacti(a.zdroj, (JIH, SEVER, ZAPAD, VYCHOD, SIRKA, HLOUBKA))
     nx, nz = int(SIRKA // KROK) + 1, int(HLOUBKA // KROK) + 1
     vysky = cuzk.hruba_mrizka(dmr, nx, nz, KROK)
-    vmin = math.floor(float(vysky.min())) - 1
-    ((vysky - vmin) * 10).round().astype('<u2').tofile(os.path.join(CIL, 'vyska.bin'))
-    print('výšky', vysky.shape, round(float(vysky.min())), '–', round(float(vysky.max())), 'm')
 
     uzly, cesty, relace = nacti_osm(a.zdroj)
     uvnitr = lambda p: abs(p[0]) < SIRKA / 2 - 2 and abs(p[1]) < HLOUBKA / 2 - 2
@@ -310,10 +307,15 @@ def main():
     seznam_ploch = plochy(uzly, cesty, relace, 'landuse') + plochy(uzly, cesty, relace, 'natural') \
         + [(v, k, i) for v, k, i in plochy(uzly, cesty, relace, 'leisure') if v in BARVY] \
         + [('parking', k, i) for v, k, i in plochy(uzly, cesty, relace, 'amenity') if v == 'parking']
+    cuzk.vyrovnej_silnice(vysky, KROK, dmr, seznam_cest, zeleznice)
+    vmin = math.floor(float(vysky.min())) - 1
+    ((vysky - vmin) * 10).round().astype('<u2').tofile(os.path.join(CIL, 'vyska.bin'))
+    print('výšky', vysky.shape, round(float(vysky.min())), '–', round(float(vysky.max())), 'm')
     hladiny = cuzk.koryta(dmr, vysky, KROK, potoky, seznam_cest, zeleznice, CIL)
     cuzk.rozbor_budov(budovy, dmr, dmp, orto)
     sportoviste = [k for v, vn, vni in plochy(uzly, cesty, relace, 'leisure') if v in ('pitch', 'sports_centre', 'playground') for k in vn]
     budovy += [b for b in cuzk.drobne_stavby(budovy, seznam_cest, dmr, dmp, orto, sportoviste) if all(uvnitr(p) for p in b['body'])]
+    cuzk.stromy_z_dmp(a.zdroj, (JIH, SEVER, ZAPAD, VYCHOD, SIRKA, HLOUBKA), dmr, orto, budovy, seznam_cest, -SIRKA / 2, -HLOUBKA / 2, CIL)
     obr, les, zahrady, zastaveno = podklad(seznam_ploch, seznam_cest, potoky, zeleznice, budovy, rng)
     png = os.path.join(a.zdroj, 'podklad.png')
     obr.save(png)
@@ -401,7 +403,7 @@ def main():
         json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
     print(f"budov {len(budovy)}, cest {len(seznam_cest)}, potoků {len(potoky)}, kolejí {len(zeleznice)}, "
           f"stromů {len(stromy)}, míst {len(mista)}, objektů {len(objekty)}, plotů {len(ploty)}, vedení {len(vedeni)}, start {data['start']}")
-    for f in ('data.json', 'vyska.bin', 'podklad.webp', 'stromy.png', 'koryto.png'):
+    for f in ('data.json', 'vyska.bin', 'podklad.webp', 'stromy.png', 'stromy.bin', 'koryto.png'):
         print(f, os.path.getsize(os.path.join(CIL, f)) // 1024, 'kB')
 
 

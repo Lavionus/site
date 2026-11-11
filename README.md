@@ -1144,11 +1144,17 @@ Lukavice (okres Ústí nad Orlicí, ~5,7 × 3,8 km), chůze i jízda autem.
 - Data (pořadí): `python3 tools/lukavice_data.py [--zdroj mezipaměť]` → `python3 tools/lukavice_ploty.py`.
   OSM přes API `/map` po čtvrtinách (Overpass bývá přetížený) + otevřená data ČÚZK (`tools/lukavice_cuzk.py`,
   CC BY 4.0) z ags.cuzk.cz v síti EPSG:4326 – **pixely musí být čtvercové ve stupních**, jinak ArcGIS rozsah roztáhne:
-  DMR 5G → terén po 10 m (`vyska.bin`) + `koryto.png` (jemná vložka koryt po ~1,3 × 2 m: R odchylka/4 cm, G váha,
+  DMR 5G → terén po 10 m (`vyska.bin`; jemně vyhlazený a silnice/koleje srovnané na podélný profil z DMR v ose
+  – `vyrovnej_silnice`, hlídá `_test/lukavice_drsnost.mjs` a test „silnice hladké“) + `koryto.png` (jemná vložka koryt po ~1,3 × 2 m: R odchylka/4 cm, G váha,
   B maska; pod silnicemi propustek), hladina a střed vody z příčných řezů; DMP 1G − DMR → okap, výška hřebene,
   tvar a osa střechy (sedlová/napříč/valbová/pultová/plochá) u ~1200 budov; ortofoto → barva střechy; stavby
   chybějící v OSM (DMP + červené kůlny z ortofota, ~100). Ploty: parcely INSPIRE WFS ČÚZK → `ploty.json`
   (usedlosti kolem domů, uliční plot s vraty/brankou, pletivo mezi sousedy; 93 km). Stažení dat 11. 11. 2026.
+  Stromy z DMP OK (služba `dmp`, povrch VČETNĚ vegetace – DMP 1G ji nemá): vrcholy korun = lokální maxima
+  výšky vegetace, výška ze dat, jehličnan podle barvy ortofota → `stromy.bin` (6 B/strom, ~54 tis.).
+- Vzhled: ACES tónování + PMREM prostředí (`scena.prostredi()`) pro odlesky laku a skla; modely z Blenderu
+  (`lukavice_modely.py`, auto ~20 tis. △ s materiály Brzdova/Couvaci, postava ~12,5 tis. △ s IK animacemi);
+  mezerník = brzda/ruční brzda, brzdová a couvací světla (`svetlaBrzd`).
 - `jadro.js` bez three.js: výška = hrubá mřížka (stejné trojúhelníky jako síť) + odchylka koryta, povrch, kolize
   s budovami a kmeny, rozsazení stromů (stálé semínko), chodec, auto (jízdní kolo, povrchy, klopení ze 4 kol).
   `scena.js`: terén s detailní texturou (v pásu koryt se zahazuje a kreslí jemná síť + voda po terénu koryta),

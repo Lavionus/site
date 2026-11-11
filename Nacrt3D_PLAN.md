@@ -19,7 +19,8 @@ z Modeláře. **Bez AI a bez cizích služeb.** Vše běží v prohlížeči, po
    jde dál upravovat. Přímé předání mezi stránkami Modelář nemá, proto se předává soubor.
 8. **Znovu použít:** `modelar/jadro/vazby.js` (řešič vazeb, node i worker), formát skici z `modelar/jadro/skica.js`,
    manifold z `lib/manifold`, jsPDF z `lib/`, písmo `lib/pdflib/LiberationSans-Regular.ttf`.
-9. Nová stránka v `apps.js` se zapíše se stavem `"vyvoj"`, až bude použitelná (po etapě 4).
+9. V `apps.js` je od 11. 11. (na přání uživatele už po etapě 3) v sekci 🧊 3D modelování se stavem `"vyvoj"`, anglický název
+   v `i18n/en/_katalog.js`. Texty stránky zatím jen česky – překlad v etapě 11.
 
 ## Geometrie listu (smlouva)
 
@@ -87,8 +88,10 @@ pro všechny pohledy najednou) **→ 3D** (manifold). Fotka i virtuální papír
       vnoření (lichá hloubka = otvor). Vazby: vodorovně/svisle podle kresby, kotva vlevo dole (u tří pohledů v nárysu),
       kóty přiřazené průmětem (vodorovná → vzdalX, svislá → vzdalY, šikmá → délka, přes kružnici ⌀, od středu R,
       u rotačního listu vodorovná od osy = ⌀), mezipohledové svisle/vodorovně mezi body se stejným X (nárys–půdorys)
-      a Z (nárys–bokorys). Měřítko kresby: jen když se ≥ 2 kóty shodnou (±10 %) – jedna kóta mění jen svůj rozměr;
-      škáluje se po pohledech kolem kotvy / zadního okraje, aby zarovnání zůstalo. Rozpor kót, nepřiřazené kóty,
+      a Z (nárys–bokorys). Měřítko kresby = medián poměrů kóta / kresba (už z jediné kóty): kresba se nejdřív celá
+      přeškáluje (tvar zůstane), řešič pak dorovná kóty; škáluje se po pohledech kolem kotvy / zadního okraje, aby
+      zarovnání zůstalo. Modrý náhled se kreslí zpět v měřítku kresby (`vysledek.zobrazit`), `vysledek.tvary` = skutečné mm.
+      (Uživatel 11. 11.: „když přidám kótu, tvar se změní – to je špatně“ → dřívější pravidlo „jen ≥ 2 shodné kóty“ zrušeno.) Rozpor kót, nepřiřazené kóty,
       profil přes osu → Kontrola. Řešič z Modeláře se načítá samostatně (`omez`, `mm` doplňuje vyklad.js).
       UI: vyřešený tvar modře přes kresbu (evenodd = otvory), kóty barevně podle stavu, nástroj Výběr (V) s úchyty
       (body, konce kót, střed a poloměr kružnice), změna pera a Delete, tlačítko Kontrola se seznamem hlášení.
@@ -96,8 +99,62 @@ pro všechny pohledy najednou) **→ 3D** (manifold). Fotka i virtuální papír
       sjednotí se při stavbě (etapa 4): hloubku určí půdorys, bokorys se přizpůsobí.
 *Revize 11. 11. (po etapě 3): 14 nálezů opraveno, zápis v `REVIZE.md`.*
 
-- [ ] **4. Stavba 3D:** plochý (vytažení + díry), rotační, tři pohledy (průnik vytažení, díry ze skrytých čar),
+- [x] **4. Stavba 3D:** plochý (vytažení + díry), rotační, tři pohledy (průnik vytažení, díry ze skrytých čar),
       náhled, export STL/3MF/.modelar. **Stránka funguje celá bez focení**, zápis do `apps.js` (vyvoj), ikona, sw.js.
+      *Hotovo 11. 11. (na přání „vylepši na profi nástroj“):* `stavba.js` – `N3D.postavTeleso(w, vykres, vyklad)` přes
+      manifold (CrossSection EvenOdd = otvory i ostrůvky; plochý extrude o tloušťku (bez ní 5 mm + hlášení), rotační
+      revolve s ořezem na r ≥ 0, tři pohledy = průnik vytažených pohledů (nárys podél Y, půdorys podél Z, bokorys podél X;
+      stačí dva pohledy), hloubka z půdorysu – nesouhlasný bokorys se přepočte s varováním, díl na desce v počátku,
+      počet kusů). UI: panel 🧊 3D (M) vedle papíru s živým náhledem (`SPOJKY_NAHLED`, three r128), rozměry, objem,
+      hmotnost podle materiálu, síť; 💾 Export STL / 3MF (`KRAB.stlBinarni` / `soubor3mf`); hlášení stavby v Kontrole;
+      📏 tabulka kót (K): přepis čísel, Enter/šipky, 🎯 ukázat. Test `_test/nacrt3d_stavba_test.js` (46 kontrol: uzavřené
+      sítě, objemy, orientace, díry, klín, nesouhlasná hloubka, STL/3MF). Díry ze skrytých čar (slepé díry) a `.modelar`
+      přesunuty do etap P1 a P7.
+*Úprava 11. 11. podle kresby uživatele („jak může být z černého objektu ten modrý?“ + „kóty ať odskočí mimo kresbu“):*
+mělký oblouk (< 35°) = rukou prohnutá rovná čára; vodorovné/svislé tětivy oblouků drží konce spolu; měřítko kresby
+zvlášť po osách (šířka/výška, u tří pohledů X, Z a hloubka); odhadnuté vodorovně/svisle (id `a…`) ustoupí kótám –
+uvolňují se po jedné (37 nahoře / 35 dole = šikmá hrana, ne rozpor); kóta se kreslí mezi měřenými body s vynášecími
+čarami a po zadání čísla odskočí 8 mm za obrys (`N3D.umistiKotu`, řazení po 7 mm, kóta výřezu od výřezu, šikmá si
+pamatuje body v `m`); příkazy „Odsadit všechny kóty“ (📏) a „Znovu rozpoznat čáry“ (👁, z uložených surových tahů).
+
+*Revize 2 (11. 11.): 7 nálezů opraveno, zápis v `REVIZE.md`.*
+
+### Profi nástroj (přání 11. 11. 2026 „vylepši na profi nástroj“)
+
+- [ ] **P1. Export do Modeláře (`.modelar`):** skica s obrysy a vazbami (kóty jako kóty skici, y nahoru, otočené
+      vyboulení), plochý = vytažení, rotační = rotace, tři pohledy = skupina „průnik“ tří skic; ověřit jádrem Modeláře v node
+      (stejný objem jako `postavTeleso`).
+- [ ] **P2. Projekty:** víc výkresů v IndexedDB (název, náhled, datum), uložit/otevřít soubor `.nacrt3d.json`, název v hlavičce
+      listu i v názvu exportu.
+- [x] **P3. Přesné kreslení:** během tahu úsečky zadat délku/úhel z klávesnice, nástroje obdélník / kružnice / oblouk
+      s rozměrem, vlastní krok mřížky (1 / 2,5 / 5 / 10 mm).
+      *Hotovo 11. 11. (přání „víc nástrojů pro kreslení“):* `nastroje.js` (bez DOM) – `tvarZBodu`, `ciselneZadani`
+      (úsečka „40“ / „40<30“, obdélník „40x20“, kružnice/díra průměr – zadané číslo = kóta s `umistit`),
+      `vybouleniTriBody`. Pero (obrys/skrytá/osa, klávesy 1–3) je oddělené od nástroje (`nast.pero`; staré
+      `nastroj: 'obrys'` se převede na `ruka`). Nástroje ✍️ ruka Q, ╱ úsečka L (klikáním lomená, Enter/dvojklik konec, klik
+      na první bod uzavře, Backspace, Esc), ▭ obdélník O, ◯ kružnice C, ⊕ díra s osami D, ◠ oblouk 3 body A; tažení
+      i klik-klik, přichycení k bodům a na krok (👁 Zobrazit → Krok), živý rozměr u kurzoru.
+- [x] **P4. Úpravy výběru:** výběr obdélníkem a Shiftem, posun, kopie, zrcadlení podle osy, pole (vzor děr), zaoblení
+      a zkosení rohu (R/C kóta), ořez a prodloužení čáry k jiné.
+      *Hotovo 11. 11. kromě ořezu/prodloužení a R/C kóty:* `model.vybrane` je pole id; výběr klepnutím, Shiftem a rámem,
+      posun tažením s přichycením taženého bodu, šipky 1 / 5 mm, Ctrl+D kopie, Ctrl+A, ⇋ ⇵ zrcadlení na místě, 🪞 kopie
+      podle vybrané osy, ▦ pole (Dialog.zeptej „nx ny dx dy“); ◜ Roh: zaoblení R / zkosení X (`N3D.upravRoh`, i roh ze
+      dvou čar se společným koncem – zkrátí je a přidá oblouk), políčko až po puštění myši (fokus).
+      Výklad: kotva pro každou skupinu obrysů spojenou kótami (díl roste doprava nahoru, ne na obě strany);
+      kóta přesně sedící s kresbou (±2 %) = měřítko 1 : 1 v té ose.
+- [x] **P4b. Vodicí linky, chytré přichytávání, měření, odsazení, ořez** (přání 11. 11. „vodicí lišty, snapování a další
+      užitečné nástroje“): `geom.js` (primitiva úsečka/oblouk/kružnice/přímka s parametrem t, průsečíky, nejbližší bod),
+      `prichyt.js` (`pripravPrichyt` – konce, středy úseček a oblouků, středy a kvadranty kružnic, průsečíky O(n²) do 700
+      primitiv; `chytBod` – pořadí body → vodicí linka → zarovnání s body (stopy) → na čáře → úhel po 15° → mřížka,
+      volby po druzích, Alt vypne), mezipaměť podle `model.verze` (během tažení se nepřepočítává). Vodicí linky
+      `vykres.voditka [{id, a, u}]` (nepočítají se do 3D, jsou ve zpět/vpřed, maže je guma), nástroj ┼ (G): klepnutí =
+      vodorovná + svislá, tažení = směr po 15°. 📐 měření (U). `nastroje.js`: `odsad` (ekvidistanta s ostrými rohy mezi
+      úsečkami, oblouky se stejným středem), `orizni` (úsečka / oblouk / kružnice / uzavřená čára mezi průsečíky, i
+      s vodicími linkami), `prodluz` (Shift u ořezu). Nabídka 🧲 Přichytávání (volby, krok, vodicí linky). rovnoběžně, kolmo, stejná délka, symetrie podle osy, tečna, soustředně;
+      ikony vazeb u hran, referenční (neřídící) kóty, úhlová kóta.
+- [ ] **P6. Čistý výkres:** PDF/SVG/DXF z vyřešené geometrie (pohledy, kóty, razítko, izometrie z 3D).
+- [ ] **P7. Slepé díry a kapsy ze skrytých čar** (hloubka z druhého pohledu), závit M (symbol), sražení hran.
+
 - [ ] **5. Fotka → narovnaný list:** soubor nebo fotoaparát, značky, homografie, vyrovnání osvětlení, odfiltrování
       mřížky, oddělení černé a červené. Test na syntetických „fotkách“ (vykreslený list + perspektiva, stín, šum,
       JPEG). Pak 3–5 skutečných fotek od uživatele.

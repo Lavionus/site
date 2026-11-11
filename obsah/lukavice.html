@@ -130,7 +130,7 @@ canvas.svet3d { display: block; width: 100%; height: 100%; outline: none; }
   <div id="pomoc" class="panel" hidden>
     <h3>Ovládání</h3>
     <p><kbd>W A S D</kbd> / šipky – chůze, v autě plyn, brzda, zatáčení</p>
-    <p><kbd>Shift</kbd> – běh · <kbd>Mezerník</kbd> – skok, v autě ruční brzda</p>
+    <p><kbd>Shift</kbd> – běh · <kbd>Mezerník</kbd> – skok, v autě brzda / ruční brzda (smyk v zatáčce)</p>
     <p><kbd>E</kbd> – nastoupit / vystoupit (u auta) · <kbd>H</kbd> – houkačka</p>
     <p><kbd>C</kbd> – přepnout kameru · tažení myší – rozhlížení · kolečko – vzdálenost</p>
     <p><kbd>M</kbd> – mapa, kliknutím se přesuneš</p>
@@ -162,8 +162,8 @@ canvas.svet3d { display: block; width: 100%; height: 100%; outline: none; }
 
 <script type="module">
 import * as THREE from 'three';
-import { vytvorSvet, novyChodec, krokChodce, noveAuto, krokAuta, AUTO } from './lukavice/jadro.js';
-import { postavScenu, aktualizujDohled, nactiModely } from './lukavice/scena.js';
+import { vytvorSvet, novyChodec, krokChodce, noveAuto, krokAuta } from './lukavice/jadro.js';
+import { postavScenu, aktualizujDohled, nactiModely, prostredi } from './lukavice/scena.js';
 
 const $ = id => document.getElementById(id);
 const parametry = new URLSearchParams(location.search);
@@ -182,10 +182,11 @@ async function nactiObrazek(src) {
 let svet, scena, slunce, smerSlunce, podkladImg;
 try {
   const TEXTURY = ['asfalt', 'sterk', 'zamkova', 'dlazba', 'trava', 'tasky', 'fasady'];
-  const [data, vysky, plotyK, podklad, maskaImg, korytoImg, ...texImg] = await Promise.all([
+  const [data, vysky, plotyK, stromyBin, podklad, maskaImg, korytoImg, ...texImg] = await Promise.all([
     fetch('lukavice/data.json').then(r => r.json()),
     fetch('lukavice/vyska.bin').then(r => r.arrayBuffer()),
     fetch('lukavice/ploty.json').then(r => r.json()).catch(() => null),
+    fetch('lukavice/stromy.bin').then(r => (r.ok ? r.arrayBuffer() : null)).catch(() => null),
     nactiObrazek('lukavice/podklad.webp'),
     nactiObrazek('lukavice/stromy.png'),
     nactiObrazek('lukavice/koryto.png'),
@@ -216,7 +217,7 @@ try {
     kg.drawImage(img, 0, 0);
     return kg.getImageData(0, 0, k.width, k.height).data;
   };
-  svet = vytvorSvet(data, new Uint16Array(vysky), maska, pixely(korytoImg), plotyK);
+  svet = vytvorSvet(data, new Uint16Array(vysky), maska, pixely(korytoImg), plotyK, stromyBin);
   podkladImg = podklad;
   const podkladTex = new THREE.Texture(podklad); podkladTex.needsUpdate = true;
   ({ scena, slunce, smerSlunce } = postavScenu(svet, podkladTex, tex));
@@ -232,6 +233,13 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'hi
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;       // filmové tónování: lak a sklo s odlesky okolí
+renderer.toneMappingExposure = 1.15;
+{
+  const pm = new THREE.PMREMGenerator(renderer);
+  scena.environment = pm.fromScene(prostredi(), 0.02).texture;
+  pm.dispose();
+}
 renderer.domElement.tabIndex = 0;
 renderer.domElement.className = 'svet3d';
 plocha.prepend(renderer.domElement);
@@ -273,11 +281,13 @@ function nastoupit() {
 function vystoupit() {
   if (Math.abs(auto.rychlost) > 3) { ukazTip('Nejdřív zastav 🛑'); return; }
   const lx = Math.cos(auto.smer), lz = -Math.sin(auto.smer);
-  for (const [a, b] of [[2, 0], [-2, 0], [0, -3.4], [0, 3.4], [3, 2], [-3, -2]]) {
-    const x = auto.x + lx * a + Math.sin(auto.smer) * b, z = auto.z + lz * a + Math.cos(auto.smer) * b;
-    if (svet.volneMisto(x, z, 0.4)) { chodec.x = x; chodec.z = z; break; }
-  }
-  chodec.y = svet.vyska(chodec.x, chodec.z);
+  const mista = [[2, 0], [-2, 0], [0, -3.4], [0, 3.4], [3, 2], [-3, -2]].map(([a, b]) =>
+    [auto.x + lx * a + Math.sin(auto.smer) * b, auto.z + lz * a + Math.cos(auto.smer) * b]);
+  // první volné místo u auta; když žádné není, vedle dveří a vytlačit z překážek (ne zpět tam, kde postava kdysi stála)
+  const volne = mista.find(([x, z]) => svet.volneMisto(x, z, 0.4));
+  const k = volne ? { x: volne[0], z: volne[1] } : svet.kolize(mista[0][0], mista[0][1], 0.4);
+  chodec.x = k.x; chodec.z = k.z;
+  chodec.y = svet.vyska(chodec.x, chodec.z) + svet.nadZemi(chodec.x, chodec.z);
   chodec.smer = auto.smer; chodec.rychlost = 0;
   stav.rezim = 'pesky';
   stav.kamera = nast.kameraPesky;
@@ -311,6 +321,8 @@ const paka = { id: null, x0: 0, y0: 0, dx: 0, dy: 0 };
 let dotykSkok = false;
 addEventListener('keydown', e => {
   if (e.target.closest?.('input, textarea')) return;
+  // fokus na tlačítku lišty: mezerník (brzda) ani Enter (nastoupit) ho nesmí znovu „zmáčknout“
+  if (e.target.closest?.('button') && ['Space', 'Enter', 'NumpadEnter'].includes(e.code)) { e.target.blur(); e.preventDefault(); }
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
   if (e.repeat) return;
   klavesy.add(e.code);
@@ -319,7 +331,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyM') prepniMapu();
   if (e.code === 'Escape') { $('mapa').hidden = true; $('pomoc').hidden = true; zavriNabidky(); }
 });
-addEventListener('keyup', e => klavesy.delete(e.code));
+addEventListener('keyup', e => { klavesy.delete(e.code); if (e.code === 'Space') e.preventDefault(); });
 addEventListener('blur', () => klavesy.clear());
 function prectiVstup() {
   const k = c => klavesy.has(c);
@@ -428,6 +440,7 @@ function obnovTlacitka() {
   const vAute = stav.rezim === 'auto';
   $('tlAuto').innerHTML = vAute ? '🚶<span class="txt"> Vystoupit</span>' : '🚗<span class="txt"> Nastoupit</span>';
   $('dAuto').textContent = vAute ? '🚶' : '🚗';
+  $('dSkok').textContent = vAute ? '🛑' : '⤒';
 }
 
 let tipCas = 0;
@@ -553,6 +566,20 @@ const paprsek = new THREE.Raycaster(), budovyObj = scena.getObjectByName('budovy
 let posledni = performance.now(), dohledCas = 0, hudCas = 0;
 const bezSmycky = parametry.has('zastav');     // testy: žádná smyčka, snímky přes LUKAVICE.krok(n)
 
+// brzdová a couvací světla: materiály Brzdova / Couvaci z auto.glb (u starších modelů zesílí Koncova)
+const svetlaAuta = { brzdova: [], koncova: [], couvaci: [] };
+autoObj.traverse(o => {
+  for (const m of [].concat(o.material || [])) {
+    const k = { Brzdova: 'brzdova', Koncova: 'koncova', Couvaci: 'couvaci' }[m.name];
+    if (k && m.emissive) { svetlaAuta[k].push(m); m.userData.zaklad = m.emissiveIntensity; }
+  }
+});
+function svetlaBrzd(brzdi, couva) {
+  for (const m of svetlaAuta.brzdova) { m.emissive.set(0xff1a10); m.emissiveIntensity = brzdi ? 6 : 0; }
+  if (!svetlaAuta.brzdova.length) for (const m of svetlaAuta.koncova) m.emissiveIntensity = brzdi ? 6 : m.userData.zaklad;
+  for (const m of svetlaAuta.couvaci) { m.emissive.set(0xfff6e8); m.emissiveIntensity = couva ? 4 : 0; }
+}
+
 function aktualizujObjekty(dt = 0) {
   autoObj.position.set(auto.x, auto.y, auto.z);
   autoObj.rotation.set(-auto.klopeni, auto.smer, auto.naklon);
@@ -613,6 +640,8 @@ function vytlacZAuta() {          // chodec neprojde zaparkovaným autem
     const cx = auto.x + fx * o, cz = auto.z + fz * o, dx = chodec.x - cx, dz = chodec.z - cz, d = Math.hypot(dx, dz), r = 1.3;
     if (d < r) { chodec.x = cx + dx / (d || 1) * r; chodec.z = cz + dz / (d || 1) * r; }
   }
+  const k = svet.kolize(chodec.x, chodec.z, 0.35);       // odstrčení od auta nesmí skončit ve zdi
+  chodec.x = k.x; chodec.z = k.z;
 }
 
 function nejblizsiMisto(x, z) {
@@ -642,10 +671,11 @@ function snimek(ted, kreslit = true) {
   } else {
     const n = Math.abs(auto.rychlost) > 15 ? 2 : 1;
     for (let i = 0; i < n; i++) krokAuta(auto, { plyn: vstup.dopredu, zatoc: -vstup.bokem, brzda: vstup.skok }, dt / n, svet);
+    svetlaBrzd(vstup.skok || (vstup.dopredu < 0 && auto.rychlost > 0.5) || (vstup.dopredu > 0 && auto.rychlost < -0.5),
+      auto.rychlost < -0.2);
     if (auto.naraz > 6) ukazTip(`💥 Bum! (${Math.round(auto.naraz * 3.6)} km/h)`);
   }
-  // auto bez řidiče dojede
-  if (stav.rezim === 'pesky' && auto.rychlost !== 0) krokAuta(auto, { plyn: 0, zatoc: 0, brzda: true }, dt, svet);
+  if (stav.rezim === 'pesky') svetlaBrzd(false, false);      // zaparkované auto (vystoupit jde jen po zastavení)
   aktualizujObjekty(dt);
   aktualizujKameru(dt);
 

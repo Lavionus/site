@@ -2527,6 +2527,12 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/nacrt3d.html",
+        "nazev": "✏️ Z náčrtu do 3D",
+        "stav": "vyvoj",
+        "tagy": ["náčrt", "skica", "kresba", "výkres", "kóty", "3d", "3d tisk", "technický výkres", "nárys", "půdorys", "bokorys", "rotační díl", "mřížka", "šablona", "pero", "tablet", "stl"]
+      },
+      {
         "soubor": "obsah/text3d.html",
         "nazev": "🔠 3D text z písma",
         "stav": "beta",
@@ -2748,6 +2754,12 @@ const KATALOG_SEKCE = [
         "nazev": "🧥 Věšáky se skrytými šrouby",
         "stav": "beta",
         "tagy": ["3D tisk", "STL", "3MF", "věšák", "háček", "háčky", "věšák na bundy", "kabát", "ručník", "nástěnný věšák", "skryté šrouby", "rybina", "úchyt na zeď", "náhodný tvar", "generátor"]
+      },
+      {
+        "soubor": "obsah/cleat.html",
+        "nazev": "🪝 Háčky a úchyty na French cleat",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "French cleat", "francouzská lišta", "nástěnná lišta", "úkos 45°", "hák", "háček", "heavy duty", "dvojitý hák", "kolík", "sedlo na hadici", "kolébka", "klip na tyč", "držák koštěte", "V-drážka", "držák hadru", "police", "stojánek", "šroubováky", "bity", "sada vrtáků", "kleště", "hřeben na kabely", "kapsa", "kelímky", "zásobník", "montážní deska", "suchý zip", "dílna", "nářadí", "rybina", "generátor"]
       },
       {
         "soubor": "obsah/knob.html",

@@ -9,6 +9,7 @@
   const J = window.WB_JADRO, SABLONY = window.WB_SABLONY;
   const $ = id => document.getElementById(id);
   const platno = $('platno'), ctx = platno.getContext('2d'), plocha = $('plocha');
+  const vrstvaKurzoru = $('vrstvaKurzoru'), kctx = vrstvaKurzoru.getContext('2d');      // stopa pera bez překreslení tabule
 
   const merCtx = document.createElement('canvas').getContext('2d');
   J.nastavMereni((t, vel, pis) => { merCtx.font = `${vel}px ${J.PISMA[pis] || J.PISMA.sans}`; return merCtx.measureText(t).width; });
@@ -23,9 +24,12 @@
     vyber: 'Výběr', ruka: 'Posun plochy', pero: 'Pero', zvyr: 'Zvýrazňovač', guma: 'Guma', cara: 'Čára', sipka: 'Šipka',
     obdelnik: 'Obdélník', elipsa: 'Elipsa', kosoctverec: 'Kosočtverec', zaobleny: 'Zaoblený obdélník', trojuhelnik: 'Trojúhelník',
     sestiuhelnik: 'Šestiúhelník', hvezda: 'Hvězda', text: 'Text', listek: 'Lístek', vypln: 'Kbelík', laser: 'Laser', ram: 'Rám',
-    pipeta: 'Pipeta', lomena: 'Lomená čára', krivka: 'Křivka'
+    pipeta: 'Pipeta', lomena: 'Lomená čára', krivka: 'Křivka', pruhl: 'Barva → průhledná'
   };
-  const KURZORY = { vyber: 'vyber', ruka: 'ruka', text: 'text', vypln: 'vypln', guma: 'guma' };
+  const KURZORY = { vyber: 'vyber', ruka: 'ruka', text: 'text', vypln: 'vypln', guma: 'guma', pero: 'stopa', zvyr: 'stopa' };
+  // nástroje, u kterých se kolem kurzoru kreslí stopa budoucí čáry (pero/zvýrazňovač místo kurzoru, čáry ke křížku)
+  const NEKRESLI = new Set(['vyber', 'ruka', 'pipeta', 'laser', 'guma', 'pruhl']);     // nástroje, které nic nepřidávají
+  const STOPA = new Set(['pero', 'zvyr', 'cara', 'sipka', 'lomena', 'krivka']);
   const KLAVESY = { v: 'vyber', p: 'pero', h: 'zvyr', x: 'guma', l: 'cara', a: 'sipka', r: 'obdelnik', e: 'elipsa', d: 'kosoctverec', t: 'text', n: 'listek', f: 'vypln', k: 'laser', m: 'ram', i: 'pipeta', o: 'lomena', u: 'krivka' };
   const KLIC_NASTAVENI = 'webapp_whiteboard_nastaveni';
   const STARY_KLIC = 'whiteboard_drawings';
@@ -37,26 +41,27 @@
   let vyber = new Set();            // id vybraných objektů
   let nastroj = 'pero';
   const styl = { barva: '#e0e0e0', sirka: 3, alfa: 1, vypln: false, styl: 'plna', sipkaZ: false, sipkaK: true, pismo: 'sans', velikost: 24, trasa: 'prima',
-    stetec: 'fix', vyhlazeni: 3, rozpoznat: false, symetrie: 'ne', mezery: 2 };
+    stetec: 'fix', vyhlazeni: 3, rozpoznat: false, symetrie: 'ne', mezery: 2, tolPruhl: 15, souvisle: false };
   // které skupiny pruhu vlastností patří k nástroji / k typu vybraného objektu
   const TVAR_PRUH = ['sirka', 'alfa', 'vypln', 'styl', 'pismo'];
   const PRUH_NASTROJE = {
     pero: ['sirka', 'alfa', 'kresba'], zvyr: ['sirka', 'alfa', 'kresba'], guma: ['sirka'],
     cara: ['sirka', 'alfa', 'styl', 'sipky', 'pismo'], sipka: ['sirka', 'alfa', 'styl', 'sipky', 'pismo'],
     lomena: ['sirka', 'alfa', 'vypln', 'styl'], krivka: ['sirka', 'alfa', 'vypln', 'styl'],
-    text: ['alfa', 'pismo'], listek: ['pismo'], vypln: ['alfa', 'kbelik']
+    text: ['alfa', 'pismo'], listek: ['pismo'], vypln: ['alfa', 'kbelik'], pruhl: ['pruhl']
   };
   const PRUH_TYPU = {
     tah: ['sirka', 'alfa', 'kresba'], cara: ['sirka', 'alfa', 'styl', 'sipky', 'pismo'], tvar: TVAR_PRUH,
-    krivka: ['sirka', 'alfa', 'vypln', 'styl'], text: ['alfa', 'pismo'], listek: ['alfa', 'pismo'], obr: ['alfa'], oblast: ['alfa']
+    krivka: ['sirka', 'alfa', 'vypln', 'styl'], text: ['alfa', 'pismo'], listek: ['alfa', 'pismo'], obr: ['alfa', 'obrazek'], oblast: ['alfa']
   };
   let pruhledne = false;
   let minimapa = innerWidth > 700;
+  let panelVrstev = false;
   let zpet = [], vpred = [], stavJSON = '[]';
   let akce = null;                  // probíhající tah myší
   let editor = null;                // {o, el}
   let laser = [];
-  const mys = { x: 0, y: 0, uvnitr: false };
+  const mys = { x: 0, y: 0, uvnitr: false, typ: 'mouse' };
   let mezernik = false;
   let vlozeni = 0;                  // posun opakovaně vložených objektů
   let akcent = '#6aa6fd';
@@ -76,7 +81,19 @@
   const info = t => window.Dialog ? Dialog.info(t) : console.log(t);
   const chyba = t => window.Dialog ? Dialog.chyba(t) : console.error(t);
   const tmaveTema = () => J.jas(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()) < 0.5;
-  const zamceny = o => !!o.zamek;
+  // vrstvy: mapa id → vrstva; objekt ve skryté nebo zamčené vrstvě se nedá vybrat ani měnit
+  let mapaVrstev = new Map();
+  const vrstvaObjektu = o => mapaVrstev.get(o.vrstva);
+  const vrstvaNepristupna = o => { const v = mapaVrstev.get(o.vrstva); return !!(v && (v.zamcena || v.skryta)); };
+  const skryty = o => { const v = mapaVrstev.get(o.vrstva); return !!(v && v.skryta); };
+  let jenAktivni = true;            // vybírat, posouvat a mazat jen objekty aktivní vrstvy
+  const zamceny = o => {
+    if (o.zamek) return true;
+    const v = mapaVrstev.get(o.vrstva);
+    if (v && (v.zamcena || v.skryta)) return true;
+    return jenAktivni && !!tabule && mapaVrstev.size > 1 && o.vrstva !== tabule.aktivniVrstva;
+  };
+  const T = (s, p) => (window.I18N && I18N.t ? I18N.t(s, p) : s.replace(/\{(\w+)\}/g, (_, k) => p[k]));
   const barvaRamu = () => J.jas(tabule.pozadi) > 0.5 ? '#5f666e' : '#9e9e9e';
   const viditelnaOblast = () => ({ x: kam().x, y: kam().y, w: sirkaPlochy() / kam().z, h: vyskaPlochy() / kam().z });
 
@@ -87,11 +104,13 @@
       if (n.styl) Object.assign(styl, n.styl);
       pruhledne = !!n.pruhledne;
       if (typeof n.minimapa === 'boolean') minimapa = n.minimapa;
+      if (typeof n.panelVrstev === 'boolean') panelVrstev = n.panelVrstev;
+      if (typeof n.jenAktivni === 'boolean') jenAktivni = n.jenAktivni;
       return n;
     } catch (e) { return {}; }
   }
   function ulozNastaveni() {
-    try { localStorage.setItem(KLIC_NASTAVENI, JSON.stringify({ styl, pruhledne, minimapa, posledni: tabule && tabule.id })); } catch (e) { /* plné úložiště – nastavení není důležité */ }
+    try { localStorage.setItem(KLIC_NASTAVENI, JSON.stringify({ styl, pruhledne, minimapa, panelVrstev, jenAktivni, posledni: tabule && tabule.id })); } catch (e) { /* plné úložiště – nastavení není důležité */ }
   }
 
   // ---------- IndexedDB ----------
@@ -200,8 +219,9 @@
     tabule.kamera = tabule.kamera || { x: 0, y: 0, z: 1 };
     cacheObr.clear();
     vyber.clear(); zpet = []; vpred = [];
+    obnovVrstvy();
     J.prepoj(tabule.objekty);
-    stavJSON = JSON.stringify(tabule.objekty);
+    stavJSON = snimek();
     kontrastPera();
     ulozNastaveni();
     $('nazevTabule').textContent = tabule.nazev;
@@ -254,9 +274,11 @@
   }
 
   // ---------- historie ----------
+  const snimek = () => JSON.stringify({ o: tabule.objekty, v: tabule.vrstvy });
   function zapis() {
+    obnovVrstvy();
     J.prepoj(tabule.objekty);
-    const s = JSON.stringify(tabule.objekty);
+    const s = snimek();
     if (s === stavJSON) return;
     zpet.push(stavJSON);
     if (zpet.length > MAX_HISTORIE) zpet.shift();
@@ -265,7 +287,9 @@
     poZmene();
   }
   function obnovStav(s) {
-    tabule.objekty = JSON.parse(s);
+    const d = JSON.parse(s);
+    tabule.objekty = d.o; tabule.vrstvy = d.v;
+    obnovVrstvy();
     stavJSON = s;
     const ids = new Set(tabule.objekty.map(o => o.id));
     vyber = new Set([...vyber].filter(id => ids.has(id)));
@@ -293,6 +317,7 @@
     mm.platne = false;
     obnovStavRadek();
     obnovPruh();
+    vykresliPanelVrstev();
     prekresli();
   }
 
@@ -304,9 +329,50 @@
   }
 
   // ---------- obrázky ----------
+  // barva pod bodem p (souřadnice tabule) v obrázku o zprůhlední – podle tolerance, případně jen souvislá oblast
+  let pruhlBezi = false;            // další klik počká, jinak by oba počítaly z původního obrázku
+  async function barvaDoPruhledne(o, p) {
+    if (pruhlBezi) return;
+    pruhlBezi = true;
+    try { await barvaDoPruhledneTed(o, p); } finally { pruhlBezi = false; }
+  }
+  async function barvaDoPruhledneTed(o, p) {
+    const t0 = tabule, obr0 = o.obr, src = tabule.obrazky[o.obr];
+    if (!src) return;
+    let img;
+    try { img = await nactiObrazek(src); } catch (e) { return chyba('Obrázek nejde načíst.'); }
+    const W = img.naturalWidth, H = img.naturalHeight;
+    if (!W || !H) return;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(img, 0, 0);
+    let u = (p.x - o.x) / o.w, v = (p.y - o.y) / o.h;
+    if (o.zrcX) u = 1 - u;
+    if (o.zrcY) v = 1 - v;
+    const sx = Math.max(0, Math.min(W - 1, Math.floor(u * W))), sy = Math.max(0, Math.min(H - 1, Math.floor(v * H)));
+    const obr = x.getImageData(0, 0, W, H), d = obr.data, i = 4 * (sy * W + sx);
+    if (!d[i + 3]) return info('Tady je obrázek už průhledný.');
+    const barva = [d[i], d[i + 1], d[i + 2]], hex = '#' + barva.map(k => k.toString(16).padStart(2, '0')).join('');
+    const n = J.barvaDoPruhledne(d, W, H, barva, styl.tolPruhl * 2.2, { souvisle: styl.souvisle, sx, sy });
+    if (!n) return info('Nic se nezměnilo.');
+    x.putImageData(obr, 0, 0);
+    const novy = c.toDataURL('image/png');
+    if (tabule !== t0) return;
+    const cil = tabule.objekty.find(q => q.id === o.id);
+    if (!cil || cil.obr !== obr0) return;           // mezitím Zpět nebo smazání
+    const id = J.otisk(novy);
+    tabule.obrazky[id] = novy;      // původní zůstává kvůli Zpět (neužívané se pročistí při dalším otevření)
+    cil.obr = id;
+    mm.platne = false;
+    zapis();
+    info(`Barva ${hex} → průhledná (${Math.max(1, Math.round(n / (W * H) * 100))} % obrázku).`);
+  }
+
   const cacheObr = new Map();
   const env = {
     pozadi: null, bezRamu: false,
+    vrstva: o => mapaVrstev.get(o.vrstva),
     obrazek(id) {
       let i = cacheObr.get(id);
       if (!i) {
@@ -335,6 +401,7 @@
   const presneMisto = () => !!bodPrikazu || mys.uvnitr;
 
   async function vlozObrazek(blob, posun = 0) {
+    if (!aktivniPristupna()) return;
     const t0 = tabule;
     let src;
     try { src = await ctiSoubor(blob); } catch (e) { return chyba('Soubor nejde přečíst.'); }
@@ -364,7 +431,7 @@
 
   // vložení dat ze schránky / přetažení
   function vlozText(text) {
-    if (!text) return;
+    if (!text || !aktivniPristupna()) return;
     try {
       const d = JSON.parse(text);
       if (d && d.whiteboard === 1 && Array.isArray(d.objekty)) return vlozObjekty(d);
@@ -381,8 +448,10 @@
   }
 
   function vlozObjekty(d, naMisto = true) {
+    if (!aktivniPristupna()) return [];
     const objekty = J.klonuj(d.objekty.filter(o => J.platnyObjekt(o)));
     if (!objekty.length) return [];
+    objekty.forEach(o => { delete o.vrstva; });       // vložené objekty patří do aktivní vrstvy
     prevezmiObrazky(objekty, d.obrazky, tabule.obrazky);
     if (naMisto) {
       const h = J.hraniceVsech(objekty), m = mistoVlozeni();
@@ -410,6 +479,7 @@
   }
 
   function vlozSablonu(id) {
+    if (!aktivniPristupna()) return;
     const objekty = SABLONY.vytvor(id, { tmave: J.jas(tabule.pozadi) < 0.5 });
     if (!objekty.length) return;
     const h = J.hraniceVsech(objekty), v = viditelnaOblast();
@@ -460,7 +530,7 @@
     const sk = new Set();
     for (const o of tabule.objekty) if (vyber.has(o.id) && o.skupina) sk.add(o.skupina);
     if (!sk.size) return;
-    for (const o of tabule.objekty) if (o.skupina && sk.has(o.skupina)) vyber.add(o.id);
+    for (const o of tabule.objekty) if (o.skupina && sk.has(o.skupina) && !zamceny(o)) vyber.add(o.id);      // ne části v jiné vrstvě
   }
   function smazVyber() {
     if (!vyber.size) return;
@@ -510,7 +580,7 @@
     info('Zamčeno – odemknete pravým tlačítkem nebo v nabídce Uspořádat.');
   }
   function odemknout(o) {
-    const cil = o ? [o] : tabule.objekty.filter(zamceny);
+    const cil = o ? [o] : tabule.objekty.filter(x => x.zamek && !skryty(x));
     if (!cil.length) return info('Nic není zamčené.');
     cil.forEach(x => { delete x.zamek; });
     vyber = new Set(cil.map(x => x.id));
@@ -578,6 +648,9 @@
   $('pismo').addEventListener('change', e => nastavStyl('pismo', e.target.value));
   $('velikostPisma').addEventListener('change', e => nastavStyl('velikost', +e.target.value));
   $('stetec').addEventListener('change', e => nastavStyl('stetec', e.target.value));
+  $('tolPruhl').addEventListener('input', e => { styl.tolPruhl = +e.target.value; $('tolPruhlHodn').textContent = styl.tolPruhl; ulozNastaveni(); });
+  $('tlSouvisle').addEventListener('click', () => { styl.souvisle = !styl.souvisle; $('tlSouvisle').setAttribute('aria-pressed', styl.souvisle); ulozNastaveni(); });
+  $('tlPruhl').addEventListener('click', () => zvolNastroj('pruhl'));
   $('vyhlazeni').addEventListener('input', e => { styl.vyhlazeni = +e.target.value; ulozNastaveni(); });
   $('tlRozpoznat').addEventListener('click', () => { styl.rozpoznat = !styl.rozpoznat; ulozNastaveni(); obnovPruh(); });
   $('symetrie').addEventListener('change', e => { styl.symetrie = e.target.value; nastavSymStred(); ulozNastaveni(); prekresli(); });
@@ -633,6 +706,8 @@
     $('symetrie').value = styl.symetrie;
     $('tlSymStred').hidden = styl.symetrie === 'ne';
     $('mezery').value = styl.mezery;
+    $('tolPruhl').value = styl.tolPruhl; $('tolPruhlHodn').textContent = styl.tolPruhl;
+    $('tlSouvisle').setAttribute('aria-pressed', !!styl.souvisle);
     obnovSkupinyPruhu();
   }
 
@@ -664,7 +739,7 @@
   function prizpusobPlatno() {
     const dpr = window.devicePixelRatio || 1;
     const w = Math.max(1, Math.round(platno.clientWidth * dpr)), h = Math.max(1, Math.round(platno.clientHeight * dpr));
-    if (platno.width !== w || platno.height !== h) { platno.width = w; platno.height = h; }
+    if (platno.width !== w || platno.height !== h) { platno.width = w; platno.height = h; vrstvaKurzoru.width = w; vrstvaKurzoru.height = h; }
     if (!tabule) return;
     if (prezentace) ukazSnimek(prezentace.i);
     vykresli();
@@ -748,9 +823,10 @@
     if (!tabule) return;
     const dpr = window.devicePixelRatio || 1, k = kam();
     J.prepoj(tabule.objekty);
-    env.pozadi = tabule.pozadi; env.bezRamu = !!prezentace;
+    const sach = tabule.pruhledna && !prezentace;      // průhledná tabule: šachovnice jako v grafických editorech
+    env.pozadi = sach ? null : tabule.pozadi; env.bezRamu = !!prezentace;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = tabule.pozadi;
+    ctx.fillStyle = sach ? vzorSachovnice(dpr) : tabule.pozadi;
     ctx.fillRect(0, 0, platno.width, platno.height);
     ctx.setTransform(dpr * k.z, 0, 0, dpr * k.z, -k.x * k.z * dpr, -k.y * k.z * dpr);
     const vid = viditelnaOblast();
@@ -807,6 +883,7 @@
       ctx.strokeStyle = akcent; ctx.lineWidth = 1.5 / k.z;
       ctx.beginPath(); ctx.arc(p.x, p.y, polomerGumy() / k.z, 0, Math.PI * 2); ctx.stroke();
     }
+    kresliStopu();
     kresliMinimapu();
   }
 
@@ -826,7 +903,84 @@
     ctx.beginPath(); ctx.arc(c.x, c.y, 4 / k.z, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
+  // barva bodu tabule složená jen z objektů (průhledná tabule – šachovnice se nepočítá); [r, g, b, a]
+  function bodBezPozadi(p) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 1;
+    const x = c.getContext('2d', { willReadFrequently: true }), z = kam().z * (window.devicePixelRatio || 1);
+    x.setTransform(z, 0, 0, z, -p.x * z, -p.y * z);
+    const e = Object.assign({}, env, { pozadi: null, bezRamu: false });
+    const ob = { x: p.x - 1, y: p.y - 1, w: 2, h: 2 };
+    for (const o of tabule.objekty) if (o.typ === 'ram' && J.prekryva(J.hranice(o), ob)) J.kresli(x, o, e);
+    for (const o of tabule.objekty) if (o.typ !== 'ram' && J.prekryva(J.hranice(o), ob)) J.kresli(x, o, e);
+    const d = x.getImageData(0, 0, 1, 1).data;
+    return [d[0], d[1], d[2], d[3]];
+  }
+  // šachovnice v pixelech obrazovky; světlá/tmavá podle zvoleného tónu tabule (ten řídí i kontrast pera)
+  let sachovnice = null;
+  function vzorSachovnice(dpr) {
+    const svetla = J.jas(tabule.pozadi) > 0.5, klic = svetla + ':' + dpr;
+    if (!sachovnice || sachovnice.klic !== klic) {
+      const b = Math.max(1, Math.round(8 * dpr)), c = document.createElement('canvas');
+      c.width = c.height = 2 * b;
+      const x = c.getContext('2d');
+      x.fillStyle = svetla ? '#ffffff' : '#2a2a2a'; x.fillRect(0, 0, 2 * b, 2 * b);
+      x.fillStyle = svetla ? '#e2e2e2' : '#383838'; x.fillRect(0, 0, b, b); x.fillRect(b, b, b, b);
+      sachovnice = { klic, vzor: ctx.createPattern(c, 'repeat') };
+    }
+    return sachovnice.vzor;
+  }
   const polomerGumy = () => Math.max(6, styl.sirka * 1.5);
+
+  // kurzor ve velikosti budoucí stopy: kruh (pero, štětec, zvýrazňovač, čáry), hrot (kaligrafie), oblak (sprej)
+  // kreslí se do vlastní průhledné vrstvy nad tabulí – pohyb myši nepřekresluje tabuli
+  let stopaViditelna = false;
+  function kresliStopu() {
+    const ctx = kctx;
+    const ukazat = tabule && STOPA.has(nastroj) && mys.uvnitr && mys.typ !== 'touch' && !mezernik && !prezentace &&
+      !(akce && (akce.typ === 'posun' || akce.typ === 'pinch'));
+    if (stopaViditelna) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, vrstvaKurzoru.width, vrstvaKurzoru.height); stopaViditelna = false; }
+    if (!ukazat) return;
+    const k = kam(), dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr * k.z, 0, 0, dpr * k.z, -k.x * k.z * dpr, -k.y * k.z * dpr);
+    const p = naSvet(mys.x, mys.y), px = 1 / k.z;
+    const kresba = nastroj === 'pero' || nastroj === 'zvyr';
+    const stetec = nastroj === 'pero' ? styl.stetec : 'fix';
+    let r = styl.sirka / 2;
+    if (nastroj === 'zvyr') r = Math.max(8, styl.sirka * 3) / 2;
+    else if (stetec === 'stetec') r = styl.sirka * 0.75;
+    else if (stetec === 'sprej') r = styl.sirka * 2;
+    if (!kresba && r * k.z < 3) return;              // čárám stačí křížek systémového kurzoru
+    stopaViditelna = true;
+    const alfa = (styl.alfa == null ? 1 : styl.alfa) * (nastroj === 'zvyr' ? 0.35 : 0.55);
+    // dvojitý obrys (tmavý + světlý) je vidět na každém pozadí
+    const obtahni = cesta => {
+      ctx.lineWidth = 2.5 * px; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; cesta(); ctx.stroke();
+      ctx.lineWidth = 1 * px; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; cesta(); ctx.stroke();
+    };
+    ctx.save();
+    ctx.lineCap = ctx.lineJoin = 'round'; ctx.setLineDash([]);
+    if (stetec === 'kaligrafie') {
+      const v = styl.sirka / 2 * Math.SQRT1_2, hrot = () => { ctx.beginPath(); ctx.moveTo(p.x + v, p.y - v); ctx.lineTo(p.x - v, p.y + v); };
+      obtahni(hrot);
+      ctx.strokeStyle = styl.barva; ctx.lineWidth = 1 * px; hrot(); ctx.stroke();
+    } else {
+      const rk = Math.max(r, 2 * px), kruh = () => { ctx.beginPath(); ctx.arc(p.x, p.y, rk, 0, Math.PI * 2); };
+      if (stetec !== 'sprej') { ctx.globalAlpha = alfa; ctx.fillStyle = styl.barva; kruh(); ctx.fill(); ctx.globalAlpha = 1; }
+      else ctx.setLineDash([3 * px, 3 * px]);
+      obtahni(kruh);
+      ctx.setLineDash([]);
+    }
+    if (kresba && r * k.z < 4) {                      // malý hrot: ramínka, ať se kurzor neztratí
+      const a = Math.max(r, 2 * px) + 3 * px, b = a + 5 * px, ramena = () => {
+        ctx.beginPath();
+        ctx.moveTo(p.x - a, p.y); ctx.lineTo(p.x - b, p.y); ctx.moveTo(p.x + a, p.y); ctx.lineTo(p.x + b, p.y);
+        ctx.moveTo(p.x, p.y - a); ctx.lineTo(p.x, p.y - b); ctx.moveTo(p.x, p.y + a); ctx.lineTo(p.x, p.y + b);
+      };
+      obtahni(ramena);
+    }
+    ctx.restore();
+  }
 
   const obdelnik = (a, b) => ({ x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) });
 
@@ -895,7 +1049,7 @@
     const t = 4 / kam().z;
     for (let i = tabule.objekty.length - 1; i >= 0; i--) {
       const o = tabule.objekty[i];
-      if (o === krome || !J.lzePripojit(o) || o.typ === 'ram') continue;
+      if (o === krome || !J.lzePripojit(o) || o.typ === 'ram' || skryty(o)) continue;
       const h = J.hraniceHole(o);
       if (p.x >= h.x - t && p.x <= h.x + h.w + t && p.y >= h.y - t && p.y <= h.y + h.h + t) return o;
     }
@@ -945,6 +1099,7 @@
       plocha.dataset.kurzor = 'tahne';
       return;
     }
+    if (!NEKRESLI.has(nastroj) && !aktivniPristupna()) return;
     const zakl = { id: J.noveId(), barva: styl.barva, alfa: styl.alfa, sirka: styl.sirka };
     switch (nastroj) {
       case 'pero': case 'zvyr': {
@@ -966,10 +1121,18 @@
       case 'pipeta': {
         const dpr = window.devicePixelRatio || 1;
         const d = ctx.getImageData(Math.floor(s.x * dpr), Math.floor(s.y * dpr), 1, 1).data;
-        const hex = '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+        const bod = tabule.pruhledna ? bodBezPozadi(p) : d;
+        if (bod[3] < 128) { zvolNastroj(predPipetou === 'pipeta' ? 'pero' : predPipetou); return info('Tady je průhledné pozadí – žádná barva.'); }
+        const hex = '#' + [bod[0], bod[1], bod[2]].map(v => v.toString(16).padStart(2, '0')).join('');
         nastavStyl('barva', hex, false);
         zvolNastroj(predPipetou === 'pipeta' ? 'pero' : predPipetou);
         info('Barva ' + hex);
+        return;
+      }
+      case 'pruhl': {
+        const o = J.najdi(tabule.objekty, p.x, p.y, 0, x => x.typ !== 'obr' || zamceny(x));
+        if (!o) return info('Klikněte do obrázku – barva, na kterou kliknete, v něm zprůhlední.');
+        barvaDoPruhledne(o, p);
         return;
       }
       case 'cara': case 'sipka': {
@@ -1034,7 +1197,7 @@
         const o = J.najdi(tabule.objekty, p.x, p.y, tol, zamceny);
         if (o) {
           if (e.shiftKey) {
-            const cleni = o.skupina ? tabule.objekty.filter(x => x.skupina === o.skupina) : [o];
+            const cleni = o.skupina ? tabule.objekty.filter(x => x.skupina === o.skupina && !zamceny(x)) : [o];
             const pryc = vyber.has(o.id);
             cleni.forEach(x => pryc ? vyber.delete(x.id) : vyber.add(x.id));
             poZmene(false);
@@ -1191,7 +1354,7 @@
   platno.addEventListener('pointermove', e => {
     obdelnikPlatna = platno.getBoundingClientRect();
     const s = poziceObr(e);
-    mys.x = s.x; mys.y = s.y; mys.uvnitr = true;
+    mys.x = s.x; mys.y = s.y; mys.uvnitr = true; mys.typ = e.pointerType;
     if (ukazatele.has(e.pointerId)) ukazatele.set(e.pointerId, s);
     const p = naSvet(s.x, s.y), k = kam();
     $('stavPozice').textContent = `${Math.round(p.x)}, ${Math.round(p.y)}`;
@@ -1203,6 +1366,7 @@
           : (J.najdi(tabule.objekty, p.x, p.y, 5 / k.z, zamceny) ? 'presun' : 'vyber');
       }
       if (nastroj === 'guma') prekresli();
+      else if (STOPA.has(nastroj)) kresliStopu();
       return;
     }
     switch (akce.typ) {
@@ -1416,7 +1580,7 @@
   }
   platno.addEventListener('pointerup', konecUkazatele);
   platno.addEventListener('pointercancel', e => { ukazatele.delete(e.pointerId); zrusAkci(); });
-  platno.addEventListener('pointerleave', () => { mys.uvnitr = false; if (nastroj === 'guma') prekresli(); });
+  platno.addEventListener('pointerleave', () => { mys.uvnitr = false; kresliStopu(); if (nastroj === 'guma') prekresli(); });
 
   platno.addEventListener('dblclick', e => {
     if (akce && akce.typ === 'krivka') return dokonciKrivku(false);
@@ -1455,7 +1619,7 @@
     mys.x = s.x; mys.y = s.y; mys.uvnitr = true;
     kontextBod = { x: s.x, y: s.y };
     const o = J.najdi(tabule.objekty, p.x, p.y, tol, zamceny);
-    kontextZamceny = o ? null : J.najdi(tabule.objekty, p.x, p.y, tol, x => !zamceny(x));
+    kontextZamceny = o ? null : J.najdi(tabule.objekty, p.x, p.y, tol, x => !x.zamek || skryty(x));
     if (o && !vyber.has(o.id)) { vyber = new Set([o.id]); rozsirSkupiny(); if (nastroj !== 'vyber') zvolNastroj('vyber'); poZmene(false); }
     if (!o && vyber.size) { vyber.clear(); poZmene(false); }
     const n = $('nabKontext'), v = vybrane();
@@ -1464,6 +1628,7 @@
     n.querySelectorAll('[data-jeden]').forEach(x => { x.hidden = !(v.length === 1 && UPRAVITELNE.includes(v[0].typ)); });
     n.querySelectorAll('[data-skupina]').forEach(x => { x.hidden = !v.some(y => y.skupina); });
     n.querySelectorAll('[data-zamek]').forEach(x => { x.hidden = !kontextZamceny; });
+    n.querySelectorAll('[data-obr]').forEach(x => { x.hidden = !v.some(y => y.typ === 'obr'); });
     zavriNabidky();
     n.hidden = false;
     n.style.left = Math.max(6, Math.min(e.clientX, innerWidth - n.offsetWidth - 6)) + 'px';
@@ -1599,7 +1764,7 @@
   }
   function hledej() {
     const q = bezDiakritiky($('hledatText').value.trim());
-    hledani.nalezy = q ? tabule.objekty.filter(o => bezDiakritiky(J.textObjektu(o)).includes(q)).map(o => o.id) : [];
+    hledani.nalezy = q ? tabule.objekty.filter(o => !skryty(o) && bezDiakritiky(J.textObjektu(o)).includes(q)).map(o => o.id) : [];
     hledani.i = -1;
     if (hledani.nalezy.length) dalsiNalez(1);
     else $('hledatPocet').textContent = q ? '0 / 0' : '';
@@ -1627,8 +1792,9 @@
   function prezentovat() {
     if (prezentace) return;
     potvrdEditor(); zrusAkci(); zavriNabidky(); zavriHledani();
-    const ramy = J.poradiRamu(tabule.objekty);
-    const vse = J.hraniceVsech(tabule.objekty);
+    const vid = viditelneObjekty();
+    const ramy = J.poradiRamu(vid);
+    const vse = J.hraniceVsech(vid);
     const snimky = ramy.length ? ramy.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h, nazev: r.nazev })) : (vse ? [vse] : []);
     if (!snimky.length) return info('Tabule je prázdná – není co prezentovat.');
     prezentace = { snimky, i: 0, kamera: Object.assign({}, kam()), nastroj, bezRamu: !ramy.length };
@@ -1666,8 +1832,269 @@
     if (prezentace && prezentace.fs && !document.fullscreenElement) ukoncitPrezentaci();
   });
 
+  // ---------- lišta: popisky tlačítek jen když se vejdou (závisí na jazyku a šířce okna) ----------
+  const lista = $('lista');
+  // pořadí, ve kterém popisky ustupují (od nejméně důležitých)
+  const PORADI_POPISKU = ['vlozitSchranka', 'prezentovat', 'nabSablony', 'nabUsporadat', 'nabVlozit', 'nabVrstvy', 'nabZobrazit', 'nabUpravit', 'nabSoubor', 'nabExport'];
+  const popiskyListy = PORADI_POPISKU.map(k => lista.querySelector(`[data-prikaz="${k}"] .txt, [data-nabidka="${k}"] .txt`)).filter(Boolean);
+  const pretika = () => lista.scrollWidth > lista.clientWidth + 1;
+  function prizpusobListu() {
+    lista.classList.remove('uzka3');
+    popiskyListy.forEach(t => t.classList.remove('schovat'));
+    for (const t of popiskyListy) { if (!pretika()) return; t.classList.add('schovat'); }
+    if (pretika()) lista.classList.add('uzka3');      // jinak se lišta posouvá (telefon)
+  }
+  let listaPlan = 0;      // přepočet až v dalším snímku – změna tříd uvnitř zpětného volání by hlásila smyčku ResizeObserveru
+  const roLista = new ResizeObserver(() => { if (!listaPlan) listaPlan = requestAnimationFrame(() => { listaPlan = 0; prizpusobListu(); }); });
+  roLista.observe(lista);
+  lista.querySelectorAll('.skup').forEach(sk => roLista.observe(sk));      // překlad změní šířku skupin
+
+  // ---------- vrstvy ----------
+  // po každé změně: doplnit/seřadit (jádro), mapa, výběr bez nepřístupných objektů, panel
+  function obnovVrstvy() {
+    tabule.aktivniVrstva = J.normalizujVrstvy(tabule, tabule.aktivniVrstva, T('Vrstva {n}', { n: 1 }));
+    mapaVrstev = new Map(tabule.vrstvy.map(v => [v.id, v]));
+    if (vyber.size) for (const o of tabule.objekty) if (vyber.has(o.id) && vrstvaNepristupna(o)) vyber.delete(o.id);
+    mm.platne = false;
+    vykresliPanelVrstev();
+  }
+  const aktivniVrstva = () => mapaVrstev.get(tabule.aktivniVrstva) || tabule.vrstvy[tabule.vrstvy.length - 1];
+  const indexVrstvy = id => tabule.vrstvy.findIndex(v => v.id === id);
+  const pocetVeVrstve = id => tabule.objekty.reduce((n, o) => n + (o.vrstva === id), 0);
+  function aktivniPristupna() {
+    const v = aktivniVrstva();
+    if (v && v.skryta) { info('Aktivní vrstva je skrytá – zobrazte ji, nebo v panelu vrstev vyberte jinou.'); return false; }
+    if (v && v.zamcena) { info('Aktivní vrstva je zamčená – odemkněte ji, nebo v panelu vrstev vyberte jinou.'); return false; }
+    return true;
+  }
+  function volnyNazevVrstvy() {
+    let n = tabule.vrstvy.length + 1;
+    while (tabule.vrstvy.some(v => v.nazev === T('Vrstva {n}', { n }))) n++;
+    return T('Vrstva {n}', { n });
+  }
+  function aktivujVrstvu(id) {
+    if (!mapaVrstev.has(id)) return;
+    if (tabule.aktivniVrstva === id) return;
+    tabule.aktivniVrstva = id;
+    naplanujUlozeni();
+    // výběr zůstává – vybrané objekty jde pak tlačítkem ⇲ přesunout do této vrstvy; nové vybírání už jen v ní
+    vykresliPanelVrstev();
+    prekresli();
+  }
+  function prepniJenAktivni() {
+    jenAktivni = !jenAktivni;
+    ulozNastaveni();
+    vykresliPanelVrstev();
+    info(jenAktivni ? 'Vybírat a posouvat jde jen objekty aktivní vrstvy.' : 'Vybírat a posouvat jde objekty všech viditelných vrstev.');
+  }
+  function novaVrstva() {
+    const v = { id: 'v' + J.noveId(), nazev: volnyNazevVrstvy() };
+    tabule.vrstvy.splice(indexVrstvy(aktivniVrstva().id) + 1, 0, v);
+    tabule.aktivniVrstva = v.id;
+    zapis();
+  }
+  function duplikovatVrstvu() {
+    const a = aktivniVrstva();
+    const v = Object.assign({}, a, { id: 'v' + J.noveId(), nazev: T('{nazev} – kopie', { nazev: a.nazev }).slice(0, 120) });
+    const kopie = J.klonuj(tabule.objekty.filter(o => o.vrstva === a.id));
+    kopie.forEach(o => { o.vrstva = v.id; });
+    tabule.vrstvy.splice(indexVrstvy(a.id) + 1, 0, v);
+    tabule.objekty.push(...kopie);
+    tabule.aktivniVrstva = v.id;
+    zapis();
+  }
+  async function smazatVrstvu(id = aktivniVrstva().id) {
+    const v = mapaVrstev.get(id);
+    if (!v) return;
+    if (tabule.vrstvy.length === 1) return info('Tabule musí mít aspoň jednu vrstvu.');
+    const n = pocetVeVrstve(id);
+    if (n && !await Dialog.potvrd(T('Smazat vrstvu „{nazev}“ i s objekty ({n})? Vrátit jde přes Zpět.', { nazev: v.nazev, n }))) return;
+    const i = indexVrstvy(id);
+    tabule.objekty = tabule.objekty.filter(o => o.vrstva !== id);
+    tabule.vrstvy.splice(i, 1);
+    if (tabule.aktivniVrstva === id) tabule.aktivniVrstva = tabule.vrstvy[Math.max(0, i - 1)].id;
+    zapis();
+  }
+  async function prejmenovatVrstvu(id = aktivniVrstva().id) {
+    const v = mapaVrstev.get(id);
+    if (!v) return;
+    const n = await Dialog.zeptej('Název vrstvy', v.nazev);
+    if (n == null || !n.trim() || n.trim() === v.nazev) return;
+    v.nazev = n.trim().slice(0, 120);
+    zapis();
+  }
+  function posunVrstvu(id, kam) {
+    const i = indexVrstvy(id), j = i + kam;
+    if (i < 0 || j < 0 || j >= tabule.vrstvy.length) return;
+    const [v] = tabule.vrstvy.splice(i, 1);
+    tabule.vrstvy.splice(j, 0, v);
+    zapis();
+  }
+  function presunVrstvuNa(id, j) {           // tažení v panelu
+    const i = indexVrstvy(id);
+    if (i < 0 || i === j) return;
+    const [v] = tabule.vrstvy.splice(i, 1);
+    tabule.vrstvy.splice(Math.max(0, Math.min(tabule.vrstvy.length, j)), 0, v);
+    zapis();
+  }
+  function sloucitDolu() {
+    const a = aktivniVrstva(), i = indexVrstvy(a.id);
+    if (i <= 0) return info('Pod touto vrstvou už žádná není.');
+    const b = tabule.vrstvy[i - 1];
+    if (b.zamcena || b.skryta) return info('Vrstva pod ní je skrytá nebo zamčená – nejdřív ji zobrazte a odemkněte.');
+    J.slucVrstvy(tabule, a.id, b.id);
+    tabule.aktivniVrstva = b.id;
+    zapis();
+  }
+  function sloucitViditelne() {
+    const vid = tabule.vrstvy.filter(v => !v.skryta);
+    if (vid.length < 2) return info('Ke sloučení jsou potřeba aspoň dvě viditelné vrstvy.');
+    const cil = vid[0];
+    delete cil.zamcena;
+    for (const v of vid.slice(1)) J.slucVrstvy(tabule, v.id, cil.id);
+    tabule.aktivniVrstva = cil.id;
+    zapis();
+  }
+  function prepniSkryti(id = aktivniVrstva().id) {
+    const v = mapaVrstev.get(id);
+    if (!v) return;
+    if (v.skryta) delete v.skryta; else v.skryta = true;
+    zapis();
+  }
+  function prepniZamekVrstvy(id = aktivniVrstva().id) {
+    const v = mapaVrstev.get(id);
+    if (!v) return;
+    if (v.zamcena) delete v.zamcena; else v.zamcena = true;
+    zapis();
+  }
+  function zobrazitVsechnyVrstvy() {
+    tabule.vrstvy.forEach(v => { delete v.skryta; });
+    zapis();
+  }
+  function vybratVrstvu(id = aktivniVrstva().id) {
+    const v = mapaVrstev.get(id);
+    if (!v || v.skryta || v.zamcena) return info('Skrytá nebo zamčená vrstva se nedá vybrat.');
+    zvolNastroj('vyber');
+    vyber = new Set(tabule.objekty.filter(o => o.vrstva === id && !o.zamek).map(o => o.id));
+    poZmene(false);
+  }
+  function vyberDoVrstvy(id = aktivniVrstva().id) {
+    const v = mapaVrstev.get(id), ob = vybrane();
+    if (!v || !ob.length) return info('Nejdřív vyberte objekty, které se mají přesunout.');
+    ob.forEach(o => { o.vrstva = id; });
+    zapis();
+    info(T('Přesunuto do vrstvy „{nazev}“.', { nazev: v.nazev }));
+  }
+
+  // panel vrstev: nahoře nejvyšší vrstva (jako v grafických editorech)
+  const seznamVrstev = $('seznamVrstev');
+  function vykresliPanelVrstev() {
+    const panel = $('panelVrstev');
+    panel.hidden = !panelVrstev;
+    $('tlPanelVrstev').setAttribute('aria-pressed', panelVrstev);
+    if (!panelVrstev || !tabule) return;
+    const vybraneVrstvy = new Set(vybrane().map(o => o.vrstva));
+    const pocty = new Map();
+    for (const o of tabule.objekty) pocty.set(o.vrstva, (pocty.get(o.vrstva) || 0) + 1);
+    // řádky se aktualizují na místě – přestavění seznamu mezi dvěma kliky by zrušilo dvojklik (přejmenování)
+    const poradi = tabule.vrstvy.slice().reverse();
+    const stare = [...seznamVrstev.children];
+    if (stare.length !== poradi.length || stare.some((li, i) => li.dataset.id !== poradi[i].id)) {
+      seznamVrstev.replaceChildren(...poradi.map(v => {
+        const li = document.createElement('li');
+        li.className = 'pv-radek';
+        li.dataset.id = v.id;
+        li.draggable = true;
+        const oko = document.createElement('button');
+        oko.className = 'tl ik pv-oko'; oko.dataset.akce = 'oko';
+        const zam = document.createElement('button');
+        zam.className = 'tl ik pv-zamek'; zam.dataset.akce = 'zamek';
+        const jm = document.createElement('span');
+        jm.className = 'pv-nazev'; jm.dataset.i18n = 'ne';
+        jm.title = 'Dvojklik = přejmenovat';
+        const pc = document.createElement('span');
+        pc.className = 'pv-pocet';
+        li.append(oko, zam, jm, pc);
+        return li;
+      }));
+    }
+    [...seznamVrstev.children].forEach((li, i) => {
+      const v = poradi[i], [oko, zam, jm, pc] = li.children;
+      li.classList.toggle('skryta', !!v.skryta);
+      li.toggleAttribute('aria-current', v.id === tabule.aktivniVrstva);
+      oko.textContent = v.skryta ? '⊘' : '👁';
+      oko.title = v.skryta ? 'Zobrazit vrstvu' : 'Skrýt vrstvu';
+      oko.setAttribute('aria-pressed', !v.skryta);
+      zam.textContent = v.zamcena ? '🔒' : '🔓';
+      zam.title = v.zamcena ? 'Odemknout vrstvu' : 'Zamknout vrstvu';
+      zam.setAttribute('aria-pressed', !!v.zamcena);
+      if (jm.textContent !== v.nazev) jm.textContent = v.nazev;
+      pc.textContent = (vybraneVrstvy.has(v.id) ? '● ' : '') + (pocty.get(v.id) || 0) + (v.alfa != null && v.alfa < 1 ? ` · ${Math.round(v.alfa * 100)} %` : '');
+    });
+    obnovOvladaniPanelu();
+  }
+  function obnovOvladaniPanelu() {
+    const a = aktivniVrstva(), i = indexVrstvy(a.id);
+    const alfa = Math.round((a.alfa == null ? 1 : a.alfa) * 100);
+    $('krytiVrstvy').value = alfa; $('krytiVrstvyHodn').textContent = alfa + ' %';
+    $('pvVys').disabled = i === tabule.vrstvy.length - 1;
+    $('pvNiz').disabled = $('pvSloucit').disabled = i === 0;
+    $('pvSmazat').disabled = tabule.vrstvy.length === 1;
+    $('pvVyberSem').disabled = !vyber.size;
+    $('tlJenAktivni').setAttribute('aria-pressed', jenAktivni);
+  }
+  seznamVrstev.addEventListener('click', e => {
+    const li = e.target.closest('.pv-radek');
+    if (!li) return;
+    const b = e.target.closest('[data-akce]');
+    if (b && b.dataset.akce === 'oko') return prepniSkryti(li.dataset.id);
+    if (b && b.dataset.akce === 'zamek') return prepniZamekVrstvy(li.dataset.id);
+    aktivujVrstvu(li.dataset.id);
+  });
+  seznamVrstev.addEventListener('dblclick', e => {
+    const li = e.target.closest('.pv-radek');
+    if (li && !e.target.closest('[data-akce]')) prejmenovatVrstvu(li.dataset.id);
+  });
+  let tazenaVrstva = null;
+  seznamVrstev.addEventListener('dragstart', e => {
+    const li = e.target.closest('.pv-radek');
+    if (!li) return;
+    tazenaVrstva = li.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/x-wb-vrstva', tazenaVrstva); } catch (_) { /* starší prohlížeče */ }
+  });
+  seznamVrstev.addEventListener('dragover', e => {
+    if (!tazenaVrstva) return;
+    e.preventDefault();
+    seznamVrstev.querySelectorAll('.cil').forEach(x => x.classList.remove('cil'));
+    const li = e.target.closest('.pv-radek');
+    if (li) li.classList.add('cil');
+  });
+  seznamVrstev.addEventListener('drop', e => {
+    if (!tazenaVrstva) return;
+    e.preventDefault(); e.stopPropagation();
+    const li = e.target.closest('.pv-radek');
+    if (li) presunVrstvuNa(tazenaVrstva, indexVrstvy(li.dataset.id));
+    tazenaVrstva = null;
+  });
+  seznamVrstev.addEventListener('dragend', () => { tazenaVrstva = null; seznamVrstev.querySelectorAll('.cil').forEach(x => x.classList.remove('cil')); });
+  $('krytiVrstvy').addEventListener('input', e => {
+    const a = aktivniVrstva(), v = +e.target.value / 100;
+    if (v >= 1) delete a.alfa; else a.alfa = v;
+    $('krytiVrstvyHodn').textContent = e.target.value + ' %';
+    mm.platne = false; prekresli();
+  });
+  $('krytiVrstvy').addEventListener('change', () => zapis());
+
   // ---------- export ----------
-  const exportObjekty = () => (vyber.size ? vybrane() : tabule.objekty);
+  const pruhlednyExport = () => pruhledne || !!tabule.pruhledna;
+  const viditelneObjekty = () => tabule.objekty.filter(o => !skryty(o));
+  const exportObjekty = () => (vyber.size ? vybrane() : viditelneObjekty());
+  // pro SVG: krytí vrstvy převést do objektů
+  const sKrytimVrstvy = objekty => objekty.map(o => {
+    const v = vrstvaObjektu(o);
+    return v && v.alfa != null && v.alfa < 1 ? Object.assign({}, o, { alfa: (o.alfa == null ? 1 : o.alfa) * v.alfa }) : o;
+  });
   const bezpecneJmeno = s => (s || 'tabule').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'tabule';
 
   // vykreslí oblast světa (objekty, které ji protínají) do plátna v daném měřítku
@@ -1679,7 +2106,7 @@
     const x = c.getContext('2d');
     if (!pruh) { x.fillStyle = tabule.pozadi; x.fillRect(0, 0, c.width, c.height); }
     x.setTransform(m, 0, 0, m, -ob.x * m, -ob.y * m);
-    const e = Object.assign({}, env, { pozadi: tabule.pozadi, bezRamu });
+    const e = Object.assign({}, env, { pozadi: pruh ? null : tabule.pozadi, bezRamu });
     const vid = objekty.filter(o => J.prekryva(J.hranice(o), ob));
     for (const o of vid) if (o.typ === 'ram') J.kresli(x, o, e);
     for (const o of vid) if (o.typ !== 'ram') J.kresli(x, o, e);
@@ -1690,7 +2117,7 @@
     const h = J.hraniceVsech(objekty);
     if (!h) return null;
     const okraj = 20;
-    return vykresliOblast({ x: h.x - okraj, y: h.y - okraj, w: h.w + 2 * okraj, h: h.h + 2 * okraj }, objekty, meritko, { pruhledne });
+    return vykresliOblast({ x: h.x - okraj, y: h.y - okraj, w: h.w + 2 * okraj, h: h.h + 2 * okraj }, objekty, meritko, { pruhledne: pruhlednyExport() });
   }
 
   function stahni(blob, jmeno) {
@@ -1710,7 +2137,7 @@
   function exportSVG() {
     const o = exportObjekty();
     if (!o.length) return info('Tabule je prázdná.');
-    const s = J.svg(o, { obrazky: tabule.obrazky, pozadi: pruhledne ? null : tabule.pozadi });
+    const s = J.svg(sKrytimVrstvy(o), { obrazky: tabule.obrazky, pozadi: pruhlednyExport() ? null : tabule.pozadi });
     stahni(new Blob([s], { type: 'image/svg+xml;charset=utf-8' }), bezpecneJmeno(tabule.nazev) + '.svg');
   }
 
@@ -1726,8 +2153,8 @@
 
   // PDF: stránka na každý rám (v pořadí snímků), bez rámů celá tabule na jedné stránce
   async function exportPDF(stahnout = true) {
-    const ramy = J.poradiRamu(tabule.objekty);
-    const h = J.hraniceVsech(tabule.objekty);
+    const ramy = J.poradiRamu(viditelneObjekty());
+    const h = J.hraniceVsech(viditelneObjekty());
     if (!h) { info('Tabule je prázdná.'); return null; }
     const oblasti = ramy.length ? ramy : [{ x: h.x - 20, y: h.y - 20, w: h.w + 40, h: h.h + 40 }];
     try { await nactiJsPDF(); } catch (e) { chyba(e.message); return null; }
@@ -1777,7 +2204,7 @@
 
   function exportJson() {
     const d = {
-      format: 'whiteboard', verze: 1, nazev: tabule.nazev, pozadi: tabule.pozadi, mrizka: tabule.mrizka,
+      format: 'whiteboard', verze: 1, nazev: tabule.nazev, pozadi: tabule.pozadi, pruhledna: !!tabule.pruhledna, mrizka: tabule.mrizka, vrstvy: tabule.vrstvy, aktivniVrstva: tabule.aktivniVrstva,
       objekty: tabule.objekty, obrazky: J.pouziteObrazky(tabule.objekty, tabule.obrazky)
     };
     stahni(new Blob([JSON.stringify(d)], { type: 'application/json' }), bezpecneJmeno(tabule.nazev) + '.whiteboard.json');
@@ -1790,6 +2217,8 @@
     if (casovacUlozeni) await ulozit();
     const t = novaTabule(String(d.nazev || volnyNazev()).slice(0, 120));
     if (/^#[0-9a-f]{6}$/i.test(d.pozadi)) t.pozadi = d.pozadi;
+    if (d.pruhledna === true) t.pruhledna = true;
+    if (Array.isArray(d.vrstvy)) { t.vrstvy = d.vrstvy.filter(v => J.platnaVrstva(v)); t.aktivniVrstva = d.aktivniVrstva; }
     if (['ne', 'ctverce', 'tecky'].includes(d.mrizka)) t.mrizka = d.mrizka;
     t.objekty = J.klonuj(d.objekty.filter(o => J.platnyObjekt(o)));     // nová id – cizí soubor může mít duplicitní
     prevezmiObrazky(t.objekty, d.obrazky, t.obrazky);
@@ -1917,11 +2346,35 @@
   }
   function obnovNabidky() {
     document.querySelectorAll('[data-prikaz^="mrizka-"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.prikaz === 'mrizka-' + tabule.mrizka));
-    document.querySelectorAll('[data-prikaz^="poz-"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.prikaz === 'poz-' + tabule.pozadi));
+    document.querySelectorAll('[data-prikaz^="poz-"]').forEach(b => b.setAttribute('aria-pressed', !tabule.pruhledna && b.dataset.prikaz === 'poz-' + tabule.pozadi));
+    $('tlPozPruhledna').setAttribute('aria-pressed', !!tabule.pruhledna);
     $('tlPrichytit').setAttribute('aria-pressed', !!tabule.prichytit);
-    $('tlPruhledne').setAttribute('aria-pressed', pruhledne);
+    $('tlPruhledne').setAttribute('aria-pressed', pruhlednyExport());
+    $('tlPruhledne').disabled = !!tabule.pruhledna;      // průhledná tabule se exportuje průhledně vždy
     $('tlMinimapa').setAttribute('aria-pressed', minimapa);
     $('expRozsah').textContent = vyber.size ? `výběr (${vyber.size})` : 'vše';
+    // položky, které bez vhodného výběru nic neudělají, jsou zašedlé (kontextová nabídka je skrývá sama)
+    const v = vybrane(), n = v.length;
+    const av = aktivniVrstva(), ai = indexVrstvy(av.id), nv = tabule.vrstvy.length;
+    $('nazevAktivniVrstvy').textContent = av.nazev;
+    $('tlVrstvaSkryt').setAttribute('aria-pressed', !!av.skryta);
+    $('tlVrstvaZamek').setAttribute('aria-pressed', !!av.zamcena);
+    $('tlPanelVrstev2').setAttribute('aria-pressed', panelVrstev);
+    $('tlJenAktivni2').setAttribute('aria-pressed', jenAktivni);
+    const lze = {
+      'vrstva-smazat': nv > 1, 'vrstva-vys': ai < nv - 1, 'vrstva-niz': ai > 0, 'vrstva-sloucit': ai > 0,
+      'vrstva-sloucitViditelne': tabule.vrstvy.filter(x => !x.skryta).length > 1, 'vrstva-vyberSem': n,
+      'vrstva-zobrazitVse': tabule.vrstvy.some(x => x.skryta), 'vrstva-vybrat': !av.skryta && !av.zamcena,
+      vyjmout: n, kopirovat: n, duplikovat: n, smazat: n, zrusitVyber: n, prevratitX: n, prevratitY: n,
+      naVrch: n, vys: n, niz: n, naSpod: n, seskupit: n > 1, zamknout: n, ramVyber: n, zobrazitVyber: n,
+      rozdelit: v.some(o => o.skupina), upravitText: n === 1 && UPRAVITELNE.includes(v[0].typ)
+    };
+    document.querySelectorAll('.nabidka:not(#nabKontext) [data-prikaz]').forEach(b => {
+      const p = b.dataset.prikaz;
+      if (p in lze) b.disabled = !lze[p];
+      else if (p.startsWith('zar-')) b.disabled = n < 2;
+      else if (p.startsWith('roz-')) b.disabled = n < 3;
+    });
   }
   document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
@@ -1966,7 +2419,7 @@
     if (p.startsWith('zar-')) { J.zarovnej(vybrane(), p.slice(4)); return zapis(); }
     if (p.startsWith('roz-')) { J.rozmisti(vybrane(), p.slice(4)); return zapis(); }
     if (p.startsWith('mrizka-')) return nastavMrizku(p.slice(7));
-    if (p.startsWith('poz-')) { tabule.pozadi = p.slice(4); kontrastPera(); mm.platne = false; naplanujUlozeni(); return prekresli(); }
+    if (p.startsWith('poz-')) { tabule.pozadi = p.slice(4); tabule.pruhledna = false; kontrastPera(); mm.platne = false; naplanujUlozeni(); return prekresli(); }
     if (p.startsWith('sab-')) return vlozSablonu(p.slice(4));
     if (p.startsWith('nastroj-')) return zvolNastroj(p.slice(8));
     switch (p) {
@@ -1982,6 +2435,22 @@
       case 'pdf': return exportPDF();
       case 'kopirovatObr': return kopirovatObrazek();
       case 'pruhledne': pruhledne = !pruhledne; return ulozNastaveni();
+      case 'panelVrstev': panelVrstev = !panelVrstev; ulozNastaveni(); return vykresliPanelVrstev();
+      case 'vrstva-nova': return novaVrstva();
+      case 'vrstva-duplikovat': return duplikovatVrstvu();
+      case 'vrstva-prejmenovat': return prejmenovatVrstvu();
+      case 'vrstva-smazat': return smazatVrstvu();
+      case 'vrstva-vys': return posunVrstvu(aktivniVrstva().id, 1);
+      case 'vrstva-niz': return posunVrstvu(aktivniVrstva().id, -1);
+      case 'vrstva-sloucit': return sloucitDolu();
+      case 'vrstva-sloucitViditelne': return sloucitViditelne();
+      case 'vrstva-skryt': return prepniSkryti();
+      case 'vrstva-zamknout': return prepniZamekVrstvy();
+      case 'vrstva-zobrazitVse': return zobrazitVsechnyVrstvy();
+      case 'vrstva-vybrat': return vybratVrstvu();
+      case 'vrstva-vyberSem': return vyberDoVrstvy();
+      case 'vrstva-jenAktivni': return prepniJenAktivni();
+      case 'pozPruhledna': tabule.pruhledna = !tabule.pruhledna; mm.platne = false; naplanujUlozeni(); return prekresli();
       case 'minimapa': minimapa = !minimapa; ulozNastaveni(); mm.platne = false; return prekresli();
       case 'exportJson': return exportJson();
       case 'importJson': return $('souborJson').click();
@@ -2137,7 +2606,7 @@
     if (e.altKey) return;
     if (e.key === ' ') {
       e.preventDefault();
-      if (!e.repeat && !mezernik) { mezernik = true; if (!akce) plocha.dataset.kurzor = 'ruka'; }
+      if (!e.repeat && !mezernik) { mezernik = true; if (!akce) plocha.dataset.kurzor = 'ruka'; kresliStopu(); }
       return;
     }
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return smazVyber(); }
@@ -2159,7 +2628,7 @@
     if (KLAVESY[k]) zvolNastroj(KLAVESY[k]);
   });
   document.addEventListener('keyup', e => {
-    if (e.key === ' ') { mezernik = false; if (!akce) plocha.dataset.kurzor = KURZORY[nastroj] || ''; }
+    if (e.key === ' ') { mezernik = false; if (!akce) plocha.dataset.kurzor = KURZORY[nastroj] || ''; kresliStopu(); }
     if (SIPKY[e.key] && casovacSipek && !editor && !prezentace) { clearTimeout(casovacSipek); casovacSipek = 0; zapis(); }
   });
 
@@ -2171,7 +2640,7 @@
   new MutationObserver(nactiAkcent).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
   document.addEventListener('visibilitychange', () => { if (document.hidden && casovacUlozeni) ulozit(); if (document.hidden) pustMezernik(); });
   addEventListener('blur', pustMezernik);
-  function pustMezernik() { if (!mezernik) return; mezernik = false; if (!akce) plocha.dataset.kurzor = KURZORY[nastroj] || ''; }
+  function pustMezernik() { if (!mezernik) return; mezernik = false; if (!akce) plocha.dataset.kurzor = KURZORY[nastroj] || ''; kresliStopu(); }
   addEventListener('pagehide', () => { if (casovacUlozeni) ulozit(); });
 
   // ---------- start ----------
@@ -2199,7 +2668,7 @@
   // pro testy
   window.WB_APP = {
     get tabule() { return tabule; }, get vyber() { return vyber; }, get nastroj() { return nastroj; }, get prezentace() { return prezentace; },
-    styl, prikaz, zvolNastroj, kbelik, vlozText, vlozObjekty, vlozObrazek, vlozSablonu, ulozit, dataVyberu, zapis, exportPDF,
+    styl, prikaz, zvolNastroj, kbelik, vlozText, vlozObjekty, vlozObrazek, vlozSablonu, ulozit, dataVyberu, zapis, exportPDF, vykresliPNG,
     hotovo: null
   };
   window.WB_APP.hotovo = start();

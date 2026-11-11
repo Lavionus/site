@@ -861,8 +861,10 @@
   // env: { obrazek(id) → Image|null, pozadi, bezRamu }
   function kresli(ctx, o, env) {
     if (o.typ === 'ram' && env && env.bezRamu) return;
+    const vr = env && env.vrstva ? env.vrstva(o) : null;      // skrytá vrstva se nekreslí, krytí vrstvy násobí krytí objektu
+    if (vr && vr.skryta) return;
     ctx.save();
-    ctx.globalAlpha = (o.alfa == null ? 1 : o.alfa) * (o.typ === 'tah' && o.zvyr ? ZVYR_ALFA : 1);
+    ctx.globalAlpha = (o.alfa == null ? 1 : o.alfa) * (o.typ === 'tah' && o.zvyr ? ZVYR_ALFA : 1) * (vr && vr.alfa != null ? vr.alfa : 1);
     ctx.strokeStyle = ctx.fillStyle = o.barva;
     ctx.lineWidth = sirkaCary(o);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -1133,7 +1135,7 @@
     const mez = prisne ? MEZ : Infinity;
     const cislo = (...k) => k.every(n => Number.isFinite(o[n]));
     const retezec = (...k) => k.every(n => o[n] == null || typeof o[n] === 'string');
-    if (!retezec('id', 'skupina', 'text', 'nazev', 'zac', 'kon', 'pismo', 'styl', 'trasa', 'osa', 'vypln', 'stetec')) return false;
+    if (!retezec('id', 'skupina', 'text', 'nazev', 'zac', 'kon', 'pismo', 'styl', 'trasa', 'osa', 'vypln', 'stetec', 'vrstva')) return false;
     const cisla = (a, min) => Array.isArray(a) && a.length >= min && a.length % 2 === 0 && a.every(v => Math.abs(v) <= mez);
     if (o.velikost != null && !cislo('velikost')) return false;
     switch (o.typ) {
@@ -1151,6 +1153,100 @@
     return false;
   }
 
+  // ---------- barva do průhledné (obrázky) ----------
+  // data = RGBA pole (ImageData.data), mění se na místě. Pixely do vzdálenosti tol (0–441) od barvy [r,g,b]
+  // zmizí úplně, v pásmu prechod za ní průhlednost plynule ubývá a barva se „odečte“ (jemné okraje bez lemu).
+  // souvisle: jen oblast spojená s bodem [sx, sy]. Vrací počet změněných pixelů.
+  function barvaDoPruhledne(data, W, H, barva, tol, { souvisle = false, sx = 0, sy = 0, prechod = null } = {}) {
+    const [cr, cg, cb] = barva, pr = prechod == null ? Math.max(12, tol * 0.6) : prechod, mez = tol + pr;
+    const n = W * H, vzd = i => { const r = data[4 * i] - cr, g = data[4 * i + 1] - cg, b = data[4 * i + 2] - cb; return Math.sqrt(r * r + g * g + b * b); };
+    let pouzit = null;
+    if (souvisle) {
+      sx = Math.floor(sx); sy = Math.floor(sy);
+      if (sx < 0 || sy < 0 || sx >= W || sy >= H) return 0;
+      pouzit = new Uint8Array(n);
+      const zas = new Int32Array(n);
+      let v = 0;
+      const start = sy * W + sx;
+      if (data[4 * start + 3] === 0 || vzd(start) > mez) return 0;
+      pouzit[start] = 1; zas[v++] = start;
+      while (v) {
+        const i = zas[--v], x = i % W;
+        for (let k = 0; k < 4; k++) {
+          const j = k === 0 ? (x > 0 ? i - 1 : -1) : k === 1 ? (x < W - 1 ? i + 1 : -1) : k === 2 ? i - W : i + W;
+          if (j < 0 || j >= n || pouzit[j]) continue;
+          if (data[4 * j + 3] === 0 || vzd(j) > mez) continue;
+          pouzit[j] = 1; zas[v++] = j;
+        }
+      }
+    }
+    let pocet = 0;
+    for (let i = 0; i < n; i++) {
+      if (pouzit && !pouzit[i]) continue;
+      const a0 = data[4 * i + 3];
+      if (!a0) continue;
+      const d = vzd(i);
+      if (d > mez) continue;
+      const f = d <= tol ? 0 : (d - tol) / pr;           // 0 = úplně průhledné, 1 = beze změny
+      if (f <= 0) { data[4 * i + 3] = 0; pocet++; continue; }
+      // odečtení barvy: pixel = f·nová + (1−f)·barva → nová = (pixel − (1−f)·barva) / f
+      const q = 1 - f, o = 4 * i;
+      data[o] = Math.max(0, Math.min(255, Math.round((data[o] - q * cr) / f)));
+      data[o + 1] = Math.max(0, Math.min(255, Math.round((data[o + 1] - q * cg) / f)));
+      data[o + 2] = Math.max(0, Math.min(255, Math.round((data[o + 2] - q * cb) / f)));
+      data[o + 3] = Math.round(a0 * f);
+      pocet++;
+    }
+    return pocet;
+  }
+
+  // ---------- vrstvy ----------
+  // vrstva {id, nazev, skryta?, zamcena?, alfa?}; t.vrstvy zdola nahoru. Objekt nese id vrstvy v o.vrstva.
+  // Pole t.objekty se drží seřazené po vrstvách (stabilně – pořadí uvnitř vrstvy zůstává), kreslení a hledání pod
+  // kurzorem tak nemusí o vrstvách vědět.
+  function platnaVrstva(v) {
+    return !!v && typeof v === 'object' && typeof v.id === 'string' && !!v.id && v.id.length <= 64 && typeof v.nazev === 'string' &&
+      (v.alfa == null || (typeof v.alfa === 'number' && v.alfa >= 0 && v.alfa <= 1));
+  }
+  function cistaVrstva(v) {
+    const c = { id: v.id, nazev: v.nazev.slice(0, 120) };
+    if (v.skryta === true) c.skryta = true;
+    if (v.zamcena === true) c.zamcena = true;
+    if (v.alfa != null && v.alfa < 1) c.alfa = Math.round(v.alfa * 100) / 100;
+    return c;
+  }
+  // doplní vrstvy (aspoň jedna), objektům bez platné vrstvy dá aktivní a seřadí; vrací id aktivní vrstvy
+  function normalizujVrstvy(t, aktivni, nazevPrvni = 'Vrstva 1') {
+    const ids = new Set();
+    t.vrstvy = (Array.isArray(t.vrstvy) ? t.vrstvy : []).filter(v => platnaVrstva(v) && !ids.has(v.id) && ids.add(v.id)).map(cistaVrstva);
+    if (!t.vrstvy.length) t.vrstvy = [{ id: 'v' + noveId(), nazev: nazevPrvni }];
+    const poradi = new Map(t.vrstvy.map((v, i) => [v.id, i]));
+    const akt = poradi.has(aktivni) ? aktivni : t.vrstvy[t.vrstvy.length - 1].id;
+    let serazeno = true;
+    for (let i = 0; i < t.objekty.length; i++) {
+      const o = t.objekty[i];
+      if (!poradi.has(o.vrstva)) o.vrstva = akt;
+      if (i && poradi.get(t.objekty[i - 1].vrstva) > poradi.get(o.vrstva)) serazeno = false;
+    }
+    if (!serazeno) {
+      t.objekty = t.objekty.map((o, i) => [poradi.get(o.vrstva), i, o]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(x => x[2]);
+    }
+    return akt;
+  }
+  // sloučí vrstvu s id do vrstvy cil (krytí vrstvy se převede do objektů); vrstva zmizí
+  function slucVrstvy(t, id, cil) {
+    const a = t.vrstvy.find(v => v.id === id), b = t.vrstvy.find(v => v.id === cil);
+    if (!a || !b || a === b) return false;
+    const ka = a.alfa == null ? 1 : a.alfa, kb = b.alfa == null ? 1 : b.alfa;
+    for (const o of t.objekty) if (o.vrstva === id) {
+      o.vrstva = cil;
+      if (ka !== kb) o.alfa = Math.max(0, Math.min(1, Math.round((o.alfa == null ? 1 : o.alfa) * ka / (kb || 1) * 100) / 100));
+    }
+    t.vrstvy = t.vrstvy.filter(v => v !== a);
+    normalizujVrstvy(t, cil);
+    return true;
+  }
+
   // text objektu pro hledání
   const textObjektu = o => o.typ === 'ram' ? (o.nazev || '') : (o.text || '');
 
@@ -1160,7 +1256,8 @@
     pismo, zalom, popisekTvaru, bodyCary, stredCary, hranice, hraniceHole, hraniceVsech, zneplatni, prekryva, obsahuje,
     zasah, najdi, prepoj, prusecik, lzePripojit, klonuj, voditka, premisti, skaluj, zredukuj, omez, zarovnej, rozmisti, poradiRamu,
     jas, textNaPodklad, barvaPopisku, kresli, svg, objektSVG, pouziteObrazky, otisk, platnyObjekt, textObjektu,
-    STETCE, polomerTahu, kapkySpreje, vzorkyKrivky, zjednodus, rozsir, zaplav, obrysy, rozpoznej, symetrie, transformuj
+    STETCE, polomerTahu, kapkySpreje, vzorkyKrivky, zjednodus, rozsir, zaplav, obrysy, rozpoznej, symetrie, transformuj, barvaDoPruhledne,
+    platnaVrstva, normalizujVrstvy, slucVrstvy
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else koren.WB_JADRO = api;
