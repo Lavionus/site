@@ -114,6 +114,8 @@
 
     filtr(css) { this.img.style.filter = css || ''; }
 
+    zrcadli(zap) { this.zrcadlo = !!zap; this._kresli(true); }
+
     // pohled nezávislý na velikosti snímku – pro synchronizaci dvou ploch
     relativni() {
       const p = this.rozmerPlochy();
@@ -138,7 +140,9 @@
       if (this.rot === 90) ox = this.h;
       else if (this.rot === 180) { ox = this.w; oy = this.h; }
       else if (this.rot === 270) oy = this.w;
-      this.img.style.transform = `translate(${this.x}px, ${this.y}px) scale(${this.s}) translate(${ox}px, ${oy}px) rotate(${this.rot}deg)`;
+      // zrcadlo (Leonardovo zrcadlové písmo) – převrácení v souřadnicích snímku
+      const zrc = this.zrcadlo ? ` translate(${this.w}px, 0) scale(-1, 1)` : '';
+      this.img.style.transform = `translate(${this.x}px, ${this.y}px) scale(${this.s}) translate(${ox}px, ${oy}px) rotate(${this.rot}deg)${zrc}`;
       this._minimapa(p);
       if (!bezOznameni && this.volby.naZmenu) this.volby.naZmenu(this);
     }

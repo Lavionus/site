@@ -1177,3 +1177,30 @@ Lukavice (okres Ústí nad Orlicí, ~5,7 × 3,8 km), chůze i jízda autem.
 - Testy: `node --import ./_test/three_importmap.mjs _test/lukavice_test.mjs` (jádro, vybavení, měření geometrie všech
   budov), `python3 _test/lukavice_ui.py [dpi]` (swiftshader; `?start&zastav` vypne smyčku, snímky přes `LUKAVICE.krok(n)`;
   snímky obrazovky občas ukážou černý trojúhelník – artefakt headless skládání, ve WebGL snímku není).
+
+## Leonardův zápisník – `obsah/leonardo.html` (12. 11. 2026)
+
+Prohlížeč Codexu Atlanticus ve stylu Voynichova rukopisu (sekce 🏛️ Dějiny, stav vyvoj):
+- 🔎 Prohlížeč: všech 2238 stran (1119 listů recto/verso), lupa a otáčení ze sdílené `voynich/prohlizec.js`
+  (nově `zrcadli()` – Leonardovo zrcadlové písmo, klávesa M), jas/kontrast/sépie/negativ, náhledy s filtrem oboru
+  a „jen s textem“, záložky, poznámky, odkaz `#327v`; do pole listu jde i staré číslo `s119v`.
+  Panel: Text (originál a překlad vedle sebe / jen česky / jen italsky), List (nové, staré Hoepli a antické číslo,
+  datace, témata), Poznámka.
+- 📖 Texty: 675 úryvků z E. Solmi, *Frammenti letterari e filosofici* (1900, přepis it.wikisource) – bajky, bestiář,
+  myšlenky, malířství, krajiny, proroctví, žerty – s vlastním českým překladem; hledání bez diakritiky, oddíly.
+  Solmiho odkazy „C. A. 67 r“ (staré číslování) jsou převedené na nové listy (často 2 kandidáti = kusy starého listu).
+- 🧭 Témata a roky: graf stran podle datace, obory → témata (katalog Ambrosiany, české názvy) → mřížka listů.
+- Data: `leonardo/data/listy_data.js` a `texty_data.js` generuje `python3 _test/leonardo_sestav.py`
+  z `leonardo/_originaly/` (v .gitignore: originály z Commons, převod číslování Museo Galileo `num_*.json`,
+  `ambrosiana_app.js.txt`, Solmi HTML + `solmi_parse.py`, dávky překladu `preklad/vystupN.json`).
+  Na webu jsou náhledy všech stran (`atlanticus/nahledy/`, 160 px) a plné snímky jen stran s textem (`atlanticus/*.webp`),
+  ostatní se načítají z upload.wikimedia.org.
+- Testy: `node _test/leonardo_test.js` (data, převod číslování, adresy Commons, hledání), `python3 _test/leonardo_ui.py [dpi]`.
+- Doplněno 12. 11. odpoledne: ⭐ Slavné listy (32 ověřených listů s popisem cs/en, prohlídka s lištou nad snímkem,
+  `_originaly/slavne.json` → `data/slavne_data.js`), 🐦 Let ptáků (`leonardo/volo.js`, Kodex o letu ptáků, 40 stran,
+  text Sabachnikoff–Piumati 1893 + překlad, `_originaly/volo.json` + `volo/*.jpg` → `leonardo/volo/`),
+  Richter 1883 (`_originaly/richter.json` z `richter_parse.py` → Solmiho „R. nnnn“ dostanou rukopis a list,
+  `data/richter_data.js` = anglické úryvky na 359 stranách CA, snímky těch stran z Commons),
+  ❓ Hádej proroctví (148 hádanek), ✍️ Zrcadlové písmo (generátor PNG + jak číst rukopis), 🎲 náhodný list,
+  období Leonardova života pod grafem roků. Nové režimy v `leonardo/extra.js`; revize překladu (68 úryvků).
+- Plán dalších etap: `Leonardo_PLAN.md`.

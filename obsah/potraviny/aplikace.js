@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-28a';
+  const VERZE_KODU = '2026-11-12a';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -645,8 +645,14 @@
     $('#denPopis').textContent = J.popisDne(aktivniDen, dnes);
     $('#denVyber').value = aktivniDen;
     $('#denDnes').hidden = aktivniDen === dnes;
-    const ser = J.serie(S, dnes);
-    $('#serie').textContent = ser > 1 ? '🔥 ' + J.pocet(ser, 'den', 'dny', 'dní') + ' v řadě' : '';
+    const mot = motivaceTed();
+    hlidejOdznaky(mot);
+    const ser = mot.serie, dalsi = J.dalsiOdznak(mot);
+    const tlSerie = $('#serie');
+    tlSerie.textContent = ser > 0 && !mot.dnesZapsano ? '🔥 ' + J.pocet(ser, 'den', 'dny', 'dní') + ' – zapiš i dnes'
+      : ser > 1 ? '🔥 ' + J.pocet(ser, 'den', 'dny', 'dní') + ' v řadě' + (ser === mot.nejdelsiSerie && ser >= 3 ? ' · rekord!' : '') : '';
+    tlSerie.hidden = !tlSerie.textContent;
+    tlSerie.title = dalsi ? 'Další odznak: ' + dalsi.ikona + ' ' + dalsi.nazev + ' (zbývá ' + J.pocet(dalsi.zbyva, ...dalsi.jedn) + ')' : '';
     const d = S.dny[aktivniDen] || { z: [], voda: 0, pohyb: [] };
     const soub = J.souhrnDne(S, aktivniDen);
     const kont = $('#jidla');
@@ -3492,12 +3498,12 @@
     // cíl se počítá stejně jako v deníku – včetně pohybu, je-li to zapnuté
     const zapsaneDny = st.dny.filter(d => d.zapsano);
     const prumPohyb = S.nastaveni.pohybKCili && zapsaneDny.length ? zapsaneDny.reduce((a, d) => a + d.s.pohyb, 0) / zapsaneDny.length : 0;
+    kont.appendChild(kartaCesty());
     kont.appendChild(h('div', { class: 'cisla' },
       karticka(st.zapsanych + ' / ' + obdobi, 'dní se záznamem'),
       karticka(st.zapsanych ? en(prumKcal) : '–', 'průměrně za zapsaný den'),
       karticka(c.kcal && st.zapsanych ? fc(100 * prumKcal / (c.kcal + prumPohyb)) + ' %' : '–', 'průměr vůči cíli' + (prumPohyb ? ' (vč. pohybu)' : '')),
       karticka(st.zapsanych ? fc(st.prumer.bilkoviny, 0) + ' g' : '–', 'bílkovin denně'),
-      karticka(J.pocet(J.serie(S, doK), 'den', 'dny', 'dní'), 'aktuální série'),
       karticka(zmena !== null ? (zmena > 0 ? '+' : '') + fc(zmena, 1) + ' kg' : '–', 'změna hmotnosti')));
     const kp = kartaPohybu(od, doK);
     if (!st.zapsanych) {
@@ -3659,6 +3665,86 @@
       c.kcal ? null : h('p', { class: 'slabe', text: 'Barvy podle plnění se ukážou po nastavení cíle v profilu.' }),
       h('p', { class: 'slabe', style: { marginTop: '6px' }, text: 'Klepnutím na den otevřeš jeho deník. Plnění se počítá vůči dnešnímu cíli (s pohybem daného dne).' }));
     return karta;
+  }
+  /* ---------- motivace: série, rekordy, odznaky ---------- */
+  function motivaceTed() {
+    return J.motivace(S, J.datumKlic(new Date()), k => { const c = cileDne(k); return { kcal: c.kcal, vodaMl: c.vodaMl, vlaknina: c.zivinyCil.vlaknina }; });
+  }
+  // nově splněné odznaky si zapamatuje a ohlásí; při prvním spuštění jen tiše zapíše už splněné
+  function hlidejOdznaky(m) {
+    const prvne = !S.nastaveni.odznaky;
+    const zname = S.nastaveni.odznaky || (S.nastaveni.odznaky = {});
+    const nove = m.odznaky.filter(o => o.splneno && !zname[o.id]);
+    if (!nove.length && !prvne) return;
+    const dnes = J.datumKlic(new Date());
+    for (const o of nove) zname[o.id] = dnes;
+    ulozPodListou = true;   // nezavírat lištu „Vrátit“ změny, která odznak přinesla
+    try { uloz(); } finally { ulozPodListou = false; }
+    if (!prvne) D.info('🏅 ' + (nove.length > 1 ? 'Nové odznaky: ' : 'Nový odznak: ') + nove.map(o => o.ikona + ' ' + o.nazev).join(', '));
+  }
+  const pocetDni = n => J.pocet(n, 'den', 'dny', 'dní');
+  const kratkeDatum = k => J.zKlice(k).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+  function kartaCesty() {
+    const m = motivaceTed();
+    const karta = h('div', { class: 'karta cesta' }, h('h2', { style: { marginBottom: '8px' }, text: '🏆 Tvoje cesta' }));
+    if (!m.zapsanychDni) {
+      karta.appendChild(h('p', { class: 'slabe', text: 'Zapiš první jídlo a začni sbírat série a odznaky.' }));
+      return karta;
+    }
+    const pomer = Math.round(100 * m.zapsanychDni / m.dniOdZacatku), odKdy = kratkeDatum(m.prvni);
+    const delka = pocetDni(m.dniOdZacatku), zapsano = pocetDni(m.zapsanychDni);
+    karta.appendChild(h('p', { class: 'cesta-uvod', text: 'Zapisuješ už ' + delka + ' (od ' + odKdy + '), záznam má ' + zapsano + ' – ' + pomer + ' %.' }));
+    const t = m.tyden;
+    karta.appendChild(h('div', { class: 'cisla' },
+      karticka(J.pocet(m.serie, 'den', 'dny', 'dní'), m.dnesZapsano || !m.serie ? 'aktuální série' : 'série – dnes ještě nezapsáno'),
+      karticka(J.pocet(m.nejdelsiSerie, 'den', 'dny', 'dní'), 'nejdelší série (' + kratkeDatum(m.nejdelsiOd) + ' – ' + kratkeDatum(m.nejdelsiDo) + ')'),
+      karticka(t.ted + ' / ' + t.dnuTed + (t.ted > t.minule ? ' ▲' : t.ted < t.minule ? ' ▼' : ''), 'dní tento týden (minulý: ' + t.minule + ')'),
+      karticka(J.pocet(m.polozek, 'záznam', 'záznamy', 'záznamů'), 'zapsáno celkem'),
+      karticka(String(m.ruznychPotravin), 'různých potravin'),
+      karticka(String(m.dnyCil), 'dní v cíli (90–110 %)')));
+    karta.appendChild(h('p', { class: 'cesta-povzbuzeni', text: povzbuzeni(m) }));
+    // posledních 16 týdnů: sloupec = týden po–ne
+    const dnes = J.datumKlic(new Date());
+    const start = J.posunDen(dnes, -((J.zKlice(dnes).getDay() + 6) % 7) - 15 * 7);
+    const mriz = h('div', { class: 'cesta-mriz', role: 'group', 'aria-label': 'Zapsané dny za posledních 16 týdnů' });
+    for (let i = 0; i < 16 * 7; i++) {
+      const k = J.posunDen(start, (i % 16) * 7 + Math.floor(i / 16));   // mřížka se plní po řádcích: řádek = den v týdnu, sloupec = týden
+      if (k > dnes) { mriz.appendChild(h('span', {})); continue; }
+      const st = m.dny[k];
+      const popis = J.zKlice(k).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' }) + ': ' + (st === 'cil' ? 'v cíli' : st ? 'zapsáno' : 'bez záznamu');
+      mriz.appendChild(h('button', { type: 'button', class: 'cesta-den ' + (st || 'nic') + (k === dnes ? ' dnes' : ''), title: popis, 'aria-label': popis,
+        onclick: () => { aktivniDen = k; prepni('denik'); } }));
+    }
+    pridat(karta, h('h3', { class: 'cesta-nadpis', text: 'Posledních 16 týdnů' }), h('div', { class: 'cesta-mriz-obal' }, mriz),
+      h('div', { class: 'kal-legenda' }, ...[['nic', 'bez záznamu'], ['zapsano', 'zapsáno'], ['cil', 'energie v cíli']].map(([c, n]) => h('span', {}, h('i', { class: 'vzorek cesta-den ' + c }), n))));
+    // odznaky: u každého druhu nejvyšší získaný stupeň a postup k dalšímu
+    const vse = m.odznaky, zname = S.nastaveni.odznaky || {};
+    const ziskane = vse.filter(o => o.splneno || zname[o.id]);
+    const seznam = h('div', { class: 'odznaky' });
+    for (const druh of J.ODZNAKY) {
+      const stupne = vse.filter(o => o.druh === druh.m);
+      const mam = stupne.filter(o => o.splneno || zname[o.id]).pop();
+      const dalsi = stupne.find(o => !o.splneno);
+      const hodnota = stupne[0].hodnota;
+      pridat(seznam, h('div', { class: 'odznak' + (mam ? '' : ' zamceny'), title: druh.popis + (dalsi ? ' – další stupeň: ' + dalsi.nazev : '') },
+        h('span', { class: 'odznak-ik', 'aria-hidden': 'true', text: druh.ikona }),
+        h('div', { class: 'odznak-text' },
+          h('b', { text: mam ? mam.nazev : dalsi.nazev }),
+          h('small', { text: dalsi ? J.formatCislo(hodnota, 0) + ' / ' + J.formatCislo(dalsi.cil, 0) + ' · ' + druh.popis : 'vše splněno · ' + druh.popis }),
+          dalsi ? h('progress', { max: String(dalsi.cil), value: String(Math.min(hodnota, dalsi.cil)), 'aria-label': 'Postup k odznaku ' + dalsi.nazev }) : null)));
+    }
+    pridat(karta, h('h3', { class: 'cesta-nadpis', text: 'Odznaky – ' + ziskane.length + ' z ' + vse.length }), seznam);
+    return karta;
+  }
+  // krátká povzbudivá věta podle stavu
+  function povzbuzeni(m) {
+    const dalsi = J.dalsiOdznak(m), serie = pocetDni(m.serie), zbyva = pocetDni(m.nejdelsiSerie - m.serie);
+    if (m.serie && !m.dnesZapsano) return 'Včera jsi zapisoval(a) – zapiš něco i dnes a série ' + serie + ' poroste dál.';
+    if (!m.serie) return 'Každý den je nový začátek – jeden zápis dnes rozjede novou sérii.';
+    if (m.serie === m.nejdelsiSerie && m.serie >= 3) return 'Tohle je tvoje nejdelší série vůbec. Jen tak dál!';
+    if (m.nejdelsiSerie - m.serie <= 3 && m.nejdelsiSerie >= 5) return 'K vyrovnání rekordu zbývá ' + zbyva + '.';
+    if (m.tyden.ted > m.tyden.minule) return 'Tento týden zapisuješ častěji než minulý. 👍';
+    return dalsi ? 'Do odznaku ' + dalsi.ikona + ' ' + dalsi.nazev + ' zbývá ' + J.pocet(dalsi.zbyva, ...dalsi.jedn) + '.' : 'Máš všechny odznaky – klobouk dolů!';
   }
   function karticka(hodnota, popis) { return h('div', { class: 'cislo-karta' }, h('b', { text: hodnota }), h('span', { text: popis })); }
   function kresliPozdeji(fn) { requestAnimationFrame(() => fn()); }
@@ -4476,6 +4562,7 @@
     $('#denPred').addEventListener('click', () => { aktivniDen = J.posunDen(aktivniDen, -1); vykresliDenik(); });
     $('#denDalsi').addEventListener('click', () => { aktivniDen = J.posunDen(aktivniDen, 1); vykresliDenik(); });
     $('#denDnes').addEventListener('click', () => { aktivniDen = J.datumKlic(new Date()); vykresliDenik(); });
+    $('#serie').addEventListener('click', () => prepni('statistiky'));
     $('#denMenu').addEventListener('click', e => nabidkaDne(e.currentTarget));
     $('#pismoTl').addEventListener('click', e => nabidkaPisma(e.currentTarget));
     $('#profilTl').addEventListener('click', e => nabidkaProfilu(e.currentTarget));

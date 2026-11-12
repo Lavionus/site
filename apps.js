@@ -2594,6 +2594,12 @@ const KATALOG_SEKCE = [
         "nazev": "🔏 Razítka, pečeti a reliéfy",
         "stav": "vyvoj",
         "tagy": ["3D tisk", "STL", "3MF", "razítko", "pečeť", "vosk", "plaketa", "reliéf", "text po kruhu", "SVG", "generátor"]
+      },
+      {
+        "soubor": "obsah/stinitka.html",
+        "nazev": "🛎️ Lustrová stínítka",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "stínítko", "lustr", "lampa", "svítidlo", "E14", "E27", "tulipán", "zvon", "litofanie", "režim váza", "výkres", "generátor"]
       }
     ]
   },
@@ -3579,6 +3585,12 @@ const KATALOG_SEKCE = [
         "nazev": "🎵 Simon",
         "stav": "beta",
         "tagy": ["simon", "paměť", "sekvence", "barvy", "zvuky"]
+      },
+      {
+        "soubor": "obsah/kde_je_vali.html",
+        "nazev": "🔎 Kde je Vali?",
+        "stav": "vyvoj",
+        "tagy": ["hledání", "najdi postavu", "dav", "hledačka", "pozornost", "obrázková hra", "pro děti", "vali"]
       }
     ]
   },
@@ -4106,6 +4118,12 @@ const KATALOG_SEKCE = [
         "nazev": "📜 Voynichův rukopis",
         "stav": "vyvoj",
         "tagy": ["voynich", "rukopis", "manuskript", "šifra", "nerozluštěné", "eva", "přepis", "transliterace", "středověk", "rudolf ii", "hořčický", "kryptologie", "lingvistika", "entropie", "zipf", "kwic", "yale", "beinecke"]
+      },
+      {
+        "soubor": "obsah/leonardo.html",
+        "nazev": "🪶 Leonardův zápisník",
+        "stav": "vyvoj",
+        "tagy": ["leonardo", "da vinci", "codex atlanticus", "atlantický kodex", "rukopis", "zápisník", "zrcadlové písmo", "renesance", "bajky", "proroctví", "překlad", "italština", "ambrosiana", "vynálezy", "stroje"]
       }
     ]
   },

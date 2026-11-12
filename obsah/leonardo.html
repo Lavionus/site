@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leonardův zápisník</title>
+  <meta name="description" content="Prohlížeč zápisníků Leonarda da Vinciho: všech 2238 stran Codexu Atlanticus s lupou, zrcadlem a filtry, staré i nové číslování listů, témata a datace; 675 úryvků Leonardových textů v italském originále (Solmi 1900) s českým překladem, hledání a poznámky.">
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="leonardo/data/listy_data.js"></script>
+  <script src="leonardo/data/texty_data.js"></script>
+  <script src="leonardo/data/slavne_data.js"></script>
+  <script src="leonardo/data/richter_data.js"></script>
+  <script src="leonardo/data/volo_data.js"></script>
+  <style>
+    :root { --panel-sirka: 440px; --zvyrazneni: rgba(255, 196, 0, .35); --sepie: #b4884d; }
+    :root[data-theme="light"] { --zvyrazneni: rgba(255, 200, 0, .45); --sepie: #8a5a1c; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--bg-deep); color: var(--text); font-family: var(--font); display: flex; flex-direction: column; min-height: 100vh; }
+    button, select, input, textarea { font: inherit; color: inherit; }
+    a { color: var(--accent); }
+
+    header.hl { padding: 8px clamp(10px, 2vw, 18px) 0; background: var(--bg-panel); border-bottom: 1px solid var(--border); }
+    .hl-radek { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    h1 { font-size: 1.15rem; margin: 0; font-weight: 650; white-space: nowrap; }
+    .podtitul { color: var(--text-faint); font-size: .8rem; }
+    body.samostatne .hl-vpravo { margin-right: 56px; }
+    .hl-vpravo { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    nav.rezimy { display: flex; gap: 2px; margin-top: 6px; overflow-x: auto; scrollbar-width: thin; }
+    nav.rezimy button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 7px 12px; cursor: pointer; color: var(--text-muted); white-space: nowrap; font-size: .9rem; }
+    nav.rezimy button:hover { color: var(--text); background: var(--bg-hover); }
+    nav.rezimy button.zap { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+
+    .btn { background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: .85rem; line-height: 1.25; white-space: nowrap; }
+    .btn:hover { background: var(--bg-hover); }
+    .btn.zap { background: var(--accent); color: var(--on-accent, #fff); border-color: var(--accent); }
+    .btn.ikona { min-width: 32px; text-align: center; padding: 5px 7px; }
+    a.btn { color: var(--text); text-decoration: none; display: inline-block; }
+    .btn:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, nav.rezimy button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    select, input[type=text], input[type=search], textarea { background: var(--bg-input); border: 1px solid var(--border-strong); border-radius: 6px; padding: 5px 8px; font-size: .85rem; }
+    label.prep { display: inline-flex; align-items: center; gap: 5px; font-size: .85rem; cursor: pointer; white-space: nowrap; }
+    .oddel { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+    .tlumeny { color: var(--text-faint); }
+    .male { font-size: .8rem; }
+    .skryto { display: none !important; }
+
+    main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    section.rezim { flex: 1; min-height: 0; display: none; }
+    section.rezim.zap { display: flex; }
+    .stranka-obsah { flex: 1; overflow: auto; padding: 14px clamp(10px, 2vw, 22px) 30px; }
+    .stranka-obsah > .sirka { max-width: 1150px; margin: 0 auto; }
+    h2 { font-size: 1.05rem; margin: 18px 0 8px; }
+    h2:first-child { margin-top: 0; }
+    h3 { font-size: .95rem; margin: 14px 0 6px; }
+    p { line-height: 1.55; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
+
+    /* ---------- prohlížeč ---------- */
+    #m-prohlizec { display: none; }
+    #m-prohlizec.zap { display: grid; grid-template-columns: 124px minmax(0, 1fr) var(--panel-sirka); }
+    #m-prohlizec.bez-nahledu { grid-template-columns: 0 minmax(0, 1fr) var(--panel-sirka); }
+    #m-prohlizec.bez-panelu { grid-template-columns: 124px minmax(0, 1fr) 0; }
+    #m-prohlizec.bez-nahledu.bez-panelu { grid-template-columns: 0 minmax(0, 1fr) 0; }
+    #m-volo.zap { display: grid; grid-template-columns: 124px minmax(0, 1fr) var(--panel-sirka); }
+    #m-volo > .levy { grid-column: 1; grid-row: 1; } #m-volo > .stred { grid-column: 2; grid-row: 1; } #m-volo > .panel { grid-column: 3; grid-row: 1; }
+    #m-prohlizec > .levy { grid-column: 1; grid-row: 1; }
+    #m-prohlizec > .stred { grid-column: 2; grid-row: 1; }
+    #m-prohlizec > .panel { grid-column: 3; grid-row: 1; }
+    .bez-nahledu .levy, .bez-panelu .panel { display: none; }
+    .levy { display: flex; flex-direction: column; min-height: 0; background: var(--bg-panel); border-right: 1px solid var(--border); }
+    .levy-filtr { padding: 6px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+    .levy-filtr select { width: 100%; font-size: .75rem; padding: 3px 4px; }
+    .levy-filtr label { font-size: .72rem; }
+    .nahledy { overflow-y: auto; overflow-x: hidden; padding: 6px; min-height: 0; flex: 1; }
+    .nahledy .sekce-nadpis { font-size: .7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .04em; margin: 8px 2px 4px; }
+    .nahled { display: block; width: 100%; background: none; border: 2px solid transparent; border-radius: 6px; padding: 2px; margin-bottom: 4px; cursor: pointer; position: relative; }
+    .nahled img { display: block; width: 100%; height: 100px; object-fit: contain; background: #e9e1cf; border-radius: 3px; }
+    .nahled span { display: block; font-size: .72rem; color: var(--text-muted); margin-top: 2px; text-align: center; white-space: nowrap; }
+    .nahled:hover { border-color: var(--border-strong); }
+    .nahled.zap { border-color: var(--accent); }
+    .nahled .znacky { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; }
+    .nahled .znacky i { font-style: normal; font-size: .7rem; background: var(--bg-elevated); border-radius: 4px; padding: 0 3px; }
+
+    .stred { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .plochy-obal { flex: 1; min-height: 0; display: flex; position: relative; }
+    .plochy-obal > .plochy { flex: 1; }
+    .vratit { position: absolute; top: 50%; z-index: 5; writing-mode: vertical-rl; transform: translateY(-50%); background: var(--accent); color: var(--on-accent, #fff); border: 0; padding: 12px 5px; font-size: .8rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); }
+    .vratit-l { left: 0; border-radius: 0 8px 8px 0; }
+    .vratit-p { right: 0; border-radius: 8px 0 0 8px; }
+    .nastroje { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 6px 8px; background: var(--bg-panel); border-bottom: 1px solid var(--border); }
+    .nastroje input.folio { width: 96px; }
+    .nastroje .zoom-hodnota { min-width: 48px; text-align: center; font-size: .8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .plochy { flex: 1; min-height: 0; display: flex; background: #1b1814; }
+    .plocha { flex: 1; min-width: 0; position: relative; overflow: hidden; cursor: grab; touch-action: none; user-select: none; }
+    .plocha.tahne { cursor: grabbing; }
+    .plocha img.obraz { position: absolute; left: 0; top: 0; transform-origin: 0 0; max-width: none; will-change: transform; pointer-events: none; }
+    .plocha .stitek { position: absolute; left: 8px; top: 8px; background: rgba(0,0,0,.65); color: #eee; font-size: .78rem; padding: 3px 7px; border-radius: 5px; pointer-events: none; max-width: calc(100% - 16px); }
+    .plocha .nacitani { position: absolute; right: 8px; top: 8px; background: rgba(0,0,0,.65); color: #eee; font-size: .75rem; padding: 3px 7px; border-radius: 5px; pointer-events: none; }
+    .plocha .minimapa { position: absolute; right: 8px; bottom: 8px; border: 1px solid rgba(255,255,255,.5); background: rgba(0,0,0,.5); pointer-events: none; }
+    .plocha .minimapa img { display: block; opacity: .75; }
+    .plocha .minimapa i { position: absolute; border: 2px solid #ffcc33; }
+
+    .vyskakovaci { position: absolute; z-index: 40; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow); padding: 10px 12px; min-width: 260px; }
+    .vyskakovaci .radek { display: grid; grid-template-columns: 82px 1fr 44px; gap: 8px; align-items: center; font-size: .82rem; margin: 5px 0; }
+    .vyskakovaci input[type=range] { width: 100%; }
+
+    .panel { display: flex; flex-direction: column; min-height: 0; background: var(--bg-panel); border-left: 1px solid var(--border); }
+    .panel-taby { display: flex; border-bottom: 1px solid var(--border); }
+    .panel-taby button { flex: 1; background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 6px; cursor: pointer; color: var(--text-muted); font-size: .85rem; }
+    .panel-taby button.zap { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+    .panel-volby { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--border); font-size: .8rem; }
+    .panel-obsah { flex: 1; overflow: auto; padding: 10px 12px 24px; min-height: 0; }
+
+    /* úryvky */
+    .uryvek { margin: 0 0 18px; }
+    .uryvek-hlava { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; margin-bottom: 6px; }
+    .uryvek-hlava b { font-size: .98rem; }
+    .stitek-m { font-size: .7rem; border: 1px solid var(--border-strong); border-radius: 10px; padding: 0 6px; color: var(--text-muted); white-space: nowrap; }
+    .stitek-m.ca { border-color: var(--sepie); color: var(--sepie); cursor: pointer; }
+    .odst { line-height: 1.6; margin: 0 0 8px; white-space: pre-line; }
+    .odst.it { font-family: Georgia, 'Times New Roman', serif; color: var(--text-muted); font-style: italic; }
+    .dvojice { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin-bottom: 8px; }
+    .dvojice .odst { margin: 0; }
+    .upozorneni { font-size: .78rem; color: var(--text-faint); margin: 4px 0 8px; }
+    mark { background: var(--zvyrazneni); color: inherit; border-radius: 2px; }
+    .meta { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .meta th { text-align: left; font-weight: 500; color: var(--text-muted); padding: 3px 8px 3px 0; vertical-align: top; white-space: nowrap; }
+    .meta td { padding: 3px 0; }
+    .tema-radek { font-size: .85rem; margin: 3px 0; }
+    .tema-radek .pod { color: var(--text-muted); font-style: italic; }
+    textarea.poznamka { width: 100%; min-height: 180px; resize: vertical; line-height: 1.45; }
+
+    /* texty, témata */
+    .filtry { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 12px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; position: sticky; top: -14px; z-index: 3; }
+    .filtry input[type=search] { flex: 1 1 240px; max-width: 420px; font-size: .95rem; padding: 6px 10px; }
+    .cipy { display: flex; flex-wrap: wrap; gap: 3px; }
+    .cip { background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 14px; padding: 2px 9px; font-size: .8rem; cursor: pointer; white-space: nowrap; }
+    .cip.zap { background: var(--accent); color: var(--on-accent, #fff); border-color: var(--accent); }
+    .oddil-nadpis { font-size: 1rem; margin: 22px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+    .mrizka-listu { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+    .mrizka-listu .nahled img { height: 130px; }
+    .mrizka-listu .nahled span { white-space: normal; }
+    .materie { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+    .materie .karta h3 { margin-top: 0; display: flex; justify-content: space-between; gap: 8px; }
+    .graf-roky { display: flex; align-items: flex-end; gap: 2px; height: 140px; padding: 4px 0; border-bottom: 1px solid var(--border-strong); }
+    .graf-roky button { flex: 1; min-width: 0; background: var(--sepie); border: 0; padding: 0; cursor: pointer; border-radius: 2px 2px 0 0; opacity: .8; }
+    .graf-roky button:hover, .graf-roky button.zap { opacity: 1; outline: 2px solid var(--accent); }
+    .graf-popis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--text-faint); margin-top: 2px; }
+    /* období života pod grafem */
+    .obdobi { display: flex; gap: 2px; margin-top: 4px; }
+    .obdobi button { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .72rem; padding: 3px 4px;
+      background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 4px; cursor: pointer; }
+    .obdobi button:nth-child(odd) { background: var(--bg-hover); }
+    .obdobi button:hover { outline: 2px solid var(--accent); }
+    /* prohlídka slavných listů */
+    .prohlidka { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; background: var(--bg-elevated); border-bottom: 1px solid var(--border); }
+    .prohlidka .text { flex: 1; min-width: 0; font-size: .88rem; line-height: 1.45; }
+    .prohlidka .text b { display: block; font-size: .95rem; }
+    .prohlidka .text .hledej { color: var(--text-muted); font-size: .8rem; }
+    .prohlidka .ovl { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .slavne-mrizka { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .slavny { display: flex; flex-direction: column; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; text-align: left; padding: 0; }
+    .slavny:hover { border-color: var(--accent); }
+    .slavny img { width: 100%; height: 190px; object-fit: cover; object-position: center; background: #e9e1cf; }
+    .slavny div { padding: 8px 10px 10px; font-size: .85rem; line-height: 1.4; }
+    .slavny b { display: block; font-size: .95rem; margin-bottom: 3px; }
+    .slavny .cislo { color: var(--text-faint); font-size: .75rem; }
+    /* hádanka */
+    .hadanka { max-width: 760px; margin: 0 auto; }
+    .hadanka blockquote { margin: 0 0 14px; padding: 14px 18px; background: var(--bg-panel); border-left: 4px solid var(--sepie); border-radius: 6px; font-size: 1.08rem; line-height: 1.6; }
+    .hadanka blockquote.it { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: .98rem; color: var(--text-muted); }
+    .moznosti { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin: 12px 0; }
+    .moznosti button { padding: 10px 12px; text-align: left; font-size: .95rem; background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 8px; cursor: pointer; }
+    .moznosti button:hover:not(:disabled) { border-color: var(--accent); }
+    .moznosti button.dobre { background: color-mix(in srgb, var(--ok) 25%, transparent); border-color: var(--ok); }
+    .moznosti button.spatne { background: color-mix(in srgb, var(--danger) 22%, transparent); border-color: var(--danger); }
+    .skore { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: .9rem; color: var(--text-muted); margin-bottom: 10px; }
+    /* zrcadlové písmo */
+    .pismo-ovl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 8px 0; }
+    textarea.pismo-vstup { width: 100%; min-height: 90px; resize: vertical; font-size: 1rem; line-height: 1.4; }
+    .pismo-platno { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; background: #efe4c8; }
+    .tab-zkratky { border-collapse: collapse; font-size: .88rem; width: 100%; }
+    .tab-zkratky td, .tab-zkratky th { border-bottom: 1px solid var(--border); padding: 5px 8px; text-align: left; vertical-align: top; }
+    .tab-zkratky td:first-child { font-family: Georgia, serif; font-size: 1.05rem; white-space: nowrap; }
+    @font-face { font-family: 'LeoFondamento'; src: url('fonty/Fondamento-Regular.ttf'); font-display: swap; }
+    @font-face { font-family: 'LeoItalianno'; src: url('fonty/Italianno-Regular.ttf'); font-display: swap; }
+    @font-face { font-family: 'LeoFell'; src: url('fonty/IMFellEnglish-Regular.ttf'); font-display: swap; }
+    #tip { position: fixed; z-index: 100; pointer-events: none; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 6px; padding: 5px 8px; font-size: .8rem; box-shadow: var(--shadow); display: none; max-width: 320px; }
+    kbd { background: var(--bg-control); border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: .78rem; font-family: inherit; }
+    .zkratky { columns: 2 260px; font-size: .85rem; }
+    .zkratky div { break-inside: avoid; margin-bottom: 3px; }
+
+    @media (max-width: 1100px) { :root { --panel-sirka: 360px; } .dvojice { grid-template-columns: 1fr; } }
+    @media (max-width: 860px) {
+      #m-prohlizec.zap, #m-prohlizec.bez-nahledu, #m-prohlizec.bez-panelu, #m-prohlizec.bez-nahledu.bez-panelu, #m-volo.zap { display: flex; flex-direction: column; overflow: auto; }
+      .levy { border-right: 0; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+      .levy-filtr { flex-direction: row; flex-wrap: wrap; }
+      .levy-filtr select { width: auto; flex: 1; }
+      .nahledy { display: flex; overflow-x: auto; overflow-y: hidden; gap: 4px; padding: 4px; }
+      .nahledy .sekce-nadpis { display: none; }
+      .nahled { width: 70px; flex: 0 0 70px; margin: 0; }
+      .nahled img { height: 64px; }
+      .stred { flex: 0 0 auto; }
+      .nastroje { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+      .nastroje > * { flex: none; }
+      .plochy-obal { flex: 0 0 auto; }
+      .plochy { height: 62vh; flex: 0 0 auto; }
+      .vratit { writing-mode: horizontal-tb; padding: 6px 10px; }
+      .vratit-l { top: 8px; transform: none; }
+      .vratit-p { top: auto; bottom: 8px; transform: none; }
+      .panel { border-left: 0; border-top: 1px solid var(--border); min-height: 50vh; flex: 0 0 auto; }
+      .panel-obsah { overflow: visible; }
+      .podtitul { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hl">
+    <div class="hl-radek">
+      <h1>🪶 Leonardův zápisník</h1>
+      <span class="podtitul">Codex Atlanticus · originál a český překlad</span>
+      <div class="hl-vpravo">
+        <label class="prep" title="Jak ukazovat Leonardovy texty">Text
+          <select id="volbaJazyka">
+            <option value="obe">italsky + česky</option>
+            <option value="cs">jen česky</option>
+            <option value="it">jen originál</option>
+          </select></label>
+      </div>
+    </div>
+    <nav class="rezimy" id="rezimy" aria-label="Režim">
+      <button data-rezim="slavne">⭐ Slavné listy</button>
+      <button data-rezim="prohlizec" class="zap">🔎 Prohlížeč</button>
+      <button data-rezim="volo">🐦 Let ptáků</button>
+      <button data-rezim="texty">📖 Texty</button>
+      <button data-rezim="temata">🧭 Témata a roky</button>
+      <button data-rezim="proroctvi">❓ Hádej proroctví</button>
+      <button data-rezim="pismo">✍️ Zrcadlové písmo</button>
+      <button data-rezim="poznamky">📝 Poznámky</button>
+      <button data-rezim="info">ℹ️ O zápisnících</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="rezim zap" id="m-prohlizec">
+      <div class="levy">
+        <div class="levy-filtr">
+          <select id="filtrMaterie" title="Ukázat jen listy daného oboru" aria-label="Obor"></select>
+          <label class="prep"><input type="checkbox" id="filtrText"> jen s textem</label>
+        </div>
+        <div class="nahledy" id="nahledy" aria-label="Náhledy stran"></div>
+      </div>
+      <div class="stred">
+        <div class="nastroje">
+          <button class="btn ikona" id="tlNahledy" title="Skrýt/ukázat náhledy (N)" aria-label="Náhledy">▤</button>
+          <button class="btn ikona" id="tlPredchozi" title="Předchozí strana (←)" aria-label="Předchozí">◀</button>
+          <input type="text" class="folio" id="vstupFolio" title="Přejít na list: nové číslo (327v) nebo staré se „s“ (s119v); Enter" aria-label="List">
+          <button class="btn ikona" id="tlDalsi" title="Další strana (→)" aria-label="Další">▶</button>
+          <button class="btn ikona" id="tlNahodny" title="Náhodný list (?)" aria-label="Náhodný list">🎲</button>
+          <span class="tlumeny male" id="poradi"></span>
+          <span class="oddel"></span>
+          <button class="btn ikona" id="tlOddalit" title="Oddálit (−)" aria-label="Oddálit">−</button>
+          <span class="zoom-hodnota" id="zoomHodnota">100 %</span>
+          <button class="btn ikona" id="tlPriblizit" title="Přiblížit (+)" aria-label="Přiblížit">+</button>
+          <button class="btn" id="tlCele" title="Celá strana (0)">Celá</button>
+          <button class="btn ikona" id="tlOtocit" title="Otočit o 90° (R)" aria-label="Otočit">⟳</button>
+          <button class="btn" id="tlZrcadlo" title="Zrcadlo – Leonardo psal zprava doleva, zrcadlově (M)">🪞 Zrcadlo</button>
+          <button class="btn" id="tlFiltry" title="Jas, kontrast, zvýraznění inkoustu (F)">🎚️ Obraz</button>
+          <button class="btn ikona" id="tlZalozka" title="Záložka (B)" aria-label="Záložka">☆</button>
+          <a class="btn ikona" id="odkazCommons" target="_blank" rel="noopener" title="Snímek na Wikimedia Commons" aria-label="Snímek na Commons">🖼</a>
+          <button class="btn ikona" id="tlOdkaz" title="Zkopírovat odkaz na tuto stranu" aria-label="Odkaz">🔗</button>
+          <button class="btn ikona" id="tlPanel" title="Skrýt/ukázat panel s textem (P)" aria-label="Panel">◨</button>
+        </div>
+        <div class="prohlidka skryto" id="prohlidka" data-i18n="ne"></div>
+        <div class="plochy-obal">
+          <div class="plochy"><div class="plocha" id="plocha"></div></div>
+          <button class="vratit vratit-l skryto" id="vratNahledy" title="Ukázat náhledy (N)">▸ Náhledy</button>
+          <button class="vratit vratit-p skryto" id="vratPanel" title="Ukázat panel (P)">Text ◂</button>
+        </div>
+      </div>
+      <aside class="panel">
+        <div class="panel-taby" id="panelTaby">
+          <button data-tab="text" class="zap">Text</button>
+          <button data-tab="list">List</button>
+          <button data-tab="poznamka">Poznámka</button>
+        </div>
+        <div class="panel-obsah" id="panelObsah"></div>
+      </aside>
+    </section>
+
+    <section class="rezim" id="m-texty"><div class="stranka-obsah"><div class="sirka" id="obsahTexty"></div></div></section>
+    <section class="rezim" id="m-temata"><div class="stranka-obsah"><div class="sirka" id="obsahTemata"></div></div></section>
+    <section class="rezim" id="m-volo"></section>
+    <section class="rezim" id="m-slavne"><div class="stranka-obsah"><div class="sirka" id="obsahSlavne"></div></div></section>
+    <section class="rezim" id="m-proroctvi"><div class="stranka-obsah"><div class="sirka" id="obsahProroctvi"></div></div></section>
+    <section class="rezim" id="m-pismo"><div class="stranka-obsah"><div class="sirka" id="obsahPismo"></div></div></section>
+    <section class="rezim" id="m-poznamky"><div class="stranka-obsah"><div class="sirka" id="obsahPoznamky"></div></div></section>
+    <section class="rezim" id="m-info"><div class="stranka-obsah"><div class="sirka" id="obsahInfo"></div></div></section>
+  </main>
+  <div id="tip" role="tooltip"></div>
+
+  <script src="voynich/prohlizec.js"></script>
+  <script src="leonardo/jadro.js"></script>
+  <script src="leonardo/ui.js"></script>
+  <script src="leonardo/extra.js"></script>
+  <script src="leonardo/volo.js"></script>
+</body>
+</html>

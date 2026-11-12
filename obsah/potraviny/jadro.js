@@ -2022,6 +2022,104 @@
     while (ma(d)) { n++; d = posunDen(d, -1); if (n > 3660) break; }
     return n;
   }
+
+  /* ---------- motivace: jak dlouho zapisuji, rekordy, odznaky ---------- */
+  // každý druh odznaku má stupně; hodnota se bere z výsledku motivace() pod klíčem `m`
+  const ODZNAKY = [
+    { m: 'polozek', ikona: '✏️', stupne: [[1, 'První zápis'], [100, 'Stovka záznamů'], [500, 'Pět set záznamů'], [1000, 'Tisíc záznamů'], [2500, 'Kronikář']], jedn: ['záznam', 'záznamy', 'záznamů'], popis: 'zapsaných položek celkem' },
+    { m: 'nejdelsiSerie', ikona: '🔥', stupne: [[3, 'Rozjezd'], [7, 'Týden v kuse'], [14, 'Dva týdny'], [30, 'Měsíc bez přestávky'], [60, 'Dva měsíce'], [100, 'Stovka v řadě'], [180, 'Půl roku'], [365, 'Celý rok']], jedn: ['den', 'dny', 'dní'], popis: 'dní v řadě (nejdelší série)' },
+    { m: 'zapsanychDni', ikona: '📅', stupne: [[10, 'Deset dní'], [30, 'Třicítka'], [100, 'Sto dní'], [200, 'Dvě stě dní'], [365, 'Rok zápisů']], jedn: ['den', 'dny', 'dní'], popis: 'dní se záznamem celkem' },
+    { m: 'plneTydny', ikona: '🗓️', stupne: [[1, 'Celý týden'], [4, 'Čtyři celé týdny'], [12, 'Čtvrtletí poctivě'], [26, 'Půlroční poctivost']], jedn: ['týden', 'týdny', 'týdnů'], popis: 'týdnů (po–ne) zapsaných každý den' },
+    { m: 'dnyCil', ikona: '🎯', stupne: [[3, 'Trefa'], [14, 'Ostrostřelec'], [50, 'Mistr cíle'], [150, 'Neomylný']], jedn: ['den', 'dny', 'dní'], popis: 'dní s energií 90–110 % cíle' },
+    { m: 'dnyVoda', ikona: '💧', stupne: [[3, 'Napitý'], [14, 'Studánka'], [50, 'Pramen'], [150, 'Vodopád']], jedn: ['den', 'dny', 'dní'], popis: 'dní se splněným pitným režimem' },
+    { m: 'dnyVlaknina', ikona: '🥦', stupne: [[3, 'Vlákninový začátek'], [14, 'Zelená cesta'], [50, 'Strážce střev']], jedn: ['den', 'dny', 'dní'], popis: 'dní s dostatkem vlákniny' },
+    { m: 'ruznychPotravin', ikona: '🌈', stupne: [[25, 'Ochutnávač'], [50, 'Pestrý talíř'], [100, 'Gurmán'], [200, 'Encyklopedie chutí']], jedn: ['potravina', 'potraviny', 'potravin'], popis: 'různých potravin v deníku' },
+    { m: 'dnyPohyb', ikona: '🏃', stupne: [[5, 'V pohybu'], [20, 'Aktivní'], [60, 'Sportovec'], [150, 'Neúnavný']], jedn: ['den', 'dny', 'dní'], popis: 'dní se zapsaným pohybem' },
+    { m: 'vazeni', ikona: '⚖️', stupne: [[3, 'Na váze'], [12, 'Pravidelné vážení'], [52, 'Rok vážení']], jedn: ['vážení', 'vážení', 'vážení'], popis: 'zapsaných vážení' },
+    { m: 'navraty', ikona: '🔁', stupne: [[1, 'Zpátky ve hře'], [5, 'Nevzdávám to']], jedn: ['návrat', 'návraty', 'návratů'], popis: 'návratů k zapisování po pauze aspoň 3 dny' },
+  ];
+  // souhrn pro motivaci; cileFn(k) → { kcal, vodaMl, vlaknina } (cíle daného dne, může vrátit null)
+  function motivace(stav, dnes, cileFn) {
+    const ma = x => !!(stav.dny[x] && stav.dny[x].z.length > 0);
+    const klice = Object.keys(stav.dny).filter(k => k <= dnes && ma(k)).sort();
+    const vys = {
+      prvni: klice[0] || null, posledni: klice[klice.length - 1] || null,
+      dniOdZacatku: klice.length ? rozdilDni(klice[0], dnes) + 1 : 0,
+      zapsanychDni: klice.length, polozek: 0, ruznychPotravin: 0,
+      serie: serie(stav, dnes), nejdelsiSerie: 0, nejdelsiOd: null, nejdelsiDo: null, dnesZapsano: ma(dnes),
+      dnyCil: 0, dnyVoda: 0, dnyVlaknina: 0, dnyPohyb: 0, vazeni: 0, plneTydny: 0, navraty: 0,
+      tyden: { ted: 0, minule: 0, dnuTed: 0 }, nejlepsiMesic: null, dny: {},
+    };
+    const ruzne = new Set();
+    let run = 0, runOd = null, pred = null;
+    for (const k of klice) {
+      const d = stav.dny[k];
+      vys.polozek += d.z.length;
+      for (const z of d.z) if (!z.rychly) { const f = stav.potraviny[z.p]; ruzne.add(f ? (f.id || z.p) : z.p); }
+      // série a návraty
+      if (pred && rozdilDni(pred, k) === 1) run++;
+      else { if (pred && rozdilDni(pred, k) > 3) vys.navraty++; run = 1; runOd = k; }
+      if (run > vys.nejdelsiSerie) { vys.nejdelsiSerie = run; vys.nejdelsiOd = runOd; vys.nejdelsiDo = k; }
+      pred = k;
+      // plnění cílů dne
+      const s = souhrnDne(stav, k);
+      const c = cileFn ? cileFn(k) : null;
+      let stavDne = 'zapsano';
+      if (c && c.kcal) {
+        const p = (s.celkem.kcal || 0) / (c.kcal + (stav.nastaveni.pohybKCili ? s.pohyb : 0));
+        if (p >= 0.9 && p <= 1.1) { vys.dnyCil++; stavDne = 'cil'; }
+      }
+      const cilVoda = Math.round(((c && c.vodaMl) || 2000) * 0.8 / 250) * 250;   // stejně jako v deníku
+      if ((s.voda || 0) + (s.napoje || 0) >= cilVoda) vys.dnyVoda++;
+      const vl = c && c.vlaknina;
+      if (vl && (s.celkem.vlaknina || 0) >= vl) vys.dnyVlaknina++;
+      vys.dny[k] = stavDne;
+    }
+    for (const k in stav.dny) if (k <= dnes && ((stav.dny[k].pohyb || []).length || 0) > 0) vys.dnyPohyb++;
+    vys.ruznychPotravin = ruzne.size;
+    vys.vazeni = Object.keys(stav.vahy || {}).filter(k => k <= dnes).length;
+    // týdny po–ne: celé zapsané týdny, tento × minulý týden (stejný počet dní)
+    const po = k => posunDen(k, -((zKlice(k).getDay() + 6) % 7));
+    const tydny = new Map();
+    for (const k of klice) { const t = po(k); tydny.set(t, (tydny.get(t) || 0) + 1); }
+    for (const [t, n] of tydny) if (n >= 7 && posunDen(t, 6) <= dnes) vys.plneTydny++;
+    const tenhle = po(dnes);
+    vys.tyden.dnuTed = rozdilDni(tenhle, dnes) + 1;
+    for (let i = 0; i < vys.tyden.dnuTed; i++) {
+      if (ma(posunDen(tenhle, i))) vys.tyden.ted++;
+      if (ma(posunDen(tenhle, i - 7))) vys.tyden.minule++;
+    }
+    // nejlepší měsíc (nejvíc zapsaných dní)
+    const mesice = new Map();
+    for (const k of klice) mesice.set(k.slice(0, 7), (mesice.get(k.slice(0, 7)) || 0) + 1);
+    for (const [m, n] of mesice) if (!vys.nejlepsiMesic || n > vys.nejlepsiMesic.n) vys.nejlepsiMesic = { m, n };
+    vys.odznaky = odznaky(vys);
+    return vys;
+  }
+  // seznam odznaků: splněné stupně + nejbližší další stupeň s postupem
+  function odznaky(m) {
+    const vys = [];
+    for (const o of ODZNAKY) {
+      const hodnota = m[o.m] || 0;
+      o.stupne.forEach(([cil, nazev], i) => {
+        vys.push({ id: o.m + ':' + cil, ikona: o.ikona, nazev, cil, hodnota, stupen: i + 1, druh: o.m, jedn: o.jedn,
+          popis: o.popis, splneno: hodnota >= cil });
+      });
+    }
+    return vys;
+  }
+  // nejbližší nesplněný stupeň (pro „ještě 2 dny do…“); přednost má série, pak nejmenší zbývající podíl
+  function dalsiOdznak(m) {
+    let nej = null;
+    for (const o of ODZNAKY) {
+      const hodnota = m[o.m] || 0;
+      const st = o.stupne.find(([cil]) => hodnota < cil);
+      if (!st) continue;
+      const x = { druh: o.m, ikona: o.ikona, nazev: st[1], cil: st[0], hodnota, zbyva: st[0] - hodnota, jedn: o.jedn, podil: hodnota / st[0] };
+      if (!nej || x.podil > nej.podil) nej = x;
+    }
+    return nej;
+  }
   function nedavne(stav, limit) {
     // posledních N různých potravin podle času přidání
     const vse = [];
@@ -2520,6 +2618,7 @@
       if ('skrytZalohu' in s.nastaveni && s.nastaveni.skrytZalohu !== true && !(typeof s.nastaveni.skrytZalohu === 'string' && zKlice(s.nastaveni.skrytZalohu))) delete s.nastaveni.skrytZalohu;
       { const kr = cislo(s.nastaveni.krok); if (!(kr >= 30 && kr <= 150)) delete s.nastaveni.krok; }
       s.nastaveni.pitnyVyjimky = mapa(s.nastaveni.pitnyVyjimky, v => typeof v === 'boolean' ? v : null);
+      if ('odznaky' in s.nastaveni) s.nastaveni.odznaky = mapa(s.nastaveni.odznaky, v => typeof v === 'string' && zKlice(v) ? v : null);   // id odznaku → den získání
     }
     s.potraviny = mapa(x.potraviny, overSnimek);
     s.vlastni = mapa(x.vlastni, f => { const v = overSnimek(f); return v && Number.isFinite(v.n.kcal) ? v : null; });
@@ -2620,7 +2719,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-28a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-11-12a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
@@ -2630,7 +2729,7 @@
     vek, bmr, bmi, bmiPopis, cile,
     novyStav, klicSnimku, snimek, den, pridejZaznam, rychlyZaznam, najdiZaznam, smazZaznam, presunZaznam,
     kopirujJidlo, kopirujDen, castePrJidlo, casteNapoje, tipyNaZiviny, rozeberSuroviny, gramySuroviny, tvaryNazvu, najdiSurovinu,
-    prevodVahy, prepocetVahy, nastavPrevody, PREVODY_VAHY, namerenaVarianta, PAROVANI_ODHADU, rozeberEtiketu, pridejDoPlanu, smazZPlanu, rozvinPolozkuPlanu, souhrnPlanuDne, zapisPlanDoDeniku, nakupniSeznam, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
+    prevodVahy, prepocetVahy, nastavPrevody, PREVODY_VAHY, namerenaVarianta, PAROVANI_ODHADU, rozeberEtiketu, pridejDoPlanu, smazZPlanu, rozvinPolozkuPlanu, souhrnPlanuDne, zapisPlanDoDeniku, nakupniSeznam, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, motivace, odznaky, dalsiOdznak, ODZNAKY, nedavne, caste, uklid,
     overPotravinu, ulozVlastni, spocitejRecept, ulozRecept, receptJakoPotravina,
     exportJson, importJson, normalizujStav, overPohyb, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
     rozeberTabulkuJidel, importujPolozky,

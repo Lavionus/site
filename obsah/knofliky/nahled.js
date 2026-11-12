@@ -42,7 +42,7 @@
       prekresli();
     }
     /** Normály s lomem: plochy svírající víc než „uhel“ se nevyhlazují. */
-    function lomenaGeometrie(poz, idx, uhel) {
+    function lomenaGeometrie(poz, idx, uhel, barvy) {
       const nT = idx.length / 3, fn = new Float32Array(3 * nT), nV = poz.length / 3, kos = Math.cos(uhel * Math.PI / 180);
       const sous = Array.from({ length: nV }, () => []);
       for (let t = 0; t < nT; t++) {
@@ -53,7 +53,7 @@
         sous[a].push(t); sous[b].push(t); sous[c].push(t);
       }
       const delka = t => Math.hypot(fn[3 * t], fn[3 * t + 1], fn[3 * t + 2]) || 1;
-      const P = new Float32Array(9 * nT), N = new Float32Array(9 * nT);
+      const P = new Float32Array(9 * nT), N = new Float32Array(9 * nT), C = barvy ? new Float32Array(9 * nT) : null;
       for (let t = 0; t < nT; t++) {
         const lt = delka(t);
         for (let k = 0; k < 3; k++) {
@@ -65,11 +65,13 @@
           const l = Math.hypot(nx, ny, nz) || 1;
           N[o] = nx / l; N[o + 1] = ny / l; N[o + 2] = nz / l;
           P[o] = poz[3 * v]; P[o + 1] = poz[3 * v + 1]; P[o + 2] = poz[3 * v + 2];
+          if (C) { C[o] = barvy[3 * v]; C[o + 1] = barvy[3 * v + 1]; C[o + 2] = barvy[3 * v + 2]; }
         }
       }
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.BufferAttribute(P, 3));
       g.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+      if (C) g.setAttribute('color', new THREE.BufferAttribute(C, 3));
       return g;
     }
     const ovl = { cil: new THREE.Vector3(), vzd: 200, azimut: -1.2, elevace: 0.6 };
@@ -98,9 +100,11 @@
       if (!dily || !dily.length) { stin.visible = false; prekresli(); return; }
       const box = new THREE.Box3();
       for (const d of dily) {
-        const g = lomenaGeometrie(d.poz, d.idx, 30);
-        const mat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(d.barva || '#4F86D9'), roughness: 0.45, metalness: 0.05, clearcoat: 0.3, clearcoatRoughness: 0.5,
-          clippingPlanes: stav.rez ? [rovinaRezu] : [] });
+        const g = lomenaGeometrie(d.poz, d.idx, 30, d.barvy);
+        // d.barvy = vlastní barvy vrcholů (např. simulace svícení) – bez stínování scény
+        const mat = d.barvy ? new THREE.MeshBasicMaterial({ vertexColors: true, clippingPlanes: stav.rez ? [rovinaRezu] : [] })
+          : new THREE.MeshPhysicalMaterial({ color: new THREE.Color(d.barva || '#4F86D9'), roughness: 0.45, metalness: 0.05, clearcoat: 0.3, clearcoatRoughness: 0.5,
+            clippingPlanes: stav.rez ? [rovinaRezu] : [] });
         const mesh = new THREE.Mesh(g, mat); mesh.userData.vlastniMat = true; mesh.userData.zakl = true;
         skupina.add(mesh); objekty.push(mesh);
         const vn = new THREE.Mesh(g, matVnitrek); vn.visible = stav.rez; vn.userData.vnitrek = true;
