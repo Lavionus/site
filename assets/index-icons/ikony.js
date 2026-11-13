@@ -442,7 +442,7 @@ const KATALOG_IKONY = {
   "obsah/lights_out.html": "pages/page-lights_out",
   "obsah/hanoi.html": "pages/page-hanoi",
   "obsah/simon.html": "pages/page-simon",
-  "obsah/kde_je_vali.html": "pages/page-kde_je_vali",
+  "obsah/viktoriansky_dum.html": "pages/page-viktoriansky_dum",
   "obsah/ciselny_kod.html": "pages/page-ciselny_kod",
   "obsah/einstein.html": "pages/page-einstein",
   "obsah/rytiri_padousi.html": "pages/page-rytiri_padousi",

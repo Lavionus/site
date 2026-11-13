@@ -59,27 +59,37 @@
 
   // ---------- hádej proroctví ----------
   // Leonardova „proroctví“ jsou hádanky: děsivá věštba popisuje obyčejnou věc, řešení je v nadpisu
-  const obecne = /^(proroctví|totéž|o totéž|jiné|další|ještě|proroctví o totéž)\b/i;
+  // obecné nadpisy nejsou odpověď; \b bez příznaku u za českými znaky nefunguje
+  const obecne = /^(proroctví|totéž|o totéž|jiné|další|ještě|osnova)(?!\p{L})/iu;
   const POOL = URYVKY.filter(u => u.o === 'Profezie' && u.cs.length && u.nc && !obecne.test(u.nc.trim()) &&
     u.cs.join(' ').length <= 650 && u.cs.join(' ').length >= 25);
-  const reseni = u => u.nc.trim().replace(/^./, c => c.toUpperCase());
+  // odpověď = nadpis úryvku; v režimu „jen originál“ italský nadpis, jinak český
+  const reseni = u => {
+    const t = (stav.jazyk === 'it' ? u.ni : u.nc).trim();
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  };
   const hra = stav.hra = Object.assign({ spravne: 0, celkem: 0, serie: 0, nejlepsi: 0 }, stav.hra);
   let otazka = null, posledni = [];
   function novaOtazka() {
     let u;
     do { u = POOL[nahoda(POOL.length)]; } while (POOL.length > 20 && posledni.includes(u.id));
     posledni = [u.id, ...posledni].slice(0, 15);
-    const spr = reseni(u);
-    const moz = new Set([spr]);
-    while (moz.size < 4) moz.add(reseni(POOL[nahoda(POOL.length)]));
-    otazka = { u, spr, moz: [...moz].sort(() => Math.random() - .5), odpoved: null };
+    // 3 další úryvky s jiným nadpisem v obou jazycích (stejné nadpisy by byly dvě správné odpovědi)
+    const moz = [u];
+    const ruzne = x => moz.every(m => m.nc.trim().toLowerCase() !== x.nc.trim().toLowerCase() && m.ni.trim().toLowerCase() !== x.ni.trim().toLowerCase());
+    for (let pokus = 0; moz.length < 4 && pokus < 500; pokus++) {
+      const x = POOL[nahoda(POOL.length)];
+      if (ruzne(x)) moz.push(x);
+    }
+    otazka = { u, moz: moz.sort(() => Math.random() - .5), odpoved: null };
   }
   rezimy.proroctvi = function () {
+    if (POOL.length < 4) { $('#obsahProroctvi').innerHTML = '<p class="tlumeny">Hádanky nejsou k dispozici.</p>'; return; }
     if (!otazka) novaOtazka();
     kresliHadanku();
   };
   function kresliHadanku() {
-    const { u, spr, moz, odpoved } = otazka;
+    const { u, moz, odpoved } = otazka;
     const jaz = stav.jazyk;
     const text = jaz === 'it' ? `<blockquote class="it" lang="it">${u.it.map(esc).join('<br>')}</blockquote>`
       : `<blockquote>${u.cs.map(esc).join('<br>')}</blockquote>` + (jaz === 'obe' && odpoved ? `<blockquote class="it" lang="it">${u.it.map(esc).join('<br>')}</blockquote>` : '');
@@ -89,8 +99,8 @@
       <p class="male tlumeny">Leonardo psal hádanky ve formě hrůzostrašných proroctví – za děsivou věštbou se skrývá obyčejná věc. Uhodnete, která?</p>
       <div class="skore"><span>✔ ${hra.spravne} / ${hra.celkem} (${procento} %)</span><span>🔥 ${T('série')} ${hra.serie}</span><span>🏆 ${T('nejlepší série')} ${hra.nejlepsi}</span></div>
       <div data-i18n="ne">${text}
-      <div class="moznosti">${moz.map(m => `<button data-m="${esc(m)}" ${odpoved ? 'disabled' : ''} class="${odpoved ? (m === spr ? 'dobre' : m === odpoved ? 'spatne' : '') : ''}">${esc(m)}</button>`).join('')}</div></div>
-      ${odpoved ? `<p><b>${odpoved === spr ? '✔ ' + T('Správně!') : '✘ ' + T('Řešení:')}</b> <span data-i18n="ne">${esc(spr)}</span>
+      <div class="moznosti">${moz.map(m => `<button data-m="${esc(m.id)}" ${odpoved ? 'disabled' : ''} class="${odpoved ? (m === u ? 'dobre' : m.id === odpoved ? 'spatne' : '') : ''}"${jaz === 'it' ? ' lang="it"' : ''}>${esc(reseni(m))}</button>`).join('')}</div></div>
+      ${odpoved ? `<p><b>${odpoved === u.id ? '✔ ' + T('Správně!') : '✘ ' + T('Řešení:')}</b> <span data-i18n="ne">${esc(reseni(u))}</span>
         <span class="tlumeny male" data-i18n="ne">· ${esc(u.ref ? u.ref.raw : '')}</span>
         ${u.ca.length ? ` · <a href="#" data-skok="${u.ca[0]}">${T('ukázat list')}</a>` : ''}</p>
         <p><button class="btn" id="tlDalsiHadanka" style="background:var(--accent);color:var(--on-accent,#fff)">${T('Další hádanka')} ▶</button></p>` : ''}
@@ -100,11 +110,11 @@
     const d = $('#tlDalsiHadanka');
     if (d) d.onclick = () => { novaOtazka(); kresliHadanku(); };
   }
-  function odpovez(m) {
+  function odpovez(id) {
     if (otazka.odpoved) return;
-    otazka.odpoved = m;
+    otazka.odpoved = id;
     hra.celkem++;
-    if (m === otazka.spr) { hra.spravne++; hra.serie++; hra.nejlepsi = Math.max(hra.nejlepsi, hra.serie); }
+    if (id === otazka.u.id) { hra.spravne++; hra.serie++; hra.nejlepsi = Math.max(hra.nejlepsi, hra.serie); }
     else hra.serie = 0;
     L.ulozStav();
     kresliHadanku();

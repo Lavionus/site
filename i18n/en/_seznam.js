@@ -447,6 +447,7 @@ I18N.seznam('en', [
   'vesaky',
   'video_sekce',
   'videocutter',
+  'viktoriansky_dum',
   'vin_decoder',
   'vision_test',
   'vodopady',

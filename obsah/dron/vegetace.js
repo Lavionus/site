@@ -1,5 +1,5 @@
 // Nad krajinou — vegetace: lesy a solitérní stromy, keře, tráva, polní plodiny, kapradí, rákos,
-// květiny a kameny. Vlastník: VEGETACE. Smlouva rozhraní viz Dron_PLAN.md.
+// květiny a kameny. Vlastník: VEGETACE. Smlouva rozhraní viz docs/plany/Dron_PLAN.md.
 //
 // Jak to funguje:
 //  • Textury: listí, jehličí a kůra se při startu namalují na plátno do jednoho atlasu (2048×1280),

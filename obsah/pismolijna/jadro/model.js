@@ -1,6 +1,6 @@
 /* ============================================================
    Písmolijna – jadro/model.js
-   Datový model fontu (smlouva viz Pismolijna_PLAN.md): nový font
+   Datový model fontu (smlouva viz docs/plany/Pismolijna_PLAN.md): nový font
    a glyf, názvy glyfů podle Adobe Glyph List pro latinku, cmap,
    rozložení komponent, obálka a postranní mezery, bloky Unicode.
    Bez DOM – běží i v node.

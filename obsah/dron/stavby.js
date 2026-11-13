@@ -1,7 +1,7 @@
 // Nad krajinou — stavby: vesnice (domy, stodoly, kostel s věží, kaple), rozhledna, posed, balíky sena,
 // mosty, ploty a ohrady, elektrické vedení s dráty, závodní branky, startovní plocha s pilotem.
 // Vše se slučuje podle materiálu do několika málo meshů (vlastní slučování geometrie, „Stavitel“),
-// textury se kreslí procedurálně do canvasu. Smlouva dat je v Dron_PLAN.md › Terén.
+// textury se kreslí procedurálně do canvasu. Smlouva dat je v docs/plany/Dron_PLAN.md › Terén.
 (function (D) {
   'use strict';
 

@@ -54,6 +54,7 @@
       this.miniImg.src = obr.nahled;
       const token = this._token = {};
       this.img.src = obr.nahled;
+      this.nacitani.textContent = 'načítám plné rozlišení…';   // po předchozí chybě vrátit původní text
       this.nacitani.classList.remove('skryto');
       const plne = new Image();
       plne.decoding = 'async';

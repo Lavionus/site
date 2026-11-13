@@ -1,7 +1,7 @@
 // Nad krajinou — 3D modely dronů: kamerový (skládací ramena, gimbal), FPV 5" (karbonový rám X),
 // cinewhoop (vrtule v ochranných prstencích). Vrtule se točí podle dron.motory, při vysokých otáčkách
 // se místo listů ukáže průhledný rozmazaný disk, LED blikají. V pohledu FPV/gimbal se tělo schová.
-// Rozhraní: D.vytvorModelDronu(typ) → { skupina, kameraFPV, update(dron, dt, ctx) } (Dron_PLAN.md).
+// Rozhraní: D.vytvorModelDronu(typ) → { skupina, kameraFPV, update(dron, dt, ctx) } (docs/plany/Dron_PLAN.md).
 (function (D) {
   'use strict';
 

@@ -1,7 +1,7 @@
 // Nad krajinou — fyzika dronu: tuhé těleso se 6 stupni volnosti, čtyři motory se setrvačností,
 // odpor vzduchu, vítr s nárazy a turbulencí, přízemní efekt, vírový prstenec, LiPo baterie,
 // kontakty (nohy s pružinou a třením, vrtule, tělo), poškození a havárie. Bez THREE — běží i v node.
-// Rozhraní (závazné): Dron_PLAN.md › Fyzika.
+// Rozhraní (závazné): docs/plany/Dron_PLAN.md › Fyzika.
 //
 // Souřadnice: Y nahoru, nos dronu k −Z, pravá strana +X. Úhlové rychlosti w v tělových osách:
 // w[0] kolem x (kladná = nos nahoru), w[1] kolem y (kladná = doleva), w[2] kolem z (kladná = pravý bok nahoru).

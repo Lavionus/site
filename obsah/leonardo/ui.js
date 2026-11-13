@@ -22,12 +22,22 @@
     zrcadlo: false, materie: '', jenText: false, obraz: { jas: 100, kontrast: 100, sepie: 0, negativ: false },
     textyOddil: '', textyDotaz: ''
   };
-  const ulozeny = cti(KLIC_STAV, {});
-  const stav = Object.assign({}, vychozi, ulozeny, { obraz: Object.assign({}, vychozi.obraz, ulozeny.obraz) });
-  if (!(stav.list >= 0 && stav.list < LISTY.length)) stav.list = vychozi.list;
+  // uložená data mohou být z jiné verze nebo poškozená – nic z nich nesmí stránku shodit
+  const objekt = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  const platnyList = i => Number.isInteger(i) && i >= 0 && i < LISTY.length;
+  const ulozeny = objekt(cti(KLIC_STAV, {}));
+  const stav = Object.assign({}, vychozi, ulozeny, { obraz: Object.assign({}, vychozi.obraz, objekt(ulozeny.obraz)) });
+  if (!platnyList(stav.list)) stav.list = vychozi.list;
+  if (!['obe', 'cs', 'it'].includes(stav.jazyk)) stav.jazyk = vychozi.jazyk;
+  if (!['text', 'list', 'poznamka'].includes(stav.tab)) stav.tab = vychozi.tab;
+  if (stav.materie && !DATA.materie[stav.materie]) stav.materie = '';
   let casovac = null;
   const ulozStav = () => { clearTimeout(casovac); casovac = setTimeout(() => pis(KLIC_STAV, stav), 250); };
-  let poznamky = cti(KLIC_POZN, {}), zalozky = cti(KLIC_ZAL, []);
+  // klíčem je pořadí strany (1r = 0, 1v = 1 …), pevně dané číslováním listů
+  const poznamky = objekt(cti(KLIC_POZN, {}));
+  Object.keys(poznamky).forEach(k => { if (!platnyList(+k) || typeof poznamky[k] !== 'string') delete poznamky[k]; });
+  let zalozky = cti(KLIC_ZAL, []);
+  zalozky = Array.isArray(zalozky) ? zalozky.filter(platnyList) : [];
 
   // texty skládané z proměnných a texty uvnitř úryvků (data-i18n="ne") se překládají tady
   const T = (s, p) => (window.I18N && I18N.t ? I18N.t(s, p) : s.replace(/\{(\w+)\}/g, (_, k) => p[k]));
@@ -43,19 +53,22 @@
     document.querySelectorAll('section.rezim').forEach(s => s.classList.toggle('zap', s.id === 'm-' + r));
     if (rezimy[r]) rezimy[r]();
     if (r === 'prohlizec' && plocha.prizpusobeno) plocha.prizpusob(plocha.prizpusobeno);
-    if (!bezHash) zapisHash();
+    if (!bezHash) zapisHash(true);
     ulozStav();
   }
-  function zapisHash() {
+  // novyZaznam: přepnutí režimu a skok z textu jdou do historie (Zpět funguje), listování po stranách ne
+  function zapisHash(novyZaznam) {
     const h = stav.rezim === 'prohlizec' ? '#' + J.souborListu(LISTY[stav.list]).replace(/^0+/, '') : '#' + stav.rezim;
-    if (location.hash !== h) history.replaceState(null, '', h);
+    if (location.hash !== h) history[novyZaznam ? 'pushState' : 'replaceState'](null, '', h);
   }
+  // vrací 'list', 'rezim' nebo false
   function ctiHash() {
-    const h = decodeURIComponent(location.hash.slice(1));
+    let h = '';
+    try { h = decodeURIComponent(location.hash.slice(1)); } catch (_) { return false; }   // poškozené %xx
     if (!h) return false;
-    if (document.getElementById('m-' + h)) { prepniRezim(h, true); return true; }
+    if (document.getElementById('m-' + h)) { prepniRezim(h, true); return 'rezim'; }
     const i = J.najdiList(LISTY, h);
-    if (i >= 0) { jdiNa(i, true); prepniRezim('prohlizec', true); return true; }
+    if (i >= 0) { jdiNa(i, true); prepniRezim('prohlizec', true); return 'list'; }
     return false;
   }
   document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => prepniRezim(b.dataset.rezim)));
@@ -73,6 +86,7 @@
   function nastavZrcadlo() {
     plocha.zrcadli(stav.zrcadlo);
     $('#tlZrcadlo').classList.toggle('zap', stav.zrcadlo);
+    $('#tlZrcadlo').setAttribute('aria-pressed', stav.zrcadlo);
   }
 
   function jdiNa(i, bezHash) {
@@ -88,6 +102,7 @@
     $('#poradi').textContent = (i + 1) + ' / ' + LISTY.length;
     $('#odkazCommons').href = J.stranaCommons(l);
     $('#tlZalozka').textContent = zalozky.includes(i) ? '★' : '☆';
+    $('#tlZalozka').setAttribute('aria-pressed', zalozky.includes(i));
     oznacNahled();
     kresliPanel();
     if (window.Leonardo && Leonardo.poPrechodu) Leonardo.poPrechodu(i);
@@ -104,7 +119,7 @@
   }
   function nahledHtml(i, popisek) {
     const l = LISTY[i];
-    const zn = (SLAVNE.has(i) ? '<i title="Slavný list – v prohlídce">⭐</i>' : '') + (NA_LISTU[i] ? '<i title="Je zde text s překladem">📜</i>' : NA_RICHTER[i] ? '<i title="Anglický překlad (Richter 1883)">EN</i>' : '') + (zalozky.includes(i) ? '<i>★</i>' : '') + (poznamky[i] ? '<i>📝</i>' : '');
+    const zn = (SLAVNE.has(i) ? `<i title="${esc(T('Slavný list – v prohlídce'))}">⭐</i>` : '') + (NA_LISTU[i] ? `<i title="${esc(T('Je zde text s překladem'))}">📜</i>` : NA_RICHTER[i] ? `<i title="${esc(T('Anglický překlad (Richter 1883)'))}">EN</i>` : '') + (zalozky.includes(i) ? '<i>★</i>' : '') + (poznamky[i] ? '<i>📝</i>' : '');
     return `<button class="nahled" data-i="${i}" title="${esc(popisListu(i) + (l.h ? ' (' + T('dříve {l}', { l: stareCislo(l) }) + ')' : ''))}"><img loading="lazy" src="${esc(J.urlNahledu(DATA, l, CESTA))}" alt=""><span>${esc(popisek || J.popis(l))}</span><b class="znacky">${zn}</b></button>`;
   }
   function kresliNahledy() {
@@ -112,13 +127,20 @@
     LISTY.forEach((l, i) => {
       if (!vyhovujeFiltru(i)) return;
       const b = Math.floor((l.n - 1) / 100);
-      if (b !== blok) { html += `<div class="sekce-nadpis">Listy ${b * 100 + 1}–${Math.min(1119, b * 100 + 100)}</div>`; blok = b; }
+      if (b !== blok) { html += `<div class="sekce-nadpis">${esc(T('Listy {b}–{b2}', { b: b * 100 + 1, b2: Math.min(1119, b * 100 + 100) }))}</div>`; blok = b; }
       html += nahledHtml(i);
       n++;
     });
-    $('#nahledy').innerHTML = html || '<p class="tlumeny male">Filtru nic neodpovídá.</p>';
+    $('#nahledy').innerHTML = html || `<p class="tlumeny male">${esc(T('Filtru nic neodpovídá.'))}</p>`;
     oznacNahled(true);
     return n;
+  }
+  // jedna změna (záložka, poznámka) nemusí překreslovat 2238 náhledů
+  function obnovNahled(i) {
+    const b = document.querySelector(`#nahledy .nahled[data-i="${i}"]`);
+    if (!b) return;
+    b.outerHTML = nahledHtml(i);
+    oznacNahled(false);
   }
   function oznacNahled(posun) {
     const el = $('#nahledy');
@@ -198,12 +220,12 @@
            <p class="male tlumeny">Přepis s překladem má ${Object.keys(NA_LISTU).length} stran Codexu Atlanticus – zapněte vlevo „jen s textem“, nebo projděte všech ${URYVKY.length} úryvků v režimu <a href="#texty">📖 Texty</a>.</p>
            <p class="male tlumeny">Tip: Leonardo psal levou rukou zprava doleva – tlačítko 🪞 Zrcadlo převrátí stranu, aby se písmo dalo číst.</p>`;
     } else if (stav.tab === 'list') {
-      const temata = (l.t || []).map(([m, t, pod]) => `<div class="tema-radek">${esc(DATA.materie[m] || m)} › <b>${esc(DATA.temata[t] || '')}</b>${pod ? ` <span class="pod" lang="it">(${esc(pod)})</span>` : ''}</div>`).join('');
+      const temata = (l.t || []).map(([m, t, pod]) => `<div class="tema-radek">${esc(T(DATA.materie[m] || m))} › <b>${esc(T(DATA.temata[t] || ''))}</b>${pod ? ` <span class="pod" lang="it">(${esc(pod)})</span>` : ''}</div>`).join('');
       el.innerHTML = `<table class="meta">
           <tr><th>Nové číslo</th><td>f. ${esc(J.popis(l))}${l.m && l.m.length > 1 ? ` <span class="tlumeny">(části ${esc(l.m.join(', '))})</span>` : ''}</td></tr>
           <tr><th>Dříve (Hoepli)</th><td>${l.h ? esc(stareCislo(l)) : '<span class="tlumeny">–</span>'}</td></tr>
           <tr><th>Antické číslo</th><td>${l.st ? esc(l.st.join(', ')) : '<span class="tlumeny">–</span>'}</td></tr>
-          <tr><th>Datace</th><td>${l.rok ? esc(l.rok) + ' <span class="tlumeny">(přibližně, podle Ambrosiany)</span>' : '<span class="tlumeny">neuvedena</span>'}</td></tr>
+          <tr><th>Datace</th><td>${l.rok ? esc(l.rok) + ` <span class="tlumeny">${esc(T('(přibližně, podle Ambrosiany)'))}</span>` : '<span class="tlumeny">neuvedena</span>'}</td></tr>
           <tr><th>Snímek</th><td><a href="${esc(J.stranaCommons(l))}" target="_blank" rel="noopener">Wikimedia Commons</a> · volné dílo</td></tr>
         </table>
         <h3>Co je na straně</h3>${temata || '<p class="tlumeny male">Témata této strany nejsou v katalogu uvedena.</p>'}
@@ -212,8 +234,10 @@
       el.innerHTML = `<p class="male tlumeny">Poznámka k f. ${esc(J.popis(l))} – zůstává jen v tomto prohlížeči.</p><textarea class="poznamka" id="poleP" placeholder="Co na straně vidíte, co jste přečetli…">${esc(poznamky[i] || '')}</textarea>`;
       $('#poleP').addEventListener('input', e => {
         const v = e.target.value;
+        const mela = !!poznamky[i];
         if (v.trim()) poznamky[i] = v; else delete poznamky[i];
         pis(KLIC_POZN, poznamky);
+        if (mela !== !!poznamky[i]) obnovNahled(i);
       });
     }
   }
@@ -222,19 +246,21 @@
     const s = e.target.closest('[data-skok]');
     if (!s) return;
     e.preventDefault();
-    jdiNa(+s.dataset.skok);
-    if (stav.rezim !== 'prohlizec') prepniRezim('prohlizec');
+    jdiNa(+s.dataset.skok, true);
+    if (stav.rezim !== 'prohlizec') prepniRezim('prohlizec'); else zapisHash(true);
   });
 
   // ---------- nástroje ----------
   function prepniNahledy(v) {
     stav.nahledy = v;
+    $('#tlNahledy').setAttribute('aria-pressed', v);
     $('#m-prohlizec').classList.toggle('bez-nahledu', !v);
     $('#vratNahledy').classList.toggle('skryto', v);
     ulozStav();
   }
   function prepniPanel(v) {
     stav.panel = v;
+    $('#tlPanel').setAttribute('aria-pressed', v);
     $('#m-prohlizec').classList.toggle('bez-panelu', !v);
     $('#vratPanel').classList.toggle('skryto', v);
     ulozStav();
@@ -259,7 +285,8 @@
     if (k >= 0) zalozky.splice(k, 1); else zalozky.push(i);
     pis(KLIC_ZAL, zalozky);
     $('#tlZalozka').textContent = zalozky.includes(i) ? '★' : '☆';
-    kresliNahledy();
+    $('#tlZalozka').setAttribute('aria-pressed', zalozky.includes(i));
+    obnovNahled(i);
   };
   $('#tlOdkaz').onclick = async () => {
     const url = location.href.split('#')[0] + '#' + J.souborListu(LISTY[stav.list]).replace(/^0+/, '');
@@ -306,6 +333,9 @@
   };
   document.addEventListener('pointerdown', e => {
     if (okno && !okno.contains(e.target) && e.target.id !== 'tlFiltry') { okno.remove(); okno = null; }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && okno) { okno.remove(); okno = null; $('#tlFiltry').focus(); }
   });
 
   // klávesy
@@ -397,7 +427,7 @@
       <div class="graf-roky" id="grafRoky">${graf}</div>
       <div class="obdobi" id="obdobi">${OBDOBI.filter(o => o.do >= od && o.od <= doR).map(o => {
         const a = Math.max(o.od, od), b = Math.min(o.do, doR);
-        return `<button data-od="${a}" data-do="${b}" style="flex:${b - a + 1}" title="${esc(o.nazev + ' ' + o.od + '–' + o.do + ': ' + o.popis)}">${esc(o.nazev)}</button>`;
+        return `<button data-od="${a}" data-do="${b}" style="flex:${b - a + 1}" title="${esc(T(o.nazev) + ' ' + o.od + '–' + o.do + ': ' + T(o.popis))}">${esc(T(o.nazev))}</button>`;
       }).join('')}</div>
       <div class="graf-popis"><span>${od}</span><span>${Math.round((od + doR) / 2)}</span><span>${doR}</span></div>
       <p class="male tlumeny">Pruh pod grafem: kde Leonardo žil (klikněte na období).</p>
@@ -415,13 +445,13 @@
     $('#grafRoky').addEventListener('click', e => {
       const b = e.target.closest('button[data-rok]');
       if (!b) return;
-      vyberTemat = { nadpis: 'Rok ' + b.dataset.rok, listy: roky[b.dataset.rok] };
+      vyberTemat = { nadpis: T('Rok {rok}', { rok: b.dataset.rok }), listy: roky[b.dataset.rok] };
       kresliVyber();
     });
     el.querySelector('.materie').addEventListener('click', e => {
       const b = e.target.closest('.cip');
       if (!b) return;
-      vyberTemat = { nadpis: DATA.materie[b.dataset.mat] + ' › ' + DATA.temata[b.dataset.tema], listy: [...mat[b.dataset.mat].temata[b.dataset.tema]], tema: +b.dataset.tema };
+      vyberTemat = { nadpis: T(DATA.materie[b.dataset.mat]) + ' › ' + T(DATA.temata[b.dataset.tema]), listy: [...mat[b.dataset.mat].temata[b.dataset.tema]], tema: +b.dataset.tema };
       kresliVyber();
     });
     if (vyberTemat) kresliVyber(true);
@@ -483,8 +513,9 @@
   kresliNahledy();
   nastavObraz();
   nastavZrcadlo();
-  jdiNa(stav.list, true);
-  if (!ctiHash()) prepniRezim(stav.rezim, true);
+  const zHashe = ctiHash();
+  if (zHashe !== 'list') jdiNa(stav.list, true);   // jinak by se načetly dva snímky
+  if (!zHashe) prepniRezim(stav.rezim, true);
   zapisHash();
   Object.assign(window.Leonardo = window.Leonardo || {}, {
     stav, jdiNa, prepniRezim, LISTY, URYVKY, NA_LISTU, NA_RICHTER, DATA, TX, J, esc, T, rezimy, ulozStav, nahledHtml, uryvekHtml, kresliPanel, $

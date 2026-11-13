@@ -1,5 +1,5 @@
 // Nad krajinou — sdílený základ: registr modulů, parametry, události, sdílené uniformy,
-// atmosférický GLSL a úprava standardních materiálů. Smlouva rozhraní je v Dron_PLAN.md.
+// atmosférický GLSL a úprava standardních materiálů. Smlouva rozhraní je v docs/plany/Dron_PLAN.md.
 (function (D) {
   'use strict';
 

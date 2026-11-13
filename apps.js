@@ -3587,10 +3587,10 @@ const KATALOG_SEKCE = [
         "tagy": ["simon", "paměť", "sekvence", "barvy", "zvuky"]
       },
       {
-        "soubor": "obsah/kde_je_vali.html",
-        "nazev": "🔎 Kde je Vali?",
+        "soubor": "obsah/viktoriansky_dum.html",
+        "nazev": "🕯️ Viktoriánský dům",
         "stav": "vyvoj",
-        "tagy": ["hledání", "najdi postavu", "dav", "hledačka", "pozornost", "obrázková hra", "pro děti", "vali"]
+        "tagy": ["hledání předmětů", "skryté předměty", "hidden object", "hledačka", "viktoriánský", "pokoje", "starožitnosti", "pozornost", "obrázková hra", "kde je vali"]
       }
     ]
   },

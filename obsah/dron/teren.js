@@ -1,5 +1,5 @@
 // Nad krajinou — generátor krajiny (agent TERÉN): česká vrchovina 4 × 4 km ze seedu.
-// Rozhraní (data i metody) je závazné, viz Dron_PLAN.md › Terén. Běží v node, ve Workeru i na stránce.
+// Rozhraní (data i metody) je závazné, viz docs/plany/Dron_PLAN.md › Terén. Běží v node, ve Workeru i na stránce.
 //
 // Postup: osa údolí + makrotvar (dno údolí, svahy, hřbety, zkroucení domény) na mřížce 513² (8 m)
 // → kapková hydraulická eroze + lehká termální → bikubicky na 1025² (4 m) + jemný detail
@@ -9,7 +9,7 @@
 // → masky (pole v lánech, les s roztřepeným okrajem, cesty, vlhkost) → vedení, stavby, stromy, kameny
 // → závodní tratě (ověřené proti stavbám a terénu, stromy v cestě se vykácí) a cíle fotomisí.
 //
-// Upřesnění a DOPLNĚNÁ pole dat (vše ostatní přesně podle Dron_PLAN.md):
+// Upřesnění a DOPLNĚNÁ pole dat (vše ostatní přesně podle docs/plany/Dron_PLAN.md):
 //   maska G (pole): 0 = louka/úhor; 1..255 = orná půda, hodnota rozlišuje plodinu pruhu
 //          (255 obilí, 215 řepka, 175 kukuřice, 135 oranice) → vykreslení smí barvit podle hodnoty.
 //   maska B (cesta): 255 silnice (asfalt), 150 polní cesta; okraj plynule klesá.

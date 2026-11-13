@@ -1,5 +1,5 @@
 // Nad krajinou — vstup: klávesnice, gamepad, RC vysílačka přes USB, dotykové páky, nastavení ovládání.
-// Rozhraní je závazné, viz Dron_PLAN.md › Vstup:
+// Rozhraní je závazné, viz docs/plany/Dron_PLAN.md › Vstup:
 //   D.vstup.cti(ctx) → { plyn 0..1, yaw, pitch, roll, gimbal ∈ −1..1, plynStred, prepinace { arm, rezim, sport }, udalosti [] }
 //   pitch +1 = páka od sebe (nos dolů, vpřed), roll +1 = doprava, yaw +1 = doprava,
 //   gimbal = rychlost naklápění kamery (+1 nahoru, −1 dolů).

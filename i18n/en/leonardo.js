@@ -399,4 +399,12 @@ I18N.pridej('en', {
   'Italianno (krasopis)': 'Italianno (calligraphy)',
   'IM Fell (tisk 17. stol.)': 'IM Fell (17th-c. print)',
   'Text k převedení': 'Text to convert',
+  'Hádanky nejsou k dispozici.': 'Riddles are not available.',
+  'přední deska': 'front cover',
+  'přední deska – vnitřek': 'front cover – inside',
+  'zadní deska – vnitřek': 'back cover – inside',
+  'zadní deska': 'back cover',
+  'Jas': 'Brightness',
+  'Kontrast': 'Contrast',
+  '(přibližně, podle Ambrosiany)': '(approximately, according to the Ambrosiana)',
 });

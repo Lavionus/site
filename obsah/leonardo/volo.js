@@ -7,6 +7,9 @@
   const nav = document.querySelector('#rezimy [data-rezim="volo"]');
   if (!V || !V.strany || !V.strany.length) { if (nav) nav.remove(); return; }
   const S = V.strany;
+  // desky mají v datech technická id – pro lidi popis
+  const DESKY = { deska_p: 'přední deska', deska_pv: 'přední deska – vnitřek', deska_zv: 'zadní deska – vnitřek', deska_z: 'zadní deska' };
+  const nazevStrany = s => DESKY[s.id] ? T(DESKY[s.id]) : 'f. ' + s.id;
   const url = (s, nahled) => 'leonardo/volo/' + (nahled ? 'nahledy/' : '') + s.id + '.webp';
   let plocha = null;
   if (!(stav.volo >= 0 && stav.volo < S.length)) stav.volo = Math.min(1, S.length - 1);
@@ -15,7 +18,7 @@
     const el = $('#m-volo');
     el.innerHTML = `
       <div class="levy"><div class="nahledy" id="voloNahledy">${S.map((s, k) =>
-        `<button class="nahled" data-k="${k}" title="${esc(s.shrnuti || s.id)}"><img loading="lazy" src="${url(s, true)}" alt=""><span>${esc(s.id)}</span>${s.it.length ? '<b class="znacky"><i>📜</i></b>' : ''}</button>`).join('')}</div></div>
+        `<button class="nahled" data-k="${k}" title="${esc(((document.documentElement.lang || '').startsWith('en') && s.en_shrnuti) || s.shrnuti || s.id)}"><img loading="lazy" src="${url(s, true)}" alt=""><span>${esc(DESKY[s.id] ? T(DESKY[s.id]) : s.id)}</span>${s.it.length ? '<b class="znacky"><i>📜</i></b>' : ''}</button>`).join('')}</div></div>
       <div class="stred">
         <div class="nastroje">
           <button class="btn ikona" data-v="-1" title="Předchozí strana" aria-label="Předchozí">◀</button>
@@ -50,7 +53,7 @@
     k = Math.max(0, Math.min(S.length - 1, k));
     stav.volo = k;
     const s = S[k];
-    plocha.nastav({ url: url(s), nahled: url(s, true), w: s.w, h: s.h, popis: T('Kodex o letu ptáků') + ' · ' + s.id });
+    plocha.nastav({ url: url(s), nahled: url(s, true), w: s.w, h: s.h, popis: T('Kodex o letu ptáků') + ' · ' + nazevStrany(s) });
     $('#voloPoradi').textContent = (k + 1) + ' / ' + S.length;
     document.querySelectorAll('#voloNahledy .nahled').forEach(b => b.classList.toggle('zap', +b.dataset.k === k));
     const b = document.querySelector(`#voloNahledy .nahled[data-k="${k}"]`);
@@ -62,7 +65,7 @@
     else if (jaz === 'obe' && s.cs.length) telo = s.it.map((p, i) => `<div class="dvojice"><p class="odst it" lang="it">${esc(p)}</p><p class="odst">${esc(s.cs[i] || '')}</p></div>`).join('');
     else if (jaz === 'cs' && s.cs.length) telo = s.cs.map(p => `<p class="odst">${esc(p)}</p>`).join('');
     else telo = s.it.map(p => `<p class="odst it" lang="it">${esc(p)}</p>`).join('');
-    $('#voloText').innerHTML = `<div class="uryvek" data-i18n="ne"><div class="uryvek-hlava"><b>f. ${esc(s.id)}</b></div>
+    $('#voloText').innerHTML = `<div class="uryvek" data-i18n="ne"><div class="uryvek-hlava"><b>${esc(nazevStrany(s))}</b></div>
       ${shr ? `<p class="upozorneni">${esc(shr)}</p>` : ''}${telo}</div>
       <p class="male tlumeny">${esc(T('Zdroj textu'))}: ${esc(V.zdroj_text || '')}<br>${esc(T('Snímky'))}: ${esc(V.zdroj_snimky || 'Wikimedia Commons')}</p>`;
     L.ulozStav();
