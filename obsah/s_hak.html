@@ -6,12 +6,17 @@
   <title>S hák na trubky – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor 3D S háku na dvě trubky: paleta průřezů i vlastní průřez, průměry trubek, zacvaknutí, prolnutí žebra na druhou stranu, aby oba konce ležely hladce na trubce, odhad nosnosti, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="s_hak/jadro.js"></script>
   <script src="s_hak/nahled.js"></script>
@@ -119,7 +124,7 @@
       border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; }
     .legenda-napeti i { display: inline-block; width: 90px; height: 9px; border-radius: 3px; background: linear-gradient(90deg, #3060d0, #30b070, #e0c030, #e04030); }
 
-    /* --- rozvržení sdílí generátory trubek (trubky_gui.css), tady jen doplňky */
+    /* --- rozvržení sdílí generátory trubek (gen3d/gui.css), tady jen doplňky */
     #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border);
       background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
     #canvas-container:active { cursor: grabbing; }
@@ -160,15 +165,17 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje háky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk</div>
-            <button class="pol" id="btnStl" role="menuitem">⬇ STL <span class="pozn">Ctrl+S</span></button>
-            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF <span class="pozn">s názvem a barvou</span></button>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše <span class="pozn">s názvem a barvou</span></button>
             <button class="pol" id="btnKlip1" role="menuitem">🧪 Zkušební klipy – horní trubka <span class="pozn">3MF</span></button>
             <button class="pol" id="btnKlip2" role="menuitem">🧪 Zkušební klipy – dolní trubka <span class="pozn">3MF</span></button>
             <div class="nab-tip">Hák se exportuje v tiskové poloze (naležato). Klipy = jen konec háku ve třech přesazích (−0,5 / zadaný / +0,5 mm) na vyzkoušení zacvaknutí na skutečné trubce.</div>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -179,20 +186,15 @@
           </div>
         </div>
         <div class="menu">
-          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkresy<span class="sipka"> ▾</span></button>
-          <div class="nabidka" id="nabVykres" role="menu" hidden>
-            <button class="pol" id="btnSvg" role="menuitem">📐 Výkres trasy 1 : 1 <span class="pozn">SVG</span></button>
-            <button class="pol" id="btnList" role="menuitem">📄 Technický list <span class="pozn">tisk / PDF</span></button>
-            <div class="nab-tip">Výkres vytiskněte ve 100 % a přiložte k trubce. Technický list: pohledy, parametry, pevnost, kontroly a doporučení pro tisk.</div>
-          </div>
-        </div>
-        <div class="menu">
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
-            <button class="pol" id="tTrubky" role="menuitemcheckbox" aria-pressed="true">◎ Trubky <span class="pozn">T</span></button>
-            <button class="pol" id="tNapeti" role="menuitemcheckbox" aria-pressed="false">🌡 Barvy podle napětí <span class="pozn">N</span></button>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
             <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <button class="pol" id="tTrubky" role="menuitemcheckbox" aria-pressed="true">◎ Trubky <span class="pozn">T</span></button>
+            <button class="pol" id="tNapeti" role="menuitemcheckbox" aria-pressed="false">🌡 Barvy podle napětí <span class="pozn">N</span></button>
             <div class="nab-tip">Montážní poloha = hák visí na trubkách, tisková = leží na podložce jako v exportu.</div>
           </div>
         </div>
@@ -201,12 +203,23 @@
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora – boční pohled háku <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku – tisková výška <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu – tisková výška <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" id="btnTrasa" role="menuitem">👁 Zobrazit trasu <span class="pozn">boční pohled s kótami</span></button>
+            <button class="pol" id="btnSvg" role="menuitem">📐 Výkres trasy 1 : 1 <span class="pozn">SVG</span></button>
+            <button class="pol" id="btnList" role="menuitem">📄 Technický list <span class="pozn">tisk / PDF</span></button>
+            <div class="nab-tip">Výkres vytiskněte ve 100 % a přiložte k trubce. Technický list: pohledy, parametry, pevnost, kontroly a doporučení pro tisk.</div>
           </div>
         </div>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
         <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
-        <button class="tl" id="btnNapoveda" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnNap" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -220,7 +233,7 @@
 
     <main class="plocha" data-zobrazeno="obecne">
       <aside class="box box-in" id="boxTrasa" data-box="in" aria-label="Trubky a trasa">
-        <div class="box-hlava"><span class="box-znak" aria-hidden="true">∿</span><h2>Trubky a trasa</h2></div>
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">∿</span><h2>Trubky a trasa</h2><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo">
           <details class="oddil" data-oddil="trubky" id="dTrubky" open>
             <summary><span class="oddil-nazev">Trubky a trasa</span><span class="souhrn" id="sTrubky"></span></summary>
@@ -271,6 +284,7 @@
         <div id="canvas-container" aria-label="3D náhled háku">
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám…</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="legenda-napeti" id="legNapeti" hidden>0 <i></i> <span id="legMax">max</span></div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
@@ -327,7 +341,7 @@
       </section>
 
       <aside class="box box-out" id="boxPrurez" data-box="out" aria-label="Průřez">
-        <div class="box-hlava"><span class="box-znak" aria-hidden="true">▭</span><h2>Průřez</h2><span class="souhrn" id="sPrurez"></span></div>
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">▭</span><h2>Průřez</h2><span class="souhrn" id="sPrurez"></span><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo" id="dPrurez">
         <div class="paleta" id="paleta" role="group" aria-label="Paleta průřezů"></div>
         <div class="mrizka" id="gPrurez">
@@ -422,9 +436,12 @@
     <p><b>Pohled.</b> 3D náhled ukazuje hák v montážní poloze (jak visí na trubkách); 🖨 Tisk přepne na tiskovou polohu na podložce.</p>
     <p><b>Tisk.</b> Export je v tiskové poloze – hák leží v rovině podložky, šířka průřezu je výška tisku. Vrstvy pak vedou podél háku
       a ohyb je nenamáhá na odtržení.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>3</kbd> pohledy, <kbd>T</kbd> trubky, <kbd>N</kbd> napětí, <kbd>M</kbd> tisková / montážní poloha, <kbd>P</kbd> panel,
-      <kbd>H</kbd> hrany, <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1),
-      <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>T</kbd> trubky, <kbd>N</kbd> napětí, <kbd>M</kbd> tisková / montážní poloha, <kbd>P</kbd> převisy,
+      <kbd>L</kbd> pravítka, <kbd>H</kbd> hrany, <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1),
+      <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Sdílení a Modelář.</b> <b>🔗 Sdílet odkazem</b> (Soubor) uloží celé nastavení do adresy – kdo odkaz otevře, uvidí stejný hák.
+      <b>🧊 Otevřít v Modeláři</b> předá hák v tiskové poloze jako 3MF k dalším úpravám. <b>🟥 Převisy barevně</b> ukážou v tiskové poloze
+      plochy, které by visely víc než zadaný úhel.</p>
   </div>
 </dialog>
 <script src="s_hak/ui.js"></script>

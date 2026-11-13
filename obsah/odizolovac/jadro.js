@@ -896,6 +896,54 @@
     return buf;
   }
 
+  /* ---------- stav stránky (projekt gen3d) ----------
+     {nazev, rezim, hodnoty: {<režim>: {…, vodice: [{nazev, D, t, d}]}}}. Jen převod na čísla a známé klíče –
+     meze a vazby hlídá normalizuj(rezim, hodnoty) při stavbě (vodič s chybou v tabulce zůstane, aby šel opravit).
+     Přijme i starší tvary: webapp_odizolovac_stav, uložený návrh / export {format: 'odizolovac-v1', rezim, hodnoty jednoho režimu}. */
+  function vychoziStav() {
+    const hodnoty = {};
+    for (const r of Object.keys(REZIMY)) hodnoty[r] = vychozi(r);
+    return { nazev: '', rezim: 'hrebinek', hodnoty };
+  }
+  function normalizujStav(vstup) {
+    const p = vychoziStav(), hlaseni = [];
+    const v = vstup && typeof vstup === 'object' && !Array.isArray(vstup) ? vstup : {};
+    if (REZIMY[v.rezim]) p.rezim = v.rezim;
+    else if (v.rezim !== undefined) hlaseni.push(`neznámý druh stahováku „${v.rezim}“ → ${REZIMY.hrebinek.nazev}`);
+    let hod = v.hodnoty && typeof v.hodnoty === 'object' && !Array.isArray(v.hodnoty) ? v.hodnoty : {};
+    if (!Object.keys(REZIMY).some(r => hod[r] && typeof hod[r] === 'object' && !Array.isArray(hod[r]))) hod = { [p.rezim]: hod };   // hodnoty jednoho režimu
+    const cisloNeboText = x => { const c = cislo(typeof x === 'number' ? x : String(x)); return Number.isFinite(c) ? c : String(x).slice(0, 20); };
+    for (const r of Object.keys(REZIMY)) {
+      const h = hod[r];
+      if (!h || typeof h !== 'object') continue;
+      for (const d of PARAMETRY) {
+        if (!d.rezimy.includes(r)) continue;
+        const x = h[d.klic];
+        if (x === undefined || x === null || x === '') continue;
+        if (d.typ === 'text') { p.hodnoty[r][d.klic] = String(x).slice(0, 200); continue; }
+        if (d.typ === 'vyber') { if (d.moznosti.some(m => m[0] === x)) p.hodnoty[r][d.klic] = x; else hlaseni.push(`${d.nazev}: neznámá volba „${x}“`); continue; }
+        const c = cislo(typeof x === 'number' ? x : String(x));
+        if (Number.isFinite(c)) p.hodnoty[r][d.klic] = c; else hlaseni.push(`${d.nazev}: neplatné číslo „${x}“`);
+      }
+      if (SVODICI.includes(r) && Array.isArray(h.vodice)) p.hodnoty[r].vodice = h.vodice.slice(0, 32).filter(x => x && typeof x === 'object').map((x, i) => ({
+        nazev: String(x.nazev == null ? 'vodič ' + (i + 1) : x.nazev).slice(0, 60), D: cisloNeboText(x.D), t: cisloNeboText(x.t), d: cisloNeboText(x.d) }));
+    }
+    if (typeof v.nazev === 'string') p.nazev = v.nazev.slice(0, 120);
+    return { p, hlaseni };
+  }
+  /* Starší pojmenované návrhy (webapp_odizolovac_sady: {jméno: {rezim, hodnoty}}) → záznamy Tvary (Moje stahováky). */
+  function prevedSady(sady, cas) {
+    const out = [];
+    let i = 0;
+    cas = cas || Date.now();
+    for (const [nazev, x] of Object.entries(sady && typeof sady === 'object' ? sady : {})) {
+      if (!x || !REZIMY[x.rezim]) continue;
+      out.push({ id: 'sada' + (i++) + '_' + cas.toString(36), nazev, vytvoreno: cas - i, upraveno: cas - i,
+        parametry: normalizujStav({ rezim: x.rezim, hodnoty: { [x.rezim]: x.hodnoty || {} } }).p });
+    }
+    return out;
+  }
+
   function fmt(x, des) {
     if (!Number.isFinite(x)) return x > 0 ? '∞' : '–';
     if (des === undefined) des = Math.abs(x) >= 100 ? 0 : Math.abs(x) >= 10 ? 1 : 2;
@@ -906,6 +954,6 @@
   }
 
   const api = { KLOUB, VK, SVODICI, VODICE_JEMNE, VYCHOZI_JEMNE, JADRA, seznamCisel, textObdelniky, sirkaTextu, REZIMY, CEPELE, VODICE, VYCHOZI_VODICE, KABELY, PLOCHE, MATERIALY, PARAMETRY, PODLE_KLICE, RAD,
-    vychozi, cislo, normalizuj, rezy, kusCepele, rozvrhni, rozborDrazky, rozmistiPodelOstri, obrysCepeleObecne, bodOblouku, bodTisk, bodPoloha, sitZMeshe, zkontrolujSit, stlBinarni, fmt };
+    vychozi, cislo, normalizuj, vychoziStav, normalizujStav, prevedSady, rezy, kusCepele, rozvrhni, rozborDrazky, rozmistiPodelOstri, obrysCepeleObecne, bodOblouku, bodTisk, bodPoloha, sitZMeshe, zkontrolujSit, stlBinarni, fmt };
   if (typeof module !== 'undefined') module.exports = api; else window.ODIZ = api;
 })();

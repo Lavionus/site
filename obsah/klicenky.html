@@ -6,12 +6,17 @@
   <title>Klíčenky a jmenovky (vícebarevné) – generátor pro 3D tisk</title>
   <meta name="description" content="Klíčenka, jmenovka na stůl, magnet na lednici nebo záložka s textem z písma: podklad jako bublina kolem písmen nebo štítek, očko, rámeček, kapsa na magnet. Vícebarevný tisk – 3MF s barevnými díly nebo výměna filamentu M600/PAUSE na přesné vrstvě. Dávka jmen na podložku.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="lib/opentype.min.js"></script>
   <script src="fonty/fonty.js"></script>
   <script src="krabicky/jadro.js"></script>
@@ -65,6 +70,10 @@
     .hlaseni li.skok { cursor: pointer; }
     .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
     .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
+    .tabulka { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .tabulka th, .tabulka td { text-align: left; padding: 4px 5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .tabulka th { color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; }
+    .tabulka td.c { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
     .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
     @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
     .zvyrazni { animation: zvyrazni 2.4s ease-out; }
@@ -116,14 +125,16 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje klíčenky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk</div>
-            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF barevný <span class="pozn">díly s barvami</span></button>
-            <button class="pol" id="btnStl" role="menuitem">⬇ STL vše <span class="pozn">Ctrl+S</span></button>
-            <button class="pol" id="btnStlBarvy" role="menuitem">⬇ STL po barvách <span class="pozn">ZIP</span></button>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše, barevný <span class="pozn">díly s barvami</span></button>
+            <button class="pol" id="btnStlBarvy" role="menuitem">⬇ STL po barvách <span class="pozn">ZIP · díly zvlášť</span></button>
             <div class="nab-tip">3MF: podklad, text a rámeček jsou části jednoho objektu s vlastní barvou a extruderem (PrusaSlicer, OrcaSlicer). Jiný slicer: STL po barvách načtěte naráz jako jeden objekt s více díly.</div>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -137,7 +148,11 @@
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="false">🟥 Převisy barevně <span class="pozn">P</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
             <button class="pol" id="tRoviny" role="menuitemcheckbox" aria-pressed="true">🟧 Roviny výměny barvy <span class="pozn">R</span></button>
+            <div class="nab-tip">Klíčenka je vždy v tiskové poloze (podklad na podložce).</div>
           </div>
         </div>
         <div class="menu">
@@ -145,12 +160,14 @@
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku – výšky vrstev <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku – výšky vrstev <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
           </div>
         </div>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
         <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
-        <button class="tl" id="btnNapoveda" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnNap" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -203,17 +220,19 @@
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám…</div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Výsledky a tisk">
           <div class="zalozky" role="tablist">
-            <button role="tab" data-zalozka="barvy" aria-selected="true">🎨 Barvy a vrstvy <span class="souhrn-zal" id="sBarvy"></span></button>
-            <button role="tab" data-zalozka="vysledky" aria-selected="false">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
+            <button role="tab" data-zalozka="barvy" aria-selected="false">🎨 Barvy a vrstvy <span class="souhrn-zal" id="sBarvy"></span></button>
             <button role="tab" data-zalozka="davka" aria-selected="false">📦 Dávka <span class="souhrn-zal" id="sDavka"></span></button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false">🧾 Kusovník</button>
             <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje klíčenky</button>
           </div>
-          <div class="zalozka-telo" data-telo="barvy" role="tabpanel">
+          <div class="zalozka-telo" data-telo="barvy" role="tabpanel" hidden>
             <div class="barvy">
               <div><label for="f_bp">Podklad</label><input type="color" id="f_bp" data-p="barvy.podklad" data-typ="text"></div>
               <div><label for="f_bt">Text</label><input type="color" id="f_bt" data-p="barvy.text" data-typ="text"></div>
@@ -227,7 +246,7 @@
             <label class="zaskrt"><input type="checkbox" id="f_prich" data-p="tisk.prichytit" data-typ="bool"> Přichytit výšky na hranice vrstev (rozhraní barev přesně mezi vrstvami)</label>
             <div id="pokyny"></div>
           </div>
-          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel" hidden>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel">
             <div class="mrizka">
               <div class="pole"><label for="f_mat">Materiál</label><select id="f_mat" data-p="tisk.material" data-typ="text"></select></div>
               <div class="pole"><label for="f_vypln">Výplň</label><input type="text" inputmode="decimal" class="mm" id="f_vypln" data-p="tisk.vypln"><span class="jedn">%</span></div>
@@ -250,6 +269,10 @@
             </div>
             <ul class="hlaseni" id="davkaStav" style="margin-top:8px"></ul>
             <p class="napoveda">Každé jméno dostane stejné nastavení (písmo, tvar, výšky). Kusy se řadí do řad na čtvercovou podložku; ZIP obsahuje každý kus jako samostatný 3MF.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden>
+            <table class="tabulka"><thead><tr><th>Díl</th><th class="c">Objem</th><th class="c">Hmotnost</th><th></th></tr></thead><tbody id="tDily"></tbody></table>
+            <p class="napoveda">Díly jednoho kusu v tiskové poloze – STL jednoho dílu se ve sliceru přidá k ostatním jako část téhož objektu.</p>
           </div>
           <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
             <ul class="hlaseni" id="hlaseni"></ul>
@@ -343,8 +366,8 @@
       a číslem extruderu (stejná barva = stejný extruder). Pokud slicer díly spojí, použijte <b>STL po barvách</b> a načtěte
       je naráz jako jeden objekt s více díly.</p>
     <p><b>Písmo.</b> Volte tučná písma (v nabídce bez poznámky „tenké tahy“). Kontrola upozorní na tahy užší než stopa trysky 0,4 mm.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>3</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>R</kbd> roviny výměny, <kbd>↑</kbd>/<kbd>↓</kbd> v poli ± 1
-      (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd>, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>R</kbd> roviny výměny, <kbd>P</kbd> převisy, <kbd>L</kbd> pravítka, <kbd>↑</kbd>/<kbd>↓</kbd> v poli ± 1
+      (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd>, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
   </div>
 </dialog>
 <script src="klicenky/ui.js"></script>

@@ -1,49 +1,45 @@
-/* Bludiště – ovládání stránky: formulář, historie, manifold, mapa bludiště, výsledky, kontroly, export. */
-/* global BLUD, BLUD_GEO, BLUD_NAHLED, KRAB, Dialog, Tvary, TrubkyGui */
+/* Bludiště – ovládání stránky nad společným zapojením gen3d/aplikace.js:
+   tady jen to, co je pro bludiště zvláštní (režimy, mapa s řešením, výsledky, díly, export). */
+/* global BLUD, BLUD_GEO, BLUD_NAHLED, KRAB, G3D, Dialog, TrubkyGui */
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const KLIC = 'webapp_bludiste3d_projekt';
   const fmt = BLUD.fmt;
-
-  /* ---------- stav a historie ---------- */
   let p, model = null, geo = null, wasm = null, chybaJadra = null;
-  const zpet = [], znovu = [];
-  function nactiUlozeny() {
-    try { const t = localStorage.getItem(KLIC); if (t) return BLUD.normalizuj(JSON.parse(t)).p; } catch (e) { /* poškozený záznam */ }
-    return BLUD.normalizuj({}).p;
-  }
-  function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(p)); } catch (e) { /* plné úložiště */ } }
-  function zmen(fn, slouceni) {
-    const pred = JSON.stringify(p);
-    fn(p);
-    p = BLUD.normalizuj(p).p;
-    if (JSON.stringify(p) === pred) return;
-    const posl = zpet[zpet.length - 1];
-    if (!(slouceni && posl && posl.klic === slouceni && Date.now() - posl.cas < 1200)) zpet.push({ stav: pred, klic: slouceni, cas: Date.now() });
-    else posl.cas = Date.now();
-    if (zpet.length > 100) zpet.shift();
-    znovu.length = 0;
-    po();
-  }
-  function krokHistorie(z, do_) {
-    if (!z.length) return;
-    do_.push({ stav: JSON.stringify(p), cas: 0 });
-    p = BLUD.normalizuj(JSON.parse(z.pop().stav)).p;
-    naplnFormular(); po();
-  }
-  function po() { $('btnZpet').disabled = !zpet.length; $('btnZnovu').disabled = !znovu.length; uloz(); naplanuj(); }
-  const nahradVse = q => zmen(x => { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, q); });
+  const nahled = BLUD_NAHLED.vytvorNahled($('platno'));
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  // číslo mimo rozsah: po potvrzení ukázat, s čím model počítá (poslouchá dřív než aplikace.js)
+  document.querySelectorAll('input[data-p]:not([data-typ])').forEach(el => el.addEventListener('change', () => {
+    const psano = G3D.ctiCislo(el.value), roz = BLUD.ROZSAHY[el.dataset.p];
+    if (!roz || !Number.isFinite(psano)) return;
+    setTimeout(() => {
+      const h = BLUD.vezmi(app.p, el.dataset.p);
+      if (Math.abs(psano - h) < 1e-9) return;
+      el.classList.remove('zvyrazni'); void el.offsetWidth; el.classList.add('zvyrazni');
+      Dialog.info(`${el.labels[0] ? el.labels[0].textContent : 'Hodnota'}: povoleno ${fmt(roz[0], 2)}–${fmt(roz[1], 2)}, použito ${fmt(h, 2)}.`);
+    });
+  }));
+
+  const app = G3D.aplikace({
+    typ: 'bludiste3d', nazev: 'Bludiště', klic: 'webapp_bludiste3d', soubor: 'Bludiste',
+    normalizuj: BLUD.normalizuj, vychozi: () => BLUD.normalizuj({}).p,
+    ulozProjekt: BLUD.ulozProjekt, nactiProjekt: BLUD.nactiProjekt, vezmi: BLUD.vezmi, poloz: BLUD.poloz,
+    popis: q => `${q.nazev || 'Bludiště'} – ${(BLUD.REZIMY[q.rezim] || BLUD.REZIMY.valec).nazev}, semínko ${q.seed}`,
+    viditelnost: () => viditelnost(),
+    prepocitej: () => prepocitej(), zpozdeni: 120,
+    png: () => nahled.png(), pohled: j => nahled.pohled(j),
+    exportStl: () => exportuj('stl'),
+    nahodny: q => Object.assign(BLUD.kopie(q), { seed: Math.floor(Math.random() * 1e6) }),
+    doModelare: () => { const d = tiskoveDily(); return d ? { data: KRAB.soubor3mf(d, app.p.nazev || 'Bludiště'), pripona: '.3mf' } : null; },
+    zkratky: { r: 'tReseni', e: 'tRozlozit', p: 'tPruhledne', h: 'tHrany', m: 'tTisk', v: 'tPrevisy', x: 'tRez', l: 'tPravitka', n: 'btnNahoda' },
+    zmenaTematu: () => { if (model) { nahled.barvy(css('--border-strong'), css('--border'), css('--text'), css('--bg-panel')); kresliMapuDoPlatna(); } },
+  });
 
   /* ---------- formulář ---------- */
-  const pole = [...document.querySelectorAll('[data-p]')];
   $('f_mat').innerHTML = Object.entries(BLUD.MATERIALY).map(([k, m]) => `<option value="${k}">${m.nazev}</option>`).join('');
-  function naplnFormular() {
-    for (const el of pole) {
-      const h = BLUD.vezmi(p, el.dataset.p);
-      if (document.activeElement !== el) el.value = el.dataset.typ === 'text' ? (h ?? '') : String(h).replace('.', ',');
-      el.classList.remove('spatne');
-    }
+  function viditelnost() {
+    p = app.p;
     for (const b of $('rezimy').children) b.setAttribute('aria-pressed', String(b.dataset.rezim === p.rezim));
     for (const el of document.querySelectorAll('[data-jen]')) el.hidden = el.dataset.jen !== p.rezim;
     for (const el of document.querySelectorAll('[data-jen-viko]')) el.hidden = el.dataset.jenViko !== p.deska.viko;
@@ -51,81 +47,23 @@
     $('lKulicka').textContent = valec ? '⌀ čepu' : '⌀ kuličky';
     $('nKulicka').textContent = valec ? 'Čep a drážky' : 'Kulička a chodby';
     $('lRamecek').textContent = p.deska.viko === 'plexi' ? 'Tloušťka rámečku' : 'Tloušťka víka';
-  }
-  for (const el of pole) {
-    el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
-      const c = el.dataset.p;
-      let h;
-      if (el.dataset.typ === 'text') h = el.value;
-      else {
-        h = BLUD.cislo(el.value, NaN);
-        el.classList.toggle('spatne', !Number.isFinite(h));
-        if (!Number.isFinite(h)) return;
-      }
-      zmen(x => BLUD.poloz(x, c, h), c);
-      if (el.tagName === 'SELECT') naplnFormular();
-    });
-    if (el.tagName === 'INPUT' && el.dataset.typ !== 'text') {
-      el.addEventListener('change', () => {
-        const psano = BLUD.cislo(el.value, NaN), h = BLUD.vezmi(p, el.dataset.p), roz = BLUD.ROZSAHY[el.dataset.p];
-        el.value = String(h).replace('.', ',');
-        if (Number.isFinite(psano) && Math.abs(psano - h) > 1e-9 && roz) {
-          el.classList.remove('zvyrazni'); void el.offsetWidth; el.classList.add('zvyrazni');
-          Dialog.info(`${el.labels[0] ? el.labels[0].textContent : 'Hodnota'}: povoleno ${fmt(roz[0], 2)}–${fmt(roz[1], 2)}, použito ${fmt(h, 2)}.`);
-        }
-      });
-      // ↑/↓ ± 1, Shift × 10, Alt po 0,1
-      el.addEventListener('keydown', e => {
-        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-        const h = BLUD.cislo(el.value, NaN); if (!Number.isFinite(h)) return;
-        e.preventDefault();
-        const krok = (e.shiftKey ? 10 : e.altKey ? 0.1 : 1) * (e.key === 'ArrowUp' ? 1 : -1);
-        el.value = fmt(Math.round((h + krok) * 1000) / 1000, 3);
-        el.dispatchEvent(new Event('input'));
-      });
-    }
+    if (wasm) { $('stav3d').textContent = 'Počítám…'; $('stav3d').classList.remove('chyba'); }
   }
   for (const [k, r] of Object.entries(BLUD.REZIMY)) {
     const b = document.createElement('button');
     b.type = 'button'; b.dataset.rezim = k; b.title = r.popis;
     b.innerHTML = `<span class="znak" aria-hidden="true">${r.znak}</span>${r.nazev}`;
     b.addEventListener('click', () => {
-      if (p.rezim === k) return;
+      if (app.p.rezim === k) return;
       // typické rozměry chodby pro daný typ (čep krabičky je menší než kulička)
       const vzor = BLUD.PREDVOLBY.find(v => v.p.rezim === k).p;
-      zmen(x => { x.rezim = k; x.kulicka = vzor.kulicka; x.vule = vzor.vule; x.stena = vzor.stena; });
-      naplnFormular();
+      app.zmen(x => { x.rezim = k; x.kulicka = vzor.kulicka; x.vule = vzor.vule; x.stena = vzor.stena; });
+      app.naplnFormular();
     });
     $('rezimy').appendChild(b);
   }
-  const noveSeminko = () => { zmen(x => { x.seed = Math.floor(Math.random() * 1e6); }); naplnFormular(); };
-  $('btnNahoda').addEventListener('click', noveSeminko);
-
-  /* ---------- manifold ---------- */
-  function nactiSkript(src) {
-    return new Promise((ok, chyba) => {
-      const el = document.createElement('script'); el.src = src; el.onload = ok;
-      el.onerror = () => chyba(new Error('nejde načíst ' + src)); document.head.appendChild(el);
-    });
-  }
-  async function nactiManifold() {
-    globalThis.MANIFOLD_URL = new URL('lib/manifold/manifold.klasicky.js', location.href).href;
-    if (!globalThis.ManifoldModule) await nactiSkript('lib/manifold/manifold.klasicky.js');
-    let volby;
-    if (location.protocol === 'file:') {
-      await nactiSkript('lib/manifold/manifold.wasm.js');
-      const s = atob(globalThis.MANIFOLD_WASM_B64), bin = new Uint8Array(s.length);
-      for (let i = 0; i < s.length; i++) bin[i] = s.charCodeAt(i);
-      delete globalThis.MANIFOLD_WASM_B64;
-      volby = { wasmBinary: bin };
-    } else volby = { locateFile: f => new URL('lib/manifold/' + f, location.href).href };
-    const w = await globalThis.ManifoldModule(volby);
-    w.setup();
-    return w;
-  }
 
   /* ---------- plátna a barvy ---------- */
-  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   function pripravPlatno(c, dprVlastni) {
     const dpr = dprVlastni || Math.min(window.devicePixelRatio || 1, 3), w = c.clientWidth || 300, h = c.clientHeight || 150;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
@@ -238,7 +176,7 @@
   function kresliMapuDoPlatna() { const c = $('cMapa'), { g, w, h } = pripravPlatno(c); kresliMapu(g, w, h, model); }
 
   /* ---------- výsledky ---------- */
-  const box = (popis, cislo, dalsi, tr) => `<div class="dlazdice"><div class="popis">${popis}</div><div class="cislo ${tr || ''}">${cislo}</div>${dalsi ? `<div class="dalsi">${dalsi}</div>` : ''}</div>`;
+  const box = G3D.dlazdice;
   function rozmerSestavy(m) {
     const p = m.p;
     if (p.rezim === 'valec') return [2 * m.Ro, 2 * m.Ro, m.zavrena];
@@ -283,7 +221,8 @@
         <td class="c"><button class="tl" data-dil="${i}" data-fmt="stl">STL</button> <button class="tl" data-dil="${i}" data-fmt="3mf">3MF</button></td></tr>`;
     });
     $('tDily').innerHTML = dily.length ? `<tr><th>Díl</th><th class="c">Objem</th><th class="c">Hmotnost</th><th class="c">Tisk</th><th class="c">Export</th></tr>${radky.join('')}` : '';
-    $('sTisk').textContent = dily.length ? `${dily.length} díly · ${fmt(sumG, 0)} g` : '';
+    $('sTisk').textContent = dily.length ? `${fmt(sumG, 0)} g` : '';
+    $('sKusovnik').textContent = dily.length ? String(dily.length) : '';
     $('pTisk').innerHTML = !ok ? '' : {
       valec: 'Nádobu tiskněte patkou na podložku, pouzdro víkem dolů. Výplň 15–20 %, 3 obvody, vrstva 0,2 mm; drážky bez podpor. Po tisku čep zbavte otřepů a krabičku několikrát projděte.',
       kostka: 'Vrstvy podlahou dolů (kolíky nahoru), víko naplocho. Víko z průhledného PETG s výplní 100 %. Zkontrolujte, že kulička projde otvorem v podlaze, a teprve pak lepte nebo nasazujte zámky.',
@@ -299,48 +238,17 @@
     // karta v rohu náhledu
     $('karta3d').innerHTML = ok && geo ? `<div class="titul">${BLUD.REZIMY[p.rezim].nazev}</div><b>${r3.map(x => fmt(x, 0)).join(' × ')}</b> mm · <b>${fmt(sumG, 0)}</b> g<br>`
       + `řešení <b>${m.b.cesta.length}</b> kroků, slepých uliček <b>${m.b.slepe}</b>` : '';
-    // hlášení
-    const ul = $('hlaseni'); ul.innerHTML = '';
-    for (const x of H) {
-      const li = document.createElement('li'); li.className = x.uroven + (x.pole.length ? ' skok' : '');
-      li.textContent = x.text;
-      if (x.pole.length) {
-        li.tabIndex = 0;
-        const kam = document.createElement('span'); kam.className = 'kam'; kam.textContent = '→ upravit'; li.appendChild(kam);
-        li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') jdiNaPole(x.pole[0]); });
-        li.addEventListener('keydown', e => { if (e.key === 'Enter') jdiNaPole(x.pole[0]); });
-      }
-      if (x.oprava) {
-        const b = document.createElement('button'); b.className = 'tl oprava'; b.textContent = '🔧 ' + x.oprava.text;
-        b.addEventListener('click', () => { zmen(q => BLUD.poloz(q, x.oprava.pole, x.oprava.hodnota)); naplnFormular(); });
-        li.appendChild(b);
-      }
-      ul.appendChild(li);
-    }
-    const nch = H.filter(x => x.uroven === 'chyba').length, nv = H.filter(x => x.uroven === 'varovani').length;
-    const o = $('stavOdznak');
-    o.className = 'odznak ' + (nch ? 'chyba' : nv ? 'mez' : 'ok');
-    o.textContent = nch ? `✖ ${nch}` : nv ? `⚠ ${nv}` : '✔';
-    $('sKontrola').textContent = nch ? `${nch} ${nch === 1 ? 'chyba' : nch < 5 ? 'chyby' : 'chyb'}` : nv ? `${nv} varování` : 'v pořádku';
-    if (m && m.chyba) TrubkyGui.otevriZalozku('kontrola');
+    zbytekVypisu(H);
   }
-  function jdiNaPole(cesta) {
-    let el = document.querySelector(`[data-p="${cesta}"]`);
-    if (!el) return;
-    const det = el.closest('details'); if (det) det.open = true;
-    const tel = el.closest('.zalozka-telo'); if (tel) TrubkyGui.otevriZalozku(tel.dataset.telo);
-    const bx = el.closest('[data-box]'); TrubkyGui.ukazBox(bx ? bx.dataset.box : 'obecne');
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    el.focus({ preventScroll: true });
-    el.classList.remove('zvyrazni'); void el.offsetWidth; el.classList.add('zvyrazni');
+  function zbytekVypisu(H) {
+    app.hlaseni(H, { boxy: ['boxBludiste', 'boxRozmery'] });
+    if (model && model.chyba) TrubkyGui.otevriZalozku('kontrola');
   }
 
   /* ---------- přepočet ---------- */
-  const nahled = BLUD_NAHLED.vytvorNahled($('platno'));
-  let casovac = null;
-  function naplanuj() { clearTimeout(casovac); $('stav3d').textContent = wasm ? 'Počítám…' : $('stav3d').textContent; casovac = setTimeout(prepocitej, 120); }
   function prepocitej() {
-    nahled.barvy(css('--border-strong'), css('--border'), css('--text'));
+    p = app.p;
+    nahled.barvy(css('--border-strong'), css('--border'), css('--text'), css('--bg-panel'));
     model = BLUD.model(p);
     const H = BLUD.kontroly(model);
     geo = null;
@@ -356,20 +264,13 @@
     kresliMapuDoPlatna();
   }
 
-  /* ---------- lišta, nabídky, export ---------- */
+  /* ---------- nabídky, export ---------- */
   TrubkyGui.pripoj({ klic: 'webapp_bludiste3d_gui', pohled: j => nahled.pohled(j) });
   for (const [i, v] of BLUD.PREDVOLBY.entries()) {
     const b = document.createElement('button'); b.className = 'pol'; b.setAttribute('role', 'menuitem');
     b.innerHTML = `${BLUD.REZIMY[v.p.rezim].znak} ${v.nazev}<span class="pozn">${v.popis}</span>`;
-    b.addEventListener('click', () => { nahradVse(BLUD.predvolba(i, p)); naplnFormular(); });
+    b.addEventListener('click', () => app.nahrad(BLUD.predvolba(i, app.p)));
     $('seznamPredvoleb').appendChild(b);
-  }
-  const jmenoSouboru = pripona => ((p.nazev || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_').replace(/^_|_$/g, '') || 'Bludiste') + pripona;
-  function stahni(data, nazev, typ) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: typ }));
-    a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
   function tiskoveDily(vyber) {
     if (!model || model.chyba || !geo) { Dialog.chyba(model && model.chyba ? 'Model nelze sestavit: ' + model.chyba : 'Geometrie ještě není spočítaná.'); return null; }
@@ -380,13 +281,12 @@
     const d = tiskoveDily(vyber);
     if (!d) return;
     const pripona = vyber === undefined ? '' : '_' + d[0].jmeno;
-    if (format === 'stl') stahni(KRAB.stlBinarni(d, 'Bludiste - github_site'), jmenoSouboru(pripona + '.stl'), 'model/stl');
-    else stahni(KRAB.soubor3mf(d, p.nazev || 'Bludiště'), jmenoSouboru(pripona + '.3mf'), 'model/3mf');
+    if (format === 'stl') app.stahni(KRAB.stlBinarni(d, 'Bludiste - github_site'), app.jmeno(pripona + '.stl'), 'model/stl');
+    else app.stahni(KRAB.soubor3mf(d, app.p.nazev || 'Bludiště'), app.jmeno(pripona + '.3mf'), 'model/3mf');
   }
   $('btnStl').addEventListener('click', () => exportuj('stl'));
   $('btn3mf').addEventListener('click', () => exportuj('3mf'));
   $('tDily').addEventListener('click', e => { const b = e.target.closest('[data-dil]'); if (b) exportuj(b.dataset.fmt, +b.dataset.dil); });
-  $('btnPng').addEventListener('click', () => fetch(nahled.png()).then(r => r.blob()).then(b => stahni(b, jmenoSouboru('.png'))));
   $('btnMapa').addEventListener('click', () => {
     if (!model || model.chyba) return;
     // mapa pro papír: světlé téma, 1600 px
@@ -396,68 +296,25 @@
     const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
     kresliMapu(g, c.width, c.height, model);
     if (tema0 === null) koren.removeAttribute('data-theme'); else koren.setAttribute('data-theme', tema0);
-    c.toBlob(b => stahni(b, jmenoSouboru('_mapa.png')));
+    c.toBlob(b => app.stahni(b, app.jmeno('_mapa.png')));
   });
-  $('btnUlozit').addEventListener('click', () => stahni(BLUD.ulozProjekt(p), jmenoSouboru('.json'), 'application/json'));
-  $('btnNacist').addEventListener('click', () => $('soubor').click());
-  $('soubor').addEventListener('change', async e => {
-    const f = e.target.files[0]; e.target.value = '';
-    if (!f) return;
-    try {
-      const { p: q, hlaseni } = BLUD.nactiProjekt(await f.text());
-      nahradVse(q); naplnFormular();
-      Dialog.info(hlaseni.length ? 'Projekt načten s úpravami: ' + hlaseni.join('; ') + '.' : 'Projekt načten.');
-    } catch (err) { Dialog.chyba(err.message); }
-  });
-  $('btnVychozi').addEventListener('click', async () => {
-    if (!await Dialog.potvrd('Vrátit všechny parametry na výchozí hodnoty?')) return;
-    nahradVse(BLUD.normalizuj({}).p); naplnFormular();
-  });
-  $('btnZpet').addEventListener('click', () => krokHistorie(zpet, znovu));
-  $('btnZnovu').addEventListener('click', () => krokHistorie(znovu, zpet));
-  function prepinac(id, co) {
-    const b = $(id);
-    b.addEventListener('click', () => {
-      const h = b.getAttribute('aria-pressed') !== 'true';
-      b.setAttribute('aria-pressed', String(h)); nahled.prepni(co, h);
-      if (co === 'reseni') kresliMapuDoPlatna();
-    });
-  }
-  prepinac('tReseni', 'reseni'); prepinac('tRozlozit', 'rozlozit'); prepinac('tPruhledne', 'pruhledne'); prepinac('tHrany', 'hrany'); prepinac('tTisk', 'tisk');
-  $('stavOdznak').addEventListener('click', () => TrubkyGui.otevriZalozku('kontrola'));
-  $('btnNapoveda').addEventListener('click', () => $('dlgNapoveda').showModal());
-  $('btnZavritNap').addEventListener('click', () => $('dlgNapoveda').close());
-  document.addEventListener('keydown', e => {
-    const a = document.activeElement;
-    const vPoli = a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !/checkbox|range|radio|button/.test(a.type));
-    if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'z') { e.preventDefault(); krokHistorie(e.shiftKey ? znovu : zpet, e.shiftKey ? zpet : znovu); return; }
-    if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'y') { e.preventDefault(); krokHistorie(znovu, zpet); return; }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); exportuj('stl'); return; }
-    if (e.key === 'F1') { e.preventDefault(); $('dlgNapoveda').showModal(); return; }
-    if (vPoli || e.ctrlKey || e.metaKey || e.altKey || $('dlgNapoveda').open) return;
-    const k = e.key.toLowerCase();
-    const akce = { 1: () => nahled.pohled('iso'), 2: () => nahled.pohled('shora'), 3: () => nahled.pohled('zboku'),
-      r: () => $('tReseni').click(), e: () => $('tRozlozit').click(), p: () => $('tPruhledne').click(), h: () => $('tHrany').click(), m: () => $('tTisk').click(), n: noveSeminko };
-    if (akce[k]) akce[k]();
-  });
+  app.prepinac('tReseni', h => { nahled.prepni('reseni', h); if (model) kresliMapuDoPlatna(); });
+  app.prepinac('tRozlozit', h => nahled.prepni('rozlozit', h));
+  app.prepinac('tPruhledne', h => nahled.prepni('pruhledne', h));
+  app.prepinac('tHrany', h => nahled.prepni('hrany', h));
+  app.prepinac('tPrevisy', h => { nahled.prepni('previsy', h); $('legPrevisy').hidden = !(h && nahled.stav.tisk); }, true);
+  app.prepinac('tRez', h => { nahled.prepni('rez', h); $('legRez').hidden = !h; });
+  app.prepinac('tPravitka', h => nahled.prepni('pravitka', h), true);
+  app.prepinac('tTisk', h => { nahled.prepni('tisk', h); $('legPrevisy').hidden = !(h && nahled.stav.previsy); });
   new ResizeObserver(() => { if (model) requestAnimationFrame(kresliMapuDoPlatna); }).observe($('cMapa'));
-  new MutationObserver(() => { if (model) { nahled.barvy(css('--border-strong'), css('--border'), css('--text')); kresliMapuDoPlatna(); } })
-    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-  if (typeof Tvary !== 'undefined') Tvary.pripoj({
-    klic: 'webapp_bludiste3d_tvary', typ: 'bludiste3d', nazev: 'Bludiště', kontejner: $('tvary'),
-    parametry: () => BLUD.kopie(p),
-    pouzij: q => { nahradVse(BLUD.normalizuj(q).p); naplnFormular(); },
-    popis: q => `${q.nazev || 'Bludiště'} – ${(BLUD.REZIMY[q.rezim] || BLUD.REZIMY.valec).nazev}, semínko ${q.seed}`,
-  });
 
   /* ---------- start ---------- */
-  p = nactiUlozeny();
-  naplnFormular();
-  prepocitej();
-  nactiManifold().then(w => { wasm = w; prepocitej(); }).catch(e => {
-    chybaJadra = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – mapa a kontroly fungují, export ne.';
-    prepocitej();
+  p = app.p;
+  app.start({
+    manifold: {
+      ok: w => { wasm = w; prepocitej(); },
+      chyba: e => { chybaJadra = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – mapa a kontroly fungují, export ne.'; prepocitej(); },
+    },
   });
-  window.BLUD_UI = { nahled, get p() { return p; }, get model() { return model; }, get geo() { return geo; }, zmen, naplnFormular, prepocitej };
+  window.BLUD_UI = { nahled, get p() { return app.p; }, get model() { return model; }, get geo() { return geo; }, zmen: app.zmen, naplnFormular: app.naplnFormular, prepocitej, app };
 })();

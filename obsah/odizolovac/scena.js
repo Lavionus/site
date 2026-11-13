@@ -3,6 +3,8 @@
    Souřadnice mm, Z nahoru. Těleso + čepele (kosodélníkové hranoly)
    + vodiče ležící ve drážkách. Tažení = otáčení, pravé tl./Shift =
    posun, kolečko / dva prsty = přiblížení. Kreslí se na vyžádání.
+   Volby: pruhledne, rez, cepele, vodice, hrany (obrysové hrany), pravitka (gen3d/koty.js).
+   nastavModel({sit, roz, obrysy, tridy, stred}) – tridy = převisy (G3D.tridyPrevisu) obarví těleso (tisková poloha).
    ============================================================ */
 window.ODIZ_SCENA = (function () {
   'use strict';
@@ -10,7 +12,8 @@ window.ODIZ_SCENA = (function () {
   const kam = { az: -0.6, el: 0.55, dist: 150, cil: [0, 0, 0] };
   const ukazatele = new Map(); let pinch = null, pozadavek = 0;
   let velikost = 60, stred = [0, 0, 0];
-  const volby = { pruhledne: false, rez: false, cepele: true, vodice: true };
+  const volby = { pruhledne: false, rez: false, cepele: true, vodice: true, hrany: false, pravitka: false };
+  let pravitkaObj = null;
   const rovinaRezu = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   let posledni = null, stisk = 0, horniSkupina = null, listMesh = null;
 
@@ -130,6 +133,46 @@ window.ODIZ_SCENA = (function () {
     return g;
   }
 
+  /* Těleso: převisy barevně (třídy 1 most, 2 převis) a obrysové hrany. */
+  function teleso(sit, barva, o, tridy) {
+    const g = geometrieSite(sit);
+    if (tridy) {
+      const c = new THREE.Color(barva), C = new Float32Array(g.attributes.position.count * 3);
+      for (let t = 0; t < tridy.length; t++) {
+        const b = tridy[t] === 1 || tridy[t] === 2 ? G3D.BARVY_TRID[tridy[t]] : [c.r, c.g, c.b];
+        for (let k = 0; k < 3; k++) C.set(b, 9 * t + 3 * k);
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+    }
+    const m = material(tridy ? 0xffffff : barva, o);
+    if (tridy) m.vertexColors = true;
+    const mesh = new THREE.Mesh(g, m);
+    if (volby.hrany) {
+      const mh = new THREE.LineBasicMaterial({ color: document.documentElement.getAttribute('data-theme') === 'light' ? 0x0b1a33 : 0x05070a, transparent: true, opacity: 0.45 });
+      if (volby.rez) mh.clippingPlanes = [rovinaRezu];
+      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), mh));
+    }
+    return mesh;
+  }
+  /* Pravítka s dílky po hranách obalu (gen3d/koty.js). */
+  function pravitka() {
+    if (pravitkaObj) { scene.remove(pravitkaObj); pravitkaObj.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) { if (c.material.map) c.material.map.dispose(); c.material.dispose(); } }); pravitkaObj = null; }
+    if (!volby.pravitka || !window.G3D || !G3D.koty) return;
+    skupina.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(skupina);
+    if (box.isEmpty()) return;
+    const a = box.min, b = box.max, vel = new THREE.Vector3(); box.getSize(vel);
+    pravitkaObj = G3D.koty.postav(THREE, {
+      barva: css('--text', '#ddd'), pozadi: css('--bg-input', '#222'), velikost: Math.max(vel.x, vel.y, vel.z),
+      pravitka: [
+        { a: [a.x, a.y, a.z], b: [b.x, a.y, a.z], n: [0, -1, 0] },
+        { a: [b.x, a.y, a.z], b: [b.x, b.y, a.z], n: [1, 0, 0] },
+        { a: [a.x, b.y, a.z], b: [a.x, b.y, b.z], n: [-1, 0, 0] },
+      ],
+    });
+    scene.add(pravitkaObj);
+  }
+
   function vycisti(g) {
     for (const o of [...g.children]) {
       g.remove(o);
@@ -145,10 +188,10 @@ window.ODIZ_SCENA = (function () {
     horniSkupina = null; listMesh = null;
     if (data.dily) {
       // sešívačka: spodní díl pevně, horní rameno se natáčí podle stisku, list se ohýbá
-      skupina.add(new THREE.Mesh(geometrieSite(data.dily.dolni), material(0xe0a040, { pruhledne: volby.pruhledne, opacity: 0.35 })));
+      skupina.add(teleso(data.dily.dolni, 0xe0a040, { pruhledne: volby.pruhledne, opacity: 0.35 }));
       horniSkupina = new THREE.Group();
       horniSkupina.matrixAutoUpdate = false;
-      horniSkupina.add(new THREE.Mesh(geometrieSite(data.dily.horni), material(0xc98b3a, { pruhledne: volby.pruhledne, opacity: 0.35 })));
+      horniSkupina.add(teleso(data.dily.horni, 0xc98b3a, { pruhledne: volby.pruhledne, opacity: 0.35 }));
       skupina.add(horniSkupina);
       const kl = data.roz.kloub, n = 64;
       const g = new THREE.BoxGeometry(kl.Bx, kl.tf, kl.L, 1, 1, n);
@@ -159,19 +202,18 @@ window.ODIZ_SCENA = (function () {
       if (volby.cepele) data.roz.cepele.forEach((c, i) => (c.dil === 'horni' ? horniSkupina : skupina).add(cepelMesh(c, data.obrysy[i])));
       nastavStisk(stisk, true);
     } else {
-      const telo = new THREE.Mesh(geometrieSite(data.sit), material(0xe0a040, { pruhledne: volby.pruhledne, opacity: 0.35 }));
-      skupina.add(telo);
+      skupina.add(teleso(data.sit, 0xe0a040, { pruhledne: volby.pruhledne, opacity: 0.35 }, data.tridy));
       if (volby.cepele) data.roz.cepele.forEach((c, i) => skupina.add(cepelMesh(c, data.obrysy[i])));
     }
     if (volby.vodice) data.roz.vodice.forEach(v => skupina.add(vodicMesh(v)));
     const r = data.roz.rozmery;
     velikost = Math.max(r.x, r.y, r.z);
-    stred = [r.x / 2, r.y / 2, r.z / 2];
+    stred = data.stred || [r.x / 2, r.y / 2, r.z / 2];
     if (mrizka) { scene.remove(mrizka); mrizka.geometry.dispose(); mrizka.material.dispose(); }
     const s = Math.ceil(velikost * 1.8 / 10) * 10;
     mrizka = new THREE.GridHelper(s, s / 5, 0x666666, 0x666666);
     mrizka.rotation.x = Math.PI / 2;
-    mrizka.position.set(stred[0], stred[1], -0.05);
+    mrizka.position.set(stred[0], stred[1], stred[2] - r.z / 2 - 0.05);
     mrizka.material.transparent = true; mrizka.material.opacity = 0.5;
     scene.add(mrizka);
     tema();
@@ -179,6 +221,7 @@ window.ODIZ_SCENA = (function () {
     if (c0 && c0.osa === 'X') { rovinaRezu.normal.set(0, 1, 0); rovinaRezu.constant = -c0.poloha; }
     else if (c0) { rovinaRezu.normal.set(1, 0, 0); rovinaRezu.constant = -c0.poloha; }
     if (prvni || !zachovatKameru) { kam.cil = stred.slice(); kam.dist = velikost * 2.8; }
+    pravitka();
     vykresli();
   }
   /* Stisk sešívačky 0 (tisková poloha, rozevřeno) … 1 (čelisti sevřené). Model listu: oblouk stálé křivosti. */
@@ -206,7 +249,7 @@ window.ODIZ_SCENA = (function () {
     if (posledni) nastavModel(posledni, true);
   }
   function pohled(druh) {
-    const P = { iso: [-0.6, 0.55], predni: [0, 0.02], bocni: [-Math.PI / 2, 0.02], shora: [0, 1.5] }[druh] || [-0.6, 0.55];
+    const P = { iso: [-0.6, 0.55], zepredu: [0, 0.02], zboku: [-Math.PI / 2, 0.02], shora: [0, 1.5], zespodu: [0, -1.5] }[{ predni: 'zepredu', bocni: 'zboku' }[druh] || druh] || [-0.6, 0.55];
     kam.az = P[0]; kam.el = P[1]; kam.cil = stred.slice(); kam.dist = velikost * 2.8;
     vykresli();
   }
@@ -229,5 +272,7 @@ window.ODIZ_SCENA = (function () {
     svetla.children[1].position.set(camera.position.x - kam.cil[0] + kam.dist * 0.3, camera.position.y - kam.cil[1], camera.position.z - kam.cil[2] + kam.dist * 0.6);
     renderer.render(scene, camera);
   }
-  return { init, nastavModel, nastavVolby, nastavStisk, pohled, vykresli, kresli };
+  /* Snímek plátna jako dataURL (obrázek náhledu). */
+  function snimek() { kresli(); return renderer.domElement.toDataURL('image/png'); }
+  return { init, nastavModel, nastavVolby, nastavStisk, pohled, vykresli, kresli, snimek };
 })();

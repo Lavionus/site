@@ -6,12 +6,17 @@
   <title>Kolíčky na prádlo – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor kolíčků na prádlo pro 3D tisk: pružina ze starého dřevěného nebo plastového kolíčku, tištěné pružiny (pružné oko, jazýček, V pružina, hadovitá) i gumička, kloub s čepem, háček / oko / klip na zavěšení, zoubkované čelisti, drážka na šňůru, kapsa na magnet. Skicář bočního obrysu s podkladem z fotky, výpočet síly sevření a stisku, pevnost, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="spojky/jadro.js"></script>
   <script src="kolicky/jadro.js"></script>
@@ -127,8 +132,8 @@
     #skicar { min-height: 340px; }
     .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
     .zalozky .souhrn-zal:empty { display: none; }
-    .pol[aria-checked="true"]::before { content: '✓ '; color: var(--accent); }
-    .pol[aria-checked="false"]::before { content: '✓ '; visibility: hidden; }
+    .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-pressed="false"]::before { content: '✓ '; visibility: hidden; }
     .nab-pole input { width: 100%; box-sizing: border-box; }
     .sloupec-nab { display: flex; flex-direction: column; max-height: 70vh; overflow-y: auto; }
     .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
@@ -177,8 +182,8 @@
             <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty</button>
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
-            <button class="pol" id="btnOdkaz" role="menuitem">🔗 Odkaz na tento kolíček <span class="pozn">sdílet</span></button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje kolíčky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk (díly na boku)</div>
             <button class="pol" id="btnStl" role="menuitem">⬇ STL – celá sada <span class="pozn">Ctrl+S</span></button>
@@ -186,9 +191,8 @@
             <div class="sloupec-nab" id="exportDilu"></div>
             <div class="nab-tip">Sada = všechny díly × počet kolíčků (záložka Tisk). Díly leží na boku – boční profil je na podložce, tisk bez podpor.</div>
             <hr>
-            <button class="pol" id="btnProfil" role="menuitem">📐 Boční profil 1:1 <span class="pozn">tisk A4 – přiložte starý kolíček</span></button>
-            <button class="pol" id="btnSvg" role="menuitem">⬇ Boční profil <span class="pozn">SVG</span></button>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -196,19 +200,22 @@
           <div class="nabidka" id="nabPredvolby" role="menu" hidden>
             <div class="nab-nadpis">Přepíše celé nastavení</div>
             <div class="sloupec-nab" id="seznamPredvoleb"></div>
+            <hr>
+            <button class="pol" id="btnNahoda" role="menuitem">🎲 Náhodný kolíček <span class="pozn">N – po pár kliknutích uvidíte, co generátor umí</span></button>
           </div>
         </div>
         <div class="menu">
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
-            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-checked="true">🧵 Pružina, šňůra a tyč <span class="pozn">D</span></button>
-            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-checked="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
-            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-checked="false">🖨 Tisková poloha <span class="pozn">M</span></button>
-            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-checked="true">🟥 Převisy barevně <span class="pozn">V</span></button>
-            <button class="pol" id="tAnimace" role="menuitemcheckbox" aria-checked="false">▶ Animace otevírání <span class="pozn">A</span></button>
-            <button class="pol" id="tMeritko" role="menuitemcheckbox" aria-checked="true">📏 Měřítko (pravítko v mm) <span class="pozn">L</span></button>
-            <button class="pol" id="tVolne" role="menuitemcheckbox" aria-checked="false">🟧 Volná pružina – předpětí <span class="pozn">P</span></button>
-            <button class="pol" id="tRozpad" role="menuitemcheckbox" aria-checked="false">🧩 Rozpad na díly <span class="pozn">R</span></button>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="true">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-pressed="true">🧵 Pružina, šňůra a tyč <span class="pozn">D</span></button>
+            <button class="pol" id="tAnimace" role="menuitemcheckbox" aria-pressed="false">▶ Animace otevírání <span class="pozn">A</span></button>
+            <button class="pol" id="tVolne" role="menuitemcheckbox" aria-pressed="false">🟧 Volná pružina – předpětí <span class="pozn">V</span></button>
+            <button class="pol" id="tRozpad" role="menuitemcheckbox" aria-pressed="false">🧩 Rozpad na díly <span class="pozn">R</span></button>
             <hr>
             <div class="nab-nadpis">Vzhled v sestavě</div>
             <div class="sloupec-nab vzhled-volba" id="vzhledy" role="group" aria-label="Vzhled"></div>
@@ -218,17 +225,24 @@
           <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku (profil) <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">3</span></button>
-            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Na čelisti <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu – na čelisti <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku – profil <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
             <hr>
             <button class="pol" id="btnSkicar" role="menuitem">✏️ Skicář obrysu <span class="pozn">K</span></button>
           </div>
         </div>
-        <button class="tl" id="btnNahodny" title="Náhodný kolíček – po pár kliknutích uvidíte, co generátor umí (N)">🎲<span class="jmeno"> Náhodný</span></button>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" id="btnProfil" role="menuitem">📐 Boční profil 1:1 <span class="pozn">tisk A4 – přiložte starý kolíček</span></button>
+            <button class="pol" id="btnSvg" role="menuitem">⬇ Boční profil <span class="pozn">SVG</span></button>
+          </div>
+        </div>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
         <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
-        <button class="tl" id="btnNapoveda" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnNap" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -440,7 +454,7 @@
           <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
           <div class="karta3d" id="karta3d"></div>
           <div class="legenda3d" id="legendaVolne" hidden><span><i style="background:#ff8a3d"></i>pružina volná (před montáží) – rozdíl proti sestavě je předpětí <b id="tPredpeti"></b></span></div>
-          <div class="legenda3d" id="legenda3d" hidden><span><i style="background:#db3833"></i>převis bez opory</span><span><i style="background:#d9a833"></i>most nad dílem</span></div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="previs"></i>převis bez opory</span><span><i class="most"></i>most nad dílem</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div id="skicar" hidden>
@@ -619,11 +633,12 @@
     <p><b>Skicář.</b> Obrys ramene nakreslíte body: tažení posune bod, dvojklik na bod přepne ostrý / hladký roh, dvojklik na hranu přidá bod, Delete nebo pravé tlačítko bod smaže.
       Vložte fotku starého kolíčku jako podklad, nástrojem 📐 klikněte na dva body se známou vzdáleností (např. délku kolíčku) a obrys obkreslete.
       Zářezy, kloub, drážky a pružinu doplní generátor sám – čelisti musí dosedat na vodorovnou čáru dosednutí.</p>
-    <p><b>Boční profil 1:1</b> (Soubor) vytiskne profil ve skutečné velikosti – přiložíte k němu starý kolíček nebo pružinu a ověříte rozměry před tiskem.</p>
+    <p><b>Boční profil 1:1</b> (Výkres) vytiskne profil ve skutečné velikosti – přiložíte k němu starý kolíček nebo pružinu a ověříte rozměry před tiskem.</p>
     <p><b>Volná pružina a rozpad.</b> Zobrazení → Volná pružina ukáže oranžově pružinu, jak vypadá mimo kolíček (tištěná tak, jak vyjde z tiskárny) – o tolik se při montáži stlačí nebo natočí, to je předpětí.
       Posuvník Rozložit (klávesa <kbd>R</kbd>) rozloží kolíček na díly: ramena od sebe, čep do strany, pružina ven.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy, <kbd>K</kbd> skicář / 3D, <kbd>A</kbd> animace otevírání, <kbd>P</kbd> volná pružina, <kbd>R</kbd> rozpad na díly, <kbd>L</kbd> měřítko, <kbd>N</kbd> náhodný kolíček, <kbd>M</kbd> tisková poloha, <kbd>D</kbd> pružina a šňůra, <kbd>V</kbd> převisy, <kbd>H</kbd> hrany,
-      <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Sdílení.</b> Soubor → Sdílet odkazem dá adresu s celým nastavením; kdo ji otevře, uvidí stejný kolíček (fungují i starší odkazy). Soubor → Otevřít v Modeláři pošle sadu dílů k dalším úpravám.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy (izometrie, shora, zepředu, zboku, zespodu), <kbd>K</kbd> skicář / 3D, <kbd>A</kbd> animace otevírání, <kbd>V</kbd> volná pružina, <kbd>R</kbd> rozpad na díly, <kbd>L</kbd> pravítka, <kbd>N</kbd> náhodný kolíček, <kbd>M</kbd> tisková poloha, <kbd>D</kbd> pružina a šňůra, <kbd>P</kbd> převisy, <kbd>H</kbd> hrany,
+      <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
     <p class="pozn">Materiálové hodnoty jsou orientační pro FDM tisk (stav 11/2026); skutečná síla závisí na tiskárně, teplotě a obvodech.</p>
   </div>
 </dialog>

@@ -2073,4 +2073,10 @@ I18N.pridej('en', {
   'Střední (výchozí)': 'Medium (default)',
   'Proměnné projektu…': 'Project variables…',
   'Plátno skici': 'Sketch canvas',
+  'float p = mod(vD / max(mmNaPx, 1e-6), 16.0); if ((p > 8.0 && p': 'float p = mod(vD / max(mmNaPx, 1e-6), 16.0); if ((p > 8.0 && p',
+  '{popis} ({jednotka}) – číslo nebo výraz s proměnnými projektu, třeba D/2:': '{popis} ({jednotka}) – a number or an expression with project variables, e.g. D/2:',
+  'float nz = normalize(vN).z; if (nz >= mez2 || vZ': 'float nz = normalize(vN).z; if (nz >= mez2 || vZ',
+  'Srážky v {us} rozsahu (krok {vz} {j}):': 'Collisions in {us} of the range (step {vz} {j}):',
+  'Předaný model už není k dispozici – stáhněte ho v generátoru a otevřete přes Soubor → Otevřít.': 'The handed-over model is no longer available – download it in the generator and open it via File → Open.',
+  'Předaný model se nepodařilo převzít: {message}': 'Could not take over the handed-over model: {message}',
 });

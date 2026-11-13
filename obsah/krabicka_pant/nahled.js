@@ -1,167 +1,130 @@
-/* Krabička s víčkem na pantu – 3D náhled (three.js r128): orbitální ovládání, otevírání víka a chlopní
-   kolem os pantů, průhledné víko a úchyty, jejichž tažením se mění vnitřní rozměry.
-   Osa Z nahoru, jednotky mm. Úchyt X a Y mění rozměr symetricky (posun × 2), úchyt Z výšku. */
-/* global THREE */
+/* Krabička s víčkem na pantu – 3D náhled nad společnou scénou gen3d/scena.js: otevírání víka a chlopní
+   kolem os pantů, průhledné víko, úchyty, jejichž tažením se mění vnitřní rozměry, řez kolmo na X / Y,
+   tisková poloha s převisy a pravítka. Osa Z nahoru, jednotky mm. Úchyt X a Y mění rozměr symetricky (posun × 2), úchyt Z výšku.
+   const n = KPANT_NAHLED.vytvorNahled(kontejner, {hodnoty, priTazeni})
+   n.nastavDily(dily, odv, texty, kov, {tisk: [díly v tiskové poloze] | null, uhel})
+   n.prepni(co, h) – hrany | previsy | pravitka | pruhledne | uchyty · n.uhly(viko, chlopen) · n.rez(osa | null, podil) */
+/* global THREE, G3D */
 (function () {
   'use strict';
   const fmt = x => (Math.round(x * 10) / 10).toString().replace('.', ',');
+  const BARVY = { krabicka: 0x4f86d9, viko: 0xe0a63f, chlopen: 0x4caf7a, vlozka: 0xa77bd6, kov: 0xb8c0c8, plast: 0xd8d8d8 };
+  const POHLEDY = { zezadu: [Math.PI / 2, 0.25] };
 
   function vytvorNahled(kontejner, volby = {}) {
-    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: !!volby.zachovat });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
-    renderer.localClippingEnabled = true;
-    kontejner.appendChild(renderer.domElement);
-    const platno = renderer.domElement;
-    platno.style.display = 'block'; platno.style.width = '100%'; platno.style.height = '100%';
-    platno.style.touchAction = 'none';
-    platno.tabIndex = 0;
-    platno.setAttribute('aria-label', '3D náhled krabičky – táhnutím otáčíte, barevnými úchyty měníte rozměry, kolečkem přibližujete');
+    // náhled se po výrazné změně poměru stran (úzký displej, přepnutí boxu) znovu vejde – jádro to samo nedělá
+    let posledniBox = null, pomer = 0;
+    const prizpusob = (w, h) => { if (posledniBox && Math.abs(w / h - pomer) / pomer > 0.15) s.pohled('ponech', posledniBox); pomer = w / h; };
+    const s = G3D.scena(kontejner, { pohledy: POHLEDY, odstup: 1, zmenaVelikosti: prizpusob, popis: '3D náhled krabičky – táhnutím otáčíte, barevnými úchyty měníte rozměry, kolečkem přibližujete' });
     const vrstva = document.createElement('div');
     vrstva.className = 'popisky3d';
     kontejner.appendChild(vrstva);
-
-    const scena = new THREE.Scene();
-    const kamera = new THREE.PerspectiveCamera(35, 1, 0.5, 5000);
-    kamera.up.set(0, 0, 1);
-    scena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 0.75));
-    const sv1 = new THREE.DirectionalLight(0xffffff, 0.65); sv1.position.set(1, -1.4, 2); scena.add(sv1);
-    const sv2 = new THREE.DirectionalLight(0xffffff, 0.3); sv2.position.set(-1.5, 1, 0.6); scena.add(sv2);
-
-    const mat = (barva, extra) => new THREE.MeshStandardMaterial(Object.assign({ color: barva, roughness: 0.62, metalness: 0.05, flatShading: true, side: THREE.DoubleSide }, extra));
-    const materialy = {
-      krabicka: mat(0x4f86d9), viko: mat(0xe0a63f), chlopen: mat(0x4caf7a), vlozka: mat(0xa77bd6),
-      kov: mat(0xb8c0c8, { metalness: 0.8, roughness: 0.3 }), plast: mat(0xd8d8d8),
-      hrany: new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5 }),
-    };
     const UCHYTY = {
       x: { barva: 0xe5484d, smer: new THREE.Vector3(1, 0, 0), faktor: 2, nazev: 'Délka' },
       y: { barva: 0x30a46c, smer: new THREE.Vector3(0, -1, 0), faktor: 2, nazev: 'Šířka' },
       z: { barva: 0x3e8ef7, smer: new THREE.Vector3(0, 0, 1), faktor: 1, nazev: 'Výška' },
     };
-
-    const skupina = new THREE.Group(); scena.add(skupina);
-    const pivotViko = new THREE.Group(), vnitrekViko = new THREE.Group();
-    pivotViko.add(vnitrekViko);
-    let pivotyChl = [], stranyChl = [], objekty = [], uchytyG = null, odv = null, rozmer = 100;
+    let pivotViko = null, pivotyChl = [], uchytyG = null, odv = null, rozmer = 100, prvni = true;
+    let posledni = null;                                  // argumenty posledního nastavDily (přestavba po přepnutí)
     const uchyty = {};
-    const stav = { viko: 0, chlopen: 0, pruhledne: false, uchyty: true, rez: null };
-    const rovinaRezu = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
-    const ovl = { cil: new THREE.Vector3(0, 0, 15), vzd: 260, azimut: -0.95, elevace: 0.5 };
-
-    let ceka = false;
-    function prekresli() { if (ceka) return; ceka = true; requestAnimationFrame(() => { ceka = false; snimek(); }); }
-    function snimek() {
-      pivotViko.rotation.x = -stav.viko * Math.PI / 180;
-      for (const g of pivotyChl) g.rotation.x = -stav.chlopen * Math.PI / 180;
-      const ce = Math.cos(ovl.elevace);
-      kamera.position.set(ovl.cil.x + ovl.vzd * ce * Math.cos(ovl.azimut), ovl.cil.y + ovl.vzd * ce * Math.sin(ovl.azimut), ovl.cil.z + ovl.vzd * Math.sin(ovl.elevace));
-      kamera.lookAt(ovl.cil);
-      kamera.near = Math.max(0.1, ovl.vzd / 200); kamera.far = ovl.vzd * 20 + rozmer * 10; kamera.updateProjectionMatrix();
-      renderer.render(scena, kamera);
-      popisky();
-    }
-
-    function velikost() {
-      const w = Math.max(50, kontejner.clientWidth), h = Math.max(50, kontejner.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
-      renderer.setSize(w, h, false);
-      kamera.aspect = w / h; kamera.updateProjectionMatrix();
-      prekresli();
-    }
-    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(velikost).observe(kontejner);
-    window.addEventListener('resize', velikost);
-
-    function tema() {
-      const bg = (getComputedStyle(document.documentElement).getPropertyValue('--bg-input') || '#1e1e1e').trim();
-      renderer.setClearColor(new THREE.Color(bg));
-      materialy.hrany.opacity = document.documentElement.getAttribute('data-theme') === 'light' ? 0.4 : 0.55;
-      prekresli();
-    }
-    new MutationObserver(tema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    tema();
+    const stav = { viko: 0, chlopen: 0, pruhledne: false, uchyty: true, rez: null, hrany: true, previsy: true, pravitka: false, tisk: false };
+    const roviny = () => (stav.rez ? [s.rovinaRezu] : []);
 
     /* ---------- díly ---------- */
-    function geometrie(sit) {
-      const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.BufferAttribute(sit.poz, 3));
-      g.setIndex(new THREE.BufferAttribute(sit.idx, 1));
-      g.computeBoundingSphere();
-      return g;
+    function pridej(rodic, d, barva, tridy, x = 0) {
+      const g = s.geometrie(d.poz, d.idx, { uhel: 28, barvaTroj: tridy && (t => (tridy[t] === 1 || tridy[t] === 2 ? G3D.BARVY_TRID[tridy[t]] : null)), zaklad: new THREE.Color(barva).toArray() });
+      const kov = barva === BARVY.kov;
+      const mat = new THREE.MeshPhysicalMaterial({ color: barva, roughness: kov ? 0.3 : 0.5, metalness: kov ? 0.8 : 0.05, clearcoat: 0.2, clearcoatRoughness: 0.6, clippingPlanes: roviny() });
+      if (tridy) { mat.color.set(0xffffff); mat.vertexColors = true; }   // převisy: barvy trojúhelníků, ostatní v barvě dílu (zaklad)
+      const m = new THREE.Mesh(g, mat); m.userData = { vlastniMat: true, zakl: true, jmeno: d.jmeno };
+      const vn = new THREE.Mesh(g, s.matVnitrek); vn.visible = !!stav.rez; vn.userData = { vnitrek: true, model: false };
+      const mh = new THREE.LineBasicMaterial({ color: s.matHrany.color, transparent: true, opacity: s.matHrany.opacity, clippingPlanes: roviny() });
+      const e = s.hrany(d.poz, d.idx, 28, mh); e.visible = stav.hrany; e.userData = { hrany: true, vlastniMat: true, jmeno: d.jmeno };
+      m.position.x = vn.position.x = e.position.x = x;
+      rodic.add(m, vn, e);
+      g.computeBoundingBox();
+      return g.boundingBox.clone().translate(new THREE.Vector3(x, 0, 0));
     }
-    function pridej(rodic, g, hr, material, x = 0) {
-      const m = new THREE.Mesh(g, material), e = new THREE.LineSegments(hr, materialy.hrany);
-      m.position.x = e.position.x = x;
-      rodic.add(m); rodic.add(e);
-      objekty.push(m, e);
-      return m;
-    }
-    function nastavDily(dily, o, texty, kov) {
-      const prvni = !odv;
+    function nastavDily(dily, o, texty, kov, v = {}) {
+      posledni = [dily, o, texty, kov, v];
+      s.vycisti(); pivotViko = null; pivotyChl = []; uchytyG = null;
+      vrstva.querySelectorAll('.uchyt-popis').forEach(e => e.remove());
+      for (const k of Object.keys(uchyty)) delete uchyty[k];
+      if (!dily) { odv = null; s.stin(null); s.prekresli(); return; }
       odv = o;
-      for (const ob of objekty) { ob.parent.remove(ob); }
-      const geo = new Set(objekty.map(ob => ob.geometry));
-      geo.forEach(g => g.dispose());
-      objekty = [];
-      for (const g of stranyChl) vnitrekViko.remove(g);
-      pivotyChl = []; stranyChl = [];
-      skupina.remove(pivotViko);
-
-      const { yA, zA } = o.pant, { zF } = o.zap;
-      // díl zapínání: skupina otočená na stranu (kolem Z), v ní kloub v místě (x, y) osy
-      const naStranu = (um, kloub) => {
-        const st = new THREE.Group(); st.rotation.z = um.phi * Math.PI / 180;
-        const piv = new THREE.Group(), vn = new THREE.Group();
-        piv.position.set(um.x, um.y, zF); vn.position.set(0, 0, -zF);
-        piv.add(vn); st.add(piv); vnitrekViko.add(st); stranyChl.push(st);
-        if (kloub) pivotyChl.push(piv);
-        return vn;
-      };
-      pivotViko.position.set(0, yA, zA);
-      vnitrekViko.position.set(0, -yA, -zA);
-      skupina.add(pivotViko);
-      const mCep = kov ? materialy.kov : materialy.plast;
-      for (const d of dily) {
-        const g = geometrie(d), hr = new THREE.EdgesGeometry(g, 28);
-        if (d.jmeno === 'krabicka') pridej(skupina, g, hr, materialy.krabicka);
-        else if (d.jmeno === 'cepPant') for (const x of d.xs) pridej(skupina, g, hr, mCep, x);
-        else if (d.jmeno === 'viko') pridej(vnitrekViko, g, hr, materialy.viko);
-        else if (d.jmeno === 'vlozka') pridej(skupina, g, hr, materialy.vlozka);
-        else if (d.jmeno === 'cepZap') for (const um of d.umisteni) pridej(naStranu(um, false), g, hr, mCep);
-        else if (d.jmeno === 'chlopen') for (const um of d.umisteni) pridej(naStranu(um, true), g, hr, materialy.chlopen);
+      stav.tisk = !!v.tisk;
+      const box = new THREE.Box3();
+      if (stav.tisk) {
+        // díly v tiskové poloze vedle sebe na podložce, převisy barevně
+        for (const d of v.tisk) {
+          const tridy = stav.previsy ? G3D.tridyPrevisu(d.poz, d.idx, v.uhel || 45) : null;
+          box.union(pridej(s.skupina, d, d.jmeno.startsWith('cep') ? (kov ? BARVY.kov : BARVY.plast) : BARVY[d.jmeno] || BARVY.krabicka, tridy));
+        }
+      } else {
+        const { yA, zA } = o.pant, { zF } = o.zap;
+        pivotViko = new THREE.Group(); const vnitrekViko = new THREE.Group();
+        pivotViko.add(vnitrekViko); pivotViko.position.set(0, yA, zA); vnitrekViko.position.set(0, -yA, -zA);
+        s.skupina.add(pivotViko);
+        // díl zapínání: skupina otočená na stranu (kolem Z), v ní kloub v místě (x, y) osy
+        const naStranu = (um, kloub) => {
+          const st = new THREE.Group(); st.rotation.z = um.phi * Math.PI / 180;
+          const piv = new THREE.Group(), vn = new THREE.Group();
+          piv.position.set(um.x, um.y, zF); vn.position.set(0, 0, -zF);
+          piv.add(vn); st.add(piv); vnitrekViko.add(st);
+          if (kloub) pivotyChl.push(piv);
+          return vn;
+        };
+        const bCep = kov ? BARVY.kov : BARVY.plast;
+        for (const d of dily) {
+          if (d.jmeno === 'krabicka' || d.jmeno === 'vlozka') box.union(pridej(s.skupina, d, BARVY[d.jmeno]));
+          else if (d.jmeno === 'cepPant') for (const x of d.xs) pridej(s.skupina, d, bCep, null, x);
+          else if (d.jmeno === 'viko') box.union(pridej(vnitrekViko, d, BARVY.viko));
+          else if (d.jmeno === 'cepZap') for (const um of d.umisteni) pridej(naStranu(um, false), d, bCep);
+          else if (d.jmeno === 'chlopen') for (const um of d.umisteni) pridej(naStranu(um, true), d, BARVY.chlopen);
+        }
+        box.min.x = Math.min(box.min.x, -o.celkem[0] / 2); box.max.x = Math.max(box.max.x, o.celkem[0] / 2);
+        box.min.y = Math.min(box.min.y, -o.celkem[1] / 2); box.max.y = Math.max(box.max.y, o.celkem[1] / 2);
+        postavUchyty(texty);
       }
       rozmer = Math.max(...o.celkem);
-      postavUchyty(texty);
-      nastavRez();
-      pruhlednost();
-      if (prvni) pohled('izo');
-      prekresli();
+      s.mrizka(box, stav.tisk);
+      s.stin(box, !stav.tisk);
+      if (stav.pravitka) s.pravitka(box);
+      nastavRez(); pruhlednost();
+      posledniBox = box;
+      if (prvni || v.novyPohled) { s.pohled(prvni ? 'iso' : 'ponech', box); prvni = false; }
+      s.prekresli();
     }
+    const obnov = () => { if (posledni) nastavDily(...posledni); };
 
     function pruhlednost() {
-      for (const k of ['viko', 'chlopen']) {
-        const m = materialy[k];
-        m.transparent = stav.pruhledne; m.opacity = stav.pruhledne ? 0.3 : 1; m.depthWrite = !stav.pruhledne; m.needsUpdate = true;
-      }
-      prekresli();
+      const pr = stav.pruhledne && !stav.tisk;
+      s.skupina.traverse(ob => {
+        if (ob.userData.zakl && (ob.userData.jmeno === 'viko' || ob.userData.jmeno === 'chlopen')) {
+          ob.material.transparent = pr; ob.material.opacity = pr ? 0.3 : 1; ob.material.depthWrite = !pr; ob.material.needsUpdate = true;
+        }
+      });
+      s.prekresli();
     }
 
     /* ---------- řez: ponechá se část modelu s x (nebo y) menším než poloha řezu ---------- */
     function nastavRez() {
-      const r = stav.rez, roviny = r ? [rovinaRezu] : [];
+      const r = stav.rez;
       if (r && odv) {
         // rozsah posuvníku: celá délka, v Y souměrně až za články pantu
         const i = r.osa === 'y' ? 1 : 0, L = i ? 2 * (odv.pant.yA + 2 * odv.pant.Rk) : odv.celkem[0] + 2;
-        rovinaRezu.normal.set(i ? 0 : -1, i ? -1 : 0, 0);
-        rovinaRezu.constant = -L / 2 + r.podil * L;
+        s.rovinaRezu.normal.set(i ? 0 : -1, i ? -1 : 0, 0);
+        s.rovinaRezu.constant = -L / 2 + r.podil * L;
       }
-      for (const m of Object.values(materialy)) { m.clippingPlanes = roviny; m.needsUpdate = true; }
-      prekresli();
+      s.skupina.traverse(ob => {
+        if (ob.userData.zakl || ob.userData.hrany) { ob.material.clippingPlanes = roviny(); ob.material.needsUpdate = true; }
+        if (ob.userData.vnitrek) ob.visible = !!r;
+      });
+      s.prekresli();
     }
 
     /* ---------- úchyty rozměrů ---------- */
     function postavUchyty(texty) {
-      if (uchytyG) { skupina.remove(uchytyG); uchytyG.traverse(ob => { if (ob.geometry) ob.geometry.dispose(); if (ob.material) ob.material.dispose(); }); }
-      vrstva.querySelectorAll('.uchyt-popis').forEach(e => e.remove());
       uchytyG = new THREE.Group(); uchytyG.visible = stav.uchyty;
       const o = odv, off = Math.max(8, rozmer * 0.12), r = Math.max(1.6, rozmer * 0.022);
       // počátek úchytu = bod na povrchu, osa = směr tažení
@@ -174,9 +137,9 @@
         const a = zaklad[osa], b = a.clone().addScaledVector(u.smer, off);
         const m = new THREE.MeshBasicMaterial({ color: u.barva, depthTest: false, transparent: true, opacity: 0.95 });
         const koule = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), m);
-        koule.position.copy(b); koule.renderOrder = 20; koule.userData.osa = osa;
+        koule.position.copy(b); koule.renderOrder = 20; koule.userData = { osa, model: false, vlastniMat: true };
         const cara = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a, b]), new THREE.LineBasicMaterial({ color: u.barva, depthTest: false }));
-        cara.renderOrder = 19;
+        cara.renderOrder = 19; cara.userData.vlastniMat = true;
         uchytyG.add(koule, cara);
         const el = document.createElement('div'); el.className = 'kota uchyt-popis';
         el.textContent = texty && texty[osa] ? texty[osa] : u.nazev;
@@ -184,40 +147,32 @@
         vrstva.appendChild(el);
         uchyty[osa] = { koule, bod: b, smer: u.smer, faktor: u.faktor, el, r };
       }
-      skupina.add(uchytyG);
+      s.skupina.add(uchytyG);
     }
 
+    /* ---------- každý snímek: úhly víka a chlopní, popisky úchytů ---------- */
     const v3 = new THREE.Vector3();
-    function popisky() {
+    s.scena.onBeforeRender = () => {
+      if (pivotViko) pivotViko.rotation.x = -stav.viko * Math.PI / 180;
+      for (const g of pivotyChl) g.rotation.x = -stav.chlopen * Math.PI / 180;
+      s.skupina.updateMatrixWorld(true);
       const w = kontejner.clientWidth, h = kontejner.clientHeight;
       for (const u of Object.values(uchyty)) {
-        if (!u.el) continue;
-        v3.copy(u.bod).addScaledVector(u.smer, u.r * 2.2).project(kamera);
+        v3.copy(u.bod).addScaledVector(u.smer, u.r * 2.2).project(s.kamera);
         u.el.style.display = v3.z < 1 && v3.z > -1 ? '' : 'none';
         u.el.style.transform = `translate(-50%, -50%) translate(${(v3.x + 1) / 2 * w}px, ${(1 - v3.y) / 2 * h}px)`;
       }
-    }
+    };
 
-    /* ---------- pohledy ---------- */
-    function pohled(druh) {
-      const H = odv ? odv.celkem[2] : 30;
-      ovl.cil.set(0, 0, H / 2);
-      const pul = Math.tan(kamera.fov * Math.PI / 360);
-      ovl.vzd = (rozmer * 0.62) / (pul * Math.min(1, kamera.aspect)) + rozmer * 0.5;
-      const smery = { izo: [-0.95, 0.5], shora: [-Math.PI / 2, Math.PI / 2 - 0.001], zepredu: [-Math.PI / 2, 0.02], zboku: [0, 0.02], zezadu: [Math.PI / 2, 0.25] };
-      [ovl.azimut, ovl.elevace] = smery[druh] || smery.izo;
-      prekresli();
-    }
-
-    /* ---------- myš a dotyk ---------- */
+    /* ---------- tažení úchytů (před otáčením scény: zachytí se ve fázi capture na kontejneru) ---------- */
     const ray = new THREE.Raycaster();
     function paprsek(x, y) {
-      const r = platno.getBoundingClientRect();
-      ray.setFromCamera(new THREE.Vector2((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1), kamera);
+      const r = s.platno.getBoundingClientRect();
+      ray.setFromCamera(new THREE.Vector2((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1), s.kamera);
       return ray.ray;
     }
     function zasahUchytu(x, y) {
-      if (!stav.uchyty || !uchytyG) return null;
+      if (!stav.uchyty || !uchytyG || stav.tisk) return null;
       paprsek(x, y);
       const h = ray.intersectObjects(Object.values(uchyty).map(u => u.koule), false)[0];
       return h ? h.object.userData.osa : null;
@@ -229,168 +184,104 @@
       const jm = d.dot(d) * c - b * b;
       return Math.abs(jm) < 1e-6 ? null : (b * e - c * dd) / jm;
     }
-
-    const ukazatele = new Map();
     let tah = null;
-    platno.addEventListener('contextmenu', e => e.preventDefault());
-    platno.addEventListener('pointerdown', e => {
-      platno.setPointerCapture(e.pointerId);
-      ukazatele.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      const osa = ukazatele.size === 1 && e.button === 0 ? zasahUchytu(e.clientX, e.clientY) : null;
-      if (osa && volby.hodnoty) {
-        const u = uchyty[osa];
-        const s0 = naOse(paprsek(e.clientX, e.clientY), u.bod, u.smer);
-        if (s0 !== null) { tah = { druh: 'uchyt', osa, s0, h0: volby.hodnoty()[osa], bod: u.bod.clone(), posl: null }; return; }
-      }
-      tah = { druh: (e.button === 2 || e.button === 1 || e.ctrlKey || e.shiftKey) ? 'posun' : 'otoc' };
+    kontejner.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || !volby.hodnoty || e.target !== s.platno) return;
+      const osa = zasahUchytu(e.clientX, e.clientY); if (!osa) return;
+      const u = uchyty[osa], s0 = naOse(paprsek(e.clientX, e.clientY), u.bod, u.smer);
+      if (s0 === null) return;
+      e.stopPropagation();
+      try { kontejner.setPointerCapture(e.pointerId); } catch (er) { /* ukazatel už není aktivní */ }
+      tah = { id: e.pointerId, osa, s0, h0: volby.hodnoty()[osa], bod: u.bod.clone(), posl: null };
+    }, true);
+    kontejner.addEventListener('pointermove', e => {
+      if (!tah) { if (!e.buttons && e.target === s.platno) s.platno.style.cursor = zasahUchytu(e.clientX, e.clientY) ? 'grab' : ''; return; }
+      if (e.pointerId !== tah.id) return;
+      const u = UCHYTY[tah.osa], q = naOse(paprsek(e.clientX, e.clientY), tah.bod, u.smer);
+      if (q === null) return;
+      const krok = e.shiftKey ? 0.1 : 1;
+      const h = Math.round((tah.h0 + u.faktor * (q - tah.s0)) / krok) * krok;
+      s.platno.style.cursor = 'grabbing';
+      if (h !== tah.posl) { tah.posl = h; volby.priTazeni(tah.osa, h, false); }
     });
-    platno.addEventListener('pointermove', e => {
-      const p = ukazatele.get(e.pointerId);
-      if (!p) { platno.style.cursor = zasahUchytu(e.clientX, e.clientY) ? 'grab' : ''; return; }
-      const dx = e.clientX - p.x, dy = e.clientY - p.y;
-      const d0 = ukazatele.size === 2 ? vzdalenostPrstu() : 0;
-      p.x = e.clientX; p.y = e.clientY;
-      if (tah && tah.druh === 'uchyt') {
-        const u = UCHYTY[tah.osa];
-        const s = naOse(paprsek(e.clientX, e.clientY), tah.bod, u.smer);
-        if (s === null) return;
-        const krok = e.shiftKey ? 0.1 : 1;
-        const h = Math.round((tah.h0 + u.faktor * (s - tah.s0)) / krok) * krok;
-        platno.style.cursor = 'grabbing';
-        if (h !== tah.posl) { tah.posl = h; volby.priTazeni(tah.osa, h, false); }
-        return;
-      }
-      if (ukazatele.size === 2) {
-        const d1 = vzdalenostPrstu();
-        if (d0 > 0 && d1 > 0) ovl.vzd = Math.min(rozmer * 30, Math.max(rozmer * 0.15, ovl.vzd * d0 / d1));
-        posun(dx / 2, dy / 2);
-      } else if (tah && tah.druh === 'otoc') {
-        ovl.azimut -= dx * 0.008;
-        ovl.elevace = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, ovl.elevace + dy * 0.008));
-      } else posun(dx, dy);
-      prekresli();
-    });
-    function vzdalenostPrstu() { const [a, b] = [...ukazatele.values()]; return Math.hypot(a.x - b.x, a.y - b.y); }
-    function posun(dx, dy) {
-      const k = ovl.vzd * 0.0018 * (480 / Math.max(200, kontejner.clientHeight));
-      const vpravo = new THREE.Vector3().setFromMatrixColumn(kamera.matrix, 0);
-      const nahoru = new THREE.Vector3().setFromMatrixColumn(kamera.matrix, 1);
-      ovl.cil.addScaledVector(vpravo, -dx * k).addScaledVector(nahoru, dy * k);
-    }
     const konec = e => {
-      if (!ukazatele.has(e.pointerId)) return;
-      ukazatele.delete(e.pointerId);
-      if (tah && tah.druh === 'uchyt' && tah.posl !== null) volby.priTazeni(tah.osa, tah.posl, true);
-      if (ukazatele.size === 0) { tah = null; platno.style.cursor = ''; }
+      if (!tah || e.pointerId !== tah.id) return;
+      const t = tah; tah = null; s.platno.style.cursor = '';
+      if (t.posl !== null) volby.priTazeni(t.osa, t.posl, true);
     };
-    platno.addEventListener('pointerup', konec);
-    platno.addEventListener('pointercancel', konec);
-    platno.addEventListener('wheel', e => {
-      e.preventDefault();
-      ovl.vzd = Math.min(rozmer * 30, Math.max(rozmer * 0.15, ovl.vzd * Math.exp(e.deltaY * 0.0012)));
-      prekresli();
-    }, { passive: false });
+    kontejner.addEventListener('pointerup', konec);
+    kontejner.addEventListener('pointercancel', konec);
 
-    velikost();
+    function prepni(co, h) {
+      stav[co] = h;
+      if (co === 'hrany') { s.skupina.traverse(ob => { if (ob.userData.hrany) ob.visible = h; }); s.prekresli(); return; }
+      if (co === 'pruhledne') { pruhlednost(); return; }
+      if (co === 'uchyty') { if (uchytyG) uchytyG.visible = h; for (const u of Object.values(uchyty)) u.el.hidden = !h; s.prekresli(); return; }
+      obnov();   // převisy, pravítka
+    }
     return {
-      nastavDily, pohled, prekresli,
-      uhly(viko, chlopen) { stav.viko = viko; stav.chlopen = chlopen; prekresli(); },
+      nastavDily, prepni, stav,
+      pohled: jak => s.pohled(jak === 'izo' ? 'iso' : jak),
+      prekresli: s.prekresli,
+      uhly(viko, chlopen) { stav.viko = viko; stav.chlopen = chlopen; s.prekresli(); },
       rez(osa, podil) { stav.rez = osa ? { osa, podil } : null; nastavRez(); },
-      pruhledne(v) { stav.pruhledne = v; pruhlednost(); },
-      zobrazUchyty(v) { stav.uchyty = v; if (uchytyG) uchytyG.visible = v; for (const u of Object.values(uchyty)) u.el.hidden = !v; prekresli(); },
-      tahne: () => !!(tah && tah.druh === 'uchyt'),
-      snimekPNG() { snimek(); return platno.toDataURL('image/png'); },
+      pruhledne(v) { prepni('pruhledne', v); },
+      zobrazUchyty(v) { prepni('uchyty', v); },
+      barvy(cara, cara2, hrana) { s.barvy(cara, cara2, hrana); s.skupina.traverse(ob => { if (ob.userData.hrany) ob.material.color.copy(s.matHrany.color); }); },
+      tahne: () => !!tah,
+      png: s.png, snimekPNG: s.png,
       // pro testy: střed úchytu v pixelech plátna
       poziceUchytu(osa) {
         const u = uchyty[osa]; if (!u) return null;
-        snimek();
-        v3.copy(u.bod).project(kamera);
-        const r = platno.getBoundingClientRect();
+        s.snimek();
+        v3.copy(u.bod).project(s.kamera);
+        const r = s.platno.getBoundingClientRect();
         return { x: r.left + (v3.x + 1) / 2 * r.width, y: r.top + (1 - v3.y) / 2 * r.height };
       },
-      stav,
     };
   }
 
-  /* ---------- malý prohlížeč dílů (měrka vůlí): podložka, díly v tiskové poloze, popisky ----------
+  /* ---------- malý prohlížeč dílů (měrka vůlí, zkušební chlopně): podložka, díly v tiskové poloze, popisky ----------
      zobraz([{poz, idx, barva}], [{bod: [x, y, z], text, zvyraznit}]) */
   function vytvorProhlizec(kontejner) {
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
-    kontejner.appendChild(renderer.domElement);
-    const platno = renderer.domElement;
-    platno.style.display = 'block'; platno.style.width = '100%'; platno.style.height = '100%'; platno.style.touchAction = 'none';
-    platno.setAttribute('aria-label', 'Náhled dílů v tiskové poloze – táhnutím otáčíte, kolečkem přibližujete');
+    const s = G3D.scena(kontejner, { odstup: 0.9, popis: 'Náhled dílů v tiskové poloze – táhnutím otáčíte, kolečkem přibližujete' });
     const vrstva = document.createElement('div'); vrstva.className = 'popisky3d'; kontejner.appendChild(vrstva);
-    const scena = new THREE.Scene(), kamera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
-    kamera.up.set(0, 0, 1);
-    scena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 0.8));
-    const sv = new THREE.DirectionalLight(0xffffff, 0.7); sv.position.set(1, -1.5, 2.5); scena.add(sv);
-    const skupina = new THREE.Group(); scena.add(skupina);
-    // zepředu a mírně shora – otvory měrky jsou vidět čelně a popisky se nepřekrývají
-    const ovl = { cil: new THREE.Vector3(), vzd: 100, azimut: -Math.PI / 2 - 0.25, elevace: 0.42 };
-    let popisky = [], rozmer = 50;
-    function snimek() {
-      const ce = Math.cos(ovl.elevace);
-      kamera.position.set(ovl.cil.x + ovl.vzd * ce * Math.cos(ovl.azimut), ovl.cil.y + ovl.vzd * ce * Math.sin(ovl.azimut), ovl.cil.z + ovl.vzd * Math.sin(ovl.elevace));
-      kamera.lookAt(ovl.cil); kamera.updateProjectionMatrix();
-      renderer.render(scena, kamera);
-      const w = kontejner.clientWidth, h = kontejner.clientHeight, v = new THREE.Vector3();
+    let popisky = [];
+    const v = new THREE.Vector3();
+    s.scena.onBeforeRender = () => {
+      const w = kontejner.clientWidth, h = kontejner.clientHeight;
       for (const p of popisky) {
-        v.set(...p.bod).project(kamera);
+        v.set(...p.bod).project(s.kamera);
         p.el.style.transform = `translate(-50%, -100%) translate(${(v.x + 1) / 2 * w}px, ${(1 - v.y) / 2 * h - 6}px)`;
       }
-    }
-    let ceka = false;
-    const prekresli = () => { if (ceka) return; ceka = true; requestAnimationFrame(() => { ceka = false; snimek(); }); };
-    function velikost() {
-      const w = Math.max(50, kontejner.clientWidth), h = Math.max(50, kontejner.clientHeight);
-      renderer.setSize(w, h, false); kamera.aspect = w / h; prekresli();
-    }
-    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(velikost).observe(kontejner);
-    const bg = () => renderer.setClearColor(new THREE.Color((getComputedStyle(document.documentElement).getPropertyValue('--bg-input') || '#1e1e1e').trim()));
-    bg(); new MutationObserver(() => { bg(); prekresli(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-    const ukaz = new Map();
-    platno.addEventListener('pointerdown', e => { platno.setPointerCapture(e.pointerId); ukaz.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
-    platno.addEventListener('pointermove', e => {
-      const p = ukaz.get(e.pointerId); if (!p) return;
-      ovl.azimut -= (e.clientX - p.x) * 0.008;
-      ovl.elevace = Math.max(0.05, Math.min(Math.PI / 2 - 0.01, ovl.elevace + (e.clientY - p.y) * 0.008));
-      p.x = e.clientX; p.y = e.clientY; prekresli();
-    });
-    const pust = e => ukaz.delete(e.pointerId);
-    platno.addEventListener('pointerup', pust); platno.addEventListener('pointercancel', pust);
-    platno.addEventListener('wheel', e => { e.preventDefault(); ovl.vzd = Math.min(rozmer * 10, Math.max(rozmer * 0.4, ovl.vzd * Math.exp(e.deltaY * 0.0012))); prekresli(); }, { passive: false });
-
+    };
     function zobraz(dily, novePopisky) {
-      skupina.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
-      skupina.clear();
+      s.vycisti();
       const box = new THREE.Box3();
       for (const d of dily) {
-        const g = new THREE.BufferGeometry();
-        g.setAttribute('position', new THREE.BufferAttribute(d.poz, 3)); g.setIndex(new THREE.BufferAttribute(d.idx, 1));
+        const g = s.geometrie(d.poz, d.idx, { uhel: 28 });
+        const m = new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({ color: d.barva || 0x4f86d9, roughness: 0.5, metalness: 0.05 }));
+        m.userData.vlastniMat = true;
+        s.skupina.add(m, s.hrany(d.poz, d.idx, 28));
         g.computeBoundingBox(); box.union(g.boundingBox);
-        skupina.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: d.barva || 0x4f86d9, roughness: 0.6, flatShading: true, side: THREE.DoubleSide })));
-        skupina.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 28), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45 })));
       }
       // podložka tiskárny jako mřížka 10 mm pod díly
       const vel = box.getSize(new THREE.Vector3()), stred = box.getCenter(new THREE.Vector3());
-      rozmer = Math.max(vel.x, vel.y, vel.z, 10);
-      const n = Math.ceil(rozmer * 1.6 / 10) * 2, mriz = new THREE.GridHelper(n * 10 / 2, n / 2, 0x888888, 0x888888);
+      const rozmer = Math.max(vel.x, vel.y, vel.z, 10), n = Math.ceil(rozmer * 1.6 / 10) * 2;
+      const mriz = new THREE.GridHelper(n * 10 / 2, n / 2, 0x888888, 0x888888);
       mriz.rotation.x = Math.PI / 2; mriz.position.set(stred.x, stred.y, 0);
-      mriz.material.transparent = true; mriz.material.opacity = 0.35;
-      skupina.add(mriz);
+      mriz.material.transparent = true; mriz.material.opacity = 0.35; mriz.userData.model = false;
+      s.skupina.add(mriz);
       vrstva.innerHTML = '';
       popisky = (novePopisky || []).map(p => {
         const el = document.createElement('div'); el.className = 'kota' + (p.zvyraznit ? ' zvyraznena' : ''); el.textContent = p.text;
         vrstva.appendChild(el); return { bod: p.bod, el };
       });
-      ovl.cil.copy(stred);
-      ovl.vzd = rozmer * 0.55 / Math.tan(kamera.fov * Math.PI / 360) / Math.min(1, kamera.aspect || 1) + rozmer * 0.2;
-      velikost();
+      // zepředu a mírně shora – otvory měrky jsou vidět čelně a popisky se nepřekrývají
+      const pohled = () => s.pohled({ azimut: -Math.PI / 2 - 0.25, elevace: 0.42 }, box);
+      pohled(); requestAnimationFrame(pohled);   // okno se právě otevřelo – po změně velikosti ještě jednou
     }
-    return { zobraz, prekresli: velikost };
+    return { zobraz, prekresli: s.prekresli };
   }
 
   window.KPANT_NAHLED = { vytvorNahled, vytvorProhlizec, fmt };

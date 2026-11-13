@@ -533,6 +533,53 @@
     ['vlastni', 'Vlastní rozměr', 0, 0]
   ];
 
+
+  /* ---------- stav stránky (projekt gen3d) ----------
+     {nazev, rezim, hodnoty: {pant, cep, kulovy, pruzny}, podlozka, podlozkaW, podlozkaD, rozestup, rychlost}.
+     Hodnoty se tu jen převedou na čísla – meze a vazby hlídá normalizuj(rezim, hodnoty) při stavbě (s hlášením u polí).
+     Přijme i starší tvary: stav z webapp_panty_stav, uložený návrh {rezim, hodnoty jednoho režimu}, export {format: 'webapp_panty'}. */
+  function vychoziStav() {
+    const hodnoty = {};
+    for (const r of Object.keys(REZIMY)) hodnoty[r] = vychozi(r);
+    return { nazev: '', rezim: 'pant', hodnoty, podlozka: '220x220', podlozkaW: 220, podlozkaD: 220, rozestup: 5, rychlost: 1 };
+  }
+  function normalizujStav(vstup) {
+    const p = vychoziStav(), hlaseni = [];
+    const v = vstup && typeof vstup === 'object' && !Array.isArray(vstup) ? vstup : {};
+    if (REZIMY[v.rezim]) p.rezim = v.rezim;
+    else if (v.rezim !== undefined) hlaseni.push(`neznámý druh spoje „${v.rezim}“ → ${REZIMY.pant.kratce}`);
+    let hod = v.hodnoty && typeof v.hodnoty === 'object' && !Array.isArray(v.hodnoty) ? v.hodnoty : {};
+    if (!Object.keys(REZIMY).some(r => hod[r] && typeof hod[r] === 'object')) hod = { [p.rezim]: hod };   // hodnoty jednoho režimu
+    for (const r of Object.keys(REZIMY)) {
+      const h = hod[r];
+      if (!h || typeof h !== 'object') continue;
+      for (const k of Object.keys(h)) {
+        const d = PODLE_KLICE[k], x = h[k];
+        if (!d || x === undefined || x === null) continue;
+        if (d.typ === 'vyber') { if (d.volby.some(o => o[0] === x)) p.hodnoty[r][k] = x; else if (d.rezimy.includes(r)) hlaseni.push(`${d.nazev}: neznámá volba „${x}“`); continue; }
+        const c = cislo(x);
+        if (Number.isFinite(c)) p.hodnoty[r][k] = c; else if (d.rezimy.includes(r)) hlaseni.push(`${d.nazev}: neplatné číslo „${x}“`);
+      }
+    }
+    if (typeof v.nazev === 'string') p.nazev = v.nazev.slice(0, 120);
+    if (PODLOZKY.some(x => x[0] === v.podlozka)) p.podlozka = v.podlozka;
+    for (const k of ['podlozkaW', 'podlozkaD', 'rozestup']) { const c = cislo(v[k]); if (Number.isFinite(c)) p[k] = c; }
+    if ([0.5, 1, 2].includes(cislo(v.rychlost))) p.rychlost = cislo(v.rychlost);
+    return { p, hlaseni };
+  }
+  /* Starší pojmenované návrhy (webapp_panty_sady: {jméno: {rezim, hodnoty, cas}}) → záznamy Tvary (Moje panty). */
+  function prevedSady(sady) {
+    const out = [];
+    let i = 0;
+    for (const [nazev, x] of Object.entries(sady && typeof sady === 'object' ? sady : {})) {
+      if (!x || !REZIMY[x.rezim]) continue;
+      const cas = Date.parse(x.cas) || Date.now();
+      out.push({ id: 'sada' + (i++) + '_' + cas.toString(36), nazev, vytvoreno: cas, upraveno: cas,
+        parametry: normalizujStav({ rezim: x.rezim, hodnoty: { [x.rezim]: x.hodnoty } }).p });
+    }
+    return out;
+  }
+
   /* ---------- pomocné ---------- */
   function fmt(x, des) {
     if (!Number.isFinite(x)) return x > 0 ? '∞' : '–';
@@ -544,7 +591,7 @@
   }
 
   const api = { REZIMY, MATERIALY, PARAMETRY, PODLE_KLICE, PODLOZKY, NEOVERENO, RAD,
-    vychozi, cislo, normalizuj, rozmeryPantu, rozmeryKoule, rozmeryPruzneho,
+    vychozi, cislo, normalizuj, vychoziStav, normalizujStav, prevedSady, rozmeryPantu, rozmeryKoule, rozmeryPruzneho,
     teorieMezePantu, teorieNaklonu, teorieOhybu, pruznyPasek, zacvaknuti, upozorneniTisku,
     mI, mNasob, mPosun, mOsa, mRotX, mBod, maticeOhybu, bodOhybu, maticeNaklonu,
     sitZMeshe, zkontrolujSit, stlBinarni, ctiStl, rozmisti, fmt };

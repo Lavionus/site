@@ -9,6 +9,7 @@
 <script src="../theme.js"></script>
 <script src="../dialog.js"></script>
 <script src="../podpis.js" defer></script>
+<script src="gen3d/predavka.js"></script>
 <script src="loziska/jadro.js"></script>
 <style>
 *{box-sizing:border-box}
@@ -168,8 +169,10 @@ a{color:var(--accent)}
       <div class="akce">
         <button class="btn mini" data-prikaz="stlMaketa">⬇️ Maketa ložiska (STL)</button>
         <button class="btn mini" data-prikaz="stlPouzdro">⬇️ Pouzdro s osazením (STL)</button>
+        <button class="btn mini" data-prikaz="modelar" data-co="stlMaketa">🧊 Maketa do Modeláře</button>
+        <button class="btn mini" data-prikaz="modelar" data-co="stlPouzdro">🧊 Pouzdro do Modeláře</button>
       </div>
-      <p class="pozn">Modelář zatím nepřijímá data z jiných stránek přímo – stáhněte STL a v <a href="modelar.html" target="_self">Modeláři 3D</a> ho otevřete přes <i>Soubor → Otevřít / importovat</i> (Ctrl+O). Maketa je dutý válec d × D × B, pouzdro má díru D + vůle a dno s otvorem jako osazení.</p>
+      <p class="pozn">„Do Modeláře“ otevře <a href="modelar.html" target="_self">Modelář 3D</a> a díl do něj rovnou vloží (stažené STL jde otevřít i ručně přes <i>Soubor → Otevřít / importovat</i>, Ctrl+O). Maketa je dutý válec d × D × B, pouzdro má díru D + vůle a dno s otvorem jako osazení.</p>
     </section>
     <section class="karta">
       <h2>🎯 Doporučené uložení</h2>
@@ -261,8 +264,9 @@ a{color:var(--accent)}
         <button class="btn mini" data-prikaz="svgKopie" data-zdroj="oNacrt">📋 Kopírovat SVG</button>
         <button class="btn mini" data-prikaz="svgStahni" data-zdroj="oNacrt">⬇️ Stáhnout SVG</button>
         <button class="btn mini" data-prikaz="stlDrazka">⬇️ Díl s drážkou (STL)</button>
+        <button class="btn mini" data-prikaz="modelar" data-co="stlDrazka">🧊 Do Modeláře</button>
       </div>
-      <p class="pozn">t = hloubka od těsněné plochy ke dnu drážky (u radiální drážky včetně vůle mezi pístem a dírou). Při tlaku nad ~100 bar hlídejte spáru proti vytlačení (opěrný kroužek). STL je pro 3D tisk zkušebního kusu – v <a href="modelar.html" target="_self">Modeláři</a> přes Soubor → Otevřít.</p>
+      <p class="pozn">t = hloubka od těsněné plochy ke dnu drážky (u radiální drážky včetně vůle mezi pístem a dírou). Při tlaku nad ~100 bar hlídejte spáru proti vytlačení (opěrný kroužek). STL je pro 3D tisk zkušebního kusu – „Do Modeláře“ ho rovnou otevře v <a href="modelar.html" target="_self">Modeláři</a>.</p>
     </section>
   </div>
   <section class="karta">
@@ -357,7 +361,7 @@ a{color:var(--accent)}
     <p style="margin:0"><b>Data:</b> rozměry d × D × B jsou normované (ISO 15, kuželíková ISO 355, axiální ISO 104). Únosnosti C/C0 jsou průměrné katalogové hodnoty a <b>mezní otáčky jsou odhad</b> z n·dm pro mazání tukem – stav k 11/2026, orientačně. Pro konstrukci ověřte v katalogu výrobce.</p>
     <p style="margin:0"><b>O-kroužky:</b> hloubka drážky se navrhne pro stlačení ~22 % (statické) / 15 % (dynamické) / 25 % (čelní), šířka pro vyplnění ~77 %. Protažení kroužku na pístu snižuje průřez – počítá se s tím. Hodnoty t a b můžete přepsat a kontrola hned ukáže stlačení, vyplnění a varování.</p>
     <p style="margin:0"><b>Rozměry AS568</b> jsou převedené z palců (řady 0xx, 1xx, 2xx, 3xx). Metrické rozměry odpovídají běžným sortimentům prodejců – dostupnost se liší.</p>
-    <p style="margin:0"><b>Do Modeláře 3D</b> se díly přenášejí přes soubor STL (Soubor → Otevřít / importovat). Náčrty jdou zkopírovat nebo stáhnout jako SVG.</p>
+    <p style="margin:0"><b>Do Modeláře 3D</b> díl pošlou tlačítka 🧊 (Modelář se otevře s dílem ve scéně), nebo stáhněte STL a otevřete ho přes Soubor → Otevřít / importovat. Náčrty jdou zkopírovat nebo stáhnout jako SVG.</p>
     <p style="margin:0">Oblíbené a vlastní ložiska se ukládají jen v tomto prohlížeči – zálohujte přes <i>Soubor → Záloha</i>.</p>
   </div>
   <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
@@ -576,10 +580,13 @@ function svgText(id) {
   const svg = $(id).querySelector('svg');
   return svg ? '<?xml version="1.0" encoding="UTF-8"?>\n' + svg.outerHTML.replace(/currentColor/g, '#000') : null;
 }
-function stl(sit, jmeno) {
+let doModelare = false;   // příkaz spuštěný přes „Otevřít v Modeláři“ – STL se předá Modeláři místo stažení
+async function stl(sit, jmeno) {
   const k = J.kontrolaSite(sit);
   if (!k.vodotesna || !(k.objem > 0)) return Dialog.chyba('Síť se nepodařilo sestavit uzavřenou – zkontrolujte rozměry.');
-  stahni(jmeno + '.stl', J.stlBinarni(sit, jmeno), 'model/stl');
+  if (!doModelare) return stahni(jmeno + '.stl', J.stlBinarni(sit, jmeno), 'model/stl');
+  try { await G3D.predej('modelar', new Blob([J.stlBinarni(sit, jmeno)]), jmeno + '.stl'); location.href = 'modelar.html#predavka'; }
+  catch (e) { Dialog.chyba('Model se nepodařilo předat Modeláři: ' + e.message + ' – stáhněte STL a otevřete ho v Modeláři ručně.'); }
 }
 
 const PRIKAZY = {
@@ -615,6 +622,7 @@ const PRIKAZY = {
     if (navrh.typ === 'pist' && navrh.dno <= 0) return Dialog.chyba('Drážka je hlubší než poloměr pístu.');
     stl(J.sitDrazka(navrh), 'drazka-' + navrh.typ + '-' + bezpecneJmeno(f(navrh.prumer)));
   },
+  modelar: el => { doModelare = true; try { return PRIKAZY[el.dataset.co](el); } finally { doModelare = false; } },
   oNavrh: oNavrhZnovu,
   oOblibene: () => { if (!navrh) return; J.prepniOblibene(data, oKlic()); uloz(); vykresliDrazku(); },
   doTrvanlivosti: () => {

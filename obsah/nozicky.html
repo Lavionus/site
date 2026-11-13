@@ -6,12 +6,17 @@
   <title>Nožičky, krytky a podložky – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor nožiček nábytku (válec, kužel, kopule; šroub, lepení, čep), pantoflí na nohy židlí a stolů včetně šikmých, krytek trubek s pružnými lamelami, vyrovnávacích klínů a sad podložek. Protiskluzová vložka z TPU, kontroly tisku, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="nozicky/jadro.js"></script>
   <script src="nozicky/nahled.js"></script>
@@ -49,6 +54,10 @@
     .hlaseni li.ok { border-left-color: var(--ok); }
     .hlaseni li.skok { cursor: pointer; }
     .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+    .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
+    .legenda-rezu { position: absolute; left: 10px; bottom: 10px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+    .legenda-rezu i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #c0504d; vertical-align: -1px; margin-right: 4px; }
     .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
     @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
     .zvyrazni { animation: zvyrazni 2.4s ease-out; }
@@ -88,7 +97,7 @@
     .karta3d b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
     @media (max-width: 600px) { .karta3d { display: none; } }
     .box-obecne { max-height: 40%; }
-    .box-out > .box-telo { padding: 10px 12px 14px; }
+    .box-out > .box-telo { padding: 0; }
     .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
     .zalozky .souhrn-zal:empty { display: none; }
     .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
@@ -132,15 +141,17 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje díly…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk (celá sada)</div>
             <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
             <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše <span class="pozn">díly s barvou</span></button>
             <button class="pol" id="btnStlHlavni" role="menuitem">⬇ STL – jen hlavní díly</button>
             <button class="pol" id="btnStlVlozky" role="menuitem">⬇ STL – jen vložky TPU</button>
-            <div class="nab-tip">Díly jsou v tiskové poloze, rozmístěné na podložce. Jednotlivé díly stáhnete v boxu Výsledky → Díly.</div>
+            <div class="nab-tip">Díly jsou v tiskové poloze, rozmístěné na podložce. Jednotlivé díly stáhnete v záložce Kusovník.</div>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -153,11 +164,14 @@
         <div class="menu">
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
-            <button class="pol" id="tSada" role="menuitemcheckbox" aria-pressed="false">▦ Celá sada na podložce <span class="pozn">S</span></button>
-            <button class="pol" id="tDuch" role="menuitemcheckbox" aria-pressed="true">◎ Noha / trubka <span class="pozn">D</span></button>
-            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez středem <span class="pozn">R</span></button>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
-            <div class="nab-tip">Noha nebo trubka se ukazuje jen u jednoho kusu (pantofle, krytka).</div>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha – celá sada na podložce <span class="pozn">M · S</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="false">🟥 Převisy barevně <span class="pozn">P</span></button>
+            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez středem <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <button class="pol" id="tDuch" role="menuitemcheckbox" aria-pressed="true">◎ Noha / trubka <span class="pozn">D</span></button>
+            <div class="nab-tip">Díly jsou vždy v tiskové poloze; bez celé sady se ukáže jeden kus. Noha nebo trubka se ukazuje jen u jednoho kusu (pantofle, krytka).</div>
           </div>
         </div>
         <div class="menu">
@@ -165,24 +179,27 @@
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku <span class="pozn">3</span></button>
-            <button class="pol" data-pohled="zespodu" role="menuitem">▢ Zespodu – dosedací plocha <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu – dosedací plocha <span class="pozn">5</span></button>
           </div>
         </div>
-        <button class="tl" id="btnNapoveda" title="Nápověda a jak tisknout (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNap" title="Nápověda a jak tisknout (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
-      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol">…</button></div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
     <input type="file" id="soubor" accept=".json,application/json" class="skryty">
 
     <nav class="prepinac-boxu" aria-label="Části nastavení">
       <button data-ukaz="in" class="je-vstup">📐 Rozměry</button>
       <button data-ukaz="obecne" class="aktivni">🪑 Náhled</button>
-      <button data-ukaz="out" class="je-vystup">Výsledky ✔</button>
+      <button data-ukaz="out" class="je-vystup">Materiál ⚙</button>
     </nav>
 
     <main class="plocha" data-zobrazeno="obecne">
-      <aside class="box box-in" id="boxVstup" aria-label="Typ dílu a rozměry">
+      <aside class="box box-in" id="boxVstup" data-box="in" aria-label="Typ dílu a rozměry">
         <div class="box-hlava"><span class="box-znak" aria-hidden="true">📐</span><h2>Typ a rozměry</h2><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo">
           <div class="typy" role="group" aria-label="Typ dílu">
@@ -325,16 +342,6 @@
             </div>
           </details>
 
-          <details class="oddil" data-oddil="spolecne" open>
-            <summary><span class="oddil-nazev">Materiál a vůle</span><span class="souhrn" id="sSpolecne"></span></summary>
-            <div class="oddil-telo">
-              <div class="mrizka">
-                <div class="pole"><label for="f_mat">Materiál</label><select id="f_mat" data-p="material" data-typ="text"></select></div>
-                <div class="pole"><label for="f_vule">Vůle na stranu</label><input type="text" inputmode="text" class="mm" id="f_vule" data-p="vule" title="Mezera mezi dílem a nohou / trubkou / dírou na každé straně; záporná = nalisování"><span class="jedn">mm</span></div>
-              </div>
-              <p class="napoveda">Vůle 0,15–0,25 mm sedí u většiny tiskáren; pro pevné nasazení 0 až −0,1 mm (PETG, TPU).</p>
-            </div>
-          </details>
         </div>
       </aside>
 
@@ -343,15 +350,29 @@
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám…</div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
+          <div class="legenda-rezu" id="legRez" hidden><i></i>vnitřní plochy v řezu</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
-        <div class="box box-obecne" aria-label="Tisk a další nastavení">
+        <div class="box box-obecne" aria-label="Výsledky, tisk a kontrola">
           <div class="zalozky" role="tablist">
-            <button role="tab" data-zalozka="tisk" aria-selected="true">🖨 Tisk a sada <span class="souhrn-zal" id="sTisk"></span></button>
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
             <button role="tab" data-zalozka="protiskluz" aria-selected="false">🧽 Protiskluz TPU <span class="souhrn-zal" id="sProtiskluz"></span></button>
+            <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk a sada <span class="souhrn-zal" id="sTisk"></span></button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false">🧾 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje díly</button>
           </div>
-          <div class="zalozka-telo" data-telo="tisk" role="tabpanel">
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel"><div class="vysledky" id="vysledky"></div></div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden>
+            <table class="tabulka"><thead><tr><th>Díl</th><th class="c">Objem</th><th></th></tr></thead><tbody id="tDily"></tbody></table>
+            <div class="radek-tl">
+              <button class="tl hlavni-tl" type="button" id="btnStl2">⬇ STL – celá sada</button>
+              <button class="tl" type="button" id="btn3mf2">⬇ 3MF</button>
+            </div>
+          </div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden><ul class="hlaseni" id="hlaseni"></ul></div>
+          <div class="zalozka-telo" data-telo="tisk" role="tabpanel" hidden>
             <div class="mrizka">
               <div class="pole"><label for="f_kusu">Počet kusů</label><input type="text" inputmode="numeric" class="mm" id="f_kusu" data-p="kusu"><span class="jedn">ks</span></div>
               <div class="pole"><label for="f_mez">Mezera mezi díly</label><input type="text" inputmode="decimal" class="mm" id="f_mez" data-p="mezera"><span class="jedn">mm</span></div>
@@ -375,18 +396,19 @@
         </div>
       </section>
 
-      <aside class="box box-out" id="boxVystup" aria-label="Výsledky">
-        <div class="box-hlava"><span class="box-znak" aria-hidden="true">✔</span><h2>Výsledky</h2></div>
+      <aside class="box box-out" id="boxVystup" data-box="out" aria-label="Materiál a vůle">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Materiál a vůle</h2><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo">
-          <div class="vysledky" id="vysledky"></div>
-          <h3>Kontroly</h3>
-          <ul class="hlaseni" id="hlaseni"></ul>
-          <h3>Díly jednoho kusu</h3>
-          <table class="tabulka"><thead><tr><th>Díl</th><th class="c">Objem</th><th></th></tr></thead><tbody id="tDily"></tbody></table>
-          <div class="radek-tl">
-            <button class="tl hlavni-tl" type="button" id="btnStl2">⬇ STL – celá sada</button>
-            <button class="tl" type="button" id="btn3mf2">⬇ 3MF</button>
-          </div>
+          <details class="oddil" data-oddil="spolecne" open>
+            <summary><span class="oddil-nazev">Materiál a vůle</span><span class="souhrn" id="sSpolecne"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_mat">Materiál</label><select id="f_mat" data-p="material" data-typ="text"></select></div>
+                <div class="pole"><label for="f_vule">Vůle na stranu</label><input type="text" inputmode="text" class="mm" id="f_vule" data-p="vule" title="Mezera mezi dílem a nohou / trubkou / dírou na každé straně; záporná = nalisování"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">Vůle 0,15–0,25 mm sedí u většiny tiskáren; pro pevné nasazení 0 až −0,1 mm (PETG, TPU).</p>
+            </div>
+          </details>
         </div>
       </aside>
     </main>
@@ -408,7 +430,8 @@
       <li><b>Vůle:</b> nejdřív vytiskněte jeden kus a vyzkoušejte; při volném uložení zmenšete vůli o 0,1 mm.</li>
     </ul>
     <p><b>Kontroly</b> hlásí tenká dna a stěny, převisy (kopule, kužel, šikmé stěny), pružnost lamel podle materiálu, zavření štěrbin a další nemožné kombinace. Klepnutím na hlášení skočíte na pole.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy, <kbd>S</kbd> sada / jeden kus, <kbd>D</kbd> noha nebo trubka, <kbd>R</kbd> řez, <kbd>H</kbd> hrany, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>M</kbd> nebo <kbd>S</kbd> celá sada / jeden kus, <kbd>D</kbd> noha nebo trubka, <kbd>P</kbd> převisy, <kbd>R</kbd> řez, <kbd>L</kbd> pravítka, <kbd>H</kbd> hrany,
+      <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
   </div>
 </dialog>
 <script src="nozicky/ui.js"></script>

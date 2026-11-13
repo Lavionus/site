@@ -503,4 +503,6 @@ I18N.pridej('en', {
   'zaoblení R {x} mm': 'fillet R {x} mm',
   'sražení {x} mm': 'chamfer {x} mm',
   'plocha {n}': 'face {n}',
+  'Otevře Modelář 3D s tímto modelem ve scéně': 'Opens the 3D Modeller with this model in the scene',
+  'Do Modeláře': 'To Modeller',
 });

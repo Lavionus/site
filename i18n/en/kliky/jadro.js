@@ -305,4 +305,8 @@ I18N.pridej('en', {
   'od osy zámku k líci {druh} {tloustka} mm; přečnívá {presah} mm': 'from the lock axis to the face of the {druh} {tloustka} mm; sticks out {presah} mm',
   'od osy zámku k líci {druh} {tloustka} mm; přečnívá {presah} mm – víc než doporučené 3 mm (kratší vložka nebývá)': 'from the lock axis to the face of the {druh} {tloustka} mm; sticks out {presah} mm – more than the recommended 3 mm (shorter cylinders are not common)',
   'Samořezný vrut do plastu {velikost} × {L} se zápustnou hlavou (typ PT / Delta PT)': 'Self-tapping screw for plastic {velikost} × {L}, countersunk head (PT / Delta PT type)',
+  'Samořezný vrut do plastu {velikost} × {L} {tvar} hlavou (typ PT / Delta PT)': 'Self-tapping screw for plastic {velikost} × {L}, {tvar} head (PT / Delta PT type)',
+  'od osy zámku k líci {druh} {tloustka} mm; přečnívá {presah} mm{presah2}': 'from the lock axis to the face of the {druh} {tloustka} mm; sticks out {presah} mm{presah2}',
+  'se zápustnou': 'countersunk',
+  's válcovou': 'cheese',
 });

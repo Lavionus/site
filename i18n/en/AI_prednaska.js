@@ -182,4 +182,5 @@ I18N.pridej('en', {
   'Automatizace': 'Automation',
   'Praxe': 'Practice',
   'Komunita': 'Community',
+  'Pokračování: Svět AI – o půl roku dál ➜': 'Continued: The World of AI – Six Months Later ➜',
 });

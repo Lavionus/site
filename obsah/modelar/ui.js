@@ -242,7 +242,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.vytvorMagnet(S, S.telesa);
     M.pouzijIkony();
     M.cekej('start', 'Otevírám projekt…', null, 0);
-    U.start().finally(() => { M.hotovoCekani('start'); M.pripraveno = true; M.vysli('pripraveno'); M.pruvodceNaZacatku(); });
+    U.start().finally(() => { M.hotovoCekani('start'); M.pripraveno = true; M.vysli('pripraveno'); M.pruvodceNaZacatku(); prevezmiPredavku(); });
+
+    // model poslaný z 3D generátoru (gen3d/predavka.js): modelar.html#predavka → import do scény
+    async function prevezmiPredavku() {
+      if (location.hash !== '#predavka' || !window.G3D || !G3D.prevezmi) return;
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* sandbox */ }
+      try { const f = await G3D.prevezmi('modelar'); if (f) await M.otevriSoubory([f]); else Dialog.info('Předaný model už není k dispozici – stáhněte ho v generátoru a otevřete přes Soubor → Otevřít.'); }
+      catch (e) { Dialog.chyba('Předaný model se nepodařilo převzít: ' + e.message); }
+    }
 
     // na úzké obrazovce panel po přidání tvaru zmizí, aby bylo vidět na plochu
     M.na('dokument', e => { if (/^Přidat/.test(e.popis)) document.body.classList.remove('panel-ukazany'); });

@@ -6,12 +6,17 @@
   <title>Úhelníky a odsávání frézky – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor úhelníků (vinglů) pro 3D tisk: dvě ramena s trojúhelníkovými výztuhami, otvory pro vruty se zápustnou hlavou nebo oválné. Odsávací úhelník za frézu stolní frézky s oknem, hrdlem pro hadici vysavače a uchy na vruty. Rozbor tisku, kusovník, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="spojky/jadro.js"></script>
   <script src="spojky/nahled.js"></script>
@@ -37,9 +42,6 @@
     .karta3d:empty { display: none; }
     .karta3d b { color: var(--text); font-variant-numeric: tabular-nums; }
     .karta3d .titul { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
-    .legenda3d { position: absolute; left: 10px; bottom: 30px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
-      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .legenda3d i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }
     @media (max-width: 600px) { .karta3d { display: none; } }
 
     label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
@@ -129,6 +131,7 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje úhelníky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
             <button class="pol" id="btnStl" role="menuitem">⬇ STL – všechny kusy <span class="pozn">Ctrl+S</span></button>
@@ -137,10 +140,7 @@
             <div class="nab-tip">Počet kusů na podložku nastavíte v záložce 🖨 Tisk. Díl je otočený do doporučené (nebo vybrané) orientace a stojí na z = 0.</div>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
-            <hr>
-            <div class="nab-nadpis">Výkres – nárys, bokorys, půdorys s kótami</div>
-            <button class="pol" id="btnVykresPdf" role="menuitem">📏 Výkres PDF <span class="pozn">A4, tisk 1:1</span></button>
-            <button class="pol" id="btnVykresSvg" role="menuitem">📏 Výkres SVG <span class="pozn">pro Inkscape / CAD</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -153,10 +153,12 @@
         <div class="menu">
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
-            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-pressed="true">▥ Desky / pravítko a stůl <span class="pozn">D</span></button>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
             <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
-            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">V</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P / V · v tiskové poloze</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-pressed="true">▥ Desky / pravítko a stůl <span class="pozn">D</span></button>
             <div class="nab-tip">Montážní poloha = díl na místě s průhledným dřevem. Tisková = jak leží na podložce; červeně převisy bez opory, žlutě mosty nad dílem.</div>
           </div>
         </div>
@@ -167,11 +169,21 @@
             <button class="pol" data-pohled="shora" role="menuitem">▭ Půdorys – shora <span class="pozn">2</span></button>
             <button class="pol" data-pohled="zepredu" role="menuitem">▤ Nárys – zepředu <span class="pozn">3</span></button>
             <button class="pol" data-pohled="zboku" role="menuitem">▥ Bokorys – zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <div class="nab-nadpis">Nárys, bokorys, půdorys s kótami</div>
+            <button class="pol" data-vykres-zobraz role="menuitem">👁 Zobrazit výkres <span class="pozn">záložka Výkres</span></button>
+            <button class="pol" id="btnVykresSvg" role="menuitem">📏 Výkres SVG <span class="pozn">pro Inkscape / CAD</span></button>
+            <button class="pol" id="btnVykresPdf" role="menuitem">📏 Výkres PDF <span class="pozn">A4, tisk 1:1</span></button>
           </div>
         </div>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
         <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
-        <button class="tl" id="btnNapoveda" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnNap" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -257,7 +269,7 @@
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
-          <div class="legenda3d" id="legenda3d" hidden><span><i style="background:#db3833"></i>převis bez opory</span><span><i style="background:#d9a833"></i>most nad dílem</span></div>
+          <div class="g3d-legenda" id="legenda3d" hidden><span><i class="previs"></i>převis bez opory</span><span><i class="most"></i>most nad dílem</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Výsledky a tisk">
@@ -383,8 +395,9 @@
     <p><b>Tisk.</b> Generátor vyzkouší šest poloh a doporučí tu s nejméně převisy. Úhelník tiskněte na boku – vrstvy vedou podél ramen
       a roh se nerozštípne. Materiál <b>PETG</b> (houževnatý, do dílny), na zatížené úhelníky výplň 40 % a víc a 4 obvodové stopy;
       pevnost dávají hlavně stěny kolem otvorů.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy (izometrie, půdorys, nárys, bokorys), <kbd>M</kbd> tisková / montážní poloha, <kbd>D</kbd> dřevo, <kbd>V</kbd> převisy, <kbd>H</kbd> hrany,
-      <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy (izometrie, půdorys, nárys, bokorys, zespodu), <kbd>M</kbd> tisková / montážní poloha, <kbd>D</kbd> dřevo, <kbd>P</kbd> nebo <kbd>V</kbd> převisy, <kbd>H</kbd> hrany, <kbd>L</kbd> pravítka,
+      <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.
+      Výkres (SVG, PDF k tisku 1:1) je v nabídce 📐 Výkres; Soubor → 🔗 Sdílet odkazem uloží celé nastavení do adresy.</p>
   </div>
 </dialog>
 <script src="uhelniky/ui.js"></script>

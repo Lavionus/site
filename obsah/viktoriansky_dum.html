@@ -9,6 +9,8 @@
 <script src="../podpis.js" defer></script>
 <script src="../rekord.js"></script>
 <script src="viktoriansky_dum/predmety.js"></script>
+<script src="viktoriansky_dum/hadanky.js"></script>
+<script src="viktoriansky_dum/zvuky.js"></script>
 <style>
 html,body{height:100%}
 body{background:var(--bg-deep);margin:0;color:var(--text);display:flex;flex-direction:column;overflow:hidden}
@@ -48,7 +50,8 @@ body{background:var(--bg-deep);margin:0;color:var(--text);display:flex;flex-dire
 .pocet{padding:0 6px}
 
 .plocha{position:relative;flex:1;min-height:0;background:var(--bg-deep);touch-action:none;user-select:none}
-#platno{position:absolute;inset:0;width:100%;height:100%;cursor:grab;display:block}
+/* kurzor: mosazná lupa, kliká se tečkou uprostřed čočky */
+#platno{position:absolute;inset:0;width:100%;height:100%;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cline x1='20' y1='20' x2='29' y2='29' stroke='%232a1608' stroke-width='6' stroke-linecap='round'/%3E%3Cline x1='21' y1='21' x2='28.6' y2='28.6' stroke='%238a5426' stroke-width='3.6' stroke-linecap='round'/%3E%3Cline x1='19' y1='19' x2='21.6' y2='21.6' stroke='%23e2b450' stroke-width='3.4'/%3E%3Ccircle cx='13' cy='13' r='10' fill='%23fff3d6' fill-opacity='.14' stroke='%232a1608' stroke-width='4.6'/%3E%3Ccircle cx='13' cy='13' r='10' fill='none' stroke='%23d9a640' stroke-width='2.4'/%3E%3Cpath d='M7.4 10.2a6.2 6.2 0 0 1 3.9-3.8' stroke='%23fff' stroke-opacity='.8' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='13' cy='13' r='1.4' fill='%23fff' stroke='%232a1608' stroke-width='.9'/%3E%3C/svg%3E") 13 13,crosshair;display:block}
 #platno.tahne{cursor:grabbing}
 .zoom{position:absolute;right:10px;bottom:34px;display:flex;flex-direction:column;gap:4px}
 .zoom .tl{width:36px;height:36px;font-size:1.1rem;padding:0;box-shadow:var(--shadow)}
@@ -60,9 +63,47 @@ body{background:var(--bg-deep);margin:0;color:var(--text);display:flex;flex-dire
 /* pruh přes horní okraj scény: úvod (sám zmizí) a výsledek – nic neblokuje */
 .pruh{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:6px 8px 6px 12px;max-width:calc(100% - 90px);box-sizing:border-box;font-size:.9rem;line-height:1.4}
 .pruh.vyhra{border-color:var(--ok)}
+.pruh.chyba{border-color:var(--danger)}
 .pruh .tl{flex-shrink:0}
 .pruh .zavrit{background:none;border:0;color:var(--text-muted);font-size:1.1rem;cursor:pointer;padding:2px 6px;flex-shrink:0}
 @media (max-width:640px){.pruh{flex-wrap:wrap;max-width:calc(100% - 20px)}}
+
+/* tlačítko zapnuto/vypnuto */
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+/* seznam hádanek */
+.seznam .hadanka{white-space:normal;font-style:italic;max-width:24em;text-align:center}
+.seznam .hadanka::before{content:'❓ ';font-style:normal}
+.seznam .zbyva{color:var(--text-muted);font-size:.85rem;align-self:center}
+/* procházka domem: dům po patrech */
+.dum{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:color-mix(in srgb,var(--bg-deep) 70%,transparent);backdrop-filter:blur(3px);overflow:auto;padding:12px;box-sizing:border-box}
+.dum-okno{background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px 16px;width:min(760px,100%);box-sizing:border-box;font-family:Georgia,'Times New Roman',serif}
+.dum-hlava{display:flex;align-items:center;justify-content:space-between}
+.dum-hlava h2{margin:0;font-size:1.2rem}
+.dum-hlava .zavrit{background:none;border:0;color:var(--text-muted);font-size:1.4rem;cursor:pointer}
+.dum-info{color:var(--text-muted);font-size:.9rem;margin:2px 0 10px}
+.dum-strecha{height:34px;margin:0 6%;background:color-mix(in srgb,var(--accent) 35%,var(--bg-control));clip-path:polygon(4% 100%,50% 0,96% 100%)}
+.patro{border:1px solid var(--border);border-top:0;padding:6px 8px 8px;background:var(--bg-elevated)}
+.patro:first-child{border-top:1px solid var(--border)}
+.patro-nazev{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-bottom:4px}
+.pokoje{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.dum-pokoj{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border-radius:8px;border:1px solid var(--border);background:var(--bg-control);color:var(--text);cursor:pointer;font-family:inherit;font-size:.82rem;line-height:1.25}
+.dum-pokoj:hover:not(:disabled){border-color:var(--accent);background:var(--bg-hover)}
+.dum-pokoj .ikona{font-size:1.5rem}
+.dum-pokoj .svicky{font-size:.8rem;letter-spacing:1px;min-height:1.1em}
+.dum-pokoj:disabled{opacity:.45;cursor:not-allowed}
+.dum-pokoj.dalsi{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+/* modální okno přípravy scény */
+.priprava{position:absolute;inset:0;z-index:40;display:grid;place-items:center;background:color-mix(in srgb,var(--bg-deep) 72%,transparent);backdrop-filter:blur(3px)}
+.priprava-okno{background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:20px 26px;width:min(340px,calc(100% - 32px));box-sizing:border-box;text-align:center;font-family:Georgia,'Times New Roman',serif}
+.priprava-okno h2{margin:4px 0 2px;font-size:1.2rem;font-weight:600}
+.priprava-svice{font-size:2rem;animation:plamen 1.6s ease-in-out infinite alternate}
+@keyframes plamen{from{transform:rotate(-4deg) scale(1);opacity:.85}to{transform:rotate(4deg) scale(1.06);opacity:1}}
+@media (prefers-reduced-motion:reduce){.priprava-svice{animation:none}}
+.priprava-pokoj{color:var(--text-muted);font-size:.92rem;margin-bottom:12px}
+.priprava-ukazatel{height:8px;border-radius:4px;background:var(--bg-control);border:1px solid var(--border);overflow:hidden}
+.priprava-ukazatel div{height:100%;width:0;background:var(--accent);transition:width .2s}
+.priprava-text{margin-top:10px;font-size:.88rem;color:var(--text-muted);font-style:italic;min-height:1.3em}
 
 /* seznam hledaných předmětů: slova nebo siluety */
 .seznam{flex-shrink:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;padding:7px 12px 9px;background:var(--bg-elevated);border-top:1px solid var(--border);font-size:.95rem;font-family:Georgia,'Times New Roman',serif}
@@ -79,12 +120,15 @@ body{background:var(--bg-deep);margin:0;color:var(--text);display:flex;flex-dire
   <h1>🕯️ Viktoriánský dům</h1>
   <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
     <button class="tl hlavni-tl" data-prikaz="nova" title="Nová hra (N)">🎲<span class="txt"> Nová</span></button>
+    <button class="tl" data-prikaz="dum" title="Procházka domem – pokoje se odemykají postupně (D)">🏠<span class="txt"> Dům</span></button>
     <button class="tl" data-nabidka="nabHra" aria-expanded="false" title="Pokoj, obtížnost a seznam">⚙️<span class="txt"> Nastavení</span> ▾</button>
   </div></div>
   <div class="skup" role="group" aria-label="Nalezeno"><span class="skup-nazev" aria-hidden="true">Nalezeno</span><div class="skup-tl"><div class="pocet" id="pocet">0 / 0</div></div></div>
   <div class="skup" role="group" aria-label="Čas"><span class="skup-nazev" aria-hidden="true">Čas</span><div class="skup-tl"><div class="cas" id="cas">0:00</div></div></div>
   <div class="skup" role="group" aria-label="Pomoc"><span class="skup-nazev" aria-hidden="true">Pomoc</span><div class="skup-tl">
-    <button class="tl" data-prikaz="napoveda" title="Zúžit oblast hledání (H) – hra pak nejde do rekordů">💡<span class="txt"> Nápověda</span></button>
+    <button class="tl" data-prikaz="napoveda" id="tlNapoveda" title="Zúžit oblast hledání (H) – dobíjí se jednou za minutu">💡<span class="txt"> Nápověda</span></button>
+    <button class="tl" data-prikaz="lupa" id="tlLupa" aria-pressed="false" title="Lupa pod kurzorem (podrž L, na dotyku dlouze podrž prst)">🔍</button>
+    <button class="tl" data-prikaz="zvuk" id="tlZvuk" aria-pressed="true" title="Zvuky pokoje">🔊</button>
     <button class="tl" data-nabidka="nabPomoc" aria-expanded="false" title="Jak se hraje">❓</button>
   </div></div>
 </header>
@@ -95,30 +139,34 @@ body{background:var(--bg-deep);margin:0;color:var(--text);display:flex;flex-dire
   <button class="tl" data-obtiznost="stredni">😐 Střední <kbd>2</kbd></button>
   <button class="tl" data-obtiznost="tezka">😬 Těžká <kbd>3</kbd></button>
   <button class="tl" data-obtiznost="mistr">🎩 Mistr <kbd>4</kbd></button>
+  <button class="tl" data-obtiznost="pulnoc">🌙 Půlnoc – jen se svíčkou <kbd>5</kbd></button>
   <hr>
   <div class="nadpis">Seznam</div>
   <button class="tl" data-seznam="slova">🔤 Slova</button>
   <button class="tl" data-seznam="siluety">👤 Siluety</button>
+  <button class="tl" data-seznam="hadanky">❓ Hádanky</button>
   <hr>
   <div class="nadpis">Pokoj</div>
   <div id="nabPokoje"></div>
   <hr>
   <button class="tl" data-prikaz="sdilej">🔗 Zkopírovat odkaz na tuto hru</button>
   <hr>
-  <div class="nadpis">Rekordy (bez nápovědy)</div>
+  <div class="nadpis">Rekordy</div>
   <div class="rekordy" id="rekLehka"></div>
   <div class="rekordy" id="rekStredni"></div>
   <div class="rekordy" id="rekTezka"></div>
   <div class="rekordy" id="rekMistr"></div>
+  <div class="rekordy" id="rekPulnoc"></div>
 </div>
 
 <div id="nabPomoc" class="nabidka popis" hidden>
   <h3>🕯️ Viktoriánský dům</h3>
   <p>V pokoji je rozmístěno víc předmětů, než kolik jich hledáš – ty navíc tam jsou, aby mátly. Najdi všechno ze seznamu dole.</p>
-  <p>Předměty přebírají barvy a světlo místa, kde leží, bývají natočené a různě velké. Na vyšších obtížnostech si vybírají místa, kde nejvíc splývají, a bývají zčásti zastrčené za něčím ve scéně – přibliž si ji.</p>
+  <p>Před každou hrou se scéna chvíli připravuje: předměty převezmou světlo místa, kde leží, a zčásti se schovají za věci v pokoji – vykukují zpoza vázy, polštáře, rámu či knih. Větší část předmětu je ale vždycky vidět. Čím vyšší obtížnost, tím víc předmětů je zastrčených – přibliž si scénu.</p>
   <p>Pozor: podobné věci jsou v pokoji i namalované – platí jen ty, které jsou ve scéně navíc. Jedno kliknutí vedle nevadí, za tři rychle za sebou je +5 s.</p>
-  <p>V Nastavení lze místo slov hledat podle siluet.</p>
-  <p>Kolečkem, tahem dvěma prsty nebo tlačítky + − přibližuj, tažením posouvej, kliknutím ukaž. 💡 Nápověda zúží oblast, ale hra se pak nepočítá do rekordů.</p>
+  <p>V Nastavení lze místo slov hledat podle siluet nebo hádanek. Na obtížnost 🌙 Půlnoc je v pokoji tma a svítí jen svíčka kolem kurzoru.</p>
+  <p>🏠 Procházka domem: pokoje se odemykají jeden po druhém, za každý dostaneš 1–3 svíčky podle času a nápověd.</p>
+  <p>Kolečkem, tahem dvěma prsty nebo tlačítky + − přibližuj, tažením posouvej, kliknutím ukaž. 🔍 Lupa: podrž L (na dotyku dlouze podrž prst). 💡 Nápověda zúží oblast a pak se minutu dobíjí.</p>
 </div>
 
 <main class="plocha" id="plocha">
@@ -131,6 +179,23 @@ body{background:var(--bg-deep);margin:0;color:var(--text);display:flex;flex-dire
   </div>
   <div class="hlaska" id="hlaska" hidden></div>
   <div class="pruh" id="pruh" hidden></div>
+  <div class="dum" id="dum" hidden role="dialog" aria-modal="true" aria-labelledby="dumNadpis">
+    <div class="dum-okno">
+      <div class="dum-hlava"><h2 id="dumNadpis">🏠 Procházka domem</h2><button class="zavrit" data-prikaz="zavriDum" title="Zavřít (Esc)">×</button></div>
+      <div class="dum-info" id="dumInfo"></div>
+      <div class="dum-strecha" aria-hidden="true"></div>
+      <div id="dumPatra"></div>
+    </div>
+  </div>
+  <div class="priprava" id="priprava" hidden role="dialog" aria-modal="true" aria-labelledby="pripravaNadpis">
+    <div class="priprava-okno">
+      <div class="priprava-svice" aria-hidden="true">🕯️</div>
+      <h2 id="pripravaNadpis">Připravuji scénu</h2>
+      <div class="priprava-pokoj" id="pripravaPokoj"></div>
+      <div class="priprava-ukazatel"><div id="pripravaPruh"></div></div>
+      <div class="priprava-text" id="pripravaText" aria-live="polite"></div>
+    </div>
+  </div>
 </main>
 <div class="seznam" id="seznam"></div>
 
@@ -152,18 +217,48 @@ const VDUM = (() => {
     { id: 'koupelna', nazev: '🛁 Koupelna', soubor: 'pokoj_koupelna.webp', plochy: [[[0.02, 0.06], [0.7, 0.06], [0.7, 0.97], [0.02, 0.97]], [[0.7, 0.42], [0.98, 0.42], [0.98, 0.97], [0.7, 0.97]], [[0.8, 0.06], [0.98, 0.06], [0.98, 0.42], [0.8, 0.42]]] },
     { id: 'kabinet', nazev: '🦋 Kabinet kuriozit', soubor: 'pokoj_kabinet.webp', plochy: [[[0.02, 0.12], [0.76, 0.12], [0.76, 0.97], [0.02, 0.97]], [[0.76, 0.42], [0.98, 0.42], [0.98, 0.97], [0.76, 0.97]], [[0.85, 0.12], [0.98, 0.12], [0.98, 0.42], [0.85, 0.42]]] },
     { id: 'hala', nazev: '🕰️ Vstupní hala', soubor: 'pokoj_hala.webp', plochy: [[[0.02, 0.12], [0.35, 0.12], [0.35, 0.97], [0.02, 0.97]], [[0.35, 0.6], [0.98, 0.6], [0.98, 0.97], [0.35, 0.97]], [[0.47, 0.25], [0.98, 0.25], [0.98, 0.6], [0.47, 0.6]], [[0.47, 0.12], [0.7, 0.12], [0.7, 0.25], [0.47, 0.25]]] },
+    { id: 'knihovna', nazev: '📖 Knihovna', soubor: 'pokoj_knihovna.webp', plochy: [[[0.02, 0.55], [0.98, 0.55], [0.98, 0.97], [0.02, 0.97]], [[0.1, 0.2], [0.27, 0.2], [0.27, 0.55], [0.1, 0.55]], [[0.33, 0.22], [0.98, 0.22], [0.98, 0.55], [0.33, 0.55]]] },
+    { id: 'atelier', nazev: '🎨 Malířský ateliér', soubor: 'pokoj_atelier.webp', plochy: [[[0.02, 0.55], [0.98, 0.55], [0.98, 0.97], [0.02, 0.97]], [[0.02, 0.15], [0.3, 0.15], [0.3, 0.55], [0.02, 0.55]], [[0.55, 0.2], [0.98, 0.2], [0.98, 0.55], [0.55, 0.55]]] },
+    { id: 'satna', nazev: '👗 Šatna', soubor: 'pokoj_satna.webp', plochy: [[[0.02, 0.55], [0.98, 0.55], [0.98, 0.97], [0.02, 0.97]], [[0.02, 0.15], [0.6, 0.15], [0.6, 0.55], [0.02, 0.55]], [[0.77, 0.15], [0.98, 0.15], [0.98, 0.55], [0.77, 0.55]]] },
+    { id: 'sklep', nazev: '🍷 Vinný sklep', soubor: 'pokoj_sklep.webp', plochy: [[[0.02, 0.45], [0.98, 0.45], [0.98, 0.97], [0.02, 0.97]], [[0.02, 0.12], [0.78, 0.12], [0.78, 0.45], [0.02, 0.45]], [[0.78, 0.2], [0.98, 0.2], [0.98, 0.45], [0.78, 0.45]]] },
+    { id: 'hodinar', nazev: '⚙️ Dílna hodináře', soubor: 'pokoj_hodinar.webp', plochy: [[[0.02, 0.5], [0.98, 0.5], [0.98, 0.97], [0.02, 0.97]], [[0.02, 0.08], [0.48, 0.08], [0.48, 0.5], [0.02, 0.5]], [[0.62, 0.1], [0.98, 0.1], [0.98, 0.5], [0.62, 0.5]]] },
+    { id: 'sici', nazev: '🧵 Šicí salonek', soubor: 'pokoj_sici.webp', plochy: [[[0.02, 0.55], [0.98, 0.55], [0.98, 0.97], [0.02, 0.97]], [[0.3, 0.18], [0.98, 0.18], [0.98, 0.55], [0.3, 0.55]], [[0.02, 0.1], [0.17, 0.1], [0.17, 0.55], [0.02, 0.55]]] },
   ];
   // hledat = délka seznamu, polozit = kolik předmětů leží v pokoji (zbytek mate), vel = výška předmětu jako
-  // podíl výšky pokoje, sila = jak moc se barvy předmětu přizpůsobí okolí (0–1), uhel = max. natočení (rad),
-  // kandidatu = z kolika možných míst se vybere to, kde předmět nejvíc splývá, kryti = jak velkou část předmětu
-  // smí zakrýt malba (zastrčení za polštář, knihu…), vzor = jak silně se do předmětu propíše kresba podkladu
-  // (ornament sametu, koberec), pruhl = podíl malby prosvítající předmětem, meritko = rozsah náhodné velikosti
-  // (násobek vel; velký předmět se tváří jako součást nábytku), zarovnat = protáhlé předměty natočit podél hran malby
+  // podíl výšky pokoje, sila = jak moc převezme barvy okolí (0–1, předmět zůstává neprůhledný), uhel = max. natočení
+  // (rad), kandidatu = z kolika možných míst se vybere nejlepší úkryt, zastrcit = pravděpodobnost, že předmět zajede
+  // za něco v malbě (váza, polštář, kniha), kryti = [min, max] podíl předmětu, který je pak zakrytý – větší část
+  // zůstane vždy vidět, meritko = rozsah náhodné velikosti (násobek vel), zarovnat = protáhlé předměty podél hran malby
   const OBTIZNOSTI = {
-    lehka: { nazev: 'Lehká', hledat: 8, polozit: 20, vel: .07, sila: .45, uhel: .35, kandidatu: 1, kryti: 0, vzor: .15, pruhl: .04, meritko: [.8, 1.2], zarovnat: false },
-    stredni: { nazev: 'Střední', hledat: 12, polozit: 30, vel: .052, sila: .68, uhel: .8, kandidatu: 10, kryti: .25, vzor: .35, pruhl: .1, meritko: [.65, 1.45], zarovnat: true },
-    tezka: { nazev: 'Těžká', hledat: 18, polozit: 42, vel: .04, sila: .82, uhel: 1.6, kandidatu: 24, kryti: .4, vzor: .5, pruhl: .16, meritko: [.5, 1.75], zarovnat: true },
-    mistr: { nazev: 'Mistr', hledat: 24, polozit: 56, vel: .034, sila: .92, uhel: Math.PI, kandidatu: 40, kryti: .5, vzor: .6, pruhl: .22, meritko: [.4, 2.1], zarovnat: true },
+    lehka: { nazev: 'Lehká', hledat: 8, polozit: 20, vel: .07, sila: .3, uhel: .35, kandidatu: 12, zastrcit: .3, kryti: [.12, .25], meritko: [.8, 1.2], zarovnat: false },
+    stredni: { nazev: 'Střední', hledat: 12, polozit: 30, vel: .055, sila: .5, uhel: .8, kandidatu: 40, zastrcit: .75, kryti: [.18, .35], meritko: [.75, 1.3], zarovnat: true },
+    tezka: { nazev: 'Těžká', hledat: 18, polozit: 42, vel: .047, sila: .65, uhel: 1.6, kandidatu: 80, zastrcit: .95, kryti: [.25, .42], meritko: [.7, 1.3], zarovnat: true },
+    mistr: { nazev: 'Mistr', hledat: 24, polozit: 56, vel: .043, sila: .75, uhel: Math.PI, kandidatu: 120, zastrcit: 1, kryti: [.3, .48], meritko: [.65, 1.3], zarovnat: true },
+    // půlnoc: pokoj je potemnělý, svítí jen svíčka kolem kurzoru (tma = vykreslení v rozhraní)
+    pulnoc: { nazev: 'Půlnoc', hledat: 12, polozit: 34, vel: .055, sila: .55, uhel: 1.2, kandidatu: 60, zastrcit: .6, kryti: [.15, .3], meritko: [.8, 1.3], zarovnat: true, tma: true },
+  };
+  // předměty, které do pokoje patří – dostávají přednost (víc se jich položí a víc jich je v seznamu),
+  // takže pokoj působí uvěřitelně a předmět s ním splývá i významem
+  const TYPICKE = {
+    salon: ['čajová konvice', 'šálek', 'lžička', 'vějíř', 'porcelánová panenka', 'hrací skříňka', 'růže', 'krajkový kapesník', 'cukřenka', 'konvička na mléko', 'fotografie', 'svícen', 'kniha', 'brož'],
+    pracovna: ['husí brk', 'kalamář', 'dopis s pečetí', 'pečetidlo', 'mapa', 'kompas', 'lupa', 'brýle', 'monokl', 'mosazný dalekohled', 'kniha', 'svitek', 'kapesní hodinky', 'dýmka'],
+    loznice: ['ruční zrcátko', 'hřeben', 'flakon', 'perly', 'brož', 'náušnice', 'prsten', 'pudřenka', 'medailon', 'náramek', 'vějíř', 'krajkový kapesník', 'rukavička', 'růže'],
+    jidelna: ['šálek', 'lžička', 'sklenka na víno', 'solnička', 'kalíšek na vajíčko', 'kroužek na ubrousek', 'jablko', 'hruška', 'hrozen vína', 'pomeranč', 'naběračka', 'cukřenka', 'konvička na mléko', 'svícen'],
+    kuchyne: ['mlýnek na kávu', 'váleček na těsto', 'naběračka', 'lžička', 'solnička', 'citron', 'jablko', 'perník', 'preclík', 'kalíšek na vajíčko', 'konvička na mléko', 'krabička na čaj', 'ptačí vejce', 'kaštan'],
+    detsky: ['houpací koník', 'plyšový medvídek', 'loďka', 'vláček', 'cínový vojáček', 'káča', 'porcelánová panenka', 'hrací kostka', 'domino', 'hrací skříňka', 'perník', 'korunka', 'motýl', 'kulečníková koule'],
+    zahrada: ['konvička na zalévání', 'levandule', 'růže', 'motýl', 'ptačí vejce', 'žalud', 'kaštan', 'citron', 'pomeranč', 'jahoda', 'třešně', 'zlatý brouk', 'deštník', 'dámský klobouk'],
+    puda: ['lucerna', 'olejová lampa', 'deštník', 'cylindr', 'houpací koník', 'cínový vojáček', 'podkova', 'visací zámek', 'klíč', 'svitek', 'kotva', 'mapa', 'fotografie', 'kladívko'],
+    kulecnik: ['kulečníková koule', 'doutník', 'dýmka', 'tabatěrka', 'hrací karta', 'domino', 'hrací kostka', 'šachový kůň', 'sklenka na víno', 'mince', 'pohár', 'kapesní hodinky', 'lovecký roh', 'motýlek'],
+    hudebni: ['housle', 'flétna', 'noty', 'metronom', 'ladička', 'foukací harmonika', 'lovecký roh', 'hrací skříňka', 'zvonek', 'operní kukátko', 'vějíř', 'svícen', 'růže', 'pohár'],
+    koupelna: ['mýdlo', 'holicí štětka', 'břitva', 'hřeben', 'kartáč na šaty', 'pudřenka', 'flakon', 'lahvička s lékem', 'ruční zrcátko', 'mušle', 'hvězdice', 'mořský koník', 'krajkový kapesník', 'perly'],
+    kabinet: ['zkamenělá ulita', 'ametyst', 'zlatý brouk', 'hvězdice', 'mořský koník', 'mušle', 'ptačí vejce', 'motýl', 'lupa', 'soška sovy', 'soška slona', 'mosazný dalekohled', 'kompas', 'mapa'],
+    hala: ['vycházková hůl', 'deštník', 'cylindr', 'dámský klobouk', 'rukavička', 'klíč', 'dopis s pečetí', 'zvonek', 'kartáč na šaty', 'lucerna', 'kapesní hodinky', 'mince', 'visací zámek', 'podkova'],
+    knihovna: ['kniha', 'svitek', 'lupa', 'brýle', 'monokl', 'husí brk', 'kalamář', 'mapa', 'kompas', 'soška sovy', 'svícen', 'fotografie', 'dopis s pečetí', 'pečetidlo'],
+    atelier: ['štětec', 'malířská paleta', 'jablko', 'hruška', 'hrozen vína', 'citron', 'pomeranč', 'jahoda', 'třešně', 'mušle', 'růže', 'sklenka na víno', 'porcelánová panenka', 'vlašský ořech'],
+    satna: ['dámský klobouk', 'cylindr', 'rukavička', 'vějíř', 'motýlek', 'krajkový kapesník', 'knoflík', 'brož', 'perly', 'náramek', 'náušnice', 'kartáč na šaty', 'deštník', 'flakon'],
+    sklep: ['sklenka na víno', 'hrozen vína', 'lucerna', 'svícen', 'klíč', 'visací zámek', 'kladívko', 'kotva', 'jablko', 'hruška', 'vlašský ořech', 'kaštan', 'pohár', 'krabička sirek'],
+    hodinar: ['kapesní hodinky', 'klíček od hodin', 'ozubené kolo', 'přesýpací hodiny', 'metronom', 'lupa', 'monokl', 'brýle', 'kladívko', 'kompas', 'zvonek', 'medailon', 'prsten', 'krabička sirek'],
+    sici: ['cívka nití', 'jehelníček', 'náprstek', 'nůžky', 'klubko vlny', 'knoflík', 'krajkový kapesník', 'rukavička', 'dámský klobouk', 'motýlek', 'brož', 'perly', 'čajová konvice', 'šálek'],
   };
   // protáhlý předmět (hůl, brk, nůž…): úhel jeho dlouhé osy ve spritu (z tvaru, i šikmo nakreslený), jinak null
   const PROTAHLY = 1.8;
@@ -205,31 +300,32 @@ const VDUM = (() => {
   }
 
   /* Rozmístí předměty po pokoji: každý nejvýš jednou, nepřekrývají se; prvních `hledat` je v seznamu.
-     hodnot(s, cx, cy, r) → číslo (menší = předmět tam víc splývá); bez něj se bere první vhodné místo.
+     hodnot(s, cx, cy, r, zastrcit, p) → číslo (p = kandidát s natočením a velikostí) (menší = lepší úkryt; se zastrcit i podle toho, jestli je poblíž
+     věc v malbě, za kterou předmět zajede); bez něj se bere první vhodné místo.
      smer(cx, cy, r) → úhel převládajících hran malby v okolí, nebo null (žádný jasný směr); protáhlé předměty
      se podle něj natočí (hůl podél hrany stolu).
-     kryt = {smer, podil}: kterou stranou a jak velkou částí předmět zajede pod malbu pokoje.
+     kryt = {min, max}: předmět má zčásti zajet za malbu (skutečný řez spočítá rozhraní podle hran malby).
      Vrací { predmety: [{s, x, y, m, zrcadlo, uhel, kryt?}], cile: [index] seřazené abecedně }. */
   function generuj(pokoj, obtiznost, seed, sprity, W, H, hodnot, smer) {
     const o = OBTIZNOSTI[obtiznost], r = rng(seed);
-    const vse = sprity.map((s, i) => i);
-    for (let i = vse.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [vse[i], vse[j]] = [vse[j], vse[i]]; }
+    // náhodné pořadí, ale předměty patřící do pokoje se řadí dopředu (ne všechny, ať je hra pestrá)
+    const typicke = new Set(TYPICKE[pokoj.id] || []);
+    const vse = sprity.map((s, i) => ({ i, k: r() - (typicke.has(s.nazev) ? .3 : 0) })).sort((a, b) => a.k - b.k).map(v => v.i);
     const polozit = vse.slice(0, Math.min(o.polozit, vse.length));
     const predmety = [], koule = [];
     for (let k = 0; k < polozit.length; k++) {
       const s = polozit[k], sp = sprity[s];
-      const kandidati = [];
+      const kandidati = [], zastrcit = r() < o.zastrcit;
       for (let pokus = 0; pokus < 3000 && kandidati.length < o.kandidatu; pokus++) {
         const cx = r() * W, cy = r() * H;
-        const m = o.vel * H * (o.meritko[0] + (o.meritko[1] - o.meritko[0]) * r()) * hloubka(cy, H) / Math.max(sp.w, sp.h);
+        // velikost podle delší strany; protáhlý předmět (hůl, brk) by tak vyšel jako nitka – dostane navíc až ×1,6
+        const m = o.vel * H * (o.meritko[0] + (o.meritko[1] - o.meritko[0]) * r()) * hloubka(cy, H) / Math.max(sp.w, sp.h)
+          * (sp.prot > PROTAHLY ? Math.min(1.6, 1 + (sp.prot - PROTAHLY) * .2) : 1);
         if (!naPlose(pokoj, cx / W, cy / H)) continue;
         const rad = Math.hypot(sp.w, sp.h) * m / 2;
         if (cx - rad < 0 || cx + rad > W || cy - rad < 0 || cy + rad > H) continue;
         if (koule.some(q => Math.hypot(q.x - cx, q.y - cy) < (q.r + rad) * 0.95)) continue;
-        kandidati.push({ cx, cy, m, rad, skore: hodnot ? hodnot(s, cx, cy, rad) : 0 });
-      }
-      if (kandidati.length) {
-        const { cx, cy, m, rad } = kandidati.reduce((a, b) => b.skore < a.skore ? b : a);
+        // natočení už u kandidáta – hodnotitel pak zkouší zastrčení se skutečným tvarem předmětu
         const p = { s, x: cx, y: cy, m, zrcadlo: r() < .5, uhel: (r() * 2 - 1) * o.uhel, cil: k < o.hledat };
         const zaklad = osa(sp), odchylka = (r() - .5) * .12;   // drobná nepřesnost, ať to nepůsobí strojově
         const stoji = STOJI.has(sp.nazev);
@@ -241,10 +337,13 @@ const VDUM = (() => {
             else { p.uhel = zuzit(hrana - zaklad + odchylka); p.zarovnan = 'lezi'; }                               // leží podél hrany
           }
         }
-        // zastrčení: předmět zajíždí za věci před sebou – dolů a do stran (±80° od svislice), shora nepůsobí přirozeně
-        if (o.kryti && r() < .75) p.kryt = { smer: Math.PI / 2 + (r() - .5) * 2.8, podil: o.kryti * (.4 + .6 * r()) };
+        kandidati.push({ p, rad, skore: hodnot ? hodnot(s, cx, cy, rad, zastrcit, p) : 0 });
+      }
+      if (kandidati.length) {
+        const { p, rad } = kandidati.reduce((a, b) => b.skore < a.skore ? b : a);
+        if (zastrcit) p.kryt = { min: o.kryti[0], max: o.kryti[1] };
         predmety.push(p);
-        koule.push({ x: cx, y: cy, r: rad });
+        koule.push({ x: p.x, y: p.y, r: rad });
       }
       if (k < o.hledat && !predmety.some(p => p.s === s)) throw new Error('předmět se nevešel do pokoje');
     }
@@ -262,7 +361,7 @@ const VDUM = (() => {
     return { pokoj: m[1], obtiznost: m[2], seed: +m[3] };
   }
 
-  return { POKOJE, OBTIZNOSTI, rng, uvnitr, naPlose, obdelnik, generuj, kod, zKodu, osa, zuzit, hloubka, STOJI };
+  return { POKOJE, OBTIZNOSTI, TYPICKE, rng, uvnitr, naPlose, obdelnik, generuj, kod, zKodu, osa, zuzit, hloubka, STOJI };
 })();
 
 /* ---------- rozhraní ---------- */
@@ -278,6 +377,10 @@ const VDUM = (() => {
   let znacky = [];                    // křížky po kliknutí vedle {x, y, do}
   let obtiznost = 'stredni', pokojVolba = 'nahodny', seznamDruh = 'slova';
   const MIZENI = 650;   // ms – nalezený předmět se rozzáří a zmizí
+  const NABITI = 60000;  // ms – za jak dlouho se nápověda znovu nabije
+  const lupa = { klavesa: false, trvale: false, dotyk: false };
+  let ukazatel = null, dotykovy = false;   // poslední poloha ukazatele v CSS px plátna (lupa, svíčka v Půlnoci)
+  const zvuk = typeof VDUM_ZVUK !== 'undefined' ? VDUM_ZVUK : { efekt() {}, kulisa() {}, prepni: () => false, zapnuto: () => false };
   const formatCas = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   const rekordy = {};
   for (const k of Object.keys(VDUM.OBTIZNOSTI)) {
@@ -331,27 +434,130 @@ const VDUM = (() => {
     const h = hrany(P, cx, cy, rad * .8);
     return h.souhlas > .25 ? h.uhel : null;   // bez jasného směru (vzor koberce) nechat náhodné natočení
   };
-  // skóre místa: barevný rozdíl předmětu a okolí, pestré okolí (vzory, ornamenty) skóre snižuje;
-  // protáhlý předmět dostane přednost tam, kde vede výrazná rovná hrana (hůl podél stolu)
-  const hodnotitel = P => (s, cx, cy, rad) => {
+  /* Zastrčení za věc v malbě. Od středu předmětu se šíří „plocha, na které leží“: cena pixelu = nejsilnější
+     hrana malby na cestě ze středu (minimax; ceny jsou celá čísla, takže stačí fronta po úrovních).
+     Co leží za silnou hranou (váza, polštář, kniha), je před předmětem a zakryje ho – řez jde po skutečném
+     obrysu. rez() vybere nejsilnější hranu, za kterou zmizí aspoň min a nejvýš max předmětu; null = není za co. */
+  function minimax(G, w, h, s0) {
+    const cena = new Uint16Array(w * h).fill(65535), fronty = [[s0]];
+    cena[s0] = 0;
+    for (let L = 0; L < fronty.length; L++) {
+      const f = fronty[L];
+      if (!f) continue;
+      for (let k = 0; k < f.length; k++) {
+        const j = f[k], x = j % w;
+        for (const q of [x > 0 ? j - 1 : -1, x < w - 1 ? j + 1 : -1, j >= w ? j - w : -1, j + w < w * h ? j + w : -1]) {
+          if (q < 0 || cena[q] !== 65535) continue;   // první nalezení je zároveň nejlepší
+          const c = Math.max(L, G[q]);
+          cena[q] = c; (fronty[c] ||= []).push(q);
+        }
+      }
+    }
+    return cena;
+  }
+  function rez(G, w, h, maska, sx, sy, min, max) {
+    const s0 = Math.min(h - 1, Math.max(0, sy)) * w + Math.min(w - 1, Math.max(0, sx));
+    const cena = minimax(G, w, h, s0), ceny = [];
+    for (let j = 0; j < maska.length; j++) if (maska[j]) ceny.push(cena[j]);
+    if (ceny.length < 12) return null;
+    ceny.sort((a, b) => a - b);
+    const T = ceny[Math.floor((1 - min) * (ceny.length - 1))];
+    if (T < 18) return null;   // jen slabá hrana – řez by působil vystřiženě
+    let n = 0, dx = 0, dy = 0;
+    for (let j = 0; j < maska.length; j++) if (maska[j] && cena[j] >= T) { n++; dx += j % w - sx; dy += Math.floor(j / w) - sy; }
+    if (n > max * ceny.length) return null;   // větší část musí zůstat vidět
+    // zakrytá část nahoře = předmět by se „propadal“ do stěny nad stolem; za věcí dole nebo vedle je přirozený
+    if (dy < -.4 * Math.hypot(dx, dy)) return null;
+    // celistvost: řez jemným vzorem (krajka, třásně) by předmět rozsekal na kousky – takové místo je horší
+    const celistvost = Math.min(casti(maska, w, h, j => cena[j] < T).podil, casti(maska, w, h, j => cena[j] >= T).podil);
+    return { T, cena, podil: n / ceny.length, celistvost };
+  }
+  // souvislé části z pixelů předmětu, které splňují podmínku: znacka[j] = číslo části (0 = nesplňuje),
+  // nej = číslo největší, podil = její podíl ze všech takových pixelů
+  function casti(maska, w, h, ok) {
+    const znacka = new Int32Array(w * h); let celkem = 0, nej = 0, nejVel = 0, cislo = 0;
+    for (let j = 0; j < w * h; j++) if (maska[j] && ok(j)) { znacka[j] = -1; celkem++; }
+    for (let j0 = 0; j0 < w * h; j0++) {
+      if (znacka[j0] !== -1) continue;
+      const fronta = [j0]; znacka[j0] = ++cislo;
+      for (let k = 0; k < fronta.length; k++) {
+        const j = fronta[k], x = j % w;
+        for (const q of [x > 0 ? j - 1 : -1, x < w - 1 ? j + 1 : -1, j - w, j + w]) if (q >= 0 && znacka[q] === -1) { znacka[q] = cislo; fronta.push(q); }
+      }
+      if (fronta.length > nejVel) { nejVel = fronta.length; nej = cislo; }
+    }
+    return { znacka, nej, podil: celkem ? nejVel / celkem : 1 };
+  }
+  // odhad pro výběr místa: hrubá mřížka (krok 2 px), tvar předmětu z atlasu (bez p jen kruh)
+  function odhadZastrceni(P, cx, cy, rad, min, max, p) {
+    const A = atlas.data, sp = p && S[p.s], c = p && Math.cos(p.uhel), si = p && Math.sin(p.uhel);
+    const vTvaru = (dx, dy) => {   // je bod (vůči středu, px pokoje) uvnitř předmětu?
+      if (!p) return dx * dx + dy * dy <= (rad * .55) ** 2;
+      let u = (dx * c + dy * si) / p.m + sp.w / 2;
+      const v = (-dx * si + dy * c) / p.m + sp.h / 2;
+      if (u < 0 || v < 0 || u >= sp.w || v >= sp.h) return false;
+      if (p.zrcadlo) u = sp.w - 1 - u;
+      return A.data[((sp.y + Math.floor(v)) * A.width + sp.x + Math.floor(u)) * 4 + 3] > 60;
+    };
+    const W = P.width, D = P.data, K = 2, r = Math.max(4, Math.round(rad / K)), w = 2 * r + 1, N = w * w;
+    const G = new Uint16Array(N), maska = new Uint8Array(N);
+    const L = (x, y) => { x = Math.min(W - 1, Math.max(0, x)); y = Math.min(P.height - 1, Math.max(0, y)); const i = (y * W + x) * 4; return .3 * D[i] + .59 * D[i + 1] + .11 * D[i + 2]; };
+    for (let gy = 0; gy < w; gy++) for (let gx = 0; gx < w; gx++) {
+      const x = Math.round(cx) + (gx - r) * K, y = Math.round(cy) + (gy - r) * K, j = gy * w + gx;
+      G[j] = Math.round(Math.hypot(L(x + K, y) - L(x - K, y), L(x, y + K) - L(x, y - K)) / (2 * K));   // na 1 px jako u přesného řezu
+      if (vTvaru((gx - r) * K, (gy - r) * K)) maska[j] = 1;
+    }
+    return rez(G, w, w, maska, r, r, min, max);
+  }
+  // skóre místa (menší = lepší úkryt): barevný a hlavně jasový rozdíl předmětu a okolí (světlý papír nepatří
+  // na tmavé dřevo); má-li se předmět zastrčit, rozhoduje hlavně, jestli je poblíž věc, za kterou zajede
+  // (čím silnější hrana, tím líp); protáhlý předmět navíc tam, kde vede výrazná rovná hrana (hůl podél stolu)
+  const hodnotitel = (P, o) => (s, cx, cy, rad, zastrcit, p) => {
     const b = prumerPredmetu(s), m = [0, 0, 0], q = [0, 0, 0]; let n = 0;
-    const x0 = Math.max(0, cx - rad | 0), x1 = Math.min(P.width, cx + rad | 0), y0 = Math.max(0, cy - rad | 0), y1 = Math.min(P.height, cy + rad | 0);
+    const W = P.width, D = P.data;
+    const x0 = Math.max(0, cx - rad | 0), x1 = Math.min(W, cx + rad | 0), y0 = Math.max(0, cy - rad | 0), y1 = Math.min(P.height, cy + rad | 0);
     for (let y = y0; y < y1; y += 3) for (let x = x0; x < x1; x += 3) {
-      const i = (y * P.width + x) * 4;
-      for (let k = 0; k < 3; k++) { m[k] += P.data[i + k]; q[k] += P.data[i + k] ** 2; }
+      const i = (y * W + x) * 4;
+      for (let k = 0; k < 3; k++) { m[k] += D[i + k]; q[k] += D[i + k] ** 2; }
       n++;
     }
     if (!n) return 1e9;
     let rozdil = 0, pestrost = 0;
     const mm = [0, 1, 2].map(k => m[k] / n);
     for (let k = 0; k < 3; k++) { rozdil += (mm[k] - b[k]) ** 2; pestrost += Math.sqrt(Math.max(0, q[k] / n - mm[k] * mm[k])); }
-    // jasový rozdíl je nejnápadnější (světlá karta na tmavém sametu) – váží dvakrát víc než barva
     const jas = Math.abs(.3 * (mm[0] - b[0]) + .59 * (mm[1] - b[1]) + .11 * (mm[2] - b[2]));
-    const zaklad = (Math.sqrt(rozdil) + 2 * jas) / (1 + pestrost / 120);
-    return VDUM.osa(S[s]) === null ? zaklad : zaklad * (1 - .5 * hrany(P, cx, cy, rad * .8).souhlas);
+    let skore = (Math.sqrt(rozdil) + 3 * jas) / (1 + pestrost / 300);
+    if (zastrcit) {
+      const z = odhadZastrceni(P, cx, cy, rad, o.kryti[0], o.kryti[1], p);
+      skore = z ? skore * (1 - .6 * Math.min(1, z.T / 100)) * (1 + 4 * (1 - z.celistvost)) : 1e6 + skore;   // bez možnosti zastrčení až jako poslední záchrana
+    }
+    return VDUM.osa(S[s]) === null ? skore : skore * (1 - .5 * hrany(P, cx, cy, rad * .8).souhlas);
   };
 
   /* ---- start hry ---- */
+  const dalsiSnimek = () => new Promise(ok => setTimeout(ok, 0));
+  function priprava(podil, text, nadpis) {
+    $('priprava').hidden = false;
+    if (nadpis) $('pripravaPokoj').textContent = nadpis;
+    $('pripravaText').textContent = text;
+    $('pripravaPruh').style.width = Math.round(podil * 100) + '%';
+  }
+  // pro animaci nalezení: jen pixely předmětu bez okolní malby
+  function jenPredmet(o) {
+    const c = document.createElement('canvas'); c.width = o.w; c.height = o.h;
+    const d = c.getContext('2d'); d.drawImage(o.platno, 0, 0);
+    const im = d.getImageData(0, 0, o.w, o.h);
+    for (let j = 0; j < o.maska.length; j++) if (!o.maska[j]) im.data[j * 4 + 3] = 0;
+    d.putImageData(im, 0, 0); o.jen = c;
+  }
+  // pokoj + všechny dosud nenalezené předměty v jednom obrázku (kreslí se jedním drawImage)
+  function slozScenu(h) {
+    const c = h.scena; c.width = h.img.width; c.height = h.img.height;
+    const d = c.getContext('2d');
+    d.drawImage(h.img, 0, 0);
+    h.predmety.forEach((p, i) => { const o = h.obr[i]; if (o && !h.nalezene.has(i)) d.drawImage(o.platno, o.x0, o.y0); });
+  }
+
   let beh = 0;   // pořadí spuštěné hry – pomalejší načítání starší hry ji nepřepíše
   async function novaHra(zadani) {
     const cislo = ++beh;
@@ -368,20 +574,44 @@ const VDUM = (() => {
     const img = obrazky[z.pokoj];
     if (pozadi.id !== z.pokoj) pozadi = { id: z.pokoj, data: pixely(img) };
     const P = pozadi.data && atlas.data ? pozadi.data : null;
-    const g = VDUM.generuj(pokoj, z.obtiznost, z.seed, S, img.width, img.height, P && hodnotitel(P), P && smerovac(P));
-    hra = { ...z, img, ...g, nalezene: new Set(), start: performance.now(), konec: 0, napovedy: 0, chyby: 0, kruh: null, obr: {}, mizi: {}, vedle: [] };
-    obtiznost = z.obtiznost;
-    if (P) zladPredmety(P);
-    znacky = [];
     $('nacitani').hidden = true;
+    // příprava scény v modálním okně: rozmístění, zastrčení a sladění světla trvá podle obtížnosti pár sekund
+    priprava(0, 'Hledám úkryty za nábytkem…', pokoj.nazev);
+    await dalsiSnimek();
+    if (beh !== cislo) return;
+    const g = VDUM.generuj(pokoj, z.obtiznost, z.seed, S, img.width, img.height, P && hodnotitel(P, VDUM.OBTIZNOSTI[z.obtiznost]), P && smerovac(P));
+    const h = { ...z, img, ...g, nalezene: new Set(), start: 0, konec: 0, napovedy: 0, nabitaOd: 0, chyby: 0, kruh: null, obr: {}, mizi: {}, vedle: [] };
+    // pořadí hádanek (aktivní jsou vždy čtyři)
+    const rh = VDUM.rng(z.seed + 17);
+    h.poradiHadanek = g.cile.map(i => ({ i, k: rh() })).sort((a, b) => a.k - b.k).map(v => v.i);
+    if (P) {
+      const hotovo = await zladPredmety(h, P, async podil => {
+        priprava(.08 + .9 * podil, podil < .5 ? 'Zastrkávám předměty za nábytek…' : 'Ladím světlo a stíny…');
+        await dalsiSnimek();
+        return beh !== cislo;
+      });
+      if (!hotovo || beh !== cislo) return;
+      h.scena = document.createElement('canvas');
+      slozScenu(h);
+    }
+    $('priprava').hidden = true; $('dum').hidden = true;
+    h.start = performance.now();
+    hra = h;
+    zvuk.kulisa(z.pokoj);
+    obtiznost = z.obtiznost;
+    znacky = [];
     vykresliSeznam(); vykresliNabidky(); rozmer(); cela();
     if (platno.clientHeight > platno.clientWidth) zoomNa(platno.clientHeight / img.height, platno.clientWidth / 2, platno.clientHeight / 2);   // na výšku vyplnit
-    pruh(`<span>${pokoj.nazev}: najdi předměty ze seznamu dole. Splývají s pokojem – přibliž si scénu.</span>`, '', 7000);
+    if (P) pruh(`<span>${pokoj.nazev}: najdi předměty ze seznamu dole. Splývají s pokojem – přibliž si scénu.</span>`, '', 7000);
+    // otevřeno ze souboru: prohlížeč nedovolí číst pixely obrázků, předměty nejde sladit s malbou
+    else pruh('<span>⚠️ Stránka je otevřená přímo ze souboru (file://) – prohlížeč nedovolí číst obrázky, takže předměty nejdou schovat do malby. Otevři ji přes webovou adresu (http).</span>', 'chyba');
   }
 
-  /* ---- předměty: barvy a světlo podle místa, kam padly, zastrčení pod malbu, stín ---- */
-  function zladPredmety(pozadi) {
-    const o = VDUM.OBTIZNOSTI[hra.obtiznost], A = atlas.data;
+  /* ---- předměty: barvy a světlo podle místa, zastrčení za hrany malby ----
+     Každý předmět se vykreslí do výřezu pokoje (1 px = 1 px obrázku) a zastrčí se za skutečné hrany malby.
+     Výsledek: hra.obr[i] = {platno, x0, y0, w, h, maska} – maska = viditelné pixely předmětu pro zásah. */
+  async function zladPredmety(h, pozadi, prubeh) {
+    const o = VDUM.OBTIZNOSTI[h.obtiznost], A = atlas.data, PW = pozadi.width, PD = pozadi.data;
     const statistika = (data, sirka, x0, y0, x1, y1, maska) => {
       const s = [0, 0, 0], q = [0, 0, 0]; let n = 0;
       for (let y = y0; y < y1; y += 2) for (let x = x0; x < x1; x += 2) {
@@ -396,12 +626,12 @@ const VDUM = (() => {
     const jasMrizka = (b) => {
       const N = 4, g = [];
       for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-        const x0 = Math.max(0, Math.floor(b.x0 + (b.x1 - b.x0) * i / N)), x1 = Math.min(pozadi.width, Math.ceil(b.x0 + (b.x1 - b.x0) * (i + 1) / N));
+        const x0 = Math.max(0, Math.floor(b.x0 + (b.x1 - b.x0) * i / N)), x1 = Math.min(PW, Math.ceil(b.x0 + (b.x1 - b.x0) * (i + 1) / N));
         const y0 = Math.max(0, Math.floor(b.y0 + (b.y1 - b.y0) * j / N)), y1 = Math.min(pozadi.height, Math.ceil(b.y0 + (b.y1 - b.y0) * (j + 1) / N));
         let s = 0, n = 0;
         for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
-          const k = (y * pozadi.width + x) * 4;
-          s += .3 * pozadi.data[k] + .59 * pozadi.data[k + 1] + .11 * pozadi.data[k + 2]; n++;
+          const k = (y * PW + x) * 4;
+          s += .3 * PD[k] + .59 * PD[k + 1] + .11 * PD[k + 2]; n++;
         }
         g.push(n ? s / n : 128);
       }
@@ -415,59 +645,86 @@ const VDUM = (() => {
       fn.prumer = prumer;
       return fn;
     };
-    hra.predmety.forEach((p, i) => {
-      const sp = S[p.s], b = VDUM.obdelnik(p, S);
-      const okoli = statistika(pozadi.data, pozadi.width, Math.max(0, Math.floor(b.x0)), Math.max(0, Math.floor(b.y0)),
-        Math.min(pozadi.width, Math.ceil(b.x1)), Math.min(pozadi.height, Math.ceil(b.y1)));
+    for (let i = 0; i < h.predmety.length; i++) {
+      const p = h.predmety[i], sp = S[p.s], b = VDUM.obdelnik(p, S);
+      const okoli = statistika(PD, PW, Math.max(0, Math.floor(b.x0)), Math.max(0, Math.floor(b.y0)),
+        Math.min(PW, Math.ceil(b.x1)), Math.min(pozadi.height, Math.ceil(b.y1)));
       const vlastni = statistika(A.data, A.width, sp.x, sp.y, sp.x + sp.w, sp.y + sp.h, true);
       const svetlo = jasMrizka(b);
       const cos = Math.cos(p.uhel), sin = Math.sin(p.uhel), bw = b.x1 - b.x0, bh = b.y1 - b.y0;
-      // zastrčení: za vlnitou hranou ve směru kryt.smer předmět mizí pod malbou
-      const polomer = Math.hypot(sp.w, sp.h) * p.m / 2;
-      const kx = p.kryt ? Math.cos(p.kryt.smer) : 0, ky = p.kryt ? Math.sin(p.kryt.smer) : 0;
-      const hrana = p.kryt ? 1 - 2 * p.kryt.podil : 2, faze = (p.s * 7.31) % 6.28;
+      // 1) přebarvení spritu podle okolí a místní světlo (předmět zůstává neprůhledný)
       const c = document.createElement('canvas'); c.width = sp.w; c.height = sp.h;
-      const d = c.getContext('2d');
-      const px = d.createImageData(sp.w, sp.h);
+      const px = c.getContext('2d').createImageData(sp.w, sp.h);
       for (let y = 0; y < sp.h; y++) for (let x = 0; x < sp.w; x++) {
         const z = ((sp.y + y) * A.width + sp.x + x) * 4, k = (y * sp.w + x) * 4;
-        // kde v pokoji tenhle pixel leží (se zrcadlením a natočením) → místní jas
         const lx = ((p.zrcadlo ? sp.w - 1 - x : x) - sp.w / 2) * p.m, ly = (y - sp.h / 2) * p.m;
         const wx = lx * cos - ly * sin + bw / 2, wy = lx * sin + ly * cos + bh / 2;
         const mistni = svetlo(wx / bw, wy / bh);
         const jas = Math.min(1.45, Math.max(.55, mistni ** (o.sila * .9)));
-        // pixel malby přesně pod tímto bodem předmětu: jeho kresba (ornament, vzor) se propíše do předmětu
-        const bx = Math.min(pozadi.width - 1, Math.max(0, Math.round(b.x0 + wx))), by = Math.min(pozadi.height - 1, Math.max(0, Math.round(b.y0 + wy)));
-        const bi = (by * pozadi.width + bx) * 4, P = pozadi.data;
-        const jasPodkladu = .3 * P[bi] + .59 * P[bi + 1] + .11 * P[bi + 2];
-        const kresba = Math.min(1.6, Math.max(.5, (jasPodkladu + 8) / (mistni * svetlo.prumer + 8))) ** o.vzor;
         const rgb = [0, 1, 2].map(ch => {
           const v = A.data[z + ch], a = okoli[ch], m = vlastni[ch];
           const prevod = a.m + (v - m.m) * Math.min(1.3, Math.max(.55, a.d / m.d));
-          return ((v + (prevod - v) * o.sila) * jas * kresba) * (1 - o.pruhl) + P[bi + ch] * o.pruhl;
+          return (v + (prevod - v) * o.sila) * jas;
         });
-        // sytost: přiblížit k šedi podle síly (malba je tlumenější než samostatný předmět)
         const sed = .3 * rgb[0] + .59 * rgb[1] + .11 * rgb[2];
-        for (let ch = 0; ch < 3; ch++) px.data[k + ch] = sed + (rgb[ch] - sed) * (1 - o.sila * .25);
-        let alfaPx = A.data[z + 3];
-        if (p.kryt) {
-          const xs = wx - bw / 2, ys = wy - bh / 2;
-          const t = (xs * kx + ys * ky) / polomer, kolmo = (-xs * ky + ys * kx) / polomer;
-          const h = hrana + .07 * Math.sin(kolmo * 9 + faze) + .04 * Math.sin(kolmo * 23 + faze * 2);
-          alfaPx *= Math.min(1, Math.max(0, (h - t) / .05));   // měkká hrana asi 1 px pokoje
-        }
-        px.data[k + 3] = alfaPx;
+        for (let ch = 0; ch < 3; ch++) px.data[k + ch] = sed + (rgb[ch] - sed) * (1 - o.sila * .12);
+        px.data[k + 3] = A.data[z + 3];
       }
-      d.putImageData(px, 0, 0);
-      // stín (asi 3 px pokoje) a lehké změkčení hran podle ostrosti malby – kreslí se do plátna s okrajem
-      const okraj = Math.ceil(6 / p.m), s2 = document.createElement('canvas');
-      s2.width = sp.w + 2 * okraj; s2.height = sp.h + 2 * okraj;
-      const d2 = s2.getContext('2d');
-      d2.shadowColor = 'rgba(25,12,0,.32)'; d2.shadowBlur = 4 / p.m; d2.shadowOffsetX = .8 / p.m; d2.shadowOffsetY = 1.4 / p.m;
-      d2.filter = `blur(${(.35 + .25 * o.sila) / p.m}px)`;   // prohlížeč bez ctx.filter to tiše přeskočí
-      d2.drawImage(c, okraj, okraj);
-      hra.obr[i] = { platno: s2, okraj, px };   // px = viditelné pixely (bez zastrčené části) pro přesný zásah
-    });
+      c.getContext('2d').putImageData(px, 0, 0);
+      // 2) do výřezu pokoje: s jemným stínem (obraz) a bez stínu (maska zásahu)
+      const okraj = 8, x0 = Math.max(0, Math.floor(b.x0) - okraj), y0 = Math.max(0, Math.floor(b.y0) - okraj);
+      const w = Math.min(PW, Math.ceil(b.x1) + okraj) - x0, hh = Math.min(pozadi.height, Math.ceil(b.y1) + okraj) - y0;
+      const vyrez = document.createElement('canvas'); vyrez.width = w; vyrez.height = hh;
+      const d = vyrez.getContext('2d', { willReadFrequently: true });
+      const kresli = stin => {
+        d.clearRect(0, 0, w, hh); d.save();
+        if (stin) { d.shadowColor = 'rgba(25,12,0,.3)'; d.shadowBlur = 3; d.shadowOffsetX = .8; d.shadowOffsetY = 1.4; }
+        d.translate(p.x - x0, p.y - y0); d.rotate(p.uhel); if (p.zrcadlo) d.scale(-1, 1);
+        d.drawImage(c, -sp.w * p.m / 2, -sp.h * p.m / 2, sp.w * p.m, sp.h * p.m);
+        d.restore();
+        return d.getImageData(0, 0, w, hh);
+      };
+      const tvar = kresli(false).data, obraz = kresli(true), O = obraz.data, N = w * hh;
+      const maska = new Uint8Array(N);
+      for (let j = 0; j < N; j++) maska[j] = tvar[j * 4 + 3] > 60 ? 1 : 0;
+      // síla hran malby ve výřezu (jas ±2 px, stejně jako v odhadu) = cena přechodu přes hranu
+      const G = new Uint16Array(N);
+      const jasB = (x, y) => { x = Math.min(PW - 1, Math.max(0, x0 + x)); y = Math.min(pozadi.height - 1, Math.max(0, y0 + y)); const k = (y * PW + x) * 4; return .3 * PD[k] + .59 * PD[k + 1] + .11 * PD[k + 2]; };
+      for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++)
+        G[y * w + x] = Math.round(Math.hypot(jasB(x + 2, y) - jasB(x - 2, y), jasB(x, y + 2) - jasB(x, y - 2)) / 4);
+      // 3) zastrčení za věc v malbě (váza, polštář, kniha) – řez po jejím skutečném obrysu, viz rez()
+      if (p.kryt) zastrc(p, maska, O, G, w, hh, Math.round(p.x - x0), Math.round(p.y - y0));
+      d.putImageData(obraz, 0, 0);
+      h.obr[i] = { platno: vyrez, x0, y0, w, h: hh, maska };
+      if (prubeh && (i % 3 === 2 || i === h.predmety.length - 1)) { if (await prubeh((i + 1) / h.predmety.length)) return false; }
+    }
+    return true;
+  }
+
+  function zastrc(p, maska, O, G, w, hh, sx, sy) {
+    // odhad počítal s kruhem; na skutečném tvaru zkusit i menší zakrytí
+    const z = rez(G, w, hh, maska, sx, sy, p.kryt.min, p.kryt.max) || rez(G, w, hh, maska, sx, sy, p.kryt.min * .5, p.kryt.max);
+    if (!z) { delete p.kryt; return; }   // na skutečném tvaru předmětu se vhodná hrana nenašla – nechat celý
+    // úklid: osamělé viditelné kousky schovat, malé díry v předmětu zaplnit – zůstane jeden celistvý kus
+    const N = w * hh, kryto = new Uint8Array(N);
+    const vid = casti(maska, w, hh, j => z.cena[j] < z.T), skr = casti(maska, w, hh, j => z.cena[j] >= z.T);
+    for (let j = 0; j < N; j++) {
+      const k = maska[j] ? (vid.znacka[j] ? vid.znacka[j] !== vid.nej : skr.znacka[j] === skr.nej) : z.cena[j] >= z.T;
+      if (k) kryto[j] = 1;
+    }
+    // zaplněná díra může ležet venku za zakrytou částí – nakonec nechat jen největší viditelný kus
+    const konec = casti(maska, w, hh, j => !kryto[j]);
+    for (let j = 0; j < N; j++) if (konec.znacka[j] && konec.znacka[j] !== konec.nej) kryto[j] = 1;
+    let skryto = 0, vse = 0;
+    for (let j = 0; j < N; j++) if (maska[j]) { vse++; if (kryto[j]) skryto++; }
+    if (skryto > p.kryt.max * vse) { delete p.kryt; return; }   // po úklidu by zmizelo moc – nechat celý
+    for (let j = 0; j < N; j++) if (kryto[j]) { maska[j] = 0; O[j * 4 + 3] = 0; }
+    // měkký okraj řezu (půl pixelu), ať hrana nepůsobí vystřiženě
+    for (let j = w; j < N - w; j++) {
+      if (kryto[j] || !O[j * 4 + 3]) continue;
+      if (kryto[j - 1] || kryto[j + 1] || kryto[j - w] || kryto[j + w]) O[j * 4 + 3] *= .55;
+    }
+    p.kryt.podil = skryto / vse;
   }
 
   /* ---- seznam hledaných: slova nebo siluety ---- */
@@ -487,6 +744,10 @@ const VDUM = (() => {
     if (seznamDruh === 'siluety') {
       el.innerHTML = hra.cile.map(i => `<span class="silueta${hra.nalezene.has(i) ? ' nalezen' : ''}"><canvas></canvas></span>`).join('');
       el.querySelectorAll('canvas').forEach((cv, n) => silueta(cv, hra.predmety[hra.cile[n]].s));
+    } else if (seznamDruh === 'hadanky') {
+      const zbyva = hra.poradiHadanek.filter(i => !hra.nalezene.has(i)), H = typeof HADANKY !== 'undefined' ? HADANKY : {};
+      el.innerHTML = zbyva.slice(0, 4).map(i => { const n = S[hra.predmety[i].s].nazev; return `<span class="hadanka">${H[n] || n}</span>`; }).join('') +
+        (zbyva.length > 4 ? `<span class="zbyva">a ještě ${zbyva.length - 4} dalších</span>` : '');
     } else el.innerHTML = hra.cile.map(i => `<span class="${hra.nalezene.has(i) ? 'nalezen' : ''}">${S[hra.predmety[i].s].nazev}</span>`).join('');
   }
 
@@ -520,7 +781,7 @@ const VDUM = (() => {
     const z = kam.z * dpr;
     ctx.setTransform(z, 0, 0, z, -kam.x * z, -kam.y * z);
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(hra.img, 0, 0);
+    ctx.drawImage(hra.scena || hra.img, 0, 0);
     const vx0 = kam.x, vy0 = kam.y, vx1 = kam.x + platno.width / z, vy1 = kam.y + platno.height / z;
     const ted = performance.now(), px = 1 / kam.z;
     let animace = false;
@@ -529,6 +790,8 @@ const VDUM = (() => {
       if (b.x1 < vx0 || b.x0 > vx1 || b.y0 > vy1 || b.y1 < vy0) return;
       const mizi = hra.mizi[i] === undefined ? -1 : (ted - hra.mizi[i]) / MIZENI;
       if (mizi >= 1) return;
+      const o = hra.obr[i];
+      if (o && mizi < 0) return;   // nenalezený je už ve složené scéně
       ctx.save(); ctx.translate(p.x, p.y);
       if (mizi >= 0) {   // nalezený předmět se rozzáří, zvětší a zmizí
         animace = true;
@@ -536,13 +799,15 @@ const VDUM = (() => {
         ctx.scale(1 + .45 * mizi, 1 + .45 * mizi);
         ctx.shadowColor = 'rgba(255,215,120,.95)'; ctx.shadowBlur = 18 * (1 - mizi) * kam.z * dpr;
       }
-      ctx.rotate(p.uhel);
-      if (p.zrcadlo) ctx.scale(-1, 1);
-      const o = hra.obr[i];
-      if (o) ctx.drawImage(o.platno, -w / 2 - o.okraj * p.m, -h / 2 - o.okraj * p.m, o.platno.width * p.m, o.platno.height * p.m);
-      else ctx.drawImage(atlas.img, sp.x, sp.y, sp.w, sp.h, -w / 2, -h / 2, w, h);
+      if (o) ctx.drawImage(o.jen || o.platno, o.x0 - p.x, o.y0 - p.y);
+      else {
+        ctx.rotate(p.uhel);
+        if (p.zrcadlo) ctx.scale(-1, 1);
+        ctx.drawImage(atlas.img, sp.x, sp.y, sp.w, sp.h, -w / 2, -h / 2, w, h);
+      }
       ctx.restore();
     });
+    if (VDUM.OBTIZNOSTI[hra.obtiznost].tma && !hra.konec) { kresliTmu(dpr, ted); animace = true; ctx.setTransform(z, 0, 0, z, -kam.x * z, -kam.y * z); }
     if (hra.kruh) {
       ctx.lineWidth = 3 * px; ctx.setLineDash([10 * px, 8 * px]); ctx.strokeStyle = '#ffb000';
       ctx.beginPath(); ctx.arc(hra.kruh.x, hra.kruh.y, hra.kruh.r, 0, Math.PI * 2); ctx.stroke();
@@ -556,7 +821,39 @@ const VDUM = (() => {
       ctx.beginPath(); ctx.moveTo(m.x - d, m.y - d); ctx.lineTo(m.x + d, m.y + d); ctx.moveTo(m.x + d, m.y - d); ctx.lineTo(m.x - d, m.y + d); ctx.stroke();
       ctx.globalAlpha = 1;
     }
+    if (lupaVidet()) kresliLupu(dpr);
     if (znacky.length || animace) prekresli();
+  }
+  // Půlnoc: tma, jen kolem ukazatele mihotavé světlo svíčky
+  function kresliTmu(dpr, ted) {
+    const w = platno.width / dpr, h = platno.height / dpr, u = ukazatel || { x: w / 2, y: h / 2 };
+    const R = Math.min(w, h) * .2 * (1 + .035 * Math.sin(ted / 140) + .02 * Math.sin(ted / 61));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const g = ctx.createRadialGradient(u.x, u.y, R * .15, u.x, u.y, R);
+    g.addColorStop(0, 'rgba(40,20,0,0)'); g.addColorStop(.55, 'rgba(12,6,2,.25)'); g.addColorStop(1, 'rgba(4,3,8,.9)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  }
+  // lupa: kruhový výřez zvětšený 2,5× (na dotyku nad prstem, aby ho prst nezakrýval)
+  const lupaVidet = () => hra && ukazatel && (lupa.klavesa || lupa.trvale || lupa.dotyk);
+  function kresliLupu(dpr) {
+    const R = 90, Z = Math.min(8, kam.z * 2.5), ux = ukazatel.x, uy = ukazatel.y;
+    const lx = ux, ly = dotykovy ? Math.max(R + 4, uy - R - 40) : uy;
+    const wx = kam.x + ux / kam.z, wy = kam.y + uy / kam.z;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.beginPath(); ctx.arc(lx, ly, R, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = getComputedStyle(document.body).backgroundColor; ctx.fillRect(lx - R, ly - R, 2 * R, 2 * R);
+    ctx.setTransform(Z * dpr, 0, 0, Z * dpr, (lx - wx * Z) * dpr, (ly - wy * Z) * dpr);
+    ctx.drawImage(hra.scena || hra.img, 0, 0);
+    ctx.restore();
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.beginPath(); ctx.arc(lx, ly, R, 0, Math.PI * 2);
+    ctx.lineWidth = 8; ctx.strokeStyle = '#2a1608'; ctx.stroke();
+    ctx.lineWidth = 4.5; ctx.strokeStyle = '#d9a640'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(lx, ly, R - 12, Math.PI * 1.1, Math.PI * 1.45);
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.stroke();
+    ctx.restore();
   }
 
   /* ---- kamera ---- */
@@ -580,7 +877,11 @@ const VDUM = (() => {
   /* ---- zásah ---- */
   // je v bodě pokoje vidět i-tý předmět? (zastrčená část pod malbou se nepočítá)
   function alfa(i, wx, wy) {
-    const p = hra.predmety[i], sp = S[p.s];
+    const p = hra.predmety[i], sp = S[p.s], o = hra.obr[i];
+    if (o) {
+      const x = Math.floor(wx) - o.x0, y = Math.floor(wy) - o.y0;
+      return x >= 0 && y >= 0 && x < o.w && y < o.h && o.maska[y * o.w + x] === 1;
+    }
     let dx = wx - p.x, dy = wy - p.y;
     const c = Math.cos(p.uhel), s = Math.sin(p.uhel);
     [dx, dy] = [dx * c + dy * s, -dx * s + dy * c];
@@ -588,8 +889,6 @@ const VDUM = (() => {
     const v = dy / p.m + sp.h / 2;
     if (u < 0 || v < 0 || u >= sp.w || v >= sp.h) return false;
     if (p.zrcadlo) u = sp.w - 1 - u;
-    const vlastni = hra.obr[i]?.px;
-    if (vlastni) return vlastni.data[(Math.floor(v) * sp.w + Math.floor(u)) * 4 + 3] > 60;
     if (!atlas.data) return true;
     return atlas.data.data[((sp.y + Math.floor(v)) * atlas.data.width + sp.x + Math.floor(u)) * 4 + 3] > 60;
   }
@@ -611,11 +910,14 @@ const VDUM = (() => {
     const ted = performance.now();
     if (hra.cile.includes(zasah)) {
       hra.nalezene.add(zasah); hra.kruh = null; hra.mizi[zasah] = ted;
+      if (hra.scena) { jenPredmet(hra.obr[zasah]); slozScenu(hra); }
       vykresliSeznam();
+      zvuk.efekt('nalezeno');
       if (hra.nalezene.size === hra.cile.length) return vyhra();
       hlaska('Nalezeno: ' + S[hra.predmety[zasah].s].nazev, 'ok', 1400);
     } else {
       znacky.push({ ...w, do: ted + 1200 });
+      zvuk.efekt('vedle');
       // v pokoji jsou namalované i podobné věci – trest jen za zbrklé klikání (3× vedle během 4 s)
       hra.vedle = hra.vedle.filter(c => ted - c < 4000).concat(ted);
       if (hra.vedle.length < 3) hlaska('Tady nic ze seznamu není.', 'chyba', 1200);
@@ -628,14 +930,26 @@ const VDUM = (() => {
     hra.konec = performance.now();
     $('hlaska').hidden = true;
     const t = cas(), o = VDUM.OBTIZNOSTI[hra.obtiznost], rek = rekordy[hra.obtiznost];
-    const novy = !hra.napovedy && rek.zapis(Math.round(t));
+    const novy = rek.zapis(Math.round(t));
     prekresli();
-    const vysledek = hra.napovedy ? 'S nápovědou se do rekordů nepočítá.' : novy ? '🏆 Nový osobní rekord!' : 'Rekord: ' + formatCas(rek.hodnota() ?? 0);
-    pruh(`<span><b>🎉 Všechno nalezeno!</b> ${formatCas(t)} · ${o.nazev}${hra.chyby ? ` · zbrkle ${hra.chyby}×` : ''} · ${vysledek}</span>
+    zvuk.efekt('vyhra');
+    const vysledek = novy ? '🏆 Nový osobní rekord!' : 'Rekord: ' + formatCas(rek.hodnota() ?? 0);
+    const navic = `${hra.chyby ? ` · zbrkle ${hra.chyby}×` : ''}${hra.napovedy ? ` · nápověd ${hra.napovedy}` : ''}`;
+    if (hra.prochazka) {
+      const sv = svickyZaHru(hra, t), pred = odemcene();
+      zapisSvicky(hra.obtiznost, hra.pokoj, sv);
+      const nove = odemcene().filter(id => !pred.includes(id)).map(id => VDUM.POKOJE.find(p => p.id === id).nazev);
+      pruh(`<span><b>${'🕯️'.repeat(sv)}</b> ${formatCas(t)}${navic} · ${vysledek}${nove.length ? ` · Odemčeno: ${nove.join(', ')}` : ''}</span>
+        <button class="tl hlavni-tl" data-prikaz="dum">🏠 Dál po domě</button>`, 'vyhra');
+    } else pruh(`<span><b>🎉 Všechno nalezeno!</b> ${formatCas(t)} · ${o.nazev}${navic} · ${vysledek}</span>
       <button class="tl hlavni-tl" data-prikaz="nova">🎲 Další pokoj</button>`, 'vyhra');
   }
   function napoveda() {
     if (!hra || hra.konec) return;
+    const ted = performance.now();
+    if (ted < hra.nabitaOd) return hlaska(`💡 Nápověda se dobíjí – ještě ${Math.ceil((hra.nabitaOd - ted) / 1000)} s.`);
+    hra.nabitaOd = ted + NABITI;
+    zvuk.efekt('napoveda');
     const p = hra.predmety[hra.cile.find(c => !hra.nalezene.has(c))], W = hra.img.width;
     const r = hra.kruh ? Math.max(W * .05, hra.kruh.r * .5) : W * .2;
     const rnd = VDUM.rng(hra.seed + hra.napovedy * 7919);
@@ -649,9 +963,16 @@ const VDUM = (() => {
   /* ---- ovládání myší a dotykem ---- */
   const dotyky = new Map();
   let tah = null;   // {sx, sy, kx, ky, posun, pinch}
+  let dlouhyStisk = 0;
   platno.addEventListener('pointerdown', e => {
     platno.setPointerCapture(e.pointerId);
     dotyky.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+    dotykovy = e.pointerType !== 'mouse'; ukazatel = { x: e.offsetX, y: e.offsetY };
+    // dlouhé podržení prstu = lupa (tah pak lupou pohybuje, nic neposouvá a neklikne)
+    clearTimeout(dlouhyStisk);
+    if (dotykovy && dotyky.size === 1) dlouhyStisk = setTimeout(() => {
+      if (tah && !tah.posun && !tah.pinch && dotyky.size === 1) { tah.lupa = true; lupa.dotyk = true; prekresli(); }
+    }, 450);
     if (!$('pruh').classList.contains('vyhra')) $('pruh').hidden = true;
     if (dotyky.size === 2) {
       const [a, b] = [...dotyky.values()];
@@ -659,8 +980,11 @@ const VDUM = (() => {
     } else if (dotyky.size === 1) tah = { sx: e.offsetX, sy: e.offsetY, kx: kam.x, ky: kam.y, posun: false };
   });
   platno.addEventListener('pointermove', e => {
+    ukazatel = { x: e.offsetX, y: e.offsetY }; dotykovy = e.pointerType !== 'mouse';
+    if (lupaVidet() || (hra && VDUM.OBTIZNOSTI[hra.obtiznost].tma)) prekresli();
     if (!dotyky.has(e.pointerId) || !tah) return;
     dotyky.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+    if (tah.lupa) return;
     if (tah.pinch && dotyky.size === 2) {
       const [a, b] = [...dotyky.values()];
       zoomNa(tah.z * Math.hypot(a.x - b.x, a.y - b.y) / tah.pinch, (a.x + b.x) / 2, (a.y + b.y) / 2);
@@ -674,15 +998,52 @@ const VDUM = (() => {
   function pust(e) {
     if (!dotyky.has(e.pointerId)) return;
     dotyky.delete(e.pointerId);
+    clearTimeout(dlouhyStisk);
+    if (tah?.lupa) { lupa.dotyk = false; tah.posun = true; prekresli(); }
     if (tah && !tah.posun && !tah.pinch && e.type === 'pointerup') klik(e.offsetX, e.offsetY);
     if (dotyky.size === 0) { tah = null; platno.classList.remove('tahne'); }
   }
   platno.addEventListener('pointerup', pust);
+  platno.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { ukazatel = null; prekresli(); } });
   platno.addEventListener('pointercancel', pust);
   platno.addEventListener('wheel', e => {
     e.preventDefault();
     zoomNa(kam.z * Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0015)), e.offsetX, e.offsetY);
   }, { passive: false });
+
+  /* ---- procházka domem: pokoje se odemykají postupně, za každý 1–3 svíčky ---- */
+  const PORADI = ['hala', 'salon', 'jidelna', 'kuchyne', 'knihovna', 'hudebni', 'kulecnik', 'zahrada', 'pracovna', 'loznice',
+    'satna', 'sici', 'koupelna', 'detsky', 'kabinet', 'hodinar', 'atelier', 'puda', 'sklep'];
+  const PATRA = [['Podkroví', ['puda', 'atelier', 'hodinar', 'kabinet']], ['1. patro', ['loznice', 'satna', 'koupelna', 'detsky', 'sici', 'pracovna']],
+    ['Přízemí', ['hala', 'salon', 'jidelna', 'kuchyne', 'hudebni', 'kulecnik', 'knihovna', 'zahrada']], ['Suterén', ['sklep']]];
+  const KLIC_DUM = 'webapp_hra_viktordum_prochazka';
+  let prochazka = {};   // {obtížnost: {pokoj: svíčky}}
+  const nactiProchazku = () => { try { prochazka = JSON.parse(localStorage.getItem(KLIC_DUM)) || {}; } catch { prochazka = {}; } };
+  nactiProchazku();
+  const svicky = id => prochazka[obtiznost]?.[id] || 0;
+  const odemcene = () => PORADI.filter((id, i) => i < 3 || svicky(PORADI[i - 1]) > 0);
+  // 3 svíčky: bez nápovědy a do 15 s na předmět; 2: nejvýš jedna nápověda a do 30 s na předmět
+  function svickyZaHru(h, t) {
+    const n = VDUM.OBTIZNOSTI[h.obtiznost].hledat;
+    return !h.napovedy && t <= n * 15 ? 3 : h.napovedy <= 1 && t <= n * 30 ? 2 : 1;
+  }
+  function zapisSvicky(ob, id, n) {
+    (prochazka[ob] ||= {})[id] = Math.max(n, prochazka[ob][id] || 0);
+    try { localStorage.setItem(KLIC_DUM, JSON.stringify(prochazka)); } catch { /* jen pro tuto návštěvu */ }
+  }
+  function ukazDum() {
+    zavriNabidky(); nactiProchazku();   // mohla se změnit v jiné záložce
+    const ote = odemcene(), dalsi = PORADI.find(id => ote.includes(id) && !svicky(id));
+    const soucet = PORADI.reduce((a, id) => a + svicky(id), 0), o = VDUM.OBTIZNOSTI[obtiznost];
+    $('dumInfo').textContent = `Obtížnost: ${o.nazev} (změníš v Nastavení) · ${soucet} / ${PORADI.length * 3} 🕯️ · odemčeno ${ote.length} z ${PORADI.length} pokojů`;
+    $('dumPatra').innerHTML = PATRA.map(([nazev, pokoje]) => `<div class="patro"><div class="patro-nazev">${nazev}</div><div class="pokoje">${pokoje.map(id => {
+      const p = VDUM.POKOJE.find(q => q.id === id), [ikona, ...jm] = p.nazev.split(' '), ok = ote.includes(id), n = svicky(id);
+      return `<button class="dum-pokoj${id === dalsi ? ' dalsi' : ''}" data-dum-pokoj="${id}"${ok ? '' : ' disabled'} title="${ok ? '' : 'Zamčeno – nejdřív projdi předchozí pokoj'}">
+        <span class="ikona">${ok ? ikona : '🔒'}</span><span>${jm.join(' ')}</span><span class="svicky">${'🕯️'.repeat(n)}${'·'.repeat(ok ? 3 - n : 0)}</span></button>`;
+    }).join('')}</div></div>`).join('');
+    $('dum').hidden = false;
+    $('dum').querySelector('.dalsi, .dum-pokoj:not(:disabled)')?.focus();
+  }
 
   /* ---- nabídky a příkazy ---- */
   $('nabPokoje').innerHTML = '<button class="tl" data-pokoj="nahodny">🎲 Náhodný</button>' +
@@ -699,6 +1060,10 @@ const VDUM = (() => {
     priblizit: () => zoomNa(kam.z * 1.4, ...stred()),
     oddalit: () => zoomNa(kam.z / 1.4, ...stred()),
     cela,
+    dum: ukazDum,
+    zavriDum: () => { $('dum').hidden = true; },
+    lupa() { lupa.trvale = !lupa.trvale; $('tlLupa').setAttribute('aria-pressed', lupa.trvale); prekresli(); },
+    zvuk() { const z = zvuk.prepni(); $('tlZvuk').setAttribute('aria-pressed', z); $('tlZvuk').textContent = z ? '🔊' : '🔇'; },
     async sdilej() {
       if (!hra) return;
       const url = location.href.split('?')[0].split('#')[0] + '?h=' + VDUM.kod(hra);
@@ -721,9 +1086,10 @@ const VDUM = (() => {
     n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
   }));
   document.addEventListener('click', e => {
-    const b = e.target.closest('[data-prikaz], [data-obtiznost], [data-pokoj], [data-seznam]');
+    const b = e.target.closest('[data-prikaz], [data-obtiznost], [data-pokoj], [data-seznam], [data-dum-pokoj]');
     if (b) {
       e.stopPropagation(); zavriNabidky();
+      if (b.dataset.dumPokoj) return novaHra({ pokoj: b.dataset.dumPokoj, obtiznost, seed: Math.floor(Math.random() * 1e9), prochazka: true });
       if (b.dataset.seznam) { seznamDruh = b.dataset.seznam; vykresliNabidky(); if (hra) { vykresliSeznam(); rozmer(); omez(); } return; }
       if (b.dataset.obtiznost) { obtiznost = b.dataset.obtiznost; return novaHra(); }
       if (b.dataset.pokoj) { pokojVolba = b.dataset.pokoj; return novaHra(); }
@@ -734,22 +1100,32 @@ const VDUM = (() => {
   addEventListener('resize', () => { zavriNabidky(); rozmer(); omez(); });
   addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input,textarea')) return;
-    if (e.key === 'Escape') { zavriNabidky(); $('pruh').hidden = true; return; }
+    if (e.key === 'Escape') { zavriNabidky(); $('pruh').hidden = true; $('dum').hidden = true; return; }
+    if (e.key.toLowerCase() === 'l') { if (!lupa.klavesa) { lupa.klavesa = true; prekresli(); } return; }
     const krok = 120 / kam.z, posun = (dx, dy) => () => { kam.x += dx; kam.y += dy; omez(); prekresli(); };
     const obt = k => () => { obtiznost = k; novaHra(); };
     const akce = {
       '+': PRIKAZY.priblizit, '=': PRIKAZY.priblizit, '-': PRIKAZY.oddalit, '0': cela,
-      n: PRIKAZY.nova, h: napoveda, '1': obt('lehka'), '2': obt('stredni'), '3': obt('tezka'), '4': obt('mistr'),
+      n: PRIKAZY.nova, h: napoveda, d: ukazDum, '1': obt('lehka'), '2': obt('stredni'), '3': obt('tezka'), '4': obt('mistr'), '5': obt('pulnoc'),
       ArrowLeft: posun(-krok, 0), ArrowRight: posun(krok, 0), ArrowUp: posun(0, -krok), ArrowDown: posun(0, krok),
     }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
     if (akce) { e.preventDefault(); akce(); }
   });
+  addEventListener('keyup', e => { if (e.key.toLowerCase() === 'l') { lupa.klavesa = false; prekresli(); } });
+  addEventListener('blur', () => { lupa.klavesa = false; prekresli(); });
   // přepnutí tématu: pozadí plátna a barva siluet
   new MutationObserver(() => { if (hra) { vykresliSeznam(); prekresli(); } })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   // čas v liště
-  setInterval(() => { if (hra) $('cas').textContent = formatCas(cas()); }, 250);
+  setInterval(() => {
+    if (!hra) return;
+    $('cas').textContent = formatCas(cas());
+    const zbyva = hra.konec ? 0 : Math.ceil((hra.nabitaOd - performance.now()) / 1000), tl = $('tlNapoveda');
+    const html = zbyva > 0 ? `💡<span class="txt"> ${zbyva} s</span>` : '💡<span class="txt"> Nápověda</span>';
+    if (tl.innerHTML !== html) { tl.innerHTML = html; tl.classList.toggle('dobiji', zbyva > 0); }
+  }, 250);
+  if (!zvuk.zapnuto()) { $('tlZvuk').setAttribute('aria-pressed', 'false'); $('tlZvuk').textContent = '🔇'; }
 
   /* ---- start ---- */
   nactiObrazek('viktoriansky_dum/predmety.webp').then(img => {
@@ -759,6 +1135,9 @@ const VDUM = (() => {
   }, () => { $('nacitani').textContent = 'Nepodařilo se načíst předměty.'; });
   window.VDUM_HRA = {   // pro testy
     stav: () => hra, kam, klik, naSvet,
+    nova: kod => novaHra(VDUM.zKodu(kod)),
+    atlas: () => atlas.data,
+    vykresliDo: d => d.drawImage(hra.scena || hra.img, 0, 0),
     celaAlfa: (i, u, v) => { const sp = S[hra.predmety[i].s], D = atlas.data; return D.data[((sp.y + v) * D.width + sp.x + u) * 4 + 3]; },
   };
 })();

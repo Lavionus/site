@@ -397,4 +397,6 @@ I18N.pridej('en', {
   'Jednotlivá pravidla už nic dalšího nevyškrtnou – zkuste je kombinovat, nebo odhalte číslici.': 'Single rules cannot cross out anything more – try combining them, or reveal a digit.',
   'Číselný kód – hádanka {hra}': 'Number Code – puzzle {hra}',
   'Odkaz na hádanku {hra} je ve schránce.': 'The link to puzzle {hra} is on the clipboard.',
+  'Denní hádanka, kód hádanky, začít znovu, řešení, rekord': 'Daily puzzle, puzzle code, restart, solution, record',
+  'Rekord': 'Record',
 });

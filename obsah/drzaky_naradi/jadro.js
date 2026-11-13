@@ -810,6 +810,27 @@
     };
   }
 
+
+  const REZIMY = ['podlozka', 'krabicky', 'vlozka', 'lista', 'drzaky', 'peg'];
+  /** Doplní projekt (uložený, načtený, ze sdílení) o chybějící hodnoty – na místě, objekty zůstávají stejné
+      (formuláře stránky drží odkazy na podobjekty). Klíče exportu (aplikace, exportovano, ulozeno) se zahodí. */
+  function normalizujProjekt(u) {
+    const S = u && typeof u === 'object' && !Array.isArray(u) ? u : vychoziProjekt();
+    const dopln = (cil, vych) => {
+      for (const k of Object.keys(vych)) {
+        const v = vych[k];
+        if (Array.isArray(v)) { if (!Array.isArray(cil[k])) cil[k] = JSON.parse(JSON.stringify(v)); }
+        else if (v && typeof v === 'object') { if (!cil[k] || typeof cil[k] !== 'object' || Array.isArray(cil[k])) cil[k] = JSON.parse(JSON.stringify(v)); else dopln(cil[k], v); }
+        else if (cil[k] === undefined) cil[k] = v;
+      }
+    };
+    for (const k of ['aplikace', 'exportovano', 'ulozeno']) delete S[k];
+    dopln(S, vychoziProjekt());
+    if (!S.gf.podlozka.zasuvka) S.gf.podlozka.zasuvka = { W: 400, H: 300, vule: 1, zarovnani: 'stred' };
+    if (!REZIMY.includes(S.rezim)) S.rezim = 'podlozka';
+    return S;
+  }
+
   const PAPIRY = { a4: [210, 297], a3: [297, 420], letter: [215.9, 279.4] };
 
   const API = {
@@ -819,7 +840,7 @@
     parsujSvg, parsujCestu, obrysNaMm, SADY, sadaVrtaku,
     VYCHOZI_LISTA, lista, rezPlan, rozvrzeniSteny, rozmistiDrzaky,
     VYCHOZI_NAST_STENA, DRUHY, drzak, cisla, seznam,
-    PEG_PREDVOLBY, VYCHOZI_HAK, hak, kusovnik, vychoziProjekt, PAPIRY, r2, r1, cz, cislo, omez,
+    PEG_PREDVOLBY, VYCHOZI_HAK, hak, kusovnik, vychoziProjekt, normalizujProjekt, REZIMY, PAPIRY, r2, r1, cz, cislo, omez,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   koren.DN = API;

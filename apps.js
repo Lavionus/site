@@ -2668,6 +2668,12 @@ const KATALOG_SEKCE = [
         "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování", "kónus", "sražení", "fazeta"]
       },
       {
+        "soubor": "obsah/rozbocka_vzt.html",
+        "nazev": "🌬️ Rozbočka pro vzduchotechniku",
+        "stav": "vyvoj",
+        "tagy": ["vzduchotechnika", "VZT", "rozbočka", "rozdělovač", "odsávání", "rekuperace", "ventilace", "spiro", "trubky", "vývody", "difuzor", "tlaková ztráta", "nízký odpor", "spojka hadic", "prodloužení hadice", "úchyty", "odlomitelné podpory", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
         "soubor": "obsah/cookieCutter.html",
         "nazev": "🍪 Vykrajovátka",
         "stav": "beta",
@@ -4178,6 +4184,127 @@ const KATALOG_SEKCE = [
     ]
   },
   {
+    "nazev": "🎤 Přednášky a bezpečnost",
+    "skupina": "ostatni",
+    "polozky": [
+      {
+        "soubor": "obsah/prednasky.html",
+        "nazev": "🧭 Přednášky – rozcestník a program",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednášky", "rozcestník", "přehled", "program", "harmonogram", "prezentace", "délka", "počet snímků", "AI", "bezpečnost", "podvody", "senioři", "lektor"]
+      },
+      {
+        "soubor": "obsah/AI_prednaska.html",
+        "nazev": "🤖 Přednáška: Úvod do AI",
+        "stav": "vyvoj",
+        "tagy": ["AI", "umělá inteligence", "přednáška", "prezentace", "slidy", "ChatGPT", "prompt", "LLM", "pro laiky"]
+      },
+      {
+        "soubor": "obsah/AI_prednaska2.html",
+        "nazev": "🚀 Přednáška: AI o půl roku dál",
+        "stav": "vyvoj",
+        "tagy": ["AI", "umělá inteligence", "přednáška", "pokračování", "novinky", "agenti", "deepfake", "AI Act", "Claude", "Gemini", "GPT", "pro laiky"]
+      },
+      {
+        "soubor": "obsah/podvody.html",
+        "nazev": "🛡️ Běžné podvody a jak se bránit",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["bezpečnost", "podvod", "podvodníci", "phishing", "spam", "telefon", "SMS", "klonovaný hlas", "deepfake", "bezpečný účet", "peníze omylem", "bazar", "senioři", "kyberbezpečnost"]
+      },
+      {
+        "soubor": "obsah/podvody_prednaska.html",
+        "nazev": "🎤 Přednáška: Nenechte se napálit",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "prezentace", "slidy", "bezpečnost", "podvod", "phishing", "telefon", "klonovaný hlas", "deepfake", "bezpečný účet", "peníze omylem", "senioři", "pro laiky"]
+      },
+      {
+        "soubor": "obsah/AI_prednaska3.html",
+        "nazev": "🧪 Přednáška: AI v praxi – workshop",
+        "stav": "vyvoj",
+        "tagy": ["AI", "umělá inteligence", "přednáška", "workshop", "prompt", "šablona promptu", "halucinace", "pro laiky", "senioři"]
+      },
+      {
+        "soubor": "obsah/bezpecny_telefon_prednaska.html",
+        "nazev": "🔐 Přednáška: Bezpečný telefon a účty",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "bezpečnost", "hesla", "správce hesel", "2FA", "dvoufázové ověření", "passkey", "aktualizace", "záloha", "telefon", "senioři"]
+      },
+      {
+        "soubor": "obsah/fake_news_prednaska.html",
+        "nazev": "🔎 Přednáška: Fake news a deepfake",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "fake news", "hoax", "dezinformace", "deepfake", "ověřování", "fact-checking", "zpětné hledání obrázku", "boti", "mediální gramotnost"]
+      },
+      {
+        "soubor": "obsah/deti_internet_prednaska.html",
+        "nazev": "👨‍👩‍👧 Přednáška: Děti a internet",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "děti", "rodiče", "sociální sítě", "kyberšikana", "kybergrooming", "sextortion", "rodičovská kontrola", "čas u obrazovky", "hry"]
+      },
+      {
+        "soubor": "obsah/digitalni_pozustalost_prednaska.html",
+        "nazev": "🕯️ Přednáška: Digitální pozůstalost",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "digitální pozůstalost", "dědictví", "hesla", "účty", "správce neaktivního účtu", "digitální dědic", "fotky", "úmrtí", "závěť"]
+      },
+      {
+        "soubor": "obsah/bezpecne_placeni_prednaska.html",
+        "nazev": "💳 Přednáška: Bezpečné placení",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "placení", "platební karta", "Apple Pay", "Google Pay", "QR platba", "limity", "chargeback", "bankomat", "nákupy online"]
+      },
+      {
+        "soubor": "obsah/slovnicek_ai.html",
+        "nazev": "📖 Slovníček: AI a bezpečnost",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["slovníček", "pojmy", "AI", "umělá inteligence", "bezpečnost", "kyberbezpečnost", "phishing", "deepfake", "hesla", "2FA", "AI Act", "podvod", "pro laiky", "senioři"]
+      },
+      {
+        "soubor": "obsah/trenink_podvodu.html",
+        "nazev": "📞 Trénink: podvodný hovor a SMS",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["bezpečnost", "podvod", "trénink", "nácvik", "scénáře", "telefon", "SMS", "bezpečný účet", "klonovaný hlas", "rodinné heslo", "peníze omylem", "bazar", "technická podpora", "nahrávání hovoru", "senioři"]
+      },
+      {
+        "soubor": "obsah/kontrola_odkazu.html",
+        "nazev": "🔗 Kontrola odkazu",
+        "stav": "vyvoj",
+        "tagy": ["bezpečnost", "podvod", "phishing", "odkaz", "URL", "SMS", "e-mail", "doména", "punycode", "homoglyfy", "zkracovač", "falešná pošta", "banka", "senioři", "kyberbezpečnost", "offline"]
+      },
+      {
+        "soubor": "obsah/bezpecnostni_karticka.html",
+        "nazev": "🪪 Rodinná bezpečnostní kartička",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["senioři", "podvody", "bezpečnost", "tisk", "kartička", "telefon", "banka", "rodinné heslo", "lednice"]
+      },
+      {
+        "soubor": "obsah/zabezpec_telefon.html",
+        "nazev": "✅ Zabezpeč si telefon – kontrolní seznam",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["bezpečnost", "mobil", "Android", "iPhone", "kontrolní seznam", "dvoufázové ověření", "hesla", "záloha", "podvody", "nastavení"]
+      },
+      {
+        "soubor": "obsah/spravce_hesel_prednaska.html",
+        "nazev": "🔑 Přednáška: Správce hesel v praxi",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "správce hesel", "hesla", "Android", "iPhone", "Správce hesel Google", "Hesla Apple", "Klíčenka", "Bitwarden", "passkey", "přístupový klíč", "kontrola hesel", "sdílení hesel", "senioři"]
+      }
+    ]
+  },
+  {
     "nazev": "✉️ Ostatní",
     "skupina": "ostatni",
     "polozky": [
@@ -4186,12 +4313,6 @@ const KATALOG_SEKCE = [
         "nazev": "🇺🇦 Vývoj války na Ukrajině",
         "stav": "vyvoj",
         "tagy": ["ukrajina", "válka", "rusko", "isw", "fronta", "mapa fronty", "okupace", "deepstate", "oryx", "ztráty", "osn", "uprchlíci", "zprávy"]
-      },
-      {
-        "soubor": "obsah/AI_prednaska.html",
-        "nazev": "🤖 Přednáška: Úvod do AI",
-        "stav": "vyvoj",
-        "tagy": ["AI", "umělá inteligence", "přednáška", "prezentace", "slidy", "ChatGPT", "prompt", "LLM", "pro laiky"]
       },
       {
         "soubor": "obsah/about.html",

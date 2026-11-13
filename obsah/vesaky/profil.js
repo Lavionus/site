@@ -541,6 +541,8 @@
       dokonciPraci();
     };
     svg.addEventListener('pointerup', konec); svg.addEventListener('pointercancel', konec);
+    // klepnutý úchyt se při překreslení odebere a prohlížeč pak pošle fokus na body – klávesy (Enter, Delete) by skicář minuly
+    svg.addEventListener('pointerup', () => { if (document.activeElement !== svg) svg.focus({ preventScroll: true }); });
     svg.addEventListener('dblclick', e => { if (st.nastroj === 'pero') { e.preventDefault(); if (st.pero && st.pero.body.length > 3) st.pero.body.pop(); peroUzavri(); } });
     svg.addEventListener('keydown', e => {
       const k = e.key, kl = k.toLowerCase();

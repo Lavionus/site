@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔎 Přednáška: Fake news a deepfake</title>
+    <link rel="stylesheet" href="../common.css">
+    <script src="../theme.js"></script>
+    <script src="../podpis.js" defer></script>
+    <style>
+        :root {
+            --bg: #0d0d1a;
+            --surface: #111827;
+            --surface2: #1a2235;
+            --accent: #6366f1;
+            --accent2: #ec4899;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(99, 102, 241, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            /* Systémové písmo místo Google Fonts – stránka funguje i offline. */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                         Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ── Animated background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,102,241,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 80%, rgba(236,72,153,0.10) 0%, transparent 60%);
+            animation: bgShift 12s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes bgShift {
+            0%   { opacity: 0.6; transform: scale(1); }
+            100% { opacity: 1;   transform: scale(1.08); }
+        }
+
+        /* ── Container ── */
+        .presentation-container {
+            width: 96%;
+            height: 92%;
+            position: relative;
+            background: var(--surface);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+            padding: 40px 44px 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ── Top toolbar ── */
+        .toolbar {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .toolbar-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(99,102,241,0.2);
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        /* ── Slides ── */
+        .slide {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            animation: slideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .slide.active { display: flex; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(18px) scale(0.99); }
+            to   { opacity: 1; transform: translateY(0)  scale(1); }
+        }
+
+        .slide-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 36px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .text-content {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 100%;
+            padding-right: 4px;
+        }
+
+        .text-content::-webkit-scrollbar { width: 4px; }
+        .text-content::-webkit-scrollbar-track { background: transparent; }
+        .text-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .image-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-content img {
+            max-width: 100%;
+            max-height: 68vh;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            object-fit: contain;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .image-content img.loaded { opacity: 1; }
+
+        .image-placeholder {
+            width: 100%;
+            max-width: 420px;
+            height: 280px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #1a2235 0%, #111827 100%);
+            border: 1px dashed rgba(99,102,241,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 3rem;
+            gap: 12px;
+        }
+
+        .image-placeholder span { font-size: 0.9rem; }
+
+        /* ── Typography ── */
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #818cf8, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4em;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.6em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            border-radius: 2px;
+        }
+
+        /* ── Lists with build animation ── */
+        ul {
+            font-size: 1.2rem;
+            line-height: 1.65;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            margin-bottom: 14px;
+            padding-left: 24px;
+            position: relative;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+
+        ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.55em;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+        }
+
+        /* ── Cards ── */
+        .highlight-box {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin: 18px 0;
+            font-size: 1.15rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .code-example {
+            background: #0a0a14;
+            border: 1px solid rgba(99,102,241,0.2);
+            padding: 18px 20px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #a5f3a5;
+            margin-top: 12px;
+        }
+
+        /* ── Tools grid ── */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .tool-category {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 16px 18px;
+            border-radius: 14px;
+            border-left: 3px solid var(--accent2);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .tool-category:hover {
+            border-left-color: var(--accent);
+            box-shadow: 0 4px 16px rgba(99,102,241,0.1);
+        }
+
+        .tool-category h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--accent2);
+            margin-bottom: 10px;
+        }
+
+        .tool-category ul {
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .tool-category ul li { margin-bottom: 6px; }
+
+        /* ── Full-image layout (stacked) ── */
+        .slide.full-image .slide-content { flex-direction: column; }
+        .slide.full-image .image-content img { max-height: 45vh; }
+
+        /* ── Bottom controls ── */
+        .controls {
+            position: absolute;
+            bottom: 18px;
+            right: 24px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: inherit;
+            font-weight: 500;
+            transition: background 0.2s, border-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(99,102,241,0.25);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:active { transform: translateY(0); }
+
+        /* ── Dots navigation ── */
+        .dots-container {
+            position: absolute;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 7px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: background 0.25s, transform 0.25s, width 0.25s;
+            border: none;
+        }
+
+        .dot.active {
+            background: var(--accent);
+            transform: scale(1.2);
+            width: 18px;
+            border-radius: 4px;
+        }
+
+        .dot:hover:not(.active) { background: rgba(255,255,255,0.45); }
+
+        /* ── Slide number ── */
+        .slide-number {
+            position: absolute;
+            bottom: 22px;
+            left: 24px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+
+        /* ── Progress bar ── */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            border-radius: 0 2px 0 24px;
+        }
+
+        /* ── Overview overlay ── */
+        #overview-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 15, 0.92);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            padding: 40px;
+            overflow-y: auto;
+            animation: fadeOverlay 0.25s ease;
+        }
+
+        #overview-overlay.open { display: block; }
+
+        @keyframes fadeOverlay {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        #overview-overlay h3 {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .overview-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 0;
+            cursor: pointer;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .overview-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(99,102,241,0.2);
+        }
+
+        .overview-card.current {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent), 0 8px 24px rgba(99,102,241,0.3);
+        }
+
+        /* thumbnail viewport – clips the scaled clone */
+        .overview-thumb {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg);
+            border-radius: 12px 12px 0 0;
+        }
+
+        /* scaled clone inside thumbnail */
+        .overview-thumb > .slide {
+            display: flex !important;
+            position: absolute !important;
+            top: 0; left: 0;
+            transform-origin: top left;
+            pointer-events: none;
+            animation: none !important;
+        }
+
+        .overview-thumb > .slide * {
+            animation: none !important;
+        }
+
+        .overview-thumb > .slide .image-content img {
+            opacity: 1 !important;
+        }
+
+        .overview-card-label {
+            padding: 7px 10px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .overview-num {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .overview-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            line-height: 1.3;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        /* ── Corner logo ── */
+        .corner-logo {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            width: 220px;
+            opacity: 0.25;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+            border-radius: 8px;
+            transform: scaleX(-1);
+            display: none; /**/
+        }
+
+        /* ── Fullscreen ── */
+        :fullscreen .presentation-container,
+        :-webkit-full-screen .presentation-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+        }
+
+        :fullscreen body,
+        :-webkit-full-screen body {
+            background: var(--bg);
+        }
+
+        /* ── Odkazy na navazující stránky ── */
+        .odkazy { margin-top: 26px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .odkazy a, .highlight-box a { color: var(--text); }
+        .odkazy a {
+            text-decoration: none; padding: 8px 14px; border-radius: 10px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+        }
+        .odkazy a:hover { border-color: var(--accent); background: rgba(99,102,241,0.18); }
+
+        /* ── Úzká obrazovka: obrázek pod text ── */
+        @media (max-width: 760px) {
+            .presentation-container { padding: 52px 18px 70px; width: 100%; height: 100%; border-radius: 0; }
+            .slide-content { flex-direction: column; gap: 14px; justify-content: flex-start; }
+            .text-content { flex: 0 1 auto; }
+            .image-content { flex: 0 0 auto; }
+            .image-content img { max-height: 26vh; }
+            .tools-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+
+        /* ── Kvíz s publikem ── */
+        details.kviz { margin: 8px 0; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); }
+        details.kviz summary { cursor: pointer; font-size: 1.05rem; line-height: 1.45; }
+        details.kviz[open] { border-color: var(--accent); }
+        details.kviz p { margin-top: 8px; font-size: 1.05rem; }
+    </style>
+</head>
+<body>
+
+<!-- Overview overlay -->
+<div id="overview-overlay">
+    <h3>Přehled slidů — klikněte pro přechod</h3>
+    <div class="overview-grid" id="overview-grid"></div>
+</div>
+
+<div class="presentation-container" id="pres">
+
+    <!-- Corner logo -->
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="toolbar-btn" id="btn-overview" title="Přehled (O)">⊞</button>
+        <button class="toolbar-btn" id="btn-fs" title="Celá obrazovka (F)">⛶</button>
+    </div>
+
+    <!-- ══ Slide 1 ══ -->
+    <div class="slide active full-image" data-title="Fake news a deepfake">
+        <div class="slide-content">
+            <div class="text-content" style="text-align: center;">
+                <h1>Fake news a deepfake</h1>
+                <h2 style="justify-content: center;">Jak poznat, čemu věřit</h2>
+                <p style="font-size: 1.4rem; margin: 28px 0; color: var(--text-muted);">
+                    Ověřování zdrojů, zpětné hledání obrázků, boční čtení a typické triky manipulátorů.
+                </p>
+                <div class="highlight-box" style="display: inline-block;">
+                    🎯 Cíl: Naučit se zastavit, ověřit a až potom sdílet.
+                </div>
+                <p class="odkazy">
+                    <a href="AI_prednaska2.html">🚀 Svět AI – o půl roku dál</a>
+                    <a href="podvody_prednaska.html">🎤 Nenechte se napálit</a>
+                    <a href="slovnicek_ai.html">📖 Slovníček pojmů</a>
+                </p>
+            </div>
+            <div class="image-content">
+                <img src="fake_news_prednaska/f01.webp" alt="Noviny rozpadající se do pixelů">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 2 ══ -->
+    <div class="slide" data-title="Proč se lži šíří">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Proč se lži šíří</h2>
+                <ul>
+                    <li><strong>Emoce:</strong> vztek, strach a pohoršení nás nutí sdílet dřív, než přemýšlíme.</li>
+                    <li><strong>Rychlost:</strong> studie MIT (Science, 2018) zjistila, že nepravdivé zprávy se na Twitteru šířily rychleji a dál než pravdivé.</li>
+                    <li><strong>Algoritmy:</strong> sítě ukazují to, na co klikáme. Pobouření je nejlepší návnada.</li>
+                    <li><strong>Potvrzení názoru:</strong> věříme snáz tomu, co si už myslíme.</li>
+                </ul>
+                <div class="highlight-box">
+                    🧠 Když vás zpráva rozzuří nebo vyděsí, je to signál zpomalit, ne sdílet.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f02.webp" alt="Šokující titulek">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 3 ══ -->
+    <div class="slide" data-title="Metoda SIFT: čtyři kroky">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Metoda SIFT: čtyři kroky</h2>
+                <ul>
+                    <li><strong>S – Stop:</strong> zastavte se. Znám zdroj? Proč to chci sdílet?</li>
+                    <li><strong>I – Investigate:</strong> prověřte zdroj. Kdo za ním stojí?</li>
+                    <li><strong>F – Find:</strong> najděte lepší zpravodajství. Píšou o tom i jiná, ověřená média?</li>
+                    <li><strong>T – Trace:</strong> dohledejte původ. Odkud citát, fotka nebo číslo pochází?</li>
+                </ul>
+                <div class="highlight-box">
+                    ⏱️ Většinu nesmyslů odhalíte do 30 vteřin. Stačí udělat krok S.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f03.webp" alt="Lupa nad článkem">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 4 ══ -->
+    <div class="slide" data-title="Kdo to píše?">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Kdo to píše?</h2>
+                <ul>
+                    <li><strong>Adresa:</strong> napodobeniny médií mívají podobné adresy (písmenko navíc, jiná koncovka).</li>
+                    <li><strong>Tiráž a autor:</strong> seriózní web uvádí vydavatele, redakci a kontakt.</li>
+                    <li><strong>Datum:</strong> staré zprávy se rády recyklují jako „čerstvé“.</li>
+                    <li><strong>Zbytek webu:</strong> jen senzace, reklamy na zázračné léky a výzvy „sdílejte, než to smažou“?</li>
+                </ul>
+                <div class="highlight-box">
+                    📰 Anonymní stránka bez tiráže není zdroj, je to fáma.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f03.webp" alt="Lupa nad článkem">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 5 ══ -->
+    <div class="slide" data-title="Zpětné hledání obrázku">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Zpětné hledání obrázku</h2>
+                <ul>
+                    <li><strong>Nástroje:</strong> Google Lens (dlouhý stisk na fotku), TinEye, Bing Vizuální vyhledávání.</li>
+                    <li><strong>Co odhalí:</strong> fotka je často stará, z jiné země nebo jiné události.</li>
+                    <li><strong>Video:</strong> udělejte snímek obrazovky z klíčového záběru a hledejte ho.</li>
+                </ul>
+                <div class="highlight-box">
+                    🔁 Zkuste si to: vezměte „šokující“ fotku z internetu a dohledejte, kdy se objevila poprvé.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f04.webp" alt="Fotka vystopovaná k originálu">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 6 ══ -->
+    <div class="slide" data-title="Boční čtení">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Boční čtení</h2>
+                <ul>
+                    <li><strong>Jak to dělají profesionálové:</strong> ověřovatelé faktů nečtou podezřelou stránku do hloubky. Otevřou nové záložky a hledají, co o ní píšou jiní.</li>
+                    <li><strong>Hledejte:</strong> název webu nebo autora + „hoax“, „podvod“, „kdo je“.</li>
+                    <li><strong>Ověřovatelé:</strong> Demagog.cz, Manipulátoři.cz, AFP Fakta.</li>
+                </ul>
+                <div class="highlight-box">
+                    ↔️ Nejdřív se ptejte, kdo to říká. Až potom, co říká.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f05.webp" alt="Mnoho záložek prohlížeče">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 7 ══ -->
+    <div class="slide" data-title="Deepfake: video, hlas, fotky">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Deepfake: video, hlas, fotky</h2>
+                <ul>
+                    <li><strong>Dnes:</strong> AI vytvoří věrohodné video i hlas známé osobnosti. Staré poznávací znaky (rty, mrkání) přestávají platit.</li>
+                    <li><strong>Ptejte se:</strong> kdo video zveřejnil první? Je na oficiálním účtu dané osoby nebo v ověřeném médiu?</li>
+                    <li><strong>Značení:</strong> od 2. 8. 2026 musí být deepfake v EU označený. Podvodníci to ale neudělají.</li>
+                </ul>
+                <div class="highlight-box">
+                    🎭 Ohromující video bez důvěryhodného zdroje berte jako podvrh, dokud se neprokáže opak.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f06.webp" alt="Tvář napůl digitální">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 8 ══ -->
+    <div class="slide" data-title="Boti a trollí farmy">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Boti a trollí farmy</h2>
+                <ul>
+                    <li><strong>Znaky:</strong> nové účty, bez fotky nebo s cizí, stovky komentářů denně, stejné věty pod různými příspěvky.</li>
+                    <li><strong>Cíl:</strong> vytvořit dojem, že „to si myslí všichni“.</li>
+                    <li><strong>AI:</strong> dnes píše komentáře bez chyb a v perfektní češtině.</li>
+                </ul>
+                <div class="highlight-box">
+                    👥 Počet lajků a komentářů není důkaz, že je něco pravda.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f07.webp" alt="Armáda botů">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 9 ══ -->
+    <div class="slide" data-title="Triky s čísly a grafy">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Triky s čísly a grafy</h2>
+                <ul>
+                    <li><strong>Useknutá osa:</strong> malý rozdíl vypadá obrovský.</li>
+                    <li><strong>Vybrané období:</strong> ukáže se jen kus, který se hodí.</li>
+                    <li><strong>Procenta bez základu:</strong> „nárůst o 200 %“ může být z 1 na 3 případy.</li>
+                    <li><strong>Souvislost není příčina:</strong> dvě věci rostou spolu, ale jedna nemusí způsobovat druhou.</li>
+                </ul>
+                <div class="highlight-box">
+                    📊 U každého čísla se ptejte: z kolika? Za jakou dobu? Ve srovnání s čím?
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f08.webp" alt="Zavádějící graf">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 10 ══ -->
+    <div class="slide" data-title="Řetězové zprávy a „média mlčí“">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Řetězové zprávy a „média mlčí“</h2>
+                <ul>
+                    <li><strong>Typické fráze:</strong> „Přepošli všem“, „média o tom mlčí“, „lékaři to tají“, „než to smažou“.</li>
+                    <li><strong>Zdroj:</strong> „Kamarád z policie“, „známá lékařka“ – bez jména, bez ověření.</li>
+                    <li><strong>Co dělat:</strong> nepřeposílat. Zkontrolovat na Manipulátoři.cz nebo Demagog.cz.</li>
+                </ul>
+                <div class="highlight-box">
+                    📵 Když si nejste jistí, nesdílejte. Mlčení nikomu neublíží, hoax ano.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f09.webp" alt="Řetězová zpráva">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 11 ══ -->
+    <div class="slide" data-title="Když hoax šíří někdo blízký">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Když hoax šíří někdo blízký</h2>
+                <ul>
+                    <li><strong>Laskavě:</strong> neponižujte. „Taky mě to zaujalo, ale našel jsem tohle…“</li>
+                    <li><strong>Soukromě:</strong> zpráva mezi čtyřma očima funguje líp než veřejná oprava.</li>
+                    <li><strong>Odkaz:</strong> pošlete ověření, ne svůj názor.</li>
+                    <li><strong>Nahlášení:</strong> podvodné reklamy a falešné účty nahlaste platformě.</li>
+                </ul>
+                <div class="highlight-box">
+                    🤝 Cílem není vyhrát hádku, ale aby příště ten druhý sám zpomalil.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f10.webp" alt="Stůl ověřovatele faktů">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 12 ══ -->
+    <div class="slide full-image" data-title="Zastavit, ověřit, až pak sdílet">
+        <div class="slide-content">
+            <div class="text-content" style="text-align: center;">
+                <h1>Zastavit, ověřit, až pak sdílet</h1>
+                <p style="font-size: 1.5rem; margin: 28px 0; color: var(--text-muted); line-height: 1.5;">
+                    Emoce jsou signál ke zpomalení.<br>Kdo to říká, je důležitější než co říká.
+                </p>
+                <div class="highlight-box" style="display: inline-block; text-align: left;">
+                    🔎 Ověřovatelé: <strong>Demagog.cz</strong> · <strong>Manipulátoři.cz</strong> · <strong>AFP Fakta</strong><br>🖼️ Obrázky: <strong>Google Lens</strong> · <strong>TinEye</strong>
+                </div>
+                <div style="margin-top: 30px;">
+                    <h2 style="justify-content: center; border: none;">Děkuji za pozornost</h2>
+                    <p style="font-size: 1.3rem; color: var(--text-muted);">Prostor pro dotazy</p>
+                </div>
+                <p class="odkazy">
+                    <a href="AI_prednaska2.html">🚀 Svět AI – o půl roku dál</a>
+                    <a href="slovnicek_ai.html">📖 Slovníček pojmů</a>
+                </p>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="fake_news_prednaska/f12.webp" alt="Maják v mlze">
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="nav-btn" onclick="changeSlide(-1)">❮ Předchozí</button>
+        <button class="nav-btn" onclick="changeSlide(1)">Další ❯</button>
+    </div>
+
+    <div class="dots-container" id="dots-container"></div>
+    <div class="slide-number"><span id="current-slide">1</span> / <span id="total-slides">12</span></div>
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    // ── Image loading ──
+    document.querySelectorAll('.image-content img').forEach(img => {
+        img.onload = () => img.classList.add('loaded');
+        if (img.complete) img.classList.add('loaded');
+        img.onerror = function () {
+            const ph = document.createElement('div');
+            ph.className = 'image-placeholder';
+            ph.innerHTML = '🔎<span>Obrázek není dostupný</span>';
+            this.parentNode.replaceChild(ph, this);
+        };
+    });
+
+    // ── Dot navigation ──
+    const dotsContainer = document.getElementById('dots-container');
+    slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.title = slides[i].dataset.title || `Slide ${i + 1}`;
+        dot.onclick = () => goTo(i);
+        dotsContainer.appendChild(dot);
+    });
+
+    function getDots() { return dotsContainer.querySelectorAll('.dot'); }
+
+    // ── Navigation ──
+    function goTo(idx) {
+        slides[currentSlide].classList.remove('active');
+        getDots()[currentSlide].classList.remove('active');
+
+        currentSlide = Math.max(0, Math.min(idx, totalSlides - 1));
+
+        slides[currentSlide].classList.add('active');
+        getDots()[currentSlide].classList.add('active');
+
+        document.getElementById('progress-bar').style.width =
+            `${((currentSlide + 1) / totalSlides) * 100}%`;
+        document.getElementById('current-slide').textContent = currentSlide + 1;
+
+        // přednačíst obrázek následujícího slidu, ať je přechod plynulý
+        const nextImg = slides[currentSlide + 1]?.querySelector('img[loading="lazy"]');
+        if (nextImg) nextImg.loading = 'eager';
+
+        try { localStorage.setItem('webapp_fake_news_prednaska_slide', currentSlide); } catch (e) {}
+    }
+
+    function changeSlide(dir) {
+        goTo(currentSlide + dir);
+    }
+
+    // ── Keyboard ──
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT') return;
+        switch (e.key) {
+            case 'ArrowRight': case ' ': case 'PageDown': e.preventDefault(); changeSlide(1); break;
+            case 'ArrowLeft':            case 'PageUp':   e.preventDefault(); changeSlide(-1); break;
+            case 'Home': e.preventDefault(); goTo(0); break;
+            case 'End':  e.preventDefault(); goTo(totalSlides - 1); break;
+            case 'f': case 'F': toggleFullscreen(); break;
+            case 'o': case 'O': toggleOverview(); break;
+            case 'Escape': closeOverview(); break;
+        }
+    });
+
+    // ── Touch / swipe ──
+    let touchStartX = 0;
+    const pres = document.getElementById('pres');
+    pres.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+    pres.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+    }, { passive: true });
+
+    // ── Fullscreen ──
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    document.getElementById('btn-fs').onclick = toggleFullscreen;
+
+    document.addEventListener('fullscreenchange', () => {
+        document.getElementById('btn-fs').textContent =
+            document.fullscreenElement ? '✕' : '⛶';
+    });
+
+    // ── Overview ──
+    const overlay = document.getElementById('overview-overlay');
+    const grid = document.getElementById('overview-grid');
+
+    slides.forEach((slide, i) => {
+        const title = slide.dataset.title || slide.querySelector('h1,h2')?.textContent || '';
+        const card = document.createElement('div');
+        card.className = 'overview-card' + (i === currentSlide ? ' current' : '');
+        card.innerHTML = `
+            <div class="overview-thumb" data-idx="${i}"></div>
+            <div class="overview-card-label">
+                <span class="overview-num">${i + 1}</span>
+                <span class="overview-title">${title}</span>
+            </div>`;
+        card.onclick = () => { goTo(i); closeOverview(); };
+        grid.appendChild(card);
+    });
+
+    let thumbsBuilt = false;
+    function buildThumbnails() {
+        if (thumbsBuilt) return;
+        thumbsBuilt = true;
+        const pres = document.getElementById('pres');
+        const pw = pres.offsetWidth;
+        const ph = pres.offsetHeight;
+        const tw = 220; // thumbnail width in px
+        const scale = tw / pw;
+        const th = Math.round(ph * scale);
+
+        grid.querySelectorAll('.overview-thumb').forEach((thumb, i) => {
+            thumb.style.height = th + 'px';
+            const clone = slides[i].cloneNode(true);
+            clone.style.cssText =
+                `width:${pw}px;height:${ph}px;` +
+                `transform:scale(${scale});transform-origin:top left;` +
+                `animation:none!important;`;
+            // force images visible in clone
+            clone.querySelectorAll('.image-content img').forEach(img => {
+                img.style.opacity = '1';
+            });
+            thumb.appendChild(clone);
+        });
+    }
+
+    function toggleOverview() {
+        overlay.classList.toggle('open');
+        if (overlay.classList.contains('open')) {
+            buildThumbnails();
+            updateOverviewCurrent();
+        }
+    }
+
+    function closeOverview() { overlay.classList.remove('open'); }
+
+    function updateOverviewCurrent() {
+        grid.querySelectorAll('.overview-card').forEach((c, i) => {
+            c.classList.toggle('current', i === currentSlide);
+        });
+    }
+
+    document.getElementById('btn-overview').onclick = toggleOverview;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeOverview(); });
+
+    // ── Init ──
+    document.getElementById('total-slides').textContent = totalSlides;
+    let savedSlide = 0;
+    try { savedSlide = parseInt(localStorage.getItem('webapp_fake_news_prednaska_slide') || '0') || 0; } catch (e) {}
+    goTo(Math.min(savedSlide, totalSlides - 1));
+</script>
+<script src="prednasky_tisk.js"></script>
+</body>
+</html>

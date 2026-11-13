@@ -1,50 +1,40 @@
-/* Věšáky – ovládání stránky: formulář, editor ramen a trasy, galerie a náhodné tvary, historie, manifold, přepočet,
-   výsledky, pevnost, tisk, kontroly, export. Náhled sdílí kliky/nahled.js (stejné souřadnice: rovina z = 0, y nahoru). */
-/* global VESAKY, VESAKY_GEOM, VESAKY_VYKRES, VESAKY_NAHLED, VESAKY_PROFIL, KRAB, Dialog, Tvary, TrubkyGui */
+/* Věšáky – ovládání stránky nad společným zapojením gen3d/aplikace.js (historie, projekt, Moje…, sdílení, hlášení, klávesy, manifold):
+   tady formulář s živou odezvou, editor ramen a trasy, galerie a náhodné tvary, přepočet, výsledky, pevnost, tisk, kontroly,
+   skicář profilu a štítku, výkres a export. Náhled vesaky/nahled.js nad gen3d/scena.js (rovina z = 0, y nahoru). */
+/* global VESAKY, VESAKY_GEOM, VESAKY_VYKRES, VESAKY_NAHLED, VESAKY_PROFIL, KRAB, G3D, Dialog, TrubkyGui */
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
   const K = VESAKY, fmt = K.fmt;
-  const KLIC = 'webapp_vesaky_projekt', KLIC_VZHLED = 'webapp_vesaky_vzhled';
+  const KLIC_VZHLED = 'webapp_vesaky_vzhled';
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const des = x => String(x).replace('.', ',');
 
-  /* ---------- stav a historie ---------- */
-  let p, wasm = null, model = null, chybaStavby = null, aktivni = 0;
-  const zpet = [], znovu = [];
-  function hlasPrevod(hl, co) { if (hl && hl.length) setTimeout(() => Dialog.info(`${co} upraven: ${hl.join('; ')}.`), 300); }
-  function nactiUlozeny() {
-    try {
-      const t = localStorage.getItem(KLIC);
-      if (t) { const r = K.normalizuj(JSON.parse(t)); hlasPrevod(r.hlaseni, 'Uložený projekt'); return r.p; }
-    } catch (e) { /* poškozený záznam */ }
-    return K.zPredvolby(0);
-  }
-  function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(p)); } catch (e) { /* plné úložiště */ } }
-  function zmen(fn, slouceni) {
-    const pred = JSON.stringify(p);
-    fn(p);
-    p = K.normalizuj(p).p;
-    if (JSON.stringify(p) === pred) return;
-    const posl = zpet[zpet.length - 1];
-    if (!(slouceni && posl && posl.klic === slouceni && Date.now() - posl.cas < 1200)) zpet.push({ stav: pred, klic: slouceni, cas: Date.now() });
-    else posl.cas = Date.now();
-    if (zpet.length > 100) zpet.shift();
-    znovu.length = 0;
-    po();
-  }
-  function krokHistorie(z, do_) {
-    if (!z.length) return;
-    do_.push({ stav: JSON.stringify(p), cas: 0 });
-    p = K.normalizuj(JSON.parse(z.pop().stav)).p;
-    naplnFormular(); po();
-  }
-  function po() {
-    $('btnZpet').disabled = !zpet.length; $('btnZnovu').disabled = !znovu.length;
-    uloz(); viditelnost(); naplanuj();
-    if (pole.length) naplnPole($('f_uvys'));   // automatická výška úchytu se mění s tvarem štítku
-  }
-  function nahrad(q) { zmen(x => { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, K.kopie(q)); }); naplnFormular(); }
+  /* ---------- stav (historie, ukládání, projekt, sdílení a klávesy drží G3D.aplikace) ---------- */
+  let p, wasm = null, model = null, chybaStavby = null, chybaJadra = null, aktivni = 0, nasazeni = false;
+  const nahled = VESAKY_NAHLED.vytvorNahled($('platno'));
+  nahled.stav.duchove = true;
+  const app = G3D.aplikace({
+    typ: 'vesaky', nazev: 'Věšáky', klic: 'webapp_vesaky', soubor: 'vesak',
+    normalizuj: K.normalizuj, vychozi: () => K.zPredvolby(0),
+    ulozProjekt: K.ulozProjekt, nactiProjekt: K.nactiProjekt, vezmi: K.vezmi, poloz: K.poloz,
+    popis: q => `${q.nazev || 'Věšák'} – ${K.popis(q)}`,
+    hlasitOpravyUlozeneho: true,
+    formular: false,   // pole mají živou odezvu (input) a hlášení o omezení rozsahu – napoj() níž
+    predNaplnenim: q => { p = q; if (aktivni >= p.ramena.length) aktivni = Math.max(0, p.ramena.length - 1); editorRamen(); },
+    viditelnost: q => { p = q; viditelnost(); naplnPole($('f_uvys')); },   // automatická výška úchytu se mění s tvarem štítku
+    prepocitej: () => prepocitej(), zpozdeni: 40,
+    png: () => nahled.png(), pohled: j => nahled.pohled(j),
+    exportStl: () => exportStl(),
+    doModelare: () => (maModel() ? { data: KRAB.soubor3mf(kusyNaPodlozku(), p.nazev || 'Věšák'), pripona: '.3mf' } : null),
+    zkratky: { m: 'tTisk', d: 'tDuchove', v: 'tPrevisy', p: 'tPrevisy', h: 'tHrany', r: 'tRozpad', n: 'tNasazeni', l: 'tPravitka', g: 'btnNahodny', o: 'btnObmena' },
+    hlaseniNavic: (li, x) => hlaseniNavic(li, x),
+    zmenaTematu: () => app.prepocitej(),
+  });
+  p = app.p;
+  const zmen = (fn, slouceni) => { app.zmen(fn, slouceni); p = app.p; };
+  const nahrad = q => { app.nahrad(q); p = app.p; };
+  const naplnFormular = () => app.naplnFormular();
 
   /* ---------- formulář ---------- */
   const opt = (sel, obj, f) => { $(sel).innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${esc(f(k, v))}</option>`).join(''); };
@@ -112,6 +102,7 @@
     el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', akce);
     if (el.tagName === 'INPUT' && el.type === 'text' && el.dataset.typ !== 'text') {
       el.addEventListener('change', () => {
+        akce();   // i bez předchozího „input“ (vložení, skript)
         const psano = K.cislo(el.value, NaN), h = K.vezmi(p, el.dataset.p), roz = rozsah(el.dataset.p);
         if (h == null) return;
         el.value = des(h);
@@ -134,16 +125,11 @@
   const pole = [...document.querySelectorAll('[data-p]')];
   pole.forEach(napoj);
   function naplnPole(el) {
+    if (!el || !p) return;
     const h = K.vezmi(p, el.dataset.p);
     if (el.type === 'checkbox') el.checked = !!h;
     else if (document.activeElement !== el) el.value = el.dataset.typ === 'text' ? (h ?? '') : des(h);
     el.classList.remove('spatne');
-  }
-  function naplnFormular() {
-    pole.forEach(naplnPole);
-    if (aktivni >= p.ramena.length) aktivni = Math.max(0, p.ramena.length - 1);
-    editorRamen();
-    viditelnost();
   }
   function viditelnost() {
     for (const el of document.querySelectorAll('[data-profil]')) el.hidden = el.dataset.profil !== p.uchyt.profil;
@@ -278,34 +264,9 @@
   $('btnNahodny').addEventListener('click', () => generuj(false));
   $('btnObmena').addEventListener('click', () => generuj(true));
 
-  /* ---------- manifold ---------- */
-  function nactiSkript(src) {
-    return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('nenačteno ' + src)); document.head.appendChild(s); });
-  }
-  async function nactiManifold() {
-    globalThis.MANIFOLD_URL = new URL('lib/manifold/manifold.klasicky.js', location.href).href;
-    if (!globalThis.ManifoldModule) await nactiSkript('lib/manifold/manifold.klasicky.js');
-    let volby;
-    if (location.protocol === 'file:') {
-      await nactiSkript('lib/manifold/manifold.wasm.js');
-      const s = atob(globalThis.MANIFOLD_WASM_B64), bin = new Uint8Array(s.length);
-      for (let i = 0; i < s.length; i++) bin[i] = s.charCodeAt(i);
-      delete globalThis.MANIFOLD_WASM_B64;
-      volby = { wasmBinary: bin };
-    } else volby = { locateFile: f => new URL('lib/manifold/' + f, location.href).href };
-    const w = await globalThis.ManifoldModule(volby);
-    w.setup();
-    return w;
-  }
-
   /* ---------- přepočet ---------- */
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const nahled = VESAKY_NAHLED.vytvorNahled($('platno'));
-  nahled.stav.duchove = true;
-  let nasazeni = false, casovac = null;
-  function naplanuj() { clearTimeout(casovac); casovac = setTimeout(prepocitej, 40); }
   const posun = (poz, dx, dy) => { const out = Float32Array.from(poz); for (let i = 0; i < out.length; i += 3) { out[i] += dx; out[i + 1] += dy; } return out; };
-  /** Díly v tiskové poloze: věšák na boku, úchyt zády dolů. */
   /** Díly v tiskové poloze. Věšák: na boku nebo zády dolů (automaticky = méně převisů, při shodě na boku kvůli pevnosti). */
   function sestavTisk(r) {
     const hr = p.telo.hranaTyp === 'zkoseni' ? p.telo.hrana : 0;
@@ -376,13 +337,19 @@
     nahled.nastav({ klic: 'vesak' + kolik, montaz, tisk: model.podlozka, duchove });
   }
   function prepocitej() {
+    p = app.p;
     nahled.barvy(css('--border-strong'), css('--border'), css('--text'));
     let o = K.odvozene(p);
     if (!profil.pracuje) profil.kresli(p, o);
     let H = K.kontroly(p, o);
     model = null; chybaStavby = null;
     const st = $('stav3d');
-    if (!wasm) { vypis(H, o, null); return; }
+    if (!wasm) {
+      st.textContent = chybaJadra || 'Načítám geometrické jádro…'; st.classList.toggle('chyba', !!chybaJadra);
+      nastavNahled();
+      vypis(chybaJadra ? H.concat([{ uroven: 'chyba', text: chybaJadra, pole: [] }]) : H, o, null);
+      return;
+    }
     {
       try {
         const t0 = performance.now();
@@ -492,41 +459,33 @@
       `${d.ks.trojuhelniku} trojúhelníků, ${d.ks.teles} těleso`, d.ks.uzavrena && d.ks.teles === 1 ? 'ok-t' : 'chyba-t')).join('') + dl('Výpočet', `${fmt(m.cas, 0)} ms`, 'stavba a rozbor tisku') : '';
     $('karta3d').innerHTML = m ? `<div class="titul">Věšák</div><b>${esc(p.nazev || 'Věšák')}</b><br>${esc(K.popis(p))}<br>`
       + `<b>${fmt(celkem.g, 0)}</b> g ${mat.nazev} · unese <b>${kg(unese)}</b>` : '';
-    $('legenda3d').hidden = !(m && nahled.stav.tisk && nahled.stav.previsy);
+    legenda();
     TrubkyGui.souhrn('sTelo', `${fmt(p.telo.sirka)} × ${fmt(p.telo.vyska)} × ${fmt(p.telo.hloubka)}`);
     TrubkyGui.souhrn('sUchyt', `${K.PROFILY_UCHYTU[p.uchyt.profil].nazev.split(' ')[0]} ${fmt(p.uchyt.sirka)} × ${fmt(p.uchyt.vyska)}${p.uchyt.klin ? ', klín' : ''}`);
     TrubkyGui.souhrn('sSrouby', `${p.uchyt.pocet} × ${fmt(K.SROUBY[p.uchyt.sroub].d)} mm`);
     TrubkyGui.souhrn('sRamena', `${p.ramena.length}`);
 
-    if (!wasm && !chybaStavby) H = H.concat([{ uroven: 'info', text: 'Načítám geometrické jádro (manifold-3d)…', pole: [] }]);
-    const ul = $('hlaseni'); ul.innerHTML = '';
+    if (!wasm && !chybaJadra) H = H.concat([{ uroven: 'info', text: 'Načítám geometrické jádro (manifold-3d)…', pole: [] }]);
     if (!H.some(x => x.uroven !== 'info')) H.unshift({ uroven: 'ok', text: 'Vše v pořádku – věšák drží, dá se vytisknout bez podpor.', pole: [] });
-    for (const x of H) {
-      const li = document.createElement('li'); li.className = x.uroven + (x.pole.length ? ' skok' : '');
-      li.textContent = x.text;
-      if (x.pole.length) {
-        li.tabIndex = 0;
-        const kam = document.createElement('span'); kam.className = 'kam'; kam.textContent = '→ upravit'; li.appendChild(kam);
-        li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') jdiNaPole(x.pole[0]); });
-        li.addEventListener('keydown', e => { if (e.key === 'Enter') jdiNaPole(x.pole[0]); });
-      }
-      if (x.oprava) {
-        const b = document.createElement('button'); b.className = 'tl oprava'; b.textContent = '🔧 ' + x.oprava.text;
-        b.addEventListener('click', () => { zmen(q2 => { K.poloz(q2, x.oprava.pole, x.oprava.hodnota); for (const [c, h] of x.oprava.vice || []) K.poloz(q2, c, h); }); naplnFormular(); });
-        li.appendChild(b);
-      }
-      ul.appendChild(li);
+    app.hlaseni(H, { boxy: ['boxUchyt'] });
+    // ramena se kreslí jen pro vybrané – chyba ve kterémkoli ramenu označí box Tvar
+    TrubkyGui.oznacChybu('boxTvar', H.some(x => x.uroven === 'chyba' && x.pole.some(c => c.startsWith('ramena') || c.startsWith('obrysy'))));
+  }
+  /** Hlášení vypisuje G3D.aplikace; skok vede přes vlastní jdiNaPole (přepne rameno, najde viditelné pole)
+      a oprava může měnit víc polí naráz (oprava.vice) – posluchače v zachytávací fázi předběhnou ty z jádra. */
+  function hlaseniNavic(li, x) {
+    if (x.pole.length) {
+      const jdi = e => {
+        if ((e.type === 'keydown' && e.key !== 'Enter') || e.target.tagName === 'BUTTON') return;
+        e.stopImmediatePropagation(); jdiNaPole(x.pole[0]);
+      };
+      li.addEventListener('click', jdi, true); li.addEventListener('keydown', jdi, true);
     }
-    const nch = H.filter(x => x.uroven === 'chyba').length, nv = H.filter(x => x.uroven === 'varovani').length;
-    const od = $('stavOdznak');
-    od.className = 'odznak ' + (nch ? 'chyba' : nv ? 'mez' : 'ok');
-    od.textContent = nch ? `✖ ${nch}` : nv ? `⚠ ${nv}` : '✔';
-    $('sKontrola').textContent = nch ? `${nch} ${nch === 1 ? 'chyba' : nch < 5 ? 'chyby' : 'chyb'}` : nv ? `${nv} varování` : 'v pořádku';
-    const boxy = { boxUchyt: false, boxTvar: false };
-    for (const x of H) if (x.uroven === 'chyba') for (const c of x.pole) {
-      if (c.startsWith('ramena')) boxy.boxTvar = true; else if (c.startsWith('telo') || c.startsWith('uchyt')) boxy.boxUchyt = true;
-    }
-    for (const [id, a] of Object.entries(boxy)) TrubkyGui.oznacChybu(id, a);
+    const b = x.oprava && x.oprava.vice && li.querySelector('.oprava');
+    if (b) b.addEventListener('click', e => {
+      e.stopImmediatePropagation();
+      zmen(q2 => { K.poloz(q2, x.oprava.pole, x.oprava.hodnota); for (const [c, h] of x.oprava.vice) K.poloz(q2, c, h); }); naplnFormular();
+    }, true);
   }
   function jdiNaPole(cesta) {
     const m = /^ramena\.(\d+)/.exec(cesta);
@@ -734,16 +693,10 @@
     });
     $('vzhledy').appendChild(b);
   }
-  const jmenoSouboru = pripona => ((p.nazev || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_').replace(/^_|_$/g, '') || 'vesak') + pripona;
-  function stahni(data, nazev, typ) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: typ }));
-    a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  }
+  const jmenoSouboru = app.jmeno, stahni = app.stahni;
   function maModel() {
     if (model) return true;
-    Dialog.chyba(chybaStavby || (wasm ? 'Model nelze sestavit – viz záložka Kontrola.' : 'Geometrické jádro se ještě načítá.'));
+    Dialog.chyba(chybaStavby || chybaJadra || (wasm ? 'Model nelze sestavit – viz záložka Kontrola.' : 'Geometrické jádro se ještě načítá.'));
     return false;
   }
   function exportStl(jen) {
@@ -785,67 +738,30 @@
   }
   for (const [id, f] of [['btnList', technickyList], ['btnList2', technickyList], ['btnSablona', sablona], ['btnSablona2', sablona], ['btnSvg', stahniSvg], ['btnSvg2', stahniSvg],
     ['btnStlZkouska', exportZkousky], ['btnStlZkouska2', exportZkousky]]) $(id).addEventListener('click', f);
-  $('btnPng').addEventListener('click', () => { fetch(nahled.png()).then(r => r.blob()).then(b => stahni(b, jmenoSouboru('.png'))); });
-  $('btnUlozit').addEventListener('click', () => stahni(K.ulozProjekt(p), jmenoSouboru('.json'), 'application/json'));
-  $('btnNacist').addEventListener('click', () => $('soubor').click());
-  $('soubor').addEventListener('change', async e => {
-    const f = e.target.files[0]; e.target.value = '';
-    if (!f) return;
-    try { const r = K.nactiProjekt(await f.text()); aktivni = 0; nahrad(r.p); hlasPrevod(r.hlaseni, 'Načtený projekt'); }
-    catch (err) { Dialog.chyba(err.message); }
-  });
-  $('btnVychozi').addEventListener('click', async () => {
-    if (await Dialog.potvrd('Vrátit všechny hodnoty na výchozí (první předvolba)?')) { aktivni = 0; nahrad(K.zPredvolby(0)); }
-  });
-  $('btnZpet').addEventListener('click', () => krokHistorie(zpet, znovu));
-  $('btnZnovu').addEventListener('click', () => krokHistorie(znovu, zpet));
-  function prepinac(id, co) {
-    const b = $(id);
-    b.addEventListener('click', () => {
-      const h = b.getAttribute('aria-pressed') !== 'true';
-      b.setAttribute('aria-pressed', String(h));
-      if (co === 'nasazeni') { nasazeni = h; nastavNahled(); return; }
-      nahled.prepni(co, h);
-      $('legenda3d').hidden = !(model && nahled.stav.tisk && nahled.stav.previsy);
-    });
-  }
-  prepinac('tRozpad', 'rozpad');
-  prepinac('tDuchove', 'duchove'); prepinac('tHrany', 'hrany'); prepinac('tTisk', 'tisk'); prepinac('tPrevisy', 'previsy'); prepinac('tNasazeni', 'nasazeni');
-  $('stavOdznak').addEventListener('click', () => TrubkyGui.otevriZalozku('kontrola'));
-  $('btnZavritNap').addEventListener('click', () => $('napoveda').close());
+
+  /* ---------- přepínače zobrazení, klávesy, start ---------- */
+  function legenda() { $('legPrevisy').hidden = !(model && nahled.stav.tisk && nahled.stav.previsy); }
+  app.prepinac('tHrany', h => nahled.prepni('hrany', h));
+  app.prepinac('tTisk', h => { nahled.prepni('tisk', h); legenda(); });
+  app.prepinac('tPrevisy', h => { nahled.prepni('previsy', h); legenda(); }, true);
+  app.prepinac('tRozpad', h => nahled.prepni('rozpad', h));
+  app.prepinac('tPravitka', h => nahled.prepni('pravitka', h), true);
+  app.prepinac('tDuchove', h => nahled.prepni('duchove', h));
+  app.prepinac('tNasazeni', h => { nasazeni = h; nastavNahled(); });
+  // česká klávesnice: horní řada bez Shiftu píše +ěščř – pohledy 1–5 i podle fyzické klávesy
   document.addEventListener('keydown', e => {
-    const a = document.activeElement;
-    const vPoli = a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !/checkbox|range|radio|button/.test(a.type));
-    const k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && !vPoli && k === 'z') { e.preventDefault(); krokHistorie(e.shiftKey ? znovu : zpet, e.shiftKey ? zpet : znovu); return; }
-    if ((e.ctrlKey || e.metaKey) && !vPoli && k === 'y') { e.preventDefault(); krokHistorie(znovu, zpet); return; }
-    if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); exportStl(); return; }
-    if (e.key === 'F1') { e.preventDefault(); $('napoveda').showModal(); return; }
-    if (vPoli || e.ctrlKey || e.metaKey || e.altKey || $('napoveda').open) return;
-    const cislo = e.code ? e.code.replace('Digit', '').replace('Numpad', '') : k;
-    const pohl = { 1: 'iso', 2: 'shora', 3: 'zepredu', 4: 'zboku' }[cislo] || { 1: 'iso', 2: 'shora', 3: 'zepredu', 4: 'zboku' }[k];
-    if (pohl) nahled.pohled(pohl);
-    else if (k === 'm') $('tTisk').click(); else if (k === 'd') $('tDuchove').click(); else if (k === 'v') $('tPrevisy').click(); else if (k === 'h') $('tHrany').click();
-    else if (k === 'r') $('tRozpad').click();
-    else if (k === 'n') $('tNasazeni').click(); else if (k === 'g') generuj(false); else if (k === 'o') generuj(true);
+    const m = /^(?:Digit|Numpad)([1-5])$/.exec(e.code || ''), a = document.activeElement;
+    if (!m || /^[1-5]$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]')) return;
+    if (a && (/^(TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable || (a.tagName === 'INPUT' && !/checkbox|range|radio|button/.test(a.type)))) return;
+    nahled.pohled(['iso', 'shora', 'zepredu', 'zboku', 'zespodu'][m[1] - 1]);
   });
-  new MutationObserver(() => naplanuj()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  $('btnVykres').addEventListener('click', () => { TrubkyGui.otevriZalozku('vykres'); TrubkyGui.ukazBox('obecne'); });
 
-  if (typeof Tvary !== 'undefined') Tvary.pripoj({
-    klic: 'webapp_vesaky_tvary', typ: 'vesaky', nazev: 'Věšáky', kontejner: $('tvary'),
-    parametry: () => K.kopie(p),
-    pouzij: q => { const n = K.normalizuj(q); hlasPrevod(n.hlaseni, 'Uložený věšák'); aktivni = 0; nahrad(n.p); },
-    popis: q => `${q.nazev || 'Věšák'} – ${K.popis(K.normalizuj(q).p)}`,
+  app.start({
+    manifold: {
+      ok: w => { wasm = w; prepocitej(); },
+      chyba: e => { chybaJadra = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – model ani export nejsou k dispozici.'; prepocitej(); },
+    },
   });
-
-  /* ---------- start ---------- */
-  p = nactiUlozeny();
-  naplnFormular();
-  prepocitej();
-  nactiManifold().then(w => { wasm = w; $('stav3d').textContent = ''; prepocitej(); }).catch(e => {
-    chybaStavby = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – model ani export nejsou k dispozici.';
-    const st = $('stav3d'); st.textContent = chybaStavby; st.classList.add('chyba');
-    vypis(K.kontroly(p, K.odvozene(p)).concat([{ uroven: 'chyba', text: chybaStavby, pole: [] }]), K.odvozene(p), null);
-  });
-  window.VESAKY_UI = { get p() { return p; }, get model() { return model; }, get wasm() { return wasm; }, nahled, profil, zobraz, zmen, naplnFormular, prepocitej, nahrad, generuj, technickyList, sablona, exportZkousky };
+  window.VESAKY_UI = { get p() { return app.p; }, get model() { return model; }, get wasm() { return wasm; }, nahled, profil, zobraz, zmen, naplnFormular, prepocitej, nahrad, generuj, technickyList, sablona, exportZkousky, app };
 })();

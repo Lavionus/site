@@ -1,0 +1,20 @@
+// modelar/jadro/vazby – en (sdílený modul obsah/modelar/jadro/vazby.js). Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Vodorovně': 'Horizontal',
+  'Svisle': 'Vertical',
+  'Rovnoběžně': 'Parallel',
+  'Kolmo': 'Perpendicular',
+  'Stejně': 'Equal',
+  'Splývá': 'Coincident',
+  'Pevný bod': 'Fixed point',
+  'Bod na přímce': 'Point on line',
+  'Střed úsečky': 'Midpoint',
+  'Tečna': 'Tangent',
+  'Symetrie': 'Symmetry',
+  'Délka': 'Length',
+  'Vzdálenost X': 'Distance X',
+  'Vzdálenost Y': 'Distance Y',
+  'Průměr': 'Diameter',
+  'Úhel': 'Angle',
+  'Průměr ⌀': 'Diameter ⌀',
+});

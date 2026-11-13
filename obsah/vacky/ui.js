@@ -1,116 +1,122 @@
-/* Návrhář vaček – uživatelské rozhraní (animace, grafy, formulář, exporty). */
+/* Návrhář vaček – ovládání stránky nad společným zapojením gen3d/aplikace.js (historie, formulář [data-p], projekt,
+   sdílení, Moje…, klávesy). Tady jen to, co je pro vačky zvláštní: 2D animace, diagramy, porovnání zákonů, 3D disk, exporty. */
+/* global Vacky, VackyExport, VPROJ, KNOF_NAHLED, KRAB, G3D, Dialog, TrubkyGui */
 (function () {
   'use strict';
-  const V = window.Vacky, X = window.VackyExport;
+  const V = window.Vacky, X = window.VackyExport, P = window.VPROJ;
   const $ = id => document.getElementById(id);
   const f = (x, d) => V.fmt(x, d);
-  const KLIC = 'webapp_vacky_stav';
-  const POLE = ['h', 'Rb', 'beta1', 'delta1', 'beta2', 'n', 'Rr', 'eps', 'tloustka', 'otvor', 'm', 'k', 'F0'];
+  const esc = G3D.esc;
   const BARVY_ZAKONU = { harmonicky: '--s1', cykloidni: '--s2', p345: '--s3', p4567: '--s4' };
-  const PREDVOLBY = {
-    zaklad: Object.assign({}, V.VYCHOZI),
-    rychla: Object.assign({}, V.VYCHOZI, { zakonNabeh: 'p4567', zakonNavrat: 'p4567', n: 3000, Rb: 35, h: 10, beta1: 100, delta1: 20, beta2: 100, m: 0.15, k: 25, F0: 250, typ: 'kladka', Rr: 8 }),
-    ventil: Object.assign({}, V.VYCHOZI, { zakonNabeh: 'p345', zakonNavrat: 'p345', typ: 'plochy', Rb: 18, h: 9, beta1: 120, delta1: 0, beta2: 120, n: 2500, m: 0.12, k: 30, F0: 200, eps: 2, otvor: 14, tloustka: 14 }),
-    podrez: Object.assign({}, V.VYCHOZI, { typ: 'kladka', Rb: 10, Rr: 15, h: 30, beta1: 50, delta1: 20, beta2: 60, otvor: 8, k: 5, F0: 60 }),
-    harm: Object.assign({}, V.VYCHOZI, { zakonNabeh: 'harmonicky', zakonNavrat: 'harmonicky', beta1: 180, delta1: 0, beta2: 180, typ: 'hrot', Rb: 45 })
-  };
 
-  let p = Object.assign({}, V.VYCHOZI);
-  let v = null;                 // poslední platný výpočet
-  let uhel = 0, hraje = false, jednotky = 'uhel';
+  // převod dosavadních dat: odkaz #p={JSON} (do 11/2026) a stav „webapp_vacky_stav“ → projekt gen3d
+  let zOdkazu = null;
+  try { const o = P.staryOdkaz(location.hash); if (o) zOdkazu = P.prevedStary(o); } catch (e) { zOdkazu = null; }
+  try {
+    const s = localStorage.getItem('webapp_vacky_stav');
+    if (s && !localStorage.getItem('webapp_vacky_projekt')) localStorage.setItem('webapp_vacky_projekt', JSON.stringify(P.prevedStary(s).p));
+  } catch (e) { /* bez úložiště nebo poškozený záznam */ }
+
+  let p, r = null, v = null;          // projekt, poslední výpočet, poslední platný výpočet (kreslí se dál i při chybě zadání)
+  let model = null, tiskDily = null, chyba3d = '';
+  let uhel = 0, hraje = false, jednotky = 'uhel', rezim3d = false;
+  const stavZobr = { tisk: false, vZakl: true, vRozt: true, vNorm: true };
   const porovnat = new Set(['harmonicky', 'cykloidni', 'p345']);
+  const nahled = KNOF_NAHLED.vytvorNahled($('platno3d'));
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  const app = G3D.aplikace({
+    typ: 'vacky', nazev: 'Vačky', klic: 'webapp_vacky', soubor: 'vacka',
+    normalizuj: P.normalizuj, vychozi: () => G3D.kopie(P.VYCHOZI), popis: P.popis,
+    viditelnost: q => viditelnost(q),
+    prepocitej: () => prepocitej(),
+    png: () => (rezim3d ? nahled.png() : (kresli(), cv.toDataURL('image/png'))),
+    pohled: j => { prepniRezim(true); nahled.pohled(j); },
+    exportStl: () => exportuj('stl'),
+    doModelare: async () => (await lzeExport('3mf') ? { data: KRAB.soubor3mf(tiskDily, p.nazev || 'Vačka'), pripona: '.3mf' } : null),
+    zkratky: { h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka' },
+    zmenaTematu: () => { nactiBarvy(); prepocitej(); },
+  });
 
   // ───────── barvy z CSS ─────────
-  let B = {};
+  let B = {}, BARVY_ZAKONU_HOD = {};
   function nactiBarvy() {
-    const cs = getComputedStyle(document.documentElement);
-    const g = k => cs.getPropertyValue(k).trim();
+    const g = css;
     B = { text: g('--text'), muted: g('--text-muted'), faint: g('--text-faint'), border: g('--border'), bgp: g('--bg-panel'), bgd: g('--bg-deep'),
       accent: g('--accent'), danger: g('--danger'), warn: g('--warn'), ok: g('--ok'), vypln: g('--vacka-vypln'), vodici: g('--vodici'),
       hover: g('--bg-hover'), s1: g('--s1'), s2: g('--s2'), s3: g('--s3'), s4: g('--s4') };
     BARVY_ZAKONU_HOD = {};
     for (const k in BARVY_ZAKONU) BARVY_ZAKONU_HOD[k] = g(BARVY_ZAKONU[k]);
   }
-  let BARVY_ZAKONU_HOD = {};
 
   // ───────── formulář ─────────
-  function naplnSelecty() {
-    for (const id of ['zakonNabeh', 'zakonNavrat']) {
-      const s = $(id); s.innerHTML = '';
-      for (const [k, z] of Object.entries(V.ZAKONY)) { const o = document.createElement('option'); o.value = k; o.textContent = z.nazev; s.appendChild(o); }
-    }
-  }
-  function doFormulare() {
-    for (const k of POLE) $(k).value = p[k];
-    $('zakonNabeh').value = p.zakonNabeh; $('zakonNavrat').value = p.zakonNavrat;
-    $('smer').value = p.smer; $('svisle').checked = !!p.svisle;
-    document.querySelectorAll('[data-typ]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.typ === p.typ)));
-  }
-  function zFormulare() {
-    for (const k of POLE) {
-      const t = String($(k).value).trim().replace(',', '.');
-      p[k] = t === '' ? NaN : Number(t);
-    }
-    p.zakonNabeh = $('zakonNabeh').value; p.zakonNavrat = $('zakonNavrat').value;
-    p.smer = $('smer').value; p.svisle = $('svisle').checked;
-  }
-  function uloz() {
-    try { localStorage.setItem(KLIC, JSON.stringify(p)); } catch (e) { /* soukromé okno */ }
-  }
-  function nacti() {
-    try {
-      const h = location.hash.match(/[#&]p=([^&]+)/);
-      if (h) { const o = JSON.parse(decodeURIComponent(h[1])); if (o && typeof o === 'object') return Object.assign({}, V.VYCHOZI, o); }
-    } catch (e) { /* vadný odkaz */ }
-    try { const s = localStorage.getItem(KLIC); if (s) return Object.assign({}, V.VYCHOZI, JSON.parse(s)); } catch (e) { /* nic */ }
-    return Object.assign({}, V.VYCHOZI);
-  }
-
+  for (const id of ['zakonNabeh', 'zakonNavrat']) $(id).innerHTML = Object.entries(V.ZAKONY).map(([k, z]) => `<option value="${k}">${esc(z.nazev)}</option>`).join('');
+  $('f_material').innerHTML = Object.entries(P.MATERIALY).map(([k, m]) => `<option value="${k}">${m.nazev} · ${String(m.hustota).replace('.', ',')} g/cm³</option>`).join('');
   const NAPOVEDY = {
     hrot: 'Hrot sleduje i vydutá místa, ale bodový dotyk se rychle opotřebí. Profil = roztečná křivka.',
     kladka: 'Profil je ekvidistanta roztečné křivky (střed kladky) ve vzdálenosti Rr. Kladka nesmí mít větší poloměr, než je nejmenší poloměr křivosti vypuklé části roztečné křivky.',
     plochy: 'Talíř kolmý na osu: tlakový úhel 0°, profil musí být konvexní (Rb + s + s″ > 0). Excentricita jen posouvá dotyk po talíři.'
   };
+  function viditelnost(q) {
+    $('poleRr').hidden = q.typ !== 'kladka';
+    $('napovedaTyp').textContent = NAPOVEDY[q.typ];
+    document.querySelectorAll('[data-typzdv]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.typzdv === q.typ)));
+  }
+  document.querySelectorAll('[data-typzdv]').forEach(b => b.addEventListener('click', () => app.zmen(q => { q.typ = b.dataset.typzdv; })));
 
   // ───────── přepočet ─────────
-  let naplanovano = false;
-  function prepocet() {
-    if (naplanovano) return; naplanovano = true;
-    requestAnimationFrame(() => { naplanovano = false; prepocetIhned(); });
-  }
-  function prepocetIhned() {
-    zFormulare();
-    $('poleRr').hidden = p.typ !== 'kladka';
-    $('napovedaTyp').textContent = NAPOVEDY[p.typ];
-    document.querySelectorAll('input.chyba,select.chyba').forEach(e => e.classList.remove('chyba'));
-    const r = V.vypocet(p, { krok: 0.5 });
-    const dv = isFinite(p.beta1 + p.delta1 + p.beta2) ? 360 - p.beta1 - p.delta1 - p.beta2 : NaN;
-    $('delta2').textContent = isFinite(dv) ? f(Math.max(dv, 0), 1) + ' °' : '–';
+  function prepocitej() {
+    p = app.p;
+    r = V.vypocet(p, { krok: 0.5 });
+    const dv = 360 - p.beta1 - p.delta1 - p.beta2;
+    $('delta2').textContent = f(Math.max(dv, 0), 1) + ' °';
     $('delta2').style.color = dv < -1e-9 ? 'var(--text-chyba)' : '';
-    if (!r.ok) {
-      $('chybyVstupu').innerHTML = r.chyby.map(c => '• ' + esc(c.text)).join('<br>');
-      for (const c of r.chyby) { const e = $(c.pole); if (e) e.classList.add('chyba'); }
-      ['btnSvg', 'btnDxf', 'btnStl', 'btnCsv'].forEach(id => $(id).disabled = true);
-      return;
-    }
-    $('chybyVstupu').innerHTML = '';
-    ['btnSvg', 'btnDxf', 'btnStl', 'btnCsv'].forEach(id => $(id).disabled = false);
-    v = r;
-    $('perioda').textContent = p.n > 0 ? f(v.cas.perioda * 1000, 1) + ' ms' : '–';
-    uloz();
+    $('perioda').textContent = r.ok && p.n > 0 ? f(r.cas.perioda * 1000, 1) + ' ms' : '–';
+    $('chybyVstupu').innerHTML = r.ok ? '' : r.chyby.map(c => '• ' + esc(c.text)).join('<br>');
+    document.querySelectorAll('input.chyba,select.chyba').forEach(e => e.classList.remove('chyba'));
+    if (!r.ok) for (const c of r.chyby) { const e = $(c.pole); if (e) e.classList.add('chyba'); }
+    if (r.ok) { v = r; postav3d(); }
+    else { model = null; tiskDily = null; chyba3d = 'Zadání obsahuje chyby – 3D model se nesestavil.'; ukaz3d(); }
+    $('stav3d').textContent = chyba3d;
+    app.hlaseni(P.hlaseni(r), { boxy: ['boxPohyb', 'boxDisk'] });
+    souhrny();
+    if (!r.ok || !v) return;
     vypisVysledky();
     kresliGrafy();
     porovnani();
     kresli();
   }
-
-  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function postav3d() {
+    model = null; tiskDily = null; chyba3d = '';
+    if (!v.profilPolarni) chyba3d = 'Profil není polárně jednoznačný (podřezání) – 3D model, STL ani 3MF nelze vytvořit.';
+    else if (v.p.otvor / 2 >= v.ex.rMin) chyba3d = 'Otvor pro hřídel je větší než profil vačky – 3D model nelze vytvořit.';
+    else {
+      const d = P.disk(v, 720);
+      model = { dily: [P.montazni(d, v.p.tloustka)], disk: d };
+      tiskDily = G3D.tiskoveRozlozeni([d], 1);
+    }
+    ukaz3d();
+  }
+  function ukaz3d(novyPohled) {
+    nahled.barvy(css('--border-strong'), css('--border'), css('--text'));
+    if (model) nahled.nastav(stavZobr.tisk ? tiskDily : model.dily, { tisk: stavZobr.tisk, uhel: p.tisk.uhel, novyPohled });
+    else nahled.nastav(null);
+  }
+  function souhrny() {
+    const Z = V.ZAKONY;
+    TrubkyGui.souhrn('sPohyb', `${Z[p.zakonNabeh].kratce} / ${Z[p.zakonNavrat].kratce} · h ${f(p.h)} · Rb ${f(p.Rb)} mm`, true);
+    TrubkyGui.souhrn('sZdvihatko', { hrot: 'hrotové', kladka: `kladka Rr ${f(p.Rr)}`, plochy: 'plochý talíř' }[p.typ] + (p.eps ? ` · ε ${f(p.eps)}` : '') + (p.smer === 'ccw' ? ' · ↺' : ' · ↻'), true);
+    TrubkyGui.souhrn('sDisk', `tl. ${f(p.tloustka)} · otvor ⌀ ${f(p.otvor)} mm`, true);
+    TrubkyGui.souhrn('sPruzina', `${f(p.m, 2)} kg · k ${f(p.k, 1)} N/mm · F₀ ${f(p.F0)} N`, true);
+    TrubkyGui.souhrn('sTisk', `${P.MATERIALY[p.tisk.material].nazev} · převis ${f(p.tisk.uhel, 0)}°`, true);
+  }
 
   // ───────── výsledky ─────────
+  const box = G3D.dlazdice;
   function vypisVysledky() {
     const { ex, cas, silyEx } = v;
     const D = [];
-    const stavK = kod => { const k = v.kontroly.filter(x => x.kod === kod); return k.some(x => x.uroven === 'chyba') ? 'chyba' : k.some(x => x.uroven === 'varovani') ? 'varovani' : ''; };
+    const stavK = kod => { const k = v.kontroly.filter(x => x.kod === kod); return k.some(x => x.uroven === 'chyba') ? 'chyba-t' : k.some(x => x.uroven === 'varovani') ? 'mez-t' : ''; };
     if (p.typ !== 'plochy') {
       D.push(['Max. tlakový úhel', f(Math.max(ex.phiMax, -ex.phiMin) * V.DEG) + ' °', `náběh ${f(ex.phiMax * V.DEG)}° (${f(ex.phiMaxUhel)}°), návrat ${f(-ex.phiMin * V.DEG)}° (${f(ex.phiMinUhel)}°)`, stavK('tlak')]);
     } else D.push(['Tlakový úhel', '0 °', 'talíř kolmý na osu', '']);
@@ -125,18 +131,31 @@
     D.push(['Max. normálová síla', f(silyEx.FnMax, 1) + ' N', `u ${f(silyEx.FnMaxUhel)}°`, '']);
     D.push(['Min. přítlak v ose', f(silyEx.FyMin, 1) + ' N', silyEx.FyMin < 0 ? `odskok! potřebné F₀ ≥ ${f(silyEx.F0potreba, 1)} N` : `u ${f(silyEx.FyMinUhel)}°`, stavK('odskok')]);
     D.push(['Max. hnací moment', f(silyEx.Mmax / 1000, 2) + ' N·m', `zpětný ${f(silyEx.Mmin / 1000, 2)} N·m (bez tření)`, '']);
-    $('dlazdice').innerHTML = D.map(([t, h, pp, c]) => `<div class="${c}"><div class="t">${t}</div><div class="h">${h}</div><div class="p">${esc(pp)}</div></div>`).join('');
-    const IK = { chyba: '✕', varovani: '!', ok: '✓', info: 'i' };
-    const PO = { chyba: 0, varovani: 1, info: 2, ok: 3 };
-    const k = v.kontroly.slice().sort((a, b) => PO[a.uroven] - PO[b.uroven]);
-    $('kontroly').innerHTML = k.map(x => `<li class="${x.uroven}"><span class="ik" aria-label="${{ chyba: 'chyba', varovani: 'varování', ok: 'v pořádku', info: 'informace' }[x.uroven]}">${IK[x.uroven]}</span><span>${esc(x.text)}</span></li>`).join('');
+    $('dlazdice').innerHTML = D.map(([t, h, pp, c]) => box(t, h, esc(pp), c)).join('');
+    // 3D tisk disku
+    if (!model) { $('vTisk').innerHTML = box('3D model', 'nelze sestavit', esc(chyba3d), 'chyba-t'); $('vSit').innerHTML = ''; return; }
+    const d = model.disk, b = G3D.obal(d.poz), mat = P.MATERIALY[p.tisk.material];
+    const o = G3D.odhadTisku(d.objem, mat.hustota, { dilu: 1 }), k = KRAB.kontrolaSite(d.poz, d.idx);
+    $('vTisk').innerHTML = box('Rozměry disku', `${f(b[3] - b[0])} × ${f(b[4] - b[1])} × ${f(b[5] - b[2])} mm`, 'š × h × tloušťka')
+      + box('Objem', `${f(d.objem / 1000, 2)} cm³`, 'plný disk')
+      + box('Hmotnost', `${f(o.g, o.g < 10 ? 1 : 0)} g`, `${mat.nazev}, plný díl (při 30 % výplni zhruba ${f(o.g * 0.55, 0)} g)`)
+      + box('Filament', `${f(o.metru, 2)} m`, 'průměr 1,75 mm, plný díl')
+      + box('Doba tisku', `≈ ${o.minut < 60 ? o.minut + ' min' : f(o.minut / 60, 1) + ' h'}`, 'hrubý odhad, vrstva 0,2 mm');
+    $('vSit').innerHTML = box('Síť disku', k.uzavrena ? '✔ těsná' : '✖ netěsná', `${k.trojuhelniku} trojúhelníků, ${k.teles} těleso`, k.uzavrena && k.teles === 1 ? 'ok-t' : 'chyba-t');
   }
 
   // ───────── animace ─────────
   const cv = $('platno');
+  function kresli() {
+    if (!v) return;
+    kresliPlatno();
+    odecet();
+    for (const gr of grafy) znackaGrafu(gr);
+  }
   let pohled = null;
   function rot(q, a) { const c = Math.cos(a), s = Math.sin(a); return [c * q[0] - s * q[1], s * q[0] + c * q[1]]; }
   function spocitejPohled() {
+    const p = v.p;
     const R = v.ex.rMax;
     const stem = Math.max(0.55 * R, p.h * 1.2);
     const sirka = Math.max(4, 0.1 * R);
@@ -148,8 +167,8 @@
     const span = Math.max(2 * pul, vys) * 1.04;
     pohled = { span, cx: 0, cy: (nahore + ymin) / 2, stem, sirka, gy1, gy2 };
   }
-  function kresli() {
-    if (!v) return;
+  function kresliPlatno() {
+    const p = v.p;
     const dpr = window.devicePixelRatio || 1;
     const w = cv.clientWidth, h = cv.clientHeight;
     if (!w || !h) return;
@@ -181,8 +200,8 @@
     g.fillStyle = B.danger; g.font = '11px ' + getComputedStyle(document.body).fontFamily;
     const tz = T(zn); g.fillText('0°', tz[0] + 3, tz[1] - 3);
     g.setLineDash([6, 4]); g.lineWidth = 1;
-    if ($('vZakl').checked) { g.strokeStyle = B.muted; kruh([0, 0], p.Rb); g.stroke(); }
-    if ($('vRozt').checked && p.typ === 'kladka') { g.strokeStyle = B.accent; cesta(v.roztecna.map(q => rot(q, ang)), true); g.stroke(); }
+    if (stavZobr.vZakl) { g.strokeStyle = B.muted; kruh([0, 0], p.Rb); g.stroke(); }
+    if (stavZobr.vRozt && p.typ === 'kladka') { g.strokeStyle = B.accent; cesta(v.roztecna.map(q => rot(q, ang)), true); g.stroke(); }
     g.setLineDash([]);
     // osy středu
     g.strokeStyle = B.faint; g.lineWidth = 1; g.setLineDash([10, 3, 2, 3]);
@@ -226,7 +245,7 @@
     cesta([[xa, st[1] - (p.typ === 'kladka' ? p.Rr + 4 : 4)], [xa, yt + 4]]); g.stroke(); g.setLineDash([]);
     // dotyk, normála, tlakový úhel
     const P = M(b.P);
-    if ($('vNorm').checked) {
+    if (stavZobr.vNorm) {
       const n = p.typ === 'plochy' ? [0, 1] : M(b.normala);
       const L = 0.45 * v.ex.rMax;
       g.strokeStyle = B.warn; g.lineWidth = 1.5;
@@ -245,7 +264,10 @@
       }
     }
     const tp = T(P); g.fillStyle = B.danger; g.beginPath(); g.arc(tp[0], tp[1], 3.5, 0, 2 * Math.PI); g.fill();
-    // odečet
+  }
+  function odecet() {
+    const p = v.p;
+    const b = V.bod(v.p, uhel);
     const w_ = v.cas.w;
     const tim = jednotky === 'cas';
     const fy = v.p.F0 + v.p.k * b.s + v.p.m * (b.s2 * w_ * w_ / 1000 + (v.p.svisle ? 9.81 : 0));
@@ -260,9 +282,7 @@
     $('odecet').innerHTML = polozky.map(([a, c]) => `<div>${a}<b>${c}</b></div>`).join('');
     cv.setAttribute('aria-label', `Vačka natočená o ${f(uhel, 1)}°, zdvih ${f(b.s, 2)} mm, tlakový úhel ${f(b.phi * V.DEG, 1)}°`);
     $('uhel').value = uhel;
-    for (const gr of grafy) znackaGrafu(gr);
   }
-
   let posledni = 0;
   function smycka(t) {
     if (!hraje) return;
@@ -455,89 +475,101 @@
     $('tabPor').innerHTML = `<thead>${hl}</thead><tbody>${rad}</tbody>`;
   }
 
-  // ───────── export ─────────
-  function stahni(data, jmeno, typ) {
-    const blob = data instanceof Blob ? data : new Blob([data], { type: typ });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = jmeno;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  // ───────── 2D / 3D ─────────
+  function prepniRezim(je3d) {
+    if (rezim3d === je3d) return;
+    rezim3d = je3d;
+    $('platno3d').hidden = !je3d; cv.hidden = je3d;
+    $('tip2d').hidden = je3d; $('tip3d').hidden = !je3d;
+    $('btn2d').setAttribute('aria-pressed', String(!je3d)); $('btn3d').setAttribute('aria-pressed', String(je3d));
+    $('legPrevisy').hidden = !(je3d && stavZobr.tisk && nahled.stav.previsy);
+    if (je3d) requestAnimationFrame(() => nahled.pohled('ponech')); else requestAnimationFrame(kresli);
   }
-  function zprava(t, chyba) { const z = $('zpravaExport'); z.textContent = t; z.classList.toggle('chyba', !!chyba); }
-  const jmenoSouboru = () => `vacka_Rb${String(p.Rb).replace('.', '_')}_h${String(p.h).replace('.', '_')}`;
-  async function exportuj(typ) {
-    if (!v) return;
-    if (v.kontroly.some(k => k.uroven === 'chyba') && typ !== 'csv') {
-      if (!(await Dialog.potvrd('Návrh obsahuje chyby (viz Kontroly návrhu). Přesto exportovat?'))) return;
-    }
-    try {
-      if (typ === 'svg') { stahni(X.svg(v), jmenoSouboru() + '.svg', 'image/svg+xml'); zprava('SVG uloženo (1 jednotka = 1 mm).'); }
-      else if (typ === 'dxf') { stahni(X.dxf(v), jmenoSouboru() + '.dxf', 'application/dxf'); zprava('DXF R12 uloženo (vrstvy PROFIL, OTVOR, KONSTRUKCE, ROZTECNA).'); }
-      else if (typ === 'stl') { const b = X.stl(v, 720); stahni(new Blob([b], { type: 'model/stl' }), jmenoSouboru() + '.stl', 'model/stl'); zprava(`STL uloženo: ${f((b.byteLength - 84) / 50, 0)} trojúhelníků, tloušťka ${f(p.tloustka)} mm.`); }
-      else if (typ === 'csv') { stahni(X.csv(v, 1), jmenoSouboru() + '.csv', 'text/csv;charset=utf-8'); zprava('CSV uloženo (oddělovač středník, desetinná čárka, krok 1°).'); }
-    } catch (e) { zprava('Export se nepodařil: ' + e.message, true); }
-  }
-  async function kopirujOdkaz() {
-    const u = location.href.split('#')[0] + '#p=' + encodeURIComponent(JSON.stringify(p));
-    try { await navigator.clipboard.writeText(u); zprava('Odkaz s parametry zkopírován do schránky.'); }
-    catch (e) { await Dialog.zeptej('Zkopírujte odkaz:', u); }
-  }
+  $('btn2d').addEventListener('click', () => prepniRezim(false));
+  $('btn3d').addEventListener('click', () => prepniRezim(true));
 
-  // ───────── události ─────────
-  function init() {
-    nactiBarvy();
-    naplnSelecty();
-    p = nacti();
-    doFormulare();
-    document.querySelectorAll('input, select').forEach(e => {
-      if (e.closest('#porovnaniVolby') || ['uhel', 'rychlost', 'vZakl', 'vRozt', 'vNorm', 'predvolby'].includes(e.id)) return;
-      e.addEventListener('input', prepocet); e.addEventListener('change', prepocet);
-    });
-    document.querySelectorAll('[data-typ]').forEach(b => b.addEventListener('click', () => {
-      p.typ = b.dataset.typ;
-      document.querySelectorAll('[data-typ]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-      prepocet();
-    }));
-    document.querySelectorAll('[data-jedn]').forEach(b => b.addEventListener('click', () => {
-      jednotky = b.dataset.jedn;
-      document.querySelectorAll('[data-jedn]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-      kresliGrafy(); kresli();
-    }));
-    ['vZakl', 'vRozt', 'vNorm'].forEach(id => $(id).addEventListener('change', kresli));
-    $('uhel').addEventListener('input', () => { uhel = Number($('uhel').value) % 360; prepniPrehravani(false); kresli(); });
-    $('btnPrehrat').addEventListener('click', () => prepniPrehravani());
-    $('predvolby').addEventListener('change', () => {
-      const k = $('predvolby').value; if (!PREDVOLBY[k]) return;
-      p = Object.assign({}, PREDVOLBY[k]); doFormulare(); $('predvolby').value = ''; prepocetIhned();
-    });
-    $('btnMinRb').addEventListener('click', () => {
-      zFormulare();
-      const r = V.minimalniRb(Object.assign({}, p), 30, p.typ === 'kladka' ? 0.5 * p.Rr : p.typ === 'plochy' ? 3 : 0);
-      if (r === null) { zprava('Vhodné Rb se nepodařilo najít (zkontrolujte úhly a excentricitu).', true); return; }
-      const nove = Math.ceil(r);
-      p.Rb = nove; $('Rb').value = nove; prepocetIhned();
-      zprava(`Nejmenší vyhovující Rb = ${f(r, 2)} mm → zaokrouhleno na ${nove} mm (φ ≤ 30°, ${p.typ === 'kladka' ? 'ρ roztečné ≥ 1,5·Rr' : p.typ === 'plochy' ? 'ρ ≥ 3 mm' : 'bez rezervy křivosti'}).`);
-    });
-    $('btnSvg').addEventListener('click', () => exportuj('svg'));
-    $('btnDxf').addEventListener('click', () => exportuj('dxf'));
-    $('btnStl').addEventListener('click', () => exportuj('stl'));
-    $('btnCsv').addEventListener('click', () => exportuj('csv'));
-    $('btnOdkaz').addEventListener('click', kopirujOdkaz);
-    document.addEventListener('keydown', e => {
-      const t = e.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON' || t.isContentEditable)) return;
-      if (document.querySelector('.dialog-overlay, dialog[open]')) return;
-      if (e.code === 'Space') { e.preventDefault(); prepniPrehravani(); }
-      else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
-        e.preventDefault(); prepniPrehravani(false);
-        uhel = ((uhel + (e.code === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1)) % 360 + 360) % 360; kresli();
-      }
-    });
-    new MutationObserver(() => { nactiBarvy(); if (v) { kresliGrafy(); porovnani(); kresli(); } })
-      .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    let rt = null;
-    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (v) { for (const gr of grafy) vykresliGraf(gr); kresli(); } }, 120); });
-    prepocetIhned();
-    window.__vacky = { stav: () => ({ p, v, uhel }), nastavUhel: a => { uhel = a; kresli(); }, prepocet: prepocetIhned };
+  // ───────── export ─────────
+  function zprava(t, chyba) { const z = $('zpravaRb'); z.textContent = t; z.classList.toggle('chyba', !!chyba); }
+  const jmenoSouboru = pripona => (p.nazev ? app.jmeno(pripona) : `vacka_Rb${String(p.Rb).replace('.', '_')}_h${String(p.h).replace('.', '_')}${pripona}`);
+  /** Smí se exportovat? Zadání musí být platné, 3D formáty potřebují model; chyby kontrol se jen potvrdí. */
+  async function lzeExport(typ) {
+    if (!r || !r.ok) { Dialog.chyba('Zadání obsahuje chyby (viz Kontrola) – export není možný.'); return false; }
+    if (['stl', '3mf'].includes(typ) && !model) { Dialog.chyba(chyba3d || '3D model nelze sestavit.'); return false; }
+    if (typ !== 'csv' && v.kontroly.some(k => k.uroven === 'chyba')) return await Dialog.potvrd('Návrh obsahuje chyby (viz Kontrola). Přesto exportovat?');
+    return true;
   }
-  init();
+  async function exportuj(typ) {
+    if (!await lzeExport(typ)) return;
+    try {
+      if (typ === 'svg') app.stahni(X.svg(v), jmenoSouboru('.svg'), 'image/svg+xml');
+      else if (typ === 'dxf') app.stahni(X.dxf(v), jmenoSouboru('.dxf'), 'application/dxf');
+      else if (typ === 'csv') app.stahni(X.csv(v, 1), jmenoSouboru('.csv'), 'text/csv;charset=utf-8');
+      else if (typ === 'stl') app.stahni(KRAB.stlBinarni(tiskDily, 'Diskova vacka - ' + X.popisNavrhu(v)), jmenoSouboru('.stl'), 'model/stl');
+      else if (typ === '3mf') app.stahni(KRAB.soubor3mf(tiskDily, p.nazev || 'Vačka'), jmenoSouboru('.3mf'), 'model/3mf');
+    } catch (e) { Dialog.chyba('Export se nepodařil: ' + (e && e.message || e)); }
+  }
+  for (const [id, typ] of [['btnSvg', 'svg'], ['btnDxf', 'dxf'], ['btnCsv', 'csv'], ['btnStl', 'stl'], ['btn3mf', '3mf']]) $(id).addEventListener('click', () => exportuj(typ));
+
+  // ───────── nabídky, přepínače ─────────
+  TrubkyGui.pripoj({ klic: 'webapp_vacky_gui', pohled: j => { prepniRezim(true); nahled.pohled(j); } });
+  for (const [id, pv] of Object.entries(P.PREDVOLBY)) {
+    const b = document.createElement('button'); b.className = 'pol'; b.setAttribute('role', 'menuitem'); b.dataset.predvolba = id;
+    b.innerHTML = `${esc(pv.nazev)}<span class="pozn">${esc(pv.popis)}</span>`;
+    b.addEventListener('click', () => { const q = G3D.kopie(pv.p); q.nazev = app.p.nazev; q.tisk = G3D.kopie(app.p.tisk); app.nahrad(P.normalizuj(q).p); });
+    $('seznamPredvoleb').appendChild(b);
+  }
+  app.prepinac('tHrany', h => nahled.prepni('hrany', h));
+  app.prepinac('tPrevisy', h => { nahled.prepni('previsy', h); $('legPrevisy').hidden = !(h && stavZobr.tisk && rezim3d); }, true);
+  app.prepinac('tPravitka', h => nahled.prepni('pravitka', h), true);
+  let start = true;
+  app.prepinac('tTisk', h => {
+    stavZobr.tisk = h;
+    if (!start) prepniRezim(true);   // tisková poloha je vidět jen ve 3D
+    $('legPrevisy').hidden = !(h && nahled.stav.previsy && rezim3d);
+    if (model) ukaz3d(true);
+  });
+  for (const id of ['vZakl', 'vRozt', 'vNorm']) app.prepinac(id, h => { stavZobr[id] = h; if (!start) { prepniRezim(false); kresli(); } }, true);
+  start = false;
+  document.querySelectorAll('[data-jedn]').forEach(b => b.addEventListener('click', () => {
+    jednotky = b.dataset.jedn;
+    document.querySelectorAll('[data-jedn]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    kresliGrafy(); kresli();
+  }));
+  // grafy ve skryté záložce mají nulovou šířku – po otevření záložky překreslit
+  document.querySelectorAll('.zalozky [data-zalozka]').forEach(b => b.addEventListener('click', () => requestAnimationFrame(() => { if (v) for (const gr of grafy) vykresliGraf(gr); })));
+  $('uhel').addEventListener('input', () => { uhel = Number($('uhel').value) % 360; prepniPrehravani(false); kresli(); });
+  $('btnPrehrat').addEventListener('click', () => prepniPrehravani());
+  $('btnMinRb').addEventListener('click', () => {
+    const q = Object.assign({}, app.p);
+    const x = V.minimalniRb(q, 30, q.typ === 'kladka' ? 0.5 * q.Rr : q.typ === 'plochy' ? 3 : 0);
+    if (x === null) { zprava('Vhodné Rb se nepodařilo najít (zkontrolujte úhly a excentricitu).', true); return; }
+    const nove = Math.ceil(x);
+    app.zmen(s => { s.Rb = nove; }); app.naplnFormular();
+    zprava(`Nejmenší vyhovující Rb = ${f(x, 2)} mm → zaokrouhleno na ${nove} mm (φ ≤ 30°, ${q.typ === 'kladka' ? 'ρ roztečné ≥ 1,5·Rr' : q.typ === 'plochy' ? 'ρ ≥ 3 mm' : 'bez rezervy křivosti'}).`);
+  });
+  // animace: mezerník, šipky ±1° (Shift ±10°), V = 2D / 3D (čísla a písmena H M P L obsluhuje gen3d)
+  document.addEventListener('keydown', e => {
+    const t = e.target;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON' || t.isContentEditable)) return;
+    if (document.querySelector('.dialog-overlay, dialog[open]')) return;
+    if (e.code === 'Space') { e.preventDefault(); prepniPrehravani(); }
+    else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
+      e.preventDefault(); prepniPrehravani(false);
+      uhel = ((uhel + (e.code === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1)) % 360 + 360) % 360; kresli();
+    } else if ((e.key || '').toLowerCase() === 'v') prepniRezim(!rezim3d);
+  });
+  new ResizeObserver(() => { if (v && !rezim3d) kresli(); }).observe($('canvas-container'));
+  let rt = null;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (v) for (const gr of grafy) vykresliGraf(gr); }, 120); });
+
+  /* ---------- start ---------- */
+  nactiBarvy();
+  app.start().then(() => {
+    if (zOdkazu) {
+      app.nahrad(zOdkazu.p);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* sandbox */ }
+    }
+  });
+  window.__vacky = { stav: () => ({ p: app.p, v, uhel, model }), nastavUhel: a => { uhel = a; kresli(); }, prepocet: prepocitej, prepniRezim, app };
 })();

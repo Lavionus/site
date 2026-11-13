@@ -705,3 +705,4 @@ const Ozub = (function () {
     hreben, pulZubuCykloida, polarniObrys, koloCevove, maltez, maltezUhel, rohatka, zapadka, pero, dira, odlehceni
   };
 })();
+if (typeof module !== 'undefined' && module.exports) module.exports = Ozub;

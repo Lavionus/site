@@ -6,16 +6,21 @@
   <title>Řemenice GT2/HTD a napínáky – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor ozubených řemenic GT2, GT3, HTD 3M/5M, T2.5/T5 a MXL se správným profilem zubu, přírubami, nábojem (D-hřídel, pero, stavěcí šrouby M3 s kapsou na matici), vodicí kladkou na ložisko a napínákem. Výpočet délky řemene, osové vzdálenosti a zubů v záběru, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="remenice/jadro.js"></script>
   <script src="remenice/geometrie.js"></script>
-  <script src="remenice/nahled.js"></script>
+  <script src="knofliky/nahled.js"></script>
   <script src="../tvary.js"></script>
   <style>
     :root { --sloupec: 330px; }
@@ -103,6 +108,9 @@
       padding: 4px 9px; font: inherit; font-size: 0.82rem; color: var(--text); cursor: pointer; }
     .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
     .lista .tl:disabled { opacity: .4; cursor: default; }
+    .legenda-rezu { position: absolute; left: 10px; bottom: 10px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+    .legenda-rezu i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #c0504d; vertical-align: -1px; margin-right: 4px; }
   </style>
 </head>
 <body>
@@ -120,15 +128,17 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje řemenice…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk – všechny díly</div>
-            <button class="pol" id="btnStl" role="menuitem">⬇ STL <span class="pozn">Ctrl+S</span></button>
-            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF <span class="pozn">díly s názvy a barvami</span></button>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše <span class="pozn">díly s názvy a barvami</span></button>
             <div class="nab-nadpis">Jednotlivé díly <span class="pozn">STL</span></div>
             <div class="sloupec-nab" id="seznamDilu"></div>
             <div class="nab-tip">Díly jsou v tiskové poloze (osa svisle, náboj na podložce) a rozmístěné vedle sebe bez překryvu.</div>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -142,6 +152,11 @@
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="true">🖨 Tisková poloha <span class="pozn">M · podložka</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez osou <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <div class="nab-tip">Díly jsou vždy v tiskové poloze (osa svisle, náboj na podložce); přepínač ukáže podložku a převisy. Řez ukáže otvor hřídele, kapsu matice a otvory šroubů.</div>
           </div>
         </div>
         <div class="menu">
@@ -149,12 +164,14 @@
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora – ozubení <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku – tisková výška <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku – tisková výška <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
           </div>
         </div>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
         <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
-        <button class="tl" id="btnNapoveda" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnNap" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -168,7 +185,7 @@
 
     <main class="plocha" data-zobrazeno="obecne">
       <aside class="box box-in" id="boxRemenice" data-box="in" aria-label="Řemenice">
-        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Řemenice</h2></div>
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Řemenice</h2><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo">
           <details class="oddil" data-oddil="dily" open>
             <summary><span class="oddil-nazev">Díly k tisku</span><span class="souhrn" id="sDily"></span></summary>
@@ -249,16 +266,21 @@
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
+          <div class="legenda-rezu" id="legRez" hidden><i></i>vnitřní plochy v řezu</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Výpočty a výsledky">
           <div class="zalozky" role="tablist">
-            <button role="tab" data-zalozka="pohon" aria-selected="true">📏 Pohon <span class="souhrn-zal" id="sPohon"></span></button>
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
+            <button role="tab" data-zalozka="pohon" aria-selected="false">📏 Pohon <span class="souhrn-zal" id="sPohon"></span></button>
             <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk <span class="souhrn-zal" id="sTisk"></span></button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false" hidden>🧾 Kusovník</button>
             <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje řemenice</button>
           </div>
-          <div class="zalozka-telo" data-telo="pohon" role="tabpanel">
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel"><div class="vysledky" id="vVysledky"></div></div>
+          <div class="zalozka-telo" data-telo="pohon" role="tabpanel" hidden>
             <div class="mrizka">
               <div class="pole"><label for="f_z2">Zuby řemenice 2 (z₂)</label><input type="text" inputmode="numeric" class="mm" id="f_z2" data-p="pohon.z2"><span class="jedn">z</span></div>
               <div class="pole"><label for="f_o2">Hřídel řemenice 2</label><input type="text" inputmode="decimal" class="mm" id="f_o2" data-p="pohon.otvor2"><span class="jedn">mm</span></div>
@@ -280,9 +302,10 @@
               <div class="pole"><label for="f_mat">Materiál</label><select id="f_mat" data-p="tisk.material" data-typ="text"></select></div>
               <div class="pole"><label for="f_jem">Jemnost sítě</label><input type="text" inputmode="decimal" class="mm" id="f_jem" data-p="tisk.jemnost" title="Největší délka úsečky na obvodu – menší = hladší, větší soubor"><span class="jedn">mm</span></div>
             </div>
-            <div class="obal-tab" style="margin-top:8px"><table class="tabulka" id="tDily"></table></div>
-            <div class="vysledky" id="vTisk" style="margin-top:8px"></div>
-            <p class="napoveda">Hmotnost a filament (1,75 mm) pro plný díl – řemenice tiskněte se 100% výplní nebo aspoň 4 perimetry. Čas je jen hrubý odhad.</p>
+            <p class="napoveda">Hmotnost a filament (1,75 mm) ve Výsledcích a v Kusovníku jsou pro plný díl – řemenice tiskněte se 100% výplní nebo aspoň 4 perimetry. Čas je jen hrubý odhad.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden>
+            <div class="obal-tab"><table class="tabulka" id="tDily"></table></div>
           </div>
           <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
             <ul class="hlaseni" id="hlaseni"></ul>
@@ -293,7 +316,7 @@
       </section>
 
       <aside class="box box-out" id="boxKladka" data-box="out" aria-label="Kladka a napínák">
-        <div class="box-hlava"><span class="box-znak" aria-hidden="true">◎</span><h2>Kladka a napínák</h2></div>
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">◎</span><h2>Kladka a napínák</h2><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo">
           <details class="oddil" data-oddil="kladka" open>
             <summary><span class="oddil-nazev">Vodicí kladka</span><span class="souhrn" id="sKladka"></span></summary>
@@ -346,8 +369,8 @@
       (čep + osa kladky) nebo posuvná deska s drážkou pro dva šrouby; nálitek odtlačí ložisko od desky, aby se netřelo o vnější kroužek.</p>
     <p><b>Pohon.</b> Zadejte osovou vzdálenost a stránka spočítá délku řemene, nebo zadejte délku (násobek rozteče) a dopočítá se vzdálenost.
       Pod 6 zubů v záběru hrozí přeskakování řemene.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>3</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10,
-      <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>M</kbd> podložka, <kbd>P</kbd> převisy, <kbd>R</kbd> řez, <kbd>L</kbd> pravítka, <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10,
+      <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
   </div>
 </dialog>
 <script src="remenice/ui.js"></script>

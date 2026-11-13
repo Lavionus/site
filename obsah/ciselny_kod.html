@@ -40,8 +40,17 @@ body{background:var(--bg-deep);margin:0;min-height:100vh;color:var(--text)}
 .nabidka .tl.prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
 .nabidka .tl.prep[aria-pressed="true"]::before{content:'✓'}
 
-main{max-width:1100px;margin:0 auto;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:start}
-@media (max-width:820px){main{grid-template-columns:minmax(0,1fr)}}
+main{max-width:1100px;margin:0 auto;padding:14px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+/* tablet a víc: zámek s poznámkami vlevo (šířka podle počtu číslic), pravidla vpravo;
+   stránka se nevejde-li, neroluje celá – každý panel má vlastní posuv */
+@media (min-width:700px){
+  body{height:100vh;height:100dvh;display:flex;flex-direction:column}
+  .lista{flex-shrink:0}
+  main{flex:1;min-height:0;width:100%;box-sizing:border-box;grid-template-columns:max(350px,calc(var(--n,4) * 66px + 30px)) minmax(0,1fr);grid-template-rows:minmax(0,1fr);align-items:stretch;gap:12px;padding:10px 14px}
+  main > .panel{overflow:auto;min-height:0}
+  .pomoc{flex-shrink:0;max-height:40vh;overflow:auto}
+}
+
 @media (max-width:640px){.lista{flex-wrap:wrap}.lista .info{margin-left:0}}
 .panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,10px);padding:14px}
 .panel h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin:0 0 10px;font-weight:600}
@@ -97,10 +106,23 @@ ol.pravidla .rada-txt{display:block;font-size:.8rem;color:var(--text-muted);marg
 ol.pravidla li.rada{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 ol.pravidla li.skrtnuto .text{text-decoration:line-through;color:var(--text-faint)}
 ol.pravidla b{font-family:ui-monospace,Consolas,monospace;font-size:1.05em}
-.rekordy{font-size:.8rem;color:var(--text-muted);margin-top:12px}
+.rekordy{font-size:.8rem;color:var(--text-muted);margin:2px 6px 4px;max-width:300px}
+.rekordy.rekord{display:flex;border-radius:8px;flex-wrap:wrap}
 .pomoc{max-width:1100px;width:calc(100% - 28px);margin:14px auto 0;box-sizing:border-box;font-size:.88rem;line-height:1.5;color:var(--text-muted)}
 .pomoc p{margin:.4em 0}
-</style>
+/* nízké okno (tablet na šířku): zmenšit kolečka a mřížku poznámek */
+@media (min-width:700px) and (max-height:820px){
+  .panel{padding:10px 12px}
+  .panel h2{margin-bottom:6px}
+  .cislice{height:clamp(44px,8vh,74px);font-size:clamp(1.4rem,5vh,2.4rem)}
+  .kolecko{gap:2px}
+  .akce{margin-top:8px}
+  .btn{padding:6px 12px}
+  #panelZamek h2[style]{margin-top:10px !important}
+  .poznamky .sloupec{gap:2px}
+  .poznamky button{padding:1px 0}
+  ol.pravidla li{padding:7px 9px}
+}</style>
 </head>
 <body>
 <header class="lista">
@@ -108,7 +130,7 @@ ol.pravidla b{font-family:ui-monospace,Consolas,monospace;font-size:1.05em}
   <div class="skup" role="group" aria-label="Hra"><span class="skup-nazev" aria-hidden="true">Hra</span><div class="skup-tl">
     <button class="tl hlavni-tl" data-prikaz="nova" title="Nová hádanka (N)">🎲<span class="txt"> Nová</span></button>
     <button class="tl" data-prikaz="sdilet" title="Sdílet odkaz na tuto hádanku">🔗<span class="txt"> Sdílet</span></button>
-    <button class="tl" data-nabidka="nabHra" title="Denní hádanka, kód hádanky, začít znovu, řešení">📅<span class="txt"> Hra</span> ▾</button>
+    <button class="tl" data-nabidka="nabHra" title="Denní hádanka, kód hádanky, začít znovu, řešení, rekord">📅<span class="txt"> Hra</span> ▾</button>
   </div></div>
   <div class="skup" role="group" aria-label="Obtížnost"><span class="skup-nazev" aria-hidden="true">Obtížnost</span><div class="skup-tl">
     <button class="tl" data-nabidka="nabObtiznost" title="Počet číslic a druh pravidel"><span id="popisObtiznost">4 číslice</span> ▾</button>
@@ -128,6 +150,9 @@ ol.pravidla b{font-family:ui-monospace,Consolas,monospace;font-size:1.05em}
   <hr>
   <button class="tl" data-prikaz="znovu">↺ Začít znovu</button>
   <button class="tl" data-prikaz="vzdat">🏳️ Vzdát se a ukázat kód</button>
+  <hr>
+  <div class="titulek">Rekord</div>
+  <div class="rekordy" id="rekord"></div>
 </div>
 <div id="nabObtiznost" class="nabidka" hidden>
   <div class="titulek">Počet číslic</div>
@@ -178,7 +203,6 @@ ol.pravidla b{font-family:ui-monospace,Consolas,monospace;font-size:1.05em}
     <h2 style="margin-top:18px">Poznámky</h2>
     <div class="zamek poznamky" id="mrizka"></div>
     <div class="napoveda-mala">Klepnutí: <span class="vz mozne">možné</span> → <span class="vz jiste">jisté</span> → <span class="vz ne">nemožné</span> → zpět.</div>
-    <div class="rekordy" id="rekord"></div>
   </section>
 
   <section class="panel" id="panelPravidla">
@@ -700,6 +724,7 @@ const KodLogika = (function () {
   /* ---------- vykreslení ---------- */
   function vykresli() {
     const N = hra.N;
+    document.querySelector('main').style.setProperty('--n', N);
     $('popisObtiznost').textContent = nast.N + (nast.N < 5 ? ' číslice' : ' číslic') + (nast.styl === 'tipy' ? ' · tipy' : '') + (nast.opak ? ' · opak.' : '');
     document.querySelectorAll('[data-opak]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.opak === 'ano') === nast.opak)));
     $('premisa').textContent = (hra.opak ? 'Číslice se v kódu mohou opakovat.' : 'Žádná číslice se v kódu neopakuje.') +

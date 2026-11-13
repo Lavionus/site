@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔑 Přednáška: Správce hesel v praxi</title>
+    <link rel="stylesheet" href="../common.css">
+    <script src="../theme.js"></script>
+    <script src="../podpis.js" defer></script>
+    <style>
+        :root {
+            --bg: #0d0d1a;
+            --surface: #111827;
+            --surface2: #1a2235;
+            --accent: #6366f1;
+            --accent2: #ec4899;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(99, 102, 241, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            /* Systémové písmo místo Google Fonts – stránka funguje i offline. */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                         Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ── Animated background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,102,241,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 80%, rgba(236,72,153,0.10) 0%, transparent 60%);
+            animation: bgShift 12s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes bgShift {
+            0%   { opacity: 0.6; transform: scale(1); }
+            100% { opacity: 1;   transform: scale(1.08); }
+        }
+
+        /* ── Container ── */
+        .presentation-container {
+            width: 96%;
+            height: 92%;
+            position: relative;
+            background: var(--surface);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+            padding: 40px 44px 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ── Top toolbar ── */
+        .toolbar {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .toolbar-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(99,102,241,0.2);
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        /* ── Slides ── */
+        .slide {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            animation: slideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .slide.active { display: flex; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(18px) scale(0.99); }
+            to   { opacity: 1; transform: translateY(0)  scale(1); }
+        }
+
+        .slide-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 36px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .text-content {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 100%;
+            padding-right: 4px;
+        }
+
+        .text-content::-webkit-scrollbar { width: 4px; }
+        .text-content::-webkit-scrollbar-track { background: transparent; }
+        .text-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .image-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-content img {
+            max-width: 100%;
+            max-height: 68vh;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            object-fit: contain;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .image-content img.loaded { opacity: 1; }
+
+        .image-placeholder {
+            width: 100%;
+            max-width: 420px;
+            height: 280px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #1a2235 0%, #111827 100%);
+            border: 1px dashed rgba(99,102,241,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 3rem;
+            gap: 12px;
+        }
+
+        .image-placeholder span { font-size: 0.9rem; }
+
+        /* ── Typography ── */
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #818cf8, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4em;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.6em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            border-radius: 2px;
+        }
+
+        /* ── Lists with build animation ── */
+        ul {
+            font-size: 1.2rem;
+            line-height: 1.65;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            margin-bottom: 14px;
+            padding-left: 24px;
+            position: relative;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+
+        ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.55em;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+        }
+
+        /* ── Cards ── */
+        .highlight-box {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin: 18px 0;
+            font-size: 1.15rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .code-example {
+            background: #0a0a14;
+            border: 1px solid rgba(99,102,241,0.2);
+            padding: 18px 20px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #a5f3a5;
+            margin-top: 12px;
+        }
+
+        /* ── Tools grid ── */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .tool-category {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 16px 18px;
+            border-radius: 14px;
+            border-left: 3px solid var(--accent2);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .tool-category:hover {
+            border-left-color: var(--accent);
+            box-shadow: 0 4px 16px rgba(99,102,241,0.1);
+        }
+
+        .tool-category h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--accent2);
+            margin-bottom: 10px;
+        }
+
+        .tool-category ul {
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .tool-category ul li { margin-bottom: 6px; }
+
+        /* ── Full-image layout (stacked) ── */
+        .slide.full-image .slide-content { flex-direction: column; }
+        .slide.full-image .image-content img { max-height: 45vh; }
+
+        /* ── Bottom controls ── */
+        .controls {
+            position: absolute;
+            bottom: 18px;
+            right: 24px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: inherit;
+            font-weight: 500;
+            transition: background 0.2s, border-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(99,102,241,0.25);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:active { transform: translateY(0); }
+
+        /* ── Dots navigation ── */
+        .dots-container {
+            position: absolute;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 7px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: background 0.25s, transform 0.25s, width 0.25s;
+            border: none;
+        }
+
+        .dot.active {
+            background: var(--accent);
+            transform: scale(1.2);
+            width: 18px;
+            border-radius: 4px;
+        }
+
+        .dot:hover:not(.active) { background: rgba(255,255,255,0.45); }
+
+        /* ── Slide number ── */
+        .slide-number {
+            position: absolute;
+            bottom: 22px;
+            left: 24px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+
+        /* ── Progress bar ── */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            border-radius: 0 2px 0 24px;
+        }
+
+        /* ── Overview overlay ── */
+        #overview-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 15, 0.92);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            padding: 40px;
+            overflow-y: auto;
+            animation: fadeOverlay 0.25s ease;
+        }
+
+        #overview-overlay.open { display: block; }
+
+        @keyframes fadeOverlay {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        #overview-overlay h3 {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .overview-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 0;
+            cursor: pointer;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .overview-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(99,102,241,0.2);
+        }
+
+        .overview-card.current {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent), 0 8px 24px rgba(99,102,241,0.3);
+        }
+
+        /* thumbnail viewport – clips the scaled clone */
+        .overview-thumb {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg);
+            border-radius: 12px 12px 0 0;
+        }
+
+        /* scaled clone inside thumbnail */
+        .overview-thumb > .slide {
+            display: flex !important;
+            position: absolute !important;
+            top: 0; left: 0;
+            transform-origin: top left;
+            pointer-events: none;
+            animation: none !important;
+        }
+
+        .overview-thumb > .slide * {
+            animation: none !important;
+        }
+
+        .overview-thumb > .slide .image-content img {
+            opacity: 1 !important;
+        }
+
+        .overview-card-label {
+            padding: 7px 10px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .overview-num {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .overview-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            line-height: 1.3;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        /* ── Corner logo ── */
+        .corner-logo {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            width: 220px;
+            opacity: 0.25;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+            border-radius: 8px;
+            transform: scaleX(-1);
+            display: none; /**/
+        }
+
+        /* ── Fullscreen ── */
+        :fullscreen .presentation-container,
+        :-webkit-full-screen .presentation-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+        }
+
+        :fullscreen body,
+        :-webkit-full-screen body {
+            background: var(--bg);
+        }
+
+        /* ── Odkazy na navazující stránky ── */
+        .odkazy { margin-top: 26px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .odkazy a, .highlight-box a { color: var(--text); }
+        .odkazy a {
+            text-decoration: none; padding: 8px 14px; border-radius: 10px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+        }
+        .odkazy a:hover { border-color: var(--accent); background: rgba(99,102,241,0.18); }
+
+        /* ── Úzká obrazovka: obrázek pod text ── */
+        @media (max-width: 760px) {
+            .presentation-container { padding: 52px 18px 70px; width: 100%; height: 100%; border-radius: 0; }
+            .slide-content { flex-direction: column; gap: 14px; justify-content: flex-start; }
+            .text-content { flex: 0 1 auto; }
+            .image-content { flex: 0 0 auto; }
+            .image-content img { max-height: 26vh; }
+            .tools-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+
+        /* ── Kvíz s publikem ── */
+        details.kviz { margin: 8px 0; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); }
+        details.kviz summary { cursor: pointer; font-size: 1.05rem; line-height: 1.45; }
+        details.kviz[open] { border-color: var(--accent); }
+        details.kviz p { margin-top: 8px; font-size: 1.05rem; }
+    </style>
+</head>
+<body>
+
+<!-- Overview overlay -->
+<div id="overview-overlay">
+    <h3>Přehled slidů — klikněte pro přechod</h3>
+    <div class="overview-grid" id="overview-grid"></div>
+</div>
+
+<div class="presentation-container" id="pres">
+
+    <!-- Corner logo -->
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="toolbar-btn" id="btn-overview" title="Přehled (O)">⊞</button>
+        <button class="toolbar-btn" id="btn-fs" title="Celá obrazovka (F)">⛶</button>
+    </div>
+
+    <!-- ══ Slide 1 ══ -->
+    <div class="slide active full-image" data-title="Správce hesel v praxi">
+        <div class="slide-content">
+            <div class="text-content" style="text-align: center;">
+                <h1>Správce hesel v praxi</h1>
+                <h2 style="justify-content: center;">Krok za krokem na Androidu a iPhonu</h2>
+                <p style="font-size: 1.4rem; margin: 28px 0; color: var(--text-muted);">
+                    Jak správce hesel zapnout, uložit do něj hesla, nechat je vyplňovat a zkontrolovat, která hesla unikla.
+                </p>
+                <div class="highlight-box" style="display: inline-block;">
+                    🎯 Cíl: Odejít s telefonem, který si hesla pamatuje za vás. Vezměte si telefon s sebou.
+                </div>
+                <p class="odkazy">
+                    <a href="bezpecny_telefon_prednaska.html">🔐 Bezpečný telefon a účty</a>
+                    <a href="zabezpec_telefon.html">✅ Kontrolní seznam</a>
+                    <a href="slovnicek_ai.html#heslo-spravce-hesel">📖 Slovníček: správce hesel</a>
+                </p>
+            </div>
+            <div class="image-content">
+                <img src="spravce_hesel_prednaska/h01.webp" alt="Trezor s klíči v telefonu">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 2 ══ -->
+    <div class="slide" data-title="Proč správce hesel">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Proč správce hesel</h2>
+                <ul>
+                    <li><strong>Problém:</strong> průměrný člověk má desítky účtů. Pamatovat si různá silná hesla nejde, a tak se opakuje jedno.</li>
+                    <li><strong>Riziko:</strong> když unikne heslo z jednoho e-shopu, útočník ho vyzkouší na e-mailu, bance i Facebooku.</li>
+                    <li><strong>Řešení:</strong> správce vytvoří a pamatuje pro každý účet jiné silné heslo. Vy odemykáte otiskem nebo PINem telefonu.</li>
+                    <li><strong>Bonus:</strong> na falešné stránce banky heslo nenabídne. To je varovný signál.</li>
+                </ul>
+                <div class="highlight-box">
+                    🧠 Přestanete hesla vymýšlet, pamatovat si je a psát na lístečky.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h02.webp" alt="Lístečky proti trezoru">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 3 ══ -->
+    <div class="slide" data-title="Který správce vybrat">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Který správce vybrat</h2>
+                <ul>
+                    <li><strong>Mám Android:</strong> Správce hesel Google. Je v telefonu už teď, zdarma, propojený s účtem Google.</li>
+                    <li><strong>Mám iPhone:</strong> aplikace Hesla od Apple (od iOS 18). Zdarma, propojená s Apple ID přes Klíčenku na iCloudu.</li>
+                    <li><strong>V rodině jsou oba systémy nebo i Windows:</strong> Bitwarden. Zdarma, funguje na všem, hesla jsou šifrovaná.</li>
+                    <li><strong>Placené:</strong> 1Password a další. Pohodlné, ale pro začátek není nutné.</li>
+                </ul>
+                <div class="highlight-box">
+                    ✅ Nejlepší správce je ten, který budete opravdu používat. Pro většinu lidí stačí ten vestavěný.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h03.webp" alt="Tři trezory">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 4 ══ -->
+    <div class="slide" data-title="Než začnete: tři pojistky">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Než začnete: tři pojistky</h2>
+                <ul>
+                    <li><strong>Zámek telefonu:</strong> PIN aspoň 6 číslic a otisk nebo obličej. Kdo odemkne telefon, otevře i hesla.</li>
+                    <li><strong>Účet Google / Apple ID:</strong> silné heslo a zapnuté dvoufázové ověření. Je to klíč od trezoru.</li>
+                    <li><strong>Papír doma:</strong> heslo k účtu Google / Apple ID a záložní kódy napište na papír a uložte doma, ne do telefonu.</li>
+                </ul>
+                <div class="highlight-box">
+                    🔐 Když ztratíte telefon, hesla nezmizí. Jsou ve vašem účtu a v novém telefonu se po přihlášení objeví.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h04.webp" alt="Zámek telefonu a papír v šuplíku">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 5 ══ -->
+    <div class="slide" data-title="Android: zapnutí">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Android: zapnutí</h2>
+                <ul>
+                    <li><strong>Krok 1:</strong> Nastavení → Google → Automatické vyplňování → Automatické vyplňování od Googlu → zapnout.</li>
+                    <li><strong>Krok 2:</strong> tamtéž otevřete Správce hesel Google. Uvidíte hesla, která už Chrome uložil.</li>
+                    <li><strong>Krok 3:</strong> v nastavení správce zapněte „Nabízet ukládání hesel“ a „Automatické přihlašování“.</li>
+                    <li><strong>Krok 4:</strong> přidejte si zástupce Správce hesel na plochu.</li>
+                </ul>
+                <div class="highlight-box">
+                    ℹ️ Názvy položek v nastavení se podle verze systému a výrobce telefonu mohou mírně lišit. Na Samsungu se nabídne i Samsung Pass. Vyberte jeden a držte se ho.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h05.webp" alt="Nastavení Androidu">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 6 ══ -->
+    <div class="slide" data-title="Android: ukládání a vyplňování">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Android: ukládání a vyplňování</h2>
+                <ul>
+                    <li><strong>Uložení:</strong> přihlaste se jako obvykle. Telefon se zeptá „Uložit heslo do Správce hesel Google?“ → Uložit.</li>
+                    <li><strong>Vyplnění:</strong> klepněte do pole jména. Nad klávesnicí se nabídne uložený účet, potvrdíte otiskem.</li>
+                    <li><strong>Nové heslo:</strong> při registraci klepněte do pole hesla → „Navrhnout silné heslo“. Hned se uloží.</li>
+                    <li><strong>Ručně:</strong> ve Správci hesel tlačítko + (Přidat): web, jméno, heslo.</li>
+                </ul>
+                <div class="highlight-box">
+                    💡 Cvičení: odhlaste se z jedné aplikace a přihlaste se znovu přes nabídku nad klávesnicí.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h06.webp" alt="Uložení hesla při přihlášení">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 7 ══ -->
+    <div class="slide" data-title="Android: kontrola hesel">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Android: kontrola hesel</h2>
+                <ul>
+                    <li><strong>Kde:</strong> Správce hesel Google → Kontrola hesel.</li>
+                    <li><strong>Prolomená hesla:</strong> unikla na internet. Změňte je jako první, začněte e-mailem a bankou.</li>
+                    <li><strong>Opakovaná hesla:</strong> stejné heslo na víc místech. Postupně nahraďte navrženými.</li>
+                    <li><strong>Slabá hesla:</strong> krátká a snadno uhodnutelná.</li>
+                </ul>
+                <div class="highlight-box">
+                    🚨 Prolomené heslo k e-mailu změňte ještě dnes a zapněte k němu dvoufázové ověření.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h07.webp" alt="Přehled stavu hesel">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 8 ══ -->
+    <div class="slide" data-title="iPhone: aplikace Hesla">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>iPhone: aplikace Hesla</h2>
+                <ul>
+                    <li><strong>Kde:</strong> aplikace Hesla na ploše (iOS 18 a novější). Ve starších verzích Nastavení → Hesla.</li>
+                    <li><strong>Krok 1:</strong> Nastavení → vaše jméno → iCloud → Hesla a Klíčenka → zapnout synchronizaci.</li>
+                    <li><strong>Krok 2:</strong> Nastavení → Obecné → Automatické vyplňování a hesla → zapnout a zvolit Hesla.</li>
+                    <li><strong>Krok 3:</strong> otevřete aplikaci Hesla, odemkne se Face ID nebo Touch ID.</li>
+                </ul>
+                <div class="highlight-box">
+                    ℹ️ Názvy položek v nastavení se podle verze systému a výrobce telefonu mohou mírně lišit.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h08.webp" alt="Aplikace Hesla na iPhonu">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 9 ══ -->
+    <div class="slide" data-title="iPhone: ukládání a vyplňování">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>iPhone: ukládání a vyplňování</h2>
+                <ul>
+                    <li><strong>Uložení:</strong> po přihlášení se iPhone zeptá „Uložit heslo?“ → Uložit heslo.</li>
+                    <li><strong>Vyplnění:</strong> klepněte do pole, nad klávesnicí se objeví účet s klíčkem. Potvrdíte Face ID.</li>
+                    <li><strong>Nové heslo:</strong> při registraci iPhone sám nabídne „Použít silné heslo“.</li>
+                    <li><strong>Ověřovací kódy:</strong> Hesla umí i jednorázové kódy pro dvoufázové ověření. U účtu „Nastavit ověřovací kód“.</li>
+                </ul>
+                <div class="highlight-box">
+                    💡 Cvičení: v aplikaci Hesla najděte svůj účet na libovolném e-shopu a podívejte se, kdy jste heslo naposled měnili.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h09.webp" alt="Návrh silného hesla">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 10 ══ -->
+    <div class="slide" data-title="iPhone: kontrola zabezpečení">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>iPhone: kontrola zabezpečení</h2>
+                <ul>
+                    <li><strong>Kde:</strong> aplikace Hesla → Zabezpečení.</li>
+                    <li><strong>Uniklá hesla:</strong> objevila se v únicích dat. Změňte je jako první.</li>
+                    <li><strong>Opakovaná a slabá:</strong> iPhone nabídne „Změnit heslo na webu“ a rovnou vygeneruje nové.</li>
+                </ul>
+                <div class="highlight-box">
+                    🔁 Nemusíte změnit všechno najednou. Stačí jedno až dvě hesla denně, začněte e-mailem a bankou.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h10.webp" alt="Bezpečnostní přehled">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 11 ══ -->
+    <div class="slide" data-title="Bitwarden: pro smíšenou rodinu">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Bitwarden: pro smíšenou rodinu</h2>
+                <ul>
+                    <li><strong>Instalace:</strong> Bitwarden z Obchodu Play nebo App Store, na počítač jako rozšíření prohlížeče.</li>
+                    <li><strong>Účet:</strong> e-mail a hlavní heslo (4 až 5 náhodných slov). Hlavní heslo nikdo neobnoví, napište ho na papír.</li>
+                    <li><strong>Vyplňování, Android:</strong> Nastavení → Hesla / Automatické vyplňování → vybrat Bitwarden.</li>
+                    <li><strong>Vyplňování, iPhone:</strong> Nastavení → Obecné → Automatické vyplňování a hesla → zapnout Bitwarden.</li>
+                    <li><strong>Přenos hesel:</strong> export z Google / Apple do souboru CSV a import do Bitwardenu. Nejlépe na počítači, soubor pak smažte.</li>
+                </ul>
+                <div class="highlight-box">
+                    ⚠️ Soubor CSV obsahuje všechna hesla v čitelné podobě. Nenechávejte ho v počítači ani v e-mailu.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h11.webp" alt="Bitwarden spojuje zařízení">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 12 ══ -->
+    <div class="slide" data-title="Sdílení hesel s rodinou">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Sdílení hesel s rodinou</h2>
+                <ul>
+                    <li><strong>Android:</strong> Správce hesel Google umí sdílet heslo se členem rodinné skupiny Google.</li>
+                    <li><strong>iPhone:</strong> v aplikaci Hesla vytvořte sdílenou skupinu (třeba „Domácnost“) a pozvěte členy.</li>
+                    <li><strong>Bitwarden:</strong> organizace pro 2 osoby zdarma, pro rodinu placená varianta.</li>
+                    <li><strong>Co sdílet:</strong> Wi-Fi, streamování, energie, pojišťovna. Ne osobní e-mail a banku.</li>
+                </ul>
+                <div class="highlight-box">
+                    📨 Hesla nikdy neposílejte SMS ani e-mailem. Sdílení přes správce je šifrované.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h12.webp" alt="Rodina sdílí klíč">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 13 ══ -->
+    <div class="slide" data-title="Přístupové klíče (passkeys)">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Přístupové klíče (passkeys)</h2>
+                <ul>
+                    <li><strong>Co to je:</strong> přihlášení bez hesla, potvrdíte otiskem nebo obličejem.</li>
+                    <li><strong>Kde se uloží:</strong> ve Správci hesel Google, v aplikaci Hesla nebo v Bitwardenu.</li>
+                    <li><strong>Jak vypadá:</strong> web nabídne „Vytvořit přístupový klíč?“ → Pokračovat → otisk. Hotovo.</li>
+                    <li><strong>Proč:</strong> passkey nejde vylákat na falešné stránce ani opsat do telefonu podvodníkovi.</li>
+                </ul>
+                <div class="highlight-box">
+                    👍 Google, Apple, Microsoft a Seznam už passkeys nabízejí. Zkuste to u jednoho účtu ještě dnes.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h13.webp" alt="Otisk a obličej jako klíč">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 14 ══ -->
+    <div class="slide" data-title="Cvičení: 20 minut teď">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Cvičení: 20 minut teď</h2>
+                <ul>
+                    <li><strong>1:</strong> zapnout správce hesel a automatické vyplňování (podle slidu pro váš telefon).</li>
+                    <li><strong>2:</strong> otevřít kontrolu hesel a zjistit, kolik je prolomených.</li>
+                    <li><strong>3:</strong> změnit heslo k e-mailu na navržené silné heslo.</li>
+                    <li><strong>4:</strong> zapnout dvoufázové ověření u e-mailu.</li>
+                    <li><strong>5:</strong> napsat heslo k účtu Google / Apple ID na papír pro domácí trezor.</li>
+                </ul>
+                <div class="highlight-box">
+                    🙋 Kdo se zasekne, zvedněte ruku. Projdeme to spolu.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h14.webp" alt="Kontrolní seznam u stolu">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 15 ══ -->
+    <div class="slide" data-title="Časté otázky">
+        <div class="slide-content">
+            <div class="text-content">
+                <h2>Časté otázky</h2>
+                <ul>
+                    <li><strong>Není riskantní mít všechno na jednom místě?:</strong> méně než stejné heslo všude. Trezor je šifrovaný a chráněný zámkem telefonu.</li>
+                    <li><strong>Co když ztratím telefon?:</strong> hesla jsou v účtu. Na novém telefonu se přihlásíte a vrátí se. Proto je důležité heslo k účtu na papíře.</li>
+                    <li><strong>Můžu dál psát hesla do sešitu?:</strong> doma v šuplíku je sešit lepší než jedno heslo všude. Poznámky v telefonu nebo SMS ne.</li>
+                    <li><strong>Zeptá se banka na heslo ze správce?:</strong> nikdy. Nikomu ho nediktujte.</li>
+                </ul>
+                <div class="highlight-box">
+                    ❓ Hlavní heslo a kódy zná jen majitel. Kdo se na ně ptá, je podvodník.
+                </div>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h15.webp" alt="Otázky a záchranný kruh">
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Slide 16 ══ -->
+    <div class="slide full-image" data-title="Jeden klíč místo stovky hesel">
+        <div class="slide-content">
+            <div class="text-content" style="text-align: center;">
+                <h1>Jeden klíč místo stovky hesel</h1>
+                <p style="font-size: 1.5rem; margin: 28px 0; color: var(--text-muted); line-height: 1.5;">
+                    Zapnout správce, nechat ho vytvářet hesla,<br>začít e-mailem a bankou, hlavní heslo na papír.
+                </p>
+                <div class="highlight-box" style="display: inline-block; text-align: left;">
+                    ✅ Domácí úkol: každý den změňte jedno opakované heslo na navržené. Za měsíc máte hotovo.
+                </div>
+                <div style="margin-top: 30px;">
+                    <h2 style="justify-content: center; border: none;">Děkuji za pozornost</h2>
+                    <p style="font-size: 1.3rem; color: var(--text-muted);">Prostor pro dotazy</p>
+                </div>
+                <p class="odkazy">
+                    <a href="bezpecny_telefon_prednaska.html">🔐 Bezpečný telefon a účty</a>
+                    <a href="zabezpec_telefon.html">✅ Kontrolní seznam</a>
+                    <a href="slovnicek_ai.html#heslo-spravce-hesel">📖 Slovníček: správce hesel</a>
+                </p>
+            </div>
+            <div class="image-content">
+                <img loading="lazy" decoding="async" src="spravce_hesel_prednaska/h16.webp" alt="Zamčený trezor s jedním klíčem">
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="nav-btn" onclick="changeSlide(-1)">❮ Předchozí</button>
+        <button class="nav-btn" onclick="changeSlide(1)">Další ❯</button>
+    </div>
+
+    <div class="dots-container" id="dots-container"></div>
+    <div class="slide-number"><span id="current-slide">1</span> / <span id="total-slides">16</span></div>
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    // ── Image loading ──
+    document.querySelectorAll('.image-content img').forEach(img => {
+        img.onload = () => img.classList.add('loaded');
+        if (img.complete) img.classList.add('loaded');
+        img.onerror = function () {
+            const ph = document.createElement('div');
+            ph.className = 'image-placeholder';
+            ph.innerHTML = '🔑<span>Obrázek není dostupný</span>';
+            this.parentNode.replaceChild(ph, this);
+        };
+    });
+
+    // ── Dot navigation ──
+    const dotsContainer = document.getElementById('dots-container');
+    slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.title = slides[i].dataset.title || `Slide ${i + 1}`;
+        dot.onclick = () => goTo(i);
+        dotsContainer.appendChild(dot);
+    });
+
+    function getDots() { return dotsContainer.querySelectorAll('.dot'); }
+
+    // ── Navigation ──
+    function goTo(idx) {
+        slides[currentSlide].classList.remove('active');
+        getDots()[currentSlide].classList.remove('active');
+
+        currentSlide = Math.max(0, Math.min(idx, totalSlides - 1));
+
+        slides[currentSlide].classList.add('active');
+        getDots()[currentSlide].classList.add('active');
+
+        document.getElementById('progress-bar').style.width =
+            `${((currentSlide + 1) / totalSlides) * 100}%`;
+        document.getElementById('current-slide').textContent = currentSlide + 1;
+
+        // přednačíst obrázek následujícího slidu, ať je přechod plynulý
+        const nextImg = slides[currentSlide + 1]?.querySelector('img[loading="lazy"]');
+        if (nextImg) nextImg.loading = 'eager';
+
+        try { localStorage.setItem('webapp_spravce_hesel_prednaska_slide', currentSlide); } catch (e) {}
+    }
+
+    function changeSlide(dir) {
+        goTo(currentSlide + dir);
+    }
+
+    // ── Keyboard ──
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT') return;
+        switch (e.key) {
+            case 'ArrowRight': case ' ': case 'PageDown': e.preventDefault(); changeSlide(1); break;
+            case 'ArrowLeft':            case 'PageUp':   e.preventDefault(); changeSlide(-1); break;
+            case 'Home': e.preventDefault(); goTo(0); break;
+            case 'End':  e.preventDefault(); goTo(totalSlides - 1); break;
+            case 'f': case 'F': toggleFullscreen(); break;
+            case 'o': case 'O': toggleOverview(); break;
+            case 'Escape': closeOverview(); break;
+        }
+    });
+
+    // ── Touch / swipe ──
+    let touchStartX = 0;
+    const pres = document.getElementById('pres');
+    pres.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+    pres.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+    }, { passive: true });
+
+    // ── Fullscreen ──
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    document.getElementById('btn-fs').onclick = toggleFullscreen;
+
+    document.addEventListener('fullscreenchange', () => {
+        document.getElementById('btn-fs').textContent =
+            document.fullscreenElement ? '✕' : '⛶';
+    });
+
+    // ── Overview ──
+    const overlay = document.getElementById('overview-overlay');
+    const grid = document.getElementById('overview-grid');
+
+    slides.forEach((slide, i) => {
+        const title = slide.dataset.title || slide.querySelector('h1,h2')?.textContent || '';
+        const card = document.createElement('div');
+        card.className = 'overview-card' + (i === currentSlide ? ' current' : '');
+        card.innerHTML = `
+            <div class="overview-thumb" data-idx="${i}"></div>
+            <div class="overview-card-label">
+                <span class="overview-num">${i + 1}</span>
+                <span class="overview-title">${title}</span>
+            </div>`;
+        card.onclick = () => { goTo(i); closeOverview(); };
+        grid.appendChild(card);
+    });
+
+    let thumbsBuilt = false;
+    function buildThumbnails() {
+        if (thumbsBuilt) return;
+        thumbsBuilt = true;
+        const pres = document.getElementById('pres');
+        const pw = pres.offsetWidth;
+        const ph = pres.offsetHeight;
+        const tw = 220; // thumbnail width in px
+        const scale = tw / pw;
+        const th = Math.round(ph * scale);
+
+        grid.querySelectorAll('.overview-thumb').forEach((thumb, i) => {
+            thumb.style.height = th + 'px';
+            const clone = slides[i].cloneNode(true);
+            clone.style.cssText =
+                `width:${pw}px;height:${ph}px;` +
+                `transform:scale(${scale});transform-origin:top left;` +
+                `animation:none!important;`;
+            // force images visible in clone
+            clone.querySelectorAll('.image-content img').forEach(img => {
+                img.style.opacity = '1';
+            });
+            thumb.appendChild(clone);
+        });
+    }
+
+    function toggleOverview() {
+        overlay.classList.toggle('open');
+        if (overlay.classList.contains('open')) {
+            buildThumbnails();
+            updateOverviewCurrent();
+        }
+    }
+
+    function closeOverview() { overlay.classList.remove('open'); }
+
+    function updateOverviewCurrent() {
+        grid.querySelectorAll('.overview-card').forEach((c, i) => {
+            c.classList.toggle('current', i === currentSlide);
+        });
+    }
+
+    document.getElementById('btn-overview').onclick = toggleOverview;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeOverview(); });
+
+    // ── Init ──
+    document.getElementById('total-slides').textContent = totalSlides;
+    let savedSlide = 0;
+    try { savedSlide = parseInt(localStorage.getItem('webapp_spravce_hesel_prednaska_slide') || '0') || 0; } catch (e) {}
+    goTo(Math.min(savedSlide, totalSlides - 1));
+</script>
+<script src="prednasky_tisk.js"></script>
+</body>
+</html>

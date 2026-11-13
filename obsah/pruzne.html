@@ -6,16 +6,21 @@
   <title>Pružné mechanismy a živé panty – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor pružných (poddajných) mechanismů pro 3D tisk: živý pant a krabička s pantem, bistabilní přepínač, pružná spona (snap-fit), plastová pružina hadovitá i spirálová, křížový ohybový kloub a paralelogramové vedení. Výpočet přetvoření, tuhosti a sil, graf síla–průhyb, kontroly a export STL/3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="pruzne/jadro.js"></script>
   <script src="pruzne/geometrie.js"></script>
-  <script src="pruzne/nahled.js"></script>
+  <script src="knofliky/nahled.js"></script>
   <script src="../tvary.js"></script>
   <style>
     :root { --sloupec: 320px; }
@@ -95,6 +100,9 @@
     .sloupec-nab { display: flex; flex-direction: column; }
     .skryty { display: none; }
     @media (max-width: 1000px) { #graf { height: 210px; } }
+    .lista .tl:disabled { opacity: .4; cursor: default; }
+    .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
+    .ok-t { color: var(--ok); } .chyba-t { color: var(--danger); }
   </style>
 </head>
 <body>
@@ -105,12 +113,13 @@
         <div class="menu">
           <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabSoubor" role="menu" hidden>
-            <div class="nab-pole"><label for="f_nazev">Název projektu</label><input id="f_nazev" type="text" maxlength="120"></div>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label><input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
             <hr>
             <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty typu</button>
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje mechanismy…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk</div>
             <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
@@ -119,11 +128,15 @@
             <div class="nab-tip">Export je v tiskové poloze podle zvolené orientace, díly leží vedle sebe na podložce.</div>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
           <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
           <div class="nabidka nabidka-siroka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Druh mechanismu</div>
+            <div class="sloupec-nab" id="seznamTypu"></div>
+            <hr>
             <div class="nab-nadpis">Přepíše všechny parametry</div>
             <div class="sloupec-nab" id="seznamPredvoleb"></div>
           </div>
@@ -132,6 +145,10 @@
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="true">🖨 Tisková poloha <span class="pozn">M · všechny kusy na podložce</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <div class="nab-tip">Díly jsou natočené podle zvolené orientace tisku; bez tiskové polohy se ukáže jedna sada dílů bez podložky.</div>
           </div>
         </div>
         <div class="menu">
@@ -139,10 +156,14 @@
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
           </div>
         </div>
-        <button class="tl" id="btnNapoveda" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNap" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -155,7 +176,7 @@
     </nav>
 
     <main class="plocha" data-zobrazeno="obecne">
-      <aside class="box box-in" id="boxIn" aria-label="Mechanismus a rozměry">
+      <aside class="box box-in" id="boxIn" data-box="in" aria-label="Mechanismus a rozměry">
         <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Mechanismus</h2><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo">
           <div class="typy" id="typy" role="group" aria-label="Druh mechanismu"></div>
@@ -168,19 +189,29 @@
         <div id="canvas-container" aria-label="3D náhled v tiskové poloze">
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Graf, kontroly a vzorce">
           <div class="zalozky" role="tablist">
-            <button role="tab" data-zalozka="graf" aria-selected="true">📈 Graf</button>
-            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola</button>
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
+            <button role="tab" data-zalozka="graf" aria-selected="false">📈 Graf</button>
             <button role="tab" data-zalozka="vzorce" aria-selected="false">∑ Vzorce a materiály</button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false" hidden>🧾 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje</button>
           </div>
-          <div class="zalozka-telo" data-telo="graf" role="tabpanel">
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel">
+            <h3 style="margin-top:2px">Mechanika</h3>
+            <div class="vysledky" id="vMech"></div>
+            <h3>Výtisk</h3>
+            <div class="vysledky" id="vTisk"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="graf" role="tabpanel" hidden>
             <canvas id="graf" aria-label="Graf síla – průhyb"></canvas>
             <div class="legenda" id="legenda"></div>
           </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden><div style="overflow-x:auto"><table class="tabulka" id="tKusovnik"></table></div></div>
           <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden><ul class="hlaseni" id="hlaseni"></ul></div>
           <div class="zalozka-telo" data-telo="vzorce" role="tabpanel" hidden>
             <ul class="vzorce" id="vzorce"></ul>
@@ -193,16 +224,13 @@
         </div>
       </section>
 
-      <aside class="box box-out" id="boxOut" aria-label="Tisk a výsledky">
+      <aside class="box box-out" id="boxOut" data-box="out" aria-label="Tisk a výsledky">
         <div class="box-hlava"><span class="box-znak" aria-hidden="true">⊞</span><h2>Tisk a výsledky</h2><span class="box-chyba" aria-hidden="true">!</span></div>
         <div class="box-telo">
           <div id="poleOut"></div>
           <div class="vysl-obal">
-            <h3>Mechanika</h3>
-            <div class="vysledky" id="vMech"></div>
-            <h3>Výtisk</h3>
-            <div class="vysledky" id="vTisk"></div>
-            <p class="napoveda">Klasické čepové panty a kulové klouby najdete v generátoru <a href="panty.html">Panty a klouby</a>.</p>
+            <p class="napoveda">Výsledky mechaniky a výtisku jsou v záložce 📊 Výsledky pod náhledem.
+              Klasické čepové panty a kulové klouby najdete v generátoru <a href="panty.html">Panty a klouby</a>.</p>
           </div>
         </div>
       </aside>
@@ -225,7 +253,8 @@
   <h3>Výpočty</h3>
   <p>Nosníková teorie (Euler–Bernoulli, malé průhyby): přetvoření ε = M·t/(2EI), tuhosti a síly podle záložky Vzorce. Bistabilní přepínač
     používá energetický model kosinového oblouku – dvě stabilní polohy existují pro h/t &gt; 2,31. Výsledky jsou orientační.</p>
-  <p><b>Klávesy:</b> 1–3 pohledy, H hrany, Ctrl+S export STL, F1 nápověda.</p>
+  <p><b>Klávesy:</b> 1–5 pohledy, H hrany, M tisková poloha, P převisy, L pravítka, Ctrl+Z / Ctrl+Y zpět a znovu, Ctrl+S export STL,
+    Ctrl+Shift+S projekt, F1 nápověda.</p>
   <form method="dialog"><button class="tl">Zavřít</button></form>
 </dialog>
 <script src="pruzne/ui.js"></script>

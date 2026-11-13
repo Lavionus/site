@@ -388,4 +388,13 @@ I18N.pridej('en', {
   'oleje i za tepla, paliva, kyseliny, ozon, vakuum': 'oils even when hot, fuels, acids, ozone, vacuum',
   'oleje, tuky – standard': 'oils, greases – standard',
   'Stlačení {stlaceni} % je nad {ms} % – kroužek se trvale zdeformuje (zvětšete hloubku).': 'Squeeze {stlaceni} % is above {ms} % – the ring will take a permanent set (increase depth).',
+  'Maketa do Modeláře': 'Mock-up to Modeller',
+  'Pouzdro do Modeláře': 'Housing to Modeller',
+  'Do Modeláře“ otevře': 'To Modeller” opens',
+  'Modelář 3D': '3D Modeller',
+  'a díl do něj rovnou vloží (stažené STL jde otevřít i ručně přes': 'and inserts the part straight into it (a downloaded STL can also be opened manually via',
+  'Do Modeláře': 'To Modeller',
+  't = hloubka od těsněné plochy ke dnu drážky (u radiální drážky včetně vůle mezi pístem a dírou). Při tlaku nad ~100 bar hlídejte spáru proti vytlačení (opěrný kroužek). STL je pro 3D tisk zkušebního kusu – „Do Modeláře“ ho rovnou otevře v': 't = depth from the sealed surface to the groove bottom (for a radial groove including the clearance between piston and bore). Above ~100 bar watch the extrusion gap (backup ring). The STL is for 3D printing a test piece – “To Modeller” opens it straight in the',
+  'díl pošlou tlačítka 🧊 (Modelář se otevře s dílem ve scéně), nebo stáhněte STL a otevřete ho přes Soubor → Otevřít / importovat. Náčrty jdou zkopírovat nebo stáhnout jako SVG.': '– the 🧊 buttons send the part there (the Modeller opens with the part in the scene), or download the STL and open it via File → Open / import. Sketches can be copied or downloaded as SVG.',
+  'Model se nepodařilo předat Modeláři: {message} – stáhněte STL a otevřete ho v Modeláři ručně.': 'Could not hand the model over to the Modeller: {message} – download the STL and open it in the Modeller manually.',
 });

@@ -4,83 +4,110 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stahovák izolace pro 3D tisk</title>
+  <meta name="description" content="Generátor tisknutelných stahováků izolace vodičů a plášťů kabelů s kusem ulamovací čepele: hřebínek, odplášťovače, sešívačka, kleště s V-zářezem, jemný odizolovač, objímka na podélný řez a měrka. 3D náhled, řez s kótami, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.0.160.0.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
+  <script src="krabicky/jadro.js"></script>
   <script src="odizolovac/jadro.js"></script>
   <script src="odizolovac/geometrie.js"></script>
   <script src="odizolovac/vykres.js"></script>
   <script src="odizolovac/scena.js"></script>
+  <script src="../tvary.js"></script>
   <style>
-    :root { --text-chyba: #ff8f85; --text-mez: #f0bd5e; --v-teleso: #e0a040; --v-cepel: #aeb4bd; --v-izolace: #3b7fd9; --v-jadro: #d08a3c; --v-ostri: #ff4d4d; --v-horni: #c98b3a; }
+    :root { --sloupec: 340px; --text-chyba: #ff8f85; --text-mez: #f0bd5e; --v-teleso: #e0a040; --v-cepel: #aeb4bd; --v-izolace: #3b7fd9; --v-jadro: #d08a3c; --v-ostri: #ff4d4d; --v-horni: #c98b3a; }
     :root[data-theme="light"] { --text-chyba: var(--danger); --text-mez: var(--warn); --v-teleso: #e7b25c; --v-cepel: #8d939b; --v-ostri: #d0201a; }
-    body { background-color: var(--bg-deep); padding: 24px clamp(10px, 3vw, 40px); min-height: 100vh; }
-    h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    h2 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    h2 small { font-weight: 400; color: var(--text-muted); font-size: 0.75rem; }
-    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 980px; line-height: 1.5; }
-    .rezimy { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; max-width: 1400px; margin-bottom: 14px; }
-    @media (max-width: 1100px) { .rezimy { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 560px) { .rezimy { grid-template-columns: minmax(0, 1fr); } }
-    .stisk { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; margin-top: 10px; }
-    .stisk input[type="range"] { width: 100%; accent-color: var(--accent); min-width: 0; }
-    .stisk output { font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; font-size: 0.86rem; }
-    .rezimy button { display: flex; align-items: center; gap: 10px; text-align: left; padding: 8px 10px; min-height: 58px; line-height: 1.25; }
-    .rezimy svg { width: 48px; height: 36px; flex: none; color: var(--text-muted); }
-    .rezimy button[aria-pressed="true"] svg { color: var(--accent); }
-    .rezimy small { display: block; color: var(--text-muted); font-size: 0.72rem; }
-    .rozlozeni { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 16px; max-width: 1400px; }
-    @media (max-width: 980px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
-    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
-    fieldset { border: 0; padding: 0; margin: 14px 0 0; min-width: 0; }
-    legend { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 0; padding: 0; font-weight: 600; }
-    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
-    .pole { min-width: 0; }
+    button, select, input { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; line-height: 1.3; }
+    .aplikace input[type="text"], .aplikace select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 6px 8px; font-size: 0.9rem; min-width: 0;
+    }
+    .aplikace input:focus, .aplikace select:focus { outline: none; border-color: var(--accent); }
+    input.spatne, input.chyba { border-color: var(--danger) !important; }
+    input.mez { border-color: var(--warn) !important; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0 10px; align-items: start; }
+    .pole { min-width: 0; position: relative; }
     .pole.cela { grid-column: 1 / -1; }
-    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 9px 0 3px; line-height: 1.3; }
-    .vstup { display: flex; align-items: stretch; min-width: 0; }
-    .vstup input, .vstup select { flex: 1; min-width: 0; }
-    .vstup .jedn { display: flex; align-items: center; padding: 0 8px; border: 1px solid var(--border); border-left: 0; border-radius: 0 6px 6px 0; background: var(--bg-elevated); color: var(--text-muted); font-size: 0.78rem; }
-    .vstup:has(.jedn) input { border-radius: 6px 0 0 6px; }
-    input[type="text"], select { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 7px 9px; font-size: 0.92rem; min-width: 0; font-family: inherit; }
-    input:focus, select:focus { outline: none; border-color: var(--accent); }
-    input.chyba { border-color: var(--danger); }
-    input.mez { border-color: var(--warn); }
-    .napoveda { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
-    button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit; }
-    button:hover { background: var(--bg-hover); }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
-    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent, #fff); font-weight: 600; }
-    button.hlavni:hover { background: var(--accent-hover); }
-    button.male { padding: 4px 9px; font-size: 0.78rem; }
-    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
-    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+    .vstup { position: relative; }
+    .jedn { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .pole input.mm { padding-right: 30px; }
+    .napoveda { font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0; line-height: 1.4; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+    .dlazdice { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 9px; min-width: 0; }
+    .dlazdice .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px; }
+    .dlazdice .cislo { font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
+    .dlazdice .dalsi { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .ok { color: var(--ok); } .mez { color: var(--text-mez); } .spatne { color: var(--text-chyba); }
+    .hlaseni { list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; line-height: 1.4; padding: 0; margin: 0; }
+    .hlaseni li { padding: 5px 9px; border-left: 3px solid var(--border-strong); background: var(--bg-elevated); border-radius: 4px; color: var(--text); }
+    .hlaseni li.chyba { border-left-color: var(--danger); }
+    .hlaseni li.varovani { border-left-color: var(--warn); }
+    .hlaseni li.info { border-left-color: var(--text-faint); color: var(--text-muted); }
+    .hlaseni li.ok { border-left-color: var(--ok); }
+    .hlaseni li.skok { cursor: pointer; }
+    .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+    .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
+    @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
+    .zvyrazni { animation: zvyrazni 2.4s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .zvyrazni { animation: none; box-shadow: 0 0 0 3px var(--accent); } }
+    kbd { font-family: inherit; font-size: 0.72rem; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg-elevated); color: var(--text); }
+    .skryty { display: none; }
+    dialog.napoveda-dlg { margin: auto; max-width: min(860px, 94vw); max-height: 86vh; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-panel); color: var(--text); padding: 0; }
+    dialog.napoveda-dlg::backdrop { background: color-mix(in srgb, var(--bg-deep) 70%, transparent); }
+    .napoveda-dlg .hlava { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); }
+    .napoveda-dlg .hlava h2 { font-size: 1rem; margin: 0; }
+    .napoveda-dlg .telo { padding: 6px 18px 16px; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+    .napoveda-dlg .telo b { color: var(--text); }
+    .napoveda-dlg .telo h3 { color: var(--text); font-size: 0.92rem; margin: 14px 0 4px; }
+    .napoveda-dlg .telo ul { padding-left: 20px; }
+    .napoveda-dlg .telo li { margin: 3px 0; }
+    .napoveda-dlg .telo a { color: var(--accent); }
+    /* druhy stahováku */
+    .typy { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .typy button { display: flex; align-items: center; gap: 6px; padding: 6px 7px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-control, var(--bg-elevated));
+      color: var(--text); font-size: 0.74rem; line-height: 1.2; cursor: pointer; text-align: left; min-width: 0; }
+    .typy button svg { width: 36px; height: 27px; flex: none; color: var(--text-muted); }
+    .typy button small { display: block; color: var(--text-muted); font-size: 0.64rem; }
+    .typy button:hover { background: var(--bg-hover); }
+    .typy button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+    .typy button[aria-pressed="true"] svg { color: var(--accent); }
+    .popis-rezimu { padding: 8px 12px 0; }
     /* tabulka vodičů */
-    .vodice { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 6px; }
-    .vodice th { color: var(--text-muted); font-weight: 600; text-align: left; padding: 3px 3px; font-size: 0.72rem; }
+    .vodice { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 4px; }
+    .vodice th { color: var(--text-muted); font-weight: 600; text-align: left; padding: 3px 3px; font-size: 0.68rem; }
     .vodice td { padding: 2px 3px; vertical-align: middle; }
-    .vodice input { padding: 4px 5px; font-size: 0.82rem; }
-    .vodice td.c { width: 58px; }
-    .vodice td.x { width: 30px; text-align: right; }
-    .vodice button { padding: 2px 7px; }
-    /* 3D */
-    #platno3d { width: 100%; height: min(58vh, 480px); min-height: 280px; border-radius: 6px; overflow: hidden; background: var(--bg-input); border: 1px solid var(--border); position: relative; }
-    #platno3d .zprava { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.9rem; background: var(--bg-input); }
-    #platno3d .zprava[hidden] { display: none; }
-    .volby3d { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 8px; font-size: 0.82rem; }
-    .volby3d label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text); font-size: 0.82rem; cursor: pointer; }
-    .volby3d input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); }
-    .legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-muted); margin-top: 8px; align-items: center; }
-    .legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
-    /* výsledky */
-    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 4px; }
-    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; min-width: 0; }
-    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 4px; }
-    .box .cislo { font-size: 1.1rem; font-weight: 700; overflow-wrap: anywhere; }
-    .box .dalsi { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; line-height: 1.35; }
+    .vodice input { padding: 4px 5px !important; font-size: 0.8rem !important; }
+    .vodice td.c { width: 54px; }
+    .vodice td.x { width: 28px; text-align: right; }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+    .tlacitka select { flex: 1 1 160px; }
+    /* náhled */
+    #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); }
+    #canvas-container:active { cursor: grabbing; }
+    #platno3d { position: absolute; inset: 0; }
+    .stav3d { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.9rem; background: var(--bg-input); z-index: 3; }
+    .stav3d:empty { display: none; }
+    .legenda3d { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 3px 10px; max-width: calc(100% - 20px);
+      font-size: 0.72rem; color: var(--text-muted); background: color-mix(in srgb, var(--bg-panel) 88%, transparent); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; pointer-events: none; }
+    .legenda3d i { display: inline-block; width: 12px; height: 9px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+    .g3d-legenda { bottom: 30px; }
+    .stisk { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; flex-shrink: 0;
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 7px 10px; font-size: 0.82rem; }
+    .stisk input[type="range"] { width: 100%; accent-color: var(--accent); min-width: 0; }
+    .stisk output { font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; }
+    .stisk .tl { border-color: var(--border); background: var(--bg-control, var(--bg)); }
+    .stisk .tl[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .box-obecne { max-height: 46%; }
     .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table.tab { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; }
     table.tab th, table.tab td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
@@ -88,13 +115,10 @@
     table.tab td.cis { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     table.tab tr.klik { cursor: pointer; }
     table.tab tr.vybrany td { background: var(--accent-soft); }
-    .ok { color: var(--ok); } .mez { color: var(--text-mez); } .spatne { color: var(--text-chyba); }
-    ul.upoz { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; }
-    ul.upoz li { border-left: 4px solid var(--text-faint); background: var(--bg-elevated); border-radius: 4px; padding: 6px 10px; font-size: 0.8rem; line-height: 1.45; }
-    ul.upoz li.chyba { border-left-color: var(--danger); }
-    ul.upoz li.varovani { border-left-color: var(--warn); }
-    ul.upoz:empty { display: none; }
     /* výkres řezu */
+    .roviny { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+    .roviny:empty { display: none; }
+    .roviny button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); }
     .rezy { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; align-items: start; }
     @media (max-width: 640px) { .rezy { grid-template-columns: minmax(0, 1fr); } }
     .rez-svg { width: 100%; height: auto; display: block; max-height: 380px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; }
@@ -123,146 +147,221 @@
     .rez-svg .kota.zbytek { stroke: var(--ok); }
     .rez-svg .kota-text { fill: var(--text); font-family: var(--font); }
     .rez-svg.detail { max-height: 300px; }
-    .zalozky { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-    .zalozky button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); }
-    .postup ol, .pozn ul, .pozn ol { padding-left: 20px; }
-    .postup li { margin: 4px 0; font-size: 0.85rem; line-height: 1.5; }
-    .pozn { color: var(--text-muted); font-size: 0.82rem; line-height: 1.55; max-width: 1400px; margin-top: 20px; }
-    .pozn h2 { color: var(--text); margin-top: 16px; }
-    .pozn li { margin: 3px 0; }
-    .pozn a { color: var(--accent); }
-    .bezp { border-color: var(--danger); }
-    .bezp h2 { color: var(--text-chyba); }
-    .bezp ul { padding-left: 18px; font-size: 0.82rem; line-height: 1.5; }
+    .postup ol { padding-left: 20px; margin: 0; }
+    .postup li { margin: 4px 0; font-size: 0.84rem; line-height: 1.5; }
+    .bezp { margin-top: 10px; border: 1px solid var(--danger); border-radius: var(--radius); padding: 8px 12px; background: var(--bg-elevated); }
+    .bezp h3 { color: var(--text-chyba); font-size: 0.86rem; margin: 0 0 4px; }
+    .bezp ul { padding-left: 18px; font-size: 0.8rem; line-height: 1.5; margin: 0; }
     .chybovy { color: var(--text-chyba); font-size: 0.86rem; }
-    .skryte { display: none !important; }
+    .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-pressed="false"]::before { content: '✓ '; visibility: hidden; }
+    .nab-pole input { width: 100%; box-sizing: border-box; }
+    .sloupec-nab { display: flex; flex-direction: column; }
+    .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
+    .lista-stav .odznak:hover { background: var(--bg-hover); }
+    .odznak.ok { color: var(--ok); } .odznak.mez { color: var(--warn); } .odznak.chyba { color: var(--danger); }
+    .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
+    .zalozky .souhrn-zal:empty { display: none; }
+    .box-telo .tl, .zalozka-telo .tl { background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font: inherit; font-size: 0.8rem; color: var(--text); cursor: pointer; }
+    .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
+    .zalozka-telo .tl:disabled { opacity: 0.45; cursor: not-allowed; }
+    @media (max-width: 380px) { .typy { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <h1>Stahovák izolace pro 3D tisk</h1>
-  <p class="podtitul">Generátor tisknutelných stahováků izolace elektrikářských vodičů a plášťů kabelů. Řeže kus obyčejné ulamovací čepele
-    z odlamovacího nože. Hloubku řezu určuje dno drážky, o které se vodič opře, takže ostří zajede jen o nastavenou část izolace.
-    Rozměry jsou v milimetrech. Stránka nabízí 3D náhled, řez s kótami a export STL. Vše se počítá v prohlížeči.</p>
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Stahovák izolace pro 3D tisk"><span aria-hidden="true">✂️</span><span class="jmeno"> Stahovák izolace</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label>
+              <input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
+            <hr>
+            <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty <span class="pozn">jen zvolený druh</span></button>
+            <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
+            <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt… <span class="pozn">i starší export</span></button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje stahováky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše</button>
+            <hr>
+            <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Druh stahováku</div>
+            <div class="sloupec-nab" id="seznamPredvoleb"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="false">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M · jak v STL</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez rovinou čepele <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <button class="pol" id="tCepele" role="menuitemcheckbox" aria-pressed="true">🔪 Čepele <span class="pozn">C</span></button>
+            <button class="pol" id="tVodice" role="menuitemcheckbox" aria-pressed="true">🔌 Vodiče <span class="pozn">V</span></button>
+            <button class="pol" id="tPruhledne" role="menuitemcheckbox" aria-pressed="false">👻 Průhledně <span class="pozn">T</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu – vstup vodiče <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('vykres')">📐 Zobrazit řez a detail ostří</button>
+            <button class="pol" id="btnSvg" role="menuitem">⬇ Řez jako SVG</button>
+          </div>
+        </div>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNap" title="Nápověda, jak to funguje, odkud jsou čísla (F1)">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
+    </header>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryty">
 
-  <div class="rezimy" id="rezimy" role="group" aria-label="Druh stahováku">
-    <button type="button" data-rezim="hrebinek" aria-pressed="true">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 30 V14 H8 A3 3 0 0 0 14 14 H18 A4 4 0 0 0 26 14 H30 A5 5 0 0 0 40 14 H46 V30 Z"/><line x1="4" y1="17" x2="44" y2="17" stroke-dasharray="2 1.5"/><circle cx="11" cy="13" r="2.4"/><circle cx="22" cy="12" r="3.2"/></svg>
-      <span>Hřebínek na vodiče<small>kruhový řez izolace, doraz délky</small></span></button>
-    <button type="button" data-rezim="kulaty" aria-pressed="false">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 30 V12 H6 A7 7 0 0 0 20 12 H28 A7 7 0 0 0 42 12 H46 V30 Z"/><circle cx="13" cy="11" r="6"/><line x1="35" y1="19" x2="35" y2="29"/><line x1="4" y1="18" x2="22" y2="18" stroke-dasharray="2 1.5"/></svg>
-      <span>Odplášťovač kulatého kabelu<small>CYKY, CYSY – kruhový i podélný řez</small></span></button>
-    <button type="button" data-rezim="plochy" aria-pressed="false">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 30 V10 H8 V18 H40 V10 H46 V30 Z"/><rect x="9" y="11" width="30" height="7" rx="3"/><line x1="24" y1="18" x2="24" y2="29"/></svg>
-      <span>Odplášťovač plochého kabelu<small>CYKYLo – podélný řez</small></span></button>
-    <button type="button" data-rezim="sesivacka" aria-pressed="false">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 30 H40 V24 H14 V20 H3 Z"/><path d="M3 18 L38 6 L40 11 L14 19 Z"/><path d="M40 27 A8.5 8.5 0 0 0 40 10" stroke-width="1.3"/><line x1="9" y1="19" x2="9" y2="22" stroke-dasharray="1 1"/><circle cx="6" cy="19.5" r="1.4"/></svg>
-      <span>Sešívačka s pružným obloukem<small>stisk – řez shora i zespodu, vytáhnout</small></span></button>
-    <button type="button" data-rezim="vkleste" aria-pressed="false">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 30 H34 V20 H4 Z"/><path d="M4 16 H34 V6 H4 Z"/><path d="M12 20 L19 14.5 L26 20" stroke-width="1.3"/><path d="M12 16 L19 21.5 L26 16" stroke-width="1.3"/><path d="M34 27 A8 8 0 0 0 34 9" stroke-width="1.3"/><line x1="30" y1="20" x2="30" y2="33" stroke-dasharray="1 0.8"/></svg>
-      <span>Kleště s V-zářezem<small>šroub nastaví průřez, 4 řezy</small></span></button>
-    <button type="button" data-rezim="jemne" aria-pressed="false">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 30 H34 V20 H4 Z"/><path d="M4 16 H34 V6 H4 Z"/><path d="M12 20 L19 17 L26 20" stroke-width="1.1"/><path d="M12 16 L19 19 L26 16" stroke-width="1.1"/><circle cx="19" cy="18" r="0.9" fill="currentColor"/><path d="M34 27 A8 8 0 0 0 34 9" stroke-width="1.3"/></svg>
-      <span>Jemný odizolovač<small>tenká lanka, AWG 30–20</small></span></button>
-    <button type="button" data-rezim="podelny" aria-pressed="false">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 30 H34 V19 H8 Z"/><path d="M8 17 H34 V6 H8 Z"/><line x1="2" y1="18" x2="40" y2="18" stroke-width="5" stroke-opacity="0.35"/><line x1="14" y1="19" x2="28" y2="19" stroke-width="1"/><path d="M34 27 A8 8 0 0 0 34 9" stroke-width="1.3"/></svg>
-      <span>Objímka na podélný řez<small>plášť uprostřed kabelu</small></span></button>
-    <button type="button" data-rezim="merka" aria-pressed="false">
-      <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="42" height="26" rx="1.5"/><circle cx="10" cy="12" r="1.2"/><circle cx="17" cy="12" r="1.6"/><circle cx="25" cy="12" r="2"/><circle cx="34" cy="12" r="2.5"/><path d="M8 31 V22 M15 31 V20 M22 31 V24 M29 31 V19" stroke-width="2.2"/><path d="M36 31 V27 M39 31 V28 M42 31 V27" stroke-width="0.8"/></svg>
-      <span>Měrka průřezů a délek<small>bez čepele, kalibr a odměřování</small></span></button>
-  </div>
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">◎ Tvar</button>
+      <button data-ukaz="obecne" class="aktivni">✂️ Náhled</button>
+      <button data-ukaz="out" class="je-vystup">Tisk ⚙</button>
+    </nav>
 
-  <div class="rozlozeni">
-    <div class="sloupec">
-      <section class="karta" aria-labelledby="hParam">
-        <h2 id="hParam">Parametry</h2>
-        <p class="napoveda" id="popisRezimu"></p>
-        <div id="blokVodice">
-          <fieldset><legend id="legendaVodice">Vodiče (drážky zleva doprava)</legend>
-            <div class="obal-tab"><table class="vodice" id="tabVodice"><thead><tr><th>Název</th><th>⌀ přes izolaci</th><th>izolace</th><th>⌀ jádra</th><th></th></tr></thead><tbody></tbody></table></div>
-            <div class="tlacitka">
-              <div class="vstup" style="flex:1 1 180px"><select id="pridejVodic" aria-label="Přidat vodič z předvoleb"><option value="">+ přidat vodič z předvoleb…</option></select></div>
-              <button type="button" class="male" id="btnVlastniVodic">+ vlastní</button>
-              <button type="button" class="male" id="btnRadit">Seřadit podle ⌀</button>
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in" id="boxTvar" data-box="in" aria-label="Druh, vodiče, čepel a řez">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">◎</span><h2>Druh, vodiče, čepel a řez</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <div class="typy" id="rezimy" role="group" aria-label="Druh stahováku">
+            <button type="button" data-rezim="hrebinek" aria-pressed="true">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 30 V14 H8 A3 3 0 0 0 14 14 H18 A4 4 0 0 0 26 14 H30 A5 5 0 0 0 40 14 H46 V30 Z"/><line x1="4" y1="17" x2="44" y2="17" stroke-dasharray="2 1.5"/><circle cx="11" cy="13" r="2.4"/><circle cx="22" cy="12" r="3.2"/></svg>
+              <span>Hřebínek na vodiče<small>kruhový řez izolace, doraz délky</small></span></button>
+            <button type="button" data-rezim="kulaty" aria-pressed="false">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 30 V12 H6 A7 7 0 0 0 20 12 H28 A7 7 0 0 0 42 12 H46 V30 Z"/><circle cx="13" cy="11" r="6"/><line x1="35" y1="19" x2="35" y2="29"/><line x1="4" y1="18" x2="22" y2="18" stroke-dasharray="2 1.5"/></svg>
+              <span>Odplášťovač kulatého kabelu<small>CYKY, CYSY – kruhový i podélný řez</small></span></button>
+            <button type="button" data-rezim="plochy" aria-pressed="false">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 30 V10 H8 V18 H40 V10 H46 V30 Z"/><rect x="9" y="11" width="30" height="7" rx="3"/><line x1="24" y1="18" x2="24" y2="29"/></svg>
+              <span>Odplášťovač plochého kabelu<small>CYKYLo – podélný řez</small></span></button>
+            <button type="button" data-rezim="sesivacka" aria-pressed="false">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 30 H40 V24 H14 V20 H3 Z"/><path d="M3 18 L38 6 L40 11 L14 19 Z"/><path d="M40 27 A8.5 8.5 0 0 0 40 10" stroke-width="1.3"/><line x1="9" y1="19" x2="9" y2="22" stroke-dasharray="1 1"/><circle cx="6" cy="19.5" r="1.4"/></svg>
+              <span>Sešívačka s pružným obloukem<small>stisk – řez shora i zespodu, vytáhnout</small></span></button>
+            <button type="button" data-rezim="vkleste" aria-pressed="false">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 30 H34 V20 H4 Z"/><path d="M4 16 H34 V6 H4 Z"/><path d="M12 20 L19 14.5 L26 20" stroke-width="1.3"/><path d="M12 16 L19 21.5 L26 16" stroke-width="1.3"/><path d="M34 27 A8 8 0 0 0 34 9" stroke-width="1.3"/><line x1="30" y1="20" x2="30" y2="33" stroke-dasharray="1 0.8"/></svg>
+              <span>Kleště s V-zářezem<small>šroub nastaví průřez, 4 řezy</small></span></button>
+            <button type="button" data-rezim="jemne" aria-pressed="false">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 30 H34 V20 H4 Z"/><path d="M4 16 H34 V6 H4 Z"/><path d="M12 20 L19 17 L26 20" stroke-width="1.1"/><path d="M12 16 L19 19 L26 16" stroke-width="1.1"/><circle cx="19" cy="18" r="0.9" fill="currentColor"/><path d="M34 27 A8 8 0 0 0 34 9" stroke-width="1.3"/></svg>
+              <span>Jemný odizolovač<small>tenká lanka, AWG 30–20</small></span></button>
+            <button type="button" data-rezim="podelny" aria-pressed="false">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 30 H34 V19 H8 Z"/><path d="M8 17 H34 V6 H8 Z"/><line x1="2" y1="18" x2="40" y2="18" stroke-width="5" stroke-opacity="0.35"/><line x1="14" y1="19" x2="28" y2="19" stroke-width="1"/><path d="M34 27 A8 8 0 0 0 34 9" stroke-width="1.3"/></svg>
+              <span>Objímka na podélný řez<small>plášť uprostřed kabelu</small></span></button>
+            <button type="button" data-rezim="merka" aria-pressed="false">
+              <svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="42" height="26" rx="1.5"/><circle cx="10" cy="12" r="1.2"/><circle cx="17" cy="12" r="1.6"/><circle cx="25" cy="12" r="2"/><circle cx="34" cy="12" r="2.5"/><path d="M8 31 V22 M15 31 V20 M22 31 V24 M29 31 V19" stroke-width="2.2"/><path d="M36 31 V27 M39 31 V28 M42 31 V27" stroke-width="0.8"/></svg>
+              <span>Měrka průřezů a délek<small>bez čepele, kalibr a odměřování</small></span></button>
+          </div>
+          <p class="napoveda popis-rezimu" id="popisRezimu"></p>
+          <details class="oddil" data-oddil="vodice" id="blokVodice" open>
+            <summary><span class="oddil-nazev" id="legendaVodice">Vodiče (drážky zleva doprava)</span><span class="souhrn" id="sVodice"></span></summary>
+            <div class="oddil-telo">
+              <div class="obal-tab"><table class="vodice" id="tabVodice"><thead><tr><th>Název</th><th>⌀ přes izolaci</th><th>izolace</th><th>⌀ jádra</th><th></th></tr></thead><tbody></tbody></table></div>
+              <div class="tlacitka">
+                <select id="pridejVodic" aria-label="Přidat vodič z předvoleb"><option value="">+ přidat vodič z předvoleb…</option></select>
+                <button type="button" class="tl" id="btnVlastniVodic">+ vlastní</button>
+                <button type="button" class="tl" id="btnRadit">Seřadit podle ⌀</button>
+              </div>
+              <p class="napoveda">Průměry z předvoleb jsou typické. Hloubka řezu se odvíjí od skutečného průměru vodiče, proto ho <b>změřte posuvkou</b> a přepište.</p>
             </div>
-            <p class="napoveda">Průměry z předvoleb jsou typické. Hloubka řezu se odvíjí od skutečného průměru vodiče, proto ho <b>změřte posuvkou</b> a přepište.</p>
-          </fieldset>
+          </details>
+          <div id="formTvar"></div>
         </div>
-        <form id="formular" novalidate autocomplete="off"></form>
-        <ul class="upoz" id="hlaseni"></ul>
-        <div class="tlacitka"><button type="button" id="btnVychozi" class="male">Výchozí hodnoty</button></div>
-      </section>
-      <section class="karta" aria-labelledby="hSady">
-        <h2 id="hSady">Uložené návrhy</h2>
-        <div class="vstup"><select id="sady" aria-label="Uložené návrhy"></select></div>
-        <div class="tlacitka">
-          <button type="button" id="btnNacti" class="male">Načíst</button>
-          <button type="button" id="btnUloz" class="male">Uložit jako…</button>
-          <button type="button" id="btnSmaz" class="male">Smazat</button>
-          <button type="button" id="btnExportJson" class="male">Export JSON</button>
-          <button type="button" id="btnImportJson" class="male">Import JSON</button>
-          <input type="file" id="souborJson" accept=".json,application/json" hidden>
-        </div>
-        <p class="napoveda">Rozpracovaný návrh se ukládá automaticky v tomto prohlížeči.</p>
-      </section>
-    </div>
+      </aside>
 
-    <div class="sloupec">
-      <section class="karta" aria-labelledby="h3d">
-        <h2 id="h3d">3D model <small>tažením otáčejte, kolečkem přibližujte, pravým tlačítkem posouvejte</small></h2>
-        <div id="platno3d"><div class="zprava" id="zprava3d">Načítám výpočetní jádro…</div></div>
-        <div class="volby3d">
-          <label><input type="checkbox" id="chkCepele" checked> čepele</label>
-          <label><input type="checkbox" id="chkVodice" checked> vodiče</label>
-          <label><input type="checkbox" id="chkPruhledne"> průhledně</label>
-          <label><input type="checkbox" id="chkRez"> řez rovinou čepele</label>
-          <span class="tlacitka" style="margin:0"><button type="button" class="male" data-pohled="iso">Izometrie</button><button type="button" class="male" data-pohled="predni">Zepředu</button><button type="button" class="male" data-pohled="bocni">Z boku</button><button type="button" class="male" data-pohled="shora">Shora</button></span>
+      <section class="stred">
+        <div id="canvas-container" aria-label="3D náhled">
+          <div id="platno3d"></div>
+          <div class="stav3d" id="stav3d">Načítám výpočetní jádro…</div>
+          <div class="legenda3d" id="legenda"><span><i style="background:var(--v-teleso)"></i>výtisk</span><span><i style="background:var(--v-cepel)"></i>kus čepele</span><span><i style="background:var(--v-izolace)"></i>izolace</span><span><i style="background:var(--v-jadro)"></i>jádro</span></div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="stisk" id="blokStisk" hidden>
-          <button type="button" id="btnStisk" class="male" aria-pressed="false">▶ Stisknout</button>
+          <button type="button" id="btnStisk" class="tl" aria-pressed="false">▶ Stisknout</button>
           <input type="range" id="stisk" min="0" max="100" step="1" value="0" aria-label="Stisk čelistí">
           <output id="stiskHodnota" for="stisk">0 %</output>
         </div>
-        <div class="legenda"><span><i style="background:var(--v-teleso)"></i>výtisk</span><span><i style="background:var(--v-cepel)"></i>kus čepele</span><span><i style="background:var(--v-izolace)"></i>izolace</span><span><i style="background:var(--v-jadro)"></i>jádro</span></div>
-      </section>
-
-      <section class="karta" aria-labelledby="hVysl">
-        <h2 id="hVysl">Výsledek a export</h2>
-        <div class="vysledky" id="vysledky"></div>
-        <div class="obal-tab"><table class="tab" id="tabRezy"></table></div>
-        <div class="tlacitka">
-          <button type="button" class="hlavni" id="btnStl" disabled>Stáhnout STL</button>
-          <button type="button" id="btnSvg" disabled>Řez jako SVG</button>
+        <div class="box box-obecne" aria-label="Výsledky, postup, řez a kontrola">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
+            <button role="tab" data-zalozka="postup" aria-selected="false">📝 Postup a bezpečnost</button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false">🧩 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Řez a detail</button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje stahováky</button>
+          </div>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel">
+            <div class="vysledky" id="vysledky"></div>
+            <div class="obal-tab"><table class="tab" id="tabRezy"></table></div>
+            <p class="napoveda">STL je v milimetrech a v tiskové poloze (spodní plochou na podložce; nástroje s pružným obloukem na boku). Tiskne se bez podpěr.
+              Štěrbiny na čepel jsou svislé a strop nad nimi je krátký most. Kliknutím na řádek tabulky vyberete drážku pro detail řezu.</p>
+          </div>
+          <div class="zalozka-telo postup" data-telo="postup" role="tabpanel" hidden>
+            <div id="postup"></div>
+            <section class="bezp" aria-labelledby="hBezp">
+              <h3 id="hBezp">Bezpečnost</h3>
+              <ul>
+                <li>Pracujte <b>jen na vodičích bez napětí</b>. Nástroj není izolované nářadí pro práci pod napětím.</li>
+                <li>Ulamovací čepel je ostrá i z boku. Zasouvejte ji ostřím nahoru a vždy ji zajistěte kolíkem. Ulomený kus odhoďte do plechovky, ne do koše.</li>
+                <li>Po stažení zkontrolujte, že jádro není naříznuté ani poškrábané. Naříznutý drát se při ohybu láme a lanko ztrácí průřez. Takový konec ustřihněte.</li>
+                <li>Zkušební výtisk vyzkoušejte na odřezku stejného vodiče. Hloubku řezu dolaďte korekcí výšky ostří.</li>
+              </ul>
+            </section>
+          </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden><div class="obal-tab"><table class="tab" id="tabKusovnik"></table></div></div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden><ul class="hlaseni" id="hlaseni"></ul></div>
+          <div class="zalozka-telo" data-telo="vykres" role="tabpanel" hidden>
+            <div class="roviny" id="zalozkyRez" role="tablist"></div>
+            <div class="rezy" id="hRez"><div id="rezSvg"></div><div id="detailSvg"></div></div>
+            <p class="napoveda" id="popisRezu"></p>
+          </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
         </div>
-        <p class="napoveda">STL je v milimetrech a v tiskové poloze (spodní plochou na podložce; sešívačka na boku). Tiskne se bez podpěr.
-          Štěrbiny na čepel jsou svislé a strop nad nimi je krátký most.</p>
       </section>
 
-      <section class="karta" aria-labelledby="hRez">
-        <h2 id="hRez">Řez a detail ostří <small>kliknutím na řádek tabulky vyberete drážku</small></h2>
-        <div class="zalozky" id="zalozkyRez" role="tablist"></div>
-        <div class="rezy"><div id="rezSvg"></div><div id="detailSvg"></div></div>
-        <p class="napoveda" id="popisRezu"></p>
-      </section>
-
-      <section class="karta postup" aria-labelledby="hPostup">
-        <h2 id="hPostup">Postup</h2>
-        <div id="postup"></div>
-      </section>
-
-      <section class="karta bezp" aria-labelledby="hBezp">
-        <h2 id="hBezp">Bezpečnost</h2>
-        <ul>
-          <li>Pracujte <b>jen na vodičích bez napětí</b>. Nástroj není izolované nářadí pro práci pod napětím.</li>
-          <li>Ulamovací čepel je ostrá i z boku. Zasouvejte ji ostřím nahoru a vždy ji zajistěte kolíkem. Ulomený kus odhoďte do plechovky, ne do koše.</li>
-          <li>Po stažení zkontrolujte, že jádro není naříznuté ani poškrábané. Naříznutý drát se při ohybu láme a lanko ztrácí průřez. Takový konec ustřihněte.</li>
-          <li>Zkušební výtisk vyzkoušejte na odřezku stejného vodiče. Hloubku řezu dolaďte korekcí výšky ostří.</li>
-        </ul>
-      </section>
-    </div>
+      <aside class="box box-out" id="boxTisk" data-box="out" aria-label="Kloub, ramena a tisk">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Kloub, vůle a tisk</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo"><div id="formTisk"></div></div>
+      </aside>
+    </main>
   </div>
 
-  <section class="pozn">
-    <h2>Jak to funguje</h2>
+<dialog class="napoveda-dlg" id="dlgNapoveda">
+  <div class="hlava"><h2>Stahovák izolace – nápověda</h2><button class="tl" id="btnZavritNap" aria-label="Zavřít">✕</button></div>
+  <div class="telo">
+    <p>Generátor tisknutelných stahováků izolace elektrikářských vodičů a plášťů kabelů. Řeže kus obyčejné ulamovací čepele
+      z odlamovacího nože. Hloubku řezu určuje dno drážky, o které se vodič opře, takže ostří zajede jen o nastavenou část izolace.
+      Rozměry jsou v milimetrech. Stránka nabízí 3D náhled, řez s kótami a export STL a 3MF. Vše se počítá v prohlížeči.</p>
+    <p><b>Ovládání.</b> Druh nástroje, vodiče, čepel a řez jsou vlevo, pružný kloub, vůle a tisk vpravo. Pod náhledem je u nástrojů s obloukem posuvník stisku.
+      Záložka <b>Řez a detail</b> ukazuje analytický řez s kótami (kliknutím na řádek tabulky ve Výsledcích vyberete drážku), <b>Postup</b> jak nástroj sestavit a použít.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha, <kbd>P</kbd> převisy, <kbd>R</kbd> řez, <kbd>L</kbd> pravítka,
+      <kbd>C</kbd> čepele, <kbd>V</kbd> vodiče, <kbd>T</kbd> průhledně, <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
+    <h3>Jak to funguje</h3>
     <ul>
       <li><b>Hloubku řezu určuje dno drážky.</b> Kus čepele stojí ve svislé štěrbině ostřím nahoru. Hřbetem se opírá o dno štěrbiny, takže ostří je ve výšce
         <i>tloušťka dna + šířka čepele</i>. Nejnižší bod dna drážky leží o hloubku řezu <i>c</i> níž. Vodič zatlačený ke dnu se tak zařízne právě o <i>c</i>.
@@ -296,14 +395,14 @@
       <li><b>Geometrie</b> se skládá booleovskými operacemi knihovny <a href="https://github.com/elalish/manifold" rel="noopener" target="_blank">manifold-3d</a>
         (Apache-2.0, přibalená, běží offline). Výsledná síť je vždy uzavřená. Řez a detail se kreslí analyticky z téhož rozvržení.</li>
     </ul>
-    <h2>Odkud jsou čísla</h2>
+    <h3>Odkud jsou čísla</h3>
     <ul>
       <li>Tloušťky izolace jednožilových vodičů (H05V-K, H07V-U/CY, H07V-K/CYA) jsou jmenovité podle EN 50525-2-31. Průměry přes izolaci jsou typické a výrobci se v nich liší i o 0,3 mm.</li>
       <li>CYKY: jmenovitá tloušťka pláště a informativní průměr z katalogového listu nkt instal CYKY 450/750 V. CYSY (H05VV-F): plášť podle EN 50525-2-11, průměr typický.</li>
       <li>CYKYLo-J 3×1,5: rozměry 9,55 × 4,15 mm a plášť 0,7 mm z technického listu jednoho výrobce.</li>
       <li>Čepele: 18 mm = 100 × 18 × 0,5 mm (7–8 článků), 9 mm = 80 × 9 × 0,38 mm (13 článků). Rozteč a úhel lomových rýh se liší podle výrobce, proto je změřte.</li>
     </ul>
-    <h2>Omezení první verze</h2>
+    <h3>Omezení první verze</h3>
     <ul>
       <li>Přesnost řezu závisí na přesnosti tisku ve svislé ose (obvykle ±0,1 mm) a na skutečném průměru vodiče. Před ostrým použitím je nutný zkušební výtisk a doladění korekcí.</li>
       <li>Tabulka otáček šroubu u kleští vychází z modelu oblouku (stálá změna křivosti) a předpokládá šroub zarovnaný s čelistí na nule;
@@ -311,8 +410,8 @@
       <li>Měrka průřezů je orientační: rozdíly mezi sousedními průřezy jsou jen 0,15–0,5 mm, tedy blízko přesnosti tisku.</li>
       <li>Hřebínek se tiskne s vodorovnou horní plochou. U tenkých vodičů nad drážku vyčnívá jen málo, protože nad ostřím musí zůstat materiál. Zatlačte proto vodič bříškem prstu nebo plochým předmětem.</li>
     </ul>
-  </section>
-
-  <script src="odizolovac/ui.js"></script>
+  </div>
+</dialog>
+<script src="odizolovac/ui.js"></script>
 </body>
 </html>

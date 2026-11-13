@@ -6,12 +6,17 @@
   <title>Razítka, pečeti a reliéfy – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor razítek, pečetí do vosku a plaket pro 3D tisk: text z písem, text po kruhu, rámečky, motiv z SVG, zrcadlení, úkos boků, rukojeti, kontrola nejtenčí čáry proti trysce, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
-  <script src="../podpis.js" defer></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
+  <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="lib/clipper.min.js"></script>
   <script src="lib/opentype.min.js"></script>
   <script src="fonty/fonty.js"></script>
@@ -69,6 +74,15 @@
     #cOtisk { width: 100%; height: 230px; display: block; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; }
     .legenda { font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
     .legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 3px; }
+    .tabulka { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .tabulka th, .tabulka td { text-align: left; padding: 4px 5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .tabulka th { color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; }
+    .tabulka td.c { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+    .tabulka .pozn { font-size: 0.72rem; color: var(--text-muted); }
+    .tecka { display: inline-block; width: .7em; height: .7em; border-radius: 50%; vertical-align: -0.05em; margin-right: 4px; }
+    .legenda-rezu { position: absolute; left: 10px; bottom: 10px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+    .legenda-rezu i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #c0504d; vertical-align: -1px; margin-right: 4px; }
     .svg-nazev { font-size: 0.78rem; color: var(--text-muted); overflow-wrap: anywhere; }
 
     /* --- nápověda */
@@ -80,7 +94,7 @@
     .napoveda-dlg .telo b { color: var(--text); }
     .napoveda-dlg .telo ul { padding-left: 20px; }
 
-    /* --- rozvržení sdílí generátory trubek (trubky_gui.css), tady jen doplňky */
+    /* --- rozvržení sdílí generátory trubek (gen3d/gui.css), tady jen doplňky */
     #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border);
       background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
     #canvas-container:active { cursor: grabbing; }
@@ -119,6 +133,7 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje razítka…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk</div>
             <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
@@ -127,6 +142,7 @@
             <div class="nab-tip">Díly jsou v tiskové poloze na podložce: reliéf nahoře, rukojeť hlavicí dolů.</div>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
             <button class="pol" id="btnOtiskSvg" role="menuitem">🖋 Otisk 1 : 1 <span class="pozn">SVG</span></button>
           </div>
         </div>
@@ -141,6 +157,11 @@
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="true">🖨 Tisková poloha <span class="pozn">M · vypnuto = v ruce</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <div class="nab-tip">Tisková poloha = jak díly leží na podložce v exportu. Vypnutá ukáže razítko, jak se drží v ruce (rukojeť na čep zasunutá). Řez ukáže jamku na čep a reliéf.</div>
           </div>
         </div>
         <div class="menu">
@@ -148,10 +169,14 @@
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora – reliéf <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku – výška tisku <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu – výška tisku <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
           </div>
         </div>
-        <button class="tl" id="btnNapoveda" title="Nápověda a jak tisknout (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNap" title="Nápověda a jak tisknout (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -238,13 +263,16 @@
         <div id="canvas-container" aria-label="3D náhled v tiskové poloze">
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám…</div>
+          <div class="legenda-rezu" id="legRez" hidden><i></i>vnitřní plochy v řezu</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Výsledky a tisk">
           <div class="zalozky" role="tablist">
             <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
-            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
             <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk <span class="souhrn-zal" id="sTisk"></span></button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false" hidden>🧩 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje razítka</button>
           </div>
           <div class="zalozka-telo" data-telo="vysledky" role="tabpanel"><div class="vysledky" id="vVysledky"></div></div>
@@ -257,6 +285,7 @@
             </div>
             <p class="napoveda" id="tipTisk"></p>
           </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden><table class="tabulka" id="tKusovnik"></table></div>
           <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
         </div>
       </section>
@@ -347,7 +376,11 @@
       <li><b>Plaketa:</b> dvoubarevně výměnou filamentu (M600 / pauza) ve výšce horní plochy desky – ukazuje ji záložka Tisk. Venku PETG nebo ASA.</li>
       <li>Nejtenčí čára by měla být aspoň průměr trysky (0,4 mm), na jemná písmena tryska 0,25 mm.</li>
     </ul>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>3</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Zobrazení:</b> převisy barevně (v tiskové poloze), řez, pravítka v mm; vypnutá tisková poloha ukáže razítko, jak se drží v ruce.
+      <b>Sdílet odkazem</b> uloží celý návrh do adresy (i s obrázkem SVG), <b>Otevřít v Modeláři</b> předá model k dalším úpravám.</p>
+    <p><b>Klávesy:</b> <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd> zpět / znovu, <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha,
+      <kbd>P</kbd> převisy, <kbd>R</kbd> řez, <kbd>L</kbd> pravítka, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda,
+      <kbd>↑</kbd>/<kbd>↓</kbd> v poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1).</p>
   </div>
 </dialog>
 <script src="razitko/ui.js"></script>

@@ -6,12 +6,17 @@
   <title>Lustrová stínítka – 3D generátor</title>
   <meta name="description" content="Generátor stínítek na lustr pro 3D tisk: tvary zvon, tulipán, lilie, miska, koule, kužel; vzory žebra, plisé, fazety, dýně, vlny, kosočtverce, kroucení; tvarovaný okraj; úchyt na objímku E14/E27 nebo krček do držáku lustru; kontrola žárovky a převisů; export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="stinitka/jadro.js"></script>
   <script src="knofliky/nahled.js"></script>
@@ -128,17 +133,15 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje stínítka…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
-            <button class="pol" id="btnStl" role="menuitem">⬇ STL <span class="pozn">Ctrl+S</span></button>
-            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF</button>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše</button>
             <button class="pol" id="btnVaza" role="menuitem">⬇ STL pro režim váza <span class="pozn">plné těleso</span></button>
             <hr>
-            <div class="nab-nadpis">Výkres řezu 1:1</div>
-            <button class="pol" id="btnSvg" role="menuitem">📐 Výkres SVG</button>
-            <button class="pol" id="btnTiskVykres" role="menuitem">🖨 Vytisknout výkres</button>
-            <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -151,11 +154,14 @@
         <div class="menu">
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
-            <button class="pol" id="tSvit" role="menuitemcheckbox" aria-pressed="false">💡 Rozsvítit <span class="pozn">L</span></button>
-            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez osou <span class="pozn">R</span></button>
-            <button class="pol" id="tZarovka" role="menuitemcheckbox" aria-pressed="true">💡 Žárovka <span class="pozn">Z</span></button>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="false">✏️ Obrysové hrany <span class="pozn">H</span></button>
             <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez osou <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <button class="pol" id="tSvit" role="menuitemcheckbox" aria-pressed="false">💡 Rozsvítit <span class="pozn">S</span></button>
+            <button class="pol" id="tZarovka" role="menuitemcheckbox" aria-pressed="true">💡 Žárovka <span class="pozn">Z</span></button>
             <div class="nab-tip">Rozsvícení je orientační simulace prosvítání podle tloušťky stěny, vzdálenosti a úhlu od žárovky (barva filamentu v záložce Tisk). Žárovka je vidět v řezu.</div>
           </div>
         </div>
@@ -164,8 +170,18 @@
           <div class="nabidka" id="nabPohled" role="menu" hidden>
             <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
-            <button class="pol" data-pohled="zboku" role="menuitem">▤ Zboku <span class="pozn">3</span></button>
-            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <div class="nab-nadpis">Výkres řezu 1:1</div>
+            <button class="pol" id="btnVykres" role="menuitem">📐 Zobrazit výkres</button>
+            <button class="pol" id="btnSvg" role="menuitem">⬇ Výkres SVG <span class="pozn">1:1</span></button>
+            <button class="pol" id="btnTiskVykres" role="menuitem">🖨 Vytisknout výkres</button>
           </div>
         </div>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
@@ -256,6 +272,7 @@
           <div class="stav3d" id="stav3d"></div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
           <div class="legenda-rezu" id="legRez" hidden><i></i>vnitřní plochy v řezu</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Výsledky, tisk a kontrola">
@@ -370,8 +387,8 @@
     <p><b>Světlo.</b> Propustnost stěny a rozsvícení jsou orientační (útlum e<sup>−t/λ</sup> podle barvy filamentu). <b>Clonicí úhel</b> říká,
       pod jakým úhlem od roviny ústí ještě není vidět holá žárovka – u lustrů je příjemné aspoň 15–30°.</p>
     <p><b>Bezpečnost.</b> Jen LED žárovky s malým příkonem. PLA měkne kolem 55 °C, PETG kolem 70 °C – klasická žárovka nebo halogen plast zdeformuje.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy, <kbd>L</kbd> rozsvítit, <kbd>R</kbd> řez, <kbd>Z</kbd> žárovka, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha,
-      <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>S</kbd> rozsvítit, <kbd>R</kbd> řez, <kbd>Z</kbd> žárovka, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha,
+      <kbd>P</kbd> převisy, <kbd>L</kbd> pravítka, <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
   </div>
 </dialog>
 <div id="tiskVykres" data-i18n="ne"></div>

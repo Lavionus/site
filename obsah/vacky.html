@@ -4,15 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Návrhář diskových vaček</title>
+  <meta name="description" content="Disková vačka s translačním zdvihátkem (hrotovým, kladkovým nebo plochým talířovým, s excentricitou). Pohybové zákony harmonický, cykloidní, 3-4-5 a 4-5-6-7, animace záběru, diagramy, tlakový úhel, podřezání, přítlačná pružina. Export STL, 3MF, SVG, DXF a CSV.">
   <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
+  <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
+  <script src="krabicky/jadro.js"></script>
   <script src="vacky/jadro.js"></script>
   <script src="vacky/export.js"></script>
-  <script src="vacky/ui.js" defer></script>
+  <script src="vacky/projekt.js"></script>
+  <script src="knofliky/nahled.js"></script>
+  <script src="../tvary.js"></script>
   <style>
     :root {
+      --sloupec: 320px;
       --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
       --text-chyba: #ff8f85; --text-mez: #f0bd5e; --text-ok: #6fd39f;
       --vacka-vypln: #2f3d52; --vodici: #4a4a4a;
@@ -22,191 +35,260 @@
       --text-chyba: var(--danger); --text-mez: #8a5a00; --text-ok: var(--ok);
       --vacka-vypln: #d9e5f6; --vodici: #b9c2cb;
     }
-    body { background-color: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
-    h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    h2 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
-    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 980px; line-height: 1.5; }
-    .upozorneni { max-width: 1400px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); color: var(--text);
-      border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 16px; }
-    .upozorneni b { color: var(--text-mez); }
-    .rozlozeni { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 18px; max-width: 1400px; }
-    @media (max-width: 980px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
-    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
-    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
-    input[type="number"], input[type="text"], select {
+    button, select, input { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    .aplikace input[type="text"], .aplikace select {
       width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); padding: 7px 9px; font-size: 0.95rem; min-width: 0; font-family: inherit;
+      color: var(--text); padding: 6px 8px; font-size: 0.9rem; min-width: 0;
     }
-    input:focus, select:focus { outline: none; border-color: var(--accent); }
-    input.chyba, select.chyba { border-color: var(--danger); }
-    .vystup { padding: 7px 9px; border: 1px dashed var(--border); border-radius: 6px; font-size: 0.95rem; color: var(--text); background: var(--bg-deep); }
-    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text); margin: 8px 0 2px; cursor: pointer; }
-    .zaskrt input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
-    .mrizka2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
-    .pole { min-width: 0; }
-    .pole[hidden] { display: none; }
-    .napoveda { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
-    button {
-      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
-      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
-    }
-    button:hover { background: var(--bg-hover); }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
-    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
-    button.hlavni:hover { background: var(--accent-hover); }
-    button.male { padding: 4px 9px; font-size: 0.78rem; }
-    button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
-    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .segment { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-    .segment button { padding: 7px 4px; font-size: 0.82rem; }
-    .chyby-vstupu { margin-top: 10px; font-size: 0.82rem; color: var(--text-chyba); line-height: 1.45; }
+    .aplikace input:focus, .aplikace select:focus { outline: none; border-color: var(--accent); }
+    input.spatne { border-color: var(--danger) !important; }
+    .mrizka { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; align-items: end; }
+    .pole { min-width: 0; position: relative; }
+    .jedn { position: absolute; right: 9px; bottom: 7px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .pole input.mm { padding-right: 46px; }
+    .vystup { padding: 6px 8px; border: 1px dashed var(--border); border-radius: 6px; font-size: 0.9rem; color: var(--text); background: var(--bg); }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin: 6px 0 0; line-height: 1.45; }
+    .segment { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 6px; }
+    .segment button, .seg2 button { padding: 6px 4px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-control, var(--bg-elevated)); cursor: pointer; }
+    .segment button[aria-pressed="true"], .seg2 button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .chyby-vstupu { margin-top: 10px; font-size: 0.8rem; color: var(--text-chyba); line-height: 1.45; }
     .chyby-vstupu:empty { display: none; }
-    /* animace */
-    .platno-obal { position: relative; width: 100%; max-width: 640px; margin: 0 auto; aspect-ratio: 1 / 1; }
-    .platno-obal canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-    .ovladani { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
-    .ovladani input[type="range"] { flex: 1 1 180px; min-width: 0; accent-color: var(--accent); }
-    .ovladani select { width: auto; }
-    .odecet { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px; margin-top: 10px; }
-    .odecet div { background: var(--bg-deep); border-radius: 6px; padding: 6px 8px; font-size: 0.78rem; color: var(--text-muted); }
-    .odecet b { display: block; color: var(--text); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
-    .vrstvy { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-    /* výsledky */
-    .dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
-    .dlazdice > div { background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; min-width: 0; }
-    .dlazdice .t { font-size: 0.74rem; color: var(--text-muted); }
-    .dlazdice .h { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
-    .dlazdice .p { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
-    .dlazdice > div.chyba { border-color: var(--danger); }
-    .dlazdice > div.varovani { border-color: var(--warn); }
-    .kontroly { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-    .kontroly li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; font-size: 0.84rem; line-height: 1.45; padding: 6px 8px; border-radius: 6px; background: var(--bg-deep); }
-    .kontroly li .ik { font-weight: 700; text-align: center; }
-    .kontroly li.chyba .ik { color: var(--text-chyba); }
-    .kontroly li.varovani .ik { color: var(--text-mez); }
-    .kontroly li.ok .ik { color: var(--text-ok); }
-    .kontroly li.info .ik { color: var(--accent); }
+    .box-telo .tl, .zalozka-telo .tl, .anim .tl { background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font: inherit; font-size: 0.82rem; color: var(--text); cursor: pointer; }
+    .box-telo .tl:hover, .zalozka-telo .tl:hover, .anim .tl:hover { background: var(--bg-hover); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+    .zprava { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; min-height: 1.1em; }
+    .zprava.chyba { color: var(--text-chyba); }
+    /* náhled */
+    #canvas-container { position: relative; overflow: hidden; touch-action: none; border-radius: 8px; border: 1px solid var(--border);
+      background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
+    #platno3d, #platno { position: absolute; inset: 0; }
+    #platno { width: 100%; height: 100%; display: block; touch-action: none; }
+    .stav3d { position: absolute; left: 10px; top: 46px; font-size: 0.8rem; color: var(--danger); background: var(--bg-panel); border: 1px solid var(--danger); border-radius: 6px; padding: 4px 8px; max-width: calc(100% - 20px); z-index: 2; }
+    .stav3d:empty { display: none; }
+    .seg2 { position: absolute; left: 10px; top: 10px; z-index: 3; display: flex; gap: 2px; }
+    .seg2 button { padding: 4px 10px; background: var(--bg-panel); }
+    .anim { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; flex-shrink: 0; }
+    .anim input[type="range"] { flex: 1 1 160px; min-width: 0; accent-color: var(--accent); }
+    .anim select { width: auto; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; font-size: 0.82rem; }
+    .odecet { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 100%; }
+    .odecet div { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 3px 7px; font-size: 0.7rem; color: var(--text-muted); }
+    .odecet b { color: var(--text); font-size: 0.82rem; font-variant-numeric: tabular-nums; margin-left: 4px; }
+    .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-pressed="false"]::before { content: '✓ '; visibility: hidden; }
+    .nab-pole input { width: 100%; box-sizing: border-box; }
+    .sloupec-nab { display: flex; flex-direction: column; }
+    .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
+    .lista-stav .odznak:hover { background: var(--bg-hover); }
+    .odznak.ok { color: var(--ok); } .odznak.mez { color: var(--warn); } .odznak.chyba { color: var(--danger); }
+    .box-obecne { max-height: 46%; }
+    .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
+    .zalozky .souhrn-zal:empty { display: none; }
+    /* výsledky a kontroly */
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+    .dlazdice { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 9px; min-width: 0; }
+    .dlazdice .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px; }
+    .dlazdice .cislo { font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .dlazdice .dalsi { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .ok-t { color: var(--ok); } .mez-t { color: var(--text-mez); } .chyba-t { color: var(--text-chyba); }
+    .hlaseni { list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; line-height: 1.4; padding: 0; margin: 0; }
+    .hlaseni li { padding: 5px 9px; border-left: 3px solid var(--border-strong); background: var(--bg-elevated); border-radius: 4px; }
+    .hlaseni li.chyba { border-left-color: var(--danger); }
+    .hlaseni li.varovani { border-left-color: var(--warn); }
+    .hlaseni li.info { border-left-color: var(--accent); color: var(--text-muted); }
+    .hlaseni li.ok { border-left-color: var(--ok); }
+    .hlaseni li.skok { cursor: pointer; }
+    .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+    .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
+    .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
+    @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
+    .zvyrazni { animation: zvyrazni 2.4s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .zvyrazni { animation: none; box-shadow: 0 0 0 3px var(--accent); } }
     /* grafy */
-    .grafy { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+    .grafy { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
     .graf { position: relative; min-width: 0; }
     .graf canvas { width: 100%; height: 190px; display: block; cursor: crosshair; touch-action: pan-y; }
     .graf .titul { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
     .tip { position: absolute; pointer-events: none; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 6px;
       padding: 5px 8px; font-size: 0.76rem; color: var(--text); box-shadow: var(--shadow); white-space: nowrap; z-index: 3; font-variant-numeric: tabular-nums; }
-    .tip[hidden] { display: none; }
     .legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.8rem; color: var(--text); margin: 4px 0 8px; }
     .legenda span { display: inline-flex; align-items: center; gap: 6px; }
     .legenda i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; }
-    .legenda i.carkovana { background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px) !important; height: 2px; }
+    .vrstvy { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .radek-zal { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-bottom: 8px; }
+    .radek-zal .seg2 { position: static; }
     .tab-obal { overflow-x: auto; }
-    table { border-collapse: collapse; width: 100%; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
     th, td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
     th:first-child, td:first-child, th:last-child, td:last-child { text-align: left; }
-    th { color: var(--text-muted); font-weight: 600; font-size: 0.76rem; }
+    th { color: var(--text-muted); font-weight: 600; font-size: 0.74rem; }
     tr.aktualni td { background: var(--accent-soft); }
-    .vysvetleni { font-size: 0.86rem; line-height: 1.6; color: var(--text); }
+    .vysvetleni { font-size: 0.84rem; line-height: 1.6; color: var(--text); }
     .vysvetleni p, .vysvetleni ul { margin: 6px 0; }
     .vysvetleni ul { padding-left: 20px; }
-    .vysvetleni code { background: var(--bg-deep); padding: 1px 4px; border-radius: 4px; font-size: 0.82rem; }
-    details summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
-    .zprava { font-size: 0.82rem; color: var(--text-muted); margin-top: 8px; min-height: 1.2em; }
-    .zprava.chyba { color: var(--text-chyba); }
-    @media (max-width: 420px) { .mrizka2 { gap: 0 8px; } .karta { padding: 12px; } body { padding: 16px 10px; } }
+    .vysvetleni code { background: var(--bg); padding: 1px 4px; border-radius: 4px; font-size: 0.8rem; }
+    .vysvetleni details summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+    .upozorneni { border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-elevated); color: var(--text);
+      border-radius: var(--radius); padding: 8px 12px; font-size: 0.82rem; line-height: 1.5; margin-bottom: 10px; }
+    .upozorneni b { color: var(--text-mez); }
+    kbd { font-family: inherit; font-size: 0.72rem; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg-elevated); color: var(--text); }
+    .skryty { display: none; }
+    dialog.napoveda-dlg { margin: auto; max-width: min(760px, 94vw); max-height: 86vh; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-panel); color: var(--text); padding: 0; }
+    dialog.napoveda-dlg::backdrop { background: color-mix(in srgb, var(--bg-deep) 70%, transparent); }
+    .napoveda-dlg .hlava { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); }
+    .napoveda-dlg .hlava h2 { font-size: 1rem; margin: 0; }
+    .napoveda-dlg .telo { padding: 6px 18px 16px; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+    .napoveda-dlg .telo b { color: var(--text); }
+    @media (max-width: 1000px) { .stred #canvas-container { height: clamp(300px, 62vh, 560px); } }
+    @media (max-width: 380px) { .mrizka { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <h1>⚙️ Návrhář diskových vaček</h1>
-  <p class="podtitul">Disková vačka s translačním zdvihátkem (hrotovým, kladkovým nebo plochým talířovým, s excentricitou).
-    Pohybové zákony harmonický, cykloidní, 3-4-5 a 4-5-6-7, skutečný profil včetně ekvidistanty kladky, animace záběru,
-    diagramy zdvihu, rychlosti, zrychlení a ryvu, tlakový úhel, kontrola podřezání a konvexity, odhad přítlačné pružiny.
-    Export SVG, DXF, STL a CSV.</p>
-  <div class="upozorneni" role="note"><b>⚠️ Kinematický model tuhých těles.</b> Výpočet předpokládá dokonale tuhou vačku, zdvihátko i
-    hřídel, nulové vůle a tření. Skutečný mechanismus je pružný a kmitá – při vyšších otáčkách se pohyb zdvihátka od zákona
-    odchýlí (viz oddíl <a href="#omezeni">Omezení modelu</a>). Pro rychloběžné nebo silově namáhané vačky je nutný dynamický výpočet a kontrola Hertzova tlaku.</div>
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Návrhář diskových vaček"><span aria-hidden="true">⚙️</span><span class="jmeno"> Vačky</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label>
+              <input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
+            <hr>
+            <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty</button>
+            <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
+            <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje vačky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk (disk naležato)</div>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše <span class="pozn">s barvou</span></button>
+            <hr>
+            <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG (2D nebo 3D)</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Přepíše všechny parametry (název a tisk zůstanou)</div>
+            <div class="sloupec-nab" id="seznamPredvoleb"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H · 3D</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M · 3D</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L · 3D</span></button>
+            <hr>
+            <div class="nab-nadpis">Animace (2D)</div>
+            <button class="pol" id="vZakl" role="menuitemcheckbox" aria-pressed="true">◯ Základní kružnice</button>
+            <button class="pol" id="vRozt" role="menuitemcheckbox" aria-pressed="true">◌ Roztečná křivka <span class="pozn">kladka</span></button>
+            <button class="pol" id="vNorm" role="menuitemcheckbox" aria-pressed="true">↗ Normála a tlakový úhel</button>
+            <div class="nab-tip">Přepínač 2D / 3D je vlevo nahoře v náhledu (klávesa V). Pohledy 1–5 přepnou do 3D.</div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu – profil <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" id="btnSvg" role="menuitem">⬇ SVG profil <span class="pozn">1 : 1 v mm</span></button>
+            <button class="pol" id="btnDxf" role="menuitem">⬇ DXF (R12) <span class="pozn">CAD, CNC</span></button>
+            <button class="pol" id="btnCsv" role="menuitem">⬇ CSV tabulka <span class="pozn">krok 1°</span></button>
+            <div class="nab-tip">Výkresy v mm, střed vačky v počátku, červená značka v SVG ukazuje směr začátku náběhu (0°).</div>
+          </div>
+        </div>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNap" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
+    </header>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryty">
 
-  <div class="rozlozeni">
-    <div class="sloupec">
-      <section class="karta" aria-labelledby="h-pohyb">
-        <h2 id="h-pohyb">Pohybový diagram</h2>
-        <div class="mrizka2">
-          <div class="pole"><label for="zakonNabeh">Zákon náběhu</label><select id="zakonNabeh"></select></div>
-          <div class="pole"><label for="zakonNavrat">Zákon návratu</label><select id="zakonNavrat"></select></div>
-          <div class="pole"><label for="h">Zdvih h [mm]</label><input type="number" id="h" step="any" min="0"></div>
-          <div class="pole"><label for="Rb">Základní poloměr R<sub>b</sub> [mm]</label><input type="number" id="Rb" step="any" min="0"></div>
-          <div class="pole"><label for="beta1">Náběh β₁ [°]</label><input type="number" id="beta1" step="any" min="0" max="360"></div>
-          <div class="pole"><label for="delta1">Horní výdrž [°]</label><input type="number" id="delta1" step="any" min="0" max="360"></div>
-          <div class="pole"><label for="beta2">Návrat β₂ [°]</label><input type="number" id="beta2" step="any" min="0" max="360"></div>
-          <div class="pole"><span class="popisek">Dolní výdrž [°]</span><div class="vystup" id="delta2" aria-live="polite">–</div></div>
-          <div class="pole"><label for="n">Otáčky vačky [ot/min]</label><input type="number" id="n" step="any" min="0"></div>
-          <div class="pole"><span class="popisek">Perioda</span><div class="vystup" id="perioda">–</div></div>
-        </div>
-        <p class="napoveda">R<sub>b</sub> je nejmenší poloměr skutečného profilu vačky. Dolní výdrž se dopočte do 360°.</p>
-        <div class="tlacitka">
-          <button id="btnMinRb" class="male" title="Najde nejmenší Rb, při kterém je tlakový úhel ≤ 30° a profil bez podřezání">Nejmenší vhodné R<sub>b</sub></button>
-          <select id="predvolby" aria-label="Předvolby" style="width:auto">
-            <option value="">Předvolby…</option>
-            <option value="zaklad">Výchozí – kladka, cykloidní</option>
-            <option value="rychla">Rychloběžná – 4-5-6-7, 3000 ot/min</option>
-            <option value="ventil">Plochý talíř (rozvod motoru)</option>
-            <option value="podrez">Ukázka podřezání</option>
-            <option value="harm">Harmonický bez výdrže</option>
-          </select>
-        </div>
-      </section>
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">◎ Pohyb</button>
+      <button data-ukaz="obecne" class="aktivni">⚙️ Náhled</button>
+      <button data-ukaz="out" class="je-vystup">Disk ⚙</button>
+    </nav>
 
-      <section class="karta" aria-labelledby="h-zdvihatko">
-        <h2 id="h-zdvihatko">Zdvihátko</h2>
-        <div class="segment" role="group" aria-label="Typ zdvihátka">
-          <button data-typ="hrot">Hrotové</button>
-          <button data-typ="kladka">Kladkové</button>
-          <button data-typ="plochy">Ploché</button>
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in" id="boxPohyb" data-box="in" aria-label="Pohyb a zdvihátko">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">◎</span><h2>Pohyb a zdvihátko</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="pohyb" open>
+            <summary><span class="oddil-nazev">Pohybový diagram</span><span class="souhrn" id="sPohyb"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="zakonNabeh">Zákon náběhu</label><select id="zakonNabeh" data-p="zakonNabeh" data-typ="text"></select></div>
+                <div class="pole"><label for="zakonNavrat">Zákon návratu</label><select id="zakonNavrat" data-p="zakonNavrat" data-typ="text"></select></div>
+                <div class="pole"><label for="h">Zdvih h</label><input type="text" inputmode="decimal" class="mm" id="h" data-p="h"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="Rb">Základní poloměr R<sub>b</sub></label><input type="text" inputmode="decimal" class="mm" id="Rb" data-p="Rb"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="beta1">Náběh β₁</label><input type="text" inputmode="decimal" class="mm" id="beta1" data-p="beta1"><span class="jedn">°</span></div>
+                <div class="pole"><label for="delta1">Horní výdrž</label><input type="text" inputmode="decimal" class="mm" id="delta1" data-p="delta1"><span class="jedn">°</span></div>
+                <div class="pole"><label for="beta2">Návrat β₂</label><input type="text" inputmode="decimal" class="mm" id="beta2" data-p="beta2"><span class="jedn">°</span></div>
+                <div class="pole"><span class="popisek">Dolní výdrž</span><div class="vystup" id="delta2" aria-live="polite">–</div></div>
+                <div class="pole"><label for="n">Otáčky vačky</label><input type="text" inputmode="decimal" class="mm" id="n" data-p="n"><span class="jedn">ot/min</span></div>
+                <div class="pole"><span class="popisek">Perioda</span><div class="vystup" id="perioda">–</div></div>
+              </div>
+              <p class="napoveda">R<sub>b</sub> je nejmenší poloměr skutečného profilu vačky. Dolní výdrž se dopočte do 360°.</p>
+              <div class="tlacitka">
+                <button type="button" id="btnMinRb" class="tl" title="Najde nejmenší Rb, při kterém je tlakový úhel ≤ 30° a profil bez podřezání">Nejmenší vhodné R<sub>b</sub></button>
+              </div>
+              <div class="zprava" id="zpravaRb" aria-live="polite"></div>
+              <div class="chyby-vstupu" id="chybyVstupu" role="alert"></div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="zdvihatko" open>
+            <summary><span class="oddil-nazev">Zdvihátko</span><span class="souhrn" id="sZdvihatko"></span></summary>
+            <div class="oddil-telo">
+              <div class="segment" role="group" aria-label="Typ zdvihátka" id="typyZdvihatka">
+                <button type="button" data-typzdv="hrot">Hrotové</button>
+                <button type="button" data-typzdv="kladka">Kladkové</button>
+                <button type="button" data-typzdv="plochy">Ploché</button>
+              </div>
+              <div class="mrizka">
+                <div class="pole" id="poleRr"><label for="Rr">Poloměr kladky R<sub>r</sub></label><input type="text" inputmode="decimal" class="mm" id="Rr" data-p="Rr"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="eps">Excentricita ε</label><input type="text" inputmode="text" class="mm" id="eps" data-p="eps"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="smer">Otáčení vačky</label>
+                  <select id="smer" data-p="smer" data-typ="text"><option value="cw">po směru hodin ↻</option><option value="ccw">proti směru hodin ↺</option></select></div>
+              </div>
+              <p class="napoveda" id="napovedaTyp"></p>
+            </div>
+          </details>
         </div>
-        <div class="mrizka2">
-          <div class="pole" id="poleRr"><label for="Rr">Poloměr kladky R<sub>r</sub> [mm]</label><input type="number" id="Rr" step="any" min="0"></div>
-          <div class="pole"><label for="eps">Excentricita ε [mm]</label><input type="number" id="eps" step="any"></div>
-          <div class="pole"><label for="smer">Otáčení vačky</label>
-            <select id="smer"><option value="cw">po směru hodin ↻</option><option value="ccw">proti směru hodin ↺</option></select></div>
-        </div>
-        <p class="napoveda" id="napovedaTyp"></p>
-      </section>
+      </aside>
 
-      <section class="karta" aria-labelledby="h-disk">
-        <h2 id="h-disk">Disk a přítlačná pružina</h2>
-        <div class="mrizka2">
-          <div class="pole"><label for="tloustka">Tloušťka disku [mm]</label><input type="number" id="tloustka" step="any" min="0"></div>
-          <div class="pole"><label for="otvor">Otvor pro hřídel ⌀ [mm]</label><input type="number" id="otvor" step="any" min="0"></div>
-          <div class="pole"><label for="m">Hmotnost zdvihátka [kg]</label><input type="number" id="m" step="any" min="0"></div>
-          <div class="pole"><label for="k">Tuhost pružiny [N/mm]</label><input type="number" id="k" step="any" min="0"></div>
-          <div class="pole"><label for="F0">Předpětí pružiny [N]</label><input type="number" id="F0" step="any"></div>
-          <div class="pole"><label class="zaskrt" style="margin-top:30px"><input type="checkbox" id="svisle"> svislé (tíha)</label></div>
+      <section class="stred">
+        <div id="canvas-container" aria-label="Náhled vačky">
+          <div id="platno3d" hidden></div>
+          <canvas id="platno" role="img" aria-label="Animace vačky a zdvihátka"></canvas>
+          <div class="seg2" role="group" aria-label="Náhled 2D nebo 3D">
+            <button type="button" id="btn2d" aria-pressed="true" title="Animace vačky a zdvihátka (V)">2D animace</button>
+            <button type="button" id="btn3d" aria-pressed="false" title="3D model disku (V)">3D model</button>
+          </div>
+          <div class="stav3d" id="stav3d"></div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
+          <div class="nahled-tip" id="tip2d">mezerník = přehrát · ←/→ = po 1° (Shift 10°)</div>
+          <div class="nahled-tip" id="tip3d" hidden>tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
-        <p class="napoveda">Hmotnost zahrnuje zdvihátko, kladku a redukovanou třetinu pružiny. Síla se počítá jako F = F₀ + k·s + m·(a + g).</p>
-        <div class="chyby-vstupu" id="chybyVstupu" role="alert"></div>
-      </section>
-
-      <section class="karta" aria-labelledby="h-export">
-        <h2 id="h-export">Export a sdílení</h2>
-        <div class="tlacitka">
-          <button id="btnSvg">SVG profil</button>
-          <button id="btnDxf">DXF (R12)</button>
-          <button id="btnStl">STL disk</button>
-          <button id="btnCsv">CSV tabulka</button>
-          <button id="btnOdkaz">Kopírovat odkaz</button>
-        </div>
-        <p class="napoveda">Výkresy v mm, střed vačky v počátku, červená značka v SVG ukazuje směr začátku náběhu (0°).
-          STL je hranolový disk s kruhovým otvorem (bez drážky pro pero) – profil převzorkovaný na 720 paprsků.</p>
-        <div class="zprava" id="zpravaExport" aria-live="polite"></div>
-      </section>
-    </div>
-
-    <div class="sloupec">
-      <section class="karta" aria-labelledby="h-anim">
-        <h2 id="h-anim">Vačka a zdvihátko</h2>
-        <div class="platno-obal"><canvas id="platno" role="img" aria-label="Animace vačky a zdvihátka"></canvas></div>
-        <div class="ovladani">
-          <button id="btnPrehrat" class="hlavni" aria-pressed="false" title="Přehrát / pozastavit (mezerník)">▶ Přehrát</button>
+        <div class="anim">
+          <button id="btnPrehrat" class="tl" aria-pressed="false" title="Přehrát / pozastavit (mezerník)">▶ Přehrát</button>
           <input type="range" id="uhel" min="0" max="360" step="0.5" value="0" aria-label="Úhel natočení vačky">
           <select id="rychlost" aria-label="Rychlost animace">
             <option value="8">1 otáčka / 8 s</option>
@@ -214,79 +296,143 @@
             <option value="2">1 otáčka / 2 s</option>
             <option value="real">skutečné otáčky</option>
           </select>
+          <div class="odecet" id="odecet"></div>
         </div>
-        <div class="vrstvy">
-          <label class="zaskrt"><input type="checkbox" id="vZakl" checked> základní kružnice</label>
-          <label class="zaskrt"><input type="checkbox" id="vRozt" checked> roztečná křivka</label>
-          <label class="zaskrt"><input type="checkbox" id="vNorm" checked> normála a tlakový úhel</label>
+        <div class="box box-obecne" aria-label="Výsledky, diagramy a kontrola">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
+            <button role="tab" data-zalozka="diagramy" aria-selected="false">📈 Diagramy</button>
+            <button role="tab" data-zalozka="porovnani" aria-selected="false">⚖ Porovnání zákonů</button>
+            <button role="tab" data-zalozka="model" aria-selected="false">📘 Model a vzorce</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje vačky</button>
+          </div>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel">
+            <div class="vysledky" id="dlazdice"></div>
+            <div class="vysledky" id="vTisk" style="margin-top:6px"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="diagramy" role="tabpanel" hidden>
+            <div class="radek-zal">
+              <span class="seg2" role="group" aria-label="Jednotky">
+                <button type="button" data-jedn="uhel" aria-pressed="true">na úhel (mm/rad)</button>
+                <button type="button" data-jedn="cas" aria-pressed="false">v čase (m/s)</button>
+              </span>
+              <span class="napoveda" style="margin:0">Šedé pásy = výdrže. Najetím zobrazíte hodnoty, klepnutím nastavíte úhel animace.</span>
+            </div>
+            <div class="grafy" id="grafy"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="porovnani" role="tabpanel" hidden>
+            <p class="napoveda" style="margin:0 0 6px">Normované průběhy pro jeden zdvih: x = θ/β, y = s/h. Tabulka ukazuje, co by daný zákon (pro náběh i návrat)
+              znamenal pro aktuální rozměry. Koeficienty C<sub>v</sub>, C<sub>a</sub>, C<sub>j</sub> násobí h/β, h/β², h/β³.</p>
+            <div class="vrstvy" id="porovnaniVolby"></div>
+            <div class="legenda" id="legendaPor"></div>
+            <div class="grafy" id="grafyPor"></div>
+            <div class="tab-obal" style="margin-top:12px"><table id="tabPor"></table></div>
+          </div>
+          <div class="zalozka-telo vysvetleni" data-telo="model" role="tabpanel" id="omezeni" hidden>
+            <div class="upozorneni" role="note"><b>⚠️ Kinematický model tuhých těles.</b> Výpočet předpokládá dokonale tuhou vačku, zdvihátko i
+              hřídel, nulové vůle a tření. Skutečný mechanismus je pružný a kmitá – při vyšších otáčkách se pohyb zdvihátka od zákona
+              odchýlí (viz Omezení modelu níže). Pro rychloběžné nebo silově namáhané vačky je nutný dynamický výpočet a kontrola Hertzova tlaku.</div>
+            <details open><summary>Co se počítá</summary>
+              <ul>
+                <li><b>Zdvih</b> s(θ) z normovaného zákona y(x), x = θ/β: s = h·y, s′ = h·y′/β, s″ = h·y″/β², s‴ = h·y‴/β³ (derivace podle úhlu v radiánech).
+                  Časové veličiny: v = s′·ω, a = s″·ω², j = s‴·ω³, ω = 2πn/60.</li>
+                <li><b>Tlakový úhel</b> (hrotové a kladkové zdvihátko): <code>tan φ = (s′ − ε) / (√(R<sub>p</sub>² − ε²) + s)</code>, kde R<sub>p</sub> = R<sub>b</sub> (+ R<sub>r</sub>) je poloměr roztečné kružnice.
+                  Kladná excentricita ε (osa zdvihátka posunutá na stranu, ze které se k ní povrch vačky přibližuje) zmenšuje φ při náběhu, ale zvětšuje ho při návratu.
+                  U plochého talíře kolmého na osu je φ = 0.</li>
+                <li><b>Profil</b>: bod dotyku P(θ) v pevném rámu se otočí do rámu vačky (q = R(θ)·P). U kladky je profil vnitřní ekvidistanta roztečné křivky ve vzdálenosti R<sub>r</sub> podél normály.
+                  U plochého talíře je profil obálka přímek y = R<sub>b</sub> + s, bod dotyku leží ve vzdálenosti s′ od osy.</li>
+                <li><b>Poloměr křivosti</b> roztečné křivky ρ = |A|³ / (A × B) z analytických derivací; <b>podřezání</b> kladky nastane, když ve vypuklé části ρ<sub>rozteč</sub> ≤ R<sub>r</sub>.
+                  Plochý talíř vyžaduje konvexní profil: <code>ρ = R<sub>b</sub> + s + s″ &gt; 0</code>.</li>
+                <li><b>Síly</b>: složka ve směru osy F<sub>y</sub> = F₀ + k·s + m·(a + g), normálová síla F<sub>n</sub> = F<sub>y</sub>/cos φ, hnací moment M = F<sub>y</sub>·s′ (bez tření).
+                  Záporné F<sub>y</sub> = setrvačnost převáží pružinu a zdvihátko odskočí.</li>
+                <li><b>3D model</b>: hranolový disk s kruhovým otvorem (bez drážky pro pero), profil převzorkovaný na 720 paprsků. Hmotnost a doba tisku jsou hrubý odhad pro plný díl.</li>
+              </ul>
+            </details>
+            <details><summary>Omezení modelu – čemu nevěřit</summary>
+              <ul>
+                <li><b>Bez pružnosti.</b> Zdvihátko, tyčky, vahadla i hřídel jsou ve skutečnosti pružiny s hmotou. Při vyšších otáčkách se rozkmitají
+                  (zbytkové kmity po zdvihu, „plování“ ventilů u motorů). Hladší zákony (spojité zrychlení, ideálně i ryv) kmity budí méně, ale výpočet
+                  skutečného pohybu vyžaduje dynamický model (např. jednohmotový s tuhostí a tlumením) – ten zde není.</li>
+                <li><b>Pružina bez vlastní dynamiky.</b> Rázy vinutí („surge“) a vlastní frekvence pružiny se neuvažují; odhad předpětí je kvazistatický.</li>
+                <li><b>Bez tření a vůlí.</b> Tření ve vedení zvětšuje sílu při velkém tlakovém úhlu (a může vést k zadření dřív, než udává mez 30–45°).
+                  Vůle mezi vačkou a zdvihátkem při změně znaménka síly způsobují rázy.</li>
+                <li><b>Kontaktní tlak se nepočítá.</b> Malý poloměr křivosti znamená vysoký Hertzův tlak a opotřebení; kontrolujte ho podle materiálu a šířky vačky.</li>
+                <li><b>Ideální výroba.</b> Profil je spočten ve 720 bodech (0,5°); skutečná přesnost závisí na obrábění, broušení a zakalení.
+                  Vydutá místa vyžadují nástroj menšího poloměru, než je |ρ|.</li>
+                <li><b>Konstantní otáčky.</b> Kolísání otáček hřídele (torzní kmity, nerovnoměrný pohon) mění časové průběhy v, a, j.</li>
+                <li>Mez tlakového úhlu 30° je obvyklé doporučení pro translační zdvihátko (Norton, Shigley); pro vahadla se připouští až 35–45°.
+                  Skutečná přípustná hodnota závisí na délce a vůli vedení.</li>
+              </ul>
+            </details>
+            <p class="napoveda">Literatura: R. L. Norton – <i>Cam Design and Manufacturing Handbook</i>; H. A. Rothbart – <i>Cam Design Handbook</i>;
+              J. E. Shigley, J. J. Uicker – <i>Theory of Machines and Mechanisms</i>.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
+            <ul class="hlaseni" id="hlaseni"></ul>
+            <div class="vysledky" id="vSit" style="margin-top:8px"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
         </div>
-        <div class="odecet" id="odecet"></div>
       </section>
 
-      <section class="karta" aria-labelledby="h-vysl">
-        <h2 id="h-vysl">Výsledky</h2>
-        <div class="dlazdice" id="dlazdice"></div>
-        <h3>Kontroly návrhu</h3>
-        <ul class="kontroly" id="kontroly"></ul>
-      </section>
-
-      <section class="karta" aria-labelledby="h-grafy">
-        <h2 id="h-grafy">Diagramy v závislosti na úhlu
-          <span class="segment" style="grid-template-columns:repeat(2,auto);margin-left:auto" role="group" aria-label="Jednotky">
-            <button class="male" data-jedn="uhel" aria-pressed="true">na úhel (mm/rad)</button>
-            <button class="male" data-jedn="cas">v čase (m/s)</button>
-          </span></h2>
-        <p class="napoveda" style="margin-bottom:8px">Šedé pásy = výdrže. Najetím zobrazíte hodnoty, klepnutím nastavíte úhel animace.</p>
-        <div class="grafy" id="grafy"></div>
-      </section>
-
-      <section class="karta" aria-labelledby="h-porovnani">
-        <h2 id="h-porovnani">Porovnání pohybových zákonů</h2>
-        <p class="napoveda">Normované průběhy pro jeden zdvih: x = θ/β, y = s/h. Tabulka ukazuje, co by daný zákon (pro náběh i návrat)
-          znamenal pro aktuální rozměry. Koeficienty C<sub>v</sub>, C<sub>a</sub>, C<sub>j</sub> násobí h/β, h/β², h/β³.</p>
-        <div class="vrstvy" id="porovnaniVolby"></div>
-        <div class="legenda" id="legendaPor"></div>
-        <div class="grafy" id="grafyPor"></div>
-        <div class="tab-obal" style="margin-top:12px"><table id="tabPor"></table></div>
-      </section>
-
-      <section class="karta vysvetleni" id="omezeni" aria-labelledby="h-omez">
-        <h2 id="h-omez">Model, vzorce a jeho omezení</h2>
-        <details open><summary>Co se počítá</summary>
-          <ul>
-            <li><b>Zdvih</b> s(θ) z normovaného zákona y(x), x = θ/β: s = h·y, s′ = h·y′/β, s″ = h·y″/β², s‴ = h·y‴/β³ (derivace podle úhlu v radiánech).
-              Časové veličiny: v = s′·ω, a = s″·ω², j = s‴·ω³, ω = 2πn/60.</li>
-            <li><b>Tlakový úhel</b> (hrotové a kladkové zdvihátko): <code>tan φ = (s′ − ε) / (√(R<sub>p</sub>² − ε²) + s)</code>, kde R<sub>p</sub> = R<sub>b</sub> (+ R<sub>r</sub>) je poloměr roztečné kružnice.
-              Kladná excentricita ε (osa zdvihátka posunutá na stranu, ze které se k ní povrch vačky přibližuje) zmenšuje φ při náběhu, ale zvětšuje ho při návratu.
-              U plochého talíře kolmého na osu je φ = 0.</li>
-            <li><b>Profil</b>: bod dotyku P(θ) v pevném rámu se otočí do rámu vačky (q = R(θ)·P). U kladky je profil vnitřní ekvidistanta roztečné křivky ve vzdálenosti R<sub>r</sub> podél normály.
-              U plochého talíře je profil obálka přímek y = R<sub>b</sub> + s, bod dotyku leží ve vzdálenosti s′ od osy.</li>
-            <li><b>Poloměr křivosti</b> roztečné křivky ρ = |A|³ / (A × B) z analytických derivací; <b>podřezání</b> kladky nastane, když ve vypuklé části ρ<sub>rozteč</sub> ≤ R<sub>r</sub>.
-              Plochý talíř vyžaduje konvexní profil: <code>ρ = R<sub>b</sub> + s + s″ &gt; 0</code>.</li>
-            <li><b>Síly</b>: složka ve směru osy F<sub>y</sub> = F₀ + k·s + m·(a + g), normálová síla F<sub>n</sub> = F<sub>y</sub>/cos φ, hnací moment M = F<sub>y</sub>·s′ (bez tření).
-              Záporné F<sub>y</sub> = setrvačnost převáží pružinu a zdvihátko odskočí.</li>
-          </ul>
-        </details>
-        <details><summary>Omezení modelu – čemu nevěřit</summary>
-          <ul>
-            <li><b>Bez pružnosti.</b> Zdvihátko, tyčky, vahadla i hřídel jsou ve skutečnosti pružiny s hmotou. Při vyšších otáčkách se rozkmitají
-              (zbytkové kmity po zdvihu, „plování“ ventilů u motorů). Hladší zákony (spojité zrychlení, ideálně i ryv) kmity budí méně, ale výpočet
-              skutečného pohybu vyžaduje dynamický model (např. jednohmotový s tuhostí a tlumením) – ten zde není.</li>
-            <li><b>Pružina bez vlastní dynamiky.</b> Rázy vinutí („surge“) a vlastní frekvence pružiny se neuvažují; odhad předpětí je kvazistatický.</li>
-            <li><b>Bez tření a vůlí.</b> Tření ve vedení zvětšuje sílu při velkém tlakovém úhlu (a může vést k zadření dřív, než udává mez 30–45°).
-              Vůle mezi vačkou a zdvihátkem při změně znaménka síly způsobují rázy.</li>
-            <li><b>Kontaktní tlak se nepočítá.</b> Malý poloměr křivosti znamená vysoký Hertzův tlak a opotřebení; kontrolujte ho podle materiálu a šířky vačky.</li>
-            <li><b>Ideální výroba.</b> Profil je spočten ve 720 bodech (0,5°); skutečná přesnost závisí na obrábění, broušení a zakalení.
-              Vydutá místa vyžadují nástroj menšího poloměru, než je |ρ|.</li>
-            <li><b>Konstantní otáčky.</b> Kolísání otáček hřídele (torzní kmity, nerovnoměrný pohon) mění časové průběhy v, a, j.</li>
-            <li>Mez tlakového úhlu 30° je obvyklé doporučení pro translační zdvihátko (Norton, Shigley); pro vahadla se připouští až 35–45°.
-              Skutečná přípustná hodnota závisí na délce a vůli vedení.</li>
-          </ul>
-        </details>
-        <p class="napoveda">Literatura: R. L. Norton – <i>Cam Design and Manufacturing Handbook</i>; H. A. Rothbart – <i>Cam Design Handbook</i>;
-          J. E. Shigley, J. J. Uicker – <i>Theory of Machines and Mechanisms</i>.</p>
-      </section>
-    </div>
+      <aside class="box box-out" id="boxDisk" data-box="out" aria-label="Disk, pružina a tisk">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Disk, pružina a tisk</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <details class="oddil" data-oddil="disk" open>
+            <summary><span class="oddil-nazev">Disk</span><span class="souhrn" id="sDisk"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="tloustka">Tloušťka disku</label><input type="text" inputmode="decimal" class="mm" id="tloustka" data-p="tloustka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="otvor">Otvor pro hřídel ⌀</label><input type="text" inputmode="decimal" class="mm" id="otvor" data-p="otvor"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda">STL/3MF je hranolový disk s kruhovým otvorem (bez drážky pro pero).</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="pruzina" open>
+            <summary><span class="oddil-nazev">Zdvihátko a přítlačná pružina</span><span class="souhrn" id="sPruzina"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="m">Hmotnost zdvihátka</label><input type="text" inputmode="decimal" class="mm" id="m" data-p="m"><span class="jedn">kg</span></div>
+                <div class="pole"><label for="k">Tuhost pružiny</label><input type="text" inputmode="decimal" class="mm" id="k" data-p="k"><span class="jedn">N/mm</span></div>
+                <div class="pole"><label for="F0">Předpětí pružiny</label><input type="text" inputmode="text" class="mm" id="F0" data-p="F0"><span class="jedn">N</span></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="svisle" data-p="svisle" data-typ="bool"> svislé (tíha)</label>
+              <p class="napoveda">Hmotnost zahrnuje zdvihátko, kladku a redukovanou třetinu pružiny. Síla se počítá jako F = F₀ + k·s + m·(a + g).</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="tisk" open>
+            <summary><span class="oddil-nazev">3D tisk</span><span class="souhrn" id="sTisk"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_material">Materiál</label><select id="f_material" data-p="tisk.material" data-typ="text"></select></div>
+                <div class="pole"><label for="f_uhel">Největší převis</label><input type="text" inputmode="decimal" class="mm" id="f_uhel" data-p="tisk.uhel" title="Úhel od svislice, který tiskárna zvládne bez podpor"><span class="jedn">°</span></div>
+              </div>
+              <p class="napoveda">Disk se tiskne naležato, bez podpor. Na tištěné vačce použijte kladku nebo kluzné zdvihátko z PTFE/POM; hrot plast rychle vyjede.</p>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </main>
   </div>
+
+<dialog class="napoveda-dlg" id="dlgNapoveda">
+  <div class="hlava"><h2>Návrhář diskových vaček – nápověda</h2><button class="tl" id="btnZavritNap" aria-label="Zavřít">✕</button></div>
+  <div class="telo">
+    <p><b>Co to dělá.</b> Disková vačka s translačním zdvihátkem (hrotovým, kladkovým nebo plochým talířovým, s excentricitou).
+      Pohybové zákony harmonický, cykloidní, 3-4-5 a 4-5-6-7, skutečný profil včetně ekvidistanty kladky, animace záběru,
+      diagramy zdvihu, rychlosti, zrychlení a ryvu, tlakový úhel, kontrola podřezání a konvexity, odhad přítlačné pružiny.</p>
+    <p><b>⚠️ Kinematický model tuhých těles</b> – bez pružnosti, vůlí a tření; podrobnosti v záložce <b>Model a vzorce</b>.</p>
+    <p><b>Náhled.</b> <b>2D animace</b> ukazuje vačku se zdvihátkem, bod dotyku, normálu a tlakový úhel; pod náhledem přehrávání, úhel a odečet hodnot.
+      <b>3D model</b> je disk pro 3D tisk (STL/3MF) – v montážní poloze stojí profilem k vám jako ve 2D, v tiskové poloze leží na podložce.</p>
+    <p><b>Export.</b> Soubor: STL a 3MF disku, projekt JSON, sdílení odkazem, Otevřít v Modeláři. Výkres: SVG a DXF profilu 1 : 1, CSV tabulka po 1°.</p>
+    <p><b>Kontroly</b> hlídají tlakový úhel, podřezání / konvexitu, skoky rychlosti a zrychlení, stěnu kolem otvoru a odskok zdvihátka;
+      klepnutím na hlášení skočíte na pole, 🔧 nabídne opravu.</p>
+    <p><b>Klávesy:</b> <kbd>mezerník</kbd> přehrát/pozastavit, <kbd>←</kbd>/<kbd>→</kbd> natočení po 1° (<kbd>Shift</kbd> 10°), <kbd>V</kbd> 2D / 3D,
+      <kbd>1</kbd>–<kbd>5</kbd> pohledy 3D, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha, <kbd>P</kbd> převisy, <kbd>L</kbd> pravítka,
+      <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
+  </div>
+</dialog>
+<script src="vacky/ui.js"></script>
 </body>
 </html>

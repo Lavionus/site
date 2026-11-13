@@ -1,103 +1,76 @@
-/* Klíčenky a jmenovky – ovládání stránky: formulář, historie, písmo, manifold, náhled, pokyny pro výměnu barvy, dávka, export. */
-/* global KLIC, KLIC_NAHLED, KRAB, FONTY, Dialog, Tvary, TrubkyGui */
+/* Klíčenky a jmenovky – ovládání stránky nad společným zapojením gen3d/aplikace.js (historie, formulář, hlášení, projekt, sdílení, klávesy):
+   tady jen písmo, přepočet, pokyny pro výměnu barvy, výsledky, kusovník, dávka a barevné exporty. */
+/* global KLIC, KLIC_NAHLED, KRAB, FONTY, G3D, Dialog, TrubkyGui */
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const KLIC_PROJEKT = 'webapp_klicenky_projekt';
   const fmt = KLIC.fmt;
-
-  /* ---------- stav a historie ---------- */
   let p, model = null, wasm = null, font = null, fontId = null, chybaJadra = '';
-  const zpet = [], znovu = [];
-  function hlasPrevod(hlaseni, co) { if (hlaseni && hlaseni.length) setTimeout(() => Dialog.info(`${co} upraven: ${hlaseni.join('; ')}.`), 300); }
-  function nactiUlozeny() {
-    try { const t = localStorage.getItem(KLIC_PROJEKT); if (t) { const r = KLIC.normalizuj(JSON.parse(t)); hlasPrevod(r.hlaseni, 'Uložený projekt'); return r.p; } }
-    catch (e) { /* poškozený záznam */ }
-    return KLIC.normalizuj({}).p;
-  }
-  function uloz() { try { localStorage.setItem(KLIC_PROJEKT, JSON.stringify(p)); } catch (e) { /* plné úložiště */ } }
-  function zmen(fn, slouceni) {
-    const pred = JSON.stringify(p);
-    fn(p);
-    p = KLIC.normalizuj(p).p;
-    if (JSON.stringify(p) === pred) return;
-    const posl = zpet[zpet.length - 1];
-    if (!(slouceni && posl && posl.klic === slouceni && Date.now() - posl.cas < 1200)) zpet.push({ stav: pred, klic: slouceni, cas: Date.now() });
-    else posl.cas = Date.now();
-    if (zpet.length > 100) zpet.shift();
-    znovu.length = 0;
-    po();
-  }
-  function krokHistorie(z, do_) {
-    if (!z.length) return;
-    do_.push({ stav: JSON.stringify(p), cas: 0 });
-    p = KLIC.normalizuj(JSON.parse(z.pop().stav)).p;
-    naplnFormular(); po();
-  }
-  function po() { $('btnZpet').disabled = !zpet.length; $('btnZnovu').disabled = !znovu.length; uloz(); naplanuj(); }
-  function nahrad(q) { zmen(x => { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, q); }); naplnFormular(); }
+  const nahled = KLIC_NAHLED.vytvorNahled($('platno'));
+  let vyberPisma = null;
 
-  /* ---------- formulář ---------- */
-  const pole = [...document.querySelectorAll('[data-p]')];
+  const app = G3D.aplikace({
+    typ: 'klicenky', nazev: 'Klíčenka', klic: 'webapp_klicenky', soubor: 'klicenka',
+    normalizuj: KLIC.normalizuj, vychozi: () => KLIC.normalizuj({}).p, hlasitOpravyUlozeneho: true,
+    ulozProjekt: KLIC.ulozProjekt, nactiProjekt: KLIC.nactiProjekt,
+    vezmi: KLIC.vezmi, poloz: KLIC.poloz,
+    popis: q => `${(q.text && q.text.obsah || '').replace(/\n/g, ' / ')} – ${KLIC.NAZVY.tvar[q.podklad && q.podklad.tvar] || ''}, ${KLIC.NAZVY.rezim[q.text && q.text.rezim] || ''}`,
+    viditelnost: () => viditelnost(),
+    poNaplneni: q => { if (vyberPisma) vyberPisma.hodnota = q.text.pismo; },
+    prepocitej: () => naplanuj(),
+    png: () => nahled.png(), pohled: j => nahled.pohled(j),
+    exportStl: () => exportStl(),
+    doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(model.dily.map(d => Object.assign({}, d, { barva: barvaDilu(d) })), app.p.nazev || 'Klíčenka'), pripona: '.3mf' } : null),
+    zkratky: { h: 'tHrany', r: 'tRoviny', p: 'tPrevisy', l: 'tPravitka' },
+    zmenaTematu: () => naplanuj(),
+    hlaseniNavic: (li, x) => { if (x.pole[0] === 'text.pismo') li.addEventListener('click', () => jdiNaPismo()); },
+  });
+
+  /* ---------- formulář: viditelnost, živá změna při psaní, hlášení o omezení ---------- */
   function viditelnost() {
+    p = app.p;
     document.querySelectorAll('[data-jen]').forEach(el => { el.hidden = !el.dataset.jen.split(' ').includes(p.text.rezim); });
     document.querySelectorAll('[data-tvar]').forEach(el => { el.hidden = !el.dataset.tvar.split(' ').includes(p.podklad.tvar); });
     $('gPevny').hidden = !p.podklad.pevny;
   }
-  function naplnFormular() {
-    for (const el of pole) {
-      const h = KLIC.vezmi(p, el.dataset.p);
-      if (el.type === 'checkbox') el.checked = !!h;
-      else if (document.activeElement !== el) el.value = el.dataset.typ === 'text' ? String(h ?? '') : String(h).replace('.', ',');
-      el.classList.remove('spatne');
-    }
-    if (vyberPisma) vyberPisma.hodnota = p.text.pismo;
-    viditelnost();
-  }
-  for (const el of pole) {
-    const akce = () => {
+  const psano = new Map();   // poslední napsané číslo pole (gen3d ho při change hned přepíše omezenou hodnotou)
+  for (const el of document.querySelectorAll('input[data-p], textarea[data-p]')) {
+    if (el.type === 'checkbox' || el.type === 'color') continue;
+    const cislo = el.dataset.typ !== 'text';
+    el.addEventListener('input', () => {
       const c = el.dataset.p;
-      let h;
-      if (el.type === 'checkbox') h = el.checked;
-      else if (el.dataset.typ === 'text') h = el.value;
-      else {
+      let h = el.value;
+      if (cislo) {
         h = KLIC.cislo(el.value, NaN);
         el.classList.toggle('spatne', !Number.isFinite(h));
         if (!Number.isFinite(h)) return;
+        psano.set(el, h);
       }
-      zmen(x => KLIC.poloz(x, c, h), c);
+      app.zmen(x => KLIC.poloz(x, c, h), c);
       viditelnost();
-    };
-    el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' || el.type === 'color' ? 'change' : 'input', akce);
-    if (el.tagName === 'INPUT' && el.type === 'text' && el.dataset.typ !== 'text') el.addEventListener('change', () => {
-      const psano = KLIC.cislo(el.value, NaN), h = KLIC.vezmi(p, el.dataset.p), r = KLIC.ROZSAHY[el.dataset.p];
-      el.value = String(h).replace('.', ',');
-      if (Number.isFinite(psano) && Math.abs(psano - h) > 1e-9 && r) {
+    });
+    if (cislo) el.addEventListener('change', () => {
+      const n = psano.get(el); psano.delete(el);
+      const h = KLIC.vezmi(app.p, el.dataset.p), r = KLIC.ROZSAHY[el.dataset.p];
+      if (Number.isFinite(n) && Math.abs(n - h) > 1e-9 && r) {
         el.classList.remove('zvyrazni'); void el.offsetWidth; el.classList.add('zvyrazni');
         Dialog.info(`${el.labels[0] ? el.labels[0].textContent : 'Hodnota'}: omezeno na ${fmt(r[0], 2)}–${fmt(r[1], 2)}, použito ${fmt(h, 2)}.`);
       }
-    });
-    // ↑/↓ v číselném poli: ± 1, Shift × 10, Alt po 0,1
-    if (el.tagName === 'INPUT' && el.type === 'text' && el.dataset.typ !== 'text') el.addEventListener('keydown', e => {
-      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-      const h = KLIC.cislo(el.value, NaN); if (!Number.isFinite(h)) return;
-      e.preventDefault();
-      el.value = fmt(Math.round((h + (e.shiftKey ? 10 : e.altKey ? 0.1 : 1) * (e.key === 'ArrowUp' ? 1 : -1)) * 1000) / 1000, 3);
-      el.dispatchEvent(new Event('input'));
     });
   }
   $('f_mat').innerHTML = Object.entries(KLIC.MATERIALY).map(([k, m]) => `<option value="${k}">${m.nazev} – ${fmt(m.hustota, 2)} g/cm³</option>`).join('');
 
   /* ---------- písmo ---------- */
   let fonty = [];
-  const vyberPisma = FONTY.vyberFontu($('vyberPisma'), {
-    ukazka: () => p.text.obsah || 'Aa 123',
+  vyberPisma = FONTY.vyberFontu($('vyberPisma'), {
+    ukazka: () => app.p.text.obsah || 'Aa 123',
     poznamka: f => f.typ === 'woff2' ? 'WOFF2 – nejde do 3D' : !f.pro3d ? 'tenké tahy' : '',
     doporucene: () => 'latinka',
-    onZmena: id => zmen(x => { x.text.pismo = id; }),
+    onZmena: id => app.zmen(x => { x.text.pismo = id; }),
   });
-  FONTY.seznam().then(s => { fonty = s.filter(f => !f.pismo || f.pismo === 'latinka'); vyberPisma.nastav(fonty, p.text.pismo); }).catch(() => { /* zůstane výchozí */ });
+  FONTY.seznam().then(s => { fonty = s.filter(f => !f.pismo || f.pismo === 'latinka'); vyberPisma.nastav(fonty, app.p.text.pismo); }).catch(() => { /* zůstane výchozí */ });
   async function pripravPismo() {
+    p = app.p;
     if (fontId === p.text.pismo && font) return true;
     $('stavPisma').textContent = 'Načítám písmo…';
     try { font = await FONTY.opentype(p.text.pismo); fontId = p.text.pismo; $('stavPisma').textContent = ''; return true; }
@@ -107,28 +80,7 @@
     }
   }
 
-  /* ---------- manifold ---------- */
-  function nactiSkript(src) {
-    return new Promise((ok, chyba) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => chyba(new Error('nelze načíst ' + src)); document.head.appendChild(s); });
-  }
-  async function nactiManifold() {
-    globalThis.MANIFOLD_URL = new URL('lib/manifold/manifold.klasicky.js', location.href).href;
-    if (!globalThis.ManifoldModule) await nactiSkript('lib/manifold/manifold.klasicky.js');
-    let volby;
-    if (location.protocol === 'file:') {
-      await nactiSkript('lib/manifold/manifold.wasm.js');
-      const s = atob(globalThis.MANIFOLD_WASM_B64), bin = new Uint8Array(s.length);
-      for (let i = 0; i < s.length; i++) bin[i] = s.charCodeAt(i);
-      delete globalThis.MANIFOLD_WASM_B64;
-      volby = { wasmBinary: bin };
-    } else volby = { locateFile: f => new URL('lib/manifold/' + f, location.href).href };
-    const w = await globalThis.ManifoldModule(volby);
-    w.setup();
-    return w;
-  }
-
   /* ---------- přepočet ---------- */
-  const nahled = KLIC_NAHLED.vytvorNahled($('platno'));
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   let planovano = false, davkaNaPodlozce = false;
   function naplanuj() {
@@ -138,6 +90,7 @@
     setTimeout(async () => { planovano = false; await prestav(); }, 60);
   }
   async function prestav() {
+    p = app.p;
     nahled.barvy(css('--border-strong'), css('--text'));
     if (!wasm) { vypis(); return; }
     if (!(await pripravPismo())) { model = { chyba: 'Písmo se nenačetlo – zvolte jiné.' }; vypis(); return; }
@@ -154,15 +107,12 @@
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const box = (popis, cislo, dalsi, tr) => `<div class="dlazdice"><div class="popis">${popis}</div><div class="cislo ${tr || ''}">${cislo}</div>${dalsi ? `<div class="dalsi">${dalsi}</div>` : ''}</div>`;
   const tecka = b => `<span class="tecka" style="background:${b}"></span>`;
-  function jdiNaPole(cesta) {
-    let el = document.querySelector(`[data-p="${cesta}"]`);
-    if (!el) return;
+  /** Písmo nemá pole [data-p] – skok na výběr písma. */
+  function jdiNaPismo() {
+    const el = $('vyberPisma');
     const det = el.closest('details'); if (det) det.open = true;
-    const tel = el.closest('.zalozka-telo'); if (tel) TrubkyGui.otevriZalozku(tel.dataset.telo);
-    const bx = el.closest('[data-box]'); TrubkyGui.ukazBox(bx ? bx.dataset.box : 'obecne');
-    if (cesta === 'text.pismo') el = $('vyberPisma');
+    TrubkyGui.ukazBox('in');
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    if (el.focus) el.focus({ preventScroll: true });
     el.classList.remove('zvyrazni'); void el.offsetWidth; el.classList.add('zvyrazni');
   }
   function vypisPokyny() {
@@ -194,13 +144,15 @@
     st.textContent = !wasm && !chybaJadra ? 'Načítám geometrické jádro…' : chyba;
     st.classList.toggle('chyba', !!chyba);
     const H = chybaJadra ? [{ uroven: 'chyba', text: chybaJadra, pole: [] }] : KLIC.kontroly(p, model);
+    let o = null;
     if (model && model.dily) {
       const sit = model.sit, objem = model.dily.reduce((s, d) => s + d.objem, 0), plocha = sit.reduce((s, k) => s + k.plocha, 0);
       const bb = KLIC.obalDilu(model.dily), zmen = p.tisk.rezim === 'jedna' ? model.odv.udalosti.length : (model.odv.magnet ? 1 : 0);
-      const o = KLIC.odhad(objem, plocha, p, zmen), mat = KLIC.MATERIALY[p.tisk.material];
+      o = KLIC.odhad(objem, plocha, p, zmen); const mat = KLIC.MATERIALY[p.tisk.material];
       const poRolich = KLIC.ROLE.map(r => [r, model.dily.filter(d => d.role === r).reduce((s, d) => s + d.objem, 0)]).filter(x => x[1] > 0);
       const roz = `${fmt(bb[3] - bb[0])} × ${fmt(bb[4] - bb[1])} × ${fmt(bb[5] - bb[2], 2)}`;
       $('vysledky').innerHTML = box('Rozměr', `${roz} mm`, `písmo ${fmt(model.info.cap, 1)} mm (verzálky)`)
+        + box('Objem', `${fmt(objem / 1000, 2)} cm³`, `${model.dily.length} díly, plné`)
         + box('Hmotnost', `${fmt(o.g, 1)} g`, `${mat.nazev}, ${fmt(o.m, 2)} m filamentu 1,75 mm`)
         + box('Po barvách', poRolich.map(([r, v]) => `${tecka(barvaDilu({ role: r }))} ${fmt(v / Math.max(1e-9, objem) * o.g, 1)} g`).join(' '), poRolich.map(([r]) => KLIC.NAZVY_ROLI[r]).join(' · '))
         + box('Doba tisku', `≈ ${fmt(o.min, 0)} min`, `${model.odv.vrstev} vrstev`)
@@ -221,39 +173,30 @@
     $('sMagnet').textContent = p.magnet.zap ? `⌀ ${fmt(p.magnet.prumer)} × ${fmt(p.magnet.vyska)}` : 'ne';
     $('sStojanek').textContent = p.stojanek.zap ? `${fmt(p.stojanek.uhel, 0)}°` : 'ne';
     vypisPokyny();
-    const ul = $('hlaseni'); ul.innerHTML = '';
-    for (const x of H) {
-      const li = document.createElement('li'); li.className = x.uroven + (x.pole.length ? ' skok' : '');
-      li.textContent = x.text;
-      if (x.pole.length) {
-        li.tabIndex = 0;
-        const kam = document.createElement('span'); kam.className = 'kam'; kam.textContent = '→ upravit'; li.appendChild(kam);
-        li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') jdiNaPole(x.pole[0]); });
-        li.addEventListener('keydown', e => { if (e.key === 'Enter') jdiNaPole(x.pole[0]); });
-      }
-      if (x.oprava) {
-        const b = document.createElement('button'); b.className = 'tl oprava'; b.textContent = '🔧 ' + x.oprava.text;
-        b.addEventListener('click', () => { zmen(q => KLIC.poloz(q, x.oprava.pole, x.oprava.hodnota)); naplnFormular(); });
-        li.appendChild(b);
-      }
-      ul.appendChild(li);
-    }
-    const nch = H.filter(x => x.uroven === 'chyba').length, nv = H.filter(x => x.uroven === 'varovani').length;
-    const o = $('stavOdznak');
-    o.className = 'odznak ' + (nch ? 'chyba' : nv ? 'mez' : 'ok');
-    o.textContent = !wasm && !chybaJadra ? '…' : nch ? `✖ ${nch}` : nv ? `⚠ ${nv}` : '✔';
-    $('sKontrola').textContent = nch ? `${nch} ${nch === 1 ? 'chyba' : nch < 5 ? 'chyby' : 'chyb'}` : nv ? `${nv} varování` : 'v pořádku';
+    app.hlaseni(H, { boxy: ['boxText', 'boxTvar'] });
+    if (!wasm && !chybaJadra) $('stavOdznak').textContent = '…';
+    kusovnik();
     $('sDavka').textContent = KLIC.seznamJmen(p.davka.jmena).length ? `${KLIC.seznamJmen(p.davka.jmena).length} ks` : '';
   }
 
-  /* ---------- export ---------- */
-  const jmenoSouboru = pripona => (KLIC.bezDiakritiky(p.nazev) || 'klicenka') + pripona;
-  function stahni(data, nazev, typ) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: typ }));
-    a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  /** Kusovník: díly jednoho kusu (podklad, text, rámeček…) s objemem, hmotností a STL zvlášť. */
+  function kusovnik() {
+    const tb = $('tDily'); tb.innerHTML = '';
+    if (!model || !model.dily) return;
+    const hust = KLIC.MATERIALY[p.tisk.material].hustota;
+    for (const d of model.dily) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${tecka(barvaDilu(d))} ${esc(d.nazev || KLIC.NAZVY_ROLI[d.role] || d.jmeno)}</td><td class="c">${fmt(d.objem / 1000, 2)} cm³</td><td class="c">${fmt(d.objem / 1000 * hust, 1)} g</td><td class="c"><button class="tl" type="button">STL</button></td>`;
+      const b = tr.querySelector('button');
+      b.setAttribute('aria-label', 'Stáhnout STL – ' + (d.nazev || d.role));
+      b.addEventListener('click', () => { if (lzeExport()) stahni(KRAB.stlBinarni([d], 'klicenky - ' + (d.jmeno || d.role)), jmenoSouboru('_' + (KLIC.bezDiakritiky(d.jmeno || d.role) || 'dil') + '.stl'), 'model/stl'); });
+      tb.appendChild(tr);
+    }
   }
+
+  /* ---------- export ---------- */
+  const jmenoSouboru = pripona => (KLIC.bezDiakritiky(app.p.nazev) || 'klicenka') + pripona;
+  const stahni = (data, nazev, typ) => app.stahni(data, nazev, typ);
   function lzeExport() {
     if (!model || !model.dily) { Dialog.chyba('Model nelze sestavit: ' + (chybaJadra || (model && model.chyba) || 'jádro se ještě načítá')); return false; }
     if (KLIC.kontroly(p, model).some(h => h.uroven === 'chyba')) Dialog.info('Pozor: kontrola hlásí chyby – export proběhl, ale výrobek nemusí jít vytisknout (záložka Kontrola).');
@@ -268,7 +211,6 @@
     const b = KLIC.stlPoBarvach(jedenKus(), KLIC.bezDiakritiky(p.nazev) || 'klicenka');
     stahni(KRAB.zip(b.map(x => ({ name: x.name, data: x.data }))), jmenoSouboru('_po_barvach.zip'), 'application/zip');
   });
-  $('btnPng').addEventListener('click', () => { fetch(nahled.png()).then(r => r.blob()).then(b => stahni(b, jmenoSouboru('.png'))); });
 
   /* ---------- dávka ---------- */
   function davka() {
@@ -276,7 +218,7 @@
     const pridej = (uroven, text) => { const li = document.createElement('li'); li.className = uroven; li.textContent = text; st.appendChild(li); };
     if (!wasm || !font) { pridej('chyba', 'Geometrické jádro nebo písmo ještě není načtené.'); return null; }
     const jmena = KLIC.seznamJmen(p.davka.jmena);
-    if (!jmena.length) { pridej('varovani', 'Seznam jmen je prázdný – napište jedno jméno na řádek.'); jdiNaPole('davka.jmena'); return null; }
+    if (!jmena.length) { pridej('varovani', 'Seznam jmen je prázdný – napište jedno jméno na řádek.'); app.jdiNaPole('davka.jmena'); return null; }
     const d = KLIC.sestavDavku(wasm, font, p);
     for (const c of d.chyby) pridej('chyba', `„${c.text}“: ${c.chyba}`);
     if (!d.kusy.length) return null;
@@ -313,59 +255,21 @@
     const b = document.createElement('button'); b.className = 'pol'; b.setAttribute('role', 'menuitem');
     b.innerHTML = `${v.nazev}<span class="pozn">${v.popis}</span>`;
     b.addEventListener('click', () => {
-      nahrad(KLIC.pouzijPredvolbu(p, v));
+      app.nahrad(KLIC.pouzijPredvolbu(app.p, v));
     });
     $('seznamPredvoleb').appendChild(b);
   }
-  $('btnUlozit').addEventListener('click', () => stahni(KLIC.ulozProjekt(p), jmenoSouboru('.json'), 'application/json'));
-  $('btnNacist').addEventListener('click', () => $('soubor').click());
-  $('soubor').addEventListener('change', async e => {
-    const f = e.target.files[0]; e.target.value = '';
-    if (!f) return;
-    try { const { p: q, hlaseni } = KLIC.nactiProjekt(await f.text()); nahrad(q); if (hlaseni.length) hlasPrevod(hlaseni, 'Projekt'); else Dialog.info('Projekt načten.'); }
-    catch (err) { Dialog.chyba(err.message); }
-  });
-  $('btnVychozi').addEventListener('click', async () => {
-    if (await Dialog.potvrd('Vrátit všechny parametry na výchozí hodnoty?')) nahrad(KLIC.normalizuj({}).p);
-  });
-  $('btnZpet').addEventListener('click', () => krokHistorie(zpet, znovu));
-  $('btnZnovu').addEventListener('click', () => krokHistorie(znovu, zpet));
-  function prepinac(id, co) {
-    const b = $(id);
-    b.addEventListener('click', () => { const h = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(h)); nahled.prepni(co, h); });
-  }
-  prepinac('tHrany', 'hrany'); prepinac('tRoviny', 'roviny');
-  $('stavOdznak').addEventListener('click', () => TrubkyGui.otevriZalozku('kontrola'));
-  $('btnNapoveda').addEventListener('click', () => $('dlgNapoveda').showModal());
-  $('btnZavritNap').addEventListener('click', () => $('dlgNapoveda').close());
-  document.addEventListener('keydown', e => {
-    const a = document.activeElement;
-    const vPoli = a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !/checkbox|range|radio|button|color/.test(a.type));
-    if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'z') { e.preventDefault(); krokHistorie(e.shiftKey ? znovu : zpet, e.shiftKey ? zpet : znovu); return; }
-    if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'y') { e.preventDefault(); krokHistorie(znovu, zpet); return; }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); exportStl(); return; }
-    if (e.key === 'F1') { e.preventDefault(); $('dlgNapoveda').showModal(); return; }
-    if (vPoli || e.ctrlKey || e.metaKey || e.altKey || $('dlgNapoveda').open) return;
-    const k = e.key.toLowerCase();
-    if (k === '1') nahled.pohled('iso'); else if (k === '2') nahled.pohled('shora'); else if (k === '3') nahled.pohled('zboku');
-    else if (k === 'h') $('tHrany').click(); else if (k === 'r') $('tRoviny').click();
-  });
-  new MutationObserver(() => naplanuj()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-  if (typeof Tvary !== 'undefined') Tvary.pripoj({
-    klic: 'webapp_klicenky_tvary', typ: 'klicenky', nazev: 'Klíčenka', kontejner: $('tvary'),
-    parametry: () => KLIC.kopie(p),
-    pouzij: q => { const n = KLIC.normalizuj(q); hlasPrevod(n.hlaseni, 'Uložená klíčenka'); nahrad(n.p); },
-    popis: q => `${(q.text && q.text.obsah || '').replace(/\n/g, ' / ')} – ${KLIC.NAZVY.tvar[q.podklad && q.podklad.tvar] || ''}, ${KLIC.NAZVY.rezim[q.text && q.text.rezim] || ''}`,
-  });
+  app.prepinac('tHrany', h => nahled.prepni('hrany', h));
+  app.prepinac('tRoviny', h => nahled.prepni('roviny', h));
+  app.prepinac('tPrevisy', h => { nahled.prepni('previsy', h); $('legPrevisy').hidden = !h; }, true);
+  app.prepinac('tPravitka', h => nahled.prepni('pravitka', h), true);
 
   /* ---------- start ---------- */
-  p = nactiUlozeny();
-  naplnFormular();
-  vypis();
-  nactiManifold().then(w => { wasm = w; naplanuj(); }).catch(e => {
-    chybaJadra = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – model ani export nejsou k dispozici.';
-    vypis();
+  app.start({
+    manifold: {
+      ok: w => { wasm = w; naplanuj(); },
+      chyba: e => { chybaJadra = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – model ani export nejsou k dispozici.'; vypis(); },
+    },
   });
-  window.__klicenky = { get p() { return p; }, get model() { return model; }, nahled, zmen, prestav, davka, naplnFormular };
+  window.__klicenky = { get p() { return app.p; }, get model() { return model; }, nahled, zmen: app.zmen, prestav, davka, naplnFormular: app.naplnFormular, app };
 })();

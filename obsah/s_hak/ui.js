@@ -1,9 +1,9 @@
-/* S hák – ovládání stránky: formulář, historie, nabídky, paleta a editor průřezu, kresby, export. */
-/* global SHAK, SHAK_NAHLED, SHAK_EDITOR, KRAB, Dialog, Tvary */
+/* S hák – ovládání stránky nad společným zapojením gen3d/aplikace.js (historie, projekt, Moje…, sdílení, hlášení, klávesy):
+   tady formulář s živou odezvou, paleta a editor průřezu, kresby, výsledky, výkres, technický list a export. */
+/* global SHAK, SHAK_NAHLED, SHAK_EDITOR, KRAB, G3D, Dialog, TrubkyGui */
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const KLIC = 'webapp_s_hak_projekt';
   const fmt = SHAK.fmt;
 
   const PREDVOLBY = [
@@ -21,55 +21,31 @@
       p: { trubka1: 10, trubka2: 6, presah: 0.8, presah2: 0.4, roztec: 36, prurez: { typ: 'elipsa', sirka: 5, vyska: 5 } } },
   ];
 
-  /* ---------- stav a historie ---------- */
-  let p, model = null, pev = null;
-  const zpet = [], znovu = [];
-  function nactiUlozeny() {
-    try {
-      const t = localStorage.getItem(KLIC);
-      if (t) { const r = SHAK.normalizuj(JSON.parse(t)); hlasPrevod(r.hlaseni, 'Uložený hák'); return r.p; }
-    } catch (e) { /* poškozený záznam */ }
-    return SHAK.normalizuj({}).p;
-  }
-  /** Hlášení z normalizace (převod starších dat, omezené hodnoty) – uživatel musí vědět, že se něco změnilo. */
-  function hlasPrevod(hlaseni, co) { if (hlaseni && hlaseni.length) setTimeout(() => Dialog.info(`${co} upraven: ${hlaseni.join('; ')}.`), 300); }
-  function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(p)); } catch (e) { /* plné úložiště */ } }
-  function zmen(fn, slouceni) {
-    const pred = JSON.stringify(p);
-    fn(p);
-    p = SHAK.normalizuj(p).p;
-    if (JSON.stringify(p) === pred) return;
-    const posl = zpet[zpet.length - 1];
-    if (!(slouceni && posl && posl.klic === slouceni && Date.now() - posl.cas < 1200)) zpet.push({ stav: pred, klic: slouceni, cas: Date.now() });
-    else posl.cas = Date.now();
-    if (zpet.length > 100) zpet.shift();
-    znovu.length = 0;
-    po();
-  }
-  function krokHistorie(z, do_) {
-    if (!z.length) return;
-    do_.push({ stav: JSON.stringify(p), cas: 0 });
-    p = SHAK.normalizuj(JSON.parse(z.pop().stav)).p;
-    naplnFormular(); po();
-  }
-  function po() {
-    $('btnZpet').disabled = !zpet.length; $('btnZnovu').disabled = !znovu.length;
-    uloz(); prepocitej();
-  }
+  /* ---------- stav (historie, ukládání, projekt, sdílení a klávesy drží G3D.aplikace) ---------- */
+  let p, model = null, pev = null, tichoTematu = false;
+  const app = G3D.aplikace({
+    typ: 's_hak', nazev: 'S hák', klic: 'webapp_s_hak', soubor: 'S_hak',
+    normalizuj: SHAK.normalizuj, vychozi: () => SHAK.normalizuj({}).p,
+    ulozProjekt: SHAK.ulozProjekt, nactiProjekt: SHAK.nactiProjekt, vezmi: SHAK.vezmi, poloz: SHAK.poloz,
+    popis: q => `${q.nazev || 'S hák'} – Ø ${fmt(q.trubka1)} / Ø ${fmt(q.trubka2)}, rozteč ${fmt(q.roztec)} mm`,
+    hlasitOpravyUlozeneho: true,
+    formular: false,   // pole mají živou odezvu (input) a hlášení o omezení rozsahu – níž
+    viditelnost: q => { p = q; },
+    poNaplneni: q => { p = q; $('f_body').value = editor.bodyNaText(p.prurez.vlastni); oznacPaletu(); kresliPrurez(); },
+    prepocitej: () => prepocitej(),
+    png: () => nahled.png(), pohled: j => nahled.pohled(j),
+    exportStl: () => exportStl(),
+    doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(), p.nazev || 'S hák'), pripona: '.3mf' } : null),
+    zkratky: { t: 'tTrubky', n: 'tNapeti', m: 'tTisk', h: 'tHrany', p: 'tPrevisy', l: 'tPravitka' },
+    hlaseniNavic: (li, x) => hlaseniNavic(li, x),
+    zmenaTematu: () => { if (!tichoTematu) prepocitej(); },   // vlastní přepnutí tématu (technický list) se nepočítá
+  });
+  p = app.p;
+  const zmen = (fn, slouceni) => { app.zmen(fn, slouceni); p = app.p; };
+  const naplnFormular = () => app.naplnFormular();
 
   /* ---------- formulář ---------- */
   const pole = [...document.querySelectorAll('[data-p]')];
-  function naplnFormular() {
-    for (const el of pole) {
-      const h = SHAK.vezmi(p, el.dataset.p);
-      if (el.type === 'checkbox') el.checked = !!h;
-      else if (document.activeElement !== el) el.value = el.dataset.typ === 'text' ? (h ?? '') : String(h).replace('.', ',');
-      el.classList.remove('spatne');
-    }
-    $('f_body').value = editor.bodyNaText(p.prurez.vlastni);
-    oznacPaletu();
-    kresliPrurez();
-  }
   for (const el of pole) {
     const akce = () => {
       const c = el.dataset.p;
@@ -85,6 +61,7 @@
     };
     el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', akce);
     if (el.tagName === 'INPUT' && el.type !== 'checkbox') el.addEventListener('change', () => {
+      akce();   // i bez předchozího „input“ (vložení, skript)
       // po potvrzení ukázat hodnotu, se kterou model opravdu počítá (omezení rozsahu), a upozornit na ni
       const psano = SHAK.cislo(el.value, NaN), h = SHAK.vezmi(p, el.dataset.p);
       naplnFormular();
@@ -275,15 +252,16 @@
       $('vPrurez').innerHTML = box('Průřez', `${fmt(pr.sirka)} × ${fmt(pr.vyska)} mm`, `plocha ${fmt(Math.abs(pr.plocha), 2)} mm²`)
         + box('Bodů obrysu', String(pr.body.length), SHAK.TYPY[p.prurez.typ].nazev);
       const mat = SHAK.MATERIALY[p.material];
-      const objem = k.objem / 1000, hm = objem * mat.hustota;
+      const objem = k.objem / 1000, hm = objem * mat.hustota, od = G3D.odhadTisku(k.objem, mat.hustota);
+      const tisk = box('Filament a tisk', `${fmt(od.metru, 2)} m · ≈ ${od.minut < 60 ? od.minut + ' min' : fmt(od.minut / 60, 1) + ' h'}`, 'jeden hák, plný díl, 1,75 mm – hrubý odhad');
       if (pev && pev.drzi) {
         const kg = SHAK.nosnost(pev, p.material, p.bezpecnost);
         $('vPevnost').innerHTML = box('Odhad nosnosti', `${fmt(kg, kg < 10 ? 2 : 1)} kg`, `${mat.nazev}, bezpečnost ${fmt(p.bezpecnost)} → ${fmt(kg * 9.81, 0)} N`, kg < 1 ? 'mez-t' : 'ok-t')
           + box('Napětí na 1 kg', `${fmt(pev.max * 9.81, 2)} MPa`, `nejvíc ${popisMista(pev.kde)}`)
-          + box('Hmotnost', `${fmt(hm, 1)} g`, `objem ${fmt(objem, 2)} cm³`) + boxZacvaknuti(mat);
+          + box('Hmotnost', `${fmt(hm, 1)} g`, `objem ${fmt(objem, 2)} cm³`) + tisk + boxZacvaknuti(mat);
         $('sPevnost').textContent = `≈ ${fmt(kg, kg < 10 ? 1 : 0)} kg`;
       } else {
-        $('vPevnost').innerHTML = box('Odhad nosnosti', '—', 'hák trubku nedrží', 'chyba-t') + box('Hmotnost', `${fmt(hm, 1)} g`, `objem ${fmt(objem, 2)} cm³`);
+        $('vPevnost').innerHTML = box('Odhad nosnosti', '—', 'hák trubku nedrží', 'chyba-t') + box('Hmotnost', `${fmt(hm, 1)} g`, `objem ${fmt(objem, 2)} cm³`) + tisk;
         $('sPevnost').textContent = '—';
       }
       const dobra = k.uzavrena && !k.degenerovanych;
@@ -297,32 +275,18 @@
     } else {
       for (const id of ['vTrasa', 'vPrurez', 'vPevnost', 'vSit']) $(id).innerHTML = '';
     }
-    // hlášení
-    const ul = $('hlaseni'); ul.innerHTML = '';
-    for (const x of H) {
-      const li = document.createElement('li'); li.className = x.uroven + (x.pole.length ? ' skok' : '');
-      li.textContent = x.text;
-      if (x.pole.length) {
-        li.tabIndex = 0;
-        const kam = document.createElement('span'); kam.className = 'kam'; kam.textContent = '→ upravit'; li.appendChild(kam);
-        const jdi = () => jdiNaPole(x.pole[0]);
-        li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') jdi(); });
-        li.addEventListener('keydown', e => { if (e.key === 'Enter') jdi(); });
-      }
-      if (x.oprava) {
-        const b = document.createElement('button'); b.className = 'tl oprava'; b.textContent = '🔧 ' + x.oprava.text;
-        b.addEventListener('click', () => { zmen(q => SHAK.poloz(q, x.oprava.pole, x.oprava.hodnota)); naplnFormular(); });
-        li.appendChild(b);
-      }
-      ul.appendChild(li);
-    }
-    const nch = H.filter(x => x.uroven === 'chyba').length, nv = H.filter(x => x.uroven === 'varovani').length;
+    app.hlaseni(H);
     if (model && model.chyba) TrubkyGui.otevriZalozku('kontrola');   // model nejde sestavit – oprava musí být hned vidět
-    const o = $('stavOdznak');
-    o.className = 'odznak ' + (nch ? 'chyba' : nv ? 'mez' : 'ok');
-    o.textContent = nch ? `✖ ${nch}` : nv ? `⚠ ${nv}` : '✔';
-    const chyb = n => n === 1 ? 'chyba' : n < 5 ? 'chyby' : 'chyb';
-    $('sKontrola').textContent = nch ? `${nch} ${chyb(nch)}` : nv ? `${nv} varování` : 'v pořádku';
+  }
+  /** Hlášení vypisuje G3D.aplikace; skok vede přes vlastní jdiNaPole (pole skryté pro tento průřez → paleta / editor).
+      Posluchače v zachytávací fázi předběhnou ty z jádra. */
+  function hlaseniNavic(li, x) {
+    if (!x.pole.length) return;
+    const jdi = e => {
+      if ((e.type === 'keydown' && e.key !== 'Enter') || e.target.tagName === 'BUTTON') return;
+      e.stopImmediatePropagation(); jdiNaPole(x.pole[0]);
+    };
+    li.addEventListener('click', jdi, true); li.addEventListener('keydown', jdi, true);
   }
   function boxZacvaknuti(mat) {
     const z = SHAK.zacvaknuti(model), e = Math.max(z[0].eps, z[1].eps);
@@ -372,15 +336,16 @@
     return col;
   }
   function prepocitej() {
+    p = app.p;
     nahled.barvy(css('--bg-input'), css('--border-strong'), css('--border'), css('--text'));
     model = SHAK.sestav(p);
     pev = model.chyba ? null : SHAK.pevnost(model);
     const H = SHAK.kontroly(model);
     const k = model.chyba ? null : KRAB.kontrolaSite(model.poz, model.idx);
-    nahled.nastav(model, model.chyba ? null : barvyNapeti());
+    nahled.nastav(model, model.chyba ? null : barvyNapeti(), { uhel: p.tisk.uhel });
     const st = $('stav3d');
     st.textContent = model.chyba || ''; st.classList.toggle('chyba', !!model.chyba);
-    $('legNapeti').hidden = !(nahled.stav.napeti && pev && pev.max);
+    legendy();
     if (pev && pev.max) $('legMax').textContent = `${fmt(pev.max * 9.81, 2)} MPa / kg`;
     vypis(H, k);
     kartaNahledu(k);
@@ -401,13 +366,7 @@
     seznam.appendChild(b);
   }
 
-  const jmenoSouboru = pripona => ((p.nazev || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w-]+/g, '_').replace(/^_|_$/g, '') || 'S_hak') + pripona;
-  function stahni(data, nazev, typ) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: typ }));
-    a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  }
+  const jmenoSouboru = app.jmeno, stahni = app.stahni;
   const lzeExport = () => {
     if (!model || model.chyba) { Dialog.chyba('Model nelze sestavit: ' + (model ? model.chyba : '')); return false; }
     return true;
@@ -513,67 +472,34 @@
     okno.document.open(); okno.document.write(html); okno.document.close();
   }
   $('btnList').addEventListener('click', technickyList);
-  $('btnUlozit').addEventListener('click', () => stahni(SHAK.ulozProjekt(p), jmenoSouboru('.json'), 'application/json'));
-  $('btnNacist').addEventListener('click', () => $('soubor').click());
-  $('soubor').addEventListener('change', async e => {
-    const f = e.target.files[0]; e.target.value = '';
-    if (!f) return;
-    try {
-      const { p: q, hlaseni } = SHAK.nactiProjekt(await f.text());
-      zmen(x => { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, q); }); naplnFormular();
-      if (hlaseni.length) hlasPrevod(hlaseni, 'Projekt'); else Dialog.info('Projekt načten.');
-    }
-    catch (err) { Dialog.chyba(err.message); }
+  $('btnTrasa').addEventListener('click', () => {
+    $('dTrubky').open = true; TrubkyGui.ukazBox('in');
+    $('cTrasa').scrollIntoView({ block: 'center', behavior: 'smooth' });
   });
-  $('btnVychozi').addEventListener('click', async () => {
-    if (!await Dialog.potvrd('Vrátit všechny parametry na výchozí hodnoty?')) return;
-    zmen(x => { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, SHAK.normalizuj({}).p); }); naplnFormular();
-  });
-  $('btnPng').addEventListener('click', () => { fetch(nahled.png()).then(r => r.blob()).then(b => stahni(b, jmenoSouboru('.png'))); });
-  $('btnZpet').addEventListener('click', () => krokHistorie(zpet, znovu));
-  $('btnZnovu').addEventListener('click', () => krokHistorie(znovu, zpet));
-  function prepinac(id, co) {
-    const b = $(id);
-    b.addEventListener('click', () => {
-      const h = b.getAttribute('aria-pressed') !== 'true';
-      b.setAttribute('aria-pressed', String(h)); nahled.prepni(co, h);
-      if (co === 'napeti') prepocitej();
-    });
+
+  /* ---------- přepínače zobrazení, klávesy ---------- */
+  function legendy() {
+    $('legNapeti').hidden = !(nahled.stav.napeti && pev && pev.max && !(nahled.stav.tisk && nahled.stav.previsy));
+    $('legPrevisy').hidden = !(model && !model.chyba && nahled.stav.tisk && nahled.stav.previsy);
   }
+  const prepinac = (id, co, pamatovat) => app.prepinac(id, h => { nahled.prepni(co, h); legendy(); if (co === 'napeti' && model) prepocitej(); }, pamatovat);
   prepinac('tTrubky', 'trubky'); prepinac('tNapeti', 'napeti'); prepinac('tTisk', 'tisk'); prepinac('tHrany', 'hrany');
-  $('stavOdznak').addEventListener('click', () => TrubkyGui.otevriZalozku('kontrola'));
-  $('btnNapoveda').addEventListener('click', () => $('dlgNapoveda').showModal());
-  $('btnZavritNap').addEventListener('click', () => $('dlgNapoveda').close());
+  prepinac('tPrevisy', 'previsy', true); prepinac('tPravitka', 'pravitka', true);
+  // editor průřezu má vlastní klávesy (+ − 0 , . šipky…) – na plátně editoru neplatí zkratky stránky (kromě Ctrl a F1)
+  $('cPrurez').addEventListener('keydown', e => { if (!e.ctrlKey && !e.metaKey && e.key !== 'F1') e.stopPropagation(); });
+  // česká klávesnice: horní řada bez Shiftu píše +ěščř – pohledy 1–5 i podle fyzické klávesy
   document.addEventListener('keydown', e => {
-    const a = document.activeElement;
-    const vPoli = a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !/checkbox|range|radio|button/.test(a.type));
-    if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'z') { e.preventDefault(); krokHistorie(e.shiftKey ? znovu : zpet, e.shiftKey ? zpet : znovu); return; }
-    if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'y') { e.preventDefault(); krokHistorie(znovu, zpet); return; }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); exportStl(); return; }
-    if (e.key === 'F1') { e.preventDefault(); $('dlgNapoveda').showModal(); return; }
-    if (vPoli || e.ctrlKey || e.metaKey || e.altKey || document.activeElement === $('cPrurez') || $('dlgNapoveda').open) return;
-    const k = e.key.toLowerCase();
-    if (k === '1') nahled.pohled('iso'); else if (k === '2') nahled.pohled('shora'); else if (k === '3') nahled.pohled('zboku');
-    else if (k === 't') $('tTrubky').click(); else if (k === 'n') $('tNapeti').click(); else if (k === 'm') $('tTisk').click(); else if (k === 'h') $('tHrany').click();
+    const m = /^(?:Digit|Numpad)([1-5])$/.exec(e.code || ''), a = document.activeElement;
+    if (!m || /^[1-5]$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]')) return;
+    if (a && (/^(TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable || (a.tagName === 'INPUT' && !/checkbox|range|radio|button/.test(a.type)))) return;
+    nahled.pohled(['iso', 'shora', 'zepredu', 'zboku', 'zespodu'][m[1] - 1]);
   });
   // plátna překreslit při každé změně velikosti (posuvník panelu, otevření sekce) – jinak editor zasahuje podle starého měřítka
   const kresby = new Map([['cTrasa', kresliTrasu], ['cPrurez', kresliPrurez], ['cProlnuti', kresliProlnuti]]);
   const odloz = f => { let ceka = false; return () => { if (ceka || !model) return; ceka = true; requestAnimationFrame(() => { ceka = false; f(); }); }; };
   for (const [id, f] of kresby) new ResizeObserver(odloz(f)).observe($(id));
   new ResizeObserver(odloz(kresliPaletu)).observe(paleta);
-  let tichoTematu = false;
-  new MutationObserver(() => { if (!tichoTematu) prepocitej(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-  if (typeof Tvary !== 'undefined') Tvary.pripoj({
-    klic: 'webapp_s_hak_tvary', typ: 's_hak', nazev: 'S hák', kontejner: $('tvary'),
-    parametry: () => SHAK.kopie(p),
-    pouzij: q => { const n = SHAK.normalizuj(q), r = n.p; hlasPrevod(n.hlaseni, 'Uložený hák'); zmen(x => { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, r); }); naplnFormular(); },
-    popis: q => `${q.nazev || 'S hák'} – Ø ${fmt(q.trubka1)} / Ø ${fmt(q.trubka2)}, rozteč ${fmt(q.roztec)} mm`,
-  });
-
   /* ---------- start ---------- */
-  p = nactiUlozeny();
-  naplnFormular();
-  prepocitej();
-  window.SHAK_UI = { nahled, technickyList, get ed() { return editor.ed; }, get p() { return p; }, get model() { return model; }, zmen, naplnFormular, prepocitej, svgTrasy };
+  app.start();
+  window.SHAK_UI = { nahled, technickyList, get ed() { return editor.ed; }, get p() { return app.p; }, get model() { return model; }, zmen, naplnFormular, prepocitej, svgTrasy, app };
 })();

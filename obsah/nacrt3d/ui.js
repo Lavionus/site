@@ -147,7 +147,10 @@
     const bez = k.filter(p => p.hodnota == null).length;
     pruh.textContent = infoText || NAPOVEDA_NASTROJU[nast.nastroj] || '';
     const tvar = (c, a, b, d) => c + ' ' + (c === 1 ? a : c >= 2 && c <= 4 ? b : d);
-    $('pocty').textContent = n || k.length ? tvar(n, 'čára', 'čáry', 'čar') + ' · ' + tvar(k.length, 'kóta', 'kóty', 'kót') + (bez ? ` (${bez} bez čísla)` : '') : N.TYPY_LISTU[vykres.typ].popis;
+    // části zvlášť (span) – slovník i18n přeloží každou podle vlastního vzoru
+    const el = $('pocty'), cast = t => { const s = document.createElement('span'); s.textContent = t; return s; };
+    if (n || k.length) el.replaceChildren(cast(tvar(n, 'čára', 'čáry', 'čar')), ' · ', cast(tvar(k.length, 'kóta', 'kóty', 'kót')), ...(bez ? [' ', cast(`(${bez} bez čísla)`)] : []));
+    else el.textContent = N.TYPY_LISTU[vykres.typ].popis;
   }
   const model = {
     vykres, nast,
@@ -283,6 +286,10 @@
     if (!r || r.chyba) { Dialog.chyba('Model nejde uložit: ' + (r ? r.chyba : 'stavba selhala')); return; }
     const dil = [{ poz: r.poz, idx: r.idx }], jmeno = 'nacrt3d-' + vykres.typ;
     if (fmt === 'stl') stahni(KRAB.stlBinarni(dil, 'Z nacrtu do 3D'), jmeno + '.stl', 'model/stl');
+    else if (fmt === 'modelar') {   // předat Modeláři (gen3d/predavka.js) – otevře se s dílem ve scéně
+      try { await G3D.predej('modelar', new Blob([KRAB.soubor3mf(dil, 'Díl z náčrtu')]), jmeno + '.3mf'); location.href = 'modelar.html#predavka'; }
+      catch (e) { Dialog.chyba('Model se nepodařilo předat Modeláři: ' + e.message); }
+    }
     else stahni(KRAB.soubor3mf(dil, 'Díl z náčrtu'), jmeno + '.3mf', 'model/3mf');
   }
 
@@ -482,6 +489,7 @@
     panel3d: prepniPanel,
     exportStl: () => exportuj('stl'),
     export3mf: () => exportuj('3mf'),
+    doModelare: () => exportuj('modelar'),
     tiskPdf: () => tiskPdf(),
     async smazat() {
       if (!vykres.prvky.length) return;

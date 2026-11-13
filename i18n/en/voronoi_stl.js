@@ -37,4 +37,7 @@ I18N.pridej('en', {
   'Nejdřív vygeneruj voronoi': 'Generate the Voronoi first',
   'STL uloženo: {download}': 'STL saved: {download}',
   'Přetáhni soubor .STL': 'Drag an .STL file',
+  'Otevře Modelář 3D s tímto modelem ve scéně': 'Opens the 3D Modeller with this model in the scene',
+  'Do Modeláře': 'To Modeller',
+  'Předání do Modeláře selhalo: {message}': 'Handing over to the Modeller failed: {message}',
 });

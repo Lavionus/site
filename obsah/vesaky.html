@@ -6,12 +6,17 @@
   <title>Věšáky se skrytými šrouby – generátor pro 3D tisk</title>
   <meta name="description" content="Generátor nástěnných věšáků na bundy, kabáty, tašky a ručníky pro 3D tisk se skrytými šrouby: úchyt s rybinou nebo T přišroubovaný na zeď, věšák se nasune shora a vruty zakryje, klín vymezí vůli. Tvar háčku z ramen (rovně, oblouk, spirála, zlom), galerie tvarů, náhodný generátor s kontrolou, že poutko drží, odhad pevnosti, tisk na boku bez podpor, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="spojky/jadro.js"></script>
   <script src="vesaky/jadro.js"></script>
@@ -20,7 +25,6 @@
   <script src="vesaky/profil.js"></script>
   <script src="vesaky/nahled.js"></script>
   <script src="../tvary.js"></script>
-  <style>
   <style>
     :root { --sloupec: 320px; }
     button, select, input, textarea { font: inherit; color: inherit; }
@@ -38,9 +42,6 @@
     .karta3d:empty { display: none; }
     .karta3d b { color: var(--text); font-variant-numeric: tabular-nums; }
     .karta3d .titul { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
-    .legenda3d { position: absolute; left: 10px; bottom: 30px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
-      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .legenda3d i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }
     @media (max-width: 600px) { .karta3d { display: none; } }
 
     label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
@@ -255,20 +256,18 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje věšáky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
-            <button class="pol" id="btnStl" role="menuitem">⬇ STL – věšák i úchyt <span class="pozn">Ctrl+S</span></button>
-            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – věšák i úchyt <span class="pozn">s názvy a barvami</span></button>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">věšák i úchyt · Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše <span class="pozn">s názvy a barvami</span></button>
             <button class="pol" id="btnStlHacek" role="menuitem">⬇ STL – jen věšák</button>
             <button class="pol" id="btnStlUchyt" role="menuitem">⬇ STL – jen úchyt na zeď</button>
-            <div class="nab-tip">Věšák leží na boku (vrstvy podél ramen = nejpevnější), úchyt zadní stranou dolů. Počet kusů nastavíte v záložce Tisk.</div>
             <button class="pol" id="btnStlZkouska" role="menuitem">⬇ STL – zkušební sada vůle <span class="pozn">5 bloků + úchyt</span></button>
+            <div class="nab-tip">Věšák leží na boku (vrstvy podél ramen = nejpevnější), úchyt zadní stranou dolů. Počet kusů nastavíte v záložce Tisk.</div>
             <hr>
-            <div class="nab-nadpis">K tisku na papír</div>
-            <button class="pol" id="btnList" role="menuitem">📐 Technický list <span class="pozn">výkres, kusovník, montáž – A4</span></button>
-            <button class="pol" id="btnSablona" role="menuitem">📏 Vrtací šablona 1:1 <span class="pozn">A4</span></button>
-            <button class="pol" id="btnSvg" role="menuitem">⬇ Výkres <span class="pozn">SVG</span></button>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -281,12 +280,15 @@
         <div class="menu">
           <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
-            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-pressed="true">🧱 Zeď a vruty <span class="pozn">D</span></button>
-            <button class="pol" id="tRozpad" role="menuitemcheckbox" aria-pressed="false">🧩 Rozpad na díly <span class="pozn">R</span></button>
-            <button class="pol" id="tNasazeni" role="menuitemcheckbox" aria-pressed="false">↕ Nasazování (věšák nad úchytem) <span class="pozn">N</span></button>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
             <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
-            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">V</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P / V · v tiskové poloze</span></button>
+            <button class="pol" id="tRozpad" role="menuitemcheckbox" aria-pressed="false">🧩 Rozpad na díly <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <div class="nab-nadpis">Okolí</div>
+            <button class="pol" id="tDuchove" role="menuitemcheckbox" aria-pressed="true">🧱 Zeď a vruty <span class="pozn">D</span></button>
+            <button class="pol" id="tNasazeni" role="menuitemcheckbox" aria-pressed="false">↕ Nasazování (věšák nad úchytem) <span class="pozn">N</span></button>
             <hr>
             <div class="nab-nadpis">Vzhled</div>
             <div class="sloupec-nab vzhled-volba" id="vzhledy" role="group" aria-label="Vzhled"></div>
@@ -300,11 +302,22 @@
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
             <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu (na zeď) <span class="pozn">3</span></button>
             <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku – profil <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" id="btnVykres" role="menuitem">👁 Zobrazit výkres <span class="pozn">záložka Výkres</span></button>
+            <button class="pol" id="btnSvg" role="menuitem">⬇ Výkres <span class="pozn">SVG</span></button>
+            <button class="pol" id="btnList" role="menuitem">📄 Technický list <span class="pozn">výkres, kusovník, montáž – A4, tisk / PDF</span></button>
+            <button class="pol" id="btnSablona" role="menuitem">📏 Vrtací šablona 1:1 <span class="pozn">A4</span></button>
+            <div class="nab-tip">Šablonu tiskněte ve 100 % a ověřte měřítko 50 mm. Technický list uložíte do PDF tiskem prohlížeče.</div>
           </div>
         </div>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
         <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
-        <button class="tl" id="btnNapoveda" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnNap" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -398,7 +411,7 @@
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
-          <div class="legenda3d" id="legenda3d" hidden><span><i style="background:#db3833"></i>převis bez opory</span><span><i style="background:#d9a833"></i>most nad dílem</span></div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="previs"></i>převis bez opory</span><span><i class="most"></i>most nad dílem</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="profil-pane" id="profilPane">
@@ -455,9 +468,9 @@
             <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
             <button role="tab" data-zalozka="pevnost" aria-selected="false">💪 Pevnost <span class="souhrn-zal" id="sPevnost"></span></button>
             <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk <span class="souhrn-zal" id="sTisk"></span></button>
-            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Výkres</button>
             <button role="tab" data-zalozka="kusovnik" aria-selected="false">🔩 Kusovník</button>
             <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Výkres</button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje věšáky</button>
           </div>
           <div class="zalozka-telo" data-telo="vysledky" role="tabpanel">
@@ -570,9 +583,12 @@
     <p><b>Montáž a výroba.</b> Podle druhu zdi stránka navrhne hmoždinku, vrták a délku vrutu (tloušťka úchytu + omítka + kotevní hloubka) a spočítá, jakou silou zátěž vytahuje horní vrut.
       Záložka <b>Výkres</b> ukazuje kótovaný profil, pohled zepředu a řez úchytem; <b>Technický list</b> ho vytiskne s parametry, pevností, kusovníkem a postupem montáže.
       <b>Vrtací šablona</b> se tiskne 1:1 (ověřte měřítkem 50 mm) a u řady věšáků vyznačí i rozestupy. <b>Zkušební sada vůle</b> (Soubor nebo záložka Tisk) ušetří zkažené tisky.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy, <kbd>G</kbd> náhodný tvar, <kbd>O</kbd> obměna, <kbd>R</kbd> rozpad na díly, <kbd>N</kbd> nasazování, <kbd>M</kbd> tisková poloha, <kbd>D</kbd> zeď,
-      <kbd>V</kbd> převisy, <kbd>H</kbd> hrany, <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu,
-      <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>G</kbd> náhodný tvar, <kbd>O</kbd> obměna, <kbd>R</kbd> rozpad na díly, <kbd>N</kbd> nasazování, <kbd>M</kbd> tisková poloha, <kbd>D</kbd> zeď,
+      <kbd>P</kbd> nebo <kbd>V</kbd> převisy, <kbd>H</kbd> hrany, <kbd>L</kbd> pravítka, <kbd>↑</kbd>/<kbd>↓</kbd> v číselném poli ± 1 (<kbd>Shift</kbd> × 10, <kbd>Alt</kbd> po 0,1), <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu,
+      <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.
+      Ve skicáři mají <kbd>V</kbd>, <kbd>P</kbd> a <kbd>M</kbd> přednost nástroje (výběr, pero, měření).</p>
+    <p><b>Sdílení a Modelář.</b> <b>🔗 Sdílet odkazem</b> (Soubor) uloží celé nastavení do adresy – kdo odkaz otevře, uvidí stejný věšák.
+      <b>🧊 Otevřít v Modeláři</b> předá věšák i úchyt v tiskové poloze jako 3MF k dalším úpravám.</p>
   </div>
 </dialog>
 <script src="vesaky/ui.js"></script>

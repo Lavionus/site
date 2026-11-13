@@ -6,12 +6,17 @@
   <title>Knob – generátor tvarů pro 3D tisk</title>
   <meta name="description" content="Generátor knobů pro 3D tisk: hlava ze semínka (koule, vejce, hřib, úl, zvon… i náhodné tvary), skica obrysu pro ruční doladění, krček (průměr, délka, prstence, trumpeta), odsazení na konci krčku, zapuštění pro hřídel (čtyřhran, kulatý, D-profil, šestihran) s hloubkou a jisticí šroubek s odsazením od krčku. Výkres s kótami, rozbor tisku, export STL a 3MF.">
   <link rel="stylesheet" href="../common.css">
-  <link rel="stylesheet" href="trubky_gui.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
   <script src="../theme.js"></script>
   <script src="../dialog.js"></script>
-  <script src="trubky_gui.js"></script>
+  <script src="gen3d/gui.js"></script>
   <script src="../podpis.js" defer></script>
   <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
   <script src="krabicky/jadro.js"></script>
   <script src="spojky/jadro.js"></script>
   <script src="kliky/jadro.js"></script>
@@ -38,9 +43,6 @@
     .karta3d:empty { display: none; }
     .karta3d b { color: var(--text); font-variant-numeric: tabular-nums; }
     .karta3d .titul { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
-    .legenda3d { position: absolute; left: 10px; bottom: 30px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
-      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .legenda3d i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }
     @media (max-width: 600px) { .karta3d { display: none; } }
 
     label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
@@ -193,12 +195,14 @@
             <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
             <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
             <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje knoby…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
             <hr>
             <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
-            <button class="pol" id="btnStl" role="menuitem">⬇ STL <span class="pozn">Ctrl+S</span></button>
-            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF <span class="pozn">s názvem a barvou</span></button>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – vše <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – vše <span class="pozn">s názvem a barvou</span></button>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
           </div>
         </div>
         <div class="menu">
@@ -213,7 +217,8 @@
           <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
             <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
             <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
-            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">V</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
             <hr>
             <div class="nab-nadpis">Vzhled</div>
             <div class="sloupec-nab vzhled-volba" id="vzhledy" role="group" aria-label="Vzhled"></div>
@@ -226,12 +231,20 @@
             <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
             <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
             <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu <span class="pozn">5</span></button>
           </div>
         </div>
-        <button class="tl tl-nahodny" id="btnNahodny" title="Vylosovat náhodný knob – hlava, krček, odsazení i vzor (klávesa R)">🎲<span class="jmeno"> Náhodný knob</span></button>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('vykres')">📐 Zobrazit výkres <span class="pozn">záložka Výkres</span></button>
+            <button class="pol" id="btnVykresSvg" role="menuitem">⬇ Výkres SVG <span class="pozn">1:1 v mm</span></button>
+          </div>
+        </div>
+        <button class="tl tl-nahodny" id="btnNahoda" title="Vylosovat náhodný knob – hlava, krček, odsazení i vzor (klávesa R)">🎲<span class="jmeno"> Náhodný knob</span></button>
         <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
         <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
-        <button class="tl" id="btnNapoveda" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
+        <button class="tl" id="btnNap" title="Nápověda a klávesy (F1)">❓<span class="jmeno"> Nápověda</span></button>
       </div>
       <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
     </header>
@@ -285,16 +298,16 @@
           <div id="platno"></div>
           <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
-          <div class="legenda3d" id="legenda3d" hidden><span><i style="background:#db3833"></i>převis bez opory</span><span><i style="background:#d9a833"></i>most nad dílem</span></div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="previs"></i>převis bez opory</span><span><i class="most"></i>most nad dílem</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Výsledky a tisk">
           <div class="zalozky" role="tablist">
             <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky <span class="souhrn-zal" id="sVysledky"></span></button>
-            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Výkres</button>
             <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk <span class="souhrn-zal" id="sTisk"></span></button>
             <button role="tab" data-zalozka="kusovnik" aria-selected="false">🔩 Kusovník</button>
             <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Výkres</button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje knoby</button>
           </div>
           <div class="zalozka-telo" data-telo="vysledky" role="tabpanel"><div class="vysledky" id="vVysledky"></div></div>
@@ -405,7 +418,7 @@
     <p><b>Zahloubení šroubku:</b> u vrutu a samořezného vrutu lze zadat předvrt (otvor, do kterého se šroub zařezává), průměr otvoru pro hlavu,
       hloubku zahloubení a jeho tvar (kužel pro zápustnou hlavu, válec pro válcovou).</p>
     <p><b>Tisk.</b> Knob se tiskne spodkem dolů (zapuštění je pak svislé a jeho strop tiskárna přemostí). Výplň 100 %, PETG nebo PA.</p>
-    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>4</kbd> pohledy, <kbd>M</kbd> tisková poloha, <kbd>V</kbd> převisy, <kbd>H</kbd> hrany, <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>F1</kbd> nápověda.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>M</kbd> tisková poloha, <kbd>P</kbd> (<kbd>V</kbd>) převisy, <kbd>H</kbd> hrany, <kbd>L</kbd> pravítka, <kbd>R</kbd> náhodný knob, <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
   </div>
 </dialog>
 <script src="knob/ui.js"></script>

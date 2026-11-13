@@ -4,6 +4,8 @@
    Vlastní jednoduché ovládání kamery: tažení = otáčení, pravé
    tlačítko / Shift = posun, kolečko / dva prsty = přiblížení.
    Kreslí se jen na vyžádání (žádná trvalá smyčka – tu řídí animace v UI).
+   Volby: rez, pruhledne, hrany (obrysové hrany), pravitka (gen3d/koty.js);
+   nastavModel(…, {tridy}) obarví převisy (G3D.tridyPrevisu na díl) – pro tiskovou polohu.
    ============================================================ */
 window.PANTY_SCENA = (function () {
   'use strict';
@@ -11,7 +13,7 @@ window.PANTY_SCENA = (function () {
   let skupina = null, kolizni = null, pasekMesh = null;
   const kam = { az: -0.75, el: 0.5, dist: 120, cil: [0, 0, 0] };
   const ukazatele = new Map(); let pinch = null, pozadavek = 0;
-  let model = null, pohybliveMeshe = [], volby = { rez: false, pruhledne: false };
+  let model = null, pohybliveMeshe = [], volby = { rez: false, pruhledne: false, hrany: false, pravitka: false }, pravitkaObj = null;
   const rovinaRezu = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
 
   function css(nazev, nahrada) {
@@ -79,8 +81,9 @@ window.PANTY_SCENA = (function () {
     if (mrizka) { const svetle = document.documentElement.getAttribute('data-theme') === 'light'; mrizka.material.color.set(svetle ? 0x9aa3ad : 0x6a717a); }
   }
 
-  function material(barva) {
-    const m = new THREE.MeshStandardMaterial({ color: barva, roughness: 0.62, metalness: 0.04, flatShading: false, side: THREE.DoubleSide });
+  function material(barva, barvyVrcholu) {
+    const m = new THREE.MeshStandardMaterial({ color: barvyVrcholu ? 0xffffff : barva, vertexColors: !!barvyVrcholu, roughness: 0.62, metalness: 0.04, flatShading: false, side: THREE.DoubleSide });
+    m.userData.barva = barva;
     if (volby.pruhledne) { m.transparent = true; m.opacity = 0.45; m.depthWrite = false; }
     if (volby.rez) m.clippingPlanes = [rovinaRezu];
     return m;
@@ -96,14 +99,58 @@ window.PANTY_SCENA = (function () {
     return ne;
   }
 
+  /* Převisy: barvy trojúhelníků (třídy 1 most, 2 převis), ostatní v barvě dílu; geometrie je neindexovaná (3 vrcholy na trojúhelník). */
+  function obarvi(g, barva, tridy) {
+    const c = new THREE.Color(barva), C = new Float32Array(g.attributes.position.count * 3);
+    for (let t = 0; t < tridy.length; t++) {
+      const b = tridy[t] === 1 || tridy[t] === 2 ? G3D.BARVY_TRID[tridy[t]] : [c.r, c.g, c.b];
+      for (let k = 0; k < 3; k++) C.set(b, 9 * t + 3 * k);
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+  }
+  function hranyMat() {
+    const m = new THREE.LineBasicMaterial({ color: document.documentElement.getAttribute('data-theme') === 'light' ? 0x0b1a33 : 0x05070a, transparent: true, opacity: 0.4 });
+    if (volby.rez) m.clippingPlanes = [rovinaRezu];
+    return m;
+  }
+  function pridejHrany(mesh) {
+    const l = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 30), hranyMat());
+    l.userData.hrany = true; l.visible = volby.hrany;
+    mesh.add(l);
+  }
+  /* Pravítka s dílky po hranách obalu modelu (gen3d/koty.js). */
+  function pravitka() {
+    if (pravitkaObj) { scene.remove(pravitkaObj); pravitkaObj.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) { if (c.material.map) c.material.map.dispose(); c.material.dispose(); } }); pravitkaObj = null; }
+    if (!volby.pravitka || !window.G3D || !G3D.koty) return;
+    skupina.updateMatrixWorld(true);
+    const box = new THREE.Box3();
+    for (const o of skupina.children) if (o.isMesh && o !== pasekMesh) box.expandByObject(o);
+    if (pasekMesh) box.expandByObject(pasekMesh);
+    if (box.isEmpty()) return;
+    const a = box.min, b = box.max, vel = new THREE.Vector3(); box.getSize(vel);
+    pravitkaObj = G3D.koty.postav(THREE, {
+      barva: css('--text', '#ddd'), pozadi: css('--bg-input', '#222'), velikost: Math.max(vel.x, vel.y, vel.z),
+      pravitka: [
+        { a: [a.x, a.y, a.z], b: [b.x, a.y, a.z], n: [0, -1, 0] },
+        { a: [b.x, a.y, a.z], b: [b.x, b.y, a.z], n: [1, 0, 0] },
+        { a: [a.x, b.y, a.z], b: [a.x, b.y, b.z], n: [-1, 0, 0] },
+      ],
+    });
+    scene.add(pravitkaObj);
+  }
+
   /* Nový model: dily (sítě + barvy + role), pasek pro pružný spoj, stred a velikost pro kameru. */
-  function nastavModel(m, site, zachovatKameru) {
+  function nastavModel(m, site, zachovatKameru, o) {
+    o = o || {};
     const prvni = !model;
     model = m;
     vycisti(skupina);
     pohybliveMeshe = []; pasekMesh = null; kolizni = null;
     m.dily.forEach((d, i) => {
-      const mesh = new THREE.Mesh(geometrie(site[i]), material(d.barva));
+      const g = geometrie(site[i]), tridy = o.tridy && o.tridy[i];
+      if (tridy) obarvi(g, d.barva, tridy);
+      const mesh = new THREE.Mesh(g, material(d.barva, !!tridy));
+      pridejHrany(mesh);
       mesh.matrixAutoUpdate = false;
       mesh.userData.role = d.role;
       skupina.add(mesh);
@@ -129,9 +176,10 @@ window.PANTY_SCENA = (function () {
     rovinaRezu.constant = m.rezim === 'kulovy' ? 0 : m.stred[0];
     rovinaRezu.normal.set(m.rezim === 'kulovy' ? 0 : -1, m.rezim === 'kulovy' ? -1 : 0, 0);
     if (prvni || !zachovatKameru) { kam.cil = m.stred.slice(); kam.dist = m.velikost * 2.6; }
+    pravitka();
   }
   function vycisti(g) {
-    for (const o of [...g.children]) { g.remove(o); if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }
+    for (const o of [...g.children]) { g.remove(o); o.traverse(x => { if (x.geometry) x.geometry.dispose(); if (x.material) x.material.dispose(); }); }
   }
 
   /* Poloha pohyblivých dílů (matice 4×4 po sloupcích) a ohnutí pásku. */
@@ -165,13 +213,16 @@ window.PANTY_SCENA = (function () {
   function nastavVolby(v) {
     Object.assign(volby, v);
     for (const o of skupina.children) if (o.isMesh) {
-      const b = o.material.color.getHex(); o.material.dispose(); o.material = material(b);
+      const b = o.material.userData.barva ?? o.material.color.getHex(), vc = o.material.vertexColors;
+      o.material.dispose(); o.material = material(b, vc);
+      for (const l of o.children) if (l.userData.hrany) { l.visible = volby.hrany; l.material.dispose(); l.material = hranyMat(); }
     }
+    if ('pravitka' in v) pravitka();
     vykresli();
   }
   function pohled(druh) {
     if (!model) return;
-    const P = { iso: [-0.75, 0.5], predni: [-Math.PI / 2, 0.02], bocni: [0, 0.02], shora: [-Math.PI / 2, 1.5] }[druh] || [-0.75, 0.5];
+    const P = { iso: [-0.75, 0.5], zepredu: [0, 0.02], zboku: [-Math.PI / 2, 0.02], shora: [0, 1.5], zespodu: [0, -1.5] }[{ predni: 'zepredu', bocni: 'zboku' }[druh] || druh] || [-0.75, 0.5];
     kam.az = P[0]; kam.el = P[1]; kam.cil = model.stred.slice(); kam.dist = model.velikost * 2.6;
     vykresli();
   }

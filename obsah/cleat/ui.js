@@ -1,48 +1,43 @@
-/* French cleat – ovládání stránky: formulář, historie, manifold, přepočet, výsledky, pevnost, kontroly, výkres, export.
+/* French cleat – ovládání stránky nad gen3d/aplikace.js (historie, projekt, Moje…, sdílení #p=, klávesy, manifold):
+   tady formulář s živou odezvou, přepočet, výsledky, pevnost, výkres, sada, porovnání, stěna, galerie, export.
    3D náhled je společný se spojkami (spojky/nahled.js); model se do náhledu otočí o 180° kolem svislé osy,
    aby zeď byla vzadu a díl mířil ke kameře. */
-/* global CLEAT, CLEAT_GEOM, CLEAT_VYKRES, CLEAT_STENA, SPOJKY_NAHLED, KRAB, Dialog, Tvary, TrubkyGui */
+/* global CLEAT, CLEAT_GEOM, CLEAT_VYKRES, CLEAT_STENA, SPOJKY_NAHLED, KRAB, G3D, THREE, Dialog, TrubkyGui */
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
   const U = CLEAT, fmt = U.fmt;
-  const KLIC = 'webapp_cleat_projekt';
-
-  /* ---------- stav a historie ---------- */
   let p, wasm = null, model = null, chybaStavby = null;
-  const zpet = [], znovu = [];
-  function hlasPrevod(hl, co) { if (hl && hl.length) setTimeout(() => Dialog.info(`${co} upraven: ${hl.join('; ')}.`), 300); }
-  function nactiUlozeny() {
-    try {
-      const t = localStorage.getItem(KLIC);
-      if (t) { const r = U.normalizuj(JSON.parse(t)); hlasPrevod(r.hlaseni, 'Uložený projekt'); return r.p; }
-    } catch (e) { /* poškozený záznam */ }
-    return U.zPredvolby(0);
-  }
-  function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(p)); } catch (e) { /* plné úložiště */ } }
-  function zmen(fn, slouceni) {
-    const pred = JSON.stringify(p);
-    fn(p);
-    p = U.normalizuj(p).p;
-    if (JSON.stringify(p) === pred) return;
-    const posl = zpet[zpet.length - 1];
-    if (!(slouceni && posl && posl.klic === slouceni && Date.now() - posl.cas < 1200)) zpet.push({ stav: pred, klic: slouceni, cas: Date.now() });
-    else posl.cas = Date.now();
-    if (zpet.length > 100) zpet.shift();
-    znovu.length = 0;
-    po();
-  }
-  function krokHistorie(z, do_) {
-    if (!z.length) return;
-    do_.push({ stav: JSON.stringify(p), cas: 0 });
-    p = U.normalizuj(JSON.parse(z.pop().stav)).p;
-    naplnFormular(); po();
-  }
-  function po() {
-    $('btnZpet').disabled = !zpet.length; $('btnZnovu').disabled = !znovu.length;
-    uloz(); viditelnost(); naplanuj();
-  }
-  function nahrad(q) { zmen(x => { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, q); }); naplnFormular(); }
+  const nahled = SPOJKY_NAHLED.vytvorNahled($('platno'));
+  $('platno').querySelector('canvas').setAttribute('aria-label', '3D náhled držáku – tažením otáčíte, kolečkem přibližujete, pravým tlačítkem posouváte');
+  const app = G3D.aplikace({
+    typ: 'cleat', nazev: 'Držáky na French cleat', klic: 'webapp_cleat', soubor: 'cleat',
+    normalizuj: U.normalizuj, vychozi: () => U.zPredvolby(0), hlasitOpravyUlozeneho: true,
+    ulozProjekt: U.ulozProjekt, nactiProjekt: U.nactiProjekt, vezmi: U.vezmi, poloz: U.poloz,
+    popis: q => `${q.nazev || 'Držák'} – ${U.popis(q)}`,
+    formular: false,   // pole reagují už při psaní (input) – vlastní obsluha níž
+    poNaplneni: q => {
+      const s = q.system, shoda = Object.entries(U.SYSTEMY).find(([, v]) => ['tl', 'vyska', 'uhel'].every(c => v.s[c] === s[c]));
+      $('f_sys').value = shoda ? shoda[0] : '';
+    },
+    viditelnost: () => viditelnost(),
+    prepocitej: () => prepocitej(), zpozdeni: 40,
+    png: () => nahled.png(), pohled: j => nahled.pohled(j),
+    exportStl: () => exportStl(app.p.tisk.kusu),
+    doModelare: () => { const k = kusy(1); return k ? { data: KRAB.soubor3mf(k, app.p.nazev || 'Držák'), pripona: '.3mf' } : null; },
+    zkratky: { m: 'tTisk', d: 'tDuchove', v: 'tPrevisy', p: 'tPrevisy', h: 'tHrany' },   // R, K, L, N a číslice podle e.code níž
+    zmenaTematu: () => app.prepocitej(),
+    hlaseniNavic: (li, x) => {
+      // stejné pole může být ve víc oddílech – skok na to viditelné
+      if (x.pole.length) li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') { e.stopImmediatePropagation(); jdiNaPole(x.pole[0]); } }, true);
+      if (x.akce === 'zesil') {
+        const b = document.createElement('button'); b.className = 'tl oprava'; b.textContent = '💪 Zesílit';
+        b.addEventListener('click', zesilit);
+        li.insertBefore(b, li.querySelector('.oprava'));
+      }
+    },
+  });
+  const zmen = (f, sl) => app.zmen(f, sl), nahrad = q => app.nahrad(q), naplnFormular = () => app.naplnFormular();
 
   /* ---------- formulář ---------- */
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -105,20 +100,9 @@
   });
 
   const pole = [...document.querySelectorAll('[data-p]')];
-  function naplnFormular() {
-    for (const el of pole) {
-      const h = U.vezmi(p, el.dataset.p);
-      if (el.type === 'checkbox') el.checked = !!h;
-      // přepsat i pole s kurzorem – formulář se plní jen při změně celého projektu (zpět, předvolba, 🎲, výběr), ne při psaní
-      else el.value = el.dataset.typ === 'text' ? (h ?? '') : String(h).replace('.', ',');
-      el.classList.remove('spatne');
-    }
-    const s = p.system, shoda = Object.entries(U.SYSTEMY).find(([, v]) => ['tl', 'vyska', 'uhel'].every(c => v.s[c] === s[c]));
-    $('f_sys').value = shoda ? shoda[0] : '';
-    viditelnost();
-  }
   for (const el of pole) {
     const akce = () => {
+      el._posl = el.value;
       const c = el.dataset.p;
       let h;
       if (el.type === 'checkbox') h = el.checked;
@@ -134,6 +118,7 @@
     el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', akce);
     if (el.tagName === 'INPUT' && el.type === 'text' && el.dataset.typ !== 'text') {
       el.addEventListener('change', () => {
+        if (el.value !== el._posl) akce();   // vložení bez psaní (automatické vyplnění, testy)
         const psano = U.cislo(el.value, NaN), h = U.vezmi(p, el.dataset.p), roz = U.ROZSAHY[el.dataset.p];
         el.value = String(h).replace('.', ',');
         if (roz && Number.isFinite(psano) && Math.abs(psano - h) > 1e-9) {
@@ -196,6 +181,7 @@
   };
   const SELEKTOR = Object.keys(PODMINKY).map(k => `[data-${k}]`).join(',');
   function viditelnost() {
+    p = app.p;
     for (const el of document.querySelectorAll(SELEKTOR)) {
       el.hidden = !Object.entries(PODMINKY).every(([k, f]) => !(k in el.dataset) || f(el.dataset[k]));
     }
@@ -244,34 +230,12 @@
     }[p.hak.tvar];
   }
 
-  /* ---------- manifold ---------- */
-  function nactiSkript(src) {
-    return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('nenačteno ' + src)); document.head.appendChild(s); });
-  }
-  async function nactiManifold() {
-    globalThis.MANIFOLD_URL = new URL('lib/manifold/manifold.klasicky.js', location.href).href;
-    if (!globalThis.ManifoldModule) await nactiSkript('lib/manifold/manifold.klasicky.js');
-    let volby;
-    if (location.protocol === 'file:') {
-      await nactiSkript('lib/manifold/manifold.wasm.js');
-      const s = atob(globalThis.MANIFOLD_WASM_B64), bin = new Uint8Array(s.length);
-      for (let i = 0; i < s.length; i++) bin[i] = s.charCodeAt(i);
-      delete globalThis.MANIFOLD_WASM_B64;
-      volby = { wasmBinary: bin };
-    } else volby = { locateFile: f => new URL('lib/manifold/' + f, location.href).href };
-    const w = await globalThis.ManifoldModule(volby);
-    w.setup();
-    return w;
-  }
-
   /* ---------- přepočet ---------- */
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const nahled = SPOJKY_NAHLED.vytvorNahled($('platno'));
-  $('platno').querySelector('canvas').setAttribute('aria-label', '3D náhled držáku – tažením otáčíte, kolečkem přibližujete, pravým tlačítkem posouváte');
   /** otočení o 180° kolem svislé osy (x → −x, y → −y): zeď vzadu */
   const otoc = poz => { const q = new Float32Array(poz); for (let i = 0; i < q.length; i += 3) { q[i] = -q[i]; q[i + 1] = -q[i + 1]; } return q; };
   const otocDucha = d => (d.typ === 'box' ? { typ: 'box', min: [-d.max[0], -d.max[1], d.min[2]], max: [-d.min[0], -d.min[1], d.max[2]] } : Object.assign({}, d, { poz: otoc(d.poz) }));
-  let casovac = null, pevnostVysl = null, pismo = null, pismoNacitam = null;
+  let pevnostVysl = null, pismo = null, pismoNacitam = null;
   /** písmo pro vyryté popisky (opentype.js + Liberation Sans Bold, OFL) – načte se, až je potřeba */
   const chcePismo = q => (q.typ === 'stojan' && q.stojan.druh === 'vrtaky' && q.stojan.popisky) || q.typ === 'zkouska';
   function potrebujePismo(q = p) {
@@ -279,11 +243,11 @@
     if (pismoNacitam) return pismoNacitam;
     return (pismoNacitam = (async () => {
       try {
-        if (!window.opentype) await nactiSkript('lib/opentype.min.js');
+        if (!window.opentype) await G3D.nactiSkript('lib/opentype.min.js');
         let buf = null;
         try { const r = await fetch('fonty/LiberationSans-Bold.ttf'); if (r.ok) buf = await r.arrayBuffer(); } catch (e) { buf = null; }
         if (!buf) {
-          await nactiSkript('fonty/js/LiberationSans-Bold.ttf.js');
+          await G3D.nactiSkript('fonty/js/LiberationSans-Bold.ttf.js');
           const b = atob(window.FONTY_JS['LiberationSans-Bold.ttf']), u = new Uint8Array(b.length);
           for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
           buf = u.buffer;
@@ -293,8 +257,9 @@
       } catch (e) { pismoNacitam = null; }
     })());
   }
-  function naplanuj() { clearTimeout(casovac); casovac = setTimeout(prepocitej, 40); }
+  const naplanuj = () => app.prepocitej();
   function prepocitej() {
+    p = app.p;
     nahled.barvy(css('--border-strong'), css('--border'), css('--text'));
     const o = U.odvozene(p);
     let H = U.kontroly(p, o);
@@ -426,39 +391,7 @@
     TrubkyGui.souhrn('sOdlehceni', z.odlehceni === 'zadne' ? 'plná záda' : `${U.ODLEHCENI[z.odlehceni]} ${fmt(z.velOdlehceni)} mm${m && m.odlehcenych != null ? ` · ${m.odlehcenych} ×` : ''}`, z.odlehceni !== 'zadne');
     // hlášení
     if (!wasm && !chybaStavby) H = H.concat([{ uroven: 'info', text: 'Načítám geometrické jádro (manifold-3d)…', pole: [] }]);
-    const ul = $('hlaseni'); ul.innerHTML = '';
-    for (const x of H) {
-      const li = document.createElement('li'); li.className = x.uroven + (x.pole.length ? ' skok' : '');
-      li.textContent = x.text;
-      if (x.pole.length) {
-        li.tabIndex = 0;
-        const kam = document.createElement('span'); kam.className = 'kam'; kam.textContent = '→ upravit'; li.appendChild(kam);
-        li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') jdiNaPole(x.pole[0]); });
-        li.addEventListener('keydown', e => { if (e.key === 'Enter') jdiNaPole(x.pole[0]); });
-      }
-      if (x.akce === 'zesil') {
-        const b = document.createElement('button'); b.className = 'tl oprava'; b.textContent = '💪 Zesílit';
-        b.addEventListener('click', zesilit);
-        li.appendChild(b);
-      }
-      if (x.oprava) {
-        const b = document.createElement('button'); b.className = 'tl oprava'; b.textContent = '🔧 ' + x.oprava.text;
-        b.addEventListener('click', () => { zmen(q2 => U.poloz(q2, x.oprava.pole, x.oprava.hodnota)); naplnFormular(); });
-        li.appendChild(b);
-      }
-      ul.appendChild(li);
-    }
-    const nch = H.filter(x => x.uroven === 'chyba').length, nv = H.filter(x => x.uroven === 'varovani').length;
-    const od = $('stavOdznak');
-    od.className = 'odznak ' + (nch ? 'chyba' : nv ? 'mez' : 'ok');
-    od.textContent = nch ? `✖ ${nch}` : nv ? `⚠ ${nv}` : '✔';
-    $('sKontrola').textContent = nch ? `${nch} ${nch === 1 ? 'chyba' : nch < 5 ? 'chyby' : 'chyb'}` : nv ? `${nv} varování` : 'v pořádku';
-    const boxy = { boxTyp: false, boxLista: false };
-    for (const x of H) if (x.uroven === 'chyba') for (const c of x.pole) {
-      const el = document.querySelector(`[data-p="${c}"]`), bx = el && el.closest('[data-box]');
-      if (bx && bx.id in boxy) boxy[bx.id] = true;
-    }
-    for (const [id, a] of Object.entries(boxy)) TrubkyGui.oznacChybu(id, a);
+    app.hlaseni(H, { boxy: ['boxTyp', 'boxLista'] });
   }
   /* ---------- kóty a pravítka v 3D náhledu ---------- */
   const KLIC_KOTY = 'webapp_cleat_koty';
@@ -551,23 +484,15 @@
     b.addEventListener('click', () => nahrad(U.zPredvolby(i)));
     seznam.appendChild(b);
   });
-  const jmenoSouboru = pripona => ((p.nazev || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_').replace(/^_|_$/g, '') || 'cleat') + pripona;
-  function stahni(data, nazev, typ) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: typ }));
-    a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  }
   function kusy(n) {
     if (!model) { Dialog.chyba(chybaStavby || (wasm ? 'Model nelze sestavit – viz záložka Kontrola.' : 'Geometrické jádro se ještě načítá.')); return null; }
     const d = { poz: model.tisk.poz, idx: model.idx, barva: '#4F86D9' };
     return KRAB.tiskoveRozlozeni(Array.from({ length: n }, (_, i) => Object.assign({ jmeno: 'cleat', nazev: (p.nazev || 'Držák') + (n > 1 ? ` ${i + 1}` : '') }, d)), 8);
   }
-  function exportStl(n) { const k = kusy(n); if (k) stahni(KRAB.stlBinarni(k, 'french cleat - github_site'), jmenoSouboru(n > 1 ? `_${n}ks.stl` : '.stl'), 'model/stl'); }
-  $('btnStl').addEventListener('click', () => exportStl(p.tisk.kusu));
+  function exportStl(n) { const k = kusy(n); if (k) app.stahni(KRAB.stlBinarni(k, 'french cleat - github_site'), app.jmeno(n > 1 ? `_${n}ks.stl` : '.stl'), 'model/stl'); }
+  $('btnStl').addEventListener('click', () => exportStl(app.p.tisk.kusu));
   $('btnStl1').addEventListener('click', () => exportStl(1));
-  $('btn3mf').addEventListener('click', () => { const k = kusy(p.tisk.kusu); if (k) stahni(KRAB.soubor3mf(k, p.nazev || 'Držák'), jmenoSouboru('.3mf'), 'model/3mf'); });
-  $('btnPng').addEventListener('click', () => { fetch(nahled.png()).then(r => r.blob()).then(b => stahni(b, jmenoSouboru('.png'))); });
+  $('btn3mf').addEventListener('click', () => { const k = kusy(p.tisk.kusu); if (k) app.stahni(KRAB.soubor3mf(k, p.nazev || 'Držák'), app.jmeno('.3mf'), 'model/3mf'); });
   let pismoSlib = null;
   function nactiPismo() {
     if (window.FONTY_JS && window.FONTY_JS['LiberationSans-Regular.ttf']) return Promise.resolve(window.FONTY_JS['LiberationSans-Regular.ttf']);
@@ -589,26 +514,15 @@
       if (!window.jspdf) throw new Error('Knihovna jsPDF se nenačetla.');
       const pismo = await nactiPismo();
       const doc = CLEAT_VYKRES.pdf(window.jspdf.jsPDF, vykresTed(), { pismo, nazev: p.nazev || 'French cleat' });
-      stahni(doc.output('blob'), jmenoSouboru('_vykres.pdf'));
+      app.stahni(doc.output('blob'), app.jmeno('_vykres.pdf'));
       if (!pismo) Dialog.info('Písmo se nepodařilo načíst – PDF je bez diakritiky.');
     } catch (e) { Dialog.chyba('PDF se nepodařilo vytvořit: ' + (e && e.message || e)); }
   }
   function vykresSvg() {
-    try { stahni(CLEAT_VYKRES.svg(vykresTed()), jmenoSouboru('_vykres.svg'), 'image/svg+xml'); } catch (e) { Dialog.chyba(e.message); }
+    try { app.stahni(CLEAT_VYKRES.svg(vykresTed()), app.jmeno('_vykres.svg'), 'image/svg+xml'); } catch (e) { Dialog.chyba(e.message); }
   }
   $('btnVykresPdf').addEventListener('click', vykresPdf); $('btnVykresPdf2').addEventListener('click', vykresPdf);
   $('btnVykresSvg').addEventListener('click', vykresSvg); $('btnVykresSvg2').addEventListener('click', vykresSvg);
-  $('btnUlozit').addEventListener('click', () => stahni(U.ulozProjekt(p), jmenoSouboru('.json'), 'application/json'));
-  $('btnNacist').addEventListener('click', () => $('soubor').click());
-  $('soubor').addEventListener('change', async e => {
-    const f = e.target.files[0]; e.target.value = '';
-    if (!f) return;
-    try { const r = U.nactiProjekt(await f.text()); nahrad(r.p); hlasPrevod(r.hlaseni, 'Načtený projekt'); }
-    catch (err) { Dialog.chyba(err.message); }
-  });
-  $('btnVychozi').addEventListener('click', async () => {
-    if (await Dialog.potvrd('Vrátit všechny hodnoty na výchozí (první předvolba)?')) nahrad(U.zPredvolby(0));
-  });
   /** 🎲 náhodný držák (zpět ho vrátí Ctrl+Z); stejnyTyp = zůstane aktuální typ */
   function nahodny(stejnyTyp) {
     const q = U.nahodny(p, (Math.random() * 4294967296) >>> 0, stejnyTyp ? p.typ : undefined);
@@ -617,18 +531,11 @@
     TrubkyGui.otevriZalozku('vysledky');
   }
   $('btnNahoda').addEventListener('click', e => nahodny(e.shiftKey));
-  $('btnZpet').addEventListener('click', () => krokHistorie(zpet, znovu));
-  $('btnZnovu').addEventListener('click', () => krokHistorie(znovu, zpet));
-  function prepinac(id, co) {
-    const b = $(id);
-    b.addEventListener('click', () => {
-      const h = b.getAttribute('aria-pressed') !== 'true';
-      b.setAttribute('aria-pressed', String(h)); nahled.prepni(co, h);
-      if (co === 'tisk') obnovKoty();
-      legendy();
-    });
-  }
-  prepinac('tDuchove', 'duchove'); prepinac('tHrany', 'hrany'); prepinac('tTisk', 'tisk'); prepinac('tPrevisy', 'previsy');
+  for (const [id, co] of [['tDuchove', 'duchove'], ['tHrany', 'hrany'], ['tTisk', 'tisk'], ['tPrevisy', 'previsy']]) app.prepinac(id, h => {
+    nahled.prepni(co, h);
+    if (co === 'tisk') obnovKoty();
+    legendy();
+  });
   /* ---------- mapa pevnosti v náhledu ---------- */
   const BARVY_K = [[0.2, 0.7, 0.35], [0.88, 0.63, 0.19], [0.86, 0.22, 0.2]], ZAKLAD = [0.25, 0.48, 0.84];
   /** Barva trojúhelníku podle nejslabšího průřezu, do jehož oblasti padne jeho těžiště (souřadnice dílu). */
@@ -666,7 +573,6 @@
     Dialog.info(`${r.ok ? 'Zesíleno' : 'Zesíleno, jak to šlo – rezerva je pořád pod 3×'}: ${r.zmeny.map(x => `${popisPole(x.cesta)} ${fmt(x.z)} → ${fmt(x.na)} mm`).join('; ')}. Zpět vrátí Ctrl+Z.`);
   }
   $('btnZesil').addEventListener('click', zesilit);
-  $('stavOdznak').addEventListener('click', () => TrubkyGui.otevriZalozku('kontrola'));
   $('chipNosnost').addEventListener('click', () => TrubkyGui.otevriZalozku('pevnost'));
   // galerie předvoleb: náhledy (profil zboku + pohled zepředu) se staví postupně při prvním otevření
   let galerieHotova = false;
@@ -714,66 +620,18 @@
   }
   $('galerie').addEventListener('click', e => { const b = e.target.closest('[data-predvolba]'); if (b) { nahrad(U.zPredvolby(+b.dataset.predvolba)); TrubkyGui.otevriZalozku('vysledky'); } });
   document.querySelector('[data-zalozka="galerie"]').addEventListener('click', galerie);
-  $('btnZavritNap').addEventListener('click', () => $('napoveda').close());
+  document.querySelectorAll('[data-vykres-zobraz]').forEach(b => b.addEventListener('click', () => TrubkyGui.otevriZalozku('vykres')));
+  // klávesy navíc k gen3d (podle e.code – na české klávesnici dávají číslice bez Shiftu ě, š, č…)
   document.addEventListener('keydown', e => {
     const a = document.activeElement;
-    const vPoli = a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !/checkbox|range|radio|button/.test(a.type));
-    const k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && !vPoli && k === 'z') { e.preventDefault(); krokHistorie(e.shiftKey ? znovu : zpet, e.shiftKey ? zpet : znovu); return; }
-    if ((e.ctrlKey || e.metaKey) && !vPoli && k === 'y') { e.preventDefault(); krokHistorie(znovu, zpet); return; }
-    if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); exportStl(p.tisk.kusu); return; }
-    if (e.key === 'F1') { e.preventDefault(); $('napoveda').showModal(); return; }
-    if (vPoli || e.ctrlKey || e.metaKey || e.altKey || $('napoveda').open) return;
-    const pohl = { 1: 'iso', 2: 'shora', 3: 'zepredu', 4: 'zboku' }[(e.code || '').replace(/^(Digit|Numpad)/, '')];
-    if (pohl) nahled.pohled(pohl);
+    const vPoli = a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable || (a.tagName === 'INPUT' && !/checkbox|range|radio|button/.test(a.type)));
+    if (vPoli || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]')) return;
+    const c = (e.code || '').replace(/^(Digit|Numpad)/, ''), pohl = { 1: 'iso', 2: 'shora', 3: 'zepredu', 4: 'zboku', 5: 'zespodu' }[c];
+    if (pohl) { if (!(Number(e.key) >= 1 && Number(e.key) <= 5)) nahled.pohled(pohl); }   // s číslicí v e.key už pohled přepnul gen3d
     else if (e.code === 'KeyR') nahodny(e.shiftKey);
     else if (e.code === 'KeyK') $('tKoty').click(); else if (e.code === 'KeyL') $('tPravitka').click();
     else if (e.code === 'KeyN') prepniMapu();
-    else if (k === 'm') $('tTisk').click(); else if (k === 'd') $('tDuchove').click(); else if (k === 'v') $('tPrevisy').click(); else if (k === 'h') $('tHrany').click();
   });
-  new MutationObserver(() => naplanuj()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-  if (typeof Tvary !== 'undefined') Tvary.pripoj({
-    klic: 'webapp_cleat_tvary', typ: 'cleat', nazev: 'Držáky na French cleat', kontejner: $('tvary'),
-    parametry: () => U.kopie(p),
-    pouzij: q => { const n = U.normalizuj(q); hlasPrevod(n.hlaseni, 'Uložený držák'); nahrad(n.p); },
-    popis: q => `${q.nazev || 'Držák'} – ${U.popis(U.normalizuj(q).p)}`,
-  });
-
-  /* ---------- sdílení odkazem: #p= JSON zkomprimovaný deflate-raw, base64url ---------- */
-  const b64u = u8 => { let t = ''; for (const b of u8) t += String.fromCharCode(b); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
-  const zB64u = t => { const s2 = atob(t.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s2, c => c.charCodeAt(0)); };
-  async function proud(data, Trida, druh) { return new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new Trida(druh))).arrayBuffer()); }
-  async function zakoduj(q) {
-    const json = new TextEncoder().encode(JSON.stringify(q));
-    if (typeof CompressionStream === 'undefined') return 'j' + b64u(json);
-    return 'z' + b64u(await proud(json, CompressionStream, 'deflate-raw'));
-  }
-  async function dekoduj(t) {
-    const data = zB64u(t.slice(1));
-    const json = t[0] === 'z' ? await proud(data, DecompressionStream, 'deflate-raw') : data;
-    return JSON.parse(new TextDecoder().decode(json));
-  }
-  $('btnSdilet').addEventListener('click', async () => {
-    try {
-      const odkaz = new URL('cleat.html', location.href).href.split('#')[0] + '#p=' + await zakoduj(p);
-      // nečekat – bez oprávnění může slib viset (iframe, headless)
-      try { navigator.clipboard.writeText(odkaz).catch(() => {}); } catch (e) { /* schránka nedostupná */ }
-      await Dialog.zeptej('Odkaz s celým nastavením držáku (zkopírováno do schránky, pokud to prohlížeč dovolil). Kdo ho otevře, uvidí stejný držák:', odkaz);
-    } catch (e) { Dialog.chyba('Odkaz se nepodařilo vytvořit: ' + (e && e.message || e)); }
-  });
-  async function nactiZOdkazu() {
-    const m = /[#&]p=([\w-]+)/.exec(location.hash);
-    if (!m) return;
-    try {
-      const data = await dekoduj(m[1]);
-      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('není objekt');
-      const r = U.normalizuj(data);
-      nahrad(r.p);
-      hlasPrevod(r.hlaseni, 'Sdílený držák');
-    } catch (e) { Dialog.chyba('Odkaz je poškozený – držák z něj nejde načíst.'); }
-    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* sandbox */ }
-  }
 
   /* ---------- katalog uložených držáků (Moje držáky) pro sadu a stěnu ---------- */
   function ulozene() {
@@ -854,8 +712,8 @@
     $('stavSada').textContent = `${out.length} dílů, plocha ${fmt(c[3] - c[0], 0)} × ${fmt(c[4] - c[1], 0)} mm`;
     return out.map(d => Object.assign({}, d, KRAB.presun(d, -(c[0] + c[3]) / 2, -(c[1] + c[4]) / 2, 0)));
   }
-  $('btnSada3mf').addEventListener('click', async () => { const k = await sestavSadu(); if (k) stahni(KRAB.soubor3mf(k, 'Sada French cleat'), 'sada_french_cleat.3mf', 'model/3mf'); });
-  $('btnSadaStl').addEventListener('click', async () => { const k = await sestavSadu(); if (k) stahni(KRAB.stlBinarni(k, 'french cleat - github_site'), 'sada_french_cleat.stl', 'model/stl'); });
+  $('btnSada3mf').addEventListener('click', async () => { const k = await sestavSadu(); if (k) app.stahni(KRAB.soubor3mf(k, 'Sada French cleat'), 'sada_french_cleat.3mf', 'model/3mf'); });
+  $('btnSadaStl').addEventListener('click', async () => { const k = await sestavSadu(); if (k) app.stahni(KRAB.stlBinarni(k, 'french cleat - github_site'), 'sada_french_cleat.stl', 'model/stl'); });
 
   /* ---------- porovnání dvou variant ---------- */
   const KLIC_POR = 'webapp_cleat_porovnani';
@@ -920,15 +778,17 @@
   }
 
   /* ---------- start ---------- */
-  p = nactiUlozeny();
-  naplnFormular();
-  prepocitej();
-  nactiZOdkazu();
-  addEventListener('hashchange', nactiZOdkazu);   // odkaz vložený do adresy už otevřené stránky
-  nactiManifold().then(w => { wasm = w; $('stav3d').textContent = ''; prepocitej(); }).catch(e => {
-    chybaStavby = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – model ani export nejsou k dispozici.';
-    const st = $('stav3d'); st.textContent = chybaStavby; st.classList.add('chyba');
-    vypis(U.kontroly(p, U.odvozene(p)).concat([{ uroven: 'chyba', text: chybaStavby, pole: [] }]), U.odvozene(p));
+  p = app.p;
+  addEventListener('hashchange', () => app.nactiZOdkazu());   // odkaz vložený do adresy už otevřené stránky
+  app.start({
+    manifold: {
+      ok: w => { wasm = w; $('stav3d').textContent = ''; prepocitej(); },
+      chyba: e => {
+        chybaStavby = 'Geometrické jádro (manifold-3d) se nenačetlo: ' + (e && e.message || e) + ' – model ani export nejsou k dispozici.';
+        const st = $('stav3d'); st.textContent = chybaStavby; st.classList.add('chyba');
+        vypis(U.kontroly(p, U.odvozene(p)).concat([{ uroven: 'chyba', text: chybaStavby, pole: [] }]), U.odvozene(p));
+      },
+    },
   });
-  window.CLEAT_UI = { get p() { return p; }, get model() { return model; }, nahled, zmen, naplnFormular, prepocitej, nahrad };
+  window.CLEAT_UI = { get p() { return app.p; }, get model() { return model; }, nahled, zmen, naplnFormular, prepocitej, nahrad, app };
 })();
