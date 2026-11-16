@@ -89,7 +89,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     kontrast: { nazev: 'Vysoký kontrast', svetle: false, deska: '#000000', jemna: '#3a3a3a', hlavni: '#9a9a9a', okraj: '#ffffff', pozadi: ['#000000', '#000000'],
       osaX: '#ff4040', osaY: '#ffe600' },
   };
-  let tema = 'auto';
+  let tema = 'pisek';
   /** Aktivní téma (auto podle motivu webu). */
   M.temaDesky = () => {
     const t = M.TEMATA_DESKY[tema];

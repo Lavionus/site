@@ -202,7 +202,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // ------------------------------------------------------------ panel Kontrola tisku
     const okno = $('oknoTisk');
     const deska = () => ({ sirka: S.deska.sirka, hloubka: S.deska.hloubka });
-    const pametPrekryvu = new Map();
+    const pametPrekryvu = new Map(), pametSlupek = new Map();
     function obnovPanel() {
       if (!okno || !okno.open) return;
       const s = souhrn(true);
@@ -227,12 +227,29 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const site = { get: id => { if (!nactene.has(id)) nactene.set(id, T.svetovaSit(id)); return nactene.get(id); } };
       // „jen vybraná tělesa“: problémy jen těch (překryvy hledá kontrola mezi všemi, ukázat ty s výběrem)
       const vsechny = M.kontrolaTisku(M.app.dok, deska(), site, pametPrekryvu), vyb = new Set(M.app.vyber);
+      // slupky s nulovou tloušťkou (zbytek booleanu, zdvojená stěna): projdou kontrolou těsnosti i objemu, tiskárna
+      // z nich udělá nesmysl. Měří se jednou na tvar (paměť), u obřích sítí jen tlačítkem Tenké stěny.
+      const slupky = [];
+      for (const u of telesa(false).uzly) {
+        const klic = M.klicGeometrie(u) + '@' + [u.poloha, u.rotace, u.rozmer, u.zrcadlo || []].join(';');
+        let ano = pametSlupek.get(klic);
+        if (ano == null) {
+          const sit = site.get(u.id);
+          if (!sit || sit.idx.length / 3 > 80000) continue;
+          ano = M.tenkeSteny(sit, 0.02).plocha > 0.01;
+          if (pametSlupek.size > 500) pametSlupek.clear();
+          pametSlupek.set(klic, ano);
+        }
+        if (ano) slupky.push(u.id);
+      }
+      if (slupky.length) vsechny.push({ druh: 'slupka', ids: slupky, oprava: 'tenke',
+        text: `${slupky.slice(0, 3).map(id => '„' + M.najdiUzel(M.app.dok, id).nazev + '“').join(', ')}${slupky.length > 3 ? ' …' : ''} – stěna s nulovou tloušťkou (slupka nebo zdvojená stěna, třeba po díře zarovnané s plochou); tiskárna ji nevytiskne.` });
       const problemy = nast.jenVyber && vyb.size ? vsechny.filter(p => !p.ids || p.ids.some(id => vyb.has(id))) : vsechny;
       const chyby = T.info().chyby;
       const seznam = $('tiskProblemy');
       seznam.innerHTML = (problemy.length || chyby.length) ? problemy.map((p, i) => `<li class="problem-${p.druh}">
           <span>${esc(p.text)}</span>
-          <span class="tisk-akce"><button type="button" class="tl" data-vybrat="${i}">Vybrat</button>${p.oprava ? `<button type="button" class="tl hlavni-tl" data-opravit="${i}">${{ polozit: 'Položit na desku', dovnitr: 'Posunout na desku', rozmistit: 'Rozmístit' }[p.oprava]}</button>` : ''}</span>
+          <span class="tisk-akce"><button type="button" class="tl" data-vybrat="${i}">Vybrat</button>${p.oprava ? `<button type="button" class="tl hlavni-tl" data-opravit="${i}">${{ polozit: 'Položit na desku', dovnitr: 'Posunout na desku', rozmistit: 'Rozmístit', tenke: 'Ukázat' }[p.oprava]}</button>` : ''}</span>
         </li>`).join('') + chyby.slice(0, 3).map(c => `<li class="problem-chyba"><span>⚠ ${esc(c)}</span></li>`).join('')
         : '<li class="ok">✓ Žádné problémy – model je připravený k exportu.</li>';
       seznam._problemy = problemy;
@@ -276,6 +293,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (!p) return;
         if (b.dataset.vybrat != null) { M.nastavVyber(p.ids); return; }
         if (p.oprava === 'rozmistit') { M.nastavVyber(p.ids); M.rozmistitNaDesce(); return; }
+        if (p.oprava === 'tenke') { M.ukazTenkeSteny(0.05); return; }
         const dok = p.oprava === 'polozit' ? M.polozNaRovinu(M.app.dok, p.ids) : M.posunNaDesku(M.app.dok, p.ids, deska());
         M.zmenDokument(dok, p.oprava === 'polozit' ? 'Položit na desku' : 'Posunout na desku');
       });

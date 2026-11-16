@@ -58,6 +58,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       H.zaznamy[i].sloucit = null;
       return H.zaznamy[i];
     };
+    /** Sloučí kroky po záznamu od (od+1 … aktuální) do jednoho s popisem popis; větev „znovu“ zahodí.
+        Vrací true, když bylo co sloučit. */
+    H.sluc = function (od, popis) {
+      if (!(od >= 0) || H.index <= od + 1) return false;
+      const posl = H.zaznamy[H.index];
+      H.zaznamy.splice(od + 1, H.zaznamy.length - od - 1, Object.assign({}, posl, { popis: popis || posl.popis, sloucit: null }));
+      H.index = od + 1;
+      return true;
+    };
     H.vymaz = function (stav) {
       H.zaznamy = [];
       H.index = -1;

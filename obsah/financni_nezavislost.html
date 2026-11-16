@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulačka finanční nezávislosti</title>
+<meta name="description" content="Kolik naspořit, aby výnosy kryly výdaje, a kdy to nastane: míra výběru (pravidlo 4 % a jeho limity), daně, inflace, státní důchod, varianty Lean/Fat/Coast/Barista, Monte Carlo, historický backtest a citlivostní tabulky.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/chart.min.js"></script>
+<script src="financni_nezavislost/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+@media (max-width:1000px){.lista .txt{display:none}}
+@media (max-width:560px){.lista .h1txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.86rem;font-family:inherit;min-width:0;width:100%}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(8px,2vw,20px) 40px}
+.rozvrh{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:820px){.rozvrh{grid-template-columns:minmax(0,1fr)}}
+aside.parametry{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:8px 10px}
+@media (min-width:821px){aside.parametry{position:sticky;top:0;max-height:calc(100vh - 70px);overflow-y:auto}}
+details.blok{border-bottom:1px solid var(--border);padding:4px 0 8px}
+details.blok:last-child{border-bottom:0}
+details.blok summary{cursor:pointer;font-weight:600;font-size:.86rem;padding:4px 0;list-style-position:inside}
+.mrizka{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;margin-top:4px;align-items:end}
+.pole{display:grid;gap:2px;font-size:.74rem;color:var(--text-muted);min-width:0}
+.pole.cela{grid-column:1/-1}
+.pole .vstup{color:var(--text)}
+.napoveda-pole{font-size:.72rem;color:var(--text-faint);grid-column:1/-1;line-height:1.4;margin:0}
+
+.dlazdice{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.dl{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:9px 12px;min-width:0}
+.dl b{display:block;font-size:1.35rem;line-height:1.2;word-break:break-word}
+.dl span{font-size:.76rem;color:var(--text-muted)}
+.dl.ok b{color:var(--ok)} .dl.pozor b{color:var(--warn)} .dl.zle b{color:var(--danger)}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;margin-bottom:12px;min-width:0}
+.panel h2{font-size:.95rem;margin:0 0 8px}
+.graf{position:relative;height:340px}
+@media (max-width:500px){.graf{height:260px}}
+.tip{font-size:.8rem;color:var(--text-muted);line-height:1.5;margin:6px 0 0}
+.tab-obal{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em}
+td.c,th.c{text-align:right;white-space:nowrap}
+td.zvyr{font-weight:700;outline:2px solid var(--accent);outline-offset:-2px}
+td.h-ok{color:var(--ok)} td.h-poz{color:var(--warn)} td.h-zle{color:var(--danger)}
+.zdroj{font-size:.74rem;color:var(--text-faint);line-height:1.45;margin-top:6px}
+.text{font-size:.88rem;line-height:1.6;max-width:820px}
+.text h3{font-size:.95rem;margin:14px 0 4px}
+.text ul{padding-left:20px;margin:4px 0}
+.radek-ovl{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-bottom:8px}
+.radek-ovl .pole{width:auto}
+.radek-ovl .vstup{width:8em}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,620px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.55}
+.okno .telo p{margin:0}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+textarea.vstup{font-family:ui-monospace,Consolas,monospace;font-size:.8rem}
+
+@media print{
+  .lista,aside.parametry,dialog,#podpis-pruh,.radek-ovl{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .rozvrh{display:block}
+  .karta-pohled{display:block!important}
+  .panel,.dl{break-inside:avoid;background:#fff;border-color:#999}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🏝️<span class="h1txt"> Finanční nezávislost</span></h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Uložení, sdílení, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="prehled" aria-pressed="true" title="Přehled a projekce">📈<span class="txt"> Přehled</span></button>
+    <button class="tl" data-pohled="mc" aria-pressed="false" title="Simulace Monte Carlo">🎲<span class="txt"> Monte Carlo</span></button>
+    <button class="tl" data-pohled="historie" aria-pressed="false" title="Historický backtest">🏛️<span class="txt"> Historie</span></button>
+    <button class="tl" data-pohled="citlivost" aria-pressed="false" title="Citlivostní tabulky">🧮<span class="txt"> Citlivost</span></button>
+    <button class="tl" data-pohled="pravidlo" aria-pressed="false" title="Pravidlo 4 % a jeho limity">📖<span class="txt"> Pravidlo 4 %</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="odkaz">🔗 Zkopírovat odkaz s parametry</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Uložit parametry (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Načíst parametry…</button>
+  <button class="tl" data-prikaz="rada">📋 Vlastní historická řada…</button>
+  <hr>
+  <button class="tl" data-prikaz="vychozi">↺ Výchozí hodnoty</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="rozvrh">
+<aside class="parametry" aria-label="Parametry">
+  <form id="form" autocomplete="off" onsubmit="return false">
+  <details class="blok" open><summary>👤 Vy a výdaje</summary><div class="mrizka">
+    <label class="pole">Věk dnes<input class="vstup" name="vek" inputmode="numeric"></label>
+    <label class="pole">Plánovat do věku<input class="vstup" name="vekKonec" inputmode="numeric"></label>
+    <label class="pole cela">Roční výdaje (Kč, dnešní ceny)<input class="vstup" name="vydaje" inputmode="numeric"></label>
+    <p class="napoveda-pole" id="vydajeMes"></p>
+    <label class="pole">Majetek dnes (Kč)<input class="vstup" name="majetek" inputmode="numeric"></label>
+    <label class="pole">Spoření měsíčně (Kč)<input class="vstup" name="sporeni" inputmode="numeric"></label>
+    <label class="pole cela">Věk ukončení práce (0 = jakmile dosáhnu FI)<input class="vstup" name="vekOdchodu" inputmode="numeric"></label>
+  </div></details>
+  <details class="blok" open><summary>📊 Výnos a náklady</summary><div class="mrizka">
+    <label class="pole">Výnos nominální %<input class="vstup" name="vynos" inputmode="decimal"></label>
+    <label class="pole">Volatilita %<input class="vstup" name="volatilita" inputmode="decimal"></label>
+    <label class="pole">Inflace %<input class="vstup" name="inflace" inputmode="decimal"></label>
+    <label class="pole">Poplatky fondů %<input class="vstup" name="poplatky" inputmode="decimal"></label>
+    <label class="pole cela">Efektivní daň z výnosů %<input class="vstup" name="dan" inputmode="decimal"></label>
+    <p class="napoveda-pole">Daň se uplatní na kladný výnos každého roku. V ČR je zisk z prodeje cenných papírů po 3 letech držby (časový test) osvobozen, dividendy se daní 15 % – efektivní sazba bývá 0–3 %.</p>
+  </div></details>
+  <details class="blok" open><summary>💸 Výběr a důchod</summary><div class="mrizka">
+    <label class="pole cela">Míra výběru % (pravidlo 4 %)<input class="vstup" name="mira" inputmode="decimal"></label>
+    <label class="pole">Důchod/měs. (dnešní Kč)<input class="vstup" name="duchod" inputmode="numeric"></label>
+    <label class="pole">Od věku<input class="vstup" name="vekDuchodu" inputmode="numeric"></label>
+    <p class="napoveda-pole">Důchod zadejte orientačně sami (např. z informativního osobního listu důchodového pojištění). 0 = bez důchodu – konzervativní varianta.</p>
+  </div></details>
+  <details class="blok"><summary>🧩 Varianty Lean / Fat / Coast / Barista</summary><div class="mrizka">
+    <label class="pole">Lean: % výdajů<input class="vstup" name="lean" inputmode="numeric"></label>
+    <label class="pole">Fat: % výdajů<input class="vstup" name="fat" inputmode="numeric"></label>
+    <label class="pole">Barista: příjem měsíčně<input class="vstup" name="barista" inputmode="numeric"></label>
+    <label class="pole">Coast: cíl ve věku (0 = důchod)<input class="vstup" name="vekCoast" inputmode="numeric"></label>
+  </div></details>
+  <details class="blok"><summary>🏛️ Historický backtest</summary><div class="mrizka">
+    <label class="pole cela">Podíl akcií % (zbytek dluhopisy)<input class="vstup" name="podilAkcii" inputmode="numeric"></label>
+    <p class="napoveda-pole" id="radaPopis"></p>
+  </div></details>
+  </form>
+</aside>
+
+<section id="vysledky" aria-live="polite">
+  <div class="karta-pohled" data-karta="prehled">
+    <div class="dlazdice" id="dlPrehled"></div>
+    <div class="panel"><h2>Vývoj majetku v dnešních korunách</h2><div class="graf"><canvas id="grafProjekce" role="img" aria-label="Graf vývoje majetku a cílové částky"></canvas></div>
+      <p class="tip" id="tipProjekce"></p></div>
+    <div class="panel"><h2>Varianty finanční nezávislosti</h2><div class="tab-obal"><table id="tabVarianty"></table></div>
+      <p class="tip"><b>Lean</b> = skromný rozpočet, <b>Fat</b> = volnější. <b>Barista</b> = odejdete z hlavní práce, částečný příjem kryje část výdajů až do důchodu. <b>Coast</b> = majetek, který bez dalšího spoření sám doroste do cíle – pak stačí vydělávat jen na běžné výdaje.</p></div>
+  </div>
+
+  <div class="karta-pohled" data-karta="mc" hidden>
+    <div class="radek-ovl">
+      <label class="pole">Počet simulací<select class="vstup" id="mcN"><option>500</option><option selected>2000</option><option>5000</option><option>10000</option></select></label>
+      <label class="pole">Seed<input class="vstup" id="mcSeed" inputmode="numeric" value="12345"></label>
+      <button class="btn mini" id="mcNovy" type="button">🎲 Jiný seed</button>
+    </div>
+    <div class="dlazdice" id="dlMC"></div>
+    <div class="panel"><h2>Pásma majetku (reálné Kč)</h2><div class="graf"><canvas id="grafMC" role="img" aria-label="Graf percentilů majetku ze simulace"></canvas></div>
+      <p class="tip">Každý rok se náhodně vylosuje výnos z lognormálního rozdělení se zadaným průměrem a volatilitou, inflace je pevná. Úspěch = majetek nevyčerpán do konce plánu. Pásma ukazují 10.–90. a 25.–75. percentil, čára medián. Skutečné trhy mají „tlustší chvosty“ a období po sobě jdoucích propadů – proto i historický backtest.</p></div>
+  </div>
+
+  <div class="karta-pohled" data-karta="historie" hidden>
+    <div class="dlazdice" id="dlHist"></div>
+    <div class="panel"><h2>Výběrová fáze na historických obdobích</h2><div class="graf"><canvas id="grafHist" role="img" aria-label="Graf průběhu majetku pro jednotlivé roky odchodu"></canvas></div>
+      <p class="tip" id="tipHist"></p>
+      <p class="zdroj" id="zdrojHist"></p></div>
+    <div class="panel"><h2>Jednotlivá období</h2><div class="tab-obal" style="max-height:420px;overflow-y:auto"><table id="tabHist"></table></div></div>
+  </div>
+
+  <div class="karta-pohled" data-karta="citlivost" hidden>
+    <div class="panel"><h2>Věk dosažení FI podle spoření a výnosu</h2><div class="tab-obal"><table id="tabCitFI"></table></div>
+      <p class="tip">Řádky: měsíční spoření, sloupce: nominální výnos. Zvýrazněna je současná volba. „—“ = nedosaženo do konce plánu.</p></div>
+    <div class="panel"><h2>Historická úspěšnost podle míry výběru a podílu akcií</h2>
+      <div class="radek-ovl"><label class="pole">Délka výběru (let)<input class="vstup" id="citDelka" inputmode="numeric"></label></div>
+      <div class="tab-obal"><table id="tabCitBT"></table></div>
+      <p class="tip">Podíl historických období, ve kterých by majetek = výdaje ÷ míra výběru vydržel celou dobu (bez důchodu, s vašimi poplatky a daní). Řádek „SWR“ = nejvyšší míra, která přežila všechna období.</p></div>
+  </div>
+
+  <div class="karta-pohled text" data-karta="pravidlo" hidden>
+    <div class="panel">
+    <h2>📖 Pravidlo 4 % – odkud je a kde má limity</h2>
+    <p>William Bengen (1994) a později „Trinity study“ (Cooley, Hubbard, Walz, 1998) zkoumali, kolik lze z portfolia akcií a dluhopisů USA vybírat, aby vydrželo <b>30 let</b>. První rok vyberete 4 % počáteční hodnoty, další roky stejnou částku navýšenou o inflaci. V historických datech USA od roku 1926 takový výběr vydržel 30 let téměř ve všech obdobích. Odtud pravidlo: <b>cílová částka = 25× roční výdaje</b>.</p>
+    <h3>Limity, na které pamatovat</h3>
+    <ul>
+      <li><b>Horizont 30 let.</b> Kdo odchází ve 40, potřebuje 50 i více let. Bezpečná míra pak historicky klesá ke 3–3,5 % (vyzkoušejte v záložce Citlivost).</li>
+      <li><b>Data USA.</b> Americký trh byl ve 20. století mimořádně úspěšný. V jiných zemích (Japonsko, Itálie, Německo) by 4 % často nevydrželo. Budoucí výnosy mohou být nižší.</li>
+      <li><b>Bez poplatků a daní.</b> Studie počítaly s „hrubými“ indexy. Poplatek 1 % ročně sníží bezpečnou míru zhruba o 0,5–1 procentního bodu.</li>
+      <li><b>Kurzové riziko.</b> Kdo utrácí v korunách a investuje v dolarech, nese navíc výkyvy kurzu CZK/USD, které historická řada v USD neobsahuje.</li>
+      <li><b>Riziko pořadí výnosů.</b> Propad v prvních letech výběrů (např. odchod v roce 1966 nebo 2000) škodí mnohem víc než stejný propad později. Průměrný výnos nestačí – proto Monte Carlo a backtest.</li>
+      <li><b>Pevný reálný výběr.</b> Pravidlo předpokládá neměnné výdaje. Ve skutečnosti lze v horších letech utrácet méně (flexibilní výběr), což úspěšnost výrazně zvyšuje; naopak nečekané výdaje (zdraví, bydlení) ji snižují.</li>
+      <li><b>Výsledek „úspěch“ neznamená klid.</b> V mnoha úspěšných obdobích majetek dočasně klesl na zlomek – to je psychicky náročné.</li>
+    </ul>
+    <h3>Jak to počítá tato kalkulačka</h3>
+    <ul>
+      <li>Vše je v <b>dnešních korunách</b>: spoření, výdaje i důchod rostou s inflací, graf ukazuje reálnou kupní sílu.</li>
+      <li><b>Cílová částka</b> = (výdaje − důchod) ÷ míra výběru, plus „most“ – současná hodnota důchodu za roky, které do něj ještě zbývají (ty musí pokrýt majetek).</li>
+      <li>Reálný výnos = (1 + nominální výnos po dani a poplatcích) ÷ (1 + inflace) − 1. Deterministická projekce používá průměrný výnos, proto bývá optimističtější než medián Monte Carlo (kolísání snižuje složený výnos).</li>
+      <li>Výběr probíhá na začátku roku, výnos a spoření na konci roku.</li>
+    </ul>
+    <p class="zdroj">Výpočty jsou orientační a nejsou investičním doporučením.</p>
+    </div>
+  </div>
+</section>
+</div></main>
+
+<dialog class="okno" id="dlgRada"><form method="dialog">
+  <header>📋 Vlastní historická řada</header>
+  <div class="telo">
+    <p>Jeden rok na řádek: <code>rok výnos% inflace%</code>, nebo <code>rok akcie% dluhopisy% inflace%</code> (oddělovač mezera, tabulátor nebo středník; desetinná čárka i tečka). Roky musí navazovat. Řádky začínající # se ignorují.</p>
+    <textarea class="vstup" id="radaText" rows="12" spellcheck="false" placeholder="2000 -9,1 3,4&#10;2001 -11,9 1,6"></textarea>
+    <p class="zdroj" id="radaStav"></p>
+  </div>
+  <footer>
+    <button type="button" class="btn vlevo" id="radaVestavena">↺ Vestavěná řada S&amp;P 500</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Použít</button>
+  </footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo">
+    <p>Zadejte vlevo své <b>roční výdaje</b>, současný <b>majetek</b> a <b>měsíční spoření</b>. Kalkulačka spočítá, kolik potřebujete (cílovou částku), a v jakém věku na ni při daném výnosu dosáhnete. Vše se přepočítává hned.</p>
+    <p><b>📈 Přehled</b> – projekce majetku v dnešních korunách a varianty Lean/Fat/Coast/Barista.<br>
+    <b>🎲 Monte Carlo</b> – tisíce náhodných průběhů trhu: pravděpodobnost, že peníze vydrží.<br>
+    <b>🏛️ Historie</b> – co by se stalo, kdybyste odešli v kterémkoli roce od 1928 (S&amp;P 500, dluhopisy a inflace USA). Lze vložit i vlastní řadu (Soubor).<br>
+    <b>🧮 Citlivost</b> – jak věk FI závisí na spoření a výnosu, a jak úspěšnost závisí na míře výběru.<br>
+    <b>📖 Pravidlo 4 %</b> – odkud pochází a proč pro předčasný důchod bývá málo konzervativní.</p>
+    <p>Parametry se ukládají jen v tomto prohlížeči. Odkaz s parametry (Soubor) je můžete poslat nebo uložit.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.FinNezJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+if (window.self === window.top) document.body.classList.add('samostatne');
+const form = $('form');
+const KLIC_POHLED = 'webapp_financni_nezavislost_pohled';
+
+/* ---------- formát čísel ---------- */
+const LOC = document.documentElement.lang === 'cs' ? 'cs-CZ' : undefined;
+function kc(x) {
+  if (x == null || !isFinite(x)) return '—';
+  const a = Math.abs(x);
+  if (a >= 1e9) return `${(x / 1e9).toLocaleString(LOC, { maximumFractionDigits: 2 })} mld. Kč`;
+  if (a >= 1e6) return `${(x / 1e6).toLocaleString(LOC, { maximumFractionDigits: 2 })} mil. Kč`;
+  return kcPresne(x);
+}
+function kcPresne(x) { return `${Math.round(x).toLocaleString(LOC)} Kč`; }
+const pct = (x, d) => (x == null || !isFinite(x)) ? '—' : (x * 100).toLocaleString(LOC, { maximumFractionDigits: d == null ? 1 : d }) + ' %';
+const tridaUsp = p => p == null ? '' : p >= 0.9 ? 'ok' : p >= 0.75 ? 'pozor' : 'zle';
+const dl = (hodnota, popis, trida) => `<div class="dl ${trida || ''}"><b>${hodnota}</b><span>${popis}</span></div>`;
+
+/* ---------- stav ---------- */
+function nactiJSON(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }
+function ulozJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* plné úložiště */ } }
+let vstupy = J.normVstupy(nactiJSON(J.KLIC) || {});
+// parametry z odkazu (#p=…) mají přednost
+try {
+  const h = new URLSearchParams(location.hash.slice(1)).get('p');
+  if (h) vstupy = J.normVstupy(JSON.parse(decodeURIComponent(h)));
+} catch { /* neplatný odkaz */ }
+let vlastniRada = nactiJSON(J.KLIC_RADA);
+const rada = () => (vlastniRada && vlastniRada.length >= 5) ? vlastniRada : J.HIST_RADA;
+let pohled = (() => { try { return localStorage.getItem(KLIC_POHLED) || 'prehled'; } catch { return 'prehled'; } })();
+
+function doFormulare() { for (const k in vstupy) if (form.elements[k]) form.elements[k].value = String(vstupy[k]).replace('.', LOC ? ',' : '.'); }
+function zFormulare() {
+  const o = {};
+  for (const k in J.VYCHOZI) o[k] = form.elements[k] ? form.elements[k].value : J.VYCHOZI[k];
+  vstupy = J.normVstupy(o);
+  ulozJSON(J.KLIC, vstupy);
+}
+
+/* ---------- grafy ---------- */
+const grafy = {};
+function barvy() {
+  const s = getComputedStyle(document.documentElement), g = n => s.getPropertyValue(n).trim();
+  return { text: g('--text'), muted: g('--text-muted'), mrizka: g('--border'), accent: g('--accent'), soft: g('--accent-soft'),
+    ok: g('--ok'), warn: g('--warn'), danger: g('--danger'), faint: g('--text-faint'), panel: g('--bg-panel') };
+}
+function pruhledna(barva, a) { return `color-mix(in srgb, ${barva} ${Math.round(a * 100)}%, transparent)`; }
+function zakladGrafu(b, extra) {
+  return Object.assign({
+    responsive: true, maintainAspectRatio: false, animation: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: b.text, boxWidth: 14, usePointStyle: true } },
+      tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + kc(c.parsed.y) } }
+    },
+    scales: {
+      x: { ticks: { color: b.muted, maxRotation: 0, autoSkipPadding: 12 }, grid: { color: pruhledna(b.mrizka, 0.6) }, title: { display: true, text: 'věk', color: b.muted } },
+      y: { ticks: { color: b.muted, callback: v => kc(v) }, grid: { color: pruhledna(b.mrizka, 0.6) }, beginAtZero: true }
+    }
+  }, extra || {});
+}
+function kresli(id, cfg) {
+  if (grafy[id]) grafy[id].destroy();
+  grafy[id] = new Chart($(id), cfg);
+}
+
+/* ---------- přehled ---------- */
+let posledniMC = null;
+function vykresliPrehled() {
+  const p = J.projekce(vstupy), v = p.v, b = barvy();
+  const cilDnes = J.cilFI(v, v.vek), mc = J.monteCarlo(v, { n: 1000, seed: 12345 });
+  const fiText = p.vekFI === null ? 'nedosaženo' : p.vekFI === v.vek ? 'už teď' : p.vekFI + ' let';
+  const zaLet = p.vekFI === null ? `do ${v.vekKonec} let nedosáhnete` : p.vekFI === v.vek ? 'cíl máte splněný' : `za ${p.vekFI - v.vek} let`;
+  const vyberPct = (v.vydaje / cilDnes * 100).toLocaleString(LOC, { maximumFractionDigits: 1 });
+  $('dlPrehled').innerHTML = [
+    dl(kc(cilDnes), `cílová částka dnes (${vyberPct} % výběr)`),
+    dl(fiText, `věk finanční nezávislosti – ${zaLet}`, p.vekFI === null ? 'zle' : 'ok'),
+    dl(kc(p.majetekPriOdchodu), p.vekOdchodu !== null ? `majetek při odchodu v ${p.vekOdchodu} letech` : 'majetek při odchodu'),
+    dl(pct(p.realnyVynos, 2), 'reálný výnos po dani a poplatcích'),
+    dl(p.vekOdchodu === null ? '—' : pct(mc.uspesnost, 0), 'šance, že peníze vydrží (Monte Carlo)', p.vekOdchodu === null ? '' : tridaUsp(mc.uspesnost))
+  ].join('');
+  const tip = [];
+  if (p.vycerpano !== null) tip.push(`⚠️ Při plánovaném odchodu v ${p.vekOdchodu} letech se majetek vyčerpá ve ${p.vycerpano} letech.`);
+  if (p.miraPriOdchodu !== null && p.miraPriOdchodu > 0) tip.push(`Na začátku výběru čerpáte ${pct(p.miraPriOdchodu)} majetku ročně (${kcPresne(J.potreba(v, p.vekOdchodu) / 12)} měsíčně).`);
+  if (v.duchod > 0) tip.push(`Od ${v.vekDuchodu} let kryje důchod ${kcPresne(v.duchod * 12)} ročně, z majetku se pak čerpá jen ${kcPresne(J.potreba(v, v.vekDuchodu))}.`);
+  tip.push('Křivka cíle klesá s blížícím se důchodem – do něj chybí méně let, které musí pokrýt majetek.');
+  $('tipProjekce').innerHTML = tip.map(t => `<span>${esc(t)}</span>`).join(' ');
+  $('vydajeMes').textContent = `≈ ${kcPresne(v.vydaje / 12)} měsíčně`;
+
+  const veky = p.roky.map(r => r.vek);
+  kresli('grafProjekce', {
+    type: 'line',
+    data: { labels: veky, datasets: [
+      { label: 'Majetek', data: p.roky.map(r => r.majetek), borderColor: b.accent, backgroundColor: b.soft, fill: true, borderWidth: 2, pointRadius: 0, tension: 0.15 },
+      { label: 'Potřebná částka', data: p.roky.map(r => r.cil), borderColor: b.warn, borderDash: [6, 4], borderWidth: 2, pointRadius: 0, fill: false }
+    ] },
+    options: zakladGrafu(b, {
+      plugins: {
+        legend: { labels: { color: b.text, boxWidth: 14 } },
+        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + kc(c.parsed.y),
+          afterBody: it => { const r = p.roky[it[0].dataIndex]; return r.faze === 'renta' ? 'výběr ' + kcPresne(r.vyber) + ' / rok' : 'spoření ' + kcPresne(v.sporeni * 12) + ' / rok'; } } }
+      }
+    })
+  });
+
+  const va = J.varianty(v);
+  const NAZVY = { fi: '🎯 FI', lean: '🥖 Lean FI', fat: '🥂 Fat FI', barista: '☕ Barista FI', coast: '⛵ Coast FI' };
+  $('tabVarianty').innerHTML = '<thead><tr><th>Varianta</th><th>Popis</th><th class="c">Výdaje z majetku / rok</th><th class="c">Potřeba dnes</th><th class="c">Věk</th></tr></thead><tbody>' +
+    va.map(x => `<tr><td>${NAZVY[x.id]}</td><td>${esc(x.popis)}</td><td class="c">${kc(x.vydaje)}</td><td class="c">${kc(x.cilDnes)}</td><td class="c">${x.vek === null ? '—' : x.vek === v.vek ? 'už teď' : x.vek}</td></tr>`).join('') + '</tbody>';
+}
+
+/* ---------- Monte Carlo ---------- */
+function vykresliMC() {
+  const n = +$('mcN').value, seed = parseInt($('mcSeed').value, 10) || 0;
+  const m = J.monteCarlo(vstupy, { n, seed }), b = barvy();
+  posledniMC = m;
+  const konec = m.pasma[m.pasma.length - 1];
+  $('dlMC').innerHTML = m.vekOdchodu === null
+    ? dl('—', 'FI se v plánu nedosáhne – zadejte věk ukončení práce', 'zle')
+    : [
+      dl(pct(m.uspesnost, 1), `úspěšnost z ${n.toLocaleString(LOC)} simulací (odchod v ${m.vekOdchodu} letech)`, tridaUsp(m.uspesnost)),
+      dl(m.medianVycerpani === null ? '—' : m.medianVycerpani + ' let', 'medián věku vyčerpání v neúspěšných'),
+      dl(kc(konec.p50), 'medián majetku v ' + konec.vek + ' letech'),
+      dl(kc(konec.p10), '10. percentil v ' + konec.vek + ' letech')
+    ].join('');
+  const veky = m.pasma.map(x => x.vek), sl = k => m.pasma.map(x => x[k]);
+  kresli('grafMC', {
+    type: 'line',
+    data: { labels: veky, datasets: [
+      { label: '90. percentil', data: sl('p90'), borderColor: pruhledna(b.accent, 0.35), borderWidth: 1, pointRadius: 0, fill: false },
+      { label: '10.–90. percentil', data: sl('p10'), borderColor: pruhledna(b.accent, 0.35), borderWidth: 1, pointRadius: 0, fill: '-1', backgroundColor: pruhledna(b.accent, 0.12) },
+      { label: '75. percentil', data: sl('p75'), borderColor: 'transparent', pointRadius: 0, fill: false },
+      { label: '25.–75. percentil', data: sl('p25'), borderColor: 'transparent', pointRadius: 0, fill: '-1', backgroundColor: pruhledna(b.accent, 0.22) },
+      { label: 'Medián', data: sl('p50'), borderColor: b.accent, borderWidth: 2, pointRadius: 0, fill: false }
+    ] },
+    options: zakladGrafu(b, { plugins: {
+      legend: { labels: { color: b.text, boxWidth: 14, filter: i => !/^(90|75)\./.test(i.text) } },
+      tooltip: { callbacks: { label: c => ' ' + c.dataset.label.replace(/^\d+\.–/, '') + ': ' + kc(c.parsed.y) } }
+    } })
+  });
+}
+
+/* ---------- historie ---------- */
+function vykresliHistorii() {
+  const r = rada(), bt = J.backtest(vstupy, r), b = barvy(), st = J.statistikaRady(r, vstupy.podilAkcii);
+  $('zdrojHist').innerHTML = (vlastniRada ? `<span>Vlastní řada ${st.od}–${st.do}.</span>` : `<span>Zdroj:</span> <span>${esc(J.ZDROJ_RADY)}</span>`) +
+    ` <span>Řada ${st.od}–${st.do} při ${vstupy.podilAkcii} % akcií: nominálně ${st.nominal.toFixed(1)} % p. a., reálně ${st.realny.toFixed(1)} % p. a., inflace ${st.inflace.toFixed(1)} %, volatilita ${st.volatilita.toFixed(1)} %.</span>`;
+  if (bt.duvod) {
+    $('dlHist').innerHTML = dl('—', bt.duvod === 'nefi' ? 'FI se v plánu nedosáhne – zadejte věk ukončení práce' : `řada má ${r.length} let, výběr trvá ${vstupy.vekKonec - bt.vekOdchodu} let – zkraťte plán`, 'zle');
+    $('tipHist').textContent = ''; $('tabHist').innerHTML = '';
+    if (grafy.grafHist) { grafy.grafHist.destroy(); delete grafy.grafHist; }
+    return;
+  }
+  const neusp = bt.okna.filter(o => !o.uspech);
+  $('dlHist').innerHTML = [
+    dl(pct(bt.uspesnost, 0), `období přežilo (${bt.okna.length - neusp.length} z ${bt.okna.length})`, tridaUsp(bt.uspesnost)),
+    dl(bt.nejhorsi.start, 'nejhorší rok odchodu (konec ' + kc(bt.nejhorsi.konecna) + ')', bt.nejhorsi.uspech ? '' : 'zle'),
+    dl(kc(bt.median), 'medián majetku na konci plánu'),
+    dl(kc(bt.start), `start výběru v ${bt.vekOdchodu} letech, ${bt.delka} let`)
+  ].join('');
+  $('tipHist').innerHTML = `<span>Každá čára = odchod v jiném roce, výběr ${kcPresne(J.potreba(vstupy, bt.vekOdchodu))} ročně (od ${vstupy.vekDuchodu} let méně o důchod), výnosy a inflace podle skutečné historie.</span> <span>` +
+    (neusp.length ? `Neúspěšná období (červeně) začínají v letech ${neusp.map(o => o.start).join(', ')}.` : 'Všechna období přežila.') + '</span>';
+  const veky = Array.from({ length: bt.delka + 1 }, (_, i) => bt.vekOdchodu + i);
+  const ds = bt.okna.map(o => ({
+    label: String(o.start), data: o.cesta, pointRadius: 0, borderWidth: o === bt.nejhorsi ? 2.5 : 1, fill: false,
+    borderColor: o === bt.nejhorsi ? b.danger : o.uspech ? pruhledna(b.accent, 0.28) : pruhledna(b.danger, 0.6)
+  }));
+  // měřítko podle 85 % cest, aby pár extrémních období nezploštilo zbytek
+  const maxima = bt.okna.map(o => Math.max(...o.cesta)).sort((x, y) => x - y);
+  const opt = zakladGrafu(b, { interaction: { mode: 'nearest', intersect: false }, plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { title: it => 'odchod v roce ' + it[0].dataset.label + ', věk ' + it[0].label, label: c => ' ' + kc(c.parsed.y) } }
+    } });
+  opt.scales.y.max = J.kvantil(maxima, 0.85);
+  kresli('grafHist', { type: 'line', data: { labels: veky, datasets: ds }, options: opt });
+  $('tabHist').innerHTML = '<thead><tr><th>Odchod v roce</th><th>Do</th><th>Výsledek</th><th class="c">Minimum</th><th class="c">Na konci</th></tr></thead><tbody>' +
+    bt.okna.map(o => `<tr><td>${o.start}</td><td>${o.konec}</td><td class="${o.uspech ? 'h-ok' : 'h-zle'}">${o.uspech ? '✓ vydrželo' : '✗ došlo v ' + o.rokVycerpani}</td><td class="c">${kc(o.minimum)}</td><td class="c">${kc(o.konecna)}</td></tr>`).join('') + '</tbody>';
+}
+
+/* ---------- citlivost ---------- */
+function vykresliCitlivost() {
+  const v = vstupy, nas = [0.5, 0.75, 1, 1.25, 1.5, 2], pos = [-2, -1, 0, 1, 2];
+  const t = J.citlivostFI(v, nas, pos);
+  $('tabCitFI').innerHTML = '<thead><tr><th>Spoření / měs.</th>' + pos.map(d => `<th class="c">${(v.vynos + d).toLocaleString(LOC)} %</th>`).join('') + '</tr></thead><tbody>' +
+    t.map((r, i) => `<tr><td>${kcPresne(v.sporeni * nas[i])}</td>` + r.map((x, j) => `<td class="c${nas[i] === 1 && pos[j] === 0 ? ' zvyr' : ''}">${x === null ? '—' : x}</td>`).join('') + '</tr>').join('') + '</tbody>';
+  const delkaPole = $('citDelka');
+  if (!delkaPole.value) delkaPole.value = 30;
+  const delka = Math.max(5, Math.min(rada().length, parseInt(delkaPole.value, 10) || 30));
+  const miry = [3, 3.5, 4, 4.5, 5, 6], podily = [40, 60, 80, 100];
+  const tb = J.citlivostBacktest(v, rada(), miry, podily, delka);
+  const swr = podily.map(a => J.bezpecnaMira(v, rada(), delka, a));
+  const tr = p => p >= 0.95 ? 'h-ok' : p >= 0.8 ? 'h-poz' : 'h-zle';
+  $('tabCitBT').innerHTML = '<thead><tr><th>Míra výběru</th>' + podily.map(a => `<th class="c">${a} % akcií</th>`).join('') + '</tr></thead><tbody>' +
+    tb.map((r, i) => `<tr><td>${miry[i].toLocaleString(LOC)} %</td>` + r.map((x, j) => `<td class="c ${x == null ? '' : tr(x)}${miry[i] === v.mira && podily[j] === v.podilAkcii ? ' zvyr' : ''}">${x == null ? '—' : pct(x, 0)}</td>`).join('') + '</tr>').join('') +
+    `<tr><td><b>SWR (${delka} let)</b></td>` + swr.map(s => `<td class="c"><b>${s === null ? '< 1 %' : s.toLocaleString(LOC) + ' %'}</b></td>`).join('') + '</tr></tbody>';
+}
+
+/* ---------- vykreslení ---------- */
+const KRESLI = { prehled: vykresliPrehled, mc: vykresliMC, historie: vykresliHistorii, citlivost: vykresliCitlivost, pravidlo: () => {} };
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === pohled)));
+  document.querySelectorAll('[data-karta]').forEach(k => { k.hidden = k.dataset.karta !== pohled; });
+  $('radaPopis').textContent = vlastniRada ? `Používá se vlastní řada ${vlastniRada[0][0]}–${vlastniRada[vlastniRada.length - 1][0]} (Soubor → Vlastní historická řada).` : 'Řada S&P 500 + 10letý dluhopis USA + inflace USA 1928–2025 (Damodaran, BLS). Vlastní řadu vložíte přes Soubor.';
+  KRESLI[pohled]();
+}
+let casovac = 0;
+form.addEventListener('input', () => { clearTimeout(casovac); casovac = setTimeout(() => { zFormulare(); vykresli(); }, 250); });
+form.addEventListener('change', () => { clearTimeout(casovac); zFormulare(); doFormulare(); vykresli(); });
+$('mcN').addEventListener('change', vykresliMC);
+$('mcSeed').addEventListener('change', vykresliMC);
+$('mcNovy').addEventListener('click', () => { $('mcSeed').value = Math.floor(Math.random() * 1e6); vykresliMC(); });
+$('citDelka').addEventListener('change', vykresliCitlivost);
+new MutationObserver(() => vykresli()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* ---------- příkazy ---------- */
+function stahni(nazev, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  a.download = nazev; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const PRIKAZY = {
+  napoveda: () => $('dlgNapoveda').showModal(),
+  tisk: () => print(),
+  odkaz: async () => {
+    const u = location.href.split('#')[0] + '#p=' + encodeURIComponent(JSON.stringify(vstupy));
+    try { await navigator.clipboard.writeText(u); Dialog.info('Odkaz s parametry je ve schránce.'); }
+    catch { await Dialog.zeptej('Zkopírujte odkaz:', u); }
+  },
+  export: () => stahni('financni-nezavislost.json', JSON.stringify({ aplikace: 'financni_nezavislost', vstupy, rada: vlastniRada || undefined }, null, 1)),
+  import: () => $('souborImport').click(),
+  rada: () => {
+    $('radaText').value = (vlastniRada || J.HIST_RADA).map(r => r.filter(x => x !== null).join(' ')).join('\n');
+    $('radaStav').textContent = vlastniRada ? '' : 'Předvyplněno vestavěnou řadou: rok, S&P 500 %, dluhopis %, inflace %.';
+    $('dlgRada').showModal();
+  },
+  vychozi: async () => {
+    if (!await Dialog.potvrd('Vrátit všechny parametry na výchozí hodnoty?')) return;
+    vstupy = J.normVstupy({}); ulozJSON(J.KLIC, vstupy); doFormulare(); vykresli();
+  }
+};
+$('souborImport').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || !d.vstupy) throw new Error('chybí vstupy');
+    vstupy = J.normVstupy(d.vstupy); ulozJSON(J.KLIC, vstupy);
+    if (Array.isArray(d.rada)) { const pr = J.parseRada(d.rada.map(r => r.filter(x => x !== null).join(' ')).join('\n')); if (!pr.chyby.length) { vlastniRada = pr.rada; ulozJSON(J.KLIC_RADA, vlastniRada); } }
+    doFormulare(); vykresli(); Dialog.info('Parametry načteny.');
+  } catch (err) { Dialog.chyba(`Soubor nejde načíst: ${err.message}`); }
+});
+$('dlgRada').addEventListener('close', () => {
+  if ($('dlgRada').returnValue !== 'ok') return;
+  const pr = J.parseRada($('radaText').value);
+  if (pr.chyby.length || pr.rada.length < 5) {
+    Dialog.chyba(pr.rada.length < 5 ? 'Řada musí mít aspoň 5 let.' : `Chybné řádky: ${pr.chyby.slice(0, 8).join(', ')}`);
+    return;
+  }
+  const shodna = pr.rada.length === J.HIST_RADA.length && pr.rada.every((r, i) => r.every((x, j) => x === J.HIST_RADA[i][j]));
+  vlastniRada = shodna ? null : pr.rada;
+  try { if (vlastniRada) localStorage.setItem(J.KLIC_RADA, JSON.stringify(vlastniRada)); else localStorage.removeItem(J.KLIC_RADA); } catch { /* */ }
+  vykresli();
+});
+$('radaVestavena').addEventListener('click', () => {
+  $('radaText').value = J.HIST_RADA.map(r => r.join(' ')).join('\n');
+  $('radaStav').textContent = 'Vestavěná řada – po potvrzení se vlastní řada zahodí.';
+});
+
+/* ---------- nabídky ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; try { localStorage.setItem(KLIC_POHLED, pohled); } catch { /* */ } vykresli(); }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+
+if (!KRESLI[pohled]) pohled = 'prehled';
+doFormulare();
+vykresli();
+window.FINNEZ_APP = { vstupy: () => vstupy, vykresli, posledniMC: () => posledniMC };
+})();
+</script>
+</body>
+</html>

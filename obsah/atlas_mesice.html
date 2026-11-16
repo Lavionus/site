@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas Měsíce</title>
+<meta name="description" content="Interaktivní mapa přivrácené strany Měsíce pro pozorování dalekohledem: fáze, terminátor a librace pro zvolený čas, co pozorovat dnes, 300 útvarů s popisem, otočení obrazu podle dalekohledu a pozorovací seznam.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="sky_events/astro.js"></script>
+<script src="atlas_mesice/jadro.js"></script>
+<script src="atlas_mesice/utvary.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 170px;flex-shrink:1;min-width:140px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+input.tl{padding:3px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka .tl[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--accent);font-weight:700}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .nadpis{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);padding:4px 10px 0}
+[hidden]{display:none !important}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.mini{padding:3px 8px;font-size:.76rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+
+.plocha{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px}
+.mapa-obal{position:relative;min-height:0;background:#07090d;overflow:hidden}
+#mapa{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}
+#mapa.tahne{cursor:grabbing}
+.mapa-ovl{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px}
+.mapa-ovl button{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(20,24,32,.8);color:#eef;font-size:1.05rem;cursor:pointer}
+.mapa-ovl button:hover{background:rgba(40,48,64,.9)}
+.mapa-stav{position:absolute;left:8px;bottom:8px;right:52px;font-size:.78rem;color:#dfe6f0;text-shadow:0 1px 2px #000;pointer-events:none;line-height:1.4}
+.mapa-stav b{color:#fff}
+.mapa-zdroj{position:absolute;right:8px;bottom:8px;font-size:.66rem;color:#9aa6b6}
+.mapa-zdroj a{color:inherit}
+.nacitani{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#cfd8e6;font-size:.95rem;text-align:center;padding:20px}
+
+.panel{border-left:1px solid var(--border);background:var(--bg-elevated);display:flex;flex-direction:column;min-height:0}
+.zalozky{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.zalozky button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-muted);padding:8px 4px;cursor:pointer;font:inherit;font-size:.84rem}
+.zalozky button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel-telo{flex:1;min-height:0;overflow:auto;padding:10px 12px 40px}
+.detail{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:.85rem;line-height:1.45}
+.detail h2{margin:0 0 2px;font-size:1.05rem;display:flex;justify-content:space-between;gap:6px;align-items:flex-start}
+.detail .meta{color:var(--text-muted);font-size:.78rem}
+.detail p{margin:6px 0}
+.detail .akce{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+h3.sekce{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:12px 0 5px}
+.radek-u{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:.85rem;border:1px solid transparent}
+.radek-u:hover{background:var(--bg-hover)}
+.radek-u.vybrany{border-color:var(--accent);background:var(--accent-soft)}
+.radek-u .jm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.radek-u .jm small{color:var(--text-muted)}
+.radek-u .h{font-size:.74rem;color:var(--text-muted);white-space:nowrap}
+.radek-u input{margin:0;width:17px;height:17px;flex-shrink:0}
+.cip{display:inline-block;font-size:.68rem;border-radius:8px;padding:0 6px;border:1px solid var(--border);background:var(--bg-control);white-space:nowrap}
+.cip.term{border-color:var(--warn);color:var(--text)}
+.cip.noc{opacity:.65}
+.cip.ok{border-color:var(--ok)}
+.tabulka{width:100%;border-collapse:collapse;font-size:.84rem}
+.tabulka td{padding:4px 2px;border-bottom:1px solid var(--border);vertical-align:top}
+.tabulka td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.tip{font-size:.78rem;color:var(--text-muted);line-height:1.45;margin:6px 0}
+.filtry{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.filtry select{flex:1 1 120px}
+.filtry label{font-size:.8rem;display:flex;align-items:center;gap:4px}
+.postup{height:8px;border-radius:4px;background:var(--bg-control);overflow:hidden;margin:4px 0 8px}
+.postup span{display:block;height:100%;background:var(--ok)}
+.faze-ikona{width:64px;height:64px;flex-shrink:0}
+.souhrn{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.souhrn div{font-size:.86rem;line-height:1.45}
+.varovani{border-left:3px solid var(--warn);background:var(--bg-panel);padding:6px 9px;border-radius:6px;font-size:.8rem;margin:6px 0}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.5}
+.okno .telo p,.okno .telo ul{margin:0}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.dvoj{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+@media (max-width:860px){
+  body{height:auto;min-height:100%}
+  .plocha{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;align-content:start}
+  .mapa-obal{height:min(112vw,78vh);min-height:300px}
+  .mapa-stav{font-size:.7rem;right:48px}
+  .mapa-zdroj{top:4px;left:8px;right:auto;bottom:auto}
+  .panel{border-left:0;border-top:1px solid var(--border)}
+  .panel-telo{overflow:visible}
+}
+@media print{
+  .lista,.mapa-ovl,.zalozky,#podpis-pruh{display:none!important}
+  body{display:block;height:auto}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🌕 Atlas Měsíce</h1>
+  <div class="skup" role="group" aria-label="Čas"><span class="skup-nazev" aria-hidden="true">Čas</span><div class="skup-tl">
+    <button class="tl" data-posun="-1440" title="O den zpět" aria-label="O den zpět">«</button>
+    <button class="tl" data-posun="-60" title="O hodinu zpět" aria-label="O hodinu zpět">‹</button>
+    <input type="datetime-local" class="tl" id="cas" aria-label="Datum a čas pozorování (místní)">
+    <button class="tl" data-posun="60" title="O hodinu dál" aria-label="O hodinu dál">›</button>
+    <button class="tl" data-posun="1440" title="O den dál" aria-label="O den dál">»</button>
+    <button class="tl hlavni-tl" data-prikaz="ted" title="Nastavit aktuální čas">⏱<span class="txt"> Teď</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pohled"><span class="skup-nazev" aria-hidden="true">Pohled</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabOrientace" aria-expanded="false" title="Natočení a převrácení obrazu podle dalekohledu">🔭<span class="txt"> Dalekohled</span> ▾</button>
+    <button class="tl" data-nabidka="nabVrstvy" aria-expanded="false" title="Popisky, terminátor, mřížka">🗺️<span class="txt"> Vrstvy</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Seznam</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Záloha a obnova pozorovacího seznamu">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="misto" title="Místo pozorování (výška Měsíce nad obzorem)">📍<span class="txt" id="mistoTxt"> Místo</span></button>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat útvar…" aria-label="Hledat útvar" autocomplete="off">
+  </div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabOrientace" class="nabidka" hidden>
+  <div class="nadpis">Natočení</div>
+  <button class="tl" role="menuitemradio" data-nast="natoceni" data-hodnota="atlas">🧭 Sever Měsíce nahoru (atlas)</button>
+  <button class="tl" role="menuitemradio" data-nast="natoceni" data-hodnota="sever">🌐 Nebeský sever nahoru (rovníková montáž)</button>
+  <button class="tl" role="menuitemradio" data-nast="natoceni" data-hodnota="zenit">⬆️ Zenit nahoru (azimutální montáž, Dobson)</button>
+  <hr>
+  <div class="nadpis">Optika</div>
+  <button class="tl" role="menuitemradio" data-nast="optika" data-hodnota="primo">👁️ Vzpřímený (oko, triedr)</button>
+  <button class="tl" role="menuitemradio" data-nast="optika" data-hodnota="prevraceny">🔄 Převrácený o 180° (Newton, refraktor bez hranolu)</button>
+  <button class="tl" role="menuitemradio" data-nast="optika" data-hodnota="zrcadleny">↔️ Zrcadlený (s diagonálním zrcátkem)</button>
+</div>
+<div id="nabVrstvy" class="nabidka" hidden>
+  <button class="tl" role="menuitemcheckbox" data-prepinac="osvetleni">🌗 Osvětlení podle fáze</button>
+  <button class="tl" role="menuitemcheckbox" data-prepinac="terminator">〰️ Čára terminátoru</button>
+  <button class="tl" role="menuitemcheckbox" data-prepinac="popisky">🏷️ Popisky útvarů</button>
+  <button class="tl" role="menuitemcheckbox" data-prepinac="zvyraznit">✨ Zvýraznit útvary u terminátoru</button>
+  <button class="tl" role="menuitemcheckbox" data-prepinac="mrizka">#️⃣ Selenografická mřížka</button>
+  <button class="tl" role="menuitemcheckbox" data-prepinac="pristani">🚀 Místa přistání</button>
+</div>
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="export">💾 Záloha seznamu (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <button class="tl" data-prikaz="tiskSeznam">🖨️ Vytisknout pozorovací seznam</button>
+  <hr>
+  <button class="tl" data-prikaz="vychoziSeznam">↺ Obnovit výchozí výběr cílů…</button>
+  <button class="tl" data-prikaz="smazPozorovani">🗑️ Smazat odškrtnutá pozorování…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<div class="plocha">
+  <div class="mapa-obal" id="mapaObal">
+    <canvas id="mapa" aria-label="Mapa přivrácené strany Měsíce"></canvas>
+    <div class="nacitani" id="nacitani">Načítám mapu Měsíce…</div>
+    <div class="mapa-ovl">
+      <button data-prikaz="priblizit" title="Přiblížit" aria-label="Přiblížit">+</button>
+      <button data-prikaz="oddalit" title="Oddálit" aria-label="Oddálit">−</button>
+      <button data-prikaz="celek" title="Celý disk" aria-label="Celý disk">⤢</button>
+    </div>
+    <div class="mapa-stav" id="mapaStav"></div>
+    <div class="mapa-zdroj">Mapa: NASA/GSFC/ASU LRO WAC (SVS CGI Moon Kit)</div>
+  </div>
+  <aside class="panel">
+    <div class="zalozky" role="tablist">
+      <button role="tab" data-zalozka="dnes" aria-selected="true">Dnes</button>
+      <button role="tab" data-zalozka="utvary" aria-selected="false">Útvary</button>
+      <button role="tab" data-zalozka="seznam" aria-selected="false">Seznam</button>
+      <button role="tab" data-zalozka="udaje" aria-selected="false">Údaje</button>
+    </div>
+    <div class="panel-telo">
+      <div id="detail"></div>
+      <div id="obsahPanelu"></div>
+    </div>
+  </aside>
+</div>
+
+<dialog class="okno" id="dlgMisto"><form method="dialog">
+  <header>📍 Místo pozorování</header>
+  <div class="telo">
+    <p class="tip">Místo slouží k výpočtu výšky Měsíce nad obzorem, nejlepšího času pozorování a natočení obrazu u azimutální montáže. Fáze, librace a terminátor na místě nezávisí.</p>
+    <div class="dvoj">
+      <label class="pole">Zeměpisná šířka (°, sever +)<input class="vstup" name="lat" type="number" step="0.01" min="-90" max="90" required></label>
+      <label class="pole">Zeměpisná délka (°, východ +)<input class="vstup" name="lon" type="number" step="0.01" min="-180" max="180" required></label>
+    </div>
+    <label class="pole">Název (nepovinný)<input class="vstup" name="nazev" maxlength="60"></label>
+  </div>
+  <footer>
+    <button type="button" class="btn vlevo" id="polohaZarizeni">📡 Poloha zařízení</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak atlas používat</header>
+  <div class="telo">
+    <p><b>Mapa</b> ukazuje přivrácenou stranu Měsíce tak, jak ji v zadaném okamžiku vidíte ze Země: s librací (natočením, které odkrývá kousky odvrácené strany), osvětlením a terminátorem – hranicí dne a noci. Táhnutím posouváte, kolečkem nebo dvěma prsty přibližujete, klepnutím vyberete útvar.</p>
+    <p><b>Nejlépe je vidět to, co leží u terminátoru.</b> Nízko stojící Slunce vrhá dlouhé stíny a reliéf vystoupí. Za úplňku je Měsíc plochý, zato vyniknou světlé paprsky kráterů (Tycho, Koperník). Záložka <b>Dnes</b> vybírá útvary, nad nimiž Slunce právě vychází (ranní terminátor) nebo zapadá (večerní).</p>
+    <p><b>🔭 Dalekohled</b> natočí mapu jako obraz v okuláru: Newton a refraktor bez hranolu převracejí o 180°, diagonální zrcátko (u refraktorů a Schmidt-Cassegrainů) stranově převrací. U azimutální montáže (Dobson) je nahoře zenit; potřebuje vaše místo.</p>
+    <p><b>Seznam</b> je výběr 65 cílů od snadných po náročné; můžete do něj přidat libovolný útvar a odškrtávat pozorování (ukládá se jen v tomto prohlížeči).</p>
+    <p><b>Údaje:</b> colongitude je selenografická délka ranního terminátoru měřená k západu (0° ≈ první čtvrť, 90° ≈ úplněk, 180° ≈ poslední čtvrť, 270° ≈ nov). Librace v délce a šířce udává, o kolik je natočen střed disku – kladná délka odkrývá východní okraj (Mare Crisium), kladná šířka severní.</p>
+    <p class="tip">Výpočty: J. Meeus, Astronomical Algorithms (kap. 47, 49, 53), přesnost librace a colongitude asi 0,05°. Souřadnice a průměry útvarů: IAU Gazetteer of Planetary Nomenclature (USGS, public domain), stav 11/2026. Mapa: mozaika LRO WAC z NASA SVS CGI Moon Kit (NASA's Scientific Visualization Studio / LROC, ASU; volné užití). Strany IAU: východ Měsíce je směrem k Mare Crisium (na obloze západ).</p>
+  </div>
+  <footer><button value="ok" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<script src="atlas_mesice/app.js"></script>
+</body>
+</html>

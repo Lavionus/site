@@ -1077,7 +1077,12 @@
         return zarovnej(prevzorkuj(b, n), ref);
       };
       const vnitrni = uprav(posunObrys(zaklad, -v.wallThickness));
-      const hornistena = uprav(posunObrys(zaklad, -(v.wallThickness - v.bladeThickness)));
+      /* Ostří se dělá zúžením stěny u horní hrany. Normálně ubírá vnější
+         líc (vnitřní zůstane svislý); se zapnutým „ostří zevnitř" je vnější
+         líc rovný po celé výšce a zkosení je na vnitřní straně. */
+      const zevnitr = !!v.bladeInside;
+      const hornistena = zevnitr ? zaklad : uprav(posunObrys(zaklad, -(v.wallThickness - v.bladeThickness)));
+      const horniVnitrni = zevnitr ? uprav(posunObrys(zaklad, -v.bladeThickness)) : vnitrni;
       const limec = v.collarOn ? uprav(posunObrys(zaklad, v.collarWidth)) : null;
       /* Vnitřní líc musí ležet celý uvnitř obrysu a límec celý venku.
          V úzkém místě (třeba tělíčko motýla) se odsazení překlopí na
@@ -1087,14 +1092,35 @@
       const mimo = (c, maBytUvnitr) => !c || c.some(p => bodUvnitr(p, zaklad) !== maBytUvnitr);
       const vady = [];
       const merOstri = v.wallThickness - v.bladeThickness;
-      if (!vnitrni || !hornistena || protinaSeSam(vnitrni) || protinaSeSam(hornistena)
-          || mimo(vnitrni, true) || (merOstri > 0.05 && mimo(hornistena, true))) vady.push('stena');
+      if (!vnitrni || !hornistena || !horniVnitrni || protinaSeSam(vnitrni) || protinaSeSam(hornistena)
+          || protinaSeSam(horniVnitrni) || mimo(vnitrni, true)
+          || (merOstri > 0.05 && mimo(zevnitr ? horniVnitrni : hornistena, true))) vady.push('stena');
       if (limec && (protinaSeSam(limec) || mimo(limec, false))) vady.push('limec');
-      return { zaklad, vnitrni, hornistena, limec, vady };
+      /* Plynulý náběh límce do stěny: místo ostrého vnitřního rohu
+         (tam se vykrajovátko při tlačení láme) čtvrtkruh o poloměru r.
+         Profil (odsazení ven s, výška z nad límcem) pro φ = 0…90°:
+         s = r(1 − sin φ), z = r(1 − cos φ). Každá vrstva je obrys
+         odsazený ven o s; při r = šířka límce začne náběh rovnou na kraji. */
+      let nabeh = null;
+      const rN = limec && v.collarFillet ? Math.min(v.collarFilletRadius, v.collarWidth) : 0;
+      if (rN > 0.05) {
+        const plny = rN >= v.collarWidth - 0.02;
+        const KROKU = 8;
+        nabeh = { r: rN, plny, vrstvy: [] };
+        for (let k = 0; k <= KROKU; k++) {
+          const f = (k / KROKU) * Math.PI / 2;
+          const sVen = rN * (1 - Math.sin(f)), z = rN * (1 - Math.cos(f));
+          const c = k === 0 && plny ? limec : k === KROKU ? zaklad : uprav(posunObrys(zaklad, sVen));
+          if (!c || (c !== zaklad && c !== limec && (protinaSeSam(c) || mimo(c, false)))) { vady.push('nabeh'); nabeh = null; break; }
+          nabeh.vrstvy.push({ c, z });
+        }
+      }
+      return { zaklad, vnitrni, hornistena, horniVnitrni, limec, nabeh, vady };
     }
 
     function postavGeometrii(v, o) {
       const { zaklad, vnitrni, hornistena, limec } = o;
+      const horniVnitrni = o.horniVnitrni || vnitrni;
       const n = zaklad.length;
       const vyska = v.height;
       const limecV = v.collarOn ? v.collarHeight : 0;
@@ -1131,20 +1157,27 @@
       }
 
       // vnější plášť
-      pas(zaklad, limecV, zaklad, zlom, true);
+      const nabeh = limec && o.nabeh;
+      pas(zaklad, limecV + (nabeh ? nabeh.r : 0), zaklad, zlom, true);
+      if (nabeh) {
+        const V = nabeh.vrstvy;
+        for (let k = 0; k + 1 < V.length; k++) pas(V[k].c, limecV + V[k].z, V[k + 1].c, limecV + V[k + 1].z, true);
+      }
       pas(zaklad, zlom, hornistena, vyska, true);
-      // vnitřní plášť (od dna až nahoru)
-      pas(vnitrni, 0, vnitrni, vyska, false);
+      // vnitřní plášť (od dna až nahoru; s ostřím zevnitř se nahoře rozšiřuje)
+      if (horniVnitrni === vnitrni) pas(vnitrni, 0, vnitrni, vyska, false);
+      else { pas(vnitrni, 0, vnitrni, zlom, false); pas(vnitrni, zlom, horniVnitrni, vyska, false); }
       // límec
       if (limec) {
         pas(limec, 0, limec, limecV, true);
-        prstenec(limec, zaklad, limecV, true);
+        if (!nabeh) prstenec(limec, zaklad, limecV, true);
+        else if (!nabeh.plny) prstenec(limec, nabeh.vrstvy[0].c, limecV, true);
         prstenec(limec, vnitrni, 0, false);
       } else {
         prstenec(zaklad, vnitrni, 0, false);
       }
       // horní hrana (ostří)
-      prstenec(hornistena, vnitrni, vyska, true);
+      prstenec(hornistena, horniVnitrni, vyska, true);
 
       const objem = objemMm3(vrcholy, indexy);
       return { poz: new Float32Array(vrcholy), idx: new Uint32Array(indexy), objem, troj: indexy.length / 3 };
@@ -1264,8 +1297,8 @@
       imgThreshold: 50, imgInvert: false,
       shapeRotate: 0, mirrorShape: false, cornerRadius: 0, smoothIter: 0,
       width: 60, length: 60, lockAspect: true, height: 15, wallThickness: 1.2, scalePercent: 100,
-      collarOn: true, collarHeight: 1, collarWidth: 1,
-      bladeThickness: 0.6, bladeHeight: 2, resolution: 160,
+      collarOn: true, collarHeight: 1, collarWidth: 1, collarFillet: false, collarFilletRadius: 1,
+      bladeThickness: 0.6, bladeHeight: 2, bladeInside: false, resolution: 160,
       opacity: 100, objectColor: '#6aa6fd', bgColor: '#1a1a1a', bgAuto: true,
       showGrid: true, showEdges: false
     };
@@ -1274,7 +1307,7 @@
       starPoints: [3, 12, 1], starDepth: [15, 75], polySides: [3, 12, 1], flowerPetals: [4, 12, 1], snowArms: [5, 8, 1], treeTiers: [2, 6, 1],
       textFat: [0, 40], imgThreshold: [5, 95], shapeRotate: [-180, 180], cornerRadius: [0, 10], smoothIter: [0, 4, 1],
       width: [10, 250], length: [10, 250], height: [5, 60], wallThickness: [0.4, 5], scalePercent: [50, 200],
-      collarHeight: [0.4, 6], collarWidth: [0.4, 8], bladeThickness: [0.2, 3], bladeHeight: [0.5, 10], resolution: [48, 360, 1], opacity: [20, 100, 1]
+      collarHeight: [0.4, 6], collarWidth: [0.4, 8], collarFilletRadius: [0.3, 8], bladeThickness: [0.2, 3], bladeHeight: [0.5, 10], resolution: [48, 360, 1], opacity: [20, 100, 1]
     };
     const VYCTY = { shapeType: KATALOG.map(t => t.id), textFont: PISMA };
 
@@ -1376,6 +1409,17 @@
         hl('varovani', `Na ostří zbývá málo výšky — zkráceno na ${v.bladeHeight.toFixed(1)} mm.`, ['bladeHeight']);
       }
 
+      if (v.collarOn && v.collarFillet) {
+        const volno = v.height - limecV - v.bladeHeight - 0.2;
+        const rMax = Math.min(v.collarWidth, volno);
+        if (v.collarFilletRadius > rMax + 1e-9) {
+          v.collarFilletRadius = Math.max(0, rMax);
+          hl('varovani', v.collarWidth <= volno
+            ? `Náběh límce nemůže být širší než límec — zmenšeno na ${v.collarFilletRadius.toFixed(1)} mm.`
+            : `Na náběh límce zbývá málo výšky stěny pod ostřím — zmenšeno na ${v.collarFilletRadius.toFixed(1)} mm.`, ['collarFilletRadius']);
+        }
+      }
+
       const s = sestavObrys(v);
       if (!s) {
         const chyba = v.shapeType === 'image' ? 'Nejdřív vyberte obrázek, ze kterého se má obrys vzít.'
@@ -1403,6 +1447,10 @@
       if (o.vady.includes('limec')) {
         return { v, H, o, chyba: 'Límec je na tenhle tvar moc široký — v úžlabinách by prošel sám sebou. '
           + 'Zmenšete jeho šířku, nebo ho vypněte.', polePlochy: ['collarWidth'] };
+      }
+      if (o.vady.includes('nabeh')) {
+        return { v, H, o, chyba: 'Náběh límce je na tenhle tvar moc velký — v úžlabinách by prošel sám sebou. '
+          + 'Zmenšete jeho poloměr, nebo ho vypněte.', polePlochy: ['collarFilletRadius'] };
       }
 
       const g = postavGeometrii(v, o);

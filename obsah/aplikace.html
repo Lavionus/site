@@ -79,10 +79,22 @@
       text-overflow: ellipsis;
     }
 
-    .dlazdice .stav-stitek {
-      margin-left: auto;
-      flex-shrink: 0;
+    /* název má celý řádek, štítky (stav, CZ) pod ním – jinak by název uřízly */
+    .dlazdice a {
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      column-gap: 10px;
+      row-gap: 4px;
     }
+    .dlazdice a > .emoji { grid-row: 1 / span 2; align-self: center; }
+    .dlazdice a > .nazev { grid-column: 2 / -1; align-self: end; }
+    .dlazdice a > .nazev:last-child { grid-row: 1 / span 2; align-self: center; }
+    .dlazdice .stav-stitek {
+      grid-row: 2;
+      justify-self: start;
+      align-self: start;
+    }
+    .dlazdice .stav-stitek + .stav-stitek { margin-left: -4px; }
     .tip .text .stav-stitek { margin-left: 6px; vertical-align: 2px; font-size: 0.58rem; }
     /* `.tip .text span` přebarvuje text tipu – štítek si barvu drží sám */
     .tip .text .stav-vyvoj  { color: var(--warn); }
@@ -114,8 +126,6 @@
     .dlazdice .polozka:hover .odebrat { transform: translateY(calc(-50% - 2px)); }
     .dlazdice .odebrat:hover { color: var(--danger); background-color: var(--bg-deep); }
     @media (hover: none) { .dlazdice .odebrat { opacity: 0.8; } }
-    /* štítek stavu uhne křížku, jinak by se překrývaly */
-    .dlazdice .polozka .stav-stitek { margin-right: 4px; }
 
     .upozorneni {
       margin-top: 32px;
@@ -325,6 +335,33 @@
       font-weight: 650;
       cursor: pointer;
     }
+    /* bublina nad dlaždicí: ikona, celý název, stav, sekce, popis (jen myš) */
+    .bublina {
+      position: fixed;
+      z-index: 50;
+      max-width: min(320px, calc(100vw - 16px));
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px 12px;
+      padding: 12px 14px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      color: var(--text);
+      font-size: 0.85rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+    .bublina.vidi { opacity: 1; }
+    .bublina .emoji { grid-row: 1 / span 2; font-size: 2rem; line-height: 1; }
+    .bublina img.emoji { width: 48px; height: 48px; border-radius: 11px; margin: 0; }
+    .bublina b { font-size: 0.95rem; align-self: end; }
+    .bublina b .stav-stitek { margin-left: 6px; vertical-align: 2px; }
+    .bublina .sekce-nazev { color: var(--text-faint); font-size: 0.75rem; align-self: start; }
+    .bublina p { grid-column: 1 / -1; margin: 4px 0 0; color: var(--text-muted); line-height: 1.4; }
+    @media (prefers-reduced-motion: reduce) { .bublina { transition: none; } }
   </style>
 </head>
 <body>
@@ -889,6 +926,64 @@
 
     aktualizujNove();
     prekresli();
+    /* ---- Bublina s celým názvem a popisem při najetí myší na dlaždici ----
+       Popis = pole `popis` z katalogu, jinak tagy. Dotyk ji nevyvolá (tap rovnou otevírá). */
+    const sekcePodleSouboru = new Map();
+    KATALOG_SEKCE.forEach(s => s.polozky.forEach(p => sekcePodleSouboru.set(p.soubor, s.nazev)));
+    const bublina = document.createElement('div');
+    bublina.className = 'bublina';
+    bublina.setAttribute('role', 'tooltip');
+    bublina.setAttribute('data-i18n', 'ne');   // obsah se překládá už tady přes preloz
+    bublina.dataset.podpisUhnul = '1';          // podpis.js by jí k top přidal bottom a roztáhl ji
+    bublina.hidden = true;
+    document.body.appendChild(bublina);
+    let bublinaCil = null, bublinaCasovac = 0;
+    function skryjBublinu() {
+      clearTimeout(bublinaCasovac);
+      bublinaCil = null;
+      bublina.classList.remove('vidi');
+      bublina.hidden = true;
+    }
+    function ukazBublinu(a) {
+      const p = podleSouboru.get(a.closest('.polozka')?.dataset.soubor);
+      if (!p) return;
+      const { emoji, text } = rozdel(p.nazev);
+      const b = document.createElement('b');
+      b.textContent = preloz(text);
+      const st = stitek(p);
+      if (st) b.appendChild(st);
+      const sek = document.createElement('span');
+      sek.className = 'sekce-nazev';
+      sek.textContent = preloz(sekcePodleSouboru.get(p.soubor) || '');
+      const popis = document.createElement('p');
+      const tagy = tagyJazyka(p.soubor).length ? tagyJazyka(p.soubor) : p.tagy || [];
+      popis.textContent = p.popis ? preloz(p.popis) : tagy.join(' · ');
+      bublina.replaceChildren(symbol(IKONY?.stranky[p.soubor], emoji), b, sek);
+      if (popis.textContent) bublina.appendChild(popis);
+      bublina.hidden = false;
+      // pod dlaždici, když se nevejde, tak nad ni; vodorovně v okně
+      const r = a.getBoundingClientRect(), w = bublina.offsetWidth, h = bublina.offsetHeight;
+      let y = r.bottom + 8;
+      if (y + h > innerHeight - 8 && r.top - h - 8 >= 8) y = r.top - h - 8;
+      const x = Math.max(8, Math.min(r.left, innerWidth - w - 8));
+      bublina.style.left = x + 'px';
+      bublina.style.top = y + 'px';
+      requestAnimationFrame(() => bublina.classList.add('vidi'));
+    }
+    document.addEventListener('pointerover', e => {
+      if (e.pointerType !== 'mouse') return;
+      const a = e.target.closest?.('.dlazdice .polozka > a');
+      if (a === bublinaCil) return;
+      skryjBublinu();
+      if (!a || a.closest('.tazena')) return;
+      bublinaCil = a;
+      bublinaCasovac = setTimeout(() => ukazBublinu(a), 450);
+    });
+    document.addEventListener('pointerout', e => { if (!e.relatedTarget) skryjBublinu(); });
+    document.addEventListener('pointerdown', skryjBublinu);
+    addEventListener('scroll', skryjBublinu, { passive: true });
+    addEventListener('blur', skryjBublinu);
+    document.addEventListener('dragstart', skryjBublinu);
   </script>
 </body>
 </html>

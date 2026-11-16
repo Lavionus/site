@@ -340,22 +340,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // v přirozených souřadnicích skupiny – do Diag(S)
       if (!jeJedna(zbyva)) t = meritko(t, ...zbyva);
       if (jeJedna(S)) {
-        try { return { t: uprav(t, u.occt), z: JEDNA }; }
+        try { return { t: upravH(t, u.occt), z: JEDNA }; }
         catch (e) {
           // hrany vybrané při jiném zvětšení (délka oblouku změřená ve 2×): dohledat bez délky
           if (!/nenašla/.test(e.message) || !(u.occt.hrany || []).length) throw e;
-          return { t: uprav(t, Object.assign({}, u.occt, { hrany: u.occt.hrany.map(h => Object.assign({}, h, { delka: null, bezDelky: true })) })), z: JEDNA };
+          return { t: upravH(t, Object.assign({}, u.occt, { hrany: u.occt.hrany.map(h => Object.assign({}, h, { delka: null, bezDelky: true })) })), z: JEDNA };
         }
       }
       const o = Object.assign({}, u.occt, {
         hrany: (u.occt.hrany || []).map(h => ({ stred: krat(h.stred, S), delka: null, bod: h.bod ? krat(h.bod, S) : null,
-          konce: h.konce ? h.konce.map(p => krat(p, S)) : null, odchylka: Math.max(...S.map(x => Math.abs(1 - 1 / x))) })),
+          konce: h.konce ? h.konce.map(p => krat(p, S)) : null, odchylka: Math.max(...S.map(x => Math.abs(1 - 1 / x))), hodnota: h.hodnota, hodnota2: h.hodnota2 })),
         plochy: (u.occt.plochy || []).map(f => {
           const n = f.normala.map((x, i) => x / S[i]), l = Math.hypot(...n) || 1;
           return { stred: krat(f.stred, S), normala: n.map(x => x / l) };
         }),
       });
-      return { t: uprav(t, o), z: JEDNA };
+      return { t: upravH(t, o), z: JEDNA };
     }
     /** Dvě vrstvy úprav hran nad sebou (obal B s jedním dítětem = obal A, obě zaoblení / sražení): nejdřív novější B
         na tělese bez A, pak A navrch. Hrana B po A v rohu pokračuje průsečnicí dvou zaoblení / sražení a OCCT ji
@@ -368,6 +368,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const d = u.deti[0];
       // A smí sedět i přímo na skupině více těles (kvádr s kapsou): těleso bez A postaví brepR z jejích dětí
       if (d.druh !== 'skupina' || !d.occt || !HRANOVE.has(d.occt.operace) || !(d.occt.hrany || []).length) return null;
+      // vrstva s hranami různé velikosti: počítá se postaru (upravH po velikostech)
+      if (vlastniVelikosti(u.occt) || vlastniVelikosti(d.occt)) return null;
       if ((d.rotace || []).some(x => Math.abs(x) > 1e-9) || (d.zrcadlo || []).some(Boolean)) return null;
       // (starší úprava A větší než poloměr nového zaoblení B se kolem jeho oblouku přetočí přes sebe – takový
       // výsledek zachytí kontrola samoprůniků v hranyNativne a zkusí se další pořadí)
@@ -615,6 +617,151 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     const ZPRAVA = { zaobleni: 'zaoblení hran se nepodařilo (zkus menší poloměr nebo méně hran)',
       srazeni: 'sražení hran se nepodařilo (zkus menší vzdálenost nebo méně hran)', skorepina: 'skořepina se nepodařila (zkus tenčí stěnu)' };
+    /** Úprava s hranami různé velikosti (h.hodnota u hrany, jinak o.hodnota): OCCT umí na jedno volání jen jednu
+        velikost, proto po skupinách stejné velikosti – jako dvě vrstvy úprav: nejdřív svislé hrany (každá velikost
+        zvlášť), pak ostatní; zkusí se větší → menší i obráceně, platí první, které projde. */
+    const svislaHrana = h => { if (!h.konce) return false; const d0 = h.konce[1].map((v, j) => v - h.konce[0][j]), l = Math.hypot(...d0) || 1; return Math.abs(d0[2]) / l > 0.7; };
+    const vlastniVelikosti = o => HRANOVE.has(o.operace) && (o.hrany || []).some(h => h.hodnota2 != null || (h.hodnota != null && Math.abs(h.hodnota - o.hodnota) > 1e-9));
+    function upravH(t, o) {
+      // hrany s proměnným zaoblením / nesouměrným sražením: po ostatních, každá zvlášť
+      const zvlast = HRANOVE.has(o.operace) ? (o.hrany || []).filter(h => h.hodnota2 != null) : [];
+      if (zvlast.length) {
+        const zbyle = o.hrany.filter(h => h.hodnota2 == null);
+        const ostatni = y => zbyle.length ? upravH(y, Object.assign({}, o, { hrany: zbyle })) : y;
+        const zvlastni = y => { for (const h of zvlast) y = hranaDvemaHodnotami(y, h, o); return y; };
+        const rmax = Math.max(o.hodnota, ...o.hrany.map(h => Math.max(h.hodnota || 0, h.hodnota2 || 0)));
+        let chyba = null;
+        // ostatní napřed, pak proměnné; nebo obráceně – platí první, které nerozbije nevybrané hrany
+        for (const f of [y => zvlastni(ostatni(y)), y => ostatni(zvlastni(y))]) {
+          try { const y = f(t); if (nevybraneZachovane(t, y, o.hrany, rmax)) return y; } catch (e) { chyba = chyba || e; }
+        }
+        // každou část zvlášť na původním tělese a složit (v rohu průsečnice úprav)
+        try {
+          const casti = [];
+          if (zbyle.length) casti.push(ostatni(t));
+          for (const h of zvlast) casti.push(hranaDvemaHodnotami(t, h, o));
+          const y = slozCasti(t, casti);
+          if (y) return y;
+        } catch (e) { chyba = chyba || e; }
+        throw chyba || new Error(ZPRAVA[o.operace]);
+      }
+      if (!vlastniVelikosti(o)) return uprav(t, o);
+      const podle = new Map();
+      for (const h of o.hrany) {
+        const v = h.hodnota != null ? h.hodnota : o.hodnota;
+        if (!podle.has(v)) podle.set(v, []);
+        podle.get(v).push(Object.assign({}, h, { hodnota: undefined }));
+      }
+      const velikosti = [...podle.keys()].sort((a, b) => b - a);
+      const krok = (y, v, hrany, jen) => hrany.length ? uprav(y, Object.assign({}, o, { hodnota: v, hrany }), jen) : y;
+      let chyba = null;
+      // postupně: okraj obteče hotový zaoblený roh (svislé 6 mm + horní okraj 3 mm) – plynulý tvar
+      for (const poradi of [velikosti, velikosti.slice().reverse()]) {
+        try {
+          let y = t;
+          for (const v of poradi) y = krok(y, v, podle.get(v).filter(svislaHrana));
+          for (const v of poradi) y = krok(y, v, podle.get(v).filter(h => !svislaHrana(h)));
+          if (nevybraneZachovane(t, y, o.hrany, velikosti[0])) return y;
+          chyba = chyba || new Error(ZPRAVA[o.operace]);
+        } catch (e) { chyba = chyba || e; }
+      }
+      // postupně to nejde čistě: OCCT šíří úpravu po plynule navazujících hranách – oblouk po první velikosti
+      // navazuje na nevybranou svislou hranu rohu a druhá velikost by „stekla“ až dolů. Proto každá velikost
+      // zvlášť na původním tělese a výsledky složit: co úprava ubrala, ubrat; co přidala (vyduté hrany), přidat.
+      // V rohu, kde se potkají různé velikosti, je průsečnice obou úprav.
+      try {
+        const y = slozCasti(t, velikosti.map(v => krok(t, v, podle.get(v))));
+        if (y) return y;
+      } catch (e) { chyba = chyba || e; }
+      throw chyba || new Error(ZPRAVA[o.operace]);
+    }
+    /** Složí úpravy spočítané zvlášť na tělese t: co která ubrala, ubrat; co přidala (vyduté hrany), přidat.
+        Zdravý výsledek se stejným počtem těles, jinak null. */
+    function slozCasti(t, casti) {
+      const op = 'úprava hran po částech';
+      let y = t;
+      for (const c of casti) y = occ(op, () => k.cut(y, occ(op, () => k.cut(t, c))));
+      for (const c of casti) y = occ(op, () => k.fuse(y, occ(op, () => k.cut(c, t))));
+      try { y = k.unifySameDomain(y); } catch (e) { /* nechat jak je */ }
+      return telesa(y).length === telesa(t).length && zdravaSit(y) ? y : null;
+    }
+    /** Jedna hrana se dvěma hodnotami: zaoblení s poloměrem od začátku (h.konce[0], u oblé hrany začátek křivky)
+        h.hodnota do konce h.hodnota2; sražení o h.hodnota na vodorovnější ploše a h.hodnota2 na druhé. */
+    function hranaDvemaHodnotami(t, h, o) {
+      const d1 = h.hodnota != null ? h.hodnota : o.hodnota, d2 = h.hodnota2;
+      const zprava = ZPRAVA[o.operace];
+      const tl = telesa(t);
+      let kde = -1, e = null, d0 = Infinity;
+      tl.forEach((x, i) => {
+        const c = nejblizsiHrana(popisHran(x), h);
+        if (!c) return;
+        const d = Math.hypot(...c.stred.map((v, j) => v - h.stred[j]));
+        if (d < d0) { d0 = d; e = c; kde = i; }
+      });
+      if (!e) throw new Error('vybraná hrana se v tělese nenašla (změnil se tvar?)');
+      const x = tl[kde];
+      let y;
+      if (o.operace === 'zaobleni') {
+        let a = d1, b = d2;
+        const p = k.curveParameters(e.id), q = k.curvePointAtParam(e.id, p.get(0)), z = [q.get(0), q.get(1), q.get(2)]; p.delete(); q.delete();
+        if (h.konce && Math.hypot(...z.map((c, i) => c - h.konce[1][i])) < Math.hypot(...z.map((c, i) => c - h.konce[0][i]))) [a, b] = [b, a];
+        y = occC(zprava, () => k.filletVariable(x, e.id, a, b));
+      } else {
+        const f = pole(k.adjacentFaces(x, e.id));
+        if (!f.length) throw new Error(zprava);
+        const c = e.stred;
+        const nz = f.map(g => { try { const uv = k.uvFromPoint(g, c[0], c[1], c[2]), n = k.surfaceNormal(g, uv.get(0), uv.get(1)); uv.delete(); const r = [n.get(0), n.get(1), n.get(2)]; n.delete(); return r; } catch (z) { return [0, 0, 0]; } });
+        // vodorovnější plocha (normála víc svisle); shoda → větší |x|
+        const ref = nz.map((n, i) => [Math.abs(n[2]) * 10 + Math.abs(n[0]), i]).sort((a, b) => b[0] - a[0])[0][1];
+        y = occC(zprava, () => k.chamferAsymmetric(x, e.id, d1, d2, f[ref]));
+      }
+      if (!k.isValid(y) || telesa(y).length !== 1 || !zdravaSit(y)) throw new Error(zprava);
+      return slozit(tl.map((v, i) => i === kde ? y : v));
+    }
+    /** Nevybrané hrany daleko od vybraných zůstaly netknuté: body kousek pod nimi (uvnitř tělesa t) jsou i v y.
+        Tak se pozná úprava, která se po navazujících hranách rozběhla, kam neměla (isValid, vodotěsnost
+        ani samoprůniky to nepoznají). */
+    function nevybraneZachovane(t, y, hrany, rmax) {
+      const usecky = [];
+      for (const h of hrany) {
+        const b = [h.stred, h.bod, ...(h.konce || [])].filter(Boolean);
+        for (const p of b) for (const q of b) usecky.push([p, q]);
+      }
+      const vzdal = p => {
+        let d = Infinity;
+        for (const [a, b] of usecky) {
+          const ab = [0, 1, 2].map(i => b[i] - a[i]), l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2;
+          const s = l2 ? M.omez(((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2, 0, 1) : 0;
+          d = Math.min(d, Math.hypot(...[0, 1, 2].map(i => a[i] + ab[i] * s - p[i])));
+        }
+        return d;
+      };
+      const prah = 1.6 * rmax, eps = Math.min(0.05, 0.05 * rmax);
+      for (const e of pole(k.getSubShapes(t, 'edge'))) {
+        let f, a, b;
+        try { f = pole(k.adjacentFaces(t, e)); const pr = k.curveParameters(e); a = pr.get(0); b = pr.get(1); pr.delete(); } catch (x) { continue; }
+        if (f.length !== 2) continue;
+        for (const s of [0.15, 0.5, 0.85]) {
+          let p;
+          try {
+            const q = k.curvePointAtParam(e, a + (b - a) * s), c = [q.get(0), q.get(1), q.get(2)]; q.delete();
+            if (vzdal(c) < prah) continue;
+            const n = f.map(g => {
+              const uv = k.uvFromPoint(g, c[0], c[1], c[2]), u = [uv.get(0), uv.get(1)]; uv.delete();
+              const v = k.surfaceNormal(g, u[0], u[1]), o = [v.get(0), v.get(1), v.get(2)]; v.delete();
+              return o;
+            });
+            const m = [0, 1, 2].map(i => n[0][i] + n[1][i]), l = Math.hypot(...m);
+            if (l < 1e-6) continue;
+            p = c.map((x, i) => x - eps * m[i] / l);
+            if (!k.containsPoint(t, p[0], p[1], p[2], 1e-7)) continue;
+          } catch (x) { continue; }
+          if (!k.containsPoint(y, p[0], p[1], p[2], 1e-7)) return false;
+        }
+      }
+      return true;
+    }
+
     /** Zaoblení, sražení nebo skořepina – každé těleso výsledku zvlášť, s hranami/plochami, které mu patří. */
     function uprav(t, o, jenNativne = false) {
       const tl = telesa(t);

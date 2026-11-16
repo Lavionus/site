@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dosažitelnost za čas (izochrony)</title>
+<meta name="description" content="Kam se dostanete za 5, 10, 15 nebo 30 minut pěšky, na kole či autem: izochrony na mapě, průnik a sjednocení více míst (kde bydlet, abych to měl do práce i do školy), plocha, školy, obchody a zastávky uvnitř, trasa kliknutím, export GeoJSON a PNG.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="lib/clipper.min.js"></script>
+<script src="dosazitelnost/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 220px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka label.volba{display:flex;align-items:center;gap:8px;padding:5px 10px;font-size:.86rem;cursor:pointer;border-radius:6px}
+.nabidka label.volba:hover{background:var(--bg-hover)}
+.nabidka .pozn{font-size:.76rem;color:var(--text-muted);padding:2px 10px 4px;max-width:300px;line-height:1.4}
+.nabidka .obl{display:flex;align-items:center;gap:2px}
+.nabidka .obl .tl:first-child{flex:1}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.mini{padding:2px 7px;font-size:.8rem}
+.btn:disabled{opacity:.5;cursor:default}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+
+.plocha{flex:1;min-height:0;display:flex}
+#mapa{flex:1;min-width:0;position:relative;background:var(--bg)}
+.panel{width:340px;flex-shrink:0;overflow-y:auto;background:var(--bg-elevated);border-left:1px solid var(--border);padding:10px 12px 40px;display:flex;flex-direction:column;gap:12px}
+@media (max-width:760px){
+  .plocha{flex-direction:column;overflow-y:auto}
+  #mapa{flex:none;height:62vh;min-height:300px}
+  .panel{width:auto;border-left:0;border-top:1px solid var(--border);overflow:visible}
+}
+.panel h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:0 0 6px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.stav{font-size:.82rem;line-height:1.45;border-radius:6px;padding:7px 9px;background:var(--bg-panel);border:1px solid var(--border)}
+.stav.chyba{border-color:var(--danger);color:var(--danger)}
+.stav:empty{display:none}
+.prazdno{color:var(--text-muted);font-size:.86rem;line-height:1.5;border:1px dashed var(--border-strong);border-radius:8px;padding:12px}
+.bod{border:1px solid var(--border);border-left:4px solid var(--barva);border-radius:8px;padding:7px 8px;background:var(--bg-panel);display:grid;gap:6px}
+.bod.aktivni{box-shadow:0 0 0 1px var(--accent)}
+.bod.skryty{opacity:.6}
+.bod-hlava{display:flex;gap:4px;align-items:center}
+.bod-hlava .nazev{flex:1;width:0;font-weight:600}
+.bod-volby{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:.8rem;color:var(--text-muted)}
+.bod-volby select{flex:1;min-width:0}
+.bod-volby input{width:4.2em}
+.bod-vysl{font-size:.8rem;display:flex;flex-wrap:wrap;gap:3px 10px;color:var(--text-muted)}
+.bod-vysl b{color:var(--text);font-weight:600}
+.bod-vysl .chyba{color:var(--danger)}
+.ikona{background:none;border:1px solid transparent;border-radius:5px;cursor:pointer;padding:2px 4px;font-size:.92rem;color:var(--text);line-height:1}
+.ikona:hover{background:var(--bg-hover);border-color:var(--border)}
+.ikona[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.kombinace{border:1px solid var(--border);border-left:4px solid #e11d48;border-radius:8px;padding:8px 10px;background:var(--bg-panel);font-size:.86rem;line-height:1.45}
+.kombinace b.velke{font-size:1.25rem}
+.legenda{display:flex;flex-wrap:wrap;gap:4px}
+.legenda label{display:flex;align-items:center;gap:4px;font-size:.8rem;border:1px solid var(--border);border-radius:12px;padding:2px 8px;cursor:pointer;background:var(--bg-panel)}
+.poi-seznam{display:grid;gap:4px;font-size:.84rem}
+.poi-seznam details{border:1px solid var(--border);border-radius:6px;background:var(--bg-panel)}
+.poi-seznam summary{padding:5px 8px;cursor:pointer;display:flex;justify-content:space-between;gap:6px}
+.poi-seznam ul{margin:0;padding:2px 8px 6px 26px;max-height:180px;overflow:auto;font-size:.8rem}
+.poi-seznam li{cursor:pointer;padding:1px 0}
+.poi-seznam li:hover{color:var(--accent)}
+.trasa{font-size:.84rem;line-height:1.45}
+.trasa ol{margin:4px 0 0;padding-left:22px;max-height:220px;overflow:auto;font-size:.8rem}
+.tip{font-size:.78rem;color:var(--text-muted);line-height:1.45}
+.tip a{color:var(--accent)}
+
+/* mapa */
+.mapa-zprava{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:900;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:5px 12px;font-size:.82rem;box-shadow:var(--shadow);pointer-events:none;max-width:90%;text-align:center}
+.znacka-bod{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.znacka-bod span{transform:rotate(45deg);color:#fff;font-weight:700;font-size:12px;font-family:system-ui,sans-serif}
+.znacka-poi{font-size:15px;line-height:20px;text-align:center;filter:drop-shadow(0 0 2px #fff)}
+.leaflet-container{font-family:inherit}
+#mapa.klik-bod .leaflet-container,#mapa.klik-trasa .leaflet-container{cursor:crosshair}
+:root:not([data-theme="light"]) .tlumit .leaflet-tile-pane{filter:brightness(.78) contrast(1.05)}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,600px);max-height:90vh;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:9px;font-size:.88rem;line-height:1.55}
+.okno .telo p{margin:0}
+.okno .telo a{color:var(--accent)}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>⏱️ Dosažitelnost</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Export GeoJSON a PNG">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-nabidka="nabOblibena" aria-expanded="false" title="Uložená místa">⭐<span class="txt"> Uložená</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Místa"><span class="skup-nazev" aria-hidden="true">Místa</span><div class="skup-tl">
+    <button class="tl" id="tlBod" aria-pressed="false" title="Kliknutím do mapy přidat výchozí místo">📍<span class="txt"> Přidat bod</span></button>
+    <button class="tl" id="tlTrasa" aria-pressed="false" title="Kliknutím do mapy najít trasu z vybraného místa">🧭<span class="txt"> Trasa</span></button>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Adresa nebo místo + Enter" aria-label="Hledat adresu" autocomplete="off">
+  </div>
+  <div class="skup" role="group" aria-label="Výpočet"><span class="skup-nazev" aria-hidden="true">Výpočet</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabIntervaly" aria-expanded="false" title="Časové intervaly izochron">⏱️<span class="txt" id="txtIntervaly"> Intervaly</span> ▾</button>
+    <select class="tl" id="kombinace" aria-label="Kombinace více míst" title="Jak spojit izochrony více míst">
+      <option value="prunik" title="Odkud to mám do všech míst v limitu">🔀 Průnik</option>
+      <option value="sjednoceni" title="Odkud to mám aspoň do jednoho místa">🔗 Sjednocení</option>
+      <option value="zadna">Bez kombinace</option>
+    </select>
+    <button class="tl" data-nabidka="nabPoi" aria-expanded="false" title="Školy, obchody a zastávky uvnitř oblasti">🏫<span class="txt"> Místa zájmu</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" id="tlTlumit" aria-pressed="true" title="Ztlumit podkladovou mapu v tmavém tématu" aria-label="Ztlumit mapu">🌗</button>
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="geojson">🗺️ Export GeoJSON (izochrony, kombinace, trasa, místa zájmu)</button>
+  <button class="tl" data-prikaz="png">🖼️ Export PNG (výřez mapy s legendou)</button>
+  <hr>
+  <button class="tl" data-prikaz="vycistit">🧹 Odebrat všechna výchozí místa</button>
+</div>
+<div id="nabOblibena" class="nabidka" hidden></div>
+<div id="nabIntervaly" class="nabidka" hidden></div>
+<div id="nabPoi" class="nabidka" hidden></div>
+<div id="nabVysledky" class="nabidka" hidden></div>
+
+<div class="plocha">
+  <div id="mapa" class="tlumit"><div class="mapa-zprava" id="mapaZprava" hidden></div></div>
+  <aside class="panel" id="panel">
+    <div class="stav" id="stav" role="status" aria-live="polite"></div>
+    <section><h2>Výchozí místa <span id="pocetBodu"></span></h2><div id="body" style="display:grid;gap:6px"></div></section>
+    <section id="sekceLegenda" hidden><h2>Zobrazené intervaly</h2><div class="legenda" id="legenda"></div></section>
+    <section id="sekceKombinace" hidden><h2>Kombinace míst</h2><div class="kombinace" id="vyslKombinace"></div></section>
+    <section id="sekcePoi" hidden><h2>Místa zájmu uvnitř <button class="btn mini" id="poiZrus" title="Skrýt místa zájmu">✕</button></h2><div id="poiInfo" class="tip"></div><div class="poi-seznam" id="poiSeznam"></div></section>
+    <section id="sekceTrasa" hidden><h2>Trasa <button class="btn mini" id="trasaZrus" title="Zrušit trasu">✕</button></h2><div class="trasa" id="trasaInfo"></div></section>
+    <p class="tip">Izochrony a trasy: <a href="https://valhalla.github.io/valhalla/" target="_blank" rel="noopener">Valhalla</a> na veřejném serveru <a href="https://www.fossgis.de/arbeitsgruppen/osm-server/nutzungsbedingungen/" target="_blank" rel="noopener">FOSSGIS</a> (dotazy nejvýš 1 za sekundu, výsledky se pamatují). Mapová data © přispěvatelé <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL), hledání adres Nominatim, místa zájmu Overpass API. Časy jsou bez dopravní zácpy a čekání na semaforech.</p>
+  </aside>
+</div>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo">
+    <p><b>Izochrona</b> je oblast, kam se z daného místa dostanete do určitého času. Přidejte výchozí místo – kliknutím do mapy (📍 Přidat bod), hledáním adresy nebo z ⭐ uložených míst. Značku jde přetáhnout.</p>
+    <p>U každého místa zvolte <b>druh dopravy</b> (pěšky, na kole, autem) a <b>limit</b> v minutách. Intervaly v ⏱️ (nejvýš 4, do 60 minut – omezení veřejného serveru) se kreslí jako vrstvy: čím tmavší, tím blíž.</p>
+    <p><b>Více míst:</b> 🔀 <i>Průnik</i> ukáže, odkud je to do všech míst v jejich limitu – např. „kde bydlet, abych to měl do práce autem do 20 min a do školy pěšky do 15 min“. 🔗 <i>Sjednocení</i> = aspoň do jednoho místa. Průnik a sjednocení se počítají přímo v prohlížeči (Clipper), plocha na kouli.</p>
+    <p>🏫 <b>Místa zájmu</b> hledá v kombinaci (nebo v největší izochroně vybraného místa) školy, obchody, zastávky a další objekty z OpenStreetMap.</p>
+    <p>🧭 <b>Trasa</b>: vyberte místo (klik na jeho kartu) a klikněte do mapy – spočítá se cesta stejným druhem dopravy.</p>
+    <p>Časy jsou modelové: bez zácpy, čekání na křižovatkách a hledání parkování. Pěší rychlost cca 5 km/h, kolo cca 18–20 km/h. Pro reálné dojíždění autem ve špičce počítejte s rezervou.</p>
+    <p>Místa a nastavení se ukládají jen v tomto prohlížeči. Veřejné servery jsou zdarma a bez záruky – při přetížení stránka ohlásí chybu, zkuste to za chvíli.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const D = window.DOSAZ, CL = window.ClipperLib;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const spi = ms => new Promise(r => setTimeout(r, ms));
+const jazyk = () => (window.I18N && I18N.jazyk) || 'cs';
+
+/* ---------- stav ---------- */
+let stav;
+try { stav = D.migruj(JSON.parse(localStorage.getItem(D.KLIC) || 'null')); } catch (e) { stav = D.prazdny(); }
+let ulozCas = 0;
+function uloz() { clearTimeout(ulozCas); ulozCas = setTimeout(() => { try { localStorage.setItem(D.KLIC, JSON.stringify(stav)); } catch (e) { /* plné úložiště */ } }, 200); }
+const cache = new Map();        // klicIsochrony → geometrie
+const chyby = {};               // id bodu → text chyby
+let aktivniId = stav.body[0] ? stav.body[0].id : null;
+let skryteMinuty = new Set();
+let kombinaceGeo = null, poiData = null, trasaData = null;
+let klikRezim = stav.body.length ? null : 'bod';
+
+/* ---------- mapa ---------- */
+const mapa = L.map('mapa', { zoomControl: true, preferCanvas: false });
+const ATRIB_VALHALLA = 'Izochrony: <a href="https://valhalla.github.io/valhalla/" target="_blank" rel="noopener">Valhalla</a> / FOSSGIS';
+/* Podklady jako ve Výletním deníku: tile.openstreetmap.org webové aplikace blokuje (usage policy).
+   Všechny níže posílají CORS hlavičku (ověřeno 16. 11. 2026) → crossOrigin kvůli exportu PNG.
+   Když dlaždice opakovaně selhávají, přejde se automaticky na záložní podklad podle ZALOHA. */
+const OSM_A = '© přispěvatelé <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+const PODKLADY = [
+  { klic: 'zakladni', nazev: 'Základní (OSM Německo)', url: 'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', o: { maxZoom: 18, subdomains: 'abc', attribution: OSM_A + ', dlaždice openstreetmap.de' } },
+  { klic: 'hot', nazev: 'Základní (OSM France HOT)', url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', o: { maxZoom: 19, subdomains: 'abc', attribution: OSM_A + ', styl HOT, hosting OSM France' } },
+  { klic: 'turisticka', nazev: 'Turistická (OpenTopoMap)', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', o: { maxZoom: 17, subdomains: 'abc', attribution: '© OpenStreetMap, SRTM | styl © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC-BY-SA)' } },
+  { klic: 'cyklo', nazev: 'Cyklo (CyclOSM)', url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', o: { maxZoom: 19, subdomains: 'abc', attribution: '© OpenStreetMap | styl <a href="https://www.cyclosm.org" target="_blank" rel="noopener">CyclOSM</a>, hosting OSM France' } },
+  { klic: 'topo', nazev: 'Topografická (Esri)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', o: { maxZoom: 19, attribution: 'Podklad © Esri a dodavatelé (World Topo Map)' } },
+  { klic: 'letecka', nazev: 'Letecká (Esri)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', o: { maxZoom: 19, attribution: 'Snímky © Esri, Maxar, Earthstar Geographics a další' } }
+];
+const ZALOHA = { zakladni: 'hot', hot: 'topo', turisticka: 'zakladni', cyklo: 'zakladni', topo: 'zakladni', letecka: 'topo' };
+const podklady = {}, vrstvyPodkladu = {};
+let prepinam = false;
+for (const p of PODKLADY) {
+  const v = L.tileLayer(p.url, Object.assign({ crossOrigin: 'anonymous' }, p.o));
+  v._klic = p.klic; podklady[p.klic] = v; vrstvyPodkladu[p.nazev] = v;
+  let chyb = 0, ok = 0; // ≥ 6 chyb a žádná úspěšná dlaždice od přepnutí → záložní podklad
+  v.on('add', () => { chyb = 0; ok = 0; });
+  v.on('tileload', () => { ok++; });
+  v.on('tileerror', () => {
+    chyb++;
+    if (chyb < 6 || ok || !mapa.hasLayer(v) || prepinam) return;
+    const dalsi = podklady[ZALOHA[p.klic]];
+    prepinam = true; mapa.removeLayer(v); dalsi.addTo(mapa); prepinam = false;
+    Dialog.info(`Podklad „${p.nazev}“ se nenačítá – přepnuto na „${PODKLADY.find(x => x.klic === dalsi._klic).nazev}“.`);
+  });
+}
+(podklady[stav.podklad] || podklady.zakladni).addTo(mapa);
+L.control.layers(vrstvyPodkladu, null, { collapsed: true }).addTo(mapa);
+mapa.on('baselayerchange', e => { if (!prepinam && e.layer && e.layer._klic) { stav.podklad = e.layer._klic; uloz(); } });
+const aktivniPodklad = () => PODKLADY.find(p => mapa.hasLayer(podklady[p.klic])) || PODKLADY[0];
+mapa.attributionControl.addAttribution(ATRIB_VALHALLA);
+L.control.scale({ imperial: false }).addTo(mapa);
+if (stav.mapa) mapa.setView([stav.mapa.lat, stav.mapa.lon], stav.mapa.z); else mapa.setView([49.8, 15.47], 7);
+mapa.on('moveend', () => { const c = mapa.getCenter(); stav.mapa = { lat: +c.lat.toFixed(5), lon: +c.lng.toFixed(5), z: mapa.getZoom() }; uloz(); });
+const vrstvaIso = L.layerGroup().addTo(mapa), vrstvaKomb = L.layerGroup().addTo(mapa), vrstvaPoi = L.layerGroup().addTo(mapa),
+  vrstvaTrasa = L.layerGroup().addTo(mapa), vrstvaBody = L.layerGroup().addTo(mapa);
+const doLeaflet = g => g.map(p => p.map(k => k.map(b => [b[1], b[0]])));
+
+function zprava(t) { $('mapaZprava').textContent = t || ''; $('mapaZprava').hidden = !t; }
+function nastavStav(t, chyba) { $('stav').textContent = t || ''; $('stav').classList.toggle('chyba', !!chyba); }
+function obnovKlik() {
+  $('tlBod').setAttribute('aria-pressed', klikRezim === 'bod');
+  $('tlTrasa').setAttribute('aria-pressed', klikRezim === 'trasa');
+  $('mapa').classList.toggle('klik-bod', klikRezim === 'bod');
+  $('mapa').classList.toggle('klik-trasa', klikRezim === 'trasa');
+  zprava(klikRezim === 'bod' ? '📍 Klikněte do mapy – přidá se výchozí místo' : klikRezim === 'trasa' ? '🧭 Klikněte do mapy – cíl trasy z vybraného místa' : '');
+}
+
+/* ---------- síť ---------- */
+let fronta = Promise.resolve(), posledni = 0;
+/* Valhalla FOSSGIS: dotazy za sebou, nejvýš 1 za sekundu. */
+function valhalla(url) {
+  const uloha = fronta.then(async () => {
+    const cekej = posledni + 1100 - Date.now();
+    if (cekej > 0) await spi(cekej);
+    posledni = Date.now();
+    let odp;
+    try { odp = await fetch(url); } catch (e) { throw new Error('Nepodařilo se spojit se serverem Valhalla (FOSSGIS). Zkontrolujte připojení k internetu, nebo je server dočasně nedostupný.'); }
+    let j = null;
+    try { j = await odp.json(); } catch (e) { /* ne-JSON */ }
+    if (!odp.ok) throw new Error(D.chybaValhally(j, odp.status));
+    return j;
+  });
+  fronta = uloha.catch(() => {});
+  return uloha;
+}
+async function nominatim(cesta) {
+  const odp = await fetch('https://nominatim.openstreetmap.org/' + cesta + '&format=jsonv2&accept-language=' + jazyk());
+  if (!odp.ok) throw new Error('HTTP ' + odp.status);
+  return odp.json();
+}
+
+/* ---------- výpočet izochron ---------- */
+let generace = 0;
+async function prepocitej() {
+  const g = ++generace;
+  for (const b of stav.body) {
+    const chybi = D.potrebneMinuty(stav, b).filter(m => !cache.has(D.klicIsochrony(b, m)));
+    if (!chybi.length) { delete chyby[b.id]; continue; }
+    for (const dav of D.rozdelKontury(chybi)) {
+      nastavStav('⏳ Počítám izochrony: ' + b.nazev + ' (' + D.MODY[b.mod].nazev.toLowerCase() + ', ' + dav.join(', ') + ' min)…');
+      try {
+        const iso = D.parsujIsochronu(await valhalla(D.urlIsochrony(b, b.mod, dav)));
+        for (const m of dav) cache.set(D.klicIsochrony(b, m), iso[m] || []);
+        delete chyby[b.id];
+      } catch (e) { chyby[b.id] = e.message; break; }
+      if (g !== generace) return;
+    }
+  }
+  if (g !== generace) return;
+  const ch = Object.keys(chyby).filter(id => stav.body.some(b => b.id === id));
+  nastavStav(ch.length ? '⚠️ ' + ch.map(id => stav.body.find(b => b.id === id).nazev + ': ' + chyby[id]).join(' ') : '', ch.length > 0);
+  spocitejKombinaci();
+  vykresli();
+}
+const isoBodu = (b, m) => cache.get(D.klicIsochrony(b, m));
+function spocitejKombinaci() {
+  kombinaceGeo = null;
+  const viditelne = stav.body.filter(b => !b.skryty);
+  if (stav.kombinace === 'zadna' || viditelne.length < 2) return;
+  const geo = viditelne.map(b => isoBodu(b, b.limit));
+  if (geo.some(x => x === undefined)) return; // ještě se počítá nebo chyba
+  kombinaceGeo = D.kombinuj(CL, geo, stav.kombinace);
+}
+
+/* ---------- kreslení ---------- */
+function ikonaBodu(b, i) {
+  return L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 30],
+    html: `<div class="znacka-bod" style="background:${b.barva}"><span>${String.fromCharCode(65 + i)}</span></div>` });
+}
+function vykresli() {
+  vrstvaIso.clearLayers(); vrstvaKomb.clearLayers(); vrstvaBody.clearLayers();
+  stav.body.forEach((b, i) => {
+    const mk = L.marker([b.lat, b.lon], { icon: ikonaBodu(b, i), draggable: true, title: b.nazev, keyboard: true }).addTo(vrstvaBody);
+    mk.on('dragend', () => { const p = mk.getLatLng(); b.lat = +p.lat.toFixed(6); b.lon = +p.lng.toFixed(6); uloz(); zrusVysledkyOblasti(); vykresli(); prepocitej(); });
+    mk.on('click', () => { aktivniId = b.id; vykreslPanel(); });
+    if (b.skryty) return;
+    const minuty = stav.intervaly.slice().sort((x, y) => y - x);
+    for (const m of minuty) {
+      const geo = isoBodu(b, m);
+      if (!geo || !geo.length || skryteMinuty.has(m)) continue;
+      L.polygon(doLeaflet(geo), { color: b.barva, weight: 1.5, opacity: .85, fillColor: b.barva, fillOpacity: .13, interactive: false }).addTo(vrstvaIso);
+    }
+  });
+  if (kombinaceGeo && kombinaceGeo.length)
+    L.polygon(doLeaflet(kombinaceGeo), { color: D.BARVA_KOMBINACE, weight: 3, opacity: .95, fillColor: D.BARVA_KOMBINACE, fillOpacity: .22, dashArray: '8 5', interactive: false }).addTo(vrstvaKomb);
+  vykreslPanel();
+}
+
+function vykreslPanel() {
+  $('pocetBodu').textContent = stav.body.length ? '(' + stav.body.length + ')' : '';
+  $('txtIntervaly').textContent = ' ' + stav.intervaly.join('/') + ' min';
+  $('kombinace').value = stav.kombinace;
+  if (!stav.body.length) {
+    $('body').innerHTML = '<div class="prazdno">Zatím žádné místo. Klikněte do mapy, vyhledejte adresu v liště nebo vyberte z ⭐ uložených. Pro „kde bydlet“ přidejte víc míst (práce, škola…) a zvolte 🔀 Průnik.</div>';
+  } else {
+    if (!stav.body.some(b => b.id === aktivniId)) aktivniId = stav.body[0].id;
+    $('body').innerHTML = stav.body.map((b, i) => {
+      const vysl = chyby[b.id] ? `<span class="chyba">⚠️ ${esc(chyby[b.id])}</span>`
+        : D.potrebneMinuty(stav, b).map(m => {
+          const g = isoBodu(b, m);
+          return `<span>${m} min${m === b.limit && stav.kombinace !== 'zadna' ? ' 🎯' : ''}: <b>${g ? D.formatPlocha(D.plochaGeometrie(g)) : '…'}</b></span>`;
+        }).join('');
+      return `<div class="bod${b.id === aktivniId ? ' aktivni' : ''}${b.skryty ? ' skryty' : ''}" data-id="${b.id}" style="--barva:${b.barva}">
+        <div class="bod-hlava"><b aria-hidden="true">${String.fromCharCode(65 + i)}</b>
+          <input class="vstup nazev" data-pole="nazev" value="${esc(b.nazev)}" maxlength="80" aria-label="Název místa" data-i18n="ne">
+          <button class="ikona" data-akce="centrum" title="Ukázat na mapě" aria-label="Ukázat na mapě">🎯</button>
+          <button class="ikona" data-akce="oblibene" title="Uložit mezi ⭐ uložená místa" aria-label="Uložit místo">⭐</button>
+          <button class="ikona" data-akce="skryt" aria-pressed="${b.skryty}" title="Skrýt / ukázat izochrony" aria-label="Skrýt izochrony">👁️</button>
+          <button class="ikona" data-akce="smazat" title="Odebrat místo" aria-label="Odebrat místo">🗑️</button></div>
+        <div class="bod-volby"><select class="vstup" data-pole="mod" aria-label="Druh dopravy">${Object.entries(D.MODY).map(([k, m]) => `<option value="${k}"${k === b.mod ? ' selected' : ''}>${m.ikona} ${m.nazev}</option>`).join('')}</select>
+          <label title="Limit pro průnik / sjednocení">🎯 limit <input class="vstup" type="number" data-pole="limit" min="1" max="${D.MAX_MINUT}" value="${b.limit}"> min</label></div>
+        <div class="bod-vysl">${vysl}</div></div>`;
+    }).join('');
+  }
+  // legenda intervalů
+  $('sekceLegenda').hidden = !stav.body.length;
+  $('legenda').innerHTML = stav.intervaly.map(m => `<label><input type="checkbox" data-minuty="${m}"${skryteMinuty.has(m) ? '' : ' checked'}> ${m} min</label>`).join('');
+  // kombinace
+  const vid = stav.body.filter(b => !b.skryty);
+  $('sekceKombinace').hidden = stav.kombinace === 'zadna' || vid.length < 2;
+  if (!$('sekceKombinace').hidden) {
+    const popis = vid.map(b => `${D.MODY[b.mod].ikona} <span data-i18n="ne">${esc(b.nazev)}</span> do ${b.limit} min`).join(stav.kombinace === 'prunik' ? ' <b>a</b> ' : ' <b>nebo</b> ');
+    $('vyslKombinace').innerHTML = kombinaceGeo === null ? 'Čekám na izochrony všech míst…'
+      : (stav.kombinace === 'prunik' ? '🔀 Odkud to mám ' : '🔗 Odkud to mám ') + popis + ':<br>'
+        + (kombinaceGeo.length ? `<b class="velke">${D.formatPlocha(D.plochaGeometrie(kombinaceGeo))}</b> <span class="tip">(${kombinaceGeo.length} ${kombinaceGeo.length === 1 ? 'souvislá oblast' : kombinaceGeo.length < 5 ? 'oblasti' : 'oblastí'}, na mapě červeně čárkovaně)</span>`
+          : '<b>Žádné takové místo neexistuje</b> – zvyšte limity nebo zvolte rychlejší dopravu.');
+  }
+}
+
+/* ---------- přidávání míst ---------- */
+async function pridejBod(lat, lon, nazev, mod, limit) {
+  if (stav.body.length >= 8) return Dialog.chyba('Nejvýš 8 výchozích míst.');
+  const pouzite = new Set(stav.body.map(b => b.barva));
+  const b = D.normBod({ lat, lon, nazev: nazev || 'Místo ' + (stav.body.length + 1), mod: mod || (stav.body.length ? stav.body[stav.body.length - 1].mod : 'pesky'),
+    limit: limit || 20, barva: D.BARVY.find(c => !pouzite.has(c)) }, stav.body.length);
+  stav.body.push(b); aktivniId = b.id;
+  if (mapa.getZoom() < 11 || !mapa.getBounds().contains([lat, lon])) mapa.setView([lat, lon], Math.max(mapa.getZoom(), 13));
+  if (klikRezim === 'bod') klikRezim = null;
+  obnovKlik(); uloz(); vykresli(); prepocitej();
+  if (!nazev) {
+    try {
+      const r = await nominatim(`reverse?lat=${lat}&lon=${lon}&zoom=17`), a = r.address || {};
+      const t = r.name || [a.road || a.pedestrian || a.hamlet || a.village || a.suburb, a.house_number].filter(Boolean).join(' ');
+      if (t && stav.body.includes(b)) { b.nazev = t.slice(0, 80); uloz(); vykreslPanel(); }
+    } catch (e) { /* název zůstane obecný */ }
+  }
+}
+mapa.on('click', e => {
+  const { lat, lng } = e.latlng;
+  if (klikRezim === 'bod') pridejBod(+lat.toFixed(6), +lng.toFixed(6));
+  else if (klikRezim === 'trasa') najdiTrasu(lat, lng);
+});
+
+/* ---------- trasa ---------- */
+async function najdiTrasu(lat, lon) {
+  const b = stav.body.find(x => x.id === aktivniId);
+  if (!b) return Dialog.chyba('Nejdřív přidejte výchozí místo.');
+  $('sekceTrasa').hidden = false; $('trasaInfo').textContent = '⏳ Hledám trasu…';
+  try {
+    const t = D.parsujTrasu(await valhalla(D.urlTrasy(b, { lat, lon }, b.mod, jazyk())));
+    trasaData = Object.assign(t, { od: b.nazev, mod: b.mod });
+    vrstvaTrasa.clearLayers();
+    L.polyline(t.body, { color: '#fff', weight: 7, opacity: .8 }).addTo(vrstvaTrasa);
+    L.polyline(t.body, { color: b.barva, weight: 4 }).addTo(vrstvaTrasa);
+    L.circleMarker([lat, lon], { radius: 6, color: '#fff', weight: 2, fillColor: b.barva, fillOpacity: 1 }).addTo(vrstvaTrasa);
+    $('trasaInfo').innerHTML = `${D.MODY[b.mod].ikona} Z <b data-i18n="ne">${esc(b.nazev)}</b>: <b>${D.formatDelka(t.km)}</b>, <b>${D.formatCas(t.s)}</b>`
+      + `<details><summary>Popis trasy (${t.kroky.length} kroků)</summary><ol data-i18n="ne">${t.kroky.map(k => `<li>${esc(k.text)}${k.km ? ' <span class="tip">' + D.formatDelka(k.km) + '</span>' : ''}</li>`).join('')}</ol></details>`;
+  } catch (e) { trasaData = null; vrstvaTrasa.clearLayers(); $('trasaInfo').innerHTML = `<span style="color:var(--danger)">⚠️ ${esc(e.message)}</span>`; }
+}
+$('trasaZrus').onclick = () => { trasaData = null; vrstvaTrasa.clearLayers(); $('sekceTrasa').hidden = true; };
+
+/* ---------- místa zájmu (Overpass) ---------- */
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+const ATRIB_OSM = 'Místa zájmu: Overpass API';
+function oblastProPoi() {
+  if (kombinaceGeo && kombinaceGeo.length) return { geo: kombinaceGeo, popis: stav.kombinace === 'prunik' ? 'v průniku míst' : 've sjednocení míst' };
+  const b = stav.body.find(x => x.id === aktivniId);
+  if (!b) return null;
+  const m = Math.max(...D.potrebneMinuty(stav, b).filter(x => isoBodu(b, x)));
+  const geo = isFinite(m) && isoBodu(b, m);
+  return geo && geo.length ? { geo, popis: `do ${m} min z místa ${b.nazev}` } : null;
+}
+async function najdiPoi() {
+  const obl = oblastProPoi();
+  if (!obl) return Dialog.chyba('Nejdřív spočítejte izochronu (přidejte místo) – místa zájmu se hledají uvnitř ní.');
+  if (!stav.poi.length) return Dialog.chyba('Zaškrtněte aspoň jeden druh míst zájmu.');
+  const ob = D.obalka(obl.geo), plocha = D.plochaGeometrie([[[[ob.zapad, ob.jih], [ob.vychod, ob.jih], [ob.vychod, ob.sever], [ob.zapad, ob.sever], [ob.zapad, ob.jih]]]]);
+  if (plocha > 600e6) return Dialog.chyba(`Oblast je pro veřejný server Overpass příliš velká (${D.formatPlocha(plocha)} v obdélníku kolem ní, limit 600 km²). Zvolte kratší interval nebo pomalejší dopravu.`);
+  $('sekcePoi').hidden = false; $('poiInfo').textContent = '⏳ Stahuji z OpenStreetMap (Overpass API)…'; $('poiSeznam').innerHTML = '';
+  const q = D.dotazOverpass(ob, stav.poi);
+  let json = null, chyba = '';
+  for (const url of OVERPASS) {
+    if (chyba) await spi(2000);
+    try {
+      const odp = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+      if (!odp.ok) { chyba = 'HTTP ' + odp.status + (odp.status === 429 ? ' – příliš mnoho dotazů' : odp.status >= 500 ? ' – server přetížený' : ''); continue; }
+      json = await odp.json(); break;
+    } catch (e) { chyba = 'nedostupný server'; }
+  }
+  if (!json) { $('poiInfo').innerHTML = `<span style="color:var(--danger)">⚠️ Overpass API neodpovídá (${esc(chyba)}). Veřejné servery bývají přetížené – zkuste to za chvíli.</span>`; return; }
+  poiData = { body: D.parsujOverpass(json, obl.geo), popis: obl.popis };
+  mapa.attributionControl.removeAttribution(ATRIB_OSM); mapa.attributionControl.addAttribution(ATRIB_OSM);
+  vykresliPoi();
+}
+function vykresliPoi() {
+  vrstvaPoi.clearLayers();
+  if (!poiData) { $('sekcePoi').hidden = true; return; }
+  const K = D.KATEGORIE_POI;
+  for (const p of poiData.body) L.marker([p.lat, p.lon], { icon: L.divIcon({ className: 'znacka-poi', html: K[p.kat].ikona, iconSize: [20, 20] }), title: p.nazev || K[p.kat].nazev }).addTo(vrstvaPoi);
+  $('sekcePoi').hidden = false;
+  $('poiInfo').textContent = `Celkem ${poiData.body.length} míst ${poiData.popis}.`;
+  $('poiSeznam').innerHTML = stav.poi.map(k => {
+    const s = poiData.body.filter(p => p.kat === k);
+    return `<details><summary><span>${K[k].ikona} ${K[k].nazev}</span><b>${s.length}</b></summary><ul data-i18n="ne">${s.map(p => `<li data-lat="${p.lat}" data-lon="${p.lon}">${esc(p.nazev || '(bez názvu)')}</li>`).join('') || '<li>—</li>'}</ul></details>`;
+  }).join('');
+}
+$('poiSeznam').addEventListener('click', e => { const li = e.target.closest('li[data-lat]'); if (li) mapa.setView([+li.dataset.lat, +li.dataset.lon], Math.max(mapa.getZoom(), 16)); });
+$('poiZrus').onclick = () => { poiData = null; vykresliPoi(); };
+function zrusVysledkyOblasti() { if (poiData) { poiData = null; vykresliPoi(); } }
+
+/* ---------- nabídky ---------- */
+function naplnIntervaly() {
+  $('nabIntervaly').innerHTML = D.INTERVALY.map(m => `<label class="volba"><input type="checkbox" data-interval="${m}"${stav.intervaly.includes(m) ? ' checked' : ''}> ${m} minut</label>`).join('')
+    + `<div class="pozn">Nejvýš ${D.MAX_KONTUR} intervaly najednou a nejvýš ${D.MAX_MINUT} minut – omezení veřejného serveru. Limit místa (🎯) se dopočítá navíc.</div>`;
+}
+function naplnPoi() {
+  $('nabPoi').innerHTML = Object.entries(D.KATEGORIE_POI).map(([k, v]) => `<label class="volba"><input type="checkbox" data-poi="${k}"${stav.poi.includes(k) ? ' checked' : ''}> ${v.ikona} ${v.nazev}</label>`).join('')
+    + '<hr><button class="tl" data-prikaz="poi">🔎 Najít v oblasti</button><div class="pozn">Hledá se v kombinaci míst, jinak v největší izochroně vybraného místa. Data OpenStreetMap přes Overpass API.</div>';
+}
+function naplnOblibena() {
+  $('nabOblibena').innerHTML = (stav.oblibena.length ? stav.oblibena.map(o => `<div class="obl"><button class="tl" data-oblibene="${o.id}" title="Přidat jako výchozí místo">${D.MODY[o.mod].ikona} <span data-i18n="ne">${esc(o.nazev)}</span> <span class="tip">${o.limit} min</span></button><button class="ikona" data-smaz-oblibene="${o.id}" title="Smazat uložené místo" aria-label="Smazat uložené místo">✕</button></div>`).join('')
+    : '<div class="pozn">Zatím nic. Místo uložíte tlačítkem ⭐ na jeho kartě.</div>')
+    + (stav.body.length ? '<hr><button class="tl" data-prikaz="ulozVse">⭐ Uložit všechna současná místa</button>' : '');
+}
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+function ukazNabidku(n, kotva) {
+  n.hidden = false;
+  const r = kotva.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  if (n.id === 'nabIntervaly') naplnIntervaly();
+  if (n.id === 'nabPoi') naplnPoi();
+  if (n.id === 'nabOblibena') naplnOblibena();
+  b.setAttribute('aria-expanded', 'true'); ukazNabidku(n, b);
+}));
+
+/* ---------- export ---------- */
+function stahni(nazev, blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nazev;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function exportGeoJSON() {
+  const vrstvy = [];
+  for (const b of stav.body) for (const m of D.potrebneMinuty(stav, b)) {
+    const g = isoBodu(b, m);
+    if (g) vrstvy.push({ geometrie: g, vlastnosti: { druh: 'izochrona', misto: b.nazev, doprava: D.MODY[b.mod].costing, minuty: m, stroke: b.barva, fill: b.barva } });
+  }
+  if (kombinaceGeo) vrstvy.push({ geometrie: kombinaceGeo, vlastnosti: { druh: stav.kombinace === 'prunik' ? 'prunik' : 'sjednoceni', mista: stav.body.filter(b => !b.skryty).map(b => b.nazev + ' ' + b.limit + ' min'), stroke: D.BARVA_KOMBINACE } });
+  const fc = D.doGeoJSON(vrstvy);
+  stav.body.forEach(b => fc.features.push({ type: 'Feature', properties: { druh: 'vychozi_misto', nazev: b.nazev, doprava: D.MODY[b.mod].costing, limit_min: b.limit }, geometry: { type: 'Point', coordinates: [b.lon, b.lat] } }));
+  if (trasaData) fc.features.push({ type: 'Feature', properties: { druh: 'trasa', z: trasaData.od, delka_km: trasaData.km, cas_min: Math.round(trasaData.s / 60) }, geometry: { type: 'LineString', coordinates: trasaData.body.map(p => [p[1], p[0]]) } });
+  if (poiData) poiData.body.forEach(p => fc.features.push({ type: 'Feature', properties: { druh: 'misto_zajmu', kategorie: p.kat, nazev: p.nazev, osm: p.id }, geometry: { type: 'Point', coordinates: [p.lon, p.lat] } }));
+  if (!fc.features.length) return Dialog.chyba('Není co exportovat – přidejte místo.');
+  fc.attribution = 'Izochrony a trasy: Valhalla (FOSSGIS); data © přispěvatelé OpenStreetMap (ODbL)';
+  stahni('izochrony.geojson', new Blob([JSON.stringify(fc)], { type: 'application/geo+json' }));
+}
+async function vytvorPNG() {
+  const vel = mapa.getSize(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const c = document.createElement('canvas'); c.width = vel.x * dpr; c.height = vel.y * dpr;
+  const x = c.getContext('2d'); x.scale(dpr, dpr);
+  x.fillStyle = '#f2efe9'; x.fillRect(0, 0, vel.x, vel.y);
+  const r0 = mapa.getContainer().getBoundingClientRect();
+  let dlazdiceOk = true;
+  for (const img of mapa.getContainer().querySelectorAll('.leaflet-tile-pane img.leaflet-tile-loaded')) {
+    const r = img.getBoundingClientRect();
+    try { x.drawImage(img, r.left - r0.left, r.top - r0.top, r.width, r.height); } catch (e) { dlazdiceOk = false; }
+  }
+  const cesta = geo => { x.beginPath(); for (const p of geo) for (const k of p) k.forEach((b, i) => { const q = mapa.latLngToContainerPoint([b[1], b[0]]); i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y); }); };
+  for (const b of stav.body) {
+    if (b.skryty) continue;
+    for (const m of stav.intervaly.slice().sort((a, c2) => c2 - a)) {
+      const g = isoBodu(b, m); if (!g || !g.length || skryteMinuty.has(m)) continue;
+      cesta(g); x.globalAlpha = .13; x.fillStyle = b.barva; x.fill('evenodd'); x.globalAlpha = .85; x.strokeStyle = b.barva; x.lineWidth = 1.5; x.stroke(); x.globalAlpha = 1;
+    }
+  }
+  if (kombinaceGeo && kombinaceGeo.length) { cesta(kombinaceGeo); x.globalAlpha = .22; x.fillStyle = D.BARVA_KOMBINACE; x.fill('evenodd'); x.globalAlpha = 1; x.setLineDash([8, 5]); x.lineWidth = 3; x.strokeStyle = D.BARVA_KOMBINACE; x.stroke(); x.setLineDash([]); }
+  if (trasaData) { x.beginPath(); trasaData.body.forEach((p, i) => { const q = mapa.latLngToContainerPoint(p); i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y); }); x.lineWidth = 4; x.strokeStyle = (stav.body.find(b => b.nazev === trasaData.od) || {}).barva || '#2563eb'; x.stroke(); }
+  if (poiData) { x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; for (const p of poiData.body) { const q = mapa.latLngToContainerPoint([p.lat, p.lon]); x.fillText(D.KATEGORIE_POI[p.kat].ikona, q.x, q.y); } }
+  stav.body.forEach((b, i) => {
+    const q = mapa.latLngToContainerPoint([b.lat, b.lon]);
+    x.beginPath(); x.arc(q.x, q.y, 10, 0, 7); x.fillStyle = b.barva; x.fill(); x.lineWidth = 2; x.strokeStyle = '#fff'; x.stroke();
+    x.fillStyle = '#fff'; x.font = 'bold 11px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String.fromCharCode(65 + i), q.x, q.y + .5);
+  });
+  // legenda
+  const radky = stav.body.filter(b => !b.skryty).map((b, i) => [b.barva, `${String.fromCharCode(65 + stav.body.indexOf(b))} ${b.nazev} – ${D.MODY[b.mod].nazev.toLowerCase()}, ${stav.intervaly.filter(m => !skryteMinuty.has(m)).join('/')} min`]);
+  if (kombinaceGeo && kombinaceGeo.length) radky.push([D.BARVA_KOMBINACE, (stav.kombinace === 'prunik' ? 'Průnik' : 'Sjednocení') + ': ' + D.formatPlocha(D.plochaGeometrie(kombinaceGeo))]);
+  x.font = '12px sans-serif'; x.textAlign = 'left'; x.textBaseline = 'middle';
+  const sirka = Math.min(vel.x - 20, Math.max(120, ...radky.map(r => x.measureText(r[1]).width)) + 34);
+  if (radky.length) {
+    x.fillStyle = 'rgba(255,255,255,.92)'; x.fillRect(10, 10, sirka, radky.length * 18 + 10);
+    radky.forEach((r, i) => { x.fillStyle = r[0]; x.fillRect(18, 18 + i * 18, 14, 10); x.fillStyle = '#111'; x.fillText(r[1], 38, 23 + i * 18, sirka - 34); });
+  }
+  const atrib = aktivniPodklad().o.attribution.replace(/<[^>]+>/g, '') + ' · izochrony Valhalla / FOSSGIS';
+  x.font = '11px sans-serif'; const w = Math.min(vel.x, x.measureText(atrib).width + 10);
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.fillRect(vel.x - w, vel.y - 17, w, 17); x.fillStyle = '#333'; x.fillText(atrib, vel.x - w + 5, vel.y - 8, w - 10);
+  let blob = null;
+  try { blob = await new Promise(r => c.toBlob(r, 'image/png')); } catch (e) { blob = null; }
+  return { blob, dlazdiceOk };
+}
+async function exportPNG() {
+  const { blob, dlazdiceOk } = await vytvorPNG();
+  if (!blob) return Dialog.chyba('PNG se nepodařilo vytvořit (prohlížeč zablokoval podkladovou mapu). Zkuste GeoJSON.');
+  stahni('izochrony.png', blob);
+  if (!dlazdiceOk) Dialog.info('Část podkladové mapy chybí.');
+}
+
+/* ---------- příkazy a události ---------- */
+const PRIKAZY = {
+  napoveda: () => $('dlgNapoveda').showModal(),
+  geojson: exportGeoJSON,
+  png: exportPNG,
+  poi: najdiPoi,
+  vycistit: async () => {
+    if (!stav.body.length || !await Dialog.potvrd('Odebrat všechna výchozí místa z mapy? (⭐ uložená místa zůstanou)')) return;
+    stav.body = []; kombinaceGeo = null; zrusVysledkyOblasti(); $('trasaZrus').click(); klikRezim = 'bod'; obnovKlik(); uloz(); vykresli();
+  },
+  ulozVse: () => {
+    let n = 0;
+    for (const b of stav.body) if (!stav.oblibena.some(o => o.nazev === b.nazev && Math.abs(o.lat - b.lat) < 1e-5 && Math.abs(o.lon - b.lon) < 1e-5)) { stav.oblibena.push({ id: b.id + 'o', nazev: b.nazev, lat: b.lat, lon: b.lon, mod: b.mod, limit: b.limit }); n++; }
+    uloz(); Dialog.info(n ? 'Uloženo míst: ' + n : 'Všechna místa už jsou uložená.');
+  }
+};
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
+  const o = e.target.closest('[data-oblibene]');
+  if (o) { zavriNabidky(); const u = stav.oblibena.find(x => x.id === o.dataset.oblibene); if (u) pridejBod(u.lat, u.lon, u.nazev, u.mod, u.limit); return; }
+  const so = e.target.closest('[data-smaz-oblibene]');
+  if (so) { e.stopPropagation(); stav.oblibena = stav.oblibena.filter(x => x.id !== so.dataset.smazOblibene); uloz(); naplnOblibena(); return; }
+  const v = e.target.closest('[data-vysledek]');
+  if (v) { zavriNabidky(); const [lat, lon] = v.dataset.vysledek.split(',').map(Number); pridejBod(lat, lon, v.dataset.nazev); return; }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+// změny v nabídkách intervalů a míst zájmu
+document.addEventListener('change', e => {
+  const iv = e.target.closest('[data-interval]');
+  if (iv) {
+    const m = +iv.dataset.interval, s = new Set(stav.intervaly);
+    if (iv.checked) { if (s.size >= D.MAX_KONTUR) { iv.checked = false; return Dialog.chyba(`Nejvýš ${D.MAX_KONTUR} intervaly najednou – nejdřív jeden odškrtněte.`); } s.add(m); }
+    else { if (s.size <= 1) { iv.checked = true; return; } s.delete(m); }
+    stav.intervaly = [...s].sort((a, b) => a - b); uloz(); vykresli(); prepocitej(); return;
+  }
+  const pk = e.target.closest('[data-poi]');
+  if (pk) { stav.poi = Object.keys(D.KATEGORIE_POI).filter(k => k === pk.dataset.poi ? pk.checked : stav.poi.includes(k)); uloz(); return; }
+  const lm = e.target.closest('[data-minuty]');
+  if (lm) { const m = +lm.dataset.minuty; lm.checked ? skryteMinuty.delete(m) : skryteMinuty.add(m); vykresli(); }
+});
+// karty míst
+$('body').addEventListener('click', e => {
+  const k = e.target.closest('.bod'); if (!k) return;
+  const b = stav.body.find(x => x.id === k.dataset.id); if (!b) return;
+  const a = e.target.closest('[data-akce]');
+  if (!a) { if (aktivniId !== b.id) { aktivniId = b.id; vykreslPanel(); } return; }
+  const akce = a.dataset.akce;
+  if (akce === 'centrum') { aktivniId = b.id; const g = isoBodu(b, Math.max(...D.potrebneMinuty(stav, b))); mapa.fitBounds(g && g.length ? L.polygon(doLeaflet(g)).getBounds() : L.latLng(b.lat, b.lon).toBounds(1500)); vykreslPanel(); }
+  else if (akce === 'oblibene') { stav.oblibena.push({ id: b.id + Date.now().toString(36), nazev: b.nazev, lat: b.lat, lon: b.lon, mod: b.mod, limit: b.limit }); uloz(); Dialog.info('Uloženo mezi ⭐ uložená místa: ' + b.nazev); }
+  else if (akce === 'skryt') { b.skryty = !b.skryty; uloz(); zrusVysledkyOblasti(); spocitejKombinaci(); vykresli(); }
+  else if (akce === 'smazat') { stav.body = stav.body.filter(x => x !== b); delete chyby[b.id]; uloz(); zrusVysledkyOblasti(); spocitejKombinaci(); vykresli(); if (!stav.body.length) { klikRezim = 'bod'; obnovKlik(); } }
+});
+$('body').addEventListener('change', e => {
+  const pole = e.target.dataset.pole; if (!pole) return;
+  const b = stav.body.find(x => x.id === e.target.closest('.bod').dataset.id); if (!b) return;
+  if (pole === 'nazev') { b.nazev = e.target.value.trim().slice(0, 80) || b.nazev; uloz(); return vykresli(); }
+  if (pole === 'mod') b.mod = e.target.value;
+  if (pole === 'limit') { const v = Math.round(+e.target.value); if (!(v >= 1 && v <= D.MAX_MINUT)) { e.target.value = b.limit; return Dialog.chyba(`Limit musí být 1 až ${D.MAX_MINUT} minut.`); } b.limit = v; }
+  uloz(); zrusVysledkyOblasti(); kombinaceGeo = null; vykresli(); prepocitej();
+});
+$('kombinace').addEventListener('change', e => { stav.kombinace = e.target.value; uloz(); zrusVysledkyOblasti(); spocitejKombinaci(); vykresli(); prepocitej(); });
+$('tlBod').onclick = () => { klikRezim = klikRezim === 'bod' ? null : 'bod'; obnovKlik(); };
+$('tlTrasa').onclick = () => {
+  if (!stav.body.length) return Dialog.chyba('Trasa vede z výchozího místa – nejdřív nějaké přidejte.');
+  klikRezim = klikRezim === 'trasa' ? null : 'trasa'; obnovKlik();
+};
+$('tlTlumit').onclick = () => { const z = !$('mapa').classList.contains('tlumit'); $('mapa').classList.toggle('tlumit', z); $('tlTlumit').setAttribute('aria-pressed', z); };
+// hledání adresy (Nominatim)
+$('hledat').addEventListener('keydown', async e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const t = e.target.value.trim(); if (!t) return;
+  const n = $('nabVysledky');
+  zavriNabidky(); n.innerHTML = '<div class="pozn">⏳ Hledám…</div>'; ukazNabidku(n, e.target);
+  try {
+    const r = await nominatim('search?limit=6&q=' + encodeURIComponent(t));
+    n.innerHTML = r.length ? r.map(x => `<button class="tl" data-vysledek="${(+x.lat).toFixed(6)},${(+x.lon).toFixed(6)}" data-nazev="${esc((x.name || x.display_name).slice(0, 80))}" data-i18n="ne">📍 ${esc(x.display_name)}</button>`).join('') + '<div class="pozn">Klik = přidat jako výchozí místo. Hledání: Nominatim / OpenStreetMap.</div>'
+      : '<div class="pozn">Nic nenalezeno.</div>';
+  } catch (er) { n.innerHTML = '<div class="pozn" style="color:var(--danger)">⚠️ Hledání adres (Nominatim) teď nefunguje – zkontrolujte připojení, nebo klikněte přímo do mapy.</div>'; }
+  ukazNabidku(n, e.target);
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { zavriNabidky(); if (klikRezim) { klikRezim = null; obnovKlik(); } } });
+addEventListener('storage', e => { if (e.key === D.KLIC && e.newValue) { stav = D.migruj(JSON.parse(e.newValue)); spocitejKombinaci(); vykresli(); prepocitej(); } });
+
+obnovKlik();
+vykresli();
+prepocitej();
+window.DOSAZ_APP = { stav: () => stav, cache, pridejBod, prepocitej, najdiPoi, najdiTrasu, exportGeoJSON, vytvorPNG, kombinace: () => kombinaceGeo };
+})();
+</script>
+</body>
+</html>

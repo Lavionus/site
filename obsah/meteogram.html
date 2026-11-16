@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meteogram pro hory a létání</title>
+<meta name="description" content="Podrobný meteogram z Open-Meteo pro hory, paragliding a lety: vítr v tlakových hladinách, teplota na vrcholu, nulová izoterma, základna oblaků, termika, CAPE, emagram a porovnání údolí s vrcholem.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="meteogram/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 200px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px;max-width:190px}
+input.tl{width:78px;cursor:text}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:min(94vw,380px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .pozn{font-size:.76rem;color:var(--text-muted);padding:2px 10px}
+.nabidka label.tl{cursor:pointer}
+.nabidka .rad{display:flex;align-items:center}
+.nabidka .rad .tl:first-child{flex:1}
+[hidden]{display:none !important}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.mini{padding:3px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(8px,2.5vw,24px) 40px}
+.obal{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.hlavicka{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.hlavicka h2{font-size:1.25rem;margin:0}
+.hlavicka .meta{font-size:.82rem;color:var(--text-muted)}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;min-width:0}
+.panel h3{font-size:.95rem;margin:0 0 8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.panel h3 .vpravo{margin-left:auto;display:flex;gap:4px;align-items:center;font-weight:400}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:8px 10px;min-width:0}
+.dlazdice b{display:block;font-size:1.3rem;line-height:1.15}
+.dlazdice span{font-size:.75rem;color:var(--text-muted)}
+.dlazdice small{display:block;font-size:.75rem;color:var(--text-muted);margin-top:2px}
+.dlazdice.pozor b{color:var(--warn)} .dlazdice.zle b{color:var(--danger)} .dlazdice.dobre b{color:var(--ok)}
+.verdikt{font-size:.86rem;line-height:1.5;margin-top:8px}
+.verdikt li{margin-left:18px}
+.graf{display:flex;border:1px solid var(--border);border-radius:6px;background:var(--bg);overflow:hidden}
+.graf canvas{display:block}
+#popisky{flex-shrink:0;border-right:1px solid var(--border)}
+#svitek{overflow-x:auto;flex:1;min-width:0;cursor:crosshair}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.76rem;color:var(--text-muted);margin-top:6px}
+.legenda i{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.emagram > *{min-width:0}
+.emagram{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:900px){.emagram{grid-template-columns:1fr}}
+#emagram{width:100%;aspect-ratio:1/1.05;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.tab-obal{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{text-align:right;padding:4px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--text-muted);font-weight:600;font-size:.72rem}
+td:first-child,th:first-child{text-align:left}
+tr.cil td{background:var(--accent-soft)}
+.stav{padding:18px;text-align:center;color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;line-height:1.6}
+.stav.chyba{color:var(--danger);border-color:var(--danger)}
+.zdroje{font-size:.74rem;color:var(--text-muted);line-height:1.6}
+.zdroje a{color:inherit}
+.tip{font-size:.78rem;color:var(--text-muted);margin:4px 0 0}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(96vw,820px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+dialog.okno header{padding:10px 14px;font-weight:600;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+dialog.okno header button{margin-left:auto}
+dialog.okno .telo{padding:12px 14px;overflow:auto;max-height:calc(92vh - 110px);line-height:1.55;font-size:.88rem}
+dialog.okno .telo h4{margin:12px 0 4px}
+dialog.okno .telo ul{margin:0 0 0 18px}
+dialog.okno footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+#mapa{height:min(60vh,480px);border-radius:6px}
+#mapaInfo{font-size:.82rem;color:var(--text-muted);margin-right:auto}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>⛰️ Meteogram</h1>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat místo… (nebo 50.73, 15.74) ⏎" aria-label="Hledat místo" autocomplete="off">
+  </div>
+  <div class="skup" role="group" aria-label="Místo"><span class="skup-nazev" aria-hidden="true">Místo</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabMisto" aria-expanded="false" title="Mapa, moje poloha, oblíbená místa">📍<span class="txt"> Místo</span> ▾</button>
+    <button class="tl" data-prikaz="porovnani" aria-expanded="false" id="tlPorovnat" title="Porovnat s druhým místem (údolí × vrchol)">⇄<span class="txt"> Porovnat</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výška cíle"><span class="skup-nazev" aria-hidden="true">Výška cíle</span><div class="skup-tl">
+    <input class="tl" id="cil" type="number" min="-100" max="9000" step="10" placeholder="terén" title="Nadmořská výška vrcholu, startu nebo letové hladiny (m). Prázdné = výška místa." aria-label="Výška cíle v metrech">
+  </div></div>
+  <div class="skup" role="group" aria-label="Model"><span class="skup-nazev" aria-hidden="true">Model</span><div class="skup-tl">
+    <select class="tl" id="model" aria-label="Předpovědní model"></select>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabZobrazit" aria-expanded="false" title="Řádky meteogramu">👁️<span class="txt"> Řádky</span> ▾</button>
+    <button class="tl" data-prikaz="obnovit" title="Načíst předpověď znovu" aria-label="Obnovit">⟳</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a vysvětlivky" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabMisto" class="nabidka" hidden>
+  <button class="tl" data-prikaz="mapa" data-cil="a">🗺️ Vybrat na mapě…</button>
+  <button class="tl" data-prikaz="poloha">🎯 Moje poloha</button>
+  <button class="tl" data-prikaz="pridatOblibene">⭐ Uložit do oblíbených</button>
+  <hr>
+  <div class="pozn">Oblíbená místa</div>
+  <div id="seznamOblibenych"></div>
+</div>
+<div id="nabPorovnani" class="nabidka" hidden>
+  <div class="pozn">Druhé místo – typicky údolí × vrchol, start × přistání.</div>
+  <button class="tl" data-prikaz="mapa" data-cil="b">🗺️ Vybrat na mapě…</button>
+  <button class="tl" data-prikaz="porovnaniHledat">🔍 Vyhledat podle názvu…</button>
+  <div id="porovnaniOblibena"></div>
+  <hr>
+  <button class="tl" data-prikaz="porovnaniVypnout">✖ Vypnout porovnání</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden></div>
+<div id="nabVysledky" class="nabidka" hidden></div>
+
+<main><div class="obal" id="obsah">
+  <div class="hlavicka"><h2 id="nazevMista">–</h2><span class="meta" id="metaMista"></span></div>
+  <div id="stav" class="stav">Načítám předpověď…</div>
+  <section class="panel" id="panelHodina" hidden>
+    <h3><span id="titulHodina">Vybraná hodina</span>
+      <span class="vpravo"><button class="btn mini" data-prikaz="hodina" data-krok="-1" aria-label="O hodinu dříve">◀</button><button class="btn mini" data-prikaz="hodina" data-krok="0" title="Teď">teď</button><button class="btn mini" data-prikaz="hodina" data-krok="1" aria-label="O hodinu později">▶</button></span></h3>
+    <div class="souhrn" id="dlazdice"></div>
+    <ul class="verdikt" id="verdikt"></ul>
+  </section>
+  <section class="panel" id="panelGraf" hidden>
+    <h3>Meteogram <span class="tip">kliknutím do grafu vyberete hodinu pro souhrn a emagram</span></h3>
+    <div class="graf"><canvas id="popisky"></canvas><div id="svitek"><canvas id="platno"></canvas></div></div>
+    <div class="legenda" id="legenda"></div>
+  </section>
+  <section class="panel" id="panelPorovnani" hidden>
+    <h3 id="titulPorovnani">Porovnání</h3>
+    <div id="porovnaniSouhrn" class="verdikt"></div>
+  </section>
+  <section class="panel" id="panelEmagram" hidden>
+    <h3><span id="titulEmagram">Emagram (zjednodušený Skew-T)</span></h3>
+    <div class="emagram">
+      <canvas id="emagram" aria-label="Emagram – svislý profil teploty a rosného bodu"></canvas>
+      <div class="tab-obal"><table id="tabSondaz"></table>
+        <p class="tip">Červeně teplota, zeleně rosný bod, přerušovaně stoupající částice od země (suchá adiabata do kondenzace, pak nasycená). Kde je částice teplejší než okolí, vzduch je labilní – termika, kupovitá oblačnost, při vlhku bouřky. Šedé čáry: tenké plné = izotermy, čárkované = suché adiabaty, tečkované = nasycené adiabaty.</p>
+      </div>
+    </div>
+  </section>
+  <p class="zdroje">
+    Předpověď: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>), modely DWD ICON, ECMWF, NOAA GFS ·
+    Hledání míst: <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>, data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) ·
+    Mapa: © <a href="https://opentopomap.org/" target="_blank" rel="noopener">OpenTopoMap</a> (CC BY-SA).
+    Odvozené veličiny (termika, základna oblaků, teplota na vrcholu) jsou odhady – pro let vždy ověřte oficiální leteckou předpověď (ČHMÚ, GAMET, LAPL) a situaci na místě.
+  </p>
+</div></main>
+
+<dialog class="okno" id="dlgMapa">
+  <header><span id="dlgMapaTitul">Vyberte místo na mapě</span><button class="btn mini" data-zavrit aria-label="Zavřít">✖</button></header>
+  <div class="telo"><div id="mapa"></div></div>
+  <footer><span id="mapaInfo">Klikněte do mapy.</span><button class="btn" data-zavrit>Zrušit</button><button class="btn primary" id="mapaPouzit" disabled>Použít</button></footer>
+</dialog>
+
+<dialog class="okno" id="dlgNapoveda">
+  <header>Meteogram pro hory a létání<button class="btn mini" data-zavrit aria-label="Zavřít">✖</button></header>
+  <div class="telo">
+    <p>Stránka stáhne hodinovou předpověď z Open-Meteo včetně tlakových hladin 1000–500 hPa a z nich dopočítá veličiny důležité pro hory, paragliding a bezmotorové létání.</p>
+    <h4>Ovládání</h4>
+    <ul>
+      <li><b>Místo</b> – hledání podle názvu (Nominatim) nebo souřadnic „50.736, 15.740“, výběr na mapě, vaše poloha, oblíbená místa.</li>
+      <li><b>Výška cíle</b> – výška vrcholu, startovačky nebo letové hladiny. Teplota, vítr a pocitová teplota „v cíli“ se dopočítají z profilu tlakových hladin (pod terénem modelu standardním gradientem 0,65 °C/100 m).</li>
+      <li><b>Model</b> – ICON-D2 je nejpodrobnější (2 km) jen na 2 dny, ICON-EU 5 dní, ECMWF a GFS 7 dní. „Nejlepší dostupný“ kombinuje modely podle místa.</li>
+      <li><b>Porovnat</b> – druhé místo (např. údolí × vrchol). Ukáže teploty obou, gradient mezi nimi a hodiny s inverzí.</li>
+    </ul>
+    <h4>Co znamenají odvozené veličiny</h4>
+    <ul>
+      <li><b>Nulová izoterma</b> – z Open-Meteo, u modelů bez ní (ECMWF) z profilu: nejnižší výška, kde teplota klesne pod 0 °C (při mrazu u země nejvyšší teplá vrstva v inverzi).</li>
+      <li><b>Základna kupovité oblačnosti</b> – Espyho vzorec: 125 m na každý stupeň rozdílu teploty a rosného bodu u země.</li>
+      <li><b>Vrstevnatá oblačnost / mlha</b> – nejnižší hladina profilu, kde je rozdíl T − Td nejvýš 1,5 °C. Je-li pod výškou cíle, vrchol je pravděpodobně v mraku.</li>
+      <li><b>Termika</b> – bublina od země (za slunce přehřátá o 0,5 °C) stoupá po suché adiabatě, dokud není chladnější než okolí; strop omezí základna kumulů. Síla w* (Deardorffova konvektivní rychlost) z odhadu tepelného toku = 25 % slunečního záření. Klesavost kluzáku (~1 m/s) je třeba odečíst. Jen orientační – nezohledňuje svahy, vlhkost půdy ani střih větru.</li>
+      <li><b>Riziko bouřek</b> – podle CAPE: &lt;100 žádné, 100–500 nízké, 500–1000 mírné, 1000–2500 vysoké, nad 2500 J/kg velmi vysoké.</li>
+      <li><b>Pocitová teplota</b> – wind chill (Environment Canada) pro teplotu a vítr v cíli; platí pod 10 °C a nad 5 km/h.</li>
+      <li><b>Praporky větru</b> – meteorologická konvence v uzlech: půl čárky 5 kt, čárka 10 kt, praporek 50 kt (1 kt = 1,852 km/h); čárka ukazuje odkud vítr fouká. Barva políčka podle síly v km/h.</li>
+    </ul>
+  </div>
+  <footer><button class="btn primary" data-zavrit>Zavřít</button></footer>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+const J = window.METEOGRAM;
+const $ = id => document.getElementById(id);
+const KLIC_STAV = 'webapp_meteogram_stav', KLIC_OBLIBENE = 'webapp_meteogram_oblibene';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+const RADKY = [
+  { id: 'vitrHl', nazev: 'Vítr v hladinách' },
+  { id: 'obl', nazev: 'Oblačnost' },
+  { id: 'vysky', nazev: 'Výšky: nulová izoterma, základna, termika' },
+  { id: 'teplota', nazev: 'Teplota' },
+  { id: 'srazky', nazev: 'Srážky, sníh a bouřky' },
+  { id: 'vitr', nazev: 'Vítr a nárazy' },
+  { id: 'termika', nazev: 'Síla termiky' },
+  { id: 'vid', nazev: 'Viditelnost' }
+];
+
+function nacti(k, vychozi) { try { return JSON.parse(localStorage.getItem(k)) ?? vychozi; } catch (e) { return vychozi; } }
+const stav = Object.assign({ misto: { nazev: 'Sněžka', lat: 50.7360, lon: 15.7398, vyska: null }, model: 'best_match', cil: null,
+  skryte: [], b: null }, nacti(KLIC_STAV, {}));
+let oblibene = nacti(KLIC_OBLIBENE, []);
+const ulozStav = () => { try { localStorage.setItem(KLIC_STAV, JSON.stringify(stav)); } catch (e) {} };
+const ulozOblibene = () => { try { localStorage.setItem(KLIC_OBLIBENE, JSON.stringify(oblibene)); } catch (e) {} };
+
+let data = null, dataB = null, vyber = 0, offset = 0;
+
+/* ---------- formátování ---------- */
+const f0 = v => (v === null || v === undefined || isNaN(v) ? '–' : Math.round(v).toLocaleString('cs-CZ'));
+const f1 = v => (v === null || v === undefined || isNaN(v) ? '–' : (Math.round(v * 10) / 10).toLocaleString('cs-CZ'));
+const DNY = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so'];
+const datumZ = s => new Date(s.slice(0, 10) + 'T12:00:00Z');
+const popisCasu = s => `${DNY[datumZ(s).getUTCDay()]} ${+s.slice(8, 10)}. ${+s.slice(5, 7)}. ${s.slice(11, 16)}`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const vyskaCile = () => (stav.cil !== null && stav.cil !== '' && isFinite(stav.cil) ? +stav.cil : data.vyska);
+
+/* ---------- načtení ---------- */
+async function stahni(misto) {
+  const odp = await fetch(J.url(misto.lat, misto.lon, stav.model));
+  if (!odp.ok) {
+    let duvod = ''; try { duvod = (await odp.json()).reason || ''; } catch (e) {}
+    throw new Error(`Open-Meteo odpovědělo ${odp.status}${duvod ? ': ' + duvod : ''}`);
+  }
+  const json = await odp.json();
+  const d = J.zpracuj(json);
+  d.offset = json.utc_offset_seconds || 0;
+  if (!d.hodiny.length) throw new Error('Model pro toto místo nevrátil žádná data (zkuste jiný model).');
+  return d;
+}
+async function nactiVse() {
+  $('stav').hidden = false; $('stav').className = 'stav'; $('stav').textContent = 'Načítám předpověď…';
+  ukazHlavicku();
+  try {
+    data = await stahni(stav.misto);
+    offset = data.offset;
+    dataB = stav.b ? await stahni(stav.b).catch(e => { Dialog.chyba('Druhé místo se nenačetlo: ' + e.message); return null; }) : null;
+    $('stav').hidden = true;
+    vyber = indexTed();
+    vykresliVse();
+  } catch (e) {
+    data = null;
+    ['panelHodina', 'panelGraf', 'panelPorovnani', 'panelEmagram'].forEach(id => { $(id).hidden = true; });
+    $('stav').className = 'stav chyba';
+    $('stav').innerHTML = `Předpověď se nepodařilo načíst. ${esc(e.message === 'Failed to fetch' ? 'Zkontrolujte připojení k internetu.' : e.message)}<br><button class="btn" data-prikaz="obnovit">⟳ Zkusit znovu</button>`;
+  }
+}
+function indexTed() {
+  const ted = new Date(Date.now() + offset * 1000).toISOString().slice(0, 13);
+  const i = data.hodiny.findIndex(h => h.cas.slice(0, 13) >= ted);
+  return i < 0 ? 0 : i;
+}
+
+function ukazHlavicku() {
+  const m = stav.misto;
+  $('nazevMista').textContent = m.nazev;
+  const casti = [`${(+m.lat).toFixed(4)}, ${(+m.lon).toFixed(4)}`];
+  if (data) casti.push(`terén modelu ${f0(data.vyska)} m n. m.`, `cíl ${f0(vyskaCile())} m`);
+  casti.push((J.MODELY.find(x => x.id === stav.model) || J.MODELY[0]).nazev);
+  $('metaMista').textContent = casti.join(' · ');
+}
+
+/* ---------- výpočty pro hodinu ---------- */
+function odvozene(hod, vyska, cil) {
+  const nul = hod.nulovaApi !== null ? hod.nulovaApi : J.nulovaIzoterma(hod, vyska);
+  const tc = J.teplotaVeVysce(hod, vyska, cil), vc = J.vitrVeVysce(hod, vyska, cil);
+  return { nul, tc, vc, pocit: J.pocitovaTeplota(tc, vc.ws), term: J.termika(hod, vyska), vrstva: J.vrstvaOblaku(hod, vyska),
+    bourky: J.rizikoBourek(hod.cape) };
+}
+let cacheOdv = null;
+function vsechnyOdvozene() {
+  const cil = vyskaCile();
+  if (!cacheOdv || cacheOdv.cil !== cil || cacheOdv.data !== data) cacheOdv = { cil, data, h: data.hodiny.map(h => odvozene(h, data.vyska, cil)) };
+  return cacheOdv.h;
+}
+
+/* ---------- souhrn vybrané hodiny ---------- */
+function vykresliHodinu() {
+  const hod = data.hodiny[vyber], o = vsechnyOdvozene()[vyber], cil = vyskaCile();
+  $('titulHodina').textContent = popisCasu(hod.cas);
+  const dl = (hodnota, popis, pozn, trida) => `<div class="dlazdice ${trida || ''}"><span>${popis}</span><b>${hodnota}</b>${pozn ? `<small>${pozn}</small>` : ''}</div>`;
+  const vitrTr = o.vc.ws > 35 ? 'zle' : o.vc.ws > 22 ? 'pozor' : '';
+  const narTr = hod.naraz > 50 ? 'zle' : hod.naraz > 35 ? 'pozor' : '';
+  const t = o.term;
+  const dlazdice = [
+    dl(`${f1(hod.t2)} °C`, `Teplota (${f0(data.vyska)} m)`, `rosný bod ${f1(hod.td2)} °C`),
+    dl(`${f1(o.tc)} °C`, `Teplota v cíli (${f0(cil)} m)`, `pocitově ${f1(o.pocit)} °C`, o.pocit !== null && o.pocit < -15 ? 'zle' : ''),
+    dl(`${f0(o.vc.ws)} km/h`, `Vítr v cíli`, `z ${J.smerText(o.vc.wd)} (${f0(o.vc.wd)}°)`, vitrTr),
+    dl(`${f0(hod.naraz)} km/h`, 'Nárazy (10 m)', `průměr ${f0(hod.vitr)} km/h z ${J.smerText(hod.smer)}`, narTr),
+    dl(o.nul === null ? 'u země' : `${f0(o.nul)} m`, 'Nulová izoterma', o.nul !== null && o.nul < cil ? 'cíl je v mrazu' : ''),
+    dl(t.zakladna === null ? '–' : `${f0(t.zakladna)} m`, 'Základna kumulů', o.vrstva !== null ? `vrstva/mlha od ${f0(o.vrstva)} m` : 'bez nasycené vrstvy', o.vrstva !== null && o.vrstva <= cil ? 'pozor' : ''),
+    dl(t.hodnoceni === 'žádná' ? 'žádná' : `${f1(t.wstar)} m/s`, 'Termika (w*)', t.hloubka >= 300 ? `strop ${f0(t.strop)} m${t.kumuly ? ', kumuly' : ', bezoblačná'}` : '', t.wstar >= 2 ? 'dobre' : ''),
+    dl(o.bourky.text, 'Riziko bouřek', `CAPE ${f0(hod.cape)} J/kg`, o.bourky.stupen >= 3 ? 'zle' : o.bourky.stupen === 2 ? 'pozor' : ''),
+    dl(`${f0(hod.nizka)}/${f0(hod.stredni)}/${f0(hod.vysoka)} %`, 'Oblačnost N/S/V', `celkem ${f0(hod.obl)} %`),
+    dl(`${f1(hod.srazky)} mm`, 'Srážky za hodinu', hod.snih > 0 ? `sníh ${f1(hod.snih)} cm` : ''),
+    dl(hod.vid === null ? '–' : hod.vid >= 10000 ? `${f0(hod.vid / 1000)} km` : `${f1(hod.vid / 1000)} km`, 'Viditelnost', '', hod.vid !== null && hod.vid < 1500 ? 'zle' : hod.vid !== null && hod.vid < 5000 ? 'pozor' : '')
+  ];
+  $('dlazdice').innerHTML = dlazdice.join('');
+  // stručné upozornění
+  const v = [];
+  if (o.bourky.stupen >= 3) v.push('⛈️ Vysoké riziko bouřek – na hřebenech a ve vzduchu nebezpečné.');
+  else if (o.bourky.stupen === 2 && hod.srazky > 0) v.push('🌩️ Labilní vzduch se srážkami – možné přeháňky a bouřky.');
+  if (o.vc.ws > 35 || hod.naraz > 50) v.push('💨 Silný vítr – pro paragliding nevhodné, na hřebenech nepříjemné až nebezpečné.');
+  else if (o.vc.ws > 22 || hod.naraz > 35) v.push('🌬️ Čerstvý vítr / nárazy – pro paragliding na hraně, jen zkušení.');
+  if (o.vrstva !== null && o.vrstva <= cil) v.push('🌫️ Cíl je pravděpodobně v oblacích nebo v mlze.');
+  else if (t.kumuly && t.zakladna < cil + 300 && t.hloubka > 0) v.push('☁️ Základna kumulů těsně nad cílem.');
+  if (o.pocit !== null && o.pocit < -15) v.push('🥶 Pocitová teplota v cíli pod −15 °C – riziko omrzlin.');
+  if (o.nul !== null && o.nul < cil && hod.srazky > 0) v.push('❄️ Srážky nad nulovou izotermou – v cíli sněží nebo námraza.');
+  if (t.wstar >= 1.2 && o.vc.ws <= 22 && o.bourky.stupen < 3) v.push(`🪂 Použitelná termika do ${f0(t.strop)} m n. m. (stoupání kluzáku zhruba ${f1(Math.max(0, t.wstar - 1))} m/s).`);
+  const g = J.gradientMezi(hod.t2, data.vyska, o.tc, cil);
+  if (cil - data.vyska > 200 && g !== null && g < 0) v.push(`🔁 Inverze: v cíli je tepleji než u země (${f1(-g)} °C/100 m).`);
+  $('verdikt').innerHTML = v.map(x => `<li>${x}</li>`).join('') || '<li>Bez výrazných rizik v této hodině.</li>';
+  $('panelHodina').hidden = false;
+}
+
+/* ---------- barvy z motivu ---------- */
+function barvy() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim() || '#888';
+  const tmave = document.documentElement.dataset.theme !== 'light'; // theme.js: tmavé je výchozí
+  return { text: g('--text'), slabe: g('--text-muted'), mrizka: g('--border'), bg: g('--bg'), panel: g('--bg-panel'), akcent: g('--accent'),
+    ok: g('--ok'), warn: g('--warn'), danger: g('--danger'),
+    teplota: '#e0533d', cilT: '#f0902a', rosny: '#2fa36b', pocit: '#9b59d0', nulova: '#3d8fe0', zaklad: '#8a8f98', termika: '#f0a020',
+    dest: '#3d8fe0', snih: tmave ? '#d8e6ff' : '#9fb8e8', vitrTridy: ['rgba(120,180,255,.10)', 'rgba(80,190,120,.28)', 'rgba(230,200,40,.36)', 'rgba(240,130,40,.45)', 'rgba(220,50,50,.55)'] };
+}
+
+/* ---------- praporek větru ---------- */
+function praporek(ctx, x, y, kmh, smer, delka, barva) {
+  ctx.save(); ctx.strokeStyle = barva; ctx.fillStyle = barva; ctx.lineWidth = 1.3;
+  let kt = Math.round(kmh / 1.852 / 5) * 5;
+  if (kt < 5) { ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.stroke(); ctx.restore(); return; }
+  ctx.translate(x, y); ctx.rotate(smer * Math.PI / 180);
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -delka); ctx.stroke();
+  let p = -delka; const s = delka * 0.42;
+  while (kt >= 50) { ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(s, p + 2.5); ctx.lineTo(0, p + 5); ctx.fill(); p += 6; kt -= 50; }
+  while (kt >= 10) { ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(s, p - 3); ctx.stroke(); p += 3.5; kt -= 10; }
+  if (kt >= 5) { if (p === -delka) p += 3.5; ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(s / 2, p - 1.5); ctx.stroke(); }
+  ctx.restore();
+}
+
+/* ---------- meteogram ---------- */
+const POPISKY_SIRKA = 84;
+function rozvrh() {
+  const vys = { vitrHl: 14 + hladinyNadTerenem().length * 22, obl: 54, vysky: 130, teplota: 120, srazky: 80, vitr: 90, termika: 56, vid: 22, cmpT: 110, cmpV: 70, cmpG: 26 };
+  const r = [{ id: 'cas', v: 34 }];
+  for (const x of RADKY) if (!stav.skryte.includes(x.id)) r.push({ id: x.id, v: vys[x.id] });
+  if (dataB) r.push({ id: 'cmpT', v: vys.cmpT }, { id: 'cmpG', v: vys.cmpG }, { id: 'cmpV', v: vys.cmpV });
+  let y = 0; for (const x of r) { x.y = y; y += x.v + (x.id === 'cas' ? 0 : 8); }
+  return { r, vyska: y };
+}
+function pripravPlatno(c, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.width = w + 'px'; c.style.height = h + 'px';
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  return ctx;
+}
+let sirkaHod = 22;
+/* hladiny, které aspoň v jedné hodině leží nad terénem (od nejvyšší) */
+function hladinyNadTerenem() {
+  return J.HLADINY.filter(p => data.hodiny.some(h => h.hladiny.some(l => l.p === p && l.z > data.vyska - 20 && !(h.tlak && p > h.tlak)))).reverse();
+}
+function vykresliMeteogram() {
+  const H = data.hodiny, n = H.length, O = vsechnyOdvozene(), B = barvy(), cil = vyskaCile();
+  sirkaHod = n > 100 ? 20 : 26;
+  const W = n * sirkaHod, { r, vyska } = rozvrh();
+  const ctx = pripravPlatno($('platno'), W, vyska), lp = pripravPlatno($('popisky'), POPISKY_SIRKA, vyska);
+  const x = i => i * sirkaHod + sirkaHod / 2;
+  ctx.font = '11px system-ui,sans-serif'; lp.font = '11px system-ui,sans-serif';
+  const rozsah = (vals, minR) => { const v = vals.filter(a => a !== null && isFinite(a)); let lo = Math.min(...v), hi = Math.max(...v); if (!v.length) { lo = 0; hi = 1; } if (hi - lo < minR) { const s = (hi + lo) / 2; lo = s - minR / 2; hi = s + minR / 2; } return [lo, hi]; };
+  const cara = (y0, h, lo, hi, f, barva, carky, sila) => {
+    ctx.save(); ctx.strokeStyle = barva; ctx.lineWidth = sila || 1.8; if (carky) ctx.setLineDash(carky);
+    ctx.beginPath(); let kresli = false;
+    for (let i = 0; i < n; i++) { const v = f(i); if (v === null || !isFinite(v)) { kresli = false; continue; } const yy = y0 + h - (v - lo) / (hi - lo) * h; if (kresli) ctx.lineTo(x(i), yy); else ctx.moveTo(x(i), yy); kresli = true; }
+    ctx.stroke(); ctx.restore();
+  };
+  const osa = (y0, h, lo, hi, krok, jednotka) => {
+    lp.fillStyle = B.slabe; lp.textAlign = 'right';
+    ctx.save(); ctx.strokeStyle = B.mrizka; ctx.lineWidth = 0.6;
+    for (let v = Math.ceil(lo / krok) * krok; v <= hi; v += krok) {
+      const yy = y0 + h - (v - lo) / (hi - lo) * h;
+      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+      if (yy > y0 + 6 && yy < y0 + h - 2) lp.fillText(f0(v) + jednotka, POPISKY_SIRKA - 4, yy + 4);
+    }
+    ctx.restore();
+  };
+  const popis = (rad, text) => { lp.fillStyle = B.text; lp.textAlign = 'left'; lp.font = '600 11px system-ui,sans-serif'; lp.fillText(text, 4, rad.y + 11); lp.font = '11px system-ui,sans-serif'; };
+
+  // noc a dny
+  ctx.fillStyle = 'rgba(128,128,160,.10)';
+  H.forEach((h, i) => { if (h.den === 0) ctx.fillRect(i * sirkaHod, 0, sirkaHod, vyska); });
+  ctx.strokeStyle = B.mrizka; ctx.lineWidth = 1;
+  H.forEach((h, i) => { if (h.cas.slice(11, 13) === '00' && i) { ctx.beginPath(); ctx.moveTo(i * sirkaHod, 0); ctx.lineTo(i * sirkaHod, vyska); ctx.stroke(); } });
+
+  for (const rad of r) {
+    const y0 = rad.y, h = rad.v;
+    if (rad.id === 'cas') {
+      ctx.fillStyle = B.text; ctx.textAlign = 'left';
+      H.forEach((hh, i) => {
+        const hodina = +hh.cas.slice(11, 13);
+        if (hodina === 0 || i === 0) { ctx.font = '600 11px system-ui,sans-serif'; ctx.fillText(popisCasu(hh.cas).slice(0, -6), i * sirkaHod + 3, 12); ctx.font = '11px system-ui,sans-serif'; }
+        if (hodina % 3 === 0) { ctx.fillStyle = B.slabe; ctx.textAlign = 'center'; ctx.fillText(hodina, x(i), 28); ctx.textAlign = 'left'; ctx.fillStyle = B.text; }
+      });
+      lp.fillStyle = B.slabe; lp.fillText('čas (místní)', 4, 28);
+    } else if (rad.id === 'vitrHl') {
+      popis(rad, 'Vítr hPa · m');
+      const hl = hladinyNadTerenem(), radH = (h - 14) / hl.length;
+      hl.forEach((p, k) => {
+        const yy = y0 + 14 + k * radH;
+        const z = H[0].hladiny.find(l => l.p === p);
+        lp.fillStyle = B.slabe; lp.textAlign = 'right'; lp.fillText(`${p} · ${z ? f0(z.z) : '–'}`, POPISKY_SIRKA - 4, yy + radH / 2 + 4);
+        H.forEach((hh, i) => {
+          const l = hh.hladiny.find(a => a.p === p);
+          if (!l || l.ws === null) return;
+          const podTerenem = l.z < data.vyska - 20 || (hh.tlak && p > hh.tlak);
+          ctx.fillStyle = podTerenem ? 'rgba(128,128,128,.25)' : B.vitrTridy[J.tridaVetru(l.ws)];
+          ctx.fillRect(i * sirkaHod + 0.5, yy + 0.5, sirkaHod - 1, radH - 1);
+          if (!podTerenem && (sirkaHod >= 24 || i % 2 === 0)) praporek(ctx, x(i), yy + radH / 2, l.ws, l.wd, radH * 0.5, B.text);
+        });
+      });
+      // výška cíle jako čára (přibližně podle hladin první hodiny)
+      const zs = hl.map((p, k) => ({ k, z: (H[0].hladiny.find(l => l.p === p) || {}).z })).filter(a => a.z != null).reverse();
+      for (let k = 1; k < zs.length; k++) if (cil >= zs[k - 1].z && cil <= zs[k].z) {
+        const t = (cil - zs[k - 1].z) / (zs[k].z - zs[k - 1].z), yy = y0 + 14 + ((zs[k - 1].k + 0.5) + t * (zs[k].k - zs[k - 1].k)) * radH;
+        ctx.save(); ctx.strokeStyle = B.akcent; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke(); ctx.restore();
+      }
+    } else if (rad.id === 'obl') {
+      popis(rad, 'Oblačnost');
+      const vrstvy = [['vysoka', 'vysoká'], ['stredni', 'střední'], ['nizka', 'nízká']], vh = (h - 12) / 3;
+      vrstvy.forEach(([k, nazev], j) => {
+        const yy = y0 + 12 + j * vh;
+        lp.fillStyle = B.slabe; lp.textAlign = 'right'; lp.fillText(nazev, POPISKY_SIRKA - 4, yy + vh / 2 + 4);
+        H.forEach((hh, i) => { const v = hh[k]; if (!v) return; ctx.fillStyle = `rgba(140,150,165,${(v / 100 * 0.85).toFixed(3)})`; ctx.fillRect(i * sirkaHod, yy + 1, sirkaHod, vh - 2); });
+      });
+    } else if (rad.id === 'vysky') {
+      popis(rad, 'Výšky (m)');
+      const vals = [data.vyska, cil]; O.forEach((o, i) => { vals.push(o.nul, o.term.hloubka > 0 ? o.term.strop : null, Math.min(o.term.zakladna ?? 0, 6000)); });
+      let [lo, hi] = rozsah(vals, 1000); lo = Math.max(0, Math.floor(Math.min(lo, data.vyska) / 500) * 500); hi = Math.min(Math.ceil(hi / 500) * 500, 7000);
+      const krok = hi - lo > 3000 ? 1000 : 500;
+      osa(y0, h, lo, hi, krok, '');
+      const yz = v => y0 + h - (v - lo) / (hi - lo) * h;
+      ctx.fillStyle = 'rgba(240,160,32,.30)';
+      O.forEach((o, i) => { if (o.term.hloubka >= 300 && o.term.wstar >= 0.6) { const a = yz(Math.min(o.term.strop, hi)); ctx.fillRect(i * sirkaHod, a, sirkaHod, yz(data.vyska) - a); } });
+      ctx.fillStyle = 'rgba(128,128,128,.35)'; ctx.fillRect(0, yz(data.vyska), W, y0 + h - yz(data.vyska));
+      ctx.save(); ctx.strokeStyle = B.akcent; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(0, yz(cil)); ctx.lineTo(W, yz(cil)); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = B.zaklad;
+      O.forEach((o, i) => { if (o.vrstva !== null && o.vrstva <= hi) ctx.fillRect(i * sirkaHod + 2, yz(o.vrstva) - 2, sirkaHod - 4, 4); });
+      cara(y0, h, lo, hi, i => (O[i].term.zakladna !== null && O[i].term.zakladna <= hi && (H[i].nizka > 10 || O[i].term.kumuly) ? O[i].term.zakladna : null), B.zaklad, [3, 3]);
+      cara(y0, h, lo, hi, i => (O[i].nul !== null ? Math.min(O[i].nul, hi) : lo), B.nulova, null, 2.2);
+    } else if (rad.id === 'teplota') {
+      popis(rad, 'Teplota °C');
+      const [lo0, hi0] = rozsah(H.flatMap((hh, i) => [hh.t2, hh.td2, O[i].tc, O[i].pocit]), 8);
+      const lo = Math.floor(lo0 - 1), hi = Math.ceil(hi0 + 1), krok = hi - lo > 30 ? 10 : 5;
+      osa(y0, h, lo, hi, krok, '°');
+      if (lo < 0 && hi > 0) { const yy = y0 + h - (0 - lo) / (hi - lo) * h; ctx.save(); ctx.strokeStyle = B.nulova; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke(); ctx.restore(); }
+      cara(y0, h, lo, hi, i => H[i].td2, B.rosny, null, 1.4);
+      cara(y0, h, lo, hi, i => O[i].pocit, B.pocit, [4, 3], 1.4);
+      if (Math.abs(cil - data.vyska) > 20) cara(y0, h, lo, hi, i => O[i].tc, B.cilT, null, 2.2);
+      cara(y0, h, lo, hi, i => H[i].t2, B.teplota, null, 2.2);
+    } else if (rad.id === 'srazky') {
+      popis(rad, 'Srážky mm');
+      const hi = Math.max(2, ...H.map(hh => hh.srazky || 0)), hb = h - 14;
+      osa(y0 + 14, hb - 14, 0, hi, hi > 8 ? 5 : hi > 4 ? 2 : 1, '');
+      H.forEach((hh, i) => {
+        if (hh.srazky > 0) {
+          const bh = hh.srazky / hi * (hb - 14), snihPodil = hh.snih > 0 ? Math.min(1, hh.snih / 0.7 / hh.srazky) : 0;
+          ctx.fillStyle = B.dest; ctx.fillRect(i * sirkaHod + 2, y0 + hb - bh, sirkaHod - 4, bh * (1 - snihPodil));
+          ctx.fillStyle = B.snih; ctx.fillRect(i * sirkaHod + 2, y0 + hb - bh * snihPodil, sirkaHod - 4, bh * snihPodil);
+        }
+        const st = J.rizikoBourek(hh.cape).stupen;
+        if (st) { ctx.fillStyle = [null, 'rgba(230,200,40,.6)', 'rgba(240,130,40,.75)', 'rgba(220,50,50,.85)', 'rgba(160,30,160,.9)'][st]; ctx.fillRect(i * sirkaHod, y0 + h - 10, sirkaHod, 10); }
+      });
+      lp.fillStyle = B.slabe; lp.textAlign = 'right'; lp.fillText('bouřky', POPISKY_SIRKA - 4, y0 + h - 1);
+    } else if (rad.id === 'vitr') {
+      popis(rad, 'Vítr km/h');
+      const hi = Math.max(30, ...H.map(hh => hh.naraz || 0), ...O.map(o => o.vc.ws || 0)) * 1.05;
+      osa(y0 + 14, h - 14, 0, hi, hi > 80 ? 20 : 10, '');
+      H.forEach((hh, i) => { if (hh.naraz > 50) { ctx.fillStyle = 'rgba(220,50,50,.15)'; ctx.fillRect(i * sirkaHod, y0 + 14, sirkaHod, h - 14); } });
+      cara(y0 + 14, h - 14, 0, hi, i => H[i].naraz, B.danger, [3, 3], 1.4);
+      cara(y0 + 14, h - 14, 0, hi, i => H[i].vitr, B.slabe, null, 1.6);
+      cara(y0 + 14, h - 14, 0, hi, i => O[i].vc.ws, B.akcent, null, 2.2);
+      H.forEach((hh, i) => { if (i % (sirkaHod >= 24 ? 2 : 3) === 0 && O[i].vc.ws !== null) praporek(ctx, x(i), y0 + 8, O[i].vc.ws, O[i].vc.wd, 9, B.akcent); });
+    } else if (rad.id === 'termika') {
+      popis(rad, 'Termika m/s');
+      const hi = Math.max(3, ...O.map(o => o.term.wstar));
+      osa(y0 + 14, h - 14, 0, hi, 1, '');
+      O.forEach((o, i) => {
+        const t = o.term; if (t.hodnoceni === 'žádná') return;
+        const bh = t.wstar / hi * (h - 14);
+        ctx.fillStyle = t.wstar >= 2 ? B.ok : t.wstar >= 1.2 ? B.termika : 'rgba(240,160,32,.45)';
+        ctx.fillRect(i * sirkaHod + 2, y0 + h - bh, sirkaHod - 4, bh);
+      });
+    } else if (rad.id === 'vid') {
+      lp.fillStyle = B.text; lp.textAlign = 'left'; lp.font = '600 11px system-ui,sans-serif'; lp.fillText('Viditelnost', 4, y0 + 15); lp.font = '11px system-ui,sans-serif';
+      H.forEach((hh, i) => {
+        if (hh.vid === null) { ctx.fillStyle = 'rgba(128,128,128,.15)'; } else if (hh.vid < 1000) ctx.fillStyle = 'rgba(220,50,50,.7)'; else if (hh.vid < 5000) ctx.fillStyle = 'rgba(240,160,32,.6)'; else if (hh.vid < 10000) ctx.fillStyle = 'rgba(230,200,40,.35)'; else return;
+        ctx.fillRect(i * sirkaHod, y0 + 3, sirkaHod, h - 6);
+      });
+    } else if (rad.id === 'cmpT' || rad.id === 'cmpV' || rad.id === 'cmpG') {
+      const mapaB = new Map(dataB.hodiny.map(hh => [hh.cas, hh]));
+      const hb = i => mapaB.get(H[i].cas) || null;
+      if (rad.id === 'cmpT') {
+        popis(rad, '⇄ Teplota');
+        const [lo0, hi0] = rozsah(H.flatMap((hh, i) => [hh.t2, hb(i) && hb(i).t2]), 8), lo = Math.floor(lo0 - 1), hi = Math.ceil(hi0 + 1);
+        osa(y0, h, lo, hi, hi - lo > 30 ? 10 : 5, '°');
+        cara(y0, h, lo, hi, i => (hb(i) ? hb(i).t2 : null), B.nulova, null, 2.2);
+        cara(y0, h, lo, hi, i => H[i].t2, B.teplota, null, 2.2);
+      } else if (rad.id === 'cmpV') {
+        popis(rad, '⇄ Nárazy');
+        const hi = Math.max(30, ...H.map(hh => hh.naraz || 0), ...dataB.hodiny.map(hh => hh.naraz || 0)) * 1.05;
+        osa(y0 + 14, h - 14, 0, hi, hi > 80 ? 20 : 10, '');
+        cara(y0 + 14, h - 14, 0, hi, i => (hb(i) ? hb(i).naraz : null), B.nulova, null, 1.8);
+        cara(y0 + 14, h - 14, 0, hi, i => H[i].naraz, B.teplota, null, 1.8);
+      } else {
+        popis(rad, '⇄ Inverze');
+        H.forEach((hh, i) => {
+          const b = hb(i); if (!b) return;
+          let g = J.gradientMezi(hh.t2, data.vyska, b.t2, dataB.vyska);
+          if (g === null) return;
+          if (data.vyska > dataB.vyska) g = J.gradientMezi(b.t2, dataB.vyska, hh.t2, data.vyska);
+          ctx.fillStyle = g < 0 ? 'rgba(220,50,50,.7)' : g < 0.3 ? 'rgba(240,160,32,.55)' : g > 0.9 ? 'rgba(80,160,230,.45)' : 'rgba(80,190,120,.30)';
+          ctx.fillRect(i * sirkaHod, y0 + 14, sirkaHod, h - 14);
+        });
+      }
+    }
+  }
+  // vybraná hodina
+  ctx.save(); ctx.fillStyle = B.akcent; ctx.globalAlpha = 0.18; ctx.fillRect(vyber * sirkaHod, 0, sirkaHod, vyska); ctx.restore();
+  ctx.save(); ctx.strokeStyle = B.akcent; ctx.lineWidth = 1.5; ctx.strokeRect(vyber * sirkaHod + 0.75, 0.75, sirkaHod - 1.5, vyska - 1.5); ctx.restore();
+
+  const L = (b, t, c) => `<span><i style="background:${b}${c ? ';border-top:2px dashed ' + b + ';height:0' : ''}"></i>${t}</span>`;
+  const leg = [L(B.teplota, `teplota ${f0(data.vyska)} m`), L(B.cilT, `teplota v cíli ${f0(cil)} m`), L(B.rosny, 'rosný bod'), L(B.pocit, 'pocitová v cíli', 1),
+    L(B.nulova, 'nulová izoterma'), L(B.zaklad, 'základna kumulů / ▬ vrstva', 1), L('rgba(240,160,32,.6)', 'strop termiky'), L(B.akcent, 'výška cíle / vítr v cíli'),
+    L(B.danger, 'nárazy', 1), L(B.dest, 'déšť'), L(B.snih, 'sníh')];
+  if (dataB) leg.push(L(B.teplota, `⇄ ${esc(stav.misto.nazev)}`), L(B.nulova, `⇄ ${esc(stav.b.nazev)}`), L('rgba(220,50,50,.7)', 'inverze'), L('rgba(240,160,32,.55)', 'izotermie / stabilní'));
+  $('legenda').innerHTML = leg.join('');
+  $('panelGraf').hidden = false;
+}
+
+/* ---------- emagram ---------- */
+function vykresliEmagram() {
+  const c = $('emagram'), sirka = c.clientWidth || 500, vyska = Math.round(sirka * 1.05);
+  const ctx = pripravPlatno(c, sirka, vyska), B = barvy(), hod = data.hodiny[vyber];
+  c.style.width = ''; c.style.height = ''; // velikost řídí CSS (šířka 100 %, poměr stran)
+  const sd = J.sondaz(hod, data.vyska);
+  const PMAX = 1050, PMIN = 450, okraj = { l: 38, r: 46, t: 10, b: 24 };
+  const w = sirka - okraj.l - okraj.r, h = vyska - okraj.t - okraj.b;
+  const yP = p => okraj.t + h - (Math.log(PMAX) - Math.log(p)) / (Math.log(PMAX) - Math.log(PMIN)) * h; // nahoře nízký tlak
+  const TMIN = -50, TMAX = 35, SKOS = 0.6;
+  const xT = (t, p) => okraj.l + (t - TMIN) / (TMAX - TMIN) * w + (okraj.t + h - yP(p)) * SKOS;
+  ctx.save(); ctx.beginPath(); ctx.rect(okraj.l, okraj.t, w, h); ctx.clip();
+  const krivka = (body, barva, carky, sila) => { ctx.save(); ctx.strokeStyle = barva; ctx.lineWidth = sila; if (carky) ctx.setLineDash(carky); ctx.beginPath(); body.forEach((b, i) => { const X = xT(b.t, b.p), Y = yP(b.p); if (i) ctx.lineTo(X, Y); else ctx.moveTo(X, Y); }); ctx.stroke(); ctx.restore(); };
+  // izotermy
+  for (let t = -100; t <= 40; t += 10) krivka([{ t, p: PMAX }, { t, p: PMIN }], t === 0 ? B.nulova : B.mrizka, null, t === 0 ? 1.2 : 0.7);
+  // suché adiabaty
+  for (let th = -30; th <= 90; th += 10) { const b = []; for (let p = PMAX; p >= PMIN; p -= 25) b.push({ p, t: J.sucha(th, 1000, p) }); krivka(b, B.mrizka, [6, 4], 0.7); }
+  // nasycené adiabaty
+  for (let t0 = -10; t0 <= 30; t0 += 5) { const b = []; let t = J.vlhka(t0, 1000, PMAX), pp = PMAX; for (let p = PMAX; p >= PMIN; p -= 25) { t = J.vlhka(t, pp, p); pp = p; b.push({ p, t }); } krivka(b, B.slabe, [1, 3], 0.8); }
+  // výška cíle
+  const cil = vyskaCile();
+  const pCil = (() => { for (let i = 1; i < sd.length; i++) if (cil >= sd[i - 1].z && cil <= sd[i].z) { const k = (cil - sd[i - 1].z) / (sd[i].z - sd[i - 1].z); return Math.exp(Math.log(sd[i - 1].p) + k * (Math.log(sd[i].p) - Math.log(sd[i - 1].p))); } return null; })();
+  if (pCil) { ctx.save(); ctx.strokeStyle = B.akcent; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(okraj.l, yP(pCil)); ctx.lineTo(okraj.l + w, yP(pCil)); ctx.stroke(); ctx.restore(); }
+  // částice, rosný bod, teplota
+  if (hod.td2 !== null) {
+    const kc = J.krivkaCastice(hod.t2, hod.td2, sd[0].p, PMIN);
+    krivka(kc.body, B.text, [5, 3], 1.4);
+    if (kc.lcl.p > PMIN) { ctx.fillStyle = B.text; ctx.font = '11px system-ui,sans-serif'; ctx.fillText('kondenzace', xT(kc.lcl.t, kc.lcl.p) + 6, yP(kc.lcl.p) + 4); ctx.beginPath(); ctx.arc(xT(kc.lcl.t, kc.lcl.p), yP(kc.lcl.p), 3, 0, 7); ctx.fill(); }
+  }
+  krivka(sd.filter(b => b.td !== null).map(b => ({ p: b.p, t: b.td })), B.rosny, null, 2.4);
+  krivka(sd, B.teplota, null, 2.6);
+  ctx.restore();
+  // osy
+  ctx.font = '11px system-ui,sans-serif'; ctx.fillStyle = B.slabe; ctx.strokeStyle = B.mrizka; ctx.lineWidth = 0.7;
+  for (const p of [1000, 950, 900, 850, 800, 700, 600, 500]) {
+    if (p > PMAX) continue;
+    const Y = yP(p); ctx.beginPath(); ctx.moveTo(okraj.l, Y); ctx.lineTo(okraj.l + w, Y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.fillText(p, okraj.l - 4, Y + 4);
+    const l = hod.hladiny.find(a => a.p === p);
+    if (l) { ctx.textAlign = 'left'; ctx.fillText(f0(l.z) + ' m', okraj.l + 3, Y - 3); }
+  }
+  ctx.textAlign = 'center';
+  for (let t = -50; t <= 40; t += 10) { const X = xT(t, PMAX); if (X >= okraj.l && X <= okraj.l + w) ctx.fillText(t + '°', X, vyska - 8); }
+  ctx.strokeStyle = B.border || B.mrizka; ctx.strokeRect(okraj.l, okraj.t, w, h);
+  // praporky vpravo
+  for (const b of sd) if (b.ws !== null && b.wd !== null && b.p >= PMIN) praporek(ctx, okraj.l + w + 24, yP(b.p), b.ws, b.wd, 18, B.text);
+  // tabulka
+  const o = vsechnyOdvozene()[vyber];
+  $('titulEmagram').textContent = `Emagram – ${popisCasu(hod.cas)}`;
+  let radky = sd.map(b => `<tr><td>${b.zem ? 'u země' : b.p + ' hPa'}</td><td>${f0(b.z)}</td><td>${f1(b.t)}</td><td>${f1(b.td)}</td><td>${b.td !== null ? f0(J.vlhkost(b.t, b.td)) : '–'}</td><td>${f0(b.ws)}</td><td>${J.smerText(b.wd)}</td></tr>`);
+  const cilRadek = `<tr class="cil"><td>cíl</td><td>${f0(cil)}</td><td>${f1(o.tc)}</td><td>–</td><td>–</td><td>${f0(o.vc.ws)}</td><td>${J.smerText(o.vc.wd)}</td></tr>`;
+  const idx = sd.findIndex(b => b.z > cil);
+  if (idx < 0) radky.push(cilRadek); else radky.splice(idx, 0, cilRadek);
+  $('tabSondaz').innerHTML = '<thead><tr><th>Hladina</th><th>m n. m.</th><th>T °C</th><th>Td °C</th><th>RH %</th><th>km/h</th><th>směr</th></tr></thead><tbody>' + radky.join('') + '</tbody>';
+  $('panelEmagram').hidden = false;
+}
+
+/* ---------- porovnání ---------- */
+function vykresliPorovnani() {
+  if (!dataB) { $('panelPorovnani').hidden = true; return; }
+  const par = J.sparuj(data, dataB);
+  const [dole, nahore] = data.vyska <= dataB.vyska ? [['a', data], ['b', dataB]] : [['b', dataB], ['a', data]];
+  const jmeno = k => (k === 'a' ? stav.misto.nazev : stav.b.nazev);
+  const g = par.map(x => J.gradientMezi(x[dole[0]].t2, dole[1].vyska, x[nahore[0]].t2, nahore[1].vyska)).filter(v => v !== null);
+  const inv = g.filter(v => v < 0).length;
+  const hod = par.find(x => x.cas === data.hodiny[vyber].cas);
+  $('titulPorovnani').textContent = `Porovnání: ${stav.misto.nazev} (${f0(data.vyska)} m) × ${stav.b.nazev} (${f0(dataB.vyska)} m)`;
+  const radky = [];
+  if (Math.abs(data.vyska - dataB.vyska) < 100) radky.push('<li>Místa mají podobnou výšku – gradient ani inverzi nelze spolehlivě určit.</li>');
+  else {
+    radky.push(`<li>Průměrný gradient ${jmeno(dole[0])} → ${jmeno(nahore[0])}: <b>${f1(g.reduce((s, v) => s + v, 0) / (g.length || 1))} °C/100 m</b> (standardní atmosféra 0,65).</li>`);
+    radky.push(`<li>Hodin s inverzí (nahoře tepleji): <b>${inv}</b> z ${g.length}.</li>`);
+  }
+  if (hod) radky.push(`<li>Vybraná hodina: ${esc(jmeno('a'))} ${f1(hod.a.t2)} °C, nárazy ${f0(hod.a.naraz)} km/h, nízká oblačnost ${f0(hod.a.nizka)} % · ${esc(jmeno('b'))} ${f1(hod.b.t2)} °C, nárazy ${f0(hod.b.naraz)} km/h, nízká oblačnost ${f0(hod.b.nizka)} %.</li>`);
+  radky.push('<li class="tip">Řádky „⇄“ v meteogramu: červeně první místo, modře druhé. Pás inverze: červená = nahoře tepleji, oranžová = téměř izotermie (stabilní, smog, mlha v údolí), modrá = labilní (&gt; 0,9 °C/100 m).</li>');
+  $('porovnaniSouhrn').innerHTML = '<ul>' + radky.join('') + '</ul>';
+  $('panelPorovnani').hidden = false;
+}
+
+function vykresliVse() {
+  if (!data) return;
+  ukazHlavicku();
+  vykresliHodinu(); vykresliMeteogram(); vykresliPorovnani(); vykresliEmagram();
+}
+function vyberHodinu(i, posun) {
+  if (!data) return;
+  vyber = Math.max(0, Math.min(data.hodiny.length - 1, i));
+  vykresliHodinu(); vykresliMeteogram(); vykresliPorovnani(); vykresliEmagram();
+  if (posun) { const s = $('svitek'), xx = vyber * sirkaHod; if (xx < s.scrollLeft || xx > s.scrollLeft + s.clientWidth - sirkaHod) s.scrollLeft = xx - s.clientWidth / 3; }
+}
+
+/* ---------- místa ---------- */
+function nastavMisto(m, cil) {
+  stav.misto = { nazev: m.nazev, lat: +m.lat, lon: +m.lon };
+  stav.cil = cil ?? null; $('cil').value = stav.cil ?? '';
+  ulozStav(); nactiVse();
+}
+function nastavB(m) { stav.b = { nazev: m.nazev, lat: +m.lat, lon: +m.lon }; ulozStav(); nactiVse(); }
+
+function obnovOblibene() {
+  const pol = (m, i, prikaz) => `<div class="rad"><button class="tl" data-prikaz="${prikaz}" data-i="${i}">⭐ ${esc(m.nazev)}${m.vyska != null ? ` <small>(cíl ${f0(m.vyska)} m)</small>` : ''}</button>${prikaz === 'oblibene' ? `<button class="tl" data-prikaz="smazOblibene" data-i="${i}" aria-label="Odebrat ${esc(m.nazev)}">🗑️</button>` : ''}</div>`;
+  $('seznamOblibenych').innerHTML = oblibene.map((m, i) => pol(m, i, 'oblibene')).join('') || '<div class="pozn">Zatím žádná – uložte místo hvězdičkou.</div>';
+  $('porovnaniOblibena').innerHTML = oblibene.length ? '<hr><div class="pozn">Z oblíbených</div>' + oblibene.map((m, i) => pol(m, i, 'porovnatOblibene')).join('') : '';
+}
+
+async function hledej(dotaz, proB) {
+  dotaz = dotaz.trim(); if (!dotaz) return;
+  const souradnice = dotaz.match(/^(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)$/);
+  if (souradnice) {
+    const lat = +souradnice[1].replace(',', '.'), lon = +souradnice[2].replace(',', '.');
+    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) { const m = { nazev: `${lat.toFixed(4)}, ${lon.toFixed(4)}`, lat, lon }; return proB ? nastavB(m) : nastavMisto(m); }
+  }
+  let vysl;
+  try {
+    const odp = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&accept-language=cs&q=' + encodeURIComponent(dotaz));
+    if (!odp.ok) throw new Error('Nominatim ' + odp.status);
+    vysl = await odp.json();
+  } catch (e) { return Dialog.chyba('Hledání se nepovedlo (' + e.message + '). Zkuste mapu nebo souřadnice.'); }
+  if (!vysl.length) return Dialog.info('Nic nenalezeno.');
+  const n = $('nabVysledky');
+  n.innerHTML = '<div class="pozn">' + (proB ? 'Druhé místo pro porovnání' : 'Výsledky hledání') + '</div>' + vysl.map((r, i) => `<button class="tl" data-prikaz="vysledek" data-i="${i}" data-b="${proB ? 1 : ''}">📍 ${esc(r.display_name)}</button>`).join('');
+  n._vysl = vysl;
+  zavriNabidky(); n.hidden = false;
+  const r = $('hledat').getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px'; n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}
+const kratkeJmeno = r => (r.name || r.display_name.split(',')[0]).slice(0, 60);
+
+/* ---------- mapa ---------- */
+let mapa = null, znacka = null, mapaCil = 'a', mapaBod = null;
+function otevriMapu(cil) {
+  mapaCil = cil; mapaBod = null; $('mapaPouzit').disabled = true; $('mapaInfo').textContent = 'Klikněte do mapy.';
+  $('dlgMapaTitul').textContent = cil === 'b' ? 'Druhé místo pro porovnání' : 'Vyberte místo na mapě';
+  $('dlgMapa').showModal();
+  const m = cil === 'b' && stav.b ? stav.b : stav.misto;
+  if (!mapa) {
+    mapa = L.map('mapa').setView([m.lat, m.lon], 11);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17,
+      attribution: 'Mapa © <a href="https://opentopomap.org/" target="_blank" rel="noopener">OpenTopoMap</a> (CC BY-SA), data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' }).addTo(mapa);
+    mapa.on('click', e => {
+      mapaBod = e.latlng;
+      if (znacka) znacka.setLatLng(e.latlng); else znacka = L.circleMarker(e.latlng, { radius: 8, color: '#e0533d', weight: 3 }).addTo(mapa);
+      $('mapaInfo').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+      $('mapaPouzit').disabled = false;
+    });
+  } else mapa.setView([m.lat, m.lon], mapa.getZoom());
+  setTimeout(() => mapa.invalidateSize(), 50);
+}
+$('mapaPouzit').addEventListener('click', async () => {
+  if (!mapaBod) return;
+  $('dlgMapa').close();
+  const lat = +mapaBod.lat.toFixed(4), lon = +L.Util.wrapNum(mapaBod.lng, [-180, 180]).toFixed(4);
+  let nazev = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+  try {
+    const odp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=cs&lat=${lat}&lon=${lon}`);
+    const r = await odp.json(); if (r && r.display_name) nazev = kratkeJmeno(r);
+  } catch (e) { /* název zůstane jako souřadnice */ }
+  const m = { nazev, lat, lon };
+  if (mapaCil === 'b') nastavB(m); else nastavMisto(m);
+});
+
+/* ---------- nabídky a příkazy ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+function otevriNabidku(b, id) {
+  const n = $(id), bylo = !n.hidden;
+  zavriNabidky(); if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); otevriNabidku(b, b.dataset.nabidka); }));
+
+const PRIKAZY = {
+  mapa: p => otevriMapu(p.dataset.cil),
+  poloha: () => {
+    if (!navigator.geolocation) return Dialog.chyba('Prohlížeč neumí zjistit polohu.');
+    navigator.geolocation.getCurrentPosition(
+      pos => nastavMisto({ nazev: 'Moje poloha', lat: +pos.coords.latitude.toFixed(4), lon: +pos.coords.longitude.toFixed(4) }),
+      err => Dialog.chyba('Polohu se nepodařilo zjistit: ' + err.message), { timeout: 15000 });
+  },
+  pridatOblibene: async () => {
+    const nazev = await Dialog.zeptej('Název oblíbeného místa', stav.misto.nazev);
+    if (!nazev) return;
+    oblibene = J.pridejOblibene(oblibene, { nazev, lat: stav.misto.lat, lon: stav.misto.lon, vyska: stav.cil === null || stav.cil === '' ? null : +stav.cil });
+    ulozOblibene(); obnovOblibene(); Dialog.info('Uloženo do oblíbených.');
+  },
+  oblibene: p => { const m = oblibene[+p.dataset.i]; if (m) nastavMisto(m, m.vyska); },
+  smazOblibene: async p => {
+    const m = oblibene[+p.dataset.i]; if (!m) return;
+    if (!await Dialog.potvrd(`Odebrat „${m.nazev}“ z oblíbených?`)) return;
+    oblibene.splice(+p.dataset.i, 1); ulozOblibene(); obnovOblibene();
+  },
+  porovnani: p => otevriNabidku(p, 'nabPorovnani'),
+  porovnaniHledat: async () => { const d = await Dialog.zeptej('Druhé místo (název nebo souřadnice)', ''); if (d) hledej(d, true); },
+  porovnatOblibene: p => { const m = oblibene[+p.dataset.i]; if (m) nastavB(m); },
+  porovnaniVypnout: () => { stav.b = null; dataB = null; ulozStav(); vykresliVse(); },
+  vysledek: p => { const r = $('nabVysledky')._vysl[+p.dataset.i]; if (!r) return; const m = { nazev: kratkeJmeno(r), lat: +r.lat, lon: +r.lon }; if (p.dataset.b) nastavB(m); else nastavMisto(m); },
+  radek: p => {
+    const id = p.dataset.id, i = stav.skryte.indexOf(id);
+    if (i < 0) stav.skryte.push(id); else stav.skryte.splice(i, 1);
+    p.setAttribute('aria-pressed', i < 0 ? 'false' : 'true'); p.firstChild.textContent = i < 0 ? '☐ ' : '☑ ';
+    ulozStav(); if (data) vykresliMeteogram();
+  },
+  hodina: p => { const k = +p.dataset.krok; vyberHodinu(k === 0 ? indexTed() : vyber + k, true); },
+  obnovit: () => nactiVse(),
+  napoveda: () => $('dlgNapoveda').showModal()
+};
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); const zustan = p.dataset.prikaz === 'radek' || p.dataset.prikaz === 'porovnani'; if (!zustan) zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  if (e.target.closest('[data-zavrit]')) e.target.closest('dialog').close();
+});
+$('nabZobrazit').innerHTML = RADKY.map(r => `<button class="tl" data-prikaz="radek" data-id="${r.id}" aria-pressed="${!stav.skryte.includes(r.id)}"><span>${stav.skryte.includes(r.id) ? '☐ ' : '☑ '}</span>${r.nazev}</button>`).join('');
+$('model').innerHTML = J.MODELY.map(m => `<option value="${m.id}">${m.nazev}</option>`).join('');
+$('model').value = stav.model;
+$('model').addEventListener('change', () => { stav.model = $('model').value; ulozStav(); nactiVse(); });
+$('cil').value = stav.cil ?? '';
+$('cil').addEventListener('change', () => { const v = $('cil').value.trim(); stav.cil = v === '' ? null : +v; ulozStav(); if (data) vykresliVse(); });
+$('hledat').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); hledej($('hledat').value); } });
+$('svitek').addEventListener('click', e => { const r = $('platno').getBoundingClientRect(); vyberHodinu(Math.floor((e.clientX - r.left) / sirkaHod)); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') zavriNabidky();
+  if (e.target.closest('input,select,textarea,dialog') || !data) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); vyberHodinu(vyber - 1, true); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); vyberHodinu(vyber + 1, true); }
+});
+let casovac = null;
+addEventListener('resize', () => { zavriNabidky(); clearTimeout(casovac); casovac = setTimeout(() => data && vykresliEmagram(), 150); });
+new MutationObserver(() => data && vykresliVse()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+addEventListener('storage', e => { if (e.key === KLIC_OBLIBENE) { oblibene = nacti(KLIC_OBLIBENE, []); obnovOblibene(); } });
+
+obnovOblibene();
+nactiVse();
+window.METEOGRAM_APP = { data: () => data, dataB: () => dataB, vyberHodinu, nastavB, nastavMisto, stav };
+})();
+</script>
+</body>
+</html>

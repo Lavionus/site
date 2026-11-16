@@ -117,6 +117,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     });
   };
 
+  /** Rozmístí tělesa podél osy: mezera = null → stejné mezery mezi krajními (ty se nehnou, aspoň 3 tělesa),
+      jinak za sebou s danou mezerou od prvního (podle polohy v ose). Zamčená tělesa se nehýbou ani nepočítají. */
+  M.rozmistiUzly = function (dok, ids, osa, mezera = null) {
+    const p = zamcene(dok, ids).map(u => ({ u, o: M.obalkaUzlu(u) })).sort((a, b) => (a.o.min[osa] + a.o.max[osa]) - (b.o.min[osa] + b.o.max[osa]));
+    if (p.length < (mezera == null ? 3 : 2)) return dok;
+    const del = q => q.o.max[osa] - q.o.min[osa];
+    const m = mezera != null ? mezera
+      : (p[p.length - 1].o.max[osa] - p[0].o.min[osa] - p.reduce((s, q) => s + del(q), 0)) / (p.length - 1);
+    const cile = new Map();
+    let x = p[0].o.min[osa];
+    for (const q of p) { cile.set(q.u.id, x - q.o.min[osa]); x += del(q) + m; }
+    return M.upravUzly(dok, p.map(q => q.u.id), u => {
+      const poloha = u.poloha.slice(); poloha[osa] = bezSumu(poloha[osa] + cile.get(u.id));
+      return { poloha };
+    });
+  };
+
+  /** Výběr jako celek na střed desky (XY = 0) a spodkem na desku; vzájemná poloha těles zůstane. */
+  M.naStredDesky = function (dok, ids) {
+    const uzly = zamcene(dok, ids);
+    if (!uzly.length) return dok;
+    const ob = M.obalkaVice(uzly);
+    const d = [-(ob.min[0] + ob.max[0]) / 2, -(ob.min[1] + ob.max[1]) / 2, -ob.min[2]];
+    return M.upravUzly(dok, uzly.map(u => u.id), u => ({ poloha: u.poloha.map((x, i) => bezSumu(x + d[i])) }));
+  };
+
   /* Vrcholy spočítaných skupin (klíč geometrie → pozice v souřadnicích skupiny). Spodek skupiny
      se pak bere ze skutečného výsledku: díra nebo průnik může spodní část odříznout a obálka plných
      částí by ležela níž než výsledek (položení na desku by nedosedlo). */

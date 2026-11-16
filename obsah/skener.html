@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skener dokumentů</title>
+<meta name="description" content="Skenování dokumentů kamerou nebo z fotky: automatická detekce okrajů listu, srovnání perspektivy, černobílý sken, více stránek, export do PDF a JPG/PNG, OCR. Vše offline v prohlížeči.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="skener/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+[hidden]{display:none !important}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:disabled{opacity:.45;cursor:default}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.86rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+/* plocha: proužek stránek + editor */
+.plocha{flex:1;min-height:0;display:flex}
+.strany{width:150px;flex-shrink:0;overflow-y:auto;background:var(--bg-panel);border-right:1px solid var(--border);padding:8px;display:flex;flex-direction:column;gap:8px}
+.nahled{position:relative;border:2px solid var(--border);border-radius:6px;background:var(--bg-control);cursor:pointer;padding:0;display:block;width:100%;aspect-ratio:3/4;overflow:hidden;color:var(--text);font:inherit;flex-shrink:0}
+.nahled img{width:100%;height:100%;object-fit:contain;display:block}
+.nahled .cislo{position:absolute;left:4px;top:4px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:9px;font-size:.72rem;padding:0 6px}
+.nahled .ocrznak{position:absolute;right:4px;top:4px;font-size:.7rem;background:var(--bg-elevated);border-radius:9px;padding:0 5px}
+.nahled[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.nahled.cil{border-style:dashed;border-color:var(--accent)}
+.strany .pridat{aspect-ratio:3/4;border:2px dashed var(--border-strong);border-radius:6px;background:none;color:var(--text-muted);cursor:pointer;font:inherit;font-size:.82rem;flex-shrink:0}
+.strany .pridat:hover{color:var(--text);border-color:var(--accent)}
+.editor{flex:1;min-width:0;display:flex;flex-direction:column}
+.nastroje{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg-elevated);font-size:.84rem}
+.nastroje .pozn{color:var(--text-muted);font-size:.8rem}
+.nastroje label{display:flex;align-items:center;gap:4px}
+.okno{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none}
+#platno{position:absolute;inset:0;width:100%;height:100%;display:block}
+#lupa{position:absolute;width:130px;height:130px;border-radius:50%;border:2px solid var(--accent);box-shadow:var(--shadow);pointer-events:none;background:var(--bg)}
+.prace{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg-deep) 55%,transparent);font-size:.95rem}
+.prace span{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px 16px}
+.uvod{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.uvod .karta{max-width:520px;text-align:center;background:var(--bg-panel);border:2px dashed var(--border-strong);border-radius:12px;padding:24px 18px;line-height:1.55}
+.uvod .karta.tahni{border-color:var(--accent)}
+.uvod .velke{font-size:2.6rem;line-height:1}
+.uvod .tlacitka{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 8px}
+.uvod p{margin:6px 0;color:var(--text-muted);font-size:.86rem}
+@media (max-width:700px){
+  .plocha{flex-direction:column}
+  .strany{width:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--border);padding:6px}
+  .nahled,.strany .pridat{width:64px;height:86px;aspect-ratio:auto}
+}
+
+/* dialogy */
+dialog.okno-dlg{margin:auto;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:16px;width:min(560px,calc(100vw - 20px));max-height:calc(100vh - 30px)}
+dialog.okno-dlg::backdrop{background:rgba(0,0,0,.5)}
+dialog h2{margin:0 0 10px;font-size:1.1rem}
+.radek{display:grid;grid-template-columns:minmax(110px,40%) 1fr;gap:6px 10px;align-items:center;margin:8px 0;font-size:.88rem}
+.radek .vstup{width:100%}
+.dole{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:14px}
+.napoveda{line-height:1.55;font-size:.9rem}
+.napoveda li{margin:4px 0}
+#ocrText{width:100%;min-height:220px;resize:vertical;font-family:inherit;line-height:1.45}
+.pruh{height:6px;background:var(--bg-control);border-radius:3px;overflow:hidden;margin:8px 0}
+.pruh i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+/* kamera */
+#dlgKamera{padding:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;border:0;background:#000;color:#fff}
+#dlgKamera[open]{display:flex;flex-direction:column}
+.kam-obraz{position:relative;flex:1;min-height:0}
+.kam-obraz video,.kam-obraz canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.kam-lista{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 12px calc(12px + env(safe-area-inset-bottom));background:#111}
+.spoust{width:68px;height:68px;border-radius:50%;border:4px solid #fff;background:#ddd;cursor:pointer}
+.spoust:active{background:#fff;transform:scale(.95)}
+.kam-lista .btn{background:#333;color:#fff;border-color:#555}
+.kam-info{position:absolute;left:0;right:0;top:10px;text-align:center;font-size:.85rem;text-shadow:0 1px 3px #000}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>📄 Skener</h1>
+  <div class="skup" role="group" aria-label="Přidat"><span class="skup-nazev" aria-hidden="true">Přidat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="kamera" title="Vyfotit dokument kamerou">📷<span class="txt"> Kamera</span></button>
+    <button class="tl" data-prikaz="nahrat" title="Nahrát fotky dokumentů">🖼️<span class="txt"> Nahrát</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Stránka"><span class="skup-nazev" aria-hidden="true">Stránka</span><div class="skup-tl">
+    <button class="tl" data-rezim="rohy" aria-pressed="false" title="Upravit rohy listu">✂️<span class="txt"> Rohy</span></button>
+    <button class="tl" data-rezim="vysledek" aria-pressed="true" title="Zobrazit výsledek">👁️<span class="txt"> Výsledek</span></button>
+    <button class="tl" data-prikaz="vlevo" title="Otočit doleva" aria-label="Otočit doleva">⟲</button>
+    <button class="tl" data-prikaz="vpravo" title="Otočit doprava" aria-label="Otočit doprava">⟳</button>
+    <select class="tl" id="filtr" aria-label="Filtr" title="Filtr"></select>
+    <button class="tl" data-nabidka="nabStrana" aria-expanded="false" title="Přesun, kopie, smazání stránky">⋯ ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl" data-prikaz="pdf" title="Uložit všechny stránky do PDF">📕<span class="txt"> PDF</span></button>
+    <button class="tl" data-nabidka="nabVystup" aria-expanded="false" title="Obrázky, OCR, smazání">📤<span class="txt"> Další</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabStrana" class="nabidka" hidden>
+  <button class="tl" data-prikaz="drive">◀ Posunout dříve</button>
+  <button class="tl" data-prikaz="pozdeji">▶ Posunout později</button>
+  <button class="tl" data-prikaz="duplikat">⧉ Duplikovat stránku</button>
+  <hr>
+  <button class="tl" data-prikaz="smazStranu">🗑️ Smazat stránku</button>
+</div>
+<div id="nabVystup" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pdf">📕 PDF ze všech stránek…</button>
+  <button class="tl" data-prikaz="jpg">🖼️ Aktuální stránka jako JPG</button>
+  <button class="tl" data-prikaz="png">🖼️ Aktuální stránka jako PNG</button>
+  <button class="tl" data-prikaz="vseJpg">🗂️ Všechny stránky jako JPG</button>
+  <hr>
+  <button class="tl" data-prikaz="ocr">🔤 Rozpoznat text (OCR)…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechny stránky…</button>
+</div>
+<input type="file" id="soubor" accept="image/*" multiple hidden>
+<input type="file" id="fotak" accept="image/*" capture="environment" hidden>
+
+<div class="plocha">
+  <nav class="strany" id="strany" aria-label="Stránky"></nav>
+  <section class="editor">
+    <div class="nastroje" id="nastroje" hidden>
+      <span id="nastrojeRohy">
+        <button class="btn" data-prikaz="auto" title="Znovu najít okraje listu">🎯 Najít okraje</button>
+        <button class="btn" data-prikaz="cely" title="Rohy do rohů fotky">⛶ Celá fotka</button>
+        <button class="btn primary" data-rezim="vysledek">✓ Hotovo</button>
+      </span>
+      <label>Poměr <select class="vstup" id="pomer" aria-label="Poměr stran">
+        <option value="auto">podle rohů</option><option value="a4">A4 (1 : 1,41)</option><option value="letter">Letter</option>
+      </select></label>
+      <label id="citlivostObal">Citlivost <input type="range" id="citlivost" min="0.04" max="0.3" step="0.01" aria-label="Citlivost černobílého prahu"></label>
+      <span class="pozn" id="pozn"></span>
+    </div>
+    <div class="okno" id="okno">
+      <canvas id="platno"></canvas>
+      <canvas id="lupa" width="130" height="130" hidden></canvas>
+      <div class="uvod" id="uvod" hidden><div class="karta" id="uvodKarta">
+        <div class="velke">📄</div>
+        <h2>Naskenujte dokument</h2>
+        <div class="tlacitka">
+          <button class="btn primary" data-prikaz="kamera">📷 Vyfotit kamerou</button>
+          <button class="btn" data-prikaz="nahrat">🖼️ Nahrát fotky</button>
+        </div>
+        <p>Nebo sem fotky přetáhněte. Okraje listu se najdou samy, perspektiva se srovná a stránky uložíte jako PDF.</p>
+        <p>🔒 Vše běží jen ve vašem prohlížeči – fotky se nikam neodesílají. Rozpracované stránky zůstávají uložené v tomto zařízení.</p>
+      </div></div>
+      <div class="prace" id="prace" hidden><span id="praceText">Zpracovávám…</span></div>
+    </div>
+  </section>
+</div>
+
+<dialog class="okno-dlg" id="dlgPdf">
+  <h2>📕 Uložit PDF</h2>
+  <div class="radek"><label for="pdfNazev">Název souboru</label><input class="vstup" id="pdfNazev" placeholder="sken-…"></div>
+  <div class="radek"><label for="pdfFormat">Velikost stránky</label><select class="vstup" id="pdfFormat">
+    <option value="a4">A4</option><option value="letter">Letter</option><option value="obrazek">podle obrázku (šířka A4)</option></select></div>
+  <div class="radek"><label for="pdfOkraj">Okraj (mm)</label><input class="vstup" id="pdfOkraj" type="number" min="0" max="30" step="1"></div>
+  <div class="radek"><label for="rozliseni">Rozlišení</label><select class="vstup" id="rozliseni">
+    <option value="1754">úsporné (≈ 150 DPI u A4)</option><option value="2339">standardní (≈ 200 DPI)</option><option value="3508">vysoké (≈ 300 DPI)</option></select></div>
+  <div class="radek"><label for="kvalita">Kvalita JPEG</label><select class="vstup" id="kvalita">
+    <option value="0.7">menší soubor (70 %)</option><option value="0.85">vyvážená (85 %)</option><option value="0.95">nejlepší (95 %)</option></select></div>
+  <p class="pozn" id="pdfInfo" style="color:var(--text-muted);font-size:.84rem"></p>
+  <div class="pruh" id="pdfPruh" hidden><i></i></div>
+  <div class="dole"><button class="btn" data-zavri>Zrušit</button><button class="btn primary" id="pdfUloz">💾 Uložit PDF</button></div>
+</dialog>
+
+<dialog class="okno-dlg" id="dlgOcr">
+  <h2>🔤 Rozpoznat text</h2>
+  <div class="radek"><label for="ocrJazyk">Jazyk dokumentu</label><select class="vstup" id="ocrJazyk">
+    <option value="ces">čeština</option><option value="eng">angličtina</option><option value="ces+eng">čeština + angličtina</option></select></div>
+  <div class="dole" style="justify-content:flex-start;margin-top:6px">
+    <button class="btn primary" id="ocrTato">Tato stránka</button>
+    <button class="btn" id="ocrVse">Všechny stránky</button>
+  </div>
+  <div class="pruh" id="ocrPruh" hidden><i></i></div>
+  <p id="ocrStav" style="color:var(--text-muted);font-size:.84rem;margin:6px 0"></p>
+  <textarea class="vstup" id="ocrText" data-i18n="ne" aria-label="Rozpoznaný text" placeholder="Zde se objeví rozpoznaný text – můžete ho opravit."></textarea>
+  <p style="color:var(--text-muted);font-size:.8rem">Prohledávatelné PDF s textovou vrstvou a podrobnější úpravy umí stránka <a href="ocr.html" target="_top">🔍 OCR</a>.</p>
+  <div class="dole"><button class="btn" id="ocrKopie">📋 Kopírovat</button><button class="btn" id="ocrTxt">💾 Stáhnout TXT</button><button class="btn" data-zavri>Zavřít</button></div>
+</dialog>
+
+<dialog id="dlgKamera" aria-label="Kamera">
+  <div class="kam-obraz">
+    <video id="video" playsinline muted></video>
+    <canvas id="kamPrekryv"></canvas>
+    <div class="kam-info" id="kamInfo">Namiřte na dokument</div>
+  </div>
+  <div class="kam-lista">
+    <button class="btn" id="kamZavri">✓ Hotovo</button>
+    <button class="spoust" id="kamFoto" aria-label="Vyfotit" title="Vyfotit (mezerník)"></button>
+    <button class="btn" id="kamSoubor" title="Použít aplikaci fotoaparátu">📁</button>
+  </div>
+</dialog>
+
+<dialog class="okno-dlg" id="dlgNapoveda">
+  <h2>❓ Jak skenovat</h2>
+  <div class="napoveda">
+    <ol>
+      <li><b>Vyfoťte</b> dokument kamerou (📷) nebo <b>nahrajte</b> fotky (🖼️, i víc najednou, i přetažením). Nejlépe funguje světlý list na tmavší podložce, rovnoměrně osvětlený, bez blesku.</li>
+      <li>Okraje listu se <b>najdou automaticky</b>. V režimu <b>✂️ Rohy</b> je můžete doladit tažením – při tažení se ukáže lupa. 🎯 zkusí okraje najít znovu, ⛶ vezme celou fotku.</li>
+      <li>Perspektiva se <b>srovná</b> do obdélníku. Poměr stran se odhaduje z délky hran; u fotky šikmo zvolte raději <b>A4</b>.</li>
+      <li><b>Filtr</b>: Barevně (beze změny), Zvýraznit (vyrovná stín a vybělí papír, barvy zůstanou), Šedá, Černobíle (adaptivní práh – jako skener; jezdcem Citlivost uberete šum nebo zesílíte slabé písmo).</li>
+      <li>⟲ ⟳ otočí stránku. Pořadí změníte přetažením náhledu vlevo nebo v nabídce ⋯.</li>
+      <li><b>📕 PDF</b> uloží všechny stránky do jednoho souboru (A4, Letter nebo podle obrázku). V nabídce 📤 jsou i JPG/PNG a <b>🔤 OCR</b> – rozpoznání textu ke zkopírování.</li>
+    </ol>
+    <p>Stránky se ukládají do úložiště prohlížeče (IndexedDB) a vydrží i po zavření. Nic se neodesílá na internet. Smazat je můžete v 📤 → Smazat všechny stránky.</p>
+    <p style="color:var(--text-muted);font-size:.82rem">Knihovny: jsPDF (MIT), Tesseract.js 5 s modely tessdata_fast (Apache 2.0). Detekce okrajů, srovnání perspektivy a filtry jsou vlastní.</p>
+  </div>
+  <div class="dole"><button class="btn primary" data-zavri>Rozumím</button></div>
+</dialog>
+
+<script>
+(function () {
+'use strict';
+const S = window.SKENER, $ = id => document.getElementById(id);
+const KLIC = 'webapp_skener_nastaveni', DB = 'webapp_skener', MAX_ZDROJ = 4000, DETEKCE = 360;
+const VYCHOZI = { filtr: 'zvyrazni', pomer: 'auto', citlivost: 0.15, rozliseni: 2339, kvalita: 0.85, pdfFormat: 'a4', pdfOkraj: 0, jazyk: 'ces' };
+let nast = Object.assign({}, VYCHOZI);
+try { Object.assign(nast, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (_) { /* výchozí */ }
+const ulozNast = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch (_) { /* plno */ } };
+
+let strany = [], aktivni = null, rezim = 'vysledek';
+const vysledky = new Map(), predlohy = new Map(); // id → {klic, platno} / id → ImageBitmap
+
+/* ---------- IndexedDB ---------- */
+let dbSlib = null;
+function db() {
+  if (!dbSlib) dbSlib = new Promise((ok, ne) => {
+    const r = indexedDB.open(DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('strany', { keyPath: 'id' });
+    r.onsuccess = () => ok(r.result); r.onerror = () => ne(r.error);
+  });
+  return dbSlib;
+}
+async function dbOp(rezimTx, fn) {
+  const d = await db();
+  return new Promise((ok, ne) => {
+    const tx = d.transaction('strany', rezimTx), r = fn(tx.objectStore('strany'));
+    tx.oncomplete = () => ok(r && r.result); tx.onerror = () => ne(tx.error);
+  });
+}
+const zaznam = s => ({ id: s.id, blob: s.blob, w: s.w, h: s.h, rohy: s.rohy, otoceni: s.otoceni, filtr: s.filtr, citlivost: s.citlivost, pomer: s.pomer, nalezeno: s.nalezeno, nahled: s.nahled, text: s.text || '', poradi: strany.indexOf(s) });
+async function uloz(s) { try { await dbOp('readwrite', o => o.put(zaznam(s))); } catch (e) { Dialog.chyba('Uložení se nepodařilo: ' + e.message); } }
+async function ulozPoradi() { try { await dbOp('readwrite', o => { strany.forEach(s => o.put(zaznam(s))); }); } catch (e) { Dialog.chyba('Uložení se nepodařilo: ' + e.message); } }
+
+/* ---------- přidání fotek ---------- */
+const dnes = () => new Date().toISOString().slice(0, 10);
+const noveId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const odlehci = () => new Promise(r => setTimeout(r, 0));
+function platno(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+const doBlobu = (c, typ, q) => new Promise(r => c.toBlob(r, typ, q));
+function pixely(zdroj, w, h) {
+  const c = platno(w, h), x = c.getContext('2d', { willReadFrequently: true });
+  x.drawImage(zdroj, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h);
+  return { data: d.data, w, h };
+}
+function detekuj(zdroj, w, h) {
+  const k = Math.min(1, DETEKCE / Math.max(w, h)), mw = Math.max(8, Math.round(w * k)), mh = Math.max(8, Math.round(h * k));
+  const r = S.detekujRohy(S.seda(pixely(zdroj, mw, mh)));
+  return { rohy: S.skaluj(r.rohy, w / mw), nalezeno: r.nalezeno };
+}
+// obrázek (File/Blob/plátno) → nová stránka
+async function pridej(zdroj) {
+  let bmp = zdroj;
+  if (zdroj instanceof Blob) bmp = await createImageBitmap(zdroj, { imageOrientation: 'from-image' });
+  const k = Math.min(1, MAX_ZDROJ / Math.max(bmp.width, bmp.height)), w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+  const c = platno(w, h); c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  const blob = await doBlobu(c, 'image/jpeg', 0.92);
+  const det = detekuj(c, w, h);
+  const s = { id: noveId(), blob, w, h, rohy: det.rohy, nalezeno: det.nalezeno, otoceni: 0, filtr: nast.filtr, citlivost: nast.citlivost, pomer: nast.pomer, nahled: '', text: '' };
+  predlohy.set(s.id, await createImageBitmap(c));
+  strany.push(s);
+  await obnovNahled(s);
+  await uloz(s);
+  return s;
+}
+async function pridejSoubory(soubory) {
+  const obr = [...soubory].filter(f => /^image\//.test(f.type));
+  if (!obr.length) return Dialog.chyba('Vyberte obrázky (JPG, PNG, HEIC podle prohlížeče…).');
+  let posl = null, chyby = 0;
+  for (let i = 0; i < obr.length; i++) {
+    prace(`Načítám ${i + 1} / ${obr.length}…`);
+    await odlehci();
+    try { posl = await pridej(obr[i]); } catch (e) { chyby++; }
+  }
+  prace(null);
+  if (chyby) Dialog.chyba(`Nepodařilo se otevřít souborů: ${chyby}`);
+  if (posl) vyber(posl.id, obr.length === 1 ? 'rohy' : 'vysledek');
+  vykresliStrany();
+}
+
+/* ---------- zpracování ---------- */
+async function predloha(s) {
+  if (!predlohy.has(s.id)) predlohy.set(s.id, await createImageBitmap(s.blob));
+  return predlohy.get(s.id);
+}
+const klicVysledku = s => JSON.stringify([s.rohy, s.otoceni, s.filtr, s.citlivost, s.pomer, nast.rozliseni]);
+async function vysledek(s) {
+  const k = klicVysledku(s), c = vysledky.get(s.id);
+  if (c && c.klic === k) return c.platno;
+  const bmp = await predloha(s);
+  const roz = S.rozmerVystupu(s.rohy, nast.rozliseni, s.pomer);
+  let img = S.narovnej(pixely(bmp, s.w, s.h), s.rohy, roz.w, roz.h);
+  img = S.filtr(S.otoc(img, s.otoceni), s.filtr, s.citlivost);
+  const out = platno(img.w, img.h);
+  out.getContext('2d').putImageData(new ImageData(img.data, img.w, img.h), 0, 0);
+  vysledky.set(s.id, { klic: k, platno: out });
+  return out;
+}
+async function obnovNahled(s) {
+  const v = await vysledek(s), k = 160 / Math.max(v.width, v.height);
+  const c = platno(Math.round(v.width * k), Math.round(v.height * k));
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  s.nahled = c.toDataURL('image/jpeg', 0.7);
+}
+function prace(text) { $('prace').hidden = !text; if (text) $('praceText').textContent = text; }
+
+/* ---------- vykreslení ---------- */
+const akt = () => strany.find(s => s.id === aktivni) || null;
+function vykresliStrany() {
+  const el = $('strany');
+  el.innerHTML = strany.map((s, i) => `<button class="nahled" draggable="true" data-id="${s.id}" aria-current="${s.id === aktivni}" title="Stránka ${i + 1}">
+    ${s.nahled ? `<img src="${s.nahled}" alt="">` : ''}<span class="cislo">${i + 1}</span>${s.text ? '<span class="ocrznak" title="Má rozpoznaný text">T</span>' : ''}</button>`).join('')
+    + '<button class="pridat" data-prikaz="nahrat" title="Přidat stránky"><b style="font-size:1.4rem">+</b><br>Přidat</button>';
+  el.hidden = !strany.length;
+  const a = el.querySelector('[aria-current="true"]'); if (a) a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+function obnovOvladani() {
+  const s = akt();
+  document.querySelectorAll('[data-rezim]').forEach(b => { if (b.closest('.lista')) b.setAttribute('aria-pressed', b.dataset.rezim === rezim); });
+  document.querySelectorAll('.lista [data-prikaz="vlevo"], .lista [data-prikaz="vpravo"], .lista [data-rezim], #filtr, [data-nabidka="nabStrana"]').forEach(b => { b.disabled = !s; });
+  $('nastroje').hidden = !s; $('uvod').hidden = !!s;
+  if (!s) return;
+  $('nastrojeRohy').hidden = rezim !== 'rohy';
+  $('filtr').value = s.filtr; $('pomer').value = s.pomer; $('citlivost').value = s.citlivost;
+  $('citlivostObal').hidden = s.filtr !== 'cb' || rezim === 'rohy';
+  $('pozn').textContent = rezim === 'rohy'
+    ? (s.nalezeno ? 'Okraje nalezeny – zkontrolujte rohy, tažením je doladíte.' : 'Okraje se nepodařilo najít – přetáhněte rohy na rohy listu.')
+    : `Stránka ${strany.indexOf(s) + 1} / ${strany.length}`;
+}
+// geometrie zobrazení: obraz šířky w×h vměstnaný do okna
+function rozlozeni(w, h) {
+  const c = $('platno'), W = c.clientWidth, H = c.clientHeight, okr = 18;
+  const k = Math.min((W - 2 * okr) / w, (H - 2 * okr) / h);
+  return { k, x: (W - w * k) / 2, y: (H - h * k) / 2 };
+}
+let zobrazeni = null, vykreslovani = 0, predchozi = 'vysledek';
+async function vykresli() {
+  const zRohu = predchozi === 'rohy' && rezim !== 'rohy'; predchozi = rezim;
+  const c = $('platno'), dpr = devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+  obnovOvladani();
+  const s = akt(); if (!s) return;
+  const moje = ++vykreslovani;
+  if (rezim === 'rohy') {
+    const bmp = await predloha(s); if (moje !== vykreslovani) return;
+    const l = rozlozeni(s.w, s.h); zobrazeni = l;
+    x.drawImage(bmp, l.x, l.y, s.w * l.k, s.h * l.k);
+    const p = s.rohy.map(([a, b]) => [l.x + a * l.k, l.y + b * l.k]);
+    // ztmavit okolí listu
+    x.save(); x.fillStyle = 'rgba(0,0,0,.45)'; x.beginPath(); x.rect(l.x, l.y, s.w * l.k, s.h * l.k);
+    x.moveTo(p[0][0], p[0][1]); for (let i = 3; i >= 0; i--) x.lineTo(p[i][0], p[i][1]); x.closePath(); x.fill('evenodd'); x.restore();
+    const barva = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b82f6';
+    x.strokeStyle = barva; x.lineWidth = 2; x.beginPath(); p.forEach((b, i) => (i ? x.lineTo(...b) : x.moveTo(...b))); x.closePath(); x.stroke();
+    p.forEach(b => { x.beginPath(); x.arc(b[0], b[1], 11, 0, 7); x.fillStyle = 'rgba(255,255,255,.85)'; x.fill(); x.lineWidth = 3; x.stroke(); });
+  } else {
+    const hotovo = vysledky.get(s.id) && vysledky.get(s.id).klic === klicVysledku(s);
+    if (!hotovo) { prace('Zpracovávám…'); await odlehci(); }
+    const v = await vysledek(s); prace(null);
+    if (moje !== vykreslovani) return;
+    const l = rozlozeni(v.width, v.height); zobrazeni = l;
+    x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 10; x.fillStyle = '#fff'; x.fillRect(l.x, l.y, v.width * l.k, v.height * l.k); x.restore();
+    x.imageSmoothingQuality = 'high'; x.drawImage(v, l.x, l.y, v.width * l.k, v.height * l.k);
+    if (zRohu) { await obnovNahled(s); vykresliStrany(); uloz(s); } // rohy hotové → nový náhled
+  }
+}
+function vyber(id, r) { aktivni = id; if (r) rezim = r; vykresliStrany(); vykresli(); }
+async function zmena(s, fn) { // úprava stránky → přepočet, náhled, uložení
+  fn(s); await vykresli(); await obnovNahled(s); vykresliStrany(); uloz(s);
+}
+
+/* ---------- tažení rohů ---------- */
+let tah = null;
+function bodMysi(e) { const r = $('platno').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+$('platno').addEventListener('pointerdown', e => {
+  const s = akt(); if (!s || rezim !== 'rohy' || !zobrazeni) return;
+  const [mx, my] = bodMysi(e), l = zobrazeni;
+  let nej = -1, d = e.pointerType === 'touch' ? 40 : 24;
+  s.rohy.forEach(([a, b], i) => { const v = Math.hypot(l.x + a * l.k - mx, l.y + b * l.k - my); if (v < d) { d = v; nej = i; } });
+  if (nej < 0) return;
+  tah = { i: nej, dx: l.x + s.rohy[nej][0] * l.k - mx, dy: l.y + s.rohy[nej][1] * l.k - my };
+  $('platno').setPointerCapture(e.pointerId); e.preventDefault();
+});
+$('platno').addEventListener('pointermove', e => {
+  const s = akt();
+  if (!tah || !s) { if (s && rezim === 'rohy') $('platno').style.cursor = 'crosshair'; return; }
+  const [mx, my] = bodMysi(e), l = zobrazeni;
+  const x = Math.max(0, Math.min(s.w - 1, (mx + tah.dx - l.x) / l.k)), y = Math.max(0, Math.min(s.h - 1, (my + tah.dy - l.y) / l.k));
+  s.rohy[tah.i] = [x, y]; s.nalezeno = true;
+  vykresli(); lupa(s, x, y, mx, my);
+});
+function konecTahu() {
+  if (!tah) return; tah = null; $('lupa').hidden = true;
+  const s = akt(); if (!s) return;
+  s.rohy = S.seradRohy(s.rohy); vykresli(); uloz(s);
+}
+$('platno').addEventListener('pointerup', konecTahu);
+$('platno').addEventListener('pointercancel', konecTahu);
+async function lupa(s, x, y, mx, my) {
+  const L = $('lupa'), c = L.getContext('2d'), bmp = await predloha(s), r = 22 * s.w / 1000 + 12;
+  L.hidden = false;
+  const okno = $('okno'), vlevo = mx > okno.clientWidth / 2;
+  L.style.left = (vlevo ? 12 : okno.clientWidth - 142) + 'px'; L.style.top = (my > okno.clientHeight / 2 ? 12 : okno.clientHeight - 142) + 'px';
+  c.clearRect(0, 0, 130, 130); c.save(); c.beginPath(); c.arc(65, 65, 64, 0, 7); c.clip();
+  c.drawImage(bmp, x - r, y - r, 2 * r, 2 * r, 0, 0, 130, 130); c.restore();
+  c.strokeStyle = 'rgba(255,0,0,.9)'; c.lineWidth = 1; c.beginPath(); c.moveTo(65, 45); c.lineTo(65, 85); c.moveTo(45, 65); c.lineTo(85, 65); c.stroke();
+}
+
+/* ---------- přeřazení přetažením ---------- */
+let tazeny = null;
+$('strany').addEventListener('dragstart', e => { const b = e.target.closest('.nahled'); if (b) { tazeny = b.dataset.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', tazeny); } });
+$('strany').addEventListener('dragover', e => {
+  const b = e.target.closest('.nahled'); if (!tazeny || !b) return;
+  e.preventDefault(); document.querySelectorAll('.nahled.cil').forEach(x => x.classList.remove('cil')); b.classList.add('cil');
+});
+$('strany').addEventListener('drop', e => {
+  const b = e.target.closest('.nahled'); if (!tazeny || !b) return;
+  e.preventDefault(); e.stopPropagation();
+  const z = strany.findIndex(s => s.id === tazeny), na = strany.findIndex(s => s.id === b.dataset.id);
+  tazeny = null; strany = S.presun(strany, z, na); vykresliStrany(); obnovOvladani(); ulozPoradi();
+});
+$('strany').addEventListener('dragend', () => { tazeny = null; document.querySelectorAll('.nahled.cil').forEach(x => x.classList.remove('cil')); });
+$('strany').addEventListener('click', e => { const b = e.target.closest('.nahled'); if (b) vyber(b.dataset.id); });
+// soubory přetažené z počítače
+document.addEventListener('dragover', e => { if (!tazeny && e.dataTransfer.types.includes('Files')) { e.preventDefault(); $('uvodKarta').classList.add('tahni'); } });
+document.addEventListener('dragleave', () => $('uvodKarta').classList.remove('tahni'));
+document.addEventListener('drop', e => { if (tazeny || !e.dataTransfer.files.length) return; e.preventDefault(); $('uvodKarta').classList.remove('tahni'); pridejSoubory(e.dataTransfer.files); });
+
+/* ---------- kamera ---------- */
+let proud = null, smycka = 0, nafoceno = 0;
+async function kamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return $('fotak').click();
+  try {
+    proud = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false });
+  } catch (e) {
+    Dialog.info('Kamera není dostupná (' + (e.name === 'NotAllowedError' ? 'přístup zamítnut' : e.message) + ') – otevírám výběr fotky.');
+    return $('fotak').click();
+  }
+  const v = $('video'); v.srcObject = proud; await v.play().catch(() => {});
+  nafoceno = 0; $('kamInfo').textContent = 'Namiřte na dokument';
+  $('dlgKamera').showModal();
+  clearInterval(smycka); smycka = setInterval(zivaDetekce, 350);
+}
+function zivaDetekce() {
+  const v = $('video'), c = $('kamPrekryv'); if (!v.videoWidth) return;
+  const W = c.clientWidth, H = c.clientHeight; c.width = W; c.height = H;
+  const x = c.getContext('2d'), det = detekuj(v, v.videoWidth, v.videoHeight);
+  x.clearRect(0, 0, W, H);
+  if (!det.nalezeno) return;
+  const k = Math.min(W / v.videoWidth, H / v.videoHeight), ox = (W - v.videoWidth * k) / 2, oy = (H - v.videoHeight * k) / 2;
+  x.strokeStyle = '#4ade80'; x.lineWidth = 3; x.fillStyle = 'rgba(74,222,128,.15)'; x.beginPath();
+  det.rohy.forEach(([a, b], i) => (i ? x.lineTo(ox + a * k, oy + b * k) : x.moveTo(ox + a * k, oy + b * k))); x.closePath(); x.fill(); x.stroke();
+}
+async function vyfot() {
+  const v = $('video'); if (!v.videoWidth) return;
+  const c = platno(v.videoWidth, v.videoHeight); c.getContext('2d').drawImage(v, 0, 0);
+  $('kamInfo').textContent = 'Ukládám…';
+  const s = await pridej(c); nafoceno++; aktivni = s.id;
+  $('kamInfo').textContent = `Nafoceno stránek: ${nafoceno} – další, nebo ✓ Hotovo`;
+  vykresliStrany();
+}
+function zavriKameru() {
+  clearInterval(smycka);
+  if (proud) proud.getTracks().forEach(t => t.stop()); proud = null;
+  if ($('dlgKamera').open) $('dlgKamera').close();
+  if (nafoceno) vyber(aktivni, nafoceno === 1 ? 'rohy' : 'vysledek');
+}
+$('kamFoto').addEventListener('click', vyfot);
+$('kamZavri').addEventListener('click', zavriKameru);
+$('kamSoubor').addEventListener('click', () => { zavriKameru(); $('fotak').click(); });
+$('dlgKamera').addEventListener('cancel', e => { e.preventDefault(); zavriKameru(); });
+$('dlgKamera').addEventListener('keydown', e => { if (e.key === ' ') { e.preventDefault(); vyfot(); } });
+
+/* ---------- výstupy ---------- */
+function stahni(blob, nazev) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nazev;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function nactiSkript(src, globalni) {
+  if (window[globalni]) return Promise.resolve(window[globalni]);
+  return new Promise((ok, ne) => {
+    const s = document.createElement('script'); s.src = src;
+    s.onload = () => (window[globalni] ? ok(window[globalni]) : ne(new Error('Knihovnu se nepodařilo načíst.')));
+    s.onerror = () => { s.remove(); ne(new Error('Knihovnu se nepodařilo stáhnout (jste offline?).')); };
+    document.head.appendChild(s);
+  });
+}
+function otevriPdf() {
+  if (!strany.length) return Dialog.info('Nejdřív přidejte stránky.');
+  $('pdfNazev').value = ''; $('pdfNazev').placeholder = S.nazevSouboru('', dnes(), '.pdf');
+  $('pdfFormat').value = nast.pdfFormat; $('pdfOkraj').value = nast.pdfOkraj; $('rozliseni').value = nast.rozliseni; $('kvalita').value = nast.kvalita;
+  $('pdfInfo').textContent = `Stránek: ${strany.length}. Velikost souboru závisí hlavně na rozlišení a kvalitě.`;
+  $('pdfPruh').hidden = true; $('pdfUloz').disabled = false;
+  $('dlgPdf').showModal();
+}
+$('pdfUloz').addEventListener('click', async () => {
+  nast.pdfFormat = $('pdfFormat').value; nast.pdfOkraj = Math.max(0, Math.min(30, Number($('pdfOkraj').value) || 0));
+  nast.rozliseni = Number($('rozliseni').value); nast.kvalita = Number($('kvalita').value); ulozNast();
+  $('pdfUloz').disabled = true; $('pdfPruh').hidden = false;
+  try {
+    const { jsPDF } = await nactiSkript('lib/jspdf.umd.min.js', 'jspdf');
+    let doc = null;
+    for (let i = 0; i < strany.length; i++) {
+      $('pdfInfo').textContent = `Zpracovávám stránku ${i + 1} / ${strany.length}…`;
+      $('pdfPruh').firstElementChild.style.width = Math.round(100 * i / strany.length) + '%';
+      await odlehci();
+      const v = await vysledek(strany[i]), r = S.strankaPdf(v.width, v.height, nast.pdfFormat, nast.pdfOkraj);
+      if (!doc) doc = new jsPDF({ unit: 'mm', format: [r.sirka, r.vyska], orientation: r.orientace, compress: true });
+      else doc.addPage([r.sirka, r.vyska], r.orientace);
+      const data = new Uint8Array(await (await doBlobu(v, 'image/jpeg', nast.kvalita)).arrayBuffer());
+      doc.addImage(data, 'JPEG', r.x, r.y, r.w, r.h, undefined, 'NONE');
+    }
+    doc.setProperties({ title: $('pdfNazev').value.trim() || 'Sken', creator: 'Skener dokumentů' });
+    stahni(doc.output('blob'), S.nazevSouboru($('pdfNazev').value, dnes(), '.pdf'));
+    $('dlgPdf').close(); vykresli();
+  } catch (e) {
+    Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message); $('pdfUloz').disabled = false;
+  }
+});
+async function obrazek(s, typ, i) {
+  const v = await vysledek(s);
+  stahni(await doBlobu(v, typ === 'png' ? 'image/png' : 'image/jpeg', nast.kvalita), S.nazevSouboru('', dnes(), `-${i + 1}.${typ}`));
+}
+
+/* ---------- OCR (Tesseract z lib/) ---------- */
+const TESS = 'lib/tesseract/', abs = c => new URL(c, location.href).href;
+let worker = null, workerJazyk = '', ocrBezi = false;
+async function dejWorker(jazyk, prubeh) {
+  if (worker && workerJazyk === jazyk) return worker;
+  if (worker) { try { await worker.terminate(); } catch (_) { /* nic */ } worker = null; }
+  const T = await nactiSkript(TESS + 'tesseract.min.js', 'Tesseract');
+  worker = await T.createWorker(jazyk.split('+'), 1, {
+    workerPath: abs(TESS + 'worker.min.js'), corePath: abs(TESS), langPath: abs(TESS), gzip: false,
+    logger: m => { if (m && typeof m.progress === 'number') prubeh(m); },
+  });
+  workerJazyk = jazyk;
+  return worker;
+}
+async function ocr(seznam) {
+  if (ocrBezi) return;
+  ocrBezi = true; $('ocrTato').disabled = $('ocrVse').disabled = true; $('ocrPruh').hidden = false;
+  nast.jazyk = $('ocrJazyk').value; ulozNast();
+  let i = 0;
+  const ukaz = (p, t) => { $('ocrPruh').firstElementChild.style.width = Math.round(100 * (i + p) / seznam.length) + '%'; $('ocrStav').textContent = t; };
+  try {
+    const w = await dejWorker(nast.jazyk, m => ukaz(m.status === 'recognizing text' ? m.progress : 0, m.status === 'recognizing text' ? `Rozpoznávám stránku ${i + 1} / ${seznam.length}…` : 'Načítám rozpoznávání textu…'));
+    for (i = 0; i < seznam.length; i++) {
+      ukaz(0, `Rozpoznávám stránku ${i + 1} / ${seznam.length}…`);
+      const r = await w.recognize(await vysledek(seznam[i]));
+      seznam[i].text = r.data.text.trim(); uloz(seznam[i]);
+    }
+    $('ocrText').value = seznam.map((s, k) => (seznam.length > 1 ? `— ${strany.indexOf(s) + 1} —\n` : '') + s.text).join('\n\n');
+    $('ocrStav').textContent = 'Hotovo. Text můžete upravit a zkopírovat.';
+    vykresliStrany();
+  } catch (e) {
+    $('ocrStav').textContent = 'Chyba: ' + e.message;
+  }
+  ocrBezi = false; $('ocrTato').disabled = $('ocrVse').disabled = false; $('ocrPruh').hidden = true;
+}
+$('ocrTato').addEventListener('click', () => { const s = akt(); if (s) ocr([s]); });
+$('ocrVse').addEventListener('click', () => ocr(strany.slice()));
+$('ocrKopie').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('ocrText').value); Dialog.info('Zkopírováno.'); } catch (_) { $('ocrText').select(); document.execCommand('copy'); }
+});
+$('ocrTxt').addEventListener('click', () => stahni(new Blob([$('ocrText').value], { type: 'text/plain;charset=utf-8' }), S.nazevSouboru('', dnes(), '.txt')));
+$('ocrText').addEventListener('input', () => { const s = akt(); if (s && !$('ocrText').value.includes('\n— ')) { s.text = $('ocrText').value; uloz(s); } });
+
+/* ---------- příkazy ---------- */
+const sAkt = fn => () => { const s = akt(); if (s) return fn(s); };
+const PRIKAZY = {
+  kamera, nahrat: () => $('soubor').click(),
+  vlevo: sAkt(s => zmena(s, s => { s.otoceni = (s.otoceni + 270) % 360; })),
+  vpravo: sAkt(s => zmena(s, s => { s.otoceni = (s.otoceni + 90) % 360; })),
+  auto: sAkt(async s => {
+    const d = detekuj(await predloha(s), s.w, s.h); s.rohy = d.rohy; s.nalezeno = d.nalezeno;
+    if (!d.nalezeno) Dialog.info('Okraje listu se nepodařilo najít – nastavte rohy ručně.');
+    vykresli(); uloz(s);
+  }),
+  cely: sAkt(s => { s.rohy = S.celyObraz(s.w, s.h); s.nalezeno = true; vykresli(); uloz(s); }),
+  drive: sAkt(s => { const i = strany.indexOf(s); strany = S.presun(strany, i, i - 1); vykresliStrany(); obnovOvladani(); ulozPoradi(); }),
+  pozdeji: sAkt(s => { const i = strany.indexOf(s); strany = S.presun(strany, i, i + 1); vykresliStrany(); obnovOvladani(); ulozPoradi(); }),
+  duplikat: sAkt(async s => {
+    const n = Object.assign({}, s, { id: noveId(), rohy: s.rohy.map(r => r.slice()) });
+    strany.splice(strany.indexOf(s) + 1, 0, n); await ulozPoradi(); vyber(n.id);
+  }),
+  smazStranu: sAkt(async s => {
+    if (!await Dialog.potvrd(`Smazat stránku ${strany.indexOf(s) + 1}?`)) return;
+    const i = strany.indexOf(s); strany.splice(i, 1); vysledky.delete(s.id); predlohy.delete(s.id);
+    await dbOp('readwrite', o => o.delete(s.id)); await ulozPoradi();
+    aktivni = strany.length ? strany[Math.min(i, strany.length - 1)].id : null; vykresliStrany(); vykresli();
+  }),
+  smazVse: async () => {
+    if (!strany.length) return;
+    if (!await Dialog.potvrd(`Smazat všech ${strany.length} stránek? Nelze vrátit.`)) return;
+    strany = []; aktivni = null; vysledky.clear(); predlohy.clear();
+    await dbOp('readwrite', o => o.clear()); vykresliStrany(); vykresli();
+  },
+  pdf: otevriPdf,
+  jpg: sAkt(s => obrazek(s, 'jpg', strany.indexOf(s))),
+  png: sAkt(s => obrazek(s, 'png', strany.indexOf(s))),
+  vseJpg: async () => { for (let i = 0; i < strany.length; i++) { await obrazek(strany[i], 'jpg', i); await new Promise(r => setTimeout(r, 300)); } },
+  ocr: () => {
+    if (!strany.length) return Dialog.info('Nejdřív přidejte stránky.');
+    const s = akt(); $('ocrJazyk').value = nast.jazyk; $('ocrText').value = s ? s.text : ''; $('ocrStav').textContent = '';
+    $('dlgOcr').showModal();
+  },
+  napoveda: () => $('dlgNapoveda').showModal(),
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky(); if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p && !p.disabled) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const r = e.target.closest('[data-rezim]');
+  if (r && akt()) { rezim = r.dataset.rezim; vykresli(); }
+  const z = e.target.closest('[data-zavri]');
+  if (z) z.closest('dialog').close();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('resize', () => { zavriNabidky(); vykresli(); });
+$('filtr').innerHTML = Object.entries(S.FILTRY).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+$('filtr').addEventListener('change', sAkt(s => { nast.filtr = $('filtr').value; ulozNast(); if (rezim === 'rohy') rezim = 'vysledek'; return zmena(s, s => { s.filtr = nast.filtr; }); }));
+$('pomer').addEventListener('change', sAkt(s => { nast.pomer = $('pomer').value; ulozNast(); return zmena(s, s => { s.pomer = nast.pomer; }); }));
+$('citlivost').addEventListener('change', sAkt(s => { nast.citlivost = Number($('citlivost').value); ulozNast(); return zmena(s, s => { s.citlivost = nast.citlivost; }); }));
+$('soubor').addEventListener('change', e => { pridejSoubory(e.target.files); e.target.value = ''; });
+$('fotak').addEventListener('change', e => { pridejSoubory(e.target.files); e.target.value = ''; });
+/* ---------- start ---------- */
+(async () => {
+  try {
+    const vse = (await dbOp('readonly', o => o.getAll())) || [];
+    strany = vse.sort((a, b) => a.poradi - b.poradi).map(z => { delete z.poradi; return z; });
+  } catch (e) { Dialog.chyba('Úložiště prohlížeče není dostupné – stránky se neuloží.'); }
+  aktivni = strany.length ? strany[0].id : null;
+  vykresliStrany(); vykresli();
+})();
+window.SKENER_APP = { strany: () => strany, pridej, vyber, vysledek, rezim: r => { rezim = r; return vykresli(); } };
+})();
+</script>
+</body>
+</html>

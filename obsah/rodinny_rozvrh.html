@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rodinný rozvrh</title>
+<meta name="description" content="Týdenní rozvrh celé rodiny: škola, kroužky, práce a tréninky, kdo koho veze a vyzvedává, automatická kontrola kolizí, výjimky a prázdniny, tisk na lednici a export do kalendáře (.ics).">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="rodinny_rozvrh/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl .odznak{display:inline-block;min-width:1.4em;padding:0 4px;border-radius:9px;background:var(--danger);color:var(--on-accent,#fff);font-size:.72rem;font-weight:700;text-align:center;margin-left:3px}
+.tl .odznak.nula{background:var(--ok)}
+.tyden-popis{font-size:.82rem;padding:0 6px;min-width:9.5em;text-align:center;font-variant-numeric:tabular-nums}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+select.vstup.mini{padding:3px 6px;font-size:.8rem}
+
+main{flex:1;min-height:0;overflow:auto;padding:10px clamp(8px,2vw,20px) 40px}
+.obal{max-width:1400px;margin:0 auto}
+.filtr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.cip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);border-radius:14px;padding:3px 10px 3px 6px;font:inherit;font-size:.82rem;cursor:pointer}
+.cip i{width:12px;height:12px;border-radius:50%;background:var(--c);display:inline-block}
+.cip[aria-pressed="false"]{opacity:.45;text-decoration:line-through}
+.filtr .vpravo{margin-left:auto;font-size:.8rem;color:var(--text-muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filtr label{display:inline-flex;gap:4px;align-items:center;cursor:pointer}
+h2.skupina{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:18px 0 6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+h2.skupina .btn{text-transform:none;letter-spacing:0}
+.tip{font-size:.8rem;color:var(--text-muted);margin:4px 0 10px;line-height:1.45}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.7}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em}
+td.cislo{text-align:right;white-space:nowrap}
+td .akce{display:flex;gap:3px;flex-wrap:nowrap;justify-content:flex-end}
+.tecka{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);vertical-align:middle;margin-right:4px;flex-shrink:0}
+.jm{white-space:nowrap}
+.mute{color:var(--text-muted)}
+.chyba-txt{color:var(--danger)}
+.warn-txt{color:var(--warn)}
+
+/* týdenní mřížka */
+.mrizka{--h:56px;display:grid;grid-template-columns:44px repeat(7,minmax(150px,1fr));min-width:1100px}
+.mrizka .hlava{position:sticky;top:0;z-index:3;background:var(--bg-elevated);border-bottom:1px solid var(--border);padding:5px 6px;font-size:.8rem;font-weight:600;text-align:center;line-height:1.25}
+.mrizka .hlava small{display:block;font-weight:400;color:var(--text-muted);font-size:.7rem}
+.mrizka .hlava.dnes{background:var(--accent-soft)}
+.mrizka .hlava .svatek{color:var(--danger)}
+.mrizka .osa{position:relative;border-right:1px solid var(--border)}
+.mrizka .osa span{position:absolute;right:4px;font-size:.68rem;color:var(--text-muted);transform:translateY(-50%)}
+.mrizka .den{position:relative;border-right:1px solid var(--border);background-image:repeating-linear-gradient(to bottom,var(--border) 0 1px,transparent 1px var(--h));background-position:0 8px}
+.mrizka .den.vikend{background-color:color-mix(in srgb,var(--bg-control) 35%,transparent)}
+.blok{position:absolute;border-radius:5px;padding:2px 4px 2px 6px;font-size:.72rem;line-height:1.22;overflow:hidden;cursor:pointer;border:1px solid color-mix(in srgb,var(--c) 55%,var(--border));border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 20%,var(--bg-panel));color:var(--text)}
+.blok:hover{z-index:2;overflow:visible;min-height:fit-content;box-shadow:var(--shadow)}
+.blok b{display:block;font-size:.76rem;overflow-wrap:anywhere;hyphens:auto}
+.blok .r{overflow-wrap:anywhere;color:var(--text-muted)}
+.blok.pruh{border-left-width:0;padding-left:8px;background-image:linear-gradient(to bottom,var(--pruhy)) ,linear-gradient(color-mix(in srgb,var(--c) 20%,var(--bg-panel)),color-mix(in srgb,var(--c) 20%,var(--bg-panel)));background-size:4px 100%,100% 100%;background-repeat:no-repeat}
+.blok.svisle{writing-mode:vertical-rl;white-space:nowrap;padding:5px 2px 4px 1px;display:flex;align-items:center;gap:4px}
+.blok.svisle b,.blok.svisle .r{display:inline;overflow:visible}
+.blok.zruseno{opacity:.5;text-decoration:line-through;border-style:dashed}
+.blok.kolize{outline:2px solid var(--danger);outline-offset:-1px}
+.blok.jizda{background:color-mix(in srgb,var(--c) 70%,var(--bg-panel));border:0;border-radius:3px;padding:0}
+.blok.jizda.kolize{outline:2px solid var(--danger)}
+.odvoz-r{font-size:.68rem;overflow-wrap:anywhere}
+.odvoz-r.chybi{color:var(--danger);font-weight:600}
+/* seznam po dnech (úzký displej) */
+.dny-seznam{display:none}
+.den-karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.den-karta h3{margin:0;padding:6px 10px;font-size:.88rem;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;gap:8px;justify-content:space-between}
+.den-karta.dnes h3{background:var(--accent-soft)}
+.polozka{display:flex;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);border-left:4px solid var(--c);cursor:pointer;font-size:.84rem}
+.polozka:last-child{border-bottom:0}
+.polozka .cas{white-space:nowrap;font-variant-numeric:tabular-nums;min-width:5.6em;color:var(--text-muted)}
+.polozka.zruseno{opacity:.55;text-decoration:line-through}
+.polozka.jizda{font-size:.78rem;border-left-style:dotted}
+.polozka.kolize{background:color-mix(in srgb,var(--danger) 10%,transparent)}
+@media (max-width:760px){.obal-mrizky{display:none}.dny-seznam{display:block}}
+
+/* odvozy a kolize */
+.kolize-seznam{display:grid;gap:6px}
+.kol{display:flex;gap:10px;align-items:flex-start;background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--danger);border-radius:8px;padding:8px 10px;font-size:.86rem;line-height:1.45}
+.kol.varovani{border-left-color:var(--warn)}
+.kol .ik{font-size:1.1rem}
+.kol .txt-k{flex:1;min-width:0}
+.kol .mute{font-size:.76rem}
+.ridici{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:10px}
+.ridic-karta{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--c);border-radius:8px;padding:8px 10px;font-size:.84rem}
+.ridic-karta b{font-size:1.2rem}
+.odvozy-tab td{vertical-align:middle}
+.odvozy-tab select{max-width:150px}
+.osoby-tab td{min-width:120px;font-size:.78rem}
+.osoby-tab td.jm-b{min-width:90px;font-weight:600;font-size:.84rem;border-left:4px solid var(--c)}
+.osoby-tab .p{margin-bottom:4px;line-height:1.3}
+.osoby-tab .p.zruseno{opacity:.5;text-decoration:line-through}
+.osoby-tab .p.kolize{color:var(--danger)}
+.osoby-tab th.dnes{background:var(--accent-soft)}
+
+/* plán */
+.clenove{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.clen-karta{background:var(--bg-panel);border:1px solid var(--border);border-left:5px solid var(--c);border-radius:8px;padding:8px 10px;display:flex;gap:8px;align-items:center}
+.clen-karta{flex-wrap:wrap}
+.clen-karta .jm{font-weight:600;flex:1 1 5em;white-space:normal;overflow-wrap:anywhere}
+.znacka{display:inline-block;font-size:.7rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border);white-space:nowrap}
+.matice input{width:4.2em;padding:3px 5px;text-align:right}
+.matice th,.matice td{text-align:center;white-space:nowrap}
+.nastaveni-form{display:grid;gap:8px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.86rem}
+.nastaveni-form label{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.nastaveni-form input[type=number]{width:5em}
+
+/* dialogy */
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,600px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:92vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:480px){.radek,.radek3{grid-template-columns:1fr}}
+.volby{display:flex;flex-wrap:wrap;gap:4px}
+.volby label{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:14px;padding:3px 10px;font-size:.82rem;color:var(--text);cursor:pointer;background:var(--bg-panel)}
+.volby label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.volby input{margin:0}
+.zaskrt{display:flex;gap:6px;align-items:center;font-size:.86rem;color:var(--text);cursor:pointer}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.paleta{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.paleta button{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--c);cursor:pointer;padding:0}
+.paleta input[type=color]{width:34px;height:28px;padding:0;border:1px solid var(--border);background:none;border-radius:6px}
+.odvoz-dny{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 8px;align-items:center;font-size:.82rem}
+.odvoz-dny .h{color:var(--text-muted);font-size:.74rem}
+
+#tisk{display:none}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  body{display:block;height:auto;background:#fff;color:#000}
+  body > *:not(#tisk){display:none!important}
+  #tisk{display:block;font-size:9pt;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #tisk h1{font-size:14pt;margin:0 0 2mm}
+  #tisk .leg{display:flex;flex-wrap:wrap;gap:4mm;margin-bottom:2mm}
+  #tisk .leg span{display:inline-flex;align-items:center;gap:1.5mm}
+  #tisk .leg i{width:3.5mm;height:3.5mm;border-radius:50%;display:inline-block}
+  #tisk table{width:100%;border-collapse:collapse;table-layout:fixed}
+  #tisk th,#tisk td{border:.3mm solid #999;padding:1.2mm;vertical-align:top;font-size:8.5pt;color:#000}
+  #tisk th{background:#eee;text-transform:none;letter-spacing:0;font-size:9pt}
+  #tisk .tp{border-left:2.2mm solid;padding:.6mm 1mm;margin-bottom:1.2mm;background:#f7f7f7;break-inside:avoid}
+  #tisk .tp b{font-size:8.8pt}
+  #tisk .tp .o{font-size:7.6pt}
+  #tisk .tp.x{text-decoration:line-through;opacity:.6}
+  #tisk td.jm-b{border-left:2.2mm solid;font-weight:700}
+  #tisk .pata{margin-top:2mm;font-size:7.5pt;color:#555}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>👨‍👩‍👧 Rodinný rozvrh</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Tisk, kalendář, záloha">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Přidat"><span class="skup-nazev" aria-hidden="true">Přidat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="novaAktivita" title="Nová aktivita (škola, kroužek, práce…)">✚<span class="txt"> Aktivita</span></button>
+    <button class="tl" data-nabidka="nabPridat" aria-expanded="false" title="Člen, místo, výjimka">▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Týden"><span class="skup-nazev" aria-hidden="true">Týden</span><div class="skup-tl">
+    <button class="tl" data-prikaz="tydenZpet" title="Předchozí týden (←)" aria-label="Předchozí týden">◀</button>
+    <button class="tl tyden-popis" data-prikaz="tydenDnes" id="tydenPopis" title="Zpět na tento týden"></button>
+    <button class="tl" data-prikaz="tydenDal" title="Další týden (→)" aria-label="Další týden">▶</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="tyden" aria-pressed="true">📅<span class="txt"> Týden</span></button>
+    <button class="tl" data-pohled="osoby" aria-pressed="false">👥<span class="txt"> Po osobách</span></button>
+    <button class="tl" data-pohled="odvozy" aria-pressed="false">🚗<span class="txt"> Odvozy</span></button>
+    <button class="tl" data-pohled="kolize" aria-pressed="false" id="tlKolize">⚠️<span class="txt"> Kolize</span><span class="odznak nula" id="odznak">0</span></button>
+    <button class="tl" data-pohled="plan" aria-pressed="false">⚙️<span class="txt"> Rodina a plán</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tiskTyden">🖨️ Tisk týdne na A4 (na lednici)</button>
+  <button class="tl" data-prikaz="tiskOsoby">🖨️ Tisk po osobách na A4</button>
+  <button class="tl" data-prikaz="ics">📆 Export do kalendáře (.ics)…</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <button class="tl" data-prikaz="ukazka">🧪 Načíst ukázkovou rodinu…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<div id="nabPridat" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novaAktivita">✚ Aktivita</button>
+  <button class="tl" data-prikaz="novyClen">👤 Člen rodiny</button>
+  <button class="tl" data-prikaz="noveMisto">📍 Místo</button>
+  <hr>
+  <button class="tl" data-prikaz="prazdniny">🏖️ Prázdniny / volno</button>
+  <button class="tl" data-prikaz="novaVyjimka">✖️ Zrušení nebo jiný odvoz</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+<div id="tisk"></div>
+
+<!-- člen -->
+<dialog class="okno" id="dlgClen"><form method="dialog">
+  <header id="dlgClenTitul">Člen rodiny</header>
+  <div class="telo">
+    <label class="pole">Jméno<input class="vstup" name="jmeno" required maxlength="40" autocomplete="off"></label>
+    <div class="pole">Barva<div class="paleta" id="paleta"></div></div>
+    <label class="zaskrt"><input type="checkbox" name="ridic"> 🚗 Řídí – může vozit ostatní</label>
+    <label class="zaskrt"><input type="checkbox" name="odvoz"> 🧒 Potřebuje odvoz a vyzvednutí (dítě)</label>
+    <p class="info" style="margin:0">U člena, který potřebuje odvoz, se hlídá, aby ke každé aktivitě někdo jel tam i zpět (nebo bylo zadáno „sám / bus“).</p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgClenSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- místo -->
+<dialog class="okno" id="dlgMisto"><form method="dialog">
+  <header id="dlgMistoTitul">Místo</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" required maxlength="60" autocomplete="off" placeholder="např. Základní škola"></label>
+    <div class="radek">
+      <label class="pole">Cesta z domova (minuty autem)<input class="vstup" name="cesta" type="number" min="0" max="600" required></label>
+      <label class="pole">Adresa (do kalendáře)<input class="vstup" name="adresa" maxlength="150"></label>
+    </div>
+    <p class="info" style="margin:0">Přejezd mezi dvěma místy se odhaduje přes domov (cesta A + cesta B). Přesnější čas zadáte v <i>Rodina a plán → Přejezdy</i>.</p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgMistoSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- aktivita -->
+<dialog class="okno" id="dlgAktivita"><form method="dialog">
+  <header id="dlgAktivitaTitul">Aktivita</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Název<input class="vstup" name="nazev" required maxlength="80" autocomplete="off" placeholder="Škola, Plavání, Práce…"></label>
+      <label class="pole">Druh<select class="vstup" name="kategorie"></select></label>
+    </div>
+    <div class="pole">Kdo<div class="volby" id="akClenove"></div></div>
+    <div class="radek">
+      <label class="pole">Místo<select class="vstup" name="misto"></select></label>
+      <label class="pole">Opakování<select class="vstup" name="opakovani"></select></label>
+    </div>
+    <div class="pole" id="akDnyPole">Dny v týdnu<div class="volby" id="akDny"></div></div>
+    <label class="pole" id="akDatumPole" hidden>Datum<input class="vstup" name="datum" type="date"></label>
+    <div class="radek">
+      <label class="pole">Od<input class="vstup" name="od" type="time" required></label>
+      <label class="pole">Do<input class="vstup" name="do" type="time" required></label>
+    </div>
+    <div class="radek" id="akPlatnost">
+      <label class="pole">Platí od (prázdné = vždy)<input class="vstup" name="platOd" type="date"></label>
+      <label class="pole">Platí do (např. konec školního roku)<input class="vstup" name="platDo" type="date"></label>
+    </div>
+    <div class="pole" id="akOdvozPole">🚗 Odvozy – kdo veze tam a kdo vyzvedává<div class="odvoz-dny" id="akOdvoz"></div></div>
+    <label class="pole">Poznámka<textarea class="vstup" name="poznamka" rows="2" maxlength="500"></textarea></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgAktivitaSmaz">🗑️ Smazat</button>
+    <button type="button" class="btn" id="dlgAktivitaKopie" title="Uložit jako novou aktivitu">⧉ Kopie</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- výjimka -->
+<dialog class="okno" id="dlgVyjimka"><form method="dialog">
+  <header id="dlgVyjimkaTitul">Výjimka</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Co se děje<select class="vstup" name="druh"><option value="zrusit">✖️ Zrušeno / volno / omluven</option><option value="odvoz">🚗 Jiný odvoz</option></select></label>
+      <label class="pole">Popis<input class="vstup" name="nazev" maxlength="80" placeholder="Jarní prázdniny, nemoc…"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Od<input class="vstup" name="od" type="date" required></label>
+      <label class="pole">Do<input class="vstup" name="do" type="date" required></label>
+    </div>
+    <div class="pole">Jen druhy aktivit (nic = všechny)<div class="volby" id="vyKategorie"></div></div>
+    <div class="pole">Jen tito členové (nic = všichni; u zrušení se omluví jen oni)<div class="volby" id="vyClenove"></div></div>
+    <div class="pole">Jen aktivity (nic = všechny)<div class="volby" id="vyAktivity"></div></div>
+    <div class="radek" id="vyOdvoz">
+      <label class="pole">Tam veze<select class="vstup" name="tam"></select></label>
+      <label class="pole">Zpět vyzvedává<select class="vstup" name="zpet"></select></label>
+    </div>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgVyjimkaSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- ics -->
+<dialog class="okno" id="dlgIcs"><form method="dialog">
+  <header>📆 Export do kalendáře (.ics)</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Od data<input class="vstup" name="od" type="date" required></label>
+      <label class="pole">Počet týdnů<input class="vstup" name="tydnu" type="number" min="1" max="60" value="4" required></label>
+    </div>
+    <label class="pole">Pro koho<select class="vstup" name="clen"></select></label>
+    <label class="zaskrt"><input type="checkbox" name="jizdy" checked> Přidat i odvozy (🚗 kdo koho veze)</label>
+    <p class="info" style="margin:0">Každý výskyt se uloží jako samostatná událost (výjimky a prázdniny už jsou započtené). Soubor naimportujte do Google Kalendáře, Outlooku nebo telefonu. Při opakovaném importu se události se stejným UID přepíšou.</p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">📆 Stáhnout .ics</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>1. Rodina:</b> přidejte členy s barvou. U dospělých zaškrtněte <i>Řídí</i>, u dětí <i>Potřebuje odvoz</i>.</p>
+    <p style="margin:0"><b>2. Místa:</b> škola, práce, bazén… s dobou cesty z domova. Přejezd mezi místy se odhaduje přes domov; přesné časy zadáte v tabulce <i>Přejezdy</i>.</p>
+    <p style="margin:0"><b>3. Aktivity:</b> kdo, kde, kdy, které dny a jak často (každý / sudý / lichý týden nebo jednou), s platností třeba na školní rok. U každého dne určíte, <b>kdo veze tam</b> a <b>kdo vyzvedává</b> – nebo „sám / bus“.</p>
+    <p style="margin:0"><b>Odvozy:</b> řidič vyráží tak, aby byl na místě v čas začátku (cesta + rezerva na předání). Dítě se vyzvedává tam, kde právě je: jde-li z jedné aktivity do 30 minut na další, veze se rovnou z ní a odvoz domů se nepočítá.</p>
+    <p style="margin:0"><b>⚠️ Kolize</b> se hlídají samy: člověk na dvou místech zároveň, řidič nestíhá přejezd mezi svými jízdami a aktivitami, dítě bez odvozu, nestihnutelný přesun mezi aktivitami.</p>
+    <p style="margin:0"><b>Výjimky:</b> prázdniny (zruší školu a kroužky), zrušená aktivita, omluvený člen (nemoc), jiný řidič na určité dny. České státní svátky ruší školu a kroužky automaticky (lze vypnout).</p>
+    <p style="margin:0"><b>Tisk</b> týdne na A4 na šířku na lednici a <b>export .ics</b> do kalendáře jsou v nabídce Soubor. Šipky ← → přepínají týdny.</p>
+    <p style="margin:0">Data jsou jen v tomto prohlížeči (localStorage) – zálohujte přes <i>Soubor → Záloha</i>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script src="rodinny_rozvrh/ui.js"></script>
+</body>
+</html>

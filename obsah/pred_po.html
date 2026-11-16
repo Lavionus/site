@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porovnání před a po</title>
+<meta name="description" content="Porovnání dvou obrázků: posuvník, lupa, vedle sebe se synchronizovaným zoomem, prolínání, rozdíl s heat-mapou a metrikami PSNR/SSIM, blikání. Zarovnání podle bodů, ořez na společnou plochu, export obrázku, GIF/MP4 a vložitelného HTML posuvníku.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="pred_po/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+[hidden]{display:none !important}
+/* horní lišta – stejná stavba jako Zásoby / Hlídač termínů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl:disabled{opacity:.5;cursor:default}
+@media (max-width:1250px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn:disabled{opacity:.5;cursor:default}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.84rem;font-family:inherit;min-width:0}
+
+/* pracovní plocha + panel */
+.prace{flex:1;min-height:0;display:flex}
+.plocha{flex:1;min-width:0;position:relative;overflow:hidden;background:var(--bg-deep,var(--bg));touch-action:none}
+.plocha canvas{position:absolute;display:block;left:0;top:0;width:100%;height:100%}
+.plocha.dva canvas{width:calc(50% - 1px)}
+.plocha.dva #c2{left:auto;right:0}
+.plocha.dva.nadsebou canvas{width:100%;height:calc(50% - 1px)}
+.plocha.dva.nadsebou #c2{top:auto;bottom:0}
+.plocha:not(.dva) #c2{display:none}
+.plocha.posuvnik canvas{cursor:ew-resize}
+.plocha.posuvnik.vodorovne canvas{cursor:ns-resize}
+.plocha.body canvas{cursor:crosshair}
+.plocha.tah canvas{cursor:grabbing !important}
+.plocha .napis{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:4px 12px;font-size:.8rem;pointer-events:none;box-shadow:var(--shadow);max-width:calc(100% - 20px);text-align:center}
+.prazdno{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;overflow:auto}
+.prazdno .karty{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.slot{width:min(260px,80vw);min-height:150px;border:2px dashed var(--border-strong);border-radius:12px;background:var(--bg-panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px;text-align:center;cursor:pointer;font:inherit;color:inherit}
+.slot:hover,.slot.nad{border-color:var(--accent);background:var(--accent-soft)}
+.slot b{font-size:1.1rem}
+.slot .jm{font-size:.78rem;color:var(--text-muted);word-break:break-all}
+.slot.ma{border-style:solid;border-color:var(--ok)}
+.prazdno p{color:var(--text-muted);font-size:.84rem;text-align:center;max-width:560px;line-height:1.5;margin:0}
+
+.panel{width:310px;flex-shrink:0;overflow-y:auto;background:var(--bg-panel);border-left:1px solid var(--border);padding:10px 12px 40px;display:flex;flex-direction:column;gap:12px;font-size:.84rem}
+.panel section{display:flex;flex-direction:column;gap:7px}
+.panel h2{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:0;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.panel label.r{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:6px;color:var(--text-muted)}
+.panel label.r output{min-width:3.6em;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
+.panel label.r .vstup{width:100%}
+.panel label.c{display:flex;align-items:center;gap:6px}
+.panel input[type=range]{width:100%;accent-color:var(--accent)}
+.segment{display:flex;flex-wrap:wrap;gap:3px}
+.segment .tl{flex:1;text-align:center;padding:4px 6px}
+.radka{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tip{font-size:.76rem;color:var(--text-muted);line-height:1.45;margin:0}
+.metriky{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.metriky div{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:6px 8px}
+.metriky b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.metriky span{font-size:.72rem;color:var(--text-muted)}
+.pary{display:flex;flex-direction:column;gap:3px}
+.pary div{display:flex;align-items:center;gap:6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:.78rem;font-variant-numeric:tabular-nums}
+.pary .tecka{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.4)}
+.pary .vlevo{flex:1}
+.vysledek{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.78rem;line-height:1.5}
+.vysledek.spatne{border-color:var(--warn)}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5);margin:auto}
+dialog.okno.siroke{width:min(96vw,900px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.86rem}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.prubeh{height:8px;border-radius:4px;background:var(--bg-control);overflow:hidden}
+.prubeh i{display:block;height:100%;width:0;background:var(--accent)}
+.nahled{width:100%;height:min(420px,50vh);border:1px solid var(--border);border-radius:6px;background:#1b1b1b}
+.okno .telo h3{font-size:.86rem;margin:6px 0 0}
+.okno .telo p,.okno .telo li{line-height:1.5;margin:0}
+.okno .telo ul{margin:0;padding-left:20px}
+kbd{background:var(--bg-control);border:1px solid var(--border);border-radius:4px;padding:0 4px;font-size:.78rem}
+
+@media (max-width:820px){
+  body{height:auto;min-height:100%}
+  .prace{flex-direction:column}
+  .plocha{flex:none;height:62vh;min-height:280px}
+  .panel{width:auto;border-left:0;border-top:1px solid var(--border);overflow:visible}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>↔️ Před a po</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Načíst obrázky, ukázka, prohodit">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Režim"><span class="skup-nazev" aria-hidden="true">Režim</span><div class="skup-tl">
+    <button class="tl" data-rezim="posuvnik" title="Posuvník (1)">◧<span class="txt"> Posuvník</span></button>
+    <button class="tl" data-rezim="lupa" title="Lupa (2)">🔍<span class="txt"> Lupa</span></button>
+    <button class="tl" data-rezim="vedle" title="Vedle sebe (3)">◫<span class="txt"> Vedle sebe</span></button>
+    <button class="tl" data-rezim="prolnuti" title="Prolnutí průhledností (4)">◐<span class="txt"> Prolnutí</span></button>
+    <button class="tl" data-rezim="rozdil" title="Rozdíl a metriky (5)">≠<span class="txt"> Rozdíl</span></button>
+    <button class="tl" data-rezim="blikani" title="Blikání A/B (6)">⚡<span class="txt"> Blikání</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zarovnání"><span class="skup-nazev" aria-hidden="true">Zarovnání</span><div class="skup-tl">
+    <button class="tl" data-rezim="body" title="Zarovnat podle párů bodů (B)">📍<span class="txt"> Body</span></button>
+    <button class="tl" data-nabidka="nabZarovnat" aria-expanded="false" title="Automatický posun, ořez, zrušení">🎯<span class="txt"> Zarovnat</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabExport" aria-expanded="false" title="Obrázek, animace, HTML posuvník">💾<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="vejit" title="Celý obrázek (F)">⤢</button>
+    <button class="tl" data-prikaz="skutecna" title="Skutečná velikost 1:1 (0)">1:1</button>
+    <button class="tl" data-prikaz="priblizit" title="Přiblížit (+)" aria-label="Přiblížit">+</button>
+    <button class="tl" data-prikaz="oddalit" title="Oddálit (−)" aria-label="Oddálit">−</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nactiA">📂 Načíst „před“ (A)…</button>
+  <button class="tl" data-prikaz="nactiB">📂 Načíst „po“ (B)…</button>
+  <button class="tl" data-prikaz="schranka">📋 Vložit obrázek ze schránky</button>
+  <hr>
+  <button class="tl" data-prikaz="prohodit">⇄ Prohodit A a B</button>
+  <button class="tl" data-prikaz="ukazka">🧪 Ukázka (fasáda před a po opravě)</button>
+  <hr>
+  <button class="tl" data-prikaz="zavrit">🗑️ Zavřít obrázky</button>
+</div>
+<div id="nabZarovnat" class="nabidka" hidden>
+  <button class="tl" data-prikaz="rezimBody">📍 Zarovnat podle bodů…</button>
+  <button class="tl" data-prikaz="autoPosun">🎯 Doladit posun automaticky</button>
+  <button class="tl" data-prikaz="orez">✂️ Ořez na společnou plochu <span id="orezStav"></span></button>
+  <hr>
+  <button class="tl" data-prikaz="zrusZarovnani">↺ Zrušit zarovnání a doladění</button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="exObrazek">🖼️ Obrázek s dělicí čarou / vedle sebe…</button>
+  <button class="tl" data-prikaz="exAnimace">🎞️ Animace přejezdu (GIF, MP4, WebM)…</button>
+  <button class="tl" data-prikaz="exHtml">🧩 HTML posuvník pro vlastní web…</button>
+</div>
+<input type="file" id="souborA" accept="image/*" hidden>
+<input type="file" id="souborB" accept="image/*" hidden>
+
+<div class="prace">
+  <div class="plocha posuvnik" id="plocha">
+    <canvas id="c1" aria-label="Porovnání obrázků"></canvas>
+    <canvas id="c2" aria-label="Druhý obrázek"></canvas>
+    <div class="napis" id="napis" hidden></div>
+    <div class="prazdno" id="prazdno">
+      <div class="karty">
+        <button class="slot" id="slotA" data-slot="A"><b>A – před</b><span>Klepněte nebo sem přetáhněte obrázek</span><span class="jm"></span></button>
+        <button class="slot" id="slotB" data-slot="B"><b>B – po</b><span>Klepněte nebo sem přetáhněte obrázek</span><span class="jm"></span></button>
+      </div>
+      <p>Přetáhnout lze i oba soubory najednou (starší = před). Obrázek ze schránky vložíte Ctrl+V. Vše se zpracuje jen ve vašem prohlížeči, nic se nikam neodesílá.</p>
+      <button class="btn" data-prikaz="ukazka">🧪 Vyzkoušet ukázku</button>
+    </div>
+  </div>
+
+  <aside class="panel" id="panel">
+    <!-- nastavení režimů -->
+    <section data-pro="posuvnik">
+      <h2>Posuvník</h2>
+      <div class="segment" role="group" aria-label="Směr dělení">
+        <button class="tl" data-smer="svisle">┃ Svislá čára</button>
+        <button class="tl" data-smer="vodorovne">━ Vodorovná</button>
+      </div>
+      <label class="r">Poloha<input type="range" id="poloha" min="0" max="100" step="0.1"><output id="polohaV"></output></label>
+      <p class="tip">Táhněte kdekoli v obrázku nebo šipkami ←/→. Posun obrazu: Shift + tažení, prostřední tlačítko nebo dva prsty; kolečko přibližuje.</p>
+    </section>
+    <section data-pro="lupa">
+      <h2>Lupa</h2>
+      <label class="r">Zvětšení<input type="range" id="lupaZoom" min="1" max="8" step="0.5"><output id="lupaZoomV"></output></label>
+      <label class="r">Velikost<input type="range" id="lupaVel" min="80" max="360" step="10"><output id="lupaVelV"></output></label>
+      <label class="c"><input type="checkbox" id="lupaPul"> Lupa napůl A | B</label>
+      <p class="tip">Pod lupou je druhý obrázek na stejném místě. Klávesou ⇄ (X) prohodíte, který je podkladem.</p>
+    </section>
+    <section data-pro="vedle">
+      <h2>Vedle sebe</h2>
+      <p class="tip">Zoom kolečkem a posun tažením platí pro oba obrázky zároveň.</p>
+    </section>
+    <section data-pro="prolnuti">
+      <h2>Prolnutí</h2>
+      <label class="r">Krytí B<input type="range" id="pruhlednost" min="0" max="100" step="1"><output id="pruhlednostV"></output></label>
+    </section>
+    <section data-pro="rozdil">
+      <h2>Rozdíl</h2>
+      <div class="segment" role="group" aria-label="Zobrazení rozdílu">
+        <button class="tl" data-rozdil="zmeny" title="Šedý obrázek A, změny nad prahem červeně">Změny</button>
+        <button class="tl" data-rozdil="abs" title="Absolutní rozdíl kanálů |A−B|">|A−B|</button>
+        <button class="tl" data-rozdil="heat" title="Největší rozdíl kanálu barevnou škálou">Heat</button>
+        <button class="tl" data-rozdil="ssim" title="Mapa strukturní nepodobnosti (1 − SSIM)">SSIM</button>
+      </div>
+      <label class="r" id="poleZesileni">Zesílení<input type="range" id="zesileni" min="1" max="16" step="1"><output id="zesileniV"></output></label>
+      <label class="r" id="polePrah">Práh změny<input type="range" id="prah" min="1" max="128" step="1"><output id="prahV"></output></label>
+      <div class="metriky" id="metriky"></div>
+      <p class="tip">Metriky se počítají jen ve společné ploše (na zmenšenině do 1 Mpx). PSNR nad 40 dB = prakticky shodné, pod 20 dB = velké rozdíly; SSIM 1 = shodná struktura.</p>
+    </section>
+    <section data-pro="blikani">
+      <h2>Blikání</h2>
+      <label class="r">Interval<input type="range" id="blikInterval" min="100" max="2000" step="50"><output id="blikIntervalV"></output></label>
+      <div class="radka"><button class="btn mini" id="blikPauza">⏸ Pozastavit</button><span class="tip">Mezerník nebo klepnutí přepne ručně.</span></div>
+    </section>
+    <section data-pro="body">
+      <h2>Zarovnání podle bodů <button class="btn mini" data-rezim="posuvnik">✓ Hotovo</button></h2>
+      <p class="tip">Klepněte na výrazný bod v A (vlevo) a na tentýž bod v B (vpravo). 2 páry = posun, měřítko a otočení; 3–4 páry = afinní (i zkosení). Body lze přetáhnout, kolečko přibližuje.</p>
+      <label class="r">Model<select class="vstup" id="model">
+        <option value="auto">automaticky</option>
+        <option value="posun">jen posun</option>
+        <option value="podobnost">posun + měřítko + otočení</option>
+        <option value="afinni">afinní (i zkosení)</option>
+      </select><span></span></label>
+      <div class="pary" id="pary"></div>
+      <div class="vysledek" id="vysledekBody"></div>
+      <div class="radka"><label class="c"><input type="checkbox" id="pouzitBody"> Použít body</label><button class="btn mini" id="smazBody">🗑️ Smazat body</button></div>
+    </section>
+
+    <section>
+      <h2>Popisky</h2>
+      <label class="c"><input type="checkbox" id="popisky"> Zobrazit popisky</label>
+      <label class="r">A<input class="vstup" id="popisA" maxlength="40"><span></span></label>
+      <label class="r">B<input class="vstup" id="popisB" maxlength="40"><span></span></label>
+    </section>
+
+    <section>
+      <h2>Umístění B <button class="btn mini" data-prikaz="autoPosun" title="Doladit posun automaticky podle hran">🎯 Auto posun</button></h2>
+      <label class="r">Výchozí<select class="vstup" id="zpusob">
+        <option value="natahnout">natáhnout na A</option>
+        <option value="vejit">zachovat poměr</option>
+      </select><span></span></label>
+      <label class="r">Posun X<input type="range" id="dolDx" min="-200" max="200" step="0.5"><output id="dolDxV"></output></label>
+      <label class="r">Posun Y<input type="range" id="dolDy" min="-200" max="200" step="0.5"><output id="dolDyV"></output></label>
+      <label class="r">Měřítko<input type="range" id="dolS" min="80" max="125" step="0.1"><output id="dolSV"></output></label>
+      <label class="r">Otočení<input type="range" id="dolU" min="-15" max="15" step="0.1"><output id="dolUV"></output></label>
+      <label class="c"><input type="checkbox" id="orez"> Oříznout na společnou plochu</label>
+      <p class="tip" id="infoObr"></p>
+    </section>
+  </aside>
+</div>
+
+<!-- export obrázku -->
+<dialog class="okno" id="dlgObrazek"><form method="dialog">
+  <header>🖼️ Export obrázku</header>
+  <div class="telo">
+    <div class="mrizka">
+      <label class="pole">Obsah<select class="vstup" id="exTyp">
+        <option value="posuvnik">Dělicí čára (podle posuvníku)</option>
+        <option value="vedle">Vedle sebe A | B</option>
+        <option value="nadsebou">Nad sebou A / B</option>
+        <option value="rozdil">Aktuální rozdíl</option>
+      </select></label>
+      <label class="pole">Formát<select class="vstup" id="exFormat">
+        <option value="image/jpeg">JPEG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option>
+      </select></label>
+      <label class="pole">Největší šířka<select class="vstup" id="exSirka">
+        <option value="0">původní</option><option>3840</option><option>2560</option><option>1920</option><option>1280</option><option>800</option>
+      </select></label>
+    </div>
+    <label class="c" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="exUchyt"> Kreslit úchyt na čáře</label>
+    <p class="tip" id="exObrInfo"></p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn">Zavřít</button>
+    <button type="button" class="btn primary" id="exObrUloz">💾 Uložit obrázek</button>
+  </footer>
+</form></dialog>
+
+<!-- export animace -->
+<dialog class="okno" id="dlgAnimace"><form method="dialog">
+  <header>🎞️ Animace přejezdu posuvníku</header>
+  <div class="telo">
+    <div class="mrizka">
+      <label class="pole">Formát<select class="vstup" id="anFormat">
+        <option value="gif">GIF (všude, větší soubor)</option><option value="mp4">MP4 (H.264)</option><option value="webm">WebM (VP9)</option>
+      </select></label>
+      <label class="pole">Šířka<select class="vstup" id="anSirka">
+        <option>320</option><option>480</option><option selected>640</option><option>800</option><option>1080</option><option>1280</option><option>1920</option>
+      </select></label>
+      <label class="pole">Délka cyklu (s)<input class="vstup" id="anDelka" type="number" min="1" max="20" step="0.5" value="4"></label>
+      <label class="pole">Snímků za sekundu<select class="vstup" id="anFps"><option>10</option><option selected>15</option><option>20</option><option>25</option><option>30</option></select></label>
+      <label class="pole">Rozkmit k okrajům<select class="vstup" id="anRozsah"><option value="1">až na okraj</option><option value="0.9" selected>90 %</option><option value="0.7">70 %</option><option value="0.5">50 %</option></select></label>
+    </div>
+    <p class="tip">Čára jede plynule ze středu k jednomu okraji, k druhému a zpět – smyčka navazuje. Směr čáry podle nastavení posuvníku. GIF kóduje enkodér ze stránky „GIF, animace a sprite sheety“, video knihovna Mediabunny (MPL-2.0).</p>
+    <div class="prubeh" id="anPrubeh" hidden><i></i></div>
+    <p class="tip" id="anInfo"></p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" id="anZavrit">Zavřít</button>
+    <button type="button" class="btn" id="anZrusit" hidden>Zrušit</button>
+    <button type="button" class="btn primary" id="anStart">🎞️ Vytvořit a uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- export HTML -->
+<dialog class="okno siroke" id="dlgHtml"><form method="dialog">
+  <header>🧩 HTML posuvník pro vlastní web</header>
+  <div class="telo">
+    <p class="tip">Jeden soubor bez knihoven: obrázky jsou uvnitř jako data URL, posuvník se ovládá myší, prstem i šipkami. Kód vložte do stránky (CSS i skript jsou omezené na vlastní id, víc posuvníků na stránce si nepřekáží).</p>
+    <div class="mrizka">
+      <label class="pole">Šířka obrázků<select class="vstup" id="htSirka"><option>640</option><option>800</option><option selected>1200</option><option>1600</option><option>2000</option></select></label>
+      <label class="pole">Formát<select class="vstup" id="htFormat"><option value="image/jpeg">JPEG</option><option value="image/webp">WebP (menší)</option></select></label>
+      <label class="pole">Kvalita<select class="vstup" id="htKvalita"><option value="0.7">70 %</option><option value="0.8">80 %</option><option value="0.85" selected>85 %</option><option value="0.92">92 %</option></select></label>
+      <label class="pole">Směr<select class="vstup" id="htSmer"><option value="svisle">svislá čára</option><option value="vodorovne">vodorovná čára</option></select></label>
+    </div>
+    <div id="htNahled"></div>
+    <p class="tip" id="htInfo"></p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn vlevo">Zavřít</button>
+    <button type="button" class="btn" id="htKopirovat">📋 Kopírovat kód</button>
+    <button type="button" class="btn primary" id="htUloz">💾 Stáhnout .html</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno siroke" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Porovnání před a po</header>
+  <div class="telo">
+    <p>Nástroj na porovnání dvou snímků téhož místa či věci: rekonstrukce, úprava fotky, staré a nové foto, výsledek retuše nebo komprese.</p>
+    <h3>Režimy</h3>
+    <ul>
+      <li><b>Posuvník</b> – dělicí čára svislá nebo vodorovná; vlevo/nahoře A, vpravo/dole B.</li>
+      <li><b>Lupa</b> – pod kurzorem se ukáže druhý obrázek, volitelně zvětšený nebo rozdělený napůl.</li>
+      <li><b>Vedle sebe</b> – dva pohledy se společným zoomem a posunem.</li>
+      <li><b>Prolnutí</b> – B přes A s nastavitelnou průhledností.</li>
+      <li><b>Rozdíl</b> – změny nad prahem, |A−B| se zesílením, heat-mapa a mapa SSIM; metriky MSE, PSNR, SSIM a podíl změněných pixelů.</li>
+      <li><b>Blikání</b> – střídání A a B; oko si změny všimne nejrychleji.</li>
+    </ul>
+    <h3>Zarovnání</h3>
+    <ul>
+      <li><b>Body</b> – 1 pár = posun, 2 páry = posun, měřítko a otočení (podobnost), 3 a více = afinní transformace metodou nejmenších čtverců. Ukazuje i chybu v pixelech.</li>
+      <li><b>Auto posun</b> – najde posun, při kterém nejlépe lícují hrany (pyramida zmenšenin; necitlivé na jinou expozici).</li>
+      <li><b>Doladění</b> – posuvníky posunu, měřítka a otočení kolem středu.</li>
+      <li><b>Ořez</b> – největší obdélník, kde jsou oba obrázky (po otočení zmizí prázdné rohy).</li>
+    </ul>
+    <h3>Klávesy</h3>
+    <p><kbd>1</kbd>–<kbd>6</kbd> režimy, <kbd>B</kbd> body, <kbd>F</kbd> celý obrázek, <kbd>0</kbd> 1:1, <kbd>+</kbd>/<kbd>−</kbd> zoom, <kbd>←</kbd>/<kbd>→</kbd> posuvník (se Shiftem po 10 %), <kbd>X</kbd> prohodit A a B, <kbd>mezerník</kbd> přepnout při blikání.</p>
+    <h3>Soukromí</h3>
+    <p>Obrázky se nikam neodesílají. Poslední dvojice se pamatuje v úložišti prohlížeče (IndexedDB), zavřít ji lze v nabídce Soubor.</p>
+  </div>
+  <footer><button value="ok" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<script src="pred_po/ui.js"></script>
+</body>
+</html>

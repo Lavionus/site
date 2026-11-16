@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reklamační protokol</title>
+<meta name="description" content="Evidence reklamací pro prodejce i spotřebitele: protokol o přijetí a vyřízení reklamace podle občanského zákoníku, hlídání lhůty 30 dní, 24 měsíců a domněnky 1 roku, prodloužení o dobu reklamace, fotky vady, číselná řada, vzory dopisů, CSV.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="reklamace/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 170px;flex-shrink:1;min-width:140px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.dlazdice:hover{border-color:var(--border-strong)}
+.dlazdice b{display:block;font-size:1.5rem;line-height:1.1}
+.dlazdice span{font-size:.78rem;color:var(--text-muted)}
+.dlazdice.prosla b{color:var(--danger)} .dlazdice.brzy b{color:var(--warn)} .dlazdice.vyrizeno b{color:var(--ok)}
+.dlazdice[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.role-info{font-size:.82rem;color:var(--text-muted);margin:0 0 10px}
+
+.seznam{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.karta{--pruh:var(--border-strong);background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--pruh);border-radius:var(--radius,8px);padding:9px 11px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.karta.prosla{--pruh:var(--danger)} .karta.brzy{--pruh:var(--warn)} .karta.bezi{--pruh:var(--accent)} .karta.vcas,.karta.uzavrena{--pruh:var(--ok)} .karta.pozde{--pruh:var(--warn)}
+.karta h3{margin:0;font-size:.95rem;line-height:1.3;word-break:break-word;display:flex;justify-content:space-between;gap:8px}
+.karta h3 small{font-weight:400;color:var(--text-muted);white-space:nowrap}
+.karta .lhuta{font-size:.84rem}
+.karta.prosla .lhuta{color:var(--danger)} .karta.brzy .lhuta,.karta.pozde .lhuta{color:var(--warn)}
+.karta .meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.76rem;color:var(--text-muted)}
+.karta .vada{font-size:.8rem;color:var(--text-muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.karta .akce{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.znacka{display:inline-block;font-size:.72rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border);white-space:nowrap}
+.upozorneni{font-size:.8rem;line-height:1.4;border:1px solid var(--danger);border-radius:6px;padding:6px 8px;background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.6}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(96vw,760px);max-height:94vh;margin:auto;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.uzke{width:min(94vw,560px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:calc(94vh - 2px)}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.okno fieldset{border:1px solid var(--border);border-radius:8px;padding:8px 10px 10px;margin:0;display:grid;gap:8px;min-width:0}
+.okno legend{font-size:.8rem;font-weight:600;padding:0 4px}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted);min-width:0}
+.pole .vstup{width:100%;color:var(--text)}
+.zatrzitko{display:flex;gap:6px;align-items:center;font-size:.84rem}
+.radek{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.info{font-size:.8rem;line-height:1.5;background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;color:var(--text)}
+.info.chyba{border-left-color:var(--danger)}
+.fotky{display:flex;flex-wrap:wrap;gap:6px}
+.fotka{position:relative;width:84px;height:84px;border-radius:6px;overflow:hidden;border:1px solid var(--border);background:var(--bg-control)}
+.fotka img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.fotka button{position:absolute;top:2px;right:2px;padding:0 6px;line-height:1.5}
+.historie{font-size:.78rem;color:var(--text-muted);margin:0;padding-left:18px}
+.napoveda ul{padding-left:20px;margin:0 0 6px}
+.okno p{margin:0}
+textarea.dopis{width:100%;min-height:50vh;font-family:inherit;font-size:.86rem;line-height:1.45}
+.napoveda p,.napoveda li{margin:0 0 6px;font-size:.86rem;line-height:1.55}
+.napoveda h3{font-size:.9rem;margin:10px 0 4px}
+.napoveda a{color:var(--accent)}
+#nahled{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+#nahled img{max-width:96vw;max-height:96vh}
+
+/* tisk – na obrazovce skrytý */
+#tisk{display:none}
+@media print{
+  @page{size:A4;margin:14mm 15mm}
+  body{display:block;height:auto;background:#fff;color:#000}
+  body > *:not(#tisk){display:none!important}
+  #tisk{display:block;font:10.5pt/1.4 "Liberation Sans",Arial,sans-serif;color:#000}
+  #tisk h1{font-size:15pt;margin:0 0 2mm}
+  #tisk h2{font-size:11pt;margin:4mm 0 1.5mm;border-bottom:.3mm solid #000}
+  #tisk table{border-collapse:collapse;width:100%}
+  #tisk td,#tisk th{border:.2mm solid #888;padding:1.2mm 2mm;vertical-align:top;text-align:left}
+  #tisk th{width:34%;font-weight:600;background:#f0f0f0}
+  #tisk .hlava{display:flex;justify-content:space-between;gap:6mm;align-items:flex-start}
+  #tisk .hlava .cislo{font-size:12pt;font-weight:700;text-align:right;white-space:nowrap}
+  #tisk .dva{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+  #tisk .osoba{white-space:pre-line;border:.2mm solid #888;padding:2mm;min-height:20mm}
+  #tisk .text{white-space:pre-wrap;border:.2mm solid #888;padding:2mm;min-height:14mm}
+  #tisk .poucka{font-size:8.5pt;line-height:1.35;color:#222}
+  #tisk .podpisy{display:grid;grid-template-columns:1fr 1fr;gap:15mm;margin-top:14mm}
+  #tisk .podpisy div{border-top:.2mm solid #000;padding-top:1mm;font-size:9pt;text-align:center}
+  #tisk .tfotky{display:flex;flex-wrap:wrap;gap:2mm;break-inside:avoid}
+  #tisk .tfotky img{height:38mm;max-width:58mm;object-fit:contain;border:.2mm solid #888}
+  #tisk .dopis{white-space:pre-wrap;font:11pt/1.5 "Liberation Serif","Times New Roman",serif}
+  #tisk .zapati{margin-top:6mm;font-size:7.5pt;color:#555}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🧾 Reklamace</h1>
+  <div class="skup" role="group" aria-label="Role"><span class="skup-nazev" aria-hidden="true">Jsem</span><div class="skup-tl">
+    <button class="tl" data-role="prodejce" aria-pressed="true" title="Přijímám a vyřizuji reklamace (obchod, servis, e-shop)">🏪<span class="txt"> Prodejce</span></button>
+    <button class="tl" data-role="spotrebitel" aria-pressed="false" title="Reklamuji zboží, které jsem koupil(a)">🙋<span class="txt"> Kupující</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="CSV, záloha, údaje firmy">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Přidat"><span class="skup-nazev" aria-hidden="true">Přidat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="nova" title="Nová reklamace">✚<span class="txt"> Nová reklamace</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <select class="tl" id="filtrStav" aria-label="Stav">
+      <option value="">Všechny stavy</option><option value="prijato">📥 Přijato</option><option value="posudek">🔬 Posudek</option>
+      <option value="vyrizeno">✅ Vyřízeno</option><option value="zamitnuto">⛔ Zamítnuto</option>
+    </select>
+  </div></div>
+  <div class="skup skup-hledat"><input type="search" id="hledat" class="vstup" placeholder="🔍 Číslo, zboží, jméno…" aria-label="Hledat"></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Nápověda a právní rámec" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="udaje">🏢 Moje údaje a číselná řada…</button>
+  <hr>
+  <button class="tl" data-prikaz="csv">📊 Export do CSV (aktuální role)</button>
+  <button class="tl" data-prikaz="zaloha">💾 Záloha včetně fotek (JSON)</button>
+  <button class="tl" data-prikaz="obnov">📂 Obnovit ze zálohy…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+<div id="tisk"></div>
+<div id="nahled" hidden><img alt="Fotka vady"></div>
+
+<!-- reklamace -->
+<dialog class="okno" id="dlgRek"><form method="dialog" novalidate>
+  <header id="dlgRekTitul">Reklamace</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Číslo reklamace<input class="vstup" name="cislo" maxlength="40"></label>
+      <label class="pole">Datum uplatnění<input class="vstup" name="datumUplatneni" type="date" required></label>
+      <label class="pole">Jak uplatněno<select class="vstup" name="zpusobUplatneni"></select></label>
+    </div>
+    <fieldset><legend>Kupující</legend>
+      <div class="radek">
+        <label class="pole">Kupující je<select class="vstup" name="kupujiciTyp"><option value="spotrebitel">spotřebitel (fyzická osoba mimo podnikání)</option><option value="podnikatel">podnikatel (nákup na IČO)</option></select></label>
+        <label class="pole">Jméno / firma<input class="vstup" name="k_jmeno" maxlength="120"></label>
+      </div>
+      <label class="pole">Adresa<input class="vstup" name="k_adresa" maxlength="300"></label>
+      <div class="radek">
+        <label class="pole">Telefon<input class="vstup" name="k_telefon" type="tel" maxlength="40"></label>
+        <label class="pole">E-mail<input class="vstup" name="k_email" type="email" maxlength="120"></label>
+        <label class="pole" id="poleKIco">IČO<input class="vstup" name="k_ico" maxlength="20"></label>
+      </div>
+    </fieldset>
+    <fieldset id="fsProdavajici"><legend>Prodávající</legend>
+      <div class="radek">
+        <label class="pole">Obchod / firma<input class="vstup" name="p_jmeno" maxlength="120"></label>
+        <label class="pole">IČO<input class="vstup" name="p_ico" maxlength="20"></label>
+      </div>
+      <label class="pole">Adresa (sídlo nebo provozovna)<input class="vstup" name="p_adresa" maxlength="300"></label>
+      <div class="radek">
+        <label class="pole">Telefon<input class="vstup" name="p_telefon" maxlength="40"></label>
+        <label class="pole">E-mail<input class="vstup" name="p_email" maxlength="120"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>Zboží</legend>
+      <label class="pole">Zboží (přesné označení)<input class="vstup" name="zbozi" maxlength="200" required></label>
+      <div class="radek">
+        <label class="pole">Výrobní / sériové číslo<input class="vstup" name="sn" maxlength="80" title="Podle něj se sčítají předchozí reklamace téhož kusu"></label>
+        <label class="pole">Doklad o koupi č.<input class="vstup" name="doklad" maxlength="80"></label>
+        <label class="pole">Cena (Kč)<input class="vstup" name="cena" inputmode="decimal"></label>
+      </div>
+      <div class="radek">
+        <label class="pole">Datum koupě<input class="vstup" name="datumKoupe" type="date"></label>
+        <label class="pole">Datum převzetí (prázdné = koupě)<input class="vstup" name="datumPrevzeti" type="date"></label>
+      </div>
+      <div class="radek">
+        <label class="zatrzitko"><input type="checkbox" name="pouzite"> použité zboží</label>
+        <label class="pole" id="poleLhuta">Lhůta pro vady (měsíce)<input class="vstup" name="lhutaMesice" type="number" min="1" max="120" step="1"></label>
+        <label class="pole">Smluvní záruka za jakost (měsíce, 0 = není)<input class="vstup" name="zarukaMesice" type="number" min="0" max="600" step="1"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>Vada a požadavek</legend>
+      <label class="pole">Popis vady (jak se projevuje)<textarea class="vstup" name="vada" rows="3" maxlength="3000"></textarea></label>
+      <div class="radek">
+        <label class="pole">Požadovaný způsob vyřízení<select class="vstup" name="pozadavek"></select></label>
+        <label class="pole">Dohodnutá delší lhůta vyřízení<input class="vstup" name="dohodnutaLhuta" type="date" title="Jen skutečná dohoda s kupujícím, ne předtištěná věta"></label>
+      </div>
+      <label class="pole">Předané příslušenství / doklady<input class="vstup" name="prislusenstvi" maxlength="500"></label>
+      <label class="pole">Stav zboží při převzetí (poškození, znečištění)<input class="vstup" name="stavZbozi" maxlength="500"></label>
+      <label class="zatrzitko"><input type="checkbox" name="vecPredana"> věc je u prodávajícího / v servisu (kupující ji nemůže užívat)</label>
+      <div class="pole">Fotky vady (uloží se v tomto prohlížeči)
+        <div class="fotky" id="dlgFotky"></div>
+        <span><button type="button" class="btn mini" id="dlgPridatFoto">📷 Přidat fotky</button></span>
+        <input type="file" id="souborFoto" accept="image/*" multiple hidden>
+      </div>
+    </fieldset>
+    <fieldset><legend>Stav a vyřízení</legend>
+      <div class="radek">
+        <label class="pole">Stav<select class="vstup" name="stav"></select></label>
+        <label class="pole">Datum vyřízení / oznámení<input class="vstup" name="v_datum" type="date"></label>
+        <label class="pole">Způsob vyřízení<select class="vstup" name="v_zpusob"><option value="">—</option></select></label>
+      </div>
+      <label class="pole">Posudek / vyjádření servisu<textarea class="vstup" name="posudek" rows="2" maxlength="2000"></textarea></label>
+      <label class="pole">Popis vyřízení, u zamítnutí odůvodnění<textarea class="vstup" name="v_popis" rows="2" maxlength="3000"></textarea></label>
+      <div class="radek">
+        <label class="pole">Vrácená částka / sleva (Kč)<input class="vstup" name="v_castka" inputmode="decimal"></label>
+        <label class="pole">Věc vrácena kupujícímu dne<input class="vstup" name="datumVraceni" type="date"></label>
+      </div>
+      <label class="pole">Interní poznámka<textarea class="vstup" name="poznamka" rows="2" maxlength="3000"></textarea></label>
+    </fieldset>
+    <div class="info" id="dlgLhuty" aria-live="polite"></div>
+    <ul class="historie" id="dlgHistorie"></ul>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgRekSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- moje údaje -->
+<dialog class="okno uzke" id="dlgUdaje"><form method="dialog">
+  <header>🏢 Moje údaje</header>
+  <div class="telo">
+    <fieldset><legend>Jako prodejce (hlavička protokolu)</legend>
+      <label class="pole">Firma / jméno<input class="vstup" name="f_jmeno" maxlength="120"></label>
+      <label class="pole">Sídlo<input class="vstup" name="f_adresa" maxlength="300"></label>
+      <div class="radek">
+        <label class="pole">IČO<input class="vstup" name="f_ico" maxlength="20"></label>
+        <label class="pole">Telefon<input class="vstup" name="f_telefon" maxlength="40"></label>
+      </div>
+      <label class="pole">E-mail<input class="vstup" name="f_email" maxlength="120"></label>
+      <label class="pole">Provozovna (kde se reklamace přijímají)<input class="vstup" name="provozovna" maxlength="300"></label>
+      <label class="pole">Předpona číselné řady (např. RK → RK-2026-0001)<input class="vstup" name="prefix" maxlength="12"></label>
+    </fieldset>
+    <fieldset><legend>Jako kupující (předvyplní se do dopisů)</legend>
+      <label class="pole">Jméno<input class="vstup" name="j_jmeno" maxlength="120"></label>
+      <label class="pole">Adresa<input class="vstup" name="j_adresa" maxlength="300"></label>
+      <div class="radek">
+        <label class="pole">Telefon<input class="vstup" name="j_telefon" maxlength="40"></label>
+        <label class="pole">E-mail<input class="vstup" name="j_email" maxlength="120"></label>
+      </div>
+    </fieldset>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">Uložit</button></footer>
+</form></dialog>
+
+<!-- dopis -->
+<dialog class="okno" id="dlgDopis"><form method="dialog">
+  <header id="dlgDopisTitul">✉️ Dopis</header>
+  <div class="telo">
+    <p class="info" style="margin:0">Text můžete upravit. Doplňte místo a číslo účtu, vytiskněte a podepište. Doporučeně poslat poštou s dodejkou nebo předat osobně proti podpisu.</p>
+    <textarea class="vstup dopis" id="dopisText" aria-label="Text dopisu"></textarea>
+  </div>
+  <footer>
+    <button type="button" class="btn vlevo" id="dopisKopie">📋 Kopírovat</button>
+    <button value="zrusit" class="btn">Zavřít</button>
+    <button type="button" class="btn primary" id="dopisTisk">🖨️ Tisk A4</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Reklamace – jak to funguje a co říká zákon</header>
+  <div class="telo napoveda">
+    <p><b>🏪 Prodejce</b> eviduje přijaté reklamace s číselnou řadou, tiskne <b>potvrzení o přijetí</b> a <b>o vyřízení</b> reklamace (A4) a hlídá lhůty. <b>🙋 Kupující</b> si vede vlastní reklamace, tiskne <b>dopis s uplatněním vady</b> a po marném uplynutí lhůty <b>odstoupení od smlouvy</b>.</p>
+    <h3>Spotřebitel (nákup mimo podnikání) – znění ověřeno 16. 11. 2026</h3>
+    <ul>
+      <li><b>24 měsíců</b> od převzetí na uplatnění vady (§ 2165 odst. 1 OZ). U použitého zboží lze ujednat kratší lhůtu, nejméně <b>12 měsíců</b> (§ 2167 OZ).</li>
+      <li><b>Domněnka 1 rok:</b> vada, která se projeví do roka od převzetí, se považuje za existující už při převzetí – prodávající musí dokázat opak (§ 2161 odst. 5 OZ, novela 374/2022 Sb., dříve 6 měsíců).</li>
+      <li><b>30 dní na vyřízení</b> reklamace včetně odstranění vady a informování kupujícího (§ 19 odst. 3 zák. 634/1992 Sb.). Delší lhůta jen po skutečné dohodě. Když lhůta marně uplyne, může spotřebitel odstoupit od smlouvy nebo žádat přiměřenou slevu.</li>
+      <li><b>Potvrzení</b> o uplatnění (kdy, co je obsahem, požadovaný způsob vyřízení) a o vyřízení (datum, způsob, doba opravy, případně odůvodnění zamítnutí) – § 19 odst. 1 a 2 zák. 634/1992 Sb.</li>
+      <li><b>Lhůta neběží</b>, dokud kupující nemůže věc užívat kvůli oprávněné reklamaci (§ 2165 odst. 4 OZ). Stránka proto posouvá konec lhůty o dny od uplatnění do vrácení věci; u zamítnuté reklamace se neposouvá. Dřívější reklamace téhož kusu se sečtou podle výrobního čísla.</li>
+      <li>Náklady účelně vynaložené s oprávněnou reklamací hradí prodávající (§ 1924 OZ); neoprávněnou reklamaci nelze zpoplatnit.</li>
+    </ul>
+    <h3>Podnikatel (nákup na IČO)</h3>
+    <ul>
+      <li>Vadu je třeba vytknout bez zbytečného odkladu, skryté vady nejpozději do <b>2 let</b> od odevzdání (§ 2112 OZ). Lhůtu lze smluvně upravit – zadejte ji v poli „Lhůta pro vady“.</li>
+      <li>Zákonná <b>30denní lhůta</b> ani domněnka 1 roku <b>neplatí</b>; pokud jste se dohodli na lhůtě vyřízení, zadejte ji jako dohodnutou.</li>
+    </ul>
+    <h3>Počítání lhůt</h3>
+    <p>Lhůta ve dnech začíná dnem po uplatnění; v měsících končí dnem stejného čísla (není-li, posledním dnem měsíce). Připadne-li konec na sobotu, neděli nebo svátek, posouvá se na nejbližší pracovní den (§ 605 a § 607 OZ). Výpočet je orientační – v hraničních případech se poraďte s právníkem nebo <a href="https://www.coi.cz/" target="_blank" rel="noopener">ČOI</a> (spory řeší i mimosoudně: adr.coi.cz).</p>
+    <p class="info">Zdroje: zákon č. 89/2012 Sb. a 634/1992 Sb. ve znění zákona 374/2022 Sb. (účinnost 6. 1. 2023), <a href="https://www.coi.cz/" target="_blank" rel="noopener">ČOI – Reklamace zboží od 6. 1. 2023</a>, <a href="https://e-sbirka.gov.cz/sb/2022/374" target="_blank" rel="noopener">e-Sbírka 374/2022</a>. Stav ověřen 16. 11. 2026 – při změně zákona může být výpočet neaktuální.</p>
+    <p>Data (i fotky) jsou jen v tomto prohlížeči. Zálohujte přes <i>Soubor → Záloha</i>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script src="reklamace/app.js"></script>
+</body>
+</html>

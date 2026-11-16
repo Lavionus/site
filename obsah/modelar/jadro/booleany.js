@@ -106,11 +106,37 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return { m: z.m.translate([0, 0, 0]), barvy: z.barvy, diry: z.diry };
     }
 
+    /** Vrcholy na mřížku 1e-4 mm (m smaže, vrátí nový). Stěny „zarovnané“ jen se šumem (float32, otočení,
+        magnet) se tak stanou přesně totožnými – jinak díra o 1e-9 mm vedle stěny nechá slupku nulové tloušťky,
+        která se kreslí jako zbylé trojúhelníky stěny. Původní id běhů (barvy, díry) zůstávají. */
+    function naMrizku(m) {
+      const mesh = m.getMesh(), v = mesh.vertProperties;
+      for (let i = 0; i < v.length; i += mesh.numProp)
+        for (let k = 0; k < 3; k++) v[i + k] = Math.round(v[i + k] * 1e4) / 1e4;
+      const n = new Manifold(mesh);
+      if (n.status() !== 'NoError') { n.delete(); return m; }
+      m.delete();
+      return n;
+    }
+
     /** Dítě umístěné ve skupině (matice dítěte), nebarevná skupina jednou barvou. */
     function umistene(d) {
-      const p = prirozena(d);
-      const m = p.m.transform(Array.from(M.maticeUzlu(d).elements));
-      p.m.delete();
+      // umístěné a přichycené dítě v mezipaměti (tvar + matice): posun díry po velkém importu pak nepřichycuje
+      // znovu celé těleso, které se nehnulo; barvy a díry s ním (id běhů patří k téhle síti)
+      const mat = Array.from(M.maticeUzlu(d).elements), klicU = 'umist|' + M.klicGeometrie(d) + '|' + mat.join(',');
+      let p = zCache(klicU);
+      if (!p) {
+        const q = prirozena(d);
+        p = { m: naMrizku(q.m.transform(mat)), barvy: q.barvy, diry: q.diry, jednoId: q.barvy.size === 1 };
+        q.m.delete();
+        doCache(klicU, p);
+      }
+      let m = p.m.translate([0, 0, 0]);
+      // jednobarevné dítě: jako v prirozena každá kopie vlastní id a barva / role podle uzlu (klíč je nezná)
+      if (p.jednoId) {
+        const o = m.asOriginal(); m.delete(); m = o;
+        p = { barvy: new Map([[m.originalID(), d.barva]]), diry: new Set(d.role === 'dira' ? [m.originalID()] : []) };
+      }
       if (d.druh === 'skupina' && !d.barevne) {
         const o = m.asOriginal(); m.delete();
         return { m: o, barvy: new Map([[o.originalID(), d.barva]]), diry: new Set(d.role === 'dira' ? [o.originalID()] : []) };

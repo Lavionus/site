@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sníh a laviny</title>
+<meta name="description" content="Pro skialpinisty a turisty na horách: výška sněhu a nový sníh, vítr a oteplení, graf sezóny, mapa sklonitosti a orientace svahů z výškového modelu, odkazy na lavinové předpovědi, stupnice nebezpečí, redukční metoda a kontrolní seznam před túrou.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="lib/chart.min.js"></script>
+<script src="snih_laviny/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3;text-decoration:none}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka form{display:flex;gap:4px;padding:4px}
+.nabidka .pozn{font-size:.74rem;color:var(--text-muted);padding:2px 8px}
+[hidden]{display:none !important}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+.misto-tl{max-width:220px;overflow:hidden;text-overflow:ellipsis}
+
+.varovani{background:color-mix(in srgb,var(--warn) 16%,var(--bg-panel));border-bottom:1px solid var(--warn);padding:5px 12px;font-size:.78rem;line-height:1.35;flex-shrink:0}
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+main.mapa-rezim{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.obal{max-width:1150px;margin:0 auto}
+h2{font-size:1.1rem;margin:4px 0 10px}
+h3{font-size:.95rem;margin:16px 0 6px}
+p,li{line-height:1.5;font-size:.88rem}
+.tip{font-size:.8rem;color:var(--text-muted);line-height:1.45}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;margin-bottom:10px}
+.dlazdice{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin-bottom:10px}
+.dlazdice div{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.dlazdice b{display:block;font-size:1.35rem;line-height:1.15}
+.dlazdice span{font-size:.75rem;color:var(--text-muted)}
+.upoz{border-left:4px solid var(--border-strong);background:var(--bg-panel);border-radius:6px;padding:7px 10px;margin-bottom:6px;font-size:.85rem;line-height:1.45}
+.upoz.pozor{border-left-color:var(--warn)} .upoz.vysoke{border-left-color:var(--danger)} .upoz.info{border-left-color:var(--ok)}
+.graf{position:relative;height:260px}
+.chyba{color:var(--danger)}
+.stav{font-size:.82rem;color:var(--text-muted);margin:6px 0}
+.radek{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+a{color:var(--accent)}
+
+/* mapa */
+.mapa-lista{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:6px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);font-size:.8rem}
+.mapa-lista label{display:flex;gap:4px;align-items:center}
+#mapa{flex:1;min-height:260px}
+.leaflet-container{font-family:inherit;background:var(--bg-input)}
+.kompas{display:grid;grid-template-columns:repeat(3,26px);grid-template-rows:repeat(3,22px);gap:2px}
+.kompas button{font-size:.66rem;padding:0;border-radius:4px;border:1px solid var(--border);background:var(--bg-control);color:var(--text);cursor:pointer}
+.kompas button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.kompas .stred{border:0;background:none;cursor:default;color:var(--text-muted);font-size:.6rem}
+.legenda{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.legenda i{display:inline-block;width:14px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:3px;border:1px solid rgba(0,0,0,.25)}
+.mapa-info{font-size:.76rem;color:var(--text-muted)}
+.leaflet-popup-content{font-size:.82rem;line-height:1.45;margin:10px 12px}
+
+/* bulletin */
+.odkazy{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-bottom:12px}
+.odkazy a{display:block;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-decoration:none;color:var(--text);font-size:.84rem;line-height:1.35}
+.odkazy a:hover{border-color:var(--accent)}
+.odkazy a b{color:var(--accent)}
+.odkazy a span{display:block;font-size:.75rem;color:var(--text-muted)}
+.stupen{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:24px;padding:0 6px;border-radius:5px;font-weight:700;color:#111;border:1px solid rgba(0,0,0,.3)}
+.stupen.s5{color:#fff;background:repeating-linear-gradient(45deg,#000 0 6px,#d00 6px 12px)!important}
+.skupina{border-left:6px solid var(--border-strong)}
+.skupina .hlava{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+.problem{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--border)}
+.problem svg{flex-shrink:0}
+.problem .txt{flex:1;min-width:0;font-size:.84rem;line-height:1.4}
+.regiony{font-size:.78rem;color:var(--text-muted)}
+details summary{cursor:pointer;font-size:.82rem;color:var(--text-muted)}
+details .text{white-space:pre-line;font-size:.82rem;line-height:1.45;margin-top:4px}
+
+/* redukce */
+.formular{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.stupne-volba{display:flex;gap:4px;flex-wrap:wrap}
+.stupne-volba button{min-width:42px;height:34px;border-radius:6px;border:2px solid transparent;font-weight:700;cursor:pointer;color:#111}
+.stupne-volba button[aria-pressed="true"]{border-color:var(--text);box-shadow:0 0 0 2px var(--bg-panel) inset}
+.vysledek{font-size:1.05rem;padding:12px;border-radius:8px;border:2px solid var(--border-strong);margin:10px 0}
+.vysledek.ok{border-color:var(--ok)} .vysledek.ne{border-color:var(--danger)}
+.vysledek .vzorec{font-family:ui-monospace,monospace;font-size:1rem}
+.vysledek .verdikt{font-size:1.15rem;font-weight:700;margin-top:4px}
+.vysledek.ok .verdikt{color:var(--ok)} .vysledek.ne .verdikt{color:var(--danger)}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4}
+th{color:var(--text-muted);font-weight:600;font-size:.76rem}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;margin-bottom:10px}
+
+/* seznam */
+.seznam label{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:.88rem;line-height:1.4;cursor:pointer}
+.seznam input{margin-top:3px;width:17px;height:17px;flex-shrink:0}
+.seznam label.hotovo span{color:var(--text-muted);text-decoration:line-through}
+
+@media print{
+  .lista,.varovani,.mapa-lista,#podpis-pruh,.btn{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>❄️ Sníh a laviny</h1>
+  <div class="skup" role="group" aria-label="Místo"><span class="skup-nazev" aria-hidden="true">Místo</span><div class="skup-tl">
+    <button class="tl misto-tl" id="tlMisto" data-nabidka="nabMisto" aria-expanded="false" title="Vybrat místo: hledání, oblíbené hory, poloha">📍 <span id="nazevMista">–</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="mapa" aria-pressed="false" title="Mapa sklonitosti a orientace svahů">🗺️<span class="txt"> Sklony</span></button>
+    <button class="tl" data-pohled="snih" aria-pressed="false" title="Sníh, vítr a teplota – předpověď modelu">🌨️<span class="txt"> Sníh a počasí</span></button>
+    <button class="tl" data-pohled="sezona" aria-pressed="false" title="Výška sněhu a nový sníh za celou sezónu">📈<span class="txt"> Sezóna</span></button>
+    <button class="tl" data-pohled="predpoved" aria-pressed="false" title="Oficiální lavinové předpovědi">⚠️<span class="txt"> Předpovědi</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Rozhodování"><span class="skup-nazev" aria-hidden="true">Rozhodování</span><div class="skup-tl">
+    <button class="tl" data-pohled="redukce" aria-pressed="false" title="Redukční metoda (Munter)">🧮<span class="txt"> Redukce</span></button>
+    <button class="tl" data-pohled="stupnice" aria-pressed="false" title="Evropská stupnice lavinového nebezpečí">📊<span class="txt"> Stupnice</span></button>
+    <button class="tl" data-pohled="seznam" aria-pressed="false" title="Kontrolní seznam před túrou">✅<span class="txt"> Před túrou</span></button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-nabidka="nabInfo" aria-expanded="false" title="Zdroje dat a licence">ℹ️<span class="txt"> Zdroje</span> ▾</button></span>
+</header>
+<div class="varovani" role="note">⚠️ <b>Nejde o lavinovou předpověď.</b> Stránka ukazuje modelová data o počasí a sklonitost terénu jako pomůcku k plánování. Rozhoduje vždy oficiální lavinová předpověď pro danou oblast, situace na místě a vaše zkušenosti.</div>
+
+<div id="nabMisto" class="nabidka" hidden>
+  <form id="formHledat"><input class="vstup" id="hledat" placeholder="Hledat místo (hora, chata, obec)…" aria-label="Hledat místo" style="flex:1"><button class="btn mini" type="submit">🔎</button></form>
+  <div id="vysledkyHledani"></div>
+  <hr>
+  <div id="oblibena"></div>
+  <hr>
+  <button class="tl" data-prikaz="poloha">🎯 Moje poloha</button>
+  <button class="tl" data-prikaz="naMape">🗺️ Vybrat kliknutím do mapy</button>
+  <div class="pozn">Hledání: Nominatim © OpenStreetMap.</div>
+</div>
+
+<div id="nabInfo" class="nabidka" hidden style="max-width:420px">
+  <div class="pozn" style="font-size:.8rem;line-height:1.45">
+    <b>Počasí a sníh:</b> <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) – předpověď z modelů (ICON, ECMWF…), historie z reanalýzy ERA5/ERA5-Land (Copernicus). Hodnoty platí pro buňku modelu, ne pro konkrétní svah.<br><br>
+    <b>Výškový model:</b> <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles</a> (Mapzen/Tilezen, AWS Open Data) – v Evropě EU-DEM © Copernicus (~30 m), jinde SRTM © USGS a <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">další</a>.<br><br>
+    <b>Lavinový bulletin Švýcarska:</b> © <a href="https://www.slf.ch/" target="_blank" rel="noopener">WSL-Institut für Schnee- und Lawinenforschung SLF</a>, licence CC BY 4.0, převzato beze změn z otevřeného rozhraní <a href="https://aws.slf.ch/api/bulletin/caaml" target="_blank" rel="noopener">aws.slf.ch</a>.<br><br>
+    <b>Podkladové mapy:</b> © přispěvatelé OpenStreetMap, OpenTopoMap (CC BY-SA), Esri.<br><br>
+    <b>Redukční metoda:</b> Werner Munter: <i>3×3 Lawinen. Entscheiden in kritischen Situationen</i>, Agentur Pohl &amp; Schellhammer, Garmisch-Partenkirchen 1997 (3. vyd. 2003).
+  </div>
+</div>
+
+<main id="hlavni">
+  <!-- MAPA -->
+  <section id="p-mapa" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+    <div class="mapa-lista">
+      <label>Barvit
+        <select class="vstup" id="rezimMapy"><option value="sklon">sklon</option><option value="orientace">orientaci (svahy ≥ 20°)</option><option value="vypnuto">nic (jen mapa)</option></select></label>
+      <span style="display:flex;gap:6px;align-items:center" title="Zobrazit jen svahy vybraných orientací (např. kritické podle předpovědi)">Orientace
+        <span class="kompas" id="kompas"></span>
+        <span style="display:flex;flex-direction:column;gap:2px">
+          <button class="btn mini" data-prikaz="vsechnySektory">Všechny</button>
+          <button class="btn mini" data-prikaz="zavetri" title="Závětrné svahy podle převládajícího větru z předpovědi">🌬️ Závětří</button>
+        </span></span>
+      <label>Krytí <input type="range" id="pruhlednost" min="0.2" max="1" step="0.05" value="0.6" style="width:80px"></label>
+      <label>Podklad <select class="vstup" id="podklad"></select></label>
+      <span class="legenda" id="legenda"></span>
+      <span class="mapa-info" id="mapaInfo"></span>
+    </div>
+    <div id="mapa"></div>
+  </section>
+
+  <!-- SNÍH A POČASÍ -->
+  <section id="p-snih" class="obal" hidden>
+    <h2 id="snihNadpis">Sníh a počasí</h2>
+    <div class="radek"><button class="btn" data-prikaz="nactiPocasi">🔄 Obnovit</button><span class="stav" id="snihStav"></span></div>
+    <div class="dlazdice" id="snihDlazdice"></div>
+    <h3>Signály v počasí</h3>
+    <div id="upozorneni"></div>
+    <p class="tip">Upozornění vycházejí jen z modelu počasí (nový sníh, vítr, oteplení, déšť). Slabé vrstvy ve starém sněhu, které stojí za většinou smrtelných lavin, z počasí vyčíst nejde.</p>
+    <h3>Sníh – 3 dny zpět a 7 dní dopředu</h3>
+    <div class="panel"><div class="graf"><canvas id="grafSnih"></canvas></div></div>
+    <h3>Vítr a teplota</h3>
+    <div class="panel"><div class="graf"><canvas id="grafVitr"></canvas></div></div>
+    <p class="tip">Data: Open-Meteo (CC BY 4.0). Model počítá s výškou <span id="snihVyska">–</span>; na hřebenech bývá vítr silnější a výška sněhu v terénu se kvůli návějím liší o desítky centimetrů až metry.</p>
+  </section>
+
+  <!-- SEZÓNA -->
+  <section id="p-sezona" class="obal" hidden>
+    <h2 id="sezonaNadpis">Sezóna</h2>
+    <div class="radek"><label class="pole" style="display:flex;align-items:center;gap:6px">Sezóna <select class="vstup" id="volbaSezony"></select></label><span class="stav" id="sezonaStav"></span></div>
+    <div class="dlazdice" id="sezonaDlazdice"></div>
+    <div class="panel"><div class="graf" style="height:300px"><canvas id="grafSezona"></canvas></div></div>
+    <p class="tip">Historie z reanalýzy ERA5/ERA5-Land přes Open-Meteo (CC BY 4.0), zpoždění asi 5 dní. Výška sněhu je průměr buňky modelu (~10 km) – vhodné pro srovnání sezón a vývoje (kdy napadlo, kdy oteplilo), ne jako měření na místě.</p>
+  </section>
+
+  <!-- PŘEDPOVĚDI -->
+  <section id="p-predpoved" class="obal" hidden>
+    <h2>Oficiální lavinové předpovědi</h2>
+    <p class="tip">Před každou túrou si přečtěte předpověď lavinové služby pro danou oblast – nejen stupeň, ale hlavně lavinové problémy, kritické orientace a výšky. Data těchto služeb se sem nepřebírají (s výjimkou otevřeného rozhraní SLF níže).</p>
+    <div class="odkazy">
+      <a href="https://www.laviny.cz/" target="_blank" rel="noopener"><b>🇨🇿 Horská služba ČR – laviny.cz</b><span>Krkonoše a Hrubý Jeseník, denně v sezóně</span></a>
+      <a href="https://www.laviny.sk/" target="_blank" rel="noopener"><b>🇸🇰 Stredisko lavínovej prevencie HZS</b><span>Tatry, Fatra, Nízké Tatry…</span></a>
+      <a href="https://lawiny.topr.pl/" target="_blank" rel="noopener"><b>🇵🇱 TOPR – lawiny</b><span>Polské Tatry</span></a>
+      <a href="https://avalanche.report/" target="_blank" rel="noopener"><b>🇦🇹🇮🇹 Avalanche.report (Euregio)</b><span>Tyrolsko, Jižní Tyrolsko, Trentino</span></a>
+      <a href="https://www.lawinen-warnung.eu/" target="_blank" rel="noopener"><b>🇦🇹 Lawinenwarndienste Österreich</b><span>Rozcestník rakouských zemí</span></a>
+      <a href="https://www.lawinenwarndienst-bayern.de/" target="_blank" rel="noopener"><b>🇩🇪 Lawinenwarndienst Bayern</b><span>Bavorské Alpy</span></a>
+      <a href="https://www.slf.ch/en/avalanche-bulletin-and-snow-situation/" target="_blank" rel="noopener"><b>🇨🇭 SLF – White Risk</b><span>Švýcarsko; souhrn i níže na stránce</span></a>
+      <a href="https://www.aineva.it/" target="_blank" rel="noopener"><b>🇮🇹 AINEVA</b><span>Italské Alpy</span></a>
+      <a href="https://meteofrance.com/meteo-montagne" target="_blank" rel="noopener"><b>🇫🇷 Météo-France – montagne</b><span>BERA pro francouzská pohoří</span></a>
+      <a href="https://www.avalanches.org/" target="_blank" rel="noopener"><b>🇪🇺 EAWS – mapa Evropy</b><span>Všechny evropské lavinové služby na jedné mapě</span></a>
+    </div>
+    <h3>Švýcarsko – aktuální bulletin SLF</h3>
+    <div class="radek"><input class="vstup" id="filtrRegionu" placeholder="Filtr regionu (např. Davos, Engadin)…" aria-label="Filtr regionu" style="flex:1;min-width:180px"><button class="btn" data-prikaz="nactiBulletin">🔄 Načíst</button></div>
+    <div class="stav" id="bulletinStav"></div>
+    <div id="bulletin"></div>
+    <p class="tip">Zdroj: © WSL-Institut für Schnee- und Lawinenforschung SLF, CC BY 4.0, převzato z otevřeného rozhraní beze změn obsahu (texty v angličtině, seskupeny regiony se shodným hodnocením). Platnost a závazné znění vždy na <a href="https://www.slf.ch/" target="_blank" rel="noopener">slf.ch</a> / White Risk.</p>
+  </section>
+
+  <!-- REDUKČNÍ METODA -->
+  <section id="p-redukce" class="obal" hidden>
+    <h2>Redukční metoda (Werner Munter)</h2>
+    <p class="tip">Pravděpodobnostní metoda pro plánování a rozhodnutí u svahu: <b>zbytkové riziko = potenciál nebezpečí ÷ (součin redukčních faktorů)</b>. Přijatelné je riziko <b>≤ 1</b>. Potenciál nebezpečí je 2<sup>stupeň</sup> (1 → 2, 2 → 4, 3 → 8, 4 → 16). Z každé třídy faktorů se volí nejvýš jeden.</p>
+    <div class="panel">
+      <div class="pole" style="margin-bottom:10px">Stupeň lavinového nebezpečí (z předpovědi)
+        <div class="stupne-volba" id="volbaStupne"></div></div>
+      <div class="formular">
+        <label class="pole">1. třída – nejstrmější část svahu (vč. nájezdu a výjezdu, min. 20 × 20 m)
+          <select class="vstup" id="rfSklon">
+            <option value="zadny">40° a více (bez redukce) – ×1</option>
+            <option value="pod40">vynechám ≥ 40° (nejstrmější 35–39°) – ×2</option>
+            <option value="pod35">vynechám ≥ 35° (nejstrmější 30–34°) – ×4</option>
+            <option value="pod30">vynechám ≥ 30° (vše pod 30°) – ×6</option>
+          </select></label>
+        <label class="pole">2. třída – orientace / svahy (jedna možnost)
+          <select class="vstup" id="rfOrientace">
+            <option value="zadny">bez redukce – ×1</option>
+            <option value="sever">vynechám sektor sever (SZ–S–SV) – ×2</option>
+            <option value="severniPulka">vynechám severní polovinu (ZSZ–S–VJV) – ×3</option>
+            <option value="projete">svah je trvale hojně projížděn – ×2</option>
+          </select></label>
+        <label class="pole">3. třída – skupina a chování (jedna možnost)
+          <select class="vstup" id="rfSkupina">
+            <option value="zadny">jednotlivec nebo velká skupina bez odstupů – ×1</option>
+            <option value="velkaOdstupy">velká skupina (5+) s odstupy – ×2</option>
+            <option value="mala">malá skupina (2–4) – ×2</option>
+            <option value="malaOdstupy">malá skupina (2–4) s odstupy – ×3</option>
+          </select></label>
+        <label class="pole" style="flex-direction:row;display:flex;align-items:center;gap:6px;color:var(--text)"><input type="checkbox" id="rfMokry"> Mokrý sníh (jaro, oteplení, déšť) – severní faktory neplatí</label>
+      </div>
+      <div class="vysledek" id="vysledekRedukce" aria-live="polite"></div>
+      <div id="pravidlaRedukce"></div>
+    </div>
+    <h3>Elementární redukční metoda (pro začátečníky)</h3>
+    <div class="tab-obal"><table>
+      <tr><th>Stupeň</th><th>Vynechat svahy</th><th>Pohyb</th></tr>
+      <tr><td><span class="stupen" style="background:#ffff00">2</span> mírné</td><td>40° a strmější</td><td>v terénu do 39°</td></tr>
+      <tr><td><span class="stupen" style="background:#ff9900">3</span> značné</td><td>35° a strmější</td><td>v terénu do 34°</td></tr>
+      <tr><td><span class="stupen" style="background:#ff0000">4</span> vysoké</td><td>30° a strmější</td><td>jen v mírném terénu pod 30°</td></tr>
+    </table></div>
+    <h3>Jak metodu používat</h3>
+    <ul>
+      <li>Rozhodující je <b>nejstrmější místo svahu</b> (plocha aspoň 20 × 20 m) včetně terénu nad vámi – laviny se uvolňují i ze svahů nad trasou.</li>
+      <li>Faktory 2. třídy pro severní orientace platí jen za suchého sněhu. Při mokrém sněhu jsou často nebezpečnější jižní svahy.</li>
+      <li>Odstupy = při výstupu alespoň 10 m, sjezd strmých svahů po jednom.</li>
+      <li>Metoda <b>nenahrazuje</b> lavinovou předpověď ani posouzení na místě. Varovné signály (čerstvé laviny, „wumm“, trhliny) mají přednost před jakýmkoli výpočtem.</li>
+      <li>Při stupni 3 je povinné vynechat svahy ≥ 40°, při stupni 4 zůstat pod 30°, při stupni 5 se túry nepodnikají.</li>
+    </ul>
+    <p class="tip">Citace: Werner Munter: <i>3×3 Lawinen. Entscheiden in kritischen Situationen.</i> Agentur Pohl &amp; Schellhammer, Garmisch-Partenkirchen 1997; 3. vyd. 2003. Hodnoty faktorů podle původní metody; novější školení (DAV, ÖAV, SAC) používají odvozené nástroje (Stop or Go, SnowCard, Lawinen-Mantra).</p>
+  </section>
+
+  <!-- STUPNICE -->
+  <section id="p-stupnice" class="obal" hidden>
+    <h2>Evropská stupnice lavinového nebezpečí (EAWS)</h2>
+    <p class="tip">Stupnici používají všechny evropské lavinové služby. Nebezpečí neroste lineárně – každý stupeň znamená zhruba dvojnásobek předchozího. Nejvíce smrtelných nehod skialpinistů se stává při stupních 2 a 3.</p>
+    <div class="tab-obal"><table id="tabStupnice"></table></div>
+    <h3>Lavinové problémy</h3>
+    <div class="tab-obal"><table>
+      <tr><th>Problém</th><th>Kde a kdy</th><th>Co dělat</th></tr>
+      <tr><td><b>Nový sníh</b></td><td>Během sněžení a 1–3 dny po něm, všechny orientace.</td><td>Počkat, až se nový sníh usadí; vyhnout se strmým svahům.</td></tr>
+      <tr><td><b>Navátý sníh</b></td><td>Závětrné svahy, žlaby, za hřebeny; čerstvé návěje bývají křehké.</td><td>Poznat návěje (rozdílná barva, převěje, zvuk), obejít je.</td></tr>
+      <tr><td><b>Přetrvávající slabé vrstvy</b></td><td>Hluboko ve sněhu, často na stinných svazích; vydrží týdny. Těžko předvídatelné, laviny bývají velké.</td><td>Velká rezerva ve sklonu, vyhnout se místům s málo sněhem, kde se dá vrstva spustit.</td></tr>
+      <tr><td><b>Mokrý sníh</b></td><td>Při oteplení, slunci, dešti – během dne roste.</td><td>Vyrazit brzy, být zpět před prohřátím svahů.</td></tr>
+      <tr><td><b>Klouzavý sníh</b></td><td>Na hladkém podloží (tráva, skalní plotny), za trhlinami „tlamy“.</td><td>Nezdržovat se pod trhlinami, odjezd nelze předpovědět.</td></tr>
+    </table></div>
+    <p class="tip">Zdroj: European Avalanche Warning Services, <a href="https://www.avalanches.org/standards/avalanche-danger-scale/" target="_blank" rel="noopener">Avalanche Danger Scale</a> a <a href="https://www.avalanches.org/standards/avalanche-problems/" target="_blank" rel="noopener">Avalanche Problems</a>; vlastní stručné shrnutí, závazné je znění EAWS.</p>
+  </section>
+
+  <!-- KONTROLNÍ SEZNAM -->
+  <section id="p-seznam" class="obal" hidden>
+    <h2>Kontrolní seznam před túrou</h2>
+    <div class="radek" style="margin-bottom:8px"><span class="stav" id="seznamStav"></span><button class="btn mini" data-prikaz="seznamNovy">↺ Nová túra (odškrtat vše)</button><button class="btn mini" data-prikaz="tisk">🖨️ Tisk</button></div>
+    <div id="seznam" class="seznam"></div>
+    <p class="tip">Seznam se ukládá jen v tomto prohlížeči. Neslouží jako náhrada lavinového kurzu – pravidelně trénujte vyhledávání zasypaného s LVS, sondou a lopatou.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+'use strict';
+const J = window.SnihJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const TERRARIUM = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/';
+if (window.self === window.top) document.body.classList.add('samostatne');
+const SEK = window.I18N && I18N.jazyk && I18N.jazyk !== 'cs' ? J.SEKTORY_EN : J.SEKTORY;   // „S“ česky = sever, anglicky jih
+
+const nacti = (k, z) => { try { const v = JSON.parse(localStorage.getItem(J.KLIC + '_' + k)); return v == null ? z : v; } catch (e) { return z; } };
+const uloz = (k, v) => { try { localStorage.setItem(J.KLIC + '_' + k, JSON.stringify(v)); } catch (e) {} };
+
+const OBLIBENA = [
+  { nazev: 'Luční bouda (Krkonoše)', lat: 50.7357, lon: 15.6960, vyska: 1410 },
+  { nazev: 'Kotelní jámy (Krkonoše)', lat: 50.7468, lon: 15.5335, vyska: 1350 },
+  { nazev: 'Obří důl (Krkonoše)', lat: 50.7310, lon: 15.7290, vyska: 1200 },
+  { nazev: 'Velká kotlina (Jeseníky)', lat: 50.0560, lon: 17.2350, vyska: 1300 },
+  { nazev: 'Praděd (Jeseníky)', lat: 50.0832, lon: 17.2310, vyska: 1491 },
+  { nazev: 'Skalnaté pleso (Vysoké Tatry)', lat: 49.1895, lon: 20.2340, vyska: 1780 },
+  { nazev: 'Kasprowy Wierch (Tatry)', lat: 49.2318, lon: 19.9817, vyska: 1980 },
+  { nazev: 'Chopok (Nízké Tatry)', lat: 48.9440, lon: 19.5920, vyska: 2000 },
+  { nazev: 'Hafelekar, Innsbruck', lat: 47.3125, lon: 11.3864, vyska: 2270 },
+  { nazev: 'Weissfluhjoch, Davos', lat: 46.8326, lon: 9.8061, vyska: 2660 }
+];
+let misto = nacti('misto', OBLIBENA[0]);
+let pohled = nacti('pohled', 'mapa');
+const S = { pocasi: null, pocasiKlic: '', sezony: {}, bulletin: null, mapa: null };
+
+/* ---------- nabídky ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { zavriNabidky(); return ukaz(pv.dataset.pohled); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+
+/* ---------- místo ---------- */
+function nastavMisto(m, zMapy) {
+  misto = { nazev: m.nazev || `${m.lat.toFixed(4)}, ${m.lon.toFixed(4)}`, lat: +m.lat, lon: +m.lon, vyska: m.vyska == null ? null : Math.round(m.vyska) };
+  uloz('misto', misto);
+  vykresliMisto();
+  if (S.mapa && !zMapy) S.mapa.setView([misto.lat, misto.lon], Math.max(S.mapa.getZoom(), 13));
+  if (S.znacka) S.znacka.setLatLng([misto.lat, misto.lon]);
+  if (pohled === 'snih') nactiPocasi(); else if (pohled === 'sezona') nactiSezonu();
+}
+function vykresliMisto() {
+  $('nazevMista').textContent = misto.nazev;
+  $('tlMisto').title = `${misto.nazev} – ${misto.lat.toFixed(4)}, ${misto.lon.toFixed(4)}` + (misto.vyska != null ? `, ${misto.vyska} m n. m.` : '');
+}
+$('oblibena').innerHTML = OBLIBENA.map((o, i) => `<button class="tl" data-oblibene="${i}">⛰️ ${esc(o.nazev)}</button>`).join('');
+$('oblibena').addEventListener('click', e => { const b = e.target.closest('[data-oblibene]'); if (b) { zavriNabidky(); nastavMisto(OBLIBENA[+b.dataset.oblibene]); } });
+$('formHledat').addEventListener('submit', async e => {
+  e.preventDefault();
+  const q = $('hledat').value.trim(), cil = $('vysledkyHledani');
+  if (!q) return;
+  cil.innerHTML = '<div class="pozn">Hledám…</div>';
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q=' + encodeURIComponent(q));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    cil.innerHTML = d.length ? d.map(x => `<button class="tl" data-lat="${x.lat}" data-lon="${x.lon}" data-nazev="${esc(x.name || x.display_name.split(',')[0])}">📍 ${esc(x.display_name)}</button>`).join('') : '<div class="pozn">Nic nenalezeno.</div>';
+  } catch (err) { cil.innerHTML = `<div class="pozn chyba">Hledání selhalo (${esc(err.message)}). Zkontrolujte připojení.</div>`; }
+});
+$('vysledkyHledani').addEventListener('click', async e => {
+  const b = e.target.closest('[data-lat]'); if (!b) return;
+  zavriNabidky();
+  const m = { nazev: b.dataset.nazev, lat: +b.dataset.lat, lon: +b.dataset.lon, vyska: null };
+  m.vyska = await vyskaBodu(m.lat, m.lon).catch(() => null);
+  nastavMisto(m);
+});
+
+/* ---------- pohledy ---------- */
+function ukaz(p) {
+  if (!$('p-' + p)) p = 'mapa';
+  pohled = p; uloz('pohled', p);
+  document.querySelectorAll('main > section').forEach(s => { s.hidden = s.id !== 'p-' + p; });
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === p)));
+  $('hlavni').classList.toggle('mapa-rezim', p === 'mapa');
+  if (p === 'mapa') { pripravMapu(); setTimeout(() => S.mapa.invalidateSize(), 0); }
+  if (p === 'snih') nactiPocasi();
+  if (p === 'sezona') nactiSezonu();
+  if (p === 'predpoved' && !S.bulletin) nactiBulletin();
+}
+
+/* ---------- výškový model ---------- */
+const cacheDem = new Map();
+function demDlazdice(z, x, y) {
+  const k = z + '/' + x + '/' + y;
+  if (cacheDem.has(k)) { const p = cacheDem.get(k); cacheDem.delete(k); cacheDem.set(k, p); return p; }
+  const p = new Promise((ok, chyba) => {
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
+      ok(J.vyskyZRgba(g.getImageData(0, 0, 256, 256).data));
+    };
+    img.onerror = () => chyba(new Error('dlaždice výšek ' + k + ' se nenačetla'));
+    img.src = TERRARIUM + k + '.png';
+  });
+  p.catch(() => cacheDem.delete(k));
+  cacheDem.set(k, p);
+  while (cacheDem.size > 80) cacheDem.delete(cacheDem.keys().next().value);
+  return p;
+}
+const sklonDlazdice = (z, y, v) => J.sklonOrientace(v, 256, 256, r => J.pixelDlazdice(z, J.latRadku(z, y, r)));
+async function bodTerenu(lat, lon, z) {
+  const t = J.dlazdiceBodu(lat, lon, z), v = await demDlazdice(z, t.x, t.y);
+  const sk = sklonDlazdice(z, t.y, v), i = t.py * 256 + t.px;
+  return { vyska: v[i], sklon: sk.sklon[i], orient: sk.orient[i] };
+}
+const vyskaBodu = (lat, lon) => bodTerenu(lat, lon, 13).then(b => b.vyska);
+
+/* ---------- mapa sklonů ---------- */
+const PODKLADY = {
+  topo: { nazev: 'OpenTopoMap', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', max: 17, atr: '© přispěvatelé <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, SRTM | styl © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC BY-SA)' },
+  osm: { nazev: 'OpenStreetMap', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', max: 19, atr: '© přispěvatelé <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' },
+  satelit: { nazev: 'Letecké snímky (Esri)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', max: 19, atr: 'Snímky © Esri, Maxar, Earthstar Geographics' }
+};
+const NM = Object.assign({ rezim: 'sklon', sektory: [true, true, true, true, true, true, true, true], pruhl: 0.6, podklad: 'topo', z: 13, lat: null, lon: null }, nacti('mapa', {}));
+let chybDem = 0;
+function pripravMapu() {
+  if (S.mapa) return;
+  const mapa = S.mapa = L.map('mapa', { zoomControl: true }).setView([NM.lat || misto.lat, NM.lon || misto.lon], NM.z || 13);
+  L.control.scale({ imperial: false }).addTo(mapa);
+  let vrstva = null;
+  const podklad = () => {
+    if (vrstva) mapa.removeLayer(vrstva);
+    const p = PODKLADY[NM.podklad] || PODKLADY.topo;
+    vrstva = L.tileLayer(p.url, { maxZoom: 18, maxNativeZoom: p.max, attribution: p.atr, subdomains: 'abc' }).addTo(mapa);
+    vrstva.bringToBack();
+  };
+  $('podklad').innerHTML = Object.entries(PODKLADY).map(([k, p]) => `<option value="${k}">${esc(p.nazev)}</option>`).join('');
+  $('podklad').value = NM.podklad; podklad();
+  $('podklad').addEventListener('change', () => { NM.podklad = $('podklad').value; ulozMapu(); podklad(); });
+
+  const Sklony = L.GridLayer.extend({
+    createTile(c, hotovo) {
+      const t = document.createElement('canvas'); t.width = t.height = 256;
+      demDlazdice(c.z, c.x, c.y).then(v => {
+        const rgba = J.obarvi(sklonDlazdice(c.z, c.y, v), NM.rezim, NM.sektory.every(Boolean) ? null : NM.sektory, 1);
+        t.getContext('2d').putImageData(new ImageData(rgba, 256, 256), 0, 0);
+        hotovo(null, t);
+      }).catch(err => { if (++chybDem === 1) $('mapaInfo').innerHTML = '<span class="chyba">Výškový model se nepodařilo načíst – zkontrolujte připojení.</span>'; hotovo(err, t); });
+      return t;
+    }
+  });
+  S.sklony = new Sklony({ minZoom: 12, maxZoom: 18, maxNativeZoom: 15, opacity: NM.pruhl, attribution: 'Výšky: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles</a> (EU-DEM © Copernicus, SRTM © USGS…)' });
+  if (NM.rezim !== 'vypnuto') S.sklony.addTo(mapa);
+  S.znacka = L.circleMarker([misto.lat, misto.lon], { radius: 7, color: '#000', weight: 2, fillColor: '#fff', fillOpacity: 0.9 }).addTo(mapa).bindTooltip('Vybrané místo');
+
+  mapa.on('moveend', () => { const c = mapa.getCenter(); NM.lat = c.lat; NM.lon = c.lng; NM.z = mapa.getZoom(); ulozMapu(); infoZoom(); });
+  mapa.on('click', async e => {
+    const z = Math.max(12, Math.min(15, mapa.getZoom())), { lat, lng } = e.latlng;
+    const pop = L.popup().setLatLng(e.latlng).setContent('Počítám…').openOn(mapa);
+    try {
+      const b = await bodTerenu(lat, lng, z), tr = J.tridaSklonu(b.sklon);
+      pop.setContent(`<b>${Math.round(b.vyska)} m n. m.</b><br>Sklon: <b>${b.sklon.toFixed(0)}°</b>` + (tr >= 0 ? ` (${J.TRIDY_SKLONU[tr].popis})` : '') +
+        `<br>Orientace: <b>${SEK[J.sektor(b.orient)]}</b> (${Math.round(b.orient)}°)<br><span style="font-size:.74rem">rozlišení ~${Math.round(J.pixelDlazdice(z, lat))} m, krátké strmé úseky model podhodnocuje</span><br>` +
+        `<button class="btn mini" id="popMisto">🌨️ Počasí a sníh pro tento bod</button>`);
+      const tl = document.getElementById('popMisto');
+      if (tl) tl.onclick = () => { mapa.closePopup(); nastavMisto({ lat, lon: lng, vyska: b.vyska, nazev: `Bod ${lat.toFixed(3)}, ${lng.toFixed(3)} (${Math.round(b.vyska)} m)` }, true); ukaz('snih'); };
+    } catch (err) { pop.setContent('<span class="chyba">Výšku se nepodařilo načíst: ' + esc(err.message) + '</span>'); }
+  });
+
+  // ovládání
+  const kompas = $('kompas'), poradi = [7, 0, 1, 6, -1, 2, 5, 4, 3];
+  kompas.innerHTML = poradi.map(i => i < 0 ? '<span class="stred" aria-hidden="true">⊕</span>' : `<button type="button" data-sektor="${i}" title="Orientace ${SEK[i]}">${SEK[i]}</button>`).join('');
+  kompas.addEventListener('click', e => { const b = e.target.closest('[data-sektor]'); if (!b) return; NM.sektory[+b.dataset.sektor] = !NM.sektory[+b.dataset.sektor]; prekresli(); });
+  $('rezimMapy').value = NM.rezim;
+  $('rezimMapy').addEventListener('change', () => { NM.rezim = $('rezimMapy').value; prekresli(); });
+  $('pruhlednost').value = NM.pruhl;
+  $('pruhlednost').addEventListener('input', () => { NM.pruhl = +$('pruhlednost').value; S.sklony.setOpacity(NM.pruhl); ulozMapu(); });
+  prekresli(true);
+}
+function ulozMapu() { uloz('mapa', NM); }
+function infoZoom() {
+  if (!S.mapa || chybDem) return;
+  $('mapaInfo').textContent = NM.rezim === 'vypnuto' ? '' : S.mapa.getZoom() < 12 ? 'Přibližte mapu (zoom ≥ 12), sklony se kreslí jen v detailu.' : 'Klikněte do mapy pro sklon, orientaci a výšku bodu.';
+}
+function prekresli(prvni) {
+  kompasStav();
+  const leg = NM.rezim === 'orientace' ? J.BARVY_SEKTORU.map((c, i) => `<span><i style="background:rgb(${c})"></i>${SEK[i]}</span>`).join('')
+    : NM.rezim === 'sklon' ? J.TRIDY_SKLONU.map(t => `<span><i style="background:rgb(${t.barva})"></i>${t.popis}</span>`).join('') : '';
+  $('legenda').innerHTML = leg;
+  if (S.sklony && !prvni) {
+    if (NM.rezim === 'vypnuto') S.mapa.removeLayer(S.sklony);
+    else { if (!S.mapa.hasLayer(S.sklony)) S.sklony.addTo(S.mapa); S.sklony.redraw(); }
+  }
+  ulozMapu(); infoZoom();
+}
+function kompasStav() { document.querySelectorAll('[data-sektor]').forEach(b => b.setAttribute('aria-pressed', String(NM.sektory[+b.dataset.sektor]))); }
+function nastavSektory(s) { NM.sektory = s.slice(); if (NM.rezim === 'vypnuto') { NM.rezim = 'sklon'; $('rezimMapy').value = 'sklon'; } prekresli(); }
+
+/* ---------- počasí ---------- */
+const barva = n => getComputedStyle(document.body).getPropertyValue(n).trim() || '#888';
+const grafy = {};
+function graf(id, cfg) {
+  if (grafy[id]) grafy[id].destroy();
+  const txt = barva('--text-muted'), mrizka = barva('--border');
+  Chart.defaults.color = txt; Chart.defaults.borderColor = mrizka; Chart.defaults.font.family = 'system-ui,sans-serif';
+  cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { labels: { boxWidth: 12 } } } }, cfg.options || {});
+  grafy[id] = new Chart($(id), cfg);
+}
+const casPopis = t => { const d = new Date(t); return d.toLocaleDateString('cs', { weekday: 'short', day: 'numeric', month: 'numeric' }) + ' ' + t.slice(11, 16); };
+const dlazdice = (cil, polozky) => { $(cil).innerHTML = polozky.map(([h, p]) => `<div><b>${h}</b><span>${p}</span></div>`).join(''); };
+async function stahni(url) {
+  let r;
+  try { r = await fetch(url); } catch (e) { throw new Error('Server neodpovídá – zkontrolujte připojení k internetu.'); }
+  if (!r.ok) { let d = ''; try { d = (await r.json()).reason || ''; } catch (e) {} throw new Error(`Server vrátil chybu ${r.status}${d ? ': ' + d : ''}.`); }
+  return r.json();
+}
+async function nactiPocasi(p) {
+  const klic = misto.lat + ',' + misto.lon + ',' + misto.vyska;
+  $('snihNadpis').textContent = 'Sníh a počasí – ' + misto.nazev;
+  if (S.pocasiKlic === klic && !(p && p.dataset)) return;
+  S.pocasiKlic = klic;
+  $('snihStav').textContent = 'Načítám předpověď…';
+  try {
+    const d = await stahni(J.urlPredpoved(misto));
+    S.pocasi = d; vykresliPocasi(d);
+    $('snihStav').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs', { hour: '2-digit', minute: '2-digit' }) + '.';
+  } catch (e) { S.pocasiKlic = ''; $('snihStav').innerHTML = '<span class="chyba">Předpověď se nepodařilo načíst. ' + esc(e.message) + '</span>'; }
+}
+function tedIso(d) { return new Date(Date.now() + d.utc_offset_seconds * 1000).toISOString().slice(0, 16); }
+function vykresliPocasi(d) {
+  const h = d.hourly, ted = J.indexTed(h.time, tedIso(d)), v = J.vyhodnotPocasi(h, ted, d.elevation, SEK);
+  $('snihVyska').textContent = Math.round(d.elevation) + ' m n. m.';
+  const smer = v.smer == null ? '' : ' od ' + SEK[J.sektor(v.smer)];
+  dlazdice('snihDlazdice', [
+    [v.snihTed == null ? '–' : v.snihTed + ' cm', 'výška sněhu teď (model)'],
+    [Math.round(v.novy72) + ' cm', 'nový sníh za 3 dny'],
+    [Math.round(v.novy48) + ' cm', 'nový sníh příštích 48 h'],
+    [Math.round(v.vitrMax) + ' km/h', 'max. vítr ±3/2 dny' + smer],
+    [v.tMax48 == null ? '–' : v.tMax48.toFixed(1) + ' °C', 'max. teplota 48 h'],
+    [v.izoterma == null ? '–' : Math.round(v.izoterma) + ' m', 'max. nulová izoterma 48 h']
+  ]);
+  $('upozorneni').innerHTML = v.upozorneni.map(u => `<div class="upoz ${u.uroven}"><b>${esc(u.nadpis)}.</b> ${esc(u.text)}` +
+    (u.nadpis === 'Přenos sněhu větrem' && v.smer != null ? ' <button class="btn mini" data-prikaz="zavetri">🗺️ Ukázat závětří na mapě</button>' : '') + '</div>').join('');
+  const popisky = h.time.map(casPopis), nyni = popisky[ted] || '';
+  graf('grafSnih', { data: { labels: popisky, datasets: [
+    { type: 'bar', label: 'Nový sníh (cm/h)', data: h.snowfall, backgroundColor: '#4a90e2', yAxisID: 'y1' },
+    { type: 'line', label: 'Výška sněhu (cm)', data: h.snow_depth.map(x => x == null ? null : Math.round(x * 100)), borderColor: '#7b5cd6', backgroundColor: 'rgba(123,92,214,.15)', fill: true, pointRadius: 0, yAxisID: 'y' }
+  ] }, options: { scales: { x: { ticks: { maxTicksLimit: 10, maxRotation: 0 } }, y: { position: 'left', beginAtZero: true, title: { display: true, text: 'cm' } },
+    y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'cm/h' } } },
+    plugins: { title: { display: true, text: 'teď: ' + nyni, font: { weight: 'normal' } } } } });
+  graf('grafVitr', { data: { labels: popisky, datasets: [
+    { type: 'line', label: 'Vítr (km/h)', data: h.wind_speed_10m, borderColor: '#2a9d8f', pointRadius: 0, yAxisID: 'y' },
+    { type: 'line', label: 'Nárazy (km/h)', data: h.wind_gusts_10m, borderColor: '#2a9d8f', borderDash: [4, 3], pointRadius: 0, yAxisID: 'y' },
+    { type: 'line', label: 'Teplota (°C)', data: h.temperature_2m, borderColor: '#e76f51', pointRadius: 0, yAxisID: 'y1' }
+  ] }, options: { scales: { x: { ticks: { maxTicksLimit: 10, maxRotation: 0 } }, y: { beginAtZero: true, title: { display: true, text: 'km/h' } },
+    y1: { position: 'right', grid: { color: c => c.tick && c.tick.value === 0 ? barva('--text-muted') : 'transparent' }, title: { display: true, text: '°C' } } } } });
+}
+
+/* ---------- sezóna ---------- */
+const dnesIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+(function () {
+  const r0 = J.aktualniSezona(dnesIso());
+  $('volbaSezony').innerHTML = Array.from({ length: 10 }, (_, i) => `<option value="${r0 - i}">${J.sezona(r0 - i, dnesIso()).nazev}</option>`).join('');
+  $('volbaSezony').addEventListener('change', () => nactiSezonu());
+})();
+async function nactiSezonu() {
+  const r = +$('volbaSezony').value, s = J.sezona(r, dnesIso()), klic = [misto.lat, misto.lon, misto.vyska, r].join(',');
+  $('sezonaNadpis').textContent = `Sezóna ${s.nazev} – ${misto.nazev}`;
+  if (s.do < s.od) { $('sezonaStav').textContent = 'Sezóna ještě nezačala.'; return; }
+  let dny = S.sezony[klic];
+  if (!dny) {
+    $('sezonaStav').textContent = 'Načítám historii…';
+    try { dny = J.denniZHodin((await stahni(J.urlArchiv(misto, s))).hourly); }
+    catch (e) { $('sezonaStav').innerHTML = '<span class="chyba">Historii se nepodařilo načíst. ' + esc(e.message) + '</span>'; return; }
+    S.sezony[klic] = dny;
+  }
+  const sh = J.souhrnSezony(dny), posl = [...dny].reverse().find(d => d.snih != null);
+  $('sezonaStav').textContent = `Období ${s.od} až ${s.do}` + (posl ? `, poslední den s daty ${posl.datum}.` : '.');
+  dlazdice('sezonaDlazdice', [
+    [sh.max == null ? '–' : sh.max + ' cm', 'max. výška sněhu' + (sh.datumMax ? ' (' + sh.datumMax.slice(8) + '. ' + +sh.datumMax.slice(5, 7) + '.)' : '')],
+    [sh.soucet + ' cm', 'nový sníh celkem'],
+    [sh.dnySnih + '', 'dní se sněhem ≥ 10 cm'],
+    [posl ? posl.snih + ' cm' : '–', 'výška na konci období']
+  ]);
+  graf('grafSezona', { data: { labels: dny.map(d => +d.datum.slice(8) + '. ' + +d.datum.slice(5, 7) + '.'), datasets: [
+    { type: 'bar', label: 'Nový sníh za den (cm)', data: dny.map(d => d.novy), backgroundColor: '#4a90e2', yAxisID: 'y1' },
+    { type: 'line', label: 'Výška sněhu (cm)', data: dny.map(d => d.snih), borderColor: '#7b5cd6', backgroundColor: 'rgba(123,92,214,.15)', fill: true, pointRadius: 0, yAxisID: 'y' }
+  ] }, options: { scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: { beginAtZero: true, title: { display: true, text: 'cm' } },
+    y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'cm/den' } } } } });
+}
+
+/* ---------- bulletin SLF ---------- */
+function kompasSvg(sektory) {
+  const r = 22, c = 24;
+  let s = `<svg width="48" height="48" viewBox="0 0 48 48" aria-label="Orientace: ${sektory.map(i => SEK[i]).join(', ')}" role="img">`;
+  for (let i = 0; i < 8; i++) {
+    const a0 = (i * 45 - 22.5 - 90) * Math.PI / 180, a1 = (i * 45 + 22.5 - 90) * Math.PI / 180;
+    s += `<path d="M${c},${c} L${(c + r * Math.cos(a0)).toFixed(1)},${(c + r * Math.sin(a0)).toFixed(1)} A${r},${r} 0 0 1 ${(c + r * Math.cos(a1)).toFixed(1)},${(c + r * Math.sin(a1)).toFixed(1)} Z" fill="${sektory.includes(i) ? '#e03030' : 'none'}" stroke="currentColor" stroke-opacity=".45"/>`;
+  }
+  return s + `<text x="24" y="9" font-size="8" text-anchor="middle" fill="currentColor">${SEK[0]}</text></svg>`;
+}
+const stupenHtml = (n, pod) => n ? `<span class="stupen s${n}" style="background:${J.STUPNE[n].barva}" title="${J.STUPNE[n].nazev}">${n}${pod === 'plus' ? '+' : pod === 'minus' ? '−' : pod === 'neutral' ? '=' : ''}</span>` : '<span class="stupen" style="background:var(--bg-control);color:var(--text)">–</span>';
+const OBDOBI = { all_day: '', earlier: 'dopoledne', later: 'odpoledne' };
+async function nactiBulletin() {
+  $('bulletinStav').textContent = 'Načítám bulletin SLF…';
+  try {
+    const d = await stahni('https://aws.slf.ch/api/bulletin/caaml/en/json');
+    S.bulletin = J.zpracujBulletiny(d);
+    const prvni = S.bulletin.find(b => b.od);
+    const platnost = prvni ? `Platnost ${new Date(prvni.od).toLocaleString('cs', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })} – ${new Date(prvni.do).toLocaleString('cs', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '';
+    $('bulletinStav').innerHTML = esc(platnost) + (prvni && !J.platny(prvni, Date.now()) ? ' – <b class="chyba">bulletin už neplatí (mimo sezónu nebo čeká na aktualizaci)</b>' : '');
+    vykresliBulletin();
+  } catch (e) { $('bulletinStav').innerHTML = '<span class="chyba">Bulletin se nepodařilo načíst. ' + esc(e.message) + '</span>'; }
+}
+function vykresliBulletin() {
+  if (!S.bulletin) return;
+  const f = $('filtrRegionu').value.trim().toLowerCase();
+  const sk = S.bulletin.filter(s => !f || s.regiony.some(r => r.toLowerCase().includes(f)));
+  $('bulletin').innerHTML = !sk.length ? '<p class="tip">Žádný region neodpovídá filtru.</p>' : sk.map((s, i) => {
+    const reg = f ? s.regiony.filter(r => r.toLowerCase().includes(f)) : s.regiony;
+    return `<div class="panel skupina" style="border-left-color:${s.max ? J.STUPNE[s.max].barva : 'var(--border-strong)'}">
+      <div class="hlava">${s.hodnoceni.length ? s.hodnoceni.map(h => stupenHtml(h.stupen, h.podstupen) + (h.vyska || OBDOBI[h.obdobi] ? ` <span class="tip">${esc([OBDOBI[h.obdobi], h.vyska].filter(Boolean).join(', '))}</span>` : '')).join(' ') : stupenHtml(0)}
+        <b>${s.max ? esc(J.STUPNE[s.max].nazev) : 'bez hodnocení'}</b></div>
+      <div class="regiony" data-i18n="ne">${reg.length} ${reg.length === 1 ? 'region' : 'regionů'}: ${esc(reg.slice(0, 12).join(', '))}${reg.length > 12 ? ' …' : ''}</div>
+      ${s.problemy.map((p, j) => `<div class="problem">${kompasSvg(p.sektory)}<div class="txt"><b>${esc(p.nazev)}</b> ${esc(p.vyska)} ${esc(OBDOBI[p.obdobi] || '')}
+        ${p.sektory.length && p.sektory.length < 8 ? ` <button class="btn mini" data-ukaz-sektory="${i}:${j}">🗺️ Tyto orientace na mapě</button>` : ''}
+        ${p.text ? `<details><summary>Popis (anglicky)</summary><div class="text" data-i18n="ne">${esc(p.text)}</div></details>` : ''}</div></div>`).join('')}
+      ${s.hlavni || s.snih || s.tendence ? `<details><summary>Sněhová pokrývka a vývoj (anglicky)</summary><div class="text" data-i18n="ne">${esc([s.hlavni, s.snih, s.tendence && 'Tendency: ' + s.tendence].filter(Boolean).join('\n\n'))}</div></details>` : ''}
+    </div>`;
+  }).join('');
+  $('bulletin').dataset.filtr = f;
+}
+$('filtrRegionu').addEventListener('input', vykresliBulletin);
+$('bulletin').addEventListener('click', e => {
+  const b = e.target.closest('[data-ukaz-sektory]'); if (!b) return;
+  const f = $('bulletin').dataset.filtr, sk = S.bulletin.filter(s => !f || s.regiony.some(r => r.toLowerCase().includes(f)));
+  const [i, j] = b.dataset.ukazSektory.split(':').map(Number), sekt = sk[i].problemy[j].sektory;
+  ukaz('mapa'); nastavSektory(Array.from({ length: 8 }, (_, k) => sekt.includes(k)));
+});
+
+/* ---------- redukční metoda ---------- */
+const RED = Object.assign({ stupen: 2, sklon: 'pod40', orientace: 'zadny', skupina: 'mala', mokry: false }, nacti('redukce', {}));
+$('volbaStupne').innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" data-stupen="${n}" class="${n === 5 ? 's5' : ''}" style="background:${J.STUPNE[n].barva}${n === 5 ? ';color:#fff' : ''}" title="${J.STUPNE[n].nazev}">${n}</button>`).join('');
+$('volbaStupne').addEventListener('click', e => { const b = e.target.closest('[data-stupen]'); if (b) { RED.stupen = +b.dataset.stupen; spoctiRedukci(); } });
+$('rfSklon').value = RED.sklon; $('rfOrientace').value = RED.orientace; $('rfSkupina').value = RED.skupina; $('rfMokry').checked = RED.mokry;
+['rfSklon', 'rfOrientace', 'rfSkupina', 'rfMokry'].forEach(id => $(id).addEventListener('change', () => {
+  RED.sklon = $('rfSklon').value; RED.orientace = $('rfOrientace').value; RED.skupina = $('rfSkupina').value; RED.mokry = $('rfMokry').checked; spoctiRedukci();
+}));
+const cislo = x => (Math.round(x * 100) / 100).toLocaleString('cs');
+function spoctiRedukci() {
+  uloz('redukce', RED);
+  document.querySelectorAll('[data-stupen]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.stupen === RED.stupen)));
+  const r = J.redukce(RED), el = $('vysledekRedukce');
+  el.className = 'vysledek ' + (r.prijatelne ? 'ok' : 'ne');
+  el.innerHTML = r.stupen === 5 ? '<div class="verdikt">Stupeň 5 – žádné túry ve volném terénu.</div>'
+    : `<div class="vzorec">${r.gp} ÷ (${r.rf1} × ${r.rf2} × ${r.rf3}) = ${r.gp} ÷ ${r.rf} = <b>${cislo(r.riziko)}</b></div>
+       <div class="verdikt">${r.prijatelne ? '✓ Zbytkové riziko je v mezích metody (≤ 1)' : r.riziko <= 1 ? '✗ Porušeno povinné pravidlo' : '✗ Zbytkové riziko je příliš vysoké (> 1)'}</div>
+       <div class="tip">Elementární metoda pro stupeň ${r.stupen}: ${J.elementarni(r.stupen) >= 90 ? 'bez omezení sklonu, opatrnost v extrémně strmém terénu' : 'vynechat svahy ' + J.elementarni(r.stupen) + '° a strmější'}.</div>`;
+  $('pravidlaRedukce').innerHTML = r.pravidla.map(p => `<div class="upoz ${p.includes('povinné') || r.stupen === 5 ? 'vysoke' : 'pozor'}">${esc(p)}</div>`).join('');
+}
+
+/* ---------- stupnice ---------- */
+const STUPNICE = [
+  [1, 'Sněhová pokrývka je převážně dobře zpevněná a stabilní.', 'Spuštění je možné hlavně velkým přitížením na ojedinělých místech v extrémně strmém terénu. Spontánně jen malé laviny a sesuvy.', 'Obecně příznivé podmínky. Pozor na extrémně strmé svahy a riziko pádu.'],
+  [2, 'Na některých strmých svazích je pokrývka jen mírně zpevněná, jinak dobře.', 'Spuštění hlavně velkým přitížením, zejména na strmých svazích uvedených v předpovědi. Velké spontánní laviny se nečekají.', 'Převážně příznivé podmínky. Volba trasy s ohledem na místa uvedená v předpovědi; nejvíc nehod skialpinistů.'],
+  [3, 'Na mnoha strmých svazích je pokrývka jen mírně až slabě zpevněná.', 'Spuštění je možné už malým přitížením (jeden lyžař), hlavně na místech z předpovědi. Místy i spontánní středně velké, ojediněle velké laviny.', 'Kritická situace. Vyžaduje zkušenosti s hodnocením nebezpečí; vynechat svahy ≥ 40° a místa z předpovědi. Na tomto stupni umírá nejvíc lidí.'],
+  [4, 'Na většině strmých svahů je pokrývka slabě zpevněná.', 'Spuštění pravděpodobné už malým přitížením na mnoha strmých svazích. Často spontánní velké, místy i velmi velké laviny.', 'Velmi kritická situace. Pohyb jen v mírném terénu pod 30°, mimo dosah dráhy lavin. Doporučuje se zdrženlivost.'],
+  [5, 'Pokrývka je celkově slabě zpevněná a nestabilní.', 'Mnoho velmi velkých spontánních lavin, i v mírném terénu; laviny mohou dosáhnout údolí.', 'Katastrofická situace. Túry mimo zajištěné terény se nepodnikají; řiďte se pokyny úřadů.']
+];
+$('tabStupnice').innerHTML = '<tr><th>Stupeň</th><th>Stabilita sněhu</th><th>Pravděpodobnost lavin</th><th>Doporučení</th></tr>' +
+  STUPNICE.map(([n, a, b, c]) => `<tr><td style="white-space:nowrap">${stupenHtml(n)} <b>${J.STUPNE[n].nazev}</b></td><td>${a}</td><td>${b}</td><td>${c}</td></tr>`).join('');
+
+/* ---------- kontrolní seznam ---------- */
+let zaskrtnute = nacti('seznam', {});
+function vykresliSeznam() {
+  let n = 0, hotovo = 0;
+  $('seznam').innerHTML = J.SEZNAM.map(([nadpis, body], i) => `<h3>${esc(nadpis)}</h3>` + body.map((t, j) => {
+    const k = i + '-' + j, z = !!zaskrtnute[k]; n++; if (z) hotovo++;
+    return `<label class="${z ? 'hotovo' : ''}"><input type="checkbox" data-bod="${k}" ${z ? 'checked' : ''}><span>${esc(t)}</span></label>`;
+  }).join('')).join('');
+  $('seznamStav').textContent = `Splněno ${hotovo} z ${n}.`;
+}
+$('seznam').addEventListener('change', e => { const b = e.target.closest('[data-bod]'); if (!b) return; zaskrtnute[b.dataset.bod] = b.checked; uloz('seznam', zaskrtnute); vykresliSeznam(); });
+
+/* ---------- příkazy ---------- */
+const PRIKAZY = {
+  poloha() {
+    if (!navigator.geolocation) return Dialog.chyba('Prohlížeč neumí zjistit polohu.');
+    navigator.geolocation.getCurrentPosition(async p => {
+      const m = { nazev: 'Moje poloha', lat: p.coords.latitude, lon: p.coords.longitude, vyska: null };
+      m.vyska = await vyskaBodu(m.lat, m.lon).catch(() => null);
+      nastavMisto(m);
+    }, err => Dialog.chyba('Polohu se nepodařilo zjistit: ' + err.message), { timeout: 15000 });
+  },
+  naMape() { ukaz('mapa'); Dialog.info('Klikněte do mapy a v bublině zvolte „Počasí a sníh pro tento bod“.'); },
+  nactiPocasi: p => nactiPocasi(p),
+  nactiBulletin: () => nactiBulletin(),
+  vsechnySektory: () => nastavSektory([true, true, true, true, true, true, true, true]),
+  async zavetri() {
+    if (!S.pocasi || S.pocasiKlic !== misto.lat + ',' + misto.lon + ',' + misto.vyska) { await nactiPocasi(); }
+    if (!S.pocasi) return;
+    const h = S.pocasi.hourly, ted = J.indexTed(h.time, tedIso(S.pocasi)), sm = J.prumernySmer(h.wind_direction_10m, h.wind_speed_10m, ted - 72, ted + 48);
+    if (sm == null) return Dialog.info('Ve předpovědi chybí směr větru.');
+    ukaz('mapa'); nastavSektory(J.zavetrneSektory(sm));
+    $('mapaInfo').textContent = `Převládající vítr od ${SEK[J.sektor(sm)]} (${Math.round(sm)}°, 3 dny zpět až 2 dny dopředu, ${misto.nazev}) → zvýrazněny závětrné svahy.`;
+  },
+  async seznamNovy() { if (await Dialog.potvrd('Odškrtat celý seznam pro novou túru?')) { zaskrtnute = {}; uloz('seznam', zaskrtnute); vykresliSeznam(); } },
+  tisk: () => window.print()
+};
+
+vykresliMisto();
+vykresliSeznam();
+spoctiRedukci();
+ukaz(pohled);
+})();
+</script>
+</body>
+</html>

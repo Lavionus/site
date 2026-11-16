@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Země v kostce pro cestovatele</title>
+<meta name="description" content="Praktické údaje o státech světa: zásuvky a napětí (potřebuji adaptér?), strana jízdy, tísňová čísla, měna, předvolba, čas, spropitné, pitná voda, dálniční poplatky, porovnání zemí, mapa, kontrolní seznam a tisk karty.">
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="zeme_v_kostce/data.js"></script>
+<script src="zeme_v_kostce/jadro.js"></script>
+<script src="zeme_v_kostce/zasuvky.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 170px;flex-shrink:1;min-width:140px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;text-decoration:none}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;text-decoration:none;display:inline-block}
+.btn:hover{background:var(--bg-hover)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+main.mapa-rezim{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.obal{max-width:1200px;margin:0 auto}
+h2{font-size:1.1rem;margin:4px 0 10px}
+h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:0 0 6px}
+.tip{font-size:.8rem;color:var(--text-muted);margin:4px 0 10px;line-height:1.45}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;min-width:0}
+.radek-vyber{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.radek-vyber .vstup{max-width:100%}
+.nejiste{font-size:.72rem;color:var(--warn);white-space:nowrap;cursor:help}
+.vlajka{font-size:1.3em;margin-right:4px}
+
+/* tabulka přehledu */
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;cursor:pointer;user-select:none}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--bg-hover)}
+td.nw{white-space:nowrap}
+.typ{display:inline-block;min-width:1.5em;text-align:center;font-weight:700;font-size:.78rem;border:1px solid var(--border-strong);border-radius:5px;padding:0 4px;margin:1px}
+.stav{display:inline-block;width:.75em;height:.75em;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.stav.ne,.stav.ok{background:var(--ok)} .stav.cast{background:var(--warn)} .stav.ano,.stav.menic{background:var(--danger)}
+
+/* karta země */
+.karta-hlava{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:10px}
+.karta-hlava h2{margin:0;font-size:1.5rem}
+.karta-hlava .podnadpis{color:var(--text-muted);font-size:.85rem}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;align-items:start}
+.udaj{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:.88rem;line-height:1.4}
+.udaj dt{color:var(--text-muted)} .udaj dd{margin:0}
+.zasuvky{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 8px}
+.zasuvka{text-align:center;font-size:.78rem;width:76px}
+.zas{width:64px;height:64px;display:block;margin:0 auto 2px}
+.zas .tvar{fill:var(--bg-control);stroke:var(--border-strong);stroke-width:2}
+.zas .vybrani{fill:none;stroke:var(--border-strong);stroke-width:1.5;stroke-dasharray:3 2}
+.zas .otvor{fill:var(--text)}
+.zas .pin{fill:var(--accent)}
+.verdikt{border-left:4px solid var(--border-strong);padding:6px 10px;border-radius:4px;background:var(--bg-control);font-size:.86rem;line-height:1.45;margin:4px 0}
+.verdikt.ok{border-left-color:var(--ok)} .verdikt.pozor{border-left-color:var(--warn)} .verdikt.ne{border-left-color:var(--danger)}
+.cisla{display:flex;flex-wrap:wrap;gap:8px}
+.cislo{flex:1 1 90px;text-align:center;background:var(--bg-control);border:1px solid var(--border);border-radius:8px;padding:6px 4px;text-decoration:none;color:var(--text)}
+.cislo b{display:block;font-size:1.5rem;line-height:1.15;font-variant-numeric:tabular-nums}
+.cislo span{font-size:.74rem;color:var(--text-muted)}
+.cislo.hlavni{border-color:var(--accent)}
+.odkazy{display:flex;flex-wrap:wrap;gap:6px}
+.velky-cas{font-size:1.4rem;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* porovnání */
+.porovnani td:first-child{color:var(--text-muted);white-space:nowrap}
+.porovnani td{vertical-align:top}
+.porovnani tr.jine td:not(:first-child){background:color-mix(in srgb,var(--warn) 12%,transparent)}
+
+/* kontrolní seznam */
+.seznam{list-style:none;padding:0;margin:0;display:grid;gap:4px}
+.seznam label{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;cursor:pointer;line-height:1.4;font-size:.9rem}
+.seznam input{margin-top:3px;width:18px;height:18px;flex-shrink:0;accent-color:var(--accent)}
+.seznam .dulezite span::after{content:" •";color:var(--danger)}
+.seznam input:checked + span{text-decoration:line-through;color:var(--text-muted)}
+.pokrok{height:6px;background:var(--bg-control);border-radius:3px;overflow:hidden;margin:6px 0 10px}
+.pokrok i{display:block;height:100%;background:var(--ok)}
+
+/* zásuvky – přehled typů */
+.typy{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.typy .panel{display:flex;gap:10px;align-items:flex-start;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.typy .panel:hover{border-color:var(--border-strong)}
+.typy .panel[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.typy .panel .zas{margin:0;flex-shrink:0}
+.typy b{font-size:1.05rem}
+.typy small{display:block;color:var(--text-muted);font-size:.78rem;line-height:1.35;margin-top:2px}
+
+/* mapa */
+.mapa-hlava{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);font-size:.84rem}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.78rem}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px;border:1px solid var(--border-strong)}
+#mapa{flex:1;min-height:300px;background:var(--bg)}
+.leaflet-container{font:inherit;background:var(--bg)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--bg-elevated);color:var(--text)}
+.leaflet-popup-content{margin:10px 12px;font-size:.85rem;line-height:1.45}
+.leaflet-bar a{background:var(--bg-elevated);color:var(--text);border-color:var(--border)}
+.leaflet-control-attribution{background:color-mix(in srgb,var(--bg-elevated) 80%,transparent)!important;color:var(--text-muted)}
+.leaflet-control-attribution a{color:var(--accent)}
+
+.zdroje{font-size:.85rem;line-height:1.55}
+.zdroje li{margin-bottom:4px}
+a{color:var(--accent)}
+
+@media (max-width:480px){.udaj{grid-template-columns:1fr}.udaj dd{margin-bottom:4px}}
+@media print{
+  .lista,.nabidka,.radek-vyber,.tisk-ne,#podpis-pruh{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .panel{break-inside:avoid;background:#fff;border-color:#999}
+  .mrizka{grid-template-columns:1fr 1fr}
+  .cislo{border-color:#999;background:#fff}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🌍 Země v kostce</h1>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="prehled" aria-pressed="true" title="Tabulka všech zemí">📋<span class="txt"> Přehled</span></button>
+    <button class="tl" data-pohled="karta" aria-pressed="false" title="Karta vybrané země">🗂️<span class="txt"> Karta země</span></button>
+    <button class="tl" data-pohled="porovnani" aria-pressed="false" title="Porovnat dvě země">⚖️<span class="txt"> Porovnání</span></button>
+    <button class="tl" data-pohled="mapa" aria-pressed="false" title="Mapa světa">🗺️<span class="txt"> Mapa</span></button>
+    <button class="tl" data-pohled="seznam" aria-pressed="false" title="Kontrolní seznam před cestou">✅<span class="txt"> Před cestou</span></button>
+    <button class="tl" data-pohled="zasuvky" aria-pressed="false" title="Typy zásuvek A–O">🔌<span class="txt"> Zásuvky</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Filtr"><span class="skup-nazev" aria-hidden="true">Oblast</span><div class="skup-tl">
+    <select class="tl" id="oblast" aria-label="Oblast"><option value="">Celý svět</option></select>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Země, měna, předvolba…" aria-label="Hledat zemi" autocomplete="off">
+  </div>
+  <span class="vpravo">
+    <button class="tl" data-nabidka="nabVice" aria-expanded="false" title="Tisk, domovská země, zdroje">☰<span class="txt"> Více</span> ▾</button>
+  </span>
+</header>
+
+<div id="nabVice" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tisk">🖨️ Vytisknout kartu země</button>
+  <button class="tl" data-prikaz="odkaz">🔗 Kopírovat odkaz na zemi</button>
+  <button class="tl" data-prikaz="domov">🏠 Domovská země…</button>
+  <hr>
+  <button class="tl" data-prikaz="zdroje">ℹ️ Zdroje a upozornění</button>
+</div>
+
+<main id="hlavni"><div class="obal" id="obsah"></div></main>
+
+<script>
+(() => {
+'use strict';
+const J = window.ZVK, D = window.ZVK_DATA;
+const $ = id => document.getElementById(id);
+const P = 'webapp_zeme_v_kostce_';
+const nacti = (k, v) => { try { const x = localStorage.getItem(P + k); return x === null ? v : JSON.parse(x); } catch { return v; } };
+const zapamatuj = (k, v) => { try { localStorage.setItem(P + k, JSON.stringify(v)); } catch {} };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+const ZEME = J.nactiZeme(D);
+const PODLE = Object.fromEntries(ZEME.map(z => [z.kod, z]));
+const MZV = {
+  zeme: 'https://mzv.gov.cz/jnp/cz/encyklopedie_statu/index.html',
+  varovani: 'https://mzv.gov.cz/jnp/cz/cestujeme/aktualni_doporuceni_a_varovani/index.html',
+  drozd: 'https://drozd.mzv.gov.cz/',
+  konzul: 'https://mzv.gov.cz/jnp/cz/cestujeme/konzularni_sluzba/index.html'
+};
+
+/* ---------- názvy přes Intl v jazyce webu ---------- */
+const loc = () => (window.I18N && I18N.jazyk) || 'cs';
+const dn = {};
+const intlNazev = (typ, kod) => {
+  const k = loc() + typ;
+  try { dn[k] = dn[k] || new Intl.DisplayNames(loc(), { type: typ }); return dn[k].of(kod); } catch { return kod; }
+};
+const nazev = z => intlNazev('region', z.kod);
+const menaNazev = m => (loc() === 'cs' && D.meny[m]) || (intlNazev('currency', m) !== m ? intlNazev('currency', m) : D.meny[m] || m);
+const jazykNazev = l => { const n = intlNazev('language', l); return (loc() === 'cs' && D.jazyky[l]) || (n && n !== l ? n : D.jazyky[l] || l); };
+const vlajka = kod => String.fromCodePoint(...[...kod].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+const nazvyHledani = z => [nazev(z), intlNazev('region', z.kod), new Intl.DisplayNames('en', { type: 'region' }).of(z.kod), ...z.meny.map(menaNazev)];
+const serazene = () => ZEME.slice().sort((a, b) => nazev(a).localeCompare(nazev(b), loc()));
+
+/* ---------- stav ---------- */
+let pohled = nacti('pohled', 'prehled');
+let domov = PODLE[nacti('domov', 'CZ')] ? nacti('domov', 'CZ') : 'CZ';
+let vybrana = PODLE[location.hash.slice(1).toUpperCase()] ? location.hash.slice(1).toUpperCase() : nacti('vybrana', 'AT');
+if (!PODLE[vybrana]) vybrana = 'AT';
+let porovnat = nacti('porovnat', [domov, vybrana]);
+let razeni = { sl: 'nazev', smer: 1 };
+let barvaMapy = nacti('mapa', 'adapter');
+let filtrTyp = '';
+const odskrtnute = nacti('seznam', {});
+
+const nej = (z, q) => z.nejiste.includes(q) ? ' <span class="nejiste" title="Údaj zdroj neuvádí nebo je sporný – před cestou si ho potvrďte">⚠️ neověřeno</span>' : '';
+const typy = z => z.zasuvky.map(t => `<span class="typ">${t}</span>`).join('');
+const napetiText = z => z.napeti.join(' / ') + ' V · ' + z.hz.join(' / ') + ' Hz';
+const jizdaText = z => z.jizda === 'L' ? '⬅️ vlevo' : 'vpravo ➡️';
+const rozdil = z => J.formatRozdil(J.rozdilCasu(PODLE[domov].pasma[0], z.pasma[0]));
+const ADAPTER = { ne: 'bez adaptéru', cast: 'jen ploché vidlice', ano: 'adaptér nutný' };
+
+function vyberZeme(id, hodnota, popis) {
+  return `<select class="vstup" id="${id}" aria-label="${esc(popis)}">` +
+    serazene().map(z => `<option value="${z.kod}"${z.kod === hodnota ? ' selected' : ''}>${esc(nazev(z))}</option>`).join('') + '</select>';
+}
+function filtrovane() {
+  const ob = $('oblast').value;
+  return J.hledej(ZEME, $('hledat').value, nazvyHledani).filter(z => !ob || z.oblast === ob);
+}
+
+/* ---------- přehled ---------- */
+const SLOUPCE = [
+  ['nazev', 'Země', z => nazev(z)],
+  ['zasuvky', 'Zásuvky', z => z.zasuvky.join('')],
+  ['adapter', 'Adaptér', z => ['ne', 'cast', 'ano'].indexOf(J.adapter(PODLE[domov], z).stav)],
+  ['napeti', 'Napětí', z => z.napeti[0]],
+  ['jizda', 'Jízda', z => z.jizda],
+  ['tisnova', 'Tísňová čísla', z => z.jednotne || z.tisnova[0]],
+  ['mena', 'Měna', z => z.meny[0]],
+  ['predvolba', 'Předvolba', z => +z.predvolba.replace(/\D/g, '')],
+  ['cas', 'Čas', z => J.rozdilCasu(PODLE[domov].pasma[0], z.pasma[0])]
+];
+function prehled() {
+  const sl = SLOUPCE.find(s => s[0] === razeni.sl) || SLOUPCE[0];
+  const seznam = filtrovane().sort((a, b) => {
+    const x = sl[2](a), y = sl[2](b);
+    return razeni.smer * (typeof x === 'number' ? x - y : String(x).localeCompare(String(y), loc())) || nazev(a).localeCompare(nazev(b), loc());
+  });
+  const dom = PODLE[domov];
+  const radky = seznam.map(z => {
+    const a = J.adapter(dom, z), n = J.napeti(dom, z);
+    const tis = z.tisnova.every(t => t === z.tisnova[0]) ? z.tisnova[0] : z.tisnova.filter(Boolean).join(' / ');
+    return `<tr data-zeme="${z.kod}">
+      <td><span class="vlajka" aria-hidden="true">${vlajka(z.kod)}</span><span data-i18n="ne">${esc(nazev(z))}</span></td>
+      <td class="nw">${typy(z)}</td>
+      <td class="nw"><span class="stav ${a.stav}"></span>${ADAPTER[a.stav]}</td>
+      <td class="nw"><span class="stav ${n.stav}"></span>${napetiText(z)}</td>
+      <td class="nw">${jizdaText(z)}</td>
+      <td class="nw">${esc(tis || '?')}${z.jednotne && !z.tisnova.includes(z.jednotne) ? ' · ' + z.jednotne : ''}${nej(z, 't')}</td>
+      <td class="nw">${z.meny.join(', ')}</td>
+      <td class="nw">${z.predvolba}</td>
+      <td class="nw">${rozdil(z)}${z.pasma.length > 1 ? ' *' : ''}</td></tr>`;
+  }).join('');
+  const hlava = SLOUPCE.map(s => `<th data-razeni="${s[0]}" aria-sort="${razeni.sl === s[0] ? (razeni.smer > 0 ? 'ascending' : 'descending') : 'none'}">${s[1]}${razeni.sl === s[0] ? (razeni.smer > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('');
+  return `<p class="tip">${seznam.length} zemí. Adaptér, napětí a čas se porovnávají s domovskou zemí <b>${esc(nazev(dom))}</b> (změna v ☰ Více). Klepnutím na řádek otevřete kartu země. * = více časových pásem, uveden čas hlavního města.</p>
+    ${seznam.length ? `<div class="tab-obal"><table><thead><tr>${hlava}</tr></thead><tbody>${radky}</tbody></table></div>` : '<p class="panel">Nic nenalezeno.</p>'}`;
+}
+
+/* ---------- karta země ---------- */
+function casZeme(pasmo) {
+  try { return new Intl.DateTimeFormat(loc(), { timeZone: pasmo, weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date()); }
+  catch { return '?'; }
+}
+function verdiktElektro(dom, z) {
+  const a = J.adapter(dom, z), n = J.napeti(dom, z);
+  let h = '';
+  if (a.stav === 'ne') h += `<div class="verdikt ok">🔌 Vidlice z ${esc(nazev(dom))} pasují – adaptér není potřeba.</div>`;
+  else if (a.stav === 'cast') h += `<div class="verdikt pozor">🔌 Ploché vidlice (Europlug C – nabíječky) projdou, ale uzemněné vidlice ne. Vezměte adaptér pro zásuvky typu <b>${a.doporucene.join(', ')}</b>.</div>`;
+  else h += `<div class="verdikt ne">🔌 Potřebujete cestovní adaptér pro zásuvky typu <b>${a.doporucene.join(', ')}</b>.</div>`;
+  if (n.stav === 'menic') h += `<div class="verdikt ne">⚡ Jiné napětí (${z.napeti.join(' / ')} V). Nabíječky s označením 100–240 V fungují, spotřebiče jen na ${dom.napeti.join('/')} V (fén, konvice, žehlička) potřebují měnič.</div>`;
+  else h += `<div class="verdikt ok">⚡ Napětí odpovídá (${z.napeti.join(' / ')} V).</div>`;
+  if (n.hz) h += `<div class="verdikt pozor">〰️ Jiný kmitočet (${z.hz.join(' / ')} Hz) – může ovlivnit motory a hodiny řízené sítí.</div>`;
+  if (z.zasuvky.length > 1 && a.stav !== 'ano') h += '<p class="tip">Země používá více typů zásuvek – v hotelu může být jiný, než očekáváte.</p>';
+  return h;
+}
+function karta() {
+  const z = PODLE[vybrana], dom = PODLE[domov];
+  const roz = J.rozdilCasu(dom.pasma[0], z.pasma[0]);
+  const T = ['Policie', 'Záchranka', 'Hasiči'];
+  const cisla = (z.jednotne ? `<a class="cislo hlavni" href="tel:${z.jednotne}"><b>${z.jednotne}</b><span>Jednotné číslo</span></a>` : '') +
+    (z.tisnova[0] && z.tisnova.every(c => c === z.tisnova[0]) && z.tisnova[0] !== z.jednotne
+      ? `<a class="cislo" href="tel:${z.tisnova[0]}"><b>${z.tisnova[0]}</b><span>Policie, záchranka, hasiči</span></a>`
+      : z.tisnova[0] && z.tisnova.every(c => c === z.jednotne) ? ''
+      : z.tisnova.map((c, i) => c ? `<a class="cislo" href="tel:${c}"><b>${c}</b><span>${T[i]}</span></a>` : `<span class="cislo"><b>?</b><span>${T[i]}</span></span>`).join(''));
+  const prikladCeny = m => { try { return new Intl.NumberFormat(loc(), { style: 'currency', currency: m }).format(100); } catch { return ''; } };
+  return `<div class="radek-vyber">${vyberZeme('volbaKarta', vybrana, 'Země')}
+      <button class="btn" data-prikaz="tisk">🖨️ Tisk karty</button>
+      <button class="btn" data-pohled-zeme="seznam">✅ Před cestou</button>
+      <button class="btn" data-pohled-zeme="porovnani">⚖️ Porovnat s domovem</button></div>
+    <div class="karta-hlava"><h2><span class="vlajka" aria-hidden="true">${vlajka(z.kod)}</span><span data-i18n="ne">${esc(nazev(z))}</span></h2>
+      <span class="podnadpis">${z.kod} · ${J.OBLASTI[z.oblast]}</span></div>
+    <div class="mrizka">
+      <section class="panel"><h3>🆘 Tísňová čísla${nej(z, 't')}</h3><div class="cisla">${cisla}</div>
+        ${J.vEhp(z.kod) ? '<p class="tip">V celé EU funguje 112 i z mobilu bez SIM.</p>' : ''}</section>
+      <section class="panel"><h3>🔌 Zásuvky a napětí${nej(z, 'z')}${nej(z, 'v')}</h3>
+        <div class="zasuvky">${z.zasuvky.map(t => `<div class="zasuvka">${ZVK_SVG(t)}typ ${t}</div>`).join('')}</div>
+        <p style="margin:0 0 6px;font-size:.9rem"><b>${napetiText(z)}</b></p>${verdiktElektro(dom, z)}</section>
+      <section class="panel"><h3>🕒 Čas</h3>
+        <div class="velky-cas">${esc(casZeme(z.pasma[0]))}</div>
+        <p class="tip" style="margin:2px 0 6px">${roz ? `${J.formatRozdil(roz)} oproti domovu (${esc(nazev(dom))})` : `stejný čas jako doma (${esc(nazev(dom))})`}</p>
+        ${z.pasma.length > 1 ? `<p class="tip">Více časových pásem: ${z.pasma.map(p => `${esc(p.split('/').pop().replace(/_/g, ' '))} ${esc(casZeme(p).split(' ').pop())}`).join(' · ')}</p>` : ''}</section>
+      <section class="panel"><h3>ℹ️ Základní údaje</h3><dl class="udaj">
+        <dt>Měna</dt><dd>${z.meny.map(m => `<b>${m}</b> – ${esc(menaNazev(m))} <span class="tip">(${esc(prikladCeny(m))})</span>`).join('<br>')}</dd>
+        <dt>Předvolba</dt><dd><b>${z.predvolba}</b></dd>
+        <dt>Jazyk</dt><dd>${z.jazyky.map(l => esc(jazykNazev(l))).join(', ')}</dd>
+        <dt>Jízda</dt><dd>${jizdaText(z)}</dd>
+      </dl></section>
+      <section class="panel"><h3>🍽️ Spropitné a voda (orientačně)${nej(z, 's')}${nej(z, 'w')}</h3><dl class="udaj">
+        <dt>Spropitné</dt><dd>${J.SPROPITNE[z.spropitne]}</dd>
+        <dt>Voda</dt><dd>${J.VODA[z.voda]}</dd></dl></section>
+      ${z.vineta ? `<section class="panel"><h3>🛣️ Dálniční poplatky (osobní auto)</h3><p style="margin:0;font-size:.9rem;line-height:1.45">${esc(z.vineta)}</p><p class="tip">Stav 11/2026 – ceny a pravidla ověřte před cestou.</p></section>` : ''}
+      <section class="panel"><h3>🏛️ Ministerstvo zahraničních věcí ČR</h3><div class="odkazy">
+        <a class="btn mini" href="${MZV.zeme}" target="_blank" rel="noopener">📘 Informace o zemi a velvyslanectví ČR</a>
+        <a class="btn mini" href="${MZV.varovani}" target="_blank" rel="noopener">⚠️ Cestovní doporučení a varování</a>
+        <a class="btn mini" href="${MZV.drozd}" target="_blank" rel="noopener">🐦 Registrace DROZD</a></div>
+        <p class="tip">Na stránkách MZV vyberte oblast a zemi – najdete podmínky vstupu, kontakty na zastupitelský úřad a aktuální bezpečnostní situaci.</p></section>
+    </div>
+    <p class="tip">Tísňová čísla, zásuvky, napětí a měny porovnány se zdroji ke dni <b>${new Date(D.overeno).toLocaleDateString(loc())}</b>. Podrobnosti v ☰ Více → Zdroje a upozornění.</p>`;
+}
+
+/* ---------- porovnání ---------- */
+function porovnani() {
+  const [a, b] = porovnat.map(k => PODLE[k] || PODLE.CZ);
+  const ad = J.adapter(a, b), np = J.napeti(a, b);
+  const R = [
+    ['Zásuvky', z => typy(z), z => z.zasuvky.join()],
+    ['Napětí', napetiText, napetiText],
+    ['Jízda', jizdaText, z => z.jizda],
+    ['Tísňová čísla', z => z.tisnova.map(c => c || '?').join(' / ') + (z.jednotne ? ' · ' + z.jednotne : ''), z => z.tisnova.join() + z.jednotne],
+    ['Měna', z => z.meny.map(m => `${m} – ${esc(menaNazev(m))}`).join('<br>'), z => z.meny.join()],
+    ['Předvolba', z => z.predvolba, z => z.predvolba],
+    ['Čas teď', z => esc(casZeme(z.pasma[0])), z => J.posunUtc(z.pasma[0])],
+    ['Jazyk', z => z.jazyky.map(l => esc(jazykNazev(l))).join(', '), z => z.jazyky.join()],
+    ['Spropitné', z => J.SPROPITNE[z.spropitne], z => z.spropitne],
+    ['Voda', z => J.VODA[z.voda], z => z.voda],
+    ['Dálnice', z => esc(z.vineta || '–'), z => z.vineta]
+  ];
+  const roz = J.rozdilCasu(a.pasma[0], b.pasma[0]);
+  return `<div class="radek-vyber">${vyberZeme('porA', a.kod, 'Odkud')} <button class="btn" id="prohodit" title="Prohodit" aria-label="Prohodit země">⇄</button> ${vyberZeme('porB', b.kod, 'Kam')}</div>
+    <div class="panel" style="margin-bottom:10px"><h3>Cesta ${esc(nazev(a))} → ${esc(nazev(b))}</h3>
+      ${verdiktElektro(a, b)}
+      <div class="verdikt ${a.jizda === b.jizda ? 'ok' : 'pozor'}">🚗 ${a.jizda === b.jizda ? 'Jezdí se na stejné straně.' : `V cílové zemi se jezdí ${b.jizda === 'L' ? 'vlevo' : 'vpravo'}!`}</div>
+      <div class="verdikt ${Math.abs(roz) >= 180 ? 'pozor' : 'ok'}">🕒 ${roz ? 'Časový posun ' + J.formatRozdil(roz) : 'Stejný čas'}.</div>
+      ${a.meny.some(m => b.meny.includes(m)) ? '<div class="verdikt ok">💱 Stejná měna.</div>' : `<div class="verdikt pozor">💱 Jiná měna: ${b.meny.join(', ')}.</div>`}
+    </div>
+    <div class="tab-obal"><table class="porovnani"><thead><tr><th></th><th>${esc(nazev(a))}</th><th>${esc(nazev(b))}</th></tr></thead><tbody>
+    ${R.map(r => `<tr class="${r[2](a) !== r[2](b) ? 'jine' : ''}"><td>${r[0]}</td><td>${r[1](a)}</td><td>${r[1](b)}</td></tr>`).join('')}
+    </tbody></table></div><p class="tip">Zvýrazněné řádky se liší. ${ad.stav !== 'ne' || np.stav !== 'ok' ? 'Elektrika: viz doporučení nahoře.' : ''}</p>`;
+}
+
+/* ---------- kontrolní seznam ---------- */
+function seznam() {
+  const z = PODLE[vybrana], dom = PODLE[domov];
+  const pol = J.kontrolniSeznam(dom, z);
+  const hot = odskrtnute[z.kod] || {};
+  const n = pol.filter(p => hot[p.id]).length;
+  return `<div class="radek-vyber">${vyberZeme('volbaSeznam', vybrana, 'Cíl cesty')}
+      <button class="btn" id="seznamVymaz">↺ Zrušit odškrtnutí</button>
+      <button class="btn" data-pohled-zeme="karta">🗂️ Karta země</button></div>
+    <h2>Před cestou: ${esc(nazev(dom))} → ${esc(nazev(z))}</h2>
+    <div class="pokrok" title="${n} z ${pol.length}"><i style="width:${Math.round(100 * n / pol.length)}%"></i></div>
+    <ul class="seznam">${pol.map(p => `<li class="${p.dulezite ? 'dulezite' : ''}"><label><input type="checkbox" data-bod="${p.id}"${hot[p.id] ? ' checked' : ''}><span>${esc(p.text)}${p.detail ? ': <b>' + esc(p.detail) + '</b>' : ''}</span></label></li>`).join('')}</ul>
+    <p class="tip">• = důležité. Odškrtnutí se pamatuje pro každou zemi v tomto prohlížeči. Seznam je obecný – podmínky vstupu vždy ověřte u <a href="${MZV.zeme}" target="_blank" rel="noopener">MZV</a>.</p>`;
+}
+
+/* ---------- typy zásuvek ---------- */
+function zasuvky() {
+  const zeme = filtrTyp ? serazene().filter(z => z.zasuvky.includes(filtrTyp)) : [];
+  return `<p class="tip">Schematický pohled na zásuvku ve zdi (vlastní kresba podle přehledu IEC World Plugs). Barevně je zvýrazněný zemnicí kolík nebo pera. Klepnutím na typ zobrazíte země, kde se používá.</p>
+    <div class="typy">${J.TYPY.split('').map(t => `<button class="panel" data-typ="${t}" aria-pressed="${t === filtrTyp}">${ZVK_SVG(t)}<span><b>Typ ${t}</b><small>${esc(J.POPIS_TYPU[t])}</small><small>${ZEME.filter(z => z.zasuvky.includes(t)).length} zemí</small></span></button>`).join('')}</div>
+    ${filtrTyp ? `<h2 style="margin-top:14px">Typ ${filtrTyp}: ${zeme.length} zemí</h2><p style="line-height:1.9">${zeme.map(z => `<button class="btn mini" data-zeme="${z.kod}">${vlajka(z.kod)} ${esc(nazev(z))}</button>`).join(' ')}</p>` : ''}
+    <p class="tip">Vidlice Europlug (C) z ČR projde zásuvkami C, E, F, H, J, K, L a N. Uzemněná vidlice E/F jen zásuvkami E a F.</p>`;
+}
+
+/* ---------- mapa ---------- */
+const BARVY = {
+  adapter: { nazev: 'Adaptér z domova', fn: z => J.adapter(PODLE[domov], z).stav, leg: { ne: ['bez adaptéru', '--ok'], cast: ['jen ploché vidlice', '--warn'], ano: ['adaptér nutný', '--danger'] } },
+  napeti: { nazev: 'Napětí', fn: z => J.napeti(PODLE[domov], z).stav, leg: { ok: ['stejné napětí', '--ok'], menic: ['jiné napětí', '--danger'] } },
+  jizda: { nazev: 'Strana jízdy', fn: z => z.jizda, leg: { P: ['vpravo', '--accent'], L: ['vlevo', '--warn'] } },
+  voda: { nazev: 'Kohoutková voda', fn: z => z.voda, leg: { a: ['pitná', '--ok'], c: ['místně opatrně', '--warn'], n: ['raději balená', '--danger'] } },
+  spropitne: { nazev: 'Spropitné', fn: z => String(z.spropitne), leg: { 0: ['není zvykem', '--ok'], 1: ['drobné', '--accent'], 2: ['asi 10 %', '--warn'], 3: ['15–20 %', '--danger'] } }
+};
+let mapa = null, vrstvy = [];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function nactiSkript(src) {
+  return new Promise((ok, chyba) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => chyba(new Error(src)); document.head.appendChild(s); });
+}
+function mapaHtml() {
+  const b = BARVY[barvaMapy];
+  return `<div class="mapa-hlava"><label>Obarvit: <select class="vstup" id="barvaMapy">${Object.entries(BARVY).map(([k, v]) => `<option value="${k}"${k === barvaMapy ? ' selected' : ''}>${v.nazev}</option>`).join('')}</select></label>
+    <span class="legenda">${Object.values(b.leg).map(([t, c]) => `<span><i style="background:var(${c})"></i>${t}</span>`).join('')}<span><i style="background:var(--bg-control)"></i>bez údajů</span></span></div>
+    <div id="mapa" role="application" aria-label="Mapa světa"><p class="tip" style="padding:20px">Načítám mapu…</p></div>`;
+}
+async function kresliMapu() {
+  try {
+    if (!window.L) await nactiSkript('lib/leaflet/leaflet.js');
+    if (!window.CM_SVET) await nactiSkript('cestovni_mapa/svet.js');
+  } catch (e) { $('mapa').innerHTML = '<p class="tip" style="padding:20px">Mapu se nepodařilo načíst.</p>'; return; }
+  if (!$('mapa')) return;
+  $('mapa').innerHTML = '';
+  mapa = L.map('mapa', { worldCopyJump: false, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: true, maxBounds: [[-85, -200], [85, 200]] });
+  mapa.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
+  mapa.attributionControl.addAttribution('Hranice: <a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">Natural Earth</a> (volné dílo)');
+  const sv = window.CM_SVET, b = BARVY[barvaMapy];
+  const dek = r => { const out = []; let x = 0, y = 0; for (let i = 0; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; out.push([y * sv.q, x * sv.q]); } return out; };
+  const zemeMapy = sv.zeme.filter(m => m.k !== 'ATA' && m.a2 !== 'AQ')
+    .map(m => ({ m, plocha: (m.bb[2] - m.bb[0]) * (m.bb[3] - m.bb[1]) })).sort((x, y) => y.plocha - x.plocha);
+  vrstvy = [];
+  for (const { m } of zemeMapy) {
+    const z = PODLE[m.a2];
+    const barva = z ? css((b.leg[b.fn(z)] || [0, '--bg-control'])[1]) : css('--bg-control');
+    const pol = L.polygon(m.r.map(r => [dek(r)]), { color: css('--border-strong'), weight: 0.6, fillColor: barva, fillOpacity: z ? 0.75 : 0.5 }).addTo(mapa);
+    if (z) {
+      pol.bindPopup(() => `<b>${vlajka(z.kod)} ${esc(nazev(z))}</b><br>🔌 ${z.zasuvky.join(', ')} · ${napetiText(z)}<br>🚗 ${jizdaText(z)} · 🆘 ${z.jednotne || z.tisnova[0] || '?'}<br>💱 ${z.meny.join(', ')} · 📞 ${z.predvolba}<br><button class="btn mini" data-zeme="${z.kod}" style="margin-top:6px">🗂️ Karta země</button>`);
+      pol.bindTooltip(nazev(z), { sticky: true });
+    }
+    vrstvy.push(pol);
+  }
+  mapa.fitBounds([[-55, -170], [75, 180]]);
+}
+
+/* ---------- vykreslení ---------- */
+function vykresli() {
+  if (mapa) { mapa.remove(); mapa = null; }
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === pohled)));
+  const jeMapa = pohled === 'mapa';
+  $('hlavni').classList.toggle('mapa-rezim', jeMapa);
+  $('obsah').className = jeMapa ? '' : 'obal';
+  $('obsah').style.cssText = jeMapa ? 'display:flex;flex-direction:column;flex:1;min-height:0' : '';
+  const f = { prehled, karta, porovnani, seznam, zasuvky, mapa: mapaHtml }[pohled] || prehled;
+  $('obsah').innerHTML = f();
+  if (jeMapa) kresliMapu();
+}
+function otevriZemi(kod, kam) {
+  if (!PODLE[kod]) return;
+  vybrana = kod; zapamatuj('vybrana', kod);
+  history.replaceState(null, '', '#' + kod);
+  if (kam === 'porovnani') { porovnat = [domov, kod]; zapamatuj('porovnat', porovnat); }
+  pohled = kam || 'karta'; zapamatuj('pohled', pohled);
+  vykresli(); $('hlavni').scrollTop = 0;
+}
+
+/* ---------- příkazy ---------- */
+const PRIKAZY = {
+  tisk: () => { if (pohled !== 'karta') { pohled = 'karta'; vykresli(); } setTimeout(() => print(), 50); },
+  odkaz: async () => {
+    const url = location.href.split('#')[0] + '#' + vybrana;
+    try { await navigator.clipboard.writeText(url); Dialog.info('Odkaz zkopírován:\n' + url); }
+    catch { Dialog.info(url); }
+  },
+  domov: async () => {
+    const odp = await Dialog.zeptej('Domovská země (kód ISO, např. CZ, SK, DE) – podle ní se počítá adaptér, napětí a časový posun:', domov);
+    if (odp === null || odp === undefined) return;
+    const k = String(odp).trim().toUpperCase();
+    const z = PODLE[k] || J.hledej(ZEME, k, nazvyHledani)[0];
+    if (!z) return Dialog.chyba('Zemi „' + odp + '“ neznám.');
+    domov = z.kod; zapamatuj('domov', domov); vykresli();
+    Dialog.info('Domovská země: ' + nazev(z));
+  },
+  zdroje: () => {
+    $('obsah').className = 'obal'; $('hlavni').classList.remove('mapa-rezim'); $('obsah').style.cssText = '';
+    if (mapa) { mapa.remove(); mapa = null; }
+    $('obsah').innerHTML = `<div class="panel zdroje"><h2>Zdroje a upozornění</h2><ul>
+      <li><b>Zásuvky, napětí, kmitočet:</b> Wikipedie – <a href="https://en.wikipedia.org/wiki/Mains_electricity_by_country" target="_blank" rel="noopener">Mains electricity by country</a> (vychází z <a href="https://www.iec.ch/world-plugs" target="_blank" rel="noopener">IEC World Plugs</a>). Kresby zásuvek jsou vlastní a schematické.</li>
+      <li><b>Tísňová čísla:</b> Wikipedie – <a href="https://en.wikipedia.org/wiki/List_of_emergency_telephone_numbers" target="_blank" rel="noopener">List of emergency telephone numbers</a>, jednotné evropské číslo <a href="https://digital-strategy.ec.europa.eu/cs/policies/112" target="_blank" rel="noopener">112</a>.</li>
+      <li><b>Měny:</b> aktivní kódy ISO 4217 podle <a href="https://en.wikipedia.org/wiki/ISO_4217" target="_blank" rel="noopener">Wikipedie</a> (Bulharsko od 1. 1. 2026 euro, Chorvatsko od 2023). Názvy měn, zemí a jazyků dodává prohlížeč (Intl).</li>
+      <li><b>Předvolby:</b> ITU-T E.164. <b>Časová pásma:</b> databáze IANA ve vašem prohlížeči – letní čas se počítá automaticky.</li>
+      <li><b>Spropitné, pitná voda, strana jízdy, dálniční poplatky:</b> obecné cestovní přehledy; jen orientačně.</li>
+      <li><b>Hranice na mapě:</b> <a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">Natural Earth</a> 1:50m (volné dílo), sdíleno s Cestovatelskou mapou.</li>
+      <li><b>Cestovní doporučení a velvyslanectví:</b> <a href="${MZV.zeme}" target="_blank" rel="noopener">MZV ČR – informace o státech</a>, <a href="${MZV.varovani}" target="_blank" rel="noopener">aktuální doporučení a varování</a>, <a href="${MZV.drozd}" target="_blank" rel="noopener">DROZD</a>.</li>
+      </ul>
+      <p><b>Stav dat: ${new Date(D.datum).toLocaleDateString(loc())}.</b> Tísňová čísla, zásuvky, napětí, kmitočet a měny byly strojově porovnány s uvedenými zdroji ke dni <b>${new Date(D.overeno).toLocaleDateString(loc())}</b> a rozdíly opraveny. Hodnoty označené <span class="nejiste">⚠️ neověřeno</span> zdroj neuvádí nebo jsou sporné. Před cestou si důležité údaje (tísňová čísla, podmínky vstupu, dálniční poplatky) ověřte.</p>
+      <p>Stránka nic neodesílá; v prohlížeči si pamatuje jen domovskou zemi, poslední pohled a odškrtnuté body seznamu.</p>
+      <p><button class="btn" data-pohled="prehled">← Zpět na přehled</button></p></div>`;
+  }
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; zapamatuj('pohled', pohled); return vykresli(); }
+  const pz = e.target.closest('[data-pohled-zeme]');
+  if (pz) return otevriZemi(vybrana, pz.dataset.pohledZeme);
+  const th = e.target.closest('[data-razeni]');
+  if (th) { razeni = { sl: th.dataset.razeni, smer: razeni.sl === th.dataset.razeni ? -razeni.smer : 1 }; return vykresli(); }
+  const ty = e.target.closest('[data-typ]');
+  if (ty) { filtrTyp = filtrTyp === ty.dataset.typ ? '' : ty.dataset.typ; return vykresli(); }
+  const zr = e.target.closest('[data-zeme]');
+  if (zr) return otevriZemi(zr.dataset.zeme);
+  if (e.target.id === 'prohodit') { porovnat.reverse(); zapamatuj('porovnat', porovnat); return vykresli(); }
+  if (e.target.id === 'seznamVymaz') { delete odskrtnute[vybrana]; zapamatuj('seznam', odskrtnute); return vykresli(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'volbaKarta') return otevriZemi(t.value, 'karta');
+  if (t.id === 'volbaSeznam') return otevriZemi(t.value, 'seznam');
+  if (t.id === 'porA' || t.id === 'porB') { porovnat[t.id === 'porA' ? 0 : 1] = t.value; zapamatuj('porovnat', porovnat); return vykresli(); }
+  if (t.id === 'barvaMapy') { barvaMapy = t.value; zapamatuj('mapa', barvaMapy); return vykresli(); }
+  if (t.dataset.bod) {
+    const h = odskrtnute[vybrana] = odskrtnute[vybrana] || {};
+    if (t.checked) h[t.dataset.bod] = 1; else delete h[t.dataset.bod];
+    if (!Object.keys(h).length) delete odskrtnute[vybrana];
+    zapamatuj('seznam', odskrtnute); vykresli();
+  }
+});
+$('hledat').addEventListener('input', () => { if (pohled !== 'prehled') { pohled = 'prehled'; zapamatuj('pohled', pohled); } vykresli(); });
+$('hledat').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const n = filtrovane(); if (n.length === 1) otevriZemi(n[0].kod);
+});
+$('oblast').innerHTML += Object.entries(J.OBLASTI).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+$('oblast').addEventListener('change', () => { if (pohled !== 'prehled' && pohled !== 'mapa') pohled = 'prehled'; vykresli(); });
+addEventListener('resize', zavriNabidky);
+addEventListener('hashchange', () => { const k = location.hash.slice(1).toUpperCase(); if (PODLE[k] && k !== vybrana) otevriZemi(k); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+// téma: mapa bere barvy z CSS proměnných
+new MutationObserver(() => { if (pohled === 'mapa') vykresli(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+setInterval(() => { if (pohled === 'karta' && !document.hidden && !document.activeElement.closest('select')) vykresli(); }, 60000);
+
+if (PODLE[location.hash.slice(1).toUpperCase()]) pohled = 'karta';
+vykresli();
+window.ZVK_APP = { otevriZemi, vykresli, PRIKAZY };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rozpočet obálkovou metodou</title>
+<meta name="description" content="Měsíční rozpočet obálkovou (nulovou) metodou: rozdělte příjem do obálek, zapisujte výdaje, přesouvejte mezi obálkami, přenášejte zbytky, spořte na cíle s termínem, importujte výpis z banky (CSV) a sledujte přehled roku.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/chart.min.js"></script>
+<script src="obalky/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+#mesicTl{min-width:9.5em;font-weight:600}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(8px,2.5vw,24px) 40px}
+.obal{max-width:1150px;margin:0 auto}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:9px 12px;min-width:0}
+.dlazdice b{display:block;font-size:1.25rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlazdice span{font-size:.76rem;color:var(--text-muted)}
+.dlazdice.ok b{color:var(--ok)} .dlazdice.warn b{color:var(--warn)} .dlazdice.po b{color:var(--danger)}
+.pruh{border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:.88rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--border);background:var(--bg-panel)}
+.pruh.ok{border-left:4px solid var(--ok)} .pruh.warn{border-left:4px solid var(--warn)} .pruh.po{border-left:4px solid var(--danger)}
+.pruh .vstup{padding:4px 8px}
+
+h2.skupina{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:16px 0 6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+h2.skupina span{text-transform:none;letter-spacing:0;font-weight:400}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+.prijmy .radek-p{display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border);font-size:.88rem}
+.prijmy .radek-p:last-child{border-bottom:0}
+.prijmy .radek-p .popis{flex:1;min-width:0;overflow-wrap:anywhere}
+.prijmy .radek-p .c{white-space:nowrap;font-variant-numeric:tabular-nums}
+.prijmy .radek-p.auto{color:var(--text-muted);font-style:italic}
+
+/* řádky obálek: na šířku tabulka, na úzko karta se štítky */
+.ob-hlava,.ob{display:grid;grid-template-columns:minmax(150px,2.2fr) repeat(4,minmax(78px,1fr)) minmax(96px,1.1fr) auto;gap:4px 10px;align-items:center;padding:6px 10px}
+.ob-hlava{font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.ob-hlava > :not(:first-child),.ob .c{text-align:right}
+.ob{border-bottom:1px solid var(--border);font-size:.88rem}
+.ob:last-child{border-bottom:0}
+.ob .jm{min-width:0;overflow-wrap:anywhere}
+.ob .jm small{display:block;color:var(--text-muted);font-size:.74rem;margin-top:2px}
+.ob .c{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ob .c.zust{font-weight:700}
+.ob .c.zust.po{color:var(--danger)} .ob .c.zust.ok{color:var(--ok)}
+.ob .prid{width:100%;text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums}
+.ob .akce{display:flex;gap:3px;justify-content:flex-end}
+.bar{height:5px;border-radius:3px;background:var(--bg-control);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--ok)}
+.bar i.warn{background:var(--warn)} .bar i.po{background:var(--danger)}
+.ob .lbl{display:none}
+@media (max-width:760px){
+  .ob-hlava{display:none}
+  .ob{grid-template-columns:1fr 1fr;padding:9px 10px}
+  .ob .jm{grid-column:1 / -1}
+  .ob .c{display:flex;justify-content:space-between;gap:6px;text-align:right}
+  .ob .lbl{display:inline;color:var(--text-muted);font-size:.74rem;font-weight:400}
+  .ob .c.prid-obal{grid-column:1 / -1}
+  .ob .prid{max-width:9em}
+  .ob .akce{grid-column:1 / -1}
+}
+
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.7}
+.tip{font-size:.8rem;color:var(--text-muted);margin:4px 0 10px;line-height:1.5}
+.filtry{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filtry .vstup{flex:1 1 160px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em}
+td.cislo,th.cislo{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.popis{overflow-wrap:anywhere;min-width:8em}
+td .pod{display:block;color:var(--text-muted);font-size:.76rem}
+td .akce{display:flex;gap:3px;justify-content:flex-end}
+tr.soucet td{font-weight:700;border-bottom:0}
+.zaporne{color:var(--danger)} .kladne{color:var(--ok)}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+.grafy{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin:10px 0}
+.graf{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px;min-width:0}
+.graf h3{margin:0 0 6px;font-size:.88rem}
+.graf .platno{position:relative;height:260px}
+.znacka{display:inline-block;font-size:.7rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border);color:var(--text-muted)}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,520px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,980px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:92vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.dvoj{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.dvoj{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.zaskrt{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.82rem;color:var(--text)}
+.zaskrt label{display:flex;gap:4px;align-items:center}
+.nahled td select{max-width:12em;padding:3px 4px}
+.nahled tr.dup td{opacity:.55}
+.nahled tr.prijem td.cislo{color:var(--ok)}
+.pravidla .rad{display:flex;gap:6px;align-items:center}
+.pravidla .rad .vstup{flex:1}
+
+@media print{
+  .lista,.akce,dialog,#podpis-pruh,.btn,.pruh .vstup{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .panel,.tab-obal,.dlazdice,.graf{background:#fff;border-color:#999;break-inside:avoid}
+  .ob .prid{border:0;background:none}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>✉️ Obálky</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Import výpisu, záloha, export">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Měsíc"><span class="skup-nazev" aria-hidden="true">Měsíc</span><div class="skup-tl">
+    <button class="tl" data-prikaz="predchozi" title="Předchozí měsíc" aria-label="Předchozí měsíc">◀</button>
+    <button class="tl" id="mesicTl" data-prikaz="dnes" title="Přejít na aktuální měsíc"></button>
+    <button class="tl" data-prikaz="dalsi" title="Další měsíc" aria-label="Další měsíc">▶</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zapsat"><span class="skup-nazev" aria-hidden="true">Zapsat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="vydaj" title="Zapsat výdaj">✚<span class="txt"> Výdaj</span></button>
+    <button class="tl" data-prikaz="presun" title="Přesunout peníze mezi obálkami">⇄<span class="txt"> Přesun</span></button>
+    <button class="tl" data-prikaz="prijem" title="Přidat příjem měsíce">💵<span class="txt"> Příjem</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="rozpocet" aria-pressed="true">📋<span class="txt"> Rozpočet</span></button>
+    <button class="tl" data-pohled="vydaje" aria-pressed="false">🧾<span class="txt"> Výdaje</span></button>
+    <button class="tl" data-pohled="rok" aria-pressed="false">📈<span class="txt"> Rok</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Rozpočet"><span class="skup-nazev" aria-hidden="true">Rozpočet</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabRozpocet" aria-expanded="false" title="Šablona, cíle, obálky, pravidla">✉️<span class="txt"> Obálky</span> ▾</button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="importCsv">🏦 Import výpisu z banky (CSV)…</button>
+  <button class="tl" data-prikaz="csvMesic">📊 Výdaje měsíce do CSV</button>
+  <button class="tl" data-prikaz="csvRok">📊 Výdaje roku do CSV</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<div id="nabRozpocet" class="nabidka" hidden>
+  <button class="tl" data-prikaz="sablona">📋 Šablona z minulého měsíce</button>
+  <button class="tl" data-prikaz="cile">🎯 Spoření podle cílů</button>
+  <button class="tl" data-prikaz="vynulovat">🧹 Vynulovat přidělení měsíce…</button>
+  <hr>
+  <button class="tl" data-prikaz="novaObalka">✚ Nová obálka</button>
+  <button class="tl" data-prikaz="vychozi">🗂️ Doplnit výchozí obálky</button>
+  <button class="tl" data-prikaz="skryte">👁️ Zobrazit skryté obálky</button>
+  <hr>
+  <button class="tl" data-prikaz="nastaveni">⚙️ Zbytky a pravidla importu…</button>
+</div>
+<input type="file" id="souborZaloha" accept=".json,application/json" hidden>
+<input type="file" id="souborCsv" accept=".csv,.txt,text/csv,text/plain" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+
+<!-- výdaj -->
+<dialog class="okno" id="dlgVydaj"><form method="dialog">
+  <header id="dlgVydajTitul">✚ Výdaj</header>
+  <div class="telo">
+    <div class="dvoj">
+      <label class="pole">Částka (Kč)<input class="vstup" name="castka" inputmode="decimal" required autocomplete="off" placeholder="např. 349,90"></label>
+      <label class="pole">Datum<input class="vstup" name="datum" type="date" required></label>
+    </div>
+    <label class="pole">Obálka<select class="vstup" name="obalka"></select></label>
+    <label class="pole">Popis<input class="vstup" name="popis" maxlength="200" autocomplete="off" list="seznamPopisu" placeholder="obchod, účel…"></label>
+    <p class="info" id="dlgVydajInfo" style="margin:0"></p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgVydajSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="dalsi" class="btn" id="dlgVydajDalsi" title="Uložit a zapsat další">Uložit a další</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+<datalist id="seznamPopisu"></datalist>
+
+<!-- přesun -->
+<dialog class="okno" id="dlgPresun"><form method="dialog">
+  <header>⇄ Přesun mezi obálkami</header>
+  <div class="telo">
+    <div class="dvoj">
+      <label class="pole">Z obálky<select class="vstup" name="z"></select></label>
+      <label class="pole">Do obálky<select class="vstup" name="do"></select></label>
+    </div>
+    <div class="dvoj">
+      <label class="pole">Částka (Kč)<input class="vstup" name="castka" inputmode="decimal" required autocomplete="off"></label>
+      <label class="pole">Poznámka<input class="vstup" name="popis" maxlength="120"></label>
+    </div>
+    <p class="info" id="dlgPresunInfo" style="margin:0"></p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">⇄ Přesunout</button>
+  </footer>
+</form></dialog>
+
+<!-- příjem -->
+<dialog class="okno" id="dlgPrijem"><form method="dialog">
+  <header id="dlgPrijemTitul">💵 Příjem</header>
+  <div class="telo">
+    <div class="dvoj">
+      <label class="pole">Popis<input class="vstup" name="popis" maxlength="80" placeholder="mzda, důchod, přídavky…" required></label>
+      <label class="pole">Částka (Kč)<input class="vstup" name="castka" inputmode="decimal" required autocomplete="off"></label>
+    </div>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgPrijemSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- obálka -->
+<dialog class="okno" id="dlgObalka"><form method="dialog">
+  <header id="dlgObalkaTitul">✉️ Obálka</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" maxlength="60" required></label>
+    <div class="dvoj">
+      <label class="pole">Druh<select class="vstup" name="druh"></select></label>
+      <label class="pole">Zůstatek na konci měsíce<select class="vstup" name="zbytek"></select></label>
+    </div>
+    <div class="dvoj" id="dlgObalkaCil">
+      <label class="pole">🎯 Cílová částka (Kč)<input class="vstup" name="cil" inputmode="decimal" placeholder="např. 30 000"></label>
+      <label class="pole">Termín (měsíc/rok)<input class="vstup" name="termin" placeholder="6/2027" autocomplete="off"></label>
+    </div>
+    <label class="zaskrt"><span><input type="checkbox" name="skryta"> Skrytá (nepoužívá se, v rozpočtu jen pokud má zůstatek)</span></label>
+    <p class="info" style="margin:0">Přečerpání (záporný zůstatek) se vždy přenáší do stejné obálky v dalším měsíci. Převod do spoření jde do obálky nastavené v <i>⚙️ Zbytky a pravidla</i>.</p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgObalkaSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- nastavení -->
+<dialog class="okno" id="dlgNastaveni"><form method="dialog">
+  <header>⚙️ Zbytky a pravidla importu</header>
+  <div class="telo">
+    <label class="pole">Spořicí obálka pro zbytky (u obálek s volbou „převést do spoření“)<select class="vstup" name="sporeniDo"></select></label>
+    <div class="pole">Pravidla pro import výpisu – když popis platby obsahuje text, výdaj půjde do obálky
+      <div class="pravidla" id="pravidla" style="display:grid;gap:6px"></div>
+      <button type="button" class="btn mini" id="pridejPravidlo" style="justify-self:start">✚ Pravidlo</button>
+    </div>
+    <p class="info" style="margin:0">Bez pravidla se navrhne obálka, kterou jste naposledy použili u stejného popisu (čísla v popisu se ignorují).</p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- import CSV -->
+<dialog class="okno siroke" id="dlgCsv"><form method="dialog">
+  <header>🏦 Import výpisu z banky</header>
+  <div class="telo">
+    <div class="dvoj">
+      <label class="pole">Kódování souboru<select class="vstup" name="kodovani"><option value="auto">automaticky</option><option value="utf-8">UTF-8</option><option value="windows-1250">Windows-1250 (starší banky)</option></select></label>
+      <label class="pole">Řádek se záhlavím<select class="vstup" name="hlavicka"></select></label>
+    </div>
+    <div class="dvoj">
+      <label class="pole">Sloupec s datem<select class="vstup" name="datum"></select></label>
+      <label class="pole">Sloupec s částkou<select class="vstup" name="castka"></select></label>
+    </div>
+    <div class="pole">Sloupce do popisu<div class="zaskrt" id="csvPopis"></div></div>
+    <label class="pole">Znaménko částky<select class="vstup" name="znamenko">
+      <option value="zaporne">výdaje jsou záporné, kladné = příjmy</option>
+      <option value="kladne">všechny řádky jsou výdaje</option></select></label>
+    <p class="tip" id="csvSouhrn" style="margin:0"></p>
+    <div class="tab-obal nahled"><table><thead><tr><th><input type="checkbox" id="csvVse" aria-label="Vybrat vše" title="Vybrat vše"></th><th>Datum</th><th>Popis</th><th class="cislo">Částka</th><th>Obálka</th></tr></thead><tbody id="csvRadky"></tbody></table></div>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary" id="csvImportuj">Importovat</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Obálková metoda</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>Princip:</b> na začátku měsíce rozdělíte všechny příjmy do <b>obálek</b> (pevné výdaje, proměnlivé, spoření, rezerva) tak, aby <b>nepřiděleno bylo 0 Kč</b> – každá koruna má svůj úkol. Utrácet se smí jen z obálky, ve které peníze jsou.</p>
+    <p style="margin:0"><b>📋 Rozpočet:</b> v řádku obálky zapište částku do sloupce <i>Přiděleno</i>. Zůstatek = z minula + přiděleno ± přesuny − utraceno. Když obálka dojde, <b>⇄ přesuňte</b> peníze z jiné – rozpočet zůstane vyrovnaný.</p>
+    <p style="margin:0"><b>Konec měsíce:</b> každá obálka má volbu, co se zbytkem – <i>přenést</i> (proměnlivé výdaje, roční platby), <i>převést do spoření</i> nebo <i>vrátit do příjmu</i> dalšího měsíce (typicky pevné výdaje). Přečerpání se přenáší vždy. Nic se neuzavírá: oprava starého výdaje se propíše do dalších měsíců.</p>
+    <p style="margin:0"><b>🎯 Cíle:</b> spořicí obálka může mít cílovou částku a termín – ukáže se, kolik ukládat měsíčně. <i>Obálky → Spoření podle cílů</i> to přidělí za vás. <i>Šablona z minulého měsíce</i> zkopíruje přidělení i příjmy.</p>
+    <p style="margin:0"><b>🏦 Import výpisu:</b> většina bank (internetové bankovnictví → historie / výpis → export CSV) dává CSV. Sloupce se odhadnou, opravíte je ručně. Obálka se navrhne podle pravidel a podle dřívějších plateb; stejné platby se podruhé nenaimportují.</p>
+    <p style="margin:0">Sledovat jen, kam peníze odešly, umí <a href="expense_tracker.html" style="color:var(--accent)">💰 Sledování výdajů</a>; tahle stránka je na <b>plánování</b>. Data jsou jen v tomto prohlížeči – zálohujte přes <i>Soubor → Záloha</i>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.ObalkyJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const kc = n => J.formatKc(n);
+// názvy měsíců v jazyce rozhraní (jádro je česky)
+const ciziJazyk = () => window.I18N && I18N.jazyk && I18N.jazyk !== 'cs';
+const fmtMesic = m => ciziJazyk() ? I18N.datum(new Date(+m.slice(0, 4), +m.slice(5, 7) - 1, 1), { month: 'long', year: 'numeric' }) : J.formatMesic(m);
+const kratkyMesic = m => ciziJazyk() ? I18N.datum(new Date(2026, +m.slice(5, 7) - 1, 1), { month: 'short' }) : KRATKE[+m.slice(5, 7) - 1];
+const KRATKE = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let pohled = 'rozpocet', ukazSkryte = false, filtrObalka = '', grafy = [];
+try { pohled = localStorage.getItem(J.KLIC + '_pohled') || 'rozpocet'; } catch (e) {}
+let mesic = J.dnesIso().slice(0, 7);
+let rok = +mesic.slice(0, 4);
+
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?) – udělejte zálohu.'); }
+}
+function zapamatuj(k, v) { try { localStorage.setItem(J.KLIC + '_' + k, v); } catch (e) {} }
+const obalkyAktivni = () => J.seradObalky(data.obalky.filter(o => !o.skryta));
+const nazevObalky = id => { const o = J.obalkaPodleId(data, id); return o ? o.nazev : '❔ Nezařazeno'; };
+function moznostiObalek(vybrano, sNezarazenym) {
+  let h = sNezarazenym ? `<option value="">❔ Nezařazeno</option>` : '';
+  for (const d of J.DRUHY) {
+    const o = J.seradObalky(data.obalky.filter(x => x.druh === d.id && (!x.skryta || x.id === vybrano)));
+    if (o.length) h += `<optgroup label="${esc(d.nazev)}">` + o.map(x => `<option value="${esc(x.id)}"${x.id === vybrano ? ' selected' : ''}>${esc(x.nazev)}</option>`).join('') + '</optgroup>';
+  }
+  return h;
+}
+const cislo = v => { const n = J.parsujCastku(v); return isNaN(n) ? NaN : J.zaokr(n); };
+
+/* ---------- Rozpočet ---------- */
+function stavTridy(zust, prid) { return zust < 0 ? 'po' : zust === 0 && prid > 0 ? 'warn' : 'ok'; }
+function radekObalky(r) {
+  const o = r.obalka;
+  const dostupne = r.pocatek + r.prideleno + r.prichozi - r.odchozi;
+  const pomer = dostupne > 0 ? Math.min(1, r.utraceno / dostupne) : (r.utraceno > 0 ? 1 : 0);
+  const trida = r.zustatek < 0 ? 'po' : pomer > .85 && o.druh !== 'pevne' ? 'warn' : '';
+  let pod = '';
+  if (r.cil) {
+    // potřeba na měsíc se počítá bez přidělení tohoto měsíce, „chybí“ už s ním
+    const ob = o.cil, bez = J.naCil(ob, mesic, r.pocatek + r.prichozi - r.odchozi - r.utraceno);
+    const termin = ob.termin ? ' do ' + (+ob.termin.slice(5)) + '/' + ob.termin.slice(0, 4) : '';
+    pod = r.cil.splneno ? `🎯 cíl ${kc(ob.castka)} splněn` : `🎯 ${kc(ob.castka)}${termin} · chybí ${kc(r.cil.chybi)}` +
+      (bez.mesicne == null ? '' : bez.poTerminu ? ' · po termínu' : ` · potřeba ${kc(bez.mesicne)}/měs.${r.prideleno >= bez.mesicne ? ' ✓' : ''}`);
+  } else if (r.zustatek < 0) pod = `⚠️ přečerpáno o ${kc(-r.zustatek)} – přesuňte peníze z jiné obálky`;
+  const zbytek = { prenest: '↪ přenáší se', sporeni: '🐷 zbytek do spoření', prijem: '↩ zbytek do příjmu' }[o.zbytek];
+  return `<div class="ob" data-obalka="${esc(o.id)}">
+    <div class="jm"><b data-i18n="ne">${esc(o.nazev)}</b>${o.skryta ? ' <span class="znacka">skrytá</span>' : ''}<small>${pod ? esc(pod) + ' · ' : ''}${zbytek}</small>
+      <div class="bar" title="Utraceno ${Math.round(pomer * 100)} %"><i class="${trida}" style="width:${Math.round(pomer * 100)}%"></i></div></div>
+    <div class="c"><span class="lbl">Z minula</span>${kc(r.pocatek)}</div>
+    <div class="c prid-obal"><span class="lbl">Přiděleno</span><input class="vstup prid" data-prid="${esc(o.id)}" inputmode="decimal" value="${r.prideleno ? J.formatKc(r.prideleno, true) : ''}" placeholder="0" aria-label="Přiděleno: ${esc(o.nazev)}" autocomplete="off"></div>
+    <div class="c"><span class="lbl">Přesuny</span>${r.prichozi - r.odchozi ? kc(r.prichozi - r.odchozi) : '–'}</div>
+    <div class="c"><span class="lbl">Utraceno</span>${kc(r.utraceno)}</div>
+    <div class="c zust ${stavTridy(r.zustatek, dostupne)}"><span class="lbl">Zůstatek</span>${kc(r.zustatek)}</div>
+    <div class="akce"><button class="btn mini" data-akce="vydaj" title="Zapsat výdaj z obálky" aria-label="Zapsat výdaj">✚</button><button class="btn mini" data-akce="presun" title="Přesunout z obálky" aria-label="Přesunout">⇄</button><button class="btn mini" data-akce="upravit" title="Upravit obálku" aria-label="Upravit obálku">✎</button></div>
+  </div>`;
+}
+
+function vykresliRozpocet() {
+  const s = J.spocitej(data, mesic);
+  const x = data.mesice[mesic] || { prijmy: [] };
+  const tridaNep = s.neprideleno === 0 ? 'ok' : s.neprideleno > 0 ? 'warn' : 'po';
+  let h = `<div class="souhrn">
+    <div class="dlazdice"><b>${kc(s.kDispozici)}</b><span>k rozdělení</span></div>
+    <div class="dlazdice"><b>${kc(s.prideleno)}</b><span>přiděleno do obálek</span></div>
+    <div class="dlazdice ${tridaNep}"><b>${kc(s.neprideleno)}</b><span>nepřiděleno</span></div>
+    <div class="dlazdice"><b>${kc(s.utraceno)}</b><span>utraceno</span></div>
+    <div class="dlazdice ${s.zustatekObalek < 0 ? 'po' : ''}"><b>${kc(s.zustatekObalek)}</b><span>zůstává v obálkách</span></div>
+  </div>`;
+  if (!data.obalky.length) {
+    h += `<div class="prazdno">Zatím nemáte žádné obálky.<br>
+      <button class="btn primary" data-prikaz="vychozi">🗂️ Založit výchozí obálky</button> <button class="btn" data-prikaz="novaObalka">✚ Vlastní obálka</button><br>
+      <small>Výchozí: bydlení, energie, telefon, pojištění, jídlo, doprava, domácnost, oblečení, zábava, spoření, dovolená, rezerva – upravíte si je.</small></div>`;
+    $('obsah').innerHTML = h; return;
+  }
+  if (s.kDispozici === 0 && s.prideleno === 0)
+    h += `<div class="pruh warn">Pro ${fmtMesic(mesic)} zatím není příjem. <button class="btn mini primary" data-prikaz="prijem">💵 Přidat příjem</button>${data.mesice[J.posunMesic(mesic, -1)] ? ' <button class="btn mini" data-prikaz="sablona">📋 Šablona z minulého měsíce</button>' : ''}</div>`;
+  else if (s.neprideleno > 0)
+    h += `<div class="pruh warn">Zbývá rozdělit <b>${kc(s.neprideleno)}</b>. Přidělit do: <select class="vstup" id="zbytekDo" aria-label="Obálka pro zbytek">${moznostiObalek('', false)}</select> <button class="btn mini primary" data-prikaz="zbytekDo">Přidělit</button></div>`;
+  else if (s.neprideleno < 0)
+    h += `<div class="pruh po">Přiděleno o <b>${kc(-s.neprideleno)}</b> víc, než máte. Snižte přidělení některé obálky.</div>`;
+  else h += `<div class="pruh ok">✅ Každá koruna má svou obálku – rozpočet je vyrovnaný.</div>`;
+  if (s.nezarazeno) h += `<div class="pruh warn">❔ Nezařazené výdaje za ${kc(s.nezarazeno)} ubírají z nepřiděleného. <button class="btn mini" data-pohled="vydaje" data-filtr-obalka="__nez">Zařadit</button></div>`;
+
+  // příjmy
+  h += `<h2 class="skupina">💵 Příjmy <span>${kc(s.kDispozici)}</span></h2><div class="panel prijmy">`;
+  h += x.prijmy.map(p => `<div class="radek-p" data-prijem="${esc(p.id)}"><span class="popis" data-i18n="ne">${esc(p.popis)}</span><span class="c">${kc(p.castka)}</span><button class="btn mini" data-akce="prijem" title="Upravit" aria-label="Upravit příjem">✎</button></div>`).join('');
+  if (s.zMinula) h += `<div class="radek-p auto"><span class="popis">${s.zMinula > 0 ? 'Nepřiděleno z minulého měsíce' : 'Přeplánováno v minulém měsíci'}</span><span class="c">${kc(s.zMinula)}</span></div>`;
+  if (s.vraceno) h += `<div class="radek-p auto"><span class="popis">Vrácené zbytky obálek z minulého měsíce</span><span class="c">${kc(s.vraceno)}</span></div>`;
+  h += `<div class="radek-p"><button class="btn mini" data-prikaz="prijem">✚ Příjem</button></div></div>`;
+
+  // obálky podle druhu
+  for (const d of J.DRUHY) {
+    const rad = J.seradObalky(s.obalky.map(r => r.obalka).filter(o => o.druh === d.id)).map(o => s.obalky.find(r => r.obalka === o))
+      .filter(r => !r.obalka.skryta || ukazSkryte || r.zustatek || r.prideleno || r.utraceno);
+    if (!rad.length) continue;
+    const sum = k => rad.reduce((a, r) => a + r[k], 0);
+    h += `<h2 class="skupina">${d.nazev} <span>přiděleno ${kc(sum('prideleno'))} · zůstatek ${kc(sum('zustatek'))}</span></h2><div class="panel">
+      <div class="ob-hlava"><span>Obálka</span><span>Z minula</span><span>Přiděleno</span><span>Přesuny</span><span>Utraceno</span><span>Zůstatek</span><span></span></div>
+      ${rad.map(radekObalky).join('')}</div>`;
+  }
+  h += `<p class="tip">Částky v „Přiděleno“ se ukládají hned po opuštění pole (Tab / Enter). <button class="btn mini" data-prikaz="novaObalka">✚ Nová obálka</button></p>`;
+  $('obsah').innerHTML = h;
+}
+
+/* ---------- Výdaje ---------- */
+function vykresliVydaje() {
+  const q = J.bezDiakritiky(($('hledatV') || {}).value || '');
+  const vse = data.vydaje.filter(v => J.mesicZ(v.datum) === mesic);
+  const vyd = vse.filter(v => (!filtrObalka || (filtrObalka === '__nez' ? !v.obalka : v.obalka === filtrObalka)) && (!q || J.bezDiakritiky(v.popis + ' ' + nazevObalky(v.obalka)).includes(q)))
+    .sort((a, b) => a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : 0);
+  const pres = data.presuny.filter(t => t.mesic === mesic);
+  let h = `<div class="filtry"><select class="vstup" id="filtrObalka" aria-label="Obálka"><option value="">Všechny obálky</option><option value="__nez"${filtrObalka === '__nez' ? ' selected' : ''}>❔ Nezařazené</option>${moznostiObalek(filtrObalka, false)}</select>
+    <input class="vstup" type="search" id="hledatV" placeholder="🔍 Hledat v popisu…" aria-label="Hledat" value="${esc(($('hledatV') || {}).value || '')}">
+    <button class="btn primary" data-prikaz="vydaj">✚ Výdaj</button><button class="btn" data-prikaz="importCsv">🏦 Import CSV</button></div>`;
+  if (!vse.length) h += `<div class="prazdno">Za ${fmtMesic(mesic)} zatím žádné výdaje.<br>Zapište výdaj (✚) nebo naimportujte výpis z banky (Soubor → Import).</div>`;
+  else if (!vyd.length) h += '<div class="prazdno">Filtru nic neodpovídá.</div>';
+  else {
+    const soucet = vyd.reduce((a, v) => a + v.castka, 0);
+    h += `<p class="tip">${vyd.length} výdajů za ${kc(soucet)}. Záporná částka = vratka do obálky.</p><div class="tab-obal"><table><thead><tr><th>Den</th><th>Popis · obálka</th><th class="cislo">Částka</th><th></th></tr></thead><tbody>` +
+      vyd.map(v => `<tr data-vydaj="${esc(v.id)}"><td style="white-space:nowrap">${+v.datum.slice(8)}. ${+v.datum.slice(5, 7)}.</td><td class="popis"><span data-i18n="ne">${esc(v.popis)}</span><small class="pod">${v.obalka ? `<span data-i18n="ne">${esc(nazevObalky(v.obalka))}</span>` : '❔ Nezařazeno'}</small></td>
+        <td class="cislo${v.castka < 0 ? ' kladne' : ''}">${kc(v.castka)}</td><td><div class="akce"><button class="btn mini" data-akce="vydajUpravit" title="Upravit" aria-label="Upravit výdaj">✎</button></div></td></tr>`).join('') +
+      `<tr class="soucet"><td colspan="2">Celkem</td><td class="cislo">${kc(soucet)}</td><td></td></tr></tbody></table></div>`;
+  }
+  if (pres.length) {
+    h += `<h2 class="skupina">⇄ Přesuny v měsíci</h2><div class="tab-obal"><table><thead><tr><th>Z</th><th>Do</th><th>Poznámka</th><th class="cislo">Částka</th><th></th></tr></thead><tbody>` +
+      pres.map(t => `<tr><td data-i18n="ne">${esc(nazevObalky(t.z))}</td><td data-i18n="ne">${esc(nazevObalky(t.do))}</td><td class="popis" data-i18n="ne">${esc(t.popis)}</td><td class="cislo">${kc(t.castka)}</td>
+        <td><div class="akce"><button class="btn mini danger" data-smaz-presun="${esc(t.id)}" title="Zrušit přesun" aria-label="Zrušit přesun">✕</button></div></td></tr>`).join('') + '</tbody></table></div>';
+  }
+  $('obsah').innerHTML = h;
+  $('filtrObalka').onchange = e => { filtrObalka = e.target.value; vykresli(); };
+  $('hledatV').oninput = () => { const p = $('hledatV').selectionStart; vykresli(); $('hledatV').focus(); $('hledatV').setSelectionRange(p, p); };
+}
+
+/* ---------- Rok ---------- */
+function barvy() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = n => cs.getPropertyValue(n).trim();
+  return { text: v('--text-muted'), mrizka: v('--border'), ok: v('--ok'), danger: v('--danger'), accent: v('--accent'), warn: v('--warn') };
+}
+const PALETA = ['#4e79a7', '#f28e2b', '#59a14f', '#e15759', '#76b7b2', '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#8cd17d', '#86bcb6', '#d37295', '#a0cbe8', '#bab0ac'];
+function zrusGrafy() { grafy.forEach(g => g.destroy()); grafy = []; }
+function vykresliRok() {
+  const p = J.prehledRoku(data, rok);
+  const usp = J.zaokr(p.celkem.prijmy - p.celkem.utraceno);
+  let h = `<div class="filtry" style="align-items:center"><button class="btn" data-prikaz="rokPred" aria-label="Předchozí rok">◀</button><b style="font-size:1.1rem">${rok}</b><button class="btn" data-prikaz="rokDalsi" aria-label="Další rok">▶</button></div>
+  <div class="souhrn">
+    <div class="dlazdice"><b>${kc(p.celkem.prijmy)}</b><span>příjmy</span></div>
+    <div class="dlazdice"><b>${kc(p.celkem.utraceno)}</b><span>utraceno</span></div>
+    <div class="dlazdice ${usp >= 0 ? 'ok' : 'po'}"><b>${kc(usp)}</b><span>příjmy − výdaje</span></div>
+    <div class="dlazdice"><b>${kc(p.mesice[11].sporeni)}</b><span>spoření a rezerva na konci roku</span></div>
+  </div>`;
+  if (!p.celkem.prijmy && !p.celkem.utraceno && !p.celkem.prideleno) {
+    $('obsah').innerHTML = h + `<div class="prazdno">V roce ${rok} nejsou žádná data.</div>`; return;
+  }
+  h += `<div class="grafy"><div class="graf"><h3>Příjmy a výdaje po měsících</h3><div class="platno"><canvas id="grafMesice" role="img" aria-label="Sloupcový graf příjmů a výdajů po měsících"></canvas></div></div>
+    <div class="graf"><h3>Kam peníze šly</h3><div class="platno"><canvas id="grafObalky" role="img" aria-label="Výdaje podle obálek"></canvas></div></div></div>`;
+  const ob = p.obalky.filter(o => o.prideleno || o.utraceno);
+  h += `<h2 class="skupina">Obálky za rok</h2><div class="tab-obal"><table><thead><tr><th>Obálka</th><th class="cislo">Přiděleno</th><th class="cislo">Utraceno</th><th class="cislo">Rozdíl</th><th class="cislo">Průměr/měs.</th></tr></thead><tbody>` +
+    ob.map(o => { const r = J.zaokr(o.prideleno - o.utraceno), m = o.mesicne.filter(x => x).length;
+      return `<tr><td data-i18n="ne">${esc(o.obalka.nazev)}</td><td class="cislo">${kc(o.prideleno)}</td><td class="cislo">${kc(o.utraceno)}</td><td class="cislo ${r < 0 ? 'zaporne' : ''}">${kc(r)}</td><td class="cislo">${m ? kc(Math.round(o.utraceno / m)) : '–'}</td></tr>`; }).join('') +
+    `<tr class="soucet"><td>Celkem</td><td class="cislo">${kc(p.celkem.prideleno)}</td><td class="cislo">${kc(p.celkem.utraceno)}</td><td class="cislo">${kc(p.celkem.prideleno - p.celkem.utraceno)}</td><td></td></tr></tbody></table></div>`;
+  h += `<h2 class="skupina">Měsíce</h2><div class="tab-obal"><table><thead><tr><th>Měsíc</th><th class="cislo">Příjmy</th><th class="cislo">Přiděleno</th><th class="cislo">Utraceno</th><th class="cislo">Nepřiděleno</th><th class="cislo">Spoření + rezerva</th></tr></thead><tbody>` +
+    p.mesice.map(m => `<tr><td><button class="btn mini" data-jdi-mesic="${m.mesic}">${fmtMesic(m.mesic)}</button></td><td class="cislo">${kc(m.prijmy)}</td><td class="cislo">${kc(m.prideleno)}</td><td class="cislo">${kc(m.utraceno)}</td>
+      <td class="cislo ${m.neprideleno < 0 ? 'zaporne' : ''}">${kc(m.neprideleno)}</td><td class="cislo">${kc(m.sporeni)}</td></tr>`).join('') + '</tbody></table></div>';
+  $('obsah').innerHTML = h;
+  if (!window.Chart) return;
+  const b = barvy();
+  Chart.defaults.color = b.text; Chart.defaults.borderColor = b.mrizka; Chart.defaults.font.family = 'system-ui, sans-serif';
+  const popisky = p.mesice.map(m => kratkyMesic(m.mesic));
+  const tip = { callbacks: { label: c => (c.dataset.label ? c.dataset.label + ': ' : c.label + ': ') + kc(c.raw) } };
+  grafy.push(new Chart($('grafMesice'), {
+    data: { labels: popisky, datasets: [
+      { type: 'bar', label: 'Příjmy', data: p.mesice.map(m => m.prijmy), backgroundColor: b.ok, borderRadius: 3 },
+      { type: 'bar', label: 'Utraceno', data: p.mesice.map(m => m.utraceno), backgroundColor: b.danger, borderRadius: 3 },
+      { type: 'line', label: 'Spoření + rezerva', data: p.mesice.map(m => m.sporeni), borderColor: b.accent, backgroundColor: b.accent, tension: .25, pointRadius: 2 }] },
+    options: { maintainAspectRatio: false, plugins: { tooltip: tip, legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => J.formatKc(v, true) } } } }
+  }));
+  const vyd = ob.filter(o => o.utraceno > 0);
+  grafy.push(new Chart($('grafObalky'), {
+    type: 'doughnut',
+    data: { labels: vyd.map(o => o.obalka.nazev), datasets: [{ data: vyd.map(o => o.utraceno), backgroundColor: vyd.map((o, i) => PALETA[i % PALETA.length]), borderColor: getComputedStyle(document.body).getPropertyValue('--bg-panel').trim() || '#fff', borderWidth: 2 }] },
+    options: { maintainAspectRatio: false, plugins: { tooltip: tip, legend: { position: innerWidth < 600 ? 'bottom' : 'right', labels: { boxWidth: 12 } } } }
+  }));
+}
+
+function vykresli() {
+  zrusGrafy();
+  document.querySelectorAll('[data-pohled]').forEach(b => b.closest('.lista') && b.setAttribute('aria-pressed', b.dataset.pohled === pohled));
+  $('mesicTl').textContent = pohled === 'rok' ? String(rok) : fmtMesic(mesic);
+  if (pohled === 'vydaje') vykresliVydaje();
+  else if (pohled === 'rok') vykresliRok();
+  else vykresliRozpocet();
+}
+
+/* ---------- dialogy ---------- */
+function otevri(dlg) {
+  return new Promise(res => {
+    dlg.addEventListener('close', () => res(dlg.returnValue), { once: true });
+    dlg.returnValue = '';
+    dlg.showModal();
+  });
+}
+function vychoziDatum() { const d = J.dnesIso(); return J.mesicZ(d) === mesic ? d : mesic + '-01'; }
+
+async function upravVydaj(v, obalka) {
+  const dlg = $('dlgVydaj'), f = dlg.querySelector('form'), novy = !v;
+  $('dlgVydajTitul').textContent = novy ? '✚ Výdaj' : '✎ Výdaj';
+  f.obalka.innerHTML = moznostiObalek(v ? v.obalka : obalka || '', true);
+  f.castka.value = v ? J.formatKc(v.castka, true) : ''; f.datum.value = v ? v.datum : vychoziDatum(); f.popis.value = v ? v.popis : '';
+  $('seznamPopisu').innerHTML = [...new Set(data.vydaje.slice(-300).map(x => x.popis).filter(Boolean))].map(p => `<option value="${esc(p)}">`).join('');
+  $('dlgVydajSmaz').hidden = novy; $('dlgVydajDalsi').hidden = !novy;
+  const info = () => {
+    const id = f.obalka.value, m = J.jeDatum(f.datum.value) ? J.mesicZ(f.datum.value) : mesic;
+    const r = id && J.spocitej(data, m).obalky.find(x => x.obalka.id === id);
+    $('dlgVydajInfo').textContent = r ? `Zůstatek obálky (${fmtMesic(m)}): ${kc(r.zustatek)}${v ? '' : (cislo(f.castka.value) > 0 ? ' → po výdaji ' + kc(r.zustatek - cislo(f.castka.value)) : '')}. Záporná částka = vratka.` : 'Nezařazený výdaj ubírá z nepřiděleného příjmu.';
+  };
+  f.obalka.onchange = f.castka.oninput = f.datum.onchange = info;
+  f.popis.onchange = () => { if (novy && !f.obalka.value) { const n = J.navrhniObalku(data, f.popis.value); if (n) { f.obalka.value = n; info(); } } };
+  info();
+  $('dlgVydajSmaz').onclick = async () => {
+    if (!await Dialog.potvrd('Smazat výdaj?')) return;
+    J.smazVydaj(data, v.id); uloz(); dlg.close('zrusit'); vykresli();
+  };
+  setTimeout(() => f.castka.focus(), 30);
+  const r = await otevri(dlg);
+  if (r !== 'ok' && r !== 'dalsi') return;
+  const c = cislo(f.castka.value);
+  if (isNaN(c) || !c) return Dialog.chyba('Neplatná částka.');
+  const hodnoty = { datum: f.datum.value, castka: c, obalka: f.obalka.value, popis: f.popis.value };
+  if (novy) J.pridejVydaj(data, hodnoty);
+  else Object.assign(v, J.normVydaj(Object.assign({ id: v.id }, hodnoty)), v.otisk ? { otisk: v.otisk } : {});
+  uloz(); vykresli();
+  if (r === 'dalsi') upravVydaj(null, f.obalka.value);
+}
+
+async function presun(z) {
+  const dlg = $('dlgPresun'), f = dlg.querySelector('form');
+  const s = J.spocitej(data, mesic);
+  f.z.innerHTML = moznostiObalek(z || '', false); f.do.innerHTML = moznostiObalek('', false);
+  if (!z) { const prvni = s.obalky.filter(r => !r.obalka.skryta).sort((a, b) => b.zustatek - a.zustatek)[0]; if (prvni) f.z.value = prvni.obalka.id; }
+  const zap = s.obalky.find(r => r.zustatek < 0 && r.obalka.id !== f.z.value);
+  if (zap) f.do.value = zap.obalka.id;
+  f.castka.value = zap ? J.formatKc(-zap.zustatek, true) : ''; f.popis.value = '';
+  const info = () => { const r = s.obalky.find(x => x.obalka.id === f.z.value), q = s.obalky.find(x => x.obalka.id === f.do.value);
+    $('dlgPresunInfo').textContent = `${fmtMesic(mesic)} · zůstatek „${r ? r.obalka.nazev : ''}“ ${kc(r ? r.zustatek : 0)}, „${q ? q.obalka.nazev : ''}“ ${kc(q ? q.zustatek : 0)}.`; };
+  f.z.onchange = f.do.onchange = info; info();
+  if (await otevri(dlg) !== 'ok') return;
+  const c = cislo(f.castka.value);
+  if (!J.pridejPresun(data, { mesic, z: f.z.value, do: f.do.value, castka: c, popis: f.popis.value }))
+    return Dialog.chyba('Přesun není platný (stejná obálka nebo neplatná částka).');
+  uloz(); vykresli();
+}
+
+async function upravPrijem(id) {
+  const dlg = $('dlgPrijem'), f = dlg.querySelector('form');
+  const x = J.mesic(data, mesic), p = id ? x.prijmy.find(q => q.id === id) : null;
+  $('dlgPrijemTitul').textContent = (p ? '✎ ' : '💵 ') + 'Příjem – ' + fmtMesic(mesic);
+  f.popis.value = p ? p.popis : (x.prijmy.length ? '' : 'Mzda'); f.castka.value = p ? J.formatKc(p.castka, true) : '';
+  $('dlgPrijemSmaz').hidden = !p;
+  $('dlgPrijemSmaz').onclick = () => { x.prijmy = x.prijmy.filter(q => q !== p); uloz(); dlg.close('zrusit'); vykresli(); };
+  if (await otevri(dlg) !== 'ok') return;
+  const c = cislo(f.castka.value);
+  if (isNaN(c) || !c) return Dialog.chyba('Neplatná částka.');
+  if (p) Object.assign(p, { popis: f.popis.value.trim() || 'Příjem', castka: c });
+  else x.prijmy.push(J.normPrijem({ popis: f.popis.value, castka: c }));
+  uloz(); vykresli();
+}
+
+async function upravObalku(o) {
+  const dlg = $('dlgObalka'), f = dlg.querySelector('form'), nova = !o;
+  if (nova) o = J.normObalka({ nazev: '', druh: 'promenlive', poradi: data.obalky.length });
+  $('dlgObalkaTitul').textContent = nova ? '✚ Nová obálka' : '✎ ' + o.nazev;
+  f.druh.innerHTML = J.DRUHY.map(d => `<option value="${d.id}">${d.nazev}</option>`).join('');
+  f.zbytek.innerHTML = J.ZBYTKY.map(z => `<option value="${z.id}">${z.nazev}</option>`).join('');
+  f.nazev.value = o.nazev === 'Obálka' && nova ? '' : o.nazev; f.druh.value = o.druh; f.zbytek.value = o.zbytek; f.skryta.checked = o.skryta;
+  f.cil.value = o.cil ? J.formatKc(o.cil.castka, true) : ''; f.termin.value = o.cil && o.cil.termin ? (+o.cil.termin.slice(5)) + '/' + o.cil.termin.slice(0, 4) : '';
+  const prepni = () => { $('dlgObalkaCil').hidden = f.druh.value !== 'sporeni'; };
+  f.druh.onchange = () => { prepni(); if (nova) f.zbytek.value = f.druh.value === 'pevne' ? 'prijem' : 'prenest'; };
+  prepni();
+  $('dlgObalkaSmaz').hidden = nova;
+  $('dlgObalkaSmaz').onclick = async () => {
+    if (!await Dialog.potvrd(`Smazat obálku „${o.nazev}“? Pokud má výdaje nebo přesuny, jen se skryje.`)) return;
+    const v = J.smazObalku(data, o.id); uloz(); dlg.close('zrusit'); vykresli();
+    if (v === 'skryta') Dialog.info('Obálka má historii – byla skryta.');
+  };
+  if (await otevri(dlg) !== 'ok') return;
+  const cil = cislo(f.cil.value), termin = J.parsujMesic(f.termin.value);
+  if (f.termin.value.trim() && !termin) Dialog.info('Termín nerozpoznán (zadejte např. 6/2027) – uloženo bez termínu.');
+  const n = J.normObalka({ id: o.id, nazev: f.nazev.value, druh: f.druh.value, zbytek: f.zbytek.value, skryta: f.skryta.checked, poradi: o.poradi,
+    cil: cil > 0 ? { castka: cil, termin } : null });
+  if (nova) data.obalky.push(n); else Object.assign(o, n);
+  if (n.zbytek === 'sporeni' && !data.nastaveni.sporeniDo) {
+    const sp = data.obalky.find(x => x.druh === 'sporeni' && x.id !== n.id);
+    if (sp) data.nastaveni.sporeniDo = sp.id;
+    else Dialog.info('Nastavte spořicí obálku pro zbytky (Obálky → Zbytky a pravidla), jinak se zbytek přenáší.');
+  }
+  uloz(); vykresli();
+}
+
+async function nastaveni() {
+  const dlg = $('dlgNastaveni'), f = dlg.querySelector('form');
+  const sp = data.obalky.filter(o => o.druh === 'sporeni' || o.druh === 'rezerva');
+  f.sporeniDo.innerHTML = '<option value="">– nepřevádět (zbytek se přenese) –</option>' + sp.map(o => `<option value="${esc(o.id)}">${esc(o.nazev)}</option>`).join('');
+  f.sporeniDo.value = data.nastaveni.sporeniDo;
+  const radek = p => `<div class="rad"><input class="vstup" data-text value="${esc(p.text)}" placeholder="text v popisu, např. ALBERT" aria-label="Text v popisu"><select class="vstup" data-ob aria-label="Obálka">${moznostiObalek(p.obalka, false)}</select><button type="button" class="btn mini danger" data-pryc aria-label="Odebrat pravidlo">✕</button></div>`;
+  $('pravidla').innerHTML = data.pravidla.map(radek).join('');
+  $('pridejPravidlo').onclick = () => { $('pravidla').insertAdjacentHTML('beforeend', radek({ text: '', obalka: '' })); $('pravidla').lastElementChild.querySelector('input').focus(); };
+  $('pravidla').onclick = e => { if (e.target.closest('[data-pryc]')) e.target.closest('.rad').remove(); };
+  if (await otevri(dlg) !== 'ok') return;
+  data.nastaveni.sporeniDo = f.sporeniDo.value;
+  data.pravidla = [...$('pravidla').querySelectorAll('.rad')].map(r => ({ text: r.querySelector('[data-text]').value.trim(), obalka: r.querySelector('[data-ob]').value }))
+    .filter(p => p.text && p.obalka);
+  uloz(); vykresli();
+}
+
+/* ---------- import CSV ---------- */
+let csvBajty = null, csvRadky = [], csvNahled = [];
+function dekoduj(bajty, kod) {
+  if (kod === 'auto') {
+    const u = new TextDecoder('utf-8').decode(bajty);
+    return u.includes('�') ? new TextDecoder('windows-1250').decode(bajty) : u;
+  }
+  return new TextDecoder(kod).decode(bajty);
+}
+function csvMapovani(f) {
+  return { hlavicka: +f.hlavicka.value, datum: +f.datum.value, castka: +f.castka.value, znamenko: f.znamenko.value,
+    popis: [...$('csvPopis').querySelectorAll('input:checked')].map(i => +i.value) };
+}
+function csvNactiText(f, map) {
+  csvRadky = J.parsujCsv(dekoduj(csvBajty, f.kodovani.value));
+  map = map || J.odhadniMapovani(csvRadky);
+  f.hlavicka.innerHTML = '<option value="-1">bez záhlaví</option>' + csvRadky.slice(0, 20).map((r, i) => `<option value="${i}">${i + 1}: ${esc(r.join(' | ').slice(0, 70))}</option>`).join('');
+  f.hlavicka.value = String(map.hlavicka);
+  csvSloupce(f, map);
+}
+function csvSloupce(f, map) {
+  const h = csvRadky[map.hlavicka] || [], vzor = csvRadky[map.hlavicka + 1] || [];
+  const pocet = Math.max(...csvRadky.slice(0, 30).map(r => r.length), 0);
+  const jm = i => esc(((h[i] || 'sloupec ' + (i + 1)) + (vzor[i] ? ' (' + vzor[i] + ')' : '')).slice(0, 60));
+  const opt = Array.from({ length: pocet }, (_, i) => `<option value="${i}">${jm(i)}</option>`).join('');
+  f.datum.innerHTML = opt; f.castka.innerHTML = opt;
+  f.datum.value = String(Math.max(0, map.datum)); f.castka.value = String(Math.max(0, map.castka));
+  $('csvPopis').innerHTML = Array.from({ length: pocet }, (_, i) => `<label><input type="checkbox" value="${i}"${map.popis.includes(i) ? ' checked' : ''}> ${jm(i)}</label>`).join('');
+  f.znamenko.value = map.znamenko || 'zaporne';
+  csvPrepocti(f);
+}
+function csvPrepocti(f) {
+  csvNahled = J.pripravImport(data, csvRadky, csvMapovani(f));
+  const vyd = csvNahled.filter(p => p.druh === 'vydaj'), dup = csvNahled.filter(p => p.duplicita).length;
+  $('csvSouhrn').textContent = csvNahled.length ? `${vyd.length} výdajů, ${csvNahled.length - vyd.length} příjmů${dup ? `, ${dup} už je zapsaných (nevybrány)` : ''}. Příjmy se nevybírají automaticky – zaškrtněte je, pokud je chcete přidat k příjmům měsíce.`
+    : 'V souboru nejsou řádky s platným datem a částkou – zkontrolujte sloupce a řádek záhlaví.';
+  csvKresli();
+}
+function csvKresli() {
+  const opt = moznostiObalek('', true);
+  $('csvRadky').innerHTML = csvNahled.slice(0, 1000).map((p, i) => `<tr class="${p.duplicita ? 'dup' : ''} ${p.druh}" data-i="${i}">
+    <td><input type="checkbox" data-vyber${p.vybrano ? ' checked' : ''} aria-label="Importovat"></td><td style="white-space:nowrap">${J.formatDatum(p.datum)}</td>
+    <td class="popis" data-i18n="ne">${esc(p.popis)}${p.duplicita ? ' <span class="znacka">už zapsáno</span>' : ''}</td><td class="cislo">${p.druh === 'prijem' ? '+' : ''}${kc(p.castka)}</td>
+    <td>${p.druh === 'prijem' ? '<span class="znacka">příjem</span>' : `<select class="vstup" data-ob aria-label="Obálka">${opt}</select>`}</td></tr>`).join('');
+  $('csvRadky').querySelectorAll('tr').forEach(tr => { const s = tr.querySelector('[data-ob]'); if (s) s.value = csvNahled[+tr.dataset.i].obalka; });
+  csvTlacitko();
+}
+function csvTlacitko() {
+  const n = csvNahled.filter(p => p.vybrano).length;
+  $('csvImportuj').textContent = `Importovat (${n})`; $('csvImportuj').disabled = !n;
+}
+async function importCsv(soubor) {
+  csvBajty = new Uint8Array(await soubor.arrayBuffer());
+  const dlg = $('dlgCsv'), f = dlg.querySelector('form');
+  f.kodovani.value = 'auto';
+  const ulozena = data.nastaveni.csv;
+  csvNactiText(f);
+  // dřív použité mapování, pokud sedí na stejné záhlaví
+  if (ulozena && JSON.stringify(csvRadky[ulozena.hlavicka] || null) === JSON.stringify(ulozena.zahlavi || null)) { f.hlavicka.value = String(ulozena.hlavicka); csvSloupce(f, ulozena); }
+  f.kodovani.onchange = () => csvNactiText(f);
+  f.hlavicka.onchange = () => { const m = J.odhadniMapovani(csvRadky.slice(+f.hlavicka.value < 0 ? 0 : +f.hlavicka.value)); m.hlavicka = +f.hlavicka.value; m.datum = Math.max(0, m.datum); csvSloupce(f, Object.assign(m, { popis: m.popis })); };
+  f.datum.onchange = f.castka.onchange = f.znamenko.onchange = () => csvPrepocti(f);
+  $('csvPopis').onchange = () => csvPrepocti(f);
+  $('csvRadky').onchange = e => {
+    const tr = e.target.closest('tr'), p = csvNahled[+tr.dataset.i];
+    if (e.target.matches('[data-vyber]')) p.vybrano = e.target.checked;
+    else if (e.target.matches('[data-ob]')) {
+      // stejný popis bez obálky → stejná obálka
+      p.obalka = e.target.value;
+      const klic = J.bezDiakritiky(p.popis).replace(/\d+/g, '').trim();
+      csvNahled.forEach(q => { if (!q.obalka && q.druh === 'vydaj' && J.bezDiakritiky(q.popis).replace(/\d+/g, '').trim() === klic) q.obalka = p.obalka; });
+      csvKresli();
+    }
+    csvTlacitko();
+  };
+  $('csvVse').checked = false;
+  $('csvVse').onchange = e => { csvNahled.forEach(p => { p.vybrano = e.target.checked && !p.duplicita && (p.druh === 'vydaj' || p.vybrano); }); csvKresli(); };
+  if (await otevri(dlg) !== 'ok') return;
+  const map = csvMapovani(f);
+  data.nastaveni.csv = Object.assign(map, { zahlavi: csvRadky[map.hlavicka] || null });
+  const r = J.importuj(data, csvNahled);
+  uloz();
+  const mes = csvNahled.filter(p => p.vybrano).map(p => J.mesicZ(p.datum)).sort();
+  if (mes.length) mesic = mes[mes.length - 1];
+  pohled = 'vydaje'; filtrObalka = ''; vykresli();
+  Dialog.info(`Importováno ${r.vydaju} výdajů${r.prijmu ? ' a ' + r.prijmu + ' příjmů' : ''}.`);
+}
+
+/* ---------- soubory ---------- */
+function stahni(nazev, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('souborZaloha').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.obalky)) return Dialog.chyba('Tohle není záloha Obálek.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.obalky.length} obálek, ${Object.keys(m.mesice).length} měsíců a ${m.vydaje.length} výdajů. Nahradit jimi současná data?`)) return;
+  data = m; uloz(); vykresli(); Dialog.info('Obnoveno.');
+};
+$('souborCsv').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importCsv(f).catch(er => Dialog.chyba('Soubor se nepodařilo přečíst: ' + er.message)); };
+
+const PRIKAZY = {
+  predchozi: () => { if (pohled === 'rok') rok--; else mesic = J.posunMesic(mesic, -1); vykresli(); },
+  dalsi: () => { if (pohled === 'rok') rok++; else mesic = J.posunMesic(mesic, 1); vykresli(); },
+  dnes: () => { mesic = J.dnesIso().slice(0, 7); rok = +mesic.slice(0, 4); vykresli(); },
+  rokPred: () => { rok--; vykresli(); }, rokDalsi: () => { rok++; vykresli(); },
+  vydaj: () => upravVydaj(null),
+  presun: () => { if (!data.obalky.length) return Dialog.info('Nejdřív založte obálky.'); presun(); },
+  prijem: () => upravPrijem(),
+  napoveda: () => otevri($('dlgNapoveda')),
+  novaObalka: () => upravObalku(null),
+  vychozi: () => {
+    const zname = new Set(data.obalky.map(o => J.bezDiakritiky(o.nazev)));
+    const nove = J.vychoziObalky().filter(o => !zname.has(J.bezDiakritiky(o.nazev)));
+    nove.forEach((o, i) => { o.poradi = data.obalky.length + i; data.obalky.push(o); });
+    if (!data.nastaveni.sporeniDo) { const sp = data.obalky.find(o => o.druh === 'sporeni'); if (sp) data.nastaveni.sporeniDo = sp.id; }
+    uloz(); vykresli(); Dialog.info(nove.length ? `Přidáno ${nove.length} obálek.` : 'Výchozí obálky už máte.');
+  },
+  skryte: b => { ukazSkryte = !ukazSkryte; b.textContent = ukazSkryte ? '👁️ Schovat skryté obálky' : '👁️ Zobrazit skryté obálky'; pohled = 'rozpocet'; vykresli(); },
+  nastaveni: () => nastaveni(),
+  sablona: async () => {
+    const pred = J.posunMesic(mesic, -1);
+    if (!data.mesice[pred]) return Dialog.info(`${fmtMesic(pred)} nemá rozpočet, není z čeho kopírovat.`);
+    const x = data.mesice[mesic], plny = x && (Object.keys(x.prideleno).length || x.prijmy.length);
+    const prepsat = plny ? await Dialog.potvrd(`${fmtMesic(mesic)} už má část rozpočtu. Přepsat ho podle minulého měsíce? (Zrušit = doplnit jen prázdné obálky.)`) : false;
+    const r = J.sablona(data, mesic, prepsat);
+    uloz(); pohled = 'rozpocet'; vykresli();
+    Dialog.info(`Zkopírováno: ${r.obalek} přidělení, ${r.prijmu} příjmů.`);
+  },
+  cile: () => {
+    const n = J.podleCilu(data, mesic);
+    uloz(); pohled = 'rozpocet'; vykresli();
+    Dialog.info(n ? `Přiděleno podle cílů u ${n} obálek.` : 'Žádná spořicí obálka nemá cíl s termínem (✎ u obálky).');
+  },
+  vynulovat: async () => {
+    if (!await Dialog.potvrd(`Smazat všechna přidělení za ${fmtMesic(mesic)}? Příjmy a výdaje zůstanou.`)) return;
+    if (data.mesice[mesic]) data.mesice[mesic].prideleno = {};
+    uloz(); vykresli();
+  },
+  zbytekDo: () => {
+    const id = $('zbytekDo').value, s = J.spocitej(data, mesic);
+    if (!id || s.neprideleno <= 0) return;
+    J.nastavPrideleno(data, mesic, id, ((data.mesice[mesic] || { prideleno: {} }).prideleno[id] || 0) + s.neprideleno);
+    uloz(); vykresli();
+  },
+  importCsv: () => { if (!data.obalky.length) Dialog.info('Tip: nejdřív založte obálky, ať jde výdaje rovnou zařadit.'); $('souborCsv').click(); },
+  csvMesic: () => stahni(`vydaje-${mesic}.csv`, J.vydajeCsv(data, mesic, mesic), 'text/csv;charset=utf-8'),
+  csvRok: () => { const r = pohled === 'rok' ? rok : mesic.slice(0, 4); stahni(`vydaje-${r}.csv`, J.vydajeCsv(data, r + '-01', r + '-12'), 'text/csv;charset=utf-8'); },
+  tisk: () => print(),
+  export: () => stahni(`obalky-zaloha-${J.dnesIso()}.json`, JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborZaloha').click(),
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Opravdu smazat všechny obálky, rozpočty a výdaje? Doporučujeme nejdřív zálohu.')) return;
+    data = J.prazdna(); uloz(); vykresli();
+  }
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', async e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; if (pv.dataset.filtrObalka) filtrObalka = pv.dataset.filtrObalka; if (pohled === 'rok') rok = +mesic.slice(0, 4); zapamatuj('pohled', pohled); return vykresli(); }
+  const jm = e.target.closest('[data-jdi-mesic]');
+  if (jm) { mesic = jm.dataset.jdiMesic; pohled = 'rozpocet'; zapamatuj('pohled', pohled); return vykresli(); }
+  const sp = e.target.closest('[data-smaz-presun]');
+  if (sp) { if (await Dialog.potvrd('Zrušit tento přesun?')) { J.smazPresun(data, sp.dataset.smazPresun); uloz(); vykresli(); } return; }
+  const a = e.target.closest('[data-akce]');
+  if (!a) return;
+  const akce = a.dataset.akce;
+  if (akce === 'prijem') return upravPrijem(a.closest('[data-prijem]').dataset.prijem);
+  if (akce === 'vydajUpravit') return upravVydaj(data.vydaje.find(v => v.id === a.closest('[data-vydaj]').dataset.vydaj));
+  const id = a.closest('[data-obalka]').dataset.obalka;
+  if (akce === 'vydaj') return upravVydaj(null, id);
+  if (akce === 'presun') return presun(id);
+  if (akce === 'upravit') return upravObalku(J.obalkaPodleId(data, id));
+});
+// přidělení: uložit při změně a vrátit fokus na pole, kam uživatel přešel
+$('obsah').addEventListener('change', e => {
+  const i = e.target.closest('[data-prid]');
+  if (!i) return;
+  const c = i.value.trim() === '' ? 0 : cislo(i.value);
+  if (isNaN(c)) { Dialog.chyba('Neplatná částka.'); return; }
+  J.nastavPrideleno(data, mesic, i.dataset.prid, c);
+  uloz();
+  const dalsi = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.prid;
+  const scroll = document.querySelector('main').scrollTop;
+  vykresli();
+  document.querySelector('main').scrollTop = scroll;
+  if (dalsi) { const n = document.querySelector(`[data-prid="${CSS.escape(dalsi)}"]`); if (n) { n.focus(); n.select(); } }
+});
+$('obsah').addEventListener('keydown', e => {
+  const i = e.target.closest('[data-prid]');
+  if (i && e.key === 'Enter') { e.preventDefault(); const vse = [...document.querySelectorAll('[data-prid]')]; const n = vse[vse.indexOf(i) + 1]; if (n) n.focus(); else i.blur(); }
+});
+$('obsah').addEventListener('focusin', e => { if (e.target.matches('[data-prid]')) e.target.select(); });
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('storage', e => { if (e.key === J.KLIC) { data = J.migruj(JSON.parse(e.newValue || 'null')); vykresli(); } });
+new MutationObserver(() => { if (pohled === 'rok') vykresli(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+vykresli();
+window.OBALKY_APP = { data: () => data, vykresli, nastavMesic: m => { mesic = m; rok = +m.slice(0, 4); vykresli(); }, pohled: p => { pohled = p; vykresli(); } };
+})();
+</script>
+</body>
+</html>

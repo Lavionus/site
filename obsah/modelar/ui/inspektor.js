@@ -99,8 +99,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
             const o = u.occt, n = o.operace === 'skorepina' ? (o.plochy.length ? `otevřené plochy: ${o.plochy.length}` : 'uzavřená')
               : o.operace === 'odsazeni' ? (o.hodnota > 0 ? 'zvětšené' : 'zmenšené') : `hrany: ${o.hrany.length}`;
             const co = { zaobleni: 'Zaoblení r', srazeni: 'Sražení', skorepina: 'Skořepina, stěna', odsazeni: 'Odsazení stěn (offset)' }[o.operace];
+            // hrany různé velikosti: všechny velikosti od největší (6 / 4 mm)
+            // proměnné zaoblení 2→6, nesouměrné sražení 2×6
+            const txt = x => { const a = x.hodnota != null ? x.hodnota : o.hodnota; return [a, M.mm(a, 2) + (x.hodnota2 != null ? (o.operace === 'srazeni' ? '×' : '→') + M.mm(x.hodnota2, 2) : '')]; };
+            const vel = [...new Map((o.hrany || []).map(txt).map(([a, t]) => [t, a]))].sort((x, y) => y[1] - x[1]).map(x => x[0]);
+            const velikost = vel.length > 1 || (vel.length === 1 && vel[0] !== M.mm(o.hodnota, 2)) ? vel.join(' / ') : M.mm(o.hodnota, 2);
             h += `<div class="skupina"><div class="nadpis">Přesná úprava <span class="pozn">(OpenCascade)</span></div>
-              <div class="pozn" id="inspOcct">${co} ${o.operace === 'odsazeni' && o.hodnota > 0 ? '+' : ''}${M.mm(o.hodnota, 2)} mm · ${n}</div>
+              <div class="pozn" id="inspOcct">${co} ${o.operace === 'odsazeni' && o.hodnota > 0 ? '+' : ''}${velikost} mm · ${n}</div>
               <div class="role"><button type="button" class="tl" id="inspOcctUpravit">✎ Upravit…</button>
               <button type="button" class="tl" id="inspOcctOdebrat" title="Vrátit těleso bez úpravy">✕ Odebrat úpravu</button></div></div>`;
           }

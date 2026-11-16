@@ -253,6 +253,30 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         { nadpis: 'Rady pro čisté rohy', text: 'Kombinuješ-li obojí, uprav nejdřív svislé hrany, pak horní. Zaoblení nesmí být větší než polovina stěny – tenká stěna 4 mm unese nejvýš r 2.',
           obr: () => obr(3, 175, 100).kvadr(-25, -15, 0, 50, 30, 14).kapsa(-21, -11, 21, 11, 14, 10).cara([[25, -15, 14], [25, 15, 14]], { styl: 'zvyr silna' }).cara([[25, 15, 0], [25, 15, 14]], { styl: 'zvyr silna' })
             .stitek([25, 15, 7], '1. svislé', { dx: 8, dy: 8 }).stitek([25, 0, 14], '2. horní', { dx: 10, dy: -14 }).stitek([0, -11, 14], 'stěna 4 mm → r ≤ 2', { dx: -60, dy: -28 }).svg('Pořadí hran a stěna') },
+        { nadpis: 'Každá hrana svou velikostí', text: 'Nová velikost v poli platí jen pro hrany, na které klikneš potom – hotové si nechají svou (6 mm zůstane 6 mm). U upravených hran jsou štítky s velikostí; klik na štítek ji přepíše.',
+          obr: () => obr(3.4, 175, 95).deska(-30, -25, 30, 25).kvadr(-20, -15, 0, 40, 30, 14)
+            .cara([[20, -15, 14], [20, 15, 14]], { styl: 'zvyr silna' }).cara([[-20, -15, 14], [20, -15, 14]], { styl: 'zvyr silna' })
+            .stitek([20, 0, 14], '6', { dx: 6, dy: -6 }).stitek([0, -15, 14], '4', { dx: -10, dy: -10 }).kurzor([0, -15, 14], { zpozdeni: 0.4 })
+            .ramec([12, 12, 196, 196]).okno(214, 70, 134, '◜ Zaoblení', [['Poloměr', '4 mm', true], ['6 mm ×1, 4 mm ×1', null]]).svg('Hrany různé velikosti se štítky') },
+        { nadpis: '⛓ Řetěz a ≈ Podobné', text: 'Zapnutý ⛓ Řetěz vybere jedním klikem celý řetěz plynule navazujících hran – třeba obrys kolem zaoblených rohů. ≈ Podobné přidá hrany stejné délky a směru jako naposledy kliknutá.',
+          obr: () => {
+            const o = obr(3.4, 175, 95).deska(-30, -25, 30, 25).kvadr(-20, -15, 0, 40, 30, 14);
+            // obrys vršku se zaoblenými rohy (r 5) jako jeden řetěz
+            const r = 5, ob = [];
+            for (const [cx, cy, a0] of [[15, -10, -PI / 2], [15, 10, 0], [-15, 10, PI / 2], [-15, -10, PI]])
+              for (let i = 0; i <= 6; i++) { const t = a0 + PI / 2 * i / 6; ob.push([cx + r * Math.cos(t), cy + r * Math.sin(t), 14]); }
+            return o.cara(ob, { styl: 'zvyr silna', uzavrena: true }).kurzor([20, 2, 14]).stitek([-20, 15, 14], '⛓ 1 klik = celý obrys', { dx: -40, dy: -26 }).svg('Řetěz hran jedním klikem');
+          } },
+        { nadpis: 'Proměnné zaoblení a nesouměrné sražení', text: 'Druhé pole: u zaoblení poloměr na konci hrany (2 → 6, náběh výztuhy), u sražení druhá délka (2 × 6 – první leží na vodorovnější ploše). Prázdné = stejné po celé hraně.',
+          obr: () => {
+            const o = obr(3.2, 120, 100).deska(-28, -22, 28, 22).kvadr(-18, -14, 0, 36, 28, 16);
+            // přední svislá hrana: zaoblení se k vršku rozšiřuje (klín na obou stěnách)
+            o.raw(`<polygon style="fill:var(--n-zvyr);opacity:.4;stroke:none" points="${[[18, 14 - 1.5, 0], [18, 14 - 6, 16], [18, 14, 16], [18 - 6, 14, 16], [18 - 1.5, 14, 0], [18, 14, 0]].map(p => o.P(...p)).map(q => f(q[0]) + ',' + f(q[1])).join(' ')}"/>`);
+            return o.cara([[18, 14, 0], [18, 14, 16]], { styl: 'zvyr silna' }).stitek([18, 14, 0], '2', { dx: 8, dy: 4 }).stitek([18, 14, 16], '2→6', { dx: 10, dy: -4 })
+              .ramec([12, 12, 190, 196]).okno(206, 70, 142, '◜ Zaoblení', [['Poloměr', '2 mm', true], ['→ na konci', '6 mm', true]]).svg('Proměnné zaoblení 2 až 6 mm');
+          } },
+        { nadpis: 'Celá úprava jako jeden krok Zpět', text: 'Každý klik je samostatný krok Zpět. Zaškrtni „Po Hotovo celá úprava jako jeden krok Zpět“ a po Hotovo jedno Ctrl+Z vrátí celé zaoblení naráz.',
+          obr: () => obr().okno(70, 34, 220, '◜ Zaoblení hran', [['☑ jeden krok Zpět', null], ['kliky: 1, 2, 3 …', null]], { tlacitko: 'Hotovo' }).klavesa(140, 170, 'Ctrl+Z').svg('Volba jednoho kroku Zpět') },
       ],
     },
     {
@@ -319,6 +343,52 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           obr: () => obr(3, 175, 105).deska(-32, -26, 32, 26).kvadr(-28, -10, 0, 18, 18, 10).kvadr(8, -12, 0, 22, 24, 22).kvadr(30, -12, 0, 0.01, 24, 22, { styl: 'zeleny' }).kurzor([30, 0, 12]).svg('Cílová plocha') },
         { nadpis: 'Přisazeno', text: 'První těleso se otočí a dosedne plochou na plochu druhého. Jeden krok Zpět (Ctrl+Z) vše vrátí.',
           obr: () => obr(3, 175, 105).deska(-32, -26, 32, 26).kvadr(8, -12, 0, 22, 24, 22).kvadr(30, -9, 3, 10, 18, 18).svg('Přisazené těleso') },
+      ],
+    },
+    {
+      id: 'zarovnani', ikona: '⊞', nazev: 'Zarovnání a rozmístění', prikaz: 'zarovnat',
+      uvod: 'Srovnat tělesa k sobě, rozmístit je se stejnými mezerami nebo celý výběr posadit doprostřed desky.',
+      kroky: [
+        { nadpis: 'L – puntíky kolem výběru', text: 'Vyber aspoň dvě tělesa a stiskni L. Najetí na puntík ukáže výsledek, klik zarovná. Červené puntíky = osa X, zelené Y, modré Z.',
+          obr: () => {
+            const o = obr(3, 175, 100).deska(-34, -26, 34, 26).kvadr(-28, -12, 0, 16, 16, 10).kvadr(4, -4, 0, 20, 14, 18);
+            const tecka = (p, b) => { const q = o.P(...p); return `<circle cx="${f(q[0])}" cy="${f(q[1])}" r="5" fill="${b}" stroke="#fff" stroke-width="1.5"/>`; };
+            o.cara([[-28, -18, 0], [24, -18, 0]], { styl: 'kota' }).cara([[30, -12, 0], [30, 10, 0]], { styl: 'kota' });
+            o.raw([[-28, -18, 0], [-2, -18, 0], [24, -18, 0]].map(p => tecka(p, '#e2675c')).join('') + [[30, -12, 0], [30, -1, 0], [30, 10, 0]].map(p => tecka(p, '#4fae6a')).join(''));
+            return o.kurzor([-28, -18, 0]).klavesa(320, 188, 'L').svg('Puntíky zarovnání');
+          } },
+        { nadpis: 'Vztažné těleso', text: 'Klikni na jedno z vybraných těles – dostane přerušovaný rámeček a zůstane na místě; ostatní se zarovnávají k němu.',
+          obr: () => obr(3, 175, 100).deska(-34, -26, 34, 26).kvadr(-28, -12, 0, 16, 16, 10).kvadr(4, -4, 0, 20, 14, 18)
+            .cara([[2, -6, 0], [26, -6, 0], [26, 12, 0], [2, 12, 0]], { styl: 'kota', uzavrena: true }).cara([[2, -6, 20], [26, -6, 20], [26, 12, 20], [2, 12, 20]], { styl: 'kota', uzavrena: true })
+            .kurzor([14, 3, 18]).stitek([26, -6, 20], 'vztažné', { dx: 6, dy: -6 }).svg('Vztažné těleso v rámečku') },
+        { nadpis: 'Rozmístit rovnoměrně', text: 'Nabídka ▾ u Zarovnat → ⇹ X / Y / Z: krajní tělesa zůstanou, mezery mezi ostatními se vyrovnají. Tlačítko „mm“ (nebo dvě tělesa) se zeptá na mezeru.',
+          obr: () => {
+            const o = obr(2.8, 180, 105).deska(-38, -16, 38, 16);
+            // šířky 10, 16, 6, 6 v rozpětí 72 → mezery (72 − 38) / 3
+            const m = 34 / 3, x = [-36]; [10, 16, 6].forEach((w, i) => x.push(x[i] + w + m));
+            [10, 16, 6, 6].forEach((w, i) => o.kvadr(x[i], -6, 0, w, 12, 10));
+            [10, 16, 6].forEach((w, i) => { const a = x[i] + w; o.cara([[a, -10, 0], [a + m, -10, 0]], { styl: 'kota' }).stitek([a + m / 2, -10, 0], 'a', { dx: -4, dy: 12 }); });
+            return o
+              .stitek([0, -6, 12], 'stejné mezery', { dx: -40, dy: -30 }).svg('Rovnoměrně rozmístěná tělesa');
+          } },
+        { nadpis: '⌖ Na střed desky', text: 'Výběr se přesune jako celek doprostřed desky a spodkem na ni – vzájemná poloha těles zůstane.',
+          obr: () => obr(2.6, 180, 110).deska(-40, -30, 40, 30).kvadr(16, 8, 8, 12, 12, 10, { styl: 'modry' }).kvadr(-6, -6, 0, 12, 12, 10)
+            .sipka([22, 14, 8], [3, 3, 2]).cara([[-40, 0, 0], [40, 0, 0]], { styl: 'kota' }).cara([[0, -30, 0], [0, 30, 0]], { styl: 'kota' })
+            .stitek([0, 0, 10], 'střed desky', { dx: 10, dy: -16 }).svg('Výběr na střed desky') },
+      ],
+    },
+    {
+      id: 'slupka', ikona: '🩹', nazev: 'Kontrola tisku – slupky a tenké stěny', prikaz: 'kontrolaTisku',
+      uvod: 'Stěna s nulovou tloušťkou (slupka) nebo tenčí než tryska projde exportem, ale tiskárna ji nevytiskne.',
+      kroky: [
+        { nadpis: 'Odkud se slupka bere', text: 'Díra přesně zarovnaná s plochou tělesa může po odečtení nechat stěnu s nulovou tloušťkou. Modelář zarovnání s drobnou odchylkou sám dorovná, slupka ale může přijít i z importu.',
+          obr: () => obr(3, 175, 105).deska(-32, -26, 32, 26).kvadr(-24, -14, 0, 48, 28, 14).kvadr(0, -14, 0, 24, 28, 14, { styl: 'dira' })
+            .cara([[0, -14, 14], [0, 14, 14], [0, 14, 0], [0, -14, 0]], { styl: 'zvyr silna', uzavrena: true }).stitek([0, 14, 14], 'stěna 0 mm', { dx: -30, dy: -18, styl: 'cerveny' }).svg('Díra zarovnaná s plochou') },
+        { nadpis: 'Kontrola tisku ji ohlásí', text: 'Dílna → Kontrola tisku: v seznamu problémů se objeví „stěna s nulovou tloušťkou“. Vybrat označí těleso, Ukázat vybarví místo červeně.',
+          obr: () => obr().okno(60, 40, 240, '🖨 Kontrola tisku', [['⚠ „Kvádr“ – stěna 0 mm', null], ['Vybrat · Ukázat', null]]).svg('Problém v kontrole tisku') },
+        { nadpis: '▥ Tenké stěny', text: 'Tlačítko Tenké stěny ukáže červeně i místa tenčí než zadané minimum (tryska 0,4 mm spolehlivě vytiskne aspoň 0,8 mm). Zesil stěnu nebo ji odstraň.',
+          obr: () => obr(3, 175, 105).deska(-32, -26, 32, 26).kvadr(-24, -14, 0, 48, 28, 12).kapsa(-22, -12, 22, 12, 12, 10).kvadr(22, -14, 0.1, 2, 28, 11.8, { styl: 'srazka' })
+            .stitek([24, -14, 12], '0,5 mm < 0,8', { dx: 6, dy: -8, styl: 'cerveny' }).svg('Tenká stěna červeně') },
       ],
     },
     {

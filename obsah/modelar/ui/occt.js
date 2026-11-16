@@ -1,8 +1,10 @@
 /* Modelář 3D – přesné úpravy (OpenCascade): zaoblení a sražení hran, skořepina.
    Postup: vybrat úpravu, nastavit velikost a klikat na hrany (u skořepiny na rovné
    plochy, které mají zůstat otevřené) – každý klik úpravu rovnou provede (jeden
-   krok Zpět), další klik ji rozšíří, klik na vybranou hranu ji vrátí. Změna
-   velikosti přepočítá všechny vybrané hrany. Panel vpravo (nemodální) ukazuje
+   krok Zpět), další klik ji rozšíří, klik na vybranou hranu ji vrátí. Každá hrana
+   má svou velikost (ed.velikosti): nová velikost v poli platí pro další hrany, klik
+   na upravenou hranu s jinou velikostí ji na ni změní; skořepina má jednu tloušťku
+   a změna ji přepočítá. Panel vpravo (nemodální) ukazuje
    stav, SVG vrstva nad plátnem hrany tělesa (každý snímek promítnuté) a u
    skořepiny značky všech rovných ploch. Když se úprava nepovede (třeba moc velký
    poloměr), dokument se nezmění a panel ukáže českou chybu.
@@ -38,6 +40,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     let token = 0;
 
     const hodnota = () => M.prectiCislo($('occtHodnota').value);
+    /** Druhá hodnota (zaoblení: poloměr na konci hrany, sražení: druhá délka); prázdná = žádná. */
+    const hodnota2 = () => { const t = $('occtHodnota2').value.trim(); if (!t) return null; const v = M.prectiCislo(t); return v > 0 ? v : NaN; };
+    const stejne2 = (a, b) => (a == null && b == null) || (a != null && b != null && Math.abs(a - b) < 1e-9);
+    /** Text velikosti hrany: „6“, proměnné „2→6“, nesouměrné „2×6“. */
+    const textVelikosti = i => { const a = ed.velikosti.get(i), b = ed.velikosti2.get(i); return a == null ? '' : M.mm(a, 3) + (b != null ? (ed.op === 'srazeni' ? '×' : '→') + M.mm(b, 3) : ''); };
     /** Má uzel nahoře vrstvu téže úpravy (tu, kterou panel mění)? */
     const maVrstvu = (u, op) => !!(u && u.druh === 'skupina' && u.occt && u.occt.operace === op);
     /** Rámec pro výběr hran: skupina s úpravou bez úpravy, jinak těleso obalené skupinou. */
@@ -47,6 +54,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     /** Zavře panel; dokoncit = rozpracovaný výpočet (klik těsně před „Hotovo“) se po doběhnutí ještě zapíše. */
     function zavri(dokoncit = false) {
       if (!ed) { if (okno.open) okno.close(); return; }      // panel bez úpravy musí jít zavřít vždy
+      // volba „jeden krok Zpět“: kliky z panelu sloučit do jednoho záznamu historie
+      if ($('occtJedenKrok').checked && M.historie.sluc(ed.krok0, POPIS[ed.op])) M.vysli('historie', M.historie);
       if (dokoncit && ed.pocita) { ed.dokoncit = true; Dialog.info('⏳ Poslední úprava se ještě dopočítá a zapíše.'); }
       ed = null; token++;
       svg.hidden = true; svg.innerHTML = '';
@@ -192,6 +201,24 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         });
         svg.appendChild(skryte);
         svg.appendChild(viditelne);
+        // štítek s velikostí u každé upravené (viditelné) hrany; klik na něj velikost přepíše
+        if (ed.vybraneH.size && ed.vybraneH.size <= 60) {
+          const nej = new Map();
+          for (const u of obrHran) if (ed.vybraneH.has(u.i) && (!nej.has(u.i) || u.body.length > nej.get(u.i).length)) nej.set(u.i, u.body);
+          for (const [i, b] of nej) {
+            const v = ed.velikosti.get(i), p = b[b.length >> 1];
+            if (v == null || !p) continue;
+            // nápověda v obalu (text štítku zůstane jen velikost)
+            const g = document.createElementNS(NS, 'g'), t = document.createElementNS(NS, 'title'), tx = document.createElementNS(NS, 'text');
+            t.textContent = 'Klik = přepsat velikost této hrany';
+            tx.setAttribute('x', p[0].toFixed(1)); tx.setAttribute('y', (p[1] - 7).toFixed(1));
+            tx.setAttribute('class', 'velikost-hrany');
+            tx.dataset.stitek = i;
+            tx.textContent = textVelikosti(i);
+            g.appendChild(t); g.appendChild(tx);
+            svg.appendChild(g);
+          }
+        }
         if (najeta != null) svg.querySelectorAll(`.zasah[data-i="${najeta}"]`).forEach(p => p.classList.add('najeto'));
       } else {
         // značka u každé rovné plochy: prázdná = zavřená, plná = otevřená; za tělesem tlumená
@@ -227,7 +254,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     // klik na hranu (nebo značku plochy) ji přidá či odebere a úpravu hned provede
     svg.addEventListener('pointerdown', e => {
-      const t = e.target;
+      const t = e.target.closest ? e.target.closest('text.velikost-hrany') || e.target : e.target;
+      if (ed && t.dataset && t.dataset.stitek != null && e.button === 0) {
+        e.stopPropagation(); e.preventDefault();
+        upravStitek(+t.dataset.stitek);
+        return;
+      }
       if (!ed || !t.classList.contains('zasah') || e.button !== 0) return;
       e.stopPropagation(); e.preventDefault();
       if (document.activeElement && document.activeElement.matches('#inspektor input')) document.activeElement.blur();
@@ -237,8 +269,77 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       }
       else if (t.dataset.p != null) prepni(ed.vybraneP, +t.dataset.p);
     });
+    /** Stav výběru hran (pro vrácení, když se úprava nepovede). */
+    const stavH = () => { const v = ed.vybraneH, a = ed.velikosti, b = ed.velikosti2, s = [new Set(v), new Map(a), new Map(b)]; return () => { ed.vybraneH = s[0]; ed.velikosti = s[1]; ed.velikosti2 = s[2]; }; };
+    const odeberH = i => { ed.vybraneH.delete(i); ed.velikosti.delete(i); ed.velikosti2.delete(i); };
+    /** Klik na hranu (v režimu řetězu celý řetěz): nevybrané přidá; všechny vybrané se stejnou velikostí jako
+        v poli vrátí; vybrané s jinou velikostí na ni změní (ostatní hrany zůstanou). */
+    function prepniHrany(idx) {
+      const h = hodnota(), h2 = hodnota2();
+      if (Number.isNaN(h2)) { ed.chyba = 'Druhá hodnota musí být kladné číslo (nebo prázdná).'; obnovInfo(); return; }
+      const vratit = stavH();
+      if (idx.every(i => ed.vybraneH.has(i))) {
+        const jine = idx.filter(i => h > 0 && (Math.abs(ed.velikosti.get(i) - h) > 1e-9 || !stejne2(ed.velikosti2.get(i), h2)));
+        if (jine.length) jine.forEach(i => { ed.velikosti.set(i, h); if (h2 != null) ed.velikosti2.set(i, h2); else ed.velikosti2.delete(i); });
+        else idx.forEach(odeberH);
+      } else idx.forEach(i => ed.vybraneH.add(i));
+      ed.posledni = idx[0];
+      kresli();
+      aplikuj(vratit);
+    }
+    /** Řetěz plynule navazujících hran (tečné v napojení, do 20°) s hranou i. */
+    function retez(i) {
+      const H = ed.hrany, kon = H.map(h => {
+        const b = h.body, n = b.length / 3;
+        if (n < 2) return null;
+        const P = j => [b[j * 3], b[j * 3 + 1], b[j * 3 + 2]];
+        const smer = (a, c) => { const d = [c[0] - a[0], c[1] - a[1], c[2] - a[2]], l = Math.hypot(...d) || 1; return d.map(x => x / l); };
+        // konec a směr, kterým hrana z konce „odchází“ ven
+        return [{ p: P(0), t: smer(P(1), P(0)) }, { p: P(n - 1), t: smer(P(n - 2), P(n - 1)) }];
+      });
+      const ob = M.obalkaUzlu(M.najdiUzel(M.app.dok, ed.id) || ed.puvodni);
+      const tol = Math.max(1e-3, 1e-4 * Math.hypot(...ob.max.map((x, j) => x - ob.min[j])));
+      const hotovo = new Set([i]), fronta = [i];
+      while (fronta.length) {
+        const a = fronta.pop();
+        if (!kon[a]) continue;
+        for (const ka of kon[a]) H.forEach((h, b) => {
+          if (hotovo.has(b) || !kon[b]) return;
+          // navazující hrana: v témže bodě a jde dál stejným směrem (její směr ven je opačný)
+          if (kon[b].some(kb => Math.hypot(...kb.p.map((x, j) => x - ka.p[j])) < tol && -(kb.t[0] * ka.t[0] + kb.t[1] * ka.t[1] + kb.t[2] * ka.t[2]) > 0.94)) { hotovo.add(b); fronta.push(b); }
+        });
+      }
+      return [...hotovo];
+    }
+    M.occtRetez = i => ed && ed.hrany ? retez(i).sort((a, b) => a - b) : [];
+    /** Hrany podobné hraně i: stejná délka (±1 %) a u rovných i stejný směr (rovnoběžné). */
+    function podobne(i) {
+      const smer = h => { if (!h.konce) return null; const d = h.konce[1].map((x, j) => x - h.konce[0][j]), l = Math.hypot(...d) || 1; return d.map(x => x / l); };
+      const a = ed.hrany[i], sa = smer(a);
+      return ed.hrany.map((h, j) => {
+        if (Math.abs(h.delka - a.delka) > 0.01 * a.delka + 1e-3) return -1;
+        const sb = smer(h);
+        if (!!sa !== !!sb) return -1;
+        if (sa && Math.abs(sa[0] * sb[0] + sa[1] * sb[1] + sa[2] * sb[2]) < 0.999) return -1;
+        return j;
+      }).filter(j => j >= 0);
+    }
+    M.occtPodobne = i => ed && ed.hrany ? podobne(i) : [];
+    /** Klik na štítek velikosti: přepsat velikost hrany („6“, proměnné „2-6“, nesouměrné sražení „2x6“). */
+    async function upravStitek(i) {
+      const e0 = ed;
+      const t = await Dialog.zeptej(ed.op === 'srazeni' ? 'Sražení hrany v mm (nesouměrné: 2x6 – první délka na vodorovnější ploše):' : 'Poloměr hrany v mm (proměnný po délce: 2-6):', textVelikosti(i).replace('→', '-').replace('×', 'x'));
+      if (t == null || ed !== e0 || !ed.vybraneH.has(i)) return;
+      const casti = String(t).trim().split(/\s*(?:-|–|→|x|×|\/)\s*/).filter(Boolean).map(M.prectiCislo);
+      if (!casti.length || casti.length > 2 || casti.some(v => !(v > 0))) { ed.chyba = `„${t}“ – zadej kladné číslo, nebo dvě (2-6).`; obnovInfo(); return; }
+      const vratit = stavH();
+      ed.velikosti.set(i, casti[0]);
+      if (casti[1] != null && Math.abs(casti[1] - casti[0]) > 1e-9) ed.velikosti2.set(i, casti[1]); else ed.velikosti2.delete(i);
+      kresli(); aplikuj(vratit);
+    }
     function prepni(mnozina, i) {
       const bylo = mnozina.has(i);
+      if (mnozina === ed.vybraneH) { prepniHrany($('occtRetez').getAttribute('aria-pressed') === 'true' ? retez(i) : [i]); return; }
       if (bylo) mnozina.delete(i); else mnozina.add(i);
       if (mnozina === ed.vybraneP && !bylo) ed.uzavrena = false;
       // poslední otevřená plocha zavřená: skořepina zůstane jako uzavřená dutina (ne celá pryč)
@@ -272,14 +373,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         vRovine.push(i);
       });
       if (!vRovine.length) { info.textContent = '⚠ Na téhle ploše nejsou hrany původního tělesa – klikni přímo na hranu.'; return; }
-      const pred = new Set(ed.vybraneH);
-      if (vRovine.every(i => ed.vybraneH.has(i))) vRovine.forEach(i => ed.vybraneH.delete(i));
+      const vratit = stavH();
+      if (vRovine.every(i => ed.vybraneH.has(i))) vRovine.forEach(odeberH);
       else {
         const n = new Set([...ed.vybraneH, ...vRovine]).size;
         if (n > 60 && !await mnohoHran(n)) return;
         vRovine.forEach(i => ed.vybraneH.add(i));
       }
-      kresli(); aplikuj(() => { ed.vybraneH = pred; });
+      kresli(); aplikuj(vratit);
     };
     /** Hodně hran (plošky skici, oblouk): přesný výpočet může trvat minuty – zeptat se dopředu. */
     async function mnohoHran(n) {
@@ -316,6 +417,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       $('occtNadpis').textContent = { zaobleni: '◠ ', srazeni: '◿ ', skorepina: '▢ ' }[op] + POPIS[op];
       $('occtNavod').dataset.navod = op === 'skorepina' ? 'skorepina' : 'hrany';
       $('occtVyberHran').hidden = op === 'skorepina';
+      $('occtDruhaRadek').hidden = op === 'skorepina';
+      $('occtHodnota2Popis').textContent = op === 'srazeni' ? '× druhá' : '→ na konci';
+      $('occtHodnota2Popis').title = op === 'srazeni' ? 'Nesouměrné sražení: druhá délka (první leží na vodorovnější ploše); prázdné = souměrné' : 'Proměnné zaoblení: poloměr na konci hrany; prázdné = stejný po celé délce';
       $('occtVyberPloch').hidden = op !== 'skorepina';
       $('occtUzavrena').setAttribute('aria-pressed', ed.uzavrena ? 'true' : 'false');
       // dokud jádro nenačte hrany/plochy, tlačítka nic neumějí – vypnout (klik by se ztratil)
@@ -341,7 +445,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       } else {
         if (!ed.hrany) { info.textContent = '⏳ hledám hrany…'; return; }
         const n = ed.vybraneH.size;
-        info.textContent = n ? `Upraveno hran: ${n} z ${ed.hrany.length}. Klik na další hranu ji přidá, na upravenou ji vrátí.`
+        const pocty = new Map();
+        for (const i of ed.vybraneH) { const v = textVelikosti(i); if (v) pocty.set(v, (pocty.get(v) || 0) + 1); }
+        const souhrn = pocty.size > 1 || [...ed.vybraneH].some(i => ed.velikosti2.has(i)) ? ' (' + [...pocty].sort((a, b) => parseFloat(b[0].replace(',', '.')) - parseFloat(a[0].replace(',', '.'))).map(([v, c]) => `${v} mm ×${c}`).join(', ') + ')' : '';
+        info.textContent = n ? `Upraveno hran: ${n} z ${ed.hrany.length}${souhrn}. Klik na další hranu ji přidá s velikostí z pole, na upravenou ji vrátí – nebo jí dá velikost z pole, když má jinou.`
           : 'Nastav velikost a klikni na hranu ve scéně – úprava se hned provede. Klik na rovnou plochu vybere celý její obrys.';
       }
     }
@@ -358,7 +465,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     /** Výběr hran/ploch podle úpravy uložené v uzlu (otevření, Zpět, Znovu). */
     function vyberZUzlu(u) {
-      ed.vybraneH = new Set(); ed.vybraneP = new Set(); ed.uzavrena = false;
+      ed.vybraneH = new Set(); ed.vybraneP = new Set(); ed.velikosti = new Map(); ed.velikosti2 = new Map(); ed.uzavrena = false;
       const o = maVrstvu(u, ed.op) ? u.occt : null;
       if (!o) return;
       if (ed.op === 'skorepina') {
@@ -369,7 +476,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         ed.uzavrena = !o.plochy.length;
       } else if (ed.hrany) for (const h of o.hrany) {
         const i = najdi(ed.hrany, h, x => Math.abs(x.delka - h.delka) <= 0.05 * h.delka + 0.01);
-        if (i >= 0) ed.vybraneH.add(i);
+        if (i >= 0) { ed.vybraneH.add(i); ed.velikosti.set(i, h.hodnota != null ? h.hodnota : o.hodnota); if (h.hodnota2 != null) ed.velikosti2.set(i, h.hodnota2); }
       }
       if (document.activeElement !== $('occtHodnota')) $('occtHodnota').value = M.mm(o.hodnota, 3);
     }
@@ -407,9 +514,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         return;
       }
       const krokHistorie = M.historie.index;
+      const h2 = op === 'skorepina' ? null : hodnota2();
+      if (Number.isNaN(h2)) { if (vratit) vratit(); ed.chyba = 'Druhá hodnota musí být kladné číslo (nebo prázdná).'; obnovInfo(); kresli(); return; }
+      // nově přidaná hrana: velikost z pole
+      for (const i of ed.vybraneH) if (!ed.velikosti.has(i)) { ed.velikosti.set(i, h); if (h2 != null && Math.abs(h2 - h) > 1e-9) ed.velikosti2.set(i, h2); }
       const occt = op === 'skorepina'
         ? { operace: op, hodnota: h, plochy: [...ed.vybraneP].map(i => ({ stred: ed.plochy[i].stred, normala: ed.plochy[i].normala })) }
-        : { operace: op, hodnota: h, hrany: [...ed.vybraneH].map(i => { const h = ed.hrany[i]; return { stred: h.stred, delka: h.delka, ...(h.bod ? { bod: h.bod } : {}), ...(h.konce ? { konce: h.konce } : {}) }; }) };
+        : { operace: op, hodnota: h, hrany: [...ed.vybraneH].map(i => { const h = ed.hrany[i]; return { stred: h.stred, delka: h.delka, ...(h.bod ? { bod: h.bod } : {}), ...(h.konce ? { konce: h.konce } : {}), hodnota: ed.velikosti.get(i), ...(ed.velikosti2.has(i) ? { hodnota2: ed.velikosti2.get(i) } : {}) }; }) };
       const upravit = x => maVrstvu(x, op) ? M.normalizujUzel(Object.assign({}, x, { occt })) : M.obalUpravou(x, occt);
       const novy = upravit(akt);
       ed.pocita = true; obnovInfo();
@@ -443,6 +554,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       zapamatuj(op, h);
       const dok = M.app.dok;
       M.zmenDokument(Object.assign({}, dok, { uzly: dok.uzly.map(x => x.id === vysledek.id ? vysledek : x) }), POPIS[op]);
+      // dopočet po „Hotovo“ s volbou jednoho kroku: přidat ho ke sloučenému záznamu
+      if (!otevreny && $('occtJedenKrok').checked && M.historie.sluc(e.krok0, POPIS[op])) M.vysli('historie', M.historie);
       if (otevreny) M.nastavVyber([vysledek.id]);          // po zavřeném panelu výběr nechat, jak ho uživatel mezitím nastavil
       if (otevreny) { obnovInfo(); kresli(); }
     }
@@ -493,7 +606,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // panel by těleso zakryl (úzké okno, těleso vpravo): pohled na něj do volné části plátna
       setTimeout(() => { if (ed && ed.id === u.id && S.vyberZakryty && S.vyberZakryty([u.id])) S.zamerit([u.id]); }, 0);
       ed = { id: u.id, op, puvodni: u, zacatek: u, ram: ramPro(u, op), hrany: null, plochy: null, vybraneH: new Set(), vybraneP: new Set(),
-        uzavrena: false, chyba: null, pocita: false, verze: 0 };
+        uzavrena: false, chyba: null, pocita: false, verze: 0, velikosti: new Map(), velikosti2: new Map(), posledni: null, krok0: M.historie.index };
       okno.querySelector(`input[name="occtOperace"][value="${op}"]`).checked = true;
       okno.querySelector('input[name="occtOperace"][value="skorepina"]').disabled = !M.lzeSkorepinu(u);
       $('occtHodnota').value = M.mm(maVrstvu(u, op) ? u.occt.hodnota : posledni(op), 3);   // 0,25 se nesmí zaokrouhlit na 0,3
@@ -510,22 +623,38 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (ed && r.checked && r.value !== ed.op) M.otevriUpravuHran(r.value);
     }));
     // nová velikost: přepočítat vybrané hrany (po potvrzení – Enter nebo opuštění pole)
+    // nová velikost: u zaoblení a sražení platí pro další klikané hrany (hotové si nechají svou – 6 mm zůstane 6 mm),
+    // skořepina má jednu tloušťku – přepočítat
     const hodnotaZmenena = () => {
       if (!ed) return;
+      if (ed.op !== 'skorepina') { ed.chyba = null; obnovInfo(); return; }
       const o = ed.puvodni && maVrstvu(ed.puvodni, ed.op) ? ed.puvodni.occt : null;
       if (o && Math.abs(o.hodnota - hodnota()) < 1e-9) return;
-      if (ed.vybraneH.size || ed.vybraneP.size || ed.uzavrena) aplikuj(); else { ed.chyba = null; obnovInfo(); }
+      if (ed.vybraneP.size || ed.uzavrena) aplikuj(); else { ed.chyba = null; obnovInfo(); }
     };
     $('occtHodnota').addEventListener('change', hodnotaZmenena);
     $('occtHodnota').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); hodnotaZmenena(); } });
     $('occtVse').onclick = async () => {
       if (!ed || !ed.hrany) return;
       if (ed.hrany.length > 60 && !await mnohoHran(ed.hrany.length)) return;
-      const pred = new Set(ed.vybraneH);
+      const vratit = stavH();
       ed.hrany.forEach((h, i) => ed.vybraneH.add(i));
-      kresli(); aplikuj(() => { ed.vybraneH = pred; });
+      kresli(); aplikuj(vratit);
     };
-    $('occtNic').onclick = () => { if (ed) { ed.vybraneH.clear(); kresli(); aplikuj(); } };
+    $('occtNic').onclick = () => { if (ed) { ed.vybraneH.clear(); ed.velikosti.clear(); ed.velikosti2.clear(); kresli(); aplikuj(); } };
+    $('occtRetez').onclick = () => { const b = $('occtRetez'); b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); };
+    $('occtPodobne').onclick = async () => {
+      if (!ed || !ed.hrany) return;
+      if (ed.posledni == null || !ed.hrany[ed.posledni]) { Dialog.info('Nejdřív klikni na hranu – „Podobné“ pak přidá hrany stejné délky a směru.'); return; }
+      const nove = podobne(ed.posledni).filter(i => !ed.vybraneH.has(i));
+      if (!nove.length) { Dialog.info('Žádné další podobné hrany – všechny už jsou vybrané.'); return; }
+      if (ed.vybraneH.size + nove.length > 60 && !await mnohoHran(ed.vybraneH.size + nove.length)) return;
+      const vratit = stavH();
+      nove.forEach(i => ed.vybraneH.add(i));
+      kresli(); aplikuj(vratit);
+    };
+    try { $('occtJedenKrok').checked = !!JSON.parse(localStorage.getItem(KLIC_HODNOT) || '{}').jedenKrok; } catch (e) { /* bez úložiště */ }
+    $('occtJedenKrok').addEventListener('change', () => zapamatuj('jedenKrok', $('occtJedenKrok').checked));
     /** Vnitřní (vyduté) hrany: kolem středu hrany je materiálu víc než polovina (body na malé kouli kolem
         středu leží většinou uvnitř tělesa). Typicky spoje sloučených těles – zaoblení je zpevní. */
     function vnitrniHrany(A) {
@@ -588,9 +717,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         return;
       }
       if (ed.vybraneH.size + nove.length > 60 && !await mnohoHran(ed.vybraneH.size + nove.length)) return;
-      const pred = new Set(ed.vybraneH);
+      const vratit = stavH();
       nove.forEach(i => ed.vybraneH.add(i));
-      kresli(); aplikuj(() => { ed.vybraneH = pred; });
+      kresli(); aplikuj(vratit);
     });
     $('occtUzavrena').onclick = () => {
       if (!ed || !ed.plochy) return;

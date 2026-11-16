@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staré mapy – jak to tu vypadalo</title>
+<meta name="description" content="Prolínání historických map Česka s dneškem: císařské otisky stabilního katastru, II. a III. vojenské mapování, historická ortofotomapa z 50. let, současné ortofoto a OpenStreetMap. Průhlednost, opona, lupa, mapy vedle sebe, hledání obce, sdílení odkazem a záložky míst.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="stare_mapy/jadro.js"></script>
+<script src="stare_mapy/vrstva.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 180px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat form{display:flex}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3;text-decoration:none}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px;max-width:15em}
+@media (max-width:1400px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:min(420px,calc(100vw - 12px));max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .misto{display:flex;align-items:center;gap:2px}
+.nabidka .misto .tl:first-child{flex:1}
+.nabidka .prazdne{color:var(--text-muted);font-size:.84rem;padding:6px 10px}
+[hidden]{display:none !important}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+/* mapy */
+#plocha{flex:1;min-height:0;position:relative;display:flex}
+#plocha.vedle{gap:3px;background:var(--border)}
+.mapa{flex:1;min-width:0;min-height:0;background:var(--bg-deep,var(--bg))}
+@media (max-width:700px){#plocha.vedle{flex-direction:column}}
+.leaflet-container{font-family:inherit}
+.leaflet-control-attribution{max-width:70vw;white-space:normal}
+.stitek-mapy{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:900;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.78rem;box-shadow:var(--shadow);pointer-events:none;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+
+/* opona */
+#opona{position:absolute;top:0;bottom:0;width:0;z-index:850;cursor:ew-resize;touch-action:none}
+#opona::before{content:'';position:absolute;top:0;bottom:0;left:-2px;width:4px;background:var(--accent);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+#opona .uchyt{position:absolute;top:50%;left:-17px;width:34px;height:34px;margin-top:-17px;border-radius:50%;background:var(--accent);color:var(--on-accent,#fff);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:var(--shadow);user-select:none}
+#opona .pas{position:absolute;top:0;bottom:0;left:-14px;width:28px}
+/* lupa */
+#lupaKruh{position:absolute;z-index:850;border:3px solid var(--accent);border-radius:50%;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+
+/* spodní panel: posuvník + časová osa */
+#panel{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:900;background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:6px 10px;display:flex;flex-direction:column;gap:5px;width:min(560px,calc(100% - 20px))}
+#panel .radek{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-muted)}
+#panel input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+#panel .hodnota{min-width:3.2em;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
+.osa{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin}
+.osa .tl{padding:3px 8px;font-size:.78rem;display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.osa .tl small{font-size:.66rem;color:var(--text-muted);max-width:9.5em;overflow:hidden;text-overflow:ellipsis}
+#stav{font-size:.74rem;color:var(--warn);min-height:0}
+#stav:empty{display:none}
+
+dialog{margin:auto;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:0;width:min(780px,calc(100vw - 20px));max-height:calc(100vh - 30px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog .hlava{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-panel)}
+dialog .hlava h2{font-size:1.02rem;margin:0;flex:1}
+dialog .telo{padding:12px 16px 16px;font-size:.88rem;line-height:1.5}
+dialog .telo h3{font-size:.95rem;margin:14px 0 4px}
+dialog .telo p{margin:0 0 8px}
+dialog .telo ul{margin:0 0 8px;padding-left:20px}
+.karta{border:1px solid var(--border);border-radius:8px;padding:8px 11px;margin:0 0 8px;background:var(--bg-elevated)}
+.karta b{font-size:.93rem}
+.karta .meta{font-size:.78rem;color:var(--text-muted);margin:2px 0 4px}
+.karta .lic{font-size:.76rem;color:var(--text-faint)}
+dialog a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🗺️ Staré mapy</h1>
+  <div class="skup" role="group" aria-label="Mapy"><span class="skup-nazev" aria-hidden="true">Mapy</span><div class="skup-tl">
+    <select class="tl" id="vyberB" aria-label="Horní (stará) mapa" title="Horní mapa – obvykle ta stará"></select>
+    <button class="tl" id="prohodit" title="Prohodit horní a spodní mapu" aria-label="Prohodit mapy">⇅</button>
+    <select class="tl" id="vyberA" aria-label="Spodní mapa" title="Spodní mapa – obvykle dnešek"></select>
+  </div></div>
+  <div class="skup" role="group" aria-label="Porovnání"><span class="skup-nazev" aria-hidden="true">Porovnání</span><div class="skup-tl">
+    <button class="tl" data-rezim="prekryv" title="Horní mapa průhledná přes spodní">◐<span class="txt"> Překryv</span></button>
+    <button class="tl" data-rezim="opona" title="Svislá opona – vlevo stará, vpravo nová">◧<span class="txt"> Opona</span></button>
+    <button class="tl" data-rezim="lupa" title="Kruhový průhled na starou mapu pod kurzorem">🔍<span class="txt"> Lupa</span></button>
+    <button class="tl" data-rezim="vedle" title="Dvě synchronizované mapy vedle sebe">◫<span class="txt"> Vedle sebe</span></button>
+  </div></div>
+  <div class="skup skup-hledat">
+    <form id="hledatForm" role="search"><input type="search" id="hledat" class="vstup" placeholder="🔍 Obec, ulice nebo 50.08, 14.42 ⏎" aria-label="Hledat místo" autocomplete="off"></form>
+  </div>
+  <div class="skup" role="group" aria-label="Místo"><span class="skup-nazev" aria-hidden="true">Místo</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabMista" aria-expanded="false" title="Záložky míst">⭐<span class="txt"> Místa</span> ▾</button>
+    <button class="tl" data-nabidka="nabJinde" aria-expanded="false" title="Otevřít tuto polohu v původních prohlížečích">🔗<span class="txt"> Jinde</span> ▾</button>
+    <button class="tl" id="sdilet" title="Zkopírovat odkaz na tuto polohu a mapy">📤<span class="txt"> Sdílet</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" id="oMapach" title="Popis map: rok, měřítko, zdroj, licence" aria-label="O mapách">ℹ️</button>
+    <button class="tl" id="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabMista" class="nabidka" hidden></div>
+<div id="nabJinde" class="nabidka" hidden></div>
+<div id="nabVysledky" class="nabidka" hidden></div>
+
+<div id="plocha">
+  <div id="mapa" class="mapa" role="region" aria-label="Mapa"></div>
+  <div id="mapa2" class="mapa" role="region" aria-label="Druhá mapa" hidden></div>
+  <div class="stitek-mapy" id="stitek2" hidden></div>
+  <div id="opona" hidden><div class="pas"></div><div class="uchyt" aria-hidden="true">⇔</div></div>
+  <div id="lupaKruh" hidden></div>
+  <div id="panel">
+    <div class="radek" id="radekPosuvnik">
+      <label for="posuvnik" id="posuvnikPopis">Průhlednost</label>
+      <input type="range" id="posuvnik" min="0" max="100" value="70">
+      <span class="hodnota" id="posuvnikHodnota">70 %</span>
+    </div>
+    <div class="osa" id="osa" role="group" aria-label="Časová osa – horní mapa"></div>
+    <div id="stav" role="status"></div>
+  </div>
+</div>
+
+<dialog id="dlgInfo">
+  <div class="hlava"><h2>ℹ️ O mapách</h2><button class="btn" data-zavrit>✕</button></div>
+  <div class="telo" id="infoTelo"></div>
+</dialog>
+
+<dialog id="dlgNapoveda">
+  <div class="hlava"><h2>❓ Nápověda</h2><button class="btn" data-zavrit>✕</button></div>
+  <div class="telo">
+    <p>Stránka prolíná staré mapy Česka s dnešní mapou nebo leteckým snímkem. <b>Horní</b> mapa je obvykle ta stará, <b>spodní</b> dnešní; tlačítkem ⇅ je prohodíte.</p>
+    <h3>Způsoby porovnání</h3>
+    <ul>
+      <li><b>◐ Překryv</b> – posuvníkem měníte průhlednost horní mapy.</li>
+      <li><b>◧ Opona</b> – svislou čáru táhněte myší nebo prstem; vlevo je horní mapa, vpravo spodní. Posuvník dole dělá totéž.</li>
+      <li><b>🔍 Lupa</b> – kruh pod kurzorem (na dotykovém displeji pod prstem) ukazuje horní mapu. Velikost kruhu nastavíte posuvníkem.</li>
+      <li><b>◫ Vedle sebe</b> – dvě mapy se společným posunem a přiblížením; červená tečka ukazuje totéž místo v druhé mapě.</li>
+    </ul>
+    <h3>Místa a sdílení</h3>
+    <ul>
+      <li>Hledání najde obec, ulici nebo adresu (služba Nominatim nad OpenStreetMap); souřadnice zadejte jako „50.0870, 14.4207“.</li>
+      <li><b>📤 Sdílet</b> zkopíruje odkaz s polohou, přiblížením, oběma mapami a režimem – kdo ho otevře, uvidí totéž.</li>
+      <li><b>⭐ Místa</b> – záložky zajímavých míst; ukládají se jen ve vašem prohlížeči.</li>
+      <li><b>🔗 Jinde</b> otevře stejnou polohu v původních prohlížečích (Archiv ČÚZK, Mapire, Oldmaps…) – tam jsou mapy, které sem vložit nelze.</li>
+    </ul>
+    <h3>Proč staré mapy „nesedí“ přesně</h3>
+    <p>Vojenská mapování nevznikla v dnešních souřadnicích. Služby je dodatečně georeferencovaly, takže odchylky desítek metrů (u I. a II. mapování i více) jsou běžné. Nejpřesnější jsou císařské otisky stabilního katastru a historická ortofota.</p>
+    <p>Staré mapy přicházejí v souřadnicovém systému S-JTSK (Křovákovo zobrazení) a stránka je přímo v prohlížeči převádí do mřížky dnešních webových map – proto se mohou načítat o chvilku déle.</p>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+const S = window.STMAPY;
+const $ = id => document.getElementById(id);
+const KLIC_STAV = 'webapp_stare_mapy_stav', KLIC_MISTA = 'webapp_stare_mapy_mista';
+const IDS = S.VRSTVY.map(v => v.id);
+const VYCHOZI = { z: 15, lat: 50.08690, lon: 14.42080, a: 'ortofoto', b: 'vm2', rezim: 'opona', pruhlednost: 70, opona: 50 };
+const nacti = (k, v) => { try { const x = JSON.parse(localStorage.getItem(k)); return x == null ? v : x; } catch (e) { return v; } };
+const zapis = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* plné úložiště – nevadí */ } };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+let stav = Object.assign({}, VYCHOZI, S.hashNaStav(nacti(KLIC_STAV, ''), IDS), S.hashNaStav(location.hash, IDS));
+let lupaR = 110, lupaBod = null;
+
+/* ---------- vrstvy ---------- */
+const chybyVrstev = {};
+async function pripravDef(def) {
+  if (def.urovne || !def.capabilities) return def;
+  const r = await fetch(def.capabilities);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const cap = S.parsujWmts(await r.text());
+  const sada = cap.sady[def.sada];
+  if (!sada || !sada.urovne.length) throw new Error('služba nemá očekávanou mřížku dlaždic');
+  def.urovne = sada.urovne;
+  return def;
+}
+function vytvorVrstvu(def) {
+  const opt = { attribution: def.atribuce, maxZoom: 20 };
+  if (def.bounds) opt.bounds = L.latLngBounds([def.bounds[1], def.bounds[0]], [def.bounds[3], def.bounds[2]]);
+  let v;
+  if (def.typ === 'xyz') v = L.tileLayer(def.url, Object.assign(opt, { maxNativeZoom: def.maxZoom }));
+  else v = L.gridLayer.jtsk(Object.assign(opt, { sablona: def.sablona, sada: def.sada, urovne: def.urovne, maxUroven: def.maxUroven }));
+  let chyb = 0, cas = 0;
+  v.on('tileerror', () => {
+    chyb++; clearTimeout(cas);
+    cas = setTimeout(() => { if (chyb >= 3) { chybyVrstev[def.id] = true; ukazStav(); } chyb = 0; }, 1500);
+  });
+  v.on('load', () => { if (chybyVrstev[def.id]) { delete chybyVrstev[def.id]; ukazStav(); } });
+  return v;
+}
+function ukazStav(text) {
+  const vadne = Object.keys(chybyVrstev).map(id => S.vrstva(id).nazev);
+  $('stav').textContent = text || (vadne.length ? '⚠️ Část dlaždic se nenačetla: ' + vadne.join(', ') + '. Server může být přetížený nebo jste offline – zkuste to za chvíli.' : '');
+}
+
+/* ---------- mapy ---------- */
+const mapa = L.map('mapa', { zoomControl: true, minZoom: 6, maxZoom: 20, worldCopyJump: false }).setView([stav.lat, stav.lon], stav.z);
+mapa.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
+L.control.scale({ imperial: false }).addTo(mapa);
+let mapa2 = null, vrstvaA = null, vrstvaB = null, vrstvaB2 = null, tecka = null, tecka2 = null;
+
+async function nastavVrstvy() {
+  for (const v of [vrstvaA, vrstvaB, vrstvaB2]) if (v) v.remove();
+  vrstvaA = vrstvaB = vrstvaB2 = null;
+  ukazStav('');
+  const defA = S.vrstva(stav.a), defB = S.vrstva(stav.b);
+  try { await Promise.all([pripravDef(defA), pripravDef(defB)]); }
+  catch (e) { ukazStav('⚠️ Službu se nepodařilo načíst (' + e.message + '). Zkontrolujte připojení.'); }
+  if (defA.typ === 'xyz' || defA.urovne) vrstvaA = vytvorVrstvu(defA).addTo(mapa);
+  if (defB.typ === 'xyz' || defB.urovne) {
+    if (stav.rezim === 'vedle') { vrstvaB2 = vytvorVrstvu(defB).addTo(zajistiMapu2()); }
+    else { vrstvaB = vytvorVrstvu(defB).addTo(mapa); vrstvaB.bringToFront(); }
+  }
+  pouzijRezim();
+}
+
+function zajistiMapu2() {
+  if (mapa2) return mapa2;
+  $('mapa2').hidden = false;
+  mapa2 = L.map('mapa2', { zoomControl: false, minZoom: 6, maxZoom: 20 }).setView(mapa.getCenter(), mapa.getZoom());
+  mapa2.attributionControl.setPrefix(false);
+  let vede = null;
+  const sync = (z, na) => () => {
+    if (vede && vede !== z) return;
+    vede = z; na.setView(z.getCenter(), z.getZoom(), { animate: false }); vede = null;
+  };
+  mapa.on('move zoom', sync(mapa, mapa2)); mapa2.on('move zoom', sync(mapa2, mapa));
+  const styl = { radius: 5, color: '#fff', weight: 2, fillColor: '#e0312b', fillOpacity: 1, interactive: false };
+  tecka = L.circleMarker([0, 0], styl); tecka2 = L.circleMarker([0, 0], styl);
+  mapa.on('mousemove', e => { tecka2.setLatLng(e.latlng).addTo(mapa2); tecka.remove(); });
+  mapa2.on('mousemove', e => { tecka.setLatLng(e.latlng).addTo(mapa); tecka2.remove(); });
+  mapa.on('mouseout', () => tecka2.remove()); mapa2.on('mouseout', () => tecka.remove());
+  return mapa2;
+}
+
+/* ---------- režimy porovnání ---------- */
+function pouzijRezim() {
+  const r = stav.rezim, vedle = r === 'vedle';
+  document.querySelectorAll('[data-rezim]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rezim === r)));
+  $('plocha').classList.toggle('vedle', vedle);
+  if (mapa2) { $('mapa2').hidden = !vedle; }
+  $('stitek2').hidden = !vedle;
+  if (vedle) $('stitek2').textContent = S.vrstva(stav.a).nazev + '  ⟷  ' + S.vrstva(stav.b).nazev + ' (' + S.vrstva(stav.b).rok + ')';
+  $('opona').hidden = r !== 'opona';
+  $('lupaKruh').hidden = r !== 'lupa' || !lupaBod;
+  $('radekPosuvnik').hidden = vedle;
+  const pop = { prekryv: 'Průhlednost', opona: 'Opona', lupa: 'Velikost lupy' }[r] || '';
+  $('posuvnikPopis').textContent = pop;
+  const hod = r === 'prekryv' ? stav.pruhlednost : r === 'opona' ? stav.opona : Math.round((lupaR - 50) / 2.5);
+  $('posuvnik').value = hod;
+  $('posuvnikHodnota').textContent = r === 'lupa' ? lupaR * 2 + ' px' : Math.round(hod) + ' %';
+  if (vrstvaB) vrstvaB.setOpacity(r === 'prekryv' ? stav.pruhlednost / 100 : 1);
+  setTimeout(() => { mapa.invalidateSize(); if (mapa2) mapa2.invalidateSize(); orizni(); }, 0);
+  ulozStav();
+}
+function orizni() {
+  if (!vrstvaB) return;
+  const el = vrstvaB.getContainer();
+  if (!el) return;
+  const vel = mapa.getSize(), nw = mapa.containerPointToLayerPoint([0, 0]);
+  el.style.clip = ''; el.style.clipPath = '';
+  if (stav.rezim === 'opona') {
+    const x = vel.x * stav.opona / 100;
+    $('opona').style.left = x + 'px';
+    el.style.clip = `rect(${nw.y}px, ${nw.x + x}px, ${nw.y + vel.y}px, ${nw.x}px)`;
+  } else if (stav.rezim === 'lupa') {
+    if (!lupaBod) { el.style.clipPath = 'circle(0px at 0 0)'; return; }
+    el.style.clipPath = `circle(${lupaR}px at ${nw.x + lupaBod.x}px ${nw.y + lupaBod.y}px)`;
+    const k = $('lupaKruh');
+    k.hidden = false;
+    Object.assign(k.style, { left: (lupaBod.x - lupaR) + 'px', top: (lupaBod.y - lupaR) + 'px', width: 2 * lupaR + 'px', height: 2 * lupaR + 'px' });
+  }
+}
+mapa.on('move zoomend viewreset resize', orizni);
+mapa.on('moveend', ulozStav);
+mapa.on('mousemove', e => { if (stav.rezim === 'lupa') { lupaBod = e.containerPoint; orizni(); } });
+mapa.on('mouseout', () => { if (stav.rezim === 'lupa') { lupaBod = null; $('lupaKruh').hidden = true; orizni(); } });
+mapa.getContainer().addEventListener('touchmove', e => {
+  if (stav.rezim !== 'lupa' || e.touches.length !== 1) return;
+  const r = mapa.getContainer().getBoundingClientRect();
+  lupaBod = L.point(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top - lupaR * 0.6);
+  orizni();
+}, { passive: true });
+
+/* tažení opony */
+(function () {
+  const o = $('opona');
+  let tahne = false;
+  const pohyb = e => {
+    if (!tahne) return;
+    const r = $('mapa').getBoundingClientRect();
+    stav.opona = Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100));
+    $('posuvnik').value = stav.opona; $('posuvnikHodnota').textContent = Math.round(stav.opona) + ' %';
+    orizni();
+  };
+  o.addEventListener('pointerdown', e => { tahne = true; o.setPointerCapture(e.pointerId); e.preventDefault(); });
+  o.addEventListener('pointermove', pohyb);
+  o.addEventListener('pointerup', () => { tahne = false; ulozStav(); });
+  o.addEventListener('pointercancel', () => { tahne = false; });
+  L.DomEvent.disableClickPropagation(o);
+})();
+
+$('posuvnik').addEventListener('input', e => {
+  const v = Number(e.target.value);
+  if (stav.rezim === 'prekryv') { stav.pruhlednost = v; if (vrstvaB) vrstvaB.setOpacity(v / 100); $('posuvnikHodnota').textContent = v + ' %'; }
+  else if (stav.rezim === 'opona') { stav.opona = v; $('posuvnikHodnota').textContent = v + ' %'; orizni(); }
+  else if (stav.rezim === 'lupa') {
+    lupaR = Math.round(50 + v * 2.5); $('posuvnikHodnota').textContent = lupaR * 2 + ' px';
+    if (!lupaBod) lupaBod = mapa.getSize().divideBy(2);
+    orizni();
+  }
+});
+$('posuvnik').addEventListener('change', ulozStav);
+L.DomEvent.disableClickPropagation($('panel')); L.DomEvent.disableScrollPropagation($('panel'));
+
+/* ---------- výběr map a časová osa ---------- */
+function naplnVybery() {
+  const serazene = [...S.VRSTVY].sort((x, y) => x.razeni - y.razeni);
+  const moznosti = serazene.map(v => `<option value="${v.id}">${esc(v.rok)} – ${esc(v.nazev)}</option>`).join('');
+  $('vyberA').innerHTML = moznosti; $('vyberB').innerHTML = moznosti;
+  $('vyberA').value = stav.a; $('vyberB').value = stav.b;
+  $('osa').innerHTML = serazene.map(v => `<button class="tl" data-osa="${v.id}" aria-pressed="${v.id === stav.b}" title="${esc(v.nazev)} – ${esc(v.meritko)}">${esc(v.rok)}<small>${esc(v.nazev.replace(/ \(.*\)$/, '').replace(' – Speciální mapa', ''))}</small></button>`).join('');
+}
+function zmenMapy(a, b) {
+  stav.a = a; stav.b = b;
+  $('vyberA').value = a; $('vyberB').value = b;
+  document.querySelectorAll('[data-osa]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.osa === b)));
+  nastavVrstvy();
+}
+$('vyberA').onchange = e => zmenMapy(e.target.value, stav.b);
+$('vyberB').onchange = e => zmenMapy(stav.a, e.target.value);
+$('prohodit').onclick = () => zmenMapy(stav.b, stav.a);
+$('osa').addEventListener('click', e => { const b = e.target.closest('[data-osa]'); if (b) zmenMapy(stav.a === b.dataset.osa ? stav.b : stav.a, b.dataset.osa); });
+document.querySelectorAll('[data-rezim]').forEach(b => b.onclick = () => {
+  const bylo = stav.rezim;
+  stav.rezim = b.dataset.rezim;
+  if ((bylo === 'vedle') !== (stav.rezim === 'vedle')) nastavVrstvy(); else pouzijRezim();
+});
+
+/* ---------- stav v adrese ---------- */
+function aktualniStav() {
+  const c = mapa.getCenter();
+  return Object.assign({}, stav, { z: mapa.getZoom(), lat: c.lat, lon: c.lng });
+}
+function ulozStav() {
+  const h = S.stavDoHashe(aktualniStav());
+  zapis(KLIC_STAV, h);
+  try { history.replaceState(null, '', location.pathname + location.search + h); } catch (e) { /* sandbox */ }
+}
+window.addEventListener('hashchange', () => {
+  const s = S.hashNaStav(location.hash, IDS);
+  if (s.lat == null) return;
+  const zmena = s.a && s.a !== stav.a || s.b && s.b !== stav.b || s.rezim && s.rezim !== stav.rezim;
+  Object.assign(stav, s);
+  mapa.setView([s.lat, s.lon], s.z);
+  if (zmena) { naplnVybery(); nastavVrstvy(); } else pouzijRezim();
+});
+$('sdilet').onclick = async () => {
+  const url = location.href.split('#')[0] + S.stavDoHashe(aktualniStav());
+  try { await navigator.clipboard.writeText(url); Dialog.info('Odkaz zkopírován do schránky.'); }
+  catch (e) { await Dialog.zeptej('Zkopírujte odkaz:', url); }
+};
+
+/* ---------- hledání (Nominatim) ---------- */
+$('hledatForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const q = $('hledat').value.trim();
+  if (!q) return;
+  const sour = /^\s*(-?\d{1,2}[.,]\d+)\s*[,;\s]\s*(-?\d{1,3}[.,]\d+)\s*$/.exec(q);
+  if (sour) { mapa.setView([parseFloat(sour[1].replace(',', '.')), parseFloat(sour[2].replace(',', '.'))], Math.max(mapa.getZoom(), 15)); return; }
+  const n = $('nabVysledky');
+  n.innerHTML = '<div class="prazdne">Hledám…</div>'; otevriNabidku(n, $('hledat'));
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&accept-language=cs&countrycodes=cz,sk,at,de,pl&q=' + encodeURIComponent(q));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const vysl = await r.json();
+    n.innerHTML = vysl.length
+      ? vysl.map((v, i) => `<button class="tl" data-vysledek="${i}">📍 ${esc(v.display_name)}</button>`).join('') + '<div class="prazdne" style="font-size:.72rem">Hledání: Nominatim, © přispěvatelé OpenStreetMap</div>'
+      : '<div class="prazdne">Nic nenalezeno. Zkuste jiný tvar názvu.</div>';
+    n.onclick = ev => {
+      const b = ev.target.closest('[data-vysledek]'); if (!b) return;
+      const v = vysl[b.dataset.vysledek];
+      zavriNabidky();
+      if (v.boundingbox) mapa.fitBounds([[+v.boundingbox[0], +v.boundingbox[2]], [+v.boundingbox[1], +v.boundingbox[3]]], { maxZoom: 17 });
+      else mapa.setView([+v.lat, +v.lon], 16);
+      hledanyNazev = v.display_name.split(',')[0];
+    };
+  } catch (er) {
+    n.innerHTML = '<div class="prazdne">⚠️ Hledání se nepodařilo (' + esc(er.message) + '). Jste online?</div>';
+  }
+});
+let hledanyNazev = '';
+
+/* ---------- nabídky ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+function otevriNabidku(n, kotva) {
+  zavriNabidky();
+  n.hidden = false;
+  const r = kotva.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  if (bylo) return zavriNabidky();
+  if (n.id === 'nabMista') kresliMista(); else if (n.id === 'nabJinde') kresliJinde();
+  otevriNabidku(n, b); b.setAttribute('aria-expanded', 'true');
+}));
+document.addEventListener('click', e => { if (!e.target.closest('.nabidka') && !e.target.closest('#hledatForm')) zavriNabidky(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+
+function kresliJinde() {
+  const c = mapa.getCenter(), z = mapa.getZoom();
+  $('nabJinde').innerHTML = '<div class="titulek">Tato poloha v původních prohlížečích</div>' +
+    S.ODKAZY.map(o => `<a class="tl" href="${esc(o.url(c.lat, c.lng, z))}" target="_blank" rel="noopener">↗ ${esc(o.nazev)}</a>`).join('') +
+    '<hr><div class="prazdne" style="font-size:.76rem">Tyto mapy sem nelze vložit (licence nebo chybějící veřejná služba), proto jen odkaz. Oldmaps a geoportál Jihočeského kraje polohu z odkazu nepřebírají – otevře se jejich úvodní stránka.</div>';
+}
+
+/* záložky míst */
+let mista = nacti(KLIC_MISTA, []);
+if (!Array.isArray(mista)) mista = [];
+function kresliMista() {
+  const n = $('nabMista');
+  n.innerHTML = '<button class="tl" id="pridatMisto">➕ Uložit toto místo…</button><hr>' +
+    (mista.length ? mista.map((m, i) => `<div class="misto"><button class="tl" data-misto="${i}" title="${esc(S.vrstva(m.b) ? S.vrstva(m.b).nazev : '')}">⭐ ${esc(m.nazev)}</button><button class="tl" data-smaz-misto="${i}" title="Smazat" aria-label="Smazat ${esc(m.nazev)}">✕</button></div>`).join('')
+      : '<div class="prazdne">Zatím žádná uložená místa.</div>');
+}
+$('nabMista').addEventListener('click', async e => {
+  e.stopPropagation();
+  if (e.target.closest('#pridatMisto')) {
+    zavriNabidky();
+    const c = mapa.getCenter();
+    const nazev = await Dialog.zeptej('Název místa', hledanyNazev || `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}`);
+    if (!nazev || !nazev.trim()) return;
+    const s = aktualniStav();
+    mista.push({ nazev: nazev.trim().slice(0, 80), hash: S.stavDoHashe(s) });
+    zapis(KLIC_MISTA, mista); Dialog.info('Místo uloženo.');
+    return;
+  }
+  const sm = e.target.closest('[data-smaz-misto]');
+  if (sm) {
+    const m = mista[sm.dataset.smazMisto];
+    if (!await Dialog.potvrd(`Smazat místo „${m.nazev}“?`)) return;
+    mista.splice(sm.dataset.smazMisto, 1); zapis(KLIC_MISTA, mista); kresliMista(); return;
+  }
+  const b = e.target.closest('[data-misto]');
+  if (b) { zavriNabidky(); location.hash = mista[b.dataset.misto].hash; }
+});
+
+/* ---------- dialogy ---------- */
+function kresliInfo() {
+  const serazene = [...S.VRSTVY].sort((x, y) => x.razeni - y.razeni);
+  $('infoTelo').innerHTML = '<p>Všechny vložené mapy jsou veřejné prohlížecí služby; ověřeno 16. 11. 2026 (dostupnost, CORS, podmínky užití). Kliknutím na název mapu zobrazíte nahoře.</p>' +
+    serazene.map(v => `<div class="karta"><b><a href="#" data-info-vrstva="${v.id}">${esc(v.nazev)}</a></b>
+      <div class="meta">${esc(v.rok)} · ${esc(v.meritko)} · ${esc(v.zdroj)}</div>
+      <div>${esc(v.popis)}</div>
+      <div class="lic">Licence: ${esc(v.licence)} · ${v.atribuce}</div></div>`).join('') +
+    `<h3>Mapy dostupné jen odkazem (🔗 Jinde)</h3>
+    <ul>
+      <li><b>I. vojenské (josefské) mapování</b>, 1764–1768 (Čechy), 1:28 800 – georeferencované listy nabízí Arcanum (Mapire) a Oldmaps UJEP; ani jeden nemá veřejnou službu s podmínkami pro vkládání do cizích stránek.</li>
+      <li><b>Císařské otisky a originální mapy stabilního katastru</b> pro celou ČR, 1824–1843, 1:2 880 – Archiv ČÚZK; jeho služby vyžadují přihlašovací token, sem je proto vložit nelze. Bezešvou mapu Jihočeského kraje nabízí krajský geoportál, jeho podmínky ale vkládání do cizích stránek nepovolují.</li>
+      <li><b>Archivní letecké snímky a ortofota ČÚZK</b> (různé roky) – prohlížení v Archivu ČÚZK; WMS archivních ortofot je podmíněno souhlasem s podmínkami.</li>
+    </ul>
+    <h3>Další služby</h3>
+    <p>Hledání míst: <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>, data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">přispěvatelé OpenStreetMap</a> (ODbL). Mapová knihovna Leaflet (BSD-2).</p>`;
+}
+$('oMapach').onclick = () => { kresliInfo(); $('dlgInfo').showModal(); };
+$('infoTelo').addEventListener('click', e => {
+  const a = e.target.closest('[data-info-vrstva]'); if (!a) return;
+  e.preventDefault(); $('dlgInfo').close();
+  zmenMapy(stav.a === a.dataset.infoVrstva ? stav.b : stav.a, a.dataset.infoVrstva);
+});
+$('napoveda').onclick = () => $('dlgNapoveda').showModal();
+document.querySelectorAll('[data-zavrit]').forEach(b => b.onclick = () => b.closest('dialog').close());
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+
+naplnVybery();
+nastavVrstvy();
+</script>
+</body>
+</html>

@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dělení společných výdajů</title>
+<meta name="description" content="Kdo komu kolik dluží: skupiny pro výlet, sdílený byt nebo oslavu, výdaje dělené rovným dílem, podíly, částkami či procenty, více měn s kurzem, bilance, vyrovnání minimem převodů, QR platba, sdílení odkazem a CSV.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/qrcode/qrcode.js"></script>
+<script src="qr_platba/jadro.js"></script>
+<script src="deleni_vydaju/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px;max-width:200px}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1100px;margin:0 auto}
+.nadpis{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.nadpis h2{margin:0;font-size:1.2rem}
+.nadpis .meta{color:var(--text-muted);font-size:.84rem}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px}
+.dlazdice b{display:block;font-size:1.3rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlazdice span{font-size:.78rem;color:var(--text-muted)}
+.clenove-pruh{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.cip{display:inline-flex;gap:6px;align-items:baseline;background:var(--bg-panel);border:1px solid var(--border);border-radius:16px;padding:3px 10px;font-size:.84rem}
+.plus{color:var(--ok)} .minus{color:var(--danger)} .nula{color:var(--text-muted)}
+.filtry{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filtry .vstup{flex:1 1 140px}
+.filtry select.vstup{flex:0 1 180px}
+
+.vydaje{display:flex;flex-direction:column;gap:6px}
+.den{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:10px 0 2px}
+.vydaj{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:8px 11px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.vydaj:hover{border-color:var(--border-strong)}
+.vydaj.splatka{border-style:dashed}
+.vydaj.chybny{border-color:var(--danger)}
+.vydaj .ikona{font-size:1.4rem;line-height:1}
+.vydaj .tit{font-weight:600;word-break:break-word}
+.vydaj .pod{font-size:.78rem;color:var(--text-muted);word-break:break-word}
+.vydaj .cast{text-align:right;font-weight:700;white-space:nowrap}
+.vydaj .cast small{display:block;font-weight:400;font-size:.74rem;color:var(--text-muted)}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.7}
+.prazdno .tlacitka{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.tip{font-size:.8rem;color:var(--text-muted);margin:6px 0 10px;line-height:1.5}
+
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px}
+.panel h3{margin:0 0 8px;font-size:1rem}
+.tab-obal{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em}
+td.cislo,th.cislo{text-align:right;white-space:nowrap}
+.prevody{display:flex;flex-direction:column;gap:6px}
+.prevod{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--bg)}
+.prevod .kdo{flex:1 1 180px;min-width:0;word-break:break-word}
+.prevod .kolik{font-weight:700;white-space:nowrap}
+.sloupec{display:grid;grid-template-columns:minmax(90px,160px) 1fr auto;gap:6px 10px;align-items:center;font-size:.84rem}
+.sloupec .bar{height:12px;border-radius:6px;background:var(--accent);min-width:2px}
+.sloupec .bar.zap{background:var(--danger)} .sloupec .bar.kla{background:var(--ok)}
+.sloupec .jm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sloupec .hod{text-align:right;white-space:nowrap}
+.saldo-osa{display:grid;grid-template-columns:1fr 1fr;align-items:center}
+.saldo-osa .l{display:flex;justify-content:flex-end;border-right:1px solid var(--border-strong);min-height:14px}
+.saldo-osa .r{display:flex;justify-content:flex-start;min-height:14px}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(96vw,580px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:92vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted);min-width:0}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.radek3{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+@media (max-width:480px){.radek,.radek3{grid-template-columns:1fr}}
+.prepinac{display:flex;flex-wrap:wrap;gap:4px}
+.prepinac label{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:.82rem;cursor:pointer;color:var(--text);background:var(--bg-control)}
+.prepinac input{margin:0}
+.prepinac label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.ucastnici{display:flex;flex-direction:column;gap:4px}
+.ucast{display:grid;grid-template-columns:1fr 110px 110px;gap:6px;align-items:center;font-size:.86rem;color:var(--text)}
+.ucast label{display:flex;gap:6px;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ucast .vypocet{text-align:right;color:var(--text-muted);font-size:.8rem;white-space:nowrap}
+.ucast .vstup{padding:5px 7px;text-align:right}
+@media (max-width:420px){.ucast{grid-template-columns:1fr 80px 84px}}
+.stav{font-size:.82rem;border-radius:6px;padding:6px 9px;background:var(--bg-panel);border:1px solid var(--border)}
+.stav.chyba{border-color:var(--danger);color:var(--danger)}
+.stav.ok{border-color:var(--ok)}
+.clen-radek{display:grid;grid-template-columns:1fr 1.3fr auto;gap:6px;align-items:center}
+@media (max-width:480px){.clen-radek{grid-template-columns:1fr auto}.clen-radek .ucet{grid-column:1 / -1;grid-row:2}}
+.info{font-size:.8rem;line-height:1.5;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.qr-obal{display:flex;flex-direction:column;align-items:center;gap:8px}
+.qr-obal canvas{background:#fff;border-radius:6px;max-width:100%;width:260px;height:auto;image-rendering:pixelated}
+textarea.vstup{width:100%;resize:vertical;font-family:ui-monospace,monospace;font-size:.76rem}
+.napoveda h4{margin:10px 0 4px}
+.napoveda p,.napoveda li{font-size:.86rem;line-height:1.55}
+
+@media print{
+  .lista,.filtry,dialog,#podpis-pruh,.prevod .btn{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .panel,.vydaj,.dlazdice{break-inside:avoid;background:#fff;border-color:#999}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🤝 Dělení výdajů</h1>
+  <div class="skup" role="group" aria-label="Skupina"><span class="skup-nazev" aria-hidden="true">Skupina</span><div class="skup-tl">
+    <select class="tl" id="vyberSkupiny" aria-label="Aktivní skupina"></select>
+    <button class="tl" data-nabidka="nabSkupina" aria-expanded="false" title="Nová skupina, členové, nastavení">👥<span class="txt"> Skupina</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Přidat"><span class="skup-nazev" aria-hidden="true">Přidat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="novyVydaj" title="Nový výdaj (N)">✚<span class="txt"> Výdaj</span></button>
+    <button class="tl" data-prikaz="novaSplatka" title="Zaznamenat splátku mezi členy">💸<span class="txt"> Splátka</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="vydaje" aria-pressed="true">🧾<span class="txt"> Výdaje</span></button>
+    <button class="tl" data-pohled="bilance" aria-pressed="false">⚖️<span class="txt"> Bilance a vyrovnání</span></button>
+    <button class="tl" data-pohled="prehled" aria-pressed="false">📊<span class="txt"> Přehled</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Sdílení, záloha, CSV, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </div>
+</header>
+<div id="nabSkupina" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novaSkupina">✚ Nová skupina…</button>
+  <button class="tl" data-prikaz="upravSkupinu">✏️ Název, měna a členové…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazSkupinu">🗑️ Smazat skupinu…</button>
+</div>
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="sdilet">🔗 Sdílet skupinu odkazem…</button>
+  <button class="tl" data-prikaz="vlozitOdkaz">📥 Načíst skupinu z odkazu…</button>
+  <hr>
+  <button class="tl" data-prikaz="exportSkupiny">💾 Skupina do souboru (JSON)</button>
+  <button class="tl" data-prikaz="exportVse">💾 Záloha všech skupin (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Načíst ze souboru…</button>
+  <button class="tl" data-prikaz="csv">📊 Výdaje a bilance do CSV</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+
+<!-- výdaj -->
+<dialog class="okno" id="dlgVydaj"><form method="dialog" id="formVydaj">
+  <header id="vNadpis">Nový výdaj</header>
+  <div class="telo">
+    <label class="pole">Za co<input class="vstup" name="popis" maxlength="200" placeholder="např. Nákup v Lidlu, chata, benzín" autocomplete="off"></label>
+    <div class="radek3">
+      <label class="pole">Částka<input class="vstup" name="castka" inputmode="decimal" placeholder="0,00" autocomplete="off" required></label>
+      <label class="pole">Měna<select class="vstup" name="mena"></select></label>
+    </div>
+    <div class="pole" id="vKurzObal">Kurz<div style="display:flex;align-items:center;gap:6px;color:var(--text)"><span id="vKurzZ">1 EUR =</span><input class="vstup" name="kurz" inputmode="decimal" style="flex:1" autocomplete="off"><span id="vKurzDo">CZK</span></div></div>
+    <div class="radek">
+      <label class="pole">Zaplatil(a)<select class="vstup" name="platil"></select></label>
+      <label class="pole">Datum<input class="vstup" type="date" name="datum"></label>
+    </div>
+    <label class="pole">Kategorie<select class="vstup" name="kategorie"></select></label>
+    <div class="pole">Rozdělit
+      <div class="prepinac" id="vZpusob">
+        <label><input type="radio" name="zpusob" value="rovne" checked> rovným dílem</label>
+        <label><input type="radio" name="zpusob" value="podily"> podíly</label>
+        <label><input type="radio" name="zpusob" value="castky"> přesné částky</label>
+        <label><input type="radio" name="zpusob" value="procenta"> procenta</label>
+      </div>
+    </div>
+    <div class="pole">Za koho <span style="display:flex;gap:4px"><button type="button" class="btn mini" id="vVsichni">všichni</button><button type="button" class="btn mini" id="vNikdo">nikdo</button><button type="button" class="btn mini" id="vZbytek" title="Doplní nevyplněným rovným dílem zbytek částky">doplnit zbytek</button></span></div>
+    <div class="ucastnici" id="vUcastnici"></div>
+    <div class="stav" id="vStav" aria-live="polite"></div>
+    <label class="pole">Poznámka<input class="vstup" name="poznamka" maxlength="500" autocomplete="off"></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="vSmazat">🗑️ Smazat</button>
+    <button type="button" class="btn" data-zavrit>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- splátka -->
+<dialog class="okno" id="dlgSplatka"><form method="dialog" id="formSplatka">
+  <header id="sNadpis">Splátka</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Kdo poslal<select class="vstup" name="od"></select></label>
+      <label class="pole">Komu<select class="vstup" name="komu"></select></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Částka (<span id="sMena">CZK</span>)<input class="vstup" name="castka" inputmode="decimal" required autocomplete="off"></label>
+      <label class="pole">Datum<input class="vstup" type="date" name="datum"></label>
+    </div>
+    <label class="pole">Poznámka<input class="vstup" name="popis" maxlength="200" placeholder="Vyrovnání" autocomplete="off"></label>
+    <p class="info">Splátka sníží dluh odesílatele a pohledávku příjemce. Nepočítá se do výdajů skupiny.</p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="sSmazat">🗑️ Smazat</button>
+    <button type="button" class="btn" data-zavrit>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- skupina -->
+<dialog class="okno" id="dlgSkupina"><form method="dialog" id="formSkupina">
+  <header id="gNadpis">Skupina</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" maxlength="80" required placeholder="např. Chata Šumava 2026" autocomplete="off"></label>
+    <div class="radek">
+      <label class="pole">Druh<select class="vstup" name="typ"></select></label>
+      <label class="pole">Měna skupiny<select class="vstup" name="mena"></select></label>
+    </div>
+    <p class="info" id="gMenaInfo" hidden>Měnu skupiny nejde změnit, když už má výdaje – bilance by se přepočítala jinak, než jste platili.</p>
+    <div class="pole">Členové <span style="font-size:.76rem">(číslo účtu nepovinné – použije se pro QR platbu)</span></div>
+    <div id="gClenove" style="display:flex;flex-direction:column;gap:6px"></div>
+    <div><button type="button" class="btn mini" id="gPridat">✚ Přidat člena</button></div>
+  </div>
+  <footer>
+    <button type="button" class="btn" data-zavrit>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- QR platba -->
+<dialog class="okno" id="dlgQR"><form method="dialog">
+  <header>📱 QR platba</header>
+  <div class="telo">
+    <div id="qrPopis"></div>
+    <label class="pole" id="qrUcetObal">Účet příjemce (uloží se ke členovi)<span style="display:flex;gap:6px"><input class="vstup" id="qrUcet" placeholder="123-4567890/0100 nebo IBAN" style="flex:1" autocomplete="off"><button type="button" class="btn" id="qrPouzit">Vytvořit QR</button></span></label>
+    <div class="qr-obal"><canvas id="qrPlatno" width="260" height="260" hidden></canvas><div id="qrStav" class="stav" hidden></div></div>
+    <p class="info">QR Platba (SPAYD) – načtěte ji v bankovní aplikaci. Jiné měny než CZK české banky obvykle neumějí; pak pošlete platbu ručně. Podrobnější nastavení (VS, zpráva, PAY by square, EPC) najdete na stránce <a href="qr_platba.html" target="_blank" rel="noopener">QR platba</a>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<!-- sdílení -->
+<dialog class="okno" id="dlgOdkaz"><form method="dialog">
+  <header>🔗 Sdílet skupinu</header>
+  <div class="telo">
+    <p class="info">Odkaz obsahuje celou skupinu (zkomprimovanou) – nic se neposílá na server. Kdo ho otevře, uloží si vlastní kopii; změny se mezi vámi nesynchronizují, po úpravách pošlete nový odkaz. Při načtení skupiny se stejným původem se nabídne její přepsání.</p>
+    <textarea class="vstup" id="odkazText" rows="5" readonly></textarea>
+    <div id="odkazDelka" class="tip"></div>
+  </div>
+  <footer>
+    <button type="button" class="btn vlevo" id="odkazSdilet" hidden>📤 Sdílet…</button>
+    <button value="zrusit" class="btn">Zavřít</button>
+    <button type="button" class="btn primary" id="odkazKopirovat">📋 Kopírovat</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo napoveda">
+    <p>Založte <b>skupinu</b> (výlet, sdílený byt, oslava), přidejte členy a zapisujte <b>výdaje</b>: kdo platil, za koho a jak se dělí.</p>
+    <h4>Způsoby dělení</h4>
+    <ul>
+      <li><b>Rovným dílem</b> – mezi zaškrtnuté.</li>
+      <li><b>Podíly</b> – např. 2 : 1 : 1 (rodina se dvěma lidmi má podíl 2).</li>
+      <li><b>Přesné částky</b> – součet musí dát celkovou částku; „doplnit zbytek“ rozdělí zbytek mezi nevyplněné.</li>
+      <li><b>Procenta</b> – musí dát 100 %.</li>
+    </ul>
+    <p>Počítá se v haléřích: když částka nejde rozdělit beze zbytku, dostane někdo o haléř víc – součet vždy přesně sedí. Kdo dostane haléř navíc, se u výdajů střídá.</p>
+    <h4>Více měn</h4>
+    <p>Výdaj v cizí měně zadejte s kurzem (kolik jednotek měny skupiny stojí 1 jednotka cizí měny, třeba podle výpisu z karty). Kurz se pamatuje pro další výdaje. Kurzy stránka sama nestahuje.</p>
+    <h4>Bilance a vyrovnání</h4>
+    <p><b>Zůstatek</b> = co člověk zaplatil − jeho podíl na výdajích (+ odeslané − přijaté splátky). Kladný zůstatek = má dostat, záporný = má poslat. Návrh vyrovnání hledá <b>nejmenší počet převodů</b> (do 16 lidí přesně, nad to přibližně) a každý návrh se ověří, že po něm mají všichni nulu. Po zaplacení klikněte na <b>✓ Zaplaceno</b> – zapíše se splátka (lze i částečnou).</p>
+    <h4>Sdílení a data</h4>
+    <p>Data jsou jen ve vašem prohlížeči. Skupinu pošlete ostatním odkazem nebo souborem JSON; výdaje a bilanci vyexportujete do CSV (Excel, Tabulky).</p>
+    <p class="tip">Klávesy: <b>N</b> nový výdaj, <b>1–3</b> přepnutí pohledu.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.DeleniJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let pohled = 'vydaje';
+try { pohled = localStorage.getItem(J.KLIC + '_pohled') || 'vydaje'; } catch (e) {}
+const filtr = { text: '', kategorie: '', osoba: '' };
+
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+const sk = () => data.skupiny.find(s => s.id === data.aktivni) || null;
+const jmeno = (s, id) => (s.clenove.find(c => c.id === id) || { jmeno: '?' }).jmeno;
+const kc = (hal, s) => J.formatCastka(hal, s.mena);
+const tridaSalda = x => (x > 0 ? 'plus' : x < 0 ? 'minus' : 'nula');
+const typIkona = id => (J.TYPY.find(t => t.id === id) || J.TYPY[3]).nazev.split(' ')[0];
+const datumCz = iso => { const [r, m, d] = iso.split('-'); return +d + '. ' + +m + '. ' + r; };
+const cislo = x => String(x).replace('.', ',');
+
+function stahni(nazev, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+const souborNazev = s => (s.nazev.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'skupina');
+async function doSchranky(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) { return false; }
+}
+
+/* ---------- vykreslení ---------- */
+function obnovVyber() {
+  const v = $('vyberSkupiny');
+  v.innerHTML = data.skupiny.length
+    ? data.skupiny.map(s => `<option value="${esc(s.id)}"${s.id === data.aktivni ? ' selected' : ''}>${typIkona(s.typ)} ${esc(s.nazev)}</option>`).join('')
+    : '<option value="">— žádná skupina —</option>';
+  v.disabled = !data.skupiny.length;
+}
+
+function vykresli() {
+  obnovVyber();
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === pohled)));
+  const s = sk(), o = $('obsah');
+  if (!s) {
+    o.innerHTML = `<div class="prazdno"><b>Spočítejte, kdo komu kolik dluží.</b><br>Založte skupinu, přidejte členy a zapisujte výdaje – stránka spočítá bilanci a navrhne co nejméně převodů.
+      <div class="tlacitka">${J.TYPY.map(t => `<button class="btn${t.id === 'vylet' ? ' primary' : ''}" data-nova-typ="${t.id}">${esc(t.nazev)}</button>`).join('')}</div>
+      <div class="tlacitka"><button class="btn mini" data-prikaz="vlozitOdkaz">📥 Mám odkaz od kamaráda</button><button class="btn mini" data-prikaz="import">📂 Načíst ze souboru</button></div></div>`;
+    return;
+  }
+  const bil = J.bilance(s), st = J.statistika(s);
+  const nevyrovnano = bil.reduce((a, r) => a + Math.max(0, r.saldo), 0);
+  const pocet = s.vydaje.filter(v => v.typ !== 'splatka').length;
+  let h = `<div class="nadpis"><h2>${typIkona(s.typ)} ${esc(s.nazev)}</h2><span class="meta">${s.clenove.length} členů · měna ${esc(s.mena)} · <button class="btn mini" data-prikaz="upravSkupinu">✏️ upravit</button></span></div>`;
+  h += `<div class="souhrn">
+    <div class="dlazdice"><b>${kc(st.celkem, s)}</b><span>celkem utraceno</span></div>
+    <div class="dlazdice"><b>${pocet}</b><span>výdajů</span></div>
+    <div class="dlazdice"><b>${s.clenove.length ? kc(Math.round(st.celkem / s.clenove.length), s) : '–'}</b><span>průměrně na člena</span></div>
+    <div class="dlazdice"><b class="${nevyrovnano ? 'minus' : 'plus'}">${nevyrovnano ? kc(nevyrovnano, s) : '✓ vyrovnáno'}</b><span>zbývá vyrovnat</span></div></div>`;
+  if (s.clenove.length) h += '<div class="clenove-pruh">' + bil.map(r => `<span class="cip"><span>${esc(r.jmeno)}</span><b class="${tridaSalda(r.saldo)}">${r.saldo > 0 ? '+' : ''}${kc(r.saldo, s)}</b></span>`).join('') + '</div>';
+  if (bil.chybne.length) h += `<p class="stav chyba">⚠️ ${bil.chybne.length} výdaj(ů) má chybu (např. smazaný člen nebo chybí kurz) a nepočítá se do bilance – opravte ho (červeně orámovaný).</p>`;
+  if (!s.clenove.length) h += `<div class="prazdno">Skupina zatím nemá členy. <button class="btn primary" data-prikaz="upravSkupinu">👥 Přidat členy</button></div>`;
+  else if (pohled === 'bilance') h += htmlBilance(s, bil);
+  else if (pohled === 'prehled') h += htmlPrehled(s, st, bil);
+  else h += htmlVydaje(s, bil.chybne);
+  o.innerHTML = h;
+  const fT = $('fText');
+  if (fT) {
+    fT.oninput = () => { filtr.text = fT.value; vykresliSeznam(); };
+    $('fKat').onchange = e => { filtr.kategorie = e.target.value; vykresliSeznam(); };
+    $('fOsoba').onchange = e => { filtr.osoba = e.target.value; vykresliSeznam(); };
+  }
+}
+
+function htmlVydaje(s, chybne) {
+  if (!s.vydaje.length) return `<div class="prazdno">Zatím žádné výdaje.<div class="tlacitka"><button class="btn primary" data-prikaz="novyVydaj">✚ Přidat první výdaj</button></div></div>`;
+  return `<div class="filtry">
+    <input class="vstup" id="fText" type="search" placeholder="🔍 Hledat v popisu" value="${esc(filtr.text)}" aria-label="Hledat">
+    <select class="vstup" id="fKat" aria-label="Kategorie"><option value="">Všechny kategorie</option><option value="_splatky"${filtr.kategorie === '_splatky' ? ' selected' : ''}>💸 Jen splátky</option>${J.KATEGORIE.map(k => `<option value="${k.id}"${filtr.kategorie === k.id ? ' selected' : ''}>${esc(k.nazev)}</option>`).join('')}</select>
+    <select class="vstup" id="fOsoba" aria-label="Osoba"><option value="">Všichni členové</option>${s.clenove.map(c => `<option value="${esc(c.id)}"${filtr.osoba === c.id ? ' selected' : ''}>${esc(c.jmeno)}</option>`).join('')}</select>
+  </div><div class="vydaje" id="seznam">${htmlSeznam(s, chybne)}</div>`;
+}
+function vykresliSeznam() { const s = sk(); if (s && $('seznam')) $('seznam').innerHTML = htmlSeznam(s, J.bilance(s).chybne); }
+function htmlSeznam(s, chybne) {
+  const t = filtr.text.trim().toLowerCase();
+  const vybrane = J.seradVydaje(s).filter(v =>
+    (!t || (v.popis + ' ' + v.poznamka).toLowerCase().includes(t)) &&
+    (!filtr.kategorie || (filtr.kategorie === '_splatky' ? v.typ === 'splatka' : v.typ !== 'splatka' && v.kategorie === filtr.kategorie)) &&
+    (!filtr.osoba || v.platil === filtr.osoba || filtr.osoba in v.ucastnici));
+  if (!vybrane.length) return '<p class="tip">Filtru nic neodpovídá.</p>';
+  let h = '', den = '';
+  for (const v of vybrane) {
+    if (v.datum !== den) { den = v.datum; h += `<div class="den">${datumCz(den)}</div>`; }
+    const chyba = chybne.includes(v.id);
+    let cast = '', pod = '', mojeOsoba = '';
+    try { cast = kc(J.castkaSkupiny(v, s), s); } catch (e) { cast = '?'; }
+    const cizi = v.mena !== s.mena ? `<small>${J.formatCastka(J.naHal(v.castka, v.mena), v.mena)} · kurz ${cislo(v.kurz)}</small>` : '';
+    if (filtr.osoba && !chyba) {
+      const p = J.podilyVydaje(v, s);
+      if (filtr.osoba in p) mojeOsoba = ` · podíl ${esc(jmeno(s, filtr.osoba))}: ${kc(p[filtr.osoba], s)}`;
+    }
+    if (v.typ === 'splatka') {
+      pod = `${esc(jmeno(s, v.platil))} → ${esc(Object.keys(v.ucastnici).map(id => jmeno(s, id)).join(', '))}`;
+      h += `<button class="vydaj splatka${chyba ? ' chybny' : ''}" data-id="${esc(v.id)}"><span class="ikona">💸</span><span><span class="tit">${esc(v.popis || 'Splátka')}</span><span class="pod"> · ${pod}</span></span><span class="cast">${cast}${cizi}</span></button>`;
+    } else {
+      const za = Object.keys(v.ucastnici);
+      const kdo = za.length === s.clenove.length ? 'všechny' : za.map(id => jmeno(s, id)).join(', ');
+      pod = `platil(a) ${esc(jmeno(s, v.platil))} · za ${esc(kdo)}${v.zpusob !== 'rovne' ? ' (' + J.ZPUSOBY[v.zpusob] + ')' : ''}${mojeOsoba}`;
+      h += `<button class="vydaj${chyba ? ' chybny' : ''}" data-id="${esc(v.id)}"><span class="ikona" title="${esc(J.KATEGORIE_MAPA[v.kategorie].nazev)}">${J.KATEGORIE_MAPA[v.kategorie].nazev.split(' ')[0]}</span><span><span class="tit">${esc(v.popis || 'Výdaj')}</span><br><span class="pod">${pod}${v.poznamka ? ' · ' + esc(v.poznamka) : ''}</span></span><span class="cast">${cast}${cizi}</span></button>`;
+    }
+  }
+  return h;
+}
+
+function htmlBilance(s, bil) {
+  let prevody = [], chyba = '';
+  try { prevody = J.navrhVyrovnani(s); } catch (e) { chyba = e.message; }
+  let h = '<div class="panel"><h3>⚖️ Bilance členů</h3><div class="tab-obal"><table><thead><tr><th>Člen</th><th class="cislo">Zaplatil(a)</th><th class="cislo">Podíl na výdajích</th><th class="cislo">Splátky poslal(a)</th><th class="cislo">Splátky dostal(a)</th><th class="cislo">Zůstatek</th></tr></thead><tbody>';
+  for (const r of bil) h += `<tr><td>${esc(r.jmeno)}</td><td class="cislo">${kc(r.zaplatil, s)}</td><td class="cislo">${kc(r.podil, s)}</td><td class="cislo">${kc(r.odeslal, s)}</td><td class="cislo">${kc(r.prijal, s)}</td><td class="cislo ${tridaSalda(r.saldo)}"><b>${r.saldo > 0 ? '+' : ''}${kc(r.saldo, s)}</b></td></tr>`;
+  h += '</tbody></table></div>';
+  const max = Math.max(1, ...bil.map(r => Math.abs(r.saldo)));
+  h += '<div style="margin-top:12px;display:grid;gap:4px">' + bil.map(r => `<div class="sloupec" style="grid-template-columns:minmax(80px,140px) 1fr"><span class="jm">${esc(r.jmeno)}</span><div class="saldo-osa"><div class="l">${r.saldo < 0 ? `<div class="bar zap" style="width:${(-r.saldo / max * 100).toFixed(1)}%"></div>` : ''}</div><div class="r">${r.saldo > 0 ? `<div class="bar kla" style="width:${(r.saldo / max * 100).toFixed(1)}%"></div>` : ''}</div></div></div>`).join('') + '</div>';
+  h += '<p class="tip">Zůstatek = zaplaceno − podíl + poslané splátky − přijaté splátky. Kladný = má dostat, záporný = má poslat. Součet zůstatků je vždy přesně nula.</p></div>';
+  h += '<div class="panel"><h3>🔁 Jak se vyrovnat</h3>';
+  if (chyba) h += `<p class="stav chyba">${esc(chyba)}</p>`;
+  else if (!prevody.length) h += '<p class="stav ok">✓ Všichni jsou vyrovnaní, nikdo nikomu nic nedluží.</p>';
+  else {
+    const nenul = bil.filter(r => r.saldo).length;
+    h += `<p class="tip">Stačí <b>${prevody.length}</b> ${prevody.length === 1 ? 'převod' : prevody.length < 5 ? 'převody' : 'převodů'} (${nenul <= 16 ? 'nejmenší možný počet' : 'přibližně nejmenší počet'}; ověřeno, že po nich mají všichni nulu).</p><div class="prevody">`;
+    prevody.forEach((p, i) => {
+      h += `<div class="prevod"><span class="kdo"><b>${esc(jmeno(s, p.od))}</b> → <b>${esc(jmeno(s, p.komu))}</b></span><span class="kolik">${kc(p.castka, s)}</span>
+        <button class="btn mini" data-qr="${i}" title="QR platba pro tento převod">📱 QR</button><button class="btn mini primary" data-zaplaceno="${i}">✓ Zaplaceno</button></div>`;
+    });
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+
+function htmlPrehled(s, st, bil) {
+  if (!st.celkem) return '<div class="prazdno">Přehled se ukáže po zapsání prvního výdaje.</div>';
+  const maxK = Math.max(1, ...st.kategorie.map(k => k.castka));
+  let h = '<div class="panel"><h3>🏷️ Podle kategorií</h3><div class="sloupec">';
+  for (const k of st.kategorie) h += `<span class="jm">${esc(k.nazev)}</span><div class="bar" style="width:${(k.castka / maxK * 100).toFixed(1)}%"></div><span class="hod">${kc(k.castka, s)} · ${Math.round(k.castka / st.celkem * 100)} %</span>`;
+  h += '</div></div>';
+  const maxO = Math.max(1, ...bil.map(r => Math.max(r.zaplatil, r.podil)));
+  h += '<div class="panel"><h3>👥 Kdo kolik platil a spotřeboval</h3><div class="sloupec">';
+  for (const r of bil) {
+    h += `<span class="jm">${esc(r.jmeno)}</span><div style="display:grid;gap:2px"><div class="bar kla" title="zaplatil(a)" style="width:${(r.zaplatil / maxO * 100).toFixed(1)}%"></div><div class="bar" title="podíl" style="width:${(r.podil / maxO * 100).toFixed(1)}%"></div></div><span class="hod" style="font-size:.78rem">zaplatil(a) ${kc(r.zaplatil, s)}<br>podíl ${kc(r.podil, s)}</span>`;
+  }
+  h += '</div><p class="tip">Zelený pruh = zaplatil(a), modrý = podíl na výdajích (kolik z výdajů připadá na člena).</p></div>';
+  // po měsících – užitečné hlavně u sdíleného bytu
+  const mes = {};
+  for (const v of s.vydaje) if (v.typ !== 'splatka') { try { mes[v.datum.slice(0, 7)] = (mes[v.datum.slice(0, 7)] || 0) + J.castkaSkupiny(v, s); } catch (e) {} }
+  const klice = Object.keys(mes).sort();
+  if (klice.length > 1) {
+    const maxM = Math.max(...Object.values(mes));
+    h += '<div class="panel"><h3>📅 Po měsících</h3><div class="sloupec">' + klice.map(m => `<span class="jm">${+m.slice(5)}/${m.slice(0, 4)}</span><div class="bar" style="width:${(mes[m] / maxM * 100).toFixed(1)}%"></div><span class="hod">${kc(mes[m], s)}</span>`).join('') + '</div></div>';
+  }
+  return h;
+}
+
+/* ---------- výdaj ---------- */
+let upravovany = null;
+const fV = $('formVydaj');
+function zpusob() { return fV.querySelector('[name=zpusob]:checked').value; }
+function obnovKurz() {
+  const s = sk(), m = fV.mena.value, jina = m !== s.mena;
+  $('vKurzObal').hidden = !jina;
+  $('vKurzZ').textContent = '1 ' + m + ' =';
+  $('vKurzDo').textContent = s.mena;
+  if (jina && !fV.kurz.value && s.kurzy[m]) fV.kurz.value = cislo(s.kurzy[m]);
+}
+function vykresliUcastniky(hodnoty) {
+  const s = sk(), z = zpusob();
+  const jednotka = z === 'procenta' ? '%' : z === 'castky' ? fV.mena.value : '×';
+  $('vUcastnici').innerHTML = s.clenove.map(c => {
+    const zap = c.id in hodnoty;
+    const hod = zap && z !== 'rovne' ? cislo(hodnoty[c.id]) : '';
+    return `<div class="ucast" data-clen="${esc(c.id)}"><label><input type="checkbox"${zap ? ' checked' : ''}> ${esc(c.jmeno)}</label>
+      ${z === 'rovne' ? '<span></span>' : `<input class="vstup" inputmode="decimal" value="${esc(hod)}" placeholder="${jednotka}" aria-label="${esc(c.jmeno)} – ${jednotka}">`}
+      <span class="vypocet"></span></div>`;
+  }).join('');
+  $('vZbytek').hidden = z !== 'castky';
+  prepocti();
+}
+function ctiUcastniky() {
+  const vys = {}, z = zpusob();
+  $('vUcastnici').querySelectorAll('.ucast').forEach(r => {
+    if (!r.querySelector('[type=checkbox]').checked) return;
+    const i = r.querySelector('.vstup');
+    vys[r.dataset.clen] = z === 'rovne' ? 1 : (i.value.trim() === '' ? (z === 'podily' ? 1 : 0) : J.parsujCislo(i.value));
+  });
+  return vys;
+}
+function vydajZFormulare() {
+  const s = sk();
+  return J.normVydaj({
+    id: upravovany ? upravovany.id : undefined, typ: 'vydaj',
+    popis: fV.popis.value.trim(), castka: fV.castka.value, mena: fV.mena.value, kurz: fV.kurz.value,
+    platil: fV.platil.value, datum: fV.datum.value, kategorie: fV.kategorie.value,
+    zpusob: zpusob(), ucastnici: ctiUcastniky(), poznamka: fV.poznamka.value.trim()
+  }, s);
+}
+function prepocti() {
+  const s = sk(), v = vydajZFormulare(), stav = $('vStav');
+  $('vUcastnici').querySelectorAll('.vypocet').forEach(e => { e.textContent = ''; });
+  if (!fV.castka.value.trim()) { stav.className = 'stav'; stav.textContent = 'Zadejte částku – podíly se dopočítají.'; return false; }
+  const ch = J.zkontrolujVydaj(v, s);
+  if (ch.length) { stav.className = 'stav chyba'; stav.textContent = ch[0]; return false; }
+  const p = J.podilyVydaje(v, s);
+  for (const id in p) { const e = $('vUcastnici').querySelector(`[data-clen="${CSS.escape(id)}"] .vypocet`); if (e) e.textContent = kc(p[id], s); }
+  stav.className = 'stav ok';
+  stav.textContent = '✓ Rozděleno ' + kc(J.castkaSkupiny(v, s), s) + ' mezi ' + Object.keys(p).length + (Object.keys(p).length === 1 ? ' člena' : ' členů') + '.';
+  return true;
+}
+function otevriVydaj(v) {
+  const s = sk();
+  if (!s) return novaSkupina('vylet');
+  if (!s.clenove.length) { Dialog.info('Nejdřív přidejte členy skupiny.'); return upravSkupinu(); }
+  upravovany = v || null;
+  $('vNadpis').textContent = v ? 'Upravit výdaj' : 'Nový výdaj';
+  $('vSmazat').hidden = !v;
+  const meny = [s.mena].concat(Object.keys(s.kurzy).filter(m => m !== s.mena), Object.keys(J.MENY).filter(m => m !== s.mena && !(m in s.kurzy)));
+  if (v && !meny.includes(v.mena)) meny.push(v.mena);
+  fV.mena.innerHTML = meny.map(m => `<option>${m}</option>`).join('');
+  fV.platil.innerHTML = s.clenove.map(c => `<option value="${esc(c.id)}">${esc(c.jmeno)}</option>`).join('');
+  fV.kategorie.innerHTML = J.KATEGORIE.map(k => `<option value="${k.id}">${esc(k.nazev)}</option>`).join('');
+  const posl = s.vydaje.filter(x => x.typ !== 'splatka').slice(-1)[0];
+  fV.popis.value = v ? v.popis : '';
+  fV.castka.value = v ? cislo(v.castka) : '';
+  fV.mena.value = v ? v.mena : (posl ? posl.mena : s.mena);
+  fV.kurz.value = v && v.mena !== s.mena ? cislo(v.kurz) : '';
+  fV.platil.value = v ? v.platil : (posl ? posl.platil : s.clenove[0].id);
+  fV.datum.value = v ? v.datum : J.dnesIso();
+  fV.kategorie.value = v ? v.kategorie : (s.typ === 'byt' ? 'nakup' : 'jidlo');
+  fV.poznamka.value = v ? v.poznamka : '';
+  fV.querySelector(`[name=zpusob][value="${v ? v.zpusob : 'rovne'}"]`).checked = true;
+  obnovKurz();
+  vykresliUcastniky(v ? v.ucastnici : Object.fromEntries(s.clenove.map(c => [c.id, 1])));
+  $('dlgVydaj').showModal();
+  if (!v) fV.popis.focus();
+}
+fV.addEventListener('input', e => { if (e.target.name === 'mena') return; prepocti(); });
+fV.mena.addEventListener('change', () => { fV.kurz.value = ''; obnovKurz(); if (zpusob() === 'castky') vykresliUcastniky(ctiUcastniky()); else prepocti(); });
+$('vZpusob').addEventListener('change', () => {
+  const s = sk(), puv = ctiUcastniky(), ids = Object.keys(puv), z = zpusob(), nove = {};
+  if (z === 'procenta') { const d = J.rozdelHal(10000, ids.map(() => 1)); ids.forEach((id, i) => { nove[id] = d[i] / 100; }); }
+  else if (z === 'castky') {
+    const cel = J.naHal(fV.castka.value, fV.mena.value);
+    if (cel > 0 && ids.length) { const d = J.rozdelHal(cel, ids.map(() => 1)); ids.forEach((id, i) => { nove[id] = J.zHal(d[i], fV.mena.value); }); }
+    else ids.forEach(id => { nove[id] = ''; });
+  } else ids.forEach(id => { nove[id] = 1; });
+  vykresliUcastniky(nove);
+});
+$('vVsichni').onclick = () => { $('vUcastnici').querySelectorAll('[type=checkbox]').forEach(c => { c.checked = true; }); prepocti(); };
+$('vNikdo').onclick = () => { $('vUcastnici').querySelectorAll('[type=checkbox]').forEach(c => { c.checked = false; }); prepocti(); };
+$('vZbytek').onclick = () => {
+  const m = fV.mena.value, cel = J.naHal(fV.castka.value, m);
+  if (!(cel > 0)) return Dialog.info('Nejdřív zadejte celkovou částku.');
+  const radky = [...$('vUcastnici').querySelectorAll('.ucast')].filter(r => r.querySelector('[type=checkbox]').checked);
+  const prazdne = radky.filter(r => !r.querySelector('.vstup').value.trim());
+  const vyplneno = radky.filter(r => r.querySelector('.vstup').value.trim()).reduce((a, r) => a + J.naHal(r.querySelector('.vstup').value, m), 0);
+  const zbytek = cel - vyplneno;
+  if (!prazdne.length || zbytek <= 0) return Dialog.info(zbytek <= 0 ? 'Nic nezbývá k rozdělení.' : 'Všichni zaškrtnutí už mají částku – vymažte pole, kam se má zbytek rozdělit.');
+  const d = J.rozdelHal(zbytek, prazdne.map(() => 1));
+  prazdne.forEach((r, i) => { r.querySelector('.vstup').value = cislo(J.zHal(d[i], m)); });
+  prepocti();
+};
+fV.addEventListener('submit', e => {
+  if (e.submitter && e.submitter.value !== 'ok') return;
+  const s = sk(), v = vydajZFormulare();
+  const ch = J.zkontrolujVydaj(v, s);
+  if (ch.length) { e.preventDefault(); prepocti(); return Dialog.chyba(ch[0]); }
+  if (v.mena !== s.mena) s.kurzy[v.mena] = v.kurz;
+  const i = upravovany ? s.vydaje.findIndex(x => x.id === upravovany.id) : -1;
+  if (i >= 0) s.vydaje[i] = v; else s.vydaje.push(v);
+  uloz(); vykresli();
+  Dialog.info(i >= 0 ? 'Výdaj upraven.' : 'Výdaj přidán.');
+});
+$('vSmazat').onclick = async () => {
+  if (!upravovany || !await Dialog.potvrd('Smazat výdaj „' + (upravovany.popis || 'bez popisu') + '“?')) return;
+  const s = sk(); s.vydaje = s.vydaje.filter(x => x.id !== upravovany.id);
+  $('dlgVydaj').close(); uloz(); vykresli();
+};
+
+/* ---------- splátka ---------- */
+let upravovanaSpl = null;
+const fS = $('formSplatka');
+function otevriSplatku(v, predvyplnit) {
+  const s = sk();
+  if (!s || s.clenove.length < 2) return Dialog.info('Splátka potřebuje skupinu aspoň se dvěma členy.');
+  upravovanaSpl = v || null;
+  $('sNadpis').textContent = v ? 'Upravit splátku' : 'Zaznamenat splátku';
+  $('sSmazat').hidden = !v;
+  $('sMena').textContent = s.mena;
+  const opt = s.clenove.map(c => `<option value="${esc(c.id)}">${esc(c.jmeno)}</option>`).join('');
+  fS.od.innerHTML = opt; fS.komu.innerHTML = opt;
+  const p = predvyplnit || {};
+  fS.od.value = v ? v.platil : (p.od || s.clenove[0].id);
+  fS.komu.value = v ? Object.keys(v.ucastnici)[0] : (p.komu || s.clenove[1].id);
+  fS.castka.value = v ? cislo(J.zHal(J.castkaSkupiny(v, s), s.mena)) : (p.castka ? cislo(J.zHal(p.castka, s.mena)) : '');
+  fS.datum.value = v ? v.datum : J.dnesIso();
+  fS.popis.value = v ? v.popis : '';
+  $('dlgSplatka').showModal();
+}
+fS.addEventListener('submit', e => {
+  if (e.submitter && e.submitter.value !== 'ok') return;
+  const s = sk(), hal = J.naHal(fS.castka.value, s.mena);
+  const v = J.splatka(s, fS.od.value, fS.komu.value, hal, fS.datum.value);
+  v.popis = fS.popis.value.trim() || 'Vyrovnání';
+  if (upravovanaSpl) v.id = upravovanaSpl.id;
+  const ch = J.zkontrolujVydaj(v, s);
+  if (ch.length) { e.preventDefault(); return Dialog.chyba(ch[0]); }
+  const i = upravovanaSpl ? s.vydaje.findIndex(x => x.id === upravovanaSpl.id) : -1;
+  if (i >= 0) s.vydaje[i] = v; else s.vydaje.push(v);
+  uloz(); vykresli(); Dialog.info('Splátka zapsána.');
+});
+$('sSmazat').onclick = async () => {
+  if (!upravovanaSpl || !await Dialog.potvrd('Smazat tuto splátku?')) return;
+  const s = sk(); s.vydaje = s.vydaje.filter(x => x.id !== upravovanaSpl.id);
+  $('dlgSplatka').close(); uloz(); vykresli();
+};
+
+/* ---------- skupina ---------- */
+let upravovanaSk = null, pracClenove = [];
+const fG = $('formSkupina');
+fG.typ.innerHTML = J.TYPY.map(t => `<option value="${t.id}">${esc(t.nazev)}</option>`).join('');
+fG.mena.innerHTML = Object.keys(J.MENY).map(m => `<option>${m}</option>`).join('');
+function vykresliClenyDlg() {
+  $('gClenove').innerHTML = pracClenove.map((c, i) => {
+    const pouzit = upravovanaSk && J.clenPouzit(upravovanaSk, c.id);
+    return `<div class="clen-radek" data-i="${i}"><input class="vstup jm" value="${esc(c.jmeno)}" placeholder="Jméno" maxlength="60" aria-label="Jméno"><input class="vstup ucet" value="${esc(c.ucet)}" placeholder="Účet (nepovinné)" maxlength="60" aria-label="Číslo účtu"><button type="button" class="btn mini danger" data-odebrat="${i}" ${pouzit ? 'disabled title="Člen má výdaje – nejdřív je upravte nebo smažte"' : 'title="Odebrat"'}>✕</button></div>`;
+  }).join('');
+}
+function ctiClenyDlg() {
+  $('gClenove').querySelectorAll('.clen-radek').forEach(r => {
+    const c = pracClenove[+r.dataset.i];
+    c.jmeno = r.querySelector('.jm').value; c.ucet = r.querySelector('.ucet').value;
+  });
+}
+function novaSkupina(typ) {
+  upravovanaSk = null;
+  pracClenove = [{ id: J.noveId(), jmeno: '', ucet: '' }, { id: J.noveId(), jmeno: '', ucet: '' }];
+  $('gNadpis').textContent = 'Nová skupina';
+  fG.nazev.value = ''; fG.typ.value = typ || 'vylet'; fG.mena.value = 'CZK'; fG.mena.disabled = false;
+  $('gMenaInfo').hidden = true;
+  vykresliClenyDlg(); $('dlgSkupina').showModal(); fG.nazev.focus();
+}
+function upravSkupinu() {
+  const s = sk();
+  if (!s) return novaSkupina();
+  upravovanaSk = s;
+  pracClenove = s.clenove.map(c => Object.assign({}, c));
+  if (!pracClenove.length) pracClenove.push({ id: J.noveId(), jmeno: '', ucet: '' });
+  $('gNadpis').textContent = 'Upravit skupinu';
+  fG.nazev.value = s.nazev; fG.typ.value = s.typ; fG.mena.value = s.mena;
+  if (![...fG.mena.options].some(o => o.value === s.mena)) fG.mena.insertAdjacentHTML('beforeend', `<option>${esc(s.mena)}</option>`), fG.mena.value = s.mena;
+  const ma = s.vydaje.length > 0;
+  fG.mena.disabled = ma; $('gMenaInfo').hidden = !ma;
+  vykresliClenyDlg(); $('dlgSkupina').showModal();
+}
+$('gPridat').onclick = () => { ctiClenyDlg(); pracClenove.push({ id: J.noveId(), jmeno: '', ucet: '' }); vykresliClenyDlg(); const p = $('gClenove').querySelectorAll('.jm'); p[p.length - 1].focus(); };
+$('gClenove').addEventListener('click', e => {
+  const b = e.target.closest('[data-odebrat]'); if (!b || b.disabled) return;
+  ctiClenyDlg(); pracClenove.splice(+b.dataset.odebrat, 1); vykresliClenyDlg();
+});
+$('gClenove').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.classList.contains('jm')) { e.preventDefault(); $('gPridat').click(); } });
+fG.addEventListener('submit', e => {
+  if (e.submitter && e.submitter.value !== 'ok') return;
+  ctiClenyDlg();
+  const cl = pracClenove.filter(c => c.jmeno.trim() || (upravovanaSk && J.clenPouzit(upravovanaSk, c.id)));
+  const jm = cl.map(c => c.jmeno.trim().toLowerCase());
+  if (jm.some((j, i) => j && jm.indexOf(j) !== i)) { e.preventDefault(); return Dialog.chyba('Dvě jména jsou stejná – rozlište je (např. Petr K. a Petr N.).'); }
+  for (const c of cl) if (c.ucet.trim()) {
+    const u = QRPlatba.zpracujUcet(c.ucet);
+    if (u.chyby.length) { e.preventDefault(); return Dialog.chyba('Účet u „' + (c.jmeno || '?') + '“: ' + u.chyby[0]); }
+  }
+  const zaklad = upravovanaSk || { kurzy: {}, vydaje: [], vytvoreno: J.dnesIso() };
+  const nova = J.normSkupina(Object.assign({}, zaklad, { nazev: fG.nazev.value, typ: fG.typ.value, mena: fG.mena.disabled ? zaklad.mena : fG.mena.value, clenove: cl }));
+  if (upravovanaSk) data.skupiny[data.skupiny.indexOf(upravovanaSk)] = nova;
+  else { data.skupiny.push(nova); pohled = 'vydaje'; }
+  data.aktivni = nova.id;
+  uloz(); vykresli();
+});
+
+/* ---------- vyrovnání: QR a zaplaceno ---------- */
+let qrPrevod = null;
+function kresliQR(text) {
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+  const qr = qrcode(0, 'M'); qr.addData(text, 'Byte'); qr.make();
+  const n = qr.getModuleCount(), okraj = 3, px = Math.max(2, Math.floor(520 / (n + 2 * okraj))), vel = px * (n + 2 * okraj);
+  const cv = $('qrPlatno'); cv.width = vel; cv.height = vel;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, vel, vel); g.fillStyle = '#000';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (qr.isDark(y, x)) g.fillRect((x + okraj) * px, (y + okraj) * px, px, px);
+  cv.hidden = false;
+}
+function ukazQR() {
+  const s = sk(), p = qrPrevod, prijemce = s.clenove.find(c => c.id === p.komu);
+  $('qrPopis').innerHTML = `<b>${esc(jmeno(s, p.od))}</b> posílá <b>${esc(prijemce.jmeno)}</b> <b>${kc(p.castka, s)}</b>`;
+  $('qrUcet').value = prijemce.ucet || '';
+  $('qrPlatno').hidden = true;
+  const stav = $('qrStav');
+  stav.hidden = true;
+  if (!prijemce.ucet) { stav.hidden = false; stav.className = 'stav'; stav.textContent = 'Zadejte číslo účtu příjemce.'; return; }
+  try {
+    kresliQR(QRPlatba.spayd({ ucet: prijemce.ucet, castka: J.zHal(p.castka, s.mena).toFixed(J.desetin(s.mena)), mena: s.mena, prijemce: prijemce.jmeno, zprava: s.nazev + ' – vyrovnání' }));
+    if (s.mena !== 'CZK') { stav.hidden = false; stav.className = 'stav'; stav.textContent = 'Platba je v ' + s.mena + ' – ne každá banka ji z QR přijme.'; }
+  } catch (e) { stav.hidden = false; stav.className = 'stav chyba'; stav.textContent = e.message; }
+}
+$('qrPouzit').onclick = () => {
+  const s = sk(), c = s.clenove.find(x => x.id === qrPrevod.komu), t = $('qrUcet').value.trim();
+  const u = QRPlatba.zpracujUcet(t);
+  if (u.chyby.length) { const st = $('qrStav'); st.hidden = false; st.className = 'stav chyba'; st.textContent = u.chyby[0]; return; }
+  c.ucet = t; uloz(); ukazQR();
+};
+$('qrUcet').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('qrPouzit').click(); } });
+async function zaplaceno(p) {
+  const s = sk();
+  const t = await Dialog.zeptej(`${jmeno(s, p.od)} → ${jmeno(s, p.komu)}: kolik bylo zaplaceno (${s.mena})?`, cislo(J.zHal(p.castka, s.mena).toFixed(J.desetin(s.mena))), { ok: '✓ Zapsat splátku' });
+  if (t == null) return;
+  const hal = J.naHal(t, s.mena);
+  if (!(hal > 0)) return Dialog.chyba('Částka musí být kladné číslo.');
+  if (hal > p.castka && !await Dialog.potvrd('Částka je vyšší než navržený převod – zapsat přesto?')) return;
+  s.vydaje.push(J.splatka(s, p.od, p.komu, hal));
+  uloz(); vykresli(); Dialog.info('Splátka zapsána.');
+}
+
+/* ---------- sdílení, soubory ---------- */
+async function sdilet() {
+  const s = sk(); if (!s) return;
+  let kod;
+  try { kod = await J.zakoduj(s); } catch (e) { return Dialog.chyba('Odkaz se nepodařilo vytvořit: ' + e.message); }
+  const url = location.href.split('#')[0] + '#s=' + kod;
+  $('odkazText').value = url;
+  $('odkazDelka').textContent = 'Délka odkazu: ' + url.length.toLocaleString('cs-CZ') + ' znaků' + (url.length > 8000 ? ' – je dlouhý, některé aplikace ho můžou zkrátit; spolehlivější je poslat soubor JSON.' : '.');
+  $('odkazSdilet').hidden = !navigator.share;
+  $('dlgOdkaz').showModal();
+}
+$('odkazKopirovat').onclick = async () => {
+  if (await doSchranky($('odkazText').value)) Dialog.info('Odkaz zkopírován.');
+  else { $('odkazText').select(); Dialog.info('Označeno – zkopírujte Ctrl+C.'); }
+};
+$('odkazSdilet').onclick = () => { navigator.share({ title: sk().nazev, url: $('odkazText').value }).catch(() => {}); };
+
+async function prijmiSkupinu(nova, zdroj) {
+  const stejna = data.skupiny.find(s => s.id === nova.id);
+  const popis = `„${nova.nazev}“ (${nova.clenove.length} členů, ${nova.vydaje.length} záznamů)`;
+  if (stejna) {
+    if (!await Dialog.potvrd(`Skupina ${popis} už u vás je. Nahradit ji verzí ${zdroj}? (Vaše změny v ní se přepíšou.)`, { ok: 'Nahradit', zrus: 'Ponechat moji' })) return false;
+    data.skupiny[data.skupiny.indexOf(stejna)] = nova;
+  } else {
+    if (!await Dialog.potvrd(`Načíst skupinu ${popis} ${zdroj}?`, { ok: 'Načíst' })) return false;
+    data.skupiny.push(nova);
+  }
+  data.aktivni = nova.id; uloz(); vykresli();
+  return true;
+}
+async function nactiZHashe(hash, zdroj) {
+  const m = /[#&]s=([^&]+)/.exec(hash);
+  if (!m) return false;
+  let nova;
+  try { nova = await J.dekoduj(decodeURIComponent(m[1])); } catch (e) { Dialog.chyba('Odkaz je poškozený nebo neúplný.'); return false; }
+  return prijmiSkupinu(nova, zdroj);
+}
+
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (d && Array.isArray(d.skupiny)) {
+    const m = J.migruj(d);
+    if (!await Dialog.potvrd(`Záloha obsahuje ${m.skupiny.length} skupin. Přidat je (skupiny se stejným původem se nahradí)?`)) return;
+    for (const s of m.skupiny) { const i = data.skupiny.findIndex(x => x.id === s.id); if (i >= 0) data.skupiny[i] = s; else data.skupiny.push(s); }
+    if (m.skupiny[0]) data.aktivni = m.skupiny[0].id;
+    uloz(); vykresli(); return Dialog.info('Načteno.');
+  }
+  if (d && Array.isArray(d.clenove)) return prijmiSkupinu(J.normSkupina(d), 'ze souboru');
+  Dialog.chyba('Tohle není soubor Dělení výdajů.');
+};
+
+const PRIKAZY = {
+  novyVydaj: () => otevriVydaj(null),
+  novaSplatka: () => otevriSplatku(null),
+  novaSkupina: () => novaSkupina(),
+  upravSkupinu,
+  smazSkupinu: async () => {
+    const s = sk(); if (!s) return;
+    if (!await Dialog.potvrd(`Smazat skupinu „${s.nazev}“ se všemi ${s.vydaje.length} záznamy? Nejde to vrátit – případně si ji nejdřív uložte do souboru.`, { ok: 'Smazat' })) return;
+    data.skupiny = data.skupiny.filter(x => x !== s);
+    data.aktivni = data.skupiny[0] ? data.skupiny[0].id : '';
+    uloz(); vykresli();
+  },
+  sdilet,
+  vlozitOdkaz: async () => {
+    const t = await Dialog.zeptej('Vložte odkaz na skupinu (obsahuje „#s=“):', '', { ok: 'Načíst' });
+    if (t == null) return;
+    if (!/[#&]s=/.test(t)) return Dialog.chyba('V textu není odkaz na skupinu.');
+    nactiZHashe(t.slice(t.indexOf('#')), 'z odkazu');
+  },
+  exportSkupiny: () => { const s = sk(); if (s) stahni('deleni_' + souborNazev(s) + '.json', JSON.stringify(s, null, 1), 'application/json'); },
+  exportVse: () => stahni('deleni_vydaju_zaloha_' + J.dnesIso() + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  csv: () => { const s = sk(); if (s) stahni('deleni_' + souborNazev(s) + '.csv', J.csv(s), 'text/csv;charset=utf-8'); },
+  tisk: () => window.print(),
+  smazVse: async () => {
+    if (!data.skupiny.length) return;
+    if (!await Dialog.potvrd(`Smazat všech ${data.skupiny.length} skupin? Nejde to vrátit.`, { ok: 'Smazat vše' })) return;
+    data = J.prazdna(); uloz(); vykresli();
+  },
+  napoveda: () => $('dlgNapoveda').showModal()
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+function nastavPohled(p) { pohled = p; try { localStorage.setItem(J.KLIC + '_pohled', p); } catch (e) {} vykresli(); }
+document.addEventListener('click', e => {
+  const zv = e.target.closest('[data-zavrit]');
+  if (zv) return zv.closest('dialog').close();
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) return nastavPohled(pv.dataset.pohled);
+  const nt = e.target.closest('[data-nova-typ]');
+  if (nt) return novaSkupina(nt.dataset.novaTyp);
+  const s = sk(); if (!s) return;
+  const vy = e.target.closest('.vydaj[data-id]');
+  if (vy) { const v = s.vydaje.find(x => x.id === vy.dataset.id); if (v) return v.typ === 'splatka' ? otevriSplatku(v) : otevriVydaj(v); }
+  const q = e.target.closest('[data-qr]'), z = e.target.closest('[data-zaplaceno]');
+  if (q || z) {
+    const prev = J.navrhVyrovnani(s)[+(q || z).dataset[q ? 'qr' : 'zaplaceno']];
+    if (!prev) return;
+    if (z) return zaplaceno(prev);
+    qrPrevod = prev; ukazQR(); $('dlgQR').showModal();
+  }
+});
+$('vyberSkupiny').addEventListener('change', e => { data.aktivni = e.target.value; filtr.osoba = ''; uloz(); vykresli(); });
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') zavriNabidky();
+  if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]') || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if (e.key === 'n' || e.key === 'N') { e.preventDefault(); otevriVydaj(null); }
+  const pv = { 1: 'vydaje', 2: 'bilance', 3: 'prehled' }[e.key];
+  if (pv) nastavPohled(pv);
+});
+addEventListener('storage', e => { if (e.key === J.KLIC) { data = J.migruj(JSON.parse(e.newValue || 'null')); vykresli(); } });
+
+vykresli();
+if (/[#&]s=/.test(location.hash)) {
+  const h = location.hash;
+  history.replaceState(null, '', location.pathname + location.search);
+  nactiZHashe(h, 'z odkazu');
+}
+window.DELENI_APP = { data: () => data, vykresli, sdilet, nactiZHashe };
+})();
+</script>
+</body>
+</html>

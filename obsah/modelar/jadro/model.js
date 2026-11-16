@@ -338,14 +338,21 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return { operace: 'odsazeni', hodnota: Math.abs(h) < 0.001 ? 0.001 * (h < 0 ? -1 : 1) : h, hrany: [], plochy: [] };
     }
     const bod = b => Array.isArray(b) && b.length === 3 && b.every(x => typeof x === 'number' && isFinite(x)) ? b.map(x => Math.round(x * 1e6) / 1e6) : null;
+    const hodnota = M.omez(cislo(o.hodnota, 1), 0.01, 1000);
     return {
       operace: o.operace,
-      hodnota: M.omez(cislo(o.hodnota, 1), 0.01, 1000),
+      hodnota,
       // bod uprostřed hrany a konce rovné hrany: přesné dohledání i po zvětšení skupiny (starší projekty je nemají)
       hrany: (Array.isArray(o.hrany) ? o.hrany : []).map(h => {
         const x = { stred: bod(h && h.stred), delka: Math.round(cislo(h && h.delka, 0) * 1e6) / 1e6 };
         const b2 = bod(h && h.bod); if (b2) x.bod = b2;
         const kk = h && Array.isArray(h.konce) && h.konce.length === 2 ? h.konce.map(bod) : null; if (kk && kk[0] && kk[1]) x.konce = kk;
+        // vlastní velikost hrany (6 mm u jedné, 4 mm u další); jen když se liší od velikosti úpravy
+        const vl = h && typeof h.hodnota === 'number' && isFinite(h.hodnota) ? M.omez(h.hodnota, 0.01, 1000) : hodnota;
+        if (Math.abs(vl - hodnota) > 1e-9) x.hodnota = vl;
+        // proměnné zaoblení (poloměr na konci hrany) / nesouměrné sražení (druhá délka); jen když se liší
+        const h2 = h && typeof h.hodnota2 === 'number' && isFinite(h.hodnota2) && o.operace !== 'skorepina' ? M.omez(h.hodnota2, 0.01, 1000) : null;
+        if (h2 != null && Math.abs(h2 - vl) > 1e-9) x.hodnota2 = h2;
         return x;
       }).filter(h => h.stred && h.delka > 0),
       plochy: (Array.isArray(o.plochy) ? o.plochy : []).map(h => ({ stred: bod(h && h.stred), normala: bod(h && h.normala) })).filter(h => h.stred && h.normala),

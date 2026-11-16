@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Přelety ISS a satelitů</title>
+<meta name="description" content="Předpověď viditelných přeletů ISS, Tiangongu, Hubbla, vlaků Starlinků a jasných družic: vlastní SGP4, prvky z CelesTrak, jasnost, mapa oblohy, mapa Země se stopou, upozornění a export do kalendáře.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="sky_events/astro.js"></script>
+<script src="satelity/jadro.js"></script>
+<script src="satelity/zaloha.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px}
+#mistoNazev{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+.stav{font-size:.78rem;color:var(--text-muted);padding:4px clamp(10px,2.5vw,24px);border-bottom:1px solid var(--border);background:var(--bg-elevated);display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.stav .chyba{color:var(--danger)}
+.stav .varovani{color:var(--warn)}
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto}
+.tip{font-size:.8rem;color:var(--text-muted);margin:4px 0 10px;line-height:1.45}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.6}
+
+/* přelety */
+.pristi{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
+.pristi b{font-size:1.1rem}
+.pristi .odpocet{font-variant-numeric:tabular-nums;font-weight:600;color:var(--accent)}
+h2.noc{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:16px 0 6px}
+.seznam{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--pruh,var(--border-strong));border-radius:8px;padding:9px 11px;display:flex;flex-direction:column;gap:6px;min-width:0;cursor:pointer}
+.karta:hover{border-color:var(--border-strong)}
+.karta.vybrana{box-shadow:0 0 0 2px var(--accent)}
+.karta h3{margin:0;font-size:.95rem;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.karta h3 span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mag{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.body{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:.8rem}
+.body div{background:var(--bg-control);border-radius:6px;padding:4px 6px;min-width:0}
+.body small{display:block;color:var(--text-muted);font-size:.7rem}
+.body b{font-variant-numeric:tabular-nums}
+.karta .meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.76rem;color:var(--text-muted);align-items:center}
+.karta .meta .akce{margin-left:auto;display:flex;gap:4px}
+
+/* obloha */
+.obloha-obal{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.obloha-obal{grid-template-columns:1fr}}
+#obloha{width:100%;height:auto;display:block;background:var(--bg-panel);border:1px solid var(--border);border-radius:10px}
+#obloha .kruh{fill:none;stroke:var(--border-strong);stroke-width:1}
+#obloha .obzor{fill:color-mix(in srgb,var(--accent) 5%,var(--bg-panel));stroke:var(--text-muted);stroke-width:1.5}
+#obloha text{fill:var(--text-muted);font-size:16px;font-family:inherit}
+#obloha .strana{fill:var(--text);font-weight:700;font-size:18px}
+#obloha .draha{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round}
+#obloha .stin{fill:none;stroke:var(--text-faint,var(--text-muted));stroke-width:1.5;stroke-dasharray:4 5}
+#obloha .clen{fill:none;stroke:var(--accent);stroke-width:1.5;opacity:.55}
+#obloha .bod{fill:var(--accent)}
+#obloha .bod-tma{fill:var(--text-muted)}
+#obloha .znacka-cas{fill:var(--text);font-size:15px}
+#obloha .stitek{fill:var(--text);font-size:15px}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.86rem;line-height:1.5}
+.panel h3{margin:0 0 6px;font-size:1rem}
+.panel table{border-collapse:collapse;width:100%;font-size:.84rem}
+.panel td,.panel th{padding:3px 6px;border-bottom:1px solid var(--border);text-align:left}
+.panel th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase}
+.prepinac{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+
+/* mapa */
+#mapa{height:min(70vh,640px);min-height:320px;border:1px solid var(--border);border-radius:8px}
+.leaflet-container{font-family:inherit;background:var(--bg-panel)}
+.mapa-lista{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-bottom:8px;font-size:.84rem}
+.mapa-lista label{display:flex;gap:4px;align-items:center}
+
+/* družice */
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+table.data{border-collapse:collapse;width:100%;font-size:.82rem}
+table.data th,table.data td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+table.data th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase}
+table.data td.c{text-align:right;font-variant-numeric:tabular-nums}
+table.data tr.stare td.stari{color:var(--warn)}
+.zdroj{font-size:.78rem;color:var(--text-muted);line-height:1.5;margin-top:12px}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5);margin:auto}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.5}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:480px){.radek{grid-template-columns:1fr 1fr}}
+.spolu{display:flex;gap:6px}
+.spolu .vstup{flex:1}
+.vysledky{display:flex;flex-direction:column;gap:2px;max-height:180px;overflow:auto}
+.vysledky button{text-align:left}
+textarea.vstup{width:100%;min-height:180px;font-family:ui-monospace,monospace;font-size:.76rem;white-space:pre;overflow-x:auto}
+.okno h4{margin:6px 0 0;font-size:.9rem}
+.okno ul{margin:0;padding-left:20px}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🛰️ Přelety</h1>
+  <div class="skup" role="group" aria-label="Místo"><span class="skup-nazev" aria-hidden="true">Místo</span><div class="skup-tl">
+    <button class="tl" data-prikaz="misto" title="Místo pozorovatele">📍 <span id="mistoNazev" data-i18n="ne">Praha</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Data"><span class="skup-nazev" aria-hidden="true">Data</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabData" aria-expanded="false" title="Prvky drah, vlastní TLE, kalendář, upozornění">📡<span class="txt"> Data</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="prelety" aria-pressed="true">📋<span class="txt"> Přelety</span></button>
+    <button class="tl" data-pohled="obloha" aria-pressed="false">🔭<span class="txt"> Obloha</span></button>
+    <button class="tl" data-pohled="mapa" aria-pressed="false">🌍<span class="txt"> Mapa</span></button>
+    <button class="tl" data-pohled="druzice" aria-pressed="false">📑<span class="txt"> Družice</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výběr"><span class="skup-nazev" aria-hidden="true">Výběr</span><div class="skup-tl">
+    <select class="tl" id="fCo" aria-label="Které družice">
+      <option value="vse">Všechny</option>
+      <option value="hlavni">ISS, Tiangong, Hubble</option>
+      <option value="starlink">Starlinky</option>
+      <option value="jasne">Jasné družice</option>
+      <option value="vlastni">Vlastní TLE</option>
+    </select>
+    <select class="tl" id="fDny" aria-label="Na kolik dní">
+      <option value="1">1 den</option><option value="3">3 dny</option><option value="7">7 dní</option><option value="10">10 dní</option>
+    </select>
+    <select class="tl" id="fVyska" aria-label="Nejmenší výška nad obzorem">
+      <option value="5">nad 5°</option><option value="10">nad 10°</option><option value="20">nad 20°</option><option value="30">nad 30°</option><option value="45">nad 45°</option>
+    </select>
+    <select class="tl" id="fMag" aria-label="Nejslabší jasnost">
+      <option value="0">do 0 mag</option><option value="2">do 2 mag</option><option value="3">do 3 mag</option><option value="4">do 4 mag</option><option value="5">do 5 mag</option><option value="99">bez omezení</option>
+    </select>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+<div id="nabData" class="nabidka" hidden>
+  <button class="tl" data-prikaz="aktualizovat">🔄 Aktualizovat prvky z CelesTrak</button>
+  <button class="tl" data-prikaz="tle">📋 Vlastní TLE…</button>
+  <hr>
+  <button class="tl" data-prikaz="icsVse">📅 Všechny přelety do kalendáře (.ics)</button>
+  <button class="tl" data-prikaz="upozorneni">🔔 Upozornění na přelety…</button>
+  <hr>
+  <button class="tl" data-prikaz="soumrak">🌆 Nastavení soumraku…</button>
+</div>
+<div class="stav" id="stav"></div>
+
+<main><div class="obal">
+  <section id="v-prelety"></section>
+  <section id="v-obloha" hidden>
+    <div class="prepinac">
+      <button class="tl" id="oPrelet" aria-pressed="true">🛰️ Vybraný přelet</button>
+      <button class="tl" id="oZive" aria-pressed="false">⏱️ Živě – co je teď nad obzorem</button>
+    </div>
+    <div class="obloha-obal">
+      <svg id="obloha" viewBox="-300 -300 600 600" role="img" aria-label="Mapa oblohy: střed je nadhlavník, okraj obzor"></svg>
+      <div id="oblohaInfo" class="panel"></div>
+    </div>
+    <p class="tip">Mapa oblohy je kreslená pro pohled vzhůru: sever nahoře, východ vlevo, střed = nadhlavník, okraj = obzor. Plná čára = družice osvětlená Sluncem, čárkovaně = ve stínu Země (neviditelná).</p>
+  </section>
+  <section id="v-mapa" hidden>
+    <div class="mapa-lista">
+      <label><input type="checkbox" id="mVse"> všechny družice</label>
+      <label><input type="checkbox" id="mStopa" checked> stopa vybrané družice</label>
+      <select class="tl" id="mSat" aria-label="Vybraná družice"></select>
+      <button class="tl" id="mMisto">📍 Místo kliknutím do mapy</button>
+      <span id="mInfo" class="tip" style="margin:0"></span>
+    </div>
+    <div id="mapa"></div>
+    <p class="tip">Kroužek = oblast, odkud je vybraná družice právě nad nastavenou výškou. Žlutý bod = družice osvětlená Sluncem, šedý = ve stínu. Stopa ukazuje půl oběhu zpět a jeden dopředu.</p>
+  </section>
+  <section id="v-druzice" hidden></section>
+</div></main>
+
+<dialog class="okno" id="dlgMisto"><form method="dialog">
+  <header>📍 Místo pozorovatele</header>
+  <div class="telo">
+    <label class="pole">Hledat obec nebo adresu
+      <span class="spolu"><input class="vstup" id="hledatMisto" placeholder="např. Brno, Sněžka…" autocomplete="off"><button type="button" class="btn" id="hledatTl">🔍</button></span>
+    </label>
+    <div class="vysledky" id="vysledkyMista"></div>
+    <button type="button" class="btn" id="mojePoloha">📍 Použít moji polohu (GPS)</button>
+    <label class="pole">Název<input class="vstup" name="nazev" maxlength="60"></label>
+    <div class="radek">
+      <label class="pole">Šířka (°, sever +)<input class="vstup" name="lat" type="number" step="0.0001" min="-90" max="90" required></label>
+      <label class="pole">Délka (°, východ +)<input class="vstup" name="lon" type="number" step="0.0001" min="-180" max="180" required></label>
+      <label class="pole">Nadm. výška (m)<input class="vstup" name="vyska" type="number" step="1" min="-500" max="9000"></label>
+    </div>
+    <p class="tip">Hledání: <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>, data © přispěvatelé OpenStreetMap (ODbL). Poloha zůstává jen ve vašem prohlížeči.</p>
+  </div>
+  <footer><button class="btn" value="zrusit" formnovalidate>Zrušit</button><button class="btn primary" value="ok">Uložit</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgTle"><form method="dialog">
+  <header>📋 Vlastní TLE</header>
+  <div class="telo">
+    <p class="tip" style="margin:0">Vložte dvouřádkové prvky (TLE) – volitelně s řádkem názvu nad nimi. Hodí se, když stránka nemůže stáhnout data, nebo pro družice mimo výchozí sady (např. z <a href="https://celestrak.org/NORAD/elements/" target="_blank" rel="noopener">CelesTrak</a> nebo Space-Track). Podporovány jsou nízké dráhy s oběžnou dobou pod 225 minut.</p>
+    <textarea class="vstup" id="tleText" spellcheck="false" data-i18n="ne" placeholder="ISS (ZARYA)
+1 25544U 98067A   …
+2 25544  51.6…"></textarea>
+    <div id="tleZprava" class="tip" style="margin:0"></div>
+  </div>
+  <footer><button class="btn" value="zrusit" formnovalidate>Zrušit</button><button class="btn primary" value="ok">Uložit</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgUpoz"><form method="dialog">
+  <header>🔔 Upozornění na přelety</header>
+  <div class="telo">
+    <label><input type="checkbox" name="zapnuto"> Upozornit na viditelný přelet</label>
+    <div class="radek">
+      <label class="pole">Kolik minut předem<input class="vstup" name="predem" type="number" min="1" max="120" step="1"></label>
+      <label class="pole">Jen jasnější než (mag)<input class="vstup" name="mag" type="number" min="-5" max="6" step="0.5"></label>
+    </div>
+    <p class="tip" style="margin:0">Upozornění funguje, jen když je stránka otevřená (třeba v pozadí záložky) – bez serveru jiná cesta není. Systémové oznámení vyžaduje povolení prohlížeče; jinak se zobrazí jen hlášení ve stránce. Spolehlivější je přidat přelety do kalendáře (.ics).</p>
+    <div id="upozStav" class="tip" style="margin:0"></div>
+  </div>
+  <footer><button class="btn" value="zrusit" formnovalidate>Zrušit</button><button class="btn primary" value="ok">Uložit</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgSoumrak"><form method="dialog">
+  <header>🌆 Soumrak</header>
+  <div class="telo">
+    <label class="pole">Slunce musí být pod obzorem alespoň
+      <select class="vstup" name="slunce">
+        <option value="-4">−4° (jasné družice už za světla)</option>
+        <option value="-6">−6° (občanský soumrak – výchozí)</option>
+        <option value="-9">−9° (tmavší obloha)</option>
+        <option value="-12">−12° (námořní soumrak)</option>
+      </select>
+    </label>
+    <p class="tip" style="margin:0">Družici je vidět, když je pozorovatel ve tmě, ale družice vysoko nad ním je ještě osvětlená Sluncem. Proto se přelety soustřeďují do několika hodin po soumraku a před svítáním.</p>
+  </div>
+  <footer><button class="btn" value="zrusit" formnovalidate>Zrušit</button><button class="btn primary" value="ok">Uložit</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo">
+    <p>Stránka počítá, kdy nad vaším místem přeletí <b>viditelná</b> družice: vy jste po soumraku ve tmě, družice je ještě osvětlená Sluncem a je dost vysoko nad obzorem.</p>
+    <h4>Výpočet</h4>
+    <ul>
+      <li>Polohy družic: vlastní implementace modelu <b>SGP4</b> (Vallado a kol. 2006, Spacetrack Report #3), ověřená na referenčních testovacích vektorech s přesností na setiny milimetru.</li>
+      <li>Prvky drah: <a href="https://celestrak.org/" target="_blank" rel="noopener">CelesTrak</a> (skupina „visual“ – jasné družice včetně ISS, Tiangongu a Hubbla, a Starlinky vypuštěné za posledních 30 dní). Stahují se nejvýš jednou za 2 hodiny; bez připojení se použije záloha přibalená ke stránce.</li>
+      <li>Slunce: Meeus, Astronomical Algorithms (sdíleno s Astronomickým kalendářem). Stín Země je počítaný jako válec – začátek a konec viditelnosti u stínu je přesný zhruba na 10 s.</li>
+      <li>Jasnost: odhad ze „standardní magnitudy“ (1000 km, polovina osvětlená) podle vzdálenosti a fázového úhlu. U Starlinků a raketových stupňů jde o hrubý odhad (±1 mag); skutečná jasnost kolísá s natočením panelů.</li>
+    </ul>
+    <h4>Přesnost</h4>
+    <p>S čerstvými prvky (do 2–3 dnů) jsou časy přeletů ISS přesné zhruba na desítky sekund. Starší prvky a manévry stanice (zvyšování dráhy) chybu zvětšují – před pozorováním data aktualizujte. Časy jsou v časovém pásmu vašeho prohlížeče.</p>
+    <h4>Starlink vlak</h4>
+    <p>Družice Starlink z jednoho startu, které přeletí do 15 minut po sobě, se sdruží do jednoho „vlaku“. Nejnápadnější jsou pár dní po startu, než se rozptýlí a vystoupají na provozní dráhu.</p>
+  </div>
+  <footer><button class="btn primary" value="ok">Zavřít</button></footer>
+</form></dialog>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const S = window.SAT;
+const KLIC_NAST = 'webapp_satelity_nastaveni', KLIC_DATA = 'webapp_satelity_data', KLIC_TLE = 'webapp_satelity_vlastni';
+const CELESTRAK = 'https://celestrak.org/NORAD/elements/gp.php?FORMAT=json&GROUP=';
+const HLAVNI = ['25544', '48274', '20580'];   // ISS, Tiangong (CSS Tianhe), Hubble
+const nacti = (k, v) => { try { return JSON.parse(localStorage.getItem(k)) ?? v; } catch { return v; } };
+const uloz = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { Dialog.chyba('Nepodařilo se uložit do prohlížeče.'); } };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+const nast = Object.assign({
+  misto: { nazev: 'Praha', lat: 50.0755, lon: 14.4378, vyska: 250 },
+  co: 'vse', dny: 3, minVyska: 10, maxMag: 3, slunce: -6, pohled: 'prelety',
+  upoz: { zapnuto: false, predem: 5, mag: 0 },
+}, nacti(KLIC_NAST, {}));
+const ulozNast = () => uloz(KLIC_NAST, nast);
+
+let data = null;          // {stazeno, zdroj, sady:{jasne, starlink}, zaloha?}
+let druzice = [];         // všechny inicializované družice
+let prelety = [];         // výsledek pro aktuální výběr
+let vybrany = null;       // vybraný přelet
+let chybaSite = '';
+let pocitam = 0;
+
+/* ---------- formát času ---------- */
+const fCas = new Intl.DateTimeFormat('cs-CZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const fCasK = new Intl.DateTimeFormat('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+const fDen = new Intl.DateTimeFormat('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
+const fDatum = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const cas = jd => fCas.format(S.dataZJd(jd));
+const casK = jd => fCasK.format(S.dataZJd(jd));
+const tedJd = () => S.jdZData(new Date());
+function zaJak(jd) {
+  const s = Math.round((jd - tedJd()) * 86400);
+  if (s < 0) return 'probíhá';
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+  return h ? `za ${h} h ${m} min` : m ? `za ${m} min ${sec} s` : `za ${sec} s`;
+}
+const magTxt = m => (m < 0 ? '−' : '') + Math.abs(m).toFixed(1);
+const stari = h => h < 1 ? 'před chvílí' : h < 48 ? `před ${Math.round(h)} h` : `před ${Math.round(h / 24)} dny`;
+
+/* ---------- data drah ---------- */
+function sestavDruzice() {
+  const vse = [];
+  const pridej = (seznam, sada) => { for (const o of seznam || []) { const d = S.druzice(S.zOmm(o)); if (d.model) { d.sada = sada; vse.push(d); } } };
+  pridej(data.sady.jasne, 'jasne');
+  pridej((data.sady.starlink || []).filter(o => /^STARLINK/.test(o.OBJECT_NAME)), 'starlink');
+  const vl = S.nactiTleText(localStorage.getItem(KLIC_TLE) || '');
+  for (const p of vl.prvky) { const d = S.druzice(p); if (d.model) { d.sada = 'vlastni'; vse.push(d); } }
+  druzice = vse;
+}
+function vyber() {
+  const co = nast.co;
+  return druzice.filter(d => co === 'vse' || (co === 'hlavni' ? HLAVNI.includes(d.norad) : d.sada === co));
+}
+async function stahni(rucne) {
+  const h = data && !data.zaloha ? (Date.now() - Date.parse(data.stazeno)) / 3600000 : Infinity;
+  if (h < 2) { if (rucne) Dialog.info('Data jsou stažená před méně než 2 hodinami – CelesTrak je častěji neaktualizuje a opakované stahování blokuje.'); return; }
+  chybaSite = ''; vykresliStav('Stahuji prvky drah z CelesTrak…');
+  try {
+    const [j, s] = await Promise.all(['visual', 'last-30-days'].map(async g => {
+      const r = await fetch(CELESTRAK + g, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const t = await r.text();
+      try { return JSON.parse(t); } catch { throw new Error(t.slice(0, 120)); }
+    }));
+    if (!Array.isArray(j) || !j.length) throw new Error('prázdná odpověď');
+    data = { stazeno: new Date().toISOString(), zdroj: 'CelesTrak', sady: { jasne: j.map(S.zkratOmm), starlink: s.filter(o => /^STARLINK/.test(o.OBJECT_NAME)).map(S.zkratOmm) } };
+    uloz(KLIC_DATA, data);
+    sestavDruzice();
+    if (rucne) Dialog.info(`Staženo: ${druzice.length} družic.`);
+    prepocitej();
+  } catch (e) {
+    chybaSite = `Stažení z CelesTrak selhalo (${e.message || e}). Používám ${data.zaloha ? 'zálohu přibalenou ke stránce' : 'naposledy stažená data'}.`;
+    vykresliStav();
+    if (rucne) Dialog.chyba(chybaSite);
+  }
+}
+function vykresliStav(zprava) {
+  const h = (Date.now() - Date.parse(data.stazeno)) / 3600000;
+  const iss = druzice.find(d => d.norad === '25544');
+  const stariIss = iss ? S.stariPrvku(iss, tedJd()) : 0;
+  const casti = [
+    `Prvky: ${data.zaloha ? 'záloha' : 'CelesTrak'}, staženo ${stari(h)} (${fDatum.format(new Date(data.stazeno))})`,
+    `${druzice.length} družic`,
+    `místo ${nast.misto.lat.toFixed(3)}°, ${nast.misto.lon.toFixed(3)}°`,
+  ];
+  let html = casti.map(esc).map(t => `<span>${t}</span>`).join('');
+  if (stariIss > 3) html += `<span class="varovani">⚠️ Prvky ISS jsou ${Math.round(stariIss)} dní staré – časy mohou být nepřesné o minuty.</span>`;
+  if (chybaSite) html += `<span class="chyba">${esc(chybaSite)}</span>`;
+  if (zprava) html += `<span>${esc(zprava)}</span>`;
+  $('stav').innerHTML = html;
+}
+
+/* ---------- výpočet přeletů (po dávkách, ať stránka nezamrzne) ---------- */
+async function prepocitej() {
+  const muj = ++pocitam;
+  const jd0 = tedJd() - 10 / 1440, jd1 = jd0 + nast.dny;
+  const M = S.mrizka(nast.misto, jd0, jd1, { minVyska: nast.minVyska, slunceMax: nast.slunce });
+  const seznam = vyber();
+  let vse = [];
+  for (let i = 0; i < seznam.length; i++) {
+    vse = vse.concat(S.preletyDruzice(seznam[i], M));
+    if (i % 15 === 14) {
+      vykresliStav(`Počítám… ${Math.round(100 * i / seznam.length)} %`);
+      await new Promise(r => setTimeout(r));
+      if (muj !== pocitam) return;
+    }
+  }
+  prelety = S.filtruj(S.seskupVlaky(vse), nast.maxMag >= 99 ? null : nast.maxMag).filter(p => p.konec.jd > tedJd());
+  if (vybrany) vybrany = prelety.find(p => p.norad === vybrany.norad && Math.abs(p.zacatek.jd - vybrany.zacatek.jd) < 1 / 1440) || null;
+  vykresliStav();
+  naplanujUpozorneni();
+  vykresli();
+}
+
+/* ---------- pohledy ---------- */
+function vykresli() {
+  for (const b of document.querySelectorAll('[data-pohled]')) b.setAttribute('aria-pressed', String(b.dataset.pohled === nast.pohled));
+  for (const v of ['prelety', 'obloha', 'mapa', 'druzice']) $('v-' + v).hidden = v !== nast.pohled;
+  if (nast.pohled === 'prelety') vykresliPrelety();
+  else if (nast.pohled === 'obloha') vykresliOblohu();
+  else if (nast.pohled === 'mapa') vykresliMapu();
+  else vykresliDruzice();
+}
+const pruhMag = m => m <= -2 ? 'var(--accent)' : m <= 1 ? 'var(--ok)' : m <= 3 ? 'var(--warn)' : 'var(--border-strong)';
+const pricinaTxt = (p, kde) => p === 'stin' ? (kde ? 'zmizí ve stínu' : 'vyjde ze stínu') : p === 'soumrak' ? (kde ? 'rozednívá se' : 'po setmění') : '';
+function bodHtml(nazev, b, pric) {
+  return `<div><small>${nazev}</small><b>${cas(b.jd)}</b><br>${S.strana(b.az)} ${Math.round(b.az)}° · ${Math.round(b.el)}°${pric ? `<br><small>${pric}</small>` : ''}</div>`;
+}
+function kartaHtml(p, i) {
+  const vyb = vybrany === p ? ' vybrana' : '';
+  const min = Math.floor(p.trvani / 60), s = Math.round(p.trvani % 60);
+  return `<article class="karta${vyb}" data-i="${i}" style="--pruh:${pruhMag(p.mag)}" tabindex="0">
+    <h3><span>${esc(p.nazev)}</span><span class="mag" title="Odhad nejvyšší jasnosti (čím menší číslo, tím jasnější)">${magTxt(p.mag)} mag</span></h3>
+    <div class="body">${bodHtml('Začátek', p.zacatek, pricinaTxt(p.zacPricina, 0))}${bodHtml('Vrchol', p.vrchol)}${bodHtml('Konec', p.konec, pricinaTxt(p.konPricina, 1))}</div>
+    <div class="meta"><span>${fDen.format(S.dataZJd(p.zacatek.jd))}</span><span>${min} min ${s} s</span><span>${zaJak(p.zacatek.jd)}</span>
+      <span class="akce"><button class="btn mini" data-akce="obloha" title="Dráha na mapě oblohy">🔭</button><button class="btn mini" data-akce="mapa" title="Na mapě Země">🌍</button><button class="btn mini" data-akce="ics" title="Do kalendáře (.ics)">📅</button></span></div>
+  </article>`;
+}
+function vykresliPrelety() {
+  const el = $('v-prelety');
+  if (!prelety.length) {
+    el.innerHTML = `<div class="prazdno">${pocitam ? 'V zadaném období není žádný viditelný přelet podle filtru.<br>Zkuste delší období, nižší výšku nad obzorem nebo slabší jasnost.' : 'Počítám…'}</div>`;
+    return;
+  }
+  const iss = prelety.find(p => p.norad === '25544' && p.konec.jd > tedJd());
+  let html = '';
+  const prvni = iss || prelety[0];
+  html += `<div class="pristi"><span>Příští ${iss ? 'přelet ISS' : 'přelet'}:</span><b>${esc(prvni.nazev)}</b><span>${fDen.format(S.dataZJd(prvni.zacatek.jd))} ${casK(prvni.zacatek.jd)}, ${S.strana(prvni.zacatek.az)} → ${S.strana(prvni.konec.az)}, ${Math.round(prvni.vrchol.el)}°, ${magTxt(prvni.mag)} mag</span><span class="odpocet" id="odpocet" data-jd="${prvni.zacatek.jd}">${zaJak(prvni.zacatek.jd)}</span></div>`;
+  // skupiny po nocích (večer + následující ráno)
+  let noc = '';
+  html += '<div>';
+  prelety.forEach((p, i) => {
+    const d = S.dataZJd(p.zacatek.jd - 0.5);
+    const klic = d.toDateString();
+    if (klic !== noc) {
+      if (noc) html += '</div>';
+      noc = klic;
+      const zitra = new Date(d.getTime() + 86400000);
+      html += `<h2 class="noc">Noc ${d.getDate()}. ${d.getMonth() + 1}. / ${zitra.getDate()}. ${zitra.getMonth() + 1}.</h2><div class="seznam">`;
+    }
+    html += kartaHtml(p, i);
+  });
+  html += '</div></div>';
+  html += `<p class="tip">Celkem ${prelety.length} přeletů. Časy v časovém pásmu prohlížeče. Jasnost: −4 mag ≈ Venuše, 0 ≈ nejjasnější hvězdy, 4–5 ≈ hranice viditelnosti ve městě.</p>`;
+  el.innerHTML = html;
+}
+
+/* ---------- mapa oblohy (SVG) ---------- */
+const R = 270;
+function xy(az, el) {
+  const r = R * (90 - Math.max(el, 0)) / 90, a = az * Math.PI / 180;
+  return [-r * Math.sin(a), -r * Math.cos(a)];   // sever nahoře, východ vlevo
+}
+function zakladOblohy() {
+  let s = `<circle class="obzor" r="${R}"/>`;
+  for (const v of [30, 60]) s += `<circle class="kruh" r="${R * (90 - v) / 90}"/><text x="4" y="${-R * (90 - v) / 90 - 4}">${v}°</text>`;
+  for (let az = 0; az < 360; az += 45) { const [x, y] = xy(az, 0); s += `<line class="kruh" x1="0" y1="0" x2="${x}" y2="${y}" opacity=".35"/>`; }
+  for (const [t, az] of [['S', 0], ['V', 90], ['J', 180], ['Z', 270]]) {
+    const a = az * Math.PI / 180, x = -(R + 16) * Math.sin(a), y = -(R + 16) * Math.cos(a);
+    s += `<text class="strana" x="${x}" y="${y + 5}" text-anchor="middle">${t}</text>`;
+  }
+  return s;
+}
+function drahaSvg(body, tridaSvetlo = 'draha') {
+  let s = '', usek = [], lit = null;
+  const zavri = () => { if (usek.length > 1) s += `<polyline class="${lit ? tridaSvetlo : 'stin'}" points="${usek.join(' ')}"/>`; };
+  for (const b of body) {
+    if (b.el < 0) continue;
+    const p = xy(b.az, b.el).map(v => v.toFixed(1)).join(',');
+    if (lit !== null && b.lit !== lit) { usek.push(p); zavri(); usek = []; }
+    lit = b.lit; usek.push(p);
+  }
+  zavri();
+  return s;
+}
+let zivyCasovac = 0, oblohaRezim = 'prelet';
+function vykresliOblohu() {
+  clearInterval(zivyCasovac);
+  $('oPrelet').setAttribute('aria-pressed', String(oblohaRezim === 'prelet'));
+  $('oZive').setAttribute('aria-pressed', String(oblohaRezim === 'zive'));
+  if (oblohaRezim === 'zive') { kresliZive(); zivyCasovac = setInterval(kresliZive, 2000); return; }
+  const p = vybrany || prelety[0];
+  const svg = $('obloha');
+  if (!p) { svg.innerHTML = zakladOblohy(); $('oblohaInfo').innerHTML = '<p>Žádný přelet k zobrazení.</p>'; return; }
+  let s = zakladOblohy();
+  const clenove = p.clenove || [p];
+  const okraj = 3 / 1440;
+  for (const c of clenove) {
+    const d = druzice.find(x => x.norad === c.norad);
+    if (!d) continue;
+    const body = S.drahaPreletu(d, nast.misto, c.zacatek.jd - okraj, c.konec.jd + okraj, 5);
+    s += drahaSvg(body, clenove.length > 1 && c !== p ? 'clen' : 'draha');
+    if (clenove.length === 1) {
+      // značky po minutách
+      for (let t = Math.ceil(c.zacatek.jd * 1440) / 1440; t <= c.konec.jd; t += 1 / 1440) {
+        const b = S.drahaPreletu(d, nast.misto, t, t, 1)[0];
+        if (!b || b.el < 0) continue;
+        const [x, y] = xy(b.az, b.el);
+        s += `<circle class="bod" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5"/><text class="znacka-cas" x="${(x + 7).toFixed(1)}" y="${(y + 4).toFixed(1)}">${casK(t)}</text>`;
+      }
+    }
+  }
+  for (const [b, t] of [[p.zacatek, 'začátek'], [p.konec, 'konec']]) {
+    const [x, y] = xy(b.az, b.el);
+    s += `<circle cx="${x}" cy="${y}" r="7" fill="none" stroke="var(--accent)" stroke-width="2"><title>${t}</title></circle>`;
+  }
+  const [vx, vy] = xy(p.vrchol.az, p.vrchol.el);
+  s += `<circle cx="${vx}" cy="${vy}" r="6" fill="var(--accent)"><title>vrchol</title></circle>`;
+  svg.innerHTML = s;
+  const d = druzice.find(x => x.norad === p.norad);
+  const vyska = d ? S.podbod(d, p.vrchol.jd).vyska : 0;
+  const radek = (n, b, pr) => `<tr><td>${n}</td><td>${cas(b.jd)}</td><td>${S.strana(b.az)} (${Math.round(b.az)}°)</td><td>${Math.round(b.el)}°</td><td>${b.mag != null ? magTxt(b.mag) : '–'}</td></tr>${pr ? `<tr><td></td><td colspan="4"><small>${pr}</small></td></tr>` : ''}`;
+  $('oblohaInfo').innerHTML = `<h3>${esc(p.nazev)}</h3>
+    <p>${fDen.format(S.dataZJd(p.zacatek.jd))} · nejvyšší jasnost <b>${magTxt(p.mag)} mag</b> · trvání ${Math.floor(p.trvani / 60)} min ${Math.round(p.trvani % 60)} s</p>
+    <table><tr><th></th><th>Čas</th><th>Směr</th><th>Výška</th><th>Mag</th></tr>
+    ${radek('Začátek', p.zacatek, pricinaTxt(p.zacPricina, 0))}${radek('Vrchol', p.vrchol)}${radek('Konec', p.konec, pricinaTxt(p.konPricina, 1))}</table>
+    <p>Vzdálenost ve vrcholu ${Math.round(p.vrchol.vzd)} km, výška družice ${Math.round(vyska)} km.${p.clenove ? ` Vlak: ${p.clenove.length} družic, tenčí čáry = ostatní členové.` : ''}</p>
+    <p><button class="btn mini" id="oIcs">📅 Do kalendáře</button> <button class="btn mini" id="oMapa">🌍 Na mapě</button></p>
+    ${prelety.length > 1 ? `<label class="pole">Jiný přelet<select class="vstup" id="oVyber">${prelety.slice(0, 200).map((q, i) => `<option value="${i}"${q === p ? ' selected' : ''}>${fDen.format(S.dataZJd(q.zacatek.jd))} ${casK(q.zacatek.jd)} – ${esc(q.nazev)} (${magTxt(q.mag)})</option>`).join('')}</select></label>` : ''}`;
+  $('oIcs').onclick = () => stahniIcs([p]);
+  $('oMapa').onclick = () => { mapaNorad = p.norad; nast.pohled = 'mapa'; vykresli(); };
+  if ($('oVyber')) $('oVyber').onchange = e => { vybrany = prelety[+e.target.value]; vykresliOblohu(); };
+}
+function kresliZive() {
+  if (nast.pohled !== 'obloha' || oblohaRezim !== 'zive') return clearInterval(zivyCasovac);
+  const jd = tedJd();
+  const nad = S.nadObzorem(druzice, nast.misto, jd, 0).sort((a, b) => b.s.el - a.s.el);
+  const slunceVys = nad.length ? nad[0].s.slunceVys : null;
+  let s = zakladOblohy();
+  for (const { d, s: st } of nad) {
+    const [x, y] = xy(st.az, st.el);
+    const jasna = st.mag != null && st.mag < 4.5;
+    s += `<circle class="${st.lit ? 'bod' : 'bod-tma'}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${jasna ? 5 : 3}"><title>${esc(d.nazev)}</title></circle>`;
+    if (HLAVNI.includes(d.norad) || (jasna && st.el > 15)) s += `<text class="stitek" x="${(x + 7).toFixed(1)}" y="${(y + 4).toFixed(1)}">${esc(d.nazev.replace(/ \(.*\)$/, ''))}</text>`;
+  }
+  $('obloha').innerHTML = s;
+  const tma = slunceVys != null && slunceVys < nast.slunce;
+  const viditelne = nad.filter(x => x.s.lit && x.s.mag != null && tma);
+  $('oblohaInfo').innerHTML = `<h3>Teď nad obzorem: ${nad.length} družic</h3>
+    <p>${cas(jd)} · ${slunceVys == null ? '' : `Slunce ${Math.round(slunceVys)}° – `}${tma ? `viditelných okem nebo dalekohledem: ${viditelne.length}` : 'na pozorování je příliš světlo'}.</p>
+    <table><tr><th>Družice</th><th>Směr</th><th>Výška</th><th>Mag</th></tr>
+    ${nad.slice(0, 25).map(({ d, s: st }) => `<tr><td>${esc(d.nazev)}</td><td>${S.strana(st.az)}</td><td>${Math.round(st.el)}°</td><td>${st.lit ? magTxt(st.mag) : 'stín'}</td></tr>`).join('')}</table>`;
+}
+
+/* ---------- mapa Země (Leaflet) ---------- */
+let mapa = null, mapaVrstva = null, podklad = null, mapaCasovac = 0, mapaNorad = '25544', vyberMista = false;
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const svetle = () => document.documentElement.dataset.theme === 'light';
+function podkladUrl() { return ESRI + `Canvas/World_${svetle() ? 'Light' : 'Dark'}_Gray_Base/MapServer/tile/{z}/{y}/{x}`; }
+function vykresliMapu() {
+  if (!mapa) {
+    mapa = L.map('mapa', { preferCanvas: true, worldCopyJump: true, minZoom: 1, maxZoom: 10 }).setView([nast.misto.lat, nast.misto.lon], 2);
+    podklad = L.tileLayer(podkladUrl(), { maxZoom: 16, attribution: 'Podklad © Esri, HERE, Garmin, © OpenStreetMap · prvky drah © CelesTrak' }).addTo(mapa);
+    mapaVrstva = L.layerGroup().addTo(mapa);
+    mapa.on('click', e => {
+      if (!vyberMista) return;
+      vyberMista = false; $('mMisto').setAttribute('aria-pressed', 'false');
+      nastavMisto({ nazev: `${e.latlng.lat.toFixed(3)}°, ${L.Util.wrapNum(e.latlng.lng, [-180, 180], true).toFixed(3)}°`, lat: +e.latlng.lat.toFixed(5), lon: +L.Util.wrapNum(e.latlng.lng, [-180, 180], true).toFixed(5), vyska: 0 });
+    });
+  }
+  setTimeout(() => mapa.invalidateSize(), 0);
+  const moznosti = druzice.filter(d => HLAVNI.includes(d.norad) || d.sada === 'vlastni' || d.norad === mapaNorad);
+  if (vybrany) for (const c of vybrany.clenove || [vybrany]) if (!moznosti.some(d => d.norad === c.norad)) { const d = druzice.find(x => x.norad === c.norad); if (d) moznosti.push(d); }
+  $('mSat').innerHTML = moznosti.map(d => `<option value="${d.norad}"${d.norad === mapaNorad ? ' selected' : ''}>${esc(d.nazev)}</option>`).join('');
+  clearInterval(mapaCasovac);
+  aktualizujMapu();
+  mapaCasovac = setInterval(aktualizujMapu, 2000);
+}
+function aktualizujMapu() {
+  if (nast.pohled !== 'mapa') return clearInterval(mapaCasovac);
+  const jd = tedJd();
+  mapaVrstva.clearLayers();
+  L.circleMarker([nast.misto.lat, nast.misto.lon], { radius: 6, color: '#e04040', fillOpacity: 1, weight: 2 }).bindTooltip('Pozorovatel: ' + nast.misto.nazev).addTo(mapaVrstva);
+  const kresli = (d, velka) => {
+    const b = S.podbod(d, jd);
+    if (!b) return null;
+    const m = L.circleMarker([b.lat, b.lon], { radius: velka ? 7 : 2.5, color: b.lit ? '#d9a400' : '#777', fillColor: b.lit ? '#ffd23f' : '#999', fillOpacity: velka ? 1 : .8, weight: velka ? 2 : 1 });
+    m.bindTooltip(`${esc(d.nazev)}<br>${Math.round(b.vyska)} km · ${b.rychlost.toFixed(2)} km/s · ${b.lit ? 'na slunci' : 've stínu'}`, { permanent: velka && d.norad === mapaNorad, direction: 'right' });
+    m.on('click', () => { mapaNorad = d.norad; vykresliMapu(); });
+    m.addTo(mapaVrstva);
+    return b;
+  };
+  if ($('mVse').checked) for (const d of druzice) if (d.norad !== mapaNorad) kresli(d, false);
+  for (const d of druzice) if (HLAVNI.includes(d.norad) && d.norad !== mapaNorad) kresli(d, true);
+  const sel = druzice.find(d => d.norad === mapaNorad);
+  if (!sel) { $('mInfo').textContent = ''; return; }
+  if ($('mStopa').checked) {
+    const st = S.stopa(sel, jd - sel.doba / 2880, jd + sel.doba / 1440, 0.5);
+    const minulost = st.filter(b => b.jd <= jd), budoucnost = st.filter(b => b.jd >= jd);
+    for (const u of S.rozdelStopu(minulost)) L.polyline(u, { color: '#8a8a8a', weight: 2, dashArray: '4 4', interactive: false }).addTo(mapaVrstva);
+    for (const u of S.rozdelStopu(budoucnost)) L.polyline(u, { color: '#3d8bfd', weight: 2.5, interactive: false }).addTo(mapaVrstva);
+  }
+  const b = kresli(sel, true);
+  if (b) {
+    L.circle([b.lat, b.lon], { radius: S.dosahKm(b.vyska, nast.minVyska) * 1000, color: '#3d8bfd', weight: 1, fillOpacity: .06, interactive: false }).addTo(mapaVrstva);
+    const s = S.stav(sel, S.pozorovatel(nast.misto), jd);
+    $('mInfo').textContent = `${sel.nazev}: ${b.lat.toFixed(2)}°, ${b.lon.toFixed(2)}°, výška ${Math.round(b.vyska)} km, od vás ${Math.round(s.vzd)} km, ${s.el >= 0 ? `nad obzorem ${Math.round(s.el)}° ${S.strana(s.az)}` : 'pod obzorem'}`;
+  }
+}
+
+/* ---------- seznam družic ---------- */
+function vykresliDruzice() {
+  const jd = tedJd();
+  const radky = vyber().map(d => {
+    const b = S.podbod(d, jd), st = S.stariPrvku(d, jd);
+    return `<tr class="${st > 7 ? 'stare' : ''}"><td>${esc(d.nazev)}</td><td class="c">${d.norad}</td><td>${esc(d.cospar)}</td><td class="c stari">${st.toFixed(1)}</td><td class="c">${b ? Math.round(b.vyska) : '–'}</td><td class="c">${d.sklon.toFixed(1)}°</td><td class="c">${d.doba.toFixed(1)}</td><td class="c">${magTxt(d.mag0)}</td><td>${{ jasne: 'jasné', starlink: 'Starlink', vlastni: 'vlastní' }[d.sada]}</td></tr>`;
+  });
+  $('v-druzice').innerHTML = `<p class="tip">${radky.length} družic ve výběru. Stáří prvků = dny od epochy; nad 7 dní je předpověď nespolehlivá. Std. mag = předpokládaná jasnost ve vzdálenosti 1000 km při polovičním osvětlení (odhad).</p>
+    <div class="tab-obal"><table class="data"><thead><tr><th>Název</th><th>NORAD</th><th>COSPAR</th><th>Stáří (d)</th><th>Výška (km)</th><th>Sklon</th><th>Oběh (min)</th><th>Std. mag</th><th>Sada</th></tr></thead><tbody data-i18n="ne">${radky.join('')}</tbody></table></div>
+    <div class="zdroj">Prvky drah: <a href="https://celestrak.org/NORAD/elements/" target="_blank" rel="noopener">CelesTrak</a> (T. S. Kelso), GP data z katalogu 18. SDS, volně k použití. Staženo ${fDatum.format(new Date(data.stazeno))}${data.zaloha ? ' (záloha přibalená ke stránce – po připojení se data obnoví)' : ''}.<br>
+    Model SGP4: D. A. Vallado, P. Crawford, R. Hujsak, T. S. Kelso: Revisiting Spacetrack Report #3, AIAA 2006-6753. Slunce: J. Meeus, Astronomical Algorithms. Std. magnitudy: přibližně podle Heavens-Above a seznamu M. McCantse (stav 11/2026).</div>`;
+}
+
+/* ---------- kalendář ---------- */
+function stahniIcs(seznam) {
+  if (!seznam.length) return Dialog.info('Žádné přelety k exportu.');
+  const text = S.ics(seznam, cas, nast.misto.nazev);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/calendar' }));
+  a.download = seznam.length === 1 ? `prelet-${seznam[0].nazev.replace(/[^\w-]+/g, '_')}.ics` : 'prelety-druzic.ics';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---------- upozornění ---------- */
+let casovaceUpoz = [];
+function naplanujUpozorneni() {
+  casovaceUpoz.forEach(clearTimeout); casovaceUpoz = [];
+  if (!nast.upoz.zapnuto) return;
+  const ted = tedJd();
+  for (const p of prelety) {
+    if (p.mag > nast.upoz.mag) continue;
+    const kdy = (p.zacatek.jd - nast.upoz.predem / 1440 - ted) * 86400000;
+    if (kdy < 0 || kdy > 86400000) continue;   // jen příštích 24 h
+    casovaceUpoz.push(setTimeout(() => upozorni(p), kdy));
+  }
+}
+function upozorni(p) {
+  const text = `${casK(p.zacatek.jd)} z ${S.strana(p.zacatek.az)}, vrchol ${Math.round(p.vrchol.el)}° ${S.strana(p.vrchol.az)}, ${magTxt(p.mag)} mag`;
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification('🛰️ ' + p.nazev, { body: text, tag: p.norad + '-' + Math.round(p.zacatek.jd * 1440) }); } catch { /* např. Android bez SW */ }
+  }
+  Dialog.info(`🛰️ ${p.nazev}: ${text}`);
+}
+
+/* ---------- místo ---------- */
+function nastavMisto(m) {
+  nast.misto = m; ulozNast();
+  $('mistoNazev').textContent = m.nazev || `${m.lat.toFixed(2)}°, ${m.lon.toFixed(2)}°`;
+  vykresliStav(); prepocitej();
+}
+async function hledejMisto() {
+  const q = $('hledatMisto').value.trim();
+  if (!q) return;
+  const box = $('vysledkyMista');
+  box.textContent = 'Hledám…';
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': document.documentElement.lang || 'cs' } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const v = await r.json();
+    box.innerHTML = v.length ? v.map((x, i) => `<button type="button" class="btn mini" data-i="${i}">${esc(x.display_name)}</button>`).join('') : 'Nic nenalezeno.';
+    box.querySelectorAll('button').forEach(b => b.onclick = () => {
+      const x = v[+b.dataset.i], f = $('dlgMisto').querySelector('form');
+      f.nazev.value = x.display_name.split(',')[0]; f.lat.value = (+x.lat).toFixed(4); f.lon.value = (+x.lon).toFixed(4);
+      box.innerHTML = '';
+    });
+  } catch (e) { box.textContent = 'Hledání selhalo (' + (e.message || e) + '). Zadejte souřadnice ručně.'; }
+}
+
+/* ---------- příkazy ---------- */
+const otevri = (id, priprav) => new Promise(res => {
+  const dlg = $(id), f = dlg.querySelector('form');
+  if (priprav) priprav(f);
+  dlg.onclose = () => res(dlg.returnValue === 'ok' ? f : null);
+  dlg.returnValue = ''; dlg.showModal();
+});
+const PRIKAZY = {
+  async misto() {
+    const f = await otevri('dlgMisto', f => {
+      f.nazev.value = nast.misto.nazev || ''; f.lat.value = nast.misto.lat; f.lon.value = nast.misto.lon; f.vyska.value = nast.misto.vyska || 0;
+      $('vysledkyMista').innerHTML = '';
+    });
+    if (!f) return;
+    const lat = +f.lat.value, lon = +f.lon.value;
+    if (!(Math.abs(lat) <= 90 && Math.abs(lon) <= 180)) return Dialog.chyba('Neplatné souřadnice.');
+    nastavMisto({ nazev: f.nazev.value.trim() || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`, lat, lon, vyska: +f.vyska.value || 0 });
+  },
+  aktualizovat: () => stahni(true),
+  async tle() {
+    const f = await otevri('dlgTle', () => { $('tleText').value = localStorage.getItem(KLIC_TLE) || ''; $('tleZprava').textContent = ''; });
+    if (!f) return;
+    const text = $('tleText').value;
+    const r = S.nactiTleText(text);
+    const odmitnute = r.prvky.map(S.druzice).filter(d => d.chyba);
+    try { localStorage.setItem(KLIC_TLE, text); } catch { return Dialog.chyba('Nepodařilo se uložit.'); }
+    sestavDruzice(); prepocitej();
+    const chyby = r.chyby.concat(odmitnute.map(d => `${d.prvky.nazev}: ${d.chyba}`));
+    if (chyby.length) Dialog.chyba(`Načteno ${r.prvky.length - odmitnute.length} družic. Problémy:\n${chyby.join('\n')}`);
+    else Dialog.info(`Načteno ${r.prvky.length} vlastních družic.`);
+  },
+  icsVse: () => stahniIcs(prelety),
+  async upozorneni() {
+    const f = await otevri('dlgUpoz', f => {
+      f.zapnuto.checked = nast.upoz.zapnuto; f.predem.value = nast.upoz.predem; f.mag.value = nast.upoz.mag;
+      $('upozStav').textContent = !('Notification' in window) ? 'Prohlížeč systémová oznámení nepodporuje.' : `Povolení oznámení: ${{ granted: 'povoleno', denied: 'zakázáno (změňte v nastavení prohlížeče)', default: 'zatím nevyžádáno' }[Notification.permission]}.`;
+    });
+    if (!f) return;
+    nast.upoz = { zapnuto: f.zapnuto.checked, predem: Math.max(1, +f.predem.value || 5), mag: +f.mag.value };
+    ulozNast();
+    if (nast.upoz.zapnuto && 'Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch { /* starší Safari */ } }
+    naplanujUpozorneni();
+    Dialog.info(nast.upoz.zapnuto ? `Upozornění zapnuto (${casovaceUpoz.length} přeletů v příštích 24 h).` : 'Upozornění vypnuto.');
+  },
+  async soumrak() {
+    const f = await otevri('dlgSoumrak', f => { f.slunce.value = String(nast.slunce); });
+    if (!f) return;
+    nast.slunce = +f.slunce.value; ulozNast(); prepocitej();
+  },
+  napoveda: () => $('dlgNapoveda').showModal(),
+};
+
+/* ---------- události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { nast.pohled = pv.dataset.pohled; ulozNast(); return vykresli(); }
+  const k = e.target.closest('.karta[data-i]');
+  if (k) {
+    const pr = prelety[+k.dataset.i], a = e.target.closest('[data-akce]');
+    vybrany = pr;
+    if (a && a.dataset.akce === 'ics') return stahniIcs([pr]);
+    if (a && a.dataset.akce === 'mapa') { mapaNorad = pr.norad; nast.pohled = 'mapa'; return vykresli(); }
+    oblohaRezim = 'prelet'; nast.pohled = 'obloha'; vykresli();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') zavriNabidky();
+  if (e.key === 'Enter' && e.target.matches('.karta')) e.target.click();
+});
+addEventListener('resize', zavriNabidky);
+$('hledatTl').onclick = hledejMisto;
+$('hledatMisto').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); hledejMisto(); } });
+$('mojePoloha').onclick = () => {
+  if (!navigator.geolocation) return Dialog.chyba('Prohlížeč nepodporuje zjištění polohy.');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const f = $('dlgMisto').querySelector('form');
+    f.lat.value = pos.coords.latitude.toFixed(4); f.lon.value = pos.coords.longitude.toFixed(4);
+    if (pos.coords.altitude != null) f.vyska.value = Math.round(pos.coords.altitude);
+    f.nazev.value = 'Moje poloha';
+  }, err => Dialog.chyba('Polohu se nepodařilo zjistit: ' + err.message), { enableHighAccuracy: false, timeout: 15000 });
+};
+$('oPrelet').onclick = () => { oblohaRezim = 'prelet'; vykresliOblohu(); };
+$('oZive').onclick = () => { oblohaRezim = 'zive'; vykresliOblohu(); };
+$('mSat').onchange = e => { mapaNorad = e.target.value; aktualizujMapu(); };
+$('mVse').onchange = aktualizujMapu;
+$('mStopa').onchange = aktualizujMapu;
+$('mMisto').onclick = () => { vyberMista = !vyberMista; $('mMisto').setAttribute('aria-pressed', String(vyberMista)); };
+for (const [id, klic] of [['fCo', 'co'], ['fDny', 'dny'], ['fVyska', 'minVyska'], ['fMag', 'maxMag']]) {
+  $(id).value = String(nast[klic]);
+  $(id).addEventListener('change', e => { nast[klic] = klic === 'co' ? e.target.value : +e.target.value; ulozNast(); prepocitej(); });
+}
+new MutationObserver(() => { if (podklad) podklad.setUrl(podkladUrl()); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+// odpočet do příštího přeletu
+setInterval(() => {
+  const o = $('odpocet');
+  if (o && !document.hidden) o.textContent = zaJak(+o.dataset.jd);
+}, 1000);
+// jednou za 10 min přepočítat (proběhlé přelety zmizí, upozornění se přeplánují)
+setInterval(() => { if (!document.hidden) prepocitej(); }, 600000);
+
+/* ---------- start ---------- */
+data = nacti(KLIC_DATA, null);
+if (!data || !data.sady || !Array.isArray(data.sady.jasne)) data = { ...window.SAT_ZALOHA, zaloha: true };
+$('mistoNazev').textContent = nast.misto.nazev;
+sestavDruzice();
+vykresliStav();
+vykresli();
+prepocitej();
+if (data.zaloha || Date.now() - Date.parse(data.stazeno) > 12 * 3600000) stahni(false);
+window.SATELITY_APP = { prelety: () => prelety, druzice: () => druzice, nast, vykresli };
+})();
+</script>
+</body>
+</html>

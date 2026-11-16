@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Čtení kurentu (staré písmo)</title>
+<meta name="description" content="Trénink čtení německého kurentu pro genealogy: abeceda, podobná písmena, cvičení s opakováním chyb, převodník textu do kurentu a tisk cvičných listů, slovníček matričních výrazů a zkratek, ukázky rukopisů, odkazy na digitalizované matriky.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="kurent/data.js"></script>
+<script src="kurent/jadro.js"></script>
+<style>
+@font-face{font-family:"Wiegel Kurrent";src:url("kurent/WiegelKurrent-Medium.woff2") format("woff2");font-display:block}
+@font-face{font-family:"Wiegel Kurrent Tenky";src:url("kurent/WiegelKurrent-Regular.woff2") format("woff2");font-display:block}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+@media (max-width:1100px){.lista .txt{display:none}}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.86rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.9rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1100px;margin:0 auto}
+h2{font-size:1.15rem;margin:4px 0 8px}
+h3{font-size:.98rem;margin:14px 0 6px}
+.tip{font-size:.84rem;color:var(--text-muted);margin:4px 0 10px;line-height:1.5}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.radek{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.radek label{display:inline-flex;gap:5px;align-items:center;font-size:.86rem}
+
+/* kurent */
+.k{font-family:"Wiegel Kurrent",cursive;font-weight:normal;line-height:1.7;letter-spacing:.01em;word-spacing:.12em}
+.k.tenky{font-family:"Wiegel Kurrent Tenky",cursive}
+.k .dia{position:relative}
+.k .dia::after{content:attr(data-d);position:absolute;left:50%;top:.27em;transform:translateX(-50%);font-family:Georgia,"Times New Roman",serif;font-size:.62em;line-height:1}
+.k .dia.vel::after{top:-.06em}
+
+/* abeceda */
+.mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pismeno{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:6px 10px 10px;display:flex;flex-direction:column;gap:2px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.pismeno:hover{border-color:var(--border-strong)}
+.pismeno .k{font-size:3.4rem;line-height:1.5;text-align:center;min-height:5.2rem}
+.pismeno .lat{font-size:1.1rem;font-weight:700;text-align:center}
+.pismeno .pop{font-size:.76rem;color:var(--text-muted);line-height:1.35}
+.skryt-lat .pismeno:not(.odkryto) .lat,.skryt-lat .pismeno:not(.odkryto) .pop{visibility:hidden}
+
+/* podobná písmena */
+.skupina{margin-bottom:12px}
+.skupina .znaky{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.skupina .znak{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0 12px 6px;text-align:center;min-width:76px}
+.skupina .znak .k{font-size:3.2rem;line-height:1.5;display:block}
+.skupina .znak b{font-size:1rem}
+.skupina p{margin:0 0 8px;font-size:.88rem;line-height:1.5}
+
+/* cvičení */
+.cv-hlava{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.urovne{display:flex;flex-wrap:wrap;gap:4px}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.zadani{min-height:7rem;display:flex;align-items:center;justify-content:center;width:100%;overflow-x:auto;padding:4px 8px}
+.zadani .k{font-size:clamp(2.9rem,11vw,4.6rem);line-height:1.6;white-space:nowrap}
+.zadani .k.dlouhe{font-size:clamp(1.7rem,5.5vw,2.8rem);white-space:normal}
+.moznosti{display:grid;grid-template-columns:repeat(4,minmax(56px,90px));gap:8px;justify-content:center}
+.moznosti .btn{font-size:1.4rem;padding:10px 0;font-weight:600}
+.moznosti .btn.spravne{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 20%,var(--bg-control))}
+.moznosti .btn.chybne{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 20%,var(--bg-control))}
+.odpoved{display:flex;gap:6px;width:min(100%,520px)}
+.odpoved .vstup{flex:1;font-size:1.1rem}
+.vysledek{font-size:.95rem;line-height:1.5;min-height:1.5em}
+.vysledek.ok{color:var(--ok)} .vysledek.chyba{color:var(--danger)} .vysledek.skoro{color:var(--warn)}
+.vysledek .vyznam{color:var(--text);display:block;font-size:.88rem}
+.znacka{display:inline-block;font-size:.72rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border);color:var(--text-muted)}
+.stav-sezeni{display:flex;flex-wrap:wrap;gap:10px;font-size:.82rem;color:var(--text-muted);justify-content:center}
+.stav-sezeni b{color:var(--text)}
+
+/* pokrok */
+.pruhy{display:grid;gap:8px}
+.pruh-radek{display:grid;grid-template-columns:minmax(120px,200px) 1fr auto;gap:8px;align-items:center;font-size:.86rem}
+.pruh{height:14px;border-radius:7px;background:var(--bg-control);overflow:hidden;display:flex}
+.pruh i{display:block;height:100%}
+.pruh .umim{background:var(--ok)} .pruh .ucim{background:var(--warn)}
+@media (max-width:520px){.pruh-radek{grid-template-columns:1fr auto}.pruh-radek .pruh{grid-column:1/-1;grid-row:2}}
+
+/* převodník */
+.prevodnik textarea{width:100%;min-height:110px;resize:vertical}
+.vystup{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:10px;overflow-wrap:anywhere}
+.vystup .k{white-space:pre-wrap}
+.vystup .latinka{font-size:.8rem;color:var(--text-muted);white-space:pre-wrap;margin:-4px 0 6px}
+
+/* tabulky */
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;background:var(--bg-panel)}
+td .k{font-size:1.5rem;line-height:1.3}
+.pozn{color:var(--text-muted);font-size:.8rem}
+
+/* ukázky */
+.ukazky{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.ukazka{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.ukazka button.nahled{border:0;padding:0;background:#fff;cursor:zoom-in;height:200px;overflow:hidden}
+.ukazka img{width:100%;height:100%;object-fit:cover;object-position:top}
+.ukazka .telo{padding:10px 12px;font-size:.85rem;line-height:1.45;display:flex;flex-direction:column;gap:6px}
+.ukazka details{font-size:.82rem}
+.ukazka .zdroj{font-size:.74rem;color:var(--text-muted)}
+a{color:var(--accent)}
+.prohlizec{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.88);display:flex;flex-direction:column}
+.prohlizec .hlava{display:flex;gap:8px;align-items:center;padding:8px 12px;color:#fff;flex-wrap:wrap}
+.prohlizec .hlava strong{margin-right:auto;font-size:.9rem}
+.prohlizec .platno{flex:1;overflow:auto;min-height:0}
+.prohlizec img{display:block;max-width:none;background:#fff}
+
+/* archivy */
+.odkazy{display:grid;gap:8px}
+.odkazy a.odkaz{display:block;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:9px 12px;text-decoration:none;color:var(--text)}
+.odkazy a.odkaz:hover{border-color:var(--accent)}
+.odkazy a.odkaz b{color:var(--accent)}
+.odkazy a.odkaz span{display:block;font-size:.8rem;color:var(--text-muted)}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,600px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.55}
+.okno .telo p{margin:0}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+#tiskList{display:none}
+@media print{
+  @page{margin:14mm}
+  body{display:block;height:auto;background:#fff;color:#000}
+  body > *:not(#tiskList){display:none!important}
+  #tiskList{display:block}
+  #tiskList h1{font:600 14pt Georgia,serif;margin:0 0 4mm}
+  #tiskList .pokyn{font:10pt Georgia,serif;margin:0 0 6mm}
+  #tiskList .r{break-inside:avoid;margin-bottom:2mm}
+  #tiskList .k{color:#000;line-height:1.5}
+  #tiskList .linka{border-bottom:1px solid #999;height:12mm}
+  #tiskList .linka.pomocna{border-bottom:1px dotted #bbb;height:6mm}
+  #tiskList .cislo{font:9pt Georgia,serif;color:#555}
+  #tiskList .klic{break-before:page;font:10pt Georgia,serif;columns:2}
+  #tiskList .pata{font:8pt Georgia,serif;color:#666;margin-top:8mm}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>✒️ Kurent</h1>
+  <div class="skup" role="group" aria-label="Učit se"><span class="skup-nazev" aria-hidden="true">Učit se</span><div class="skup-tl">
+    <button class="tl" data-pohled="abeceda" title="Abeceda">🔤<span class="txt"> Abeceda</span></button>
+    <button class="tl" data-pohled="podobna" title="Podobná písmena">⚖️<span class="txt"> Podobná písmena</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Cvičit"><span class="skup-nazev" aria-hidden="true">Cvičit</span><div class="skup-tl">
+    <button class="tl" data-pohled="cviceni" title="Cvičení">🎯<span class="txt"> Cvičení</span></button>
+    <button class="tl" data-pohled="pokrok" title="Pokrok a chyby">📈<span class="txt"> Pokrok</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroje"><span class="skup-nazev" aria-hidden="true">Nástroje</span><div class="skup-tl">
+    <button class="tl" data-pohled="prevodnik" title="Převodník a cvičné listy">✍️<span class="txt"> Převodník</span></button>
+    <button class="tl" data-pohled="slovnicek" title="Slovníček a zkratky">📖<span class="txt"> Slovníček</span></button>
+    <button class="tl" data-pohled="ukazky" title="Ukázky rukopisů">🖼️<span class="txt"> Ukázky</span></button>
+    <button class="tl" data-pohled="matriky" title="Matriky online">🔗<span class="txt"> Matriky</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" id="tlNapoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<main><div class="obal" id="obsah"></div></main>
+<div id="tiskList"></div>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Čtení kurentu</header>
+  <div class="telo">
+    <p><b>Kurent</b> (Kurrentschrift, „švabach“) je německé psací písmo, kterým se v českých zemích psaly matriky, pozemkové knihy i dopisy zhruba od 16. století do začátku 20. století. Matriky po roce 1784 jsou na tištěných formulářích – německé výrazy kurentem, latinské a cizí slova a jména často latinkou.</p>
+    <p><b>Postup:</b> 🔤 projděte abecedu (skrytím latinky se sami vyzkoušejte), ⚖️ naučte se rozlišovat podobná písmena, pak 🎯 cvičte po úrovních. Úroveň 5 používá tenké písmo a sklon jako skutečný rukopis.</p>
+    <p><b>Opakování chyb:</b> každá položka má přihrádku 0–5. Správná odpověď ji posune výš a vrátí se později (1 min → 10 min → 1 den → 3 → 7 → 21 dní), chyba ji vrátí na začátek a ukáže se znovu za minutu. V 📈 Pokroku najdete nejčastější chyby a můžete je procvičit zvlášť.</p>
+    <p><b>Hodnocení:</b> diakritika, velká písmena, interpunkce a ß/ss se nepočítají jako chyba. Jeden překlep (u dlouhých obratů dva) se označí „skoro“ – položka se brzy zopakuje.</p>
+    <p><b>Převodník:</b> „s“ uvnitř slova se kreslí jako dlouhé ſ, na konci jako kulaté s. Ve složeninách (Haus·tür) napište za s svislou čáru: <code>Haus|tür</code>. Zdvojení mm/nn se kreslí jako m/n s čárkou nad.</p>
+    <p><b>Písmo:</b> Wiegel Kurrent © Peter Wiegel, licence SIL Open Font License 1.1 (<a href="kurent/OFL.txt" target="_blank" rel="noopener">text licence</a>). Písmo je pravidelné – skutečné rukopisy jsou rozmanitější, proto se podívejte i na 🖼️ ukázky.</p>
+    <p>Pokrok se ukládá jen v tomto prohlížeči (localStorage).</p>
+  </div>
+  <footer><button class="btn primary" value="ok">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.KurentJadro, D = window.KurentData;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+if (window.self === window.top) document.body.classList.add('samostatne');
+const JAZYK = { de: 'německy', cs: 'česky', la: 'latinsky' };
+
+/* ---------- úložiště ---------- */
+function nacti(klic, vychozi) { try { const v = JSON.parse(localStorage.getItem(J.KLIC + '_' + klic)); return v == null ? vychozi : v; } catch (e) { return vychozi; } }
+function uloz(klic, hodnota) { try { localStorage.setItem(J.KLIC + '_' + klic, JSON.stringify(hodnota)); } catch (e) { /* plné úložiště – nevadí */ } }
+let srs = J.migruj(nacti('srs', null));
+const nast = Object.assign({ pohled: 'abeceda', uroven: 1, kategorie: '', ztizit: false, skrytLat: false,
+  prevod: { text: 'Johann Novak, Bauer in Lhota Nr. 12,\nehelich geboren den 7ten März 1843, getauft.', velikost: 40, tenky: false, dlouheS: true, ligatury: true, latinka: true, tisk: 'cteni' } }, nacti('nast', {}));
+const ulozNast = () => uloz('nast', nast);
+const ulozSrs = () => uloz('srs', srs);
+
+/* text → HTML kurentu */
+function kurent(text, opt) {
+  return J.prevod(text, opt).map(u => u.d ? `<span class="dia${u.z === u.z.toUpperCase() ? ' vel' : ''}" data-d="${esc(u.d)}">${esc(u.z)}</span>` : esc(u.z)).join('');
+}
+const kSpan = (text, tridy, opt) => `<span class="k ${tridy || ''}" data-i18n="ne">${kurent(text, opt)}</span>`;
+
+/* ---------- pohledy ---------- */
+const POHLEDY = { abeceda, podobna, cviceni, pokrok, prevodnik, slovnicek, ukazky, matriky };
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === nast.pohled)));
+  (POHLEDY[nast.pohled] || abeceda)();
+}
+function prepni(p) { nast.pohled = p; ulozNast(); vykresli(); $('obsah').parentElement.scrollTop = 0; }
+
+/* abeceda */
+function abeceda() {
+  const karta = ([z, t]) => `<button class="pismeno" type="button"><span class="k" data-i18n="ne">${kurent(z, { dlouheS: false })}</span><span class="lat" data-i18n="ne">${esc(z)}</span><span class="pop">${esc(t)}</span></button>`;
+  const cislice = '0123456789'.split('').map(c => [c, '']);
+  $('obsah').innerHTML = `<h2>🔤 Abeceda kurentu</h2>
+    <p class="tip">Velké tvary písmen, pod nimi latinka a podle čeho písmeno poznat. Zapněte „Skrýt latinku“ a zkoušejte se – kliknutím na kartu ji odkryjete.</p>
+    <div class="radek" style="margin-bottom:10px"><label><input type="checkbox" id="skrytLat" ${nast.skrytLat ? 'checked' : ''}> Skrýt latinku</label>
+    <button class="btn mini" data-start="1">🎯 Procvičit malá písmena</button><button class="btn mini" data-start="2">🎯 Procvičit velká písmena</button></div>
+    <div id="abc" class="${nast.skrytLat ? 'skryt-lat' : ''}">
+    <h3>Malá písmena</h3><div class="mrizka">${D.MALA.map(karta).join('')}</div>
+    <h3>Velká písmena</h3><div class="mrizka">${D.VELKA.map(karta).join('')}</div>
+    <h3>Spřežky a ligatury</h3><p class="tip">V převodníku se ligatury skládají samy. Čárka nad m a n znamená zdvojení (mm, nn).</p>
+    <div class="mrizka">${D.LIGATURY.map(karta).join('')}</div>
+    <h3>Číslice</h3><div class="mrizka">${cislice.map(karta).join('')}</div></div>`;
+  $('skrytLat').onchange = e => { nast.skrytLat = e.target.checked; ulozNast(); $('abc').classList.toggle('skryt-lat', nast.skrytLat); $('abc').querySelectorAll('.odkryto').forEach(x => x.classList.remove('odkryto')); };
+  $('abc').onclick = e => { const p = e.target.closest('.pismeno'); if (p) p.classList.toggle('odkryto'); };
+}
+
+/* podobná písmena */
+function podobna() {
+  $('obsah').innerHTML = `<h2>⚖️ Podobná písmena</h2>
+    <p class="tip">Nejčastější záměny při čtení matrik. U každé skupiny je rozdíl popsán slovy; tlačítkem si skupinu procvičíte.</p>` +
+    D.PODOBNA.map((s, i) => `<div class="panel skupina"><div class="znaky">${s.znaky.map(z =>
+      `<div class="znak"><span class="k" data-i18n="ne">${kurent(z, { dlouheS: false })}</span><b data-i18n="ne">${esc(z)}</b></div>`).join('')}</div>
+      <p>${esc(s.text)}</p><button class="btn mini" data-skupina="${i}">🎯 Procvičit skupinu</button></div>`).join('');
+}
+
+/* cvičení */
+let sezeni = { spravne: 0, celkem: 0, rada: 0 }, aktualni = null, vyhodnoceno = false, posledniId = null, specialni = null;
+function seznamCviceni() {
+  if (specialni) return specialni.polozky;
+  return J.polozky(D, nast.uroven, nast.uroven >= 3 ? nast.kategorie : '');
+}
+function cviceni() {
+  const kat = Object.entries(D.KATEGORIE).filter(([k]) => D.SLOVA.some(s => s[3] === k && s[4] === nast.uroven));
+  $('obsah').innerHTML = `<h2>🎯 Cvičení</h2>
+    <div class="cv-hlava">
+      <div class="urovne" role="group" aria-label="Úroveň">${J.UROVNE.map(u => `<button class="btn mini" data-uroven="${u.id}" aria-pressed="${!specialni && u.id === nast.uroven}" title="${esc(u.popis)}">${u.id}. ${esc(u.nazev)}</button>`).join('')}</div>
+      ${nast.uroven >= 3 && !specialni ? `<select class="vstup" id="kategorie" aria-label="Kategorie"><option value="">Všechny kategorie</option>${kat.map(([k, n]) => `<option value="${k}" ${k === nast.kategorie ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>` : ''}
+      <label style="font-size:.84rem"><input type="checkbox" id="ztizit" ${nast.ztizit ? 'checked' : ''}> Ztížit (tenké písmo, sklon)</label>
+    </div>
+    ${specialni ? `<p class="tip">Procvičujete: <b>${esc(specialni.nazev)}</b> <button class="btn mini" id="konecSpec">✕ Zpět na úrovně</button></p>` : `<p class="tip">${esc(J.UROVNE[nast.uroven - 1].popis)}</p>`}
+    <div class="karta" id="karta"></div>`;
+  if ($('kategorie')) $('kategorie').onchange = e => { nast.kategorie = e.target.value; ulozNast(); dalsi(); };
+  $('ztizit').onchange = e => { nast.ztizit = e.target.checked; ulozNast(); kresliUlohu(); };
+  if ($('konecSpec')) $('konecSpec').onclick = () => { specialni = null; cviceni(); };
+  dalsi();
+}
+function dalsi() {
+  const seznam = seznamCviceni();
+  aktualni = J.vyberDalsi(seznam, srs, Date.now(), Math.random, posledniId);
+  vyhodnoceno = false;
+  kresliUlohu();
+}
+function kresliUlohu() {
+  const k = $('karta'); if (!k) return;
+  if (!aktualni) { k.innerHTML = '<p class="tip">V této kategorii nic není.</p>'; return; }
+  const p = aktualni, seznam = seznamCviceni();
+  const tezke = nast.ztizit || (!specialni && nast.uroven === 5);
+  const sklon = tezke ? `transform:rotate(${(Math.random() * 6 - 3).toFixed(1)}deg)` : '';
+  const dlouhe = p.text.length > 14 ? ' dlouhe' : '';
+  let h = `<div class="zadani"><span class="k${tezke ? ' tenky' : ''}${dlouhe}" style="${sklon}" data-i18n="ne">${kurent(p.text, { dlouheS: p.typ === 'slovo' })}</span></div>`;
+  if (p.typ === 'pismeno') {
+    const pismena = seznam.filter(x => x.typ === 'pismeno');
+    const mz = J.moznosti(p, pismena.length >= 4 ? pismena : J.polozky(D, 1).concat(J.polozky(D, 2)), D.PODOBNA);
+    h += `<p class="tip" style="margin:0">Které písmeno to je? (klávesy 1–4)</p><div class="moznosti">${mz.map((m, i) => `<button class="btn" data-moznost="${esc(m)}" title="${i + 1}" data-i18n="ne">${esc(m)}</button>`).join('')}</div>`;
+  } else {
+    h += `<p class="tip" style="margin:0">Přepište latinkou <span class="znacka">${esc(JAZYK[p.jazyk])}</span> <span class="znacka">${esc(D.KATEGORIE[p.kategorie])}</span></p>
+      <form class="odpoved" id="fOdpoved" autocomplete="off"><input class="vstup" id="odpoved" aria-label="Odpověď" spellcheck="false" autocapitalize="off"><button class="btn primary">Zkontrolovat</button><button type="button" class="btn" id="nevim">Nevím</button></form>`;
+  }
+  h += `<div class="vysledek" id="vysledek" aria-live="polite"></div>
+    <button class="btn primary" id="tlDalsi" hidden>Další ⏎</button>
+    <div class="stav-sezeni" id="stavSezeni">${stavSezeni()}</div>`;
+  k.innerHTML = h;
+  $('tlDalsi').onclick = () => dalsi();
+  if (p.typ === 'slovo') {
+    $('fOdpoved').onsubmit = e => { e.preventDefault(); if (vyhodnoceno) return dalsi(); vyhodnot($('odpoved').value); };
+    $('nevim').onclick = () => { if (!vyhodnoceno) vyhodnot(''); };
+    $('odpoved').focus({ preventScroll: true });
+  }
+}
+function stavSezeni() {
+  const ph = J.prehled(seznamCviceni(), srs, Date.now());
+  return `<span>Dnes: <b>${sezeni.spravne}/${sezeni.celkem}</b></span><span>Série: <b>${sezeni.rada}</b></span>
+    <span>Umím <b>${ph.umim}</b> · učím se <b>${ph.ucim}</b> · nové <b>${ph.nove}</b> z ${ph.celkem}</span>`;
+}
+function vyhodnot(odpoved) {
+  const p = aktualni;
+  let r;
+  if (p.typ === 'pismeno') r = odpoved === p.text ? { stav: 'presne', ok: true } : { stav: 'spatne', ok: false };
+  else r = J.hodnot(odpoved, p.text, p.alt);
+  vyhodnoceno = true; posledniId = p.id;
+  J.zaznam(srs, p.id, r.stav, Date.now()); ulozSrs();
+  sezeni.celkem++; if (r.ok) { sezeni.spravne++; sezeni.rada++; } else sezeni.rada = 0;
+  const v = $('vysledek');
+  const spravne = `<b data-i18n="ne">${esc(p.text)}</b>`;
+  const vyznam = p.vyznam ? `<span class="vyznam">${esc(JAZYK[p.jazyk])}: ${spravne} = ${esc(p.vyznam)}</span>` : (p.popis ? `<span class="vyznam">${esc(p.popis)}</span>` : '');
+  const texty = { presne: '✓ Správně', diakritika: '✓ Správně (liší se jen diakritika nebo velikost písmen)', skoro: '≈ Skoro – překlep. Správně: ', spatne: '✗ Správně je ' };
+  v.className = 'vysledek ' + (r.ok ? 'ok' : r.stav === 'skoro' ? 'skoro' : 'chyba');
+  v.innerHTML = esc(texty[r.stav]) + (r.ok ? '' : spravne) + vyznam;
+  if (p.typ === 'pismeno') document.querySelectorAll('[data-moznost]').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.moznost === p.text) b.classList.add('spravne'); else if (b.dataset.moznost === odpoved) b.classList.add('chybne');
+  });
+  else $('odpoved').readOnly = true;
+  $('tlDalsi').hidden = false;
+  $('stavSezeni').innerHTML = stavSezeni();
+  if (p.typ === 'pismeno') $('tlDalsi').focus({ preventScroll: true });
+}
+
+/* pokrok */
+function pokrok() {
+  const ted = Date.now();
+  const radky = J.UROVNE.map(u => {
+    const ph = J.prehled(J.polozky(D, u.id), srs, ted);
+    const pr = x => (100 * x / Math.max(ph.celkem, 1)).toFixed(1) + '%';
+    return `<div class="pruh-radek"><span>${u.id}. ${esc(u.nazev)}</span><div class="pruh" title="umím / učím se"><i class="umim" style="width:${pr(ph.umim)}"></i><i class="ucim" style="width:${pr(ph.ucim)}"></i></div>
+      <span class="pozn">${ph.umim} / ${ph.celkem}${ph.splatne ? ` · ⏰ ${ph.splatne}` : ''}</span></div>`;
+  }).join('');
+  const vse = vsechnyPolozky(), podleId = new Map(vse.map(p => [p.id, p]));
+  const chyby = J.nejhorsi(srs, 25).filter(c => podleId.has(c.id));
+  $('obsah').innerHTML = `<h2>📈 Pokrok</h2>
+    <p class="tip">Zelená = umím (přihrádka 3+), oranžová = učím se, ⏰ = čeká na zopakování.</p>
+    <div class="panel pruhy">${radky}</div>
+    <h3>Nejčastější chyby</h3>
+    ${chyby.length ? `<p><button class="btn primary" id="cvicChyby">🎯 Procvičit chyby (${chyby.length})</button></p>
+    <div class="tab-obal"><table><thead><tr><th>Kurent</th><th>Latinkou</th><th>Chyby / pokusy</th></tr></thead><tbody>
+    ${chyby.map(c => { const p = podleId.get(c.id); return `<tr><td>${kSpan(p.text, '', { dlouheS: p.typ === 'slovo' })}</td><td data-i18n="ne">${esc(p.text)}</td><td>${c.chyb} / ${c.n}</td></tr>`; }).join('')}
+    </tbody></table></div>` : '<p class="tip">Zatím žádné chyby – nebo jste ještě necvičili.</p>'}
+    <h3>Data</h3><p><button class="btn danger mini" id="smazPokrok">🗑️ Vynulovat pokrok…</button></p>`;
+  if ($('cvicChyby')) $('cvicChyby').onclick = () => { specialni = { nazev: 'nejčastější chyby', polozky: chyby.map(c => podleId.get(c.id)) }; prepni('cviceni'); };
+  $('smazPokrok').onclick = async () => { if (await Dialog.potvrd('Smazat celý pokrok cvičení?')) { srs = J.prazdnySrs(); ulozSrs(); sezeni = { spravne: 0, celkem: 0, rada: 0 }; pokrok(); } };
+}
+function vsechnyPolozky() { return [1, 2, 3, 4, 5].flatMap(u => J.polozky(D, u)); }
+
+/* převodník a cvičné listy */
+function prevodnik() {
+  const o = nast.prevod;
+  $('obsah').innerHTML = `<h2>✍️ Převodník do kurentu</h2>
+    <p class="tip">Napište text latinkou – zobrazí se kurentem. Hodí se na vlastní cvičné listy (jména předků, obce, povolání). Kulaté s ve složenině vynutíte svislou čárou: <code>Haus|tür</code>.</p>
+    <div class="panel prevodnik">
+      <textarea class="vstup" id="pText" aria-label="Text k převodu" spellcheck="false">${esc(o.text)}</textarea>
+      <div class="radek" style="margin-top:8px">
+        <label>Velikost <input type="range" id="pVel" min="20" max="90" value="${o.velikost}"></label>
+        <label><input type="checkbox" id="pTenky" ${o.tenky ? 'checked' : ''}> Tenké písmo</label>
+        <label><input type="checkbox" id="pDlouheS" ${o.dlouheS ? 'checked' : ''}> Dlouhé ſ</label>
+        <label><input type="checkbox" id="pLig" ${o.ligatury ? 'checked' : ''}> Ligatury</label>
+        <label><input type="checkbox" id="pLat" ${o.latinka ? 'checked' : ''}> Latinka pod řádkem</label>
+      </div>
+      <div id="pVystup" class="vystup"></div>
+      <h3>🖨️ Cvičný list</h3>
+      <div class="radek">
+        <select class="vstup" id="pTisk" aria-label="Typ listu">
+          <option value="cteni" ${o.tisk === 'cteni' ? 'selected' : ''}>Ke čtení – řádek na přepis, klíč na 2. straně</option>
+          <option value="opis" ${o.tisk === 'opis' ? 'selected' : ''}>K opisu – pomocné linky na psaní</option>
+          <option value="text" ${o.tisk === 'text' ? 'selected' : ''}>Jen text kurentem</option>
+        </select>
+        <select class="vstup" id="pNahodne" aria-label="Náhodná slova">
+          <option value="">Vložit náhodná slova…</option>
+          ${J.UROVNE.filter(u => u.id >= 3).map(u => `<option value="${u.id}">${u.id}. ${esc(u.nazev)}</option>`).join('')}
+        </select>
+        <button class="btn primary" id="pTiskni">🖨️ Tisk</button>
+      </div>
+    </div>`;
+  const obnov = () => {
+    o.text = $('pText').value; o.velikost = +$('pVel').value; o.tenky = $('pTenky').checked;
+    o.dlouheS = $('pDlouheS').checked; o.ligatury = $('pLig').checked; o.latinka = $('pLat').checked; o.tisk = $('pTisk').value; ulozNast();
+    const opt = { dlouheS: o.dlouheS, ligatury: o.ligatury };
+    $('pVystup').innerHTML = o.text.split('\n').map(r => `<div class="k${o.tenky ? ' tenky' : ''}" style="font-size:${o.velikost}px" data-i18n="ne">${kurent(r, opt) || '&nbsp;'}</div>` +
+      (o.latinka && r.trim() ? `<div class="latinka" data-i18n="ne">${esc(r.replace(/\|/g, ''))}</div>` : '')).join('');
+  };
+  $('obsah').querySelectorAll('input,select:not(#pNahodne),textarea').forEach(el => el.addEventListener('input', obnov));
+  $('pNahodne').onchange = e => {
+    const u = +e.target.value; if (!u) return;
+    const slova = J.michej(J.polozky(D, u), Math.random).slice(0, u === 5 ? 8 : 14).map(p => p.text);
+    $('pText').value = slova.join('\n'); e.target.value = ''; obnov();
+  };
+  $('pTiskni').onclick = tiskni;
+  obnov();
+}
+function tiskni() {
+  const o = nast.prevod, opt = { dlouheS: o.dlouheS, ligatury: o.ligatury };
+  const radky = o.text.split('\n').filter(r => r.trim());
+  if (!radky.length) return Dialog.info('Nejdřív napište text nebo vložte náhodná slova.');
+  const vel = Math.min(o.velikost, 60);
+  const nadpis = { cteni: 'Cvičný list – čtení kurentu', opis: 'Cvičný list – psaní kurentem', text: 'Text kurentem' }[o.tisk];
+  const pokyn = { cteni: 'Přepište každý řádek latinkou. Řešení je na druhé straně.', opis: 'Opište každý řádek kurentem na linky pod ním.', text: '' }[o.tisk];
+  let h = `<h1>${esc(nadpis)}</h1>${pokyn ? `<p class="pokyn">${esc(pokyn)}</p>` : ''}`;
+  radky.forEach((r, i) => {
+    h += `<div class="r">${o.tisk === 'cteni' ? `<span class="cislo">${i + 1}.</span> ` : ''}<span class="k${o.tenky ? ' tenky' : ''}" style="font-size:${vel}px" data-i18n="ne">${kurent(r, opt)}</span>`;
+    if (o.tisk === 'cteni') h += '<div class="linka"></div>';
+    if (o.tisk === 'opis') h += '<div class="linka pomocna"></div><div class="linka"></div>';
+    h += '</div>';
+  });
+  if (o.tisk === 'cteni') h += `<div class="klic"><b>Řešení</b><br>${radky.map((r, i) => `${i + 1}. <span data-i18n="ne">${esc(r.replace(/\|/g, ''))}</span>`).join('<br>')}</div>`;
+  h += '<p class="pata">Písmo Wiegel Kurrent (Peter Wiegel, SIL OFL 1.1).</p>';
+  $('tiskList').innerHTML = h;
+  document.fonts.ready.then(() => print());
+}
+
+/* slovníček */
+function slovnicek() {
+  $('obsah').innerHTML = `<h2>📖 Slovníček matričních výrazů</h2>
+    <p class="tip">Latinsky – německy – česky. Německý sloupec můžete zobrazit i kurentem. Hledá se bez ohledu na diakritiku.</p>
+    <div class="radek" style="margin-bottom:8px"><input type="search" class="vstup" id="sHledat" placeholder="🔍 Hledat (např. kmotr, Pathe, 9ber)…" aria-label="Hledat" style="flex:1 1 220px">
+    <label><input type="checkbox" id="sKurent"> Německy kurentem</label></div>
+    <div class="tab-obal"><table><thead><tr><th>Latinsky</th><th>Německy</th><th>Česky</th><th>Poznámka</th></tr></thead><tbody id="sTelo"></tbody></table></div>
+    <h3>Zkratky a značky</h3>
+    <div class="tab-obal"><table><thead><tr><th>Zkratka</th><th>Rozvedení</th><th>Význam</th></tr></thead><tbody id="zTelo"></tbody></table></div>`;
+  const kresli = () => {
+    const q = J.normalizuj($('sHledat').value), kk = $('sKurent').checked;
+    const sedi = r => !q || r.some(x => J.normalizuj(x).includes(q));
+    $('sTelo').innerHTML = D.SLOVNICEK.filter(sedi).map(r => `<tr><td data-i18n="ne"><i>${esc(r[0])}</i></td><td data-i18n="ne">${kk ? kSpan(r[1]) : esc(r[1])}</td><td>${esc(r[2])}</td><td class="pozn">${esc(r[3])}</td></tr>`).join('') || '<tr><td colspan="4" class="pozn">Nic nenalezeno.</td></tr>';
+    $('zTelo').innerHTML = D.ZKRATKY.filter(sedi).map(r => `<tr><td data-i18n="ne"><b>${esc(r[0])}</b></td><td data-i18n="ne">${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('') || '<tr><td colspan="3" class="pozn">Nic nenalezeno.</td></tr>';
+  };
+  $('sHledat').oninput = kresli; $('sKurent').onchange = kresli;
+  kresli();
+}
+
+/* ukázky rukopisů */
+function ukazky() {
+  $('obsah').innerHTML = `<h2>🖼️ Ukázky skutečných rukopisů</h2>
+    <p class="tip">Skeny matrik a záznamů z Wikimedia Commons (volná díla). Nejdřív zkuste číst sami, pak rozbalte přepis. Kliknutím na obrázek ho zvětšíte.</p>
+    <div class="ukazky">${D.UKAZKY.map((u, i) => `<article class="ukazka">
+      <button class="nahled" data-ukazka="${i}" aria-label="Zvětšit"><img src="kurent/${esc(u.soubor)}" alt="${esc(u.titul)}" loading="lazy"></button>
+      <div class="telo"><b>${esc(u.titul)}</b><span>${esc(u.popis)}</span>
+      <details><summary>Zobrazit přepis</summary><p data-i18n="ne">${esc(u.prepis)}</p></details>
+      <span class="zdroj">${esc(u.licence)} <a href="${esc(u.zdroj)}" target="_blank" rel="noopener">Zdroj</a></span></div></article>`).join('')}</div>`;
+}
+function otevriUkazku(i) {
+  const u = D.UKAZKY[i], div = document.createElement('div');
+  div.className = 'prohlizec';
+  div.innerHTML = `<div class="hlava"><strong>${esc(u.titul)}</strong><label>Zvětšení <input type="range" min="30" max="300" value="100" id="uZoom"></label><button class="btn" id="uZavri">✕ Zavřít</button></div>
+    <div class="platno"><img src="kurent/${esc(u.vetsi || u.soubor)}" alt="${esc(u.titul)}" id="uImg"></div>`;
+  document.body.appendChild(div);
+  const img = div.querySelector('#uImg');
+  const zoom = () => { img.style.width = (div.querySelector('.platno').clientWidth * div.querySelector('#uZoom').value / 100) + 'px'; };
+  img.onload = zoom; zoom();
+  div.querySelector('#uZoom').oninput = zoom;
+  const zavri = () => { div.remove(); removeEventListener('keydown', esc1); };
+  const esc1 = e => { if (e.key === 'Escape') zavri(); };
+  addEventListener('keydown', esc1);
+  div.querySelector('#uZavri').onclick = zavri;
+}
+
+/* matriky online */
+function matriky() {
+  $('obsah').innerHTML = `<h2>🔗 Digitalizované matriky</h2>
+    <p class="tip">Matriky z českých zemí jsou zdarma online u státních oblastních archivů (seznam ověřen 16. 11. 2026). Nejdřív zjistěte, kam obec farností patřila – pomůže portál Archivní fondy ČR nebo matriční index archivu.</p>
+    <div class="odkazy">${D.ARCHIVY.map(a => `<a class="odkaz" href="${esc(a[1])}" target="_blank" rel="noopener"><b>${esc(a[0])}</b><span>${esc(a[2])}</span></a>`).join('')}</div>
+    <h3>Tipy ke čtení</h3>
+    <ul class="tip">
+      <li>Do roku 1784 se psaly matriky volně (latinsky nebo česky), od josefínských reforem na předtištěné formuláře s kolonkami – nejdřív si přečtěte záhlaví sloupců.</li>
+      <li>Německé texty jsou kurentem, latinské výrazy a mnohdy i jména latinkou – v jednom zápisu se oba typy písma míchají.</li>
+      <li>Kurent se v matrikách běžně používal do přelomu 19. a 20. století, potom převládla latinka.</li>
+      <li>Jména se zapisovala v různých jazykových podobách (Wenzel = Václav, Adalbert = Vojtěch) a příjmení podle sluchu – zkoušejte varianty.</li>
+      <li>Měsíce 7ber–Xber jsou září až prosinec (latinsky septem = 7 atd.), ne červenec až říjen.</li>
+    </ul>`;
+}
+
+/* ---------- události ---------- */
+document.addEventListener('click', e => {
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { specialni = null; return prepni(pv.dataset.pohled); }
+  const st = e.target.closest('[data-start]');
+  if (st) { specialni = null; nast.uroven = +st.dataset.start; return prepni('cviceni'); }
+  const sk = e.target.closest('[data-skupina]');
+  if (sk) {
+    const g = D.PODOBNA[+sk.dataset.skupina], vse = J.polozky(D, 1).concat(J.polozky(D, 2));
+    specialni = { nazev: 'skupina ' + g.znaky.join(' / '), polozky: vse.filter(p => g.znaky.includes(p.text)) };
+    return prepni('cviceni');
+  }
+  const ur = e.target.closest('[data-uroven]');
+  if (ur) { specialni = null; nast.uroven = +ur.dataset.uroven; nast.kategorie = ''; ulozNast(); return cviceni(); }
+  const mz = e.target.closest('[data-moznost]');
+  if (mz && !vyhodnoceno) return vyhodnot(mz.dataset.moznost);
+  const uk = e.target.closest('[data-ukazka]');
+  if (uk) return otevriUkazku(+uk.dataset.ukazka);
+});
+document.addEventListener('keydown', e => {
+  if (nast.pohled !== 'cviceni' || !aktualni || e.target.closest('dialog')) return;
+  if (aktualni.typ === 'pismeno' && !vyhodnoceno && /^[1-4]$/.test(e.key)) {
+    const b = document.querySelectorAll('[data-moznost]')[+e.key - 1]; if (b) { e.preventDefault(); vyhodnot(b.dataset.moznost); }
+  } else if (vyhodnoceno && e.key === 'Enter' && e.target.id !== 'odpoved') { e.preventDefault(); dalsi(); }
+});
+$('tlNapoveda').onclick = () => $('dlgNapoveda').showModal();
+addEventListener('storage', e => { if (e.key === J.KLIC + '_srs') srs = J.migruj(JSON.parse(e.newValue || 'null')); });
+
+vykresli();
+window.KURENT_APP = { srs: () => srs, prepni, nast };
+})();
+</script>
+</body>
+</html>

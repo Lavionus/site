@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anonymizace fotek</title>
+<meta name="description" content="Před zveřejněním fotky: automatické hledání obličejů a návrhy SPZ, rozmazání, pixelizace, černý pruh nebo emoji, odstranění EXIF a GPS, dávkové zpracování. Vše lokálně v prohlížeči.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="anonymizace/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+[hidden]{display:none !important}
+/* horní lišta – stejná stavba jako Zásoby / Prompty */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+select.tl{padding:4px 6px}
+@media (max-width:1250px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka label{display:flex;align-items:center;gap:6px;font-size:.82rem;padding:4px 10px;color:var(--text-muted)}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn.danger{color:var(--danger)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.84rem;font-family:inherit;min-width:0}
+
+/* pruh se soukromím */
+.pruh{display:flex;flex-wrap:wrap;gap:4px 18px;padding:5px 12px;font-size:.78rem;color:var(--text-muted);background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.pruh b{color:var(--ok)}
+.pruh .pozor b{color:var(--warn)}
+
+/* rozložení */
+.rozlozeni{flex:1;min-height:0;display:grid;grid-template-columns:118px minmax(0,1fr) 310px}
+.fotky{border-right:1px solid var(--border);overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;background:var(--bg-panel)}
+.fotka{position:relative;border:2px solid transparent;border-radius:8px;padding:0;background:var(--bg-control);cursor:pointer;overflow:hidden;flex-shrink:0;color:var(--text);font:inherit}
+.fotka[aria-current="true"]{border-color:var(--accent)}
+.fotka img{display:block;width:100%;height:72px;object-fit:cover}
+.fotka .stitek{position:absolute;left:3px;bottom:3px;font-size:.68rem;background:color-mix(in srgb,var(--bg) 85%,transparent);border-radius:5px;padding:0 5px;line-height:1.5}
+.fotka .stitek.hotovo{color:var(--ok)}
+.fotka .x{position:absolute;right:2px;top:2px;border:0;border-radius:50%;width:20px;height:20px;line-height:18px;font-size:.75rem;cursor:pointer;background:color-mix(in srgb,var(--bg) 80%,transparent);color:var(--text);padding:0}
+.pridat-fotku{border:1px dashed var(--border-strong);border-radius:8px;height:56px;background:none;color:var(--text-muted);cursor:pointer;font:inherit;font-size:.8rem;flex-shrink:0}
+
+.platno-obal{position:relative;overflow:auto;background:repeating-conic-gradient(color-mix(in srgb,var(--bg-control) 70%,transparent) 0 25%,transparent 0 50%) 0 0/20px 20px;min-height:0}
+.scena{position:relative;margin:12px auto;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+.scena canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#cOrig{clip-path:inset(0 50% 0 0)}
+#cOverlay{touch-action:none;cursor:crosshair}
+#cOverlay.vyber{cursor:default}
+.porovnani{position:sticky;bottom:8px;display:flex;gap:8px;align-items:center;justify-content:center;margin:0 auto 8px;width:min(420px,90%);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.78rem;z-index:2}
+.porovnani input{flex:1}
+.prazdno{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px}
+.prazdno .karta{max-width:520px;text-align:center;background:var(--bg-panel);border:2px dashed var(--border-strong);border-radius:12px;padding:26px 22px;line-height:1.55}
+.prazdno .karta.nad{border-color:var(--accent);background:var(--accent-soft)}
+.prazdno h2{margin:0 0 6px;font-size:1.15rem}
+.prazdno p{margin:6px 0;color:var(--text-muted);font-size:.86rem}
+.prace{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.84rem;box-shadow:var(--shadow);z-index:5;min-width:220px;text-align:center}
+.prace .pruh-prubehu{height:4px;background:var(--bg-control);border-radius:2px;margin-top:6px;overflow:hidden}
+.prace .pruh-prubehu i{display:block;height:100%;width:0;background:var(--accent)}
+
+/* pravý panel */
+.panel{border-left:1px solid var(--border);overflow-y:auto;background:var(--bg-panel);padding:8px 10px 40px;font-size:.84rem}
+.panel details{border-bottom:1px solid var(--border);padding:6px 0}
+.panel summary{cursor:pointer;font-weight:600;padding:4px 0;list-style-position:inside}
+.panel .obsah{display:grid;gap:8px;padding:6px 0 4px}
+.panel .pozn{font-size:.76rem;color:var(--text-muted);line-height:1.45;margin:0}
+.efekty{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.efekty .tl{display:flex;flex-direction:column;align-items:center;padding:5px 2px;font-size:.72rem;gap:1px}
+.efekty .tl span{font-size:1.15rem}
+.radek{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.radek > label{flex:1;display:grid;gap:2px;font-size:.76rem;color:var(--text-muted);min-width:110px}
+.radek input[type=range]{width:100%}
+.emoji-vyber{display:flex;flex-wrap:wrap;gap:3px}
+.emoji-vyber button{font-size:1.2rem;line-height:1;padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-control);cursor:pointer}
+.emoji-vyber button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.seznam{display:flex;flex-direction:column;gap:3px;max-height:300px;overflow-y:auto}
+.polozka{display:flex;align-items:center;gap:4px;padding:3px 4px 3px 7px;border:1px solid var(--border);border-radius:6px;background:var(--bg-control);cursor:pointer;font-size:.8rem}
+.polozka[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.polozka.navrh{border-style:dashed}
+.polozka.vyp{opacity:.55}
+.polozka .jm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.polozka button{border:0;background:none;cursor:pointer;padding:2px 4px;font-size:.9rem;color:var(--text);border-radius:4px}
+.polozka button:hover{background:var(--bg-hover)}
+.meta-tab{width:100%;border-collapse:collapse;font-size:.76rem}
+.meta-tab td{padding:3px 4px;border-bottom:1px solid var(--border);vertical-align:top;word-break:break-word}
+.meta-tab td:first-child{color:var(--text-muted);width:42%}
+.meta-tab tr.citlive td:first-child{color:var(--danger);font-weight:600}
+.stav-meta{font-size:.78rem;border-radius:6px;padding:6px 8px;background:var(--bg-control);border-left:3px solid var(--border-strong);line-height:1.45}
+.stav-meta.zle{border-left-color:var(--danger)}
+.stav-meta.ok{border-left-color:var(--ok)}
+.bloky{display:flex;flex-wrap:wrap;gap:3px}
+.bloky span{font-size:.7rem;border:1px solid var(--border);border-radius:8px;padding:0 6px;background:var(--bg-control)}
+
+@media (max-width:900px){
+  .rozlozeni{grid-template-columns:1fr;grid-template-rows:auto auto auto;overflow-y:auto}
+  .platno-obal{min-height:280px;max-height:75vh}
+  body{height:auto;min-height:100%}
+  html{height:auto}
+  .fotky{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--border)}
+  .fotka{width:92px}
+  .pridat-fotku{width:80px;height:auto}
+  .panel{border-left:0;border-top:1px solid var(--border);overflow:visible}
+}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,640px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;font-size:.86rem;line-height:1.55}
+.okno .telo h3{font-size:.92rem;margin:12px 0 4px}
+.okno .telo ul{margin:4px 0;padding-left:20px}
+.okno .telo p{margin:6px 0}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+kbd{font-family:inherit;font-size:.78rem;border:1px solid var(--border-strong);border-radius:4px;padding:0 4px;background:var(--bg-control)}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🕶️ Anonymizace</h1>
+  <div class="skup" role="group" aria-label="Fotky"><span class="skup-nazev" aria-hidden="true">Fotky</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="pridat" title="Přidat fotky (lze i přetáhnout nebo vložit Ctrl+V)">➕<span class="txt"> Přidat</span></button>
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Odebrat fotky">📁 ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Najít"><span class="skup-nazev" aria-hidden="true">Najít</span><div class="skup-tl">
+    <button class="tl" data-prikaz="obliceje" title="Najít obličeje (model běží v prohlížeči)">👤<span class="txt"> Obličeje</span></button>
+    <button class="tl" data-prikaz="spz" title="Navrhnout místa, kde může být registrační značka">🚗<span class="txt"> SPZ</span></button>
+    <button class="tl" data-nabidka="nabNajit" aria-expanded="false" title="Další možnosti hledání">▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroj"><span class="skup-nazev" aria-hidden="true">Nástroj</span><div class="skup-tl">
+    <button class="tl" data-nastroj="vyber" aria-pressed="true" title="Výběr, posun a změna velikosti (V)">✋</button>
+    <button class="tl" data-nastroj="obdelnik" aria-pressed="false" title="Obdélník (R)">▭</button>
+    <button class="tl" data-nastroj="elipsa" aria-pressed="false" title="Elipsa (E)">◯</button>
+    <button class="tl" data-nastroj="stetec" aria-pressed="false" title="Štětec – volná oblast (B)">🖌️</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
+    <button class="tl" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl" data-prikaz="smazat" title="Smazat vybranou oblast (Delete)" aria-label="Smazat oblast">🗑️</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" id="tlPorovnat" data-prikaz="porovnat" aria-pressed="false" title="Porovnat před a po (posuvník)">◐<span class="txt"> Před/po</span></button>
+    <select class="tl" id="zoom" aria-label="Zvětšení">
+      <option value="fit">Celá</option><option value="0.5">50 %</option><option value="1">100 %</option><option value="2">200 %</option>
+    </select>
+  </div></div>
+  <div class="skup" role="group" aria-label="Uložit"><span class="skup-nazev" aria-hidden="true">Uložit</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="stahnout" title="Stáhnout upravenou fotku bez metadat">💾<span class="txt"> Stáhnout</span></button>
+    <button class="tl" data-prikaz="stahnoutVse" title="Všechny fotky v ZIPu">🗂️<span class="txt"> Vše (ZIP)</span></button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pridat">➕ Přidat fotky…</button>
+  <hr>
+  <button class="tl" data-prikaz="odebrat">✖ Odebrat tuto fotku</button>
+  <button class="tl" data-prikaz="odebratVse">🗑️ Odebrat všechny fotky</button>
+</div>
+<div id="nabNajit" class="nabidka" hidden>
+  <button class="tl" data-prikaz="vseVsude">🔎 Obličeje i SPZ ve všech fotkách</button>
+  <button class="tl" data-prikaz="prijmout">✅ Přijmout všechny návrhy SPZ</button>
+  <hr>
+  <label><input type="checkbox" id="auto"> Hledat automaticky po přidání fotek</label>
+  <label>Citlivost hledání obličejů
+    <select class="vstup" id="citlivost">
+      <option value="0.5">vysoká (víc návrhů)</option><option value="0.65" selected>střední</option><option value="0.8">nízká (jen jisté)</option>
+    </select></label>
+  <hr>
+  <button class="tl" data-prikaz="smazatAuto">🧹 Smazat automaticky nalezené oblasti</button>
+  <button class="tl" data-prikaz="smazatVse">🗑️ Smazat všechny oblasti fotky</button>
+</div>
+<input type="file" id="vstupSoubory" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/avif" multiple hidden>
+
+<div class="pruh" role="note">
+  <span><b>🔒 Vše běží lokálně ve vašem prohlížeči</b> – fotky se nikam neodesílají ani neukládají.</span>
+  <span class="pozor"><b>⚠️ Automatika může něco přehlédnout</b> – před zveřejněním fotku vždy zkontrolujte.</span>
+</div>
+
+<div class="rozlozeni">
+  <nav class="fotky" id="fotky" aria-label="Fotky k úpravě"></nav>
+  <section class="platno-obal" id="obal">
+    <div class="scena" id="scena" hidden>
+      <canvas id="cVysl"></canvas>
+      <canvas id="cOrig" hidden></canvas>
+      <canvas id="cOverlay" aria-label="Plocha fotky – tažením přidáte oblast"></canvas>
+    </div>
+    <div class="porovnani" id="porovnani" hidden>
+      <span>Před</span><input type="range" id="rozdel" min="0" max="100" value="50" aria-label="Poměr před a po"><span>Po</span>
+    </div>
+    <div class="prazdno" id="prazdno">
+      <div class="karta" id="drop">
+        <h2>🕶️ Přetáhněte sem fotky</h2>
+        <p>Najdu obličeje a navrhnu místa s SPZ, vy doladíte oblasti a zvolíte rozmazání, pixelizaci, černý pruh nebo emoji. Při uložení se odstraní všechna metadata (EXIF, GPS).</p>
+        <p><button class="btn primary" data-prikaz="pridat">➕ Vybrat fotky</button></p>
+        <p>🔒 Fotky neopustí váš počítač – zpracování probíhá jen v tomto prohlížeči.</p>
+      </div>
+    </div>
+    <div class="prace" id="prace" hidden><span id="praceText">Pracuji…</span><div class="pruh-prubehu"><i id="praceProuzek"></i></div></div>
+  </section>
+  <aside class="panel" id="panel">
+    <details open>
+      <summary id="nadpisVlastnosti">Výchozí úprava nových oblastí</summary>
+      <div class="obsah">
+        <div class="efekty" role="group" aria-label="Efekt">
+          <button class="tl" data-efekt="rozmazat"><span>🌫️</span>Rozmazat</button>
+          <button class="tl" data-efekt="pixely"><span>▦</span>Pixely</button>
+          <button class="tl" data-efekt="cerna"><span>⬛</span>Pruh</button>
+          <button class="tl" data-efekt="emoji"><span>😎</span>Emoji</button>
+        </div>
+        <div class="radek" id="radekSila"><label>Síla <input type="range" id="sila" min="0" max="100" step="5"></label><span id="silaHodnota" style="min-width:3em;text-align:right"></span></div>
+        <div class="emoji-vyber" id="emojiVyber" hidden></div>
+        <div class="radek" id="radekTvar">
+          <label>Tvar <select class="vstup" id="tvar"><option value="elipsa">◯ elipsa</option><option value="obdelnik">▭ obdélník</option></select></label>
+        </div>
+        <div class="radek"><label>Štětec (px na obrazovce) <input type="range" id="stetec" min="6" max="160" step="2"></label><span id="stetecHodnota" style="min-width:3em;text-align:right"></span></div>
+        <div class="radek" id="radekNaVse">
+          <button class="btn mini" data-prikaz="naVseOblasti" title="Nastavit tento efekt a sílu všem oblastem této fotky">↳ Na všechny oblasti fotky</button>
+          <button class="btn mini" data-prikaz="naVseFotky" title="Nastavit tento efekt a sílu všem oblastem všech fotek">↳ Na všechny fotky</button>
+        </div>
+        <p class="pozn" id="poznEfekt"></p>
+      </div>
+    </details>
+    <details open>
+      <summary>Oblasti <span id="pocetOblasti"></span></summary>
+      <div class="obsah">
+        <div class="seznam" id="seznamOblasti"></div>
+      </div>
+    </details>
+    <details open>
+      <summary>Metadata souboru</summary>
+      <div class="obsah" id="metadata"><p class="pozn">Zatím není načtena žádná fotka.</p></div>
+    </details>
+    <details>
+      <summary>Uložení</summary>
+      <div class="obsah">
+        <div class="radek">
+          <label>Formát <select class="vstup" id="format"><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option><option value="image/png">PNG (bezeztrátově)</option></select></label>
+          <label>Kvalita <select class="vstup" id="kvalita"><option value="0.95">95 %</option><option value="0.9">90 %</option><option value="0.85">85 %</option><option value="0.75">75 %</option></select></label>
+        </div>
+        <div class="radek">
+          <label>Delší strana <select class="vstup" id="maxStrana"><option value="0">původní</option><option value="4096">max. 4096 px</option><option value="2560">max. 2560 px</option><option value="2048">max. 2048 px</option><option value="1600">max. 1600 px</option><option value="1080">max. 1080 px</option></select></label>
+          <label>Přípona názvu <input class="vstup" id="pripona" maxlength="30"></label>
+        </div>
+        <p class="pozn">Fotka se překreslí přes plátno, takže výsledek nemá žádná metadata (EXIF, GPS, XMP, IPTC ani komentáře; prohlížeč přidá nanejvýš obecný barevný profil sRGB). Otočení podle EXIF se zachová – obraz se uloží už natočený.</p>
+      </div>
+    </details>
+    <p class="pozn" style="margin-top:10px">Model obličejů: <a href="https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB" target="_blank" rel="noopener">Ultra-Light-Fast-Generic-Face-Detector</a> (RFB-320, MIT, © 2019 linzai). Běhové prostředí onnxruntime-web 1.22 (MIT, Microsoft). Vše se stahuje jen z tohoto webu.</p>
+  </aside>
+</div>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>🕶️ Anonymizace fotek – nápověda</header>
+  <div class="telo">
+    <p><b>🔒 Soukromí:</b> fotky se zpracují jen v tomto prohlížeči. Nic se neodesílá na server a nic se neukládá – po zavření stránky fotky zmizí. Pamatuje si jen nastavení (efekt, formát).</p>
+    <h3>Postup</h3>
+    <ul>
+      <li><b>➕ Přidat</b> – vyberte jednu nebo víc fotek, nebo je přetáhněte do okna či vložte <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li>
+      <li><b>👤 Obličeje</b> – malý model hledá obličeje v celé fotce i po dílech (najde i menší tváře v davu).</li>
+      <li><b>🚗 SPZ</b> – jednoduchá heuristika hledá podlouhlé kontrastní pruhy se znaky. Výsledky jsou jen <b>návrhy</b> (čárkovaně) – přijměte je ✅ nebo smažte.</li>
+      <li><b>▭ ◯ 🖌️</b> – tažením přidáte oblast ručně; štětcem natřete volný tvar (ruka s tetováním, cedulka, adresa).</li>
+      <li><b>✋ Výběr</b> – kliknutím vyberete oblast, tažením ji posunete, za úchyty změníte velikost. <kbd>Delete</kbd> smaže, <kbd>Ctrl</kbd>+<kbd>Z</kbd> vrátí, šipky posunou.</li>
+      <li><b>💾 Stáhnout</b> – uloží upravenou fotku bez metadat; <b>🗂️ Vše (ZIP)</b> zpracuje všechny fotky najednou.</li>
+    </ul>
+    <h3>Který efekt?</h3>
+    <ul>
+      <li><b>⬛ Černý pruh</b> a <b>😎 emoji</b> (pod ním je hrubá pixelizace) jsou nejjistější – nic z původního obrazu nezůstane.</li>
+      <li><b>▦ Pixelizace</b> s velkými bloky je bezpečná. Při malé síle (malé bloky) se dá obličej někdy rozpoznat.</li>
+      <li><b>🌫️ Rozmazání</b> působí nejlépe, ale slabé rozmazání textu (SPZ, jméno) se dá částečně obnovit – u textu volte velkou sílu nebo pruh.</li>
+      <li>Efekt se do výsledku „vpálí“ přímo do pixelů, nejde ho odstranit.</li>
+    </ul>
+    <h3>Co automatika nenajde</h3>
+    <ul>
+      <li>Obličeje z profilu, zakryté, rozmazané, velmi malé nebo neobvykle natočené; tváře na plakátech, v zrcadle a odrazech.</li>
+      <li>SPZ ze strany nebo zašpiněné; návrhy mohou ukazovat i na nápisy, ploty a mřížky.</li>
+      <li>Další stopy: jména na zvonku, adresy, dokumenty, obrazovky, tetování, uniformy se jmenovkou, okolí vašeho domu.</li>
+    </ul>
+    <h3>Metadata</h3>
+    <p>Panel <b>Metadata souboru</b> ukazuje, co původní fotka prozrazuje – hlavně <b>GPS polohu</b>, datum, typ a sériové číslo fotoaparátu nebo jméno autora. Uložená fotka je bez nich; po uložení to stránka ověří přečtením výsledného souboru.</p>
+  </div>
+  <footer><button class="btn primary" value="ok">Zavřít</button></footer>
+</form></dialog>
+
+<script src="anonymizace/stranka.js"></script>
+</body>
+</html>

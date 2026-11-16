@@ -6,7 +6,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   'use strict';
   const $ = id => document.getElementById(id);
   const KLIC = 'modelar_nastaveni';
-  const VYCHOZI = { sirka: 200, hloubka: 200, krok: 1, tema: 'auto' };
+  const VYCHOZI = { sirka: 200, hloubka: 200, krok: 1, tema: 'pisek' };
 
   function nactiNastaveni() {
     try {

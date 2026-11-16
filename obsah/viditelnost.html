@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Viditelnost z bodu – výhled z kopce a rozhledny</title>
+<meta name="description" content="Co je vidět z kopce, rozhledny nebo okna: oblast viditelnosti (viewshed) z digitálního modelu terénu se zakřivením Země a refrakcí, panorama obzoru s názvy vrcholů, čára pohledu mezi dvěma body a vzájemná viditelnost rozhleden. Export PNG a GeoJSON.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="viditelnost/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
+[hidden]{display:none !important}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:3px}
+.lista .skup-tl label{display:flex;align-items:center;gap:3px;font-size:.76rem;color:var(--text-muted);white-space:nowrap}
+.lista .skup-hledat{flex:1 1 180px;flex-shrink:1;min-width:150px;background:none;border-color:transparent;padding:0;position:relative}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.5;cursor:default}
+@media (max-width:1180px){.lista .txt{display:none}}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 7px;font-size:.84rem;font-family:inherit;min-width:0}
+input.cis{width:4.6em;text-align:right}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-width:min(380px,96vw);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted);padding:4px 8px}
+.nabidka .pole .vstup{width:100%;color:var(--text)}
+.nabidka .zaskrt{display:flex;gap:6px;align-items:center;font-size:.84rem;padding:4px 8px;cursor:pointer}
+.nabidka .pozn{font-size:.74rem;color:var(--text-muted);padding:2px 8px 4px;line-height:1.4}
+.nabidka .volby{display:flex;flex-direction:column;gap:2px;padding:2px 4px}
+.nabidka .volby .tl small{display:block;color:var(--text-muted);font-size:.72rem}
+#vysledkyHledani{left:0;right:0;top:100%;min-width:240px}
+
+.plocha{flex:1;min-height:0;display:flex;flex-direction:column}
+#mapa{flex:1;min-height:180px;background:var(--bg-panel)}
+#mapa.rezim-b{cursor:crosshair}
+.leaflet-container{font-family:inherit}
+.pixely{image-rendering:pixelated}
+.mapa-stav{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:1000;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:.82rem;box-shadow:var(--shadow);max-width:90%;text-align:center}
+.mapa-stav.chyba{border-color:var(--danger);color:var(--danger)}
+.mapa-obal{position:relative;flex:1;min-height:180px;display:flex;flex-direction:column}
+.prubeh{height:3px;background:var(--accent);width:0;transition:width .2s;position:absolute;left:0;top:0;z-index:1001}
+.leaflet-tooltip.vrchol-stitek{background:var(--bg-panel);color:var(--text);border-color:var(--border);font-size:.74rem;padding:2px 6px}
+
+/* spodní panel */
+.panel{flex:0 0 auto;height:min(44vh,380px);display:flex;flex-direction:column;border-top:1px solid var(--border);background:var(--bg-elevated);min-height:0}
+.panel.zavreny{height:auto}
+.panel.zavreny .panel-telo{display:none}
+.panel-hlava{display:flex;gap:4px;align-items:center;padding:4px 8px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.panel-hlava .vpravo{margin-left:auto;display:flex;gap:4px;align-items:center}
+.panel-telo{flex:1;min-height:0;overflow:auto;padding:8px 10px}
+.panel-telo > section{min-height:100%}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:8px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:7px 10px}
+.dlazdice b{display:block;font-size:1.15rem;line-height:1.2}
+.dlazdice span{font-size:.74rem;color:var(--text-muted)}
+.prazdno{color:var(--text-muted);border:1px dashed var(--border-strong);border-radius:8px;padding:16px;text-align:center;line-height:1.6;font-size:.88rem}
+.pozn{font-size:.78rem;color:var(--text-muted);line-height:1.45}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.76rem;color:var(--text-muted);margin:4px 0 8px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px;border:1px solid var(--border)}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{text-align:left;padding:4px 7px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--text-muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em}
+td.c,th.c{text-align:right}
+tr[data-vrchol]{cursor:pointer}
+tr[data-vrchol]:hover td{background:var(--bg-hover)}
+.tab-obal{overflow-x:auto;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel)}
+.ano{color:var(--ok);font-weight:600}.ne{color:var(--danger);font-weight:600}
+.pan-obal{overflow-x:auto;overflow-y:hidden;border:1px solid var(--border);border-radius:6px;background:var(--bg-panel);position:relative}
+.pan-obal canvas{display:block;cursor:crosshair}
+.pan-ovl{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.78rem;margin-bottom:6px;color:var(--text-muted)}
+.pan-ovl label{display:flex;gap:4px;align-items:center}
+.pan-info{font-size:.8rem;min-height:1.4em;margin-top:4px}
+.los-radek{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:.8rem;margin-bottom:6px}
+.los-radek label{display:flex;gap:4px;align-items:center;color:var(--text-muted)}
+#profil{width:100%;height:220px;display:block;border:1px solid var(--border);border-radius:6px;background:var(--bg-panel)}
+.vyrok{font-size:1rem;font-weight:600;margin:4px 0}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,720px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.okno .telo{padding:12px 16px;overflow:auto;max-height:calc(90vh - 60px);line-height:1.55;font-size:.88rem}
+.okno .telo h3{font-size:.95rem;margin:14px 0 4px}
+.okno .telo p,.okno .telo li{margin:4px 0}
+.okno .telo ul{padding-left:20px;margin:4px 0}
+@media (max-width:600px){.panel{height:48vh}}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>👁️ Viditelnost</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Export PNG, GeoJSON, sdílení odkazu">📁<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Pozorovatel"><span class="skup-nazev" aria-hidden="true">Pozorovatel</span><div class="skup-tl">
+    <label title="Výška oka nad terénem – člověk 1,7 m, okno v 3. patře ~10 m, vyhlídka rozhledny">👁<input class="vstup cis" id="vyskaOka" type="number" min="0" max="2000" step="0.5" aria-label="Výška oka nad terénem (m)"> m</label>
+    <label title="Dosah výpočtu (1–100 km)">↔<input class="vstup cis" id="dosah" type="number" min="1" max="100" step="1" aria-label="Dosah (km)"> km</label>
+    <button class="tl hlavni-tl" id="btnSpocitat" title="Spočítat viditelnost z pozorovatele">▶<span class="txt"> Spočítat</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Kliknutí do mapy"><span class="skup-nazev" aria-hidden="true">Klik do mapy</span><div class="skup-tl">
+    <button class="tl" data-rezim="a" aria-pressed="true" title="Kliknutí do mapy umístí pozorovatele A">📍<span class="txt"> Pozorovatel</span></button>
+    <button class="tl" data-rezim="b" aria-pressed="false" title="Kliknutí do mapy umístí bod B – je vidět z A?">🎯<span class="txt"> Bod B</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nastavení"><span class="skup-nazev" aria-hidden="true">Nastavení</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabZobrazit" aria-expanded="false" title="Výška cíle, barvy překryvu, podklad mapy">🎨<span class="txt"> Zobrazení</span> ▾</button>
+    <button class="tl" data-nabidka="nabData" aria-expanded="false" title="Výškový model, podrobnost, refrakce">⛰️<span class="txt"> Terén</span> ▾</button>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat místo (Sněžka, Ještěd…) ⏎" aria-label="Hledat místo" autocomplete="off">
+    <div id="vysledkyHledani" class="nabidka" hidden></div>
+  </div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pngMapa">🖼️ Mapa s viditelností (PNG)</button>
+  <button class="tl" data-prikaz="pngPanorama">🏔️ Panorama obzoru (PNG)</button>
+  <button class="tl" data-prikaz="pngProfil">📈 Profil čáry pohledu (PNG)</button>
+  <hr>
+  <button class="tl" data-prikaz="geojson">🗺️ Viditelnost, body a vrcholy (GeoJSON)</button>
+  <button class="tl" data-prikaz="pngGis">🧭 Rastr viditelnosti pro GIS (PNG + PGW)</button>
+  <button class="tl" data-prikaz="csvVrcholy">📊 Vrcholy na obzoru (CSV)</button>
+  <hr>
+  <button class="tl" data-prikaz="odkaz">🔗 Zkopírovat odkaz na tento výhled</button>
+</div>
+
+<div id="nabZobrazit" class="nabidka" hidden>
+  <label class="pole">Výška cíle nad terénem (m) – co musí vyčnívat, aby bylo vidět
+    <input class="vstup" id="vyskaCile" type="number" min="0" max="1000" step="1"></label>
+  <div class="pozn">0 = holá zem, 2 = člověk, 10 = dům, 40 = rozhledna, 150 = větrná elektrárna. Mění se hned, bez nového výpočtu.</div>
+  <label class="pole">Překryv
+    <select class="vstup" id="rezimPrekryvu">
+      <option value="vid">viditelné plochy</option>
+      <option value="vidskryte">viditelné + ztmavit skryté</option>
+      <option value="potreba">kolik metrů chybí do viditelnosti</option>
+    </select></label>
+  <label class="pole">Průhlednost překryvu <input id="pruhlednost" type="range" min="10" max="100" step="5"></label>
+  <label class="pole">Podklad mapy <select class="vstup" id="podklad"></select></label>
+  <hr>
+  <label class="zaskrt"><input type="checkbox" id="chkVrcholy"> Vrcholy a rozhledny z OpenStreetMap</label>
+  <label class="zaskrt"><input type="checkbox" id="chkKruh"> Kružnice dosahu</label>
+</div>
+
+<div id="nabData" class="nabidka" hidden>
+  <div class="pole">Výškový model</div>
+  <div class="volby" id="volbyZdroje">
+    <button class="tl" data-zdroj="terrarium" aria-pressed="true">🌍 Terrain Tiles<small>celý svět, v Evropě ~30 m (EU-DEM)</small></button>
+    <button class="tl" data-zdroj="dmr5g" aria-pressed="false">🇨🇿 ČÚZK DMR 5G – holý terén<small>jen Česko, 2 m, bez lesa a budov</small></button>
+    <button class="tl" data-zdroj="dmp1g" aria-pressed="false">🌲 ČÚZK DMP 1G – povrch<small>jen Česko, 2 m, s lesem a budovami</small></button>
+  </div>
+  <label class="pole">Podrobnost výpočtu
+    <select class="vstup" id="detail">
+      <option value="1000000">rychlá – 1 mil. buněk</option>
+      <option value="4000000">běžná – 4 mil. buněk</option>
+      <option value="9000000">jemná – 9 mil. buněk (pomalejší, víc paměti)</option>
+    </select></label>
+  <div class="pozn" id="detailInfo"></div>
+  <label class="pole">Refrakční koeficient k (0 = bez lomu světla, 0,13 = běžný den)
+    <input class="vstup" id="refrakce" type="number" min="-1" max="0.9" step="0.01"></label>
+  <label class="zaskrt"><input type="checkbox" id="chkZakriveni"> Počítat se zakřivením Země</label>
+</div>
+
+<div class="plocha">
+  <div class="mapa-obal">
+    <div class="prubeh" id="prubeh"></div>
+    <div id="mapa"></div>
+    <div class="mapa-stav" id="stav" hidden></div>
+  </div>
+  <div class="panel" id="panel">
+    <div class="panel-hlava" role="tablist">
+      <button class="tl" data-karta="vysledek" aria-pressed="true">📋<span class="txt2"> Výsledek</span></button>
+      <button class="tl" data-karta="panorama" aria-pressed="false">🏔️<span class="txt2"> Panorama</span></button>
+      <button class="tl" data-karta="cara" aria-pressed="false">🎯<span class="txt2"> Čára pohledu</span></button>
+      <span class="vpravo"><button class="tl" id="btnPanel" title="Sbalit / rozbalit panel" aria-label="Sbalit nebo rozbalit panel">▾</button></span>
+    </div>
+    <div class="panel-telo">
+      <section id="k-vysledek">
+        <div id="vysledek"><div class="prazdno">Klikněte do mapy na místo, odkud se díváte (vrchol, rozhledna, okno), nebo vyhledejte místo nahoře.<br>
+          Nastavte výšku oka nad terénem a dosah – spočítá se, kam je odtud vidět.</div></div>
+      </section>
+      <section id="k-panorama" hidden>
+        <div class="pan-ovl">
+          <label>Měřítko <select class="vstup" id="panMeritko"><option value="4">4 px/°</option><option value="8">8 px/°</option><option value="16">16 px/°</option><option value="32">32 px/°</option></select></label>
+          <label>Převýšení <select class="vstup" id="panPrevyseni"><option value="1">1× (skutečné)</option><option value="2">2×</option><option value="4">4×</option></select></label>
+          <label><input type="checkbox" id="panSkryte"> i skryté vrcholy</label>
+          <span>Klik do panoramatu ukáže místo na mapě.</span>
+        </div>
+        <div class="pan-obal" id="panObal"><canvas id="panorama" width="10" height="10"></canvas></div>
+        <div class="pan-info" id="panInfo"></div>
+      </section>
+      <section id="k-cara" hidden>
+        <div class="los-radek">
+          <label>A: výška nad terénem <input class="vstup cis" id="vyskaA" type="number" min="0" max="2000" step="0.5"> m</label>
+          <label>B: výška nad terénem <input class="vstup cis" id="vyskaB" type="number" min="0" max="2000" step="0.5"> m</label>
+          <button class="tl" id="btnProhodit" title="Prohodit A a B">⇄ Prohodit</button>
+          <button class="tl" id="btnZrusB" title="Odstranit bod B">✕ Zrušit B</button>
+        </div>
+        <div id="cara"><div class="prazdno">Zvolte nahoře „🎯 Bod B“ a klikněte do mapy. Zjistí se, zda je B vidět z A (a naopak), kde překáží terén
+          a o kolik by musel být A nebo B výš. Pro vzájemnou viditelnost dvou rozhleden zadejte výšky obou vyhlídek.</div></div>
+        <canvas id="profil" hidden></canvas>
+      </section>
+    </div>
+  </div>
+</div>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Viditelnost z bodu – nápověda <button class="tl" value="x" aria-label="Zavřít">✕</button></header>
+  <div class="telo">
+    <h3>Jak na to</h3>
+    <ol>
+      <li>Klikněte do mapy na místo pozorovatele (nebo vyhledejte vrchol). Pozorovatele lze přetáhnout.</li>
+      <li>Zadejte <b>výšku oka nad terénem</b>: stojící člověk 1,7 m, okno ve 4. patře ~12 m, vyhlídka rozhledny podle její výšky.</li>
+      <li>Zvolte <b>dosah</b> (1–100 km). Načte se výškový model, spočítá viditelnost a panorama obzoru.</li>
+      <li><b>Výška cíle</b> v nabídce Zobrazení říká, co musí v krajině vyčnívat, aby to bylo vidět – 0 m = holá zem, 150 m = větrník. Mění se okamžitě.</li>
+      <li>Režim <b>🎯 Bod B</b>: klik do mapy ukáže profil čáry pohledu a vzájemnou viditelnost dvou míst (např. dvou rozhleden).</li>
+    </ol>
+    <h3>Jak se počítá</h3>
+    <ul>
+      <li><b>Paprsky (R2)</b>: z pozorovatele vede paprsek ke každé buňce na okraji oblasti; podél paprsku se sleduje největší výškový úhel terénu. Buňka je vidět, když její úhel není menší než úhel všeho mezi ní a pozorovatelem. Každou buňku hodnotí paprsek, který jde nejblíž jejímu středu. Výpočet běží ve Web Workeru.</li>
+      <li><b>Zakřivení Země a refrakce</b>: terén ve vzdálenosti d klesá pod vodorovnou rovinu oka o d²/(2R)·(1 − k), R = 6 371 km, k = 0,13 (běžný den; lom světla v atmosféře „ohne“ paprsek k zemi). Na 10 km je to 6,8 m, na 50 km 170 m, na 100 km 683 m. Za teplotní inverze bývá k větší (vidí se dál), nad rozpáleným terénem menší.</li>
+      <li>Výsledkem je pro každou buňku <b>kolik metrů chybí</b>, aby byl předmět v ní vidět – proto lze výšku cíle měnit bez nového výpočtu.</li>
+      <li><b>Panorama</b>: pro každý azimut po 0,2° se zaznamenají viditelné hřebeny; vzdálenější jsou světlejší (vzdušná perspektiva).</li>
+      <li><b>Vrcholy</b> z OpenStreetMap (natural=peak, rozhledny) se označí jako viditelné, když je jejich nejvyšší buňka v modelu vidět s tolerancí podle velikosti buňky.</li>
+    </ul>
+    <h3>Výškové modely a jejich meze</h3>
+    <ul>
+      <li><b>Terrain Tiles</b> (Mapzen/Tilezen, AWS Open Data, kódování Terrarium): v Evropě EU-DEM © Copernicus ~30 m, jinde SRTM/GMTED © USGS, ETOPO1 © NOAA a <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">další zdroje</a>. Les a města jsou v nich zčásti, vrcholy ostrých hor zaoblené.</li>
+      <li><b>ČÚZK DMR 5G</b> – digitální model reliéfu z leteckého laserového skenování (2009–2013, průběžně aktualizovaný), holý terén bez lesa a budov, © ČÚZK, CC BY 4.0. Výhled vychází <b>optimisticky</b> – stromy ve skutečnosti zakryjí víc.</li>
+      <li><b>ČÚZK DMP 1G</b> – digitální model povrchu včetně lesa a staveb (2009–2013), © ČÚZK, CC BY 4.0. Pozor: výška oka se přičítá k povrchu v místě pozorovatele – v lese ke korunám stromů, na budově ke střeše.</li>
+      <li>ČÚZK pokrývá jen Česko; mimo hranice zůstanou buňky bez dat a paprsky přes ně „nevidí“ překážky. Na hranici (Sněžka, Šumava) použijte Terrain Tiles.</li>
+      <li>Model nezná stožáry, rozhledny ani jednotlivé stromy. Skutečnou dohlednost omezuje i opar – za běžného počasí bývá 20–50 km, výjimečně přes 200 km.</li>
+    </ul>
+    <h3>Zdroje a licence</h3>
+    <ul>
+      <li>Mapové podklady © přispěvatelé <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL), OpenTopoMap (CC BY-SA), snímky © Esri.</li>
+      <li>Vrcholy: OpenStreetMap přes <a href="https://overpass-api.de/" target="_blank" rel="noopener">Overpass API</a> (ODbL). Hledání míst: Nominatim (OSM).</li>
+      <li>Výpočet probíhá jen ve vašem prohlížeči; ukládá se pouze nastavení (localStorage).</li>
+    </ul>
+  </div>
+</form></dialog>
+
+<script src="viditelnost/app.js"></script>
+</body>
+</html>

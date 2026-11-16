@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skladová evidence</title>
+<meta name="description" content="Jednoduchý sklad pro malou firmu a dílnu: skladové karty, příjemky, výdejky, převodky, inventura s rozdíly, ocenění FIFO nebo průměrem, stav k datu, seznam k objednání, tisk dokladů A4, čtečka EAN, CSV a záloha.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="sklad/jadro.js"></script>
+<script src="sklad/ctecka.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 170px;flex-shrink:1;min-width:140px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1500px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1250px;margin:0 auto}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;text-align:left;font:inherit;color:inherit}
+button.dlazdice{cursor:pointer}
+button.dlazdice:hover{border-color:var(--border-strong)}
+.dlazdice b{display:block;font-size:clamp(1.05rem,4.2vw,1.4rem);white-space:nowrap;line-height:1.15;word-break:break-word}
+.dlazdice span{font-size:.78rem;color:var(--text-muted)}
+.dlazdice.varovani b{color:var(--danger)}
+.ovl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.ovl label{display:flex;gap:6px;align-items:center;font-size:.84rem;color:var(--text-muted)}
+.ovl .vpravo{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.tip{font-size:.8rem;color:var(--text-muted);margin:4px 0 10px;line-height:1.45}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.6}
+h2.skupina{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:16px 0 6px}
+
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+td.cislo,th.cislo{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tfoot td{font-weight:700;border-bottom:0}
+tbody tr.klik{cursor:pointer}
+tbody tr.klik:hover td{background:var(--bg-hover)}
+tr.pod td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
+td .akce{display:flex;gap:3px;flex-wrap:nowrap;justify-content:flex-end}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+.plus{color:var(--ok)} .minus{color:var(--danger)}
+.znacka{display:inline-block;font-size:.7rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border);white-space:nowrap}
+.znacka.var{border-color:var(--danger);color:var(--danger)}
+.kod{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem}
+td input.vstup{padding:4px 6px;width:100%}
+td input.vstup.cislo{text-align:right;max-width:110px}
+
+/* dialogy */
+dialog.okno{margin:auto;overflow:hidden;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,900px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:92vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.pole .spolu{display:flex;gap:4px}
+.pole .spolu .vstup{flex:1}
+.radek{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.polozky td{padding:4px}
+.polozky td.mj{color:var(--text-muted);font-size:.78rem;white-space:nowrap}
+.polozky .karta-vstup{min-width:150px}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info.chyba{border-left:3px solid var(--danger);color:var(--text)}
+.sklady-seznam{display:grid;gap:6px}
+.sklady-seznam div{display:flex;gap:6px}
+.sklady-seznam .vstup{flex:1}
+
+/* čtečka EAN (stejná jako Zásoby) */
+.ctecka{position:fixed;inset:0;z-index:200;background:#000;color:#fff;display:flex;flex-direction:column}
+.ctecka-hlava{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.ctecka-hlava strong{margin-right:auto}
+.ctecka .btn{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka-obraz{position:relative;flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ctecka video{width:100%;height:100%;object-fit:cover}
+.ctecka-ramecek{position:absolute;left:7%;right:7%;top:25%;bottom:25%;border:2px solid rgba(255,255,255,.85);border-radius:12px;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
+.ctecka-stav{padding:10px 14px;text-align:center;font-size:.92rem;min-height:2.6em}
+.ctecka-stav.chyba{color:#ffb3b3}
+.ctecka-rucne{display:flex;gap:8px;padding:6px 12px 16px;max-width:520px;margin:0 auto;width:100%}
+.ctecka-rucne .vstup{flex:1;background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka-rucne .vstup::placeholder{color:rgba(255,255,255,.6)}
+
+/* tištěné listy A4 – vždy černá na bílé (styl jako Tiskopisy) */
+#nahled{overflow:auto;background:var(--bg-deep,var(--bg));padding:12px;display:block}
+.list{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#000;box-shadow:0 2px 12px rgba(0,0,0,.35);padding:12mm;font-family:"Liberation Sans",Arial,sans-serif;font-size:9pt}
+.list .hlava{display:flex;justify-content:space-between;align-items:flex-end;gap:8mm;border-bottom:.5mm solid #000;padding-bottom:1.5mm;margin-bottom:3mm}
+.list .hlava h2{font-size:15pt;margin:0}
+.list .hlava .org{text-align:right;font-size:8pt;line-height:1.3}
+.list .udaje{display:flex;flex-wrap:wrap;gap:1.5mm 6mm;margin-bottom:3mm;font-size:9pt}
+.list .udaj{display:flex;gap:1.5mm;align-items:baseline;flex:1 1 60mm}
+.list .udaj b{white-space:nowrap}
+.list .udaj span{flex:1;border-bottom:.2mm dotted #000;min-height:4mm;white-space:pre-wrap}
+.list table.tab{width:100%;border-collapse:collapse;font-size:8.5pt}
+.list .tab th,.list .tab td{border:.25mm solid #000;padding:.8mm 1.2mm;color:#000}
+.list .tab th{font-size:7.5pt;background:#e8e8e8;text-transform:none;letter-spacing:0;text-align:center}
+.list .tab td.cislo{text-align:right}
+.list .tab tfoot td{background:#f2f2f2;font-weight:700}
+.list .tab td.prazdne{height:6.5mm}
+.list .podpisy{display:flex;justify-content:space-between;gap:12mm;margin-top:16mm}
+.list .podpisy div{flex:1;max-width:60mm;text-align:center;font-size:8pt;border-top:.25mm solid #000;padding-top:1mm}
+.list .pozn{font-size:8pt;margin-top:3mm;white-space:pre-wrap}
+.list .pata{display:flex;justify-content:space-between;gap:6mm;font-size:7pt;color:#444;margin-top:6mm;padding-top:1mm;border-top:.2mm solid #999}
+#tiskPlocha{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  body > *:not(#tiskPlocha){display:none!important}
+  html,body{height:auto;display:block;background:#fff!important}
+  #tiskPlocha{display:block}
+  .list{box-shadow:none;margin:0;min-height:0;break-after:page}
+  .list:last-child{break-after:auto}
+  .list *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .list thead{display:table-header-group}
+  .list tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>📦 Sklad</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Firma a sklady, záloha, CSV">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nový"><span class="skup-nazev" aria-hidden="true">Nový</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-nabidka="nabNovy" aria-expanded="false" title="Nový doklad nebo karta">✚<span class="txt"> Doklad</span> ▾</button>
+    <button class="tl" data-prikaz="novaKarta" title="Nová skladová karta">🗂️<span class="txt"> Karta</span></button>
+    <button class="tl" data-prikaz="ctecka" title="Najít kartu podle čárového kódu (kamera)">📷<span class="txt"> EAN</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="karty" title="Skladové karty a stav" aria-pressed="true">🗂️<span class="txt"> Karty</span></button>
+    <button class="tl" data-pohled="doklady" title="Doklady" aria-pressed="false">🧾<span class="txt"> Doklady</span></button>
+    <button class="tl" data-pohled="pohyby" title="Pohyby karty" aria-pressed="false">📊<span class="txt"> Pohyby</span></button>
+    <button class="tl" data-pohled="stav" title="Stav k datu" aria-pressed="false">📅<span class="txt"> Stav k datu</span></button>
+    <button class="tl" data-pohled="objednat" title="K objednání" aria-pressed="false">🛒<span class="txt"> K objednání</span></button>
+    <button class="tl" data-pohled="inventura" title="Inventura" aria-pressed="false">📋<span class="txt"> Inventura</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Sklad a ocenění"><span class="skup-nazev" aria-hidden="true">Sklad · ocenění</span><div class="skup-tl">
+    <select class="tl" id="filtrSklad" aria-label="Sklad"></select>
+    <select class="tl" id="metoda" aria-label="Metoda ocenění zásob" title="Metoda ocenění výdejů a zásob"><option value="fifo">FIFO</option><option value="prumer">Průměr</option></select>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat kartu, doklad…" aria-label="Hledat">
+  </div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="firma">🏢 Firma, sklady a ocenění…</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <hr>
+  <button class="tl" data-prikaz="csvKarty">📊 Karty do CSV</button>
+  <button class="tl" data-prikaz="csvImport">📥 Načíst karty z CSV…</button>
+  <button class="tl" data-prikaz="csvStav">📊 Stav zásob do CSV</button>
+  <button class="tl" data-prikaz="csvPohyby">📊 Všechny pohyby do CSV</button>
+  <hr>
+  <button class="tl" data-prikaz="ukazka">🧪 Vložit ukázková data</button>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<div id="nabNovy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novyP">📥 Příjemka</button>
+  <button class="tl" data-prikaz="novyV">📤 Výdejka</button>
+  <button class="tl" data-prikaz="novyT">🔁 Převodka mezi sklady</button>
+  <button class="tl" data-prikaz="novaI">📋 Inventura</button>
+  <hr>
+  <button class="tl" data-prikaz="novaKarta">🗂️ Skladová karta</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+<input type="file" id="souborCsv" accept=".csv,text/csv,text/plain" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+<div id="tiskPlocha"></div>
+
+<datalist id="dlKarty"></datalist>
+<datalist id="dlPartneri"></datalist>
+<datalist id="dlJednotky"></datalist>
+<datalist id="dlUmisteni"></datalist>
+
+<!-- skladová karta -->
+<dialog class="okno" id="dlgKarta"><form method="dialog">
+  <header id="dlgKartaTitul">Skladová karta</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Kód (číslo karty)<input class="vstup" name="kod" maxlength="40" autocomplete="off"></label>
+      <label class="pole">Měrná jednotka<input class="vstup" name="jednotka" maxlength="12" list="dlJednotky" required></label>
+    </div>
+    <label class="pole">Název<input class="vstup" name="nazev" required maxlength="160" autocomplete="off"></label>
+    <div class="radek">
+      <label class="pole">Umístění (regál, police)<input class="vstup" name="umisteni" maxlength="60" list="dlUmisteni" autocomplete="off"></label>
+      <label class="pole">EAN<span class="spolu"><input class="vstup" name="ean" inputmode="numeric" maxlength="14" autocomplete="off"><button type="button" class="btn" id="dlgKartaCtecka" title="Naskenovat kamerou" aria-label="Naskenovat kamerou">📷</button></span></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Minimální zásoba (0 = nehlídat)<input class="vstup" name="minimum" inputmode="decimal" placeholder="0"></label>
+      <label class="pole">Doplnit do (cílová zásoba)<input class="vstup" name="cil" inputmode="decimal" placeholder="= minimum"></label>
+    </div>
+    <label class="pole">Poznámka<textarea class="vstup" name="poznamka" rows="2" maxlength="1000"></textarea></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgKartaSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- doklad -->
+<dialog class="okno siroke" id="dlgDoklad"><form method="dialog">
+  <header id="dlgDokladTitul">Doklad</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Číslo dokladu<input class="vstup" name="cislo" required maxlength="30" autocomplete="off"></label>
+      <label class="pole">Datum<input class="vstup" name="datum" type="date" required></label>
+      <label class="pole" id="poleSklad">Sklad<select class="vstup" name="sklad"></select></label>
+      <label class="pole" id="poleCil">Do skladu<select class="vstup" name="cil"></select></label>
+    </div>
+    <div class="radek">
+      <label class="pole" id="polePartner"><span id="popisPartner">Dodavatel</span><input class="vstup" name="partner" maxlength="160" list="dlPartneri" autocomplete="off"></label>
+      <label class="pole">Poznámka<input class="vstup" name="poznamka" maxlength="1000"></label>
+    </div>
+    <div class="tab-obal"><table class="polozky"><thead><tr><th>Karta (kód, název nebo EAN)</th><th class="cislo">Množství</th><th></th><th class="cislo" id="thCena">Cena/MJ</th><th class="cislo" id="thCelkem">Celkem</th><th></th></tr></thead>
+      <tbody id="dokladPolozky"></tbody>
+      <tfoot><tr><td colspan="4"><button type="button" class="btn mini" id="dokladRadek">✚ Řádek</button> <button type="button" class="btn mini" id="dokladSken">📷 Přidat skenem</button></td><td class="cislo" id="dokladSuma"></td><td></td></tr></tfoot>
+    </table></div>
+    <p class="tip" id="dokladTip" style="margin:0"></p>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgDokladSmaz">🗑️ Smazat</button>
+    <button type="button" class="btn" id="dlgDokladTisk">🖨️ Tisk</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- firma a sklady -->
+<dialog class="okno" id="dlgFirma"><form method="dialog">
+  <header>🏢 Firma, sklady a ocenění</header>
+  <div class="telo">
+    <label class="pole">Název firmy (hlavička dokladů)<input class="vstup" name="nazev" maxlength="120"></label>
+    <div class="radek">
+      <label class="pole">IČO<input class="vstup" name="ico" maxlength="20"></label>
+      <label class="pole">Metoda ocenění<select class="vstup" name="metoda"><option value="fifo">FIFO</option><option value="prumer">Vážený průměr</option></select></label>
+    </div>
+    <label class="pole">Adresa<input class="vstup" name="adresa" maxlength="200"></label>
+    <div class="pole">Sklady<div class="sklady-seznam" id="skladySeznam"></div></div>
+    <div><button type="button" class="btn mini" id="skladPridej">✚ Přidat sklad</button></div>
+    <p class="info" style="margin:0">Ocenění se počítá vždy znovu ze všech dokladů – přepnutí metody přecení výdeje i zásoby zpětně. Sklad s doklady nejde smazat, jen přejmenovat.</p>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- náhled tisku -->
+<dialog class="okno siroke" id="dlgTisk"><form method="dialog">
+  <header id="dlgTiskTitul">🖨️ Náhled tisku</header>
+  <div class="telo" id="nahled"></div>
+  <footer>
+    <button value="zrusit" class="btn">Zavřít</button>
+    <button type="button" class="btn primary" id="tiskniTl">🖨️ Tisk (A4)</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>🗂️ Skladové karty</b> – zboží nebo materiál s kódem, měrnou jednotkou, umístěním, EAN a <b>minimální zásobou</b>. Stav se nezadává ručně, počítá se z dokladů.</p>
+    <p style="margin:0"><b>Doklady</b> mají číselnou řadu po rocích (PR2026-0001 …): <b>📥 příjemka</b> (dodavatel, nákupní cena za MJ bez DPH), <b>📤 výdejka</b> (odběratel / zakázka, cena se dopočítá oceněním), <b>🔁 převodka</b> mezi sklady (přenáší cenu), <b>📋 inventura</b> (skutečný stav; rozdíl proti evidenci se zaúčtuje jako manko nebo přebytek).</p>
+    <p style="margin:0"><b>Ocenění:</b> <b>FIFO</b> vydává nejdřív nejstarší nákupy za jejich cenu; <b>vážený průměr</b> počítá klouzavou průměrnou cenu po každém příjmu. Metodu lze přepnout v liště – vše se přepočítá ze všech dokladů. Přebytek z inventury se oceňuje poslední nákupní cenou (FIFO) nebo průměrem.</p>
+    <p style="margin:0"><b>Zpětné doklady</b> jsou povolené – pořadí určuje datum dokladu. Když by výdej šel do minusu (i kvůli pozdějšímu dokladu), stránka upozorní.</p>
+    <p style="margin:0"><b>🛒 K objednání</b> – karty pod minimem, návrh množství do cílové zásoby, poslední dodavatel a cena. <b>📅 Stav k datu</b> – množství a hodnota zásob k libovolnému dni.</p>
+    <p style="margin:0"><b>🖨️ Tisk</b> dokladů, inventurního soupisu, stavu i objednávky na A4. <b>📷 EAN</b> najde kartu podle čárového kódu (kamera nebo opis čísla).</p>
+    <p style="margin:0">Data jsou jen v tomto prohlížeči (IndexedDB) – zálohujte přes <i>Soubor → Záloha</i>. Stránka nenahrazuje účetní software; pro daňovou evidenci si ověřte požadavky svého účetnictví.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.SkladJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const fc = x => J.formatCislo(x), kc = x => J.formatKc(x), fd = s => J.formatDatum(s);
+const LS = 'webapp_sklad_';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+let pohled = 'karty', filtrDruh = '', datumStavu = J.dnesIso(), pohybyKarta = '';
+let inv = null;   // rozpracovaná inventura {id, sklad, datum, skutecne:{}}
+try { pohled = localStorage.getItem(LS + 'pohled') || 'karty'; } catch (e) {}
+const zapamatuj = (k, v) => { try { localStorage.setItem(LS + k, v); } catch (e) {} };
+const dnes = () => J.dnesIso();
+const sklad = () => $('filtrSklad').value;
+const nazevSkladu = id => (data.sklady.find(s => s.id === id) || { nazev: '?' }).nazev;
+const karta = id => data.karty.find(k => k.id === id);
+
+/* ---------- IndexedDB: celý stav jako jeden záznam ---------- */
+const IDB = (() => {
+  let db = null;
+  const otevri = () => db ? Promise.resolve(db) : new Promise((ok, chyba) => {
+    const r = indexedDB.open(J.DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('data');
+    r.onsuccess = () => ok(db = r.result);
+    r.onerror = () => chyba(r.error);
+  });
+  const tx = (rezim, fn) => otevri().then(d => new Promise((ok, chyba) => {
+    const t = d.transaction('data', rezim), r = fn(t.objectStore('data'));
+    t.oncomplete = () => ok(r && r.result);
+    t.onerror = () => chyba(t.error);
+  }));
+  return { nacti: () => tx('readonly', s => s.get('stav')), uloz: d => tx('readwrite', s => s.put(d, 'stav')) };
+})();
+function uloz() { IDB.uloz(data).catch(e => Dialog.chyba('Data se nepodařilo uložit: ' + (e && e.message))); }
+function zmena() { uloz(); obnovVybery(); vykresli(); }
+
+/* ---------- výběry a našeptávače ---------- */
+function obnovVybery() {
+  const sel = $('filtrSklad'), akt = sel.value;
+  sel.innerHTML = (data.sklady.length > 1 ? '<option value="">Všechny sklady</option>' : '') + data.sklady.map(s => `<option value="${esc(s.id)}" data-i18n="ne">${esc(s.nazev)}</option>`).join('');
+  sel.value = data.sklady.some(s => s.id === akt) || (akt === '' && data.sklady.length > 1) ? akt : sel.options[0].value;
+  $('metoda').value = data.metoda;
+  $('dlKarty').innerHTML = data.karty.map(k => `<option value="${esc(J.popisKarty(k))}">`).join('');
+  const partneri = new Set(data.doklady.map(d => d.partner).filter(Boolean));
+  $('dlPartneri').innerHTML = [...partneri].sort((a, b) => a.localeCompare(b, 'cs')).map(p => `<option value="${esc(p)}">`).join('');
+  $('dlJednotky').innerHTML = J.JEDNOTKY.map(j => `<option value="${j}">`).join('');
+  $('dlUmisteni').innerHTML = [...new Set(data.karty.map(k => k.umisteni).filter(Boolean))].map(u => `<option value="${esc(u)}">`).join('');
+  document.querySelectorAll('[data-pohled="objednat"] .txt').forEach(t => {
+    const n = J.kObjednani(data, dnes()).length;
+    t.textContent = ' K objednání' + (n ? ' (' + n + ')' : '');
+  });
+}
+
+/* ---------- pohledy ---------- */
+function vykresliKarty() {
+  const st = J.stavKDatu(data, '9999-12-31', sklad());
+  const pod = new Set(J.kObjednani(data, dnes()).map(r => r.karta.id));
+  const radky = J.filtrKaret(st.radky.map(r => r.karta), $('hledat').value).map(k => st.radky.find(r => r.karta === k));
+  let h = `<div class="souhrn">
+    <div class="dlazdice"><b>${data.karty.length}</b><span>skladových karet</span></div>
+    <div class="dlazdice"><b>${kc(st.celkem)}</b><span>hodnota zásob${sklad() ? ' – ' + esc(nazevSkladu(sklad())) : ''} (${data.metoda === 'fifo' ? 'FIFO' : 'průměr'})</span></div>
+    <button class="dlazdice${pod.size ? ' varovani' : ''}" data-pohled="objednat"><b>${pod.size}</b><span>🛒 pod minimem</span></button>
+    <button class="dlazdice" data-pohled="doklady"><b>${data.doklady.length}</b><span>🧾 dokladů</span></button>
+  </div>`;
+  const chyby = J.prepocet(data).chyby;
+  if (chyby.length) h += `<p class="info chyba">⚠️ ${chyby.length}× výdej nad skladovou zásobu (záporný stav): ${chyby.slice(0, 5).map(c => esc(c.cislo) + ' – ' + esc((karta(c.karta) || {}).nazev) + ' chybí ' + fc(c.chybi)).join('; ')}${chyby.length > 5 ? '…' : ''}</p>`;
+  if (!data.karty.length) {
+    h += `<div class="prazdno">Zatím žádné skladové karty.<br><button class="btn primary" data-prikaz="novaKarta">🗂️ Nová karta</button> <button class="btn" data-prikaz="csvImport">📥 Načíst z CSV</button> <button class="btn" data-prikaz="ukazka">🧪 Ukázková data</button></div>`;
+    $('obsah').innerHTML = h; return;
+  }
+  if (!radky.length) { $('obsah').innerHTML = h + '<div class="prazdno">Hledání nic neodpovídá.</div>'; return; }
+  h += `<div class="tab-obal"><table><thead><tr><th>Kód</th><th>Název</th><th>Umístění</th><th class="cislo">Stav</th><th>MJ</th><th class="cislo">Cena/MJ</th><th class="cislo">Hodnota</th><th class="cislo">Minimum</th><th></th></tr></thead><tbody>` +
+    radky.sort((a, b) => (a.karta.kod || a.karta.nazev).localeCompare(b.karta.kod || b.karta.nazev, 'cs', { numeric: true })).map(r => {
+      const k = r.karta;
+      return `<tr class="${pod.has(k.id) ? 'pod' : ''}" data-karta="${esc(k.id)}"><td class="kod" data-i18n="ne">${esc(k.kod)}</td><td data-i18n="ne">${esc(k.nazev)}${pod.has(k.id) ? ' <span class="znacka var">pod minimem</span>' : ''}</td>
+      <td data-i18n="ne">${esc(k.umisteni)}</td><td class="cislo ${r.q < 0 ? 'minus' : ''}"><b>${fc(r.q)}</b></td><td>${esc(k.jednotka)}</td><td class="cislo">${r.q > 0 ? kc(r.cenaJ) : ''}</td><td class="cislo">${kc(r.hodnota)}</td>
+      <td class="cislo">${k.minimum ? fc(k.minimum) : ''}</td>
+      <td><div class="akce"><button class="btn mini" data-akce="prijem" title="Příjemka na tuto kartu">📥</button><button class="btn mini" data-akce="vydej" title="Výdejka z této karty">📤</button><button class="btn mini" data-akce="pohyby" title="Pohyby karty">📊</button><button class="btn mini" data-akce="upravit" title="Upravit kartu" aria-label="Upravit kartu">✎</button></div></td></tr>`;
+    }).join('') + '</tbody></table></div>';
+  $('obsah').innerHTML = h;
+}
+
+function vykresliDoklady() {
+  const q = J.bezDiakritiky($('hledat').value).trim(), s = sklad(), pr = J.prepocet(data);
+  const z = J.seradDoklady(data.doklady).reverse().filter(d => (!filtrDruh || d.druh === filtrDruh) && (!s || d.sklad === s || d.cil === s) &&
+    (!q || J.bezDiakritiky([d.cislo, d.partner, d.poznamka].concat(d.polozky.map(p => { const k = karta(p.karta); return k ? k.kod + ' ' + k.nazev : ''; })).join(' ')).includes(q)));
+  let h = `<div class="ovl"><label>Druh <select class="vstup" id="filtrDruh"><option value="">všechny</option>${Object.entries(J.DRUHY).map(([k, v]) => `<option value="${k}"${filtrDruh === k ? ' selected' : ''}>${v.ikona} ${v.nazev}</option>`).join('')}</select></label>
+    <span class="vpravo"><button class="btn mini" data-prikaz="novyP">📥 Příjemka</button><button class="btn mini" data-prikaz="novyV">📤 Výdejka</button><button class="btn mini" data-prikaz="novyT">🔁 Převodka</button></span></div>`;
+  if (!z.length) { $('obsah').innerHTML = h + '<div class="prazdno">Žádné doklady.</div>'; return; }
+  h += `<div class="tab-obal"><table><thead><tr><th>Číslo</th><th>Datum</th><th>Druh</th><th>Sklad</th><th>Partner / poznámka</th><th class="cislo">Položek</th><th class="cislo">Hodnota</th><th></th></tr></thead><tbody>` +
+    z.map(d => `<tr class="klik" data-doklad="${esc(d.id)}"><td class="kod">${esc(d.cislo)}</td><td>${fd(d.datum)}</td><td>${J.DRUHY[d.druh].ikona} ${J.DRUHY[d.druh].nazev}</td>
+      <td data-i18n="ne">${esc(nazevSkladu(d.sklad))}${d.druh === 'T' ? ' → ' + esc(nazevSkladu(d.cil)) : ''}</td><td data-i18n="ne">${esc(d.partner || d.poznamka)}</td><td class="cislo">${d.polozky.length}</td>
+      <td class="cislo">${d.druh === 'I' ? '' : kc(J.hodnotaDokladu(data, d, pr))}</td><td><div class="akce"><button class="btn mini" data-akce="tiskDokladu" title="Tisk" aria-label="Tisk">🖨️</button></div></td></tr>`).join('') +
+    '</tbody></table></div>';
+  $('obsah').innerHTML = h;
+}
+
+function vykresliPohyby() {
+  const k = karta(pohybyKarta);
+  let h = `<div class="ovl"><label>Karta <input class="vstup" id="pohybyKarta" list="dlKarty" style="min-width:min(320px,70vw)" value="${k ? esc(J.popisKarty(k)) : ''}" placeholder="kód nebo název" autocomplete="off"></label>
+    <span class="vpravo">${k ? '<button class="btn mini" data-prikaz="csvPohybyKarty">📊 CSV</button>' : ''}</span></div>`;
+  if (!k) { $('obsah').innerHTML = h + '<div class="prazdno">Vyberte kartu – nebo klikněte na 📊 u karty v přehledu.</div>'; return; }
+  const p = J.pohybyKarty(data, k.id, sklad());
+  h += `<p class="tip"><b data-i18n="ne">${esc(J.popisKarty(k))}</b> · ${esc(k.jednotka)}${sklad() ? ' · sklad ' + esc(nazevSkladu(sklad())) : ' · všechny sklady (převodka = výdej + příjem)'} · ocenění ${data.metoda === 'fifo' ? 'FIFO' : 'průměrem'}</p>`;
+  if (!p.length) { $('obsah').innerHTML = h + '<div class="prazdno">Karta zatím nemá pohyby.</div>'; return; }
+  h += `<div class="tab-obal"><table><thead><tr><th>Datum</th><th>Doklad</th><th>Sklad</th><th class="cislo">Příjem</th><th class="cislo">Výdej</th><th class="cislo">Cena/MJ</th><th class="cislo">Hodnota</th><th class="cislo">Zůstatek</th><th class="cislo">Hodnota zůst.</th></tr></thead><tbody>` +
+    p.map(x => `<tr class="klik" data-doklad="${esc(x.doklad)}"><td>${fd(x.datum)}</td><td>${J.DRUHY[x.druh].ikona} <span class="kod">${esc(x.cislo)}</span></td><td data-i18n="ne">${esc(nazevSkladu(x.sklad))}</td>
+      <td class="cislo plus">${x.mnozstvi > 0 ? fc(x.mnozstvi) : ''}</td><td class="cislo minus">${x.mnozstvi < 0 ? fc(-x.mnozstvi) : ''}</td><td class="cislo">${kc(x.cenaJ)}</td><td class="cislo">${kc(x.hodnota)}</td>
+      <td class="cislo ${x.zustatek < 0 ? 'minus' : ''}"><b>${fc(x.zustatek)}</b></td><td class="cislo">${kc(x.zustatekHodnota)}</td></tr>`).join('') + '</tbody></table></div>';
+  $('obsah').innerHTML = h;
+}
+
+function vykresliStav() {
+  const st = J.stavKDatu(data, datumStavu, sklad());
+  const r = J.filtrKaret(data.karty, $('hledat').value).map(k => st.radky.find(x => x.karta === k)).filter(x => x.q !== 0 || x.hodnota);
+  let h = `<div class="ovl"><label>Stav ke dni <input class="vstup" type="date" id="datumStavu" value="${datumStavu}"></label>
+    <span class="vpravo"><button class="btn mini" data-prikaz="tiskStavu">🖨️ Tisk</button><button class="btn mini" data-prikaz="csvStav">📊 CSV</button></span></div>
+    <div class="souhrn"><div class="dlazdice"><b>${kc(st.celkem)}</b><span>hodnota zásob k ${fd(datumStavu)} (${data.metoda === 'fifo' ? 'FIFO' : 'průměr'})</span></div><div class="dlazdice"><b>${r.length}</b><span>karet se zásobou</span></div></div>`;
+  if (!r.length) { $('obsah').innerHTML = h + '<div class="prazdno">K tomuto dni není na skladě nic.</div>'; return; }
+  h += `<div class="tab-obal"><table><thead><tr><th>Kód</th><th>Název</th><th class="cislo">Množství</th><th>MJ</th><th class="cislo">Cena/MJ</th><th class="cislo">Hodnota</th></tr></thead><tbody>` +
+    r.map(x => `<tr><td class="kod" data-i18n="ne">${esc(x.karta.kod)}</td><td data-i18n="ne">${esc(x.karta.nazev)}</td><td class="cislo">${fc(x.q)}</td><td>${esc(x.karta.jednotka)}</td><td class="cislo">${x.q > 0 ? kc(x.cenaJ) : ''}</td><td class="cislo">${kc(x.hodnota)}</td></tr>`).join('') +
+    `</tbody><tfoot><tr><td colspan="5">Celkem</td><td class="cislo">${kc(st.celkem)}</td></tr></tfoot></table></div>`;
+  $('obsah').innerHTML = h;
+}
+
+function vykresliObjednat() {
+  const r = J.kObjednani(data, dnes());
+  let h = `<p class="tip">Karty, jejichž celková zásoba (všechny sklady) je pod minimem. Návrh doplní do cílové zásoby (není-li zadaná, do minima). Dodavatel a cena z poslední příjemky.</p>`;
+  if (!r.length) { $('obsah').innerHTML = h + '<div class="prazdno">Nic není pod minimem. Minimální zásobu nastavíte na kartě (✎).</div>'; return; }
+  h += `<div class="ovl"><span class="vpravo"><button class="btn mini" data-prikaz="tiskObjednavky">🖨️ Tisk seznamu</button><button class="btn mini" data-prikaz="kopirujObjednavku">📋 Kopírovat jako text</button></span></div>`;
+  let akt = null;
+  for (const x of r) {
+    if (x.dodavatel !== akt) {
+      if (akt !== null) h += '</tbody></table></div>';
+      akt = x.dodavatel;
+      h += `<h2 class="skupina" data-i18n="ne">${esc(akt || 'Bez dodavatele')}</h2><div class="tab-obal"><table><thead><tr><th>Kód</th><th>Název</th><th class="cislo">Stav</th><th class="cislo">Minimum</th><th class="cislo">Objednat</th><th>MJ</th><th class="cislo">Posl. cena</th><th></th></tr></thead><tbody>`;
+    }
+    h += `<tr class="pod" data-karta="${esc(x.karta.id)}"><td class="kod" data-i18n="ne">${esc(x.karta.kod)}</td><td data-i18n="ne">${esc(x.karta.nazev)}</td><td class="cislo">${fc(x.q)}</td><td class="cislo">${fc(x.karta.minimum)}</td>
+      <td class="cislo"><b>${fc(x.navrh)}</b></td><td>${esc(x.karta.jednotka)}</td><td class="cislo">${x.cena ? kc(x.cena) : ''}</td><td><div class="akce"><button class="btn mini" data-akce="prijem" title="Příjemka na tuto kartu">📥</button></div></td></tr>`;
+  }
+  $('obsah').innerHTML = h + '</tbody></table></div>';
+}
+
+/* inventura: soupis evidovaného stavu, zápis skutečného, rozdíly */
+function novaInventura(d) {
+  if (d) inv = { id: d.id, cislo: d.cislo, sklad: d.sklad, datum: d.datum, skutecne: Object.fromEntries(d.polozky.map(p => [p.karta, p.skutecne])) };
+  else inv = { id: null, cislo: '', sklad: sklad() || data.sklady[0].id, datum: dnes(), skutecne: {} };
+  pohled = 'inventura'; vykresli();
+}
+function radkyInventury() {
+  return J.rozdilyInventury(J.soupisInventury(data, inv.sklad, inv.datum, data.metoda, inv.id), inv.skutecne);
+}
+function vykresliInventuru() {
+  if (!inv) inv = { id: null, cislo: '', sklad: sklad() || data.sklady[0].id, datum: dnes(), skutecne: {} };
+  const r = radkyInventury(), filtr = new Set(J.filtrKaret(data.karty, $('hledat').value).map(k => k.id));
+  let h = `<div class="ovl"><label>Sklad <select class="vstup" id="invSklad"${inv.id ? ' disabled' : ''}>${data.sklady.map(s => `<option value="${esc(s.id)}"${s.id === inv.sklad ? ' selected' : ''} data-i18n="ne">${esc(s.nazev)}</option>`).join('')}</select></label>
+    <label>Ke dni <input class="vstup" type="date" id="invDatum" value="${inv.datum}"></label>
+    <span class="vpravo"><button class="btn mini" data-prikaz="tiskSoupisu">🖨️ Soupis k počítání</button><button class="btn mini" data-prikaz="tiskInventury">🖨️ Protokol s rozdíly</button>
+    ${inv.id ? '<button class="btn mini" data-prikaz="zrusInventuru">✕ Zavřít úpravu</button>' : ''}<button class="btn mini primary" data-prikaz="ulozInventuru">💾 ${inv.id ? 'Uložit změny ' + esc(inv.cislo) : 'Uložit inventuru'}</button></span></div>
+    <p class="tip">Do sloupce <b>Skutečně</b> zapište napočítané množství (prázdné = shoduje se s evidencí). Uložením vznikne doklad inventury; rozdíly se zaúčtují jako manko (−) nebo přebytek (+).</p>
+    <div class="souhrn" id="invSouhrn"></div>`;
+  if (!r.length) { $('obsah').innerHTML = h + '<div class="prazdno">Nejsou žádné skladové karty.</div>'; souhrnInventury(); return; }
+  h += `<div class="tab-obal"><table><thead><tr><th>Kód</th><th>Název</th><th>Umístění</th><th class="cislo">Evidováno</th><th class="cislo">Skutečně</th><th>MJ</th><th class="cislo">Rozdíl</th><th class="cislo">Hodnota rozdílu</th></tr></thead><tbody>` +
+    r.filter(x => filtr.has(x.karta.id)).map(x => `<tr data-karta="${esc(x.karta.id)}"><td class="kod" data-i18n="ne">${esc(x.karta.kod)}</td><td data-i18n="ne">${esc(x.karta.nazev)}</td><td data-i18n="ne">${esc(x.karta.umisteni)}</td>
+      <td class="cislo">${fc(x.evidovano)}</td><td class="cislo"><input class="vstup cislo" inputmode="decimal" data-skutecne aria-label="Skutečně" placeholder="${fc(x.evidovano)}" value="${inv.skutecne[x.karta.id] == null ? '' : String(inv.skutecne[x.karta.id]).replace('.', ',')}"></td>
+      <td>${esc(x.karta.jednotka)}</td><td class="cislo" data-rozdil></td><td class="cislo" data-hodnota></td></tr>`).join('') + '</tbody></table></div>';
+  $('obsah').innerHTML = h;
+  obnovRozdily(r);
+}
+function obnovRozdily(r) {
+  r = r || radkyInventury();
+  for (const x of r) {
+    const tr = $('obsah').querySelector(`tr[data-karta="${CSS.escape(x.karta.id)}"]`);
+    if (!tr) continue;
+    tr.querySelector('[data-rozdil]').innerHTML = x.rozdil ? `<b class="${x.rozdil > 0 ? 'plus' : 'minus'}">${x.rozdil > 0 ? '+' : ''}${fc(x.rozdil)}</b>` : '';
+    tr.querySelector('[data-hodnota]').textContent = x.rozdil ? kc(x.hodnota) : '';
+  }
+  souhrnInventury(r);
+}
+function souhrnInventury(r) {
+  r = r || radkyInventury();
+  const manko = r.filter(x => x.rozdil < 0), prebytek = r.filter(x => x.rozdil > 0);
+  const s = $('invSouhrn');
+  if (s) s.innerHTML = `<div class="dlazdice${manko.length ? ' varovani' : ''}"><b>${manko.length} · ${kc(manko.reduce((a, x) => a + x.hodnota, 0))}</b><span>manko</span></div>
+    <div class="dlazdice"><b>${prebytek.length} · ${kc(prebytek.reduce((a, x) => a + x.hodnota, 0))}</b><span>přebytek</span></div>
+    <div class="dlazdice"><b>${Object.keys(inv.skutecne).length} / ${r.length}</b><span>zapsaných karet</span></div>`;
+}
+async function ulozInventuru() {
+  const r = radkyInventury();
+  if (!r.length) return;
+  if (!inv.id && data.doklady.some(d => d.druh === 'I' && d.sklad === inv.sklad && d.datum === inv.datum) &&
+    !await Dialog.potvrd('Pro tento sklad a den už inventura existuje. Uložit další?')) return;
+  const puv = inv.id && data.doklady.find(d => d.id === inv.id);
+  const d = J.normDoklad({ id: inv.id || undefined, druh: 'I', cislo: puv ? puv.cislo : J.dalsiCislo(data, 'I', inv.datum), datum: inv.datum, sklad: inv.sklad,
+    polozky: r.map(x => ({ karta: x.karta.id, skutecne: x.skutecne })) });
+  const ch = J.kontrolaDokladu(data, d);
+  if (ch.length) return Dialog.chyba(ch.join('\n'));
+  const roz = r.filter(x => x.rozdil);
+  if (!await Dialog.potvrd(`Uložit inventuru ${d.cislo}: ${r.length} karet, ${roz.length} s rozdílem (${kc(roz.reduce((a, x) => a + x.hodnota, 0))})?`)) return;
+  J.ulozDoklad(data, d);
+  inv = null; pohled = 'doklady'; zmena();
+  Dialog.info('Inventura ' + d.cislo + ' uložena.');
+}
+
+function vykresli() {
+  document.querySelectorAll('.lista [data-pohled]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pohled === pohled));
+  ({ karty: vykresliKarty, doklady: vykresliDoklady, pohyby: vykresliPohyby, stav: vykresliStav, objednat: vykresliObjednat, inventura: vykresliInventuru }[pohled] || vykresliKarty)();
+}
+
+/* ---------- dialogy ---------- */
+function otevri(dlg) {
+  return new Promise(res => {
+    dlg.addEventListener('close', () => res(dlg.returnValue), { once: true });
+    dlg.returnValue = '';
+    dlg.showModal();
+  });
+}
+
+async function upravKartu(k, predvyplneni) {
+  const dlg = $('dlgKarta'), f = dlg.querySelector('form'), novy = !k;
+  if (novy) k = J.normKarta(Object.assign({ nazev: '' }, predvyplneni || {}));
+  $('dlgKartaTitul').textContent = novy ? '🗂️ Nová skladová karta' : '✎ ' + J.popisKarty(k);
+  for (const n of ['kod', 'jednotka', 'umisteni', 'ean', 'poznamka']) f[n].value = k[n];
+  f.nazev.value = novy && !(predvyplneni && predvyplneni.nazev) ? '' : k.nazev;
+  f.minimum.value = k.minimum ? String(k.minimum).replace('.', ',') : '';
+  f.cil.value = k.cil ? String(k.cil).replace('.', ',') : '';
+  $('dlgKartaCtecka').onclick = () => SkladCtecka(kod => { f.ean.value = kod; });
+  const pouzita = !novy && J.pouzitaKarta(data, k.id);
+  $('dlgKartaSmaz').hidden = novy;
+  $('dlgKartaSmaz').onclick = async () => {
+    if (pouzita) return Dialog.chyba('Karta je použitá v dokladech – nejde smazat. Nejdřív smažte nebo upravte doklady.');
+    if (!await Dialog.potvrd(`Smazat kartu „${k.nazev}“?`)) return;
+    data.karty = data.karty.filter(x => x.id !== k.id); dlg.close('smazano'); zmena();
+  };
+  for (;;) {
+    if (await otevri(dlg) !== 'ok') return null;
+    const kod = f.kod.value.trim(), ean = f.ean.value.replace(/\D/g, '');
+    const kolize = (kod && data.karty.find(x => x.id !== k.id && x.kod === kod)) || (ean && data.karty.find(x => x.id !== k.id && x.ean === ean));
+    if (kolize) { await Dialog.chyba(`Kód nebo EAN už má karta „${kolize.nazev}“.`); continue; }
+    if (ean && !J.eanKontrola(ean)) await Dialog.info('Pozor: EAN nemá platnou kontrolní číslici, uloženo i tak.');
+    const nova = J.normKarta({ id: k.id, kod, nazev: f.nazev.value, jednotka: f.jednotka.value, umisteni: f.umisteni.value, ean, minimum: f.minimum.value, cil: f.cil.value, poznamka: f.poznamka.value });
+    const i = data.karty.findIndex(x => x.id === k.id);
+    if (i >= 0) data.karty[i] = nova; else data.karty.push(nova);
+    zmena();
+    return nova;
+  }
+}
+
+/* doklad – editor položek */
+let dokl = null;   // {d: rozpracovaný doklad, sklademCache}
+function radekPolozky(p) {
+  const k = p && karta(p.karta), druh = dokl.d.druh;
+  return `<tr><td><input class="vstup karta-vstup" list="dlKarty" value="${k ? esc(J.popisKarty(k)) : ''}" aria-label="Karta" autocomplete="off"></td>
+    <td><input class="vstup cislo" data-mn inputmode="decimal" aria-label="Množství" value="${p && p.mnozstvi ? String(p.mnozstvi).replace('.', ',') : ''}"></td>
+    <td class="mj" data-mj></td>
+    <td>${druh === 'P' ? `<input class="vstup cislo" data-cena inputmode="decimal" aria-label="Cena za MJ" value="${p && p.cena ? String(p.cena).replace('.', ',') : ''}">` : ''}</td>
+    <td class="cislo" data-celkem></td>
+    <td><button type="button" class="btn mini danger" data-smaz-radek title="Odebrat řádek" aria-label="Odebrat řádek">✕</button></td></tr>`;
+}
+function sklademKDatu() {
+  const f = $('dlgDoklad').querySelector('form'), klic = f.datum.value + '|' + f.sklad.value;
+  if (!dokl.sklademCache || dokl.sklademCache.klic !== klic) {
+    const bez = Object.assign({}, data, { doklady: data.doklady.filter(x => x.id !== dokl.d.id) });
+    const st = J.stavKDatu(bez, J.jeDatum(f.datum.value) ? f.datum.value : dnes(), f.sklad.value);
+    dokl.sklademCache = { klic, mapa: Object.fromEntries(st.radky.map(r => [r.karta.id, r])) };
+  }
+  return dokl.sklademCache.mapa;
+}
+function prepoctiRadky() {
+  const druh = dokl.d.druh, sk = druh === 'P' ? null : sklademKDatu();
+  let suma = 0;
+  for (const tr of $('dokladPolozky').rows) {
+    const k = J.najdiKartu(data, tr.querySelector('.karta-vstup').value), mn = J.cislo(tr.querySelector('[data-mn]').value, 0);
+    let t = k ? k.jednotka : '';
+    if (k && sk) t += ' · skladem ' + fc(sk[k.id] ? sk[k.id].q : 0);
+    tr.querySelector('[data-mj]').textContent = t;
+    let celkem = 0;
+    if (druh === 'P') celkem = mn * J.cislo(tr.querySelector('[data-cena]').value, 0);
+    else if (k && sk && sk[k.id]) celkem = mn * sk[k.id].cenaJ;
+    suma += celkem;
+    tr.querySelector('[data-celkem]').textContent = k && mn ? (druh === 'P' ? '' : '≈ ') + kc(celkem) : '';
+  }
+  $('dokladSuma').textContent = suma ? (druh === 'P' ? '' : '≈ ') + kc(suma) : '';
+}
+function pridejRadek(p) {
+  $('dokladPolozky').insertAdjacentHTML('beforeend', radekPolozky(p));
+  prepoctiRadky();
+}
+async function upravDoklad(d) {
+  const dlg = $('dlgDoklad'), f = dlg.querySelector('form'), novy = !data.doklady.some(x => x.id === d.id);
+  dokl = { d, sklademCache: null };
+  const D = J.DRUHY[d.druh];
+  $('dlgDokladTitul').textContent = D.ikona + ' ' + D.nazev + (novy ? ' – nová' : ' ' + d.cislo);
+  const moznosti = data.sklady.map(s => `<option value="${esc(s.id)}" data-i18n="ne">${esc(s.nazev)}</option>`).join('');
+  f.sklad.innerHTML = moznosti; f.cil.innerHTML = moznosti;
+  f.cislo.value = d.cislo; f.datum.value = d.datum; f.sklad.value = d.sklad || data.sklady[0].id;
+  f.cil.value = d.cil || (data.sklady.find(s => s.id !== f.sklad.value) || data.sklady[0]).id;
+  f.partner.value = d.partner; f.poznamka.value = d.poznamka;
+  $('poleCil').hidden = d.druh !== 'T'; $('polePartner').hidden = d.druh === 'T';
+  $('poleSklad').firstChild.textContent = d.druh === 'T' ? 'Ze skladu' : 'Sklad';
+  $('popisPartner').textContent = d.druh === 'P' ? 'Dodavatel' : 'Odběratel / zakázka / středisko';
+  $('thCena').textContent = d.druh === 'P' ? 'Cena/MJ' : '';
+  $('dokladTip').textContent = d.druh === 'P' ? 'Nákupní cena za měrnou jednotku bez DPH (vč. dopravy, pokud ji chcete rozpustit do ceny).'
+    : 'Cena výdeje se dopočítá metodou ocenění (' + (data.metoda === 'fifo' ? 'FIFO' : 'vážený průměr') + '); „≈“ je odhad podle stavu k datu dokladu.';
+  $('dokladPolozky').innerHTML = '';
+  (d.polozky.length ? d.polozky : [null, null, null]).forEach(p => $('dokladPolozky').insertAdjacentHTML('beforeend', radekPolozky(p)));
+  prepoctiRadky();
+  $('dlgDokladSmaz').hidden = novy; $('dlgDokladTisk').hidden = novy;
+  $('dlgDokladSmaz').onclick = async () => {
+    const po = Object.assign({}, data, { doklady: data.doklady.filter(x => x.id !== d.id) });
+    const ned = J.noveNedostatky(data, po);
+    if (!await Dialog.potvrd(`Smazat doklad ${d.cislo}?` + (ned.length ? `\n\n⚠️ Pozdější výdeje půjdou do minusu (${ned.map(c => c.cislo).join(', ')}).` : ''))) return;
+    data.doklady = po.doklady; dlg.close('smazano'); zmena();
+  };
+  $('dlgDokladTisk').onclick = () => { dlg.close('tisk'); nahledTisku(D.nazev + ' ' + d.cislo, listDokladu(d)); };
+  f.cislo.oninput = () => { f.cislo.dataset.rucne = '1'; };
+  delete f.cislo.dataset.rucne;
+  f.datum.onchange = () => { if (novy && !f.cislo.dataset.rucne && J.jeDatum(f.datum.value)) f.cislo.value = J.dalsiCislo(data, d.druh, f.datum.value); prepoctiRadky(); };
+  f.sklad.onchange = prepoctiRadky;
+  for (;;) {
+    const v = await otevri(dlg);
+    if (v !== 'ok') return;
+    // položky: rozpoznat karty, neznámé nabídnout založit
+    const pol = [];
+    let zrus = false;
+    for (const tr of [...$('dokladPolozky').rows]) {
+      const t = tr.querySelector('.karta-vstup').value.trim(), mn = tr.querySelector('[data-mn]').value.trim();
+      if (!t && !mn) continue;
+      let k = J.najdiKartu(data, t);
+      if (!k) {
+        if (!t || !await Dialog.potvrd(`Karta „${t}“ neexistuje. Založit ji?`)) { zrus = true; break; }
+        k = await upravKartu(null, /^\d{8,14}$/.test(t) ? { ean: t } : { nazev: t });
+        if (!k) { zrus = true; break; }
+        tr.querySelector('.karta-vstup').value = J.popisKarty(k);
+      }
+      pol.push({ karta: k.id, mnozstvi: mn, cena: tr.querySelector('[data-cena]') ? tr.querySelector('[data-cena]').value : 0 });
+    }
+    if (zrus) continue;
+    const nd = J.normDoklad({ id: d.id, druh: d.druh, cislo: f.cislo.value, datum: f.datum.value, sklad: f.sklad.value, cil: f.cil.value, partner: f.partner.value, poznamka: f.poznamka.value, polozky: pol });
+    const ch = J.kontrolaDokladu(data, nd);
+    if (ch.length) { await Dialog.chyba(ch.join('\n')); continue; }
+    const po = J.migruj(JSON.parse(JSON.stringify(data)));
+    J.ulozDoklad(po, nd);
+    const ned = J.noveNedostatky(data, po);
+    if (ned.length && !await Dialog.potvrd('⚠️ Na skladě nebude dost zásoby:\n' + ned.slice(0, 8).map(c => `${c.cislo} (${fd(c.datum)}): ${(karta(c.karta) || {}).nazev} – chybí ${fc(c.chybi)}`).join('\n') + '\n\nUložit přesto (stav půjde do minusu)?')) continue;
+    J.ulozDoklad(data, nd);
+    zmena();
+    return nd;
+  }
+}
+function novyDoklad(druh, predvyplneni) {
+  const s = sklad() || data.sklady[0].id;
+  if (druh === 'T' && data.sklady.length < 2) return Dialog.info('Převodka potřebuje aspoň dva sklady – přidejte je v Soubor → Firma, sklady a ocenění.');
+  if (!data.karty.length && !(predvyplneni && predvyplneni.length)) Dialog.info('Tip: karty lze zakládat i přímo z dokladu – napište název nové položky.');
+  const d = J.normDoklad({ druh, datum: dnes(), sklad: s, polozky: [] });
+  d.cislo = J.dalsiCislo(data, druh, d.datum);
+  d.polozky = predvyplneni || [];
+  return upravDoklad(d);
+}
+
+async function firmaASklady() {
+  const dlg = $('dlgFirma'), f = dlg.querySelector('form');
+  f.nazev.value = data.firma.nazev; f.ico.value = data.firma.ico; f.adresa.value = data.firma.adresa; f.metoda.value = data.metoda;
+  let sklady = data.sklady.map(s => Object.assign({}, s));
+  const kresli = () => {
+    $('skladySeznam').innerHTML = sklady.map((s, i) => `<div><input class="vstup" data-i="${i}" value="${esc(s.nazev)}" maxlength="80" aria-label="Název skladu">${sklady.length > 1 ? `<button type="button" class="btn mini danger" data-smaz-sklad="${i}" title="Odebrat sklad" aria-label="Odebrat sklad">✕</button>` : ''}</div>`).join('');
+  };
+  kresli();
+  $('skladySeznam').oninput = e => { const i = e.target.dataset.i; if (i != null) sklady[i].nazev = e.target.value; };
+  $('skladySeznam').onclick = e => {
+    const b = e.target.closest('[data-smaz-sklad]');
+    if (!b) return;
+    const s = sklady[+b.dataset.smazSklad];
+    if (J.pouzitySklad(data, s.id)) return Dialog.chyba(`Sklad „${s.nazev}“ má doklady – nejde odebrat.`);
+    sklady.splice(+b.dataset.smazSklad, 1); kresli();
+  };
+  $('skladPridej').onclick = () => { sklady.push(J.normSklad({ nazev: 'Sklad ' + (sklady.length + 1) })); kresli(); };
+  if (await otevri(dlg) !== 'ok') return;
+  data.firma = { nazev: f.nazev.value.trim(), ico: f.ico.value.trim(), adresa: f.adresa.value.trim() };
+  data.metoda = f.metoda.value;
+  data.sklady = sklady.map(J.normSklad);
+  zmena();
+}
+
+/* ---------- tisk A4 ---------- */
+function hlavicka(titul) {
+  const fi = data.firma;
+  return `<div class="hlava"><h2>${titul}</h2><div class="org" data-i18n="ne">${esc(fi.nazev)}${fi.ico ? '<br>IČO ' + esc(fi.ico) : ''}${fi.adresa ? '<br>' + esc(fi.adresa) : ''}</div></div>`;
+}
+function pata() { return `<div class="pata"><span>Skladová evidence · ocenění ${data.metoda === 'fifo' ? 'FIFO' : 'váženým průměrem'}</span><span>Vytištěno ${fd(dnes())}</span></div>`; }
+const udaj = (popis, hodnota) => `<div class="udaj"><b>${popis}:</b><span data-i18n="ne">${esc(hodnota)}</span></div>`;
+function listDokladu(d) {
+  const D = J.DRUHY[d.druh], pr = J.prepocet(data);
+  const pohyby = pr.pohyby.filter(p => p.doklad === d.id && (d.druh !== 'T' || p.mnozstvi < 0));
+  let h = `<div class="list">${hlavicka(D.nazev + ' č. ' + esc(d.cislo))}<div class="udaje">${udaj('Datum', fd(d.datum))}${udaj(d.druh === 'T' ? 'Ze skladu' : 'Sklad', nazevSkladu(d.sklad))}` +
+    (d.druh === 'T' ? udaj('Do skladu', nazevSkladu(d.cil)) : d.druh !== 'I' ? udaj(d.druh === 'P' ? 'Dodavatel' : 'Odběratel', d.partner) : '') + '</div>';
+  if (d.druh === 'I') {
+    h += tabulkaInventury(J.rozdilyInventury(J.soupisInventury(data, d.sklad, d.datum, data.metoda, d.id), Object.fromEntries(d.polozky.map(p => [p.karta, p.skutecne]))), true);
+    return h + (d.poznamka ? `<div class="pozn">Poznámka: ${esc(d.poznamka)}</div>` : '') + '<div class="podpisy"><div>Inventuru provedl</div><div>Kontroloval</div><div>Schválil</div></div>' + pata() + '</div>';
+  }
+  let suma = 0;
+  h += `<table class="tab"><thead><tr><th style="width:7mm">#</th><th style="width:24mm">Kód</th><th>Název</th><th style="width:20mm">Množství</th><th style="width:11mm">MJ</th><th style="width:24mm">Cena/MJ</th><th style="width:28mm">Celkem</th></tr></thead><tbody>` +
+    d.polozky.map((p, i) => {
+      const k = karta(p.karta) || { kod: '', nazev: '?', jednotka: '' }, hod = pohyby[i] ? Math.abs(pohyby[i].hodnota) : 0;
+      suma += hod;
+      return `<tr><td class="cislo">${i + 1}</td><td data-i18n="ne">${esc(k.kod)}</td><td data-i18n="ne">${esc(k.nazev)}</td><td class="cislo">${fc(p.mnozstvi)}</td><td>${esc(k.jednotka)}</td><td class="cislo">${kc(p.mnozstvi ? hod / p.mnozstvi : 0)}</td><td class="cislo">${kc(hod)}</td></tr>`;
+    }).join('') + `</tbody><tfoot><tr><td colspan="6">Celkem${d.druh === 'P' ? ' (bez DPH)' : ''}</td><td class="cislo">${kc(J.r2(suma))}</td></tr></tfoot></table>`;
+  return h + (d.poznamka ? `<div class="pozn">Poznámka: ${esc(d.poznamka)}</div>` : '') +
+    `<div class="podpisy"><div>Vystavil</div><div>${d.druh === 'P' ? 'Předal (dodavatel)' : d.druh === 'V' ? 'Převzal' : 'Přijal'}</div></div>` + pata() + '</div>';
+}
+function tabulkaInventury(r, sRozdily) {
+  let manko = 0, prebytek = 0;
+  const radky = r.map((x, i) => {
+    if (x.rozdil < 0) manko += x.hodnota; else prebytek += x.hodnota;
+    return `<tr><td class="cislo">${i + 1}</td><td data-i18n="ne">${esc(x.karta.kod)}</td><td data-i18n="ne">${esc(x.karta.nazev)}</td><td data-i18n="ne">${esc(x.karta.umisteni)}</td><td>${esc(x.karta.jednotka)}</td><td class="cislo">${fc(x.evidovano)}</td>` +
+      (sRozdily ? `<td class="cislo">${fc(x.skutecne)}</td><td class="cislo">${x.rozdil ? fc(x.rozdil) : ''}</td><td class="cislo">${x.rozdil ? kc(x.hodnota) : ''}</td>` : '<td class="prazdne"></td><td></td>') + '</tr>';
+  }).join('');
+  return `<table class="tab"><thead><tr><th style="width:7mm">#</th><th style="width:22mm">Kód</th><th>Název</th><th style="width:22mm">Umístění</th><th style="width:10mm">MJ</th><th style="width:20mm">Evidováno</th>` +
+    (sRozdily ? '<th style="width:20mm">Skutečně</th><th style="width:16mm">Rozdíl</th><th style="width:24mm">Hodnota rozdílu</th>' : '<th style="width:24mm">Skutečně</th><th style="width:30mm">Poznámka</th>') + `</tr></thead><tbody>${radky}</tbody>` +
+    (sRozdily ? `<tfoot><tr><td colspan="8">Manko / přebytek</td><td class="cislo">${kc(J.r2(manko))}<br>+${kc(J.r2(prebytek))}</td></tr></tfoot>` : '') + '</table>';
+}
+function nahledTisku(titul, html) {
+  $('dlgTiskTitul').textContent = '🖨️ ' + titul;
+  $('nahled').innerHTML = html;
+  $('dlgTisk').showModal();
+}
+$('tiskniTl').onclick = () => {
+  $('tiskPlocha').innerHTML = $('nahled').innerHTML;
+  $('dlgTisk').close();
+  setTimeout(() => print(), 50);
+};
+addEventListener('afterprint', () => { $('tiskPlocha').innerHTML = ''; });
+
+/* ---------- soubory ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function textObjednavky() {
+  const r = J.kObjednani(data, dnes());
+  let t = 'K objednání ' + fd(dnes()), akt = null;
+  for (const x of r) {
+    if (x.dodavatel !== akt) { akt = x.dodavatel; t += '\n\n' + (akt || 'Bez dodavatele') + ':'; }
+    t += `\n- ${J.popisKarty(x.karta)}: ${fc(x.navrh)} ${x.karta.jednotka}${x.cena ? ' (posl. cena ' + kc(x.cena) + ')' : ''}`;
+  }
+  return t;
+}
+function ukazkovaData() {
+  const d = J.prazdna();
+  d.firma = { nazev: 'Truhlářství Ukázka s.r.o.', ico: '12345678', adresa: 'Dílenská 1, 100 00 Praha' };
+  d.sklady.push({ id: 'S2', nazev: 'Dílna' });
+  const K = (id, kod, nazev, jednotka, umisteni, minimum, cil, ean) => d.karty.push(J.normKarta({ id, kod, nazev, jednotka, umisteni, minimum, cil, ean }));
+  K('K1', 'SR-4x40', 'Vrut do dřeva 4×40 mm', 'ks', 'A1-02', 500, 2000);
+  K('K2', 'LEP-D3', 'Lepidlo na dřevo D3', 'l', 'B2-01', 2, 6, '4006381333931');
+  K('K3', 'DES-18', 'Překližka bříza 18 mm', 'm²', 'C-podlaha', 10, 30);
+  K('K4', 'LAK-MAT', 'Lak na nábytek matný', 'l', 'B2-03', 1, 4);
+  K('K5', 'BRU-120', 'Brusný papír P120', 'ks', 'A2-05', 50, 200);
+  const dk = x => J.ulozDoklad(d, Object.assign({ cislo: J.dalsiCislo(d, x.druh, x.datum) }, x));
+  const r = dnes().slice(0, 4);
+  dk({ druh: 'P', datum: r + '-01-08', sklad: 'S1', partner: 'Kování Novák', polozky: [{ karta: 'K1', mnozstvi: 2000, cena: 0.42 }, { karta: 'K5', mnozstvi: 200, cena: 6.5 }] });
+  dk({ druh: 'P', datum: r + '-01-12', sklad: 'S1', partner: 'Dřevo Horák', polozky: [{ karta: 'K3', mnozstvi: 30, cena: 690 }, { karta: 'K2', mnozstvi: 5, cena: 189 }, { karta: 'K4', mnozstvi: 4, cena: 420 }] });
+  dk({ druh: 'T', datum: r + '-01-15', sklad: 'S1', cil: 'S2', polozky: [{ karta: 'K1', mnozstvi: 500 }, { karta: 'K5', mnozstvi: 50 }] });
+  dk({ druh: 'V', datum: r + '-02-03', sklad: 'S1', partner: 'Zakázka 12 – kuchyň Dvořák', polozky: [{ karta: 'K3', mnozstvi: 14 }, { karta: 'K2', mnozstvi: 2 }, { karta: 'K4', mnozstvi: 2 }] });
+  dk({ druh: 'P', datum: r + '-02-20', sklad: 'S1', partner: 'Dřevo Horák', polozky: [{ karta: 'K3', mnozstvi: 10, cena: 735 }] });
+  dk({ druh: 'V', datum: r + '-03-10', sklad: 'S1', partner: 'Zakázka 15 – skříň Malá', polozky: [{ karta: 'K3', mnozstvi: 20 }, { karta: 'K1', mnozstvi: 1100 }, { karta: 'K2', mnozstvi: 2.5 }, { karta: 'K4', mnozstvi: 1.5 }] });
+  dk({ druh: 'I', datum: r + '-03-31', sklad: 'S1', polozky: [{ karta: 'K1', skutecne: 380 }, { karta: 'K2', skutecne: 0.5 }, { karta: 'K3', skutecne: 6 }, { karta: 'K4', skutecne: 0.5 }, { karta: 'K5', skutecne: 150 }] });
+  return d;
+}
+
+const PRIKAZY = {
+  novaKarta: () => upravKartu(null),
+  novyP: () => novyDoklad('P'), novyV: () => novyDoklad('V'), novyT: () => novyDoklad('T'),
+  novaI: () => novaInventura(),
+  napoveda: () => otevri($('dlgNapoveda')),
+  firma: firmaASklady,
+  ctecka: () => SkladCtecka(async kod => {
+    const k = data.karty.find(x => x.ean === kod);
+    if (k) { pohybyKarta = k.id; pohled = 'pohyby'; return vykresli(); }
+    if (await Dialog.potvrd(`Kód ${kod} nemá žádná karta. Založit novou?`)) upravKartu(null, { ean: kod });
+  }),
+  export: () => stahni('sklad-' + dnes() + '.json', JSON.stringify(data, null, 1), 'application/json'),
+  import: () => $('souborImport').click(),
+  csvKarty: () => stahni('sklad-karty.csv', J.csvKaret(data.karty), 'text/csv'),
+  csvImport: () => $('souborCsv').click(),
+  csvStav: () => stahni('sklad-stav-' + (pohled === 'stav' ? datumStavu : dnes()) + '.csv', J.csvStavu(J.stavKDatu(data, pohled === 'stav' ? datumStavu : dnes(), sklad()), data.sklady), 'text/csv'),
+  csvPohyby: () => stahni('sklad-pohyby.csv', J.csvPohybu(data, J.prepocet(data).pohyby), 'text/csv'),
+  csvPohybyKarty: () => stahni('sklad-pohyby-' + ((karta(pohybyKarta) || {}).kod || 'karta') + '.csv', J.csvPohybu(data, J.pohybyKarty(data, pohybyKarta, sklad())), 'text/csv'),
+  tiskStavu: () => {
+    const st = J.stavKDatu(data, datumStavu, sklad()), r = st.radky.filter(x => x.q !== 0 || x.hodnota);
+    nahledTisku('Stav zásob', `<div class="list">${hlavicka('Stav zásob k ' + fd(datumStavu))}<div class="udaje">${udaj('Sklad', sklad() ? nazevSkladu(sklad()) : 'všechny sklady')}</div>
+      <table class="tab"><thead><tr><th style="width:24mm">Kód</th><th>Název</th><th style="width:20mm">Množství</th><th style="width:11mm">MJ</th><th style="width:24mm">Cena/MJ</th><th style="width:28mm">Hodnota</th></tr></thead><tbody>` +
+      r.map(x => `<tr><td data-i18n="ne">${esc(x.karta.kod)}</td><td data-i18n="ne">${esc(x.karta.nazev)}</td><td class="cislo">${fc(x.q)}</td><td>${esc(x.karta.jednotka)}</td><td class="cislo">${x.q > 0 ? kc(x.cenaJ) : ''}</td><td class="cislo">${kc(x.hodnota)}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><td colspan="5">Celkem</td><td class="cislo">${kc(st.celkem)}</td></tr></tfoot></table>${pata()}</div>`);
+  },
+  tiskObjednavky: () => {
+    const r = J.kObjednani(data, dnes());
+    nahledTisku('K objednání', `<div class="list">${hlavicka('Seznam k objednání')}<div class="udaje">${udaj('Ke dni', fd(dnes()))}</div>
+      <table class="tab"><thead><tr><th style="width:34mm">Dodavatel</th><th style="width:22mm">Kód</th><th>Název</th><th style="width:16mm">Stav</th><th style="width:18mm">Objednat</th><th style="width:10mm">MJ</th><th style="width:22mm">Posl. cena</th></tr></thead><tbody>` +
+      r.map(x => `<tr><td data-i18n="ne">${esc(x.dodavatel)}</td><td data-i18n="ne">${esc(x.karta.kod)}</td><td data-i18n="ne">${esc(x.karta.nazev)}</td><td class="cislo">${fc(x.q)}</td><td class="cislo"><b>${fc(x.navrh)}</b></td><td>${esc(x.karta.jednotka)}</td><td class="cislo">${x.cena ? kc(x.cena) : ''}</td></tr>`).join('') +
+      `</tbody></table>${pata()}</div>`);
+  },
+  kopirujObjednavku: async () => {
+    const t = textObjednavky();
+    try { await navigator.clipboard.writeText(t); Dialog.info('Seznam zkopírován do schránky.'); }
+    catch (e) { await Dialog.zeptej('Schránka není dostupná – zkopírujte text ručně:', t); }
+  },
+  tiskSoupisu: () => nahledTisku('Inventurní soupis', `<div class="list">${hlavicka('Inventurní soupis')}<div class="udaje">${udaj('Sklad', nazevSkladu(inv.sklad))}${udaj('Ke dni', fd(inv.datum))}</div>${tabulkaInventury(radkyInventury(), false)}<div class="podpisy"><div>Počítal</div><div>Kontroloval</div></div>${pata()}</div>`),
+  tiskInventury: () => nahledTisku('Inventura', `<div class="list">${hlavicka('Inventura – protokol rozdílů' + (inv.cislo ? ' ' + esc(inv.cislo) : ''))}<div class="udaje">${udaj('Sklad', nazevSkladu(inv.sklad))}${udaj('Ke dni', fd(inv.datum))}</div>${tabulkaInventury(radkyInventury(), true)}<div class="podpisy"><div>Inventuru provedl</div><div>Kontroloval</div><div>Schválil</div></div>${pata()}</div>`),
+  ulozInventuru,
+  zrusInventuru: () => { inv = null; vykresli(); },
+  ukazka: async () => {
+    if ((data.karty.length || data.doklady.length) && !await Dialog.potvrd('Ukázková data nahradí současná data. Pokračovat?')) return;
+    data = ukazkovaData(); zmena();
+  },
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Opravdu smazat všechny karty, doklady i nastavení firmy? Doporučujeme nejdřív zálohu.')) return;
+    data = J.prazdna(); inv = null; zmena();
+  }
+};
+
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.karty) || !Array.isArray(d.doklady)) return Dialog.chyba('Tohle není záloha Skladové evidence.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.karty.length} karet a ${m.doklady.length} dokladů. Nahradit jimi současná data?`)) return;
+  data = m; inv = null; zmena(); Dialog.info('Obnoveno.');
+};
+$('souborCsv').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const v = J.importKaret(data, await f.text());
+  zmena();
+  Dialog.info(`Načteno: ${v.nove} nových karet, ${v.upravene} upravených.` + (v.chyby.length ? '\n' + v.chyby.slice(0, 10).join('\n') : '') +
+    '\n\nSloupce: Kód; Název; Jednotka; Umístění; Minimum; Cílová zásoba; EAN; Poznámka (shoda podle kódu).');
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  if (e.target.closest('dialog')) return;
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; zapamatuj('pohled', pohled); return vykresli(); }
+  const a = e.target.closest('[data-akce]');
+  if (a) {
+    const ak = a.dataset.akce;
+    if (ak === 'tiskDokladu') { const d = data.doklady.find(x => x.id === a.closest('[data-doklad]').dataset.doklad); return nahledTisku(J.DRUHY[d.druh].nazev + ' ' + d.cislo, listDokladu(d)); }
+    const k = karta(a.closest('[data-karta]').dataset.karta);
+    if (!k) return;
+    if (ak === 'upravit') return upravKartu(k);
+    if (ak === 'pohyby') { pohybyKarta = k.id; pohled = 'pohyby'; return vykresli(); }
+    if (ak === 'prijem') { const o = J.kObjednani(data, dnes()).find(x => x.karta.id === k.id); return novyDoklad('P', [{ karta: k.id, mnozstvi: o ? o.navrh : 0, cena: J.prepocet(data).posledniCena[k.id] || 0 }]); }
+    if (ak === 'vydej') return novyDoklad('V', [{ karta: k.id, mnozstvi: 0 }]);
+    return;
+  }
+  const dr = e.target.closest('tr[data-doklad]');
+  if (dr) {
+    const d = data.doklady.find(x => x.id === dr.dataset.doklad);
+    if (!d) return;
+    return d.druh === 'I' ? novaInventura(d) : upravDoklad(J.normDoklad(JSON.parse(JSON.stringify(d))));
+  }
+});
+// editor položek dokladu
+$('dokladPolozky').addEventListener('input', prepoctiRadky);
+$('dokladPolozky').addEventListener('click', e => {
+  const b = e.target.closest('[data-smaz-radek]');
+  if (b) { b.closest('tr').remove(); if (!$('dokladPolozky').rows.length) pridejRadek(); else prepoctiRadky(); }
+});
+$('dokladRadek').onclick = () => { pridejRadek(); $('dokladPolozky').lastElementChild.querySelector('input').focus(); };
+$('dokladSken').onclick = () => SkladCtecka(async kod => {
+  let k = data.karty.find(x => x.ean === kod);
+  if (!k) {
+    if (!await Dialog.potvrd(`Kód ${kod} nemá žádná karta. Založit novou?`)) return;
+    k = await upravKartu(null, { ean: kod });
+    if (!k) return;
+  }
+  // stejná karta → +1, jinak nový řádek (prázdný řádek se využije)
+  const rows = [...$('dokladPolozky').rows];
+  const tr = rows.find(r => J.najdiKartu(data, r.querySelector('.karta-vstup').value) === k);
+  if (tr) { const m = tr.querySelector('[data-mn]'); m.value = String(J.cislo(m.value, 0) + 1).replace('.', ','); }
+  else {
+    const prazdny = rows.find(r => !r.querySelector('.karta-vstup').value.trim());
+    if (prazdny) { prazdny.querySelector('.karta-vstup').value = J.popisKarty(k); prazdny.querySelector('[data-mn]').value = '1'; }
+    else pridejRadek({ karta: k.id, mnozstvi: 1 });
+  }
+  prepoctiRadky();
+});
+// ovládání uvnitř pohledů
+$('obsah').addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'filtrDruh') { filtrDruh = t.value; vykresliDoklady(); }
+  else if (t.id === 'datumStavu' && J.jeDatum(t.value)) { datumStavu = t.value; vykresliStav(); }
+  else if (t.id === 'pohybyKarta') { const k = J.najdiKartu(data, t.value); pohybyKarta = k ? k.id : ''; vykresliPohyby(); }
+  else if (t.id === 'invSklad') { inv.sklad = t.value; inv.skutecne = {}; vykresliInventuru(); }
+  else if (t.id === 'invDatum' && J.jeDatum(t.value)) { inv.datum = t.value; vykresliInventuru(); }
+});
+$('obsah').addEventListener('input', e => {
+  if (!e.target.matches('[data-skutecne]')) return;
+  const id = e.target.closest('tr').dataset.karta, v = e.target.value.trim();
+  if (v === '') delete inv.skutecne[id];
+  else { const n = J.cislo(v, NaN); if (Number.isFinite(n) && n >= 0) inv.skutecne[id] = n; }
+  obnovRozdily();
+});
+$('metoda').addEventListener('change', e => { data.metoda = e.target.value; zmena(); });
+$('filtrSklad').addEventListener('change', () => { if (pohled === 'inventura' && inv && !inv.id && sklad()) { inv.sklad = sklad(); inv.skutecne = {}; } vykresli(); });
+$('hledat').addEventListener('input', () => {
+  if (pohled === 'inventura') return vykresliInventuru();
+  if (!['karty', 'doklady', 'stav'].includes(pohled)) pohled = 'karty';
+  vykresli();
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('beforeunload', e => { if (inv && Object.keys(inv.skutecne).length) { e.preventDefault(); e.returnValue = ''; } });
+
+IDB.nacti().then(d => { if (d) data = J.migruj(d); }).catch(() => Dialog.chyba('IndexedDB není dostupná – data se neuloží.'))
+  .finally(() => { obnovVybery(); vykresli(); });
+window.SKLAD_APP = { data: () => data, nastav: d => { data = J.migruj(d); obnovVybery(); vykresli(); }, ukazkovaData, vykresli, PRIKAZY, upravDoklad, listDokladu, nahledTisku };
+})();
+</script>
+</body>
+</html>

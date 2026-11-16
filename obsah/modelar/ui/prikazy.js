@@ -128,6 +128,24 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       povoleno: () => M.app.vyber.length > 1,
       akce: () => M.provedNaVybranych((d, ids) => M.zarovnejUzly(d, ids, i, kde), 'Zarovnat'),
     })));
+    // rozmístění: stejné mezery (aspoň 3 tělesa), nebo zadaná mezera (2 tělesa vždy, „…s mezerou“ vždy)
+    const rozmisti = async (i, ptat) => {
+      const ids = M.vybraneVolne().map(u => u.id);
+      let mezera = null;
+      if (ptat || ids.length < 3) {
+        const t = await Dialog.zeptej(`Mezera mezi tělesy v ose ${'XYZ'[i]} (mm):`, '5');
+        if (t == null) return;
+        mezera = M.prectiCislo(t);
+        if (!isFinite(mezera)) { Dialog.chyba(`„${t}“ není číslo.`); return; }
+      }
+      M.provedNaVybranych((d, v) => M.rozmistiUzly(d, v, i, mezera), mezera == null ? `Rozmístit ${'XYZ'[i]} rovnoměrně` : `Rozmístit ${'XYZ'[i]} s mezerou ${M.mm(mezera, 2)} mm`);
+    };
+    ['X', 'Y', 'Z'].forEach((o, i) => P.push(
+      { id: 'rozmistit' + o, nazev: `Rozmístit rovnoměrně v ose ${o} (stejné mezery)`, klavesy: [], povoleno: () => M.vybraneVolne().length > 1, akce: () => rozmisti(i, false) },
+      { id: 'rozmistitMezera' + o, nazev: `Rozmístit v ose ${o} s mezerou…`, klavesy: [], povoleno: () => M.vybraneVolne().length > 1, akce: () => rozmisti(i, true) },
+    ));
+    P.push({ id: 'naStredDesky', nazev: 'Na střed desky (výběr jako celek, spodkem na desku)', klavesy: [], povoleno: volne,
+      akce: () => M.provedNaVybranych((d, ids) => M.naStredDesky(d, ids), 'Na střed desky') });
     const podleId = Object.fromEntries(P.map(p => [p.id, p]));
     M.PRIKAZY = P;
 

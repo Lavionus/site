@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-11-12a';
+  const VERZE_KODU = '2026-11-16a';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -3483,6 +3483,18 @@
     karta.appendChild(h('p', { class: 'slabe', style: { marginTop: '8px', fontSize: '.8rem' }, text: 'WHO (2020) doporučuje dospělým týdně 150–300 minut středně intenzivního pohybu (3–5,9 MET), nebo 75–150 minut intenzivního (od 6 MET), případně jejich kombinaci – minuta intenzivního se počítá za dvě. K tomu posilování svalů aspoň 2 dny v týdnu. Lehký pohyb se do doporučení nepočítá, ale i ten má smysl.' }));
     return karta;
   }
+  // Statistiky jsou rozdělené do podzáložek, aby stránka nebyla jeden dlouhý sloupec karet.
+  // 'vse' = všechno pod sebou (jen pro tisk).
+  const STAT_SEKCE = [['prehled', '📋', 'Přehled'], ['ziviny', '🥗', 'Živiny'], ['telo', '⚖️', 'Hmotnost a pohyb'], ['cesta', '🏆', 'Moje cesta']];
+  let statSekce = 'prehled';
+  function prepniStatSekci(s) {
+    statSekce = s;
+    vykresliStatistiky();
+    const tl = document.querySelector('.stat-sekce [data-sekce="' + s + '"]');
+    if (tl) tl.focus({ preventScroll: true });
+    const v = $('#v-statistiky');
+    if (v && v.getBoundingClientRect().top < 0) v.scrollIntoView({ block: 'start' });
+  }
   function vykresliStatistiky() {
     const kont = $('#statistiky');
     kont.textContent = '';
@@ -3491,79 +3503,115 @@
     $('#statObdobi').textContent = J.zKlice(od).toLocaleDateString('cs-CZ') + ' – ' + J.zKlice(doK).toLocaleDateString('cs-CZ');
     const st = J.statistika(S, od, doK);
     const c = cileDne(doK);
-    // čísla
     const vahy = Object.entries(S.vahy).filter(([k]) => k >= od && k <= doK).sort();
     const zmena = vahy.length >= 2 ? vahy[vahy.length - 1][1] - vahy[0][1] : null;
-    const prumKcal = st.prumer.kcal;
     // cíl se počítá stejně jako v deníku – včetně pohybu, je-li to zapnuté
     const zapsaneDny = st.dny.filter(d => d.zapsano);
     const prumPohyb = S.nastaveni.pohybKCili && zapsaneDny.length ? zapsaneDny.reduce((a, d) => a + d.s.pohyb, 0) / zapsaneDny.length : 0;
-    kont.appendChild(kartaCesty());
-    kont.appendChild(h('div', { class: 'cisla' },
-      karticka(st.zapsanych + ' / ' + obdobi, 'dní se záznamem'),
-      karticka(st.zapsanych ? en(prumKcal) : '–', 'průměrně za zapsaný den'),
-      karticka(c.kcal && st.zapsanych ? fc(100 * prumKcal / (c.kcal + prumPohyb)) + ' %' : '–', 'průměr vůči cíli' + (prumPohyb ? ' (vč. pohybu)' : '')),
-      karticka(st.zapsanych ? fc(st.prumer.bilkoviny, 0) + ' g' : '–', 'bílkovin denně'),
-      karticka(zmena !== null ? (zmena > 0 ? '+' : '') + fc(zmena, 1) + ' kg' : '–', 'změna hmotnosti')));
-    const kp = kartaPohybu(od, doK);
-    if (!st.zapsanych) {
-      kont.appendChild(h('div', { class: 'karta prazdny', text: 'V tomto období zatím nejsou žádné záznamy jídla.' }));
-      if (kp) kont.appendChild(kp);
-    } else {
-      // energie po dnech
-      const g1 = h('div', {});
-      kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Energie po dnech' }), g1));
-      const dataE = st.dny.map(d => {
-        const dt = J.zKlice(d.k);
-        return { k: d.k, v: E(d.s.celkem.kcal || 0), popis: dt.toLocaleDateString('cs-CZ'), kratce: obdobi <= 31 ? dt.getDate() + '.' + (dt.getMonth() + 1) + '.' : (dt.getDate() === 1 ? (dt.getMonth() + 1) + '/' + String(dt.getFullYear()).slice(2) : '') };
-      });
-      kresliPozdeji(() => G.sloupce(g1, dataE, { cil: c.kcal ? Math.round(E(c.kcal + prumPohyb)) : null, jednotka: ej(), popis: 'Energie po dnech' }));
-      // makra
-      const pe = J.podilEnergie(st.prumer);
-      const kol = h('div', {});
-      kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Průměrné rozložení energie' }),
-        h('div', { class: 'radek', style: { gap: '20px' } }, kol,
-          h('div', { class: 'legenda', style: { flexDirection: 'column', fontSize: '.88rem', gap: '6px' } },
-            ...[['bilkoviny', 'Bílkoviny', '--c-bil'], ['sacharidy', 'Sacharidy', '--c-sach'], ['tuk', 'Tuky', '--c-tuk']].map(([k, n, b]) => {
-              const s = h('span', { text: n + ': ' + fc(st.prumer[k], 0) + ' g (' + fc(pe[k]) + ' %)' + (c.makraProcenta ? ' · cíl ' + fc(c.makraProcenta[k]) + ' %' : '') });
-              s.style.setProperty('--b', 'var(' + b + ')');
-              return s;
-            }),
-            pe.alk > 0.5 ? (() => { const s = h('span', { text: 'Alkohol: ' + fc(pe.alk) + ' % energie' }); s.style.setProperty('--b', 'var(--c-alk)'); return s; })() : null))));
-      G.kolac(kol, [{ v: pe.bilkoviny, barva: 'var(--c-bil)', popis: 'Bílkoviny' }, { v: pe.sacharidy, barva: 'var(--c-sach)', popis: 'Sacharidy' }, { v: pe.tuk, barva: 'var(--c-tuk)', popis: 'Tuky' }, { v: pe.alk, barva: 'var(--c-alk)', popis: 'Alkohol' }],
-        { popis: 'Rozložení energie: bílkoviny ' + fc(pe.bilkoviny) + ' %, sacharidy ' + fc(pe.sacharidy) + ' %, tuky ' + fc(pe.tuk) + ' %' + (pe.alk > 0.5 ? ', alkohol ' + fc(pe.alk) + ' %' : '') });
-      kont.appendChild(kartaNapoju(st));
-      if (kp) kont.appendChild(kp);
-      kont.appendChild(kartaTipu(od, doK, c));
-      // průměrné živiny
-      const pokryti = {};
-      for (const z of J.ZIVINY) {
-        let e = 0, ez = 0;
-        for (const d of st.dny) if (d.zapsano) { const ee = d.s.celkem.kcal || 0; e += ee; ez += ee * (d.s.pokryti[z.k] || 0); }
-        pokryti[z.k] = e ? ez / e : 0;
-      }
-      const cP = c.kcal ? { ...c, kcal: c.kcal + prumPohyb } : c;
-      kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Průměrný denní příjem živin' }), prehledZivin(st.prumer, cP, { od, doK })));
-      // „Odkud to mám?“ – největší zdroje zvolené živiny
-      kont.appendChild(kartaZdroju(od, doK));
+    const vse = statSekce === 'vse';
+    if (!vse) {
+      kont.appendChild(h('div', { class: 'stat-sekce', role: 'group', 'aria-label': 'Část statistik' },
+        ...STAT_SEKCE.map(([k, ik, n]) => h('button', { class: 'btn', type: 'button', 'data-sekce': k, 'aria-pressed': String(k === statSekce), onclick: () => prepniStatSekci(k) },
+          h('span', { 'aria-hidden': 'true', text: ik }), h('span', { text: n })))));
     }
-    kont.appendChild(kartaKalendare(c));
-    // odhad skutečného výdeje z posledních 4 týdnů (nezávisle na zvoleném období)
-    kont.appendChild(kartaVydeje(doK, c));
+    const ukaz = s => vse || statSekce === s;
+    const prazdno = () => h('div', { class: 'karta prazdny', text: 'V tomto období zatím nejsou žádné záznamy jídla.' });
+    if (ukaz('prehled')) {
+      kont.appendChild(kartaShrnuti(st, c, prumPohyb, zmena));
+      if (st.zapsanych) {
+        const g1 = h('div', {});
+        kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Energie po dnech' }), g1));
+        const dataE = st.dny.map(d => {
+          const dt = J.zKlice(d.k);
+          return { k: d.k, v: E(d.s.celkem.kcal || 0), popis: dt.toLocaleDateString('cs-CZ'), kratce: obdobi <= 31 ? dt.getDate() + '.' + (dt.getMonth() + 1) + '.' : (dt.getDate() === 1 ? (dt.getMonth() + 1) + '/' + String(dt.getFullYear()).slice(2) : '') };
+        });
+        kresliPozdeji(() => G.sloupce(g1, dataE, { cil: c.kcal ? Math.round(E(c.kcal + prumPohyb)) : null, jednotka: ej(), popis: 'Energie po dnech' }));
+      }
+      kont.appendChild(kartaKalendare(c));
+    }
+    if (ukaz('ziviny')) {
+      if (!st.zapsanych) kont.appendChild(prazdno());
+      else {
+        const pe = J.podilEnergie(st.prumer);
+        const kol = h('div', {});
+        kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Průměrné rozložení energie' }),
+          h('div', { class: 'radek', style: { gap: '20px' } }, kol,
+            h('div', { class: 'legenda', style: { flexDirection: 'column', fontSize: '.88rem', gap: '6px' } },
+              ...[['bilkoviny', 'Bílkoviny', '--c-bil'], ['sacharidy', 'Sacharidy', '--c-sach'], ['tuk', 'Tuky', '--c-tuk']].map(([k, n, b]) => {
+                const s = h('span', { text: n + ': ' + fc(st.prumer[k], 0) + ' g (' + fc(pe[k]) + ' %)' + (c.makraProcenta ? ' · cíl ' + fc(c.makraProcenta[k]) + ' %' : '') });
+                s.style.setProperty('--b', 'var(' + b + ')');
+                return s;
+              }),
+              pe.alk > 0.5 ? (() => { const s = h('span', { text: 'Alkohol: ' + fc(pe.alk) + ' % energie' }); s.style.setProperty('--b', 'var(--c-alk)'); return s; })() : null))));
+        G.kolac(kol, [{ v: pe.bilkoviny, barva: 'var(--c-bil)', popis: 'Bílkoviny' }, { v: pe.sacharidy, barva: 'var(--c-sach)', popis: 'Sacharidy' }, { v: pe.tuk, barva: 'var(--c-tuk)', popis: 'Tuky' }, { v: pe.alk, barva: 'var(--c-alk)', popis: 'Alkohol' }],
+          { popis: 'Rozložení energie: bílkoviny ' + fc(pe.bilkoviny) + ' %, sacharidy ' + fc(pe.sacharidy) + ' %, tuky ' + fc(pe.tuk) + ' %' + (pe.alk > 0.5 ? ', alkohol ' + fc(pe.alk) + ' %' : '') });
+        kont.appendChild(kartaTipu(od, doK, c));
+        const cP = c.kcal ? { ...c, kcal: c.kcal + prumPohyb } : c;
+        kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Průměrný denní příjem živin' }), prehledZivin(st.prumer, cP, { od, doK })));
+        // „Odkud to mám?“ – největší zdroje zvolené živiny
+        kont.appendChild(kartaZdroju(od, doK));
+        kont.appendChild(kartaNapoju(st));
+      }
+    }
+    if (ukaz('telo')) {
+      // hmotnost
+      const vsechnyVahy = Object.entries(S.vahy).sort();
+      const gv = h('div', {});
+      const vahaKarta = h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: '⚖️ Hmotnost' }));
+      const vObdobi = vsechnyVahy.filter(([k]) => k >= od && k <= doK);
+      if (vObdobi.length >= 2) {
+        vahaKarta.appendChild(gv);
+        const body = vObdobi.map(([k, kg]) => ({ t: J.zKlice(k).getTime(), v: kg, popis: J.zKlice(k).toLocaleDateString('cs-CZ') }));
+        kresliPozdeji(() => G.cara(gv, body, { trend: true, jednotka: 'kg', cilV: J.cislo(S.profil.cilVaha), popis: 'Vývoj hmotnosti',
+          popisy: [{ t: body[0].t, text: J.zKlice(vObdobi[0][0]).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) }, { t: body[body.length - 1].t, text: J.zKlice(vObdobi[vObdobi.length - 1][0]).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) }] }));
+        vahaKarta.appendChild(h('p', { class: 'slabe', style: { marginTop: '6px' }, text: 'Plná čára = vyhlazený trend (tlumí denní výkyvy vody), tenká = jednotlivá vážení.' }));
+      } else vahaKarta.appendChild(h('p', { class: 'slabe', text: 'Graf se zobrazí po aspoň dvou váženích v období. Vážení zapisuj v záložce Profil a cíle.' }));
+      vahaKarta.appendChild(h('button', { class: 'btn mini', type: 'button', style: { marginTop: '8px' }, onclick: () => prepni('profil') }, '⚖️ Zapsat hmotnost'));
+      kont.appendChild(vahaKarta);
+      // odhad skutečného výdeje z posledních 4 týdnů (nezávisle na zvoleném období)
+      kont.appendChild(kartaVydeje(doK, c));
+      const kp = kartaPohybu(od, doK);
+      kont.appendChild(kp || h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '8px' }, text: '🏃 Pohyb' }),
+        h('p', { class: 'slabe', text: 'V tomto období není zapsaný žádný pohyb. Přidáš ho v deníku tlačítkem „+ Přidat pohyb“.' })));
+    }
+    if (ukaz('cesta')) kont.appendChild(kartaCesty());
+  }
+  // „Jak se ti daří“ – pár vět místo řady čísel; každý řádek vede do části, kde jsou podrobnosti
+  function kartaShrnuti(st, c, prumPohyb, zmena) {
+    const karta = h('div', { class: 'karta shrnuti' }, h('h2', { style: { marginBottom: '10px' }, text: '📋 Jak se ti daří' }));
+    const radky = [];
+    const radek = (ik, nazev, hodnota, vyrok, stav, sekce) => radky.push(h('button', { class: 'shrn-radek ' + (stav || ''), type: 'button',
+      title: 'Podrobnosti', onclick: () => sekce === 'denik' ? prepni('denik') : prepniStatSekci(sekce) },
+      h('span', { class: 'shrn-ik', 'aria-hidden': 'true', text: ik }),
+      h('span', { class: 'shrn-text' }, h('b', { text: nazev }), h('span', { class: 'shrn-hodnota' }, ...[].concat(hodnota).map((t, i) => h('span', { text: (i ? ' · ' : '') + t })))),
+      h('span', { class: 'shrn-vyrok', text: vyrok })));
+    const m = motivaceTed();
+    // zapisování
+    const podilZ = st.zapsanych / obdobi;
+    radek('📝', 'Zapisování', [st.zapsanych + ' z ' + obdobi + ' dní', m.serie ? 'série ' + pocetDni(m.serie) : null].filter(Boolean),
+      podilZ >= 0.8 ? 'pravidelně 👍' : podilZ >= 0.5 ? 'občas vynecháš' : st.zapsanych ? 'spíš výjimečně' : 'zatím nic',
+      podilZ >= 0.8 ? 'ok' : podilZ >= 0.5 ? 'pozor' : 'slabe-st', 'cesta');
+    if (st.zapsanych) {
+      // energie
+      const cil = c.kcal ? c.kcal + prumPohyb : null, pod = cil ? st.prumer.kcal / cil : null;
+      radek('🔥', 'Energie', [en(st.prumer.kcal) + ' denně', pod !== null ? fc(100 * pod) + ' % cíle' + (prumPohyb ? ' (vč. pohybu)' : '') : null].filter(Boolean),
+        pod === null ? 'cíl není nastavený' : pod < 0.9 ? 'méně než cíl' : pod <= 1.1 ? 'v cíli' : 'víc než cíl',
+        pod === null ? 'slabe-st' : pod < 0.8 || pod > 1.15 ? 'spatne' : pod < 0.9 || pod > 1.1 ? 'pozor' : 'ok', pod === null ? 'denik' : 'prehled');
+      // bílkoviny
+      const cb = c.zivinyCil && c.zivinyCil.bilkoviny, pb = cb ? st.prumer.bilkoviny / cb : null;
+      radek('🥩', 'Bílkoviny', [fc(st.prumer.bilkoviny, 0) + ' g denně', pb !== null ? fc(100 * pb) + ' % cíle' : null].filter(Boolean),
+        pb === null ? '' : pb < 0.8 ? 'málo' : pb <= 1.3 ? 'dost' : 'hodně', pb === null ? 'slabe-st' : pb < 0.8 ? 'pozor' : 'ok', 'ziviny');
+      // pitný režim
+      const pit = st.napoje && st.napoje.pitny, cilV = c.vodaMl ? c.vodaMl * 0.8 : null;
+      if (pit > 0) radek('💧', 'Pitný režim', [fc(pit / 1000, 1) + ' l denně', cilV ? 'doporučeno cca ' + fc(cilV / 1000, 1) + ' l' : null].filter(Boolean),
+        !cilV ? '' : pit < 0.7 * cilV ? 'piješ málo' : 'v pořádku', !cilV ? 'slabe-st' : pit < 0.7 * cilV ? 'pozor' : 'ok', 'ziviny');
+    }
     // hmotnost
-    const vsechnyVahy = Object.entries(S.vahy).sort();
-    const gv = h('div', {});
-    const vahaKarta = h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Hmotnost' }));
-    const vObdobi = vsechnyVahy.filter(([k]) => k >= od && k <= doK);
-    if (vObdobi.length >= 2) {
-      vahaKarta.appendChild(gv);
-      const body = vObdobi.map(([k, kg]) => ({ t: J.zKlice(k).getTime(), v: kg, popis: J.zKlice(k).toLocaleDateString('cs-CZ') }));
-      kresliPozdeji(() => G.cara(gv, body, { trend: true, jednotka: 'kg', cilV: J.cislo(S.profil.cilVaha), popis: 'Vývoj hmotnosti',
-        popisy: [{ t: body[0].t, text: J.zKlice(vObdobi[0][0]).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) }, { t: body[body.length - 1].t, text: J.zKlice(vObdobi[vObdobi.length - 1][0]).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) }] }));
-      vahaKarta.appendChild(h('p', { class: 'slabe', style: { marginTop: '6px' }, text: 'Plná čára = vyhlazený trend (tlumí denní výkyvy vody), tenká = jednotlivá vážení.' }));
-    } else vahaKarta.appendChild(h('p', { class: 'slabe', text: 'Graf se zobrazí po aspoň dvou váženích v období. Vážení zapisuj v záložce Profil a cíle.' }));
-    vahaKarta.appendChild(h('button', { class: 'btn mini', type: 'button', style: { marginTop: '8px' }, onclick: () => prepni('profil') }, '⚖️ Zapsat hmotnost'));
-    kont.appendChild(vahaKarta);
+    radek('⚖️', 'Hmotnost', zmena !== null ? (zmena > 0 ? '+' : '') + fc(zmena, 1) + ' kg za období' : 'málo vážení v období',
+      zmena === null ? 'zapiš vážení' : Math.abs(zmena) < 0.3 ? 'drží se' : zmena < 0 ? 'klesá' : 'stoupá', 'slabe-st', 'telo');
+    pridat(karta, h('div', { class: 'shrn-seznam' }, ...radky));
+    if (!st.zapsanych) karta.appendChild(h('p', { class: 'slabe', style: { marginTop: '8px' }, text: 'V tomto období zatím nejsou žádné záznamy jídla.' }));
+    return karta;
   }
   function kartaVydeje(doK, c) {
     const o = J.odhadVydeje(S, doK, 28);
@@ -3693,16 +3741,17 @@
     }
     const pomer = Math.round(100 * m.zapsanychDni / m.dniOdZacatku), odKdy = kratkeDatum(m.prvni);
     const delka = pocetDni(m.dniOdZacatku), zapsano = pocetDni(m.zapsanychDni);
-    karta.appendChild(h('p', { class: 'cesta-uvod', text: 'Zapisuješ už ' + delka + ' (od ' + odKdy + '), záznam má ' + zapsano + ' – ' + pomer + ' %.' }));
+    // doba zapisování jako jedna velká věta, pod ní jen tři nejdůležitější čísla
+    pridat(karta, h('p', { class: 'cesta-uvod' },
+      h('span', { class: 'cesta-velke', text: 'Zapisuješ už ' + delka }),
+      h('span', { class: 'slabe', text: 'od ' + odKdy + ' · záznam má ' + zapsano + ' (' + pomer + ' %)' })));
     const t = m.tyden;
     karta.appendChild(h('div', { class: 'cisla' },
-      karticka(J.pocet(m.serie, 'den', 'dny', 'dní'), m.dnesZapsano || !m.serie ? 'aktuální série' : 'série – dnes ještě nezapsáno'),
-      karticka(J.pocet(m.nejdelsiSerie, 'den', 'dny', 'dní'), 'nejdelší série (' + kratkeDatum(m.nejdelsiOd) + ' – ' + kratkeDatum(m.nejdelsiDo) + ')'),
-      karticka(t.ted + ' / ' + t.dnuTed + (t.ted > t.minule ? ' ▲' : t.ted < t.minule ? ' ▼' : ''), 'dní tento týden (minulý: ' + t.minule + ')'),
-      karticka(J.pocet(m.polozek, 'záznam', 'záznamy', 'záznamů'), 'zapsáno celkem'),
-      karticka(String(m.ruznychPotravin), 'různých potravin'),
-      karticka(String(m.dnyCil), 'dní v cíli (90–110 %)')));
+      karticka(pocetDni(m.serie), m.dnesZapsano || !m.serie ? 'aktuální série' : 'série – dnes ještě nezapsáno'),
+      karticka(pocetDni(m.nejdelsiSerie), 'rekord (' + J.zKlice(m.nejdelsiOd).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) + ' – ' + J.zKlice(m.nejdelsiDo).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) + ')'),
+      karticka(t.ted + ' / ' + t.dnuTed + (t.ted > t.minule ? ' ▲' : t.ted < t.minule ? ' ▼' : ''), 'dní tento týden (minulý: ' + t.minule + ')')));
     karta.appendChild(h('p', { class: 'cesta-povzbuzeni', text: povzbuzeni(m) }));
+    karta.appendChild(h('p', { class: 'slabe cesta-dalsi', text: 'Celkem ' + J.pocet(m.polozek, 'záznam', 'záznamy', 'záznamů') + ' · ' + m.ruznychPotravin + ' různých potravin · ' + pocetDni(m.dnyCil) + ' v cíli (90–110 %)' }));
     // posledních 16 týdnů: sloupec = týden po–ne
     const dnes = J.datumKlic(new Date());
     const start = J.posunDen(dnes, -((J.zKlice(dnes).getDay() + 6) % 7) - 15 * 7);
@@ -3733,7 +3782,11 @@
           h('small', { text: dalsi ? J.formatCislo(hodnota, 0) + ' / ' + J.formatCislo(dalsi.cil, 0) + ' · ' + druh.popis : 'vše splněno · ' + druh.popis }),
           dalsi ? h('progress', { max: String(dalsi.cil), value: String(Math.min(hodnota, dalsi.cil)), 'aria-label': 'Postup k odznaku ' + dalsi.nazev }) : null)));
     }
-    pridat(karta, h('h3', { class: 'cesta-nadpis', text: 'Odznaky – ' + ziskane.length + ' z ' + vse.length }), seznam);
+    const zamcene = h('div', { class: 'odznaky' });
+    for (const el of [...seznam.children]) if (el.classList.contains('zamceny')) zamcene.appendChild(el);
+    pridat(karta, h('h3', { class: 'cesta-nadpis', text: 'Odznaky – ' + ziskane.length + ' z ' + vse.length }),
+      seznam.children.length ? seznam : h('p', { class: 'slabe', text: 'Zatím žádný – první získáš hned prvním zápisem.' }),
+      zamcene.children.length ? h('details', { class: 'odznaky-dalsi' }, h('summary', { text: 'Ještě nezískané (' + zamcene.children.length + ')' }), zamcene) : null);
     return karta;
   }
   // krátká povzbudivá věta podle stavu
@@ -4562,7 +4615,7 @@
     $('#denPred').addEventListener('click', () => { aktivniDen = J.posunDen(aktivniDen, -1); vykresliDenik(); });
     $('#denDalsi').addEventListener('click', () => { aktivniDen = J.posunDen(aktivniDen, 1); vykresliDenik(); });
     $('#denDnes').addEventListener('click', () => { aktivniDen = J.datumKlic(new Date()); vykresliDenik(); });
-    $('#serie').addEventListener('click', () => prepni('statistiky'));
+    $('#serie').addEventListener('click', () => { statSekce = 'cesta'; prepni('statistiky'); });
     $('#denMenu').addEventListener('click', e => nabidkaDne(e.currentTarget));
     $('#pismoTl').addEventListener('click', e => nabidkaPisma(e.currentTarget));
     $('#profilTl').addEventListener('click', e => nabidkaProfilu(e.currentTarget));
@@ -4673,7 +4726,10 @@
     addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('zprava-otevrena') && !vrstvy.length) zavriZpravu(); });
     $('#tiskStat').addEventListener('click', () => {
       $('#tiskPopis').textContent = 'Přehled za období ' + $('#statObdobi').textContent + ' · vytištěno ' + new Date().toLocaleDateString('cs-CZ');
-      setTimeout(() => window.print(), 50);
+      // tiskne se celý přehled (všechny podzáložky pod sebou), pak se vrátí zvolená část
+      const byla = statSekce;
+      statSekce = 'vse'; vykresliStatistiky();
+      setTimeout(() => { try { window.print(); } finally { statSekce = byla; vykresliStatistiky(); } }, 150);
     });
     // data
     $('#exportJson').addEventListener('click', stahniZalohu);

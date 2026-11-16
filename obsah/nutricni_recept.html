@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nutriční hodnoty receptu</title>
+<meta name="description" content="Výpočet nutričních hodnot receptu ze seznamu surovin: energie, tuky, sacharidy, cukry, bílkoviny, vláknina a sůl celkem, na porci a na 100 g, nutriční etiketa podle nařízení EU 1169/2011 k tisku, rozpad podle surovin, uložené recepty a odeslání do Deníku jídla.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="potraviny/jadro.js"></script>
+<script src="nutricni_recept/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3;text-decoration:none}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+@media (max-width:900px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;text-decoration:none;display:inline-block}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn.plain{background:none;border-color:transparent}
+.btn.danger{color:var(--danger)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.88rem;font-family:inherit;min-width:0}
+textarea.vstup{width:100%;resize:vertical;line-height:1.45}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(8px,2.5vw,24px) 40px}
+.obal{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.obal{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px;min-width:0}
+.panel + .panel{margin-top:12px}
+.panel h2{font-size:.95rem;margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel h2 .vpravo{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.radek-tl{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.tip{font-size:.78rem;color:var(--text-muted);line-height:1.45}
+.stav-db{font-size:.78rem;color:var(--text-muted)}
+.stav-db.chyba{color:var(--danger)}
+
+/* suroviny */
+.sur{border:1px solid var(--border);border-left:4px solid var(--ok);border-radius:8px;padding:7px 9px;display:grid;gap:5px;background:var(--bg)}
+.sur + .sur{margin-top:6px}
+.sur.odhad{border-left-color:var(--warn)}
+.sur.chyba{border-left-color:var(--danger)}
+.sur .hlava{display:flex;gap:6px;align-items:flex-start}
+.sur .jmeno{flex:1;min-width:0;font-weight:600;font-size:.9rem;word-break:break-word}
+.sur .puvodni{font-size:.76rem;color:var(--text-muted);word-break:break-word}
+.sur .mnoz{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:.82rem}
+.sur .mnoz input{width:5.5em}
+.sur .mnoz select{max-width:13em}
+.sur .vypocet{color:var(--text-muted)}
+.sur .pozn{font-size:.75rem;color:var(--text-muted)}
+.sur.odhad .pozn,.sur.chyba .pozn{color:var(--warn)}
+.znacka{display:inline-block;font-size:.68rem;font-weight:500;border-radius:8px;padding:0 6px;background:var(--bg-control);border:1px solid var(--border);color:var(--text-muted);vertical-align:1px;margin-left:4px}
+.prazdno{color:var(--text-muted);border:1px dashed var(--border-strong);border-radius:8px;padding:18px;text-align:center;line-height:1.6;font-size:.88rem}
+
+/* výsledky */
+.dlazdice{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px}
+.dlazdice div{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.dlazdice b{display:block;font-size:1.35rem;line-height:1.15}
+.dlazdice span{font-size:.75rem;color:var(--text-muted)}
+.upozorneni{font-size:.8rem;line-height:1.45;border-left:3px solid var(--warn);background:var(--bg);padding:6px 10px;border-radius:6px;margin-bottom:10px}
+.upozorneni p{margin:0}
+.upozorneni p + p{margin-top:4px}
+
+/* nutriční etiketa – vždy černá na bílé (k tisku), ať je v obou tématech stejná */
+.etiketa-obal{overflow-x:auto}
+.etiketa{background:#fff;color:#000;border:2px solid #000;border-radius:2px;padding:6px 8px;max-width:520px;font-family:Arial,Helvetica,sans-serif}
+.etiketa .titul{font-weight:700;font-size:1.05rem;border-bottom:3px solid #000;padding-bottom:3px;margin-bottom:2px}
+.etiketa .recept{font-size:.8rem;margin-bottom:3px}
+.etiketa table{border-collapse:collapse;width:100%;font-size:.84rem}
+.etiketa th,.etiketa td{padding:3px 4px;border-bottom:1px solid #000;text-align:right;white-space:nowrap}
+.etiketa th:first-child,.etiketa td:first-child{text-align:left;white-space:normal}
+.etiketa thead th{font-weight:700;border-bottom:2px solid #000;vertical-align:bottom;font-size:.78rem}
+.etiketa td.pod{padding-left:16px}
+.etiketa .poznamka{font-size:.7rem;margin-top:4px;line-height:1.35}
+
+@media (max-width:480px){.etiketa table{font-size:.74rem}.etiketa th,.etiketa td{white-space:normal;padding:3px 2px}}
+table.data{border-collapse:collapse;width:100%;font-size:.8rem}
+table.data th,table.data td{padding:4px 6px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+table.data th:first-child,table.data td:first-child{text-align:left;white-space:normal;min-width:9em}
+table.data th{color:var(--text-muted);font-weight:600;font-size:.72rem}
+table.data tfoot td{font-weight:700;border-top:2px solid var(--border-strong)}
+.tab-obal{overflow-x:auto}
+.pruh{display:inline-block;height:6px;border-radius:3px;background:var(--accent);vertical-align:middle;margin-right:4px}
+.zdroje{font-size:.72rem;color:var(--text-muted);line-height:1.5;margin-top:10px}
+.zdroje a{color:var(--accent)}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,600px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5);margin:auto}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.5}
+.okno .telo p{margin:0}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.vysledky{display:grid;gap:4px;max-height:55vh;overflow:auto}
+.vysledky button{display:flex;gap:8px;justify-content:space-between;align-items:center;text-align:left;background:var(--bg-panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;cursor:pointer;font:inherit;font-size:.85rem}
+.vysledky button:hover,.vysledky button:focus-visible{border-color:var(--accent)}
+.vysledky small{color:var(--text-muted);white-space:nowrap}
+.recepty{display:grid;gap:6px}
+.recepty .polozka{display:flex;gap:6px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg-panel)}
+.recepty .polozka span{flex:1;min-width:0;word-break:break-word}
+.odkaz-pole{width:100%;font-size:.75rem}
+
+@media print{
+  .lista,#podpis-pruh,dialog,.neni-tisk,#panelVstup{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .obal{display:block}
+  .panel{border:0;background:#fff;color:#000;padding:0 0 10px}
+  body.jen-etiketa .panel:not(#panelEtiketa){display:none!important}
+  table.data th,table.data td{color:#000;border-color:#999}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🥗 Nutriční hodnoty receptu</h1>
+  <div class="skup" role="group" aria-label="Recept"><span class="skup-nazev" aria-hidden="true">Recept</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabRecept" aria-expanded="false" title="Nový, uložit, moje recepty, export">📁<span class="txt"> Recept</span> ▾</button>
+    <button class="tl" data-prikaz="ulozit" title="Uložit recept do tohoto prohlížeče">💾<span class="txt"> Uložit</span></button>
+    <button class="tl" data-prikaz="recepty" title="Uložené recepty">📚<span class="txt"> Moje recepty</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabTisk" aria-expanded="false" title="Tisk etikety nebo celého výpočtu">🖨️<span class="txt"> Tisk</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="denik" title="Uložit recept do Deníku jídla">📤<span class="txt"> Do Deníku jídla</span></button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabRecept" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">🆕 Nový recept</button>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit</button>
+  <button class="tl" data-prikaz="ulozitJako">💾 Uložit jako nový…</button>
+  <button class="tl" data-prikaz="recepty">📚 Moje recepty…</button>
+  <hr>
+  <button class="tl" data-prikaz="csv">📊 Rozpad podle surovin (CSV)</button>
+  <button class="tl" data-prikaz="export">⬇️ Záloha receptů (JSON)</button>
+  <button class="tl" data-prikaz="import">⬆️ Načíst zálohu…</button>
+</div>
+<div id="nabTisk" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tiskEtikety">🏷️ Jen nutriční etiketa</button>
+  <button class="tl" data-prikaz="tiskVse">🧾 Celý výpočet</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal">
+  <div id="panelVstup">
+    <section class="panel">
+      <h2>📝 Recept</h2>
+      <label class="pole">Název<input class="vstup" id="nazev" maxlength="120" placeholder="např. Bramborový guláš" autocomplete="off"></label>
+      <label class="pole" style="margin-top:8px">Suroviny – volným textem nebo po řádcích
+        <textarea class="vstup" id="text" rows="7" placeholder="200 g mouky, 2 vejce, 1 lžíce oleje&#10;½ l mléka&#10;2 stroužky česneku&#10;sůl dle chuti"></textarea></label>
+      <div class="radek-tl">
+        <button class="btn primary" id="rozpoznat" title="Ctrl+Enter">🔎 Rozpoznat suroviny</button>
+        <button class="btn" id="pridatSur">➕ Přidat surovinu</button>
+        <span class="stav-db" id="stavDb" role="status"></span>
+      </div>
+      <p class="tip" style="margin-top:6px">Rozpozná g, dkg, kg, ml, dl, l, lžíce (15 ml), lžičky (5 ml), hrnky (250 ml), špetky, kusy, stroužky a balení. Objem převede na gramy podle naměřených porcí suroviny (lžíce mouky váží jinak než lžíce oleje).</p>
+      <div class="mrizka">
+        <label class="pole">Počet porcí<input class="vstup" id="porci" type="number" min="1" max="500" step="1" value="4"></label>
+        <label class="pole">Hmotnost hotového jídla
+          <select class="vstup" id="rezim">
+            <option value="soucet">= součet surovin</option>
+            <option value="ztrata">ztráta vařením (%)</option>
+            <option value="hmotnost">zvážil(a) jsem (g)</option>
+          </select></label>
+        <label class="pole" id="poleZtrata" hidden>Ztráta hmotnosti (%)<input class="vstup" id="ztrata" type="number" min="-300" max="95" step="1" value="10"></label>
+        <label class="pole" id="poleHmotnost" hidden>Hotové jídlo (g)<input class="vstup" id="hmotnost" type="number" min="1" step="1" placeholder="zvaž po uvaření"></label>
+      </div>
+      <p class="tip" id="tipRezim" style="margin-top:6px"></p>
+    </section>
+    <section class="panel">
+      <h2>🧺 Suroviny <span class="vpravo tip" id="pocetSur"></span></h2>
+      <div id="suroviny"></div>
+    </section>
+  </div>
+
+  <div id="panelVystup">
+    <section class="panel" id="panelSouhrn">
+      <h2>📊 Výsledek</h2>
+      <div class="dlazdice" id="dlazdice"></div>
+      <div id="upozorneni"></div>
+      <div class="tab-obal"><table class="data" id="tabSouhrn"></table></div>
+    </section>
+    <section class="panel" id="panelEtiketa">
+      <h2>🏷️ Nutriční etiketa <span class="tip">(nařízení EU 1169/2011)</span></h2>
+      <div class="etiketa-obal"><div class="etiketa" id="etiketa"></div></div>
+    </section>
+    <section class="panel" id="panelRozpad">
+      <h2>🧮 Rozpad podle surovin</h2>
+      <div class="tab-obal"><table class="data" id="tabRozpad"></table></div>
+      <p class="zdroje" id="zdroje"></p>
+    </section>
+  </div>
+</div></main>
+
+<dialog class="okno" id="dlgHledat"><form method="dialog">
+  <header id="dlgHledatTitul">Vybrat potravinu</header>
+  <div class="telo">
+    <input class="vstup" id="hledatDotaz" type="search" placeholder="🔍 Hledat v databázi (název, značka, EAN)…" autocomplete="off" aria-label="Hledat potravinu">
+    <div class="vysledky" id="hledatVysledky"></div>
+  </div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgRecepty"><form method="dialog">
+  <header>📚 Moje recepty</header>
+  <div class="telo"><div class="recepty" id="seznamReceptu"></div></div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgDenik"><form method="dialog">
+  <header>📤 Do Deníku jídla</header>
+  <div class="telo">
+    <p>Recept <b id="denikNazev" data-i18n="ne"></b> se otevře v Deníku jídla jako sdílený recept. Tam klikni na <b>💾 Uložit</b> – objeví se v <i>Potraviny a recepty → Recepty</i> a půjde zapisovat do deníku jako potravina (po porcích nebo gramech).</p>
+    <p class="tip">Data se nikam neposílají – vše je v odkazu a zůstává v tomto prohlížeči.</p>
+    <input class="vstup odkaz-pole" id="denikOdkaz" readonly aria-label="Odkaz do Deníku jídla">
+  </div>
+  <footer>
+    <button type="button" class="btn" id="denikKopirovat">📋 Kopírovat odkaz</button>
+    <a class="btn primary" id="denikOtevrit" target="_blank" rel="noopener">🥗 Otevřít v Deníku jídla</a>
+    <button value="zrusit" class="btn">Zavřít</button>
+  </footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak to funguje</header>
+  <div class="telo">
+    <p><b>1. Vlož suroviny</b> – zkopíruj seznam z receptu (každou surovinu na řádek, nebo oddělené čárkou) a klikni na <b>🔎 Rozpoznat suroviny</b>. Stránka přečte množství a jednotku a najde surovinu ve stejné databázi, kterou používá <a href="potraviny.html" style="color:var(--accent)">Deník jídla</a> (obecné suroviny USDA, CIQUAL, Frida… a výrobky z Open Food Facts).</p>
+    <p><b>2. Zkontroluj shodu</b> – u každé suroviny vidíš původní řádek, nalezenou potravinu a přepočet na gramy. Tlačítkem <b>Změnit</b> vybereš jinou potravinu, množství a jednotku můžeš přepsat. Zeleně = v pořádku, oranžově = odhad (zkontroluj), červeně = nenalezeno nebo chybí množství (do výpočtu se nepočítá).</p>
+    <p><b>3. Hotové jídlo</b> – vařením se odpaří voda (nebo ji těstoviny a rýže naopak nasají), proto se hodnoty na 100 g liší od syrových surovin. Nejpřesnější je hotové jídlo zvážit. Ztráta v % zmenší (záporná zvětší) hmotnost; živiny zůstávají stejné, mění se jen hodnoty na 100 g. Úbytek vitaminů ani odkapaný tuk se nepočítá.</p>
+    <p><b>Energie</b> se počítá přepočítacími faktory EU (příloha XIV nařízení 1169/2011): tuky 37 kJ / 9 kcal, sacharidy a bílkoviny 17 kJ / 4 kcal, vláknina 8 kJ / 2 kcal, alkohol 29 kJ / 7 kcal. Proto se může o pár procent lišit od součtu kalorií v Deníku jídla.</p>
+    <p><b>Etiketa</b> má pořadí a zaokrouhlení podle nařízení EU 1169/2011 a pokynů Komise k tolerancím (12/2012); % referenčního příjmu podle přílohy XIII (2 000 kcal, tuky 70 g, nasycené 20 g, sacharidy 260 g, cukry 90 g, bílkoviny 50 g, sůl 6 g). Jde o vypočtené hodnoty – pro prodej potravin odpovídá za údaje výrobce.</p>
+    <p><b>Uložené recepty</b> jsou jen v tomto prohlížeči (Recept → Moje recepty, záloha do JSON). <b>📤 Do Deníku jídla</b> otevře recept v Deníku jídla, kde se uloží jako recept – potravina pro zápis do deníku.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const D = window.DENIK_JADRO, N = window.NUTREC;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const fc = (v, d) => D.formatCislo(v, d || 0);
+const DATA = 'potraviny/data/';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+/* ---------- úložiště ---------- */
+let data = N.prazdna();
+try { data = N.migruj(JSON.parse(localStorage.getItem(N.KLIC))); } catch (e) { data = N.prazdna(); }
+const KLIC_ROZPRAC = N.KLIC + '_rozprac';
+function uloz() {
+  try { localStorage.setItem(N.KLIC, JSON.stringify(data)); return true; }
+  catch (e) { Dialog.chyba('Recepty se nepodařilo uložit (plné úložiště?)'); return false; }
+}
+let akt = novy();
+try { const r = JSON.parse(localStorage.getItem(KLIC_ROZPRAC)); if (r) akt = { ...N.normRecept(r), id: r.id && data.recepty[r.id] ? r.id : null }; } catch (e) { /* nic */ }
+function novy() { return { id: null, nazev: '', text: '', porci: 4, rezim: 'soucet', ztrata: 10, hmotnost: null, polozky: [] }; }
+let casRozprac = 0;
+function ulozRozprac() {
+  clearTimeout(casRozprac);
+  casRozprac = setTimeout(() => { try { localStorage.setItem(KLIC_ROZPRAC, JSON.stringify({ ...N.normRecept(akt), id: akt.id })); } catch (e) { /* nic */ } }, 400);
+}
+
+/* ---------- databáze (sdílená s Deníkem jídla) ---------- */
+const DB = { nacteno: false, suroviny: [], doplnky: [], vyrobky: [], indexSurovin: [], index: [], podleId: new Map(), meta: {} };
+async function stahni(soubor) {
+  const r = await fetch(DATA + soubor);
+  if (!r.ok) throw new Error(soubor + ': HTTP ' + r.status);
+  return r.json();
+}
+let dbSlib = null;
+function nactiDb() {
+  if (dbSlib) return dbSlib;
+  const st = $('stavDb');
+  st.classList.remove('chyba');
+  st.textContent = '⏳ načítám databázi potravin…';
+  dbSlib = (async () => {
+    const [s, d, v] = await Promise.all([stahni('suroviny.json'), stahni('doplnky.json').catch(() => null), stahni('vyrobky.json').catch(() => null)]);
+    DB.suroviny = s.radky.map(D.surovinaZRadku);
+    DB.doplnky = d && d.format === D.FORMAT_DOPLNKY && Array.isArray(d.polozky) ? d.polozky.filter(x => !D.overDoplnek(x).length).map(D.doplnekZDat) : [];
+    const eanDopl = new Set(DB.doplnky.map(f => f.ean).filter(Boolean));
+    DB.vyrobky = v ? v.radky.map(D.vyrobekZRadku).filter(f => !eanDopl.has(f.ean) && !(f.priznaky & 2) && Number.isFinite(f.n.kcal)) : [];
+    DB.meta = { suroviny: s.zdroj, vyrobky: v && v.zdroj };
+    DB.indexSurovin = D.vytvorIndex(DB.suroviny.concat(DB.doplnky));
+    DB.index = D.vytvorIndex(DB.suroviny.concat(DB.doplnky, DB.vyrobky));
+    for (const f of DB.suroviny.concat(DB.doplnky, DB.vyrobky)) DB.podleId.set(f.id, f);
+    DB.nacteno = true;
+    st.textContent = '✓ ' + fc(DB.suroviny.length + DB.doplnky.length) + ' surovin · ' + fc(DB.vyrobky.length) + ' výrobků' + (v ? '' : ' (výrobky se nenačetly)');
+    vykresliZdroje();
+  })().catch(e => {
+    dbSlib = null;
+    st.classList.add('chyba');
+    st.textContent = '⚠️ Databázi potravin se nepodařilo načíst (' + e.message + '). Zkontroluj připojení a zkus to znovu.';
+    throw e;
+  });
+  return dbSlib;
+}
+const najdi = nazev => D.najdiSurovinu(DB.indexSurovin, DB.index, nazev);
+
+/* ---------- rozpoznání ---------- */
+async function rozpoznat() {
+  akt.text = $('text').value;
+  if (!akt.text.trim()) { Dialog.info('Nejdřív vlož seznam surovin.'); $('text').focus(); return; }
+  try { await nactiDb(); } catch (e) { return; }
+  // ruční úpravy u stejných řádků zůstanou
+  const puv = new Map(akt.polozky.filter(p => p.rucne && p.radek).map(p => [p.radek, p]));
+  const pridane = akt.polozky.filter(p => !p.radek);
+  akt.polozky = N.rozpoznej(akt.text, najdi).map(p => puv.get(p.radek) || p).concat(pridane);
+  if (!akt.polozky.length) Dialog.info('V textu jsem nenašel žádné suroviny – dej každou na samostatný řádek nebo je odděl čárkou.');
+  vykresli();
+}
+
+/* ---------- výběr potraviny ---------- */
+let poVyberu = null;
+function hledatPotravinu(titul, dotaz, cb) {
+  if (!DB.nacteno) { nactiDb().then(() => hledatPotravinu(titul, dotaz, cb)).catch(() => {}); return; }
+  poVyberu = cb;
+  $('dlgHledatTitul').textContent = titul;
+  $('hledatDotaz').value = dotaz || '';
+  vysledkyHledani();
+  $('dlgHledat').showModal();
+  $('hledatDotaz').focus();
+  $('hledatDotaz').select();
+}
+let nalezene = [];
+function vysledkyHledani() {
+  const q = $('hledatDotaz').value;
+  nalezene = q.trim() ? D.hledej(DB.index, q, { limit: 40 }) : [];
+  $('hledatVysledky').innerHTML = nalezene.length ? nalezene.map((f, i) => `<button type="button" data-vyber="${i}"><span><span data-i18n="ne">${esc(f.nazev)}</span>${f.znacka ? ' <small data-i18n="ne">· ' + esc(f.znacka) + '</small>' : ''}${znackaZdroje(f)}</span><small>${fc(f.n.kcal)} kcal/100 ${f.ml ? 'ml' : 'g'}</small></button>`).join('')
+    : `<p class="tip">${q.trim() ? 'Nic nenalezeno – zkus jiné slovo (např. jen „mouka“).' : 'Napiš název potraviny.'}</p>`;
+}
+function znackaZdroje(f) {
+  if (f.typ === 'v') return '<span class="znacka">výrobek</span>';
+  if (f.typ === 'd' && f.odhad) return '<span class="znacka" title="Typická hodnota, ne naměřená">odhad</span>';
+  return '';
+}
+
+/* ---------- výpočet a vykreslení ---------- */
+let vys = null;
+function prepocti() {
+  for (const p of akt.polozky) p._x = N.prepocet(p, p.f);
+  vys = N.vysledek(akt.polozky.map(p => ({ f: p.f, m: p._x.m, g: p._x.g })), akt);
+}
+function vykresli() {
+  prepocti();
+  vykresliSuroviny();
+  vykresliVysledek();
+  ulozRozprac();
+}
+function vykresliSuroviny() {
+  const el = $('suroviny');
+  $('pocetSur').textContent = akt.polozky.length ? vys.pocet + ' z ' + akt.polozky.length + ' ve výpočtu' : '';
+  if (!akt.polozky.length) { el.innerHTML = '<div class="prazdno">Zatím žádné suroviny.<br>Vlož recept nahoře a klikni na 🔎 Rozpoznat suroviny.</div>'; return; }
+  el.innerHTML = akt.polozky.map((p, i) => {
+    const x = p._x, f = p.f;
+    const trida = !f || x.m === null ? 'chyba' : x.odhad ? 'odhad' : '';
+    const volby = N.volbyJednotek(f).map(o => `<option value="${o.id}"${o.id === p.j ? ' selected' : ''}>${esc(o.n)}</option>`).join('');
+    const vypocet = x.m !== null ? '= ' + fc(x.g, 1) + ' g' + (f.ml ? ' (' + fc(x.m, 0) + ' ml)' : '') + ' · ' + fc(N.energieEU(D.zivinyZa(f.n, x.m)).kcal) + ' kcal' : '';
+    return `<div class="sur ${trida}" data-i="${i}">
+      <div class="hlava"><div class="jmeno">${f ? `<span data-i18n="ne">${esc(f.nazev)}</span>${f.znacka ? ' <span class="tip" data-i18n="ne">· ' + esc(f.znacka) + '</span>' : ''}${znackaZdroje(f)}` : `❓ Nenalezeno: <span data-i18n="ne">„${esc(p.nazev)}“</span>`}</div>
+        <button class="btn mini" data-akce="zmenit">${f ? 'Změnit' : 'Vybrat'}</button>
+        <button class="btn mini plain" data-akce="smazat" title="Odebrat" aria-label="Odebrat">✕</button></div>
+      ${p.radek ? `<div class="puvodni">📝 <span data-i18n="ne">${esc(p.radek)}</span></div>` : ''}
+      <div class="mnoz"><input class="vstup" data-pole="mn" inputmode="decimal" value="${p.mn !== null ? String(D.zaokrouhli(p.mn, 3)).replace('.', ',') : ''}" placeholder="?" aria-label="Množství">
+        <select class="vstup" data-pole="j" aria-label="Jednotka">${volby}</select>
+        <span class="vypocet">${vypocet}</span></div>
+      ${x.pozn && f ? `<div class="pozn">${esc(x.pozn)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+const h1 = (k, v) => k === 'kj' || k === 'kcal' ? fc(v) : fc(v, k === 'sul' ? 2 : 1);
+function vykresliVysledek() {
+  const v = vys;
+  $('dlazdice').innerHTML = [
+    [fc(v.celkem.kcal), 'kcal celkem (' + fc(v.celkem.kj) + ' kJ)'],
+    [fc(v.naPorci.kcal), 'kcal na porci (' + fc(v.porceG) + ' g)'],
+    [fc(v.na100.kcal), 'kcal na 100 g'],
+    [fc(v.hotova), 'g hotového jídla' + (Math.abs(v.koeficient - 1) > 0.001 ? ' (syrové ' + fc(v.syrova) + ' g)' : '')],
+  ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
+  // upozornění
+  const u = [];
+  const chybiMn = akt.polozky.filter(p => p.f && p._x.m === null), nenal = akt.polozky.filter(p => !p.f), odh = akt.polozky.filter(p => p.f && p._x.odhad && p._x.m !== null);
+  if (nenal.length) u.push('❓ Nenalezeno (nepočítá se): ' + nenal.map(p => '„' + esc(p.nazev) + '“').join(', ') + '.');
+  if (chybiMn.length) u.push('⚖️ Bez množství (nepočítá se): ' + chybiMn.map(p => esc(p.f.nazev)).join(', ') + '.');
+  if (odh.length) u.push('🟠 Odhadnuté množství – zkontroluj: ' + odh.map(p => esc(p.f.nazev)).join(', ') + '.');
+  for (const k of Object.keys(v.chybi)) {
+    const sez = [...new Set(v.chybi[k])];
+    u.push('ℹ️ ' + (k === 'makra' ? 'Energie z databáze (chybí makroživiny)' : 'Chybí údaj „' + N.NAZVY[k] + '“') + ' u: ' + sez.map(esc).join(', ') + ' – součet je podhodnocený.');
+  }
+  if (akt.rezim === 'hmotnost' && !(D.cislo(akt.hmotnost) > 0)) u.push('⚖️ Zadej hmotnost hotového jídla – zatím se počítá součet surovin.');
+  $('upozorneni').innerHTML = u.length ? '<div class="upozorneni">' + u.map(t => '<p>' + t + '</p>').join('') + '</div>' : '';
+  // přesná tabulka
+  const rad = [['kj', 'Energie (kJ)'], ['kcal', 'Energie (kcal)'], ['tuk', 'Tuky (g)'], ['nasycene', '– nasycené MK (g)'], ['sacharidy', 'Sacharidy (g)'], ['cukry', '– cukry (g)'], ['vlaknina', 'Vláknina (g)'], ['bilkoviny', 'Bílkoviny (g)'], ['sul', 'Sůl (g)']];
+  $('tabSouhrn').innerHTML = `<thead><tr><th></th><th>Celkem</th><th>Na porci (${fc(v.porceG)} g)</th><th>Na 100 g</th><th>% RI / porce</th></tr></thead><tbody>` +
+    rad.map(([k, n]) => `<tr><td>${n}</td><td>${h1(k, v.celkem[k])}</td><td>${h1(k, v.naPorci[k])}</td><td>${h1(k, v.na100[k])}</td><td>${N.RI[k] ? fc(v.riPorce[k]) + ' %' : ''}</td></tr>`).join('') + '</tbody>';
+  // etiketa
+  const et = N.radkyEtikety(v);
+  $('etiketa').innerHTML = `<div class="titul">Výživové údaje</div>${akt.nazev ? `<div class="recept" data-i18n="ne">${esc(akt.nazev)}</div>` : ''}
+    <table><thead><tr><th></th><th>na 100 g</th><th>na porci<br>(${fc(v.porceG)} g)</th><th>% RI*<br>na porci</th></tr></thead><tbody>` +
+    et.map(r => `<tr><td class="${r.pod ? 'pod' : ''}">${r.n}</td><td>${r.na100}</td><td>${r.naPorci}</td><td>${r.ri}</td></tr>`).join('') +
+    `</tbody></table><div class="poznamka">* Referenční hodnota příjmu průměrného dospělého (8 400 kJ / 2 000 kcal).<br>Počet porcí: ${v.porci}. Průměrné hodnoty vypočtené z údajů o surovinách (čl. 31 odst. 4 písm. c) nařízení EU 1169/2011).</div>`;
+  // rozpad podle surovin
+  const kcal = v.celkem.kcal || 1;
+  const bunky = (x, podil) => `<td>${fc(x.kcal)}</td><td>${podil}</td>` + ['tuk', 'nasycene', 'sacharidy', 'cukry', 'vlaknina', 'bilkoviny', 'sul'].map(k => `<td>${Number.isFinite(x[k]) ? h1(k, x[k]) : '–'}</td>`).join('');
+  $('tabRozpad').innerHTML = v.radky.length ? `<thead><tr><th>Surovina</th><th>g</th><th>kcal</th><th>podíl energie</th><th>tuky</th><th>nas. MK</th><th>sachar.</th><th>cukry</th><th>vlákn.</th><th>bílk.</th><th>sůl</th></tr></thead><tbody>` +
+    v.radky.slice().sort((a, b) => b.v.kcal - a.v.kcal).map(x => `<tr><td data-i18n="ne">${esc(x.f.nazev)}</td><td>${fc(x.g)}</td>${bunky(x.v, `<span class="pruh" style="width:${Math.round(x.v.kcal / kcal * 50)}px"></span>${fc(x.v.kcal / kcal * 100)} %`)}</tr>`).join('') +
+    `</tbody><tfoot><tr><td>Celkem</td><td>${fc(v.syrova)}</td>${bunky(v.celkem, '100 %')}</tr></tfoot>` : '<tbody><tr><td class="tip">Zatím nic k rozpadu.</td></tr></tbody>';
+}
+function vykresliZdroje() {
+  const z = [DB.meta.suroviny, DB.meta.vyrobky].filter(Boolean);
+  $('zdroje').innerHTML = 'Databáze potravin je společná s <a href="potraviny.html">Deníkem jídla</a>: ' + z.map(x => `${esc(x.nazev)} (${x.licence_url || x.url ? `<a href="${esc(x.licence_url || x.url)}" target="_blank" rel="noopener">${esc(x.licence)}</a>` : esc(x.licence || '')}${x.stazeno ? ', stav ' + esc(x.stazeno) : ''})`).join('; ') +
+    '. <span>Doplňky a české názvy připravil autor webu. Hodnoty surovin jsou průměrné, skutečné potraviny se liší.</span>';
+}
+function nastavRezim() {
+  $('poleZtrata').hidden = akt.rezim !== 'ztrata';
+  $('poleHmotnost').hidden = akt.rezim !== 'hmotnost';
+  $('tipRezim').textContent = akt.rezim === 'ztrata' ? 'Kolik procent hmotnosti se vařením odpaří (kladné číslo) nebo kolik vody jídlo nasaje (záporné – rýže, těstoviny). Nejpřesnější je hotové jídlo zvážit.'
+    : akt.rezim === 'hmotnost' ? 'Zvaž celé hotové jídlo (bez nádoby) – hodnoty na 100 g pak odpovídají jídlu na talíři.' : '';
+}
+function doFormulare() {
+  $('nazev').value = akt.nazev || '';
+  $('text').value = akt.text || '';
+  $('porci').value = akt.porci;
+  $('rezim').value = akt.rezim;
+  $('ztrata').value = akt.ztrata;
+  $('hmotnost').value = akt.hmotnost || '';
+  nastavRezim();
+  vykresli();
+}
+
+/* ---------- události surovin ---------- */
+$('suroviny').addEventListener('input', e => {
+  const el = e.target.closest('[data-pole]'); if (!el) return;
+  const p = akt.polozky[+el.closest('[data-i]').dataset.i];
+  if (el.dataset.pole === 'mn') { const v = D.cislo(el.value); p.mn = v !== null && v >= 0 ? v : null; }
+  else p.j = el.value;
+  p.rucne = true;
+  prepocti();
+  // jen popisky řádku (pole zůstává ve fokusu)
+  const r = el.closest('.sur'), x = p._x, f = p.f;
+  r.className = 'sur ' + (!f || x.m === null ? 'chyba' : x.odhad ? 'odhad' : '');
+  r.querySelector('.vypocet').textContent = x.m !== null && f ? '= ' + fc(x.g, 1) + ' g' + (f.ml ? ' (' + fc(x.m, 0) + ' ml)' : '') + ' · ' + fc(N.energieEU(D.zivinyZa(f.n, x.m)).kcal) + ' kcal' : '';
+  let pz = r.querySelector('.pozn');
+  if (x.pozn && f) { if (!pz) { pz = document.createElement('div'); pz.className = 'pozn'; r.appendChild(pz); } pz.textContent = x.pozn; } else if (pz) pz.remove();
+  $('pocetSur').textContent = vys.pocet + ' z ' + akt.polozky.length + ' ve výpočtu';
+  vykresliVysledek();
+  ulozRozprac();
+});
+$('suroviny').addEventListener('click', e => {
+  const b = e.target.closest('[data-akce]'); if (!b) return;
+  const i = +b.closest('[data-i]').dataset.i, p = akt.polozky[i];
+  if (b.dataset.akce === 'smazat') { akt.polozky.splice(i, 1); vykresli(); return; }
+  hledatPotravinu('Surovina: ' + (p.radek || p.nazev), p.nazev, f => {
+    p.f = f; p.rucne = true;
+    if (/^p\d+$/.test(p.j) && !(f.porce || [])[+p.j.slice(1)]) p.j = 'ks';
+    vykresli();
+  });
+});
+$('pridatSur').addEventListener('click', () => hledatPotravinu('Přidat surovinu', '', f => {
+  akt.polozky.push({ radek: '', nazev: f.nazev, druh: null, jednotka: null, mn: 100, j: f.ml ? 'ml' : 'g', gKus: null, f, rucne: true });
+  vykresli();
+}));
+$('hledatDotaz').addEventListener('input', vysledkyHledani);
+$('hledatDotaz').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (nalezene[0]) vyber(0); } });
+$('hledatVysledky').addEventListener('click', e => { const b = e.target.closest('[data-vyber]'); if (b) vyber(+b.dataset.vyber); });
+function vyber(i) { const f = nalezene[i]; $('dlgHledat').close(); if (f && poVyberu) poVyberu(f); poVyberu = null; }
+
+$('rozpoznat').addEventListener('click', rozpoznat);
+$('text').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); rozpoznat(); } });
+$('text').addEventListener('input', () => { akt.text = $('text').value; ulozRozprac(); });
+$('nazev').addEventListener('input', () => { akt.nazev = $('nazev').value; vykresliVysledek(); ulozRozprac(); });
+$('porci').addEventListener('input', () => { akt.porci = Math.max(1, Math.round(D.cislo($('porci').value) || 1)); prepocti(); vykresliVysledek(); ulozRozprac(); });
+$('rezim').addEventListener('change', () => { akt.rezim = $('rezim').value; nastavRezim(); prepocti(); vykresliVysledek(); ulozRozprac(); });
+$('ztrata').addEventListener('input', () => { akt.ztrata = D.cislo($('ztrata').value) || 0; prepocti(); vykresliVysledek(); ulozRozprac(); });
+$('hmotnost').addEventListener('input', () => { akt.hmotnost = D.cislo($('hmotnost').value); prepocti(); vykresliVysledek(); ulozRozprac(); });
+
+/* ---------- příkazy ---------- */
+function stahniSoubor(nazev, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = nazev;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const jmenoSouboru = s => (D.norm(s || 'recept').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'recept');
+async function ulozit(jakoNovy) {
+  if (!akt.polozky.length) { Dialog.info('Recept nemá žádné suroviny – nejdřív je rozpoznej.'); return; }
+  let nazev = akt.nazev.trim();
+  if (!nazev || jakoNovy) {
+    nazev = await Dialog.zeptej('Název receptu', nazev || '');
+    if (nazev === null || !nazev.trim()) return;
+    akt.nazev = nazev.trim(); $('nazev').value = akt.nazev;
+  }
+  const r = N.ulozRecept(data, { ...akt, id: jakoNovy ? null : akt.id });
+  if (!uloz()) return;
+  akt.id = r.id;
+  ulozRozprac();
+  vykresliVysledek();
+  Dialog.info('Uloženo: ' + r.nazev);
+}
+function otevriRecept(r) {
+  akt = JSON.parse(JSON.stringify(r));
+  // aktuální údaje z databáze (snímek zůstane, pokud potravina v databázi už není)
+  if (DB.nacteno) for (const p of akt.polozky) if (p.f && DB.podleId.has(p.f.id)) p.f = DB.podleId.get(p.f.id);
+  doFormulare();
+}
+function vykresliRecepty() {
+  const sez = N.seznamReceptu(data);
+  $('seznamReceptu').innerHTML = sez.length ? sez.map(r => `<div class="polozka" data-id="${esc(r.id)}"><span><b data-i18n="ne">${esc(r.nazev)}</b><br><small class="tip">suroviny: ${r.polozky.length} · porce: ${r.porci} · ${new Date(r.zmeneno).toLocaleDateString('cs-CZ')}</small></span>
+    <button type="button" class="btn mini primary" data-r="otevrit">Otevřít</button><button type="button" class="btn mini danger" data-r="smazat" aria-label="Smazat" title="Smazat">🗑️</button></div>`).join('')
+    : '<p class="tip">Zatím žádné uložené recepty. Recept uložíš tlačítkem 💾 Uložit.</p>';
+}
+$('seznamReceptu').addEventListener('click', async e => {
+  const b = e.target.closest('[data-r]'); if (!b) return;
+  const r = data.recepty[b.closest('[data-id]').dataset.id]; if (!r) return;
+  if (b.dataset.r === 'otevrit') { $('dlgRecepty').close(); otevriRecept(r); return; }
+  if (!await Dialog.potvrd('Smazat recept „' + r.nazev + '“?')) return;
+  delete data.recepty[r.id]; uloz();
+  if (akt.id === r.id) akt.id = null;
+  vykresliRecepty();
+});
+// balík → kód odkazu stejně jako Deník jídla: „z“ + deflate-raw + base64url (bez CompressionStream „u“ + base64url)
+function b64url(b) { let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+async function kodSdileni(b) {
+  const json = new TextEncoder().encode(JSON.stringify(b));
+  if (typeof CompressionStream === 'function') {
+    try { return 'z' + b64url(new Uint8Array(await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer())); } catch (e) { /* bez komprese */ }
+  }
+  return 'u' + b64url(json);
+}
+const PRIKAZY = {
+  novy: async () => {
+    if ((akt.text.trim() || akt.polozky.length) && !akt.id && !await Dialog.potvrd('Zahodit neuložený recept a začít nový?')) return;
+    akt = novy(); doFormulare(); $('text').focus();
+  },
+  ulozit: () => ulozit(false),
+  ulozitJako: () => ulozit(true),
+  recepty: () => { vykresliRecepty(); $('dlgRecepty').showModal(); },
+  csv: () => {
+    if (!vys.pocet) { Dialog.info('Zatím není co exportovat.'); return; }
+    stahniSoubor(jmenoSouboru(akt.nazev) + '_rozpad.csv', N.csvRozpadu(vys), 'text/csv;charset=utf-8');
+  },
+  export: () => {
+    if (!Object.keys(data.recepty).length) { Dialog.info('Zatím nemáš žádné uložené recepty.'); return; }
+    stahniSoubor('nutricni_recepty_' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify({ format: 'nutricni-recepty', ...data }, null, 1), 'application/json');
+  },
+  import: () => $('souborImport').click(),
+  tiskEtikety: () => { document.body.classList.add('jen-etiketa'); print(); },
+  tiskVse: () => { document.body.classList.remove('jen-etiketa'); print(); },
+  denik: async () => {
+    let b;
+    try { b = N.balikProDenik(akt, vys); } catch (e) { Dialog.chyba(e.message); return; }
+    if (!akt.nazev.trim()) b.n = 'Recept ' + new Date().toLocaleDateString('cs-CZ');
+    const kod = await kodSdileni(b);
+    if (kod.length > 19000) { Dialog.chyba('Recept je na odkaz příliš velký – rozděl ho nebo ulož zálohu (JSON).'); return; }
+    const url = new URL('potraviny.html#sdileni=' + kod, location.href).href;
+    $('denikNazev').textContent = b.n;
+    $('denikOdkaz').value = url;
+    $('denikOtevrit').href = url;
+    $('dlgDenik').showModal();
+  },
+  napoveda: () => $('dlgNapoveda').showModal(),
+};
+addEventListener('afterprint', () => document.body.classList.remove('jen-etiketa'));
+$('denikKopirovat').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('denikOdkaz').value); Dialog.info('Odkaz zkopírován.'); }
+  catch (e) { $('denikOdkaz').select(); Dialog.info('Zkopíruj odkaz ručně (Ctrl+C).'); }
+});
+$('souborImport').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { Dialog.chyba('Soubor není platný JSON.'); return; }
+  const m = N.migruj(d), n = Object.keys(m.recepty).length;
+  if (!n) { Dialog.chyba('V souboru nejsou žádné recepty.'); return; }
+  if (!await Dialog.potvrd('Načíst recepty ze zálohy (' + n + ')? Recepty se stejným id se přepíší, ostatní zůstanou.')) return;
+  Object.assign(data.recepty, m.recepty);
+  if (uloz()) Dialog.info('Načteno.');
+});
+
+/* ---------- nabídky ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); PRIKAZY[p.dataset.prikaz](); return; }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('resize', zavriNabidky);
+addEventListener('storage', e => { if (e.key === N.KLIC) { try { data = N.migruj(JSON.parse(e.newValue || 'null')); } catch (er) { /* nic */ } } });
+
+doFormulare();
+nactiDb().then(() => { if (akt.polozky.length) otevriRecept(akt); }).catch(() => {});
+window.NUTREC_APP = { akt: () => akt, vys: () => vys, rozpoznat, db: () => DB };
+})();
+</script>
+</body>
+</html>

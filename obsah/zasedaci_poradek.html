@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zasedací pořádek a jmenovky</title>
+<meta name="description" content="Zasedací pořádek pro svatby, oslavy a konference: seznam hostů se skupinami a dietami, plánek sálu se stoly, automatické rozsazení podle pravidel, tisk jmenovek, čísel stolů, menu a seznamu kdo sedí kde.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="zasedaci_poradek/jadro.js"></script>
+<script src="zasedaci_poradek/tisk.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+[hidden]{display:none !important}
+/* horní lišta (vzor Zásoby / Prompty) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .akce-nazev{font-size:.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.zatrh{display:flex;align-items:center;gap:6px;font-size:.84rem;color:var(--text);cursor:pointer}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.radek{grid-template-columns:1fr}}
+.tip{font-size:.8rem;color:var(--text-muted);margin:4px 0 10px;line-height:1.45}
+.mala{font-size:.76rem;color:var(--text-muted)}
+
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+.pohled{flex:1;min-height:0;overflow:auto}
+
+/* ---------- hosté ---------- */
+.obal{max-width:1200px;margin:0 auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:9px 12px}
+.dlazdice b{display:block;font-size:1.4rem;line-height:1.1}
+.dlazdice span{font-size:.76rem;color:var(--text-muted)}
+.nastroje{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.nastroje .vstup{flex:1 1 180px}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+td .akce{display:flex;gap:3px}
+tr.klik{cursor:pointer} tr.klik:hover td{background:var(--bg-hover)}
+.tecka{display:inline-block;width:.75em;height:.75em;border-radius:50%;vertical-align:-.05em;margin-right:5px;background:var(--border-strong)}
+.znacka{display:inline-block;font-size:.72rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border);white-space:nowrap}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.7}
+h2.nadp{font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:18px 0 6px}
+.pravidlo-form{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.pravidlo-form select{flex:1 1 160px}
+
+/* ---------- plánek ---------- */
+.plan-mrizka{display:grid;grid-template-columns:250px minmax(0,1fr) 290px;height:100%;min-height:0}
+.panel{background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+.panel.vpravo{border-right:0;border-left:1px solid var(--border);overflow-y:auto;padding:10px 12px;gap:10px}
+.panel-hlava{padding:8px 10px;border-bottom:1px solid var(--border);display:grid;gap:6px}
+.panel-hlava .vstup{width:100%}
+#seznamHostu{overflow-y:auto;flex:1;padding:4px;min-height:80px}
+.host-pol{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:6px;cursor:grab;font-size:.84rem;user-select:none;touch-action:none;border:1px solid transparent}
+.host-pol:hover{background:var(--bg-hover)}
+.host-pol.vybrany{border-color:var(--accent);background:var(--accent-soft)}
+.host-pol .jm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.host-pol .kde{font-size:.72rem;color:var(--text-muted);white-space:nowrap}
+.plan-obal{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
+.plan-nastroje{display:flex;gap:4px;padding:5px 8px;border-bottom:1px solid var(--border);background:var(--bg-elevated);flex-wrap:wrap;align-items:center}
+.plan-nastroje .mala{margin-left:auto}
+#planPlocha{flex:1;overflow:auto;min-height:0;padding:8px}
+#planPlocha svg{display:block;width:calc(100% * var(--zoom,1));height:auto;max-height:none}
+.zp-plan{touch-action:none;user-select:none;-webkit-user-select:none}
+.zp-plan text{text-anchor:middle;dominant-baseline:central;fill:var(--text);pointer-events:none;font-family:system-ui,sans-serif}
+.zp-plan .sal{fill:var(--bg-panel);stroke:var(--border-strong);stroke-width:.05}
+.zp-plan .mriz{stroke:var(--border);stroke-width:.012;fill:none}
+.zp-plan .deska{fill:var(--bg-control);stroke:var(--text-muted);stroke-width:.03}
+.zp-plan .stul{cursor:move}
+.zp-plan .stul.vybrany .deska,.zp-plan .stul.vybrany .prvek{stroke:var(--accent);stroke-width:.08}
+.zp-plan .stul.hlavni .deska{fill:color-mix(in srgb,var(--accent) 22%,var(--bg-control))}
+.zp-plan .prvek{fill:color-mix(in srgb,var(--text-muted) 12%,transparent);stroke:var(--text-muted);stroke-dasharray:.15 .1;stroke-width:.03}
+.zp-plan .popis-prvku{fill:var(--text-muted)}
+.zp-plan .cislo-stolu{font-weight:700}
+.zp-plan .misto{cursor:pointer}
+.zp-plan .misto circle{fill:var(--accent);stroke:var(--bg-panel);stroke-width:.03}
+.zp-plan .misto.volne circle{fill:var(--bg-panel);stroke:var(--text-faint,var(--text-muted));stroke-dasharray:.06 .04;stroke-width:.025}
+.zp-plan .misto .ini{font-size:.17px;font-weight:700;fill:#fff}
+.zp-plan .misto.volne .ini{fill:var(--text-muted);font-weight:400;font-size:.13px}
+.zp-plan .misto.dite circle{stroke:var(--text);stroke-dasharray:.05 .03;stroke-width:.03}
+.zp-plan .misto.chyba circle{stroke:var(--danger);stroke-width:.07;stroke-dasharray:none}
+.zp-plan .misto.vybrane circle{stroke:var(--text);stroke-width:.09;stroke-dasharray:none}
+.zp-plan .misto.cil circle{stroke:var(--accent);stroke-width:.1}
+.zp-plan .jmeno-mista{font-size:.19px;dominant-baseline:central}
+.plan-mrizka .panel h3{margin:0;font-size:.9rem}
+.box{border:1px solid var(--border);border-radius:8px;padding:9px 10px;display:grid;gap:8px;background:var(--bg-elevated)}
+.box .radek{gap:6px}
+.skore{display:flex;align-items:baseline;gap:8px}
+.skore b{font-size:1.6rem}
+.skore.dobre b{color:var(--ok)} .skore.spatne b{color:var(--danger)} .skore.stredni b{color:var(--warn)}
+.poruseni{display:grid;gap:4px;font-size:.8rem;max-height:340px;overflow-y:auto}
+.poruseni button{all:unset;cursor:pointer;display:flex;gap:6px;padding:4px 6px;border-radius:5px;border-left:3px solid var(--warn);background:var(--bg-panel);line-height:1.35}
+.poruseni button.nesmi,.poruseni button.nerozsazen{border-left-color:var(--danger)}
+.poruseni button.skupina{border-left-color:var(--border-strong)}
+.poruseni button:hover{background:var(--bg-hover)}
+.poruseni .body{margin-left:auto;color:var(--text-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.u-stolu{font-size:.8rem;display:grid;gap:2px;margin:0;padding-left:1.4em}
+.duch{position:fixed;z-index:300;pointer-events:none;background:var(--accent);color:var(--on-accent,#fff);padding:4px 10px;border-radius:14px;font-size:.84rem;box-shadow:var(--shadow);transform:translate(-50%,-130%);white-space:nowrap}
+.hlaska{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:250;background:var(--bg-panel);border:1px solid var(--border-strong);box-shadow:var(--shadow);padding:8px 14px;border-radius:8px;font-size:.86rem;max-width:min(92vw,560px)}
+@media (max-width:980px){
+  .plan-mrizka{grid-template-columns:1fr;height:auto}
+  .plan-obal{order:1}
+  #planPlocha{flex:none;max-height:80vh}
+  .panel{order:2;border-right:0;border-top:1px solid var(--border);max-height:50vh}
+  .panel.vpravo{order:3;border-left:0;max-height:none}
+}
+
+/* ---------- tisk ---------- */
+.tisk-mrizka{display:grid;grid-template-columns:300px minmax(0,1fr);height:100%;min-height:0}
+.tisk-nast{background:var(--bg-panel);border-right:1px solid var(--border);overflow-y:auto;padding:10px 12px;display:grid;gap:9px;align-content:start}
+.tisk-nast textarea{resize:vertical;min-height:120px}
+.tisk-prava{display:flex;flex-direction:column;min-width:0;min-height:0}
+.tisk-info{padding:6px 12px;font-size:.82rem;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--bg-elevated);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tisk-info .btn{margin-left:auto}
+#nahled{flex:1;overflow:auto;padding:14px;background:var(--bg-deep,var(--bg))}
+@media (max-width:820px){.tisk-mrizka{grid-template-columns:1fr;height:auto}.tisk-nast{border-right:0;border-bottom:1px solid var(--border)}#nahled{min-height:60vh}}
+
+/* listy – vždy bílý papír */
+.zp-list{position:relative;background:#fff;color:#000;margin:0 auto 14px;box-shadow:0 2px 12px rgba(0,0,0,.35);overflow:hidden}
+.zp-kus{position:absolute}
+.zp-stan{position:absolute;inset:0}
+.zp-stan.ram,.zp-menu.ram{outline:.2mm dashed #bbb;outline-offset:-.1mm}
+.zp-pul{position:absolute;left:0;right:0;top:0;overflow:hidden}
+.zp-pul.hore{transform:rotate(180deg)}
+.zp-ohyb{position:absolute;left:0;right:0;border-top:.2mm dashed #999}
+.zp-ozdoba{position:absolute;border:.5mm double;border-radius:1.5mm}
+.zp-stred{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1mm;padding:0 4%}
+.zp-jm{line-height:1.12;white-space:nowrap}
+.zp-r2{line-height:1.1;white-space:nowrap}
+.zp-hoste{line-height:1.25;max-width:88%;color:#333}
+.zp-dieta{position:absolute;right:9%;bottom:9%;font-size:2.4mm;color:#555;font-family:system-ui,sans-serif}
+.zp-menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;text-align:center;padding:10% 9% 8%;gap:2mm}
+.zp-menu .zp-jm{margin-bottom:1mm}
+.zp-nad{line-height:1.1}
+.zp-pod{color:#444}
+.zp-cara{width:30%;height:.4mm;margin:1mm 0 2mm}
+.zp-text{line-height:1.45;color:#111}
+.zp-mezera{display:inline-block;height:.6em}
+.zp-dieta-menu{margin-top:auto;font-size:3mm;color:#444}
+.zp-seznam{height:100%;font-family:system-ui,"Segoe UI",sans-serif;color:#000}
+.zp-sez-hlava{border-bottom:.3mm solid #999;margin-bottom:6mm;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:2mm}
+.zp-sez-pod{font-size:3.6mm;color:#555}
+.zp-sloupce{display:flex;align-items:flex-start}
+.zp-pismeno{font-weight:700;font-size:1.25em;margin-top:.15em;border-bottom:.2mm solid #ccc}
+.zp-radek{display:flex;gap:1.5mm;white-space:nowrap;overflow:hidden}
+.zp-kdo{overflow:hidden;text-overflow:ellipsis}
+.zp-tecky{flex:1;border-bottom:.3mm dotted #999;margin-bottom:1.2mm;min-width:3mm}
+.zp-kde{font-weight:600}
+.zp-mala{font-size:.82em;color:#555;font-weight:400}
+.zp-stul-hl{margin-top:.5em;font-size:1.1em}
+.zp-planek-list{height:100%;display:flex;flex-direction:column;gap:3mm}
+.zp-pl-hlava{display:flex;justify-content:space-between;align-items:baseline;gap:6mm;font-size:6mm;flex-wrap:wrap}
+.zp-legenda{display:flex;gap:4mm;flex-wrap:wrap;font-size:3.2mm;font-family:system-ui,sans-serif}
+.zp-leg i{display:inline-block;width:3mm;height:3mm;border-radius:50%;margin-right:1mm;vertical-align:-.3mm}
+.zp-pl-svg{flex:1;min-height:0}
+.zp-pl-svg svg{width:100%;height:100%}
+.zp-plan.tiskova text{fill:#000}
+.zp-plan.tiskova .sal{fill:#fff;stroke:#666}
+.zp-plan.tiskova .deska{fill:#f1f1f1;stroke:#555}
+.zp-plan.tiskova .stul.hlavni .deska{fill:#e8e0cc}
+.zp-plan.tiskova .prvek{fill:#f6f6f6;stroke:#888}
+.zp-plan.tiskova .misto circle{stroke:#fff}
+.zp-plan.tiskova .misto.volne circle{fill:#fff;stroke:#999}
+.zp-plan.tiskova .misto.volne .ini{fill:#999}
+.zp-plan.tiskova .misto.obsazene:not([style]) circle{fill:#666}
+
+@media print{
+  body.tiskne{display:block;height:auto;background:#fff}
+  body.tiskne > *:not(main){display:none !important}
+  body.tiskne main > *:not(#vTisk),body.tiskne .tisk-nast,body.tiskne .tisk-info{display:none !important}
+  body.tiskne .tisk-mrizka{display:block}
+  body.tiskne #nahled{zoom:1 !important;padding:0;overflow:visible;background:none}
+  body.tiskne .zp-list{margin:0;box-shadow:none;break-after:page;page-break-after:always}
+  body.tiskne .zp-list:last-child{break-after:auto;page-break-after:auto}
+  body.tiskne .pohled{overflow:visible}
+}
+
+/* dialogy */
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5);margin:auto}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.okno textarea{font-family:ui-monospace,monospace;font-size:.8rem}
+.akce-seznam{display:grid;gap:6px}
+.akce-seznam .pol{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel)}
+.akce-seznam .pol.aktivni{border-color:var(--accent)}
+.akce-seznam .pol div{flex:1;min-width:0}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🪑 Zasedací pořádek</h1>
+  <span class="akce-nazev" id="akceNazev" data-i18n="ne"></span>
+  <div class="skup" role="group" aria-label="Akce"><span class="skup-nazev" aria-hidden="true">Akce</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Akce, záloha, export">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" id="tlZpet" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Hosté a stoly"><span class="skup-nazev" aria-hidden="true">Přidat</span><div class="skup-tl">
+    <button class="tl" data-prikaz="novyHost" title="Nový host">✚<span class="txt"> Host</span></button>
+    <button class="tl" data-prikaz="import" title="Vložit seznam hostů nebo načíst CSV">📥<span class="txt"> Import</span></button>
+    <button class="tl" data-nabidka="nabStoly" aria-expanded="false" title="Přidat stůl nebo prvek sálu">🪑<span class="txt"> Stoly</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Rozsazení"><span class="skup-nazev" aria-hidden="true">Rozsadit</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="rozsad" title="Automaticky rozsadit nerozsazené a vylepšit stávající">✨<span class="txt"> Rozsadit</span></button>
+    <button class="tl" data-nabidka="nabRozsad" aria-expanded="false" title="Další možnosti rozsazení" aria-label="Další možnosti rozsazení">▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="hoste" aria-pressed="false">👥<span class="txt"> Hosté</span></button>
+    <button class="tl" data-pohled="planek" aria-pressed="true">🗺️<span class="txt"> Plánek</span></button>
+    <button class="tl" data-pohled="tisk" aria-pressed="false">🖨️<span class="txt"> Tisk</span></button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="upravAkci">✎ Název, datum a rozměr sálu…</button>
+  <button class="tl" data-prikaz="akce">📂 Moje akce…</button>
+  <button class="tl" data-prikaz="novaAkce">✚ Nová akce</button>
+  <button class="tl" data-prikaz="duplikat">⧉ Duplikovat akci</button>
+  <button class="tl" data-prikaz="ukazka">💒 Otevřít ukázkovou svatbu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha akce (JSON)</button>
+  <button class="tl" data-prikaz="obnov">📂 Obnovit ze zálohy…</button>
+  <button class="tl" data-prikaz="csv">📊 Hosté a místa do CSV</button>
+  <hr>
+  <button class="tl" data-prikaz="smazAkci">🗑️ Smazat tuto akci…</button>
+</div>
+<div id="nabStoly" class="nabidka" hidden>
+  <button class="tl" data-stul-novy="kulaty">⚪ Kulatý stůl (8 míst)</button>
+  <button class="tl" data-stul-novy="obdelnik">▭ Obdélníkový stůl (8 míst)</button>
+  <button class="tl" data-stul-novy="tabule">═ Dlouhá tabule (20 míst)</button>
+  <button class="tl" data-stul-novy="hlavni">★ Hlavní stůl (jednostranný)</button>
+  <button class="tl" data-stul-novy="prvek">⬚ Prvek sálu (parket, bar, vchod…)</button>
+  <hr>
+  <button class="tl" data-prikaz="viceStolu">⊞ Více stolů najednou…</button>
+  <button class="tl" data-prikaz="precisluj">🔢 Přečíslovat stoly podle polohy</button>
+</div>
+<div id="nabRozsad" class="nabidka" hidden>
+  <button class="tl" data-prikaz="rozsad">✨ Rozsadit a vylepšit (zachová, co jde)</button>
+  <button class="tl" data-prikaz="rozsadNuly">🔄 Rozsadit znovu od nuly</button>
+  <button class="tl" data-prikaz="zvedni">🧹 Zvednout všechny ze židlí (kromě 🔒)</button>
+  <hr>
+  <button class="tl" data-pohled="hoste" data-kotva="pravidla">📏 Pravidla „chce / nesmí sedět s“</button>
+</div>
+<input type="file" id="souborZaloha" accept=".json,application/json" hidden>
+<input type="file" id="souborCsv" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden>
+
+<main>
+  <!-- HOSTÉ -->
+  <section class="pohled" id="vHoste" hidden><div class="obal">
+    <div class="souhrn" id="souhrnHoste"></div>
+    <div class="nastroje">
+      <input type="search" class="vstup" id="hledatHoste" placeholder="🔍 Hledat hosta, skupinu, dietu…" aria-label="Hledat hosta">
+      <button class="btn primary" data-prikaz="novyHost">✚ Host</button>
+      <button class="btn" data-prikaz="import">📥 Import</button>
+    </div>
+    <div id="tabHoste"></div>
+    <h2 class="nadp" id="pravidla">📏 Pravidla rozsazení</h2>
+    <p class="tip">Doprovod a děti se drží u „svého“ hosta samy (nastavíte u hosta). Tady přidejte, kdo <b>chce</b> sedět s kým (u stejného stolu, nejlépe vedle sebe) a kdo <b>nesmí</b> sedět u jednoho stolu. Hosté se stejnou skupinou se drží pohromadě.</p>
+    <div class="pravidlo-form">
+      <select class="vstup" id="pravA" aria-label="První host"></select>
+      <select class="vstup" id="pravTyp" aria-label="Druh pravidla" style="flex:0 0 auto"><option value="chce">💚 chce sedět s</option><option value="nesmi">⛔ nesmí sedět s</option></select>
+      <select class="vstup" id="pravB" aria-label="Druhý host"></select>
+      <button class="btn" data-prikaz="pridejPravidlo">✚ Přidat</button>
+    </div>
+    <div id="seznamPravidel"></div>
+  </div></section>
+
+  <!-- PLÁNEK -->
+  <section class="pohled" id="vPlanek" hidden><div class="plan-mrizka">
+    <aside class="panel">
+      <div class="panel-hlava">
+        <input type="search" class="vstup" id="hledatPlan" placeholder="🔍 Hledat hosta" aria-label="Hledat hosta">
+        <select class="vstup" id="filtrPlan" aria-label="Které hosty ukázat"></select>
+        <div class="mala" id="pocetPlan"></div>
+      </div>
+      <div id="seznamHostu" aria-label="Hosté – přetáhněte na místo"></div>
+    </aside>
+    <div class="plan-obal">
+      <div class="plan-nastroje">
+        <button class="btn mini" data-zoom="1.25" title="Přiblížit" aria-label="Přiblížit">+</button>
+        <button class="btn mini" data-zoom="0.8" title="Oddálit" aria-label="Oddálit">−</button>
+        <button class="btn mini" data-zoom="0" title="Celý sál">⤢</button>
+        <label class="zatrh mala"><input type="checkbox" id="ukazJmena" checked> jména u míst</label>
+        <span class="mala" id="napovedaPlan">Táhněte hosty na místa, stoly po sále.</span>
+      </div>
+      <div id="planPlocha"></div>
+    </div>
+    <aside class="panel vpravo" id="panelVpravo"></aside>
+  </div></section>
+
+  <!-- TISK -->
+  <section class="pohled" id="vTisk" hidden><div class="tisk-mrizka">
+    <form class="tisk-nast" id="tiskForm" onsubmit="return false">
+      <label class="pole">Co tisknout<select class="vstup" name="druh" id="tiskDruh"></select></label>
+      <div class="radek">
+        <label class="pole">Papír<select class="vstup" name="papir"><option value="a4">A4</option><option value="a3">A3</option><option value="letter">Letter</option></select></label>
+        <label class="pole" data-druhy="jmenovky cisla menu abecedne planek">Hlavní písmo<select class="vstup" name="pismo" data-pisma></select></label>
+      </div>
+      <label class="pole" data-druhy="jmenovky cisla menu">Doplňkové písmo<select class="vstup" name="pismo2" data-pisma></select></label>
+      <div class="radek">
+        <label class="pole" data-druhy="jmenovky cisla menu abecedne postolech planek">Barva ozdob<input class="vstup" type="color" name="barva" value="#8a6d3b" style="padding:2px;height:32px"></label>
+        <label class="pole" data-druhy="jmenovky cisla menu">Barva jmen<input class="vstup" type="color" name="barvaTextu" value="#222222" style="padding:2px;height:32px"></label>
+      </div>
+      <!-- jmenovky -->
+      <label class="pole" data-druhy="jmenovky">Velikost jmenovky (jedna strana)<select class="vstup" name="jmVelikost"></select></label>
+      <div class="radek" data-druhy="jmenovky" data-vlastni>
+        <label class="pole">Šířka mm<input class="vstup" type="number" name="jmW" min="40" max="280" value="100"></label>
+        <label class="pole">Výška mm<input class="vstup" type="number" name="jmH" min="20" max="140" value="55"></label>
+      </div>
+      <label class="pole" data-druhy="jmenovky menu">Tvar jména<select class="vstup" name="jmFormat"><option value="cele">Celé jméno (i s tituly)</option><option value="bezTitulu">Jméno bez titulů</option><option value="krestni">Jen křestní jméno</option></select></label>
+      <label class="pole" data-druhy="jmenovky">Druhý řádek<select class="vstup" name="jmRadek2"><option value="stul">Číslo stolu</option><option value="vlastni">Vlastní text</option><option value="nic">Nic</option></select></label>
+      <label class="pole" data-druhy="jmenovky" data-text2>Vlastní text<input class="vstup" name="jmText2" maxlength="60" placeholder="např. Svatba Jany a Petra"></label>
+      <label class="zatrh" data-druhy="jmenovky"><input type="checkbox" name="jmDieta" checked> Dieta a alergie v rohu (pro obsluhu)</label>
+      <!-- čísla stolů -->
+      <label class="pole" data-druhy="cisla">Velikost karty (jedna strana)<select class="vstup" name="cVelikost"></select></label>
+      <label class="pole" data-druhy="cisla">Nadpis nad číslem<input class="vstup" name="cNadpis" maxlength="30" value="Stůl"></label>
+      <label class="zatrh" data-druhy="cisla"><input type="checkbox" name="cJmena"> Jména hostů pod číslem</label>
+      <!-- menu -->
+      <label class="pole" data-druhy="menu">Formát menu<select class="vstup" name="mFormat"></select></label>
+      <label class="zatrh" data-druhy="menu"><input type="checkbox" name="mOsobni"> Pro každého hosta (jméno a dieta)</label>
+      <label class="pole" data-druhy="menu" data-pocet>Počet karet<input class="vstup" type="number" name="mPocet" min="1" max="500" value="10"></label>
+      <label class="pole" data-druhy="menu">Nadpis menu<input class="vstup" id="menuNadpis" maxlength="80" data-i18n="ne"></label>
+      <label class="pole" data-druhy="menu">Text menu (prázdný řádek = mezera)<textarea class="vstup" id="menuText" rows="8" maxlength="3000" data-i18n="ne"></textarea></label>
+      <!-- výběr hostů -->
+      <label class="pole" data-druhy="jmenovky menu abecedne">Hosté<select class="vstup" name="vyber" id="tiskVyber"></select></label>
+      <label class="pole" data-druhy="jmenovky menu">Pořadí<select class="vstup" name="poradi"><option value="abeceda">Abecedně (podle příjmení)</option><option value="stoly">Po stolech</option></select></label>
+      <!-- seznamy -->
+      <label class="pole" data-druhy="abecedne">Nadpis<input class="vstup" name="sNadpis" maxlength="60" value="Kde sedíte"></label>
+      <div class="radek" data-druhy="abecedne postolech">
+        <label class="pole">Sloupců<select class="vstup" name="sSloupcu"><option>1</option><option selected>2</option><option>3</option></select></label>
+        <label class="pole">Písmo (pt)<input class="vstup" type="number" name="sPismo" min="7" max="24" value="12"></label>
+      </div>
+      <label class="zatrh" data-druhy="planek"><input type="checkbox" name="pJmena" checked> Jména u míst</label>
+      <hr style="border:0;border-top:1px solid var(--border);width:100%">
+      <label class="zatrh" data-druhy="jmenovky cisla menu"><input type="checkbox" name="ramecek" checked> Čárkovaný ořez</label>
+      <label class="zatrh" data-druhy="jmenovky cisla"><input type="checkbox" name="ohyb" checked> Čára přehybu</label>
+      <label class="zatrh" data-druhy="jmenovky cisla menu"><input type="checkbox" name="ozdoba" checked> Ozdobný rámeček</label>
+      <p class="tip" id="tiskRada"></p>
+    </form>
+    <div class="tisk-prava">
+      <div class="tisk-info"><span id="tiskInfo"></span><button class="btn primary" data-prikaz="tiskni">🖨️ Tisknout / PDF</button></div>
+      <div id="nahled"></div>
+    </div>
+  </div></section>
+</main>
+
+<datalist id="seznamSkupin"></datalist>
+<datalist id="seznamDiet"></datalist>
+
+<!-- host -->
+<dialog class="okno" id="dlgHost"><form method="dialog">
+  <header id="dlgHostTitul">Host</header>
+  <div class="telo">
+    <label class="pole">Jméno (jak bude na jmenovce)<input class="vstup" name="jmeno" required maxlength="120" autocomplete="off" data-i18n="ne"></label>
+    <div class="radek">
+      <label class="pole">Skupina (rodina nevěsty, kolegové…)<input class="vstup" name="skupina" maxlength="60" list="seznamSkupin" autocomplete="off" data-i18n="ne"></label>
+      <label class="pole">Dieta<input class="vstup" name="dieta" maxlength="60" list="seznamDiet" autocomplete="off" data-i18n="ne"></label>
+    </div>
+    <label class="pole">Alergie<input class="vstup" name="alergie" maxlength="120" placeholder="ořechy, laktóza…" data-i18n="ne"></label>
+    <div class="radek">
+      <label class="pole">Patří k (doprovod / rodič dítěte)<select class="vstup" name="k"></select></label>
+      <div style="display:grid;gap:6px;align-content:end">
+        <label class="zatrh"><input type="checkbox" name="dite"> 👶 Dítě (sedí u rodiče)</label>
+        <label class="zatrh"><input type="checkbox" name="zamceny"> 🔒 Zamknout místo</label>
+      </div>
+    </div>
+    <label class="pole">Poznámka<input class="vstup" name="poznamka" maxlength="300" data-i18n="ne"></label>
+  </div>
+  <footer>
+    <button type="button" class="btn danger vlevo" id="dlgHostSmaz">🗑️ Smazat</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- import -->
+<dialog class="okno" id="dlgImport" style="width:min(94vw,680px)"><form method="dialog">
+  <header>📥 Import hostů</header>
+  <div class="telo">
+    <p class="tip" style="margin:0">Vložte seznam – <b>jeden host na řádek</b>, nebo tabulku z Excelu či CSV (sloupce <i>jméno; skupina; dieta; alergie; dítě; doprovod</i>, hlavička se pozná sama). Zkratky: <code>Jan Novák + 1</code> přidá doprovod, <code>Jan Novák + Eva Nováková</code> dvojici, <code>Eva + dítě Ema</code> dítě.</p>
+    <textarea class="vstup" id="importText" rows="10" placeholder="Jana Dvořáková&#10;Petr Dvořák + Lucie Malá&#10;Karel Svoboda + 1&#10;Marie Svobodová + dítě Anička" data-i18n="ne"></textarea>
+    <div class="radek">
+      <label class="pole">Skupina pro řádky bez skupiny<input class="vstup" id="importSkupina" maxlength="60" list="seznamSkupin" placeholder="nepovinné" data-i18n="ne"></label>
+      <div style="display:flex;align-items:end"><button type="button" class="btn" id="importSoubor">📄 Načíst soubor CSV…</button></div>
+    </div>
+    <div class="mala" id="importNahled"></div>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">📥 Přidat hosty</button>
+  </footer>
+</form></dialog>
+
+<!-- akce -->
+<dialog class="okno" id="dlgAkce"><form method="dialog">
+  <header>✎ Akce</header>
+  <div class="telo">
+    <label class="pole">Název akce<input class="vstup" name="nazev" required maxlength="120" data-i18n="ne"></label>
+    <label class="pole">Datum<input class="vstup" type="date" name="datum"></label>
+    <div class="radek">
+      <label class="pole">Šířka sálu (m)<input class="vstup" type="number" name="sirka" min="3" max="200" step="0.5"></label>
+      <label class="pole">Hloubka sálu (m)<input class="vstup" type="number" name="hloubka" min="3" max="200" step="0.5"></label>
+    </div>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">Uložit</button></footer>
+</form></dialog>
+
+<!-- moje akce -->
+<dialog class="okno" id="dlgSeznamAkci"><form method="dialog">
+  <header>📂 Moje akce</header>
+  <div class="telo"><div class="akce-seznam" id="seznamAkci"></div></div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<!-- více stolů -->
+<dialog class="okno" id="dlgVice"><form method="dialog">
+  <header>⊞ Více stolů najednou</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Počet stolů<input class="vstup" type="number" name="pocet" min="1" max="80" value="6"></label>
+      <label class="pole">Míst u stolu<input class="vstup" type="number" name="mist" min="1" max="60" value="8"></label>
+    </div>
+    <label class="pole">Tvar<select class="vstup" name="tvar"><option value="kulaty">⚪ Kulatý</option><option value="obdelnik">▭ Obdélníkový</option></select></label>
+    <p class="tip" id="viceTip" style="margin:0"></p>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">Přidat</button></footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda" style="width:min(94vw,640px)"><form method="dialog">
+  <header>❓ Jak na zasedací pořádek</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>1. Hosté</b> – přidejte je jednotlivě nebo <b>📥 Importem</b> (vložit z Excelu, CSV, nebo prostý seznam). U hosta nastavte <b>skupinu</b> (rodina nevěsty, kolegové…), dietu, alergie a komu patří: <b>doprovod</b> sedí vedle svého hosta, <b>dítě</b> u rodiče.</p>
+    <p style="margin:0"><b>2. Sál</b> – v nabídce <b>🪑 Stoly</b> přidejte kulaté a obdélníkové stoly, dlouhé tabule, hlavní stůl a prvky sálu (parket, bar, vchod). Stoly přetahujte po plánku, v pravém panelu nastavíte počet míst, otočení, čela, jednostranné sezení. Volba <b>„jen ručně“</b> vyřadí stůl z automatického rozsazení (typicky hlavní stůl).</p>
+    <p style="margin:0"><b>3. Rozsazení</b> – hosty přetahujte ze seznamu na místa (nebo klepněte na hosta a pak na židli; na mobilu stejně). Host přetažený zpět do seznamu místo uvolní. <b>✨ Rozsadit</b> doplní nerozsazené a vylepší pořadí: hledá rozsazení s co nejmenším počtem <b>trestných bodů</b> (simulované žíhání s několika starty). Body: nesmí-sedět u jednoho stolu 100, doprovod či dítě u jiného stolu 50, „chce sedět s“ u jiného stolu 20, doprovod ne vedle sebe 8, rozdělená skupina až 6 na hosta, host bez místa 200. Zamčení hosté (🔒) zůstávají, kde jsou.</p>
+    <p style="margin:0"><b>4. Tisk</b> – jmenovky jako <b>stanové karty</b> (horní polovina je vzhůru nohama, po přeložení je jméno vidět z obou stran), čísla stolů, menu (i s jménem a dietou hosta), seznam <b>kdo sedí kde</b> abecedně ke vchodu, přehled po stolech pro obsluhu a kuchyni a plánek sálu. Tiskněte v měřítku 100 %, PDF přes „Uložit jako PDF“. Písma jsou svobodná (SIL Open Font License) a jsou součástí webu.</p>
+    <p style="margin:0"><b>Data</b> zůstávají jen ve vašem prohlížeči (IndexedDB). Pro jistotu si dělejte <b>💾 zálohu</b> – soubor JSON jde nahrát i na jiném zařízení. <b>Ctrl+Z</b> vrátí poslední změnu.</p>
+  </div>
+  <footer><button value="ok" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.ZasedaciJadro, T = window.ZasedaciTisk;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const KLIC = 'webapp_zasedaci_poradek';
+if (window.self === window.top) document.body.classList.add('samostatne');
+const ls = { get(k, d) { try { const v = localStorage.getItem(KLIC + '_' + k); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(KLIC + '_' + k, v); } catch (e) {} } };
+
+/* ---------- úložiště (IndexedDB) ---------- */
+let db = null;
+function otevriDb() {
+  return new Promise(res => {
+    try {
+      const r = indexedDB.open(KLIC, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('akce', { keyPath: 'id' });
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(null);
+    } catch (e) { res(null); }
+  });
+}
+function dbAkce(mod, fn) {
+  return new Promise((res, rej) => {
+    if (!db) return res(null);
+    const tx = db.transaction('akce', mod), st = tx.objectStore('akce'), r = fn(st);
+    tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error);
+  });
+}
+const vsechnyAkce = () => dbAkce('readonly', st => st.getAll()).then(v => (v || []).map(J.migruj).sort((a, b) => b.zmeneno - a.zmeneno));
+
+let P = J.prazdny(), ulozCas = null, zpet = [];
+function uloz() {
+  clearTimeout(ulozCas);
+  ulozCas = setTimeout(async () => {
+    P.zmeneno = Date.now();
+    try { await dbAkce('readwrite', st => st.put(JSON.parse(JSON.stringify(P)))); }
+    catch (e) { Dialog.chyba('Uložení se nepodařilo (plné úložiště?). Udělejte si zálohu JSON.'); }
+  }, 300);
+  ls.set('posledni', P.id);
+}
+/* každá změna dat: snímek pro Zpět → úprava → uložení → překreslení */
+function zmen(fn) {
+  zpet.push(JSON.stringify(P)); if (zpet.length > 60) zpet.shift();
+  fn();
+  J.uklid(P); uloz(); vykresli();
+}
+function otevriAkci(p) { P = J.migruj(p); zpet = []; vybStul = null; vybHost = null; zvyrazni = new Set(); uloz(); vykresli(); }
+
+/* ---------- stav pohledu ---------- */
+let pohled = ls.get('pohled', 'planek'), vybStul = null, vybHost = null, zvyrazni = new Set(), zoom = innerWidth < 600 ? 2 : 1;
+const hostPodleId = id => P.hoste.find(h => h.id === id);
+const stulPodleId = id => P.stoly.find(s => s.id === id);
+function kdeSedi(h) { const u = P.usazeni[h.id], s = u && stulPodleId(u.stul); return s ? J.popisStolu(s) + ', místo ' + (u.misto + 1) : ''; }
+function barvaSk(h, barvy) { return h.skupina && barvy[h.skupina] ? barvy[h.skupina] : 'var(--border-strong)'; }
+let hlaskaCas;
+function hlaska(t) {
+  let e = document.querySelector('.hlaska');
+  if (!e) { e = document.createElement('div'); e.className = 'hlaska'; e.setAttribute('role', 'status'); document.body.appendChild(e); }
+  e.textContent = t; e.hidden = false; clearTimeout(hlaskaCas); hlaskaCas = setTimeout(() => { e.hidden = true; }, 4500);
+}
+
+function vykresli() {
+  $('akceNazev').textContent = P.nazev;
+  $('tlZpet').disabled = !zpet.length;
+  document.querySelectorAll('[data-pohled]').forEach(b => { if (!b.dataset.kotva) b.setAttribute('aria-pressed', b.dataset.pohled === pohled); });
+  $('vHoste').hidden = pohled !== 'hoste'; $('vPlanek').hidden = pohled !== 'planek'; $('vTisk').hidden = pohled !== 'tisk';
+  const sk = [...new Set(P.hoste.map(h => h.skupina).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'cs'));
+  $('seznamSkupin').innerHTML = sk.map(s => `<option value="${esc(s)}">`).join('');
+  $('seznamDiet').innerHTML = [...new Set(J.DIETY.concat(P.hoste.map(h => h.dieta).filter(Boolean)))].map(s => `<option value="${esc(s)}">`).join('');
+  if (pohled === 'hoste') vykresliHosty();
+  else if (pohled === 'planek') vykresliPlanek();
+  else vykresliTisk();
+}
+
+/* ---------- pohled Hosté ---------- */
+function vykresliHosty() {
+  const s = J.skore(P), d = J.souhrnDiet(P), barvy = T.barvySkupin(P);
+  const rozs = P.hoste.length - s.nerozsazeno;
+  const dl = (b, t) => `<div class="dlazdice"><b>${b}</b><span>${t}</span></div>`;
+  $('souhrnHoste').innerHTML = dl(P.hoste.length, 'hostů') + dl(d.deti, 'z toho dětí') + dl(`${rozs}/${P.hoste.length}`, 'rozsazeno') +
+    dl(s.kapacita, 'míst u stolů') + dl(Object.values(d.diety).reduce((a, b) => a + b, 0), 'se speciální stravou') + dl(d.alergie, 's alergií');
+  const q = J.bezDiakritiky($('hledatHoste').value).trim();
+  const hm = Object.fromEntries(P.hoste.map(h => [h.id, h]));
+  const sez = P.hoste.filter(h => !q || J.bezDiakritiky([h.jmeno, h.skupina, h.dieta, h.alergie, h.poznamka].join(' ')).includes(q));
+  if (!P.hoste.length) $('tabHoste').innerHTML = `<div class="prazdno">Zatím žádní hosté.<br><button class="btn primary" data-prikaz="import">📥 Vložit seznam hostů</button> <button class="btn" data-prikaz="novyHost">✚ Přidat hosta</button> <button class="btn" data-prikaz="ukazka">💒 Ukázková svatba</button></div>`;
+  else $('tabHoste').innerHTML = `<div class="tab-obal"><table><thead><tr><th>Jméno</th><th>Skupina</th><th>Dieta / alergie</th><th>Patří k</th><th>Místo</th><th></th></tr></thead><tbody>` +
+    sez.map(h => `<tr class="klik" data-host="${esc(h.id)}"><td><span data-i18n="ne">${esc(h.jmeno)}</span>${h.dite ? ' 👶' : ''}${h.zamceny ? ' 🔒' : ''}${h.poznamka ? ` <span class="mala" title="${esc(h.poznamka)}">📝</span>` : ''}</td>
+      <td>${h.skupina ? `<span class="tecka" style="background:${barvaSk(h, barvy)}"></span><span data-i18n="ne">${esc(h.skupina)}</span>` : ''}</td>
+      <td data-i18n="ne">${esc([h.dieta, h.alergie && '⚠ ' + h.alergie].filter(Boolean).join(' · '))}</td>
+      <td data-i18n="ne">${h.k && hm[h.k] ? esc(hm[h.k].jmeno) : ''}</td>
+      <td>${P.usazeni[h.id] ? `<span data-i18n="ne">${esc(kdeSedi(h))}</span>` : '<span class="mala">bez místa</span>'}</td>
+      <td><div class="akce"><button class="btn mini danger" data-smaz-host="${esc(h.id)}" title="Smazat" aria-label="Smazat hosta">✕</button></div></td></tr>`).join('') + '</tbody></table></div>';
+  const moz = P.hoste.slice().sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs')).map(h => `<option value="${esc(h.id)}">${esc(h.jmeno)}</option>`).join('');
+  const a = $('pravA').value, b = $('pravB').value;
+  $('pravA').innerHTML = $('pravB').innerHTML = moz; if (a) $('pravA').value = a; if (b) $('pravB').value = b;
+  $('seznamPravidel').innerHTML = P.vazby.length ? `<div class="tab-obal"><table><tbody>` + P.vazby.map(v => `<tr><td data-i18n="ne">${esc(hm[v.a].jmeno)}</td><td>${v.typ === 'nesmi' ? '⛔ nesmí sedět s' : '💚 chce sedět s'}</td><td data-i18n="ne">${esc(hm[v.b].jmeno)}</td>
+    <td style="width:1%"><button class="btn mini danger" data-smaz-pravidlo="${esc(v.id)}" aria-label="Smazat pravidlo">✕</button></td></tr>`).join('') + '</tbody></table></div>' : '<p class="mala">Zatím žádná pravidla.</p>';
+}
+
+async function upravHosta(h) {
+  const dlg = $('dlgHost'), f = dlg.querySelector('form'), novy = !h;
+  if (novy) h = J.normHost({ jmeno: '' });
+  $('dlgHostTitul').textContent = novy ? '✚ Nový host' : '✎ ' + h.jmeno;
+  f.jmeno.value = novy ? '' : h.jmeno; f.skupina.value = h.skupina; f.dieta.value = h.dieta; f.alergie.value = h.alergie;
+  f.dite.checked = h.dite; f.zamceny.checked = h.zamceny; f.poznamka.value = h.poznamka;
+  f.k.innerHTML = '<option value="">— nikomu —</option>' + P.hoste.filter(x => x.id !== h.id).sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs')).map(x => `<option value="${esc(x.id)}">${esc(x.jmeno)}</option>`).join('');
+  f.k.value = h.k;
+  $('dlgHostSmaz').hidden = novy;
+  $('dlgHostSmaz').onclick = async () => { dlg.close(); await smazHosta(h.id); };
+  dlg.returnValue = ''; dlg.showModal();
+  const v = await new Promise(r => dlg.addEventListener('close', () => r(dlg.returnValue), { once: true }));
+  if (v !== 'ok') return;
+  zmen(() => {
+    const n = J.normHost({ id: h.id, jmeno: f.jmeno.value, skupina: f.skupina.value, dieta: f.dieta.value, alergie: f.alergie.value,
+      dite: f.dite.checked, zamceny: f.zamceny.checked, k: f.k.value, poznamka: f.poznamka.value });
+    const i = P.hoste.findIndex(x => x.id === h.id);
+    if (i >= 0) P.hoste[i] = n; else P.hoste.push(n);
+  });
+}
+async function smazHosta(id) {
+  const h = hostPodleId(id); if (!h) return;
+  if (!await Dialog.potvrd(`Smazat hosta ${h.jmeno}?`)) return;
+  zmen(() => { P.hoste = P.hoste.filter(x => x.id !== id); delete P.usazeni[id]; if (vybHost === id) vybHost = null; });
+}
+
+/* ---------- import ---------- */
+function importNahled() {
+  const r = J.parsujHosty($('importText').value, P.hoste);
+  $('importNahled').textContent = r.hoste.length ? `Přidá se ${r.hoste.length} hostů` + (r.chyby.length ? ` · ⚠ ${r.chyby.slice(0, 3).join('; ')}${r.chyby.length > 3 ? '…' : ''}` : '') : '';
+}
+async function importuj() {
+  const dlg = $('dlgImport');
+  $('importText').value = ''; $('importSkupina').value = ''; importNahled();
+  dlg.returnValue = ''; dlg.showModal();
+  const v = await new Promise(r => dlg.addEventListener('close', () => r(dlg.returnValue), { once: true }));
+  if (v !== 'ok') return;
+  const r = J.parsujHosty($('importText').value, P.hoste), sk = $('importSkupina').value.trim();
+  if (!r.hoste.length) return Dialog.info('Nebyl rozpoznán žádný host.');
+  zmen(() => { r.hoste.forEach(h => { if (!h.skupina && sk) h.skupina = sk; }); P.hoste.push(...r.hoste); });
+  hlaska(`Přidáno ${r.hoste.length} hostů.` + (r.chyby.length ? ` Upozornění: ${r.chyby.length}× (${r.chyby[0]})` : ''));
+}
+$('importText').addEventListener('input', importNahled);
+$('importSoubor').onclick = () => $('souborCsv').click();
+$('souborCsv').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const buf = await f.arrayBuffer();
+  let t = new TextDecoder('utf-8').decode(buf);
+  if (t.includes('�')) t = new TextDecoder('windows-1250').decode(buf);   // CSV z českého Excelu
+  $('importText').value = t; importNahled();
+};
+
+/* ---------- pohled Plánek ---------- */
+function vykresliPlanek() {
+  // seznam hostů
+  const filtr = $('filtrPlan'), akt = filtr.value || 'nerozsazeni';
+  const sk = [...new Set(P.hoste.map(h => h.skupina).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'cs'));
+  filtr.innerHTML = '<option value="nerozsazeni">Bez místa</option><option value="vsichni">Všichni hosté</option>' + sk.map(s => `<option value="sk:${esc(s)}">Skupina: ${esc(s)}</option>`).join('');
+  filtr.value = [...filtr.options].some(o => o.value === akt) ? akt : 'nerozsazeni';
+  const q = J.bezDiakritiky($('hledatPlan').value).trim(), barvy = T.barvySkupin(P);
+  let sez = P.hoste.filter(h => !q || J.bezDiakritiky(h.jmeno + ' ' + h.skupina).includes(q));
+  if (filtr.value === 'nerozsazeni' && !q) sez = sez.filter(h => !P.usazeni[h.id]);
+  else if (filtr.value.startsWith('sk:')) sez = sez.filter(h => h.skupina === filtr.value.slice(3));
+  const st = Object.fromEntries(P.stoly.map(s => [s.id, s]));
+  const bez = P.hoste.filter(h => !P.usazeni[h.id]).length;
+  $('pocetPlan').textContent = P.hoste.length ? `Bez místa ${bez} z ${P.hoste.length} · míst ${J.kapacita(P)}` : '';
+  $('seznamHostu').innerHTML = sez.length ? sez.map(h => {
+    const u = P.usazeni[h.id], s = u && st[u.stul];
+    return `<div class="host-pol${vybHost === h.id ? ' vybrany' : ''}" data-host="${esc(h.id)}" title="${esc([h.skupina, h.dieta, h.alergie].filter(Boolean).join(' · '))}">
+      <span class="tecka" style="background:${barvaSk(h, barvy)}"></span><span class="jm" data-i18n="ne">${esc(h.jmeno)}</span>${h.dite ? '👶' : ''}${h.dieta || h.alergie ? '🍽️' : ''}${h.zamceny ? '🔒' : ''}
+      ${s ? `<span class="kde" data-i18n="ne">${esc(s.hlavni && !s.nazev ? '★' : s.nazev || s.cislo)}</span>` : ''}</div>`;
+  }).join('') : `<p class="mala" style="padding:8px">${P.hoste.length ? (filtr.value === 'nerozsazeni' ? '✓ Všichni hosté mají místo.' : 'Nic nenalezeno.') : 'Zatím žádní hosté – přidejte je přes ✚ Host nebo 📥 Import.'}</p>`;
+  // plánek
+  const sk2 = J.skore(P);
+  const tvrde = new Set(); sk2.poruseni.filter(x => x.druh !== 'skupina' && x.druh !== 'nerozsazen').forEach(x => x.hoste.forEach(id => tvrde.add(id)));
+  zvyrazni.forEach(id => tvrde.add(id));
+  $('planPlocha').style.setProperty('--zoom', zoom);
+  $('planPlocha').innerHTML = T.planekSVG(P, { jmena: $('ukazJmena').checked, vybranyStul: vybStul, vybranyHost: vybHost, zvyrazni: tvrde });
+  $('napovedaPlan').textContent = vybHost ? `Vybráno: ${hostPodleId(vybHost) ? hostPodleId(vybHost).jmeno : ''} – klepněte na místo` : 'Táhněte hosty na místa, stoly po sále.';
+  vykresliPanel(sk2);
+}
+
+function vykresliPanel(s) {
+  let h = '';
+  const st = vybStul && stulPodleId(vybStul);
+  if (st) {
+    const kdo = J.kdoSedi(P)[st.id] || [];
+    h += `<div class="box"><h3>${st.tvar === 'prvek' ? '⬚ Prvek sálu' : '🪑 ' + esc(J.popisStolu(st))}</h3>
+      <div class="radek">
+        <label class="pole">Název${st.tvar === 'prvek' ? '' : ' (nepovinný)'}<input class="vstup" data-st="nazev" value="${esc(st.nazev)}" maxlength="60" data-i18n="ne"></label>
+        ${st.tvar === 'prvek' ? '' : `<label class="pole">Číslo<input class="vstup" type="number" min="0" max="999" data-st="cislo" value="${st.cislo}"></label>`}
+      </div>
+      ${st.tvar === 'prvek' ? `<div class="radek"><label class="pole">Šířka m<input class="vstup" type="number" step="0.1" min="0.5" data-st="sirka" value="${st.sirka}"></label><label class="pole">Hloubka m<input class="vstup" type="number" step="0.1" min="0.5" data-st="hloubka" value="${st.hloubka}"></label></div>` : `
+      <div class="radek">
+        <label class="pole">Tvar<select class="vstup" data-st="tvar"><option value="kulaty"${st.tvar === 'kulaty' ? ' selected' : ''}>⚪ Kulatý</option><option value="obdelnik"${st.tvar === 'obdelnik' ? ' selected' : ''}>▭ Obdélník</option></select></label>
+        <label class="pole">Míst<input class="vstup" type="number" min="1" max="60" data-st="mist" value="${st.mist}"></label>
+      </div>
+      ${st.tvar === 'obdelnik' ? `<label class="zatrh"><input type="checkbox" data-st="jednostranny"${st.jednostranny ? ' checked' : ''}> Sedí se jen z jedné strany</label>
+      <label class="zatrh"><input type="checkbox" data-st="cela"${st.cela ? ' checked' : ''}> Místa i na čelech</label>` : ''}
+      <label class="zatrh"><input type="checkbox" data-st="hlavni"${st.hlavni ? ' checked' : ''}> ★ Hlavní stůl</label>
+      <label class="zatrh"><input type="checkbox" data-st="rucne"${st.rucne ? ' checked' : ''}> Jen ručně (automatika sem nikoho nesadí)</label>`}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+        <button class="btn mini" data-otoc="-15" title="Otočit doleva">⟲ 15°</button><button class="btn mini" data-otoc="15" title="Otočit doprava">⟳ 15°</button><button class="btn mini" data-otoc="90">⟳ 90°</button>
+        <span class="mala">${st.uhel}°</span>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn mini" data-prikaz="duplikujStul">⧉ Duplikovat</button>
+        ${st.tvar === 'prvek' ? '' : '<button class="btn mini" data-prikaz="uvolniStul">🧹 Uvolnit místa</button>'}
+        <button class="btn mini danger" data-prikaz="smazStul">🗑️ Smazat</button>
+      </div>
+      ${st.tvar === 'prvek' ? '' : `<ol class="u-stolu">${kdo.map((id, i) => `<li data-i18n="ne">${id ? esc(hostPodleId(id).jmeno) : '<span class="mala">volno</span>'}</li>`).join('')}</ol>`}
+    </div>`;
+  } else if (vybHost && hostPodleId(vybHost)) {
+    const g = hostPodleId(vybHost);
+    h += `<div class="box"><h3 data-i18n="ne">${esc(g.jmeno)}${g.dite ? ' 👶' : ''}</h3>
+      <div class="mala" data-i18n="ne">${esc([g.skupina, g.dieta, g.alergie && '⚠ ' + g.alergie].filter(Boolean).join(' · ')) || '—'}</div>
+      <div>${P.usazeni[g.id] ? '📍 <span data-i18n="ne">' + esc(kdeSedi(g)) + '</span>' : '<span class="mala">Bez místa – klepněte na volnou židli v plánku.</span>'}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${P.usazeni[g.id] ? '<button class="btn mini" data-prikaz="zvedniHosta">↩ Zvednout z místa</button>' : ''}
+        <button class="btn mini" data-prikaz="zamkniHosta">${g.zamceny ? '🔓 Odemknout' : '🔒 Zamknout místo'}</button>
+        <button class="btn mini" data-prikaz="upravVybraneho">✎ Upravit</button>
+      </div></div>`;
+  } else {
+    h += `<p class="tip" style="margin:0">Klepnutím vyberete stůl (vlastnosti, otočení) nebo hosta. Stoly přidáte v nabídce <b>🪑 Stoly</b>.</p>`;
+  }
+  const tr = s.celkem === 0 ? 'dobre' : s.porusenoPravidel || s.nerozsazeno ? 'spatne' : 'stredni';
+  h += `<div class="box"><h3>📊 Hodnocení rozsazení</h3>
+    <div class="skore ${tr}"><b>${s.celkem.toLocaleString('cs-CZ')}</b><span class="mala">trestných bodů (0 = vše splněno)</span></div>
+    <div class="mala">Rozsazeno ${s.hostu - s.nerozsazeno} z ${s.hostu} · míst ${s.kapacita}${s.kapacita < s.hostu ? ` · <b style="color:var(--danger)">chybí ${s.hostu - s.kapacita} míst</b>` : ''} · pravidla splněna ${s.pravidel - s.porusenoPravidel}/${s.pravidel}</div>
+    ${s.poruseni.length ? `<div class="poruseni">${s.poruseni.map((x, i) => `<button class="${x.druh}" data-poruseni="${i}"><span>${esc(x.text)}</span><span class="body">${x.body}</span></button>`).join('')}</div>` : (s.hostu ? '<div class="mala">✓ Žádné porušení.</div>' : '')}
+    ${s.hostu ? '<button class="btn primary" data-prikaz="rozsad">✨ Rozsadit automaticky</button>' : ''}
+  </div>`;
+  $('panelVpravo').innerHTML = h;
+  $('panelVpravo')._poruseni = s.poruseni;
+}
+$('panelVpravo').addEventListener('change', e => {
+  const k = e.target.dataset.st, st = vybStul && stulPodleId(vybStul); if (!k || !st) return;
+  zmen(() => {
+    const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const n = J.normStul(Object.assign({}, st, { [k]: v }));
+    if (k === 'hlavni' && v && !st.hlavni) { n.rucne = true; if (n.tvar === 'obdelnik') n.jednostranny = true; }
+    Object.assign(st, n);
+  });
+});
+
+/* tah hostů a stolů myší i prstem */
+let tah = null;
+function bodSvg(svg, e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+function zacniTah(e, co) {
+  if (e.button > 0) return;
+  tah = Object.assign({ x0: e.clientX, y0: e.clientY, pohyb: false }, co);
+  e.preventDefault();
+}
+$('seznamHostu').addEventListener('pointerdown', e => { const el = e.target.closest('.host-pol'); if (el) zacniTah(e, { druh: 'host', id: el.dataset.host }); });
+$('planPlocha').addEventListener('pointerdown', e => {
+  const svg = $('planPlocha').querySelector('svg'); if (!svg) return;
+  const m = e.target.closest('.misto');
+  if (m) return zacniTah(e, { druh: m.dataset.host ? 'host' : 'misto', id: m.dataset.host, stul: m.dataset.stul, misto: +m.dataset.misto });
+  const g = e.target.closest('g.stul');
+  if (g) { const s = stulPodleId(g.dataset.stul), b = bodSvg(svg, e); return zacniTah(e, { druh: 'stul', id: s.id, el: g, svg, dx: s.x - b.x, dy: s.y - b.y, sx: s.x, sy: s.y }); }
+  if (e.target.closest('svg')) zacniTah(e, { druh: 'nic' });
+});
+addEventListener('pointermove', e => {
+  if (!tah) return;
+  if (!tah.pohyb && Math.hypot(e.clientX - tah.x0, e.clientY - tah.y0) < 6) return;
+  tah.pohyb = true;
+  if (tah.druh === 'stul') {
+    const s = stulPodleId(tah.id), b = bodSvg(tah.svg, e);
+    s.x = Math.round(Math.min(P.sal.sirka, Math.max(0, b.x + tah.dx)) * 10) / 10;
+    s.y = Math.round(Math.min(P.sal.hloubka, Math.max(0, b.y + tah.dy)) * 10) / 10;
+    tah.el.setAttribute('transform', `translate(${s.x} ${s.y}) rotate(${s.uhel})`);
+  } else if (tah.druh === 'host') {
+    if (!tah.duch) { tah.duch = document.createElement('div'); tah.duch.className = 'duch'; tah.duch.textContent = hostPodleId(tah.id).jmeno; document.body.appendChild(tah.duch); }
+    tah.duch.style.left = e.clientX + 'px'; tah.duch.style.top = e.clientY + 'px';
+    const cil = document.elementFromPoint(e.clientX, e.clientY), m = cil && cil.closest('.misto');
+    document.querySelectorAll('.misto.cil').forEach(x => x.classList.remove('cil'));
+    if (m) m.classList.add('cil');
+  }
+});
+addEventListener('pointerup', e => {
+  const t = tah; tah = null; if (!t) return;
+  if (t.duch) t.duch.remove();
+  if (t.druh === 'stul') {
+    const s = stulPodleId(t.id);
+    if (t.pohyb) { const nx = s.x, ny = s.y; s.x = t.sx; s.y = t.sy; zmen(() => { s.x = nx; s.y = ny; }); }
+    else { vybStul = vybStul === t.id ? null : t.id; vybHost = null; vykresli(); }
+    return;
+  }
+  if (t.druh === 'host' && t.pohyb) {
+    const cil = document.elementFromPoint(e.clientX, e.clientY);
+    const m = cil && cil.closest('.misto');
+    if (m) { zmen(() => J.posad(P, t.id, m.dataset.stul, +m.dataset.misto)); vybHost = null; }
+    else if (cil && cil.closest('#seznamHostu') && P.usazeni[t.id]) zmen(() => { delete P.usazeni[t.id]; });
+    else vykresli();
+    return;
+  }
+  // klepnutí bez tahu
+  if (t.druh === 'host') { vybHost = vybHost === t.id ? null : t.id; vybStul = null; return vykresli(); }
+  if (t.druh === 'misto') {
+    if (vybHost) { const id = vybHost; vybHost = null; return zmen(() => J.posad(P, id, t.stul, t.misto)); }
+    vybStul = t.stul; return vykresli();
+  }
+  if (t.druh === 'nic') { vybStul = null; vybHost = null; zvyrazni = new Set(); vykresli(); }
+});
+addEventListener('pointercancel', () => { if (tah && tah.duch) tah.duch.remove(); tah = null; vykresli(); });
+
+/* nové stoly */
+function novyStul(druh) {
+  const vzory = {
+    kulaty: { tvar: 'kulaty', mist: 8 }, obdelnik: { tvar: 'obdelnik', mist: 8 }, tabule: { tvar: 'obdelnik', mist: 20 },
+    hlavni: { tvar: 'obdelnik', mist: 6, jednostranny: true, hlavni: true, rucne: true }, prvek: { tvar: 'prvek', nazev: 'Taneční parket', sirka: 5, hloubka: 4 }
+  };
+  zmen(() => {
+    const v = vzory[druh];
+    const s = J.normStul(Object.assign({ cislo: v.tvar === 'prvek' || v.hlavni ? 0 : J.dalsiCislo(P), x: P.sal.sirka / 2, y: P.sal.hloubka / 2 }, v));
+    // posunout, aby nezakryl jiný stůl
+    for (let k = 0; k < 40 && P.stoly.some(o => Math.hypot(o.x - s.x, o.y - s.y) < 1.5); k++) { s.x = Math.min(P.sal.sirka - 1, s.x + 1.7); if (s.x >= P.sal.sirka - 1) { s.x = 1.5; s.y = Math.min(P.sal.hloubka - 1, s.y + 1.7); } }
+    P.stoly.push(s); vybStul = s.id; vybHost = null;
+  });
+  if (pohled !== 'planek') { pohled = 'planek'; vykresli(); }
+}
+
+/* automatické rozsazení */
+async function rozsad(odNuly) {
+  if (!P.hoste.length) return Dialog.info('Nejdřív přidejte hosty.');
+  if (!P.stoly.some(s => s.tvar !== 'prvek')) return Dialog.info('Nejdřív přidejte stoly (nabídka 🪑 Stoly).');
+  if (odNuly && !await Dialog.potvrd('Rozsadit všechny znovu od nuly? Zůstanou jen zamčení hosté (🔒) a stoly „jen ručně“. Změnu lze vrátit (↶).')) return;
+  const pred = J.skore(P).celkem;
+  hlaska('⏳ Hledám nejlepší rozsazení…');
+  await new Promise(r => setTimeout(r, 30));
+  const t0 = performance.now();
+  const v = J.rozsad(P, { seed: (Math.random() * 1e9) | 0, odNuly });
+  if (!odNuly && v.cena > pred) return hlaska(`Lepší rozsazení se nenašlo (zůstává ${pred} bodů).`);
+  zmen(() => { P.usazeni = v.usazeni; });
+  const s = J.skore(P);
+  hlaska(`✨ Hotovo za ${((performance.now() - t0) / 1000).toFixed(1)} s: ${pred.toLocaleString('cs-CZ')} → ${s.celkem.toLocaleString('cs-CZ')} trestných bodů` + (s.porusenoPravidel ? ` · porušených pravidel ${s.porusenoPravidel}` : ' · všechna pravidla splněna'));
+  if (pohled === 'hoste') { pohled = 'planek'; vykresli(); }
+}
+
+/* ---------- pohled Tisk ---------- */
+const VYCHOZI_TISK = { druh: 'jmenovky', papir: 'a4', pismo: 'greatvibes', pismo2: 'marcellus', barva: '#8a6d3b', barvaTextu: '#222222',
+  jmVelikost: 'stredni', jmW: 100, jmH: 55, jmFormat: 'cele', jmRadek2: 'stul', jmText2: '', jmDieta: true,
+  cVelikost: 'a5', cNadpis: 'Stůl', cJmena: false, mFormat: 'dl', mOsobni: false, mPocet: 10,
+  vyber: 'vsichni', poradi: 'abeceda', sNadpis: 'Kde sedíte', sSloupcu: 2, sPismo: 12, pJmena: true, ramecek: true, ohyb: true, ozdoba: true };
+let nast = Object.assign({}, VYCHOZI_TISK);
+try { Object.assign(nast, JSON.parse(ls.get('tisk', '{}'))); } catch (e) {}
+const tf = $('tiskForm');
+$('tiskDruh').innerHTML = Object.entries(T.DRUHY).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+tf.querySelectorAll('[data-pisma]').forEach(s => { s.innerHTML = T.PISMA.map(p => `<option value="${p.id}">${esc(p.nazev)}</option>`).join(''); });
+tf.jmVelikost.innerHTML = Object.entries(T.VELIKOSTI_JM).map(([k, v]) => `<option value="${k}">${v.n}</option>`).join('') + '<option value="vlastni">Vlastní…</option>';
+tf.cVelikost.innerHTML = Object.entries(T.VELIKOSTI_CISLA).map(([k, v]) => `<option value="${k}">${v.n}</option>`).join('');
+tf.mFormat.innerHTML = Object.entries(T.FORMATY_MENU).map(([k, v]) => `<option value="${k}">${v.n}</option>`).join('');
+function formDoNast() {
+  for (const el of tf.elements) {
+    if (!el.name || !(el.name in VYCHOZI_TISK)) continue;
+    nast[el.name] = el.type === 'checkbox' ? el.checked : el.type === 'number' ? Number(el.value) || VYCHOZI_TISK[el.name] : el.value;
+  }
+  ls.set('tisk', JSON.stringify(nast));
+}
+function nastDoFormu() {
+  for (const el of tf.elements) {
+    if (!el.name || !(el.name in nast)) continue;
+    if (el.type === 'checkbox') el.checked = !!nast[el.name]; else el.value = nast[el.name];
+  }
+}
+let tiskCislo = 0;
+async function vykresliTisk() {
+  const sk = [...new Set(P.hoste.map(h => h.skupina).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'cs'));
+  $('tiskVyber').innerHTML = '<option value="vsichni">Všichni</option><option value="rozsazeni">Jen rozsazení</option>' + sk.map(s => `<option value="sk:${esc(s)}">Skupina: ${esc(s)}</option>`).join('');
+  if (![...$('tiskVyber').options].some(o => o.value === nast.vyber)) nast.vyber = 'vsichni';
+  nastDoFormu();
+  tf.querySelectorAll('[data-druhy]').forEach(el => { el.hidden = !el.dataset.druhy.split(' ').includes(nast.druh); });
+  tf.querySelector('[data-vlastni]').hidden = nast.druh !== 'jmenovky' || nast.jmVelikost !== 'vlastni';
+  tf.querySelector('[data-text2]').hidden = nast.druh !== 'jmenovky' || nast.jmRadek2 !== 'vlastni';
+  tf.querySelector('[data-pocet]').hidden = nast.druh !== 'menu' || nast.mOsobni;
+  if (document.activeElement !== $('menuNadpis')) $('menuNadpis').value = P.menu.nadpis;
+  if (document.activeElement !== $('menuText')) $('menuText').value = P.menu.text;
+  $('tiskRada').textContent = {
+    jmenovky: 'Stanová jmenovka: přeložte podél čárkované čáry – horní polovina je vzhůru nohama, takže jméno je čitelné z obou stran stolu. Na pevnější papír (160–250 g/m²).',
+    cisla: 'Karta s číslem stolu se překládá stejně jako jmenovka – číslo je vidět z obou stran.',
+    menu: 'Menu se tiskne bez okrajů, aby šlo karty rozřezat podél čárkovaných čar.',
+    abecedne: 'Seznam ke vchodu: hosté abecedně podle příjmení a jejich stůl.',
+    postolech: 'Pro obsluhu a kuchyni: hosté po stolech s dietami a alergiemi, nahoře souhrn diet.',
+    planek: 'Plánek sálu na šířku, barvy podle skupin.'
+  }[nast.druh] + ' V dialogu tisku nechte měřítko 100 % a vypněte záhlaví a zápatí.';
+  const moje = ++tiskCislo;
+  await T.nactiPisma([nast.pismo, nast.pismo2]);
+  if (moje !== tiskCislo) return;
+  T.vymazMiru();
+  const r = T.listy(P, nast);
+  $('nahled').innerHTML = r.html || '';
+  const papir = r.L ? `${Math.round(r.L.W)} × ${Math.round(r.L.H)} mm` : '';
+  $('tiskInfo').textContent = r.L && r.L.naList === 0 ? '⚠ Karta se na papír nevejde – zvolte menší rozměr nebo větší papír.' :
+    `${r.kusu} ${r.popis} · ${r.listu} ${r.listu === 1 ? 'list' : r.listu < 5 ? 'listy' : 'listů'}${r.L && r.L.naList ? ' · ' + r.L.naList + ' na list' : ''} · ${papir}`;
+  let st = $('stylStranky'); if (!st) { st = document.createElement('style'); st.id = 'stylStranky'; document.head.appendChild(st); }
+  if (r.L) st.textContent = `@page{size:${r.L.W}mm ${r.L.H}mm;margin:0}`;
+  priblizeni(r.L);
+}
+let posledniL = null;
+function priblizeni(L) {
+  L = L || posledniL; if (!L) return; posledniL = L;
+  // zoom zmenší i odsazení náhledu (2 × 14 px)
+  $('nahled').style.zoom = Math.min(1, Math.max(0.2, ($('nahled').parentElement.clientWidth - 6) / (L.W * 96 / 25.4 + 28)));
+}
+tf.addEventListener('change', e => { if (e.target.id === 'menuNadpis' || e.target.id === 'menuText') return; formDoNast(); vykresliTisk(); });
+let menuCas;
+['menuNadpis', 'menuText'].forEach(id => $(id).addEventListener('input', () => {
+  clearTimeout(menuCas);
+  menuCas = setTimeout(() => { P.menu = { nadpis: $('menuNadpis').value, text: $('menuText').value }; uloz(); vykresliTisk(); }, 400);
+}));
+async function tiskni() {
+  await vykresliTisk();
+  if (!$('nahled').children.length) return Dialog.info('Není co tisknout.');
+  document.body.classList.add('tiskne');
+  const hotovo = () => { document.body.classList.remove('tiskne'); removeEventListener('afterprint', hotovo); priblizeni(); };
+  addEventListener('afterprint', hotovo);
+  print();
+  setTimeout(() => { if (document.body.classList.contains('tiskne') && !matchMedia('print').matches) hotovo(); }, 1500);
+}
+
+/* ---------- soubor ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const souborNazev = () => J.bezDiakritiky(P.nazev).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'akce';
+async function upravAkci() {
+  const dlg = $('dlgAkce'), f = dlg.querySelector('form');
+  f.nazev.value = P.nazev; f.datum.value = P.datum; f.sirka.value = P.sal.sirka; f.hloubka.value = P.sal.hloubka;
+  dlg.returnValue = ''; dlg.showModal();
+  const v = await new Promise(r => dlg.addEventListener('close', () => r(dlg.returnValue), { once: true }));
+  if (v !== 'ok') return;
+  zmen(() => { const m = J.migruj(Object.assign({}, P, { nazev: f.nazev.value, datum: f.datum.value, sal: { sirka: f.sirka.value, hloubka: f.hloubka.value } })); P.nazev = m.nazev; P.datum = m.datum; P.sal = m.sal; });
+}
+async function seznamAkci() {
+  const v = await vsechnyAkce();
+  $('seznamAkci').innerHTML = v.length ? v.map(a => `<div class="pol${a.id === P.id ? ' aktivni' : ''}"><div><b data-i18n="ne">${esc(a.nazev)}</b><br><span class="mala">${a.hoste.length} hostů · ${a.stoly.filter(s => s.tvar !== 'prvek').length} stolů${a.datum ? ' · ' + esc(a.datum.split('-').reverse().join('. ')) : ''}</span></div>
+    <button class="btn mini" data-otevri-akci="${esc(a.id)}">Otevřít</button><button class="btn mini danger" data-smaz-akci="${esc(a.id)}" aria-label="Smazat akci">✕</button></div>`).join('') : '<p class="mala">Žádné uložené akce.</p>';
+  $('seznamAkci')._akce = v;
+  if (!$('dlgSeznamAkci').open) $('dlgSeznamAkci').showModal();
+}
+$('seznamAkci').addEventListener('click', async e => {
+  const o = e.target.closest('[data-otevri-akci]'), s = e.target.closest('[data-smaz-akci]');
+  const akce = $('seznamAkci')._akce || [];
+  if (o) { otevriAkci(akce.find(a => a.id === o.dataset.otevriAkci)); $('dlgSeznamAkci').close(); }
+  if (s) {
+    const a = akce.find(x => x.id === s.dataset.smazAkci);
+    if (!await Dialog.potvrd(`Smazat akci „${a.nazev}“ se všemi hosty? Nejde vrátit.`)) return;
+    await dbAkce('readwrite', st => st.delete(a.id));
+    if (a.id === P.id) { const zb = (await vsechnyAkce())[0]; otevriAkci(zb || J.prazdny()); }
+    seznamAkci();
+  }
+});
+
+const PRIKAZY = {
+  novyHost: () => upravHosta(null),
+  import: () => importuj(),
+  upravVybraneho: () => vybHost && upravHosta(hostPodleId(vybHost)),
+  zvedniHosta: () => zmen(() => { delete P.usazeni[vybHost]; }),
+  zamkniHosta: () => zmen(() => { const h = hostPodleId(vybHost); h.zamceny = !h.zamceny; }),
+  rozsad: () => rozsad(false),
+  rozsadNuly: () => rozsad(true),
+  zvedni: async () => { if (await Dialog.potvrd('Uvolnit všechna místa? Zamčení hosté (🔒) zůstanou.')) zmen(() => { for (const id of Object.keys(P.usazeni)) { const h = hostPodleId(id); if (!h || !h.zamceny) delete P.usazeni[id]; } }); },
+  pridejPravidlo: () => {
+    const a = $('pravA').value, b = $('pravB').value, typ = $('pravTyp').value;
+    if (!a || !b || a === b) return Dialog.info('Vyberte dva různé hosty.');
+    if (P.vazby.some(v => (v.a === a && v.b === b) || (v.a === b && v.b === a))) return Dialog.info('Pro tuto dvojici už pravidlo existuje.');
+    zmen(() => P.vazby.push({ id: J.novyId('v'), a, b, typ }));
+  },
+  viceStolu: async () => {
+    const dlg = $('dlgVice'), f = dlg.querySelector('form');
+    const chybi = Math.max(0, P.hoste.length - J.kapacita(P));
+    f.pocet.value = Math.max(1, Math.ceil(chybi / 8)) || 6;
+    $('viceTip').textContent = P.hoste.length ? `Hostů ${P.hoste.length}, míst zatím ${J.kapacita(P)}${chybi ? ` – chybí ${chybi}` : ''}.` : '';
+    dlg.returnValue = ''; dlg.showModal();
+    const v = await new Promise(r => dlg.addEventListener('close', () => r(dlg.returnValue), { once: true }));
+    if (v !== 'ok') return;
+    zmen(() => J.rozmistiStoly(P, Math.min(80, Math.max(1, +f.pocet.value || 1)), f.tvar.value, Math.min(60, Math.max(1, +f.mist.value || 8))));
+    if (pohled !== 'planek') { pohled = 'planek'; vykresli(); }
+  },
+  precisluj: () => zmen(() => J.precisluj(P)),
+  duplikujStul: () => { const s = stulPodleId(vybStul); if (s) zmen(() => { const n = J.normStul(Object.assign({}, s, { id: '', cislo: s.tvar === 'prvek' || s.hlavni ? 0 : J.dalsiCislo(P), x: s.x + 1.5, y: s.y + 0.5, hlavni: false })); P.stoly.push(n); vybStul = n.id; }); },
+  uvolniStul: () => zmen(() => { for (const [id, u] of Object.entries(P.usazeni)) if (u.stul === vybStul) delete P.usazeni[id]; }),
+  smazStul: async () => {
+    const s = stulPodleId(vybStul); if (!s) return;
+    const obs = Object.values(P.usazeni).filter(u => u.stul === s.id).length;
+    if (obs && !await Dialog.potvrd(`Smazat ${J.popisStolu(s)}? ${obs} hostů přijde o místo.`)) return;
+    zmen(() => { P.stoly = P.stoly.filter(x => x.id !== s.id); vybStul = null; });
+  },
+  upravAkci, akce: seznamAkci,
+  novaAkce: () => { otevriAkci(J.prazdny()); upravAkci(); },
+  duplikat: () => { const k = J.migruj(JSON.parse(JSON.stringify(P))); k.id = J.novyId('p'); k.nazev = P.nazev + ' (kopie)'; otevriAkci(k); hlaska('Vytvořena kopie akce.'); },
+  ukazka: () => { otevriAkci(J.ukazka()); pohled = 'planek'; vykresli(); hlaska('Ukázková svatba – zkuste ✨ Rozsadit.'); },
+  export: () => stahni('zasedaci-poradek-' + souborNazev() + '.json', JSON.stringify(Object.assign({ typ: 'zasedaci_poradek' }, P), null, 1), 'application/json'),
+  obnov: () => $('souborZaloha').click(),
+  csv: () => stahni('hoste-' + souborNazev() + '.csv', J.csvVystup(P), 'text/csv'),
+  smazAkci: async () => {
+    if (!await Dialog.potvrd(`Smazat akci „${P.nazev}“? Nejde vrátit – doporučujeme nejdřív zálohu.`)) return;
+    await dbAkce('readwrite', st => st.delete(P.id));
+    const zb = (await vsechnyAkce())[0]; otevriAkci(zb || J.prazdny());
+  },
+  zpet: () => { if (!zpet.length) return; P = J.migruj(JSON.parse(zpet.pop())); uloz(); vykresli(); },
+  tiskni, napoveda: () => $('dlgNapoveda').showModal()
+};
+$('souborZaloha').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  let d; try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.hoste) || !Array.isArray(d.stoly)) return Dialog.chyba('Tohle není záloha zasedacího pořádku.');
+  const m = J.migruj(d);
+  const exist = (await vsechnyAkce()).some(a => a.id === m.id);
+  if (exist && !await Dialog.potvrd(`Akce „${m.nazev}“ už existuje. Přepsat ji zálohou (${m.hoste.length} hostů)?`)) return;
+  otevriAkci(m); hlaska(`Obnoveno: ${m.nazev}`);
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky(); if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', async e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.preventDefault(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  const ns = e.target.closest('[data-stul-novy]');
+  if (ns) { zavriNabidky(); return novyStul(ns.dataset.stulNovy); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) {
+    zavriNabidky(); pohled = pv.dataset.pohled; ls.set('pohled', pohled); vykresli();
+    if (pv.dataset.kotva) $(pv.dataset.kotva).scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  const z = e.target.closest('[data-zoom]');
+  if (z) { const k = +z.dataset.zoom; zoom = k ? Math.min(5, Math.max(1, zoom * k)) : 1; $('planPlocha').style.setProperty('--zoom', zoom); return; }
+  const o = e.target.closest('[data-otoc]');
+  if (o) { const s = stulPodleId(vybStul); if (s) zmen(() => { s.uhel = ((s.uhel + +o.dataset.otoc) % 360 + 360) % 360; }); return; }
+  const por = e.target.closest('[data-poruseni]');
+  if (por) {
+    const x = $('panelVpravo')._poruseni[+por.dataset.poruseni];
+    zvyrazni = new Set(x.hoste); vybStul = null; vybHost = x.hoste[0] || null; return vykresli();
+  }
+  const sh = e.target.closest('[data-smaz-host]');
+  if (sh) { e.stopPropagation(); return smazHosta(sh.dataset.smazHost); }
+  const sp = e.target.closest('[data-smaz-pravidlo]');
+  if (sp) return zmen(() => { P.vazby = P.vazby.filter(v => v.id !== sp.dataset.smazPravidlo); });
+  const tr = e.target.closest('tr[data-host]');
+  if (tr) return upravHosta(hostPodleId(tr.dataset.host));
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { zavriNabidky(); if (vybHost || vybStul) { vybHost = null; vybStul = null; zvyrazni = new Set(); if (pohled === 'planek') vykresli(); } }
+  const pole = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !pole) { e.preventDefault(); PRIKAZY.zpet(); }
+  if (!pole && pohled === 'planek' && vybStul && (e.key === 'Delete' || e.key === 'r' || e.key === 'R')) {
+    if (e.key === 'Delete') PRIKAZY.smazStul();
+    else { const s = stulPodleId(vybStul); zmen(() => { s.uhel = (s.uhel + (e.shiftKey ? 345 : 15)) % 360; }); }
+  }
+});
+addEventListener('resize', () => { zavriNabidky(); if (pohled === 'tisk') priblizeni(); });
+$('hledatHoste').addEventListener('input', vykresliHosty);
+$('hledatPlan').addEventListener('input', vykresliPlanek);
+$('filtrPlan').addEventListener('change', vykresliPlanek);
+$('ukazJmena').addEventListener('change', vykresliPlanek);
+
+/* ---------- start ---------- */
+(async function () {
+  db = await otevriDb();
+  if (!db) hlaska('⚠ Úložiště prohlížeče není dostupné – data se neuloží, používejte zálohu JSON.');
+  const v = await vsechnyAkce(), posl = ls.get('posledni', '');
+  const p = v.find(a => a.id === posl) || v[0];
+  if (p) otevriAkci(p);
+  else { P = J.prazdny('Moje akce'); if (pohled === 'planek') pohled = 'hoste'; vykresli(); }
+})();
+window.ZASEDACI_APP = { projekt: () => P, vykresli, otevriAkci, prikaz: k => PRIKAZY[k](), pohled: x => { pohled = x; vykresli(); }, nast: o => { Object.assign(nast, o); ls.set('tisk', JSON.stringify(nast)); vykresli(); } };
+})();
+</script>
+</body>
+</html>

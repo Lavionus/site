@@ -41,8 +41,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const ids = vybrane().map(u => u.id);
       if (!natrvalo) {
         if (!M.app.uprava) M.zacniUpravu();
-        M.zmenDokument(M.zarovnejUzly(M.app.uprava.zaklad, ids, osa, kde, klic), '', { docasne: true });
+        // náhled nastavit dřív, než se změní dokument: událost „dokument“ by jinak puntíky překreslila podle
+        // posunutých těles – puntík by uskočil zpod myši, náhled se zrušil a tělesa odskočila zpět
         nahled = { osa, kde };
+        M.zmenDokument(M.zarovnejUzly(M.app.uprava.zaklad, ids, osa, kde, klic), '', { docasne: true });
         return;
       }
       if (M.app.uprava && nahled) { M.dokonciUpravu(`Zarovnat ${'XYZ'[osa]} ${POPIS[kde][osa]}`); nahled = null; }
@@ -57,7 +59,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     function kresli() {
       svg.innerHTML = '';
       if (!aktivni()) return;
-      const uzly = vybrane();
+      // během náhledu puntíky podle původní polohy těles (ne podle náhledu) – zůstanou pod myší
+      const dok0 = nahled && M.app.uprava ? M.app.uprava.zaklad : null;
+      const uzly = dok0 ? vybrane().map(u => M.najdiUzel(dok0, u.id)).filter(Boolean) : vybrane();
       if (uzly.length < 2) return;
       const vztazne = klic && uzly.find(u => u.id === klic);
       // puntíky leží kolem celého výběru (u malého vztažného tělesa by se slily), poloha puntíku v ose = cíl
@@ -152,7 +156,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (!aktivni()) return;
       if (M.vybraneUzly().length < 2) { M.nastavRezim(null); return; }
       if (klic && !M.app.vyber.includes(klic)) klic = null;
-      kresli();
+      if (!nahled) kresli();
     });
     // během náhledu se puntíky nepřekreslují (zůstanou, kde byly – jako v Tinkercadu)
     M.na('dokument', () => { if (!nahled) kresli(); });

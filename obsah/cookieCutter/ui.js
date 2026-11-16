@@ -248,7 +248,10 @@
       b.setAttribute('aria-selected', String(vybrany));
     });
     $('collarFields').style.opacity = q.collarOn ? '1' : '.45';
-    $('collarHeight').disabled = $('collarWidth').disabled = !q.collarOn;
+    $('collarHeight').disabled = $('collarWidth').disabled = $('collarFillet').disabled = !q.collarOn;
+    $('filletFields').style.opacity = q.collarOn ? '1' : '.45';
+    $('collarFilletRadius').disabled = !q.collarOn || !q.collarFillet;
+    $('collarFilletRadius').closest('.form-group').style.opacity = q.collarOn && q.collarFillet ? '1' : '.45';
   }
   // hrany a mřížka jsou součástí projektu (jako dřív), proto přes zmen
   $('tHrany').addEventListener('click', () => nastav('showEdges', !app.p.showEdges));

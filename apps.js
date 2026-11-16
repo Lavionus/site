@@ -197,6 +197,12 @@ const KATALOG_SEKCE = [
         "nazev": "🔍 OCR – text z obrázku a skenu",
         "stav": "vyvoj",
         "tagy": ["ocr", "rozpoznání textu", "sken", "pdf", "prohledávatelné pdf", "tesseract", "fotka", "přepis"]
+      },
+      {
+        "soubor": "obsah/skener.html",
+        "nazev": "📄 Skener dokumentů",
+        "stav": "vyvoj",
+        "tagy": ["skener", "sken", "skenování", "kamera", "fotka dokumentu", "perspektiva", "ořez", "detekce okrajů", "černobílý sken", "pdf", "jpg", "png", "více stránek", "ocr", "offline"]
       }
     ]
   },
@@ -332,6 +338,12 @@ const KATALOG_SEKCE = [
           "svátky",
           "datum"
         ]
+      },
+      {
+        "soubor": "obsah/rodinny_rozvrh.html",
+        "nazev": "👨‍👩‍👧 Rodinný rozvrh",
+        "stav": "vyvoj",
+        "tagy": ["rozvrh", "rodina", "kroužky", "škola", "odvozy", "vyzvedávání", "kolize", "týden", "kalendář", "ics", "lednice", "tisk"]
       }
     ]
   },
@@ -582,6 +594,24 @@ const KATALOG_SEKCE = [
           "slovy",
           "koruna"
         ]
+      },
+      {
+        "soubor": "obsah/deleni_vydaju.html",
+        "nazev": "🤝 Dělení společných výdajů",
+        "stav": "vyvoj",
+        "tagy": ["dělení výdajů", "kdo komu dluží", "společné výdaje", "výlet", "spolubydlení", "oslava", "vyrovnání", "splitwise", "QR platba", "měny", "kurz"]
+      },
+      {
+        "soubor": "obsah/financni_nezavislost.html",
+        "nazev": "🏝️ Kalkulačka finanční nezávislosti",
+        "stav": "vyvoj",
+        "tagy": ["FIRE", "finanční nezávislost", "pravidlo 4 %", "předčasný důchod", "renta", "Monte Carlo", "backtest", "spoření", "investice", "míra výběru", "Coast FI", "Lean FI"]
+      },
+      {
+        "soubor": "obsah/obalky.html",
+        "nazev": "✉️ Rozpočet obálkovou metodou",
+        "stav": "vyvoj",
+        "tagy": ["rozpočet", "obálková metoda", "nulový rozpočet", "plánování", "spoření", "cíle spoření", "měsíční rozpočet", "import výpisu", "CSV banka", "domácnost", "finance", "peníze"]
       }
     ]
   },
@@ -703,6 +733,18 @@ const KATALOG_SEKCE = [
         "nazev": "📏 Tabulky velikostí",
         "stav": "vyvoj",
         "tagy": ["velikost", "tabulka velikostí", "převod velikostí", "oblečení", "boty", "velikost bot", "EU", "UK", "US", "Mondopoint", "dětské velikosti", "prsten", "velikost prstenu", "měřítko prstenu", "rukavice", "klobouk", "čepice", "obvod hlavy", "podprsenka", "košíček", "rám kola", "košile", "džíny", "W/L", "míry", "EN 13402"]
+      },
+      {
+        "soubor": "obsah/meraky.html",
+        "nazev": "📱 Měřáky z telefonu",
+        "stav": "vyvoj",
+        "tagy": ["vodováha", "sklonoměr", "úhloměr", "hlukoměr", "decibely", "luxmetr", "stroboskop", "otáčky", "spektrum", "senzory"]
+      },
+      {
+        "soubor": "obsah/pocitadlo.html",
+        "nazev": "🔢 Počítadlo kusů",
+        "stav": "vyvoj",
+        "tagy": ["počítadlo", "tally", "sčítání", "návštěvníci", "ptáci", "doprava", "kola", "klikr", "statistiky", "CSV"]
       }
     ]
   },
@@ -799,6 +841,12 @@ const KATALOG_SEKCE = [
           "perioda",
           "PMS"
         ]
+      },
+      {
+        "soubor": "obsah/denik_migren.html",
+        "nazev": "🤕 Deník migrén a bolestí hlavy",
+        "stav": "vyvoj",
+        "tagy": ["migréna", "bolest hlavy", "deník", "záchvat", "aura", "tenzní bolest", "triptan", "analgetika", "nadužívání léků", "ICHD-3", "MIDAS", "spouštěče", "tlak vzduchu", "počasí", "kalendář", "pro lékaře", "neurolog"]
       }
     ]
   },
@@ -889,6 +937,12 @@ const KATALOG_SEKCE = [
         "nazev": "🖨️ Kondiciogram retro",
         "stav": "beta",
         "tagy": ["biorytmus", "kondice", "cykly", "retro", "tisk"]
+      },
+      {
+        "soubor": "obsah/score2.html",
+        "nazev": "❤️ Kardiovaskulární riziko (SCORE2)",
+        "stav": "vyvoj",
+        "tagy": ["SCORE2", "infarkt", "mrtvice", "cholesterol", "krevní tlak", "kouření", "ESC", "srdce", "diabetes"]
       }
     ]
   },
@@ -956,6 +1010,12 @@ const KATALOG_SEKCE = [
           "kpr",
           "resuscitace"
         ]
+      },
+      {
+        "soubor": "obsah/bezecky_plan.html",
+        "nazev": "🏃 Běžecký plán a tempa",
+        "stav": "vyvoj",
+        "tagy": ["běh", "běhání", "VDOT", "Daniels", "Riegel", "VO2max", "tempo", "kalkulačka tempa", "predikce času", "maraton", "půlmaraton", "10 km", "5 km", "mezičasy", "negativní split", "tréninkový plán", "intervaly", "prahové tempo", "kalendář", "ics", "převýšení", "teplota"]
       }
     ]
   },
@@ -1027,6 +1087,12 @@ const KATALOG_SEKCE = [
         "nazev": "🌍 Svět u stolu",
         "stav": "vyvoj",
         "tagy": ["svátky", "tradice", "zvyky", "rituál", "kalendář", "svět", "národní jídla", "Vánoce", "Velikonoce", "Nový rok", "čínský Nový rok", "ramadán", "Diwali", "recept", "mapa", "co se jí"]
+      },
+      {
+        "soubor": "obsah/nutricni_recept.html",
+        "nazev": "🥗 Nutriční hodnoty receptu",
+        "stav": "vyvoj",
+        "tagy": ["nutriční hodnoty", "kalorie", "recept", "etiketa", "výživové údaje", "bílkoviny", "sacharidy", "tuky", "1169/2011", "deník jídla"]
       }
     ]
   },
@@ -1105,6 +1171,18 @@ const KATALOG_SEKCE = [
         "nazev": "🌡️ Převodník meteo jednotek",
         "stav": "beta",
         "tagy": ["převod jednotek", "teplota", "tlak", "rychlost větru", "srážky"]
+      },
+      {
+        "soubor": "obsah/meteogram.html",
+        "nazev": "⛰️ Meteogram pro hory a létání",
+        "stav": "vyvoj",
+        "tagy": ["počasí", "meteogram", "hory", "paragliding", "plachtění", "vítr ve výškách", "nulová izoterma", "základna oblaků", "termika", "emagram", "Skew-T", "CAPE", "inverze", "ICON-D2", "ECMWF"]
+      },
+      {
+        "soubor": "obsah/snih_laviny.html",
+        "nazev": "❄️ Sníh a laviny",
+        "stav": "vyvoj",
+        "tagy": ["laviny", "sníh", "skialpinismus", "skialpy", "hory", "sklon svahu", "mapa sklonitosti", "orientace svahu", "redukční metoda", "Munter", "lavinové nebezpečí", "nový sníh", "výška sněhu", "Krkonoše", "Jeseníky", "Tatry", "Alpy", "Open-Meteo"]
       }
     ]
   },
@@ -1359,6 +1437,12 @@ const KATALOG_SEKCE = [
         "nazev": "🧭 Cestovatelská mapa",
         "stav": "vyvoj",
         "tagy": ["cestopis", "mapa", "trasa", "video", "animace", "YouTube", "vlog", "kreslená mapa", "inkoust", "akvarel", "stará mapa", "Bézier", "MP4", "WebM", "PNG", "Indiana Jones mapa", "cesta letadlem"]
+      },
+      {
+        "soubor": "obsah/zeme_v_kostce.html",
+        "nazev": "🌍 Země v kostce pro cestovatele",
+        "stav": "vyvoj",
+        "tagy": ["zásuvky", "adaptér", "napětí", "tísňová čísla", "měna", "předvolba", "časové pásmo", "strana jízdy", "spropitné", "pitná voda", "dálniční známka", "mýto", "MZV", "státy světa", "cestování"]
       }
     ]
   },
@@ -1436,6 +1520,18 @@ const KATALOG_SEKCE = [
         "nazev": "🧭 Sextant – poloha podle hvězd",
         "stav": "beta",
         "tagy": ["astronavigace", "polárka", "zeměpisná šířka", "slunce v poledne"]
+      },
+      {
+        "soubor": "obsah/satelity.html",
+        "nazev": "🛰️ Přelety ISS a satelitů",
+        "stav": "vyvoj",
+        "tagy": ["ISS", "družice", "satelity", "přelety", "Starlink", "Tiangong", "Hubble", "SGP4", "TLE", "CelesTrak", "pozorování", "obloha", "mapa"]
+      },
+      {
+        "soubor": "obsah/atlas_mesice.html",
+        "nazev": "🌕 Atlas Měsíce",
+        "stav": "vyvoj",
+        "tagy": ["měsíc", "mapa měsíce", "krátery", "terminátor", "librace", "fáze", "dalekohled", "pozorování", "selenografie", "apollo"]
       }
     ]
   },
@@ -2698,7 +2794,11 @@ const KATALOG_SEKCE = [
         "tagy": [
           "3d tisk",
           "pla",
-          "petg"
+          "petg",
+          "gramy na metry",
+          "zbytek na cívce",
+          "cena tisku",
+          "sklad cívek"
         ]
       },
       {
@@ -4001,6 +4101,13 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["dovolená", "plán dovolených", "rozvrh čerpání dovolené", "§ 217", "nárok", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/mzdove_naklady.html",
+        "nazev": "🧮 Mzdové náklady zaměstnavatele",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["mzdové náklady", "superhrubá mzda", "cena práce", "odvody zaměstnavatele", "sociální pojištění", "zdravotní pojištění", "čistá mzda", "DPP", "DPČ", "minimální mzda", "doplatek do minima", "sleva na pojistném", "zkrácený úvazek", "pojištění odpovědnosti", "Kooperativa", "stravenkový paušál", "benefity", "náklad na hodinu", "OSVČ", "švarcsystém", "kalkulačka", "2026"]
       }
     ]
   },
@@ -4056,6 +4163,19 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["vlastní tiskopis", "editor formulářů", "návrh formuláře", "tabulka k tisku", "prázdný formulář", "JSON", "tiskopis", "formulář", "tisk", "šablona"]
+      },
+      {
+        "soubor": "obsah/sklad.html",
+        "nazev": "📦 Skladová evidence",
+        "stav": "vyvoj",
+        "tagy": ["sklad", "skladová evidence", "skladová karta", "příjemka", "výdejka", "převodka", "inventura", "FIFO", "vážený průměr", "ocenění zásob", "stav k datu", "minimální zásoba", "objednávka", "EAN", "čárový kód", "dílna", "firma", "tisk", "CSV"]
+      },
+      {
+        "soubor": "obsah/reklamace.html",
+        "nazev": "🧾 Reklamační protokol",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["reklamace", "reklamační protokol", "potvrzení o přijetí reklamace", "vyřízení reklamace", "30 dní", "24 měsíců", "záruka", "vady zboží", "spotřebitel", "odstoupení od smlouvy", "§ 2165", "evidence reklamací", "tisk", "formulář"]
       }
     ]
   },

@@ -182,7 +182,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (l < 1e-12) continue;
       const A = l / 2; celkem += A;
       const d = n.map(x => -x / l);                                   // dovnitř tělesa
-      const o = [0, 1, 2].map(k => (p[a + k] + p[b + k] + p[c + k]) / 3 + d[k] * 1e-4);
+      // start kousek NAD plochou: stěna s nulovou tloušťkou (protější trojúhelník přesně v téže rovině – slupka po
+      // booleanu se zarovnanou dírou) se pak trefí na vzdálenost 1e-4 a vyjde tloušťka 0
+      const o = [0, 1, 2].map(k => (p[a + k] + p[b + k] + p[c + k]) / 3 - d[k] * 1e-4);
       // buňky podél krátkého úseku o → o + d·minimum
       const kand = new Set();
       const kroku = Math.max(1, Math.ceil(minimum / vel * 2));
@@ -207,8 +209,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const v = iv * (d[0] * qq[0] + d[1] * qq[1] + d[2] * qq[2]);
         if (v < 0 || u + v > 1) continue;
         const tt = iv * (f2[0] * qq[0] + f2[1] * qq[1] + f2[2] * qq[2]);
-        if (tt > 1e-3 && tt < nej) nej = tt;
+        if (tt > 0 && tt < nej) nej = tt;
       }
+      nej = Math.max(0, nej - 1e-4);
       if (nej < minimum) { tenke[f] = 1; plocha += A; if (nej < nejtensi) nejtensi = nej; }
     }
     return { tenke, plocha, celkem, nejtensi };

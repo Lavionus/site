@@ -8,6 +8,11 @@
   <script src="../theme.js"></script>
   <script src="../podpis.js" defer></script>
 <script src="../dialog.js" defer></script>
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <script src="lib/leaflet/leaflet.js"></script>
+  <script src="lib/qrcode/qrcode.js"></script>
+  <script src="lib/jsQR.min.js"></script>
+  <script src="vacation_planner/jadro.js"></script>
   <style>
     :root {
       --editor-font-size: 0.8rem;
@@ -16,6 +21,32 @@
       --day-base-height: 300px;
       --night-base-height: 245px;
       --axis-offset: 0px;
+      /* Barvy karet - tmave tema */
+      --vp-day-bg: #353535;
+      --vp-day-border: #505050;
+      --vp-we-bg: #3a3535;
+      --vp-we-border: #5a4545;
+      --vp-we-accent: #ff8a80;
+      --vp-night-bg: #2d2d3a;
+      --vp-night-border: #4a4a5a;
+      --vp-night-field: #24242e;
+      --vp-night-field-border: #4a4a5a;
+      --vp-night-accent: #b794ff;
+      --vp-field: #262626;
+    }
+
+    :root[data-theme="light"] {
+      --vp-day-bg: #f7f8fa;
+      --vp-day-border: #cfd5dd;
+      --vp-we-bg: #fdf3f2;
+      --vp-we-border: #e6c3bf;
+      --vp-we-accent: #c62828;
+      --vp-night-bg: #f4f1fb;
+      --vp-night-border: #d3c9ec;
+      --vp-night-field: #ffffff;
+      --vp-night-field-border: #c8bde6;
+      --vp-night-accent: #6d28d9;
+      --vp-field: #ffffff;
     }
 
     * {
@@ -34,107 +65,43 @@
     .container {
       max-width: 100%;
       margin: 0 auto;
-      padding: 20px;
+      padding: 14px 20px 28px;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
+    /* Horni lista: nadpis vlevo, menu vpravo */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-bottom: 14px;
+      padding-right: 48px;  /* misto pro stitek stavu stranky vpravo nahore */
     }
 
-    .header h1 {
-      font-size: 1.6rem;
-      font-weight: 600;
+    .app-bar h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
       margin: 0;
-      margin-bottom: 5px;
       color: var(--text);
+      white-space: nowrap;
     }
 
-    .header-subtitle {
-      font-size: 0.85rem;
-      color: var(--text-faint);
-    }
-
-    .controls-section {
+    /* Hlavni panel: zalozky dovolenych nad nim, uvnitr hlavicka (termin, prehled, pohled) a obsah */
+    .plan-panel {
       background-color: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 30px;
+      border-radius: 0 12px 12px 12px;
+      box-shadow: var(--shadow);
     }
 
-    .date-range-form {
+    .plan-panel-head {
       display: flex;
       align-items: center;
-      gap: 15px;
       flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .action-btn {
-      background-color: var(--accent);
-      color: var(--on-accent, #fff);
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      height: fit-content;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .action-btn:hover {
-      background-color: var(--accent);
-      transform: translateY(-1px);
-    }
-
-    .action-btn:active {
-      transform: translateY(0);
-    }
-
-    .action-btn.secondary {
-      background-color: #505050; color: #fff;
-    }
-
-    .action-btn.secondary:hover {
-      background-color: #606060;
-    }
-
-    .action-btn.icon-only {
-      padding: 10px 13px;
-      font-size: 1.1rem;
-    }
-
-    .action-btn.share {
-      background-color: #9c6afd;
-    }
-
-    .action-btn.share:hover {
-      background-color: #8a52f5;
-    }
-
-    .action-btn.print {
-      background-color: #4caf50; color: #0b1a33;
-    }
-
-    .action-btn.print:hover {
-      background-color: #45a049;
-    }
-
-    .action-btn.export {
-      background-color: #ff9800; color: #0b1a33;
-    }
-
-    .action-btn.export:hover {
-      background-color: #f57c00;
-    }
-
-    .btn-icon {
-      font-size: 1rem;
+      gap: 10px 16px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
     }
 
     /* Calendar picker styles */
@@ -143,42 +110,52 @@
     }
 
     .calendar-display {
-      background-color: var(--border);
-      border: 1px solid var(--border-strong);
-      border-radius: 4px;
-      padding: 10px 14px;
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
       color: var(--text);
-      font-size: 0.95rem;
       cursor: pointer;
-      min-width: 320px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      transition: all 0.2s ease;
+      gap: 12px;
+      transition: border-color 0.15s ease;
     }
 
     .calendar-display:hover {
       border-color: var(--accent);
-      background-color: var(--border-strong);
     }
 
     .calendar-display-icon {
-      font-size: 1.1rem;
+      font-size: 1.4rem;
     }
 
     .calendar-display-info {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 8px;
     }
 
     .calendar-display-range {
-      font-weight: 500;
+      font-weight: 700;
+      font-size: 1.02rem;
+      width: 100%;
     }
 
-    .calendar-display-stats {
-      font-size: 0.75rem;
-      color: var(--text-faint);
+    .calendar-display-stats,
+    .calendar-display-price {
+      font-size: 0.76rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .calendar-display-price {
+      color: var(--ok, #4caf50);
+      font-weight: 600;
     }
 
     .calendar-dropdown {
@@ -247,7 +224,7 @@
     }
 
     .calendar-weekday.weekend {
-      color: #ff8a80;
+      color: var(--vp-we-accent);
     }
 
     .calendar-days {
@@ -277,7 +254,7 @@
     }
 
     .calendar-day.weekend:not(.other-month) {
-      color: #ff8a80;
+      color: var(--vp-we-accent);
     }
 
     .calendar-day.selected-start,
@@ -304,10 +281,7 @@
     }
 
     .timeline-section {
-      background-color: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px 10px;
+      padding: 14px 12px 10px;
       overflow-x: auto;
     }
 
@@ -337,10 +311,10 @@
     }
 
     .day-card {
-      background-color: #353535;
-      border: 1px solid #505050;
-      border-radius: 6px;
-      padding: 6px;
+      background-color: var(--vp-day-bg);
+      border: 1px solid var(--vp-day-border);
+      border-radius: 10px;
+      padding: 8px;
       width: calc(100% - 4px);
       height: calc(var(--day-base-height) + var(--axis-offset));
       min-height: 0;
@@ -356,37 +330,37 @@
     }
 
     .day-card.weekend {
-      background-color: #3a3535;
-      border-color: #5a4545;
+      background-color: var(--vp-we-bg);
+      border-color: var(--vp-we-border);
     }
 
     .day-card.weekend:hover {
-      border-color: #ff8a80;
+      border-color: var(--vp-we-accent);
       box-shadow: 0 2px 8px rgba(255, 138, 128, 0.15);
     }
 
     .day-card-header {
-      font-size: 0.8rem;
+      font-size: 0.86rem;
       color: var(--accent);
       font-weight: 600;
       margin-bottom: 4px;
       text-align: center;
-      border-bottom: 1px solid #505050;
+      border-bottom: 1px solid var(--vp-day-border);
       padding-bottom: 4px;
     }
 
     .day-card.weekend .day-card-header {
-      color: #ff8a80;
-      border-bottom-color: #5a4545;
+      color: var(--vp-we-accent);
+      border-bottom-color: var(--vp-we-border);
     }
 
     .day-card textarea {
       width: 100%;
       flex: 1;
       min-height: 0;
-      background-color: var(--border);
-      border: 1px solid var(--border-strong);
-      border-radius: 3px;
+      background-color: var(--vp-field);
+      border: 1px solid var(--vp-day-border);
+      border-radius: 6px;
       color: var(--text);
       font-size: var(--editor-font-size);
       padding: 4px;
@@ -401,9 +375,9 @@
 
     .day-card input[type="text"] {
       width: 100%;
-      background-color: var(--border);
-      border: 1px solid var(--border-strong);
-      border-radius: 3px;
+      background-color: var(--vp-field);
+      border: 1px solid var(--vp-day-border);
+      border-radius: 6px;
       color: var(--text);
       font-size: var(--editor-font-size);
       padding: 4px;
@@ -417,7 +391,7 @@
     }
 
     .day-card.weekend textarea:focus {
-      border-color: #ff8a80;
+      border-color: var(--vp-we-accent);
     }
 
     /* Svislá čára od karty k časové ose */
@@ -428,7 +402,7 @@
     }
 
     .day-column.weekend .day-line {
-      background-color: #ff8a80;
+      background-color: var(--vp-we-accent);
     }
 
     /* Časová osa */
@@ -507,7 +481,7 @@
     }
 
     .day-point-wrapper.weekend .day-point {
-      background-color: #ff8a80;
+      background-color: var(--vp-we-accent);
     }
 
     .day-point-label {
@@ -525,7 +499,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, #505050, var(--accent), #505050);
+      background: linear-gradient(90deg, var(--vp-day-border), var(--accent), var(--vp-day-border));
       transform: translateY(-50%);
       border-radius: 2px;
       z-index: 1;
@@ -557,14 +531,14 @@
     .night-line {
       width: 2px;
       height: 20px;
-      background-color: #9c6afd;
+      background-color: var(--vp-night-accent);
     }
 
     .night-card {
-      background-color: #2d2d3a;
-      border: 1px solid #4a4a5a;
-      border-radius: 6px;
-      padding: 6px;
+      background-color: var(--vp-night-bg);
+      border: 1px solid var(--vp-night-border);
+      border-radius: 10px;
+      padding: 8px;
       width: calc(100% - 4px);
       height: calc(var(--night-base-height) - var(--axis-offset));
       min-height: 0;
@@ -576,16 +550,16 @@
     }
 
     .night-card:hover {
-      border-color: #9c6afd;
+      border-color: var(--vp-night-accent);
       box-shadow: 0 2px 8px rgba(156, 106, 253, 0.15);
     }
 
     .night-card-header {
       font-size: 0.75rem;
-      color: #9c6afd;
+      color: var(--vp-night-accent);
       font-weight: 600;
       text-align: center;
-      border-bottom: 1px solid #4a4a5a;
+      border-bottom: 1px solid var(--vp-night-border);
       padding-bottom: 4px;
       display: flex;
       align-items: center;
@@ -620,9 +594,9 @@
 
     .night-card input[type="text"] {
       width: 100%;
-      background-color: #3a3a4a;
-      border: 1px solid #5a5a6a;
-      border-radius: 3px;
+      background-color: var(--vp-night-field);
+      border: 1px solid var(--vp-night-field-border);
+      border-radius: 6px;
       color: var(--text);
       font-size: var(--editor-font-size);
       padding: 4px;
@@ -632,16 +606,16 @@
 
     .night-card input[type="text"]:focus {
       outline: none;
-      border-color: #9c6afd;
+      border-color: var(--vp-night-accent);
     }
 
     .night-card textarea {
       width: 100%;
       flex: 1;
       min-height: 0;
-      background-color: #3a3a4a;
-      border: 1px solid #5a5a6a;
-      border-radius: 3px;
+      background-color: var(--vp-night-field);
+      border: 1px solid var(--vp-night-field-border);
+      border-radius: 6px;
       color: var(--text);
       font-size: var(--editor-font-size);
       padding: 4px;
@@ -652,7 +626,7 @@
 
     .night-card textarea:focus {
       outline: none;
-      border-color: #9c6afd;
+      border-color: var(--vp-night-accent);
     }
 
     /* Merge controls */
@@ -660,7 +634,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-bottom: 1px solid #4a4a5a;
+      border-bottom: 1px solid var(--vp-night-border);
       padding-bottom: 4px;
       margin-bottom: 4px;
       position: relative;
@@ -668,7 +642,7 @@
 
     .night-card-title {
       font-size: 0.75rem;
-      color: #9c6afd;
+      color: var(--vp-night-accent);
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -688,16 +662,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-end;
-      padding-bottom: 80px;
+      justify-content: flex-start;
+      padding-top: 28px;  /* v urovni nadpisu noci, ne pres pole */
       margin: 0 -8px;
       z-index: 10;
     }
 
     .merge-btn {
-      background-color: #3a3a4a;
-      border: 1px solid #5a5a6a;
-      color: #9c6afd;
+      background-color: var(--vp-night-field);
+      border: 1px solid var(--vp-night-field-border);
+      color: var(--vp-night-accent);
       font-size: 1rem;
       cursor: pointer;
       padding: 4px 8px;
@@ -711,19 +685,19 @@
     }
 
     .merge-btn:hover {
-      background-color: #4a4a5a;
-      border-color: #9c6afd;
+      background-color: var(--vp-night-border);
+      border-color: var(--vp-night-accent);
       transform: scale(1.1);
     }
 
     .merge-btn.unmerge {
-      color: #ff8a80;
-      border-color: #5a4545;
+      color: var(--vp-we-accent);
+      border-color: var(--vp-we-border);
     }
 
     .merge-btn.unmerge:hover {
-      background-color: #5a4545;
-      border-color: #ff8a80;
+      background-color: var(--vp-we-border);
+      border-color: var(--vp-we-accent);
     }
 
     /* Mensi tlacitko rozdelit uvnitr karty */
@@ -736,8 +710,8 @@
 
     .nights-count {
       font-size: 0.65rem;
-      color: #9c6afd;
-      background-color: #3a3a4a;
+      color: var(--vp-night-accent);
+      background-color: var(--vp-night-field);
       padding: 1px 5px;
       border-radius: 3px;
       margin-left: 5px;
@@ -807,39 +781,6 @@
       display: none;
     }
 
-    /* Font size selector */
-    .font-size-selector {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .font-size-selector label {
-      font-size: 0.85rem;
-      color: var(--text-faint);
-    }
-
-    .font-size-selector select {
-      background-color: var(--border);
-      border: 1px solid var(--border-strong);
-      border-radius: 4px;
-      padding: 8px 12px;
-      color: var(--text);
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .font-size-selector select:hover {
-      border-color: var(--accent);
-      background-color: var(--border-strong);
-    }
-
-    .font-size-selector select:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
     /* Print styles - svetle tema, optimalizovano pro landscape A4 */
     @media print {
       @page {
@@ -861,6 +802,7 @@
       }
 
       .timeline-section {
+        display: block !important;
         width: var(--print-section-width, auto) !important;
         height: var(--print-section-height, auto) !important;
         overflow: hidden !important;
@@ -879,7 +821,9 @@
 
       .controls-section,
       .plan-tabs,
-      .header-subtitle,
+      .menu-bar,
+      .view-tabs,
+      .map-section,
       .axis-grip {
         display: none !important;
       }
@@ -999,45 +943,604 @@
       display: none;
     }
 
-    .calendar-display-price {
+    /* Horni menu */
+    .menu-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .menu-sep {
+      width: 1px;
+      height: 22px;
+      background-color: var(--border);
+      margin: 0 4px;
+    }
+
+    .menu-wrap {
+      position: relative;
+    }
+
+    .menu-btn {
+      background-color: var(--border);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font: inherit;
+      font-size: 0.86rem;
+      cursor: pointer;
+      white-space: nowrap;
+      background-color: var(--bg-elevated);
+      border-color: var(--border);
+    }
+
+    .menu-btn:hover:not(:disabled),
+    .menu-btn[aria-expanded="true"],
+    .menu-btn[aria-pressed="true"] {
+      border-color: var(--accent);
+      background-color: var(--bg-hover);
+    }
+
+    .menu-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .menu-pop {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: 1100;
+      min-width: 260px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .menu-pop[hidden] {
+      display: none;
+    }
+
+    .menu-pop button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      color: var(--text);
+      padding: 7px 10px;
+      font: inherit;
+      font-size: 0.86rem;
+      cursor: pointer;
+    }
+
+    .menu-pop button:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .menu-pop kbd {
+      margin-left: auto;
+      font-family: inherit;
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0 5px;
+    }
+
+    .menu-pop hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 4px 0;
+    }
+
+    .menu-pop label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      font-size: 0.86rem;
+    }
+
+    .menu-pop select {
+      background-color: var(--border);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      border-radius: 4px;
+      padding: 4px 6px;
+      font: inherit;
+    }
+
+    /* Rozpocet a seznam veci */
+    .dlg-section h3 {
       font-size: 0.8rem;
-      color: var(--ok, #4caf50);
-      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-faint);
+      margin: 14px 0 6px;
+    }
+
+    .dlg-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 45vh;
+      overflow-y: auto;
+    }
+
+    .dlg-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .dlg-line input[type="text"],
+    .dlg-input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 8px;
+      background-color: var(--border);
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.85rem;
+    }
+
+    .dlg-line input.amount {
+      flex: 0 0 110px;
+      text-align: right;
+    }
+
+    .dlg-line .grow {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .dlg-line.done input[type="text"] {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .dlg-x {
+      background: none;
+      border: none;
+      color: var(--text-faint);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 2px 6px;
+    }
+
+    .dlg-x:hover {
+      color: var(--danger, #e53935);
+    }
+
+    .dlg-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .budget-summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 4px 16px;
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: var(--bg);
+      font-size: 0.9rem;
+    }
+
+    .budget-summary .big {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .budget-warn {
+      color: var(--warn, #e0a000);
+      font-size: 0.8rem;
+      grid-column: 1 / -1;
+    }
+
+    .help-list {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      padding-left: 18px;
+    }
+
+    .night-card .paid-check {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      text-transform: none;
+      cursor: pointer;
+    }
+
+    .day-card.today {
+      border: 2px solid var(--accent);
+    }
+
+    /* Podzalozky dovolene: casova osa / mapa */
+    .view-tabs {
+      display: inline-flex;
+      gap: 2px;
+      margin-left: auto;
+      padding: 3px;
+      border-radius: 10px;
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .view-tab {
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted, var(--text));
+      padding: 7px 16px;
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .view-tab:hover {
+      color: var(--text);
+    }
+
+    .view-tab[aria-selected="true"] {
+      background-color: var(--accent);
+      color: var(--on-accent, #fff);
+      font-weight: 600;
+    }
+
+    .view-tab[aria-selected="true"] .count {
+      color: inherit;
+      opacity: 0.85;
+    }
+
+    .view-tab .count {
+      font-size: 0.75rem;
+      color: var(--text-faint);
+      font-weight: 400;
+    }
+
+    /* Mapa */
+    .map-section {
+      padding: 12px 14px 14px;
+    }
+
+    .map-layout {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    #planMap {
+      height: max(420px, calc(100vh - 330px));
+      border-radius: 6px;
+    }
+
+    .place-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: max(420px, calc(100vh - 330px));
+      overflow-y: auto;
+      font-size: 0.82rem;
+    }
+
+    .place-panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-faint);
+    }
+
+    .place-row {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2px 8px;
+      cursor: pointer;
+    }
+
+    .place-row:hover {
+      border-color: var(--accent);
+    }
+
+    .layer-switch {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    .layer-switch button {
+      border-radius: 0 !important;
+      margin-left: -1px;
+    }
+
+    .layer-switch button:first-child {
+      border-radius: 8px 0 0 8px !important;
+    }
+
+    .layer-switch button:last-child {
+      border-radius: 0 8px 8px 0 !important;
+    }
+
+    .layer-switch button[aria-pressed="true"] {
+      background-color: var(--accent);
+      color: var(--on-accent, #fff);
+      border-color: var(--accent);
+      position: relative;
+    }
+
+    .map-pin.text {
+      width: 12px;
+      height: 12px;
+      background-color: #16a34a;
+      border-width: 2px;
+    }
+
+    .leaflet-tooltip.text-place-tip {
+      padding: 1px 5px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #14532d;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #86efac;
+      box-shadow: none;
+    }
+
+    .text-place-head {
+      margin-top: 8px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .place-row.text-place {
+      border-style: dashed;
+    }
+
+    .place-row.unsure {
+      border-color: var(--warn, #e0a000);
+    }
+
+    .place-row .warn {
+      grid-column: 2;
+      color: var(--warn, #e0a000);
+      font-size: 0.76rem;
+    }
+
+    .map-pin.unsure {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.6);
+    }
+
+    .place-row.missing {
+      border-color: var(--danger, #e53935);
+    }
+
+    .place-row .pin-no {
+      grid-row: span 4;
+      align-self: start;
+    }
+
+    .place-row small {
+      color: var(--text-faint);
+    }
+
+    .place-row .found {
+      color: var(--text);
+    }
+
+    .place-row.missing .found {
+      color: var(--danger, #e53935);
+    }
+
+    .place-actions {
+      grid-column: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .place-choices {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+      cursor: default;
+    }
+
+    .place-choices form {
+      display: flex;
+      gap: 4px;
+    }
+
+    .place-choices input {
+      flex: 1;
+      min-width: 0;
+      padding: 5px 7px;
+      background-color: var(--border);
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .place-choices .choice {
+      text-align: left;
+    }
+
+
+    @media (max-width: 760px) {
+      .map-layout {
+        grid-template-columns: 1fr;
+      }
+
+      #planMap {
+        order: -1;
+        height: 60vh;
+      }
+
+      .place-panel {
+        max-height: none;
+      }
+    }
+
+    .map-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      margin-bottom: 8px;
+    }
+
+    .map-info button,
+    .place-panel button,
+    .place-choices button {
+      font: inherit;
+      font-size: 0.78rem;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-elevated);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .map-info button:hover,
+    .place-panel button:hover,
+    .place-choices button:hover {
+      border-color: var(--accent);
+    }
+
+    .map-pin {
+      background-color: #7c3aed;
+      flex: none;
+      color: #fff;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .map-pin.move {
+      background-color: #2563eb;
+      width: 20px;
+      height: 20px;
+      font-size: 0.65rem;
+    }
+
+    .map-info button.on {
+      background-color: var(--accent);
+      color: var(--on-accent, #fff);
+      border-color: var(--accent);
+    }
+
+    .map-plan-hint {
+      width: 100%;
+      color: var(--text);
+    }
+
+    .map-planning #planMap,
+    .map-picking #planMap {
+      cursor: crosshair;
+    }
+
+    /* QR do mobilu */
+    .qr-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .qr-box svg {
+      background: #fff;
+      width: min(360px, 80vw);
+      height: auto;
+      border-radius: 6px;
+    }
+
+    .qr-box video {
+      width: min(360px, 80vw);
+      border-radius: 6px;
     }
 
     /* Zalozky dovolenych */
     .plan-tabs {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 10px;
-      align-items: stretch;
+      gap: 2px;
+      align-items: flex-end;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      position: relative;
+      z-index: 1;
+      margin-bottom: -1px;
     }
 
     .plan-tab {
       display: flex;
       align-items: center;
-      gap: 6px;
-      background-color: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-bottom-width: 3px;
-      border-radius: 8px 8px 4px 4px;
-      padding: 6px 12px;
-      color: var(--text);
+      gap: 7px;
+      flex: none;
+      background-color: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+      padding: 8px 14px 9px;
+      color: var(--text-muted, var(--text));
       cursor: pointer;
       font: inherit;
-      font-size: 0.85rem;
-      max-width: 100%;
+      font-size: 0.86rem;
     }
 
     .plan-tab:hover {
-      border-color: var(--accent);
+      background-color: var(--bg-hover);
+      color: var(--text);
     }
 
     .plan-tab.active {
-      border-bottom-color: var(--accent);
-      background-color: var(--bg-hover);
+      background-color: var(--bg-elevated);
+      border-color: var(--border);
+      color: var(--text);
       font-weight: 600;
+      box-shadow: inset 0 3px 0 var(--accent);
+    }
+
+    .plan-tab.add,
+    .plan-tab.manage {
+      color: var(--text-faint);
+      padding-inline: 11px;
     }
 
     .plan-tab-icon {
@@ -1059,6 +1562,50 @@
 
     .plan-tab.manage {
       margin-left: auto;
+    }
+
+    /* Uzka obrazovka: menu jen ikony, hlavicka panelu pod sebou */
+    @media (max-width: 760px) {
+      .container {
+        padding: 10px 10px 24px;
+      }
+
+      .app-bar {
+        padding-right: 0;
+      }
+
+      .app-bar h1 {
+        font-size: 1.1rem;
+      }
+
+      .menu-sep {
+        margin: 0 1px;
+      }
+
+      .menu-bar .txt,
+      .save-indicator,
+      .plan-tab .manage-txt,
+      .plan-tab-dates {
+        display: none;
+      }
+
+      .plan-panel-head {
+        padding: 10px;
+      }
+
+      .calendar-picker-container,
+      .calendar-display {
+        width: 100%;
+      }
+
+      .view-tabs {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .view-tab {
+        flex: 1;
+      }
     }
 
     /* Sprava dovolenych */
@@ -1184,67 +1731,95 @@
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>Planovac dovolene</h1>
-      <div class="header-subtitle">Ctrl+P = tisk | Ctrl+S = ulozit | Ctrl+E = export | osu lze tahnout mysi nahoru a dolu</div>
+    <header class="header app-bar">
+      <h1>🧳 Planovac dovolene</h1>
       <div class="print-header" id="printHeader"></div>
-    </div>
+      <div class="menu-bar">
+        <span class="menu-wrap">
+          <button class="menu-btn" onclick="toggleMenu(this)" aria-expanded="false">📁<span class="txt"> Soubor</span> ▾</button>
+          <div class="menu-pop" hidden>
+            <button onclick="exportData()">📤 Export dovolene (JSON) <kbd>Ctrl+E</kbd></button>
+            <button onclick="exportAll()">💾 Zaloha vsech dovolenych</button>
+            <button onclick="document.getElementById('importInput').click()">📥 Import dovolene nebo zalohy…</button>
+            <hr>
+            <button onclick="exportIcs()">📆 Export do kalendare (.ics)</button>
+            <button onclick="printPlan()">🖨 Tisknout <kbd>Ctrl+P</kbd></button>
+          </div>
+        </span>
+        <span class="menu-wrap">
+          <button class="menu-btn" onclick="toggleMenu(this)" aria-expanded="false">📤<span class="txt"> Sdilet</span> ▾</button>
+          <div class="menu-pop" hidden>
+            <button id="shareLinkBtn" onclick="sharePlanLink()">🔗 Odkaz na plan</button>
+            <button onclick="openQr()">📱 QR kod do mobilu</button>
+            <hr>
+            <button id="shareImageBtn" onclick="sharePlanImage()">🖼 Ulozit / sdilet jako obrazek</button>
+            <button id="copyImageBtn" onclick="copyPlanImage()">📋 Kopirovat obrazek do schranky</button>
+          </div>
+        </span>
+        <span class="menu-wrap">
+          <button class="menu-btn" onclick="toggleMenu(this)" aria-expanded="false">👁<span class="txt"> Zobrazit</span> ▾</button>
+          <div class="menu-pop" hidden>
+            <label>📝 Velikost pisma
+              <select id="fontSizeSelect" onchange="setFontSize(this.value)">
+                <option value="0.6rem">Maly (0.6)</option>
+                <option value="0.7rem">Stredni (0.7)</option>
+                <option value="0.8rem" selected>Normalni (0.8)</option>
+                <option value="0.9rem">Vetsi (0.9)</option>
+                <option value="1rem">Velky (1.0)</option>
+              </select>
+            </label>
+            <button onclick="setAxisOffset(0); showSaveIndicator()">↕ Vychozi pozice osy</button>
+          </div>
+        </span>
+        <span class="menu-sep"></span>
+        <button class="menu-btn" onclick="openBudget()" title="Rozpocet">💰<span class="txt"> Rozpocet</span></button>
+        <button class="menu-btn" id="packingBtn" onclick="openPacking()">🎒 Veci</button>
+        <span class="menu-sep"></span>
+        <button class="menu-btn" id="undoBtn" onclick="undo()" title="Zpet (Ctrl+Z)" aria-label="Zpet" disabled>↶</button>
+        <button class="menu-btn" id="redoBtn" onclick="redo()" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="menu-btn" onclick="openHelp()" title="Napoveda" aria-label="Napoveda">❓</button>
+        <span class="save-indicator" id="saveIndicator">✓ Ulozeno</span>
+      </div>
+    </header>
+        <input type="file" id="importInput" class="hidden-input" accept=".json,application/json" onchange="importData(event)">
 
     <div class="plan-tabs" id="planTabs"></div>
 
-    <div class="controls-section">
-      <div class="date-range-form">
-        <div class="calendar-picker-container">
-          <div class="calendar-display" id="calendarDisplay" onclick="toggleCalendar()">
-            <span class="calendar-display-icon">📅</span>
-            <div class="calendar-display-info">
-              <span class="calendar-display-range" id="dateRangeText">Vyberte rozsah dovolene</span>
-              <span class="calendar-display-stats" id="dateStats"></span>
-              <span class="calendar-display-price" id="priceSum" hidden></span>
-            </div>
-          </div>
-          <div class="calendar-dropdown" id="calendarDropdown">
-            <div class="calendar-header">
-              <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
-              <span class="calendar-month-year" id="calendarMonthYear"></span>
-              <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
-            </div>
-            <div class="calendar-weekdays">
-              <div class="calendar-weekday">Po</div>
-              <div class="calendar-weekday">Ut</div>
-              <div class="calendar-weekday">St</div>
-              <div class="calendar-weekday">Ct</div>
-              <div class="calendar-weekday">Pa</div>
-              <div class="calendar-weekday weekend">So</div>
-              <div class="calendar-weekday weekend">Ne</div>
-            </div>
-            <div class="calendar-days" id="calendarDays"></div>
-            <div class="calendar-hint">Kliknete pro vyber zacatku a konce dovolene</div>
+    <section class="plan-panel">
+      <div class="controls-section plan-panel-head">
+      <div class="calendar-picker-container">
+        <div class="calendar-display" id="calendarDisplay" onclick="toggleCalendar()">
+          <span class="calendar-display-icon">📅</span>
+          <div class="calendar-display-info">
+            <span class="calendar-display-range" id="dateRangeText">Vyberte rozsah dovolene</span>
+            <span class="calendar-display-stats" id="dateStats"></span>
+            <span class="calendar-display-price" id="priceSum" hidden></span>
           </div>
         </div>
-        <div class="font-size-selector">
-          <label for="fontSizeSelect">📝 Velikost pisma:</label>
-          <select id="fontSizeSelect" onchange="setFontSize(this.value)">
-            <option value="0.6rem">Maly (0.6)</option>
-            <option value="0.7rem">Stredni (0.7)</option>
-            <option value="0.8rem" selected>Normalni (0.8)</option>
-            <option value="0.9rem">Vetsi (0.9)</option>
-            <option value="1rem">Velky (1.0)</option>
-          </select>
+        <div class="calendar-dropdown" id="calendarDropdown">
+          <div class="calendar-header">
+            <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
+            <span class="calendar-month-year" id="calendarMonthYear"></span>
+            <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
+          </div>
+          <div class="calendar-weekdays">
+            <div class="calendar-weekday">Po</div>
+            <div class="calendar-weekday">Ut</div>
+            <div class="calendar-weekday">St</div>
+            <div class="calendar-weekday">Ct</div>
+            <div class="calendar-weekday">Pa</div>
+            <div class="calendar-weekday weekend">So</div>
+            <div class="calendar-weekday weekend">Ne</div>
+          </div>
+          <div class="calendar-days" id="calendarDays"></div>
+          <div class="calendar-hint">Kliknete pro vyber zacatku a konce dovolene</div>
         </div>
-        <button class="action-btn export" onclick="exportData()"><span class="btn-icon">📤</span> Export</button>
-        <button class="action-btn secondary" onclick="document.getElementById('importInput').click()"><span class="btn-icon">📥</span> Import</button>
-        <input type="file" id="importInput" class="hidden-input" accept=".json" onchange="importData(event)">
-        <button class="action-btn share icon-only" id="shareLinkBtn" onclick="sharePlanLink()"
-                title="Sdilet plan odkazem" aria-label="Sdilet plan odkazem"><span class="btn-icon">🔗</span></button>
-        <button class="action-btn share icon-only" id="shareImageBtn" onclick="sharePlanImage()"
-                title="Ulozit / sdilet plan jako obrazek" aria-label="Ulozit plan jako obrazek"><span class="btn-icon">🖼</span></button>
-        <button class="action-btn share icon-only" id="copyImageBtn" onclick="copyPlanImage()"
-                title="Kopirovat obrazek do schranky" aria-label="Kopirovat obrazek do schranky"><span class="btn-icon">📋</span></button>
-        <button class="action-btn print" onclick="printPlan()"><span class="btn-icon">🖨</span> Tisknout</button>
-        <span class="save-indicator" id="saveIndicator"><span class="btn-icon">✓</span> Ulozeno</span>
       </div>
-    </div>
+      <div class="view-tabs" role="tablist" aria-label="Zobrazeni dovolene">
+          <button class="view-tab" id="viewPlanBtn" role="tab" aria-selected="true" onclick="setView('plan')">📅 Casova osa</button>
+          <button class="view-tab" id="viewMapBtn" role="tab" aria-selected="false" onclick="setView('map')">🗺️ Mapa <span class="count" id="mapCount"></span></button>
+        </div>
+      </div>
 
     <div class="timeline-section">
       <div id="timelineContent">
@@ -1254,7 +1829,106 @@
         </div>
       </div>
     </div>
+
+    <div class="map-section" id="mapSection" hidden>
+      <div class="map-info">
+        <span class="layer-switch" role="group" aria-label="Co ukazat na mape">
+          <button data-layer="spani" onclick="setMapLayer('spani')" aria-pressed="false">🌙 Jen spani</button>
+          <button data-layer="presuny" onclick="setMapLayer('presuny')" aria-pressed="true">🌙 Spani a 🚗 presuny</button>
+          <button data-layer="vse" onclick="setMapLayer('vse')" aria-pressed="false">📝 + obce z popisu dnu</button>
+        </span>
+        <button id="planModeBtn" onclick="togglePlanMode()">✏️ Planovat klikanim do mapy</button>
+        <button id="undoNightBtn" onclick="removeLastNight()" hidden>↶ Odebrat posledni noc</button>
+        <span>🌙 <b>cislo</b> = ubytovani, 🔵 = presun kam. Spatne umisteny bod lze pretahnout mysi nebo vybrat jine misto v seznamu.</span>
+        <span id="mapStatus"></span>
+        <span class="map-plan-hint" id="planHint" hidden>👉 Kliknete do mapy, kde budete spat dalsi noc - adresa se doplni sama.
+          Klik na existujici bod = jeste jedna noc tamtez. Kdyz noci dojdou, dovolena se prodlouzi.</span>
+      </div>
+      <div class="map-layout">
+        <div class="place-panel">
+          <div class="place-panel-head">
+            <span id="routeInfo"></span>
+            <button onclick="relocateAll()" title="Znovu vyhledat mista, ktera nebyla umistena rucne">🔄 Hledat znovu</button>
+          </div>
+          <div id="placeList"></div>
+          <div id="textPlaceList"></div>
+        </div>
+        <div id="planMap"></div>
+      </div>
+    </div>
+    </section>
   </div>
+
+  <dialog class="plan-manager" id="qrDialog">
+    <div class="pm-head">
+      <h2>📱 Plan do mobilu</h2>
+      <button class="pm-btn" onclick="closeQr()" title="Zavrit">✕</button>
+    </div>
+    <div class="qr-box">
+      <div id="qrOut"></div>
+      <div id="qrNote"></div>
+      <video id="qrVideo" playsinline muted hidden></video>
+      <button class="pm-btn" id="qrScanBtn" onclick="toggleQrScan()">📷 Nacist QR kamerou (na mobilu)</button>
+    </div>
+  </dialog>
+
+  <dialog class="plan-manager" id="budgetDialog">
+    <div class="pm-head">
+      <h2>💰 Rozpocet</h2>
+      <button class="pm-btn" onclick="closeDialog('budgetDialog')" title="Zavrit">✕</button>
+    </div>
+    <div class="dlg-section">
+      <label class="dlg-line">👥 Pocet osob
+        <input type="number" id="bdPersons" min="1" max="99" class="dlg-input" style="flex:0 0 80px" oninput="setPersons(this.value)">
+      </label>
+      <h3>🌙 Ubytovani</h3>
+      <div class="dlg-list" id="bdAcc" data-i18n="ne"></div>
+      <h3>🧾 Dalsi naklady</h3>
+      <div class="dlg-list" id="bdCosts" data-i18n="ne"></div>
+      <div class="dlg-chips" id="bdChips">
+        <button class="pm-btn" onclick="addCost('')">+ Polozka</button>
+      </div>
+      <div class="budget-summary" id="bdSummary"></div>
+    </div>
+  </dialog>
+
+  <dialog class="plan-manager" id="packingDialog">
+    <div class="pm-head">
+      <h2>🎒 Seznam veci</h2>
+      <button class="pm-btn" onclick="closeDialog('packingDialog')" title="Zavrit">✕</button>
+    </div>
+    <div class="dlg-section">
+      <form class="dlg-line" onsubmit="event.preventDefault(); addPackingItem()">
+        <input type="text" id="pkNew" class="dlg-input" placeholder="Pridat vec a Enter…" aria-label="Nova vec">
+        <button class="pm-btn" type="submit">+ Pridat</button>
+      </form>
+      <h3 id="pkCount"></h3>
+      <div class="dlg-list" id="pkList" data-i18n="ne"></div>
+      <div class="dlg-chips">
+        <button class="pm-btn" onclick="addPackingBase()">✨ Vlozit zakladni seznam</button>
+        <button class="pm-btn" onclick="uncheckPacking()">☐ Zrusit zaskrtnuti</button>
+        <button class="pm-btn danger" onclick="clearPacking()">🗑 Smazat cely seznam</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="plan-manager" id="helpDialog">
+    <div class="pm-head">
+      <h2>❓ Napoveda</h2>
+      <button class="pm-btn" onclick="closeDialog('helpDialog')" title="Zavrit">✕</button>
+    </div>
+    <ul class="help-list">
+      <li><b>Termin</b> zmenite klikem na kalendar (zacatek a konec). Poznamky zustanou u svych datumu.</li>
+      <li><b>Noci</b> lze spojit tlacitkem + mezi nimi (vice noci na jednom miste), ✂ je zase rozdeli.</li>
+      <li><b>Osa</b> mezi dny a nocmi jde tahnout mysi nahoru a dolu.</li>
+      <li><b>Mapa</b> ukaze mista spani a trasu; v rezimu ✏️ se plan da naklikat primo do mapy.</li>
+      <li><b>Rozpocet</b> scita ceny ubytovani a dalsi naklady, ukaze zaplaceno, zbyva a castku na osobu.</li>
+      <li><b>Zpet / Znovu</b> (↶ ↷, Ctrl+Z / Ctrl+Y mimo textove pole) vrati i smazanou dovolenou nebo zmenu terminu.</li>
+      <li><b>Prenos</b>: 🔗 odkaz nebo 📱 QR kod. Tataz dovolena se pri dalsim prenosu aktualizuje.</li>
+      <li><b>Zaloha</b>: Soubor → Zaloha vsech dovolenych. Data jsou jen v tomto prohlizeci.</li>
+      <li><b>Kalendar</b>: Soubor → Export do kalendare vytvori .ics pro Google, Outlook i telefon.</li>
+    </ul>
+  </dialog>
 
   <dialog class="plan-manager" id="planManager">
     <div class="pm-head">
@@ -1343,7 +2017,7 @@
     // e.g., mergedNights[0] = 3 means nights 0, 1, 2 are merged into one box
     let mergedNights = {};
 
-    function mergeWithNext(nightIndex) {
+    async function mergeWithNext(nightIndex) {
       const totalNights = getDaysBetween(selectedStartDate, selectedEndDate).length - 1;
 
       // Find the current merge group this night belongs to
@@ -1361,6 +2035,21 @@
 
       // Can't merge if we're at the last night
       if (newEnd >= totalNights) return;
+
+      // Udaje druhe noci se prevezmou do prazdnych poli prvni, poznamky se spoji
+      const first = k => document.getElementById(`night-${k}-${groupStart}`);
+      const second = k => document.getElementById(`night-${k}-${newEnd}`);
+      const both = k => first(k)?.value.trim() && second(k)?.value.trim();
+      const conflict = both('price') || ['name', 'street', 'city'].some(k => both(k) && first(k).value.trim() !== second(k).value.trim());
+      if (conflict && !await Dialog.potvrd('Obe noci maji vyplnene ubytovani. Po slouceni zustanou udaje prvni noci a poznamky se spoji. Pokracovat?')) return;
+      if (second('name')) {
+        ['name', 'street', 'city'].forEach(k => { if (!first(k).value.trim()) first(k).value = second(k).value; });
+        if (!first('price').value.trim() && second('price').value.trim()) {
+          first('price').value = second('price').value;
+          first('paid').checked = second('paid').checked;
+        }
+        first('notes').value = [first('notes').value.trim(), second('notes').value.trim()].filter(Boolean).join('\n');
+      }
 
       // Check if next night is part of another group
       let nextGroupSize = mergedNights[newEnd] || 1;
@@ -1431,42 +2120,7 @@
     const PLANS_KEY = 'vacation_planner_plany';
     let store = { active: null, plans: [] };
 
-    // Pravidla automaticke ikony - hledaji se v nazvu a textech planu (bez diakritiky)
-    const ICON_RULES = [
-      ['🏖️', /\b(mor[eiu]|plaz|pobrez|chorvat|ital|reck|spanel|egypt|bulhar|turec|ostrov|beach)/g],
-      ['⛷️', /\b(lyz|sjezd|snowboard|ski)/g],
-      ['🏔️', /\b(hor[ayu]?\b|alp|tatr|krkonos|sumav|dolomit|beskyd|jesenik)/g],
-      ['🏕️', /\b(kemp|stan[uy]?\b|camp)/g],
-      ['🥾', /\b(tur[auy]\b|turistik|trek|pesk|hike)/g],
-      ['🚴', /\b(kol[aeou]\b|cykl|bike)/g],
-      ['🛶', /\b(vodak|kanoe|kanoi|raft|splav|kajak)/g],
-      ['🚢', /\b(plavb|trajekt|lod|cruise)/g],
-      ['🏙️', /\b(mest|praha|praz|pariz|londyn|rim\b|rima|viden|vidni|berlin|barcelon|amsterd|city)/g],
-      ['🏰', /\b(hrad|zam[e]?k|castle)/g],
-      ['🚗', /\b(auto|road.?trip|obytn|karavan)/g],
-      ['✈️', /\b(letadl|letist|odlet|prilet|flight)/g],
-      ['🌴', /\b(tropi|exot|thaj|bali|karib|dominik|maledi)/g],
-      ['🏞️', /\b(jezer|prirod|narodni park|lake)/g],
-      ['🧖', /\b(wellnes|lazn|spa\b|termal)/g],
-      ['🎢', /\b(zabavni|aquapark|disney)/g],
-      ['👨‍👩‍👧', /\b(rodin|deti|babi)/g]
-    ];
-    const SEASON_ICONS = ['❄️', '🌷', '☀️', '🍂'];  // zima, jaro, leto, podzim
-    const ICON_CHOICES = [...new Set([...ICON_RULES.map(r => r[0]), ...SEASON_ICONS,
-      '🧳', '🎒', '🏝️', '🗺️', '🍷', '🎭', '⚽', '🐚', '❤️', '⭐'])];
-
-    function autoIcon(plan) {
-      const text = [plan.name, ...Object.values(plan.days || {}), ...Object.values(plan.nights || {})].join(' ')
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-      let best = '', bestCount = 0;
-      ICON_RULES.forEach(([icon, re]) => {
-        const count = (text.match(re) || []).length;
-        if (count > bestCount) { best = icon; bestCount = count; }
-      });
-      if (best) return best;
-      const month = (plan.startDate ? new Date(plan.startDate) : new Date()).getMonth();
-      return SEASON_ICONS[Math.floor(((month + 1) % 12) / 3)];
-    }
+    const { ICON_CHOICES, autoIcon, parseISO } = VP;
 
     function planIcon(plan) {
       return plan.icon || autoIcon(plan);
@@ -1482,7 +2136,7 @@
       nextWeek.setDate(today.getDate() + 7);
       const plan = { id: newId(), name, icon: '', startDate: formatDateISO(today), endDate: formatDateISO(nextWeek),
                      days: {}, nights: {}, mergedNights: {} };
-      ['icon', 'days', 'nights', 'mergedNights'].forEach(k => { if (data[k]) plan[k] = data[k]; });
+      ['icon', 'days', 'nights', 'mergedNights', 'geo', 'costs', 'packing', 'persons', 'hiddenPlaces'].forEach(k => { if (data[k]) plan[k] = data[k]; });
       if (data.startDate && data.endDate) {
         plan.startDate = data.startDate;
         plan.endDate = data.endDate;
@@ -1490,16 +2144,101 @@
       return plan;
     }
 
-    function writeStore() {
-      localStorage.setItem(PLANS_KEY, JSON.stringify(store));
+    // ---- Ukladani, Zpet / Znovu ----
+    // Kazdy zapis (krome cache souradnic) je krok zpet; zapisy tesne po sobe (do 400 ms) jsou jeden krok.
+    let lastSaved = null, lastUndoPush = 0, storageWarned = false;
+    let undoStack = [], redoStack = [];
+
+    function writeStore(undoable = true) {
+      const text = JSON.stringify(store);
+      if (text === lastSaved) return true;
+      try {
+        localStorage.setItem(PLANS_KEY, text);
+        storageWarned = false;
+      } catch (err) {
+        if (!storageWarned) {
+          storageWarned = true;
+          Dialog.chyba('Ulozeni se nepovedlo - uloziste prohlizece je plne nebo zakazane. Udelejte si zalohu (Soubor → Zaloha vsech dovolenych).');
+        }
+        return false;
+      }
+      if (undoable && lastSaved !== null) {
+        if (Date.now() - lastUndoPush > 400) {
+          undoStack.push(lastSaved);
+          if (undoStack.length > 80) undoStack.shift();
+        }
+        lastUndoPush = Date.now();
+        redoStack = [];
+      }
+      lastSaved = text;
+      updateUndoButtons();
+      return true;
+    }
+
+    function updateUndoButtons() {
+      document.getElementById('undoBtn').disabled = !undoStack.length;
+      document.getElementById('redoBtn').disabled = !redoStack.length;
+    }
+
+    function restoreStore(text) {
+      store = JSON.parse(text);
+      lastSaved = null;
+      writeStore(false);
+      refreshAll();
+    }
+
+    // Prekreslit stranku i otevrena okna po zmene celych dat (Zpet, jina karta)
+    function refreshAll() {
+      applyPlan(false);
+      if (document.getElementById('planManager').open) renderManager();
+      if (document.getElementById('budgetDialog').open) renderBudget();
+      if (document.getElementById('packingDialog').open) renderPacking();
+      updateUndoButtons();
+    }
+
+    function undo() {
+      if (saveTimeout) saveToStorage();
+      if (!undoStack.length) return;
+      redoStack.push(lastSaved);
+      lastUndoPush = 0;
+      restoreStore(undoStack.pop());
+    }
+
+    function redo() {
+      if (!redoStack.length) return;
+      undoStack.push(lastSaved);
+      restoreStore(redoStack.pop());
+    }
+
+    // Plany z uloziste nebo jine karty - vadne polozky vynechat, aby nezablokovaly stranku
+    function sanePlans(list) {
+      return (Array.isArray(list) ? list : []).map(p => {
+        try {
+          const clean = VP.cleanPlan(p);
+          return { ...newPlan(clean.name, clean), id: clean.id || newId() };
+        } catch (err) {
+          return null;
+        }
+      }).filter(Boolean);
     }
 
     function loadStore() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(PLANS_KEY));
-        if (saved && Array.isArray(saved.plans)) store = saved;
-      } catch (e) {
-        console.error('Chyba pri nacitani dat:', e);
+      const raw = localStorage.getItem(PLANS_KEY);
+      let damaged = false;
+      if (raw) {
+        try {
+          const saved = JSON.parse(raw);
+          store = { active: saved.active, plans: sanePlans(saved.plans) };
+          damaged = !Array.isArray(saved.plans) || store.plans.length < saved.plans.length;
+        } catch (e) {
+          damaged = true;
+        }
+      }
+      if (damaged) {
+        // Puvodni data schovat, nez se prepisou - jde je obnovit rucne
+        try { localStorage.setItem('vacation_planner_plany_poskozene', raw); } catch (e) {}
+        document.addEventListener('DOMContentLoaded', () => Dialog.chyba(
+          'Cast ulozenych dat byla poskozena a vynechala se. Puvodni data jsou schovana pod klicem vacation_planner_plany_poskozene.'));
       }
       if (!store.plans.length) {
         // Prevod z puvodni verze s jedinym planem
@@ -1509,8 +2248,35 @@
         localStorage.removeItem(STORAGE_KEY);
       }
       if (!store.plans.some(p => p.id === store.active)) store.active = store.plans[0].id;
-      writeStore();
+      writeStore(false);
     }
+
+    // Jina zalozka prohlizece zmenila data - prevzit je (rozepsane psani tady ma prednost)
+    window.addEventListener('storage', (e) => {
+      if (e.key !== PLANS_KEY || !e.newValue || saveTimeout) return;
+      let incoming;
+      try { incoming = JSON.parse(e.newValue); } catch (err) { return; }
+      const plans = sanePlans(incoming?.plans);
+      if (!plans.length) return;
+      const active = store.active;
+      const focused = document.activeElement;
+      const caret = focused && 'selectionStart' in focused ? [focused.selectionStart, focused.selectionEnd] : null;
+      store = { active: plans.some(p => p.id === active) ? active : plans[0].id, plans };
+      lastSaved = e.newValue;
+      undoStack = [];
+      redoStack = [];
+      refreshAll();
+      // Kurzor zustane, kde byl
+      const again = focused?.id && document.getElementById(focused.id);
+      if (again) {
+        again.focus();
+        try { if (caret) again.setSelectionRange(...caret); } catch (err) {}
+      }
+    });
+
+    // Rozepsane zmeny ulozit i pri zavreni nebo skryti stranky
+    window.addEventListener('pagehide', () => { if (saveTimeout) saveToStorage(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden && saveTimeout) saveToStorage(); });
 
     function activePlan() {
       return store.plans.find(p => p.id === store.active);
@@ -1522,7 +2288,10 @@
 
     function planRange(plan) {
       if (!plan.startDate || !plan.endDate) return '';
-      return `${formatDate(new Date(plan.startDate))} - ${formatDate(new Date(plan.endDate))}${new Date(plan.endDate).getFullYear()}`;
+      const today = formatDateISO(new Date());
+      const until = VP.dayDiff(today, plan.startDate);
+      const when = until > 0 ? ` · za ${until} d.` : today <= plan.endDate ? ' · probiha' : '';
+      return `${formatDate(parseISO(plan.startDate))} - ${formatDate(parseISO(plan.endDate))}${parseISO(plan.endDate).getFullYear()}${when}`;
     }
 
     // Data aktivniho planu (pouziva generateTimeline)
@@ -1533,34 +2302,38 @@
     // Ulozeni rozepsaneho planu do aktivni dovolene
     function saveToStorage() {
       clearTimeout(saveTimeout);
+      saveTimeout = null;
       const { startDate, endDate, days, nights, mergedNights: merged } = collectPlan();
       Object.assign(activePlan(), { days, nights, mergedNights: merged });
       // Rozpracovany vyber v kalendari (jen zacatek) se neuklada
       if (startDate && endDate) Object.assign(activePlan(), { startDate, endDate });
-      writeStore();
-      showSaveIndicator();
+      if (writeStore()) showSaveIndicator();
       renderTabs();
       updateDateRangeDisplay();
+      scheduleMapUpdate();
     }
 
     // Nacteni aktivni dovolene do stranky
-    function applyPlan() {
+    function applyPlan(fitMap = true) {
       const plan = activePlan();
-      selectedStartDate = new Date(plan.startDate);
-      selectedEndDate = new Date(plan.endDate);
+      selectedStartDate = parseISO(plan.startDate);
+      selectedEndDate = parseISO(plan.endDate);
       selectionState = 2;
       currentMonth = new Date(selectedStartDate);
       mergedNights = { ...(plan.mergedNights || {}) };
       generateTimeline(true);
       updateDateRangeDisplay();
       renderTabs();
+      renderPackingButton();
+      if (map && view === 'map') updateMap(fitMap);
+      else renderMapCount();
     }
 
     function switchPlan(id) {
       if (id === store.active) return;
       saveToStorage();
       store.active = id;
-      writeStore();
+      writeStore(false);
       applyPlan();
     }
 
@@ -1572,6 +2345,25 @@
       writeStore();
       applyPlan();
       if (document.getElementById('planManager').open) renderManager();
+    }
+
+    // Plan z odkazu, QR nebo souboru - tataz dovolena (stejne id) se po potvrzeni aktualizuje, jinak nova zalozka
+    async function receivePlan(data, fallbackName) {
+      if (data.axisOffset !== undefined) setAxisOffset(data.axisOffset);
+      const same = data.id && findPlan(data.id);
+      if (same && await Dialog.potvrd(`Dovolena "${same.name}" uz tu je. Prepsat ji prevzatou verzi?`)) {
+        saveToStorage();
+        Object.assign(same, newPlan(data.name || same.name, data), { id: same.id });
+        store.active = same.id;
+        writeStore();
+        applyPlan();
+        Dialog.info('Dovolena je aktualizovana');
+        return;
+      }
+      const plan = newPlan(data.name || fallbackName, data);
+      if (data.id && !same) plan.id = data.id;  // aby dalsi prenos teze dovolene ji aktualizoval
+      openNewPlan(plan);
+      Dialog.info('Dovolena je otevrena jako nova zalozka');
     }
 
     async function addPlan() {
@@ -1588,8 +2380,8 @@
           <span class="plan-tab-dates">${planRange(p)}</span>
         </button>`).join('');
       document.getElementById('planTabs').innerHTML = tabs +
-        '<button class="plan-tab" onclick="addPlan()" title="Nova dovolena">+</button>' +
-        '<button class="plan-tab manage" onclick="openManager()">⚙️ Sprava dovolenych</button>';
+        '<button class="plan-tab add" onclick="addPlan()" title="Nova dovolena">+</button>' +
+        '<button class="plan-tab manage" onclick="openManager()" title="Sprava dovolenych">⚙️<span class="manage-txt"> Sprava dovolenych</span></button>';
     }
 
     // ---- Sprava dovolenych (CRUD) ----
@@ -1691,24 +2483,60 @@
 
     // Odlozene ukladani (debounce)
     function scheduleSave() {
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
+      clearTimeout(saveTimeout);
       saveTimeout = setTimeout(saveToStorage, 500);
+    }
+
+    function downloadFile(text, filename, type) {
+      const url = URL.createObjectURL(new Blob([text], { type }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportAll() {
+      saveToStorage();
+      const data = { type: 'vacation_planner_backup', version: 1, exportDate: new Date().toISOString(), plans: store.plans };
+      downloadFile(JSON.stringify(data, null, 2), `dovolene_zaloha_${formatDateISO(new Date())}.json`, 'application/json');
+    }
+
+    function exportIcs() {
+      saveToStorage();
+      downloadFile(VP.buildIcs(activePlan()), `dovolena_${activePlan().startDate}.ics`, 'text/calendar');
+    }
+
+    // Obnova ze zalohy - dovolene se stejnym id se po potvrzeni prepisou, ostatni pribudou
+    async function importBackup(raw) {
+      const plans = [];
+      raw.plans.forEach(p => { try { plans.push(VP.cleanPlan(p)); } catch (err) { /* vadna polozka */ } });
+      if (!plans.length) throw new Error('zaloha je prazdna');
+      const existing = plans.filter(p => p.id && findPlan(p.id));
+      const overwrite = existing.length > 0 && await Dialog.potvrd(
+        `Zaloha obsahuje ${plans.length} dovolenych, ${existing.length} z nich uz tu je. Prepsat je verzi ze zalohy? (Zrusit = pridat jako kopie)`);
+      saveToStorage();
+      plans.forEach(data => {
+        const plan = newPlan(data.name || 'Dovolena', data);
+        const same = data.id && findPlan(data.id);
+        if (same && overwrite) {
+          Object.assign(same, plan, { id: same.id });
+        } else {
+          if (data.id && !same) plan.id = data.id;
+          store.plans.push(plan);
+        }
+      });
+      writeStore();
+      applyPlan();
+      Dialog.info(`Obnoveno ${plans.length} dovolenych ze zalohy`);
     }
 
     // Export dat do JSON souboru
     function exportData() {
-      const data = { exportDate: new Date().toISOString(), ...collectPlan() };
-
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const filename = `dovolena_${formatDateISO(selectedStartDate)}_${formatDateISO(selectedEndDate)}.json`;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      saveToStorage();
+      const plan = activePlan();
+      const data = { exportDate: new Date().toISOString(), ...collectPlan(), startDate: plan.startDate, endDate: plan.endDate };
+      downloadFile(JSON.stringify(data, null, 2), `dovolena_${plan.startDate}_${plan.endDate}.json`, 'application/json');
     }
 
     // Import dat z JSON souboru
@@ -1717,19 +2545,19 @@
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
+        let raw;
         try {
-          let data;
-          try {
-            data = cleanPlan(JSON.parse(e.target.result));
-          } catch (err) {
-            Dialog.info('Neplatny format souboru');
-            return;
-          }
-          if (data.axisOffset !== undefined) setAxisOffset(data.axisOffset);
-          openNewPlan(newPlan(data.name || file.name.replace(/\.json$/i, ''), data));
+          raw = JSON.parse(e.target.result);
         } catch (err) {
-          Dialog.info('Chyba pri cteni souboru: ' + err.message);
+          Dialog.chyba('Soubor neni platny JSON');
+          return;
+        }
+        try {
+          if (Array.isArray(raw?.plans)) await importBackup(raw);
+          else await receivePlan(VP.cleanPlan(raw), file.name.replace(/\.json$/i, ''));
+        } catch (err) {
+          Dialog.chyba('Neplatny format souboru: ' + err.message);
         }
       };
       reader.readAsText(file);
@@ -1746,9 +2574,13 @@
       const days = {};
       const nights = {};
       document.querySelectorAll('[id^="day-"]').forEach(el => { if (el.value) days[el.id] = el.value; });
-      document.querySelectorAll('[id^="night-"]').forEach(el => { if (el.value) nights[el.id] = el.value; });
+      document.querySelectorAll('[id^="night-"]').forEach(el => {
+        const value = el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value;
+        if (value) nights[el.id] = value;
+      });
       const plan = activePlan();
       return {
+        id: plan.id,
         name: plan.name,
         icon: plan.icon,
         startDate: selectedStartDate ? formatDateISO(selectedStartDate) : null,
@@ -1756,7 +2588,12 @@
         days,
         nights,
         mergedNights: { ...mergedNights },
-        axisOffset
+        axisOffset,
+        geo: plan.geo || {},
+        costs: plan.costs || [],
+        packing: plan.packing || [],
+        persons: plan.persons || 1,
+        hiddenPlaces: plan.hiddenPlaces || []
       };
     }
 
@@ -1775,30 +2612,7 @@
       return JSON.parse(await new Response(stream).text());
     }
 
-    // Data z ciziho odkazu - nechat jen ocekavane hodnoty spravneho typu
-    function cleanPlan(raw) {
-      const isoDate = /^\d{4}-\d{2}-\d{2}$/;
-      if (!raw || !isoDate.test(raw.startDate) || !isoDate.test(raw.endDate)) throw new Error('chybi datumy');
-      const texts = (obj, re) => {
-        const out = {};
-        Object.entries(obj || {}).forEach(([k, v]) => { if (re.test(k) && typeof v === 'string') out[k] = v; });
-        return out;
-      };
-      const merged = {};
-      Object.entries(raw.mergedNights || {}).forEach(([k, v]) => {
-        if (/^\d+$/.test(k) && Number.isInteger(v) && v > 1) merged[k] = v;
-      });
-      return {
-        name: typeof raw.name === 'string' ? raw.name.slice(0, 100) : '',
-        icon: ICON_CHOICES.includes(raw.icon) ? raw.icon : '',
-        startDate: raw.startDate,
-        endDate: raw.endDate,
-        days: texts(raw.days, /^day-(move-)?\d+$/),
-        nights: texts(raw.nights, /^night-(name|street|city|price|notes)-\d+$/),
-        mergedNights: merged,
-        axisOffset: Number.isFinite(raw.axisOffset) ? raw.axisOffset : undefined
-      };
-    }
+    const cleanPlan = VP.cleanPlan;
 
     function sharePlanLink() {
       return withButtonFeedback('shareLinkBtn', async () => {
@@ -1830,6 +2644,11 @@
       if (!location.hash.startsWith(LINK_PREFIX)) return;
       const text = location.hash.slice(LINK_PREFIX.length);
       history.replaceState(null, '', location.pathname + location.search);
+      await loadPackedPlan(text);
+    }
+
+    // Plan z odkazu nebo QR - tataz dovolena (stejne id) se aktualizuje, jinak vznikne nova zalozka
+    async function loadPackedPlan(text) {
       let data;
       try {
         data = cleanPlan(await unpackPlan(text));
@@ -1837,9 +2656,808 @@
         Dialog.chyba('Odkaz na plan je poskozeny nebo neuplny.');
         return;
       }
-      if (data.axisOffset !== undefined) setAxisOffset(data.axisOffset);
-      openNewPlan(newPlan(data.name || 'Sdileny plan', data));
-      Dialog.info('Sdileny plan je otevreny jako nova zalozka');
+      await receivePlan(data, 'Sdileny plan');
+    }
+
+    // ---- QR kod do mobilu ----
+    // QR obsahuje stejny odkaz jako 🔗 - mobil ho otevre fotoaparatem, nebo tlacitkem 📷 primo zde
+    let qrStream = null;
+
+    async function openQr() {
+      saveToStorage();
+      const out = document.getElementById('qrOut');
+      const note = document.getElementById('qrNote');
+      out.innerHTML = '';
+      note.textContent = '';
+      document.getElementById('qrDialog').showModal();
+      if (typeof CompressionStream !== 'function') {
+        note.textContent = 'Tento prohlizec neumi vytvorit odkaz - pouzijte Export.';
+        return;
+      }
+      const url = location.href.split('#')[0] + LINK_PREFIX + await packPlan(collectPlan());
+      try {
+        const qr = qrcode(0, 'L');
+        qr.addData(url);
+        qr.make();
+        out.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+        note.textContent = 'Naskenujte fotoaparatem mobilu - otevre se planovac s touto dovolenou.';
+        if (/^(localhost|127\.|192\.168\.|\[::1\])/.test(location.hostname)) {
+          note.textContent += ' Pozor: stranka bezi na lokalni adrese, mobil ji nemusi otevrit.';
+        }
+      } catch (err) {
+        note.textContent = `Plan je na QR kod prilis velky (${url.length} znaku). Pouzijte 🔗 odkaz nebo Export.`;
+      }
+    }
+
+    function closeQr() {
+      stopQrScan();
+      document.getElementById('qrDialog').close();
+    }
+
+    function stopQrScan() {
+      if (qrStream) qrStream.getTracks().forEach(t => t.stop());
+      qrStream = null;
+      document.getElementById('qrVideo').hidden = true;
+    }
+
+    document.getElementById('qrDialog').addEventListener('close', stopQrScan);
+
+    async function toggleQrScan() {
+      if (qrStream) { stopQrScan(); return; }
+      const video = document.getElementById('qrVideo');
+      try {
+        qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      } catch (err) {
+        Dialog.chyba('Kameru se nepodarilo spustit: ' + err.message);
+        return;
+      }
+      video.srcObject = qrStream;
+      video.hidden = false;
+      document.getElementById('qrOut').innerHTML = '';
+      document.getElementById('qrNote').textContent = 'Namirte kameru na QR kod planu z pocitace.';
+      try {
+        await video.play();
+      } catch (err) {
+        stopQrScan();
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const scan = () => {
+        if (!qrStream) return;
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+          const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+          const at = code ? code.data.indexOf(LINK_PREFIX) : -1;
+          if (at >= 0) {
+            closeQr();
+            loadPackedPlan(code.data.slice(at + LINK_PREFIX.length));
+            return;
+          }
+        }
+        requestAnimationFrame(scan);
+      };
+      scan();
+    }
+
+    // ---- Mapa: mista spani a trasa ----
+    // Adresy hleda Nominatim (OSM), trasu po silnicich OSRM. Nalezene souradnice se ukladaji
+    // do planu (plan.geo: dotaz -> [lat, lon] nebo null = nenalezeno), takze se hleda jen jednou.
+    const MAP_KEY = 'vacation_planner_mapa';
+    let map = null, mapLayer = null, mapRun = 0, mapTimer = null, pickingQuery = null;
+    const routeCache = {};
+
+    let view = 'plan';
+
+    // Podzalozky dovolene: casova osa nebo mapa
+    function setView(next) {
+      view = next;
+      const isMap = view === 'map';
+      document.querySelector('.timeline-section').hidden = isMap;
+      document.getElementById('mapSection').hidden = !isMap;
+      document.getElementById('viewPlanBtn').setAttribute('aria-selected', String(!isMap));
+      document.getElementById('viewMapBtn').setAttribute('aria-selected', String(isMap));
+      localStorage.setItem(MAP_KEY, isMap ? '1' : '0');
+      if (!isMap) return;
+      if (!map) {
+        map = L.map('planMap').setView([49.8, 15.5], 6);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' +
+                       ' · hledani <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>,' +
+                       ' <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a>' +
+                       ' · trasy <a href="https://routing.openstreetmap.de/" target="_blank" rel="noopener">FOSSGIS OSRM</a>'
+        }).addTo(map);
+        mapLayer = L.layerGroup().addTo(map);
+        map.on('click', e => {
+          if (planMode && !pickingQuery) {
+            planQueue = planQueue.then(() => addNightAt(e.latlng));
+            return;
+          }
+          if (!pickingQuery) return;
+          setPlace(pickingQuery, [+e.latlng.lat.toFixed(5), +e.latlng.lng.toFixed(5), MANUAL]);
+          pickingQuery = null;
+          document.body.classList.remove('map-picking');
+        });
+      }
+      renderLayerButtons();
+      map.invalidateSize();
+      updateMap(true);
+    }
+
+    // Body v casovem poradi: presun dne, pak ubytovani na noc, ktera ten den zacina
+    function mapStops() {
+      const plan = activePlan();
+      const stops = [];
+      const days = getDaysBetween(selectedStartDate, selectedEndDate);
+      let nightNo = 0;
+      days.forEach((day, d) => {
+        const move = (plan.days[`day-move-${d}`] || '').trim();
+        if (move) stops.push({ kind: 'move', query: move, d, title: `${formatDateFull(day)}: presun`, text: move });
+        if (d >= days.length - 1 || getMergeGroupForNight(d).start !== d) return;
+        const n = k => (plan.nights[`night-${k}-${d}`] || '').trim();
+        const query = [n('street'), n('city')].filter(Boolean).join(', ') || n('name');
+        nightNo++;
+        if (!query) return;
+        const size = mergedNights[d] || 1;
+        stops.push({ kind: 'night', query, no: nightNo, d,
+                     title: `🌙 ${formatDate(day)} - ${formatDate(days[d + size])}`,
+                     text: [n('name'), [n('street'), n('city')].filter(Boolean).join(', '), n('price') && '💰 ' + n('price')]
+                           .filter(Boolean).join('\n') });
+      });
+      return stops;
+    }
+
+    function scheduleMapUpdate() {
+      if (!map || view !== 'map') {
+        renderMapCount();
+        return;
+      }
+      clearTimeout(mapTimer);
+      mapTimer = setTimeout(() => updateMap(false), 1500);
+    }
+
+    // ---- Hledani mist ----
+    // Nominatim (OSM): nejdriv cely dotaz, pak bez ulice; kdyz nic, Photon (snese preklepy a chybejici diakritiku).
+    // Ulozi se [lat, lon, popis nalezeneho mista]; MANUAL = umisteno rucne (hledani ho neprepise).
+    const MANUAL = '✋';
+    const UNSURE = '⚠ ';  // zacatek popisku: nazev je vicekrat a vyber je potreba overit
+    const candidateCache = {};      // dotaz -> shody (jen v teto relaci)
+    const triedThisSession = new Set();
+    let lastNominatim = 0;
+
+    async function nominatimSlot() {
+      const wait = lastNominatim + 1100 - Date.now();  // Nominatim povoluje 1 dotaz za sekundu
+      if (wait > 0) await new Promise(res => setTimeout(res, wait));
+      lastNominatim = Date.now();
+    }
+
+    const SETTLEMENT = /^(place|boundary)$/;
+
+    // Oblast kolem sousednich zastavek - hledani dava prednost shodam v ni (ale nevylucuje jine)
+    function viewbox(near) {
+      if (!near.length) return '';
+      const lats = near.map(p => p[0]), lons = near.map(p => p[1]);
+      return `&viewbox=${Math.min(...lons) - 0.7},${Math.max(...lats) + 0.5},${Math.max(...lons) + 0.7},${Math.min(...lats) - 0.5}`;
+    }
+
+    async function nominatimSearch(q, near = []) {
+      await nominatimSlot();
+      const res = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=15' + viewbox(near) +
+                              '&q=' + encodeURIComponent(q),
+                              { headers: { 'Accept-Language': 'cs' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      // Spravni obvody (SO ORP, SO POU) nejsou mista, kde se spi
+      return (await res.json()).filter(r => !/^SO (ORP|PO[UÚ]) /.test(r.name || '')).map(r => {
+        const a = r.address || {};
+        const place = a.city || a.town || a.village || a.hamlet || a.municipality || a.suburb || '';
+        // Popisek z celeho nazvu (bez PSC a statu) + okres, aby sly rozlisit obce stejneho jmena
+        const parts = (r.display_name || '').split(', ').filter(x => !/^\d{3} ?\d{2}$/.test(x));
+        if (parts.length > 1) parts.pop();
+        const head = parts.slice(0, 3);
+        const region = parts.find(x => /^okres /i.test(x)) || a.county || a.state;
+        if (region && !head.includes(region)) head.push(region);
+        const label = head.join(', ') + (a.country_code ? ', ' + a.country_code.toUpperCase() : '');
+        return { lat: +(+r.lat).toFixed(5), lon: +(+r.lon).toFixed(5), label: label + ' · OSM',
+                 name: r.name || place, kind: SETTLEMENT.test(r.category) ? 'obec' : 'adresa' };
+      });
+    }
+
+    async function photonSearch(q, near = []) {
+      const bias = near.length ? `&lat=${near[0][0]}&lon=${near[0][1]}` : '';
+      const res = await fetch('https://photon.komoot.io/api/?limit=10' + bias + '&q=' + encodeURIComponent(q));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return ((await res.json()).features || []).map(f => {
+        const p = f.properties || {};
+        const [lon, lat] = f.geometry.coordinates;
+        const label = [p.name, [p.street, p.housenumber].filter(Boolean).join(' '), p.city !== p.name ? p.city : '',
+                       p.county || p.state, (p.countrycode || '').toUpperCase()].filter(Boolean).join(', ');
+        return { lat: +lat.toFixed(5), lon: +lon.toFixed(5), label: label + ' · Photon', name: p.name,
+                 kind: SETTLEMENT.test(p.osm_key) ? 'obec' : 'adresa' };
+      });
+    }
+
+    // near = souradnice sousednich zastavek (pro vyber mezi stejnymi nazvy)
+    async function findCandidates(query, near = []) {
+      const key = query + '|' + near.map(p => p.join()).join(';');
+      if (candidateCache[key]) return candidateCache[key];
+      const far = list => near.length && list.length && VP.nearestKm(VP.pickCandidate(list, near), near) > VP.PLAUSIBLE_KM;
+      let list = await nominatimSearch(query, near);
+      // Ulice nenalezena nebo nalezena jinde (napr. jina Lhota) -> hledat samotnou obec
+      const parts = query.split(',').map(x => x.trim()).filter(Boolean);
+      if (parts.length > 1 && (!list.length || far(list))) list = list.concat(await nominatimSearch(parts.slice(1).join(', '), near));
+      if (!list.length || far(list)) {
+        try { list = list.concat(await photonSearch(query, near)); } catch (err) { /* zalozni sluzba nedostupna */ }
+      }
+      candidateCache[key] = list;
+      return list;
+    }
+
+    // Souradnice zastavek pred a za zastavkou i (nejvys jedna z kazde strany)
+    function nearFor(stops, i, geo) {
+      const pos = q => (Array.isArray(geo[q]) ? geo[q].slice(0, 2) : null);
+      const near = [];
+      for (let j = i - 1; j >= 0; j--) if (pos(stops[j].query)) { near.push(pos(stops[j].query)); break; }
+      for (let j = i + 1; j < stops.length; j++) if (pos(stops[j].query)) { near.push(pos(stops[j].query)); break; }
+      return near;
+    }
+
+    function setPlace(query, value) {
+      activePlan().geo[query] = value;
+      writeStore();
+      updateMap(false);
+    }
+
+    // Znovu vyhledat vse, co nebylo umisteno rucne
+    function relocateAll() {
+      const geo = activePlan().geo || {};
+      Object.keys(geo).forEach(q => { if (!geo[q] || geo[q][2] !== MANUAL) delete geo[q]; });
+      Object.keys(candidateCache).forEach(q => delete candidateCache[q]);
+      triedThisSession.clear();
+      writeStore();
+      updateMap(true);
+    }
+
+    async function routeLine(points) {
+      const key = points.map(p => p.join(',')).join(';');
+      if (!routeCache[key]) {
+        const coords = points.map(([lat, lon]) => `${lon},${lat}`).join(';');
+        const res = await fetch(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+        const route = (await res.json()).routes?.[0];
+        if (!route) throw new Error('trasa nenalezena');
+        routeCache[key] = { line: route.geometry.coordinates.map(([lon, lat]) => [lat, lon]), km: route.distance / 1000 };
+      }
+      return routeCache[key];
+    }
+
+    // ---- Planovani klikanim do mapy ----
+    // Klik = ubytovani pro prvni noc bez ubytovani (adresa z Nominatim reverse), klik na bod = dalsi noc tamtez.
+    let planMode = false;
+    let planQueue = Promise.resolve();  // kliky se zpracuji postupne (Nominatim 1 dotaz/s)
+
+    function togglePlanMode() {
+      planMode = !planMode;
+      document.body.classList.toggle('map-planning', planMode);
+      document.getElementById('planModeBtn').classList.toggle('on', planMode);
+      document.getElementById('planHint').hidden = !planMode;
+      document.getElementById('undoNightBtn').hidden = !planMode;
+    }
+
+    const field = id => document.getElementById(id);
+    const nightCount = () => getDaysBetween(selectedStartDate, selectedEndDate).length - 1;
+
+    function nightGroupStarts() {
+      const starts = [];
+      for (let i = 0; i < nightCount(); i += mergedNights[i] || 1) starts.push(i);
+      return starts;
+    }
+
+    function nightFilled(d) {
+      return ['name', 'street', 'city'].some(k => field(`night-${k}-${d}`).value.trim());
+    }
+
+    async function reverseGeocode(lat, lon) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=18&lat=${lat}&lon=${lon}`,
+                                { headers: { 'Accept-Language': 'cs' } });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const a = data.address || {};
+        const city = a.city || a.town || a.village || a.municipality || a.hamlet || a.county || '';
+        if (city) {
+          return { city,
+                   street: [a.road, a.house_number].filter(Boolean).join(' '),
+                   name: ['tourism', 'amenity', 'leisure'].includes(data.category) ? (data.name || '') : '' };
+        }
+      } catch (err) {
+        // bez site se pouziji souradnice
+      }
+      return { city: `${lat}, ${lon}`, street: '', name: '' };
+    }
+
+    // Prodlouzit dovolenou o den (= o noc), texty zustanou na svych mistech
+    function extendByNight() {
+      saveToStorage();
+      const end = new Date(selectedEndDate);
+      end.setDate(end.getDate() + 1);
+      activePlan().endDate = formatDateISO(end);
+      writeStore();
+      applyPlan(false);
+    }
+
+    async function addNightAt(latlng) {
+      const lat = +latlng.lat.toFixed(5), lon = +latlng.lng.toFixed(5);
+      document.getElementById('mapStatus').textContent = 'Zjistuji adresu…';
+      await nominatimSlot();
+      const planId = store.active;
+      const place = await reverseGeocode(lat, lon);
+      if (store.active !== planId) return;  // mezitim prepnuto na jinou dovolenou
+      let d = nightGroupStarts().find(g => !nightFilled(g));
+      if (d === undefined) {
+        extendByNight();
+        d = nightCount() - 1;
+      }
+      field(`night-name-${d}`).value = place.name;
+      field(`night-street-${d}`).value = place.street;
+      field(`night-city-${d}`).value = place.city;
+      const plan = activePlan();
+      plan.geo = plan.geo || {};
+      plan.geo[[place.street, place.city].filter(Boolean).join(', ')] = [lat, lon, MANUAL];
+      // Prijezd do jineho mista nez minula noc = presun v ten den
+      const prev = nightGroupStarts().filter(g => g < d && nightFilled(g)).pop();
+      const move = field(`day-move-${d}`);
+      if (!move.value.trim() && (prev === undefined || field(`night-city-${prev}`).value.trim() !== place.city)) {
+        move.value = place.city;
+        plan.geo[place.city] = [lat, lon, MANUAL];
+      }
+      saveToStorage();
+      field(`night-city-${d}`).closest('.night-card').scrollIntoView({ block: 'nearest', inline: 'center' });
+      await updateMap(false);
+    }
+
+    // Jeste jedna noc na stejnem miste - slouci s dalsi prazdnou noci (pripadne prodlouzi dovolenou)
+    async function addNightHere(d) {
+      const size = mergedNights[d] || 1;
+      if (d + size >= nightCount()) extendByNight();
+      const next = d + size;
+      if (nightFilled(next)) {
+        Dialog.info('Dalsi noc uz ma ubytovani - nejdriv ho smazte, nebo noci spojte tlacitkem +');
+        return;
+      }
+      await mergeWithNext(d);
+      await updateMap(false);
+    }
+
+    function removeLastNight() {
+      const d = nightGroupStarts().filter(nightFilled).pop();
+      if (d === undefined) return;
+      const city = field(`night-city-${d}`).value;
+      ['name', 'street', 'city', 'price'].forEach(k => { field(`night-${k}-${d}`).value = ''; });
+      field(`night-paid-${d}`).checked = false;
+      if (field(`day-move-${d}`).value === city) field(`day-move-${d}`).value = '';
+      saveToStorage();
+      if (mergedNights[d]) unmergeNight(d);
+      updateMap(false);
+    }
+
+    // ---- Pohledy mapy: jen spani / spani a presuny / navic obce z popisu dnu ----
+    const LAYER_KEY = 'vacation_planner_mapa_vrstva';
+    let mapLayerMode = 'presuny';
+    try {
+      const saved = localStorage.getItem(LAYER_KEY);
+      if (['spani', 'presuny', 'vse'].includes(saved)) mapLayerMode = saved;
+    } catch (err) { /* bez uloziste vychozi pohled */ }
+
+    function setMapLayer(mode) {
+      mapLayerMode = mode;
+      localStorage.setItem(LAYER_KEY, mode);
+      renderLayerButtons();
+      updateMap(true);
+    }
+
+    function renderLayerButtons() {
+      document.querySelectorAll('[data-layer]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.layer === mapLayerMode)));
+    }
+
+    // Obce k nazvum z popisu dnu. V okruhu dovolene se hleda kazda obec; mimo nej jen mesta (do 300 km),
+    // aby se bezna slova nepletla s nejakou vzdalenou vesnici. U stejnych jmen ma prednost okruh dovolene.
+    // Hlavni zdroj: Overpass (OSM) - jediny dotaz na zacatky vsech slov ("Valt" -> Valtice, i sklonovane tvary).
+    // Zaloha: Photon po jednotlivych slovech (setrne - nejvys 40 slov, po dvou).
+    const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+                      'https://overpass.kumi.systems/api/interpreter'];
+    const PLACE_TYPES = /^(city|town|village|hamlet|municipality)$/;
+    const CITY_TYPES = /^(city|town)$/;
+    const regionWordCache = {};  // slovo|oblast -> obce
+
+    function regionBox(points) {
+      const lats = points.map(p => p[0]), lons = points.map(p => p[1]);
+      return { s: Math.min(...lats) - 0.3, w: Math.min(...lons) - 0.4, n: Math.max(...lats) + 0.3, e: Math.max(...lons) + 0.4,
+               center: [(Math.min(...lats) + Math.max(...lats)) / 2, (Math.min(...lons) + Math.max(...lons)) / 2] };
+    }
+
+    // Obec patri do vysledku: v okruhu kazda, mimo nej jen mesto do 300 km
+    function placeAllowed(box, lat, lon, type) {
+      const inside = lat >= box.s && lat <= box.n && lon >= box.w && lon <= box.e;
+      return inside ? PLACE_TYPES.test(type) : CITY_TYPES.test(type) && VP.distanceKm(box.center, [lat, lon]) < 300;
+    }
+
+    async function overpassPlaces(box, words) {
+      const re = VP.prefixRegex(words.map(VP.wordPrefix));
+      const near = [box.s, box.w, box.n, box.e].map(x => x.toFixed(3)).join(',');
+      const far = [box.center[0] - 2.8, box.center[1] - 4.2, box.center[0] + 2.8, box.center[1] + 4.2].map(x => x.toFixed(3)).join(',');
+      const query = `[out:json][timeout:25];(node["place"~"^(city|town|village|hamlet)$"]["name"~"^(${re})"](${near});` +
+                    `node["place"~"^(city|town)$"]["name"~"^(${re})"](${far}););out body;`;
+      let lastErr = null;
+      for (const url of OVERPASS) {
+        try {
+          const res = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(query),
+                                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                         signal: AbortSignal.timeout(12000) });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return (await res.json()).elements
+            .filter(e => e.tags?.name && placeAllowed(box, e.lat, e.lon, e.tags.place))
+            .map(e => ({ name: e.tags.name, lat: e.lat, lon: e.lon }));
+        } catch (err) {
+          lastErr = err;  // pretizeny server -> dalsi
+        }
+      }
+      throw lastErr;
+    }
+
+    async function photonPlaces(box, words) {
+      const bbox = [box.w, box.s, box.e, box.n].map(x => x.toFixed(2)).join(',');
+      const places = [];
+      const todo = words.slice(0, 40);
+      const worker = async () => {
+        while (todo.length) {
+          const q = VP.wordPrefix(todo.pop());
+          for (const area of [`bbox=${bbox}`, `lat=${box.center[0]}&lon=${box.center[1]}`]) {
+            const res = await fetch(`https://photon.komoot.io/api/?limit=15&osm_tag=place&${area}&q=${encodeURIComponent(q)}`,
+                                    { signal: AbortSignal.timeout(15000) });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const list = ((await res.json()).features || [])
+              .filter(f => f.properties?.name && placeAllowed(box, f.geometry.coordinates[1], f.geometry.coordinates[0], f.properties.osm_value || ''))
+              .map(f => ({ name: f.properties.name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] }));
+            places.push(...list);
+            if (list.length) break;  // v okruhu nalezeno -> mesta mimo okruh nehledat
+          }
+        }
+      };
+      await Promise.all([worker(), worker()]);
+      return places;
+    }
+
+    const regionInFlight = {};  // stejne hledani spustene vickrat (prepnuti pohledu, ulozeni) bezi jen jednou
+
+    async function regionPlaces(points, words) {
+      const box = regionBox(points);
+      const area = [box.s, box.w, box.n, box.e].map(x => x.toFixed(1)).join(',');
+      const todo = words.filter(w => !regionWordCache[w + '|' + area]);
+      const key = area + '|' + todo.join(',');
+      if (todo.length && !regionInFlight[key]) regionInFlight[key] = searchRegion(box, area, todo).finally(() => delete regionInFlight[key]);
+      if (regionInFlight[key]) await regionInFlight[key];
+      return VP.indexPlaces(words.flatMap(w => regionWordCache[w + '|' + area] || []));
+    }
+
+    async function searchRegion(box, area, todo) {
+      let places;
+      try {
+        places = await overpassPlaces(box, todo);
+      } catch (err) {
+        places = await photonPlaces(box, todo);  // kdyz selze i zaloha, chyba jde ven
+      }
+      // Ulozit k slovum, ktera obci odpovidaji (slovo bez shody -> prazdny seznam, uz se nehleda)
+      todo.forEach(w => {
+        regionWordCache[w + '|' + area] = places.filter(p => VP.wordFitsName(w, p.name));
+      });
+    }
+
+    async function showTextPlaces(run, stops, pos, fit) {
+      const box = document.getElementById('textPlaceList');
+      box.innerHTML = '';
+      if (mapLayerMode !== 'vse') return;
+      const plan = activePlan();
+      const known = stops.map(s => pos(s.query)).filter(Boolean);
+      if (!known.length) {
+        box.textContent = 'Obce z popisu se hledaji v okoli mist spani - nejdriv musi byt nejake na mape.';
+        return;
+      }
+      // Slova s velkym pismenem z popisu dnu (a poznamek k nocim) - kandidati na nazvy obci
+      const days = getDaysBetween(selectedStartDate, selectedEndDate);
+      const dayText = d => [plan.days[`day-${d}`], plan.nights[`night-notes-${d}`]].filter(Boolean).join('\n');
+      const words = new Set();
+      days.forEach((day, d) => {
+        for (const m of dayText(d).matchAll(/\p{Lu}\p{L}{2,}/gu)) if (!VP.isCommonWord(m[0])) words.add(m[0]);
+      });
+      if (!words.size) {
+        box.textContent = 'V popisech dnu zatim nejsou zadne nazvy obci.';
+        return;
+      }
+      box.textContent = 'Hledam obce z popisu dnu…';
+      let index;
+      try {
+        index = await regionPlaces(known, [...words].slice(0, 80));
+      } catch (err) {
+        box.textContent = 'Hledani obci ted neni dostupne - zkuste to pozdeji. ';
+        const again = document.createElement('button');
+        again.textContent = '🔄 Zkusit znovu';
+        again.onclick = () => updateMap(false);
+        box.appendChild(again);
+        return;
+      }
+      if (run !== mapRun) return;
+
+      // U vice obci stejneho jmena vzit tu nejblize mistum toho dne
+      const hidden = new Set(plan.hiddenPlaces || []);
+      const found = new Map();
+      days.forEach((day, d) => {
+        const text = dayText(d);
+        if (!text) return;
+        const todays = stops.filter(s => s.d <= d && d <= s.d + (s.kind === 'night' ? (mergedNights[s.d] || 1) : 0))
+          .map(s => pos(s.query)).filter(Boolean);
+        const near = todays.length ? todays : known;
+        VP.findPlaceNames(text, index).forEach(f => {
+          const key = VP.normName(f.name);
+          if (hidden.has(key)) return;
+          const place = f.places.reduce((a, b) => (VP.nearestKm(a, near) <= VP.nearestKm(b, near) ? a : b));
+          if (known.some(p => VP.distanceKm(p, [place.lat, place.lon]) < 1.5)) return;  // uz je bodem spani/presunu
+          if (!found.has(key)) found.set(key, { key, name: f.name, place, days: [] });
+          const label = formatDateFull(day);
+          if (!found.get(key).days.includes(label)) found.get(key).days.push(label);
+        });
+      });
+
+      box.innerHTML = '';
+      const head = document.createElement('div');
+      head.className = 'text-place-head';
+      head.textContent = `📝 Obce z popisu dnu: ${found.size}`;
+      box.appendChild(head);
+      found.forEach(f => {
+        const marker = L.marker([f.place.lat, f.place.lon], {
+          icon: L.divIcon({ className: '', html: '<div class="map-pin text"></div>', iconSize: [12, 12] }) }).addTo(mapLayer);
+        marker.bindTooltip(f.name, { permanent: true, direction: 'right', offset: [6, 0], className: 'text-place-tip' });
+        const popup = document.createElement('div');
+        popup.innerHTML = `<b>📝 ${escapeHtml(f.name)}</b><br>${escapeHtml(f.days.join(', '))}`;
+        marker.bindPopup(popup);
+        const row = document.createElement('div');
+        row.className = 'place-row text-place';
+        row.innerHTML = '<span class="map-pin pin-no text"></span><b data-i18n="ne"></b><small></small><div class="place-actions"></div>';
+        row.querySelector('b').textContent = f.name;
+        row.querySelector('small').textContent = f.days.join(', ');
+        row.onclick = (e) => {
+          if (e.target.closest('button')) return;
+          map.setView(marker.getLatLng(), Math.max(map.getZoom(), 12));
+          marker.openPopup();
+        };
+        const hide = document.createElement('button');
+        hide.textContent = '🙈 Neni to obec - skryt';
+        hide.onclick = () => togglePlaceHidden(f.key, true);
+        row.querySelector('.place-actions').appendChild(hide);
+        box.appendChild(row);
+      });
+      // Vyrez mapy i s obcemi z popisu (Brno, Znojmo... mohou byt mimo mista spani)
+      if (fit && found.size) {
+        map.fitBounds(L.latLngBounds([...known, ...[...found.values()].map(f => [f.place.lat, f.place.lon])]).pad(0.1), { maxZoom: 13 });
+      }
+      if (hidden.size) {
+        const again = document.createElement('button');
+        again.textContent = `👁 Zobrazit skryte (${hidden.size})`;
+        again.onclick = () => togglePlaceHidden(null, false);
+        box.appendChild(again);
+      }
+    }
+
+    function togglePlaceHidden(key, hide) {
+      const plan = activePlan();
+      plan.hiddenPlaces = hide ? [...new Set([...(plan.hiddenPlaces || []), key])] : [];
+      writeStore();
+      updateMap(false);
+    }
+
+    function renderMapCount() {
+      const stops = mapStops();
+      const geo = activePlan().geo || {};
+      const missing = stops.filter(s => !geo[s.query]).length;
+      document.getElementById('mapCount').textContent = stops.length
+        ? `(${stops.length}${missing ? ', ⚠ ' + missing : ''})` : '';
+    }
+
+    let openChoices = null;  // dotaz, u ktereho je otevreny vyber jineho mista
+
+    async function updateMap(fit) {
+      const run = ++mapRun;
+      const plan = activePlan();
+      plan.geo = plan.geo || {};
+      const status = document.getElementById('mapStatus');
+      const stops = mapLayerMode === 'spani' ? mapStops().filter(s => s.kind === 'night') : mapStops();
+
+      // 1) Najit shody pro nova mista (a "nenalezeno" znovu jednou za navstevu stranky)
+      const needs = q => !(q in plan.geo) || (plan.geo[q] === null && !triedThisSession.has(q));
+      const cands = {};
+      for (let i = 0; i < stops.length; i++) {
+        const q = stops[i].query;
+        if (!needs(q) || q in cands) continue;
+        status.textContent = `Hledam: ${q}…`;
+        try {
+          cands[q] = await findCandidates(q, nearFor(stops, i, plan.geo));
+        } catch (err) {
+          status.textContent = 'Vyhledavani adres ted neni dostupne (offline nebo pretizeno) - zkusi se znovu pozdeji';
+          break;
+        }
+        if (run !== mapRun) return;
+        triedThisSession.add(q);
+      }
+      // 2) Umistit: nejdriv jednoznacna mista, pak obce, ktere jsou vicekrat (Pavlov...), podle sousedu
+      const known = {};
+      Object.entries(plan.geo).forEach(([q, g]) => { if (g) known[q] = g.slice(0, 2); });
+      const placedNow = VP.resolvePlaces(stops.map(st => st.query), cands, known);
+      Object.entries(placedNow).forEach(([q, res]) => {
+        plan.geo[q] = res ? [res.c.lat, res.c.lon, (res.unsure ? UNSURE : '') + res.c.label] : null;
+      });
+      const changed = Object.keys(placedNow).length > 0;
+      if (run !== mapRun) return;
+      if (changed) writeStore(false);      if (run !== mapRun) return;
+      if (changed) writeStore(false);
+      if (!status.textContent.startsWith('Vyhledavani')) status.textContent = '';
+      const pos = q => (Array.isArray(plan.geo[q]) ? plan.geo[q].slice(0, 2) : null);
+
+      // 3) Znacky
+      mapLayer.clearLayers();
+      const markers = {};
+      const placed = stops.filter(s => plan.geo[s.query]);
+      placed.forEach(stop => {
+        const unsure = (plan.geo[stop.query][2] || '').startsWith(UNSURE) ? ' unsure' : '';
+        const icon = L.divIcon({ className: '', html: `<div class="map-pin ${stop.kind}${unsure}">${stop.kind === 'night' ? stop.no : '→'}</div>`,
+                                 iconSize: stop.kind === 'night' ? [28, 28] : [20, 20] });
+        const marker = L.marker(pos(stop.query), { icon, draggable: true, title: stop.query }).addTo(mapLayer);
+        markers[stop.query] = markers[stop.query] || marker;
+        const popup = document.createElement('div');
+        popup.innerHTML = `<b>${escapeHtml(stop.title)}</b><br>${escapeHtml(stop.text).replace(/\n/g, '<br>')}`;
+        marker.bindPopup(popup);
+        if (stop.kind === 'night') {
+          marker.on('click', () => {
+            if (planMode) planQueue = planQueue.then(() => addNightHere(stop.d));
+          });
+        }
+        marker.on('dragend', () => {
+          const { lat, lng } = marker.getLatLng();
+          setPlace(stop.query, [+lat.toFixed(5), +lng.toFixed(5), MANUAL]);
+        });
+      });
+
+      // 4) Seznam mist: co se hledalo, co se naslo, moznost vybrat jine
+      renderPlaceList(stops, markers);
+      renderMapCount();
+      showTextPlaces(run, stops, pos, fit);
+
+      const points = placed.map(s => pos(s.query))
+        .filter((p, i, all) => i === 0 || p.join() !== all[i - 1].join());
+      if (fit && points.length) map.fitBounds(L.latLngBounds(points).pad(0.15), { maxZoom: 13 });
+      const routeInfo = document.getElementById('routeInfo');
+      routeInfo.textContent = '';
+      if (points.length < 2) return;
+      const straight = L.polyline(points, { color: '#7c3aed', weight: 3, dashArray: '6 8' }).addTo(mapLayer);
+      try {
+        const route = await routeLine(points);
+        if (run !== mapRun) return;
+        mapLayer.removeLayer(straight);
+        L.polyline(route.line, { color: '#7c3aed', weight: 4, opacity: 0.8 }).addTo(mapLayer);
+        routeInfo.textContent = `🚗 Trasa autem cca ${Math.round(route.km).toLocaleString('cs-CZ')} km`;
+      } catch (err) {
+        // bez site zustane prima carkovana cara
+      }
+    }
+
+    function renderPlaceList(stops, markers) {
+      const geo = activePlan().geo;
+      const list = document.getElementById('placeList');
+      list.innerHTML = '';
+      if (!stops.length) {
+        list.textContent = 'Zatim zadna mista - vyplnte obec u noci nebo presun dne, nebo planujte klikanim do mapy.';
+        return;
+      }
+      const seen = new Set();
+      stops.forEach((stop, i) => {
+        const g = geo[stop.query];
+        const row = document.createElement('div');
+        const unsure = g && (g[2] || '').startsWith(UNSURE);
+        row.className = 'place-row' + (g ? '' : ' missing') + (unsure ? ' unsure' : '');
+        const where = !g ? '⚠ Nenalezeno - vyberte jine misto nebo kliknete do mapy'
+                    : g[2] === MANUAL ? '📍 Umisteno rucne'
+                    : '📍 ' + (unsure ? g[2].slice(UNSURE.length) : g[2] || 'ulozeno drive (bez popisu)');
+        row.innerHTML = `<span class="map-pin pin-no ${stop.kind}">${stop.kind === 'night' ? stop.no : '→'}</span>
+          <b></b><small></small><span class="found"></span><div class="place-actions"></div>`;
+        row.querySelector('b').textContent = stop.title;
+        row.querySelector('small').textContent = `Hledano: „${stop.query}“`;
+        row.querySelector('.found').textContent = where;
+        if (g && g[2] && g[2] !== MANUAL) row.querySelector('.found').dataset.i18n = 'ne';  // nazev mista ze sluzby
+        if (unsure) {
+          const warn = document.createElement('span');
+          warn.className = 'warn';
+          warn.textContent = '⚠ Toto jmeno ma vic mist - zkontrolujte, ze je to to spravne (nebo napiste obec i s okresem, napr. „Pavlov, Breclav“)';
+          row.querySelector('.found').after(warn);
+        }
+        row.onclick = (e) => {
+          if (e.target.closest('button, input, form') || !markers[stop.query]) return;
+          map.setView(markers[stop.query].getLatLng(), Math.max(map.getZoom(), 12));
+          markers[stop.query].openPopup();
+        };
+        // Stejne misto vickrat za sebou (presun + noc) ma tlacitka jen jednou
+        if (!seen.has(stop.query)) {
+          seen.add(stop.query);
+          const actions = row.querySelector('.place-actions');
+          const other = document.createElement('button');
+          other.textContent = unsure ? '🔍 Vybrat spravne misto' : '🔍 Jine misto';
+          other.onclick = () => { openChoices = openChoices === stop.query ? null : stop.query; renderPlaceList(stops, markers); };
+          const pick = document.createElement('button');
+          pick.textContent = '👆 Kliknout do mapy';
+          pick.onclick = () => {
+            pickingQuery = stop.query;
+            document.body.classList.add('map-picking');
+            document.getElementById('mapStatus').textContent = `Kliknete do mapy, kde je „${stop.query}“`;
+          };
+          actions.append(other, pick);
+          if (openChoices === stop.query) row.appendChild(choicesBox(stop.query, nearFor(stops, i, geo)));
+        }
+        list.appendChild(row);
+      });
+    }
+
+    // Vyber z nalezenych shod, pripadne upresneni dotazu ("Lhota u Kladna", "Lhota, Plzensky kraj")
+    function choicesBox(query, near) {
+      const box = document.createElement('div');
+      box.className = 'place-choices';
+      const form = document.createElement('form');
+      const input = document.createElement('input');
+      input.value = query;
+      input.setAttribute('aria-label', 'Upresnit hledani');
+      const go = document.createElement('button');
+      go.type = 'submit';
+      go.textContent = 'Hledat';
+      form.append(input, go);
+      const results = document.createElement('div');
+      results.className = 'place-choices';
+      const show = (cands) => {
+        results.innerHTML = '';
+        if (!cands.length) results.textContent = 'Nic nenalezeno - zkuste jiny zapis nebo kliknete do mapy.';
+        cands.forEach(c => {
+          const b = document.createElement('button');
+          b.className = 'choice';
+          const name = document.createElement('span');
+          name.dataset.i18n = 'ne';
+          name.textContent = c.label;
+          b.appendChild(name);
+          if (c.km !== undefined) b.append(` (${Math.round(c.km)} km od trasy)`);
+          b.onclick = () => { openChoices = null; setPlace(query, [c.lat, c.lon, c.label]); };
+          results.appendChild(b);
+        });
+      };
+      const search = async (q) => {
+        results.textContent = 'Hledam…';
+        try {
+          // Pro vyber ukazat shody z obou sluzeb
+          // Cely dotaz i samotna obec (bez ulice), z obou sluzeb
+          const parts = q.split(',').map(x => x.trim()).filter(Boolean);
+          const photon = photonSearch(q, near).catch(() => []);
+          let a = await nominatimSearch(q, near);
+          if (parts.length > 1) a = a.concat(await nominatimSearch(parts.slice(1).join(', '), near));
+          const b = await photon;
+          // Bez duplicit; nejblize trase nahoru, se vzdalenosti
+          let all = [...a, ...b].filter((c, i, list) => list.findIndex(x => VP.distanceKm([x.lat, x.lon], [c.lat, c.lon]) < 0.2) === i);
+          if (near.length) {
+            all = all.map(c => ({ ...c, km: VP.nearestKm(c, near) })).sort((x, y) => x.km - y.km);
+          }
+          show(all);
+        } catch (err) {
+          results.textContent = 'Vyhledavani ted neni dostupne.';
+        }
+      };
+      form.onsubmit = (e) => { e.preventDefault(); search(input.value.trim()); };
+      box.append(form, results);
+      search(query);
+      return box;
     }
 
     // dialog.js se nacita s defer, proto az po DOMContentLoaded
@@ -1871,13 +3489,30 @@
         if (field.tagName === 'TEXTAREA') {
           field.textContent = src.value;
           field.scrollTop = src.scrollTop;
+        } else if (field.type === 'checkbox') {
+          field.toggleAttribute('checked', src.checked);
         } else {
           field.setAttribute('value', src.value);
         }
       });
     }
 
+    // Nazvy vsech promennych CSS definovanych na :root (vcetne common.css a inline nastaveni)
+    function rootVariables() {
+      const names = new Set([...document.documentElement.style].filter(p => p.startsWith('--')));
+      for (const sheet of document.styleSheets) {
+        let rules;
+        try { rules = sheet.cssRules; } catch (err) { continue; }
+        for (const rule of rules) {
+          if (!rule.style || !/:root/.test(rule.selectorText || '')) continue;
+          for (const prop of rule.style) if (prop.startsWith('--')) names.add(prop);
+        }
+      }
+      return [...names].filter(p => !p.startsWith('--print-'));
+    }
+
     async function renderPlanImage() {
+      if (view !== 'plan') setView('plan');
       // Snimame cely box s planem tak, jak je videt na strance
       const source = document.querySelector('.timeline-section');
       if (!source) return null;
@@ -1903,13 +3538,9 @@
       holder.style.color = bodyStyle.color;
       holder.style.fontFamily = bodyStyle.fontFamily;
 
-      // Prenest aktualni nastaveni (posun osy, velikost pisma) - v SVG neplati :root dokumentu
-      const rootStyle = document.documentElement.style;
-      for (const prop of rootStyle) {
-        if (prop.startsWith('--') && !prop.startsWith('--print-')) {
-          holder.style.setProperty(prop, rootStyle.getPropertyValue(prop));
-        }
-      }
+      // Prenest barvy tematu (common.css) a nastaveni (posun osy, velikost pisma) - v SVG neplati :root dokumentu
+      const rootStyle = getComputedStyle(document.documentElement);
+      rootVariables().forEach(prop => holder.style.setProperty(prop, rootStyle.getPropertyValue(prop)));
 
       const styleEl = document.createElement('style');
       styleEl.textContent = document.querySelector('style').textContent;
@@ -2078,6 +3709,7 @@
 
     // Tisk planu
     function printPlan() {
+      closeCalendar();
       if (selectedStartDate && selectedEndDate) {
         const nights = getDaysBetween(selectedStartDate, selectedEndDate).length - 1;
         document.getElementById('printHeader').textContent =
@@ -2134,10 +3766,23 @@
     // Calendar functions
     function toggleCalendar() {
       const dropdown = document.getElementById('calendarDropdown');
-      dropdown.classList.toggle('show');
       if (dropdown.classList.contains('show')) {
-        renderCalendar();
+        closeCalendar();
+        return;
       }
+      dropdown.classList.add('show');
+      renderCalendar();
+    }
+
+    // Zavreni bez dokonceneho vyberu vrati puvodni termin
+    function closeCalendar() {
+      document.getElementById('calendarDropdown').classList.remove('show');
+      if (selectionState !== 1) return;
+      const plan = activePlan();
+      selectedStartDate = parseISO(plan.startDate);
+      selectedEndDate = parseISO(plan.endDate);
+      selectionState = 2;
+      updateDateRangeDisplay();
     }
 
     function changeMonth(delta) {
@@ -2246,34 +3891,42 @@
     }
 
     function selectDate(date) {
-      if (selectionState === 0 || selectionState === 2) {
-        // Prvni klik nebo treti klik (reset)
+      if (selectionState !== 1) {
+        // Prvni klik - zacatek noveho terminu
         selectedStartDate = new Date(date);
         selectedEndDate = null;
         selectionState = 1;
-        // Reset stavu slucovani pri novem vyberu
-        mergedNights = {};
-      } else if (selectionState === 1) {
-        // Druhy klik
-        if (date < selectedStartDate) {
-          // Pokud je druhe datum pred prvnim, prohodime
-          selectedEndDate = new Date(selectedStartDate);
-          selectedStartDate = new Date(date);
-        } else {
-          selectedEndDate = new Date(date);
-        }
-        selectionState = 2;
-        // Zavrit kalendar po vyberu rozsahu
-        document.getElementById('calendarDropdown').classList.remove('show');
-        // Automaticky generovat timeline
-        generateTimeline();
+        updateDateRangeDisplay();
+        renderCalendar();
+        return;
       }
+      let start = selectedStartDate, end = new Date(date);
+      if (end < start) [start, end] = [end, start];
+      selectionState = 2;
+      document.getElementById('calendarDropdown').classList.remove('show');
+      changeRange(formatDateISO(start), formatDateISO(end));
+    }
 
-      updateDateRangeDisplay();
-      renderCalendar();
-      if (selectionState === 1) {
-        saveToStorage();
+    // Novy termin - poznamky zustanou u svych datumu, o tom, co vypadne, se rozhodne uzivatel
+    async function changeRange(start, end) {
+      saveToStorage();
+      const plan = activePlan();
+      if (VP.dayDiff(start, end) > 366) {
+        Dialog.info('Dovolena muze mit nejvyse rok');
+        applyPlan(false);
+        return;
       }
+      const moved = VP.remapPlan(plan, start, end);
+      if (moved.lost.length) {
+        const list = moved.lost.map(d => formatDate(parseISO(d))).join(', ');
+        if (!await Dialog.potvrd(`Mimo novy termin by zustaly poznamky z techto dnu: ${list}. Smazat je? (Lze vratit tlacitkem ↶ Zpet.)`)) {
+          applyPlan(false);
+          return;
+        }
+      }
+      Object.assign(plan, { startDate: start, endDate: end, days: moved.days, nights: moved.nights, mergedNights: moved.mergedNights });
+      writeStore();
+      applyPlan();
     }
 
     function updateDateRangeDisplay() {
@@ -2288,36 +3941,17 @@
       } else {
         statsEl.textContent = '';
       }
-      const sum = priceSummary();
+      const b = VP.budget(collectPlan());
       const priceEl = document.getElementById('priceSum');
-      priceEl.hidden = !sum;
-      priceEl.textContent = sum ? `💰 Ubytovani celkem: ${sum}` : '';
+      priceEl.hidden = !b.count;
+      priceEl.textContent = b.count
+        ? `💰 Celkem ${money(b.total, b)}` + (b.remaining > 0 ? ` · zbyva zaplatit ${money(b.remaining, b)}` : ' · vse zaplaceno')
+        : '';
     }
 
-    // Cena muze byt "1 200 Kc", "1.200", "85,50 EUR" - secte se cislo, mena se prevezme, je-li vsude stejna
-    function parsePrice(text) {
-      const num = text.replace(/[^\d.,-]/g, '');
-      const sep = Math.max(num.lastIndexOf('.'), num.lastIndexOf(','));
-      // Posledni oddelovac je desetinny, pokud za nim nejsou presne 3 cislice (to jsou tisice)
-      if (sep < 0 || num.length - sep - 1 === 3) return parseFloat(num.replace(/[.,]/g, ''));
-      return parseFloat(num.slice(0, sep).replace(/[.,]/g, '') + '.' + num.slice(sep + 1));
-    }
-
-    function priceSummary() {
-      let total = 0;
-      let count = 0;
-      const units = new Set();
-      document.querySelectorAll('[id^="night-price-"]').forEach(el => {
-        const value = parsePrice(el.value);
-        if (!Number.isFinite(value)) return;
-        total += value;
-        count++;
-        const unit = el.value.replace(/[\d\s.,-]/g, '');
-        if (unit) units.add(unit);
-      });
-      if (!count) return '';
-      const unit = units.size === 1 ? ' ' + [...units][0] : units.size > 1 ? ' (ruzne meny!)' : '';
-      return total.toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) + unit;
+    function money(value, b) {
+      const unit = b.mixed ? ' (ruzne meny!)' : b.unit ? ' ' + b.unit : '';
+      return value.toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) + unit;
     }
 
     function escapeHtml(text) {
@@ -2332,6 +3966,7 @@
       const days = getDaysBetween(selectedStartDate, selectedEndDate);
       const container = document.getElementById('timelineContent');
       const savedData = preserveData ? loadFromStorage() : null;
+      const todayISO = formatDateISO(new Date());
 
       let html = '<div class="timeline-wrapper">';
 
@@ -2343,7 +3978,7 @@
         const weekendClass = isWeekend(day) ? 'weekend' : '';
         html += `
           <div class="day-column ${weekendClass}">
-            <div class="day-card ${weekendClass}">
+            <div class="day-card ${weekendClass}${formatDateISO(day) === todayISO ? ' today' : ''}">
               <div class="day-card-header">${formatDateFull(day)}</div>
               <textarea id="day-${index}" oninput="scheduleSave()">${escapeHtml(savedValue)}</textarea>
               <div class="field-group">
@@ -2390,6 +4025,7 @@
           const savedStreet = savedData?.nights?.[`night-street-${i}`] || '';
           const savedCity = savedData?.nights?.[`night-city-${i}`] || '';
           const savedPrice = savedData?.nights?.[`night-price-${i}`] || '';
+          const savedPaid = savedData?.nights?.[`night-paid-${i}`] ? ' checked' : '';
           const savedNotes = savedData?.nights?.[`night-notes-${i}`] || '';
 
           const isMerged = mergeSize > 1;
@@ -2440,7 +4076,9 @@
                   <input type="text" id="night-city-${i}" value="${escapeHtml(savedCity)}" oninput="scheduleSave()">
                 </div>
                 <div class="field-group">
-                  <div class="field-label"><span class="field-icon">💰</span> Cena</div>
+                  <div class="field-label"><span class="field-icon">💰</span> Cena${isMerged ? ' za pobyt' : ''}
+                    <label class="paid-check"><input type="checkbox" id="night-paid-${i}"${savedPaid}
+                           onchange="scheduleSave(); updateDateRangeDisplay()"> zaplaceno</label></div>
                   <input type="text" id="night-price-${i}" value="${escapeHtml(savedPrice)}" inputmode="decimal"
                          placeholder="napr. 1 800 Kc" oninput="scheduleSave(); updateDateRangeDisplay()">
                 </div>
@@ -2469,24 +4107,219 @@
     // Zavrit kalendar pri kliknuti mimo
     document.addEventListener('click', (e) => {
       const container = document.querySelector('.calendar-picker-container');
-      if (!container.contains(e.target)) {
-        document.getElementById('calendarDropdown').classList.remove('show');
-      }
+      if (!container.contains(e.target)) closeCalendar();
     });
+
+    // ---- Horni menu ----
+    function closeMenus(except) {
+      document.querySelectorAll('.menu-pop').forEach(pop => {
+        if (pop === except) return;
+        pop.hidden = true;
+        pop.previousElementSibling.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    function toggleMenu(btn) {
+      const pop = btn.nextElementSibling;
+      closeMenus(pop);
+      pop.hidden = !pop.hidden;
+      btn.setAttribute('aria-expanded', String(!pop.hidden));
+    }
+
+    // Klik mimo menu nebo na polozku menu menu zavre (vyber pisma ho nechava otevrene)
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.menu-wrap') || e.target.closest('.menu-pop button')) closeMenus();
+    });
+
+    function closeDialog(id) {
+      document.getElementById(id).close();
+    }
+
+    function openHelp() {
+      document.getElementById('helpDialog').showModal();
+    }
+
+    // ---- Rozpocet ----
+    const COST_CHIPS = ['Palivo', 'Dalnicni znamka', 'Myto', 'Parkovne', 'Jidlo', 'Vstupne', 'Pojisteni', 'Letenky'];
+
+    function openBudget() {
+      saveToStorage();
+      document.getElementById('bdChips').innerHTML = '<button class="pm-btn" onclick="addCost(\'\')">+ Polozka</button>' +
+        COST_CHIPS.map(c => `<button class="pm-btn" onclick="addCost(this.textContent.slice(2))">+ ${c}</button>`).join('');
+      renderBudget();
+      document.getElementById('budgetDialog').showModal();
+    }
+
+    function renderBudget() {
+      const plan = activePlan();
+      document.getElementById('bdPersons').value = plan.persons || 1;
+      const days = getDaysBetween(selectedStartDate, selectedEndDate);
+      const acc = VP.nightGroups(plan).filter(({ start }) => plan.nights[`night-price-${start}`] || plan.nights[`night-name-${start}`] || plan.nights[`night-city-${start}`]);
+      document.getElementById('bdAcc').innerHTML = acc.length ? acc.map(({ start, size }) => {
+        const n = k => escapeHtml(plan.nights[`night-${k}-${start}`] || '');
+        return `<label class="dlg-line">
+            <input type="checkbox" ${n('paid') ? 'checked' : ''} onchange="setNightPaid(${start}, this.checked)" title="Zaplaceno">
+            <span class="grow">${formatDate(days[start])} - ${formatDate(days[start + size])} · ${n('name') || n('city') || '?'}</span>
+            <b>${n('price') || '-'}</b></label>`;
+      }).join('') : '<span class="dlg-line">Zatim zadne ubytovani s cenou - cena se zadava v nocnim boxu.</span>';
+      const costs = plan.costs || [];
+      document.getElementById('bdCosts').innerHTML = costs.map((c, i) => `
+        <div class="dlg-line">
+          <input type="checkbox" ${c.paid ? 'checked' : ''} onchange="setCost(${i}, 'paid', this.checked)" title="Zaplaceno">
+          <input type="text" value="${escapeHtml(c.name)}" placeholder="Polozka" oninput="setCost(${i}, 'name', this.value)">
+          <input type="text" class="amount" value="${escapeHtml(c.amount)}" placeholder="castka" inputmode="decimal" oninput="setCost(${i}, 'amount', this.value)">
+          <button class="dlg-x" onclick="removeCost(${i})" title="Odebrat">✕</button>
+        </div>`).join('');
+      renderBudgetSummary();
+    }
+
+    function renderBudgetSummary() {
+      const b = VP.budget(activePlan());
+      const row = (label, value, cls = '') => `<span class="${cls}">${label}</span><span class="${cls}">${money(value, b)}</span>`;
+      document.getElementById('bdSummary').innerHTML =
+        row('Ubytovani', b.accommodation.total) + row('Dalsi naklady', b.other.total) +
+        row('Celkem', b.total, 'big') + row('Zaplaceno', b.paid) + row('Zbyva zaplatit', b.remaining, 'big') +
+        (b.persons > 1 ? row(`Na osobu (${b.persons})`, b.perPerson) : '') +
+        (b.mixed ? '<span class="budget-warn">⚠ Castky jsou v ruznych menach - soucet neni presny.</span>' : '');
+      updateDateRangeDisplay();
+    }
+
+    function setNightPaid(start, paid) {
+      const box = document.getElementById(`night-paid-${start}`);
+      if (box) box.checked = paid;
+      saveToStorage();
+      renderBudgetSummary();
+    }
+
+    function addCost(name) {
+      const plan = activePlan();
+      plan.costs = plan.costs || [];
+      plan.costs.push({ name, amount: '', paid: false });
+      writeStore();
+      renderBudget();
+      document.querySelector('#bdCosts .dlg-line:last-child .amount')?.focus();
+    }
+
+    function setCost(i, key, value) {
+      activePlan().costs[i][key] = value;
+      scheduleSave();
+      renderBudgetSummary();
+    }
+
+    function removeCost(i) {
+      activePlan().costs.splice(i, 1);
+      writeStore();
+      renderBudget();
+    }
+
+    function setPersons(value) {
+      const n = Math.min(99, Math.max(1, parseInt(value, 10) || 1));
+      activePlan().persons = n;
+      scheduleSave();
+      renderBudgetSummary();
+    }
+
+    // ---- Seznam veci ----
+    function renderPackingButton() {
+      const list = activePlan().packing || [];
+      document.getElementById('packingBtn').textContent =
+        list.length ? `🎒 Veci ${list.filter(x => x.done).length}/${list.length}` : '🎒 Veci';
+    }
+
+    function openPacking() {
+      saveToStorage();
+      renderPacking();
+      document.getElementById('packingDialog').showModal();
+      document.getElementById('pkNew').focus();
+    }
+
+    function renderPacking() {
+      const list = activePlan().packing || [];
+      document.getElementById('pkCount').textContent = list.length
+        ? `Zabaleno ${list.filter(x => x.done).length} z ${list.length}` : 'Seznam je prazdny';
+      document.getElementById('pkList').innerHTML = list.map((x, i) => `
+        <div class="dlg-line${x.done ? ' done' : ''}">
+          <input type="checkbox" ${x.done ? 'checked' : ''} onchange="setPacking(${i}, 'done', this.checked)" aria-label="Zabaleno">
+          <input type="text" value="${escapeHtml(x.t)}" oninput="setPacking(${i}, 't', this.value)">
+          <button class="dlg-x" onclick="removePacking(${i})" title="Odebrat">✕</button>
+        </div>`).join('');
+      renderPackingButton();
+    }
+
+    function packingChanged(rerender = true) {
+      writeStore();
+      if (rerender) renderPacking();
+      else renderPackingButton();
+    }
+
+    function addPackingItem() {
+      const input = document.getElementById('pkNew');
+      const t = input.value.trim();
+      if (!t) return;
+      const plan = activePlan();
+      plan.packing = plan.packing || [];
+      plan.packing.push({ t, done: false });
+      input.value = '';
+      packingChanged();
+    }
+
+    function addPackingBase() {
+      const plan = activePlan();
+      plan.packing = plan.packing || [];
+      const have = new Set(plan.packing.map(x => x.t.toLowerCase()));
+      const tr = t => (window.I18N && I18N.t) ? I18N.t(t) : t;
+      VP.PACKING_BASE.map(tr).forEach(t => { if (!have.has(t.toLowerCase())) plan.packing.push({ t, done: false }); });
+      packingChanged();
+    }
+
+    function setPacking(i, key, value) {
+      activePlan().packing[i][key] = value;
+      if (key === 'done') {
+        packingChanged();
+      } else {
+        scheduleSave();
+        renderPackingButton();
+      }
+    }
+
+    function removePacking(i) {
+      activePlan().packing.splice(i, 1);
+      packingChanged();
+    }
+
+    function uncheckPacking() {
+      (activePlan().packing || []).forEach(x => { x.done = false; });
+      packingChanged();
+    }
+
+    async function clearPacking() {
+      if (!(activePlan().packing || []).length) return;
+      if (!await Dialog.potvrd('Smazat cely seznam veci? (Lze vratit tlacitkem ↶ Zpet.)')) return;
+      activePlan().packing = [];
+      packingChanged();
+    }
 
     // Klavesove zkratky
     document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'p') {
-          e.preventDefault();
-          printPlan();
-        } else if (e.key === 's') {
-          e.preventDefault();
-          saveToStorage();
-        } else if (e.key === 'e') {
-          e.preventDefault();
-          exportData();
-        }
+      if (e.key === 'Escape') closeMenus();
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const key = e.key.toLowerCase();
+      const inText = e.target.matches('input[type="text"], input:not([type]), textarea');
+      if (key === 'p') {
+        e.preventDefault();
+        printPlan();
+      } else if (key === 's') {
+        e.preventDefault();
+        saveToStorage();
+      } else if (key === 'e') {
+        e.preventDefault();
+        exportData();
+      } else if (!inText && (key === 'y' || (key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+      } else if (!inText && key === 'z') {
+        e.preventDefault();
+        undo();
       }
     });
 
@@ -2496,6 +4329,7 @@
       loadAxisOffset();
       loadStore();
       applyPlan();
+      if (localStorage.getItem(MAP_KEY) === '1') setView('map');
     }
 
     // Spustit inicializaci po nacteni stranky

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Počítadlo kusů</title>
+<meta name="description" content="Počítadlo (tally) pro sčítání návštěvníků, ptáků, kusů, kol nebo dopravy: více počítadel, krok, cíl a limit, celoobrazovkový režim jedním palcem, klávesy, historie kliků s časem, graf po minutách a hodinách, rychlost za hodinu, relace a export CSV.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/chart.min.js"></script>
+<script src="pocitadlo/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+button{touch-action:manipulation}
+/* horní lišta – stavba jako Zásoby */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+@media (max-width:1000px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka label{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:.84rem;cursor:pointer;border-radius:6px}
+.nabidka label:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto}
+.relinfo{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:.84rem;color:var(--text-muted);margin-bottom:10px}
+.relinfo b{color:var(--text);font-variant-numeric:tabular-nums}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.6}
+.tip{font-size:.8rem;color:var(--text-muted);margin:10px 0}
+kbd{font-family:ui-monospace,monospace;font-size:.85em;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:4px;padding:0 5px}
+
+/* karty počítadel */
+.mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.karta{--barva:#2f80ed;--na-barve:#fff;background:var(--bg-panel);border:1px solid var(--border);border-top:5px solid var(--barva);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.karta.aktivni{box-shadow:0 0 0 2px var(--accent)}
+.karta.nad-limit{border-color:var(--danger);border-top-color:var(--barva);box-shadow:0 0 0 2px var(--danger)}
+.karta .hlava{display:flex;align-items:center;gap:6px;min-width:0}
+.karta .jmeno{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.karta .klavesa{font-size:.72rem;color:var(--text-muted)}
+.karta .hodnota{background:var(--barva);color:var(--na-barve);border:0;border-radius:8px;font:700 clamp(2.6rem,9vw,3.6rem)/1.1 system-ui,sans-serif;font-variant-numeric:tabular-nums;padding:14px 6px;cursor:pointer;user-select:none;transition:transform .06s}
+.karta .hodnota:active{transform:scale(.98)}
+.karta .hodnota.blik{animation:blik .5s 2}
+@keyframes blik{50%{filter:brightness(1.5)}}
+.pruh{height:6px;background:var(--bg-control);border-radius:3px;overflow:hidden}
+.pruh i{display:block;height:100%;background:var(--ok);width:0}
+.pruh.limit i{background:var(--danger)}
+.karta .meta{font-size:.78rem;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:2px 10px;min-height:1.2em}
+.karta .meta .vyst{color:var(--danger);font-weight:600}
+.karta .meta .hotovo{color:var(--ok);font-weight:600}
+.karta .tlacitka{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.karta .tlacitka button{font-size:1.4rem;font-weight:700;padding:10px;border-radius:8px;cursor:pointer;border:1px solid var(--border-strong);background:var(--bg-control);color:var(--text);font-family:inherit}
+.karta .tlacitka .plus{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+
+/* režim jedním palcem */
+#palec{position:fixed;inset:0;z-index:100;background:var(--barva,#2f80ed);color:var(--na-barve,#fff);display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
+#palec .p-hlava{display:flex;align-items:center;gap:6px;padding:10px 12px}
+#palec .p-hlava b{flex:1;text-align:center;font-size:1.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#palec button{background:rgba(0,0,0,.18);color:inherit;border:1px solid rgba(127,127,127,.5);border-radius:10px;font:inherit;cursor:pointer}
+#palec .p-hlava button{min-width:46px;min-height:44px;font-size:1.2rem}
+#palec .p-plus{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0!important;background:none!important;margin:0 10px;border-radius:16px}
+#palec .p-plus:active{background:rgba(255,255,255,.15)!important}
+#palec .p-cislo{font-size:clamp(5rem,28vw,14rem);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+#palec .p-info{font-size:1rem;opacity:.9;margin-top:10px;text-align:center;padding:0 10px}
+#palec .p-dole{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px calc(14px + env(safe-area-inset-bottom,0px))}
+#palec .p-dole button{font-size:1.5rem;font-weight:700;padding:18px 6px}
+
+/* tabulky */
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em}
+td.c,th.c{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+.tecka{display:inline-block;width:.8em;height:.8em;border-radius:50%;background:var(--barva);vertical-align:-.05em;margin-right:5px;flex-shrink:0}
+.plus-t{color:var(--ok)} .minus-t{color:var(--danger)}
+.ovl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;font-size:.84rem}
+.ovl label{display:flex;align-items:center;gap:5px;max-width:100%;min-width:0}
+.ovl select{max-width:100%;min-width:0;flex:1 1 auto}
+.graf-obal{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:8px;height:min(55vh,420px);position:relative}
+h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:18px 0 8px}
+
+/* relace */
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:12px;display:grid;gap:8px}
+.panel .radek2{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.panel .radek2 .vstup{flex:1 1 200px}
+.rel-seznam{display:grid;gap:8px}
+.rel{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start}
+.rel h3{margin:0;font-size:.95rem;word-break:break-word}
+.rel .meta{font-size:.78rem;color:var(--text-muted)}
+.rel .stitky{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.stitek{font-size:.76rem;border:1px solid var(--border);border-radius:10px;padding:1px 8px;display:inline-flex;align-items:center}
+.rel .akce{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px}
+.rel input[type=checkbox]{width:18px;height:18px;margin-top:2px}
+
+/* dialog */
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,500px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.radek{grid-template-columns:1fr}}
+.vzorky{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.vzorky button{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:0}
+.vzorky button[aria-pressed="true"]{border-color:var(--text);box-shadow:0 0 0 2px var(--bg-elevated) inset}
+.vzorky input[type=color]{width:36px;height:30px;border:1px solid var(--border);background:none;padding:0;cursor:pointer}
+.zaskrt{display:flex;align-items:center;gap:8px;font-size:.84rem}
+.napoveda{font-size:.86rem;line-height:1.55}
+.napoveda table{font-size:.82rem}
+
+#toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:300;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-strong);border-left:5px solid var(--accent);border-radius:8px;padding:10px 16px;box-shadow:var(--shadow);font-size:.92rem;max-width:min(92vw,420px);pointer-events:none;opacity:0;transition:opacity .2s}
+#toast.vidi{opacity:1}
+#toast.cil{border-left-color:var(--ok)} #toast.limit{border-left-color:var(--danger)}
+
+@media print{
+  .lista,.tlacitka,dialog,#toast,#palec,.ovl,#podpis-pruh,.rel .akce{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🔢 Počítadlo</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Export CSV, záloha, obnovení">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Počítat"><span class="skup-nazev" aria-hidden="true">Počítat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="nove" title="Přidat počítadlo">✚<span class="txt"> Počítadlo</span></button>
+    <button class="tl" data-prikaz="zpet" title="Vrátit poslední klik (Ctrl+Z)">↶<span class="txt"> Zpět</span></button>
+    <button class="tl" data-prikaz="palec" title="Celá obrazovka – počítání jedním palcem (F)">⛶<span class="txt"> Jedním palcem</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Relace"><span class="skup-nazev" aria-hidden="true">Relace</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabRelace" aria-expanded="false" title="Uložit, začít novou, vynulovat">🗂️<span class="txt"> Relace</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="pocitadla" aria-pressed="true" title="Počítadla">🔢<span class="txt"> Počítadla</span></button>
+    <button class="tl" data-pohled="graf" aria-pressed="false" title="Graf a statistiky">📈<span class="txt"> Graf</span></button>
+    <button class="tl" data-pohled="historie" aria-pressed="false" title="Historie kliků">🧾<span class="txt"> Historie</span></button>
+    <button class="tl" data-pohled="relace" aria-pressed="false" title="Uložené relace a porovnání">📚<span class="txt"> Uložené</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-nabidka="nabMoznosti" aria-expanded="false" title="Vibrace, zvuk, displej">⚙️<span class="txt"> Možnosti</span> ▾</button>
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="csvKliky">📊 Kliky aktuální relace (CSV)</button>
+  <button class="tl" data-prikaz="csvSouhrn">📊 Souhrn všech relací (CSV)</button>
+  <button class="tl" data-prikaz="csvIntervaly">📊 Intervaly z grafu (CSV)</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk aktuálního pohledu</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat všechna data…</button>
+</div>
+<div id="nabRelace" class="nabidka" hidden>
+  <button class="tl" data-prikaz="ulozRelaci">💾 Uložit relaci…</button>
+  <button class="tl" data-prikaz="novaRelace">🆕 Uložit a začít novou…</button>
+  <button class="tl" data-prikaz="vynulovat">⟲ Vynulovat bez uložení…</button>
+  <hr>
+  <button class="tl" data-pohled="relace">📚 Uložené relace a porovnání</button>
+</div>
+<div id="nabMoznosti" class="nabidka" hidden>
+  <label><input type="checkbox" data-moznost="vibrace"> 📳 Vibrace při kliku</label>
+  <label><input type="checkbox" data-moznost="zvukKlik"> 🔈 Cvaknutí při kliku</label>
+  <label><input type="checkbox" data-moznost="zvukUpozorneni"> 🔔 Zvuk při cíli a limitu</label>
+  <label><input type="checkbox" data-moznost="displej"> 💡 Nezhasínat displej</label>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+
+<!-- režim jedním palcem -->
+<div id="palec" hidden>
+  <div class="p-hlava">
+    <button data-p="pred" title="Předchozí počítadlo (←)" aria-label="Předchozí počítadlo">‹</button>
+    <b id="pJmeno"></b>
+    <button data-p="dalsi" title="Další počítadlo (→)" aria-label="Další počítadlo">›</button>
+    <button data-p="konec" title="Zavřít (Esc)" aria-label="Zavřít">✕</button>
+  </div>
+  <button class="p-plus" data-p="plus" aria-label="Přičíst"><span class="p-cislo" id="pCislo">0</span><span class="p-info" id="pInfo"></span></button>
+  <div class="p-dole">
+    <button data-p="minus" id="pMinus">−1</button>
+    <button data-p="zpet">↶ Zpět</button>
+  </div>
+</div>
+
+<!-- počítadlo -->
+<dialog class="okno" id="dlgPocitadlo"><form method="dialog">
+  <header id="dlgPocitadloTitul">Počítadlo</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" required maxlength="60" autocomplete="off" placeholder="např. Návštěvníci, Kos černý, Auta"></label>
+    <div class="pole">Barva<div class="vzorky" id="vzorky"></div></div>
+    <div class="radek">
+      <label class="pole">Krok (+/−)<input class="vstup" name="krok" type="number" min="1" step="1" inputmode="numeric"></label>
+      <label class="pole">Aktuální hodnota<input class="vstup" name="hodnota" type="number" step="1" inputmode="numeric"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">🎯 Cíl (nepovinné)<input class="vstup" name="cil" type="number" step="1" inputmode="numeric" placeholder="např. 100"></label>
+      <label class="pole">⛔ Limit (nepovinné)<input class="vstup" name="limit" type="number" step="1" inputmode="numeric" placeholder="např. 50 osob"></label>
+    </div>
+    <label class="zaskrt"><input type="checkbox" name="zaporne"> Povolit záporné hodnoty</label>
+    <p class="tip" style="margin:0">Cíl ohlásí dosažení a odhadne, kdy ho při současném tempu dosáhnete. Limit (např. kapacita sálu) upozorní při dosažení a pak při každém dalším přičtení. Změna hodnoty ručně se zapíše do historie jako ruční oprava.</p>
+  </div>
+  <footer>
+    <button class="btn danger vlevo" value="smazat" id="dlgSmazat">🗑️ Smazat</button>
+    <button class="btn" value="vynulovat" id="dlgVynulovat">⟲ Vynulovat</button>
+    <button class="btn" value="zrusit" formnovalidate>Zrušit</button>
+    <button class="btn primary" value="ok">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Nápověda</header>
+  <div class="telo napoveda">
+    <p>Klepnutím na velké číslo nebo na <b>+</b> přičtete krok, <b>−</b> ho odečte. Každý klik se uloží s časem, takže graf a statistiky ukazují, kdy a jak rychle přibývalo. Data zůstávají jen v tomto prohlížeči.</p>
+    <p><b>⛶ Jedním palcem</b> – celá obrazovka s jedním počítadlem: horní plocha přičítá, dole je − a zpět. Přejetím doleva/doprava přepnete počítadlo.</p>
+    <p><b>Relace</b> = jedno sčítání (ranní přelet, směna u vchodu). Uložte ji pod názvem a začněte novou se stejnými počítadly; uložené relace porovnáte vedle sebe.</p>
+    <div class="tab-obal"><table>
+      <tr><th>Klávesa</th><th>Akce</th></tr>
+      <tr><td><kbd>1</kbd> … <kbd>9</kbd> (horní řada / numerická)</td><td>+ u počítadla s tímto pořadím</td></tr>
+      <tr><td><kbd>Shift</kbd> + <kbd>1</kbd> … <kbd>9</kbd></td><td>− u počítadla s tímto pořadím</td></tr>
+      <tr><td><kbd>Mezera</kbd> <kbd>Enter</kbd> <kbd>↑</kbd> <kbd>+</kbd> <kbd>PageDown</kbd></td><td>+ u vybraného počítadla</td></tr>
+      <tr><td><kbd>↓</kbd> <kbd>−</kbd> <kbd>PageUp</kbd> <kbd>Backspace</kbd></td><td>− u vybraného počítadla</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>Tab</kbd></td><td>výběr jiného počítadla</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>zpět poslední klik</td></tr>
+      <tr><td><kbd>F</kbd> / <kbd>Esc</kbd></td><td>režim jedním palcem / zavřít</td></tr>
+    </table></div>
+    <p><b>Bluetooth ovladače a klikry</b> (spoušť selfie tyčky, prezentér, nožní pedál) se v telefonu obvykle hlásí jako klávesnice a posílají Enter, mezeru, PageDown/PageUp nebo šipky – ty počítají. Hlasitostní tlačítka (i ta na ovladači) prohlížeče většinou stránce nepředají; pokud ano, Hlasitost + přičítá a Hlasitost − odečítá.</p>
+  </div>
+  <footer><button class="btn primary" value="ok">Zavřít</button></footer>
+</form></dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+'use strict';
+const J = window.PocitadloJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { const s = localStorage.getItem(J.KLIC); if (s) data = J.migruj(JSON.parse(s)); } catch (e) { data = J.prazdna(); }
+let moznosti = { vibrace: true, zvukKlik: false, zvukUpozorneni: true, displej: true };
+let pohled = 'pocitadla';
+const graf = { relace: 'aktualni', interval: 'auto', rezim: 'interval' };
+let historieVse = false, historieFiltr = '', vybraneRelace = new Set();
+try {
+  Object.assign(moznosti, JSON.parse(localStorage.getItem(J.KLIC + '_moznosti') || '{}'));
+  pohled = localStorage.getItem(J.KLIC + '_pohled') || 'pocitadla';
+} catch (e) {}
+const rel = () => data.aktualni;
+const aktivniP = () => rel().pocitadla[data.aktivni] || rel().pocitadla[0];
+
+function uloz() {
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?). Exportujte a smažte staré relace.'); }
+}
+function zapamatuj(klic, hodnota) { try { localStorage.setItem(J.KLIC + '_' + klic, hodnota); } catch (e) {} }
+const tzMs = t => -new Date(t || Date.now()).getTimezoneOffset() * 60000;
+const cas = (t, sek) => { const d = new Date(t); return d.toLocaleTimeString('cs-CZ', sek === false ? { hour: '2-digit', minute: '2-digit' } : {}); };
+const datumCas = t => new Date(t).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const znamenko = d => (d > 0 ? '+' : '−') + Math.abs(d);
+const barvaStyl = p => `--barva:${p.barva};--na-barve:${J.textNaBarve(p.barva)}`;
+
+/* ---------- zvuk, vibrace, toast ---------- */
+let audio = null;
+function pip(frekv, delka, hlas) {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+    o.frequency.value = frekv; g.gain.setValueAtTime(hlas || 0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + delka);
+    o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + delka + 0.02);
+  } catch (e) {}
+}
+function vibruj(vzor) { if (moznosti.vibrace && navigator.vibrate) try { navigator.vibrate(vzor); } catch (e) {} }
+let toastCas = 0;
+function toast(text, druh) {
+  const el = $('toast');
+  el.textContent = text; el.className = 'vidi ' + (druh || '');
+  clearTimeout(toastCas); toastCas = setTimeout(() => { el.className = ''; }, 2600);
+}
+
+/* ---------- displej nezhasíná (Wake Lock) ---------- */
+let zamek = null;
+async function drzDisplej() {
+  if (!moznosti.displej || !navigator.wakeLock || document.hidden || zamek) return;
+  try { zamek = await navigator.wakeLock.request('screen'); zamek.addEventListener('release', () => { zamek = null; }); } catch (e) {}
+}
+function pustDisplej() { if (zamek) { zamek.release().catch(() => {}); zamek = null; } }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) drzDisplej(); });
+
+/* ---------- počítání ---------- */
+function pocitej(id, smer) {
+  const v = J.klik(rel(), id, smer);
+  if (!v) return;
+  const i = rel().pocitadla.findIndex(p => p.id === id);
+  if (i >= 0) data.aktivni = i;
+  uloz();
+  if (v.d) {
+    vibruj(smer > 0 ? 15 : [10, 40, 10]);
+    if (moznosti.zvukKlik) pip(smer > 0 ? 1200 : 700, 0.04, 0.08);
+  }
+  const p = J.najdi(rel(), id);
+  if (v.upozorneni.includes('cil')) { toast(`🎯 ${p.nazev}: cíl ${p.cil} dosažen!`, 'cil'); vibruj([80, 60, 80, 60, 160]); if (moznosti.zvukUpozorneni) { pip(880, 0.15); setTimeout(() => pip(1320, 0.25), 160); } blikni(id); }
+  if (v.upozorneni.includes('limit')) { toast(`⛔ ${p.nazev}: limit ${p.limit} dosažen!`, 'limit'); vibruj([300, 100, 300]); if (moznosti.zvukUpozorneni) pip(440, 0.5, 0.25); blikni(id); }
+  else if (v.upozorneni.includes('nadLimit')) { toast(`⛔ ${p.nazev}: ${p.hodnota} – nad limitem ${p.limit}`, 'limit'); vibruj([200, 80, 200]); if (moznosti.zvukUpozorneni) pip(440, 0.3, 0.2); }
+  obnovHodnoty();
+}
+function zpet() {
+  const k = J.zpet(rel());
+  if (!k) return toast('Není co vracet.');
+  uloz();
+  const p = J.najdi(rel(), k.p);
+  toast(`↶ Vráceno: ${p ? p.nazev : ''} ${znamenko(-k.d)} (${cas(k.t)})`);
+  if (pohled === 'pocitadla' || !$('palec').hidden) obnovHodnoty(); else vykresli();
+}
+function blikni(id) {
+  const el = document.querySelector(`.karta[data-id="${id}"] .hodnota`);
+  if (el) { el.classList.remove('blik'); void el.offsetWidth; el.classList.add('blik'); }
+}
+
+/* ---------- pohled Počítadla ---------- */
+function relInfoHtml() {
+  const r = rel(), st = J.statistiky(r, null, Date.now());
+  const celkem = r.pocitadla.reduce((s, p) => s + p.hodnota, 0);
+  return `<span>${r.nazev ? '<b>' + esc(r.nazev) + '</b> · ' : ''}relace od <b>${datumCas(r.start)}</b></span>
+    <span>celkem <b>${J.formatCislo(celkem)}</b></span>
+    <span>kliků <b>${J.formatCislo(st.pocetKliku)}</b></span>
+    <span>počítáte <b>${J.formatTrvani(st.trvani)}</b></span>
+    <span>tempo <b>${st.zaHodinu == null ? '–' : J.formatCislo(st.zaHodinu, 1) + ' /h'}</b></span>`;
+}
+function kartaHtml(p, i) {
+  return `<div class="karta" data-id="${p.id}" style="${barvaStyl(p)}">
+    <div class="hlava"><span class="tecka"></span><span class="jmeno" title="${esc(p.nazev)}">${esc(p.nazev)}</span>
+      ${i < 9 ? `<span class="klavesa" title="Klávesa ${i + 1}, se Shiftem odečte"><kbd>${i + 1}</kbd></span>` : ''}
+      <button class="tl" data-akce="upravit" title="Upravit, cíl, limit" aria-label="Upravit ${esc(p.nazev)}">⚙️</button></div>
+    <button class="hodnota" data-akce="plus" aria-label="Přičíst k ${esc(p.nazev)}">0</button>
+    <div class="pruh" hidden><i></i></div>
+    <div class="meta"></div>
+    <div class="tlacitka"><button data-akce="minus" aria-label="Odečíst">−</button><button class="plus" data-akce="plus" aria-label="Přičíst">+</button></div>
+  </div>`;
+}
+function metaHtml(p, st) {
+  const c = [];
+  if (st.zaHodinu != null) c.push(`⏱ ${J.formatCislo(st.zaHodinu, 1)}/h`);
+  if (st.zaHodinu15 != null) c.push(`posl. 15 min ${J.formatCislo(st.zaHodinu15)}/h`);
+  if (st.posledni) c.push(`naposledy ${cas(st.posledni, false)}`);
+  if (p.cil !== null) {
+    if (p.hodnota >= p.cil) c.push(`<span class="hotovo">🎯 cíl ${p.cil} splněn</span>`);
+    else { const o = J.odhadCile(p, st); c.push(`🎯 ${p.hodnota}/${p.cil}, zbývá ${p.cil - p.hodnota}${o != null ? ' (~' + J.formatTrvani(o) + ')' : ''}`); }
+  }
+  if (p.limit !== null) c.push(p.hodnota >= p.limit ? `<span class="vyst">⛔ limit ${p.limit}</span>` : `⛔ limit ${p.limit} (zbývá ${p.limit - p.hodnota})`);
+  if (!c.length) c.push(p.krok > 1 ? `krok ${p.krok}` : 'klepněte na číslo');
+  else if (p.krok > 1) c.push(`krok ${p.krok}`);
+  return c.map(x => `<span>${x}</span>`).join('');
+}
+function vykresliPocitadla() {
+  const r = rel();
+  $('obsah').innerHTML = `<div class="relinfo" id="relinfo"></div>
+    ${r.pocitadla.length ? `<div class="mrizka" id="mrizka">${r.pocitadla.map(kartaHtml).join('')}</div>` :
+      '<div class="prazdno">Žádné počítadlo. Přidejte ho tlačítkem <b>✚ Počítadlo</b>.</div>'}
+    <p class="tip">Tip: klávesy <kbd>1</kbd>–<kbd>9</kbd> přičítají, se <kbd>Shift</kbd> odečítají; <kbd>Mezera</kbd>/<kbd>Enter</kbd> přičte u vybraného (zvýrazněného) počítadla. Bluetooth klikr fungující jako klávesnice počítá také. Celou nápovědu otevře ❓.</p>`;
+  obnovHodnoty();
+}
+/* Aktualizuje čísla bez překreslení karet (rychlé klikání nesmí ztratit klik). */
+function obnovHodnoty() {
+  const r = rel(), ted = Date.now();
+  if (!$('palec').hidden) obnovPalec();
+  if (pohled !== 'pocitadla') return;
+  const info = $('relinfo'); if (info) info.innerHTML = relInfoHtml();
+  r.pocitadla.forEach((p, i) => {
+    const k = document.querySelector(`.karta[data-id="${p.id}"]`); if (!k) return;
+    const st = J.statistiky(r, p.id, ted);
+    k.querySelector('.hodnota').textContent = J.formatCislo(p.hodnota);
+    k.querySelector('[data-akce="minus"]').textContent = '−' + p.krok;
+    k.querySelector('.tlacitka .plus').textContent = '+' + p.krok;
+    k.classList.toggle('aktivni', i === data.aktivni && r.pocitadla.length > 1);
+    k.classList.toggle('nad-limit', p.limit !== null && p.hodnota >= p.limit);
+    const meze = p.cil !== null ? p.cil : p.limit, pruh = k.querySelector('.pruh');
+    pruh.hidden = meze === null || meze <= 0;
+    if (!pruh.hidden) { pruh.classList.toggle('limit', p.cil === null); pruh.firstChild.style.width = Math.min(100, Math.max(0, p.hodnota / meze * 100)) + '%'; }
+    k.querySelector('.meta').innerHTML = metaHtml(p, st);
+  });
+}
+
+/* ---------- režim jedním palcem ---------- */
+function otevriPalec() {
+  if (!rel().pocitadla.length) return Dialog.info('Nejdřív přidejte počítadlo.');
+  $('palec').hidden = false;
+  const el = $('palec');
+  if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
+  drzDisplej();
+  obnovPalec();
+}
+function zavriPalec() {
+  $('palec').hidden = true;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  vykresli();
+}
+function obnovPalec() {
+  const p = aktivniP(); if (!p) return zavriPalec();
+  const st = J.statistiky(rel(), p.id, Date.now());
+  const el = $('palec');
+  el.style.cssText = barvaStyl(p);
+  $('pJmeno').textContent = `${p.nazev} (${data.aktivni + 1}/${rel().pocitadla.length})`;
+  $('pCislo').textContent = J.formatCislo(p.hodnota);
+  $('pMinus').textContent = '−' + p.krok;
+  const c = [];
+  if (st.zaHodinu != null) c.push(J.formatCislo(st.zaHodinu, 1) + ' /h');
+  if (p.cil !== null) c.push(p.hodnota >= p.cil ? '🎯 cíl splněn' : `🎯 ${p.hodnota}/${p.cil}`);
+  if (p.limit !== null) c.push(p.hodnota >= p.limit ? `⛔ NAD LIMITEM ${p.limit}` : `⛔ limit ${p.limit}`);
+  $('pInfo').textContent = c.join(' · ') || `klepněte kamkoli sem: +${p.krok}`;
+}
+function prepni(o) {
+  const n = rel().pocitadla.length; if (!n) return;
+  data.aktivni = (data.aktivni + o + n) % n;
+  uloz(); obnovHodnoty();
+}
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !$('palec').hidden) { /* uživatel opustil celou obrazovku – overlay necháme */ } });
+$('palec').addEventListener('click', e => {
+  const b = e.target.closest('[data-p]'); if (!b) return;
+  const a = b.dataset.p, p = aktivniP();
+  if (a === 'plus') pocitej(p.id, 1);
+  else if (a === 'minus') pocitej(p.id, -1);
+  else if (a === 'zpet') zpet();
+  else if (a === 'pred') prepni(-1);
+  else if (a === 'dalsi') prepni(1);
+  else if (a === 'konec') zavriPalec();
+});
+// přejetí prstem doleva/doprava = jiné počítadlo (krátké klepnutí zůstane klikem)
+let dotyk = null;
+$('palec').addEventListener('touchstart', e => { const t = e.touches[0]; dotyk = { x: t.clientX, y: t.clientY }; }, { passive: true });
+$('palec').addEventListener('touchend', e => {
+  if (!dotyk) return;
+  const t = e.changedTouches[0], dx = t.clientX - dotyk.x, dy = t.clientY - dotyk.y;
+  dotyk = null;
+  if (Math.abs(dx) > 70 && Math.abs(dx) > 2 * Math.abs(dy)) { e.preventDefault(); prepni(dx < 0 ? 1 : -1); }
+});
+
+/* ---------- graf ---------- */
+let chart = null;
+const css = (n, f) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
+function vybranaRelace() {
+  return graf.relace === 'aktualni' ? rel() : (data.archiv.find(r => r.id === graf.relace) || rel());
+}
+function intervalMs(r) {
+  let id = graf.interval;
+  if (id === 'auto') {
+    const k = r.kliky, trv = k.length ? (r.konec || Date.now()) - k[0].t : 0;
+    id = J.vhodnyInterval(trv);
+  }
+  return J.INTERVALY.find(i => i.id === id) || J.INTERVALY[0];
+}
+function aktualniAgregace() {
+  const r = vybranaRelace(), iv = intervalMs(r);
+  const doCas = r === rel() ? Date.now() : null;
+  return { r, iv, agr: J.agreguj(r.kliky, iv.ms, tzMs(r.start), r.pocitadla.map(p => p.id), null, r.kliky.length ? doCas : null) };
+}
+function vykresliGraf() {
+  const moznostiRel = `<option value="aktualni">▶ Aktuální relace</option>` + data.archiv.map(r => `<option value="${r.id}">${esc(r.nazev)} (${datumCas(r.start)})</option>`).join('');
+  if (graf.relace !== 'aktualni' && !data.archiv.some(r => r.id === graf.relace)) graf.relace = 'aktualni';
+  const { r, iv, agr } = aktualniAgregace();
+  const ted = r === rel() ? Date.now() : (r.konec || null);
+  const radky = r.pocitadla.map(p => {
+    const st = J.statistiky(r, p.id, ted);
+    return `<tr style="${barvaStyl(p)}"><td><span class="tecka"></span>${esc(p.nazev)}</td><td class="c"><b>${J.formatCislo(p.hodnota)}</b></td>
+      <td class="c">${J.formatCislo(st.pricteno)}</td><td class="c">${J.formatCislo(st.odecteno)}</td><td class="c">${J.formatCislo(st.pocetKliku)}</td>
+      <td class="c">${st.zaHodinu == null ? '–' : J.formatCislo(st.zaHodinu, 1)}</td><td class="c">${st.zaHodinu15 == null ? '–' : J.formatCislo(st.zaHodinu15)}</td>
+      <td class="c">${J.formatCislo(st.maxZaMinutu)}</td><td class="c">${st.prumernyOdstup == null ? '–' : J.formatTrvani(st.prumernyOdstup)}</td>
+      <td class="c">${st.prvni ? cas(st.prvni) : '–'}</td><td class="c">${st.posledni ? cas(st.posledni) : '–'}</td><td class="c">${J.formatTrvani(st.trvani)}</td></tr>`;
+  }).join('');
+  $('obsah').innerHTML = `<div class="ovl">
+      <label>Relace <select class="vstup" id="gRelace">${moznostiRel}</select></label>
+      <label>Interval <select class="vstup" id="gInterval"><option value="auto">automaticky (${iv.nazev})</option>${J.INTERVALY.map(i => `<option value="${i.id}">${i.nazev}</option>`).join('')}</select></label>
+      <label>Zobrazit <select class="vstup" id="gRezim"><option value="interval">přírůstek za interval</option><option value="kumul">průběžný stav</option><option value="tempo">tempo (kusů za hodinu)</option></select></label>
+    </div>
+    ${r.kliky.length ? `<div class="graf-obal"><canvas id="platno" aria-label="Graf kliků v čase"></canvas></div>` : '<div class="prazdno">V této relaci zatím nejsou žádné kliky – graf se objeví po prvním počítání.</div>'}
+    <h2>Statistiky</h2>
+    <div class="tab-obal"><table>
+      <thead><tr><th>Počítadlo</th><th class="c">Stav</th><th class="c">Přičteno</th><th class="c">Odečteno</th><th class="c">Kliků</th><th class="c" title="Přičtené kusy na hodinu od prvního kliku">Za hodinu</th><th class="c" title="Tempo za posledních 15 minut, přepočteno na hodinu">Posl. 15 min /h</th><th class="c" title="Nejvíc přičtených kusů za jednu minutu">Max/min</th><th class="c" title="Průměrný odstup mezi přičtením">Odstup</th><th class="c">První</th><th class="c">Poslední</th><th class="c">Trvání</th></tr></thead>
+      <tbody>${radky}</tbody></table></div>
+    <p class="tip">Tempo za hodinu = přičtené kusy od prvního kliku do ${r === rel() ? 'teď' : 'posledního kliku'} (počítá se až po minutě měření). Intervaly jsou zarovnané na místní čas.</p>`;
+  $('gRelace').value = graf.relace; $('gInterval').value = graf.interval; $('gRezim').value = graf.rezim;
+  if (chart) { chart.destroy(); chart = null; }
+  if (!r.kliky.length || typeof Chart === 'undefined') return;
+  const popisky = agr.zacatky.map(t => iv.ms >= 86400000 ? new Date(t).toLocaleDateString('cs-CZ') : (iv.ms >= 3600000 && agr.zacatky.length > 24 ? new Date(t).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : cas(t, false)));
+  const kumul = graf.rezim === 'kumul', tempo = graf.rezim === 'tempo';
+  const sady = r.pocitadla.map(p => {
+    const rada = agr.rady[p.id] || [];
+    const hodnoty = kumul ? J.kumulativne(rada) : tempo ? rada.map(v => Math.round(Math.max(0, v) * 3600000 / iv.ms * 10) / 10) : rada;
+    return { label: p.nazev, data: hodnoty, backgroundColor: p.barva + (kumul ? '33' : 'cc'), borderColor: p.barva, borderWidth: kumul || tempo ? 2 : 0, pointRadius: hodnoty.length > 60 ? 0 : 2, fill: false, tension: 0.15, stepped: kumul };
+  });
+  const text = css('--text-muted', '#888'), mrizka = css('--border', '#ccc');
+  chart = new Chart($('platno'), {
+    type: kumul || tempo ? 'line' : 'bar',
+    data: { labels: popisky, datasets: sady },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { color: text, boxWidth: 14 } }, tooltip: { callbacks: { title: it => it.length ? `${popisky[it[0].dataIndex]} (+${iv.nazev})` : '' } } },
+      scales: {
+        x: { stacked: !kumul && !tempo, ticks: { color: text, maxRotation: 0, autoSkip: true }, grid: { color: mrizka } },
+        y: { stacked: !kumul && !tempo, beginAtZero: true, ticks: { color: text, precision: 0 }, grid: { color: mrizka }, title: { display: true, color: text, text: kumul ? 'stav' : tempo ? 'kusů za hodinu' : 'za ' + iv.nazev } }
+      }
+    }
+  });
+}
+
+/* ---------- historie ---------- */
+function vykresliHistorii() {
+  const r = rel(), jm = {};
+  r.pocitadla.forEach(p => { jm[p.id] = p; });
+  const stav = {}, predchozi = {};
+  const radky = r.kliky.map(k => {
+    stav[k.p] = (stav[k.p] || 0) + k.d;
+    const o = { k, stav: stav[k.p], odstup: predchozi[k.p] ? k.t - predchozi[k.p] : null };
+    predchozi[k.p] = k.t;
+    return o;
+  }).filter(o => !historieFiltr || o.k.p === historieFiltr).reverse();
+  const limit = historieVse ? radky.length : 300;
+  const dnes = new Date().toDateString();
+  $('obsah').innerHTML = `<div class="ovl">
+      <label>Počítadlo <select class="vstup" id="hFiltr"><option value="">všechna</option>${r.pocitadla.map(p => `<option value="${p.id}">${esc(p.nazev)}</option>`).join('')}</select></label>
+      <span>${J.formatCislo(radky.length)} záznamů v aktuální relaci</span>
+      <button class="btn mini" data-prikaz="zpet">↶ Vrátit poslední</button>
+      <button class="btn mini" data-prikaz="csvKliky">📊 CSV</button>
+    </div>
+    ${radky.length ? `<div class="tab-obal"><table>
+      <thead><tr><th>Čas</th><th>Počítadlo</th><th class="c">Změna</th><th class="c">Stav</th><th class="c" title="Od předchozího kliku téhož počítadla">Odstup</th></tr></thead>
+      <tbody>${radky.slice(0, limit).map(o => {
+        const p = jm[o.k.p], d = new Date(o.k.t);
+        return `<tr style="${barvaStyl(p)}"><td>${d.toDateString() === dnes ? '' : d.toLocaleDateString('cs-CZ') + ' '}${cas(o.k.t)}</td><td><span class="tecka"></span>${esc(p.nazev)}${o.k.r ? ' <span class="stitek" title="Ručně nastavená hodnota">ručně</span>' : ''}</td>
+          <td class="c ${o.k.d > 0 ? 'plus-t' : 'minus-t'}">${znamenko(o.k.d)}</td><td class="c">${J.formatCislo(o.stav)}</td><td class="c">${o.odstup == null ? '' : J.formatTrvani(o.odstup)}</td></tr>`;
+      }).join('')}</tbody></table></div>
+      ${radky.length > limit ? `<p><button class="btn" id="hVse">Zobrazit všech ${J.formatCislo(radky.length)} záznamů</button></p>` : ''}` :
+      '<div class="prazdno">Zatím žádné kliky. Každé přičtení i odečtení se sem zapíše s přesným časem.</div>'}`;
+  $('hFiltr').value = historieFiltr;
+}
+
+/* ---------- relace ---------- */
+function relaceKarta(r, aktualni) {
+  const st = J.statistiky(r, null, aktualni ? Date.now() : r.konec);
+  const celkem = r.pocitadla.reduce((s, p) => s + p.hodnota, 0);
+  const id = aktualni ? 'aktualni' : r.id;
+  return `<div class="rel" data-rel="${id}">
+    <input type="checkbox" data-porovnat="${id}" ${vybraneRelace.has(id) ? 'checked' : ''} aria-label="Porovnat">
+    <div><h3>${aktualni ? '▶ ' + esc(r.nazev || 'Aktuální relace (neuložená)') : esc(r.nazev)}</h3>
+      <div class="meta">${datumCas(r.start)} · ${J.formatTrvani(st.trvani)} · celkem <b>${J.formatCislo(celkem)}</b> · ${J.formatCislo(st.pocetKliku)} kliků${st.zaHodinu != null ? ' · ' + J.formatCislo(st.zaHodinu, 1) + '/h' : ''}</div>
+      ${r.poznamka ? `<div class="meta">📝 ${esc(r.poznamka)}</div>` : ''}
+      <div class="stitky">${r.pocitadla.map(p => `<span class="stitek" style="${barvaStyl(p)}"><span class="tecka"></span>${esc(p.nazev)}: <b>&nbsp;${J.formatCislo(p.hodnota)}</b></span>`).join('')}</div></div>
+    <div class="akce">
+      <button class="btn mini" data-rel-akce="graf">📈 Graf</button>
+      ${aktualni ? `<button class="btn mini" data-prikaz="ulozRelaci">💾 Uložit</button><button class="btn mini" data-prikaz="novaRelace">🆕 Uložit a začít novou</button>` :
+        `<button class="btn mini" data-rel-akce="prejmenovat">✏️ Přejmenovat</button><button class="btn mini" data-rel-akce="poznamka">📝 Poznámka</button>
+         <button class="btn mini" data-rel-akce="pokracovat" title="Načíst jako aktuální a počítat dál">↻ Pokračovat</button><button class="btn mini" data-rel-akce="csv">📊 CSV</button><button class="btn mini danger" data-rel-akce="smazat">🗑️</button>`}
+    </div></div>`;
+}
+function porovnaniHtml() {
+  const vybr = [...vybraneRelace].map(id => id === 'aktualni' ? rel() : data.archiv.find(r => r.id === id)).filter(Boolean);
+  if (vybr.length < 2) return `<p class="tip">Zaškrtněte aspoň dvě relace a objeví se jejich porovnání (počítadla se párují podle názvu).</p>`;
+  const por = J.porovnej(vybr, Date.now());
+  const max = por.sloupce.map((_, i) => Math.max(...por.radky.map(x => x.hodnoty[i] || 0)));
+  return `<h2>Porovnání</h2><div class="tab-obal"><table>
+    <thead><tr><th></th>${por.sloupce.map(s => `<th class="c">${esc(s.nazev)}<br><span style="font-weight:400;text-transform:none">${datumCas(s.start)}</span></th>`).join('')}</tr></thead>
+    <tbody>${por.radky.map(x => `<tr style="--barva:${x.barva}"><td><span class="tecka"></span>${esc(x.nazev)}</td>${x.hodnoty.map((v, i) => `<td class="c">${v == null ? '–' : (v === max[i] && v > 0 ? '<b>' + J.formatCislo(v) + '</b>' : J.formatCislo(v))}</td>`).join('')}</tr>`).join('')}
+      <tr><td><b>Celkem</b></td>${por.sloupce.map(s => `<td class="c"><b>${J.formatCislo(s.celkem)}</b></td>`).join('')}</tr>
+      <tr><td>Trvání</td>${por.sloupce.map(s => `<td class="c">${J.formatTrvani(s.trvani)}</td>`).join('')}</tr>
+      <tr><td>Kliků</td>${por.sloupce.map(s => `<td class="c">${J.formatCislo(s.kliku)}</td>`).join('')}</tr>
+      <tr><td>Za hodinu</td>${por.sloupce.map(s => `<td class="c">${J.formatCislo(s.zaHodinu, 1)}</td>`).join('')}</tr>
+    </tbody></table></div>`;
+}
+function vykresliRelace() {
+  $('obsah').innerHTML = `<h2>Aktuální relace</h2>
+    <div class="panel">
+      <div class="radek2"><input class="vstup" id="rNazev" maxlength="80" placeholder="Název relace (např. Sčítání ptáků – Rybník, ráno)" value="${esc(rel().nazev)}" aria-label="Název aktuální relace">
+      <input class="vstup" id="rPoznamka" maxlength="500" placeholder="Poznámka (místo, počasí, kdo počítal)" value="${esc(rel().poznamka)}" aria-label="Poznámka"></div>
+    </div>
+    <div class="rel-seznam" style="margin-top:8px">${relaceKarta(rel(), true)}</div>
+    <h2>Uložené relace (${data.archiv.length})</h2>
+    ${data.archiv.length ? `<div class="rel-seznam">${data.archiv.map(r => relaceKarta(r, false)).join('')}</div>` : '<div class="prazdno">Zatím žádná uložená relace. Hotové sčítání uložíte v nabídce <b>🗂️ Relace → 💾 Uložit relaci</b>.</div>'}
+    <div id="porovnani">${porovnaniHtml()}</div>`;
+}
+
+function vykresli() {
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === pohled)));
+  if (pohled !== 'graf' && chart) { chart.destroy(); chart = null; }
+  ({ pocitadla: vykresliPocitadla, graf: vykresliGraf, historie: vykresliHistorii, relace: vykresliRelace }[pohled] || vykresliPocitadla)();
+}
+
+/* ---------- dialog počítadla ---------- */
+let upravovane = null;
+function otevri(dlg) { dlg.showModal(); }
+function vzorky(barva) {
+  $('vzorky').innerHTML = J.BARVY.map(b => `<button type="button" data-barva="${b}" style="background:${b}" aria-label="Barva ${b}" aria-pressed="${b === barva}"></button>`).join('') +
+    `<input type="color" id="vlastniBarva" value="${barva}" title="Vlastní barva" aria-label="Vlastní barva">`;
+}
+$('vzorky').addEventListener('click', e => { const b = e.target.closest('[data-barva]'); if (b) { vzorky(b.dataset.barva); } });
+$('vzorky').addEventListener('input', e => { if (e.target.id === 'vlastniBarva') $('vzorky').querySelectorAll('[data-barva]').forEach(b => b.setAttribute('aria-pressed', 'false')); });
+const vybranaBarva = () => $('vlastniBarva').value;
+function upravPocitadlo(p) {
+  upravovane = p;
+  const f = $('dlgPocitadlo').querySelector('form');
+  $('dlgPocitadloTitul').textContent = p ? 'Upravit počítadlo' : 'Nové počítadlo';
+  $('dlgSmazat').hidden = $('dlgVynulovat').hidden = !p;
+  f.nazev.value = p ? p.nazev : '';
+  f.krok.value = p ? p.krok : 1;
+  f.hodnota.value = p ? p.hodnota : 0;
+  f.cil.value = p && p.cil !== null ? p.cil : '';
+  f.limit.value = p && p.limit !== null ? p.limit : '';
+  f.zaporne.checked = !!(p && p.zaporne);
+  const pouzite = new Set(rel().pocitadla.map(x => x.barva));
+  vzorky(p ? p.barva : (J.BARVY.find(b => !pouzite.has(b)) || J.BARVY[0]));
+  otevri($('dlgPocitadlo'));
+  setTimeout(() => f.nazev.focus(), 30);
+}
+$('dlgPocitadlo').addEventListener('close', async () => {
+  const dlg = $('dlgPocitadlo'), f = dlg.querySelector('form'), v = dlg.returnValue, p = upravovane;
+  dlg.returnValue = '';
+  if (v === 'smazat' && p) {
+    if (await Dialog.potvrd(`Smazat počítadlo „${p.nazev}“ i s historií kliků?`)) { J.smazPocitadlo(rel(), p.id); data.aktivni = 0; uloz(); vykresli(); }
+    return;
+  }
+  if (v === 'vynulovat' && p) {
+    if (await Dialog.potvrd(`Vynulovat „${p.nazev}“ a smazat jeho kliky v aktuální relaci?`)) { J.vynulujPocitadlo(rel(), p.id); uloz(); vykresli(); }
+    return;
+  }
+  if (v !== 'ok') return;
+  const vl = { nazev: f.nazev.value, barva: vybranaBarva(), krok: f.krok.value, cil: f.cil.value, limit: f.limit.value, zaporne: f.zaporne.checked };
+  if (p) {
+    J.upravPocitadlo(rel(), p.id, vl);
+    if (f.hodnota.value !== '' && +f.hodnota.value !== p.hodnota) J.nastavHodnotu(rel(), p.id, f.hodnota.value);
+  } else {
+    const n = J.pridejPocitadlo(rel(), vl);
+    if (f.hodnota.value && +f.hodnota.value) J.nastavHodnotu(rel(), n.id, f.hodnota.value);
+    data.aktivni = rel().pocitadla.length - 1;
+  }
+  uloz(); vykresli();
+});
+
+/* ---------- soubor a relace ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const dnesIso = () => J.casText(Date.now(), false).slice(0, 10);
+const nazevSouboru = r => 'pocitadlo-' + (r.nazev ? r.nazev.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w]+/g, '-').toLowerCase().slice(0, 40) : J.casText(r.start, false).slice(0, 10));
+async function ulozRelaci(apak) {
+  const n = await Dialog.zeptej(apak ? 'Uložit relaci a začít novou se stejnými počítadly. Název relace:' : 'Název relace:', rel().nazev || ('Sčítání ' + datumCas(rel().start)));
+  if (n === null) return false;
+  J.ulozRelaci(data, n);
+  if (apak) J.novaRelace(data);
+  else rel().nazev = n.trim();
+  uloz(); vykresli();
+  toast(apak ? '💾 Uloženo, počítadla jsou na nule.' : '💾 Relace uložena.');
+  return true;
+}
+const PRIKAZY = {
+  nove: () => upravPocitadlo(null),
+  zpet,
+  palec: otevriPalec,
+  napoveda: () => otevri($('dlgNapoveda')),
+  tisk: () => print(),
+  ulozRelaci: () => ulozRelaci(false),
+  novaRelace: () => ulozRelaci(true),
+  vynulovat: async () => {
+    if (!rel().kliky.length) return toast('Počítadla jsou už na nule.');
+    if (!await Dialog.potvrd('Vynulovat všechna počítadla a smazat kliky aktuální relace bez uložení?')) return;
+    J.novaRelace(data); uloz(); vykresli();
+  },
+  csvKliky: () => stahni(nazevSouboru(rel()) + '-kliky.csv', J.csvKliky(rel()), 'text/csv'),
+  csvSouhrn: () => stahni('pocitadlo-souhrn-' + dnesIso() + '.csv', J.csvSouhrn([rel()].concat(data.archiv), Date.now()), 'text/csv'),
+  csvIntervaly: () => { const { r, iv, agr } = aktualniAgregace(); stahni(nazevSouboru(r) + '-' + iv.id + '.csv', J.csvIntervaly(agr, r.pocitadla), 'text/csv'); },
+  export: () => stahni('pocitadlo-zaloha-' + dnesIso() + '.json', JSON.stringify(data), 'application/json'),
+  import: () => $('souborImport').click(),
+  smazVse: async () => {
+    if (!await Dialog.potvrd('Opravdu smazat všechna počítadla, aktuální relaci i všechny uložené relace? Doporučujeme nejdřív zálohu.')) return;
+    data = J.prazdna(); vybraneRelace.clear(); uloz(); vykresli();
+  }
+};
+$('souborImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !d.aktualni) return Dialog.chyba('Tohle není záloha Počítadla.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.aktualni.pocitadla.length} počítadel a ${m.archiv.length} uložených relací. Nahradit jimi současná data?`)) return;
+  data = m; vybraneRelace.clear(); uloz(); vykresli(); toast('Obnoveno ze zálohy.');
+};
+
+/* ---------- nabídky a události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.querySelectorAll('[data-moznost]').forEach(ch => {
+  ch.checked = !!moznosti[ch.dataset.moznost];
+  ch.addEventListener('change', () => {
+    moznosti[ch.dataset.moznost] = ch.checked; zapamatuj('moznosti', JSON.stringify(moznosti));
+    if (ch.dataset.moznost === 'displej') { if (ch.checked) drzDisplej(); else pustDisplej(); }
+    if (ch.dataset.moznost === 'vibrace' && ch.checked && !navigator.vibrate) toast('Tento prohlížeč vibrace nepodporuje (např. Safari na iPhonu).');
+  });
+});
+document.addEventListener('click', async e => {
+  const pr = e.target.closest('[data-prikaz]');
+  if (pr) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[pr.dataset.prikaz](pr); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  else if (!e.target.closest('[data-pohled]')) return;
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { zavriNabidky(); pohled = pv.dataset.pohled; zapamatuj('pohled', pohled); return vykresli(); }
+  if (e.target.id === 'hVse') { historieVse = true; return vykresliHistorii(); }
+  const ra = e.target.closest('[data-rel-akce]');
+  if (ra) return akceRelace(ra.dataset.relAkce, ra.closest('[data-rel]').dataset.rel);
+  const k = e.target.closest('.karta');
+  if (!k) return;
+  const i = rel().pocitadla.findIndex(p => p.id === k.dataset.id); if (i < 0) return;
+  const a = e.target.closest('[data-akce]');
+  if (!a) { data.aktivni = i; uloz(); return obnovHodnoty(); }
+  const p = rel().pocitadla[i];
+  if (a.dataset.akce === 'plus') pocitej(p.id, 1);
+  else if (a.dataset.akce === 'minus') pocitej(p.id, -1);
+  else upravPocitadlo(p);
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'gRelace') { graf.relace = t.value; vykresliGraf(); }
+  else if (t.id === 'gInterval') { graf.interval = t.value; vykresliGraf(); }
+  else if (t.id === 'gRezim') { graf.rezim = t.value; vykresliGraf(); }
+  else if (t.id === 'hFiltr') { historieFiltr = t.value; vykresliHistorii(); }
+  else if (t.dataset.porovnat) { if (t.checked) vybraneRelace.add(t.dataset.porovnat); else vybraneRelace.delete(t.dataset.porovnat); $('porovnani').innerHTML = porovnaniHtml(); }
+  else if (t.id === 'rNazev' || t.id === 'rPoznamka') { rel()[t.id === 'rNazev' ? 'nazev' : 'poznamka'] = t.value.trim(); uloz(); vykresliRelace(); }
+});
+async function akceRelace(akce, id) {
+  if (akce === 'graf') { graf.relace = id; pohled = 'graf'; zapamatuj('pohled', pohled); return vykresli(); }
+  const r = data.archiv.find(x => x.id === id); if (!r) return;
+  if (akce === 'prejmenovat') { const n = await Dialog.zeptej('Nový název relace:', r.nazev); if (n === null || !n.trim()) return; r.nazev = n.trim().slice(0, 80); }
+  else if (akce === 'poznamka') { const n = await Dialog.zeptej('Poznámka k relaci:', r.poznamka); if (n === null) return; r.poznamka = n.slice(0, 500); }
+  else if (akce === 'csv') return stahni(nazevSouboru(r) + '-kliky.csv', J.csvKliky(r), 'text/csv');
+  else if (akce === 'smazat') { if (!await Dialog.potvrd(`Smazat uloženou relaci „${r.nazev}“?`)) return; data.archiv = data.archiv.filter(x => x !== r); vybraneRelace.delete(id); }
+  else if (akce === 'pokracovat') {
+    if (rel().kliky.length && !await Dialog.potvrd('Aktuální relace se nahradí touto uloženou (uložená kopie zůstane v seznamu). Neuložené kliky aktuální relace se ztratí – pokračovat?')) return;
+    J.pokracujRelaci(data, id); pohled = 'pocitadla'; zapamatuj('pohled', pohled);
+  }
+  uloz(); vykresli();
+}
+
+/* ---------- klávesy (i Bluetooth klikry a ovladače, které se hlásí jako klávesnice) ---------- */
+const PLUS = new Set([' ', 'Enter', 'ArrowUp', '+', 'PageDown', 'AudioVolumeUp', 'VolumeUp', 'MediaPlayPause', 'MediaTrackNext']);
+const MINUS = new Set(['ArrowDown', '-', 'PageUp', 'Backspace', 'AudioVolumeDown', 'VolumeDown', 'MediaTrackPrevious']);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { zavriNabidky(); if (!$('palec').hidden) zavriPalec(); return; }
+  const t = e.target;
+  if (document.querySelector('dialog[open]') || t.closest && t.closest('input,select,textarea,[contenteditable]')) return;
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); return zpet(); }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const r = rel(), m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+  if (m) {
+    const p = r.pocitadla[+m[1] - 1]; if (!p) return;
+    e.preventDefault(); return pocitej(p.id, e.shiftKey ? -1 : 1);
+  }
+  if (e.code === 'KeyF' && $('palec').hidden) { e.preventDefault(); return otevriPalec(); }
+  if (pohled !== 'pocitadla' && $('palec').hidden) return;
+  const p = aktivniP(); if (!p) return;
+  // tlačítka nabídky, karty a lišty mají vlastní Enter/mezeru – při fokusu na nich nechat prohlížeči
+  if ((e.key === ' ' || e.key === 'Enter') && t.closest && t.closest('button') && $('palec').hidden) return;
+  if (PLUS.has(e.key) || e.code === 'NumpadAdd') { e.preventDefault(); pocitej(p.id, 1); }
+  else if (MINUS.has(e.key) || e.code === 'NumpadSubtract') { e.preventDefault(); pocitej(p.id, -1); }
+  else if (e.key === 'ArrowRight' || (e.key === 'Tab' && !e.shiftKey && !$('palec').hidden)) { e.preventDefault(); prepni(1); }
+  else if (e.key === 'ArrowLeft' || (e.key === 'Tab' && e.shiftKey && !$('palec').hidden)) { e.preventDefault(); prepni(-1); }
+});
+
+addEventListener('resize', zavriNabidky);
+addEventListener('storage', e => { if (e.key === J.KLIC && e.newValue) { data = J.migruj(JSON.parse(e.newValue)); vykresli(); } });
+new MutationObserver(() => { if (pohled === 'graf') vykresliGraf(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+// průběžné tempo a trvání
+setInterval(() => { if (!document.hidden && (pohled === 'pocitadla' || !$('palec').hidden)) obnovHodnoty(); }, 5000);
+document.addEventListener('pointerdown', () => drzDisplej(), { once: true });
+
+vykresli();
+window.POCITADLO_APP = { data: () => data, vykresli, pocitej, otevriPalec, nastav: d => { data = J.migruj(d); uloz(); vykresli(); }, prepniPohled: p => { pohled = p; vykresli(); } };
+})();
+</script>
+</body>
+</html>

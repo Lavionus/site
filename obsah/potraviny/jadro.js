@@ -495,6 +495,7 @@
     'Žemle (kaiserka)': 'kaiserka',
     'Chléb konzumní (kmínový)': 'chleba, chléb, konzumní chléb, kmínový chléb',
     'Rohlík tukový': 'rohlík, rohlíky',
+    'Mouka pšeničná hladká': 'mouka, mouky, hladká mouka, pšeničná mouka',
     'Mléko polotučné (medián etiket)': 'mléko, polotučné mléko',
     'Tvaroh polotučný (medián etiket)': 'tvaroh, měkký tvaroh',
     'Eidam 30 % (medián etiket)': 'eidam, sýr, plátkový sýr',
@@ -2719,7 +2720,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-11-12a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-11-16a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
